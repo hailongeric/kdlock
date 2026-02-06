@@ -6,6 +6,7 @@
 #include <linux/spinlock.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
+#include <linux/ktime.h>
 
 #define DRIVER_NAME "lock_dev"
 
@@ -13,6 +14,7 @@
 struct test_args {
     unsigned long loop_count;  // 总共抢多少次锁
     unsigned long work_load;   // 每次抢到锁后，在里面算多少次加法 (临界区大小)
+    unsigned int mode;         // 0: contention, 1: nested, 2: api-in-lock
 };
 
 #define IOC_MAGIC 'k'
@@ -20,9 +22,15 @@ struct test_args {
 
 // 全局锁：确保所有打开此设备的线程/进程都抢这一把锁
 static DEFINE_SPINLOCK(global_lock);
+static DEFINE_SPINLOCK(nested_lock_a);
+static DEFINE_SPINLOCK(nested_lock_b);
 
 // 全局计数器：验证数据的正确性
 static unsigned long global_counter = 0;
+
+#define MODE_CONTENTION 0
+#define MODE_NESTED     1
+#define MODE_API_IN_LOCK 2
 
 static void run_contention_test(unsigned long loop_count, unsigned long work_load)
 {
@@ -50,6 +58,48 @@ static void run_contention_test(unsigned long loop_count, unsigned long work_loa
     }
 }
 
+static void run_nested_spinlock_test(unsigned long loop_count, unsigned long work_load)
+{
+    unsigned long i, j;
+    volatile int dummy_computation = 0;
+
+    for (i = 0; i < loop_count; i++) {
+        spin_lock(&nested_lock_a);
+        spin_lock(&nested_lock_b);
+
+        // --- 临界区开始 ---
+        global_counter++;
+        for (j = 0; j < work_load; j++) {
+            dummy_computation++;
+        }
+        // --- 临界区结束 ---
+
+        spin_unlock(&nested_lock_b);
+        spin_unlock(&nested_lock_a);
+    }
+}
+
+static void run_api_in_lock_test(unsigned long loop_count, unsigned long work_load)
+{
+    unsigned long i, j;
+    volatile int dummy_computation = 0;
+
+    for (i = 0; i < loop_count; i++) {
+        spin_lock(&global_lock);
+
+        // --- 临界区开始 ---
+        // Safe API in spinlock context: ktime_get_ns() does not sleep.
+        global_counter += (unsigned long)(ktime_get_ns() & 0xFFFF);
+
+        for (j = 0; j < work_load; j++) {
+            dummy_computation++;
+        }
+        // --- 临界区结束 ---
+
+        spin_unlock(&global_lock);
+    }
+}
+
 static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
     struct test_args k_args;
@@ -61,7 +111,15 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
                 return -EFAULT;
             }
             // 执行测试
-            run_contention_test(k_args.loop_count, k_args.work_load);
+            if (k_args.mode == MODE_CONTENTION) {
+                run_contention_test(k_args.loop_count, k_args.work_load);
+            } else if (k_args.mode == MODE_NESTED) {
+                run_nested_spinlock_test(k_args.loop_count, k_args.work_load);
+            } else if (k_args.mode == MODE_API_IN_LOCK) {
+                run_api_in_lock_test(k_args.loop_count, k_args.work_load);
+            } else {
+                return -EINVAL;
+            }
             break;
         default:
             return -EINVAL;

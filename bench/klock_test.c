@@ -12,6 +12,7 @@
 struct test_args {
     unsigned long loop_count;
     unsigned long work_load;
+    unsigned int mode;
 };
 
 #define IOC_RUN_TEST _IOW(IOC_MAGIC, 1, struct test_args)
@@ -47,9 +48,10 @@ long long current_timestamp() {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 5) {
-        printf("Usage: %s <num_threads> <loop_count> <work_load> <sys_count>\n", argv[0]);
-        printf("Example: %s 4 100000 1000\n", argv[0]);
+    if (argc < 6) {
+        printf("Usage: %s <num_threads> <loop_count> <work_load> <sys_count> <mode>\n", argv[0]);
+        printf("Mode: 0=contention, 1=nested, 2=api-in-lock\n");
+        printf("Example: %s 4 100000 1000 10 0\n", argv[0]);
         return -1;
     }
 
@@ -57,6 +59,7 @@ int main(int argc, char *argv[]) {
     unsigned long loop_count = strtoul(argv[2], NULL, 10);
     unsigned long work_load = strtoul(argv[3], NULL, 10);
     unsigned long sys_count = strtoul(argv[4], NULL, 10);
+    unsigned int mode = (unsigned int)strtoul(argv[5], NULL, 10);
 
     int fd = open(DEVICE_PATH, O_RDWR);
     if (fd < 0) {
@@ -71,6 +74,7 @@ int main(int argc, char *argv[]) {
     printf("  Threads: %d\n", num_threads);
     printf("  Loops per thread: %lu\n", loop_count);
     printf("  Critical Section Workload: %lu\n", work_load);
+    printf("  Mode: %u\n", mode);
 
     long long start_time = current_timestamp();
 
@@ -80,6 +84,7 @@ int main(int argc, char *argv[]) {
         t_data[i].fd = fd; // 所有线程共享同一个文件描述符
         t_data[i].args.loop_count = loop_count;
         t_data[i].args.work_load = work_load;
+        t_data[i].args.mode = mode;
         t_data[i].sys_count = sys_count;
 
         if (pthread_create(&threads[i], NULL, worker_thread, &t_data[i]) != 0) {

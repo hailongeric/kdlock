@@ -36,6 +36,7 @@
 #include "kd_lock.h"
 #include "exe.h"
 #include "utils.h"
+#include "komb.h"
 
 #include <linux/spinlock.h>
 
@@ -344,7 +345,7 @@ void not_wake_up_q(struct wake_q_head* wake_q) {
     }
 }
 
-#include "komb.h"
+
 void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_addr) {
     struct hrtimer_sleeper timeout, * to;
     struct restart_block* restart;
