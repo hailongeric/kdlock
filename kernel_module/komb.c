@@ -422,7 +422,7 @@ execute_cs(struct qspinlock *lock, struct komb_node *curr_node)
     {
         KD_PR_DEBUG("error return exe run error\n");
         // BUG_ON(true);
-        return 1;
+        return ret_flag;
         // ! import it's hard to deal, maybe use this delegation thread to deal exception
     }
     // local_irq_enable();
@@ -510,10 +510,17 @@ run_combiner(struct qspinlock *lock, struct komb_node *curr_node)
 
         next_node = get_next_node(curr_node);
 
-        if(execute_cs(lock, curr_node)){
+        int exe_flag = execute_cs(lock, curr_node);
+
+        if(exe_flag == EXE_NO_RUN){
             print_debug("can't assembly\n");
             next_node = curr_node; 
             //! no exe any waiter
+            break;
+        }
+        if(exe_flag == EXE_RUN_ERROR){
+            print_debug("run error\n");
+            next_node = curr_node; 
             break;
         }
 
@@ -671,6 +678,8 @@ __komb_spin_lock_longjmp(struct qspinlock *lock, int tail,
             LOCK_START_TIMING_PER_CPU(unlock_stack_switch);
             return 3;
         }
+        
+    
     }
 
     /*

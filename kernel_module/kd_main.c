@@ -8,6 +8,7 @@
 
 // HL ADDD
 #include <linux/spinlock.h>
+#include <linux/mutex.h>
 
 #include "exe.h"
 #include "sys.h"
@@ -40,6 +41,12 @@ extern int (*is_kd_test)(void);
 
 extern void (*kd_raw_spin_lock)(raw_spinlock_t *lock, unsigned long ret_addr);
 extern void (*kd_raw_spin_unlock)(raw_spinlock_t *lock, unsigned long ret_addr);
+
+// ! kd mod
+extern int (*is_kd)(void);
+extern void (*kd_mutex_lock)(struct mutex  *lock, unsigned long ret_addr);
+extern void (*kd_mutex_unlock)(struct mutex  *lock, unsigned long ret_addr);
+
 extern int (*nf_do_int3)(struct pt_regs*);
 
 
@@ -99,6 +106,9 @@ static int __init kdlock_km_init(void) {
 	is_kd_test = __is_kd_test;
 	kd_raw_spin_unlock = __kd_raw_spin_unlock;
 	kd_raw_spin_lock = __kd_raw_spin_lock;
+	is_kd =  __is_kd_test;
+	kd_mutex_lock = __kd_mutex_lock;
+	kd_mutex_unlock = __kd_mutex_unlock;
 	nf_do_int3 = NULL;
 
 	// nf_sys_call_table = kallsyms_lookup_name("sys_call_table");
@@ -112,6 +122,9 @@ static void __exit kdlock_km_exit(void) {
 	kd_raw_spin_lock = NULL;
 	is_kd_test = NULL;
 	nf_do_int3 = NULL;
+	kd_mutex_unlock = NULL;
+	kd_mutex_lock = NULL;
+	is_kd = NULL;
 	KD_PR_INFO("nf_success_cnt:%ld nf_total_cnt:%ld nf_success_wake_cnt:%ld success_rate:%ld.%02ld%% success_wake_rate:%ld.%02ld%%\n", \
 		nf_success_cnt, nf_total_cnt, nf_success_wake_cnt, \
 		rate_int(nf_success_cnt, nf_total_cnt), rate_dec(nf_success_cnt, nf_total_cnt), \
