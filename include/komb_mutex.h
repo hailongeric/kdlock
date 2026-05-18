@@ -3,7 +3,7 @@
 
 #define SIZE_OF_SHADOW_STACK 8192L
 #ifdef KERNEL_SYNCSTRESS
-#include "lib/combiner.h"
+#include "combiner.h"
 #else
 #endif
 

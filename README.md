@@ -1,64 +1,222 @@
 # kdlock
 
-Kernel-space lock experiments and user-space tooling.
+kdlock is an experimental kernel-space lock delegation system.  The goal is
+to apply the transparent critical-section delegation idea from
+[TCLocks](https://github.com/rs3lab/TCLocks) to Linux kernel locks, while using
+the dynamic binary translation path from
+[BCD](https://github.com/zjyiu/BCD) as the runtime mechanism for packaging and
+executing delegated code.
 
-This repo contains Linux kernel modules for lock-related experiments, plus
-user-space helpers for driving tests and analyzing behavior.
+TCLocks delegates a critical section from a waiter to a combiner so the
+lock-protected data stays local to the combiner core.  BCD shows how to discover
+and translate critical sections dynamically, without rewriting the application
+binary.  kdlock moves this direction into kernel space: patched kernel
+`mutex`/`spinlock` paths call into a loadable module, the module records the
+kernel instruction address that should be delegated, a userspace daemon
+translates that instruction stream into a sandboxed JIT block, and the kernel
+module later executes that block on behalf of waiters.
 
-**Contents**
-1. `kernel_module/` Kernel module implementing the core lock logic and helpers.
-1. `klock_module/` Simple character device module used by test tools.
-1. `bench/` User-space benchmarks and test programs.
-1. `daemon/` User-space daemons/helpers.
-1. `disassem/` Python tooling for disassembly/analysis.
-1. `include/` Shared headers.
-1. `test_tools/` Misc test scripts.
+This repository is a research prototype.  It assumes a kernel that already
+contains the kdlock hook points and exports the hook function pointers consumed
+by `kernel_module/kd_main.c`.
 
-**Prerequisites**
-1. Linux with kernel headers installed.
-1. `gcc`, `make`.
-1. Python 3 (for tools in `disassem/` and `test_tools/`).
+## Repository Layout
 
-**Build**
-1. Kernel module:
-   ```sh
-   cd kernel_module
-   make
-   ```
-1. Lock device module:
-   ```sh
-   cd klock_module
-   make
-   ```
-1. User-space daemons:
-   ```sh
-   cd daemon
-   make
-   ```
+1. `kernel_module/`: main kdlock module.  It registers `/dev/kd_dev`, installs
+   the kernel hook callbacks, tracks translated entries, and executes delegated
+   code.
+1. `klock_module/`: small test module exposing `/dev/lock_dev`.  It creates
+   kernel-side `spin_lock` workloads that can be driven from userspace.
+1. `daemon/`: userspace daemon that polls `/dev/kd_dev`, runs the dynamic
+   translator, and writes generated JIT code back to the kernel module.
+1. `disassem/`: Python/miasm-based translator.  It reads kernel text through
+   `/proc/kcore`, emits `asm/jit.S`, and produces `asm/jit.bin`.
+1. `include/`: shared headers and the assembly wrapper used by translated
+   blocks.
+1. `bench/`: small userspace driver for `/dev/lock_dev`.
+1. `setup.sh`: convenience setup for the test module and a few sysctls.
 
-**Load / Setup (requires root)**
-1. Load the lock device module:
-   ```sh
-   sudo insmod klock_module/klock_module.ko
-   ```
-1. Optional sysctl tuning (see `setup.sh`):
-   ```sh
-   sudo ./setup.sh
-   ```
+The local reference trees are expected at `/tmp/TCLocks` and `/tmp/BCD`.
 
-**Example: build a benchmark**
+## Runtime Model
+
+1. The patched kernel lock path checks whether the current task matches
+   `target_process`.
+1. On a target `spinlock`/`mutex` path, the hook in `kdlock_km` observes the
+   lock address and return address.
+1. Hot lock addresses are promoted to delegation candidates.
+1. For a new candidate return address, `exe_add()` allocates executable module
+   memory and marks the entry `F_UN_INIT`.
+1. `daemon/daemon2` reads `/dev/kd_dev`, creates a per-entry workspace under
+   `daemon/0x.../<tgid>/`, and invokes `disassem/disassem.py`.
+1. The translator disassembles kernel text from `/proc/kcore`, wraps the
+   translated block with `include/wrapper.S`, and emits `asm/jit.bin`.
+1. The daemon writes the binary back through `/dev/kd_dev`; the module copies it
+   into the entry's executable code buffer and marks it runnable.
+1. The combiner path can call the translated block with a saved `pt_regs`
+   context and use the result to continue delegation or fall back.
+
+## VM Workflow
+
+All builds and tests should run inside the VM.  From the host:
+
 ```sh
+ssh -p 2222 root@127.0.0.1
+cd /root/host_fs/kdlock
+```
+
+`/root/host_fs/kdlock` in the VM is the same shared directory as this repository
+on the host.
+
+## Prerequisites
+
+Install the normal kernel module build tools and Python dependencies inside the
+VM:
+
+```sh
+apt-get update
+apt-get install -y build-essential gcc make python3 python3-pip binutils \
+    linux-headers-$(uname -r)
+pip3 install pyelftools future pyparsing==2.4.7 miasm==0.1.3
+```
+
+If `miasm==0.1.3` is not available from pip in the VM, install the same miasm
+version used by the BCD artifact.
+
+The running kernel and the kernel build tree used by `make` must include the
+kdlock hook patch.  In particular, the kernel lock code must call and export the
+hook pointers used by this module, including the raw spinlock and mutex
+callbacks declared in `include/kd_lock.h`.  Building against a stock Ubuntu
+kernel tree is expected to fail at `modpost` with unresolved symbols such as
+`kd_raw_spin_lock`, `kd_raw_spin_unlock`, `is_kd_test`, or `nf_do_int3`.
+
+## Build
+
+Build the main module:
+
+```sh
+cd /root/host_fs/kdlock/kernel_module
+make
+```
+
+If the patched kernel build tree is not the VM's `/lib/modules/$(uname -r)/build`,
+pass it explicitly:
+
+```sh
+make KDIR=/path/to/patched/linux/build
+```
+
+Build the test lock device module:
+
+```sh
+cd /root/host_fs/kdlock/klock_module
+make
+```
+
+Build the daemon:
+
+```sh
+cd /root/host_fs/kdlock/daemon
+make
+```
+
+Build the userspace benchmark driver:
+
+```sh
+cd /root/host_fs/kdlock
 gcc -Iinclude bench/klock_test.c -o bench/klock_test -lpthread
 ```
 
-**Clean**
+## Run A Minimal Test
+
+Use two VM terminals.
+
+Terminal 1 loads the modules:
+
 ```sh
-cd kernel_module && make clean
-cd klock_module && make clean
-cd daemon && make clean
+cd /root/host_fs/kdlock
+sysctl -w kernel.randomize_va_space=0
+sysctl -w kernel.numa_balancing=0
+insmod kernel_module/kdlock_km.ko target_process="klock_test"
+insmod klock_module/klock_module.ko
 ```
 
-**Notes**
-1. Kernel modules require matching kernel headers and root privileges.
-1. `setup.sh` disables ASLR and NUMA balancing; only run it if that matches
-   your testing needs.
+`target_process` is matched against `current->comm`, so it should be the process
+name that enters the hooked lock path.  For the benchmark built above, use
+`klock_test`.
+
+Terminal 2 starts the dynamic translation daemon:
+
+```sh
+cd /root/host_fs/kdlock/daemon
+./daemon2
+```
+
+The daemon must run from `daemon/`, because it expects the `asm/` template
+directory in its current working directory.  It will create transient
+directories named like `0xffffffff...`.
+
+Terminal 1 starts the test workload:
+
+```sh
+cd /root/host_fs/kdlock
+./bench/klock_test 4 100000 1000 10 0
+```
+
+Benchmark modes:
+
+1. `0`: contended single spinlock.
+1. `1`: nested spinlocks.
+1. `2`: spinlock with a kernel API call inside the critical section.
+
+Inspect kernel logs after a run:
+
+```sh
+dmesg -T | tail -n 100
+```
+
+## Module Options
+
+`kernel_module/km.sh` is a helper for reloading `kdlock_km`:
+
+```sh
+cd /root/host_fs/kdlock/kernel_module
+./km.sh "klock_test"
+./km.sh "klock_test" UB
+./km.sh "klock_test" DE
+./km.sh "klock_test" VW
+```
+
+The second argument toggles prototype optimizations:
+
+1. `UB`: disable both `velvet_wait_queue` and `delegate_election`.
+1. `DE`: disable `velvet_wait_queue`.
+1. `VW`: disable `delegate_election`.
+
+## Stop And Clean
+
+Stop the daemon with `Ctrl-C`, then unload modules:
+
+```sh
+rmmod klock_module
+rmmod kdlock_km
+```
+
+Clean build outputs:
+
+```sh
+cd /root/host_fs/kdlock/kernel_module && make clean
+cd /root/host_fs/kdlock/klock_module && make clean
+cd /root/host_fs/kdlock/daemon && make clean
+rm -f /root/host_fs/kdlock/bench/klock_test
+```
+
+## Current Limitations
+
+1. The prototype is tied to x86-64 and a patched Linux kernel.
+1. Dynamic translation currently depends on miasm and `/proc/kcore` access.
+1. Unsupported calls or indirect jumps are reported back to the daemon as
+   `F_CALL_MISS` or `F_IJ_MISS`; the daemon extends the translation tables and
+   recompiles the block.
+1. If a lock address is not promoted to delegation, the hook falls back to the
+   original kernel lock path.
