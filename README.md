@@ -58,7 +58,16 @@ The local reference trees are expected at `/tmp/TCLocks` and `/tmp/BCD`.
 
 ## VM Workflow
 
-All builds and tests should run inside the VM.  From the host:
+All builds and tests must run inside the VM.  Do not build the modules directly
+from the host copy of this directory.
+
+If the VM is not running, start it from the host with the local QEMU script:
+
+```sh
+../qemu-scripts/run_vm.sh
+```
+
+Then connect to the VM:
 
 ```sh
 ssh -p 2222 root@127.0.0.1
@@ -66,7 +75,8 @@ cd /root/host_fs/kdlock
 ```
 
 `/root/host_fs/kdlock` in the VM is the same shared directory as this repository
-on the host.
+on the host.  Source edits can be made on the host, but compilation, module
+loading, daemon execution, and benchmarks should be run from this VM path.
 
 ## Prerequisites
 
@@ -77,18 +87,16 @@ VM:
 apt-get update
 apt-get install -y build-essential gcc make python3 python3-pip binutils \
     linux-headers-$(uname -r)
-pip3 install pyelftools future pyparsing==2.4.7 miasm==0.1.3
+pip3 install pyelftools future pyparsing==2.4.7 miasm==0.1.5
 ```
 
-If `miasm==0.1.3` is not available from pip in the VM, install the same miasm
+If `miasm==0.1.5` is not available from pip in the VM, install the same miasm
 version used by the BCD artifact.
 
-The running kernel and the kernel build tree used by `make` must include the
-kdlock hook patch.  In particular, the kernel lock code must call and export the
-hook pointers used by this module, including the raw spinlock and mutex
-callbacks declared in `include/kd_lock.h`.  Building against a stock Ubuntu
-kernel tree is expected to fail at `modpost` with unresolved symbols such as
-`kd_raw_spin_lock`, `kd_raw_spin_unlock`, `is_kd_test`, or `nf_do_int3`.
+The VM kernel and the kernel build tree used by `make` must include the kdlock
+hook patch.  In particular, the kernel lock code must call and export the hook
+pointers used by this module, including the raw spinlock and mutex callbacks
+declared in `include/kd_lock.h`.
 
 ## Build
 
@@ -99,8 +107,8 @@ cd /root/host_fs/kdlock/kernel_module
 make
 ```
 
-If the patched kernel build tree is not the VM's `/lib/modules/$(uname -r)/build`,
-pass it explicitly:
+If the patched kernel build tree is not the VM's
+`/lib/modules/$(uname -r)/build`, pass it explicitly:
 
 ```sh
 make KDIR=/path/to/patched/linux/build

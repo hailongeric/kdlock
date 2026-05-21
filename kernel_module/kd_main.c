@@ -101,9 +101,9 @@ static int __init kdlock_km_init(void)
 	is_kd_test = __is_kd_test;
 	kd_raw_spin_unlock = __kd_raw_spin_unlock;
 	kd_raw_spin_lock = __kd_raw_spin_lock;
-	is_kd = __is_kd_test;
-	kd_mutex_lock = __kd_mutex_lock;
-	kd_mutex_unlock = __kd_mutex_unlock;
+	// is_kd = __is_kd_test;
+	// kd_mutex_lock = __kd_mutex_lock;
+	// kd_mutex_unlock = __kd_mutex_unlock;
 	nf_do_int3 = NULL;
 
 	KD_PR_INFO("kd kernel module init\n");

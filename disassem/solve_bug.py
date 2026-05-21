@@ -1,3 +1,6 @@
+from miasm_compat import expr_args, expr_int_value, expr_ptr, set_expr_int_value
+
+
 def solve_cond_jmp_lock_cmpxchg(file_path):
 
     def is_match(a, b):
@@ -122,8 +125,10 @@ def solve_lea_ra_rb_c_rb(line, offset):
 
     read_scale = 1 << scale
 
-    if line.args[1]._ptr._args[1]._arg != read_scale + 1:
-        line.args[1]._ptr._args[1]._arg = read_scale + 1
+    lea_args = expr_args(expr_ptr(line.args[1]))
+    scale_arg = lea_args[1]
+    if expr_int_value(scale_arg) != read_scale + 1:
+        set_expr_int_value(scale_arg, read_scale + 1)
         # print("solve solve_lea_ra_rb_c_rb %x" % offset, line, line.b)
 
     return True

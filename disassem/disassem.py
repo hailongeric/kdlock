@@ -1,4 +1,5 @@
 from miasm.analysis.machine import Machine
+from miasm.core.locationdb import LocationDB 
 from miasm.analysis.binary import Container
 from miasm.core.bin_stream import bin_stream_str
 from miasm.expression.expression import ExprMem, ExprId, ExprInt, ExprLoc
@@ -65,12 +66,13 @@ def dis_assem(PID, entry, need_count, debug=0):
     for r in rets:
         c = bin_stream_str(r[0], base_address=r[1])
         machine = Machine("x86_64")
-        mdis = machine.dis_engine(c)
+        loc_db = LocationDB()
+        mdis = machine.dis_engine(c,loc_db=loc_db)
         mdis.follow_call = False
         asmcfg = None
         job_done = set()
 
-        mdis.dont_dis_retcall_funcs = set([0xffffffff81e90a80]) #! kd mod add the raw_spin_unlock
+        mdis.dont_dis_retcall_funcs = set([0xffffffff81e90b00]) #! kd mod add the raw_spin_unlock
 
         for t in r[2]:
             if t - r[1] in ordering_bug_list:  # To let buggy blocks first. MIASM bug
@@ -103,7 +105,7 @@ def dis_assem(PID, entry, need_count, debug=0):
     for offset, block in sorted(block_dict.items()):
 
         db = db_dict[block]
-        f.write("/*\n" + block.to_string(db) + "\n */ \n")  # Comment source
+        f.write("/*\n" + block.to_string() + "\n */ \n")  # Comment source
         label = db.pretty_str(block.loc_key)
 
         if need_count:

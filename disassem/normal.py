@@ -1,6 +1,14 @@
 from miasm.expression.expression import ExprMem, ExprId, ExprInt, ExprLoc, ExprOp
 from conflict import *
 from assist import *
+from miasm_compat import (
+    expr_args,
+    expr_int_value,
+    expr_op,
+    expr_ptr,
+    is_mem_segm_expr,
+    set_expr_int_value,
+)
 
 checked_regs = set()
 
@@ -80,20 +88,21 @@ def process_normal(name, args, offset, reg_map, can_check = False):
 
 def mem_addr(arg, res):
     if isinstance(arg, ExprOp):
-        if arg._op == '+':
-            for x in list(arg._args):
+        if expr_op(arg) == '+':
+            for x in list(expr_args(arg)):
                 mem_addr(x, res)
-        elif arg._op == '*':
+        elif expr_op(arg) == '*':
             if len(res['mul']) > 0:
                 print('Warning: Multiple index')
                 return
-            if isinstance(arg._args[0], ExprId) and isinstance(arg._args[1], ExprInt):
-                res['mul'].append(arg._args[1])
-                res['mul'].append(arg._args[0])
+            args = expr_args(arg)
+            if isinstance(args[0], ExprId) and isinstance(args[1], ExprInt):
+                res['mul'].append(args[1])
+                res['mul'].append(args[0])
 
-                if(res['mul'][0]._arg % 2 == 1):
-                    res['mul'][0]._arg = res['mul'][0]._arg -1
-                    res['regs'].append(arg._args[0])
+                if(expr_int_value(res['mul'][0]) % 2 == 1):
+                    set_expr_int_value(res['mul'][0], expr_int_value(res['mul'][0]) - 1)
+                    res['regs'].append(args[0])
             else:
                 print('Warning: Index incorrect')
         else:
@@ -111,11 +120,12 @@ def arg_purify(arg, offset):
         return ''
     if isinstance(arg, ExprMem):
         res = {'sz':arg.size, 'regs':[], 'im':'','mul':[]}
-        if arg.is_mem_segm():
-            res['regs'].append(ExprId('R' + str(arg._ptr.args[0]), 64))
-            arg = arg._ptr.args[1]
+        if is_mem_segm_expr(arg):
+            ptr_args = expr_args(expr_ptr(arg))
+            res['regs'].append(ExprId('R' + str(ptr_args[0]), 64))
+            arg = ptr_args[1]
         else:
-            arg = arg._ptr   
+            arg = expr_ptr(arg)
         mem_addr(arg, res)
         return  res
     elif isinstance(arg, ExprId):

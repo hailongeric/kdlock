@@ -17,5 +17,5 @@ def read_kernel_addr_data(addr, size):
     return None
 
 # 使用示例
-data = read_kernel_addr_data(0xffffffffbae00300, 64)
+data = read_kernel_addr_data(0xffffffffc0bcb10d, 64)
 print(data.hex())

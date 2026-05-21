@@ -1,4 +1,5 @@
 from miasm.expression.expression import ExprMem, ExprId, ExprInt, ExprLoc
+from miasm_compat import make_expr_int
 
 conditional_branch = ["JO", "JNO", "JB", "JAE",
                       "JZ", "JNZ", "JBE", "JA",
@@ -48,7 +49,7 @@ def check_flag_def_use(lines):
 def make_mem_dict(size, regs=[], im=0):
     res = {'sz':size, 'regs':[], 'im':'','mul':[]}
     if im != 0:
-        res['im'] = ExprInt(im, 64)
+        res['im'] = make_expr_int(im, 64)
     for reg in regs:
         res['regs'].append(ExprId(reg, 64))
     return res
@@ -88,12 +89,19 @@ def get_inst_name(inst ):
         if inst.additional_info.g1.value & 1:
             o = "LOCK %s" % o
         if inst.additional_info.g1.value & 2:
-            if getattr(inst.additional_info.prefixed, 'default', b"") != b"\xF2":
+            if get_prefixed_default(inst) != b"\xF2":
                 o = "REPNE %s" % o
         if inst.additional_info.g1.value & 8:
-            if getattr(inst.additional_info.prefixed, 'default', b"") != b"\xF3":
+            if get_prefixed_default(inst) != b"\xF3":
                 o = "REP %s" % o
         elif inst.additional_info.g1.value & 4:
-            if getattr(inst.additional_info.prefixed, 'default', b"") != b"\xF3":
+            if get_prefixed_default(inst) != b"\xF3":
                 o = "REPE %s" % o
         return o
+
+
+def get_prefixed_default(inst):
+    prefixed = inst.additional_info.prefixed
+    if isinstance(prefixed, bytes):
+        return prefixed
+    return getattr(prefixed, 'default', b"")
