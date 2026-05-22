@@ -4,25 +4,16 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
-#include "exe.h"
+#include "exe_info.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
 char* sys_path = "/dev/kd_dev";
-// char* sys_path = "/sys/kernel/zz_sys/etx_value";
 
+const unsigned long targets[] = { };
 
-//const unsigned long targets[] = {0x7ffff7fa1abb, 0x7ffff7de6487, 0x7ffff7df274e,  0x7ffff7de4fae, 0x7ffff7fa1437,  0x007ffff7fa76ca, 0x07ffff7ed116a, 0x007ffff7e5232f};
-// const unsigned long targets[] = { 0x7ffff7fa7170, 0x7ffff7fa1e8b, 0x7ffff7fa15df, 0x7ffff7fa1f37, 0x7ffff7e58170, 0x7ffff7fa3376, 0x7ffff7e54376, 0x7ffff7e41cd7, 0x7ffff7e4b170, 0x7ffff7e47376, 0x7ffff7d5d95d, 0x7ffff7d5e95d, 0x7ffff7f96376, 0x7ffff7cda5cb, 0x7ffff7fa732f };
-// const unsigned long targets[] = { 0x7ffff7fa7170, 0x7ffff7ead95d,0x7ffff7eac95d,0x7ffff7fa15df,0x7ffff7fa1e8b,0x7ffff7fa1f37,0x7ffff7fa2c8e,0x7ffff7fa2ceb };
-const unsigned long targets[] = { 0x7ffff7fad170,0x7ffff7fa7170,0x7ffff7e5e170 ,0x7ffff7c7c170,0x7ffff7e5d170,0x7ffff7c7b170 , 0x7ffff7e5a170,0x7ffff7f5f170 ,0x7ffff7f53170,0x7ffff7fa9170,0x7ffff7fa3170,0x7ffff7fbf170,
-0x7ffff7fa35df,0x7ffff7fa3f37,0x7ffff7fa3e8b,0x7ffff7fbec5f,0x7ffff7fc3060,
-0x7ffff7fc023f,0x7ffff7ebc95d,0x555555555569 ,0x555555555319,0x5555555553db,0x555555555602,0x555555555589 };
-// const unsigned long targets[] = { };
-
-//0x7ffff7eb02cf
 unsigned long records[1024] = {};
 int cnts = 0;
 
@@ -74,11 +65,6 @@ int hash_history(unsigned int hash) {
 
 int compile(int pid, void* entry) {
 	char cmd[1024];
-	// const char* pythonPaths =
-	//     "/home/szq/.local/lib/python3.8/site-packages:/usr/local/lib/python3.8";
-	// setenv("PYTHONPATH", pythonPaths, 1);
-
-	// path to zz_disassem/disassem.py
 	sprintf(cmd, "cd ./%p/ && python3 ../../disassem/disassem.py %d %p",
 		entry, pid, entry);
 	return system(cmd);
@@ -127,14 +113,13 @@ void write_sys(int pid, unsigned long RIP) {
 		memcpy(o_buf + sizeof(pkt), i_buf + pkt.offset, to_copy_len);
 		rest_len -= to_copy_len;
 		pkt.offset += to_copy_len;
-		// printf("%d.", pkt.status_code);
 		fwrite(o_buf, 1, sizeof(pkt) + to_copy_len, fp);
 		fclose(fp);
 	}
 }
 
 int valid_address(unsigned long addr) {
-	long iva[] = {};//,0x555555555420 };
+	long iva[] = {};
 	int length = sizeof(iva) / sizeof(iva[0]);
 	for (int i = 0; i < length; i++) {
 		if (addr == iva[i]) {
@@ -174,14 +159,7 @@ void check() {
 		if (i > 0 && exe->pid == begin_pid && exe->RIP == begin_rip)
 			break;
 		cmd[0] = 0;
-		// if (!in_targets(exe->RIP, exe->pid)) {
-		// 	if (!in_records(exe->RIP, exe->pid)) {
-		// 		printf("#### warning: syscall address %p is not in the white-list, it will not be boosted ####\n", (void*)exe->RIP);
-		// 		records[cnts] = (unsigned long)exe->RIP;
-		// 		cnts++;
-		// 	}
-		// 	continue;
-		// }
+
 
 		if (exe->status_code == 0 || exe->status_code == 4) {
 			continue;

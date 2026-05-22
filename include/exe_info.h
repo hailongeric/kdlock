@@ -1,5 +1,5 @@
-#ifndef DAEMON_EXE_H
-#define DAEMON_EXE_H
+#ifndef EXE_INFO_H
+#define EXE_INFO_H
 
 #define F_UN_USED -2
 #define F_UN_INIT -1
@@ -14,13 +14,15 @@ struct exe_info {
 	int pid;
 	int tgid;
 	unsigned long RIP;
-	void *code_block;
+	void* code_block;
 	unsigned long jump_from;
 	unsigned long tgt_addr;
+	// unsigned long fsbase;
 	unsigned long gsbase;
 	int success_cnt;
 	int fail_cnt;
-} __attribute__((aligned(64)));
+}__attribute__((aligned(64)));
+
 
 struct recv_pkt {
 	int status_code;
@@ -29,4 +31,4 @@ struct recv_pkt {
 	unsigned long offset;
 };
 
-#endif /* DAEMON_EXE_H */
+#endif

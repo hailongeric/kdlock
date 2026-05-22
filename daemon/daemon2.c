@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
-#include "exe.h"
+#include "exe_info.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -72,11 +72,6 @@ int hash_history(unsigned int hash) {
 
 void compile(int pid, int tgid, void* entry) {
     char cmd[1024];
-    // const char* pythonPaths =
-    //     "/home/szq/.local/lib/python3.8/site-packages:/usr/local/lib/python3.8";
-    // setenv("PYTHONPATH", pythonPaths, 1);
-
-    // path to zz_disassem/disassem.py
     sprintf(cmd, "cd ./%p/%d/ && python3 ../../../disassem/disassem.py %d %p",
         entry, tgid, pid, entry);
     system(cmd);
@@ -133,7 +128,7 @@ void write_sys(int pid, int tgid, unsigned long RIP) {
 }
 
 int valid_address(unsigned long addr) {
-    long iva[] = { 0x7ffff7fa07e7,0x7ffff7fbd119 };//,0x555555555420 };
+    long iva[] = { };//,0x555555555420 };
     int length = sizeof(iva) / sizeof(iva[0]);
     for (int i = 0; i < length; i++) {
         if (addr == iva[i]) {
@@ -173,14 +168,7 @@ void check() {
         if (i > 0 && exe->pid == begin_pid && exe->RIP == begin_rip)
             break;
         cmd[0] = 0;
-        // if (!in_targets(exe->RIP, exe->pid)) {
-        //     if (!in_records(exe->RIP, exe->pid)) {
-        //         printf("#### warning: syscall address %p is not in the white-list, it will not be boosted ####\n", (void*)exe->RIP);
-        //         records[cnts] = (unsigned long)exe->RIP;
-        //         cnts++;
-        //     }
-        //     continue;
-        // }
+
 
         if (exe->status_code == 0) {
             continue;

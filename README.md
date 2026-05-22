@@ -47,7 +47,7 @@ The local reference trees are expected at `/tmp/TCLocks` and `/tmp/BCD`.
 1. Hot lock addresses are promoted to delegation candidates.
 1. For a new candidate return address, `exe_add()` allocates executable module
    memory and marks the entry `F_UN_INIT`.
-1. `daemon/daemon2` reads `/dev/kd_dev`, creates a per-entry workspace under
+1. `daemon/daemon --mode 2` reads `/dev/kd_dev`, creates a per-entry workspace under
    `daemon/0x.../<tgid>/`, and invokes `disassem/disassem.py`.
 1. The translator disassembles kernel text from `/proc/kcore`, wraps the
    translated block with `include/wrapper.S`, and emits `asm/jit.bin`.
@@ -157,12 +157,15 @@ Terminal 2 starts the dynamic translation daemon:
 
 ```sh
 cd /root/host_fs/kdlock/daemon
-./daemon2
+./daemon --mode 2
 ```
 
 The daemon must run from `daemon/`, because it expects the `asm/` template
 directory in its current working directory.  It will create transient
 directories named like `0xffffffff...`.
+
+Use `./daemon --mode 1` only when you need the old `daemon1.c` workspace layout
+under `daemon/0x.../` without the `tgid` subdirectory.
 
 Terminal 1 starts the test workload:
 

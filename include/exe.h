@@ -1,18 +1,8 @@
 #ifndef EXE_H
 #define EXE_H
-
+#include "exe_info.h"
 #include <asm/ptrace.h>
-#include <linux/spinlock.h>
-#include <linux/kfifo.h>
 #include <linux/sched/task.h>
-
-#define F_UN_USED -2
-#define F_UN_INIT -1
-#define F_NORMAL 0
-#define F_CALL_MISS 1
-#define F_IJ_MISS 2
-#define F_ERROR_INST 3
-#define F_INST_LIMIT 4
 
 #define F_UADDR_INIT -1
 #define F_UADDR_CHECKING 0
@@ -31,28 +21,6 @@ static const unsigned int NF_M = 0xFFFFFFFF;
 #define MAX_RAN 511
 #define MAX_UADDR 131071
 #define MAX_CALL 31
-
-struct exe_info {
-	int status_code;
-	int pid;
-	int tgid;
-	unsigned long RIP;
-	void* code_block;
-	unsigned long jump_from;
-	unsigned long tgt_addr;
-	// unsigned long fsbase;
-	unsigned long gsbase;
-	int success_cnt;
-	int fail_cnt;
-}__attribute__((aligned(64)));
-
-
-struct recv_pkt {
-	int status_code;
-	int pid;
-	unsigned long RIP;
-	unsigned long offset;
-};
 
 
 struct exe_ret {
