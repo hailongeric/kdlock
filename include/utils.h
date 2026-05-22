@@ -27,7 +27,7 @@
 #ifdef DSM_DEBUG
 #define print_debug(fmt, ...)                                      \
     ({                                                             \
-        printk(KERN_INFO "[%d] komb (%s) lock(%px): " fmt,        \
+        printk(KERN_INFO "[%d] kdlock (%s) lock(%px): " fmt,        \
                smp_processor_id(), __func__, lock, ##__VA_ARGS__); \
     })
 #else

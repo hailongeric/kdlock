@@ -10,11 +10,11 @@ executing delegated code.
 TCLocks delegates a critical section from a waiter to a combiner so the
 lock-protected data stays local to the combiner core.  BCD shows how to discover
 and translate critical sections dynamically, without rewriting the application
-binary.  kdlock moves this direction into kernel space: patched kernel
-`mutex`/`spinlock` paths call into a loadable module, the module records the
-kernel instruction address that should be delegated, a userspace daemon
-translates that instruction stream into a sandboxed JIT block, and the kernel
-module later executes that block on behalf of waiters.
+binary.  kdlock moves this direction into kernel space: a patched kernel
+spinlock path calls into a loadable module, the module records the kernel
+instruction address that should be delegated, a userspace daemon translates that
+instruction stream into a sandboxed JIT block, and the kernel module later
+executes that block on behalf of waiters.
 
 This repository is a research prototype.  It assumes a kernel that already
 contains the kdlock hook points and exports the hook function pointers consumed
@@ -42,8 +42,8 @@ The local reference trees are expected at `/tmp/TCLocks` and `/tmp/BCD`.
 
 1. The patched kernel lock path checks whether the current task matches
    `target_process`.
-1. On a target `spinlock`/`mutex` path, the hook in `kdlock_km` observes the
-   lock address and return address.
+1. On a target raw spinlock path, the hook in `kdlock_km` observes the lock
+   address and return address.
 1. Hot lock addresses are promoted to delegation candidates.
 1. For a new candidate return address, `exe_add()` allocates executable module
    memory and marks the entry `F_UN_INIT`.
@@ -94,9 +94,8 @@ If `miasm==0.1.5` is not available from pip in the VM, install the same miasm
 version used by the BCD artifact.
 
 The VM kernel and the kernel build tree used by `make` must include the kdlock
-hook patch.  In particular, the kernel lock code must call and export the hook
-pointers used by this module, including the raw spinlock and mutex callbacks
-declared in `include/kd_lock.h`.
+hook patch.  In particular, the kernel lock code must call and export the raw
+spinlock hook pointers used by this module and declared in `include/kd_lock.h`.
 
 ## Build
 
@@ -225,6 +224,9 @@ rm -f /root/host_fs/kdlock/bench/klock_test
 ## Current Limitations
 
 1. The prototype is tied to x86-64 and a patched Linux kernel.
+1. Only the raw spinlock delegation path is currently wired. The copied
+   TCLocks mutex files are kept as migration references and are not built into
+   `kdlock_km`.
 1. Dynamic translation currently depends on miasm and `/proc/kcore` access.
 1. Unsupported calls or indirect jumps are reported back to the daemon as
    `F_CALL_MISS` or `F_IJ_MISS`; the daemon extends the translation tables and

@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0
 // Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi
 
+/*
+ * Legacy TCLocks mutex implementation kept as migration reference.
+ *
+ * kdlock currently wires only the raw spinlock hook path, and this file is not
+ * part of kdlock_km-objs.
+ */
+
 #include <linux/module.h>
 #include <linux/smp.h>
 #include <linux/bug.h>

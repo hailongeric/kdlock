@@ -1,6 +1,13 @@
 #ifndef _LINUX_KOMB_MUTEX_H
 #define _LINUX_KOMB_MUTEX_H
 
+/*
+ * Legacy TCLocks mutex header kept as migration reference.
+ *
+ * kdlock currently wires only the raw spinlock hook path. This header is not
+ * included by the kdlock module build.
+ */
+
 #define SIZE_OF_SHADOW_STACK 8192L
 #ifdef KERNEL_SYNCSTRESS
 #include "combiner.h"

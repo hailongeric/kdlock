@@ -36,7 +36,7 @@
 #include "kd_lock.h"
 #include "exe.h"
 #include "utils.h"
-#include "komb.h"
+#include "kd_spinlock.h"
 
 #include <linux/spinlock.h>
 
@@ -376,7 +376,7 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_addr) {
 
     // stac();
 
-    komb_spin_unlock((struct qspinlock *)lock);
+    kd_spin_unlock((struct qspinlock *)lock);
     return;
 
     // to = futex_setup_timer(abs_time, &timeout, flags, current->timer_slack_ns);
@@ -711,7 +711,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long rsp_value) {
 
     // stac();
     // __raw_spin_lock(lock);
-    komb_spin_lock((struct qspinlock *)lock, rsp_value);
+    kd_spin_lock((struct qspinlock *)lock, rsp_value);
     return;
 
     // nf_cldemote_context(regs, regs->sp);
