@@ -32,6 +32,7 @@
 #include <linux/mm.h>
 #include <linux/highmem.h>
 #include <asm/bitops.h>
+#include <linux/mutex.h>
 
 #include "kd_lock.h"
 #include "exe.h"
@@ -42,6 +43,10 @@
 
 #define prefetch_up_size 2
 #define prefetch_down_size 1
+#define KD_MUTEX_SHADOW_LOCKS 1024
+#define KD_MUTEX_BYPASS_SLOTS 256
+#define KD_MUTEX_ACTIVE_SLOTS 1024
+#define KD_MUTEX_RET_ADDR_OFFSET 48
 
 int velvet_wait_queue = 1;
 int delegate_election = 1;
@@ -49,6 +54,29 @@ int delegate_election = 1;
 int int3_changed = 0;
 
 int fast_path_wake_time[8] = { 1000,2000,4000,8000,16000,32000,64000,128000 };
+
+struct kd_mutex_shadow_lock {
+    unsigned long mutex_addr;
+    struct qspinlock shadow_lock;
+};
+
+struct kd_mutex_bypass_slot {
+    struct task_struct* task;
+    int depth;
+};
+
+struct kd_mutex_active_lock {
+    struct task_struct* task;
+    unsigned long mutex_addr;
+    int delegated;
+};
+
+static struct kd_mutex_shadow_lock kd_mutex_shadows[KD_MUTEX_SHADOW_LOCKS];
+static struct kd_mutex_bypass_slot kd_mutex_bypass_slots[KD_MUTEX_BYPASS_SLOTS];
+static struct kd_mutex_active_lock kd_mutex_active_locks[KD_MUTEX_ACTIVE_SLOTS];
+static DEFINE_RAW_SPINLOCK(kd_mutex_shadow_lock);
+static DEFINE_RAW_SPINLOCK(kd_mutex_bypass_lock);
+static DEFINE_RAW_SPINLOCK(kd_mutex_active_lock);
 
 extern int delegate_uaddr_cnt;
 extern long nf_success_cnt;
@@ -214,6 +242,145 @@ int check_uaddr_state(unsigned long uaddr) {
     if (u_state->state == F_UADDR_DELGEGATE)
         return 1;
     return 0;
+}
+
+static struct qspinlock* get_kd_mutex_shadow_lock(struct mutex* lock)
+{
+    unsigned long flags;
+    unsigned long mutex_addr = (unsigned long)lock;
+    int start = mutex_addr % KD_MUTEX_SHADOW_LOCKS;
+    int pos = start;
+
+    raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
+    do {
+        if (kd_mutex_shadows[pos].mutex_addr == mutex_addr) {
+            raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
+            return &kd_mutex_shadows[pos].shadow_lock;
+        }
+        if (kd_mutex_shadows[pos].mutex_addr == 0) {
+            kd_mutex_shadows[pos].mutex_addr = mutex_addr;
+            kd_spin_lock_init(&kd_mutex_shadows[pos].shadow_lock);
+            raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
+            return &kd_mutex_shadows[pos].shadow_lock;
+        }
+        pos = (pos + 1) % KD_MUTEX_SHADOW_LOCKS;
+    } while (pos != start);
+    raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
+
+    KD_PR_ERR("kd mutex shadow table is full\n");
+    return NULL;
+}
+
+static void kd_mutex_bypass_enter(void)
+{
+    unsigned long flags;
+    int i, free_slot = -1;
+
+    raw_spin_lock_irqsave(&kd_mutex_bypass_lock, flags);
+    for (i = 0; i < KD_MUTEX_BYPASS_SLOTS; i++) {
+        if (kd_mutex_bypass_slots[i].task == current) {
+            kd_mutex_bypass_slots[i].depth++;
+            raw_spin_unlock_irqrestore(&kd_mutex_bypass_lock, flags);
+            return;
+        }
+        if (free_slot < 0 && kd_mutex_bypass_slots[i].task == NULL)
+            free_slot = i;
+    }
+    if (free_slot >= 0) {
+        kd_mutex_bypass_slots[free_slot].task = current;
+        kd_mutex_bypass_slots[free_slot].depth = 1;
+    } else {
+        KD_PR_ERR("kd mutex bypass table is full\n");
+    }
+    raw_spin_unlock_irqrestore(&kd_mutex_bypass_lock, flags);
+}
+
+static void kd_mutex_bypass_exit(void)
+{
+    unsigned long flags;
+    int i;
+
+    raw_spin_lock_irqsave(&kd_mutex_bypass_lock, flags);
+    for (i = 0; i < KD_MUTEX_BYPASS_SLOTS; i++) {
+        if (kd_mutex_bypass_slots[i].task == current) {
+            kd_mutex_bypass_slots[i].depth--;
+            if (kd_mutex_bypass_slots[i].depth <= 0) {
+                kd_mutex_bypass_slots[i].task = NULL;
+                kd_mutex_bypass_slots[i].depth = 0;
+            }
+            break;
+        }
+    }
+    raw_spin_unlock_irqrestore(&kd_mutex_bypass_lock, flags);
+}
+
+int kd_mutex_bypass_active(void)
+{
+    unsigned long flags;
+    int i, active = 0;
+
+    raw_spin_lock_irqsave(&kd_mutex_bypass_lock, flags);
+    for (i = 0; i < KD_MUTEX_BYPASS_SLOTS; i++) {
+        if (kd_mutex_bypass_slots[i].task == current &&
+            kd_mutex_bypass_slots[i].depth > 0) {
+            active = 1;
+            break;
+        }
+    }
+    raw_spin_unlock_irqrestore(&kd_mutex_bypass_lock, flags);
+    return active;
+}
+
+static int kd_mutex_record_lock(struct mutex* lock, int delegated)
+{
+    unsigned long flags;
+    unsigned long mutex_addr = (unsigned long)lock;
+    int i, free_slot = -1;
+
+    raw_spin_lock_irqsave(&kd_mutex_active_lock, flags);
+    for (i = 0; i < KD_MUTEX_ACTIVE_SLOTS; i++) {
+        if (kd_mutex_active_locks[i].task == current &&
+            kd_mutex_active_locks[i].mutex_addr == mutex_addr) {
+            kd_mutex_active_locks[i].delegated = delegated;
+            raw_spin_unlock_irqrestore(&kd_mutex_active_lock, flags);
+            return 1;
+        }
+        if (free_slot < 0 && kd_mutex_active_locks[i].task == NULL)
+            free_slot = i;
+    }
+    if (free_slot >= 0) {
+        kd_mutex_active_locks[free_slot].task = current;
+        kd_mutex_active_locks[free_slot].mutex_addr = mutex_addr;
+        kd_mutex_active_locks[free_slot].delegated = delegated;
+        raw_spin_unlock_irqrestore(&kd_mutex_active_lock, flags);
+        return 1;
+    }
+    raw_spin_unlock_irqrestore(&kd_mutex_active_lock, flags);
+
+    KD_PR_ERR("kd mutex active lock table is full\n");
+    return 0;
+}
+
+static int kd_mutex_take_lock_record(struct mutex* lock, int* delegated)
+{
+    unsigned long flags;
+    unsigned long mutex_addr = (unsigned long)lock;
+    int i, found = 0;
+
+    raw_spin_lock_irqsave(&kd_mutex_active_lock, flags);
+    for (i = 0; i < KD_MUTEX_ACTIVE_SLOTS; i++) {
+        if (kd_mutex_active_locks[i].task == current &&
+            kd_mutex_active_locks[i].mutex_addr == mutex_addr) {
+            *delegated = kd_mutex_active_locks[i].delegated;
+            kd_mutex_active_locks[i].task = NULL;
+            kd_mutex_active_locks[i].mutex_addr = 0;
+            kd_mutex_active_locks[i].delegated = 0;
+            found = 1;
+            break;
+        }
+    }
+    raw_spin_unlock_irqrestore(&kd_mutex_active_lock, flags);
+    return found;
 }
 
 #define __set_task_state(task, state_value)				\
@@ -635,6 +802,7 @@ unsigned long delegation_end_time = 0;
 #include <linux/kgdb.h>
 
 #define get_ret_addr_from_rsp(rsp) (*((unsigned long*)(rsp + 56)))
+#define get_mutex_ret_addr_from_rsp(rsp) (*((unsigned long*)((rsp) + KD_MUTEX_RET_ADDR_OFFSET)))
 void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long rsp_value) {
     // struct futex_hash_bucket* hb;
     // struct futex_q* this, * next, * nf_wake_targets;
@@ -1004,10 +1172,75 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long rsp_value) {
     }
 
 
+void __kd_mutex_lock(struct mutex *lock, unsigned long rsp_value)
+{
+    struct qspinlock* shadow_lock;
+    unsigned long ret_addr;
+
+    if (!check_uaddr_state((unsigned long)lock)) {
+        kd_mutex_record_lock(lock, 0);
+        count_uaddr_cnt((unsigned long)lock);
+        origin_mutex_lock(lock);
+        return;
+    }
+
+    shadow_lock = get_kd_mutex_shadow_lock(lock);
+    if (shadow_lock == NULL) {
+        kd_mutex_record_lock(lock, 0);
+        origin_mutex_lock(lock);
+        return;
+    }
+
+    ret_addr = get_mutex_ret_addr_from_rsp(rsp_value);
+    exe_add(current->pid, ret_addr);
+    if (!kd_mutex_record_lock(lock, 1)) {
+        origin_mutex_lock(lock);
+        return;
+    }
+    kd_spin_lock(shadow_lock, rsp_value);
+}
+
+void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_addr)
+{
+    struct qspinlock* shadow_lock;
+    int delegated = 0;
+
+    if (!kd_mutex_take_lock_record(lock, &delegated)) {
+        origin_mutex_unlock(lock);
+        return;
+    }
+
+    if (!delegated) {
+        origin_mutex_unlock(lock);
+        return;
+    }
+
+    shadow_lock = get_kd_mutex_shadow_lock(lock);
+    if (shadow_lock == NULL) {
+        KD_PR_ERR("kd mutex delegated lock has no shadow lock\n");
+        return;
+    }
+
+    kd_spin_unlock(shadow_lock);
+}
+
+
 void origin_raw_spin_lock(raw_spinlock_t *lock) {
         __raw_spin_lock(lock);
 }
 
 void origin_raw_spin_unlock(raw_spinlock_t *lock) {
         __raw_spin_unlock(lock);
+}
+
+void origin_mutex_lock(struct mutex *lock) {
+        kd_mutex_bypass_enter();
+        mutex_lock(lock);
+        kd_mutex_bypass_exit();
+}
+
+void origin_mutex_unlock(struct mutex *lock) {
+        kd_mutex_bypass_enter();
+        mutex_unlock(lock);
+        kd_mutex_bypass_exit();
 }

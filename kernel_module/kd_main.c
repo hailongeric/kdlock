@@ -6,6 +6,7 @@
 #include <linux/sched/task_stack.h>
 #include <linux/string.h>
 
+#include <linux/mutex.h>
 #include <linux/spinlock.h>
 
 #include "exe.h"
@@ -36,6 +37,10 @@ extern int (*is_kd_test)(void);
 extern void (*kd_raw_spin_lock)(raw_spinlock_t *lock, unsigned long ret_addr);
 extern void (*kd_raw_spin_unlock)(raw_spinlock_t *lock, unsigned long ret_addr);
 
+extern int (*is_kd)(void);
+extern void (*kd_mutex_lock)(struct mutex *lock, unsigned long ret_addr);
+extern void (*kd_mutex_unlock)(struct mutex *lock, unsigned long ret_addr);
+
 extern int (*nf_do_int3)(struct pt_regs *);
 
 long nf_success_cnt;
@@ -59,6 +64,13 @@ static int __is_kd_test(void)
 			return 1;
 	}
 	return 0;
+}
+
+static int __is_kd_mutex(void)
+{
+	if (kd_mutex_bypass_active())
+		return 0;
+	return __is_kd_test();
 }
 
 static int __init kdlock_km_init(void)
@@ -96,6 +108,9 @@ static int __init kdlock_km_init(void)
 	is_kd_test = __is_kd_test;
 	kd_raw_spin_unlock = __kd_raw_spin_unlock;
 	kd_raw_spin_lock = __kd_raw_spin_lock;
+	is_kd = __is_kd_mutex;
+	kd_mutex_lock = __kd_mutex_lock;
+	kd_mutex_unlock = __kd_mutex_unlock;
 	nf_do_int3 = NULL;
 
 	KD_PR_INFO("kd kernel module init\n");
@@ -109,6 +124,9 @@ static void __exit kdlock_km_exit(void)
 	kd_raw_spin_unlock = NULL;
 	kd_raw_spin_lock = NULL;
 	is_kd_test = NULL;
+	kd_mutex_unlock = NULL;
+	kd_mutex_lock = NULL;
+	is_kd = NULL;
 	nf_do_int3 = NULL;
 	KD_PR_INFO("nf_success_cnt:%ld nf_total_cnt:%ld nf_success_wake_cnt:%ld success_rate:%ld.%02ld%% success_wake_rate:%ld.%02ld%%\n", \
 		nf_success_cnt, nf_total_cnt, nf_success_wake_cnt, \

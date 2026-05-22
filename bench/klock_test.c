@@ -17,6 +17,13 @@ struct test_args {
 
 #define IOC_RUN_TEST _IOW(IOC_MAGIC, 1, struct test_args)
 
+#define MODE_SPIN_CONTENTION 0
+#define MODE_SPIN_NESTED 1
+#define MODE_SPIN_API_IN_LOCK 2
+#define MODE_MUTEX_CONTENTION 3
+#define MODE_MUTEX_NESTED 4
+#define MODE_MUTEX_API_IN_LOCK 5
+
 // 传递给线程的参数
 struct thread_data {
     int thread_id;
@@ -47,11 +54,31 @@ long long current_timestamp() {
     return te.tv_sec * 1000LL + te.tv_usec / 1000;
 }
 
+const char *mode_name(unsigned int mode) {
+    switch (mode) {
+    case MODE_SPIN_CONTENTION:
+        return "spin-contention";
+    case MODE_SPIN_NESTED:
+        return "spin-nested";
+    case MODE_SPIN_API_IN_LOCK:
+        return "spin-api-in-lock";
+    case MODE_MUTEX_CONTENTION:
+        return "mutex-contention";
+    case MODE_MUTEX_NESTED:
+        return "mutex-nested";
+    case MODE_MUTEX_API_IN_LOCK:
+        return "mutex-api-in-lock";
+    default:
+        return "unknown";
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 6) {
         printf("Usage: %s <num_threads> <loop_count> <work_load> <sys_count> <mode>\n", argv[0]);
-        printf("Mode: 0=contention, 1=nested, 2=api-in-lock\n");
-        printf("Example: %s 4 100000 1000 10 0\n", argv[0]);
+        printf("Mode: 0=spin-contention, 1=spin-nested, 2=spin-api-in-lock\n");
+        printf("      3=mutex-contention, 4=mutex-nested, 5=mutex-api-in-lock\n");
+        printf("Example: %s 4 100000 1000 10 3\n", argv[0]);
         return -1;
     }
 
@@ -60,6 +87,11 @@ int main(int argc, char *argv[]) {
     unsigned long work_load = strtoul(argv[3], NULL, 10);
     unsigned long sys_count = strtoul(argv[4], NULL, 10);
     unsigned int mode = (unsigned int)strtoul(argv[5], NULL, 10);
+
+    if (mode > MODE_MUTEX_API_IN_LOCK) {
+        fprintf(stderr, "Invalid mode: %u\n", mode);
+        return -1;
+    }
 
     int fd = open(DEVICE_PATH, O_RDWR);
     if (fd < 0) {
@@ -74,7 +106,7 @@ int main(int argc, char *argv[]) {
     printf("  Threads: %d\n", num_threads);
     printf("  Loops per thread: %lu\n", loop_count);
     printf("  Critical Section Workload: %lu\n", work_load);
-    printf("  Mode: %u\n", mode);
+    printf("  Mode: %u (%s)\n", mode, mode_name(mode));
 
     long long start_time = current_timestamp();
 

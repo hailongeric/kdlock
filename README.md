@@ -42,8 +42,8 @@ The local reference trees are expected at `/tmp/TCLocks` and `/tmp/BCD`.
 
 1. The patched kernel lock path checks whether the current task matches
    `target_process`.
-1. On a target raw spinlock path, the hook in `kdlock_km` observes the lock
-   address and return address.
+1. On a target raw spinlock or mutex path, the hook in `kdlock_km` observes the
+   lock address and return address.
 1. Hot lock addresses are promoted to delegation candidates.
 1. For a new candidate return address, `exe_add()` allocates executable module
    memory and marks the entry `F_UN_INIT`.
@@ -95,7 +95,12 @@ version used by the BCD artifact.
 
 The VM kernel and the kernel build tree used by `make` must include the kdlock
 hook patch.  In particular, the kernel lock code must call and export the raw
-spinlock hook pointers used by this module and declared in `include/kd_lock.h`.
+spinlock and mutex hook pointers used by this module and declared in
+`include/kd_lock.h`.
+
+For the mutex path, the patched kernel must export `is_kd`, `kd_mutex_lock`,
+and `kd_mutex_unlock`.  `kdlock_km` installs callbacks for those symbols during
+module init and clears them during module exit.
 
 ## Build
 
@@ -178,6 +183,9 @@ Benchmark modes:
 1. `0`: contended single spinlock.
 1. `1`: nested spinlocks.
 1. `2`: spinlock with a kernel API call inside the critical section.
+1. `3`: contended single mutex.
+1. `4`: nested mutexes.
+1. `5`: mutex with a kernel API call inside the critical section.
 
 Inspect kernel logs after a run:
 
@@ -224,9 +232,12 @@ rm -f /root/host_fs/kdlock/bench/klock_test
 ## Current Limitations
 
 1. The prototype is tied to x86-64 and a patched Linux kernel.
-1. Only the raw spinlock delegation path is currently wired. The copied
-   TCLocks mutex files are kept as migration references and are not built into
-   `kdlock_km`.
+1. Raw spinlock delegation is the primary tested path. The mutex path is wired
+   through the same dynamic translation machinery by mapping hot mutex
+   addresses to internal shadow qspinlocks.
+1. The mutex proxy assumes all participants in a delegated mutex critical
+   section enter through the kdlock-patched mutex hooks. Mixing delegated mutex
+   users with code paths that bypass the hooks can break mutual exclusion.
 1. Dynamic translation currently depends on miasm and `/proc/kcore` access.
 1. Unsupported calls or indirect jumps are reported back to the daemon as
    `F_CALL_MISS` or `F_IJ_MISS`; the daemon extends the translation tables and

@@ -3,6 +3,7 @@
 #include <linux/init.h>
 #include <linux/fs.h>
 #include <linux/miscdevice.h>
+#include <linux/mutex.h>
 #include <linux/spinlock.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
@@ -22,12 +23,18 @@ struct test_args {
 static DEFINE_SPINLOCK(global_lock);
 static DEFINE_SPINLOCK(nested_lock_a);
 static DEFINE_SPINLOCK(nested_lock_b);
+static DEFINE_MUTEX(global_mutex);
+static DEFINE_MUTEX(nested_mutex_a);
+static DEFINE_MUTEX(nested_mutex_b);
 
 static unsigned long global_counter = 0;
 
-#define MODE_CONTENTION 0
-#define MODE_NESTED     1
-#define MODE_API_IN_LOCK 2
+#define MODE_SPIN_CONTENTION 0
+#define MODE_SPIN_NESTED 1
+#define MODE_SPIN_API_IN_LOCK 2
+#define MODE_MUTEX_CONTENTION 3
+#define MODE_MUTEX_NESTED 4
+#define MODE_MUTEX_API_IN_LOCK 5
 
 static void run_contention_test(unsigned long loop_count, unsigned long work_load)
 {
@@ -80,6 +87,56 @@ static void run_api_in_lock_test(unsigned long loop_count, unsigned long work_lo
 	}
 }
 
+static void run_mutex_contention_test(unsigned long loop_count, unsigned long work_load)
+{
+	unsigned long i, j;
+	volatile int dummy_computation = 0;
+
+	for (i = 0; i < loop_count; i++) {
+		mutex_lock(&global_mutex);
+
+		global_counter++;
+		for (j = 0; j < work_load; j++)
+			dummy_computation++;
+
+		mutex_unlock(&global_mutex);
+	}
+}
+
+static void run_nested_mutex_test(unsigned long loop_count, unsigned long work_load)
+{
+	unsigned long i, j;
+	volatile int dummy_computation = 0;
+
+	for (i = 0; i < loop_count; i++) {
+		mutex_lock(&nested_mutex_a);
+		mutex_lock(&nested_mutex_b);
+
+		global_counter++;
+		for (j = 0; j < work_load; j++)
+			dummy_computation++;
+
+		mutex_unlock(&nested_mutex_b);
+		mutex_unlock(&nested_mutex_a);
+	}
+}
+
+static void run_api_in_mutex_test(unsigned long loop_count, unsigned long work_load)
+{
+	unsigned long i, j;
+	volatile int dummy_computation = 0;
+
+	for (i = 0; i < loop_count; i++) {
+		mutex_lock(&global_mutex);
+
+		global_counter += (unsigned long)(ktime_get_ns() & 0xffff);
+		for (j = 0; j < work_load; j++)
+			dummy_computation++;
+
+		mutex_unlock(&global_mutex);
+	}
+}
+
 static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	struct test_args k_args;
@@ -88,13 +145,22 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case IOC_RUN_TEST:
 		if (copy_from_user(&k_args, (void __user *)arg, sizeof(k_args)))
 			return -EFAULT;
-		if (k_args.mode == MODE_CONTENTION)
+		if (k_args.mode == MODE_SPIN_CONTENTION)
 			run_contention_test(k_args.loop_count, k_args.work_load);
-		else if (k_args.mode == MODE_NESTED)
+		else if (k_args.mode == MODE_SPIN_NESTED)
 			run_nested_spinlock_test(k_args.loop_count,
 						 k_args.work_load);
-		else if (k_args.mode == MODE_API_IN_LOCK)
+		else if (k_args.mode == MODE_SPIN_API_IN_LOCK)
 			run_api_in_lock_test(k_args.loop_count, k_args.work_load);
+		else if (k_args.mode == MODE_MUTEX_CONTENTION)
+			run_mutex_contention_test(k_args.loop_count,
+						 k_args.work_load);
+		else if (k_args.mode == MODE_MUTEX_NESTED)
+			run_nested_mutex_test(k_args.loop_count,
+					      k_args.work_load);
+		else if (k_args.mode == MODE_MUTEX_API_IN_LOCK)
+			run_api_in_mutex_test(k_args.loop_count,
+					      k_args.work_load);
 		else
 			return -EINVAL;
 		break;
