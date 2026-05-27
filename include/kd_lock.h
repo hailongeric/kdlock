@@ -139,12 +139,15 @@ static __always_inline void nf_preempt_disable_spin_lock(spinlock_t* lock)
 }
 
 
-void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_addr);
-void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_addr);
+void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
+                        unsigned long ret_addr);
+void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
+                          unsigned long ret_addr);
 
-void __kd_mutex_lock(struct mutex *lock, unsigned long rsp_value);
-void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_addr);
-int kd_mutex_bypass_active(void);
+void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
+                     unsigned long ret_addr);
+void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
+                       unsigned long ret_addr);
 
 int new_futex_wake1(u32 __user* uaddr, unsigned int flags, int nr_wake, u32 bitset);
 
@@ -153,7 +156,7 @@ int __nf_do_int3(struct pt_regs* regs);
 void origin_raw_spin_lock(raw_spinlock_t *lock);
 void origin_raw_spin_unlock(raw_spinlock_t *lock);
 void origin_mutex_lock(struct mutex *lock);
-void origin_mutex_unlock(struct mutex *lock);
+void origin_mutex_unlock(struct mutex *lock, unsigned long ret_addr);
 
 
 

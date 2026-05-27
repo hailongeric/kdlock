@@ -99,8 +99,12 @@ spinlock and mutex hook pointers used by this module and declared in
 `include/kd_lock.h`.
 
 For the mutex path, the patched kernel must export `is_kd`, `kd_mutex_lock`,
-and `kd_mutex_unlock`.  `kdlock_km` installs callbacks for those symbols during
-module init and clears them during module exit.
+`kd_mutex_unlock`, `__mutex_lock_slowpath`, and
+`__mutex_unlock_slowpath`.  Both mutex hooks pass
+`(lock, ret_rsp, ret_addr)`: `ret_rsp` supplies the saved execution context and
+`ret_addr` supplies the translated critical-section entry or the original
+unlock caller address.  `kdlock_km` installs callbacks for the hook symbols
+during module init and clears them during module exit.
 
 ## Build
 

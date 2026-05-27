@@ -72,7 +72,10 @@ def dis_assem(PID, entry, need_count, debug=0):
         asmcfg = None
         job_done = set()
 
-        mdis.dont_dis_retcall_funcs = set([0xffffffff81e90b00]) #! kd mod add the raw_spin_unlock
+        mdis.dont_dis_retcall_funcs = set([
+            0xffffffff81e90b30,  # _raw_spin_unlock
+            0xffffffff81e8a040,  # mutex_unlock
+        ])
 
         for t in r[2]:
             if t - r[1] in ordering_bug_list:  # To let buggy blocks first. MIASM bug

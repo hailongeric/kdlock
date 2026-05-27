@@ -16,7 +16,6 @@
 #include <linux/syscalls.h>
 #include <asm-generic/resource.h>
 #include <asm-generic/mman.h>
-// #include <linux/maple_tree.h>
 #include <linux/rwsem.h>
 #include <linux/spinlock.h>
 #include <asm/tlbflush.h>
@@ -56,7 +55,10 @@ long long total_cycle = 0, total_cnt = 0;
 
 unsigned long btc_t = 0;
 unsigned long iva[32] = { 0 };
-unsigned long end_point[] = { 0x7ffff7fa4bdd,0x7ffff7fa27e7,0x7ffff7fba2f6,0x555555558e80 };
+unsigned long end_point[] = {
+	0xffffffff81e90b30,  // _raw_spin_unlock
+	0xffffffff81e8a040,  // mutex_unlock
+};
 
 struct exe_info* exes;
 struct nf_delegate_numanode** nf_numanodes;
@@ -246,6 +248,16 @@ int valid_address(unsigned long addr) {
 		if (addr == end_point[i])
 			return 0;
 	return 1;
+}
+
+static int is_end_point(unsigned long addr)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(end_point); i++)
+		if (addr == end_point[i])
+			return 1;
+	return 0;
 }
 
 //! IN MY VERSION PID IS TGID
@@ -546,13 +558,11 @@ int exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
 	}
 	else if (args[0] == F_CALL_MISS /*&& exe->success_cnt >= 0*/) {  // missing call
 
-		if(regs->ip == 0xffffffff81e90b00){
-			// regs->ip += 5; //! skip raw_spin_unlock function
+		if (is_end_point(regs->ip)) {
 			ret_flag = EXE_RUN_TO_UNLOCK;
 		}else{
 			exe->tgt_addr = regs->ip;  // ! todo avoid raw_spin_unlock 
 			// exe->fail_cnt++;
-			//! raw_spin_unlock 0xffffffff81e90b00
 			if (valid_address(exe->tgt_addr)) {
 				// exe->miss_cnt++;
 				// if (exe->miss_cnt < 10)

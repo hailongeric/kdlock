@@ -34,12 +34,16 @@ char *target_names[MAX_NAME_CNT] = { 0 };
 
 extern int (*is_kd_test)(void);
 
-extern void (*kd_raw_spin_lock)(raw_spinlock_t *lock, unsigned long ret_addr);
-extern void (*kd_raw_spin_unlock)(raw_spinlock_t *lock, unsigned long ret_addr);
+extern void (*kd_raw_spin_lock)(raw_spinlock_t *lock, unsigned long ret_rsp,
+				unsigned long ret_addr);
+extern void (*kd_raw_spin_unlock)(raw_spinlock_t *lock, unsigned long ret_rsp,
+				  unsigned long ret_addr);
 
 extern int (*is_kd)(void);
-extern void (*kd_mutex_lock)(struct mutex *lock, unsigned long ret_addr);
-extern void (*kd_mutex_unlock)(struct mutex *lock, unsigned long ret_addr);
+extern void (*kd_mutex_lock)(struct mutex *lock, unsigned long ret_rsp,
+			     unsigned long ret_addr);
+extern void (*kd_mutex_unlock)(struct mutex *lock, unsigned long ret_rsp,
+			       unsigned long ret_addr);
 
 extern int (*nf_do_int3)(struct pt_regs *);
 
@@ -64,13 +68,6 @@ static int __is_kd_test(void)
 			return 1;
 	}
 	return 0;
-}
-
-static int __is_kd_mutex(void)
-{
-	if (kd_mutex_bypass_active())
-		return 0;
-	return __is_kd_test();
 }
 
 static int __init kdlock_km_init(void)
@@ -108,7 +105,7 @@ static int __init kdlock_km_init(void)
 	is_kd_test = __is_kd_test;
 	kd_raw_spin_unlock = __kd_raw_spin_unlock;
 	kd_raw_spin_lock = __kd_raw_spin_lock;
-	is_kd = __is_kd_mutex;
+	is_kd = __is_kd_test;
 	kd_mutex_lock = __kd_mutex_lock;
 	kd_mutex_unlock = __kd_mutex_unlock;
 	nf_do_int3 = NULL;
