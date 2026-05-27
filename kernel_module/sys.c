@@ -11,14 +11,14 @@
 #include "exe.h"
 #include "utils.h"
 
-extern struct exe_info *exes;
+extern struct kd_exe_info *kd_exes;
 
-int nf_major = 0;
-int nf_minor = 0;
+int kd_major = 0;
+int kd_minor = 0;
 
-struct nf_dev *nf_device;
-static struct class *nf_class;
-static struct device *nf_device_node;
+struct kd_dev *kd_device;
+static struct class *kd_class;
+static struct device *kd_device_node;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
 #define kd_class_create(name) class_create(name)
@@ -26,29 +26,29 @@ static struct device *nf_device_node;
 #define kd_class_create(name) class_create(THIS_MODULE, name)
 #endif
 
-static int nf_open(struct inode *inode, struct file *filp)
+static int kd_dev_open(struct inode *inode, struct file *filp)
 {
 	return 0;
 }
 
-static int nf_release(struct inode *inode, struct file *filp)
+static int kd_dev_release(struct inode *inode, struct file *filp)
 {
 	return 0;
 }
 
-static ssize_t nf_read(struct file *filp, char __user *buf, size_t count,
+static ssize_t kd_dev_read(struct file *filp, char __user *buf, size_t count,
 		       loff_t *fpos)
 {
 	ssize_t len = 0;
-	const int sz = sizeof(struct exe_info);
+	const int sz = sizeof(struct kd_exe_info);
 	int i;
 
-	for (i = 0; i < MAX_EXE; i++) {
-		if (exes[i].status_code == F_UN_USED)
+	for (i = 0; i < KD_MAX_EXE; i++) {
+		if (kd_exes[i].status_code == KD_EXE_UNUSED)
 			continue;
 		if (len + sz > count)
 			break;
-		if (copy_to_user(buf + len, &exes[i], sz))
+		if (copy_to_user(buf + len, &kd_exes[i], sz))
 			return -EFAULT;
 		len += sz;
 	}
@@ -56,13 +56,13 @@ static ssize_t nf_read(struct file *filp, char __user *buf, size_t count,
 	return len;
 }
 
-static ssize_t nf_write(struct file *filp, const char __user *buf, size_t count,
+static ssize_t kd_dev_write(struct file *filp, const char __user *buf, size_t count,
 			loff_t *f_pos)
 {
 	int len;
 	const char __user *payload;
-	struct exe_info *p;
-	struct recv_pkt *head;
+	struct kd_exe_info *p;
+	struct kd_recv_pkt *head;
 
 	if (count < sizeof(*head))
 		return -EINVAL;
@@ -77,7 +77,7 @@ static ssize_t nf_write(struct file *filp, const char __user *buf, size_t count,
 
 	len = count - sizeof(*head);
 	payload = buf + sizeof(*head);
-	p = get_exe(head->pid, head->RIP);
+	p = kd_get_exe(head->pid, head->RIP);
 
 	printk(KERN_EMERG "write to kernel %d %px %d %ld p-%px\n", head->pid,
 	       (void *)head->RIP, head->status_code, head->offset, p);
@@ -97,21 +97,21 @@ static ssize_t nf_write(struct file *filp, const char __user *buf, size_t count,
 	return count;
 }
 
-static const struct file_operations nf_fops = {
+static const struct file_operations kd_dev_fops = {
 	.owner = THIS_MODULE,
-	.read = nf_read,
-	.write = nf_write,
-	.open = nf_open,
-	.release = nf_release,
+	.read = kd_dev_read,
+	.write = kd_dev_write,
+	.open = kd_dev_open,
+	.release = kd_dev_release,
 };
 
-static int nf_setup_cdev(struct nf_dev *dev)
+static int kd_setup_cdev(struct kd_dev *dev)
 {
-	int err, devno = MKDEV(nf_major, nf_minor);
+	int err, devno = MKDEV(kd_major, kd_minor);
 
-	cdev_init(&dev->cdev, &nf_fops);
+	cdev_init(&dev->cdev, &kd_dev_fops);
 	dev->cdev.owner = THIS_MODULE;
-	dev->cdev.ops = &nf_fops;
+	dev->cdev.ops = &kd_dev_fops;
 	err = cdev_add(&dev->cdev, devno, 1);
 	if (err)
 		KD_PR_INFO("error %d adding kd_dev\n", err);
@@ -119,72 +119,72 @@ static int nf_setup_cdev(struct nf_dev *dev)
 	return err;
 }
 
-void sys_init(void)
+void kd_sys_init(void)
 {
 	int ret;
 	dev_t dev = 0;
 
-	if (nf_major) {
-		dev = MKDEV(nf_major, nf_minor);
+	if (kd_major) {
+		dev = MKDEV(kd_major, kd_minor);
 		ret = register_chrdev_region(dev, 1, "kd_dev");
 	} else {
-		ret = alloc_chrdev_region(&dev, nf_minor, 1, "kd_dev");
-		nf_major = MAJOR(dev);
+		ret = alloc_chrdev_region(&dev, kd_minor, 1, "kd_dev");
+		kd_major = MAJOR(dev);
 	}
 	if (ret < 0) {
-		KD_PR_INFO("kd_dev: can't get major %d\n", nf_major);
+		KD_PR_INFO("kd_dev: can't get major %d\n", kd_major);
 		return;
 	}
 
-	nf_device = kzalloc(sizeof(*nf_device), GFP_KERNEL);
-	if (!nf_device)
+	kd_device = kzalloc(sizeof(*kd_device), GFP_KERNEL);
+	if (!kd_device)
 		goto err_chrdev;
 
-	ret = nf_setup_cdev(nf_device);
+	ret = kd_setup_cdev(kd_device);
 	if (ret)
 		goto err_device;
 
-	nf_class = kd_class_create("kd_dev");
-	if (IS_ERR(nf_class)) {
-		ret = PTR_ERR(nf_class);
-		nf_class = NULL;
+	kd_class = kd_class_create("kd_dev");
+	if (IS_ERR(kd_class)) {
+		ret = PTR_ERR(kd_class);
+		kd_class = NULL;
 		goto err_cdev;
 	}
 
-	nf_device_node = device_create(nf_class, NULL, dev, NULL, "kd_dev");
-	if (IS_ERR(nf_device_node)) {
-		ret = PTR_ERR(nf_device_node);
-		nf_device_node = NULL;
+	kd_device_node = device_create(kd_class, NULL, dev, NULL, "kd_dev");
+	if (IS_ERR(kd_device_node)) {
+		ret = PTR_ERR(kd_device_node);
+		kd_device_node = NULL;
 		goto err_class;
 	}
 
 	return;
 
 err_class:
-	class_destroy(nf_class);
-	nf_class = NULL;
+	class_destroy(kd_class);
+	kd_class = NULL;
 err_cdev:
-	cdev_del(&nf_device->cdev);
+	cdev_del(&kd_device->cdev);
 err_device:
-	kfree(nf_device);
-	nf_device = NULL;
+	kfree(kd_device);
+	kd_device = NULL;
 err_chrdev:
 	unregister_chrdev_region(dev, 1);
 	KD_PR_INFO("kd_dev init failed: %d\n", ret);
 }
 
-void sys_exit(void)
+void kd_sys_exit(void)
 {
-	dev_t devno = MKDEV(nf_major, nf_minor);
+	dev_t devno = MKDEV(kd_major, kd_minor);
 
-	if (nf_device_node)
-		device_destroy(nf_class, devno);
-	if (nf_class)
-		class_destroy(nf_class);
-	if (nf_device) {
-		cdev_del(&nf_device->cdev);
-		kfree(nf_device);
-		nf_device = NULL;
+	if (kd_device_node)
+		device_destroy(kd_class, devno);
+	if (kd_class)
+		class_destroy(kd_class);
+	if (kd_device) {
+		cdev_del(&kd_device->cdev);
+		kfree(kd_device);
+		kd_device = NULL;
 	}
 	unregister_chrdev_region(devno, 1);
 }

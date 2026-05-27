@@ -1,3 +1,25 @@
+/*
+ * kd_lock.c — kdlock hook implementations and futex delegation engine.
+ *
+ * This file implements the hook callbacks that the patched kernel calls on
+ * every spinlock and mutex operation for the target process.  It contains:
+ *
+ *   1. Raw spinlock hooks  (__kd_raw_spin_lock / __kd_raw_spin_unlock)
+ *      → delegate to kd_spinlock protocol (kd_spinlock.c)
+ *
+ *   2. Mutex hooks (__kd_mutex_lock / __kd_mutex_unlock)
+ *      → delegate to kd_mutex protocol (kd_mutex.c) via shadow table
+ *
+ *   3. Futex delegation engine — intercepts futex syscalls inside
+ *      translated critical sections and executes them on behalf of
+ *      waiters (new_futex_wait / new_futex_wake / etc.)
+ *
+ *   4. int3 handler (__kd_do_int3) — runtime call redirection for
+ *      untranslated call instructions in JIT sandbox code.
+ *
+ *   5. Hot-uaddr tracking (count_uaddr_cnt / check_uaddr_state) —
+ *      decides which lock addresses are promoted to delegation.
+ */
 #include <linux/freezer.h>
 #include <linux/sched/signal.h>
 #include <linux/sched/task.h>
@@ -38,13 +60,13 @@
 #include "exe.h"
 #include "utils.h"
 #include "kd_spinlock.h"
+#include "kd_mutex.h"
 
 #include <linux/spinlock.h>
 
 #define prefetch_up_size 2
 #define prefetch_down_size 1
-#define KD_MUTEX_SHADOW_LOCKS 1024
-#define KD_MUTEX_ACTIVE_SLOTS 1024
+#define KD_MUTEX_SHADOW_TABLE_SIZE 1024
 
 int velvet_wait_queue = 1;
 int delegate_election = 1;
@@ -53,40 +75,38 @@ int int3_changed = 0;
 
 int fast_path_wake_time[8] = { 1000,2000,4000,8000,16000,32000,64000,128000 };
 
-struct kd_mutex_shadow_lock {
-    unsigned long mutex_addr;
-    struct qspinlock shadow_lock;
+/*
+ * kd_mutex shadow table — maps each kernel struct mutex * to a struct kd_mutex.
+ * The kd_mutex implements TCLocks-style delegation with its own combiner/waiter
+ * protocol, replacing the old shadow qspinlock workaround.
+ */
+struct kd_mutex_shadow_entry {
+	unsigned long mutex_addr;
+	struct kd_mutex kd_mtx;
+	int delegated;
 };
 
-struct kd_mutex_active_lock {
-    struct task_struct* task;
-    unsigned long mutex_addr;
-    int delegated;
-};
-
-static struct kd_mutex_shadow_lock kd_mutex_shadows[KD_MUTEX_SHADOW_LOCKS];
-static struct kd_mutex_active_lock kd_mutex_active_locks[KD_MUTEX_ACTIVE_SLOTS];
+static struct kd_mutex_shadow_entry kd_mutex_shadows[KD_MUTEX_SHADOW_TABLE_SIZE];
 static DEFINE_RAW_SPINLOCK(kd_mutex_shadow_lock);
-static DEFINE_RAW_SPINLOCK(kd_mutex_active_lock);
 
 extern int delegate_uaddr_cnt;
-extern long nf_success_cnt;
+extern long kd_success_cnt;
 extern unsigned long uaddrs[];
 extern unsigned long uaddr_cnts[];
-extern unsigned long nf_wake_rets[];
+extern unsigned long kd_wake_rets[];
 extern long uaddr_cnt;
 extern atomic_t normal_wake_cnt;
-extern atomic_t nf_d_lock;
-extern atomic_t nf_com;
-extern atomic_t nf_wake_state;
+extern atomic_t kd_d_lock;
+extern atomic_t kd_com;
+extern atomic_t kd_wake_state;
 extern atomic_long_t start_work_cycle;
 extern atomic_long_t count_uaddr_time;
-extern atomic_t nf_is_delegating;
+extern atomic_t kd_is_delegating;
 extern atomic_t int3_waiter_cnt;
 
 extern spinlock_t int3_change_lock;
-extern struct nf_delegate_numanode** nf_numanodes;
-extern struct nf_cycle_cnt* cycle_cnts;
+extern struct kd_delegate_numanode** kd_numanodes;
+extern struct kd_cycle_cnt* kd_cycle_cnts;
 
 extern void futex_wake_mark(struct wake_q_head* wake_q, struct futex_q* q);
 extern void futex_wake_mark_2(struct futex_q* q);
@@ -128,7 +148,7 @@ void modify_var_with_lock(char* ptr, char value) {
 
 int add_int3_in_lock(unsigned long vaddr) {
     struct page* pages[1];
-    struct nf_call_inst* call_inst = get_call_inst(vaddr);
+    struct kd_call_inst* call_inst = kd_get_call_inst(vaddr);
     int ret;
     ret = get_user_pages_fast(vaddr & PAGE_MASK, 1, FOLL_WRITE | FOLL_FORCE, pages);
     if (ret < 0) {
@@ -186,30 +206,30 @@ int count_uaddr_cnt(unsigned long uaddr) {
     else if (rdtsc_ordered() - atomic_long_read(&start_work_cycle) < 1000000000)
         return 0;
 
-    struct nf_uaddr_state* u_state = get_uaddr_state(uaddr);
+    struct kd_uaddr_state* u_state = kd_get_uaddr_state(uaddr);
     // if (uaddr == 0x555555592bc0) {
-    //     u_state->state = F_UADDR_IGNORE;
+    //     u_state->state = KD_UADDR_IGNORE;
     //     return 0;
     // }
 
-    if (u_state->state == F_UADDR_DELGEGATE)
+    if (u_state->state == KD_UADDR_DELEGATE)
         return 1;
-    if (u_state->state == F_UADDR_IGNORE) {
+    if (u_state->state == KD_UADDR_IGNORE) {
         u_state->cnt++;
         if (u_state->cnt == 10000)
             u_state->end = rdtsc_ordered();
         return 0;
     }
     u_state->cnt++;
-    if (u_state->state == F_UADDR_INIT) {
-        u_state->state = F_UADDR_CHECKING;
+    if (u_state->state == KD_UADDR_INIT) {
+        u_state->state = KD_UADDR_CHECKING;
         u_state->begin = rdtsc_ordered();
         return 0;
     }
-    if (u_state->state == F_UADDR_CHECKING) {
+    if (u_state->state == KD_UADDR_CHECKING) {
         u_state->end = rdtsc_ordered();
         if (u_state->end - u_state->begin >= atomic_long_read(&count_uaddr_time)) {
-            u_state->state = F_UADDR_IGNORE;
+            u_state->state = KD_UADDR_IGNORE;
             return 0;
         }
         else if (u_state->cnt == 10000) {
@@ -217,7 +237,7 @@ int count_uaddr_cnt(unsigned long uaddr) {
             atomic_set_release(&u_state->is_delegating, 0);
             atomic_set_release(&u_state->numa_info[0].is_delegating, 0);
             atomic_set_release(&u_state->numa_info[1].is_delegating, 0);
-            u_state->state = F_UADDR_DELGEGATE;
+            u_state->state = KD_UADDR_DELEGATE;
             unsigned long old = atomic_long_read(&count_uaddr_time);
             unsigned long new = old;
             while (new / (u_state->end - u_state->begin) >= 10)
@@ -231,89 +251,37 @@ int count_uaddr_cnt(unsigned long uaddr) {
 }
 
 int check_uaddr_state(unsigned long uaddr) {
-    struct nf_uaddr_state* u_state = get_uaddr_state(uaddr);
-    if (u_state->state == F_UADDR_DELGEGATE)
+    struct kd_uaddr_state* u_state = kd_get_uaddr_state(uaddr);
+    if (u_state->state == KD_UADDR_DELEGATE)
         return 1;
     return 0;
 }
 
-static struct qspinlock* get_kd_mutex_shadow_lock(struct mutex* lock)
+static struct kd_mutex* get_kd_mutex_shadow(struct mutex* lock)
 {
     unsigned long flags;
     unsigned long mutex_addr = (unsigned long)lock;
-    int start = mutex_addr % KD_MUTEX_SHADOW_LOCKS;
+    int start = mutex_addr % KD_MUTEX_SHADOW_TABLE_SIZE;
     int pos = start;
 
     raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
     do {
         if (kd_mutex_shadows[pos].mutex_addr == mutex_addr) {
             raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
-            return &kd_mutex_shadows[pos].shadow_lock;
+            return &kd_mutex_shadows[pos].kd_mtx;
         }
         if (kd_mutex_shadows[pos].mutex_addr == 0) {
             kd_mutex_shadows[pos].mutex_addr = mutex_addr;
-            kd_spin_lock_init(&kd_mutex_shadows[pos].shadow_lock);
+            kd_mutex_init(&kd_mutex_shadows[pos].kd_mtx);
             raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
-            return &kd_mutex_shadows[pos].shadow_lock;
+            return &kd_mutex_shadows[pos].kd_mtx;
         }
-        pos = (pos + 1) % KD_MUTEX_SHADOW_LOCKS;
+        pos = (pos + 1) % KD_MUTEX_SHADOW_TABLE_SIZE;
     } while (pos != start);
     raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
 
     KD_PR_ERR("kd mutex shadow table is full\n");
     return NULL;
-}
-
-static int kd_mutex_record_lock(struct mutex* lock, int delegated)
-{
-    unsigned long flags;
-    unsigned long mutex_addr = (unsigned long)lock;
-    int i, free_slot = -1;
-
-    raw_spin_lock_irqsave(&kd_mutex_active_lock, flags);
-    for (i = 0; i < KD_MUTEX_ACTIVE_SLOTS; i++) {
-        if (kd_mutex_active_locks[i].task == current &&
-            kd_mutex_active_locks[i].mutex_addr == mutex_addr) {
-            kd_mutex_active_locks[i].delegated = delegated;
-            raw_spin_unlock_irqrestore(&kd_mutex_active_lock, flags);
-            return 1;
-        }
-        if (free_slot < 0 && kd_mutex_active_locks[i].task == NULL)
-            free_slot = i;
-    }
-    if (free_slot >= 0) {
-        kd_mutex_active_locks[free_slot].task = current;
-        kd_mutex_active_locks[free_slot].mutex_addr = mutex_addr;
-        kd_mutex_active_locks[free_slot].delegated = delegated;
-        raw_spin_unlock_irqrestore(&kd_mutex_active_lock, flags);
-        return 1;
-    }
-    raw_spin_unlock_irqrestore(&kd_mutex_active_lock, flags);
-
-    KD_PR_ERR("kd mutex active lock table is full\n");
-    return 0;
-}
-
-static int kd_mutex_take_lock_record(struct mutex* lock, int* delegated)
-{
-    unsigned long flags;
-    unsigned long mutex_addr = (unsigned long)lock;
-    int i, found = 0;
-
-    raw_spin_lock_irqsave(&kd_mutex_active_lock, flags);
-    for (i = 0; i < KD_MUTEX_ACTIVE_SLOTS; i++) {
-        if (kd_mutex_active_locks[i].task == current &&
-            kd_mutex_active_locks[i].mutex_addr == mutex_addr) {
-            *delegated = kd_mutex_active_locks[i].delegated;
-            kd_mutex_active_locks[i].task = NULL;
-            kd_mutex_active_locks[i].mutex_addr = 0;
-            kd_mutex_active_locks[i].delegated = 0;
-            found = 1;
-            break;
-        }
-    }
-    raw_spin_unlock_irqrestore(&kd_mutex_active_lock, flags);
-    return found;
 }
 
 #define __set_task_state(task, state_value)				\
@@ -366,10 +334,10 @@ void add_uaddr(unsigned long u) {
 }
 
 void record_ret(int ret) {
-    if (ret >= 0 && ret <= NF_CNT_NUM)
-        nf_wake_rets[ret]++;
-    else if (ret > NF_CNT_NUM)
-        nf_wake_rets[NF_CNT_NUM + 1]++;
+    if (ret >= 0 && ret <= KD_CNT_NUM)
+        kd_wake_rets[ret]++;
+    else if (ret > KD_CNT_NUM)
+        kd_wake_rets[KD_CNT_NUM + 1]++;
 }
 
 int check_numa_node(struct futex_q* q, int node) {
@@ -381,7 +349,7 @@ int check_numa_node(struct futex_q* q, int node) {
         return 0;
 }
 
-void nf_call_q(struct wake_q_head* wake_q, struct exe_ret* r) {
+void kd_call_q(struct wake_q_head* wake_q, struct kd_exe_ret* r) {
     struct wake_q_node* node = wake_q->first;
     struct pt_regs* regs;
     r->ret = -11;
@@ -396,40 +364,40 @@ void nf_call_q(struct wake_q_head* wake_q, struct exe_ret* r) {
         //     prefetch((void*)(rsp + 64 * i));
         // for (i = 0;i < 64;i++)
         //     prefetch((void*)(rsp - 64 * i));
-        exe_on_call(task, regs, r);
+        kd_exe_on_call(task, regs, r);
         node = node->next;
     }
 }
 
-void nf_call(struct task_struct* task, struct exe_ret* r) {
+void kd_call(struct task_struct* task, struct kd_exe_ret* r) {
     struct pt_regs* regs;
     unsigned long rsp;
-    exe_on_call(task, regs = task_pt_regs(task), r);
+    kd_exe_on_call(task, regs = task_pt_regs(task), r);
 }
 
-void nf_prefetch_context(struct pt_regs* regs, unsigned long rsp) {
+void kd_prefetch_context(struct pt_regs* regs, unsigned long rsp) {
     stac();
     int i;
-    nf_prefetchw(regs);
-    nf_prefetchw((char*)regs + 64);
-    nf_prefetchw((char*)regs + 128);
+    kd_prefetchw(regs);
+    kd_prefetchw((char*)regs + 64);
+    kd_prefetchw((char*)regs + 128);
 
     for (i = 0;i < prefetch_up_size;i++)
-        nf_prefetchw((char*)rsp + 64 * i);
+        kd_prefetchw((char*)rsp + 64 * i);
     for (i = 1;i <= prefetch_down_size;i++)
-        nf_prefetchw((char*)rsp - 64 * i);
+        kd_prefetchw((char*)rsp - 64 * i);
 }
 
-void nf_cldemote_context(struct pt_regs* regs, unsigned long rsp) {
+void kd_cldemote_context(struct pt_regs* regs, unsigned long rsp) {
     stac();
     int i;
-    // nf_cldemote(regs);
-    // nf_cldemote((char*)regs + 64);
-    // nf_cldemote((char*)regs + 128);
+    // kd_cldemote(regs);
+    // kd_cldemote((char*)regs + 64);
+    // kd_cldemote((char*)regs + 128);
     for (i = 0;i < prefetch_up_size;i++)
-        nf_cldemote((char*)rsp + 64 * i);
+        kd_cldemote((char*)rsp + 64 * i);
     for (i = 1;i <= prefetch_down_size;i++)
-        nf_cldemote((char*)rsp - 64 * i);
+        kd_cldemote((char*)rsp - 64 * i);
 }
 
 void not_wake_up_q(struct wake_q_head* wake_q) {
@@ -457,14 +425,14 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
     int is_nf_need_add = 1, i;
     int cpu_id, numa_id, cpu_index, temp, timeout_time;
     unsigned long long begin, t, end, start, cur_ts, check_ts;
-    struct nf_delegate_complete* completes;
+    struct kd_delegate_complete* completes;
     volatile atomic_long_t* queue;
     volatile atomic_t* state;
     struct cpumask* mask;
     struct pt_regs* regs;
     unsigned long before_rip, after_rip, wait_cost;
-    struct nf_delegate_uaddrnode* uaddrnode;
-    struct nf_uaddr_state* u_state;
+    struct kd_delegate_uaddrnode* uaddrnode;
+    struct kd_uaddr_state* u_state;
 
     if (!check_uaddr_state((unsigned long)lock))
         return origin_raw_spin_unlock(lock);
@@ -473,7 +441,7 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
     // before_rip = regs->ip;
 
     // if (is_nf_need_add)
-    //     exe_add(current->tgid, regs->ip);
+    //     kd_exe_add(current->tgid, regs->ip);
 
     // stac();
 
@@ -507,11 +475,11 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //             cpu_id++;
 //         }
 
-//         uaddrnode = get_uaddrnode((unsigned long)uaddr, nf_numanodes[numa_id]->uaddr_node);
+//         uaddrnode = kd_get_uaddrnode((unsigned long)uaddr, kd_numanodes[numa_id]->uaddr_node);
 //         completes = uaddrnode->completes;
 //         queue = &uaddrnode->queue.q;
 //         state = &completes[cpu_id].state;
-//         u_state = get_uaddr_state(uaddr);
+//         u_state = kd_get_uaddr_state(uaddr);
 
 //         if (completes[cpu_id].task != current)
 //             completes[cpu_id].task = current;
@@ -525,14 +493,14 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //             completes[cpu_id].val = val;
 
 //         stac();
-//         // nf_cldemote_context(regs, regs->sp);
-//         nf_cldemote((void*)regs);
-//         nf_cldemote((char*)regs + 64);
-//         nf_cldemote((char*)regs + 128);
-//         // nf_cldemote((char*)completes + 64);
+//         // kd_cldemote_context(regs, regs->sp);
+//         kd_cldemote((void*)regs);
+//         kd_cldemote((char*)regs + 64);
+//         kd_cldemote((char*)regs + 128);
+//         // kd_cldemote((char*)completes + 64);
 
 //         // stac();
-//         // nf_cldemote((void*)(&completes[cpu_id]) + 64);
+//         // kd_cldemote((void*)(&completes[cpu_id]) + 64);
 //         //retrylock:
 //         // atomic_inc(&normal_wake_cnt);
 //         timeout_time = 0;
@@ -545,7 +513,7 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 
 //         if (test_and_set_bit(cpu_id, (volatile unsigned long*)queue))
 //             KD_PR_INFO("fast path q start value wrong");
-//         nf_cldemote((void*)queue);
+//         kd_cldemote((void*)queue);
 
 //         start = rdtsc_ordered();
 //         check_ts = start;
@@ -574,7 +542,7 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //             if (cur_ts - start >= 1024000) {
 //                 if (test_and_clear_bit(cpu_id, (volatile unsigned long*)queue)) {
 //                     atomic_set_release(state, fast_path_timeout);
-//                     // nf_cldemote((void*)queue);
+//                     // kd_cldemote((void*)queue);
 //                     preempt_enable();
 //                     is_timeout = 1;
 //                     // timeout_time = timeout_time < 7 ? timeout_time + 1 : timeout_time;
@@ -589,7 +557,7 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //             preempt_enable();
 //             switch (atomic_read(state)) {
 //             case fast_path_success:
-//                 // atomic_inc(&nf_com);
+//                 // atomic_inc(&kd_com);
 //                 smp_store_release(&q.lock_ptr, NULL);
 //                 atomic_set(state, fast_path_uninit);
 //                 ret = 0;
@@ -597,25 +565,25 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 
 //                 // unsigned long delegation_interval = rdtsc_ordered() - delegation_begin_time;
 //                 // if (delegation_interval < 3000UL)
-//                 //     ++cycle_cnts[cpu_index].cnt[delegation_interval / 100UL];
+//                 //     ++kd_cycle_cnts[cpu_index].cnt[delegation_interval / 100UL];
 //                 // else
-//                 //     ++cycle_cnts[cpu_index].cnt[29];
-//                 // cycle_cnts[cpu_index].min = cycle_cnts[cpu_index].min < delegation_interval ? cycle_cnts[cpu_index].min : delegation_interval;
-//                 // cycle_cnts[cpu_index].total += delegation_interval;
-//                 // ++cycle_cnts[cpu_index].total_cnt;
+//                 //     ++kd_cycle_cnts[cpu_index].cnt[29];
+//                 // kd_cycle_cnts[cpu_index].min = kd_cycle_cnts[cpu_index].min < delegation_interval ? kd_cycle_cnts[cpu_index].min : delegation_interval;
+//                 // kd_cycle_cnts[cpu_index].total += delegation_interval;
+//                 // ++kd_cycle_cnts[cpu_index].total_cnt;
 
 //                 goto out;
 //             case fast_path_no_need_to_sleep:
-//                 // atomic_inc(&nf_wake_state);
+//                 // atomic_inc(&kd_wake_state);
 //                 // futex_hb_waiters_dec(hb);
 //                 ret = -EWOULDBLOCK;
 //                 atomic_set(state, fast_path_uninit);
-//                 // nf_cldemote((void*)state);
+//                 // kd_cldemote((void*)state);
 //                 goto out;
 //             case fast_path_fail:
-//                 // atomic_inc(&nf_d_lock);
+//                 // atomic_inc(&kd_d_lock);
 //                 atomic_set(state, fast_path_uninit);
-//                 // nf_cldemote((void*)state);
+//                 // kd_cldemote((void*)state);
 //                 goto fast_path_sleep;
 //             default:
 //                 KD_PR_INFO(" state return wrong value %d", atomic_read(state));
@@ -628,9 +596,9 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //     }
 //     else {
 //         stac();
-//         nf_cldemote((void*)regs);
-//         nf_cldemote((char*)regs + 64);
-//         nf_cldemote((char*)regs + 128);
+//         kd_cldemote((void*)regs);
+//         kd_cldemote((char*)regs + 64);
+//         kd_cldemote((char*)regs + 128);
 //     }
 
 // fast_path_sleep:
@@ -685,16 +653,16 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //     return ;
 }
 
-int __nf_do_int3(struct pt_regs* regs) {
-    struct nf_uaddr_state* u_state = get_uaddr_state((unsigned long)(regs->di));
+int __kd_do_int3(struct pt_regs* regs) {
+    struct kd_uaddr_state* u_state = kd_get_uaddr_state((unsigned long)(regs->di));
     int cpu_id = smp_processor_id();
     // atomic_inc(&normal_wake_cnt);
-    if (u_state->state == F_UADDR_DELGEGATE) {
+    if (u_state->state == KD_UADDR_DELEGATE) {
         preempt_disable();
-        // atomic_inc(&nf_d_lock);
+        // atomic_inc(&kd_d_lock);
 
         // if (atomic_read(&u_state->is_delegating) == 1)
-        //     atomic_inc(&nf_com);
+        //     atomic_inc(&kd_com);
 
         // unsigned long delegation_begin_time = rdtsc_ordered();
 
@@ -704,23 +672,23 @@ int __nf_do_int3(struct pt_regs* regs) {
 
         // unsigned long delegation_interval = rdtsc_ordered() - delegation_begin_time;
         // if (delegation_interval < 3000UL)
-        //     ++cycle_cnts[cpu_id].cnt[delegation_interval / 100UL];
+        //     ++kd_cycle_cnts[cpu_id].cnt[delegation_interval / 100UL];
         // else
-        //     ++cycle_cnts[cpu_id].cnt[29];
-        // cycle_cnts[cpu_id].min = cycle_cnts[cpu_id].min < delegation_interval ? cycle_cnts[cpu_id].min : delegation_interval;
-        // cycle_cnts[cpu_id].total += delegation_interval;
-        // ++cycle_cnts[cpu_id].total_cnt;
+        //     ++kd_cycle_cnts[cpu_id].cnt[29];
+        // kd_cycle_cnts[cpu_id].min = kd_cycle_cnts[cpu_id].min < delegation_interval ? kd_cycle_cnts[cpu_id].min : delegation_interval;
+        // kd_cycle_cnts[cpu_id].total += delegation_interval;
+        // ++kd_cycle_cnts[cpu_id].total_cnt;
 
         preempt_enable();
     }
 
-    struct nf_call_inst* call_inst = get_call_inst(regs->ip - 1);
+    struct kd_call_inst* call_inst = kd_get_call_inst(regs->ip - 1);
     regs->sp -= 8;
     stac();
     *((unsigned long*)(regs->sp)) = regs->ip + 4;
     regs->ip += call_inst->offset + 4;
 
-    // unsigned int wait_cycle = nf_random() % 1000;
+    // unsigned int wait_cycle = kd_random() % 1000;
     // unsigned long begin = rdtsc_ordered();
     // while (rdtsc_ordered() - begin < wait_cycle);
 
@@ -745,8 +713,8 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
          return;
     }
 
-    exe_add(current->pid, ret_addr);  // TODO !
-    // KD_PR_DEBUG("exe_add ret_addr %lx\n", (unsigned long)ret_addr);
+    kd_exe_add(current->pid, ret_addr);  // TODO !
+    // KD_PR_DEBUG("kd_exe_add ret_addr %lx\n", (unsigned long)ret_addr);
 
     // int numa_id = numa_node_id();
     // int numa_nodes = 2;
@@ -760,11 +728,11 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
     //     cpu_id++;
     // }
 
-    // uaddrnode = get_uaddrnode((unsigned long)ret_addr, nf_numanodes[numa_id]->uaddr_node);
+    // uaddrnode = kd_get_uaddrnode((unsigned long)ret_addr, kd_numanodes[numa_id]->uaddr_node);
     // completes = uaddrnode->completes;
     // queue = &uaddrnode->queue.q;
     // state = &completes[cpu_id].state;
-    // u_state = get_uaddr_state((unsigned long)ret_addr);
+    // u_state = kd_get_uaddr_state((unsigned long)ret_addr);
 
     // // if (velvet_wait_queue == 1) {
 
@@ -789,15 +757,15 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
     kd_spin_lock((struct qspinlock *)lock, ret_rsp);
     return;
 
-    // nf_cldemote_context(regs, regs->sp);
-    // nf_cldemote((void*)regs);
-    // nf_cldemote((char*)regs + 64);
-    // nf_cldemote((char*)regs + 128);
+    // kd_cldemote_context(regs, regs->sp);
+    // kd_cldemote((void*)regs);
+    // kd_cldemote((char*)regs + 64);
+    // kd_cldemote((char*)regs + 128);
 
 //     if (delegate_election == 1) {
 
 //         wake_queue = &uaddrnode->wake_queue.q;
-//         // nf_cldemote((void*)uaddrnode);
+//         // kd_cldemote((void*)uaddrnode);
 //         timeout_time = 0;
 //         // while (atomic_read_acquire(&u_state->is_delegating) == 1 || !spin_trylock(&hb->lock)) {
 //         while (atomic_cmpxchg(&u_state->numa_info[numa_id].is_delegating, 0, 1) == 1) {
@@ -805,7 +773,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //             atomic_set(state, fast_wake_ready);
 //             if (test_and_set_bit(cpu_id, (volatile unsigned long*)wake_queue))
 //                 KD_PR_INFO("[__kd_raw_spin_lock]\tfast path q start value wrong");
-//             // nf_cldemote((void*)wake_queue);
+//             // kd_cldemote((void*)wake_queue);
 
 //             start = rdtsc_ordered();
 //             preempt_disable();
@@ -815,7 +783,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //                 if (rdtsc_ordered() - start >= fast_path_wake_time[timeout_time]) {
 //                     if (test_and_clear_bit(cpu_id, (volatile unsigned long*)wake_queue)) {
 //                         atomic_set_release(state, fast_wake_timeout);
-//                         // nf_cldemote((void*)wake_queue);
+//                         // kd_cldemote((void*)wake_queue);
 //                         preempt_enable();
 //                         is_timeout = 1;
 //                         timeout_time = timeout_time < 6 ? timeout_time + 1 : timeout_time;
@@ -873,7 +841,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //         e_ret.count = 0;
 //         ret = 0;
 
-//         if (delegate_election == 1 && need_e_queue == 1 && waker_cnt < NF_E_QUEUE_NUM) {
+//         if (delegate_election == 1 && need_e_queue == 1 && waker_cnt < KD_E_QUEUE_NUM) {
 //             wake_cnt = 0;
 //             old = atomic_long_xchg(wake_queue, 0UL);
 //             if (old != 0) {
@@ -893,7 +861,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 
 //         if (velvet_wait_queue == 1) {
 
-//             if (!nf_need_end && need_vw_queue == 1 && cnt < NF_FAST_PATH_WAKE_NUM && w_index == cnt) {
+//             if (!nf_need_end && need_vw_queue == 1 && cnt < KD_FAST_PATH_WAKE_NUM && w_index == cnt) {
 //             vw_queue_retry:
 //                 one_dequeue_cnt = 0;
 //                 old = atomic_long_xchg(queue, 0UL);
@@ -910,7 +878,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //                     // }
 
 //                     // for (j = one_dequeue_cnt - 1;j > 0;j--) {
-//                     //     ran = nf_random() % (j + 1);
+//                     //     ran = kd_random() % (j + 1);
 //                     //     temp = temp_pos[j];
 //                     //     temp_pos[j] = temp_pos[ran];
 //                     //     temp_pos[ran] = temp;
@@ -918,7 +886,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //                     // if (one_dequeue_cnt == 1)
 //                     //     need_vw_queue = 0;
 
-//                     ran = nf_random() % 2;
+//                     ran = kd_random() % 2;
 //                     if (ran == 0)
 //                         for (j = 0;j < one_dequeue_cnt;j++)
 //                             pos[cnt++] = temp_pos[j];
@@ -938,7 +906,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //         }
 
 //         for (;p_index < cnt && p_index < w_index + 2;p_index++)
-//             nf_prefetch_context(completes[pos[p_index]].regs, completes[pos[p_index]].rsp);
+//             kd_prefetch_context(completes[pos[p_index]].regs, completes[pos[p_index]].rsp);
 
 //         if (!nf_need_end) {
 //             if (w_index < cnt) {
@@ -950,14 +918,14 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //                 //     atomic_set_release(&u_state->is_delegating, 0);
 //                 // }
 
-//                 // ran = nf_random();
+//                 // ran = kd_random();
 //                 // t_index = w_index + ran % (cnt - w_index);
 //                 // temp = pos[t_index];
 //                 // pos[t_index] = pos[w_index];
 //                 // pos[w_index] = temp;
 
-//                 // nf_prefetch_context(completes[pos[w_index]].regs, completes[pos[w_index]].rsp);
-//                 exe_on_call(completes[pos[w_index]].task, completes[pos[w_index]].regs, &e_ret);
+//                 // kd_prefetch_context(completes[pos[w_index]].regs, completes[pos[w_index]].rsp);
+//                 kd_exe_on_call(completes[pos[w_index]].task, completes[pos[w_index]].regs, &e_ret);
 //                 if (e_ret.ret < -1)
 //                     nf_need_end = 1;
 //                 else if (e_ret.ret == 1) {
@@ -990,15 +958,15 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 //                             continue;
 //                         nf_wake_targets = this;
 //                         target_regs = task_pt_regs(nf_wake_targets->task);
-//                         nf_prefetch_context(target_regs, target_regs->sp);
+//                         kd_prefetch_context(target_regs, target_regs->sp);
 //                         if (++ret >= 1)
 //                             break;
 //                     }
 //                 }
 //                 if (ret == 1) {
-//                     if (nf_wake_cnt < cnt + NF_SLOW_PATH_WAKE_NUM) {
+//                     if (nf_wake_cnt < cnt + KD_SLOW_PATH_WAKE_NUM) {
 //                         nf_wake_cnt++;
-//                         exe_on_call(nf_wake_targets->task, task_pt_regs(nf_wake_targets->task), &e_ret);
+//                         kd_exe_on_call(nf_wake_targets->task, task_pt_regs(nf_wake_targets->task), &e_ret);
 //                     }
 //                     futex_wake_mark(&wake_q, nf_wake_targets);
 //                 }
@@ -1082,55 +1050,51 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
                      unsigned long ret_addr)
 {
-    struct qspinlock* shadow_lock;
+    struct kd_mutex* kd_mtx;
+    struct kd_mutex_shadow_entry* entry;
+
+    (void)ret_rsp;
 
     if (!check_uaddr_state((unsigned long)lock)) {
-        kd_mutex_record_lock(lock, 0);
         count_uaddr_cnt((unsigned long)lock);
         origin_mutex_lock(lock);
         return;
     }
 
-    shadow_lock = get_kd_mutex_shadow_lock(lock);
-    if (shadow_lock == NULL) {
-        kd_mutex_record_lock(lock, 0);
+    kd_mtx = get_kd_mutex_shadow(lock);
+    if (kd_mtx == NULL) {
         origin_mutex_lock(lock);
         return;
     }
 
-    exe_add(current->pid, ret_addr);
-    if (!kd_mutex_record_lock(lock, 1)) {
-        origin_mutex_lock(lock);
-        return;
-    }
-    kd_spin_lock(shadow_lock, ret_rsp);
+    kd_exe_add(current->pid, ret_addr);
+    entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
+    entry->delegated = 1;
+    _kd_mutex_lock(kd_mtx);
 }
 
 void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
                        unsigned long ret_addr)
 {
-    struct qspinlock* shadow_lock;
-    int delegated = 0;
+    struct kd_mutex* kd_mtx;
+    struct kd_mutex_shadow_entry* entry;
 
     (void)ret_rsp;
 
-    if (!kd_mutex_take_lock_record(lock, &delegated)) {
+    kd_mtx = get_kd_mutex_shadow(lock);
+    if (kd_mtx == NULL) {
         origin_mutex_unlock(lock, ret_addr);
         return;
     }
 
-    if (!delegated) {
+    entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
+    if (!entry->delegated) {
         origin_mutex_unlock(lock, ret_addr);
         return;
     }
 
-    shadow_lock = get_kd_mutex_shadow_lock(lock);
-    if (shadow_lock == NULL) {
-        KD_PR_ERR("kd mutex delegated lock has no shadow lock\n");
-        return;
-    }
-
-    kd_spin_unlock(shadow_lock);
+    entry->delegated = 0;
+    _kd_mutex_unlock(kd_mtx);
 }
 
 

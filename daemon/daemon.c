@@ -86,7 +86,7 @@ static int hash_history(unsigned int hash)
 }
 
 static void workspace_path(char *buf, size_t size, const struct daemon_config *cfg,
-			   const struct exe_info *exe)
+			   const struct kd_exe_info *exe)
 {
 	if (cfg->mode == MODE_V1)
 		snprintf(buf, size, "./%p", (void *)exe->RIP);
@@ -95,7 +95,7 @@ static void workspace_path(char *buf, size_t size, const struct daemon_config *c
 }
 
 static int make_init_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
-			 const struct exe_info *exe)
+			 const struct kd_exe_info *exe)
 {
 	char workspace[256];
 
@@ -105,7 +105,7 @@ static int make_init_cmd(char *cmd, size_t size, const struct daemon_config *cfg
 }
 
 static int make_callee_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
-			   const struct exe_info *exe)
+			   const struct kd_exe_info *exe)
 {
 	char workspace[256];
 
@@ -115,7 +115,7 @@ static int make_callee_cmd(char *cmd, size_t size, const struct daemon_config *c
 }
 
 static int make_ij_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
-		       const struct exe_info *exe)
+		       const struct kd_exe_info *exe)
 {
 	char workspace[256];
 
@@ -124,7 +124,7 @@ static int make_ij_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
 			  (void *)exe->jump_from, (void *)exe->tgt_addr, workspace);
 }
 
-static int compile_entry(const struct daemon_config *cfg, const struct exe_info *exe)
+static int compile_entry(const struct daemon_config *cfg, const struct kd_exe_info *exe)
 {
 	char cmd[1024];
 
@@ -159,13 +159,13 @@ static int read_sys(char *buffer, size_t size)
 	return len;
 }
 
-static int write_sys(const struct daemon_config *cfg, const struct exe_info *exe)
+static int write_sys(const struct daemon_config *cfg, const struct kd_exe_info *exe)
 {
 	int rest_len;
 	int to_copy_len;
 	char i_buf[4096 * 256];
 	char o_buf[4096 * 2];
-	struct recv_pkt pkt;
+	struct kd_recv_pkt pkt;
 	char jit_path[512];
 	char workspace[256];
 	FILE *fp;
@@ -228,7 +228,7 @@ static inline unsigned long hash3(long a, long b, long c)
 	return (unsigned int)hash_value;
 }
 
-static void log_status(const struct daemon_config *cfg, const struct exe_info *exe,
+static void log_status(const struct daemon_config *cfg, const struct kd_exe_info *exe,
 		       const char *msg)
 {
 	if (cfg->verbose)
@@ -238,8 +238,8 @@ static void log_status(const struct daemon_config *cfg, const struct exe_info *e
 static void check_once(const struct daemon_config *cfg)
 {
 	int len;
-	int sz = sizeof(struct exe_info);
-	struct exe_info *exe;
+	int sz = sizeof(struct kd_exe_info);
+	struct kd_exe_info *exe;
 	char cmd[1024];
 	char buffer[4096 * 256] = {0};
 	int begin_pid;
@@ -249,7 +249,7 @@ static void check_once(const struct daemon_config *cfg)
 	if (len <= 0)
 		return;
 
-	exe = (struct exe_info *)buffer;
+	exe = (struct kd_exe_info *)buffer;
 	begin_pid = exe->pid;
 	begin_rip = exe->RIP;
 
@@ -259,15 +259,15 @@ static void check_once(const struct daemon_config *cfg)
 		if (i > 0 && exe->pid == begin_pid && exe->RIP == begin_rip)
 			break;
 
-		if (exe->status_code == F_NORMAL ||
-		    (cfg->mode == MODE_V1 && exe->status_code == F_INST_LIMIT))
+		if (exe->status_code == KD_EXE_NORMAL ||
+		    (cfg->mode == MODE_V1 && exe->status_code == KD_EXE_INST_LIMIT))
 			continue;
 
-		if (exe->status_code == F_UN_INIT) {
+		if (exe->status_code == KD_EXE_UNINIT) {
 			if (make_init_cmd(cmd, sizeof(cmd), cfg, exe))
 				continue;
 			log_status(cfg, exe, "Initialization");
-		} else if (exe->status_code == F_CALL_MISS) {
+		} else if (exe->status_code == KD_EXE_CALL_MISS) {
 			if (valid_address(exe->tgt_addr) && valid_address(exe->RIP)) {
 				if (make_callee_cmd(cmd, sizeof(cmd), cfg, exe))
 					continue;
@@ -276,10 +276,10 @@ static void check_once(const struct daemon_config *cfg)
 					       exe->pid, (void *)exe->RIP,
 					       (void *)exe->tgt_addr);
 			} else if (!hash_history(hash2(exe->pid, exe->RIP))) {
-				printf("F_CALL_MISS invalid address %p %p\n",
+				printf("KD_EXE_CALL_MISS invalid address %p %p\n",
 				       (void *)exe->tgt_addr, (void *)exe->RIP);
 			}
-		} else if (exe->status_code == F_IJ_MISS) {
+		} else if (exe->status_code == KD_EXE_IJ_MISS) {
 			if (valid_address(exe->jump_from) &&
 			    valid_address(exe->tgt_addr) &&
 			    valid_address(exe->RIP)) {
@@ -292,7 +292,7 @@ static void check_once(const struct daemon_config *cfg)
 					       (void *)exe->tgt_addr);
 			} else if (!hash_history(hash3(exe->pid, exe->jump_from,
 						       exe->RIP))) {
-				printf("F_IJ_MISS invalid address %p %p %p\n",
+				printf("KD_EXE_IJ_MISS invalid address %p %p %p\n",
 				       (void *)exe->jump_from, (void *)exe->tgt_addr,
 				       (void *)exe->RIP);
 			}

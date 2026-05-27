@@ -1,3 +1,28 @@
+/*
+ * klock_test — userspace driver for /dev/lock_dev.
+ *
+ * Usage:  ./klock_test <threads> <loops> <workload> <spare> <mode>
+ *
+ *   threads  — number of concurrent threads
+ *   loops    — how many ioctl calls per thread
+ *   workload — busy-loop iterations inside each critical section
+ *   spare    — unused (reserved)
+ *   mode     — benchmark mode (see below)
+ *
+ * Modes:
+ *   0  MODE_SPIN_CONTENTION    Contended single spinlock
+ *   1  MODE_SPIN_NESTED        Nested spinlocks (lock A → lock B)
+ *   2  MODE_SPIN_API_IN_LOCK   Spinlock CS containing a kernel API call
+ *   3  MODE_MUTEX_CONTENTION   Contended single mutex
+ *   4  MODE_MUTEX_NESTED       Nested mutexes
+ *   5  MODE_MUTEX_API_IN_LOCK  Mutex CS containing a kernel API call
+ *
+ * Modes 0–2 exercise the spinlock delegation path (kd_spinlock.c).
+ * Modes 3–5 exercise the mutex delegation path (kd_mutex.c).
+ *
+ * Example:  ./klock_test 4 100000 1000 10 0
+ *   → 4 threads, 100k iterations each, 1000-loop workload, mode 0
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -17,14 +42,14 @@ struct test_args {
 
 #define IOC_RUN_TEST _IOW(IOC_MAGIC, 1, struct test_args)
 
-#define MODE_SPIN_CONTENTION 0
-#define MODE_SPIN_NESTED 1
-#define MODE_SPIN_API_IN_LOCK 2
-#define MODE_MUTEX_CONTENTION 3
-#define MODE_MUTEX_NESTED 4
-#define MODE_MUTEX_API_IN_LOCK 5
+#define MODE_SPIN_CONTENTION    0  /* contended single spinlock           */
+#define MODE_SPIN_NESTED        1  /* nested spinlocks                    */
+#define MODE_SPIN_API_IN_LOCK   2  /* spinlock with kernel API inside CS  */
+#define MODE_MUTEX_CONTENTION   3  /* contended single mutex              */
+#define MODE_MUTEX_NESTED       4  /* nested mutexes                      */
+#define MODE_MUTEX_API_IN_LOCK  5  /* mutex with kernel API inside CS     */
 
-// 传递给线程的参数
+/* per-thread work item */
 struct thread_data {
     int thread_id;
     int fd;

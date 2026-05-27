@@ -3,12 +3,11 @@
 
 #include <linux/cdev.h>
 
-void sys_init(void);
-void sys_exit(void);
+void kd_sys_init(void);
+void kd_sys_exit(void);
 
-struct nf_dev {
-    struct cdev cdev;
-    // struct semaphore sem;
+struct kd_dev {
+	struct cdev cdev;
 };
 
 #endif

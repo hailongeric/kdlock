@@ -1,3 +1,13 @@
+/*
+ * klock_module — test device driver for kdlock benchmarking.
+ *
+ * Exposes /dev/lock_dev with an ioctl interface.  Each ioctl call executes
+ * a synthetic critical section using either a spinlock or mutex (depending
+ * on mode), optionally with a nested lock or a kernel API call inside the
+ * critical section.  When kdlock_km is loaded with target_process="klock_test",
+ * these lock operations trigger the kdlock hooks and exercise the delegation
+ * path.
+ */
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>

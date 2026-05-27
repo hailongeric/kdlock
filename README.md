@@ -38,6 +38,62 @@ by `kernel_module/kd_main.c`.
 
 The local reference trees are expected at `/tmp/TCLocks` and `/tmp/BCD`.
 
+## Architecture
+
+```
+                    Patched Kernel
+                   ┌──────────────┐
+  spin_lock ───────┤ kd_raw_spin_*│──────────────┐
+  mutex_lock ──────┤ kd_mutex_*   │              │
+                   └──────────────┘              ▼
+                                         ┌─────────────┐
+                    Userspace            │ kdlock_km.ko│
+                  ┌──────────┐           │             │
+  /dev/kd_dev ◄───┤ daemon.c │──write──►│ kd_exe_info │
+       │          │          │           │ code_block  │
+       ▼          │ disassem │           │             │
+  /proc/kcore ───►│  .py     │──JIT──┐   │ kd_spinlock │──delegation──►
+       │          │ miasm    │       │   │ kd_mutex    │
+       │          └──────────┘       │   │ kd_exe_on_* │──JIT sandbox──►
+       │                             │   └─────────────┘
+       ▼                             │
+  disassem + asm/ ───────────────────┘
+  wrapper.S → jit.bin
+```
+
+### Delegation Paths
+
+| Lock type | Protocol file | Delegation style |
+|-----------|-------------|-------------------|
+| Raw spinlock | kd_spinlock.c | JIT sandbox via kd_exe_on_call_hl() |
+| Mutex | kd_mutex.c | Stack-switch via kd_context_switch() |
+
+### Key Modules
+
+| Component | File(s) | Role |
+|-----------|---------|------|
+| Hook layer | kd_lock.c | Intercepts kernel lock calls, routes to delegation |
+| Spinlock protocol | kd_spinlock.c | TCLocks MCS queue + combiner/waiter + JIT execution |
+| Mutex protocol | kd_mutex.c | TCLocks linked-list queue + combiner/waiter |
+| JIT engine | exe.c | Manages translated code blocks, executes sandboxes |
+| Char device | sys.c | /dev/kd_dev for daemon ↔ kernel communication |
+| Daemon | daemon/daemon.c | Polls /dev/kd_dev, invokes translator, writes JIT back |
+| Translator | disassem/disassem.py | miasm-based kernel text → JIT assembly translation |
+| Sandbox wrapper | include/wrapper.S | Assembly prologue/epilogue for JIT context save/restore |
+
+### Current Status
+
+- **Spinlock delegation**: fully functional.  The combiner executes JIT-translated
+  sandbox code for queued waiters.  Tested with modes 0–2.
+- **Mutex delegation**: protocol implemented (kd_mutex.c), shadow table wired.
+  Basic lock/unlock works; combiner stack-switch delegation functional.
+  JIT sandbox integration for mutex is pending (currently does raw stack-switch,
+  not translated execution).
+- **Futex delegation**: engine present in kd_lock.c; intercepts futex syscalls
+  inside translated CS and executes them on behalf of waiters.
+- **Dynamic translation**: miasm pipeline functional; supports call-miss and
+  indirect-jump-miss recompilation via daemon polling.
+
 ## Runtime Model
 
 1. The patched kernel lock path checks whether the current task matches

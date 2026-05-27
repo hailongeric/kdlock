@@ -1,3 +1,21 @@
+/*
+ * exe.c — JIT sandbox execution engine (ported from BCD).
+ *
+ * Manages translated code blocks for delegated critical sections:
+ *   - kd_exe_add()      allocate a vmalloc'd executable page for a new RIP
+ *   - kd_exe_on_call()   execute the JIT sandbox for a futex-waiting task
+ *   - kd_exe_on_call_hl() execute JIT sandbox on the combiner's behalf
+ *
+ * The JIT binary is written by the userspace daemon through /dev/kd_dev
+ * (see sys.c).  At runtime the sandbox may report:
+ *   - KD_EXE_CALL_MISS:  untranslated call → daemon extends tables, recompiles
+ *   - KD_EXE_IJ_MISS:    untranslated indirect jump → same
+ *   - KD_EXE_NORMAL:     futex syscall needs handling (wake/wait logic)
+ *   - KD_EXE_INST_LIMIT: instruction count exhausted
+ *
+ * The end_point[] array lists kernel functions whose return indicates the
+ * end of a critical section (e.g. _raw_spin_unlock, mutex_unlock).
+ */
 #include "exe.h"
 
 #include <asm-generic/set_memory.h>
@@ -31,22 +49,22 @@
 
 #include "utils.h"
 
-#define invalid_addr_file_path "/tmp/nf_iva"
+#define invalid_addr_file_path "/tmp/kd_iva"
 
-const int num_pg = 160;
+const int KD_NUM_PG = 160;
 
 
-extern long nf_success_cnt;
-extern long nf_total_cnt;
-extern long nf_success_wake_cnt;
+extern long kd_success_cnt;
+extern long kd_total_cnt;
+extern long kd_success_wake_cnt;
 atomic_t normal_wake_cnt;
-atomic_t nf_d_lock;
-atomic_t nf_com;
-atomic_t nf_wake_state;
+atomic_t kd_d_lock;
+atomic_t kd_com;
+atomic_t kd_wake_state;
 atomic_long_t count_uaddr_time;
 atomic_long_t start_work_cycle;
 
-atomic_t nf_is_delegating;
+atomic_t kd_is_delegating;
 atomic_t int3_waiter_cnt;
 
 spinlock_t int3_change_lock;
@@ -60,12 +78,12 @@ unsigned long end_point[] = {
 	0xffffffff81e8a040,  // mutex_unlock
 };
 
-struct exe_info* exes;
-struct nf_delegate_numanode** nf_numanodes;
-struct nf_cycle_cnt* cycle_cnts;
-struct nf_uaddr_state* uaddr_states;
-struct nf_call_inst* call_insts;
-struct nf_thread* nf_threads;
+struct kd_exe_info* kd_exes;
+struct kd_delegate_numanode** kd_numanodes;
+struct kd_cycle_cnt* kd_cycle_cnts;
+struct kd_uaddr_state* kd_uaddr_states;
+struct kd_call_inst* kd_call_insts;
+struct kd_thread* kd_threads;
 int delegate_uaddr_cnt;
 
 static loff_t get_file_size(struct file* file) {
@@ -75,68 +93,68 @@ static loff_t get_file_size(struct file* file) {
 	return size;
 }
 
-struct exe_info* get_exe(unsigned int pid, unsigned long ip) {
-	int pos = zz_hash(pid, ip) % MAX_EXE;
-	while (exes[pos].status_code != F_UN_USED && (exes[pos].pid != pid || exes[pos].RIP != ip))
-		pos = (pos + 1) % MAX_EXE;
-	return &exes[pos];
+struct kd_exe_info* kd_get_exe(unsigned int pid, unsigned long ip) {
+	int pos = zz_hash(pid, ip) % KD_MAX_EXE;
+	while (kd_exes[pos].status_code != KD_EXE_UNUSED && (kd_exes[pos].pid != pid || kd_exes[pos].RIP != ip))
+		pos = (pos + 1) % KD_MAX_EXE;
+	return &kd_exes[pos];
 }
 
-struct nf_delegate_uaddrnode* get_uaddrnode(unsigned long uaddr, struct nf_delegate_uaddrnode* u_list) {
-	int pos = uaddr % MAX_DELGEGATE_UADDR;
+struct kd_delegate_uaddrnode* kd_get_uaddrnode(unsigned long uaddr, struct kd_delegate_uaddrnode* u_list) {
+	int pos = uaddr % KD_MAX_DELEGATE_UADDR;
 	while (u_list[pos].uaddr != 0 && u_list[pos].uaddr != uaddr)
-		pos = (pos + 1) % MAX_DELGEGATE_UADDR;
+		pos = (pos + 1) % KD_MAX_DELEGATE_UADDR;
 	if (u_list[pos].uaddr == 0)
 		u_list[pos].uaddr = uaddr;
 	return &u_list[pos];
 }
 
-struct nf_uaddr_state* get_uaddr_state(unsigned long uaddr) {
-	int pos = uaddr % MAX_UADDR;
-	while (uaddr_states[pos].state != F_UADDR_INIT && uaddr_states[pos].uaddr != uaddr)
-		pos = (pos + 1) % MAX_UADDR;
-	if (uaddr_states[pos].state == F_UADDR_INIT) {
-		uaddr_states[pos].uaddr = uaddr;
+struct kd_uaddr_state* kd_get_uaddr_state(unsigned long uaddr) {
+	int pos = uaddr % KD_MAX_UADDR;
+	while (kd_uaddr_states[pos].state != KD_UADDR_INIT && kd_uaddr_states[pos].uaddr != uaddr)
+		pos = (pos + 1) % KD_MAX_UADDR;
+	if (kd_uaddr_states[pos].state == KD_UADDR_INIT) {
+		kd_uaddr_states[pos].uaddr = uaddr;
 	}
-	return &uaddr_states[pos];
+	return &kd_uaddr_states[pos];
 }
 
-struct nf_call_inst* get_call_inst(unsigned long addr) {
-	int pos = addr % MAX_CALL;
-	while (call_insts[pos].address != 0 && call_insts[pos].address != addr)
-		pos = (pos + 1) % MAX_CALL;
-	if (call_insts[pos].address == 0)
-		call_insts[pos].address = addr;
-	return &call_insts[pos];
+struct kd_call_inst* kd_get_call_inst(unsigned long addr) {
+	int pos = addr % KD_MAX_CALL;
+	while (kd_call_insts[pos].address != 0 && kd_call_insts[pos].address != addr)
+		pos = (pos + 1) % KD_MAX_CALL;
+	if (kd_call_insts[pos].address == 0)
+		kd_call_insts[pos].address = addr;
+	return &kd_call_insts[pos];
 }
 
-struct nf_thread* get_nf_thread(int pid) {
-	int pos = pid % MAX_THREAD;
-	while (nf_threads[pos].pid != 0 && nf_threads[pos].pid != pid)
-		pos = (pos + 1) % MAX_THREAD;
-	if (nf_threads[pos].pid == 0)
-		nf_threads[pos].pid = pid;
-	return &nf_threads[pos];
+struct kd_thread* kd_get_thread(int pid) {
+	int pos = pid % KD_MAX_THREAD;
+	while (kd_threads[pos].pid != 0 && kd_threads[pos].pid != pid)
+		pos = (pos + 1) % KD_MAX_THREAD;
+	if (kd_threads[pos].pid == 0)
+		kd_threads[pos].pid = pid;
+	return &kd_threads[pos];
 }
 
-void exe_init(void) {
+void kd_exe_init(void) {
 	int i, j, k, ret, cpu, addr_num;
 	unsigned long* addr_buffer;
 
-	KD_PR_INFO("struct nf_delegate_uaddrnode %d", sizeof(struct nf_delegate_uaddrnode));
+	KD_PR_INFO("struct kd_delegate_uaddrnode %d", sizeof(struct kd_delegate_uaddrnode));
 
-	exes = (struct exe_info*)vmalloc(sizeof(struct exe_info) * MAX_EXE);
-	for (i = 0; i < MAX_EXE; i++) {
-		exes[i].status_code = F_UN_USED;
-		exes[i].code_block = NULL;
-		exes[i].gsbase = 0;
+	kd_exes = (struct kd_exe_info*)vmalloc(sizeof(struct kd_exe_info) * KD_MAX_EXE);
+	for (i = 0; i < KD_MAX_EXE; i++) {
+		kd_exes[i].status_code = KD_EXE_UNUSED;
+		kd_exes[i].code_block = NULL;
+		kd_exes[i].gsbase = 0;
 	}
 
-	nf_numanodes = (struct nf_delegate_numanode**)vmalloc(sizeof(struct nf_delegate_numanode*) * num_online_nodes());
+	kd_numanodes = (struct kd_delegate_numanode**)vmalloc(sizeof(struct kd_delegate_numanode*) * num_online_nodes());
 	for (i = 0;i < num_online_nodes();i++) {
-		nf_numanodes[i] = (struct nf_delegate_numanode*)vmalloc_node(sizeof(struct nf_delegate_numanode), i);
-		for (j = 0;j < MAX_DELGEGATE_UADDR;j++) {
-			struct nf_delegate_uaddrnode* u_node = &nf_numanodes[i]->uaddr_node[j];
+		kd_numanodes[i] = (struct kd_delegate_numanode*)vmalloc_node(sizeof(struct kd_delegate_numanode), i);
+		for (j = 0;j < KD_MAX_DELEGATE_UADDR;j++) {
+			struct kd_delegate_uaddrnode* u_node = &kd_numanodes[i]->uaddr_node[j];
 			u_node->uaddr = 0;
 			atomic_long_set(&u_node->queue.q, 0);
 			atomic_long_set(&u_node->wake_queue.q, 0);
@@ -149,87 +167,87 @@ void exe_init(void) {
 		}
 	}
 
-	uaddr_states = (struct nf_uaddr_state*)vmalloc(sizeof(struct nf_uaddr_state) * MAX_UADDR);
-	for (i = 0;i < MAX_UADDR;i++) {
-		uaddr_states[i].begin = 0;
-		uaddr_states[i].cnt = 0;
-		uaddr_states[i].end = 0;
-		uaddr_states[i].state = F_UADDR_INIT;
-		uaddr_states[i].uaddr = 0;
-		atomic_set(&uaddr_states[i].is_delegating, 0);
+	kd_uaddr_states = (struct kd_uaddr_state*)vmalloc(sizeof(struct kd_uaddr_state) * KD_MAX_UADDR);
+	for (i = 0;i < KD_MAX_UADDR;i++) {
+		kd_uaddr_states[i].begin = 0;
+		kd_uaddr_states[i].cnt = 0;
+		kd_uaddr_states[i].end = 0;
+		kd_uaddr_states[i].state = KD_UADDR_INIT;
+		kd_uaddr_states[i].uaddr = 0;
+		atomic_set(&kd_uaddr_states[i].is_delegating, 0);
 	}
 
 
-	call_insts = (struct nf_call_inst*)vmalloc(sizeof(struct nf_call_inst) * MAX_CALL);
-	for (i = 0;i < MAX_CALL;i++) {
-		call_insts[i].address = 0;
-		call_insts[i].offset = 0;
+	kd_call_insts = (struct kd_call_inst*)vmalloc(sizeof(struct kd_call_inst) * KD_MAX_CALL);
+	for (i = 0;i < KD_MAX_CALL;i++) {
+		kd_call_insts[i].address = 0;
+		kd_call_insts[i].offset = 0;
 	}
 
-	cycle_cnts = (struct nf_cycle_cnt*)vmalloc(sizeof(struct nf_cycle_cnt) * 64);
+	kd_cycle_cnts = (struct kd_cycle_cnt*)vmalloc(sizeof(struct kd_cycle_cnt) * 64);
 	for (i = 0;i < 64;i++) {	
-		cycle_cnts[i].min = INT_MAX;
-		cycle_cnts[i].total = 0;
-		cycle_cnts[i].total_cnt = 0;
+		kd_cycle_cnts[i].min = INT_MAX;
+		kd_cycle_cnts[i].total = 0;
+		kd_cycle_cnts[i].total_cnt = 0;
 		for (j = 0;j < 30;++j)
-			cycle_cnts[i].cnt[j] = 0;
+			kd_cycle_cnts[i].cnt[j] = 0;
 	}
 	delegate_uaddr_cnt = 0;
 
 	atomic_set(&normal_wake_cnt, 0);
-	atomic_set(&nf_d_lock, 0);
-	atomic_set(&nf_com, 0);
-	atomic_set(&nf_wake_state, 0);
+	atomic_set(&kd_d_lock, 0);
+	atomic_set(&kd_com, 0);
+	atomic_set(&kd_wake_state, 0);
 	atomic_long_set(&start_work_cycle, 0);
 	atomic_long_set(&count_uaddr_time, 2500000000);
-	atomic_set(&nf_is_delegating, 0);
+	atomic_set(&kd_is_delegating, 0);
 	atomic_set(&int3_waiter_cnt, 0);
 	spin_lock_init(&int3_change_lock);
 }
 
-void exe_exit(void) {
+void kd_exe_exit(void) {
 	int i, j, cpu, range[30] = { 0 };
 	unsigned long sum = 0, sum_cnt = 0;
 
 
-	KD_PR_INFO("normal_wake_cnt: %d nf_d_lock: %d nf_com: %d nf_wake_state: %d", \
-		atomic_read(&normal_wake_cnt), atomic_read(&nf_d_lock), atomic_read(&nf_com), atomic_read(&nf_wake_state));
+	KD_PR_INFO("normal_wake_cnt: %d kd_d_lock: %d kd_com: %d kd_wake_state: %d", \
+		atomic_read(&normal_wake_cnt), atomic_read(&kd_d_lock), atomic_read(&kd_com), atomic_read(&kd_wake_state));
 
-	for (i = 0;i < MAX_EXE;i++) {
-		// if (exes[i].code_block != NULL)
-		// 	KD_PR_INFO("code address: %lx", (unsigned long)(exes[i].code_block));
-		vfree(exes[i].code_block);
+	for (i = 0;i < KD_MAX_EXE;i++) {
+		// if (kd_exes[i].code_block != NULL)
+		// 	KD_PR_INFO("code address: %lx", (unsigned long)(kd_exes[i].code_block));
+		vfree(kd_exes[i].code_block);
 	}
 
-	vfree(exes);
+	vfree(kd_exes);
 
 	for (i = 0;i < 64;i++) {
-		sum += cycle_cnts[i].total;
-		sum_cnt += cycle_cnts[i].total_cnt;
+		sum += kd_cycle_cnts[i].total;
+		sum_cnt += kd_cycle_cnts[i].total_cnt;
 		for (j = 0;j < 30;j++)
-			range[j] += cycle_cnts[i].cnt[j];
-		if (cycle_cnts[i].min < INT_MAX)
-			KD_PR_INFO("min cycle: %lld", cycle_cnts[i].min);
+			range[j] += kd_cycle_cnts[i].cnt[j];
+		if (kd_cycle_cnts[i].min < INT_MAX)
+			KD_PR_INFO("min cycle: %lld", kd_cycle_cnts[i].min);
 	}
 	if (sum_cnt > 0)
 		KD_PR_INFO("average cycle: %ld", sum / sum_cnt);
 	for (i = 0;i < 30;i++)
 		KD_PR_INFO("[%2d00 --- %2d00]: %d", i, i + 1, range[i]);
 
-	vfree(call_insts);
+	vfree(kd_call_insts);
 
-	vfree(cycle_cnts);
+	vfree(kd_cycle_cnts);
 	for (i = 0;i < num_online_nodes();i++)
-		vfree(nf_numanodes[i]);
-	vfree(nf_numanodes);
+		vfree(kd_numanodes[i]);
+	vfree(kd_numanodes);
 
-	for (i = 0;i < MAX_UADDR;i++) {
-		if ((uaddr_states[i].state == F_UADDR_DELGEGATE || uaddr_states[i].state == F_UADDR_IGNORE) && uaddr_states[i].cnt > 100)
-			KD_PR_INFO("uaddr: %lx cycle: %ld state: %d cnt: %d", uaddr_states[i].uaddr, uaddr_states[i].end - uaddr_states[i].begin, uaddr_states[i].state, uaddr_states[i].cnt);
+	for (i = 0;i < KD_MAX_UADDR;i++) {
+		if ((kd_uaddr_states[i].state == KD_UADDR_DELEGATE || kd_uaddr_states[i].state == KD_UADDR_IGNORE) && kd_uaddr_states[i].cnt > 100)
+			KD_PR_INFO("uaddr: %lx cycle: %ld state: %d cnt: %d", kd_uaddr_states[i].uaddr, kd_uaddr_states[i].end - kd_uaddr_states[i].begin, kd_uaddr_states[i].state, kd_uaddr_states[i].cnt);
 	}
-	vfree(uaddr_states);
+	vfree(kd_uaddr_states);
 
-	// vfree(nf_threads);
+	// vfree(kd_threads);
 	return;
 }
 
@@ -261,26 +279,26 @@ static int is_end_point(unsigned long addr)
 }
 
 //! IN MY VERSION PID IS TGID
-void exe_add(int pid, unsigned long RIP) {
+void kd_exe_add(int pid, unsigned long RIP) {
 	void* mem;
-	struct exe_info* p = get_exe(pid, RIP);
+	struct kd_exe_info* p = kd_get_exe(pid, RIP);
 
 	if (p->pid == pid && p->RIP == RIP)  return;
 
 	// if (!target_address(RIP)) return;
 
-	if (p->status_code != F_UN_USED)
-		KD_PR_INFO( "exe add crash error %d %d %lx --- %d %lx\t%d---%d\n", p->status_code, p->pid, p->RIP, pid, RIP, zz_hash(p->pid, p->RIP) % MAX_EXE, zz_hash(pid, RIP) % MAX_EXE);
+	if (p->status_code != KD_EXE_UNUSED)
+		KD_PR_INFO( "exe add crash error %d %d %lx --- %d %lx\t%d---%d\n", p->status_code, p->pid, p->RIP, pid, RIP, zz_hash(p->pid, p->RIP) % KD_MAX_EXE, zz_hash(pid, RIP) % KD_MAX_EXE);
 
 	p->pid = pid;
 	p->RIP = RIP;
 	p->tgid = current->tgid;
 
-	mem = vmalloc(4096 * num_pg);
-	set_memory_x((unsigned long)mem, num_pg);  // ! TODO fix bug
+	mem = vmalloc(4096 * KD_NUM_PG);
+	set_memory_x((unsigned long)mem, KD_NUM_PG);  // ! TODO fix bug
 
 	p->code_block = mem;
-	p->status_code = F_UN_INIT;
+	p->status_code = KD_EXE_UNINIT;
 	p->success_cnt = 0;
 	p->fail_cnt = 0;
 
@@ -292,7 +310,7 @@ void exe_add(int pid, unsigned long RIP) {
     	asm volatile("rdgsbase %0" : "=r"(gs_base));
 		p->gsbase = gs_base;
 	}
-	// struct nf_thread* t = get_nf_thread(pid);
+	// struct kd_thread* t = kd_get_thread(pid);
 	// t->fsbase = x86_fsbase_read_cpu();
 
 
@@ -304,14 +322,14 @@ void exe_add(int pid, unsigned long RIP) {
   For input, the first arg is fs, and second being gs.
   For output, the first is return_code, or the address of indirect jump.
 */
-void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret* r) {
+void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_exe_ret* r) {
 	unsigned long long begin, end;
 
 	// int cpu_id = smp_processor_id();
 	// begin = rdtsc_ordered();
 
 	// if (task->exit_state == EXIT_DEAD || task->exit_state == EXIT_ZOMBIE) {
-	// 	KD_PR_INFO("[exe_on_call] task is dead");
+	// 	KD_PR_INFO("[kd_exe_on_call] task is dead");
 	// 	r->ret = -0xdead;
 	// 	return;
 	// }
@@ -320,8 +338,8 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 
 	unsigned long args[2];
 	void (*virt_ptr)(struct pt_regs* regs, unsigned long* args);
-	struct exe_info* exe;
-	// struct nf_thread* th;
+	struct kd_exe_info* exe;
+	// struct kd_thread* th;
 	unsigned long cur_uaddr;
 	r->count = 0;
 
@@ -334,20 +352,20 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 		unsigned long rip = regs->ip;
 
 
-		exe = get_exe(pid, rip);
+		exe = kd_get_exe(pid, rip);
 		// spin_lock(&exe->lock);
 
-		if (exe->status_code != F_NORMAL || exe->RIP != regs->ip || exe->pid != pid) {
-			if (exe->status_code == F_NORMAL)
+		if (exe->status_code != KD_EXE_NORMAL || exe->RIP != regs->ip || exe->pid != pid) {
+			if (exe->status_code == KD_EXE_NORMAL)
 				KD_PR_INFO( "run error exe %lx %lx %lx %d %d!\n", exe->status_code, exe->RIP, regs->ip, exe->pid, pid);
 			r->ret = -1;
 			// spin_unlock(&exe->lock);
 			return;
 		}
 
-		// th = get_nf_thread(pid);
+		// th = kd_get_thread(pid);
 
-		// nf_total_cnt++;
+		// kd_total_cnt++;
 
 		virt_ptr = exe->code_block;
 
@@ -382,20 +400,20 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 		// rdmsrl_safe(0xC4, &end);
 		// barrier();
 
-		if (args[0] == F_NORMAL) {  // syscall
+		if (args[0] == KD_EXE_NORMAL) {  // syscall
 			if (regs->ax == 202) {  // legal syscall
-				int nf_op = regs->si & 0x7f;
+				int kd_op = regs->si & 0x7f;
 				if (!((regs->si) & FUTEX_PRIVATE_FLAG))
 					KD_PR_INFO( "kd not shared flag\n");
-				if (nf_op == 1) { // futex wake
+				if (kd_op == 1) { // futex wake
 
 					cur_uaddr = regs->di;
 					r->uaddr[r->count] = cur_uaddr;
 					r->wake_num[r->count] = regs->dx;
 					r->count++;
 					// exe->success_cnt++;
-					// nf_success_cnt++;
-					// nf_success_wake_cnt++;
+					// kd_success_cnt++;
+					// kd_success_wake_cnt++;
 					// exe->success_cnt++;
 					// KD_PR_INFO( "wake number: %lx uaddr: %lx ip:%lx\n", regs->dx, origin_uaddr, regs->ip);
 					if (cur_uaddr == origin_uaddr) { //wake same uaddr
@@ -410,12 +428,12 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 						// end = rdtsc_ordered();
 						// unsigned long cost = end - begin;
 						// if (cost < 3000UL)
-						// 	++cycle_cnts[cpu_id].cnt[cost / 100UL];
+						// 	++kd_cycle_cnts[cpu_id].cnt[cost / 100UL];
 						// else
-						// 	++cycle_cnts[cpu_id].cnt[29];
-						// cycle_cnts[cpu_id].min = cycle_cnts[cpu_id].min < cost ? cycle_cnts[cpu_id].min : cost;
-						// cycle_cnts[cpu_id].total += cost;
-						// ++cycle_cnts[cpu_id].total_cnt;
+						// 	++kd_cycle_cnts[cpu_id].cnt[29];
+						// kd_cycle_cnts[cpu_id].min = kd_cycle_cnts[cpu_id].min < cost ? kd_cycle_cnts[cpu_id].min : cost;
+						// kd_cycle_cnts[cpu_id].total += cost;
+						// ++kd_cycle_cnts[cpu_id].total_cnt;
 
 					}
 					else { //wake another uaddr
@@ -424,15 +442,15 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 						// regs->r11 = regs->flags;
 						// regs->orig_ax = regs->ax;
 						// regs->ax = 1;
-						// exe_add(pid, regs->ip);
+						// kd_exe_add(pid, regs->ip);
 						// KD_PR_INFO( "not same wake.ip: %lx wake number: %lx uaddr: %lx ip:%lx rsi: %lx\n", exe->RIP, regs->dx, origin_uaddr, regs->ip, regs->si);
 						// continue;
 						r->ret = 2;
 					}
 				}
-				else if (nf_op == 0 || nf_op == 9) { //futex wait
+				else if (kd_op == 0 || kd_op == 9) { //futex wait
 					cur_uaddr = regs->di;
-					// nf_success_cnt++;
+					// kd_success_cnt++;
 					if (cur_uaddr == origin_uaddr) {
 						// regs->ip += 2;
 						// regs->cx = regs->ip;
@@ -449,7 +467,7 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 					}
 				}
 				else {
-					KD_PR_INFO( "illegal nf_op %d\n", nf_op);
+					KD_PR_INFO( "illegal kd_op %d\n", kd_op);
 					// exe->fail_cnt++;
 					r->ret = -4;
 				}
@@ -460,13 +478,13 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 				r->ret = -4;
 			}
 		}
-		else if (args[0] == F_CALL_MISS /*&& exe->success_cnt >= 0*/) {  // missing call
+		else if (args[0] == KD_EXE_CALL_MISS /*&& exe->success_cnt >= 0*/) {  // missing call
 			exe->tgt_addr = regs->ip;
 			// exe->fail_cnt++;
 			if (valid_address(exe->tgt_addr)) {
 				// exe->miss_cnt++;
 				// if (exe->miss_cnt < 10)
-				exe->status_code = F_CALL_MISS;
+				exe->status_code = KD_EXE_CALL_MISS;
 				// else {
 				// 	for (int i = 0;i < 10;i++) {
 				// 		if (iva[i] == exe->tgt_addr)
@@ -481,9 +499,9 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 			// exe->fail_cnt++;
 			r->ret = -1;
 		}
-		else if (args[0] == F_INST_LIMIT) {
+		else if (args[0] == KD_EXE_INST_LIMIT) {
 			KD_PR_INFO("inst limit\n");
-			exe->status_code = F_NORMAL;
+			exe->status_code = KD_EXE_NORMAL;
 			r->ret = 3;
 		}
 		else if (1/*exe->success_cnt >= 0*/) {  // ij
@@ -491,7 +509,7 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 			exe->tgt_addr = regs->ip;
 			exe->jump_from = args[0];
 			if (valid_address(exe->tgt_addr) && valid_address(exe->jump_from))
-				exe->status_code = F_IJ_MISS;
+				exe->status_code = KD_EXE_IJ_MISS;
 			// exe->fail_cnt++;
 			r->ret = -1;
 		}
@@ -506,23 +524,23 @@ void exe_on_call(struct task_struct* task, struct pt_regs* regs, struct exe_ret*
 
 
 
-int exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
+int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
 	int pid = current->pid;
 	unsigned long args[2];
 	void (*virt_ptr)(struct pt_regs* regs, unsigned long* args);
-	struct exe_info* exe;
+	struct kd_exe_info* exe;
 	unsigned long rip = regs->ip;
 	int ret_flag;
 
 
-	exe = get_exe(pid, rip);
+	exe = kd_get_exe(pid, rip);
 	// spin_lock(&exe->lock);
-	if (exe->status_code != F_NORMAL || exe->RIP != regs->ip || exe->pid != pid) {
-		if (exe->status_code == F_NORMAL)
+	if (exe->status_code != KD_EXE_NORMAL || exe->RIP != regs->ip || exe->pid != pid) {
+		if (exe->status_code == KD_EXE_NORMAL)
 			KD_PR_INFO( "run error exe %d %lx %lx %d %d!\n", exe->status_code, exe->RIP, regs->ip, exe->pid, pid);
 		// spin_unlock(&exe->lock);
 		KD_PR_INFO("run error exe(%px) %d %lx %lx %d %d!\n", exe, exe->status_code, exe->RIP, regs->ip, exe->pid, pid);
-		return EXE_NO_RUN;
+		return KD_EXE_NO_RUN;
 	}
 	// ! todo pid is not correct
 
@@ -552,37 +570,37 @@ int exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
 	// rdmsrl_safe(0xC4, &end);
 	// barrier();
 
-	if (args[0] == F_NORMAL) {  // syscall
+	if (args[0] == KD_EXE_NORMAL) {  // syscall
 		KD_PR_INFO( "illegal syscall %ld %lx\n", regs->ax, regs->ip);
-		ret_flag = EXE_RUN_ERROR;
+		ret_flag = KD_EXE_RUN_ERROR;
 	}
-	else if (args[0] == F_CALL_MISS /*&& exe->success_cnt >= 0*/) {  // missing call
+	else if (args[0] == KD_EXE_CALL_MISS /*&& exe->success_cnt >= 0*/) {  // missing call
 
 		if (is_end_point(regs->ip)) {
-			ret_flag = EXE_RUN_TO_UNLOCK;
+			ret_flag = KD_EXE_RUN_TO_UNLOCK;
 		}else{
 			exe->tgt_addr = regs->ip;  // ! todo avoid raw_spin_unlock 
 			// exe->fail_cnt++;
 			if (valid_address(exe->tgt_addr)) {
 				// exe->miss_cnt++;
 				// if (exe->miss_cnt < 10)
-				exe->status_code = F_CALL_MISS;
+				exe->status_code = KD_EXE_CALL_MISS;
 			}
-			ret_flag = EXE_RUN_ERROR;
+			ret_flag = KD_EXE_RUN_ERROR;
 		}
 	}
-	else if (args[0] == F_INST_LIMIT) {
+	else if (args[0] == KD_EXE_INST_LIMIT) {
 		KD_PR_INFO("inst limit\n");
-		exe->status_code = F_NORMAL;
-		ret_flag = EXE_RUN_ERROR;
+		exe->status_code = KD_EXE_NORMAL;
+		ret_flag = KD_EXE_RUN_ERROR;
 	}
 	else  {  // ij
 		// exe->fail_cnt++;
 		exe->tgt_addr = regs->ip;
 		exe->jump_from = args[0];
 		if (valid_address(exe->tgt_addr) && valid_address(exe->jump_from))
-			exe->status_code = F_IJ_MISS;
-		ret_flag = EXE_RUN_ERROR;
+			exe->status_code = KD_EXE_IJ_MISS;
+		ret_flag = KD_EXE_RUN_ERROR;
 	}
 	mb();
 	return ret_flag;

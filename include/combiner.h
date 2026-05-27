@@ -24,6 +24,7 @@
 #define LOCK_END_TIMING_PER_CPU_DISABLE(name)
 
 extern long kd_combiner_batch_size;
+extern long kd_mutex_batch_size;
 
 void kd_context_switch(void *incoming_rsp_ptr, void *outgoing_rsp_ptr);
 

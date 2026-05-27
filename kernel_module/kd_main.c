@@ -12,6 +12,7 @@
 #include "exe.h"
 #include "kd_lock.h"
 #include "kd_spinlock.h"
+#include "kd_mutex.h"
 #include "sys.h"
 #include "utils.h"
 
@@ -45,14 +46,14 @@ extern void (*kd_mutex_lock)(struct mutex *lock, unsigned long ret_rsp,
 extern void (*kd_mutex_unlock)(struct mutex *lock, unsigned long ret_rsp,
 			       unsigned long ret_addr);
 
-extern int (*nf_do_int3)(struct pt_regs *);
+extern int (*kd_do_int3)(struct pt_regs *);
 
-long nf_success_cnt;
-long nf_success_wake_cnt;
-long nf_total_cnt;
+long kd_success_cnt;
+long kd_success_wake_cnt;
+long kd_total_cnt;
 unsigned long uaddrs[102400];
 unsigned long uaddr_cnts[102400];
-unsigned long nf_wake_rets[512];
+unsigned long kd_wake_rets[512];
 long uaddr_cnt;
 
 static int __is_kd_test(void)
@@ -75,9 +76,10 @@ static int __init kdlock_km_init(void)
 	int i;
 	char *token;
 
-	exe_init();
-	sys_init();
+	kd_exe_init();
+	kd_sys_init();
 	kd_spinlock_init();
+	kd_mutex_init_percpu();
 	i = 0;
 	token = strsep(&target_process, " ");
 	while (token != NULL) {
@@ -97,18 +99,18 @@ static int __init kdlock_km_init(void)
 	}
 
 	uaddr_cnt = 0;
-	nf_success_cnt = 0;
-	nf_success_wake_cnt = 0;
-	nf_total_cnt = 0;
-	for (i = 0; i < NF_CNT_NUM + 2; i++)
-		nf_wake_rets[i] = 0;
+	kd_success_cnt = 0;
+	kd_success_wake_cnt = 0;
+	kd_total_cnt = 0;
+	for (i = 0; i < KD_CNT_NUM + 2; i++)
+		kd_wake_rets[i] = 0;
 	is_kd_test = __is_kd_test;
 	kd_raw_spin_unlock = __kd_raw_spin_unlock;
 	kd_raw_spin_lock = __kd_raw_spin_lock;
 	is_kd = __is_kd_test;
 	kd_mutex_lock = __kd_mutex_lock;
 	kd_mutex_unlock = __kd_mutex_unlock;
-	nf_do_int3 = NULL;
+	kd_do_int3 = NULL;
 
 	KD_PR_INFO("kd kernel module init\n");
 	return 0;
@@ -124,15 +126,15 @@ static void __exit kdlock_km_exit(void)
 	kd_mutex_unlock = NULL;
 	kd_mutex_lock = NULL;
 	is_kd = NULL;
-	nf_do_int3 = NULL;
-	KD_PR_INFO("nf_success_cnt:%ld nf_total_cnt:%ld nf_success_wake_cnt:%ld success_rate:%ld.%02ld%% success_wake_rate:%ld.%02ld%%\n", \
-		nf_success_cnt, nf_total_cnt, nf_success_wake_cnt, \
-		rate_int(nf_success_cnt, nf_total_cnt), rate_dec(nf_success_cnt, nf_total_cnt), \
-		rate_int(nf_success_wake_cnt, nf_success_cnt), rate_dec(nf_success_wake_cnt, nf_success_cnt));
-	for (i = 0; i < NF_CNT_NUM + 2; i++) {
-		target_cnt += i * nf_wake_rets[i];
-		time_cnt += nf_wake_rets[i];
-		KD_PR_INFO("ret: %d cnt: %lu\n", i, nf_wake_rets[i]);
+	kd_do_int3 = NULL;
+	KD_PR_INFO("kd_success_cnt:%ld kd_total_cnt:%ld kd_success_wake_cnt:%ld success_rate:%ld.%02ld%% success_wake_rate:%ld.%02ld%%\n", \
+		kd_success_cnt, kd_total_cnt, kd_success_wake_cnt, \
+		rate_int(kd_success_cnt, kd_total_cnt), rate_dec(kd_success_cnt, kd_total_cnt), \
+		rate_int(kd_success_wake_cnt, kd_success_cnt), rate_dec(kd_success_wake_cnt, kd_success_cnt));
+	for (i = 0; i < KD_CNT_NUM + 2; i++) {
+		target_cnt += i * kd_wake_rets[i];
+		time_cnt += kd_wake_rets[i];
+		KD_PR_INFO("ret: %d cnt: %lu\n", i, kd_wake_rets[i]);
 	}
 	if (time_cnt > 0)
 		KD_PR_INFO("average ret: %d", target_cnt / time_cnt);
@@ -145,8 +147,9 @@ static void __exit kdlock_km_exit(void)
 			kfree(target_names[i]);
 
 	kd_spinlock_exit();
-	sys_exit();
-	exe_exit();
+	kd_mutex_exit();
+	kd_sys_exit();
+	kd_exe_exit();
 
 	KD_PR_INFO("kd kernel module exit\n");
 }

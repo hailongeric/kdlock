@@ -1,5 +1,5 @@
-#ifndef NEW_KD_LOCK
-#define NEW_KD_LOCK
+#ifndef KD_LOCK_H
+#define KD_LOCK_H
 
 #include <linux/freezer.h>
 #include <linux/sched/signal.h>
@@ -128,14 +128,14 @@ __releases(&hb->lock) {
     spin_unlock(&hb->lock);
 }
 
-static inline void nf_preempt_disable_raw_spin_lock(raw_spinlock_t* lock) {
+static inline void kd_preempt_disable_raw_spin_lock(raw_spinlock_t* lock) {
     spin_acquire(&lock->dep_map, 0, 0, _RET_IP_);
     LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
 }
 
-static __always_inline void nf_preempt_disable_spin_lock(spinlock_t* lock)
+static __always_inline void kd_preempt_disable_spin_lock(spinlock_t* lock)
 {
-    nf_preempt_disable_raw_spin_lock(&lock->rlock);
+    kd_preempt_disable_raw_spin_lock(&lock->rlock);
 }
 
 
@@ -151,7 +151,7 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 
 int new_futex_wake1(u32 __user* uaddr, unsigned int flags, int nr_wake, u32 bitset);
 
-int __nf_do_int3(struct pt_regs* regs);
+int __kd_do_int3(struct pt_regs* regs);
 
 void origin_raw_spin_lock(raw_spinlock_t *lock);
 void origin_raw_spin_unlock(raw_spinlock_t *lock);
@@ -160,23 +160,23 @@ void origin_mutex_unlock(struct mutex *lock, unsigned long ret_addr);
 
 
 
-#define NF_WAKER 20
-#define NF_WAKE_NUM 20
-#define NF_FAST_PATH_WAKE_NUM 20
-#define NF_SLOW_PATH_WAKE_NUM 20
-#define NF_CNT_NUM 40
-#define NF_E_QUEUE_NUM 20
+#define KD_WAKER                 20
+#define KD_WAKE_NUM              20
+#define KD_FAST_PATH_WAKE_NUM    20
+#define KD_SLOW_PATH_WAKE_NUM    20
+#define KD_CNT_NUM               40
+#define KD_E_QUEUE_NUM           20
 
-#define fast_path_uninit 0
-#define fast_path_ready 1
-#define fast_path_success 2
-#define fast_path_fail 3
-#define fast_path_timeout 4
+#define fast_path_uninit           0
+#define fast_path_ready            1
+#define fast_path_success          2
+#define fast_path_fail             3
+#define fast_path_timeout          4
 #define fast_path_no_need_to_sleep 5
 
-#define fast_wake_ready 6
-#define fast_wake_success 7
-#define fast_wake_timeout 8
-#define fast_to_slow_wake 9
+#define fast_wake_ready            6
+#define fast_wake_success          7
+#define fast_wake_timeout          8
+#define fast_to_slow_wake          9
 
-#endif
+#endif /* KD_LOCK_H */

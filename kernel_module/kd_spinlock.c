@@ -1,5 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0
 // Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi
+//
+// Ported to kdlock: TCLocks komb.c → kd_spinlock.c
+//
+// kd_spinlock implements transparent delegation for kernel spinlocks.
+// The protocol uses a per-CPU MCS-style queue with a combiner/waiter model:
+// the lock holder (combiner) executes critical sections on behalf of queued
+// waiters via kd_context_switch.  JIT-translated sandbox code is run through
+// kd_exe_on_call_hl() (see exe.c).
+//
+// Key differences from TCLocks komb.c:
+//   - Calls kd_exe_on_call_hl() inside execute_cs() for JIT delegation
+//   - Uses kd_spin_node (renamed from komb_node) with embedded pt_regs
+//   - Delegation via sandbox JIT, not raw stack-switch
 
 /*
  * TODO: (Performance optimiztion)
@@ -410,9 +423,9 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
                 curr_node->regs.r15, curr_node->regs.r14, curr_node->regs.r13,
                 curr_node->regs.r12, curr_node->regs.bx, curr_node->regs.bp,
                 curr_node->regs.ip, curr_node->regs.sp);
-    int ret_flag = exe_on_call_hl(&curr_node->regs, outgoing_rsp_ptr);
+    int ret_flag = kd_exe_on_call_hl(&curr_node->regs, outgoing_rsp_ptr);
 
-    if (ret_flag == EXE_RUN_TO_UNLOCK)
+    if (ret_flag == KD_EXE_RUN_TO_UNLOCK)
     {
         // TODO its ok
         KD_PR_DEBUG("delegation ok\n");
@@ -512,13 +525,13 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 
         int exe_flag = execute_cs(lock, curr_node);
 
-        if(exe_flag == EXE_NO_RUN){
+        if(exe_flag == KD_EXE_NO_RUN){
             print_debug("can't assembly\n");
             next_node = curr_node; 
             //! no exe any waiter
             break;
         }
-        if(exe_flag == EXE_RUN_ERROR){
+        if(exe_flag == KD_EXE_RUN_ERROR){
             print_debug("run error\n");
             next_node = curr_node; 
             break;
@@ -1142,7 +1155,7 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value)
                 :
                 : "i"(get_kd_spin_node), "i"(offsetof(struct kd_spin_node, rsp))
                 : "memory");
-        // ! waiter F_IJ_MISS
+        // ! waiter KD_EXE_IJ_MISS
         cur_node = get_kd_spin_node();
         jump_to_saved_regs_in_cs(&cur_node->regs);
         __builtin_unreachable();
