@@ -11,6 +11,7 @@
 
 #include "exe.h"
 #include "kd_lock.h"
+#include "kd_futex.h"
 #include "kd_spinlock.h"
 #include "kd_mutex.h"
 #include "sys.h"
