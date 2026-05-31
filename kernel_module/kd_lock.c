@@ -239,7 +239,6 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 		return;
 	}
 
-	entry->delegated = 0;
 	_kd_mutex_unlock(kd_mtx);
 }
 
