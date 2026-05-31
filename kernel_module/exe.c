@@ -53,6 +53,19 @@
 
 const int KD_NUM_PG = 160;
 
+/*
+ * Pre-allocated pool of executable code blocks.  kd_exe_add() is called from
+ * the lock hooks which may run with interrupts disabled, so vmalloc and
+ * set_memory_x cannot be used there.  All blocks are allocated and marked
+ * executable during kd_exe_init().
+ */
+#define KD_CODE_BLOCK_POOL 64
+#define KD_CODE_BLOCK_SIZE  (4096 * KD_NUM_PG)
+
+static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
+static int kd_code_block_free;
+static DEFINE_SPINLOCK(kd_code_block_lock);
+
 
 extern long kd_success_cnt;
 extern long kd_total_cnt;
@@ -73,10 +86,8 @@ long long total_cycle = 0, total_cnt = 0;
 
 unsigned long btc_t = 0;
 unsigned long iva[32] = { 0 };
-unsigned long end_point[] = {
-	0xffffffff81e90b30,  // _raw_spin_unlock
-	0xffffffff81e8a040,  // mutex_unlock
-};
+unsigned long end_point[4];
+static int end_point_count;
 
 struct kd_exe_info* kd_exes;
 struct kd_delegate_numanode** kd_numanodes;
@@ -143,6 +154,17 @@ void kd_exe_init(void) {
 
 	KD_PR_INFO("struct kd_delegate_uaddrnode %d", sizeof(struct kd_delegate_uaddrnode));
 
+	/* Resolve unlock function addresses dynamically */
+	end_point_count = 0;
+	end_point[end_point_count] = kallsyms_lookup_name("_raw_spin_unlock");
+	if (end_point[end_point_count])
+		end_point_count++;
+	end_point[end_point_count] = kallsyms_lookup_name("mutex_unlock");
+	if (end_point[end_point_count])
+		end_point_count++;
+	for (i = 0; i < end_point_count; i++)
+		KD_PR_INFO("end_point[%d] = %lx", i, end_point[i]);
+
 	kd_exes = (struct kd_exe_info*)vmalloc(sizeof(struct kd_exe_info) * KD_MAX_EXE);
 	for (i = 0; i < KD_MAX_EXE; i++) {
 		kd_exes[i].status_code = KD_EXE_UNUSED;
@@ -203,6 +225,17 @@ void kd_exe_init(void) {
 	atomic_set(&kd_is_delegating, 0);
 	atomic_set(&int3_waiter_cnt, 0);
 	spin_lock_init(&int3_change_lock);
+
+	/* Pre-allocate executable code blocks so kd_exe_add() never calls
+	 * vmalloc or set_memory_x from inside a critical section. */
+	spin_lock_init(&kd_code_block_lock);
+	for (i = 0; i < KD_CODE_BLOCK_POOL; i++) {
+		kd_code_block_pool[i] = vmalloc(KD_CODE_BLOCK_SIZE);
+		if (kd_code_block_pool[i])
+			set_memory_x((unsigned long)kd_code_block_pool[i],
+				     KD_NUM_PG);
+	}
+	kd_code_block_free = KD_CODE_BLOCK_POOL;
 }
 
 void kd_exe_exit(void) {
@@ -213,13 +246,12 @@ void kd_exe_exit(void) {
 	KD_PR_INFO("normal_wake_cnt: %d kd_d_lock: %d kd_com: %d kd_wake_state: %d", \
 		atomic_read(&normal_wake_cnt), atomic_read(&kd_d_lock), atomic_read(&kd_com), atomic_read(&kd_wake_state));
 
-	for (i = 0;i < KD_MAX_EXE;i++) {
-		// if (kd_exes[i].code_block != NULL)
-		// 	KD_PR_INFO("code address: %lx", (unsigned long)(kd_exes[i].code_block));
-		vfree(kd_exes[i].code_block);
-	}
-
+	/* code_blocks are allocated from the pre-allocated pool, freed below */
 	vfree(kd_exes);
+
+	/* Free the pre-allocated code block pool */
+	for (i = 0; i < KD_CODE_BLOCK_POOL; i++)
+		vfree(kd_code_block_pool[i]);
 
 	for (i = 0;i < 64;i++) {
 		sum += kd_cycle_cnts[i].total;
@@ -261,8 +293,7 @@ int valid_address(unsigned long addr) {
 			return 0;
 		}
 	}
-	length = sizeof(end_point) / sizeof(end_point[0]);
-	for (i = 0;i < length;i++)
+	for (i = 0; i < end_point_count; i++)
 		if (addr == end_point[i])
 			return 0;
 	return 1;
@@ -272,7 +303,7 @@ static int is_end_point(unsigned long addr)
 {
 	int i;
 
-	for (i = 0; i < ARRAY_SIZE(end_point); i++)
+	for (i = 0; i < end_point_count; i++)
 		if (addr == end_point[i])
 			return 1;
 	return 0;
@@ -280,7 +311,7 @@ static int is_end_point(unsigned long addr)
 
 //! IN MY VERSION PID IS TGID
 void kd_exe_add(int pid, unsigned long RIP) {
-	void* mem;
+	void* mem = NULL;
 	struct kd_exe_info* p = kd_get_exe(pid, RIP);
 
 	if (p->pid == pid && p->RIP == RIP)  return;
@@ -290,12 +321,20 @@ void kd_exe_add(int pid, unsigned long RIP) {
 	if (p->status_code != KD_EXE_UNUSED)
 		KD_PR_INFO( "exe add crash error %d %d %lx --- %d %lx\t%d---%d\n", p->status_code, p->pid, p->RIP, pid, RIP, zz_hash(p->pid, p->RIP) % KD_MAX_EXE, zz_hash(pid, RIP) % KD_MAX_EXE);
 
+	/* Take a pre-allocated block from the pool (safe with IRQs off) */
+	spin_lock(&kd_code_block_lock);
+	if (kd_code_block_free > 0)
+		mem = kd_code_block_pool[--kd_code_block_free];
+	spin_unlock(&kd_code_block_lock);
+
+	if (!mem) {
+		KD_PR_ERR("kd_exe_add: code block pool exhausted\n");
+		return;
+	}
+
 	p->pid = pid;
 	p->RIP = RIP;
 	p->tgid = current->tgid;
-
-	mem = vmalloc(4096 * KD_NUM_PG);
-	set_memory_x((unsigned long)mem, KD_NUM_PG);  // ! TODO fix bug
 
 	p->code_block = mem;
 	p->status_code = KD_EXE_UNINIT;

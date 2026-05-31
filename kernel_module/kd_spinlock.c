@@ -789,6 +789,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 #ifdef DEBUG_KD_SPIN
     BUG_ON(j >= 8 || j < 0);
 #endif
+    if (unlikely(j >= 8))
+        goto release;
     ptr->lock_addr[j] = lock;
 
     run_combiner(lock, next_node);

@@ -4,14 +4,11 @@
 // #define KERNEL_SYNCSTRESS
 
 // #ifdef KERNEL_SYNCSTRESS
-#include <asm/ptrace.h>  // ! pt_regs 
+#include <asm/ptrace.h>  // ! pt_regs
 #include "qspinlock_i.h"
 #include "combiner.h"
 #define qspinlock orig_qspinlock
-// #else
-// #define ENABLE_IRQS_CHECK 1
-// #include <asm/qspinlock.h>
-// #endif
+#define ENABLE_IRQS_CHECK 1
 
 #define MAX_NODES 4
 #define DEFINE_KDSPINLOCK(x)                                                 \

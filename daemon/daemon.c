@@ -366,7 +366,7 @@ static int parse_args(int argc, char **argv, struct daemon_config *cfg)
 int main(int argc, char **argv)
 {
 	struct daemon_config cfg = {
-		.mode = MODE_V1,
+		.mode = MODE_V2,
 		.verbose = true,
 		.poll_us = 100 * 1000,
 	};

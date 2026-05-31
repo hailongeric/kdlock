@@ -5,6 +5,7 @@
 #include <linux/sched.h>
 #include <linux/sched/task_stack.h>
 #include <linux/string.h>
+#include <linux/rcupdate.h>
 
 #include <linux/mutex.h>
 #include <linux/spinlock.h>
@@ -128,6 +129,8 @@ static void __exit kdlock_km_exit(void)
 	kd_mutex_lock = NULL;
 	is_kd = NULL;
 	kd_do_int3 = NULL;
+
+	synchronize_rcu();
 	KD_PR_INFO("kd_success_cnt:%ld kd_total_cnt:%ld kd_success_wake_cnt:%ld success_rate:%ld.%02ld%% success_wake_rate:%ld.%02ld%%\n", \
 		kd_success_cnt, kd_total_cnt, kd_success_wake_cnt, \
 		rate_int(kd_success_cnt, kd_total_cnt), rate_dec(kd_success_cnt, kd_total_cnt), \

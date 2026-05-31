@@ -201,8 +201,6 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 	struct kd_mutex* kd_mtx;
 	struct kd_mutex_shadow_entry* entry;
 
-	(void)ret_rsp;
-
 	if (!check_uaddr_state((unsigned long)lock)) {
 		count_uaddr_cnt((unsigned long)lock);
 		origin_mutex_lock(lock);
@@ -218,7 +216,7 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 	kd_exe_add(current->pid, ret_addr);
 	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
 	entry->delegated = 1;
-	_kd_mutex_lock(kd_mtx);
+	_kd_mutex_lock(kd_mtx, ret_rsp);
 }
 
 void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,

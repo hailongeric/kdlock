@@ -1,40 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 // Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi
 //
-// Ported to kdlock: kd_mutex — TCLocks-style mutex delegation protocol.
-//
-// Architecture
-// ===========================================================================
-// kd_mutex implements transparent critical-section delegation for kernel
-// mutexes.  When a waiter contends on a mutex, instead of blocking, it
-// packages its state into a per-CPU kd_mutex_node and queues itself.  The
-// lock holder (combiner) then executes the waiter's critical section on the
-// waiter's behalf using a lightweight stack switch (kd_context_switch).
-//
-// Flow summary
-// ------------
-// _kd_mutex_lock():
-//   fastpath:  cmpxchg(locked, 0→1) → return immediately
-//   slowpath:  save callee regs, switch to shadow stack, queue as waiter.
-//              If at head of queue, become the combiner and execute CS for
-//              queued waiters via execute_cs().
-//
-// _kd_mutex_unlock():
-//   fastpath:  if simple-locked (locked==1), clear and return
-//   combiner:  context-switch to next waiter (chaining), or back to own
-//              shadow stack (end-of-batch).  OOO unlock is detected when
-//              the lock is released from a non-outermost nesting level.
-//
-// Differences from the TCLocks reference (komb_mutex)
-// ---------------------------------------------------
-// - Per-CPU storage:  kd_mutex_nodes and kd_mutex_shadows are per-CPU
-//   rather than per-task (current->komb_*).  This avoids task_struct
-//   modifications, which a loadable module cannot perform.
-// - Node pointers:  curr_cs_node / prev_cs_node store kd_mutex_node*
-//   directly instead of CPU IDs or task pointers.
-// - No task_struct extensions:  all delegation state lives in the per-CPU
-//   shadow stack and node structures.
-// ===========================================================================
+// Ported to kdlock: kd_mutex — JIT-sandbox mutex delegation.
+// Follows the same kd_exe_on_call_hl() model as kd_spinlock.c.
 
 #include <linux/module.h>
 #include <linux/smp.h>
@@ -51,18 +19,12 @@
 #include <linux/topology.h>
 
 #include "kd_mutex.h"
+#include "exe.h"
 #include "utils.h"
 
-/* _Q_LOCKED_VAL comes from the spinlock world; define locally. */
-#ifndef _Q_LOCKED_VAL
-#define _Q_LOCKED_VAL 1
-#endif
-
 /* --------------------------------------------------------------------------
- * Debug helpers
+ * Debug
  * -------------------------------------------------------------------------- */
-// #define DEBUG_KD_MUTEX 1
-
 #ifdef DSM_DEBUG
 #define print_debug(fmt, ...)                                                  \
 	({                                                                     \
@@ -77,74 +39,79 @@
 /* --------------------------------------------------------------------------
  * Constants
  * -------------------------------------------------------------------------- */
-#define KD_MUTEX_WAITER_UNPROCESSED   0
-#define KD_MUTEX_WAITER_PARKED        1
-#define KD_MUTEX_WAITER_PROCESSING    2
-#define KD_MUTEX_WAITER_PROCESSED     4
+#define KD_MUTEX_WAITER_UNPROCESSED  0
+#define KD_MUTEX_WAITER_PROCESSED    1
 
-#define _Q_LOCKED_COMBINER_VAL        3
-#define _Q_UNLOCKED_OOO_VAL           7
+#define _Q_LOCKED_VAL                1
+#define _Q_LOCKED_COMBINER_VAL       3
 
-#define UINT64_MAX 0xffffffffffffffffL
+#define SIZE_OF_SHADOW_STACK         8192L
+#define UINT64_MAX                   0xffffffffffffffffL
 
 long kd_mutex_batch_size = 1024;
 
 /* --------------------------------------------------------------------------
- * Per-CPU shadow stack for mutex delegation context switches
- *
- * curr_cs_node / prev_cs_node store node pointers directly, avoiding
- * the need for task_struct extensions that a loadable module cannot add.
+ * Spin-with-schedule macros (for waiter spinning)
  * -------------------------------------------------------------------------- */
-struct kd_mutex_shadow {
-	uint64_t lock_addr[8];
-	void *ptr;
-	struct kd_mutex_node *curr_cs_node;
-	struct kd_mutex_node *prev_cs_node;
-	uint64_t counter_val;
-	struct kd_mutex_node *next_node_ptr;
-	uint64_t local_shadow_stack_ptr;
-#ifdef NUMA_AWARE
-	struct kd_mutex_node *local_queue_head;
-	struct kd_mutex_node *local_queue_tail;
+#ifndef smp_cond_load_relaxed_sched
+#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
+	({                                                                     \
+		typeof(ptr) __PTR = (ptr);                                     \
+		__unqual_scalar_typeof(*ptr) VAL;                              \
+		for (;;) {                                                     \
+			VAL = READ_ONCE(*__PTR);                               \
+			if (cond_expr) break;                                  \
+			cpu_relax();                                           \
+			if (need_resched()) {                                  \
+				preempt_enable(); schedule(); preempt_disable();\
+			}                                                      \
+		}                                                              \
+		(typeof(*ptr))VAL;                                             \
+	})
 #endif
-} __cacheline_aligned_in_smp;
-
-static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node, kd_mutex_nodes);
-static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_shadow, kd_mutex_shadows);
 
 /* --------------------------------------------------------------------------
- * Scheduling / wait helpers
+ * Per-CPU shadow stack
  * -------------------------------------------------------------------------- */
-static inline void schedule_out_curr_task(void)
+struct kd_mutex_shadow {
+	uint64_t lock_addr[8];           /* nested lock tracking              */
+	void *ptr;                       /* base of shadow stack              */
+	uint64_t local_shadow_stack_ptr; /* current shadow stack position     */
+} __cacheline_aligned_in_smp;
+
+static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
+				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
+static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_shadow,
+				     kd_mutex_shadows);
+
+/* --------------------------------------------------------------------------
+ * Tail encoding (same scheme as qspinlock: cpu+idx packed into u32)
+ * -------------------------------------------------------------------------- */
+#define _Q_TAIL_IDX_OFFSET  2
+#define _Q_TAIL_IDX_BITS    2
+#define _Q_TAIL_IDX_MASK    ((1U << _Q_TAIL_IDX_BITS) - 1)
+#define _Q_TAIL_CPU_OFFSET  (_Q_TAIL_IDX_OFFSET + _Q_TAIL_IDX_BITS)
+
+static inline u32 encode_tail(int cpu, int idx)
 {
-	preempt_enable();
-	schedule();
-	preempt_disable();
+	return (cpu + 1) << _Q_TAIL_CPU_OFFSET | idx << _Q_TAIL_IDX_OFFSET;
 }
 
-static inline void park_waiter(struct kd_mutex_node *node)
+static inline struct kd_mutex_node *decode_tail(u32 tail)
 {
-	__set_current_state(TASK_INTERRUPTIBLE);
-	if (cmpxchg(&node->completed, KD_MUTEX_WAITER_UNPROCESSED,
-		    KD_MUTEX_WAITER_PARKED) != KD_MUTEX_WAITER_UNPROCESSED) {
-		__set_current_state(TASK_RUNNING);
-		return;
-	}
-	schedule_out_curr_task();
-	__set_current_state(TASK_RUNNING);
+	int cpu = (tail >> _Q_TAIL_CPU_OFFSET) - 1;
+	int idx = (tail & _Q_TAIL_IDX_MASK) >> _Q_TAIL_IDX_OFFSET;
+	return per_cpu_ptr(&kd_mutex_nodes[idx], cpu);
 }
 
-static inline void wake_up_waiter(struct kd_mutex_node *node)
+static inline u32 xchg_tail(struct kd_mutex *lock, u32 tail)
 {
-	u8 old_val = xchg(&node->completed, KD_MUTEX_WAITER_PROCESSING);
-	if (old_val == KD_MUTEX_WAITER_PARKED) {
-		struct task_struct *task = node->task_struct_ptr;
-		get_task_struct(task);
-		wake_up_process(task);
-		put_task_struct(task);
-	}
+	return (u32)(unsigned long)xchg(&lock->tail, (void *)(unsigned long)tail);
 }
 
+/* --------------------------------------------------------------------------
+ * Small helpers
+ * -------------------------------------------------------------------------- */
 static __always_inline void
 clear_locked_set_completed(struct kd_mutex_node *node)
 {
@@ -154,521 +121,279 @@ clear_locked_set_completed(struct kd_mutex_node *node)
 
 static __always_inline void set_locked(struct kd_mutex *lock)
 {
-	WRITE_ONCE(lock->locked, 1);
+	WRITE_ONCE(lock->locked, _Q_LOCKED_VAL);
 }
 
 /* --------------------------------------------------------------------------
- * Spin-with-possible-schedule macros
- * -------------------------------------------------------------------------- */
-#ifndef smp_cond_load_relaxed_sched
-#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
-	({                                                                     \
-		typeof(ptr) __PTR = (ptr);                                     \
-		__unqual_scalar_typeof(*ptr) VAL;                              \
-		for (;;) {                                                     \
-			VAL = READ_ONCE(*__PTR);                               \
-			if (cond_expr)                                         \
-				break;                                         \
-			cpu_relax();                                           \
-			if (need_resched()) {                                  \
-				preempt_enable();                              \
-				schedule();                                    \
-				preempt_disable();                             \
-			}                                                      \
-		}                                                              \
-		(typeof(*ptr))VAL;                                             \
-	})
-#endif
-
-#define smp_cond_load_relaxed_sleep(curr_node, ptr, cond_expr)                 \
-	({                                                                     \
-		typeof(ptr) __PTR = (ptr);                                     \
-		__unqual_scalar_typeof(*ptr) VAL;                              \
-		for (;;) {                                                     \
-			VAL = READ_ONCE(*__PTR);                               \
-			if (cond_expr)                                         \
-				break;                                         \
-			cpu_relax();                                           \
-			if (need_resched()) {                                  \
-				if (single_task_running())                     \
-					schedule_out_curr_task();              \
-				else {                                         \
-					if (READ_ONCE(curr_node->completed) == \
-					    KD_MUTEX_WAITER_UNPROCESSED)       \
-						park_waiter(curr_node);        \
-					else                                   \
-						schedule_out_curr_task();      \
-				}                                              \
-			}                                                      \
-		}                                                              \
-		(typeof(*ptr))VAL;                                             \
-	})
-
-/* --------------------------------------------------------------------------
- * Per-CPU accessors (noipa — required for inline asm callq pattern)
+ * Shadow-stack accessors (noipa for callq in inline asm)
  * -------------------------------------------------------------------------- */
 __attribute__((noipa)) noinline notrace static uint64_t
-get_mutex_shadow_stack_ptr(struct kd_mutex *lock)
+get_mutex_shadow_stack_ptr(void)
 {
-	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
-	return (uint64_t)&ptr->local_shadow_stack_ptr;
+	struct kd_mutex_shadow *p = this_cpu_ptr(&kd_mutex_shadows);
+	return (uint64_t)&p->local_shadow_stack_ptr;
 }
 
 __attribute__((noipa)) noinline notrace static struct kd_mutex_node *
-get_kd_mutex_node(struct kd_mutex *lock)
+get_kd_mutex_node(void)
 {
-	return this_cpu_ptr(&kd_mutex_nodes);
+	return this_cpu_ptr(&kd_mutex_nodes[0]);
 }
 
 /* --------------------------------------------------------------------------
- * NUMA-aware queue helpers
- * -------------------------------------------------------------------------- */
-#ifdef NUMA_AWARE
-__always_inline static void add_to_local_queue(struct kd_mutex_node *node)
-{
-	struct kd_mutex_node **head, **tail;
-	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
-	head = &ptr->local_queue_head;
-	tail = &ptr->local_queue_tail;
-
-	if (*head == NULL) {
-		*head = node;
-		*tail = node;
-	} else {
-		(*tail)->next = node;
-		*tail = node;
-	}
-}
-#endif
-
-__always_inline static struct kd_mutex_node *
-get_next_node(struct kd_mutex_node *my_node)
-{
-#ifdef NUMA_AWARE
-	struct kd_mutex_node *curr_node, *next_node;
-	curr_node = my_node;
-	next_node = curr_node->next;
-
-	while (true) {
-		if (next_node == NULL || next_node->next == NULL)
-			goto next_node_null;
-
-		if (next_node->socket_id == numa_node_id()) {
-			void *rsp_ptr = (void *)(next_node->rsp);
-			prefetchw(rsp_ptr);
-			prefetchw(rsp_ptr + 64);
-			prefetchw(rsp_ptr + 128);
-			prefetchw(rsp_ptr + 192);
-			prefetchw(rsp_ptr + 256);
-			prefetchw(rsp_ptr + 320);
-			prefetch(next_node->next);
-			return next_node;
-		}
-		add_to_local_queue(next_node);
-		curr_node = next_node;
-		next_node = curr_node->next;
-	}
-next_node_null:
-	return next_node;
-#else
-	return my_node->next;
-#endif
-}
-
-/* --------------------------------------------------------------------------
- * Core: execute a waiter's critical section as the combiner.
- *
- * The combiner context-switches from the shadow stack to the waiter's stack
- * (pointed to by curr_node->rsp).  The waiter's code runs until it calls
- * _kd_mutex_unlock, which switches back here.  On return, we check for
- * out-of-order (OOO) unlock: the lock was released by a nested critical
- * section, not the outermost one.  In that case we wake up the waiter that
- * was preempted by the OOO unlock and continue chaining.
+ * JIT-sandbox execution of a waiter's critical section
  * -------------------------------------------------------------------------- */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
-__attribute__((noipa)) noinline notrace static void
+__attribute__((noipa)) noinline notrace static int
 execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
-	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
-	struct kd_mutex_node *next_node;
 	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
+	void *outgoing_rsp_ptr = &ptr->local_shadow_stack_ptr;
+	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
+	int ret_flag;
 
-	ptr->curr_cs_node = curr_node;
+	/*
+	 * Populate pt_regs from the waiter's saved stack frame.
+	 * Layout matches the callee-saved register spill produced by the
+	 * compiler at the hook call site (same as kd_spinlock.c execute_cs).
+	 */
+	curr_node->regs.r15 = ((unsigned long *)incoming_rsp_ptr)[5];
+	curr_node->regs.r14 = ((unsigned long *)incoming_rsp_ptr)[4];
+	curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
+	curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
+	curr_node->regs.bx  = ((unsigned long *)incoming_rsp_ptr)[1];
+	curr_node->regs.bp  = ((unsigned long *)incoming_rsp_ptr)[6];
+	curr_node->regs.ip  = ((unsigned long *)incoming_rsp_ptr)[7];
+	curr_node->regs.sp  = (unsigned long)incoming_rsp_ptr + 64;
 
-#ifdef DEBUG_KD_MUTEX
-	BUG_ON(curr_node->cpuid == smp_processor_id());
-#endif
+	print_debug("JIT-sandbox exec for waiter cpu %d ip %lx sp %lx\n",
+		    curr_node->cpuid, curr_node->regs.ip, curr_node->regs.sp);
 
-	/* Switch to the waiter's saved stack pointer.  The pushed return
-	 * address inside kd_context_switch resumes here when the waiter's
-	 * unlock switches back. */
-	incoming_rsp_ptr = &(curr_node->rsp);
-	outgoing_rsp_ptr = &ptr->local_shadow_stack_ptr;
+	ret_flag = kd_exe_on_call_hl(&curr_node->regs, outgoing_rsp_ptr);
 
-	kd_context_switch(incoming_rsp_ptr, outgoing_rsp_ptr);
-
-	/* --- we resume here after the waiter's unlock context-switches back --- */
-
-	if (lock->locked == _Q_UNLOCKED_OOO_VAL) {
-		print_debug("Combiner got control back OOO unlock\n");
-
-		curr_node = ptr->curr_cs_node;
-		struct kd_mutex_node *my_node = this_cpu_ptr(&kd_mutex_nodes);
-
-		if (curr_node) {
-			curr_node->rsp = my_node->rsp;
-			wake_up_waiter(curr_node);
-			clear_locked_set_completed(curr_node);
-		}
-		ptr->prev_cs_node = NULL;
-		ptr->curr_cs_node = NULL;
-		lock->locked = _Q_LOCKED_COMBINER_VAL;
-
-		next_node = ptr->next_node_ptr;
-		if (next_node != NULL && next_node->next != NULL)
-			execute_cs(lock, next_node);
+	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
+		KD_PR_DEBUG("mutex JIT delegation ok\n");
+		return 0;
 	}
+
+	KD_PR_DEBUG("mutex JIT delegation failed: %d\n", ret_flag);
+	return ret_flag;
 }
 #pragma GCC pop_options
 
 /* --------------------------------------------------------------------------
- * Core: combiner loop — execute CS for queued waiters
+ * Combiner loop: execute CS for each queued waiter via JIT sandbox
  * -------------------------------------------------------------------------- */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static void
 run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
-	struct kd_mutex_node *next_node = curr_node->next;
-	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
+	struct kd_mutex_node *next_node = NULL;
+	int counter = 0;
 
-#ifdef DEBUG_KD_MUTEX
-	BUG_ON(curr_node == NULL);
-#endif
-
-	if (next_node == NULL) {
+	if (!curr_node || !curr_node->next) {
+		/* Only one waiter — pass lock directly, no delegation needed */
 		set_locked(lock);
-		wake_up_waiter(curr_node);
-		WRITE_ONCE(curr_node->locked, 0);
+		curr_node->locked = false;
+		smp_mb();
 		return;
 	}
 
-	WRITE_ONCE(lock->combiner_task, current);
-	ptr->counter_val = 0;
+	while (curr_node) {
+		counter++;
+		next_node = curr_node->next;
 
-	print_debug("mutex Combiner %d giving control to %d\n",
-		    smp_processor_id(), curr_node->cpuid);
+		int exe_flag = execute_cs(lock, curr_node);
 
-	execute_cs(lock, curr_node);
+		if (exe_flag == KD_EXE_NO_RUN ||
+		    exe_flag == KD_EXE_RUN_ERROR) {
+			/*
+			 * Delegation failed — do NOT mark completed.
+			 * Hand the lock to this waiter so it can execute
+			 * its own CS as the new combiner.
+			 */
+			next_node = curr_node;
+			break;
+		}
 
-	print_debug("mutex Combiner got control back: %d counter: %lld\n",
-		    smp_processor_id(), ptr->counter_val);
+		clear_locked_set_completed(curr_node);
 
-	if (ptr->prev_cs_node) {
-		wake_up_waiter(ptr->prev_cs_node);
-		clear_locked_set_completed(ptr->prev_cs_node);
-		ptr->prev_cs_node = NULL;
+		if (!next_node || !next_node->next ||
+		    counter >= kd_mutex_batch_size)
+			break;
+
+		curr_node = next_node;
 	}
 
-	next_node = ptr->next_node_ptr;
-	ptr->next_node_ptr = NULL;
-
-#ifdef NUMA_AWARE
-	if (ptr->local_queue_head != NULL) {
-		ptr->local_queue_tail->next = next_node;
-		next_node = ptr->local_queue_head;
-		ptr->local_queue_head = NULL;
-		ptr->local_queue_tail = NULL;
-	}
-#endif
-
-	WRITE_ONCE(lock->combiner_task, NULL);
+	/* Pass lock to the next waiter who will become the new combiner.
+	 * next_node is guaranteed non-NULL: either it's the failed curr_node,
+	 * or it was validated as non-NULL before the break above. */
 	set_locked(lock);
-
-	print_debug("mutex Passing lock to next node %d\n", next_node->cpuid);
-	wake_up_waiter(next_node);
-	WRITE_ONCE(next_node->locked, 0);
+	if (next_node)
+		next_node->locked = false;
 }
 #pragma GCC pop_options
 
 /* --------------------------------------------------------------------------
- * Slowpath: queue as waiter, spin, possibly become combiner.
- *
- * This is the heart of the mutex delegation protocol.
- *
- * Two paths out:
- *   1. Waiter path (prev != NULL):  link into queue, spin on node->locked.
- *      If completed == PROCESSED → the combiner executed our CS → return 0
- *      (restore original stack and return to caller as if we held the lock).
- *      Otherwise → fall through to become combiner.
- *
- *   2. Combiner path (prev == NULL, or waiter fell through):  wait for
- *      locked→0, cmpxchg ownership, then run_combiner to execute CS for
- *      queued waiters.
- *
- * Nested locking:  lock_addr[] tracks the stack of held locks so OOO
- * unlock can be detected.  All per-CPU shadow state is saved/restored
- * around the run_combiner call so nested delegation works correctly.
+ * Slowpath: queue as waiter, spin, possibly become combiner
  * -------------------------------------------------------------------------- */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
-__kd_mutex_lock_slowpath(struct kd_mutex *lock,
-			 register struct kd_mutex_node *curr_node)
+__kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
+			  struct kd_mutex_node *curr_node)
 {
-	register struct kd_mutex_node *prev, *next;
-	u8 prev_locked_val;
-	int j;
-	struct kd_mutex *parent_lock;
+	struct kd_mutex_node *prev_node = NULL, *next_node = NULL;
 	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
+	u32 old_tail;
+	int old_locked;
+	int j;
 
-#ifdef NUMA_AWARE
-	struct kd_mutex_node *prev_local_queue_head;
-	struct kd_mutex_node *prev_local_queue_tail;
-#endif
+	old_tail = xchg_tail(lock, tail);
 
-	prev = xchg(&lock->tail, curr_node);
-	next = NULL;
+	if (old_tail) {
+		/* --- waiter path: link behind prev, spin until woken --- */
+		prev_node = decode_tail(old_tail);
+		WRITE_ONCE(prev_node->next, curr_node);
 
-	if (prev) {
-		WRITE_ONCE(prev->next, curr_node);
+		print_debug("Mutex waiter spinning\n");
+		smp_cond_load_relaxed_sched(&curr_node->locked, !VAL);
 
-		print_debug("Mutex waiter going to spin\n");
-		smp_cond_load_relaxed_sleep(curr_node, &curr_node->locked,
-					    VAL == 0);
-
-		print_debug("Mutex spin completed\n");
-		if (READ_ONCE(curr_node->completed) ==
-		    KD_MUTEX_WAITER_PROCESSED) {
-			print_debug("Mutex CS processed\n");
-			for (j = 7; j >= 0; j--)
-				if (ptr->lock_addr[j])
-					break;
-
-			if (j >= 0) {
-				parent_lock =
-					(struct kd_mutex *)ptr->lock_addr[j];
-#ifdef DEBUG_KD_MUTEX
-				BUG_ON(parent_lock == lock);
-#endif
-				if (parent_lock->locked ==
-				    _Q_UNLOCKED_OOO_VAL) {
-					print_debug("Waiter unlocked OOO\n");
-					return 1;
-				}
-			}
-
-			prefetchw((void *)curr_node->rsp);
+		/* CS was processed by combiner via JIT sandbox → done */
+		if (curr_node->completed) {
+			curr_node->count--;
 			return 0;
 		}
+		/* Fall through: become combiner */
 	}
 
-	/*
-	 * At head of queue — wait for lock to become free.
-	 */
+	/* --- become lock holder / combiner --- */
 	for (;;) {
-		while (READ_ONCE(lock->locked)) {
+		while (READ_ONCE(lock->locked))
 			cpu_relax();
-			if (need_resched())
-				schedule_out_curr_task();
-		}
-		if (cmpxchg(&lock->locked, 0, 1) == 0)
+		if (cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)
 			break;
 	}
 
-	print_debug("Mutex lock owner\n");
-
-	if (cmpxchg(&lock->tail, curr_node, NULL) == curr_node)
+	/* Only waiter in queue? */
+	if (cmpxchg(&lock->tail,
+		    (struct kd_mutex_node *)(unsigned long)curr_node->tail,
+		    NULL) == (struct kd_mutex_node *)(unsigned long)curr_node->tail)
 		goto release;
 
-	while (!next) {
-		next = READ_ONCE(curr_node->next);
-		cpu_relax();
-		if (need_resched())
-			schedule_out_curr_task();
-	}
+	/* Wait for next waiter to appear */
+	while (!next_node)
+		next_node = READ_ONCE(curr_node->next);
 
-	/* Head of queue — become the combiner. */
-	{
-		struct kd_mutex_node *prev_cs_node = ptr->curr_cs_node;
-		ptr->curr_cs_node = NULL;
+	/* --- combiner path --- */
+	old_locked = lock->locked;
+	lock->locked = _Q_LOCKED_COMBINER_VAL;
 
-#ifdef DEBUG_KD_MUTEX
-		BUG_ON(ptr->prev_cs_node != NULL);
-#endif
+	/* Save/restore nested delegation state */
+	uint64_t prev_rsp = curr_node->rsp;
+	curr_node->rsp = 0;
 
-		prev_locked_val = lock->locked;
-#ifdef DEBUG_KD_MUTEX
-		BUG_ON(prev_locked_val >= _Q_LOCKED_COMBINER_VAL);
-#endif
-		lock->locked = _Q_LOCKED_COMBINER_VAL;
+	j = 7;
+	for (j = 7; j >= 0; j--)
+		if (ptr->lock_addr[j])
+			break;
+	j += 1;
+	if (unlikely(j >= 8))
+		goto release;
+	ptr->lock_addr[j] = (uint64_t)lock;
 
-		struct task_struct *prev_task = curr_node->task_struct_ptr;
-		uint64_t prev_rsp = curr_node->rsp;
-		curr_node->rsp = 0;
-		uint64_t prev_counter_val = ptr->counter_val;
-		ptr->counter_val = 0;
-		struct kd_mutex_node *prev_next_node = ptr->next_node_ptr;
-		ptr->next_node_ptr = NULL;
+	run_combiner(lock, next_node);
 
-#ifdef NUMA_AWARE
-		prev_local_queue_head = ptr->local_queue_head;
-		prev_local_queue_tail = ptr->local_queue_tail;
-		ptr->local_queue_head = NULL;
-		ptr->local_queue_tail = NULL;
-#endif
-		uint64_t prev_stack_ptr = ptr->local_shadow_stack_ptr;
-
-		j = 7;
-		for (j = 7; j >= 0; j--)
-			if (ptr->lock_addr[j])
-				break;
-		j += 1;
-#ifdef DEBUG_KD_MUTEX
-		BUG_ON(j >= 8 || j < 0);
-#endif
-		ptr->lock_addr[j] = (uint64_t)lock;
-
-		run_combiner(lock, next);
-
-#ifdef DEBUG_KD_MUTEX
-		BUG_ON(ptr->lock_addr[j] != (uint64_t)lock);
-#endif
-		ptr->lock_addr[j] = 0;
-
-		ptr->next_node_ptr = prev_next_node;
-		ptr->counter_val = prev_counter_val;
-
-#ifdef NUMA_AWARE
-		ptr->local_queue_head = prev_local_queue_head;
-		ptr->local_queue_tail = prev_local_queue_tail;
-#endif
-
-		ptr->local_shadow_stack_ptr = prev_stack_ptr;
-		ptr->curr_cs_node = prev_cs_node;
-		curr_node->rsp = prev_rsp;
-		curr_node->task_struct_ptr = prev_task;
-
-		if (lock->locked == _Q_UNLOCKED_OOO_VAL) {
-			if (prev_cs_node) {
-				wake_up_waiter(prev_cs_node);
-				clear_locked_set_completed(prev_cs_node);
-			}
-			ptr->curr_cs_node = NULL;
-		}
-		lock->locked = prev_locked_val;
-	}
+	ptr->lock_addr[j] = 0;
+	curr_node->rsp = prev_rsp;
+	lock->locked = old_locked;
 
 release:
-	return 0;
+	curr_node->count--;
+	return 2;
 }
 #pragma GCC pop_options
 
 /* --------------------------------------------------------------------------
- * Mutex lock slowpath (node init + queue)
+ * Slowpath entry: init node, queue, may become combiner
  * -------------------------------------------------------------------------- */
 __attribute__((noipa)) noinline notrace static int
 kd_mutex_lock_slowpath(struct kd_mutex *lock)
 {
-	struct kd_mutex_node *curr_node = get_kd_mutex_node(lock);
+	struct kd_mutex_node *curr_node = this_cpu_ptr(&kd_mutex_nodes[0]);
+	int idx = curr_node->count++;
+	int tail = encode_tail(smp_processor_id(), idx);
 
+	if (unlikely(idx >= KD_MUTEX_MAX_NODES)) {
+		/* Nested too deep — fall back to spinning */
+		while (!_kd_mutex_trylock(lock))
+			cpu_relax();
+		curr_node->count--;
+		return 0;
+	}
+
+	curr_node += idx;
 	curr_node->locked = true;
-	curr_node->completed = KD_MUTEX_WAITER_UNPROCESSED;
+	curr_node->completed = false;
 	curr_node->next = NULL;
+	curr_node->tail = tail;
+	curr_node->socket_id = numa_node_id();
 	curr_node->cpuid = smp_processor_id();
-	curr_node->task_struct_ptr = current;
 	curr_node->lock = lock;
+	curr_node->task_struct_ptr = current;
 
-	return __kd_mutex_lock_slowpath(lock, curr_node);
+	return __kd_mutex_lock_slowpath(lock, tail, curr_node);
 }
 
 /* --------------------------------------------------------------------------
- * Mutex lock entry: save callee regs, switch to shadow stack, call slowpath.
- *
- * This is the inline-asm trampoline.  It must be noipa so the compiler does
- * not assume anything about caller-saved registers after the stack switch.
- *
- * The sequence:
- *   1. Push callee-saved regs (rbp, rbx, r12–r15)
- *   2. Save current rsp → node->rsp   (get_kd_mutex_node)
- *   3. Load shadow stack ptr → rsp    (get_mutex_shadow_stack_ptr)
- *   4. Push rdi (lock argument) onto shadow stack
- *   5. Call kd_mutex_lock_slowpath(lock)
- *   6. On return: if OOO, return via shadow stack; otherwise restore
- *      waiter's rsp from node->rsp, pop callee regs, and ret.
+ * Asm trampoline: save regs, switch to shadow stack, call slowpath
  * -------------------------------------------------------------------------- */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace void
-__kd_mutex_lock_asm(struct kd_mutex *lock)
+kd_mutex_lock_slowpath_asm(struct kd_mutex *lock, unsigned long rsp_value)
 {
 	register int ret_val;
+	register struct kd_mutex_node *cur_node;
 
-	asm volatile("pushq %%rbp\n"
-		     "pushq %%rbx\n"
-		     "pushq %%r12\n"
-		     "pushq %%r13\n"
-		     "pushq %%r14\n"
-		     "pushq %%r15\n"
-		     :
-		     :
-		     : "memory");
-	asm volatile("callq %P0\n"
-		     "movq %%rsp, %c1(%%rax)\n"
-		     :
+	/* Save callee rsp to node, record original sp for JIT sandbox */
+	asm volatile("callq %P1\n"
+		     "movq %%rsp, %c2(%%rax)\n"
+		     "movq %%rax, %0\n"
+		     : "=r"(cur_node)
 		     : "i"(get_kd_mutex_node),
 		       "i"(offsetof(struct kd_mutex_node, rsp))
 		     : "memory");
+	cur_node->regs.sp = rsp_value;
+
+	/* Switch to per-CPU shadow stack */
 	asm volatile("callq %P0\n"
 		     "movq (%%rax), %%rsp\n"
-		     "pushq %%rdi\n"
 		     :
 		     : "i"(get_mutex_shadow_stack_ptr)
 		     : "memory");
 
 	ret_val = kd_mutex_lock_slowpath(lock);
 
-	if (ret_val) {
-		/* OOO unlock — return via shadow stack */
-		asm volatile("popq %%rdi\n"
-			     "callq %P0\n"
-			     "movq (%%rax), %%rsp\n"
-			     "popq %%r15\n"
-			     "popq %%r14\n"
-			     "popq %%r13\n"
-			     "popq %%r12\n"
-			     "popq %%rbx\n"
-			     "popq %%rbp\n"
-			     "retq\n"
-			     :
-			     : "i"(get_mutex_shadow_stack_ptr)
-			     : "memory");
-	} else {
-		/* Normal — restore waiter's stack and return */
-		asm volatile("popq %%rdi\n"
-			     "callq %P0\n"
-			     "movq %%rsp, (%%rax)\n"
-			     :
-			     : "i"(get_mutex_shadow_stack_ptr)
-			     : "memory");
-		asm volatile("callq %P0\n"
-			     "movq %c1(%%rax), %%rsp\n"
-			     :
-			     : "i"(get_kd_mutex_node),
-			       "i"(offsetof(struct kd_mutex_node, rsp))
-			     : "memory");
-		asm volatile("popq %%r15\n"
-			     "popq %%r14\n"
-			     "popq %%r13\n"
-			     "popq %%r12\n"
-			     "popq %%rbx\n"
-			     "popq %%rbp\n"
-			     "retq\n"
-			     :
-			     :
-			     : "memory");
+	/* Restore original stack before returning */
+	asm volatile("callq %P0\n"
+		     "movq %c1(%%rax), %%rsp\n"
+		     :
+		     : "i"(get_kd_mutex_node),
+		       "i"(offsetof(struct kd_mutex_node, rsp))
+		     : "memory");
+
+	if (ret_val == 2) {
+		/* Became combiner — return to caller (runs own CS now) */
+		return;
 	}
+
+	/* Waiter — CS was processed by combiner via JIT sandbox.
+	 * The JIT sandbox already executed our CS code and reached unlock.
+	 * We can simply return as if we held the lock. */
+	return;
 }
 #pragma GCC pop_options
 
@@ -687,178 +412,67 @@ void kd_mutex_init_percpu(void)
 {
 	int i, j;
 	for_each_possible_cpu(i) {
-		void *stack_ptr = vzalloc(KD_MUTEX_SHADOW_STACK_SIZE);
-		struct kd_mutex_shadow *ptr =
-			per_cpu_ptr(&kd_mutex_shadows, i);
-
-		ptr->ptr = stack_ptr + KD_MUTEX_SHADOW_STACK_SIZE;
+		void *stack_ptr = vzalloc(SIZE_OF_SHADOW_STACK);
+		struct kd_mutex_shadow *p = per_cpu_ptr(&kd_mutex_shadows, i);
+		p->ptr = stack_ptr + SIZE_OF_SHADOW_STACK;
 		for (j = 0; j < 8; j++)
-			ptr->lock_addr[j] = 0;
-		ptr->local_shadow_stack_ptr =
-			(uint64_t)(stack_ptr + KD_MUTEX_SHADOW_STACK_SIZE - 8);
-		ptr->curr_cs_node = NULL;
-		ptr->prev_cs_node = NULL;
-		ptr->counter_val = 0;
-		ptr->next_node_ptr = NULL;
-#ifdef NUMA_AWARE
-		ptr->local_queue_head = NULL;
-		ptr->local_queue_tail = NULL;
-#endif
+			p->lock_addr[j] = 0;
+		p->local_shadow_stack_ptr =
+			(uint64_t)(stack_ptr + SIZE_OF_SHADOW_STACK - 8);
 	}
 }
 
 void kd_mutex_exit(void)
 {
 	int i;
-	for_each_possible_cpu(i) {
-		struct kd_mutex_shadow *ptr =
-			per_cpu_ptr(&kd_mutex_shadows, i);
-		vfree(ptr->ptr - KD_MUTEX_SHADOW_STACK_SIZE);
-	}
+	for_each_possible_cpu(i)
+		vfree(per_cpu_ptr(&kd_mutex_shadows, i)->ptr
+		      - SIZE_OF_SHADOW_STACK);
 }
 
+/*
+ * _kd_mutex_lock — fastpath cmpxchg, slowpath delegation queue.
+ */
 __attribute__((noipa)) noinline notrace void
-_kd_mutex_lock(struct kd_mutex *lock)
+_kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value)
 {
-	int ret;
-
-	ret = cmpxchg(&lock->locked, 0, 1);
-	if (likely(ret == 0))
+	if (likely(cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0))
 		return;
 
 	preempt_disable();
 	{
-		struct kd_mutex_node *curr_node = get_kd_mutex_node(lock);
+		struct kd_mutex_node *curr_node =
+			this_cpu_ptr(&kd_mutex_nodes[0]);
 		curr_node->socket_id = numa_node_id();
-
-		__kd_mutex_lock_asm(lock);
-
-		/* Post-combiner cleanup */
-		struct kd_mutex_shadow *ptr =
-			this_cpu_ptr(&kd_mutex_shadows);
-		struct kd_mutex_node *cs_node = ptr->curr_cs_node;
-
-		if (cs_node) {
-			if ((struct kd_mutex *)cs_node->lock == lock) {
-				struct kd_mutex_node *next_node =
-					get_next_node(cs_node);
-				ptr->next_node_ptr = next_node;
-			}
-			wake_up_waiter(cs_node);
-
-			if (ptr->prev_cs_node) {
-				wake_up_waiter(ptr->prev_cs_node);
-				clear_locked_set_completed(ptr->prev_cs_node);
-				ptr->prev_cs_node = NULL;
-			}
-		}
+		kd_mutex_lock_slowpath_asm(lock, rsp_value);
 	}
 	preempt_enable();
-}
-
-int _kd_mutex_trylock(struct kd_mutex *lock)
-{
-	if (!lock->locked && cmpxchg(&lock->locked, 0, 1) == 0)
-		return 1;
-	return 0;
 }
 
 /*
  * _kd_mutex_unlock — release the kd_mutex.
  *
- * Three cases:
- *   Fastpath:  locked == _Q_LOCKED_VAL → clear to 0, return.
- *   OOO:       my_idx < max_idx in lock_addr[] → set OOO flag.
- *   Combiner:  context-switch to next waiter (chaining) or back to
- *              shadow stack (end-of-batch).
+ * Fastpath only: clear the locked bit.  No context switching, OOO detection,
+ * or chaining — the JIT sandbox intercepted mutex_unlock inside the waiter's
+ * CS and returned KD_EXE_RUN_TO_UNLOCK.  The combiner's run_combiner() loop
+ * handles all waiter transitions.
  */
 __attribute__((noipa)) noinline notrace void
 _kd_mutex_unlock(struct kd_mutex *lock)
 {
-	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
-	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
-	struct kd_mutex_node *curr_node, *next_node;
-	int j, max_idx, my_idx;
-	uint64_t temp_lock_addr;
-
-	j = 0;
-	max_idx = -1;
-	my_idx = -1;
-
-	/* Fastpath: simple locked bit */
-	if (lock->locked == _Q_LOCKED_VAL) {
+	if (lock->locked == _Q_LOCKED_VAL ||
+	    lock->locked == _Q_LOCKED_COMBINER_VAL) {
 		lock->locked = false;
 		return;
 	}
-
-	for (j = 0; j < 8; j++) {
-		temp_lock_addr = ptr->lock_addr[j];
-		if (temp_lock_addr)
-			max_idx = j;
-		if (temp_lock_addr == (uint64_t)lock)
-			my_idx = j;
-		if (temp_lock_addr == 0)
-			break;
-	}
-
-	if (my_idx == -1) {
-		if (lock->locked == _Q_LOCKED_COMBINER_VAL) {
-			lock->locked = _Q_UNLOCKED_OOO_VAL;
-			print_debug("OOO unlock\n");
-		}
-		return;
-	}
-
-	/* Out-of-order unlock */
-	if (my_idx < max_idx) {
-		lock->locked = _Q_UNLOCKED_OOO_VAL;
-		return;
-	}
-
-	curr_node = ptr->curr_cs_node;
-#ifdef DEBUG_KD_MUTEX
-	BUG_ON(curr_node == NULL);
-	BUG_ON(lock->locked != _Q_LOCKED_COMBINER_VAL);
-	BUG_ON(lock->combiner_task != current);
-#endif
-
-	next_node = ptr->next_node_ptr;
-	uint64_t counter = ptr->counter_val;
-
-	if (next_node == NULL || next_node->next == NULL ||
-	    counter >= kd_mutex_batch_size) {
-		incoming_rsp_ptr = &ptr->local_shadow_stack_ptr;
-		ptr->prev_cs_node = curr_node;
-		ptr->curr_cs_node = NULL;
-	} else {
-		ptr->prev_cs_node = curr_node;
-		ptr->curr_cs_node = next_node;
-		incoming_rsp_ptr = &(next_node->rsp);
-		ptr->counter_val = counter + 1;
-		print_debug("Jumping to next waiter: %d\n", next_node->cpuid);
-	}
-
-	outgoing_rsp_ptr = &(curr_node->rsp);
-
-	preempt_disable();
-	kd_context_switch(incoming_rsp_ptr, outgoing_rsp_ptr);
-	preempt_enable();
+	/* Should not reach here in JIT sandbox model */
+	KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\n",
+		  lock->locked);
 }
 
-/* --------------------------------------------------------------------------
- * Stub implementations for API completeness
- * -------------------------------------------------------------------------- */
-void _kd_mutex_lock_rwsem_writer(struct kd_mutex *lock)
+int _kd_mutex_trylock(struct kd_mutex *lock)
 {
-	_kd_mutex_lock(lock);
-}
-
-int __must_check _kd_mutex_lock_interruptible(struct kd_mutex *lock)
-{
-	return 0;
-}
-
-int __must_check _kd_mutex_lock_killable(struct kd_mutex *lock)
-{
+	if (!lock->locked && cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)
+		return 1;
 	return 0;
 }
