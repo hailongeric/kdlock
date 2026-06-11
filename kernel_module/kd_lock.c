@@ -200,6 +200,27 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 {
 	struct kd_mutex* kd_mtx;
 	struct kd_mutex_shadow_entry* entry;
+	/*
+	 * Capture callee-saved registers NOW, before any function calls
+	 * in this hook can clobber them. At this point they hold the values
+	 * that mutex_lock preserved from the original caller.
+	 *
+	 * We store them in local variables; they'll be passed to
+	 * _kd_mutex_lock which saves them into the per-CPU node.
+	 */
+	unsigned long s_rbx, s_r12, s_r13, s_r14, s_r15, s_rbp;
+	asm volatile(
+		"movq %%rbx, %0\n"
+		"movq %%r12, %1\n"
+		"movq %%r13, %2\n"
+		"movq %%r14, %3\n"
+		"movq %%r15, %4\n"
+		"movq %%rbp, %5\n"
+		: "=m"(s_rbx), "=m"(s_r12), "=m"(s_r13),
+		  "=m"(s_r14), "=m"(s_r15), "=m"(s_rbp)
+		:
+		: "memory"
+	);
 
 	if (!check_uaddr_state((unsigned long)lock)) {
 		count_uaddr_cnt((unsigned long)lock);
@@ -216,9 +237,19 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 	kd_exe_add(current->pid, ret_addr);
 	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
 	entry->delegated = 1;
-	_kd_mutex_lock(kd_mtx, ret_rsp);
+	_kd_mutex_lock(kd_mtx, ret_rsp, ret_addr,
+		       s_rbx, s_r12, s_r13, s_r14, s_r15, s_rbp);
 }
 
+/*
+ * __kd_mutex_unlock — unlock hook.
+ *
+ * NOTE: we intentionally do NOT clear entry->delegated here.  Once a mutex
+ * has been routed through the kd_mutex protocol, all subsequent unlock calls
+ * must also go through _kd_mutex_unlock to clear the kd_mutex.locked field.
+ * Clearing delegated would cause the next unlock to call origin_mutex_unlock,
+ * leaving kd_mutex.locked permanently set → deadlock for waiters.
+ */
 void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 		       unsigned long ret_addr)
 {

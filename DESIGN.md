@@ -254,22 +254,38 @@ independent of the kernel mutex internals.
 ### 5.2 Protocol (mirrors spinlock)
 
 ```c
-void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value)
+void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
+                    unsigned long ret_addr,
+                    unsigned long s_rbx, unsigned long s_r12,
+                    unsigned long s_r13, unsigned long s_r14,
+                    unsigned long s_r15, unsigned long s_rbp)
 {
     // Fastpath: cmpxchg
     if (cmpxchg(&lock->locked, 0, 1) == 0)
         return;
 
-    // Slowpath: queue, spin, possibly become combiner
+    // Store callee-saved registers captured at hook entry into node[0]
+    // (copied to node[idx] by kd_mutex_lock_slowpath when idx > 0)
     preempt_disable();
+    curr_node->saved_rbx = s_rbx;  // ...etc
     kd_mutex_lock_slowpath_asm(lock, rsp_value);
     preempt_enable();
 }
 ```
 
 The mutex combiner loop is identical in structure to the spinlock combiner:
-populate `pt_regs` from the waiter's stack frame, call `kd_exe_on_call_hl()`,
-check for `KD_EXE_RUN_TO_UNLOCK`.
+populate `pt_regs` from the waiter's stack frame at `ret_rsp`, call
+`kd_exe_on_call_hl()`, check for `KD_EXE_RUN_TO_UNLOCK`.
+
+**Stack frame layout** (confirmed via disassembly of the kernel's `mutex_lock`):
+the kernel's `mutex_lock` saves all 6 callee-saved registers in the same order
+as `raw_spin_lock`, so both paths share identical offsets in `execute_cs()`.
+
+**Node count management**: the `count` field lives exclusively in `nodes[0]`.
+All increments (`base_node->count++`) and decrements
+(`this_cpu_ptr(&kd_mutex_nodes[0])->count--`) target this single location.
+When `idx > 0`, `regs.sp` and saved registers are copied from `nodes[0]` to
+`nodes[idx]` in `kd_mutex_lock_slowpath`.
 
 ### 5.3 Differences from Spinlock Path
 
@@ -326,13 +342,12 @@ int kd_exe_on_call_hl(struct pt_regs *regs, void *outgoing_rsp_ptr)
 ### 6.4 End-Point Detection
 
 The `end_point[]` array lists kernel functions whose address signals the end of
-a critical section:
+a critical section.  These are resolved dynamically at module init via
+`kallsyms_lookup_name`:
 
 ```c
-unsigned long end_point[] = {
-    0xffffffff81e90b30,  // _raw_spin_unlock
-    0xffffffff81e8a040,  // mutex_unlock
-};
+end_point[end_point_count] = kallsyms_lookup_name("_raw_spin_unlock");
+end_point[end_point_count] = kallsyms_lookup_name("mutex_unlock");
 ```
 
 When the sandbox encounters a `CALL` to one of these addresses, it reports
@@ -540,10 +555,13 @@ without requiring them to enter the kernel syscall path.
 ### Working
 
 - Raw spinlock delegation with JIT sandbox (modes 0-2 tested).
+- Mutex delegation with JIT sandbox (modes 3-5, same execute_cs path as spinlock).
 - Dynamic translation pipeline (init, call-miss, ij-miss recompilation).
-- Mutex delegation protocol with JIT sandbox integration.
 - Hot-lock promotion and fallback to original kernel path.
 - Nested lock detection and graceful degradation.
+- Dynamic end_point resolution via kallsyms_lookup_name.
+- Module exit safety with synchronize_rcu.
+- User-space unit tests for core data structures.
 
 ### Limitations
 
@@ -551,8 +569,8 @@ without requiring them to enter the kernel syscall path.
    conventions are architecture-specific.
 2. **Patched kernel required** — the hook function pointers and exported
    symbols must exist in the running kernel.
-3. **KASLR must be disabled** — `end_point[]` addresses are hardcoded;
-   `/proc/kcore` reading assumes fixed kernel text layout.
+3. **KASLR must be disabled** — `/proc/kcore` reading assumes fixed kernel
+   text layout. (end_point[] is resolved dynamically and unaffected.)
 4. **miasm dependency** — the translator requires miasm 0.1.5 and
    `/proc/kcore` access from userspace.
 5. **No rwsem support** — only spinlock and mutex are implemented.

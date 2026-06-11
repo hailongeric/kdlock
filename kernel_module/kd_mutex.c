@@ -100,7 +100,7 @@ static inline u32 encode_tail(int cpu, int idx)
 static inline struct kd_mutex_node *decode_tail(u32 tail)
 {
 	int cpu = (tail >> _Q_TAIL_CPU_OFFSET) - 1;
-	int idx = (tail & _Q_TAIL_IDX_MASK) >> _Q_TAIL_IDX_OFFSET;
+	int idx = (tail >> _Q_TAIL_IDX_OFFSET) & _Q_TAIL_IDX_MASK;
 	return per_cpu_ptr(&kd_mutex_nodes[idx], cpu);
 }
 
@@ -142,6 +142,14 @@ get_kd_mutex_node(void)
 
 /* --------------------------------------------------------------------------
  * JIT-sandbox execution of a waiter's critical section
+ *
+ * The kernel's mutex_lock saves ALL callee-saved registers before capturing
+ * ret_rsp (confirmed via disassembly).  Stack layout at ret_rsp:
+ *   [0] = lock ptr / padding    [4] = saved r14
+ *   [1] = saved rbx             [5] = saved r15
+ *   [2] = saved r12             [6] = saved rbp (caller's)
+ *   [3] = saved r13             [7] = return address (CS entry)
+ * ret_rsp + 64 = caller's RSP.  Identical to the spinlock path.
  * -------------------------------------------------------------------------- */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
@@ -153,21 +161,19 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
 	int ret_flag;
 
-	/*
-	 * Populate pt_regs from the waiter's saved stack frame.
-	 * Layout matches the callee-saved register spill produced by the
-	 * compiler at the hook call site (same as kd_spinlock.c execute_cs).
-	 */
-	curr_node->regs.r15 = ((unsigned long *)incoming_rsp_ptr)[5];
-	curr_node->regs.r14 = ((unsigned long *)incoming_rsp_ptr)[4];
-	curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
-	curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
+	if (!incoming_rsp_ptr)
+		return KD_EXE_RUN_ERROR;
+
 	curr_node->regs.bx  = ((unsigned long *)incoming_rsp_ptr)[1];
+	curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
+	curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
+	curr_node->regs.r14 = ((unsigned long *)incoming_rsp_ptr)[4];
+	curr_node->regs.r15 = ((unsigned long *)incoming_rsp_ptr)[5];
 	curr_node->regs.bp  = ((unsigned long *)incoming_rsp_ptr)[6];
 	curr_node->regs.ip  = ((unsigned long *)incoming_rsp_ptr)[7];
 	curr_node->regs.sp  = (unsigned long)incoming_rsp_ptr + 64;
 
-	print_debug("JIT-sandbox exec for waiter cpu %d ip %lx sp %lx\n",
+	print_debug("JIT exec waiter cpu %d ip %lx sp %lx\n",
 		    curr_node->cpuid, curr_node->regs.ip, curr_node->regs.sp);
 
 	ret_flag = kd_exe_on_call_hl(&curr_node->regs, outgoing_rsp_ptr);
@@ -263,7 +269,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 
 		/* CS was processed by combiner via JIT sandbox → done */
 		if (curr_node->completed) {
-			curr_node->count--;
+			this_cpu_ptr(&kd_mutex_nodes[0])->count--;
 			return 0;
 		}
 		/* Fall through: become combiner */
@@ -311,7 +317,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	lock->locked = old_locked;
 
 release:
-	curr_node->count--;
+	this_cpu_ptr(&kd_mutex_nodes[0])->count--;
 	return 2;
 }
 #pragma GCC pop_options
@@ -322,19 +328,20 @@ release:
 __attribute__((noipa)) noinline notrace static int
 kd_mutex_lock_slowpath(struct kd_mutex *lock)
 {
-	struct kd_mutex_node *curr_node = this_cpu_ptr(&kd_mutex_nodes[0]);
-	int idx = curr_node->count++;
+	struct kd_mutex_node *base_node = this_cpu_ptr(&kd_mutex_nodes[0]);
+	struct kd_mutex_node *curr_node;
+	int idx = base_node->count++;
 	int tail = encode_tail(smp_processor_id(), idx);
 
 	if (unlikely(idx >= KD_MUTEX_MAX_NODES)) {
 		/* Nested too deep — fall back to spinning */
 		while (!_kd_mutex_trylock(lock))
 			cpu_relax();
-		curr_node->count--;
+		base_node->count--;
 		return 0;
 	}
 
-	curr_node += idx;
+	curr_node = base_node + idx;
 	curr_node->locked = true;
 	curr_node->completed = false;
 	curr_node->next = NULL;
@@ -343,6 +350,19 @@ kd_mutex_lock_slowpath(struct kd_mutex *lock)
 	curr_node->cpuid = smp_processor_id();
 	curr_node->lock = lock;
 	curr_node->task_struct_ptr = current;
+
+	/* regs.sp and saved_* were written to node[0] by the asm trampoline
+	 * and _kd_mutex_lock respectively — copy to the actual waiter node. */
+	if (idx > 0) {
+		curr_node->regs.sp       = base_node->regs.sp;
+		curr_node->saved_rbx     = base_node->saved_rbx;
+		curr_node->saved_r12     = base_node->saved_r12;
+		curr_node->saved_r13     = base_node->saved_r13;
+		curr_node->saved_r14     = base_node->saved_r14;
+		curr_node->saved_r15     = base_node->saved_r15;
+		curr_node->saved_rbp     = base_node->saved_rbp;
+		curr_node->saved_ret_addr = base_node->saved_ret_addr;
+	}
 
 	return __kd_mutex_lock_slowpath(lock, tail, curr_node);
 }
@@ -357,6 +377,7 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock, unsigned long rsp_value)
 {
 	register int ret_val;
 	register struct kd_mutex_node *cur_node;
+	register uint64_t shadow_sp;
 
 	/* Save callee rsp to node, record original sp for JIT sandbox */
 	asm volatile("callq %P1\n"
@@ -367,6 +388,16 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock, unsigned long rsp_value)
 		       "i"(offsetof(struct kd_mutex_node, rsp))
 		     : "memory");
 	cur_node->regs.sp = rsp_value;
+
+	/* Safety check: verify shadow stack is valid before switching */
+	shadow_sp = this_cpu_ptr(&kd_mutex_shadows)->local_shadow_stack_ptr;
+	if (unlikely(!shadow_sp)) {
+		KD_PR_ERR("kd_mutex: shadow stack ptr is NULL on cpu %d! "
+			  "Falling back to trylock.\n", smp_processor_id());
+		while (!_kd_mutex_trylock(lock))
+			cpu_relax();
+		return;
+	}
 
 	/* Switch to per-CPU shadow stack */
 	asm volatile("callq %P0\n"
@@ -434,7 +465,11 @@ void kd_mutex_exit(void)
  * _kd_mutex_lock — fastpath cmpxchg, slowpath delegation queue.
  */
 __attribute__((noipa)) noinline notrace void
-_kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value)
+_kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
+	       unsigned long ret_addr,
+	       unsigned long s_rbx, unsigned long s_r12,
+	       unsigned long s_r13, unsigned long s_r14,
+	       unsigned long s_r15, unsigned long s_rbp)
 {
 	if (likely(cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0))
 		return;
@@ -444,6 +479,14 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value)
 		struct kd_mutex_node *curr_node =
 			this_cpu_ptr(&kd_mutex_nodes[0]);
 		curr_node->socket_id = numa_node_id();
+		/* Store callee-saved registers captured at hook entry */
+		curr_node->saved_rbx = s_rbx;
+		curr_node->saved_r12 = s_r12;
+		curr_node->saved_r13 = s_r13;
+		curr_node->saved_r14 = s_r14;
+		curr_node->saved_r15 = s_r15;
+		curr_node->saved_rbp = s_rbp;
+		curr_node->saved_ret_addr = ret_addr;
 		kd_mutex_lock_slowpath_asm(lock, rsp_value);
 	}
 	preempt_enable();

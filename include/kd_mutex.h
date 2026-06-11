@@ -26,14 +26,19 @@
  * slowpath the node is initialised with the waiter's state and linked into
  * the queue.  The combiner feeds node->regs into kd_exe_on_call_hl() to
  * execute the waiter's critical section inside the JIT sandbox.
+ *
+ * IMPORTANT: the nesting refcount (count) lives ONLY in nodes[0].  All
+ * increments and decrements MUST target this_cpu_ptr(&kd_mutex_nodes[0])->count.
+ * The asm trampoline writes regs.sp to nodes[0]; kd_mutex_lock_slowpath copies
+ * it to nodes[idx] when idx > 0.
  */
 struct kd_mutex_node {
 	struct kd_mutex_node *next;
 	int tail;                        /* encoded tail (cpu+idx)            */
-	int count;                       /* nesting refcount                  */
+	int count;                       /* nesting refcount (valid in [0] only) */
 	int socket_id;                   /* NUMA node id                      */
 	int cpuid;                       /* CPU that owns this node           */
-	uint64_t rsp;                    /* saved stack pointer (for restore)  */
+	uint64_t rsp;                    /* saved real stack ptr (for restore) */
 	struct kd_mutex *lock;
 	struct task_struct *task_struct_ptr;
 	int irqs_disabled;
@@ -42,6 +47,19 @@ struct kd_mutex_node {
 		struct { u8 completed; u8 locked; };
 		struct { u16 locked_completed; };
 	};
+
+	/*
+	 * Callee-saved registers captured at __kd_mutex_lock entry.
+	 * Redundant with reading from the stack at regs.sp (which is the
+	 * primary path in execute_cs), but kept for debugging/validation.
+	 */
+	unsigned long saved_rbx;
+	unsigned long saved_rbp;
+	unsigned long saved_r12;
+	unsigned long saved_r13;
+	unsigned long saved_r14;
+	unsigned long saved_r15;
+	unsigned long saved_ret_addr;     /* CS entry point (ret_addr)         */
 
 	struct pt_regs regs;             /* waiter context → JIT sandbox      */
 };
@@ -68,7 +86,11 @@ void kd_mutex_init(struct kd_mutex *lock);
 void kd_mutex_init_percpu(void);
 void kd_mutex_exit(void);
 
-void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value);
+void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
+		    unsigned long ret_addr,
+		    unsigned long s_rbx, unsigned long s_r12,
+		    unsigned long s_r13, unsigned long s_r14,
+		    unsigned long s_r15, unsigned long s_rbp);
 void _kd_mutex_unlock(struct kd_mutex *lock);
 int  _kd_mutex_trylock(struct kd_mutex *lock);
 
