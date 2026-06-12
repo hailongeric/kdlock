@@ -1,13 +1,14 @@
 # kdlock — Task List & Known Gaps
 
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 
 ## Implemented
 
 - [x] Raw spinlock delegation via kd_spinlock.c (ported from TCLocks komb.c)
 - [x] Spinlock JIT sandbox execution via kd_exe_on_call_hl()
 - [x] kd_mutex delegation protocol (ported from TCLocks komb_mutex.c)
-- [x] Mutex JIT sandbox execution via kd_exe_on_call_hl() in execute_cs()
+- [x] Mutex delegation protocol with safe handoff/fallback mode
+- [ ] Mutex JIT sandbox execution (implemented but guarded by `mutex_jit=0` by default; crashes under stress, needs sandbox memory-safety debugging)
 - [x] Mutex → kd_mutex shadow table mapping (kd_lock.c)
 - [x] Shadow stack per-CPU setup (kd_spinlock_init / kd_mutex_init_percpu)
 - [x] Character device /dev/kd_dev for daemon ↔ kernel communication
@@ -49,15 +50,19 @@ Last updated: 2026-06-11
       `next_node` could be NULL. Fixed with NULL check.
 - [x] **Mutex tail cmpxchg type mismatch** — compared node pointer vs encoded
       u32 tail value. Fixed to compare encoded tail.
+- [x] **Mutex unlock shadow allocation leak** — `__kd_mutex_unlock` used the
+      create-or-find shadow lookup, so unlocks for never-delegated mutexes could
+      permanently consume fixed shadow-table slots. Fixed by using a lookup-only
+      path on unlock and falling back to `origin_mutex_unlock` when absent.
 
 ## Near-term (correctness & stability)
 
 - [ ] **Test mutex delegation end-to-end** — run mode 3/4/5 benchmarks
       with kdlock_km loaded and verify no hangs, OOO, or corruption.
-- [ ] **Avoid creating shadow entries on the unlock path** — when
-      __kd_mutex_unlock is called for a never-delegated mutex,
-      get_kd_mutex_shadow creates a useless entry that permanently occupies
-      a table slot.  Either skip creation on unlock, or add a periodic GC.
+- [x] **Avoid creating shadow entries on the unlock path** — when
+      __kd_mutex_unlock is called for a never-delegated mutex, use a
+      lookup-only shadow-table path and fall back to origin_mutex_unlock
+      without permanently occupying a table slot.
 - [ ] **Verify nested mutex delegation** — test mode 4 (nested mutexes) to
       confirm the lock_addr[] tracking and OOO detection work correctly with
       the JIT sandbox.

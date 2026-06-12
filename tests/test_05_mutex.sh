@@ -1,6 +1,9 @@
 #!/bin/bash
-# test_05_mutex.sh — verify mutex delegation for modes 3, 4, 5.
-# Key checks: no double fault, no soft lockup, count doesn't leak across runs.
+# test_05_mutex.sh — verify mutex delegation protocol for modes 3, 4, 5.
+# By default kdlock_km loads with mutex_jit=0, so this validates queueing,
+# combiner handoff, fallback, and count management without executing the
+# experimental mutex JIT sandbox. Key checks: no double fault, no soft lockup,
+# count doesn't leak across runs.
 TEST_NAME="test_05_mutex"
 source "$(dirname "$0")/common.sh"
 

@@ -1,3 +1,5 @@
+import os
+
 from miasm.analysis.machine import Machine
 from miasm.core.locationdb import LocationDB 
 from miasm.analysis.binary import Container
@@ -250,7 +252,11 @@ def dis_assem(PID, entry, need_count, debug=0):
     # add_lines_after_specific_content("./asm/jit.S", "7ffff7fa6820")
     # add_lines_after_specific_content("./asm/jit.S", "7ffff7fa6800")
 
-    os.system("gcc -I../../include/ -I./asm/ -c -fPIC ../../include/wrapper.S -o ./asm/jit.o && objcopy --remove-section .note.gnu.property ./asm/jit.o && objcopy -O binary ./asm/jit.o ./asm/jit.bin")
+    # include/ is 2 dirs up from disassem/ (kdlock/include/).
+    # daemon runs from daemon/, so the workspace is ./0xRIP/ or ./0xRIP/tgid/.
+    # Use a depth-independent path based on this script's location.
+    include_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "include")
+    os.system(f"gcc -I{include_dir} -I./asm/ -c -fPIC {include_dir}/wrapper.S -o ./asm/jit.o && objcopy --remove-section .note.gnu.property ./asm/jit.o && objcopy -O binary ./asm/jit.o ./asm/jit.bin")
     os.system("objdump -b binary -m i386:x86-64:intel -D ./asm/jit.bin > ./asm/bin.txt")
 
 

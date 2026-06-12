@@ -50,6 +50,15 @@
 
 long kd_mutex_batch_size = 1024;
 
+/*
+ * Mutex JIT sandbox is still experimental.  Keep it opt-in so normal mutex
+ * delegation tests exercise the queue / combiner / fallback protocol without
+ * risking VM-wide crashes from translated code bugs.  Enable with:
+ *   insmod kdlock_km.ko mutex_jit=1
+ */
+int kd_mutex_jit_enabled;
+module_param_named(mutex_jit, kd_mutex_jit_enabled, int, 0644);
+
 /* --------------------------------------------------------------------------
  * Spin-with-schedule macros (for waiter spinning)
  * -------------------------------------------------------------------------- */
@@ -163,6 +172,11 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 	if (!incoming_rsp_ptr)
 		return KD_EXE_RUN_ERROR;
+
+	if (!kd_mutex_jit_enabled) {
+		KD_PR_DEBUG("mutex JIT disabled, hand lock to waiter\n");
+		return KD_EXE_RUN_ERROR;
+	}
 
 	curr_node->regs.bx  = ((unsigned long *)incoming_rsp_ptr)[1];
 	curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
@@ -389,7 +403,10 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock, unsigned long rsp_value)
 		     : "memory");
 	cur_node->regs.sp = rsp_value;
 
-	/* Safety check: verify shadow stack is valid before switching */
+	/* Safety check and shadow stack switch.
+	 * Read local_shadow_stack_ptr ONCE and use the saved value in RSP.
+	 * This avoids a TOCTOU window where an asm re-read could race with
+	 * sandbox corruption on another CPU. */
 	shadow_sp = this_cpu_ptr(&kd_mutex_shadows)->local_shadow_stack_ptr;
 	if (unlikely(!shadow_sp)) {
 		KD_PR_ERR("kd_mutex: shadow stack ptr is NULL on cpu %d! "
@@ -399,12 +416,8 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock, unsigned long rsp_value)
 		return;
 	}
 
-	/* Switch to per-CPU shadow stack */
-	asm volatile("callq %P0\n"
-		     "movq (%%rax), %%rsp\n"
-		     :
-		     : "i"(get_mutex_shadow_stack_ptr)
-		     : "memory");
+	/* Switch to per-CPU shadow stack using the already-validated value */
+	asm volatile("movq %0, %%rsp" :: "r"(shadow_sp) : "memory");
 
 	ret_val = kd_mutex_lock_slowpath(lock);
 

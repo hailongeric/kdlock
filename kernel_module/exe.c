@@ -564,7 +564,6 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 
 
 int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
-	int pid = current->pid;
 	unsigned long args[2];
 	void (*virt_ptr)(struct pt_regs* regs, unsigned long* args);
 	struct kd_exe_info* exe;
@@ -572,13 +571,10 @@ int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
 	int ret_flag;
 
 
-	exe = kd_get_exe(pid, rip);
+	exe = kd_get_exe(0, rip);  /* rip-only lookup, same code for all */
 	// spin_lock(&exe->lock);
-	if (exe->status_code != KD_EXE_NORMAL || exe->RIP != regs->ip || exe->pid != pid) {
-		if (exe->status_code == KD_EXE_NORMAL)
-			KD_PR_INFO( "run error exe %d %lx %lx %d %d!\n", exe->status_code, exe->RIP, regs->ip, exe->pid, pid);
-		// spin_unlock(&exe->lock);
-		KD_PR_INFO("run error exe(%px) %d %lx %lx %d %d!\n", exe, exe->status_code, exe->RIP, regs->ip, exe->pid, pid);
+	if (exe->status_code != KD_EXE_NORMAL || exe->RIP != rip) {
+		KD_PR_INFO("run error exe(%px) %d %lx %lx %d %d!\n", exe, exe->status_code, exe->RIP, regs->ip, exe->pid, 0);
 		return KD_EXE_NO_RUN;
 	}
 	// ! todo pid is not correct

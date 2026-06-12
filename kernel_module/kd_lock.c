@@ -146,6 +146,30 @@ static struct kd_mutex* get_kd_mutex_shadow(struct mutex* lock)
 	return NULL;
 }
 
+static struct kd_mutex* find_kd_mutex_shadow(struct mutex* lock)
+{
+	unsigned long flags;
+	unsigned long mutex_addr = (unsigned long)lock;
+	int start = mutex_addr % KD_MUTEX_SHADOW_TABLE_SIZE;
+	int pos = start;
+
+	raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
+	do {
+		if (kd_mutex_shadows[pos].mutex_addr == mutex_addr) {
+			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
+			return &kd_mutex_shadows[pos].kd_mtx;
+		}
+		if (kd_mutex_shadows[pos].mutex_addr == 0) {
+			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
+			return NULL;
+		}
+		pos = (pos + 1) % KD_MUTEX_SHADOW_TABLE_SIZE;
+	} while (pos != start);
+
+	raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
+	return NULL;
+}
+
 /* ==========================================================================
  * Raw spinlock hooks
  * ========================================================================== */
@@ -187,7 +211,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 		return;
 	}
 
-	kd_exe_add(current->pid, ret_addr);
+	kd_exe_add(0, ret_addr);  /* rip-only key: same kernel CS shared by all */
 	kd_spin_lock((struct qspinlock *)lock, ret_rsp);
 }
 
@@ -234,7 +258,7 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 		return;
 	}
 
-	kd_exe_add(current->pid, ret_addr);
+	kd_exe_add(0, ret_addr);  /* pid=0: rip-only key, shared by all processes */
 	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
 	entry->delegated = 1;
 	_kd_mutex_lock(kd_mtx, ret_rsp, ret_addr,
@@ -258,7 +282,7 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 
 	(void)ret_rsp;
 
-	kd_mtx = get_kd_mutex_shadow(lock);
+	kd_mtx = find_kd_mutex_shadow(lock);
 	if (kd_mtx == NULL) {
 		origin_mutex_unlock(lock, ret_addr);
 		return;

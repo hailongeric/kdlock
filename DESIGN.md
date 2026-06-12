@@ -251,6 +251,13 @@ Each `struct mutex *` from the kernel is mapped to a `struct kd_mutex *` via
 `kd_mutex_shadow_lock`).  The shadow lock has its own queue and state
 independent of the kernel mutex internals.
 
+The lock path uses a create-or-find lookup: once hot-lock promotion routes a
+mutex through kdlock, `__kd_mutex_lock()` allocates or reuses the corresponding
+shadow entry.  The unlock path is lookup-only: `__kd_mutex_unlock()` calls
+`find_kd_mutex_shadow()` and falls back to `origin_mutex_unlock()` when no entry
+exists.  This prevents ordinary unlocks for never-delegated mutexes from
+permanently consuming slots in the fixed-size shadow table.
+
 ### 5.2 Protocol (mirrors spinlock)
 
 ```c
@@ -274,8 +281,16 @@ void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 ```
 
 The mutex combiner loop is identical in structure to the spinlock combiner:
-populate `pt_regs` from the waiter's stack frame at `ret_rsp`, call
+populate `pt_regs` from the waiter's stack frame at `ret_rsp`, optionally call
 `kd_exe_on_call_hl()`, check for `KD_EXE_RUN_TO_UNLOCK`.
+
+Because translated mutex CS execution is still experimental, `mutex_jit` defaults
+to 0. In this safe mode, `execute_cs()` returns `KD_EXE_RUN_ERROR`, so
+`run_combiner()` hands the lock to the waiter without marking it completed. This
+exercises the queue/combiner/fallback/handoff protocol without executing
+translated mutex critical-section code. Normal mutex validation should keep this
+default. Enable actual mutex sandbox execution only for explicit debugging with
+`insmod kdlock_km.ko mutex_jit=1`.
 
 **Stack frame layout** (confirmed via disassembly of the kernel's `mutex_lock`):
 the kernel's `mutex_lock` saves all 6 callee-saved registers in the same order
@@ -305,6 +320,11 @@ At module init, `kd_exe_init()` pre-allocates a pool of 64 executable memory
 blocks (each 160 pages = 640KB).  These are vmalloc'd and marked executable via
 `set_memory_x()`.  When `kd_exe_add()` is called from the lock hook (possibly
 with IRQs disabled), it takes a block from the pool without calling vmalloc.
+
+Kernel critical-section text is shared across all tasks, so kernel-lock JIT
+entries use a **RIP-only key**: the hook calls `kd_exe_add(0, ret_addr)` and
+`kd_exe_on_call_hl()` looks up `kd_get_exe(0, regs->ip)`. This avoids binding a
+translation to one short-lived benchmark thread or process ID.
 
 ### 6.2 Entry Lifecycle
 
