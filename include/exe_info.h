@@ -31,7 +31,7 @@ struct kd_exe_info {
 	void* code_block;          /* vmalloc'd executable page for JIT code   */
 	unsigned long jump_from;   /* source address for indirect jump fixup   */
 	unsigned long tgt_addr;    /* target address for call-miss / ij-miss   */
-	unsigned long gsbase;      /* saved GS base for sandbox context        */
+	unsigned long gsbase;      /* reserved; waiter GS travels in args[0]   */
 	int success_cnt;           /* successful delegation count              */
 	int fail_cnt;              /* delegation failure count                 */
 }__attribute__((aligned(64)));

@@ -1,7 +1,6 @@
 #!/bin/bash
-# test_08_mutex_jit_modes.sh - opt-in mutex JIT validation for nested mode 4
-# and repeated hostcall mode 5. Run only in a recovery VM with a confirmed
-# host-side snapshot.
+# test_08_mutex_jit_modes.sh - opt-in mutex JIT validation for nested mode 4,
+# repeated hostcall mode 5, and GS-context mode 11. Run only in a recovery VM.
 TEST_NAME="test_08_mutex_jit_modes"
 source "$(dirname "$0")/common.sh"
 
@@ -59,22 +58,24 @@ fi
 
 build_all || exit 1
 
-run_mode4_nested_contention() {
+run_nested_mutex_contention() {
+    local mode="$1"
     local -a pids=()
     local -a logs=()
     local role pid failed=0
 
     if [ "$(nproc)" -lt "$MODE4_ROLES" ]; then
-        fail "$TEST_NAME" "mode 4 requires at least $MODE4_ROLES online CPUs"
+        fail "$TEST_NAME" \
+            "mode $mode requires at least $MODE4_ROLES online CPUs"
         return 1
     fi
 
     # Start the two holders first. Every process is pinned to a distinct CPU so
     # a scheduled parent execution frame cannot block the task that releases B.
     for role in 1 3; do
-        logs[$role]="$(mktemp "/tmp/kdlock-mode4-role${role}.XXXXXX.log")"
+        logs[$role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
         timeout --kill-after=5s 60s taskset -c "$role" "$BENCH_BIN" \
-            1 1 "$MODE4_WORKLOAD" 1 4 \
+            1 1 "$MODE4_WORKLOAD" 1 "$mode" \
             "$((MODE4_ROLE_BASE + role))" \
             >"${logs[$role]}" 2>&1 &
         pids[$role]=$!
@@ -85,9 +86,9 @@ run_mode4_nested_contention() {
     # trailing waiter. This makes the direct waiter combine the target instead
     # of merely handing the lock to it.
     for role in 2 4 0 5 6; do
-        logs[$role]="$(mktemp "/tmp/kdlock-mode4-role${role}.XXXXXX.log")"
+        logs[$role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
         timeout --kill-after=5s 60s taskset -c "$role" "$BENCH_BIN" \
-            1 1 "$MODE4_WORKLOAD" 1 4 \
+            1 1 "$MODE4_WORKLOAD" 1 "$mode" \
             "$((MODE4_ROLE_BASE + role))" \
             >"${logs[$role]}" 2>&1 &
         pids[$role]=$!
@@ -97,7 +98,7 @@ run_mode4_nested_contention() {
         pid="${pids[$role]}"
         if ! wait "$pid"; then
             failed=1
-            info "mode 4 role $role failed:"
+            info "mode $mode role $role failed:"
             tail -n 10 "${logs[$role]}" || true
         fi
     done
@@ -106,7 +107,7 @@ run_mode4_nested_contention() {
     done
 
     if [ "$failed" -ne 0 ]; then
-        fail "$TEST_NAME" "mode 4 deterministic nested contention failed"
+        fail "$TEST_NAME" "mode $mode deterministic nested contention failed"
         return 1
     fi
     return 0
@@ -185,6 +186,7 @@ run_jit_mode() {
     local mode_name="$2"
     local expected_artifacts="$3"
     local artifacts asm_dir
+    local -a gs_asm_dirs=()
     local delegate_count write_count target_count
     local runtime_write_count runtime_target_count
     local expected_counter actual_counter
@@ -234,7 +236,17 @@ run_jit_mode() {
         if [ "$mode" -eq 5 ]; then
             check_jit_hostcall_artifact "$asm_dir" "ktime_get" || return 1
         fi
+        if [ "$mode" -eq 11 ] &&
+                is_jit_gs_context_artifact "$asm_dir"; then
+            check_jit_gs_context_artifact "$asm_dir" || return 1
+            gs_asm_dirs+=("$asm_dir")
+        fi
     done <<< "$artifacts"
+    if [ "$mode" -eq 11 ] && [ "${#gs_asm_dirs[@]}" -eq 0 ]; then
+        fail "$TEST_NAME" \
+            "mode 11 produced no JIT artifact using waiter GS/current"
+        return 1
+    fi
     check_daemon_read_kernel_text "$DAEMON_LOG" || return 1
 
     delegate_count="$(dmesg | grep -c "begin delegate" || true)"
@@ -255,9 +267,9 @@ run_jit_mode() {
     write_count="$(dmesg | grep -c "write to kernel" || true)"
     target_count="$(grep -c "^Targets: \['0x" "$DAEMON_LOG" || true)"
 
-    if [ "$mode" -eq 4 ]; then
+    if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
         info "Running deterministic A/B nested contention..."
-        run_mode4_nested_contention || return 1
+        run_nested_mutex_contention "$mode" || return 1
     else
         info "Running repeated mode 5 hostcall contention..."
         run_mode5_hostcall_contention || return 1
@@ -284,7 +296,7 @@ run_jit_mode() {
     check_dmesg_ok || return 1
 
     unload_modules
-    if [ "$mode" -eq 4 ]; then
+    if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
         local jit_success nested_queued nested_remote
 
         jit_success="$(get_dmesg_stat jit_success)"
@@ -292,17 +304,17 @@ run_jit_mode() {
         nested_remote="$(get_dmesg_stat nested_remote)"
         if [ -z "$jit_success" ] || [ "$jit_success" -lt 2 ]; then
             fail "$TEST_NAME" \
-                "mode 4: expected outer and inner JIT completions, got ${jit_success:-missing}"
+                "mode $mode: expected outer and inner JIT completions, got ${jit_success:-missing}"
             return 1
         fi
         if [ -z "$nested_queued" ] || [ "$nested_queued" -lt 1 ] ||
            [ -z "$nested_remote" ] || [ "$nested_remote" -lt 1 ]; then
             fail "$TEST_NAME" \
-                "mode 4: nested B was not queued and remotely delegated"
+                "mode $mode: nested B was not queued and remotely delegated"
             return 1
         fi
         check_dmesg_stat_equals "jit_resume" "1" \
-            "mode 4: outer waiter did not resume exactly once" || return 1
+            "mode $mode: outer waiter did not resume exactly once" || return 1
     else
         local jit_success jit_resume max_waiters
         local hostcall_stats hostcall_exits hostcall_executed
@@ -366,7 +378,18 @@ run_jit_mode() {
         check_jit_entry_executed "$asm_dir" || return 1
     done <<< "$artifacts"
 
-    if [ "$mode" -eq 4 ]; then
+    if [ "$mode" -eq 11 ]; then
+        check_any_jit_entry_executed "${gs_asm_dirs[@]}" || return 1
+        if ! dmesg | grep -Eq \
+                "kd_gs mutex stats: attempts=[1-9][0-9]* successes=[1-9][0-9]* failures=0"; then
+            fail "$TEST_NAME" \
+                "mode 11 GS/current probe did not complete without mismatch"
+            dmesg | grep "kd_gs mutex stats:" | tail -n 1 || true
+            return 1
+        fi
+    fi
+
+    if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
         expected_counter=$((1 + 12000 + MODE4_ROLES))
     else
         expected_counter=$((1 + 12000 +
@@ -407,12 +430,16 @@ case "${1:-all}" in
 5)
     run_jit_mode 5 "mutex-api-in-lock" 1 || exit 1
     ;;
+11)
+    run_jit_mode 11 "mutex-gs-context" 2 || exit 1
+    ;;
 all)
     run_jit_mode 4 "mutex-nested" 2 || exit 1
     run_jit_mode 5 "mutex-api-in-lock" 1 || exit 1
+    run_jit_mode 11 "mutex-gs-context" 2 || exit 1
     ;;
 *)
-    fail "$TEST_NAME" "usage: $0 [4|5|all]"
+    fail "$TEST_NAME" "usage: $0 [4|5|11|all]"
     exit 1
     ;;
 esac

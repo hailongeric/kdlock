@@ -97,8 +97,10 @@ daemon code, tests, and generated sandbox assembly.
 - `include/kd_int3.h`: hot-lock/int3 declarations.
 - `include/kd_lock.h`: lock hook and fallback declarations.
 - `include/kd_exec.h`: nested JIT execution-frame, event, combiner snapshot,
-  and lock-ownership declarations.
+  lock-ownership, waiter GS base, and logical-task declarations.
 - `include/kd_mutex.h`: kd mutex structures and function declarations.
+- `include/kd_segment.h`: x86 helper for capturing the kernel GS base of the
+  current CPU or the CPU associated with a target task.
 - `include/kd_spinlock.h`: kd spinlock structures and function declarations.
 - `include/mcs_spinlock.h`: MCS queue primitives used by delegation code.
 - `include/qspinlock_i.h`: qspinlock-compatible internal constants/helpers.
@@ -129,22 +131,25 @@ The `disassem/` directory contains the Python/miasm translation pipeline that
 reads kernel text and emits sandbox assembly.
 
 - `disassem/disassem.py`: main translation driver. Reads kernel bytes for an
-  entry RIP, classifies resumable control calls and hostcalls, builds the
-  control-flow view, invokes translation passes, and emits build artifacts.
+  entry RIP, resolves the `current_task` per-CPU offset, classifies resumable
+  control calls and hostcalls, preflights segment operands, builds the
+  control-flow view, invokes translation passes, and emits either executable
+  code or a terminal unsupported-instruction artifact.
 - `disassem/hostcall.py`: parses the shared hostcall manifest and resolves the
   service addresses available in the running kernel.
 - `disassem/memread.py`: helpers for reading kernel text, normally through
   `/proc/kcore`; excludes hostcall targets from callee-table expansion.
 - `disassem/translation.py`: core instruction translation logic from kernel
   instructions to sandbox-safe assembly.
-- `disassem/normal.py`: handling for ordinary instructions and control-flow
-  cases.
+- `disassem/normal.py`: ordinary instruction handling, including explicit
+  waiter-GS addressing, logical `current_task` substitution, and fail-closed
+  FS/unsupported-segment policy.
 - `disassem/indirect_jump.py`: indirect-jump tables plus distinct hostcall and
   ordinary call-miss stub generation.
 - `disassem/special_inst.py`: translation support for special instructions
   that need custom lowering.
 - `disassem/conflict.py`: register/memory conflict handling for generated
-  assembly.
+  assembly, including virtual waiter GS (`RGS`) and logical task (`RCT`).
 - `disassem/assist.py`: helper routines used by translation passes.
 - `disassem/solve_bug.py`: debugging/repair helper for known translator edge
   cases.
@@ -156,13 +161,14 @@ The `klock_module/` directory builds `klock_module.ko`, the synthetic workload
 module used by benchmarks and tests.
 
 - `klock_module/Makefile`: kbuild entry for the workload module.
-- `klock_module/klock_module.c`: registers `/dev/lock_dev` and implements ten
-  benchmark modes (0-9): the original spin/mutex modes plus deep spin nesting,
-  OOO unlock, deterministic independent A/B queues, and nested-JIT abort
-  recovery. Modes 2 and 5 consume the native time-service result after their
-  CALL and report independent exact observation counts. Mode 4 exposes seven
-  synchronized mutex roles that independently order A and B queues. Prints final
-  counters on unload.
+- `klock_module/klock_module.c`: registers `/dev/lock_dev` and implements twelve
+  benchmark modes (0-11): the original spin/mutex modes plus deep spin nesting,
+  OOO unlock, deterministic independent A/B queues, nested-JIT abort recovery,
+  and spin/mutex waiter-GS context validation. Modes 2 and 5 consume the native
+  time-service result after their CALL. Modes 10 and 11 execute translated
+  per-CPU MOV read/write, INC RMW, and `current` reads, then report exact probe
+  success/failure counts. Modes 4 and 11 expose seven synchronized mutex roles
+  that independently order A and B queues. Prints final counters on unload.
 
 ## Benchmark
 
@@ -183,7 +189,8 @@ modules and must run inside the guest with timeouts.
 
 - `tests/common.sh`: shared test helpers for building, module load/unload,
   daemon lifecycle, dmesg assertions, JIT artifact/runtime-entry matching,
-  hostcall stub validation, and stat parsing.
+  hostcall stub validation, waiter GS/current artifact inspection, and stat
+  parsing.
 - `tests/run_all.sh`: default low-risk integration suite. Runs tests 01-06 and
   intentionally excludes opt-in `mutex_jit=1` tests.
 - `tests/snapshot_test.sh`: helper for running a selected mode with QEMU
@@ -202,8 +209,9 @@ modules and must run inside the guest with timeouts.
   Mode 2 additionally requires a named hostcall stub, no service callee
   translation or runtime recompilation, matching exit/execute/resume counts,
   and exact post-CALL API observations.
-  Recovery-only selectors cover mode 9 failure kinds and mode 8 queue-owner
-  abort cleanup.
+  Recovery-only selectors cover mode 9 failure kinds, mode 8 queue-owner abort
+  cleanup, and mode 10 translated GS/current semantics under remote nested
+  proxying.
 - `tests/test_05_mutex.sh`: validates mutex modes 3-5 with `mutex_jit=0`,
   requiring promotion, slowpath entry, combiner election, handoff, and clean
   dmesg.
@@ -219,7 +227,7 @@ modules and must run inside the guest with timeouts.
   continuous workload. It requires repeated sandbox completion, same-CPU
   multi-slot evidence, matching completion/resume counts, exact final counter,
   and zero JIT/frame/overflow/waiter/slot-leak diagnostics.
-- `tests/test_08_mutex_jit_modes.sh`: recovery-only modes 4/5 validation. It
+- `tests/test_08_mutex_jit_modes.sh`: recovery-only modes 4/5/11 validation. It
   independently validates every initial translation workspace and write-back.
   Mode 4 then creates deterministic A/B queues with seven CPU-pinned roles and
   requires runtime IP matches for both A/B workspaces, outer plus inner JIT
@@ -227,14 +235,16 @@ modules and must run inside the guest with timeouts.
   protocol failures or leaks. Mode 5 runs repeated owner/waiter rounds, a
   CPU-pinned queue, and continuous contention; it requires one hostcall cycle
   and final waiter resume per JIT completion, no runtime recompilation, exact
-  counters, and zero failures or leaks. The script remains outside
-  `tests/run_all.sh`.
+  counters, and zero failures or leaks. Mode 11 reuses the deterministic mode 4
+  topology and additionally requires waiter-GS/current artifact and runtime
+  probe evidence. The script remains outside `tests/run_all.sh`.
 - `tests/test_09_jit_execution_modes.sh`: recovery-only acceptance suite for
-  modes 0/1/2/3/4/5. Modes 0/1/2 reuse the strict spinlock execution checks, with
-  mode 2 adding hostcall proof; mode 3 uses the repeated/stress mutex JIT test;
-  mode 4 uses the nested-mutex JIT test; mode 5 uses the repeated mutex hostcall
-  test. Every selected mode must match runtime execution IPs to installed
-  workspaces, not only generate or install an artifact.
+  modes 0/1/2/3/4/5/10/11. Modes 0/1/2/10 reuse the strict spinlock execution
+  checks, with mode 2 adding hostcall proof and mode 10 adding GS/current proof;
+  mode 3 uses the repeated/stress mutex JIT test; modes 4/11 use deterministic
+  nested-mutex JIT tests; mode 5 uses the repeated mutex hostcall test. Every
+  selected mode must match runtime execution IPs to installed workspaces, not
+  only generate or install an artifact.
 
 ## Unit Tests
 
@@ -259,12 +269,16 @@ logic. They do not load kernel modules.
   behavior.
 - `tests/unit/test_exec_frame.c`: validates nested frame parent/LIFO rules,
   lock-stack/OOO invariants, exact completion, capacity failure, repeated-lock
-  rejection, and reverse-order abort cleanup.
+  rejection, reverse-order abort cleanup, two-word GS/task arguments, and
+  nested context inheritance.
 - `tests/unit/test_jit_call_policy.c`: validates outer/inner control-call
   continuations, allowlisted hostcall resume, forged hostcall rejection,
   unknown-call stack unwind, and the continuation bound.
 - `tests/unit/test_hostcall_codegen.py`: verifies manifest loading and that
   generated hostcall/call-miss stubs use distinct exit and virtual-stack rules.
+- `tests/unit/test_segment_codegen.py`: verifies GS MOV read/write and INC RMW
+  lowering, logical `current_task`, FS/current-write/`SWAPGS` rejection,
+  alignment NOP handling, and exact wrapper slot/argument definitions.
 - `tests/unit/test_spin_node_count.c`: validates count-neutral native fallback,
   nested node-exhaustion failure, and capacity reuse after release.
 

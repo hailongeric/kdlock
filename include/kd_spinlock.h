@@ -29,11 +29,12 @@ struct kd_spin_node {
 	int count;
 	int socket_id;
 	int cpuid;
+	unsigned long gsbase;
 	uint64_t rsp;
 	struct qspinlock *lock;
 	struct task_struct *task_struct_ptr;
 	int irqs_disabled;
-	char dummy1[12];
+	char dummy1[4];
 	union {
 		struct {
 			u8 completed;

@@ -37,7 +37,7 @@ main:
 	push	PT_R12		// Stack_R12
 	push	PT_R11		// Stack_R11
 	push	PT_GS		// Stack_GS
-	push	PT_FS		// Stack_FS
+	push	PT_TASK		// Stack_TASK
 	sub		RSP, 3*8	// For Stack_RIP, Strack_IJ and INST_CNT
 	
 	mov		R13, Stack_RSP
@@ -54,11 +54,13 @@ MOV         Stack_IJ, R15
 JMP			exit
 
 seg_error:
-JMP			exit
+		MOV			Stack_IJ, 0x3
+		JMP			exit
 
 seg_error2:
-POPF
-JMP			exit
+	POPF
+	MOV			Stack_IJ, 0x3
+	JMP			exit
 
 inst_limit:
 MOV			Stack_IJ, 0x4
@@ -75,7 +77,7 @@ exit:
 	pop     MEM_ARG2    // [arg+8] <-  Stack_INST_CNT
 	pop		MEM_ARG		//[arg]  <-  Stack_IJ
 	pop		PT_RIP
-	Add		RSP, 2*8	//Stack_GS and Stack_FS
+	Add		RSP, 2*8	//Stack_GS and Stack_TASK
 	
 	pop		PT_R11
 	pop		PT_R12		//Context Recovery

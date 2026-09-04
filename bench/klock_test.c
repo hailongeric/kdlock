@@ -20,9 +20,11 @@
  *   7  MODE_SPIN_OOO_NESTED    Out-of-order unlock (A, B, unlock A, B)
  *   8  MODE_SPIN_INNER_CONTENTION  Independent contenders for inner B
  *   9  MODE_SPIN_ABORT_RECOVERY  Isolated nested-JIT abort recovery
+ *   10 MODE_SPIN_GS_CONTEXT      Nested spinlock GS/current validation
+ *   11 MODE_MUTEX_GS_CONTEXT     Nested mutex GS/current validation
  *
- * Modes 0–2 and 6 exercise the spinlock delegation path (kd_spinlock.c).
- * Modes 3–5 exercise the mutex delegation path (kd_mutex.c).
+ * Modes 0-2 and 6-10 exercise the spinlock delegation path (kd_spinlock.c).
+ * Modes 3-5 and 11 exercise the mutex delegation path (kd_mutex.c).
  *
  * Example:  ./klock_test 4 100000 1000 10 0
  *   → 4 threads, 100k iterations each, 1000-loop workload, mode 0
@@ -57,6 +59,8 @@ struct test_args {
 #define MODE_SPIN_OOO_NESTED    7  /* nested spinlocks, outer unlock first */
 #define MODE_SPIN_INNER_CONTENTION 8 /* nested A/B plus direct B contenders */
 #define MODE_SPIN_ABORT_RECOVERY 9 /* isolated A/B JIT abort recovery       */
+#define MODE_SPIN_GS_CONTEXT 10 /* nested spin GS/current context           */
+#define MODE_MUTEX_GS_CONTEXT 11 /* nested mutex GS/current context         */
 
 /* per-thread work item */
 struct thread_data {
@@ -114,6 +118,10 @@ const char *mode_name(unsigned int mode) {
         return "spin-inner-contention";
     case MODE_SPIN_ABORT_RECOVERY:
         return "spin-abort-recovery";
+    case MODE_SPIN_GS_CONTEXT:
+        return "spin-gs-context";
+    case MODE_MUTEX_GS_CONTEXT:
+        return "mutex-gs-context";
     default:
         return "unknown";
     }
@@ -128,6 +136,7 @@ int main(int argc, char *argv[]) {
         printf("      7=spin-ooo-nested\n");
         printf("      8=spin-inner-contention\n");
         printf("      9=spin-abort-recovery\n");
+        printf("      10=spin-gs-context, 11=mutex-gs-context\n");
         printf("Example: %s 4 100000 1000 10 3\n", argv[0]);
         return -1;
     }
@@ -140,7 +149,7 @@ int main(int argc, char *argv[]) {
     unsigned int role_base = argc > 6 ?
         (unsigned int)strtoul(argv[6], NULL, 10) : 0;
 
-    if (mode > MODE_SPIN_ABORT_RECOVERY) {
+    if (mode > MODE_MUTEX_GS_CONTEXT) {
         fprintf(stderr, "Invalid mode: %u\n", mode);
         return -1;
     }

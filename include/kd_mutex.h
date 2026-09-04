@@ -37,6 +37,7 @@ struct kd_mutex_node {
 	int slot;                        /* reserved per-CPU slot index       */
 	int socket_id;                   /* NUMA node id                      */
 	int cpuid;                       /* CPU that owns this node           */
+	unsigned long gsbase;            /* logical waiter's kernel GS base   */
 	uint64_t rsp;                    /* saved real stack ptr (for restore) */
 	void *shadow_stack_base;
 	uint64_t shadow_stack_ptr;

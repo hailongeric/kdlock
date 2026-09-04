@@ -1,7 +1,7 @@
 #!/bin/bash
 # test_09_jit_execution_modes.sh - require real translated execution for
-# modes 0 through 5. Modes 2 and 5 additionally require complete native
-# hostcall exit/execute/resume cycles. Modes 3/4/5 mutex JIT are recovery-only.
+# modes 0 through 5 plus GS-context modes 10 and 11. Modes 2 and 5 additionally
+# require complete native hostcall cycles. Mutex JIT modes are recovery-only.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -18,7 +18,7 @@ run_mode() {
     echo "Verifying mode $mode translates and executes JIT code"
     echo "------------------------------------------------------------"
     case "$mode" in
-        0|1|2)
+        0|1|2|10)
             bash "$SCRIPT_DIR/test_04_spinlock.sh" "$mode"
             ;;
         3)
@@ -30,6 +30,9 @@ run_mode() {
         5)
             bash "$SCRIPT_DIR/test_08_mutex_jit_modes.sh" 5
             ;;
+        11)
+            bash "$SCRIPT_DIR/test_08_mutex_jit_modes.sh" 11
+            ;;
         *)
             echo "[FAIL] test_09_jit_execution_modes: unsupported mode $mode"
             return 1
@@ -39,7 +42,7 @@ run_mode() {
 }
 
 if [ "$#" -eq 0 ]; then
-    set -- 0 1 2 3 4 5
+    set -- 0 1 2 3 4 5 10 11
 fi
 
 for mode in "$@"; do

@@ -40,6 +40,7 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 	state = kd_exec_frame_state(frame);
 	if (!kd_exec_frame_state_is_active(state) ||
 	    frame->depth >= KD_EXEC_MAX_NESTING ||
+	    !frame->gsbase || !frame->logical_task ||
 	    frame->held_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
 	    frame->outer_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
 	    frame->jit_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
@@ -157,13 +158,16 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 					 unsigned long outer_lock_addr,
 					 void *waiter,
 					 void *outgoing_rsp_ptr,
-					 unsigned int held_lock_depth)
+					 unsigned int held_lock_depth,
+					 unsigned long gsbase,
+					 struct task_struct *logical_task)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
 	bool first_frame;
 
-	if (!regs || ctx->depth >= KD_EXEC_MAX_NESTING ||
+	if (!regs || !gsbase || !logical_task ||
+	    ctx->depth >= KD_EXEC_MAX_NESTING ||
 	    !kd_exec_context_validate(ctx) ||
 	    (ctx->depth && ctx->owner != current))
 		return NULL;
@@ -176,6 +180,8 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 	frame->regs = *regs;
 	frame->entry_ip = entry_ip;
 	frame->outer_lock_addr = outer_lock_addr;
+	frame->gsbase = gsbase;
+	frame->logical_task = logical_task;
 	frame->waiter = waiter;
 	frame->outgoing_rsp_ptr = outgoing_rsp_ptr;
 	frame->parent = kd_exec_current_frame();

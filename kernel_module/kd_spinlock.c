@@ -26,6 +26,7 @@
 #include "utils.h"
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_segment.h"
 // #else
 // #include <asm-generic/qspinlock.h>
 #include <linux/sched.h>
@@ -400,9 +401,11 @@ kd_spin_diag_find(unsigned long addr)
 
         if ((unsigned long)observed == addr)
             return slot;
-        if (observed == 0 &&
-            atomic_long_cmpxchg(&slot->addr, 0, (long)addr) == 0)
-            return slot;
+        if (observed == 0) {
+            observed = atomic_long_cmpxchg(&slot->addr, 0, (long)addr);
+            if (observed == 0 || (unsigned long)observed == addr)
+                return slot;
+        }
     }
 
     atomic64_inc(&kd_spin_diag_overflow);
@@ -825,7 +828,9 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
                            (unsigned long)lock,
                            curr_node,
                            outgoing_rsp_ptr,
-                           frame_lock_depth);
+                           frame_lock_depth,
+                           curr_node->gsbase,
+                           curr_node->task_struct_ptr);
     int ret_flag;
 
     if (!frame) {
@@ -1368,6 +1373,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock)
     curr_node->irqs_disabled = false;
     curr_node->lock = lock;
     curr_node->task_struct_ptr = current;
+    curr_node->gsbase = kd_read_kernel_gsbase();
     curr_node->exec_frame = NULL;
     curr_node->jit_waiter = false;
     curr_node->jit_retry = false;
@@ -1434,6 +1440,7 @@ void kd_spinlock_init(void)
             node->jit_waiter = false;
             node->jit_retry = false;
             node->jit_context = NULL;
+            node->gsbase = 0;
         }
 
 #ifdef LOCK_MEASURE_TIME
@@ -1511,6 +1518,8 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
         return -E2BIG;
 
     node->regs = *regs;
+    node->gsbase = parent->gsbase;
+    node->task_struct_ptr = parent->logical_task;
     node->jit_waiter = true;
     node->jit_context = context;
     context->lock_depth = depth + 1;
@@ -1577,7 +1586,8 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
     node->cpuid = smp_processor_id();
     node->rsp = regs->sp;
     node->lock = lock;
-    node->task_struct_ptr = current;
+    node->task_struct_ptr = NULL;
+    node->gsbase = 0;
     node->irqs_disabled = false;
     node->exec_frame = NULL;
     node->jit_retry = false;
@@ -2017,6 +2027,7 @@ queue:
         curr_node->irqs_disabled = false;
         curr_node->lock = lock;
         curr_node->task_struct_ptr = current;
+        curr_node->gsbase = kd_read_kernel_gsbase();
 
         uint64_t prev_rsp = curr_node->rsp;
         curr_node->rsp = 0xdeadbeef;

@@ -14,6 +14,7 @@
 #include <linux/fs.h>
 #include <linux/miscdevice.h>
 #include <linux/mutex.h>
+#include <linux/percpu.h>
 #include <linux/spinlock.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
@@ -41,6 +42,8 @@ static DEFINE_SPINLOCK(nested_lock_c);
 static DEFINE_MUTEX(global_mutex);
 static DEFINE_MUTEX(nested_mutex_a);
 static DEFINE_MUTEX(nested_mutex_b);
+static DEFINE_PER_CPU(unsigned long, kd_gs_probe_value);
+static DEFINE_PER_CPU(unsigned long, kd_gs_probe_rmw);
 
 static unsigned long global_counter = 0;
 static unsigned long mode2_api_observations;
@@ -61,6 +64,12 @@ static atomic_t mutex_outer_holder_ready = ATOMIC_INIT(0);
 static atomic_t mutex_outer_direct_waiting = ATOMIC_INIT(0);
 static atomic_t mutex_outer_nested_waiting = ATOMIC_INIT(0);
 static atomic_t mutex_outer_trailing_waiting = ATOMIC_INIT(0);
+static atomic64_t gs_spin_attempts = ATOMIC64_INIT(0);
+static atomic64_t gs_spin_successes = ATOMIC64_INIT(0);
+static atomic64_t gs_spin_failures = ATOMIC64_INIT(0);
+static atomic64_t gs_mutex_attempts = ATOMIC64_INIT(0);
+static atomic64_t gs_mutex_successes = ATOMIC64_INIT(0);
+static atomic64_t gs_mutex_failures = ATOMIC64_INIT(0);
 
 #define MODE_ROLE_SYNCHRONIZED 0x80000000U
 #define MODE_ROLE_OUTER_ONLY   0x40000000U
@@ -75,6 +84,79 @@ static atomic_t mutex_outer_trailing_waiting = ATOMIC_INIT(0);
 #define MODE_SPIN_OOO_NESTED 7
 #define MODE_SPIN_INNER_CONTENTION 8
 #define MODE_SPIN_ABORT_RECOVERY 9
+#define MODE_SPIN_GS_CONTEXT 10
+#define MODE_MUTEX_GS_CONTEXT 11
+
+#define KD_GS_PROBE_MAGIC 0x4b44475300000000UL
+#define KD_GS_PROBE_DELTA 0x101UL
+#define KD_GS_PROBE_RMW_MAGIC 0x524d570000000000UL
+
+struct kd_gs_probe_state {
+	int cpu;
+	unsigned long expected_value;
+	unsigned long expected_rmw;
+	unsigned long seen_value;
+	unsigned long seen_task;
+	struct task_struct *expected_task;
+};
+
+static noinline void kd_gs_probe_prepare(struct kd_gs_probe_state *state)
+{
+	int cpu = raw_smp_processor_id();
+	unsigned long task_value = (unsigned long)current;
+
+	memset(state, 0, sizeof(*state));
+	state->cpu = cpu;
+	state->expected_task = current;
+	state->expected_value = KD_GS_PROBE_MAGIC ^ task_value ^
+		((unsigned long)(cpu + 1) << 32);
+	state->expected_rmw = KD_GS_PROBE_RMW_MAGIC ^ task_value ^
+		(unsigned long)(cpu + 1);
+	WRITE_ONCE(per_cpu(kd_gs_probe_value, cpu), state->expected_value);
+	WRITE_ONCE(per_cpu(kd_gs_probe_rmw, cpu), state->expected_rmw);
+}
+
+static __always_inline void
+kd_gs_probe_in_cs(struct kd_gs_probe_state *state)
+{
+	unsigned long value = raw_cpu_read(kd_gs_probe_value);
+
+	raw_cpu_write(kd_gs_probe_value, value + KD_GS_PROBE_DELTA);
+	raw_cpu_inc(kd_gs_probe_rmw);
+	WRITE_ONCE(state->seen_value, value);
+	WRITE_ONCE(state->seen_task, (unsigned long)current);
+}
+
+static noinline void kd_gs_probe_finish(struct kd_gs_probe_state *state,
+					 bool mutex_mode)
+{
+	atomic64_t *attempts = mutex_mode ? &gs_mutex_attempts :
+		&gs_spin_attempts;
+	atomic64_t *successes = mutex_mode ? &gs_mutex_successes :
+		&gs_spin_successes;
+	atomic64_t *failures = mutex_mode ? &gs_mutex_failures :
+		&gs_spin_failures;
+	unsigned long written_value;
+	unsigned long written_rmw;
+
+	written_value = READ_ONCE(per_cpu(kd_gs_probe_value, state->cpu));
+	written_rmw = READ_ONCE(per_cpu(kd_gs_probe_rmw, state->cpu));
+	atomic64_inc(attempts);
+	if (state->seen_value == state->expected_value &&
+	    state->seen_task == (unsigned long)state->expected_task &&
+	    written_value == state->expected_value + KD_GS_PROBE_DELTA &&
+	    written_rmw == state->expected_rmw + 1) {
+		atomic64_inc(successes);
+		return;
+	}
+
+	atomic64_inc(failures);
+	pr_err_ratelimited("kd_gs probe mismatch: kind=%s cpu=%d value=%lx/%lx write=%lx rmw=%lx/%lx task=%lx/%px\n",
+		mutex_mode ? "mutex" : "spin", state->cpu,
+		state->seen_value, state->expected_value, written_value,
+		written_rmw, state->expected_rmw + 1, state->seen_task,
+		state->expected_task);
+}
 
 static void run_contention_test(unsigned long loop_count, unsigned long work_load)
 {
@@ -188,6 +270,32 @@ static noinline void run_inner_nested_role(unsigned long work_load,
 		dummy_computation++;
 	spin_unlock(&nested_lock_b);
 	spin_unlock(&nested_lock_a);
+}
+
+static noinline void run_gs_spin_nested_role(unsigned long work_load,
+					      bool synchronized)
+{
+	struct kd_gs_probe_state probe;
+	unsigned long j;
+	volatile int dummy_computation = 0;
+
+	prepare_inner_nested_role(synchronized);
+	kd_gs_probe_prepare(&probe);
+	atomic_set(&outer_nested_waiting, 1);
+	smp_mb__after_atomic();
+	spin_lock(&nested_lock_a);
+	atomic_set(&inner_nested_waiting, 1);
+	smp_mb__after_atomic();
+	spin_lock(&nested_lock_b);
+
+	kd_gs_probe_in_cs(&probe);
+	global_counter++;
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+
+	spin_unlock(&nested_lock_b);
+	spin_unlock(&nested_lock_a);
+	kd_gs_probe_finish(&probe, false);
 }
 
 static noinline void prepare_inner_direct_role(bool synchronized)
@@ -344,7 +452,8 @@ static noinline void run_outer_trailing_role(unsigned long work_load,
 
 static void run_inner_contention_spinlock_test(unsigned long loop_count,
 					       unsigned long work_load,
-					       unsigned int role)
+					       unsigned int role,
+					       bool gs_context)
 {
 	unsigned long i;
 	unsigned int sync_role = role & ~(MODE_ROLE_SYNCHRONIZED |
@@ -353,8 +462,13 @@ static void run_inner_contention_spinlock_test(unsigned long loop_count,
 	bool outer_only = role & MODE_ROLE_OUTER_ONLY;
 
 	for (i = 0; i < loop_count; i++) {
-		if (sync_role == 0)
-			run_inner_nested_role(work_load, synchronized, outer_only);
+		if (sync_role == 0) {
+			if (gs_context && !outer_only)
+				run_gs_spin_nested_role(work_load, synchronized);
+			else
+				run_inner_nested_role(work_load, synchronized,
+						      outer_only);
+		}
 		else if (synchronized && sync_role == 1)
 			run_inner_holder_role(work_load);
 		else if (synchronized && sync_role == 3)
@@ -524,12 +638,40 @@ static noinline void run_nested_mutex_cs(unsigned long work_load)
 	mutex_unlock(&nested_mutex_a);
 }
 
+static noinline void run_gs_nested_mutex_cs(unsigned long work_load)
+{
+	struct kd_gs_probe_state probe;
+	unsigned long j;
+	volatile int dummy_computation = 0;
+
+	kd_gs_probe_prepare(&probe);
+	atomic_set(&mutex_outer_nested_waiting, 1);
+	smp_mb__after_atomic();
+	mutex_lock(&nested_mutex_a);
+	atomic_set(&mutex_inner_nested_waiting, 1);
+	smp_mb__after_atomic();
+	mutex_lock(&nested_mutex_b);
+
+	kd_gs_probe_in_cs(&probe);
+	global_counter++;
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+
+	mutex_unlock(&nested_mutex_b);
+	mutex_unlock(&nested_mutex_a);
+	kd_gs_probe_finish(&probe, true);
+}
+
 static noinline void run_nested_mutex_role(unsigned long work_load,
-					    bool synchronized)
+					    bool synchronized,
+					    bool gs_context)
 {
 	if (synchronized)
 		prepare_nested_mutex_role();
-	run_nested_mutex_cs(work_load);
+	if (gs_context)
+		run_gs_nested_mutex_cs(work_load);
+	else
+		run_nested_mutex_cs(work_load);
 }
 
 static noinline void run_inner_mutex_direct_role(unsigned long work_load)
@@ -654,7 +796,8 @@ static noinline void run_outer_mutex_trailing_role(unsigned long work_load)
 
 static void run_nested_mutex_test(unsigned long loop_count,
 				  unsigned long work_load,
-				  unsigned int role)
+				  unsigned int role,
+				  bool gs_context)
 {
 	unsigned long i;
 	unsigned int sync_role = role & ~MODE_ROLE_SYNCHRONIZED;
@@ -662,7 +805,7 @@ static void run_nested_mutex_test(unsigned long loop_count,
 
 	for (i = 0; i < loop_count; i++) {
 		if (!synchronized || sync_role == 0)
-			run_nested_mutex_role(work_load, synchronized);
+			run_nested_mutex_role(work_load, synchronized, gs_context);
 		else if (sync_role == 1)
 			run_inner_mutex_holder_role(work_load);
 		else if (sync_role == 2)
@@ -720,7 +863,7 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		else if (k_args.mode == MODE_MUTEX_NESTED)
 			run_nested_mutex_test(k_args.loop_count,
 					      k_args.work_load,
-					      k_args.role);
+					      k_args.role, false);
 		else if (k_args.mode == MODE_MUTEX_API_IN_LOCK)
 			run_api_in_mutex_test(k_args.loop_count,
 					      k_args.work_load);
@@ -732,10 +875,19 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 						     k_args.work_load);
 		else if (k_args.mode == MODE_SPIN_INNER_CONTENTION)
 			run_inner_contention_spinlock_test(
-				k_args.loop_count, k_args.work_load, k_args.role);
+				k_args.loop_count, k_args.work_load, k_args.role,
+				false);
 		else if (k_args.mode == MODE_SPIN_ABORT_RECOVERY)
 			run_abort_recovery_spinlock_test(
 				k_args.loop_count, k_args.work_load, k_args.role);
+		else if (k_args.mode == MODE_SPIN_GS_CONTEXT)
+			run_inner_contention_spinlock_test(
+				k_args.loop_count, k_args.work_load, k_args.role,
+				true);
+		else if (k_args.mode == MODE_MUTEX_GS_CONTEXT)
+			run_nested_mutex_test(k_args.loop_count,
+					      k_args.work_load,
+					      k_args.role, true);
 		else
 			return -EINVAL;
 		break;
@@ -758,11 +910,22 @@ static struct miscdevice my_misc_device = {
 
 static int __init my_module_init(void)
 {
+	int cpu;
 	int ret;
 
 	global_counter = 0;
 	mode2_api_observations = 0;
 	mode5_api_observations = 0;
+	atomic64_set(&gs_spin_attempts, 0);
+	atomic64_set(&gs_spin_successes, 0);
+	atomic64_set(&gs_spin_failures, 0);
+	atomic64_set(&gs_mutex_attempts, 0);
+	atomic64_set(&gs_mutex_successes, 0);
+	atomic64_set(&gs_mutex_failures, 0);
+	for_each_possible_cpu(cpu) {
+		per_cpu(kd_gs_probe_value, cpu) = ~0UL;
+		per_cpu(kd_gs_probe_rmw, cpu) = ~0UL;
+	}
 	ret = misc_register(&my_misc_device);
 	if (ret) {
 		pr_err("failed to register %s: %d\n", DRIVER_NAME, ret);
@@ -778,6 +941,14 @@ static void __exit my_module_exit(void)
 	pr_info("module unloaded, final counter: %lu\n", global_counter);
 	pr_info("mode2 api observations: %lu\n", mode2_api_observations);
 	pr_info("mode5 api observations: %lu\n", mode5_api_observations);
+	pr_info("kd_gs spin stats: attempts=%lld successes=%lld failures=%lld\n",
+		(long long)atomic64_read(&gs_spin_attempts),
+		(long long)atomic64_read(&gs_spin_successes),
+		(long long)atomic64_read(&gs_spin_failures));
+	pr_info("kd_gs mutex stats: attempts=%lld successes=%lld failures=%lld\n",
+		(long long)atomic64_read(&gs_mutex_attempts),
+		(long long)atomic64_read(&gs_mutex_successes),
+		(long long)atomic64_read(&gs_mutex_failures));
 }
 
 module_init(my_module_init);

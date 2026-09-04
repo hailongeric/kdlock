@@ -28,11 +28,13 @@ untranslated calls and indirect jumps incrementally.
 4. The kernel module executes the sandbox on behalf of queued waiters, achieving
    lock delegation without modifying the original kernel code.
 
-The key insight is that the sandbox eliminates RSP/RIP-relative operations: all
-register state is passed through a `struct pt_regs`, memory accesses are
-bounds-checked, and control flow is flattened.  This makes it safe for the
-combiner to execute another thread's critical section without a full context
-switch.
+The key mechanism is that the sandbox virtualizes RSP/RIP-sensitive operations:
+supported register state is passed through `struct pt_regs`, waiter per-CPU GS
+accesses are lowered to explicit addressing, and control flow is redirected
+through generated dispatch tables. This lets a combiner execute another
+thread's supported critical section without a full context switch. General
+translated-memory bounds checking is not complete, so this sandbox is not a
+security isolation boundary.
 
 ## 2. System Overview
 
@@ -179,7 +181,8 @@ static int execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
         return KD_EXE_NO_RUN;
 
     retry_regs = curr_node->regs;
-    frame = kd_exec_frame_push(...);
+    frame = kd_exec_frame_push(..., curr_node->gsbase,
+                               curr_node->task_struct_ptr);
     import_combiner_and_lock_stack(frame, curr_node);
     ret = kd_exe_on_call_hl_entry(&frame->regs, ...,
                                   frame->entry_ip,
@@ -199,9 +202,11 @@ static int execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
 }
 ```
 
-Native waiters first import callee-saved registers from the saved hook stack.
-Nested virtual waiters already carry a complete `pt_regs` snapshot and an
-explicit `kd_exec_frame`; they do not rely on the combiner's C stack.
+Native waiters first import callee-saved registers from the saved hook stack and
+use the kernel GS base captured on their origin CPU. Nested virtual waiters
+already carry a complete `pt_regs` snapshot and inherit the parent's GS base,
+logical task, and explicit `kd_exec_frame`; they do not rely on the combiner's C
+stack or `current`.
 
 The stack frame layout at `ret_rsp` (set by the compiler at the hook call site):
 
@@ -383,10 +388,13 @@ uses an atomic gate and never waits for the userspace daemon.
 ### 6.2 Entry Lifecycle
 
 ```
-KD_EXE_UNUSED → KD_EXE_UNINIT → KD_EXE_NORMAL → (KD_EXE_CALL_MISS | KD_EXE_IJ_MISS) → KD_EXE_NORMAL
-                     ↑                                        │
-                     │              daemon recompiles         │
-                     └────────────────────────────────────────┘
+KD_EXE_UNUSED -> KD_EXE_UNINIT -> KD_EXE_NORMAL
+                                      |  ^
+                 daemon recompiles   |  | complete write-back
+                                      v  |
+                        KD_EXE_CALL_MISS / KD_EXE_IJ_MISS
+
+KD_EXE_NORMAL -> KD_EXE_ERROR_INST  (terminal unsupported instruction)
 ```
 
 `KD_EXE_HOSTCALL` is deliberately absent from this lifecycle. It is a transient
@@ -406,9 +414,12 @@ int kd_exe_on_call_hl(struct pt_regs *regs, void *outgoing_rsp_ptr)
         return KD_EXE_NO_RUN;  // not ready
 
     void (*virt_ptr)(struct pt_regs *, unsigned long *) = exe->code_block;
-    unsigned long args[2] = { exe->gsbase, 0 };
+    struct kd_exec_frame *frame = kd_exec_current_frame();
+    unsigned long args[2];
 
     for (;;) {
+        args[0] = frame->gsbase;
+        args[1] = (unsigned long)frame->logical_task;
         virt_ptr(regs, args);  // execute or resume the same artifact
         if (args[0] == KD_EXE_HOSTCALL) {
             dispatch_allowlisted_hostcall(regs);
@@ -460,16 +471,25 @@ The miasm-based translator:
 1. Reads raw kernel bytes from `/proc/kcore` at the target RIP (`memread.py`).
 2. Loads `include/kd_hostcalls.def`, resolves available service symbols, and
    excludes those targets from callee-table expansion.
-3. Disassembles into a control-flow graph using miasm's `dis_multiblock`.
-4. Stops disassembly at `dont_dis_retcall_funcs` (unlock functions).
-5. For each basic block, translates instructions via `translation.py`:
+3. Resolves the x86 per-CPU `current_task` offset from `/proc/kallsyms`.
+4. Disassembles into a control-flow graph using miasm's `dis_multiblock`.
+5. Stops disassembly at `dont_dis_retcall_funcs` (unlock functions).
+6. Preflights every reachable segment operand and rejects undecodable/empty
+   blocks inside fetched translation ranges. Out-of-range bad blocks are CALL
+   miss placeholders. Unsupported FS/base-register operations, including raw
+   encodings that miasm 0.1.5 misdecodes, or unsupported `current_task` forms
+   produce a terminal `KD_EXE_ERROR_INST` artifact before any partial
+   translated side effect runs.
+7. For each basic block, translates instructions via `translation.py`:
    - Normal instructions: register conflict resolution, memory base checking.
+   - Generic `%gs:` memory operands: explicit waiter-GS-base addressing.
+   - `%gs:current_task`: logical waiter task substitution.
    - Branches: translated to sandbox-local jumps.
    - Special instructions: handled by `special_inst.py`.
-6. Handles indirect jumps (`indirect_jump.py`): builds jump tables, reports
+8. Handles indirect jumps (`indirect_jump.py`): builds jump tables, reports
    misses.
-7. Emits distinct control-call, hostcall, and ordinary call-miss stubs.
-8. Outputs `asm/jit.S` which is included by `wrapper.S`.
+9. Emits distinct control-call, hostcall, and ordinary call-miss stubs.
+10. Outputs `asm/jit.S` which is included by `wrapper.S`.
 
 ### 7.3 Incremental Recompilation
 
@@ -512,11 +532,12 @@ the pointers have been saved in wrapper stack slots:
 | R11 | Basic-block budget counter | Guest R11 is kept in a spill slot/mapped through R12-R15 |
 
 RAX, RBX, RCX, RDX, RSI, RDI, and R8-R10 directly represent their guest
-counterparts. Guest R11-R15, RIP, RSP, and RBP are virtual registers managed by
-`disassem/conflict.py`; ordinary translated instructions must not assume a
-fixed physical location for guest R11-R15. The complete current convention,
-including stack slots, exit values, hostcall continuations, flags, and waiter
-resume behavior, is specified in `docs/JIT_REGISTER_ABI.md`.
+counterparts. Guest R11-R15, RIP, RSP, RBP, waiter GS (`RGS`), and logical
+current task (`RCT`) are virtual registers managed by `disassem/conflict.py`;
+ordinary translated instructions must not assume a fixed physical location for
+them. The complete current convention, including stack slots, exit values,
+hostcall continuations, flags, segment lowering, and waiter resume behavior, is
+specified in `docs/JIT_REGISTER_ABI.md`.
 
 ### 8.2 Wrapper (include/wrapper.S)
 
@@ -527,8 +548,10 @@ The wrapper provides prologue/epilogue around the translated code:
 2. Load `pt_regs` pointer into R14, args pointer into R15.
 3. Load directly mapped GPRs from `pt_regs` and copy guest RSP, RBP, R11-R15
    into wrapper stack slots.
-4. Initialize R13 = virtual RSP and R12 = virtual RBP.
-5. Set R11 to the block-budget counter, load the requested RIP into R14, and
+4. Copy `args[0]` to `Stack_RGS` and `args[1]` to the reused
+   `Stack_TASK`/`Stack_RCT` slot. No third input or extra physical slot exists.
+5. Initialize R13 = virtual RSP and R12 = virtual RBP.
+6. Set R11 to the block-budget counter, load the requested RIP into R14, and
    dispatch to the matching translated entry/continuation label.
 
 **Epilogue (exit label):**
@@ -537,12 +560,13 @@ The wrapper provides prologue/epilogue around the translated code:
 3. Write return code (`Stack_IJ`) into `args[0]`:
    - `0x0` = `KD_EXE_NORMAL` (syscall encountered)
    - `0x1` = `KD_EXE_CALL_MISS`
+   - `0x3` = `KD_EXE_ERROR_INST`
    - `0x4` = `KD_EXE_INST_LIMIT`
    - `0x5` = `KD_EXE_HOSTCALL`
    - Other = indirect jump source address (`KD_EXE_IJ_MISS`)
 4. Write final RIP into `pt_regs->ip`.
-5. Write the supported GPR/RIP/RSP state back to `pt_regs`; EFLAGS, segment
-   state, and SIMD/FPU state are not part of the current persistent JIT ABI.
+5. Write the supported GPR/RIP/RSP state back to `pt_regs`; EFLAGS, hardware
+   segment-base state, and SIMD/FPU state are not restored by the wrapper.
 6. Restore callee-saved registers and return.
 
 `args[1]` receives the reserved `Stack_INST_CNT` slot, but the current wrapper
@@ -554,12 +578,35 @@ valid counter.
 `normal.py` identifies memory-base registers and retains scaffolding for
 flag-preserving checks, but the actual address-test instruction is commented
 out and the generated check sequence is currently empty. `seg_error` and
-`seg_error2` also do not publish a deterministic exit reason. Consequently the
-current JIT is not a security boundary and does not provide complete canonical
+`seg_error2` now deterministically return `KD_EXE_ERROR_INST`, but the current
+JIT is still not a security boundary and does not provide complete canonical
 address or bounds validation. This is an explicit implementation gap, not a
 property callers may rely on.
 
-### 8.4 Instruction Count Limit
+### 8.4 Kernel GS And Logical Current
+
+The two wrapper inputs are exactly `{waiter kernel GS base, logical waiter
+task}`. A top-level spin or mutex waiter captures both when it queues; a nested
+waiter inherits both from its parent frame. Hostcall and known-call continuation
+reinstall the same pair before re-entering the artifact. The legacy futex path
+uses the target task's origin CPU to obtain its kernel GS base and passes that
+task as logical current.
+
+The translator never changes the combiner's hardware GS base. It rewrites
+generic `%gs:offset` reads, writes, and RMW instructions to ordinary memory
+operands based on the captured GS value. A 64-bit MOV source at the resolved
+`current_task` per-CPU offset instead reads the logical task input, so proxy
+execution observes the waiter rather than the combiner. Writes/RMW to
+`current_task`, `%fs:` operands, direct FS/GS base instructions (including
+`SWAPGS`), and unsupported segment prefixes fail closed before normal translated code executes. Segment
+prefixes used only as alignment-NOP pseudo operands are discarded.
+
+Modes 10 and 11 validate this contract for nested spinlock and nested mutex
+proxying. They require artifacts containing both virtual inputs, no live
+hardware segment operand, actual translated execution, exact per-CPU
+read/write/RMW results, logical-current identity, and zero mismatch counters.
+
+### 8.5 Instruction Count Limit
 
 Translated blocks classified as ending in a branch increment R11. When
 `R11 & 0x1000000` is set (roughly 16M counted branch blocks in one wrapper
@@ -567,7 +614,7 @@ invocation), the sandbox jumps to `inst_limit`. R11 is reset on every re-entry,
 so this is neither a precise instruction counter nor a whole-critical-section
 budget.
 
-### 8.5 Call Translation
+### 8.6 Call Translation
 
 Function calls are assigned to four disjoint policies:
 
@@ -578,7 +625,7 @@ Function calls are assigned to four disjoint policies:
 | Translatable | ordinary discovered callee | Report `KD_EXE_CALL_MISS`, unwind the virtual CALL frame for native retry, add the target to `callee_table.txt`, and recompile. |
 | Unsupported | unresolved or rejected target | Fail closed; never invoke an arbitrary address as a service. |
 
-### 8.6 Native Hostcalls
+### 8.7 Native Hostcalls
 
 `include/kd_hostcalls.def` is the shared declarative service manifest. The
 kernel expands it into a registry of stable IDs, symbol names, safety flags,
@@ -613,9 +660,10 @@ that occur after native execution.
 ### 9.1 Execution Frames
 
 Every delegated spin critical section owns a per-CPU `kd_exec_frame`. The frame
-stores its complete `pt_regs`, entry and continuation RIP/RSP, parent frame,
-outer lock, lock ownership kind, held-lock stack, and a snapshot of TCLock's
-combiner state. Frames and lock stacks are bounded at eight entries.
+stores its complete `pt_regs`, entry and continuation RIP/RSP, waiter GS base,
+logical waiter task, parent frame, outer lock, lock ownership kind, held-lock
+stack, and a snapshot of TCLock's combiner state. Frames and lock stacks are
+bounded at eight entries.
 
 Unlike the old adapter, this state survives suspension of A while B enters its
 own fastpath, MCS queue, or combiner. Nested execution therefore does not depend
@@ -684,6 +732,8 @@ one transaction abort:
 Modes 1/6/7/8 cover normal nested, deep nested, OOO, and independent A/B queue
 behavior. Recovery mode 9 covers post-B and runtime JIT faults; mode 8's
 not-ready variant additionally proves cleanup while B is a queue owner.
+Mode 10 reuses the independent A/B topology and adds translated GS/current
+validation for the nested remote waiter.
 
 In mode 1, B's known lock/unlock calls are handled while the same translated A
 stream remains active. Consequently the outer A lock owns the JIT-completion
@@ -699,6 +749,10 @@ futex syscalls encountered inside translated critical sections:
 - **futex_wait**: record the uaddr; the caller decides whether to actually
   block or continue.
 
+Before invoking the shared wrapper, this path obtains kernel GS from the target
+task's `task_cpu(task)` and passes `{GS base, task}`. It therefore does not use
+the executor/combiner CPU as the logical futex origin.
+
 The futex delegation engine (`kd_futex.c`) provides `new_futex_wait` /
 `new_futex_wake` that execute futex operations on behalf of delegated waiters
 without requiring them to enter the kernel syscall path.
@@ -712,7 +766,7 @@ without requiring them to enter the kernel syscall path.
 | `delegate_election` | 1 | Enable/disable delegate election |
 | `kd_combiner_batch_size` | (extern) | Max waiters processed per combiner round (spinlock) |
 | `kd_mutex_batch_size` | 1024 | Max waiters processed per combiner round (mutex) |
-| `mutex_jit` | 0 | Opt in to translated mutex execution, including mode 4 nested A/B proxying and mode 5 native hostcall continuation |
+| `mutex_jit` | 0 | Opt in to translated mutex execution, including mode 4 nested A/B proxying, mode 5 native hostcall continuation, and mode 11 waiter GS/current proxying |
 | `spin_jit_fail_after_nested_lock` | 0 | One-shot test failure after nested spin acquisition |
 | `jit_hl_fault_after_known_call` | 0 | One-shot test fault: 1=CALL miss, 2=IJ miss, 3=instruction limit |
 
@@ -720,10 +774,12 @@ without requiring them to enter the kernel syscall path.
 
 ### Working
 
-- Raw spinlock delegation with JIT sandbox (modes 0-2 and 6-9 tested), including
-  allowlisted native hostcall exit/resume for mode 2.
+- Raw spinlock delegation with JIT sandbox (modes 0-2 and 6-10 tested), including
+  allowlisted native hostcall exit/resume for mode 2 and waiter GS/current
+  proxy semantics for mode 10.
 - Mutex safe-mode queue/handoff (modes 3-5), mode 3 stress JIT, mode 4 nested
-  A/B JIT proxying, and repeated/stress mode 5 hostcall JIT.
+  A/B JIT proxying, repeated/stress mode 5 hostcall JIT, and mode 11 nested
+  waiter GS/current proxying.
 - Dynamic translation pipeline (init, call-miss, ij-miss recompilation).
 - Hot-lock promotion and fallback to original kernel path.
 - TCLock-style nested spinlock and mutex JIT delegation, explicit frames,
@@ -755,9 +811,11 @@ without requiring them to enter the kernel syscall path.
 10. **Hostcalls are an explicit allowlist** — only fixed-signature, atomic-safe,
     task-context-independent, retry-safe services are currently accepted.
     General variadic `printk` and side-effecting services are unsupported.
-11. **Persistent processor state is partial** — EFLAGS, FS/GS semantics,
-    SIMD/FPU state, and the reserved `args[1]` count are not complete cross-exit
-    ABI state. See `docs/JIT_REGISTER_ABI.md`.
+11. **Persistent processor state is partial** — waiter kernel GS memory
+    semantics and logical `current_task` reads are supported through explicit
+    translation, but hardware FS/GS switching, FS operands, EFLAGS, SIMD/FPU
+    state, and the reserved `args[1]` output count are not supported as general
+    cross-exit state. See `docs/JIT_REGISTER_ABI.md`.
 12. **Memory checks are incomplete** — the translator currently emits no
     effective canonical-address or bounds guard, so the JIT must not be treated
     as a security isolation boundary.

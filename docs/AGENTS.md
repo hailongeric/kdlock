@@ -65,7 +65,8 @@ Benchmark 参数为：
 模式 `0/1/2` 分别是 spinlock contention、nested，以及 JIT 临界区通过白名单
 hostcall 执行原生 API 后恢复；模式 `3/4/5` 是对应的 mutex 测试；模式 `6/7/8/9`
 分别验证 spinlock 深层嵌套、OOO unlock、独立 A/B 竞争和 nested-JIT abort
-recovery。
+recovery；模式 `10/11` 分别验证 nested spin/mutex 代理时翻译后的
+waiter kernel GS、per-CPU 读写/RMW 和 logical `current`。
 
 ## 3. 强制安全规则
 
@@ -177,23 +178,26 @@ timeout 180 bash tests/test_04_spinlock.sh
 timeout 180 bash tests/test_05_mutex.sh
 ```
 
-若验收目标明确要求 modes 0/1/2/3/4/5 都实际执行翻译后的指令，不能只运行
+若验收目标明确要求 modes 0/1/2/3/4/5/10/11 都实际执行翻译后的指令，不能只运行
 `tests/run_all.sh`；后者的 mode 3/4/5 使用 `mutex_jit=0`。确认 recovery 快照后运行：
 
 ```bash
 KDLOCK_RECOVERY_CONFIRMED=1 \
   timeout --kill-after=10s 600s \
-  bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5
+  bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5 10 11
 ```
 
-该入口对 mode 0/1/2 检查 spin JIT，对 mode 3 运行重复/压力 mutex JIT，对 mode 4
-运行 nested-mutex sandbox，对 mode 5 运行重复/压力 mutex hostcall。所有模式均要求
+该入口对 mode 0/1/2/10 检查 spin JIT，对 mode 3 运行重复/压力 mutex JIT，
+对 mode 4/11 运行 nested-mutex sandbox，对 mode 5 运行重复/压力 mutex hostcall。
+所有模式均要求
 完整 artifact、daemon 回写、真实 `jit_success`、精确 counter 和干净的 `dmesg`。
 mode 2/5 还要求 `ktime_get` 生成 hostcall stub、服务地址不进入
 `callee_table.txt`、运行期不重编译，并且 `exits == executed == resumed > 0`；mode 5
 还要求这些值等于 mutex `jit_success` 和 `jit_resume`。mode 1 的 B 在同一个 A 翻译
 流中通过 known-call 执行；mode 4 则必须让 A/B 两个独立入口都进入 JIT。完整判定
-和最近一次结果见 `docs/VALIDATION.md`。
+和最近一次结果见 `docs/VALIDATION.md`。mode 10/11 还必须证明相关 artifact
+加载 `Stack_RGS` 和 `Stack_RCT`、不保留硬件 segment 操作数，且运行时
+`attempts == successes > 0` 、`failures == 0`。
 
 仅在用户明确要求并接受 guest 崩溃风险时，运行独立的 mutex JIT 确认测试：
 
@@ -207,13 +211,14 @@ timeout 300 bash tests/test_07_mutex_jit.sh
 所有 JIT/frame/node/waiter/slot 失败指标为 0，且 `dmesg` 无内核错误。测试还要求
 CPU 0 holder 后面的四个 CPU 1 waiter 产生 `multi_slot > 0`。
 
-`tests/test_08_mutex_jit_modes.sh` 是 recovery-only 的 mode 4/5 验证。mode 4
+`tests/test_08_mutex_jit_modes.sh` 是 recovery-only 的 mode 4/5/11 验证。mode 4
 使用 7 个分别绑定 CPU 的角色，在 A、B 上都强制形成 holder -> direct waiter ->
 nested target -> trailing waiter 队列。通过条件包括至少两次真实 JIT completion、
 `nested_queued >= 1`、`nested_remote >= 1`、最终 counter `12008`，以及所有
 readiness/JIT/frame/context/node/waiter/slot 失败或泄漏指标为 0。mode 5 执行 16 轮
 owner/waiter、CPU-pinned queue 和 8 线程连续竞争，要求 hostcall/JIT/waiter resume
-严格一一对应、API observation 与最终 counter 精确相等且运行期不重编译。除非
+严格一一对应、API observation 与最终 counter 精确相等且运行期不重编译。mode 11
+复用 mode 4 队列拓扑，并额外校验 translated GS/current artifact 与运行时一致性。除非
 recovery VM 正常且恢复快照已确认，否则不要运行该测试。
 
 spin nested-JIT 的故障恢复同样只在 recovery VM 中运行：
@@ -341,10 +346,11 @@ cd /home/eric/vm/qemu-scripts
 - `kernel_module/km.sh` 含 `sudo` 和旧式参数引用；自动化操作优先直接使用 `insmod`。
 - `tests/run_all.sh` 是真实内核集成测试，不是无风险单元测试。
 - `tests/test_07_mutex_jit.sh` 是显式启用 `mutex_jit=1` 的高风险、非默认测试。
-- `tests/test_08_mutex_jit_modes.sh` 是 high-risk mode 4/5 recovery-only 验证，
+- `tests/test_08_mutex_jit_modes.sh` 是 high-risk mode 4/5/11 recovery-only 验证，
   不得加入默认测试或在无新快照时运行。
-- `tests/test_09_jit_execution_modes.sh` 的严格 selector 包括 0/1/2/3/4/5；其中
+- `tests/test_09_jit_execution_modes.sh` 的严格 selector 包括 0/1/2/3/4/5/10/11；其中
   selector 2/5 分别验证 spin/mutex sandbox hostcall 的退出、原生执行和续点恢复。
+  selector 10/11 验证 spin/mutex 的 waiter GS 和 logical `current` 代理语义。
 - `tests/snapshot_test.sh` 本身不提供可靠快照保护；使用宿主机 recovery mode 和
   monitor 明确创建/列出快照，见上一节。
 - `compiler_install_kernel.sh` 会编译并安装内核，默认禁止运行。

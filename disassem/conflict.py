@@ -2,7 +2,7 @@ from assist import *
 from miasm.expression.expression import ExprMem, ExprId, ExprInt, ExprLoc, ExprOp
 import copy
 
-special_regs=['IP', 'SP', 'BP', '15', '14', '13', '12','11', 'FS', 'GS', 'T1', 'T2']  
+special_regs=['IP', 'SP', 'BP', '15', '14', '13', '12','11', 'FS', 'GS', 'CT', 'T1', 'T2']
 stable_regs = ['T1', 'T2', 'SP', 'BP']
 
 orig_stable_map = {'SP':'13', 'BP':'12'}
@@ -29,7 +29,7 @@ def release_conflict(reg_map, block_end = True):
     for k, v in reg_map.items():
         if v == '' or v in stable_regs:
             continue
-        if v != 'FS' and v != 'GS':
+        if v != 'FS' and v != 'GS' and v != 'CT':
             res += make_inst('MOV', ['Stack_R'+ v, 'R'+k ])
     return res
 
@@ -144,4 +144,3 @@ def reverse_reg(reg_map, arg):
             return inv_map[arg]
         return ' '
     return arg
-

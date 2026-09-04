@@ -4,9 +4,10 @@
 以及如何退出、续跑并最终恢复到原 waiter。它描述的是现有代码的实际约定，
 不是一个与实现无关的目标设计。
 
-适用范围是高层代理路径 `kd_exe_on_call_hl_entry()`，即当前 mode 0/1/2 和
-`mutex_jit=1` 下的 mode 3/4/5。低层 futex 路径 `kd_exe_on_call()` 共用 wrapper，
-但不支持 mode 2/5 使用的 hostcall。
+适用范围是高层代理路径 `kd_exe_on_call_hl_entry()`，即当前 mode
+0/1/2/10 和 `mutex_jit=1` 下的 mode 3/4/5/11。低层 futex 路径
+`kd_exe_on_call()` 共用相同的两参数 wrapper ABI，但不支持 mode 2/5
+使用的 hostcall。本项目当前只定义 x86-64 内核代码的翻译语义。
 
 本文描述的 mode 2/5 退出和续跑约定已经通过独立运行验证；实际入口、服务地址、
 计数器和保留日志见 [`VALIDATION.md`](VALIDATION.md)。
@@ -15,7 +16,10 @@
 
 - `include/wrapper.S`：JIT 二进制入口、寄存器装载和回写。
 - `include/asm_head.h`：`pt_regs` 偏移和 wrapper 私有栈槽。
+- `include/kd_segment.h`：获取 waiter 所在 CPU 的 kernel GS base。
 - `disassem/conflict.py`：虚拟特殊寄存器到 R12-R15 的动态映射。
+- `disassem/normal.py`：GS/current 操作数降级和 segment 拒绝策略。
+- `disassem/disassem.py`：读取 per-CPU 符号偏移并在产生代码前预检查 segment 指令。
 - `disassem/special_inst.py`：`CALL`、`RET`、`PUSH`、`POP` 等指令的降级。
 - `disassem/indirect_jump.py`：间接跳转、call miss 和 hostcall 退出桩。
 - `kernel_module/exe.c`：退出原因解释、known-call/hostcall 执行和续跑。
@@ -79,11 +83,15 @@ wrapper 保存宿主 RBX、RBP、R12-R15，因此对调用它的 C 代码遵守 
 
 | 元素 | 调用前 | wrapper 返回后 |
 | --- | --- | --- |
-| `args[0]` | 当前传入 `exe->gsbase` | sandbox 退出原因；IJ miss 时为源 RIP |
-| `args[1]` | `0` | 对应 `Stack_INST_CNT`，但当前没有初始化/写入，值未定义 |
+| `args[0]` | 被代理 waiter 的 kernel GS base | sandbox 退出原因；IJ miss 时为源 RIP |
+| `args[1]` | logical waiter 的 `task_struct *` | 对应 `Stack_INST_CNT`，但当前没有初始化/写入，值未定义 |
 
-因此，当前代码不得读取 `args[1]` 作为可靠的执行计数。R11 中虽有运行时
-block budget 计数，但 epilogue 没有把它复制到 `Stack_INST_CNT`。
+参数数组始终只有两个元素，没有第三个 task 参数。wrapper 在
+返回时会覆盖这两个输入，所以 executor 每次首次进入或 continuation
+续跑前，都要从当前 `kd_exec_frame` 重新写入 GS base 和 logical task。
+当前代码不得读取返回后的 `args[1]` 作为可靠执行计数：R11 中
+虽有运行时 block budget，但 epilogue 没有把它复制到
+`Stack_INST_CNT`。
 
 ## 3. `pt_regs` 输入输出约定
 
@@ -146,9 +154,15 @@ RAX、RCX、RDX、RSI、RDI、R8-R11 作为 lock 函数的 caller-saved 状态�
 ### 4.2 嵌套 JIT waiter
 
 嵌套 waiter 不重新解析 native hook 栈，而是通过
-`node->regs = *regs` 复制父 JIT 的完整 GPR/RIP/RSP 快照，并复制显式 lock stack。
+`node->regs = *regs` 复制父 JIT 的完整 GPR/RIP/RSP 快照，复制显式 lock stack，
+并继承父 frame 的 waiter GS base 和 logical task。
 这使 B 锁的远端 combiner 可以继续代理 A 的执行流，而不依赖 A combiner 的
 C 调用栈。
+
+顶层 spin/mutex waiter 在入队的 origin CPU 上记录
+`cpu_kernelmode_gs_base(cpu)` 和 `current`。低层 futex 入口则使用目标
+task 的 `task_cpu(task)` 查找 kernel GS base，并把该 task 作为 logical
+waiter。这两条路径都不使用 artifact 全局的 `exe->gsbase`。
 
 ## 5. Wrapper 私有栈布局
 
@@ -166,8 +180,8 @@ C 调用栈。
 | `-0x60` | `Stack_R13` | guest R13 spill |
 | `-0x68` | `Stack_R12` | guest R12 spill |
 | `-0x70` | `Stack_R11` | guest R11 spill |
-| `-0x78` | `Stack_RGS` | 入口 `args[1]` |
-| `-0x80` | `Stack_RFS` | 入口 `args[0]` |
+| `-0x78` | `Stack_RGS` | 入口 `args[0]`，waiter kernel GS base |
+| `-0x80` | `Stack_TASK` / `Stack_RCT` | 入口 `args[1]`，logical waiter task |
 | `-0x88` | `Stack_RIP` | 退出 RIP 临时槽 |
 | `-0x90` | `Stack_IJ` | 退出原因或 IJ 源地址 |
 | `-0x98` | `Stack_INST_CNT` | 预留计数槽；当前未初始化 |
@@ -175,9 +189,9 @@ C 调用栈。
 `Stack_RIP`、`Stack_IJ`、`Stack_INST_CNT` 由一次 `sub rsp, 24` 分配，并不会自动
 清零。正常退出桩必须先定义 R14 和 `Stack_IJ`，再跳到公共 `exit`。
 
-FS/GS 仍是遗留接口：`asm_head.h` 把 `args[0]` 命名为 `PT_FS`、`args[1]` 命名为
-`PT_GS`，但执行器实际把 GS base 放在 `args[0]`，`args[1]` 为零。因此当前
-FS/GS 虚拟寄存器的槽位名称和输入不一致，不能视为稳定 ABI。
+`Stack_TASK` 直接复用旧的第二个 segment 槽；`Stack_RIP` 及其后的物理偏移
+没有变化。`Stack_RCT` 是翻译器对同一槽位的别名，不会增加栈槽或
+`args` 元素。`Stack_RGS` 和 `Stack_RCT` 是每次 wrapper 调用内只读的输入。
 
 ## 6. Translated code 的物理寄存器分工
 
@@ -200,7 +214,7 @@ FS/GS 虚拟寄存器的槽位名称和输入不一致，不能视为稳定 ABI�
 `conflict.py` 把以下 guest 状态定义为 special registers：
 
 ```text
-RIP, RSP, RBP, R11, R12, R13, R14, R15, FS, GS, T1, T2
+RIP, RSP, RBP, R11, R12, R13, R14, R15, GS, CT, T1, T2
 ```
 
 每个 translated basic block 的初始映射只有：
@@ -231,6 +245,30 @@ R15”。只有 dispatcher 和退出协议对 physical R14/R15 的含义是固�
   `KD_EXE_INST_LIMIT` 退出。R11 在每次 wrapper 进入时重新清零，因此这是单次
   sandbox 运行的 branch-block budget，不是整个临界区的精确 retired-instruction
   数。
+
+### 6.3 GS 和 logical `current`
+
+运行 translated code 时不会执行 `wrgsbase`，也不会把 combiner CPU 的硬件
+GS base 切换为 waiter 的值。翻译器将普通 `%gs:offset` 操作数改写为
+`[virtual_GS_base + offset]`；virtual GS 从 `Stack_RGS` 加载，因而 MOV 读、
+MOV 写和 INC 等 read-modify-write 都访问 origin CPU 的 per-CPU 区。
+
+`current_task` 是特例。daemon 从 `/proc/kallsyms` 计算其 per-CPU 偏移；遇到
+64-bit `MOV reg, %gs:current_task` 时，直接从 virtual `CT` / `Stack_RCT`
+返回 logical waiter。这避免远端 combiner 读到它自己或 origin CPU 上后续
+调度进程的 `current`。对 `current_task` 的写入或 RMW 不允许。
+
+当前 fail-closed 策略为：
+
+- `%fs:` 内存操作数不支持，不传入 FS base。
+- `rdfsbase`/`rdgsbase`/`wrfsbase`/`wrgsbase`/`swapgs` 和直接 segment
+  寄存器访问不支持。
+- 其他 segment-prefixed 内存指令不支持。对齐 NOP 携带的 CS 伪操作数会被丢弃并生成普通 NOP。
+- miasm 在 daemon 已抓取翻译范围内不能解码的 basic block 整体拒绝。
+  范围外的 CALL 目标坏块只是 miss 占位，仍按 call-miss 策略处理。对
+  miasm 0.1.5 会错解的 `SWAPGS` 和 FSGSBASE 编码另行按原始字节拒绝。
+- 预检查失败时 daemon 生成最小拒绝 artifact，以
+  `KD_EXE_ERROR_INST == 3` 退出；kernel executor 将该 entry 标记为终止错误并回退。
 
 ## 7. 虚拟栈和函数调用
 
@@ -272,13 +310,15 @@ args[1]    = Stack_INST_CNT   (当前未定义)
 | IJ miss | jump target | IJ 源 RIP，而不是常量 `2` | 不变 |
 | block budget 超限 | 最近记录的 block RIP | `4` (`KD_EXE_INST_LIMIT`) | 不变 |
 | dispatcher 无匹配 continuation | 请求的 RIP | `2` | 不变；高层路径最终失败 |
+| 不支持的 segment/指令 | 被拒绝的入口或指令 RIP | `3` (`KD_EXE_ERROR_INST`) | 不变；终止失败 |
 
 `KD_EXE_IJ_MISS == 2` 是 `kd_exe_info.status_code` 的 daemon 状态，不是普通 IJ
 miss 时 wrapper 返回在 `args[0]` 的值。wrapper 返回源 RIP，kernel executor
 验证后才把 translation entry 发布为 `KD_EXE_IJ_MISS`。
 
-`seg_error`/`seg_error2` 当前没有建立独立、可靠的 `Stack_IJ` 值；同时
-`normal.py` 中实际地址检查指令仍未启用。因此这两个标签不能作为稳定退出 ABI。
+`seg_error`/`seg_error2` 现在都明确写入 `KD_EXE_ERROR_INST == 3`。但
+`normal.py` 中的一般内存地址检查指令仍未启用；确定性错误码不代表
+sandbox 已经成为内存隔离边界。
 
 ## 9. Mode 2/5 hostcall 的寄存器续跑约定
 
@@ -294,7 +334,8 @@ mode 2 和 mode 5 的 sandbox 退出及内部返回流程相同：
 5. `advance_after_known_call()` 读取 `*(unsigned long *)regs->sp` 作为 continuation，
    然后执行 `regs->sp += 8` 和 `regs->ip = continuation`。
 6. 更新后的完整 `pt_regs` 保存到当前 `kd_exec_frame`，同一个 JIT artifact 再次
-   通过 wrapper 进入；dispatcher 直接跳到 continuation label。
+   通过 wrapper 进入；executor 先重新写入该 frame 的 GS base/logical
+   task，dispatcher 再直接跳到 continuation label。
 
 当前 handler 只显式修改 RAX，其他 guest GPR 保留。新增服务时必须为每个服务
 定义参数、返回值和允许 clobber 的寄存器，不能直接按 `regs->ip` 调用任意内核
@@ -322,8 +363,8 @@ lock/unlock 与 hostcall 使用相同的“保留虚拟 CALL frame 后退出”�
   需要用该栈顶返回地址直接跳过已经代理执行的 unlock。
 
 `kd_exec_frame` 是 nested/hostcall 边界的持久状态，保存 `regs`、entry RIP、
-continuation RIP/RSP、父 frame 和 lock ownership。当前 frame depth 和 lock
-depth 都限制为 8。
+continuation RIP/RSP、waiter GS base、logical task、父 frame 和 lock ownership。
+当前 frame depth 和 lock depth 都限制为 8。
 
 ## 11. 返回原 waiter
 
@@ -341,7 +382,9 @@ spin JIT 失败回退使用 `jump_to_saved_regs_in_cs()`：它切换到 `regs->s
 压入 `regs->ip`，再 `retq`，因此从原始 CS entry 重新执行。mutex JIT 失败则
 保持 waiter 未完成并把锁交还给它，让原 lock 调用按 native 路径返回。
 
-两个恢复函数都不恢复 EFLAGS、segment state 或 SIMD/FPU 状态。
+两个恢复函数都不恢复 EFLAGS、硬件 segment base 或 SIMD/FPU 状态。
+GS 内存语义由翻译后的显式基址寻址实现，不依赖这两个恢复函数切换
+硬件 GS。
 
 ## 12. 修改 JIT 时必须保持的约束
 
@@ -355,7 +398,11 @@ spin JIT 失败回退使用 `jump_to_saved_regs_in_cs()`：它切换到 `regs->s
    continuation label 集合。
 6. native handler 只能通过 `pt_regs` 读取 guest 参数、写回明确声明的结果，
    且必须定义失败、重试和 side-effect 语义。
-7. 不得把 `args[1]`、EFLAGS、FS/GS 或 SIMD 状态当成已实现的跨边界 ABI；若要
-   使用，应先补齐 wrapper 保存/恢复及对应测试。
-8. 修改 `struct pt_regs` 偏移、wrapper push 顺序或 `Stack_*` 宏时必须同步修改
+7. `args[0]`/`args[1]` 在入口时必须分别为 waiter kernel GS base 和
+   logical task，每次 continuation 都必须重新安装；返回后 `args[1]`
+   仍不能当作有效计数。
+8. 不得依赖硬件 FS/GS 切换。只有文档化的 GS 显式基址降级和 logical
+   `current_task` 读取受支持；FS、base-register 指令和 `current_task` 写入必须失败关闭。
+9. EFLAGS 和 SIMD/FPU 状态仍不是完整的跨边界 ABI。
+10. 修改 `struct pt_regs` 偏移、wrapper push 顺序或 `Stack_*` 宏时必须同步修改
    三者，并反汇编最终 `jit.bin` 验证实际编码。

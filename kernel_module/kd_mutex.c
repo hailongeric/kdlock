@@ -22,6 +22,7 @@
 #include "kd_mutex.h"
 #include "kd_lock.h"
 #include "kd_exec.h"
+#include "kd_segment.h"
 #include "exe.h"
 #include "utils.h"
 
@@ -282,6 +283,7 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 	node->next = NULL;
 	node->lock = NULL;
 	node->task_struct_ptr = NULL;
+	node->gsbase = 0;
 	node->jit_context = NULL;
 	node->jit_waiter = false;
 	WRITE_ONCE(shadow->node_slots, slots & ~bit);
@@ -375,7 +377,9 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 				   lock->origin_mutex_addr, curr_node,
 				   outgoing_rsp_ptr,
 				   curr_node->jit_waiter ?
-				   jit_context->lock_depth : 1);
+				   jit_context->lock_depth : 1,
+				   curr_node->gsbase,
+				   curr_node->task_struct_ptr);
 	if (!frame) {
 		atomic64_inc(&kd_mutex_frame_failure_count);
 		return KD_EXE_RUN_ERROR;
@@ -643,6 +647,8 @@ static int kd_mutex_prepare_jit_node(
 
 	memset(context, 0, sizeof(*context));
 	node->regs = *regs;
+	node->gsbase = parent->gsbase;
+	node->task_struct_ptr = parent->logical_task;
 	node->jit_waiter = true;
 	node->jit_context = context;
 	context->lock_depth = depth + 1;
@@ -961,6 +967,7 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->cpuid = smp_processor_id();
 		curr_node->lock = lock;
 		curr_node->task_struct_ptr = current;
+		curr_node->gsbase = kd_read_kernel_gsbase();
 		curr_node->jit_context = NULL;
 		curr_node->jit_waiter = false;
 		/* Store callee-saved registers captured at hook entry */

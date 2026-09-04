@@ -29,8 +29,8 @@ See [docs/DESIGN.md](docs/DESIGN.md) for the full technical design.
 
 | Component | State |
 |-----------|-------|
-| Spinlock delegation (modes 0-2, 6-9) | Working; nested JIT, mode 2 native hostcalls, and bounded recovery validated |
-| Mutex delegation protocol (modes 3-5) | Safe mode working; mode 3 stress JIT, mode 4 nested A/B proxy, and mode 5 repeated native hostcalls confirmed |
+| Spinlock delegation (modes 0-2, 6-10) | Working; nested JIT, mode 2 native hostcalls, bounded recovery, and waiter GS/current proxying validated |
+| Mutex delegation protocol (modes 3-5, 11) | Safe mode working; mode 3 stress JIT, mode 4 nested A/B proxy, mode 5 native hostcalls, and mode 11 waiter GS/current proxying confirmed |
 | Dynamic translation (daemon + miasm) | Working |
 | Hot-lock promotion | Working |
 | Nested spinlock handling | TCLock-style JIT delegation, recursive frames, OOO handoff, and native retry |
@@ -117,6 +117,8 @@ Terminal 1 — run benchmark:
 | 7 | Spinlock | Out-of-order unlock (unlock A before B) |
 | 8 | Spinlock | Independent contention and queues on A and B |
 | 9 | Spinlock | Isolated nested-JIT abort/retry |
+| 10 | Spinlock | Nested A/B proxy with translated per-CPU GS and logical `current` validation |
+| 11 | Mutex | Nested A/B proxy with translated per-CPU GS and logical `current` validation (`mutex_jit=1`) |
 
 ### Inspect Results
 
@@ -138,10 +140,11 @@ make -C klock_module -j"$(nproc)"
 make -C daemon
 ```
 
-Nine C binaries plus one Python code-generation test cover tail encoding,
+Nine C binaries plus two Python code-generation tests cover tail encoding,
 bounded translation lookup/publication, hot-lock state, spin/mutex node
 capacity, explicit nested execution frames, hostcall/call-miss policy, generated
-hostcall stubs, mutex shadow lookup, and safe draining during promotion.
+hostcall stubs, GS/current lowering, mutex shadow lookup, and safe draining
+during promotion.
 
 ### Default Integration Suite
 
@@ -156,32 +159,34 @@ The default suite does not prove translated execution for mutex modes 3/4/5:
 `test_05_mutex.sh` deliberately uses `mutex_jit=0` to validate the queue and
 handoff protocol without entering the experimental mutex sandbox.
 
-### Modes 0/1/2/3/4/5 JIT Acceptance
+### Modes 0/1/2/3/4/5/10/11 JIT Acceptance
 
 After confirming a recovery snapshot, run:
 
 ```bash
 KDLOCK_RECOVERY_CONFIRMED=1 \
   timeout --kill-after=10s 600s \
-  bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5
+  bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5 10 11
 ```
 
 Selectors may be supplied individually. A pass requires complete translation
 artifacts, kernel write-back, actual translated completion (`jit_success`), an
 exact final counter, drained queues/frames, and clean kernel diagnostics. Modes
-3/4/5 additionally verify that `mutex_jit=1` is active. Modes 2 and 5 also
+3/4/5/11 additionally verify that `mutex_jit=1` is active. Modes 2 and 5 also
 require a named `ktime_get` hostcall stub, no service callee translation or
 runtime recompilation, and matching nonzero exit/execute/resume counters. Mode 5
 additionally requires hostcall counts to equal mutex JIT completion and waiter
-resume counts under repeated contention.
+resume counts under repeated contention. Modes 10 and 11 require generated
+code to load both `Stack_RGS` and `Stack_RCT`, contain no live hardware segment
+operand, execute that artifact, and report zero GS/current mismatches.
 
-The final independent mode 5 run on 2026-09-04 observed `mutex_jit=1`, then
-installed and executed the 1464-byte artifact for entry
-`0xffffffffc071edea`. It recorded `jit_success=jit_resume=381`, hostcall
-`exits=executed=resumed=381`, exact counters of 12582, one initial JIT
-write-back, and zero hostcall, queue, frame, or invariant failures. A follow-up
-mode 2 regression also passed with four complete hostcall cycles. Exact
-evidence and retained logs are in
+The current 2026-09-04 regression passed modes 0-5 after the segment-context
+changes. Mode 5 observed `mutex_jit=1` and recorded
+`jit_success=jit_resume=399`, matching 399 complete hostcall cycles, exact
+counters of 12582, and zero hostcall, queue, frame, or invariant failures.
+Independent final runs also passed mode 10 with GS probe `3/3/0` and mode 11
+with GS probe `12002/12002/0`; both matched runtime IPs to the inspected
+GS/current artifacts. Exact evidence and retained logs are in
 [docs/VALIDATION.md](docs/VALIDATION.md).
 
 | Mode | `tests/run_all.sh` | Real JIT acceptance |
@@ -192,6 +197,8 @@ evidence and retained logs are in
 | 3 | No, default uses `mutex_jit=0` | `test_07_mutex_jit.sh` |
 | 4 | No, default uses `mutex_jit=0` | `test_08_mutex_jit_modes.sh 4` |
 | 5 | No, default uses `mutex_jit=0` | `test_08_mutex_jit_modes.sh 5` |
+| 10 | No, recovery-only GS/current contract | `test_04_spinlock.sh 10` |
+| 11 | No, default uses `mutex_jit=0` | `test_08_mutex_jit_modes.sh 11` |
 
 Mode 1 executes one translated outer A stream through the nested B lock/unlock
 known-call path; B's nested counters prove those boundaries were crossed without
@@ -203,6 +210,13 @@ and requires both entry RIPs to execute, including remote B proxy evidence. Mode
 sandbox exit/resume plus final waiter resume under contention. See
 [docs/VALIDATION.md](docs/VALIDATION.md) for the exact latest results and this
 distinction.
+
+Modes 10 and 11 validate the x86 kernel segment-context ABI. The two wrapper
+inputs remain exactly two machine words: `args[0]` is the original waiter's
+kernel GS base and `args[1]` is the logical waiter task. Generic `%gs:` memory
+operands are lowered to ordinary addressing through that captured base;
+`%gs:current_task` reads the logical task argument. Hardware GS is never
+switched to the waiter while the combiner runs, and `%fs:` operands fail closed.
 
 ### Specialized Recovery Tests
 
@@ -218,6 +232,8 @@ bash tests/test_07a_mutex_jit_smoke.sh
 bash tests/test_07_mutex_jit.sh
 bash tests/test_08_mutex_jit_modes.sh 4
 bash tests/test_08_mutex_jit_modes.sh 5
+bash tests/test_04_spinlock.sh 10
+bash tests/test_08_mutex_jit_modes.sh 11
 ```
 
 These are intentionally excluded from `tests/run_all.sh`. The mode 9 variants
@@ -248,7 +264,7 @@ Do not issue HMP `quit`, which exits QEMU.
 | `target_process` | `"kd_test"` | Space-separated process names to intercept |
 | `velvet_wait_queue` | 1 | Enable velvet wait queue optimization |
 | `delegate_election` | 1 | Enable delegate election |
-| `mutex_jit` | 0 | Enable experimental mutex JIT sandbox execution. Mode 3 repeated/stress execution, mode 4 nested A/B proxy execution, and mode 5 repeated hostcall execution are recovery-confirmed. It remains opt-in; default 0 is required for normal testing. |
+| `mutex_jit` | 0 | Enable experimental mutex JIT sandbox execution. Mode 3 repeated/stress execution, mode 4 nested A/B proxy execution, mode 5 repeated hostcall execution, and mode 11 waiter GS/current execution are recovery-confirmed. It remains opt-in; default 0 is required for normal testing. |
 | `spin_jit_fail_after_nested_lock` | 0 | One-shot test fault after nested spin acquisition; validates frame cleanup and native retry. |
 | `jit_hl_fault_after_known_call` | 0 | One-shot test fault after a known JIT call: 1=CALL miss, 2=IJ miss, 3=instruction limit. |
 

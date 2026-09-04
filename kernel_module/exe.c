@@ -19,10 +19,10 @@
  */
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_segment.h"
 
 #include <asm-generic/set_memory.h>
 #include <asm/current.h>
-#include <asm/fsgsbase.h>
 #include <asm/smap.h>
 #include <linux/mm.h>
 #include <linux/moduleparam.h>
@@ -592,14 +592,6 @@ void kd_exe_add(int pid, unsigned long RIP) {
 	p->success_cnt = 0;
 	p->fail_cnt = 0;
 
-	// if (p->fsbase == 0)
-	// 	p->fsbase = x86_fsbase_read_cpu(); //! TODO dont use this register
-	
-	if(p->gsbase == 0){
-		unsigned long gs_base;
-    	asm volatile("rdgsbase %0" : "=r"(gs_base));
-		p->gsbase = gs_base;
-	}
 	smp_store_release(&p->status_code, KD_EXE_UNINIT);
 	kd_code_block_gate_unlock();
 	// struct kd_thread* t = kd_get_thread(pid);
@@ -610,10 +602,7 @@ void kd_exe_add(int pid, unsigned long RIP) {
 	//  printk(KERN_EMERG "exe added %d %lx %d\n", pid, RIP, current->tgid);
 }
 
-/*args is used to pass arguments to code block
-  For input, the first arg is fs, and second being gs.
-  For output, the first is return_code, or the address of indirect jump.
-*/
+/* Input: waiter kernel GS and logical task. Output: exit reason and count. */
 void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_exe_ret* r) {
 	unsigned long long begin, end;
 
@@ -629,6 +618,7 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 	int tid = task->tgid;
 
 	unsigned long args[2];
+	unsigned long gsbase;
 	void (*virt_ptr)(struct pt_regs* regs, unsigned long* args);
 	struct kd_exe_info* exe;
 	// struct kd_thread* th;
@@ -636,6 +626,12 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 	r->count = 0;
 
 	unsigned long origin_uaddr = regs->di;
+
+	gsbase = kd_kernel_gsbase_for_task(task);
+	if (!gsbase) {
+		r->ret = -1;
+		return;
+	}
 
 	while (1) {  // chaining
 		// if (regs->ip == 0x7ffff7fb4330)
@@ -666,18 +662,8 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 
 		virt_ptr = exe->code_block;
 
-		// if (exe->fsbase == 0)
-		// 	KD_PR_INFO("[exe on call]\tfsbase is zero !!!");
-
-		if (exe->gsbase == 0)
-			KD_PR_INFO("[exe on call]\tgsbase is zero !!!");
-
-		// args[0] = exe->fsbase;  //!
-		args[0] = exe->gsbase;  //!
-		// if (th->fsbase == 0)
-		// 	KD_PR_INFO("[exe on call]\tfsbase is zero !!!");
-		// args[0] = th->fsbase;
-		args[1] = 0;
+		args[0] = gsbase;
+		args[1] = (unsigned long)task;
 
 		regs->cx = regs->ip;
 		regs->r11 = regs->flags;
@@ -801,6 +787,12 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 			// exe->fail_cnt++;
 			r->ret = -1;
 		}
+		else if (args[0] == KD_EXE_ERROR_INST) {
+			KD_PR_INFO("unsupported translated instruction at %lx\n",
+				   regs->ip);
+			smp_store_release(&exe->status_code, KD_EXE_ERROR_INST);
+			r->ret = -1;
+		}
 		else if (args[0] == KD_EXE_INST_LIMIT) {
 			KD_PR_INFO("inst limit\n");
 			smp_store_release(&exe->status_code, KD_EXE_NORMAL);
@@ -838,8 +830,11 @@ int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
 	int hostcall_count = 0;
 	int fault_kind;
 	bool resume_after_hostcall = false;
+	struct kd_exec_frame *frame = kd_exec_current_frame();
 
-
+	if (!frame || !kd_exec_frame_validate(frame) ||
+	    !frame->gsbase || !frame->logical_task)
+		return KD_EXE_RUN_ERROR;
 	exe = kd_get_exe(0, entry_ip);  /* rip-only lookup, same code for all */
 	// spin_lock(&exe->lock);
 	if (!exe || !kd_exe_is_ready(0, entry_ip)) {
@@ -855,43 +850,33 @@ int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
 
 	virt_ptr = exe->code_block;
 	while (1) {
-	// if (exe->fsbase == 0)
-	// 	KD_PR_INFO("[exe on call]\tfsbase is zero !!!");
-
-	if (exe->gsbase == 0)
-		KD_PR_INFO("[exe on call]\tgsbase is zero !!!");
-
-	// args[0] = exe->fsbase; //!
-	args[0] = exe->gsbase; //!
-	// if (th->fsbase == 0)
-	// 	KD_PR_INFO("[exe on call]\tfsbase is zero !!!");
-	// args[0] = th->fsbase;
-	args[1] = 0;
-	fault_kind = continuation_count > 0 ?
-		xchg(&kd_jit_hl_fault_after_known_call, 0) : 0;
-	if (unlikely(fault_kind)) {
-		KD_PR_INFO("JIT injected runtime fault: kind=%d entry=%lx ip=%lx outer=%lx\n",
-			   fault_kind, entry_ip, regs->ip, outer_lock_addr);
-		switch (fault_kind) {
-		case 1:
-			args[0] = KD_EXE_CALL_MISS;
-			break;
-		case 2:
-			args[0] = entry_ip;
-			break;
-		case 3:
-			args[0] = KD_EXE_INST_LIMIT;
-			break;
-		default:
-			args[0] = KD_EXE_NORMAL;
-			break;
+		args[0] = frame->gsbase;
+		args[1] = (unsigned long)frame->logical_task;
+		fault_kind = continuation_count > 0 ?
+			xchg(&kd_jit_hl_fault_after_known_call, 0) : 0;
+		if (unlikely(fault_kind)) {
+			KD_PR_INFO("JIT injected runtime fault: kind=%d entry=%lx ip=%lx outer=%lx\n",
+				   fault_kind, entry_ip, regs->ip, outer_lock_addr);
+			switch (fault_kind) {
+			case 1:
+				args[0] = KD_EXE_CALL_MISS;
+				break;
+			case 2:
+				args[0] = entry_ip;
+				break;
+			case 3:
+				args[0] = KD_EXE_INST_LIMIT;
+				break;
+			default:
+				args[0] = KD_EXE_NORMAL;
+				break;
+			}
+		} else {
+			virt_ptr(regs, args);
+			if (resume_after_hostcall)
+				atomic64_inc(&kd_hostcall_resumed);
 		}
-	} else {
-		virt_ptr(regs, args);
-		if (resume_after_hostcall)
-			atomic64_inc(&kd_hostcall_resumed);
-	}
-	resume_after_hostcall = false;
+		resume_after_hostcall = false;
 
 	// regs->cx = regs->ip;
 	// regs->r11 = regs->flags;
@@ -956,8 +941,6 @@ int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
 			}
 			if (call_ret > 0) {
 				continuation_count++;
-				args[0] = exe->gsbase;
-				args[1] = 0;
 				continue;
 			}
 			ret_flag = KD_EXE_RUN_ERROR;
@@ -982,8 +965,6 @@ int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
 			}
 			if (call_ret > 0) {
 				continuation_count++;
-				args[0] = exe->gsbase;
-				args[1] = 0;
 				continue;
 			}
 			if (call_ret < 0) {
@@ -1002,6 +983,12 @@ int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
 			}
 			ret_flag = KD_EXE_RUN_ERROR;
 		}
+	}
+	else if (args[0] == KD_EXE_ERROR_INST) {
+		KD_PR_INFO("unsupported translated instruction: entry=%lx ip=%lx\n",
+			   entry_ip, regs->ip);
+		smp_store_release(&exe->status_code, KD_EXE_ERROR_INST);
+		ret_flag = KD_EXE_RUN_ERROR;
 	}
 	else if (args[0] == KD_EXE_INST_LIMIT) {
 		KD_PR_INFO("inst limit\n");

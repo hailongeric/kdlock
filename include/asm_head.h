@@ -38,14 +38,15 @@
 #define Stack_R11 QWORD PTR [RBP - 8*14]
 
 #define Stack_RGS QWORD PTR [RBP - 8*15]
-#define Stack_RFS QWORD PTR [RBP - 8*16]
+#define Stack_TASK QWORD PTR [RBP - 8*16]
+#define Stack_RCT Stack_TASK
 
 #define Stack_RIP QWORD PTR [RBP - 8*17]
 #define Stack_IJ QWORD PTR [RBP - 8*18]
 #define Stack_INST_CNT QWORD PTR [RBP - 8*19]
 
-#define PT_FS QWORD PTR [ARG_REG]
-#define PT_GS QWORD PTR [ARG_REG + 8]
+#define PT_GS QWORD PTR [ARG_REG]
+#define PT_TASK QWORD PTR [ARG_REG + 8]
 
 #define Stack_RIPL DWORD PTR [RBP - 8*17]
 #define Stack_RIPH DWORD PTR [RBP - 8*17+4]

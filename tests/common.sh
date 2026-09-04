@@ -358,6 +358,41 @@ check_jit_hostcall_artifact() {
     return 0
 }
 
+is_jit_gs_context_artifact() {
+	local asm_dir="$1"
+
+	grep -Eq "Stack_RGS" "$asm_dir/jit.S" &&
+		grep -Eq "Stack_RCT" "$asm_dir/jit.S"
+}
+
+jit_has_live_segment_operand() {
+	local asm_dir="$1"
+
+	awk '
+		/^[[:space:]]*\/\*/ { in_comment = 1; next }
+		/^[[:space:]]*\*\// { in_comment = 0; next }
+		!in_comment && /(FS|GS):\[/ { found = 1 }
+		END { exit(found ? 0 : 1) }
+	' "$asm_dir/jit.S"
+}
+
+check_jit_gs_context_artifact() {
+	local asm_dir="$1"
+
+	if ! is_jit_gs_context_artifact "$asm_dir"; then
+		fail "$TEST_NAME" \
+			"jit.S does not load both waiter GS and logical current"
+		return 1
+	fi
+	if jit_has_live_segment_operand "$asm_dir"; then
+		fail "$TEST_NAME" \
+			"jit.S retained a hardware segment-prefixed memory operand"
+		return 1
+	fi
+	info "GS/current context code verified in $asm_dir"
+	return 0
+}
+
 jit_entry_from_asm_dir() {
     local asm_dir="$1"
     local tgid_dir rip_dir entry

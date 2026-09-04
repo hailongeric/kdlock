@@ -13,6 +13,8 @@
 #include <linux/types.h>
 #include <asm/ptrace.h>
 
+struct task_struct;
+
 #define KD_EXEC_MAX_NESTING 8
 #define KD_EXEC_MAX_LOCK_DEPTH 8
 
@@ -64,6 +66,8 @@ struct kd_exec_frame {
 	unsigned long outer_lock_addr;
 	unsigned long continuation_ip;
 	unsigned long continuation_sp;
+	unsigned long gsbase;
+	struct task_struct *logical_task;
 	void *waiter;
 	void *outgoing_rsp_ptr;
 	struct kd_exec_frame *parent;
@@ -105,7 +109,9 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 					 unsigned long outer_lock_addr,
 					 void *waiter,
 					 void *outgoing_rsp_ptr,
-					 unsigned int held_lock_depth);
+					 unsigned int held_lock_depth,
+					 unsigned long gsbase,
+					 struct task_struct *logical_task);
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs);
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame);
 bool kd_exec_context_validate(const struct kd_exec_context *ctx);

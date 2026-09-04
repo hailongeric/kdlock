@@ -4,7 +4,7 @@ Last updated: 2026-09-04
 
 Completed implementation history is available in Git and is intentionally not
 duplicated here. Current architecture is documented in `DESIGN.md`; the latest
-mode 0/1/2/3/4/5 JIT execution results are in `VALIDATION.md`.
+mode 0/1/2/3/4/5/10/11 JIT execution results are in `VALIDATION.md`.
 
 ## Current Baseline
 
@@ -17,18 +17,29 @@ mode 0/1/2/3/4/5 JIT execution results are in `VALIDATION.md`.
   nested mode 4 A/B proxy execution pass the recovery-only acceptance suite.
   Mode 5 repeatedly executes the same allowlisted hostcall protocol under mutex
   contention with exact hostcall, JIT completion, and waiter resume accounting.
+- The x86 two-word JIT context ABI is `{waiter kernel GS base, logical waiter
+  task}`. Generic `%gs:` MOV read/write and RMW use the captured origin-CPU
+  base; `%gs:current_task` returns the logical waiter. Top-level capture,
+  nested inheritance, continuation reuse, and the legacy futex entry are wired.
+  Modes 10 and 11 prove the translated spin/mutex paths execute this behavior.
+- `%fs:`, direct FS/GS-base instructions, and unsupported `current_task` forms
+  fail closed with `KD_EXE_ERROR_INST`; no FS base or third argument is part of
+  the ABI.
 - The default integration suite keeps `mutex_jit=0` for modes 3-5 and validates
   only the mutex queue, promotion, handoff, and fallback protocol.
-- No mode 0/1/2/3/4/5 acceptance failure is currently known. Any code change to the
-  translation, frame, queue, or resume paths must rerun the acceptance contract
-  in `VALIDATION.md`.
+- No mode 0/1/2/3/4/5/10/11 acceptance failure is currently known. Any code
+  change to the translation, frame, queue, segment context, or resume paths must
+  rerun the acceptance contract in `VALIDATION.md`.
 
 ## Correctness And Coverage
 
-- [ ] Implement effective translated-memory address validation, preserve live
-      EFLAGS around it, and assign `seg_error` a deterministic exit reason.
-- [ ] Define and test any required cross-exit EFLAGS, FS/GS, and SIMD/FPU ABI
-      before translating critical sections that depend on those states.
+- [ ] Implement effective translated-memory address validation and preserve live
+      EFLAGS around it. Segment errors now have a deterministic exit reason, but
+      the general address guard is still disabled.
+- [ ] Define and test any required cross-exit EFLAGS and SIMD/FPU ABI before
+      translating critical sections that depend on those states. Kernel GS
+      memory access is implemented through explicit lowering, not hardware
+      segment-state restoration; FS remains deliberately unsupported.
 - [ ] Initialize `Stack_INST_CNT` from R11 or remove `args[1]` from the wrapper
       output contract; it is currently an undefined reserved value.
 - [ ] Add kernel integration pressure tests for translation-table and executable
@@ -55,7 +66,7 @@ mode 0/1/2/3/4/5 JIT execution results are in `VALIDATION.md`.
 - [ ] Add rwsem delegation using TCLocks' rwsem protocol as the reference.
 - [ ] Add structured delegation statistics or tracepoints for perf/ftrace rather
       than relying only on module-exit `dmesg` summaries.
-- [ ] Add an automated benchmark matrix over all ten workload modes, thread
+- [ ] Add an automated benchmark matrix over all twelve workload modes, thread
       counts, and contention levels.
 
 ## Performance And Portability
@@ -65,5 +76,6 @@ mode 0/1/2/3/4/5 JIT execution results are in `VALIDATION.md`.
 - [ ] Measure adaptive batch sizing against the fixed batch limits of 1024.
 - [ ] Quantify mode 3/4/5 delegation benefit and overhead against native mutexes;
       the current tests are correctness tests, not performance evidence.
-- [ ] Support architectures beyond x86-64. The wrapper, register layout, and
-      translated instruction model are currently architecture-specific.
+- x86-64 is the intentional architecture scope. The wrapper, register layout,
+  per-CPU GS rules, and translated instruction model are architecture-specific;
+  cross-architecture support is not a current project task.

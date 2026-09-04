@@ -23,6 +23,8 @@ struct frame_model {
 	int depth;
 	int state;
 	unsigned long outer_lock;
+	unsigned long gsbase;
+	unsigned long logical_task;
 	unsigned long locks[MAX_LOCKS];
 	bool released[MAX_LOCKS];
 	int lock_depth;
@@ -43,6 +45,7 @@ static bool frame_valid(const struct frame_model *frame)
 
 	if (!frame || frame->state == FRAME_UNUSED ||
 	    frame->depth < 0 || frame->depth >= MAX_FRAMES ||
+	    !frame->gsbase || !frame->logical_task ||
 	    frame->lock_depth < 0 || frame->lock_depth > MAX_LOCKS ||
 	    (frame->outer_unlock_seen && !frame->outer_lock) ||
 	    (frame->completion_seen && frame->state != FRAME_COMPLETE))
@@ -96,6 +99,8 @@ static struct frame_model *push_frame_owned(struct context_model *ctx,
 	frame->depth = ctx->depth;
 	frame->state = FRAME_RUNNING;
 	frame->outer_lock = outer_lock;
+	frame->gsbase = 0x100000UL + (unsigned long)owner;
+	frame->logical_task = (unsigned long)owner;
 	frame->parent = ctx->depth ? &ctx->frames[ctx->depth - 1] : NULL;
 	ctx->depth++;
 	return context_valid(ctx) ? frame : NULL;
@@ -406,6 +411,40 @@ TEST(abort_releases_only_nested_locks_in_reverse_order) {
 	ASSERT_EQ(pop_frame(&ctx, frame), 0);
 }
 
+TEST(gs_context_is_inherited_and_args_remain_two_words) {
+	struct context_model ctx = { 0 };
+	struct frame_model *outer = push_frame(&ctx, 0xA);
+	struct frame_model *inner;
+	unsigned long args[2];
+
+	ASSERT(outer != NULL);
+	outer->gsbase = 0x12345000UL;
+	outer->logical_task = 0xabcdef00UL;
+	ASSERT(frame_valid(outer));
+
+	inner = push_frame(&ctx, 0xB);
+	ASSERT(inner != NULL);
+	inner->gsbase = outer->gsbase;
+	inner->logical_task = outer->logical_task;
+	ASSERT(frame_valid(inner));
+	ASSERT_EQ(inner->gsbase, outer->gsbase);
+	ASSERT_EQ(inner->logical_task, outer->logical_task);
+
+	args[0] = inner->gsbase;
+	args[1] = inner->logical_task;
+	ASSERT_EQ(args[0], 0x12345000UL);
+	ASSERT_EQ(args[1], 0xabcdef00UL);
+	args[0] = 5;
+	args[1] = 77;
+	ASSERT_EQ(args[0], 5UL);
+	ASSERT_EQ(args[1], 77UL);
+
+	inner->state = FRAME_ERROR;
+	ASSERT_EQ(pop_frame(&ctx, inner), 0);
+	outer->state = FRAME_ERROR;
+	ASSERT_EQ(pop_frame(&ctx, outer), 0);
+}
+
 int main(void)
 {
 	printf("=== test_exec_frame ===\n");
@@ -419,5 +458,6 @@ int main(void)
 	RUN_TEST(invalid_initial_stack_does_not_mutate_frame);
 	RUN_TEST(error_path_can_pop_without_completion);
 	RUN_TEST(abort_releases_only_nested_locks_in_reverse_order);
+	RUN_TEST(gs_context_is_inherited_and_args_remain_two_words);
 	REPORT();
 }

@@ -13,6 +13,7 @@ run_spinlock_mode() {
     local diag_count nested_diag_count
     local jit_writes_before=0 jit_writes_after=0
     local -a asm_dirs
+    local -a gs_asm_dirs=()
     local exec_threads=8
     local exec_loops=1
     local exec_workload=1000000
@@ -50,7 +51,7 @@ run_spinlock_mode() {
         0|2) expected_artifacts=1 ;;
         1|7) expected_artifacts=2 ;;
         6) expected_artifacts=3 ;;
-        8)
+        8|10)
             expected_artifacts=6
             warmup_threads=2
             promotion_mode=1
@@ -58,7 +59,7 @@ run_spinlock_mode() {
             exec_threads=9
             exec_role_base=2147483648
             exec_workload=50000
-            if [ "$mode8_not_ready" -eq 1 ]; then
+            if [ "$mode" -eq 8 ] && [ "$mode8_not_ready" -eq 1 ]; then
                 expected_artifacts=5
                 nested_registration_role=1073741824
             fi
@@ -72,7 +73,7 @@ run_spinlock_mode() {
         *) expected_artifacts=1 ;;
     esac
     expected_locks=$expected_artifacts
-    if [ "$mode" -eq 8 ]; then
+    if [ "$mode" -eq 8 ] || [ "$mode" -eq 10 ]; then
         expected_locks=2
     fi
 
@@ -162,7 +163,17 @@ run_spinlock_mode() {
                 return 1
             }
         fi
+        if [ "$mode" -eq 10 ] &&
+                is_jit_gs_context_artifact "$asm_dir"; then
+            check_jit_gs_context_artifact "$asm_dir" || return 1
+            gs_asm_dirs+=("$asm_dir")
+        fi
     done
+    if [ "$mode" -eq 10 ] && [ "${#gs_asm_dirs[@]}" -eq 0 ]; then
+        fail "$TEST_NAME" \
+            "mode 10 produced no JIT artifact using waiter GS/current"
+        return 1
+    fi
     check_dmesg_has "write to kernel" \
         "mode $mode ($mode_name) did not write JIT code back" || {
         stop_daemon
@@ -252,7 +263,7 @@ run_spinlock_mode() {
                 return 1
             fi
             ;;
-        1|6|7|8|9)
+        1|6|7|8|9|10)
             diag_count="$(printf '%s\n' "$diag_lines" | sed '/^$/d' | wc -l)"
             if [ "$diag_count" -ne "$expected_locks" ]; then
                 fail "$TEST_NAME" \
@@ -286,13 +297,25 @@ run_spinlock_mode() {
         return 1
     fi
 
-    if [ "$mode" -eq 8 ] && [ "$mode8_not_ready" -eq 0 ] &&
+    if { [ "$mode" -eq 8 ] || [ "$mode" -eq 10 ]; } &&
+            [ "$mode8_not_ready" -eq 0 ] &&
             ! printf '%s\n' "$diag_lines" |
             grep -Eq "slowpath=[1-9][0-9]*.*combiner=[1-9][0-9]*.*jit_success=[1-9][0-9]*.*nested_lock=[1-9][0-9]*.*nested_remote=[1-9][0-9]*"; then
         fail "$TEST_NAME" \
-            "mode 8 did not remotely execute a nested B waiter through JIT"
+            "mode $mode did not remotely execute a nested B waiter through JIT"
         printf '%s\n' "$diag_lines"
         return 1
+    fi
+
+    if [ "$mode" -eq 10 ]; then
+        check_any_jit_entry_executed "${gs_asm_dirs[@]}" || return 1
+        if ! dmesg | grep -Eq \
+                "kd_gs spin stats: attempts=[1-9][0-9]* successes=[1-9][0-9]* failures=0"; then
+            fail "$TEST_NAME" \
+                "mode 10 GS/current probe did not complete without mismatch"
+            dmesg | grep "kd_gs spin stats:" | tail -n 1 || true
+            return 1
+        fi
     fi
 
     if [ "$mode" -eq 8 ] && [ "$mode8_not_ready" -eq 1 ] &&
@@ -399,6 +422,7 @@ run_selected_mode() {
         7) run_spinlock_mode 7 "spin-ooo-nested" ;;
         8) run_spinlock_mode 8 "spin-inner-contention" ;;
         9) run_spinlock_mode 9 "spin-abort-recovery" ;;
+        10) run_spinlock_mode 10 "spin-gs-context" ;;
         *)
             fail "$TEST_NAME" "unsupported spinlock mode: $1"
             return 1

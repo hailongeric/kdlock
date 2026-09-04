@@ -34,3 +34,10 @@ Allowlisted JIT hostcalls are not translation misses. The translator emits a
 dedicated hostcall exit stub, and the kernel executes and resumes that service
 without changing the entry status or appending the target to
 `asm/callee_table.txt`.
+
+For x86 kernel critical sections, the translator also resolves the per-CPU
+`current_task` offset from `/proc/kallsyms`. Generic `%gs:` memory operands are
+lowered to explicit addressing through the waiter GS base supplied by the
+kernel; `%gs:current_task` is replaced by the logical waiter task. `%fs:`, direct
+FS/GS-base operations, and unsupported `current_task` forms produce a minimal
+`KD_EXE_ERROR_INST` artifact instead of a partially executable translation.

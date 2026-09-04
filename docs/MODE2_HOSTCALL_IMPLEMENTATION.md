@@ -64,8 +64,8 @@ depend on the original waiter task are not permitted.
 4. The virtual CALL return address remains at `regs->sp` when the sandbox exits.
 5. The dispatcher writes the service result to the documented x86-64 ABI return
    register, then advances `regs->sp` and `regs->ip` exactly once.
-6. Resume uses the same `virt_ptr`, original entry RIP, execution frame, and
-   outer lock ownership.
+6. Resume uses the same `virt_ptr`, original entry RIP, execution frame, outer
+   lock ownership, waiter kernel GS base, and logical waiter task.
 7. Hostcalls per delegated critical section are bounded. Registry rejection,
    handler failure, malformed virtual stack state, or a limit violation fails
    closed through the existing JIT abort/native-retry policy.
@@ -99,7 +99,11 @@ MOV     Stack_RSP, R13
 JMP     exit
 ```
 
-The wrapper stores `R14` in `regs->ip` and the exit reason in `args[0]`. General
+The wrapper stores `R14` in `regs->ip` and the exit reason in `args[0]`. Before
+each initial or resumed invocation, its two inputs are exactly
+`args[0]=waiter kernel GS base` and `args[1]=logical waiter task`; wrapper return
+values overwrite both, so the executor reinstalls them from the same execution
+frame. General
 service arguments remain in `regs->di`, `regs->si`, `regs->dx`, `regs->cx`,
 `regs->r8`, and `regs->r9`. The initial time services take no arguments and
 return nanoseconds in `regs->ax`.
@@ -260,7 +264,8 @@ The plan was completed on 2026-09-04 in the recovery guest running Linux
 `6.1.159`. The confirmed QEMU snapshot was
 `pre_spin_translation_20260903`. Validation produced these results:
 
-- Nine C unit binaries and `test_hostcall_codegen.py` passed: 10/10.
+- Nine C unit binaries plus `test_hostcall_codegen.py` and
+  `test_segment_codegen.py` passed: 11/11.
 - Python byte-compilation, both kernel module builds, daemon build, and benchmark
   build succeeded.
 - `tests/test_01_module_load.sh` passed and registered `ktime_get` at

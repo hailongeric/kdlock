@@ -26,6 +26,62 @@ def get_kernel_symbol(name, default=0):
     return default
 
 
+def get_percpu_symbol_offset(name):
+    value = get_kernel_symbol(name)
+    percpu_start = get_kernel_symbol('__per_cpu_start')
+    if value and percpu_start and value >= percpu_start:
+        return value - percpu_start
+    return value
+
+
+def find_segment_policy_error(block_dict, code_ranges=None):
+    saw_gs = False
+    for block_start, block in sorted(block_dict.items()):
+        if code_ranges and not any(
+                start <= block_start < end for start, end in code_ranges):
+            continue
+        if not getattr(block, 'lines', None):
+            return block_start, 'undecodable or empty basic block'
+        offset = block_start
+        for line in block.lines:
+            for arg in line.args:
+                segment, _ = normal.segment_operand(arg)
+                saw_gs = saw_gs or segment == 'GS'
+            reason = normal.segment_policy_error(line)
+            if reason:
+                return offset, reason
+            offset += line.l
+    if saw_gs and normal.current_task_offset is None:
+        return 0, 'current_task per-CPU offset is unavailable'
+    return None
+
+
+def write_unsupported_jit(reason):
+    with open('./asm/jit.S', 'w') as f:
+        f.write('/* KD_UNSUPPORTED: %s */\n' % reason)
+        f.write('MOV     R14, PT_RIP\n')
+        f.write('MOV     Stack_INST_CNT, 0\n')
+        f.write('MOV     Stack_IJ, 0x3\n')
+        f.write('JMP     exit\n')
+
+
+def build_jit_binary():
+    include_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), '..', 'include')
+    ret = os.system(
+        'gcc -I%s -I./asm/ -c -fPIC %s/wrapper.S -o ./asm/jit.o && '
+        'objcopy --remove-section .note.gnu.property ./asm/jit.o && '
+        'objcopy -O binary ./asm/jit.o ./asm/jit.bin' %
+        (include_dir, include_dir))
+    if ret:
+        raise RuntimeError('failed to build JIT binary')
+    ret = os.system(
+        'objdump -b binary -m i386:x86-64:intel -D ./asm/jit.bin '
+        '> ./asm/bin.txt')
+    if ret:
+        raise RuntimeError('failed to disassemble JIT binary')
+
+
 def add_lines_after_specific_content(file_path, target_address):
     # 读取原始文件内容
     with open(file_path, "r", encoding="utf-8") as file:
@@ -200,6 +256,17 @@ def dis_assem(PID, entry, need_count, debug=0):
             block_dict[offset] = block
             db_dict[block] = asmcfg.loc_db
 
+    normal.set_current_task_offset(get_percpu_symbol_offset('current_task') or None)
+    code_ranges = [(chunk[1], chunk[1] + len(chunk[0])) for chunk in rets]
+    segment_error = find_segment_policy_error(block_dict, code_ranges)
+    if segment_error:
+        offset, reason = segment_error
+        detail = '%s at 0x%x' % (reason, offset) if offset else reason
+        print('Rejecting translation:', detail)
+        write_unsupported_jit(detail)
+        build_jit_binary()
+        return
+
     missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -361,12 +428,7 @@ def dis_assem(PID, entry, need_count, debug=0):
     # add_lines_after_specific_content("./asm/jit.S", "7ffff7fa6820")
     # add_lines_after_specific_content("./asm/jit.S", "7ffff7fa6800")
 
-    # include/ is 2 dirs up from disassem/ (kdlock/include/).
-    # daemon runs from daemon/, so the workspace is ./0xRIP/ or ./0xRIP/tgid/.
-    # Use a depth-independent path based on this script's location.
-    include_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "include")
-    os.system(f"gcc -I{include_dir} -I./asm/ -c -fPIC {include_dir}/wrapper.S -o ./asm/jit.o && objcopy --remove-section .note.gnu.property ./asm/jit.o && objcopy -O binary ./asm/jit.o ./asm/jit.bin")
-    os.system("objdump -b binary -m i386:x86-64:intel -D ./asm/jit.bin > ./asm/bin.txt")
+    build_jit_binary()
 
 
 if __name__ == "__main__":
