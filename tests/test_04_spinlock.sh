@@ -188,13 +188,33 @@ run_spinlock_mode() {
     unload_modules
 
     check_dmesg_ok || return 1
+    check_dmesg_has "kd_spin diag overflow=0" \
+        "spinlock diagnostic table overflowed" || return 1
+    check_dmesg_has "kd_spin diag invariant_failures=0" \
+        "spinlock delegation invariant failed" || return 1
+    check_dmesg_has "kd_exec invariant_failures=0" \
+        "execution-frame invariant failed" || return 1
 
-    local diag_lines
+    local diag_lines jit_lock
     diag_lines="$(dmesg | grep -E "kd_spin lock stats:" || true)"
     if [ -z "$diag_lines" ]; then
         fail "$TEST_NAME" \
             "mode $mode ($mode_name) missing spinlock delegation statistics"
         return 1
+    fi
+    if [ "$mode" -eq 0 ] || [ "$mode" -eq 1 ]; then
+        jit_lock="$(printf '%s\n' "$diag_lines" | sed -n \
+            's/.*lock=\([0-9a-f]*\) depth=1 .*jit_success=[1-9][0-9]*.*/\1/p' | \
+            head -n 1)"
+        if [ -z "$jit_lock" ]; then
+            fail "$TEST_NAME" \
+                "mode $mode has no depth-1 lock with JIT completion evidence"
+            return 1
+        fi
+        check_any_jit_entry_executed_for_lock \
+            "$jit_lock" "${asm_dirs[@]}" || return 1
+    else
+        check_any_jit_entry_executed "${asm_dirs[@]}" || return 1
     fi
     if printf '%s\n' "$diag_lines" | grep -Eq "waiters=[1-9][0-9]*"; then
         fail "$TEST_NAME" "mode $mode leaked queued spinlock waiters"
@@ -220,7 +240,7 @@ run_spinlock_mode() {
             fi
             if [ "$abort_expected" -eq 0 ] &&
                     ! printf '%s\n' "$diag_lines" |
-                    grep -Eq "jit_success=[1-9][0-9]*"; then
+                    grep -Eq "depth=1 .*jit_success=[1-9][0-9]*"; then
                 fail "$TEST_NAME" \
                     "mode $mode outer lock has no JIT success evidence"
                 return 1

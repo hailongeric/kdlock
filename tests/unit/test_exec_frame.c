@@ -33,6 +33,7 @@ struct frame_model {
 
 struct context_model {
 	struct frame_model frames[MAX_FRAMES];
+	int owner;
 	int depth;
 };
 
@@ -64,7 +65,8 @@ static bool context_valid(const struct context_model *ctx)
 {
 	int i;
 
-	if (!ctx || ctx->depth < 0 || ctx->depth > MAX_FRAMES)
+	if (!ctx || ctx->depth < 0 || ctx->depth > MAX_FRAMES ||
+	    (!!ctx->depth != !!ctx->owner))
 		return false;
 
 	for (i = 0; i < ctx->depth; i++) {
@@ -78,13 +80,17 @@ static bool context_valid(const struct context_model *ctx)
 	return true;
 }
 
-static struct frame_model *push_frame(struct context_model *ctx,
-				       unsigned long outer_lock)
+static struct frame_model *push_frame_owned(struct context_model *ctx,
+					     unsigned long outer_lock,
+					     int owner)
 {
 	struct frame_model *frame;
 
-	if (!ctx || ctx->depth >= MAX_FRAMES || !context_valid(ctx))
+	if (!ctx || owner <= 0 || ctx->depth >= MAX_FRAMES ||
+	    !context_valid(ctx) || (ctx->depth && ctx->owner != owner))
 		return NULL;
+	if (!ctx->depth)
+		ctx->owner = owner;
 	frame = &ctx->frames[ctx->depth];
 	memset(frame, 0, sizeof(*frame));
 	frame->depth = ctx->depth;
@@ -95,15 +101,29 @@ static struct frame_model *push_frame(struct context_model *ctx,
 	return context_valid(ctx) ? frame : NULL;
 }
 
-static int pop_frame(struct context_model *ctx, struct frame_model *frame)
+static struct frame_model *push_frame(struct context_model *ctx,
+				       unsigned long outer_lock)
 {
-	if (!ctx || !frame || !ctx->depth ||
+	return push_frame_owned(ctx, outer_lock, 1);
+}
+
+static int pop_frame_owned(struct context_model *ctx,
+			   struct frame_model *frame, int owner)
+{
+	if (!ctx || !frame || !ctx->depth || ctx->owner != owner ||
 	    frame != &ctx->frames[ctx->depth - 1] ||
 	    (frame->state != FRAME_COMPLETE && frame->state != FRAME_ERROR))
 		return -1;
 	memset(frame, 0, sizeof(*frame));
 	ctx->depth--;
+	if (!ctx->depth)
+		ctx->owner = 0;
 	return context_valid(ctx) ? 0 : -1;
+}
+
+static int pop_frame(struct context_model *ctx, struct frame_model *frame)
+{
+	return pop_frame_owned(ctx, frame, 1);
 }
 
 static int push_lock(struct frame_model *frame, unsigned long lock)
@@ -246,6 +266,24 @@ TEST(frame_parent_and_lifo) {
 	ASSERT_EQ(ctx.depth, 0);
 }
 
+TEST(live_context_rejects_foreign_task) {
+	struct context_model ctx = { 0 };
+	struct frame_model *outer = push_frame_owned(&ctx, 0xA, 11);
+	struct frame_model *inner;
+
+	ASSERT(outer != NULL);
+	ASSERT_EQ(ctx.owner, 11);
+	ASSERT_EQ(push_frame_owned(&ctx, 0xB, 22), NULL);
+	inner = push_frame_owned(&ctx, 0xB, 11);
+	ASSERT(inner != NULL);
+	inner->state = FRAME_ERROR;
+	ASSERT_EQ(pop_frame_owned(&ctx, inner, 22), -1);
+	ASSERT_EQ(pop_frame_owned(&ctx, inner, 11), 0);
+	outer->state = FRAME_ERROR;
+	ASSERT_EQ(pop_frame_owned(&ctx, outer, 11), 0);
+	ASSERT_EQ(ctx.owner, 0);
+}
+
 TEST(lock_stack_is_dense_and_ooo_pop_is_tracked) {
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
@@ -372,6 +410,7 @@ int main(void)
 {
 	printf("=== test_exec_frame ===\n");
 	RUN_TEST(frame_parent_and_lifo);
+	RUN_TEST(live_context_rejects_foreign_task);
 	RUN_TEST(lock_stack_is_dense_and_ooo_pop_is_tracked);
 	RUN_TEST(outer_unlock_is_required_and_exactly_once);
 	RUN_TEST(deep_nested_ooo_release_waits_for_inner_locks);

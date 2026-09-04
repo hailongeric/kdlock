@@ -19,8 +19,6 @@ Module.symvers
 .*.cmd
 
 # User-space binaries
-/daemon/daemon1
-/daemon/daemon2
 /daemon/daemon
 daemon/asm/
 disassem/asm/

@@ -89,6 +89,7 @@ struct kd_exec_frame {
 
 struct kd_exec_context {
 	struct kd_exec_frame frames[KD_EXEC_MAX_NESTING];
+	struct task_struct *owner;
 	unsigned int depth;
 };
 
@@ -97,6 +98,7 @@ void kd_exec_context_exit(void);
 
 struct kd_exec_context *kd_exec_current_context(void);
 struct kd_exec_frame *kd_exec_current_frame(void);
+bool kd_exec_context_busy(void);
 
 struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 					 unsigned long entry_ip,

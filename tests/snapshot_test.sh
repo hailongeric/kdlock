@@ -107,7 +107,7 @@ elif [ $RC -ne 0 ]; then
 fi
 
 # --- Step 8: Verify dmesg ---
-if dmesg | grep -qi "BUG:\|panic\|double fault\|soft lockup"; then
+if dmesg | grep -i "BUG:\|panic\|double fault\|soft lockup" >/dev/null; then
     fail "Kernel errors detected!"
     dmesg | grep -i "BUG:\|panic\|double fault\|soft lockup" | tail -5
     exit 1
@@ -120,7 +120,7 @@ rmmod kdlock_km 2>/dev/null
 # --- Step 10: Report ---
 info "═══════════════════════════════"
 info "[PASS] mode $TEST_MODE completed without errors"
-if dmesg | grep -q "delegation ok"; then
+if dmesg | grep "delegation ok" >/dev/null; then
     count=$(dmesg | grep -c "delegation ok")
     info "Delegation succeeded $count times"
 fi

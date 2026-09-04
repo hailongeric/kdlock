@@ -19,26 +19,27 @@
 #include "combiner.h"
 #include <asm/ptrace.h>
 
+struct kd_exec_frame;
+struct kd_mutex_jit_context;
+
 /*
  * kd_mutex_node — per-waiter queue node.
  *
- * One per-CPU array of KD_MUTEX_MAX_NODES nodes is allocated.  During the
- * slowpath the node is initialised with the waiter's state and linked into
- * the queue.  The combiner feeds node->regs into kd_exe_on_call_hl() to
- * execute the waiter's critical section inside the JIT sandbox.
- *
- * IMPORTANT: the nesting refcount (count) lives ONLY in nodes[0].  All
- * increments and decrements MUST target this_cpu_ptr(&kd_mutex_nodes[0])->count.
- * The asm trampoline writes regs.sp to nodes[0]; kd_mutex_lock_slowpath copies
- * it to nodes[idx] when idx > 0.
+ * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
+ * owns its shadow stack, so a scheduled waiter cannot have its stack reused by
+ * another target task running on the same CPU. The combiner feeds node->regs
+ * into kd_exe_on_call_hl() to execute the waiter's critical section inside the
+ * JIT sandbox.
  */
 struct kd_mutex_node {
 	struct kd_mutex_node *next;
 	int tail;                        /* encoded tail (cpu+idx)            */
-	int count;                       /* nesting refcount (valid in [0] only) */
+	int slot;                        /* reserved per-CPU slot index       */
 	int socket_id;                   /* NUMA node id                      */
 	int cpuid;                       /* CPU that owns this node           */
 	uint64_t rsp;                    /* saved real stack ptr (for restore) */
+	void *shadow_stack_base;
+	uint64_t shadow_stack_ptr;
 	struct kd_mutex *lock;
 	struct task_struct *task_struct_ptr;
 	int irqs_disabled;
@@ -62,6 +63,8 @@ struct kd_mutex_node {
 	unsigned long saved_ret_addr;     /* CS entry point (ret_addr)         */
 
 	struct pt_regs regs;             /* waiter context → JIT sandbox      */
+	struct kd_mutex_jit_context *jit_context;
+	bool jit_waiter;
 };
 
 /*
@@ -75,11 +78,12 @@ struct kd_mutex {
 	};
 	struct task_struct *combiner_task;
 	unsigned long origin_mutex_addr; /* original struct mutex *, if shadow */
+	atomic_t waiter_count;
 };
 
 #define __KD_MUTEX_INITIALIZER(lockname) \
 	{ .tail = NULL, .state = ATOMIC_INIT(0), .combiner_task = NULL, \
-	  .origin_mutex_addr = 0 }
+	  .origin_mutex_addr = 0, .waiter_count = ATOMIC_INIT(0) }
 
 #define DEFINE_KD_MUTEX(mname) \
 	struct kd_mutex mname = __KD_MUTEX_INITIALIZER(mname)
@@ -96,5 +100,15 @@ void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 int _kd_mutex_unlock_checked(struct kd_mutex *lock);
 void _kd_mutex_unlock(struct kd_mutex *lock);
 int  _kd_mutex_trylock(struct kd_mutex *lock);
+
+#define KD_MUTEX_NESTED_ACQUIRED       0
+#define KD_MUTEX_NESTED_DELEGATED      1
+#define KD_MUTEX_NESTED_ACQUIRED_QUEUE 2
+
+int kd_mutex_nested_lock(struct kd_mutex *lock, struct pt_regs *regs,
+			 const struct kd_exec_frame *parent);
+int kd_mutex_nested_unlock(struct kd_mutex *lock);
+int kd_mutex_waiter_count(struct kd_mutex *lock);
+void kd_mutex_note_nested_abort_release(void);
 
 #endif /* _LINUX_KD_MUTEX_H */

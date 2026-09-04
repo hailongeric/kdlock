@@ -4,6 +4,7 @@
 #include <linux/atomic.h>
 #include <linux/bug.h>
 #include <linux/kernel.h>
+#include <linux/sched.h>
 #include <linux/string.h>
 #include <linux/smp.h>
 
@@ -78,7 +79,8 @@ bool kd_exec_context_validate(const struct kd_exec_context *ctx)
 {
 	unsigned int i;
 
-	if (!ctx || ctx->depth > KD_EXEC_MAX_NESTING)
+	if (!ctx || ctx->depth > KD_EXEC_MAX_NESTING ||
+	    (!!ctx->depth != !!ctx->owner))
 		return false;
 
 	for (i = 0; i < KD_EXEC_MAX_NESTING; i++) {
@@ -138,9 +140,16 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 
-	if (!ctx->depth)
+	if (!ctx->depth || ctx->owner != current)
 		return NULL;
 	return &ctx->frames[ctx->depth - 1];
+}
+
+bool kd_exec_context_busy(void)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+
+	return ctx->depth && ctx->owner != current;
 }
 
 struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
@@ -152,11 +161,16 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
+	bool first_frame;
 
 	if (!regs || ctx->depth >= KD_EXEC_MAX_NESTING ||
-	    !kd_exec_context_validate(ctx))
+	    !kd_exec_context_validate(ctx) ||
+	    (ctx->depth && ctx->owner != current))
 		return NULL;
 
+	first_frame = ctx->depth == 0;
+	if (first_frame)
+		ctx->owner = current;
 	frame = &ctx->frames[ctx->depth];
 	memset(frame, 0, sizeof(*frame));
 	frame->regs = *regs;
@@ -176,6 +190,8 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 	if (!kd_exec_context_validate(ctx)) {
 		ctx->depth--;
 		memset(frame, 0, sizeof(*frame));
+		if (first_frame)
+			ctx->owner = NULL;
 		return NULL;
 	}
 
@@ -187,7 +203,7 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	int state;
 
-	if (!frame || !ctx->depth ||
+	if (!frame || !ctx->depth || ctx->owner != current ||
 	    frame != &ctx->frames[ctx->depth - 1])
 		return -EINVAL;
 
@@ -201,6 +217,8 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 		*regs = frame->regs;
 	ctx->depth--;
 	memset(frame, 0, sizeof(*frame));
+	if (!ctx->depth)
+		ctx->owner = NULL;
 	if (!kd_exec_context_validate(ctx))
 		return kd_exec_invariant_failure();
 	return 0;

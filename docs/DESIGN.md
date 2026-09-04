@@ -133,7 +133,7 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
         origin_raw_spin_lock(lock);  // fallback
         return;
     }
-    kd_exe_add(current->pid, ret_addr);  // register CS entry
+    kd_exe_add(0, ret_addr);  // kernel CS translations use a RIP-only key
     kd_spin_lock((struct qspinlock *)lock, ret_rsp);
 }
 ```
@@ -266,66 +266,99 @@ shadow entry.  The unlock path is lookup-only: `__kd_mutex_unlock()` calls
 exists.  This prevents ordinary unlocks for never-delegated mutexes from
 permanently consuming slots in the fixed-size shadow table.
 
-### 5.2 Protocol (mirrors spinlock)
+### 5.2 Base Protocol
 
 ```c
-void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
-                    unsigned long ret_addr,
-                    unsigned long s_rbx, unsigned long s_r12,
-                    unsigned long s_r13, unsigned long s_r14,
-                    unsigned long s_r15, unsigned long s_rbp)
+void _kd_mutex_lock(struct kd_mutex *lock, ...)
 {
-    // Fastpath: cmpxchg
     if (cmpxchg(&lock->locked, 0, 1) == 0)
         return;
 
-    // Store callee-saved registers captured at hook entry into node[0]
-    // (copied to node[idx] by kd_mutex_lock_slowpath when idx > 0)
+    migrate_disable();
     preempt_disable();
-    curr_node->saved_rbx = s_rbx;  // ...etc
-    kd_mutex_lock_slowpath_asm(lock, rsp_value);
+    node = reserve_per_cpu_bitmap_slot();
+    if (!node)
+        wait_and_acquire_without_entering_the_queue(lock);
+    else {
+        capture_waiter_registers(node);
+        run_queue_on_node_private_shadow_stack(lock, node);
+        release_exact_bitmap_slot(node);
+    }
     preempt_enable();
+    migrate_enable();
 }
 ```
 
-The mutex combiner loop is identical in structure to the spinlock combiner:
-populate `pt_regs` from the waiter's stack frame at `ret_rsp`, optionally call
-`kd_exe_on_call_hl()`, check for `KD_EXE_RUN_TO_UNLOCK`.
+The mutex combiner reconstructs `pt_regs` from the waiter's saved hook stack and
+calls `kd_exe_on_call_hl_entry()`. Because translated mutex execution remains
+experimental, `mutex_jit` defaults to 0. In this safe mode `execute_cs()`
+returns `KD_EXE_NO_RUN`, and the combiner hands ownership to the waiter without
+marking its critical section complete.
 
-Because translated mutex CS execution is still experimental, `mutex_jit` defaults
-to 0. In this safe mode, `execute_cs()` returns `KD_EXE_RUN_ERROR`, so
-`run_combiner()` hands the lock to the waiter without marking it completed. This
-exercises the queue/combiner/fallback/handoff protocol without executing
-translated mutex critical-section code. Normal mutex validation should keep this
-default. Enable actual mutex sandbox execution only for explicit debugging with
-`insmod kdlock_km.ko mutex_jit=1`.
+With `mutex_jit=1`, every translated waiter owns a `kd_exec_frame` containing
+its original mutex address, registers, and lock ownership. Only an exact outer
+`mutex_unlock` followed by valid frame completion can publish success. A
+post-unlock invariant failure is fail-stop: retrying natively at that point
+would duplicate already committed side effects.
 
-The opt-in modes 3/4/5 paths have bounded end-to-end confirmation: the combiner
-can run a translated critical section through `mutex_unlock`, publish
-completion with release/acquire ordering, and resume the waiter after the
-translated unlock without executing the CS twice. Waiters are migration-pinned
-while using per-CPU queue/resume state. Stress remains experimental and is not
-part of the default test suite.
+Completion uses release/acquire ordering. The waiter snapshots the completed
+node's `pt_regs` while migration and preemption remain disabled, releases the
+exact slot, restores scheduler state, and jumps to the instruction after its
+translated `mutex_unlock`. Every one of the four per-CPU slots owns an
+independent 8KB shadow stack. Exhaustion stays outside the delegation queue and
+acquires the shadow mutex from the native task stack.
 
-**Stack frame layout** (confirmed via disassembly of the kernel's `mutex_lock`):
-the kernel's `mutex_lock` saves all 6 callee-saved registers in the same order
-as `raw_spin_lock`, so both paths share identical offsets in `execute_cs()`.
+The saved `mutex_lock` frame has the same six callee-saved register offsets as
+the raw-spin path; this layout is verified against the guest kernel
+disassembly. Waiter slots are bitmap-reserved rather than managed through the
+old shared `nodes[0].count`, so a scheduled task cannot release or overwrite a
+different live slot.
 
-**Node count management**: the `count` field lives exclusively in `nodes[0]`.
-All increments (`base_node->count++`) and decrements
-(`this_cpu_ptr(&kd_mutex_nodes[0])->count--`) target this single location.
-When `idx > 0`, `regs.sp` and saved registers are copied from `nodes[0]` to
-`nodes[idx]` in `kd_mutex_lock_slowpath`.
+### 5.3 Nested A -> B Mutex Proxy
 
-### 5.3 Differences from Spinlock Path
+Mode 4 extends the base protocol instead of using the old trylock-only adapter:
+
+1. When translated A reaches `mutex_lock(B)`, the known-call handler consumes
+   the call return address and records A's post-call continuation.
+2. An uncontended B is acquired directly and recorded in A's frame as `FAST`.
+3. If B is contended, kdlock reserves another mutex node and creates a virtual
+   waiter. Its stack-owned JIT context copies A's register state and lock stack,
+   then appends B as `QUEUE_OWNER`.
+4. The B queue treats this node like a native waiter. A B combiner creates a
+   child execution frame from the copied A/B state and runs the translated code
+   after `mutex_lock(B)` until the exact `mutex_unlock(B)` endpoint.
+5. B publishes the resulting registers and wakes the suspended A combiner. A
+   advances past that B unlock and continues the original translated section
+   toward `mutex_unlock(A)`; it does not acquire or execute B a second time.
+6. If the current task becomes B's queue owner instead of being remotely
+   completed, A records B locally and the translated `mutex_unlock(B)` releases
+   it normally. Abort cleanup releases locally retained nested mutexes in
+   reverse order before A falls back.
+
+The parent A frame remains in a per-CPU execution context while its task may
+schedule. The context records `current` as owner; another task scheduled on the
+same CPU cannot reuse it and receives normal queue handoff instead. The virtual
+waiter's inherited context lives on the migration-pinned combiner stack until B
+publishes completion, avoiding both lifetime ambiguity and a large per-CPU
+module allocation.
+
+Translation readiness is checked independently for A and B. Mode 4's recovery
+test first translates the two exact return addresses, then uses seven
+CPU-pinned roles to create holder -> direct -> nested -> trailing queues on both
+locks. Passing requires two JIT completions plus `nested_queued` and
+`nested_remote` evidence, exact counter accounting, and no protocol failures or
+resource leaks. Current measured results are recorded in `VALIDATION.md`.
+
+### 5.4 Differences from Spinlock Path
 
 | Aspect | Spinlock | Mutex |
 |--------|----------|-------|
-| Queue structure | Per-CPU `kd_spin_node[4]` | Per-CPU `kd_mutex_node[4]` |
+| Queue structure | Per-CPU `kd_spin_node[4]` | Bitmap-reserved per-CPU `kd_mutex_node[4]` |
 | Lock state | `qspinlock.val` (atomic) | `kd_mutex.locked` (u8) |
 | Tail encoding | In `qspinlock.tail` field | In `kd_mutex.tail` pointer |
-| Preemption | Disabled throughout | Disabled only in slowpath |
-| OOO unlock | Full support via `lock_addr[]` | Simplified (no chaining) |
+| Scheduling | Non-sleeping spin protocol | Waiters may schedule while migration-pinned |
+| Nested contention | Virtual spin waiter and combiner snapshot | Virtual mutex waiter and inherited frame context |
+| OOO unlock | Full support via `lock_addr[]` | LIFO nested unlock; reverse cleanup on abort |
 
 ## 6. JIT Execution Engine (exe.c)
 
@@ -363,7 +396,7 @@ This is the core execution function called by the combiner:
 ```c
 int kd_exe_on_call_hl(struct pt_regs *regs, void *outgoing_rsp_ptr)
 {
-    struct kd_exe_info *exe = kd_get_exe(pid, regs->ip);
+    struct kd_exe_info *exe = kd_get_exe(0, regs->ip);
 
     if (exe->status_code != KD_EXE_NORMAL)
         return KD_EXE_NO_RUN;  // not ready
@@ -589,6 +622,11 @@ Modes 1/6/7/8 cover normal nested, deep nested, OOO, and independent A/B queue
 behavior. Recovery mode 9 covers post-B and runtime JIT faults; mode 8's
 not-ready variant additionally proves cleanup while B is a queue owner.
 
+In mode 1, B's known lock/unlock calls are handled while the same translated A
+stream remains active. Consequently the outer A lock owns the JIT-completion
+counter, while B reports nested lock/unlock activity. Mode 8 is the separate
+test for an independently queued and remotely executed spin B waiter.
+
 ## 10. Futex Delegation
 
 For user-space lock delegation (the BCD path), `kd_exe_on_call()` handles
@@ -611,6 +649,7 @@ without requiring them to enter the kernel syscall path.
 | `delegate_election` | 1 | Enable/disable delegate election |
 | `kd_combiner_batch_size` | (extern) | Max waiters processed per combiner round (spinlock) |
 | `kd_mutex_batch_size` | 1024 | Max waiters processed per combiner round (mutex) |
+| `mutex_jit` | 0 | Opt in to translated mutex execution, including mode 4 nested A/B proxying |
 | `spin_jit_fail_after_nested_lock` | 0 | One-shot test failure after nested spin acquisition |
 | `jit_hl_fault_after_known_call` | 0 | One-shot test fault: 1=CALL miss, 2=IJ miss, 3=instruction limit |
 
@@ -619,10 +658,11 @@ without requiring them to enter the kernel syscall path.
 ### Working
 
 - Raw spinlock delegation with JIT sandbox (modes 0-2 and 6-9 tested).
-- Mutex safe-mode queue/handoff (modes 3-5); bounded JIT confirmation for modes 3/4/5.
+- Mutex safe-mode queue/handoff (modes 3-5), mode 3 stress JIT, mode 4 nested
+  A/B JIT proxying, and bounded mode 5 JIT.
 - Dynamic translation pipeline (init, call-miss, ij-miss recompilation).
 - Hot-lock promotion and fallback to original kernel path.
-- TCLock-style nested spinlock JIT delegation, recursive frames, OOO handoff,
+- TCLock-style nested spinlock and mutex JIT delegation, explicit frames,
   translation-readiness checks, and transactional native retry.
 - Dynamic end_point resolution via kallsyms_lookup_name.
 - Module exit safety with synchronize_rcu.
@@ -644,7 +684,7 @@ without requiring them to enter the kernel syscall path.
 7. **Sandbox cannot handle all instructions** — unsupported instructions
    or complex indirect jumps cause delegation failure and fallback.
 8. **Nested resources are bounded** — execution frames and lock stacks allow
-   eight entries; each CPU has four spin MCS nodes. Exhaustion aborts JIT or
-   uses the documented native-node fallback.
+   eight entries; each CPU has four spin nodes and four bitmap-reserved mutex
+   nodes. Exhaustion aborts JIT or uses the documented native fallback.
 9. **Spin JIT failure is sticky per lock** — after a translated frame fails,
    that outer lock remains on native handoff until `kdlock_km` is reloaded.

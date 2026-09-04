@@ -1,8 +1,5 @@
 /*
- * test_mutex_count.c — verify mutex node count management.
- *
- * The count field lives in nodes[0] and must be incremented/decremented
- * correctly regardless of which node index is used.
+ * test_mutex_count.c — verify mutex node-slot and resume management.
  */
 #include "mock_kernel.h"
 #include "test_harness.h"
@@ -10,7 +7,8 @@
 #define KD_MUTEX_MAX_NODES 4
 
 struct kd_mutex_node {
-	int count;
+	int slot;
+	bool stack_available;
 	int tail;
 	int cpuid;
 	int socket_id;
@@ -18,127 +16,166 @@ struct kd_mutex_node {
 	uint8_t locked;
 	unsigned long rsp;
 	unsigned long regs_sp;
+	unsigned long regs_ip;
 };
 
 static struct kd_mutex_node nodes[KD_MUTEX_MAX_NODES];
+static struct kd_mutex_node *resume_node;
+static unsigned long node_slots;
+
+struct resume_regs {
+	unsigned long sp;
+	unsigned long ip;
+};
 
 static void init_nodes(void) {
 	memset(nodes, 0, sizeof(nodes));
-}
-
-/* Simulate the fixed kd_mutex_lock_slowpath count logic */
-static int simulate_lock(void) {
-	struct kd_mutex_node *base = &nodes[0];
-	int idx = base->count++;
-
-	if (idx >= KD_MUTEX_MAX_NODES) {
-		base->count--;
-		return -1; /* overflow fallback */
+	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++) {
+		nodes[i].slot = i;
+		nodes[i].stack_available = true;
 	}
-	return idx;
+	resume_node = NULL;
+	node_slots = 0;
 }
 
-/* Simulate the fixed count decrement (must target nodes[0]) */
-static void simulate_unlock(void) {
-	nodes[0].count--;
+static void publish_resume_node(struct kd_mutex_node *node)
+{
+	resume_node = node;
 }
 
-/* Simulate the OLD buggy decrement (targets nodes[idx]) */
-static void simulate_unlock_buggy(int idx) {
-	nodes[idx].count--;
+static bool snapshot_resume_regs(struct resume_regs *regs)
+{
+	struct kd_mutex_node *node = resume_node;
+
+	if (!node || !regs)
+		return false;
+	regs->sp = node->regs_sp;
+	regs->ip = node->regs_ip;
+	resume_node = NULL;
+	return true;
 }
 
-TEST(count_starts_at_zero) {
+static struct kd_mutex_node *reserve_node(void)
+{
+	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++) {
+		if ((node_slots & (1UL << i)) || !nodes[i].stack_available)
+			continue;
+		node_slots |= 1UL << i;
+		return &nodes[i];
+	}
+	return NULL;
+}
+
+static bool release_node(struct kd_mutex_node *node)
+{
+	unsigned long bit;
+
+	if (!node || node->slot < 0 || node->slot >= KD_MUTEX_MAX_NODES)
+		return false;
+	bit = 1UL << node->slot;
+	if (!(node_slots & bit))
+		return false;
+	node_slots &= ~bit;
+	return true;
+}
+
+TEST(slots_start_empty) {
 	init_nodes();
-	ASSERT_EQ(nodes[0].count, 0);
+	ASSERT_EQ(node_slots, 0UL);
 }
 
-TEST(single_lock_unlock) {
+TEST(single_reservation_release) {
+	struct kd_mutex_node *node;
+
 	init_nodes();
-	int idx = simulate_lock();
-	ASSERT_EQ(idx, 0);
-	ASSERT_EQ(nodes[0].count, 1);
-	simulate_unlock();
-	ASSERT_EQ(nodes[0].count, 0);
+	node = reserve_node();
+	ASSERT_EQ(node, &nodes[0]);
+	ASSERT_EQ(node_slots, 1UL);
+	ASSERT_EQ(release_node(node), true);
+	ASSERT_EQ(node_slots, 0UL);
 }
 
-TEST(nested_lock_unlock) {
-	init_nodes();
-	int idx0 = simulate_lock();
-	int idx1 = simulate_lock();
-	int idx2 = simulate_lock();
-	ASSERT_EQ(idx0, 0);
-	ASSERT_EQ(idx1, 1);
-	ASSERT_EQ(idx2, 2);
-	ASSERT_EQ(nodes[0].count, 3);
-
-	simulate_unlock();
-	simulate_unlock();
-	simulate_unlock();
-	ASSERT_EQ(nodes[0].count, 0);
-}
-
-TEST(overflow_protection) {
+TEST(all_slots_and_overflow) {
 	init_nodes();
 	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++)
-		simulate_lock();
-	ASSERT_EQ(nodes[0].count, 4);
-
-	/* Next attempt should fail */
-	int rc = simulate_lock();
-	ASSERT_EQ(rc, -1);
-	ASSERT_EQ(nodes[0].count, 4); /* unchanged */
+		ASSERT_EQ(reserve_node(), &nodes[i]);
+	ASSERT_EQ(node_slots, 0xfUL);
+	ASSERT_EQ(reserve_node(), NULL);
 }
 
-TEST(buggy_decrement_leaks_count) {
-	/* Demonstrate the bug we fixed: decrementing nodes[idx] instead of nodes[0] */
-	init_nodes();
-	simulate_lock(); /* idx=0, count=1 */
-	simulate_lock(); /* idx=1, count=2 */
-	simulate_unlock_buggy(1); /* decrements nodes[1].count, NOT nodes[0]! */
-	simulate_unlock_buggy(0); /* decrements nodes[0].count → 0 */
+TEST(out_of_order_release_reuses_only_free_slot) {
+	struct kd_mutex_node *node0;
+	struct kd_mutex_node *node1;
+	struct kd_mutex_node *node2;
 
-	/* After "unlocking" both, count should be 0 if correct, but with
-	 * the buggy version only the second decrement actually hits nodes[0] */
-	/* The first lock (idx=0) decrements correctly, the second (idx=1) leaks */
-	/* Let's verify the leak: lock again and idx should be != 0 */
 	init_nodes();
-	simulate_lock(); /* count: 0→1, idx=0 */
-	simulate_unlock_buggy(0); /* nodes[0].count: 1→0 ✓ */
+	node0 = reserve_node();
+	node1 = reserve_node();
+	node2 = reserve_node();
+	ASSERT_EQ(release_node(node0), true);
+	ASSERT_EQ(reserve_node(), node0);
+	ASSERT_EQ(node_slots & (1UL << node1->slot), 1UL << node1->slot);
+	ASSERT_EQ(node_slots & (1UL << node2->slot), 1UL << node2->slot);
+}
 
-	simulate_lock(); /* count: 0→1, idx=0 */
-	int idx = simulate_lock(); /* count: 1→2, idx=1 */
-	ASSERT_EQ(idx, 1);
-	simulate_unlock_buggy(1); /* BUG: nodes[1].count--, nodes[0].count stays 2 */
-	ASSERT_EQ(nodes[0].count, 2); /* leaked! should be 1 */
-
-	/* With correct version: */
+TEST(unavailable_stack_is_skipped) {
 	init_nodes();
-	simulate_lock();
-	simulate_lock();
-	simulate_unlock(); /* nodes[0].count: 2→1 */
-	ASSERT_EQ(nodes[0].count, 1); /* correct */
-	simulate_unlock(); /* nodes[0].count: 1→0 */
-	ASSERT_EQ(nodes[0].count, 0); /* correct */
+	nodes[0].stack_available = false;
+	ASSERT_EQ(reserve_node(), &nodes[1]);
+	ASSERT_EQ(node_slots, 1UL << 1);
+}
+
+TEST(double_release_is_rejected) {
+	struct kd_mutex_node *node;
+
+	init_nodes();
+	node = reserve_node();
+	ASSERT_EQ(release_node(node), true);
+	ASSERT_EQ(release_node(node), false);
 }
 
 TEST(repeated_lock_unlock_stable) {
 	init_nodes();
 	for (int i = 0; i < 1000; i++) {
-		int idx = simulate_lock();
-		ASSERT_EQ(idx, 0);
-		simulate_unlock();
+		struct kd_mutex_node *node = reserve_node();
+
+		ASSERT_EQ(node, &nodes[0]);
+		ASSERT_EQ(release_node(node), true);
 	}
-	ASSERT_EQ(nodes[0].count, 0);
+	ASSERT_EQ(node_slots, 0UL);
+}
+
+TEST(resume_context_is_copied_before_node_reuse) {
+	struct resume_regs regs = { 0 };
+	struct kd_mutex_node *node;
+
+	init_nodes();
+	node = reserve_node();
+	node->regs_sp = 0x1000;
+	node->regs_ip = 0x2000;
+	publish_resume_node(node);
+	ASSERT_EQ(snapshot_resume_regs(&regs), true);
+	ASSERT_EQ(resume_node, NULL);
+	ASSERT_EQ(release_node(node), true);
+
+	/* A later waiter may reuse the per-CPU node after the snapshot. */
+	ASSERT_EQ(reserve_node(), node);
+	node->regs_sp = 0x3000;
+	node->regs_ip = 0x4000;
+	ASSERT_EQ(regs.sp, 0x1000UL);
+	ASSERT_EQ(regs.ip, 0x2000UL);
+	ASSERT_EQ(snapshot_resume_regs(&regs), false);
 }
 
 int main(void) {
 	printf("=== test_mutex_count ===\n");
-	RUN_TEST(count_starts_at_zero);
-	RUN_TEST(single_lock_unlock);
-	RUN_TEST(nested_lock_unlock);
-	RUN_TEST(overflow_protection);
-	RUN_TEST(buggy_decrement_leaks_count);
+	RUN_TEST(slots_start_empty);
+	RUN_TEST(single_reservation_release);
+	RUN_TEST(all_slots_and_overflow);
+	RUN_TEST(out_of_order_release_reuses_only_free_slot);
+	RUN_TEST(unavailable_stack_is_skipped);
+	RUN_TEST(double_release_is_rejected);
 	RUN_TEST(repeated_lock_unlock_stable);
+	RUN_TEST(resume_context_is_copied_before_node_reuse);
 	REPORT();
 }

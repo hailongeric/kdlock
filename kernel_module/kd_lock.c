@@ -14,6 +14,7 @@
  * The origin_* functions provide fallback to the original kernel lock paths.
  */
 #include <linux/freezer.h>
+#include <linux/module.h>
 #include <linux/sched/signal.h>
 #include <linux/sched/task.h>
 #include <linux/sched.h>
@@ -350,10 +351,82 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 	_kd_mutex_unlock(kd_mtx);
 }
 
-int kd_mutex_jit_nested_lock(struct mutex *lock)
+static int kd_mutex_jit_advance_call(struct kd_exec_frame *frame,
+				     struct pt_regs *regs)
 {
-	struct kd_mutex *kd_mtx;
+	unsigned long return_ip;
+
+	if (!frame || !regs || !regs->sp)
+		return -EINVAL;
+	return_ip = READ_ONCE(*(unsigned long *)regs->sp);
+	if (!return_ip)
+		return -EINVAL;
+	regs->sp += sizeof(unsigned long);
+	regs->ip = return_ip;
+	kd_exec_frame_save_continuation(frame, regs);
+	return 0;
+}
+
+int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,
+				 struct kd_exec_frame *frame)
+{
 	struct kd_mutex_shadow_entry *entry;
+	struct kd_mutex *kd_mtx;
+	enum kd_exec_lock_kind kind;
+	int ret;
+
+	if (!lock || !regs || !frame || !kd_exec_frame_validate(frame))
+		return -EINVAL;
+	if (kd_exec_frame_lock_contains(frame, (unsigned long)lock))
+		return -EDEADLK;
+	if (kd_exec_frame_lock_depth(frame) >= KD_EXEC_MAX_LOCK_DEPTH)
+		return -E2BIG;
+
+	kd_mtx = find_kd_mutex_shadow(lock);
+	if (!kd_mtx)
+		return -ENOENT;
+	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
+	if (!entry->delegated)
+		return -EINVAL;
+
+	if (kd_mutex_jit_advance_call(frame, regs))
+		return -EINVAL;
+	if (kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_LOCK, regs))
+		return -EINVAL;
+
+	ret = kd_mutex_nested_lock(kd_mtx, regs, frame);
+	if (ret < 0)
+		return ret;
+	if (ret == KD_MUTEX_NESTED_DELEGATED) {
+		kd_exec_frame_save_continuation(frame, regs);
+		return 1;
+	}
+
+	kind = ret == KD_MUTEX_NESTED_ACQUIRED_QUEUE ?
+		KD_EXEC_LOCK_QUEUE_OWNER : KD_EXEC_LOCK_FAST;
+	if (kd_exec_frame_lock_push(frame, (unsigned long)lock, kind, kd_mtx)) {
+		if (kd_mutex_nested_unlock(kd_mtx))
+			return -EIO;
+		return -E2BIG;
+	}
+	return 1;
+}
+
+int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
+				   struct kd_exec_frame *frame)
+{
+	struct kd_mutex_shadow_entry *entry;
+	struct kd_mutex *kd_mtx;
+	enum kd_exec_lock_kind kind;
+	void *lock_node;
+	int ret;
+
+	if (!lock || !frame || !kd_exec_frame_validate(frame))
+		return -EINVAL;
+	kind = kd_exec_frame_lock_kind(frame, (unsigned long)lock);
+	if (kind != KD_EXEC_LOCK_FAST &&
+	    kind != KD_EXEC_LOCK_QUEUE_OWNER)
+		return -ENOENT;
 
 	kd_mtx = find_kd_mutex_shadow(lock);
 	if (!kd_mtx)
@@ -362,25 +435,69 @@ int kd_mutex_jit_nested_lock(struct mutex *lock)
 	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
 	if (!entry->delegated)
 		return -EINVAL;
-
-	return _kd_mutex_trylock(kd_mtx) ? 0 : -EBUSY;
-}
-
-int kd_mutex_jit_nested_unlock(struct mutex *lock)
-{
-	struct kd_mutex *kd_mtx;
-	struct kd_mutex_shadow_entry *entry;
-
-	kd_mtx = find_kd_mutex_shadow(lock);
-	if (!kd_mtx)
-		return -ENOENT;
-
-	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
-	if (!entry->delegated)
+	lock_node = kd_exec_frame_lock_node(frame, (unsigned long)lock);
+	if (lock_node != kd_mtx)
+		return -EINVAL;
+	if (kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_UNLOCK,
+				       NULL))
 		return -EINVAL;
 
-	return _kd_mutex_unlock_checked(kd_mtx);
+	ret = kd_mutex_nested_unlock(kd_mtx);
+	if (ret)
+		return ret;
+	return kd_exec_frame_lock_pop(frame, (unsigned long)lock);
 }
+
+int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
+{
+	unsigned int cleaned = 0;
+
+	if (!frame || !kd_exec_frame_validate(frame) ||
+	    frame->outer_lock_index >= frame->jit_lock_depth)
+		return -EINVAL;
+
+	while (frame->jit_lock_depth > frame->outer_lock_index + 1) {
+		unsigned int index = frame->jit_lock_depth - 1;
+		unsigned long lock_addr = frame->jit_lock_addr[index];
+		enum kd_exec_lock_kind kind = frame->jit_lock_kind[index];
+		struct kd_mutex *kd_mtx = frame->jit_lock_node[index];
+		bool released = frame->jit_lock_released[index];
+		int ret;
+
+		if (kind != KD_EXEC_LOCK_FAST &&
+		    kind != KD_EXEC_LOCK_QUEUE_OWNER)
+			return -EINVAL;
+		if (!kd_mtx || kd_mtx->origin_mutex_addr != lock_addr)
+			return -EINVAL;
+		if (!released) {
+			ret = kd_mutex_nested_unlock(kd_mtx);
+			if (ret)
+				return ret;
+			kd_mutex_note_nested_abort_release();
+		}
+		ret = kd_exec_frame_lock_pop(frame, lock_addr);
+		if (ret)
+			return ret;
+		KD_PR_INFO("mutex JIT abort release: lock=%lx kind=%d was_released=%d\n",
+			   lock_addr, kind, released);
+		cleaned++;
+	}
+	if (cleaned)
+		KD_PR_INFO("mutex JIT abort cleanup: outer=%lx released=%u\n",
+			   frame->outer_lock_addr, cleaned);
+	return 0;
+}
+
+int kd_mutex_debug_waiter_count(struct mutex *lock)
+{
+	struct kd_mutex *kd_mtx;
+
+	if (!lock)
+		return -EINVAL;
+	kd_mtx = find_kd_mutex_shadow(lock);
+	return kd_mtx ? kd_mutex_waiter_count(kd_mtx) : -ENOENT;
+}
+EXPORT_SYMBOL_GPL(kd_mutex_debug_waiter_count);
 
 /* ==========================================================================
  * origin_* — original kernel lock paths (fallback when not delegating)

@@ -19,15 +19,6 @@ on the host checkout.
   normal development unless explicitly authorized because it modifies the guest
   kernel installation.
 
-## Tool Metadata
-
-- `.agents/`: automation metadata directory. It currently contains no tracked
-  project files.
-- `.codex/`: Codex metadata directory. It currently contains no tracked project
-  files.
-- `.claude/settings.local.json`: local Claude permissions for SSH and git
-  commands. Treat it as tool configuration, not runtime project logic.
-
 ## Documentation
 
 - `docs/AGENTS.md`: operating manual for AI/automation sessions, including host
@@ -35,14 +26,9 @@ on the host checkout.
 - `docs/DESIGN.md`: full architecture and protocol design for hooks,
   delegation, sandbox translation, JIT execution, and known limitations.
 - `docs/COMPONENTS.md`: this file, a file-by-file component and test map.
-- `docs/CRASH_LOG_PLAN.md`: plan and current status for high-risk JIT recovery,
-  QEMU monitor usage, and crash evidence collection.
-- `docs/NESTED_SPIN_JIT_TASKS.md`: completed phased checklist and validation
-  evidence for TCLock-style nested spinlock JIT delegation.
-- `docs/plan.md`: current execution checklist, decisions, failures, and
-  validation results; read and update it before task operations.
-- `docs/TODO.md`: task status, recently fixed bugs, validation
-  status, and future work.
+- `docs/VALIDATION.md`: canonical latest end-to-end test procedure, evidence,
+  and mode-specific interpretation.
+- `docs/TODO.md`: unfinished features and known gaps only.
 
 ## Kernel Module
 
@@ -56,16 +42,21 @@ installs hooks into the patched Linux kernel and implements delegation.
 - `kernel_module/kd_lock.c`: hook layer for raw spinlocks and mutexes. Handles
   target filtering, hot-lock checks, original fallback paths, mutex shadow-table
   lookup, transition draining from original mutex users to kd mutex users, and
-  nested spin known-call acquire/unlock/abort handling.
+  nested spin/mutex known-call acquire, unlock, continuation, and abort handling.
 - `kernel_module/kd_exec.c`: bounded per-CPU execution-frame stack for nested
   JIT register continuations, lock ownership, completion, and abort invariants.
+  A task owner prevents a suspended frame from being reused by another task on
+  the same CPU.
 - `kernel_module/kd_spinlock.c`: spinlock delegation protocol. Implements the
   queue, combiner path, shadow stack, waiter completion, nested/OOO unlock
   handling, and JIT execution for spinlock critical sections.
 - `kernel_module/kd_mutex.c`: mutex delegation protocol. Implements kd mutex
-  queueing, combiner handoff/fallback, per-CPU shadow stacks, optional
-  `mutex_jit=1` sandbox execution, resume after delegated `mutex_unlock`, and
-  protocol counters.
+  queueing, combiner handoff/fallback, independently reserved per-CPU waiter
+  stacks, optional `mutex_jit=1` execution frames, release/acquire completion,
+  local register snapshots before scheduler restoration, resume after delegated
+  `mutex_unlock`, and protocol/invariant counters. A contended nested mutex uses
+  a virtual waiter with a stack-owned context so a B combiner can proxy through
+  `mutex_unlock(B)` and return the post-B continuation to A.
 - `kernel_module/exe.c`: JIT execution engine. Manages `kd_exe_info` entries,
   executable code-block pool, endpoint resolution, write-back state, miss
   handling, and sandbox invocation through the assembly wrapper.
@@ -156,7 +147,8 @@ module used by benchmarks and tests.
 - `klock_module/klock_module.c`: registers `/dev/lock_dev` and implements ten
   benchmark modes (0-9): the original spin/mutex modes plus deep spin nesting,
   OOO unlock, deterministic independent A/B queues, and nested-JIT abort
-  recovery. Prints the final counter on unload.
+  recovery. Mode 4 exposes seven synchronized mutex roles that independently
+  order A and B queues. Prints the final counter on unload.
 
 ## Benchmark
 
@@ -176,7 +168,8 @@ Integration tests are shell scripts under `tests/`. They load real kernel
 modules and must run inside the guest with timeouts.
 
 - `tests/common.sh`: shared test helpers for building, module load/unload,
-  daemon lifecycle, dmesg assertions, JIT artifact checks, and stat parsing.
+  daemon lifecycle, dmesg assertions, JIT artifact/runtime-entry matching, and
+  stat parsing.
 - `tests/run_all.sh`: default low-risk integration suite. Runs tests 01-06 and
   intentionally excludes opt-in `mutex_jit=1` tests.
 - `tests/snapshot_test.sh`: helper for running a selected mode with QEMU
@@ -203,14 +196,24 @@ modules and must run inside the guest with timeouts.
   `mutex_jit=1`, confirms translation, then uses four synchronized one-shot
   workers to require exactly one real mutex sandbox completion and exact final
   counter accounting.
-- `tests/test_07_mutex_jit.sh`: high-risk opt-in bounded mode 3 confirmation.
-  Requires translation artifacts, daemon write-back, real sandbox completion,
-  nonzero JIT success, exact final counter, and clean dmesg.
+- `tests/test_07_mutex_jit.sh`: high-risk opt-in repeated/stress mode 3
+  confirmation. After translation becomes ready, it runs 32 deterministic
+  owner/waiter rounds, four CPU-1 waiters behind a CPU-0 holder, and an 8-thread
+  continuous workload. It requires repeated sandbox completion, same-CPU
+  multi-slot evidence, matching completion/resume counts, exact final counter,
+  and zero JIT/frame/overflow/waiter/slot-leak diagnostics.
 - `tests/test_08_mutex_jit_modes.sh`: recovery-only modes 4/5 validation. It
-  independently validates every initial translation workspace and write-back,
-  then attempts bounded real sandbox execution with exact counter accounting.
-  Both modes passed on 2026-07-03 under `pre_mutex_jit_modes45_fix`; the test
-  must remain outside `tests/run_all.sh`.
+  independently validates every initial translation workspace and write-back.
+  Mode 4 then creates deterministic A/B queues with seven CPU-pinned roles and
+  requires runtime IP matches for both A/B workspaces, outer plus inner JIT
+  completion, queued/remote B evidence, exact counter accounting, and zero
+  protocol failures or leaks. Mode 5 retains bounded API-in-CS coverage; the
+  script remains outside `tests/run_all.sh`.
+- `tests/test_09_jit_execution_modes.sh`: recovery-only acceptance suite for
+  modes 0/1/3/4. Mode 0/1 reuse the strict spinlock execution checks; mode 3
+  uses the repeated/stress mutex JIT test; mode 4 uses the nested-mutex JIT test.
+  Every selected mode must match runtime execution IPs to installed workspaces,
+  not only generate or install an artifact.
 
 ## Unit Tests
 
@@ -225,8 +228,8 @@ logic. They do not load kernel modules.
   reuse, full-table failure, and acquire/release readiness publication.
 - `tests/unit/test_hotlock_state.c`: validates hot-lock promotion and ignore
   state transitions.
-- `tests/unit/test_mutex_count.c`: validates kd mutex per-CPU node count
-  accounting.
+- `tests/unit/test_mutex_count.c`: validates kd mutex bitmap slot reservation,
+  capacity reuse, and that post-JIT registers are snapshotted before node reuse.
 - `tests/unit/test_mutex_shadow.c`: validates create-or-find lookup on lock and
   lookup-only behavior on unlock for the mutex shadow table.
 - `tests/unit/test_mutex_transition.c`: validates original-to-shadow promotion

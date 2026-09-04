@@ -1,12 +1,57 @@
 #!/bin/bash
-# test_07_mutex_jit.sh — opt-in bounded confirmation of mutex JIT sandbox
-# execution.
+# test_07_mutex_jit.sh — opt-in repeated mutex JIT delegation and contention
+# validation.
 #
 # This is intentionally excluded from run_all.sh because mutex_jit=1 executes
 # translated kernel critical sections and can crash the guest while under
 # development.
 TEST_NAME="test_07_mutex_jit"
 source "$(dirname "$0")/common.sh"
+
+JIT_ROUNDS="${KD_MUTEX_JIT_ROUNDS:-32}"
+ROUND_THREADS=4
+ROUND_LOOPS=1
+ROUND_WORKLOAD="${KD_MUTEX_JIT_ROUND_WORKLOAD:-1000000}"
+PINNED_THREADS=4
+PINNED_LOOPS=1
+PINNED_HOLDER_WORKLOAD="${KD_MUTEX_JIT_PINNED_HOLDER_WORKLOAD:-200000000}"
+PINNED_WAITER_WORKLOAD="${KD_MUTEX_JIT_PINNED_WAITER_WORKLOAD:-1000000}"
+STRESS_THREADS="${KD_MUTEX_JIT_STRESS_THREADS:-8}"
+STRESS_LOOPS="${KD_MUTEX_JIT_STRESS_LOOPS:-100}"
+STRESS_WORKLOAD="${KD_MUTEX_JIT_STRESS_WORKLOAD:-100000}"
+MIN_JIT_SUCCESSES="${KD_MUTEX_JIT_MIN_SUCCESSES:-}"
+
+for value in "$JIT_ROUNDS" "$ROUND_WORKLOAD" "$PINNED_HOLDER_WORKLOAD" \
+             "$PINNED_WAITER_WORKLOAD" "$STRESS_THREADS" "$STRESS_LOOPS" \
+             "$STRESS_WORKLOAD"; do
+    case "$value" in
+        ''|*[!0-9]*)
+            fail "$TEST_NAME" "stress parameters must be non-negative integers"
+            exit 1
+            ;;
+    esac
+done
+if [ "$JIT_ROUNDS" -lt 1 ] || [ "$ROUND_WORKLOAD" -lt 1 ] ||
+   [ "$PINNED_HOLDER_WORKLOAD" -lt 1 ] ||
+   [ "$PINNED_WAITER_WORKLOAD" -lt 1 ] ||
+   [ "$STRESS_THREADS" -lt 2 ] || [ "$STRESS_LOOPS" -lt 1 ] ||
+   [ "$STRESS_WORKLOAD" -lt 1 ]; then
+    fail "$TEST_NAME" "stress rounds, threads, loops, and workloads must be positive"
+    exit 1
+fi
+if [ -z "$MIN_JIT_SUCCESSES" ]; then
+    MIN_JIT_SUCCESSES=$((JIT_ROUNDS / 2))
+else
+    case "$MIN_JIT_SUCCESSES" in
+        *[!0-9]*)
+            fail "$TEST_NAME" "minimum JIT successes must be an integer"
+            exit 1
+            ;;
+    esac
+fi
+if [ "$MIN_JIT_SUCCESSES" -lt 1 ]; then
+    MIN_JIT_SUCCESSES=1
+fi
 
 info "Building components..."
 build_all || exit 1
@@ -55,11 +100,49 @@ fi
 check_daemon_read_kernel_text "$DAEMON_LOG" || exit 1
 check_jit_artifacts "$asm_dir" || exit 1
 check_dmesg_has "write to kernel" "daemon did not install mutex JIT code" || exit 1
+wait_for_jit_quiescence 1 20 2 || {
+    fail "$TEST_NAME" "mutex translation did not become quiet"
+    exit 1
+}
 
-# Now introduce a bounded amount of contention. A passing run must contain an
-# actual KD_EXE_RUN_TO_UNLOCK completion, not merely a successful translation.
-run_with_timeout 20 "$BENCH_BIN" 4 500 1000 1 3 >/dev/null 2>&1 || {
-    fail "$TEST_NAME" "JIT contention workload failed"
+# Recreate the deterministic owner/three-waiter topology repeatedly. One long
+# critical section gives the remaining workers time to queue, exercising node
+# reuse, completion publication, and post-unlock register resume on every round.
+for ((round = 1; round <= JIT_ROUNDS; round++)); do
+    run_with_timeout 20 "$BENCH_BIN" \
+        "$ROUND_THREADS" "$ROUND_LOOPS" "$ROUND_WORKLOAD" 1 3 \
+        >/dev/null 2>&1 || {
+        fail "$TEST_NAME" "JIT delegation round $round failed"
+        exit 1
+    }
+done
+
+# Hold the mutex on CPU 0 while four waiters share CPU 1. The blocked waiters
+# must schedule on independently reserved shadow stacks instead of reusing one
+# per-CPU stack.
+timeout --kill-after=5s 90s taskset -c 0 "$BENCH_BIN" \
+    1 1 "$PINNED_HOLDER_WORKLOAD" 1 3 >/dev/null 2>&1 &
+pinned_holder_pid=$!
+sleep 0.1
+run_with_timeout 90 taskset -c 1 "$BENCH_BIN" \
+    "$PINNED_THREADS" "$PINNED_LOOPS" "$PINNED_WAITER_WORKLOAD" 1 3 \
+    >/dev/null 2>&1 || {
+    kill "$pinned_holder_pid" 2>/dev/null || true
+    wait "$pinned_holder_pid" 2>/dev/null || true
+    fail "$TEST_NAME" "same-CPU waiter scheduling workload failed"
+    exit 1
+}
+if ! wait "$pinned_holder_pid"; then
+    fail "$TEST_NAME" "pinned mutex holder failed"
+    exit 1
+fi
+
+# Keep the same translated entry hot across repeated lock/unlock cycles. This
+# catches queue corruption that isolated one-shot runs cannot expose.
+run_with_timeout 90 "$BENCH_BIN" \
+    "$STRESS_THREADS" "$STRESS_LOOPS" "$STRESS_WORKLOAD" 1 3 \
+    >/dev/null 2>&1 || {
+    fail "$TEST_NAME" "continuous JIT contention workload failed"
     exit 1
 }
 sleep 1
@@ -73,10 +156,48 @@ check_dmesg_not_has "unexpected locked state" \
 
 unload_modules
 
-check_dmesg_has "jit_success=[1-9][0-9]*" \
-    "mutex JIT success counter remained zero" || exit 1
+jit_success="$(get_dmesg_stat jit_success)"
+jit_resume="$(get_dmesg_stat jit_resume)"
+multi_slot="$(get_dmesg_stat multi_slot)"
+if [ -z "$jit_success" ] || [ "$jit_success" -lt "$MIN_JIT_SUCCESSES" ]; then
+    fail "$TEST_NAME" \
+        "expected at least $MIN_JIT_SUCCESSES JIT completions, got ${jit_success:-missing}"
+    exit 1
+fi
+if [ "$jit_resume" != "$jit_success" ]; then
+    fail "$TEST_NAME" \
+        "completed/resumed waiter mismatch: success=$jit_success resume=${jit_resume:-missing}"
+    exit 1
+fi
+if [ -z "$multi_slot" ] || [ "$multi_slot" -lt 1 ]; then
+    fail "$TEST_NAME" \
+        "single-CPU workload never reserved concurrent waiter slots"
+    exit 1
+fi
+check_dmesg_stat_equals "jit_not_ready" "0" \
+    "JIT workload ran before translation was ready" || exit 1
+check_dmesg_stat_equals "jit_failure" "0" \
+    "translated mutex critical section failed" || exit 1
+check_dmesg_stat_equals "frame_failure" "0" \
+    "mutex JIT execution-frame invariant failed" || exit 1
+check_dmesg_stat_equals "node_overflow" "0" \
+    "mutex waiter node capacity was exhausted" || exit 1
+check_dmesg_stat_equals "context_busy" "0" \
+    "a foreign task encountered a live execution context" || exit 1
+check_dmesg_stat_equals "nested_abort_release" "0" \
+    "mode 3 unexpectedly used nested abort cleanup" || exit 1
+check_dmesg_stat_equals "active_waiters" "0" \
+    "mutex queue leaked active waiters" || exit 1
+check_dmesg_stat_equals "reserved_nodes" "0" \
+    "mutex queue leaked reserved waiter slots" || exit 1
+check_dmesg_has "kd_exec invariant_failures=0" \
+    "execution-frame invariant failed" || exit 1
+check_jit_entry_executed "$asm_dir" || exit 1
 
-expected_counter=$((1 + 12000 + 4 * 500))
+expected_counter=$((1 + 12000 +
+    JIT_ROUNDS * ROUND_THREADS * ROUND_LOOPS +
+    1 + PINNED_THREADS * PINNED_LOOPS +
+    STRESS_THREADS * STRESS_LOOPS))
 actual_counter=$(dmesg | sed -n 's/.*final counter: \([0-9][0-9]*\).*/\1/p' | tail -n 1)
 if [ "$actual_counter" != "$expected_counter" ]; then
     fail "$TEST_NAME" \
@@ -86,5 +207,6 @@ fi
 
 check_dmesg_ok || exit 1
 
+info "JIT completions verified: $jit_success"
 pass "$TEST_NAME"
 exit $EXIT_CODE

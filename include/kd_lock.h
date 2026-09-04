@@ -51,10 +51,13 @@ void origin_raw_spin_unlock(raw_spinlock_t *lock);
 void origin_mutex_lock(struct mutex *lock);
 void origin_mutex_unlock(struct mutex *lock, unsigned long ret_addr);
 
-/* Known-call handlers used by the high-lock JIT continuation path.  These
- * must not sleep: the mutex combiner executes with preemption disabled. */
-int kd_mutex_jit_nested_lock(struct mutex *lock);
-int kd_mutex_jit_nested_unlock(struct mutex *lock);
+/* Known-call handlers used by the high-lock JIT continuation path. */
+int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,
+				 struct kd_exec_frame *frame);
+int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
+				   struct kd_exec_frame *frame);
+int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame);
+int kd_mutex_debug_waiter_count(struct mutex *lock);
 
 /* Known-call handlers used by the high-lock spinlock JIT continuation path. */
 int kd_spin_jit_nested_lock(raw_spinlock_t *lock);

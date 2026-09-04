@@ -362,8 +362,8 @@ static void usage(const char *prog)
 	fprintf(stderr,
 		"Usage: %s [--mode 1|2] [--quiet|--verbose] [--poll-us N]\n"
 		"\n"
-		"  --mode 1     use legacy daemon1 layout: ./<RIP>/\n"
-		"  --mode 2     use legacy daemon2 layout: ./<RIP>/<tgid>/ (default)\n"
+		"  --mode 1     use flat layout: ./<RIP>/\n"
+		"  --mode 2     use per-tgid layout: ./<RIP>/<tgid>/ (default)\n"
 		"  --quiet      suppress normal progress logs\n"
 		"  --verbose    print normal progress logs\n"
 		"  --poll-us N  polling interval in microseconds, default 100000\n",

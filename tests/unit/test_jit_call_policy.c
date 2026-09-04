@@ -35,6 +35,7 @@ static unsigned long ktime_get_addr = 0x3000;
 static unsigned long outer_mutex = 0xaaa0;
 static unsigned long inner_mutex = 0xbbb0;
 static int inner_locked;
+static bool inner_remote;
 
 static enum call_kind call_kind(unsigned long ip)
 {
@@ -60,6 +61,13 @@ static int handle_known_call(struct regs_model *regs)
 	case CALL_MUTEX_LOCK:
 		if (regs->di != inner_mutex || inner_locked)
 			return 0;
+		if (inner_remote) {
+			/* A B combiner ran through mutex_unlock(B), so the parent A
+			 * frame resumes at the instruction after that unlock. */
+			regs->ip = 0x7777UL;
+			regs->sp = (unsigned long)&fake_stack[7];
+			return 1;
+		}
 		inner_locked = 1;
 		return advance_after_known_call(regs);
 	case CALL_MUTEX_UNLOCK:
@@ -126,6 +134,7 @@ TEST(inner_lock_and_unlock_continue) {
 	};
 	fake_stack[3] = 0x4444UL;
 	inner_locked = 0;
+	inner_remote = false;
 
 	ASSERT_EQ(simulate_call_miss(&regs), 0);
 	ASSERT_EQ(regs.ip, 0x4444UL);
@@ -141,6 +150,22 @@ TEST(inner_lock_and_unlock_continue) {
 	ASSERT_EQ(regs.ip, 0x5555UL);
 	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[3]);
 	ASSERT_EQ(inner_locked, 0);
+}
+
+TEST(contended_inner_lock_resumes_after_remote_unlock) {
+	struct regs_model regs = {
+		.ip = mutex_lock_addr,
+		.di = inner_mutex,
+		.sp = (unsigned long)&fake_stack[3],
+	};
+
+	inner_locked = 0;
+	inner_remote = true;
+	ASSERT_EQ(simulate_call_miss(&regs), 0);
+	ASSERT_EQ(regs.ip, 0x7777UL);
+	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[7]);
+	ASSERT_EQ(inner_locked, 0);
+	inner_remote = false;
 }
 
 TEST(api_call_continues) {
@@ -189,6 +214,7 @@ int main(void)
 	printf("=== test_jit_call_policy ===\n");
 	RUN_TEST(outer_unlock_completes);
 	RUN_TEST(inner_lock_and_unlock_continue);
+	RUN_TEST(contended_inner_lock_resumes_after_remote_unlock);
 	RUN_TEST(api_call_continues);
 	RUN_TEST(unknown_call_fallback_unwinds_stack);
 	RUN_TEST(known_continuation_is_bounded);

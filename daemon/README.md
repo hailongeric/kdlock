@@ -13,10 +13,9 @@ make
 
 Modes:
 
-- `--mode 1`: compatible with the old `daemon1.c` layout. Each translated
-  entry uses `./<RIP>/` as its workspace.
-- `--mode 2`: compatible with the old `daemon2.c` layout. Each translated
-  entry uses `./<RIP>/<tgid>/` as its workspace. This is the default.
+- `--mode 1`: use one flat workspace per translated entry: `./<RIP>/`.
+- `--mode 2`: isolate workspaces by process: `./<RIP>/<tgid>/`. This is the
+  default.
 
 Useful options:
 
@@ -30,6 +29,3 @@ For each entry it copies that template, updates `asm/callee_table.txt` or
 `asm/ij_table.txt` when the kernel reports a missing call or indirect jump,
 invokes the translator, and writes the generated `asm/jit.bin` back through
 `/dev/kd_dev`.
-
-Legacy source files `daemon1.c` and `daemon2.c` are kept for comparison. Use
-`make legacy` only when you need to rebuild those old binaries.

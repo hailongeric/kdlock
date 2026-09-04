@@ -1,7 +1,8 @@
 # kdlock AI 操作手册
 
 本文档是后续 AI/自动化工具操作本仓库时的首要运行说明。项目设计细节见
-`README.md` 和 `docs/DESIGN.md`；本文只规定环境边界、安全约束和可复现的操作流程。
+`README.md` 和 `docs/DESIGN.md`，最新实测证据见 `docs/VALIDATION.md`；本文只规定
+环境边界、安全约束和可复现的操作流程。
 
 ## 1. 环境边界
 
@@ -128,9 +129,9 @@ ssh -p 2222 root@127.0.0.1 '
 '
 ```
 
-说明：`tests/common.sh` 的 `build_all` 会隐藏构建输出，并忽略 daemon/benchmark 的部分构建
-失败，而且仅在 benchmark 不存在时才重新编译。因此排查代码修改时应先执行上面的显式构建，
-不能仅凭集成脚本进入了测试阶段就判断所有产物都是最新的。
+说明：`tests/common.sh` 的 `build_all` 会隐藏构建输出，并忽略 daemon 的构建失败；benchmark
+会重新编译且失败会终止测试。排查代码修改时仍应先执行上面的显式构建，不能仅凭集成脚本进入
+测试阶段就判断全部产物都是最新且无告警的。
 
 ### 4.3 最小模块加载验证
 
@@ -175,19 +176,39 @@ timeout 180 bash tests/test_04_spinlock.sh
 timeout 180 bash tests/test_05_mutex.sh
 ```
 
+若验收目标明确要求 modes 0/1/3/4 都实际执行翻译后的指令，不能只运行
+`tests/run_all.sh`；后者的 mode 3/4 使用 `mutex_jit=0`。确认 recovery 快照后运行：
+
+```bash
+KDLOCK_RECOVERY_CONFIRMED=1 \
+  timeout --kill-after=10s 600s \
+  bash tests/test_09_jit_execution_modes.sh 0 1 3 4
+```
+
+该入口对 mode 0/1 检查 spin JIT，对 mode 3 运行重复/压力 mutex JIT，对 mode 4
+运行 nested-mutex sandbox。所有模式均要求完整 artifact、daemon 回写、真实
+`jit_success`、精确 counter 和干净的 `dmesg`。mode 1 的 B 在同一个 A 翻译流中
+通过 known-call 执行；mode 4 则必须让 A/B 两个独立入口都进入 JIT。完整判定和最近一次
+结果见 `docs/VALIDATION.md`。
+
 仅在用户明确要求并接受 guest 崩溃风险时，运行独立的 mutex JIT 确认测试：
 
 ```bash
-timeout 120 bash tests/test_07_mutex_jit.sh
+timeout 300 bash tests/test_07_mutex_jit.sh
 ```
 
-该测试故意不属于 `tests/run_all.sh`。通过必须同时满足：daemon 已回写 JIT、日志出现
-`mutex JIT delegation ok`、卸载统计 `jit_success` 非零、最终 counter 精确匹配，以及
-`dmesg` 无内核错误。当前只确认了有界的 modes 3/4/5；stress 仍未验证。
+该测试故意不属于 `tests/run_all.sh`。它执行 32 轮确定性 owner/waiter 队列和 8 线程
+连续竞争。通过必须同时满足：daemon 已回写 JIT、重复出现
+`mutex JIT delegation ok`、`jit_resume == jit_success`、最终 counter 精确匹配，
+所有 JIT/frame/node/waiter/slot 失败指标为 0，且 `dmesg` 无内核错误。测试还要求
+CPU 0 holder 后面的四个 CPU 1 waiter 产生 `multi_slot > 0`。
 
-`tests/test_08_mutex_jit_modes.sh` 是 recovery-only 的 mode 4/5 验证。2026-07-03
-在 `pre_mutex_jit_modes45_fix` 快照保护下，mode 4 和 mode 5 均通过一次真实 sandbox
-completion 和精确 counter 校验。除非 recovery VM 正常且新快照已确认，否则不要运行该测试。
+`tests/test_08_mutex_jit_modes.sh` 是 recovery-only 的 mode 4/5 验证。mode 4
+使用 7 个分别绑定 CPU 的角色，在 A、B 上都强制形成 holder -> direct waiter ->
+nested target -> trailing waiter 队列。通过条件包括至少两次真实 JIT completion、
+`nested_queued >= 1`、`nested_remote >= 1`、最终 counter `12008`，以及所有
+readiness/JIT/frame/context/node/waiter/slot 失败或泄漏指标为 0。mode 5 保留
+bounded API-in-CS 验证。除非 recovery VM 正常且恢复快照已确认，否则不要运行该测试。
 
 spin nested-JIT 的故障恢复同样只在 recovery VM 中运行：
 

@@ -115,7 +115,9 @@ check_dmesg_ok() {
 check_dmesg_has() {
     local pattern="$1"
     local msg="${2:-expected pattern '$pattern' in dmesg}"
-    if ! dmesg | grep -q "$pattern"; then
+    # Do not use grep -q here. With pipefail and a large kernel log, grep can
+    # exit on the first match and make dmesg fail with SIGPIPE.
+    if ! dmesg | grep "$pattern" >/dev/null; then
         fail "$TEST_NAME" "$msg"
         return 1
     fi
@@ -125,7 +127,7 @@ check_dmesg_has() {
 check_dmesg_not_has() {
     local pattern="$1"
     local msg="${2:-unexpected pattern '$pattern' in dmesg}"
-    if dmesg | grep -q "$pattern"; then
+    if dmesg | grep "$pattern" >/dev/null; then
         fail "$TEST_NAME" "$msg"
         dmesg | grep "$pattern" | tail -3
         return 1
@@ -307,6 +309,86 @@ check_jit_artifacts() {
 
     info "JIT artifacts verified for entry 0x$entry (${bin_size} bytes)"
     return 0
+}
+
+jit_entry_from_asm_dir() {
+    local asm_dir="$1"
+    local tgid_dir rip_dir entry
+
+    tgid_dir="$(dirname "$asm_dir")"
+    rip_dir="$(basename "$(dirname "$tgid_dir")")"
+    entry="${rip_dir#0x}"
+    if [ "$entry" = "$rip_dir" ] || [ -z "$entry" ]; then
+        return 1
+    fi
+    printf '%s\n' "$entry"
+}
+
+jit_entry_was_executed() {
+    local asm_dir="$1"
+    local entry
+
+    entry="$(jit_entry_from_asm_dir "$asm_dir")" || return 1
+    dmesg | grep -E "\(execute_cs\).* ip ${entry}([[:space:]]|$)" >/dev/null
+}
+
+jit_entry_was_executed_for_lock() {
+    local lock_addr="$1"
+    local asm_dir="$2"
+    local entry
+
+    entry="$(jit_entry_from_asm_dir "$asm_dir")" || return 1
+    dmesg | grep -E \
+        "\(execute_cs\) lock\(${lock_addr}\):.* ip ${entry}([[:space:]]|$)" \
+        >/dev/null
+}
+
+check_jit_entry_executed() {
+    local asm_dir="$1"
+    local entry
+
+    entry="$(jit_entry_from_asm_dir "$asm_dir")" || {
+        fail "$TEST_NAME" "cannot derive runtime entry RIP from $asm_dir"
+        return 1
+    }
+    if ! jit_entry_was_executed "$asm_dir"; then
+        fail "$TEST_NAME" \
+            "translated entry 0x$entry was installed but never executed"
+        return 1
+    fi
+    info "Runtime execution verified for translated entry 0x$entry"
+    return 0
+}
+
+check_any_jit_entry_executed() {
+    local asm_dir entry
+
+    for asm_dir in "$@"; do
+        if jit_entry_was_executed "$asm_dir"; then
+            entry="$(jit_entry_from_asm_dir "$asm_dir")"
+            info "Runtime execution verified for translated entry 0x$entry"
+            return 0
+        fi
+    done
+    fail "$TEST_NAME" "none of the installed translated entries was executed"
+    return 1
+}
+
+check_any_jit_entry_executed_for_lock() {
+    local lock_addr="$1"
+    local asm_dir entry
+
+    shift
+    for asm_dir in "$@"; do
+        if jit_entry_was_executed_for_lock "$lock_addr" "$asm_dir"; then
+            entry="$(jit_entry_from_asm_dir "$asm_dir")"
+            info "Runtime execution verified for lock $lock_addr at translated entry 0x$entry"
+            return 0
+        fi
+    done
+    fail "$TEST_NAME" \
+        "lock $lock_addr never executed any of its installed translated entries"
+    return 1
 }
 
 # --- Cleanup trap ---

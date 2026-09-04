@@ -469,9 +469,11 @@ static int handle_known_call(struct pt_regs *regs,
 	if (regs->ip == mutex_unlock_addr) {
 		if (regs->di == outer_lock_addr)
 			return KD_EXE_KNOWN_OUTER_UNLOCK;
-		ret = kd_mutex_jit_nested_unlock((struct mutex *)regs->di);
+		ret = kd_mutex_jit_nested_unlock_ctx(
+			(struct mutex *)regs->di, frame);
 	} else {
-		ret = kd_mutex_jit_nested_lock((struct mutex *)regs->di);
+		return kd_mutex_jit_nested_lock_ctx(
+			(struct mutex *)regs->di, regs, frame);
 	}
 
 	if (ret)

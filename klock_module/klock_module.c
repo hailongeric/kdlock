@@ -22,6 +22,7 @@
 #define DRIVER_NAME "lock_dev"
 
 extern int kd_spin_debug_waiter_count(raw_spinlock_t *lock);
+extern int kd_mutex_debug_waiter_count(struct mutex *lock);
 
 struct test_args {
 	unsigned long loop_count;
@@ -50,6 +51,14 @@ static atomic_t outer_holder_ready = ATOMIC_INIT(0);
 static atomic_t outer_direct_waiting = ATOMIC_INIT(0);
 static atomic_t outer_nested_waiting = ATOMIC_INIT(0);
 static atomic_t outer_trailing_waiting = ATOMIC_INIT(0);
+static atomic_t mutex_inner_holder_ready = ATOMIC_INIT(0);
+static atomic_t mutex_inner_direct_waiting = ATOMIC_INIT(0);
+static atomic_t mutex_inner_nested_waiting = ATOMIC_INIT(0);
+static atomic_t mutex_inner_trailing_waiting = ATOMIC_INIT(0);
+static atomic_t mutex_outer_holder_ready = ATOMIC_INIT(0);
+static atomic_t mutex_outer_direct_waiting = ATOMIC_INIT(0);
+static atomic_t mutex_outer_nested_waiting = ATOMIC_INIT(0);
+static atomic_t mutex_outer_trailing_waiting = ATOMIC_INIT(0);
 
 #define MODE_ROLE_SYNCHRONIZED 0x80000000U
 #define MODE_ROLE_OUTER_ONLY   0x40000000U
@@ -477,21 +486,189 @@ static void run_mutex_contention_test(unsigned long loop_count, unsigned long wo
 	}
 }
 
-static void run_nested_mutex_test(unsigned long loop_count, unsigned long work_load)
+static noinline void prepare_nested_mutex_role(void)
 {
-	unsigned long i, j;
+	while (!atomic_read(&mutex_inner_holder_ready) ||
+	       !atomic_read(&mutex_inner_direct_waiting) ||
+	       !atomic_read(&mutex_outer_holder_ready) ||
+	       !atomic_read(&mutex_outer_direct_waiting))
+		cpu_relax();
+	while (kd_mutex_debug_waiter_count(&nested_mutex_a) < 1 ||
+	       kd_mutex_debug_waiter_count(&nested_mutex_b) < 1)
+		cpu_relax();
+}
+
+static noinline void run_nested_mutex_cs(unsigned long work_load)
+{
+	unsigned long j;
 	volatile int dummy_computation = 0;
 
+	atomic_set(&mutex_outer_nested_waiting, 1);
+	smp_mb__after_atomic();
+	mutex_lock(&nested_mutex_a);
+	atomic_set(&mutex_inner_nested_waiting, 1);
+	smp_mb__after_atomic();
+	mutex_lock(&nested_mutex_b);
+
+	global_counter++;
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+
+	mutex_unlock(&nested_mutex_b);
+	mutex_unlock(&nested_mutex_a);
+}
+
+static noinline void run_nested_mutex_role(unsigned long work_load,
+					    bool synchronized)
+{
+	if (synchronized)
+		prepare_nested_mutex_role();
+	run_nested_mutex_cs(work_load);
+}
+
+static noinline void run_inner_mutex_direct_role(unsigned long work_load)
+{
+	unsigned long j;
+	volatile int dummy_computation = 0;
+
+	while (!atomic_read(&mutex_inner_holder_ready))
+		cpu_relax();
+	atomic_set(&mutex_inner_direct_waiting, 1);
+	smp_mb__after_atomic();
+	mutex_lock(&nested_mutex_b);
+	global_counter++;
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+	mutex_unlock(&nested_mutex_b);
+}
+
+static noinline void run_inner_mutex_holder_role(unsigned long work_load)
+{
+	unsigned long j;
+	volatile int dummy_computation = 0;
+
+	atomic_set(&mutex_inner_holder_ready, 0);
+	atomic_set(&mutex_inner_direct_waiting, 0);
+	atomic_set(&mutex_inner_nested_waiting, 0);
+	atomic_set(&mutex_inner_trailing_waiting, 0);
+	smp_mb__after_atomic();
+
+	mutex_lock(&nested_mutex_b);
+	atomic_set(&mutex_inner_holder_ready, 1);
+	smp_mb__after_atomic();
+	while (!atomic_read(&mutex_inner_direct_waiting) ||
+	       !atomic_read(&mutex_inner_nested_waiting) ||
+	       !atomic_read(&mutex_inner_trailing_waiting))
+		cpu_relax();
+	while (kd_mutex_debug_waiter_count(&nested_mutex_b) < 3)
+		cpu_relax();
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+	global_counter++;
+	mutex_unlock(&nested_mutex_b);
+}
+
+static noinline void run_inner_mutex_trailing_role(unsigned long work_load)
+{
+	unsigned long j;
+	volatile int dummy_computation = 0;
+
+	while (!atomic_read(&mutex_inner_nested_waiting))
+		cpu_relax();
+	while (kd_mutex_debug_waiter_count(&nested_mutex_b) < 2)
+		cpu_relax();
+	atomic_set(&mutex_inner_trailing_waiting, 1);
+	smp_mb__after_atomic();
+	mutex_lock(&nested_mutex_b);
+	global_counter++;
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+	mutex_unlock(&nested_mutex_b);
+}
+
+static noinline void run_outer_mutex_direct_role(unsigned long work_load)
+{
+	unsigned long j;
+	volatile int dummy_computation = 0;
+
+	while (!atomic_read(&mutex_outer_holder_ready))
+		cpu_relax();
+	atomic_set(&mutex_outer_direct_waiting, 1);
+	smp_mb__after_atomic();
+	mutex_lock(&nested_mutex_a);
+	global_counter++;
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+	mutex_unlock(&nested_mutex_a);
+}
+
+static noinline void run_outer_mutex_holder_role(unsigned long work_load)
+{
+	unsigned long j;
+	volatile int dummy_computation = 0;
+
+	atomic_set(&mutex_outer_holder_ready, 0);
+	atomic_set(&mutex_outer_direct_waiting, 0);
+	atomic_set(&mutex_outer_nested_waiting, 0);
+	atomic_set(&mutex_outer_trailing_waiting, 0);
+	smp_mb__after_atomic();
+
+	mutex_lock(&nested_mutex_a);
+	atomic_set(&mutex_outer_holder_ready, 1);
+	smp_mb__after_atomic();
+	while (!atomic_read(&mutex_outer_direct_waiting) ||
+	       !atomic_read(&mutex_outer_nested_waiting) ||
+	       !atomic_read(&mutex_outer_trailing_waiting))
+		cpu_relax();
+	while (kd_mutex_debug_waiter_count(&nested_mutex_a) < 3)
+		cpu_relax();
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+	global_counter++;
+	mutex_unlock(&nested_mutex_a);
+}
+
+static noinline void run_outer_mutex_trailing_role(unsigned long work_load)
+{
+	unsigned long j;
+	volatile int dummy_computation = 0;
+
+	while (!atomic_read(&mutex_outer_nested_waiting))
+		cpu_relax();
+	while (kd_mutex_debug_waiter_count(&nested_mutex_a) < 2)
+		cpu_relax();
+	atomic_set(&mutex_outer_trailing_waiting, 1);
+	smp_mb__after_atomic();
+	mutex_lock(&nested_mutex_a);
+	global_counter++;
+	for (j = 0; j < work_load; j++)
+		dummy_computation++;
+	mutex_unlock(&nested_mutex_a);
+}
+
+static void run_nested_mutex_test(unsigned long loop_count,
+				  unsigned long work_load,
+				  unsigned int role)
+{
+	unsigned long i;
+	unsigned int sync_role = role & ~MODE_ROLE_SYNCHRONIZED;
+	bool synchronized = role & MODE_ROLE_SYNCHRONIZED;
+
 	for (i = 0; i < loop_count; i++) {
-		mutex_lock(&nested_mutex_a);
-		mutex_lock(&nested_mutex_b);
-
-		global_counter++;
-		for (j = 0; j < work_load; j++)
-			dummy_computation++;
-
-		mutex_unlock(&nested_mutex_b);
-		mutex_unlock(&nested_mutex_a);
+		if (!synchronized || sync_role == 0)
+			run_nested_mutex_role(work_load, synchronized);
+		else if (sync_role == 1)
+			run_inner_mutex_holder_role(work_load);
+		else if (sync_role == 2)
+			run_inner_mutex_direct_role(work_load);
+		else if (sync_role == 3)
+			run_outer_mutex_holder_role(work_load);
+		else if (sync_role == 4)
+			run_outer_mutex_direct_role(work_load);
+		else if (sync_role == 5)
+			run_inner_mutex_trailing_role(work_load);
+		else if (sync_role == 6)
+			run_outer_mutex_trailing_role(work_load);
 	}
 }
 
@@ -532,7 +709,8 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 						 k_args.work_load);
 		else if (k_args.mode == MODE_MUTEX_NESTED)
 			run_nested_mutex_test(k_args.loop_count,
-					      k_args.work_load);
+					      k_args.work_load,
+					      k_args.role);
 		else if (k_args.mode == MODE_MUTEX_API_IN_LOCK)
 			run_api_in_mutex_test(k_args.loop_count,
 					      k_args.work_load);

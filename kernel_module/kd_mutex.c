@@ -20,6 +20,8 @@
 #include <linux/errno.h>
 
 #include "kd_mutex.h"
+#include "kd_lock.h"
+#include "kd_exec.h"
 #include "exe.h"
 #include "utils.h"
 
@@ -56,6 +58,22 @@ static atomic64_t kd_mutex_slowpath_count;
 static atomic64_t kd_mutex_combiner_count;
 static atomic64_t kd_mutex_handoff_count;
 static atomic64_t kd_mutex_jit_success_count;
+static atomic64_t kd_mutex_jit_not_ready_count;
+static atomic64_t kd_mutex_jit_failure_count;
+static atomic64_t kd_mutex_jit_resume_count;
+static atomic64_t kd_mutex_frame_failure_count;
+static atomic64_t kd_mutex_node_overflow_count;
+static atomic64_t kd_mutex_multi_slot_count;
+static atomic64_t kd_mutex_context_busy_count;
+static atomic64_t kd_mutex_nested_lock_count;
+static atomic64_t kd_mutex_nested_fast_count;
+static atomic64_t kd_mutex_nested_queued_count;
+static atomic64_t kd_mutex_nested_remote_count;
+static atomic64_t kd_mutex_nested_unlock_count;
+static atomic64_t kd_mutex_nested_abort_release_count;
+static atomic_t kd_mutex_active_waiters;
+static atomic_t kd_mutex_max_waiters;
+static atomic_t kd_mutex_reserved_nodes;
 
 /*
  * Mutex JIT sandbox is still experimental.  Keep it opt-in so normal mutex
@@ -106,10 +124,17 @@ module_param_named(mutex_jit, kd_mutex_jit_enabled, int, 0644);
  * -------------------------------------------------------------------------- */
 struct kd_mutex_shadow {
 	uint64_t lock_addr[8];           /* nested lock tracking              */
-	void *ptr;                       /* base of shadow stack              */
-	uint64_t local_shadow_stack_ptr; /* current shadow stack position     */
-	struct pt_regs resume_regs;      /* completed waiter's post-JIT state */
+	unsigned long node_slots;        /* reserved per-CPU waiter slots     */
+	struct kd_mutex_node *resume_node; /* valid while waiter is CPU-pinned */
 } __cacheline_aligned_in_smp;
+
+struct kd_mutex_jit_context {
+	unsigned int lock_depth;
+	unsigned long lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
+	enum kd_exec_lock_kind lock_kind[KD_EXEC_MAX_LOCK_DEPTH];
+	void *lock_node[KD_EXEC_MAX_LOCK_DEPTH];
+	bool lock_released[KD_EXEC_MAX_LOCK_DEPTH];
+};
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
@@ -153,23 +178,120 @@ clear_locked_set_completed(struct kd_mutex_node *node)
 
 static __always_inline void set_locked(struct kd_mutex *lock)
 {
-	WRITE_ONCE(lock->locked, _Q_LOCKED_VAL);
+	smp_store_release(&lock->locked, _Q_LOCKED_VAL);
 }
 
-/* --------------------------------------------------------------------------
- * Shadow-stack accessors (noipa for callq in inline asm)
- * -------------------------------------------------------------------------- */
-__attribute__((noipa)) noinline notrace static uint64_t
-get_mutex_shadow_stack_ptr(void)
+static void kd_mutex_update_max_waiters(int active)
 {
-	struct kd_mutex_shadow *p = this_cpu_ptr(&kd_mutex_shadows);
-	return (uint64_t)&p->local_shadow_stack_ptr;
+	int old = atomic_read(&kd_mutex_max_waiters);
+
+	while (active > old) {
+		int previous = atomic_cmpxchg(&kd_mutex_max_waiters, old, active);
+
+		if (previous == old)
+			break;
+		old = previous;
+	}
 }
 
-__attribute__((noipa)) noinline notrace static struct kd_mutex_node *
-get_kd_mutex_node(void)
+static void kd_mutex_waiter_enter(struct kd_mutex *lock)
 {
-	return this_cpu_ptr(&kd_mutex_nodes[0]);
+	int active = atomic_inc_return(&kd_mutex_active_waiters);
+
+	atomic_inc(&lock->waiter_count);
+	kd_mutex_update_max_waiters(active);
+}
+
+static void kd_mutex_waiter_exit(struct kd_mutex *lock)
+{
+	if (unlikely(atomic_dec_return(&lock->waiter_count) < 0)) {
+		atomic_set(&lock->waiter_count, 0);
+		atomic64_inc(&kd_mutex_frame_failure_count);
+		KD_PR_ERR("kd_mutex lock waiter count underflow lock=%px\n", lock);
+	}
+	if (unlikely(atomic_dec_return(&kd_mutex_active_waiters) < 0)) {
+		atomic_set(&kd_mutex_active_waiters, 0);
+		atomic64_inc(&kd_mutex_frame_failure_count);
+		KD_PR_ERR("kd_mutex active waiter count underflow\n");
+	}
+}
+
+/* Called with preemption disabled and migration pinned. */
+static void kd_mutex_schedule_if_needed(void)
+{
+	if (!need_resched())
+		return;
+	preempt_enable();
+	schedule();
+	preempt_disable();
+}
+
+static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
+{
+	for (;;) {
+		while (smp_load_acquire(&lock->locked)) {
+			cpu_relax();
+			kd_mutex_schedule_if_needed();
+		}
+		if (cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)
+			return;
+		cpu_relax();
+		kd_mutex_schedule_if_needed();
+	}
+}
+
+/* Reservation is serialized by preemption disable on this migration-pinned
+ * CPU. A separate stack per slot permits the reservation to survive schedule(). */
+static struct kd_mutex_node *kd_mutex_reserve_node(void)
+{
+	struct kd_mutex_shadow *shadow = this_cpu_ptr(&kd_mutex_shadows);
+	unsigned long slots = READ_ONCE(shadow->node_slots);
+	int idx;
+
+	for (idx = 0; idx < KD_MUTEX_MAX_NODES; idx++) {
+		struct kd_mutex_node *node;
+
+		if (slots & BIT(idx))
+			continue;
+		node = this_cpu_ptr(&kd_mutex_nodes[idx]);
+		if (!node->shadow_stack_base)
+			continue;
+		WRITE_ONCE(shadow->node_slots, slots | BIT(idx));
+		if (slots)
+			atomic64_inc(&kd_mutex_multi_slot_count);
+		atomic_inc(&kd_mutex_reserved_nodes);
+		return node;
+	}
+
+	return NULL;
+}
+
+static void kd_mutex_release_node(struct kd_mutex_node *node)
+{
+	struct kd_mutex_shadow *shadow = this_cpu_ptr(&kd_mutex_shadows);
+	unsigned long slots = READ_ONCE(shadow->node_slots);
+	unsigned long bit;
+
+	if (unlikely(!node || node->slot < 0 ||
+		     node->slot >= KD_MUTEX_MAX_NODES))
+		goto invalid;
+	bit = BIT(node->slot);
+	if (unlikely(!(slots & bit)))
+		goto invalid;
+
+	node->next = NULL;
+	node->lock = NULL;
+	node->task_struct_ptr = NULL;
+	node->jit_context = NULL;
+	node->jit_waiter = false;
+	WRITE_ONCE(shadow->node_slots, slots & ~bit);
+	atomic_dec(&kd_mutex_reserved_nodes);
+	return;
+
+invalid:
+	atomic64_inc(&kd_mutex_frame_failure_count);
+	KD_PR_ERR("kd_mutex invalid waiter slot release node=%px slots=%lx\n",
+		  node, slots);
 }
 
 /* --------------------------------------------------------------------------
@@ -188,40 +310,154 @@ get_kd_mutex_node(void)
 __attribute__((noipa)) noinline notrace static int
 execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
-	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
-	void *outgoing_rsp_ptr = &ptr->local_shadow_stack_ptr;
+	unsigned long outgoing_rsp;
+	void *outgoing_rsp_ptr = &outgoing_rsp;
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
+	struct kd_mutex_jit_context *jit_context = curr_node->jit_context;
+	struct kd_exec_frame *frame;
+	struct pt_regs retry_regs;
+	unsigned long lock_addr[1];
+	enum kd_exec_lock_kind lock_kind[1];
+	void *lock_node[1];
 	int ret_flag;
+	int frame_ret;
 
-	if (!incoming_rsp_ptr)
-		return KD_EXE_RUN_ERROR;
+	asm volatile("movq %%rsp, %0" : "=r"(outgoing_rsp));
 
-	if (!kd_mutex_jit_enabled) {
-		KD_PR_DEBUG("mutex JIT disabled, hand lock to waiter\n");
+	if (!lock->origin_mutex_addr ||
+	    (!curr_node->jit_waiter && !incoming_rsp_ptr) ||
+	    (curr_node->jit_waiter && !jit_context)) {
+		atomic64_inc(&kd_mutex_frame_failure_count);
 		return KD_EXE_RUN_ERROR;
 	}
 
-	curr_node->regs.bx  = ((unsigned long *)incoming_rsp_ptr)[1];
-	curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
-	curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
-	curr_node->regs.r14 = ((unsigned long *)incoming_rsp_ptr)[4];
-	curr_node->regs.r15 = ((unsigned long *)incoming_rsp_ptr)[5];
-	curr_node->regs.bp  = ((unsigned long *)incoming_rsp_ptr)[6];
-	curr_node->regs.ip  = ((unsigned long *)incoming_rsp_ptr)[7];
-	curr_node->regs.sp  = (unsigned long)incoming_rsp_ptr + 64;
+	if (!kd_mutex_jit_enabled) {
+		KD_PR_DEBUG("mutex JIT disabled, hand lock to waiter\n");
+		return KD_EXE_NO_RUN;
+	}
+
+	if (!curr_node->jit_waiter) {
+		curr_node->regs.bx  = ((unsigned long *)incoming_rsp_ptr)[1];
+		curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
+		curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
+		curr_node->regs.r14 = ((unsigned long *)incoming_rsp_ptr)[4];
+		curr_node->regs.r15 = ((unsigned long *)incoming_rsp_ptr)[5];
+		curr_node->regs.bp  = ((unsigned long *)incoming_rsp_ptr)[6];
+		curr_node->regs.ip  = ((unsigned long *)incoming_rsp_ptr)[7];
+		curr_node->regs.sp  = (unsigned long)incoming_rsp_ptr + 64;
+		if (!curr_node->regs.ip ||
+		    (curr_node->saved_ret_addr &&
+		     curr_node->regs.ip != curr_node->saved_ret_addr)) {
+			atomic64_inc(&kd_mutex_frame_failure_count);
+			KD_PR_ERR("mutex JIT invalid waiter entry: stack=%lx saved=%lx\n",
+				  curr_node->regs.ip, curr_node->saved_ret_addr);
+			return KD_EXE_RUN_ERROR;
+		}
+	}
 
 	print_debug("JIT exec waiter cpu %d ip %lx sp %lx\n",
 		    curr_node->cpuid, curr_node->regs.ip, curr_node->regs.sp);
 
-	ret_flag = kd_exe_on_call_hl_entry(&curr_node->regs, outgoing_rsp_ptr,
-					   curr_node->regs.ip,
-					   lock->origin_mutex_addr);
+	if (!kd_exe_is_ready(0, curr_node->regs.ip)) {
+		atomic64_inc(&kd_mutex_jit_not_ready_count);
+		kd_exe_add(0, curr_node->regs.ip);
+		return KD_EXE_NO_RUN;
+	}
+	if (kd_exec_context_busy()) {
+		/* A scheduled mutex combiner owns this CPU's frame stack. The
+		 * current waiter must use queue handoff without touching it. */
+		atomic64_inc(&kd_mutex_context_busy_count);
+		return KD_EXE_NO_RUN;
+	}
+
+	retry_regs = curr_node->regs;
+	frame = kd_exec_frame_push(&curr_node->regs, curr_node->regs.ip,
+				   lock->origin_mutex_addr, curr_node,
+				   outgoing_rsp_ptr,
+				   curr_node->jit_waiter ?
+				   jit_context->lock_depth : 1);
+	if (!frame) {
+		atomic64_inc(&kd_mutex_frame_failure_count);
+		return KD_EXE_RUN_ERROR;
+	}
+
+	if (curr_node->jit_waiter) {
+		frame_ret = kd_exec_frame_set_lock_entries(
+			frame, jit_context->lock_addr, jit_context->lock_kind,
+			jit_context->lock_node, jit_context->lock_released,
+			jit_context->lock_depth);
+	} else {
+		lock_addr[0] = lock->origin_mutex_addr;
+		lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
+		lock_node[0] = curr_node;
+		frame_ret = kd_exec_frame_set_lock_entries(
+			frame, lock_addr, lock_kind, lock_node, NULL, 1);
+	}
+	if (frame_ret) {
+		atomic64_inc(&kd_mutex_frame_failure_count);
+		KD_PR_ERR("mutex JIT frame lock entry invalid: %d\n",
+			  frame_ret);
+		frame_ret = kd_exec_frame_abort(frame);
+		if (!frame_ret)
+			frame_ret = kd_exec_frame_pop(frame, NULL);
+		if (unlikely(frame_ret)) {
+			atomic64_inc(&kd_mutex_frame_failure_count);
+			KD_PR_ERR("mutex JIT invalid-frame cleanup failed: %d\n",
+				  frame_ret);
+			/* A live invalid frame poisons every later translation on this
+			 * CPU, so native continuation is no longer safe. */
+			BUG();
+		}
+		return KD_EXE_RUN_ERROR;
+	}
+
+	ret_flag = kd_exe_on_call_hl_entry(&frame->regs, outgoing_rsp_ptr,
+					   frame->entry_ip,
+					   frame->outer_lock_addr);
+	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
+		frame_ret = kd_exec_frame_record_event(
+			frame, KD_EXEC_EVENT_OUTER_UNLOCK, &frame->regs);
+		if (!frame_ret)
+			frame_ret = kd_exec_frame_complete(frame);
+		if (unlikely(frame_ret)) {
+			atomic64_inc(&kd_mutex_frame_failure_count);
+			KD_PR_ERR("mutex JIT committed frame transition failed: %d\n",
+				  frame_ret);
+			/* The translated CS has already reached its outer unlock. A
+			 * native retry would execute its side effects twice. */
+			BUG();
+		}
+	}
+
+	if (ret_flag != KD_EXE_RUN_TO_UNLOCK) {
+		frame_ret = kd_mutex_jit_abort_cleanup(frame);
+		if (unlikely(frame_ret)) {
+			atomic64_inc(&kd_mutex_frame_failure_count);
+			KD_PR_ERR("mutex JIT nested abort cleanup failed: %d\n",
+				  frame_ret);
+			BUG();
+		}
+		if (kd_exec_frame_state(frame) != KD_EXEC_FRAME_COMPLETE &&
+		    kd_exec_frame_abort(frame))
+			atomic64_inc(&kd_mutex_frame_failure_count);
+		frame->regs = retry_regs;
+	}
+
+	frame_ret = kd_exec_frame_pop(frame, &curr_node->regs);
+	if (frame_ret) {
+		atomic64_inc(&kd_mutex_frame_failure_count);
+		KD_PR_ERR("mutex JIT frame pop failed: %d\n", frame_ret);
+		if (ret_flag == KD_EXE_RUN_TO_UNLOCK)
+			BUG();
+		return KD_EXE_RUN_ERROR;
+	}
 
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
 		KD_PR_DEBUG("mutex JIT delegation ok\n");
 		return 0;
 	}
 
+	atomic64_inc(&kd_mutex_jit_failure_count);
 	KD_PR_DEBUG("mutex JIT delegation failed: %d\n", ret_flag);
 	return ret_flag;
 }
@@ -236,6 +472,7 @@ __attribute__((noipa)) noinline notrace static void
 run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *next_node = NULL;
+	struct task_struct *previous_combiner;
 	int counter = 0;
 
 	atomic64_inc(&kd_mutex_combiner_count);
@@ -249,6 +486,8 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		return;
 	}
 
+	previous_combiner = READ_ONCE(lock->combiner_task);
+	WRITE_ONCE(lock->combiner_task, current);
 	while (curr_node) {
 		counter++;
 		next_node = curr_node->next;
@@ -277,6 +516,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 		curr_node = next_node;
 	}
+	WRITE_ONCE(lock->combiner_task, previous_combiner);
 
 	/* Pass lock to the next waiter who will become the new combiner.
 	 * next_node is guaranteed non-NULL: either it's the failed curr_node,
@@ -303,6 +543,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	int j;
 
 	old_tail = xchg_tail(lock, tail);
+	kd_mutex_waiter_enter(lock);
 
 	if (old_tail) {
 		/* --- waiter path: link behind prev, spin until woken --- */
@@ -314,22 +555,19 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 
 		/* CS was processed by combiner via JIT sandbox → done */
 		if (curr_node->completed) {
-			/* Preserve the actual node's post-JIT state before dropping the
-			 * nesting count. The waiter may be using nodes[idx], not node[0]. */
-			ptr->resume_regs = curr_node->regs;
-			this_cpu_ptr(&kd_mutex_nodes[0])->count--;
+			if (!curr_node->jit_waiter) {
+				/* Keep the node reachable until _kd_mutex_lock snapshots its
+				 * post-JIT registers with migration disabled. */
+				WRITE_ONCE(ptr->resume_node, curr_node);
+			}
+			kd_mutex_waiter_exit(lock);
 			return 3;
 		}
 		/* Fall through: become combiner */
 	}
 
 	/* --- become lock holder / combiner --- */
-	for (;;) {
-		while (READ_ONCE(lock->locked))
-			cpu_relax();
-		if (cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)
-			break;
-	}
+	kd_mutex_wait_and_lock(lock);
 
 	/* Only waiter in queue? */
 	if (cmpxchg(&lock->tail,
@@ -354,18 +592,22 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 		if (ptr->lock_addr[j])
 			break;
 	j += 1;
-	if (unlikely(j >= 8))
+	if (unlikely(j >= 8)) {
+		atomic64_inc(&kd_mutex_frame_failure_count);
+		curr_node->rsp = prev_rsp;
+		WRITE_ONCE(lock->locked, old_locked);
 		goto release;
+	}
 	ptr->lock_addr[j] = (uint64_t)lock;
 
 	run_combiner(lock, next_node);
 
 	ptr->lock_addr[j] = 0;
 	curr_node->rsp = prev_rsp;
-	lock->locked = old_locked;
+	WRITE_ONCE(lock->locked, old_locked);
 
 release:
-	this_cpu_ptr(&kd_mutex_nodes[0])->count--;
+	kd_mutex_waiter_exit(lock);
 	return 2;
 }
 #pragma GCC pop_options
@@ -374,47 +616,138 @@ release:
  * Slowpath entry: init node, queue, may become combiner
  * -------------------------------------------------------------------------- */
 __attribute__((noipa)) noinline notrace static int
-kd_mutex_lock_slowpath(struct kd_mutex *lock)
+kd_mutex_lock_slowpath(struct kd_mutex *lock,
+			   struct kd_mutex_node *curr_node)
 {
-	struct kd_mutex_node *base_node = this_cpu_ptr(&kd_mutex_nodes[0]);
-	struct kd_mutex_node *curr_node;
-	int idx = base_node->count++;
-	int tail = encode_tail(smp_processor_id(), idx);
-
 	atomic64_inc(&kd_mutex_slowpath_count);
+	return __kd_mutex_lock_slowpath(lock, curr_node->tail, curr_node);
+}
 
-	if (unlikely(idx >= KD_MUTEX_MAX_NODES)) {
-		/* Nested too deep — fall back to spinning */
-		while (!_kd_mutex_trylock(lock))
-			cpu_relax();
-		base_node->count--;
-		return 0;
+static int kd_mutex_prepare_jit_node(
+	struct kd_mutex_node *node,
+	struct kd_mutex_jit_context *context,
+	struct kd_mutex *lock,
+	const struct pt_regs *regs,
+	const struct kd_exec_frame *parent)
+{
+	unsigned int i, depth;
+
+	if (!node || !context || !lock || !lock->origin_mutex_addr ||
+	    !regs || !regs->ip || !regs->sp || !parent ||
+	    !kd_exec_frame_validate(parent))
+		return -EINVAL;
+
+	depth = kd_exec_frame_lock_depth(parent);
+	if (depth >= KD_EXEC_MAX_LOCK_DEPTH)
+		return -E2BIG;
+
+	memset(context, 0, sizeof(*context));
+	node->regs = *regs;
+	node->jit_waiter = true;
+	node->jit_context = context;
+	context->lock_depth = depth + 1;
+	for (i = 0; i < depth; i++) {
+		context->lock_addr[i] = parent->jit_lock_addr[i];
+		context->lock_kind[i] = parent->jit_lock_kind[i];
+		context->lock_node[i] = parent->jit_lock_node[i];
+		context->lock_released[i] = parent->jit_lock_released[i];
+	}
+	context->lock_addr[depth] = lock->origin_mutex_addr;
+	context->lock_kind[depth] = KD_EXEC_LOCK_QUEUE_OWNER;
+	context->lock_node[depth] = node;
+	context->lock_released[depth] = false;
+	return 0;
+}
+
+static int kd_mutex_advance_jit_node(struct kd_mutex_node *node,
+				     struct pt_regs *regs)
+{
+	unsigned long return_ip;
+
+	if (!node || !regs || !node->regs.sp)
+		return -EINVAL;
+	return_ip = READ_ONCE(*(unsigned long *)node->regs.sp);
+	if (!return_ip)
+		return -EINVAL;
+	node->regs.sp += sizeof(unsigned long);
+	node->regs.ip = return_ip;
+	*regs = node->regs;
+	return 0;
+}
+
+int kd_mutex_nested_lock(struct kd_mutex *lock, struct pt_regs *regs,
+			 const struct kd_exec_frame *parent)
+{
+	struct kd_mutex_jit_context context;
+	struct kd_mutex_node *node;
+	int ret;
+
+	if (!lock || !regs || !parent)
+		return -EINVAL;
+
+	atomic64_inc(&kd_mutex_nested_lock_count);
+	if (cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0) {
+		atomic64_inc(&kd_mutex_nested_fast_count);
+		return KD_MUTEX_NESTED_ACQUIRED;
 	}
 
-	curr_node = base_node + idx;
-	curr_node->locked = true;
-	curr_node->completed = false;
-	curr_node->next = NULL;
-	curr_node->tail = tail;
-	curr_node->socket_id = numa_node_id();
-	curr_node->cpuid = smp_processor_id();
-	curr_node->lock = lock;
-	curr_node->task_struct_ptr = current;
-
-	/* regs.sp and saved_* were written to node[0] by the asm trampoline
-	 * and _kd_mutex_lock respectively — copy to the actual waiter node. */
-	if (idx > 0) {
-		curr_node->regs.sp       = base_node->regs.sp;
-		curr_node->saved_rbx     = base_node->saved_rbx;
-		curr_node->saved_r12     = base_node->saved_r12;
-		curr_node->saved_r13     = base_node->saved_r13;
-		curr_node->saved_r14     = base_node->saved_r14;
-		curr_node->saved_r15     = base_node->saved_r15;
-		curr_node->saved_rbp     = base_node->saved_rbp;
-		curr_node->saved_ret_addr = base_node->saved_ret_addr;
+	node = kd_mutex_reserve_node();
+	if (!node) {
+		atomic64_inc(&kd_mutex_node_overflow_count);
+		return -E2BIG;
 	}
 
-	return __kd_mutex_lock_slowpath(lock, tail, curr_node);
+	node->locked = true;
+	node->completed = false;
+	node->next = NULL;
+	node->tail = encode_tail(smp_processor_id(), node->slot);
+	node->socket_id = numa_node_id();
+	node->cpuid = smp_processor_id();
+	node->rsp = 0;
+	node->lock = lock;
+	node->task_struct_ptr = current;
+	node->saved_ret_addr = 0;
+	ret = kd_mutex_prepare_jit_node(node, &context, lock, regs, parent);
+	if (ret)
+		goto release_node;
+
+	atomic64_inc(&kd_mutex_nested_queued_count);
+	atomic64_inc(&kd_mutex_slowpath_count);
+	ret = __kd_mutex_lock_slowpath(lock, node->tail, node);
+	if (ret == 3) {
+		ret = kd_mutex_advance_jit_node(node, regs);
+		if (!ret) {
+			atomic64_inc(&kd_mutex_nested_remote_count);
+			ret = KD_MUTEX_NESTED_DELEGATED;
+		}
+	} else if (ret == 2) {
+		ret = KD_MUTEX_NESTED_ACQUIRED_QUEUE;
+	} else {
+		ret = -EIO;
+	}
+
+release_node:
+	kd_mutex_release_node(node);
+	return ret;
+}
+
+int kd_mutex_nested_unlock(struct kd_mutex *lock)
+{
+	int ret = _kd_mutex_unlock_checked(lock);
+
+	if (!ret)
+		atomic64_inc(&kd_mutex_nested_unlock_count);
+	return ret;
+}
+
+int kd_mutex_waiter_count(struct kd_mutex *lock)
+{
+	return lock ? atomic_read(&lock->waiter_count) : -EINVAL;
+}
+
+void kd_mutex_note_nested_abort_release(void)
+{
+	atomic64_inc(&kd_mutex_nested_abort_release_count);
 }
 
 /* --------------------------------------------------------------------------
@@ -423,39 +756,33 @@ kd_mutex_lock_slowpath(struct kd_mutex *lock)
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace int
-kd_mutex_lock_slowpath_asm(struct kd_mutex *lock, unsigned long rsp_value)
+kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
+			   struct kd_mutex_node *curr_node)
 {
 	register int ret_val;
-	register struct kd_mutex_node *cur_node;
+	register struct kd_mutex_node *cur_node = curr_node;
 	register uint64_t shadow_sp;
 
-	/* Save callee rsp to node, record original sp for JIT sandbox */
-	asm volatile("callq %P1\n"
-		     "movq %%rsp, %c2(%%rax)\n"
-		     "movq %%rax, %0\n"
-		     : "=r"(cur_node)
-		     : "i"(get_kd_mutex_node),
+	/* Save the native call stack so this waiter can schedule while executing
+	 * the queue protocol on its independently reserved shadow stack. */
+	asm volatile("movq %%rsp, %c1(%0)\n"
+		     :
+		     : "r"(cur_node),
 		       "i"(offsetof(struct kd_mutex_node, rsp))
 		     : "memory");
-	cur_node->regs.sp = rsp_value;
 
-	/* Safety check and shadow stack switch.
-	 * Read local_shadow_stack_ptr ONCE and use the saved value in RSP.
-	 * This avoids a TOCTOU window where an asm re-read could race with
-	 * sandbox corruption on another CPU. */
-	shadow_sp = this_cpu_ptr(&kd_mutex_shadows)->local_shadow_stack_ptr;
+	shadow_sp = cur_node->shadow_stack_ptr;
 	if (unlikely(!shadow_sp)) {
-		KD_PR_ERR("kd_mutex: shadow stack ptr is NULL on cpu %d! "
-			  "Falling back to trylock.\n", smp_processor_id());
-		while (!_kd_mutex_trylock(lock))
-			cpu_relax();
+		KD_PR_ERR("kd_mutex: waiter shadow stack is NULL on cpu %d slot %d\n",
+			  smp_processor_id(), cur_node->slot);
+		kd_mutex_wait_and_lock(lock);
 		return 0;
 	}
 
-	/* Switch to per-CPU shadow stack using the already-validated value */
+	/* Switch to this reservation's shadow stack. */
 	asm volatile("movq %0, %%rsp" :: "r"(shadow_sp) : "memory");
 
-	ret_val = kd_mutex_lock_slowpath(lock);
+	ret_val = kd_mutex_lock_slowpath(lock, cur_node);
 
 	/* Restore original stack before returning */
 	asm volatile("movq %c1(%0), %%rsp\n"
@@ -478,6 +805,7 @@ void kd_mutex_init(struct kd_mutex *lock)
 	atomic_set(&lock->state, 0);
 	lock->combiner_task = NULL;
 	lock->origin_mutex_addr = 0;
+	atomic_set(&lock->waiter_count, 0);
 }
 
 void kd_mutex_init_percpu(void)
@@ -488,15 +816,49 @@ void kd_mutex_init_percpu(void)
 	atomic64_set(&kd_mutex_combiner_count, 0);
 	atomic64_set(&kd_mutex_handoff_count, 0);
 	atomic64_set(&kd_mutex_jit_success_count, 0);
+	atomic64_set(&kd_mutex_jit_not_ready_count, 0);
+	atomic64_set(&kd_mutex_jit_failure_count, 0);
+	atomic64_set(&kd_mutex_jit_resume_count, 0);
+	atomic64_set(&kd_mutex_frame_failure_count, 0);
+	atomic64_set(&kd_mutex_node_overflow_count, 0);
+	atomic64_set(&kd_mutex_multi_slot_count, 0);
+	atomic64_set(&kd_mutex_context_busy_count, 0);
+	atomic64_set(&kd_mutex_nested_lock_count, 0);
+	atomic64_set(&kd_mutex_nested_fast_count, 0);
+	atomic64_set(&kd_mutex_nested_queued_count, 0);
+	atomic64_set(&kd_mutex_nested_remote_count, 0);
+	atomic64_set(&kd_mutex_nested_unlock_count, 0);
+	atomic64_set(&kd_mutex_nested_abort_release_count, 0);
+	atomic_set(&kd_mutex_active_waiters, 0);
+	atomic_set(&kd_mutex_max_waiters, 0);
+	atomic_set(&kd_mutex_reserved_nodes, 0);
 
 	for_each_possible_cpu(i) {
-		void *stack_ptr = vzalloc(SIZE_OF_SHADOW_STACK);
 		struct kd_mutex_shadow *p = per_cpu_ptr(&kd_mutex_shadows, i);
-		p->ptr = stack_ptr + SIZE_OF_SHADOW_STACK;
+
+		memset(per_cpu_ptr(&kd_mutex_nodes[0], i), 0,
+		       sizeof(struct kd_mutex_node) * KD_MUTEX_MAX_NODES);
+		memset(p, 0, sizeof(*p));
 		for (j = 0; j < 8; j++)
 			p->lock_addr[j] = 0;
-		p->local_shadow_stack_ptr =
-			(uint64_t)(stack_ptr + SIZE_OF_SHADOW_STACK - 8);
+		p->node_slots = 0;
+		p->resume_node = NULL;
+		for (j = 0; j < KD_MUTEX_MAX_NODES; j++) {
+			struct kd_mutex_node *node =
+				per_cpu_ptr(&kd_mutex_nodes[j], i);
+			void *node_stack = vzalloc(SIZE_OF_SHADOW_STACK);
+
+			node->slot = j;
+			node->shadow_stack_base = node_stack;
+			if (!node_stack) {
+				KD_PR_ERR("kd_mutex: waiter stack allocation failed on cpu %d slot %d\n",
+					  i, j);
+				continue;
+			}
+			node->shadow_stack_ptr =
+				(uint64_t)((char *)node_stack +
+					   SIZE_OF_SHADOW_STACK - 8);
+		}
 	}
 }
 
@@ -504,15 +866,56 @@ void kd_mutex_exit(void)
 {
 	int i;
 
-	KD_PR_INFO("kd_mutex stats: slowpath=%lld combiner=%lld handoff=%lld jit_success=%lld\n",
+	KD_PR_INFO("kd_mutex stats: slowpath=%lld combiner=%lld handoff=%lld "
+		   "jit_success=%lld jit_not_ready=%lld jit_failure=%lld "
+		   "jit_resume=%lld frame_failure=%lld node_overflow=%lld "
+		   "multi_slot=%lld context_busy=%lld nested_lock=%lld "
+		   "nested_fast=%lld nested_queued=%lld nested_remote=%lld "
+		   "nested_unlock=%lld nested_abort_release=%lld "
+		   "active_waiters=%d max_waiters=%d "
+		   "reserved_nodes=%d\n",
 		   (long long)atomic64_read(&kd_mutex_slowpath_count),
 		   (long long)atomic64_read(&kd_mutex_combiner_count),
 		   (long long)atomic64_read(&kd_mutex_handoff_count),
-		   (long long)atomic64_read(&kd_mutex_jit_success_count));
+		   (long long)atomic64_read(&kd_mutex_jit_success_count),
+		   (long long)atomic64_read(&kd_mutex_jit_not_ready_count),
+		   (long long)atomic64_read(&kd_mutex_jit_failure_count),
+		   (long long)atomic64_read(&kd_mutex_jit_resume_count),
+		   (long long)atomic64_read(&kd_mutex_frame_failure_count),
+		   (long long)atomic64_read(&kd_mutex_node_overflow_count),
+		   (long long)atomic64_read(&kd_mutex_multi_slot_count),
+		   (long long)atomic64_read(&kd_mutex_context_busy_count),
+		   (long long)atomic64_read(&kd_mutex_nested_lock_count),
+		   (long long)atomic64_read(&kd_mutex_nested_fast_count),
+		   (long long)atomic64_read(&kd_mutex_nested_queued_count),
+		   (long long)atomic64_read(&kd_mutex_nested_remote_count),
+		   (long long)atomic64_read(&kd_mutex_nested_unlock_count),
+		   (long long)atomic64_read(
+			   &kd_mutex_nested_abort_release_count),
+		   atomic_read(&kd_mutex_active_waiters),
+		   atomic_read(&kd_mutex_max_waiters),
+		   atomic_read(&kd_mutex_reserved_nodes));
 
-	for_each_possible_cpu(i)
-		vfree(per_cpu_ptr(&kd_mutex_shadows, i)->ptr
-		      - SIZE_OF_SHADOW_STACK);
+	for_each_possible_cpu(i) {
+		struct kd_mutex_shadow *p = per_cpu_ptr(&kd_mutex_shadows, i);
+		int j;
+
+		if (READ_ONCE(p->node_slots))
+			KD_PR_ERR("kd_mutex: cpu %d leaked waiter slots=%lx\n",
+				  i, READ_ONCE(p->node_slots));
+		for (j = 0; j < KD_MUTEX_MAX_NODES; j++) {
+			struct kd_mutex_node *node =
+				per_cpu_ptr(&kd_mutex_nodes[j], i);
+
+			if (node->shadow_stack_base)
+				vfree(node->shadow_stack_base);
+			node->shadow_stack_base = NULL;
+			node->shadow_stack_ptr = 0;
+		}
+
+		p->node_slots = 0;
+		p->resume_node = NULL;
+	}
 }
 
 /*
@@ -525,21 +928,41 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 	       unsigned long s_r13, unsigned long s_r14,
 	       unsigned long s_r15, unsigned long s_rbp)
 {
-	struct pt_regs *resume_regs = NULL;
+	struct pt_regs resume_regs;
+	bool resume_ready = false;
 	int ret_val;
 
 	if (likely(cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0))
 		return;
 
-	/* smp_cond_load_relaxed_sched() temporarily enables preemption while a
-	 * waiter sleeps. Pin it to this CPU so its per-CPU node/shadow state stays
-	 * valid across the schedule. */
+	/* Waiters may schedule, so pin each one to the CPU that owns its reserved
+	 * node and private shadow-stack slot. */
 	migrate_disable();
 	preempt_disable();
 	{
-		struct kd_mutex_node *curr_node =
-			this_cpu_ptr(&kd_mutex_nodes[0]);
+		struct kd_mutex_node *curr_node = kd_mutex_reserve_node();
+
+		if (unlikely(!curr_node)) {
+			/* This task never enters the queue, so waiting on its native stack
+			 * is safe and returns only after it owns the shadow mutex. */
+			atomic64_inc(&kd_mutex_node_overflow_count);
+			kd_mutex_wait_and_lock(lock);
+			ret_val = 0;
+			goto scheduler_restore;
+		}
+
+		memset(&curr_node->regs, 0, sizeof(curr_node->regs));
+		curr_node->regs.sp = rsp_value;
+		curr_node->locked = true;
+		curr_node->completed = false;
+		curr_node->next = NULL;
+		curr_node->tail = encode_tail(smp_processor_id(), curr_node->slot);
 		curr_node->socket_id = numa_node_id();
+		curr_node->cpuid = smp_processor_id();
+		curr_node->lock = lock;
+		curr_node->task_struct_ptr = current;
+		curr_node->jit_context = NULL;
+		curr_node->jit_waiter = false;
 		/* Store callee-saved registers captured at hook entry */
 		curr_node->saved_rbx = s_rbx;
 		curr_node->saved_r12 = s_r12;
@@ -548,24 +971,42 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->saved_r15 = s_r15;
 		curr_node->saved_rbp = s_rbp;
 		curr_node->saved_ret_addr = ret_addr;
-		ret_val = kd_mutex_lock_slowpath_asm(lock, rsp_value);
-		if (ret_val == 3)
-			resume_regs =
-				&this_cpu_ptr(&kd_mutex_shadows)->resume_regs;
+		ret_val = kd_mutex_lock_slowpath_asm(lock, curr_node);
+		if (ret_val == 3) {
+			struct kd_mutex_shadow *shadow =
+				this_cpu_ptr(&kd_mutex_shadows);
+			struct kd_mutex_node *resume_node =
+				READ_ONCE(shadow->resume_node);
+
+			if (unlikely(!resume_node)) {
+				atomic64_inc(&kd_mutex_frame_failure_count);
+				KD_PR_ERR("mutex JIT completion missing resume node\n");
+				BUG();
+			}
+			resume_regs = resume_node->regs;
+			WRITE_ONCE(shadow->resume_node, NULL);
+			kd_mutex_release_node(resume_node);
+			resume_ready = true;
+			atomic64_inc(&kd_mutex_jit_resume_count);
+		} else {
+			kd_mutex_release_node(curr_node);
+		}
+	scheduler_restore:
+		;
 	}
 	preempt_enable();
 	migrate_enable();
 
-	if (ret_val == 3) {
+	if (resume_ready) {
 		/* The combiner already executed this waiter's CS through
 		 * mutex_unlock. Resume after that call only after restoring scheduler
 		 * state, otherwise the waiter would execute its original CS again or
 		 * remain permanently non-preemptible. */
 		KD_PR_DEBUG("mutex JIT resume sp=%lx target=%lx ip=%lx\n",
-			    resume_regs->sp,
-			    READ_ONCE(*(unsigned long *)resume_regs->sp),
-			    resume_regs->ip);
-		jump_to_saved_regs(resume_regs);
+			    resume_regs.sp,
+			    READ_ONCE(*(unsigned long *)resume_regs.sp),
+			    resume_regs.ip);
+		jump_to_saved_regs(&resume_regs);
 		BUG(); /* jump_to_saved_regs() must never return */
 	}
 
@@ -583,14 +1024,16 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 __attribute__((noipa)) noinline notrace int
 _kd_mutex_unlock_checked(struct kd_mutex *lock)
 {
-	if (lock->locked == _Q_LOCKED_VAL ||
-	    lock->locked == _Q_LOCKED_COMBINER_VAL) {
-		lock->locked = false;
+	u8 locked = smp_load_acquire(&lock->locked);
+
+	if (locked == _Q_LOCKED_VAL ||
+	    locked == _Q_LOCKED_COMBINER_VAL) {
+		smp_store_release(&lock->locked, 0);
 		return 0;
 	}
 	/* Should not reach here in JIT sandbox model */
 	KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\n",
-		  lock->locked);
+		  locked);
 	return -EINVAL;
 }
 
@@ -602,7 +1045,8 @@ _kd_mutex_unlock(struct kd_mutex *lock)
 
 int _kd_mutex_trylock(struct kd_mutex *lock)
 {
-	if (!lock->locked && cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)
+	if (!READ_ONCE(lock->locked) &&
+	    cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)
 		return 1;
 	return 0;
 }
