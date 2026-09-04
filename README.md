@@ -29,7 +29,7 @@ See [docs/DESIGN.md](docs/DESIGN.md) for the full technical design.
 
 | Component | State |
 |-----------|-------|
-| Spinlock delegation (modes 0-2, 6-9) | Working; nested JIT and bounded recovery validated |
+| Spinlock delegation (modes 0-2, 6-9) | Working; nested JIT, mode 2 native hostcalls, and bounded recovery validated |
 | Mutex delegation protocol (modes 3-5) | Safe mode working; mode 3 stress JIT and mode 4 nested A/B JIT proxy confirmed |
 | Dynamic translation (daemon + miasm) | Working |
 | Hot-lock promotion | Working |
@@ -109,7 +109,7 @@ Terminal 1 — run benchmark:
 |------|-----------|----------|
 | 0 | Spinlock | Contended single lock |
 | 1 | Spinlock | Nested locks (A → B) |
-| 2 | Spinlock | API call inside CS |
+| 2 | Spinlock | JIT CS exits to an allowlisted native API and resumes after CALL |
 | 3 | Mutex | Contended single lock |
 | 4 | Mutex | Nested locks (A → B) |
 | 5 | Mutex | API call inside CS |
@@ -138,9 +138,10 @@ make -C klock_module -j"$(nproc)"
 make -C daemon
 ```
 
-Nine binaries cover tail encoding, bounded translation lookup/publication,
-hot-lock state, spin/mutex node capacity, explicit nested execution frames,
-known-call policy, mutex shadow lookup, and safe draining during promotion.
+Nine C binaries plus one Python code-generation test cover tail encoding,
+bounded translation lookup/publication, hot-lock state, spin/mutex node
+capacity, explicit nested execution frames, hostcall/call-miss policy, generated
+hostcall stubs, mutex shadow lookup, and safe draining during promotion.
 
 ### Default Integration Suite
 
@@ -155,32 +156,44 @@ The default suite does not prove translated execution for mutex modes 3/4:
 `test_05_mutex.sh` deliberately uses `mutex_jit=0` to validate the queue and
 handoff protocol without entering the experimental mutex sandbox.
 
-### Modes 0/1/3/4 JIT Acceptance
+### Modes 0/1/2/3/4 JIT Acceptance
 
 After confirming a recovery snapshot, run:
 
 ```bash
 KDLOCK_RECOVERY_CONFIRMED=1 \
   timeout --kill-after=10s 600s \
-  bash tests/test_09_jit_execution_modes.sh 0 1 3 4
+  bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4
 ```
 
 Selectors may be supplied individually. A pass requires complete translation
 artifacts, kernel write-back, actual translated completion (`jit_success`), an
 exact final counter, drained queues/frames, and clean kernel diagnostics. Modes
-3/4 additionally verify that `mutex_jit=1` is active.
+3/4 additionally verify that `mutex_jit=1` is active. Mode 2 also requires a
+named `ktime_get` hostcall stub, no service callee translation or runtime
+recompilation, and matching nonzero exit/execute/resume counters.
+
+The latest independent mode 2 rerun on 2026-09-04 installed and executed the
+1407-byte artifact for entry `0xffffffffc071ee7b`. It recorded
+`jit_success=4`, `exits=4 executed=4 resumed=4`, exact counters of 12009, one
+initial JIT write-back, and zero hostcall, queue, or invariant failures. The
+command output and kernel log retained in the recovery guest are listed in
+[docs/VALIDATION.md](docs/VALIDATION.md).
 
 | Mode | `tests/run_all.sh` | Real JIT acceptance |
 | --- | --- | --- |
 | 0 | Yes, translated spin CS executes | `test_04_spinlock.sh 0` |
 | 1 | Yes, translated nested spin CS executes | `test_04_spinlock.sh 1` |
+| 2 | Yes, translated spin CS executes around a native hostcall | `test_04_spinlock.sh 2` |
 | 3 | No, default uses `mutex_jit=0` | `test_07_mutex_jit.sh` |
 | 4 | No, default uses `mutex_jit=0` | `test_08_mutex_jit_modes.sh 4` |
 
 Mode 1 executes one translated outer A stream through the nested B lock/unlock
 known-call path; B's nested counters prove those boundaries were crossed without
-native fallback. Mode 4 forms independent A and B queues and requires both entry
-RIPs to execute, including remote B proxy evidence. See
+native fallback. Mode 2 exits that stream at an allowlisted time API, executes a
+typed native handler while retaining outer-lock ownership, and resumes the same
+artifact at the instruction after CALL. Mode 4 forms independent A and B queues
+and requires both entry RIPs to execute, including remote B proxy evidence. See
 [docs/VALIDATION.md](docs/VALIDATION.md) for the exact latest results and this
 distinction.
 
@@ -242,7 +255,9 @@ Do not issue HMP `quit`, which exits QEMU.
 ## Documentation
 
 - [docs/DESIGN.md](docs/DESIGN.md) — Full technical design (architecture, protocols, sandbox model)
+- [docs/JIT_REGISTER_ABI.md](docs/JIT_REGISTER_ABI.md) — Current JIT entry/exit, virtual-register, stack, and continuation ABI
 - [docs/COMPONENTS.md](docs/COMPONENTS.md) — File-by-file component and test map
 - [docs/AGENTS.md](docs/AGENTS.md) — Automation operating manual and safety rules
 - [docs/VALIDATION.md](docs/VALIDATION.md) — Latest reproducible JIT execution evidence
+- [docs/MODE2_HOSTCALL_IMPLEMENTATION.md](docs/MODE2_HOSTCALL_IMPLEMENTATION.md) — Mode 2 hostcall protocol, implementation steps, and acceptance checklist
 - [docs/TODO.md](docs/TODO.md) — Open tasks and known gaps

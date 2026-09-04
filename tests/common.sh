@@ -311,6 +311,53 @@ check_jit_artifacts() {
     return 0
 }
 
+check_jit_hostcall_artifact() {
+    local asm_dir="$1"
+    local symbol="$2"
+    local stub label target
+
+    stub="$(awk -v symbol="$symbol" '
+        $0 ~ "KD_HOSTCALL.*symbol=" symbol { capture = 1 }
+        capture { print }
+        capture && /JMP[[:space:]]+exit/ { exit }
+    ' "$asm_dir/jit.S")"
+    if [ -z "$stub" ]; then
+        fail "$TEST_NAME" \
+            "jit.S has no named hostcall stub for $symbol"
+        return 1
+    fi
+    if ! printf '%s\n' "$stub" |
+            grep -E "MOV[[:space:]]+Stack_IJ,[[:space:]]+0x5" >/dev/null; then
+        fail "$TEST_NAME" \
+            "$symbol stub does not use KD_EXE_HOSTCALL"
+        return 1
+    fi
+    if printf '%s\n' "$stub" |
+            grep -E "LEA[[:space:]]+R13,.*R13[[:space:]]*\+[[:space:]]*0x8" \
+                >/dev/null; then
+        fail "$TEST_NAME" \
+            "$symbol hostcall stub discards its virtual return address"
+        return 1
+    fi
+
+    label="$(printf '%s\n' "$stub" | sed -n \
+        's/^loc_\([0-9a-f][0-9a-f]*\):$/\1/p' | head -n 1)"
+    if [ -z "$label" ]; then
+        fail "$TEST_NAME" "cannot derive $symbol hostcall target"
+        return 1
+    fi
+    target="$(printf '%s' "$label" | tr '[:upper:]' '[:lower:]')"
+    if [ -s "$asm_dir/callee_table.txt" ] &&
+            grep -Eiq "^(0x)?${target}$" "$asm_dir/callee_table.txt"; then
+        fail "$TEST_NAME" \
+            "$symbol hostcall leaked into callee_table.txt"
+        return 1
+    fi
+
+    info "Hostcall artifact verified for $symbol at 0x$target"
+    return 0
+}
+
 jit_entry_from_asm_dir() {
     local asm_dir="$1"
     local tgid_dir rip_dir entry

@@ -389,6 +389,10 @@ KD_EXE_UNUSED → KD_EXE_UNINIT → KD_EXE_NORMAL → (KD_EXE_CALL_MISS | KD_EXE
                      └────────────────────────────────────────┘
 ```
 
+`KD_EXE_HOSTCALL` is deliberately absent from this lifecycle. It is a transient
+sandbox exit reason handled synchronously by the kernel executor, not a
+translation-entry state observed by the daemon.
+
 ### 6.3 kd_exe_on_call_hl()
 
 This is the core execution function called by the combiner:
@@ -404,12 +408,17 @@ int kd_exe_on_call_hl(struct pt_regs *regs, void *outgoing_rsp_ptr)
     void (*virt_ptr)(struct pt_regs *, unsigned long *) = exe->code_block;
     unsigned long args[2] = { exe->gsbase, 0 };
 
-    virt_ptr(regs, args);  // execute sandbox
-
-    // Interpret result
-    if (args[0] == KD_EXE_CALL_MISS && is_end_point(regs->ip))
-        return KD_EXE_RUN_TO_UNLOCK;  // CS complete
-    ...
+    for (;;) {
+        virt_ptr(regs, args);  // execute or resume the same artifact
+        if (args[0] == KD_EXE_HOSTCALL) {
+            dispatch_allowlisted_hostcall(regs);
+            advance_and_save_continuation(regs);
+            continue;
+        }
+        if (args[0] == KD_EXE_CALL_MISS && is_end_point(regs->ip))
+            return KD_EXE_RUN_TO_UNLOCK;  // CS complete
+        ...
+    }
 }
 ```
 
@@ -449,15 +458,18 @@ The daemon runs in userspace and polls `/dev/kd_dev`:
 The miasm-based translator:
 
 1. Reads raw kernel bytes from `/proc/kcore` at the target RIP (`memread.py`).
-2. Disassembles into a control-flow graph using miasm's `dis_multiblock`.
-3. Stops disassembly at `dont_dis_retcall_funcs` (unlock functions).
-4. For each basic block, translates instructions via `translation.py`:
+2. Loads `include/kd_hostcalls.def`, resolves available service symbols, and
+   excludes those targets from callee-table expansion.
+3. Disassembles into a control-flow graph using miasm's `dis_multiblock`.
+4. Stops disassembly at `dont_dis_retcall_funcs` (unlock functions).
+5. For each basic block, translates instructions via `translation.py`:
    - Normal instructions: register conflict resolution, memory base checking.
    - Branches: translated to sandbox-local jumps.
    - Special instructions: handled by `special_inst.py`.
-5. Handles indirect jumps (`indirect_jump.py`): builds jump tables, reports
+6. Handles indirect jumps (`indirect_jump.py`): builds jump tables, reports
    misses.
-6. Outputs `asm/jit.S` which is included by `wrapper.S`.
+7. Emits distinct control-call, hostcall, and ordinary call-miss stubs.
+8. Outputs `asm/jit.S` which is included by `wrapper.S`.
 
 ### 7.3 Incremental Recompilation
 
@@ -478,23 +490,33 @@ semantics. A combiner never waits for recompilation: a miss aborts that frame,
 disables JIT for the affected outer lock, hands ownership to the waiter, and
 retries from the original critical-section entry.
 
+An allowlisted hostcall never enters this recompilation sequence. It leaves the
+entry in `KD_EXE_NORMAL`, executes synchronously in the kernel, and resumes the
+same artifact at the saved post-CALL RIP.
+
 ## 8. Sandbox Code Model
 
 ### 8.1 Register Convention
 
-The sandbox uses a fixed register assignment to avoid RSP/RIP operations:
+The register assignment is phase-specific. R14/R15 carry the two C arguments
+only during the wrapper prologue and epilogue; translated code reuses them after
+the pointers have been saved in wrapper stack slots:
 
-| Register | Sandbox role | Notes |
+| Physical register | Translated-code role | Notes |
 |----------|-------------|-------|
-| R14 | `PT_REG` pointer | Points to `struct pt_regs` |
-| R15 | `ARG_REG` pointer | Points to args[] (gsbase, return code) |
-| R13 | Virtual RSP | Tracks the logical stack pointer |
-| R12 | Virtual RBP | Tracks the logical frame pointer |
-| R11 | Instruction counter | Incremented per basic block |
+| RSP / RBP | Wrapper real stack/frame | Never represent guest RSP/RBP |
+| R13 | Virtual RSP | Stable mapping, temporarily borrowable by the register mapper |
+| R12 | Virtual RBP | Stable mapping, temporarily borrowable by the register mapper |
+| R14 | Special-register pool / RIP target | Carries RIP or target at dispatch and exit boundaries |
+| R15 | Special-register pool / IJ source | Carries source RIP on an indirect-jump miss |
+| R11 | Basic-block budget counter | Guest R11 is kept in a spill slot/mapped through R12-R15 |
 
-All other registers (RAX, RBX, RCX, RDX, RSI, RDI, R8-R10) hold their
-"real" values from the waiter's context and are used normally by translated
-instructions.
+RAX, RBX, RCX, RDX, RSI, RDI, and R8-R10 directly represent their guest
+counterparts. Guest R11-R15, RIP, RSP, and RBP are virtual registers managed by
+`disassem/conflict.py`; ordinary translated instructions must not assume a
+fixed physical location for guest R11-R15. The complete current convention,
+including stack slots, exit values, hostcall continuations, flags, and waiter
+resume behavior, is specified in `docs/JIT_REGISTER_ABI.md`.
 
 ### 8.2 Wrapper (include/wrapper.S)
 
@@ -503,11 +525,11 @@ The wrapper provides prologue/epilogue around the translated code:
 **Prologue:**
 1. Save callee-saved registers (standard C ABI).
 2. Load `pt_regs` pointer into R14, args pointer into R15.
-3. Restore all general-purpose registers from `pt_regs`.
-4. Push virtual RSP, RBP, R12-R15, R11, GS, FS onto the real stack for
-   later recovery.
-5. Initialize R13 = virtual RSP, R12 = virtual RBP.
-6. Jump to translated code entry (`jit.S`).
+3. Load directly mapped GPRs from `pt_regs` and copy guest RSP, RBP, R11-R15
+   into wrapper stack slots.
+4. Initialize R13 = virtual RSP and R12 = virtual RBP.
+5. Set R11 to the block-budget counter, load the requested RIP into R14, and
+   dispatch to the matching translated entry/continuation label.
 
 **Epilogue (exit label):**
 1. Save current R14 (RIP), R13 (RSP), R12 (RBP) back to stack slots.
@@ -516,34 +538,72 @@ The wrapper provides prologue/epilogue around the translated code:
    - `0x0` = `KD_EXE_NORMAL` (syscall encountered)
    - `0x1` = `KD_EXE_CALL_MISS`
    - `0x4` = `KD_EXE_INST_LIMIT`
+   - `0x5` = `KD_EXE_HOSTCALL`
    - Other = indirect jump source address (`KD_EXE_IJ_MISS`)
 4. Write final RIP into `pt_regs->ip`.
-5. Restore all registers back to `pt_regs`.
+5. Write the supported GPR/RIP/RSP state back to `pt_regs`; EFLAGS, segment
+   state, and SIMD/FPU state are not part of the current persistent JIT ABI.
 6. Restore callee-saved registers and return.
 
-### 8.3 Memory Access Safety
+`args[1]` receives the reserved `Stack_INST_CNT` slot, but the current wrapper
+does not initialize that slot or copy R11 into it. It must not be consumed as a
+valid counter.
 
-The translator inserts bounds checks before memory accesses through base
-registers.  If a base register points to a non-canonical address (indicating
-a user-space pointer that shouldn't be dereferenced in kernel context), the
-sandbox jumps to `seg_error` / `seg_error2` and exits cleanly.
+### 8.3 Memory Access Check Status
+
+`normal.py` identifies memory-base registers and retains scaffolding for
+flag-preserving checks, but the actual address-test instruction is commented
+out and the generated check sequence is currently empty. `seg_error` and
+`seg_error2` also do not publish a deterministic exit reason. Consequently the
+current JIT is not a security boundary and does not provide complete canonical
+address or bounds validation. This is an explicit implementation gap, not a
+property callers may rely on.
 
 ### 8.4 Instruction Count Limit
 
-Each basic block increments R11.  When `R11 & 0x1000000` is set (~16M
-instructions), the sandbox jumps to `inst_limit`, preventing infinite loops
-in translated code.
+Translated blocks classified as ending in a branch increment R11. When
+`R11 & 0x1000000` is set (roughly 16M counted branch blocks in one wrapper
+invocation), the sandbox jumps to `inst_limit`. R11 is reset on every re-entry,
+so this is neither a precise instruction counter nor a whole-critical-section
+budget.
 
 ### 8.5 Call Translation
 
-Function calls in the original code are translated to:
-- **Known callees** (in `callee_table.txt`): inlined or translated as part of
-  the same sandbox.
-- **Unknown callees**: trigger `KD_EXE_CALL_MISS` — set R14 to the target
-  address, set `Stack_IJ = 0x1`, jump to exit.
-- **End-point callees** (`_raw_spin_unlock`, `mutex_unlock`): same as call-miss
-  mechanically, but the kernel engine recognizes the target as an end-point and
-  returns `KD_EXE_RUN_TO_UNLOCK`.
+Function calls are assigned to four disjoint policies:
+
+| Class | Examples | Behavior |
+| --- | --- | --- |
+| Control | lock/unlock functions | Preserve the virtual CALL frame and use nested-lock or end-point handling. |
+| Hostcall | `ktime_get`, exported `ktime_get_ns` | Preserve the virtual CALL frame, set `Stack_IJ = 0x5`, execute a typed native handler, then resume. |
+| Translatable | ordinary discovered callee | Report `KD_EXE_CALL_MISS`, unwind the virtual CALL frame for native retry, add the target to `callee_table.txt`, and recompile. |
+| Unsupported | unresolved or rejected target | Fail closed; never invoke an arbitrary address as a service. |
+
+### 8.6 Native Hostcalls
+
+`include/kd_hostcalls.def` is the shared declarative service manifest. The
+kernel expands it into a registry of stable IDs, symbol names, safety flags,
+resolved addresses, and typed handlers. `disassem/hostcall.py` parses the same
+manifest and maps resolved targets to hostcall stubs. Runtime dispatch matches
+the exact address against the kernel registry; translated code cannot request an
+arbitrary function pointer.
+
+For a hostcall, translated CALL lowering has already pushed the post-CALL RIP
+onto the virtual stack. The generated stub puts the service target in R14,
+returns `KD_EXE_HOSTCALL`, and deliberately does not pop that RIP. The kernel
+handler writes its result to `regs->ax`, calls
+`advance_and_save_continuation()`, and invokes the same JIT artifact again. The
+outer lock and current `kd_exec_frame` remain active across this boundary.
+
+Each critical section is limited to 16 hostcalls. Module-exit diagnostics report
+`exits`, `executed`, `resumed`, `rejected`, `failed`, and `limit`. Mode 2 requires
+the first three to be equal and nonzero, and the final three to be zero.
+
+The initial services are `ktime_get` and `ktime_get_ns` when those symbols are
+available. They are fixed-signature, atomic-context-safe, independent of the
+proxy task's `current`, and retry-safe. Variadic `printk`, sleeping APIs,
+task-context-dependent APIs, and side-effecting calls are not allowed. A future
+side-effecting service needs a fixed ABI and an exactly-once rule for failures
+that occur after native execution.
 
 ## 9. Nested Spinlock JIT Handling
 
@@ -657,7 +717,8 @@ without requiring them to enter the kernel syscall path.
 
 ### Working
 
-- Raw spinlock delegation with JIT sandbox (modes 0-2 and 6-9 tested).
+- Raw spinlock delegation with JIT sandbox (modes 0-2 and 6-9 tested), including
+  allowlisted native hostcall exit/resume for mode 2.
 - Mutex safe-mode queue/handoff (modes 3-5), mode 3 stress JIT, mode 4 nested
   A/B JIT proxying, and bounded mode 5 JIT.
 - Dynamic translation pipeline (init, call-miss, ij-miss recompilation).
@@ -688,3 +749,12 @@ without requiring them to enter the kernel syscall path.
    nodes. Exhaustion aborts JIT or uses the documented native fallback.
 9. **Spin JIT failure is sticky per lock** — after a translated frame fails,
    that outer lock remains on native handoff until `kdlock_km` is reloaded.
+10. **Hostcalls are an explicit allowlist** — only fixed-signature, atomic-safe,
+    task-context-independent, retry-safe services are currently accepted.
+    General variadic `printk` and side-effecting services are unsupported.
+11. **Persistent processor state is partial** — EFLAGS, FS/GS semantics,
+    SIMD/FPU state, and the reserved `args[1]` count are not complete cross-exit
+    ABI state. See `docs/JIT_REGISTER_ABI.md`.
+12. **Memory checks are incomplete** — the translator currently emits no
+    effective canonical-address or bounds guard, so the JIT must not be treated
+    as a security isolation boundary.

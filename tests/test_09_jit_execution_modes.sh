@@ -1,6 +1,7 @@
 #!/bin/bash
 # test_09_jit_execution_modes.sh - require real translated execution for
-# modes 0, 1, 3, and 4. Mode 3/4 mutex JIT is recovery-only.
+# modes 0, 1, 2, 3, and 4. Mode 2 additionally requires a complete native
+# hostcall exit/execute/resume cycle. Mode 3/4 mutex JIT is recovery-only.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -17,7 +18,7 @@ run_mode() {
     echo "Verifying mode $mode translates and executes JIT code"
     echo "------------------------------------------------------------"
     case "$mode" in
-        0|1)
+        0|1|2)
             bash "$SCRIPT_DIR/test_04_spinlock.sh" "$mode"
             ;;
         3)
@@ -35,7 +36,7 @@ run_mode() {
 }
 
 if [ "$#" -eq 0 ]; then
-    set -- 0 1 3 4
+    set -- 0 1 2 3 4
 fi
 
 for mode in "$@"; do

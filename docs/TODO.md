@@ -4,22 +4,31 @@ Last updated: 2026-09-04
 
 Completed implementation history is available in Git and is intentionally not
 duplicated here. Current architecture is documented in `DESIGN.md`; the latest
-mode 0/1/3/4 JIT execution results are in `VALIDATION.md`.
+mode 0/1/2/3/4 JIT execution results are in `VALIDATION.md`.
 
 ## Current Baseline
 
 - Spinlock JIT delegation supports contention, nested A -> B -> C execution,
   out-of-order unlock, independent inner queues, and transactional abort/retry.
+- Mode 2 uses a distinct allowlisted hostcall exit for `ktime_get`, executes the
+  typed native service while retaining the outer spinlock, and resumes the same
+  JIT artifact after CALL. Artifact and runtime counters prove this path.
 - Mutex JIT delegation is opt-in through `mutex_jit=1`. Repeated mode 3 and
   nested mode 4 A/B proxy execution pass the recovery-only acceptance suite.
 - The default integration suite keeps `mutex_jit=0` for modes 3-5 and validates
   only the mutex queue, promotion, handoff, and fallback protocol.
-- No mode 0/1/3/4 acceptance failure is currently known. Any code change to the
+- No mode 0/1/2/3/4 acceptance failure is currently known. Any code change to the
   translation, frame, queue, or resume paths must rerun the acceptance contract
   in `VALIDATION.md`.
 
 ## Correctness And Coverage
 
+- [ ] Implement effective translated-memory address validation, preserve live
+      EFLAGS around it, and assign `seg_error` a deterministic exit reason.
+- [ ] Define and test any required cross-exit EFLAGS, FS/GS, and SIMD/FPU ABI
+      before translating critical sections that depend on those states.
+- [ ] Initialize `Stack_INST_CNT` from R11 or remove `args[1]` from the wrapper
+      output contract; it is currently an undefined reserved value.
 - [ ] Expand mode 5 API-in-mutex-JIT coverage beyond the current bounded
       recovery test, including repeated execution and exact resume accounting.
 - [ ] Add kernel integration pressure tests for translation-table and executable
@@ -35,6 +44,10 @@ mode 0/1/3/4 JIT execution results are in `VALIDATION.md`.
 
 ## Features
 
+- [ ] Add a fixed-signature, bounded logging hostcall backed by a per-CPU buffer;
+      do not expose raw variadic `printk` or arbitrary format strings.
+- [ ] Define exactly-once behavior for side-effecting hostcalls before adding
+      any service that cannot safely be repeated after a later JIT abort.
 - [ ] Enable and validate `NUMA_AWARE` combining on a multi-socket guest.
 - [ ] Implement the NUMA-local mutex queue path; its code is currently disabled
       behind `NUMA_AWARE`.
@@ -47,6 +60,8 @@ mode 0/1/3/4 JIT execution results are in `VALIDATION.md`.
 
 ## Performance And Portability
 
+- [ ] Measure hostcall exit/resume overhead and establish when native service
+      execution is cheaper than translating a callee into the sandbox.
 - [ ] Measure adaptive batch sizing against the fixed batch limits of 1024.
 - [ ] Quantify mode 3/4 delegation benefit and overhead against native mutexes;
       the current tests are correctness tests, not performance evidence.

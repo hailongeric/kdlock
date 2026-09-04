@@ -20,8 +20,11 @@
 #define KD_EXE_ERROR_INST  3   /* unsupported instruction encountered       */
 #define KD_EXE_INST_LIMIT  4   /* instruction count limit exceeded          */
 
+/* Runtime-only sandbox exit; never published as kd_exe_info.status_code. */
+#define KD_EXE_HOSTCALL    5   /* sandbox requests an allowlisted service   */
+
 struct kd_exe_info {
-	int status_code;           /* one of KD_EXE_* above                    */
+	int status_code;           /* KD_EXE_UNUSED through KD_EXE_INST_LIMIT  */
 	int pid;                   /* thread id that triggered this entry      */
 	int tgid;                  /* process id (thread-group leader)         */
 	unsigned long RIP;         /* kernel instruction pointer of CS entry   */

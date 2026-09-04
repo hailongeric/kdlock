@@ -59,14 +59,22 @@ def make_jump_table(jump_table):
         ret_str += '\n'
     return ret_str
 
-def make_callee_table(callee_list, keep_call_stack=None):
+def make_callee_table(callee_list, keep_call_stack=None, hostcalls=None):
     keep_call_stack = keep_call_stack or set()
+    hostcalls = hostcalls or {}
     ret_str = ''
-    for offset in callee_list:
+    for offset in sorted(callee_list):
+        service = hostcalls.get(offset)
+        if service:
+            ret_str += '/* KD_HOSTCALL id=%d symbol=%s */\n' % (
+                service.service_id, service.symbol
+            )
         ret_str += 'loc_' + hex(offset)[2:] +':\n'
         ret_str += make_inst('MOVABS', ['R14', hex(offset)])
-        ret_str += make_inst('MOV', ['Stack_IJ', '0x1'])
-        if offset not in keep_call_stack:
+        ret_str += make_inst(
+            'MOV', ['Stack_IJ', '0x5' if service else '0x1']
+        )
+        if offset not in keep_call_stack and not service:
             ret_str += make_inst('LEA', ['R13', 'QWORD PTR [R13 + 0x8]'])
         ret_str += make_inst('MOV', ['Stack_RSP', 'R13'])
         ret_str += make_inst('JMP', ['exit'] )

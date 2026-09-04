@@ -1,14 +1,15 @@
 /*
- * test_jit_call_policy.c — userspace model for mutex JIT call-miss policy.
+ * test_jit_call_policy.c — userspace model for JIT call and hostcall policy.
  *
  * The real kernel path handles these decisions in kd_exe_on_call_hl_entry().
  * This test keeps the high-risk rule explicit: only the outer mutex unlock
- * completes a delegated critical section; known safe calls may advance to the
- * saved return address; unknown calls must not leave a simulated CALL frame on
- * the waiter stack when falling back.
+ * completes a delegated critical section; allowlisted hostcalls advance to the
+ * saved return address through a separate exit path; unknown calls must not
+ * leave a simulated CALL frame on the waiter stack when falling back.
  */
 #include "mock_kernel.h"
 #include "test_harness.h"
+#include "../../include/exe_info.h"
 
 #define KD_EXE_RUN_ERROR 3
 #define KD_EXE_RUN_TO_UNLOCK 4
@@ -18,7 +19,6 @@ enum call_kind {
 	CALL_UNKNOWN,
 	CALL_MUTEX_LOCK,
 	CALL_MUTEX_UNLOCK,
-	CALL_KTIME_GET,
 };
 
 struct regs_model {
@@ -43,8 +43,6 @@ static enum call_kind call_kind(unsigned long ip)
 		return CALL_MUTEX_LOCK;
 	if (ip == mutex_unlock_addr)
 		return CALL_MUTEX_UNLOCK;
-	if (ip == ktime_get_addr)
-		return CALL_KTIME_GET;
 	return CALL_UNKNOWN;
 }
 
@@ -77,12 +75,17 @@ static int handle_known_call(struct regs_model *regs)
 			return 0;
 		inner_locked = 0;
 		return advance_after_known_call(regs);
-	case CALL_KTIME_GET:
-		regs->ax = 1234;
-		return advance_after_known_call(regs);
 	default:
 		return 0;
 	}
+}
+
+static int dispatch_hostcall(struct regs_model *regs)
+{
+	if (regs->ip != ktime_get_addr)
+		return KD_EXE_RUN_ERROR;
+	regs->ax = 1234;
+	return advance_after_known_call(regs);
 }
 
 static int simulate_call_miss(struct regs_model *regs)
@@ -100,18 +103,18 @@ static int simulate_call_miss(struct regs_model *regs)
 	return KD_EXE_RUN_ERROR;
 }
 
-static int simulate_known_continuation_loop(struct regs_model *regs)
+static int simulate_hostcall_continuation_loop(struct regs_model *regs)
 {
-	int continuation_count = 0;
+	int hostcall_count = 0;
 	int ret;
 
 	for (;;) {
-		if (continuation_count >= MAX_KNOWN_CONTINUATIONS)
+		if (hostcall_count >= MAX_KNOWN_CONTINUATIONS)
 			return KD_EXE_RUN_ERROR;
-		ret = handle_known_call(regs);
+		ret = dispatch_hostcall(regs);
 		if (ret != 1)
 			return ret;
-		continuation_count++;
+		hostcall_count++;
 	}
 }
 
@@ -168,7 +171,7 @@ TEST(contended_inner_lock_resumes_after_remote_unlock) {
 	inner_remote = false;
 }
 
-TEST(api_call_continues) {
+TEST(api_hostcall_continues) {
 	struct regs_model regs = {
 		.ip = ktime_get_addr,
 		.di = 0,
@@ -176,10 +179,22 @@ TEST(api_call_continues) {
 	};
 	fake_stack[1] = 0x6666UL;
 
-	ASSERT_EQ(simulate_call_miss(&regs), 0);
+	ASSERT_NE(KD_EXE_HOSTCALL, KD_EXE_CALL_MISS);
+	ASSERT_EQ(dispatch_hostcall(&regs), 1);
 	ASSERT_EQ(regs.ip, 0x6666UL);
 	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[2]);
 	ASSERT_EQ(regs.ax, 1234UL);
+}
+
+TEST(unknown_hostcall_is_rejected_without_stack_change) {
+	struct regs_model regs = {
+		.ip = 0xdead,
+		.di = 0,
+		.sp = (unsigned long)&fake_stack[2],
+	};
+
+	ASSERT_EQ(dispatch_hostcall(&regs), KD_EXE_RUN_ERROR);
+	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[2]);
 }
 
 TEST(unknown_call_fallback_unwinds_stack) {
@@ -193,7 +208,7 @@ TEST(unknown_call_fallback_unwinds_stack) {
 	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[3]);
 }
 
-TEST(known_continuation_is_bounded) {
+TEST(hostcall_continuation_is_bounded) {
 	struct regs_model regs = {
 		.ip = ktime_get_addr,
 		.di = 0,
@@ -204,7 +219,7 @@ TEST(known_continuation_is_bounded) {
 	for (i = 0; i < MAX_KNOWN_CONTINUATIONS + 1; i++)
 		fake_stack[i] = ktime_get_addr;
 
-	ASSERT_EQ(simulate_known_continuation_loop(&regs), KD_EXE_RUN_ERROR);
+	ASSERT_EQ(simulate_hostcall_continuation_loop(&regs), KD_EXE_RUN_ERROR);
 	ASSERT_EQ(regs.sp,
 		  (unsigned long)&fake_stack[MAX_KNOWN_CONTINUATIONS]);
 }
@@ -215,8 +230,9 @@ int main(void)
 	RUN_TEST(outer_unlock_completes);
 	RUN_TEST(inner_lock_and_unlock_continue);
 	RUN_TEST(contended_inner_lock_resumes_after_remote_unlock);
-	RUN_TEST(api_call_continues);
+	RUN_TEST(api_hostcall_continues);
+	RUN_TEST(unknown_hostcall_is_rejected_without_stack_change);
 	RUN_TEST(unknown_call_fallback_unwinds_stack);
-	RUN_TEST(known_continuation_is_bounded);
+	RUN_TEST(hostcall_continuation_is_bounded);
 	REPORT();
 }

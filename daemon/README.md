@@ -29,3 +29,8 @@ For each entry it copies that template, updates `asm/callee_table.txt` or
 `asm/ij_table.txt` when the kernel reports a missing call or indirect jump,
 invokes the translator, and writes the generated `asm/jit.bin` back through
 `/dev/kd_dev`.
+
+Allowlisted JIT hostcalls are not translation misses. The translator emits a
+dedicated hostcall exit stub, and the kernel executes and resumes that service
+without changing the entry status or appending the target to
+`asm/callee_table.txt`.

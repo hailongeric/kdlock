@@ -11,6 +11,7 @@ run_spinlock_mode() {
     local expected_artifacts expected_locks expected_counter actual_counter
     local artifact_output
     local diag_count nested_diag_count
+    local jit_writes_before=0 jit_writes_after=0
     local -a asm_dirs
     local exec_threads=8
     local exec_loops=1
@@ -154,6 +155,13 @@ run_spinlock_mode() {
             unload_modules
             return 1
         }
+        if [ "$mode" -eq 2 ]; then
+            check_jit_hostcall_artifact "$asm_dir" "ktime_get" || {
+                stop_daemon
+                unload_modules
+                return 1
+            }
+        fi
     done
     check_dmesg_has "write to kernel" \
         "mode $mode ($mode_name) did not write JIT code back" || {
@@ -161,6 +169,9 @@ run_spinlock_mode() {
         unload_modules
         return 1
     }
+    if [ "$mode" -eq 2 ]; then
+        jit_writes_before="$(dmesg | grep -c "write to kernel" || true)"
+    fi
 
     if [ "$abort_inject" -eq 1 ]; then
         info "  Injecting one failure after nested B acquisition..."
@@ -183,6 +194,17 @@ run_spinlock_mode() {
         return 1
     }
     sleep 2
+
+    if [ "$mode" -eq 2 ]; then
+        jit_writes_after="$(dmesg | grep -c "write to kernel" || true)"
+        if [ "$jit_writes_after" != "$jit_writes_before" ]; then
+            fail "$TEST_NAME" \
+                "mode 2 hostcall triggered runtime JIT recompilation"
+            stop_daemon
+            unload_modules
+            return 1
+        fi
+    fi
 
     stop_daemon
     unload_modules
@@ -316,6 +338,52 @@ run_spinlock_mode() {
         fail "$TEST_NAME" \
             "mode $mode ($mode_name) counter mismatch: expected $expected_counter, got ${actual_counter:-missing}"
         return 1
+    fi
+
+    if [ "$mode" -eq 2 ]; then
+        local hostcall_stats hostcall_exits hostcall_executed
+        local hostcall_resumed hostcall_rejected hostcall_failed hostcall_limit
+        local api_observations
+
+        hostcall_stats="$(dmesg | sed -n '/kd_hostcall stats:/p' | tail -n 1)"
+        hostcall_exits="$(printf '%s\n' "$hostcall_stats" | sed -n \
+            's/.*exits=\([0-9][0-9]*\).*/\1/p')"
+        hostcall_executed="$(printf '%s\n' "$hostcall_stats" | sed -n \
+            's/.*executed=\([0-9][0-9]*\).*/\1/p')"
+        hostcall_resumed="$(printf '%s\n' "$hostcall_stats" | sed -n \
+            's/.*resumed=\([0-9][0-9]*\).*/\1/p')"
+        hostcall_rejected="$(printf '%s\n' "$hostcall_stats" | sed -n \
+            's/.*rejected=\([0-9][0-9]*\).*/\1/p')"
+        hostcall_failed="$(printf '%s\n' "$hostcall_stats" | sed -n \
+            's/.*failed=\([0-9][0-9]*\).*/\1/p')"
+        hostcall_limit="$(printf '%s\n' "$hostcall_stats" | sed -n \
+            's/.*limit=\([0-9][0-9]*\).*/\1/p')"
+
+        if [ -z "$hostcall_exits" ] || [ "$hostcall_exits" -eq 0 ] ||
+                [ "$hostcall_executed" != "$hostcall_exits" ] ||
+                [ "$hostcall_resumed" != "$hostcall_exits" ]; then
+            fail "$TEST_NAME" \
+                "mode 2 did not complete every hostcall exit/execute/resume cycle"
+            printf '%s\n' "$hostcall_stats"
+            return 1
+        fi
+        if [ "$hostcall_rejected" != "0" ] ||
+                [ "$hostcall_failed" != "0" ] ||
+                [ "$hostcall_limit" != "0" ]; then
+            fail "$TEST_NAME" "mode 2 hostcall diagnostics reported a failure"
+            printf '%s\n' "$hostcall_stats"
+            return 1
+        fi
+
+        api_observations="$(dmesg | sed -n \
+            's/.*mode2 api observations: \([0-9][0-9]*\).*/\1/p' |
+            tail -n 1)"
+        if [ "$api_observations" != "$expected_counter" ]; then
+            fail "$TEST_NAME" \
+                "mode 2 post-hostcall observation mismatch: expected $expected_counter, got ${api_observations:-missing}"
+            return 1
+        fi
+        info "  mode 2 hostcalls: exits=$hostcall_exits, all resumed"
     fi
 
     info "  mode $mode: delegation and translated execution verified"

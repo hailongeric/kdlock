@@ -35,7 +35,8 @@ def read_kernel_addr_data(addr, size):
                     return f.read(size)
     return None
 
-def read(pid, entry, jump_table):
+def read(pid, entry, jump_table, excluded_callees=None):
+    excluded_callees = excluded_callees or set()
     try:
         ij_file = open('./asm/ij_table.txt', 'r', 4096).read()
     except Exception as e:
@@ -60,7 +61,8 @@ def read(pid, entry, jump_table):
     except Exception as e:
         calleefile = ''
         print('No callee_table')
-    callees = [int(x, 16) for x in calleefile.splitlines()]
+    callees = [int(x, 16) for x in calleefile.splitlines()
+               if int(x, 16) not in excluded_callees]
     targets += callees
 
     targets = list(set(targets))

@@ -25,9 +25,14 @@ on the host checkout.
   vs guest boundaries, safety rules, validation order, and crash handling.
 - `docs/DESIGN.md`: full architecture and protocol design for hooks,
   delegation, sandbox translation, JIT execution, and known limitations.
+- `docs/JIT_REGISTER_ABI.md`: current x86-64 JIT entry/exit ABI, wrapper stack,
+  physical/virtual register mapping, call frames, hostcall continuations, and
+  waiter resume rules.
 - `docs/COMPONENTS.md`: this file, a file-by-file component and test map.
 - `docs/VALIDATION.md`: canonical latest end-to-end test procedure, evidence,
   and mode-specific interpretation.
+- `docs/MODE2_HOSTCALL_IMPLEMENTATION.md`: mode 2 hostcall scope, ABI, safety
+  invariants, implementation sequence, and acceptance checklist.
 - `docs/TODO.md`: unfinished features and known gaps only.
 
 ## Kernel Module
@@ -58,8 +63,9 @@ installs hooks into the patched Linux kernel and implements delegation.
   a virtual waiter with a stack-owned context so a B combiner can proxy through
   `mutex_unlock(B)` and return the post-B continuation to A.
 - `kernel_module/exe.c`: JIT execution engine. Manages `kd_exe_info` entries,
-  executable code-block pool, endpoint resolution, write-back state, miss
-  handling, and sandbox invocation through the assembly wrapper.
+  executable code-block pool, endpoint resolution, allowlisted native hostcall
+  dispatch/resume and diagnostics, write-back state, miss handling, and sandbox
+  invocation through the assembly wrapper.
 - `kernel_module/sys.c`: `/dev/kd_dev` character device for daemon/kernel
   communication. Exposes pending translation requests and receives generated
   `jit.bin` payloads.
@@ -84,6 +90,9 @@ daemon code, tests, and generated sandbox assembly.
 - `include/exe.h`: JIT execution constants, status codes, and `kd_exe_info`
   declarations shared with kernel code.
 - `include/exe_info.h`: daemon/kernel wire-format structure for `/dev/kd_dev`.
+- `include/kd_hostcall.h`: stable hostcall IDs and service safety flags.
+- `include/kd_hostcalls.def`: declarative hostcall manifest shared by the kernel
+  registry and Python translator.
 - `include/kd_futex.h`: futex delegation declarations.
 - `include/kd_int3.h`: hot-lock/int3 declarations.
 - `include/kd_lock.h`: lock hook and fallback declarations.
@@ -120,15 +129,18 @@ The `disassem/` directory contains the Python/miasm translation pipeline that
 reads kernel text and emits sandbox assembly.
 
 - `disassem/disassem.py`: main translation driver. Reads kernel bytes for an
-  entry RIP, builds the control-flow view, invokes translation passes, and
-  emits build artifacts.
+  entry RIP, classifies resumable control calls and hostcalls, builds the
+  control-flow view, invokes translation passes, and emits build artifacts.
+- `disassem/hostcall.py`: parses the shared hostcall manifest and resolves the
+  service addresses available in the running kernel.
 - `disassem/memread.py`: helpers for reading kernel text, normally through
-  `/proc/kcore`.
+  `/proc/kcore`; excludes hostcall targets from callee-table expansion.
 - `disassem/translation.py`: core instruction translation logic from kernel
   instructions to sandbox-safe assembly.
 - `disassem/normal.py`: handling for ordinary instructions and control-flow
   cases.
-- `disassem/indirect_jump.py`: indirect-jump table and miss handling support.
+- `disassem/indirect_jump.py`: indirect-jump tables plus distinct hostcall and
+  ordinary call-miss stub generation.
 - `disassem/special_inst.py`: translation support for special instructions
   that need custom lowering.
 - `disassem/conflict.py`: register/memory conflict handling for generated
@@ -147,8 +159,10 @@ module used by benchmarks and tests.
 - `klock_module/klock_module.c`: registers `/dev/lock_dev` and implements ten
   benchmark modes (0-9): the original spin/mutex modes plus deep spin nesting,
   OOO unlock, deterministic independent A/B queues, and nested-JIT abort
-  recovery. Mode 4 exposes seven synchronized mutex roles that independently
-  order A and B queues. Prints the final counter on unload.
+  recovery. Mode 2 consumes the native time-service result after its CALL and
+  reports an exact observation count. Mode 4 exposes seven synchronized mutex
+  roles that independently order A and B queues. Prints final counters on
+  unload.
 
 ## Benchmark
 
@@ -168,8 +182,8 @@ Integration tests are shell scripts under `tests/`. They load real kernel
 modules and must run inside the guest with timeouts.
 
 - `tests/common.sh`: shared test helpers for building, module load/unload,
-  daemon lifecycle, dmesg assertions, JIT artifact/runtime-entry matching, and
-  stat parsing.
+  daemon lifecycle, dmesg assertions, JIT artifact/runtime-entry matching,
+  hostcall stub validation, and stat parsing.
 - `tests/run_all.sh`: default low-risk integration suite. Runs tests 01-06 and
   intentionally excludes opt-in `mutex_jit=1` tests.
 - `tests/snapshot_test.sh`: helper for running a selected mode with QEMU
@@ -185,6 +199,9 @@ modules and must run inside the guest with timeouts.
 - `tests/test_04_spinlock.sh`: validates spinlock modes 0/1/2/6/7/8 by default,
   including complete JIT artifacts, write-back, real translated execution,
   exact counters, per-lock diagnostics, zero waiter leaks, and clean dmesg.
+  Mode 2 additionally requires a named hostcall stub, no service callee
+  translation or runtime recompilation, matching exit/execute/resume counts,
+  and exact post-CALL API observations.
   Recovery-only selectors cover mode 9 failure kinds and mode 8 queue-owner
   abort cleanup.
 - `tests/test_05_mutex.sh`: validates mutex modes 3-5 with `mutex_jit=0`,
@@ -210,10 +227,11 @@ modules and must run inside the guest with timeouts.
   protocol failures or leaks. Mode 5 retains bounded API-in-CS coverage; the
   script remains outside `tests/run_all.sh`.
 - `tests/test_09_jit_execution_modes.sh`: recovery-only acceptance suite for
-  modes 0/1/3/4. Mode 0/1 reuse the strict spinlock execution checks; mode 3
-  uses the repeated/stress mutex JIT test; mode 4 uses the nested-mutex JIT test.
-  Every selected mode must match runtime execution IPs to installed workspaces,
-  not only generate or install an artifact.
+  modes 0/1/2/3/4. Modes 0/1/2 reuse the strict spinlock execution checks, with
+  mode 2 adding hostcall proof; mode 3 uses the repeated/stress mutex JIT test;
+  mode 4 uses the nested-mutex JIT test. Every selected mode must match runtime
+  execution IPs to installed workspaces, not only generate or install an
+  artifact.
 
 ## Unit Tests
 
@@ -239,8 +257,11 @@ logic. They do not load kernel modules.
 - `tests/unit/test_exec_frame.c`: validates nested frame parent/LIFO rules,
   lock-stack/OOO invariants, exact completion, capacity failure, repeated-lock
   rejection, and reverse-order abort cleanup.
-- `tests/unit/test_jit_call_policy.c`: validates outer/inner known-call
-  continuations, unknown-call stack unwind, and the continuation bound.
+- `tests/unit/test_jit_call_policy.c`: validates outer/inner control-call
+  continuations, allowlisted hostcall resume, forged hostcall rejection,
+  unknown-call stack unwind, and the continuation bound.
+- `tests/unit/test_hostcall_codegen.py`: verifies manifest loading and that
+  generated hostcall/call-miss stubs use distinct exit and virtual-stack rules.
 - `tests/unit/test_spin_node_count.c`: validates count-neutral native fallback,
   nested node-exhaustion failure, and capacity reuse after release.
 

@@ -6,7 +6,7 @@ from miasm.analysis.binary import Container
 from miasm.core.bin_stream import bin_stream_str
 from miasm.expression.expression import ExprMem, ExprId, ExprInt, ExprLoc
 from miasm.arch.x86.arch import mn_x86
-import memread, translation
+import hostcall, memread, translation
 from assist import make_inst
 
 import indirect_jump, conflict, assist, normal, solve_bug
@@ -60,7 +60,7 @@ def add_lines_after_specific_content(file_path, target_address):
         file.writelines(new_lines)
 
 
-def find_known_call_continuations(block_dict, db_dict, keep_call_stack):
+def find_resumable_call_continuations(block_dict, db_dict, keep_call_stack):
     continuations = set()
     for block_start, block in block_dict.items():
         db = db_dict[block]
@@ -107,8 +107,16 @@ def dis_assem(PID, entry, need_count, debug=0):
             f_line = fp.readline()
         fp.close()
 
+    resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
+    hostcall_targets = set(resolved_hostcalls)
+    print("Hostcalls:", [
+        "%s@%s" % (spec.symbol, hex(address))
+        for address, spec in sorted(resolved_hostcalls.items())
+    ])
+
     jump_table = dict()
-    rets = memread.read(PID, entry, jump_table)  # [chunk, start, targets]
+    rets = memread.read(PID, entry, jump_table,
+                        excluded_callees=hostcall_targets)
     cfgs = []
     raw_spin_lock = get_kernel_symbol("_raw_spin_lock",
                                       0xffffffff81e90a20)
@@ -116,18 +124,15 @@ def dis_assem(PID, entry, need_count, debug=0):
                                         0xffffffff81e90b30)
     mutex_lock = get_kernel_symbol("mutex_lock", 0xffffffff81e8b570)
     mutex_unlock = get_kernel_symbol("mutex_unlock", 0xffffffff81e8a040)
-    ktime_get = get_kernel_symbol("ktime_get", 0)
-    ktime_get_ns = get_kernel_symbol("ktime_get_ns", 0)
-    keep_call_stack = {
+    control_call_targets = {
         addr for addr in (
             raw_spin_lock,
             raw_spin_unlock,
             mutex_lock,
             mutex_unlock,
-            ktime_get,
-            ktime_get_ns,
         ) if addr
     }
+    keep_call_stack = control_call_targets | hostcall_targets
 
     ordering_bug_list = [0x2CE40, 0x2CE50, 0x4FFD0, 0x738D0, 0x67B0]
 
@@ -168,7 +173,7 @@ def dis_assem(PID, entry, need_count, debug=0):
                 cfg_blocks[block_start] = block
                 cfg_dbs[block] = asmcfg.loc_db
 
-            continuation_targets = find_known_call_continuations(
+            continuation_targets = find_resumable_call_continuations(
                 cfg_blocks, cfg_dbs, keep_call_stack
             )
             existing_targets = set(cfg_blocks)
@@ -196,7 +201,7 @@ def dis_assem(PID, entry, need_count, debug=0):
             db_dict[block] = asmcfg.loc_db
 
     missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
-    continuation_targets = find_known_call_continuations(
+    continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
     )
     continuation_labels = continuation_targets - set(block_dict)
@@ -345,8 +350,9 @@ def dis_assem(PID, entry, need_count, debug=0):
     if need_count:
         print("---------Total count : %d ------------" % total_count)
     f.write(indirect_jump.make_jump_table(jump_table))
-    f.write(indirect_jump.make_callee_table(missing_callees,
-                                            keep_call_stack))
+    f.write(indirect_jump.make_callee_table(
+        missing_callees, keep_call_stack, resolved_hostcalls
+    ))
 
     f.close()
 

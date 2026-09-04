@@ -10,6 +10,7 @@
  * (see sys.c).  At runtime the sandbox may report:
  *   - KD_EXE_CALL_MISS:  untranslated call → daemon extends tables, recompiles
  *   - KD_EXE_IJ_MISS:    untranslated indirect jump → same
+ *   - KD_EXE_HOSTCALL:    allowlisted service → native dispatch, then JIT resume
  *   - KD_EXE_NORMAL:     futex syscall needs handling (wake/wait logic)
  *   - KD_EXE_INST_LIMIT: instruction count exhausted
  *
@@ -54,6 +55,7 @@
 #include "utils.h"
 #include "kd_lock.h"
 #include "kd_spinlock.h"
+#include "kd_hostcall.h"
 
 #define invalid_addr_file_path "/tmp/kd_iva"
 
@@ -67,6 +69,7 @@ const int KD_NUM_PG = 160;
  */
 #define KD_CODE_BLOCK_POOL 64
 #define KD_EXE_HL_MAX_CONTINUATIONS 16
+#define KD_EXE_HL_MAX_HOSTCALLS 16
 
 /* One-shot high-level JIT fault injection for nested recovery tests. */
 static int kd_jit_hl_fault_after_known_call;
@@ -116,8 +119,67 @@ static unsigned long raw_spin_lock_addr;
 static unsigned long raw_spin_unlock_addr;
 static unsigned long mutex_lock_addr;
 static unsigned long mutex_unlock_addr;
-static unsigned long ktime_get_addr;
-static unsigned long ktime_get_ns_addr;
+
+struct kd_hostcall_desc {
+	enum kd_hostcall_id id;
+	const char *symbol;
+	unsigned long addr;
+	unsigned int flags;
+	int (*invoke)(struct pt_regs *regs);
+};
+
+static atomic64_t kd_hostcall_exits;
+static atomic64_t kd_hostcall_executed;
+static atomic64_t kd_hostcall_resumed;
+static atomic64_t kd_hostcall_rejected;
+static atomic64_t kd_hostcall_failed;
+static atomic64_t kd_hostcall_limit;
+
+static int kd_hostcall_invoke_ktime_get(struct pt_regs *regs)
+{
+	regs->ax = (unsigned long)ktime_to_ns(ktime_get());
+	return 0;
+}
+
+static int kd_hostcall_invoke_ktime_get_ns(struct pt_regs *regs)
+{
+	regs->ax = (unsigned long)ktime_get_ns();
+	return 0;
+}
+
+static struct kd_hostcall_desc kd_hostcalls[] = {
+#define KD_HOSTCALL(name, service_id, service_symbol, service_flags) \
+	{ KD_HOSTCALL_##name, #service_symbol, 0, service_flags, \
+	  kd_hostcall_invoke_##service_symbol },
+#include "kd_hostcalls.def"
+#undef KD_HOSTCALL
+};
+
+static const struct kd_hostcall_desc *kd_hostcall_lookup(unsigned long addr)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(kd_hostcalls); i++)
+		if (kd_hostcalls[i].addr && kd_hostcalls[i].addr == addr)
+			return &kd_hostcalls[i];
+	return NULL;
+}
+
+static int kd_hostcall_dispatch(struct pt_regs *regs)
+{
+	const unsigned int required_flags =
+		KD_HOSTCALL_F_ATOMIC_SAFE |
+		KD_HOSTCALL_F_NO_TASK_CONTEXT |
+		KD_HOSTCALL_F_RETRY_SAFE;
+	const struct kd_hostcall_desc *service;
+
+	service = kd_hostcall_lookup(regs->ip);
+	if (!service)
+		return -ENOENT;
+	if ((service->flags & required_flags) != required_flags)
+		return -EPERM;
+	return service->invoke(regs);
+}
 
 struct kd_exe_info* kd_exes;
 struct kd_delegate_numanode** kd_numanodes;
@@ -219,8 +281,6 @@ void kd_exe_init(void) {
 		end_point_count++;
 	mutex_lock_addr = kallsyms_lookup_name("mutex_lock");
 	mutex_unlock_addr = kallsyms_lookup_name("mutex_unlock");
-	ktime_get_addr = kallsyms_lookup_name("ktime_get");
-	ktime_get_ns_addr = kallsyms_lookup_name("ktime_get_ns");
 	end_point[end_point_count] = mutex_unlock_addr;
 	if (mutex_unlock_addr)
 		end_point_count++;
@@ -228,10 +288,23 @@ void kd_exe_init(void) {
 		KD_PR_INFO("end_point[%d] = %lx", i, end_point[i]);
 	if (mutex_lock_addr)
 		KD_PR_INFO("mutex_lock addr = %lx", mutex_lock_addr);
-	if (ktime_get_addr)
-		KD_PR_INFO("ktime_get addr = %lx", ktime_get_addr);
-	if (ktime_get_ns_addr)
-		KD_PR_INFO("ktime_get_ns addr = %lx", ktime_get_ns_addr);
+
+	atomic64_set(&kd_hostcall_exits, 0);
+	atomic64_set(&kd_hostcall_executed, 0);
+	atomic64_set(&kd_hostcall_resumed, 0);
+	atomic64_set(&kd_hostcall_rejected, 0);
+	atomic64_set(&kd_hostcall_failed, 0);
+	atomic64_set(&kd_hostcall_limit, 0);
+	for (i = 0; i < ARRAY_SIZE(kd_hostcalls); i++) {
+		kd_hostcalls[i].addr = kallsyms_lookup_name(kd_hostcalls[i].symbol);
+		if (kd_hostcalls[i].addr)
+			KD_PR_INFO("hostcall service id=%u symbol=%s addr=%lx flags=%x\n",
+				   kd_hostcalls[i].id, kd_hostcalls[i].symbol,
+				   kd_hostcalls[i].addr, kd_hostcalls[i].flags);
+		else
+			KD_PR_INFO("hostcall service unavailable id=%u symbol=%s\n",
+				   kd_hostcalls[i].id, kd_hostcalls[i].symbol);
+	}
 
 	kd_exes = vzalloc(sizeof(struct kd_exe_info) * KD_MAX_EXE);
 	for (i = 0; i < KD_MAX_EXE; i++) {
@@ -322,6 +395,13 @@ void kd_exe_exit(void) {
 
 	KD_PR_INFO("normal_wake_cnt: %d kd_d_lock: %d kd_com: %d kd_wake_state: %d", \
 		atomic_read(&normal_wake_cnt), atomic_read(&kd_d_lock), atomic_read(&kd_com), atomic_read(&kd_wake_state));
+	KD_PR_INFO("kd_hostcall stats: exits=%lld executed=%lld resumed=%lld rejected=%lld failed=%lld limit=%lld\n",
+		   (long long)atomic64_read(&kd_hostcall_exits),
+		   (long long)atomic64_read(&kd_hostcall_executed),
+		   (long long)atomic64_read(&kd_hostcall_resumed),
+		   (long long)atomic64_read(&kd_hostcall_rejected),
+		   (long long)atomic64_read(&kd_hostcall_failed),
+		   (long long)atomic64_read(&kd_hostcall_limit));
 
 	/* code_blocks are allocated from the pre-allocated pool, freed below */
 	vfree(kd_exes);
@@ -448,16 +528,6 @@ static int handle_known_call(struct pt_regs *regs,
 		ret = kd_spin_jit_nested_unlock_ctx((raw_spinlock_t *)regs->di,
 						    frame);
 		return ret ? ret : advance_and_save_continuation(frame, regs);
-	}
-
-	if (regs->ip == ktime_get_addr) {
-		regs->ax = ktime_to_ns(ktime_get());
-		return advance_and_save_continuation(frame, regs);
-	}
-
-	if (regs->ip == ktime_get_ns_addr) {
-		regs->ax = ktime_get_ns();
-		return advance_and_save_continuation(frame, regs);
 	}
 
 	if (!mutex_lock_addr || !mutex_unlock_addr)
@@ -705,6 +775,11 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 				r->ret = -4;
 			}
 		}
+		else if (args[0] == KD_EXE_HOSTCALL) {
+			KD_PR_INFO("hostcall is unsupported in low-level JIT path: target=%lx\n",
+				   regs->ip);
+			r->ret = -4;
+		}
 		else if (args[0] == KD_EXE_CALL_MISS /*&& exe->success_cnt >= 0*/) {  // missing call
 			exe->tgt_addr = regs->ip;
 			// exe->fail_cnt++;
@@ -760,7 +835,9 @@ int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
 	int ret_flag;
 	int call_ret;
 	int continuation_count = 0;
+	int hostcall_count = 0;
 	int fault_kind;
+	bool resume_after_hostcall = false;
 
 
 	exe = kd_get_exe(0, entry_ip);  /* rip-only lookup, same code for all */
@@ -811,7 +888,10 @@ int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
 		}
 	} else {
 		virt_ptr(regs, args);
+		if (resume_after_hostcall)
+			atomic64_inc(&kd_hostcall_resumed);
 	}
+	resume_after_hostcall = false;
 
 	// regs->cx = regs->ip;
 	// regs->r11 = regs->flags;
@@ -826,6 +906,45 @@ int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
 	if (args[0] == KD_EXE_NORMAL) {  // syscall
 		KD_PR_INFO( "illegal syscall %ld %lx\n", regs->ax, regs->ip);
 		ret_flag = KD_EXE_RUN_ERROR;
+	}
+	else if (args[0] == KD_EXE_HOSTCALL) {
+		atomic64_inc(&kd_hostcall_exits);
+		if (hostcall_count >= KD_EXE_HL_MAX_HOSTCALLS ||
+		    continuation_count >= KD_EXE_HL_MAX_CONTINUATIONS) {
+			atomic64_inc(&kd_hostcall_limit);
+			KD_PR_INFO("JIT hostcall limit hit: entry=%lx target=%lx limit=%d\n",
+				   entry_ip, regs->ip, KD_EXE_HL_MAX_HOSTCALLS);
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
+
+		call_ret = kd_hostcall_dispatch(regs);
+		if (call_ret) {
+			if (call_ret == -ENOENT || call_ret == -EPERM)
+				atomic64_inc(&kd_hostcall_rejected);
+			else
+				atomic64_inc(&kd_hostcall_failed);
+			KD_PR_INFO("JIT hostcall rejected: entry=%lx target=%lx ret=%d\n",
+				   entry_ip, regs->ip, call_ret);
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
+		atomic64_inc(&kd_hostcall_executed);
+
+		call_ret = advance_and_save_continuation(
+			kd_exec_current_frame(), regs);
+		if (call_ret <= 0) {
+			atomic64_inc(&kd_hostcall_failed);
+			KD_PR_INFO("JIT hostcall continuation failed: entry=%lx target=%lx ret=%d\n",
+				   entry_ip, regs->ip, call_ret);
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
+
+		hostcall_count++;
+		continuation_count++;
+		resume_after_hostcall = true;
+		continue;
 	}
 	else if (args[0] == KD_EXE_CALL_MISS /*&& exe->success_cnt >= 0*/) {  // missing call
 
