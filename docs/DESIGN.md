@@ -595,8 +595,11 @@ handler writes its result to `regs->ax`, calls
 outer lock and current `kd_exec_frame` remain active across this boundary.
 
 Each critical section is limited to 16 hostcalls. Module-exit diagnostics report
-`exits`, `executed`, `resumed`, `rejected`, `failed`, and `limit`. Mode 2 requires
-the first three to be equal and nonzero, and the final three to be zero.
+`exits`, `executed`, `resumed`, `rejected`, `failed`, and `limit`. Modes 2 and 5
+require the first three to be equal and nonzero, and the final three to be zero.
+Mode 5 additionally requires those three counts to equal both mutex
+`jit_success` and `jit_resume`, proving internal sandbox continuation and final
+waiter continuation occur once per delegated critical section.
 
 The initial services are `ktime_get` and `ktime_get_ns` when those symbols are
 available. They are fixed-signature, atomic-context-safe, independent of the
@@ -709,7 +712,7 @@ without requiring them to enter the kernel syscall path.
 | `delegate_election` | 1 | Enable/disable delegate election |
 | `kd_combiner_batch_size` | (extern) | Max waiters processed per combiner round (spinlock) |
 | `kd_mutex_batch_size` | 1024 | Max waiters processed per combiner round (mutex) |
-| `mutex_jit` | 0 | Opt in to translated mutex execution, including mode 4 nested A/B proxying |
+| `mutex_jit` | 0 | Opt in to translated mutex execution, including mode 4 nested A/B proxying and mode 5 native hostcall continuation |
 | `spin_jit_fail_after_nested_lock` | 0 | One-shot test failure after nested spin acquisition |
 | `jit_hl_fault_after_known_call` | 0 | One-shot test fault: 1=CALL miss, 2=IJ miss, 3=instruction limit |
 
@@ -720,7 +723,7 @@ without requiring them to enter the kernel syscall path.
 - Raw spinlock delegation with JIT sandbox (modes 0-2 and 6-9 tested), including
   allowlisted native hostcall exit/resume for mode 2.
 - Mutex safe-mode queue/handoff (modes 3-5), mode 3 stress JIT, mode 4 nested
-  A/B JIT proxying, and bounded mode 5 JIT.
+  A/B JIT proxying, and repeated/stress mode 5 hostcall JIT.
 - Dynamic translation pipeline (init, call-miss, ij-miss recompilation).
 - Hot-lock promotion and fallback to original kernel path.
 - TCLock-style nested spinlock and mutex JIT delegation, explicit frames,

@@ -44,6 +44,7 @@ static DEFINE_MUTEX(nested_mutex_b);
 
 static unsigned long global_counter = 0;
 static unsigned long mode2_api_observations;
+static unsigned long mode5_api_observations;
 static atomic_t inner_holder_ready = ATOMIC_INIT(0);
 static atomic_t inner_direct_waiting = ATOMIC_INIT(0);
 static atomic_t inner_nested_waiting = ATOMIC_INIT(0);
@@ -680,13 +681,17 @@ static void run_nested_mutex_test(unsigned long loop_count,
 static void run_api_in_mutex_test(unsigned long loop_count, unsigned long work_load)
 {
 	unsigned long i, j;
+	unsigned long now;
 	volatile int dummy_computation = 0;
 
 	for (i = 0; i < loop_count; i++) {
 		mutex_lock(&global_mutex);
 
 		global_counter++;
-		dummy_computation ^= (int)(ktime_get_ns() & 0xffff);
+		now = (unsigned long)ktime_get_ns();
+		dummy_computation ^= (int)(now & 0xffff);
+		if (now)
+			mode5_api_observations++;
 		for (j = 0; j < work_load; j++)
 			dummy_computation++;
 
@@ -757,6 +762,7 @@ static int __init my_module_init(void)
 
 	global_counter = 0;
 	mode2_api_observations = 0;
+	mode5_api_observations = 0;
 	ret = misc_register(&my_misc_device);
 	if (ret) {
 		pr_err("failed to register %s: %d\n", DRIVER_NAME, ret);
@@ -771,6 +777,7 @@ static void __exit my_module_exit(void)
 	misc_deregister(&my_misc_device);
 	pr_info("module unloaded, final counter: %lu\n", global_counter);
 	pr_info("mode2 api observations: %lu\n", mode2_api_observations);
+	pr_info("mode5 api observations: %lu\n", mode5_api_observations);
 }
 
 module_init(my_module_init);

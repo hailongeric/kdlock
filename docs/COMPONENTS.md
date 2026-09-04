@@ -159,10 +159,10 @@ module used by benchmarks and tests.
 - `klock_module/klock_module.c`: registers `/dev/lock_dev` and implements ten
   benchmark modes (0-9): the original spin/mutex modes plus deep spin nesting,
   OOO unlock, deterministic independent A/B queues, and nested-JIT abort
-  recovery. Mode 2 consumes the native time-service result after its CALL and
-  reports an exact observation count. Mode 4 exposes seven synchronized mutex
-  roles that independently order A and B queues. Prints final counters on
-  unload.
+  recovery. Modes 2 and 5 consume the native time-service result after their
+  CALL and report independent exact observation counts. Mode 4 exposes seven
+  synchronized mutex roles that independently order A and B queues. Prints final
+  counters on unload.
 
 ## Benchmark
 
@@ -224,14 +224,17 @@ modules and must run inside the guest with timeouts.
   Mode 4 then creates deterministic A/B queues with seven CPU-pinned roles and
   requires runtime IP matches for both A/B workspaces, outer plus inner JIT
   completion, queued/remote B evidence, exact counter accounting, and zero
-  protocol failures or leaks. Mode 5 retains bounded API-in-CS coverage; the
-  script remains outside `tests/run_all.sh`.
+  protocol failures or leaks. Mode 5 runs repeated owner/waiter rounds, a
+  CPU-pinned queue, and continuous contention; it requires one hostcall cycle
+  and final waiter resume per JIT completion, no runtime recompilation, exact
+  counters, and zero failures or leaks. The script remains outside
+  `tests/run_all.sh`.
 - `tests/test_09_jit_execution_modes.sh`: recovery-only acceptance suite for
-  modes 0/1/2/3/4. Modes 0/1/2 reuse the strict spinlock execution checks, with
+  modes 0/1/2/3/4/5. Modes 0/1/2 reuse the strict spinlock execution checks, with
   mode 2 adding hostcall proof; mode 3 uses the repeated/stress mutex JIT test;
-  mode 4 uses the nested-mutex JIT test. Every selected mode must match runtime
-  execution IPs to installed workspaces, not only generate or install an
-  artifact.
+  mode 4 uses the nested-mutex JIT test; mode 5 uses the repeated mutex hostcall
+  test. Every selected mode must match runtime execution IPs to installed
+  workspaces, not only generate or install an artifact.
 
 ## Unit Tests
 

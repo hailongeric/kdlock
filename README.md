@@ -30,7 +30,7 @@ See [docs/DESIGN.md](docs/DESIGN.md) for the full technical design.
 | Component | State |
 |-----------|-------|
 | Spinlock delegation (modes 0-2, 6-9) | Working; nested JIT, mode 2 native hostcalls, and bounded recovery validated |
-| Mutex delegation protocol (modes 3-5) | Safe mode working; mode 3 stress JIT and mode 4 nested A/B JIT proxy confirmed |
+| Mutex delegation protocol (modes 3-5) | Safe mode working; mode 3 stress JIT, mode 4 nested A/B proxy, and mode 5 repeated native hostcalls confirmed |
 | Dynamic translation (daemon + miasm) | Working |
 | Hot-lock promotion | Working |
 | Nested spinlock handling | TCLock-style JIT delegation, recursive frames, OOO handoff, and native retry |
@@ -152,32 +152,36 @@ bash tests/run_all.sh
 This runs six scripts covering module load, JIT installation, hot-lock promotion,
 spinlock delegation, mutex delegation, and daemon pipeline.
 
-The default suite does not prove translated execution for mutex modes 3/4:
+The default suite does not prove translated execution for mutex modes 3/4/5:
 `test_05_mutex.sh` deliberately uses `mutex_jit=0` to validate the queue and
 handoff protocol without entering the experimental mutex sandbox.
 
-### Modes 0/1/2/3/4 JIT Acceptance
+### Modes 0/1/2/3/4/5 JIT Acceptance
 
 After confirming a recovery snapshot, run:
 
 ```bash
 KDLOCK_RECOVERY_CONFIRMED=1 \
   timeout --kill-after=10s 600s \
-  bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4
+  bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5
 ```
 
 Selectors may be supplied individually. A pass requires complete translation
 artifacts, kernel write-back, actual translated completion (`jit_success`), an
 exact final counter, drained queues/frames, and clean kernel diagnostics. Modes
-3/4 additionally verify that `mutex_jit=1` is active. Mode 2 also requires a
-named `ktime_get` hostcall stub, no service callee translation or runtime
-recompilation, and matching nonzero exit/execute/resume counters.
+3/4/5 additionally verify that `mutex_jit=1` is active. Modes 2 and 5 also
+require a named `ktime_get` hostcall stub, no service callee translation or
+runtime recompilation, and matching nonzero exit/execute/resume counters. Mode 5
+additionally requires hostcall counts to equal mutex JIT completion and waiter
+resume counts under repeated contention.
 
-The latest independent mode 2 rerun on 2026-09-04 installed and executed the
-1407-byte artifact for entry `0xffffffffc071ee7b`. It recorded
-`jit_success=4`, `exits=4 executed=4 resumed=4`, exact counters of 12009, one
-initial JIT write-back, and zero hostcall, queue, or invariant failures. The
-command output and kernel log retained in the recovery guest are listed in
+The final independent mode 5 run on 2026-09-04 observed `mutex_jit=1`, then
+installed and executed the 1464-byte artifact for entry
+`0xffffffffc071edea`. It recorded `jit_success=jit_resume=381`, hostcall
+`exits=executed=resumed=381`, exact counters of 12582, one initial JIT
+write-back, and zero hostcall, queue, frame, or invariant failures. A follow-up
+mode 2 regression also passed with four complete hostcall cycles. Exact
+evidence and retained logs are in
 [docs/VALIDATION.md](docs/VALIDATION.md).
 
 | Mode | `tests/run_all.sh` | Real JIT acceptance |
@@ -187,13 +191,16 @@ command output and kernel log retained in the recovery guest are listed in
 | 2 | Yes, translated spin CS executes around a native hostcall | `test_04_spinlock.sh 2` |
 | 3 | No, default uses `mutex_jit=0` | `test_07_mutex_jit.sh` |
 | 4 | No, default uses `mutex_jit=0` | `test_08_mutex_jit_modes.sh 4` |
+| 5 | No, default uses `mutex_jit=0` | `test_08_mutex_jit_modes.sh 5` |
 
 Mode 1 executes one translated outer A stream through the nested B lock/unlock
 known-call path; B's nested counters prove those boundaries were crossed without
 native fallback. Mode 2 exits that stream at an allowlisted time API, executes a
 typed native handler while retaining outer-lock ownership, and resumes the same
 artifact at the instruction after CALL. Mode 4 forms independent A and B queues
-and requires both entry RIPs to execute, including remote B proxy evidence. See
+and requires both entry RIPs to execute, including remote B proxy evidence. Mode
+5 applies the mode 2 hostcall protocol to a mutex waiter and proves repeated
+sandbox exit/resume plus final waiter resume under contention. See
 [docs/VALIDATION.md](docs/VALIDATION.md) for the exact latest results and this
 distinction.
 
@@ -241,7 +248,7 @@ Do not issue HMP `quit`, which exits QEMU.
 | `target_process` | `"kd_test"` | Space-separated process names to intercept |
 | `velvet_wait_queue` | 1 | Enable velvet wait queue optimization |
 | `delegate_election` | 1 | Enable delegate election |
-| `mutex_jit` | 0 | Enable experimental mutex JIT sandbox execution. Mode 3 repeated/stress execution, mode 4 nested A/B proxy execution, and bounded mode 5 are recovery-confirmed. It remains opt-in; default 0 is required for normal testing. |
+| `mutex_jit` | 0 | Enable experimental mutex JIT sandbox execution. Mode 3 repeated/stress execution, mode 4 nested A/B proxy execution, and mode 5 repeated hostcall execution are recovery-confirmed. It remains opt-in; default 0 is required for normal testing. |
 | `spin_jit_fail_after_nested_lock` | 0 | One-shot test fault after nested spin acquisition; validates frame cleanup and native retry. |
 | `jit_hl_fault_after_known_call` | 0 | One-shot test fault after a known JIT call: 1=CALL miss, 2=IJ miss, 3=instruction limit. |
 

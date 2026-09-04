@@ -274,11 +274,15 @@ The plan was completed on 2026-09-04 in the recovery guest running Linux
   `mode2 api observations: 12009`.
 - `tests/test_04_spinlock.sh 0 1` passed as the shared translator/executor
   regression check.
-- The supplementary mutex mode 5 check passed with one complete hostcall cycle
-  (`exits=1 executed=1 resumed=1`) and `final counter: 12005`.
+- The mutex counterpart in mode 5 now passes repeated/stress acceptance with
+  `mutex_jit=1` independently observed, 381 complete
+  JIT/hostcall/waiter-resume cycles, and exact counters of 12582.
 - The guest remained reachable; no module or daemon remained loaded, and no
   kernel panic/BUG/double-fault/soft-lockup/unable-to-handle signature appeared.
 - A final strict rerun after the register-ABI audit reproduced the 1407-byte
   artifact and all four hostcall cycles without recompilation or failures; its
   output is retained as `/tmp/kdlock-mode2-jit-rerun-20260904.log` and
   `/tmp/kdlock-mode2-jit-rerun-20260904-dmesg.log`.
+- A post-mode-5 regression rebuilt the workload module and again completed all
+  four mode 2 hostcall cycles. The shifted entry produced a 1464-byte artifact;
+  output is retained as `/tmp/kdlock-mode2-regression-after-mode5-20260904.log`.

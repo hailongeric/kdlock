@@ -4,7 +4,7 @@ Last updated: 2026-09-04
 
 Completed implementation history is available in Git and is intentionally not
 duplicated here. Current architecture is documented in `DESIGN.md`; the latest
-mode 0/1/2/3/4 JIT execution results are in `VALIDATION.md`.
+mode 0/1/2/3/4/5 JIT execution results are in `VALIDATION.md`.
 
 ## Current Baseline
 
@@ -15,9 +15,11 @@ mode 0/1/2/3/4 JIT execution results are in `VALIDATION.md`.
   JIT artifact after CALL. Artifact and runtime counters prove this path.
 - Mutex JIT delegation is opt-in through `mutex_jit=1`. Repeated mode 3 and
   nested mode 4 A/B proxy execution pass the recovery-only acceptance suite.
+  Mode 5 repeatedly executes the same allowlisted hostcall protocol under mutex
+  contention with exact hostcall, JIT completion, and waiter resume accounting.
 - The default integration suite keeps `mutex_jit=0` for modes 3-5 and validates
   only the mutex queue, promotion, handoff, and fallback protocol.
-- No mode 0/1/2/3/4 acceptance failure is currently known. Any code change to the
+- No mode 0/1/2/3/4/5 acceptance failure is currently known. Any code change to the
   translation, frame, queue, or resume paths must rerun the acceptance contract
   in `VALIDATION.md`.
 
@@ -29,8 +31,6 @@ mode 0/1/2/3/4 JIT execution results are in `VALIDATION.md`.
       before translating critical sections that depend on those states.
 - [ ] Initialize `Stack_INST_CNT` from R11 or remove `args[1]` from the wrapper
       output contract; it is currently an undefined reserved value.
-- [ ] Expand mode 5 API-in-mutex-JIT coverage beyond the current bounded
-      recovery test, including repeated execution and exact resume accounting.
 - [ ] Add kernel integration pressure tests for translation-table and executable
       block-pool exhaustion; these are currently covered only by unit-level
       bounded lookup tests.
@@ -63,7 +63,7 @@ mode 0/1/2/3/4 JIT execution results are in `VALIDATION.md`.
 - [ ] Measure hostcall exit/resume overhead and establish when native service
       execution is cheaper than translating a callee into the sandbox.
 - [ ] Measure adaptive batch sizing against the fixed batch limits of 1024.
-- [ ] Quantify mode 3/4 delegation benefit and overhead against native mutexes;
+- [ ] Quantify mode 3/4/5 delegation benefit and overhead against native mutexes;
       the current tests are correctness tests, not performance evidence.
 - [ ] Support architectures beyond x86-64. The wrapper, register layout, and
       translated instruction model are currently architecture-specific.

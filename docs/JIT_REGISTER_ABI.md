@@ -5,10 +5,10 @@
 不是一个与实现无关的目标设计。
 
 适用范围是高层代理路径 `kd_exe_on_call_hl_entry()`，即当前 mode 0/1/2 和
-`mutex_jit=1` 下的 mode 3/4。低层 futex 路径 `kd_exe_on_call()` 共用 wrapper，
-但不支持 mode 2 hostcall。
+`mutex_jit=1` 下的 mode 3/4/5。低层 futex 路径 `kd_exe_on_call()` 共用 wrapper，
+但不支持 mode 2/5 使用的 hostcall。
 
-本文描述的 mode 2 退出和续跑约定已经通过独立运行验证；实际入口、服务地址、
+本文描述的 mode 2/5 退出和续跑约定已经通过独立运行验证；实际入口、服务地址、
 计数器和保留日志见 [`VALIDATION.md`](VALIDATION.md)。
 
 关键实现文件：
@@ -280,9 +280,9 @@ miss 时 wrapper 返回在 `args[0]` 的值。wrapper 返回源 RIP，kernel exe
 `seg_error`/`seg_error2` 当前没有建立独立、可靠的 `Stack_IJ` 值；同时
 `normal.py` 中实际地址检查指令仍未启用。因此这两个标签不能作为稳定退出 ABI。
 
-## 9. Mode 2 hostcall 的寄存器续跑约定
+## 9. Mode 2/5 hostcall 的寄存器续跑约定
 
-mode 2 的退出和返回流程为：
+mode 2 和 mode 5 的 sandbox 退出及内部返回流程相同：
 
 1. translated `CALL` 把 post-CALL RIP 压到 virtual stack；调用参数仍位于 guest
    RDI、RSI、RDX、RCX、R8、R9，按 x86-64 调用约定解释。
@@ -302,7 +302,10 @@ mode 2 的退出和返回流程为：
 临界区最多 16 次的 continuation budget。
 
 hostcall continuation 位于函数调用之后，因此不能依赖调用前 EFLAGS。外层锁和
-当前 `kd_exec_frame` 在 native service 执行期间保持有效。
+当前 `kd_exec_frame` 在 native service 执行期间保持有效。mode 5 在到达最外层
+`mutex_unlock` 后还有第二层恢复：mutex combiner 发布完成状态，原 waiter 通过
+`jump_to_saved_regs()` 从 unlock 后继续；严格测试要求该 `jit_resume` 次数与
+hostcall resume 及 `jit_success` 完全相等。
 
 ## 10. Nested lock known-call 约定
 
