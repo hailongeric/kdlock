@@ -1,7 +1,7 @@
 /*
  * klock_test — userspace driver for /dev/lock_dev.
  *
- * Usage:  ./klock_test <threads> <loops> <workload> <spare> <mode>
+ * Usage:  ./klock_test <threads> <loops> <workload> <spare> <mode> [role-base]
  *
  *   threads  — number of concurrent threads
  *   loops    — how many ioctl calls per thread
@@ -16,8 +16,12 @@
  *   3  MODE_MUTEX_CONTENTION   Contended single mutex
  *   4  MODE_MUTEX_NESTED       Nested mutexes
  *   5  MODE_MUTEX_API_IN_LOCK  Mutex CS containing a kernel API call
+ *   6  MODE_SPIN_DEEP_NESTED   Deep nested spinlocks (A -> B -> C)
+ *   7  MODE_SPIN_OOO_NESTED    Out-of-order unlock (A, B, unlock A, B)
+ *   8  MODE_SPIN_INNER_CONTENTION  Independent contenders for inner B
+ *   9  MODE_SPIN_ABORT_RECOVERY  Isolated nested-JIT abort recovery
  *
- * Modes 0–2 exercise the spinlock delegation path (kd_spinlock.c).
+ * Modes 0–2 and 6 exercise the spinlock delegation path (kd_spinlock.c).
  * Modes 3–5 exercise the mutex delegation path (kd_mutex.c).
  *
  * Example:  ./klock_test 4 100000 1000 10 0
@@ -38,6 +42,7 @@ struct test_args {
     unsigned long loop_count;
     unsigned long work_load;
     unsigned int mode;
+    unsigned int role;
 };
 
 #define IOC_RUN_TEST _IOW(IOC_MAGIC, 1, struct test_args)
@@ -48,6 +53,10 @@ struct test_args {
 #define MODE_MUTEX_CONTENTION   3  /* contended single mutex              */
 #define MODE_MUTEX_NESTED       4  /* nested mutexes                      */
 #define MODE_MUTEX_API_IN_LOCK  5  /* mutex with kernel API inside CS     */
+#define MODE_SPIN_DEEP_NESTED   6  /* three nested spinlocks              */
+#define MODE_SPIN_OOO_NESTED    7  /* nested spinlocks, outer unlock first */
+#define MODE_SPIN_INNER_CONTENTION 8 /* nested A/B plus direct B contenders */
+#define MODE_SPIN_ABORT_RECOVERY 9 /* isolated A/B JIT abort recovery       */
 
 /* per-thread work item */
 struct thread_data {
@@ -57,16 +66,20 @@ struct thread_data {
     struct test_args args;
 };
 
+static pthread_barrier_t start_barrier;
+
 // 线程工作函数
 void *worker_thread(void *arg) {
     struct thread_data *data = (struct thread_data *)arg;
-    
+
+    pthread_barrier_wait(&start_barrier);
+
     // printf("Thread %d starting...\n", data->thread_id);
-    for(int count = 0; count < data->sys_count; count++) {
+    for (unsigned long count = 0; count < data->sys_count; count++) {
         if (ioctl(data->fd, IOC_RUN_TEST, &data->args) < 0) {
             perror("IOCTL failed");
         }
-        printf("Thread %d: Loop %d completed\n", data->thread_id, count);
+        printf("Thread %d: Loop %lu completed\n", data->thread_id, count);
     }
     // printf("Thread %d finished.\n", data->thread_id);
     return NULL;
@@ -93,6 +106,14 @@ const char *mode_name(unsigned int mode) {
         return "mutex-nested";
     case MODE_MUTEX_API_IN_LOCK:
         return "mutex-api-in-lock";
+    case MODE_SPIN_DEEP_NESTED:
+        return "spin-deep-nested";
+    case MODE_SPIN_OOO_NESTED:
+        return "spin-ooo-nested";
+    case MODE_SPIN_INNER_CONTENTION:
+        return "spin-inner-contention";
+    case MODE_SPIN_ABORT_RECOVERY:
+        return "spin-abort-recovery";
     default:
         return "unknown";
     }
@@ -100,9 +121,13 @@ const char *mode_name(unsigned int mode) {
 
 int main(int argc, char *argv[]) {
     if (argc < 6) {
-        printf("Usage: %s <num_threads> <loop_count> <work_load> <sys_count> <mode>\n", argv[0]);
+        printf("Usage: %s <num_threads> <loop_count> <work_load> <sys_count> <mode> [role-base]\n", argv[0]);
         printf("Mode: 0=spin-contention, 1=spin-nested, 2=spin-api-in-lock\n");
         printf("      3=mutex-contention, 4=mutex-nested, 5=mutex-api-in-lock\n");
+        printf("      6=spin-deep-nested\n");
+        printf("      7=spin-ooo-nested\n");
+        printf("      8=spin-inner-contention\n");
+        printf("      9=spin-abort-recovery\n");
         printf("Example: %s 4 100000 1000 10 3\n", argv[0]);
         return -1;
     }
@@ -112,8 +137,10 @@ int main(int argc, char *argv[]) {
     unsigned long work_load = strtoul(argv[3], NULL, 10);
     unsigned long sys_count = strtoul(argv[4], NULL, 10);
     unsigned int mode = (unsigned int)strtoul(argv[5], NULL, 10);
+    unsigned int role_base = argc > 6 ?
+        (unsigned int)strtoul(argv[6], NULL, 10) : 0;
 
-    if (mode > MODE_MUTEX_API_IN_LOCK) {
+    if (mode > MODE_SPIN_ABORT_RECOVERY) {
         fprintf(stderr, "Invalid mode: %u\n", mode);
         return -1;
     }
@@ -126,6 +153,11 @@ int main(int argc, char *argv[]) {
 
     pthread_t *threads = malloc(sizeof(pthread_t) * num_threads);
     struct thread_data *t_data = malloc(sizeof(struct thread_data) * num_threads);
+
+    if (pthread_barrier_init(&start_barrier, NULL, num_threads) != 0) {
+        perror("Failed to initialize thread barrier");
+        return -1;
+    }
 
     printf("Starting Test:\n");
     printf("  Threads: %d\n", num_threads);
@@ -142,6 +174,7 @@ int main(int argc, char *argv[]) {
         t_data[i].args.loop_count = loop_count;
         t_data[i].args.work_load = work_load;
         t_data[i].args.mode = mode;
+        t_data[i].args.role = role_base + (unsigned int)i;
         t_data[i].sys_count = sys_count;
 
         if (pthread_create(&threads[i], NULL, worker_thread, &t_data[i]) != 0) {
@@ -166,6 +199,7 @@ int main(int argc, char *argv[]) {
 
     free(threads);
     free(t_data);
+    pthread_barrier_destroy(&start_barrier);
     close(fd);
     return 0;
 }

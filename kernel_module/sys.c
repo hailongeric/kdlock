@@ -78,6 +78,17 @@ static ssize_t kd_dev_write(struct file *filp, const char __user *buf, size_t co
 	len = count - sizeof(*head);
 	payload = buf + sizeof(*head);
 	p = kd_get_exe(head->pid, head->RIP);
+	if (!p) {
+		kfree(head);
+		return -ENOSPC;
+	}
+	if (!READ_ONCE(p->code_block) || head->offset > KD_CODE_BLOCK_SIZE ||
+	    len > KD_CODE_BLOCK_SIZE - head->offset ||
+	    (head->status_code != KD_EXE_UNINIT &&
+	     head->status_code != KD_EXE_NORMAL)) {
+		kfree(head);
+		return -EINVAL;
+	}
 
 	printk(KERN_EMERG "write to kernel %d %px %d %ld p-%px\n", head->pid,
 	       (void *)head->RIP, head->status_code, head->offset, p);
@@ -86,7 +97,7 @@ static ssize_t kd_dev_write(struct file *filp, const char __user *buf, size_t co
 			kfree(head);
 			return -EFAULT;
 		}
-		p->status_code = head->status_code;
+		smp_store_release(&p->status_code, head->status_code);
 		kfree(head);
 		return count;
 	}

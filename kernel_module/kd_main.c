@@ -11,6 +11,7 @@
 #include <linux/spinlock.h>
 
 #include "exe.h"
+#include "kd_exec.h"
 #include "kd_lock.h"
 #include "kd_futex.h"
 #include "kd_spinlock.h"
@@ -28,8 +29,13 @@ MODULE_LICENSE("GPL");
 
 extern int velvet_wait_queue;
 extern int delegate_election;
+extern int kd_spin_jit_fail_after_nested_lock;
 module_param(velvet_wait_queue, int, S_IRUGO);
 module_param(delegate_election, int, S_IRUGO);
+module_param_named(spin_jit_fail_after_nested_lock,
+		   kd_spin_jit_fail_after_nested_lock, int, 0644);
+MODULE_PARM_DESC(spin_jit_fail_after_nested_lock,
+		 "one-shot failure after a JIT nested spinlock acquisition");
 
 char *target_process = "kd_test";
 module_param(target_process, charp, S_IRUGO);
@@ -79,6 +85,7 @@ static int __init kdlock_km_init(void)
 	char *token;
 
 	kd_exe_init();
+	kd_exec_context_init();
 	kd_sys_init();
 	kd_spinlock_init();
 	kd_mutex_init_percpu();
@@ -152,6 +159,7 @@ static void __exit kdlock_km_exit(void)
 
 	kd_spinlock_exit();
 	kd_mutex_exit();
+	kd_exec_context_exit();
 	kd_sys_exit();
 	kd_exe_exit();
 

@@ -10,10 +10,16 @@ clear_dmesg
 load_modules || exit 1
 
 # --- Test 1: run enough iterations to trigger promotion ---
-# 4 threads × 5000 loops = 20000 hits on the same lock address
+# 1 thread × 12000 loops = 12000 hits on the same lock address
 # The hot-lock promotion requires 10000 hits within a time window.
+# count_uaddr_cnt() ignores the first 1e9 TSC cycles after the first observed
+# lock, so prime that timer and wait before the real workload.
+info "Priming hot-lock timer..."
+run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 0 >/dev/null 2>&1 || true
+sleep 1
+
 info "Running workload to trigger hot-lock promotion..."
-run_with_timeout 15 "$BENCH_BIN" 4 5000 10 1 0 >/dev/null 2>&1 || true
+run_with_timeout 20 "$BENCH_BIN" 1 12000 10 1 0 >/dev/null 2>&1 || true
 sleep 1
 
 check_dmesg_has "begin delegate" "hot-lock promotion did not trigger" || exit 1

@@ -49,7 +49,7 @@ static int append_cmd(char *cmd, size_t size, const char *fmt, ...)
 	return 0;
 }
 
-static int cmd_history(const char *cmd)
+static int cmd_seen(const char *cmd)
 {
 	int i;
 
@@ -57,9 +57,14 @@ static int cmd_history(const char *cmd)
 		if (!strcmp(cmd, cmd_hist[i]))
 			return 1;
 	}
+	return 0;
+}
+
+static int remember_cmd(const char *cmd)
+{
 	if (cmd_cnt >= (int)ARRAY_SIZE(cmd_hist)) {
 		fprintf(stderr, "daemon: command history is full\n");
-		return 1;
+		return -1;
 	}
 	cmd_hist[cmd_cnt] = malloc(strlen(cmd) + 1);
 	if (!cmd_hist[cmd_cnt]) {
@@ -68,6 +73,18 @@ static int cmd_history(const char *cmd)
 	}
 	strcpy(cmd_hist[cmd_cnt], cmd);
 	cmd_cnt++;
+	return 0;
+}
+
+static int run_cmd(const char *cmd, const char *label)
+{
+	int ret = system(cmd);
+
+	if (ret) {
+		fprintf(stderr, "daemon: %s command failed (%d): %s\n",
+			label, ret, cmd);
+		return -1;
+	}
 	return 0;
 }
 
@@ -110,8 +127,10 @@ static int make_callee_cmd(char *cmd, size_t size, const struct daemon_config *c
 	char workspace[256];
 
 	workspace_path(workspace, sizeof(workspace), cfg, exe);
-	return append_cmd(cmd, size, "echo %p >> %s/asm/callee_table.txt",
-			  (void *)exe->tgt_addr, workspace);
+	return append_cmd(cmd, size,
+			  "mkdir -p %s/asm && touch %s/asm/ij_table.txt && echo %p >> %s/asm/callee_table.txt",
+			  workspace, workspace, (void *)exe->tgt_addr,
+			  workspace);
 }
 
 static int make_ij_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
@@ -120,8 +139,10 @@ static int make_ij_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
 	char workspace[256];
 
 	workspace_path(workspace, sizeof(workspace), cfg, exe);
-	return append_cmd(cmd, size, "echo '%p %p' >> %s/asm/ij_table.txt",
-			  (void *)exe->jump_from, (void *)exe->tgt_addr, workspace);
+	return append_cmd(cmd, size,
+			  "mkdir -p %s/asm && touch %s/asm/callee_table.txt && echo '%p %p' >> %s/asm/ij_table.txt",
+			  workspace, workspace, (void *)exe->jump_from,
+			  (void *)exe->tgt_addr, workspace);
 }
 
 static int compile_entry(const struct daemon_config *cfg, const struct kd_exe_info *exe)
@@ -139,7 +160,7 @@ static int compile_entry(const struct daemon_config *cfg, const struct kd_exe_in
 			       (void *)exe->RIP, exe->tgid, exe->pid, (void *)exe->RIP))
 			return -1;
 	}
-	return system(cmd);
+	return run_cmd(cmd, "compile");
 }
 
 static int read_sys(char *buffer, size_t size)
@@ -302,18 +323,34 @@ static void check_once(const struct daemon_config *cfg)
 			continue;
 		}
 
-		if (cmd[0] && !cmd_history(cmd)) {
-			if (cfg->verbose)
-				printf(" Compiling");
-			system(cmd);
-			if (compile_entry(cfg, exe) == -1)
-				break;
-		} else if (cmd[0] && cfg->verbose) {
-			printf(" Compile saved");
-		}
-
 		if (cmd[0]) {
-			write_sys(cfg, exe);
+			if (!cmd_seen(cmd)) {
+				if (cfg->verbose)
+					printf(" Compiling");
+				if (run_cmd(cmd, "workspace update")) {
+					if (cfg->verbose)
+						printf("\n");
+					continue;
+				}
+				if (compile_entry(cfg, exe)) {
+					if (cfg->verbose)
+						printf("\n");
+					continue;
+				}
+				if (remember_cmd(cmd)) {
+					if (cfg->verbose)
+						printf("\n");
+					continue;
+				}
+			} else if (cfg->verbose) {
+				printf(" Compile saved");
+			}
+
+			if (write_sys(cfg, exe)) {
+				if (cfg->verbose)
+					printf("\n");
+				continue;
+			}
 			if (cfg->verbose)
 				printf("\n");
 		}

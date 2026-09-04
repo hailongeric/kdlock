@@ -31,10 +31,25 @@ static inline unsigned int zz_hash(unsigned int pid, unsigned long ip) {
 
 static struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip) {
 	int pos = zz_hash(pid, ip) % KD_MAX_EXE;
-	while (kd_exes[pos].status_code != KD_EXE_UNUSED &&
-	       (kd_exes[pos].pid != pid || kd_exes[pos].RIP != ip))
+
+	for (int probes = 0; probes < KD_MAX_EXE; probes++) {
+		struct kd_exe_info *exe = &kd_exes[pos];
+
+		if (exe->status_code == KD_EXE_UNUSED ||
+		    (exe->pid == (int)pid && exe->RIP == ip))
+			return exe;
 		pos = (pos + 1) % KD_MAX_EXE;
-	return &kd_exes[pos];
+	}
+	return NULL;
+}
+
+static int kd_exe_is_ready(unsigned int pid, unsigned long ip)
+{
+	struct kd_exe_info *exe = kd_get_exe(pid, ip);
+
+	return exe && exe->status_code == KD_EXE_NORMAL &&
+	       exe->pid == (int)pid &&
+	       exe->RIP == ip && exe->code_block != NULL;
 }
 
 static void init_exes(void) {
@@ -102,6 +117,33 @@ TEST(no_duplicate_on_re_add) {
 	ASSERT_EQ(e1, e2);
 }
 
+TEST(ready_requires_published_matching_code) {
+	struct kd_exe_info *e;
+
+	init_exes();
+	e = kd_get_exe(0, 0x1234);
+	e->pid = 0;
+	e->RIP = 0x1234;
+	e->code_block = (void *)0x1;
+	e->status_code = KD_EXE_UNINIT;
+	ASSERT_EQ(kd_exe_is_ready(0, 0x1234), 0);
+	e->status_code = KD_EXE_NORMAL;
+	ASSERT_EQ(kd_exe_is_ready(0, 0x1234), 1);
+	e->code_block = NULL;
+	ASSERT_EQ(kd_exe_is_ready(0, 0x1234), 0);
+	ASSERT_EQ(kd_exe_is_ready(1, 0x1234), 0);
+}
+
+TEST(full_table_lookup_fails_closed) {
+	init_exes();
+	for (int i = 0; i < KD_MAX_EXE; i++) {
+		kd_exes[i].status_code = KD_EXE_NORMAL;
+		kd_exes[i].pid = i + 1;
+		kd_exes[i].RIP = 0x100000 + i;
+	}
+	ASSERT_EQ(kd_get_exe(0, 0xdeadbeef), NULL);
+}
+
 int main(void) {
 	printf("=== test_exe_hash ===\n");
 	RUN_TEST(lookup_empty_returns_unused);
@@ -109,5 +151,7 @@ int main(void) {
 	RUN_TEST(different_pid_same_rip);
 	RUN_TEST(collision_resolution);
 	RUN_TEST(no_duplicate_on_re_add);
+	RUN_TEST(ready_requires_published_matching_code);
+	RUN_TEST(full_table_lookup_fails_closed);
 	REPORT();
 }

@@ -1,0 +1,51 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.out
+*.exe
+
+# Kernel module build outputs
+*.o.d
+*.ko
+*.ko.*
+*.mod
+*.mod.c
+*.mod.o
+*.symvers
+modules.order
+Module.symvers
+.tmp_versions/
+.*.cmd
+
+# User-space binaries
+/daemon/daemon1
+/daemon/daemon2
+/daemon/daemon
+daemon/asm/
+disassem/asm/
+daemon/0x*
+/bench/klock_test
+/bench/lock1_proc
+/bench/lock1_t
+/bench/sched_y
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Editor/OS noise
+.vscode/
+.idea/
+.DS_Store
+*~
+tests/unit/test_exe_hash
+tests/unit/test_hotlock_state
+tests/unit/test_mutex_count
+tests/unit/test_tail_encoding
+tests/unit/test_mutex_shadow
+tests/unit/test_mutex_transition
+tests/unit/test_exec_frame
+tests/unit/test_jit_call_policy
+tests/unit/test_spin_node_count

@@ -16,6 +16,7 @@
 #include <linux/spinlock.h>
 #include <linux/mutex.h>
 
+struct kd_exec_frame;
 /* --- preemption helpers --------------------------------------------------- */
 
 static inline void kd_preempt_disable_raw_spin_lock(raw_spinlock_t* lock)
@@ -49,5 +50,14 @@ void origin_raw_spin_lock(raw_spinlock_t *lock);
 void origin_raw_spin_unlock(raw_spinlock_t *lock);
 void origin_mutex_lock(struct mutex *lock);
 void origin_mutex_unlock(struct mutex *lock, unsigned long ret_addr);
+
+/* Known-call handlers used by the high-lock JIT continuation path.  These
+ * must not sleep: the mutex combiner executes with preemption disabled. */
+int kd_mutex_jit_nested_lock(struct mutex *lock);
+int kd_mutex_jit_nested_unlock(struct mutex *lock);
+
+/* Known-call handlers used by the high-lock spinlock JIT continuation path. */
+int kd_spin_jit_nested_lock(raw_spinlock_t *lock);
+int kd_spin_jit_nested_unlock(raw_spinlock_t *lock);
 
 #endif /* KD_LOCK_H */

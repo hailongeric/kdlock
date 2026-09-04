@@ -15,6 +15,7 @@
 #define KD_MAX_RAN          511
 #define KD_MAX_UADDR        131071
 #define KD_MAX_CALL         31
+#define KD_CODE_BLOCK_SIZE  (4096 * 160)
 
 static unsigned int kd_seed = 12345;
 static const unsigned int KD_A = 1664525;
@@ -44,7 +45,9 @@ struct kd_uaddr_state {
 	unsigned long end;
 	int state;
 	int cnt;
-	char padding_1[96];
+	/* Original mutex acquisitions that must drain before shadow activation. */
+	atomic_t mutex_origin_users;
+	char padding_1[92];
 	atomic_t is_delegating;
 	char padding_2[124];
 	struct kd_numa_delegate_info numa_info[2];
@@ -98,6 +101,7 @@ struct kd_random {
 }__attribute__((aligned(64)));
 
 void kd_exe_add(int pid, unsigned long RIP);
+bool kd_exe_is_ready(unsigned int pid, unsigned long RIP);
 void kd_exe_init(void);
 void kd_exe_exit(void);
 void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_exe_ret* r);
@@ -106,8 +110,15 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 #define KD_EXE_NO_RUN      2
 #define KD_EXE_RUN_ERROR   3
 #define KD_EXE_RUN_TO_UNLOCK 4
+#define KD_EXE_KNOWN_OUTER_UNLOCK 5
 
 int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr);
+int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
+			    unsigned long entry_ip,
+			    unsigned long outer_lock_addr);
+
+/* Resume a waiter after its critical section has already run in the sandbox. */
+void jump_to_saved_regs(struct pt_regs* regs);
 
 struct kd_exe_info* kd_get_exe(unsigned int pid, unsigned long ip);
 struct kd_delegate_uaddrnode* kd_get_uaddrnode(unsigned long uaddr, struct kd_delegate_uaddrnode* u_list);

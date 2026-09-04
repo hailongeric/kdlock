@@ -17,12 +17,14 @@
  * end of a critical section (e.g. _raw_spin_unlock, mutex_unlock).
  */
 #include "exe.h"
+#include "kd_exec.h"
 
 #include <asm-generic/set_memory.h>
 #include <asm/current.h>
 #include <asm/fsgsbase.h>
 #include <asm/smap.h>
 #include <linux/mm.h>
+#include <linux/moduleparam.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/futex.h>
@@ -32,10 +34,12 @@
 #include <linux/sched/topology.h>
 #include <linux/irqflags.h>
 #include <linux/syscalls.h>
+#include <linux/ktime.h>
 #include <asm-generic/resource.h>
 #include <asm-generic/mman.h>
 #include <linux/rwsem.h>
 #include <linux/spinlock.h>
+#include <linux/mutex.h>
 #include <asm/tlbflush.h>
 #include <linux/kallsyms.h>
 #include <linux/uaccess.h>
@@ -48,6 +52,8 @@
 #include <linux/fs.h>
 
 #include "utils.h"
+#include "kd_lock.h"
+#include "kd_spinlock.h"
 
 #define invalid_addr_file_path "/tmp/kd_iva"
 
@@ -60,11 +66,29 @@ const int KD_NUM_PG = 160;
  * executable during kd_exe_init().
  */
 #define KD_CODE_BLOCK_POOL 64
-#define KD_CODE_BLOCK_SIZE  (4096 * KD_NUM_PG)
+#define KD_EXE_HL_MAX_CONTINUATIONS 16
+
+/* One-shot high-level JIT fault injection for nested recovery tests. */
+static int kd_jit_hl_fault_after_known_call;
+module_param_named(jit_hl_fault_after_known_call,
+		   kd_jit_hl_fault_after_known_call, int, 0644);
+MODULE_PARM_DESC(jit_hl_fault_after_known_call,
+		 "Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit");
 
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
 static int kd_code_block_free;
-static DEFINE_SPINLOCK(kd_code_block_lock);
+static atomic_t kd_code_block_gate = ATOMIC_INIT(0);
+
+static void kd_code_block_gate_lock(void)
+{
+	while (atomic_cmpxchg_acquire(&kd_code_block_gate, 0, 1))
+		cpu_relax();
+}
+
+static void kd_code_block_gate_unlock(void)
+{
+	atomic_set_release(&kd_code_block_gate, 0);
+}
 
 
 extern long kd_success_cnt;
@@ -88,6 +112,12 @@ unsigned long btc_t = 0;
 unsigned long iva[32] = { 0 };
 unsigned long end_point[4];
 static int end_point_count;
+static unsigned long raw_spin_lock_addr;
+static unsigned long raw_spin_unlock_addr;
+static unsigned long mutex_lock_addr;
+static unsigned long mutex_unlock_addr;
+static unsigned long ktime_get_addr;
+static unsigned long ktime_get_ns_addr;
 
 struct kd_exe_info* kd_exes;
 struct kd_delegate_numanode** kd_numanodes;
@@ -105,10 +135,36 @@ static loff_t get_file_size(struct file* file) {
 }
 
 struct kd_exe_info* kd_get_exe(unsigned int pid, unsigned long ip) {
-	int pos = zz_hash(pid, ip) % KD_MAX_EXE;
-	while (kd_exes[pos].status_code != KD_EXE_UNUSED && (kd_exes[pos].pid != pid || kd_exes[pos].RIP != ip))
+	int pos;
+	int probes;
+
+	if (!kd_exes)
+		return NULL;
+	pos = zz_hash(pid, ip) % KD_MAX_EXE;
+	for (probes = 0; probes < KD_MAX_EXE; probes++) {
+		struct kd_exe_info *exe = &kd_exes[pos];
+
+		if (READ_ONCE(exe->status_code) == KD_EXE_UNUSED ||
+		    (READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == ip))
+			return exe;
 		pos = (pos + 1) % KD_MAX_EXE;
-	return &kd_exes[pos];
+	}
+	return NULL;
+}
+
+bool kd_exe_is_ready(unsigned int pid, unsigned long ip)
+{
+	struct kd_exe_info *exe;
+
+	if (!kd_exes || !ip)
+		return false;
+	exe = kd_get_exe(pid, ip);
+	if (!exe)
+		return false;
+	if (smp_load_acquire(&exe->status_code) != KD_EXE_NORMAL)
+		return false;
+	return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == ip &&
+	       READ_ONCE(exe->code_block) != NULL;
 }
 
 struct kd_delegate_uaddrnode* kd_get_uaddrnode(unsigned long uaddr, struct kd_delegate_uaddrnode* u_list) {
@@ -156,16 +212,28 @@ void kd_exe_init(void) {
 
 	/* Resolve unlock function addresses dynamically */
 	end_point_count = 0;
-	end_point[end_point_count] = kallsyms_lookup_name("_raw_spin_unlock");
-	if (end_point[end_point_count])
+	raw_spin_lock_addr = kallsyms_lookup_name("_raw_spin_lock");
+	raw_spin_unlock_addr = kallsyms_lookup_name("_raw_spin_unlock");
+	end_point[end_point_count] = raw_spin_unlock_addr;
+	if (raw_spin_unlock_addr)
 		end_point_count++;
-	end_point[end_point_count] = kallsyms_lookup_name("mutex_unlock");
-	if (end_point[end_point_count])
+	mutex_lock_addr = kallsyms_lookup_name("mutex_lock");
+	mutex_unlock_addr = kallsyms_lookup_name("mutex_unlock");
+	ktime_get_addr = kallsyms_lookup_name("ktime_get");
+	ktime_get_ns_addr = kallsyms_lookup_name("ktime_get_ns");
+	end_point[end_point_count] = mutex_unlock_addr;
+	if (mutex_unlock_addr)
 		end_point_count++;
 	for (i = 0; i < end_point_count; i++)
 		KD_PR_INFO("end_point[%d] = %lx", i, end_point[i]);
+	if (mutex_lock_addr)
+		KD_PR_INFO("mutex_lock addr = %lx", mutex_lock_addr);
+	if (ktime_get_addr)
+		KD_PR_INFO("ktime_get addr = %lx", ktime_get_addr);
+	if (ktime_get_ns_addr)
+		KD_PR_INFO("ktime_get_ns addr = %lx", ktime_get_ns_addr);
 
-	kd_exes = (struct kd_exe_info*)vmalloc(sizeof(struct kd_exe_info) * KD_MAX_EXE);
+	kd_exes = vzalloc(sizeof(struct kd_exe_info) * KD_MAX_EXE);
 	for (i = 0; i < KD_MAX_EXE; i++) {
 		kd_exes[i].status_code = KD_EXE_UNUSED;
 		kd_exes[i].code_block = NULL;
@@ -196,6 +264,7 @@ void kd_exe_init(void) {
 		kd_uaddr_states[i].end = 0;
 		kd_uaddr_states[i].state = KD_UADDR_INIT;
 		kd_uaddr_states[i].uaddr = 0;
+		atomic_set(&kd_uaddr_states[i].mutex_origin_users, 0);
 		atomic_set(&kd_uaddr_states[i].is_delegating, 0);
 	}
 
@@ -228,14 +297,22 @@ void kd_exe_init(void) {
 
 	/* Pre-allocate executable code blocks so kd_exe_add() never calls
 	 * vmalloc or set_memory_x from inside a critical section. */
-	spin_lock_init(&kd_code_block_lock);
+	atomic_set(&kd_code_block_gate, 0);
+	kd_code_block_free = 0;
 	for (i = 0; i < KD_CODE_BLOCK_POOL; i++) {
-		kd_code_block_pool[i] = vmalloc(KD_CODE_BLOCK_SIZE);
-		if (kd_code_block_pool[i])
-			set_memory_x((unsigned long)kd_code_block_pool[i],
-				     KD_NUM_PG);
+		void *block = vmalloc(KD_CODE_BLOCK_SIZE);
+
+		if (!block)
+			continue;
+		ret = set_memory_x((unsigned long)block, KD_NUM_PG);
+		if (ret) {
+			vfree(block);
+			continue;
+		}
+		kd_code_block_pool[kd_code_block_free++] = block;
 	}
-	kd_code_block_free = KD_CODE_BLOCK_POOL;
+	KD_PR_INFO("JIT code block pool ready: %d/%d\n",
+		   kd_code_block_free, KD_CODE_BLOCK_POOL);
 }
 
 void kd_exe_exit(void) {
@@ -309,12 +386,116 @@ static int is_end_point(unsigned long addr)
 	return 0;
 }
 
+static int is_outer_lock_unlock(struct pt_regs *regs,
+				unsigned long outer_lock_addr)
+{
+	if (regs->ip != raw_spin_unlock_addr &&
+	    regs->ip != mutex_unlock_addr)
+		return 0;
+	if (!outer_lock_addr)
+		return 1;
+	return regs->di == outer_lock_addr;
+}
+
+static int advance_after_known_call(struct pt_regs *regs)
+{
+	unsigned long return_ip;
+
+	if (regs->sp == 0)
+		return -EINVAL;
+
+	return_ip = READ_ONCE(*(unsigned long *)regs->sp);
+	regs->sp += sizeof(unsigned long);
+	regs->ip = return_ip;
+	return 1;
+}
+
+static int advance_and_save_continuation(struct kd_exec_frame *frame,
+					 struct pt_regs *regs)
+{
+	int ret = advance_after_known_call(regs);
+
+	if (ret > 0 && frame)
+		kd_exec_frame_save_continuation(frame, regs);
+	return ret;
+}
+
+static int handle_known_call(struct pt_regs *regs,
+			     unsigned long outer_lock_addr)
+{
+	struct kd_exec_frame *frame = kd_exec_current_frame();
+	int ret;
+
+	if (regs->ip == raw_spin_lock_addr) {
+		ret = kd_spin_jit_nested_lock_ctx((raw_spinlock_t *)regs->di,
+						  regs, frame);
+		return ret;
+	}
+
+	if (regs->ip == raw_spin_unlock_addr) {
+		if (regs->di == outer_lock_addr) {
+			/* An early outer unlock is a real OOO release.  Keep executing
+			 * until every nested lock has released, then finish A once. */
+			if (frame && kd_exec_frame_has_unreleased_nested(frame)) {
+				ret = kd_spin_jit_outer_unlock_ooo_ctx(
+					(raw_spinlock_t *)regs->di, regs, frame);
+				if (ret)
+					return ret;
+				return advance_and_save_continuation(frame, regs);
+			}
+			return KD_EXE_KNOWN_OUTER_UNLOCK;
+		}
+		ret = kd_spin_jit_nested_unlock_ctx((raw_spinlock_t *)regs->di,
+						    frame);
+		return ret ? ret : advance_and_save_continuation(frame, regs);
+	}
+
+	if (regs->ip == ktime_get_addr) {
+		regs->ax = ktime_to_ns(ktime_get());
+		return advance_and_save_continuation(frame, regs);
+	}
+
+	if (regs->ip == ktime_get_ns_addr) {
+		regs->ax = ktime_get_ns();
+		return advance_and_save_continuation(frame, regs);
+	}
+
+	if (!mutex_lock_addr || !mutex_unlock_addr)
+		return 0;
+
+	if (regs->ip != mutex_lock_addr && regs->ip != mutex_unlock_addr)
+		return 0;
+
+	if (regs->ip == mutex_unlock_addr) {
+		if (regs->di == outer_lock_addr)
+			return KD_EXE_KNOWN_OUTER_UNLOCK;
+		ret = kd_mutex_jit_nested_unlock((struct mutex *)regs->di);
+	} else {
+		ret = kd_mutex_jit_nested_lock((struct mutex *)regs->di);
+	}
+
+	if (ret)
+		return ret;
+
+	return advance_and_save_continuation(frame, regs);
+}
+
 //! IN MY VERSION PID IS TGID
 void kd_exe_add(int pid, unsigned long RIP) {
 	void* mem = NULL;
-	struct kd_exe_info* p = kd_get_exe(pid, RIP);
+	struct kd_exe_info* p;
 
-	if (p->pid == pid && p->RIP == RIP)  return;
+	kd_code_block_gate_lock();
+	p = kd_get_exe(pid, RIP);
+	if (!p) {
+		kd_code_block_gate_unlock();
+		KD_PR_ERR("kd_exe_add: translation table exhausted\n");
+		return;
+	}
+	if (p->pid == pid && p->RIP == RIP) {
+		kd_code_block_gate_unlock();
+		return;
+	}
 
 	// if (!target_address(RIP)) return;
 
@@ -322,12 +503,11 @@ void kd_exe_add(int pid, unsigned long RIP) {
 		KD_PR_INFO( "exe add crash error %d %d %lx --- %d %lx\t%d---%d\n", p->status_code, p->pid, p->RIP, pid, RIP, zz_hash(p->pid, p->RIP) % KD_MAX_EXE, zz_hash(pid, RIP) % KD_MAX_EXE);
 
 	/* Take a pre-allocated block from the pool (safe with IRQs off) */
-	spin_lock(&kd_code_block_lock);
 	if (kd_code_block_free > 0)
 		mem = kd_code_block_pool[--kd_code_block_free];
-	spin_unlock(&kd_code_block_lock);
 
 	if (!mem) {
+		kd_code_block_gate_unlock();
 		KD_PR_ERR("kd_exe_add: code block pool exhausted\n");
 		return;
 	}
@@ -337,7 +517,6 @@ void kd_exe_add(int pid, unsigned long RIP) {
 	p->tgid = current->tgid;
 
 	p->code_block = mem;
-	p->status_code = KD_EXE_UNINIT;
 	p->success_cnt = 0;
 	p->fail_cnt = 0;
 
@@ -349,6 +528,8 @@ void kd_exe_add(int pid, unsigned long RIP) {
     	asm volatile("rdgsbase %0" : "=r"(gs_base));
 		p->gsbase = gs_base;
 	}
+	smp_store_release(&p->status_code, KD_EXE_UNINIT);
+	kd_code_block_gate_unlock();
 	// struct kd_thread* t = kd_get_thread(pid);
 	// t->fsbase = x86_fsbase_read_cpu();
 
@@ -394,7 +575,12 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 		exe = kd_get_exe(pid, rip);
 		// spin_lock(&exe->lock);
 
-		if (exe->status_code != KD_EXE_NORMAL || exe->RIP != regs->ip || exe->pid != pid) {
+		if (!exe || exe->status_code != KD_EXE_NORMAL ||
+		    exe->RIP != regs->ip || exe->pid != pid) {
+			if (!exe) {
+				r->ret = -1;
+				return;
+			}
 			if (exe->status_code == KD_EXE_NORMAL)
 				KD_PR_INFO( "run error exe %lx %lx %lx %d %d!\n", exe->status_code, exe->RIP, regs->ip, exe->pid, pid);
 			r->ret = -1;
@@ -523,7 +709,7 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 			if (valid_address(exe->tgt_addr)) {
 				// exe->miss_cnt++;
 				// if (exe->miss_cnt < 10)
-				exe->status_code = KD_EXE_CALL_MISS;
+				smp_store_release(&exe->status_code, KD_EXE_CALL_MISS);
 				// else {
 				// 	for (int i = 0;i < 10;i++) {
 				// 		if (iva[i] == exe->tgt_addr)
@@ -540,7 +726,7 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 		}
 		else if (args[0] == KD_EXE_INST_LIMIT) {
 			KD_PR_INFO("inst limit\n");
-			exe->status_code = KD_EXE_NORMAL;
+			smp_store_release(&exe->status_code, KD_EXE_NORMAL);
 			r->ret = 3;
 		}
 		else if (1/*exe->success_cnt >= 0*/) {  // ij
@@ -548,7 +734,7 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 			exe->tgt_addr = regs->ip;
 			exe->jump_from = args[0];
 			if (valid_address(exe->tgt_addr) && valid_address(exe->jump_from))
-				exe->status_code = KD_EXE_IJ_MISS;
+				smp_store_release(&exe->status_code, KD_EXE_IJ_MISS);
 			// exe->fail_cnt++;
 			r->ret = -1;
 		}
@@ -563,23 +749,33 @@ void kd_exe_on_call(struct task_struct* task, struct pt_regs* regs, struct kd_ex
 
 
 
-int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
+int kd_exe_on_call_hl_entry(struct pt_regs* regs, void* outgoing_rsp_ptr,
+			    unsigned long entry_ip,
+			    unsigned long outer_lock_addr) {
 	unsigned long args[2];
 	void (*virt_ptr)(struct pt_regs* regs, unsigned long* args);
 	struct kd_exe_info* exe;
-	unsigned long rip = regs->ip;
 	int ret_flag;
+	int call_ret;
+	int continuation_count = 0;
+	int fault_kind;
 
 
-	exe = kd_get_exe(0, rip);  /* rip-only lookup, same code for all */
+	exe = kd_get_exe(0, entry_ip);  /* rip-only lookup, same code for all */
 	// spin_lock(&exe->lock);
-	if (exe->status_code != KD_EXE_NORMAL || exe->RIP != rip) {
+	if (!exe || !kd_exe_is_ready(0, entry_ip)) {
+		if (!exe) {
+			KD_PR_INFO("run error: translation table exhausted entry=%lx\n",
+				   entry_ip);
+			return KD_EXE_NO_RUN;
+		}
 		KD_PR_INFO("run error exe(%px) %d %lx %lx %d %d!\n", exe, exe->status_code, exe->RIP, regs->ip, exe->pid, 0);
 		return KD_EXE_NO_RUN;
 	}
 	// ! todo pid is not correct
 
 	virt_ptr = exe->code_block;
+	while (1) {
 	// if (exe->fsbase == 0)
 	// 	KD_PR_INFO("[exe on call]\tfsbase is zero !!!");
 
@@ -592,6 +788,28 @@ int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
 	// 	KD_PR_INFO("[exe on call]\tfsbase is zero !!!");
 	// args[0] = th->fsbase;
 	args[1] = 0;
+	fault_kind = continuation_count > 0 ?
+		xchg(&kd_jit_hl_fault_after_known_call, 0) : 0;
+	if (unlikely(fault_kind)) {
+		KD_PR_INFO("JIT injected runtime fault: kind=%d entry=%lx ip=%lx outer=%lx\n",
+			   fault_kind, entry_ip, regs->ip, outer_lock_addr);
+		switch (fault_kind) {
+		case 1:
+			args[0] = KD_EXE_CALL_MISS;
+			break;
+		case 2:
+			args[0] = entry_ip;
+			break;
+		case 3:
+			args[0] = KD_EXE_INST_LIMIT;
+			break;
+		default:
+			args[0] = KD_EXE_NORMAL;
+			break;
+		}
+	} else {
+		virt_ptr(regs, args);
+	}
 
 	// regs->cx = regs->ip;
 	// regs->r11 = regs->flags;
@@ -599,8 +817,6 @@ int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
 	// regs->ax = 0;
 
 	// pid = *((volatile int*)(0x5555556922a0));
-	virt_ptr(regs, args);
-
 	// barrier();
 	// rdmsrl_safe(0xC4, &end);
 	// barrier();
@@ -611,22 +827,64 @@ int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
 	}
 	else if (args[0] == KD_EXE_CALL_MISS /*&& exe->success_cnt >= 0*/) {  // missing call
 
-		if (is_end_point(regs->ip)) {
+		if (outer_lock_addr && is_outer_lock_unlock(regs, outer_lock_addr)) {
+			call_ret = handle_known_call(regs, outer_lock_addr);
+			if (call_ret == KD_EXE_KNOWN_OUTER_UNLOCK) {
+				ret_flag = KD_EXE_RUN_TO_UNLOCK;
+				break;
+			}
+			if (call_ret > 0) {
+				continuation_count++;
+				args[0] = exe->gsbase;
+				args[1] = 0;
+				continue;
+			}
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		} else if (!outer_lock_addr && is_end_point(regs->ip)) {
 			ret_flag = KD_EXE_RUN_TO_UNLOCK;
-		}else{
+		} else {
+			if (continuation_count >=
+			    KD_EXE_HL_MAX_CONTINUATIONS) {
+				KD_PR_INFO("mutex JIT continuation limit hit: entry=%lx ip=%lx outer=%lx limit=%d\n",
+					   entry_ip, regs->ip,
+					   outer_lock_addr,
+					   KD_EXE_HL_MAX_CONTINUATIONS);
+				ret_flag = KD_EXE_RUN_ERROR;
+				break;
+			}
+			call_ret = outer_lock_addr ?
+				handle_known_call(regs, outer_lock_addr) : 0;
+			if (call_ret == KD_EXE_KNOWN_OUTER_UNLOCK) {
+				ret_flag = KD_EXE_RUN_TO_UNLOCK;
+				break;
+			}
+			if (call_ret > 0) {
+				continuation_count++;
+				args[0] = exe->gsbase;
+				args[1] = 0;
+				continue;
+			}
+			if (call_ret < 0) {
+				KD_PR_INFO("mutex known-call handler failed: ip=%lx di=%lx outer=%lx ret=%d\n",
+					   regs->ip, regs->di, outer_lock_addr,
+					   call_ret);
+				ret_flag = KD_EXE_RUN_ERROR;
+				break;
+			}
 			exe->tgt_addr = regs->ip;  // ! todo avoid raw_spin_unlock 
 			// exe->fail_cnt++;
 			if (valid_address(exe->tgt_addr)) {
 				// exe->miss_cnt++;
 				// if (exe->miss_cnt < 10)
-				exe->status_code = KD_EXE_CALL_MISS;
+				smp_store_release(&exe->status_code, KD_EXE_CALL_MISS);
 			}
 			ret_flag = KD_EXE_RUN_ERROR;
 		}
 	}
 	else if (args[0] == KD_EXE_INST_LIMIT) {
 		KD_PR_INFO("inst limit\n");
-		exe->status_code = KD_EXE_NORMAL;
+		smp_store_release(&exe->status_code, KD_EXE_NORMAL);
 		ret_flag = KD_EXE_RUN_ERROR;
 	}
 	else  {  // ij
@@ -634,10 +892,16 @@ int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
 		exe->tgt_addr = regs->ip;
 		exe->jump_from = args[0];
 		if (valid_address(exe->tgt_addr) && valid_address(exe->jump_from))
-			exe->status_code = KD_EXE_IJ_MISS;
+			smp_store_release(&exe->status_code, KD_EXE_IJ_MISS);
 		ret_flag = KD_EXE_RUN_ERROR;
+	}
+	break;
 	}
 	mb();
 	return ret_flag;
 
+}
+
+int kd_exe_on_call_hl(struct pt_regs* regs, void* outgoing_rsp_ptr) {
+	return kd_exe_on_call_hl_entry(regs, outgoing_rsp_ptr, regs->ip, 0);
 }

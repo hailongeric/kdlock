@@ -1,6 +1,6 @@
 CC ?= gcc
 CFLAGS = -Wall -Wextra -g -O0 -std=gnu11
-TESTS = test_tail_encoding test_exe_hash test_hotlock_state test_mutex_count test_mutex_shadow
+TESTS = test_tail_encoding test_exe_hash test_hotlock_state test_mutex_count test_mutex_shadow test_mutex_transition test_jit_call_policy test_exec_frame test_spin_node_count
 
 .PHONY: all clean run
 

@@ -17,13 +17,14 @@ static const char *_current_test = "";
 #define TEST(name) static void test_##name(void)
 
 #define RUN_TEST(name) do {                                   \
+    int _failed_before = _tests_failed;                       \
     _current_test = #name;                                    \
     _tests_run++;                                             \
     test_##name();                                            \
-    if (_tests_run == _tests_passed + _tests_failed)          \
-        /* test didn't assert anything? count as pass */      \
+    if (_tests_failed == _failed_before) {                    \
         _tests_passed++;                                      \
-    printf("  [PASS] %s\n", #name);                           \
+        printf("  [PASS] %s\n", #name);                       \
+    }                                                         \
 } while (0)
 
 #define ASSERT(cond) do {                                     \
@@ -31,7 +32,6 @@ static const char *_current_test = "";
         printf("  [FAIL] %s: %s (line %d)\n",                 \
                _current_test, #cond, __LINE__);               \
         _tests_failed++;                                      \
-        _tests_passed--; /* offset the auto-pass */           \
         return;                                               \
     }                                                         \
 } while (0)
@@ -43,7 +43,6 @@ static const char *_current_test = "";
                _current_test, #a, #b,                         \
                (long)_a, (long)_b, __LINE__);                 \
         _tests_failed++;                                      \
-        _tests_passed--;                                      \
         return;                                               \
     }                                                         \
 } while (0)
@@ -54,7 +53,6 @@ static const char *_current_test = "";
         printf("  [FAIL] %s: %s != %s → both %ld (line %d)\n", \
                _current_test, #a, #b, (long)_a, __LINE__);   \
         _tests_failed++;                                      \
-        _tests_passed--;                                      \
         return;                                               \
     }                                                         \
 } while (0)

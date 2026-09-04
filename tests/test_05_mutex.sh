@@ -18,11 +18,21 @@ run_mutex_mode() {
     clear_dmesg
     load_modules || return 1
     start_daemon 2
+
+    # count_uaddr_cnt() intentionally ignores the first 1e9 TSC cycles after
+    # the first observed lock. Prime that timer, then wait before the real
+    # workload; otherwise a short test can pass without entering kd_mutex.
+    run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 "$mode" >/dev/null 2>&1 || {
+        fail "$TEST_NAME" "mode $mode warmup failed"
+        stop_daemon; unload_modules; return 1
+    }
     sleep 1
 
     for i in $(seq 1 "$runs"); do
         info "  run $i/$runs..."
-        run_with_timeout "$TIMEOUT_SEC" "$BENCH_BIN" 4 1000 50 2 "$mode" >/dev/null 2>&1
+        # 4 * 5000 acquisitions exceed the 10000-hit promotion threshold and
+        # leave enough operations to exercise the kd_mutex slowpath/handoff.
+        run_with_timeout "$TIMEOUT_SEC" "$BENCH_BIN" 4 5000 10 1 "$mode" >/dev/null 2>&1
         local rc=$?
         if [ $rc -ne 0 ]; then
             fail "$TEST_NAME" "mode $mode run $i timed out or failed"
@@ -33,19 +43,26 @@ run_mutex_mode() {
 
     stop_daemon
 
+    check_dmesg_has "begin delegate" \
+        "mode $mode never promoted its mutex to kdlock" || { unload_modules; return 1; }
+    check_dmesg_has "exe added" \
+        "mode $mode did not enter the kd_mutex execution path" || { unload_modules; return 1; }
+
     # Critical: no double fault or lockup
     check_dmesg_not_has "double fault" "double fault detected in mode $mode" || { unload_modules; return 1; }
     check_dmesg_not_has "soft lockup" "soft lockup detected in mode $mode" || { unload_modules; return 1; }
     check_dmesg_not_has "shadow stack ptr is NULL" "shadow stack corruption in mode $mode" || { unload_modules; return 1; }
     check_dmesg_ok || { unload_modules; return 1; }
 
-    if dmesg | grep -q "delegation ok"; then
-        info "  mode $mode: mutex delegation successful"
-    else
-        info "  mode $mode: delegation not triggered (normal if workload too small)"
-    fi
-
     unload_modules
+
+    check_dmesg_has "kd_mutex stats: slowpath=[1-9][0-9]*" \
+        "mode $mode never entered the kd_mutex slowpath" || return 1
+    check_dmesg_has "combiner=[1-9][0-9]*" \
+        "mode $mode never elected a mutex combiner" || return 1
+    check_dmesg_has "handoff=[1-9][0-9]*" \
+        "mode $mode never handed a mutex to a waiter" || return 1
+    info "  mode $mode: promotion, slowpath, combiner, and handoff verified"
     return 0
 }
 

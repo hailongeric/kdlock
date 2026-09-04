@@ -74,10 +74,12 @@ struct kd_mutex {
 		struct { u8 locked; };
 	};
 	struct task_struct *combiner_task;
+	unsigned long origin_mutex_addr; /* original struct mutex *, if shadow */
 };
 
 #define __KD_MUTEX_INITIALIZER(lockname) \
-	{ .tail = NULL, .state = ATOMIC_INIT(0), .combiner_task = NULL }
+	{ .tail = NULL, .state = ATOMIC_INIT(0), .combiner_task = NULL, \
+	  .origin_mutex_addr = 0 }
 
 #define DEFINE_KD_MUTEX(mname) \
 	struct kd_mutex mname = __KD_MUTEX_INITIALIZER(mname)
@@ -91,6 +93,7 @@ void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 		    unsigned long s_rbx, unsigned long s_r12,
 		    unsigned long s_r13, unsigned long s_r14,
 		    unsigned long s_r15, unsigned long s_rbp);
+int _kd_mutex_unlock_checked(struct kd_mutex *lock);
 void _kd_mutex_unlock(struct kd_mutex *lock);
 int  _kd_mutex_trylock(struct kd_mutex *lock);
 

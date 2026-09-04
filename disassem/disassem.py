@@ -14,6 +14,18 @@ import os, signal, sys
 import time
 
 
+def get_kernel_symbol(name, default=0):
+    try:
+        with open("/proc/kallsyms", "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 3 and parts[2] == name:
+                    return int(parts[0], 16)
+    except OSError:
+        pass
+    return default
+
+
 def add_lines_after_specific_content(file_path, target_address):
     # 读取原始文件内容
     with open(file_path, "r", encoding="utf-8") as file:
@@ -36,6 +48,8 @@ def add_lines_after_specific_content(file_path, target_address):
     lines_to_add = [
         "MOVABS          R14, 0x" + target_address + "\n",
         "MOV             Stack_IJ, 0x1\n",
+        "LEA             R13, QWORD PTR [R13 + 0x8]\n",
+        "MOV             Stack_RSP, R13\n",
         "JMP             exit\n",
     ]
 
@@ -46,7 +60,41 @@ def add_lines_after_specific_content(file_path, target_address):
         file.writelines(new_lines)
 
 
+def find_known_call_continuations(block_dict, db_dict, keep_call_stack):
+    continuations = set()
+    for block_start, block in block_dict.items():
+        db = db_dict[block]
+        offset = block_start
+        for line in block.lines:
+            offset += line.l
+            if line.name != "CALL" or not isinstance(line.args[0], ExprLoc):
+                continue
+            callee = int(line.arg2str(line.args[0], 0, db).split("_")[1], 16)
+            if callee in keep_call_stack:
+                continuations.add(offset)
+    return continuations
+
+
+def write_entry_dispatch(f, entry, block_dict, continuation_targets=None):
+    dispatch_targets = set(block_dict)
+    dispatch_targets.update(continuation_targets or set())
+
+    f.write('MOV     R11, 0\n')
+    f.write('MOV     R14, PT_RIP\n')
+    f.write("CMP     R14, 0x%x\n" % entry)
+    f.write("JZ      loc_%x\n" % entry)
+    for offset in sorted(dispatch_targets):
+        if offset == entry:
+            continue
+        f.write("CMP     R14, 0x%x\n" % offset)
+        f.write("JZ      loc_%x\n" % offset)
+    f.write("MOV     Stack_IJ, 0x2\n")
+    f.write("MOV     R15, R14\n")
+    f.write("JMP     exit\n")
+
+
 def dis_assem(PID, entry, need_count, debug=0):
+    os.makedirs("./asm", exist_ok=True)
 
     if need_count:
         # Get the target list
@@ -62,6 +110,24 @@ def dis_assem(PID, entry, need_count, debug=0):
     jump_table = dict()
     rets = memread.read(PID, entry, jump_table)  # [chunk, start, targets]
     cfgs = []
+    raw_spin_lock = get_kernel_symbol("_raw_spin_lock",
+                                      0xffffffff81e90a20)
+    raw_spin_unlock = get_kernel_symbol("_raw_spin_unlock",
+                                        0xffffffff81e90b30)
+    mutex_lock = get_kernel_symbol("mutex_lock", 0xffffffff81e8b570)
+    mutex_unlock = get_kernel_symbol("mutex_unlock", 0xffffffff81e8a040)
+    ktime_get = get_kernel_symbol("ktime_get", 0)
+    ktime_get_ns = get_kernel_symbol("ktime_get_ns", 0)
+    keep_call_stack = {
+        addr for addr in (
+            raw_spin_lock,
+            raw_spin_unlock,
+            mutex_lock,
+            mutex_unlock,
+            ktime_get,
+            ktime_get_ns,
+        ) if addr
+    }
 
     ordering_bug_list = [0x2CE40, 0x2CE50, 0x4FFD0, 0x738D0, 0x67B0]
 
@@ -74,10 +140,9 @@ def dis_assem(PID, entry, need_count, debug=0):
         asmcfg = None
         job_done = set()
 
-        mdis.dont_dis_retcall_funcs = set([
-            0xffffffff81e90b30,  # _raw_spin_unlock
-            0xffffffff81e8a040,  # mutex_unlock
-        ])
+        mdis.dont_dis_retcall_funcs = {
+            addr for addr in (raw_spin_unlock,) if addr
+        }
 
         for t in r[2]:
             if t - r[1] in ordering_bug_list:  # To let buggy blocks first. MIASM bug
@@ -89,6 +154,36 @@ def dis_assem(PID, entry, need_count, debug=0):
                 continue
             # print(hex(t))
             asmcfg = mdis.dis_multiblock(t, asmcfg, job_done)
+
+        # mdis.dont_dis_retcall_funcs intentionally stops at endpoint calls.
+        # The caller still needs the fall-through block when that same call
+        # is nested in a translated critical section, so discover and add
+        # those blocks before building the final dispatch table.
+        while True:
+            cfg_blocks = dict()
+            cfg_dbs = dict()
+            for block in asmcfg.blocks:
+                label = asmcfg.loc_db.pretty_str(block.loc_key)
+                block_start = int(label.split("_")[1], 16)
+                cfg_blocks[block_start] = block
+                cfg_dbs[block] = asmcfg.loc_db
+
+            continuation_targets = find_known_call_continuations(
+                cfg_blocks, cfg_dbs, keep_call_stack
+            )
+            existing_targets = set(cfg_blocks)
+            chunk_end = r[1] + len(r[0])
+            missing_targets = sorted(
+                target for target in continuation_targets
+                if target not in existing_targets and
+                r[1] <= target < chunk_end
+            )
+            if not missing_targets:
+                break
+            for target in missing_targets:
+                asmcfg = mdis.dis_multiblock(
+                    target, asmcfg, job_done
+                )
         cfgs.append(asmcfg)
 
     block_dict = dict()
@@ -101,11 +196,14 @@ def dis_assem(PID, entry, need_count, debug=0):
             db_dict[block] = asmcfg.loc_db
 
     missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
+    continuation_targets = find_known_call_continuations(
+        block_dict, db_dict, keep_call_stack
+    )
+    continuation_labels = continuation_targets - set(block_dict)
+    emitted_continuation_labels = set()
 
     f = open("./asm/jit.S", "w")
-    # f.write('MOV     Stack_INST_CNT, 0\n')
-    f.write('MOV     R11, 0\n')
-    f.write("JMP     loc_%x\n" % entry)
+    write_entry_dispatch(f, entry, block_dict, continuation_targets)
 
     for offset, block in sorted(block_dict.items()):
 
@@ -149,6 +247,10 @@ def dis_assem(PID, entry, need_count, debug=0):
         temp_check=None
         while temp_i < len(block.lines):
             line = block.lines[temp_i]
+            if (offset in continuation_labels and
+                    offset not in emitted_continuation_labels):
+                f.write("loc_%x:\n" % offset)
+                emitted_continuation_labels.add(offset)
             # print(line.b)
             if str(line)=="LEA        R13, QWORD PTR [R12 + R14]":
                 temp_inst1=mn_x86.fromstring("MOV R13, R14",loc_db=None,mode="64")
@@ -243,7 +345,8 @@ def dis_assem(PID, entry, need_count, debug=0):
     if need_count:
         print("---------Total count : %d ------------" % total_count)
     f.write(indirect_jump.make_jump_table(jump_table))
-    f.write(indirect_jump.make_callee_table(missing_callees))
+    f.write(indirect_jump.make_callee_table(missing_callees,
+                                            keep_call_stack))
 
     f.close()
 
