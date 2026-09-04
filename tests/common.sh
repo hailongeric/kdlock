@@ -13,6 +13,7 @@ BENCH_BIN="$BENCH_DIR/klock_test"
 
 TARGET_PROCESS="klock_test"
 TIMEOUT_SEC=30
+JIT_INSTALL_PATTERN='install JIT chunk:.*status=0'
 
 # --- Output helpers ---
 
@@ -20,14 +21,25 @@ pass() { echo "[PASS] $1"; }
 fail() { echo "[FAIL] $1: $2"; EXIT_CODE=1; }
 info() { echo "  [INFO] $1"; }
 
+# Sourced test scripts read this shared result accumulator.
+# shellcheck disable=SC2034
 EXIT_CODE=0
 
 # --- Build ---
 
 build_all() {
-    make -C "$KM_DIR" -j"$(nproc)" >/dev/null 2>&1 || { fail "$TEST_NAME" "kernel module build failed"; return 1; }
-    make -C "$KLOCK_DIR" -j"$(nproc)" >/dev/null 2>&1 || { fail "$TEST_NAME" "klock_module build failed"; return 1; }
-    make -C "$DAEMON_DIR" >/dev/null 2>&1 || true
+    make -C "$KM_DIR" -j"$(nproc)" >/dev/null 2>&1 || {
+        fail "$TEST_NAME" "kernel module build failed"
+        return 1
+    }
+    make -C "$KLOCK_DIR" -j"$(nproc)" >/dev/null 2>&1 || {
+        fail "$TEST_NAME" "klock_module build failed"
+        return 1
+    }
+    make -C "$DAEMON_DIR" >/dev/null 2>&1 || {
+        fail "$TEST_NAME" "daemon build failed"
+        return 1
+    }
     gcc -I"$KDLOCK_DIR/include" "$BENCH_DIR/klock_test.c" \
         -o "$BENCH_BIN" -lpthread 2>/dev/null || {
         fail "$TEST_NAME" "benchmark build failed"
@@ -112,9 +124,13 @@ check_dmesg_ok() {
     return 0
 }
 
+jit_install_count() {
+    dmesg | grep -c "$JIT_INSTALL_PATTERN" || true
+}
+
 check_dmesg_has() {
     local pattern="$1"
-    local msg="${2:-expected pattern '$pattern' in dmesg}"
+    local msg="${2:-expected pattern $pattern in dmesg}"
     # Do not use grep -q here. With pipefail and a large kernel log, grep can
     # exit on the first match and make dmesg fail with SIGPIPE.
     if ! dmesg | grep "$pattern" >/dev/null; then
@@ -126,7 +142,7 @@ check_dmesg_has() {
 
 check_dmesg_not_has() {
     local pattern="$1"
-    local msg="${2:-unexpected pattern '$pattern' in dmesg}"
+    local msg="${2:-unexpected pattern $pattern in dmesg}"
     if dmesg | grep "$pattern" >/dev/null; then
         fail "$TEST_NAME" "$msg"
         dmesg | grep "$pattern" | tail -3
@@ -152,6 +168,49 @@ check_dmesg_stat_equals() {
         fail "$TEST_NAME" "$msg (got ${actual:-missing})"
         return 1
     fi
+    return 0
+}
+
+check_complex_cs_integrity() {
+    local expected_operations="$1"
+    local expected_active_states="${2:-}"
+    local line operations active_states failures
+
+    line="$(dmesg | sed -n '/kd_cs integrity:/p' | tail -n 1)"
+    operations="$(printf '%s\n' "$line" | sed -n \
+        's/.*operations=\([0-9][0-9]*\).*/\1/p')"
+    active_states="$(printf '%s\n' "$line" | sed -n \
+        's/.*active_states=\([0-9][0-9]*\).*/\1/p')"
+    failures="$(printf '%s\n' "$line" | sed -n \
+        's/.*failures=\([0-9][0-9]*\).*/\1/p')"
+
+    if [ -z "$operations" ] || [ -z "$active_states" ] ||
+       [ -z "$failures" ]; then
+        fail "$TEST_NAME" "complex critical-section integrity report is missing"
+        return 1
+    fi
+    if [ "$operations" != "$expected_operations" ]; then
+        fail "$TEST_NAME" \
+            "complex critical-section operation mismatch: expected $expected_operations, got $operations"
+        return 1
+    fi
+    if [ "$expected_operations" -gt 0 ] && [ "$active_states" -eq 0 ]; then
+        fail "$TEST_NAME" "complex critical-section state was never updated"
+        return 1
+    fi
+    if [ -n "$expected_active_states" ] &&
+       [ "$active_states" != "$expected_active_states" ]; then
+        fail "$TEST_NAME" \
+            "complex critical-section active-state mismatch: expected $expected_active_states, got $active_states"
+        return 1
+    fi
+    if [ "$failures" != "0" ]; then
+        fail "$TEST_NAME" "complex critical-section state validation failed"
+        dmesg | grep "kd_cs .*mismatch\|kd_cs integrity limit" | tail -n 8 || true
+        return 1
+    fi
+
+    info "Complex critical section verified: $operations transitions across $active_states state(s)"
     return 0
 }
 
@@ -222,7 +281,7 @@ wait_for_jit_quiescence() {
     local writes artifacts
 
     while [ "$SECONDS" -lt "$deadline" ]; do
-        writes="$(dmesg | grep -c "write to kernel" || true)"
+        writes="$(jit_install_count)"
         artifacts="$(find "$DAEMON_DIR" -mindepth 4 -maxdepth 4 -type f \
             -name jit.bin -size +127c 2>/dev/null | wc -l)"
         if [ "$artifacts" -ge "$min_artifacts" ]; then
@@ -249,12 +308,10 @@ check_daemon_read_kernel_text() {
         fail "$TEST_NAME" "daemon log is missing or empty"
         return 1
     fi
-    if ! grep -q "Targets: \\['0x" "$log_file"; then
-        fail "$TEST_NAME" "daemon did not log translation targets"
-        return 1
-    fi
-    if ! grep -Eq "^\\['0x[0-9a-f]+" "$log_file"; then
-        fail "$TEST_NAME" "daemon did not log bytes read from kernel text"
+    if ! grep -Eq \
+            '^Translation input: entry=0x[0-9a-f]+ targets=[1-9][0-9]* regions=[1-9][0-9]* bytes=[1-9][0-9]*$' \
+            "$log_file"; then
+        fail "$TEST_NAME" "daemon did not confirm reading kernel text"
         return 1
     fi
     return 0
@@ -311,6 +368,46 @@ check_jit_artifacts() {
     return 0
 }
 
+check_complex_cs_artifact() {
+    local asm_dir="$1"
+    local code
+
+    code="$(awk '
+        /^[[:space:]]*\/\*/ { in_comment = 1; next }
+        /^[[:space:]]*\*\// { in_comment = 0; next }
+        !in_comment { print }
+    ' "$asm_dir/jit.S")"
+
+    if ! printf '%s\n' "$code" |
+            grep -Ei 'AND[[:space:]]+[^,]+,[[:space:]]+0x3' >/dev/null; then
+        fail "$TEST_NAME" \
+            "jit.S does not execute the complex critical-section lane selector"
+        return 1
+    fi
+    if ! printf '%s\n' "$code" |
+            grep -E 'JZ[[:space:]]+loc_' >/dev/null; then
+        fail "$TEST_NAME" \
+            "jit.S does not execute the complex critical-section branch"
+        return 1
+    fi
+    if ! printf '%s\n' "$code" | grep -E 'ROL[[:space:]]+' >/dev/null ||
+       ! printf '%s\n' "$code" | grep -E 'IMUL[[:space:]]+' >/dev/null; then
+        fail "$TEST_NAME" \
+            "jit.S is missing complex rotate or multiply operations"
+        return 1
+    fi
+    if ! printf '%s\n' "$code" |
+            grep -E 'QWORD PTR \[[^]]*0x8[[:space:]]*\*[[:space:]]*R' \
+                >/dev/null; then
+        fail "$TEST_NAME" \
+            "jit.S is missing complex indexed state access"
+        return 1
+    fi
+
+    info "Complex critical-section instructions verified in $asm_dir"
+    return 0
+}
+
 check_jit_hostcall_artifact() {
     local asm_dir="$1"
     local symbol="$2"
@@ -359,38 +456,38 @@ check_jit_hostcall_artifact() {
 }
 
 is_jit_gs_context_artifact() {
-	local asm_dir="$1"
+    local asm_dir="$1"
 
-	grep -Eq "Stack_RGS" "$asm_dir/jit.S" &&
-		grep -Eq "Stack_RCT" "$asm_dir/jit.S"
+    grep -Eq "Stack_RGS" "$asm_dir/jit.S" &&
+        grep -Eq "Stack_RCT" "$asm_dir/jit.S"
 }
 
 jit_has_live_segment_operand() {
-	local asm_dir="$1"
+    local asm_dir="$1"
 
-	awk '
-		/^[[:space:]]*\/\*/ { in_comment = 1; next }
-		/^[[:space:]]*\*\// { in_comment = 0; next }
-		!in_comment && /(FS|GS):\[/ { found = 1 }
-		END { exit(found ? 0 : 1) }
-	' "$asm_dir/jit.S"
+    awk '
+        /^[[:space:]]*\/\*/ { in_comment = 1; next }
+        /^[[:space:]]*\*\// { in_comment = 0; next }
+        !in_comment && /(FS|GS):\[/ { found = 1 }
+        END { exit(found ? 0 : 1) }
+    ' "$asm_dir/jit.S"
 }
 
 check_jit_gs_context_artifact() {
-	local asm_dir="$1"
+    local asm_dir="$1"
 
-	if ! is_jit_gs_context_artifact "$asm_dir"; then
-		fail "$TEST_NAME" \
-			"jit.S does not load both waiter GS and logical current"
-		return 1
-	fi
-	if jit_has_live_segment_operand "$asm_dir"; then
-		fail "$TEST_NAME" \
-			"jit.S retained a hardware segment-prefixed memory operand"
-		return 1
-	fi
-	info "GS/current context code verified in $asm_dir"
-	return 0
+    if ! is_jit_gs_context_artifact "$asm_dir"; then
+        fail "$TEST_NAME" \
+            "jit.S does not load both waiter GS and logical current"
+        return 1
+    fi
+    if jit_has_live_segment_operand "$asm_dir"; then
+        fail "$TEST_NAME" \
+            "jit.S retained a hardware segment-prefixed memory operand"
+        return 1
+    fi
+    info "GS/current context code verified in $asm_dir"
+    return 0
 }
 
 jit_entry_from_asm_dir() {

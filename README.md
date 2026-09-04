@@ -29,14 +29,11 @@ See [docs/DESIGN.md](docs/DESIGN.md) for the full technical design.
 
 | Component | State |
 |-----------|-------|
-| Spinlock delegation (modes 0-2, 6-10) | Working; nested JIT, mode 2 native hostcalls, bounded recovery, and waiter GS/current proxying validated |
-| Mutex delegation protocol (modes 3-5, 11) | Safe mode working; mode 3 stress JIT, mode 4 nested A/B proxy, mode 5 native hostcalls, and mode 11 waiter GS/current proxying confirmed |
-| Dynamic translation (daemon + miasm) | Working |
+| Spinlock delegation | Modes 0-2 and 6-10 validated, including nesting, hostcalls, recovery, and waiter context |
+| Mutex delegation | Safe path plus opt-in JIT modes 3-5 and 11 validated |
+| Translation pipeline | Daemon, miasm translation, JIT write-back, and execution validated |
 | Hot-lock promotion | Working |
-| Nested spinlock handling | TCLock-style JIT delegation, recursive frames, OOO handoff, and native retry |
-| Nested mutex handling | A remains delegated while contended B is queued and executed by a B combiner |
-| NUMA-aware combining | Not yet enabled |
-| ARM64 | Not supported |
+| Architecture scope | x86-64 only; NUMA-aware combining is not enabled |
 
 ## Repository Layout
 
@@ -47,14 +44,15 @@ kdlock/
 │   ├── kd_lock.c     Hook implementations (spinlock + mutex)
 │   ├── kd_spinlock.c Spinlock delegation protocol
 │   ├── kd_mutex.c    Mutex delegation protocol
-│   ├── exe.c         JIT execution engine
+│   ├── kd_exec.c     Nested execution frames and lock ownership
+│   ├── kd_hotlock.c  Bounded hot-lock promotion table
+│   ├── exe.c         JIT lookup, execution, and hostcall engine
 │   ├── sys.c         /dev/kd_dev char device
-│   └── kd_int3.c     Hot-lock promotion + int3 handler
 ├── klock_module/      Test workload module (/dev/lock_dev)
 ├── daemon/            Userspace translation daemon
 ├── disassem/          miasm-based kernel text translator
 ├── include/           Shared headers + wrapper.S
-├── docs/              Design, component map, operating notes, TODOs
+├── docs/              Design, JIT ABI, operations, validation, TODOs
 ├── bench/             Userspace benchmark driver
 └── tests/             Test suite
     ├── unit/          User-space unit tests (no kernel needed)
@@ -77,10 +75,11 @@ individual changed files.
 
 ```bash
 cd /root/host_fs/kdlock
-make -C kernel_module
-make -C klock_module
-make -C daemon
-gcc -Iinclude bench/klock_test.c -o bench/klock_test -lpthread
+make -C kernel_module W=1
+make -C klock_module W=1
+make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'
+cc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c \
+  -o bench/klock_test -lpthread
 ```
 
 ### Run
@@ -123,7 +122,7 @@ Terminal 1 — run benchmark:
 ### Inspect Results
 
 ```bash
-dmesg | grep -i "delegation ok\|success_rate\|begin delegate"
+dmesg | grep -i "delegation ok\|kd_cs integrity\|begin delegate"
 ```
 
 ## Testing
@@ -134,7 +133,7 @@ Run inside the VM from `/root/host_fs/kdlock`:
 
 ```bash
 make -C tests/unit clean >/dev/null && make -C tests/unit run
-python3 -m py_compile disassem/*.py
+python3 -m compileall -q disassem tests/unit
 make -C kernel_module -j"$(nproc)"
 make -C klock_module -j"$(nproc)"
 make -C daemon
@@ -169,24 +168,31 @@ KDLOCK_RECOVERY_CONFIRMED=1 \
   bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5 10 11
 ```
 
-Selectors may be supplied individually. A pass requires complete translation
-artifacts, kernel write-back, actual translated completion (`jit_success`), an
-exact final counter, drained queues/frames, and clean kernel diagnostics. Modes
-3/4/5/11 additionally verify that `mutex_jit=1` is active. Modes 2 and 5 also
-require a named `ktime_get` hostcall stub, no service callee translation or
-runtime recompilation, and matching nonzero exit/execute/resume counters. Mode 5
-additionally requires hostcall counts to equal mutex JIT completion and waiter
-resume counts under repeated contention. Modes 10 and 11 require generated
-code to load both `Stack_RGS` and `Stack_RCT`, contain no live hardware segment
-operand, execute that artifact, and report zero GS/current mismatches.
+Selectors may be supplied individually. The workload inside every tested lock is
+a multi-field state transition: sequence and sum updates, an odd/even branch, a
+rolling rotate/mix, indexed writes to four lanes, multiplication, and a final
+commit value. A pass requires the executable part of `jit.S` to retain the
+distinctive branch, rotate, multiply, and indexed-memory operations. After the
+module unloads, native code replays every per-lock state and requires
+`kd_cs integrity: operations=<exact> active_states=<expected> failures=0` in
+addition to the exact legacy counter.
 
-The current 2026-09-04 regression passed modes 0-5 after the segment-context
-changes. Mode 5 observed `mutex_jit=1` and recorded
-`jit_success=jit_resume=399`, matching 399 complete hostcall cycles, exact
-counters of 12582, and zero hostcall, queue, frame, or invariant failures.
-Independent final runs also passed mode 10 with GS probe `3/3/0` and mode 11
-with GS probe `12002/12002/0`; both matched runtime IPs to the inspected
-GS/current artifacts. Exact evidence and retained logs are in
+A pass also requires complete translation artifacts, kernel write-back, actual
+translated completion (`jit_success`), drained queues/frames, and clean kernel
+diagnostics. Modes 3/4/5/11 additionally verify that `mutex_jit=1` is active.
+Kernel write-back evidence is the final `install JIT chunk: ... status=0` event;
+intermediate chunks never publish a partially copied artifact.
+Modes 2 and 5 also require a named `ktime_get` hostcall stub, no service callee
+translation or runtime recompilation, and matching nonzero
+exit/execute/resume counters. Mode 5 additionally requires hostcall counts to
+equal mutex JIT completion and waiter resume counts under repeated contention.
+Modes 10 and 11 require generated code to load both `Stack_RGS` and
+`Stack_RCT`, contain no live hardware segment operand, execute that artifact,
+and report zero GS/current mismatches.
+
+The latest strengthened regression passed the complete mode set in one run.
+Every mode matched its exact transition count and reported zero complex-state
+mismatch. Current artifact sizes, commands, counters, and retained logs are in
 [docs/VALIDATION.md](docs/VALIDATION.md).
 
 | Mode | `tests/run_all.sh` | Real JIT acceptance |
@@ -261,12 +267,10 @@ Do not issue HMP `quit`, which exits QEMU.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `target_process` | `"kd_test"` | Space-separated process names to intercept |
-| `velvet_wait_queue` | 1 | Enable velvet wait queue optimization |
-| `delegate_election` | 1 | Enable delegate election |
-| `mutex_jit` | 0 | Enable experimental mutex JIT sandbox execution. Mode 3 repeated/stress execution, mode 4 nested A/B proxy execution, mode 5 repeated hostcall execution, and mode 11 waiter GS/current execution are recovery-confirmed. It remains opt-in; default 0 is required for normal testing. |
-| `spin_jit_fail_after_nested_lock` | 0 | One-shot test fault after nested spin acquisition; validates frame cleanup and native retry. |
-| `jit_hl_fault_after_known_call` | 0 | One-shot test fault after a known JIT call: 1=CALL miss, 2=IJ miss, 3=instruction limit. |
+| `target_process` | `"kd_test"` | One exact `current->comm` name routed through kdlock hooks |
+| `mutex_jit` | 0 | Opt-in translated mutex path for modes 3-5 and 11; keep disabled outside recovery tests |
+| `spin_jit_fail_after_nested_lock` | 0 | Inject one failure after nested spin acquisition |
+| `jit_hl_fault_after_known_call` | 0 | Inject CALL miss (1), IJ miss (2), or instruction limit (3) |
 
 ## Prerequisites
 
@@ -277,10 +281,12 @@ Do not issue HMP `quit`, which exits QEMU.
 
 ## Documentation
 
-- [docs/DESIGN.md](docs/DESIGN.md) — Full technical design (architecture, protocols, sandbox model)
-- [docs/JIT_REGISTER_ABI.md](docs/JIT_REGISTER_ABI.md) — Current JIT entry/exit, virtual-register, stack, and continuation ABI
-- [docs/COMPONENTS.md](docs/COMPONENTS.md) — File-by-file component and test map
-- [docs/AGENTS.md](docs/AGENTS.md) — Automation operating manual and safety rules
-- [docs/VALIDATION.md](docs/VALIDATION.md) — Latest reproducible JIT execution evidence
-- [docs/MODE2_HOSTCALL_IMPLEMENTATION.md](docs/MODE2_HOSTCALL_IMPLEMENTATION.md) — Mode 2 hostcall protocol, implementation steps, and acceptance checklist
-- [docs/TODO.md](docs/TODO.md) — Open tasks and known gaps
+- [docs/DESIGN.md](docs/DESIGN.md) - architecture, delegation protocols, and
+  sandbox model
+- [docs/JIT_REGISTER_ABI.md](docs/JIT_REGISTER_ABI.md) - x86-64 JIT register,
+  stack, exit, and continuation ABI
+- [docs/AGENTS.md](docs/AGENTS.md) - VM operating procedure and safety rules
+- [docs/VALIDATION.md](docs/VALIDATION.md) - latest reproducible execution
+  evidence and acceptance contract
+- [docs/TODO.md](docs/TODO.md) - unfinished work and known gaps
+- [daemon/README.md](daemon/README.md) - daemon options and workspace behavior

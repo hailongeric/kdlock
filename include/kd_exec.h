@@ -52,8 +52,6 @@ struct kd_combiner_state {
 	unsigned int lock_depth;
 	int curr_cs_cpu;
 	int prev_cs_cpu;
-	unsigned long counter_val;
-	void *next_node_ptr;
 	void *local_queue_head;
 	void *local_queue_tail;
 	unsigned long local_shadow_stack_ptr;
@@ -100,56 +98,43 @@ struct kd_exec_context {
 void kd_exec_context_init(void);
 void kd_exec_context_exit(void);
 
-struct kd_exec_context *kd_exec_current_context(void);
 struct kd_exec_frame *kd_exec_current_frame(void);
 bool kd_exec_context_busy(void);
 
-struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
-					 unsigned long entry_ip,
-					 unsigned long outer_lock_addr,
-					 void *waiter,
-					 void *outgoing_rsp_ptr,
-					 unsigned int held_lock_depth,
-					 unsigned long gsbase,
-					 struct task_struct *logical_task);
+struct kd_exec_frame *
+kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
+		   unsigned long outer_lock_addr, void *waiter,
+		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		   unsigned long gsbase, struct task_struct *logical_task);
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs);
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame);
-bool kd_exec_context_validate(const struct kd_exec_context *ctx);
-
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 				     const struct pt_regs *regs);
-void kd_exec_frame_save_call_continuation(struct kd_exec_frame *frame,
-					  const struct pt_regs *regs);
 unsigned int kd_exec_frame_lock_depth(const struct kd_exec_frame *frame);
 
 int kd_exec_frame_set_lock_stack(struct kd_exec_frame *frame,
 				 const unsigned long *lock_addr,
 				 unsigned int depth);
-int kd_exec_frame_set_lock_entries(
-	struct kd_exec_frame *frame,
-	const unsigned long *lock_addr,
-	const enum kd_exec_lock_kind *lock_kind,
-	void *const *lock_node,
-	const bool *lock_released,
-	unsigned int depth);
+int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,
+				   const unsigned long *lock_addr,
+				   const enum kd_exec_lock_kind *lock_kind,
+				   void *const *lock_node,
+				   const bool *lock_released,
+				   unsigned int depth);
 int kd_exec_frame_lock_push(struct kd_exec_frame *frame,
 			    unsigned long lock_addr,
-			    enum kd_exec_lock_kind kind,
-			    void *lock_node);
+			    enum kd_exec_lock_kind kind, void *lock_node);
 int kd_exec_frame_lock_pop(struct kd_exec_frame *frame,
-				   unsigned long lock_addr);
+			   unsigned long lock_addr);
 int kd_exec_frame_lock_mark_released(struct kd_exec_frame *frame,
-					     unsigned long lock_addr);
-bool kd_exec_frame_lock_released(const struct kd_exec_frame *frame,
-						unsigned long lock_addr);
-unsigned long kd_exec_frame_lock_top(const struct kd_exec_frame *frame);
+				     unsigned long lock_addr);
 enum kd_exec_lock_kind
 kd_exec_frame_lock_kind(const struct kd_exec_frame *frame,
 			unsigned long lock_addr);
 void *kd_exec_frame_lock_node(const struct kd_exec_frame *frame,
 			      unsigned long lock_addr);
 bool kd_exec_frame_lock_contains(const struct kd_exec_frame *frame,
-					 unsigned long lock_addr);
+				 unsigned long lock_addr);
 bool kd_exec_frame_has_unreleased_nested(const struct kd_exec_frame *frame);
 bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame);
 int kd_exec_frame_record_event(struct kd_exec_frame *frame,
@@ -158,6 +143,5 @@ int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 int kd_exec_frame_complete(struct kd_exec_frame *frame);
 int kd_exec_frame_abort(struct kd_exec_frame *frame);
 int kd_exec_frame_state(const struct kd_exec_frame *frame);
-void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state);
 
 #endif /* KD_EXEC_H */

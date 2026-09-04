@@ -12,9 +12,10 @@
 #include "exe_info.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#define X86_KERNEL_ADDRESS_MIN 0xffff800000000000UL
+#define MAX_PAYLOAD 4000
 
 static const char *sys_path = "/dev/kd_dev";
-static const int max_payload = 4000;
 
 enum daemon_mode {
 	MODE_V1 = 1,
@@ -33,7 +34,7 @@ static int hash_cnt;
 static char *cmd_hist[1000];
 static int cmd_cnt;
 
-static int append_cmd(char *cmd, size_t size, const char *fmt, ...)
+static int format_cmd(char *cmd, size_t size, const char *fmt, ...)
 {
 	va_list ap;
 	int ret;
@@ -81,8 +82,8 @@ static int run_cmd(const char *cmd, const char *label)
 	int ret = system(cmd);
 
 	if (ret) {
-		fprintf(stderr, "daemon: %s command failed (%d): %s\n",
-			label, ret, cmd);
+		fprintf(stderr, "daemon: %s command failed (%d): %s\n", label,
+			ret, cmd);
 		return -1;
 	}
 	return 0;
@@ -102,7 +103,8 @@ static int hash_history(unsigned int hash)
 	return 0;
 }
 
-static void workspace_path(char *buf, size_t size, const struct daemon_config *cfg,
+static void workspace_path(char *buf, size_t size,
+			   const struct daemon_config *cfg,
 			   const struct kd_exe_info *exe)
 {
 	if (cfg->mode == MODE_V1)
@@ -111,26 +113,31 @@ static void workspace_path(char *buf, size_t size, const struct daemon_config *c
 		snprintf(buf, size, "./%p/%d", (void *)exe->RIP, exe->tgid);
 }
 
-static int make_init_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
+static int make_init_cmd(char *cmd, size_t size,
+			 const struct daemon_config *cfg,
 			 const struct kd_exe_info *exe)
 {
 	char workspace[256];
 
 	workspace_path(workspace, sizeof(workspace), cfg, exe);
-	return append_cmd(cmd, size, "mkdir -p %s && cp -rf ./asm/ %s/",
-			  workspace, workspace);
+	return format_cmd(cmd, size,
+			  "mkdir -p %s/asm && "
+			  ": > %s/asm/callee_table.txt && "
+			  ": > %s/asm/ij_table.txt",
+			  workspace, workspace, workspace);
 }
 
-static int make_callee_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
+static int make_callee_cmd(char *cmd, size_t size,
+			   const struct daemon_config *cfg,
 			   const struct kd_exe_info *exe)
 {
 	char workspace[256];
 
 	workspace_path(workspace, sizeof(workspace), cfg, exe);
-	return append_cmd(cmd, size,
-			  "mkdir -p %s/asm && touch %s/asm/ij_table.txt && echo %p >> %s/asm/callee_table.txt",
-			  workspace, workspace, (void *)exe->tgt_addr,
-			  workspace);
+	return format_cmd(
+		cmd, size,
+		"mkdir -p %s/asm && touch %s/asm/ij_table.txt && echo %p >> %s/asm/callee_table.txt",
+		workspace, workspace, (void *)exe->tgt_addr, workspace);
 }
 
 static int make_ij_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
@@ -139,37 +146,43 @@ static int make_ij_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
 	char workspace[256];
 
 	workspace_path(workspace, sizeof(workspace), cfg, exe);
-	return append_cmd(cmd, size,
-			  "mkdir -p %s/asm && touch %s/asm/callee_table.txt && echo '%p %p' >> %s/asm/ij_table.txt",
-			  workspace, workspace, (void *)exe->jump_from,
-			  (void *)exe->tgt_addr, workspace);
+	return format_cmd(
+		cmd, size,
+		"mkdir -p %s/asm && touch %s/asm/callee_table.txt && echo '%p %p' >> %s/asm/ij_table.txt",
+		workspace, workspace, (void *)exe->jump_from,
+		(void *)exe->tgt_addr, workspace);
 }
 
-static int compile_entry(const struct daemon_config *cfg, const struct kd_exe_info *exe)
+static int compile_entry(const struct daemon_config *cfg,
+			 const struct kd_exe_info *exe)
 {
 	char cmd[1024];
 
 	if (cfg->mode == MODE_V1) {
-		if (append_cmd(cmd, sizeof(cmd),
-			       "cd ./%p/ && python3 ../../disassem/disassem.py %d %p",
-			       (void *)exe->RIP, exe->pid, (void *)exe->RIP))
+		if (format_cmd(
+			    cmd, sizeof(cmd),
+			    "cd ./%p/ && python3 ../../disassem/disassem.py %d %p",
+			    (void *)exe->RIP, exe->pid, (void *)exe->RIP))
 			return -1;
 	} else {
-		if (append_cmd(cmd, sizeof(cmd),
-			       "cd ./%p/%d/ && python3 ../../../disassem/disassem.py %d %p",
-			       (void *)exe->RIP, exe->tgid, exe->pid, (void *)exe->RIP))
+		if (format_cmd(
+			    cmd, sizeof(cmd),
+			    "cd ./%p/%d/ && python3 ../../../disassem/disassem.py %d %p",
+			    (void *)exe->RIP, exe->tgid, exe->pid,
+			    (void *)exe->RIP))
 			return -1;
 	}
 	return run_cmd(cmd, "compile");
 }
 
-static int read_sys(char *buffer, size_t size)
+static ssize_t read_sys(void *buffer, size_t size)
 {
-	int fd = -1;
-	int len;
+	ssize_t len;
+	int fd;
 
-	while (fd == -1)
-		fd = open(sys_path, O_RDONLY);
+	fd = open(sys_path, O_RDONLY);
+	if (fd == -1)
+		return -errno;
 	len = read(fd, buffer, size);
 	if (len < 0) {
 		perror("read /dev/kd_dev");
@@ -180,16 +193,17 @@ static int read_sys(char *buffer, size_t size)
 	return len;
 }
 
-static int write_sys(const struct daemon_config *cfg, const struct kd_exe_info *exe)
+static int write_sys(const struct daemon_config *cfg,
+		     const struct kd_exe_info *exe)
 {
-	int rest_len;
-	int to_copy_len;
-	char i_buf[4096 * 256];
-	char o_buf[4096 * 2];
+	unsigned char buffer[sizeof(struct kd_recv_pkt) + MAX_PAYLOAD];
 	struct kd_recv_pkt pkt;
 	char jit_path[512];
 	char workspace[256];
+	size_t remaining;
+	long image_size;
 	FILE *fp;
+	int fd;
 
 	workspace_path(workspace, sizeof(workspace), cfg, exe);
 	snprintf(jit_path, sizeof(jit_path), "%s/asm/jit.bin", workspace);
@@ -200,42 +214,77 @@ static int write_sys(const struct daemon_config *cfg, const struct kd_exe_info *
 			strerror(errno));
 		return -1;
 	}
-	rest_len = fread(i_buf, 1, sizeof(i_buf), fp);
-	fclose(fp);
+	if (fseek(fp, 0, SEEK_END)) {
+		fprintf(stderr, "daemon: failed to seek %s\n", jit_path);
+		fclose(fp);
+		return -1;
+	}
+	image_size = ftell(fp);
+	if (image_size <= 0 || (unsigned long)image_size > KD_CODE_BLOCK_SIZE ||
+	    fseek(fp, 0, SEEK_SET)) {
+		fprintf(stderr, "daemon: invalid JIT image size for %s\n",
+			jit_path);
+		fclose(fp);
+		return -1;
+	}
+	remaining = (size_t)image_size;
+
+	fd = open(sys_path, O_WRONLY);
+	if (fd == -1) {
+		perror("open /dev/kd_dev for write");
+		fclose(fp);
+		return -1;
+	}
 
 	pkt.pid = exe->pid;
 	pkt.RIP = exe->RIP;
 	pkt.offset = 0;
 
-	while (rest_len > 0) {
-		fp = fopen(sys_path, "wb");
-		if (!fp) {
-			perror("open /dev/kd_dev for write");
-			return -1;
+	while (remaining) {
+		size_t chunk = remaining < MAX_PAYLOAD ? remaining :
+							 MAX_PAYLOAD;
+		size_t packet_size = sizeof(pkt) + chunk;
+		ssize_t written;
+
+		if (fread(buffer + sizeof(pkt), 1, chunk, fp) != chunk) {
+			fprintf(stderr, "daemon: failed to read %s\n",
+				jit_path);
+			goto error;
 		}
-		pkt.status_code = (rest_len <= max_payload ? 0 : -1);
-		to_copy_len = rest_len <= max_payload ? rest_len : max_payload;
-		memcpy(o_buf, &pkt, sizeof(pkt));
-		memcpy(o_buf + sizeof(pkt), i_buf + pkt.offset, to_copy_len);
-		rest_len -= to_copy_len;
-		pkt.offset += to_copy_len;
-		fwrite(o_buf, 1, sizeof(pkt) + to_copy_len, fp);
-		fclose(fp);
+		pkt.status_code = remaining == chunk ? KD_EXE_NORMAL :
+						       KD_EXE_UNINIT;
+		memcpy(buffer, &pkt, sizeof(pkt));
+
+		do {
+			written = write(fd, buffer, packet_size);
+		} while (written < 0 && errno == EINTR);
+		if (written != (ssize_t)packet_size) {
+			if (written < 0)
+				perror("write /dev/kd_dev");
+			else
+				fprintf(stderr,
+					"daemon: short device write: %zd of %zu bytes\n",
+					written, packet_size);
+			goto error;
+		}
+
+		remaining -= chunk;
+		pkt.offset += chunk;
 	}
+
+	close(fd);
+	fclose(fp);
 	return 0;
+
+error:
+	close(fd);
+	fclose(fp);
+	return -1;
 }
 
 static int valid_address(unsigned long addr)
 {
-	static const unsigned long *invalid_addrs;
-	static const size_t invalid_addr_count;
-	size_t i;
-
-	for (i = 0; i < invalid_addr_count; i++) {
-		if (addr == invalid_addrs[i])
-			return 0;
-	}
-	return 1;
+	return addr >= X86_KERNEL_ADDRESS_MIN;
 }
 
 static inline unsigned int hash2(unsigned int pid, unsigned long ip)
@@ -243,14 +292,16 @@ static inline unsigned int hash2(unsigned int pid, unsigned long ip)
 	return (((unsigned int)ip ^ 1674567091) + (pid ^ 569809));
 }
 
-static inline unsigned long hash3(long a, long b, long c)
+static inline unsigned int hash3(unsigned long a, unsigned long b,
+				 unsigned long c)
 {
 	unsigned long hash_value = a + b + c;
+
 	return (unsigned int)hash_value;
 }
 
-static void log_status(const struct daemon_config *cfg, const struct kd_exe_info *exe,
-		       const char *msg)
+static void log_status(const struct daemon_config *cfg,
+		       const struct kd_exe_info *exe, const char *msg)
 {
 	if (cfg->verbose)
 		printf("%5d %p %s", exe->pid, (void *)exe->RIP, msg);
@@ -258,30 +309,31 @@ static void log_status(const struct daemon_config *cfg, const struct kd_exe_info
 
 static void check_once(const struct daemon_config *cfg)
 {
-	int len;
-	int sz = sizeof(struct kd_exe_info);
-	struct kd_exe_info *exe;
+	static struct kd_exe_info entries[KD_MAX_EXE];
+	const size_t entry_size = sizeof(entries[0]);
+	ssize_t len;
 	char cmd[1024];
-	char buffer[4096 * 256] = {0};
-	int begin_pid;
-	unsigned long begin_rip;
+	size_t count;
+	size_t i;
 
-	len = read_sys(buffer, sizeof(buffer));
+	len = read_sys(entries, sizeof(entries));
 	if (len <= 0)
 		return;
+	if ((size_t)len % entry_size) {
+		fprintf(stderr, "daemon: malformed kd_dev read: %zd bytes\n",
+			len);
+		return;
+	}
 
-	exe = (struct kd_exe_info *)buffer;
-	begin_pid = exe->pid;
-	begin_rip = exe->RIP;
+	count = (size_t)len / entry_size;
+	for (i = 0; i < count; i++) {
+		struct kd_exe_info *exe = &entries[i];
 
-	for (int i = 0; i < len / sz; i++, exe++) {
 		cmd[0] = 0;
 
-		if (i > 0 && exe->pid == begin_pid && exe->RIP == begin_rip)
-			break;
-
 		if (exe->status_code == KD_EXE_NORMAL ||
-		    (cfg->mode == MODE_V1 && exe->status_code == KD_EXE_INST_LIMIT))
+		    (cfg->mode == MODE_V1 &&
+		     exe->status_code == KD_EXE_INST_LIMIT))
 			continue;
 
 		if (exe->status_code == KD_EXE_UNINIT) {
@@ -289,7 +341,8 @@ static void check_once(const struct daemon_config *cfg)
 				continue;
 			log_status(cfg, exe, "Initialization");
 		} else if (exe->status_code == KD_EXE_CALL_MISS) {
-			if (valid_address(exe->tgt_addr) && valid_address(exe->RIP)) {
+			if (valid_address(exe->tgt_addr) &&
+			    valid_address(exe->RIP)) {
 				if (make_callee_cmd(cmd, sizeof(cmd), cfg, exe))
 					continue;
 				if (cfg->verbose)
@@ -314,8 +367,8 @@ static void check_once(const struct daemon_config *cfg)
 			} else if (!hash_history(hash3(exe->pid, exe->jump_from,
 						       exe->RIP))) {
 				printf("KD_EXE_IJ_MISS invalid address %p %p %p\n",
-				       (void *)exe->jump_from, (void *)exe->tgt_addr,
-				       (void *)exe->RIP);
+				       (void *)exe->jump_from,
+				       (void *)exe->tgt_addr, (void *)exe->RIP);
 			}
 		} else {
 			printf("%5d %p Unrecognized Code %d", exe->pid,
@@ -378,19 +431,23 @@ static int parse_args(int argc, char **argv, struct daemon_config *cfg)
 				return -1;
 			if (!strcmp(argv[i], "1") || !strcmp(argv[i], "v1"))
 				cfg->mode = MODE_V1;
-			else if (!strcmp(argv[i], "2") || !strcmp(argv[i], "v2"))
+			else if (!strcmp(argv[i], "2") ||
+				 !strcmp(argv[i], "v2"))
 				cfg->mode = MODE_V2;
 			else
 				return -1;
-		} else if (!strcmp(argv[i], "--quiet") || !strcmp(argv[i], "-q")) {
+		} else if (!strcmp(argv[i], "--quiet") ||
+			   !strcmp(argv[i], "-q")) {
 			cfg->verbose = false;
-		} else if (!strcmp(argv[i], "--verbose") || !strcmp(argv[i], "-v")) {
+		} else if (!strcmp(argv[i], "--verbose") ||
+			   !strcmp(argv[i], "-v")) {
 			cfg->verbose = true;
 		} else if (!strcmp(argv[i], "--poll-us")) {
 			if (++i >= argc)
 				return -1;
 			cfg->poll_us = (useconds_t)strtoul(argv[i], NULL, 10);
-		} else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
+		} else if (!strcmp(argv[i], "--help") ||
+			   !strcmp(argv[i], "-h")) {
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
 		} else {
@@ -413,7 +470,8 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	system("rm -rf 0x*");
+	if (run_cmd("rm -rf -- 0x*", "workspace cleanup"))
+		return EXIT_FAILURE;
 	while (1) {
 		check_once(&cfg);
 		usleep(cfg.poll_us);

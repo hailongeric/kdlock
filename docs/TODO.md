@@ -1,35 +1,11 @@
 # kdlock Open Tasks
 
-Last updated: 2026-09-04
+Last updated: 2026-09-05
 
-Completed implementation history is available in Git and is intentionally not
-duplicated here. Current architecture is documented in `DESIGN.md`; the latest
-mode 0/1/2/3/4/5/10/11 JIT execution results are in `VALIDATION.md`.
-
-## Current Baseline
-
-- Spinlock JIT delegation supports contention, nested A -> B -> C execution,
-  out-of-order unlock, independent inner queues, and transactional abort/retry.
-- Mode 2 uses a distinct allowlisted hostcall exit for `ktime_get`, executes the
-  typed native service while retaining the outer spinlock, and resumes the same
-  JIT artifact after CALL. Artifact and runtime counters prove this path.
-- Mutex JIT delegation is opt-in through `mutex_jit=1`. Repeated mode 3 and
-  nested mode 4 A/B proxy execution pass the recovery-only acceptance suite.
-  Mode 5 repeatedly executes the same allowlisted hostcall protocol under mutex
-  contention with exact hostcall, JIT completion, and waiter resume accounting.
-- The x86 two-word JIT context ABI is `{waiter kernel GS base, logical waiter
-  task}`. Generic `%gs:` MOV read/write and RMW use the captured origin-CPU
-  base; `%gs:current_task` returns the logical waiter. Top-level capture,
-  nested inheritance, continuation reuse, and the legacy futex entry are wired.
-  Modes 10 and 11 prove the translated spin/mutex paths execute this behavior.
-- `%fs:`, direct FS/GS-base instructions, and unsupported `current_task` forms
-  fail closed with `KD_EXE_ERROR_INST`; no FS base or third argument is part of
-  the ABI.
-- The default integration suite keeps `mutex_jit=0` for modes 3-5 and validates
-  only the mutex queue, promotion, handoff, and fallback protocol.
-- No mode 0/1/2/3/4/5/10/11 acceptance failure is currently known. Any code
-  change to the translation, frame, queue, segment context, or resume paths must
-  rerun the acceptance contract in `VALIDATION.md`.
+This file tracks unfinished work only. Completed behavior belongs in
+`DESIGN.md`, the current register contract belongs in `JIT_REGISTER_ABI.md`,
+and the latest mode 0/1/2/3/4/5/10/11 execution evidence belongs in
+`VALIDATION.md`.
 
 ## Correctness And Coverage
 
@@ -40,8 +16,6 @@ mode 0/1/2/3/4/5/10/11 JIT execution results are in `VALIDATION.md`.
       translating critical sections that depend on those states. Kernel GS
       memory access is implemented through explicit lowering, not hardware
       segment-state restoration; FS remains deliberately unsupported.
-- [ ] Initialize `Stack_INST_CNT` from R11 or remove `args[1]` from the wrapper
-      output contract; it is currently an undefined reserved value.
 - [ ] Add kernel integration pressure tests for translation-table and executable
       block-pool exhaustion; these are currently covered only by unit-level
       bounded lookup tests.
@@ -52,6 +26,9 @@ mode 0/1/2/3/4/5/10/11 JIT execution results are in `VALIDATION.md`.
       waiter/wakeup protocol.
 - [ ] Add a recovery test that injects nested mutex failure after B acquisition
       and proves reverse-order cleanup without duplicate A execution.
+- [ ] Decide whether to wire a scheduler/wakeup frontend to the retained
+      low-level `kd_exe_on_call()` futex compatibility entry or remove that API.
+      No in-tree path currently submits delegated futex waiters to it.
 
 ## Features
 
@@ -60,8 +37,8 @@ mode 0/1/2/3/4/5/10/11 JIT execution results are in `VALIDATION.md`.
 - [ ] Define exactly-once behavior for side-effecting hostcalls before adding
       any service that cannot safely be repeated after a later JIT abort.
 - [ ] Enable and validate `NUMA_AWARE` combining on a multi-socket guest.
-- [ ] Implement the NUMA-local mutex queue path; its code is currently disabled
-      behind `NUMA_AWARE`.
+- [ ] Implement a NUMA-local mutex queue path. Only the spinlock source retains
+      dormant branches behind `NUMA_AWARE`.
 - [ ] Expose spin and mutex batch sizes as module parameters.
 - [ ] Add rwsem delegation using TCLocks' rwsem protocol as the reference.
 - [ ] Add structured delegation statistics or tracepoints for perf/ftrace rather
@@ -76,6 +53,3 @@ mode 0/1/2/3/4/5/10/11 JIT execution results are in `VALIDATION.md`.
 - [ ] Measure adaptive batch sizing against the fixed batch limits of 1024.
 - [ ] Quantify mode 3/4/5 delegation benefit and overhead against native mutexes;
       the current tests are correctness tests, not performance evidence.
-- x86-64 is the intentional architecture scope. The wrapper, register layout,
-  per-CPU GS rules, and translated instruction model are architecture-specific;
-  cross-architecture support is not a current project task.

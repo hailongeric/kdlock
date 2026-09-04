@@ -2,7 +2,7 @@
 // Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi
 //
 // Ported to kdlock: kd_mutex — JIT-sandbox mutex delegation.
-// Follows the same kd_exe_on_call_hl() model as kd_spinlock.c.
+// Follows the same kd_exe_on_call_hl_entry() model as kd_spinlock.c.
 
 #include <linux/module.h>
 #include <linux/smp.h>
@@ -30,29 +30,25 @@
  * Debug
  * -------------------------------------------------------------------------- */
 #ifdef DSM_DEBUG
-#define print_debug(fmt, ...)                                                  \
-	({                                                                     \
-		printk(KERN_ALERT "[%d] [%d] kd_mutex (%s) lock(%px): " fmt,  \
-		       smp_processor_id(), current->pid, __func__, lock,       \
-		       ##__VA_ARGS__);                                         \
+#define mutex_debug(fmt, ...)                                                \
+	({                                                                   \
+		printk(KERN_ALERT "[%d] [%d] kd_mutex (%s) lock(%px): " fmt, \
+		       smp_processor_id(), current->pid, __func__,           \
+		       lock, ##__VA_ARGS__);                                 \
 	})
 #else
-#define print_debug(fmt, ...)
+#define mutex_debug(fmt, ...)
 #endif
 
 /* --------------------------------------------------------------------------
  * Constants
  * -------------------------------------------------------------------------- */
-#define KD_MUTEX_WAITER_UNPROCESSED  0
-#define KD_MUTEX_WAITER_PROCESSED    1
+#define KD_MUTEX_WAITER_UNPROCESSED 0
+#define KD_MUTEX_WAITER_PROCESSED 1
 
-#define _Q_LOCKED_VAL                1
-#define _Q_LOCKED_COMBINER_VAL       3
+#define _Q_LOCKED_COMBINER_VAL 3
 
-#define SIZE_OF_SHADOW_STACK         8192L
-#define UINT64_MAX                   0xffffffffffffffffL
-
-long kd_mutex_batch_size = 1024;
+static const unsigned int kd_mutex_batch_size = 1024;
 
 /* Always-on protocol counters used for validation and post-mortem diagnosis. */
 static atomic64_t kd_mutex_slowpath_count;
@@ -82,52 +78,58 @@ static atomic_t kd_mutex_reserved_nodes;
  * risking VM-wide crashes from translated code bugs.  Enable with:
  *   insmod kdlock_km.ko mutex_jit=1
  */
-int kd_mutex_jit_enabled;
+static int kd_mutex_jit_enabled;
 module_param_named(mutex_jit, kd_mutex_jit_enabled, int, 0644);
 
 /* --------------------------------------------------------------------------
  * Spin-with-schedule macros (for waiter spinning)
  * -------------------------------------------------------------------------- */
 #ifndef smp_cond_load_relaxed_sched
-#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
-	({                                                                     \
-		typeof(ptr) __PTR = (ptr);                                     \
-		__unqual_scalar_typeof(*ptr) VAL;                              \
-		for (;;) {                                                     \
-			VAL = READ_ONCE(*__PTR);                               \
-			if (cond_expr) break;                                  \
-			cpu_relax();                                           \
-			if (need_resched()) {                                  \
-				preempt_enable(); schedule(); preempt_disable();\
-			}                                                      \
-		}                                                              \
-		(typeof(*ptr))VAL;                                             \
+#define smp_cond_load_relaxed_sched(ptr, cond_expr) \
+	({                                          \
+		typeof(ptr) __PTR = (ptr);          \
+		__unqual_scalar_typeof(*ptr) VAL;   \
+		for (;;) {                          \
+			VAL = READ_ONCE(*__PTR);    \
+			if (cond_expr)              \
+				break;              \
+			cpu_relax();                \
+			if (need_resched()) {       \
+				preempt_enable();   \
+				schedule();         \
+				preempt_disable();  \
+			}                           \
+		}                                   \
+		(typeof(*ptr))VAL;                  \
 	})
 #endif
 
-#define kd_cond_load_acquire_sched(ptr, cond_expr)                             \
-	({                                                                     \
-		typeof(ptr) __PTR = (ptr);                                     \
-		__unqual_scalar_typeof(*ptr) VAL;                              \
-		for (;;) {                                                     \
-			VAL = smp_load_acquire(__PTR);                         \
-			if (cond_expr) break;                                  \
-			cpu_relax();                                           \
-			if (need_resched()) {                                  \
-				preempt_enable(); schedule(); preempt_disable();\
-			}                                                      \
-		}                                                              \
-		(typeof(*ptr))VAL;                                             \
+#define kd_cond_load_acquire_sched(ptr, cond_expr)     \
+	({                                             \
+		typeof(ptr) __PTR = (ptr);             \
+		__unqual_scalar_typeof(*ptr) VAL;      \
+		for (;;) {                             \
+			VAL = smp_load_acquire(__PTR); \
+			if (cond_expr)                 \
+				break;                 \
+			cpu_relax();                   \
+			if (need_resched()) {          \
+				preempt_enable();      \
+				schedule();            \
+				preempt_disable();     \
+			}                              \
+		}                                      \
+		(typeof(*ptr))VAL;                     \
 	})
 
 /* --------------------------------------------------------------------------
  * Per-CPU shadow stack
  * -------------------------------------------------------------------------- */
 struct kd_mutex_shadow {
-	uint64_t lock_addr[8];           /* nested lock tracking              */
-	unsigned long node_slots;        /* reserved per-CPU waiter slots     */
+	uint64_t lock_addr[8]; /* nested lock tracking              */
+	unsigned long node_slots; /* reserved per-CPU waiter slots     */
 	struct kd_mutex_node *resume_node; /* valid while waiter is CPU-pinned */
-} __cacheline_aligned_in_smp;
+};
 
 struct kd_mutex_jit_context {
 	unsigned int lock_depth;
@@ -139,32 +141,34 @@ struct kd_mutex_jit_context {
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
-static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_shadow,
-				     kd_mutex_shadows);
+static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_shadow, kd_mutex_shadows);
 
 /* --------------------------------------------------------------------------
  * Tail encoding (same scheme as qspinlock: cpu+idx packed into u32)
  * -------------------------------------------------------------------------- */
-#define _Q_TAIL_IDX_OFFSET  2
-#define _Q_TAIL_IDX_BITS    2
-#define _Q_TAIL_IDX_MASK    ((1U << _Q_TAIL_IDX_BITS) - 1)
-#define _Q_TAIL_CPU_OFFSET  (_Q_TAIL_IDX_OFFSET + _Q_TAIL_IDX_BITS)
+#define KD_MUTEX_TAIL_IDX_OFFSET 2
+#define KD_MUTEX_TAIL_IDX_BITS 2
+#define KD_MUTEX_TAIL_IDX_MASK ((1U << KD_MUTEX_TAIL_IDX_BITS) - 1)
+#define KD_MUTEX_TAIL_CPU_OFFSET \
+	(KD_MUTEX_TAIL_IDX_OFFSET + KD_MUTEX_TAIL_IDX_BITS)
 
 static inline u32 encode_tail(int cpu, int idx)
 {
-	return (cpu + 1) << _Q_TAIL_CPU_OFFSET | idx << _Q_TAIL_IDX_OFFSET;
+	return (cpu + 1) << KD_MUTEX_TAIL_CPU_OFFSET |
+	       idx << KD_MUTEX_TAIL_IDX_OFFSET;
 }
 
 static inline struct kd_mutex_node *decode_tail(u32 tail)
 {
-	int cpu = (tail >> _Q_TAIL_CPU_OFFSET) - 1;
-	int idx = (tail >> _Q_TAIL_IDX_OFFSET) & _Q_TAIL_IDX_MASK;
+	int cpu = (tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1;
+	int idx = (tail >> KD_MUTEX_TAIL_IDX_OFFSET) & KD_MUTEX_TAIL_IDX_MASK;
 	return per_cpu_ptr(&kd_mutex_nodes[idx], cpu);
 }
 
 static inline u32 xchg_tail(struct kd_mutex *lock, u32 tail)
 {
-	return (u32)(unsigned long)xchg(&lock->tail, (void *)(unsigned long)tail);
+	return (u32)(unsigned long)xchg(&lock->tail,
+					(void *)(unsigned long)tail);
 }
 
 /* --------------------------------------------------------------------------
@@ -187,7 +191,8 @@ static void kd_mutex_update_max_waiters(int active)
 	int old = atomic_read(&kd_mutex_max_waiters);
 
 	while (active > old) {
-		int previous = atomic_cmpxchg(&kd_mutex_max_waiters, old, active);
+		int previous =
+			atomic_cmpxchg(&kd_mutex_max_waiters, old, active);
 
 		if (previous == old)
 			break;
@@ -208,7 +213,8 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock)
 	if (unlikely(atomic_dec_return(&lock->waiter_count) < 0)) {
 		atomic_set(&lock->waiter_count, 0);
 		atomic64_inc(&kd_mutex_frame_failure_count);
-		KD_PR_ERR("kd_mutex lock waiter count underflow lock=%px\n", lock);
+		KD_PR_ERR("kd_mutex lock waiter count underflow lock=%px\n",
+			  lock);
 	}
 	if (unlikely(atomic_dec_return(&kd_mutex_active_waiters) < 0)) {
 		atomic_set(&kd_mutex_active_waiters, 0);
@@ -339,26 +345,27 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	}
 
 	if (!curr_node->jit_waiter) {
-		curr_node->regs.bx  = ((unsigned long *)incoming_rsp_ptr)[1];
+		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
 		curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
 		curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
 		curr_node->regs.r14 = ((unsigned long *)incoming_rsp_ptr)[4];
 		curr_node->regs.r15 = ((unsigned long *)incoming_rsp_ptr)[5];
-		curr_node->regs.bp  = ((unsigned long *)incoming_rsp_ptr)[6];
-		curr_node->regs.ip  = ((unsigned long *)incoming_rsp_ptr)[7];
-		curr_node->regs.sp  = (unsigned long)incoming_rsp_ptr + 64;
+		curr_node->regs.bp = ((unsigned long *)incoming_rsp_ptr)[6];
+		curr_node->regs.ip = ((unsigned long *)incoming_rsp_ptr)[7];
+		curr_node->regs.sp = (unsigned long)incoming_rsp_ptr + 64;
 		if (!curr_node->regs.ip ||
 		    (curr_node->saved_ret_addr &&
 		     curr_node->regs.ip != curr_node->saved_ret_addr)) {
 			atomic64_inc(&kd_mutex_frame_failure_count);
-			KD_PR_ERR("mutex JIT invalid waiter entry: stack=%lx saved=%lx\n",
-				  curr_node->regs.ip, curr_node->saved_ret_addr);
+			KD_PR_ERR(
+				"mutex JIT invalid waiter entry: stack=%lx saved=%lx\n",
+				curr_node->regs.ip, curr_node->saved_ret_addr);
 			return KD_EXE_RUN_ERROR;
 		}
 	}
 
-	print_debug("JIT exec waiter cpu %d ip %lx sp %lx\n",
-		    curr_node->cpuid, curr_node->regs.ip, curr_node->regs.sp);
+	mutex_debug("JIT exec waiter cpu %d ip %lx sp %lx\n", curr_node->cpuid,
+		    curr_node->regs.ip, curr_node->regs.sp);
 
 	if (!kd_exe_is_ready(0, curr_node->regs.ip)) {
 		atomic64_inc(&kd_mutex_jit_not_ready_count);
@@ -373,13 +380,11 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	}
 
 	retry_regs = curr_node->regs;
-	frame = kd_exec_frame_push(&curr_node->regs, curr_node->regs.ip,
-				   lock->origin_mutex_addr, curr_node,
-				   outgoing_rsp_ptr,
-				   curr_node->jit_waiter ?
-				   jit_context->lock_depth : 1,
-				   curr_node->gsbase,
-				   curr_node->task_struct_ptr);
+	frame = kd_exec_frame_push(
+		&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr,
+		curr_node, outgoing_rsp_ptr,
+		curr_node->jit_waiter ? jit_context->lock_depth : 1,
+		curr_node->gsbase, curr_node->task_struct_ptr);
 	if (!frame) {
 		atomic64_inc(&kd_mutex_frame_failure_count);
 		return KD_EXE_RUN_ERROR;
@@ -406,8 +411,9 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			frame_ret = kd_exec_frame_pop(frame, NULL);
 		if (unlikely(frame_ret)) {
 			atomic64_inc(&kd_mutex_frame_failure_count);
-			KD_PR_ERR("mutex JIT invalid-frame cleanup failed: %d\n",
-				  frame_ret);
+			KD_PR_ERR(
+				"mutex JIT invalid-frame cleanup failed: %d\n",
+				frame_ret);
 			/* A live invalid frame poisons every later translation on this
 			 * CPU, so native continuation is no longer safe. */
 			BUG();
@@ -415,8 +421,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		return KD_EXE_RUN_ERROR;
 	}
 
-	ret_flag = kd_exe_on_call_hl_entry(&frame->regs, outgoing_rsp_ptr,
-					   frame->entry_ip,
+	ret_flag = kd_exe_on_call_hl_entry(&frame->regs, frame->entry_ip,
 					   frame->outer_lock_addr);
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
 		frame_ret = kd_exec_frame_record_event(
@@ -425,8 +430,9 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			frame_ret = kd_exec_frame_complete(frame);
 		if (unlikely(frame_ret)) {
 			atomic64_inc(&kd_mutex_frame_failure_count);
-			KD_PR_ERR("mutex JIT committed frame transition failed: %d\n",
-				  frame_ret);
+			KD_PR_ERR(
+				"mutex JIT committed frame transition failed: %d\n",
+				frame_ret);
 			/* The translated CS has already reached its outer unlock. A
 			 * native retry would execute its side effects twice. */
 			BUG();
@@ -538,7 +544,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
 __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
-			  struct kd_mutex_node *curr_node)
+			 struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *prev_node = NULL, *next_node = NULL;
 	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
@@ -554,7 +560,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 		prev_node = decode_tail(old_tail);
 		WRITE_ONCE(prev_node->next, curr_node);
 
-		print_debug("Mutex waiter spinning\n");
+		mutex_debug("Mutex waiter spinning\n");
 		kd_cond_load_acquire_sched(&curr_node->locked, !VAL);
 
 		/* CS was processed by combiner via JIT sandbox → done */
@@ -576,7 +582,8 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	/* Only waiter in queue? */
 	if (cmpxchg(&lock->tail,
 		    (struct kd_mutex_node *)(unsigned long)curr_node->tail,
-		    NULL) == (struct kd_mutex_node *)(unsigned long)curr_node->tail)
+		    NULL) ==
+	    (struct kd_mutex_node *)(unsigned long)curr_node->tail)
 		goto release;
 
 	/* Wait for next waiter to appear */
@@ -620,24 +627,22 @@ release:
  * Slowpath entry: init node, queue, may become combiner
  * -------------------------------------------------------------------------- */
 __attribute__((noipa)) noinline notrace static int
-kd_mutex_lock_slowpath(struct kd_mutex *lock,
-			   struct kd_mutex_node *curr_node)
+kd_mutex_lock_slowpath(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
 	atomic64_inc(&kd_mutex_slowpath_count);
 	return __kd_mutex_lock_slowpath(lock, curr_node->tail, curr_node);
 }
 
-static int kd_mutex_prepare_jit_node(
-	struct kd_mutex_node *node,
-	struct kd_mutex_jit_context *context,
-	struct kd_mutex *lock,
-	const struct pt_regs *regs,
-	const struct kd_exec_frame *parent)
+static int kd_mutex_prepare_jit_node(struct kd_mutex_node *node,
+				     struct kd_mutex_jit_context *context,
+				     struct kd_mutex *lock,
+				     const struct pt_regs *regs,
+				     const struct kd_exec_frame *parent)
 {
 	unsigned int i, depth;
 
-	if (!node || !context || !lock || !lock->origin_mutex_addr ||
-	    !regs || !regs->ip || !regs->sp || !parent ||
+	if (!node || !context || !lock || !lock->origin_mutex_addr || !regs ||
+	    !regs->ip || !regs->sp || !parent ||
 	    !kd_exec_frame_validate(parent))
 		return -EINVAL;
 
@@ -761,7 +766,7 @@ void kd_mutex_note_nested_abort_release(void)
  * -------------------------------------------------------------------------- */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
-__attribute__((noipa)) noinline notrace int
+__attribute__((noipa)) noinline notrace static int
 kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 			   struct kd_mutex_node *curr_node)
 {
@@ -773,28 +778,27 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	 * the queue protocol on its independently reserved shadow stack. */
 	asm volatile("movq %%rsp, %c1(%0)\n"
 		     :
-		     : "r"(cur_node),
-		       "i"(offsetof(struct kd_mutex_node, rsp))
+		     : "r"(cur_node), "i"(offsetof(struct kd_mutex_node, rsp))
 		     : "memory");
 
 	shadow_sp = cur_node->shadow_stack_ptr;
 	if (unlikely(!shadow_sp)) {
-		KD_PR_ERR("kd_mutex: waiter shadow stack is NULL on cpu %d slot %d\n",
-			  smp_processor_id(), cur_node->slot);
+		KD_PR_ERR(
+			"kd_mutex: waiter shadow stack is NULL on cpu %d slot %d\n",
+			smp_processor_id(), cur_node->slot);
 		kd_mutex_wait_and_lock(lock);
 		return 0;
 	}
 
 	/* Switch to this reservation's shadow stack. */
-	asm volatile("movq %0, %%rsp" :: "r"(shadow_sp) : "memory");
+	asm volatile("movq %0, %%rsp" ::"r"(shadow_sp) : "memory");
 
 	ret_val = kd_mutex_lock_slowpath(lock, cur_node);
 
 	/* Restore original stack before returning */
 	asm volatile("movq %c1(%0), %%rsp\n"
 		     :
-		     : "r"(cur_node),
-		       "i"(offsetof(struct kd_mutex_node, rsp))
+		     : "r"(cur_node), "i"(offsetof(struct kd_mutex_node, rsp))
 		     : "memory");
 
 	return ret_val;
@@ -814,7 +818,29 @@ void kd_mutex_init(struct kd_mutex *lock)
 	atomic_set(&lock->waiter_count, 0);
 }
 
-void kd_mutex_init_percpu(void)
+static void kd_mutex_free_percpu_stacks(void)
+{
+	int cpu;
+
+	for_each_possible_cpu(cpu) {
+		struct kd_mutex_shadow *shadow =
+			per_cpu_ptr(&kd_mutex_shadows, cpu);
+		int slot;
+
+		for (slot = 0; slot < KD_MUTEX_MAX_NODES; slot++) {
+			struct kd_mutex_node *node =
+				per_cpu_ptr(&kd_mutex_nodes[slot], cpu);
+
+			vfree(node->shadow_stack_base);
+			node->shadow_stack_base = NULL;
+			node->shadow_stack_ptr = 0;
+		}
+		shadow->node_slots = 0;
+		shadow->resume_node = NULL;
+	}
+}
+
+int kd_mutex_init_percpu(void)
 {
 	int i, j;
 
@@ -852,76 +878,71 @@ void kd_mutex_init_percpu(void)
 		for (j = 0; j < KD_MUTEX_MAX_NODES; j++) {
 			struct kd_mutex_node *node =
 				per_cpu_ptr(&kd_mutex_nodes[j], i);
-			void *node_stack = vzalloc(SIZE_OF_SHADOW_STACK);
+			void *node_stack = vzalloc(KD_MUTEX_SHADOW_STACK_SIZE);
 
 			node->slot = j;
 			node->shadow_stack_base = node_stack;
 			if (!node_stack) {
-				KD_PR_ERR("kd_mutex: waiter stack allocation failed on cpu %d slot %d\n",
-					  i, j);
-				continue;
+				KD_PR_ERR(
+					"kd_mutex: waiter stack allocation failed on cpu %d slot %d\n",
+					i, j);
+				goto err_free;
 			}
 			node->shadow_stack_ptr =
 				(uint64_t)((char *)node_stack +
-					   SIZE_OF_SHADOW_STACK - 8);
+					   KD_MUTEX_SHADOW_STACK_SIZE - 8);
 		}
 	}
+
+	return 0;
+
+err_free:
+	kd_mutex_free_percpu_stacks();
+	return -ENOMEM;
 }
 
 void kd_mutex_exit(void)
 {
 	int i;
 
-	KD_PR_INFO("kd_mutex stats: slowpath=%lld combiner=%lld handoff=%lld "
-		   "jit_success=%lld jit_not_ready=%lld jit_failure=%lld "
-		   "jit_resume=%lld frame_failure=%lld node_overflow=%lld "
-		   "multi_slot=%lld context_busy=%lld nested_lock=%lld "
-		   "nested_fast=%lld nested_queued=%lld nested_remote=%lld "
-		   "nested_unlock=%lld nested_abort_release=%lld "
-		   "active_waiters=%d max_waiters=%d "
-		   "reserved_nodes=%d\n",
-		   (long long)atomic64_read(&kd_mutex_slowpath_count),
-		   (long long)atomic64_read(&kd_mutex_combiner_count),
-		   (long long)atomic64_read(&kd_mutex_handoff_count),
-		   (long long)atomic64_read(&kd_mutex_jit_success_count),
-		   (long long)atomic64_read(&kd_mutex_jit_not_ready_count),
-		   (long long)atomic64_read(&kd_mutex_jit_failure_count),
-		   (long long)atomic64_read(&kd_mutex_jit_resume_count),
-		   (long long)atomic64_read(&kd_mutex_frame_failure_count),
-		   (long long)atomic64_read(&kd_mutex_node_overflow_count),
-		   (long long)atomic64_read(&kd_mutex_multi_slot_count),
-		   (long long)atomic64_read(&kd_mutex_context_busy_count),
-		   (long long)atomic64_read(&kd_mutex_nested_lock_count),
-		   (long long)atomic64_read(&kd_mutex_nested_fast_count),
-		   (long long)atomic64_read(&kd_mutex_nested_queued_count),
-		   (long long)atomic64_read(&kd_mutex_nested_remote_count),
-		   (long long)atomic64_read(&kd_mutex_nested_unlock_count),
-		   (long long)atomic64_read(
-			   &kd_mutex_nested_abort_release_count),
-		   atomic_read(&kd_mutex_active_waiters),
-		   atomic_read(&kd_mutex_max_waiters),
-		   atomic_read(&kd_mutex_reserved_nodes));
+	KD_PR_INFO(
+		"kd_mutex stats: slowpath=%lld combiner=%lld handoff=%lld "
+		"jit_success=%lld jit_not_ready=%lld jit_failure=%lld "
+		"jit_resume=%lld frame_failure=%lld node_overflow=%lld "
+		"multi_slot=%lld context_busy=%lld nested_lock=%lld "
+		"nested_fast=%lld nested_queued=%lld nested_remote=%lld "
+		"nested_unlock=%lld nested_abort_release=%lld "
+		"active_waiters=%d max_waiters=%d "
+		"reserved_nodes=%d\n",
+		(long long)atomic64_read(&kd_mutex_slowpath_count),
+		(long long)atomic64_read(&kd_mutex_combiner_count),
+		(long long)atomic64_read(&kd_mutex_handoff_count),
+		(long long)atomic64_read(&kd_mutex_jit_success_count),
+		(long long)atomic64_read(&kd_mutex_jit_not_ready_count),
+		(long long)atomic64_read(&kd_mutex_jit_failure_count),
+		(long long)atomic64_read(&kd_mutex_jit_resume_count),
+		(long long)atomic64_read(&kd_mutex_frame_failure_count),
+		(long long)atomic64_read(&kd_mutex_node_overflow_count),
+		(long long)atomic64_read(&kd_mutex_multi_slot_count),
+		(long long)atomic64_read(&kd_mutex_context_busy_count),
+		(long long)atomic64_read(&kd_mutex_nested_lock_count),
+		(long long)atomic64_read(&kd_mutex_nested_fast_count),
+		(long long)atomic64_read(&kd_mutex_nested_queued_count),
+		(long long)atomic64_read(&kd_mutex_nested_remote_count),
+		(long long)atomic64_read(&kd_mutex_nested_unlock_count),
+		(long long)atomic64_read(&kd_mutex_nested_abort_release_count),
+		atomic_read(&kd_mutex_active_waiters),
+		atomic_read(&kd_mutex_max_waiters),
+		atomic_read(&kd_mutex_reserved_nodes));
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_shadow *p = per_cpu_ptr(&kd_mutex_shadows, i);
-		int j;
 
 		if (READ_ONCE(p->node_slots))
 			KD_PR_ERR("kd_mutex: cpu %d leaked waiter slots=%lx\n",
 				  i, READ_ONCE(p->node_slots));
-		for (j = 0; j < KD_MUTEX_MAX_NODES; j++) {
-			struct kd_mutex_node *node =
-				per_cpu_ptr(&kd_mutex_nodes[j], i);
-
-			if (node->shadow_stack_base)
-				vfree(node->shadow_stack_base);
-			node->shadow_stack_base = NULL;
-			node->shadow_stack_ptr = 0;
-		}
-
-		p->node_slots = 0;
-		p->resume_node = NULL;
 	}
+	kd_mutex_free_percpu_stacks();
 }
 
 /*
@@ -929,10 +950,9 @@ void kd_mutex_exit(void)
  */
 __attribute__((noipa)) noinline notrace void
 _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
-	       unsigned long ret_addr,
-	       unsigned long s_rbx, unsigned long s_r12,
-	       unsigned long s_r13, unsigned long s_r14,
-	       unsigned long s_r15, unsigned long s_rbp)
+	       unsigned long ret_addr, unsigned long s_rbx, unsigned long s_r12,
+	       unsigned long s_r13, unsigned long s_r14, unsigned long s_r15,
+	       unsigned long s_rbp)
 {
 	struct pt_regs resume_regs;
 	bool resume_ready = false;
@@ -962,7 +982,8 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->locked = true;
 		curr_node->completed = false;
 		curr_node->next = NULL;
-		curr_node->tail = encode_tail(smp_processor_id(), curr_node->slot);
+		curr_node->tail =
+			encode_tail(smp_processor_id(), curr_node->slot);
 		curr_node->socket_id = numa_node_id();
 		curr_node->cpuid = smp_processor_id();
 		curr_node->lock = lock;
@@ -987,7 +1008,8 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 
 			if (unlikely(!resume_node)) {
 				atomic64_inc(&kd_mutex_frame_failure_count);
-				KD_PR_ERR("mutex JIT completion missing resume node\n");
+				KD_PR_ERR(
+					"mutex JIT completion missing resume node\n");
 				BUG();
 			}
 			resume_regs = resume_node->regs;
@@ -998,8 +1020,7 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 		} else {
 			kd_mutex_release_node(curr_node);
 		}
-	scheduler_restore:
-		;
+scheduler_restore:;
 	}
 	preempt_enable();
 	migrate_enable();
@@ -1033,14 +1054,12 @@ _kd_mutex_unlock_checked(struct kd_mutex *lock)
 {
 	u8 locked = smp_load_acquire(&lock->locked);
 
-	if (locked == _Q_LOCKED_VAL ||
-	    locked == _Q_LOCKED_COMBINER_VAL) {
+	if (locked == _Q_LOCKED_VAL || locked == _Q_LOCKED_COMBINER_VAL) {
 		smp_store_release(&lock->locked, 0);
 		return 0;
 	}
 	/* Should not reach here in JIT sandbox model */
-	KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\n",
-		  locked);
+	KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\n", locked);
 	return -EINVAL;
 }
 
@@ -1048,12 +1067,4 @@ __attribute__((noipa)) noinline notrace void
 _kd_mutex_unlock(struct kd_mutex *lock)
 {
 	_kd_mutex_unlock_checked(lock);
-}
-
-int _kd_mutex_trylock(struct kd_mutex *lock)
-{
-	if (!READ_ONCE(lock->locked) &&
-	    cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)
-		return 1;
-	return 0;
 }

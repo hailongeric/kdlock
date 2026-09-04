@@ -25,8 +25,7 @@ static bool kd_exec_frame_state_is_active(int state)
 	return state == KD_EXEC_FRAME_RUNNING ||
 	       state == KD_EXEC_FRAME_WAITING_LOCK ||
 	       state == KD_EXEC_FRAME_RESUME ||
-	       state == KD_EXEC_FRAME_COMPLETE ||
-	       state == KD_EXEC_FRAME_ERROR;
+	       state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR;
 }
 
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
@@ -39,8 +38,8 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 
 	state = kd_exec_frame_state(frame);
 	if (!kd_exec_frame_state_is_active(state) ||
-	    frame->depth >= KD_EXEC_MAX_NESTING ||
-	    !frame->gsbase || !frame->logical_task ||
+	    frame->depth >= KD_EXEC_MAX_NESTING || !frame->gsbase ||
+	    !frame->logical_task ||
 	    frame->held_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
 	    frame->outer_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
 	    frame->jit_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
@@ -76,7 +75,9 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 	return true;
 }
 
-bool kd_exec_context_validate(const struct kd_exec_context *ctx)
+static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state);
+
+static bool kd_exec_context_validate(const struct kd_exec_context *ctx)
 {
 	unsigned int i;
 
@@ -93,10 +94,9 @@ bool kd_exec_context_validate(const struct kd_exec_context *ctx)
 			continue;
 		}
 
-		if (!kd_exec_frame_validate(frame) ||
-		    frame->depth != i ||
+		if (!kd_exec_frame_validate(frame) || frame->depth != i ||
 		    (i == 0 ? frame->parent != NULL :
-		     frame->parent != &ctx->frames[i - 1]))
+			      frame->parent != &ctx->frames[i - 1]))
 			return false;
 	}
 
@@ -122,7 +122,8 @@ void kd_exec_context_exit(void)
 	int cpu;
 
 	for_each_possible_cpu(cpu) {
-		struct kd_exec_context *ctx = per_cpu_ptr(&kd_exec_context, cpu);
+		struct kd_exec_context *ctx =
+			per_cpu_ptr(&kd_exec_context, cpu);
 
 		if (!kd_exec_context_validate(ctx))
 			kd_exec_invariant_failure();
@@ -132,7 +133,7 @@ void kd_exec_context_exit(void)
 		(long long)atomic64_read(&kd_exec_invariant_failures));
 }
 
-struct kd_exec_context *kd_exec_current_context(void)
+static struct kd_exec_context *kd_exec_current_context(void)
 {
 	return this_cpu_ptr(&kd_exec_context);
 }
@@ -153,14 +154,11 @@ bool kd_exec_context_busy(void)
 	return ctx->depth && ctx->owner != current;
 }
 
-struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
-					 unsigned long entry_ip,
-					 unsigned long outer_lock_addr,
-					 void *waiter,
-					 void *outgoing_rsp_ptr,
-					 unsigned int held_lock_depth,
-					 unsigned long gsbase,
-					 struct task_struct *logical_task)
+struct kd_exec_frame *
+kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
+		   unsigned long outer_lock_addr, void *waiter,
+		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		   unsigned long gsbase, struct task_struct *logical_task)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
@@ -214,8 +212,7 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 		return -EINVAL;
 
 	state = kd_exec_frame_state(frame);
-	if ((state != KD_EXEC_FRAME_COMPLETE &&
-	     state != KD_EXEC_FRAME_ERROR) ||
+	if ((state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR) ||
 	    !kd_exec_context_validate(ctx))
 		return -EBUSY;
 
@@ -245,37 +242,12 @@ void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 	kd_exec_frame_set_state(frame, KD_EXEC_FRAME_RESUME);
 }
 
-void kd_exec_frame_save_call_continuation(struct kd_exec_frame *frame,
-					  const struct pt_regs *regs)
-{
-	unsigned long return_ip;
-
-	if (!frame || !regs || !regs->sp ||
-	    !kd_exec_frame_validate(frame))
-		return;
-
-	/*
-	 * regs->sp points at the return address of the intercepted call.  Save
-	 * the post-call state so a nested lock can suspend A without retaining
-	 * the raw lock function as its resume point.
-	 */
-	return_ip = READ_ONCE(*(unsigned long *)regs->sp);
-	if (!return_ip)
-		return;
-
-	frame->continuation_ip = return_ip;
-	frame->continuation_sp = regs->sp + sizeof(unsigned long);
-	frame->regs = *regs;
-	kd_exec_frame_set_state(frame, KD_EXEC_FRAME_RESUME);
-}
-
-int kd_exec_frame_set_lock_entries(
-	struct kd_exec_frame *frame,
-	const unsigned long *lock_addr,
-	const enum kd_exec_lock_kind *lock_kind,
-	void *const *lock_node,
-	const bool *lock_released,
-	unsigned int depth)
+int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,
+				   const unsigned long *lock_addr,
+				   const enum kd_exec_lock_kind *lock_kind,
+				   void *const *lock_node,
+				   const bool *lock_released,
+				   unsigned int depth)
 {
 	unsigned int i;
 	unsigned int outer_index = KD_EXEC_MAX_LOCK_DEPTH;
@@ -289,9 +261,8 @@ int kd_exec_frame_set_lock_entries(
 
 		if (!lock_addr[i])
 			return -EINVAL;
-		if (lock_kind &&
-		    (lock_kind[i] <= KD_EXEC_LOCK_NONE ||
-		     lock_kind[i] > KD_EXEC_LOCK_NATIVE))
+		if (lock_kind && (lock_kind[i] <= KD_EXEC_LOCK_NONE ||
+				  lock_kind[i] > KD_EXEC_LOCK_NATIVE))
 			return -EINVAL;
 		for (j = 0; j < i; j++)
 			if (lock_addr[j] == lock_addr[i])
@@ -299,8 +270,7 @@ int kd_exec_frame_set_lock_entries(
 		if (lock_addr[i] == frame->outer_lock_addr)
 			outer_index = i;
 	}
-	if (frame->outer_lock_addr &&
-	    outer_index == KD_EXEC_MAX_LOCK_DEPTH)
+	if (frame->outer_lock_addr && outer_index == KD_EXEC_MAX_LOCK_DEPTH)
 		return -ENOENT;
 
 	memset(frame->jit_lock_addr, 0, sizeof(frame->jit_lock_addr));
@@ -310,10 +280,10 @@ int kd_exec_frame_set_lock_entries(
 	for (i = 0; i < depth; i++) {
 		frame->jit_lock_addr[i] = lock_addr[i];
 		frame->jit_lock_kind[i] = lock_kind ? lock_kind[i] :
-			KD_EXEC_LOCK_QUEUE_OWNER;
+						      KD_EXEC_LOCK_QUEUE_OWNER;
 		frame->jit_lock_node[i] = lock_node ? lock_node[i] : NULL;
-		frame->jit_lock_released[i] = lock_released ?
-			lock_released[i] : false;
+		frame->jit_lock_released[i] = lock_released ? lock_released[i] :
+							      false;
 	}
 	frame->jit_lock_depth = depth;
 	frame->outer_lock_index = outer_index;
@@ -330,12 +300,10 @@ int kd_exec_frame_set_lock_stack(struct kd_exec_frame *frame,
 
 int kd_exec_frame_lock_push(struct kd_exec_frame *frame,
 			    unsigned long lock_addr,
-			    enum kd_exec_lock_kind kind,
-			    void *lock_node)
+			    enum kd_exec_lock_kind kind, void *lock_node)
 {
-	if (!frame || !lock_addr ||
-	    kind <= KD_EXEC_LOCK_NONE || kind > KD_EXEC_LOCK_NATIVE ||
-	    !kd_exec_frame_validate(frame))
+	if (!frame || !lock_addr || kind <= KD_EXEC_LOCK_NONE ||
+	    kind > KD_EXEC_LOCK_NATIVE || !kd_exec_frame_validate(frame))
 		return -EINVAL;
 	if (frame->jit_lock_depth >= KD_EXEC_MAX_LOCK_DEPTH)
 		return -E2BIG;
@@ -358,8 +326,7 @@ unsigned int kd_exec_frame_lock_depth(const struct kd_exec_frame *frame)
 	return frame->jit_lock_depth;
 }
 
-int kd_exec_frame_lock_pop(struct kd_exec_frame *frame,
-			   unsigned long lock_addr)
+int kd_exec_frame_lock_pop(struct kd_exec_frame *frame, unsigned long lock_addr)
 {
 	unsigned int i, removed;
 	bool removed_outer;
@@ -377,7 +344,8 @@ int kd_exec_frame_lock_pop(struct kd_exec_frame *frame,
 			frame->jit_lock_addr[i - 1] = frame->jit_lock_addr[i];
 			frame->jit_lock_kind[i - 1] = frame->jit_lock_kind[i];
 			frame->jit_lock_node[i - 1] = frame->jit_lock_node[i];
-			frame->jit_lock_released[i - 1] = frame->jit_lock_released[i];
+			frame->jit_lock_released[i - 1] =
+				frame->jit_lock_released[i];
 		}
 		frame->jit_lock_addr[frame->jit_lock_depth - 1] = 0;
 		frame->jit_lock_kind[frame->jit_lock_depth - 1] =
@@ -390,10 +358,11 @@ int kd_exec_frame_lock_pop(struct kd_exec_frame *frame,
 		if (removed_outer)
 			frame->outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
 		else if (frame->outer_lock_index > removed &&
-		    frame->outer_lock_index < KD_EXEC_MAX_LOCK_DEPTH)
+			 frame->outer_lock_index < KD_EXEC_MAX_LOCK_DEPTH)
 			frame->outer_lock_index--;
-		return kd_exec_frame_validate(frame) ? 0 :
-			kd_exec_invariant_failure();
+		return kd_exec_frame_validate(frame) ?
+			       0 :
+			       kd_exec_invariant_failure();
 	}
 
 	return -ENOENT;
@@ -417,28 +386,6 @@ int kd_exec_frame_lock_mark_released(struct kd_exec_frame *frame,
 	}
 
 	return -ENOENT;
-}
-
-bool kd_exec_frame_lock_released(const struct kd_exec_frame *frame,
-					unsigned long lock_addr)
-{
-	unsigned int i;
-
-	if (!frame || !lock_addr)
-		return false;
-
-	for (i = frame->jit_lock_depth; i > 0; i--)
-		if (frame->jit_lock_addr[i - 1] == lock_addr)
-			return frame->jit_lock_released[i - 1];
-
-	return false;
-}
-
-unsigned long kd_exec_frame_lock_top(const struct kd_exec_frame *frame)
-{
-	if (!frame || !frame->jit_lock_depth)
-		return 0;
-	return frame->jit_lock_addr[frame->jit_lock_depth - 1];
 }
 
 enum kd_exec_lock_kind
@@ -473,7 +420,7 @@ void *kd_exec_frame_lock_node(const struct kd_exec_frame *frame,
 }
 
 bool kd_exec_frame_lock_contains(const struct kd_exec_frame *frame,
-					 unsigned long lock_addr)
+				 unsigned long lock_addr)
 {
 	unsigned int i;
 
@@ -525,8 +472,7 @@ int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 		return -EINVAL;
 
 	state = kd_exec_frame_state(frame);
-	if (state == KD_EXEC_FRAME_COMPLETE ||
-	    state == KD_EXEC_FRAME_ERROR)
+	if (state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR)
 		return -EALREADY;
 
 	switch (event) {
@@ -542,18 +488,21 @@ int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 		return kd_exec_frame_lock_mark_released(frame,
 							frame->outer_lock_addr);
 	case KD_EXEC_EVENT_COMPLETE:
-		if (!kd_exec_frame_can_complete(frame) || frame->completion_seen)
+		if (!kd_exec_frame_can_complete(frame) ||
+		    frame->completion_seen)
 			return -EINVAL;
 		frame->completion_seen = true;
 		kd_exec_frame_set_state(frame, KD_EXEC_FRAME_COMPLETE);
-		return kd_exec_frame_validate(frame) ? 0 :
-			kd_exec_invariant_failure();
+		return kd_exec_frame_validate(frame) ?
+			       0 :
+			       kd_exec_invariant_failure();
 	case KD_EXEC_EVENT_ERROR:
 		if (frame->completion_seen)
 			return -EALREADY;
 		kd_exec_frame_set_state(frame, KD_EXEC_FRAME_ERROR);
-		return kd_exec_frame_validate(frame) ? 0 :
-			kd_exec_invariant_failure();
+		return kd_exec_frame_validate(frame) ?
+			       0 :
+			       kd_exec_invariant_failure();
 	default:
 		return -EINVAL;
 	}
@@ -576,7 +525,7 @@ int kd_exec_frame_state(const struct kd_exec_frame *frame)
 	return smp_load_acquire(&frame->state);
 }
 
-void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state)
+static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state)
 {
 	if (!frame)
 		return;

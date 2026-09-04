@@ -13,7 +13,7 @@ check_dmesg_has "end_point\[1\]" "end_point[1] (mutex_unlock) not resolved" || e
 info "end_point resolved for spin_unlock and mutex_unlock"
 
 # --- Test 2: trigger exe_add after hot-lock promotion ---
-# count_uaddr_cnt() ignores the first 1e9 TSC cycles after the first observed
+# kd_hotlock_record() ignores the first 1e9 TSC cycles after the first observed
 # lock. Prime that timer before the real workload, otherwise this test can pass
 # through the original spinlock path and never allocate an exe entry.
 info "Priming hot-lock timer..."
@@ -46,11 +46,11 @@ info "Daemon read kernel text for translation"
 
 check_jit_artifacts "$asm_dir" || exit 1
 
-check_dmesg_has "write to kernel" "daemon did not write JIT back" || exit 1
+check_dmesg_has "$JIT_INSTALL_PATTERN" "daemon did not write JIT back" || exit 1
 info "Daemon wrote JIT binary back to kernel"
 
 stop_daemon
 check_dmesg_ok || exit 1
 
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"

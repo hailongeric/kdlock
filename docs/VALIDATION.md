@@ -1,186 +1,169 @@
 # JIT Validation Record
 
-Last validated: 2026-09-04
+Last validated: 2026-09-05
 
 This is the canonical record for the latest end-to-end validation. Architecture
-belongs in `DESIGN.md`, operating and recovery procedures belong in `AGENTS.md`,
-and unfinished work belongs in `TODO.md`.
+belongs in `DESIGN.md`, register and continuation rules belong in
+`JIT_REGISTER_ABI.md`, operating procedures belong in `AGENTS.md`, and open
+work belongs in `TODO.md`.
 
 ## Acceptance Contract
 
-Generating `jit.S` or writing `jit.bin` back to the kernel is not sufficient.
-For every selected mode, `tests/test_09_jit_execution_modes.sh` requires:
+Generating `jit.S` or installing `jit.bin` is not enough. A JIT mode passes only
+when all applicable checks below succeed:
 
-1. Every expected workspace contains a non-empty `jit.S`, `jit.bin`, and
-   `bin.txt`, and the generated entry label matches the requested kernel RIP.
-2. The daemon read kernel text and the kernel logged `write to kernel`.
-3. A contended workload logged an execution IP matching the installed workspace
-   entry and completed through the matching unlock endpoint (`jit_success > 0`).
-4. The workload's final counter is exact, proving the critical-section side
-   effect was neither skipped nor executed twice.
-5. Execution frames, queues, and node slots drain completely, with no kernel
-   error or JIT/protocol failure diagnostics.
-6. Modes 2 and 5 contain a named allowlisted hostcall stub, never translate that
-   service through `callee_table.txt`, perform no runtime recompilation, and
-   report equal nonzero exit/execute/resume counts with no hostcall failure.
-   Their exact API observation counters prove post-CALL instructions ran.
-7. Mutex modes 3, 4, 5, and 11 load `kdlock_km.ko` with `mutex_jit=1` and verify
-   the module parameter before any translated workload runs. Mode 5 additionally
-   requires hostcall counts to equal both mutex JIT completion and waiter resume
-   counts across repeated and continuous contention.
-8. Modes 10 and 11 require at least one relevant artifact to load both
-   `Stack_RGS` and `Stack_RCT`, require no live hardware segment operand in
-   generated instructions, match runtime IPs to those artifacts, and report
-   `attempts == successes > 0` with zero GS/current mismatch.
+1. Every expected workspace contains non-empty `jit.S`, `jit.bin`, and
+   `bin.txt` files with the requested kernel entry RIP.
+2. The translator reports a nonzero structured kernel-text read summary, and
+   the kernel reports that the completed binary was installed.
+3. Runtime diagnostics contain an executed JIT IP matching an inspected
+   workspace and a successful completion through the expected unlock endpoint.
+4. Executable generated assembly contains the complex workload's branch,
+   rotate, multiply, scaled-index access, and dependent state writes.
+5. Native replay matches every protected sequence, sum, branch, rotate, lane,
+   and commit field, with exact operation and active-state counts.
+6. Execution frames, lock queues, and node slots drain completely, with no
+   kernel error or JIT/protocol failure diagnostic.
+7. Modes 2 and 5 contain a named `ktime_get` hostcall stub, perform no runtime
+   recompilation, and report equal nonzero exit, execute, and resume counts.
+8. Mutex modes 3, 4, 5, and 11 verify `mutex_jit=1` before translated execution.
+   Mode 5 also requires hostcall, JIT completion, and waiter resume counts to
+   match.
+9. Modes 10 and 11 load both `Stack_RGS` and `Stack_RCT`, retain no live hardware
+   segment operand, execute the inspected context artifact, and report no
+   GS/current mismatch.
 
-## Environment And Command
+## Environment And Commands
 
-The validation ran in the recovery VM with Linux `6.1.159`, 40 online CPUs, and
-the guest-local checkout at `/root/host_fs/kdlock`. The checkout is on the
-guest's ext4 root filesystem rather than a shared mount. Changed files were
-compared and synced selectively; the repository was not moved or recursively
-overwritten. Both kernel modules, the daemon, and the benchmark were rebuilt.
-All nine C unit binaries and both Python code-generation tests passed (11/11
-total), including the exact two-word GS/task wrapper-layout checks.
+Validation used the recovery VM with Linux `6.1.159` and 40 online CPUs. The
+guest-local checkout was `/root/host_fs/kdlock` on ext4. The running QEMU command
+contained neither VirtFS nor VFIO, and `info snapshots` confirmed four recovery
+snapshots before the high-risk tests.
 
-The existing QEMU snapshots were confirmed with `info snapshots` before running
-the recovery-only tests. The current complete acceptance command is:
+Changed files were hash-compared and copied individually. No repository tree was
+moved or recursively replaced. The daemon was built and tested without a
+pre-created `daemon/asm` template.
+
+Host-side source checks (no module execution on the host):
+
+```bash
+uvx ruff format --check disassem tests/unit
+uvx ruff check disassem tests/unit
+uvx --from shellcheck-py shellcheck -x -P SCRIPTDIR tests/*.sh
+bash -n tests/*.sh
+git diff --check
+```
+
+Build and unit checks:
 
 ```bash
 cd /root/host_fs/kdlock
+python3 -m compileall -q disassem tests/unit
+make -C tests/unit clean
+make -C tests/unit -j"$(nproc)" run
+make -C kernel_module clean && make -C kernel_module W=1 -j"$(nproc)"
+make -C klock_module clean && make -C klock_module W=1 -j"$(nproc)"
+make -C daemon clean && make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'
+cc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c \
+  -o bench/klock_test -lpthread
+```
+
+All nine C unit binaries and both Python code-generation tests passed (11/11).
+The daemon, benchmark, and ordinary kernel source compilation produced no
+compiler warnings. The remaining kernel build warnings are objtool reports
+caused by the project's deliberate naked returns, stack switching, dynamic JIT
+call, and UACCESS regions. Guest locale warnings are unrelated to the source.
+
+Strict translated-execution suite:
+
+```bash
 KDLOCK_RECOVERY_CONFIRMED=1 \
   timeout --kill-after=10s 600s \
   bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5 10 11
 ```
 
-The segment-context implementation first passed selectors 10 and 11, then the
-complete 0/1/2/3/4/5 regression reran against the same wrapper, translator, and
-frame changes. An initial mode 1 run exposed duplicate diagnostic-table slots
-when two CPUs raced to publish the same lock address. The cmpxchg loser now
-accepts the concurrently published matching address; standalone mode 1 and the
-complete 0-5 rerun then passed. After adding raw FSGSBASE/SWAPGS compatibility
-guards and correctly scoping bad-block rejection to fetched code ranges, the
-entire `0 1 2 3 4 5 10 11` command passed again as the final run.
+Additional and default coverage:
+
+```bash
+bash tests/test_04_spinlock.sh 9
+bash tests/run_all.sh
+```
 
 ## Verified Results
 
-| Mode | Translation and runtime evidence | Exact result |
+| Mode | JIT artifact bytes | Exact protected result |
+| --- | ---: | --- |
+| 0 | 1688 | 12009 operations, 1 state, 0 replay failures |
+| 1 | 1774 + 1774 | 12009 operations, 1 state, 0 replay failures |
+| 2 | 1844 | 12009 operations/API observations, 0 replay failures |
+| 3 | 1688 | 12934 operations, 1 state, 0 replay failures |
+| 4 | 1177 + 1078 | 12008 operations, 2 states, 0 replay failures |
+| 5 | 1844 | 12582 operations/API observations, 0 replay failures |
+| 10 | 1053 + 1053 + 3479 + 3385 + 1774 + 1774 | 12014 operations, 2 states, 0 replay failures |
+| 11 | 1999 + 1905 | 12008 operations, 2 states, 0 replay failures |
+
+Every listed artifact passed static instruction checks and runtime-IP matching.
+Mode 3 completed 618 JIT delegations. Mode 2 completed four hostcall cycles and
+mode 5 completed 368; every exit was executed and resumed without recompilation,
+rejection, failure, or continuation-limit exhaustion. The mode 5 count also
+matched mutex JIT completion and waiter resume. Modes 4 and 11 executed both
+independent A and B translated entries and recorded remote nested execution.
+Modes 10 and 11 passed their waiter GS/logical-current probes.
+
+Spin modes outside the strict selector also passed:
+
+| Mode | Scenario | Exact protected result |
 | --- | --- | --- |
-| 0, spin contention | The post-segment-ABI regression installed the entry, matched the runtime execution IP, completed through translated unlock, and passed all lock/frame diagnostics. | `final counter: 12009` |
-| 1, nested spin A -> B | Both entries were installed; the translated A stream crossed B lock/unlock, remote nested evidence was nonzero, and the corrected diagnostic table reported one record per lock. | `final counter: 12009` |
-| 2, spin hostcall | The rebuilt artifact contained the named `ktime_get` stub, did not translate the service, and performed no runtime recompilation. All four runtime entries completed; hostcall stats were `exits=4 executed=4 resumed=4 rejected=0 failed=0 limit=0`. | `final counter: 12009`; `mode2 api observations: 12009` |
-| 3, mutex contention | The artifact was installed with `mutex_jit=1` and its runtime IP matched. The repeated/stress workload recorded `jit_success=687` and matching waiter resumes; readiness, JIT, frame, node, context, waiter, and slot failures/leaks were zero. | `final counter: 12934` |
-| 4, nested mutex A -> B | Both A/B artifacts were installed with `mutex_jit=1` and both runtime IPs matched. The run required `jit_success=2`, `jit_resume=1`, `nested_queued=1`, `nested_remote=1`, and zero failure/leak fields. | `final counter: 12008` |
-| 5, mutex hostcall | The current run used `mutex_jit=1`, matched the installed runtime entry, and recorded `jit_success=399 jit_resume=399`. Hostcall stats were `exits=399 executed=399 resumed=399 rejected=0 failed=0 limit=0`; all protocol and invariant failures were zero. | `final counter: 12582`; `mode5 api observations: 12582` |
-| 10, spin GS/current | Six artifacts were complete; the two context-bearing artifacts were 2995 and 2901 bytes and contained both virtual inputs with no live segment operand. Runtime IP `0xffffffffc090aacf` matched a context artifact. A/B each recorded one JIT completion and B proxying recorded `nested_remote=1`; probe stats were `attempts=3 successes=3 failures=0`. | `final counter: 12014` |
-| 11, mutex GS/current | The 1695-byte and 1601-byte A/B artifacts both contained virtual GS/current input and both runtime IPs matched. With `mutex_jit=1`, stats were `jit_success=2 jit_resume=1 nested_queued=1 nested_remote=1`; probe stats were `attempts=12002 successes=12002 failures=0`, with every protocol/invariant failure zero. | `final counter: 12008` |
+| 6 | A -> B -> C nesting | 12009 operations, 1 state, 0 failures |
+| 7 | Out-of-order A/B unlock | 12009 operations, 1 state, 0 failures |
+| 8 | Independent A/B contention | 12014 operations, 2 states, 0 failures |
+| 9 | Nested JIT recovery topology | 12006 operations, 2 states, 0 failures |
 
-Mode 3 and mode 5 completion counts are scheduling-dependent. Their contracts
-require a minimum repeated-execution threshold and equality between completion
-and resume counts, not the literal values above. Mode 5 further requires one
-complete hostcall cycle per successful mutex JIT completion.
+The default six-script suite passed 6/6. Its `mutex_jit=0` paths replayed 40001
+mode 3 transitions and 20001 transitions for each of modes 4 and 5. This proves
+the stronger workload remains valid for native mutex handoff as well as opt-in
+translated execution.
 
-### Modes 10 And 11 Interpretation
+## Result Interpretation
 
-These modes distinguish waiter context from the combiner context. The target
-waiter initializes two per-CPU values and records its `task_struct *` before it
-queues. Its translated critical section performs a `%gs:` MOV read, MOV write,
-INC RMW, and `current` read while another CPU may proxy it. After returning to
-the original waiter, native code validates the values on the recorded origin
-CPU and the observed logical task. Artifact inspection proves those operations
-use `Stack_RGS`/`Stack_RCT` and no hardware `%gs:` operand; runtime-IP matching
-and nonzero success counts prove that inspected code actually ran. Mode 10 does
-this through independent spin A/B queues, while mode 11 does it through the
-mutex A/B queue with `mutex_jit=1`.
+Each `kd_cs_state` transition updates nine words with chained dependencies. A
+partial, skipped, duplicated, or reordered execution cannot hide behind the
+legacy counter because module exit replays the complete transition from zero
+and compares every field. Independent physical locks use independent states.
 
-### Mode 1 Interpretation
+Mode 1 keeps one outer A translation active while known-call handling crosses
+B lock/unlock. Mode 4 instead creates independent A and B mutex queues and
+requires both translated entries to execute. Modes 2 and 5 preserve a virtual
+CALL frame while native `ktime_get` runs, then dispatch back into the same
+artifact at the post-CALL RIP. Exact API-observation counts prove that code after
+the call executed.
 
-Mode 1 intentionally does not start a second top-level B combiner. The A sandbox
-contains the critical-section instruction stream. When that stream reaches
-`spin_lock(B)` and `spin_unlock(B)`, the high-level known-call handler acquires
-and releases B, then resumes the same translated A stream. Therefore A owns the
-`jit_success` count, while B's `nested_lock`/`nested_unlock` counters prove that
-the translated stream crossed both nested lock boundaries without native
-fallback. The exact final counter proves the code between those boundaries ran
-once per delegated waiter. Independent remote B queue execution is a separate
-mode 8 topology.
-
-### Mode 2 Interpretation
-
-Mode 2 translates the code before and after its time API call but does not
-translate `ktime_get`. The CALL stub preserves the virtual return RIP and exits
-with `KD_EXE_HOSTCALL`; the kernel registry invokes the typed native handler,
-writes the timestamp to `regs->ax`, consumes the virtual CALL frame, and invokes
-the same artifact at the post-CALL RIP. Equal exit/execute/resume counts prove
-all four delegated requests crossed both sandbox boundaries. The exact API
-observation counter proves instructions after the CALL consumed a nonzero
-result, while one total JIT write-back proves no service miss reached the daemon.
-
-### Mode 4 Interpretation
-
-Mode 4 does force independent A and B queues. A direct A waiter executes the A
-translation until the contended `mutex_lock(B)`. A B combiner then executes the
-virtual nested waiter from B's translated entry through `mutex_unlock(B)`, after
-which A resumes and reaches `mutex_unlock(A)`. Two distinct runtime entry RIPs,
-two successful completions, and `nested_remote=1` establish that both translated
-segments executed.
-
-### Mode 5 Interpretation
-
-Mode 5 uses the same hostcall ABI as mode 2, but the outer lock is a mutex and a
-combiner executes queued waiters remotely. Each translated waiter reaches
-`ktime_get`, exits through `KD_EXE_HOSTCALL`, resumes the same artifact after the
-CALL, and completes at `mutex_unlock`. Equality across hostcall exits, native
-executions, internal JIT resumes, mutex JIT completions, and original-waiter
-resumes proves both levels of continuation occur exactly once. The exact API
-observation counter proves every native and delegated critical section consumed
-a nonzero return value.
+Modes 10 and 11 run while the combiner may differ from the original waiter.
+Generated code must use the captured waiter GS base and logical task arguments,
+not the combiner's hardware GS/current state. Artifact checks and runtime probes
+jointly establish this contract.
 
 ## Retained Guest Evidence
 
-The independent-run `dmesg` snapshots are retained in the recovery guest:
+The current recovery guest retains these logs:
 
 ```text
-/tmp/kdlock-mode0-jit-verify-20260904.log
-/tmp/kdlock-mode1-jit-verify-20260904.log
-/tmp/kdlock-mode2-hostcall-output-20260904.log
-/tmp/kdlock-mode2-hostcall-dmesg-20260904.log
-/tmp/kdlock-mode2-jit-rerun-20260904.log
-/tmp/kdlock-mode2-jit-rerun-20260904-dmesg.log
-/tmp/kdlock-mode5-hostcall-regression-20260904.log
-/tmp/kdlock-mode5-jit-final-20260904.log
-/tmp/kdlock-mode5-jit-final-20260904-dmesg.log
-/tmp/kdlock-mode5-mutex-jit1-confirm-20260904.log
-/tmp/kdlock-mode5-mutex-jit1-confirm-20260904-dmesg.log
-/tmp/kdlock-mode5-safe-mode-regression-20260904.log
-/tmp/kdlock-mode5-safe-mode-regression-20260904-dmesg.log
-/tmp/kdlock-mode4-regression-after-mode5-20260904.log
-/tmp/kdlock-mode4-regression-after-mode5-20260904-dmesg.log
-/tmp/kdlock-mode2-regression-after-mode5-20260904.log
-/tmp/kdlock-mode2-regression-after-mode5-20260904-dmesg.log
-/tmp/kdlock-mode3-jit-verify-20260904.log
-/tmp/kdlock-mode4-jit-verify-20260904.log
-/tmp/kdlock-mode10-gs-jit-verify-20260904.log
-/tmp/kdlock-mode10-gs-jit-verify-20260904-dmesg.log
-/tmp/kdlock-mode11-gs-jit-verify-20260904.log
-/tmp/kdlock-mode11-gs-jit-verify-20260904-dmesg.log
-/tmp/kdlock-jit-acceptance-gs-final-20260904.log
-/tmp/kdlock-jit-acceptance-gs-final-20260904-dmesg.log
+/tmp/kdlock-code-cleanup-build-20260905.log
+/tmp/kdlock-module-load-code-cleanup-20260905.log
+/tmp/kdlock-run-all-code-cleanup-20260905.log
+/tmp/kdlock-jit-modes-code-cleanup-20260905.log
+/tmp/kdlock-jit-modes-code-cleanup-20260905-dmesg.log
+/tmp/kdlock-mode9-code-cleanup-20260905.log
 ```
 
-The complete strengthened-suite output is
-`/tmp/kdlock-jit-acceptance-strict-20260904.log`; per-mode assertion output is
-stored as `/tmp/kdlock-mode<mode>-strict-output-20260904.log`.
-
-These files are diagnostic evidence, not substitutes for rerunning the tests
-after code changes. Module addresses and completion counts may differ on later
-runs.
+These logs are diagnostic evidence, not substitutes for rerunning tests after
+code changes. Kernel addresses and scheduling-dependent completion counts may
+change between runs.
 
 ## Post-test Health
 
-The host still reported the recovery `qemu-system-x86_64` process and the guest
-answered a five-second SSH health check after the complete suite and every
-independent rerun, including final modes 10 and 11. `kdlock_km`, `klock_module`,
-and the translation daemon were not running after each test, and the retained
-logs contained no `BUG:`, panic, double-fault, soft-lockup, or unable-to-handle
-signature.
+After validation, the host still reported the recovery
+`qemu-system-x86_64` process and the guest answered the five-second SSH health
+check. No test left `kdlock_km`, `klock_module`, or the translation daemon
+running, and the final kernel log contained no BUG, panic, double fault, soft
+lockup, or unable-to-handle signature.

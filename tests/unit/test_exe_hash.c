@@ -5,10 +5,10 @@
 #include "test_harness.h"
 
 /* Replicate from exe.h / exe_info.h */
-#define KD_EXE_UNUSED   -2
-#define KD_EXE_UNINIT   -1
-#define KD_EXE_NORMAL    0
-#define KD_MAX_EXE       511
+#define KD_EXE_UNUSED -2
+#define KD_EXE_UNINIT -1
+#define KD_EXE_NORMAL 0
+#define KD_MAX_EXE 511
 
 struct kd_exe_info {
 	int status_code;
@@ -18,18 +18,17 @@ struct kd_exe_info {
 	void *code_block;
 	unsigned long jump_from;
 	unsigned long tgt_addr;
-	unsigned long gsbase;
-	int success_cnt;
-	int fail_cnt;
 } __attribute__((aligned(64)));
 
 static struct kd_exe_info kd_exes[KD_MAX_EXE];
 
-static inline unsigned int zz_hash(unsigned int pid, unsigned long ip) {
+static inline unsigned int zz_hash(unsigned int pid, unsigned long ip)
+{
 	return (pid + (ip & 0xFFFF)) * 1000003;
 }
 
-static struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip) {
+static struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip)
+{
 	int pos = zz_hash(pid, ip) % KD_MAX_EXE;
 
 	for (int probes = 0; probes < KD_MAX_EXE; probes++) {
@@ -48,22 +47,25 @@ static int kd_exe_is_ready(unsigned int pid, unsigned long ip)
 	struct kd_exe_info *exe = kd_get_exe(pid, ip);
 
 	return exe && exe->status_code == KD_EXE_NORMAL &&
-	       exe->pid == (int)pid &&
-	       exe->RIP == ip && exe->code_block != NULL;
+	       exe->pid == (int)pid && exe->RIP == ip &&
+	       exe->code_block != NULL;
 }
 
-static void init_exes(void) {
+static void init_exes(void)
+{
 	for (int i = 0; i < KD_MAX_EXE; i++)
 		kd_exes[i].status_code = KD_EXE_UNUSED;
 }
 
-TEST(lookup_empty_returns_unused) {
+TEST(lookup_empty_returns_unused)
+{
 	init_exes();
 	struct kd_exe_info *e = kd_get_exe(100, 0xffffffff81001234);
 	ASSERT_EQ(e->status_code, KD_EXE_UNUSED);
 }
 
-TEST(insert_and_find) {
+TEST(insert_and_find)
+{
 	init_exes();
 	struct kd_exe_info *e = kd_get_exe(100, 0xffffffff81001234);
 	e->status_code = KD_EXE_UNINIT;
@@ -75,7 +77,8 @@ TEST(insert_and_find) {
 	ASSERT_EQ(f->status_code, KD_EXE_UNINIT);
 }
 
-TEST(different_pid_same_rip) {
+TEST(different_pid_same_rip)
+{
 	init_exes();
 	struct kd_exe_info *e1 = kd_get_exe(100, 0xdead);
 	e1->status_code = KD_EXE_NORMAL;
@@ -87,7 +90,8 @@ TEST(different_pid_same_rip) {
 	ASSERT_EQ(e2->status_code, KD_EXE_UNUSED);
 }
 
-TEST(collision_resolution) {
+TEST(collision_resolution)
+{
 	init_exes();
 	/* Fill several entries with sequential PIDs to force collisions */
 	for (int i = 0; i < 20; i++) {
@@ -105,7 +109,8 @@ TEST(collision_resolution) {
 	}
 }
 
-TEST(no_duplicate_on_re_add) {
+TEST(no_duplicate_on_re_add)
+{
 	init_exes();
 	struct kd_exe_info *e1 = kd_get_exe(42, 0xcafe);
 	e1->status_code = KD_EXE_UNINIT;
@@ -117,7 +122,8 @@ TEST(no_duplicate_on_re_add) {
 	ASSERT_EQ(e1, e2);
 }
 
-TEST(ready_requires_published_matching_code) {
+TEST(ready_requires_published_matching_code)
+{
 	struct kd_exe_info *e;
 
 	init_exes();
@@ -134,7 +140,8 @@ TEST(ready_requires_published_matching_code) {
 	ASSERT_EQ(kd_exe_is_ready(1, 0x1234), 0);
 }
 
-TEST(full_table_lookup_fails_closed) {
+TEST(full_table_lookup_fails_closed)
+{
 	init_exes();
 	for (int i = 0; i < KD_MAX_EXE; i++) {
 		kd_exes[i].status_code = KD_EXE_NORMAL;
@@ -144,7 +151,8 @@ TEST(full_table_lookup_fails_closed) {
 	ASSERT_EQ(kd_get_exe(0, 0xdeadbeef), NULL);
 }
 
-int main(void) {
+int main(void)
+{
 	printf("=== test_exe_hash ===\n");
 	RUN_TEST(lookup_empty_returns_unused);
 	RUN_TEST(insert_and_find);

@@ -8,7 +8,7 @@ def solve_cond_jmp_lock_cmpxchg(file_path):
         b1 = b.split()
         if len(a1) == len(b1) + 1:
             return False
-        for e in range(0, len(b1)):
+        for e in range(len(b1)):
             if a1[e + 1] != b1[e]:
                 return False
         return True
@@ -62,22 +62,9 @@ def solve_cond_jmp_lock_cmpxchg(file_path):
 
     with open(file_path, "w", encoding="utf-8") as file:
         file.writelines(new_lines)
-    # print("add_jmp_cond_jmp_lock_cmpxchg")
 
 
-# def solve_lea_ra_rb_c_rb(line, offset):
-#     need_solve_code = {
-#         b"\x48\x8d\x14\x7f": 3,
-#         b"\x48\x8d\x04\x9b": 5,
-#         b"\x48\x8D\x04\x80": 5,
-#         b"\x48\x8D\x14\x9B": 5,
-#     }
-#     if line.b in need_solve_code:
-#         line.args[1]._ptr._args[1]._arg = need_solve_code[line.b]
-#         print("miasm bug at %x" % offset)
-
-
-def solve_lea_ra_rb_c_rb(line, offset):
+def solve_lea_ra_rb_c_rb(line):
     def get_bits(byte, start, length):
         return (byte >> start) & ((1 << length) - 1)
 
@@ -103,7 +90,6 @@ def solve_lea_ra_rb_c_rb(line, offset):
     modr_m_index = opcode_index + 1
     modr_m = bytes_code[modr_m_index]
     mod = get_bits(modr_m, 6, 2)
-    reg = get_bits(modr_m, 3, 3)
     r_m = get_bits(modr_m, 0, 3)
 
     if mod != 0x00:
@@ -129,6 +115,5 @@ def solve_lea_ra_rb_c_rb(line, offset):
     scale_arg = lea_args[1]
     if expr_int_value(scale_arg) != read_scale + 1:
         set_expr_int_value(scale_arg, read_scale + 1)
-        # print("solve solve_lea_ra_rb_c_rb %x" % offset, line, line.b)
 
     return True

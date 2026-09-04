@@ -24,11 +24,21 @@ Useful options:
 - `--poll-us N`: set the polling interval in microseconds. The default is
   `100000`.
 
-The daemon expects the template `asm/` directory to exist under `daemon/`.
-For each entry it copies that template, updates `asm/callee_table.txt` or
-`asm/ij_table.txt` when the kernel reports a missing call or indirect jump,
-invokes the translator, and writes the generated `asm/jit.bin` back through
-`/dev/kd_dev`.
+For each new entry the daemon creates an isolated `asm/` workspace and empty
+`callee_table.txt` and `ij_table.txt` files. It updates those tables when the
+kernel reports a missing call or indirect jump, invokes the translator, and
+writes the generated `jit.bin` back through `/dev/kd_dev`. No pre-created
+workspace template is required.
+
+The daemon rejects empty images and images larger than the shared 640 KiB code
+block. It streams the artifact in chunks of at most 4000 bytes, checks every
+file and device transfer, and marks the entry `KD_EXE_NORMAL` only on the final
+complete chunk. The kernel validates the entry key, destination offset, payload
+length, and status before copying each chunk.
+
+Each translation emits one concise input summary containing the entry RIP and
+nonzero target, region, and kernel-text byte counts. Tests use this line as
+evidence that translation read `/proc/kcore`; raw kernel bytes are not logged.
 
 Allowlisted JIT hostcalls are not translation misses. The translator emits a
 dedicated hostcall exit stub, and the kernel executes and resumes that service

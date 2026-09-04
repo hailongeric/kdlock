@@ -118,7 +118,8 @@ static int simulate_hostcall_continuation_loop(struct regs_model *regs)
 	}
 }
 
-TEST(outer_unlock_completes) {
+TEST(outer_unlock_completes)
+{
 	struct regs_model regs = {
 		.ip = mutex_unlock_addr,
 		.di = outer_mutex,
@@ -129,7 +130,8 @@ TEST(outer_unlock_completes) {
 	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[3]);
 }
 
-TEST(inner_lock_and_unlock_continue) {
+TEST(inner_lock_and_unlock_continue)
+{
 	struct regs_model regs = {
 		.ip = mutex_lock_addr,
 		.di = inner_mutex,
@@ -155,7 +157,8 @@ TEST(inner_lock_and_unlock_continue) {
 	ASSERT_EQ(inner_locked, 0);
 }
 
-TEST(contended_inner_lock_resumes_after_remote_unlock) {
+TEST(contended_inner_lock_resumes_after_remote_unlock)
+{
 	struct regs_model regs = {
 		.ip = mutex_lock_addr,
 		.di = inner_mutex,
@@ -171,7 +174,8 @@ TEST(contended_inner_lock_resumes_after_remote_unlock) {
 	inner_remote = false;
 }
 
-TEST(api_hostcall_continues) {
+TEST(api_hostcall_continues)
+{
 	struct regs_model regs = {
 		.ip = ktime_get_addr,
 		.di = 0,
@@ -186,7 +190,8 @@ TEST(api_hostcall_continues) {
 	ASSERT_EQ(regs.ax, 1234UL);
 }
 
-TEST(unknown_hostcall_is_rejected_without_stack_change) {
+TEST(unknown_hostcall_is_rejected_without_stack_change)
+{
 	struct regs_model regs = {
 		.ip = 0xdead,
 		.di = 0,
@@ -197,7 +202,8 @@ TEST(unknown_hostcall_is_rejected_without_stack_change) {
 	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[2]);
 }
 
-TEST(unknown_call_fallback_unwinds_stack) {
+TEST(unknown_call_fallback_unwinds_stack)
+{
 	struct regs_model regs = {
 		.ip = 0xdead,
 		.di = 0,
@@ -208,7 +214,8 @@ TEST(unknown_call_fallback_unwinds_stack) {
 	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[3]);
 }
 
-TEST(hostcall_continuation_is_bounded) {
+TEST(hostcall_continuation_is_bounded)
+{
 	struct regs_model regs = {
 		.ip = ktime_get_addr,
 		.di = 0,
@@ -220,8 +227,7 @@ TEST(hostcall_continuation_is_bounded) {
 		fake_stack[i] = ktime_get_addr;
 
 	ASSERT_EQ(simulate_hostcall_continuation_loop(&regs), KD_EXE_RUN_ERROR);
-	ASSERT_EQ(regs.sp,
-		  (unsigned long)&fake_stack[MAX_KNOWN_CONTINUATIONS]);
+	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[MAX_KNOWN_CONTINUATIONS]);
 }
 
 int main(void)

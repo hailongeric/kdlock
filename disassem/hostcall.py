@@ -2,7 +2,6 @@ import os
 import re
 from collections import namedtuple
 
-
 HostcallSpec = namedtuple("HostcallSpec", "name service_id symbol")
 
 _HOSTCALL_RE = re.compile(
@@ -13,8 +12,12 @@ _HOSTCALL_RE = re.compile(
 
 def default_manifest_path():
     return os.path.normpath(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                     "..", "include", "kd_hostcalls.def")
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..",
+            "include",
+            "kd_hostcalls.def",
+        )
     )
 
 
@@ -35,7 +38,7 @@ def load_hostcall_specs(path=None):
                 raise ValueError("hostcall ID 0 is reserved")
             if name in names or service_id in service_ids or symbol in symbols:
                 raise ValueError(
-                    "duplicate hostcall declaration at line %d" % line_number
+                    f"duplicate hostcall declaration at line {line_number}"
                 )
             names.add(name)
             service_ids.add(service_id)

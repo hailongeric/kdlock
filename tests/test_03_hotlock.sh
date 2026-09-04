@@ -1,7 +1,7 @@
 #!/bin/bash
 # test_03_hotlock.sh — verify hot-lock promotion state machine.
 # The lock address must be hit 10000 times within the time window
-# for count_uaddr_cnt to promote it to DELEGATE state.
+# for kd_hotlock_record() to promote it to DELEGATE state.
 TEST_NAME="test_03_hotlock"
 source "$(dirname "$0")/common.sh"
 
@@ -12,7 +12,7 @@ load_modules || exit 1
 # --- Test 1: run enough iterations to trigger promotion ---
 # 1 thread × 12000 loops = 12000 hits on the same lock address
 # The hot-lock promotion requires 10000 hits within a time window.
-# count_uaddr_cnt() ignores the first 1e9 TSC cycles after the first observed
+# kd_hotlock_record() ignores the first 1e9 TSC cycles after the first observed
 # lock, so prime that timer and wait before the real workload.
 info "Priming hot-lock timer..."
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 0 >/dev/null 2>&1 || true
@@ -30,4 +30,4 @@ check_dmesg_ok || exit 1
 info "No kernel errors during promotion"
 
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"

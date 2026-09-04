@@ -10,7 +10,7 @@
 #include "test_harness.h"
 
 #define MAX_FRAMES 3
-#define MAX_LOCKS  3
+#define MAX_LOCKS 3
 
 enum frame_state {
 	FRAME_UNUSED,
@@ -43,10 +43,10 @@ static bool frame_valid(const struct frame_model *frame)
 {
 	int i;
 
-	if (!frame || frame->state == FRAME_UNUSED ||
-	    frame->depth < 0 || frame->depth >= MAX_FRAMES ||
-	    !frame->gsbase || !frame->logical_task ||
-	    frame->lock_depth < 0 || frame->lock_depth > MAX_LOCKS ||
+	if (!frame || frame->state == FRAME_UNUSED || frame->depth < 0 ||
+	    frame->depth >= MAX_FRAMES || !frame->gsbase ||
+	    !frame->logical_task || frame->lock_depth < 0 ||
+	    frame->lock_depth > MAX_LOCKS ||
 	    (frame->outer_unlock_seen && !frame->outer_lock) ||
 	    (frame->completion_seen && frame->state != FRAME_COMPLETE))
 		return false;
@@ -77,15 +77,14 @@ static bool context_valid(const struct context_model *ctx)
 
 		if (!frame_valid(frame) || frame->depth != i ||
 		    (i == 0 ? frame->parent != NULL :
-		     frame->parent != &ctx->frames[i - 1]))
+			      frame->parent != &ctx->frames[i - 1]))
 			return false;
 	}
 	return true;
 }
 
 static struct frame_model *push_frame_owned(struct context_model *ctx,
-					     unsigned long outer_lock,
-					     int owner)
+					    unsigned long outer_lock, int owner)
 {
 	struct frame_model *frame;
 
@@ -107,13 +106,13 @@ static struct frame_model *push_frame_owned(struct context_model *ctx,
 }
 
 static struct frame_model *push_frame(struct context_model *ctx,
-				       unsigned long outer_lock)
+				      unsigned long outer_lock)
 {
 	return push_frame_owned(ctx, outer_lock, 1);
 }
 
-static int pop_frame_owned(struct context_model *ctx,
-			   struct frame_model *frame, int owner)
+static int pop_frame_owned(struct context_model *ctx, struct frame_model *frame,
+			   int owner)
 {
 	if (!ctx || !frame || !ctx->depth || ctx->owner != owner ||
 	    frame != &ctx->frames[ctx->depth - 1] ||
@@ -146,8 +145,8 @@ static int push_lock(struct frame_model *frame, unsigned long lock)
 	return frame_valid(frame) ? 0 : -1;
 }
 
-static int set_lock_stack(struct frame_model *frame,
-			  const unsigned long *locks, int depth)
+static int set_lock_stack(struct frame_model *frame, const unsigned long *locks,
+			  int depth)
 {
 	bool outer_found = false;
 	int i, j;
@@ -200,8 +199,7 @@ static int pop_lock(struct frame_model *frame, unsigned long lock)
 	for (i = frame->lock_depth - 1; i >= 0; i--) {
 		if (frame->locks[i] != lock)
 			continue;
-		for (; i + 1 < frame->lock_depth; i++)
-		{
+		for (; i + 1 < frame->lock_depth; i++) {
 			frame->locks[i] = frame->locks[i + 1];
 			frame->released[i] = frame->released[i + 1];
 		}
@@ -214,8 +212,8 @@ static int pop_lock(struct frame_model *frame, unsigned long lock)
 
 static int complete_frame(struct frame_model *frame)
 {
-	if (!frame || !frame->outer_unlock_seen ||
-	    frame->completion_seen || !frame_valid(frame))
+	if (!frame || !frame->outer_unlock_seen || frame->completion_seen ||
+	    !frame_valid(frame))
 		return -1;
 	for (int i = 0; i < frame->lock_depth; i++)
 		if (!frame->released[i])
@@ -226,8 +224,7 @@ static int complete_frame(struct frame_model *frame)
 }
 
 static int abort_nested_locks(struct frame_model *frame,
-			      unsigned long *release_order,
-			      int *release_count)
+			      unsigned long *release_order, int *release_count)
 {
 	int outer_index = -1;
 	int i;
@@ -250,7 +247,8 @@ static int abort_nested_locks(struct frame_model *frame,
 	return 0;
 }
 
-TEST(frame_parent_and_lifo) {
+TEST(frame_parent_and_lifo)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *outer = push_frame(&ctx, 0xA);
 	struct frame_model *inner = push_frame(&ctx, 0xB);
@@ -271,7 +269,8 @@ TEST(frame_parent_and_lifo) {
 	ASSERT_EQ(ctx.depth, 0);
 }
 
-TEST(live_context_rejects_foreign_task) {
+TEST(live_context_rejects_foreign_task)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *outer = push_frame_owned(&ctx, 0xA, 11);
 	struct frame_model *inner;
@@ -289,7 +288,8 @@ TEST(live_context_rejects_foreign_task) {
 	ASSERT_EQ(ctx.owner, 0);
 }
 
-TEST(lock_stack_is_dense_and_ooo_pop_is_tracked) {
+TEST(lock_stack_is_dense_and_ooo_pop_is_tracked)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
 
@@ -305,7 +305,8 @@ TEST(lock_stack_is_dense_and_ooo_pop_is_tracked) {
 	ASSERT_EQ(pop_frame(&ctx, frame), 0);
 }
 
-TEST(outer_unlock_is_required_and_exactly_once) {
+TEST(outer_unlock_is_required_and_exactly_once)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
 
@@ -319,7 +320,8 @@ TEST(outer_unlock_is_required_and_exactly_once) {
 	ASSERT_EQ(pop_frame(&ctx, frame), 0);
 }
 
-TEST(deep_nested_ooo_release_waits_for_inner_locks) {
+TEST(deep_nested_ooo_release_waits_for_inner_locks)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
 
@@ -340,7 +342,8 @@ TEST(deep_nested_ooo_release_waits_for_inner_locks) {
 	ASSERT_EQ(pop_frame(&ctx, frame), 0);
 }
 
-TEST(repeated_acquisition_is_rejected) {
+TEST(repeated_acquisition_is_rejected)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
 
@@ -351,7 +354,8 @@ TEST(repeated_acquisition_is_rejected) {
 	ASSERT_EQ(pop_frame(&ctx, frame), 0);
 }
 
-TEST(lock_stack_capacity_fails_closed) {
+TEST(lock_stack_capacity_fails_closed)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
 
@@ -366,7 +370,8 @@ TEST(lock_stack_capacity_fails_closed) {
 	ASSERT_EQ(pop_frame(&ctx, frame), 0);
 }
 
-TEST(invalid_initial_stack_does_not_mutate_frame) {
+TEST(invalid_initial_stack_does_not_mutate_frame)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
 	const unsigned long initial[] = { 0xA };
@@ -381,7 +386,8 @@ TEST(invalid_initial_stack_does_not_mutate_frame) {
 	ASSERT_EQ(pop_frame(&ctx, frame), 0);
 }
 
-TEST(error_path_can_pop_without_completion) {
+TEST(error_path_can_pop_without_completion)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
 
@@ -391,7 +397,8 @@ TEST(error_path_can_pop_without_completion) {
 	ASSERT_EQ(ctx.depth, 0);
 }
 
-TEST(abort_releases_only_nested_locks_in_reverse_order) {
+TEST(abort_releases_only_nested_locks_in_reverse_order)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *frame = push_frame(&ctx, 0xA);
 	unsigned long release_order[MAX_LOCKS] = { 0 };
@@ -411,7 +418,8 @@ TEST(abort_releases_only_nested_locks_in_reverse_order) {
 	ASSERT_EQ(pop_frame(&ctx, frame), 0);
 }
 
-TEST(gs_context_is_inherited_and_args_remain_two_words) {
+TEST(gs_context_is_inherited_and_args_remain_two_words)
+{
 	struct context_model ctx = { 0 };
 	struct frame_model *outer = push_frame(&ctx, 0xA);
 	struct frame_model *inner;

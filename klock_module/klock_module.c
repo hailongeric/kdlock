@@ -19,6 +19,7 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/ktime.h>
+#include <linux/string.h>
 
 #define DRIVER_NAME "lock_dev"
 
@@ -48,6 +49,76 @@ static DEFINE_PER_CPU(unsigned long, kd_gs_probe_rmw);
 static unsigned long global_counter = 0;
 static unsigned long mode2_api_observations;
 static unsigned long mode5_api_observations;
+
+#define KD_CS_LANES 4
+#define KD_CS_VERIFY_LIMIT 10000000UL
+#define KD_CS_ODD_BIAS 0x9e3779b97f4a7c15UL
+#define KD_CS_EVEN_BIAS 0xc2b2ae3d27d4eb4fUL
+#define KD_CS_COMMIT_BIAS 0x165667b19e3779f9UL
+
+enum kd_cs_state_id {
+	KD_CS_SPIN_GLOBAL,
+	KD_CS_SPIN_A,
+	KD_CS_SPIN_B,
+	KD_CS_SPIN_C,
+	KD_CS_MUTEX_GLOBAL,
+	KD_CS_MUTEX_A,
+	KD_CS_MUTEX_B,
+	KD_CS_STATE_COUNT,
+};
+
+struct kd_cs_state {
+	unsigned long sequence;
+	unsigned long sum;
+	unsigned long branch_mix;
+	unsigned long rolling;
+	unsigned long lanes[KD_CS_LANES];
+	unsigned long commit;
+};
+
+static struct kd_cs_state kd_cs_states[KD_CS_STATE_COUNT];
+static const char *const kd_cs_state_names[KD_CS_STATE_COUNT] = {
+	[KD_CS_SPIN_GLOBAL] = "spin-global",
+	[KD_CS_SPIN_A] = "spin-a",
+	[KD_CS_SPIN_B] = "spin-b",
+	[KD_CS_SPIN_C] = "spin-c",
+	[KD_CS_MUTEX_GLOBAL] = "mutex-global",
+	[KD_CS_MUTEX_A] = "mutex-a",
+	[KD_CS_MUTEX_B] = "mutex-b",
+};
+
+/* Keep this inline: every operation is part of the translated critical section. */
+static __always_inline void kd_cs_transition(struct kd_cs_state *state)
+{
+	unsigned long next = state->sequence + 1;
+	unsigned long sum = state->sum + next;
+	unsigned long branch_mix = state->branch_mix;
+	unsigned long rolling;
+	unsigned long lane = next & (KD_CS_LANES - 1);
+
+	state->sequence = next;
+	state->sum = sum;
+	if (next & 1)
+		branch_mix += (next << 1) ^ KD_CS_ODD_BIAS;
+	else
+		branch_mix ^= (next << 2) + KD_CS_EVEN_BIAS;
+	state->branch_mix = branch_mix;
+
+	rolling = state->rolling ^ (sum + branch_mix);
+	rolling = (rolling << 7) | (rolling >> 57);
+	state->rolling = rolling;
+	state->lanes[lane] += next + lane + (rolling & 0xffff);
+	state->commit = (sum ^ branch_mix ^ rolling ^ state->lanes[0] ^
+			 state->lanes[1] ^ state->lanes[2] ^ state->lanes[3]) +
+			next * KD_CS_COMMIT_BIAS;
+}
+
+static __always_inline void kd_cs_step(enum kd_cs_state_id id)
+{
+	kd_cs_transition(&kd_cs_states[id]);
+	global_counter++;
+}
+
 static atomic_t inner_holder_ready = ATOMIC_INIT(0);
 static atomic_t inner_direct_waiting = ATOMIC_INIT(0);
 static atomic_t inner_nested_waiting = ATOMIC_INIT(0);
@@ -72,7 +143,7 @@ static atomic64_t gs_mutex_successes = ATOMIC64_INIT(0);
 static atomic64_t gs_mutex_failures = ATOMIC64_INIT(0);
 
 #define MODE_ROLE_SYNCHRONIZED 0x80000000U
-#define MODE_ROLE_OUTER_ONLY   0x40000000U
+#define MODE_ROLE_OUTER_ONLY 0x40000000U
 
 #define MODE_SPIN_CONTENTION 0
 #define MODE_SPIN_NESTED 1
@@ -109,15 +180,14 @@ static noinline void kd_gs_probe_prepare(struct kd_gs_probe_state *state)
 	state->cpu = cpu;
 	state->expected_task = current;
 	state->expected_value = KD_GS_PROBE_MAGIC ^ task_value ^
-		((unsigned long)(cpu + 1) << 32);
+				((unsigned long)(cpu + 1) << 32);
 	state->expected_rmw = KD_GS_PROBE_RMW_MAGIC ^ task_value ^
-		(unsigned long)(cpu + 1);
+			      (unsigned long)(cpu + 1);
 	WRITE_ONCE(per_cpu(kd_gs_probe_value, cpu), state->expected_value);
 	WRITE_ONCE(per_cpu(kd_gs_probe_rmw, cpu), state->expected_rmw);
 }
 
-static __always_inline void
-kd_gs_probe_in_cs(struct kd_gs_probe_state *state)
+static __always_inline void kd_gs_probe_in_cs(struct kd_gs_probe_state *state)
 {
 	unsigned long value = raw_cpu_read(kd_gs_probe_value);
 
@@ -128,14 +198,14 @@ kd_gs_probe_in_cs(struct kd_gs_probe_state *state)
 }
 
 static noinline void kd_gs_probe_finish(struct kd_gs_probe_state *state,
-					 bool mutex_mode)
+					bool mutex_mode)
 {
 	atomic64_t *attempts = mutex_mode ? &gs_mutex_attempts :
-		&gs_spin_attempts;
+					    &gs_spin_attempts;
 	atomic64_t *successes = mutex_mode ? &gs_mutex_successes :
-		&gs_spin_successes;
+					     &gs_spin_successes;
 	atomic64_t *failures = mutex_mode ? &gs_mutex_failures :
-		&gs_spin_failures;
+					    &gs_spin_failures;
 	unsigned long written_value;
 	unsigned long written_rmw;
 
@@ -151,14 +221,16 @@ static noinline void kd_gs_probe_finish(struct kd_gs_probe_state *state,
 	}
 
 	atomic64_inc(failures);
-	pr_err_ratelimited("kd_gs probe mismatch: kind=%s cpu=%d value=%lx/%lx write=%lx rmw=%lx/%lx task=%lx/%px\n",
-		mutex_mode ? "mutex" : "spin", state->cpu,
-		state->seen_value, state->expected_value, written_value,
-		written_rmw, state->expected_rmw + 1, state->seen_task,
+	pr_err_ratelimited(
+		"kd_gs probe mismatch: kind=%s cpu=%d value=%lx/%lx write=%lx rmw=%lx/%lx task=%lx/%px\n",
+		mutex_mode ? "mutex" : "spin", state->cpu, state->seen_value,
+		state->expected_value, written_value, written_rmw,
+		state->expected_rmw + 1, state->seen_task,
 		state->expected_task);
 }
 
-static void run_contention_test(unsigned long loop_count, unsigned long work_load)
+static void run_contention_test(unsigned long loop_count,
+				unsigned long work_load)
 {
 	unsigned long i, j;
 	volatile int dummy_computation = 0;
@@ -166,7 +238,7 @@ static void run_contention_test(unsigned long loop_count, unsigned long work_loa
 	for (i = 0; i < loop_count; i++) {
 		spin_lock(&global_lock);
 
-		global_counter++;
+		kd_cs_step(KD_CS_SPIN_GLOBAL);
 		for (j = 0; j < work_load; j++)
 			dummy_computation++;
 
@@ -174,7 +246,8 @@ static void run_contention_test(unsigned long loop_count, unsigned long work_loa
 	}
 }
 
-static void run_nested_spinlock_test(unsigned long loop_count, unsigned long work_load)
+static void run_nested_spinlock_test(unsigned long loop_count,
+				     unsigned long work_load)
 {
 	unsigned long i, j;
 	volatile int dummy_computation = 0;
@@ -183,7 +256,7 @@ static void run_nested_spinlock_test(unsigned long loop_count, unsigned long wor
 		spin_lock(&nested_lock_a);
 		spin_lock(&nested_lock_b);
 
-		global_counter++;
+		kd_cs_step(KD_CS_SPIN_B);
 		for (j = 0; j < work_load; j++)
 			dummy_computation++;
 
@@ -203,7 +276,7 @@ static void run_deep_nested_spinlock_test(unsigned long loop_count,
 		spin_lock(&nested_lock_b);
 		spin_lock(&nested_lock_c);
 
-		global_counter++;
+		kd_cs_step(KD_CS_SPIN_C);
 		for (j = 0; j < work_load; j++)
 			dummy_computation++;
 
@@ -223,7 +296,7 @@ static void run_ooo_nested_spinlock_test(unsigned long loop_count,
 		spin_lock(&nested_lock_a);
 		spin_lock(&nested_lock_b);
 
-		global_counter++;
+		kd_cs_step(KD_CS_SPIN_B);
 		for (j = 0; j < work_load; j++)
 			dummy_computation++;
 
@@ -247,8 +320,7 @@ static noinline void prepare_inner_nested_role(bool synchronized)
 }
 
 static noinline void run_inner_nested_role(unsigned long work_load,
-					    bool synchronized,
-					    bool outer_only)
+					   bool synchronized, bool outer_only)
 {
 	unsigned long j;
 	volatile int dummy_computation = 0;
@@ -258,14 +330,14 @@ static noinline void run_inner_nested_role(unsigned long work_load,
 	smp_mb__after_atomic();
 	spin_lock(&nested_lock_a);
 	if (outer_only) {
-		global_counter++;
+		kd_cs_step(KD_CS_SPIN_A);
 		spin_unlock(&nested_lock_a);
 		return;
 	}
 	atomic_set(&inner_nested_waiting, 1);
 	smp_mb__after_atomic();
 	spin_lock(&nested_lock_b);
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	spin_unlock(&nested_lock_b);
@@ -273,7 +345,7 @@ static noinline void run_inner_nested_role(unsigned long work_load,
 }
 
 static noinline void run_gs_spin_nested_role(unsigned long work_load,
-					      bool synchronized)
+					     bool synchronized)
 {
 	struct kd_gs_probe_state probe;
 	unsigned long j;
@@ -289,7 +361,7 @@ static noinline void run_gs_spin_nested_role(unsigned long work_load,
 	spin_lock(&nested_lock_b);
 
 	kd_gs_probe_in_cs(&probe);
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 
@@ -309,14 +381,14 @@ static noinline void prepare_inner_direct_role(bool synchronized)
 }
 
 static noinline void run_inner_direct_role(unsigned long work_load,
-					    bool synchronized)
+					   bool synchronized)
 {
 	unsigned long j;
 	volatile int dummy_computation = 0;
 
 	prepare_inner_direct_role(synchronized);
 	spin_lock(&nested_lock_b);
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	spin_unlock(&nested_lock_b);
@@ -344,7 +416,7 @@ static noinline void run_inner_holder_role(unsigned long work_load)
 		cpu_relax();
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_B);
 	spin_unlock(&nested_lock_b);
 }
 
@@ -361,14 +433,14 @@ static noinline void prepare_inner_trailing_role(bool synchronized)
 }
 
 static noinline void run_inner_trailing_role(unsigned long work_load,
-					      bool synchronized)
+					     bool synchronized)
 {
 	unsigned long j;
 	volatile int dummy_computation = 0;
 
 	prepare_inner_trailing_role(synchronized);
 	spin_lock(&nested_lock_b);
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	spin_unlock(&nested_lock_b);
@@ -385,14 +457,14 @@ static noinline void prepare_outer_direct_role(bool synchronized)
 }
 
 static noinline void run_outer_direct_role(unsigned long work_load,
-					    bool synchronized)
+					   bool synchronized)
 {
 	unsigned long j;
 	volatile int dummy_computation = 0;
 
 	prepare_outer_direct_role(synchronized);
 	spin_lock(&nested_lock_a);
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_A);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	spin_unlock(&nested_lock_a);
@@ -420,7 +492,7 @@ static noinline void run_outer_holder_role(unsigned long work_load)
 		cpu_relax();
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_A);
 	spin_unlock(&nested_lock_a);
 }
 
@@ -437,14 +509,14 @@ static noinline void prepare_outer_trailing_role(bool synchronized)
 }
 
 static noinline void run_outer_trailing_role(unsigned long work_load,
-					      bool synchronized)
+					     bool synchronized)
 {
 	unsigned long j;
 	volatile int dummy_computation = 0;
 
 	prepare_outer_trailing_role(synchronized);
 	spin_lock(&nested_lock_a);
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_A);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	spin_unlock(&nested_lock_a);
@@ -456,20 +528,20 @@ static void run_inner_contention_spinlock_test(unsigned long loop_count,
 					       bool gs_context)
 {
 	unsigned long i;
-	unsigned int sync_role = role & ~(MODE_ROLE_SYNCHRONIZED |
-					 MODE_ROLE_OUTER_ONLY);
+	unsigned int sync_role =
+		role & ~(MODE_ROLE_SYNCHRONIZED | MODE_ROLE_OUTER_ONLY);
 	bool synchronized = role & MODE_ROLE_SYNCHRONIZED;
 	bool outer_only = role & MODE_ROLE_OUTER_ONLY;
 
 	for (i = 0; i < loop_count; i++) {
 		if (sync_role == 0) {
 			if (gs_context && !outer_only)
-				run_gs_spin_nested_role(work_load, synchronized);
+				run_gs_spin_nested_role(work_load,
+							synchronized);
 			else
 				run_inner_nested_role(work_load, synchronized,
 						      outer_only);
-		}
-		else if (synchronized && sync_role == 1)
+		} else if (synchronized && sync_role == 1)
 			run_inner_holder_role(work_load);
 		else if (synchronized && sync_role == 3)
 			run_outer_holder_role(work_load);
@@ -501,7 +573,7 @@ static noinline void run_abort_target_role(unsigned long work_load,
 	}
 	spin_lock(&nested_lock_a);
 	spin_lock(&nested_lock_b);
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	spin_unlock(&nested_lock_b);
@@ -530,7 +602,7 @@ static noinline void run_abort_holder_role(unsigned long work_load)
 		cpu_relax();
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
-	global_counter++;
+	kd_cs_step(KD_CS_SPIN_A);
 	spin_unlock(&nested_lock_a);
 }
 
@@ -549,8 +621,8 @@ static noinline void run_abort_trailing_role(unsigned long work_load,
 }
 
 static void run_abort_recovery_spinlock_test(unsigned long loop_count,
-					      unsigned long work_load,
-					      unsigned int role)
+					     unsigned long work_load,
+					     unsigned int role)
 {
 	unsigned long i;
 	unsigned int sync_role = role & ~MODE_ROLE_SYNCHRONIZED;
@@ -568,7 +640,8 @@ static void run_abort_recovery_spinlock_test(unsigned long loop_count,
 	}
 }
 
-static void run_api_in_lock_test(unsigned long loop_count, unsigned long work_load)
+static void run_api_in_lock_test(unsigned long loop_count,
+				 unsigned long work_load)
 {
 	unsigned long i, j;
 	unsigned long now;
@@ -577,7 +650,7 @@ static void run_api_in_lock_test(unsigned long loop_count, unsigned long work_lo
 	for (i = 0; i < loop_count; i++) {
 		spin_lock(&global_lock);
 
-		global_counter++;
+		kd_cs_step(KD_CS_SPIN_GLOBAL);
 		now = (unsigned long)ktime_get_ns();
 		dummy_computation ^= (int)(now & 0xffff);
 		if (now)
@@ -590,7 +663,8 @@ static void run_api_in_lock_test(unsigned long loop_count, unsigned long work_lo
 	}
 }
 
-static void run_mutex_contention_test(unsigned long loop_count, unsigned long work_load)
+static void run_mutex_contention_test(unsigned long loop_count,
+				      unsigned long work_load)
 {
 	unsigned long i, j;
 	volatile int dummy_computation = 0;
@@ -598,7 +672,7 @@ static void run_mutex_contention_test(unsigned long loop_count, unsigned long wo
 	for (i = 0; i < loop_count; i++) {
 		mutex_lock(&global_mutex);
 
-		global_counter++;
+		kd_cs_step(KD_CS_MUTEX_GLOBAL);
 		for (j = 0; j < work_load; j++)
 			dummy_computation++;
 
@@ -630,7 +704,7 @@ static noinline void run_nested_mutex_cs(unsigned long work_load)
 	smp_mb__after_atomic();
 	mutex_lock(&nested_mutex_b);
 
-	global_counter++;
+	kd_cs_step(KD_CS_MUTEX_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 
@@ -653,7 +727,7 @@ static noinline void run_gs_nested_mutex_cs(unsigned long work_load)
 	mutex_lock(&nested_mutex_b);
 
 	kd_gs_probe_in_cs(&probe);
-	global_counter++;
+	kd_cs_step(KD_CS_MUTEX_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 
@@ -663,8 +737,7 @@ static noinline void run_gs_nested_mutex_cs(unsigned long work_load)
 }
 
 static noinline void run_nested_mutex_role(unsigned long work_load,
-					    bool synchronized,
-					    bool gs_context)
+					   bool synchronized, bool gs_context)
 {
 	if (synchronized)
 		prepare_nested_mutex_role();
@@ -684,7 +757,7 @@ static noinline void run_inner_mutex_direct_role(unsigned long work_load)
 	atomic_set(&mutex_inner_direct_waiting, 1);
 	smp_mb__after_atomic();
 	mutex_lock(&nested_mutex_b);
-	global_counter++;
+	kd_cs_step(KD_CS_MUTEX_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	mutex_unlock(&nested_mutex_b);
@@ -712,7 +785,7 @@ static noinline void run_inner_mutex_holder_role(unsigned long work_load)
 		cpu_relax();
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
-	global_counter++;
+	kd_cs_step(KD_CS_MUTEX_B);
 	mutex_unlock(&nested_mutex_b);
 }
 
@@ -728,7 +801,7 @@ static noinline void run_inner_mutex_trailing_role(unsigned long work_load)
 	atomic_set(&mutex_inner_trailing_waiting, 1);
 	smp_mb__after_atomic();
 	mutex_lock(&nested_mutex_b);
-	global_counter++;
+	kd_cs_step(KD_CS_MUTEX_B);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	mutex_unlock(&nested_mutex_b);
@@ -744,7 +817,7 @@ static noinline void run_outer_mutex_direct_role(unsigned long work_load)
 	atomic_set(&mutex_outer_direct_waiting, 1);
 	smp_mb__after_atomic();
 	mutex_lock(&nested_mutex_a);
-	global_counter++;
+	kd_cs_step(KD_CS_MUTEX_A);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	mutex_unlock(&nested_mutex_a);
@@ -772,7 +845,7 @@ static noinline void run_outer_mutex_holder_role(unsigned long work_load)
 		cpu_relax();
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
-	global_counter++;
+	kd_cs_step(KD_CS_MUTEX_A);
 	mutex_unlock(&nested_mutex_a);
 }
 
@@ -788,15 +861,14 @@ static noinline void run_outer_mutex_trailing_role(unsigned long work_load)
 	atomic_set(&mutex_outer_trailing_waiting, 1);
 	smp_mb__after_atomic();
 	mutex_lock(&nested_mutex_a);
-	global_counter++;
+	kd_cs_step(KD_CS_MUTEX_A);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	mutex_unlock(&nested_mutex_a);
 }
 
 static void run_nested_mutex_test(unsigned long loop_count,
-				  unsigned long work_load,
-				  unsigned int role,
+				  unsigned long work_load, unsigned int role,
 				  bool gs_context)
 {
 	unsigned long i;
@@ -805,7 +877,8 @@ static void run_nested_mutex_test(unsigned long loop_count,
 
 	for (i = 0; i < loop_count; i++) {
 		if (!synchronized || sync_role == 0)
-			run_nested_mutex_role(work_load, synchronized, gs_context);
+			run_nested_mutex_role(work_load, synchronized,
+					      gs_context);
 		else if (sync_role == 1)
 			run_inner_mutex_holder_role(work_load);
 		else if (sync_role == 2)
@@ -821,7 +894,8 @@ static void run_nested_mutex_test(unsigned long loop_count,
 	}
 }
 
-static void run_api_in_mutex_test(unsigned long loop_count, unsigned long work_load)
+static void run_api_in_mutex_test(unsigned long loop_count,
+				  unsigned long work_load)
 {
 	unsigned long i, j;
 	unsigned long now;
@@ -830,7 +904,7 @@ static void run_api_in_mutex_test(unsigned long loop_count, unsigned long work_l
 	for (i = 0; i < loop_count; i++) {
 		mutex_lock(&global_mutex);
 
-		global_counter++;
+		kd_cs_step(KD_CS_MUTEX_GLOBAL);
 		now = (unsigned long)ktime_get_ns();
 		dummy_computation ^= (int)(now & 0xffff);
 		if (now)
@@ -851,19 +925,21 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		if (copy_from_user(&k_args, (void __user *)arg, sizeof(k_args)))
 			return -EFAULT;
 		if (k_args.mode == MODE_SPIN_CONTENTION)
-			run_contention_test(k_args.loop_count, k_args.work_load);
+			run_contention_test(k_args.loop_count,
+					    k_args.work_load);
 		else if (k_args.mode == MODE_SPIN_NESTED)
 			run_nested_spinlock_test(k_args.loop_count,
 						 k_args.work_load);
 		else if (k_args.mode == MODE_SPIN_API_IN_LOCK)
-			run_api_in_lock_test(k_args.loop_count, k_args.work_load);
+			run_api_in_lock_test(k_args.loop_count,
+					     k_args.work_load);
 		else if (k_args.mode == MODE_MUTEX_CONTENTION)
 			run_mutex_contention_test(k_args.loop_count,
-						 k_args.work_load);
+						  k_args.work_load);
 		else if (k_args.mode == MODE_MUTEX_NESTED)
 			run_nested_mutex_test(k_args.loop_count,
-					      k_args.work_load,
-					      k_args.role, false);
+					      k_args.work_load, k_args.role,
+					      false);
 		else if (k_args.mode == MODE_MUTEX_API_IN_LOCK)
 			run_api_in_mutex_test(k_args.loop_count,
 					      k_args.work_load);
@@ -874,20 +950,21 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			run_ooo_nested_spinlock_test(k_args.loop_count,
 						     k_args.work_load);
 		else if (k_args.mode == MODE_SPIN_INNER_CONTENTION)
-			run_inner_contention_spinlock_test(
-				k_args.loop_count, k_args.work_load, k_args.role,
-				false);
+			run_inner_contention_spinlock_test(k_args.loop_count,
+							   k_args.work_load,
+							   k_args.role, false);
 		else if (k_args.mode == MODE_SPIN_ABORT_RECOVERY)
-			run_abort_recovery_spinlock_test(
-				k_args.loop_count, k_args.work_load, k_args.role);
+			run_abort_recovery_spinlock_test(k_args.loop_count,
+							 k_args.work_load,
+							 k_args.role);
 		else if (k_args.mode == MODE_SPIN_GS_CONTEXT)
-			run_inner_contention_spinlock_test(
-				k_args.loop_count, k_args.work_load, k_args.role,
-				true);
+			run_inner_contention_spinlock_test(k_args.loop_count,
+							   k_args.work_load,
+							   k_args.role, true);
 		else if (k_args.mode == MODE_MUTEX_GS_CONTEXT)
 			run_nested_mutex_test(k_args.loop_count,
-					      k_args.work_load,
-					      k_args.role, true);
+					      k_args.work_load, k_args.role,
+					      true);
 		else
 			return -EINVAL;
 		break;
@@ -908,6 +985,50 @@ static struct miscdevice my_misc_device = {
 	.fops = &my_fops,
 };
 
+static unsigned int kd_cs_validate(unsigned long *operations,
+				   unsigned int *active_states)
+{
+	unsigned int failures = 0;
+	unsigned int id;
+
+	*operations = 0;
+	*active_states = 0;
+	for (id = 0; id < KD_CS_STATE_COUNT; id++) {
+		struct kd_cs_state expected = {};
+		struct kd_cs_state *state = &kd_cs_states[id];
+		unsigned long count = READ_ONCE(state->sequence);
+		unsigned long i;
+
+		*operations += count;
+		if (!count)
+			continue;
+		(*active_states)++;
+		if (count > KD_CS_VERIFY_LIMIT) {
+			failures++;
+			pr_err("kd_cs integrity limit: state=%s operations=%lu limit=%lu\n",
+			       kd_cs_state_names[id], count,
+			       KD_CS_VERIFY_LIMIT);
+			continue;
+		}
+
+		for (i = 0; i < count; i++)
+			kd_cs_transition(&expected);
+		if (memcmp(state, &expected, sizeof(expected))) {
+			failures++;
+			pr_err("kd_cs integrity mismatch: state=%s operations=%lu commit=%lx/%lx\n",
+			       kd_cs_state_names[id], count, state->commit,
+			       expected.commit);
+		}
+	}
+
+	if (*operations != READ_ONCE(global_counter)) {
+		failures++;
+		pr_err("kd_cs operation mismatch: states=%lu counter=%lu\n",
+		       *operations, READ_ONCE(global_counter));
+	}
+	return failures;
+}
+
 static int __init my_module_init(void)
 {
 	int cpu;
@@ -916,6 +1037,7 @@ static int __init my_module_init(void)
 	global_counter = 0;
 	mode2_api_observations = 0;
 	mode5_api_observations = 0;
+	memset(kd_cs_states, 0, sizeof(kd_cs_states));
 	atomic64_set(&gs_spin_attempts, 0);
 	atomic64_set(&gs_spin_successes, 0);
 	atomic64_set(&gs_spin_failures, 0);
@@ -937,8 +1059,15 @@ static int __init my_module_init(void)
 
 static void __exit my_module_exit(void)
 {
+	unsigned long cs_operations;
+	unsigned int cs_active_states;
+	unsigned int cs_failures;
+
 	misc_deregister(&my_misc_device);
+	cs_failures = kd_cs_validate(&cs_operations, &cs_active_states);
 	pr_info("module unloaded, final counter: %lu\n", global_counter);
+	pr_info("kd_cs integrity: operations=%lu active_states=%u failures=%u\n",
+		cs_operations, cs_active_states, cs_failures);
 	pr_info("mode2 api observations: %lu\n", mode2_api_observations);
 	pr_info("mode5 api observations: %lu\n", mode5_api_observations);
 	pr_info("kd_gs spin stats: attempts=%lld successes=%lld failures=%lld\n",

@@ -21,7 +21,7 @@
 - 共享目录目标：`/root/host_fs`
 - 虚拟机内项目路径：`/root/host_fs/kdlock`
 - 编译、单元测试、模块加载、daemon 和 benchmark 全部在虚拟机内执行。
-- 当前已验证环境（2026-09-04）：定制内核 `6.1.159`，内核构建目录
+- 当前已验证环境（2026-09-05）：定制内核 `6.1.159`，内核构建目录
   `/root/linux-6.1.159`，`/lib/modules/$(uname -r)/build` 指向该目录。每次会话
   仍须重新检查，不能假定虚拟机状态未变化。
 
@@ -44,8 +44,9 @@ klock_module/klock_module.ko（构造 spinlock/mutex 临界区）
         v
 kernel_module/kdlock_km.ko
   - kd_lock.c：hook、hot-lock 判断和原始锁 fallback
+  - kd_hotlock.c：有界 hot-lock 状态表
   - kd_spinlock.c / kd_mutex.c：排队、combiner、委托协议
-  - exe.c / kd_int3.c：JIT 执行和动态补全
+  - kd_exec.c / exe.c：嵌套 frame、JIT 执行、hostcall 和动态补全
         ^                         |
         | /dev/kd_dev             | JIT sandbox
         v                         v
@@ -82,8 +83,8 @@ waiter kernel GS、per-CPU 读写/RMW 和 logical `current`。
    且已经确认可用恢复手段后启用。
 6. 加载前先卸载旧模块；卸载顺序固定为 `klock_module`，然后 `kdlock_km`。daemon 必须在
    卸载模块前停止。
-7. 不要默认运行 `compiler_install_kernel.sh`，也不要修改、编译、安装
-   `/root/linux-6.1.159` 中的内核。此类操作必须由用户明确授权。
+7. 不要修改、编译或安装 `/root/linux-6.1.159` 中的内核。此类操作必须由用户
+   明确授权。
 8. 不要启动第二个 QEMU 实例。先执行 `ps -aux | grep qemu-system-x86` 检查
    QEMU 进程，再使用带超时的 SSH 检查 guest；如果 SSH 无法连接，按虚拟机已经崩溃
    处理，使用 `sudo pkill -9 qemu-system-x86` 强制关闭旧虚拟机后再重新启动。
@@ -124,16 +125,16 @@ ssh -p 2222 root@127.0.0.1 '
   make -C tests/unit clean
   make -C tests/unit run
   python3 -m py_compile disassem/*.py
-  make -C kernel_module -j$(nproc)
-  make -C klock_module -j$(nproc)
-  make -C daemon
-  gcc -Iinclude bench/klock_test.c -o bench/klock_test -lpthread
+  make -C kernel_module W=1 -j$(nproc)
+  make -C klock_module W=1 -j$(nproc)
+  make -C daemon CFLAGS="-O2 -Wall -Wextra -Werror"
+  gcc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c \
+    -o bench/klock_test -lpthread
 '
 ```
 
-说明：`tests/common.sh` 的 `build_all` 会隐藏构建输出，并忽略 daemon 的构建失败；benchmark
-会重新编译且失败会终止测试。排查代码修改时仍应先执行上面的显式构建，不能仅凭集成脚本进入
-测试阶段就判断全部产物都是最新且无告警的。
+说明：`tests/common.sh` 的 `build_all` 为保持测试输出简洁会隐藏构建日志，但任一组件
+失败都会终止测试。排查编译问题时仍应先执行上面的显式构建，以获得完整诊断。
 
 ### 4.3 最小模块加载验证
 
@@ -189,8 +190,13 @@ KDLOCK_RECOVERY_CONFIRMED=1 \
 
 该入口对 mode 0/1/2/10 检查 spin JIT，对 mode 3 运行重复/压力 mutex JIT，
 对 mode 4/11 运行 nested-mutex sandbox，对 mode 5 运行重复/压力 mutex hostcall。
-所有模式均要求
-完整 artifact、daemon 回写、真实 `jit_success`、精确 counter 和干净的 `dmesg`。
+所有模式均要求完整 artifact、daemon 回写、真实 `jit_success`、精确 counter 和干净的
+`dmesg`。此外，artifact 的可执行部分必须包含复杂临界区特有的条件分支、`ROL`、
+`IMUL` 和动态索引访存；卸载时必须报告
+`kd_cs integrity: operations=<精确值> active_states=<预期值> failures=0`。该状态按锁隔离并由原生代码重放，
+用于发现部分执行、重复执行和错误续点，不能只检查原有单一 counter。
+mode 7 的 OOO 路径会让外锁记录的最大 frame depth 为 2；应联合检查非零
+`jit_success`、`ooo_unlock` 和 nested lock/unlock，不要将外锁 depth 硬编码为 1。
 mode 2/5 还要求 `ktime_get` 生成 hostcall stub、服务地址不进入
 `callee_table.txt`、运行期不重编译，并且 `exits == executed == resumed > 0`；mode 5
 还要求这些值等于 mutex `jit_success` 和 `jit_resume`。mode 1 的 B 在同一个 A 翻译
@@ -270,8 +276,6 @@ rmmod kdlock_km 2>/dev/null || true
 - recovery mode 使用 guest 根磁盘上的 `/root/host_fs/kdlock` 既有本地目录；宿主机
   修改不会自动同步。测试前逐个比较相关文件哈希，只 `scp` 内容不同的单个文件，禁止
   搬移或递归覆盖目录，然后在 guest 重新构建。
-- `tests/snapshot_test.sh` 在 guest 内看不到宿主机 monitor socket，不能作为快照已
-  创建的证据；必须从宿主机 `./run_vm.sh monitor` 并确认 `info snapshots`。
 - guest 内的 `/tmp` 不是宿主机 `/tmp`；宿主机 monitor socket 仍应由宿主机侧
   流程控制。guest 内脚本只能把是否成功连接作为提示。
 - monitor socket 由启动用户拥有。使用 `./run_vm.sh monitor` 连接，使用 `Ctrl-C`
@@ -343,7 +347,6 @@ cd /home/eric/vm/qemu-scripts
 
 ## 6. 仓库脚本的使用边界
 
-- `kernel_module/km.sh` 含 `sudo` 和旧式参数引用；自动化操作优先直接使用 `insmod`。
 - `tests/run_all.sh` 是真实内核集成测试，不是无风险单元测试。
 - `tests/test_07_mutex_jit.sh` 是显式启用 `mutex_jit=1` 的高风险、非默认测试。
 - `tests/test_08_mutex_jit_modes.sh` 是 high-risk mode 4/5/11 recovery-only 验证，
@@ -351,9 +354,6 @@ cd /home/eric/vm/qemu-scripts
 - `tests/test_09_jit_execution_modes.sh` 的严格 selector 包括 0/1/2/3/4/5/10/11；其中
   selector 2/5 分别验证 spin/mutex sandbox hostcall 的退出、原生执行和续点恢复。
   selector 10/11 验证 spin/mutex 的 waiter GS 和 logical `current` 代理语义。
-- `tests/snapshot_test.sh` 本身不提供可靠快照保护；使用宿主机 recovery mode 和
-  monitor 明确创建/列出快照，见上一节。
-- `compiler_install_kernel.sh` 会编译并安装内核，默认禁止运行。
 - `daemon/0x*` 是翻译工作目录；只能在确认 daemon 已停止后清理。
 
 ## 7. 完成工作的报告要求

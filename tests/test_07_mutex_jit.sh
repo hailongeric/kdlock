@@ -78,7 +78,7 @@ fi
 DAEMON_LOG="$(mktemp /tmp/kdlock-test07-daemon.XXXXXX.log)"
 start_daemon 2
 
-# Prime count_uaddr_cnt's 1e9-cycle startup window.
+# Prime kd_hotlock_record's 1e9-cycle startup window.
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 3 >/dev/null 2>&1 || {
     fail "$TEST_NAME" "warmup failed"
     exit 1
@@ -99,7 +99,8 @@ if ! asm_dir="$(wait_for_jit_artifacts 20)"; then
 fi
 check_daemon_read_kernel_text "$DAEMON_LOG" || exit 1
 check_jit_artifacts "$asm_dir" || exit 1
-check_dmesg_has "write to kernel" "daemon did not install mutex JIT code" || exit 1
+check_complex_cs_artifact "$asm_dir" || exit 1
+check_dmesg_has "$JIT_INSTALL_PATTERN" "daemon did not install mutex JIT code" || exit 1
 wait_for_jit_quiescence 1 20 2 || {
     fail "$TEST_NAME" "mutex translation did not become quiet"
     exit 1
@@ -204,9 +205,10 @@ if [ "$actual_counter" != "$expected_counter" ]; then
         "counter mismatch after JIT: expected $expected_counter, got ${actual_counter:-missing}"
     exit 1
 fi
+check_complex_cs_integrity "$expected_counter" 1 || exit 1
 
 check_dmesg_ok || exit 1
 
 info "JIT completions verified: $jit_success"
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"

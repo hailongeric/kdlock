@@ -5,11 +5,8 @@
 #include <linux/bug.h>
 #include <linux/percpu.h>
 #include <linux/hardirq.h>
-// #include <linux/prefetch.h>
 #include <linux/atomic.h>
 #include <asm/byteorder.h>
-// #include "mcs_spinlock.h"
-
 #ifndef CONFIG_PARAVIRT
 #include <linux/types.h>
 #include <linux/atomic.h>
@@ -26,18 +23,17 @@
  * pre-named variable @VAL to be used in @cond.
  */
 #ifndef smp_cond_load_relaxed
-#define smp_cond_load_relaxed(ptr, cond_expr) \
-	({                                        \
-		typeof(ptr) __PTR = (ptr);            \
-		typeof(*ptr) VAL;                     \
-		for (;;)                              \
-		{                                     \
-			VAL = READ_ONCE(*__PTR);          \
-			if (cond_expr)                    \
-				break;                        \
-			cpu_relax();                      \
-		}                                     \
-		VAL;                                  \
+#define smp_cond_load_relaxed(ptr, cond_expr)    \
+	({                                       \
+		typeof(ptr) __PTR = (ptr);       \
+		typeof(*ptr) VAL;                \
+		for (;;) {                       \
+			VAL = READ_ONCE(*__PTR); \
+			if (cond_expr)           \
+				break;           \
+			cpu_relax();             \
+		}                                \
+		VAL;                             \
 	})
 #endif
 
@@ -45,10 +41,8 @@
 #define atomic_cond_read_relaxed(v, c) smp_cond_load_relaxed(&(v)->counter, (c))
 #endif
 
-struct orig_qspinlock
-{
-	union
-	{
+struct orig_qspinlock {
+	union {
 		atomic_t val;
 
 		/*
@@ -57,24 +51,20 @@ struct orig_qspinlock
 		 * acquisition for the pending bit holder.
 		 */
 #ifdef __LITTLE_ENDIAN
-		struct
-		{
+		struct {
 			u8 locked;
 			u8 pending;
 		};
-		struct
-		{
+		struct {
 			u16 locked_pending;
 			u16 tail;
 		};
 #else
-		struct
-		{
+		struct {
 			u16 tail;
 			u16 locked_pending;
 		};
-		struct
-		{
+		struct {
 			u8 reserved[2];
 			u8 pending;
 			u8 locked;
@@ -87,9 +77,7 @@ struct orig_qspinlock
  * Initializier
  */
 #ifndef __ORIG_QSPIN_LOCK_UNLOCKED
-#define __ORIG_QSPIN_LOCK_UNLOCKED \
-	{                              \
-		.val = ATOMIC_INIT(0)}
+#define __ORIG_QSPIN_LOCK_UNLOCKED { .val = ATOMIC_INIT(0) }
 #endif
 
 /*
@@ -108,7 +96,8 @@ struct orig_qspinlock
  *  9-10: tail index
  * 11-31: tail cpu (+1)
  */
-#define _Q_SET_MASK_HL(type) (((1U << _Q_##type##_BITS_HL) - 1) << _Q_##type##_OFFSET_HL)
+#define _Q_SET_MASK_HL(type) \
+	(((1U << _Q_##type##_BITS_HL) - 1) << _Q_##type##_OFFSET_HL)
 #define _Q_LOCKED_OFFSET_HL 0
 #define _Q_LOCKED_BITS_HL 8
 #define _Q_LOCKED_MASK_HL _Q_SET_MASK_HL(LOCKED)
@@ -138,7 +127,6 @@ struct orig_qspinlock
 #ifndef _Q_PENDING_LOOPS_HL
 #define _Q_PENDING_LOOPS_HL 1
 #endif
-
 
 /*
  * Bitfields in the non-atomic socket_and_count value:

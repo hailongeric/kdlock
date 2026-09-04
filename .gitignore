@@ -20,16 +20,13 @@ Module.symvers
 
 # User-space binaries
 /daemon/daemon
-daemon/asm/
 disassem/asm/
 daemon/0x*
 /bench/klock_test
-/bench/lock1_proc
-/bench/lock1_t
-/bench/sched_y
 
 # Python cache
 __pycache__/
+.ruff_cache/
 *.py[cod]
 *.pyo
 

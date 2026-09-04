@@ -44,4 +44,4 @@ fi
 info "/dev/kd_dev removed"
 
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"

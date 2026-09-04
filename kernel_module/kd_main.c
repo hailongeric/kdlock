@@ -1,45 +1,32 @@
-#include <linux/init.h>
-#include <linux/kallsyms.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
-#include <linux/sched.h>
-#include <linux/sched/task_stack.h>
-#include <linux/string.h>
-#include <linux/rcupdate.h>
-
 #include <linux/mutex.h>
+#include <linux/rcupdate.h>
+#include <linux/sched.h>
 #include <linux/spinlock.h>
+#include <linux/string.h>
 
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_hotlock.h"
 #include "kd_lock.h"
-#include "kd_futex.h"
-#include "kd_spinlock.h"
 #include "kd_mutex.h"
+#include "kd_spinlock.h"
 #include "sys.h"
 #include "utils.h"
 
-#define MAX_NAME_CNT 20
-#define MAX_NAME_LENGTH 20
-
 MODULE_LICENSE("GPL");
+MODULE_DESCRIPTION("kdlock JIT lock delegation");
 
-#define rate_int(a, b) ((b) > 0 ? (((a) * 100) / (b)) : 0)
-#define rate_dec(a, b) ((b) > 0 ? ((((a) * 10000) / (b)) % 100) : 0)
-
-extern int velvet_wait_queue;
-extern int delegate_election;
 extern int kd_spin_jit_fail_after_nested_lock;
-module_param(velvet_wait_queue, int, S_IRUGO);
-module_param(delegate_election, int, S_IRUGO);
 module_param_named(spin_jit_fail_after_nested_lock,
 		   kd_spin_jit_fail_after_nested_lock, int, 0644);
 MODULE_PARM_DESC(spin_jit_fail_after_nested_lock,
 		 "one-shot failure after a JIT nested spinlock acquisition");
 
-char *target_process = "kd_test";
+static char *target_process = "kd_test";
 module_param(target_process, charp, S_IRUGO);
-char *target_names[MAX_NAME_CNT] = { 0 };
+MODULE_PARM_DESC(target_process, "task comm routed through kdlock hooks");
 
 extern int (*is_kd_test)(void);
 
@@ -54,114 +41,75 @@ extern void (*kd_mutex_lock)(struct mutex *lock, unsigned long ret_rsp,
 extern void (*kd_mutex_unlock)(struct mutex *lock, unsigned long ret_rsp,
 			       unsigned long ret_addr);
 
-extern int (*kd_do_int3)(struct pt_regs *);
-
-long kd_success_cnt;
-long kd_success_wake_cnt;
-long kd_total_cnt;
-unsigned long uaddrs[102400];
-unsigned long uaddr_cnts[102400];
-unsigned long kd_wake_rets[512];
-long uaddr_cnt;
-
 static int __is_kd_test(void)
 {
-	int i;
-
-	if (strcmp(current->comm, target_names[0]) == 0)
-		return 2;
-	for (i = 0; i < MAX_NAME_CNT; i++) {
-		if (target_names[i] == NULL)
-			break;
-		if (strcmp(current->comm, target_names[i]) == 0)
-			return 1;
-	}
-	return 0;
+	return target_process && !strcmp(current->comm, target_process) ? 2 : 0;
 }
 
 static int __init kdlock_km_init(void)
 {
-	int i;
-	char *token;
+	int ret;
 
-	kd_exe_init();
+	ret = kd_hotlock_init();
+	if (ret)
+		return ret;
+
+	ret = kd_exe_init();
+	if (ret)
+		goto err_hotlock;
+
 	kd_exec_context_init();
-	kd_sys_init();
-	kd_spinlock_init();
-	kd_mutex_init_percpu();
-	i = 0;
-	token = strsep(&target_process, " ");
-	while (token != NULL) {
-		if (i < MAX_NAME_CNT) {
-			target_names[i] = kmalloc(MAX_NAME_LENGTH, GFP_KERNEL);
-			strncpy(target_names[i], token, MAX_NAME_LENGTH - 1);
-			target_names[i][MAX_NAME_LENGTH - 1] = '\0';
-			i++;
-		}
-		token = strsep(&target_process, " ");
-	}
+	ret = kd_sys_init();
+	if (ret)
+		goto err_exec_context;
 
-	for (i = 0; i < MAX_NAME_CNT; i++) {
-		if (target_names[i] == NULL)
-			break;
-		KD_PR_INFO("%s", target_names[i]);
-	}
+	ret = kd_spinlock_init();
+	if (ret)
+		goto err_sys;
 
-	uaddr_cnt = 0;
-	kd_success_cnt = 0;
-	kd_success_wake_cnt = 0;
-	kd_total_cnt = 0;
-	for (i = 0; i < KD_CNT_NUM + 2; i++)
-		kd_wake_rets[i] = 0;
+	ret = kd_mutex_init_percpu();
+	if (ret)
+		goto err_spinlock;
+
 	is_kd_test = __is_kd_test;
 	kd_raw_spin_unlock = __kd_raw_spin_unlock;
 	kd_raw_spin_lock = __kd_raw_spin_lock;
 	is_kd = __is_kd_test;
 	kd_mutex_lock = __kd_mutex_lock;
 	kd_mutex_unlock = __kd_mutex_unlock;
-	kd_do_int3 = NULL;
 
-	KD_PR_INFO("kd kernel module init\n");
+	KD_PR_INFO("kd kernel module init: target_process=%s\n",
+		   target_process);
 	return 0;
+
+err_spinlock:
+	kd_spinlock_exit();
+err_sys:
+	kd_sys_exit();
+err_exec_context:
+	kd_exec_context_exit();
+	kd_exe_exit();
+err_hotlock:
+	kd_hotlock_exit();
+	return ret;
 }
 
 static void __exit kdlock_km_exit(void)
 {
-	int i, target_cnt = 0, time_cnt = 0;
-
 	kd_raw_spin_unlock = NULL;
 	kd_raw_spin_lock = NULL;
 	is_kd_test = NULL;
 	kd_mutex_unlock = NULL;
 	kd_mutex_lock = NULL;
 	is_kd = NULL;
-	kd_do_int3 = NULL;
 
 	synchronize_rcu();
-	KD_PR_INFO("kd_success_cnt:%ld kd_total_cnt:%ld kd_success_wake_cnt:%ld success_rate:%ld.%02ld%% success_wake_rate:%ld.%02ld%%\n", \
-		kd_success_cnt, kd_total_cnt, kd_success_wake_cnt, \
-		rate_int(kd_success_cnt, kd_total_cnt), rate_dec(kd_success_cnt, kd_total_cnt), \
-		rate_int(kd_success_wake_cnt, kd_success_cnt), rate_dec(kd_success_wake_cnt, kd_success_cnt));
-	for (i = 0; i < KD_CNT_NUM + 2; i++) {
-		target_cnt += i * kd_wake_rets[i];
-		time_cnt += kd_wake_rets[i];
-		KD_PR_INFO("ret: %d cnt: %lu\n", i, kd_wake_rets[i]);
-	}
-	if (time_cnt > 0)
-		KD_PR_INFO("average ret: %d", target_cnt / time_cnt);
-	KD_PR_INFO("uaddr total: %ld", uaddr_cnt);
-	for (i = 0; i < uaddr_cnt; i++)
-		KD_PR_INFO("%lx --- %ld", uaddrs[i], uaddr_cnts[i]);
-
-	for (i = 0; i < MAX_NAME_CNT; i++)
-		if (target_names[i] != NULL)
-			kfree(target_names[i]);
-
-	kd_spinlock_exit();
 	kd_mutex_exit();
+	kd_spinlock_exit();
 	kd_exec_context_exit();
 	kd_sys_exit();
 	kd_exe_exit();
+	kd_hotlock_exit();
 
 	KD_PR_INFO("kd kernel module exit\n");
 }

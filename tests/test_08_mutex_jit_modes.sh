@@ -73,12 +73,12 @@ run_nested_mutex_contention() {
     # Start the two holders first. Every process is pinned to a distinct CPU so
     # a scheduled parent execution frame cannot block the task that releases B.
     for role in 1 3; do
-        logs[$role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
+        logs[role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
         timeout --kill-after=5s 60s taskset -c "$role" "$BENCH_BIN" \
             1 1 "$MODE4_WORKLOAD" 1 "$mode" \
             "$((MODE4_ROLE_BASE + role))" \
-            >"${logs[$role]}" 2>&1 &
-        pids[$role]=$!
+            >"${logs[role]}" 2>&1 &
+        pids[role]=$!
     done
     sleep 0.1
 
@@ -86,24 +86,24 @@ run_nested_mutex_contention() {
     # trailing waiter. This makes the direct waiter combine the target instead
     # of merely handing the lock to it.
     for role in 2 4 0 5 6; do
-        logs[$role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
+        logs[role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
         timeout --kill-after=5s 60s taskset -c "$role" "$BENCH_BIN" \
             1 1 "$MODE4_WORKLOAD" 1 "$mode" \
             "$((MODE4_ROLE_BASE + role))" \
-            >"${logs[$role]}" 2>&1 &
-        pids[$role]=$!
+            >"${logs[role]}" 2>&1 &
+        pids[role]=$!
     done
 
     for role in 0 1 2 3 4 5 6; do
-        pid="${pids[$role]}"
+        pid="${pids[role]}"
         if ! wait "$pid"; then
             failed=1
             info "mode $mode role $role failed:"
-            tail -n 10 "${logs[$role]}" || true
+            tail -n 10 "${logs[role]}" || true
         fi
     done
     for role in 0 1 2 3 4 5 6; do
-        rm -f "${logs[$role]}"
+        rm -f "${logs[role]}"
     done
 
     if [ "$failed" -ne 0 ]; then
@@ -190,6 +190,7 @@ run_jit_mode() {
     local delegate_count write_count target_count
     local runtime_write_count runtime_target_count
     local expected_counter actual_counter
+    local expected_cs_states=1
 
     info "Testing mutex JIT mode $mode ($mode_name)..."
     clear_dmesg
@@ -233,6 +234,7 @@ run_jit_mode() {
     fi
     while IFS= read -r asm_dir; do
         check_jit_artifacts "$asm_dir" || return 1
+        check_complex_cs_artifact "$asm_dir" || return 1
         if [ "$mode" -eq 5 ]; then
             check_jit_hostcall_artifact "$asm_dir" "ktime_get" || return 1
         fi
@@ -250,8 +252,9 @@ run_jit_mode() {
     check_daemon_read_kernel_text "$DAEMON_LOG" || return 1
 
     delegate_count="$(dmesg | grep -c "begin delegate" || true)"
-    write_count="$(dmesg | grep -c "write to kernel" || true)"
-    target_count="$(grep -c "^Targets: \['0x" "$DAEMON_LOG" || true)"
+    write_count="$(jit_install_count)"
+    target_count="$(grep -c '^Translation input: entry=0x' \
+        "$DAEMON_LOG" || true)"
     if [ "$delegate_count" -lt "$expected_artifacts" ] ||
        [ "$write_count" -lt "$expected_artifacts" ] ||
        [ "$target_count" -lt "$expected_artifacts" ]; then
@@ -264,8 +267,9 @@ run_jit_mode() {
         fail "$TEST_NAME" "mode $mode: JIT translation did not become quiet"
         return 1
     fi
-    write_count="$(dmesg | grep -c "write to kernel" || true)"
-    target_count="$(grep -c "^Targets: \['0x" "$DAEMON_LOG" || true)"
+    write_count="$(jit_install_count)"
+    target_count="$(grep -c '^Translation input: entry=0x' \
+        "$DAEMON_LOG" || true)"
 
     if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
         info "Running deterministic A/B nested contention..."
@@ -277,8 +281,8 @@ run_jit_mode() {
     sleep 1
 
     if [ "$mode" -eq 5 ]; then
-        runtime_write_count="$(dmesg | grep -c "write to kernel" || true)"
-        runtime_target_count="$(grep -c "^Targets: \['0x" \
+        runtime_write_count="$(jit_install_count)"
+        runtime_target_count="$(grep -c '^Translation input: entry=0x' \
             "$DAEMON_LOG" || true)"
         if [ "$runtime_write_count" != "$write_count" ] ||
            [ "$runtime_target_count" != "$target_count" ]; then
@@ -391,6 +395,7 @@ run_jit_mode() {
 
     if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
         expected_counter=$((1 + 12000 + MODE4_ROLES))
+        expected_cs_states=2
     else
         expected_counter=$((1 + 12000 +
             MODE5_ROUNDS * MODE5_ROUND_THREADS * MODE5_ROUND_LOOPS +
@@ -404,6 +409,7 @@ run_jit_mode() {
             "mode $mode: counter mismatch, expected $expected_counter, got ${actual_counter:-missing}"
         return 1
     fi
+    check_complex_cs_integrity "$expected_counter" "$expected_cs_states" || return 1
 
     if [ "$mode" -eq 5 ]; then
         local api_observations
@@ -445,4 +451,4 @@ all)
 esac
 
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"

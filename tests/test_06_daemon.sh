@@ -38,7 +38,7 @@ fi
 # --- Test 3: JIT translation artifacts and write-back ---
 check_daemon_read_kernel_text "$DAEMON_LOG" || exit 1
 check_jit_artifacts "$asm_dir" || exit 1
-check_dmesg_has "write to kernel" "daemon did not write JIT back" || exit 1
+check_dmesg_has "$JIT_INSTALL_PATTERN" "daemon did not write JIT back" || exit 1
 info "JIT binary written to kernel"
 
 # --- Test 4: clean stop ---
@@ -57,4 +57,4 @@ fi
 check_dmesg_ok || exit 1
 
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"

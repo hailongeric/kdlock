@@ -50,7 +50,7 @@ security isolation boundary.
          ▼                                          ▼
 ┌─────────────────┐                    ┌──────────────────────────┐
 │  /dev/kd_dev    │◄── poll ───────────│  exe.c: code_block pool  │
-│  (char device)  │                    │  kd_exe_on_call_hl()     │
+│  (char device)  │                    │ kd_exe_on_call_hl_entry()│
 └────────┬────────┘                    └──────────────────────────┘
          │                                          ▲
          │ (2) Translate                            │ write jit.bin
@@ -102,27 +102,27 @@ extern void (*kd_mutex_unlock)(struct mutex *lock,
 
 ### 3.2 Target Process Matching
 
-The module parameter `target_process` specifies which process names should be
-intercepted.  The patched kernel calls `is_kd_test()` which compares
-`current->comm` against the target list.  Only matching processes enter the
+The module parameter `target_process` specifies which process name should be
+intercepted. The patched kernel calls `is_kd_test()`, which compares
+`current->comm` with this single exact name. Only matching processes enter the
 delegation path; all others use the original kernel lock implementation.
 
 ### 3.3 Hot-Lock Promotion
 
-Not every lock is worth delegating.  The `count_uaddr_cnt()` / `check_uaddr_state()`
-mechanism in `kd_int3.c` implements a promotion pipeline:
+Not every lock is worth delegating. `kd_hotlock.c` keeps a bounded, append-only,
+open-addressed table and implements this promotion pipeline:
 
 ```
-KD_UADDR_INIT → KD_UADDR_CHECKING → KD_UADDR_DELEGATE
-                                   → KD_UADDR_IGNORE (if too infrequent)
+KD_HOTLOCK_INIT -> KD_HOTLOCK_CHECKING -> KD_HOTLOCK_DELEGATE
+                                           -> KD_HOTLOCK_IGNORE
 ```
 
-A lock address starts in `INIT` state.  After the first access it moves to
-`CHECKING` and begins counting.  If 10,000 accesses occur within a
-cycle-budget window, the lock is promoted to `DELEGATE` and enters the
-delegation path.  If the accesses are too spread out (exceed `count_uaddr_time`
-cycles), the lock is marked `IGNORE` and always falls back to the original
-kernel path.
+Sampling begins after a module-wide one-billion-cycle warmup. A lock address
+starts in `INIT`; its first sampled access moves it to `CHECKING`. If 10,000
+samples arrive within an adaptive cycle window that initially equals 2.5
+billion cycles, the lock becomes `DELEGATE`. Reaching the window first makes it
+`IGNORE`. The 131071-slot table uses bounded linear probing under a raw spinlock
+and fails closed when full, so a hook cannot loop forever in atomic context.
 
 ### 3.4 Hook Implementation (kd_lock.c)
 
@@ -130,8 +130,8 @@ kernel path.
 void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
                         unsigned long ret_addr)
 {
-    if (!check_uaddr_state((unsigned long)lock)) {
-        count_uaddr_cnt((unsigned long)lock);
+    if (!kd_hotlock_is_promoted((unsigned long)lock)) {
+        kd_hotlock_record((unsigned long)lock);
         origin_raw_spin_lock(lock);  // fallback
         return;
     }
@@ -228,10 +228,10 @@ After `execute_cs` returns, the waiter is woken via `clear_locked_set_completed`
 | Return value | Meaning | Waiter action |
 |---|---|---|
 | `ret_val == 0` | Uncontended acquire | Normal return |
-| `ret_val == 1` | Delegated CS completed while its parent lock was OOO | Restore the actual node's saved register context |
+| `ret_val == 1` | Parent lock was released OOO | Restore the actual node's saved context |
 | `ret_val == 2` | Became queue owner/combiner | Normal return (runs own CS) |
-| `ret_val == 3` | CS was delegated | `jump_to_saved_regs(&regs)` — restore full context |
-| `ret_val == 4` | JIT failed; waiter later acquired the outer lock normally | `jump_to_saved_regs_in_cs(&regs)` — resume at the original CS entry |
+| `ret_val == 3` | CS was delegated | Restore with `jump_to_saved_regs()` |
+| `ret_val == 4` | JIT failed; waiter acquired natively | Resume CS with `jump_to_saved_regs_in_cs()` |
 
 ### 4.5 Out-of-Order (OOO) Unlock
 
@@ -378,7 +378,7 @@ pool. Pool or translation-table exhaustion fails closed.
 
 Kernel critical-section text is shared across all tasks, so kernel-lock JIT
 entries use a **RIP-only key**: the hook calls `kd_exe_add(0, ret_addr)` and
-`kd_exe_on_call_hl()` looks up `kd_get_exe(0, regs->ip)`. This avoids binding a
+`kd_exe_on_call_hl_entry()` looks up `kd_get_exe(0, entry_ip)`. This avoids binding a
 translation to one short-lived benchmark thread or process ID.
 
 The translation hash probes at most `KD_MAX_EXE` slots. It returns `NULL` when
@@ -401,14 +401,15 @@ KD_EXE_NORMAL -> KD_EXE_ERROR_INST  (terminal unsupported instruction)
 sandbox exit reason handled synchronously by the kernel executor, not a
 translation-entry state observed by the daemon.
 
-### 6.3 kd_exe_on_call_hl()
+### 6.3 kd_exe_on_call_hl_entry()
 
 This is the core execution function called by the combiner:
 
 ```c
-int kd_exe_on_call_hl(struct pt_regs *regs, void *outgoing_rsp_ptr)
+int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
+                            unsigned long outer_lock_addr)
 {
-    struct kd_exe_info *exe = kd_get_exe(0, regs->ip);
+    struct kd_exe_info *exe = kd_get_exe(0, entry_ip);
 
     if (exe->status_code != KD_EXE_NORMAL)
         return KD_EXE_NO_RUN;  // not ready
@@ -435,13 +436,13 @@ int kd_exe_on_call_hl(struct pt_regs *regs, void *outgoing_rsp_ptr)
 
 ### 6.4 End-Point Detection
 
-The `end_point[]` array lists kernel functions whose address signals the end of
+The `end_points[]` array lists kernel functions whose address signals the end of
 a critical section.  These are resolved dynamically at module init via
 `kallsyms_lookup_name`:
 
 ```c
-end_point[end_point_count] = kallsyms_lookup_name("_raw_spin_unlock");
-end_point[end_point_count] = kallsyms_lookup_name("mutex_unlock");
+end_points[end_point_count] = kallsyms_lookup_name("_raw_spin_unlock");
+end_points[end_point_count] = kallsyms_lookup_name("mutex_unlock");
 ```
 
 When the sandbox encounters a `CALL` to one of these addresses, it reports
@@ -456,19 +457,22 @@ The daemon runs in userspace and polls `/dev/kd_dev`:
 
 1. **Read**: get array of `kd_exe_info` entries from the kernel.
 2. **Dispatch** based on `status_code`:
-   - `KD_EXE_UNINIT`: create workspace, run initial translation.
+   - `KD_EXE_UNINIT`: create an isolated `asm/` workspace, initialize empty
+     callee/IJ tables, and run the first translation.
    - `KD_EXE_CALL_MISS`: append target to `callee_table.txt`, recompile.
    - `KD_EXE_IJ_MISS`: append `(from, target)` to `ij_table.txt`, recompile.
 3. **Compile**: invoke `disassem.py` which produces `asm/jit.S`.
 4. **Assemble**: `wrapper.S` includes `jit.S`, assembled into `jit.bin`.
-5. **Write**: send `jit.bin` back through `/dev/kd_dev` in chunks (max 4000
-   bytes per write), with `kd_recv_pkt` headers.
+5. **Write**: reject empty or over-640-KiB images, then send `jit.bin` through
+   `/dev/kd_dev` in checked chunks (max 4000 payload bytes) with `kd_recv_pkt`
+   headers. Only the final complete chunk publishes `KD_EXE_NORMAL`.
 
 ### 7.2 Translator (disassem/disassem.py)
 
 The miasm-based translator:
 
-1. Reads raw kernel bytes from `/proc/kcore` at the target RIP (`memread.py`).
+1. Reads raw kernel bytes from `/proc/kcore` at the target RIP (`memread.py`) and
+   logs only entry/target/region/byte counts, never the raw bytes.
 2. Loads `include/kd_hostcalls.def`, resolves available service symbols, and
    excludes those targets from callee-table expansion.
 3. Resolves the x86 per-CPU `current_task` offset from `/proc/kallsyms`.
@@ -481,7 +485,7 @@ The miasm-based translator:
    produce a terminal `KD_EXE_ERROR_INST` artifact before any partial
    translated side effect runs.
 7. For each basic block, translates instructions via `translation.py`:
-   - Normal instructions: register conflict resolution, memory base checking.
+   - Normal instructions: register conflict resolution and operand rewriting.
    - Generic `%gs:` memory operands: explicit waiter-GS-base addressing.
    - `%gs:current_task`: logical waiter task substitution.
    - Branches: translated to sandbox-local jumps.
@@ -550,8 +554,9 @@ The wrapper provides prologue/epilogue around the translated code:
    into wrapper stack slots.
 4. Copy `args[0]` to `Stack_RGS` and `args[1]` to the reused
    `Stack_TASK`/`Stack_RCT` slot. No third input or extra physical slot exists.
-5. Initialize R13 = virtual RSP and R12 = virtual RBP.
-6. Set R11 to the block-budget counter, load the requested RIP into R14, and
+5. Initialize the reserved `Stack_INST_CNT` output to zero.
+6. Initialize R13 = virtual RSP and R12 = virtual RBP.
+7. Set R11 to the block-budget counter, load the requested RIP into R14, and
    dispatch to the matching translated entry/continuation label.
 
 **Epilogue (exit label):**
@@ -564,24 +569,21 @@ The wrapper provides prologue/epilogue around the translated code:
    - `0x4` = `KD_EXE_INST_LIMIT`
    - `0x5` = `KD_EXE_HOSTCALL`
    - Other = indirect jump source address (`KD_EXE_IJ_MISS`)
-4. Write final RIP into `pt_regs->ip`.
-5. Write the supported GPR/RIP/RSP state back to `pt_regs`; EFLAGS, hardware
+4. Write the reserved zero `Stack_INST_CNT` value into `args[1]`.
+5. Write final RIP into `pt_regs->ip`.
+6. Write the supported GPR/RIP/RSP state back to `pt_regs`; EFLAGS, hardware
    segment-base state, and SIMD/FPU state are not restored by the wrapper.
-6. Restore callee-saved registers and return.
+7. Restore callee-saved registers and return.
 
-`args[1]` receives the reserved `Stack_INST_CNT` slot, but the current wrapper
-does not initialize that slot or copy R11 into it. It must not be consumed as a
-valid counter.
+`args[1]` remains a reserved output and is always zero. It is not the R11 block
+budget and must not be consumed as an execution counter.
 
 ### 8.3 Memory Access Check Status
 
-`normal.py` identifies memory-base registers and retains scaffolding for
-flag-preserving checks, but the actual address-test instruction is commented
-out and the generated check sequence is currently empty. `seg_error` and
-`seg_error2` now deterministically return `KD_EXE_ERROR_INST`, but the current
-JIT is still not a security boundary and does not provide complete canonical
-address or bounds validation. This is an explicit implementation gap, not a
-property callers may rely on.
+`normal.py` does not emit canonical-address or bounds guards for translated
+memory operands. Segment-policy failures return `KD_EXE_ERROR_INST`, but that
+does not make the JIT a security boundary. Effective-address validation and
+the EFLAGS preservation it requires remain explicit implementation gaps.
 
 ### 8.4 Kernel GS And Logical Current
 
@@ -598,8 +600,9 @@ operands based on the captured GS value. A 64-bit MOV source at the resolved
 `current_task` per-CPU offset instead reads the logical task input, so proxy
 execution observes the waiter rather than the combiner. Writes/RMW to
 `current_task`, `%fs:` operands, direct FS/GS base instructions (including
-`SWAPGS`), and unsupported segment prefixes fail closed before normal translated code executes. Segment
-prefixes used only as alignment-NOP pseudo operands are discarded.
+`SWAPGS`), and unsupported segment prefixes fail closed before normal
+translated code executes. Segment prefixes used only as alignment-NOP pseudo
+operands are discarded.
 
 Modes 10 and 11 validate this contract for nested spinlock and nested mutex
 proxying. They require artifacts containing both virtual inputs, no live
@@ -621,8 +624,8 @@ Function calls are assigned to four disjoint policies:
 | Class | Examples | Behavior |
 | --- | --- | --- |
 | Control | lock/unlock functions | Preserve the virtual CALL frame and use nested-lock or end-point handling. |
-| Hostcall | `ktime_get`, exported `ktime_get_ns` | Preserve the virtual CALL frame, set `Stack_IJ = 0x5`, execute a typed native handler, then resume. |
-| Translatable | ordinary discovered callee | Report `KD_EXE_CALL_MISS`, unwind the virtual CALL frame for native retry, add the target to `callee_table.txt`, and recompile. |
+| Hostcall | allowlisted time API | Exit with the CALL frame, execute its typed handler, and resume. |
+| Translatable | discovered callee | Report a miss, unwind for native retry, record the target, and recompile. |
 | Unsupported | unresolved or rejected target | Fail closed; never invoke an arbitrary address as a service. |
 
 ### 8.7 Native Hostcalls
@@ -654,6 +657,32 @@ proxy task's `current`, and retry-safe. Variadic `printk`, sleeping APIs,
 task-context-dependent APIs, and side-effecting calls are not allowed. A future
 side-effecting service needs a fixed ABI and an exactly-once rule for failures
 that occur after native execution.
+
+### 8.8 Complex Workload Correctness Oracle
+
+The synthetic workload does not use a single increment as its only translated
+side effect. Every lock protects one of seven independent `kd_cs_state` objects
+(global/A/B/C spin states and global/A/B mutex states). Each acquisition updates
+a sequence, cumulative sum, odd/even branch mix, rotating checksum, one of four
+dynamically indexed lanes, and a final commit value before incrementing the
+legacy global counter. The compiled critical section therefore includes
+dependent loads/stores, a conditional branch, `ROL`, `IMUL`, and scaled-index
+memory addressing.
+
+At workload-module unload, native code starts from zero and replays the observed
+number of transitions for every active lock. It compares every field, sums all
+per-lock operation counts, and requires that sum to equal `global_counter`. The
+integration tests require both an exact expected operation count and
+the expected number of independently protected active states, plus `failures=0`
+in the `kd_cs integrity` report. This catches partial execution, duplicate
+execution, updates assigned to the wrong lock, incorrect branch state, and
+resume-at-the-wrong-IP errors that a lone increment could miss.
+
+Artifact checks inspect only executable generated assembly, excluding source
+comments. They require the four-lane selector plus a conditional jump, rotate,
+multiply, and indexed access. Constants that the compiler hoists before the lock
+are deliberately not required inside the artifact; their correctness is covered
+by the initial-register ABI and the runtime replay result.
 
 ## 9. Nested Spinlock JIT Handling
 
@@ -740,7 +769,7 @@ stream remains active. Consequently the outer A lock owns the JIT-completion
 counter, while B reports nested lock/unlock activity. Mode 8 is the separate
 test for an independently queued and remotely executed spin B waiter.
 
-## 10. Futex Delegation
+## 10. Legacy Low-Level Futex Exit
 
 For user-space lock delegation (the BCD path), `kd_exe_on_call()` handles
 futex syscalls encountered inside translated critical sections:
@@ -753,54 +782,38 @@ Before invoking the shared wrapper, this path obtains kernel GS from the target
 task's `task_cpu(task)` and passes `{GS base, task}`. It therefore does not use
 the executor/combiner CPU as the logical futex origin.
 
-The futex delegation engine (`kd_futex.c`) provides `new_futex_wait` /
-`new_futex_wake` that execute futex operations on behalf of delegated waiters
-without requiring them to enter the kernel syscall path.
+This low-level API remains as a compatibility execution entry only. There is no
+in-tree scheduler/wakeup frontend that submits delegated futex waiters to it;
+the unused former `kd_futex.c` frontend has been removed. Current spinlock and
+mutex delegation use `kd_exe_on_call_hl_entry()` instead.
 
 ## 11. Module Parameters & Runtime Configuration
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `target_process` | `"kd_test"` | Space-separated process names to intercept |
-| `velvet_wait_queue` | 1 | Enable/disable velvet wait queue optimization |
-| `delegate_election` | 1 | Enable/disable delegate election |
-| `kd_combiner_batch_size` | (extern) | Max waiters processed per combiner round (spinlock) |
-| `kd_mutex_batch_size` | 1024 | Max waiters processed per combiner round (mutex) |
-| `mutex_jit` | 0 | Opt in to translated mutex execution, including mode 4 nested A/B proxying, mode 5 native hostcall continuation, and mode 11 waiter GS/current proxying |
+| `target_process` | `"kd_test"` | One exact `current->comm` name routed through kdlock hooks |
+| `mutex_jit` | 0 | Opt in to translated mutex modes 3, 4, 5, and 11 |
 | `spin_jit_fail_after_nested_lock` | 0 | One-shot test failure after nested spin acquisition |
 | `jit_hl_fault_after_known_call` | 0 | One-shot test fault: 1=CALL miss, 2=IJ miss, 3=instruction limit |
 
-## 12. Current Status & Limitations
+## 12. Supported Scope And Limits
 
-### Working
-
-- Raw spinlock delegation with JIT sandbox (modes 0-2 and 6-10 tested), including
-  allowlisted native hostcall exit/resume for mode 2 and waiter GS/current
-  proxy semantics for mode 10.
-- Mutex safe-mode queue/handoff (modes 3-5), mode 3 stress JIT, mode 4 nested
-  A/B JIT proxying, repeated/stress mode 5 hostcall JIT, and mode 11 nested
-  waiter GS/current proxying.
-- Dynamic translation pipeline (init, call-miss, ij-miss recompilation).
-- Hot-lock promotion and fallback to original kernel path.
-- TCLock-style nested spinlock and mutex JIT delegation, explicit frames,
-  translation-readiness checks, and transactional native retry.
-- Dynamic end_point resolution via kallsyms_lookup_name.
-- Module exit safety with synchronize_rcu.
-- User-space unit tests for core data structures.
-
-### Limitations
+The concise support matrix is in `README.md`, current execution evidence is in
+`docs/VALIDATION.md`, and actionable gaps are tracked only in `docs/TODO.md`.
+The implementation boundaries are:
 
 1. **x86-64 only** — inline assembly, stack frame layout, and register
    conventions are architecture-specific.
 2. **Patched kernel required** — the hook function pointers and exported
    symbols must exist in the running kernel.
 3. **KASLR must be disabled** — `/proc/kcore` reading assumes fixed kernel
-   text layout. (end_point[] is resolved dynamically and unaffected.)
+   text layout. (`end_points[]` is resolved dynamically and unaffected.)
 4. **miasm dependency** — the translator requires miasm 0.1.5 and
    `/proc/kcore` access from userspace.
 5. **No rwsem support** — only spinlock and mutex are implemented.
-6. **NUMA-aware combining disabled** — `NUMA_AWARE` is defined but not
-   enabled; multi-socket optimization is untested.
+6. **NUMA-aware combining disabled** — dormant spinlock branches exist behind
+   `NUMA_AWARE`, but the macro is not enabled and multi-socket behavior is
+   untested. Mutex delegation has no NUMA-local queue implementation.
 7. **Sandbox cannot handle all instructions** — unsupported instructions
    or complex indirect jumps cause delegation failure and fallback.
 8. **Nested resources are bounded** — execution frames and lock stacks allow
@@ -813,9 +826,11 @@ without requiring them to enter the kernel syscall path.
     General variadic `printk` and side-effecting services are unsupported.
 11. **Persistent processor state is partial** — waiter kernel GS memory
     semantics and logical `current_task` reads are supported through explicit
-    translation, but hardware FS/GS switching, FS operands, EFLAGS, SIMD/FPU
-    state, and the reserved `args[1]` output count are not supported as general
-    cross-exit state. See `docs/JIT_REGISTER_ABI.md`.
+    translation, but hardware FS/GS switching, FS operands, EFLAGS, and SIMD/FPU
+    state are not supported as general cross-exit state. The reserved
+    `args[1]` output is fixed at zero. See `docs/JIT_REGISTER_ABI.md`.
 12. **Memory checks are incomplete** — the translator currently emits no
     effective canonical-address or bounds guard, so the JIT must not be treated
     as a security isolation boundary.
+13. **Batch limits are fixed** — spin and mutex combiners process at most 1024
+    waiters per round; these constants are not module parameters.

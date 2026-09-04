@@ -1,150 +1,192 @@
-/*
- * test_hotlock_state.c — verify the hot-lock promotion state machine.
- *
- * Simulates count_uaddr_cnt logic: INIT → CHECKING → DELEGATE after 10K hits
- * within the time window, or IGNORE if too slow.
- */
+/* Verify the bounded hot-lock promotion state machine in kd_hotlock.c. */
 #include "mock_kernel.h"
 #include "test_harness.h"
 
-/* Replicate state definitions from exe.h */
-#define KD_UADDR_INIT      -1
-#define KD_UADDR_CHECKING   0
-#define KD_UADDR_DELEGATE   1
-#define KD_UADDR_IGNORE    -2
-#define KD_MAX_UADDR       131071
+#define MOCK_TABLE_SIZE 8
+#define MOCK_WARMUP_CYCLES 1000000000UL
+#define MOCK_INITIAL_WINDOW 2500000000UL
+#define MOCK_SAMPLE_TARGET 10000U
 
-struct kd_uaddr_state {
-	unsigned long uaddr;
-	unsigned long begin;
-	unsigned long end;
-	int state;
-	int cnt;
-	atomic_t is_delegating;
+enum mock_hotlock_status {
+	MOCK_HOTLOCK_INIT = 0,
+	MOCK_HOTLOCK_CHECKING,
+	MOCK_HOTLOCK_DELEGATE,
+	MOCK_HOTLOCK_IGNORE,
 };
 
-static struct kd_uaddr_state states[64];
-static atomic_long_t start_work_cycle = { .counter = 0 };
-static atomic_long_t count_uaddr_time = { .counter = 2500000000L };
+struct mock_hotlock_state {
+	unsigned long lock_addr;
+	unsigned long begin_cycles;
+	unsigned long end_cycles;
+	unsigned int samples;
+	enum mock_hotlock_status status;
+};
 
-static struct kd_uaddr_state *get_state(unsigned long uaddr) {
-	int pos = uaddr % 64;
-	while (states[pos].state != KD_UADDR_INIT && states[pos].uaddr != uaddr)
-		pos = (pos + 1) % 64;
-	if (states[pos].uaddr == 0)
-		states[pos].uaddr = uaddr;
-	return &states[pos];
+static struct mock_hotlock_state states[MOCK_TABLE_SIZE];
+static unsigned long start_cycles;
+static unsigned long window_cycles;
+
+static struct mock_hotlock_state *mock_lookup(unsigned long lock_addr,
+					      bool create)
+{
+	unsigned int pos = lock_addr % MOCK_TABLE_SIZE;
+	unsigned int probes;
+
+	if (!lock_addr)
+		return NULL;
+
+	for (probes = 0; probes < MOCK_TABLE_SIZE; probes++) {
+		struct mock_hotlock_state *state = &states[pos];
+
+		if (state->lock_addr == lock_addr)
+			return state;
+		if (!state->lock_addr) {
+			if (!create)
+				return NULL;
+			state->lock_addr = lock_addr;
+			return state;
+		}
+		pos = (pos + 1) % MOCK_TABLE_SIZE;
+	}
+
+	return NULL;
 }
 
-static void init_states(void) {
-	for (int i = 0; i < 64; i++) {
-		states[i].uaddr = 0;
-		states[i].begin = 0;
-		states[i].end = 0;
-		states[i].state = KD_UADDR_INIT;
-		states[i].cnt = 0;
-		atomic_set(&states[i].is_delegating, 0);
-	}
-	start_work_cycle.counter = 0;
-	count_uaddr_time.counter = 2500000000L;
+static void reset_states(void)
+{
+	memset(states, 0, sizeof(states));
+	start_cycles = 0;
+	window_cycles = MOCK_INITIAL_WINDOW;
 	mock_tsc = 1000000000UL;
 }
 
-/* Simplified count_uaddr_cnt (same logic, no NUMA bits) */
-static int mock_count_uaddr_cnt(unsigned long uaddr) {
-	if (atomic_long_read(&start_work_cycle) == 0) {
-		atomic_long_cmpxchg(&start_work_cycle, 0, rdtsc_ordered());
-		return 0;
-	} else if (rdtsc_ordered() - atomic_long_read(&start_work_cycle) < 1000000000)
-		return 0;
+static int mock_record(unsigned long lock_addr)
+{
+	struct mock_hotlock_state *state;
+	unsigned long now = rdtsc_ordered();
 
-	struct kd_uaddr_state *u = get_state(uaddr);
-	if (u->state == KD_UADDR_DELEGATE) return 1;
-	if (u->state == KD_UADDR_IGNORE) { u->cnt++; return 0; }
-
-	u->cnt++;
-	if (u->state == KD_UADDR_INIT) {
-		u->state = KD_UADDR_CHECKING;
-		u->begin = rdtsc_ordered();
+	if (!start_cycles) {
+		start_cycles = now;
 		return 0;
 	}
-	if (u->state == KD_UADDR_CHECKING) {
-		u->end = rdtsc_ordered();
-		if (u->end - u->begin >= (unsigned long)atomic_long_read(&count_uaddr_time)) {
-			u->state = KD_UADDR_IGNORE;
-			return 0;
-		} else if (u->cnt >= 10000) {
-			u->state = KD_UADDR_DELEGATE;
-			return 1;
-		}
+	if (now - start_cycles < MOCK_WARMUP_CYCLES || !lock_addr)
+		return 0;
+
+	state = mock_lookup(lock_addr, true);
+	if (!state)
+		return 0;
+	if (state->status == MOCK_HOTLOCK_DELEGATE)
+		return 1;
+
+	state->samples++;
+	if (state->status == MOCK_HOTLOCK_IGNORE)
+		return 0;
+	if (state->status == MOCK_HOTLOCK_INIT) {
+		state->status = MOCK_HOTLOCK_CHECKING;
+		state->begin_cycles = now;
+		return 0;
 	}
+
+	state->end_cycles = now;
+	if (state->end_cycles - state->begin_cycles >= window_cycles) {
+		state->status = MOCK_HOTLOCK_IGNORE;
+	} else if (state->samples == MOCK_SAMPLE_TARGET) {
+		state->status = MOCK_HOTLOCK_DELEGATE;
+		return 1;
+	}
+
 	return 0;
 }
 
-static int mock_check_uaddr_state(unsigned long uaddr) {
-	struct kd_uaddr_state *u = get_state(uaddr);
-	return u->state == KD_UADDR_DELEGATE ? 1 : 0;
+static bool mock_is_promoted(unsigned long lock_addr)
+{
+	struct mock_hotlock_state *state = mock_lookup(lock_addr, false);
+
+	return state && state->status == MOCK_HOTLOCK_DELEGATE;
 }
 
-TEST(initial_state_not_delegate) {
-	init_states();
-	ASSERT_EQ(mock_check_uaddr_state(0x1234), 0);
+static void pass_warmup(void)
+{
+	mock_record(0xaaaa);
+	mock_tsc += MOCK_WARMUP_CYCLES + 1;
 }
 
-TEST(promote_after_10k_fast_hits) {
-	init_states();
-	/* First call starts the work cycle clock */
-	mock_count_uaddr_cnt(0xAAAA);
-	/* Advance TSC past the 1B warmup threshold */
-	mock_tsc += 1100000000UL;
+TEST(initial_state_is_not_delegate)
+{
+	reset_states();
+	ASSERT_EQ(mock_is_promoted(0x1234), false);
+}
 
-	/* Hit 10000 times quickly (TSC advances slowly) */
+TEST(promotes_after_fast_samples)
+{
+	unsigned int i;
 	int promoted = 0;
-	for (int i = 0; i < 11000; i++) {
-		mock_tsc += 1; /* very fast hits */
-		if (mock_count_uaddr_cnt(0xAAAA)) {
+
+	reset_states();
+	pass_warmup();
+	for (i = 0; i < MOCK_SAMPLE_TARGET; i++) {
+		mock_tsc++;
+		if (mock_record(0xaaaa)) {
 			promoted = 1;
 			break;
 		}
 	}
+
 	ASSERT_EQ(promoted, 1);
-	ASSERT_EQ(mock_check_uaddr_state(0xAAAA), 1);
+	ASSERT_EQ(mock_is_promoted(0xaaaa), true);
 }
 
-TEST(ignore_if_too_slow) {
-	init_states();
-	mock_count_uaddr_cnt(0xBBBB);
-	mock_tsc += 1100000000UL;
+TEST(ignores_slow_lock)
+{
+	struct mock_hotlock_state *state;
 
-	/* Hit slowly — each hit takes a long time */
-	for (int i = 0; i < 100; i++) {
-		mock_tsc += 500000000UL; /* very slow */
-		mock_count_uaddr_cnt(0xBBBB);
-	}
-	struct kd_uaddr_state *u = get_state(0xBBBB);
-	ASSERT_EQ(u->state, KD_UADDR_IGNORE);
-	ASSERT_EQ(mock_check_uaddr_state(0xBBBB), 0);
+	reset_states();
+	pass_warmup();
+	mock_record(0xbbbb);
+	mock_tsc += MOCK_INITIAL_WINDOW;
+	mock_record(0xbbbb);
+	state = mock_lookup(0xbbbb, false);
+
+	ASSERT_NE(state, NULL);
+	ASSERT_EQ((int)state->status, (int)MOCK_HOTLOCK_IGNORE);
+	ASSERT_EQ(mock_is_promoted(0xbbbb), false);
 }
 
-TEST(different_addrs_independent) {
-	init_states();
-	mock_count_uaddr_cnt(0x1111);
-	mock_tsc += 1100000000UL;
+TEST(collisions_remain_independent)
+{
+	struct mock_hotlock_state *first;
+	struct mock_hotlock_state *second;
 
-	/* Promote addr 0x1111 */
-	for (int i = 0; i < 11000; i++) {
-		mock_tsc += 1;
-		mock_count_uaddr_cnt(0x1111);
-	}
-	ASSERT_EQ(mock_check_uaddr_state(0x1111), 1);
-	ASSERT_EQ(mock_check_uaddr_state(0x2222), 0);
+	reset_states();
+	first = mock_lookup(1, true);
+	second = mock_lookup(1 + MOCK_TABLE_SIZE, true);
+
+	ASSERT_NE(first, NULL);
+	ASSERT_NE(second, NULL);
+	ASSERT_NE(first, second);
+	ASSERT_EQ(first->lock_addr, 1UL);
+	ASSERT_EQ(second->lock_addr, 1UL + MOCK_TABLE_SIZE);
 }
 
-int main(void) {
+TEST(full_table_fails_closed)
+{
+	unsigned int i;
+
+	reset_states();
+	for (i = 0; i < MOCK_TABLE_SIZE; i++)
+		ASSERT_NE(mock_lookup(i + 1, true), NULL);
+
+	ASSERT_EQ(mock_lookup(0xdeadbeef, true), NULL);
+	ASSERT_EQ(mock_is_promoted(0xdeadbeef), false);
+}
+
+int main(void)
+{
 	printf("=== test_hotlock_state ===\n");
-	RUN_TEST(initial_state_not_delegate);
-	RUN_TEST(promote_after_10k_fast_hits);
-	RUN_TEST(ignore_if_too_slow);
-	RUN_TEST(different_addrs_independent);
+	RUN_TEST(initial_state_is_not_delegate);
+	RUN_TEST(promotes_after_fast_samples);
+	RUN_TEST(ignores_slow_lock);
+	RUN_TEST(collisions_remain_independent);
+	RUN_TEST(full_table_fails_closed);
 	REPORT();
 }

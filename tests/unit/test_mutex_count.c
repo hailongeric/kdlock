@@ -28,7 +28,8 @@ struct resume_regs {
 	unsigned long ip;
 };
 
-static void init_nodes(void) {
+static void init_nodes(void)
+{
 	memset(nodes, 0, sizeof(nodes));
 	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++) {
 		nodes[i].slot = i;
@@ -79,12 +80,14 @@ static bool release_node(struct kd_mutex_node *node)
 	return true;
 }
 
-TEST(slots_start_empty) {
+TEST(slots_start_empty)
+{
 	init_nodes();
 	ASSERT_EQ(node_slots, 0UL);
 }
 
-TEST(single_reservation_release) {
+TEST(single_reservation_release)
+{
 	struct kd_mutex_node *node;
 
 	init_nodes();
@@ -95,7 +98,8 @@ TEST(single_reservation_release) {
 	ASSERT_EQ(node_slots, 0UL);
 }
 
-TEST(all_slots_and_overflow) {
+TEST(all_slots_and_overflow)
+{
 	init_nodes();
 	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++)
 		ASSERT_EQ(reserve_node(), &nodes[i]);
@@ -103,7 +107,8 @@ TEST(all_slots_and_overflow) {
 	ASSERT_EQ(reserve_node(), NULL);
 }
 
-TEST(out_of_order_release_reuses_only_free_slot) {
+TEST(out_of_order_release_reuses_only_free_slot)
+{
 	struct kd_mutex_node *node0;
 	struct kd_mutex_node *node1;
 	struct kd_mutex_node *node2;
@@ -118,14 +123,16 @@ TEST(out_of_order_release_reuses_only_free_slot) {
 	ASSERT_EQ(node_slots & (1UL << node2->slot), 1UL << node2->slot);
 }
 
-TEST(unavailable_stack_is_skipped) {
+TEST(unavailable_stack_is_skipped)
+{
 	init_nodes();
 	nodes[0].stack_available = false;
 	ASSERT_EQ(reserve_node(), &nodes[1]);
 	ASSERT_EQ(node_slots, 1UL << 1);
 }
 
-TEST(double_release_is_rejected) {
+TEST(double_release_is_rejected)
+{
 	struct kd_mutex_node *node;
 
 	init_nodes();
@@ -134,7 +141,8 @@ TEST(double_release_is_rejected) {
 	ASSERT_EQ(release_node(node), false);
 }
 
-TEST(repeated_lock_unlock_stable) {
+TEST(repeated_lock_unlock_stable)
+{
 	init_nodes();
 	for (int i = 0; i < 1000; i++) {
 		struct kd_mutex_node *node = reserve_node();
@@ -145,7 +153,8 @@ TEST(repeated_lock_unlock_stable) {
 	ASSERT_EQ(node_slots, 0UL);
 }
 
-TEST(resume_context_is_copied_before_node_reuse) {
+TEST(resume_context_is_copied_before_node_reuse)
+{
 	struct resume_regs regs = { 0 };
 	struct kd_mutex_node *node;
 
@@ -167,7 +176,8 @@ TEST(resume_context_is_copied_before_node_reuse) {
 	ASSERT_EQ(snapshot_resume_regs(&regs), false);
 }
 
-int main(void) {
+int main(void)
+{
 	printf("=== test_mutex_count ===\n");
 	RUN_TEST(slots_start_empty);
 	RUN_TEST(single_reservation_release);

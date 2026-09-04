@@ -1,6 +1,12 @@
-from miasm.expression.expression import ExprMem, ExprId, ExprInt, ExprLoc, ExprOp
-from conflict import *
-from assist import *
+from assist import make_inst
+from conflict import (
+    apply_map,
+    conflict_resolve,
+    extract_conflict_regs,
+    recover_stable,
+    release_IP,
+)
+from miasm.expression.expression import ExprId, ExprInt, ExprMem, ExprOp
 from miasm_compat import (
     expr_args,
     expr_int_value,
@@ -10,7 +16,6 @@ from miasm_compat import (
     set_expr_int_value,
 )
 
-checked_regs = set()
 current_task_offset = None
 
 
@@ -30,7 +35,7 @@ def segment_operand(arg):
 
 def is_current_task_operand(arg):
     segment, address = segment_operand(arg)
-    if segment != 'GS' or current_task_offset is None:
+    if segment != "GS" or current_task_offset is None:
         return False
     if not isinstance(address, ExprInt):
         return False
@@ -46,182 +51,140 @@ def segment_encoding_policy_error(raw):
     except (TypeError, ValueError):
         return None
 
-    if raw == b'\x0f\x01\xf8':
-        return 'direct FS/GS base access is unsupported'
+    if raw == b"\x0f\x01\xf8":
+        return "direct FS/GS base access is unsupported"
 
     index = 0
-    if raw[index:index + 1] != b'\xf3':
+    if raw[index : index + 1] != b"\xf3":
         return None
     index += 1
-    if index < len(raw) and 0x40 <= raw[index] <= 0x4f:
+    if index < len(raw) and 0x40 <= raw[index] <= 0x4F:
         index += 1
-    if raw[index:index + 2] != b'\x0f\xae':
+    if raw[index : index + 2] != b"\x0f\xae":
         return None
     index += 2
     if index + 1 != len(raw):
         return None
     modrm = raw[index]
     register_class = (modrm >> 3) & 0x7
-    if (modrm & 0xc0) == 0xc0 and register_class <= 3:
-        return 'direct FS/GS base access is unsupported'
+    if (modrm & 0xC0) == 0xC0 and register_class <= 3:
+        return "direct FS/GS base access is unsupported"
     return None
 
 
 def segment_policy_error(line):
     # miasm 0.1.5 misdecodes SWAPGS and two FSGSBASE encodings.
-    encoding_error = segment_encoding_policy_error(getattr(line, 'b', b''))
+    encoding_error = segment_encoding_policy_error(getattr(line, "b", b""))
     if encoding_error:
         return encoding_error
-    if line.name.upper() in {
-            'RDFSBASE', 'RDGSBASE', 'WRFSBASE', 'WRGSBASE', 'SWAPGS'}:
-        return 'direct FS/GS base access is unsupported'
+    if line.name.upper() in {"RDFSBASE", "RDGSBASE", "WRFSBASE", "WRGSBASE", "SWAPGS"}:
+        return "direct FS/GS base access is unsupported"
 
     for index, arg in enumerate(line.args):
-        if isinstance(arg, ExprId) and str(arg).upper() in {'FS', 'GS'}:
-            return 'direct FS/GS register access is unsupported'
+        if isinstance(arg, ExprId) and str(arg).upper() in {"FS", "GS"}:
+            return "direct FS/GS register access is unsupported"
         segment, _ = segment_operand(arg)
         if segment is None:
             continue
-        if line.name.upper() == 'NOP':
+        if line.name.upper() == "NOP":
             continue
-        if segment == 'FS':
-            return 'FS-prefixed memory access is unsupported'
-        if segment != 'GS':
-            return '%s-prefixed memory access is unsupported' % segment
+        if segment == "FS":
+            return "FS-prefixed memory access is unsupported"
+        if segment != "GS":
+            return f"{segment}-prefixed memory access is unsupported"
         if not is_current_task_operand(arg):
             continue
-        if (line.name.upper() != 'MOV' or index != 1 or
-                len(line.args) != 2 or arg.size != 64 or
-                not isinstance(line.args[0], ExprId)):
-            return 'current_task is only supported as a 64-bit MOV source'
+        if (
+            line.name.upper() != "MOV"
+            or index != 1
+            or len(line.args) != 2
+            or arg.size != 64
+            or not isinstance(line.args[0], ExprId)
+        ):
+            return "current_task is only supported as a 64-bit MOV source"
     return None
 
-def check_mem_base_block_init():
-    global checked_regs 
-    checked_regs = set()
 
 def extract_reg(arg, regs):
     if isinstance(arg, dict):
-        regs.update(arg['regs'])
-        if arg['mul'] != []:
-            regs.add(arg['mul'][1])            #To change
+        regs.update(arg["regs"])
+        if arg["mul"] != []:
+            regs.add(arg["mul"][1])
     elif isinstance(arg, ExprId):
         regs.add(arg)
 
-def get_mem_base(name, purified_args):
-    to_check_regs = []
-    if name != 'LEA':
-        for arg in purified_args:
-            if isinstance(arg, dict):
-                if len(arg['regs']) > 1:
-                    continue
-                for reg in arg['regs']:
-                    rg = str(reg)
-                    if rg[-1] == 'P': # or rg[-1] == 'S':
-                        continue
-                    to_check_regs.append(reg)
-    return to_check_regs
 
-def process_normal(name, args, offset, reg_map, can_check = False):
-    if name.upper() == 'NOP':
-        return make_inst('NOP', [])
+def process_normal(name, args, offset, reg_map):
+    if name.upper() == "NOP":
+        return make_inst("NOP", [])
 
     purified_args = []
     conflict_regs = set()
     regs = set()
-    pre_inst = ''
-    post_inst = ''
-    check_inst = ''
-    clob_flag = False
+    pre_inst = ""
+    post_inst = ""
     for arg in args:
-        arg= arg_purify(arg, offset, is_current_task_operand(arg))
+        arg = arg_purify(arg, offset, is_current_task_operand(arg))
         purified_args.append(arg)
         extract_reg(arg, regs)
     for reg in regs:
         extract_conflict_regs(reg, conflict_regs)
 
-    global checked_regs
-    to_check_regs = set(get_mem_base(name,purified_args)) - checked_regs
-
-    if len(purified_args)>0 and isinstance(purified_args[0], ExprId):
-        checked_regs.discard(purified_args[0])
-    checked_regs = checked_regs.union(to_check_regs)
-
-    if(len(conflict_regs) >0):
+    if len(conflict_regs) > 0:
         pre_inst = conflict_resolve(reg_map, conflict_regs, offset)
-        purified_args = apply_map(purified_args, reg_map)    
-        to_check_regs = apply_map(to_check_regs, reg_map) 
+        purified_args = apply_map(purified_args, reg_map)
         release_IP(reg_map)
         post_inst = recover_stable(reg_map, conflict_regs)
-    
 
-    if len(to_check_regs) > 0 and not can_check:
-        clob_flag = True
-        check_inst += 'PUSHF\n'
-    for reg in to_check_regs:
-        if clob_flag:
-            jmp_target = 'seg_error2'
-        else:
-            jmp_target = 'seg_error'
-            
-        # check_inst += make_inst('SHL', [reg, 1]) + make_inst('SHR', [reg, 1])
-    if clob_flag:
-        check_inst += 'POPF\n'
+    return pre_inst + make_inst(name, purified_args) + post_inst
 
-    if len(to_check_regs) > 1 or not can_check:
-        check_inst = ''
-      
-    return pre_inst + check_inst + make_inst(name, purified_args) + post_inst
 
 def mem_addr(arg, res):
     if isinstance(arg, ExprOp):
-        if expr_op(arg) == '+':
+        if expr_op(arg) == "+":
             for x in list(expr_args(arg)):
                 mem_addr(x, res)
-        elif expr_op(arg) == '*':
-            if len(res['mul']) > 0:
-                print('Warning: Multiple index')
+        elif expr_op(arg) == "*":
+            if len(res["mul"]) > 0:
+                print("Warning: Multiple index")
                 return
             args = expr_args(arg)
             if isinstance(args[0], ExprId) and isinstance(args[1], ExprInt):
-                res['mul'].append(args[1])
-                res['mul'].append(args[0])
+                res["mul"].append(args[1])
+                res["mul"].append(args[0])
 
-                if(expr_int_value(res['mul'][0]) % 2 == 1):
-                    set_expr_int_value(res['mul'][0], expr_int_value(res['mul'][0]) - 1)
-                    res['regs'].append(args[0])
+                if expr_int_value(res["mul"][0]) % 2 == 1:
+                    set_expr_int_value(res["mul"][0], expr_int_value(res["mul"][0]) - 1)
+                    res["regs"].append(args[0])
             else:
-                print('Warning: Index incorrect')
+                print("Warning: Index incorrect")
         else:
-            print('Warning: Unresolved addressing op')
+            print("Warning: Unresolved addressing op")
     elif isinstance(arg, ExprId):
-        res['regs'].append(arg)
+        res["regs"].append(arg)
     elif isinstance(arg, ExprInt):
-        res['im'] = arg
+        res["im"] = arg
     else:
-        print('Warning: Unresolved addressing args')
+        print("Warning: Unresolved addressing args")
+
 
 def arg_purify(arg, offset, logical_task=False):
     if isinstance(arg, ExprOp):
-        print('Warning: Unresolved arg in arg_purify')
-        return ''
+        print("Warning: Unresolved arg in arg_purify")
+        return ""
     if isinstance(arg, ExprMem):
         if logical_task:
-            return ExprId('RCT', 64)
-        res = {'sz':arg.size, 'regs':[], 'im':'','mul':[]}
+            return ExprId("RCT", 64)
+        res = {"sz": arg.size, "regs": [], "im": "", "mul": []}
         if is_mem_segm_expr(arg):
             ptr_args = expr_args(expr_ptr(arg))
-            res['regs'].append(ExprId('R' + str(ptr_args[0]), 64))
+            res["regs"].append(ExprId("R" + str(ptr_args[0]), 64))
             arg = ptr_args[1]
         else:
             arg = expr_ptr(arg)
         mem_addr(arg, res)
-        return  res
-    elif isinstance(arg, ExprId):
-        return arg
-    elif isinstance(arg, ExprInt):
-        return arg
-    elif isinstance(arg, dict):
+        return res
+    elif isinstance(arg, (ExprId, ExprInt, dict)):
         return arg
     else:
-        print('Warning: Unresolved args used by target', offset)
+        print("Warning: Unresolved args used by target", offset)

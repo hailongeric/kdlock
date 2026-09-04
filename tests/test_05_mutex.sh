@@ -13,13 +13,14 @@ run_mutex_mode() {
     local mode=$1
     local mode_name=$2
     local runs="${3:-1}"
+    local expected_operations=$((1 + runs * 4 * 5000))
 
     info "Testing mode $mode ($mode_name), $runs run(s)..."
     clear_dmesg
     load_modules || return 1
     start_daemon 2
 
-    # count_uaddr_cnt() intentionally ignores the first 1e9 TSC cycles after
+    # kd_hotlock_record() intentionally ignores the first 1e9 TSC cycles after
     # the first observed lock. Prime that timer, then wait before the real
     # workload; otherwise a short test can pass without entering kd_mutex.
     run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 "$mode" >/dev/null 2>&1 || {
@@ -56,6 +57,8 @@ run_mutex_mode() {
 
     unload_modules
 
+    check_complex_cs_integrity "$expected_operations" 1 || return 1
+
     check_dmesg_has "kd_mutex stats: slowpath=[1-9][0-9]*" \
         "mode $mode never entered the kd_mutex slowpath" || return 1
     check_dmesg_has "combiner=[1-9][0-9]*" \
@@ -77,4 +80,4 @@ run_mutex_mode 4 "mutex-nested" 1 || exit 1
 run_mutex_mode 5 "mutex-api-in-lock" 1 || exit 1
 
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"

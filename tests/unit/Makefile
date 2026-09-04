@@ -1,7 +1,19 @@
 CC ?= gcc
-CFLAGS = -Wall -Wextra -g -O0 -std=gnu11
-TESTS = test_tail_encoding test_exe_hash test_hotlock_state test_mutex_count test_mutex_shadow test_mutex_transition test_jit_call_policy test_exec_frame test_spin_node_count
-PY_TESTS = test_hostcall_codegen.py test_segment_codegen.py
+PYTHON ?= python3
+CFLAGS ?= -g -O0
+CFLAGS += -Wall -Wextra -std=gnu11
+
+TESTS := \
+	test_tail_encoding \
+	test_exe_hash \
+	test_hotlock_state \
+	test_mutex_count \
+	test_mutex_shadow \
+	test_mutex_transition \
+	test_jit_call_policy \
+	test_exec_frame \
+	test_spin_node_count
+PY_TESTS := test_hostcall_codegen.py test_segment_codegen.py
 
 .PHONY: all clean run
 
@@ -22,7 +34,7 @@ run: $(TESTS)
 	done; \
 	for t in $(PY_TESTS); do \
 		echo ""; \
-		if python3 ./$$t; then \
+		if $(PYTHON) ./$$t; then \
 			passed=$$((passed + 1)); \
 		else \
 			failed=$$((failed + 1)); \

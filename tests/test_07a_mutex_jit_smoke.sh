@@ -54,7 +54,8 @@ if ! asm_dir="$(wait_for_jit_artifacts 20)"; then
 fi
 check_daemon_read_kernel_text "$DAEMON_LOG" || exit 1
 check_jit_artifacts "$asm_dir" || exit 1
-check_dmesg_has "write to kernel" "daemon did not install mutex JIT code" || exit 1
+check_complex_cs_artifact "$asm_dir" || exit 1
+check_dmesg_has "$JIT_INSTALL_PATTERN" "daemon did not install mutex JIT code" || exit 1
 
 # The benchmark start barrier releases all workers together. A long single CS
 # keeps the owner active until three waiters queue, which gives the combiner
@@ -86,8 +87,9 @@ if [ "$actual_counter" != "$expected_counter" ]; then
         "counter mismatch after smoke test: expected $expected_counter, got ${actual_counter:-missing}"
     exit 1
 fi
+check_complex_cs_integrity "$expected_counter" 1 || exit 1
 
 check_dmesg_ok || exit 1
 
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"

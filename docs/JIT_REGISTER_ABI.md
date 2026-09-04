@@ -84,14 +84,13 @@ wrapper 保存宿主 RBX、RBP、R12-R15，因此对调用它的 C 代码遵守 
 | 元素 | 调用前 | wrapper 返回后 |
 | --- | --- | --- |
 | `args[0]` | 被代理 waiter 的 kernel GS base | sandbox 退出原因；IJ miss 时为源 RIP |
-| `args[1]` | logical waiter 的 `task_struct *` | 对应 `Stack_INST_CNT`，但当前没有初始化/写入，值未定义 |
+| `args[1]` | logical waiter 的 `task_struct *` | 预留计数输出，当前固定为 0 |
 
 参数数组始终只有两个元素，没有第三个 task 参数。wrapper 在
 返回时会覆盖这两个输入，所以 executor 每次首次进入或 continuation
 续跑前，都要从当前 `kd_exec_frame` 重新写入 GS base 和 logical task。
-当前代码不得读取返回后的 `args[1]` 作为可靠执行计数：R11 中
-虽有运行时 block budget，但 epilogue 没有把它复制到
-`Stack_INST_CNT`。
+当前代码不得读取返回后的 `args[1]` 作为执行计数：R11 中虽有运行时 block
+budget，但 epilogue 不会把它复制到 `Stack_INST_CNT`。
 
 ## 3. `pt_regs` 输入输出约定
 
@@ -162,7 +161,9 @@ C 调用栈。
 顶层 spin/mutex waiter 在入队的 origin CPU 上记录
 `cpu_kernelmode_gs_base(cpu)` 和 `current`。低层 futex 入口则使用目标
 task 的 `task_cpu(task)` 查找 kernel GS base，并把该 task 作为 logical
-waiter。这两条路径都不使用 artifact 全局的 `exe->gsbase`。
+waiter。这两条路径都不使用 artifact 全局的 `exe->gsbase`。低层
+futex 入口当前仅作为兼容 API 保留，仓库内没有调度/唤醒代理 waiter 的
+frontend。
 
 ## 5. Wrapper 私有栈布局
 
@@ -184,10 +185,11 @@ waiter。这两条路径都不使用 artifact 全局的 `exe->gsbase`。
 | `-0x80` | `Stack_TASK` / `Stack_RCT` | 入口 `args[1]`，logical waiter task |
 | `-0x88` | `Stack_RIP` | 退出 RIP 临时槽 |
 | `-0x90` | `Stack_IJ` | 退出原因或 IJ 源地址 |
-| `-0x98` | `Stack_INST_CNT` | 预留计数槽；当前未初始化 |
+| `-0x98` | `Stack_INST_CNT` | 预留计数槽；prologue 固定写入 0 |
 
-`Stack_RIP`、`Stack_IJ`、`Stack_INST_CNT` 由一次 `sub rsp, 24` 分配，并不会自动
-清零。正常退出桩必须先定义 R14 和 `Stack_IJ`，再跳到公共 `exit`。
+`Stack_RIP`、`Stack_IJ`、`Stack_INST_CNT` 由一次 `sub rsp, 24` 分配；prologue
+显式清零 `Stack_INST_CNT`。正常退出桩必须先定义 R14 和 `Stack_IJ`，再跳到公共
+`exit`。
 
 `Stack_TASK` 直接复用旧的第二个 segment 槽；`Stack_RIP` 及其后的物理偏移
 没有变化。`Stack_RCT` 是翻译器对同一槽位的别名，不会增加栈槽或
@@ -296,7 +298,7 @@ pt_regs.ip = physical R14
 pt_regs.sp = physical R13
 pt_regs.bp = physical R12
 args[0]    = Stack_IJ
-args[1]    = Stack_INST_CNT   (当前未定义)
+args[1]    = Stack_INST_CNT   (当前固定为 0)
 ```
 
 其余受支持 GPR 也写回 `pt_regs`。退出桩的具体协议如下：
@@ -398,9 +400,9 @@ GS 内存语义由翻译后的显式基址寻址实现，不依赖这两个恢�
    continuation label 集合。
 6. native handler 只能通过 `pt_regs` 读取 guest 参数、写回明确声明的结果，
    且必须定义失败、重试和 side-effect 语义。
-7. `args[0]`/`args[1]` 在入口时必须分别为 waiter kernel GS base 和
-   logical task，每次 continuation 都必须重新安装；返回后 `args[1]`
-   仍不能当作有效计数。
+7. `args[0]`/`args[1]` 在入口时必须分别为 waiter kernel GS base 和 logical
+   task，每次 continuation 都必须重新安装；返回后 `args[1]` 固定为 0，不能当作
+   有效计数。
 8. 不得依赖硬件 FS/GS 切换。只有文档化的 GS 显式基址降级和 logical
    `current_task` 读取受支持；FS、base-register 指令和 `current_task` 写入必须失败关闭。
 9. EFLAGS 和 SIMD/FPU 状态仍不是完整的跨边界 ABI。

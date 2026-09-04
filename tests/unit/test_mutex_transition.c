@@ -41,7 +41,8 @@ static void finish_origin_unlock(struct transition_state *state)
 		state->origin_users.counter--;
 }
 
-TEST(origin_holder_blocks_shadow_after_promotion) {
+TEST(origin_holder_blocks_shadow_after_promotion)
+{
 	struct transition_state state = {
 		.state = KD_UADDR_CHECKING,
 		.origin_users = { .counter = 0 },
@@ -56,7 +57,8 @@ TEST(origin_holder_blocks_shadow_after_promotion) {
 	ASSERT_EQ(shadow_can_enter(&state), true);
 }
 
-TEST(origin_waiters_all_drain_before_shadow) {
+TEST(origin_waiters_all_drain_before_shadow)
+{
 	struct transition_state state = {
 		.state = KD_UADDR_CHECKING,
 		.origin_users = { .counter = 0 },
@@ -74,7 +76,8 @@ TEST(origin_waiters_all_drain_before_shadow) {
 	ASSERT_EQ(shadow_can_enter(&state), true);
 }
 
-TEST(promotion_during_recheck_withdraws_origin_candidate) {
+TEST(promotion_during_recheck_withdraws_origin_candidate)
+{
 	struct transition_state state = {
 		.state = KD_UADDR_CHECKING,
 		.origin_users = { .counter = 0 },
@@ -87,7 +90,8 @@ TEST(promotion_during_recheck_withdraws_origin_candidate) {
 	ASSERT_EQ(shadow_can_enter(&state), true);
 }
 
-TEST(untracked_pre_module_unlock_does_not_underflow) {
+TEST(untracked_pre_module_unlock_does_not_underflow)
+{
 	struct transition_state state = {
 		.state = KD_UADDR_DELEGATE,
 		.origin_users = { .counter = 0 },

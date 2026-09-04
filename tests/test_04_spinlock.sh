@@ -25,6 +25,7 @@ run_spinlock_mode() {
     local promotion_mode=$mode
     local registration_calls=0
     local nested_registration_role=0
+    local expected_cs_states=1
     local mode8_not_ready="${KD_MODE8_NOT_READY:-0}"
     local abort_inject="${KD_SPIN_ABORT_INJECT:-0}"
     local jit_fault_kind="${KD_JIT_FAULT_KIND:-0}"
@@ -59,6 +60,7 @@ run_spinlock_mode() {
             exec_threads=9
             exec_role_base=2147483648
             exec_workload=50000
+            expected_cs_states=2
             if [ "$mode" -eq 8 ] && [ "$mode8_not_ready" -eq 1 ]; then
                 expected_artifacts=5
                 nested_registration_role=1073741824
@@ -69,6 +71,7 @@ run_spinlock_mode() {
             exec_threads=5
             exec_role_base=2147483648
             exec_workload=50000
+            expected_cs_states=2
             ;;
         *) expected_artifacts=1 ;;
     esac
@@ -156,6 +159,7 @@ run_spinlock_mode() {
             unload_modules
             return 1
         }
+        check_complex_cs_artifact "$asm_dir" || return 1
         if [ "$mode" -eq 2 ]; then
             check_jit_hostcall_artifact "$asm_dir" "ktime_get" || {
                 stop_daemon
@@ -174,14 +178,14 @@ run_spinlock_mode() {
             "mode 10 produced no JIT artifact using waiter GS/current"
         return 1
     fi
-    check_dmesg_has "write to kernel" \
+    check_dmesg_has "$JIT_INSTALL_PATTERN" \
         "mode $mode ($mode_name) did not write JIT code back" || {
         stop_daemon
         unload_modules
         return 1
     }
     if [ "$mode" -eq 2 ]; then
-        jit_writes_before="$(dmesg | grep -c "write to kernel" || true)"
+        jit_writes_before="$(jit_install_count)"
     fi
 
     if [ "$abort_inject" -eq 1 ]; then
@@ -207,7 +211,7 @@ run_spinlock_mode() {
     sleep 2
 
     if [ "$mode" -eq 2 ]; then
-        jit_writes_after="$(dmesg | grep -c "write to kernel" || true)"
+        jit_writes_after="$(jit_install_count)"
         if [ "$jit_writes_after" != "$jit_writes_before" ]; then
             fail "$TEST_NAME" \
                 "mode 2 hostcall triggered runtime JIT recompilation"
@@ -271,12 +275,20 @@ run_spinlock_mode() {
                 printf '%s\n' "$diag_lines"
                 return 1
             fi
-            if [ "$abort_expected" -eq 0 ] &&
-                    ! printf '%s\n' "$diag_lines" |
-                    grep -Eq "depth=1 .*jit_success=[1-9][0-9]*"; then
-                fail "$TEST_NAME" \
-                    "mode $mode outer lock has no JIT success evidence"
-                return 1
+            if [ "$abort_expected" -eq 0 ]; then
+                if [ "$mode" -eq 7 ]; then
+                    if ! printf '%s\n' "$diag_lines" |
+                            grep -Eq "jit_success=[1-9][0-9]*"; then
+                        fail "$TEST_NAME" \
+                            "mode 7 has no JIT success evidence"
+                        return 1
+                    fi
+                elif ! printf '%s\n' "$diag_lines" |
+                        grep -Eq "depth=1 .*jit_success=[1-9][0-9]*"; then
+                    fail "$TEST_NAME" \
+                        "mode $mode outer lock has no JIT success evidence"
+                    return 1
+                fi
             fi
             nested_diag_count="$(printf '%s\n' "$diag_lines" | awk \
                 '/nested_lock=[1-9][0-9]*.*nested_unlock=[1-9][0-9]*.*native_fallback=0/ { count++ } END { print count + 0 }')"
@@ -362,6 +374,7 @@ run_spinlock_mode() {
             "mode $mode ($mode_name) counter mismatch: expected $expected_counter, got ${actual_counter:-missing}"
         return 1
     fi
+    check_complex_cs_integrity "$expected_counter" "$expected_cs_states" || return 1
 
     if [ "$mode" -eq 2 ]; then
         local hostcall_stats hostcall_exits hostcall_executed
@@ -438,4 +451,4 @@ for mode in "$@"; do
 done
 
 pass "$TEST_NAME"
-exit $EXIT_CODE
+exit "$EXIT_CODE"
