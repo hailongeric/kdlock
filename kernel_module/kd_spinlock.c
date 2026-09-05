@@ -778,6 +778,26 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
 
 	ret_flag = kd_exe_on_call_hl_entry(&frame->regs, frame->entry_ip,
 					   frame->outer_lock_addr);
+	if (ret_flag == KD_EXE_RUN_NATIVE) {
+		BUG_ON(kd_exec_native_begin(frame, false));
+		curr_node->regs = frame->regs;
+		curr_node->exec_frame = NULL;
+		WRITE_ONCE(curr_node->native_resume, true);
+		smp_store_release(&curr_node->locked, 0);
+		/* The waiter may reuse its queue slot after this publication. */
+		BUG_ON(kd_exec_native_wait(frame));
+		BUG_ON(kd_spin_jit_nested_cleanup(frame));
+		BUG_ON(!kd_spin_combiner_state_matches(
+			&frame->saved_combiner, ptr));
+		BUG_ON(kd_exec_frame_complete(frame));
+		BUG_ON(kd_exec_frame_pop(frame, NULL));
+		return KD_EXE_NATIVE_DONE;
+	}
+	if (ret_flag != KD_EXE_RUN_TO_UNLOCK && frame->executed) {
+		KD_PR_ERR("spin JIT non-continuable exit: entry=%lx ip=%lx ret=%d\n",
+			  frame->entry_ip, frame->regs.ip, ret_flag);
+		BUG();
+	}
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
 		if (!frame->outer_unlock_seen &&
 		    kd_exec_frame_record_event(
@@ -793,6 +813,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
 		}
 	}
 	if (ret_flag != KD_EXE_RUN_TO_UNLOCK) {
+		BUG_ON(frame->executed);
 		if (kd_spin_jit_abort_cleanup(frame)) {
 			KD_PR_ERR(
 				"spin JIT abort cleanup failed lock=%px depth=%u\n",
@@ -817,6 +838,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
 		}
 	}
 	if (ret_flag != KD_EXE_RUN_TO_UNLOCK) {
+		BUG_ON(frame->executed);
 		if (!abort_cleaned && kd_spin_jit_abort_cleanup(frame)) {
 			KD_PR_ERR(
 				"spin JIT late abort cleanup failed lock=%px depth=%u\n",
@@ -842,7 +864,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
 	curr_node->exec_frame = NULL;
 	if (kd_exec_frame_pop(frame, &curr_node->regs)) {
 		KD_PR_ERR("spin JIT frame pop mismatch lock=%px\n", lock);
-		return KD_EXE_RUN_ERROR;
+		BUG();
 	}
 
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
@@ -934,7 +956,8 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 			break;
 		}
 
-		clear_locked_set_completed(curr_node);
+		if (exe_flag != KD_EXE_NATIVE_DONE)
+			clear_locked_set_completed(curr_node);
 
 		if (next_node == NULL || next_node->next == NULL ||
 		    counter >= kd_combiner_batch_size)
@@ -1000,6 +1023,13 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		prev_node->next = curr_node;
 
 		smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
+		smp_rmb();
+		if (READ_ONCE(curr_node->native_resume)) {
+			this_cpu_ptr(&kd_spin_nodes[0])->count--;
+			kd_spin_diag_waiter_exit(lock);
+			kd_spin_set_resume_node(curr_node);
+			return 5;
+		}
 
 		struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
 
@@ -1217,6 +1247,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock)
 	curr_node->exec_frame = NULL;
 	curr_node->jit_waiter = false;
 	curr_node->jit_retry = false;
+	curr_node->native_resume = false;
 	curr_node->jit_context = NULL;
 
 	return __kd_spin_lock_longjmp(lock, tail, curr_node);
@@ -1446,6 +1477,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	node->irqs_disabled = false;
 	node->exec_frame = NULL;
 	node->jit_retry = false;
+	node->native_resume = false;
 	ret = kd_spin_prepare_jit_node(node, &contexts[idx], lock, regs,
 				       parent);
 	if (ret) {
@@ -1457,6 +1489,10 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		lock, KD_SPIN_DIAG_SLOWPATH,
 		kd_spin_lock_stack_depth(this_cpu_ptr(&local_shadow_stack)));
 	ret = __kd_spin_lock_longjmp(lock, tail, node);
+	if (ret == 5) {
+		*regs = node->regs;
+		return KD_SPIN_NESTED_NATIVE;
+	}
 	if (ret == 0)
 		return KD_SPIN_NESTED_ACQUIRED;
 	if (ret == 2)
@@ -1558,7 +1594,7 @@ jump_to_saved_regs(struct pt_regs *regs)
 }
 
 #pragma GCC optimize("O3")
-__attribute__((noipa)) noinline notrace static void
+__attribute__((noipa)) noinline notrace void
 jump_to_saved_regs_in_cs(struct pt_regs *regs)
 {
 	asm volatile("movq 0x00(%%rdi), %%r15\n"
@@ -1677,7 +1713,7 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value)
 			jump_to_saved_regs_in_cs(&cur_node->regs);
 		jump_to_saved_regs(&cur_node->regs);
 		__builtin_unreachable();
-	} else if (ret_val == 4) {
+	} else if (ret_val == 4 || ret_val == 5) {
 		asm volatile("callq %P0\n"
 			     "movq %c1(%%rax), %%rsp\n"
 			     :

@@ -303,11 +303,7 @@ def dis_assem(pid, entry):
                 temp_j -= 1
         f.write("\n\n")
     f.write(indirect_jump.make_jump_table(jump_table))
-    f.write(
-        indirect_jump.make_callee_table(
-            missing_callees, keep_call_stack, resolved_hostcalls
-        )
-    )
+    f.write(indirect_jump.make_callee_table(missing_callees, resolved_hostcalls))
 
     Path("./asm/jit.S").write_text(f.getvalue(), encoding="utf-8")
 

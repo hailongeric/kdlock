@@ -9,9 +9,141 @@
 #include <linux/smp.h>
 
 #include "kd_exec.h"
+#include "kd_lock.h"
+#include "kd_spinlock.h"
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_exec_context, kd_exec_context);
 static atomic64_t kd_exec_invariant_failures;
+
+struct kd_native_request {
+	unsigned long lock_addr;
+	int result;
+	bool done;
+};
+
+static LIST_HEAD(kd_native_frames);
+static DEFINE_RAW_SPINLOCK(kd_native_lock);
+static atomic64_t kd_native_started;
+static atomic64_t kd_native_completed;
+static atomic64_t kd_native_unlocks;
+
+int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
+{
+	unsigned long flags;
+
+	if (!kd_exec_frame_validate(frame) || !frame->regs.ip ||
+	    !frame->regs.sp || frame->outer_unlock_seen ||
+	    frame->logical_task == current || frame->mutex_backend != mutex)
+		return -EINVAL;
+	frame->native_request = NULL;
+	raw_spin_lock_irqsave(&kd_native_lock, flags);
+	list_add(&frame->native_link, &kd_native_frames);
+	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	atomic64_inc(&kd_native_started);
+	pr_info("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u\n",
+		frame->logical_task->pid, frame->outer_lock_addr, frame->entry_ip,
+		frame->regs.ip, frame->regs.sp,
+		frame->jit_lock_depth - frame->outer_lock_index, mutex,
+		raw_smp_processor_id());
+	return 0;
+}
+
+bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
+{
+	struct kd_native_request request = { .lock_addr = lock_addr };
+	struct kd_exec_frame *frame;
+	unsigned long flags;
+	bool found = false;
+
+	if (list_empty(&kd_native_frames))
+		return false;
+	raw_spin_lock_irqsave(&kd_native_lock, flags);
+	list_for_each_entry(frame, &kd_native_frames, native_link) {
+		unsigned int i;
+
+		if (frame->logical_task != current || frame->mutex_backend != mutex)
+			continue;
+		/* Ancestors copied into a remote B frame still belong to A's
+		 * executor. Only route the locks owned by this particular frame. */
+		for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++) {
+			if (frame->jit_lock_addr[i] != lock_addr ||
+			    frame->jit_lock_released[i])
+				continue;
+			BUG_ON(frame->native_request);
+			smp_store_release(&frame->native_request, &request);
+			found = true;
+			break;
+		}
+		if (found)
+			break;
+	}
+	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	if (!found)
+		return false;
+
+	/* The acknowledgment lives on the waiter's native stack, not in the
+	 * executor frame, which may be retired as soon as it acknowledges. */
+	while (!smp_load_acquire(&request.done)) {
+		cpu_relax();
+		if (mutex)
+			cond_resched();
+	}
+	BUG_ON(request.result);
+	return true;
+}
+
+int kd_exec_native_wait(struct kd_exec_frame *frame)
+{
+	for (;;) {
+		struct kd_native_request *request =
+			smp_load_acquire(&frame->native_request);
+
+		if (request) {
+			unsigned long flags;
+			pid_t pid = frame->logical_task->pid;
+			bool complete;
+			int ret;
+
+			if (request->lock_addr == frame->outer_lock_addr)
+				ret = kd_exec_frame_record_event(
+					frame, KD_EXEC_EVENT_OUTER_UNLOCK, NULL);
+			else if (frame->mutex_backend)
+				ret = kd_mutex_jit_nested_unlock_ctx(
+					(struct mutex *)request->lock_addr, frame);
+			else
+				ret = kd_spin_jit_nested_unlock_ctx(
+					(raw_spinlock_t *)request->lock_addr, frame);
+			complete = kd_exec_frame_can_complete(frame);
+			atomic64_inc(&kd_native_unlocks);
+			WRITE_ONCE(frame->native_request, NULL);
+			if (complete || ret < 0) {
+				raw_spin_lock_irqsave(&kd_native_lock, flags);
+				list_del_init(&frame->native_link);
+				raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+			}
+			if (complete && frame->mutex_backend)
+				kd_mutex_task_put(frame->logical_task);
+			request->result = ret < 0 ? ret : 0;
+			/* Last access: the waiter can return and discard request. */
+			smp_store_release(&request->done, true);
+			if (ret < 0)
+				return ret;
+			if (complete) {
+				atomic64_inc(&kd_native_completed);
+				pr_info("kd_native complete: task=%d outer=%lx mutex=%u\n",
+					pid,
+					frame->outer_lock_addr, frame->mutex_backend);
+				return 0;
+			}
+		}
+		cpu_relax();
+		if (frame->mutex_backend && need_resched()) {
+			preempt_enable();
+			cond_resched();
+			preempt_disable();
+		}
+	}
+}
 
 static int kd_exec_invariant_failure(void)
 {
@@ -113,6 +245,9 @@ void kd_exec_context_init(void)
 	int cpu;
 
 	atomic64_set(&kd_exec_invariant_failures, 0);
+	atomic64_set(&kd_native_started, 0);
+	atomic64_set(&kd_native_completed, 0);
+	atomic64_set(&kd_native_unlocks, 0);
 	for_each_possible_cpu(cpu)
 		kd_exec_context_reset(per_cpu_ptr(&kd_exec_context, cpu));
 }
@@ -121,6 +256,11 @@ void kd_exec_context_exit(void)
 {
 	int cpu;
 
+	BUG_ON(!list_empty(&kd_native_frames));
+	pr_info("kd_native stats: started=%lld completed=%lld unlocks=%lld\n",
+		(long long)atomic64_read(&kd_native_started),
+		(long long)atomic64_read(&kd_native_completed),
+		(long long)atomic64_read(&kd_native_unlocks));
 	for_each_possible_cpu(cpu) {
 		struct kd_exec_context *ctx =
 			per_cpu_ptr(&kd_exec_context, cpu);

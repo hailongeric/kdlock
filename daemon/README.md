@@ -53,6 +53,18 @@ Each translation emits one concise input summary containing the entry RIP and
 nonzero target, region, and kernel-text byte counts. Tests use this line as
 evidence that translation read `/proc/kcore`; raw kernel bytes are not logged.
 
+Ordinary CALL-miss stubs now retain the virtual return address. The current
+waiter continues in the original native callee while the kernel's continuation
+protocol retains its locks. The daemon can translate that target for future
+requests; it does not restart the partially executed critical section. This
+native suffix is distinct from a mode 2/5 hostcall that returns to the same JIT
+artifact. The two-word wrapper args ABI is unchanged.
+
+For nested mutexes, the same A combiner acquires original B as a native control
+service, then resumes A's artifact to execute B's instructions. B no longer
+needs its own remote-mutex waiter or translation workspace. Spin remote B still
+uses a separate entry. Daemon layout modes do not select either lock protocol.
+
 Allowlisted JIT hostcalls are not translation misses. The translator emits a
 dedicated hostcall exit stub, and the kernel executes and resumes that service
 without changing the entry status or appending the target to

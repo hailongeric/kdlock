@@ -9,17 +9,17 @@
  * sandbox runs the critical section and returns KD_EXE_RUN_TO_UNLOCK when it
  * reaches mutex_unlock. No raw context switches are used.
  *
- * The kd_mutex is a shadow lock that sits beside the kernel's struct mutex;
- * kd_lock.c maps each struct mutex * to a struct kd_mutex *.
+ * The kd_mutex is a scheduling gate beside the kernel's struct mutex. Every
+ * executor also acquires the original mutex; only that task releases it.
  */
 
 #define KD_MUTEX_SHADOW_STACK_SIZE 8192L
-#define KD_MUTEX_MAX_NODES 4 /* per-CPU nesting depth */
+#define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
 
 #include <asm/ptrace.h>
 
 struct kd_exec_frame;
-struct kd_mutex_jit_context;
+struct mutex;
 
 /*
  * kd_mutex_node — per-waiter queue node.
@@ -68,12 +68,11 @@ struct kd_mutex_node {
 	unsigned long saved_ret_addr; /* CS entry point (ret_addr)         */
 
 	struct pt_regs regs; /* waiter context → JIT sandbox      */
-	struct kd_mutex_jit_context *jit_context;
-	bool jit_waiter;
+	bool native_resume;
 };
 
 /*
- * kd_mutex — the shadow lock itself.
+ * Scheduling state beside one original Linux mutex.
  */
 struct kd_mutex {
 	struct kd_mutex_node *tail; /* queue tail (NULL if empty)        */
@@ -83,7 +82,7 @@ struct kd_mutex {
 			u8 locked;
 		};
 	};
-	struct task_struct *combiner_task;
+	struct task_struct *physical_owner; /* task holding the original mutex */
 	unsigned long origin_mutex_addr; /* original struct mutex *, if shadow */
 	atomic_t waiter_count;
 };
@@ -91,7 +90,7 @@ struct kd_mutex {
 #define __KD_MUTEX_INITIALIZER(lockname) \
 	{ .tail = NULL,                  \
 	  .state = ATOMIC_INIT(0),       \
-	  .combiner_task = NULL,         \
+	  .physical_owner = NULL,        \
 	  .origin_mutex_addr = 0,        \
 	  .waiter_count = ATOMIC_INIT(0) }
 
@@ -107,13 +106,11 @@ void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 int _kd_mutex_unlock_checked(struct kd_mutex *lock);
 void _kd_mutex_unlock(struct kd_mutex *lock);
 
-#define KD_MUTEX_NESTED_ACQUIRED 0
-#define KD_MUTEX_NESTED_DELEGATED 1
-#define KD_MUTEX_NESTED_ACQUIRED_QUEUE 2
-
-int kd_mutex_nested_lock(struct kd_mutex *lock, struct pt_regs *regs,
-			 const struct kd_exec_frame *parent);
-int kd_mutex_nested_unlock(struct kd_mutex *lock);
+bool kd_mutex_jit_is_enabled(void);
+int kd_mutex_debug_nested_waiters(void);
+int kd_mutex_nested_lock(struct mutex *lock);
+int kd_mutex_nested_unlock(struct mutex *lock);
+void kd_mutex_note_nested_jit(void);
 int kd_mutex_waiter_count(struct kd_mutex *lock);
 void kd_mutex_note_nested_abort_release(void);
 

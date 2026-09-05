@@ -206,6 +206,7 @@ if [ "$actual_counter" != "$expected_counter" ]; then
     exit 1
 fi
 check_complex_cs_integrity "$expected_counter" 1 || exit 1
+check_mutex_origin_accounting || exit 1
 
 check_dmesg_ok || exit 1
 

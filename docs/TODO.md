@@ -1,10 +1,11 @@
 # kdlock Open Tasks
 
-Last reviewed: 2026-09-05, against `ed00edb` and the recovery guest's patched
-Linux 6.1.159 hook callers. The BCD comparison uses local revision `dbde52c`.
-P0 findings below are source-audit findings, not newly reproduced runtime
-failures. The observed promotion-test failure is recorded separately below
-and in `VALIDATION.md`.
+Last reviewed: 2026-09-05, including CALL continuation and native-owner mutex
+changes on base `c08368d`. The existing Linux 6.1.159 hooks are reused without
+new guest kernel changes. The BCD comparison uses local revision `dbde52c`.
+C1/C2 describe implemented subsets and their remaining boundaries. Other P0
+findings remain source-audit findings, not newly reproduced runtime failures. The
+historical promotion-test failure is recorded separately in `VALIDATION.md`.
 
 This file tracks unfinished work only. Completed behavior belongs in
 `DESIGN.md`, the current register contract belongs in `JIT_REGISTER_ABI.md`,
@@ -30,30 +31,22 @@ start production-kernel experiments while P0 is unresolved.
 
 ### C1. Forward Continuation After Partial Execution
 
-Evidence: [spin execute_cs](../kernel_module/kd_spinlock.c) and
-[mutex execute_cs](../kernel_module/kd_mutex.c) restore `retry_regs` after a
-failed run; [frame abort](../kernel_module/kd_exec.c) and lock cleanup do not
-restore shared data or the waiter stack. Entry retry can repeat writes and
-already completed nested B sections. BCD instead preserves the ordinary CALL
-frame and resumes the waiter's original code from the exit context; see
-`DESIGN.md` 9.6. The target is forward continuation, not transactional rollback.
+Implemented: ordinary CALL miss preserves the virtual CALL frame and current
+registers, resumes the original waiter, and retains the combiner's physical
+locks through native-unlock rendezvous. Single spin/mutex, A after completed B,
+still-held B, and independent remote spin B are covered by
+`test_10_native_resume.sh`. Post-entry errors without a continuation protocol
+are fail-stop; not-started work can still use native entry handoff. Frame/node
+metadata was extended, not the two-word wrapper args. See `DESIGN.md` 9.5/9.6.
 
-- [ ] Introduce explicit outcomes for not-started, native-continuable,
-      completed, and unrecoverable execution. Separate rejection before any
-      side effect from exits after writes, nested unlock, or a native service.
-      Keep progress metadata in the execution frame and retain two args words.
-- [ ] Implement a single-lock ordinary CALL-miss continuation first. Retain
-      the virtual return frame, preserve the callee-entry state and live flags,
-      and return ownership to the original waiter without `retry_regs` entry
-      replay. Provide spin and mutex continuation trampolines. Removing only
-      the register reset is incorrect while the CALL stub still pops RSP.
-- [ ] Extend to A exiting after B has completed/unlocked: retain B's effects
-      and resume A after the completed work, without reacquiring/replaying B.
-- [ ] Extend to exits while B is still held, including queued/remote child
-      frames. Transfer logical ownership, lock-stack, queue/node, and execution
-      context to the waiter; do not run generic abort cleanup that releases B.
-      Record control-call phases so an acquisition failure cannot resume at
-      post-lock RIP without owning the lock.
+Flags are explicitly deferred at the user's request. CALL-boundary tests do
+not establish general flags correctness or basic-block/budget continuation.
+
+- [ ] Complete control-call phase metadata so a failed nested acquisition can
+      resume the pending call without pretending its post-CALL RIP owns B.
+      Mutex now consumes the CALL only after native B acquisition and frame
+      recording. The remaining fail-stop behavior avoids duplicate execution
+      but does not recover failed control calls.
 - [ ] Define precise original-code state for IJ, budget, guard, and service
       exits. Distinguish pending from completed operations and preserve virtual
       stack, live flags, and code/stack lifetimes. An arbitrary JIT machine IP
@@ -62,8 +55,8 @@ frame and resumes the waiter's original code from the exit context; see
       required continuations, resource needs, and source-text generation. An
       unresolved entry should receive native handoff without starting JIT.
 - [ ] Until a particular exit has a proven continuation protocol, reject its
-      unsupported paths before execution and treat unexpected post-effect
-      failure as fatal, not a successful native retry. Memory undo is not the
+      unsupported paths before execution. Post-entry fail-stop is implemented,
+      but it is not a substitute for this eligibility pass. Memory undo is not the
       default remedy: externally observed effects after releasing B cannot
       generally be restored by a local write log.
 - [ ] Acceptance: inject CALL/IJ/limit/capacity failures before the first write,
@@ -71,25 +64,39 @@ frame and resumes the waiter's original code from the exit context; see
       B completion/unlock, and after hostcall execution. Use distinct request
       IDs and an independent observer to prove no lost or duplicated A/B work.
       Include nested mutex cleanup, not only spin mode 9.
+- [ ] Extend native rendezvous tests beyond the current distinct-request
+      before/call/after oracle, mutex in-CS exclusion guard, CPU-1 waiters and
+      comm changes: add randomized histories, deep/OOO exits, and teardown while
+      a native continuation is active. Do not claim arbitrary
+      kernel compatibility from the tested nested spin/mutex subset.
 
 ### C2. One Protocol Per Physical Lock
 
-Evidence: [target selection](../kernel_module/kd_main.c) is based on `comm`;
-[mutex promotion](../kernel_module/kd_lock.c) drains only hooked native users
-before entering an independent shadow mutex. The guest's `mutex.c` checks
-`is_kd()` before routing, so other tasks can still acquire the original lock.
+Implemented for the tested non-RT mutex subset: the original Linux mutex is
+the exclusion lock, the shadow is a scheduling gate, and all scheduler owners
+acquire/release the original mutex as `current`. Native continuation borrows
+the combiner's protection and returns unlock requests to it. Nested B uses the
+same combiner's native acquisition, not remote mutex delegation. No native
+owner handoff or new kernel hook/export is required. `mutex_jit=0` is native-only.
 
-- [ ] Separate eligibility to delegate a request from the protocol used to
-      acquire/release a promoted physical lock. All participants must agree on
-      one protocol; a non-delegatable request still needs compatible handoff.
-      Until then, explicitly restrict delegation to isolated test locks.
-- [ ] Audit promotion, process renaming, unhooked callers, trylock,
-      irqsave/bh, interruptible/killable mutex variants, and lock-address reuse.
-      Do not treat `mutex_jit=0` as a fix for shadow/native mutual exclusion.
-- [ ] Acceptance: targeted and non-targeted threads race on the same mutex
-      before/during/after promotion; an in-CS guard never exceeds one. Repeat
-      with process renaming and alternate lock APIs. Audit native qspinlock
-      interoperability separately; shared lock-word layout is not a proof.
+The module's RCU task registry preserves the existing `is_kd` routing after
+rename. `test_11_mutex_native_protocol.sh` checks mixed native/delegated users,
+an in-CS exclusion guard, task allocation failure and slot exhaustion;
+`test_10_native_resume.sh` also checks renamed native continuation. Current
+results, including which variants actually ran, belong in `VALIDATION.md`.
+
+- [ ] Extend native participant validation to signal-aborted interruptible /
+      killable waits, systematic promotion timing and randomized histories.
+      Successful alternate APIs are native participants, not translated services.
+- [ ] Audit lock-address reuse, WW/PI/RT and debug/lockdep kernel configurations.
+      Keep production lock selection restricted until context/lifetime issues
+      in C3-C5 are resolved. Hot unload is not made safe by task-record RCU.
+- [ ] Reject owner-sensitive native suffixes before delegation, or define a
+      separate service contract. A borrowed waiter does not become the native
+      owner; direct owner checks, recursive reacquisition and task-bound lock
+      side effects cannot be made equivalent by the unlock rendezvous alone.
+- [ ] Audit native qspinlock interoperability separately, including target
+      renaming and irqsave/bh. Shared lock-word layout is not a proof.
 
 ### C3. Immutable JIT Publication And Lifetime
 
@@ -153,9 +160,10 @@ observe the combiner's real task and CPU.
       scheduler/IRQ/preemption/RCU state. Reject unsafe remote RMW or route a
       defined service to its origin context; do not blanket-rewrite every GS
       access as though it had identical concurrency semantics.
-- [ ] Record/validate lock type and execution context at control boundaries;
-      explicitly reject unsupported mixed spin/mutex nesting and sleeping in
-      spin context. Carry a common budget through child frames if a global
+- [ ] Extend the frame's backend check into preflight eligibility and a full
+      execution-context contract. Known mixed spin/mutex calls now reject before
+      service, but post-entry rejection still fail-stops. Carry a common budget
+      through child frames if a global
       limit is intended; account for the early outer-unlock/OOO branch.
 - [ ] Acceptance: controlled origin-CPU interrupt/task updates during remote
       delegation, known-call/hostcall context checks, maximum nesting and node
@@ -172,13 +180,15 @@ observe the combiner's real task and CPU.
       relying only on pre-call IP logs and aggregate success counters.
       Distinguish all generated artifacts from
       the subset required to execute. Run each fault variant explicitly.
-      The 2026-09-05 rerun retained per-mode logs and hashes externally; make
-      this automatic in the committed harness and add generation identity.
+      The 2026-09-05 rerun retained per-mode logs and hashes externally, and
+      `test_10_native_resume.sh` now archives its own evidence. Extend automatic
+      retention to the strict suite and add generation identity.
 - [ ] Make nested-test promotion deterministic without weakening JIT checks.
       Mode 6 initially generated only one of three artifacts on 2026-09-05:
       C's promotion tightened the shared sampling window and A/B became
-      ignored. An unchanged rerun passed. Isolate/reset sampling policy or add
-      a controlled test-only promotion mechanism; preserve failed attempts.
+      ignored. An unchanged rerun and the later CALL-continuation regression
+      passed; the policy is still unchanged. Isolate/reset sampling policy or
+      add a controlled test-only promotion mechanism; preserve failed attempts.
 - [ ] Add varied per-request inputs, multi-lock histories, branch coverage,
       randomized schedules and an exactly-once/linearizability oracle. Keep
       the existing nine-word state replay as a fast regression, not a proof.

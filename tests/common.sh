@@ -171,6 +171,20 @@ check_dmesg_stat_equals() {
     return 0
 }
 
+# Call after module unload, when all physical acquisitions must be released.
+check_mutex_origin_accounting() {
+    local acquired released
+    acquired="$(get_dmesg_stat origin_acquires)"
+    released="$(get_dmesg_stat origin_releases)"
+    if [ -z "$acquired" ] || [ "$acquired" != "$released" ]; then
+        fail "$TEST_NAME" "native owner imbalance: acquire=$acquired release=$released"
+        return 1
+    fi
+    check_dmesg_stat_equals active_tasks 0 || return 1
+    check_dmesg_stat_equals task_alloc_failure "${1:-0}" || return 1
+    check_dmesg_has 'kd_mutex oracle: inside=0 overlaps=0' || return 1
+}
+
 check_complex_cs_integrity() {
     local expected_operations="$1"
     local expected_active_states="${2:-}"

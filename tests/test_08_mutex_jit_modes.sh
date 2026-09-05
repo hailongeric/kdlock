@@ -82,9 +82,8 @@ run_nested_mutex_contention() {
     done
     sleep 0.1
 
-    # Queue one direct waiter before the target on each lock, then queue a
-    # trailing waiter. This makes the direct waiter combine the target instead
-    # of merely handing the lock to it.
+    # A's direct waiter becomes the target's combiner. B's native holder waits
+    # until that combiner actually contends on B before allowing progress.
     for role in 2 4 0 5 6; do
         logs[role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
         timeout --kill-after=5s 60s taskset -c "$role" "$BENCH_BIN" \
@@ -177,6 +176,7 @@ check_mutex_jit_clean_stats() {
         "mode $mode: nested abort cleanup ran unexpectedly" || return 1
     check_dmesg_stat_equals "active_waiters" "0" \
         "mode $mode: mutex queue leaked active waiters" || return 1
+    check_mutex_origin_accounting || return 1
     check_dmesg_stat_equals "reserved_nodes" "0" \
         "mode $mode: mutex queue leaked reserved slots" || return 1
 }
@@ -301,20 +301,20 @@ run_jit_mode() {
 
     unload_modules
     if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
-        local jit_success nested_queued nested_remote
+        local jit_success nested_queued nested_jit
 
         jit_success="$(get_dmesg_stat jit_success)"
         nested_queued="$(get_dmesg_stat nested_queued)"
-        nested_remote="$(get_dmesg_stat nested_remote)"
-        if [ -z "$jit_success" ] || [ "$jit_success" -lt 2 ]; then
+        nested_jit="$(get_dmesg_stat nested_jit)"
+        if [ -z "$jit_success" ] || [ "$jit_success" -lt 1 ]; then
             fail "$TEST_NAME" \
-                "mode $mode: expected outer and inner JIT completions, got ${jit_success:-missing}"
+                "mode $mode: expected an outer JIT completion including native B, got ${jit_success:-missing}"
             return 1
         fi
         if [ -z "$nested_queued" ] || [ "$nested_queued" -lt 1 ] ||
-           [ -z "$nested_remote" ] || [ "$nested_remote" -lt 1 ]; then
+           [ -z "$nested_jit" ] || [ "$nested_jit" -lt 1 ]; then
             fail "$TEST_NAME" \
-                "mode $mode: nested B was not queued and remotely delegated"
+                "mode $mode: nested B did not contend natively and resume JIT"
             return 1
         fi
         check_dmesg_stat_equals "jit_resume" "1" \
@@ -431,18 +431,18 @@ run_jit_mode() {
 
 case "${1:-all}" in
 4)
-    run_jit_mode 4 "mutex-nested" 2 || exit 1
+    run_jit_mode 4 "mutex-nested" 1 || exit 1
     ;;
 5)
     run_jit_mode 5 "mutex-api-in-lock" 1 || exit 1
     ;;
 11)
-    run_jit_mode 11 "mutex-gs-context" 2 || exit 1
+    run_jit_mode 11 "mutex-gs-context" 1 || exit 1
     ;;
 all)
-    run_jit_mode 4 "mutex-nested" 2 || exit 1
+    run_jit_mode 4 "mutex-nested" 1 || exit 1
     run_jit_mode 5 "mutex-api-in-lock" 1 || exit 1
-    run_jit_mode 11 "mutex-gs-context" 2 || exit 1
+    run_jit_mode 11 "mutex-gs-context" 1 || exit 1
     ;;
 *)
     fail "$TEST_NAME" "usage: $0 [4|5|11|all]"

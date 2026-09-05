@@ -4,8 +4,8 @@
  * The real kernel path handles these decisions in kd_exe_on_call_hl_entry().
  * This test keeps the high-risk rule explicit: only the outer mutex unlock
  * completes a delegated critical section; allowlisted hostcalls advance to the
- * saved return address through a separate exit path; unknown calls must not
- * leave a simulated CALL frame on the waiter stack when falling back.
+ * saved return address through a separate exit path; unknown calls preserve
+ * the CALL frame so the original waiter can continue at the native callee.
  */
 #include "mock_kernel.h"
 #include "test_harness.h"
@@ -13,6 +13,7 @@
 
 #define KD_EXE_RUN_ERROR 3
 #define KD_EXE_RUN_TO_UNLOCK 4
+#define KD_EXE_RUN_NATIVE 6
 #define MAX_KNOWN_CONTINUATIONS 16
 
 enum call_kind {
@@ -97,10 +98,7 @@ static int simulate_call_miss(struct regs_model *regs)
 	if (ret > 0)
 		return 0;
 
-	/* Unknown-call miss stubs must undo the simulated call push before
-	 * returning to the kernel fallback path. */
-	regs->sp += sizeof(unsigned long);
-	return KD_EXE_RUN_ERROR;
+	return KD_EXE_RUN_NATIVE;
 }
 
 static int simulate_hostcall_continuation_loop(struct regs_model *regs)
@@ -202,7 +200,7 @@ TEST(unknown_hostcall_is_rejected_without_stack_change)
 	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[2]);
 }
 
-TEST(unknown_call_fallback_unwinds_stack)
+TEST(unknown_call_preserves_native_continuation)
 {
 	struct regs_model regs = {
 		.ip = 0xdead,
@@ -210,8 +208,11 @@ TEST(unknown_call_fallback_unwinds_stack)
 		.sp = (unsigned long)&fake_stack[2],
 	};
 
-	ASSERT_EQ(simulate_call_miss(&regs), KD_EXE_RUN_ERROR);
-	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[3]);
+	fake_stack[2] = 0xbeef;
+	ASSERT_EQ(simulate_call_miss(&regs), KD_EXE_RUN_NATIVE);
+	ASSERT_EQ(regs.ip, 0xdeadUL);
+	ASSERT_EQ(regs.sp, (unsigned long)&fake_stack[2]);
+	ASSERT_EQ(*(unsigned long *)regs.sp, 0xbeefUL);
 }
 
 TEST(hostcall_continuation_is_bounded)
@@ -238,7 +239,7 @@ int main(void)
 	RUN_TEST(contended_inner_lock_resumes_after_remote_unlock);
 	RUN_TEST(api_hostcall_continues);
 	RUN_TEST(unknown_hostcall_is_rejected_without_stack_change);
-	RUN_TEST(unknown_call_fallback_unwinds_stack);
+	RUN_TEST(unknown_call_preserves_native_continuation);
 	RUN_TEST(hostcall_continuation_is_bounded);
 	REPORT();
 }

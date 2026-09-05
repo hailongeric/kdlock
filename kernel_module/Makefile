@@ -10,7 +10,8 @@ kdlock_km-objs := \
 	exe.o \
 	kd_exec.o \
 	kd_spinlock.o \
-	kd_mutex.o
+	kd_mutex.o \
+	kd_mutex_tasks.o
 
 OBJECT_FILES_NON_STANDARD_kd_spinlock.o := y
 

@@ -26,10 +26,11 @@ How it works:
 The goal is to leave critical-section source unchanged, not to run on an
 unmodified kernel. The current sandbox executes in kernel mode; it is neither
 a security boundary nor a transaction with memory rollback.
-Recoverable JIT exits should preserve completed effects and resume the original
-code at the exit point, as in BCD's ordinary CALL-miss path. Current high-level
-fallback still restarts at entry; the gap and target protocol are described in
-[DESIGN section 9.6](docs/DESIGN.md#96-bcd-comparison-and-forward-continuation-target).
+Ordinary CALL misses preserve completed effects and resume the original callee
+on the waiter, as in BCD. Combiners retain physical locks until native unlock
+requests complete the handoff. Other post-entry errors currently fail-stop;
+flags and non-CALL continuation remain deferred. The protocol is described in
+[DESIGN section 9.6](docs/DESIGN.md#96-bcd-comparison-and-continuation-scope).
 
 See [docs/DESIGN.md](docs/DESIGN.md) for the full technical design.
 
@@ -37,17 +38,23 @@ See [docs/DESIGN.md](docs/DESIGN.md) for the full technical design.
 
 | Component | State |
 |-----------|-------|
-| Spinlock delegation | Synthetic modes 0-2 and 6-10 validated; latest mode 9 run did not inject faults |
-| Mutex delegation | Native handoff plus opt-in JIT modes 3-5 and 11 validated on test locks |
+| Spinlock delegation | Synthetic JIT and ordinary CALL-miss continuation; legacy synthetic abort options are disabled |
+| Mutex delegation | Original Linux mutex ownership, opt-in JIT, same-combiner nested B, and native-unlock rendezvous |
 | Translation pipeline | Daemon, miasm translation, JIT write-back, and execution validated |
 | Hot-lock promotion | Functional; timing-sensitive nested promotion needs deterministic tests |
 | Architecture scope | x86-64 only; NUMA-aware combining is not enabled |
 
 This is a research prototype. Arbitrary kernel critical sections are not yet
-supported safely: partial-execution retry, mixed native/shadow lock users,
+supported safely: non-CALL recovery, spin/native interoperability,
 concurrent JIT replacement, instruction/flags semantics, and per-CPU execution
 context remain correctness gaps. See [docs/TODO.md](docs/TODO.md) for the
 ordered implementation and acceptance plan.
+
+Mutex shadow state now schedules requests only. The combiner acquires the
+original Linux mutex and remains its real owner, including during waiter-native
+continuation; the waiter sends unlock requests back and waits for acknowledgment.
+Native non-target callers use that same mutex. No guest kernel source changes
+were added for this protocol; existing hooks and slowpath exports are reused.
 
 ## Repository Layout
 
@@ -58,6 +65,7 @@ kdlock/
 │   ├── kd_lock.c     Hook implementations (spinlock + mutex)
 │   ├── kd_spinlock.c Spinlock delegation protocol
 │   ├── kd_mutex.c    Mutex delegation protocol
+│   ├── kd_mutex_tasks.c In-flight task routing across rename/continuation
 │   ├── kd_exec.c     Nested execution frames and lock ownership
 │   ├── kd_hotlock.c  Bounded hot-lock promotion table
 │   ├── exe.c         JIT lookup, execution, and hostcall engine
@@ -132,7 +140,7 @@ timeout 120 ./bench/klock_test 4 100000 1000 10 0
 | 6 | Spinlock | Deep nesting (A -> B -> C) |
 | 7 | Spinlock | Out-of-order unlock (unlock A before B) |
 | 8 | Spinlock | Independent contention and queues on A and B |
-| 9 | Spinlock | Nested recovery topology; fault injection requires the environment flags below |
+| 9 | Spinlock | Nested recovery topology; legacy synthetic fault injection is disabled |
 | 10 | Spinlock | Nested A/B proxy with translated per-CPU GS and logical `current` validation |
 | 11 | Mutex | Nested A/B proxy with translated per-CPU GS and logical `current` validation (`mutex_jit=1`) |
 
@@ -159,9 +167,9 @@ make -C daemon
 Nine C model binaries plus two Python tests against the actual code generator
 cover tail encoding, bounded translation lookup/publication, hot-lock state, spin/mutex node
 capacity, explicit nested execution frames, hostcall/call-miss policy, generated
-hostcall stubs, GS/current lowering, mutex shadow lookup, and safe draining
-during promotion among intercepted users. The C models are not a substitute
-for kernel implementation tests. Missing miasm currently makes the Python tests
+hostcall stubs, GS/current lowering, mutex shadow lookup, and original-mutex
+ownership across promotion, continuation, rename and queue handoff. The C models
+are not a substitute for kernel implementation tests. Missing miasm currently makes the Python tests
 print `SKIP` and exit successfully; 11/11 is valid only with no skipped tests.
 
 ### Default Integration Suite
@@ -174,8 +182,8 @@ This runs six scripts covering module load, JIT installation, hot-lock promotion
 spinlock delegation, mutex delegation, and daemon pipeline.
 
 The default suite does not prove translated execution for mutex modes 3/4/5:
-`test_05_mutex.sh` deliberately uses `mutex_jit=0` to validate the queue and
-handoff protocol without entering the experimental mutex sandbox.
+`test_05_mutex.sh` deliberately uses `mutex_jit=0`. Even after promotion, this
+setting uses the original native mutex without entering the delegation queue.
 
 ### Modes 0/1/2/3/4/5/10/11 JIT Acceptance
 
@@ -212,9 +220,9 @@ Modes 10 and 11 require generated code to load both `Stack_RGS` and
 `Stack_RCT`, contain no live hardware segment operand, execute that artifact,
 and report zero GS/current mismatches.
 
-The latest strengthened regression passed the complete mode set in one run.
-Every mode matched its exact transition count and reported zero complex-state
-mismatch. Current artifact sizes, commands, counters, and retained logs are in
+Acceptance is recorded per command and source version, not inferred from
+artifact generation or earlier runs. Current artifact sizes, commands,
+counters, and retained logs are in
 [docs/VALIDATION.md](docs/VALIDATION.md).
 
 | Mode | `tests/run_all.sh` | Real JIT acceptance |
@@ -232,8 +240,10 @@ Mode 1 executes one translated outer A stream through the nested B lock/unlock
 known-call path; B's nested counters prove those boundaries were crossed without
 native fallback. Mode 2 exits that stream at an allowlisted time API, executes a
 typed native handler while retaining outer-lock ownership, and resumes the same
-artifact at the instruction after CALL. Mode 4 forms independent A and B queues
-and requires both entry RIPs to execute, including remote B proxy evidence. Mode
+artifact at the instruction after CALL. Mode 4 runs B in the same translated A
+stream: A's combiner acquires native B, waits if contended, and resumes JIT.
+`nested_queued>0` and `nested_jit>0` prove contention and resumed B execution;
+mutex B no longer uses a virtual waiter or remote combiner. Mode
 5 applies the mode 2 hostcall protocol to a mutex waiter and proves repeated
 sandbox exit/resume plus final waiter resume under contention. See
 [docs/VALIDATION.md](docs/VALIDATION.md) for the exact latest results and this
@@ -252,12 +262,22 @@ arbitrary remote per-CPU atomicity or scheduler/IRQ context equivalence.
 
 ```bash
 KD_MODE8_NOT_READY=1 bash tests/test_04_spinlock.sh 8
-KD_MODE8_NOT_READY=1 KD_SPIN_ABORT_INJECT=1 \
-  bash tests/test_04_spinlock.sh 8
-KD_SPIN_ABORT_INJECT=1 bash tests/test_04_spinlock.sh 9
-KD_JIT_FAULT_KIND=1 bash tests/test_04_spinlock.sh 9
-KD_JIT_FAULT_KIND=2 bash tests/test_04_spinlock.sh 9
-KD_JIT_FAULT_KIND=3 bash tests/test_04_spinlock.sh 9
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_10_native_resume.sh 0 1
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_10_native_resume.sh 3 1
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_10_native_resume.sh 1 2
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_10_native_resume.sh 4 2
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_10_native_resume.sh 8 2
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_10_native_resume.sh 1 3
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_10_native_resume.sh 4 3
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_10_native_resume.sh 8 3
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PINNED=1 \
+  bash tests/test_10_native_resume.sh 3 1
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_RENAME=1 \
+  bash tests/test_10_native_resume.sh 4 3
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_MIXED=1 \
+  bash tests/test_10_native_resume.sh 3 1
+bash tests/test_11_mutex_native_protocol.sh 0
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_11_mutex_native_protocol.sh 1
 bash tests/test_07a_mutex_jit_smoke.sh
 bash tests/test_07_mutex_jit.sh
 bash tests/test_08_mutex_jit_modes.sh 4
@@ -266,9 +286,20 @@ bash tests/test_04_spinlock.sh 10
 bash tests/test_08_mutex_jit_modes.sh 11
 ```
 
-These are intentionally excluded from `tests/run_all.sh`. The injected mode 9
-variants exercise lock/frame cleanup and entry retry, not rollback of memory or
-native service side effects. The mutex tests explicitly opt into `mutex_jit=1`.
+These are excluded from `tests/run_all.sh`. Native-resume stage 1 covers single
+locks, stage 2 exits after B unlock, and stage 3 exits while B is held. The test
+stops the daemon before execution, requires a real miss at its native probe,
+checks per-request before/call/after records, and verifies frame/queue draining.
+Mutex tests explicitly use `mutex_jit=1`. Legacy `KD_SPIN_ABORT_INJECT` and
+`KD_JIT_FAULT_KIND` options are rejected by `test_04`: those synthetic exits do
+not model precise CALL state and now reach fail-stop, not entry retry.
+
+`test_11` races targeted and non-targeted workers using plain lock, trylock,
+interruptible and killable native APIs, checks an in-CS exclusion guard and
+exact state replay, and exercises task-record allocation failure plus waiter
+slot exhaustion. Successful native APIs are tested; signal cancellation is not
+yet injected. `KD_TEST_MIXED=1` selects these test worker roles;
+`KD_TEST_COMM=<name>` names every worker instead of the default comm.
 
 ### Recovery VM
 
@@ -295,10 +326,24 @@ Do not issue HMP `quit`, which exits QEMU.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `target_process` | `"kd_test"` | One exact `current->comm` name routed through kdlock hooks |
-| `mutex_jit` | 0 | Opt-in translated mutex path for modes 3-5 and 11; keep disabled outside recovery tests |
-| `spin_jit_fail_after_nested_lock` | 0 | Inject one failure after nested spin acquisition |
-| `jit_hl_fault_after_known_call` | 0 | Inject CALL miss (1), IJ miss (2), or instruction limit (3) |
+| `target_process` | `"kd_test"` | Exact eligible task comm; active mutex tasks stay routed through unlock after rename |
+| `mutex_jit` | 0 | 0 uses original native mutex; 1 enables delegation for eligible requests, recovery-only |
+| `mutex_task_fail_once` | 0 | Test-only: 1 fails the next mutex task-record allocation and resets to 0 |
+| `spin_jit_fail_after_nested_lock` | 0 | Legacy synthetic failure after nested spin acquisition; post-entry fail-stop |
+| `jit_hl_fault_after_known_call` | 0 | Legacy synthetic CALL/IJ/limit exit (1/2/3); post-entry fail-stop |
+
+The test workload module has a separate read-only `native_resume_stage`
+parameter: `0` disables the probe, `1` places it inside a single lock, `2` after
+B unlock, and `3` while B is held. `test_10_native_resume.sh` sets this parameter
+and checks distinct request records. `KD_NATIVE_PINNED=1` adds the mode 3 case
+with a CPU-0 holder and four CPU-1 waiters.
+`KD_NATIVE_RENAME=1` arms the test-only writable `native_resume_rename=1`
+after promotion and translation, so rename/task-lock traffic cannot redirect
+the shared hot-lock sampling window. The probe
+changes the native waiter's comm while it borrows a combiner-owned mutex, then
+restores it after unlock. In-flight task routing must still complete its unlocks.
+`KD_NATIVE_MIXED=1` adds native non-target participants to mode 3 stage 1;
+it cannot be combined with rename or pinning in this harness.
 
 ## Prerequisites
 

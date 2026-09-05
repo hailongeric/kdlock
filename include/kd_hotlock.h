@@ -18,7 +18,6 @@ struct kd_hotlock_state {
 	unsigned long end_cycles;
 	unsigned int samples;
 	enum kd_hotlock_status status;
-	atomic_t mutex_origin_users;
 } ____cacheline_aligned;
 
 int kd_hotlock_init(void);

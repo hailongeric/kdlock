@@ -16,6 +16,18 @@
 #include <linux/mutex.h>
 
 struct kd_exec_frame;
+struct task_struct;
+
+/* Existing guest exports implement the contended paths, without hook reentry. */
+void kd_origin_mutex_lock(struct mutex *lock);
+void kd_origin_mutex_unlock(struct mutex *lock, unsigned long ip);
+bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task);
+
+bool kd_mutex_task_active(struct task_struct *task);
+bool kd_mutex_task_reroute(struct task_struct *task);
+bool kd_mutex_task_get(struct task_struct *task);
+void kd_mutex_task_put(struct task_struct *task);
+void kd_mutex_tasks_exit(void);
 /* --- preemption helpers --------------------------------------------------- */
 
 static inline void kd_preempt_disable_raw_spin_lock(raw_spinlock_t *lock)

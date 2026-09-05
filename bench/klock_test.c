@@ -29,6 +29,7 @@
  * Example:  ./klock_test 4 100000 1000 10 0
  *   → 4 threads, 100k iterations each, 1000-loop workload, mode 0
  */
+#define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -78,8 +79,21 @@ static void *worker_thread(void *arg)
 {
 	struct thread_data *data = arg;
 	unsigned long count;
+	const char *comm = getenv("KD_TEST_COMM");
+
+	/* Mixed validation keeps even workers on delegated mutex_lock and sends
+	 * odd workers through native names and all four ordinary mutex APIs. */
+	if (getenv("KD_TEST_MIXED")) {
+		comm = data->thread_id & 1 ? "kd_native" : "klock_test";
+		data->args.role = 0x20000000U |
+			(data->thread_id & 1 ? (data->thread_id / 2) % 4 : 0);
+	}
+	if (comm)
+		data->error = pthread_setname_np(pthread_self(), comm);
 
 	pthread_barrier_wait(&start_barrier);
+	if (data->error)
+		return NULL;
 
 	for (count = 0; count < data->sys_count; count++) {
 		if (ioctl(data->fd, IOC_RUN_TEST, &data->args) < 0) {

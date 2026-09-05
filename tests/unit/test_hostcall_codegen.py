@@ -48,7 +48,7 @@ def main():
     unknown_address = 0x2000
     services = {service_address: by_symbol["ktime_get"]}
     assembly = indirect_jump.make_callee_table(
-        [unknown_address, service_address], {service_address}, services
+        [unknown_address, service_address], services
     )
     service_stub = stub_for(assembly, service_address, unknown_address)
     unknown_stub = stub_for(assembly, unknown_address)
@@ -63,8 +63,8 @@ def main():
     )
     require("0x1" in unknown_stub, "unknown call does not use KD_EXE_CALL_MISS")
     require(
-        "R13 + 0x8" in unknown_stub,
-        "unknown call does not unwind its virtual CALL frame",
+        "R13 + 0x8" not in unknown_stub,
+        "unknown call discards its native continuation return address",
     )
 
     print("[PASS] test_hostcall_codegen")

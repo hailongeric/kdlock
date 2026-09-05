@@ -1,253 +1,302 @@
-# JIT Validation Record
+# JIT And Native-Owner Mutex Validation
 
 Last validated: 2026-09-05
 
-Fresh guest builds and JIT tests ran against source revision `ed00edb` on
-2026-09-05, with runtime tests from 10:11 to 10:17 Asia/Shanghai (02:11 to 02:17
-UTC). Only documentation changed on the host. Strict selectors passed 8/8;
-extra modes 6/7/8/9 passed in a separate run after an initial mode 6 promotion
-failure. Both attempts are retained below.
+The latest commit verification ran from 13:36:53 to 13:39:21 Asia/Shanghai.
+All **13 mutex integration cases passed with `mutex_jit=1`**: four strict JIT
+selectors, one mixed native/delegated protocol case, and eight native-continuation
+variants. Guest builds, 11 unit/codegen tests without skips, and module loading
+also passed again. Detailed results are in [Commit Verification](#commit-verification).
 
-This is the canonical record for the latest end-to-end validation. Architecture
-belongs in `DESIGN.md`, register and continuation rules belong in
-`JIT_REGISTER_ABI.md`, operating procedures belong in `AGENTS.md`, and open
-work belongs in `TODO.md`.
+The preceding full native-owner regression ran from 13:26:27 to 13:31:49.
+All **28 integration cases passed**: native mutex
+baseline, two mixed-protocol variants, 13 native-continuation variants, eight
+strict JIT selectors, and four additional spin selectors. The same sources also
+passed 11 unit/codegen tests without skips, guest builds, and a module-load test.
+Both runs use the same manifest of 68 source/build/test files implementing the
+changes after base `c08368d`. Only documentation changed after this source
+manifest was fixed. The broader result tables below retain the earlier run's
+counts; spin selectors and `mutex_jit=0` were not rerun during commit verification.
+
+Architecture belongs in `DESIGN.md`, register rules in `JIT_REGISTER_ABI.md`,
+operations in `AGENTS.md`, and remaining work in `TODO.md`. Passing this bounded
+suite is not a general kernel-correctness or performance guarantee.
+
+## Commit Verification
+
+These are fresh results from the 13-case run, not artifact-generation counts:
+
+| Mode | JIT completions / waiter resumes | Exact operations / states | Additional runtime evidence |
+| --- | ---: | ---: | --- |
+| 3 | 569 / 569 | 12934 / 1 | Repeated contention and pinned waiters |
+| 4 | 1 / 1 | 12008 / 2 | `nested_queued=1`, `nested_jit=1`, B unlock completed |
+| 5 | 399 / 399 | 12582 / 1 | 399 matching hostcall exits/executions/resumes |
+| 11 | 1 / 1 | 12008 / 2 | Native B contention; 12002 GS/current successes, zero mismatches |
+
+Each strict selector checked `mutex_jit=1`, generated and inspected its artifact,
+matched runtime entry diagnostics, and required translated completion plus exact
+protected-state replay. JIT/readiness/frame/context failures were zero. Native
+scheduler acquisitions/releases matched at 2364/2364, 2006/2006, 2182/2182 and
+2006/2006 respectively; all tasks, waiters and slots drained.
+
+The mixed-protocol case performed 18810 operations, completed/resumed 18 JIT
+delegations and balanced 4390 native scheduler ownership intervals. Its in-CS
+guard reported zero overlap. The deliberate task-allocation failure occurred
+once, and four waiter-slot overflow fallbacks were exercised without leaking
+resources or breaking replay.
+
+Eight native-continuation cases passed: mode 3 stage 1 and mode 4 stages 2/3,
+their three renamed-task variants, CPU-pinned mode 3 and mixed-participant mode 3.
+Each completed one native frame with exact per-request records and no replay
+failure. Mode 4 stage 3 required two acknowledged unlocks on the retained owner;
+the renamed variants recorded 8, 1 and 2 task reroutes. These cases execute a JIT
+prefix followed by a native suffix, not a fully translated completion.
+
+Evidence is retained on the host at `/tmp/kdlock-mutex-jit-commit.VzVf2T/`:
+
+- `source.sha256`, `source-kernel-check.log`, `post-test-health.log`: the same 68
+  inputs before/after testing and unchanged guest kernel/config hashes.
+- `build-unit.log`: repeated guest builds, 11 actual unit/codegen passes and
+  module loading. Existing objtool and locale warnings remain as noted below.
+- `run.sh`, `cases/started-at`, `cases/completed-at`: serial commands and timing.
+- `cases/<case>/`: command, output, zero exit status, dmesg, artifact hashes and
+  archive; native/mixed cases also retain detailed guest evidence archives.
+
+All 13 dmesg logs were free of BUG, panic, double fault, soft lockup,
+unable-to-handle and WARNING signatures. The guest stayed reachable without a
+restart; no benchmark, daemon or test module remained active afterward.
 
 ## Acceptance Contract
 
-Generating `jit.S` or installing `jit.bin` is not enough. A JIT mode passes only
-when all applicable checks below succeed:
+Generating `jit.S` or installing `jit.bin` is insufficient. Strict selectors
+require nonempty assembly/binary/disassembly artifacts, nonzero structured
+kernel-text reads, checked daemon writes, and execution diagnostics matching
+an inspected entry. The final chunk log precedes payload copy and cannot alone
+prove successful publication. Runtime entry logs also precede the JIT call;
+they must be followed by translated completion and the exact protected result.
 
-1. Every expected workspace contains non-empty `jit.S`, `jit.bin`, and
-   `bin.txt` files with the requested kernel entry RIP.
-2. The translator reports a nonzero structured kernel-text read summary, and
-   the daemon's device writes succeed. The kernel's final-chunk diagnostic is
-   supporting evidence only: it is emitted before the copy/publication completes.
-3. Runtime diagnostics contain an executed JIT IP matching an inspected
-   workspace and a successful completion through the expected unlock endpoint.
-4. Executable generated assembly contains the complex workload's branch,
-   rotate, multiply, scaled-index access, and dependent state writes.
-5. Native replay matches every protected sequence, sum, branch, rotate, lane,
-   and commit field, with exact operation and active-state counts.
-6. Execution frames, lock queues, and node slots drain completely, with no
-   kernel error or JIT/protocol failure diagnostic.
-7. Modes 2 and 5 contain a named `ktime_get` hostcall stub, perform no runtime
-   recompilation, and report equal nonzero exit, execute, and resume counts.
-8. Mutex modes 3, 4, 5, and 11 verify `mutex_jit=1` before translated execution.
-   Mode 5 also requires hostcall, JIT completion, and waiter resume counts to
-   match.
-9. Modes 10 and 11 load both `Stack_RGS` and `Stack_RCT`, retain no live hardware
-   segment operand, execute the inspected context artifact, and report no
-   GS/current mismatch.
+The executable artifact must retain branch, rotate, multiply, scaled-index
+access and dependent writes. Native replay checks all nine protected state
+words, the exact operation count, and the expected number of active states.
+Frames, waiters and slots must drain; kernel and protocol failures must be zero.
+Modes 2/5 additionally require the named `ktime_get` stub, no service-callee
+translation/runtime recompilation, and equal nonzero exit/execute/resume counts.
+Mode 5 matches those to JIT completion and waiter resume. Modes 10/11 execute
+GS/current artifacts using `Stack_RGS` and `Stack_RCT`, without live hardware
+segment operands, and require zero probe mismatches.
 
-## Environment And Commands
+All mutex JIT cases verify `mutex_jit=1`. Ownership/resource accounting requires
+`origin_acquires == origin_releases`, `active_tasks=0`, and no leaked waiter
+slots. These origin counters count scheduler-owner intervals, not every direct
+native API acquisition or nested B. Mode 3's in-CS guard requires
+`inside=0 overlaps=0`; that guard does not instrument all nested A/B states.
+Task allocation failures are zero except the deliberate one-shot test.
 
-Validation used the recovery VM with Linux `6.1.159` and 40 online CPUs. The
-guest-local checkout was `/root/host_fs/kdlock` on ext4. The running QEMU command
-contained neither VirtFS nor VFIO. A new snapshot,
-`pre_jit_audit_20260905_1010`, was created and confirmed by `info snapshots`
-before testing; the four existing recovery snapshots were retained.
+Modes 4/11 require one executed A artifact, `nested_queued>0` and `nested_jit>0`:
+A's combiner really contends on native B, obtains it, and resumes JIT through B
+unlock. B no longer has a remote mutex waiter or a separate required artifact.
 
-All 66 code/build/test inputs matched host and guest SHA-256 hashes before the
-build, so no source synchronization was needed. No repository tree was moved
-or recursively replaced. The daemon was built and tested without a pre-created
-`daemon/asm` template. The guest used GCC 11.4.0 and miasm 0.1.5.
+Native-continuation cases stop the daemon before execution and require an
+ordinary generated CALL miss at the actual `kd_resume_native_probe` RIP. The
+original task completes distinct per-request before/call/after records exactly
+once; `kd_native started == completed > 0`, with no entry retry or lost state.
+A JIT prefix plus native suffix is not counted as an all-JIT completion.
 
-Formatting/lint checks from the preceding code-cleanup run (not rerun for this
-documentation-only update):
+## Environment And Builds
 
-```bash
-uvx ruff format --check disassem tests/unit
-uvx ruff check disassem tests/unit
-uvx --from shellcheck-py shellcheck -x -P SCRIPTDIR tests/*.sh
+All builds and execution ran in the recovery guest: patched Linux `6.1.159`,
+40 CPUs, 28 GiB RAM, GCC 11.4.0 and miasm 0.1.5. The guest path
+`/root/host_fs/kdlock` is on ext4, not a live host share. Only changed individual
+files were synchronized after hash comparison; no repository was moved.
+
+**No guest kernel source, config, hook, or export was added or changed.** The
+module reuses `is_kd`, mutex hooks, and the existing exported native slowpaths.
+The test-only nested-waiter diagnostic is exported by kdlock, not by the kernel.
+These kernel hashes matched before and after validation:
+
+```text
+3f759de23929a1d32a353aa6b0962fbe31b43cbfc704eca93d998f1ce57cb167  kernel/locking/mutex.c
+8a8cce1b35a362abf0fcbdefcacfe0296dd7aa0a7540bbbf29634b3e492bb038  include/linux/mutex.h
+caa447885e0429aaaed10b76cc47816aa53c20869e6598b15fce8e6e37eed792  .config
 ```
 
-This run rechecked every shell script with `bash -n` in the guest and checked
-documentation links, fenced blocks, and `git diff --check` on the host. No
-module was built or executed on the host.
+Before the final run, QEMU disappeared during an execution-environment change;
+its cause was not established. The previous serial log was preserved and
+`run_vm.sh recovery` restarted the VM. All 68 source hashes matched afterward,
+and the existing `pre_native_resume_20260905_1110` recovery snapshot was confirmed.
+The final 28-case run completed without a VM restart.
 
-Fresh guest build and unit checks:
+Guest checks:
 
 ```bash
-cd /root/host_fs/kdlock
-python3 -m compileall -q disassem tests/unit
-for script in tests/*.sh; do bash -n "$script" || exit; done
 make -C tests/unit clean
-make -C tests/unit -j"$(nproc)" run
-make -C kernel_module clean && make -C kernel_module W=1 -j"$(nproc)"
-make -C klock_module clean && make -C klock_module W=1 -j"$(nproc)"
-make -C daemon clean && make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'
-cc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c \
-  -o bench/klock_test -lpthread
+make -C tests/unit -j8 run
+python3 -m compileall -q disassem tests/unit
+make -C kernel_module W=1 -j8
+make -C klock_module W=1 -j8
+make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'
+gcc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c -o bench/klock_test -lpthread
+timeout --kill-after=10s 60 bash tests/test_01_module_load.sh
 ```
 
-All nine C unit binaries and both Python code-generation tests passed (11/11),
-with miasm present and no skips. `tests/test_01_module_load.sh` also passed.
-The C tests model selected algorithms rather than compile the kernel sources.
-The Python tests exercise real translator code, but missing miasm currently
-produces a successful `SKIP`; required runs must explicitly reject skips.
-The shell syntax loop above is the corrected all-file command;
-`bash -n tests/*.sh` checks only its first script, not every expanded filename.
-The daemon, benchmark, and ordinary kernel source compilation produced no
-compiler warnings. The remaining kernel build warnings are objtool reports
-associated with the project's naked returns, stack switching, dynamic JIT
-call, and UACCESS regions. They remain an unwind/stack-validation gap, not
-warnings proven harmless. Guest locale warnings are unrelated to the source.
+Nine C models and two real-translator Python tests passed with no `SKIP`.
+Bash syntax checks, Ruff lint/format (13 Python files), ShellCheck, Markdown
+local-link/fence checks and `git diff --check` passed. Existing objtool warnings
+about naked returns, stack switching, dynamic calls and UACCESS remain;
+no C compiler diagnostic was reported by the final W=1 build. Locale warnings
+are separate. These are not warning-free or unwind-validated builds.
 
-Strict translated-execution selectors ran separately to retain each mode's
-kernel log and artifacts before the next test cleared them:
+## Native Mutex And Fallback
+
+`test_05_mutex.sh` passed mode 3 twice (40001 combined operations), mode 4
+(20001) and mode 5 (20001). Each uses `mutex_jit=0`, including after promotion:
+no delegation slowpath or JIT completion, exact replay, no task/slot leak.
+It is not evidence that JIT executed, nor a run of the entire default suite.
+
+`test_11_mutex_native_protocol.sh` passed with both `0` and `1`. Each performed
+18810 operations on one protected state: mixed callers before promotion,
+non-target callers active during the promotion phase, mixed callers afterward,
+and eight CPU-1 target waiters behind a CPU-0 holder. Odd mixed workers use
+native plain lock, trylock, interruptible and killable APIs; even workers remain
+eligible for delegation. Signal cancellation was not injected.
+
+| Result | `mutex_jit=0` | `mutex_jit=1` |
+| --- | ---: | ---: |
+| Protected operations / replay failures | 18810 / 0 | 18810 / 0 |
+| In-CS overlaps / final inside | 0 / 0 | 0 / 0 |
+| JIT completions / resumes | 0 / 0 | 20 / 20 |
+| Scheduler native acquisitions / releases | 0 / 0 | 4388 / 4388 |
+| Injected task allocation failures | 0 | 1 |
+| Waiter slot overflow fallbacks | 0 | 4 |
+| Remaining tasks / waiters / slots | 0 / 0 / 0 | 0 / 0 / 0 |
+
+Promotion is exercised concurrently, but its exact scheduling interleavings
+are not exhaustively controlled. Table/code-pool exhaustion and signal-aborted
+waits remain untested by this case.
+
+## Native Continuation Results
+
+Stage 1 misses inside a single lock, stage 2 after B unlock, and stage 3 while B
+is still held. All rows load `mutex_jit=1`; spin rows retain their spin backend.
+Every row has zero request-record, replay and invariant failures.
+
+| Mode / stage | Variant | Valid request records | Native frames started/completed | Operations / states |
+| --- | --- | ---: | ---: | ---: |
+| 0 / 1 | Single spin | 12009 | 1 / 1 | 12009 / 1 |
+| 3 / 1 | Single mutex | 12009 | 1 / 1 | 12009 / 1 |
+| 1 / 2 | Spin A after B | 12009 | 1 / 1 | 12009 / 1 |
+| 4 / 2 | Mutex A after B | 12002 | 1 / 1 | 12008 / 2 |
+| 8 / 2 | Independent spin A/B, after B | 12003 | 1 / 1 | 12013 / 2 |
+| 1 / 3 | Spin B held | 12009 | 1 / 1 | 12009 / 1 |
+| 4 / 3 | Native mutex B held by A combiner | 12002 | 1 / 1 | 12008 / 2 |
+| 8 / 3 | Remote spin B held | 12003 | 2 / 2 | 12013 / 2 |
+| 3 / 1 | Rename during native suffix | 12009 | 1 / 1 | 12009 / 1 |
+| 4 / 2 | Rename after B unlock | 12002 | 1 / 1 | 12008 / 2 |
+| 4 / 3 | Rename while B held | 12002 | 1 / 1 | 12008 / 2 |
+| 3 / 1 | CPU-0 holder / four CPU-1 waiters | 12006 | 1 / 1 | 12006 / 1 |
+| 3 / 1 | Mixed native/delegated participants | 12009 | 1 / 1 | 12009 / 1 |
+
+Counts include warmup and promotion; they are not counts of JIT misses. The
+renamed mutex variants recorded `task_reroutes=8`, `1`, and `2`, respectively.
+Mode 4 stage 3 used one frame and two unlock requests on the same actual owner;
+mode 8 stage 3 retained two distinct spin frames. No owner handoff was added.
+
+A first rename test enabled comm changes during warmup: repeated `task_lock`
+traffic promoted an unrelated lock first and the target mutex did not enter
+JIT. The test correctly failed its execution check. It now arms the test-only
+writable `native_resume_rename` parameter only after promotion/translation;
+all final rename cases passed without weakening JIT checks. The test helper
+changes comm under `task_lock`; it is not a replacement for the full tracing
+semantics of the kernel's unexported `__set_task_comm` API.
+
+## Strict JIT Results
+
+| Mode | Artifact bytes | Exact operations / states | Additional evidence |
+| --- | --- | --- | --- |
+| 0 | 2121 | 12009 / 1 | Translated spin completion |
+| 1 | 2489 + 2489 | 12009 / 1 | A stream crosses B known calls |
+| 2 | 1923 | 12009 / 1 | 4 hostcall exits/executions/resumes |
+| 3 | 3400 | 12934 / 1 | 600 JIT completions and resumes |
+| 4 | 2153 | 12008 / 2 | `nested_queued=1`, `nested_jit=1`, one JIT completion |
+| 5 | 1924 | 12582 / 1 | 418 hostcall cycles, JIT completions and resumes |
+| 10 | 1053 + 1053 + 3333 + 3239 + 2489 + 2489 | 12014 / 2 | Translated waiter GS/current |
+| 11 | 2065 | 12008 / 2 | Native B contention, JIT resume, GS/current |
+
+All replay failures are zero. Modes 3/4/5/11 have zero JIT/readiness/frame/context
+failures and drained resources. Mutex scheduler acquisition/release counts
+were 2333/2333, 2006/2006, 2163/2163 and 2006/2006 respectively. Mode 11 recorded
+12002 GS/current attempts and successes with no mismatch. Generated entries
+are not all required to execute in spin modes 1/10; their scripts identify the
+required executed artifact. Mutex modes 4/11 now require A's single artifact.
+
+Additional normal spin selectors 6/7/8/9 passed: respectively 12009/1,
+12009/1, 12014/2 and 12006/2 operations/states, all with zero replay failures.
+Mode 9 did not enable obsolete synthetic abort injection.
+
+## Reproduction And Evidence
+
+All runtime commands below run in the guest, with bounded outer timeouts as
+recorded in each retained `command` file:
 
 ```bash
 export KDLOCK_RECOVERY_CONFIRMED=1
-unset KD_SPIN_ABORT_INJECT KD_JIT_FAULT_KIND KD_MODE8_NOT_READY
+bash tests/test_05_mutex.sh
+bash tests/test_11_mutex_native_protocol.sh 0
+bash tests/test_11_mutex_native_protocol.sh 1
+for spec in '0 1' '3 1' '1 2' '4 2' '8 2' '1 3' '4 3' '8 3'; do
+  read -r mode stage <<< "$spec"
+  timeout --kill-after=10s 180 bash tests/test_10_native_resume.sh "$mode" "$stage" || exit
+done
+for spec in '3 1' '4 2' '4 3'; do
+  read -r mode stage <<< "$spec"
+  KD_NATIVE_RENAME=1 timeout --kill-after=10s 180 bash tests/test_10_native_resume.sh "$mode" "$stage" || exit
+done
+KD_NATIVE_PINNED=1 bash tests/test_10_native_resume.sh 3 1
+KD_NATIVE_MIXED=1 bash tests/test_10_native_resume.sh 3 1
 for mode in 0 1 2 3 4 5 10 11; do
-  timeout --kill-after=10s 300s \
-    bash tests/test_09_jit_execution_modes.sh "$mode" || exit
-  # Archive this mode's dmesg, daemon log, artifacts, and hashes here.
+  timeout --kill-after=10s 300 bash tests/test_09_jit_execution_modes.sh "$mode" || exit
 done
-```
-
-Additional modes used the same per-mode retention procedure:
-
-```bash
 for mode in 6 7 8 9; do
-  timeout --kill-after=10s 180s bash tests/test_04_spinlock.sh "$mode" || exit
+  timeout --kill-after=10s 180 bash tests/test_04_spinlock.sh "$mode" || exit
 done
 ```
 
-## Verified Results
+Host evidence: `/tmp/kdlock-mutex-owner-20260905/`:
 
-| Mode | JIT artifact bytes | Exact protected result |
-| --- | ---: | --- |
-| 0 | 1688 | 12009 operations, 1 state, 0 replay failures |
-| 1 | 1774 + 1774 | 12009 operations, 1 state, 0 replay failures |
-| 2 | 1844 | 12009 operations/API observations, 0 replay failures |
-| 3 | 1688 | 12934 operations, 1 state, 0 replay failures |
-| 4 | 1177 + 1078 | 12008 operations, 2 states, 0 replay failures |
-| 5 | 1844 | 12582 operations/API observations, 0 replay failures |
-| 10 | 1053 + 1053 + 3479 + 3385 + 1774 + 1774 | 12014 operations, 2 states, 0 replay failures |
-| 11 | 1999 + 1905 | 12008 operations, 2 states, 0 replay failures |
+- `source.sha256`, `source-check.log`, `post-test-health.log`: 68 matching inputs,
+  unchanged kernel hashes, healthy SSH and no residual worker/daemon/modules.
+- `final-build-unit.log`: W=1 builds, 11 actual unit/codegen passes, module load.
+- `run-final.sh`, `final/started-at`, `final/completed-at`: serial runner and timing.
+- `final/<case>/`: command, output, exit status and dmesg for all 28 cases;
+  JIT cases also retain artifact hashes and an archive. Native/mixed cases add
+  an archive of their own detailed guest evidence directory.
+- Earlier standalone logs, `previous-VALIDATION.md` and
+  `serial-before-restart.log` distinguish implementation attempts from this run.
 
-Every listed artifact passed static instruction checks. Runtime-IP checks prove
-at least one inspected entry per spin mode, with lock-specific/context checks
-where required; they do not prove execution of all mode 1 or mode 10 artifacts.
-Mutex modes 4 and 11 require both A/B entries to execute.
+All final case statuses were zero; dmesg scans found no BUG, panic, double fault,
+soft lockup, unable-to-handle or WARNING signature. QEMU remained available;
+no benchmark, translation daemon or test module remained loaded. The evidence
+is for this source manifest, not for subsequent source changes.
 
-The IP diagnostic is emitted by `execute_cs` before calling the artifact, not
-by an instruction inside `jit.bin`. It must be interpreted together with JIT
-completion, zero failure/not-ready counters where required, nested-remote
-evidence, and exact state results. There is no per-generation in-JIT entry/exit
-trace or all-path instruction coverage yet.
+Historical `/tmp/kdlock-native-final-20260905/` records the earlier 21-case
+CALL-continuation revision, not native-owner mutex behavior. Its remote-mutex-B
+results must not be applied to this implementation. Earlier
+`/tmp/kdlock-jit-audit-20260905-1010/` records a timing-sensitive mode 6 promotion
+failure followed by an unchanged successful rerun; that general sampling
+policy is still not fixed.
 
-Mode 3 completed 640 JIT delegations. Mode 2 completed four hostcall cycles and
-mode 5 completed 398; every exit was executed and resumed without recompilation,
-rejection, failure, or continuation-limit exhaustion. The mode 5 count also
-matched mutex JIT completion and waiter resume. Modes 4 and 11 executed both
-independent A and B translated entries and recorded remote nested execution.
-Modes 10 and 11 passed their waiter GS/logical-current probes.
+## Remaining Limits
 
-Spin modes outside the strict selector passed in the separate follow-up run:
+The mutex in-CS guard and native per-request records strengthen the oracle but
+do not prove arbitrary kernel linearizability. Signal cancellation, alternate
+kernel configs, WW/PI/RT locks, lock-address reuse, owner-sensitive native
+suffixes and production subsystems require separate evaluation. Native spin
+interoperability is not established by mutex mixed-user tests.
 
-| Mode | Scenario | Exact protected result |
-| --- | --- | --- |
-| 6 | A -> B -> C nesting | 12009 operations, 1 state, 0 failures |
-| 7 | Out-of-order A/B unlock | 12009 operations, 1 state, 0 failures |
-| 8 | Independent A/B contention | 12014 operations, 2 states, 0 failures |
-| 9 | Nested JIT recovery topology | 12006 operations, 2 states, 0 failures |
-
-The first mode 6 attempt failed before the translated workload: only one of
-three required artifacts was generated. Its hot-lock diagnostics showed C
-promoted at 24,973,040 cycles, while B/A were ignored at 25,007,630/25,009,662
-cycles. `kd_hotlock_record()` tightens the shared window on C's promotion;
-these values cross the resulting 25,000,000-cycle boundary. The unchanged
-independent rerun generated all three artifacts and executed JIT successfully.
-This is a timing-sensitive promotion/test issue, not a clean first-pass result
-or proof that the issue is fixed. No test assertion was relaxed. See `TODO.md`.
-
-The mode 9 command above did not enable `KD_SPIN_ABORT_INJECT` or
-`KD_JIT_FAULT_KIND`. It validates that topology's normal execution, not the
-fault-injection variants or recovery after arbitrary partial writes.
-
-Historical coverage, not rerun this time: the preceding code-cleanup run's
-default six-script suite passed 6/6. Its `mutex_jit=0` paths replayed 40001
-mode 3 transitions and 20001 transitions for each of modes 4 and 5. This proves
-the stronger workload remains valid for native mutex handoff as well as opt-in
-translated execution.
-
-## Result Interpretation
-
-Each `kd_cs_state` transition updates nine words with chained dependencies.
-Module exit replays the complete transition from zero and compares every field,
-which detects more errors than the legacy counter. Independent physical locks
-use independent states. This is not a per-request history: identical transitions
-cannot distinguish a skipped request offset by a duplicated one. It does not
-prove linearizability or exactly-once execution for arbitrary workloads.
-
-Mode 1 keeps one outer A translation active while known-call handling crosses
-B lock/unlock. Mode 4 instead creates independent A and B mutex queues and
-requires both translated entries to execute. Modes 2 and 5 preserve a virtual
-CALL frame while native `ktime_get` runs, then dispatch back into the same
-artifact at the post-CALL RIP. Exact API-observation counts prove that code after
-the call executed.
-
-Modes 10 and 11 run while the combiner may differ from the original waiter.
-Generated code must use the captured waiter GS base and logical task arguments,
-not the combiner's hardware GS/current state. Artifact checks and runtime probes
-jointly establish this contract.
-
-That contract is addressing and identity for the tested variables. It does not
-validate concurrent origin-CPU interrupt updates, arbitrary non-locked per-CPU
-RMW, or scheduler/RCU context substitution.
-
-Not established by this run: precise native continuation after partial writes
-or completed nested sections (the preferred target, not a requirement for
-memory rollback); mixed native/shadow mutex users; all-instruction/flags
-correctness;
-concurrent JIT replacement and module unload; real-kernel workload safety; or
-speedup against native locks/TCLocks. See [TODO.md](TODO.md) for targeted tests.
-
-## Retained Evidence
-
-Fresh evidence is retained on both host and guest at
-`/tmp/kdlock-jit-audit-20260905-1010/`:
-
-```text
-environment.log                 Kernel, mount, compiler, miasm, source, snapshot
-source.sha256                   66 matching source/build/test inputs
-build-unit.log                  Clean builds and 11 unit/codegen tests
-module-load{,-dmesg}.log         Module load/unload test
-run.sh / suite.log              Initial strict run, then first mode 6 failure
-mode-{0,1,2,3,4,5,10,11}/        Successful strict selectors
-mode-6/                         Preserved first failed promotion attempt
-extra-run.sh / extra-suite.log  Independent follow-up run
-extra-rerun/mode-{6,7,8,9}/      Successful additional selectors
-extra-rerun/completed-at        Follow-up completion timestamp
-snapshots.log                   Host-only snapshot inventory
-post-test-health.log            Final source hashes and guest health (host copy)
-```
-
-Each mode directory contains `command.log`, `test.log`, `dmesg.log`,
-`exit-status`, daemon logs, `artifacts.sha256`, and `artifacts.tar.gz`. The
-runner archives generated files before later tests clean their workspaces.
-The original suite stopped on mode 6 and has a nonzero exit status; its eight
-strict selectors passed, and the follow-up suite exited zero. Do not collapse
-these into a claim that the initial entire suite passed.
-
-The guest also retains `/tmp/kdlock-run-all-code-cleanup-20260905.log` for the
-historical default suite. Its earlier strict-suite `-dmesg.log` contains only
-mode 11; use the fresh per-mode evidence above for the current JIT results.
-
-These logs are diagnostic evidence, not substitutes for rerunning tests after
-code changes. Kernel addresses and scheduling-dependent completion counts may
-change between runs.
-
-Artifact hashes and matching runtime RIPs are now retained per mode, but the
-runtime protocol still lacks a generation identifier and an in-JIT trace.
-
-## Post-test Health
-
-After validation, the host still reported the recovery
-`qemu-system-x86_64` process and the guest answered the five-second SSH health
-check. No test left `kdlock_km`, `klock_module`, or the translation daemon
-running, and the final kernel log contained no BUG, panic, double fault, soft
-lockup, or unable-to-handle signature.
+Flags remain deferred by user scope. Ordinary CALL continuation is not a
+solution for IJ, budget, fault or failed control calls; unsupported post-entry
+errors still fail-stop. Known mixed spin/mutex calls reject before their native
+service, not through a complete pre-execution eligibility pass. Concurrent JIT
+replacement, live hook/module unload, per-CPU concurrency and general task/CPU
+context equivalence remain open. The two-word GS/task ABI is unchanged; no
+transactional rollback or performance speedup is claimed.

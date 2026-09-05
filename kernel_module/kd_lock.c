@@ -35,8 +35,6 @@ int kd_spin_jit_fail_after_nested_lock;
 
 static void origin_raw_spin_lock(raw_spinlock_t *lock);
 static void origin_raw_spin_unlock(raw_spinlock_t *lock);
-static void origin_mutex_lock(struct mutex *lock);
-static void origin_mutex_unlock(struct mutex *lock, unsigned long ret_addr);
 
 /* --- mutex → kd_mutex shadow table ---------------------------------------- */
 
@@ -45,7 +43,6 @@ static void origin_mutex_unlock(struct mutex *lock, unsigned long ret_addr);
 struct kd_mutex_shadow_entry {
 	unsigned long mutex_addr;
 	struct kd_mutex kd_mtx;
-	bool delegated; /* Remains set after this mutex enters shadow mode. */
 };
 
 static struct kd_mutex_shadow_entry kd_mutex_shadows[KD_MUTEX_SHADOW_TABLE_SIZE];
@@ -125,6 +122,8 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 	(void)ret_addr;
 	(void)ret_rsp;
 
+	if (kd_exec_native_unlock((unsigned long)lock, false))
+		return;
 	if (!kd_hotlock_is_promoted((unsigned long)lock)) {
 		kd_hotlock_record((unsigned long)lock);
 		origin_raw_spin_unlock(lock);
@@ -152,36 +151,19 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
  * Mutex hooks
  * ========================================================================== */
 
-/* Linux 6.1 stores the owner task pointer in struct mutex::owner and reserves
- * the low three bits for WAITERS/HANDOFF/PICKUP.  kdlock is already tied to
- * this patched kernel ABI, so use the owner to distinguish an in-flight
- * original acquisition from a shadow-mutex acquisition during promotion. */
+/* Native owner bits are only inspected; delegation never changes the owner. */
 #define KD_MUTEX_OWNER_FLAGS 0x7UL
 
-static bool kd_origin_mutex_owned_by_current(struct mutex *lock)
+bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 {
-	unsigned long owner = atomic_long_read(&lock->owner);
-
-	return (owner & ~KD_MUTEX_OWNER_FLAGS) == (unsigned long)current;
-}
-
-static void kd_wait_for_origin_mutex_users(struct kd_hotlock_state *state)
-{
-	while (atomic_read(&state->mutex_origin_users) != 0) {
-		cpu_relax();
-		cond_resched();
-	}
-	/* Pair the drain with the atomic updates on the original path before
-	 * allowing this task to acquire the independent shadow mutex. */
-	smp_mb();
+	return (atomic_long_read(&lock->owner) & ~KD_MUTEX_OWNER_FLAGS) ==
+	       (unsigned long)task;
 }
 
 void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 		     unsigned long ret_addr)
 {
 	struct kd_mutex *kd_mtx;
-	struct kd_mutex_shadow_entry *entry;
-	struct kd_hotlock_state *state;
 	/*
 	 * Capture callee-saved registers NOW, before any function calls
 	 * in this hook can clobber them. At this point they hold the values
@@ -202,84 +184,49 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 		     :
 		     : "memory");
 
-	state = kd_hotlock_state_get((unsigned long)lock);
-	if (!state) {
-		origin_mutex_lock(lock);
+	/* Nested native calls and borrowed continuations must not join another
+	 * delegation queue. Their original mutexes still provide mutual exclusion. */
+	if (kd_mutex_task_active(current)) {
+		kd_origin_mutex_lock(lock);
 		return;
 	}
 	if (!kd_hotlock_is_promoted((unsigned long)lock)) {
-		/* Register before rechecking the promotion state.  If another CPU
-		 * promotes between the two checks, withdraw and join the shadow path.
-		 * Otherwise this acquisition remains counted through its unlock, so
-		 * shadow users cannot overlap an original owner or waiter. */
-		atomic_inc(&state->mutex_origin_users);
-		smp_mb__after_atomic();
-		if (!kd_hotlock_is_promoted((unsigned long)lock)) {
-			kd_hotlock_record((unsigned long)lock);
-			origin_mutex_lock(lock);
-			return;
-		}
-		atomic_dec(&state->mutex_origin_users);
+		kd_hotlock_record((unsigned long)lock);
+		kd_origin_mutex_lock(lock);
+		return;
 	}
-
-	kd_wait_for_origin_mutex_users(state);
-
-	kd_mtx = get_kd_mutex_shadow(lock);
-	if (kd_mtx == NULL) {
-		origin_mutex_lock(lock);
+	if (!kd_mutex_jit_is_enabled()) {
+		kd_origin_mutex_lock(lock);
 		return;
 	}
 
-	kd_exe_add(0,
-		   ret_addr); /* pid=0: rip-only key, shared by all processes */
-	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
-	WRITE_ONCE(entry->delegated, true);
+	kd_mtx = get_kd_mutex_shadow(lock);
+	if (!kd_mtx || !kd_mutex_task_get(current)) {
+		kd_origin_mutex_lock(lock);
+		return;
+	}
+	kd_exe_add(0, ret_addr);
 	_kd_mutex_lock(kd_mtx, ret_rsp, ret_addr, s_rbx, s_r12, s_r13, s_r14,
 		       s_r15, s_rbp);
 }
 
-/*
- * __kd_mutex_unlock — unlock hook.
- *
- * NOTE: we intentionally do NOT clear entry->delegated here.  Once a mutex
- * has been routed through the kd_mutex protocol, all subsequent unlock calls
- * must also go through _kd_mutex_unlock to clear the kd_mutex.locked field.
- * Clearing delegated would cause the next unlock to call origin_mutex_unlock,
- * leaving kd_mutex.locked permanently set → deadlock for waiters.
- */
+/* A borrowed unlock is a request, not permission to unlock another task's
+ * Linux mutex. Queue owners also have bookkeeping beyond the native unlock. */
 void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 		       unsigned long ret_addr)
 {
 	struct kd_mutex *kd_mtx;
-	struct kd_mutex_shadow_entry *entry;
-	struct kd_hotlock_state *state;
 
 	(void)ret_rsp;
-	state = kd_hotlock_state_get((unsigned long)lock);
-
-	/* A task that entered before/during promotion still owns the Linux mutex.
-	 * Release that exact lock and keep shadow acquisitions gated until all
-	 * original owners and queued acquirers have drained. */
-	if (kd_origin_mutex_owned_by_current(lock)) {
-		origin_mutex_unlock(lock, ret_addr);
-		if (state)
-			atomic_add_unless(&state->mutex_origin_users, -1, 0);
+	if (kd_exec_native_unlock((unsigned long)lock, true))
 		return;
-	}
-
 	kd_mtx = find_kd_mutex_shadow(lock);
-	if (kd_mtx == NULL) {
-		origin_mutex_unlock(lock, ret_addr);
+	if (kd_mtx && READ_ONCE(kd_mtx->physical_owner) == current) {
+		_kd_mutex_unlock(kd_mtx);
+		kd_mutex_task_put(current);
 		return;
 	}
-
-	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
-	if (!READ_ONCE(entry->delegated)) {
-		origin_mutex_unlock(lock, ret_addr);
-		return;
-	}
-
-	_kd_mutex_unlock(kd_mtx);
+	kd_origin_mutex_unlock(lock, ret_addr);
 }
 
 static int kd_mutex_jit_advance_call(struct kd_exec_frame *frame,
@@ -301,122 +248,77 @@ static int kd_mutex_jit_advance_call(struct kd_exec_frame *frame,
 int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,
 				 struct kd_exec_frame *frame)
 {
-	struct kd_mutex_shadow_entry *entry;
-	struct kd_mutex *kd_mtx;
-	enum kd_exec_lock_kind kind;
 	int ret;
 
-	if (!lock || !regs || !frame || !kd_exec_frame_validate(frame))
+	if (!lock || !regs || !regs->sp || !frame ||
+	    !kd_exec_frame_validate(frame))
 		return -EINVAL;
 	if (kd_exec_frame_lock_contains(frame, (unsigned long)lock))
 		return -EDEADLK;
 	if (kd_exec_frame_lock_depth(frame) >= KD_EXEC_MAX_LOCK_DEPTH)
 		return -E2BIG;
-
-	kd_mtx = find_kd_mutex_shadow(lock);
-	if (!kd_mtx)
-		return -ENOENT;
-	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
-	if (!READ_ONCE(entry->delegated))
+	if (!READ_ONCE(*(unsigned long *)regs->sp))
 		return -EINVAL;
-
-	if (kd_mutex_jit_advance_call(frame, regs))
-		return -EINVAL;
-	if (kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_LOCK, regs))
-		return -EINVAL;
-
-	ret = kd_mutex_nested_lock(kd_mtx, regs, frame);
-	if (ret < 0)
+	ret = kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_LOCK, regs);
+	if (ret)
 		return ret;
-	if (ret == KD_MUTEX_NESTED_DELEGATED) {
-		kd_exec_frame_save_continuation(frame, regs);
-		return 1;
-	}
 
-	kind = ret == KD_MUTEX_NESTED_ACQUIRED_QUEUE ?
-		       KD_EXEC_LOCK_QUEUE_OWNER :
-		       KD_EXEC_LOCK_FAST;
-	if (kd_exec_frame_lock_push(frame, (unsigned long)lock, kind, kd_mtx)) {
-		if (kd_mutex_nested_unlock(kd_mtx))
-			return -EIO;
-		return -E2BIG;
+	ret = kd_mutex_nested_lock(lock);
+	if (ret)
+		return ret;
+	ret = kd_exec_frame_lock_push(frame, (unsigned long)lock,
+				      KD_EXEC_LOCK_NATIVE, lock);
+	if (ret) {
+		BUG_ON(kd_mutex_nested_unlock(lock));
+		return ret;
 	}
-	return 1;
+	/* The CALL is consumed only after the physical lock and its record exist. */
+	ret = kd_mutex_jit_advance_call(frame, regs);
+	return ret ? ret : 1;
 }
 
 int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
 				   struct kd_exec_frame *frame)
 {
-	struct kd_mutex_shadow_entry *entry;
-	struct kd_mutex *kd_mtx;
-	enum kd_exec_lock_kind kind;
-	void *lock_node;
 	int ret;
 
 	if (!lock || !frame || !kd_exec_frame_validate(frame))
 		return -EINVAL;
-	kind = kd_exec_frame_lock_kind(frame, (unsigned long)lock);
-	if (kind != KD_EXEC_LOCK_FAST && kind != KD_EXEC_LOCK_QUEUE_OWNER)
+	if (kd_exec_frame_lock_kind(frame, (unsigned long)lock) !=
+	    KD_EXEC_LOCK_NATIVE ||
+	    kd_exec_frame_lock_node(frame, (unsigned long)lock) != lock)
 		return -ENOENT;
-
-	kd_mtx = find_kd_mutex_shadow(lock);
-	if (!kd_mtx)
-		return -ENOENT;
-
-	entry = container_of(kd_mtx, struct kd_mutex_shadow_entry, kd_mtx);
-	if (!READ_ONCE(entry->delegated))
-		return -EINVAL;
-	lock_node = kd_exec_frame_lock_node(frame, (unsigned long)lock);
-	if (lock_node != kd_mtx)
-		return -EINVAL;
-	if (kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_UNLOCK,
-				       NULL))
-		return -EINVAL;
-
-	ret = kd_mutex_nested_unlock(kd_mtx);
+	ret = kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_UNLOCK, NULL);
 	if (ret)
 		return ret;
-	return kd_exec_frame_lock_pop(frame, (unsigned long)lock);
+	ret = kd_mutex_nested_unlock(lock);
+	return ret ? ret : kd_exec_frame_lock_pop(frame, (unsigned long)lock);
 }
 
 int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
 {
-	unsigned int cleaned = 0;
-
 	if (!frame || !kd_exec_frame_validate(frame) ||
 	    frame->outer_lock_index >= frame->jit_lock_depth)
 		return -EINVAL;
 
 	while (frame->jit_lock_depth > frame->outer_lock_index + 1) {
-		unsigned int index = frame->jit_lock_depth - 1;
-		unsigned long lock_addr = frame->jit_lock_addr[index];
-		enum kd_exec_lock_kind kind = frame->jit_lock_kind[index];
-		struct kd_mutex *kd_mtx = frame->jit_lock_node[index];
-		bool released = frame->jit_lock_released[index];
+		unsigned int i = frame->jit_lock_depth - 1;
+		struct mutex *lock = (struct mutex *)frame->jit_lock_addr[i];
 		int ret;
 
-		if (kind != KD_EXEC_LOCK_FAST &&
-		    kind != KD_EXEC_LOCK_QUEUE_OWNER)
+		if (frame->jit_lock_kind[i] != KD_EXEC_LOCK_NATIVE ||
+		    frame->jit_lock_node[i] != lock)
 			return -EINVAL;
-		if (!kd_mtx || kd_mtx->origin_mutex_addr != lock_addr)
-			return -EINVAL;
-		if (!released) {
-			ret = kd_mutex_nested_unlock(kd_mtx);
+		if (!frame->jit_lock_released[i]) {
+			ret = kd_mutex_nested_unlock(lock);
 			if (ret)
 				return ret;
 			kd_mutex_note_nested_abort_release();
 		}
-		ret = kd_exec_frame_lock_pop(frame, lock_addr);
+		ret = kd_exec_frame_lock_pop(frame, (unsigned long)lock);
 		if (ret)
 			return ret;
-		KD_PR_INFO(
-			"mutex JIT abort release: lock=%lx kind=%d was_released=%d\n",
-			lock_addr, kind, released);
-		cleaned++;
 	}
-	if (cleaned)
-		KD_PR_INFO("mutex JIT abort cleanup: outer=%lx released=%u\n",
-			   frame->outer_lock_addr, cleaned);
 	return 0;
 }
 
@@ -503,6 +405,8 @@ static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
 					  active_frame);
 		if (ret < 0)
 			return ret;
+		if (ret == KD_SPIN_NESTED_NATIVE)
+			return KD_EXE_KNOWN_NATIVE;
 
 		kd_spin_debug_nested_lock(lock, false);
 		if (ret == KD_SPIN_NESTED_DELEGATED ||
@@ -742,15 +646,17 @@ static __always_inline bool kd_mutex_unlock_fast(struct mutex *lock)
 	return atomic_long_try_cmpxchg_release(&lock->owner, &curr, 0UL);
 }
 
-static void origin_mutex_lock(struct mutex *lock)
+void kd_origin_mutex_lock(struct mutex *lock)
 {
 	might_sleep();
+	BUG_ON(kd_origin_mutex_owned(lock, current));
 	if (!kd_mutex_trylock_fast(lock))
 		__mutex_lock_slowpath(lock);
 }
 
-static void origin_mutex_unlock(struct mutex *lock, unsigned long ret_addr)
+void kd_origin_mutex_unlock(struct mutex *lock, unsigned long ret_addr)
 {
+	BUG_ON(!kd_origin_mutex_owned(lock, current));
 #ifndef CONFIG_DEBUG_LOCK_ALLOC
 	if (kd_mutex_unlock_fast(lock))
 		return;

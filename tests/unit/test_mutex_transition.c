@@ -1,112 +1,82 @@
-/*
- * test_mutex_transition.c — verify original-to-shadow mutex promotion rules.
- *
- * The real hook uses struct mutex::owner to route unlock and keeps an
- * origin-user count so the independent shadow mutex cannot overlap an
- * original owner or waiter while a hot lock is being promoted.
- */
+/* Model tests for the native-owner/serial-executor contract.
+ * Kernel integration tests exercise the actual queue, atomics and hook ABI. */
 #include "mock_kernel.h"
 #include "test_harness.h"
 
-#define KD_UADDR_CHECKING 0
-#define KD_UADDR_DELEGATE 1
-
-struct transition_state {
-	int state;
-	atomic_t origin_users;
+struct protocol {
+	int owner;
+	int executor;
+	int effects;
+	bool promoted;
+	bool inflight[4];
 };
 
-static void begin_origin_candidate(struct transition_state *state)
+static bool native_trylock(struct protocol *p, int task)
 {
-	state->origin_users.counter++;
+	if (p->owner)
+		return false;
+	p->owner = task;
+	return true;
 }
 
-static bool recheck_and_use_origin(struct transition_state *state)
+static bool hook_matches(struct protocol *p, int task, bool target_name)
 {
-	if (state->state != KD_UADDR_DELEGATE)
-		return true;
-	state->origin_users.counter--;
-	return false;
+	return target_name || p->inflight[task];
 }
 
-static bool shadow_can_enter(struct transition_state *state)
+TEST(promotion_does_not_bypass_native_owner)
 {
-	return state->state == KD_UADDR_DELEGATE &&
-	       atomic_read(&state->origin_users) == 0;
+	struct protocol p = { .owner = 1 };
+	p.promoted = true;
+	ASSERT_EQ(native_trylock(&p, 2), false);
+	p.owner = 0;
+	ASSERT_EQ(native_trylock(&p, 2), true);
 }
 
-static void finish_origin_unlock(struct transition_state *state)
+TEST(borrowed_native_execution_keeps_external_tasks_out)
 {
-	if (state->origin_users.counter > 0)
-		state->origin_users.counter--;
+	struct protocol p = { .owner = 1, .executor = 1, .effects = 1 };
+	p.inflight[1] = p.inflight[2] = true;
+	p.executor = 2;
+	ASSERT_EQ(p.owner, 1);
+	ASSERT_EQ(native_trylock(&p, 3), false);
+	ASSERT_EQ(native_trylock(&p, 1), false);
+	p.effects++;
+	p.executor = 1;
+	p.inflight[2] = false;
+	ASSERT_EQ(p.effects, 2);
+	ASSERT_EQ(p.owner, 1);
+	p.owner = 0;
+	ASSERT_EQ(native_trylock(&p, 3), true);
 }
 
-TEST(origin_holder_blocks_shadow_after_promotion)
+TEST(renaming_cannot_drop_active_unlock_routing)
 {
-	struct transition_state state = {
-		.state = KD_UADDR_CHECKING,
-		.origin_users = { .counter = 0 },
-	};
-
-	begin_origin_candidate(&state);
-	ASSERT(recheck_and_use_origin(&state));
-	state.state = KD_UADDR_DELEGATE;
-	ASSERT_EQ(shadow_can_enter(&state), false);
-
-	finish_origin_unlock(&state);
-	ASSERT_EQ(shadow_can_enter(&state), true);
+	struct protocol p = { 0 };
+	ASSERT_EQ(hook_matches(&p, 2, false), false);
+	p.inflight[2] = true;
+	ASSERT_EQ(hook_matches(&p, 2, false), true);
+	p.inflight[2] = false;
+	ASSERT_EQ(hook_matches(&p, 2, false), false);
 }
 
-TEST(origin_waiters_all_drain_before_shadow)
+TEST(queue_handoff_does_not_transfer_native_ownership)
 {
-	struct transition_state state = {
-		.state = KD_UADDR_CHECKING,
-		.origin_users = { .counter = 0 },
-	};
-
-	begin_origin_candidate(&state);
-	begin_origin_candidate(&state);
-	ASSERT(recheck_and_use_origin(&state));
-	ASSERT(recheck_and_use_origin(&state));
-	state.state = KD_UADDR_DELEGATE;
-
-	finish_origin_unlock(&state);
-	ASSERT_EQ(shadow_can_enter(&state), false);
-	finish_origin_unlock(&state);
-	ASSERT_EQ(shadow_can_enter(&state), true);
-}
-
-TEST(promotion_during_recheck_withdraws_origin_candidate)
-{
-	struct transition_state state = {
-		.state = KD_UADDR_CHECKING,
-		.origin_users = { .counter = 0 },
-	};
-
-	begin_origin_candidate(&state);
-	state.state = KD_UADDR_DELEGATE;
-	ASSERT_EQ(recheck_and_use_origin(&state), false);
-	ASSERT_EQ(atomic_read(&state.origin_users), 0);
-	ASSERT_EQ(shadow_can_enter(&state), true);
-}
-
-TEST(untracked_pre_module_unlock_does_not_underflow)
-{
-	struct transition_state state = {
-		.state = KD_UADDR_DELEGATE,
-		.origin_users = { .counter = 0 },
-	};
-
-	finish_origin_unlock(&state);
-	ASSERT_EQ(atomic_read(&state.origin_users), 0);
+	struct protocol p = { .owner = 1 };
+	ASSERT_EQ(native_trylock(&p, 2), false);
+	p.owner = 0;
+	ASSERT_EQ(native_trylock(&p, 3), true);
+	ASSERT_EQ(native_trylock(&p, 2), false);
+	p.owner = 0;
+	ASSERT_EQ(native_trylock(&p, 2), true);
 }
 
 int main(void)
 {
 	printf("=== test_mutex_transition ===\n");
-	RUN_TEST(origin_holder_blocks_shadow_after_promotion);
-	RUN_TEST(origin_waiters_all_drain_before_shadow);
-	RUN_TEST(promotion_during_recheck_withdraws_origin_candidate);
-	RUN_TEST(untracked_pre_module_unlock_does_not_underflow);
+	RUN_TEST(promotion_does_not_bypass_native_owner);
+	RUN_TEST(borrowed_native_execution_keeps_external_tasks_out);
+	RUN_TEST(renaming_cannot_drop_active_unlock_routing);
+	RUN_TEST(queue_handoff_does_not_transfer_native_ownership);
 	REPORT();
 }

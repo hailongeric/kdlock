@@ -37,6 +37,7 @@
 
 #include "utils.h"
 #include "kd_lock.h"
+#include "kd_mutex.h"
 #include "kd_spinlock.h"
 #include "kd_hostcall.h"
 
@@ -331,6 +332,15 @@ static int handle_known_call(struct pt_regs *regs,
 	struct kd_exec_frame *frame = kd_exec_current_frame();
 	int ret;
 
+	/* Backend-specific lock stacks cannot represent mixed spin/mutex nesting.
+	 * In particular, never enter a sleeping mutex service from a spin frame. */
+	if (frame &&
+	    ((frame->mutex_backend &&
+	      (regs->ip == raw_spin_lock_addr || regs->ip == raw_spin_unlock_addr)) ||
+	     (!frame->mutex_backend && mutex_lock_addr && mutex_unlock_addr &&
+	      (regs->ip == mutex_lock_addr || regs->ip == mutex_unlock_addr))))
+		return -EOPNOTSUPP;
+
 	if (regs->ip == raw_spin_lock_addr) {
 		ret = kd_spin_jit_nested_lock_ctx((raw_spinlock_t *)regs->di,
 						  regs, frame);
@@ -368,7 +378,9 @@ static int handle_known_call(struct pt_regs *regs,
 		if (regs->di == outer_lock_addr)
 			return KD_EXE_KNOWN_OUTER_UNLOCK;
 		ret = kd_mutex_jit_nested_unlock_ctx((struct mutex *)regs->di,
-						     frame);
+						    frame);
+		if (!ret)
+			kd_mutex_note_nested_jit();
 	} else {
 		return kd_mutex_jit_nested_lock_ctx((struct mutex *)regs->di,
 						    regs, frame);
@@ -593,6 +605,7 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 				break;
 			}
 		} else {
+			frame->executed = true;
 			translated(regs, args);
 			if (resume_after_hostcall)
 				atomic64_inc(&kd_hostcall_resumed);
@@ -655,6 +668,10 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 					ret_flag = KD_EXE_RUN_TO_UNLOCK;
 					break;
 				}
+				if (call_ret == KD_EXE_KNOWN_NATIVE) {
+					ret_flag = KD_EXE_RUN_NATIVE;
+					break;
+				}
 				if (call_ret > 0) {
 					continuation_count++;
 					continue;
@@ -681,6 +698,10 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 						handle_known_call(
 							regs, outer_lock_addr) :
 						0;
+				if (call_ret == KD_EXE_KNOWN_NATIVE) {
+					ret_flag = KD_EXE_RUN_NATIVE;
+					break;
+				}
 				if (call_ret == KD_EXE_KNOWN_OUTER_UNLOCK) {
 					ret_flag = KD_EXE_RUN_TO_UNLOCK;
 					break;
@@ -702,7 +723,9 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 				if (!is_end_point(exe->tgt_addr))
 					smp_store_release(&exe->status_code,
 							  KD_EXE_CALL_MISS);
-				ret_flag = KD_EXE_RUN_ERROR;
+				/* Synthetic faults have no CALL frame and are not resumable. */
+				ret_flag = fault_kind ? KD_EXE_RUN_ERROR :
+							KD_EXE_RUN_NATIVE;
 			}
 		} else if (args[0] == KD_EXE_ERROR_INST) {
 			KD_PR_INFO(

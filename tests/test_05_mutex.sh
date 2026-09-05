@@ -1,9 +1,5 @@
 #!/bin/bash
-# test_05_mutex.sh — verify mutex delegation protocol for modes 3, 4, 5.
-# By default kdlock_km loads with mutex_jit=0, so this validates queueing,
-# combiner handoff, fallback, and count management without executing the
-# experimental mutex JIT sandbox. Key checks: no double fault, no soft lockup,
-# count doesn't leak across runs.
+# test_05_mutex.sh - mutex_jit=0 must use Linux mutexes even after promotion.
 TEST_NAME="test_05_mutex"
 source "$(dirname "$0")/common.sh"
 
@@ -22,7 +18,7 @@ run_mutex_mode() {
 
     # kd_hotlock_record() intentionally ignores the first 1e9 TSC cycles after
     # the first observed lock. Prime that timer, then wait before the real
-    # workload; otherwise a short test can pass without entering kd_mutex.
+    # workload; the workload must cross promotion while staying on the native path.
     run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 "$mode" >/dev/null 2>&1 || {
         fail "$TEST_NAME" "mode $mode warmup failed"
         stop_daemon; unload_modules; return 1
@@ -32,7 +28,7 @@ run_mutex_mode() {
     for i in $(seq 1 "$runs"); do
         info "  run $i/$runs..."
         # 4 * 5000 acquisitions exceed the 10000-hit promotion threshold and
-        # leave enough operations to exercise the kd_mutex slowpath/handoff.
+        # leave enough operations to verify native execution after promotion.
         run_with_timeout "$TIMEOUT_SEC" "$BENCH_BIN" 4 5000 10 1 "$mode" >/dev/null 2>&1
         local rc=$?
         if [ $rc -ne 0 ]; then
@@ -46,9 +42,6 @@ run_mutex_mode() {
 
     check_dmesg_has "begin delegate" \
         "mode $mode never promoted its mutex to kdlock" || { unload_modules; return 1; }
-    check_dmesg_has "exe added" \
-        "mode $mode did not enter the kd_mutex execution path" || { unload_modules; return 1; }
-
     # Critical: no double fault or lockup
     check_dmesg_not_has "double fault" "double fault detected in mode $mode" || { unload_modules; return 1; }
     check_dmesg_not_has "soft lockup" "soft lockup detected in mode $mode" || { unload_modules; return 1; }
@@ -59,13 +52,10 @@ run_mutex_mode() {
 
     check_complex_cs_integrity "$expected_operations" 1 || return 1
 
-    check_dmesg_has "kd_mutex stats: slowpath=[1-9][0-9]*" \
-        "mode $mode never entered the kd_mutex slowpath" || return 1
-    check_dmesg_has "combiner=[1-9][0-9]*" \
-        "mode $mode never elected a mutex combiner" || return 1
-    check_dmesg_has "handoff=[1-9][0-9]*" \
-        "mode $mode never handed a mutex to a waiter" || return 1
-    info "  mode $mode: promotion, slowpath, combiner, and handoff verified"
+    check_dmesg_stat_equals slowpath 0 || return 1
+    check_dmesg_stat_equals jit_success 0 || return 1
+    check_mutex_origin_accounting || return 1
+    info "  mode $mode: promoted locks still use native mutexes with JIT disabled"
     return 0
 }
 

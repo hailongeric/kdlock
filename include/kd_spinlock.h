@@ -37,6 +37,7 @@ struct kd_spin_node {
 	struct kd_exec_frame *exec_frame;
 	bool jit_waiter;
 	bool jit_retry;
+	bool native_resume;
 	struct kd_spin_jit_context *jit_context;
 };
 
@@ -63,6 +64,7 @@ void kd_spin_unlock(struct qspinlock *lock);
 #define KD_SPIN_NESTED_DELEGATED 1
 #define KD_SPIN_NESTED_PARENT_OOO 2
 #define KD_SPIN_NESTED_ACQUIRED_QUEUE 3
+#define KD_SPIN_NESTED_NATIVE 4
 int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 			const struct kd_exec_frame *parent);
 #define KD_SPIN_NESTED_UNLOCK_OK 0

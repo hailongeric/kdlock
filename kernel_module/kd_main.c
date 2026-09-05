@@ -46,6 +46,12 @@ static int __is_kd_test(void)
 	return target_process && !strcmp(current->comm, target_process) ? 2 : 0;
 }
 
+/* A renamed task must still finish its queued or borrowed mutex acquisition. */
+static int __is_kd_mutex_task(void)
+{
+	return __is_kd_test() == 2 || kd_mutex_task_reroute(current) ? 2 : 0;
+}
+
 static int __init kdlock_km_init(void)
 {
 	int ret;
@@ -74,7 +80,7 @@ static int __init kdlock_km_init(void)
 	is_kd_test = __is_kd_test;
 	kd_raw_spin_unlock = __kd_raw_spin_unlock;
 	kd_raw_spin_lock = __kd_raw_spin_lock;
-	is_kd = __is_kd_test;
+	is_kd = __is_kd_mutex_task;
 	kd_mutex_lock = __kd_mutex_lock;
 	kd_mutex_unlock = __kd_mutex_unlock;
 
@@ -105,6 +111,7 @@ static void __exit kdlock_km_exit(void)
 
 	synchronize_rcu();
 	kd_mutex_exit();
+	kd_mutex_tasks_exit();
 	kd_spinlock_exit();
 	kd_exec_context_exit();
 	kd_sys_exit();

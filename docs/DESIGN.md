@@ -1,8 +1,10 @@
 # kdlock Design Document
 
-Documentation/source audit: 2026-09-05, against `ed00edb` and the guest's patched
-Linux 6.1.159 lock hooks. This describes a tested research prototype, not a
-general correctness or performance guarantee. Implementation priorities and
+Documentation/source audit: 2026-09-05, including CALL continuation and the
+native-owner mutex protocol on base `c08368d`. The existing guest Linux 6.1.159
+hooks/exports are reused without further kernel source changes. This describes
+a tested research prototype, not a general correctness or performance guarantee.
+Implementation priorities and
 acceptance criteria are in [TODO.md](TODO.md).
 
 ## 1. Motivation & Background
@@ -111,19 +113,21 @@ extern void (*kd_mutex_unlock)(struct mutex *lock,
 
 ### 3.2 Target Process Matching
 
-The module parameter `target_process` specifies which process name should be
-intercepted. The patched spin path calls `is_kd_test()` and the mutex path calls
-`is_kd()`; both point to `__is_kd_test()`, which compares
-`current->comm` with this single exact name. Only matching processes enter the
-delegation path; all others use the original kernel lock implementation.
+`target_process` selects one exact task `comm` eligible for delegation. The
+patched spin path still uses `is_kd_test()`. The mutex path's existing `is_kd()`
+callback now points to a module predicate that matches the target name **or**
+an active mutex task record. RCU lookups in that predicate neither allocate nor
+sleep. A queued waiter, physical owner, or borrowed native continuation remains
+routed through kdlock if its name changes before unlock.
 
-This is a workload selector, not a per-lock compatibility protocol. In
-particular, a promoted shadow mutex and its original Linux mutex are distinct
-locks. `mutex_origin_users` drains only acquisitions registered through the
-hook; it cannot exclude an unhooked task entering the original mutex after
-promotion. Mixed users can therefore violate mutual exclusion, even with
-`mutex_jit=0`. Tests use controlled lock participants. Process renaming and
-other lock API variants also require a routing audit before wider use.
+Eligibility no longer selects a separate mutex exclusion protocol. All mutex
+participants acquire the original Linux mutex, directly or through its actual
+combiner owner; a shadow entry only schedules delegation. Unhooked callers and
+native trylock/interruptible/killable acquisitions therefore contend on the
+same physical lock. Native continuation does not transfer `mutex.owner`.
+Mixed-participant tests cover this bounded non-RT mutex subset; native
+qspinlock interoperability, other APIs, and lock-address lifetime remain
+separate correctness questions.
 
 ### 3.3 Hot-Lock Promotion
 
@@ -211,6 +215,15 @@ static int execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node)
     ret = kd_exe_on_call_hl_entry(&frame->regs, frame->entry_ip,
                                   frame->outer_lock_addr);
 
+    if (ret == KD_EXE_RUN_NATIVE) {
+        kd_exec_native_begin(frame, false);
+        publish_native_regs_and_wake_waiter(curr_node, frame);
+        kd_exec_native_wait(frame); /* retain physical locks */
+        complete_and_pop_frame(frame);
+        return KD_EXE_NATIVE_DONE; /* curr_node may already be reused */
+    }
+    if (ret != KD_EXE_RUN_TO_UNLOCK && frame->executed)
+        BUG(); /* no precise continuation; never replay partial effects */
     if (ret == KD_EXE_RUN_TO_UNLOCK)
         complete_frame_once(frame);
     else {
@@ -231,7 +244,8 @@ already carry a complete `pt_regs` snapshot and inherit the parent's GS base,
 logical task, and explicit `kd_exec_frame`; they do not reconstruct guest state
 from the combiner's `current`. The virtual waiter's `jit_context` is still
 stack-owned, so the suspended combiner stack must remain alive until completion.
-Restoring `retry_regs` above does not restore memory written by the JIT (9.5).
+The remaining `retry_regs` path is only for rejection before translated code
+ran; it is not a recovery path after stores. See 9.5 for native continuation.
 
 The stack frame layout at `ret_rsp` (set by the compiler at the hook call site):
 
@@ -248,7 +262,9 @@ The stack frame layout at `ret_rsp` (set by the compiler at the hook call site):
 
 ### 4.4 Waiter Wake-up Paths
 
-After `execute_cs` returns, the waiter is woken via `clear_locked_set_completed`:
+Full JIT completion wakes the waiter via `clear_locked_set_completed`.
+Native continuation instead publishes exit registers and wakes it before the
+combiner waits for native unlock requests:
 
 | Return value | Meaning | Waiter action |
 |---|---|---|
@@ -256,7 +272,8 @@ After `execute_cs` returns, the waiter is woken via `clear_locked_set_completed`
 | `ret_val == 1` | Parent lock was released OOO | Restore the actual node's saved context |
 | `ret_val == 2` | Became queue owner/combiner | Normal return (runs own CS) |
 | `ret_val == 3` | CS was delegated | Restore with `jump_to_saved_regs()` |
-| `ret_val == 4` | JIT failed; waiter acquired natively | Resume CS with `jump_to_saved_regs_in_cs()` |
+| `ret_val == 4` | Pre-execution rejection; waiter acquired natively | Resume the unexecuted CS with `jump_to_saved_regs_in_cs()` |
+| `ret_val == 5` | Ordinary CALL miss after partial JIT execution | Resume the original callee with `jump_to_saved_regs_in_cs()`; combiner retains locks |
 
 ### 4.5 Out-of-Order (OOO) Unlock
 
@@ -282,116 +299,114 @@ before returning.
 
 ## 5. Mutex Delegation Protocol
 
-### 5.1 Shadow Table
+### 5.1 Physical Lock And Scheduling Gate
 
-Each `struct mutex *` from the kernel is mapped to a `struct kd_mutex *` via
-`kd_mutex_shadows[]` (1024-entry hash table with linear probing, protected by
-`kd_mutex_shadow_lock`).  The shadow lock has its own queue and state
-independent of the kernel mutex internals.
+`kd_mutex_shadows[]` maps original mutex addresses to 1024 bounded scheduler
+entries under `kd_mutex_shadow_lock`. An entry contains a queue, `locked` gate,
+and `physical_owner`. **Neither the gate nor a queue handoff grants the right
+to execute a critical section without owning the original Linux mutex.**
+Unlock lookup never creates entries; table exhaustion uses the original mutex.
+The old `delegated` transition and `mutex_origin_users` draining are removed.
+There is no interval in which promotion substitutes a different exclusion lock.
 
-The lock path uses a create-or-find lookup: once hot-lock promotion routes a
-mutex through kdlock, `__kd_mutex_lock()` allocates or reuses the corresponding
-shadow entry.  The unlock path is lookup-only: `__kd_mutex_unlock()` calls
-`find_kd_mutex_shadow()` and falls back to `origin_mutex_unlock()` when no entry
-exists.  This prevents ordinary unlocks for never-delegated mutexes from
-permanently consuming slots in the fixed-size shadow table.
+The module's `kd_origin_mutex_lock/unlock()` use the existing native owner
+fast paths and already-exported `__mutex_lock_slowpath` /
+`__mutex_unlock_slowpath`. Ownership is checked against `current`, masking the
+three native owner flag bits. kdlock does not invent an owner value, assign
+ownership to the waiter, or modify native wait lists or handoff flags. This
+implementation is tied to the tested non-RT 6.1.159 configuration without
+DEBUG_MUTEXES/DEBUG_LOCK_ALLOC; other configurations require separate review.
 
-### 5.2 Base Protocol
+### 5.2 Entry, Completion, And Task Routing
 
-```c
-void _kd_mutex_lock(struct kd_mutex *lock, ...)
-{
-    if (cmpxchg(&lock->locked, 0, 1) == 0)
-        return;
+1. Cold locks, `mutex_jit=0`, shadow/task-record allocation failure, and nested
+   acquisitions by an already-active task go directly to the original mutex.
+2. A promoted, eligible request registers its task before entering the scheduler.
+   Winning the gate calls `kd_mutex_claim_origin()`, which acquires the original
+   mutex and records `physical_owner=current`, before entering any CS.
+3. Queued waiters capture the hook stack and waiter GS/task. Their combiner
+   verifies real ownership, reconstructs `pt_regs`, checks exact entry readiness,
+   and executes the translated CS in a frame. Missing code or a busy per-CPU
+   frame context receives an unexecuted queue handoff. That next owner must
+   acquire the original mutex; it cannot inherit exclusion from the gate alone.
+4. Successful JIT execution reaches exact outer unlock and completes its frame.
+   The waiter snapshots published registers, releases its exact bitmap slot,
+   restores preemption/migration state, drops its task record, and resumes
+   after the logical unlock. The combiner can retain the original mutex across
+   several requests, then run its own CS before unlocking as its real owner.
+5. `_kd_mutex_unlock_checked()` releases the original mutex before opening the
+   scheduling gate. Native participants can acquire it between scheduler owners.
 
-    migrate_disable();
-    preempt_disable();
-    node = reserve_per_cpu_bitmap_slot();
-    if (!node)
-        wait_and_acquire_without_entering_the_queue(lock);
-    else {
-        capture_waiter_registers(node);
-        run_queue_on_node_private_shadow_stack(lock, node);
-        release_exact_bitmap_slot(node);
-    }
-    preempt_enable();
-    migrate_enable();
-}
-```
+Each CPU has four independently reserved 8KB waiter stacks. An exhausted task
+never publishes a queue node; it waits on its native stack for the gate and
+then acquires the original mutex. Migration stays disabled during queued waits,
+but preemption is temporarily enabled where scheduling or native locking is
+required. A scheduled combiner retains ownership of its per-CPU frame context;
+another task cannot overwrite it.
 
-The mutex combiner reconstructs `pt_regs` from the waiter's saved hook stack and
-calls `kd_exe_on_call_hl_entry()`. Because translated mutex execution remains
-experimental, `mutex_jit` defaults to 0. In this non-JIT mode `execute_cs()`
-returns `KD_EXE_NO_RUN`, and the combiner hands ownership to the waiter without
-marking its critical section complete.
+`kd_mutex_tasks.c` keeps RCU-readable task membership with a task reference and
+lock-protected acquisition refs. The existing mutex `is_kd` callback matches
+target comm or membership. This preserves unlock routing after a rename; it
+does not replace the original lock. `mutex_task_fail_once=1` tests pre-entry
+allocation failure. No allocations are needed in the predicate. Unload requires
+all callers stopped and records/queues drained; `rcu_barrier()` only completes
+deferred task-record frees, not general hook hot-unload protection.
 
-This avoids translated execution, but still uses the shadow queue and retains
-the mixed-participant restriction in 3.2.
+### 5.3 Nested A -> B And Native Continuation
 
-With `mutex_jit=1`, every translated waiter owns a `kd_exec_frame` containing
-its original mutex address, registers, and lock ownership. Only an exact outer
-`mutex_unlock` followed by valid frame completion can publish success. A
-post-unlock invariant failure is fail-stop: retrying natively at that point
-would duplicate already committed side effects.
+Nested B no longer creates a virtual mutex waiter or remote B combiner:
 
-Completion uses release/acquire ordering. The waiter snapshots the completed
-node's `pt_regs` while migration and preemption remain disabled, releases the
-exact slot, restores scheduler state, and jumps to the instruction after its
-translated `mutex_unlock`. Every one of the four per-CPU slots owns an
-independent 8KB shadow stack. Exhaustion stays outside the delegation queue and
-acquires the shadow mutex from the native task stack.
+1. At translated `mutex_lock(B)`, validate the frame, return address, depth and
+   non-recursion before touching B. Mixed spin/mutex control calls are rejected.
+2. The same A combiner enables preemption while remaining migration-pinned,
+   tries the original B, and waits via its native slowpath if contended.
+3. Once it physically owns B, record B as `KD_EXEC_LOCK_NATIVE`. **Only then**
+   consume the virtual CALL return address and resume A's artifact after the
+   lock call. B need not be promoted or have a separate artifact.
+4. Translated B instructions execute under real A/B ownership. Its known unlock
+   releases B on the same combiner, pops the frame entry, and increments
+   `nested_jit`; A continues in the same artifact until its outer unlock.
 
-The saved `mutex_lock` frame has the same six callee-saved register offsets as
-the raw-spin path; this layout is verified against the guest kernel
-disassembly. Waiter slots are bitmap-reserved rather than managed through the
-old shared `nodes[0].count`, so a scheduled task cannot release or overwrite a
-different live slot.
+An ordinary CALL miss instead preserves exit GPRs/RIP/virtual stack and resumes
+the original waiter natively. The combiner retains real A and any still-held B,
+stops processing other requests, and services that waiter's unlock messages.
+The waiter cannot directly unlock a mutex owned by the combiner. Native nested
+unlocks release B on the actual owner; outer unlock acknowledges logical
+completion while A stays held until the combiner finishes its own ownership
+interval. No native `owner` handoff or new kernel protocol is introduced.
 
-### 5.3 Nested A -> B Mutex Proxy
+The waiter's task record survives until the combiner processes final native
+completion, removes the frame from the native registry, and drops that record
+before acknowledging. New native acquisitions by the waiter are ordinary
+original mutex acquisitions. The combiner must not inspect a published waiter
+node after wakeup because it can already have been released and reused.
+Native continuation is counted by `kd_native`, not all-JIT completion counters;
+unhandled post-entry errors remain fail-stop, never entry replay.
 
-Mode 4 extends the base protocol instead of using the old trylock-only adapter:
+Borrowed execution does not make `mutex.owner == current` true on the waiter.
+Code that inspects ownership, recursively acquires a borrowed mutex, relies on
+lockdep ownership, or requires task/CPU-local lock side effects is outside this
+subset. It needs eligibility rejection or a separately evaluated service,
+not an assignment to native owner bits.
 
-1. When translated A reaches `mutex_lock(B)`, the known-call handler consumes
-   the call return address and records A's post-call continuation.
-2. An uncontended B is acquired directly and recorded in A's frame as `FAST`.
-3. If B is contended, kdlock reserves another mutex node and creates a virtual
-   waiter. Its stack-owned JIT context copies A's register state and lock stack,
-   then appends B as `QUEUE_OWNER`.
-4. The B queue treats this node like a native waiter. A B combiner creates a
-   child execution frame from the copied A/B state and runs the translated code
-   after `mutex_lock(B)` until the exact `mutex_unlock(B)` endpoint.
-5. B publishes the resulting registers and wakes the suspended A combiner. A
-   advances past that B unlock and continues the original translated section
-   toward `mutex_unlock(A)`; it does not acquire or execute B a second time.
-6. If the current task becomes B's queue owner instead of being remotely
-   completed, A records B locally and the translated `mutex_unlock(B)` releases
-   it normally. Abort cleanup releases locally retained nested mutexes in
-   reverse order before A falls back.
-
-The parent A frame remains in a per-CPU execution context while its task may
-schedule. The context records `current` as owner; another task scheduled on the
-same CPU cannot reuse it and receives normal queue handoff instead. The virtual
-waiter's inherited context lives on the migration-pinned combiner stack until B
-publishes completion, avoiding both lifetime ambiguity and a large per-CPU
-module allocation.
-
-Translation readiness is checked independently for A and B. Mode 4's recovery
-test first translates the two exact return addresses, then uses seven
-CPU-pinned roles to create holder -> direct -> nested -> trailing queues on both
-locks. Passing requires two JIT completions plus `nested_queued` and
-`nested_remote` evidence, exact counter accounting, and no protocol failures or
-resource leaks. Current measured results are recorded in `VALIDATION.md`.
+Modes 4/11 use seven pinned roles: A has a delegation queue and B a native
+holder plus competing callers. The holder waits for a failed native B trylock
+(`kd_mutex_debug_nested_waiters()>0`) before releasing B. One A artifact must
+execute, `nested_queued>0` proves actual native contention, and `nested_jit>0`
+proves resumed JIT reached B unlock. `nested_remote` is removed for mutex only.
+See `VALIDATION.md` for data, ownership and resource accounting.
 
 ### 5.4 Differences from Spinlock Path
 
 | Aspect | Spinlock | Mutex |
 |--------|----------|-------|
 | Queue structure | Per-CPU `kd_spin_node[4]` | Bitmap-reserved per-CPU `kd_mutex_node[4]` |
-| Lock state | `qspinlock.val` (atomic) | `kd_mutex.locked` (u8) |
-| Tail encoding | In `qspinlock.tail` field | In `kd_mutex.tail` pointer |
+| Exclusion | `qspinlock.val` (interoperability still needs audit) | Original Linux mutex and its actual owner |
+| Scheduler state | In `qspinlock.tail` | `kd_mutex.locked/tail`, never sufficient for exclusion |
 | Scheduling | Non-sleeping spin protocol | Waiters may schedule while migration-pinned |
-| Nested contention | Virtual spin waiter and combiner snapshot | Virtual mutex waiter and inherited frame context |
-| OOO unlock | Tested patterns via bounded `lock_addr[]` | LIFO nested unlock; reverse cleanup on abort |
+| Nested contention | Virtual spin waiter and combiner snapshot | Same combiner waits for native B |
+| OOO unlock | Tested normal patterns via bounded `lock_addr[]` | Only LIFO nested patterns validated |
+| JIT disabled | Per-lock spin readiness policy | All mutex calls use original native protocol |
 
 ## 6. JIT Execution Engine (exe.c)
 
@@ -450,9 +465,12 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 4. On a control-call exit, use `handle_known_call()` to acquire/release nested
    locks or recognize the matching outer unlock. Nested and OOO handling may
    continue execution rather than complete the frame.
-5. On a miss, unsupported exit, or exhausted budget, return failure. The lock
-   backend decides cleanup and waiter handoff; this function does not roll back
-   writes or undo services.
+5. On an ordinary CALL miss, retain the virtual CALL frame, record the target
+   for future translation, and return `KD_EXE_RUN_NATIVE`. A remote child's
+   native exit propagates through `KD_EXE_KNOWN_NATIVE` without re-entering JIT.
+6. Other unsupported exits return an error. Once `frame->executed` is set,
+   backends fail-stop rather than replaying the entry. No stores or services
+   are undone. IJ, budget, and arbitrary fault continuation remain deferred.
 
 ### 6.4 End-Point Detection
 
@@ -519,7 +537,8 @@ The miasm-based translator:
    - Special instructions: handled by `special_inst.py`.
 8. Handles indirect jumps (`indirect_jump.py`): builds jump tables, reports
    misses.
-9. Emits distinct control-call, hostcall, and ordinary call-miss stubs.
+9. Emits CALL/hostcall exit stubs with intact return frames; kernel handlers
+   distinguish lock-control targets from ordinary missing callees.
 10. Outputs `asm/jit.S` which is included by `wrapper.S`.
 
 ### 7.3 Incremental Recompilation
@@ -544,10 +563,11 @@ executor can still reference the overwritten block. A concurrent read of an
 entry's status/target fields is not a versioned coherent miss snapshot either.
 Thus release/acquire is not an immutable-artifact replacement protocol.
 
-A combiner does not wait for recompilation: a miss returns failure, the backend
-cleans up lock/frame state and hands ownership to the waiter for entry retry.
-Spin JIT is then disabled for that outer lock; mutex has no equivalent sticky
-per-lock disable. Neither path rolls back data writes (9.5).
+A combiner does not wait for recompilation. An ordinary CALL miss returns the
+original callee context to the waiter, then the combiner waits for its native
+unlock requests while retaining lock ownership (9.5). The missing entry is
+unavailable to subsequent JIT requests until the daemon republishes it. This
+does not require a sticky per-lock JIT disable or entry replay.
 
 An allowlisted hostcall never enters this recompilation sequence. It leaves the
 entry in `KD_EXE_NORMAL`, executes synchronously in the kernel, and resumes the
@@ -624,7 +644,8 @@ the EFLAGS preservation it requires remain explicit implementation gaps.
 
 The two wrapper inputs are exactly `{waiter kernel GS base, logical waiter
 task}`. A top-level spin or mutex waiter captures both when it queues; a nested
-waiter inherits both from its parent frame. Hostcall and known-call continuation
+spin waiter inherits both from its parent frame, while mutex B keeps A's frame.
+Hostcall and known-call continuation
 reinstall the same pair before re-entering the artifact. The legacy futex path
 samples `task_cpu(task)` to obtain a kernel GS base and passes that task as
 logical current; it has no in-tree frontend guaranteeing task lifetime or CPU
@@ -670,7 +691,7 @@ Function calls are assigned to four disjoint policies:
 | --- | --- | --- |
 | Control | lock/unlock functions | Preserve the virtual CALL frame and use nested-lock or end-point handling. |
 | Hostcall | allowlisted time API | Exit with the CALL frame, execute its typed handler, and resume. |
-| Translatable | discovered callee | Report a miss, unwind for native retry, record the target, and recompile. |
+| Translatable | discovered callee | Preserve the CALL frame, resume the native callee on the waiter, and record the target for future translation. |
 | Unsupported | unresolved or rejected target | Fail closed; never invoke an arbitrary address as a service. |
 
 ### 8.7 Native Hostcalls
@@ -778,9 +799,10 @@ lock-stack, and node limits.
 
 Each CPU has four MCS nodes. Native node exhaustion uses direct trylock spinning
 without incrementing the retained node count. Nested JIT node exhaustion
-returns `-E2BIG`; the enclosing frame aborts and the outer waiter retries
-natively. Frame or lock-stack exhaustion also aborts rather than executing with
-partial state.
+returns `-E2BIG`. Exhaustion before translated execution permits native entry
+handoff. After entry, unhandled node/frame/lock-stack exhaustion is fail-stop:
+there is not yet a precise control-call continuation protocol, and partial
+execution must not be replayed from the entry.
 
 The same lock may not appear twice in one execution frame. kdlock returns
 `-EDEADLK`; recursive spinlock semantics are intentionally not invented.
@@ -801,46 +823,66 @@ and receives normal queue ownership instead of partially executing translated
 code. This is an entry-readiness gate, not a proof that all subsequently reached
 calls, indirect targets, resources, and instructions can complete.
 
-CALL miss, IJ miss, instruction-limit, capacity, and injected failures all use
-lock/frame abort cleanup (not a memory transaction):
+Ordinary CALL misses now preserve forward progress for spin and mutex:
 
-1. Release unreleased nested locks in reverse order using their recorded
-   `NATIVE`, `FAST`, or `QUEUE_OWNER` semantics.
-2. Remove retained OOO shadow entries and restore A's combiner state.
-3. Mark the frame `ERROR` and pop it once.
-4. Keep the failed waiter uncompleted until it acquires A normally.
-5. Return through the dedicated ret4 trampoline and resume at A's original
-   critical-section entry. JIT stays disabled for that A lock until module
-   reload, and per-lock diagnostics expose the fallback.
+1. Preserve original callee RIP, current GPRs, virtual RSP and its CALL return
+   address. Do not replace them with the entry snapshot.
+2. Register the frame's logical task and owned lock suffix in a protected
+   native-continuation registry. Inherited A entries in a remote B frame still
+   belong to A's executor, not B's.
+3. Publish the exit registers and `native_resume`, then wake the queue node
+   without marking it completed. The backend must not use that node again:
+   the receiver snapshots it and can release/reuse its slot immediately.
+4. A physical waiter resumes native code at `regs->ip`. A virtual spin B waiter
+   instead propagates the same exit registers to its parent A, which performs
+   the same handoff. It does not pop another return address or re-enter JIT.
+   Mutex B stays on A's executor and uses no child waiter/frame (section 5.3).
+5. Each combiner keeps its physical lock and services native unlock requests
+   from the logical waiter. Child locks are released by the executor that
+   acquired them, preserving native preemption accounting and shadow-stack
+   state. Outer unlock acknowledges logical completion without prematurely
+   releasing the combiner's physical lock to another critical section.
+6. Only after outer completion does the combiner retire its frame and continue
+   its queue. `KD_EXE_NATIVE_DONE` prevents a second completion publication to
+   a possibly reused node. Request acknowledgments live on the native waiter's
+   stack, so frame retirement cannot invalidate a waiter polling an ack.
 
-**Correctness gap:** translated stores modify real shared memory and the waiter
-stack immediately. `retry_regs` restores registers only; no write set, undo log,
-or service-result journal exists. A write followed by a CALL/IJ miss or limit
-failure can therefore be applied again on native entry retry. A nested B section
-may already have completed and released B before A later fails. Reacquiring B
-does not undo that earlier externally visible effect. The mutex failure path
-has the same gap. Even retry-safe time services do not make earlier data writes
-retry-safe. General use requires pre-execution eligibility and a defined
-post-side-effect continuation/commit policy, not blind entry replay. This does
-not mean delegation requires transactional rollback: preserving completed
-effects and resuming the original code at a precise exit point is the preferred
-direction (9.6), but the current high-level paths do not implement it.
+This rendezvous matters even for one lock: releasing A and letting the
+combiner run its own A before the partial waiter finishes would expose a
+partial critical section. With B held, that ordering can also deadlock if the
+combiner needs B. The rendezvous avoids both without rolling back memory.
+
+The supported boundary is an ordinary CALL miss with an intact call frame,
+including after completed B or inside still-held/remote B. The outer unlock
+must not already have been consumed at the initial miss. Mutex waits may
+schedule; spin waits retain the existing CPU/context restrictions. Arbitrary
+OOO continuation, mixed lock types, IJ, budget, capacity/control-call failure,
+and fault continuation are not claimed. Flags preservation is explicitly
+deferred by user scope: these tests use CALL boundaries with no flags-return
+contract, not basic-block budget exits. This is not proof that flags are
+transparent elsewhere inside translated code.
+
+`frame->executed` distinguishes pre-execution rejection from a run that may
+have written data. A non-continuable error after entering JIT is fail-stop.
+The old synthetic CALL/IJ/limit injections lack a precise CALL state;
+`test_04_spinlock.sh` rejects those legacy injection options before loading.
+Use `test_10_native_resume.sh` to exercise actual generated CALL-miss stubs.
 
 Modes 1/6/7/8 cover normal nested, deep nested, OOO, and independent A/B queue
-behavior. Fault-enabled mode 9 variants exercise post-B and runtime JIT faults;
-mode 8's not-ready variant additionally checks cleanup while B is a queue owner.
+behavior. Mode 8's non-injected not-ready variant checks native entry handoff.
 Mode 10 reuses the independent A/B topology and adds translated GS/current
 validation for the nested remote waiter.
 
-The latest plain mode 9 run had no injection flags. Existing injected tests
-must not be presented as proof of rollback after arbitrary partial writes.
+Historical mode 9 injection results do not validate this new protocol. New
+native-resume tests use distinct per-request records, verify the exact native
+callee target and logical task, and keep the daemon stopped during execution.
 
 In mode 1, B's known lock/unlock calls are handled while the same translated A
 stream remains active. Consequently the outer A lock owns the JIT-completion
 counter, while B reports nested lock/unlock activity. Mode 8 is the separate
 test for an independently queued and remotely executed spin B waiter.
 
-### 9.6 BCD Comparison And Forward Continuation Target
+### 9.6 BCD Comparison And Continuation Scope
 
 Source inspection on 2026-09-05 used the local `~/BCD` checkout at
 `dbde52c57a961a5cdb87c0212f9b032947d2df13`. The active translation template is
@@ -877,7 +919,7 @@ wrapper does not write live arithmetic EFLAGS back into `pt_regs`. Its code is
 not evidence that arbitrary faults, arbitrary instructions, or the kdlock
 kernel lock protocol can resume correctly just by loading saved GPRs.
 
-The kdlock high-level paths differ in three material ways:
+Before this implementation (revision `c08368d`), kdlock differed in these ways:
 
 - Ordinary CALL-miss stubs in `disassem/indirect_jump.py` pop the virtual return
   address, and spin/mutex `execute_cs()` replace exit registers with
@@ -887,29 +929,32 @@ The kdlock high-level paths differ in three material ways:
   this cleanup would execute without B. If B already completed and unlocked,
   its effects should instead remain committed and A should resume after them.
 - Kernel control-call handling has its own progress state: for example,
-  `kd_mutex_jit_advance_call()` consumes the CALL before attempting a nested
+  `kd_mutex_jit_advance_call()` consumed the CALL before attempting a nested
   acquisition. A failed acquisition cannot safely resume at its post-CALL RIP
   as though B were acquired. Queue ownership, physical lock state, and the
   original waiter's scheduling/IRQ/preemption context also need a transfer
   protocol; a userspace syscall return does not supply one for kernel code.
 
-The target protocol, **not implemented yet**, is:
+The native-owner mutex implementation now consumes that nested lock CALL only
+after native B acquisition and frame recording. Capacity/control-call failures
+after JIT entry still fail-stop; moving the consume point does not establish
+general recovery for those exits.
+
+The implemented outcome split and remaining boundary are:
 
 | Outcome | Required action |
 | --- | --- |
 | Not started | Native entry handoff is allowed only when no semantic progress occurred. |
-| Supported exit after progress | Resume native original code at a precise continuation with its registers, flags, virtual stack, and logically held locks intact. Do not restore the entry snapshot or release locks needed by that continuation. |
+| Ordinary CALL miss after progress | Resume the original callee with current GPRs and virtual stack; retain physical locks through the native-unlock rendezvous. Flags are deferred. |
 | Completed outer unlock | Keep the existing successful post-unlock return contract. |
 | Unrecoverable state | Fail-stop or use a separately proven recovery protocol; never disguise it as an entry retry. |
 
-Implementation should start with a single-lock ordinary CALL miss, then test
-A continuing after a completed B, then transfer a still-held nested B and
-queued/remote child frames. Define original instruction boundaries and
-control-call phase metadata before extending to IJ, budget, or guard exits.
-Preserve live flags and pin the relevant code/stack lifetimes. Progress and
-lock metadata belong in execution frames; the two-word wrapper args ABI does
-not need a third element. Detailed acceptance work is tracked in C1 of
-`TODO.md`.
+Single-lock CALL miss, A after completed B, and still-held/remote B have been
+implemented in that order using the kernel-specific rendezvous in 9.5. The
+remaining work is precise original-state and control-call phase metadata for
+other exits, broader lifetime/context guarantees, and flags when that scope is
+reopened. Progress and lock metadata remain in execution frames; the wrapper
+args ABI still has exactly two words. See C1 in `TODO.md` and `VALIDATION.md`.
 
 ## 10. Legacy Low-Level Futex Exit
 
@@ -936,10 +981,11 @@ this retained entry is not a supported userspace TLS/futex delegation feature.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `target_process` | `"kd_test"` | One exact `current->comm` name routed through kdlock hooks |
-| `mutex_jit` | 0 | Opt in to translated mutex modes 3, 4, 5, and 11 |
-| `spin_jit_fail_after_nested_lock` | 0 | One-shot test failure after nested spin acquisition |
-| `jit_hl_fault_after_known_call` | 0 | One-shot test fault: 1=CALL miss, 2=IJ miss, 3=instruction limit |
+| `target_process` | `"kd_test"` | Exact eligible comm; active mutex task records retain routing after rename |
+| `mutex_jit` | 0 | 0 uses native mutex only; 1 opts into mutex delegation |
+| `mutex_task_fail_once` | 0 | Test-only one-shot pre-entry task-record allocation failure |
+| `spin_jit_fail_after_nested_lock` | 0 | Legacy synthetic nested failure; post-entry fail-stop |
+| `jit_hl_fault_after_known_call` | 0 | Legacy synthetic CALL/IJ/limit exit (1/2/3); post-entry fail-stop |
 
 ## 12. Supported Scope And Limits
 
@@ -966,9 +1012,10 @@ The implementation boundaries are:
    instructions can therefore be mistranslated or executed, not rejected.
 8. **Nested resources are bounded** — execution frames and lock stacks allow
    eight entries; each CPU has four spin nodes and four bitmap-reserved mutex
-   nodes. Exhaustion aborts JIT or uses the documented native fallback.
-9. **Spin JIT failure is sticky per lock** — after a translated frame fails,
-   that outer lock remains on native handoff until `kdlock_km` is reloaded.
+   nodes. Before execution, exhaustion uses native handoff; an unhandled
+   post-progress exhaustion is fail-stop.
+9. **Partial progress is not replayed** — ordinary CALL misses use native
+   continuation; other exits after entering JIT fail-stop until supported.
 10. **Hostcalls are an explicit allowlist** — only fixed-signature, atomic-safe,
     task-context-independent, retry-safe services are currently accepted.
     General variadic `printk` and side-effecting services are unsupported.
@@ -985,14 +1032,17 @@ The implementation boundaries are:
 14. **Flags can be clobbered inside JIT** — dispatcher comparisons and inserted
     branch-block `INC`/`TEST` are not transparent to live flags. No liveness
     verifier enforces the restriction, even without a wrapper exit.
-15. **Failure cleanup is not rollback** — see 9.5; memory, completed child
-    sections, and service effects are not restored by an entry-register snapshot.
+15. **Continuation is not rollback** — see 9.5; completed stores and child
+    sections are retained. Register entry retry is limited to not-started work.
 16. **Publication and lifetime are incomplete** — code is overwritten in place;
     no generation/refcount retirement handles concurrent execution, module-text
     unload/reload, or reused lock addresses. Hook removal uses
     `synchronize_rcu()`, but guest hook callers do not implement a matching
     reader/drain protocol. Stop all callers and drain queues before unloading.
-17. **Scope is narrower than all kernel lock APIs** — the verified hooks are
-    plain raw spin lock/unlock and mutex lock/unlock. Trylock, irqsave/bh,
-    interruptible/killable mutex, mixed spin/mutex nesting, and interactions with
-    non-target tasks are not covered by the current acceptance suite.
+17. **Scope is narrower than all kernel lock APIs** — delegation supports plain
+    raw spin lock/unlock and non-RT mutex lock/unlock. Native mutex participants
+    include non-target tasks and successful trylock/interruptible/killable calls;
+    those alternate acquisitions are not themselves delegated. Signal-aborted
+    waits, WW/PI/RT mutexes, irqsave/bh and lock-address reuse need separate work.
+    Known mixed spin/mutex control calls are rejected before their service;
+    if reached after JIT entry this is fail-stop, not general preflight safety.

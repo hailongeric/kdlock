@@ -57,13 +57,16 @@ daemon/daemon  -> disassem/*.py -> 汇编/链接 -> jit.bin 回写内核
 `klock_module.ko` 只是测试负载模块，创建 `/dev/lock_dev`。daemon 轮询
 `/dev/kd_dev`，调用 miasm 翻译器并把生成的 JIT 二进制写回 `kdlock_km.ko`。
 
-本项目仍是受限研究原型。`target_process` 只按 task comm 筛选，不能保证同一把
-真实内核锁的所有使用者都走相同协议；`mutex_jit=0` 也仍使用独立 shadow mutex。
-不要将测试锁上的通过结论推广到生产内核锁。JIT 失败只清理锁/frame 和恢复入口寄存器，
-不会撤销内存写入；一般指令、flags、代码版本生命周期和 per-CPU 并发语义的缺口见
-`docs/TODO.md`，不能称为通用的安全 sandbox 或事务恢复。
-恢复的目标是保留已完成效果并从精确退出点继续 native 执行，不是要求内存回滚。
-BCD 对比和仍需实现的调用栈/锁所有权协议见 `docs/DESIGN.md` 9.6。
+本项目仍是受限研究原型。mutex 现在始终使用原生 Linux mutex 保证互斥，
+shadow 只调度代理；`mutex_jit=0` 直接原生执行。现有 `is_kd` hook 匹配目标
+comm 或模块的在途 task 记录，保持改名后的 unlock 路由，未新增 guest 内核修改。
+native qspinlock 互操作仍需独立审计；不要将测试锁上的结论推广到生产内核锁。
+普通 CALL miss 已保留退出寄存器和
+虚拟调用栈，并由原 waiter 续跑 native 代码；combiner 保留物理锁并处理其 unlock
+请求，不重放已完成写入或 B 临界区。其他 post-entry 错误暂时 fail-stop，不再从
+入口重试。flags 按用户要求暂不处理；一般指令、代码版本生命周期和 per-CPU 并发
+语义仍见 `docs/TODO.md`。BCD 对比和交接协议见 `docs/DESIGN.md` 9.5/9.6，不能称为
+通用的安全 sandbox 或事务回滚。
 
 Benchmark 参数为：
 
@@ -73,9 +76,9 @@ Benchmark 参数为：
 
 模式 `0/1/2` 分别是 spinlock contention、nested，以及 JIT 临界区通过白名单
 hostcall 执行原生 API 后恢复；模式 `3/4/5` 是对应的 mutex 测试；模式 `6/7/8/9`
-分别验证 spinlock 深层嵌套、OOO unlock、独立 A/B 竞争和 nested-JIT abort
-recovery；模式 `10/11` 分别验证 nested spin/mutex 代理时翻译后的
-waiter kernel GS、per-CPU 读写/RMW 和 logical `current`。
+分别验证 spinlock 深层嵌套、OOO unlock、独立 A/B 竞争和旧 nested-JIT recovery
+拓扑的正常执行（旧人工失败注入已禁用）；模式 `10/11` 分别验证 nested spin/mutex
+代理时翻译后的 waiter kernel GS、per-CPU 读写/RMW 和 logical `current`。
 
 ## 3. 强制安全规则
 
@@ -216,14 +219,16 @@ mode 7 的 OOO 路径会让外锁记录的最大 frame depth 为 2；应联合�
 mode 2/5 还要求 `ktime_get` 生成 hostcall stub、服务地址不进入
 `callee_table.txt`、运行期不重编译，并且 `exits == executed == resumed > 0`；mode 5
 还要求这些值等于 mutex `jit_success` 和 `jit_resume`。mode 1 的 B 在同一个 A 翻译
-流中通过 known-call 执行；mode 4 则必须让 A/B 两个独立入口都进入 JIT。完整判定
+流中通过 known-call 执行；mode 4 也由同一 A artifact 继续执行 B，但 B 由
+A combiner 获取原生 mutex，不再有远端 mutex B 代理。完整判定
 和最近一次结果见 `docs/VALIDATION.md`。mode 10/11 还必须证明相关 artifact
 加载 `Stack_RGS` 和 `Stack_RCT`、不保留硬件 segment 操作数，且运行时
 `attempts == successes > 0` 、`failures == 0`。
 
 注意：`install JIT chunk: ... status=0` 在 payload 拷贝前打印，只是回写请求记录。
 需要结合 daemon 写入结果和运行期 JIT 成功证据，不能只凭日志认定完整发布。
-mode 1/10 的测试不要求每个生成产物都执行；mode 4/11 才对 A/B 两个入口逐一检查。
+mode 1/10 的测试不要求每个生成产物都执行；mode 4/11 要求 A 入口执行，
+以及 `nested_queued>0` 和 `nested_jit>0` 证明原生 B 竞争后回到 JIT 完成 B。
 每轮测试会清空 dmesg，保留整套结果时必须逐 mode 保存日志和产物标识。
 
 仅在用户明确要求并接受 guest 崩溃风险时，运行独立的 mutex JIT 确认测试：
@@ -239,27 +244,51 @@ timeout 300 bash tests/test_07_mutex_jit.sh
 CPU 0 holder 后面的四个 CPU 1 waiter 产生 `multi_slot > 0`。
 
 `tests/test_08_mutex_jit_modes.sh` 是 recovery-only 的 mode 4/5/11 验证。mode 4
-使用 7 个分别绑定 CPU 的角色，在 A、B 上都强制形成 holder -> direct waiter ->
-nested target -> trailing waiter 队列。通过条件包括至少两次真实 JIT completion、
-`nested_queued >= 1`、`nested_remote >= 1`、最终 counter `12008`，以及所有
+使用 7 个分别绑定 CPU 的角色，A 形成代理队列，B holder 在 A combiner
+实际竞争原生 B 后才释放 B。通过条件包括 A 的真实 JIT completion、
+`nested_queued >= 1`、`nested_jit >= 1`、最终 counter `12008`，以及所有
 readiness/JIT/frame/context/node/waiter/slot 失败或泄漏指标为 0。mode 5 执行 16 轮
 owner/waiter、CPU-pinned queue 和 8 线程连续竞争，要求 hostcall/JIT/waiter resume
 严格一一对应、API observation 与最终 counter 精确相等且运行期不重编译。mode 11
 复用 mode 4 队列拓扑，并额外校验 translated GS/current artifact 与运行时一致性。除非
 recovery VM 正常且恢复快照已确认，否则不要运行该测试。
 
-spin nested-JIT 的故障恢复同样只在 recovery VM 中运行：
+普通 CALL miss 的精确续跑仅在确认新 recovery 快照后运行：
 
 ```bash
-KD_SPIN_ABORT_INJECT=1 bash tests/test_04_spinlock.sh 9
-KD_JIT_FAULT_KIND=1 bash tests/test_04_spinlock.sh 9
-KD_JIT_FAULT_KIND=2 bash tests/test_04_spinlock.sh 9
-KD_JIT_FAULT_KIND=3 bash tests/test_04_spinlock.sh 9
-KD_MODE8_NOT_READY=1 KD_SPIN_ABORT_INJECT=1 bash tests/test_04_spinlock.sh 8
+export KDLOCK_RECOVERY_CONFIRMED=1
+bash tests/test_10_native_resume.sh 0 1
+bash tests/test_10_native_resume.sh 3 1
+bash tests/test_10_native_resume.sh 1 2
+bash tests/test_10_native_resume.sh 4 2
+bash tests/test_10_native_resume.sh 8 2
+bash tests/test_10_native_resume.sh 1 3
+bash tests/test_10_native_resume.sh 4 3
+bash tests/test_10_native_resume.sh 8 3
+KD_NATIVE_PINNED=1 bash tests/test_10_native_resume.sh 3 1
+KD_NATIVE_RENAME=1 bash tests/test_10_native_resume.sh 4 3
+KD_NATIVE_MIXED=1 bash tests/test_10_native_resume.sh 3 1
+bash tests/test_11_mutex_native_protocol.sh 0
+bash tests/test_11_mutex_native_protocol.sh 1
 ```
 
-单独 `bash tests/test_04_spinlock.sh 9` 不会打开这些故障开关。必须记录实际环境变量，
-区分普通拓扑通过、特定故障清理通过和仍未实现的副作用后精确续跑；不能将它们混写。
+stage 1 是单锁，stage 2 在 B 解锁后退出，stage 3 在 B 内退出。必须检查真实
+callee 退出 RIP、`kd_native started == completed > 0`、逐请求 before/call/after
+各一次以及精确复杂状态结果。`kd_native` 是 JIT 前缀加 native 后缀，不计作整个
+CS 都经 JIT 完成。脚本会在运行前停止 daemon，并保留独立日志和产物。
+
+`KD_NATIVE_RENAME=1` 在目标提升且 artifact 就绪后才启用改名探针，避免预热的
+`task_lock` 流量干扰热点窗口。native 中改名、解锁后恢复，必须有 `task_reroutes>0`。
+`KD_NATIVE_MIXED=1` 给 mode 3 stage 1 加入非目标原生参与者，不与 rename/pinned 合用。
+`test_11` 混合目标/非目标线程及原生 trylock/interruptible/killable 成功路径，
+检查互斥守卫和状态重放；JIT 变体还注入一次 task 记录分配失败并耗尽
+waiter 槽位。没有注入信号取消。所有 mutex 测试应检查 `origin_acquires == origin_releases`、
+`active_tasks=0`、`inside=0 overlaps=0`；除明确注入的案例外，`task_alloc_failure=0`。
+task 记录使用 RCU 不等于 hook 已支持热卸载，仍必须先停止所有调用者。
+
+旧 `KD_SPIN_ABORT_INJECT`、`KD_JIT_FAULT_KIND` 开关现由 `test_04` 拒绝；它们没有
+真实 CALL 的栈状态，不能套用新的续跑协议。直接写对应模块参数可能触发 fail-stop，
+不得按旧版“可恢复”测试批量运行。普通 mode 9 不注入故障。
 
 全部相关测试稳定后，必要时才运行：
 

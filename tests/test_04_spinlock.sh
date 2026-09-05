@@ -36,6 +36,12 @@ run_spinlock_mode() {
     fi
 
     if [ "$abort_expected" -eq 1 ]; then
+        fail "$TEST_NAME" \
+            "legacy synthetic aborts are fail-stop; use test_10_native_resume.sh for recoverable CALL misses"
+        return 1
+    fi
+
+    if [ "$abort_expected" -eq 1 ]; then
         if [ "$mode" -ne 9 ] &&
                 ! { [ "$mode" -eq 8 ] && [ "$mode8_not_ready" -eq 1 ]; }; then
             fail "$TEST_NAME" \

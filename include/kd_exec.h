@@ -11,9 +11,11 @@
 
 #include <linux/errno.h>
 #include <linux/types.h>
+#include <linux/list.h>
 #include <asm/ptrace.h>
 
 struct task_struct;
+struct kd_native_request;
 
 #define KD_EXEC_MAX_NESTING 8
 #define KD_EXEC_MAX_LOCK_DEPTH 8
@@ -87,6 +89,10 @@ struct kd_exec_frame {
 	bool completion_seen;
 	int state;
 	int remote_result;
+	bool executed;
+	bool mutex_backend;
+	struct list_head native_link;
+	struct kd_native_request *native_request;
 };
 
 struct kd_exec_context {
@@ -143,5 +149,11 @@ int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 int kd_exec_frame_complete(struct kd_exec_frame *frame);
 int kd_exec_frame_abort(struct kd_exec_frame *frame);
 int kd_exec_frame_state(const struct kd_exec_frame *frame);
+
+/* Native continuation borrows the combiner's locks until the waiter unlocks.
+ * Unlock requests are serviced on the executor that acquired each lock. */
+int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex);
+int kd_exec_native_wait(struct kd_exec_frame *frame);
+bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex);
 
 #endif /* KD_EXEC_H */
