@@ -45,9 +45,16 @@ does not track total image length, chunk continuity, image generation, or live
 executors. Recompilation overwrites the same executable block; release/acquire
 publication does not protect an old execution from those writes. The
 `install JIT chunk` diagnostic is emitted before key validation and payload
-copy, so even `status=0` is not a completed-install acknowledgment. Versioned
-publication and coherent miss snapshots remain open work in
-[`docs/TODO.md`](../docs/TODO.md).
+copy, so even `status=0` is not a completed-install acknowledgment.
+
+The concurrent-overwrite risk applies when independent lock instances share
+one RIP-keyed artifact; a fixed entry serialized throughout execution by one
+lock is not that scenario. The project treats the risk as low probability
+(not a measured rate) and defers immutable versions, complete-image checks,
+coherent miss snapshots and old-version reclamation. Lock serialization does
+not itself validate missing chunks or stale jobs. These are known limitations,
+not current daemon implementation tasks; future work is retained in
+[TODO C3](../docs/TODO.md#c3-immutable-jit-publication-and-lifetime).
 
 Each translation emits one concise input summary containing the entry RIP and
 nonzero target, region, and kernel-text byte counts. Tests use this line as

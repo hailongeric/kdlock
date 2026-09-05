@@ -21,11 +21,13 @@ code, not a reason by itself to expect speedup or safety. The useful next goal
 is a precisely bounded, demonstrably correct delegation subset, then measured
 benefit on unchanged critical-section source.
 
-P0 items block claims of general kernel safety. Implement each with a failing
-regression first, then unit/codegen checks, guest build, a minimal integration
-test, and the existing strict JIT suite. Add new modes only when a missing
-behavior cannot be tested in the existing harness. Do not expand services or
-start production-kernel experiments while P0 is unresolved.
+P0 items block claims of general kernel safety. Explicitly deferred items,
+including C3's JIT publication/version lifetime work, remain known limitations
+but are not current implementation tasks. When an item is taken up, implement
+it with a failing regression first, then unit/codegen checks, guest build, a
+minimal integration test, and the existing strict JIT suite. Add new modes only
+when a missing behavior cannot be tested in the existing harness. Do not expand
+services or start production-kernel experiments while P0 is unresolved.
 
 ## P0: Correctness Contracts
 
@@ -104,22 +106,43 @@ Evidence: [sys.c](../kernel_module/sys.c) copies chunks into live executable
 storage and trusts the final status; [exe.c](../kernel_module/exe.c) retains the
 same pointer across continuation. Status acquire/release does not retire readers.
 
-- [ ] Add generation and total-size metadata, coherent miss snapshots, checked
-      chunk coverage, a single-writer/session policy, and publication
+#### Deferred Limitation: JIT Publication And Version Lifetime
+
+Entries are shared by RIP rather than lock address. Independent lock instances
+using the same entry can execute the same artifact while one execution triggers
+an in-place recompilation. A fixed entry serialized throughout execution by
+one lock does not establish this concurrent scenario. The project treats the
+risk as low probability and explicitly defers the work below; this is a
+qualitative scope decision, not a measured failure rate or a reproduced failure
+in the current suite. No versioning code or additional tests are scheduled now.
+Incomplete/stale-image publication is a separate limitation even without
+concurrent executors; its checks are also deferred, not satisfied by lock
+serialization.
+
+- [ ] Future: add generation and total-size metadata, coherent miss snapshots,
+      checked chunk coverage, a single-writer/session policy, and publication
       acknowledgment after the image is complete. Reject stale/incomplete jobs.
-- [ ] Stage in writable non-executable memory, validate the image, publish an
-      immutable RX generation, and pin it across execution and hostcall/nested
+- [ ] Future: stage in writable non-executable memory, validate the image,
+      publish an immutable RX generation, and pin it across execution and hostcall/nested
       suspension. Retire old generations only after all readers drain, using
       a protocol that also supports scheduled mutex executors.
+- [ ] Future acceptance: execute the same RIP on independent locks while
+      recompiling; inject missing/out-of-order chunks, failed copies, stale jobs,
+      daemon restart, and teardown under a suspended continuation. Never execute
+      a mixed image or freed generated text; enforce W^X.
+
+#### Independent Source-Text And Hook Lifetime Work
+
+The deferral above does not downgrade original module-text lifetime,
+address-reuse or live-unload risks, or authorize hot unload.
+
 - [ ] Track original module-text lifetime and address reuse. Add a hook
       removal/drain protocol matched by patched-kernel callers; setting hook
       pointers to NULL followed by `synchronize_rcu()` alone does not protect
       those callers today. Preserve a reproducible kernel patch/config/build
       identity in the repository, rather than relying only on the live guest.
-- [ ] Acceptance: execute the same RIP on independent locks while recompiling;
-      inject missing/out-of-order chunks, failed copies, stale jobs, daemon
-      restart, and teardown under a suspended continuation. Never execute a
-      mixed image or freed source/generated text; enforce W^X.
+- [ ] Acceptance: teardown under a suspended continuation must not free source
+      text still needed by an executor.
 
 ### C4. Instruction, Flags, And Fault Semantics
 

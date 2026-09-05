@@ -296,7 +296,18 @@ interoperability is not established by mutex mixed-user tests.
 Flags remain deferred by user scope. Ordinary CALL continuation is not a
 solution for IJ, budget, fault or failed control calls; unsupported post-entry
 errors still fail-stop. Known mixed spin/mutex calls reject before their native
-service, not through a complete pre-execution eligibility pass. Concurrent JIT
-replacement, live hook/module unload, per-CPU concurrency and general task/CPU
-context equivalence remain open. The two-word GS/task ABI is unchanged; no
-transactional rollback or performance speedup is claimed.
+service, not through a complete pre-execution eligibility pass. Live hook/module
+unload, per-CPU concurrency and general task/CPU context equivalence remain
+open. The two-word GS/task ABI is unchanged; no transactional rollback or
+performance speedup is claimed.
+
+Concurrent JIT replacement is an explicitly deferred limitation. The suite did
+not exercise independent lock instances sharing the same RIP during in-place
+recompilation; fixed-lock serialization is not evidence for that scenario.
+No concurrent-overwrite failure or failure rate was established. Treating it
+as low probability is a project scope decision, not a statistical test result.
+Immutable versions, complete-image publication checks and old-version
+reclamation remain future work in
+[TODO C3](TODO.md#c3-immutable-jit-publication-and-lifetime). This documentation
+update adds no runtime validation and does not change the results above or
+the independent source-text lifetime and live-unload limitations.

@@ -563,6 +563,15 @@ executor can still reference the overwritten block. A concurrent read of an
 entry's status/target fields is not a versioned coherent miss snapshot either.
 Thus release/acquire is not an immutable-artifact replacement protocol.
 
+The concurrent-overwrite case requires overlapping use of an artifact during
+replacement. The RIP-only cache does not bind that artifact to one lock
+instance: the same function operating on two objects' different mutexes can
+execute concurrently. By contrast, if an entry always uses one lock held
+throughout execution and resumable suspension, its executions are serialized.
+With one trusted daemon completing ordered transfers, that fixed-lock case
+does not imply a concurrent old-code reader during recompilation. It does not
+prove safety for independent lock instances or malformed/stale transfers.
+
 A combiner does not wait for recompilation. An ordinary CALL miss returns the
 original callee context to the waiter, then the combiner waits for its native
 unlock requests while retaining lock ownership (9.5). The missing entry is
@@ -572,6 +581,14 @@ does not require a sticky per-lock JIT disable or entry replay.
 An allowlisted hostcall never enters this recompilation sequence. It leaves the
 entry in `KD_EXE_NORMAL`, executes synchronously in the kernel, and resumes the
 same artifact at the saved post-CALL RIP.
+
+**Deferred limitation:** the project treats concurrent replacement as a
+low-probability risk, a qualitative judgment rather than a measured failure
+rate. Immutable versions, complete-image publication checks, and old-version
+reclamation are future work, not current implementation tasks. No concurrent
+overwrite failure is claimed to have been reproduced by the existing suite.
+See [TODO C3](TODO.md#c3-immutable-jit-publication-and-lifetime); this decision
+does not relax separate source-text lifetime or hook/module-unload requirements.
 
 ## 8. Sandbox Code Model
 

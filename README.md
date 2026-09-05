@@ -46,15 +46,27 @@ See [docs/DESIGN.md](docs/DESIGN.md) for the full technical design.
 
 This is a research prototype. Arbitrary kernel critical sections are not yet
 supported safely: non-CALL recovery, spin/native interoperability,
-concurrent JIT replacement, instruction/flags semantics, and per-CPU execution
-context remain correctness gaps. See [docs/TODO.md](docs/TODO.md) for the
-ordered implementation and acceptance plan.
+instruction/flags semantics, and per-CPU execution context remain correctness
+gaps. See [docs/TODO.md](docs/TODO.md) for implementation priorities and
+explicitly deferred limitations.
 
 Mutex shadow state now schedules requests only. The combiner acquires the
 original Linux mutex and remains its real owner, including during waiter-native
 continuation; the waiter sends unlock requests back and waits for acknowledgment.
 Native non-target callers use that same mutex. No guest kernel source changes
 were added for this protocol; existing hooks and slowpath exports are reused.
+
+### Known Limitation: JIT Recompilation
+
+Translations are shared by entry RIP, not lock address. Independent lock
+instances using the same entry can execute one artifact concurrently; an
+in-place recompilation can overwrite code another executor still uses. A fixed
+entry serialized throughout execution by one lock is not that scenario.
+The project treats this as a low-probability risk and explicitly defers
+immutable versions, complete-image publication checks, and old-version
+reclamation. This is a qualitative scope decision, not a measured failure rate
+or a safety guarantee. Future work remains in
+[TODO C3](docs/TODO.md#c3-immutable-jit-publication-and-lifetime).
 
 ## Repository Layout
 
