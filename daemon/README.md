@@ -17,6 +17,10 @@ Modes:
 - `--mode 2`: isolate workspaces by process: `./<RIP>/<tgid>/`. This is the
   default.
 
+These select workspace layout, not benchmark mode or hostcall policy. Kernel
+lock entries use `pid=0` as their lookup key, but retain the registering task's
+`tgid`. Their mode-2 workspace is still `./<RIP>/<tgid>/`, not `./<RIP>/0/`.
+
 Useful options:
 
 - `--quiet`: suppress normal progress output.
@@ -36,6 +40,15 @@ file and device transfer, and marks the entry `KD_EXE_NORMAL` only on the final
 complete chunk. The kernel validates the entry key, destination offset, payload
 length, and status before copying each chunk.
 
+This relies on a trusted, single daemon completing the transfer. The kernel
+does not track total image length, chunk continuity, image generation, or live
+executors. Recompilation overwrites the same executable block; release/acquire
+publication does not protect an old execution from those writes. The
+`install JIT chunk` diagnostic is emitted before key validation and payload
+copy, so even `status=0` is not a completed-install acknowledgment. Versioned
+publication and coherent miss snapshots remain open work in
+[`docs/TODO.md`](../docs/TODO.md).
+
 Each translation emits one concise input summary containing the entry RIP and
 nonzero target, region, and kernel-text byte counts. Tests use this line as
 evidence that translation read `/proc/kcore`; raw kernel bytes are not logged.
@@ -51,3 +64,8 @@ lowered to explicit addressing through the waiter GS base supplied by the
 kernel; `%gs:current_task` is replaced by the logical waiter task. `%fs:`, direct
 FS/GS-base operations, and unsupported `current_task` forms produce a minimal
 `KD_EXE_ERROR_INST` artifact instead of a partially executable translation.
+
+That rejection guarantee covers segment preflight in fetched code ranges only.
+It is not a general instruction verifier: some unsupported special operations
+only warn, and `INT` is currently lowered to NOP. Do not translate arbitrary
+kernel callees on the assumption that every unsafe instruction will be rejected.

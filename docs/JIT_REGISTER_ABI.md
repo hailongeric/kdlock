@@ -5,7 +5,7 @@
 不是一个与实现无关的目标设计。
 
 适用范围是高层代理路径 `kd_exe_on_call_hl_entry()`，即当前 mode
-0/1/2/10 和 `mutex_jit=1` 下的 mode 3/4/5/11。低层 futex 路径
+0/1/2/6/7/8/9/10 和 `mutex_jit=1` 下的 mode 3/4/5/11。低层 futex 路径
 `kd_exe_on_call()` 共用相同的两参数 wrapper ABI，但不支持 mode 2/5
 使用的 hostcall。本项目当前只定义 x86-64 内核代码的翻译语义。
 
@@ -122,6 +122,11 @@ flags，但入口 dispatcher 的 `CMP` 以及 branch-block budget 的 `INC`/`TES
 代码没有跨这些插桩点存活的 flags；continuation 只能放在函数调用边界等不要求
 旧 flags 保持的位置，不能在任意依赖旧 flags 的指令之间退出和恢复。
 
+这只是当前实现的使用限制，翻译器尚未检查 flags 活跃性，也没有自动拒绝违反该限制的
+临界区。风险不仅存在于退出/续跑边界：原始代码跨基本块使用 CF/ZF 等状态时，也可能被
+block budget 插桩破坏。需要用跨块 `CMP/JMP/Jcc`、`ADC/SBB` 等差分用例验收，
+不能由现有复杂状态测试通过推断所有 flags 语义正确。
+
 同理，wrapper 不保存或恢复 XMM/YMM、x87、PKRU、debug/control registers。
 当前可翻译临界区不能依赖这些状态跨 sandbox 退出保持。
 
@@ -155,8 +160,9 @@ RAX、RCX、RDX、RSI、RDI、R8-R11 作为 lock 函数的 caller-saved 状态�
 嵌套 waiter 不重新解析 native hook 栈，而是通过
 `node->regs = *regs` 复制父 JIT 的完整 GPR/RIP/RSP 快照，复制显式 lock stack，
 并继承父 frame 的 waiter GS base 和 logical task。
-这使 B 锁的远端 combiner 可以继续代理 A 的执行流，而不依赖 A combiner 的
-C 调用栈。
+这使 B 锁的远端 combiner 可以从显式寄存器状态继续代理 A 的执行流。
+但 `jit_context` 本身仍是 A combiner 栈上的对象；该栈在 B 完成前必须保持有效，
+不能将“续点显式化”理解成“不依赖宿主栈的生命周期”。
 
 顶层 spin/mutex waiter 在入队的 origin CPU 上记录
 `cpu_kernelmode_gs_base(cpu)` 和 `current`。低层 futex 入口则使用目标
@@ -164,6 +170,9 @@ task 的 `task_cpu(task)` 查找 kernel GS base，并把该 task 作为 logical
 waiter。这两条路径都不使用 artifact 全局的 `exe->gsbase`。低层
 futex 入口当前仅作为兼容 API 保留，仓库内没有调度/唤醒代理 waiter 的
 frontend。
+
+`task_cpu(task)` 只是读取时的 CPU，不等同于顶层 waiter 入队时捕获并保持的 origin
+CPU。这个低层 API 本身不负责持有 task 引用或禁止其迁移，尚无完整调用契约。
 
 ## 5. Wrapper 私有栈布局
 
@@ -260,6 +269,12 @@ MOV 写和 INC 等 read-modify-write 都访问 origin CPU 的 per-CPU 区。
 返回 logical waiter。这避免远端 combiner 读到它自己或 origin CPU 上后续
 调度进程的 `current`。对 `current_task` 的写入或 RMW 不允许。
 
+这里保证的是地址来源和 logical task 的替换，不是任意 per-CPU 操作的并发正确性。
+远端 combiner 修改 origin CPU 的 per-CPU 内存时，origin CPU 上的中断或其他任务
+仍可能同时操作它；`migrate_disable()` 不能防止这类并发。对依赖本地非 LOCK RMW、
+抢占计数、IRQ/RCU 或调度状态的代码，需要单独的策略和测试。原生 handler 执行时
+硬件 GS 和真实 `current` 仍属于 combiner，不能自动观察到这里的 logical waiter。
+
 当前 fail-closed 策略为：
 
 - `%fs:` 内存操作数不支持，不传入 FS base。
@@ -271,6 +286,10 @@ MOV 写和 INC 等 read-modify-write 都访问 origin CPU 的 per-CPU 区。
   miasm 0.1.5 会错解的 `SWAPGS` 和 FSGSBASE 编码另行按原始字节拒绝。
 - 预检查失败时 daemon 生成最小拒绝 artifact，以
   `KD_EXE_ERROR_INST == 3` 退出；kernel executor 将该 entry 标记为终止错误并回退。
+
+以上是 segment/解码检查的范围，不是完整指令白名单。当前 `INT` 被生成为 NOP，
+部分未处理 special 指令仅打印 warning，一般特权指令也没有统一的拒绝门槛。
+不能据此声称任意危险内核指令都能失败关闭；待办见 [`TODO.md`](TODO.md)。
 
 ## 7. 虚拟栈和函数调用
 
@@ -288,6 +307,12 @@ wrapper 实栈来模拟 guest 调用。
    整个临界区从保存的入口快照进行 native retry/重新翻译。
 4. control call 和 hostcall 必须保留这个 CALL frame，kernel handler 才能从
    `[regs->sp]` 取得 post-CALL continuation。
+
+第 3 项不是事务回滚。已写入的共享内存和 waiter 栈不会随入口寄存器一起恢复，
+因此执行过副作用后再从入口重试可能重复写入。现阶段不能把普通 miss 当作通用的
+安全退出。这里缺少的是精确续跑协议，不意味着必须实现内存事务回滚。
+BCD 的普通 CALL miss 保留虚拟返回地址，直接以 callee RIP 和退出状态返回原
+waiter 执行 native 代码；目标方案及当前差异见 `DESIGN.md` 9.6。
 
 ## 8. Sandbox 退出 ABI
 
@@ -341,8 +366,10 @@ mode 2 和 mode 5 的 sandbox 退出及内部返回流程相同：
 
 当前 handler 只显式修改 RAX，其他 guest GPR 保留。新增服务时必须为每个服务
 定义参数、返回值和允许 clobber 的寄存器，不能直接按 `regs->ip` 调用任意内核
-函数。hostcall 自身上限为 16；hostcall 和 known-call 恢复共同占用每个高层
-临界区最多 16 次的 continuation budget。
+函数。每次 `kd_exe_on_call_hl_entry()` 调用内，hostcall 上限为 16，并与普通
+known-call 恢复共用 16 次 continuation 检查。嵌套子调用重新计数，提前 outer
+unlock 的 OOO 分支还绕过普通 known-call 的上限检查；这不是整个嵌套临界区的
+严格全局预算。
 
 hostcall continuation 位于函数调用之后，因此不能依赖调用前 EFLAGS。外层锁和
 当前 `kd_exec_frame` 在 native service 执行期间保持有效。mode 5 在到达最外层
@@ -383,6 +410,17 @@ continuation RIP/RSP、waiter GS base、logical task、父 frame 和 lock owners
 spin JIT 失败回退使用 `jump_to_saved_regs_in_cs()`：它切换到 `regs->sp` 后，先
 压入 `regs->ip`，再 `retq`，因此从原始 CS entry 重新执行。mutex JIT 失败则
 保持 waiter 未完成并把锁交还给它，让原 lock 调用按 native 路径返回。
+
+两种失败路径都没有恢复已修改的数据。尤其 B 已完成并解锁后 A 再失败，重跑 A
+可能再次执行 B。正确的目标是保留已完成的写入和 B 的效果，从 A 的精确退出点
+续跑，而不是从入口重做；当前代码尚未实现这个目标。
+
+不能只删除 `retry_regs` 赋值：普通 CALL miss 还弹掉了虚拟返回地址，abort
+cleanup 还可能释放续点所需的 B 锁。必须同时定义原指令 RIP、CALL/RET 阶段、
+RSP/栈内容、GPR/flags 和逻辑持锁状态的一致性。尤其 nested mutex 获取前已
+调用 `kd_mutex_jit_advance_call()`，获取失败时 post-CALL RIP 不代表已持有 B。
+BCD 使用 syscall `pt_regs` 返回用户态，不能直接替代这里的内核栈和锁所有权
+移交协议。新增进度信息应放进 execution frame，不扩展两元素 `args`。
 
 两个恢复函数都不恢复 EFLAGS、硬件 segment base 或 SIMD/FPU 状态。
 GS 内存语义由翻译后的显式基址寻址实现，不依赖这两个恢复函数切换

@@ -57,6 +57,14 @@ daemon/daemon  -> disassem/*.py -> 汇编/链接 -> jit.bin 回写内核
 `klock_module.ko` 只是测试负载模块，创建 `/dev/lock_dev`。daemon 轮询
 `/dev/kd_dev`，调用 miasm 翻译器并把生成的 JIT 二进制写回 `kdlock_km.ko`。
 
+本项目仍是受限研究原型。`target_process` 只按 task comm 筛选，不能保证同一把
+真实内核锁的所有使用者都走相同协议；`mutex_jit=0` 也仍使用独立 shadow mutex。
+不要将测试锁上的通过结论推广到生产内核锁。JIT 失败只清理锁/frame 和恢复入口寄存器，
+不会撤销内存写入；一般指令、flags、代码版本生命周期和 per-CPU 并发语义的缺口见
+`docs/TODO.md`，不能称为通用的安全 sandbox 或事务恢复。
+恢复的目标是保留已完成效果并从精确退出点继续 native 执行，不是要求内存回滚。
+BCD 对比和仍需实现的调用栈/锁所有权协议见 `docs/DESIGN.md` 9.6。
+
 Benchmark 参数为：
 
 ```text
@@ -81,8 +89,9 @@ waiter kernel GS、per-CPU 读写/RMW 和 logical `current`。
    `-o BatchMode=yes -o ConnectTimeout=5`，避免无限等待。
 5. 默认保持 `mutex_jit=0`。`mutex_jit=1` 仍是高风险 opt-in，只能在用户明确要求、
    且已经确认可用恢复手段后启用。
-6. 加载前先卸载旧模块；卸载顺序固定为 `klock_module`，然后 `kdlock_km`。daemon 必须在
-   卸载模块前停止。
+6. 加载前先卸载旧模块；先停止并等待 benchmark/所有 hook 调用者退出，确认队列和 frame
+   无在途执行，再停止 daemon，按 `klock_module`、`kdlock_km` 顺序卸载。当前 hook
+   调用者没有配套的 RCU reader/drain 保护，不能在压力负载运行时直接 `rmmod`。
 7. 不要修改、编译或安装 `/root/linux-6.1.159` 中的内核。此类操作必须由用户
    明确授权。
 8. 不要启动第二个 QEMU 实例。先执行 `ps -aux | grep qemu-system-x86` 检查
@@ -122,6 +131,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=5 -p 2222 root@127.0.0.1 \
 ssh -p 2222 root@127.0.0.1 '
   set -e
   cd /root/host_fs/kdlock
+  python3 -c "import miasm"
   make -C tests/unit clean
   make -C tests/unit run
   python3 -m py_compile disassem/*.py
@@ -135,6 +145,8 @@ ssh -p 2222 root@127.0.0.1 '
 
 说明：`tests/common.sh` 的 `build_all` 为保持测试输出简洁会隐藏构建日志，但任一组件
 失败都会终止测试。排查编译问题时仍应先执行上面的显式构建，以获得完整诊断。
+两项 Python codegen 测试在 miasm 缺失时会打印 `SKIP` 并返回 0，必须确认没有跳过，
+才能报告 11/11 实际执行。九项 C 测试是算法模型，不能替代内核集成测试。
 
 ### 4.3 最小模块加载验证
 
@@ -147,7 +159,8 @@ ssh -p 2222 root@127.0.0.1 '
 '
 ```
 
-需要手动操作时使用以下顺序（guest 已是 root，不使用 `sudo`）：
+需要手动操作时，先确认 benchmark/调用者已退出且没有在途代理，再使用以下顺序
+（guest 已是 root，不使用 `sudo`）：
 
 ```bash
 cd /root/host_fs/kdlock
@@ -160,6 +173,9 @@ dmesg -C
 insmod kernel_module/kdlock_km.ko target_process=klock_test mutex_jit=0
 insmod klock_module/klock_module.ko
 ```
+
+`kernel.randomize_va_space=0` 仅控制用户态 ASLR。内核 KASLR 必须已通过启动参数
+`nokaslr` 禁用，不能用上述 sysctl 代替。
 
 ### 4.4 相关功能验证
 
@@ -205,6 +221,11 @@ mode 2/5 还要求 `ktime_get` 生成 hostcall stub、服务地址不进入
 加载 `Stack_RGS` 和 `Stack_RCT`、不保留硬件 segment 操作数，且运行时
 `attempts == successes > 0` 、`failures == 0`。
 
+注意：`install JIT chunk: ... status=0` 在 payload 拷贝前打印，只是回写请求记录。
+需要结合 daemon 写入结果和运行期 JIT 成功证据，不能只凭日志认定完整发布。
+mode 1/10 的测试不要求每个生成产物都执行；mode 4/11 才对 A/B 两个入口逐一检查。
+每轮测试会清空 dmesg，保留整套结果时必须逐 mode 保存日志和产物标识。
+
 仅在用户明确要求并接受 guest 崩溃风险时，运行独立的 mutex JIT 确认测试：
 
 ```bash
@@ -237,6 +258,9 @@ KD_JIT_FAULT_KIND=3 bash tests/test_04_spinlock.sh 9
 KD_MODE8_NOT_READY=1 KD_SPIN_ABORT_INJECT=1 bash tests/test_04_spinlock.sh 8
 ```
 
+单独 `bash tests/test_04_spinlock.sh 9` 不会打开这些故障开关。必须记录实际环境变量，
+区分普通拓扑通过、特定故障清理通过和仍未实现的副作用后精确续跑；不能将它们混写。
+
 全部相关测试稳定后，必要时才运行：
 
 ```bash
@@ -248,6 +272,12 @@ timeout 600 bash tests/run_all.sh
 ```bash
 dmesg -T | tail -n 300
 dmesg -T | grep -Ei 'BUG:|panic|double fault|soft lockup|unable to handle|kdlock|delegation'
+```
+
+确认工作线程已退出且队列/frame 已排空后，才执行卸载；若无法确认，不要强制卸载，
+保留证据并按 recovery 流程恢复 guest。
+
+```bash
 pkill -x daemon 2>/dev/null || true
 rmmod klock_module 2>/dev/null || true
 rmmod kdlock_km 2>/dev/null || true
@@ -325,11 +355,10 @@ cd /home/eric/vm/qemu-scripts
 ./run_vm.sh recovery
 ```
 
-高风险测试使用已经准备好 guest 本地源码副本的 recovery mode：
+`run_vm.sh recovery` 前台运行，启动后在另一个宿主机终端连接 monitor：
 
 ```bash
 cd /home/eric/vm/qemu-scripts
-./run_vm.sh recovery
 ./run_vm.sh monitor
 # HMP: savevm pre_mutex_jit
 # HMP: info snapshots
@@ -361,6 +390,7 @@ cd /home/eric/vm/qemu-scripts
 后续 AI 完成修改后应明确报告：
 
 - 修改了哪些宿主机源码文件；
+- 本次是文档/静态核对还是实际运行；不要把历史验证日期、计数器和日志写成新结果；
 - 在 guest 中执行了哪些构建/测试及其结果；
 - 是否加载过内核模块、是否启用 `mutex_jit`；
 - `dmesg` 是否出现内核错误；

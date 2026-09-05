@@ -3,18 +3,18 @@
 Kernel-space lock delegation via dynamic binary translation.
 
 kdlock combines [TCLocks](https://github.com/rs3lab/TCLocks) (lock delegation)
-with [BCD](https://github.com/zjyiu/BCD) (runtime binary translation) to
-automatically accelerate contended kernel locks. A combiner core executes
-translated critical sections on behalf of queued waiters, keeping lock-protected
-data cache-local and eliminating cross-core cache-line bouncing.
+with [BCD](https://github.com/zjyiu/BCD) (runtime binary translation) to explore
+transparent delegation of contended kernel locks. A combiner core executes
+translated critical sections on behalf of queued waiters, aiming to reduce
+movement of lock-protected data. Net speedup has not yet been established.
 
 ## Idea
 
 ```
 Problem:  4 cores compete for spin_lock(L) → cache line of L bounces 4 ways
 
-Solution: 1 core (combiner) holds L, executes all 4 critical sections locally
-          → lock-protected data never leaves the combiner's L1 cache
+Approach: 1 core (combiner) holds L and batches queued critical sections
+          → protected data may remain cache-local during that batch
 ```
 
 How it works:
@@ -23,17 +23,31 @@ How it works:
 3. Userspace daemon translates that code into a JIT sandbox binary
 4. Combiner executes the sandbox on behalf of queued waiters
 
+The goal is to leave critical-section source unchanged, not to run on an
+unmodified kernel. The current sandbox executes in kernel mode; it is neither
+a security boundary nor a transaction with memory rollback.
+Recoverable JIT exits should preserve completed effects and resume the original
+code at the exit point, as in BCD's ordinary CALL-miss path. Current high-level
+fallback still restarts at entry; the gap and target protocol are described in
+[DESIGN section 9.6](docs/DESIGN.md#96-bcd-comparison-and-forward-continuation-target).
+
 See [docs/DESIGN.md](docs/DESIGN.md) for the full technical design.
 
 ## Status
 
 | Component | State |
 |-----------|-------|
-| Spinlock delegation | Modes 0-2 and 6-10 validated, including nesting, hostcalls, recovery, and waiter context |
-| Mutex delegation | Safe path plus opt-in JIT modes 3-5 and 11 validated |
+| Spinlock delegation | Synthetic modes 0-2 and 6-10 validated; latest mode 9 run did not inject faults |
+| Mutex delegation | Native handoff plus opt-in JIT modes 3-5 and 11 validated on test locks |
 | Translation pipeline | Daemon, miasm translation, JIT write-back, and execution validated |
-| Hot-lock promotion | Working |
+| Hot-lock promotion | Functional; timing-sensitive nested promotion needs deterministic tests |
 | Architecture scope | x86-64 only; NUMA-aware combining is not enabled |
+
+This is a research prototype. Arbitrary kernel critical sections are not yet
+supported safely: partial-execution retry, mixed native/shadow lock users,
+concurrent JIT replacement, instruction/flags semantics, and per-CPU execution
+context remain correctness gaps. See [docs/TODO.md](docs/TODO.md) for the
+ordered implementation and acceptance plan.
 
 ## Repository Layout
 
@@ -92,6 +106,9 @@ insmod kernel_module/kdlock_km.ko target_process="klock_test"
 insmod klock_module/klock_module.ko
 ```
 
+Kernel KASLR must already be disabled at boot (`nokaslr`);
+`kernel.randomize_va_space=0` only disables userspace ASLR.
+
 Terminal 2 — start daemon:
 ```bash
 cd daemon && ./daemon --mode 2
@@ -99,7 +116,7 @@ cd daemon && ./daemon --mode 2
 
 Terminal 1 — run benchmark:
 ```bash
-./bench/klock_test 4 100000 1000 10 0
+timeout 120 ./bench/klock_test 4 100000 1000 10 0
 ```
 
 ### Benchmark Modes
@@ -115,7 +132,7 @@ Terminal 1 — run benchmark:
 | 6 | Spinlock | Deep nesting (A -> B -> C) |
 | 7 | Spinlock | Out-of-order unlock (unlock A before B) |
 | 8 | Spinlock | Independent contention and queues on A and B |
-| 9 | Spinlock | Isolated nested-JIT abort/retry |
+| 9 | Spinlock | Nested recovery topology; fault injection requires the environment flags below |
 | 10 | Spinlock | Nested A/B proxy with translated per-CPU GS and logical `current` validation |
 | 11 | Mutex | Nested A/B proxy with translated per-CPU GS and logical `current` validation (`mutex_jit=1`) |
 
@@ -139,11 +156,13 @@ make -C klock_module -j"$(nproc)"
 make -C daemon
 ```
 
-Nine C binaries plus two Python code-generation tests cover tail encoding,
-bounded translation lookup/publication, hot-lock state, spin/mutex node
+Nine C model binaries plus two Python tests against the actual code generator
+cover tail encoding, bounded translation lookup/publication, hot-lock state, spin/mutex node
 capacity, explicit nested execution frames, hostcall/call-miss policy, generated
 hostcall stubs, GS/current lowering, mutex shadow lookup, and safe draining
-during promotion.
+during promotion among intercepted users. The C models are not a substitute
+for kernel implementation tests. Missing miasm currently makes the Python tests
+print `SKIP` and exit successfully; 11/11 is valid only with no skipped tests.
 
 ### Default Integration Suite
 
@@ -180,8 +199,11 @@ addition to the exact legacy counter.
 A pass also requires complete translation artifacts, kernel write-back, actual
 translated completion (`jit_success`), drained queues/frames, and clean kernel
 diagnostics. Modes 3/4/5/11 additionally verify that `mutex_jit=1` is active.
-Kernel write-back evidence is the final `install JIT chunk: ... status=0` event;
-intermediate chunks never publish a partially copied artifact.
+The final `install JIT chunk: ... status=0` log records a write attempt, before
+the kernel copies its payload. Require checked daemon writes plus runtime
+execution evidence; that line alone does not prove completed publication.
+The daemon sends `KD_EXE_NORMAL` only on its final chunk, but the kernel has no
+complete-image or concurrent-replacement protocol yet.
 Modes 2 and 5 also require a named `ktime_get` hostcall stub, no service callee
 translation or runtime recompilation, and matching nonzero
 exit/execute/resume counters. Mode 5 additionally requires hostcall counts to
@@ -223,6 +245,8 @@ kernel GS base and `args[1]` is the logical waiter task. Generic `%gs:` memory
 operands are lowered to ordinary addressing through that captured base;
 `%gs:current_task` reads the logical task argument. Hardware GS is never
 switched to the waiter while the combiner runs, and `%fs:` operands fail closed.
+These probes validate addressing and identity for the synthetic workload, not
+arbitrary remote per-CPU atomicity or scheduler/IRQ context equivalence.
 
 ### Specialized Recovery Tests
 
@@ -242,25 +266,29 @@ bash tests/test_04_spinlock.sh 10
 bash tests/test_08_mutex_jit_modes.sh 11
 ```
 
-These are intentionally excluded from `tests/run_all.sh`. The mode 9 variants
-exercise transactional cleanup and native retry after nested JIT faults. The
-mutex tests explicitly opt into `mutex_jit=1`.
+These are intentionally excluded from `tests/run_all.sh`. The injected mode 9
+variants exercise lock/frame cleanup and entry retry, not rollback of memory or
+native service side effects. The mutex tests explicitly opt into `mutex_jit=1`.
 
 ### Recovery VM
 
 The normal VM configuration includes VirtFS and VFIO, so QEMU `savevm` is not
-available. For high-risk tests, use the existing guest-local repository at
-`/root/host_fs/kdlock`; compare hashes and sync only changed files before
-starting the VM from the host in recovery mode:
+available. For high-risk tests, first check that no other VM is running and
+start the VM from the host in recovery mode:
 
 ```bash
 cd /home/eric/vm/qemu-scripts
 ./run_vm.sh recovery
 ```
 
+After SSH becomes available, use the existing guest-local repository at
+`/root/host_fs/kdlock`; compare hashes and sync only changed files before
+building and testing. This pathname is not a live host share in recovery mode.
+
 Recovery mode omits VirtFS and VFIO, writes serial output to
 `/tmp/qemu-serial.log`, and exposes `/tmp/qemu-monitor.sock`. Connect with
-`./run_vm.sh monitor`, issue `savevm pre_mutex_jit`, and use `Ctrl-C` to detach.
+`./run_vm.sh monitor` in a separate host terminal, issue `savevm pre_mutex_jit`,
+verify it with `info snapshots`, and use `Ctrl-C` to detach.
 Do not issue HMP `quit`, which exits QEMU.
 
 ## Module Parameters
