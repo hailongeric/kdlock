@@ -26,6 +26,7 @@ PY_TESTS += test_jit_body_witness.py
 PY_TESTS += test_context_spill_audit.py
 PY_TESTS += test_context_memory.py
 PY_TESTS += test_context_guards.py
+PY_TESTS += test_jit_entry_scope.py
 
 .PHONY: all clean run
 

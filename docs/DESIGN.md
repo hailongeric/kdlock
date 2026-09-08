@@ -294,9 +294,9 @@ KD_EXE_UNUSED -> KD_EXE_UNINIT -> KD_EXE_NORMAL
 KD_EXE_NORMAL -> KD_EXE_ERROR_INST  (terminal unsupported instruction)
 ```
 
-`KD_EXE_HOSTCALL` is deliberately absent from this lifecycle. It is a transient
-sandbox exit reason handled synchronously by the kernel executor, not a
-translation-entry state observed by the daemon.
+`KD_EXE_HOSTCALL` and `KD_EXE_ENTRY_REFUSED` are deliberately absent from this
+lifecycle. They are transient sandbox exit reasons handled by the kernel
+executor, not translation-entry states observed by the daemon.
 
 ### 6.3 kd_exe_on_call_hl_entry()
 
@@ -309,8 +309,14 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 ```
 
 1. Validate the active frame, waiter GS/task, and exact `(0, entry_ip)` readiness.
+   Require a fresh root or a published logical spin child with matching entry,
+   task, GS, post-lock-CALL packet and lock depth. A CPU-local physical parent
+   alone is insufficient; this checks logical scope, not image generation.
 2. Install the two inputs `{frame->gsbase, frame->logical_task}` and enter the
-   wrapper.
+   wrapper. Conditional images check entry disjointness before body. Only an
+   explicit `ENTRY_REFUSED` on the first pristine root call, with original
+   RIP/RSP and zero witness, can clear the conservative executed mark and
+   return `NO_RUN`. It is not a retry after progress or a daemon state change.
 3. On hostcall, enforce budgets, dispatch the typed service, pop the virtual
    return address, save continuation state, and re-enter the same artifact.
 4. On a control-call exit, use `handle_known_call()` to acquire/release nested
@@ -428,7 +434,7 @@ instruction/path coverage or version identity. Zero never authorizes replay.
 
 Branch-ending blocks increment R11 and test bit 24; the counter resets at each
 wrapper entry. It is not a retired-instruction or whole-CS budget.
-Dispatcher CMP and budget INC/TEST can clobber flags. No flags liveness verifier
+Entry predicates, dispatcher CMP and budget INC/TEST can clobber flags. No flags liveness verifier
 enforces the limitation. INT-to-NOP and warning-only special lowering remain;
 diagnostics do not repair instruction semantics.
 
@@ -443,12 +449,16 @@ successful waiter restoration.
 No effective canonical-address or general bounds guard is emitted.
 Neither admission nor the word "sandbox" implies a security isolation boundary.
 
-`context_guards.EntryGuards` is an analysis/test foundation, not enabled by
-`dis_assem`. It records conditional entry-range disjointness instead of assuming
-that distinct source bases cannot alias. Its experimental emitter and optional
-control-call facts have no production refusal/continuation contract yet. See
-[the usage guide](JIT_EXECUTION.md#5-入口条件分析尚未接入生产) for the bounded scope;
-this does not change the runtime statements above or the two-word ABI.
+For eligible single-root nested prefixes rejected by unconditional address
+analysis, `dis_assem` retries with `context_guards.EntryGuards`. It collects all
+required entry-range separations and emits their predicates before body, rather
+than assuming source bases cannot alias. Missing reachable text must be fetched
+and reanalyzed first. Known lock controls retain saved-register facts, not an
+assumption of untouched memory. Learned roots and independently decoded callees
+cannot borrow this conditional proof. See
+[the usage guide](JIT_EXECUTION.md#5-入口条件与嵌套续点) for bounds, runtime refusal and
+logical-child checks. The two-word ABI is unchanged; this is neither a general
+address guard nor immutable version isolation.
 
 ### 8.4 Native Hostcalls
 
@@ -664,7 +674,7 @@ The implementation boundaries are:
     as a security isolation boundary.
 13. **Batch limits are fixed** — spin and mutex combiners process at most 1024
     waiters per round; these constants are not module parameters.
-14. **Flags can be clobbered inside JIT** — dispatcher comparisons and inserted
+14. **Flags can be clobbered inside JIT** — entry predicates, dispatcher comparisons and inserted
     branch-block `INC`/`TEST` are not transparent to live flags. No liveness
     verifier enforces the restriction, even without a wrapper exit.
 15. **Continuation is not rollback** — see 9.5; completed stores and child

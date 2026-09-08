@@ -3,6 +3,7 @@
 import ctypes
 import io
 import random
+import struct
 import sys
 import unittest
 from pathlib import Path
@@ -13,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "disassem"))
 from context_guards import ENTRY_REFUSED, MASK, REGISTER_OFFSETS, EntryGuards
 from miasm.expression.expression import ExprId, ExprInt, ExprMem
 from test_jit_body_witness import render, run_image
-from test_jit_diagnostics import decode, translator
+from test_jit_diagnostics import TEST_LOCK_SYMBOLS, decode, translator
 from test_jit_diagnostics import render as translator_render
 
 
@@ -29,6 +30,87 @@ def guarded(guards, raw="48c7c02a000000c3"):
 
 
 class EntryGuardTests(unittest.TestCase):
+    def test_nested_precision_retry_fetches_and_checks_cold_paths(self):
+        def call(name, offset):
+            return b"\xe8" + struct.pack("<i", TEST_LOCK_SYMBOLS[name] - offset - 5)
+
+        prefix = bytes.fromhex("4d892c24c645f830498b04244c8930")
+        prefix += call("_raw_spin_lock", 0x1000 + len(prefix))
+        prefix += b"\xe9" + struct.pack("<i", 0x3000 - (0x1000 + len(prefix) + 5))
+        initial = (prefix, 0x1000, [0x1000])
+        for unsafe in (False, True):
+            cold = bytes.fromhex("65488b042500000000") if unsafe else b""
+            cold += call("_raw_spin_unlock", 0x3000 + len(cold))
+            cold += call("_raw_spin_unlock", 0x3000 + len(cold))
+            # Only the text-read boundary is mocked. Actual CFG scope, flow
+            # analysis and emission must include and check the fetched branch.
+            with (
+                self.subTest(unsafe=unsafe),
+                patch.object(
+                    translator.memread,
+                    "extend_regions",
+                    return_value=[initial, (cold, 0x3000, [0x3000])],
+                ) as extend,
+            ):
+                assembly, log, status = render(
+                    "", regions=[initial], return_status=True
+                )
+            extend.assert_called_once()
+            self.assertIn("ENTRY_GUARD_WAIT_TEXT", log)
+            self.assertEqual(status, 2 if unsafe else 0, log)
+            if unsafe:
+                self.assertEqual(assembly, b"")
+                self.assertIn("GS/current", log)
+            else:
+                self.assertIn("ENTRY_GUARDED_ADMISSION", log)
+                self.assertIn(b"kd_entry_guard_refused", assembly)
+
+    def test_automatic_nested_admission_checks_aliases_before_real_stores(self):
+        # A partial alias can corrupt the spilled pointer before its use. The
+        # safe packet must really execute; the overlapping packet must perform
+        # none of these stores, rather than merely losing its body witness.
+        raw = bytes.fromhex("4d892c24c645f830498b04244c8930")
+        for name in ("_raw_spin_lock", "_raw_spin_unlock", "_raw_spin_unlock"):
+            target = TEST_LOCK_SYMBOLS[name]
+            raw += b"\xe8" + struct.pack("<i", target - (0x1000 + len(raw) + 5))
+        assembly, log, status = render(raw.hex(), return_status=True)
+        self.assertEqual(status, 0, log)
+        self.assertIn("ENTRY_GUARDED_ADMISSION", log)
+        self.assertIn(b"kd_entry_guard_refused", assembly)
+        for overlap in (False, True):
+            with self.subTest(overlap=overlap):
+                pointer = ctypes.c_ulong(0x1234)
+                destination = ctypes.c_ulong(0x5678)
+                unrelated = ctypes.c_ulong(0)
+                before = []
+
+                def initialize(
+                    regs,
+                    _,
+                    pointer=pointer,
+                    destination=destination,
+                    base=pointer if overlap else unrelated,
+                    before=before,
+                ):
+                    regs[3] = ctypes.addressof(pointer)
+                    regs[2] = ctypes.addressof(destination)
+                    regs[1] = 42
+                    regs[4] = ctypes.addressof(base) + 8
+                    before.append(list(regs))
+
+                regs, args = run_image(assembly, [0x1000], initialize)[0]
+                if overlap:
+                    self.assertEqual(args, [ENTRY_REFUSED, 0])
+                    self.assertEqual(regs, before[0])
+                    self.assertEqual(
+                        (pointer.value, destination.value), (0x1234, 0x5678)
+                    )
+                else:
+                    self.assertEqual(args, [1, 1])
+                    self.assertEqual(regs[16], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
+                    self.assertEqual(pointer.value, ctypes.addressof(destination))
+                    self.assertEqual((destination.value, unrelated.value), (42, 0x30))
+
     def test_guarded_analysis_keeps_explicit_context_rejections(self):
         original = translator.find_segment_policy_error
 

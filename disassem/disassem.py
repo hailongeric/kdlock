@@ -6,6 +6,7 @@ from pathlib import Path
 
 import assist
 import conflict
+import context_guards
 import context_policy
 import diagnostics
 import hostcall
@@ -53,8 +54,8 @@ def find_segment_policy_error(
     native_exits=(),
     guards=None,
 ):
-    # Supplying guards is analysis-only until their complete predicates are
-    # enforced before body execution; production callers do not enable it yet.
+    # A guarded verdict is conditional: its complete predicates must be emitted
+    # before body execution. Analysis and emission share this same collector.
     db_dict = db_dict or {}
     symbols = symbols or {}
     selected = {
@@ -303,6 +304,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
     # Newly fetched branch targets inherit their caller's lock depth. Only
     # originally discovered callees/IJ targets are independent full-scan roots.
     discovered_targets = {target for _, _, targets in rets for target in targets}
+    entry_guards = None
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
     for expansion in range(33):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
@@ -344,12 +346,13 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
                 start <= offset and offset + 15 <= end for start, end in code_ranges
             )
         }
+        selected = {
+            offset: block
+            for offset, block in block_dict.items()
+            if offset not in missing
+        }
         segment_error = find_segment_policy_error(
-            {
-                offset: block
-                for offset, block in block_dict.items()
-                if offset not in missing
-            },
+            selected,
             code_ranges,
             db_dict,
             context_symbols,
@@ -358,6 +361,56 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
             roots=(discovered_targets | {entry}) & (block_dict.keys() - missing),
             native_exits=native_exits,
         )
+        if (
+            segment_error
+            and segment_error[1].startswith("bounded register-address alternatives")
+            and discovered_targets <= {entry}
+            and any(
+                line.name.upper() == "CALL"
+                and line.args
+                and context_policy.static_address(
+                    line.args[0], db_dict[block], line.offset + line.l
+                )
+                in {raw_spin_lock, mutex_lock}
+                for block in selected.values()
+                for line in block.lines
+            )
+        ):
+            if missing:
+                # This is not admission: complete the selected cold paths and
+                # rerun both analyses before collecting/emitting any predicates.
+                segment_error = None
+                diagnostics.warn(
+                    "ENTRY_GUARD_WAIT_TEXT",
+                    "complete_cfg",
+                    "nested precision retry requires all selected branch text",
+                )
+            else:
+                # Every separated entry range becomes a real pre-body predicate;
+                # learned roots cannot borrow this entry's register identities.
+                candidate = context_guards.EntryGuards()
+                segment_error = find_segment_policy_error(
+                    selected,
+                    code_ranges,
+                    db_dict,
+                    context_symbols,
+                    lock_kind,
+                    lock_symbols,
+                    roots={entry},
+                    native_exits=native_exits,
+                    guards=candidate,
+                )
+                if not segment_error:
+                    entry_guards = candidate
+                    diagnostics.set_instruction(
+                        entry, "<entry disjointness predicates>"
+                    )
+                    diagnostics.warn(
+                        "ENTRY_GUARDED_ADMISSION",
+                        "emit_entry_checks",
+                        "conditional nested admission; check all premises before body",
+                        guards=len(candidate.conditions()),
+                    )
         if segment_error:
             offset, reason = segment_error
             detail = f"{reason} at 0x{offset:x}" if offset else reason
@@ -386,6 +439,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
     emitted_continuation_labels = set()
 
     f = StringIO()
+    if entry_guards is not None:
+        entry_guards.emit(f, entry)
     write_entry_dispatch(f, entry, block_dict, continuation_targets)
     budget_blocks = 0
     first_budget_rip = None

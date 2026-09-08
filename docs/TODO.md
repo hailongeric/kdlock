@@ -12,19 +12,23 @@ ends this JIT invocation and the original waiter completes the native suffix.
 Admission and emission share the same scope. This replaces the old requirement
 to admit that waiter-only suffix; it does not allow unchecked live JIT paths.
 
-Latest complete matrix: **37/51 pass, 14 fail**; 23 passes execute generated
-code, 12 are context refusals and two are native controls. The later foundation
-check passes all 39 unit programs and the 25-case admission audit. Evidence
-and exact failures:
-[VALIDATION](VALIDATION.md#jit-episode-scope). Main mode 1/4/8 acceptance is open.
+Latest complete matrix: **47/51 pass, 4 fail**; 33 passes execute generated
+code, 12 are context refusals and two are native controls. All 40 unit programs
+and the 25-case admission audit pass. Mode 0-7, including guarded mode 1/4,
+pass actual JIT. The open gates are ordinary mode 8, its stage-2/3 register
+cases and mutex learned-depth continuation:
+[VALIDATION](VALIDATION.md#guarded-nested-admission).
 
 Implement next in this order:
 
-1. Reduce the complex nested JIT prefix's false refusals without assuming
-   private source stacks, invisible aliases or preserved registers across
-   services. Keep the existing register-sample and sensitive-memory probes.
-2. Recover mode 1/4/8 and the related register/native continuation gates on
-   the same frozen inputs, including `mutex_jit=1` for mutex cases.
+1. Resolve ordinary mode 8's retained empty/undecodable cold blocks. Distinguish
+   missing text and decoder/CFG construction from real unsupported instructions;
+   never omit a live block or remove register/context probes to pass admission.
+2. Extend justified admission to the mutex depth helper learned after a real
+   CALL miss. Current single-root guards cannot be borrowed by independent
+   callee roots; the expanded image is refused even though its first prefix
+   executes. Keep memory clobbers and two-word ABI; do not resume this native
+   invocation inside JIT or silently add version isolation.
 3. Re-run the complete matrix, retain failed attempts and classify actual JIT,
    context refusal and native-only controls separately.
 4. Only then broaden context/resource coverage and consider optional services
@@ -32,26 +36,27 @@ Implement next in this order:
 
 ### Guarded Admission Increment
 
-The optional analysis collects required entry-range separations and models
-callee-saved effects only at registered lock-control calls. Production does
-not enable it. Captured-text feasibility, tests and limitations are recorded in
-[VALIDATION](VALIDATION.md#entry-guard-foundation); this does not close C1/C2/C5.
+Production conditional analysis collects required entry-range separations and
+models callee-saved effects only at registered lock-control calls. Every premise
+is checked before root body execution; missing cold text must be fetched first.
+Results and remaining gates are in
+[VALIDATION](VALIDATION.md#guarded-nested-admission); this does not close C1/C2/C5.
 
 - [x] Collect every required disjoint range and test the emitted entry predicate
       against concrete overlap, adjacency, wrap and register-preservation cases.
-- [ ] Validate lock-control register effects against production handlers; keep
-      memory clobbers and ordinary/decoded call handling conservative. Two real
-      CALL advance helpers pass packet-preservation tests; remote child/control
-      paths still need end-to-end proof before enabling this analysis.
-- [ ] Connect guarded analysis to code generation only with a verified pre-body
+- [x] Validate the two production CALL advance helpers' packet preservation;
+      retain memory clobbers and conservative ordinary/decoded call effects.
+      Guarded mode 1/4 and their register continuations execute actual JIT.
+- [x] Connect guarded analysis to code generation with a verified pre-body
       refusal path. Preserve two arguments, GS/current refusal and progressed
-      fail-stop behavior. Prove that non-root dispatch inherits the same root's
-      successful admission; `executed` or a body marker alone is not a version
-      certificate. Current analysis permits one explicit root and no independently
-      seeded decoded callee. Do not bypass these constraints for learned targets.
-- [ ] Execute the main modes, negative guard cases, register continuations and
-      full matrix on one frozen source set. No candidate JIT runs before these
-      prerequisites, and the current fourteen failed gates remain open.
+      fail-stop behavior. Validate a non-root child's published logical parent,
+      CALL phase/packet, task, GS and lock depth before first dispatch. This is
+      logical scope, not a version certificate; C3 remains deferred. Conditional
+      analysis permits one explicit root and no independently seeded callee.
+- [ ] Close the remaining ordinary mode-8 and mutex learned-depth gates without
+      deleting register probes or treating missing/undecodable text as safe.
+      Keep generated overlap-refusal tests and full-matrix results separate from
+      fixture-only scope tests and captured-text feasibility.
 
 ## P0: Correctness Contracts
 
@@ -70,8 +75,10 @@ Implemented boundaries:
 
 Remaining:
 
-- [ ] Recover the failed nested register/CALL, held-B, pending-B and mutex-depth
-      cases under current admission, not a historical translator.
+- [x] Recover mode 1/4 register/CALL, held-B and pending-B gates under guarded
+      admission, with exactly-once protected-state and ownership checks.
+- [ ] Recover mode 8 register/CALL and mutex learned-depth acceptance on current
+      source; a successful first prefix does not validate expanded callee code.
 - [ ] Prove/test each additional recoverable exit with registers, stack,
       ownership and exactly-once side effects. Unsupported post-entry exits
       remain fail-stop, not restart-at-entry fallbacks.
@@ -89,7 +96,7 @@ publication. Native signal/trylock participants use Linux exclusion.
 
 Remaining:
 
-- [ ] Complete current nested main-path acceptance and broaden non-target,
+- [ ] Complete mode 8 and learned-depth acceptance, then broaden non-target,
       oversubscribed, cancellation and remote/deferred follower schedules.
 - [ ] Review source/lock address reuse, source-module lifetime and metadata
       retirement. Existing guest hook readers lack a complete unload/drain
@@ -135,8 +142,10 @@ hostcall escape disguised as context restoration.
 
 Remaining:
 
-- [ ] Fix current conservative refusals at loaded-pointer/register-sample
-      stores before the terminal CALL in complex mode 1/4/8.
+- [x] Admit eligible mode 1/4 loaded-pointer/register-sample prefixes using
+      enforced entry disjointness conditions, not assumed private stacks.
+- [ ] Resolve mode 8's cold CFG and learned mutex helper admission while retaining
+      full checks on every executable JIT path.
 - [ ] Preserve alternate live paths, learned-target reanalysis, indirect-call
       conservatism and CALL stack-write checks while improving precision.
 - [ ] Expand negative tests for aliases, implicit/internal IR accesses and

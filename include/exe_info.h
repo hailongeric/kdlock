@@ -27,6 +27,8 @@
 
 /* Runtime-only sandbox exit; never published as kd_exe_info.status_code. */
 #define KD_EXE_HOSTCALL 5 /* sandbox requests an allowlisted service   */
+#define KD_EXE_ENTRY_REFUSED \
+	6 /* entry predicate failed before any CS instruction */
 
 enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,

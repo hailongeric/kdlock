@@ -37,7 +37,12 @@ waiter 获取/请求 L，记录原临界区入口
   |
   +-- 无可用 JIT / 准入拒绝 --> waiter 原生执行
   |
-  +-- combiner 持有原生 L --> wrapper 装载 waiter 的 pt_regs
+  +-- combiner 持有原生 L --> 校验入口/逻辑子请求的执行范围
+                              |
+                         wrapper 装载 waiter 的 pt_regs
+                              |
+                         必要时检查入口地址区间
+                              +-- 条件不满足 --> 尚未开始，走原生路径
                               |
                               v
                          执行翻译后的指令
@@ -104,8 +109,8 @@ bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5
 该入口遇到失败立即停止；检查每种模式时可分别传入一个 mode，不能因为前面
 通过就假定后面执行过。mode 3/4/5 脚本显式加载 `mutex_jit=1` 并检查实参。
 daemon 的 `--mode 1/2` 只选择工作目录布局，不是 benchmark 的 mode。
-当前 mode 1/4 仍被保守准入拒绝，因此上述完整命令不能预期全绿；这也是要
-单独保留失败日志的原因。mode 0/2/3/5 已通过本轮实际 JIT 检查。
+mode 1/4 已通过接入入口条件后的实际 JIT 检查；这不代表所有 mode 8、远端
+或资源耗尽场景也通过，完整结果及未通过项见验证记录。
 
 普通 CALL 的真实寄存器/退出点续跑，以及上下文拒绝测试：
 
@@ -138,58 +143,74 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 脚本输出的 `Evidence:` 目录。分析精度耗尽是保守拒绝，不是发生真实越界的证据；
 拒绝后的原生完成不能冒充 JIT 正例通过。
 
+同一次翻译可能先报告无条件分析的 `CONTEXT_ADDRESS_WIDENED`，再通过带条件
+分析并报告 `ENTRY_GUARDED_ADMISSION`。前一条不能单独当作最终拒绝。冷分支
+补读为 `ENTRY_GUARD_WAIT_TEXT` / `TEXT_RANGE_EXTEND`，补读完成仍须重新检查。
+运行时 `ENTRY_GUARD_REFUSED` 表示当前入口值不满足条件，本次未执行 body；
+`ENTRY_SCOPE_MISMATCH` 或 `INVALID_ENTRY_REFUSAL` 则需要核查 frame、CALL
+阶段、RIP/RSP 和父请求，不能忽略错误并重试入口。
+
 本轮实测结果与未通过项集中记录在
-[VALIDATION: JIT Episode Scope](VALIDATION.md#jit-episode-scope)。
+[VALIDATION: Guarded Nested Admission](VALIDATION.md#guarded-nested-admission)。
 完整矩阵的逐项命令见 [测试清单](VALIDATION.md#current-matrix-manifest)，
-本次整理文档后的短回归另记于 [提交前验证](VALIDATION.md#commit-verification)，
-不能将短回归当作完整矩阵重跑。
-完整 51 项中 37 通过、14 失败，通过项包含 23 项实际 JIT。mode 0/3 的
-普通 CALL 寄存器续跑检查通过；复杂 mode 1/4/8 及相关路径仍需进一步实现，
-不能把本轮范围选择的完成写成整个项目或所有模式已完成。
+本轮使用相同的 51 个选择器重新执行，不借用旧的短回归结果。
+完整 51 项中 47 通过、4 失败，通过项包含 33 项实际 JIT。mode 0–7 和
+mode 1/4 的普通 CALL 寄存器、held-B、pending-B 续跑检查通过；普通 mode 8、
+它的两个寄存器续跑项及 mutex 学习深层 callee 后的扩大准入仍未通过，不能
+将本轮改进写成整个项目或所有模式已完成。
 
-## 5. 入口条件分析（尚未接入生产）
+## 5. 入口条件与嵌套续点
 
-复杂嵌套前缀中的未知别名会导致地址分析扩大并保守拒绝。新增
-`context_guards.EntryGuards` 收集分析所依赖的“不重叠”条件，而不是直接假定
-waiter 栈、记录对象及绝对地址相互独立。**生产 `dis_assem` 不启用此分析，也不
-调用 emitter；没有可开启它的 daemon 参数。mode 1/4 仍未通过实际 JIT 验收。**
-
-当前已实现的分析/测试流程：
+复杂嵌套前缀中的未知别名会导致地址分析扩大并保守拒绝。生产翻译器现在自动
+尝试 `context_guards.EntryGuards`，收集分析所依赖的“不重叠”条件，并在执行
+任何 body 指令之前检查。它不假定 waiter 栈、记录对象或绝对地址彼此独立，
+也不需要新增 daemon 参数。
 
 ```text
-测试显式传入 collector，限定一个 CFG root
+无条件分析遇到有界地址精度耗尽
+  -> 单一初始 root，且包含普通嵌套 lock 控制 CALL，才尝试条件分析
+  -> 补齐所有 JIT 可达冷分支，再重新分析，不把缺失文本当作安全代码
   -> 每次别名分离记录两个完整字节区间（store 包含全部写入宽度）
-  -> 合并相邻区间，保留间隙，生成有界条件集合
-  -> 用户态测试把 predicate 放到真实 wrapper 的 body 标签之前
-  -> 从保存的入口 GPR 计算地址差，不读取指针指向的内存
-  -> 重叠：实验退出，保存的寄存器包/虚拟栈/外部内存不变
-     不重叠：执行测试用 MOV/RET body，并检查返回后的 witness
+  -> 条件分析通过：把全部条件生成在入口分发表及 body 之前
+  -> 首次 root 调用：只从保存的入口 GPR 计算地址差，不解引用目标
+     不重叠：执行 body，后续锁控制/hostcall 可在同一调用内继续
+     重叠：ENTRY_REFUSED=6，保留入口 GPR/RIP/RSP、虚拟栈和外部内存
+  -> kernel 仅接受真正首次 root 的 pre-body 拒绝，转为未开始的原生工作
 ```
 
-只接受入口 GPR 加常量或绝对地址；无法识别的基址继续保守处理。收集上限为
-1024 个区间、256 条最终条件，耗尽不能当作通过。已学习的独立根和已解码的
-独立 callee 暂不支持。只有已注册锁控制 CALL 可保留 callee-saved 分析事实，
-普通调用不获得该假设，内存 clobber 仍保留。GS/current、IRQ 及已知敏感符号
-拒绝规则不变；这些条件也不是任意指针或并发内存的安全证明。
+只接受入口 GPR 加常量或绝对地址。收集上限为 1024 个区间、256 条最终条件；
+未知基址、分析或条件预算耗尽继续保守拒绝。已学习的独立根、已解码的独立
+callee 不借用这个条件分析，原无条件分析仍可处理它们。只有已注册锁控制 CALL
+可保留 callee-saved 分析事实，普通调用不获得该假设，内存 clobber 仍保留。
+GS/current、IRQ 及已知敏感符号拒绝规则不变。
+
+非 root 首次分发不能随意跳过条件。`kd_jit_entry_has_scope()` 要求逻辑父请求
+已经执行并在已知锁 CALL 后发布 `WAITING` / `ENTERED`，核对相同 entry、task、
+GS，以及 post-CALL RIP/RSP、目标 B 和锁层级。CPU 本地的物理 parent 不能代替
+逻辑父请求。mutex B 在同一 frame 内续跑，不创建远端 mutex 子 frame。
+
+`ENTRY_REFUSED` 只有在首次 root、未处理 continuation/hostcall、返回入口
+RIP/RSP 且 witness 为零时才能清除保守的 executed 标记。专用拒绝桩保证整个
+寄存器包不变；kernel 不逐个比较 GPR。已执行后的拒绝、错误包或其他退出
+仍按既有错误协议处理，零 witness 单独不授权重放。
+
+这些校验只建立逻辑调用范围，**不是代码版本证书**。并发原地重编译可能使
+父请求的条件与新代码不匹配，仍属于已延期的版本隔离限制。条件比较也会
+修改 flags；本次不补 flags 活跃性验证或恢复，不宣称一般内存/上下文安全。
 
 在 guest 中运行，不能在宿主机执行生成机器码：
 
 ```sh
-cd /root/host_fs/kdlock
 python3 tests/unit/test_context_guards.py
+python3 tests/unit/test_jit_entry_scope.py
 python3 tests/unit/test_native_after_outer.py
 make -C tests/unit run
 python3 tests/audit_context_spills.py
 ```
 
-前两项分别覆盖 14 项条件测试和真实 CALL 推进函数的保存包检查；不是内核
-锁并发或 guarded mode 1/4 的执行证明。捕获文本回放只能证明候选分析可通过，
-不能安装其未检查的汇编。测量及源文件身份只维护在
-[验证记录](VALIDATION.md#entry-guard-foundation)。
-
-接入前仍须实现专用 pre-body 拒绝协议，并证明非入口续跑继承同一逻辑调用的
-已通过条件。实验 emitter 的非 root 分支目前跳过检查，生产不能无条件采用。
-真正未开始的工作才可原生执行；已产生副作用的异常仍不能入口重放。之后再做
-真实锁控制/远端执行、负条件拒绝、mode 1/4/8 及完整矩阵测试，任务顺序见
-[TODO](TODO.md#guarded-admission-increment)。不新增第三个参数，不修改 guest 内核，
-也不在此次基础提交中扩展已延期的 flags 或代码版本隔离工作。
+条件测试包含真实生成代码的重叠拒绝、无重叠写入和冷分支敏感操作拒绝。
+scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行后拒绝及
+远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
+另行验证真实 JIT、嵌套竞争及寄存器续跑。结果只维护在
+[验证记录](VALIDATION.md#guarded-nested-admission)，后续顺序见
+[TODO](TODO.md#guarded-admission-increment)。

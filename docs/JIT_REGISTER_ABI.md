@@ -3,7 +3,7 @@
 本文以当前 x86-64 内核 spin/mutex 实现为准，描述入口、wrapper、退出及原 waiter
 续跑的寄存器/栈约定。使用与执行流见 [JIT_EXECUTION.md](JIT_EXECUTION.md)，
 锁和 frame 生命周期见 [DESIGN.md](DESIGN.md)，结果见
-[VALIDATION.md](VALIDATION.md#jit-episode-scope)。
+[VALIDATION.md](VALIDATION.md#guarded-nested-admission)。
 
 唯一执行入口是 frame-backed `kd_exe_on_call_hl_entry()`。两元素输入保持
 `{waiter GS base, logical waiter task}`，不增加 FS base 或第三个 task 元素。
@@ -85,7 +85,8 @@ budget，但 epilogue 不会把它复制到 `Stack_JIT_WITNESS`。此布尔标�
 避免上次执行的 1 被误用。公共测试启动 daemon 时强制开启，并要求匹配
 entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志不再足够。
 执行器每次高层调用只记录第一个正标记，不承诺每次内部续跑都有单独日志。
-此值不参与失败恢复、锁交接或重放决策；未开启观测的代码即使执行也返回 0。
+此值不独立授权失败恢复、锁交接或重放；未开启观测的代码即使执行也返回 0。
+专用入口拒绝协议将零值作为必要的包校验之一，还必须满足第 8 节的其他条件。
 
 ## 3. `pt_regs` 输入输出约定
 
@@ -112,7 +113,7 @@ entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志
 | `orig_rax`、CS、EFLAGS、SS | 不装入 translated state | wrapper 不修改 |
 
 EFLAGS 不是跨 wrapper 边界的持久状态。相邻 translated 指令会自然使用 CPU
-flags，但入口 dispatcher 的 `CMP` 以及 branch-block budget 的 `INC`/`TEST` 都会
+flags，但入口条件的地址比较、dispatcher 的 `CMP` 以及 branch-block budget 的 `INC`/`TEST` 都会
 改写 flags，epilogue 也不把 flags 写回 `pt_regs.flags`。所以当前正确性要求原始
 代码没有跨这些插桩点存活的 flags；continuation 只能放在函数调用边界等不要求
 旧 flags 保持的位置，不能在任意依赖旧 flags 的指令之间退出和恢复。
@@ -322,14 +323,18 @@ args[1]    = Stack_JIT_WITNESS   (0/1，只供观测)
 | block budget 超限 | 最近记录的 block RIP | `4` (`KD_EXE_INST_LIMIT`) | 不变 |
 | dispatcher 无匹配 continuation | 请求的 RIP | `2` | 不变；高层路径最终失败 |
 | 运行期不支持的指令退出 | 保存的指令 RIP | `3` (`KD_EXE_ERROR_INST`) | 不变；终止失败 |
+| 入口不重叠条件不满足 | 原入口 RIP | `6` (`KD_EXE_ENTRY_REFUSED`) | 未执行 body；原 GPR/RSP/内存不变，witness 为 0 |
 
 `KD_EXE_NATIVE_ONLY == -3` 仅是翻译准入状态，不是 wrapper 的退出原因，
-不能写入 `args[0]` 来模拟拒绝。拒绝入口不调用 wrapper。
+不能写入 `args[0]` 来模拟拒绝。静态拒绝的入口不调用 wrapper。
 
-`context_guards.py` 的实验 emitter 在用户态 wrapper 测试中使用 `ENTRY_REFUSED=6`；
-它尚未接入生产翻译、daemon 发布或内核运行时，不能作为本表新增的退出 ABI。
-尤其不能仅因 `body=0` 就清除已执行状态或从入口重跑。后续接入条件见
-[执行指南](JIT_EXECUTION.md#5-入口条件分析尚未接入生产)。
+`ENTRY_REFUSED=6` 是生产条件检查的运行期退出，不是 daemon 的 entry status，
+也不要与 C 执行函数返回的 `KD_EXE_RUN_NATIVE=6` 混淆。kernel 仅在首次 root、
+尚无 continuation/hostcall、RIP/RSP 保持入口且 witness 为零时接受它，清除
+保守的 executed 标记并返回 `KD_EXE_NO_RUN`；条件未通过不废弃其他输入可用的
+已发布代码。其他时机或错误包返回 `KD_EXE_RUN_ERROR`，不允许入口重放。
+非 root 续点的逻辑父子校验及版本限制见
+[执行指南](JIT_EXECUTION.md#5-入口条件与嵌套续点)。
 
 `KD_EXE_IJ_MISS == 2` 是 `kd_exe_info.status_code` 的 daemon 状态，不是普通 IJ
 miss 时 wrapper 返回在 `args[0]` 的值。wrapper 返回源 RIP，kernel executor
@@ -401,8 +406,8 @@ task/目标 RIP/RSP 对应。远端祖先可以转递同一个包，但 callee �
 RBP/RSP/后继 RIP 的期望地址由 caller 生成，并非独立证明所有地址计算。
 此探针不检查 RFLAGS、向量寄存器、非 CALL 出口、任意栈对齐或 IRQ/NMI；
 纯原生及 guest 用户态对照不能记为 JIT 通过。证据见
-[CALL 寄存器验证](VALIDATION.md#call-miss-register-witnesses)。
-当前单锁 mode 0/3 的标记样本通过；复杂嵌套相关正例仍失败，详见最新验收。
+[最新寄存器验收](VALIDATION.md#guarded-nested-admission)。
+当前 mode 0/3 和嵌套 mode 1/4 的标记样本通过；mode 8 相关正例仍失败。
 
 ## 10. Nested lock known-call 约定
 

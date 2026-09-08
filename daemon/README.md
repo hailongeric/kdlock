@@ -92,6 +92,14 @@ including with `--quiet`. Read the reason, action, source RIP/instruction and
 address/alias provenance before interpreting an aggregate failure.
 `CONTEXT_NATIVE_ONLY` reports policy rejection; `CONTEXT_ADDRESS_WIDENED`
 reports analysis precision loss, not proof of a real invalid access.
+An eligible nested entry may then report `ENTRY_GUARD_WAIT_TEXT` while fetching
+cold branches, followed by `ENTRY_GUARDED_ADMISSION` on conditional success.
+Read the final verdict, not the first unconditional-analysis warning alone.
+The generated image checks all collected entry predicates before body; runtime
+`ENTRY_GUARD_REFUSED` means that invocation remains unstarted and native, not
+that the daemon should disable the entry or replay completed work. No extra
+daemon switch is needed. Scope and protocol are documented in
+[the usage guide](../docs/JIT_EXECUTION.md#5-入口条件与嵌套续点).
 Existing INT/special-instruction and flags diagnostics describe limitations;
 they do not repair semantics or establish a general privilege verifier.
 
@@ -123,4 +131,4 @@ failures into accepted native fallback.
 Actual runtime continuation and test commands are maintained in
 [JIT_EXECUTION](../docs/JIT_EXECUTION.md). Current results, including failed
 complex nested modes, are in
-[VALIDATION](../docs/VALIDATION.md#jit-episode-scope), not duplicated here.
+[VALIDATION](../docs/VALIDATION.md#guarded-nested-admission), not duplicated here.

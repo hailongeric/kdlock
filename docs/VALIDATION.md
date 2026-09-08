@@ -1,31 +1,107 @@
 # kdlock Validation
 
-Latest complete-matrix evidence is the JIT Episode Scope freeze below. The full matrix
-has **14 failed gates** and is not accepted as complete. An actual-JIT positive,
-a context refusal and a pure-native control are different outcomes. The later
-[entry-guard foundation](#entry-guard-foundation) has a separate source freeze
-and narrow regression; it does not replace that complete matrix.
+Latest complete matrix: **47/51 pass, four gates fail** on the
+[guarded nested admission](#guarded-nested-admission) freeze. An actual-JIT
+positive, a context refusal and a pure-native control are different outcomes.
+The project is not accepted as complete; older matrices are historical only.
 
-Complete-matrix source identity: 168 inputs in
-`/tmp/kdlock-jit-episode.lQFNLA/source.sha256`.
+Complete-matrix source identity: **172 inputs** in
+`/tmp/kdlock-guard-matrix.90lmMR/source.sha256`.
 Full source/log/artifact/command archive:
-`/tmp/kdlock-jit-episode.lQFNLA.tar.gz`, SHA256:
+`/tmp/kdlock-guard-matrix.90lmMR.tar.gz`, SHA256:
 
 ```text
-049153a5fd1c185db6531716bd666d09b023a7e58ca3f7caf8dbc32ba0345687
+231c916667b7c1b2e8d6e1ff71f9695d8978441e79d8ece2fa0e0e5dbaa57276
 ```
 
 The archive includes frozen source, generated artifacts, per-case commands,
-status/dmesg/drain records, units, builds, kernel identities and a separate
-guest-userspace wrapper check. /tmp paths are external local evidence, not
+status/dmesg/drain records, units, builds, kernel identities and guest-userspace
+generated-predicate checks. /tmp paths are external local evidence, not
 files delivered by a fresh Git checkout. The command manifest below keeps
 invocations auditable. The two pure-native controls depend on an external
 helper; they are not yet a self-contained fresh-checkout test. General evidence
 packaging remains TODO P1. Losing an archive never makes recorded results new.
 
+## Guarded Nested Admission
+
+**2026-09-08, 16:24:54-16:43:06 +08:** all 51 selectors from the
+[command manifest](#current-matrix-manifest) are attempted on the same frozen
+inputs. **47 pass: 33 actual-JIT, 12 context refusals, two native controls.**
+Ten formerly failed gates recover; **four still fail**. No source/test probe
+changes occur during the matrix, and no native fallback is counted as a JIT
+positive. `results.tsv` records each exit status; the matrix driver completing
+does not mean all cases passed.
+
+This increment enables conditional nested admission, complete cold-path
+reanalysis, pre-body `ENTRY_REFUSED` handling and first-dispatch logical-scope
+validation. Predicate, runtime and test branches explain their purpose and
+constraints in code. The execution contract and commands are maintained in
+[JIT_EXECUTION](JIT_EXECUTION.md#5-入口条件与嵌套续点), not duplicated here.
+
+| Cases | Result / evidence |
+| --- | --- |
+| mode 0/1/2/3/4/5/6/7 | All pass actual JIT; returned body counts respectively 4/4/4/650/1/442/4/2 |
+| mode 1 nested spin | Main image 8611 bytes, 42 entry conditions; protected-state oracle passes |
+| mode 4 nested mutex, `mutex_jit=1` | Image 11778 bytes, 43 entry conditions; deterministic A/B contention and 12008 transitions across two states pass |
+| mode 5, `mutex_jit=1` | 442 hostcall exits execute and resume; JIT/result checks pass |
+| mode 0/3 stage 1; mode 1/4 stages 2/3, register probes | All six pass with actual JIT, 16 GPR/stack and exactly-once checks; flags unchecked |
+| mode 1/4 stages 3/4, held-B/pending-B | All four pass actual-JIT native continuation and protected-state checks |
+| Context negatives, native controls, mixed-owner cases | 12 zero-JIT refusals, two pure-native controls, two actual-JIT owner/exclusion passes |
+| Physical depth / remote / deferred / cross-NUMA fixtures | All eleven pass actual JIT; these do not validate ordinary mode 8 |
+| Late spin/mutex policy | Both pass prefix execution, waiter-native completion and later policy checks |
+
+Remaining failures, with their own retained stderr, artifacts and dmesg:
+
+- `mode-8`: required JIT artifacts are incomplete at the 30-second gate;
+  the log records address widening and cold-text extension, without a final
+  successful admission for the required entries. No returned body witness.
+- `registers-8-2`, `registers-8-3`: after cold-text extension, entries
+  `0xffffffffc0a67fb0` and `0xffffffffc0a67f84` are refused for an
+  empty/undecodable block at `0xffffffffc0a6ed7f`. No returned body witness.
+  Do not infer actual unsupported bytes versus a decoder/CFG issue without
+  further investigation, and do not remove the block from admission.
+- `native-mutex-depth` (`test_10_native_resume.sh 4 5`): the initial guarded
+  prefix executes (one body witness) and produces a real helper CALL miss.
+  After callers drain, learning the helper expands the roots; the new image
+  is refused at `MOV [RBX+0xD0],R13`. Single-root predicates cannot be borrowed
+  by that expanded analysis. The failed deep gate is not an actual-JIT pass.
+
+Before and after integration, **40 unit programs** pass without skips,
+including **16 predicate methods**, **66 production executor scope checks**
+and the real CALL-helper packet tests. The independent **25-case admission
+audit** reports zero failures. Predicate tests execute generated code in guest
+userspace; the scope fixture substitutes wrapper/lock boundaries. These are
+separate from live kernel concurrency evidence. Both selftest+NUMA and default
+module profiles build; existing manual-stack objtool warnings remain.
+
+At **16:44:56 +08**, postflight again verifies all 172 host/guest input hashes,
+the 18-file kernel baseline, config, nine build files and running Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`. Default kdlock module `.text` is
+`37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`.
+Every case has an empty kernel-fault scan and drains callers/modules. No live
+`ENTRY_SCOPE_MISMATCH`, `INVALID_ENTRY_REFUSAL` or `ENTRY_GUARD_REFUSED` is
+observed; guard-negative execution is covered separately by the generated-code
+unit tests, not claimed as a live negative workload.
+
+No guest-kernel edit/build/install/restart, owner handoff, third wrapper argument,
+frame-layout growth, flags repair or immutable code version is introduced.
+Logical-child scope is not version isolation. C3/C4 remain explicitly deferred;
+the four failed gates and broader context/resource coverage remain TODO.
+
+Earlier attempts are retained separately, not mixed into this matrix:
+`/tmp/kdlock-guard-runtime.N6l1wz.tar.gz` preserves the failed cold-read ordering
+candidate; `/tmp/kdlock-guard-complete-scope.qwFSxV.tar.gz` preserves the corrected
+four-mode focused pass. The latter differs from the final freeze only by the
+test initializer's explicit closure binding. Archive SHA256 values respectively:
+
+```text
+4bc964e0f98697f580266767f35b6b3947a6eda20c28f6aace4b3cc4d0a936c3
+bf077f89d8edabaa829d31deb2a6417246e1184426f44124d868c8a123b11abf
+```
+
 ## Entry Guard Foundation
 
-**Status: analysis/test foundation only; not enabled in production.** Evidence:
+**Historical checkpoint: analysis/test foundation only at this source freeze.** Evidence:
 `/tmp/kdlock-guard-foundation.qaCvD5/`, with **170 frozen inputs** in
 `source.sha256`. Archive `/tmp/kdlock-guard-foundation.qaCvD5.tar.gz`, SHA256:
 
@@ -54,12 +130,11 @@ only for registered lock controls:
 | mode 4 | 500 | 43 | 787978 / 1000000 | Conditional analysis passes |
 
 The replay does **not** enforce predicates, install an image or execute kernel
-text. Its assembly sizes/status are feasibility observations only. Earlier
-unconditional separation experiments in `/tmp/kdlock-guard-feasibility.FpSXTS/`
-are not safe candidates. Production `dis_assem` still supplies no collector;
-the experimental `ENTRY_REFUSED=6` and non-root bypass have no runtime contract.
-Integration prerequisites and usage are maintained in
-[JIT_EXECUTION](JIT_EXECUTION.md#5-入口条件分析尚未接入生产), not inferred from this table.
+text. At this checkpoint production supplies no collector; the runtime refusal
+and logical-child contract are added only in the later
+[guarded integration](#guarded-nested-admission). Feasibility is not execution
+evidence. The active contract is maintained in
+[JIT_EXECUTION](JIT_EXECUTION.md#5-入口条件与嵌套续点).
 
 Six fresh production regressions run on the final freeze from
 **15:28:28 to 15:30:46 +08**; the candidate predicates remain disabled:
@@ -81,7 +156,8 @@ files, config, nine build files and running Build ID
 `6f9f2e9fec382e97f620553793aa90b527a30af5`. No guest-kernel edit or image build,
 owner/argument ABI change, flags repair or immutable-code change is made.
 This is **3 actual-JIT passes + 1 refusal pass + 2 failures**, not a full-matrix
-rerun and not guarded nested-JIT acceptance. The fourteen main gates stay open.
+rerun and not guarded nested-JIT acceptance. Fourteen gates remained open at
+this historical checkpoint; use the latest matrix for current status.
 
 ## Acceptance Contract
 
@@ -125,9 +201,11 @@ then resumes it to validate subsequent refusal without replay.
 
 ## JIT Episode Scope
 
-**Status: episode scope implemented; 37/51 live gates pass, 14 remain failing.**
+**Historical matrix: episode scope implemented; 37/51 pass, 14 fail at this freeze.**
 Evidence: `/tmp/kdlock-jit-episode.lQFNLA/`. Usage, execution flow and test
 commands are in [JIT_EXECUTION.md](JIT_EXECUTION.md).
+Historical archive `/tmp/kdlock-jit-episode.lQFNLA.tar.gz` has SHA256
+`049153a5fd1c185db6531716bd666d09b023a7e58ca3f7caf8dbc32ba0345687`.
 
 The user approved checking the actual possible JIT episode rather than a
 waiter-only native suffix. The new 168-input freeze changes six files from the
@@ -173,7 +251,7 @@ no prior-source pass or invalid CPU-placement attempt is substituted.
 Eight former failures recover: mode 0/3, their two register-CALL cases, both
 mixed-owner cases and both late-policy cases. Full acceptance remains open.
 
-The remaining failures are:
+The failures at this freeze are:
 
 ```text
 mode-1 mode-4 mode-8
@@ -232,63 +310,12 @@ and version checkpoint is recorded separately below.
 
 ## Current Matrix Manifest
 
-These are the **13:02-13:23 +08, 2026-09-08** results, not the later focused
-commit checks. Body records count returned positive log records, not retired
-instructions, unique source instructions or immutable generations.
-
-| Case | Exit | Class | Returned body records |
-| --- | --- | --- | --- |
-| `mode-0` | `0` | `actual-jit` | `4` |
-| `mode-1` | `1` | `failed` | `0` |
-| `mode-2` | `0` | `actual-jit` | `4` |
-| `mode-3` | `0` | `actual-jit` | `635` |
-| `mode-4` | `1` | `failed` | `0` |
-| `mode-5` | `0` | `actual-jit` | `436` |
-| `mode-6` | `0` | `actual-jit` | `4` |
-| `mode-7` | `0` | `actual-jit` | `2` |
-| `mode-8` | `1` | `failed` | `0` |
-| `registers-4-2` | `1` | `failed` | `0` |
-| `registers-1-2` | `1` | `failed` | `0` |
-| `context-percpu-spill` | `0` | `context-native` | `0` |
-| `context-percpu-implicit` | `0` | `context-native` | `0` |
-| `context-percpu-rotate` | `0` | `context-native` | `0` |
-| `context-percpu-cmov` | `0` | `context-native` | `0` |
-| `control-0` | `0` | `native-control` | `0` |
-| `control-3` | `0` | `native-control` | `0` |
-| `registers-0-1` | `0` | `actual-jit` | `1` |
-| `registers-3-1` | `0` | `actual-jit` | `1` |
-| `registers-1-3` | `1` | `failed` | `0` |
-| `registers-4-3` | `1` | `failed` | `0` |
-| `registers-8-2` | `1` | `failed` | `0` |
-| `registers-8-3` | `1` | `failed` | `0` |
-| `context-spin` | `0` | `context-native` | `0` |
-| `context-mutex` | `0` | `context-native` | `0` |
-| `context-mixed` | `0` | `context-native` | `0` |
-| `context-irqsave` | `0` | `context-native` | `0` |
-| `context-bh` | `0` | `context-native` | `0` |
-| `context-percpu` | `0` | `context-native` | `0` |
-| `context-percpu-reg` | `0` | `context-native` | `0` |
-| `context-percpu-flow` | `0` | `context-native` | `0` |
-| `mixed-spin` | `0` | `actual-jit` | `913` |
-| `mixed-mutex` | `0` | `actual-jit` | `26` |
-| `native-1-3` | `1` | `failed` | `0` |
-| `native-4-3` | `1` | `failed` | `0` |
-| `native-1-4` | `1` | `failed` | `0` |
-| `native-4-4` | `1` | `failed` | `0` |
-| `node-physical-1-0` | `0` | `actual-jit` | `1` |
-| `node-physical-1-1` | `0` | `actual-jit` | `1` |
-| `node-physical-2-0` | `0` | `actual-jit` | `2` |
-| `node-physical-2-1` | `0` | `actual-jit` | `2` |
-| `node-physical-8-0` | `0` | `actual-jit` | `8` |
-| `node-physical-8-1` | `0` | `actual-jit` | `8` |
-| `node-remote-plain` | `0` | `actual-jit` | `4` |
-| `node-multi-b-depth8-stage5-layer6-count3-owner1-reverse1-rename1` | `0` | `actual-jit` | `8` |
-| `late-spin-policy` | `0` | `actual-jit` | `1` |
-| `late-mutex-policy` | `0` | `actual-jit` | `1` |
-| `native-mutex-depth` | `1` | `failed` | `0` |
-| `remote-late-2-cross-fixed` | `0` | `actual-jit` | `4` |
-| `remote-late-3-cross-fixed` | `0` | `actual-jit` | `4` |
-| `remote-late-4-cross-fixed` | `0` | `actual-jit` | `4` |
+These same 51 selectors were rerun at **16:24-16:43 +08, 2026-09-08**.
+The current classification and four failures are recorded above; per-case exits
+are in `/tmp/kdlock-guard-matrix.90lmMR/results.tsv`. The obsolete earlier result
+table is removed from this active manifest; its archive remains under
+[JIT Episode Scope](#jit-episode-scope). Body records count returned positive
+logs, not retired instructions, unique instructions or immutable generations.
 
 ### Recorded Commands
 
@@ -458,6 +485,9 @@ env KD_DEEP_NATIVE_OWNER=1 KD_DEEP_REVERSE=1 KD_NATIVE_RENAME=1 KD_DEEP_CROSS_NU
 
 ## Commit Verification
 
+This is the **historical 14:03-14:18 documentation checkpoint**, not this
+increment's postflight. Current verification is in Guarded Nested Admission.
+
 The documentation cleanup preserves the above 168 runtime/test inputs unchanged.
 At **2026-09-08 14:03:16 +08**, a fresh guest check passed all 38 unit programs
 without skips, the 25-case admission audit, default module build and captured
@@ -502,7 +532,7 @@ this documentation checkpoint.
 ## Historical Evidence Index
 
 The entries below are **historical summaries only**, tied to their own source
-snapshots. "Accepted" or "passes" here never overrides the current 14 failures.
+snapshots. "Accepted" or "passes" here never overrides the latest matrix.
 Detailed old test transcripts and repeated investigation narratives were removed
 from active docs; headings, key findings and evidence locations are retained.
 Current implementation contracts are in DESIGN/ABI, not these old summaries.

@@ -4,15 +4,15 @@ Guards compare saved entry-register values without dereferencing their targets.
 They must run before any translated instruction; a failed guard is unstarted
 work, never permission to replay an already executed critical section.
 
-Analysis/test foundation only: dis_assem does not enable this collector or
-emitter. The production runtime does not yet implement ENTRY_REFUSED or prove
-that a non-root dispatch inherits the same root's successful admission.
+The kernel validates the first dispatch's logical scope: a non-root entry must
+inherit a published parent's admitted CALL continuation. In-place code version
+replacement is still a separate, explicitly deferred limitation.
 """
 
 from collections import defaultdict
 
 MASK = (1 << 64) - 1
-# Experimental wrapper result, not a published daemon status or runtime ABI.
+# Keep in sync with KD_EXE_ENTRY_REFUSED, a runtime-only wrapper result.
 ENTRY_REFUSED = 6
 REGISTER_OFFSETS = {
     name: offset * 8

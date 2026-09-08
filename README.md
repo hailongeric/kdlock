@@ -9,6 +9,9 @@ lock hooks are still required; this is not an unmodified-kernel solution.
 
 ```text
 kernel lock hook -> native lock L + kdlock request queue
+                 -> validate root / logical-child scope
+                 -> optional entry predicates before generated body
+                    -> refusal: unstarted native execution, no body replay
                  -> combiner executes waiter state in generated JIT code
                     -> lock control: update ownership, continue JIT
                     -> allowlisted hostcall: native service, continue JIT
@@ -30,19 +33,22 @@ and services waiter unlock notifications. Mutex owner handoff is not added.
 
 ## Current Status
 
-Latest complete matrix, **2026-09-08**: **37/51 pass**, comprising **23 actual-JIT
-cases, 12 context-refusal cases and two native controls**. **14 cases fail**,
-including the ordinary complex mode 1/4/8 workloads and related continuations.
-Mode 0/2/3/5/6/7 pass actual-JIT checks; mutex positives use `mutex_jit=1`.
-Dedicated depth/remote fixtures passing does not make ordinary mode 8 pass.
-The later analysis-foundation check passes all 39 unit programs and the
-independent 25-case admission audit. Experimental entry predicates are not
-enabled in production and do not close the failed nested gates. Their scope
-and tests are described in [the usage guide](docs/JIT_EXECUTION.md#5-入口条件分析尚未接入生产).
+Latest complete matrix, **2026-09-08 16:43 +08**: **47/51 pass**, comprising
+**33 actual-JIT cases, 12 context-refusal cases and two native controls**.
+Mode **0-7** pass actual-JIT checks, including guarded nested mode 1/4 and
+`mutex_jit=1` for mutex positives. Mode 1/4 register, held-B and pending-B
+continuations also pass. All **40 unit programs** and the independent
+**25-case admission audit** pass.
+
+**Four gates remain failing:** ordinary mode 8, its stage-2/3 register cases,
+and mutex learned-depth continuation. Selected remote/depth fixtures passing
+does not close those gates. Entry predicates are now enforced in production;
+scope, refusal and continuation rules are in
+[the usage guide](docs/JIT_EXECUTION.md#5-入口条件与嵌套续点).
 
 These are bounded correctness observations, not a claim of complete support.
 Commands, failed cases, source identity and evidence are centralized in
-[VALIDATION](docs/VALIDATION.md#jit-episode-scope). Do not substitute historical
+[VALIDATION](docs/VALIDATION.md#guarded-nested-admission). Do not substitute historical
 passes or successful native fallback for the current JIT acceptance gate.
 
 ## Quick Start
@@ -84,17 +90,18 @@ the daemon and workload, checks returned generated-body evidence, then drains
 and unloads. It is not a harmless userspace test.
 See [JIT_EXECUTION](docs/JIT_EXECUTION.md) for the full flow, all main-mode
 commands, native-continuation tests and interpreting failures.
-The multi-mode script stops at its first failure; modes 1/4 currently fail.
+The multi-mode script stops at its first failure; inspect each requested mode's
+returned execution evidence, not only the overall launch command.
 
 ## Benchmark Modes
 
 | Mode | Backend | Scenario | Latest ordinary JIT gate |
 | --- | --- | --- | --- |
 | 0 | Spin | Contended single lock | Pass |
-| 1 | Spin | Nested A/B | Fails admission |
+| 1 | Spin | Nested A/B | Pass, guarded admission |
 | 2 | Spin | Allowlisted service, return to JIT | Pass |
 | 3 | Mutex | Contended single lock | Pass, `mutex_jit=1` |
-| 4 | Mutex | Nested A/B | Fails admission, `mutex_jit=1` |
+| 4 | Mutex | Nested A/B | Pass, guarded admission, `mutex_jit=1` |
 | 5 | Mutex | Allowlisted service, return to JIT | Pass, `mutex_jit=1` |
 | 6 | Spin | Deep A/B/C nesting | Pass |
 | 7 | Spin | Unlock A before B | Pass |

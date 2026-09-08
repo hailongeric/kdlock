@@ -508,6 +508,41 @@ static void kd_jit_log_hl_error(const char *reason,
 		frame->control_call.phase);
 }
 
+/* A non-root first dispatch is valid only for the published logical child of
+ * a root invocation which already returned through a known lock CALL. A CPU-
+ * local physical parent is not that proof. This establishes logical scope,
+ * not immutable code identity; in-place publication remains a separate limit.
+ */
+static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,
+				   const struct pt_regs *regs,
+				   unsigned long entry_ip)
+{
+	const struct kd_exec_frame *parent = frame->resume_target;
+
+	if (!entry_ip || !regs->sp || frame->executed ||
+	    kd_exec_frame_state(frame) != KD_EXEC_FRAME_RUNNING ||
+	    frame->outer_unlock_seen || frame->entry_ip != entry_ip ||
+	    frame->control_call.phase != KD_CALL_NONE)
+		return false;
+	if (!parent)
+		return regs->ip == entry_ip;
+	if (parent == frame || frame->mutex_backend ||
+	    smp_load_acquire(&parent->remote_result) != KD_EXEC_REMOTE_WAITING)
+		return false;
+	return kd_exec_frame_validate(parent) && !parent->mutex_backend &&
+	       !parent->completion_seen &&
+	       kd_exec_frame_state(parent) != KD_EXEC_FRAME_ERROR &&
+	       parent->executed && parent->entry_ip == entry_ip &&
+	       parent->logical_task == frame->logical_task &&
+	       parent->gsbase == frame->gsbase &&
+	       parent->control_call.phase == KD_CALL_ENTERED &&
+	       parent->control_call.return_ip == regs->ip &&
+	       parent->control_call.stack + sizeof(unsigned long) == regs->sp &&
+	       parent->regs.ip == regs->ip && parent->regs.sp == regs->sp &&
+	       parent->regs.di == frame->outer_lock_addr &&
+	       parent->outer_lock_index < frame->outer_lock_index;
+}
+
 int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 			    unsigned long outer_lock_addr)
 {
@@ -519,6 +554,7 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 	int hostcall_count = 0;
 	bool resume_after_hostcall = false;
 	bool body_reported = false;
+	bool pristine_root;
 	int ret_flag;
 
 	if (!regs || !frame || !kd_exec_frame_validate(frame) ||
@@ -547,10 +583,17 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 			entry_ip, exe->lock_kind, frame->mutex_backend);
 		return KD_EXE_NO_RUN;
 	}
+	if (!kd_jit_entry_has_scope(frame, regs, entry_ip)) {
+		kd_jit_log_hl_error("ENTRY_SCOPE_MISMATCH", frame, regs, 0,
+				    -EINVAL, 0, 0);
+		return KD_EXE_NO_RUN;
+	}
+	pristine_root = !frame->resume_target && regs->ip == entry_ip;
 	translated = exe->code_block;
 	for (;;) {
 		int call_ret;
 		int fault_kind;
+		unsigned long entry_sp = regs->sp;
 
 		args[0] = frame->gsbase;
 		args[1] = (unsigned long)frame->logical_task;
@@ -580,6 +623,28 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 		} else {
 			frame->executed = true;
 			translated(regs, args);
+			if (args[0] == KD_EXE_ENTRY_REFUSED) {
+				/* Only this explicit pre-body exit can undo our conservative
+				 * executed mark. A zero witness by itself never permits replay.
+				 * Root packet preservation is part of the generated guard ABI.
+				 */
+				if (pristine_root && !continuation_count &&
+				    !hostcall_count && regs->ip == entry_ip &&
+				    regs->sp == entry_sp && args[1] == 0) {
+					frame->executed = false;
+					pr_warn_ratelimited(
+						"[KD_JIT][WARN] reason=ENTRY_GUARD_REFUSED entry=0x%lx waiter_pid=%d lock=0x%lx action=native_unstarted\n",
+						entry_ip,
+						frame->logical_task->pid,
+						outer_lock_addr);
+					return KD_EXE_NO_RUN;
+				}
+				kd_jit_log_hl_error("INVALID_ENTRY_REFUSAL",
+						    frame, regs, args[0],
+						    -EINVAL, continuation_count,
+						    hostcall_count);
+				return KD_EXE_RUN_ERROR;
+			}
 			/* Observational only: never use missing evidence to replay work. */
 			if (!body_reported && args[1] == 1) {
 				KD_PR_INFO(
