@@ -367,6 +367,11 @@ a deleted native edge must not contaminate that path's dataflow.
 Every recompile rechecks the newly learned scope. Admission, lexical lock
 boundaries, constant propagation, emitted blocks and entry dispatch share it.
 Missing reachable branch text is not an implicitly safe empty block.
+For a cross-window placeholder whose bytes are already cached, the translator
+seeds the owning decoder window and recomputes the selected graph. Decoder roots
+are split into dispatch blocks even when they lie inside an earlier block.
+These seeds do not become independent admission roots. Text reads and decoder
+reseeding share the 32-expansion bound; genuine undecodable blocks still refuse.
 
 ### 7.2 Context And Memory Admission
 
@@ -383,12 +388,17 @@ retain sensitive alternatives. Memory values, masks, alias origins and writes
 are checked conservatively. It does not read runtime memory or treat source
 RBP/RSP as private memory. Analysis limits affecting addresses refuse admission.
 
-This is an incomplete conservative analysis, not proof for all pointers,
-unlifted instructions or concurrent mutation. Current complex mode 1/4/8 can
-be over-rejected before their terminal CALL; improving precision is main work,
-not grounds for removing safety probes. A refusal makes future entries
-native-only; it does not undo earlier work or validate owner-sensitive native
-suffixes.
+Eligible single-root nested entries can retry address-precision failures with
+entry disjointness predicates. Every premise is enforced before generated body
+execution; independently seeded callees cannot borrow those root facts. This
+restores the tested mode 1/4/8 prefixes, but the learned mutex-depth helper still
+fails expanded admission. The predicate/continuation contract is in
+[JIT_EXECUTION](JIT_EXECUTION.md#5-入口条件与嵌套续点).
+
+This remains incomplete for arbitrary pointers, unlifted instructions and
+concurrent mutation. Improving precision is not grounds for removing safety
+probes. A refusal makes future entries native-only; it does not undo earlier
+work or validate owner-sensitive native suffixes.
 
 ### 7.3 Build And Publication
 

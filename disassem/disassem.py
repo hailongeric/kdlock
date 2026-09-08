@@ -201,6 +201,9 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack):
         loc_db = LocationDB()
         mdis = machine.dis_engine(c, loc_db=loc_db)
         mdis.follow_call = False
+        # A root can already be an interior instruction of an earlier root's
+        # block. Split there so every source entry has a checked dispatch label.
+        mdis.split_dis = set(r[2])
         asmcfg = None
         job_done = set()
 
@@ -337,12 +340,41 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
             return reject_translation("entry has no reachable decoded block")
 
         code_ranges = [(start, start + len(data)) for data, start, _ in rets]
+        empty_blocks = {
+            offset for offset, block in block_dict.items() if not block.lines
+        }
+        seeded_regions = []
+        added_roots = set()
+        for data, start, roots in rets:
+            # Another window may discover this edge only after it is expanded.
+            # Existing bytes do not imply that this window decoded that target.
+            # These are decoder seeds, never new independent admission roots.
+            additions = {
+                offset
+                for offset in empty_blocks
+                if start <= offset and offset + 15 <= start + len(data)
+            } - set(roots)
+            added_roots.update(additions)
+            seeded_regions.append((data, start, sorted(set(roots) | additions)))
+        if added_roots:
+            diagnostics.set_instruction(
+                min(added_roots), "<covered undecoded CFG block>"
+            )
+            if expansion == 32:
+                return reject_translation("reachable text exceeds 32 CFG expansions")
+            diagnostics.warn(
+                "CFG_ROOT_EXTEND",
+                "decode_cfg",
+                "decode newly reachable targets in existing text windows",
+                targets=[hex(target) for target in sorted(added_roots)],
+            )
+            rets = seeded_regions
+            continue
         # A truncated instruction at a read boundary also needs another window.
         missing = {
             offset
-            for offset, block in block_dict.items()
-            if not block.lines
-            and not any(
+            for offset in empty_blocks
+            if not any(
                 start <= offset and offset + 15 <= end for start, end in code_ranges
             )
         }

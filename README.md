@@ -33,23 +33,23 @@ and services waiter unlock notifications. Mutex owner handoff is not added.
 
 ## Current Status
 
-Latest complete matrix, **2026-09-08 16:43 +08**: **47/51 pass**, comprising
-**33 actual-JIT cases, 12 context-refusal cases and two native controls**.
-Mode **0-7** pass actual-JIT checks, including guarded nested mode 1/4 and
+Latest complete matrix, **2026-09-08 17:42 +08**: **50/51 pass**, comprising
+**36 actual-JIT cases, 12 context-refusal cases and two native controls**.
+Mode **0-8** pass actual-JIT checks, including guarded nested mode 1/4/8 and
 `mutex_jit=1` for mutex positives. Mode 1/4 register, held-B and pending-B
-continuations also pass. All **40 unit programs** and the independent
-**25-case admission audit** pass.
+continuations also pass, as do mode 8's stage-2/3 register cases.
+All **40 unit programs** and the independent **25-case admission audit** pass.
 
-**Four gates remain failing:** ordinary mode 8, its stage-2/3 register cases,
-and mutex learned-depth continuation. Selected remote/depth fixtures passing
-does not close those gates. Entry predicates are now enforced in production;
+**One gate remains failing:** mutex learned-depth continuation after learning
+the helper. Its initial JIT prefix executes, but the expanded image is refused;
+that is not a deep-JIT pass. Entry predicates are enforced in production;
 scope, refusal and continuation rules are in
 [the usage guide](docs/JIT_EXECUTION.md#5-入口条件与嵌套续点).
 
 These are bounded correctness observations, not a claim of complete support.
 Commands, failed cases, source identity and evidence are centralized in
-[VALIDATION](docs/VALIDATION.md#guarded-nested-admission). Do not substitute historical
-passes or successful native fallback for the current JIT acceptance gate.
+[VALIDATION](docs/VALIDATION.md#cross-window-cfg-completion). Do not substitute
+historical passes or successful native fallback for the current JIT gate.
 
 ## Quick Start
 
@@ -105,7 +105,7 @@ returned execution evidence, not only the overall launch command.
 | 5 | Mutex | Allowlisted service, return to JIT | Pass, `mutex_jit=1` |
 | 6 | Spin | Deep A/B/C nesting | Pass |
 | 7 | Spin | Unlock A before B | Pass |
-| 8 | Spin | Independent queues / opt-in remote chains | Ordinary case fails; selected fixtures pass |
+| 8 | Spin | Independent queues / opt-in remote chains | Pass; stage-2/3 register continuation also passes |
 | 9 | Spin | Recovery topology | Legacy synthetic post-entry faults are fail-stop |
 | 10 | Spin | GS/current rejection | Native-only negative test |
 | 11 | Mutex | GS/current rejection | Native-only negative test, `mutex_jit=1` |

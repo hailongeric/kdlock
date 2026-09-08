@@ -24,6 +24,11 @@
 分支文本仍走有界补读，不能把未解码的跳转目的地当作安全空块。
 普通 CALL 自身的目标和压入返回地址的内存写入也必须通过检查。
 
+文本窗口已经覆盖目标地址，不代表该窗口的 CFG 已解码目标。新热路径可能
+指向已有冷窗口中尚未解码的块；翻译器会补充该窗口的解码入口并重新检查。
+这不增加独立的准入根，不让冷分支借用新的入口寄存器假设。补读和补充解码
+入口共用 32 轮扩展上限；真正不可解码或预算耗尽仍拒绝，不跳过缺失块。
+
 范围内发现 GS/current 访存、已识别的 per-CPU/调度/IRQ/RCU 符号或其他既有
 拒绝条件时，整个候选拒绝并删除本次汇编/二进制产物，daemon 发布 native-only。
 只存在于已排除后缀的 GS/current 操作不再导致该 JIT 前缀被拒绝，因为它们
@@ -109,8 +114,12 @@ bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5
 该入口遇到失败立即停止；检查每种模式时可分别传入一个 mode，不能因为前面
 通过就假定后面执行过。mode 3/4/5 脚本显式加载 `mutex_jit=1` 并检查实参。
 daemon 的 `--mode 1/2` 只选择工作目录布局，不是 benchmark 的 mode。
-mode 1/4 已通过接入入口条件后的实际 JIT 检查；这不代表所有 mode 8、远端
-或资源耗尽场景也通过，完整结果及未通过项见验证记录。
+mode 1/4 的入口条件及 mode 8 的跨窗口解码已通过实际 JIT 检查；这不代表
+所有远端或资源耗尽场景也通过，完整结果及未通过项见验证记录。
+
+mode 8 需要串行准备六个翻译入口，`test_04` / `test_10` 为此单独等待最多
+90 秒并打印实际耗时。只延长产物初始化等待，不改变负载执行超时、必需产物、
+返回后 body witness、寄存器或互斥/副作用检查。
 
 普通 CALL 的真实寄存器/退出点续跑，以及上下文拒绝测试：
 
@@ -119,6 +128,9 @@ KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 0 1
 KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 3 1
 KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 1 2
 KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 4 2
+bash tests/test_04_spinlock.sh 8
+KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 8 2
+KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 8 3
 bash tests/test_12_context_native_only.sh 10
 bash tests/test_12_context_native_only.sh 11
 KD_CONTEXT_LOCK_API=percpu-spill bash tests/test_12_context_native_only.sh 3
@@ -126,6 +138,16 @@ KD_CONTEXT_LOCK_API=percpu-spill bash tests/test_12_context_native_only.sh 3
 
 普通 CALL 测试检查当前退出状态、waiter 身份、返回栈及副作用恰好一次；不能用
 完全原生对照代替。上下文拒绝测试则必须没有 JIT 执行，随后验证原生结果。
+
+尚未通过的 learned-depth 主功能单独运行：
+
+```sh
+bash tests/test_10_native_resume.sh 4 5
+```
+
+该脚本先执行 JIT 前缀并产生真实 helper CALL miss，排空调用者后让 daemon
+学习 helper，再检查新范围的 JIT 和锁容量退出。目前扩大范围被准入拒绝，
+因此即使第一段有 body witness，整项仍失败；不能把原生完成当作此项通过。
 
 ## 4. 如何判读
 
@@ -146,18 +168,20 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 同一次翻译可能先报告无条件分析的 `CONTEXT_ADDRESS_WIDENED`，再通过带条件
 分析并报告 `ENTRY_GUARDED_ADMISSION`。前一条不能单独当作最终拒绝。冷分支
 补读为 `ENTRY_GUARD_WAIT_TEXT` / `TEXT_RANGE_EXTEND`，补读完成仍须重新检查。
+`CFG_ROOT_EXTEND` 则表示为已缓存文本补充可达解码入口，不是额外读取文本或
+接受未检查的块。
 运行时 `ENTRY_GUARD_REFUSED` 表示当前入口值不满足条件，本次未执行 body；
 `ENTRY_SCOPE_MISMATCH` 或 `INVALID_ENTRY_REFUSAL` 则需要核查 frame、CALL
 阶段、RIP/RSP 和父请求，不能忽略错误并重试入口。
 
 本轮实测结果与未通过项集中记录在
-[VALIDATION: Guarded Nested Admission](VALIDATION.md#guarded-nested-admission)。
+[VALIDATION: Cross-Window CFG Completion](VALIDATION.md#cross-window-cfg-completion)。
 完整矩阵的逐项命令见 [测试清单](VALIDATION.md#current-matrix-manifest)，
 本轮使用相同的 51 个选择器重新执行，不借用旧的短回归结果。
-完整 51 项中 47 通过、4 失败，通过项包含 33 项实际 JIT。mode 0–7 和
-mode 1/4 的普通 CALL 寄存器、held-B、pending-B 续跑检查通过；普通 mode 8、
-它的两个寄存器续跑项及 mutex 学习深层 callee 后的扩大准入仍未通过，不能
-将本轮改进写成整个项目或所有模式已完成。
+完整 51 项中 50 通过、1 失败，通过项包含 36 项实际 JIT。mode 0–8、
+mode 1/4 的普通 CALL 寄存器、held-B、pending-B，以及 mode 8 的两项寄存器
+续跑检查通过。mutex 学习深层 callee 后的扩大准入仍未通过，不能将本轮
+改进写成整个项目或所有资源耗尽场景已完成。
 
 ## 5. 入口条件与嵌套续点
 
@@ -204,6 +228,7 @@ RIP/RSP 且 witness 为零时才能清除保守的 executed 标记。专用拒�
 python3 tests/unit/test_context_guards.py
 python3 tests/unit/test_jit_entry_scope.py
 python3 tests/unit/test_native_after_outer.py
+python3 tests/unit/test_text_regions.py
 make -C tests/unit run
 python3 tests/audit_context_spills.py
 ```
@@ -211,6 +236,7 @@ python3 tests/audit_context_spills.py
 条件测试包含真实生成代码的重叠拒绝、无重叠写入和冷分支敏感操作拒绝。
 scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行后拒绝及
 远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
-另行验证真实 JIT、嵌套竞争及寄存器续跑。结果只维护在
-[验证记录](VALIDATION.md#guarded-nested-admission)，后续顺序见
-[TODO](TODO.md#guarded-admission-increment)。
+另行验证真实 JIT、嵌套竞争及寄存器续跑。文本窗口测试检查新增可达块、块内
+入口分割、GS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
+结果只维护在 [验证记录](VALIDATION.md#cross-window-cfg-completion)，后续顺序见
+[TODO](TODO.md#learned-callee-increment)。

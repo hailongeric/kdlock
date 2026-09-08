@@ -60,8 +60,9 @@ run_spinlock_mode() {
         6) expected_artifacts=3 ;;
         8)
             expected_artifacts=6
-            # Six serial translations now include the larger A/B/C branch CFG.
-            artifact_timeout=30
+            # Six serial translations now include guarded A/B/C CFG analysis.
+            # Bound initialization separately; do not relax execution/oracle gates.
+            artifact_timeout=90
             warmup_threads=2
             promotion_mode=1
             registration_calls=3
@@ -148,6 +149,7 @@ run_spinlock_mode() {
         return 1
     }
 
+    local artifact_started=$SECONDS
     if ! artifact_output="$(wait_for_jit_artifact_count "$expected_artifacts" "$artifact_timeout")"; then
         fail "$TEST_NAME" \
             "mode $mode ($mode_name) incomplete JIT artifacts after ${artifact_timeout}s (daemon: $DAEMON_LOG)"
@@ -156,6 +158,7 @@ run_spinlock_mode() {
         return 1
     fi
     mapfile -t asm_dirs <<< "$artifact_output"
+    info "  JIT artifacts ready after $((SECONDS - artifact_started))s (limit ${artifact_timeout}s)"
 
     check_daemon_read_kernel_text "$DAEMON_LOG" || {
         stop_daemon

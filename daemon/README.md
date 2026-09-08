@@ -15,7 +15,7 @@ Its kernel hooks/exports depend on the captured
 string. The read-only source/build/Build-ID check is an operator prerequisite;
 it is not a daemon publication/version-isolation change or a hot-unload guarantee.
 
-Run it from this directory:
+Build and run only in the recovery guest, from this directory:
 
 ```sh
 cd daemon
@@ -95,6 +95,8 @@ reports analysis precision loss, not proof of a real invalid access.
 An eligible nested entry may then report `ENTRY_GUARD_WAIT_TEXT` while fetching
 cold branches, followed by `ENTRY_GUARDED_ADMISSION` on conditional success.
 Read the final verdict, not the first unconditional-analysis warning alone.
+`CFG_ROOT_EXTEND` seeds a newly reachable block inside an already cached window;
+cached bytes alone are not proof that its CFG was decoded and checked.
 The generated image checks all collected entry predicates before body; runtime
 `ENTRY_GUARD_REFUSED` means that invocation remains unstarted and native, not
 that the daemon should disable the entry or replay completed work. No extra
@@ -129,6 +131,6 @@ verdicts; they remain diagnostic/retry failures. Do not turn arbitrary Python
 failures into accepted native fallback.
 
 Actual runtime continuation and test commands are maintained in
-[JIT_EXECUTION](../docs/JIT_EXECUTION.md). Current results, including failed
-complex nested modes, are in
-[VALIDATION](../docs/VALIDATION.md#guarded-nested-admission), not duplicated here.
+[JIT_EXECUTION](../docs/JIT_EXECUTION.md). Current results and the remaining
+learned mutex-depth failure are in
+[VALIDATION](../docs/VALIDATION.md#cross-window-cfg-completion), not duplicated here.

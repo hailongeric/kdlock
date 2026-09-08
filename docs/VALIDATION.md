@@ -1,17 +1,17 @@
 # kdlock Validation
 
-Latest complete matrix: **47/51 pass, four gates fail** on the
-[guarded nested admission](#guarded-nested-admission) freeze. An actual-JIT
+Latest complete matrix: **50/51 pass, one gate fails** on the
+[cross-window CFG completion](#cross-window-cfg-completion) freeze. An actual-JIT
 positive, a context refusal and a pure-native control are different outcomes.
 The project is not accepted as complete; older matrices are historical only.
 
 Complete-matrix source identity: **172 inputs** in
-`/tmp/kdlock-guard-matrix.90lmMR/source.sha256`.
+`/tmp/kdlock-mode8-matrix.HaCWga/source.sha256`.
 Full source/log/artifact/command archive:
-`/tmp/kdlock-guard-matrix.90lmMR.tar.gz`, SHA256:
+`/tmp/kdlock-mode8-matrix.HaCWga.tar.gz`, SHA256:
 
 ```text
-231c916667b7c1b2e8d6e1ff71f9695d8978441e79d8ece2fa0e0e5dbaa57276
+8460f9fc2b217c3974db44888efa8a2c8277592f76f612541cc459145b409b74
 ```
 
 The archive includes frozen source, generated artifacts, per-case commands,
@@ -22,7 +22,95 @@ invocations auditable. The two pure-native controls depend on an external
 helper; they are not yet a self-contained fresh-checkout test. General evidence
 packaging remains TODO P1. Losing an archive never makes recorded results new.
 
+## Cross-Window CFG Completion
+
+**2026-09-08, 17:23:52-17:42:25 +08:** all 51 selectors from the
+[command manifest](#current-matrix-manifest) finish on the same 172-input freeze.
+**50 pass: 36 actual-JIT, 12 context refusals, two native controls.** The only
+failure is `native-mutex-depth`. No source or test input changes during the run;
+each case retains its command, exit status, source hashes, artifacts, dmesg and
+drain record. Earlier focused runs are separate evidence, not substituted cases.
+
+The mode-8 cold-block failure was a decoder/CFG issue, not a demonstrated
+unsupported instruction. A newly expanded hot path can reveal another target
+inside a cold window already fetched in an earlier pass. The hot decoder emits
+an empty cross-window placeholder, while the cold decoder has not been seeded
+at that target. Byte coverage alone previously prevented further decoding.
+The translator now seeds that cached window, splits interior roots into dispatch
+blocks and repeats scope selection and admission. These are not independent
+admission roots; text extension and reseeding share the existing 32-round limit.
+GS, genuine bad instructions and exhausted budgets still refuse with no image.
+
+Six serial guarded translations exceed the old 30-second artifact wait even
+after that decoder fix. Only mode 8's initialization wait in `test_04` and
+`test_10` changes to 90 seconds, with measured readiness printed. Workload
+timeouts, six required artifacts, returned body witnesses, GPR/stack probes,
+protected-state and ownership checks remain unchanged. Purpose and constraint
+comments accompany both the decoder and test changes.
+
+| Cases | Result / evidence |
+| --- | --- |
+| mode 0/1/2/3/4/5/6/7/8 | All pass actual JIT; returned body counts respectively 4/4/4/573/1/389/4/2/2 |
+| mode 8 ordinary | Six artifacts ready in 35 seconds; required entry `0xffffffffc0a67f84`, 16401-byte image, 12014 checked transitions across two states |
+| mode 8 register stages 2/3 | Ready in 36 seconds each; 12003 requests and 12013 state transitions each; one marked JIT sample, 16 GPR/stack checks, native frames 1/2; flags unchecked |
+| mode 4, `mutex_jit=1` | 11778-byte image, deterministic A/B contention, nested JIT and owner accounting pass |
+| mode 5, `mutex_jit=1` | 389 hostcall exits execute and resume, matching JIT completions and waiter resumes |
+| Other continuation / ownership / depth / remote gates | All pass, including mode 1/4 registers, held-B/pending-B and all three cross-NUMA cases |
+| Context negatives and native controls | 12 refusals with zero JIT, two pure-native controls; neither category counts as actual JIT |
+| `native-mutex-depth` | Fails: first JIT prefix executes and misses the helper, but the learned expanded image is refused |
+
+The depth refusal remains at source RIP `0xffffffffc0a6976f`,
+`MOV [RBX+0xD0],R13`, after learning `kd_resume_depth_mutex`. The log reports
+bounded address alternatives, at 61026/1000000 analysis work, not overall work
+budget exhaustion. Independent callee roots cannot borrow single-root predicates.
+The initial body witness is not proof that the helper's nested locks execute JIT;
+the script correctly fails with `deep callee was refused`. The next main task is
+[learned-callee admission](TODO.md#learned-callee-increment), not weakening probes.
+
+Preflight and postflight both pass **40 unit programs** without skips and the
+independent **25-case admission audit**. Text-window coverage now has **13 test
+methods**, including three new regressions for cached-window targets, interior
+dispatch roots and the shared expansion limit. The old decoder fails the new
+safe/GS cached-target and interior-root checks; the retained `units-before.log`
+records those failures. Existing generated entry-predicate and 66 production
+scope checks also pass. These fixture results do not replace live concurrency
+or returned-body evidence. Default and selftest+NUMA module builds pass; existing
+manual-stack objtool warnings remain.
+
+At **17:44:11 +08**, postflight rechecks all 172 host/guest hashes, the 18-file
+kernel baseline, config, nine build files and running Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`. Default kdlock module `.text` remains
+`37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`.
+All 51 kernel-fault scans are empty and callers/modules drain. No guest-kernel
+edit/build/install/restart, physical-owner change, wrapper ABI/layout change,
+flags repair or immutable-version implementation is introduced. C1/C2/C5 remain
+open beyond the recovered gates; C3/C4 remain explicitly deferred.
+
+Two earlier six-case attempts are retained separately:
+
+- `/tmp/kdlock-mode8-cfg.5HSbXp.tar.gz`, 17:09:39-17:12:39 +08:
+  mode 1/4 pass actual JIT; three mode-8 gates fail the old 30-second artifact
+  wait and mutex learned-depth fails admission. This is the decoder-only freeze.
+- `/tmp/kdlock-mode8-readiness.EeKxsI.tar.gz`, 17:16:44-17:20:11 +08:
+  five actual-JIT passes (mode 8, its two register cases, mode 1/4), one depth
+  failure. Mode-8 readiness is 36-37 seconds. Runtime/test inputs match the
+  subsequent complete matrix; this focused run alone is not a 50/51 result.
+
+Their SHA256 values, respectively:
+
+```text
+365ce866d3e97b30b271db33fd9eb26312952095610fed458fc86d4148788b00
+6acc0b405511bede6354cf5e5bc8f13a288d1201b9be8d96af4335148bd10712
+```
+
 ## Guarded Nested Admission
+
+Historical checkpoint at `1592e89`; its four failures are not the current result.
+Archive `/tmp/kdlock-guard-matrix.90lmMR.tar.gz`, SHA256:
+
+```text
+231c916667b7c1b2e8d6e1ff71f9695d8978441e79d8ece2fa0e0e5dbaa57276
+```
 
 **2026-09-08, 16:24:54-16:43:06 +08:** all 51 selectors from the
 [command manifest](#current-matrix-manifest) are attempted on the same frozen
@@ -310,12 +398,12 @@ and version checkpoint is recorded separately below.
 
 ## Current Matrix Manifest
 
-These same 51 selectors were rerun at **16:24-16:43 +08, 2026-09-08**.
-The current classification and four failures are recorded above; per-case exits
-are in `/tmp/kdlock-guard-matrix.90lmMR/results.tsv`. The obsolete earlier result
-table is removed from this active manifest; its archive remains under
-[JIT Episode Scope](#jit-episode-scope). Body records count returned positive
-logs, not retired instructions, unique instructions or immutable generations.
+These same 51 selectors were rerun at **17:23-17:42 +08, 2026-09-08**.
+The current classification and one failure are recorded above; per-case exits
+are in `/tmp/kdlock-mode8-matrix.HaCWga/results.tsv`. Earlier result tables remain
+historical and do not define current acceptance. Body records count returned
+positive logs, not retired instructions, unique instructions or immutable
+generations.
 
 ### Recorded Commands
 
@@ -486,7 +574,7 @@ env KD_DEEP_NATIVE_OWNER=1 KD_DEEP_REVERSE=1 KD_NATIVE_RENAME=1 KD_DEEP_CROSS_NU
 ## Commit Verification
 
 This is the **historical 14:03-14:18 documentation checkpoint**, not this
-increment's postflight. Current verification is in Guarded Nested Admission.
+increment's postflight. Use the latest matrix at the top of this document.
 
 The documentation cleanup preserves the above 168 runtime/test inputs unchanged.
 At **2026-09-08 14:03:16 +08**, a fresh guest check passed all 38 unit programs
@@ -559,10 +647,8 @@ This investigation does not rerun the 51 valid live cases or turn any of
 their 22 functional failures into passes.
 
 The external experiment changes only in-process analysis functions and reads
-the retained relocated module text. It compares four variants under the same
-1M budget and whole selected-block scan:
-
-Retained historical evidence: `/tmp/kdlock-entry-premises.8mGP9Y/`.
+the retained relocated module text. Its four variants use the same 1M budget
+and the historical whole selected-block scan; they are not production fixes.
 
 ## Native Registration Phase Guard
 
@@ -2077,13 +2163,9 @@ required executed artifact. Mutex modes 4/11 now require A's single artifact.
 
 Historical source snapshot, not current acceptance.
 
-This broader command list and the 28-case evidence below belong to the earlier
-native-owner sources. With the current sources, selectors 10/11 exercise
-native-only refusal, not the historical translated-GS contract. The current
-admission run and its separate evidence directory are described above.
-
-All runtime commands below run in the guest, with bounded outer timeouts as
-recorded in each retained `command` file:
+The earlier 28-case evidence belongs to the native-owner sources. Current
+selectors 10/11 exercise native-only refusal, not the historical translated-GS
+contract. Current commands are maintained in the matrix manifest above.
 
 Retained historical evidence: `/tmp/kdlock-mutex-owner-20260905/`, `/tmp/kdlock-native-final-20260905/`, `/tmp/kdlock-jit-audit-20260905-1010/`.
 
@@ -2091,29 +2173,10 @@ Retained historical evidence: `/tmp/kdlock-mutex-owner-20260905/`, `/tmp/kdlock-
 
 Historical source snapshot, not current acceptance.
 
-The mutex in-CS guard and native per-request records strengthen the oracle but
-do not prove arbitrary kernel linearizability. Uncovered signal histories, alternate
-kernel configs, WW/PI/RT locks, lock-address reuse, owner-sensitive native
-suffixes and production subsystems require separate evaluation. Native spin
-interoperability is not established by mutex mixed-user tests.
-Remote ancestor release and zero-local native relay now have bounded real A/B
-and A/B/C integration evidence, including both ancestor release orders in C.
-These histories do not establish more executors, cross-NUMA placement of this
-chain, arbitrary dependency graphs or full-S reclaim fairness.
-The eight-frame remaining-stack sample is not a whole-run high-water
-or IRQ/NMI safety proof.
-
-Flags remain deferred by user scope. Ordinary CALL and PENDING resource-error
-continuation do not solve IJ, budget, faults or later-phase control failures;
-unsupported post-entry errors still fail-stop. Known mixed spin/mutex references
-are now rejected by preflight, but undiscovered targets can still reach the
-runtime backend guard. This is not a complete eligibility proof. Live hook/module
-unload, per-CPU concurrency and general task/CPU context equivalence remain
-open. Conservative native-only admission excludes recognized GS/context
-operations but does not cover unknown callees or arbitrary pointers, and cannot
-revoke already-started code. The two-word GS/task ABI is unchanged; no transactional rollback or
-performance speedup is claimed.
-
+The old duplicate limitations list is superseded by
+[DESIGN](DESIGN.md#12-supported-scope-and-limits) and [TODO](TODO.md).
+Historical fixtures do not establish arbitrary lock histories, IRQ/NMI stack
+safety, general context equivalence, transactional rollback or a JIT speedup.
 
 ### In-Flight Hotlock Window
 

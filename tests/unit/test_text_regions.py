@@ -100,6 +100,78 @@ class TextRegionTests(unittest.TestCase):
                 self.assertIn(b"0x13579bdf", assembly.lower())
         self.assertEqual(self.reads, [])
 
+    def test_new_hot_path_seeds_another_block_in_already_fetched_cold_window(self):
+        # Both windows are fetched in one round. Only then does the backward
+        # hot path expose a second cold entry; byte coverage is not CFG coverage.
+        first, second, hot = BASE + 0x7100, BASE + 0x7200, BASE + 0x1100
+        self.put(
+            self.entry,
+            b"\x85\xc0\x0f\x84"
+            + struct.pack("<i", first - self.entry - 8)
+            + branch(self.entry + 8, hot),
+        )
+        self.put(hot, branch(hot, second))
+        self.put(first, bytes.fromhex("b82a000000c3"))
+        for raw, error in (
+            ("b863000000c3", None),
+            ("65488b042528000000c3", "GS/current"),
+            ("0f04c3", "undecodable or empty basic block"),
+        ):
+            with self.subTest(error=error):
+                self.reads.clear()
+                self.put(second, bytes.fromhex(raw))
+                assembly, log, status = self.translate()
+                self.assertEqual(status, 2 if error else 0, log)
+                self.assertEqual(log.count("reason=CFG_ROOT_EXTEND"), 1)
+                if error:
+                    self.assertEqual(assembly, b"")
+                    self.assertIn(error, log)
+                    self.assertIn(f'rip="{second:#x}"', log)
+                else:
+                    self.assertIn(f"loc_{second:x}:".encode(), assembly)
+                    self.assertIn(b"0x63", assembly)
+                self.assertEqual(
+                    self.reads, [(BASE + 0x1000, 0x3000), (BASE + 0x7000, 0x2000)]
+                )
+
+    def test_additional_root_inside_existing_block_gets_a_dispatch_label(self):
+        # A second source root may already have been decoded as a predecessor's
+        # interior instruction. It still needs its own checked dispatch block.
+        start = BASE + 0x2100
+        raw = bytes.fromhex("b82a000000b863000000c3")
+        assembly, log, status = render(
+            "",
+            entry=start + 5,
+            regions=[(raw, start, [start, start + 5])],
+            return_status=True,
+        )
+        self.assertEqual(status, 0, log)
+        self.assertIn(f"loc_{start + 5:x}:".encode(), assembly)
+
+    def test_cached_window_reseeding_shares_the_cfg_expansion_budget(self):
+        # Alternating windows reveal one further target per pass without any
+        # text read. The existing finite expansion limit must still apply.
+        hot, cold = BASE + 0x2000, BASE + 0x7000
+        for index in range(40):
+            source, target = hot + index * 0x20, cold + index * 0x20
+            self.put(source, branch(source, target))
+            self.put(target, branch(target, source + 0x20))
+        assembly, log, status = render(
+            "",
+            entry=hot,
+            regions=[
+                (bytes(self.text[0x2000:0x3000]), hot, [hot]),
+                (bytes(self.text[0x7000:0x8000]), cold, [cold]),
+            ],
+            memory_reader=self.read_memory,
+            return_status=True,
+        )
+        self.assertEqual(status, 2, log)
+        self.assertEqual(assembly, b"")
+        self.assertIn("32 CFG expansions", log)
+        self.assertEqual(log.count("reason=CFG_ROOT_EXTEND"), 32)
+        self.assertEqual(self.reads, [])
+
     def test_overlapping_windows_are_merged_and_roots_preserved(self):
         with patch.object(
             memread, "read_kernel_addr_data", side_effect=self.read_memory

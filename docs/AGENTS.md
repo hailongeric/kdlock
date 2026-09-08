@@ -9,8 +9,8 @@
 1. 先读代码、文档及 `git status --short`，保留已有改动，不重置未知文件。
 2. 新增或修改协议、算法、测试时，必须注释其目的、用途和关键约束，尤其解释
    为什么需要该分支或顺序；不要求逐行复述代码。
-3. 优先完成主功能和可执行的端到端验证；次要优化后置。当前优先恢复复杂
-   mode 8 及 mutex learned-depth 的剩余准入/续跑正例，保持 mode 1/4 已恢复的
+3. 优先完成主功能和可执行的端到端验证；次要优化后置。当前优先恢复
+   mutex learned-depth 的剩余准入/续跑正例，保持 mode 1/4/8 已恢复的
    实际 JIT 验收；不能削弱敏感地址检查或删除探针来制造通过。
 4. 默认只改 kdlock，不修改、编译或安装 guest 内核；现有 hook 无法支持的
    能力单独评估。不可变 JIT 版本和 flags/特殊指令语义修复已明确延期。
@@ -136,5 +136,5 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 说明实际改动、构建/测试命令和结果、是否加载模块及启用 mutex_jit、
 内核错误和排空状态、未执行/失败项目、Git 版本。
 本轮或历史证据必须标明来源和时间，不混用不同源码版本的通过结果。
-当前完整矩阵为 47/51 通过，仍有 4 项失败，详见
-[最新验收](VALIDATION.md#guarded-nested-admission)。
+当前完整矩阵为 50/51 通过，mutex learned-depth 仍失败，详见
+[最新验收](VALIDATION.md#cross-window-cfg-completion)。

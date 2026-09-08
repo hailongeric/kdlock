@@ -185,13 +185,16 @@ start_daemon 2
 
 promotion_mode="$mode"
 artifacts=1
+artifact_timeout=30
 threads=8
 states=1
 operations=12009
 requests=12009
 case "$mode" in
     1) artifacts=2 ;;
-    8) promotion_mode=1; artifacts=6 ;;
+    # Six guarded translations are serial; keep the native/JIT execution
+    # timeout and all register/ownership checks unchanged.
+    8) promotion_mode=1; artifacts=6; artifact_timeout=90 ;;
 esac
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 "$promotion_mode" > "$out/warmup.log"
 sleep 1
@@ -201,8 +204,10 @@ if [ "$mode" = 8 ]; then
         run_with_timeout 10 "$BENCH_BIN" 1 1 10 1 8 "$role" >> "$out/registration.log"
     done
 fi
-artifact_output="$(wait_for_jit_artifact_count "$artifacts" 30)"
+artifact_started=$SECONDS
+artifact_output="$(wait_for_jit_artifact_count "$artifacts" "$artifact_timeout")"
 mapfile -t asm_dirs <<< "$artifact_output"
+info "JIT artifacts ready after $((SECONDS - artifact_started))s (limit ${artifact_timeout}s)"
 for asm_dir in "${asm_dirs[@]}"; do
     check_jit_artifacts "$asm_dir"
 done

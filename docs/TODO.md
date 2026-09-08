@@ -12,26 +12,23 @@ ends this JIT invocation and the original waiter completes the native suffix.
 Admission and emission share the same scope. This replaces the old requirement
 to admit that waiter-only suffix; it does not allow unchecked live JIT paths.
 
-Latest complete matrix: **47/51 pass, 4 fail**; 33 passes execute generated
+Latest complete matrix: **50/51 pass, 1 fail**; 36 passes execute generated
 code, 12 are context refusals and two are native controls. All 40 unit programs
-and the 25-case admission audit pass. Mode 0-7, including guarded mode 1/4,
-pass actual JIT. The open gates are ordinary mode 8, its stage-2/3 register
-cases and mutex learned-depth continuation:
-[VALIDATION](VALIDATION.md#guarded-nested-admission).
+and the 25-case admission audit pass. Mode 0-8, including guarded mode 1/4/8,
+pass actual JIT. Mode 8's stage-2/3 register cases also pass. The remaining
+matrix gate is mutex learned-depth continuation:
+[VALIDATION](VALIDATION.md#cross-window-cfg-completion).
 
 Implement next in this order:
 
-1. Resolve ordinary mode 8's retained empty/undecodable cold blocks. Distinguish
-   missing text and decoder/CFG construction from real unsupported instructions;
-   never omit a live block or remove register/context probes to pass admission.
-2. Extend justified admission to the mutex depth helper learned after a real
+1. Extend justified admission to the mutex depth helper learned after a real
    CALL miss. Current single-root guards cannot be borrowed by independent
    callee roots; the expanded image is refused even though its first prefix
    executes. Keep memory clobbers and two-word ABI; do not resume this native
    invocation inside JIT or silently add version isolation.
-3. Re-run the complete matrix, retain failed attempts and classify actual JIT,
-   context refusal and native-only controls separately.
-4. Only then broaden context/resource coverage and consider optional services
+2. Re-run the complete matrix after that change, retain failed attempts and
+   classify actual JIT, context refusal and native-only controls separately.
+3. Only then broaden context/resource coverage and consider optional services
    and performance. Do not mark C1/C2/C5 complete from selected fixtures.
 
 ### Guarded Admission Increment
@@ -39,8 +36,8 @@ Implement next in this order:
 Production conditional analysis collects required entry-range separations and
 models callee-saved effects only at registered lock-control calls. Every premise
 is checked before root body execution; missing cold text must be fetched first.
-Results and remaining gates are in
-[VALIDATION](VALIDATION.md#guarded-nested-admission); this does not close C1/C2/C5.
+Current results and remaining gates are in
+[VALIDATION](VALIDATION.md#cross-window-cfg-completion); this does not close C1/C2/C5.
 
 - [x] Collect every required disjoint range and test the emitted entry predicate
       against concrete overlap, adjacency, wrap and register-preservation cases.
@@ -53,10 +50,35 @@ Results and remaining gates are in
       CALL phase/packet, task, GS and lock depth before first dispatch. This is
       logical scope, not a version certificate; C3 remains deferred. Conditional
       analysis permits one explicit root and no independently seeded callee.
-- [ ] Close the remaining ordinary mode-8 and mutex learned-depth gates without
-      deleting register probes or treating missing/undecodable text as safe.
-      Keep generated overlap-refusal tests and full-matrix results separate from
-      fixture-only scope tests and captured-text feasibility.
+- [x] Complete mode 8's cross-window CFG and interior-root dispatch labels.
+      Decoder seeds do not become independent admission roots; GS, genuine bad
+      instructions and expansion exhaustion still refuse. Ordinary mode 8 and
+      its two register gates execute actual JIT with the probes retained.
+- [ ] Close mutex learned-depth admission without deleting register probes or
+      borrowing root facts for independent callees. Keep generated tests and
+      full-matrix results separate from captured-text feasibility.
+
+### Learned Callee Increment
+
+The learned mutex-depth gate must execute the helper's translated nested locks,
+not merely preserve the already-working caller prefix. Before changing the
+single-root guard restriction, establish this contract:
+
+1. Distinguish decoder seeds from independently enterable CALL/IJ targets.
+   Check whether the retained callee graph is reachable from the runtime-validated
+   root, and compare admission RET edges with generated per-RET target tables.
+   An unconnected or independently learned target cannot inherit root GPR facts.
+2. Validate entry-scoped CALL packet and RET-effect propagation. Do not join a
+   fabricated untouched post-CALL state, assume private source stacks, or erase
+   actual callee writes. Unknown/native calls retain their clobber semantics;
+   keep the default independent-root analysis until a scoped alternative is proved.
+3. Enforce every conditional premise before body and preserve bounded analysis,
+   the two-word ABI, native owners and no replay. This is not permission to add
+   immutable versions, flags repair or kernel hooks incidentally.
+4. Add generated-code positives plus callee/return-alias, GS, unresolved-control
+   and malformed-scope negatives; run `test_10_native_resume.sh 4 5` with
+   `mutex_jit=1`, real helper learning, held-lock exhaustion and owner ACK checks.
+   Re-run all main and complete-matrix gates on the resulting frozen source.
 
 ## P0: Correctness Contracts
 
@@ -77,8 +99,10 @@ Remaining:
 
 - [x] Recover mode 1/4 register/CALL, held-B and pending-B gates under guarded
       admission, with exactly-once protected-state and ownership checks.
-- [ ] Recover mode 8 register/CALL and mutex learned-depth acceptance on current
-      source; a successful first prefix does not validate expanded callee code.
+- [x] Recover mode 8 register/CALL stages 2/3 with real body evidence and
+      exactly-once checks; preserve GPR/stack probes and owner notifications.
+- [ ] Recover mutex learned-depth acceptance on current source; a successful
+      first prefix does not validate expanded callee code.
 - [ ] Prove/test each additional recoverable exit with registers, stack,
       ownership and exactly-once side effects. Unsupported post-entry exits
       remain fail-stop, not restart-at-entry fallbacks.
@@ -96,7 +120,7 @@ publication. Native signal/trylock participants use Linux exclusion.
 
 Remaining:
 
-- [ ] Complete mode 8 and learned-depth acceptance, then broaden non-target,
+- [ ] Complete learned-depth acceptance, then broaden non-target,
       oversubscribed, cancellation and remote/deferred follower schedules.
 - [ ] Review source/lock address reuse, source-module lifetime and metadata
       retirement. Existing guest hook readers lack a complete unload/drain
@@ -144,8 +168,10 @@ Remaining:
 
 - [x] Admit eligible mode 1/4 loaded-pointer/register-sample prefixes using
       enforced entry disjointness conditions, not assumed private stacks.
-- [ ] Resolve mode 8's cold CFG and learned mutex helper admission while retaining
-      full checks on every executable JIT path.
+- [x] Resolve mode 8's cold CFG without skipping any executable JIT block;
+      check new cached-window targets again before admission and emission.
+- [ ] Resolve learned mutex helper admission while retaining full checks on
+      every executable JIT path.
 - [ ] Preserve alternate live paths, learned-target reanalysis, indirect-call
       conservatism and CALL stack-write checks while improving precision.
 - [ ] Expand negative tests for aliases, implicit/internal IR accesses and
