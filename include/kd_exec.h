@@ -13,9 +13,12 @@
 #include <linux/types.h>
 #include <linux/list.h>
 #include <asm/ptrace.h>
+#include "kd_call.h"
+#include "kd_spin_entry.h"
 
 struct task_struct;
 struct kd_native_request;
+struct kd_remote_request;
 
 #define KD_EXEC_MAX_NESTING 8
 #define KD_EXEC_MAX_LOCK_DEPTH 8
@@ -45,6 +48,13 @@ enum kd_exec_lock_kind {
 	KD_EXEC_LOCK_NATIVE,
 };
 
+enum kd_exec_remote_state {
+	KD_EXEC_REMOTE_IDLE,
+	KD_EXEC_REMOTE_WAITING,
+	KD_EXEC_REMOTE_NATIVE,
+	KD_EXEC_REMOTE_DONE,
+};
+
 /*
  * State that TCLock saves before entering a nested combiner. Pointers are
  * intentionally opaque here; the spinlock backend owns their concrete types.
@@ -60,6 +70,15 @@ struct kd_combiner_state {
 	int irqs_disabled;
 };
 
+struct kd_exec_frame;
+
+/* Backend-owned batch state remains live until this frame is retired. */
+struct kd_exec_outer_unlock {
+	int (*release)(struct kd_exec_frame *frame,
+		       struct kd_exec_outer_unlock *hook);
+	bool released;
+};
+
 struct kd_exec_frame {
 	struct pt_regs regs;
 	unsigned long entry_ip;
@@ -71,8 +90,9 @@ struct kd_exec_frame {
 	void *waiter;
 	void *outgoing_rsp_ptr;
 	struct kd_exec_frame *parent;
+	/* Logical requester, distinct from the CPU-local physical parent above. */
 	struct kd_exec_frame *resume_target;
-	void *lock_node;
+	struct kd_remote_request *remote_request;
 	struct kd_combiner_state saved_combiner;
 	unsigned long jit_lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
 	enum kd_exec_lock_kind jit_lock_kind[KD_EXEC_MAX_LOCK_DEPTH];
@@ -83,7 +103,7 @@ struct kd_exec_frame {
 	unsigned int outer_lock_depth;
 	unsigned int outer_lock_index;
 	unsigned int jit_lock_depth;
-	enum kd_exec_lock_kind lock_kind;
+	int logical_pid;
 	bool nested;
 	bool outer_unlock_seen;
 	bool completion_seen;
@@ -91,8 +111,11 @@ struct kd_exec_frame {
 	int remote_result;
 	bool executed;
 	bool mutex_backend;
+	struct kd_exec_outer_unlock *outer_unlock_hook;
+	struct kd_call_state control_call;
 	struct list_head native_link;
 	struct kd_native_request *native_request;
+	struct kd_spin_ref spin_origin;
 };
 
 struct kd_exec_context {
@@ -143,6 +166,10 @@ bool kd_exec_frame_lock_contains(const struct kd_exec_frame *frame,
 				 unsigned long lock_addr);
 bool kd_exec_frame_has_unreleased_nested(const struct kd_exec_frame *frame);
 bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame);
+bool kd_exec_frame_locks_released(const struct kd_exec_frame *frame);
+bool kd_exec_frame_remote_pending(const struct kd_exec_frame *frame);
+/* Ledger admission only; physical locks and origin references stay backend-owned. */
+bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame);
 int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 			       enum kd_exec_event event,
 			       const struct pt_regs *regs);
@@ -155,5 +182,18 @@ int kd_exec_frame_state(const struct kd_exec_frame *frame);
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex);
 int kd_exec_native_wait(struct kd_exec_frame *frame);
 bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex);
+
+/* Only a waiting virtual request owns these logical-parent links/mailboxes. */
+int kd_exec_remote_unlock(struct kd_exec_frame *frame, unsigned long lock_addr);
+void kd_exec_remote_poll(struct kd_exec_frame *frame);
+int kd_exec_remote_native(struct kd_exec_frame *frame);
+int kd_exec_remote_complete(struct kd_exec_frame *frame);
+/* Detach an unexecuted child without cancelling the queued parent request. */
+void kd_exec_remote_cancel(struct kd_exec_frame *frame);
+
+#ifdef KDLOCK_SELFTEST
+void kd_exec_selftest_capacity_probe(const struct kd_exec_frame *frame);
+void kd_exec_selftest_capacity_report(void);
+#endif
 
 #endif /* KD_EXEC_H */

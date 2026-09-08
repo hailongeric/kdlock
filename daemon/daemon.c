@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "exe_info.h"
@@ -14,6 +15,7 @@
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #define X86_KERNEL_ADDRESS_MIN 0xffff800000000000UL
 #define MAX_PAYLOAD 4000
+#define TRANSLATOR_NATIVE_ONLY 2
 
 static const char *sys_path = "/dev/kd_dev";
 
@@ -32,6 +34,7 @@ static unsigned int hash_hist[1000];
 static int hash_cnt;
 
 static char *cmd_hist[1000];
+static int cmd_results[1000];
 static int cmd_cnt;
 
 static int format_cmd(char *cmd, size_t size, const char *fmt, ...)
@@ -50,18 +53,20 @@ static int format_cmd(char *cmd, size_t size, const char *fmt, ...)
 	return 0;
 }
 
-static int cmd_seen(const char *cmd)
+static int cmd_seen(const char *cmd, int *result)
 {
 	int i;
 
 	for (i = 0; i < cmd_cnt; i++) {
-		if (!strcmp(cmd, cmd_hist[i]))
+		if (!strcmp(cmd, cmd_hist[i])) {
+			*result = cmd_results[i];
 			return 1;
+		}
 	}
 	return 0;
 }
 
-static int remember_cmd(const char *cmd)
+static int remember_cmd(const char *cmd, int result)
 {
 	if (cmd_cnt >= (int)ARRAY_SIZE(cmd_hist)) {
 		fprintf(stderr, "daemon: command history is full\n");
@@ -73,8 +78,20 @@ static int remember_cmd(const char *cmd)
 		exit(EXIT_FAILURE);
 	}
 	strcpy(cmd_hist[cmd_cnt], cmd);
+	cmd_results[cmd_cnt] = result;
 	cmd_cnt++;
 	return 0;
+}
+
+static int compile_result(int status)
+{
+	if (status >= 0 && WIFEXITED(status)) {
+		int code = WEXITSTATUS(status);
+
+		if (code == 0 || code == TRANSLATOR_NATIVE_ONLY)
+			return code;
+	}
+	return -1;
 }
 
 static int run_cmd(const char *cmd, const char *label)
@@ -156,23 +173,82 @@ static int make_ij_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
 static int compile_entry(const struct daemon_config *cfg,
 			 const struct kd_exe_info *exe)
 {
-	char cmd[1024];
+	/* Direct Python file-open errors and shell cd failures also exit 2.
+	 * runpy makes a missing script an ordinary exception (exit 1), so only
+	 * the translator's deliberate exit 2 means policy rejection. */
+	static const char bootstrap[] =
+		"import os, runpy, sys; script = sys.argv.pop(1); "
+		"sys.path.insert(0, os.path.dirname(script)); "
+		"runpy.run_path(script, run_name='__main__')";
+	const char *script = cfg->mode == MODE_V1 ?
+				     "../../disassem/disassem.py" :
+				     "../../../disassem/disassem.py";
+	const char *kind = exe->lock_kind == KD_EXE_LOCK_SPIN  ? "spin" :
+			   exe->lock_kind == KD_EXE_LOCK_MUTEX ? "mutex" :
+								 "unknown";
+	char workspace[256], pid_text[32], rip_text[32];
+	pid_t child, waited;
+	int status, result;
 
-	if (cfg->mode == MODE_V1) {
-		if (format_cmd(
-			    cmd, sizeof(cmd),
-			    "cd ./%p/ && python3 ../../disassem/disassem.py %d %p",
-			    (void *)exe->RIP, exe->pid, (void *)exe->RIP))
-			return -1;
-	} else {
-		if (format_cmd(
-			    cmd, sizeof(cmd),
-			    "cd ./%p/%d/ && python3 ../../../disassem/disassem.py %d %p",
-			    (void *)exe->RIP, exe->tgid, exe->pid,
-			    (void *)exe->RIP))
-			return -1;
+	workspace_path(workspace, sizeof(workspace), cfg, exe);
+	snprintf(pid_text, sizeof(pid_text), "%d", exe->pid);
+	snprintf(rip_text, sizeof(rip_text), "%p", (void *)exe->RIP);
+	child = fork();
+	if (child < 0) {
+		perror("fork translator");
+		return -1;
 	}
-	return run_cmd(cmd, "compile");
+	if (!child) {
+		if (chdir(workspace)) {
+			perror("chdir translator workspace");
+			_exit(126);
+		}
+		execlp("python3", "python3", "-c", bootstrap, script, pid_text,
+		       rip_text, kind, (char *)NULL);
+		perror("exec translator");
+		_exit(127);
+	}
+	do {
+		waited = waitpid(child, &status, 0);
+	} while (waited < 0 && errno == EINTR);
+	if (waited < 0) {
+		perror("wait translator");
+		return -1;
+	}
+	result = compile_result(status);
+	if (result < 0)
+		fprintf(stderr,
+			"daemon: translator failed: workspace=%s status=%d\n",
+			workspace, status);
+	return result;
+}
+
+static int write_native_only(const struct kd_exe_info *exe)
+{
+	const struct kd_recv_pkt pkt = {
+		.status_code = KD_EXE_NATIVE_ONLY,
+		.pid = exe->pid,
+		.RIP = exe->RIP,
+		.offset = 0,
+	};
+	ssize_t written;
+	int fd = open(sys_path, O_WRONLY);
+
+	if (fd < 0) {
+		perror("open /dev/kd_dev for rejection");
+		return -1;
+	}
+	do {
+		written = write(fd, &pkt, sizeof(pkt));
+	} while (written < 0 && errno == EINTR);
+	close(fd);
+	if (written != sizeof(pkt)) {
+		fprintf(stderr,
+			"daemon: native-only status write failed: %zd\n",
+			written);
+		return -1;
+	}
+	return 0;
 }
 
 static ssize_t read_sys(void *buffer, size_t size)
@@ -328,10 +404,12 @@ static void check_once(const struct daemon_config *cfg)
 	count = (size_t)len / entry_size;
 	for (i = 0; i < count; i++) {
 		struct kd_exe_info *exe = &entries[i];
+		int result = 0;
 
 		cmd[0] = 0;
 
-		if (exe->status_code == KD_EXE_NORMAL ||
+		if (exe->status_code == KD_EXE_NATIVE_ONLY ||
+		    exe->status_code == KD_EXE_NORMAL ||
 		    (cfg->mode == MODE_V1 &&
 		     exe->status_code == KD_EXE_INST_LIMIT))
 			continue;
@@ -377,7 +455,7 @@ static void check_once(const struct daemon_config *cfg)
 		}
 
 		if (cmd[0]) {
-			if (!cmd_seen(cmd)) {
+			if (!cmd_seen(cmd, &result)) {
 				if (cfg->verbose)
 					printf(" Compiling");
 				if (run_cmd(cmd, "workspace update")) {
@@ -385,12 +463,13 @@ static void check_once(const struct daemon_config *cfg)
 						printf("\n");
 					continue;
 				}
-				if (compile_entry(cfg, exe)) {
+				result = compile_entry(cfg, exe);
+				if (result < 0) {
 					if (cfg->verbose)
 						printf("\n");
 					continue;
 				}
-				if (remember_cmd(cmd)) {
+				if (remember_cmd(cmd, result)) {
 					if (cfg->verbose)
 						printf("\n");
 					continue;
@@ -399,6 +478,13 @@ static void check_once(const struct daemon_config *cfg)
 				printf(" Compile saved");
 			}
 
+			if (result == TRANSLATOR_NATIVE_ONLY) {
+				if (!write_native_only(exe))
+					fprintf(stderr,
+						"daemon: native-only pid=%d entry=0x%lx\n",
+						exe->pid, exe->RIP);
+				continue;
+			}
 			if (write_sys(cfg, exe)) {
 				if (cfg->verbose)
 					printf("\n");

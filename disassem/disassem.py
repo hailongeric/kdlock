@@ -6,6 +6,8 @@ from pathlib import Path
 
 import assist
 import conflict
+import context_policy
+import diagnostics
 import hostcall
 import indirect_jump
 import memread
@@ -40,43 +42,87 @@ def get_percpu_symbol_offset(name):
     return value
 
 
-def find_segment_policy_error(block_dict, code_ranges=None):
-    saw_gs = False
-    for block_start, block in sorted(block_dict.items()):
-        if code_ranges and not any(
-            start <= block_start < end for start, end in code_ranges
-        ):
-            continue
+def find_segment_policy_error(
+    block_dict,
+    code_ranges=None,
+    db_dict=None,
+    symbols=None,
+    lock_kind=None,
+    lock_symbols=None,
+    roots=None,
+    native_exits=(),
+):
+    db_dict = db_dict or {}
+    symbols = symbols or {}
+    selected = {
+        start: block
+        for start, block in block_dict.items()
+        if not code_ranges or any(left <= start < right for left, right in code_ranges)
+    }
+    for block_start, block in sorted(selected.items()):
         if not getattr(block, "lines", None):
+            diagnostics.set_instruction(block_start, "<undecodable/empty block>")
             return block_start, "undecodable or empty basic block"
-        offset = block_start
-        for line in block.lines:
-            for arg in line.args:
-                segment, _ = normal.segment_operand(arg)
-                saw_gs = saw_gs or segment == "GS"
-            reason = normal.segment_policy_error(line)
-            if reason:
-                return offset, reason
-            offset += line.l
-    if saw_gs and normal.current_task_offset is None:
-        return 0, "current_task per-CPU offset is unavailable"
+    try:
+        for block_start, block, constants in context_policy.constant_blocks(
+            selected,
+            db_dict,
+            roots=roots,
+            control_targets=lock_symbols or (),
+            native_exits=native_exits,
+        ):
+            offset = block_start
+            for line in block.lines:
+                context_error = context_policy.instruction_rejection(
+                    line,
+                    offset,
+                    db_dict.get(block),
+                    symbols,
+                    lock_kind,
+                    lock_symbols,
+                    constants,
+                )
+                if context_error:
+                    reason, symbol = context_error
+                    diagnostics.set_instruction(offset, line)
+                    return offset, f"{reason}: {symbol}" if symbol else reason
+                reason = normal.segment_policy_error(line)
+                if reason:
+                    diagnostics.set_instruction(offset, line)
+                    return offset, reason
+                constants.update(line, symbols)
+                offset += line.l
+    except context_policy.ContextFlowLimit as error:
+        error.report()
+        diagnostics.set_instruction(
+            error.offset, error.instruction or "<register-address analysis>"
+        )
+        return error.offset, str(error)
     return None
 
 
-def write_unsupported_jit(reason):
-    with open("./asm/jit.S", "w") as f:
-        f.write(f"/* KD_UNSUPPORTED: {reason} */\n")
-        f.write("MOV     R14, PT_RIP\n")
-        f.write("MOV     Stack_INST_CNT, 0\n")
-        f.write("MOV     Stack_IJ, 0x3\n")
-        f.write("JMP     exit\n")
+def reject_translation(detail):
+    diagnostics.warn("CONTEXT_NATIVE_ONLY", "reject_entry", detail)
+    # A previous successful generation must never look like this result's image.
+    for name in ("jit.S", "jit.o", "jit.bin", "bin.txt"):
+        Path("asm", name).unlink(missing_ok=True)
+    return context_policy.NATIVE_ONLY_EXIT
+
+
+def run_build_step(command, **kwargs):
+    try:
+        return subprocess.run(command, check=True, **kwargs)
+    except (OSError, subprocess.CalledProcessError) as error:
+        diagnostics.error("BUILD_FAILED", "raise", str(error), command=command)
+        raise
 
 
 def build_jit_binary():
+    diagnostics.set_instruction(None, "<assemble/objcopy/objdump>")
     include_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "include"
     )
-    subprocess.run(
+    run_build_step(
         [
             "gcc",
             f"-I{include_dir}",
@@ -87,17 +133,13 @@ def build_jit_binary():
             "-o",
             "./asm/jit.o",
         ],
-        check=True,
     )
-    subprocess.run(
+    run_build_step(
         ["objcopy", "--remove-section", ".note.gnu.property", "./asm/jit.o"],
-        check=True,
     )
-    subprocess.run(
-        ["objcopy", "-O", "binary", "./asm/jit.o", "./asm/jit.bin"], check=True
-    )
+    run_build_step(["objcopy", "-O", "binary", "./asm/jit.o", "./asm/jit.bin"])
     with open("./asm/bin.txt", "w", encoding="ascii") as output:
-        subprocess.run(
+        run_build_step(
             [
                 "objdump",
                 "-b",
@@ -107,7 +149,6 @@ def build_jit_binary():
                 "-D",
                 "./asm/jit.bin",
             ],
-            check=True,
             stdout=output,
         )
 
@@ -145,31 +186,8 @@ def write_entry_dispatch(f, entry, block_dict, continuation_targets=None):
     f.write("JMP     exit\n")
 
 
-def dis_assem(pid, entry):
-    os.makedirs("./asm", exist_ok=True)
-
-    resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
-    hostcall_targets = set(resolved_hostcalls)
-
-    jump_table = {}
-    rets = memread.read(entry, jump_table, excluded_callees=hostcall_targets)
+def decode_regions(rets, raw_spin_unlock, keep_call_stack):
     cfgs = []
-    raw_spin_lock = get_kernel_symbol("_raw_spin_lock", 0xFFFFFFFF81E90A20)
-    raw_spin_unlock = get_kernel_symbol("_raw_spin_unlock", 0xFFFFFFFF81E90B30)
-    mutex_lock = get_kernel_symbol("mutex_lock", 0xFFFFFFFF81E8B570)
-    mutex_unlock = get_kernel_symbol("mutex_unlock", 0xFFFFFFFF81E8A040)
-    control_call_targets = {
-        addr
-        for addr in (
-            raw_spin_lock,
-            raw_spin_unlock,
-            mutex_lock,
-            mutex_unlock,
-        )
-        if addr
-    }
-    keep_call_stack = control_call_targets | hostcall_targets
-
     ordering_bug_list = [0x2CE40, 0x2CE50, 0x4FFD0, 0x738D0, 0x67B0]
 
     for r in rets:
@@ -227,19 +245,134 @@ def dis_assem(pid, entry):
         for block in asmcfg.blocks:
             label = asmcfg.loc_db.pretty_str(block.loc_key)
             offset = int(label.split("_")[1], 16)
+            # A cross-region edge may create a bad placeholder for a block
+            # that another region has decoded. Never overwrite the real block.
+            if offset in block_dict and block_dict[offset].lines and not block.lines:
+                continue
             block_dict[offset] = block
             db_dict[block] = asmcfg.loc_db
+    return block_dict, db_dict
 
+
+def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
+    diagnostics.begin(pid, entry)
+    os.makedirs("./asm", exist_ok=True)
+
+    if lock_kind not in {"spin", "mutex"}:
+        diagnostics.set_instruction(entry, "<entry lock kind>")
+        return reject_translation("missing or invalid entry lock kind")
+
+    diagnostics.set_instruction(entry, "<context symbol resolution>")
+    try:
+        control_symbols = context_policy.resolve_control_symbols(get_kernel_symbol)
+        context_symbols = context_policy.load_context_symbols()
+    except (OSError, ValueError) as error:
+        # Missing visibility is a retryable environment error, not a CS verdict.
+        diagnostics.error(
+            "CONTEXT_SYMBOLS_UNAVAILABLE", "retry_translation", str(error)
+        )
+        raise
+
+    resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
+    hostcall_targets = set(resolved_hostcalls)
+    raw_spin_lock = control_symbols["_raw_spin_lock"]
+    raw_spin_unlock = control_symbols["_raw_spin_unlock"]
+    mutex_lock = control_symbols["mutex_lock"]
+    mutex_unlock = control_symbols["mutex_unlock"]
+    lock_symbols = {
+        addr: (kind, name)
+        for addr, kind, name in (
+            (raw_spin_lock, "spin", "_raw_spin_lock"),
+            (raw_spin_unlock, "spin", "_raw_spin_unlock"),
+            (mutex_lock, "mutex", "mutex_lock"),
+            (mutex_unlock, "mutex", "mutex_unlock"),
+        )
+    }
+    keep_call_stack = set(lock_symbols) | hostcall_targets
+    jump_table = {}
+    diagnostics.set_instruction(entry, "<CFG text coverage>")
+    try:
+        rets = memread.read(entry, jump_table, excluded_callees=hostcall_targets)
+    except memread.TextReadLimit as error:
+        return reject_translation(str(error))
+
+    # Newly fetched branch targets inherit their caller's lock depth. Only
+    # originally discovered callees/IJ targets are independent full-scan roots.
+    discovered_targets = {target for _, _, targets in rets for target in targets}
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
-    code_ranges = [(chunk[1], chunk[1] + len(chunk[0])) for chunk in rets]
-    segment_error = find_segment_policy_error(block_dict, code_ranges)
-    if segment_error:
-        offset, reason = segment_error
-        detail = f"{reason} at 0x{offset:x}" if offset else reason
-        print("Rejecting translation:", detail)
-        write_unsupported_jit(detail)
-        build_jit_binary()
-        return
+    for expansion in range(33):
+        block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
+        try:
+            # Admission and emission must use the same executable scope. A
+            # native-only suffix is not a service run on the combiner's context.
+            block_dict, db_dict, native_exits = context_policy.jit_phase_blocks(
+                block_dict,
+                db_dict,
+                discovered_targets | {entry},
+                keep_call_stack,
+            )
+        except context_policy.ContextFlowLimit as error:
+            diagnostics.set_instruction(error.offset, "<JIT phase scope>")
+            return reject_translation(str(error))
+        block_dict, boundary_error = context_policy.critical_section_blocks(
+            block_dict,
+            db_dict,
+            entry,
+            {raw_spin_lock, mutex_lock},
+            {raw_spin_unlock, mutex_unlock},
+            discovered_targets,
+            native_exits=native_exits,
+        )
+        if boundary_error:
+            offset, reason = boundary_error
+            diagnostics.set_instruction(offset, "<critical-section boundary>")
+            return reject_translation(reason)
+        if entry not in block_dict:
+            return reject_translation("entry has no reachable decoded block")
+
+        code_ranges = [(start, start + len(data)) for data, start, _ in rets]
+        # A truncated instruction at a read boundary also needs another window.
+        missing = {
+            offset
+            for offset, block in block_dict.items()
+            if not block.lines
+            and not any(
+                start <= offset and offset + 15 <= end for start, end in code_ranges
+            )
+        }
+        segment_error = find_segment_policy_error(
+            {
+                offset: block
+                for offset, block in block_dict.items()
+                if offset not in missing
+            },
+            code_ranges,
+            db_dict,
+            context_symbols,
+            lock_kind,
+            lock_symbols,
+            roots=(discovered_targets | {entry}) & (block_dict.keys() - missing),
+            native_exits=native_exits,
+        )
+        if segment_error:
+            offset, reason = segment_error
+            detail = f"{reason} at 0x{offset:x}" if offset else reason
+            return reject_translation(detail)
+        if not missing:
+            break
+        diagnostics.set_instruction(min(missing), "<missing reachable CFG block>")
+        if expansion == 32:
+            return reject_translation("reachable text exceeds 32 CFG expansions")
+        diagnostics.warn(
+            "TEXT_RANGE_EXTEND",
+            "read_cfg",
+            "fetch reachable branch text",
+            targets=[hex(target) for target in sorted(missing)],
+        )
+        try:
+            rets = memread.extend_regions(rets, missing)
+        except memread.TextReadLimit as error:
+            return reject_translation(str(error))
 
     missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
     continuation_targets = find_resumable_call_continuations(
@@ -250,6 +383,8 @@ def dis_assem(pid, entry):
 
     f = StringIO()
     write_entry_dispatch(f, entry, block_dict, continuation_targets)
+    budget_blocks = 0
+    first_budget_rip = None
 
     for offset, block in sorted(block_dict.items()):
         db = db_dict[block]
@@ -257,6 +392,9 @@ def dis_assem(pid, entry):
         label = db.pretty_str(block.loc_key)
 
         f.write(label + ":\n")
+        if body_witness:
+            # MOV observes body entry without changing guest GPRs or live flags.
+            f.write(make_inst("MOV", ["Stack_JIT_WITNESS", "1"]))
 
         reg_map = conflict.block_init()
 
@@ -264,6 +402,9 @@ def dis_assem(pid, entry):
         line_cnt = 0
 
         if assist.check_is_branch(block.lines) and label[0] == "l":
+            budget_blocks += 1
+            if first_budget_rip is None:
+                first_budget_rip = offset
             f.write(make_inst("MOVABS", ["R14", hex(offset)]))
             f.write("INC             R11\n")
             f.write("TEST            R11, 0x1000000\n")
@@ -273,13 +414,23 @@ def dis_assem(pid, entry):
         temp_j = 0
         while temp_i < len(block.lines):
             line = block.lines[temp_i]
+            # Keep the source location through the two synthetic LEA instructions.
+            if temp_j == 0:
+                diagnostics.set_instruction(offset, line)
             if (
                 offset in continuation_labels
                 and offset not in emitted_continuation_labels
             ):
                 f.write(f"loc_{offset:x}:\n")
+                if body_witness:
+                    f.write(make_inst("MOV", ["Stack_JIT_WITNESS", "1"]))
                 emitted_continuation_labels.add(offset)
             if str(line) == "LEA        R13, QWORD PTR [R12 + R14]":
+                diagnostics.warn(
+                    "LEA_FLAGS_REWRITE",
+                    "emit_mov_add",
+                    "ADD changes flags although the original LEA does not",
+                )
                 temp_inst1 = mn_x86.fromstring("MOV R13, R14", loc_db=None, mode="64")
                 temp_inst2 = mn_x86.fromstring("ADD R13, R12", loc_db=None, mode="64")
                 block.lines[temp_i : temp_i + 1] = [temp_inst1, temp_inst2]
@@ -305,14 +456,35 @@ def dis_assem(pid, entry):
     f.write(indirect_jump.make_jump_table(jump_table))
     f.write(indirect_jump.make_callee_table(missing_callees, resolved_hostcalls))
 
+    diagnostics.set_instruction(entry, "<entry/branch instrumentation>")
+    diagnostics.warn(
+        "FLAGS_UNPRESERVED",
+        "emit_unchanged",
+        "entry dispatch and branch budget may clobber live flags; liveness is unchecked",
+        budget_blocks=budget_blocks,
+        first_budget_rip=(
+            f"0x{first_budget_rip:x}" if first_budget_rip is not None else "n/a"
+        ),
+    )
     Path("./asm/jit.S").write_text(f.getvalue(), encoding="utf-8")
 
     solve_bug.solve_cond_jmp_lock_cmpxchg("./asm/jit.S")
 
     build_jit_binary()
+    return 0
 
 
 if __name__ == "__main__":
     pid = int(sys.argv[1])
     entry = int(sys.argv[2], 16)
-    dis_assem(pid, entry)
+    lock_kind = sys.argv[3] if len(sys.argv) > 3 else "unknown"
+    try:
+        body_witness = os.environ.get("KD_JIT_BODY_WITNESS", "0")
+        if body_witness not in {"0", "1"}:
+            raise ValueError("KD_JIT_BODY_WITNESS must be 0 or 1")
+        sys.exit(dis_assem(pid, entry, lock_kind, body_witness=body_witness == "1"))
+    except Exception as error:
+        diagnostics.error(
+            "TRANSLATION_FAILED", "raise", f"{type(error).__name__}: {error}"
+        )
+        raise

@@ -1,29 +1,15 @@
 # kdlock JIT 执行与寄存器 ABI
 
-本文记录当前 x86-64 实现中，临界区状态如何进入 JIT、如何在翻译代码中表示，
-以及如何退出、续跑并最终恢复到原 waiter。它描述的是现有代码的实际约定，
-不是一个与实现无关的目标设计。
+本文以当前 x86-64 内核 spin/mutex 实现为准，描述入口、wrapper、退出及原 waiter
+续跑的寄存器/栈约定。使用与执行流见 [JIT_EXECUTION.md](JIT_EXECUTION.md)，
+锁和 frame 生命周期见 [DESIGN.md](DESIGN.md)，结果见
+[VALIDATION.md](VALIDATION.md#jit-episode-scope)。
 
-适用范围是高层代理路径 `kd_exe_on_call_hl_entry()`，即当前 mode
-0/1/2/6/7/8/9/10 和 `mutex_jit=1` 下的 mode 3/4/5/11。低层 futex 路径
-`kd_exe_on_call()` 共用相同的两参数 wrapper ABI，但不支持 mode 2/5
-使用的 hostcall。本项目当前只定义 x86-64 内核代码的翻译语义。
-
-本文描述的 mode 2/5 退出和续跑约定已经通过独立运行验证；实际入口、服务地址、
-计数器和保留日志见 [`VALIDATION.md`](VALIDATION.md)。
-
-关键实现文件：
-
-- `include/wrapper.S`：JIT 二进制入口、寄存器装载和回写。
-- `include/asm_head.h`：`pt_regs` 偏移和 wrapper 私有栈槽。
-- `include/kd_segment.h`：获取 waiter 所在 CPU 的 kernel GS base。
-- `disassem/conflict.py`：虚拟特殊寄存器到 R12-R15 的动态映射。
-- `disassem/normal.py`：GS/current 操作数降级和 segment 拒绝策略。
-- `disassem/disassem.py`：读取 per-CPU 符号偏移并在产生代码前预检查 segment 指令。
-- `disassem/special_inst.py`：`CALL`、`RET`、`PUSH`、`POP` 等指令的降级。
-- `disassem/indirect_jump.py`：间接跳转、call miss 和 hostcall 退出桩。
-- `kernel_module/exe.c`：退出原因解释、known-call/hostcall 执行和续跑。
-- `kernel_module/kd_exec.c`：嵌套执行帧和 continuation 快照。
+唯一执行入口是 frame-backed `kd_exe_on_call_hl_entry()`。两元素输入保持
+`{waiter GS base, logical waiter task}`，不增加 FS base 或第三个 task 元素。
+GS lowering helper 保留，但生产准入拒绝保留 JIT 范围中的 GS 内存操作。
+普通直接 CALL miss 后原 waiter 原生完成后缀，不返回本次 JIT；它不是入口重试。
+本文件只说明已实现的状态契约，不保证 flags、任意指令或任意故障恢复正确。
 
 ## 1. 状态边界
 
@@ -84,13 +70,22 @@ wrapper 保存宿主 RBX、RBP、R12-R15，因此对调用它的 C 代码遵守 
 | 元素 | 调用前 | wrapper 返回后 |
 | --- | --- | --- |
 | `args[0]` | 被代理 waiter 的 kernel GS base | sandbox 退出原因；IJ miss 时为源 RIP |
-| `args[1]` | logical waiter 的 `task_struct *` | 预留计数输出，当前固定为 0 |
+| `args[1]` | logical waiter 的 `task_struct *` | body witness：开启观测且进入生成块为 1，否则为 0 |
 
 参数数组始终只有两个元素，没有第三个 task 参数。wrapper 在
 返回时会覆盖这两个输入，所以 executor 每次首次进入或 continuation
 续跑前，都要从当前 `kd_exec_frame` 重新写入 GS base 和 logical task。
 当前代码不得读取返回后的 `args[1]` 作为执行计数：R11 中虽有运行时 block
-budget，但 epilogue 不会把它复制到 `Stack_INST_CNT`。
+budget，但 epilogue 不会把它复制到 `Stack_JIT_WITNESS`。此布尔标记不是指令
+数量、完整路径覆盖率或代码 generation 身份。
+
+翻译诊断开关 `KD_JIT_BODY_WITNESS` 默认是 `0`。设为 `1` 时，生成的基本块
+和可恢复续点在标签后用 `MOV Stack_JIT_WITNESS, 1` 写入标记，不改变 GPR
+或 flags；dispatcher、callee/IJ 退出表不写入它。每次 wrapper 调用先清零，
+避免上次执行的 1 被误用。公共测试启动 daemon 时强制开启，并要求匹配
+entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志不再足够。
+执行器每次高层调用只记录第一个正标记，不承诺每次内部续跑都有单独日志。
+此值不参与失败恢复、锁交接或重放决策；未开启观测的代码即使执行也返回 0。
 
 ## 3. `pt_regs` 输入输出约定
 
@@ -161,22 +156,20 @@ RAX、RCX、RDX、RSI、RDI、R8-R11 作为 lock 函数的 caller-saved 状态�
 `node->regs = *regs` 复制父 JIT 的完整 GPR/RIP/RSP 快照，复制显式 lock stack，
 并继承父 frame 的 waiter GS base 和 logical task。
 这使 B 锁的远端 combiner 可以从显式寄存器状态继续代理 A 的执行流。
-但 `jit_context` 本身仍是 A combiner 栈上的对象；该栈在 B 完成前必须保持有效，
-不能将“续点显式化”理解成“不依赖宿主栈的生命周期”。
+`jit_context` 位于初始化分配的 per-CPU 池，按请求节点槽位使用；父 combiner
+的 C 栈仍保留暂停的控制流和局部快照，在 B 返回前必须保持有效，不能将
+“续点显式化”理解成“不依赖宿主栈的生命周期”。
 
 mutex B 不再创建虚拟 waiter 或子 frame。A combiner 获取原生 B 后，在同一
 frame 记录 `KD_EXEC_LOCK_NATIVE`，然后才弹出 lock CALL 的返回地址。等待 B 期间
 保留父级 GPR/RIP/RSP/GS/task，获取后在同一 artifact 执行 B 内的指令。
 
 顶层 spin/mutex waiter 在入队的 origin CPU 上记录
-`cpu_kernelmode_gs_base(cpu)` 和 `current`。低层 futex 入口则使用目标
-task 的 `task_cpu(task)` 查找 kernel GS base，并把该 task 作为 logical
-waiter。这两条路径都不使用 artifact 全局的 `exe->gsbase`。低层
-futex 入口当前仅作为兼容 API 保留，仓库内没有调度/唤醒代理 waiter 的
-frontend。
-
-`task_cpu(task)` 只是读取时的 CPU，不等同于顶层 waiter 入队时捕获并保持的 origin
-CPU。这个低层 API 本身不负责持有 task 引用或禁止其迁移，尚无完整调用契约。
+`cpu_kernelmode_gs_base(cpu)` 和 `current`，不使用 artifact 全局的
+`exe->gsbase`。nested spin 继承父请求捕获的上下文，mutex B 保持同一 frame。
+旧 futex 入口及其 `task_cpu(task)` 查询辅助函数已移除，不能再将任意 task
+的即时 CPU 采样当作已固定的 origin 上下文。此清理没有切换硬件 GS，也没有
+补全一般 per-CPU 并发语义。
 
 ## 5. Wrapper 私有栈布局
 
@@ -198,10 +191,10 @@ CPU。这个低层 API 本身不负责持有 task 引用或禁止其迁移，尚
 | `-0x80` | `Stack_TASK` / `Stack_RCT` | 入口 `args[1]`，logical waiter task |
 | `-0x88` | `Stack_RIP` | 退出 RIP 临时槽 |
 | `-0x90` | `Stack_IJ` | 退出原因或 IJ 源地址 |
-| `-0x98` | `Stack_INST_CNT` | 预留计数槽；prologue 固定写入 0 |
+| `-0x98` | `Stack_JIT_WITNESS` | 复用旧计数槽；prologue 写 0，观测用生成块写 1 |
 
-`Stack_RIP`、`Stack_IJ`、`Stack_INST_CNT` 由一次 `sub rsp, 24` 分配；prologue
-显式清零 `Stack_INST_CNT`。正常退出桩必须先定义 R14 和 `Stack_IJ`，再跳到公共
+`Stack_RIP`、`Stack_IJ`、`Stack_JIT_WITNESS` 由一次 `sub rsp, 24` 分配；prologue
+显式清零 `Stack_JIT_WITNESS`。正常退出桩必须先定义 R14 和 `Stack_IJ`，再跳到公共
 `exit`。
 
 `Stack_TASK` 直接复用旧的第二个 segment 槽；`Stack_RIP` 及其后的物理偏移
@@ -261,40 +254,26 @@ R15”。只有 dispatcher 和退出协议对 physical R14/R15 的含义是固�
   sandbox 运行的 branch-block budget，不是整个临界区的精确 retired-instruction
   数。
 
+
 ### 6.3 GS 和 logical `current`
 
-运行 translated code 时不会执行 `wrgsbase`，也不会把 combiner CPU 的硬件
-GS base 切换为 waiter 的值。翻译器将普通 `%gs:offset` 操作数改写为
-`[virtual_GS_base + offset]`；virtual GS 从 `Stack_RGS` 加载，因而 MOV 读、
-MOV 写和 INC 等 read-modify-write 都访问 origin CPU 的 per-CPU 区。
+生产准入拒绝保留 JIT 范围中的所有 GS 内存操作，包括只读及 current_task
+读取；FS/base 操作也不受支持。下述是保留并由单元测试覆盖的 lowering helper，
+不是生产代理许可。
 
-`current_task` 是特例。daemon 从 `/proc/kallsyms` 计算其 per-CPU 偏移；遇到
-64-bit `MOV reg, %gs:current_task` 时，直接从 virtual `CT` / `Stack_RCT`
-返回 logical waiter。这避免远端 combiner 读到它自己或 origin CPU 上后续
-调度进程的 `current`。对 `current_task` 的写入或 RMW 不允许。
+翻译器不写硬件 GS base。普通 GS 操作数降为显式
+`[Stack_RGS + offset]`；匹配 current_task 偏移的 64-bit MOV 则从
+`Stack_RCT` 取得 logical waiter。写入/RMW current_task 不允许。
+原 waiter 在入队 origin CPU 上捕获 GS/task，嵌套 spin 继承，mutex 保持同一 frame。
 
-这里保证的是地址来源和 logical task 的替换，不是任意 per-CPU 操作的并发正确性。
-远端 combiner 修改 origin CPU 的 per-CPU 内存时，origin CPU 上的中断或其他任务
-仍可能同时操作它；`migrate_disable()` 不能防止这类并发。对依赖本地非 LOCK RMW、
-抢占计数、IRQ/RCU 或调度状态的代码，需要单独的策略和测试。原生 handler 执行时
-硬件 GS 和真实 `current` 仍属于 combiner，不能自动观察到这里的 logical waiter。
+显式地址和 logical task 不切换实际调度、IRQ、RCU 或抢占状态。远端访问 origin
+per-CPU 内存仍可能与本地操作冲突；native service 的真实 current/GS 仍属于
+combiner。已排除的普通 CALL native 后缀在 waiter 上运行，但这也不消除
+borrowed mutex 的 owner-sensitive 限制。
 
-当前 fail-closed 策略为：
-
-- `%fs:` 内存操作数不支持，不传入 FS base。
-- `rdfsbase`/`rdgsbase`/`wrfsbase`/`wrgsbase`/`swapgs` 和直接 segment
-  寄存器访问不支持。
-- 其他 segment-prefixed 内存指令不支持。对齐 NOP 携带的 CS 伪操作数会被丢弃并生成普通 NOP。
-- miasm 在 daemon 已抓取翻译范围内不能解码的 basic block 整体拒绝。
-  范围外的 CALL 目标坏块只是 miss 占位，仍按 call-miss 策略处理。对
-  miasm 0.1.5 会错解的 `SWAPGS` 和 FSGSBASE 编码另行按原始字节拒绝。
-- 预检查失败时 daemon 生成最小拒绝 artifact，以
-  `KD_EXE_ERROR_INST == 3` 退出；kernel executor 将该 entry 标记为终止错误。
-  当前高层路径在进入 wrapper 后遇到这种无续跑协议的退出会 fail-stop，不从入口重做。
-
-以上是 segment/解码检查的范围，不是完整指令白名单。当前 `INT` 被生成为 NOP，
-部分未处理 special 指令仅打印 warning，一般特权指令也没有统一的拒绝门槛。
-不能据此声称任意危险内核指令都能失败关闭；待办见 [`TODO.md`](TODO.md)。
+准入范围、IR 内存/别名分析与边界只维护在 DESIGN 第 7 节。
+原 waiter pin、稳定 origin 引用、物理 owner 和 ACK 放在锁/frame 元数据，
+不占 wrapper args 或保存寄存器槽。
 
 ## 7. 虚拟栈和函数调用
 
@@ -316,7 +295,8 @@ wrapper 实栈来模拟 guest 调用。
 第 3 项保留已执行的共享内存和 waiter 栈写入，不做事务回滚，也不再覆盖为入口
 快照。combiner 保留物理锁，通过 native unlock 请求完成交接；B 已完成时不会
 重做 B，B 仍持有时不会先释放 B 再续跑。实现和 BCD 对比见 `DESIGN.md` 9.5/9.6。
-本轮按用户要求暂不扩展 flags ABI，只验收普通 CALL miss，不验收基本块预算退出。
+按用户要求暂不扩展 flags ABI。普通 CALL miss 和尚未开始获取 B 的资源失败
+使用完整 CALL 边界；这不涵盖基本块预算退出。
 
 ## 8. Sandbox 退出 ABI
 
@@ -327,7 +307,7 @@ pt_regs.ip = physical R14
 pt_regs.sp = physical R13
 pt_regs.bp = physical R12
 args[0]    = Stack_IJ
-args[1]    = Stack_INST_CNT   (当前固定为 0)
+args[1]    = Stack_JIT_WITNESS   (0/1，只供观测)
 ```
 
 其余受支持 GPR 也写回 `pt_regs`。退出桩的具体协议如下：
@@ -341,7 +321,10 @@ args[1]    = Stack_INST_CNT   (当前固定为 0)
 | IJ miss | jump target | IJ 源 RIP，而不是常量 `2` | 不变 |
 | block budget 超限 | 最近记录的 block RIP | `4` (`KD_EXE_INST_LIMIT`) | 不变 |
 | dispatcher 无匹配 continuation | 请求的 RIP | `2` | 不变；高层路径最终失败 |
-| 不支持的 segment/指令 | 被拒绝的入口或指令 RIP | `3` (`KD_EXE_ERROR_INST`) | 不变；终止失败 |
+| 运行期不支持的指令退出 | 保存的指令 RIP | `3` (`KD_EXE_ERROR_INST`) | 不变；终止失败 |
+
+`KD_EXE_NATIVE_ONLY == -3` 仅是翻译准入状态，不是 wrapper 的退出原因，
+不能写入 `args[0]` 来模拟拒绝。拒绝入口不调用 wrapper。
 
 `KD_EXE_IJ_MISS == 2` 是 `kd_exe_info.status_code` 的 daemon 状态，不是普通 IJ
 miss 时 wrapper 返回在 `args[0]` 的值。wrapper 返回源 RIP，kernel executor
@@ -353,7 +336,8 @@ sandbox 已经成为内存隔离边界。
 
 `KD_EXE_RUN_NATIVE=6`、`KD_EXE_NATIVE_DONE=7` 和 `KD_EXE_KNOWN_NATIVE=8`
 是高层 C 执行结果，不是新增的 wrapper `args[0]` 错误码。输入/输出仍各有两个
-元素。运行中非普通 CALL 的错误目前 fail-stop，不能套用 CALL 的栈约定。
+元素。除已验证的 PENDING 锁获取资源失败外，其他运行错误仍 fail-stop，
+不能直接套用 CALL 的栈约定。
 
 ## 9. Mode 2/5 hostcall 的寄存器续跑约定
 
@@ -385,26 +369,75 @@ hostcall continuation 位于函数调用之后，因此不能依赖调用前 EFL
 `jump_to_saved_regs()` 从 unlock 后继续；严格测试要求该 `jit_resume` 次数与
 hostcall resume 及 `jit_success` 完全相等。
 
+### 9.1 普通 CALL miss 的寄存器观察
+
+`KD_NATIVE_REGISTERS=1` 为 `test_10_native_resume.sh` 增加默认关闭的测试探针，
+不修改 wrapper 或生产 `pt_regs` 布局。捕获函数 `kd_resume_register_capture`
+是独立汇编 callee，在任何 C prologue 前存储 16 个 GPR，随后按内核
+`ASM_RET` 返回。caller 保存并恢复被写入标记的 callee-saved 寄存器；RBP
+从未改写，额外使用 64 字节原 waiter 的虚拟/原生栈，CALL 再压入八字节返回地址。
+
+| 检查对象 | 期望值 |
+| --- | --- |
+| RAX/RBX/RCX/RDX/RSI/R8..R15 | 各自固定标记 XOR `record_id + 1` |
+| RDI | 独立请求的捕获缓冲地址 |
+| RBP | caller 记录的有效 frame pointer |
+| RSP | caller 记录的 callee-entry 栈顶 |
+| `[RSP]` | 原始 CALL 后继地址，与 caller 的 RIP-relative LEA 结果一致 |
+| `[RSP+8]`、`[RSP+16]` | 两个固定栈标记 XOR 同一请求 seed |
+| 返回 RAX、capture 次数 | 指定返回标记 XOR seed，且仅调用一次 |
+
+每条请求都由卸载时的检查器验证；只输出 daemon 停止后启用 `native_regs_armed`
+的样本，最多 128 条，遗漏会使测试失败。独立 Python 校验器读取原始小端 GPR
+字节，而非只相信内核的 `mask=0`，并将样本与真实 `kd_native begin` 的
+task/目标 RIP/RSP 对应。远端祖先可以转递同一个包，但 callee 只能执行一次。
+一次原生 CALL miss 之外的握手必须继续满足现有精确副作用、owner 和 ACK 检查。
+
+RBP/RSP/后继 RIP 的期望地址由 caller 生成，并非独立证明所有地址计算。
+此探针不检查 RFLAGS、向量寄存器、非 CALL 出口、任意栈对齐或 IRQ/NMI；
+纯原生及 guest 用户态对照不能记为 JIT 通过。证据见
+[CALL 寄存器验证](VALIDATION.md#call-miss-register-witnesses)。
+当前单锁 mode 0/3 的标记样本通过；复杂嵌套相关正例仍失败，详见最新验收。
+
 ## 10. Nested lock known-call 约定
 
-lock/unlock 与 hostcall 使用相同的“保留虚拟 CALL frame 后退出”机制：
+lock/unlock 和 hostcall 都保留虚拟 CALL frame 后退出。
+`regs.ip` 为控制目标，`regs.di` 为原始锁地址。nested handler 成功处理后通常
+弹出 post-CALL RIP 并继续同一 artifact；**最终完成的 unlock CALL 不弹出**，
+留给原 waiter 的返回 trampoline。A-before-B 时最终边界可以是 B unlock。
 
-- `regs->ip` 标识 `_raw_spin_lock`、`_raw_spin_unlock`、`mutex_lock` 或
-  `mutex_unlock`。
-- `regs->di` 是第一个 guest 参数，即原始 lock 地址。
-- nested lock/unlock 被 handler 消费后，通常弹出 `[regs->sp]` 并从 post-CALL
-  RIP 继续同一 artifact。
-- 发生远端 spin B 代理时，B waiter 携带完整 `pt_regs`；B 完成后返回的 RIP/RSP/GPR
-  再成为 A 的 continuation 状态。
-- 最外层 unlock 是临界区完成边界，不能先弹 CALL frame，因为原 waiter 最终
-  需要用该栈顶返回地址直接跳过已经代理执行的 unlock。
+spin 虚拟 B 复制完整寄存器、显式锁表及 GS/task，使用父 artifact 和 B 续点 RIP。
+`frame.entry_ip` 是 artifact 查找键，不必等于实际 `regs.ip`。
+mutex B 由 A combiner 真实获取，记录 NATIVE 后才弹 CALL，不创建远端 mutex waiter。
+frame/lock depth 都有八项限制；不同后端不得混用。
 
-`kd_exec_frame` 是 nested/hostcall 边界的持久状态，保存 `regs`、entry RIP、
-continuation RIP/RSP、waiter GS base、logical task、父 frame 和 lock ownership。
-当前 frame depth 和 lock depth 都限制为 8。
-`mutex_backend` 记录该 frame 的锁后端，known-call 不允许混用 spin/mutex 处理器。
+`control_call` 保存 NONE/PENDING/ENTERED/ACQUIRED/COMPLETE 及原始 callee、
+CALL RSP、返回地址。合法 PENDING 资源失败恢复该 CALL 包，保留当前 GPR 和
+已完成写入；已经发布/获取的操作不能冒充未开始。native 注册也独立验证 phase。
+
+逻辑 requester/resume_target 链不同于物理 CPU 的 parent frame 栈。远端 child
+先清 resume_target，再 release-store DONE，此后不访问 parent；parent 即使
+没有本地锁，也必须等 child 完成。native 包可以沿链传播而不再返回 JIT。
+零本地锁的合法 COMPLETE relay 不新增借用、ACK 或 unpin。
+
+A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执行自己的原始
+临界区前重新获取 A。回调/批次对象依赖 combiner C 栈寿命，不能仅因寄存器显式化
+就提前释放宿主栈。native ACK 位于 waiter 原生栈；最后 ACK 后由原 waiter
+结束自己的 pin，combiner 不能远端解除固定。
+
+默认实测布局为 frame 656、context 5264、spin JIT context 184、spin node 280
+字节，静态 per-CPU 7904 字节。布局不是动态栈峰值或任意深度安全证明。
+精确节点预留、OOO、远端发布和 readmission 约束见 DESIGN 第 4/9 节；
+相关测试参数与失败记录集中在使用/验收文档，不在 ABI 中复制历史流水。
 
 ## 11. 返回原 waiter
+
+spin 队列普通获取返回 0/2 时恢复 `kd_spin_native_input.rsp`，包括未分配节点的
+容量回退。非局部返回先恢复 `min(node->rsp, node->regs.sp)`，再在该原生栈上
+复制 `pt_regs` 与凭证；这避免覆盖已经长入旧 hook 帧的虚拟 CALL 返回地址。
+完成代理的 1/3 路径随后结束自己的 ticket，可能重新调度，因此不得再读取原
+per-CPU 节点。返回 5 只标记 native 状态并保留 pin；最后一个 native ack 才
+由原 waiter 结束它。返回 4 的旧重试路径不提前消耗仍持有的凭证。
 
 成功代理后使用 `jump_to_saved_regs()`：
 
@@ -413,8 +446,9 @@ continuation RIP/RSP、waiter GS base、logical task、父 frame 和 lock owners
 2. 把真实 RSP 切换为 `regs->sp`。
 3. 执行 `retq`，从 virtual CALL frame 栈顶取得 post-unlock RIP。
 
-该函数不会跳到 `regs->ip`；成功退出时该字段通常仍是 outer unlock target。
-真正的续点来自 `[regs->sp]`。
+该函数不会跳到 `regs->ip`；成功退出时该字段通常仍是 outer unlock target，
+OOO 完成时也可以是最后一个 B unlock target。真正的续点来自 `[regs->sp]`，
+因此 final unlock CALL 不能先被 known-call 弹掉。
 
 spin 和 mutex 的普通 CALL miss 都使用 `jump_to_saved_regs_in_cs()`：切换到
 `regs->sp` 后先压入 `regs->ip`，再 `retq`。这里的 IP 是退出时原始 callee 地址，
@@ -426,20 +460,41 @@ spin 和 mutex 的普通 CALL miss 都使用 `jump_to_saved_regs_in_cs()`：切�
 
 combiner frame 在 native 执行期间仍存活并保留物理锁；native unlock hook 将
 请求交给拥有该锁的 executor 处理。ack 放在 waiter 自己的 native 栈上，避免
-frame 清除后 waiter 仍轮询已释放内存。发布 native 唤醒后，combiner 不再读取或
+frame 清除后 waiter 仍轮询已释放内存。spin 的 ack 同时携带原 waiter 的凭证及
+是否为最后一个 native 引用；executor 在发布 done 前完成 `borrow_put()`，waiter
+收到最后确认后才 `end()`，不能远端解除固定。发布 native 唤醒后，combiner 不再读取或
 二次完成那个可能已被复用的队列节点。详见 `DESIGN.md` 9.5。
 
-mutex 的原生 owner 一直是 combiner，不会写成 waiter。waiter 仅借用其持锁
+已由 combiner 获取的 mutex，其原生 owner 仍是 combiner，不会写成 waiter。waiter 仅借用其持锁
 保护执行 native 后缀；在途 task 记录保持改名后的 mutex unlock hook 路由，
 combiner 完成最后的解锁通知时释放该记录再 ack。这些状态不占用 wrapper args。
 
-仍需定义 nested control-call 失败续跑。mutex 现在仅在获取并记录 B 后消费 CALL，
-但容量等 post-entry 失败仍是 fail-stop。新增状态位和交接元数据放在 frame/node，
-没有扩展两元素 `args`。
+`frame->control_call` 记录 NONE/PENDING/ENTERED/ACQUIRED/COMPLETE 以及原始
+callee RIP、CALL RSP、返回地址。仅 PENDING 的 `-ENOMEM`/`-E2BIG` 可续跑：
+spin 为构造远端请求而暂存的 post-CALL RIP/RSP 恢复到原始 CALL 位置；mutex
+此时还没有消费 CALL。当前 GPR 和已完成内存写入不回退。已入队、已获取 B、
+无效状态，或 A 已解锁但当前 frame 已无未释放本地锁的情况，不进入这个恢复分支。
+PENDING 诊断追加 `outer_released` 和 waiter `task`，便于关联真实 lock CALL 与
+native begin；不将 ENTERED/ACQUIRED/COMPLETE 失败改成可重试。
 
-两个恢复函数都不恢复 EFLAGS、硬件 segment base 或 SIMD/FPU 状态。
-GS 内存语义由翻译后的显式基址寻址实现，不依赖这两个恢复函数切换
-硬件 GS。
+native 注册入口现在也独立检查 phase，不再只在 A 已释放时检查。仅 NONE、
+目标/RSP/返回地址有效的 PENDING，以及已验证的 spin remote-native COMPLETE
+relay 可以登记；其他阶段在借用引用、发布 frame 和修改计数前拒绝。A 仍被
+持有不代表可恢复已发布/已获取的操作。此检查不改寄存器、flags 或两元素 args，
+也不新增后期错误恢复，详见 [phase 检查](VALIDATION.md#native-registration-phase-guard)。
+
+spin 的本地 shadow 持锁表容量检查也放在 CALL 推进和获取 B 之前；满表时保持
+PENDING，原始 RIP/RSP 不会被消费。这张 CPU 本地表与 logical frame 的八项
+持锁表不同。底层原生排队遇到满表则保留物理锁、原始 `node->rsp` 和父 combiner
+状态，只释放一次节点并通知后继等待正常 unlock；不创建新 JIT frame。
+
+pending mutex B 若由 native waiter 首次获取，其 owner 是 waiter；之前由
+combiner 获取的 A/B 则仍通过 owner 通知解锁。pending spin B 在 native ticket
+状态下走 Linux L，不新发布 JIT B 请求。两者均保留嵌套 helper 的返回链，
+不回退先前副作用。
+
+两个恢复函数都不恢复 EFLAGS、硬件 segment base 或 SIMD/FPU。
+这些限制不能由寄存器观察测试通过推断为已解决。
 
 ## 12. 修改 JIT 时必须保持的约束
 
@@ -455,10 +510,10 @@ GS 内存语义由翻译后的显式基址寻址实现，不依赖这两个恢�
 6. native handler 只能通过 `pt_regs` 读取 guest 参数、写回明确声明的结果，
    且必须定义失败、重试和 side-effect 语义。
 7. `args[0]`/`args[1]` 在入口时必须分别为 waiter kernel GS base 和 logical
-   task，每次 continuation 都必须重新安装；返回后 `args[1]` 固定为 0，不能当作
-   有效计数。
-8. 不得依赖硬件 FS/GS 切换。只有文档化的 GS 显式基址降级和 logical
-   `current_task` 读取受支持；FS、base-register 指令和 `current_task` 写入必须失败关闭。
+   task，每次 continuation 都必须重新安装；返回后 `args[1]` 是 0/1 body witness，
+   不能当作指令计数或未执行任何副作用的证明，也不能据此决定回退重跑。
+8. 不得依赖硬件 FS/GS 切换。GS 内存当前不准入；保留的 GS 显式基址降级和 logical
+   `current_task` helper 仅保留代码生成能力和测试，不代表允许生产代理。
 9. EFLAGS 和 SIMD/FPU 状态仍不是完整的跨边界 ABI。
 10. 修改 `struct pt_regs` 偏移、wrapper push 顺序或 `Stack_*` 宏时必须同步修改
    三者，并反汇编最终 `jit.bin` 验证实际编码。

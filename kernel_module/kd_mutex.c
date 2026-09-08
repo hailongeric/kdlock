@@ -314,6 +314,44 @@ invalid:
 		  node, slots);
 }
 
+struct kd_mutex_batch {
+	struct kd_exec_outer_unlock outer;
+	struct kd_mutex_node *next;
+};
+
+/* Detach A's queue while this executor still owns B. The saved successor is
+ * never touched again after publication; it may complete and reuse its slot. */
+static int kd_mutex_release_outer(struct kd_exec_frame *frame,
+				  struct kd_exec_outer_unlock *hook)
+{
+	struct kd_mutex_batch *batch =
+		container_of(hook, struct kd_mutex_batch, outer);
+	struct kd_mutex *lock = frame->jit_lock_node[frame->outer_lock_index];
+	unsigned int i, remaining = 0;
+	int ret;
+
+	if (!frame->mutex_backend || !lock || !batch->next ||
+	    !batch->next->task_struct_ptr ||
+	    frame->jit_lock_kind[frame->outer_lock_index] !=
+		    KD_EXEC_LOCK_QUEUE_OWNER ||
+	    frame->outer_lock_addr != lock->origin_mutex_addr ||
+	    READ_ONCE(lock->locked) != _Q_LOCKED_COMBINER_VAL)
+		return -EINVAL;
+	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
+		remaining += !frame->jit_lock_released[i];
+	/* A native successor can run as soon as L opens. Log release intent
+	 * before that point, as on the spin path; the observer proves progress. */
+	pr_info("kd_mutex outer release: task=%d owner=%d owner_task=%lx outer=%lx next_task=%d remaining=%u\n",
+		frame->logical_task->pid, current->pid, (unsigned long)current,
+		frame->outer_lock_addr,
+		batch->next->task_struct_ptr->pid, remaining);
+	ret = _kd_mutex_unlock_checked(lock);
+	if (ret)
+		return ret;
+	smp_store_release(&batch->next->locked, 0);
+	return 0;
+}
+
 /* --------------------------------------------------------------------------
  * JIT-sandbox execution of a waiter's critical section
  *
@@ -328,7 +366,8 @@ invalid:
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
-execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
+execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
+	   struct kd_mutex_batch *batch)
 {
 	unsigned long outgoing_rsp;
 	void *outgoing_rsp_ptr = &outgoing_rsp;
@@ -345,7 +384,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 	BUG_ON(READ_ONCE(lock->physical_owner) != current);
 	BUG_ON(!kd_origin_mutex_owned((struct mutex *)lock->origin_mutex_addr,
-				     current));
+				      current));
 	if (!incoming_rsp_ptr)
 		return KD_EXE_RUN_ERROR;
 	if (!kd_mutex_jit_is_enabled())
@@ -371,7 +410,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 	if (!kd_exe_is_ready(0, curr_node->regs.ip)) {
 		atomic64_inc(&kd_mutex_jit_not_ready_count);
-		kd_exe_add(0, curr_node->regs.ip);
+		kd_exe_add(0, curr_node->regs.ip, KD_EXE_LOCK_MUTEX);
 		return KD_EXE_NO_RUN;
 	}
 	if (kd_exec_context_busy()) {
@@ -416,6 +455,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		return KD_EXE_RUN_ERROR;
 	}
 
+	frame->outer_unlock_hook = &batch->outer;
 	ret_flag = kd_exe_on_call_hl_entry(&frame->regs, frame->entry_ip,
 					   frame->outer_lock_addr);
 	if (ret_flag == KD_EXE_RUN_NATIVE) {
@@ -435,8 +475,10 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		BUG();
 	}
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
-		frame_ret = kd_exec_frame_record_event(
-			frame, KD_EXEC_EVENT_OUTER_UNLOCK, &frame->regs);
+		frame_ret = 0;
+		if (!frame->outer_unlock_seen)
+			frame_ret = kd_exec_frame_record_event(
+				frame, KD_EXEC_EVENT_OUTER_UNLOCK, &frame->regs);
 		if (!frame_ret)
 			frame_ret = kd_exec_frame_complete(frame);
 		if (unlikely(frame_ret)) {
@@ -493,6 +535,9 @@ __attribute__((noipa)) noinline notrace static void
 run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *next_node = NULL;
+	struct kd_mutex_batch batch = {
+		.outer.release = kd_mutex_release_outer,
+	};
 	int counter = 0;
 
 	atomic64_inc(&kd_mutex_combiner_count);
@@ -509,8 +554,10 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	while (curr_node) {
 		counter++;
 		next_node = curr_node->next;
+		batch.next = next_node;
+		batch.outer.released = false;
 
-		int exe_flag = execute_cs(lock, curr_node);
+		int exe_flag = execute_cs(lock, curr_node, &batch);
 
 		if (exe_flag != 0 && exe_flag != KD_EXE_NATIVE_DONE) {
 			/*
@@ -528,6 +575,14 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		if (exe_flag != KD_EXE_NATIVE_DONE) {
 			atomic64_inc(&kd_mutex_jit_success_count);
 			clear_locked_set_completed(curr_node);
+		}
+
+		if (batch.outer.released) {
+			/* A's queue already runs independently. B and the frame are
+			 * now finished; reacquire A for our own original request.
+			 * Do not inspect or wake the old successor a second time. */
+			kd_mutex_wait_and_lock(lock);
+			return;
 		}
 
 		if (exe_flag == KD_EXE_NATIVE_DONE ||
@@ -964,8 +1019,8 @@ scheduler_restore:;
 /*
  * Release the original mutex as its real owner, then open the scheduling gate.
  *
- * A delegated outer unlock completes a logical request, not physical ownership.
- * run_combiner() retains that ownership through its batch and the owner's CS.
+ * Ordinary completion retains A through the batch and the owner's CS. An early
+ * A unlock with B still live detaches the batch through kd_mutex_release_outer().
  */
 __attribute__((noipa)) noinline notrace int
 _kd_mutex_unlock_checked(struct kd_mutex *lock)

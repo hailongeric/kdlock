@@ -1,3 +1,4 @@
+import diagnostics
 from assist import make_inst
 from miasm.expression.expression import ExprId
 
@@ -152,7 +153,7 @@ def reverse_reg(reg_map, arg):
     elif isinstance(arg, str):
         arg = arg[1:3]
     else:
-        print(f"Error, {arg!s} not a register")
+        diagnostics.error("EXPECTED_REGISTER", "continue_unchanged", str(arg))
 
     if arg in special_regs:
         inv_map = {v: k for k, v in reg_map.items()}

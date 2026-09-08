@@ -1,4 +1,6 @@
 obj-m += klock_module.o
+# The contention oracle reads the actual non-RT mutex waiter type.
+ccflags-y += -I$(srctree)
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
 KDLOCK_SYMVERS ?= $(abspath ../kernel_module/Module.symvers)

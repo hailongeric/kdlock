@@ -38,7 +38,12 @@ struct kd_spin_node {
 	bool jit_waiter;
 	bool jit_retry;
 	bool native_resume;
+	bool pinned_context;
+	/* regs holds the decoded packet, not the original callee-save RSP. */
+	bool native_regs_decoded;
 	struct kd_spin_jit_context *jit_context;
+	/* Logical hook waiter, not this recyclable node's physical requester. */
+	struct kd_spin_ref spin_origin;
 };
 
 #define _Q_COMPLETED_OFFSET (_Q_LOCKED_OFFSET_HL + _Q_LOCKED_BITS_HL)
@@ -66,12 +71,20 @@ void kd_spin_unlock(struct qspinlock *lock);
 #define KD_SPIN_NESTED_ACQUIRED_QUEUE 3
 #define KD_SPIN_NESTED_NATIVE 4
 int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
-			const struct kd_exec_frame *parent);
+			struct kd_exec_frame *parent);
 #define KD_SPIN_NESTED_UNLOCK_OK 0
 #define KD_SPIN_NESTED_UNLOCK_OOO 1
 int kd_spin_nested_unlock(struct qspinlock *lock);
+bool kd_spin_nested_shadow_has_space(void);
 int kd_spin_nested_shadow_push(struct qspinlock *lock);
 int kd_spin_nested_shadow_remove(struct qspinlock *lock);
+
+#ifdef KDLOCK_SELFTEST
+bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct pt_regs *regs,
+				   struct kd_exec_frame *frame);
+void kd_spin_selftest_shadow_end(struct pt_regs *regs,
+				 struct kd_exec_frame *frame, int result);
+#endif
 
 /*
  * Diagnostics for the nested-JIT migration. These functions only record
@@ -81,6 +94,8 @@ void kd_spin_debug_nested_lock(raw_spinlock_t *lock, bool native_fallback);
 void kd_spin_debug_nested_unlock(raw_spinlock_t *lock);
 void kd_spin_debug_nested_remote(raw_spinlock_t *lock);
 int kd_spin_debug_waiter_count(raw_spinlock_t *lock);
+unsigned int kd_spin_debug_word(raw_spinlock_t *lock);
+unsigned long kd_spin_debug_owner(raw_spinlock_t *lock);
 
 /*
  * JIT nested lock adapter. A positive return value means the known-call

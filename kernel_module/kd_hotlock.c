@@ -8,6 +8,9 @@
 #include <linux/errno.h>
 #include <linux/spinlock.h>
 #include <linux/vmalloc.h>
+#ifdef KDLOCK_SELFTEST
+#include <linux/module.h>
+#endif
 
 #include "kd_hotlock.h"
 #include "utils.h"
@@ -131,12 +134,14 @@ int kd_hotlock_record(unsigned long lock_addr)
 	if (state->status == KD_HOTLOCK_INIT) {
 		state->status = KD_HOTLOCK_CHECKING;
 		state->begin_cycles = now;
+		/* Another lock may tighten the global window while this sample is
+		 * in flight. Apply that threshold only to newly started samples. */
+		state->sample_window = atomic_long_read(&kd_hotlock_window_cycles);
 		goto out;
 	}
 
 	state->end_cycles = now;
-	if (state->end_cycles - state->begin_cycles >=
-	    atomic_long_read(&kd_hotlock_window_cycles)) {
+	if (state->end_cycles - state->begin_cycles >= state->sample_window) {
 		state->status = KD_HOTLOCK_IGNORE;
 	} else if (state->samples == KD_HOTLOCK_SAMPLE_TARGET) {
 		unsigned long old_window;
@@ -176,3 +181,43 @@ bool kd_hotlock_is_promoted(unsigned long lock_addr)
 	raw_spin_unlock_irqrestore(&kd_hotlock_table_lock, flags);
 	return promoted;
 }
+
+#ifdef KDLOCK_SELFTEST
+/* Recovery fixtures control promotion before a chain or while a native owner
+ * holds L. Real acquisitions/queues/JIT stay unchanged; production excludes it. */
+static unsigned long spin_selftest_promote;
+
+static int kd_hotlock_test_promote_set(const char *value,
+				       const struct kernel_param *param)
+{
+	struct kd_hotlock_state *state;
+	unsigned long addr, flags;
+	int ret = kstrtoul(value, 0, &addr);
+
+	if (ret || !addr)
+		return ret ? ret : -EINVAL;
+	if (!kd_hotlocks)
+		return -EAGAIN;
+	raw_spin_lock_irqsave(&kd_hotlock_table_lock, flags);
+	state = kd_hotlock_lookup_locked(addr, true);
+	if (state) {
+		state->status = KD_HOTLOCK_DELEGATE;
+		*(unsigned long *)param->arg = addr;
+	}
+	raw_spin_unlock_irqrestore(&kd_hotlock_table_lock, flags);
+	if (!state)
+		return -ENOSPC;
+	KD_PR_INFO("kd_hotlock selftest promote: lock=%lx\n", addr);
+	return 0;
+}
+
+static const struct kernel_param_ops kd_hotlock_test_promote_ops = {
+	.set = kd_hotlock_test_promote_set,
+	.get = param_get_ulong,
+};
+module_param_cb(spin_selftest_promote, &kd_hotlock_test_promote_ops,
+		&spin_selftest_promote, 0600);
+MODULE_PARM_DESC(
+	spin_selftest_promote,
+	"Recovery test only: promote one original lock at a controlled boundary");
+#endif

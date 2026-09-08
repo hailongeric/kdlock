@@ -10,10 +10,10 @@ run_spinlock_mode() {
     local mode_name=$2
     local expected_artifacts expected_locks expected_counter actual_counter
     local artifact_output
+    local artifact_timeout=20
     local diag_count nested_diag_count
     local jit_writes_before=0 jit_writes_after=0
     local -a asm_dirs
-    local -a gs_asm_dirs=()
     local exec_threads=8
     local exec_loops=1
     local exec_workload=1000000
@@ -58,8 +58,10 @@ run_spinlock_mode() {
         0|2) expected_artifacts=1 ;;
         1|7) expected_artifacts=2 ;;
         6) expected_artifacts=3 ;;
-        8|10)
+        8)
             expected_artifacts=6
+            # Six serial translations now include the larger A/B/C branch CFG.
+            artifact_timeout=30
             warmup_threads=2
             promotion_mode=1
             registration_calls=3
@@ -82,7 +84,7 @@ run_spinlock_mode() {
         *) expected_artifacts=1 ;;
     esac
     expected_locks=$expected_artifacts
-    if [ "$mode" -eq 8 ] || [ "$mode" -eq 10 ]; then
+    if [ "$mode" -eq 8 ]; then
         expected_locks=2
     fi
 
@@ -146,8 +148,9 @@ run_spinlock_mode() {
         return 1
     }
 
-    if ! artifact_output="$(wait_for_jit_artifact_count "$expected_artifacts" 20)"; then
-        fail "$TEST_NAME" "mode $mode ($mode_name) did not produce complete JIT artifacts"
+    if ! artifact_output="$(wait_for_jit_artifact_count "$expected_artifacts" "$artifact_timeout")"; then
+        fail "$TEST_NAME" \
+            "mode $mode ($mode_name) incomplete JIT artifacts after ${artifact_timeout}s (daemon: $DAEMON_LOG)"
         stop_daemon
         unload_modules
         return 1
@@ -173,17 +176,7 @@ run_spinlock_mode() {
                 return 1
             }
         fi
-        if [ "$mode" -eq 10 ] &&
-                is_jit_gs_context_artifact "$asm_dir"; then
-            check_jit_gs_context_artifact "$asm_dir" || return 1
-            gs_asm_dirs+=("$asm_dir")
-        fi
     done
-    if [ "$mode" -eq 10 ] && [ "${#gs_asm_dirs[@]}" -eq 0 ]; then
-        fail "$TEST_NAME" \
-            "mode 10 produced no JIT artifact using waiter GS/current"
-        return 1
-    fi
     check_dmesg_has "$JIT_INSTALL_PATTERN" \
         "mode $mode ($mode_name) did not write JIT code back" || {
         stop_daemon
@@ -273,7 +266,7 @@ run_spinlock_mode() {
                 return 1
             fi
             ;;
-        1|6|7|8|9|10)
+        1|6|7|8|9)
             diag_count="$(printf '%s\n' "$diag_lines" | sed '/^$/d' | wc -l)"
             if [ "$diag_count" -ne "$expected_locks" ]; then
                 fail "$TEST_NAME" \
@@ -315,7 +308,7 @@ run_spinlock_mode() {
         return 1
     fi
 
-    if { [ "$mode" -eq 8 ] || [ "$mode" -eq 10 ]; } &&
+    if [ "$mode" -eq 8 ] &&
             [ "$mode8_not_ready" -eq 0 ] &&
             ! printf '%s\n' "$diag_lines" |
             grep -Eq "slowpath=[1-9][0-9]*.*combiner=[1-9][0-9]*.*jit_success=[1-9][0-9]*.*nested_lock=[1-9][0-9]*.*nested_remote=[1-9][0-9]*"; then
@@ -323,17 +316,6 @@ run_spinlock_mode() {
             "mode $mode did not remotely execute a nested B waiter through JIT"
         printf '%s\n' "$diag_lines"
         return 1
-    fi
-
-    if [ "$mode" -eq 10 ]; then
-        check_any_jit_entry_executed "${gs_asm_dirs[@]}" || return 1
-        if ! dmesg | grep -Eq \
-                "kd_gs spin stats: attempts=[1-9][0-9]* successes=[1-9][0-9]* failures=0"; then
-            fail "$TEST_NAME" \
-                "mode 10 GS/current probe did not complete without mismatch"
-            dmesg | grep "kd_gs spin stats:" | tail -n 1 || true
-            return 1
-        fi
     fi
 
     if [ "$mode" -eq 8 ] && [ "$mode8_not_ready" -eq 1 ] &&
@@ -441,7 +423,7 @@ run_selected_mode() {
         7) run_spinlock_mode 7 "spin-ooo-nested" ;;
         8) run_spinlock_mode 8 "spin-inner-contention" ;;
         9) run_spinlock_mode 9 "spin-abort-recovery" ;;
-        10) run_spinlock_mode 10 "spin-gs-context" ;;
+        10) bash "$KDLOCK_DIR/tests/test_12_context_native_only.sh" 10 ;;
         *)
             fail "$TEST_NAME" "unsupported spinlock mode: $1"
             return 1

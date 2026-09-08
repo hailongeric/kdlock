@@ -1,0 +1,2 @@
+# Captured upstream/guest differences retain historical whitespace verbatim.
+kernel_baseline/linux-6.1.159-guest.patch -whitespace

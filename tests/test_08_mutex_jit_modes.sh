@@ -1,12 +1,18 @@
 #!/bin/bash
 # test_08_mutex_jit_modes.sh - opt-in mutex JIT validation for nested mode 4,
-# repeated hostcall mode 5, and GS-context mode 11. Run only in a recovery VM.
+# repeated hostcall mode 5, and native-only GS mode 11. Recovery VM only.
 TEST_NAME="test_08_mutex_jit_modes"
 source "$(dirname "$0")/common.sh"
 
 MODE4_ROLES=7
 MODE4_ROLE_BASE=2147483648
 MODE4_WORKLOAD=50000
+MODE4_OOO="${KD_MUTEX_OOO:-0}"
+if [ "$MODE4_OOO" != 0 ] &&
+        { [ "$MODE4_OOO" != 1 ] || [ "${1:-all}" != 4 ]; }; then
+    fail "$TEST_NAME" "KD_MUTEX_OOO=1 requires explicit mode 4"
+    exit 1
+fi
 MODE5_ROUNDS="${KD_MUTEX_HOSTCALL_JIT_ROUNDS:-16}"
 MODE5_ROUND_THREADS=4
 MODE5_ROUND_LOOPS=1
@@ -186,7 +192,6 @@ run_jit_mode() {
     local mode_name="$2"
     local expected_artifacts="$3"
     local artifacts asm_dir
-    local -a gs_asm_dirs=()
     local delegate_count write_count target_count
     local runtime_write_count runtime_target_count
     local expected_counter actual_counter
@@ -238,17 +243,7 @@ run_jit_mode() {
         if [ "$mode" -eq 5 ]; then
             check_jit_hostcall_artifact "$asm_dir" "ktime_get" || return 1
         fi
-        if [ "$mode" -eq 11 ] &&
-                is_jit_gs_context_artifact "$asm_dir"; then
-            check_jit_gs_context_artifact "$asm_dir" || return 1
-            gs_asm_dirs+=("$asm_dir")
-        fi
     done <<< "$artifacts"
-    if [ "$mode" -eq 11 ] && [ "${#gs_asm_dirs[@]}" -eq 0 ]; then
-        fail "$TEST_NAME" \
-            "mode 11 produced no JIT artifact using waiter GS/current"
-        return 1
-    fi
     check_daemon_read_kernel_text "$DAEMON_LOG" || return 1
 
     delegate_count="$(dmesg | grep -c "begin delegate" || true)"
@@ -271,7 +266,10 @@ run_jit_mode() {
     target_count="$(grep -c '^Translation input: entry=0x' \
         "$DAEMON_LOG" || true)"
 
-    if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
+    if [ "$mode" -eq 4 ]; then
+        if [ "$MODE4_OOO" = 1 ]; then
+            printf '1\n' > /sys/module/klock_module/parameters/jit_mutex_ooo
+        fi
         info "Running deterministic A/B nested contention..."
         run_nested_mutex_contention "$mode" || return 1
     else
@@ -300,7 +298,7 @@ run_jit_mode() {
     check_dmesg_ok || return 1
 
     unload_modules
-    if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
+    if [ "$mode" -eq 4 ]; then
         local jit_success nested_queued nested_jit
 
         jit_success="$(get_dmesg_stat jit_success)"
@@ -319,6 +317,10 @@ run_jit_mode() {
         fi
         check_dmesg_stat_equals "jit_resume" "1" \
             "mode $mode: outer waiter did not resume exactly once" || return 1
+        if [ "$MODE4_OOO" = 1 ]; then
+            check_dmesg_has "kd_native stats: started=0 completed=0 unlocks=0" \
+                "mode 4 OOO must complete entirely through JIT" || return 1
+        fi
     else
         local jit_success jit_resume max_waiters
         local hostcall_stats hostcall_exits hostcall_executed
@@ -382,19 +384,8 @@ run_jit_mode() {
         check_jit_entry_executed "$asm_dir" || return 1
     done <<< "$artifacts"
 
-    if [ "$mode" -eq 11 ]; then
-        check_any_jit_entry_executed "${gs_asm_dirs[@]}" || return 1
-        if ! dmesg | grep -Eq \
-                "kd_gs mutex stats: attempts=[1-9][0-9]* successes=[1-9][0-9]* failures=0"; then
-            fail "$TEST_NAME" \
-                "mode 11 GS/current probe did not complete without mismatch"
-            dmesg | grep "kd_gs mutex stats:" | tail -n 1 || true
-            return 1
-        fi
-    fi
-
-    if [ "$mode" -eq 4 ] || [ "$mode" -eq 11 ]; then
-        expected_counter=$((1 + 12000 + MODE4_ROLES))
+    if [ "$mode" -eq 4 ]; then
+        expected_counter=$((1 + 12000 + MODE4_ROLES + MODE4_OOO))
         expected_cs_states=2
     else
         expected_counter=$((1 + 12000 +
@@ -437,12 +428,12 @@ case "${1:-all}" in
     run_jit_mode 5 "mutex-api-in-lock" 1 || exit 1
     ;;
 11)
-    run_jit_mode 11 "mutex-gs-context" 1 || exit 1
+    bash "$KDLOCK_DIR/tests/test_12_context_native_only.sh" 11 || exit 1
     ;;
 all)
     run_jit_mode 4 "mutex-nested" 1 || exit 1
     run_jit_mode 5 "mutex-api-in-lock" 1 || exit 1
-    run_jit_mode 11 "mutex-gs-context" 1 || exit 1
+    bash "$KDLOCK_DIR/tests/test_12_context_native_only.sh" 11 || exit 1
     ;;
 *)
     fail "$TEST_NAME" "usage: $0 [4|5|11|all]"

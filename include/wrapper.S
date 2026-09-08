@@ -39,8 +39,8 @@ main:
 	push	PT_R11
 	push	PT_GS
 	push	PT_TASK
-	sub	RSP, 3*8		/* Stack_RIP, Stack_IJ, Stack_INST_CNT */
-	mov	Stack_INST_CNT, 0
+	sub	RSP, 3*8		/* Stack_RIP, Stack_IJ, Stack_JIT_WITNESS */
+	mov	Stack_JIT_WITNESS, 0	/* Only generated body labels set this. */
 
 	mov	R13, Stack_RSP
 	mov	R12, Stack_RBP
@@ -76,7 +76,7 @@ exit:
 	mov	PT_REG, Stack_PT_REG
 	mov	ARG_REG, Stack_ARG_REG
 
-	pop	MEM_ARG2		/* args[1] <- Stack_INST_CNT */
+	pop	MEM_ARG2		/* args[1] <- Stack_JIT_WITNESS */
 	pop	MEM_ARG			/* args[0] <- Stack_IJ */
 	pop	PT_RIP
 	add	RSP, 2*8		/* Discard Stack_RGS and Stack_TASK. */

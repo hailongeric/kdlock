@@ -17,8 +17,10 @@ static atomic64_t kd_exec_invariant_failures;
 
 struct kd_native_request {
 	unsigned long lock_addr;
+	struct kd_spin_ref spin_origin;
 	int result;
 	bool done;
+	bool spin_last;
 };
 
 static LIST_HEAD(kd_native_frames);
@@ -27,24 +29,184 @@ static atomic64_t kd_native_started;
 static atomic64_t kd_native_completed;
 static atomic64_t kd_native_unlocks;
 
+struct kd_remote_request {
+	struct kd_exec_frame *sender;
+	unsigned long lock_addr;
+	int result;
+	bool done;
+};
+
+bool kd_exec_frame_remote_pending(const struct kd_exec_frame *frame)
+{
+	int state = frame ? smp_load_acquire(&frame->remote_result) :
+			    KD_EXEC_REMOTE_IDLE;
+
+	return state == KD_EXEC_REMOTE_WAITING ||
+	       state == KD_EXEC_REMOTE_NATIVE;
+}
+
+int kd_exec_remote_unlock(struct kd_exec_frame *frame, unsigned long lock_addr)
+{
+	struct kd_remote_request request = { .sender = frame,
+					     .lock_addr = lock_addr };
+	struct kd_exec_frame *parent;
+
+	if (!kd_exec_frame_validate(frame) || frame->mutex_backend ||
+	    frame != kd_exec_current_frame() || !lock_addr)
+		return -EINVAL;
+	parent = frame->resume_target;
+	if (!parent || !kd_exec_frame_validate(parent) ||
+	    parent->mutex_backend ||
+	    parent->logical_task != frame->logical_task ||
+	    parent->outer_lock_index >= frame->outer_lock_index ||
+	    smp_load_acquire(&parent->remote_result) !=
+		    KD_EXEC_REMOTE_WAITING ||
+	    parent->control_call.phase != KD_CALL_ENTERED ||
+	    parent->regs.di != frame->outer_lock_addr)
+		return -EINVAL;
+	if (cmpxchg(&parent->remote_request, NULL, &request))
+		return -EBUSY;
+	while (!smp_load_acquire(&request.done))
+		cpu_relax();
+	return request.result;
+}
+
+void kd_exec_remote_poll(struct kd_exec_frame *frame)
+{
+	struct kd_remote_request *request;
+	int ret = -EINVAL;
+
+	if (!frame || !(request = smp_load_acquire(&frame->remote_request)))
+		return;
+	if (frame == kd_exec_current_frame() &&
+	    frame->remote_result == KD_EXEC_REMOTE_WAITING &&
+	    request->sender->resume_target == frame &&
+	    request->sender->logical_task == frame->logical_task) {
+		if (request->lock_addr == frame->outer_lock_addr)
+			ret = kd_exec_frame_record_event(
+				frame, KD_EXEC_EVENT_OUTER_UNLOCK, NULL);
+		else
+			ret = kd_spin_jit_nested_unlock_ctx(
+				(raw_spinlock_t *)request->lock_addr, frame);
+	}
+	pr_info("kd_remote unlock: task=%d cpu=%u outer=%lx lock=%lx result=%d\n",
+		frame->logical_task->pid, raw_smp_processor_id(),
+		frame->outer_lock_addr, request->lock_addr, ret);
+	WRITE_ONCE(frame->remote_request, NULL);
+	request->result = ret < 0 ? ret : 0;
+	/* The sender can discard both its stack request and copied scope now. */
+	smp_store_release(&request->done, true);
+}
+
+int kd_exec_remote_native(struct kd_exec_frame *frame)
+{
+	struct kd_exec_frame *parent = frame->resume_target;
+
+	if (!parent)
+		return 0;
+	if (smp_load_acquire(&parent->remote_result) !=
+		    KD_EXEC_REMOTE_WAITING ||
+	    READ_ONCE(parent->remote_request))
+		return -EINVAL;
+	smp_store_release(&parent->remote_result, KD_EXEC_REMOTE_NATIVE);
+	return 0;
+}
+
+int kd_exec_remote_complete(struct kd_exec_frame *frame)
+{
+	struct kd_exec_frame *parent = frame->resume_target;
+
+	if (!parent)
+		return 0;
+	if (!kd_exec_frame_can_complete(frame) ||
+	    !kd_exec_frame_remote_pending(parent) ||
+	    READ_ONCE(parent->remote_request))
+		return -EINVAL;
+	frame->resume_target = NULL;
+	/* Last parent access: its executor may immediately retire/reuse the frame. */
+	smp_store_release(&parent->remote_result, KD_EXEC_REMOTE_DONE);
+	return 0;
+}
+
+void kd_exec_remote_cancel(struct kd_exec_frame *frame)
+{
+	struct kd_exec_frame *parent = frame->resume_target;
+
+	if (!parent)
+		return;
+	BUG_ON(frame->executed ||
+	       parent->remote_result != KD_EXEC_REMOTE_WAITING ||
+	       READ_ONCE(parent->remote_request));
+	/* Cancel this unexecuted child, not its still-queued virtual request.
+	 * A retry, local acquisition or native handoff still owns its disposition. */
+	frame->resume_target = NULL;
+}
+
+bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)
+{
+	if (!kd_exec_frame_validate(frame) || frame->completion_seen ||
+	    kd_exec_frame_state(frame) == KD_EXEC_FRAME_ERROR ||
+	    frame->outer_lock_index >= frame->jit_lock_depth ||
+	    frame->jit_lock_addr[frame->outer_lock_index] !=
+		    frame->outer_lock_addr ||
+	    frame->jit_lock_released[frame->outer_lock_index] !=
+		    frame->outer_unlock_seen)
+		return false;
+	return !frame->outer_unlock_seen ||
+	       kd_exec_frame_has_unreleased_nested(frame);
+}
+
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
 	unsigned long flags;
+	unsigned int i, remaining = 0;
+	bool relay = !mutex && frame &&
+		     smp_load_acquire(&frame->remote_result) ==
+			     KD_EXEC_REMOTE_NATIVE &&
+		     frame->control_call.phase == KD_CALL_COMPLETE;
+	int ret;
 
-	if (!kd_exec_frame_validate(frame) || !frame->regs.ip ||
-	    !frame->regs.sp || frame->outer_unlock_seen ||
-	    frame->logical_task == current || frame->mutex_backend != mutex)
+	if ((!kd_exec_frame_can_borrow_locks(frame) &&
+	     !(relay && kd_exec_frame_validate(frame) &&
+	       !frame->completion_seen &&
+	       kd_exec_frame_state(frame) != KD_EXEC_FRAME_ERROR &&
+	       kd_exec_frame_locks_released(frame) &&
+	       frame->jit_lock_addr[frame->outer_lock_index] ==
+		       frame->outer_lock_addr)) ||
+	    !frame->regs.ip || !frame->regs.sp ||
+	    frame->logical_task == current || frame->mutex_backend != mutex ||
+	    (frame->control_call.phase == KD_CALL_PENDING &&
+	     (!frame->control_call.return_ip ||
+	      frame->regs.ip != frame->control_call.target ||
+	      frame->regs.sp != frame->control_call.stack)))
 		return -EINVAL;
+	/* Only an ordinary miss, pristine PENDING call, or completed remote relay
+	 * has a continuation protocol. Still owning A does not make a partially
+	 * acquired/published control call safe to transfer to the waiter. */
+	if (frame->control_call.phase != KD_CALL_NONE &&
+	    frame->control_call.phase != KD_CALL_PENDING && !relay)
+		return -EINVAL;
+	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
+		remaining += !frame->jit_lock_released[i];
+	if (!mutex && remaining) {
+		ret = kd_spin_entry_borrow_get(&frame->spin_origin);
+		if (ret)
+			return ret;
+	}
 	frame->native_request = NULL;
-	raw_spin_lock_irqsave(&kd_native_lock, flags);
-	list_add(&frame->native_link, &kd_native_frames);
-	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	frame->logical_pid = frame->logical_task->pid;
+	INIT_LIST_HEAD(&frame->native_link);
+	if (remaining) {
+		raw_spin_lock_irqsave(&kd_native_lock, flags);
+		list_add(&frame->native_link, &kd_native_frames);
+		raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	}
 	atomic64_inc(&kd_native_started);
-	pr_info("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u\n",
-		frame->logical_task->pid, frame->outer_lock_addr, frame->entry_ip,
-		frame->regs.ip, frame->regs.sp,
+	pr_info("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u outer_released=%u remaining=%u\n",
+		frame->logical_task->pid, frame->outer_lock_addr,
+		frame->entry_ip, frame->regs.ip, frame->regs.sp,
 		frame->jit_lock_depth - frame->outer_lock_index, mutex,
-		raw_smp_processor_id());
+		raw_smp_processor_id(), frame->outer_unlock_seen, remaining);
 	return 0;
 }
 
@@ -61,11 +223,13 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 	list_for_each_entry(frame, &kd_native_frames, native_link) {
 		unsigned int i;
 
-		if (frame->logical_task != current || frame->mutex_backend != mutex)
+		if (frame->logical_task != current ||
+		    frame->mutex_backend != mutex)
 			continue;
 		/* Ancestors copied into a remote B frame still belong to A's
 		 * executor. Only route the locks owned by this particular frame. */
-		for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++) {
+		for (i = frame->outer_lock_index; i < frame->jit_lock_depth;
+		     i++) {
 			if (frame->jit_lock_addr[i] != lock_addr ||
 			    frame->jit_lock_released[i])
 				continue;
@@ -89,7 +253,27 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 			cond_resched();
 	}
 	BUG_ON(request.result);
+	if (request.spin_last)
+		BUG_ON(kd_spin_entry_end(&request.spin_origin));
+	/* The executor's completion log may follow its release-store. Observe
+	 * acknowledgment on the waiter, using only its still-live stack data. */
+	pr_info("kd_native ack: task=%d lock=%lx mutex=%u last_spin=%u\n",
+		current->pid, request.lock_addr, mutex, request.spin_last);
 	return true;
+}
+
+static int kd_exec_native_finish(struct kd_exec_frame *frame)
+{
+	int ret = kd_exec_remote_complete(frame);
+
+	if (ret)
+		return ret;
+	atomic64_inc(&kd_native_completed);
+	/* A no-lock relay can outlive the waiter's final ACK and task lifetime. */
+	pr_info("kd_native complete: task=%d outer=%lx mutex=%u\n",
+		frame->logical_pid, frame->outer_lock_addr,
+		frame->mutex_backend);
+	return 0;
 }
 
 int kd_exec_native_wait(struct kd_exec_frame *frame)
@@ -100,42 +284,51 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 
 		if (request) {
 			unsigned long flags;
-			pid_t pid = frame->logical_task->pid;
-			bool complete;
+			bool complete, local_complete;
 			int ret;
 
 			if (request->lock_addr == frame->outer_lock_addr)
 				ret = kd_exec_frame_record_event(
-					frame, KD_EXEC_EVENT_OUTER_UNLOCK, NULL);
+					frame, KD_EXEC_EVENT_OUTER_UNLOCK,
+					NULL);
 			else if (frame->mutex_backend)
 				ret = kd_mutex_jit_nested_unlock_ctx(
-					(struct mutex *)request->lock_addr, frame);
+					(struct mutex *)request->lock_addr,
+					frame);
 			else
 				ret = kd_spin_jit_nested_unlock_ctx(
-					(raw_spinlock_t *)request->lock_addr, frame);
+					(raw_spinlock_t *)request->lock_addr,
+					frame);
 			complete = kd_exec_frame_can_complete(frame);
+			local_complete = kd_exec_frame_locks_released(frame);
 			atomic64_inc(&kd_native_unlocks);
 			WRITE_ONCE(frame->native_request, NULL);
-			if (complete || ret < 0) {
+			if (local_complete || ret < 0) {
 				raw_spin_lock_irqsave(&kd_native_lock, flags);
 				list_del_init(&frame->native_link);
-				raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+				raw_spin_unlock_irqrestore(&kd_native_lock,
+							   flags);
 			}
-			if (complete && frame->mutex_backend)
+			if (local_complete && frame->mutex_backend)
 				kd_mutex_task_put(frame->logical_task);
+			if (local_complete && !frame->mutex_backend) {
+				request->spin_origin = frame->spin_origin;
+				BUG_ON(kd_spin_entry_borrow_put(
+					&frame->spin_origin,
+					&request->spin_last));
+			}
+			if (complete && ret >= 0)
+				ret = kd_exec_native_finish(frame);
 			request->result = ret < 0 ? ret : 0;
 			/* Last access: the waiter can return and discard request. */
 			smp_store_release(&request->done, true);
 			if (ret < 0)
 				return ret;
-			if (complete) {
-				atomic64_inc(&kd_native_completed);
-				pr_info("kd_native complete: task=%d outer=%lx mutex=%u\n",
-					pid,
-					frame->outer_lock_addr, frame->mutex_backend);
+			if (complete)
 				return 0;
-			}
 		}
+		if (kd_exec_frame_can_complete(frame))
+			return kd_exec_native_finish(frame);
 		cpu_relax();
 		if (frame->mutex_backend && need_resched()) {
 			preempt_enable();
@@ -320,6 +513,7 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 	frame->outer_lock_addr = outer_lock_addr;
 	frame->gsbase = gsbase;
 	frame->logical_task = logical_task;
+	frame->logical_pid = logical_task->pid;
 	frame->waiter = waiter;
 	frame->outgoing_rsp_ptr = outgoing_rsp_ptr;
 	frame->parent = kd_exec_current_frame();
@@ -352,7 +546,9 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 		return -EINVAL;
 
 	state = kd_exec_frame_state(frame);
-	if ((state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR) ||
+	if (kd_exec_frame_remote_pending(frame) || frame->resume_target ||
+	    READ_ONCE(frame->remote_request) ||
+	    (state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR) ||
 	    !kd_exec_context_validate(ctx))
 		return -EBUSY;
 
@@ -587,7 +783,7 @@ bool kd_exec_frame_has_unreleased_nested(const struct kd_exec_frame *frame)
 	return false;
 }
 
-bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame)
+bool kd_exec_frame_locks_released(const struct kd_exec_frame *frame)
 {
 	unsigned int i;
 
@@ -602,11 +798,17 @@ bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame)
 	return true;
 }
 
+bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame)
+{
+	return kd_exec_frame_locks_released(frame) &&
+	       !kd_exec_frame_remote_pending(frame);
+}
+
 int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 			       enum kd_exec_event event,
 			       const struct pt_regs *regs)
 {
-	int state;
+	int state, ret;
 
 	if (!frame || !kd_exec_frame_validate(frame))
 		return -EINVAL;
@@ -625,8 +827,21 @@ int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 		    (regs && regs->di != frame->outer_lock_addr))
 			return -EINVAL;
 		frame->outer_unlock_seen = true;
-		return kd_exec_frame_lock_mark_released(frame,
-							frame->outer_lock_addr);
+		ret = kd_exec_frame_lock_mark_released(frame,
+						       frame->outer_lock_addr);
+		if (!ret && frame->outer_unlock_hook &&
+		    (kd_exec_frame_has_unreleased_nested(frame) ||
+		     kd_exec_frame_remote_pending(frame))) {
+			struct kd_exec_outer_unlock *hook =
+				frame->outer_unlock_hook;
+
+			if (!hook->release || hook->released)
+				return -EINVAL;
+			ret = hook->release(frame, hook);
+			if (!ret)
+				hook->released = true;
+		}
+		return ret;
 	case KD_EXEC_EVENT_COMPLETE:
 		if (!kd_exec_frame_can_complete(frame) ||
 		    frame->completion_seen)
@@ -671,3 +886,7 @@ static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state)
 		return;
 	smp_store_release(&frame->state, state);
 }
+
+#ifdef KDLOCK_SELFTEST
+#include "../tests/kernel/exec_capacity_probe.c"
+#endif

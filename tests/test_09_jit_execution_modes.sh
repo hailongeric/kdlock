@@ -1,6 +1,7 @@
 #!/bin/bash
 # test_09_jit_execution_modes.sh - require real translated execution for
-# modes 0 through 5 plus GS-context modes 10 and 11. Modes 2 and 5 additionally
+# modes 0 through 5. GS-context modes 10 and 11 require native-only rejection.
+# Modes 2 and 5 additionally
 # require complete native hostcall cycles. Mutex JIT modes are recovery-only.
 set -euo pipefail
 
@@ -15,10 +16,10 @@ run_mode() {
     local mode="$1"
 
     echo "------------------------------------------------------------"
-    echo "Verifying mode $mode translates and executes JIT code"
+    echo "Verifying mode $mode admission and execution"
     echo "------------------------------------------------------------"
     case "$mode" in
-        0|1|2|10)
+        0|1|2)
             bash "$SCRIPT_DIR/test_04_spinlock.sh" "$mode"
             ;;
         3)
@@ -30,8 +31,10 @@ run_mode() {
         5)
             bash "$SCRIPT_DIR/test_08_mutex_jit_modes.sh" 5
             ;;
-        11)
-            bash "$SCRIPT_DIR/test_08_mutex_jit_modes.sh" 11
+        10|11)
+            bash "$SCRIPT_DIR/test_12_context_native_only.sh" "$mode"
+            echo "[PASS] mode $mode: native-only rejection and native execution"
+            return
             ;;
         *)
             echo "[FAIL] test_09_jit_execution_modes: unsupported mode $mode"

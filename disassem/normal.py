@@ -1,3 +1,4 @@
+import diagnostics
 from assist import make_inst
 from conflict import (
     apply_map,
@@ -146,7 +147,7 @@ def mem_addr(arg, res):
                 mem_addr(x, res)
         elif expr_op(arg) == "*":
             if len(res["mul"]) > 0:
-                print("Warning: Multiple index")
+                diagnostics.warn("MULTIPLE_INDEX", "keep_partial_address", str(arg))
                 return
             args = expr_args(arg)
             if isinstance(args[0], ExprId) and isinstance(args[1], ExprInt):
@@ -157,20 +158,20 @@ def mem_addr(arg, res):
                     set_expr_int_value(res["mul"][0], expr_int_value(res["mul"][0]) - 1)
                     res["regs"].append(args[0])
             else:
-                print("Warning: Index incorrect")
+                diagnostics.warn("INVALID_INDEX", "keep_partial_address", str(arg))
         else:
-            print("Warning: Unresolved addressing op")
+            diagnostics.warn("UNRESOLVED_ADDRESS_OP", "keep_partial_address", str(arg))
     elif isinstance(arg, ExprId):
         res["regs"].append(arg)
     elif isinstance(arg, ExprInt):
         res["im"] = arg
     else:
-        print("Warning: Unresolved addressing args")
+        diagnostics.warn("UNRESOLVED_ADDRESS_ARG", "keep_partial_address", str(arg))
 
 
 def arg_purify(arg, offset, logical_task=False):
     if isinstance(arg, ExprOp):
-        print("Warning: Unresolved arg in arg_purify")
+        diagnostics.warn("UNRESOLVED_OPERAND_OP", "emit_empty_operand", str(arg))
         return ""
     if isinstance(arg, ExprMem):
         if logical_task:
@@ -187,4 +188,6 @@ def arg_purify(arg, offset, logical_task=False):
     elif isinstance(arg, (ExprId, ExprInt, dict)):
         return arg
     else:
-        print("Warning: Unresolved args used by target", offset)
+        diagnostics.warn(
+            "UNRESOLVED_OPERAND", "return_none", str(arg), next_rip=f"0x{offset:x}"
+        )

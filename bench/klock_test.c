@@ -81,11 +81,12 @@ static void *worker_thread(void *arg)
 	unsigned long count;
 	const char *comm = getenv("KD_TEST_COMM");
 
-	/* Mixed validation keeps even workers on delegated mutex_lock and sends
-	 * odd workers through native names and all four ordinary mutex APIs. */
+	/* Mixed validation keeps even workers on the ordinary target API and
+	 * sends odd workers through native names and four spin/mutex variants. */
 	if (getenv("KD_TEST_MIXED")) {
 		comm = data->thread_id & 1 ? "kd_native" : "klock_test";
-		data->args.role = 0x20000000U |
+		data->args.role =
+			0x20000000U |
 			(data->thread_id & 1 ? (data->thread_id / 2) % 4 : 0);
 	}
 	if (comm)

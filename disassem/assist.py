@@ -1,3 +1,4 @@
+import diagnostics
 from miasm.expression.expression import ExprId, ExprInt
 from miasm_compat import make_expr_int
 
@@ -72,7 +73,9 @@ def make_inst(name, args):
             processed_args.append(arg)
         elif isinstance(arg, dict):
             if len(arg["regs"]) + len(arg["mul"]) / 2 > 3:
-                print("Warning: segment register overflow")
+                diagnostics.warn(
+                    "ADDRESS_REGISTER_OVERFLOW", "emit_unchanged", str(arg)
+                )
             res = []
             for reg in arg["regs"]:
                 res.append(str(reg))

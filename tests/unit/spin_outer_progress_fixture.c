@@ -1,0 +1,933 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+#include "spin_gate_mock.h"
+#include <stddef.h>
+
+typedef uint32_t u32;
+struct list_head {
+	struct list_head *next, *prev;
+};
+#define kd_exec_frame_push real_frame_push
+#define kd_exec_frame_pop real_frame_pop
+#include "spin_outer_types.h"
+#undef kd_exec_frame_push
+#undef kd_exec_frame_pop
+
+static raw_spinlock_t origins[2];
+static struct kd_spin_ref executor_ref, b_ref, next_ref;
+static struct task_struct waiter = { .pid = 3 };
+static struct kd_spin_node kd_spin_nodes[MAX_NODES], successor, deferred;
+#define request kd_spin_nodes[0]
+static struct shadow_stack shadow_states[2];
+#define local_shadow_stack shadow_states[0]
+static struct kd_exec_frame active, requester;
+static struct kd_exec_context kd_exec_context[2], pool_before[2];
+static struct task_struct pressure_tasks[KD_EXEC_MAX_NESTING];
+static unsigned int full_pool_calls, full_pool_batches;
+static struct kd_spin_jit_context request_context;
+static struct pt_regs readmission_regs;
+static unsigned long kd_exec_invariant_failures;
+static unsigned int mode, failures, scripts, pops, native_waits;
+static unsigned int early_releases, waits, stage;
+static unsigned int jit_disables;
+static bool next_holds;
+static bool preentry_queue_case;
+static void preentry_queue_peer(void);
+static const unsigned int kd_combiner_batch_size = 1024;
+
+#undef CHECK
+#ifdef KD_OUTER_MUTATION
+#define STOP_MUTATION() exit(1)
+#else
+#define STOP_MUTATION() ((void)0)
+#endif
+#define CHECK(c)                                                            \
+	do {                                                                \
+		checks++;                                                   \
+		if (!(c)) {                                                 \
+			failures++;                                         \
+			fprintf(stderr, "FAIL mode=%u line=%d: %s\n", mode, \
+				__LINE__, #c);                              \
+			STOP_MUTATION();                                    \
+		}                                                           \
+	} while (0)
+#define BUG_ON(c)                                                      \
+	do {                                                           \
+		if (c) {                                               \
+			fprintf(stderr, "BUG mode=%u line=%d\n", mode, \
+				__LINE__);                             \
+			exit(2);                                       \
+		}                                                      \
+	} while (0)
+#define BUG() BUG_ON(true)
+#define WARN_ON_ONCE(c) ((void)(c))
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#define unlikely(x) (x)
+#define smp_store_release(p, v) (*(p) = (v))
+#define smp_load_acquire(p) (*(p))
+#define smp_mb() ((void)0)
+#define atomic64_inc(p) (++*(p))
+#define atomic_cmpxchg_acquire(p, old, v) cmpxchg(&(p)->counter, old, v)
+#define alloc_percpu(type) calloc(2, sizeof(type))
+#define free_percpu(p) free(p)
+#define container_of(p, type, member) \
+	((type *)((char *)(p) - offsetof(type, member)))
+#define _Q_LOCKED_VAL_HL 1
+#define _Q_LOCKED_COMBINER_VAL 3
+#define _Q_UNLOCKED_OOO_VAL 7
+#define IRQ_NUMA_NODE 255
+#define KD_SPIN_DIAG_NATIVE_FALLBACK 0
+#define get_rsp_from_regs(name, regs, i) ((unsigned long *)(regs))[i]
+#define KD_EXE_LOCK_SPIN 1
+#define numa_node_id() mock_cpu
+#define smp_processor_id() mock_cpu
+#define pr_info(...)                         \
+	do {                                 \
+		if (0)                       \
+			printf(__VA_ARGS__); \
+	} while (0)
+#define pr_warn_ratelimited(...) pr_info(__VA_ARGS__)
+#define KD_PR_ERR(...) pr_info(__VA_ARGS__)
+#define KD_PR_INFO(...) pr_info(__VA_ARGS__)
+#define KD_PR_DEBUG(...) pr_info(__VA_ARGS__)
+#define print_debug(...) pr_info(__VA_ARGS__)
+
+static void cpu_relax(void) __attribute__((unused));
+static bool kd_spin_jit_is_disabled(struct qspinlock *lock)
+{
+	(void)lock;
+	return mode == 9;
+}
+static void kd_spin_jit_disable(struct qspinlock *lock)
+{
+	(void)lock;
+	CHECK(mode == 11);
+	jit_disables++;
+}
+static void kd_spin_diag_record(struct qspinlock *lock, int event,
+				unsigned int depth)
+{
+	(void)lock;
+	(void)event;
+	(void)depth;
+}
+static void kd_spin_debug_jit_not_ready(struct qspinlock *lock,
+					unsigned int depth)
+{
+	(void)lock;
+	(void)depth;
+}
+static void kd_spin_debug_jit_success(struct qspinlock *lock,
+				      unsigned int depth)
+{
+	(void)lock;
+	(void)depth;
+}
+static void kd_spin_debug_combiner(struct qspinlock *lock, unsigned int depth)
+{
+	(void)lock;
+	(void)depth;
+}
+static void kd_spin_debug_ooo_unlock(struct qspinlock *lock, unsigned int depth)
+{
+	(void)lock;
+	(void)depth;
+	early_releases++;
+}
+static void kd_spin_diag_invariant_failure(void)
+{
+	CHECK(false);
+}
+static bool kd_exe_is_ready(int pid, unsigned long ip)
+{
+	(void)pid;
+	CHECK(ip == (request.jit_waiter ? 0x900UL : 0x800UL));
+	return mode != 4;
+}
+static void kd_exe_add(int pid, unsigned long ip, int kind)
+{
+	(void)pid;
+	(void)ip;
+	CHECK(kind == KD_EXE_LOCK_SPIN);
+}
+static int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long ip,
+				   unsigned long lock);
+
+static int kd_exec_invariant_failure(void);
+/* Frame storage is an array in this CPU substitute; keep the allocator body. */
+#undef this_cpu_ptr
+#define this_cpu_ptr(p) (&(*(p))[mock_cpu])
+#define kd_exec_frame_push real_frame_push
+#define kd_exec_frame_pop real_frame_pop
+#include "spin_frame_pool_production.h"
+#undef kd_exec_frame_push
+#undef kd_exec_frame_pop
+#undef this_cpu_ptr
+#define this_cpu_ptr(p) (&(p)[mock_cpu])
+
+struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
+					 unsigned long ip, unsigned long lock,
+					 void *node, void *rsp,
+					 unsigned int depth, unsigned long gs,
+					 struct task_struct *task)
+{
+	if (mode == 8) {
+		struct kd_exec_frame *result;
+
+		CHECK(regs && gs && task && depth <= KD_EXEC_MAX_LOCK_DEPTH);
+		CHECK(node == &request && regs == &request.regs &&
+		      task == request.task_struct_ptr && gs == request.gsbase);
+		CHECK(kd_exec_current_context()->depth == KD_EXEC_MAX_NESTING &&
+		      kd_exec_current_context()->owner == current &&
+		      kd_exec_context_validate(kd_exec_current_context()));
+		full_pool_calls++;
+		result = real_frame_push(regs, ip, lock, node, rsp, depth, gs,
+					 task);
+		CHECK(!result);
+		return result;
+	}
+	memset(&active, 0, sizeof(active));
+	active.regs = *regs;
+	active.entry_ip = ip;
+	active.outer_lock_addr = lock;
+	active.waiter = node;
+	active.outgoing_rsp_ptr = rsp;
+	active.gsbase = gs;
+	active.logical_task = task;
+	active.logical_pid = task->pid;
+	active.state = KD_EXEC_FRAME_RUNNING;
+	active.held_lock_depth = active.outer_lock_depth = depth;
+	active.outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
+	return &active;
+}
+int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
+{
+	CHECK(frame == &active &&
+	      (frame->completion_seen ||
+	       (!frame->executed && frame->state == KD_EXEC_FRAME_ERROR)));
+	if (regs)
+		*regs = frame->regs;
+	pops++;
+	return 0;
+}
+int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
+{
+	CHECK(frame == &active && !mutex && origins[1].held);
+	return 0;
+}
+int kd_exec_native_wait(struct kd_exec_frame *frame);
+int kd_spin_jit_nested_cleanup(struct kd_exec_frame *frame)
+{
+	CHECK(frame == &active && !origins[1].held);
+	return 0;
+}
+int kd_spin_jit_abort_cleanup(struct kd_exec_frame *frame)
+{
+	(void)frame;
+	return 0;
+}
+void kd_spin_unlock(struct qspinlock *lock)
+{
+	struct kd_spin_gate *gate = kd_spin_gate_find((raw_spinlock_t *)lock);
+	CHECK(gate && gate->word.locked == 3);
+	kd_spin_debug_ooo_unlock(lock, 2);
+	if (gate)
+		gate->word.locked = 7;
+}
+
+#include "spin_outer_production.h"
+
+static void checked_run_combiner(struct qspinlock *lock,
+				 struct kd_spin_node *node)
+{
+	unsigned int calls = full_pool_calls;
+	bool full = mode == 8 && node == &request;
+
+	if (full) {
+		CHECK(sizeof(struct pt_regs) == 168 &&
+		      sizeof(struct kd_exec_frame) == 656 &&
+		      sizeof(struct kd_exec_context) == 5264);
+		CHECK(!kd_exec_current_context()->depth);
+		for (unsigned int i = 0; i < KD_EXEC_MAX_NESTING; i++) {
+			struct pt_regs regs;
+			struct kd_exec_frame *frame;
+
+			memset(&regs, 0x31 + i, sizeof(regs));
+			pressure_tasks[i].pid = 100 + i;
+			frame = real_frame_push(&regs, 0x1000 + i, 0, NULL,
+						NULL, 0, 0x3000 + i,
+						&pressure_tasks[i]);
+			CHECK(frame == &kd_exec_current_context()->frames[i]);
+			CHECK(frame &&
+			      !memcmp(&frame->regs, &regs, sizeof(regs)));
+		}
+		memcpy(pool_before, kd_exec_context, sizeof(pool_before));
+	}
+	run_combiner(lock, node);
+	if (full) {
+		CHECK(full_pool_calls == calls + 1);
+		CHECK(!memcmp(pool_before, kd_exec_context,
+			      sizeof(pool_before)));
+		CHECK(kd_exec_context_validate(kd_exec_current_context()));
+		CHECK(!node->completed && !node->native_resume &&
+		      !node->exec_frame);
+		/* Retire only the unexecuted, API-created test frames after queue return. */
+		while (kd_exec_current_frame()) {
+			struct kd_exec_frame *frame = kd_exec_current_frame();
+
+			CHECK(kd_exec_frame_abort(frame) == 0);
+			CHECK(real_frame_pop(frame, NULL) == 0);
+		}
+		CHECK(!kd_exec_current_context()->owner &&
+		      kd_exec_context_validate(kd_exec_current_context()));
+		full_pool_batches++;
+	}
+}
+
+#define run_combiner checked_run_combiner
+
+static struct qspinlock *a_lock(void)
+{
+	return (struct qspinlock *)&origins[0];
+}
+
+/* The old executor must not steal an unlocked word with pending/tail state.
+ * Deterministic scheduling advances each state on a separate failed trylock. */
+static void cpu_relax(void)
+{
+	if (preentry_queue_case) {
+		preentry_queue_peer();
+		return;
+	}
+	struct kd_spin_gate *gate = kd_spin_entry_gate(&executor_ref);
+	CHECK(next_holds && gate && current == &tasks[0] && mock_preempt == 1);
+	waits++;
+	if (!stage) {
+		mock_cpu = 1;
+		current = &tasks[1];
+		CHECK(kd_spin_entry_release_origin(&next_ref) == 0);
+		gate->word.locked = 0;
+		CHECK(kd_spin_entry_end(&next_ref) == 0);
+		mock_cpu = 0;
+		current = &tasks[0];
+		gate->word.pending = 1;
+	} else if (stage == 1) {
+		gate->word.pending = 0;
+	} else {
+		gate->word.tail = 0;
+		next_holds = false;
+	}
+	stage++;
+}
+
+static void successor_progress(void)
+{
+	struct kd_spin_gate *gate = kd_spin_entry_gate(&executor_ref);
+	struct kd_spin_node *published = &successor;
+#ifdef NUMA_AWARE
+	if (mode == 5)
+		published = &deferred;
+#endif
+	CHECK(!origins[0].held && !gate->word.locked && !published->locked);
+	CHECK(origins[1].held && mock_preempt == 2);
+	if (origins[0].held || gate->word.locked || published->locked)
+		return;
+#ifdef NUMA_AWARE
+	if (mode == 5) {
+		CHECK(!deferred.locked && deferred.next == &successor);
+		CHECK(!shadow_states[0].local_queue_head &&
+		      !shadow_states[0].local_queue_tail);
+	}
+#endif
+	mock_cpu = 1;
+	current = &tasks[1];
+	CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK, &next_ref) ==
+	      0);
+	gate->word.locked = 1;
+	CHECK(kd_spin_entry_claim(&next_ref) == 0);
+	mock_cpu = 0;
+	current = &tasks[0];
+	successor.locked = 1;
+	successor.next = (void *)0xdeadbeef;
+	deferred.locked = 1;
+	next_holds = true;
+}
+
+static void release_b(void)
+{
+	CHECK(kd_exec_frame_lock_mark_released(
+		      &active, (unsigned long)&origins[1]) == 0);
+	kd_spin_release_origin((struct qspinlock *)&origins[1]);
+	shadow_states[0].lock_addr[1] = 0;
+}
+
+static void early_a(bool native)
+{
+	if (native)
+		CHECK(kd_exec_frame_record_event(
+			      &active, KD_EXEC_EVENT_OUTER_UNLOCK, NULL) == 0);
+	else
+		CHECK(kd_spin_jit_outer_unlock_ooo_ctx(
+			      &origins[0], &active.regs, &active) == 0);
+	CHECK(kd_exec_frame_record_event(&active, KD_EXEC_EVENT_OUTER_UNLOCK,
+					 NULL) == -EINVAL);
+	successor_progress();
+}
+
+static int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long ip,
+				   unsigned long lock)
+{
+	CHECK(regs == &active.regs &&
+	      ip == (request.jit_waiter ? 0x900UL : 0x800UL) &&
+	      lock == (unsigned long)&origins[0]);
+	scripts++;
+	if (mode == 11 || mode == 12) {
+		CHECK(!active.executed && active.waiter == &request);
+		CHECK(!memcmp(&request.regs, &readmission_regs,
+			      sizeof(request.regs)));
+		/* Staging may change the frame packet, never the queued input.
+		 * No instruction body, unlock, native publication or node reuse. */
+		memset(regs, 0xcc, sizeof(*regs));
+		return mode == 11 ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
+	}
+	active.executed = true;
+	if (mode == 10) {
+		CHECK(!memcmp(regs, &readmission_regs, sizeof(*regs)));
+		CHECK(active.gsbase == 0x20000 &&
+		      active.logical_task == &waiter);
+		return KD_EXE_RUN_TO_UNLOCK;
+	}
+	if (mode == 6) {
+		CHECK(regs->ip == 0x801 && active.resume_target == &requester);
+		CHECK(active.outer_lock_index == 1 &&
+		      active.jit_lock_depth == 2);
+		return KD_EXE_RUN_TO_UNLOCK;
+	}
+	CHECK(kd_spin_entry_begin(&origins[1], KD_SPIN_ENTRY_VIRTUAL, &b_ref) ==
+	      0);
+	kd_spin_word((struct qspinlock *)&origins[1])->locked = 1;
+	kd_spin_claim_origin((struct qspinlock *)&origins[1]);
+	active.jit_lock_depth = active.held_lock_depth = 2;
+	active.jit_lock_addr[1] = (unsigned long)&origins[1];
+	active.jit_lock_kind[1] = KD_EXEC_LOCK_FAST;
+	shadow_states[0].lock_addr[1] = (unsigned long)&origins[1];
+	if (mode == 2)
+		return KD_EXE_RUN_NATIVE;
+	if (mode != 0)
+		early_a(false);
+	if (mode == 3)
+		return KD_EXE_RUN_NATIVE;
+	release_b();
+	return KD_EXE_RUN_TO_UNLOCK;
+}
+
+int kd_exec_native_wait(struct kd_exec_frame *frame)
+{
+	CHECK(frame == &active && request.native_resume && !request.locked);
+	native_waits++;
+	if (mode == 2)
+		early_a(true);
+	release_b();
+	return 0;
+}
+
+/* Selection may append remote nodes before admission rejects the current
+ * waiter. Walk a bounded expected chain: a regression must fail, not hang. */
+static unsigned int rejected_selection(bool virtual, unsigned int cpu)
+{
+	const unsigned int rejection_modes[] = { 4, 7, 8, 9 };
+	unsigned int cases = 0;
+	unsigned int max_prefix = 0;
+
+#ifdef NUMA_AWARE
+	max_prefix = 2;
+#endif
+	mock_cpu = cpu;
+	current = &tasks[cpu];
+	for (unsigned int reason = 0; reason < ARRAY_SIZE(rejection_modes);
+	     reason++) {
+		mode = rejection_modes[reason];
+		if (virtual && mode != 8)
+			continue;
+		for (unsigned int prefix = 0; prefix <= max_prefix; prefix++) {
+			for (unsigned int count = 0; count <= 8; count++) {
+				struct kd_spin_node nodes[10] = { 0 };
+				struct kd_spin_node *expected[12], *cursor;
+				unsigned long saved[8] = { 0, 1, 2, 3,
+							   4, 5, 6, 0x800 };
+				unsigned int length = 0;
+				struct kd_spin_gate *gate;
+				struct pt_regs expected_regs;
+				struct kd_exec_frame parent_before;
+				struct kd_spin_jit_context context_before;
+
+				memset(&request, 0, sizeof(request));
+				memset(&successor, 0, sizeof(successor));
+				memset(shadow_states, 0, sizeof(shadow_states));
+				executor_ref = (struct kd_spin_ref){ 0 };
+				CHECK(kd_spin_entry_begin(&origins[0],
+							  KD_SPIN_ENTRY_HOOK,
+							  &executor_ref) == 0);
+				gate = kd_spin_entry_gate(&executor_ref);
+				gate->word.locked = 3;
+				kd_spin_claim_origin(a_lock());
+				shadow_states[cpu].lock_addr[0] =
+					(unsigned long)&origins[0];
+				shadow_states[cpu].curr_cs_cpu =
+					shadow_states[cpu].prev_cs_cpu = -1;
+				memset(&request.regs, 0x5a,
+				       sizeof(request.regs));
+				request.regs.sp = (unsigned long)saved;
+				request.regs.di = (unsigned long)&origins[0];
+				request.regs.ip = 0x801;
+				request.gsbase = 0x20000;
+				request.task_struct_ptr = &waiter;
+				request.cpuid = cpu ^ 1;
+				request.pinned_context = mode == 7;
+				request.locked = successor.locked = 1;
+				request.next = count ? &nodes[prefix] :
+						       &successor;
+				successor.task_struct_ptr = &tasks[cpu ^ 1];
+				expected_regs = request.regs;
+				if (virtual) {
+					requester = (struct kd_exec_frame){
+						.regs = request.regs,
+						.entry_ip = 0x900,
+						.outer_lock_addr = 0x1000,
+						.logical_task = &waiter,
+						.gsbase = request.gsbase,
+						.state = KD_EXEC_FRAME_RUNNING,
+						.remote_result =
+							KD_EXEC_REMOTE_WAITING,
+					};
+					request_context = (struct kd_spin_jit_context){
+						.requester = &requester,
+						.lock_depth = 2,
+						.lock_addr = { 0x1000,
+							       (unsigned long)&origins
+								       [0] },
+						.lock_kind = { KD_EXEC_LOCK_QUEUE_OWNER,
+							       KD_EXEC_LOCK_QUEUE_OWNER },
+					};
+					request.jit_waiter = true;
+					request.jit_context = &request_context;
+					parent_before = requester;
+					context_before = request_context;
+				} else if (mode == 4 || mode == 8) {
+					expected_regs.bx = 1;
+					expected_regs.r12 = 2;
+					expected_regs.r13 = 3;
+					expected_regs.r14 = 4;
+					expected_regs.r15 = 5;
+					expected_regs.bp = 6;
+					expected_regs.ip = 0x800;
+					expected_regs.sp =
+						(unsigned long)&saved[8];
+				}
+				for (unsigned int i = 0; i < prefix + count;
+				     i++) {
+					nodes[i].locked = 1;
+					nodes[i].socket_id = cpu ^ 1;
+					nodes[i].cpuid = cpu ^ 1;
+					nodes[i].task_struct_ptr =
+						&tasks[cpu ^ 1];
+					nodes[i].next = i + 1 < prefix + count ?
+								&nodes[i + 1] :
+								&successor;
+				}
+#ifdef NUMA_AWARE
+				for (unsigned int i = 0; i < prefix; i++) {
+					add_to_local_queue(&nodes[i]);
+					expected[length++] = &nodes[i];
+				}
+				if (prefix)
+					nodes[prefix - 1].next = &request;
+#endif
+				expected[length++] = &request;
+				for (unsigned int i = 0; i < count; i++)
+					expected[length++] = &nodes[prefix + i];
+				expected[length++] = &successor;
+				scripts = pops = 0;
+				run_combiner(a_lock(), &request);
+
+				CHECK(!scripts && !pops && !request.completed);
+				CHECK(!request.native_resume &&
+				      !request.exec_frame &&
+				      !request.jit_retry &&
+				      request.gsbase == 0x20000 &&
+				      request.task_struct_ptr == &waiter);
+				CHECK(!memcmp(&request.regs, &expected_regs,
+					      sizeof(expected_regs)));
+				CHECK(request.native_regs_decoded ==
+				      (!virtual && (mode == 4 || mode == 8)));
+				if (virtual) {
+					CHECK(!memcmp(&requester,
+						      &parent_before,
+						      sizeof(parent_before)));
+					CHECK(!memcmp(&request_context,
+						      &context_before,
+						      sizeof(context_before)));
+				}
+				CHECK(origins[0].held &&
+				      gate->owner == current &&
+				      mock_preempt == 1);
+				cursor = expected[0];
+				for (unsigned int i = 0; i < length; i++) {
+					CHECK(cursor == expected[i]);
+					CHECK(expected[i]->locked == (i != 0));
+					CHECK(!expected[i]->completed);
+					if (cursor)
+						cursor = cursor->next;
+				}
+				CHECK(!cursor);
+#ifdef NUMA_AWARE
+				CHECK(!shadow_states[cpu].local_queue_head &&
+				      !shadow_states[cpu].local_queue_tail);
+#endif
+				gate->word.val.counter = 1;
+				kd_spin_release_origin(a_lock());
+				CHECK(!mock_preempt &&
+				      kd_spin_entries_check_idle() == 0);
+				cases++;
+			}
+		}
+	}
+	mock_cpu = 0;
+	current = &tasks[0];
+	return cases;
+}
+
+/* Distinct owners retry one packet. NUMA-on publishes a committed prefix
+ * before each retry; scheduling and prefix consumption remain deterministic. */
+static unsigned int repeated_admission(void)
+{
+	unsigned int cases = 0;
+
+	for (unsigned int pattern = 0; pattern < 3; pattern++) {
+		for (unsigned int refusals = 1; refusals <= 4; refusals++) {
+			unsigned long saved[40];
+
+			/* Keep erroneous repeated reads in bounds so the old code
+			 * produces failed register checks, not an accidental fault. */
+			for (unsigned int i = 0; i < ARRAY_SIZE(saved); i++)
+				saved[i] = 0x1000 + i;
+			for (unsigned int i = 0; i < 7; i++)
+				saved[i] = i;
+			saved[7] = 0x800;
+			memset(&request, 0, sizeof(request));
+			memset(&successor, 0, sizeof(successor));
+			memset(shadow_states, 0, sizeof(shadow_states));
+			request.regs.sp = (unsigned long)saved;
+			request.regs.di = (unsigned long)&origins[0];
+			request.task_struct_ptr = &waiter;
+			request.cpuid = 2;
+			request.gsbase = 0x20000;
+			request.next = &successor;
+			successor.task_struct_ptr = &waiter;
+			successor.cpuid = 2;
+			successor.locked = 1;
+			readmission_regs = (struct pt_regs){
+				.ip = 0x800,
+				.sp = (unsigned long)&saved[8],
+				.di = (unsigned long)&origins[0],
+				.bx = 1,
+				.r12 = 2,
+				.r13 = 3,
+				.r14 = 4,
+				.r15 = 5,
+				.bp = 6,
+			};
+			scripts = pops = 0;
+			for (unsigned int attempt = 0; attempt <= refusals;
+			     attempt++) {
+				struct kd_spin_gate *gate;
+				bool ready = attempt == refusals;
+#ifdef NUMA_AWARE
+				struct kd_spin_node prefix = {
+					.locked = 1,
+					.cpuid = (attempt & 1) ^ 1,
+					.task_struct_ptr =
+						&tasks[(attempt & 1) ^ 1],
+					.next = &request,
+				};
+#endif
+				mode = ready	     ? 10 :
+				       pattern == 0  ? 4 :
+				       pattern == 1  ? 8 :
+				       (attempt & 1) ? 8 :
+						       4;
+				mock_cpu = attempt & 1;
+				current = &tasks[mock_cpu];
+				executor_ref = (struct kd_spin_ref){ 0 };
+				CHECK(kd_spin_entry_begin(&origins[0],
+							  KD_SPIN_ENTRY_HOOK,
+							  &executor_ref) == 0);
+				gate = kd_spin_entry_gate(&executor_ref);
+				gate->word.locked = 3;
+				kd_spin_claim_origin(a_lock());
+				shadow_states[mock_cpu].lock_addr[0] =
+					(unsigned long)&origins[0];
+				shadow_states[mock_cpu].curr_cs_cpu = -1;
+				shadow_states[mock_cpu].prev_cs_cpu = -1;
+				request.locked = 1;
+#ifdef NUMA_AWARE
+				add_to_local_queue(&prefix);
+#endif
+				run_combiner(a_lock(), &request);
+				CHECK(!memcmp(&request.regs, &readmission_regs,
+					      sizeof(request.regs)));
+				CHECK(request.completed == ready &&
+				      scripts == ready && pops == ready &&
+				      !request.exec_frame);
+				CHECK(request.next == &successor &&
+				      !successor.next && !successor.completed);
+				CHECK(origins[0].held &&
+				      gate->owner == current &&
+				      mock_preempt == 1);
+#ifdef NUMA_AWARE
+				CHECK(!prefix.locked && !prefix.completed &&
+				      prefix.next ==
+					      (ready ? &successor : &request));
+				CHECK(request.locked == !ready &&
+				      successor.locked);
+				CHECK(!shadow_states[mock_cpu].local_queue_head &&
+				      !shadow_states[mock_cpu].local_queue_tail);
+#else
+				CHECK(!request.locked &&
+				      successor.locked == !ready);
+#endif
+				gate->word.val.counter = 1;
+				kd_spin_release_origin(a_lock());
+				shadow_states[mock_cpu].lock_addr[0] = 0;
+				CHECK(!mock_preempt &&
+				      kd_spin_entries_check_idle() == 0);
+			}
+			cases++;
+		}
+	}
+	mock_cpu = 0;
+	current = &tasks[0];
+	return cases;
+}
+
+/* Rejected pre-entry frames must recover the node's original packet, for
+ * both native and virtual inputs, before publishing any completion. */
+static unsigned int preentry_packet(void)
+{
+	unsigned int cases = 0;
+
+	for (unsigned int virtual = 0; virtual < 2; virtual++) {
+		for (mode = 11; mode <= 12; mode++) {
+			unsigned long saved[8] = { 0, 1, 2, 3, 4, 5, 6, 0x800 };
+			struct kd_spin_gate *gate;
+
+			memset(&request, 0, sizeof(request));
+			memset(&successor, 0, sizeof(successor));
+			memset(shadow_states, 0, sizeof(shadow_states));
+			executor_ref = (struct kd_spin_ref){ 0 };
+			CHECK(kd_spin_entry_begin(&origins[0],
+						  KD_SPIN_ENTRY_HOOK,
+						  &executor_ref) == 0);
+			gate = kd_spin_entry_gate(&executor_ref);
+			gate->word.locked = 3;
+			kd_spin_claim_origin(a_lock());
+			shadow_states[0].lock_addr[0] =
+				(unsigned long)&origins[0];
+			shadow_states[0].curr_cs_cpu =
+				shadow_states[0].prev_cs_cpu = -1;
+			readmission_regs = (struct pt_regs){
+				.ip = 0x800,
+				.sp = (unsigned long)&saved[8],
+				.di = (unsigned long)&origins[0],
+				.bx = 1,
+				.r12 = 2,
+				.r13 = 3,
+				.r14 = 4,
+				.r15 = 5,
+				.bp = 6,
+			};
+			request.regs = readmission_regs;
+			request.regs.sp = (unsigned long)saved;
+			request.gsbase = 0x20000;
+			request.cpuid = 1;
+			request.task_struct_ptr = &waiter;
+			request.locked = successor.locked = 1;
+			request.next = &successor;
+			successor.task_struct_ptr = &tasks[1];
+			if (virtual) {
+				readmission_regs.ip = 0x801;
+				readmission_regs.sp = (unsigned long)saved;
+				request.regs = readmission_regs;
+				requester = (struct kd_exec_frame){
+					.entry_ip = 0x900,
+					.outer_lock_addr = 0x1000,
+					.logical_task = &waiter,
+					.gsbase = 0x20000,
+					.state = KD_EXEC_FRAME_RUNNING,
+					.remote_result = KD_EXEC_REMOTE_WAITING,
+				};
+				request_context = (struct kd_spin_jit_context){
+					.requester = &requester,
+					.lock_depth = 2,
+					.lock_addr = { 0x1000,
+						       (unsigned long)&origins
+							       [0] },
+					.lock_kind = { KD_EXEC_LOCK_QUEUE_OWNER,
+						       KD_EXEC_LOCK_QUEUE_OWNER },
+				};
+				request.jit_waiter = true;
+				request.jit_context = &request_context;
+			}
+			scripts = pops = jit_disables = 0;
+			run_combiner(a_lock(), &request);
+			CHECK(scripts == 1 && pops == 1);
+			CHECK(jit_disables == (mode == 11));
+			CHECK(!active.executed && !active.completion_seen &&
+			      active.state == KD_EXEC_FRAME_ERROR);
+			CHECK(!memcmp(&request.regs, &readmission_regs,
+				      sizeof(request.regs)));
+			CHECK(!memcmp(&active.regs, &readmission_regs,
+				      sizeof(active.regs)));
+			CHECK(!request.exec_frame && !request.completed &&
+			      !request.native_resume &&
+			      request.jit_retry == !virtual);
+			CHECK(request.native_regs_decoded == !virtual);
+			CHECK(!request.locked && successor.locked &&
+			      request.next == &successor && !successor.next);
+			CHECK(origins[0].held && !origins[1].held &&
+			      gate->owner == current && mock_preempt == 1);
+			if (virtual)
+				CHECK(requester.remote_result ==
+					      KD_EXEC_REMOTE_WAITING &&
+				      !active.resume_target);
+			gate->word.val.counter = 1;
+			kd_spin_release_origin(a_lock());
+			CHECK(!mock_preempt &&
+			      kd_spin_entries_check_idle() == 0);
+			cases++;
+		}
+	}
+	return cases;
+}
+
+#include "spin_queue_return_fixture.c"
+
+int main(void)
+{
+#ifdef KD_OUTER_BUG_ONLY
+	BUG_ON(true);
+#endif
+	unsigned long saved[8] = { 0, 1, 2, 3, 4, 5, 6, 0x800 };
+	tasks[0].pid = 1;
+	tasks[1].pid = 2;
+	CHECK(kd_spin_entries_init() == 0);
+	for (mode = 0; mode < 8; mode++) {
+		struct kd_spin_gate *gate;
+		bool early = mode != 0 && mode != 4 && mode != 6 && mode != 7;
+		memset(&request, 0, sizeof(request));
+		memset(&successor, 0, sizeof(successor));
+		memset(&deferred, 0, sizeof(deferred));
+		memset(shadow_states, 0, sizeof(shadow_states));
+		executor_ref = (struct kd_spin_ref){ 0 };
+		b_ref = (struct kd_spin_ref){ 0 };
+		CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK,
+					  &executor_ref) == 0);
+		gate = kd_spin_entry_gate(&executor_ref);
+		gate->word.locked = 3;
+		gate->word.tail = 4;
+		kd_spin_claim_origin(a_lock());
+		CHECK(!kd_spin_trylock(a_lock()));
+		shadow_states[0].lock_addr[0] = (unsigned long)&origins[0];
+		shadow_states[0].curr_cs_cpu = shadow_states[0].prev_cs_cpu =
+			-1;
+		shadow_states[0].local_shadow_stack_ptr = 0x10000;
+		request.regs.sp = (unsigned long)saved;
+		request.regs.di = (unsigned long)&origins[0];
+		request.task_struct_ptr = &waiter;
+		request.gsbase = 0x20000;
+		request.pinned_context = mode == 7;
+		if (mode == 6) {
+			requester = (struct kd_exec_frame){
+				.entry_ip = 0x900,
+				.outer_lock_addr = 0x1000,
+				.logical_task = &waiter,
+				.gsbase = 0x20000,
+				.state = KD_EXEC_FRAME_RUNNING,
+				.remote_result = KD_EXEC_REMOTE_WAITING,
+			};
+			request_context = (struct kd_spin_jit_context){
+				.requester = &requester,
+				.lock_depth = 2,
+				.lock_addr = { 0x1000,
+					       (unsigned long)&origins[0] },
+				.lock_kind = { KD_EXEC_LOCK_QUEUE_OWNER,
+					       KD_EXEC_LOCK_QUEUE_OWNER },
+			};
+			request.jit_waiter = true;
+			request.jit_context = &request_context;
+			request.regs.ip = 0x801;
+		}
+		request.cpuid = 1;
+		request.next = &successor;
+		request.locked = successor.locked = deferred.locked = 1;
+		successor.task_struct_ptr = deferred.task_struct_ptr =
+			&tasks[1];
+#ifdef NUMA_AWARE
+		if (mode == 5) {
+			request.next = &deferred;
+			deferred.next = &successor;
+			deferred.socket_id = 1;
+		}
+#endif
+		scripts = pops = native_waits = early_releases = waits = stage =
+			0;
+		next_holds = false;
+		run_combiner(a_lock(), &request);
+		CHECK(scripts == (mode != 4 && mode != 7) && pops == scripts);
+		CHECK(native_waits == (mode == 2 || mode == 3));
+		CHECK(origins[0].held && gate->owner == current &&
+		      !origins[1].held);
+		CHECK(mock_preempt == 1 && mock_preempts[1] == 0 &&
+		      !next_holds);
+		CHECK(waits == (early ? 3 : 0));
+		CHECK(successor.locked == (early || mode == 4 || mode == 7));
+#ifdef NUMA_AWARE
+		if (mode == 5)
+			CHECK(deferred.locked == early);
+#endif
+		CHECK(request.completed ==
+		      (mode == 0 || mode == 1 || mode == 5 || mode == 6));
+		if (mode == 6)
+			CHECK(requester.remote_result == KD_EXEC_REMOTE_DONE &&
+			      !active.resume_target);
+		gate->word.val.counter = 1;
+		kd_spin_release_origin(a_lock());
+		CHECK(!mock_preempt && kd_spin_entries_check_idle() == 0);
+	}
+	unsigned int rejection_cases = 0;
+	for (unsigned int cpu = 0; cpu < 2; cpu++) {
+		rejection_cases += rejected_selection(false, cpu);
+		rejection_cases += rejected_selection(true, cpu);
+	}
+	unsigned int readmission_cases = repeated_admission();
+	unsigned int preentry_cases = preentry_packet();
+	unsigned int queue_cases = preentry_queue_return();
+	CHECK(!kd_exec_invariant_failures && native_claims == native_releases);
+	CHECK(full_pool_calls == full_pool_batches && full_pool_calls > 0);
+	CHECK(kd_spin_gates_check_idle() == 0);
+	kd_spin_entries_exit();
+	printf("spin outer production progress: %u checks, %u failures, 8 progress + %u rejection + %u readmission + %u preentry scenarios NUMA=%u\n",
+	       checks, failures, rejection_cases, readmission_cases,
+	       preentry_cases,
+#ifdef NUMA_AWARE
+	       1U
+#else
+	       0U
+#endif
+	);
+	printf("spin full frame refusal: %u real API failures, regs=%zu frame=%zu context=%zu\n",
+	       full_pool_calls, sizeof(struct pt_regs),
+	       sizeof(struct kd_exec_frame), sizeof(struct kd_exec_context));
+	printf("spin preentry queue return: %u joined producer/combiner/acquisition cases\n",
+	       queue_cases);
+	return failures ? 1 : 0;
+}

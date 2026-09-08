@@ -17,6 +17,7 @@
 #include <linux/errno.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/moduleparam.h>
 #include <linux/mutex.h>
 #include <linux/sched.h>
 #include <linux/spinlock.h>
@@ -32,6 +33,10 @@
 /* --- module parameters ---------------------------------------------------- */
 
 int kd_spin_jit_fail_after_nested_lock;
+static int kd_jit_fail_pending_lock;
+module_param_named(jit_fail_pending_lock, kd_jit_fail_pending_lock, int, 0644);
+MODULE_PARM_DESC(jit_fail_pending_lock,
+		 "One-shot pre-acquisition resource failure: 1=spin, 2=mutex");
 
 static void origin_raw_spin_lock(raw_spinlock_t *lock);
 static void origin_raw_spin_unlock(raw_spinlock_t *lock);
@@ -119,31 +124,34 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
 void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 			  unsigned long ret_addr)
 {
+	struct kd_spin_ref ref = { 0 };
+
 	(void)ret_addr;
 	(void)ret_rsp;
 
 	if (kd_exec_native_unlock((unsigned long)lock, false))
 		return;
-	if (!kd_hotlock_is_promoted((unsigned long)lock)) {
-		kd_hotlock_record((unsigned long)lock);
-		origin_raw_spin_unlock(lock);
+	/* Acquisition provenance wins over today's promotion state or comm. */
+	if (kd_spin_entry_find(lock, &ref)) {
+		kd_spin_unlock((struct qspinlock *)lock);
 		return;
 	}
-
-	kd_spin_unlock((struct qspinlock *)lock);
+	if (!kd_hotlock_is_promoted((unsigned long)lock))
+		kd_hotlock_record((unsigned long)lock);
+	origin_raw_spin_unlock(lock);
 }
 
 void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 			unsigned long ret_addr)
 {
-	if (!kd_hotlock_is_promoted((unsigned long)lock)) {
+	if (kd_spin_entry_native_active() ||
+	    !kd_hotlock_is_promoted((unsigned long)lock)) {
 		kd_hotlock_record((unsigned long)lock);
 		origin_raw_spin_lock(lock);
 		return;
 	}
 
-	kd_exe_add(0,
-		   ret_addr); /* rip-only key: same kernel CS shared by all */
+	kd_exe_add(0, ret_addr, KD_EXE_LOCK_SPIN);
 	kd_spin_lock((struct qspinlock *)lock, ret_rsp);
 }
 
@@ -205,7 +213,7 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 		kd_origin_mutex_lock(lock);
 		return;
 	}
-	kd_exe_add(0, ret_addr);
+	kd_exe_add(0, ret_addr, KD_EXE_LOCK_MUTEX);
 	_kd_mutex_lock(kd_mtx, ret_rsp, ret_addr, s_rbx, s_r12, s_r13, s_r14,
 		       s_r15, s_rbp);
 }
@@ -229,8 +237,16 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 	kd_origin_mutex_unlock(lock, ret_addr);
 }
 
-static int kd_mutex_jit_advance_call(struct kd_exec_frame *frame,
-				     struct pt_regs *regs)
+static int kd_jit_begin_call(struct kd_exec_frame *frame, struct pt_regs *regs)
+{
+	if (!frame || !regs || !regs->sp || !kd_exec_frame_validate(frame))
+		return -EINVAL;
+	return kd_call_begin(&frame->control_call, regs->ip, regs->sp,
+			     READ_ONCE(*(unsigned long *)regs->sp));
+}
+
+static int kd_jit_advance_call(struct kd_exec_frame *frame,
+			       struct pt_regs *regs)
 {
 	unsigned long return_ip;
 
@@ -253,19 +269,27 @@ int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,
 	if (!lock || !regs || !regs->sp || !frame ||
 	    !kd_exec_frame_validate(frame))
 		return -EINVAL;
+	ret = kd_jit_begin_call(frame, regs);
+	if (ret)
+		return ret;
 	if (kd_exec_frame_lock_contains(frame, (unsigned long)lock))
 		return -EDEADLK;
 	if (kd_exec_frame_lock_depth(frame) >= KD_EXEC_MAX_LOCK_DEPTH)
 		return -E2BIG;
 	if (!READ_ONCE(*(unsigned long *)regs->sp))
 		return -EINVAL;
-	ret = kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_LOCK, regs);
+	ret = kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_LOCK,
+					 regs);
 	if (ret)
 		return ret;
+	if (unlikely(cmpxchg(&kd_jit_fail_pending_lock, 2, 0) == 2))
+		return -E2BIG;
 
+	frame->control_call.phase = KD_CALL_ENTERED;
 	ret = kd_mutex_nested_lock(lock);
 	if (ret)
 		return ret;
+	frame->control_call.phase = KD_CALL_ACQUIRED;
 	ret = kd_exec_frame_lock_push(frame, (unsigned long)lock,
 				      KD_EXEC_LOCK_NATIVE, lock);
 	if (ret) {
@@ -273,7 +297,9 @@ int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,
 		return ret;
 	}
 	/* The CALL is consumed only after the physical lock and its record exist. */
-	ret = kd_mutex_jit_advance_call(frame, regs);
+	ret = kd_jit_advance_call(frame, regs);
+	if (!ret)
+		frame->control_call.phase = KD_CALL_COMPLETE;
 	return ret ? ret : 1;
 }
 
@@ -285,10 +311,11 @@ int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
 	if (!lock || !frame || !kd_exec_frame_validate(frame))
 		return -EINVAL;
 	if (kd_exec_frame_lock_kind(frame, (unsigned long)lock) !=
-	    KD_EXEC_LOCK_NATIVE ||
+		    KD_EXEC_LOCK_NATIVE ||
 	    kd_exec_frame_lock_node(frame, (unsigned long)lock) != lock)
 		return -ENOENT;
-	ret = kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_UNLOCK, NULL);
+	ret = kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_UNLOCK,
+					 NULL);
 	if (ret)
 		return ret;
 	ret = kd_mutex_nested_unlock(lock);
@@ -347,22 +374,6 @@ static void origin_raw_spin_unlock(raw_spinlock_t *lock)
 	__raw_spin_unlock(lock);
 }
 
-static int kd_spin_jit_advance_call(struct kd_exec_frame *frame,
-				    struct pt_regs *regs)
-{
-	unsigned long return_ip;
-
-	if (!frame || !regs || !regs->sp)
-		return -EINVAL;
-	return_ip = READ_ONCE(*(unsigned long *)regs->sp);
-	if (!return_ip)
-		return -EINVAL;
-	regs->sp += sizeof(unsigned long);
-	regs->ip = return_ip;
-	kd_exec_frame_save_continuation(frame, regs);
-	return 0;
-}
-
 static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
 					  struct pt_regs *regs,
 					  struct kd_exec_frame *frame)
@@ -377,6 +388,8 @@ static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
 	promoted = kd_hotlock_is_promoted((unsigned long)lock);
 	if (!active_frame)
 		active_frame = kd_exec_current_frame();
+	if (regs && kd_jit_begin_call(active_frame, regs))
+		return -EINVAL;
 
 	if (active_frame) {
 		if (kd_exec_frame_lock_contains(active_frame,
@@ -387,16 +400,23 @@ static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
 			return -E2BIG;
 	}
 
+	/* The CPU's combiner stack can be fuller than this logical frame. */
+	if (!kd_spin_nested_shadow_has_space())
+		return -E2BIG;
+
 	if (!regs || !regs->sp)
 		goto fallback;
-	if (!active_frame || kd_spin_jit_advance_call(active_frame, regs))
+	if (!active_frame || kd_jit_advance_call(active_frame, regs))
 		return -EINVAL;
 	if (promoted && !kd_exe_is_ready(0, regs->ip))
-		kd_exe_add(0, regs->ip);
+		kd_exe_add(0, regs->ip, KD_EXE_LOCK_SPIN);
 
 	if (kd_exec_frame_record_event(active_frame, KD_EXEC_EVENT_NESTED_LOCK,
 				       regs))
 		return -EINVAL;
+	/* Exercise the real staged-RIP case without publishing a B request. */
+	if (unlikely(cmpxchg(&kd_jit_fail_pending_lock, 1, 0) == 1))
+		return -E2BIG;
 
 	if (promoted) {
 		enum kd_exec_lock_kind kind;
@@ -415,9 +435,7 @@ static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
 			kd_spin_debug_nested_remote(lock);
 			kd_exec_frame_save_continuation(active_frame, regs);
 			if (ret == KD_SPIN_NESTED_PARENT_OOO) {
-				if (kd_exec_frame_record_event(
-					    active_frame,
-					    KD_EXEC_EVENT_OUTER_UNLOCK, NULL))
+				if (!kd_exec_frame_can_complete(active_frame))
 					return -EINVAL;
 				return KD_EXE_KNOWN_OUTER_UNLOCK;
 			}
@@ -449,6 +467,7 @@ static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
 				kind);
 			return -EIO;
 		}
+		active_frame->control_call.phase = KD_CALL_COMPLETE;
 		return KD_JIT_NESTED_CONSUMED;
 	}
 
@@ -459,7 +478,11 @@ fallback:
 		return -EINVAL;
 
 	kd_hotlock_record((unsigned long)lock);
+	if (active_frame)
+		active_frame->control_call.phase = KD_CALL_ENTERED;
 	origin_raw_spin_lock(lock);
+	if (active_frame)
+		active_frame->control_call.phase = KD_CALL_ACQUIRED;
 	if (kd_spin_nested_shadow_push((struct qspinlock *)lock)) {
 		origin_raw_spin_unlock(lock);
 		return -E2BIG;
@@ -472,13 +495,24 @@ fallback:
 		return -E2BIG;
 	}
 	kd_spin_debug_nested_lock(lock, true);
+	if (active_frame)
+		active_frame->control_call.phase = KD_CALL_COMPLETE;
 	return regs ? KD_JIT_NESTED_CONSUMED : KD_JIT_NESTED_NATIVE;
 }
 
 int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
 				struct kd_exec_frame *frame)
 {
+#ifdef KDLOCK_SELFTEST
+	bool pressure = kd_spin_selftest_shadow_begin(lock, regs, frame);
+	int ret = kd_spin_jit_nested_lock_common(lock, regs, frame);
+
+	if (pressure)
+		kd_spin_selftest_shadow_end(regs, frame, ret);
+	return ret;
+#else
 	return kd_spin_jit_nested_lock_common(lock, regs, frame);
+#endif
 }
 
 int kd_spin_jit_nested_unlock_ctx(raw_spinlock_t *lock,
@@ -486,13 +520,27 @@ int kd_spin_jit_nested_unlock_ctx(raw_spinlock_t *lock,
 {
 	struct kd_exec_frame *active_frame = frame;
 	enum kd_exec_lock_kind kind;
+	unsigned int i;
 
 	if (!lock)
 		return -EINVAL;
 	if (!active_frame)
 		active_frame = kd_exec_current_frame();
-	if (!active_frame)
+	if (!kd_exec_frame_validate(active_frame) ||
+	    active_frame->outer_lock_index >= active_frame->jit_lock_depth)
 		return -EINVAL;
+	for (i = 0; i < active_frame->outer_lock_index; i++) {
+		int ret;
+
+		if (active_frame->jit_lock_addr[i] != (unsigned long)lock)
+			continue;
+		if (active_frame->jit_lock_released[i])
+			return -EALREADY;
+		ret = kd_exec_remote_unlock(active_frame, (unsigned long)lock);
+		return ret ? ret :
+			     kd_exec_frame_lock_mark_released(
+				     active_frame, (unsigned long)lock);
+	}
 
 	kind = kd_exec_frame_lock_kind(active_frame, (unsigned long)lock);
 	if (kind == KD_EXEC_LOCK_NONE)
@@ -542,8 +590,11 @@ int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
 	if (kd_exec_frame_record_event(frame, KD_EXEC_EVENT_OUTER_UNLOCK, regs))
 		return -EINVAL;
 
-	/* The shadow stack contains the nested locks, so kdlock marks A as OOO
-	 * and keeps its handoff state until the enclosing combiner returns. */
+	/* The local batch callback already opened L/S. Never mark a successor's
+	 * scheduling word OOO after publication. Inherited ancestors use the
+	 * logical-parent request protocol above, never another CPU's ticket. */
+	if (frame->outer_unlock_hook && frame->outer_unlock_hook->released)
+		return 0;
 	kd_spin_unlock((struct qspinlock *)lock);
 	return 0;
 }

@@ -3,7 +3,7 @@
  *
  * Native acquisition falls back to direct spinning when all per-CPU nodes are
  * occupied. A nested JIT acquisition cannot block inside that fallback, so it
- * reports an error and lets the enclosing execution frame abort and retry.
+ * reports a pending resource error for native continuation at that lock CALL.
  * Neither path may leak the base-node count.
  */
 #include "mock_kernel.h"

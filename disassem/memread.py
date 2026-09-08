@@ -1,5 +1,13 @@
 from elftools.elf.elffile import ELFFile
 
+PAGE_SIZE = 0x1000
+WINDOW_SIZE = 2 * PAGE_SIZE
+MAX_TEXT_BYTES = 256 * 1024
+
+
+class TextReadLimit(RuntimeError):
+    """The reachable text exceeds this translator's bounded admission scope."""
+
 
 def read_kernel_addr_data(addr, size):
     with open("/proc/kcore", "rb") as f:
@@ -10,10 +18,40 @@ def read_kernel_addr_data(addr, size):
                 memsz = segment["p_memsz"]
                 # Map the virtual kernel address through the matching ELF segment.
                 if vaddr <= addr < vaddr + memsz:
+                    if addr + size > vaddr + memsz:
+                        raise RuntimeError(
+                            f"kernel text range crosses ELF segment at {addr:#x}"
+                        )
                     offset = segment["p_offset"] + (addr - vaddr)
                     f.seek(offset)
                     return f.read(size)
     return None
+
+
+def extend_regions(regions, targets):
+    """Merge overlapping windows before decoding, including backward CFG edges."""
+    windows = [(start, start + len(data), set(roots)) for data, start, roots in regions]
+    for target in targets:
+        start = target & ~(PAGE_SIZE - 1)
+        if not 0xFFFFFFFF80000000 < start < 0xFFFFFFFFFFFFFFFF - WINDOW_SIZE:
+            raise RuntimeError(f"JMP/CALL target {target:#x} is outside kernel space")
+        windows.append((start, start + WINDOW_SIZE, {target}))
+    merged = []
+    for start, end, roots in sorted(windows, key=lambda window: window[0]):
+        if merged and start <= merged[-1][1]:
+            merged[-1][1] = max(end, merged[-1][1])
+            merged[-1][2].update(roots)
+        else:
+            merged.append([start, end, set(roots)])
+    if sum(end - start for start, end, _ in merged) > MAX_TEXT_BYTES:
+        raise TextReadLimit(f"reachable text exceeds {MAX_TEXT_BYTES} bytes")
+    result = []
+    for start, end, roots in merged:
+        chunk = read_kernel_addr_data(start, end - start)
+        if chunk is None or len(chunk) != end - start:
+            raise RuntimeError(f"incomplete kernel text read at {start:#x}")
+        result.append([chunk, start, sorted(roots)])
+    return result
 
 
 def read(entry, jump_table, excluded_callees=None):
@@ -51,26 +89,8 @@ def read(entry, jump_table, excluded_callees=None):
 
     targets = sorted(set(targets))
 
-    targets_of = {}
-    for t in targets:
-        t1 = t & 0xFFFFFFFFFFFFF000
-        if t1 > 0xFFFFFFFF80000000 and t1 < 0xFFFFFFFFFFFFFFFF:
-            if t1 not in targets_of:
-                targets_of[t1] = []
-            targets_of[t1].append(t)
-        else:
-            raise RuntimeError(f"JMP/CALL target {t:#x} is outside kernel space")
-
-    res = []
-    total_bytes = 0
-
-    for start, page_targets in targets_of.items():
-        end = start + 0x2000
-        chunk = read_kernel_addr_data(start, end - start)
-        if chunk is None:
-            raise RuntimeError(f"cannot read kernel text at {start:#x}")
-        res.append([chunk, start, page_targets])
-        total_bytes += len(chunk)
+    res = extend_regions([], targets)
+    total_bytes = sum(len(chunk) for chunk, _, _ in res)
 
     print(
         f"Translation input: entry={entry:#x} targets={len(targets)} "

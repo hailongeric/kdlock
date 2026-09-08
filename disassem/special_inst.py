@@ -1,3 +1,4 @@
+import diagnostics
 from assist import get_inst_name, im64_abs, make_inst, make_mem_dict
 from conflict import (
     conflict_resolve,
@@ -45,7 +46,7 @@ def process_jump(name, line, arg, offset, db, reg_map):
             ret_str += make_inst("MOV", ["R14", dst_tgt])
         ret_str += make_inst(name, ["ij_" + hex(offset)[2:]])
     else:
-        print("Warning: Unresolved args used by" + name)
+        diagnostics.warn("UNRESOLVED_JUMP", "omit_jump", f"{name}: {arg}")
     return ret_str
 
 
@@ -53,6 +54,10 @@ def special_inst_dispatch(line, args, offset, db, reg_map, block_end):
     ret_str = ""
     name = get_inst_name(line)
     if name == "ENDBR64" or line.name == "NOP" or name == "INT":
+        if name == "INT":
+            diagnostics.warn(
+                "INT_AS_NOP", "emit_nop", "original interrupt behavior is omitted"
+            )
         ret_str += "NOP\n"
         ret_str += release_conflict(reg_map, block_end)
     elif name == "CALL":
@@ -85,7 +90,7 @@ def special_inst_dispatch(line, args, offset, db, reg_map, block_end):
         ret_str += make_inst("MOVABS", ["R14", hex(offset - 2)])
         ret_str += make_inst("JMP", ["ill_inst"])
     else:
-        print("Warning: Unsupported special op " + name + "\n")
+        diagnostics.warn("UNSUPPORTED_SPECIAL", "omit_instruction", name)
     return ret_str
 
 

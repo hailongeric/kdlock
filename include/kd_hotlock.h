@@ -16,6 +16,7 @@ struct kd_hotlock_state {
 	unsigned long lock_addr;
 	unsigned long begin_cycles;
 	unsigned long end_cycles;
+	unsigned long sample_window;
 	unsigned int samples;
 	enum kd_hotlock_status status;
 } ____cacheline_aligned;

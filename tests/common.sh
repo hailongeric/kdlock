@@ -76,9 +76,9 @@ start_daemon() {
     cd "$DAEMON_DIR"
     rm -rf 0x* 2>/dev/null || true
     if [ -n "${DAEMON_LOG:-}" ]; then
-        setsid ./daemon --mode "$mode" --quiet >"$DAEMON_LOG" 2>&1 &
+        KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode "$mode" --quiet >"$DAEMON_LOG" 2>&1 &
     else
-        setsid ./daemon --mode "$mode" --quiet &
+        KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode "$mode" --quiet &
     fi
     DAEMON_PID=$!
     cd "$KDLOCK_DIR"
@@ -224,6 +224,7 @@ check_complex_cs_integrity() {
         return 1
     fi
 
+    check_dmesg_has 'kd_spin oracle: inside=0 overlaps=0 origin_missing=0 context_failures=0' || return 1
     info "Complex critical section verified: $operations transitions across $active_states state(s)"
     return 0
 }
@@ -469,41 +470,6 @@ check_jit_hostcall_artifact() {
     return 0
 }
 
-is_jit_gs_context_artifact() {
-    local asm_dir="$1"
-
-    grep -Eq "Stack_RGS" "$asm_dir/jit.S" &&
-        grep -Eq "Stack_RCT" "$asm_dir/jit.S"
-}
-
-jit_has_live_segment_operand() {
-    local asm_dir="$1"
-
-    awk '
-        /^[[:space:]]*\/\*/ { in_comment = 1; next }
-        /^[[:space:]]*\*\// { in_comment = 0; next }
-        !in_comment && /(FS|GS):\[/ { found = 1 }
-        END { exit(found ? 0 : 1) }
-    ' "$asm_dir/jit.S"
-}
-
-check_jit_gs_context_artifact() {
-    local asm_dir="$1"
-
-    if ! is_jit_gs_context_artifact "$asm_dir"; then
-        fail "$TEST_NAME" \
-            "jit.S does not load both waiter GS and logical current"
-        return 1
-    fi
-    if jit_has_live_segment_operand "$asm_dir"; then
-        fail "$TEST_NAME" \
-            "jit.S retained a hardware segment-prefixed memory operand"
-        return 1
-    fi
-    info "GS/current context code verified in $asm_dir"
-    return 0
-}
-
 jit_entry_from_asm_dir() {
     local asm_dir="$1"
     local tgid_dir rip_dir entry
@@ -522,7 +488,9 @@ jit_entry_was_executed() {
     local entry
 
     entry="$(jit_entry_from_asm_dir "$asm_dir")" || return 1
-    dmesg | grep -E "\(execute_cs\).* ip ${entry}([[:space:]]|$)" >/dev/null
+    dmesg | grep -E \
+        "JIT body witness: entry=${entry} lock=[0-9a-f]+ body=1([[:space:]]|$)" \
+        >/dev/null
 }
 
 jit_entry_was_executed_for_lock() {
@@ -532,7 +500,7 @@ jit_entry_was_executed_for_lock() {
 
     entry="$(jit_entry_from_asm_dir "$asm_dir")" || return 1
     dmesg | grep -E \
-        "\(execute_cs\) lock\(${lock_addr}\):.* ip ${entry}([[:space:]]|$)" \
+        "JIT body witness: entry=${entry} lock=${lock_addr} body=1([[:space:]]|$)" \
         >/dev/null
 }
 
@@ -546,7 +514,7 @@ check_jit_entry_executed() {
     }
     if ! jit_entry_was_executed "$asm_dir"; then
         fail "$TEST_NAME" \
-            "translated entry 0x$entry was installed but never executed"
+            "translated entry 0x$entry has no returned generated-body witness"
         return 1
     fi
     info "Runtime execution verified for translated entry 0x$entry"
@@ -563,7 +531,7 @@ check_any_jit_entry_executed() {
             return 0
         fi
     done
-    fail "$TEST_NAME" "none of the installed translated entries was executed"
+    fail "$TEST_NAME" "none of the installed entries has a returned generated-body witness"
     return 1
 }
 
@@ -580,7 +548,7 @@ check_any_jit_entry_executed_for_lock() {
         fi
     done
     fail "$TEST_NAME" \
-        "lock $lock_addr never executed any of its installed translated entries"
+        "lock $lock_addr has no matching generated-body witness"
     return 1
 }
 

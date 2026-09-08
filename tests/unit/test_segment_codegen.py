@@ -118,7 +118,7 @@ def main():
     external_error = translator.find_segment_policy_error(
         {0x1000: type("ExternalBadBlock", (), {"lines": []})()}, [(0x2000, 0x2100)]
     )
-    require(external_error is None, "out-of-range CALL-miss placeholder was rejected")
+    require(external_error is None, "missing text was rejected before CFG expansion")
     current_write = instruction(f"MOV QWORD PTR GS:[0x{CURRENT_TASK_OFFSET:x}], RAX")
     require(
         "current_task" in normal.segment_policy_error(current_write),
@@ -173,7 +173,7 @@ def main():
     )
     require("PT_FS" not in wrapper, "wrapper still consumes an obsolete FS input")
     require(
-        re.search(r"\bmov\s+Stack_INST_CNT\s*,\s*0\b", wrapper) is not None,
+        re.search(r"\bmov\s+Stack_JIT_WITNESS\s*,\s*0\b", wrapper) is not None,
         "wrapper does not initialize its second output",
     )
 

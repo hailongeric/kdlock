@@ -15,6 +15,8 @@
  */
 
 /* --- status_code values -------------------------------------------------- */
+#define KD_EXE_NATIVE_ONLY \
+	-3 /* terminal policy rejection; never execute code */
 #define KD_EXE_UNUSED -2 /* slot is free                              */
 #define KD_EXE_UNINIT -1 /* allocated, waiting for daemon translation */
 #define KD_EXE_NORMAL 0 /* translation ready, code can be executed   */
@@ -26,10 +28,17 @@
 /* Runtime-only sandbox exit; never published as kd_exe_info.status_code. */
 #define KD_EXE_HOSTCALL 5 /* sandbox requests an allowlisted service   */
 
+enum kd_exe_lock_kind {
+	KD_EXE_LOCK_UNKNOWN = 0,
+	KD_EXE_LOCK_SPIN = 1,
+	KD_EXE_LOCK_MUTEX = 2,
+};
+
 struct kd_exe_info {
-	int status_code; /* KD_EXE_UNUSED through KD_EXE_INST_LIMIT  */
+	int status_code; /* KD_EXE_NATIVE_ONLY through KD_EXE_INST_LIMIT */
 	int pid; /* thread id that triggered this entry      */
 	int tgid; /* process id (thread-group leader)         */
+	int lock_kind; /* immutable registration kind; uses old alignment padding */
 	unsigned long RIP; /* kernel instruction pointer of CS entry   */
 	void *code_block; /* vmalloc'd executable page for JIT code   */
 	unsigned long jump_from; /* source address for indirect jump fixup   */
@@ -40,10 +49,11 @@ struct kd_exe_info {
  * kd_recv_pkt — header written by daemon to /dev/kd_dev.
  *
  * The daemon sends one of these before each chunk of JIT binary so the
- * kernel module can locate the correct exe entry and copy the code.
+ * kernel module can locate the correct exe entry and copy the code. A
+ * NATIVE_ONLY packet has offset zero and no binary payload.
  */
 struct kd_recv_pkt {
-	int status_code; /* KD_EXE_NORMAL on final chunk, UNINIT otherwise */
+	int status_code; /* NORMAL/UNINIT chunks, or header-only NATIVE_ONLY */
 	int pid; /* matches kd_exe_info.pid                  */
 	unsigned long RIP; /* matches kd_exe_info.RIP                  */
 	unsigned long offset; /* byte offset within code_block            */
