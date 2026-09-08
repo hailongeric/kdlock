@@ -17,13 +17,14 @@ code, 12 are context refusals and two are native controls. All 40 unit programs
 and the 25-case admission audit pass. Mode 0-8, including guarded mode 1/4/8,
 pass actual JIT. Mode 8's stage-2/3 register cases and learned mutex-depth
 continuation also pass. This closes the matrix gates, not the whole project:
-[VALIDATION](VALIDATION.md#scoped-learned-callees).
+[VALIDATION](VALIDATION.md#resource-registry-coverage).
 
 Implement next in this order:
 
-1. Inventory remaining pool/refusal paths and add missing production-path
-   coverage for pre-entry and PENDING failures. Verify registers, retained locks
-   and exactly-once effects; do not broaden unsupported post-entry recovery.
+1. Follow the [resource inventory](JIT_EXECUTION.md#6-资源拒绝与测试边界): replace
+   remaining mutex node/shadow models with production paths, then join missing
+   pre-entry/PENDING failures to queue and ownership checks. Verify registers,
+   retained locks and exactly-once effects without broadening post-entry recovery.
 2. Broaden native-peer, signal/trylock, oversubscribed and multi-request remote
    schedules, using existing hooks. Keep source/lock lifetime review separate
    from owner handoff and the explicitly deferred immutable-version work.
@@ -39,7 +40,7 @@ Production conditional analysis collects required entry-range separations and
 models callee-saved effects only at registered lock-control calls. Every premise
 is checked before root body execution; missing cold text must be fetched first.
 Current results and remaining gates are in
-[VALIDATION](VALIDATION.md#scoped-learned-callees); this does not close C1/C2/C5.
+[VALIDATION](VALIDATION.md#resource-registry-coverage); this does not close C1/C2/C5.
 
 - [x] Collect every required disjoint range and test the emitted entry predicate
       against concrete overlap, adjacency, wrap and register-preservation cases.
@@ -83,6 +84,23 @@ prefix. The implementation and execution flow are in
       returned-body markers are not arbitrary-control-flow proofs.
 
 ## P0: Correctness Contracts
+
+### Resource Coverage Increment
+
+- [x] Inventory the principal pool/refusal classes and separate unstarted
+      root fallback from progressed PENDING continuation and fail-stop exits.
+- [x] Replace the copied execution hash model with production registration,
+      partial-allocation/teardown, pool exhaustion and device-boundary tests.
+      Add real registration-gate contention and seven assertion-detected mutants.
+- [x] Use real lookup/ready in the high-level entry fixture; check 14 unavailable
+      spin/mutex root cases without wrapper calls or packet/stack/ledger writes.
+- [x] Finish fresh full-matrix verification on this 173-input test freeze:
+      51/51 pass with 37 actual-JIT cases; all units/audit and postflight pass.
+      Earlier 172-input results remain separate historical evidence.
+- [ ] Replace the remaining mutex node/shadow copied models and test the actual
+      hook/slowpath failure combinations. Keep test 11's existing real four-slot
+      overflow gate; it is not a reserve/release state fixture. Broaden combined
+      pressure separately. These tests do not close C1/C2/C5 or prove live pool saturation.
 
 ### C1. Forward Continuation After Partial Execution
 

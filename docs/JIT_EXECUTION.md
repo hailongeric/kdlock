@@ -175,8 +175,8 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 `ENTRY_SCOPE_MISMATCH` 或 `INVALID_ENTRY_REFUSAL` 则需要核查 frame、CALL
 阶段、RIP/RSP 和父请求，不能忽略错误并重试入口。
 
-最近一次完整矩阵（2026-09-08 18:14–18:33 +08）的结果集中记录在
-[VALIDATION: Scoped Learned Callees](VALIDATION.md#scoped-learned-callees)。
+最近一次完整矩阵（2026-09-08 19:17–19:36 +08）的结果集中记录在
+[VALIDATION: Resource Registry Coverage](VALIDATION.md#resource-registry-coverage)。
 完整矩阵的逐项命令见 [测试清单](VALIDATION.md#current-matrix-manifest)，
 该矩阵使用同一源码快照执行全部 51 个选择器，不借用旧的短回归结果。
 完整 51 项全部通过，包含 37 项实际 JIT。mode 0–8、
@@ -273,5 +273,49 @@ scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行
 远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
 另行验证真实 JIT、嵌套竞争及寄存器续跑。文本窗口测试检查新增可达块、块内
 入口分割、GS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
-结果只维护在 [验证记录](VALIDATION.md#scoped-learned-callees)，后续顺序见
+结果只维护在 [验证记录](VALIDATION.md#resource-registry-coverage)，后续顺序见
 [TODO](TODO.md#direction-and-priority)。
+
+## 6. 资源拒绝与测试边界
+
+先判断拒绝发生在哪个阶段，再决定执行流。资源不足不等于可以重跑入口：
+
+```text
+模块初始化分配失败 -> 初始化返回错误，尚未安装 hook
+新入口没有代码块 -> 不发布半成品条目 -> ready=false
+  -> wrapper 尚未调用 -> 队列按未执行请求处理，由 waiter 原生执行
+JIT 已执行，新的 lock CALL 仍为合法 PENDING，尚未取得/发布新锁
+  -> 仅支持的 ENOMEM/E2BIG -> 保留当前 CALL 包，原 waiter 完成原生后缀
+已经 ENTERED/ACQUIRED，或其他未经验证的 post-entry 错误
+  -> 不授权入口重放，按既有 fail-stop 协议处理
+```
+
+以下是当前主要资源路径清单，不把组件测试写成所有生产调度均已验证：
+
+| 资源 | 当前边界与处理 | 覆盖与缺口 |
+| --- | --- | --- |
+| 代码块池 / 执行表 | 最多 64 个 640 KiB 块、511 个槽；注册失败不发布条目，已有 key 不重复取块；原生拒绝不回收块 | `test_exe_registry.py` 提取真实 init/add/lookup/publish/exit，检查全量及部分分配、失败清理、并发重复注册；当前配置先耗尽代码池，511 槽满是合成元数据的探测边界测试 |
+| 高层 JIT 入口 | 表不存在、空槽、未就绪、native-only、无 code block 或查无空槽均在 wrapper 前返回 | `test_jit_entry_scope.py` 使用真实 lookup/ready 和高层执行器，检查 spin/mutex 的完整 GPR 包、虚拟栈和锁记录不变；wrapper/锁原语仍是替身 |
+| 上传边界 | 单块容量外的 payload 被设备拒绝；未知 key 不创建新条目 | 注册测试检查真实设备读写函数与最后一个合法字节；不证明完整镜像、并发替换或上传互斥锁语义 |
+| hotlock 表 | 131071 槽；新地址无法建立采样记录时不晋升，继续原生 | `test_hotlock_sampling.py` 的生产函数容量测试；不是同时访问十万把真实锁的压力测试 |
+| spin gate / acquisition ticket | gate 1024 槽、每 CPU 32 个 ticket；普通 hook 预留失败转原生；虚拟 B 必须遵守 CALL 阶段 | `test_spin_gate.py` / `test_spin_entry.py` 检查真实组件耗尽；仍需更多 hook 到队列的组合失败调度，不能把 EOVERFLOW 等都当作可恢复 ENOMEM |
+| mutex shadow / task 记录 | shadow 1024 槽；task 记录用 GFP_ATOMIC 分配；hook 中失败在入队前转原生 mutex | 已有原生参与者及一处 task 分配失败测试；`test_mutex_shadow.c` 仍是复制模型，真实表耗尽与失败组合覆盖待补 |
+| spin / mutex node | 每 CPU 各 4 个；普通请求无 node 时用自己的栈等待私有 gate，再取得原锁；虚拟 spin 请求先取消预留再返回 | spin 生产 producer/队列及 live observer 有界覆盖；mutex `test_11` 已有八 waiter 争用四槽的真实回退，但 `test_mutex_count.c` 仍为模型，生产 reserve/release 状态及组合失败覆盖待补 |
+| frame / held-lock / shadow stack | 8 层 frame、8 个逻辑锁记录与 CPU-local held-lock 容量分别检查；栈空间不是相同资源 | 生产 frame 容量、spin producer、远端拒绝及 mutex learned-depth 有界测试；不能由一项容量通过推导全部耗尽场景 |
+
+代码池测试在真实初始化流程的分配 API 上注入失败，不修改生产容量，也不
+执行生成机器码。它用 24 个 pthread 对六个 key 重复注册以竞争真实注册 gate，
+所有表读取在 join 后进行；这不是 Linux IRQ、抢占或同时执行 JIT 的证明。
+入口拒绝检查不是锁回滚测试，不能用于扩大已执行后的恢复范围。
+
+在 guest 运行：
+
+```sh
+python3 tests/unit/test_exe_registry.py
+python3 tests/unit/test_jit_entry_scope.py
+make -C tests/unit run
+```
+
+注册测试的七个变异负例必须成功编译、再由断言检测；编译错误或超时不算通过。
+真实 JIT 与 native 后缀仍用第 3 节命令验收，证据见
+[VALIDATION](VALIDATION.md)。队列资源耗尽的下一步以 [TODO](TODO.md) 为准。

@@ -1,17 +1,17 @@
 # kdlock Validation
 
 Latest complete matrix: **51/51 pass** on the
-[scoped learned-callee](#scoped-learned-callees) freeze. An actual-JIT
+[resource registry](#resource-registry-coverage) freeze. An actual-JIT
 positive, a context refusal and a pure-native control are different outcomes.
 The project is not accepted as complete; older matrices are historical only.
 
-Complete-matrix source identity: **172 inputs** in
-`/tmp/kdlock-learned-matrix.uCNLc7/source.sha256`.
+Complete-matrix source identity: **173 inputs** in
+`/tmp/kdlock-registry-matrix.RES3zj/source.sha256`.
 Full source/log/artifact/command archive:
-`/tmp/kdlock-learned-matrix.uCNLc7.tar.gz`, SHA256:
+`/tmp/kdlock-registry-matrix.RES3zj.tar.gz`, SHA256:
 
 ```text
-3c3e892b2c578e95805fdceba4abec4fb2ee47e82716510ca806e02e345e7c73
+374dd5625799acc6d00bb5ac11cc2355ddba540c5149741227cbfd40421c9b20
 ```
 
 The archive includes frozen source, generated artifacts, per-case commands,
@@ -22,97 +22,114 @@ invocations auditable. The two pure-native controls depend on an external
 helper; they are not yet a self-contained fresh-checkout test. General evidence
 packaging remains TODO P1. Losing an archive never makes recorded results new.
 
+## Resource Registry Coverage
+
+The resource-test increment freezes **173 inputs** against `560e4ec`. It
+replaces `test_exe_hash.c` with `test_exe_registry.py` and its C fixture, updates
+the unit runner and connects the existing entry-scope fixture to real lookup,
+readiness and terminal publication functions. Production module, translator,
+daemon, workload, wrapper ABI and guest-kernel inputs are unchanged.
+
+At **2026-09-08 19:15:19 +08**, preflight passes all **40 unit programs** and
+the independent **25-case admission audit**, without skips. Default and
+selftest+NUMA kdlock builds, workload module and daemon build checks pass;
+default module `.text` remains
+`37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`.
+Source/config/build/live kernel identity is unchanged. The recovered VM and
+existing snapshot are verified before any live load; no restart is needed.
+
+| New component evidence | Scope |
+| --- | --- |
+| Production registry: 8433 checks, zero failures | Real init/add/lookup/ready/publish/exit and device read/write decisions; 64-block and partial-pool exhaustion, cleanup, stable prior entries, repeated registration and bounded probes |
+| Seven detected mutations | Partial publication, duplicate pool consumption, early pool refusal, premature readiness, lost terminal rejection, hidden last slot and out-of-range upload; each compiles then fails assertions |
+| Real registration gate contention | 24 guest pthreads issue 2400 registrations across six colliding keys; six entries/blocks, no duplicate allocation; readers run after join |
+| High-level entry: 136 checks, zero failures | Existing scope tests plus 14 unavailable spin/mutex root cases using real lookup/ready; no wrapper calls, full frame/GPR/stack/table snapshots unchanged |
+
+Allocator, executable-permission and user-copy APIs are substitutes. The
+511-slot full-table case seeds synthetic metadata: ordinary registration runs
+out of its 64 code blocks first. The entry fixture substitutes wrapper/lock
+primitives; neither fixture proves live pool saturation, native queue behavior,
+IRQ/preemption semantics or concurrent executable replacement. The resource
+inventory and remaining mutex-model gaps are in
+[JIT_EXECUTION](JIT_EXECUTION.md#6-资源拒绝与测试边界) and [TODO](TODO.md).
+
+Initial component evidence is retained in `/tmp/kdlock-registry.nVHMHh/`.
+Its first attempt is a compile adaptation failure, not a passing test:
+kernel mixed-sign comparisons trigger userspace `-Werror`. Only the unchanged
+production include adopts Kbuild's sign-comparison warning policy; fixture
+code retains strict warnings. Subsequent registry and joined entry runs pass.
+
+**Complete matrix, 2026-09-08 19:17:36-19:36:12 +08:** all 51 selectors in the
+[command manifest](#current-matrix-manifest) pass on this freeze, comprising
+**37 actual-JIT, 12 context refusals and two native controls**. All nine main
+modes 0/1/2/3/4/5/6/7/8 have matching returned body records, respectively
+**4/4/4/669/1/411/4/2/2**, and correct protected states. Mutex positives explicitly
+use `mutex_jit=1`; mode 5 records 411 matching hostcall exits/executions/resumes.
+All eight register continuation gates, four held-B/PENDING gates, eleven
+depth/remote cases, late-policy and mixed-owner cases also pass. Refusal cases
+retain zero JIT; no earlier result substitutes for a current failed gate.
+
+The mixed-mutex run observes four node-overflow fallbacks, the expected one-shot
+task-allocation failure, 4392/4392 origin acquisitions/releases and zero active
+tasks/waiters/reserved nodes. Learned mutex-depth again executes the expanded
+11778 -> 12512-byte helper image, reaches three real capacity exits, retains
+seven children at each exit and finishes 12017 state transitions. Four native
+starts/completions, 25 owner unlock notifications and 2012/2012 origin counters
+match; `jit_success=0` is expected for these partial-JIT/native completions.
+These are live protocol observations separate from the new registry fixtures.
+
+At **19:38:38 +08**, postflight repeats all 40 units and 25 audit cases without
+skips, including 8433 registry checks, seven detected mutants and 136 entry
+checks. All 173 host/guest hashes, default module `.text`, 18 kernel source
+files, config, nine build files and live Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5` match. All 51 fault scans are empty
+and all callers/modules drain. Existing manual-stack objtool warnings remain.
+No guest-kernel edit/build/install, VM restart or runtime capacity change is
+introduced. The main matrix is closed for this freeze; broader C1/C2/C5 and
+the explicitly deferred C3/C4 work are not closed by these results.
+
+**Pre-commit recheck, 2026-09-08 19:50:42 +08:** all 173 host/guest runtime
+and test inputs still match this matrix. The 40 unit programs, 25-case admission
+audit and default incremental module build pass again, without skips. Registry
+and entry checks remain 8433 and 136 respectively; all seven registry mutants
+are detected. Kernel identity and module `.text` are unchanged, and no callers
+or test modules are present before or after the check. No module is loaded and
+no guest kernel is changed; this is not another live matrix. Evidence:
+`/tmp/kdlock-registry-review.zshemK/verify.sh` and `guest.log`. Host Ruff/format,
+changed C fixture formatting, all nine documents' local links and
+`git diff --check` also pass. The matrix archive SHA256 is rechecked above.
+
 ## Scoped Learned Callees
 
-**Complete matrix, 2026-09-08 18:14:38-18:33:14 +08:** all 51 selectors from
-the [command manifest](#current-matrix-manifest) pass on the same frozen inputs:
-**37 actual-JIT, 12 context refusals and two native controls**. This independently
-repeats the focused learned-depth success below; no failed or earlier-source
-case is substituted. Per-case commands, artifacts, source hashes, exit statuses,
-dmesg and drain records are retained in the current archive.
+Historical implementation checkpoint at `560e4ec`, **2026-09-08
+18:14:38-18:33:14 +08**: the earlier 172-input matrix passes 51/51, comprising
+37 actual-JIT, 12 context refusals and two native controls. It closes the
+learned mutex-depth failure from `6858c58`; it is not the newer resource-test
+freeze. Both pre/post units (40 programs, 24 guard/CALL methods), 25-case audit,
+kernel identities and drains pass.
 
-Main mode 0/1/2/3/4/5/6/7/8 have respectively **4/4/4/674/1/439/4/2/2** returned
-body records and passing protected-state oracles. Mutex positives explicitly
-use `mutex_jit=1`; mode 5 has 439 executed/resumed hostcalls. All eight marked
-register continuation selectors, four held-B/pending-B selectors, late-policy,
-mixed-owner and eleven depth/remote fixtures also pass their actual-JIT gates.
-Context refusals retain zero JIT and native controls remain a separate category.
+The scoped analysis propagates actual post-push CALL packets and RET effects
+from the checked root, removes fabricated CALL fall-through, and checks all
+generated RET targets. Default independent-root analysis, memory clobbers,
+GS/context rejection, bounded work and the two-word ABI remain unchanged.
+Execution and retained-owner capacity flow are described in
+[JIT_EXECUTION](JIT_EXECUTION.md#51-学习后的直接-callee), not repeated here.
 
-`native-mutex-depth` again changes the image from 11778 to 12512 bytes and reaches
-three genuine capacity exits inside the translated helper. It reports
-`capacity=3 callee=1 native=12`, four native starts/completions, 25 owner-side
-unlock notifications and 12017 exact state transitions, matching the focused
-contract below. This validates the helper's JIT lock calls, not just its caller
-prefix and not every possible original instruction or branch.
+That run observes a 11778 -> 12512-byte learned mutex image, three capacity
+exits, four native starts/completions, 25 owner unlock notifications and
+12017 exact state transitions. An earlier three-case focused run independently
+passes learned depth, ordinary mode 4 and stage-2 register continuation.
+A separate static replay only establishes analysis feasibility, not execution.
 
-At **18:34:42 +08**, postflight repeats all **40 unit programs** (including
-**24 guard/CALL methods**) without skips and the independent **25-case admission
-audit** with zero failures. All 172 host/guest hashes still match. The 18-file
-kernel baseline, config, nine build files and running Build ID
-`6f9f2e9fec382e97f620553793aa90b527a30af5` are unchanged. Default module `.text`
-is the hash recorded below; existing manual-stack objtool warnings remain.
-All 51 kernel-fault scans are empty and callers/modules drain. This closes the
-current matrix, not the broader resource/context/lifetime tasks or deferred C3/C4.
-
-**Focused checkpoint, 2026-09-08 18:10:29-18:11:43 +08:** the formerly failed
-`native-mutex-depth` gate now passes with `mutex_jit=1`, as do ordinary mode 4
-and its stage-2 register continuation. This three-case run is not a substitute
-for a complete matrix. Evidence: `/tmp/kdlock-learned-scope.67p5oR.tar.gz`, SHA256:
-
-```text
-2cb1c08bf0980f193d2b6f4242c9af7dee12ceeec75d45c5dbceffd9be7f6521
-```
-
-The 172-input freeze changes only `context_policy.py`, `disassem.py` and two
-Python test files from `6858c58`. The new conditional path has one actual root;
-learned direct callees receive the real post-push CALL packet instead of an
-independent seed. CALL fall-through cannot run ahead of RET effects. Every
-return target must match the generated whitelist, including nonmatching-caller
-targets; no balanced-stack or ordinary callee-saved assumption is added.
-IJ history, indirect control, disconnected selected blocks, adjusting RETs,
-effect/dispatch mismatch and existing budgets refuse this path. Default
-independent-root analysis, GS/context rejection and native/control memory
-clobbers remain. Purpose/constraint comments explain the new branches and tests.
-
-Preflight passes all **40 unit programs**, including **24 entry-guard/CALL
-methods**, and the **25-case admission audit**, without skips. Eight new methods
-cover real generated CALL/RET results, automatic guarded helper execution,
-callee memory corruption, GS rejection, disconnected targets, indirect control,
-RET dispatch mismatch, IJ-history exclusion and bounded recursion. These are
-separate from the live lock/owner observations below.
-
-| Focused observation | Evidence |
+| Retained archive | SHA256 |
 | --- | --- |
-| Real helper learning | First wave executes the JIT prefix and exits at `kd_resume_depth_mutex`; callers drain before daemon recompilation |
-| Expanded image | Entry `0xffffffffc0a69597`, 11778 -> 12512 bytes; helper label and learned target present, image changed |
-| Translated helper lock calls | Three real `-E2BIG` exits at `mutex_lock`, return RIP `0xffffffffc0a693b6` inside the helper; no synthetic pending failure injection |
-| Retained native owners | Each capacity exit begins with eight held locks: outer A plus seven children; all three report `retained=7 children=8 valid=1` |
-| Native completion / owner ACK | `capacity=3 callee=1 native=12`; four starts/four completions, 25 unlock notifications; 2012 native acquires/releases |
-| Protected results | 12017 checked transitions; no replay or lost updates; first-wave and capacity outcomes remain separate |
-| Ordinary mode 4 / register case | Both pass actual JIT; register case includes one marked JIT sample, 16 GPR/stack checks, flags unchecked |
+| `/tmp/kdlock-learned-matrix.uCNLc7.tar.gz` | `3c3e892b2c578e95805fdceba4abec4fb2ee47e82716510ca806e02e345e7c73` |
+| `/tmp/kdlock-learned-scope.67p5oR.tar.gz` | `2cb1c08bf0980f193d2b6f4242c9af7dee12ceeec75d45c5dbceffd9be7f6521` |
 
-The depth test has four returned body witnesses but `jit_success=0`: it is
-deliberately completed by native CALL/capacity continuation, not entirely by
-JIT. Its returned markers plus the helper's staged lock CALL and retained-owner
-records prove translated helper execution; the first-wave prefix alone does not.
-This does not prove that every helper branch or original instruction executes.
-All three fault scans are empty and callers/modules drain.
-
-An earlier static replay first stops because the old module capture lacks the
-core-kernel return thunk. After read-only baseline verification, it augments
-only core-kernel text, never replacing old relocated module bytes. The replay
-then admits the expanded scope with 43 predicates; it does not assemble,
-install or execute that captured code. Both attempts and the captured text are
-retained separately inside the focused archive. The complete freeze adds the
-`scoped_calls` diagnostic field and final test negatives after that replay.
-
-Default and selftest+NUMA module builds pass with existing objtool warnings.
-Default `.text` stays
-`37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`;
-the read-only source/config/build/live baseline checks pass. No guest-kernel
-edit/build/install/restart, owner handoff, third wrapper argument, frame growth,
-flags repair or immutable version is introduced. Broader C1/C2/C5 work remains;
-C3/C4 are still explicitly deferred.
+The subsequent documentation/version check at **18:50:39 +08** again passes
+40 units, 25 audit cases and the default incremental build on the same runtime
+inputs, without another live matrix. Evidence: `/tmp/kdlock-release-review.s9K2e0/`.
+Full earlier detail is available with `git show 560e4ec:docs/VALIDATION.md`.
 
 ## Acceptance Contract
 
@@ -155,9 +172,9 @@ then resumes it to validate subsequent refusal without replay.
 
 ## Current Matrix Manifest
 
-These same 51 selectors were rerun at **18:14-18:33 +08, 2026-09-08**.
+These same 51 selectors were rerun at **19:17-19:36 +08, 2026-09-08**.
 All pass in their respective categories; per-case exits
-are in `/tmp/kdlock-learned-matrix.uCNLc7/results.tsv`. Earlier result tables remain
+are in `/tmp/kdlock-registry-matrix.RES3zj/results.tsv`. Earlier result tables remain
 historical and do not define current acceptance. Body records count returned
 positive logs, not retired instructions, unique instructions or immutable
 generations.
@@ -328,32 +345,6 @@ env KD_DEEP_NATIVE_OWNER=1 KD_DEEP_REVERSE=1 KD_NATIVE_RENAME=1 KD_DEEP_CROSS_NU
 env KD_DEEP_NATIVE_OWNER=1 KD_DEEP_REVERSE=1 KD_NATIVE_RENAME=1 KD_DEEP_CROSS_NUMA=1 KD_DEEP_CPUS=0,39,20,21,22,23,1,2,3,4,24,25,26,27,5,6,7,8 bash tests/test_21_remote_depth.sh 4 4
 ```
 
-## Commit Verification
-
-**2026-09-08 18:50:39 +08:** a fresh pre-commit guest check passes all
-40 unit programs, including 24 guard/CALL methods, and the independent
-25-case admission audit, with no skips. The default module incremental build
-passes; its `.text` remains
-`37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`.
-Evidence: `/tmp/kdlock-release-review.s9K2e0/verify.sh` and `guest.log`.
-
-Both host and guest match all 172 runtime/test inputs of the complete matrix.
-The source/config/build/live kernel baseline matches, including Build ID
-`6f9f2e9fec382e97f620553793aa90b527a30af5`; callers/modules are absent before
-and after this check. No module is loaded and no guest kernel is rebuilt or
-changed in this pre-commit check. This is not another live 51-case run.
-The matrix's 51 zero exit statuses and both current evidence-archive SHA256
-values are rechecked separately against the recorded results above.
-
-The documentation cleanup keeps the execution flow and commands in
-JIT_EXECUTION, ownership in DESIGN, and entry/exit state in JIT_REGISTER_ABI.
-It condenses repeated historical validation prose into the index below without
-deleting source, test or evidence files. Purpose/constraint comments accompany
-the learned-callee implementation and its eight added test methods. Broader
-resource/context/lifetime tasks and explicitly deferred version/flags work
-remain in TODO, not silently marked complete. All nine local document link
-checks, Ruff checks/formatting (59 Python files) and `git diff --check` pass.
-
 ## Historical Evidence Index
 
 Older results belong to their own source freezes; none substitutes for the
@@ -368,7 +359,7 @@ All prior detailed records through cross-window CFG completion remain in Git:
 git show 6858c58:docs/VALIDATION.md
 ```
 
-The nine-document snapshot immediately before this cleanup is also retained at
+The nine-document snapshot before the `560e4ec` documentation cleanup is at
 `/tmp/kdlock-release-review.s9K2e0/docs-before.tar.gz`, SHA256:
 
 ```text

@@ -18,11 +18,10 @@ typedef struct {
 static struct task_struct executor = { 1 }, waiter = { 2 }, stranger = { 3 };
 static struct task_struct *current = &executor;
 static struct kd_exec_frame active, parent;
-static struct kd_exe_info entry;
+static struct kd_exe_info entry_table[KD_MAX_EXE], *entry;
 static unsigned long stack[16];
 static int calls, known_calls, known_result, errors, warnings, checks, failures;
 static int kd_jit_hl_fault_after_known_call;
-static bool ready;
 static unsigned long kd_hostcall_exits, kd_hostcall_executed,
 	kd_hostcall_resumed;
 static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
@@ -30,6 +29,9 @@ static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
 
 #define READ_ONCE(x) (x)
 #define smp_load_acquire(p) (*(p))
+#define try_cmpxchg(p, old, value)                                          \
+	__atomic_compare_exchange_n(p, old, value, false, __ATOMIC_SEQ_CST, \
+				    __ATOMIC_SEQ_CST)
 #define atomic64_inc(p) (++*(p))
 #define unlikely(x) (x)
 #define mb() ((void)0)
@@ -81,22 +83,12 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 {
 	return &active;
 }
-static struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip)
-{
-	(void)pid;
-	return ip == entry.RIP ? &entry : NULL;
-}
-static bool kd_exe_is_ready(unsigned int pid, unsigned long ip)
-{
-	(void)pid;
-	(void)ip;
-	return ready;
-}
-static bool kd_exe_publish_status(struct kd_exe_info *exe, int status)
-{
-	exe->status_code = status;
-	return true;
-}
+/* Retain Kbuild's comparison policy for the unmodified lookup functions. A
+ * real empty/full/unready registry must stop before invoking the wrapper. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#include "registry_lookup.h"
+#pragma GCC diagnostic pop
 static bool is_end_point(unsigned long ip)
 {
 	return ip == 0x9000;
@@ -161,14 +153,18 @@ static void reset(void)
 	active.regs.di = active.outer_lock_addr;
 	stack[8] = 0x1005;
 	memset(steps, 0, sizeof(steps));
-	entry = (struct kd_exe_info){ .RIP = active.entry_ip,
-				      .lock_kind = KD_EXE_LOCK_SPIN,
-				      .code_block = translated,
-				      .status_code = KD_EXE_NORMAL };
+	kd_exes = entry_table;
+	memset(entry_table, 0, sizeof(entry_table));
+	for (int i = 0; i < KD_MAX_EXE; i++)
+		entry_table[i].status_code = KD_EXE_UNUSED;
+	entry = kd_get_exe(0, active.entry_ip);
+	*entry = (struct kd_exe_info){ .RIP = active.entry_ip,
+				       .lock_kind = KD_EXE_LOCK_SPIN,
+				       .code_block = translated,
+				       .status_code = KD_EXE_NORMAL };
 	calls = known_calls = errors = warnings =
 		kd_jit_hl_fault_after_known_call = 0;
 	known_result = 1;
-	ready = true;
 }
 
 static int run(void)
@@ -187,7 +183,7 @@ static void check_pristine_refusal(void)
 	CHECK(run() == KD_EXE_NO_RUN);
 	CHECK(calls == 1 && !active.executed && !known_calls);
 	CHECK(memcmp(&before, &active.regs, sizeof(before)) == 0);
-	CHECK(warnings == 1 && !errors && entry.status_code == KD_EXE_NORMAL);
+	CHECK(warnings == 1 && !errors && entry->status_code == KD_EXE_NORMAL);
 	for (int bad = 0; bad < 4; bad++) {
 		reset();
 		steps[0].reason = KD_EXE_ENTRY_REFUSED;
@@ -311,11 +307,71 @@ static void check_remote_scope(void)
 	}
 }
 
+static void check_registry_refusal(void)
+{
+	struct kd_exec_frame before;
+	unsigned long stack_before[16];
+	struct kd_exe_info table_before[KD_MAX_EXE];
+
+	/* These are unstarted spin/mutex roots, not post-progress recovery. Check
+	 * the full packet, virtual stack and owner ledger, not just executed=false. */
+	for (int backend = 0; backend < 2; backend++) {
+		for (int state = 0; state < 7; state++) {
+			reset();
+			active.mutex_backend = backend;
+			entry->lock_kind = backend ? KD_EXE_LOCK_MUTEX :
+						     KD_EXE_LOCK_SPIN;
+			memset(&active.regs, 0x51, sizeof(active.regs));
+			active.regs.ip = active.entry_ip;
+			active.regs.sp = (unsigned long)&stack[9];
+			active.regs.di = active.outer_lock_addr;
+			switch (state) {
+			case 0:
+				kd_exes = NULL;
+				break;
+			case 1:
+				entry->status_code = KD_EXE_UNUSED;
+				break;
+			case 2:
+				entry->status_code = KD_EXE_UNINIT;
+				break;
+			case 3:
+				entry->status_code = KD_EXE_CALL_MISS;
+				break;
+			case 4:
+				entry->status_code = KD_EXE_NATIVE_ONLY;
+				break;
+			case 5:
+				entry->code_block = NULL;
+				break;
+			case 6:
+				for (int i = 0; i < KD_MAX_EXE; i++) {
+					entry_table[i].status_code =
+						KD_EXE_UNINIT;
+					entry_table[i].pid = 1;
+				}
+				break;
+			}
+			before = active;
+			memcpy(stack_before, stack, sizeof(stack));
+			memcpy(table_before, entry_table, sizeof(entry_table));
+			CHECK(run() == KD_EXE_NO_RUN);
+			CHECK(!calls && !known_calls && !errors &&
+			      !active.executed);
+			CHECK(memcmp(&before, &active, sizeof(active)) == 0);
+			CHECK(memcmp(stack_before, stack, sizeof(stack)) == 0);
+			CHECK(memcmp(table_before, entry_table,
+				     sizeof(entry_table)) == 0);
+		}
+	}
+}
+
 int main(void)
 {
 	check_pristine_refusal();
 	check_local_continuation();
 	check_remote_scope();
+	check_registry_refusal();
 	printf("production JIT entry scope: %d checks, %d failures\n", checks,
 	       failures);
 	return failures != 0;

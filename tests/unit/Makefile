@@ -5,7 +5,6 @@ CFLAGS += -Wall -Wextra -std=gnu11 -I../../include
 
 TESTS := \
 	test_tail_encoding \
-	test_exe_hash \
 	test_mutex_count \
 	test_mutex_shadow \
 	test_mutex_transition \
@@ -27,6 +26,7 @@ PY_TESTS += test_context_spill_audit.py
 PY_TESTS += test_context_memory.py
 PY_TESTS += test_context_guards.py
 PY_TESTS += test_jit_entry_scope.py
+PY_TESTS += test_exe_registry.py
 
 .PHONY: all clean run
 

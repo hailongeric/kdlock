@@ -139,4 +139,4 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 内核错误和排空状态、未执行/失败项目、Git 版本。
 本轮或历史证据必须标明来源和时间，不混用不同源码版本的通过结果。
 当前完整矩阵为 51/51 通过，不代表所有资源、上下文和生命周期问题已解决，详见
-[最新验收](VALIDATION.md#scoped-learned-callees)。
+[最新验收](VALIDATION.md#resource-registry-coverage)。

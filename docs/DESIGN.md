@@ -236,8 +236,8 @@ subset. It needs eligibility rejection or a separately evaluated service,
 not an assignment to native owner bits.
 
 Mode 4 uses actual independent B contention. Mode 11 is now a context-refusal
-negative test, not a positive nested-JIT oracle. See VALIDATION for the current
-failed main modes and the separately bounded positive fixtures.
+negative test, not a positive nested-JIT oracle. Current main-mode results and
+the scope of the separately bounded fixtures are recorded in [VALIDATION](VALIDATION.md).
 
 ### 5.4 Differences from Spinlock Path
 
@@ -263,6 +263,14 @@ with IRQs disabled), it takes a block from the pool without calling vmalloc.
 Only blocks for which both allocation and `set_memory_x()` succeeded enter the
 pool. Pool or translation-table exhaustion fails closed.
 
+Registration publishes a new key only after obtaining its code block. If the
+pool is empty, the unused slot is left unchanged and existing entries remain
+usable. Re-registering an existing key consumes no block, even after a miss or
+terminal policy refusal. Allocated blocks are retained until drained module
+teardown, not returned to the pool on native-only publication. Thus the 64-block
+pool fills before the 511-slot execution table in the current configuration;
+the full-table lookup guard still has an independent bounded-probe test.
+
 The full executable pool is 40 MiB. These blocks remain writable; there is no
 RW-staging/RX-publication transition or code-generation lifetime protocol.
 
@@ -281,6 +289,11 @@ already-started execution or provide immutable JIT versions.
 The translation hash probes at most `KD_MAX_EXE` slots. It returns `NULL` when
 full rather than looping in atomic/IRQ-disabled context. Code-block allocation
 uses an atomic gate and never waits for the userspace daemon.
+
+An unavailable root entry returns before wrapper execution; spin/mutex queue
+handling then lets the unstarted waiter obtain native execution. This is not
+PENDING-lock continuation after progress. Resource classes, tests and remaining
+coverage gaps are listed in [the usage guide](JIT_EXECUTION.md#6-资源拒绝与测试边界).
 
 ### 6.2 Entry Lifecycle
 

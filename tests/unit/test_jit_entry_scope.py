@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from test_exe_registry import lookup_code
 from test_exec_capacity import production
 from test_spin_gate import ROOT, without_includes
 from test_spin_shadow import definition
@@ -47,6 +48,7 @@ def main():
         directory = Path(tmp)
         (directory / "frame_types.h").write_text(types)
         (directory / "frame_code.h").write_text(code)
+        (directory / "registry_lookup.h").write_text(lookup_code())
         binary = directory / "entry-scope"
         subprocess.run(
             shlex.split(os.environ.get("CC", "cc"))
