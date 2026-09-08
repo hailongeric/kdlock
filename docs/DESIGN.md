@@ -443,6 +443,13 @@ successful waiter restoration.
 No effective canonical-address or general bounds guard is emitted.
 Neither admission nor the word "sandbox" implies a security isolation boundary.
 
+`context_guards.EntryGuards` is an analysis/test foundation, not enabled by
+`dis_assem`. It records conditional entry-range disjointness instead of assuming
+that distinct source bases cannot alias. Its experimental emitter and optional
+control-call facts have no production refusal/continuation contract yet. See
+[the usage guide](JIT_EXECUTION.md#5-入口条件分析尚未接入生产) for the bounded scope;
+this does not change the runtime statements above or the two-word ABI.
+
 ### 8.4 Native Hostcalls
 
 `include/kd_hostcalls.def` is the shared declarative service manifest. The

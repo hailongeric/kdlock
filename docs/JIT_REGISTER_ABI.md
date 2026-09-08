@@ -326,6 +326,11 @@ args[1]    = Stack_JIT_WITNESS   (0/1，只供观测)
 `KD_EXE_NATIVE_ONLY == -3` 仅是翻译准入状态，不是 wrapper 的退出原因，
 不能写入 `args[0]` 来模拟拒绝。拒绝入口不调用 wrapper。
 
+`context_guards.py` 的实验 emitter 在用户态 wrapper 测试中使用 `ENTRY_REFUSED=6`；
+它尚未接入生产翻译、daemon 发布或内核运行时，不能作为本表新增的退出 ABI。
+尤其不能仅因 `body=0` 就清除已执行状态或从入口重跑。后续接入条件见
+[执行指南](JIT_EXECUTION.md#5-入口条件分析尚未接入生产)。
+
 `KD_EXE_IJ_MISS == 2` 是 `kd_exe_info.status_code` 的 daemon 状态，不是普通 IJ
 miss 时 wrapper 返回在 `args[0]` 的值。wrapper 返回源 RIP，kernel executor
 验证后才把 translation entry 发布为 `KD_EXE_IJ_MISS`。

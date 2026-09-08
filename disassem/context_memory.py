@@ -78,8 +78,9 @@ class MemoryValues:
     MAX_WORK = 1_000_000
     MAX_WORDS = 32
 
-    def __init__(self, bases):
+    def __init__(self, bases, guards=None):
         self.bases = bases
+        self.guards = guards
         self.cells = {}
         self.default = UNKNOWN
         self.words = {}
@@ -128,6 +129,8 @@ class MemoryValues:
         a, b = self.address(left), self.address(right)
         if a is not None and b is not None and a[0] == b[0]:
             return a[1] == b[1]
+        if self.guards is not None and self.guards.separate(a, b):
+            return False
         return None
 
     def byte_at(self, pointer):
@@ -261,6 +264,10 @@ class MemoryValues:
     def placements(self, memory, pointer, width):
         address, base = self.address(pointer), self.address(memory.ptr)
         size, written = memory.size // 8, width // 8
+        if self.guards is not None and self.guards.separate(
+            address, base, written, size
+        ):
+            return [None]
         if address is None or base is None or address[0] != base[0]:
             return [None, *range(1 - written, size)]
         delta = (address[1] - base[1]) & ((1 << 64) - 1)
@@ -414,6 +421,12 @@ class MemoryValues:
                         covers.append(covered)
                         if covered:
                             changes = self.join(changes, byte_values[delta])
+                    elif self.guards is not None and self.guards.separate(
+                        location, address, right_size=len(byte_values)
+                    ):
+                        # This is conditional disjointness: every such decision
+                        # checks the entire write, not only its first byte.
+                        covers.append(False)
                     else:
                         covers.append(False)
                         changes = self.join(changes, any_byte)

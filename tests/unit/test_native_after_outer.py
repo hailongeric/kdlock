@@ -51,6 +51,7 @@ def main():
             "int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)",
         ),
         "kernel_module/kd_lock.c": (
+            "static int kd_jit_advance_call(struct kd_exec_frame *frame,",
             "int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,",
         ),
         "kernel_module/exe.c": (

@@ -304,7 +304,7 @@ class FlowConstants(RegisterConstants):
     MAX_IR_VISITS = 1024
     UNKNOWN = frozenset({None})
 
-    def __init__(self):
+    def __init__(self, guards=None):
         super().__init__()
         self.instruction_lifted = {}
         self.unknown = {
@@ -317,7 +317,10 @@ class FlowConstants(RegisterConstants):
         self.origins = {
             reg: ExprId(f"kd_entry_{reg}", reg.size) for reg in self.registers
         }
-        self.memory = context_memory.MemoryValues(frozenset(self.origins.values()))
+        self.memory = context_memory.MemoryValues(
+            frozenset(self.origins.values()), guards
+        )
+        self.control_calls = set()
         self.call_entries = {}
 
     def snapshot(self):
@@ -457,6 +460,25 @@ class FlowConstants(RegisterConstants):
         }
 
     def update(self, line, symbols=None):
+        if id(line) not in self.control_calls:
+            return self.update_effects(line, symbols)
+        # Model the original lock CALL boundary, not an arbitrary native C
+        # callee. The handler consumes the CALL stack and keeps saved GPRs;
+        # a remote child executes the selected original successor instructions.
+        saved = {
+            ExprId(name, 64)
+            for name in ("RBX", "RBP", "RSP", "R12", "R13", "R14", "R15")
+        }
+        values, origins = dict(self.values), dict(self.origins)
+        self.update_effects(line, symbols)
+        for reg in saved:
+            for output, before in ((self.values, values), (self.origins, origins)):
+                if reg in before:
+                    output[reg] = before[reg]
+                else:
+                    output.pop(reg, None)
+
+    def update_effects(self, line, symbols=None):
         plan = self.instruction_plan(line)
         if plan is None:
             self.clobber()
@@ -843,6 +865,7 @@ def constant_blocks(
     roots=None,
     control_targets=(),
     native_exits=(),
+    guards=None,
 ):
     """Seed real entries, then propagate to previously unvisited successors.
 
@@ -853,9 +876,14 @@ def constant_blocks(
     roots = set(blocks if roots is None else roots)
     if roots - blocks.keys() or (blocks and not roots):
         raise ContextFlowLimit("missing or invalid CFG analysis roots")
+    # An entry predicate describes one saved register packet. Independently
+    # seeded/learned callees need their own admission contract, not these bases.
+    if guards is not None and (not strict_roots or len(roots) != 1):
+        raise ContextFlowLimit("entry guards require one explicit CFG root")
     successors = {}
     calls = defaultdict(list)
     callees = set()
+    control_calls = set()
     for start, block in blocks.items():
         db = databases.get(block)
         if db is None:
@@ -872,6 +900,8 @@ def constant_blocks(
             # Endpoint calls may lack a decoder edge, yet a nested unlock has
             # a selected continuation. Do not create new code beyond the scope.
             callee = static_address(line.args[0], db, offset)
+            if guards is not None and callee in control_targets:
+                control_calls.add(id(line))
             if callee in blocks and callee not in control_targets:
                 roots.add(callee)
                 callees.add(callee)
@@ -879,8 +909,11 @@ def constant_blocks(
                 targets.discard(callee)
             targets.add(offset)
         successors[start] = targets & blocks.keys()
+    if guards is not None and callees:
+        raise ContextFlowLimit("entry guards do not cover independently seeded callees")
     returns = call_return_edges(blocks, successors, calls, max_visits)
-    tracker = FlowConstants()
+    tracker = FlowConstants(guards)
+    tracker.control_calls = control_calls
     initial = tracker.snapshot()
     # Independently learned callee inputs are not equal to the caller's entry
     # register identities. Numeric alternatives from real CALL edges still join.
@@ -933,6 +966,14 @@ def constant_blocks(
     unreached = blocks.keys() - seen
     if unreached:
         raise ContextFlowLimit("unreached selected CFG blocks", min(unreached))
+    if guards is not None:
+        # Earlier propagation may already rely on collected separations. A
+        # successful policy result therefore requires the entire guard set to
+        # fit, even if a caller never reaches the assembly emitter.
+        try:
+            guards.conditions()
+        except ValueError as error:
+            raise ContextFlowLimit(str(error)) from error
 
 
 def context_reference(expr, db, next_rip, symbols, size=1):

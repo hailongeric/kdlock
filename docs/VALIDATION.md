@@ -1,10 +1,13 @@
 # kdlock Validation
 
-Current runtime evidence is the JIT Episode Scope freeze below. The full matrix
+Latest complete-matrix evidence is the JIT Episode Scope freeze below. The full matrix
 has **14 failed gates** and is not accepted as complete. An actual-JIT positive,
-a context refusal and a pure-native control are different outcomes.
+a context refusal and a pure-native control are different outcomes. The later
+[entry-guard foundation](#entry-guard-foundation) has a separate source freeze
+and narrow regression; it does not replace that complete matrix.
 
-Source identity: 168 inputs in `/tmp/kdlock-jit-episode.lQFNLA/source.sha256`.
+Complete-matrix source identity: 168 inputs in
+`/tmp/kdlock-jit-episode.lQFNLA/source.sha256`.
 Full source/log/artifact/command archive:
 `/tmp/kdlock-jit-episode.lQFNLA.tar.gz`, SHA256:
 
@@ -19,6 +22,66 @@ files delivered by a fresh Git checkout. The command manifest below keeps
 invocations auditable. The two pure-native controls depend on an external
 helper; they are not yet a self-contained fresh-checkout test. General evidence
 packaging remains TODO P1. Losing an archive never makes recorded results new.
+
+## Entry Guard Foundation
+
+**Status: analysis/test foundation only; not enabled in production.** Evidence:
+`/tmp/kdlock-guard-foundation.qaCvD5/`, with **170 frozen inputs** in
+`source.sha256`. Archive `/tmp/kdlock-guard-foundation.qaCvD5.tar.gz`, SHA256:
+
+```text
+4e41af4531c564323f8751c3e439770a6f10c22a5de4739d0b0073661fea2178
+```
+
+At **2026-09-08 15:28:18 +08**, all **39 unit programs** pass without skips,
+including **14 entry-predicate methods**. These execute bounded generated
+MOV/RET fixtures in the guest-userspace wrapper and check overlap, adjacency,
+modular wrap, complete store width, register/stack/memory preservation,
+single-root admission, sensitive-code rejection and budget refusal before
+emission. The expanded real CALL-helper fixture passes **432 checks**. It
+tests saved packets, not arbitrary callee effects or remote lock concurrency.
+The independent **25-case admission audit** also passes. The default W=1
+module build passes with existing objtool warnings and unchanged `.text` hash
+`2ab4297b6f3b7656cfa8fa32deff3735a52b9afc7661803d49af13b08eac696c`.
+
+Captured-text replay at **15:28:18-15:28:28 +08** uses the final single-root and
+guard-budget checks, preserves memory clobbers and models saved GPR effects
+only for registered lock controls:
+
+| Captured entry | Collected ranges | Final conditions | Analysis work | Result |
+| --- | ---: | ---: | ---: | --- |
+| mode 1 | 487 | 42 | 516076 / 1000000 | Conditional analysis passes |
+| mode 4 | 500 | 43 | 787978 / 1000000 | Conditional analysis passes |
+
+The replay does **not** enforce predicates, install an image or execute kernel
+text. Its assembly sizes/status are feasibility observations only. Earlier
+unconditional separation experiments in `/tmp/kdlock-guard-feasibility.FpSXTS/`
+are not safe candidates. Production `dis_assem` still supplies no collector;
+the experimental `ENTRY_REFUSED=6` and non-root bypass have no runtime contract.
+Integration prerequisites and usage are maintained in
+[JIT_EXECUTION](JIT_EXECUTION.md#5-入口条件分析尚未接入生产), not inferred from this table.
+
+Six fresh production regressions run on the final freeze from
+**15:28:28 to 15:30:46 +08**; the candidate predicates remain disabled:
+
+| Case | Result | Returned JIT body witnesses / other evidence |
+| --- | --- | --- |
+| mode 0 | Pass | 4; protected-state oracle passes |
+| mode 3, `mutex_jit=1` | Pass | 663; protected-state oracle passes |
+| mode 5, `mutex_jit=1` | Pass | 431; 431 hostcalls executed and resumed |
+| context mode 11, `mutex_jit=1` | Pass, native-only | 0; 12129 checked native transitions |
+| mode 1 | Fail | 0; refusal at `MOV [RAX+0xD0],RDX` |
+| mode 4, `mutex_jit=1` | Fail | 0; refusal at `MOV [RBX+0xD0],R13` |
+
+Per-case commands, status, source checks, artifacts, dmesg and drain records
+are retained; failed daemon logs preserve the address-widening diagnostics.
+All fault scans are empty and callers/modules drain. At **15:30:49 +08**, both
+source copies still match and the read-only baseline check passes: 18 source
+files, config, nine build files and running Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`. No guest-kernel edit or image build,
+owner/argument ABI change, flags repair or immutable-code change is made.
+This is **3 actual-JIT passes + 1 refusal pass + 2 failures**, not a full-matrix
+rerun and not guarded nested-JIT acceptance. The fourteen main gates stay open.
 
 ## Acceptance Contract
 

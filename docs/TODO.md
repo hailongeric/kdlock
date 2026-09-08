@@ -13,8 +13,9 @@ Admission and emission share the same scope. This replaces the old requirement
 to admit that waiter-only suffix; it does not allow unchecked live JIT paths.
 
 Latest complete matrix: **37/51 pass, 14 fail**; 23 passes execute generated
-code, 12 are context refusals and two are native controls. All 38 unit programs
-and the 25-case admission audit pass. Evidence and exact failures:
+code, 12 are context refusals and two are native controls. The later foundation
+check passes all 39 unit programs and the 25-case admission audit. Evidence
+and exact failures:
 [VALIDATION](VALIDATION.md#jit-episode-scope). Main mode 1/4/8 acceptance is open.
 
 Implement next in this order:
@@ -28,6 +29,29 @@ Implement next in this order:
    context refusal and native-only controls separately.
 4. Only then broaden context/resource coverage and consider optional services
    and performance. Do not mark C1/C2/C5 complete from selected fixtures.
+
+### Guarded Admission Increment
+
+The optional analysis collects required entry-range separations and models
+callee-saved effects only at registered lock-control calls. Production does
+not enable it. Captured-text feasibility, tests and limitations are recorded in
+[VALIDATION](VALIDATION.md#entry-guard-foundation); this does not close C1/C2/C5.
+
+- [x] Collect every required disjoint range and test the emitted entry predicate
+      against concrete overlap, adjacency, wrap and register-preservation cases.
+- [ ] Validate lock-control register effects against production handlers; keep
+      memory clobbers and ordinary/decoded call handling conservative. Two real
+      CALL advance helpers pass packet-preservation tests; remote child/control
+      paths still need end-to-end proof before enabling this analysis.
+- [ ] Connect guarded analysis to code generation only with a verified pre-body
+      refusal path. Preserve two arguments, GS/current refusal and progressed
+      fail-stop behavior. Prove that non-root dispatch inherits the same root's
+      successful admission; `executed` or a body marker alone is not a version
+      certificate. Current analysis permits one explicit root and no independently
+      seeded decoded callee. Do not bypass these constraints for learned targets.
+- [ ] Execute the main modes, negative guard cases, register continuations and
+      full matrix on one frozen source set. No candidate JIT runs before these
+      prerequisites, and the current fourteen failed gates remain open.
 
 ## P0: Correctness Contracts
 

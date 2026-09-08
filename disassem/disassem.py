@@ -51,7 +51,10 @@ def find_segment_policy_error(
     lock_symbols=None,
     roots=None,
     native_exits=(),
+    guards=None,
 ):
+    # Supplying guards is analysis-only until their complete predicates are
+    # enforced before body execution; production callers do not enable it yet.
     db_dict = db_dict or {}
     symbols = symbols or {}
     selected = {
@@ -70,6 +73,7 @@ def find_segment_policy_error(
             roots=roots,
             control_targets=lock_symbols or (),
             native_exits=native_exits,
+            guards=guards,
         ):
             offset = block_start
             for line in block.lines:

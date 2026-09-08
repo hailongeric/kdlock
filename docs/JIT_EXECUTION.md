@@ -146,3 +146,50 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 完整 51 项中 37 通过、14 失败，通过项包含 23 项实际 JIT。mode 0/3 的
 普通 CALL 寄存器续跑检查通过；复杂 mode 1/4/8 及相关路径仍需进一步实现，
 不能把本轮范围选择的完成写成整个项目或所有模式已完成。
+
+## 5. 入口条件分析（尚未接入生产）
+
+复杂嵌套前缀中的未知别名会导致地址分析扩大并保守拒绝。新增
+`context_guards.EntryGuards` 收集分析所依赖的“不重叠”条件，而不是直接假定
+waiter 栈、记录对象及绝对地址相互独立。**生产 `dis_assem` 不启用此分析，也不
+调用 emitter；没有可开启它的 daemon 参数。mode 1/4 仍未通过实际 JIT 验收。**
+
+当前已实现的分析/测试流程：
+
+```text
+测试显式传入 collector，限定一个 CFG root
+  -> 每次别名分离记录两个完整字节区间（store 包含全部写入宽度）
+  -> 合并相邻区间，保留间隙，生成有界条件集合
+  -> 用户态测试把 predicate 放到真实 wrapper 的 body 标签之前
+  -> 从保存的入口 GPR 计算地址差，不读取指针指向的内存
+  -> 重叠：实验退出，保存的寄存器包/虚拟栈/外部内存不变
+     不重叠：执行测试用 MOV/RET body，并检查返回后的 witness
+```
+
+只接受入口 GPR 加常量或绝对地址；无法识别的基址继续保守处理。收集上限为
+1024 个区间、256 条最终条件，耗尽不能当作通过。已学习的独立根和已解码的
+独立 callee 暂不支持。只有已注册锁控制 CALL 可保留 callee-saved 分析事实，
+普通调用不获得该假设，内存 clobber 仍保留。GS/current、IRQ 及已知敏感符号
+拒绝规则不变；这些条件也不是任意指针或并发内存的安全证明。
+
+在 guest 中运行，不能在宿主机执行生成机器码：
+
+```sh
+cd /root/host_fs/kdlock
+python3 tests/unit/test_context_guards.py
+python3 tests/unit/test_native_after_outer.py
+make -C tests/unit run
+python3 tests/audit_context_spills.py
+```
+
+前两项分别覆盖 14 项条件测试和真实 CALL 推进函数的保存包检查；不是内核
+锁并发或 guarded mode 1/4 的执行证明。捕获文本回放只能证明候选分析可通过，
+不能安装其未检查的汇编。测量及源文件身份只维护在
+[验证记录](VALIDATION.md#entry-guard-foundation)。
+
+接入前仍须实现专用 pre-body 拒绝协议，并证明非入口续跑继承同一逻辑调用的
+已通过条件。实验 emitter 的非 root 分支目前跳过检查，生产不能无条件采用。
+真正未开始的工作才可原生执行；已产生副作用的异常仍不能入口重放。之后再做
+真实锁控制/远端执行、负条件拒绝、mode 1/4/8 及完整矩阵测试，任务顺序见
+[TODO](TODO.md#guarded-admission-increment)。不新增第三个参数，不修改 guest 内核，
+也不在此次基础提交中扩展已延期的 flags 或代码版本隔离工作。

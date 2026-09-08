@@ -19,7 +19,7 @@ def render(raw, **kwargs):
     return render_source(raw, body_witness=True, **kwargs)
 
 
-def run_image(assembly, entries):
+def run_image(assembly, entries, initialize=None):
     previous = Path.cwd()
     with tempfile.TemporaryDirectory(prefix="kdlock-body-witness-") as directory:
         directory = Path(directory)
@@ -47,6 +47,9 @@ def run_image(assembly, entries):
             stack[8] = 0x4444
             regs[16] = entry
             regs[19] = ctypes.addressof(stack) + 8 * 8
+            # Boundary tests seed entry packets without replacing the real wrapper.
+            if initialize is not None:
+                initialize(regs, stack)
             args[0], args[1] = 0xFEED, 0xBEEF
             invoke(regs, args)
             result.append((list(regs), list(args)))

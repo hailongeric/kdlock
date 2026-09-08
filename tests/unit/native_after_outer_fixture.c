@@ -5,7 +5,9 @@
 #include <string.h>
 
 struct pt_regs {
-	unsigned long ip, sp, di;
+	/* Use the complete x86 packet so a helper cannot silently clobber GPRs. */
+	unsigned long r15, r14, r13, r12, bp, bx, r11, r10, r9, r8;
+	unsigned long ax, cx, dx, si, di, orig_ax, ip, cs, flags, sp, ss;
 };
 struct task_struct {
 	int pid;
@@ -346,6 +348,41 @@ static void check_mutex_ooo(void)
 	CHECK(unlocked == 1);
 }
 
+static void check_call_register_preservation(void)
+{
+	unsigned long stack[] = { 0x1234, 0x5678 };
+	unsigned long words[sizeof(struct pt_regs) / sizeof(unsigned long)];
+	struct kd_exec_frame f = frame(false);
+	struct pt_regs regs, expected;
+
+	for (unsigned int i = 0; i < sizeof(words) / sizeof(words[0]); i++)
+		words[i] = 0x100 + i;
+	for (int helper = 0; helper < 2; helper++) {
+		memcpy(&regs, words, sizeof(regs));
+		regs.sp = (unsigned long)stack;
+		expected = regs;
+		expected.ip = stack[0];
+		expected.sp += sizeof(stack[0]);
+		/* These are extracted production functions, not a second model of
+		 * the CALL ABI. Only IP/SP may change; memory effects of arbitrary
+		 * callees or remote child instructions are not covered by this test. */
+		if (helper == 0) {
+			CHECK(kd_jit_advance_call(&f, &regs) == 0);
+			CHECK(memcmp(&f.regs, &expected, sizeof(regs)) == 0);
+		} else {
+			CHECK(advance_after_known_call(&regs) == 1);
+		}
+		CHECK(memcmp(&regs, &expected, sizeof(regs)) == 0);
+		CHECK(stack[0] == 0x1234 && stack[1] == 0x5678);
+		regs.sp = 0;
+		expected = regs;
+		CHECK((helper == 0 ?
+			       kd_jit_advance_call(&f, &regs) :
+			       advance_after_known_call(&regs)) == -EINVAL);
+		CHECK(memcmp(&regs, &expected, sizeof(regs)) == 0);
+	}
+}
+
 int main(void)
 {
 	check_native(false);
@@ -355,6 +392,7 @@ int main(void)
 	check_pending_after_outer(false);
 	check_pending_after_outer(true);
 	check_mutex_ooo();
+	check_call_register_preservation();
 	CHECK(kd_exec_invariant_failures == 0);
 	printf("after-outer production functions: %d checks, %d failures\n",
 	       checks, failures);
