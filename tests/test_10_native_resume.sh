@@ -17,9 +17,16 @@ pending_contended="${KD_NATIVE_PENDING_CONTENDED:-0}"
 shadow_capacity="${KD_NATIVE_SHADOW_CAPACITY:-0}"
 virtual_resource="${KD_NATIVE_VIRTUAL_RESOURCE:-0}"
 waiter_signal="${KD_NATIVE_WAITER_SIGNAL:-0}"
+waiter_api="${KD_NATIVE_WAITER_API:-0}"
 ooo="${KD_NATIVE_OOO:-0}"
 dependency="${KD_NATIVE_OOO_DEPENDENCY:-0}"
 registers="${KD_NATIVE_REGISTERS:-0}"
+# API selection changes native B's return contract, not kdlock's lock controls.
+# Only the matching real signal may cancel each opt-in native acquisition.
+case "$waiter_api:$waiter_signal" in
+    0:0|0:9|0:10|1:10|2:9) ;;
+    *) fail "$TEST_NAME" "waiter API 1 requires SIGUSR1, API 2 requires SIGKILL"; exit 1 ;;
+esac
 # The signalled participant is the single-task native B waiter, not a native
 # peer or timeout supervisor. Keep all other perturbations out of this case.
 if [ "$waiter_signal" != 0 ]; then
@@ -170,7 +177,7 @@ fi
 insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1 "${module_args[@]}"
 insmod "$KLOCK_DIR/klock_module.ko" native_resume_stage="$stage" \
     native_pending_contended="$pending_contended" native_resume_registers="$registers" \
-    native_waiter_signal="$waiter_signal"
+    native_waiter_signal="$waiter_signal" native_waiter_api="$waiter_api"
 test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1
 if [ "$shadow_capacity" = 1 ]; then
     shadow_outer="$(awk '$3 == "nested_lock_a" && $4 == "[klock_module]" { print $1 }' /proc/kallsyms)"
@@ -216,7 +223,7 @@ fi
         "$mode" "$stage" "$pinned" "$renamed" "$mixed" "$pending_contended" "$shadow_capacity" "$ooo" "$dependency"
     printf 'registers=%s probe_ip=%s\n' "$registers" "$probe_ip"
     printf 'virtual_resource=%s\n' "$virtual_resource"
-    printf 'waiter_signal=%s\n' "$waiter_signal"
+    printf 'waiter_signal=%s waiter_api=%s\n' "$waiter_signal" "$waiter_api"
 } > "$out/environment.log"
 start_daemon 2
 
@@ -274,10 +281,18 @@ if [ "$stage" = 4 ]; then
     if [ "$mode" = 4 ]; then
         kind=2
         symbol=mutex_lock
+        case "$waiter_api" in
+            1) symbol=mutex_lock_interruptible ;;
+            2) symbol=mutex_lock_killable ;;
+        esac
     fi
     probe_ip="$(awk -v name="$symbol" '$3 == name { print $1 }' /proc/kallsyms)"
     test -n "$probe_ip"
-    if [ "$shadow_capacity" = 1 ]; then
+    if [ "$waiter_api" != 0 ]; then
+        # The actual native API must be the ordinary CALL-miss target. Do not
+        # substitute a synthetic PENDING resource failure for cancellation.
+        test "$(cat /sys/module/kdlock_km/parameters/jit_fail_pending_lock)" = 0
+    elif [ "$shadow_capacity" = 1 ]; then
         test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_fill_shadow)" = 1
         test "$(cat /sys/module/kdlock_km/parameters/jit_fail_pending_lock)" = 0
     elif [ "$virtual_resource" != 0 ]; then
@@ -389,6 +404,10 @@ elif [ "$mode" = 4 ] && { [ "$stage" != 4 ] || [ "$pending_contended" = 1 ]; }; 
     done
     test "$failed" = 0
     operations=12008
+    if [ "$waiter_api" != 0 ]; then
+        # The cancelled acquisition never enters B's protected transition.
+        operations=12007
+    fi
     if [ "$dependency" = 2 ]; then
         operations=$((operations + 1))
     fi
@@ -461,6 +480,19 @@ fi
 
 if [ "$stage" = 4 ]; then
     test "$(cat /sys/module/kdlock_km/parameters/jit_fail_pending_lock)" = 0
+fi
+if [ "$waiter_api" != 0 ]; then
+    check_dmesg_not_has 'reason=PENDING_LOCK_NATIVE'
+    # Read the ordinary miss's real device state while the module still lives.
+    # The oracle later matches this entry/target to the returned JIT witness.
+    PYTHONPATH="$KDLOCK_DIR/tests" python3 -c '
+import json
+from native_only_protocol import entries
+print(json.dumps([dict(entry=hex(e.rip), target=hex(e.target), code=hex(e.code),
+                      pid=e.pid, tgid=e.tgid, kind=e.lock_kind, status=e.status)
+                  for e in entries()]))
+' > "$out/cancel-publication.json"
+elif [ "$stage" = 4 ]; then
     dmesg | grep 'reason=PENDING_LOCK_NATIVE' > "$out/pending-lock.log"
     test "$(wc -l < "$out/pending-lock.log")" = 1
     python3 -c '
@@ -641,7 +673,7 @@ events = [text.index(event) for event in (
 assert events == sorted(events)
 assert "kd_native stats: started=1 completed=1 unlocks=1" in text
 ' "$out/pending-contended.log" "$probe_ip"
-elif [ "$pending_contended" = 1 ]; then
+elif [ "$pending_contended" = 1 ] && [ "$waiter_api" = 0 ]; then
     check_dmesg_has 'kd_pending mutex: observed=1 acquired=1'
     dmesg > "$out/pending-contended.log"
     python3 -c '
@@ -669,15 +701,22 @@ events = [text.index(event) for event in (
 assert events == sorted(events)
 assert "kd_native stats: started=1 completed=1 unlocks=1" in text
 ' "$out/pending-contended.log"
+elif [ "$pending_contended" = 1 ]; then
+    check_dmesg_has 'kd_pending mutex: observed=1 acquired=0'
 fi
 if [ "$pinned" = 1 ]; then
     check_dmesg_has 'kd_native begin:.*mutex=1 cpu=1'
 fi
 if [ "$waiter_signal" != 0 ]; then
     dmesg > "$out/waiter-signal.log"
+    signal_options=(--api "$waiter_api" --target "$probe_ip")
+    if [ "$waiter_api" != 0 ]; then
+        signal_options+=(--publication "$out/cancel-publication.json")
+    fi
     python3 "$KDLOCK_DIR/tests/native_waiter_signal_protocol.py" \
         --dmesg "$out/waiter-signal.log" --client "$out/role-0.log" \
-        --statuses "$out/role-status.tsv" --signal "$waiter_signal" > "$out/waiter-signal.json"
+        --statuses "$out/role-status.tsv" --signal "$waiter_signal" \
+        "${signal_options[@]}" > "$out/waiter-signal.json"
     info "Original waiter signal/continuation verified: $(cat "$out/waiter-signal.json")"
 fi
 started="$(dmesg | sed -n 's/.*kd_native stats: started=\([0-9]*\).*/\1/p' | tail -1)"

@@ -1,20 +1,21 @@
 """Match a signalled native waiter to its actual JIT prefix and final owner ACK.
 
-Only ordinary, uninterruptible mutex_lock is covered. A fatal client exit alone
-is not success: every preceding store, acquisition and acknowledgement remains
-mandatory. This parser checks evidence, not arbitrary signal/RCU schedules.
+Ordinary B must acquire; native interruptible/killable B must cancel without
+entering B. A fatal client exit alone is never success. Both paths retain the
+JIT stores and final owner ACK, not arbitrary signal/RCU schedule coverage.
 """
 
 import argparse
 import csv
+import errno
 import io
 import json
 import re
 from pathlib import Path
 
 
-def validate(text, client, statuses, signum):
-    assert signum in (9, 10)
+def validate(text, client, statuses, signum, api=0, target=None, publication=None):
+    assert (api, signum) in {(0, 9), (0, 10), (1, 10), (2, 9)}
 
     def rows(source, name):
         return [
@@ -34,23 +35,23 @@ def validate(text, client, statuses, signum):
     def address(fields, key):
         return int(fields[key], 16)
 
+    def completed_record(fields):
+        expect(fields, before=1, called=1, after=1)
+        assert address(fields, "value") == (
+            ((int(fields["record"]) + 1) * 3 + 17) ^ 0x5A5A
+        )
+
     _, entry = one("pending client enter", client)
     pid = int(entry["pid"])
     expect(entry, signal=signum)
     begin_at, begin = one("kd_native begin")
     blocked_at, blocked = one("kd_pending mutex blocked")
-    queued_at, queued = one("kd_waiter signal queued")
-    acquired_at, acquired = one("kd_pending mutex acquired")
-    signal_acquired_at, signal_acquired = one("kd_waiter signal acquired")
     finished_at, finished = one("kd_native complete")
     ack_at, ack = one("kd_native ack")
     complete_at, complete = one("kd_waiter signal complete")
     for packet in (
         begin,
         blocked,
-        queued,
-        acquired,
-        signal_acquired,
         finished,
         ack,
         complete,
@@ -61,74 +62,142 @@ def validate(text, client, statuses, signum):
     assert blocked["holder_comm"] == "kd_native"
     owners = [address(blocked, key) for key in ("waiter", "a_owner", "b_owner")]
     assert all(owners) and len(set(owners)) == 3
-    for key in ("a_owner", "b_owner"):
-        assert address(queued, key) == address(blocked, key)
     fatal = int(signum == 9)
-    expect(
-        queued,
-        signal=signum,
-        samples=128,
-        pending=1,
-        fatal=fatal,
-        queued=1,
-        before=1,
-        called=0,
-        after=0,
-    )
-    expect(acquired, preserved=1)
-    assert acquired["waiter"] == blocked["waiter"] == acquired["b_owner"]
-    assert acquired["a_owner"] == blocked["a_owner"]
-    expect(signal_acquired, signal=signum, pending=1, fatal=fatal)
     expect(finished, mutex=1)
     expect(ack, mutex=1, last_spin=0)
     assert address(begin, "outer") == address(finished, "outer") == address(ack, "lock")
-    expect(complete, signal=signum, pending=1, fatal=fatal, before=1, called=1, after=1)
-    assert (
-        address(complete, "value") == ((int(complete["record"]) + 1) * 3 + 17) ^ 0x5A5A
-    )
+    expect(complete, signal=signum, pending=1, fatal=fatal)
+    completed_record(complete)
+    if target is not None:
+        assert address(begin, "ip") == target
 
     pending = list(re.finditer(r"reason=PENDING_LOCK_NATIVE ([^\n]+)", text))
-    assert len(pending) == 1
-    packet = dict(re.findall(r"(\w+)=([-\w]+)", pending[0][1]))
-    expect(packet, task=pid, mutex=1, error=-7, outer_released=0)
-    assert address(packet, "entry") == address(begin, "entry")
-    assert (
-        address(packet, "target")
-        == address(begin, "ip")
-        == address(packet, "staged_ip")
-    )
-    assert address(packet, "sp") == address(begin, "sp") == address(packet, "staged_sp")
-    assert address(packet, "return") != 0
+    samples = 0 if api else 128
+    if not api:
+        queued_at, queued = one("kd_waiter signal queued")
+        acquired_at, acquired = one("kd_pending mutex acquired")
+        signal_acquired_at, signal_acquired = one("kd_waiter signal acquired")
+        for fields in (queued, acquired, signal_acquired):
+            expect(fields, task=pid)
+        for key in ("a_owner", "b_owner"):
+            assert address(queued, key) == address(blocked, key)
+        expect(
+            queued,
+            signal=signum,
+            samples=samples,
+            pending=1,
+            fatal=fatal,
+            queued=1,
+            before=1,
+            called=0,
+            after=0,
+        )
+        expect(acquired, preserved=1)
+        assert acquired["waiter"] == blocked["waiter"] == acquired["b_owner"]
+        assert acquired["a_owner"] == blocked["a_owner"]
+        expect(signal_acquired, signal=signum, pending=1, fatal=fatal)
+        assert not rows(text, "kd_waiter signal cancelled")
+        assert not rows(text, "kd_waiter signal held-after-ack")
+        assert len(pending) == 1
+        packet = dict(re.findall(r"(\w+)=([-\w]+)", pending[0][1]))
+        expect(packet, task=pid, mutex=1, error=-errno.E2BIG, outer_released=0)
+        assert address(packet, "entry") == address(begin, "entry")
+        assert (
+            address(packet, "target")
+            == address(begin, "ip")
+            == address(packet, "staged_ip")
+        )
+        assert (
+            address(packet, "sp")
+            == address(begin, "sp")
+            == address(packet, "staged_sp")
+        )
+        assert address(packet, "return") != 0
+        order = [
+            pending[0].start(),
+            begin_at,
+            blocked_at,
+            queued_at,
+            acquired_at,
+            signal_acquired_at,
+            finished_at,
+            ack_at,
+            complete_at,
+        ]
+    else:
+        # A real ordinary miss must target the native API, not an injected
+        # lock-resource error or a helper that hides the API from admission.
+        assert not pending and target is not None and publication is not None
+        assert address(begin, "sp") != 0
+        entries = [
+            e for e in publication if address(e, "entry") == address(begin, "entry")
+        ]
+        assert len(entries) == 1
+        entry = entries[0]
+        expect(entry, pid=0, kind=2, status=1)
+        assert address(entry, "target") == target and address(entry, "code")
+        assert int(entry["tgid"]) > 0
+        sent_at, sent = one("kd_waiter signal sent")
+        cancelled_at, cancelled = one("kd_waiter signal cancelled")
+        held_at, held = one("kd_waiter signal held-after-ack")
+        for fields in (sent, cancelled, held):
+            expect(fields, task=pid, api=api)
+        expect(sent, signal=signum)
+        expect(
+            cancelled,
+            signal=signum,
+            ret=-errno.EINTR,
+            pending=1,
+            fatal=fatal,
+            queued=0,
+        )
+        completed_record(cancelled)
+        assert cancelled["record"] == complete["record"]
+        assert cancelled["value"] == complete["value"]
+        for key in ("a_owner", "b_owner"):
+            assert (
+                address(sent, key) == address(cancelled, key) == address(blocked, key)
+            )
+        expect(held, completed=1)
+        assert address(held, "b_owner") == address(blocked, "b_owner")
+        for event in (
+            "kd_waiter signal queued",
+            "kd_pending mutex acquired",
+            "kd_waiter signal acquired",
+        ):
+            assert not rows(text, event), "cancelled B must not report acquisition"
+        order = [
+            begin_at,
+            blocked_at,
+            sent_at,
+            cancelled_at,
+            finished_at,
+            ack_at,
+            complete_at,
+            held_at,
+        ]
+
     body = [
         at
         for at, fields in rows(text, "JIT body witness")
         if address(fields, "entry") == address(begin, "entry")
         and address(fields, "lock") == address(begin, "outer")
         and int(fields["body"]) == 1
-        and at < pending[0].start()
     ]
-    assert body, "matching returned JIT body witness is required"
-    order = [
-        pending[0].start(),
-        begin_at,
-        blocked_at,
-        queued_at,
-        acquired_at,
-        signal_acquired_at,
-        finished_at,
-        ack_at,
-        complete_at,
-    ]
+    assert len(body) == 1 and body[0] < order[0], "exact JIT prefix witness is required"
     assert order == sorted(order), "signal must not shortcut B or the final owner ACK"
     _, summary = one("kd_waiter signal stats")
     expect(
         summary,
         signal=signum,
         delivered=1,
-        samples=128,
-        acquired=1,
+        samples=samples,
+        acquired=int(not api),
         completed=1,
         failures=0,
+        api=api,
+        cancelled=int(bool(api)),
+        held_ack=int(bool(api)),
     )
     _, native = one("kd_native stats")
     expect(native, started=1, completed=1, unlocks=1)
@@ -150,8 +219,10 @@ def validate(text, client, statuses, signum):
         expect(returned[0][1], pid=pid, signal=signum, ret=0, errno=0, signals=1)
     return {
         "signal": signum,
+        "api": api,
         "task": pid,
-        "samples": 128,
+        "samples": samples,
+        "cancelled": bool(api),
         "jit": True,
         "owner_acks": 1,
         "fatal_exit": bool(fatal),
@@ -164,6 +235,9 @@ def main():
     parser.add_argument("--client", type=Path, required=True)
     parser.add_argument("--statuses", type=Path, required=True)
     parser.add_argument("--signal", type=int, choices=(9, 10), required=True)
+    parser.add_argument("--api", type=int, choices=(0, 1, 2), default=0)
+    parser.add_argument("--target", type=lambda value: int(value, 16))
+    parser.add_argument("--publication", type=Path)
     args = parser.parse_args()
     print(
         json.dumps(
@@ -172,6 +246,9 @@ def main():
                 args.client.read_text(),
                 args.statuses.read_text(),
                 args.signal,
+                args.api,
+                args.target,
+                json.loads(args.publication.read_text()) if args.publication else None,
             ),
             sort_keys=True,
         )

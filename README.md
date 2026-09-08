@@ -36,8 +36,8 @@ before ACK; reclamation waits for RCU readers.
 
 ## Current Status
 
-Latest complete matrix, **2026-09-09 00:11 +08**: **57/57 pass**, comprising
-**41 actual-JIT cases, 12 context refusals, two native controls and two kernel
+Latest complete matrix, **2026-09-09 01:08 +08**: **59/59 pass**, comprising
+**43 actual-JIT cases, 12 context refusals, two native controls and two kernel
 protocol probes**. The last two test real RCU/owner ACK without JIT.
 Mode **0-8** pass actual-JIT checks, including guarded nested mode 1/4/8 and
 `mutex_jit=1` for mutex positives. Mode 1/4 register, held-B and pending-B
@@ -50,11 +50,13 @@ native continuation; resource inputs are injected, not natural pool saturation.
 JIT. See [the resource and lifecycle guide](docs/JIT_EXECUTION.md#6-资源拒绝与测试边界)
 for commands, execution flow and coverage limits.
 
-Original-waiter tests send SIGUSR1/SIGKILL during native B waiting
-after JIT progress. They require the uninterruptible suffix and final owner
-ACK to finish before userspace signal delivery/exit. This is not arbitrary
-delegated-request cancellation; [usage 6.4](docs/JIT_EXECUTION.md#64-原-waiter-的信号与退出)
-distinguishes these from native interruptible/killable peer tests.
+Original-waiter tests send SIGUSR1/SIGKILL during native B waiting after JIT
+progress. Ordinary B must finish its uninterruptible acquisition; direct
+interruptible/killable API misses must return `-EINTR` without entering B.
+Both retain earlier stores and complete A's final owner ACK before userspace
+signal delivery/exit. This is not arbitrary delegated-request cancellation;
+[usage 6.4](docs/JIT_EXECUTION.md#64-原-waiter-的信号与退出) distinguishes
+these from independent native-peer tests and documents all four commands.
 
 Learned mutex-depth now executes the helper's translated lock calls, reaches
 real capacity exits and completes native continuation with physical-owner ACKs.
@@ -64,7 +66,7 @@ scope, refusal and continuation rules are in
 
 These are bounded correctness observations, not a claim of complete support.
 Commands, failed cases, source identity and evidence are centralized in
-[VALIDATION](docs/VALIDATION.md#original-waiter-signals). Do not substitute
+[VALIDATION](docs/VALIDATION.md). Do not substitute
 historical passes or successful native fallback for the current JIT gate.
 
 ## Quick Start

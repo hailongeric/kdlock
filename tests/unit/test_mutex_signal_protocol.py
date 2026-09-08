@@ -222,7 +222,7 @@ def waiter_signal_fixture(signum):
             "kd_native complete: task=20 outer=abcd mutex=1",
             "kd_native ack: task=20 lock=abcd mutex=1 last_spin=0",
             f"kd_waiter signal complete: task=20 signal={signum} pending=1 fatal={fatal} before=1 called=1 after=1 record=12001 value={value:x}",
-            f"kd_waiter signal stats: signal={signum} delivered=1 samples=128 acquired=1 completed=1 failures=0",
+            f"kd_waiter signal stats: signal={signum} delivered=1 samples=128 acquired=1 completed=1 failures=0 api=0 cancelled=0 held_ack=0",
             "kd_native stats: started=1 completed=1 unlocks=1",
             "kd_mutex tasks: active_tasks=0 task_alloc_failure=0 task_reroutes=0",
         ]
@@ -234,6 +234,55 @@ def waiter_signal_fixture(signum):
         f"{role}\t{137 if fatal and role == 0 else 0}" for role in range(7)
     )
     return text, client, statuses
+
+
+def waiter_cancel_fixture(api):
+    """Model evidence from a direct native API miss, never a PENDING injection."""
+    signum = 10 if api == 1 else 9
+    fatal = int(signum == 9)
+    text, client, statuses = waiter_signal_fixture(signum)
+    lines = [
+        line
+        for line in text.splitlines()
+        if not line.startswith(
+            (
+                "[KD_JIT][WARN] reason=PENDING_LOCK_NATIVE",
+                "kd_waiter signal queued:",
+                "kd_pending mutex acquired:",
+                "kd_waiter signal acquired:",
+            )
+        )
+    ]
+    blocked = next(
+        i for i, line in enumerate(lines) if "kd_pending mutex blocked:" in line
+    )
+    lines[blocked + 1 : blocked + 1] = [
+        f"kd_waiter signal sent: task=20 signal={signum} api={api} a_owner=1110 b_owner=3330",
+        f"kd_waiter signal cancelled: task=20 signal={signum} api={api} ret=-4 pending=1 fatal={fatal} queued=0 a_owner=1110 b_owner=3330 before=1 called=1 after=1 record=12001 value={((12002 * 3 + 17) ^ 0x5A5A):x}",
+    ]
+    complete = next(
+        i for i, line in enumerate(lines) if "kd_waiter signal complete:" in line
+    )
+    lines.insert(
+        complete + 1,
+        f"kd_waiter signal held-after-ack: task=20 api={api} b_owner=3330 completed=1",
+    )
+    text = "\n".join(lines).replace("samples=128 acquired=1", "samples=0 acquired=0")
+    text = text.replace(
+        "api=0 cancelled=0 held_ack=0", f"api={api} cancelled=1 held_ack=1"
+    )
+    publication = [
+        {
+            "entry": "0x1234",
+            "target": "0x5678",
+            "code": "0x9000",
+            "pid": 0,
+            "tgid": 42,
+            "kind": 2,
+            "status": 1,
+        }
+    ]
+    return [text, client, statuses, signum, api, 0x5678, publication]
 
 
 class NativeWaiterSignalTests(unittest.TestCase):
@@ -328,6 +377,95 @@ class NativeWaiterSignalTests(unittest.TestCase):
             validate_waiter_signal(
                 text, client.replace("ret=0 errno=0", "ret=-1 errno=4"), statuses, 10
             )
+
+
+class NativeWaiterCancelTests(unittest.TestCase):
+    """Real cancellation must retain A's suffix/ACK while never acquiring B."""
+
+    def test_both_cancellable_native_apis(self):
+        for api in (1, 2):
+            with self.subTest(api=api):
+                result = validate_waiter_signal(*waiter_cancel_fixture(api))
+                self.assertTrue(result["jit"] and result["cancelled"])
+                self.assertEqual(result["api"], api)
+                self.assertEqual(result["owner_acks"], 1)
+
+    def test_every_kernel_event_remains_required(self):
+        for api in (1, 2):
+            args = waiter_cancel_fixture(api)
+            lines = args[0].splitlines()
+            for index in range(len(lines)):
+                with (
+                    self.subTest(api=api, line=index),
+                    self.assertRaises(AssertionError),
+                ):
+                    validate_waiter_signal(
+                        "\n".join(lines[:index] + lines[index + 1 :]), *args[1:]
+                    )
+
+    def test_requires_exact_ordinary_miss_publication(self):
+        for field, bad in (
+            ("target", "0x6789"),
+            ("code", "0x0"),
+            ("kind", 1),
+            ("status", -1),
+            ("status", 0),
+            ("status", -3),
+            ("pid", 20),
+            ("tgid", 0),
+            ("entry", "0x9999"),
+        ):
+            args = waiter_cancel_fixture(1)
+            args[-1][0][field] = bad
+            with (
+                self.subTest(field=field, value=bad),
+                self.assertRaises(AssertionError),
+            ):
+                validate_waiter_signal(*args)
+        for position, bad in ((5, None), (5, 0x6789), (6, None), (6, [])):
+            args = waiter_cancel_fixture(2)
+            args[position] = bad
+            with self.subTest(position=position), self.assertRaises(AssertionError):
+                validate_waiter_signal(*args)
+        args = waiter_cancel_fixture(2)
+        args[-1] *= 2
+        with self.assertRaises(AssertionError):
+            validate_waiter_signal(*args)
+
+    def test_cancellation_cannot_be_an_acquisition_or_pending_injection(self):
+        args = waiter_cancel_fixture(1)
+        for event in (
+            "kd_pending mutex acquired: task=20 preserved=1",
+            "kd_waiter signal acquired: task=20 signal=10 pending=1 fatal=0",
+            "[KD_JIT][WARN] reason=PENDING_LOCK_NATIVE task=20",
+            "JIT body witness: entry=1234 lock=abcd body=1",
+        ):
+            with self.subTest(event=event), self.assertRaises(AssertionError):
+                validate_waiter_signal(args[0] + "\n" + event, *args[1:])
+        for old, new in (
+            ("ret=-4", "ret=0"),
+            ("pending=1", "pending=0"),
+            ("queued=0", "queued=1"),
+            ("a_owner=1110", "a_owner=2220"),
+            ("record=12001", "record=12000"),
+            ("called=1", "called=2"),
+            ("acquired=0", "acquired=1"),
+            ("held_ack=1", "held_ack=0"),
+        ):
+            with self.subTest(old=old), self.assertRaises(AssertionError):
+                validate_waiter_signal(args[0].replace(old, new, 1), *args[1:])
+
+    def test_owner_and_client_cannot_skip_the_final_ack(self):
+        args = waiter_cancel_fixture(2)
+        lines = args[0].splitlines()
+        ack = next(i for i, line in enumerate(lines) if "kd_native ack:" in line)
+        held = next(i for i, line in enumerate(lines) if "held-after-ack:" in line)
+        lines[ack], lines[held] = lines[held], lines[ack]
+        with self.assertRaises(AssertionError):
+            validate_waiter_signal("\n".join(lines), *args[1:])
+        args[1] += "pending client return: pid=20 signal=9 ret=0 errno=0 signals=0\n"
+        with self.assertRaises(AssertionError):
+            validate_waiter_signal(*args)
 
 
 if __name__ == "__main__":

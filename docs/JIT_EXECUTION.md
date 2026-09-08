@@ -182,15 +182,12 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 `ENTRY_SCOPE_MISMATCH` 或 `INVALID_ENTRY_REFUSAL` 则需要核查 frame、CALL
 阶段、RIP/RSP 和父请求，不能忽略错误并重试入口。
 
-最近一次完整矩阵（2026-09-08 23:50 至 09-09 00:11 +08）的结果集中记录在
-[VALIDATION: Original Waiter Signals](VALIDATION.md#original-waiter-signals)。
-完整矩阵的逐项命令见 [测试清单](VALIDATION.md#current-matrix-manifest)，
-该矩阵使用同一源码快照执行全部 57 个选择器，不借用旧的短回归结果。
-完整 57 项全部通过，包含 41 项实际 JIT；虚拟请求取消与续跑见 6.3，新增的
-原 waiter 信号用例见 6.4。两项真实 RCU/owner ACK 探针不执行 JIT，见 6.2。mode 0-8、
-mode 1/4 的普通 CALL 寄存器、held-B、pending-B，以及 mode 8 的两项寄存器
-续跑检查通过。mutex 学习深层 callee 后也实际执行 JIT 并通过容量续跑检查；
-不能将这组有界测试写成整个项目或所有资源耗尽场景已完成。
+最新批次的时间、源码身份、结果及逐项命令集中记录在
+[VALIDATION](VALIDATION.md) 和 [测试清单](VALIDATION.md#current-matrix-manifest)。
+完整矩阵必须使用同一源码快照，不借用旧的短回归结果。虚拟请求取消与续跑
+见 6.3，原 waiter 的等待/取消见 6.4；6.2 的真实 RCU/owner ACK 探针不执行
+JIT，不能计入实际 JIT 正例。主模式、寄存器、held-B、pending-B、学习后 callee
+与远端测试分别验证不同路径，不能合称所有资源耗尽或所有生命周期均已完成。
 
 ## 5. 入口条件与嵌套续点
 
@@ -281,7 +278,7 @@ scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行
 远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
 另行验证真实 JIT、嵌套竞争及寄存器续跑。文本窗口测试检查新增可达块、块内
 入口分割、GS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
-结果只维护在 [验证记录](VALIDATION.md#original-waiter-signals)，后续顺序见
+结果只维护在 [验证记录](VALIDATION.md)，后续顺序见
 [TODO](TODO.md#direction-and-priority)。
 
 ## 6. 资源拒绝与测试边界
@@ -460,10 +457,16 @@ KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_SHADOW_CAPACITY=1 \
 
 `KD_NATIVE_WAITER_SIGNAL=10/9` 将真实 SIGUSR1/SIGKILL 发送给已经执行 JIT
 前缀、正在原生 B 上等待的逻辑 waiter。它不是 `test_19` 中的旁路原生
-interruptible/killable peer：当前 guest 普通 `mutex_lock` 的 slowpath 使用
-`TASK_UNINTERRUPTIBLE`，收到信号不应提前退出此加锁或丢弃已经执行的 frame。
-脚本使用已有的 `jit_fail_pending_lock=2` 单次注入，在获取 B 之前以 E2BIG
-退出，以确定性进入 native 后缀；这不是自然容量耗尽，也不增加新的恢复出口。
+interruptible/killable peer。`KD_NATIVE_WAITER_API` 选择 B 的真实 API；
+所有用例都要求保留 JIT 已完成的写入，并完成借用 A 的最终 owner ACK。
+
+| API 选项 | B 调用与信号 | 离开 JIT 的原因 | B 的预期结果 |
+| --- | --- | --- | --- |
+| `0`，默认 | `mutex_lock`，信号 `10` 或 `9` | 单次 `jit_fail_pending_lock=2` 注入的 PENDING E2BIG | 不可中断等待，取得并释放 B |
+| `1` | `mutex_lock_interruptible`，信号 `10` | 直接调用实际 API 的普通 CALL miss，无资源注入 | 原生返回 `-EINTR`，不进入或解锁 B |
+| `2` | `mutex_lock_killable`，信号 `9` | 同上，目标为实际 killable API | 原生返回 `-EINTR`，不进入或解锁 B |
+
+默认用例使用当前 guest 的 `TASK_UNINTERRUPTIBLE` 路径，不是自然容量耗尽：
 
 ```text
 A combiner 执行 JIT 前缀，更新 record -> PENDING mutex_lock(B) 退出
@@ -478,6 +481,25 @@ A combiner 执行 JIT 前缀，更新 record -> PENDING mutex_lock(B) 退出
   -> 所有参与者退出，检查 native/task/node 计数排空及 RCU 清理
 ```
 
+API 1/2 不将 mutex API 包在 helper 中，也不把它注册成 combiner-side 服务。
+普通 CALL miss 保留真实 callee RIP、当前 GPR 和返回栈；本次不再进入 JIT：
+
+```text
+A combiner 执行 JIT 前缀，更新 record -> CALL miss 到实际 cancellable B API
+  -> 原 waiter 原生进入 API，在真实 B wait_list 排队
+  -> B owner 确认身份和 A owner 后 send_sig，仍持有 B
+  -> Linux 返回 -EINTR，waiter 离开 B 队列，不执行 B 临界区或 B unlock
+  -> waiter 原生完成错误分支的 record，提交 A unlock，等待真实 owner ACK
+  -> ACK 后发布完成标记；B owner 确认自己仍持有 B，之后才允许释放 B
+  -> SIGUSR1 返回用户态执行一次 handler；SIGKILL 在用户态返回边界结束任务
+```
+
+这里取消的是原 waiter 的新原生 B 获取，不是撤销已执行的 A 或丢弃委托 frame。
+B API 的 `-EINTR` 由负载的错误分支处理，所以 SIGUSR1 客户端的 ioctl 仍成功。
+错误分支只完成独立 record，不执行 B 的受保护状态变换。
+脚本在准备期完成翻译后停止 daemon，测量期间不重编译；设备中的 CALL_MISS
+保留用于取证。这不证明该 mutex API 本体可准入，也不验证并发替换 JIT 版本。
+
 在已确认 recovery 快照、没有调用者/模块运行的 guest 执行：
 
 ```sh
@@ -485,6 +507,12 @@ KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
   KD_NATIVE_WAITER_SIGNAL=10 bash tests/test_10_native_resume.sh 4 4
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
   KD_NATIVE_WAITER_SIGNAL=9 bash tests/test_10_native_resume.sh 4 4
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
+  KD_NATIVE_WAITER_SIGNAL=10 KD_NATIVE_WAITER_API=1 \
+  bash tests/test_10_native_resume.sh 4 4
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
+  KD_NATIVE_WAITER_SIGNAL=9 KD_NATIVE_WAITER_API=2 \
+  bash tests/test_10_native_resume.sh 4 4
 ```
 
 脚本使用 CPU 0-6 的现有 mode 4 角色配置，读取 `mutex_jit=1`，并将 role 0
@@ -492,16 +520,28 @@ KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
 pthread。B owner 仅对在真实 wait_list 中核对过的测试任务发信号，不伪造
 pending 标志或锁字；不增加测试专用 task 引用来掩盖生产生命周期问题。
 该测试只允许 mode 4、stage 4、pending contention，不能与 register、rename、
-OOO 或资源注入选项叠加。`pending-int` 是客户端的 SIGUSR1 选项名，B 仍调用
-普通 `mutex_lock`，不是 `mutex_lock_interruptible`。
+OOO 或资源注入选项叠加。`pending-int` 是客户端的 SIGUSR1 选项名；B 的 API
+只由 `KD_NATIVE_WAITER_API` 选择，客户端选项名本身不改变锁 API。
 
 `native_waiter_signal_protocol.py` 将同一 PID、entry、A 地址及 owner 贯穿
-body witness、当前 PENDING 包、B 排队/获取、完整副作用、final ACK 和客户端
-结果。SIGKILL 的 137 状态只能出现在 role 0，其他角色必须成功退出；单独
-看到进程死亡不能通过。日志在 `waiter-signal.log`、`waiter-signal.json`、
-`role-0.log` 和 `role-status.tsv`。不再访问已退出任务的 `task_struct`。
+body witness、B 排队、完整副作用、final ACK 和客户端结果：
 
-这是有界的普通 mutex 等待/退出测试，不是任意取消协议：不支持在 native
+- API 0 还要求当前 PENDING 包、128 次 pending/队列观测、取得 B；总计
+  12002 个独立 record、12008 次受保护状态变换。
+- API 1/2 要求 `jit_fail_pending_lock=0`、没有 PENDING 诊断，且设备的实际
+  CALL_MISS 条目匹配 entry、mutex kind、非零代码地址和 kallsyms 中的 API
+  目标。`-EINTR`、未取得 B、ACK 后仍持有 B 必须同时成立；总计 12002 个
+  record、12007 次状态变换，不能沿用成功取得 B 的预期计数。
+- SIGKILL 的 137 状态只能出现在 role 0，其他角色必须成功退出；单独看到
+  进程死亡不能通过。每项必须恰好一次匹配的 body witness 和 native/ACK。
+
+日志在 `waiter-signal.log`、`waiter-signal.json`、`role-0.log` 和
+`role-status.tsv`；API 1/2 另保留卸载前读取的 `cancel-publication.json`。
+取消路径发信号后只使用已保存的 PID/owner 标识及 release/acquire 完成标记，
+不再解引用可能已退出的 waiter `task_struct`。观察超时报告失败并允许 B owner
+释放锁，不能将超时或预期 SIGKILL 状态当作成功。
+
+这是有界的原生 mutex 等待/取消测试，不是任意委托请求取消协议：不支持在 native
 后缀中直接 `do_exit`、丢弃尚未确认的请求、抢占任意持锁指令或从入口重放。
 128 次观测不证明遍历所有调度；最终计数检查也不替代 6.2 的真实 RCU 读者探针。
 只修改 kdlock 的测试负载/客户端，没有 guest 内核修改或新的 owner handoff。

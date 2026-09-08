@@ -12,13 +12,11 @@ ends this JIT invocation and the original waiter completes the native suffix.
 Admission and emission share the same scope. This replaces the old requirement
 to admit that waiter-only suffix; it does not allow unchecked live JIT paths.
 
-Latest complete matrix: **57/57 pass**; 41 passes execute generated
-code, 12 are context refusals, two are native controls and two are real kernel
-task/RCU/owner-ACK probes without JIT. All 39 unit programs
-and the 25-case admission audit pass. Mode 0-8, including guarded mode 1/4/8,
-pass actual JIT. Mode 8's stage-2/3 register cases and learned mutex-depth
-continuation also pass. This closes the matrix gates, not the whole project:
-[VALIDATION](VALIDATION.md#original-waiter-signals).
+Main mode 0-8, guarded nested/register continuation and learned mutex-depth
+gates pass actual JIT. Context refusals, native controls and real kernel
+task/RCU/owner-ACK probes without JIT remain distinct acceptance categories.
+Exact batch dates, counts and source identities live in [VALIDATION](VALIDATION.md),
+not repeated task summaries. Passing these gates does not close the whole project.
 
 Implement next in this order:
 
@@ -31,9 +29,9 @@ Implement next in this order:
    arbitrary task exit, cancellation or multiple outstanding native frames.
    Spin's busy-B context/node refusal probes now connect real virtual-ticket
    cancellation to actual JIT/native continuation; their resource views are
-   injected, not naturally saturated pools. The new original-waiter signal
-   probes cover uninterruptible B and deferred userspace exit, not cancellation
-   or abandonment of a progressed delegated request.
+   injected, not naturally saturated pools. Original-waiter signal probes cover
+   uninterruptible B and direct cancellable native B after JIT progress. They
+   retain A's suffix and final ACK, not abandonment of a delegated request.
 2. Broaden native-peer, signal/trylock, oversubscribed and multi-request remote
    schedules, using existing hooks. Keep source/lock lifetime review separate
    from owner handoff and the explicitly deferred immutable-version work.
@@ -49,7 +47,7 @@ Production conditional analysis collects required entry-range separations and
 models callee-saved effects only at registered lock-control calls. Every premise
 is checked before root body execution; missing cold text must be fetched first.
 Current results and remaining gates are in
-[VALIDATION](VALIDATION.md#original-waiter-signals); this does not close C1/C2/C5.
+[VALIDATION](VALIDATION.md); this does not close C1/C2/C5.
 
 - [x] Collect every required disjoint range and test the emitted entry predicate
       against concrete overlap, adjacency, wrap and register-preservation cases.
@@ -116,24 +114,29 @@ prefix. The implementation and execution flow are in
       preserve full packets, frame/node/context storage, retained A and one
       native/owner-ACK lifecycle. Context absence and full count are injected
       inputs, not four live virtual nodes; execution flow is in usage 6.3.
-- [x] Run the full 57-case matrix on the resulting 178-input freeze, including
-      both virtual cancellation exits, original-waiter signals and prior gates.
-      The separate shadow-capacity regression and final units/audit/identity/
-      drain checks pass; default `.text` is unchanged and has no new probe.
-      Mode 3 now waits for its exact published entry before JIT contention;
-      the interrupted attempt is retained separately, not merged into this pass.
+- [x] Retain virtual cancellation, original-waiter signals and prior main gates
+      in the full-matrix manifest. Check shadow capacity separately, then units,
+      audit, default build identity and drains on the same frozen inputs.
+      Mode 3 waits for its exact published entry before JIT contention; failed
+      attempts remain separate from corrected runs in VALIDATION.
 - [x] Deliver real SIGUSR1/SIGKILL to the original waiter during native B
       waiting after JIT progress. Require the uninterruptible suffix, exact
       records and final owner ACK before userspace signal delivery/exit.
       Focused native-peer cancellation regressions also pass; usage 6.4 keeps
       these different participant/API contracts separate.
+- [x] Exercise direct `mutex_lock_interruptible/killable(B)` ordinary CALL
+      misses after actual JIT stores, without PENDING injection or helper
+      indirection. Real `-EINTR` skips B's CS/unlock, completes A's record/ACK
+      once and leaves B owned until after ACK. Keep fatal task lifetime checks
+      free of extra test task refs; focused evidence and full-matrix results
+      remain distinct in VALIDATION.
 - [ ] Broaden combined pressure, task exit/cancellation and multiple native
       frame schedules. These bounded checks do not close C1/C2/C5 or prove
       live pool saturation. `test_22` constructs its continuation and outer
       batch callback; it does not replace the actual-JIT/queue matrix.
-      Cancellable B APIs and task exit inside the native suffix remain outside
-      the ordinary-waiter signal coverage. Earlier freeze results are indexed
-      in VALIDATION rather than repeated as completed tasks here.
+      Arbitrary cancellation order, exit inside the native suffix and dropping
+      an unfinished delegated frame remain outside these bounded B API tests.
+      Earlier freezes are indexed in VALIDATION rather than repeated here.
 
 ### C1. Forward Continuation After Partial Execution
 

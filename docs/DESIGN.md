@@ -252,8 +252,14 @@ ordinary native `mutex_lock(B)` suffix waits uninterruptibly, including with a
 fatal signal pending. It must finish B, the remaining effects and the final A
 owner ACK before Linux delivers the signal on return to userspace. The opt-in
 [original-waiter signal test](JIT_EXECUTION.md#64-原-waiter-的信号与退出) checks
-this bounded path. It does not authorize `do_exit` inside the suffix or
-interruptible/killable cancellation of a delegated acquisition.
+this bounded path and direct ordinary CALL misses to native
+`mutex_lock_interruptible/killable(B)`. In the latter cases Linux returns
+`-EINTR` on the original waiter: B was not acquired, so its error suffix skips
+B's critical section and unlock, but still completes the borrowed A unlock
+and final owner ACK. This is cancellation of a new native B acquisition, not
+rollback of A or cancellation of its retained delegated frame. These APIs are
+not added as translated lock controls or hostcalls. `do_exit` inside the suffix
+and arbitrary abandonment remain unsupported.
 
 Borrowed execution does not make `mutex.owner == current` true on the waiter.
 Code that inspects ownership, recursively acquires a borrowed mutex, relies on
@@ -736,8 +742,10 @@ The implementation boundaries are:
     including head/non-head removal and survivor progress. Bounded native
     signal/release races also cover observed acquisitions/cancellations and
     real HANDOFF requests, not every internal removal/handoff interleaving.
-    A separate original-waiter test covers deferred SIGUSR1/SIGKILL during an
-    uninterruptible native suffix, not cancellation of a delegated request.
+    Separate original-waiter tests cover uninterruptible native B waiting and
+    direct cancellable B CALL misses after JIT progress. Cancellation skips B,
+    not A's completed stores or final owner ACK; it is not arbitrary delegated
+    request cancellation or exit inside a native suffix.
     Arbitrary cancellation schedules, WW/PI/RT mutexes, irqsave/bh and
     lock-address reuse need separate work.
     Known mixed spin/mutex references in the discovered CFG now refuse before

@@ -1275,6 +1275,7 @@ static noinline void prepare_nested_mutex_role(void)
 static noinline void run_nested_mutex_cs(unsigned long work_load)
 {
 	unsigned long j;
+	int lock_ret = 0;
 	volatile int dummy_computation = 0;
 	struct kd_resume_record *record = kd_resume_begin();
 
@@ -1298,7 +1299,19 @@ static noinline void run_nested_mutex_cs(unsigned long work_load)
 	kd_resume_before_pending_lock(record);
 	atomic_set(&mutex_inner_nested_waiting, 1);
 	smp_mb__after_atomic();
-	mutex_lock(&nested_mutex_b);
+	/* Keep the real cancellable API as the generated CALL-miss target. Its
+	 * -EINTR suffix runs on the original waiter, not a combiner-side service.
+	 */
+	if (native_waiter_api == 1)
+		lock_ret = mutex_lock_interruptible(&nested_mutex_b);
+	else if (native_waiter_api == 2)
+		lock_ret = mutex_lock_killable(&nested_mutex_b);
+	else
+		mutex_lock(&nested_mutex_b);
+	if (lock_ret) {
+		kd_waiter_signal_cancelled(record, lock_ret);
+		goto unlock_outer;
+	}
 	kd_resume_after_pending_lock(record);
 
 	kd_cs_step(KD_CS_MUTEX_B);
@@ -1791,8 +1804,13 @@ static int __init my_module_init(void)
 	if (native_pending_contended && native_resume_stage != 4)
 		return -EINVAL;
 	if (native_waiter_signal &&
-	    ((native_waiter_signal != SIGUSR1 && native_waiter_signal != SIGKILL) ||
+	    ((native_waiter_signal != SIGUSR1 &&
+	      native_waiter_signal != SIGKILL) ||
 	     !native_pending_contended || native_resume_stage != 4))
+		return -EINVAL;
+	if (native_waiter_api &&
+	    !((native_waiter_api == 1 && native_waiter_signal == SIGUSR1) ||
+	      (native_waiter_api == 2 && native_waiter_signal == SIGKILL)))
 		return -EINVAL;
 	if (native_resume_ooo || jit_mutex_ooo || mutex_ooo_dependency ||
 	    spin_ooo_dependency)

@@ -148,6 +148,6 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 说明实际改动、构建/测试命令和结果、是否加载模块及启用 mutex_jit、
 内核错误和排空状态、未执行/失败项目、Git 版本。
 本轮或历史证据必须标明来源和时间，不混用不同源码版本的通过结果。
-当前完整矩阵为 57/57 通过，含 41 项实际 JIT 与两项 JIT=0 的真实 RCU/ACK
-探针；不代表所有资源、上下文和生命周期问题已解决，详见
-[最新验收](VALIDATION.md#original-waiter-signals)。
+当前批次的时间、计数和源码身份只以 [最新验收](VALIDATION.md) 为准。
+实际 JIT、上下文拒绝、纯原生对照和 JIT=0 的 RCU/ACK 探针必须分开报告；
+完整矩阵通过不代表所有资源、上下文和生命周期问题已解决。

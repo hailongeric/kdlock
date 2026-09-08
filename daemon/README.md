@@ -137,4 +137,4 @@ failures into accepted native fallback.
 Actual runtime continuation and test commands are maintained in
 [JIT_EXECUTION](../docs/JIT_EXECUTION.md). Current results, including learned
 mutex-depth JIT and native continuation, are in
-[VALIDATION](../docs/VALIDATION.md#original-waiter-signals), not duplicated here.
+[VALIDATION](../docs/VALIDATION.md), not duplicated here.
