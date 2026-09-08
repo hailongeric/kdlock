@@ -3,7 +3,7 @@
 本文以当前 x86-64 内核 spin/mutex 实现为准，描述入口、wrapper、退出及原 waiter
 续跑的寄存器/栈约定。使用与执行流见 [JIT_EXECUTION.md](JIT_EXECUTION.md)，
 锁和 frame 生命周期见 [DESIGN.md](DESIGN.md)，结果见
-[VALIDATION.md](VALIDATION.md#spin-virtual-cancellation)。
+[VALIDATION.md](VALIDATION.md#original-waiter-signals)。
 
 唯一执行入口是 frame-backed `kd_exe_on_call_hl_entry()`。两元素输入保持
 `{waiter GS base, logical waiter task}`，不增加 FS base 或第三个 task 元素。
@@ -416,7 +416,7 @@ task/目标 RIP/RSP 对应。远端祖先可以转递同一个包，但 callee �
 RBP/RSP/后继 RIP 的期望地址由 caller 生成，并非独立证明所有地址计算。
 此探针不检查 RFLAGS、向量寄存器、非 CALL 出口、任意栈对齐或 IRQ/NMI；
 纯原生及 guest 用户态对照不能记为 JIT 通过。证据见
-[最新寄存器验收](VALIDATION.md#spin-virtual-cancellation)。
+[最新寄存器验收](VALIDATION.md#original-waiter-signals)。
 当前 mode 0/3 和嵌套 mode 1/4/8 的标记样本通过。mutex learned-depth 另行
 通过真实 JIT/容量续跑与保留锁检查，不等于它也运行了这套专用 GPR 标记探针。
 
@@ -517,6 +517,12 @@ pending mutex B 若由 native waiter 首次获取，其 owner 是 waiter；之�
 combiner 获取的 A/B 则仍通过 owner 通知解锁。pending spin B 在 native ticket
 状态下走 Linux L，不新发布 JIT B 请求。两者均保留嵌套 helper 的返回链，
 不回退先前副作用。
+
+普通 `mutex_lock(B)` 原生等待期间收到 SIGUSR1/SIGKILL，不改变当前 CALL 包、
+寄存器续点或 owner ACK 义务。waiter 完成不可中断的 B 获取及后缀，最终 ACK
+返回后才能到达用户态信号处理/退出边界；不得因信号改用入口快照或丢弃 frame。
+该路径的实际 JIT 测试及其限制见
+[原 waiter 信号测试](JIT_EXECUTION.md#64-原-waiter-的信号与退出)，不新增 wrapper 状态。
 
 两个恢复函数都不恢复 EFLAGS、硬件 segment base 或 SIMD/FPU。
 这些限制不能由寄存器观察测试通过推断为已解决。

@@ -115,6 +115,8 @@ static unsigned long kd_test_mutex_owner(struct mutex *lock)
 	return atomic_long_read(&lock->owner) & ~0x7UL;
 }
 
+#include "../tests/kernel/native_waiter_signal_workload.c"
+
 static bool kd_test_spin_origin_locked(u32 word)
 {
 	u32 locked = word & _Q_LOCKED_MASK;
@@ -243,6 +245,7 @@ kd_resume_native_probe(struct kd_resume_record *record)
 		pr_info("kd_pending mutex acquired: task=%d waiter=%lx a_owner=%lx b_owner=%lx preserved=%u\n",
 			current->pid, (unsigned long)current, a_owner, b_owner,
 			preserved);
+		kd_waiter_signal_acquired(record);
 	}
 	record->called++;
 	record->value += 17;
@@ -1340,6 +1343,8 @@ mutex_ooo_after_a:
 unlock_outer:
 	mutex_unlock(&nested_mutex_a);
 nested_mutex_done:
+	/* Signals are delivered to userspace only after this native suffix and ACK. */
+	kd_waiter_signal_complete(record);
 	if (native_resume_rename)
 		kd_test_rename("klock_test");
 }
@@ -1437,6 +1442,7 @@ static noinline void wait_for_pending_mutex_waiter(void)
 			pr_info("kd_pending mutex blocked: task=%d waiter=%lx a_owner=%lx b_owner=%lx queued=1 valid=%u holder_comm=%s\n",
 				record->task->pid, (unsigned long)record->task,
 				a_owner, b_owner, valid, current->comm);
+			kd_waiter_signal_send(record);
 			return;
 		}
 		if (time_after_eq(jiffies, deadline)) {
@@ -1784,6 +1790,10 @@ static int __init my_module_init(void)
 		return -EINVAL;
 	if (native_pending_contended && native_resume_stage != 4)
 		return -EINVAL;
+	if (native_waiter_signal &&
+	    ((native_waiter_signal != SIGUSR1 && native_waiter_signal != SIGKILL) ||
+	     !native_pending_contended || native_resume_stage != 4))
+		return -EINVAL;
 	if (native_resume_ooo || jit_mutex_ooo || mutex_ooo_dependency ||
 	    spin_ooo_dependency)
 		return -EINVAL;
@@ -1850,6 +1860,7 @@ static void __exit my_module_exit(void)
 	kd_context_report();
 	kd_route_report();
 	kd_signal_report();
+	kd_waiter_signal_report();
 	kd_ooo_report();
 	kd_remote_ooo_report();
 	kd_spin_oracle_report();

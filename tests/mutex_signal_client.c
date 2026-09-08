@@ -29,6 +29,7 @@ int main(int argc, char **argv)
 	struct sigaction action = { .sa_handler = notice_signal };
 	int role, fd, ret, error;
 	int race = 0;
+	int pending_signal = 0;
 	sigset_t block, previous;
 
 	if ((argc != 3 && argc != 4) ||
@@ -37,13 +38,27 @@ int main(int argc, char **argv)
 		return 2;
 	role = argv[1][0] - '0';
 	if (argc == 4) {
+		pending_signal = !strcmp(argv[3], "pending-int")  ? SIGUSR1 :
+				 !strcmp(argv[3], "pending-kill") ? SIGKILL :
+								    0;
 		race = !strcmp(argv[3], "race-int")  ? 1 :
 		       !strcmp(argv[3], "race-kill") ? 2 :
 						       0;
-		if (role || !race)
+		if (role || (!race && !pending_signal))
 			return 2;
 	}
 	args.role = 0x10000000U | role;
+	if (pending_signal) {
+		/* One process, one ioctl, no EINTR retry: a fatal result must not
+		 * be confused with the timeout supervisor or a different pthread.
+		 */
+		args.mode = 4;
+		args.role = 0x80000000U;
+		args.work_load = 50000;
+		printf("pending client enter: pid=%ld signal=%d\n",
+		       (long)getpid(), pending_signal);
+		fflush(stdout);
+	}
 	sigemptyset(&action.sa_mask);
 	if (sigaction(SIGUSR1, &action, NULL) ||
 	    prctl(PR_SET_NAME, argv[2], 0, 0, 0)) {
@@ -58,6 +73,12 @@ int main(int argc, char **argv)
 	ret = ioctl(fd, IOC_RUN_TEST, &args);
 	error = ret < 0 ? errno : 0;
 	close(fd);
+	if (pending_signal) {
+		printf("pending client return: pid=%ld signal=%d ret=%d errno=%d signals=%d\n",
+		       (long)getpid(), pending_signal, ret, error, signals);
+		return pending_signal != SIGUSR1 || ret != 0 || error ||
+		       signals != 1;
+	}
 	if (race) {
 		if (ret != 0 && (ret != -1 || error != EINTR))
 			return 1;

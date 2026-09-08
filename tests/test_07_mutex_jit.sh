@@ -100,6 +100,14 @@ fi
 check_daemon_read_kernel_text "$DAEMON_LOG" || exit 1
 check_jit_artifacts "$asm_dir" || exit 1
 check_complex_cs_artifact "$asm_dir" || exit 1
+# Files precede device upload, and the final-chunk log precedes its copy. Wait
+# for this exact mutex entry's published state before starting any JIT waiter.
+# This uses the existing protocol observer, not a sleep or execution-proof proxy.
+python3 "$KDLOCK_DIR/tests/mutex_signal_protocol.py" ready \
+    --artifact "$asm_dir" --output "${DAEMON_LOG%.log}.published.json" || {
+    fail "$TEST_NAME" "mutex JIT entry was not published before workload"
+    exit 1
+}
 check_dmesg_has "$JIT_INSTALL_PATTERN" "daemon did not install mutex JIT code" || exit 1
 wait_for_jit_quiescence 1 20 2 || {
     fail "$TEST_NAME" "mutex translation did not become quiet"

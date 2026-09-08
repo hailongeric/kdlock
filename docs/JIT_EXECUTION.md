@@ -117,6 +117,13 @@ daemon 的 `--mode 1/2` 只选择工作目录布局，不是 benchmark 的 mode�
 mode 1/4 的入口条件及 mode 8 的跨窗口解码已通过实际 JIT 检查；这不代表
 所有远端或资源耗尽场景也通过，完整结果及未通过项见验证记录。
 
+mode 3 的 `test_07` 在生成物出现后，还通过现有 `wait_ready()` 读取
+`/dev/kd_dev`，等待对应 RIP/TGID 的 mutex 条目为 NORMAL，再运行竞争负载。
+`jit.bin` 存在可能早于上传，最终 chunk 日志也早于 payload 拷贝，不能只查
+一次日志就启动测试或判失败。发布状态写入 daemon 日志同名前缀的
+`.published.json`；此准备检查不代替负载后的 body witness/计数验收，也不提供
+不可变版本或并发重编译保护。
+
 mode 8 需要串行准备六个翻译入口，`test_04` / `test_10` 为此单独等待最多
 90 秒并打印实际耗时。只延长产物初始化等待，不改变负载执行超时、必需产物、
 返回后 body witness、寄存器或互斥/副作用检查。
@@ -175,12 +182,12 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 `ENTRY_SCOPE_MISMATCH` 或 `INVALID_ENTRY_REFUSAL` 则需要核查 frame、CALL
 阶段、RIP/RSP 和父请求，不能忽略错误并重试入口。
 
-最近一次完整矩阵（2026-09-08 22:28-22:49 +08）的结果集中记录在
-[VALIDATION: Spin Virtual Cancellation](VALIDATION.md#spin-virtual-cancellation)。
+最近一次完整矩阵（2026-09-08 23:50 至 09-09 00:11 +08）的结果集中记录在
+[VALIDATION: Original Waiter Signals](VALIDATION.md#original-waiter-signals)。
 完整矩阵的逐项命令见 [测试清单](VALIDATION.md#current-matrix-manifest)，
-该矩阵使用同一源码快照执行全部 55 个选择器，不借用旧的短回归结果。
-完整 55 项全部通过，包含 39 项实际 JIT；其中新增两项虚拟请求取消与续跑
-见 6.3。两项真实 RCU/owner ACK 探针不执行 JIT，见 6.2。mode 0-8、
+该矩阵使用同一源码快照执行全部 57 个选择器，不借用旧的短回归结果。
+完整 57 项全部通过，包含 41 项实际 JIT；虚拟请求取消与续跑见 6.3，新增的
+原 waiter 信号用例见 6.4。两项真实 RCU/owner ACK 探针不执行 JIT，见 6.2。mode 0-8、
 mode 1/4 的普通 CALL 寄存器、held-B、pending-B，以及 mode 8 的两项寄存器
 续跑检查通过。mutex 学习深层 callee 后也实际执行 JIT 并通过容量续跑检查；
 不能将这组有界测试写成整个项目或所有资源耗尽场景已完成。
@@ -274,7 +281,7 @@ scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行
 远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
 另行验证真实 JIT、嵌套竞争及寄存器续跑。文本窗口测试检查新增可达块、块内
 入口分割、GS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
-结果只维护在 [验证记录](VALIDATION.md#spin-virtual-cancellation)，后续顺序见
+结果只维护在 [验证记录](VALIDATION.md#original-waiter-signals)，后续顺序见
 [TODO](TODO.md#direction-and-priority)。
 
 ## 6. 资源拒绝与测试边界
@@ -447,4 +454,62 @@ ticket 池自然耗尽、发布后失败、任意抢占、任务退出或 flags 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_SHADOW_CAPACITY=1 \
   bash tests/test_10_native_resume.sh 1 4
+```
+
+### 6.4 原 Waiter 的信号与退出
+
+`KD_NATIVE_WAITER_SIGNAL=10/9` 将真实 SIGUSR1/SIGKILL 发送给已经执行 JIT
+前缀、正在原生 B 上等待的逻辑 waiter。它不是 `test_19` 中的旁路原生
+interruptible/killable peer：当前 guest 普通 `mutex_lock` 的 slowpath 使用
+`TASK_UNINTERRUPTIBLE`，收到信号不应提前退出此加锁或丢弃已经执行的 frame。
+脚本使用已有的 `jit_fail_pending_lock=2` 单次注入，在获取 B 之前以 E2BIG
+退出，以确定性进入 native 后缀；这不是自然容量耗尽，也不增加新的恢复出口。
+
+```text
+A combiner 执行 JIT 前缀，更新 record -> PENDING mutex_lock(B) 退出
+  -> 原 waiter 从当前 CALL 包续跑，在 Linux B wait_list 排队
+  -> B 的真实 owner 确认 waiter/保留 A owner 后调用 send_sig
+  -> 观察 128 次：真实 pending/fatal 信号、不可中断等待、队列及 A/B owner 保持
+  -> owner 释放 B -> waiter 必须取得 B，并带着 pending 信号完成后缀
+  -> waiter 释放自己的 B，将 A unlock 交给原 owner
+  -> final ACK 返回，记录恰好一次；调用者不再持有 A/B
+  -> SIGUSR1：返回用户态执行一次 handler，ioctl 成功且不重试
+     SIGKILL：Linux 在返回用户态边界结束任务，客户端不能正常返回
+  -> 所有参与者退出，检查 native/task/node 计数排空及 RCU 清理
+```
+
+在已确认 recovery 快照、没有调用者/模块运行的 guest 执行：
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
+  KD_NATIVE_WAITER_SIGNAL=10 bash tests/test_10_native_resume.sh 4 4
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
+  KD_NATIVE_WAITER_SIGNAL=9 bash tests/test_10_native_resume.sh 4 4
+```
+
+脚本使用 CPU 0-6 的现有 mode 4 角色配置，读取 `mutex_jit=1`，并将 role 0
+换成单进程、单 ioctl 的信号客户端，避免误杀 timeout supervisor 或另一个
+pthread。B owner 仅对在真实 wait_list 中核对过的测试任务发信号，不伪造
+pending 标志或锁字；不增加测试专用 task 引用来掩盖生产生命周期问题。
+该测试只允许 mode 4、stage 4、pending contention，不能与 register、rename、
+OOO 或资源注入选项叠加。`pending-int` 是客户端的 SIGUSR1 选项名，B 仍调用
+普通 `mutex_lock`，不是 `mutex_lock_interruptible`。
+
+`native_waiter_signal_protocol.py` 将同一 PID、entry、A 地址及 owner 贯穿
+body witness、当前 PENDING 包、B 排队/获取、完整副作用、final ACK 和客户端
+结果。SIGKILL 的 137 状态只能出现在 role 0，其他角色必须成功退出；单独
+看到进程死亡不能通过。日志在 `waiter-signal.log`、`waiter-signal.json`、
+`role-0.log` 和 `role-status.tsv`。不再访问已退出任务的 `task_struct`。
+
+这是有界的普通 mutex 等待/退出测试，不是任意取消协议：不支持在 native
+后缀中直接 `do_exit`、丢弃尚未确认的请求、抢占任意持锁指令或从入口重放。
+128 次观测不证明遍历所有调度；最终计数检查也不替代 6.2 的真实 RCU 读者探针。
+只修改 kdlock 的测试负载/客户端，没有 guest 内核修改或新的 owner handoff。
+
+修改共享信号客户端后，另行回归旁路原生参与者的 interruptible/killable 取消。
+这两项将信号发给 native peer，不是已经执行 JIT 的逻辑 waiter：
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_19_mutex_signals.sh 1
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_19_mutex_signals.sh 3
 ```

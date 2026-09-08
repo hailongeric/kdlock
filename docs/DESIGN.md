@@ -247,6 +247,14 @@ node after wakeup because it can already have been released and reused.
 Native continuation is counted by `kd_native`, not all-JIT completion counters;
 unhandled post-entry errors remain fail-stop, never entry replay.
 
+Signals do not transfer physical ownership or cancel a retained frame. The
+ordinary native `mutex_lock(B)` suffix waits uninterruptibly, including with a
+fatal signal pending. It must finish B, the remaining effects and the final A
+owner ACK before Linux delivers the signal on return to userspace. The opt-in
+[original-waiter signal test](JIT_EXECUTION.md#64-原-waiter-的信号与退出) checks
+this bounded path. It does not authorize `do_exit` inside the suffix or
+interruptible/killable cancellation of a delegated acquisition.
+
 Borrowed execution does not make `mutex.owner == current` true on the waiter.
 Code that inspects ownership, recursively acquires a borrowed mutex, relies on
 lockdep ownership, or requires task/CPU-local lock side effects is outside this
@@ -480,9 +488,9 @@ instruction/path coverage or version identity. Zero never authorizes replay.
 
 Branch-ending blocks increment R11 and test bit 24; the counter resets at each
 wrapper entry. It is not a retired-instruction or whole-CS budget.
-Entry predicates, dispatcher CMP and budget INC/TEST can clobber flags. No flags liveness verifier
-enforces the limitation. INT-to-NOP and warning-only special lowering remain;
-diagnostics do not repair instruction semantics.
+Entry predicates, dispatcher CMP and budget INC/TEST can clobber flags. No
+flags liveness verifier enforces the limitation. INT-to-NOP and warning-only
+special lowering remain; diagnostics do not repair instruction semantics.
 
 ### 8.3 Calls And Memory Boundaries
 
@@ -494,17 +502,6 @@ successful waiter restoration.
 
 No effective canonical-address or general bounds guard is emitted.
 Neither admission nor the word "sandbox" implies a security isolation boundary.
-
-For eligible single-root nested prefixes rejected by unconditional address
-analysis, `dis_assem` retries with `context_guards.EntryGuards`. It collects all
-required entry-range separations and emits their predicates before body, rather
-than assuming source bases cannot alias. Missing reachable text must be fetched
-and reanalyzed first. Known lock controls retain saved-register facts, not an
-assumption of untouched memory. Learned roots and independently decoded callees
-cannot borrow this conditional proof. See
-[the usage guide](JIT_EXECUTION.md#5-入口条件与嵌套续点) for bounds, runtime refusal and
-logical-child checks. The two-word ABI is unchanged; this is neither a general
-address guard nor immutable version isolation.
 
 ### 8.4 Native Hostcalls
 
@@ -739,6 +736,8 @@ The implementation boundaries are:
     including head/non-head removal and survivor progress. Bounded native
     signal/release races also cover observed acquisitions/cancellations and
     real HANDOFF requests, not every internal removal/handoff interleaving.
+    A separate original-waiter test covers deferred SIGUSR1/SIGKILL during an
+    uninterruptible native suffix, not cancellation of a delegated request.
     Arbitrary cancellation schedules, WW/PI/RT mutexes, irqsave/bh and
     lock-address reuse need separate work.
     Known mixed spin/mutex references in the discovered CFG now refuse before

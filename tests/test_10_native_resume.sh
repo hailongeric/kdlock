@@ -16,9 +16,22 @@ policy_completion="${KD_NATIVE_POLICY_COMPLETION:-0}"
 pending_contended="${KD_NATIVE_PENDING_CONTENDED:-0}"
 shadow_capacity="${KD_NATIVE_SHADOW_CAPACITY:-0}"
 virtual_resource="${KD_NATIVE_VIRTUAL_RESOURCE:-0}"
+waiter_signal="${KD_NATIVE_WAITER_SIGNAL:-0}"
 ooo="${KD_NATIVE_OOO:-0}"
 dependency="${KD_NATIVE_OOO_DEPENDENCY:-0}"
 registers="${KD_NATIVE_REGISTERS:-0}"
+# The signalled participant is the single-task native B waiter, not a native
+# peer or timeout supervisor. Keep all other perturbations out of this case.
+if [ "$waiter_signal" != 0 ]; then
+    case "$waiter_signal" in
+        9|10) ;;
+        *) fail "$TEST_NAME" "KD_NATIVE_WAITER_SIGNAL must be 0, 9 or 10"; exit 1 ;;
+    esac
+    if [ "$mode:$stage:$pending_contended:$pinned:$renamed:$mixed:$policy_completion:$shadow_capacity:$virtual_resource:$ooo:$dependency:$registers" != 4:4:1:0:0:0:0:0:0:0:0:0 ]; then
+        fail "$TEST_NAME" "waiter signal requires plain mode 4 stage 4 with pending contention"
+        exit 1
+    fi
+fi
 # Reuse the independent B owner/pending topology, but reach the real virtual
 # ticket cancellation branches instead of the earlier jit_fail_pending_lock.
 if [ "$virtual_resource" != 0 ]; then
@@ -142,6 +155,9 @@ retain_and_cleanup() {
 trap retain_and_cleanup EXIT
 
 build_all
+if [ "$waiter_signal" != 0 ]; then
+    gcc -O2 -Wall -Wextra -Werror "$KDLOCK_DIR/tests/mutex_signal_client.c" -o "$out/signal-client"
+fi
 unload_modules
 clear_dmesg
 module_args=()
@@ -153,7 +169,8 @@ if [ "$selftest" = 1 ]; then
 fi
 insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1 "${module_args[@]}"
 insmod "$KLOCK_DIR/klock_module.ko" native_resume_stage="$stage" \
-    native_pending_contended="$pending_contended" native_resume_registers="$registers"
+    native_pending_contended="$pending_contended" native_resume_registers="$registers" \
+    native_waiter_signal="$waiter_signal"
 test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1
 if [ "$shadow_capacity" = 1 ]; then
     shadow_outer="$(awk '$3 == "nested_lock_a" && $4 == "[klock_module]" { print $1 }' /proc/kallsyms)"
@@ -199,6 +216,7 @@ fi
         "$mode" "$stage" "$pinned" "$renamed" "$mixed" "$pending_contended" "$shadow_capacity" "$ooo" "$dependency"
     printf 'registers=%s probe_ip=%s\n' "$registers" "$probe_ip"
     printf 'virtual_resource=%s\n' "$virtual_resource"
+    printf 'waiter_signal=%s\n' "$waiter_signal"
 } > "$out/environment.log"
 start_daemon 2
 
@@ -341,15 +359,33 @@ elif [ "$mode" = 4 ] && { [ "$stage" != 4 ] || [ "$pending_contended" = 1 ]; }; 
         if [ "$pending_contended" = 1 ]; then
             case "$role" in 1|2|5) role_comm=kd_native ;; esac
         fi
-        timeout --kill-after=5s 60s env KD_TEST_COMM="$role_comm" \
-            taskset -c "$role" "$BENCH_BIN" \
-            1 1 50000 1 4 "$((2147483648 + role))" \
-            > "$out/role-$role.log" 2>&1 &
+        if [ "$role" = 0 ] && [ "$waiter_signal" != 0 ]; then
+            signal_option=pending-int
+            if [ "$waiter_signal" = 9 ]; then
+                signal_option=pending-kill
+            fi
+            timeout --kill-after=5s 60s taskset -c "$role" "$out/signal-client" \
+                0 "$TARGET_PROCESS" "$signal_option" > "$out/role-$role.log" 2>&1 &
+        else
+            timeout --kill-after=5s 60s env KD_TEST_COMM="$role_comm" \
+                taskset -c "$role" "$BENCH_BIN" \
+                1 1 50000 1 4 "$((2147483648 + role))" \
+                > "$out/role-$role.log" 2>&1 &
+        fi
         pids+=("$!")
     done
     failed=0
-    for pid in "${pids[@]}"; do
-        wait "$pid" || failed=1
+    for index in "${!pids[@]}"; do
+        status=0
+        wait "${pids[$index]}" || status=$?
+        expected=0
+        if [ "${roles[$index]}" = 0 ] && [ "$waiter_signal" = 9 ]; then
+            expected=137
+        fi
+        printf '%s\t%s\n' "${roles[$index]}" "$status" >> "$out/role-status.tsv"
+        if [ "$status" != "$expected" ]; then
+            failed=1
+        fi
     done
     test "$failed" = 0
     operations=12008
@@ -636,6 +672,13 @@ assert "kd_native stats: started=1 completed=1 unlocks=1" in text
 fi
 if [ "$pinned" = 1 ]; then
     check_dmesg_has 'kd_native begin:.*mutex=1 cpu=1'
+fi
+if [ "$waiter_signal" != 0 ]; then
+    dmesg > "$out/waiter-signal.log"
+    python3 "$KDLOCK_DIR/tests/native_waiter_signal_protocol.py" \
+        --dmesg "$out/waiter-signal.log" --client "$out/role-0.log" \
+        --statuses "$out/role-status.tsv" --signal "$waiter_signal" > "$out/waiter-signal.json"
+    info "Original waiter signal/continuation verified: $(cat "$out/waiter-signal.json")"
 fi
 started="$(dmesg | sed -n 's/.*kd_native stats: started=\([0-9]*\).*/\1/p' | tail -1)"
 completed="$(dmesg | sed -n 's/.*kd_native stats:.*completed=\([0-9]*\).*/\1/p' | tail -1)"
