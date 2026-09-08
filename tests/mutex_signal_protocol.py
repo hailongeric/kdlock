@@ -224,8 +224,19 @@ def validate(text, identities, probe_ip):
     return candidate_acquired
 
 
-def trigger_race(pid, signum, cpus, offset_us):
+def trigger_race(
+    pid,
+    signum,
+    cpus,
+    offset_us,
+    *,
+    release_parameter="mutex_signal_release",
+    pidfd=None,
+):
     """Race two real syscalls; their recorded windows are not linearization points."""
+    # Share the same trigger for native peers and the progressed original waiter.
+    # Restrict the destination to these test gates, never an arbitrary sysfs path.
+    assert release_parameter in ("mutex_signal_release", "native_waiter_release")
     barrier = threading.Barrier(3, timeout=5)
 
     def worker(name, cpu, delay, fd):
@@ -235,7 +246,11 @@ def trigger_race(pid, signum, cpus, offset_us):
             time.sleep(delay / 1_000_000)
         result = {"cpu": cpu, "before_ns": time.monotonic_ns()}
         if name == "signal":
-            os.kill(pid, signum)
+            if pidfd is None:
+                os.kill(pid, signum)
+            else:
+                signal.pidfd_send_signal(pidfd, signum, None, 0)
+                result["pidfd"] = 1
             result.update(pid=pid, signum=int(signum))
         else:
             result["written"] = os.write(fd, b"1\n")
@@ -243,7 +258,7 @@ def trigger_race(pid, signum, cpus, offset_us):
         return result
 
     with (
-        (PARAMS / "mutex_signal_release").open("wb", buffering=0) as release,
+        (PARAMS / release_parameter).open("wb", buffering=0) as release,
         concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool,
     ):
         futures = {

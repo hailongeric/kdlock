@@ -253,11 +253,14 @@ fatal signal pending. It must finish B, the remaining effects and the final A
 owner ACK before Linux delivers the signal on return to userspace. The opt-in
 [original-waiter signal test](JIT_EXECUTION.md#64-原-waiter-的信号与退出) checks
 this bounded path and direct ordinary CALL misses to native
-`mutex_lock_interruptible/killable(B)`. In the latter cases Linux returns
+`mutex_lock_interruptible/killable(B)`. With B kept held, Linux returns
 `-EINTR` on the original waiter: B was not acquired, so its error suffix skips
-B's critical section and unlock, but still completes the borrowed A unlock
-and final owner ACK. This is cancellation of a new native B acquisition, not
-rollback of A or cancellation of its retained delegated frame. These APIs are
+B's critical section and unlock. In a signal/release race the API may instead
+return 0; the waiter then really owns B and executes/unlocks B once. Both
+branches still complete the borrowed A unlock and final owner ACK. A release
+request is not proof of physical unlock; the test records the actual owner's
+unlock bracket and the native return separately. This is a new B acquisition,
+not rollback of A or cancellation of its retained delegated frame. These APIs are
 not added as translated lock controls or hostcalls. `do_exit` inside the suffix
 and arbitrary abandonment remain unsupported.
 
@@ -743,9 +746,10 @@ The implementation boundaries are:
     signal/release races also cover observed acquisitions/cancellations and
     real HANDOFF requests, not every internal removal/handoff interleaving.
     Separate original-waiter tests cover uninterruptible native B waiting and
-    direct cancellable B CALL misses after JIT progress. Cancellation skips B,
-    not A's completed stores or final owner ACK; it is not arbitrary delegated
-    request cancellation or exit inside a native suffix.
+    direct cancellable B CALL misses after JIT progress, including pidfd signal
+    versus real B-owner release races. Acquired B runs/unlocks once; cancellation
+    skips B, not A's completed stores or final owner ACK. Neither outcome
+    cancels an arbitrary delegated request or supports exit inside a native suffix.
     Arbitrary cancellation schedules, WW/PI/RT mutexes, irqsave/bh and
     lock-address reuse need separate work.
     Known mixed spin/mutex references in the discovered CFG now refuse before

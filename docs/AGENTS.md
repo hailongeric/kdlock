@@ -88,6 +88,10 @@ hostcall 还要检查执行与恢复；native-only 负例必须没有 JIT。
 `soft lockup`、`unable to handle`；检查脚本退出码之外的内核状态。
 信号测试仅对已经核对身份的 guest 测试客户端发信号。SIGKILL 的预期退出码
 不能单独作为通过条件，仍须核对 JIT、完整副作用及最终 owner ACK。
+原 waiter 的释放竞争须支持 pidfd，并留存真实 B owner 的 unlock 时间与 API
+返回值；提前发信号不保证取消，sysfs 写成功不证明已解锁。偏置期望不符仍须
+保留为失败，不能据此改写 owner/ACK/副作用判定，详见
+[竞争测试](JIT_EXECUTION.md#65-原-waiter-与-b-释放的竞争)。
 
 先停止并等待所有 workload/hook 调用者退出，确认队列/frame 无在途请求，
 再停止 daemon，按 `klock_module`、`kdlock_km` 顺序卸载。

@@ -1,17 +1,17 @@
 # kdlock Validation
 
-Latest complete matrix: **59/59 pass** on the
-[cancellable native waiter](#cancellable-native-waiter) freeze. Actual-JIT positives,
+Latest complete matrix: **65/65 pass** on the
+[original waiter release races](#original-waiter-release-races) freeze. Actual-JIT positives,
 context refusals, pure-native controls and kernel protocol probes are distinct.
 The project is not accepted as complete; older matrices are historical only.
 
-Complete-matrix source identity: **178 runtime/test inputs** in
-`/tmp/kdlock-cancellable-waiter-matrix.aLusGN/source.sha256`.
+Complete-matrix source identity: **179 runtime/test inputs** in
+`/tmp/kdlock-waiter-race-matrix.skE2dE/source.sha256`.
 Full source/log/artifact/command archive:
-`/tmp/kdlock-cancellable-waiter-matrix.aLusGN.tar.gz`, SHA256:
+`/tmp/kdlock-waiter-race-matrix.skE2dE.tar.gz`, SHA256:
 
 ```text
-9bb03061df82db11f44fb15c5bfade05771f2124c90cc7ff4f536cb541a7686a
+a33d9c1990ceb79cd48d456940f5e370b34d1c85cc17c6ea33ac0f75b0fa710d
 ```
 
 The archive includes frozen source, generated artifacts, per-case commands,
@@ -22,69 +22,128 @@ invocations auditable. The two pure-native controls depend on an external
 helper; they are not yet a self-contained fresh-checkout test. General evidence
 packaging remains TODO P1. Losing an archive never makes recorded results new.
 
-## Cancellable Native Waiter
+## Original Waiter Release Races
 
-This increment against `37ab8b0` extends the original-waiter workload to direct
-`mutex_lock_interruptible/killable(B)` calls. After actual JIT prefix stores,
-an ordinary CALL miss transfers to the real API on the original waiter. A real
-signal cancels B with `-EINTR`; the error suffix skips B's CS/unlock and still
-completes A's exact record and final owner ACK. B's owner remains holding B
-until after that ACK. There is no PENDING injection, API-hiding helper, extra
-test task reference or production lock/wrapper/kernel change. Flow, parameter
-combinations and the four reproducible commands are in
-[usage 6.4](JIT_EXECUTION.md#64-原-waiter-的信号与退出).
+This increment against `2bdc468` adds a pidfd signal versus B-owner release
+race after actual JIT prefix stores and a direct native B API CALL miss.
+The observed native return chooses the suffix: 0 acquires/executes/unlocks B
+once; -EINTR skips B. Both retain earlier stores, finish the exact record and
+borrowed A owner ACK. The client can wait for a late signal in userspace,
+without a test-owned task/frame reference. No production lock, wrapper,
+translator or guest-kernel change is made. Flow and parameters are in
+[usage 6.5](JIT_EXECUTION.md#65-原-waiter-与-b-释放的竞争).
 
-Focused verification closes at **2026-09-09 00:46:35 +08**: four passes on this
-same freeze, comprising the two new cancellable APIs and the two retained
-ordinary-B signals. Evidence is under `focus-waiter-*` in the archive. The
-updated oracle has five new test methods; all 19 signal/publication methods
-pass within the 39 unit programs. Negative cases reject missing events,
-incorrect publication identity/target, acquired B, duplicate body execution,
-wrong records and premature ACK/exit.
+The current freeze is `/tmp/kdlock-waiter-race-matrix.skE2dE/`, with 179
+runtime/test inputs. Focused verification closes at **2026-09-09 02:22:07 +08**:
+16/16 pass, each with actual JIT and full drain. Six original-waiter race cases
+cover both APIs at -50000/0/+50000 us; both APIs have real acquired and cancelled
+returns. The two unbiased focus outcomes are interruptible acquired and killable
+cancelled. Four retained original-waiter cases and six native-peer regressions
+also pass. Peer cancellation races use non-head probes 2/4; acquisition races
+use head probes 1/3, with separate forced head-cancellation controls 1/3.
+All 27 signal/publication unit methods pass within the 39 unit programs.
 
-**Full matrix: 2026-09-09 00:46:35-01:08:39 +08**, **59/59 pass**:
-**43 actual-JIT, 12 context refusals, two native controls and two JIT=0 kernel
-protocol probes**. The focused passes are additional checks, not substitutes
-for matrix entries. Modes 0-8 return **4/4/4/642/1/456/4/2/2** body witnesses;
-mutex positives read back `mutex_jit=1`. Mode 3 observes its exact published
-entry before 642 JIT completions and 12934 transitions. Mode 5 records 456
-matched hostcall exits/executions/resumes and zero rejected/failed/limited calls.
+**Full matrix: 2026-09-09 02:22:07-02:46:05 +08**, **65/65 pass**:
+49 actual-JIT, 12 context refusals, two native controls and two JIT=0 kernel
+protocol probes. All modes 0-8 pass, with returned body counts
+**4/4/4/632/1/462/4/2/2**. Mutex positives read back `mutex_jit=1`. Mode 3 waits
+for the exact published entry before its 632 completions and 12934 transitions.
+Mode 5 has 462 matched hostcall exits/executions/resumes and zero rejected,
+failed or limited calls. These are execution observations, not version isolation
+or proof that every source instruction ran.
 
-The new interruptible and killable matrix waiters are PIDs **1590838/1592100**.
-Each executes one JIT prefix in the 12069-byte image and one native/ACK
-lifecycle, with 12002 exact records and 12007 protected transitions. Device
-CALL_MISS entries match the real API addresses and nonzero code pointers;
-`jit_fail_pending_lock=0`, no PENDING diagnostic and `acquired=0` are required.
-Both report `ret=-4`, `cancelled=1`, `held_ack=1`, no errors or active tasks.
-SIGUSR1 returns once with one handler; SIGKILL cannot return to userspace.
-The two ordinary-B signals instead retain their PENDING packet checks,
-128 pending observations, successful B acquisition and 12008 transitions.
+The six new matrix cases each have one JIT body, one native continuation and
+one final A ACK in a 12069-byte image, plus 12002 exact records:
+
+| API | Offset (us) | Waiter PID | Native result | Protected transitions |
+| --- | --- | --- | --- | --- |
+| interruptible | -50000 | 1741938 | -EINTR | 12007 |
+| interruptible | +50000 | 1743213 | 0 | 12008 |
+| interruptible | 0 | 1744474 | -EINTR | 12007 |
+| killable | -50000 | 1745735 | -EINTR | 12007 |
+| killable | +50000 | 1747001 | 0 | 12008 |
+| killable | 0 | 1748281 | -EINTR | 12007 |
+
+The device CALL_MISS targets match the real API addresses, with no PENDING
+injection. Acquired cases own B; cancelled cases never enter or unlock B.
+Pidfd target/trigger windows, owner-unlock brackets and exact records/ACKs all
+match. Both unbiased matrix cases cancel, unlike the interruptible focus case;
+these samples do not establish an outcome distribution or all interleavings.
+The four retained original-waiter signal paths also pass their separate
+held-B/acquisition/PENDING checks.
 
 All eight GPR/return-stack gates, held-B/PENDING, late-policy and depth/remote
 cases pass. Mixed mutex has four node overflows, one deliberate task allocation
-failure, balanced 4333/4333 origin intervals and no active waiter/task/node.
-Learned mutex-depth executes the **12069 -> 12751-byte** image, reaches three
-real capacity exits retaining seven child locks, and completes four native
+failure, balanced 4329/4329 origin intervals and no active waiter/task/node.
+Learned mutex-depth executes the **12069 -> 12806-byte** image, reaches three
+capacity exits retaining seven child locks, and completes four native
 continuations, 25 owner unlocks and 12017 transitions. Its zero all-JIT
-completion count is not zero generated execution. Each real task probe checks
-two unlock orders, four ACKs and two deferred frees without JIT.
+completion count is not zero generated execution. The separate shadow-capacity
+case has two body witnesses, two native continuations, three owner unlocks and
+12009 transitions. NUMA depth-8 samples 1784/712 bytes of stack margin/write
+watermark; this does not prove arbitrary IRQ/NMI or lifetime safety.
 
-The separate shadow-capacity regression passes with two body witnesses, two
-native continuations, three owner unlocks and 12009 transitions. NUMA depth-8
-SELFTEST samples 1784/712 bytes of remaining stack/write watermark; these
-bounded observations do not prove arbitrary IRQ/NMI or lifetime safety.
-
-Postflight closes at **2026-09-09 01:10:08 +08**. Pre/post 39 unit programs and
+Postflight closes at **2026-09-09 02:47:34 +08**. Pre/post 39 unit programs and
 25 admission cases pass without skips; default and SELFTEST/NUMA module builds
-and workload/daemon builds pass. All 178 host/guest input hashes, 18 captured
+and workload/daemon builds pass. All 179 host/guest input hashes, 18 captured
 kernel source/interface files, configuration, nine existing build files and
-live Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5` match. Default `.text`
-remains `37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`,
-with task/virtual selftest probes absent. The independent audit checks all
-59 statuses, empty kernel-fault scans and drained callers/modules. Existing
-objtool/locale warnings remain; no guest-kernel edit/build/install or VM restart
-occurs. Arbitrary frame abandonment/task exit and general C1/C2/C5 remain open;
-C3 version isolation and C4 flags/special-instruction repairs remain deferred.
+live Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5` match. Default
+`kdlock_km` `.text` remains
+`37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`, with
+task/virtual selftest probes absent. Independent audits verify all 65 matrix
+and 16 focus statuses, empty kernel-fault scans and drained callers/modules.
+Existing objtool/locale warnings remain; no guest-kernel edit/build/install or
+VM restart occurs. General C1/C2/C5 remain open; C3 immutable versions and
+C4 flags/special-instruction repairs remain explicitly deferred.
+
+### Failed Bias Expectations
+
+Two earlier attempts remain failures, not additional accepted matrix entries:
+
+| Archive in /tmp | Recorded outcome |
+| --- | --- |
+| `kdlock-waiter-race-matrix.ysDJPj.tar.gz` | Three focused passes, then original killable waiter acquired B despite SIGKILL being sent about 50ms before unlock; strict `expected=cancelled` fails. B owner used busy polling. |
+| `kdlock-waiter-race-matrix.T4nQAI.tar.gz` | Ten original-waiter passes, then a head native-peer race acquired despite early SIGUSR1; its strict cancellation expectation fails. Runtime inputs match the current freeze. |
+
+SHA256, in table order:
+
+```text
+e6ccff5871173d3e812f4887ae95cbbdfb6c4cc3dc1ca537573e806041322910
+f7b17a50920d38faaff07a708bddf4d6669f98717e637fb955b2d2b94df71d54
+```
+
+Both have real JIT/native/ACK records, no kernel faults and drained callers.
+The guest's mutex slowpath can trylock or optimistically spin before checking
+signals; earlier delivery alone does not require cancellation. This source
+ordering explains why the expectation is insufficient, not an instruction
+trace of the precise internal branch. The original-waiter fixture now sleeps
+between owner gate polls, letting a woken waiter leave optimistic spin; native
+return/owner/ACK assertions are unchanged. The native-peer regression selects
+the existing non-head cancellation cases instead of modifying its lock flow.
+All callers and runners stop before changes; the new run starts independently,
+without merging passed subsets or adding any guest-kernel hook.
+
+## Cancellable Native Waiter
+
+Checkpoint `2bdc468`, **2026-09-09 00:46:35-01:08:39 +08**: 178 inputs,
+59/59 pass (43 actual-JIT, 12 context refusals, two native controls, two JIT=0
+kernel probes). Four focused cases, pre/post 39 unit programs and 25 admission
+cases pass; postflight closes at 01:10:08. Default runtime `.text` is unchanged;
+source/kernel identity, fault scans and drains pass, with no kernel edit/build
+or VM restart. Existing objtool/locale warnings remain.
+
+The direct interruptible/killable B CALL misses each have one JIT prefix and
+one native/ACK lifecycle, 12002 records and 12007 transitions. Real `-EINTR`
+skips B's CS/unlock; its owner keeps B until after A ACK. No PENDING injection,
+API-hiding helper or extra test task reference is used. The two ordinary-B
+signals instead retain 128 pending samples and 12008 transitions. These tests
+do not cover B release races or arbitrary frame abandonment; the current
+execution flow is in [usage 6.4](JIT_EXECUTION.md#64-原-waiter-的信号与退出).
+
+Archive: `/tmp/kdlock-cancellable-waiter-matrix.aLusGN.tar.gz`, SHA256
+`9bb03061df82db11f44fb15c5bfade05771f2124c90cc7ff4f536cb541a7686a`.
+Detailed mode, register, capacity and remote results remain in
+`git show 2bdc468:docs/VALIDATION.md`, not duplicated in the active guide.
 
 ## Original Waiter Signals
 
@@ -236,15 +295,19 @@ PENDING resource cases instead validate the original known lock CALL packet
 before B acquisition/publication; they are not ordinary callee-learning misses.
 Signal cases correlate signal/task identity, real native queue membership,
 suffix completion and final owner ACK. Ordinary B retains its PENDING packet
-and acquisition checks; cancellable B instead requires the actual device
-CALL_MISS target, no injection, no B acquisition/unlock and B held after A ACK.
+and acquisition checks; cancellable B requires the actual device CALL_MISS
+target and no injection. Held-B cases must cancel without B acquisition/unlock,
+with B still held after A ACK. Release-race cases instead follow the real 0 or
+-EINTR return, correlating pidfd identity, actual owner-unlock timestamps and
+branch-specific ownership/effects. Neither an early signal nor a successful
+release-gate write proves cancellation or physical unlock.
 
 ## Current Matrix Manifest
 
-The prior 57 selectors plus two cancellable native B probes ran from
-**2026-09-09 00:46 to 01:08 +08**. All 59 pass in their respective
+The prior 59 selectors plus six original-waiter release races ran from
+**2026-09-09 02:22 to 02:46 +08**. All 65 pass in their respective
 categories; per-case exits are in
-`/tmp/kdlock-cancellable-waiter-matrix.aLusGN/results.tsv`. Mode 3 runs first to
+`/tmp/kdlock-waiter-race-matrix.skE2dE/results.tsv`. Mode 3 runs first to
 verify publication and actual JIT. Older tables remain historical and do
 not define current acceptance. Body records count returned
 positive logs, not retired instructions, unique instructions or immutable
@@ -257,7 +320,7 @@ All commands ran in the recovery guest project with
 snapshots, freeze/sync inputs, retain evidence and drain between cases.
 This is a manifest, not an unattended command to run on the host.
 The three cross-NUMA commands use corrected role placements; earlier invalid
-CPU placements are excluded from the 59-case total. The external
+CPU placements are excluded from the 65-case total. The external
 `/tmp/kdlock-register-native-control.sh` used only by control-0/3 must not be
 silently replaced by a JIT test or counted as delivered by this repository.
 
@@ -438,6 +501,24 @@ env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_WAITER_SIGNAL=10 KD_NATIVE_WAITER_AP
 
 # waiter-killable: no PENDING injection; fatal exit follows the same A ACK
 env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_WAITER_SIGNAL=9 KD_NATIVE_WAITER_API=2 bash tests/test_10_native_resume.sh 4 4
+
+# waiter-race-int-cancelled
+env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_WAITER_SIGNAL=10 KD_NATIVE_WAITER_API=1 KD_NATIVE_WAITER_RACE=1 KD_NATIVE_WAITER_RACE_US=-50000 KD_NATIVE_WAITER_EXPECT=cancelled bash tests/test_10_native_resume.sh 4 4
+
+# waiter-race-int-acquired
+env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_WAITER_SIGNAL=10 KD_NATIVE_WAITER_API=1 KD_NATIVE_WAITER_RACE=1 KD_NATIVE_WAITER_RACE_US=50000 KD_NATIVE_WAITER_EXPECT=acquired bash tests/test_10_native_resume.sh 4 4
+
+# waiter-race-int-either
+env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_WAITER_SIGNAL=10 KD_NATIVE_WAITER_API=1 KD_NATIVE_WAITER_RACE=1 bash tests/test_10_native_resume.sh 4 4
+
+# waiter-race-kill-cancelled
+env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_WAITER_SIGNAL=9 KD_NATIVE_WAITER_API=2 KD_NATIVE_WAITER_RACE=1 KD_NATIVE_WAITER_RACE_US=-50000 KD_NATIVE_WAITER_EXPECT=cancelled bash tests/test_10_native_resume.sh 4 4
+
+# waiter-race-kill-acquired
+env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_WAITER_SIGNAL=9 KD_NATIVE_WAITER_API=2 KD_NATIVE_WAITER_RACE=1 KD_NATIVE_WAITER_RACE_US=50000 KD_NATIVE_WAITER_EXPECT=acquired bash tests/test_10_native_resume.sh 4 4
+
+# waiter-race-kill-either
+env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_WAITER_SIGNAL=9 KD_NATIVE_WAITER_API=2 KD_NATIVE_WAITER_RACE=1 bash tests/test_10_native_resume.sh 4 4
 ```
 
 Separate regression after this matrix and before postflight:

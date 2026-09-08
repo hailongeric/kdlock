@@ -30,6 +30,7 @@ int main(int argc, char **argv)
 	int role, fd, ret, error;
 	int race = 0;
 	int pending_signal = 0;
+	int pending_race = 0;
 	sigset_t block, previous;
 
 	if ((argc != 3 && argc != 4) ||
@@ -38,9 +39,15 @@ int main(int argc, char **argv)
 		return 2;
 	role = argv[1][0] - '0';
 	if (argc == 4) {
-		pending_signal = !strcmp(argv[3], "pending-int")  ? SIGUSR1 :
-				 !strcmp(argv[3], "pending-kill") ? SIGKILL :
-								    0;
+		pending_race = !strcmp(argv[3], "pending-race-int") ||
+			       !strcmp(argv[3], "pending-race-kill");
+		pending_signal = (!strcmp(argv[3], "pending-int") ||
+				  !strcmp(argv[3], "pending-race-int")) ?
+					 SIGUSR1 :
+				 (!strcmp(argv[3], "pending-kill") ||
+				  !strcmp(argv[3], "pending-race-kill")) ?
+					 SIGKILL :
+					 0;
 		race = !strcmp(argv[3], "race-int")  ? 1 :
 		       !strcmp(argv[3], "race-kill") ? 2 :
 						       0;
@@ -74,6 +81,26 @@ int main(int argc, char **argv)
 	error = ret < 0 ? errno : 0;
 	close(fd);
 	if (pending_signal) {
+		if (pending_race) {
+			/* Acquisition may finish its kernel ACK before the signal.
+			 * Wait only in userspace, never pin a kernel task/frame for the
+			 * observer. SIGKILL may prevent even the ioctl-return log.
+			 */
+			printf("pending client ioctl: pid=%ld signal=%d ret=%d errno=%d signals=%d\n",
+			       (long)getpid(), pending_signal, ret, error,
+			       signals);
+			fflush(stdout);
+			if (ret || error)
+				return 1;
+			sigemptyset(&block);
+			sigaddset(&block, SIGUSR1);
+			if (sigprocmask(SIG_BLOCK, &block, &previous))
+				return 1;
+			while (pending_signal == SIGKILL || !signals)
+				sigsuspend(&previous);
+			if (sigprocmask(SIG_SETMASK, &previous, NULL))
+				return 1;
+		}
 		printf("pending client return: pid=%ld signal=%d ret=%d errno=%d signals=%d\n",
 		       (long)getpid(), pending_signal, ret, error, signals);
 		return pending_signal != SIGUSR1 || ret != 0 || error ||

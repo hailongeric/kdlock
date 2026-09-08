@@ -18,6 +18,9 @@ shadow_capacity="${KD_NATIVE_SHADOW_CAPACITY:-0}"
 virtual_resource="${KD_NATIVE_VIRTUAL_RESOURCE:-0}"
 waiter_signal="${KD_NATIVE_WAITER_SIGNAL:-0}"
 waiter_api="${KD_NATIVE_WAITER_API:-0}"
+waiter_race="${KD_NATIVE_WAITER_RACE:-0}"
+waiter_race_us="${KD_NATIVE_WAITER_RACE_US:-0}"
+waiter_expect="${KD_NATIVE_WAITER_EXPECT:-either}"
 ooo="${KD_NATIVE_OOO:-0}"
 dependency="${KD_NATIVE_OOO_DEPENDENCY:-0}"
 registers="${KD_NATIVE_REGISTERS:-0}"
@@ -27,6 +30,24 @@ case "$waiter_api:$waiter_signal" in
     0:0|0:9|0:10|1:10|2:9) ;;
     *) fail "$TEST_NAME" "waiter API 1 requires SIGUSR1, API 2 requires SIGKILL"; exit 1 ;;
 esac
+# Keep the release race distinct from forced cancellation. Its return is an
+# observed native API result; neither an offset nor the expected result sets it.
+case "$waiter_race:$waiter_api" in
+    0:*)
+        if [ "$waiter_race_us:$waiter_expect" != 0:either ]; then
+            fail "$TEST_NAME" "waiter race offsets/expectations require KD_NATIVE_WAITER_RACE=1"
+            exit 1
+        fi ;;
+    1:1|1:2) ;;
+    *) fail "$TEST_NAME" "waiter race requires cancellable API 1 or 2"; exit 1 ;;
+esac
+case "$waiter_expect" in
+    either|acquired|cancelled) ;;
+    *) fail "$TEST_NAME" "waiter expectation must be either/acquired/cancelled"; exit 1 ;;
+esac
+if [ "$waiter_race" = 1 ]; then
+    python3 -c 'import sys; assert -50000 <= int(sys.argv[1]) <= 50000' "$waiter_race_us"
+fi
 # The signalled participant is the single-task native B waiter, not a native
 # peer or timeout supervisor. Keep all other perturbations out of this case.
 if [ "$waiter_signal" != 0 ]; then
@@ -177,7 +198,8 @@ fi
 insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1 "${module_args[@]}"
 insmod "$KLOCK_DIR/klock_module.ko" native_resume_stage="$stage" \
     native_pending_contended="$pending_contended" native_resume_registers="$registers" \
-    native_waiter_signal="$waiter_signal" native_waiter_api="$waiter_api"
+    native_waiter_signal="$waiter_signal" native_waiter_api="$waiter_api" \
+    native_waiter_race="$waiter_race"
 test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1
 if [ "$shadow_capacity" = 1 ]; then
     shadow_outer="$(awk '$3 == "nested_lock_a" && $4 == "[klock_module]" { print $1 }' /proc/kallsyms)"
@@ -224,6 +246,7 @@ fi
     printf 'registers=%s probe_ip=%s\n' "$registers" "$probe_ip"
     printf 'virtual_resource=%s\n' "$virtual_resource"
     printf 'waiter_signal=%s waiter_api=%s\n' "$waiter_signal" "$waiter_api"
+    printf 'waiter_race=%s offset_us=%s expect=%s\n' "$waiter_race" "$waiter_race_us" "$waiter_expect"
 } > "$out/environment.log"
 start_daemon 2
 
@@ -375,9 +398,14 @@ elif [ "$mode" = 4 ] && { [ "$stage" != 4 ] || [ "$pending_contended" = 1 ]; }; 
             case "$role" in 1|2|5) role_comm=kd_native ;; esac
         fi
         if [ "$role" = 0 ] && [ "$waiter_signal" != 0 ]; then
-            signal_option=pending-int
+            signal_option=pending
+            if [ "$waiter_race" = 1 ]; then
+                signal_option=pending-race
+            fi
             if [ "$waiter_signal" = 9 ]; then
-                signal_option=pending-kill
+                signal_option+=-kill
+            else
+                signal_option+=-int
             fi
             timeout --kill-after=5s 60s taskset -c "$role" "$out/signal-client" \
                 0 "$TARGET_PROCESS" "$signal_option" > "$out/role-$role.log" 2>&1 &
@@ -390,6 +418,14 @@ elif [ "$mode" = 4 ] && { [ "$stage" != 4 ] || [ "$pending_contended" = 1 ]; }; 
         pids+=("$!")
     done
     failed=0
+    if [ "$waiter_race" = 1 ]; then
+        # Publish/trigger from userspace while all seven real ioctl tasks live.
+        # Still join every role on controller failure before considering unload.
+        run_with_timeout 20 python3 "$KDLOCK_DIR/tests/native_waiter_signal_race.py" \
+            --client "$out/role-0.log" --signal "$waiter_signal" \
+            --offset-us "$waiter_race_us" --output "$out/race-trigger.json" \
+            > "$out/race-trigger.log" 2>&1 || failed=1
+    fi
     for index in "${!pids[@]}"; do
         status=0
         wait "${pids[$index]}" || status=$?
@@ -404,9 +440,15 @@ elif [ "$mode" = 4 ] && { [ "$stage" != 4 ] || [ "$pending_contended" = 1 ]; }; 
     done
     test "$failed" = 0
     operations=12008
+    waiter_acquired=1
     if [ "$waiter_api" != 0 ]; then
         # The cancelled acquisition never enters B's protected transition.
-        operations=12007
+        waiter_acquired=0
+        if [ "$waiter_race" = 1 ]; then
+            waiter_acquired="$(cat /sys/module/klock_module/parameters/native_waiter_acquired)"
+            case "$waiter_acquired" in 0|1) ;; *) exit 1 ;; esac
+        fi
+        operations=$((12007 + waiter_acquired))
     fi
     if [ "$dependency" = 2 ]; then
         operations=$((operations + 1))
@@ -702,7 +744,7 @@ assert events == sorted(events)
 assert "kd_native stats: started=1 completed=1 unlocks=1" in text
 ' "$out/pending-contended.log"
 elif [ "$pending_contended" = 1 ]; then
-    check_dmesg_has 'kd_pending mutex: observed=1 acquired=0'
+    check_dmesg_has "kd_pending mutex: observed=1 acquired=$waiter_acquired"
 fi
 if [ "$pinned" = 1 ]; then
     check_dmesg_has 'kd_native begin:.*mutex=1 cpu=1'
@@ -712,6 +754,9 @@ if [ "$waiter_signal" != 0 ]; then
     signal_options=(--api "$waiter_api" --target "$probe_ip")
     if [ "$waiter_api" != 0 ]; then
         signal_options+=(--publication "$out/cancel-publication.json")
+    fi
+    if [ "$waiter_race" = 1 ]; then
+        signal_options+=(--race-trigger "$out/race-trigger.json" --expect "$waiter_expect")
     fi
     python3 "$KDLOCK_DIR/tests/native_waiter_signal_protocol.py" \
         --dmesg "$out/waiter-signal.log" --client "$out/role-0.log" \

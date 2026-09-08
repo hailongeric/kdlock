@@ -1496,7 +1496,12 @@ static noinline void run_inner_mutex_holder_role(unsigned long work_load)
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	kd_cs_step(KD_CS_MUTEX_B);
+	/* The native B owner brackets its real release; a sysfs trigger alone
+	 * cannot prove when a cancelled/acquired waiter was allowed to proceed.
+	 */
+	kd_waiter_race_unlock(false);
 	mutex_unlock(&nested_mutex_b);
+	kd_waiter_race_unlock(true);
 }
 
 static noinline void run_inner_mutex_trailing_role(unsigned long work_load)
@@ -1811,6 +1816,10 @@ static int __init my_module_init(void)
 	if (native_waiter_api &&
 	    !((native_waiter_api == 1 && native_waiter_signal == SIGUSR1) ||
 	      (native_waiter_api == 2 && native_waiter_signal == SIGKILL)))
+		return -EINVAL;
+	if ((native_waiter_race && !native_waiter_api) ||
+	    native_waiter_release || native_waiter_phase || native_waiter_pid ||
+	    kd_waiter_signal.acquired)
 		return -EINVAL;
 	if (native_resume_ooo || jit_mutex_ooo || mutex_ooo_dependency ||
 	    spin_ooo_dependency)

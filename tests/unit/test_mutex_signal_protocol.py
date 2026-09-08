@@ -1,10 +1,11 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from mutex_signal_protocol import Entry, validate, wait_ready
+from mutex_signal_protocol import Entry, trigger_race, validate, wait_ready
 from native_waiter_signal_protocol import validate as validate_waiter_signal
 
 
@@ -222,7 +223,7 @@ def waiter_signal_fixture(signum):
             "kd_native complete: task=20 outer=abcd mutex=1",
             "kd_native ack: task=20 lock=abcd mutex=1 last_spin=0",
             f"kd_waiter signal complete: task=20 signal={signum} pending=1 fatal={fatal} before=1 called=1 after=1 record=12001 value={value:x}",
-            f"kd_waiter signal stats: signal={signum} delivered=1 samples=128 acquired=1 completed=1 failures=0 api=0 cancelled=0 held_ack=0",
+            f"kd_waiter signal stats: signal={signum} delivered=1 samples=128 acquired=1 completed=1 failures=0 api=0 cancelled=0 held_ack=0 race=0 phase=0",
             "kd_native stats: started=1 completed=1 unlocks=1",
             "kd_mutex tasks: active_tasks=0 task_alloc_failure=0 task_reroutes=0",
         ]
@@ -283,6 +284,82 @@ def waiter_cancel_fixture(api):
         }
     ]
     return [text, client, statuses, signum, api, 0x5678, publication]
+
+
+def waiter_race_fixture(api, acquired):
+    """The native return and real owner-release bracket select the legal suffix."""
+    args = waiter_cancel_fixture(api)
+    signum, fatal = args[3], int(api == 2)
+    original = args[0].splitlines()
+    # Keep only JIT entry, native continuation and the real B queue witness;
+    # this race uses pidfd delivery, not the forced test's kernel send event.
+    rows = original[:3]
+    rows += [
+        f"kd_waiter race ready: task=20 signal={signum} api={api} a_owner=1110 b_owner=3330 owner_task=30",
+        "kd_waiter race unlock: done=0 task=30 waiter=20 owner=3330 ns=180",
+    ]
+    if acquired:
+        rows.append(
+            "kd_pending mutex acquired: task=20 waiter=2220 a_owner=1110 b_owner=2220 preserved=1"
+        )
+    rows.append(
+        f"kd_waiter race result: task=20 api={api} ret={0 if acquired else -4} waiter=2220 a_owner=1110 b_owner={'2220' if acquired else '3330'} pending=1 fatal={fatal} queued=0 before=1 called=0 after=0 record=12001 value={12002 * 3:x} ns=210"
+    )
+    if acquired:
+        rows.append(
+            f"kd_waiter signal acquired: task=20 signal={signum} pending=1 fatal={fatal}"
+        )
+    else:
+        rows += [row for row in original if "kd_waiter signal cancelled:" in row]
+    rows.append("kd_waiter race unlock: done=1 task=30 waiter=20 owner=4440 ns=250")
+    rows += [
+        row
+        for row in original
+        if row.startswith(
+            (
+                "kd_native complete:",
+                "kd_native ack:",
+                "kd_waiter signal complete:",
+                "kd_waiter signal stats:",
+                "kd_native stats:",
+                "kd_mutex tasks:",
+            )
+        )
+    ]
+    args[0] = (
+        "\n".join(rows)
+        .replace("delivered=1", "delivered=0")
+        .replace("samples=0 acquired=0", f"samples=0 acquired={int(acquired)}")
+        .replace(
+            "cancelled=1 held_ack=1 race=0 phase=0",
+            f"cancelled={int(not acquired)} held_ack=0 race=1 phase=3",
+        )
+    )
+    if api == 1:
+        args[1] = args[1].replace(
+            "pending client return:",
+            "pending client ioctl: pid=20 signal=10 ret=0 errno=0 signals=0\npending client return:",
+        )
+    args += [
+        {
+            "pid": 20,
+            "signal": signum,
+            "offset_us": 0,
+            "trigger": {
+                "signal": {
+                    "cpu": 7,
+                    "pid": 20,
+                    "signum": signum,
+                    "pidfd": 1,
+                    "before_ns": 150,
+                    "after_ns": 200,
+                },
+                "release": {"cpu": 9, "written": 2, "before_ns": 100, "after_ns": 190},
+            },
+        },
+        "either",
+    ]
+    return args
 
 
 class NativeWaiterSignalTests(unittest.TestCase):
@@ -466,6 +543,168 @@ class NativeWaiterCancelTests(unittest.TestCase):
         args[1] += "pending client return: pid=20 signal=9 ret=0 errno=0 signals=0\n"
         with self.assertRaises(AssertionError):
             validate_waiter_signal(*args)
+
+
+class NativeWaiterRaceTests(unittest.TestCase):
+    """Neither a scheduling bias nor a killed client proves native cancellation."""
+
+    def test_both_apis_and_real_returns(self):
+        for api in (1, 2):
+            for acquired in (False, True):
+                with self.subTest(api=api, acquired=acquired):
+                    result = validate_waiter_signal(*waiter_race_fixture(api, acquired))
+                    self.assertTrue(result["jit"] and result["race"])
+                    self.assertEqual(result["cancelled"], not acquired)
+                    self.assertEqual(result["owner_acks"], 1)
+
+    def test_bias_cannot_substitute_for_the_return(self):
+        for acquired in (False, True):
+            args = waiter_race_fixture(1, acquired)
+            for bias in (-50000, 50000):
+                args[-2]["offset_us"] = bias
+                validate_waiter_signal(*args)
+            args[-1] = "acquired" if acquired else "cancelled"
+            validate_waiter_signal(*args)
+            args[-1] = "cancelled" if acquired else "acquired"
+            with self.assertRaises(AssertionError):
+                validate_waiter_signal(*args)
+
+    def test_every_kernel_event_is_required(self):
+        for acquired in (False, True):
+            args = waiter_race_fixture(2, acquired)
+            lines = args[0].splitlines()
+            for index in range(len(lines)):
+                with (
+                    self.subTest(acquired=acquired, index=index),
+                    self.assertRaises(AssertionError),
+                ):
+                    validate_waiter_signal(
+                        "\n".join(lines[:index] + lines[index + 1 :]), *args[1:]
+                    )
+
+    def test_corrupt_return_owner_or_packet_is_rejected(self):
+        for acquired in (False, True):
+            args = waiter_race_fixture(1, acquired)
+            for old, new in (
+                ("a_owner=1110", "a_owner=2220"),
+                ("ip=5678", "ip=9999"),
+                ("body=1", "body=0"),
+                ("owner_task=30", "owner_task=20"),
+                ("done=0", "done=1"),
+                ("ns=210", "ns=50"),
+                ("phase=3", "phase=2"),
+                ("held_ack=0", "held_ack=1"),
+                ("before=1 called=0", "before=2 called=0"),
+                ("ret=0" if acquired else "ret=-4", "ret=-22"),
+            ):
+                with (
+                    self.subTest(acquired=acquired, old=old),
+                    self.assertRaises(AssertionError),
+                ):
+                    validate_waiter_signal(args[0].replace(old, new, 1), *args[1:])
+            for event in (
+                "[KD_JIT][WARN] reason=PENDING_LOCK_NATIVE task=20",
+                "kd_waiter signal sent: task=20",
+                "kd_waiter signal held-after-ack: task=20",
+                "JIT body witness: entry=1234 lock=abcd body=1",
+            ):
+                with (
+                    self.subTest(acquired=acquired, event=event),
+                    self.assertRaises(AssertionError),
+                ):
+                    validate_waiter_signal(args[0] + "\n" + event, *args[1:])
+
+    def test_pidfd_trigger_and_syscall_windows_remain_required(self):
+        for path, value in (
+            (("pid",), 99),
+            (("signal",), 9),
+            (("offset_us",), 50001),
+            (("trigger", "signal", "pidfd"), 0),
+            (("trigger", "signal", "pid"), 30),
+            (("trigger", "signal", "signum"), 9),
+            (("trigger", "signal", "cpu"), 9),
+            (("trigger", "signal", "after_ns"), 100),
+            (("trigger", "release", "written"), 0),
+            (("trigger", "release", "before_ns"), 181),
+        ):
+            args = waiter_race_fixture(1, False)
+            item = args[-2]
+            for key in path[:-1]:
+                item = item[key]
+            item[path[-1]] = value
+            with self.subTest(path=path), self.assertRaises(AssertionError):
+                validate_waiter_signal(*args)
+        args = waiter_race_fixture(1, True)
+        args[-2] = None
+        with self.assertRaises(AssertionError):
+            validate_waiter_signal(*args)
+
+    def test_ack_can_precede_later_owner_logs(self):
+        for acquired in (False, True):
+            args = waiter_race_fixture(2, acquired)
+            lines = args[0].splitlines()
+            moved = [
+                row
+                for row in lines
+                if row.startswith("kd_waiter race unlock:")
+                and (not acquired or "done=1" in row)
+            ]
+            lines = [row for row in lines if row not in moved]
+            insertion = next(
+                i for i, row in enumerate(lines) if "kd_waiter signal stats:" in row
+            )
+            lines[insertion:insertion] = moved
+            args[0] = "\n".join(lines)
+            if not acquired:
+                args[0] = (
+                    args[0].replace("ns=180", "ns=300").replace("ns=250", "ns=350")
+                )
+            validate_waiter_signal(*args)
+
+    def test_acquisition_can_beat_signal_but_client_must_observe_it(self):
+        args = waiter_race_fixture(1, True)
+        args[0] = args[0].replace("pending=1", "pending=0")
+        validate_waiter_signal(*args)
+        args[1] = args[1].replace("signals=1", "signals=0")
+        with self.assertRaises(AssertionError):
+            validate_waiter_signal(*args)
+        args = waiter_race_fixture(2, True)
+        args[1] += "pending client ioctl: pid=20 signal=9 ret=0 errno=0 signals=0\n"
+        validate_waiter_signal(*args)
+        args[1] += "pending client return: pid=20 signal=9 ret=0 errno=0 signals=0\n"
+        with self.assertRaises(AssertionError):
+            validate_waiter_signal(*args)
+
+    def test_shared_trigger_preserves_the_legacy_gate(self):
+        # File/syscall substitutes check controller routing, not real lock races.
+        with tempfile.TemporaryDirectory() as directory:
+            params = Path(directory)
+            for name in ("mutex_signal_release", "native_waiter_release"):
+                (params / name).write_text("0\n")
+            with (
+                patch("mutex_signal_protocol.PARAMS", params),
+                patch("mutex_signal_protocol.os.sched_setaffinity"),
+                patch("mutex_signal_protocol.os.kill") as kill,
+                patch("mutex_signal_protocol.signal.pidfd_send_signal") as send,
+            ):
+                trigger_race(42, 10, (7, 8, 9), 0)
+                kill.assert_called_once_with(42, 10)
+                send.assert_not_called()
+                self.assertEqual((params / "mutex_signal_release").read_text(), "1\n")
+                self.assertEqual((params / "native_waiter_release").read_text(), "0\n")
+                result = trigger_race(
+                    42,
+                    10,
+                    (7, 8, 9),
+                    0,
+                    release_parameter="native_waiter_release",
+                    pidfd=99,
+                )
+                send.assert_called_once_with(99, 10, None, 0)
+                self.assertEqual(kill.call_count, 1)
+                self.assertEqual(result["signal"]["pidfd"], 1)
+                self.assertEqual(result["release"]["written"], 2)
+                self.assertEqual((params / "native_waiter_release").read_text(), "1\n")
 
 
 if __name__ == "__main__":

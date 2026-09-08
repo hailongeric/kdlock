@@ -459,6 +459,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_SHADOW_CAPACITY=1 \
 前缀、正在原生 B 上等待的逻辑 waiter。它不是 `test_19` 中的旁路原生
 interruptible/killable peer。`KD_NATIVE_WAITER_API` 选择 B 的真实 API；
 所有用例都要求保留 JIT 已完成的写入，并完成借用 A 的最终 owner ACK。
+本节默认 `KD_NATIVE_WAITER_RACE=0`，B owner 在取消完成前保持锁；释放竞争
+使用 `KD_NATIVE_WAITER_RACE=1`，其两种合法返回和操作见 6.5。
 
 | API 选项 | B 调用与信号 | 离开 JIT 的原因 | B 的预期结果 |
 | --- | --- | --- | --- |
@@ -528,7 +530,7 @@ body witness、B 排队、完整副作用、final ACK 和客户端结果：
 
 - API 0 还要求当前 PENDING 包、128 次 pending/队列观测、取得 B；总计
   12002 个独立 record、12008 次受保护状态变换。
-- API 1/2 要求 `jit_fail_pending_lock=0`、没有 PENDING 诊断，且设备的实际
+- API 1/2 的强制取消要求 `jit_fail_pending_lock=0`、没有 PENDING 诊断，且设备的实际
   CALL_MISS 条目匹配 entry、mutex kind、非零代码地址和 kallsyms 中的 API
   目标。`-EINTR`、未取得 B、ACK 后仍持有 B 必须同时成立；总计 12002 个
   record、12007 次状态变换，不能沿用成功取得 B 的预期计数。
@@ -553,3 +555,76 @@ body witness、B 排队、完整副作用、final ACK 和客户端结果：
 KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_19_mutex_signals.sh 1
 KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_19_mutex_signals.sh 3
 ```
+
+### 6.5 原 Waiter 与 B 释放的竞争
+
+在 6.4 的 API 1/2 上启用 `KD_NATIVE_WAITER_RACE=1`，保留真实 JIT 前缀和
+普通 CALL miss，只改变测试中信号与 B 释放的调度。信号由 guest 用户态
+controller 发送；B owner 不调用 `send_sig`，也不等待 A ACK 才释放 B。
+
+```text
+A combiner 执行 JIT stores -> CALL miss -> 原 waiter 原生进入 B API
+  -> B owner 确认真正的 wait_list 成员和 A owner，发布 waiter PID/phase=1
+  -> owner 睡眠轮询释放门；controller 核对单线程客户端并打开 pidfd
+  -> 两个线程从同一 barrier 出发，独立执行：
+       CPU 7: pidfd_send_signal(waiter)
+       CPU 9: 写 native_waiter_release=1 -> B owner 亲自 mutex_unlock(B)，记录前后时间
+  -> 原生 API 决定返回值，不由测试或 combiner 设置：
+       0: waiter 真正拥有 B，执行一次 B 临界区并自行解锁 B
+       -EINTR: waiter 没有 B，不执行 B 临界区或 B unlock
+  -> 两条分支均保留 JIT prefix，完成一次 record 和 A unlock/owner ACK
+  -> SIGUSR1 客户端执行一次 handler；SIGKILL 客户端退出
+  -> join 全部角色，再检查 owner/frame/task 排空及最终状态
+```
+
+睡眠轮询只让被唤醒的 waiter 有机会离开 Linux optimistic-spin 并检查信号，
+不伪造取消。当前内核在部分等待路径先 trylock 再检查 signal；因此即使信号
+先送达，也可能获取成功。偏置只影响调度，不是返回值或内部线性化点的证明。
+若获取和 A ACK 早于信号，客户端仅在用户态等待信号，不能增加测试专用
+`task_struct`/frame 引用延长生产对象寿命；pidfd 固定 PID 身份而非借用锁 owner。
+
+| 参数 | 默认值与约束 |
+| --- | --- |
+| `KD_NATIVE_WAITER_RACE` | `0`；`1` 仅允许 mode 4/stage 4、pending contention、API 1/2 |
+| `KD_NATIVE_WAITER_RACE_US` | `0`；范围 `[-50000,50000]` 微秒。负数延迟释放，正数延迟信号 |
+| `KD_NATIVE_WAITER_EXPECT` | `either`；可选 `acquired`/`cancelled`，真实结果不匹配即失败 |
+
+除 CPU 0-6 的 workload 外，controller 还要求 CPU 7/8/9 可用，以及 Python
+提供 `os.pidfd_open` 和 `signal.pidfd_send_signal`。缺少依赖不是 SKIP/通过。
+先按 6.4 确认 recovery 和排空，在 guest 执行；以下两条是无偏置用例：
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
+  KD_NATIVE_WAITER_SIGNAL=10 KD_NATIVE_WAITER_API=1 KD_NATIVE_WAITER_RACE=1 \
+  bash tests/test_10_native_resume.sh 4 4
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
+  KD_NATIVE_WAITER_SIGNAL=9 KD_NATIVE_WAITER_API=2 KD_NATIVE_WAITER_RACE=1 \
+  bash tests/test_10_native_resume.sh 4 4
+```
+
+在上述命令的 `bash` 之前增加环境变量
+`KD_NATIVE_WAITER_RACE_US=-50000 KD_NATIVE_WAITER_EXPECT=cancelled`
+或 `KD_NATIVE_WAITER_RACE_US=50000 KD_NATIVE_WAITER_EXPECT=acquired`，组成四个
+有偏置检查。不要把偏置不符的失败改写成通过；保留实际返回、时间及源码身份。
+无偏置的少数运行不证明所有竞争顺序都出现，结果与失败记录只维护在 VALIDATION。
+
+判定器保留 6.4 的 JIT/实际 CALL_MISS/无 PENDING/owner ACK 检查，额外关联
+`race-trigger.json` 的 pidfd 目标和 syscall 时间窗口，以及 B owner 的两个
+`kd_waiter race unlock`、waiter 的 `kd_waiter race result`。sysfs 写成功不等于
+B 已解锁。返回值选定分支后，12002 个 record 仍须恰好一次；取消对应 12007 次
+状态变换，获取对应 12008 次，并检查实际 owner，而非只相信汇总计数。
+取消的 A ACK 可以早于 B 解锁；获取后的 ACK 可以早于 B owner 的解锁后日志。
+
+另外保留 `race-trigger.log`、client ioctl/handler 日志和七个角色的退出码。
+`delivered=0` 表示本用例没有使用 kernel `send_sig`；真实信号证据来自 pidfd
+记录和原生 pending/handler/exit。SIGKILL 允许来不及打印 ioctl 返回行，但不能
+打印正常的最终 client return。controller 失败时仍要等待所有调用者，不能
+强制卸载；B owner 的超时只帮助退出失败负载，不构成验收通过。
+
+这仍是新原生 B 获取的有界竞争测试，不支持丢弃已执行 A 的 frame、native
+后缀中直接 `do_exit` 或任意任务退出。新分支的用途/顺序注释放在 workload、
+controller、客户端和判定器中；默认关闭，无生产锁、两元素 ABI 或内核修改。
+共享 trigger 的 native-peer 回归使用 `KD_SIGNAL_RACE=1`：`test_19` 的
+probe 2/4 是非队首取消检查，probe 1/3 是队首获取检查，分别配合负/正偏置。
+偏置/期望为 `KD_SIGNAL_RACE_US`/`KD_SIGNAL_EXPECT`，不能与本节参数混用。
+另保留 6.4 的 probe 1/3 强制取消对照；不能将队首的提前信号等同于已取消。

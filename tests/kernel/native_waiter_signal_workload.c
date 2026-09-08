@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Workload only: signals must preserve JIT stores and the borrowed A unlock.
- * Ordinary B stays queued; cancellable B must return a real -EINTR and skip its
- * critical section. Neither path forges signal flags, lock words or ownership.
+ * Ordinary B stays queued; cancellable B skips its critical section on -EINTR
+ * or enters it on a real successful acquisition when B release wins the race.
+ * Neither path forges signal flags, lock words or ownership.
  */
+#include <linux/delay.h>
 #include <linux/sched/signal.h>
 
 static int native_waiter_signal;
@@ -14,6 +16,15 @@ static unsigned int native_waiter_api;
 module_param(native_waiter_api, uint, 0444);
 MODULE_PARM_DESC(native_waiter_api,
 		 "Native B API: 0=plain, 1=interruptible, 2=killable");
+static bool native_waiter_race;
+module_param(native_waiter_race, bool, 0444);
+MODULE_PARM_DESC(native_waiter_race,
+		 "Race a real userspace signal with B owner release after JIT");
+static bool native_waiter_release;
+module_param(native_waiter_release, bool, 0644);
+static unsigned int native_waiter_phase, native_waiter_pid;
+module_param(native_waiter_phase, uint, 0444);
+module_param(native_waiter_pid, uint, 0444);
 
 static struct {
 	struct kd_resume_record *record;
@@ -21,6 +32,8 @@ static struct {
 	unsigned int delivered, samples, acquired, completed, failures;
 	unsigned int cancelled, held_ack;
 } kd_waiter_signal;
+module_param_named(native_waiter_acquired, kd_waiter_signal.acquired, uint,
+		   0444);
 
 static bool kd_waiter_signal_check(bool valid, int line)
 {
@@ -69,6 +82,89 @@ static bool kd_waiter_signal_wait(unsigned int *publication)
 	return true;
 }
 
+/* Publish identity while B still prevents acquisition. The controller races
+ * pidfd_send_signal with this release request; no signal/task/owner bits are
+ * forged, and this owner never dereferences the waiter after publication.
+ */
+static void kd_waiter_race_ready(pid_t pid)
+{
+	unsigned long deadline = jiffies + 5 * HZ;
+
+	WRITE_ONCE(native_waiter_pid, pid);
+	pr_info("kd_waiter race ready: task=%d signal=%d api=%u a_owner=%lx b_owner=%lx owner_task=%d\n",
+		pid, native_waiter_signal, native_waiter_api,
+		pending_mutex_a_owner, kd_waiter_signal.b_owner, current->pid);
+	smp_store_release(&native_waiter_phase, 1);
+	while (!READ_ONCE(native_waiter_release)) {
+		if (!KD_WAITER_SIGNAL_CHECK(time_before(jiffies, deadline)))
+			return;
+		/* Keep the fixture owner off-CPU between gate polls so a woken
+		 * first waiter can leave Linux's optimistic spin and check signals.
+		 * This only biases scheduling; the real B API still chooses its
+		 * return, and this owner alone performs the eventual unlock.
+		 */
+		usleep_range(100, 200);
+	}
+}
+
+/* Bracket the real B unlock, not the sysfs write or A's logical ACK. A waiter
+ * may acquire B and complete before the owner's post-unlock log is printed.
+ */
+static noinline void kd_waiter_race_unlock(bool done)
+{
+	unsigned long owner;
+	u64 ns;
+
+	if (!native_waiter_race || !smp_load_acquire(&native_waiter_phase))
+		return;
+	ns = ktime_get_ns();
+	owner = kd_test_mutex_owner(&nested_mutex_b);
+	KD_WAITER_SIGNAL_CHECK(kd_waiter_signal.b_owner ==
+				       (unsigned long)current &&
+			       native_waiter_phase == (done ? 2 : 1));
+	if (!done) {
+		KD_WAITER_SIGNAL_CHECK(READ_ONCE(native_waiter_release) &&
+				       owner == (unsigned long)current);
+		smp_store_release(&native_waiter_phase, 2);
+	}
+	pr_info("kd_waiter race unlock: done=%u task=%d waiter=%u owner=%lx ns=%llu\n",
+		done, current->pid, native_waiter_pid, owner, ns);
+	if (done)
+		smp_store_release(&native_waiter_phase, 3);
+}
+
+/* Observe the actual API branch before B's protected work or the error suffix.
+ * Successful acquisition may beat signal delivery; pending/fatal are separate
+ * observations, not an atomic signal snapshot or a reason to abandon A's ACK.
+ */
+static void kd_waiter_race_result(struct kd_resume_record *record, int ret)
+{
+	unsigned long id = record - resume_records;
+	unsigned long a_owner, b_owner;
+	u64 ns;
+
+	if (!native_waiter_race)
+		return;
+	ns = ktime_get_ns();
+	a_owner = kd_test_mutex_owner(&nested_mutex_a);
+	b_owner = kd_test_mutex_owner(&nested_mutex_b);
+	KD_WAITER_SIGNAL_CHECK(
+		record->task == current && record->before == 1 &&
+		!record->called && !record->after &&
+		record->value == (id + 1) * 3 &&
+		a_owner == pending_mutex_a_owner &&
+		a_owner != (unsigned long)current &&
+		!kd_waiter_signal_queued(current) &&
+		(ret == 0 ?
+			 b_owner == (unsigned long)current :
+			 ret == -EINTR && b_owner != (unsigned long)current));
+	pr_info("kd_waiter race result: task=%d api=%u ret=%d waiter=%lx a_owner=%lx b_owner=%lx pending=%u fatal=%u queued=0 before=%u called=%u after=%u record=%lu value=%lx ns=%llu\n",
+		current->pid, native_waiter_api, ret, (unsigned long)current,
+		a_owner, b_owner, !!signal_pending(current),
+		!!fatal_signal_pending(current), record->before, record->called,
+		record->after, id, record->value, ns);
+}
+
 static void kd_waiter_signal_send(struct kd_resume_record *record)
 {
 	unsigned long deadline = jiffies + 5 * HZ;
@@ -85,6 +181,10 @@ static void kd_waiter_signal_send(struct kd_resume_record *record)
 	kd_waiter_signal.record = record;
 	kd_waiter_signal.b_owner = (unsigned long)current;
 	pid = task->pid;
+	if (native_waiter_race) {
+		kd_waiter_race_ready(pid);
+		return;
+	}
 	if (!KD_WAITER_SIGNAL_CHECK(send_sig(native_waiter_signal, task, 0) ==
 				    0))
 		return;
@@ -148,13 +248,22 @@ static void kd_waiter_signal_acquired(struct kd_resume_record *record)
 	    record != kd_waiter_signal.record)
 		return;
 	KD_WAITER_SIGNAL_CHECK(
-		record->task == current && kd_waiter_signal.delivered == 1 &&
-		kd_waiter_signal.samples == 128 && !kd_waiter_signal.acquired &&
-		signal_pending(current) &&
-		!!fatal_signal_pending(current) ==
-			(native_waiter_signal == SIGKILL) &&
+		record->task == current && !kd_waiter_signal.acquired &&
+		!kd_waiter_signal.cancelled &&
 		kd_test_mutex_owner(&nested_mutex_a) == pending_mutex_a_owner &&
 		kd_test_mutex_owner(&nested_mutex_b) == (unsigned long)current);
+	if (native_waiter_race) {
+		KD_WAITER_SIGNAL_CHECK(smp_load_acquire(&native_waiter_phase) >=
+				       2);
+		kd_waiter_race_result(record, 0);
+	} else {
+		KD_WAITER_SIGNAL_CHECK(
+			kd_waiter_signal.delivered == 1 &&
+			kd_waiter_signal.samples == 128 &&
+			signal_pending(current) &&
+			!!fatal_signal_pending(current) ==
+				(native_waiter_signal == SIGKILL));
+	}
 	kd_waiter_signal.acquired++;
 	pr_info("kd_waiter signal acquired: task=%d signal=%d pending=%u fatal=%u\n",
 		current->pid, native_waiter_signal, !!signal_pending(current),
@@ -175,7 +284,9 @@ static noinline void kd_waiter_signal_cancelled(struct kd_resume_record *record,
 	/* Observe the producer's identities only after its release publication;
 	 * signal notification by itself is not our record-publication protocol.
 	 */
-	if (!kd_waiter_signal_wait(&kd_waiter_signal.delivered))
+	if (!kd_waiter_signal_wait(native_waiter_race ?
+					   &native_waiter_phase :
+					   &kd_waiter_signal.delivered))
 		return;
 	if (!KD_WAITER_SIGNAL_CHECK(record == kd_waiter_signal.record &&
 				    record->task == current))
@@ -188,12 +299,15 @@ static noinline void kd_waiter_signal_cancelled(struct kd_resume_record *record,
 			(native_waiter_signal == SIGKILL) &&
 		kd_test_mutex_owner(&nested_mutex_a) == pending_mutex_a_owner &&
 		pending_mutex_a_owner != (unsigned long)current &&
-		kd_test_mutex_owner(&nested_mutex_b) ==
-			kd_waiter_signal.b_owner &&
+		(native_waiter_race ? kd_test_mutex_owner(&nested_mutex_b) !=
+					      (unsigned long)current :
+				      kd_test_mutex_owner(&nested_mutex_b) ==
+					      kd_waiter_signal.b_owner) &&
 		kd_waiter_signal.b_owner != (unsigned long)current &&
 		!kd_waiter_signal_queued(current) && record->before == 1 &&
 		!record->called && !record->after &&
 		record->value == (id + 1) * 3);
+	kd_waiter_race_result(record, ret);
 	record->called++;
 	record->value += 17;
 	record->after++;
@@ -225,23 +339,32 @@ static noinline void kd_waiter_signal_complete(struct kd_resume_record *record)
 		   0x5a5a;
 	KD_WAITER_SIGNAL_CHECK(
 		record->task == current &&
-		kd_waiter_signal.acquired == !native_waiter_api &&
-		kd_waiter_signal.cancelled == !!native_waiter_api &&
-		!kd_waiter_signal.completed && signal_pending(current) &&
-		!!fatal_signal_pending(current) ==
-			(native_waiter_signal == SIGKILL) &&
-		record->before == 1 && record->called == 1 &&
-		record->after == 1 && record->value == expected &&
+		kd_waiter_signal.acquired + kd_waiter_signal.cancelled == 1 &&
+		!kd_waiter_signal.completed && record->before == 1 &&
+		record->called == 1 && record->after == 1 &&
+		record->value == expected &&
 		kd_test_mutex_owner(&nested_mutex_a) !=
 			(unsigned long)current &&
 		kd_test_mutex_owner(&nested_mutex_b) != (unsigned long)current);
+	if (!native_waiter_race) {
+		KD_WAITER_SIGNAL_CHECK(
+			kd_waiter_signal.acquired == !native_waiter_api &&
+			kd_waiter_signal.cancelled == !!native_waiter_api);
+	}
+	if (!native_waiter_race || kd_waiter_signal.cancelled) {
+		KD_WAITER_SIGNAL_CHECK(
+			signal_pending(current) &&
+			!!fatal_signal_pending(current) ==
+				(native_waiter_signal == SIGKILL));
+	}
 	pr_info("kd_waiter signal complete: task=%d signal=%d pending=%u fatal=%u before=%u called=%u after=%u record=%lu value=%lx\n",
 		current->pid, native_waiter_signal, !!signal_pending(current),
 		!!fatal_signal_pending(current), record->before, record->called,
 		record->after, (unsigned long)(record - resume_records),
 		record->value);
-	/* The cancellable B owner may proceed as soon as this publication is
-	 * visible. Its observation must be after both final ACK and this marker.
+	/* The forced-cancellation fixture keeps B held until this publication,
+	 * after both final ACK and this marker. The race fixture releases B
+	 * independently and only checks completion after all callers exit.
 	 */
 	smp_store_release(&kd_waiter_signal.completed, 1);
 }
@@ -251,18 +374,27 @@ static void kd_waiter_signal_report(void)
 	if (!native_waiter_signal)
 		return;
 	KD_WAITER_SIGNAL_CHECK(
-		kd_waiter_signal.delivered == 1 &&
+		kd_waiter_signal.delivered == !native_waiter_race &&
 		kd_waiter_signal.samples == (native_waiter_api ? 0 : 128) &&
-		kd_waiter_signal.acquired == !native_waiter_api &&
-		kd_waiter_signal.cancelled == !!native_waiter_api &&
-		kd_waiter_signal.held_ack == !!native_waiter_api &&
+		kd_waiter_signal.acquired + kd_waiter_signal.cancelled == 1 &&
+		kd_waiter_signal.held_ack ==
+			(native_waiter_api && !native_waiter_race) &&
 		kd_waiter_signal.completed == 1);
-	pr_info("kd_waiter signal stats: signal=%d delivered=%u samples=%u acquired=%u completed=%u failures=%u api=%u cancelled=%u held_ack=%u\n",
+	if (native_waiter_race) {
+		KD_WAITER_SIGNAL_CHECK(native_waiter_phase == 3 &&
+				       native_waiter_release);
+	} else {
+		KD_WAITER_SIGNAL_CHECK(
+			kd_waiter_signal.acquired == !native_waiter_api &&
+			kd_waiter_signal.cancelled == !!native_waiter_api);
+	}
+	pr_info("kd_waiter signal stats: signal=%d delivered=%u samples=%u acquired=%u completed=%u failures=%u api=%u cancelled=%u held_ack=%u race=%u phase=%u\n",
 		native_waiter_signal, kd_waiter_signal.delivered,
 		kd_waiter_signal.samples, kd_waiter_signal.acquired,
 		kd_waiter_signal.completed, kd_waiter_signal.failures,
 		native_waiter_api, kd_waiter_signal.cancelled,
-		kd_waiter_signal.held_ack);
+		kd_waiter_signal.held_ack, native_waiter_race,
+		native_waiter_phase);
 }
 
 #undef KD_WAITER_SIGNAL_CHECK

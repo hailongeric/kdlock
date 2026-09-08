@@ -522,9 +522,11 @@ combiner 获取的 A/B 则仍通过 owner 通知解锁。pending spin B 在 nati
 寄存器续点或 owner ACK 义务。waiter 完成不可中断的 B 获取及后缀，最终 ACK
 返回后才能到达用户态信号处理/退出边界；不得因信号改用入口快照或丢弃 frame。
 直接调用 `mutex_lock_interruptible/killable(B)` 的普通 CALL miss 则保留实际
-API 的 callee RIP 和返回栈。Linux 在原 waiter 上返回 `-EINTR`，原生错误分支
-不进入或解锁 B，但仍完成之前借用 A 的 unlock/ACK。该返回值由原生 callee
-按正常 C ABI 返回，不由 combiner 伪造，也不重新进入本次 wrapper。
+API 的 callee RIP 和返回栈。Linux 在原 waiter 上返回 `-EINTR` 时，原生错误
+分支不进入或解锁 B；若信号/释放竞争返回 0，则 waiter 真正取得 B 并自行解锁。
+两条分支均完成之前借用 A 的 unlock/ACK。该返回值由原生 callee 按正常 C ABI
+返回，不由 combiner 伪造，也不重新进入本次 wrapper。获取后的最终 ACK 可早于
+信号；测试客户端只在用户态等待该信号，不修改寄存器包或生产 frame 生命周期。
 这两类路径的实际 JIT 测试及其限制见
 [原 waiter 信号测试](JIT_EXECUTION.md#64-原-waiter-的信号与退出)，不新增 wrapper 状态。
 

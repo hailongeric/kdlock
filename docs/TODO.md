@@ -30,8 +30,9 @@ Implement next in this order:
    Spin's busy-B context/node refusal probes now connect real virtual-ticket
    cancellation to actual JIT/native continuation; their resource views are
    injected, not naturally saturated pools. Original-waiter signal probes cover
-   uninterruptible B and direct cancellable native B after JIT progress. They
-   retain A's suffix and final ACK, not abandonment of a delegated request.
+   uninterruptible B, direct cancellable native B and signal/release races after
+   JIT progress. Acquired/cancelled B still retains A's suffix and final ACK;
+   none of these paths abandons a delegated request.
 2. Broaden native-peer, signal/trylock, oversubscribed and multi-request remote
    schedules, using existing hooks. Keep source/lock lifetime review separate
    from owner handoff and the explicitly deferred immutable-version work.
@@ -114,7 +115,7 @@ prefix. The implementation and execution flow are in
       preserve full packets, frame/node/context storage, retained A and one
       native/owner-ACK lifecycle. Context absence and full count are injected
       inputs, not four live virtual nodes; execution flow is in usage 6.3.
-- [x] Retain virtual cancellation, original-waiter signals and prior main gates
+- [x] Retain virtual cancellation, original-waiter signals/release races and main gates
       in the full-matrix manifest. Check shadow capacity separately, then units,
       audit, default build identity and drains on the same frozen inputs.
       Mode 3 waits for its exact published entry before JIT contention; failed
@@ -130,6 +131,13 @@ prefix. The implementation and execution flow are in
       once and leaves B owned until after ACK. Keep fatal task lifetime checks
       free of extra test task refs; focused evidence and full-matrix results
       remain distinct in VALIDATION.
+- [x] Race an identity-checked pidfd signal with the real B owner's release
+      after actual JIT. Both native APIs return real 0 and -EINTR in focused
+      tests; require branch-specific B ownership/work, exact JIT stores and
+      final A ACK. Late signals wait in userspace only. Keep the actual unlock
+      bracket distinct from the release gate, and scheduling bias distinct
+      from a proven result; flow and regressions are in
+      [usage 6.5](JIT_EXECUTION.md#65-原-waiter-与-b-释放的竞争).
 - [ ] Broaden combined pressure, task exit/cancellation and multiple native
       frame schedules. These bounded checks do not close C1/C2/C5 or prove
       live pool saturation. `test_22` constructs its continuation and outer

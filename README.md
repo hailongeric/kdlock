@@ -36,8 +36,8 @@ before ACK; reclamation waits for RCU readers.
 
 ## Current Status
 
-Latest complete matrix, **2026-09-09 01:08 +08**: **59/59 pass**, comprising
-**43 actual-JIT cases, 12 context refusals, two native controls and two kernel
+Latest complete matrix, **2026-09-09 02:46 +08**: **65/65 pass**, comprising
+**49 actual-JIT cases, 12 context refusals, two native controls and two kernel
 protocol probes**. The last two test real RCU/owner ACK without JIT.
 Mode **0-8** pass actual-JIT checks, including guarded nested mode 1/4/8 and
 `mutex_jit=1` for mutex positives. Mode 1/4 register, held-B and pending-B
@@ -50,13 +50,17 @@ native continuation; resource inputs are injected, not natural pool saturation.
 JIT. See [the resource and lifecycle guide](docs/JIT_EXECUTION.md#6-资源拒绝与测试边界)
 for commands, execution flow and coverage limits.
 
-Original-waiter tests send SIGUSR1/SIGKILL during native B waiting after JIT
-progress. Ordinary B must finish its uninterruptible acquisition; direct
-interruptible/killable API misses must return `-EINTR` without entering B.
-Both retain earlier stores and complete A's final owner ACK before userspace
-signal delivery/exit. This is not arbitrary delegated-request cancellation;
+Original-waiter tests cover real SIGUSR1/SIGKILL during native B waiting and
+in signal/release races after JIT progress. Ordinary B must finish its
+uninterruptible acquisition. Direct
+interruptible/killable API misses skip B on `-EINTR`, or enter/unlock B once
+on a real acquisition during a signal/release race. Both retain earlier stores
+and complete A's final owner ACK before userspace signal delivery/exit.
+This is not arbitrary delegated-request cancellation;
 [usage 6.4](docs/JIT_EXECUTION.md#64-原-waiter-的信号与退出) distinguishes
-these from independent native-peer tests and documents all four commands.
+forced signals from independent native peers, while
+[usage 6.5](docs/JIT_EXECUTION.md#65-原-waiter-与-b-释放的竞争) documents the
+pidfd/release race, real owner/return checks and scheduling limits.
 
 Learned mutex-depth now executes the helper's translated lock calls, reaches
 real capacity exits and completes native continuation with physical-owner ACKs.
