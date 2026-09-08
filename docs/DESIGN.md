@@ -139,8 +139,10 @@ NUMA-local batching is opt-in; it is not a different physical lock protocol.
 
 `kd_mutex_shadows[]` maps original mutex addresses to 1024 bounded scheduler
 entries under `kd_mutex_shadow_lock`. An entry contains a queue, `locked` gate,
-and `physical_owner`. **Neither the gate nor a queue handoff grants the right
-to execute a critical section without owning the original Linux mutex.**
+and `physical_owner`. **Neither the gate nor a queue handoff grants exclusion
+without the original Linux mutex being held by the tracked physical owner.**
+Borrowed native execution does not change that owner; it follows the explicit
+execution/unlock-notification protocol in section 5.3.
 Unlock lookup never creates entries; table exhaustion uses the original mutex.
 The old `delegated` transition and `mutex_origin_users` draining are removed.
 There is no interval in which promotion substitutes a different exclusion lock.
@@ -182,12 +184,18 @@ signal/release tests do not cover every internal interleaving.
 5. `_kd_mutex_unlock_checked()` releases the original mutex before opening the
    scheduling gate. Native participants can acquire it between scheduler owners.
 
-Each CPU has four independently reserved 8KB waiter stacks. An exhausted task
+Each CPU has four independently reserved 8 KiB waiter stacks. An exhausted task
 never publishes a queue node; it waits on its native stack for the gate and
 then acquires the original mutex. Migration stays disabled during queued waits,
 but preemption is temporarily enabled where scheduling or native locking is
 required. A scheduled combiner retains ownership of its per-CPU frame context;
 another task cannot overwrite it.
+
+Resource tests compile the production reservation, shadow lookup, hooks and
+entry/return consumer. They check no-node acquisition and copy-before-slot-reuse
+with the guest's complete `pt_regs`; physical locks, scheduler, task records and
+assembly are substitutes. Their scope and live-test separation are maintained
+in [the mutex resource guide](JIT_EXECUTION.md#61-mutex-资源与恢复包).
 
 `kd_mutex_tasks.c` keeps RCU-readable task membership with a task reference and
 lock-protected acquisition refs. The existing mutex `is_kd` callback matches
@@ -196,6 +204,13 @@ does not replace the original lock. `mutex_task_fail_once=1` tests pre-entry
 allocation failure. No allocations are needed in the predicate. Unload requires
 all callers stopped and records/queues drained; `rcu_barrier()` only completes
 deferred task-record frees, not general hook hot-unload protection.
+
+The opt-in `test_22` connects these real task functions to the production
+native request/ACK path, with an actual RCU reader spanning final removal.
+It covers both B-before-A and A-before-B unlock, shared acquisition refs and
+deferred callback execution. Its constructed continuation and outer batch
+callback do not exercise JIT or queue scheduling; see
+[the lifecycle guide](JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu).
 
 ### 5.3 Nested A -> B And Native Continuation
 
@@ -221,10 +236,13 @@ unlocks release B on the actual owner; outer unlock acknowledges logical
 completion while A stays held until the combiner finishes its own ownership
 interval. No native `owner` handoff or new kernel protocol is introduced.
 
-The waiter's task record survives until the combiner processes final native
-completion, removes the frame from the native registry, and drops that record
-before acknowledging. New native acquisitions by the waiter are ordinary
-original mutex acquisitions. The combiner must not inspect a published waiter
+The waiter's acquisition reference survives until the combiner releases this
+frame's last retained logical lock, removes its native registration, and drops
+that reference before acknowledging. The final reference removes task membership;
+RCU readers can retain the unlinked entry until its deferred free callback.
+This logical ACK need not release physical A in a still-owned batch.
+New native acquisitions by the waiter are ordinary original mutex acquisitions.
+The combiner must not inspect a published waiter
 node after wakeup because it can already have been released and reused.
 Native continuation is counted by `kd_native`, not all-JIT completion counters;
 unhandled post-entry errors remain fail-stop, never entry replay.
@@ -599,9 +617,10 @@ The combiner retains its acquired physical locks and pauses other delegation.
 The waiter borrows protection, not Linux ownership. Unlock requests return to
 the physical owner and wait for ACK. The ACK resides on the waiter's native
 stack; the executor drops borrow references before release-publishing done.
-The waiter ends its origin pin only on the last ACK. No owner may reread a
-released/woken node or frame. A later completion log is not the ACK's
-linearization point.
+The spin waiter ends its origin pin only on the last ACK; a mutex waiter has
+already restored migration/preemption state before entering its native suffix.
+No owner may reread a released/woken node or frame. A later completion log is
+not the ACK's linearization point.
 
 Control-call phases are NONE/PENDING/ENTERED/ACQUIRED/COMPLETE. Only validated
 PENDING -ENOMEM/-E2BIG before acquisition/publication can restore the original

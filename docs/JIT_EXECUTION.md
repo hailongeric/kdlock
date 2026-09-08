@@ -175,11 +175,12 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 `ENTRY_SCOPE_MISMATCH` 或 `INVALID_ENTRY_REFUSAL` 则需要核查 frame、CALL
 阶段、RIP/RSP 和父请求，不能忽略错误并重试入口。
 
-最近一次完整矩阵（2026-09-08 19:17–19:36 +08）的结果集中记录在
-[VALIDATION: Resource Registry Coverage](VALIDATION.md#resource-registry-coverage)。
+最近一次完整矩阵（2026-09-08 21:27-21:46 +08）的结果集中记录在
+[VALIDATION: Mutex Task Lifecycle](VALIDATION.md#mutex-task-lifecycle)。
 完整矩阵的逐项命令见 [测试清单](VALIDATION.md#current-matrix-manifest)，
-该矩阵使用同一源码快照执行全部 51 个选择器，不借用旧的短回归结果。
-完整 51 项全部通过，包含 37 项实际 JIT。mode 0–8、
+该矩阵使用同一源码快照执行全部 53 个选择器，不借用旧的短回归结果。
+完整 53 项全部通过，包含 37 项实际 JIT；新增两项真实 RCU/owner ACK 探针
+不执行 JIT，见 6.2。mode 0-8、
 mode 1/4 的普通 CALL 寄存器、held-B、pending-B，以及 mode 8 的两项寄存器
 续跑检查通过。mutex 学习深层 callee 后也实际执行 JIT 并通过容量续跑检查；
 不能将这组有界测试写成整个项目或所有资源耗尽场景已完成。
@@ -273,7 +274,7 @@ scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行
 远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
 另行验证真实 JIT、嵌套竞争及寄存器续跑。文本窗口测试检查新增可达块、块内
 入口分割、GS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
-结果只维护在 [验证记录](VALIDATION.md#resource-registry-coverage)，后续顺序见
+结果只维护在 [验证记录](VALIDATION.md#mutex-task-lifecycle)，后续顺序见
 [TODO](TODO.md#direction-and-priority)。
 
 ## 6. 资源拒绝与测试边界
@@ -299,8 +300,8 @@ JIT 已执行，新的 lock CALL 仍为合法 PENDING，尚未取得/发布新�
 | 上传边界 | 单块容量外的 payload 被设备拒绝；未知 key 不创建新条目 | 注册测试检查真实设备读写函数与最后一个合法字节；不证明完整镜像、并发替换或上传互斥锁语义 |
 | hotlock 表 | 131071 槽；新地址无法建立采样记录时不晋升，继续原生 | `test_hotlock_sampling.py` 的生产函数容量测试；不是同时访问十万把真实锁的压力测试 |
 | spin gate / acquisition ticket | gate 1024 槽、每 CPU 32 个 ticket；普通 hook 预留失败转原生；虚拟 B 必须遵守 CALL 阶段 | `test_spin_gate.py` / `test_spin_entry.py` 检查真实组件耗尽；仍需更多 hook 到队列的组合失败调度，不能把 EOVERFLOW 等都当作可恢复 ENOMEM |
-| mutex shadow / task 记录 | shadow 1024 槽；task 记录用 GFP_ATOMIC 分配；hook 中失败在入队前转原生 mutex | 已有原生参与者及一处 task 分配失败测试；`test_mutex_shadow.c` 仍是复制模型，真实表耗尽与失败组合覆盖待补 |
-| spin / mutex node | 每 CPU 各 4 个；普通请求无 node 时用自己的栈等待私有 gate，再取得原锁；虚拟 spin 请求先取消预留再返回 | spin 生产 producer/队列及 live observer 有界覆盖；mutex `test_11` 已有八 waiter 争用四槽的真实回退，但 `test_mutex_count.c` 仍为模型，生产 reserve/release 状态及组合失败覆盖待补 |
+| mutex shadow / task 记录 | shadow 1024 槽；task 记录用 GFP_ATOMIC 分配；hook 中失败在入队前转原生 mutex | `test_mutex_resources.py` 填满真实 shadow 表并测试 hook 回退，task API/IRQ 为替身；`test_22` 单独连接真实 task get/put、owner ACK 和 RCU 延后释放，边界见 6.2 |
+| spin / mutex node | 每 CPU 各 4 个；普通请求无 node 时用自己的栈等待私有 gate，再取得原锁；虚拟 spin 请求先取消预留再返回 | spin 生产 producer/队列及 live observer 有界覆盖；mutex 生产 reserve/release、hook 和入口的组合测试取代旧模型，`test_11` 另有八 waiter 争用四槽的真实回退；更多多请求/远端组合压力待补 |
 | frame / held-lock / shadow stack | 8 层 frame、8 个逻辑锁记录与 CPU-local held-lock 容量分别检查；栈空间不是相同资源 | 生产 frame 容量、spin producer、远端拒绝及 mutex learned-depth 有界测试；不能由一项容量通过推导全部耗尽场景 |
 
 代码池测试在真实初始化流程的分配 API 上注入失败，不修改生产容量，也不
@@ -313,9 +314,83 @@ JIT 已执行，新的 lock CALL 仍为合法 PENDING，尚未取得/发布新�
 ```sh
 python3 tests/unit/test_exe_registry.py
 python3 tests/unit/test_jit_entry_scope.py
+python3 tests/unit/test_mutex_resources.py
 make -C tests/unit run
 ```
 
 注册测试的七个变异负例必须成功编译、再由断言检测；编译错误或超时不算通过。
 真实 JIT 与 native 后缀仍用第 3 节命令验收，证据见
 [VALIDATION](VALIDATION.md)。队列资源耗尽的下一步以 [TODO](TODO.md) 为准。
+
+### 6.1 Mutex 资源与恢复包
+
+```text
+__kd_mutex_lock
+  task 已在代理路径 / 未晋升 / mutex_jit=0 -> 原生 mutex
+  shadow 表满 / task 登记失败 -> 原生 mutex；不登记 JIT、不预留 node
+  登记 task、请求翻译 -> _kd_mutex_lock
+    gate 空闲 -> 获取原生 mutex；physical_owner=current
+    gate 忙且没有 node -> 保留 task 登记，在自身栈上等 gate，再获取原锁
+    gate 忙且有 node -> 保存入口状态 -> 汇编 slowpath / 队列
+      未执行交接 -> 先取得原锁，再释放 node、恢复调度状态，返回原临界区
+      已完成 / native 续跑 -> 复制整个 pt_regs，清除 resume_node，释放 node
+        -> 恢复抢占/迁移状态 -> 已完成跳到 unlock 后 / native 跳到当前续点
+```
+
+`test_mutex_resources.py` 提取生产的节点函数、shadow 查找、hook、入口与
+原锁获取/释放辅助函数。它检查 256 个占用/可用栈组合、顺序与乱序复用、
+非法释放、满表碰撞及已有条目不变，以及 cold/已有 shadow 下的 hook 回退。
+真实 `_kd_mutex_lock` 分别从 hook 和直接 API 接收三种合法 slowpath 结果。
+在恢复抢占的替身中立即复用刚释放的 node，随后比较整个 guest `pt_regs`
+（当前 168 字节），确认 consumer 使用自己的副本。native 续跑保留 task
+登记与物理 owner；borrowed unlock 只能交给通知入口，不能由 waiter 直接解锁。
+
+八个变异负例同样要求先编译成功，再由断言检出。物理锁、task API、调度、
+汇编 slowpath 和跳转指令均为替身：这里不执行 JIT，也不证明真实 owner ACK、
+RCU、抢占并发或硬件 flags 恢复。它不模拟任意故障或授权入口重放。
+真实执行继续由 mode 3/4/5、寄存器续跑、`test_11` 和深度/远端矩阵验收。
+
+### 6.2 Task 引用、最终 ACK 与 RCU
+
+正常获取路径由 `kd_mutex_task_get()` 建立 acquisition 引用；同一 task 的多次
+获取共用一个表项，表项持有一个真实 `task_struct` 引用。native 续跑不额外
+增加 acquisition 引用，也不由 waiter 提前释放已有引用。
+
+```text
+task get -> 发布 RCU 可读记录 -> 保留物理 owner 的 native_begin
+  waiter 请求 unlock -> owner 的 native_wait 处理
+    B->A：真实 owner 解 B；最终逻辑 A ACK 后，物理 A 可留到 owner 批次结束
+    A->B：提前解物理 A；仍保留 B 的 owner 和 task 记录，直到最终 B unlock
+  本 frame 的保留锁全部逻辑释放
+    -> 从 native frame 表移除 -> task put
+       最后一个 acquisition 引用：hash_del_rcu -> call_rcu
+    -> release 发布 ACK，waiter 才能返回并丢弃请求栈
+  旧 RCU 读者退出 -> 回调 put_task_struct + kfree
+```
+
+`test_22_mutex_task_lifecycle.sh` 在发布 guest hook 之前启用
+`KDLOCK_SELFTEST` 探针，直接调用生产 task、frame 和 native request 函数。
+三个固定在不同在线 CPU 的 kthread 分别充当 owner、waiter 和 RCU 读者。
+读者从记录仍在表中时开始，跨越最终 ACK 后才退出。两种解锁顺序都检查：
+
+- 真正的分配失败不发布记录；两次 get 共用表项，非最终 put 保留路由。
+- 中间 ACK 后，剩余原锁仍由 combiner 持有，task 记录仍有效。
+- 最终 ACK 返回时记录已不可查、重复通知不再路由，但旧读者的记录内存未释放。
+- 等待读者和工作线程退出，再用 `rcu_barrier()` 确认真实释放回调恰好执行一次。
+
+在已确认 recovery 快照且没有模块/调用者运行的 guest 执行：
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_22_mutex_task_lifecycle.sh
+KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_TASK_CPUS=0,20,21 \
+  bash tests/test_22_mutex_task_lifecycle.sh
+```
+
+第二条使用当前双 NUMA guest 的 CPU 编号；其他拓扑须先核对。
+每次预期 `orders=2 acks=4 deferred_frees=2 failures=0 JIT=0`，并要求内核无
+错误、task/frame 排空。脚本保存 `Evidence:`、卸载自测模块并重建默认版本。
+若核心协议断言失败，探针会 fail-stop，不能带着存活读者/请求卸载代码。
+
+这是实际内核协议测试，但不执行 JIT。续跑 RIP/RSP 是不跳转的构造包；outer
+batch 回调只释放真实 A，不运行生产队列调度。测试不证明汇编跳转、任意信号/
+退出竞争、多请求远端调度或热卸载安全。自测入口与释放计数在默认构建中均不存在。

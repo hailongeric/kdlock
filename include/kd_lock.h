@@ -28,6 +28,9 @@ bool kd_mutex_task_reroute(struct task_struct *task);
 bool kd_mutex_task_get(struct task_struct *task);
 void kd_mutex_task_put(struct task_struct *task);
 void kd_mutex_tasks_exit(void);
+#ifdef KDLOCK_SELFTEST
+int kd_mutex_task_selftest(void);
+#endif
 /* --- preemption helpers --------------------------------------------------- */
 
 static inline void kd_preempt_disable_raw_spin_lock(raw_spinlock_t *lock)

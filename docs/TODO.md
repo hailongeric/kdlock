@@ -12,19 +12,23 @@ ends this JIT invocation and the original waiter completes the native suffix.
 Admission and emission share the same scope. This replaces the old requirement
 to admit that waiter-only suffix; it does not allow unchecked live JIT paths.
 
-Latest complete matrix: **51/51 pass**; 37 passes execute generated
-code, 12 are context refusals and two are native controls. All 40 unit programs
+Latest complete matrix: **53/53 pass**; 37 passes execute generated
+code, 12 are context refusals, two are native controls and two are real kernel
+task/RCU/owner-ACK probes without JIT. All 39 unit programs
 and the 25-case admission audit pass. Mode 0-8, including guarded mode 1/4/8,
 pass actual JIT. Mode 8's stage-2/3 register cases and learned mutex-depth
 continuation also pass. This closes the matrix gates, not the whole project:
-[VALIDATION](VALIDATION.md#resource-registry-coverage).
+[VALIDATION](VALIDATION.md#mutex-task-lifecycle).
 
 Implement next in this order:
 
-1. Follow the [resource inventory](JIT_EXECUTION.md#6-资源拒绝与测试边界): replace
-   remaining mutex node/shadow models with production paths, then join missing
-   pre-entry/PENDING failures to queue and ownership checks. Verify registers,
-   retained locks and exactly-once effects without broadening post-entry recovery.
+1. Follow the [resource inventory](JIT_EXECUTION.md#6-资源拒绝与测试边界): broaden
+   combined pre-entry/PENDING queue failures and task-record lifecycle schedules.
+   Mutex node/shadow/hook components now use production paths with substituted
+   primitives. Verify registers, retained locks and exactly-once effects without
+   broadening post-entry recovery or mistaking fixtures for live scheduling.
+   The real task/RCU/final-ACK probe covers two bounded unlock orders, not
+   arbitrary task exit, cancellation or multiple outstanding native frames.
 2. Broaden native-peer, signal/trylock, oversubscribed and multi-request remote
    schedules, using existing hooks. Keep source/lock lifetime review separate
    from owner handoff and the explicitly deferred immutable-version work.
@@ -40,7 +44,7 @@ Production conditional analysis collects required entry-range separations and
 models callee-saved effects only at registered lock-control calls. Every premise
 is checked before root body execution; missing cold text must be fetched first.
 Current results and remaining gates are in
-[VALIDATION](VALIDATION.md#resource-registry-coverage); this does not close C1/C2/C5.
+[VALIDATION](VALIDATION.md#mutex-task-lifecycle); this does not close C1/C2/C5.
 
 - [x] Collect every required disjoint range and test the emitted entry predicate
       against concrete overlap, adjacency, wrap and register-preservation cases.
@@ -94,13 +98,27 @@ prefix. The implementation and execution flow are in
       Add real registration-gate contention and seven assertion-detected mutants.
 - [x] Use real lookup/ready in the high-level entry fixture; check 14 unavailable
       spin/mutex root cases without wrapper calls or packet/stack/ledger writes.
-- [x] Finish fresh full-matrix verification on this 173-input test freeze:
+- [x] Finish full-matrix verification on the initial 173-input registry freeze:
       51/51 pass with 37 actual-JIT cases; all units/audit and postflight pass.
       Earlier 172-input results remain separate historical evidence.
-- [ ] Replace the remaining mutex node/shadow copied models and test the actual
-      hook/slowpath failure combinations. Keep test 11's existing real four-slot
-      overflow gate; it is not a reserve/release state fixture. Broaden combined
-      pressure separately. These tests do not close C1/C2/C5 or prove live pool saturation.
+- [x] Replace both mutex node/shadow copied models with one production resource
+      fixture: 256 reservation inputs, full 1024-slot collisions, early hook
+      failures, no-node acquisition and full-packet resume after slot reuse.
+      Test hook and direct entry paths and eight assertion-detected mutants.
+- [x] Finish the corrected mutex-resource freeze: 51/51 pass with 37 actual-JIT
+      cases; all 39 units, 25 audit cases and postflight pass. Keep test 11's real
+      four-slot overflow separate from substituted resource/assembly primitives.
+- [x] Connect production task get/put and deferred free to final owner ACK in
+      opt-in kernel `test_22`. Verify B->A and A->B with real mutex ownership,
+      shared acquisition refs, allocation refusal and an RCU reader spanning
+      removal. The release callback runs only after that reader leaves.
+- [x] Verify the 175-input freeze with local/cross-NUMA task probes and the
+      full 53-case matrix, 39 units, 25 audit cases and final identity/drain
+      checks. Default `.text` is unchanged and contains no task probe.
+- [ ] Broaden combined pressure, task exit/cancellation and multiple native
+      frame schedules. These bounded checks do not close C1/C2/C5 or prove
+      live pool saturation. `test_22` constructs its continuation and outer
+      batch callback; it does not replace the actual-JIT/queue matrix.
 
 ### C1. Forward Continuation After Partial Execution
 

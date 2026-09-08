@@ -94,6 +94,9 @@ static int __init kdlock_km_init(void)
 	ret = kd_spin_entry_selftest();
 	if (ret)
 		goto err_mutex;
+	ret = kd_mutex_task_selftest();
+	if (ret)
+		goto err_mutex;
 #endif
 
 	is_kd_test = __is_kd_test;

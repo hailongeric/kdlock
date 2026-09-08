@@ -27,6 +27,12 @@ static atomic64_t kd_mutex_task_reroutes = ATOMIC64_INIT(0);
 static int kd_mutex_task_fail_once;
 module_param_named(mutex_task_fail_once, kd_mutex_task_fail_once, int, 0644);
 
+#ifdef KDLOCK_SELFTEST
+/* Observe the real deferred free without replacing RCU or task references.
+ * Hooks are unpublished during the probe, so only its records contribute. */
+static atomic_t kd_mutex_task_test_frees = ATOMIC_INIT(0);
+#endif
+
 bool kd_mutex_task_active(struct task_struct *task)
 {
 	struct kd_mutex_task *entry;
@@ -87,6 +93,9 @@ static void kd_mutex_task_free(struct rcu_head *rcu)
 
 	put_task_struct(entry->task);
 	kfree(entry);
+#ifdef KDLOCK_SELFTEST
+	atomic_inc(&kd_mutex_task_test_frees);
+#endif
 }
 
 void kd_mutex_task_put(struct task_struct *task)
@@ -121,3 +130,7 @@ void kd_mutex_tasks_exit(void)
 		(long long)atomic64_read(&kd_mutex_task_failures),
 		(long long)atomic64_read(&kd_mutex_task_reroutes));
 }
+
+#ifdef KDLOCK_SELFTEST
+#include "../tests/kernel/mutex_task_selftest.c"
+#endif

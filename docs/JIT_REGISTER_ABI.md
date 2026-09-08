@@ -3,7 +3,7 @@
 本文以当前 x86-64 内核 spin/mutex 实现为准，描述入口、wrapper、退出及原 waiter
 续跑的寄存器/栈约定。使用与执行流见 [JIT_EXECUTION.md](JIT_EXECUTION.md)，
 锁和 frame 生命周期见 [DESIGN.md](DESIGN.md)，结果见
-[VALIDATION.md](VALIDATION.md#resource-registry-coverage)。
+[VALIDATION.md](VALIDATION.md#mutex-task-lifecycle)。
 
 唯一执行入口是 frame-backed `kd_exe_on_call_hl_entry()`。两元素输入保持
 `{waiter GS base, logical waiter task}`，不增加 FS base 或第三个 task 元素。
@@ -152,6 +152,14 @@ RAX、RCX、RDX、RSI、RDI、R8-R11 作为 lock 函数的 caller-saved 状态�
 不能被调用者假定跨 `lock()` 保持：mutex 节点创建时这些字段被清零，spin 节点
 重用时可能保留旧值。翻译代码必须遵守正常内核函数调用 ABI，不能依赖这些
 未定义的入口值。
+
+mutex waiter 收到已完成或 native 续跑结果后，`_kd_mutex_lock()` 先将
+`resume_node->regs` 复制到自己的局部 `resume_regs`，再清除发布指针、释放
+node、恢复抢占/迁移状态，最后使用该副本跳转。node 可能在恢复抢占后立即被
+另一请求复用，不能继续从旧 node 读取恢复状态。
+生产资源测试在此处主动复用 node 并比较整个 168 字节软件包；它不执行汇编
+跳转、不验证硬件 flags 恢复。测试边界见
+[mutex 资源与恢复包](JIT_EXECUTION.md#61-mutex-资源与恢复包)。
 
 ### 4.2 嵌套 JIT waiter
 
@@ -408,7 +416,7 @@ task/目标 RIP/RSP 对应。远端祖先可以转递同一个包，但 callee �
 RBP/RSP/后继 RIP 的期望地址由 caller 生成，并非独立证明所有地址计算。
 此探针不检查 RFLAGS、向量寄存器、非 CALL 出口、任意栈对齐或 IRQ/NMI；
 纯原生及 guest 用户态对照不能记为 JIT 通过。证据见
-[最新寄存器验收](VALIDATION.md#resource-registry-coverage)。
+[最新寄存器验收](VALIDATION.md#mutex-task-lifecycle)。
 当前 mode 0/3 和嵌套 mode 1/4/8 的标记样本通过。mutex learned-depth 另行
 通过真实 JIT/容量续跑与保留锁检查，不等于它也运行了这套专用 GPR 标记探针。
 
@@ -435,8 +443,9 @@ CALL RSP、返回地址。合法 PENDING 资源失败恢复该 CALL 包，保留
 
 A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执行自己的原始
 临界区前重新获取 A。回调/批次对象依赖 combiner C 栈寿命，不能仅因寄存器显式化
-就提前释放宿主栈。native ACK 位于 waiter 原生栈；最后 ACK 后由原 waiter
-结束自己的 pin，combiner 不能远端解除固定。
+就提前释放宿主栈。native ACK 位于 waiter 原生栈；spin 最后 ACK 后由原 waiter
+结束自己的 pin，combiner 不能远端解除固定。mutex 则在进入 native 后缀前已
+恢复迁移/抢占状态，不把 spin 的 pin 生命周期套用到 mutex。
 
 默认实测布局为 frame 656、context 5264、spin JIT context 184、spin node 280
 字节，静态 per-CPU 7904 字节。布局不是动态栈峰值或任意深度安全证明。
@@ -480,7 +489,10 @@ frame 清除后 waiter 仍轮询已释放内存。spin 的 ack 同时携带原 w
 
 已由 combiner 获取的 mutex，其原生 owner 仍是 combiner，不会写成 waiter。waiter 仅借用其持锁
 保护执行 native 后缀；在途 task 记录保持改名后的 mutex unlock hook 路由，
-combiner 完成最后的解锁通知时释放该记录再 ack。这些状态不占用 wrapper args。
+combiner 完成最后的解锁通知时减少 acquisition 引用再 ack。最后一个引用将
+记录从查找表移除，内存与真实 task 引用在 RCU 读者退出后的回调中释放。
+这些状态不占用 wrapper args；真实协议探针与构造寄存器包的边界见
+[生命周期测试](JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu)。
 
 `frame->control_call` 记录 NONE/PENDING/ENTERED/ACQUIRED/COMPLETE 以及原始
 callee RIP、CALL RSP、返回地址。仅 PENDING 的 `-ENOMEM`/`-E2BIG` 可续跑：

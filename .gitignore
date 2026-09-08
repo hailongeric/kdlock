@@ -37,9 +37,7 @@ __pycache__/
 *~
 tests/unit/test_exe_hash
 tests/unit/test_hotlock_state
-tests/unit/test_mutex_count
 tests/unit/test_tail_encoding
-tests/unit/test_mutex_shadow
 tests/unit/test_mutex_transition
 tests/unit/test_exec_frame
 tests/unit/test_jit_call_policy

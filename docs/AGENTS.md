@@ -62,9 +62,13 @@ CPU/NUMA 拓扑和挂载类型。具体身份与重建限制见
    不能限制已连接但卡住的远端命令。
 8. 测试后核查结果、dmesg 错误、调用者退出及模块排空，再运行下一项。
 
+修改已冻结的运行/测试输入前，先通过预置的用例边界停止机制等待当前用例
+完成清理，再停止运行器。不要改写正在执行的 shell 文件。保留部分运行，
+新输入重新完整验证，不能拼接不同冻结版本的通过项。
+
 典型构建命令和主模式命令只维护在 [README](../README.md#quick-start) 与
 [JIT_EXECUTION](JIT_EXECUTION.md#3-环境与操作)。`tests/run_all.sh` 是真实内核
-集成测试，不是初次验证入口。`test_07`、`test_08`、native/remote/capacity
+集成测试，不是初次验证入口。`test_07`、`test_08`、`test_22`、native/remote/capacity
 等 opt-in 测试均须按脚本要求确认 recovery；不要擅自加入默认套件。
 
 ### 验收与清理
@@ -138,5 +142,6 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 说明实际改动、构建/测试命令和结果、是否加载模块及启用 mutex_jit、
 内核错误和排空状态、未执行/失败项目、Git 版本。
 本轮或历史证据必须标明来源和时间，不混用不同源码版本的通过结果。
-当前完整矩阵为 51/51 通过，不代表所有资源、上下文和生命周期问题已解决，详见
-[最新验收](VALIDATION.md#resource-registry-coverage)。
+当前完整矩阵为 53/53 通过，含 37 项实际 JIT 与两项 JIT=0 的真实 RCU/ACK
+探针；不代表所有资源、上下文和生命周期问题已解决，详见
+[最新验收](VALIDATION.md#mutex-task-lifecycle)。

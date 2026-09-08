@@ -30,18 +30,27 @@ Spin and mutex delegation retain the original Linux lock as the exclusion
 authority. Private queues schedule requests; they do not replace native
 ownership. During native continuation the combiner retains its acquired locks
 and services waiter unlock notifications. Mutex owner handoff is not added.
+Final logical ACK can precede physical A release when its combiner still owns
+the batch. Dropping the last acquisition reference removes task membership
+before ACK; reclamation waits for RCU readers.
 
 ## Current Status
 
-Latest complete matrix, **2026-09-08 19:36 +08**: **51/51 pass**, comprising
-**37 actual-JIT cases, 12 context-refusal cases and two native controls**.
+Latest complete matrix, **2026-09-08 21:46 +08**: **53/53 pass**, comprising
+**37 actual-JIT cases, 12 context refusals, two native controls and two kernel
+protocol probes**. The last two test real RCU/owner ACK without JIT.
 Mode **0-8** pass actual-JIT checks, including guarded nested mode 1/4/8 and
 `mutex_jit=1` for mutex positives. Mode 1/4 register, held-B and pending-B
 continuations also pass, as do mode 8's stage-2/3 register cases.
-All **40 unit programs** and the independent **25-case admission audit** pass.
-Registry tests now use production pool/lookup functions, with unavailable-entry
-checks before wrapper execution. Resource classes and remaining coverage gaps
-are listed in [the resource guide](docs/JIT_EXECUTION.md#6-资源拒绝与测试边界).
+All **39 unit programs** and the independent **25-case admission audit** pass.
+Registry and mutex resource tests use production functions; two copied mutex
+models are now one joined node/shadow/hook fixture. This includes full-packet
+resume after node reuse, but not a substitute for real JIT or owner ACK tests.
+The separate kernel `test_22` checks real owner ACK and RCU reclamation in both
+unlock orders; its constructed continuation does not execute JIT. Commands and
+flow are in [the lifecycle guide](docs/JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu).
+Resource classes and remaining gaps are in
+[the resource guide](docs/JIT_EXECUTION.md#6-资源拒绝与测试边界).
 
 Learned mutex-depth now executes the helper's translated lock calls, reaches
 real capacity exits and completes native continuation with physical-owner ACKs.
@@ -51,7 +60,7 @@ scope, refusal and continuation rules are in
 
 These are bounded correctness observations, not a claim of complete support.
 Commands, failed cases, source identity and evidence are centralized in
-[VALIDATION](docs/VALIDATION.md#resource-registry-coverage). Do not substitute
+[VALIDATION](docs/VALIDATION.md#mutex-task-lifecycle). Do not substitute
 historical passes or successful native fallback for the current JIT gate.
 
 ## Quick Start
