@@ -142,6 +142,6 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 说明实际改动、构建/测试命令和结果、是否加载模块及启用 mutex_jit、
 内核错误和排空状态、未执行/失败项目、Git 版本。
 本轮或历史证据必须标明来源和时间，不混用不同源码版本的通过结果。
-当前完整矩阵为 53/53 通过，含 37 项实际 JIT 与两项 JIT=0 的真实 RCU/ACK
+当前完整矩阵为 55/55 通过，含 39 项实际 JIT 与两项 JIT=0 的真实 RCU/ACK
 探针；不代表所有资源、上下文和生命周期问题已解决，详见
-[最新验收](VALIDATION.md#mutex-task-lifecycle)。
+[最新验收](VALIDATION.md#spin-virtual-cancellation)。

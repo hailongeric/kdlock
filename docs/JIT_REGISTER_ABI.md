@@ -3,7 +3,7 @@
 本文以当前 x86-64 内核 spin/mutex 实现为准，描述入口、wrapper、退出及原 waiter
 续跑的寄存器/栈约定。使用与执行流见 [JIT_EXECUTION.md](JIT_EXECUTION.md)，
 锁和 frame 生命周期见 [DESIGN.md](DESIGN.md)，结果见
-[VALIDATION.md](VALIDATION.md#mutex-task-lifecycle)。
+[VALIDATION.md](VALIDATION.md#spin-virtual-cancellation)。
 
 唯一执行入口是 frame-backed `kd_exe_on_call_hl_entry()`。两元素输入保持
 `{waiter GS base, logical waiter task}`，不增加 FS base 或第三个 task 元素。
@@ -416,7 +416,7 @@ task/目标 RIP/RSP 对应。远端祖先可以转递同一个包，但 callee �
 RBP/RSP/后继 RIP 的期望地址由 caller 生成，并非独立证明所有地址计算。
 此探针不检查 RFLAGS、向量寄存器、非 CALL 出口、任意栈对齐或 IRQ/NMI；
 纯原生及 guest 用户态对照不能记为 JIT 通过。证据见
-[最新寄存器验收](VALIDATION.md#mutex-task-lifecycle)。
+[最新寄存器验收](VALIDATION.md#spin-virtual-cancellation)。
 当前 mode 0/3 和嵌套 mode 1/4/8 的标记样本通过。mutex learned-depth 另行
 通过真实 JIT/容量续跑与保留锁检查，不等于它也运行了这套专用 GPR 标记探针。
 

@@ -36,8 +36,8 @@ before ACK; reclamation waits for RCU readers.
 
 ## Current Status
 
-Latest complete matrix, **2026-09-08 21:46 +08**: **53/53 pass**, comprising
-**37 actual-JIT cases, 12 context refusals, two native controls and two kernel
+Latest complete matrix, **2026-09-08 22:49 +08**: **55/55 pass**, comprising
+**39 actual-JIT cases, 12 context refusals, two native controls and two kernel
 protocol probes**. The last two test real RCU/owner ACK without JIT.
 Mode **0-8** pass actual-JIT checks, including guarded nested mode 1/4/8 and
 `mutex_jit=1` for mutex positives. Mode 1/4 register, held-B and pending-B
@@ -51,6 +51,10 @@ unlock orders; its constructed continuation does not execute JIT. Commands and
 flow are in [the lifecycle guide](docs/JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu).
 Resource classes and remaining gaps are in
 [the resource guide](docs/JIT_EXECUTION.md#6-资源拒绝与测试边界).
+Two new busy-B probes connect real virtual-ticket cancellation after JIT
+progress to native continuation and owner ACK. Resource absence/full count is
+injected, not natural pool saturation; [usage 6.3](docs/JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑)
+describes the exact flow and limits. Default runtime and guest kernel are unchanged.
 
 Learned mutex-depth now executes the helper's translated lock calls, reaches
 real capacity exits and completes native continuation with physical-owner ACKs.
@@ -60,7 +64,7 @@ scope, refusal and continuation rules are in
 
 These are bounded correctness observations, not a claim of complete support.
 Commands, failed cases, source identity and evidence are centralized in
-[VALIDATION](docs/VALIDATION.md#mutex-task-lifecycle). Do not substitute
+[VALIDATION](docs/VALIDATION.md#spin-virtual-cancellation). Do not substitute
 historical passes or successful native fallback for the current JIT gate.
 
 ## Quick Start

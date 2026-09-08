@@ -175,12 +175,12 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 `ENTRY_SCOPE_MISMATCH` 或 `INVALID_ENTRY_REFUSAL` 则需要核查 frame、CALL
 阶段、RIP/RSP 和父请求，不能忽略错误并重试入口。
 
-最近一次完整矩阵（2026-09-08 21:27-21:46 +08）的结果集中记录在
-[VALIDATION: Mutex Task Lifecycle](VALIDATION.md#mutex-task-lifecycle)。
+最近一次完整矩阵（2026-09-08 22:28-22:49 +08）的结果集中记录在
+[VALIDATION: Spin Virtual Cancellation](VALIDATION.md#spin-virtual-cancellation)。
 完整矩阵的逐项命令见 [测试清单](VALIDATION.md#current-matrix-manifest)，
-该矩阵使用同一源码快照执行全部 53 个选择器，不借用旧的短回归结果。
-完整 53 项全部通过，包含 37 项实际 JIT；新增两项真实 RCU/owner ACK 探针
-不执行 JIT，见 6.2。mode 0-8、
+该矩阵使用同一源码快照执行全部 55 个选择器，不借用旧的短回归结果。
+完整 55 项全部通过，包含 39 项实际 JIT；其中新增两项虚拟请求取消与续跑
+见 6.3。两项真实 RCU/owner ACK 探针不执行 JIT，见 6.2。mode 0-8、
 mode 1/4 的普通 CALL 寄存器、held-B、pending-B，以及 mode 8 的两项寄存器
 续跑检查通过。mutex 学习深层 callee 后也实际执行 JIT 并通过容量续跑检查；
 不能将这组有界测试写成整个项目或所有资源耗尽场景已完成。
@@ -274,7 +274,7 @@ scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行
 远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
 另行验证真实 JIT、嵌套竞争及寄存器续跑。文本窗口测试检查新增可达块、块内
 入口分割、GS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
-结果只维护在 [验证记录](VALIDATION.md#mutex-task-lifecycle)，后续顺序见
+结果只维护在 [验证记录](VALIDATION.md#spin-virtual-cancellation)，后续顺序见
 [TODO](TODO.md#direction-and-priority)。
 
 ## 6. 资源拒绝与测试边界
@@ -301,7 +301,7 @@ JIT 已执行，新的 lock CALL 仍为合法 PENDING，尚未取得/发布新�
 | hotlock 表 | 131071 槽；新地址无法建立采样记录时不晋升，继续原生 | `test_hotlock_sampling.py` 的生产函数容量测试；不是同时访问十万把真实锁的压力测试 |
 | spin gate / acquisition ticket | gate 1024 槽、每 CPU 32 个 ticket；普通 hook 预留失败转原生；虚拟 B 必须遵守 CALL 阶段 | `test_spin_gate.py` / `test_spin_entry.py` 检查真实组件耗尽；仍需更多 hook 到队列的组合失败调度，不能把 EOVERFLOW 等都当作可恢复 ENOMEM |
 | mutex shadow / task 记录 | shadow 1024 槽；task 记录用 GFP_ATOMIC 分配；hook 中失败在入队前转原生 mutex | `test_mutex_resources.py` 填满真实 shadow 表并测试 hook 回退，task API/IRQ 为替身；`test_22` 单独连接真实 task get/put、owner ACK 和 RCU 延后释放，边界见 6.2 |
-| spin / mutex node | 每 CPU 各 4 个；普通请求无 node 时用自己的栈等待私有 gate，再取得原锁；虚拟 spin 请求先取消预留再返回 | spin 生产 producer/队列及 live observer 有界覆盖；mutex 生产 reserve/release、hook 和入口的组合测试取代旧模型，`test_11` 另有八 waiter 争用四槽的真实回退；更多多请求/远端组合压力待补 |
+| spin / mutex node | 每 CPU 各 4 个；普通请求无 node 时用自己的栈等待私有 gate，再取得原锁；虚拟 spin 请求先取消预留再返回 | spin producer/队列与 live observer 有界覆盖；6.3 连接真实 JIT、虚拟 ticket 取消及原生续跑，但资源输入为注入；mutex 生产组合测试取代旧模型，`test_11` 另有八 waiter 争用四槽的真实回退 |
 | frame / held-lock / shadow stack | 8 层 frame、8 个逻辑锁记录与 CPU-local held-lock 容量分别检查；栈空间不是相同资源 | 生产 frame 容量、spin producer、远端拒绝及 mutex learned-depth 有界测试；不能由一项容量通过推导全部耗尽场景 |
 
 代码池测试在真实初始化流程的分配 API 上注入失败，不修改生产容量，也不
@@ -394,3 +394,57 @@ KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_TASK_CPUS=0,20,21 \
 这是实际内核协议测试，但不执行 JIT。续跑 RIP/RSP 是不跳转的构造包；outer
 batch 回调只释放真实 A，不运行生产队列调度。测试不证明汇编跳转、任意信号/
 退出竞争、多请求远端调度或热卸载安全。自测入口与释放计数在默认构建中均不存在。
+
+### 6.3 Spin 虚拟请求取消与续跑
+
+`test_10` 的 `KD_NATIVE_VIRTUAL_RESOURCE=1/2` 复用 mode 8 stage 4 的真实
+A/B 持锁者、A 代理队列和 B 的 Linux pending-bit 竞争者。与较早的
+`jit_fail_pending_lock` 不同，它在 `kd_spin_nested_lock()` 已建立真实虚拟
+ticket、增加一次 preempt pin、并发现私有 B 忙之后才改变资源输入：
+
+```text
+combiner 持有 A -> JIT 执行前缀写入 -> lock(B) CALL 为 PENDING
+  -> 保存原 CALL 包，暂存 post-CALL RIP/RSP
+  -> 取得真实虚拟 ticket/pin -> B 的私有 gate 忙
+  -> 1: 当前函数的 context 视图置 NULL -> 原分支返回 ENOMEM
+     2: 本 CPU node count 暂设为 4 -> 原分支尝试后减回 4，返回 E2BIG
+  -> 原 cancel 路径注销 ticket、归还 pin；尚未发布 B 请求
+  -> 自测恢复唯一的合成 count，并核对完整存储及 A/B 持锁状态
+  -> finish_known_lock_call 恢复当前 lock(B) 的 RIP/RSP
+  -> 原 waiter 在 Linux B 上排队，保留 A 的 combiner 等待通知
+  -> B 可用后 waiter 取得/释放 B，后缀副作用恰好一次
+  -> A 的 unlock 交回原 owner，最终 ACK 后排空；本次不重返 JIT
+```
+
+在已确认 recovery 快照、voluntary/none 抢占且调用者/模块均排空的 guest 执行：
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
+  KD_NATIVE_VIRTUAL_RESOURCE=1 bash tests/test_10_native_resume.sh 8 4
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
+  KD_NATIVE_VIRTUAL_RESOURCE=2 bash tests/test_10_native_resume.sh 8 4
+```
+
+脚本检查 CPU 0/1/2/3/4/6/8 可用，自动构建 SELFTEST，并始终保持
+`jit_fail_pending_lock=0`。不可与 node trace、shadow pressure、rename 等探针
+叠加。单次只消费一次只读加载参数，失败的协议断言会 fail-stop，须按 recovery
+流程处置；不能在工作线程存活时强制卸载。
+
+验收要求生成物、返回后的 `body=1`、正确的工作负载状态，以及同一个 task、
+entry、A/B 地址贯穿取消、native begin、B 排队/取得和最终 ACK。探针比较全部
+`pt_regs`、CALL 栈字、frame、节点/context 数组和 combiner shadow 状态，核对
+ticket 消失及 pin 平衡；原有 staged RIP/RSP、原生队列和恰好一次断言不放宽。
+脚本保留 `virtual-resource.log` 等证据，排空卸载后重建默认模块。
+
+这是实际 JIT/原锁/取消/续跑的组合测试，但不是自然池耗尽证明：context 原本
+已分配，仅局部视图被置空；count=4 不代表四个真实存活节点。它不覆盖 gate/
+ticket 池自然耗尽、发布后失败、任意抢占、任务退出或 flags 恢复。所有新增
+探针均在 `KDLOCK_SELFTEST` 内，默认执行流和两元素 wrapper ABI 不变。
+
+修改共享 SELFTEST 加载/清理逻辑后，还应回归原有 CPU-local shadow 容量用例。
+它在 CALL advance 和虚拟 ticket 申请之前拒绝，不等同于上述两个出口：
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_SHADOW_CAPACITY=1 \
+  bash tests/test_10_native_resume.sh 1 4
+```

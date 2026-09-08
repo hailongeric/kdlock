@@ -1,17 +1,17 @@
 # kdlock Validation
 
-Latest complete matrix: **53/53 pass** on the
-[mutex task lifecycle](#mutex-task-lifecycle) freeze. Actual-JIT positives,
+Latest complete matrix: **55/55 pass** on the
+[spin virtual cancellation](#spin-virtual-cancellation) freeze. Actual-JIT positives,
 context refusals, pure-native controls and kernel protocol probes are distinct.
 The project is not accepted as complete; older matrices are historical only.
 
-Complete-matrix source identity: **175 runtime/test inputs** in
-`/tmp/kdlock-mutex-task-matrix.puvwk1/source.sha256`.
+Complete-matrix source identity: **176 runtime/test inputs** in
+`/tmp/kdlock-spin-virtual-matrix.bXxA9p/source.sha256`.
 Full source/log/artifact/command archive:
-`/tmp/kdlock-mutex-task-matrix.puvwk1.tar.gz`, SHA256:
+`/tmp/kdlock-spin-virtual-matrix.bXxA9p.tar.gz`, SHA256:
 
 ```text
-c7997a0432c15ddb32d9fef5a451ba12dcd243c725bf197aa0e3bb874eed7b14
+61cdad52b26512e2529a25e5071541654555976763cb9f5f26d921318a37ee95
 ```
 
 The archive includes frozen source, generated artifacts, per-case commands,
@@ -22,61 +22,86 @@ invocations auditable. The two pure-native controls depend on an external
 helper; they are not yet a self-contained fresh-checkout test. General evidence
 packaging remains TODO P1. Losing an archive never makes recorded results new.
 
+## Spin Virtual Cancellation
+
+Increment against `832c44b`: two SELFTEST resource views now exercise the real
+busy-B virtual-ticket cancellation branches after actual JIT progress. The
+first yields ENOMEM from a missing local context view; the second yields
+E2BIG from a synthetic full node count. No lock word or queue link is injected,
+and no post-publication recovery is added. The default runtime, guest kernel
+and two-word wrapper ABI are unchanged. Flow and commands are in
+[usage 6.3](JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑).
+
+Focused preflight at **2026-09-08 22:23:10 +08** passes 39 unit programs,
+25 admission cases and default/selftest+NUMA builds, without skips. Both live
+probes pass by **22:25:59**: each has one returned body witness, one
+`PENDING_LOCK_NATIVE`, one native begin/complete/owner ACK, 12003 exact request
+records and 12011 protected transitions. Ticket retirement, pin balance, full
+packet/frame/node/context storage and retained ownership all pass. B is really
+contended and acquired by the original waiter, with no private B node published.
+Evidence is under `/tmp/kdlock-spin-virtual-focus.QTkLwQ/` and the matrix's
+`focused/` copy; these two runs are not counted again as matrix cases.
+
+The first preflight fails to compile the new probe's `void *` argument to the
+`raw_spin_is_locked` macro. No new module is loaded. Explicit lock-pointer casts
+fix it before the new freeze; the failed build log and input hashes remain in
+`failed-preflight/`, not a passing result or a claim of archived failed source.
+
+**Full matrix, 2026-09-08 22:28:39-22:49:31 +08:** all 55 selectors pass,
+comprising **39 actual-JIT, 12 context refusals, two pure-native controls and
+two kernel protocol probes**. Preflight again passes all units/audit/builds.
+Modes 0-8 report **4/4/4/700/1/454/4/2/2** returned body witnesses; mutex
+positives read back `mutex_jit=1`. Mode 5 has 454 matching hostcall
+exits/executions/resumes, with zero rejected/failed/limited calls. All eight
+register gates, held-B/PENDING, mixed owners, depth/remote and late-policy
+selectors pass. Both new exits repeat the focused ticket/packet/owner and
+exact-state results above, including `retired=pin=nodes=contexts=packet=frame=owner=1`.
+
+Mixed mutex reports four node overflows, one expected task allocation failure,
+4355/4355 origin intervals and no live nodes/waiters/tasks. Learned mutex-depth
+executes its 11778 -> 12512-byte expanded artifact and reaches three capacity
+exits retaining seven children each. It completes four native continuations,
+25 owner unlocks and 12017 state checks; `jit_success=0` here means partial-JIT
+completion, not no execution. Real task probes on CPUs 0,1,2 and 0,20,21 each
+verify two orders/four ACKs/two deferred frees with JIT=0.
+
+The additional `extra-shadow-capacity` regression passes with two body
+witnesses, one actual local-shadow refusal, 12009 transitions and balanced
+two native continuations/three owner unlocks. It is separate from the 55-case
+matrix and tests the shared SELFTEST setup/cleanup. NUMA depth-8 SELFTEST
+reports sampled stack space 1784 bytes and untouched watermark 712 bytes
+(previously 2008/936). These limited measurements are not arbitrary IRQ/NMI
+stack-safety guarantees or default-runtime stack measurements.
+
+Postflight closes at **22:51:51 +08**, repeating 39 units/25 audit cases without
+skips and matching all 176 host/guest input hashes. The 18 kernel source files,
+config, nine build identities and live Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5` match. Default `.text` remains
+`37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`;
+symbols/parameters contain neither the task nor virtual-refusal probe.
+Independent evidence audit confirms 55 zero statuses, empty fault scans and
+drained callers/modules. Existing objtool/locale build warnings remain; there
+is no VM restart or guest-kernel edit/build/install. Resource views are still
+injected; this does not close C1/C2/C5 or the deferred C3/C4 work.
+
 ## Mutex Task Lifecycle
 
-This increment against `a3642bb` combines the production mutex resource fixture
-with opt-in `test_22`, which calls real task membership, native request/ACK,
-mutex ownership and RCU functions. Kernel integration is guarded by
-`KDLOCK_SELFTEST`; default runtime, wrapper ABI and guest kernel are unchanged.
-Purpose/constraint comments and test flow are maintained in
-[the lifecycle guide](JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu).
+Checkpoint `832c44b`, **2026-09-08 21:27:22-21:46:22 +08**, passes 53/53:
+37 actual-JIT, 12 context refusals, two native controls and two kernel protocol
+probes. All 175 source identities, 39 units, 25 admission cases, build/kernel
+checks and drains pass; postflight is at 21:48:48. Default `.text` is unchanged,
+and the task probe is absent from the default module. No guest-kernel change
+or VM restart occurs. This does not close the whole project.
 
-Preflight closes at **2026-09-08 21:27:22 +08**: all 39 unit programs and 25
-admission audit cases pass without skips, including the resource fixture's
-15849 checks and eight compiled/detected mutants. Default/selftest+NUMA module,
-workload and daemon builds pass; existing objtool/locale warnings remain.
-
-**Complete matrix, 21:27:22-21:46:22 +08:** all 53 selectors pass, comprising
-**37 actual-JIT, 12 context refusals, two pure-native controls and two kernel
-protocol probes**. Main modes 0-8 report respectively
-**4/4/4/554/1/460/4/2/2** returned body witnesses with correct protected states.
-Mutex positives explicitly enable `mutex_jit=1`. Mode 5 has 460 matching
-hostcall exits/executions/resumes and zero rejected/failed/limited calls.
-All eight register gates, four held-B/PENDING selectors, eleven depth/remote
-cases and the late-policy/mixed-owner cases pass.
-
-The mixed-mutex test triggers four node overflows and one expected task
-allocation failure, with 4331/4331 origin acquisitions/releases and no active
-tasks/waiters/nodes. Learned mutex-depth executes the 11778 -> 12512-byte
-expanded artifact, reaches three capacity exits retaining seven children each,
-and completes four native continuations, 25 owner unlock notifications and
-12017 exact state checks. Its `jit_success=0` means partial-JIT/native
-completion, not absence of generated-code execution.
-
-`test_22` passes on CPU placements **0,1,2** and **0,20,21**. Each executes
-B->A and A->B order, four real owner ACKs and two deferred record frees. An
-actual RCU reader keeps the unlinked entry alive across final ACK; after reader
-exit, `rcu_barrier()` observes exactly one free per round. Acquisition refs,
-allocation refusal, intermediate retention and final routing removal pass.
-These probes report **JIT=0**: continuation registers and the outer batch
-callback are constructed, with no JIT stack jump or production queue scheduling.
-The earlier focused local probe also passes and is archived under `focused/`,
-not counted again in the 53-case matrix.
-
-Postflight at **21:48:48 +08** again passes all 39 units and 25 audit cases
-without skips. All 175 host/guest inputs match; the 18 kernel source files,
-config, nine build files and live Build ID
-`6f9f2e9fec382e97f620553793aa90b527a30af5` match. Default module `.text` remains
-`37362e3c49f513089a6f6bb9647f20d41a07afb69ffef4d34bc3ac808f60a712`;
-its symbols and module parameters exclude the task probe. Independent evidence
-audit confirms 53 zero exit statuses, empty fault scans and drained callers/
-modules. No VM restart or guest-kernel edit/build/install occurs.
-This closes this bounded matrix, not C1/C2/C5 or deferred C3/C4.
-
-The two obsolete mutex model sources, unused build outputs and their ignore
-entries are removed. Old outputs are retained only as an evidence backup.
-Repeated investigation-directory descriptions are replaced by the Git history
-index below; active execution and test instructions remain in the usage guide.
+The production mutex resource fixture replaces two copied models; `test_22`
+adds real task/RCU/owner-ACK checks on CPUs 0,1,2 and 0,20,21. Each placement
+passes both unlock orders, four ACKs and two delayed frees, explicitly with
+JIT=0 and a constructed continuation. Current scope and flow are in
+[the lifecycle guide](JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu), not duplicated
+here. Full records and the removed-artifact backup remain in
+`/tmp/kdlock-mutex-task-matrix.puvwk1.tar.gz`, SHA256
+`c7997a0432c15ddb32d9fef5a451ba12dcd243c725bf197aa0e3bb874eed7b14`.
+Detailed prior results are available with `git show 832c44b:docs/VALIDATION.md`.
 
 ## Mutex Resource Coverage
 
@@ -211,9 +236,9 @@ then resumes it to validate subsequent refusal without replay.
 
 ## Current Matrix Manifest
 
-The existing 51 selectors plus two kernel task probes ran at
-**21:27-21:46 +08, 2026-09-08**. All 53 pass in their respective categories;
-per-case exits are in `/tmp/kdlock-mutex-task-matrix.puvwk1/results.tsv`. Older tables remain
+The existing 53 selectors plus two virtual cancellation probes ran at
+**22:28-22:49 +08, 2026-09-08**. All 55 pass in their respective categories;
+per-case exits are in `/tmp/kdlock-spin-virtual-matrix.bXxA9p/results.tsv`. Older tables remain
 historical and do not define current acceptance. Body records count returned
 positive logs, not retired instructions, unique instructions or immutable
 generations.
@@ -225,7 +250,7 @@ All commands ran in the recovery guest project with
 snapshots, freeze/sync inputs, retain evidence and drain between cases.
 This is a manifest, not an unattended command to run on the host.
 The three cross-NUMA commands use corrected role placements; earlier invalid
-CPU placements are excluded from the 51-case total. The external
+CPU placements are excluded from the 55-case total. The external
 `/tmp/kdlock-register-native-control.sh` used only by control-0/3 must not be
 silently replaced by a JIT test or counted as delivered by this repository.
 
@@ -388,6 +413,18 @@ bash tests/test_22_mutex_task_lifecycle.sh
 
 # kernel-task-cross-numa: real RCU/owner ACK, JIT=0
 env KD_MUTEX_TASK_CPUS=0,20,21 bash tests/test_22_mutex_task_lifecycle.sh
+
+# virtual-context-refusal: actual JIT, injected context view, real ticket cancel
+env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_VIRTUAL_RESOURCE=1 bash tests/test_10_native_resume.sh 8 4
+
+# virtual-node-refusal: actual JIT, injected full count, real ticket cancel
+env KD_NATIVE_PENDING_CONTENDED=1 KD_NATIVE_VIRTUAL_RESOURCE=2 bash tests/test_10_native_resume.sh 8 4
+```
+
+Separate regression after this matrix and before postflight:
+
+```sh
+env KD_NATIVE_SHADOW_CAPACITY=1 bash tests/test_10_native_resume.sh 1 4
 ```
 
 ## Historical Evidence Index

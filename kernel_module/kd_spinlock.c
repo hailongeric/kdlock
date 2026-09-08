@@ -232,6 +232,17 @@ struct kd_spin_jit_context {
 
 static DEFINE_PER_CPU(struct kd_spin_jit_context *, kd_spin_jit_contexts);
 
+#ifdef KDLOCK_SELFTEST
+static bool kd_spin_selftest_virtual_begin(
+	struct qspinlock *lock, const struct kd_spin_ref *request,
+	const struct pt_regs *regs, const struct kd_exec_frame *parent,
+	struct kd_spin_jit_context **contexts, int initial_preempt);
+static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
+					 const struct pt_regs *regs,
+					 const struct kd_exec_frame *parent,
+					 int result);
+#endif
+
 /*
  * 8KB shadow stack used by all the threads. For waiter threads, switch to
  * shadow stack, because of IRQs. For combiner thread, switch to shadow stack
@@ -1804,6 +1815,10 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	struct kd_spin_jit_context *contexts;
 	u32 tail;
 	int idx, ret;
+#ifdef KDLOCK_SELFTEST
+	int initial_preempt = preempt_count();
+	bool refusal_probe = false;
+#endif
 
 	if (!lock || !regs || !parent)
 		return -EINVAL;
@@ -1825,6 +1840,11 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 
 	base = this_cpu_ptr(&kd_spin_nodes[0]);
 	contexts = *this_cpu_ptr(&kd_spin_jit_contexts);
+#ifdef KDLOCK_SELFTEST
+	/* Exercise real post-ticket cancellation before any node is published. */
+	refusal_probe = kd_spin_selftest_virtual_begin(
+		lock, &request, regs, parent, &contexts, initial_preempt);
+#endif
 	if (!contexts) {
 		kd_spin_selftest_node_event(KD_NODE_CONTEXT_MISSING);
 		ret = -ENOMEM;
@@ -1900,6 +1920,10 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	return ret;
 cancel:
 	BUG_ON(kd_spin_entry_end(&request));
+#ifdef KDLOCK_SELFTEST
+	if (refusal_probe)
+		kd_spin_selftest_virtual_end(&request, regs, parent, ret);
+#endif
 	return ret;
 }
 
@@ -2269,4 +2293,5 @@ static __always_inline int kd_spin_trylock(struct qspinlock *lock)
 #include "../tests/kernel/spin_refusal_trace.c"
 #include "../tests/kernel/spin_deferred_trace.c"
 #include "../tests/kernel/spin_shadow_selftest.c"
+#include "../tests/kernel/spin_virtual_selftest.c"
 #endif

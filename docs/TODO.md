@@ -12,13 +12,13 @@ ends this JIT invocation and the original waiter completes the native suffix.
 Admission and emission share the same scope. This replaces the old requirement
 to admit that waiter-only suffix; it does not allow unchecked live JIT paths.
 
-Latest complete matrix: **53/53 pass**; 37 passes execute generated
+Latest complete matrix: **55/55 pass**; 39 passes execute generated
 code, 12 are context refusals, two are native controls and two are real kernel
 task/RCU/owner-ACK probes without JIT. All 39 unit programs
 and the 25-case admission audit pass. Mode 0-8, including guarded mode 1/4/8,
 pass actual JIT. Mode 8's stage-2/3 register cases and learned mutex-depth
 continuation also pass. This closes the matrix gates, not the whole project:
-[VALIDATION](VALIDATION.md#mutex-task-lifecycle).
+[VALIDATION](VALIDATION.md#spin-virtual-cancellation).
 
 Implement next in this order:
 
@@ -29,6 +29,9 @@ Implement next in this order:
    broadening post-entry recovery or mistaking fixtures for live scheduling.
    The real task/RCU/final-ACK probe covers two bounded unlock orders, not
    arbitrary task exit, cancellation or multiple outstanding native frames.
+   Spin's busy-B context/node refusal probes now connect real virtual-ticket
+   cancellation to actual JIT/native continuation; their resource views are
+   injected, not naturally saturated pools.
 2. Broaden native-peer, signal/trylock, oversubscribed and multi-request remote
    schedules, using existing hooks. Keep source/lock lifetime review separate
    from owner handoff and the explicitly deferred immutable-version work.
@@ -44,7 +47,7 @@ Production conditional analysis collects required entry-range separations and
 models callee-saved effects only at registered lock-control calls. Every premise
 is checked before root body execution; missing cold text must be fetched first.
 Current results and remaining gates are in
-[VALIDATION](VALIDATION.md#mutex-task-lifecycle); this does not close C1/C2/C5.
+[VALIDATION](VALIDATION.md#spin-virtual-cancellation); this does not close C1/C2/C5.
 
 - [x] Collect every required disjoint range and test the emitted entry predicate
       against concrete overlap, adjacency, wrap and register-preservation cases.
@@ -115,6 +118,15 @@ prefix. The implementation and execution flow are in
 - [x] Verify the 175-input freeze with local/cross-NUMA task probes and the
       full 53-case matrix, 39 units, 25 audit cases and final identity/drain
       checks. Default `.text` is unchanged and contains no task probe.
+- [x] Join actual mode-8 JIT progress, real busy B and virtual-ticket/pin
+      cancellation to native continuation for ENOMEM/E2BIG. Focused probes
+      preserve full packets, frame/node/context storage, retained A and one
+      native/owner-ACK lifecycle. Context absence and full count are injected
+      inputs, not four live virtual nodes; execution flow is in usage 6.3.
+- [x] Run the full 55-case matrix on the resulting 176-input freeze, including
+      both new cancellation exits and all prior actual-JIT/negative gates.
+      The separate shadow-capacity regression and final units/audit/identity/
+      drain checks pass; default `.text` is unchanged and has no new probe.
 - [ ] Broaden combined pressure, task exit/cancellation and multiple native
       frame schedules. These bounded checks do not close C1/C2/C5 or prove
       live pool saturation. `test_22` constructs its continuation and outer

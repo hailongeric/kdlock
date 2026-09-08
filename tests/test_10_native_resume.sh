@@ -15,9 +15,26 @@ mixed="${KD_NATIVE_MIXED:-0}"
 policy_completion="${KD_NATIVE_POLICY_COMPLETION:-0}"
 pending_contended="${KD_NATIVE_PENDING_CONTENDED:-0}"
 shadow_capacity="${KD_NATIVE_SHADOW_CAPACITY:-0}"
+virtual_resource="${KD_NATIVE_VIRTUAL_RESOURCE:-0}"
 ooo="${KD_NATIVE_OOO:-0}"
 dependency="${KD_NATIVE_OOO_DEPENDENCY:-0}"
 registers="${KD_NATIVE_REGISTERS:-0}"
+# Reuse the independent B owner/pending topology, but reach the real virtual
+# ticket cancellation branches instead of the earlier jit_fail_pending_lock.
+if [ "$virtual_resource" != 0 ]; then
+    case "$virtual_resource" in
+        1|2) ;;
+        *) fail "$TEST_NAME" "KD_NATIVE_VIRTUAL_RESOURCE must be 0, 1 or 2"; exit 1 ;;
+    esac
+    if [ "$mode:$stage:$pending_contended:$pinned:$renamed:$mixed:$policy_completion:$shadow_capacity:$ooo:$dependency:$registers" != 8:4:1:0:0:0:0:0:0:0:0 ]; then
+        fail "$TEST_NAME" "virtual resource refusal requires plain mode 8 stage 4 with pending contention"
+        exit 1
+    fi
+fi
+selftest=0
+if [ "$shadow_capacity" = 1 ] || [ "$virtual_resource" != 0 ]; then
+    selftest=1
+fi
 if [ "$registers" != 0 ]; then
     case "$registers:$mode:$stage" in
         1:0:1|1:3:1|1:1:2|1:1:3|1:4:2|1:4:3|1:8:2|1:8:3) ;;
@@ -106,10 +123,10 @@ retain_and_cleanup() {
     # A blocked kernel caller may still own a continuation. Do not force unload.
     if ! pgrep -x 'klock_test|kd_native|kd_shadow_[0-2]' >/dev/null; then
         unload_modules
-        if [ "$shadow_capacity" = 1 ]; then
+        if [ "$selftest" = 1 ]; then
             make -C "$KM_DIR" KDLOCK_SELFTEST=0 W=1 -j8 > "$out/build-default.log" 2>&1 || status=1
         fi
-    elif [ "$shadow_capacity" = 1 ]; then
+    elif [ "$selftest" = 1 ]; then
         fail "$TEST_NAME" "workers remain active; retain test module for VM recovery"
         status=1
     fi
@@ -128,10 +145,11 @@ build_all
 unload_modules
 clear_dmesg
 module_args=()
-if [ "$shadow_capacity" = 1 ]; then
+if [ "$selftest" = 1 ]; then
     make -C "$KM_DIR" KDLOCK_SELFTEST=1 W=1 -j8 > "$out/build-selftest.log" 2>&1
     cp "$KM_DIR/kdlock_km.ko" "$out/kdlock-selftest.ko"
-    module_args+=(spin_selftest_fill_shadow=1)
+    module_args+=(spin_selftest_fill_shadow="$shadow_capacity"
+        spin_selftest_virtual_refusal="$virtual_resource")
 fi
 insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1 "${module_args[@]}"
 insmod "$KLOCK_DIR/klock_module.ko" native_resume_stage="$stage" \
@@ -180,6 +198,7 @@ fi
     printf 'mode=%s stage=%s mutex_jit=1 pinned=%s rename=%s mixed=%s pending_contended=%s shadow_capacity=%s ooo=%s dependency=%s\n' \
         "$mode" "$stage" "$pinned" "$renamed" "$mixed" "$pending_contended" "$shadow_capacity" "$ooo" "$dependency"
     printf 'registers=%s probe_ip=%s\n' "$registers" "$probe_ip"
+    printf 'virtual_resource=%s\n' "$virtual_resource"
 } > "$out/environment.log"
 start_daemon 2
 
@@ -242,6 +261,9 @@ if [ "$stage" = 4 ]; then
     test -n "$probe_ip"
     if [ "$shadow_capacity" = 1 ]; then
         test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_fill_shadow)" = 1
+        test "$(cat /sys/module/kdlock_km/parameters/jit_fail_pending_lock)" = 0
+    elif [ "$virtual_resource" != 0 ]; then
+        test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_virtual_refusal)" = "$virtual_resource"
         test "$(cat /sys/module/kdlock_km/parameters/jit_fail_pending_lock)" = 0
     else
         printf '%s\n' "$kind" > /sys/module/kdlock_km/parameters/jit_fail_pending_lock
@@ -411,11 +433,47 @@ line = open(sys.argv[1]).read()
 fields = dict(re.findall(r"(\w+)=(0x[0-9a-f]+|[0-9-]+)", line))
 values = {k: int(v, 0) for k, v in fields.items()}
 assert values["target"] == int(sys.argv[2], 16)
-assert values["error"] == -errno.E2BIG
+assert values["error"] == (-errno.ENOMEM if sys.argv[4] == "1" else -errno.E2BIG)
 pre_stage = values["mutex"] or sys.argv[3] == "1"
 assert values["staged_ip"] == (values["target"] if pre_stage else values["return"])
 assert values["staged_sp"] == values["sp"] + (0 if pre_stage else 8)
-' "$out/pending-lock.log" "$probe_ip" "$shadow_capacity"
+' "$out/pending-lock.log" "$probe_ip" "$shadow_capacity" "$virtual_resource"
+fi
+if [ "$virtual_resource" != 0 ]; then
+    test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_virtual_refusal)" = 0
+    dmesg > "$out/virtual-resource.log"
+    python3 -c '
+import errno, re, sys
+text = open(sys.argv[1]).read()
+lines = re.findall(r"kd_spin virtual refusal: ([^\n]+)", text)
+assert len(lines) == 1, lines
+fields = dict(re.findall(r"(\w+)=([-\w]+)", lines[0]))
+kind = int(sys.argv[2])
+expected = {"kind": kind, "ret": -errno.ENOMEM if kind == 1 else -errno.E2BIG,
+            "phase": 1, "retired": 1, "pin": 1, "nodes": 1, "contexts": 1,
+            "packet": 1, "frame": 1, "owner": 1, "executed": 1, "injected": 1}
+for key, value in expected.items():
+    assert int(fields[key]) == value, (key, fields)
+assert fields["cpu"] in {"4", "6"}
+assert int(fields["target"], 16) == int(sys.argv[3], 16)
+pid = fields["task"]
+begins = re.findall(r"kd_native begin: task=" + pid + r" ([^\n]+)", text)
+assert len(begins) == 1
+begin = dict(re.findall(r"(\w+)=(\w+)", begins[0]))
+assert begin["held"] == "1" and begin["mutex"] == "0"
+assert all(begin[k] == fields[k] for k in ("outer", "entry", "cpu"))
+assert int(begin["ip"], 16) == int(fields["target"], 16)
+blocked = re.findall(r"kd_pending spin blocked: task=" + pid + r" ([^\n]+)", text)
+assert len(blocked) == 1
+blocked = dict(re.findall(r"(\w+)=(\w+)", blocked[0]))
+assert all(blocked[k] == fields[k] for k in ("outer", "lock"))
+events = [text.index(event) for event in ("kd_spin virtual refusal:",
+          "reason=PENDING_LOCK_NATIVE", "kd_native begin: task=" + pid + " ",
+          "kd_pending spin blocked:", "kd_pending spin acquired:",
+          "kd_native complete: task=" + pid + " ")]
+assert events == sorted(events)
+assert "kd_spin virtual refusal error:" not in text
+' "$out/virtual-resource.log" "$virtual_resource" "$probe_ip"
 fi
 if [ "$shadow_capacity" = 1 ]; then
     test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_fill_shadow)" = 0
