@@ -33,22 +33,22 @@ and services waiter unlock notifications. Mutex owner handoff is not added.
 
 ## Current Status
 
-Latest complete matrix, **2026-09-08 17:42 +08**: **50/51 pass**, comprising
-**36 actual-JIT cases, 12 context-refusal cases and two native controls**.
+Latest complete matrix, **2026-09-08 18:33 +08**: **51/51 pass**, comprising
+**37 actual-JIT cases, 12 context-refusal cases and two native controls**.
 Mode **0-8** pass actual-JIT checks, including guarded nested mode 1/4/8 and
 `mutex_jit=1` for mutex positives. Mode 1/4 register, held-B and pending-B
 continuations also pass, as do mode 8's stage-2/3 register cases.
 All **40 unit programs** and the independent **25-case admission audit** pass.
 
-**One gate remains failing:** mutex learned-depth continuation after learning
-the helper. Its initial JIT prefix executes, but the expanded image is refused;
-that is not a deep-JIT pass. Entry predicates are enforced in production;
+Learned mutex-depth now executes the helper's translated lock calls, reaches
+real capacity exits and completes native continuation with physical-owner ACKs.
+Entry predicates and scoped CALL/RET checks are enforced in production;
 scope, refusal and continuation rules are in
 [the usage guide](docs/JIT_EXECUTION.md#5-入口条件与嵌套续点).
 
 These are bounded correctness observations, not a claim of complete support.
 Commands, failed cases, source identity and evidence are centralized in
-[VALIDATION](docs/VALIDATION.md#cross-window-cfg-completion). Do not substitute
+[VALIDATION](docs/VALIDATION.md#scoped-learned-callees). Do not substitute
 historical passes or successful native fallback for the current JIT gate.
 
 ## Quick Start

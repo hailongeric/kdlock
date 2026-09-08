@@ -12,24 +12,26 @@ ends this JIT invocation and the original waiter completes the native suffix.
 Admission and emission share the same scope. This replaces the old requirement
 to admit that waiter-only suffix; it does not allow unchecked live JIT paths.
 
-Latest complete matrix: **50/51 pass, 1 fail**; 36 passes execute generated
+Latest complete matrix: **51/51 pass**; 37 passes execute generated
 code, 12 are context refusals and two are native controls. All 40 unit programs
 and the 25-case admission audit pass. Mode 0-8, including guarded mode 1/4/8,
-pass actual JIT. Mode 8's stage-2/3 register cases also pass. The remaining
-matrix gate is mutex learned-depth continuation:
-[VALIDATION](VALIDATION.md#cross-window-cfg-completion).
+pass actual JIT. Mode 8's stage-2/3 register cases and learned mutex-depth
+continuation also pass. This closes the matrix gates, not the whole project:
+[VALIDATION](VALIDATION.md#scoped-learned-callees).
 
 Implement next in this order:
 
-1. Extend justified admission to the mutex depth helper learned after a real
-   CALL miss. Current single-root guards cannot be borrowed by independent
-   callee roots; the expanded image is refused even though its first prefix
-   executes. Keep memory clobbers and two-word ABI; do not resume this native
-   invocation inside JIT or silently add version isolation.
-2. Re-run the complete matrix after that change, retain failed attempts and
-   classify actual JIT, context refusal and native-only controls separately.
-3. Only then broaden context/resource coverage and consider optional services
-   and performance. Do not mark C1/C2/C5 complete from selected fixtures.
+1. Inventory remaining pool/refusal paths and add missing production-path
+   coverage for pre-entry and PENDING failures. Verify registers, retained locks
+   and exactly-once effects; do not broaden unsupported post-entry recovery.
+2. Broaden native-peer, signal/trylock, oversubscribed and multi-request remote
+   schedules, using existing hooks. Keep source/lock lifetime review separate
+   from owner handoff and the explicitly deferred immutable-version work.
+3. Extend scoped CALL/RET negative coverage before broadening eligibility,
+   especially shared tails, multiple call sites and aliased return slots.
+4. Re-run affected main gates and the complete matrix on each resulting freeze.
+   Optional services and performance follow the main correctness work. Do not
+   mark C1/C2/C5 complete merely because this matrix is green.
 
 ### Guarded Admission Increment
 
@@ -37,7 +39,7 @@ Production conditional analysis collects required entry-range separations and
 models callee-saved effects only at registered lock-control calls. Every premise
 is checked before root body execution; missing cold text must be fetched first.
 Current results and remaining gates are in
-[VALIDATION](VALIDATION.md#cross-window-cfg-completion); this does not close C1/C2/C5.
+[VALIDATION](VALIDATION.md#scoped-learned-callees); this does not close C1/C2/C5.
 
 - [x] Collect every required disjoint range and test the emitted entry predicate
       against concrete overlap, adjacency, wrap and register-preservation cases.
@@ -54,31 +56,31 @@ Current results and remaining gates are in
       Decoder seeds do not become independent admission roots; GS, genuine bad
       instructions and expansion exhaustion still refuse. Ordinary mode 8 and
       its two register gates execute actual JIT with the probes retained.
-- [ ] Close mutex learned-depth admission without deleting register probes or
+- [x] Close mutex learned-depth admission without deleting register probes or
       borrowing root facts for independent callees. Keep generated tests and
       full-matrix results separate from captured-text feasibility.
 
 ### Learned Callee Increment
 
-The learned mutex-depth gate must execute the helper's translated nested locks,
-not merely preserve the already-working caller prefix. Before changing the
-single-root guard restriction, establish this contract:
+The helper's translated nested locks now execute, rather than only its caller
+prefix. The implementation and execution flow are in
+[JIT_EXECUTION](JIT_EXECUTION.md#51-学习后的直接-callee).
 
-1. Distinguish decoder seeds from independently enterable CALL/IJ targets.
-   Check whether the retained callee graph is reachable from the runtime-validated
-   root, and compare admission RET edges with generated per-RET target tables.
-   An unconnected or independently learned target cannot inherit root GPR facts.
-2. Validate entry-scoped CALL packet and RET-effect propagation. Do not join a
-   fabricated untouched post-CALL state, assume private source stacks, or erase
-   actual callee writes. Unknown/native calls retain their clobber semantics;
-   keep the default independent-root analysis until a scoped alternative is proved.
-3. Enforce every conditional premise before body and preserve bounded analysis,
-   the two-word ABI, native owners and no replay. This is not permission to add
-   immutable versions, flags repair or kernel hooks incidentally.
-4. Add generated-code positives plus callee/return-alias, GS, unresolved-control
-   and malformed-scope negatives; run `test_10_native_resume.sh 4 5` with
-   `mutex_jit=1`, real helper learning, held-lock exhaustion and owner ACK checks.
-   Re-run all main and complete-matrix gates on the resulting frozen source.
+- [x] Seed only the checked root on the conditional learned-callee path; require
+      selected-block reachability and exact generated RET target correspondence.
+      IJ history and indirect control cannot borrow one root's facts.
+- [x] Propagate real post-push CALL packets and actual RET effects without a
+      fabricated immediate fall-through. Preserve callee memory writes and
+      native/control clobbers; keep default independent-root analysis unchanged.
+- [x] Enforce the complete predicate set before body and retain bounded work,
+      two-word ABI, physical owners and no replay. No kernel/flags/version change.
+- [x] Add eight focused methods with generated-code positives, callee-pointer
+      corruption, GS, return-table mismatch, disconnected/indirect entry and
+      budget negatives. Run real helper learning and capacity/owner ACK checks
+      with `mutex_jit=1`, then the complete 51-case frozen-source matrix.
+- [ ] Broaden multi-callsite/shared-tail and actual return-slot alias execution
+      tests before further eligibility changes. Existing scope fixtures and
+      returned-body markers are not arbitrary-control-flow proofs.
 
 ## P0: Correctness Contracts
 
@@ -101,7 +103,7 @@ Remaining:
       admission, with exactly-once protected-state and ownership checks.
 - [x] Recover mode 8 register/CALL stages 2/3 with real body evidence and
       exactly-once checks; preserve GPR/stack probes and owner notifications.
-- [ ] Recover mutex learned-depth acceptance on current source; a successful
+- [x] Recover mutex learned-depth acceptance on current source; a successful
       first prefix does not validate expanded callee code.
 - [ ] Prove/test each additional recoverable exit with registers, stack,
       ownership and exactly-once side effects. Unsupported post-entry exits
@@ -120,8 +122,8 @@ publication. Native signal/trylock participants use Linux exclusion.
 
 Remaining:
 
-- [ ] Complete learned-depth acceptance, then broaden non-target,
-      oversubscribed, cancellation and remote/deferred follower schedules.
+- [ ] Broaden non-target, oversubscribed, cancellation and remote/deferred
+      follower schedules.
 - [ ] Review source/lock address reuse, source-module lifetime and metadata
       retirement. Existing guest hook readers lack a complete unload/drain
       protocol; module-side synchronize_rcu alone is insufficient.
@@ -170,7 +172,7 @@ Remaining:
       enforced entry disjointness conditions, not assumed private stacks.
 - [x] Resolve mode 8's cold CFG without skipping any executable JIT block;
       check new cached-window targets again before admission and emission.
-- [ ] Resolve learned mutex helper admission while retaining full checks on
+- [x] Resolve learned mutex helper admission while retaining full checks on
       every executable JIT path.
 - [ ] Preserve alternate live paths, learned-target reanalysis, indirect-call
       conservatism and CALL stack-write checks while improving precision.

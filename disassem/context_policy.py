@@ -9,6 +9,7 @@ from itertools import product
 
 import context_memory
 import diagnostics
+import indirect_jump
 import normal
 from miasm.analysis.machine import Machine
 from miasm.arch.x86.regs import all_regs_ids, regs64_expr
@@ -866,11 +867,13 @@ def constant_blocks(
     control_targets=(),
     native_exits=(),
     guards=None,
+    scoped_calls=False,
 ):
     """Seed real entries, then propagate to previously unvisited successors.
 
-    Callees retain independent unknown inputs plus known direct-call inputs and
-    return effects. A normal successor is not another independently seeded root.
+    By default callees retain independent unknown inputs plus direct-call inputs.
+    The guarded single-entry alternative propagates only real CALL/RET effects;
+    its return edges must also match emission before the image can be published.
     """
     strict_roots = roots is not None
     roots = set(blocks if roots is None else roots)
@@ -880,6 +883,8 @@ def constant_blocks(
     # seeded/learned callees need their own admission contract, not these bases.
     if guards is not None and (not strict_roots or len(roots) != 1):
         raise ContextFlowLimit("entry guards require one explicit CFG root")
+    if scoped_calls and guards is None:
+        raise ContextFlowLimit("scoped CALL analysis requires entry predicates")
     successors = {}
     calls = defaultdict(list)
     callees = set()
@@ -893,8 +898,22 @@ def constant_blocks(
             continue
         targets = {db.get_location_offset(edge.loc_key) for edge in block.bto}
         offset = start
-        for line in block.lines:
+        for index, line in enumerate(block.lines):
             offset += line.l
+            if scoped_calls:
+                # An indirect target may enter with another packet. Do not let
+                # it inherit one root's predicates or assume a balanced return.
+                name = line.name.upper()
+                if (name.startswith("J") or name == "CALL") and (
+                    not line.args or not isinstance(line.args[0], (ExprLoc, ExprInt))
+                ):
+                    raise ContextFlowLimit(
+                        "scoped CALL graph has indirect control", line.offset
+                    )
+                if name == "RET" and line.args:
+                    raise ContextFlowLimit(
+                        "scoped CALL graph requires plain RET", line.offset
+                    )
             if line.name.upper() != "CALL" or not line.args or start in native_exits:
                 continue
             # Endpoint calls may lack a decoder edge, yet a nested unlock has
@@ -903,15 +922,41 @@ def constant_blocks(
             if guards is not None and callee in control_targets:
                 control_calls.add(id(line))
             if callee in blocks and callee not in control_targets:
-                roots.add(callee)
+                if scoped_calls and index != len(block.lines) - 1:
+                    raise ContextFlowLimit(
+                        "decoded CALL is not a block terminator", line.offset
+                    )
+                if not scoped_calls:
+                    roots.add(callee)
                 callees.add(callee)
                 calls[start].append((line, callee, offset))
                 targets.discard(callee)
             targets.add(offset)
         successors[start] = targets & blocks.keys()
-    if guards is not None and callees:
+    if guards is not None and callees and not scoped_calls:
         raise ContextFlowLimit("entry guards do not cover independently seeded callees")
     returns = call_return_edges(blocks, successors, calls, max_visits)
+    if scoped_calls:
+        # A corrupted virtual return slot can select any emitted whitelist
+        # target, not necessarily its matching caller. Check all such edges,
+        # rather than assuming a balanced source stack or an ABI return value.
+        emitted = {}
+        try:
+            indirect_jump.find(blocks, databases, emitted)
+        except (KeyError, RecursionError) as error:
+            raise ContextFlowLimit("incomplete scoped return dispatch graph") from error
+        expected = {
+            block.lines[-1].offset + block.lines[-1].l: set(returns[start])
+            for start, block in blocks.items()
+            if block.lines and block.lines[-1].name.upper() == "RET"
+        }
+        if expected != {source: set(targets) for source, targets in emitted.items()}:
+            raise ContextFlowLimit("scoped RET effects differ from generated dispatch")
+        # RET ownership uses lexical fall-through above. Execution cannot take
+        # that edge until the callee actually returns; a native miss is terminal.
+        for start, edges in calls.items():
+            for _, _, continuation in edges:
+                successors[start].discard(continuation)
     tracker = FlowConstants(guards)
     tracker.control_calls = control_calls
     initial = tracker.snapshot()
@@ -920,7 +965,7 @@ def constant_blocks(
     incoming = {
         start: (
             dict(initial[0]),
-            {} if start in callees else dict(initial[1]),
+            {} if start in callees and not scoped_calls else dict(initial[1]),
             initial[2],
         )
         for start in roots

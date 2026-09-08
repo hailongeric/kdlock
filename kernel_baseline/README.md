@@ -137,9 +137,11 @@ signing material can change a rebuilt binary's identity. A future kernel change
 needs separate review and approval, clean build/boot evidence and renewed
 hook/register-layout/JIT validation.
 
-The checker and unchanged-runtime regressions pass on 158 frozen inputs:
+At the historical baseline checkpoint, the checker and unchanged-runtime
+regressions pass on 158 frozen inputs:
 34 unit programs without skips before/after and 16 fresh integrations
 (13 actual-JIT / three native-only). Final audits pass at
 2026-09-07 20:48:39 +08; evidence and scope are recorded in
-[VALIDATION](../docs/VALIDATION.md#captured-kernel-baseline). General C1/C2/C5,
+[VALIDATION](../docs/VALIDATION.md#captured-kernel-baseline). These are not the
+latest matrix results. General C1/C2/C5,
 source/hook lifetime and the explicitly deferred C3/C4 semantic work remain open.

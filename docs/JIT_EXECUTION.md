@@ -139,15 +139,16 @@ KD_CONTEXT_LOCK_API=percpu-spill bash tests/test_12_context_native_only.sh 3
 普通 CALL 测试检查当前退出状态、waiter 身份、返回栈及副作用恰好一次；不能用
 完全原生对照代替。上下文拒绝测试则必须没有 JIT 执行，随后验证原生结果。
 
-尚未通过的 learned-depth 主功能单独运行：
+学习普通 helper 后的深层 mutex JIT/容量退出单独运行：
 
 ```sh
 bash tests/test_10_native_resume.sh 4 5
 ```
 
 该脚本先执行 JIT 前缀并产生真实 helper CALL miss，排空调用者后让 daemon
-学习 helper，再检查新范围的 JIT 和锁容量退出。目前扩大范围被准入拒绝，
-因此即使第一段有 body witness，整项仍失败；不能把原生完成当作此项通过。
+学习 helper，再检查新范围的 JIT 和锁容量退出。必须执行 helper 中翻译后的
+加锁指令，验证真实容量退出、保留锁和 owner ACK；只有第一段 body witness
+不能通过整项验收。学习重编译期间先排空旧调用者，并非已实现版本隔离。
 
 ## 4. 如何判读
 
@@ -174,14 +175,14 @@ JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。
 `ENTRY_SCOPE_MISMATCH` 或 `INVALID_ENTRY_REFUSAL` 则需要核查 frame、CALL
 阶段、RIP/RSP 和父请求，不能忽略错误并重试入口。
 
-本轮实测结果与未通过项集中记录在
-[VALIDATION: Cross-Window CFG Completion](VALIDATION.md#cross-window-cfg-completion)。
+最近一次完整矩阵（2026-09-08 18:14–18:33 +08）的结果集中记录在
+[VALIDATION: Scoped Learned Callees](VALIDATION.md#scoped-learned-callees)。
 完整矩阵的逐项命令见 [测试清单](VALIDATION.md#current-matrix-manifest)，
-本轮使用相同的 51 个选择器重新执行，不借用旧的短回归结果。
-完整 51 项中 50 通过、1 失败，通过项包含 36 项实际 JIT。mode 0–8、
+该矩阵使用同一源码快照执行全部 51 个选择器，不借用旧的短回归结果。
+完整 51 项全部通过，包含 37 项实际 JIT。mode 0–8、
 mode 1/4 的普通 CALL 寄存器、held-B、pending-B，以及 mode 8 的两项寄存器
-续跑检查通过。mutex 学习深层 callee 后的扩大准入仍未通过，不能将本轮
-改进写成整个项目或所有资源耗尽场景已完成。
+续跑检查通过。mutex 学习深层 callee 后也实际执行 JIT 并通过容量续跑检查；
+不能将这组有界测试写成整个项目或所有资源耗尽场景已完成。
 
 ## 5. 入口条件与嵌套续点
 
@@ -192,7 +193,7 @@ mode 1/4 的普通 CALL 寄存器、held-B、pending-B，以及 mode 8 的两项
 
 ```text
 无条件分析遇到有界地址精度耗尽
-  -> 单一初始 root，且包含普通嵌套 lock 控制 CALL，才尝试条件分析
+  -> 无 IJ 学习历史，包含普通嵌套 lock 控制 CALL，才尝试单入口条件分析
   -> 补齐所有 JIT 可达冷分支，再重新分析，不把缺失文本当作安全代码
   -> 每次别名分离记录两个完整字节区间（store 包含全部写入宽度）
   -> 条件分析通过：把全部条件生成在入口分发表及 body 之前
@@ -203,10 +204,44 @@ mode 1/4 的普通 CALL 寄存器、held-B、pending-B，以及 mode 8 的两项
 ```
 
 只接受入口 GPR 加常量或绝对地址。收集上限为 1024 个区间、256 条最终条件；
-未知基址、分析或条件预算耗尽继续保守拒绝。已学习的独立根、已解码的独立
-callee 不借用这个条件分析，原无条件分析仍可处理它们。只有已注册锁控制 CALL
-可保留 callee-saved 分析事实，普通调用不获得该假设，内存 clobber 仍保留。
+未知基址、分析或条件预算耗尽继续保守拒绝。独立进入的 callee 不借用这个
+条件分析，原无条件分析仍可处理它们。只有已注册锁控制 CALL 可保留
+callee-saved 分析事实，普通函数按实际指令传播效果，不获得 ABI 保留假设；
+未建模/native 调用和控制服务的内存 clobber 仍保留。
 GS/current、IRQ 及已知敏感符号拒绝规则不变。
+
+### 5.1 学习后的直接 callee
+
+`callee_table.txt` 记录需要解码的地址，不等于授权从该地址任意进入。
+已有运行时入口约束只允许首次 root 或有合法逻辑父请求的锁续点。因此在无
+IJ 历史时，可以尝试把学习后的代码作为该 root 的直接控制流重新分析：
+
+```text
+本次 CALL miss -> 原 waiter 原生完成，结束本次 JIT
+  -> daemon 学习目标，供未来调用重编译
+  -> 补齐文本和 JIT 范围；无条件分析保持原来的独立入口规则
+  -> 合格的嵌套地址精度失败：改用受入口条件约束的单 root 分析
+     CALL：传播压入源返回地址之后、未知调用 clobber 之前的真实状态
+     callee：检查实际指令和所有内存效果，不另加独立未知入口
+     RET：把实际返回后的状态传给全部允许的返回目标
+     CALL 后继：不能从 CALL 直接到达，只能由合法 RET 或其他真实边到达
+  -> 所有选中块均可达、RET 效果边与生成目标表一致，才生成入口条件和 body
+```
+
+损坏的虚拟返回地址可能命中该 RET 的其他白名单目标，不能假定调用栈一定
+平衡。分析必须覆盖生成表的所有边；游离学习目标、间接 CALL/JMP、带栈调整
+的 RET、返回表不一致或预算耗尽都会拒绝此条件路径。GS/current 等拒绝仍然
+适用。诊断 `ENTRY_GUARDED_ADMISSION scoped_calls=true` 表示使用了这条路径，
+不是新的 daemon 参数，也不代表所有已学习 callee 都能通过。
+
+在 `test_10_native_resume.sh 4 5` 中，combiner 已持有外层 A；学习后的 JIT
+进入 helper，继续取得 B0–B6。尝试 B7 时，A 加七把子锁已经填满记录容量，
+因此在取得 B7 之前保存该 `mutex_lock(B7)` 的 CALL 包并交回 waiter。
+waiter 从这次加锁继续，随后自行释放其原生取得的 B7；B0–B6 和 A 的 unlock
+交给保留原生 owner 的 combiner 执行并确认。不会释放原锁后从 A 入口重跑，
+也不会在这次 native 后缀中重新进入 JIT。
+
+### 5.2 运行时续点
 
 非 root 首次分发不能随意跳过条件。`kd_jit_entry_has_scope()` 要求逻辑父请求
 已经执行并在已知锁 CALL 后发布 `WAITING` / `ENTERED`，核对相同 entry、task、
@@ -238,5 +273,5 @@ scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行
 远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
 另行验证真实 JIT、嵌套竞争及寄存器续跑。文本窗口测试检查新增可达块、块内
 入口分割、GS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
-结果只维护在 [验证记录](VALIDATION.md#cross-window-cfg-completion)，后续顺序见
-[TODO](TODO.md#learned-callee-increment)。
+结果只维护在 [验证记录](VALIDATION.md#scoped-learned-callees)，后续顺序见
+[TODO](TODO.md#direction-and-priority)。

@@ -390,9 +390,14 @@ RBP/RSP as private memory. Analysis limits affecting addresses refuse admission.
 
 Eligible single-root nested entries can retry address-precision failures with
 entry disjointness predicates. Every premise is enforced before generated body
-execution; independently seeded callees cannot borrow those root facts. This
-restores the tested mode 1/4/8 prefixes, but the learned mutex-depth helper still
-fails expanded admission. The predicate/continuation contract is in
+execution; independently enterable callees cannot borrow those root facts.
+For learned direct callees, a separate single-entry analysis seeds only the
+checked root and propagates real CALL packets and RET effects. It removes the
+fabricated immediate CALL fall-through, verifies every RET edge against the
+generated whitelist, and refuses unvisited selected blocks, indirect control,
+IJ history or adjusting RETs. Default independent-root analysis remains unchanged.
+This does not assume callee-saved registers or untouched source memory for an
+ordinary function. The predicate/continuation contract is in
 [JIT_EXECUTION](JIT_EXECUTION.md#5-入口条件与嵌套续点).
 
 This remains incomplete for arbitrary pointers, unlifted instructions and

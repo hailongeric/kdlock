@@ -3,12 +3,14 @@
 本文以当前 x86-64 内核 spin/mutex 实现为准，描述入口、wrapper、退出及原 waiter
 续跑的寄存器/栈约定。使用与执行流见 [JIT_EXECUTION.md](JIT_EXECUTION.md)，
 锁和 frame 生命周期见 [DESIGN.md](DESIGN.md)，结果见
-[VALIDATION.md](VALIDATION.md#cross-window-cfg-completion)。
+[VALIDATION.md](VALIDATION.md#scoped-learned-callees)。
 
 唯一执行入口是 frame-backed `kd_exe_on_call_hl_entry()`。两元素输入保持
 `{waiter GS base, logical waiter task}`，不增加 FS base 或第三个 task 元素。
 GS lowering helper 保留，但生产准入拒绝保留 JIT 范围中的 GS 内存操作。
 普通直接 CALL miss 后原 waiter 原生完成后缀，不返回本次 JIT；它不是入口重试。
+未来调用若采用学习后的直接 callee，准入传播实际 CALL 包及 RET 效果，并校验
+返回目标表；这不增加 wrapper 参数，也不假定普通 callee 保留哪些寄存器。
 本文件只说明已实现的状态契约，不保证 flags、任意指令或任意故障恢复正确。
 
 ## 1. 状态边界
@@ -406,9 +408,9 @@ task/目标 RIP/RSP 对应。远端祖先可以转递同一个包，但 callee �
 RBP/RSP/后继 RIP 的期望地址由 caller 生成，并非独立证明所有地址计算。
 此探针不检查 RFLAGS、向量寄存器、非 CALL 出口、任意栈对齐或 IRQ/NMI；
 纯原生及 guest 用户态对照不能记为 JIT 通过。证据见
-[最新寄存器验收](VALIDATION.md#cross-window-cfg-completion)。
-当前 mode 0/3 和嵌套 mode 1/4/8 的标记样本通过；mutex learned-depth
-仍未通过，不能用普通 CALL 样本代替深层 helper 的 JIT 验收。
+[最新寄存器验收](VALIDATION.md#scoped-learned-callees)。
+当前 mode 0/3 和嵌套 mode 1/4/8 的标记样本通过。mutex learned-depth 另行
+通过真实 JIT/容量续跑与保留锁检查，不等于它也运行了这套专用 GPR 标记探针。
 
 ## 10. Nested lock known-call 约定
 

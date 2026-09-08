@@ -46,17 +46,30 @@ def render(
     entry=0x1000,
     memory_reader=None,
     body_witness=False,
+    indirect_history=None,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
     previous = os.getcwd()
+
+    def read_regions(entry, jump_table, excluded_callees):
+        # Reproduce learned dispatch metadata as well as bytes so tests cannot
+        # accidentally validate a single-entry graph with its IJ history erased.
+        jump_table.update(
+            {
+                source: list(targets)
+                for source, targets in (indirect_history or {}).items()
+            }
+        )
+        return regions or [(bytes.fromhex(raw), entry, [entry])]
+
     with tempfile.TemporaryDirectory() as temp, contextlib.ExitStack() as stack:
         stack.enter_context(contextlib.redirect_stderr(output))
         stack.enter_context(
             patch.object(
                 translator.memread,
                 "read",
-                return_value=regions or [(bytes.fromhex(raw), entry, [entry])],
+                side_effect=read_regions,
             )
         )
         stack.enter_context(

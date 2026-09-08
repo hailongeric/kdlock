@@ -29,6 +29,194 @@ def guarded(guards, raw="48c7c02a000000c3"):
     return output.getvalue().encode("ascii") + assembly
 
 
+class ScopedCallTests(unittest.TestCase):
+    @staticmethod
+    def call(target, source):
+        return b"\xe8" + struct.pack("<i", target - source - 5)
+
+    def graph(self, caller, callee):
+        regions = [
+            (bytes.fromhex(caller), 0x1000, [0x1000]),
+            (bytes.fromhex(callee), 0x2000, [0x2000]),
+        ]
+        blocks, dbs = translator.decode_regions(
+            regions,
+            TEST_LOCK_SYMBOLS["_raw_spin_unlock"],
+            set(TEST_LOCK_SYMBOLS.values()),
+        )
+        return regions, blocks, dbs
+
+    def test_call_packet_and_ret_effects_replace_fabricated_fallthrough(self):
+        # Callee gets the real RDI and caller gets the actual returned RAX;
+        # an independent seed or a clobbered CALL fall-through loses both facts.
+        regions, blocks, dbs = self.graph("bf29000000e8f60f00004883c001c3", "4889f8c3")
+        guards = EntryGuards()
+        observations = []
+        for start, block, tracker in translator.context_policy.constant_blocks(
+            blocks, dbs, roots={0x1000}, guards=guards, scoped_calls=True
+        ):
+            if start == 0x100A:
+                observations.append(tracker.values.get(ExprId("RAX", 64)))
+            for line in block.lines:
+                tracker.update(line)
+        self.assertEqual(observations, [frozenset({ExprInt(41, 64)})])
+        # Run only this bounded MOV/CALL/RET corpus in guest userspace. The
+        # production wrapper and emitted RET whitelist are not mocked.
+        assembly, _, status = render("", regions=regions, return_status=True)
+        self.assertEqual(status, 0)
+        predicate = io.StringIO()
+        guards.emit(predicate, 0x1000)
+        regs, args = run_image(predicate.getvalue().encode() + assembly, [0x1000])[0]
+        self.assertEqual(regs[10], 42)
+        self.assertEqual(args[1], 1)
+
+    def test_callee_memory_writes_reach_caller_admission(self):
+        # The callee corrupts a caller-visible pointer. No saved-register or
+        # private-stack assumption may erase that write at the return boundary.
+        _, blocks, dbs = self.graph(
+            "4d892c24e8f70f0000498b0424488b00c3", "49c7042408300000c3"
+        )
+        error = translator.find_segment_policy_error(
+            blocks,
+            db_dict=dbs,
+            symbols={0x3008: "current_task"},
+            roots={0x1000},
+            guards=EntryGuards(),
+            scoped_calls=True,
+        )
+        self.assertIsNotNone(error)
+        self.assertIn("current_task", error[1])
+
+    def test_scoped_graph_rejects_indirect_and_adjusting_returns(self):
+        for raw, reason in (("ffe0", "indirect control"), ("c20800", "plain RET")):
+            _, blocks, dbs = self.graph("e8fb0f0000c3", raw)
+            with (
+                self.subTest(raw=raw),
+                self.assertRaisesRegex(
+                    translator.context_policy.ContextFlowLimit, reason
+                ),
+            ):
+                list(
+                    translator.context_policy.constant_blocks(
+                        blocks,
+                        dbs,
+                        roots={0x1000},
+                        guards=EntryGuards(),
+                        scoped_calls=True,
+                    )
+                )
+
+    def test_disconnected_learned_target_cannot_inherit_root_facts(self):
+        _, blocks, dbs = self.graph("c3", "4889f8c3")
+        with self.assertRaisesRegex(
+            translator.context_policy.ContextFlowLimit, "unreached"
+        ):
+            for _, block, tracker in translator.context_policy.constant_blocks(
+                blocks, dbs, roots={0x1000}, guards=EntryGuards(), scoped_calls=True
+            ):
+                for line in block.lines:
+                    tracker.update(line)
+
+    def test_scoped_recursion_keeps_the_flow_budget(self):
+        _, blocks, dbs = self.graph("e8fb0f0000c3", "e8fbffffffc3")
+        with self.assertRaisesRegex(
+            translator.context_policy.ContextFlowLimit, "work budget"
+        ):
+            for _, block, tracker in translator.context_policy.constant_blocks(
+                blocks,
+                dbs,
+                max_visits=2,
+                roots={0x1000},
+                guards=EntryGuards(),
+                scoped_calls=True,
+            ):
+                for line in block.lines:
+                    tracker.update(line)
+
+    def test_indirect_history_cannot_enable_guarded_callee_admission(self):
+        # This safe-looking target is reachable as a direct callee too, but an
+        # additional learned IJ route invalidates inheritance from one CALL packet.
+        caller = bytes.fromhex("4d892c24c645f830498b04244c8930")
+        caller += self.call(0x2000, 0x1000 + len(caller))
+        for name in ("_raw_spin_lock", "_raw_spin_unlock", "_raw_spin_unlock"):
+            caller += self.call(TEST_LOCK_SYMBOLS[name], 0x1000 + len(caller))
+        assembly, log, status = render(
+            "",
+            regions=[(caller, 0x1000, [0x1000]), (b"\xc3", 0x2000, [0x2000])],
+            indirect_history={0x2001: [0x2000]},
+            return_status=True,
+        )
+        self.assertEqual((assembly, status), (b"", 2), log)
+        self.assertNotIn("ENTRY_GUARDED_ADMISSION", log)
+
+    def test_all_generated_return_targets_must_have_checked_effect_edges(self):
+        _, blocks, dbs = self.graph("e8fb0f0000c3", "c3")
+        original = translator.indirect_jump.find
+
+        def extra_target(blocks, dbs, table):
+            result = original(blocks, dbs, table)
+            table[0x2001].append(0x1000)
+            return result
+
+        # Even a target inside the checked image needs its RET incoming state.
+        with (
+            patch.object(translator.indirect_jump, "find", extra_target),
+            self.assertRaisesRegex(
+                translator.context_policy.ContextFlowLimit,
+                "differ from generated dispatch",
+            ),
+        ):
+            list(
+                translator.context_policy.constant_blocks(
+                    blocks, dbs, roots={0x1000}, guards=EntryGuards(), scoped_calls=True
+                )
+            )
+
+    def test_guarded_learned_callee_really_executes_before_lock_exit(self):
+        # Force the real conditional-admission retry with a potentially aliased
+        # spill. A learned helper must execute and return before the lock exit.
+        caller = bytes.fromhex("4d892c24c645f830498b04244c8930")
+        caller += self.call(0x2000, 0x1000 + len(caller))
+        for name in ("_raw_spin_lock", "_raw_spin_unlock", "_raw_spin_unlock"):
+            caller += self.call(TEST_LOCK_SYMBOLS[name], 0x1000 + len(caller))
+        for unsafe in (False, True):
+            callee = bytes.fromhex("65488b042500000000c3" if unsafe else "b829000000c3")
+            assembly, log, status = render(
+                "",
+                regions=[(caller, 0x1000, [0x1000]), (callee, 0x2000, [0x2000])],
+                return_status=True,
+            )
+            with self.subTest(unsafe=unsafe):
+                self.assertEqual(status, 2 if unsafe else 0, log)
+                if unsafe:
+                    self.assertEqual(assembly, b"")
+                    self.assertIn("GS/current", log)
+                    continue
+                self.assertIn("ENTRY_GUARDED_ADMISSION", log)
+                self.assertIn("scoped_calls=true", log)
+                pointer, destination, unrelated = (
+                    ctypes.c_ulong(),
+                    ctypes.c_ulong(),
+                    ctypes.c_ulong(),
+                )
+
+                def initialize(
+                    regs,
+                    _,
+                    pointer=pointer,
+                    destination=destination,
+                    unrelated=unrelated,
+                ):
+                    regs[3] = ctypes.addressof(pointer)
+                    regs[2] = ctypes.addressof(destination)
+                    regs[1] = 42
+                    regs[4] = ctypes.addressof(unrelated) + 8
+
+                regs, args = run_image(assembly, [0x1000], initialize)[0]
+                self.assertEqual((args, regs[10], destination.value), ([1, 1], 41, 42))
+                self.assertEqual(regs[16], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
+
+
 class EntryGuardTests(unittest.TestCase):
     def test_nested_precision_retry_fetches_and_checks_cold_paths(self):
         def call(name, offset):

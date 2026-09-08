@@ -53,6 +53,7 @@ def find_segment_policy_error(
     roots=None,
     native_exits=(),
     guards=None,
+    scoped_calls=False,
 ):
     # A guarded verdict is conditional: its complete predicates must be emitted
     # before body execution. Analysis and emission share this same collector.
@@ -75,6 +76,7 @@ def find_segment_policy_error(
             control_targets=lock_symbols or (),
             native_exits=native_exits,
             guards=guards,
+            scoped_calls=scoped_calls,
         ):
             offset = block_start
             for line in block.lines:
@@ -396,7 +398,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
         if (
             segment_error
             and segment_error[1].startswith("bounded register-address alternatives")
-            and discovered_targets <= {entry}
+            and not jump_table
             and any(
                 line.name.upper() == "CALL"
                 and line.args
@@ -418,8 +420,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
                     "nested precision retry requires all selected branch text",
                 )
             else:
-                # Every separated entry range becomes a real pre-body predicate;
-                # learned roots cannot borrow this entry's register identities.
+                # Learned direct callees may inherit only real CALL packets
+                # reachable from this checked root, never independent inputs.
+                # IJ history cannot satisfy that single-entry contract above.
                 candidate = context_guards.EntryGuards()
                 segment_error = find_segment_policy_error(
                     selected,
@@ -431,6 +434,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
                     roots={entry},
                     native_exits=native_exits,
                     guards=candidate,
+                    scoped_calls=bool(discovered_targets - {entry}),
                 )
                 if not segment_error:
                     entry_guards = candidate
@@ -442,6 +446,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
                         "emit_entry_checks",
                         "conditional nested admission; check all premises before body",
                         guards=len(candidate.conditions()),
+                        scoped_calls=bool(discovered_targets - {entry}),
                     )
         if segment_error:
             offset, reason = segment_error
