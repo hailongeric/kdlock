@@ -384,6 +384,7 @@ def validate(
     reverse=False,
     lock_ip=None,
     refusal=0,
+    waiter_exit=False,
 ):
     n = placement["depth"]
     validate_placement(placement, n)
@@ -397,6 +398,11 @@ def validate(
     readmit = placement.get("readmit", 0)
     if readmit:
         assert stage == 1 and not refusal
+    assert type(waiter_exit) is bool
+    if waiter_exit:
+        assert n == 4 and stage == 3 and native_owner and reverse and renamed
+        assert placement["require_cross_numa"] and "defer_layer" not in placement
+        assert not readmit and not refusal
     local = bool(refusal) or readmit == 2
     readmit_layer = placement.get("readmit_layer", 3)
     local_layer = readmit_layer if readmit == 2 else n - 1
@@ -681,6 +687,39 @@ def validate(
         )
         assert row["before"] == row["called"] == row["after"] == str(expected)
     assert requests[1][1]["task"] == pid and requests[1][1]["cpu"] == str(cpus[0])
+    # One real no-lock root stays live across the waiter's final ACK and TID
+    # detachment. Do not accept a PID-number lookup, early completion, or an
+    # extra task reference as equivalent evidence of this bounded lifetime.
+    exit_arms, exit_releases = rows("kd_relay_exit arm"), rows("kd_relay_exit release")
+    assert len(exit_arms) == len(exit_releases) == int(waiter_exit)
+    if waiter_exit:
+        arm_at, arm = exit_arms[0]
+        released_at, released = exit_releases[0]
+        ((root_begin_at, root_begin),) = [
+            item for item in begins if item[1]["outer"] == locks[0]
+        ]
+        ((root_complete_at, _),) = [
+            item for item in completes if item[1]["outer"] == locks[0]
+        ]
+        identity = {
+            "task": pid,
+            "cpu": str(executors[0]),
+            "owner": owners[0],
+            "outer": locks[0],
+            "entry": entry,
+            "ip": root_begin["ip"],
+            "sp": root_begin["sp"],
+        }
+        assert arm == {**identity, "remaining": "0", "alive": "1", "valid": "1"}
+        assert released == {
+            **identity,
+            "detached": "1",
+            "packet": "1",
+            "context": "1",
+            "valid": "1",
+        }
+        assert root_begin_at < arm_at < probes[0][0] < acks[-1][0]
+        assert acks[-1][0] < requests[1][0] < released_at < root_complete_at
     # L opens before the owner logs its reply; an independent successor may
     # inspect it first. The logical continuation must still wait for all RPCs.
     rpc_deadline = min(at for at, _ in begins) if native else requests[1][0]
@@ -739,6 +778,8 @@ def validate(
         result["refusal"] = witness
     if readmit:
         result["readmit"] = readmit_witness
+    if waiter_exit:
+        result["waiter_exit"] = released
     return result
 
 
@@ -752,6 +793,7 @@ def main():
     parser.add_argument("--reverse", action="store_true")
     parser.add_argument("--lock-ip")
     parser.add_argument("--refusal", type=int, choices=(1, 2), default=0)
+    parser.add_argument("--waiter-exit", action="store_true")
     args = parser.parse_args()
     result = validate(
         args.log.read_text(),
@@ -762,6 +804,7 @@ def main():
         args.reverse,
         args.lock_ip,
         args.refusal,
+        args.waiter_exit,
     )
     print("deep remote protocol: " + json.dumps(result, sort_keys=True) + " PASS")
 

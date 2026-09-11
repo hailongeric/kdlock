@@ -1,3 +1,5 @@
+# Guest userspace unit programs only: models, extracted C, codegen and oracles.
+# No target here loads modules; generated-machine-code tests still belong in VM.
 CC ?= gcc
 PYTHON ?= python3
 CFLAGS ?= -g -O0
@@ -11,21 +13,46 @@ TESTS := \
 	test_spin_node_count \
 	test_control_call \
 	test_daemon_policy
-PY_TESTS := test_hostcall_codegen.py test_segment_codegen.py test_jit_diagnostics.py test_context_policy.py test_spin_shadow.py test_cs_oracle.py test_text_regions.py test_spin_gate.py test_spin_entry.py test_spin_routing.py test_mutex_signal_protocol.py test_native_ooo_protocol.py test_native_after_outer.py test_hotlock_sampling.py test_mutex_outer_progress.py test_spin_outer_progress.py test_remote_outer.py test_remote_outer_protocol.py
-PY_TESTS += test_remote_depth_protocol.py
-PY_TESTS += test_remote_deferred_protocol.py
-PY_TESTS += test_spin_frame_protocol.py
-PY_TESTS += test_exec_capacity.py
-PY_TESTS += test_spin_node_protocol.py
-PY_TESTS += test_kernel_baseline.py
-PY_TESTS += test_native_registers.py
-PY_TESTS += test_jit_body_witness.py
-PY_TESTS += test_context_spill_audit.py
-PY_TESTS += test_context_memory.py
-PY_TESTS += test_context_guards.py
-PY_TESTS += test_jit_entry_scope.py
-PY_TESTS += test_exe_registry.py
-PY_TESTS += test_mutex_resources.py
+# Override TESTS and PY_TESTS on the command line for an affected-only run.
+# Keep the full inventory here for initial acceptance and explicit full runs.
+PY_TESTS := \
+	test_hostcall_codegen.py \
+	test_segment_codegen.py \
+	test_jit_diagnostics.py \
+	test_context_policy.py \
+	test_spin_shadow.py \
+	test_cs_oracle.py \
+	test_text_regions.py \
+	test_spin_gate.py \
+	test_spin_entry.py \
+	test_spin_routing.py \
+	test_mutex_signal_protocol.py \
+	test_native_ooo_protocol.py \
+	test_native_after_outer.py \
+	test_hotlock_sampling.py \
+	test_mutex_outer_progress.py \
+	test_spin_outer_progress.py \
+	test_remote_outer.py \
+	test_remote_outer_protocol.py \
+	test_remote_depth_protocol.py \
+	test_remote_deferred_protocol.py \
+	test_spin_frame_protocol.py \
+	test_exec_capacity.py \
+	test_spin_node_protocol.py \
+	test_kernel_baseline.py \
+	test_native_registers.py \
+	test_jit_body_witness.py \
+	test_context_spill_audit.py \
+	test_context_memory.py \
+	test_context_guards.py \
+	test_jit_entry_scope.py \
+	test_exe_registry.py \
+	test_source_lifetime.py \
+	test_source_depth_protocol.py \
+	test_mutex_resources.py \
+	test_mutex_parallel_protocol.py \
+	test_mutex_stack_protocol.py \
+	test_regression.py
 
 .PHONY: all clean run
 

@@ -96,7 +96,20 @@ class NativeRegisterTests(unittest.TestCase):
         self.assertEqual(result["samples"], 1)
         with self.assertRaises(AssertionError):
             check(text)
-        for corrupted in (render(), text.replace("unlocks=0", "unlocks=1")):
+        for corrupted in (
+            render(),
+            text.replace("unlocks=0", "unlocks=1"),
+            *(
+                text + line
+                for line in (
+                    "JIT_ENTRY test\n",
+                    "JIT body witness: entry=1 lock=2 body=1\n",
+                    "install JIT chunk: status=0\n",
+                    "kd_native ack: task=123 lock=1\n",
+                    "kd_native complete: task=123 outer=1\n",
+                )
+            ),
+        ):
             with self.subTest(log=corrupted), self.assertRaises(AssertionError):
                 validate(corrupted, 0xFFFFFFFFC0010000, 1, expect_jit=False)
 

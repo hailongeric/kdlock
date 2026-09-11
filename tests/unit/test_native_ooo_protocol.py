@@ -1,3 +1,5 @@
+# Validate A-before-B native completion records against deliberately bad logs.
+# Ordering in this fixture is an oracle input, not a concurrent execution proof.
 import sys
 import unittest
 from pathlib import Path

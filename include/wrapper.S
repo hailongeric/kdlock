@@ -1,3 +1,6 @@
+/* Callable shell around generated jit.S. Physical RSP/RBP belong to combiner;
+ * virtual SP/BP and spilled GPRs belong to waiter. args has exactly two words,
+ * reused for exit kind and body witness. Current flags are not written back. */
 #include "asm_head.h"
 
 	.intel_syntax noprefix

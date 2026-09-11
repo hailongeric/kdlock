@@ -1,3 +1,5 @@
+# Admission corpus for context addresses, CFG scope and bounded CALL/RET facts.
+# Sensitive encodings are inspected, not executed in a kernel critical section.
 import contextlib
 import io
 import os
@@ -7,7 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import mock_open, patch
+from unittest.mock import Mock, mock_open, patch
 
 from miasm.expression.expression import ExprId
 from test_jit_diagnostics import TEST_LOCK_SYMBOLS, render, translator
@@ -127,12 +129,358 @@ class ContextPolicyTests(unittest.TestCase):
                 {0xFFFFFFFF81001000: "schedule", 0x1234: "current_task"},
             )
 
+    @staticmethod
+    def percpu_metadata():
+        # CPU 1 is impossible and its offset is deliberately invalid. CPU 2
+        # still needs coverage, independent of online CPU or current-CPU state.
+        base = 0xFFFF888100000000
+        metadata = {
+            "__per_cpu_start": 0,
+            "__per_cpu_end": 0x100,
+            "__per_cpu_offset": 0xFFFFFFFF82000000,
+            "nr_cpu_ids": 0xFFFFFFFF82000100,
+            "__cpu_possible_mask": 0xFFFFFFFF82000200,
+        }
+        payloads = {
+            metadata["nr_cpu_ids"]: struct.pack("<I", 3),
+            metadata["__cpu_possible_mask"]: struct.pack("<Q", 5 | (1 << 63)),
+            metadata["__per_cpu_offset"]: struct.pack("<QQQ", base, 0, base + 0x200),
+        }
+        text = "".join(f"{value:016x} A {name}\n" for name, value in metadata.items())
+        text += (
+            "90 A current_task\n98 A unrelated_percpu\nffffffff81000000 T schedule\n"
+        )
+        return base, metadata, payloads, text
+
+    def test_runtime_percpu_ranges_cover_possible_cpus_without_truncation(self):
+        base, metadata, payloads, text = self.percpu_metadata()
+        # A named symbol in the middle cannot truncate whole-area coverage.
+        text += f"{base + 0x20:x} D rcu_fixture\n{base + 0x30:x} D unrelated\n"
+        calls = []
+
+        def read(address, size):
+            calls.append((address, size))
+            raw = payloads[address]
+            self.assertEqual(len(raw), size)
+            return raw
+
+        with patch("builtins.open", mock_open(read_data=text)):
+            symbols = context_policy.load_context_symbols(read_memory=read)
+        self.assertEqual(len(calls), 6)
+        self.assertEqual(calls[:3], calls[3:])
+        self.assertEqual(calls[2], (metadata["__per_cpu_offset"], 24))
+        for cpu, start in ((0, base), (2, base + 0x200)):
+            for address, size in (
+                (start, 1),
+                (start + 0x80, 1),
+                (start + 0xFF, 1),
+                (start - 4, 8),
+            ):
+                self.assertEqual(
+                    symbols.resolve(address, size), f"kernel_percpu_cpu_{cpu}"
+                )
+            self.assertIsNone(symbols.resolve(start + 0x100))
+            self.assertIsNone(symbols.resolve(start - 8, 8))
+        self.assertIsNone(symbols.resolve(base + 0x100))
+        self.assertIsNone(symbols.resolve(0))
+        self.assertEqual(symbols.resolve(0x90), "current_task")
+
+    def test_runtime_percpu_section_offsets_and_modular_bases(self):
+        base, metadata, payloads, _ = self.percpu_metadata()
+        # Relocation arithmetic is modulo 64 bits; only the resulting interval
+        # must be nonwrapping. Never add the linked section itself as a range.
+        metadata["__per_cpu_start"] = 0xFFFFFFFF80000000
+        metadata["__per_cpu_end"] = metadata["__per_cpu_start"] + 0x100
+        start = metadata["__per_cpu_start"]
+        payloads[metadata["__per_cpu_offset"]] = struct.pack(
+            "<QQQ", (base - start) % (1 << 64), 0, (base + 0x200 - start) % (1 << 64)
+        )
+        ranges = context_policy.load_static_percpu_ranges(
+            metadata, lambda address, size: payloads[address]
+        )
+        self.assertEqual(ranges.resolve(base + 0x40), "kernel_percpu_cpu_0")
+        self.assertIsNone(ranges.resolve(start + 0x40))
+
+    def test_module_percpu_arena_alignment_boundaries_and_codegen(self):
+        # A sparse possible-CPU layout and an unaligned core end distinguish
+        # the reserved arena from static bytes, alignment padding and unit tail.
+        base, metadata, payloads, text = self.percpu_metadata()
+        metadata["__per_cpu_end"] = 0x101
+        payloads[metadata["__per_cpu_offset"]] = struct.pack(
+            "<QQQ", base, 0, base + 0x4000
+        )
+        text = text.replace(
+            "0000000000000100 A __per_cpu_end", "0000000000000101 A __per_cpu_end"
+        )
+        text += f"{base + 0x120:x} D rcu_module_fixture\n{base + 0x130:x} D unrelated\n"
+        with patch("builtins.open", mock_open(read_data=text)):
+            symbols = context_policy.load_context_symbols(
+                read_memory=lambda address, size: payloads[address],
+                percpu_module_bytes=8192,
+            )
+        for cpu, core in ((0, base), (2, base + 0x4000)):
+            start, end = core + 0x104, core + 0x2104
+            for address, width in (
+                (start, 1),
+                (start + 0x80, 8),
+                (end - 1, 1),
+                (start - 1, 2),
+            ):
+                self.assertEqual(
+                    symbols.resolve(address, width), f"module_percpu_cpu_{cpu}"
+                )
+            for address in (core + 0x101, core + 0x103, end, core + 0x3000):
+                self.assertIsNone(symbols.resolve(address))
+            for kind in ("spin", "mutex"):
+                # Numeric direct, derived, implicit and store-forwarded inputs
+                # exercise the existing refusal paths, never real unsafe loads.
+                for raw in (
+                    b"\x48\xb8" + struct.pack("<Q", start + 0x80) + b"\xc3",
+                    b"\x48\xb8"
+                    + struct.pack("<Q", start - 1)
+                    + bytes.fromhex("488b00c3"),
+                    b"\x48\xbe" + struct.pack("<Q", end - 4) + bytes.fromhex("48adc3"),
+                    b"\x48\xb8"
+                    + struct.pack("<Q", end)
+                    + bytes.fromhex("488907488b374883ee0448adc3"),
+                ):
+                    with self.subTest(cpu=cpu, kind=kind, raw=raw.hex()):
+                        self.assertIn(
+                            "module_percpu_cpu_",
+                            self.assert_rejected(
+                                raw.hex(), symbols=symbols, lock_kind=kind
+                            ),
+                        )
+                assembly, _, result = render(
+                    (
+                        b"\x48\xb8" + struct.pack("<Q", end) + bytes.fromhex("488b00c3")
+                    ).hex(),
+                    symbols=symbols,
+                    lock_kind=kind,
+                    return_status=True,
+                )
+                self.assertEqual(result, 0)
+                self.assertTrue(assembly)
+
+    def test_module_percpu_capability_cannot_mask_overflow_or_overlap(self):
+        base, metadata, payloads, _ = self.percpu_metadata()
+        for value in (-1, 1, 8191, 8193, True, "8192"):
+            read = Mock()
+            with (
+                self.subTest(value=value),
+                self.assertRaisesRegex(ValueError, "range capability"),
+            ):
+                context_policy.load_static_percpu_ranges(
+                    metadata, read, module_bytes=value
+                )
+            read.assert_not_called()
+        with self.assertRaisesRegex(ValueError, "leased memory reader"):
+            context_policy.load_context_symbols(percpu_module_bytes=8192)
+        for offset, reason in (
+            (base + 0x200, "overlapping"),
+            ((1 << 64) - 0x100, "runtime range"),
+        ):
+            payloads[metadata["__per_cpu_offset"]] = struct.pack(
+                "<QQQ", base, 0, offset
+            )
+            with (
+                self.subTest(offset=offset),
+                self.assertRaisesRegex(ValueError, reason),
+            ):
+                context_policy.load_static_percpu_ranges(
+                    metadata, lambda address, size: payloads[address], module_bytes=8192
+                )
+
+    def test_runtime_percpu_bad_metadata_and_unstable_reads_abort(self):
+        base, metadata, payloads, _ = self.percpu_metadata()
+        variants = []
+        for name in metadata:
+            variants.append((metadata.keys() - {name}, {}, "unavailable"))
+        for start, end in (
+            (1, 1),
+            (2, 1),
+            (0, context_policy.MAX_PERCPU_STATIC_BYTES + 1),
+        ):
+            variants.append(
+                (
+                    metadata | {"__per_cpu_start": start, "__per_cpu_end": end},
+                    {},
+                    "section bounds",
+                )
+            )
+        for name in ("nr_cpu_ids", "__cpu_possible_mask", "__per_cpu_offset"):
+            variants.append((metadata | {name: 0}, {}, "metadata address"))
+        for nr in (0, context_policy.MAX_PERCPU_CPUS + 1):
+            variants.append(
+                (metadata, {metadata["nr_cpu_ids"]: struct.pack("<I", nr)}, "CPU count")
+            )
+        variants.append(
+            (metadata, {metadata["__cpu_possible_mask"]: bytes(8)}, "empty possible")
+        )
+        for offsets, reason in (
+            ((0, 0, base + 0x200), "runtime range"),
+            ((base, 0, base), "overlapping"),
+            ((base, 0, (1 << 64) - 0x80), "runtime range"),
+        ):
+            variants.append(
+                (
+                    metadata,
+                    {metadata["__per_cpu_offset"]: struct.pack("<QQQ", *offsets)},
+                    reason,
+                )
+            )
+        for address in payloads:
+            for raw in (None, b"", payloads[address][:-1]):
+                variants.append((metadata, {address: raw}, "incomplete"))
+        for fields, changed, reason in variants:
+            fields = (
+                {name: metadata[name] for name in fields}
+                if isinstance(fields, set)
+                else fields
+            )
+            with (
+                self.subTest(fields=fields, changed=changed),
+                self.assertRaisesRegex(ValueError, reason),
+            ):
+                context_policy.load_static_percpu_ranges(
+                    fields,
+                    lambda address, size, samples=payloads | changed: samples[address],
+                )
+        for changing in payloads:
+            reads = {}
+
+            def unstable(address, size, reads=reads, changing=changing):
+                reads[address] = reads.get(address, 0) + 1
+                raw = payloads[address]
+                return (
+                    bytes(size) if address == changing and reads[address] > 1 else raw
+                )
+
+            with (
+                self.subTest(changing=changing),
+                self.assertRaisesRegex(ValueError, "changed during inspection"),
+            ):
+                context_policy.load_static_percpu_ranges(metadata, unstable)
+
+    def test_runtime_percpu_metadata_requires_unambiguous_core_symbols(self):
+        _, metadata, payloads, text = self.percpu_metadata()
+        for changed in (
+            text.replace(" A __per_cpu_end\n", " A __per_cpu_end [fixture]\n"),
+            text + "200 A __per_cpu_end\n",
+        ):
+            with (
+                patch("builtins.open", mock_open(read_data=changed)),
+                self.assertRaises(ValueError),
+            ):
+                context_policy.load_context_symbols(
+                    read_memory=lambda address, size: payloads[address]
+                )
+        for failure in (
+            OSError("unavailable kcore"),
+            translator.memread.device_session.SourceRefused("cannot pin metadata"),
+        ):
+            with self.subTest(failure=failure), self.assertRaises(type(failure)):
+                context_policy.load_static_percpu_ranges(
+                    metadata, Mock(side_effect=failure)
+                )
+
+    def test_runtime_percpu_literal_and_forwarded_accesses_refuse_both_backends(self):
+        base, _, payloads, text = self.percpu_metadata()
+        with patch("builtins.open", mock_open(read_data=text)):
+            symbols = context_policy.load_context_symbols(
+                read_memory=lambda address, size: payloads[address]
+            )
+        for kind in ("spin", "mutex"):
+            # Direct address-taking, derived overlap, and implicit IR loads all
+            # use the existing checker. No per-CPU instruction is executed here.
+            for raw in (
+                b"\x48\xb8" + struct.pack("<Q", base + 0x80) + b"\xc3",
+                b"\x48\xb8" + struct.pack("<Q", base - 4) + bytes.fromhex("488b00c3"),
+                b"\x48\xbe"
+                + struct.pack("<Q", base + 0x200 - 4)
+                + bytes.fromhex("48adc3"),
+                b"\x48\xb8"
+                + struct.pack("<Q", base - 0x10)
+                + bytes.fromhex("488907488b374883c62048adc3"),
+            ):
+                with self.subTest(kind=kind, raw=raw.hex()):
+                    self.assertIn(
+                        "kernel_percpu_cpu_",
+                        self.assert_rejected(
+                            raw.hex(), symbols=symbols, lock_kind=kind
+                        ),
+                    )
+            for raw in (
+                "b82a000000c3",
+                (
+                    b"\x48\xb8"
+                    + struct.pack("<Q", base - 8)
+                    + bytes.fromhex("488b00c3")
+                ).hex(),
+            ):
+                assembly, _, result = render(
+                    raw, symbols=symbols, lock_kind=kind, return_status=True
+                )
+                self.assertEqual(result, 0)
+                self.assertTrue(assembly)
+
+    def test_production_symbol_load_requires_leased_memory_reader(self):
+        # Fail before text/codegen and check the real entrypoint's mandatory
+        # dependency, rather than making only the optional parser tests pass.
+        previous = os.getcwd()
+        with tempfile.TemporaryDirectory() as temp, contextlib.ExitStack() as stack:
+            stack.enter_context(contextlib.redirect_stderr(io.StringIO()))
+            stack.enter_context(
+                patch.object(
+                    translator, "get_kernel_symbol", side_effect=TEST_LOCK_SYMBOLS.get
+                )
+            )
+            loader = stack.enter_context(
+                patch.object(
+                    context_policy,
+                    "load_context_symbols",
+                    side_effect=RuntimeError("percpu unavailable"),
+                )
+            )
+            capability = stack.enter_context(
+                patch.object(
+                    translator.memread.device_session,
+                    "percpu_module_bytes",
+                    return_value=8192,
+                )
+            )
+            read = stack.enter_context(patch.object(translator.memread, "read"))
+            os.chdir(temp)
+            try:
+                with self.assertRaisesRegex(RuntimeError, "percpu unavailable"):
+                    translator.dis_assem(0, 0x1000, "spin")
+                loader.assert_called_once_with(
+                    read_memory=translator.memread.read_kernel_addr_data,
+                    percpu_module_bytes=8192,
+                )
+                capability.assert_called_once_with()
+                loader.reset_mock()
+                capability.side_effect = RuntimeError("range capability unavailable")
+                for kind in ("spin", "mutex"):
+                    with (
+                        self.subTest(kind=kind),
+                        self.assertRaisesRegex(
+                            RuntimeError, "range capability unavailable"
+                        ),
+                    ):
+                        translator.dis_assem(0, 0x1000, kind)
+                loader.assert_not_called()
+                read.assert_not_called()
+                self.assertEqual(list(Path("asm").iterdir()), [])
+            finally:
+                os.chdir(previous)
+
     def test_symbol_failures_are_cli_errors_not_native_only_verdicts(self):
         locks = "".join(
             f"{address:016x} T {name}\n" for name, address in TEST_LOCK_SYMBOLS.items()
         )
         bootstrap = """
-import io, runpy, sys
+import contextlib, io, runpy, sys
 from pathlib import Path
 from unittest.mock import patch
 script, fixture = sys.argv[1:]
@@ -144,6 +492,11 @@ def fixture_open(path, *args, **kwargs):
     return real_open(path, *args, **kwargs)
 sys.argv = [script, '0', '0x1000', 'spin']
 with (
+    # This negative isolates symbol discovery after a successful device lease.
+    # Device identity/lease errors are tested separately; never load a module
+    # just to reach this CLI branch or allow it to read real kernel text.
+    patch('device_session.session', return_value=contextlib.nullcontext()),
+    patch('device_session.percpu_module_bytes', return_value=8192),
     patch('builtins.open', side_effect=fixture_open),
     patch('memread.read', side_effect=AssertionError('must not read kernel text')),
 ):

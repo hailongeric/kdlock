@@ -7,6 +7,31 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# A compatibility entry point must not turn a no-argument invocation into a
+# baseline sweep. Use the common read-only catalog until modes are explicit.
+if [ "$#" -eq 0 ]; then
+    exec bash "$SCRIPT_DIR/run_all.sh" --list
+fi
+
+# Validate the whole request before loading anything and keep first-use order.
+# Deduplicate only identical modes; an explicitly requested diagnostic still
+# runs even if another requested mode covers its ordinary success path.
+declare -A seen=()
+modes=()
+for mode in "$@"; do
+    case "$mode" in
+        0|1|2|3|4|5|10|11) ;;
+        *)
+            echo "[FAIL] test_09_jit_execution_modes: unsupported mode $mode"
+            exit 1
+            ;;
+    esac
+    if [ -z "${seen[$mode]:-}" ]; then
+        modes+=("$mode")
+        seen[$mode]=1
+    fi
+done
+
 if [ "${KDLOCK_RECOVERY_CONFIRMED:-0}" != "1" ]; then
     echo "[FAIL] test_09_jit_execution_modes: set KDLOCK_RECOVERY_CONFIRMED=1 after confirming a recoverable VM snapshot"
     exit 1
@@ -44,11 +69,7 @@ run_mode() {
     echo "[PASS] mode $mode: translated instructions executed"
 }
 
-if [ "$#" -eq 0 ]; then
-    set -- 0 1 2 3 4 5 10 11
-fi
-
-for mode in "$@"; do
+for mode in "${modes[@]}"; do
     run_mode "$mode"
 done
 

@@ -1,3 +1,6 @@
+# Read the shared hostcall manifest and emit exact-address service exit stubs.
+# A service retains the virtual CALL return word for the kernel dispatcher;
+# it is not an arbitrary native callee or original-waiter context switch.
 import os
 import re
 from collections import namedtuple

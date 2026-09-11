@@ -6,7 +6,8 @@
  *
  * Native TCLock-style handoff uses a real stack switch. The JIT backend uses
  * pt_regs and a software continuation instead, so nested execution must have
- * an explicit frame rather than relying on the C call stack.
+ * an explicit frame rather than relying on the C call stack for logical state.
+ * Suspended physical C/shadow stacks must still stay alive until return/ACK.
  */
 
 #include <linux/errno.h>

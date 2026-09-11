@@ -46,6 +46,453 @@ class ScopedCallTests(unittest.TestCase):
         )
         return regions, blocks, dbs
 
+    def multi_call(
+        self, *, shared=False, redirect=False, skipped_body=None, lock_kind="spin"
+    ):
+        # The spill forces guarded admission. Two call sites may share one
+        # callee or a RET tail; a rewritten return slot can skip site 1's
+        # continuation, so only the emitted whitelist defines possible flow.
+        caller = bytearray.fromhex("4d892c24c645f830498b04244c8930")
+        caller += self.call(0x2000, 0x1000 + len(caller))
+        first_return = 0x1000 + len(caller)
+        caller += (
+            bytes.fromhex("41c7470811000000") if skipped_body is None else skipped_body
+        )
+        caller += self.call(0x3000 if shared else 0x2000, 0x1000 + len(caller))
+        second_return = 0x1000 + len(caller)
+        caller += bytes.fromhex("41c747102a000000b82a000000")
+        lock, unlock = (
+            ("_raw_spin_lock", "_raw_spin_unlock")
+            if lock_kind == "spin"
+            else ("mutex_lock", "mutex_unlock")
+        )
+        for name in (lock, unlock, unlock):
+            caller += self.call(TEST_LOCK_SYMBOLS[name], 0x1000 + len(caller))
+        regions = [(bytes(caller), 0x1000, [0x1000])]
+        for source in (0x2000, 0x3000) if shared else (0x2000,):
+            body = bytearray.fromhex("49ff07")  # Increment caller-owned record.
+            if redirect:
+                body += b"\x48\xc7\x04\x24" + struct.pack("<I", second_return)
+            if shared:
+                body += b"\xe9" + struct.pack("<i", 0x4000 - source - len(body) - 5)
+            else:
+                body += b"\xc3"
+            regions.append((bytes(body), source, [source]))
+        if shared:
+            regions.append((b"\xc3", 0x4000, [0x4000]))
+        return regions, (first_return, second_return)
+
+    def test_skipped_return_blocks_still_receive_unconditional_context_checks(self):
+        # The callee always rewrites its return slot to site 2, so sequential
+        # dataflow never visits site 1. Both source blocks and RET targets are
+        # nevertheless emitted. Neither alias guards nor that value fact may
+        # hide an explicit context/backend ban. Never execute these images.
+        for kind in ("spin", "mutex"):
+            foreign = TEST_LOCK_SYMBOLS[
+                "mutex_lock" if kind == "spin" else "_raw_spin_lock"
+            ]
+            cases = {
+                "gs": bytes.fromhex("65488b042500000000"),
+                "fs": bytes.fromhex("64488b042500000000"),
+                "cli": bytes.fromhex("fa"),
+                "sti": bytes.fromhex("fb"),
+                "gs_lods": bytes.fromhex("6548ad"),
+                "fs_xlat": bytes.fromhex("64d7"),
+                "swapgs": bytes.fromhex("0f01f8"),
+                "current": bytes.fromhex("488b042508300000"),
+                "foreign_lock": self.call(foreign, 0x1014),
+            }
+            for name, raw in cases.items():
+                regions, returns = self.multi_call(
+                    redirect=True, skipped_body=raw, lock_kind=kind
+                )
+                with self.subTest(kind=kind, instruction=name):
+                    assembly, log, status = render(
+                        "",
+                        regions=regions,
+                        lock_kind=kind,
+                        symbols={0x3008: "current_task"},
+                        return_status=True,
+                    )
+                    self.assertEqual((status, assembly), (2, b""), log)
+                    self.assertIn("CONTEXT_NATIVE_ONLY", log)
+                    self.assertIn(f'rip="0x{returns[0]:x}"', log)
+                    self.assertNotIn("ENTRY_GUARDED_ADMISSION", log)
+                    self.assertNotIn("FLAGS_UNPRESERVED", log)
+
+    def nested_call(self, *, shared=True, control=False, corrupt=""):
+        # Real prologues/epilogues preserve two different stack depths at a
+        # shared RET. The guarded spill and record writes also exercise aliases;
+        # no balanced-stack annotation or private-memory substitute is supplied.
+        caller = bytearray.fromhex("4d892c24c645f830498b04244c8930")
+        caller += self.call(0x2000, 0x1000 + len(caller))
+        first_return = 0x1000 + len(caller)
+        caller += bytes.fromhex("48c747102a000000488b4708")
+        for name in ("mutex_lock", "mutex_unlock", "mutex_unlock"):
+            caller += self.call(TEST_LOCK_SYMBOLS[name], 0x1000 + len(caller))
+        outer = bytearray.fromhex("554889e5534889fb")
+        outer += self.call(0x3000, 0x2000 + len(outer))
+        second_return = 0x2000 + len(outer)
+        outer += bytes.fromhex("4883430811488b5df8c9")
+        inner = bytearray.fromhex("554889e55348ff07")
+        inner += bytes.fromhex(corrupt)
+        if control:
+            inner += self.call(TEST_LOCK_SYMBOLS["mutex_lock"], 0x3000 + len(inner))
+            inner += self.call(TEST_LOCK_SYMBOLS["mutex_unlock"], 0x3000 + len(inner))
+        inner += bytes.fromhex("488b5df8c9")
+        regions = [(bytes(caller), 0x1000, [0x1000])]
+        for source, body in ((0x2000, outer), (0x3000, inner)):
+            body += (
+                b"\xe9" + struct.pack("<i", 0x4000 - source - len(body) - 5)
+                if shared
+                else b"\xc3"
+            )
+            regions.append((bytes(body), source, [source]))
+        if shared:
+            regions.append((b"\xc3", 0x4000, [0x4000]))
+        return regions, (first_return, second_return)
+
+    def test_nested_shared_ret_executes_with_proven_stack_partitions(self):
+        regions, returns = self.nested_call()
+        blocks, dbs = translator.decode_regions(
+            regions, TEST_LOCK_SYMBOLS["mutex_unlock"], set(TEST_LOCK_SYMBOLS.values())
+        )
+        table = {}
+        translator.indirect_jump.find(blocks, dbs, table)
+        self.assertEqual(set(table[0x4001]), set(returns))
+        assembly, log, status = render(
+            "", regions=regions, lock_kind="mutex", return_status=True
+        )
+        self.assertEqual(status, 0, log)
+        self.assertIn("scoped_calls=true", log)
+        dispatch = assembly.split(b"ij_4001:\n", 1)[1].split(b"\n\n", 1)[0]
+        for target in returns:
+            self.assertIn(f"loc_{target:x}".encode(), dispatch)
+        pointer, destination, unrelated = (ctypes.c_ulong() for _ in range(3))
+        record = (ctypes.c_ulong * 3)()
+        initial = {}
+
+        def initialize(regs, _):
+            regs[3] = ctypes.addressof(pointer)
+            regs[2] = ctypes.addressof(destination)
+            regs[1] = 42
+            regs[4] = ctypes.addressof(unrelated) + 8
+            regs[5] = 0x5555
+            regs[14] = ctypes.addressof(record)
+            initial.update(rsp=regs[19], rbp=regs[4])
+
+        # Both CALLs and both visits to the same generated RET really run.
+        # The final known lock stub exits without executing a native kernel API.
+        regs, args = run_image(assembly, [0x1000], initialize)[0]
+        self.assertEqual(
+            (args, destination.value, list(record)), ([1, 1], 42, [1, 17, 42])
+        )
+        self.assertEqual((regs[4], regs[5], regs[10]), (initial["rbp"], 0x5555, 17))
+        self.assertEqual(regs[19], initial["rsp"] - 8)
+        self.assertEqual(regs[16], TEST_LOCK_SYMBOLS["mutex_lock"])
+
+    def test_nested_ret_partition_budget_refuses_without_publishing(self):
+        regions, _ = self.nested_call()
+        with patch.object(
+            translator.context_policy.FlowConstants, "MAX_STACK_PARTITIONS", 1
+        ):
+            assembly, log, status = render(
+                "", regions=regions, lock_kind="mutex", return_status=True
+            )
+        self.assertEqual((assembly, status), (b"", 2))
+        self.assertIn("partitions exceed their work budget", log)
+        self.assertNotIn("ENTRY_GUARDED_ADMISSION", log)
+
+    def test_nested_control_spill_clobber_is_not_mislabelled_as_a_shared_ret_fix(self):
+        # Even private RETs cannot prove reloaded saved values after a control
+        # CALL's memory clobber. Keep this separate from the solved graph join;
+        # preserving GPRs at the handler boundary does not preserve stack words.
+        for shared in (False, True):
+            regions, _ = self.nested_call(shared=shared, control=True)
+            with self.subTest(shared=shared):
+                assembly, log, status = render(
+                    "", regions=regions, lock_kind="mutex", return_status=True
+                )
+                self.assertEqual((assembly, status), (b"", 2))
+                self.assertIn("CONTEXT_ADDRESS_WIDENED", log)
+                self.assertNotIn("ENTRY_GUARDED_ADMISSION", log)
+
+    def test_checked_nested_control_returns_execute_with_shared_or_private_ret(self):
+        # The unchanged boundary permits saved-value reloads through BOTH real
+        # CALL levels. Run the generated code, not only admission. The bridge
+        # substitutes successful lock-control packets in userspace; it neither
+        # executes Linux mutex APIs nor proves the kernel checkpoint itself.
+        for shared in (False, True):
+            with self.subTest(shared=shared):
+                regions, returns = self.nested_call(shared=shared, control=True)
+                assembly, log, status = render(
+                    "",
+                    regions=regions,
+                    lock_kind="mutex",
+                    mutex_stack_bytes=256,
+                    return_status=True,
+                )
+                self.assertEqual(status, 0, log)
+                self.assertIn("scoped_calls=true", log)
+                self.assertIn("mutex_stack_bytes=256", log)
+                if shared:
+                    dispatch = assembly.split(b"ij_4001:\n", 1)[1].split(b"\n\n", 1)[0]
+                    for target in returns:
+                        self.assertIn(f"loc_{target:x}".encode(), dispatch)
+                pointer, destination, unrelated = (ctypes.c_ulong() for _ in range(3))
+                record = (ctypes.c_ulong * 3)()
+                initial, calls = {}, []
+
+                def initialize(
+                    regs, _, state=(pointer, destination, unrelated, record, initial)
+                ):
+                    pointer, destination, unrelated, record, initial = state
+                    regs[3] = ctypes.addressof(pointer)
+                    regs[2] = ctypes.addressof(destination)
+                    regs[1] = 42
+                    regs[4] = ctypes.addressof(unrelated) + 8
+                    regs[5] = 0x5555
+                    regs[14] = ctypes.addressof(record)
+                    initial.update(rsp=regs[19], rbp=regs[4])
+
+                def resume(regs, args, stack, calls=calls):
+                    self.assertEqual(list(args), [1, 1])
+                    calls.append(regs[16])
+                    if len(calls) == 3:
+                        return False
+                    self.assertLess(len(calls), 3)
+                    self.assertEqual(
+                        regs[16],
+                        TEST_LOCK_SYMBOLS[
+                            "mutex_lock" if len(calls) == 1 else "mutex_unlock"
+                        ],
+                    )
+                    self.assertLessEqual(ctypes.addressof(stack), regs[19])
+                    self.assertLess(
+                        regs[19] + 8, ctypes.addressof(stack) + ctypes.sizeof(stack)
+                    )
+                    regs[16] = ctypes.c_ulong.from_address(regs[19]).value
+                    regs[19] += 8
+                    return True
+
+                regs, args = run_image(assembly, [0x1000], initialize, resume=resume)[0]
+                self.assertEqual(
+                    calls,
+                    [
+                        TEST_LOCK_SYMBOLS[name]
+                        for name in ("mutex_lock", "mutex_unlock", "mutex_lock")
+                    ],
+                )
+                self.assertEqual(
+                    (args, destination.value, list(record)), ([1, 1], 42, [1, 17, 42])
+                )
+                self.assertEqual(
+                    (regs[4], regs[5], regs[10]), (initial["rbp"], 0x5555, 17)
+                )
+                self.assertEqual(regs[19], initial["rsp"] - 8)
+
+    def test_checked_nested_control_keeps_sensitive_spill_and_unknown_alias_refusals(
+        self,
+    ):
+        # A completed checkpoint does not undo earlier stores. Corrupt the
+        # saved RBX directly, or write through an unresolved pointer that may
+        # alias it; both remain unsafe even with the negotiated capability.
+        for corrupt in ("48c745f808500000", "488b36c60630"):
+            for shared in (False, True):
+                with self.subTest(corrupt=corrupt, shared=shared):
+                    regions, _ = self.nested_call(
+                        shared=shared, control=True, corrupt=corrupt
+                    )
+                    assembly, log, status = render(
+                        "",
+                        regions=regions,
+                        lock_kind="mutex",
+                        mutex_stack_bytes=256,
+                        symbols={0x5010: "current_task"},
+                        return_status=True,
+                    )
+                    self.assertEqual((assembly, status), (b"", 2))
+                    self.assertIn("CONTEXT_NATIVE_ONLY", log)
+                    self.assertNotIn("ENTRY_GUARDED_ADMISSION", log)
+
+    def test_unknown_shared_ret_joins_effects_without_unbounded_stack_partitions(self):
+        # No saved-value reload here: the control CALL still clobbers its
+        # return slot and can target either continuation. Converge by joining
+        # effects, not by enumerating ever-increasing hypothetical pop depths.
+        outer = bytearray.fromhex("4889fb")
+        outer += self.call(0x3000, 0x2003)
+        outer += bytes.fromhex("488b4308e9ef1f0000")
+        inner = self.call(TEST_LOCK_SYMBOLS["mutex_lock"], 0x3000)
+        inner += bytes.fromhex("e9f60f0000")
+        regions = [
+            (self.call(0x2000, 0x1000) + b"\xc3", 0x1000, [0x1000]),
+            (bytes(outer), 0x2000, [0x2000]),
+            (inner, 0x3000, [0x3000]),
+            (b"\xc3", 0x4000, [0x4000]),
+        ]
+        blocks, dbs = translator.decode_regions(
+            regions, TEST_LOCK_SYMBOLS["mutex_unlock"], set(TEST_LOCK_SYMBOLS.values())
+        )
+        table = {}
+        translator.indirect_jump.find(blocks, dbs, table)
+        self.assertEqual(set(table[0x4001]), {0x1005, 0x2008})
+        self.assertIsNone(
+            translator.find_segment_policy_error(
+                blocks,
+                db_dict=dbs,
+                lock_kind="mutex",
+                lock_symbols={TEST_LOCK_SYMBOLS["mutex_lock"]: ("mutex", "mutex_lock")},
+                roots={0x1000},
+                guards=EntryGuards(),
+                scoped_calls=True,
+            )
+        )
+
+    def test_long_callee_return_discovery_is_not_python_recursion_limited(self):
+        # Actual decoded branches, not fabricated graph nodes. This is a
+        # return-table test only; the long corpus is not executed in the kernel.
+        _, blocks, dbs = self.graph("e8fb0f0000c3", "eb00" * 1200 + "c3")
+        table = {}
+        self.assertEqual(translator.indirect_jump.find(blocks, dbs, table), [])
+        self.assertEqual(table[0x2000 + 2401], [0x1005])
+
+    def test_return_discovery_preserves_history_and_bounds_cycles_and_work(self):
+        _, blocks, dbs = self.graph("e8fb0f0000c3", "ebfe")
+        table = {0x4444: [0x5555]}
+        self.assertEqual(translator.indirect_jump.find(blocks, dbs, table), [])
+        self.assertEqual(table, {0x4444: [0x5555], 0x1006: []})
+        _, blocks, dbs = self.graph("e8fb0f0000c3", "eb00" * 8 + "c3")
+        for budget in (2, 14):
+            table = {0x4444: [0x5555]}
+            with (
+                self.subTest(budget=budget),
+                self.assertRaisesRegex(
+                    translator.indirect_jump.ReturnFlowError, "work budget"
+                ),
+            ):
+                translator.indirect_jump.find(blocks, dbs, table, max_visits=budget)
+            self.assertEqual(table, {0x4444: [0x5555]})
+
+    def test_incomplete_return_graph_never_publishes_a_partial_whitelist(self):
+        # All failures are mutations of real decoded code. Preserve prior IJ
+        # history rather than leaking the partially discovered CALL/RET graph.
+        for damage in ("database", "successor", "callee"):
+            _, blocks, dbs = self.graph("e8fb0f0000c3", "eb00c3")
+            table = {0x4444: [0x5555]}
+            if damage == "database":
+                del dbs[blocks[0x2000]]
+            elif damage == "successor":
+                del blocks[0x2002]
+            with self.subTest(damage=damage):
+                if damage == "callee":
+                    with (
+                        patch.object(
+                            dbs[blocks[0x1000]],
+                            "get_location_offset",
+                            return_value=None,
+                        ),
+                        self.assertRaisesRegex(
+                            translator.indirect_jump.ReturnFlowError, "unresolved"
+                        ),
+                    ):
+                        translator.indirect_jump.find(blocks, dbs, table)
+                else:
+                    with self.assertRaisesRegex(
+                        translator.indirect_jump.ReturnFlowError, "missing"
+                    ):
+                        translator.indirect_jump.find(blocks, dbs, table)
+                self.assertEqual(table, {0x4444: [0x5555]})
+
+    def test_final_emission_refuses_return_budget_without_guarded_retry(self):
+        original = translator.indirect_jump.find
+
+        def limited(blocks, dbs, table, **kwargs):
+            return original(blocks, dbs, table, max_visits=1)
+
+        # This ordinary MOV/RET entry passes unconditional admission. Exercise
+        # the real builder's failure at final emission, not just the scoped
+        # analysis exception handler or a fabricated successful rejection.
+        with patch.object(translator.indirect_jump, "find", limited):
+            assembly, log, status = render("48c7c02a000000c3", return_status=True)
+        self.assertEqual((assembly, status), (b"", 2))
+        self.assertIn("return dispatch exceeds its work budget", log)
+        self.assertIn("CONTEXT_NATIVE_ONLY", log)
+        self.assertNotIn("ENTRY_GUARDED_ADMISSION", log)
+
+    def test_multisite_shared_tail_and_redirected_return_execute_real_images(self):
+        for shared, redirect in ((False, False), (True, False), (False, True)):
+            regions, returns = self.multi_call(shared=shared, redirect=redirect)
+            blocks, dbs = translator.decode_regions(
+                regions,
+                TEST_LOCK_SYMBOLS["_raw_spin_unlock"],
+                set(TEST_LOCK_SYMBOLS.values()),
+            )
+            table = {}
+            translator.indirect_jump.find(blocks, dbs, table)
+            ret = 0x4001 if shared else 0x2004 + (8 if redirect else 0)
+            self.assertEqual(set(table[ret]), set(returns))
+            assembly, log, status = render("", regions=regions, return_status=True)
+            with self.subTest(shared=shared, redirect=redirect):
+                self.assertEqual(status, 0, log)
+                self.assertIn("scoped_calls=true", log)
+                pointer, destination, unrelated = (ctypes.c_ulong() for _ in range(3))
+                record = (ctypes.c_ulong * 3)()
+
+                def initialize(
+                    regs,
+                    _,
+                    pointer=pointer,
+                    destination=destination,
+                    unrelated=unrelated,
+                    record=record,
+                ):
+                    regs[3] = ctypes.addressof(pointer)
+                    regs[2] = ctypes.addressof(destination)
+                    regs[1] = 42
+                    regs[4] = ctypes.addressof(unrelated) + 8
+                    regs[0] = ctypes.addressof(record)
+
+                regs, args = run_image(assembly, [0x1000], initialize)[0]
+                self.assertEqual((args, regs[10], destination.value), ([1, 1], 42, 42))
+                self.assertEqual(regs[16], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
+                # Exact effects distinguish redirected RET execution from
+                # merely publishing a table containing both continuations.
+                self.assertEqual(
+                    list(record), [1 if redirect else 2, 0 if redirect else 17, 42]
+                )
+
+    def test_return_slot_alias_cannot_hide_a_different_callers_context_pointer(self):
+        # Site 1 forms current_task arithmetically; its ordinary continuation
+        # replaces RDI before site 2. A callee write selects site 2's return
+        # instead, so propagating only a matching/balanced CALL would be unsafe.
+        caller = bytearray.fromhex("bf003000004883c708")
+        caller += self.call(0x2000, 0x1000 + len(caller))
+        caller += bytes.fromhex("bf00400000")
+        caller += self.call(0x2000, 0x1000 + len(caller))
+        second_return = 0x1000 + len(caller)
+        caller += bytes.fromhex("488b07c3")
+        # Full known overwrite, unknown whole word, and unknown low byte must
+        # all retain site 2 when reachable. Only exact facts may narrow RET flow;
+        # neither an unknown source nor partial memory uncertainty means "return
+        # to the matching caller".
+        for write in (
+            b"\x48\xc7\x04\x24" + struct.pack("<I", second_return),
+            bytes.fromhex("48893424"),
+            bytes.fromhex("40883424"),
+        ):
+            _, blocks, dbs = self.graph(caller.hex(), (write + b"\xc3").hex())
+            with self.subTest(write=write.hex()):
+                error = translator.find_segment_policy_error(
+                    blocks,
+                    db_dict=dbs,
+                    symbols={0x3008: "current_task"},
+                    roots={0x1000},
+                    guards=EntryGuards(),
+                    scoped_calls=True,
+                )
+                self.assertIsNotNone(error)
+                self.assertIn("current_task", error[1])
+
     def test_call_packet_and_ret_effects_replace_fabricated_fallthrough(self):
         # Callee gets the real RDI and caller gets the actual returned RAX;
         # an independent seed or a clobbered CALL fall-through loses both facts.
@@ -153,8 +600,8 @@ class ScopedCallTests(unittest.TestCase):
         _, blocks, dbs = self.graph("e8fb0f0000c3", "c3")
         original = translator.indirect_jump.find
 
-        def extra_target(blocks, dbs, table):
-            result = original(blocks, dbs, table)
+        def extra_target(blocks, dbs, table, **kwargs):
+            result = original(blocks, dbs, table, **kwargs)
             table[0x2001].append(0x1000)
             return result
 
@@ -425,6 +872,125 @@ class EntryGuardTests(unittest.TestCase):
                         for v in constants.memory.load(ExprMem(original[rsp], 64))
                     )
                 )
+
+    def test_checked_mutex_uses_post_push_memory_not_the_pre_call_snapshot(self):
+        policy = translator.context_policy
+        # Giving another control, hostcall or ordinary CALL a provider bound
+        # is not authorization to retain its memory facts.
+        for kind in ("mutex", "spin", "hostcall", "ordinary"):
+            with self.subTest(kind=kind):
+                constants = policy.FlowConstants(EntryGuards(), mutex_stack_bytes=256)
+                line = decode("e800000000")
+                rsp = ExprId("RSP", 64)
+                window = constants.origins[rsp]
+                token = constants.memory.offset(window, -8)
+                constants.memory.store(
+                    [
+                        ({window}, {ExprInt(0x1234, 64)}, 64),
+                        ({token}, {ExprInt(0x2222, 64)}, 64),
+                    ]
+                )
+                if kind in {"mutex", "spin"}:
+                    constants.control_calls.add(id(line))
+                if kind == "mutex":
+                    constants.mutex_calls.add(id(line))
+                constants.update(line)
+                self.assertEqual(
+                    constants.memory.load(ExprMem(window, 64))
+                    == (ExprInt(0x1234, 64),),
+                    kind == "mutex",
+                )
+                self.assertNotIn(ExprMem(token, 64), constants.memory.words)
+                self.assertIn(ExprInt(5, 8), constants.memory.cells[token])
+                self.assertNotIn(ExprInt(0x22, 8), constants.memory.cells[token])
+
+    def test_checked_capability_marks_only_guarded_mutex_control_targets(self):
+        # Observe the production classifier, rather than manually labelling
+        # call IDs as in the packet fixture. Foreign controls are rejected by
+        # the existing backend policy; hostcalls/ordinary calls never qualify.
+        policy = translator.context_policy
+        lock_symbols = {
+            target: ("mutex" if name.startswith("mutex") else "spin", name)
+            for name, target in TEST_LOCK_SYMBOLS.items()
+        }
+        update = policy.FlowConstants.update
+        for name in (*TEST_LOCK_SYMBOLS, "hostcall"):
+            for guarded, bound in ((True, 256), (False, 256), (True, 0)):
+                with self.subTest(name=name, guarded=guarded, bound=bound):
+                    target = TEST_LOCK_SYMBOLS.get(name, 0x6000)
+                    raw = ScopedCallTests.call(target, 0x1000) + b"\xc3"
+                    blocks, dbs = translator.decode_regions(
+                        [(raw, 0x1000, [0x1000])],
+                        TEST_LOCK_SYMBOLS["_raw_spin_unlock"],
+                        set(TEST_LOCK_SYMBOLS.values()) | {0x6000},
+                    )
+                    observed = []
+
+                    def observe(tracker, line, symbols=None, observed=observed):
+                        if line.is_subcall():
+                            observed.append(
+                                bool(
+                                    id(line) in tracker.mutex_calls
+                                    and tracker.mutex_stack_bytes
+                                )
+                            )
+                        return update(tracker, line, symbols)
+
+                    with patch.object(policy.FlowConstants, "update", observe):
+                        error = translator.find_segment_policy_error(
+                            blocks,
+                            db_dict=dbs,
+                            roots={0x1000},
+                            lock_kind=lock_symbols.get(target, ("mutex",))[0],
+                            lock_symbols=lock_symbols,
+                            guards=EntryGuards() if guarded else None,
+                            mutex_stack_bytes=bound,
+                        )
+                    self.assertIsNone(error)
+                    self.assertEqual(
+                        observed, [bool(name.startswith("mutex") and guarded and bound)]
+                    )
+
+    def test_checked_mutex_requires_all_numeric_stack_paths_and_known_ir(self):
+        policy = translator.context_policy
+        constants = policy.FlowConstants(EntryGuards(), mutex_stack_bytes=256)
+        line = decode("e800000000")
+        rsp = ExprId("RSP", 64)
+        constants.values[rsp] = frozenset({ExprInt(0x9000, 64), ExprInt(0x9010, 64)})
+        for pointer in (0x9000, 0x9010, 0x90F8, 0x9100):
+            constants.memory.store(
+                [({ExprInt(pointer, 64)}, {ExprInt(0x1234, 64)}, 64)]
+            )
+        constants.control_calls.add(id(line))
+        constants.mutex_calls.add(id(line))
+        constants.update(line)
+        self.assertEqual(
+            set(constants.memory.words),
+            {ExprMem(ExprInt(p, 64), 64) for p in (0x9010, 0x90F8)},
+        )
+        for opaque in (None, "wide"):
+            with self.subTest(opaque=opaque):
+                constants.values[rsp] = (
+                    None if opaque == "wide" else frozenset({ExprInt(0x9010, 64), None})
+                )
+                constants.origins.pop(rsp, None)
+                constants.update(line)
+                self.assertFalse(constants.memory.words)
+        # An altered CALL lowering cannot inherit the eight-byte checkpoint
+        # interpretation just because its target has been registered.
+        constants = policy.FlowConstants(EntryGuards(), mutex_stack_bytes=256)
+        window = constants.origins[rsp]
+        constants.memory.store([({window}, {ExprInt(0x1234, 64)}, 64)])
+        constants.control_calls.add(id(line))
+        constants.mutex_calls.add(id(line))
+        entry, _, temps = constants.instruction_plan(line)
+        altered = dict(entry)
+        altered[rsp] = rsp - ExprInt(16, 64)
+        with patch.object(
+            constants, "instruction_plan", return_value=(altered, None, temps)
+        ):
+            constants.update(line)
+        self.assertFalse(constants.memory.words)
 
     def test_overlap_adjacency_and_modular_wrap(self):
         guards = EntryGuards()

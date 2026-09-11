@@ -4,9 +4,9 @@
  * Usage:  ./klock_test <threads> <loops> <workload> <runs> <mode> [role-base]
  *
  *   threads  — number of concurrent threads
- *   loops    — how many ioctl calls per thread
+ *   loops    — critical-section iterations inside each ioctl
  *   workload — busy-loop iterations inside each critical section
- *   runs     — ioctl invocations per worker
+ *   runs     — ioctl invocations per worker (each contains loops iterations)
  *   mode     — benchmark mode (see below)
  *
  * Modes:
@@ -27,7 +27,7 @@
  * Modes 3-5 and 11 exercise the mutex delegation path (kd_mutex.c).
  *
  * Example:  ./klock_test 4 100000 1000 10 0
- *   → 4 threads, 100k iterations each, 1000-loop workload, mode 0
+ *   -> 4 threads, 10 ioctls each, 100k CS iterations/ioctl, mode 0
  */
 #define _GNU_SOURCE
 #include <errno.h>
@@ -75,6 +75,9 @@ struct thread_data {
 
 static pthread_barrier_t start_barrier;
 
+/* The shared barrier creates contention; optional comm/role changes select
+ * test participants, not a JIT switch. Actual JIT evidence comes from kernel
+ * wrapper-return logs plus the workload integrity oracle, never this printf. */
 static void *worker_thread(void *arg)
 {
 	struct thread_data *data = arg;

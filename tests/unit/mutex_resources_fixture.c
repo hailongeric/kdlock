@@ -91,6 +91,7 @@ static jmp_buf resume_target;
 		table_irq--;                                    \
 	} while (0)
 #define smp_processor_id() 3
+#define raw_smp_processor_id() smp_processor_id()
 #define numa_node_id() 1
 #define _Q_LOCKED_VAL 1
 #define _RET_IP_ 0x9000UL
@@ -99,6 +100,8 @@ static jmp_buf resume_target;
 		if (0)                       \
 			printf(__VA_ARGS__); \
 	} while (0)
+/* Preserve diagnostic argument type checking without requiring kernel logging. */
+#define KD_PR_INFO(...) KD_PR_DEBUG(__VA_ARGS__)
 #define KD_PR_ERR(...)                    \
 	do {                              \
 		errors++;                 \
@@ -636,9 +639,31 @@ static void check_slowpath_packets(void)
 			CHECK(task_puts == (unsigned int)(mode == 3) &&
 			      refs == (unsigned int)(mode == 5));
 			if (mode == 5) {
+				struct mutex *nested = &origins[1].mutex;
+				unsigned int count;
+
+				/* The native suffix owns its unrelated C, not borrowed A.
+				 * Exercise absent and idle C shadows without consuming the
+				 * pre-existing routing ref or modifying A's physical owner.
+				 * Actual rename/ACK scheduling is checked in the live gate. */
+				if (direct_packet)
+					CHECK(get_kd_mutex_shadow(nested));
+				count = shadow_count();
+				__kd_mutex_lock(
+					nested,
+					(unsigned long)&native_stack[16],
+					0x8000);
+				CHECK(nested->owner == current &&
+				      acquires == 1);
+				__kd_mutex_unlock(nested, 0, 0x9000);
+				CHECK(!nested->owner && releases == 1);
+				CHECK(refs == 1 && gets == 1 && !task_puts &&
+				      shadow_count() == count && !errors);
+				CHECK(gate->physical_owner == &peer &&
+				      lock->owner == &peer);
 				borrowed = true;
 				__kd_mutex_unlock(lock, 0, 0x9000);
-				CHECK(notify_calls == 1 && !releases &&
+				CHECK(notify_calls == 2 && releases == 1 &&
 				      !task_puts && refs == 1);
 				CHECK(gate->physical_owner == &peer &&
 				      lock->owner == &peer);

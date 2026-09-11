@@ -12,6 +12,9 @@
  *
  * Each struct mutex * is mapped to a struct kd_mutex * via the shadow table.
  * The origin_* functions provide fallback to the original kernel lock paths.
+ * The shadow entry schedules work alongside the original mutex, not instead
+ * of it. A native suffix's unlock is routed to its retained physical owner
+ * before target-name or fresh-admission decisions can bypass that routing.
  */
 #include <linux/atomic.h>
 #include <linux/errno.h>
@@ -117,6 +120,11 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
 	return NULL;
 }
 
+#ifdef KDLOCK_SELFTEST
+/* Read-only capacity evidence; no test may manufacture table membership. */
+#include "../tests/kernel/mutex_shadow_trace.c"
+#endif
+
 /* ==========================================================================
  * Raw spinlock hooks
  * ========================================================================== */
@@ -210,6 +218,18 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 
 	kd_mtx = get_kd_mutex_shadow(lock);
 	if (!kd_mtx || !kd_mutex_task_get(current)) {
+		/* Distinguish shadow exhaustion from task allocation refusal and
+		 * node shortage. Neither branch acquired a routing reference. */
+		if (kd_mtx)
+			KD_PR_INFO(
+				"mutex task fallback: task=%d entry=%lx lock=%px cpu=%u\n",
+				current->pid, ret_addr, lock,
+				raw_smp_processor_id());
+		else
+			KD_PR_INFO(
+				"mutex shadow fallback: task=%d entry=%lx lock=%px cpu=%u\n",
+				current->pid, ret_addr, lock,
+				raw_smp_processor_id());
 		kd_origin_mutex_lock(lock);
 		return;
 	}

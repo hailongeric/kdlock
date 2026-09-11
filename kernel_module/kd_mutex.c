@@ -4,6 +4,10 @@
 // Ported to kdlock: kd_mutex — JIT-sandbox mutex delegation.
 // Follows the same kd_exe_on_call_hl_entry() model as kd_spinlock.c.
 
+/* Read in this order: reserve node, claim original mutex, execute_cs,
+ * run_combiner, then waiter restoration. The private gate never substitutes
+ * for Linux exclusion. Native continuation keeps the physical owner blocked
+ * in its ACK service loop; it does not hand the mutex owner field to waiter. */
 #include <linux/module.h>
 #include <linux/smp.h>
 #include <linux/bug.h>
@@ -410,13 +414,26 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	if (!kd_exe_is_ready(0, curr_node->regs.ip)) {
 		atomic64_inc(&kd_mutex_jit_not_ready_count);
+		/* A missing/cold image is an unstarted request, not a progressed
+		 * frame failure. Keep its identity distinct from context refusal. */
+		KD_PR_DEBUG("mutex JIT not ready: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
+			    current->pid, curr_node->task_struct_ptr->pid,
+			    curr_node->regs.ip, lock->origin_mutex_addr,
+			    raw_smp_processor_id());
 		kd_exe_add(0, curr_node->regs.ip, KD_EXE_LOCK_MUTEX);
 		return KD_EXE_NO_RUN;
 	}
 	if (kd_exec_context_busy()) {
 		/* A scheduled mutex combiner owns this CPU's frame stack. The
-		 * current waiter must use queue handoff without touching it. */
+		 * current waiter must use queue handoff without touching it.
+		 * Identify the unexecuted request so a busy refusal cannot be
+		 * mistaken for missing translation or a progressed JIT failure. */
 		atomic64_inc(&kd_mutex_context_busy_count);
+		KD_PR_DEBUG(
+			"mutex JIT context busy: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
+			current->pid, curr_node->task_struct_ptr->pid,
+			curr_node->regs.ip, lock->origin_mutex_addr,
+			raw_smp_processor_id());
 		return KD_EXE_NO_RUN;
 	}
 
@@ -867,6 +884,12 @@ err_free:
 	return -ENOMEM;
 }
 
+bool kd_mutex_check_idle(void)
+{
+	return !atomic_read(&kd_mutex_active_waiters) &&
+	       !atomic_read(&kd_mutex_reserved_nodes);
+}
+
 void kd_mutex_exit(void)
 {
 	int i;
@@ -943,6 +966,14 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 			/* No queue node was published. Wait on the native stack for the
 			 * scheduling gate, then acquire the original mutex as its owner. */
 			atomic64_inc(&kd_mutex_node_overflow_count);
+			/* Identify the unstarted request and the stable reservation mask.
+			 * A missing stack can also refuse a node, so only a full mask
+			 * establishes actual per-CPU slot exhaustion. */
+			KD_PR_DEBUG(
+				"mutex node fallback: task=%d entry=%lx lock=%lx cpu=%u slots=%lx\n",
+				current->pid, ret_addr, lock->origin_mutex_addr,
+				smp_processor_id(),
+				READ_ONCE(this_cpu_ptr(&kd_mutex_shadows)->node_slots));
 			kd_mutex_wait_and_lock(lock);
 			ret_val = 0;
 			goto scheduler_restore;

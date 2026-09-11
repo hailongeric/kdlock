@@ -1,6 +1,9 @@
 #ifndef __KD_SPINLOCK_H__
 #define __KD_SPINLOCK_H__
 
+/* Spin scheduling-node and JIT handoff layouts. Nodes are bounded per CPU and
+ * reusable; origin refs and physical holds have separate generation checks.
+ * The qspinlock alias below denotes private scheduling storage, not Linux L. */
 #include <asm/ptrace.h>
 #include "qspinlock_i.h"
 #include "kd_exec.h"

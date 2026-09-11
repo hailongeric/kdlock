@@ -1,3 +1,5 @@
+# Verify the independent spill audit's corpus and failure classification.
+# Mock failures must not become successful native-only policy outcomes.
 import contextlib
 import io
 import json

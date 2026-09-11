@@ -1,46 +1,92 @@
+# Construct bounded CALL/RET and learned indirect-target dispatch tables.
+# Build a complete staged whitelist before publishing it to emission. Sequential
+# return-slot facts can narrow analysis, not justify dropping emitted checks.
+from collections import defaultdict
+
 from assist import make_inst
 from miasm.expression.expression import ExprLoc
 
 
-def dfs(entry, blocks, ret_addr, db_dict, visited, jump_table):
-    offset = entry
-    for line in blocks[entry].lines:
-        offset = offset + line.l
-        if line.name == "RET":
-            if offset not in jump_table:
-                jump_table[offset] = []
-            jump_table[offset].append(ret_addr)
-    for fork_dst in blocks[entry].bto:
-        db = db_dict[blocks[entry]]
-        tgt = db.pretty_str(fork_dst.loc_key)
-        tgt = tgt.split("_")[1]
-        tgt = int(tgt, 16)
-        if tgt not in visited:
-            visited.add(tgt)
-            dfs(tgt, blocks, ret_addr, db_dict, visited, jump_table)
+class ReturnFlowError(ValueError):
+    """An incomplete/budgeted return graph cannot authorize generated dispatch."""
+
+    def __init__(self, message, offset):
+        super().__init__(message)
+        self.offset = offset
 
 
-def find(blocks, db_dict, pre_jump_table):
-    jump_table = pre_jump_table
+def find(blocks, db_dict, pre_jump_table, *, max_visits=65536):
+    # Stage the union with learned IJ history. On failure the caller must
+    # reject, never observe a partially populated return whitelist.
+    jump_table = {source: set(targets) for source, targets in pre_jump_table.items()}
+    callers, returns = defaultdict(set), defaultdict(set)
     missing_callees = set()
-    for offset, block in blocks.items():
-        db = db_dict[block]
+    work = 0
+
+    def spend(amount, offset):
+        nonlocal work
+        work += amount
+        if work > max_visits:
+            raise ReturnFlowError("return dispatch exceeds its work budget", offset)
+
+    for start, block in sorted(blocks.items()):
+        db = db_dict.get(block)
+        if db is None:
+            raise ReturnFlowError("missing return dispatch location database", start)
+        offset = start
         for line in block.lines:
-            offset = offset + line.l
-            if line.name == "CALL" and isinstance(line.args[0], ExprLoc):
-                callee = int(line.arg2str(line.args[0], 0, db).split("_")[1], 16)
+            spend(1, offset)
+            offset += line.l
+            name = line.name.upper()
+            direct = bool(line.args) and isinstance(line.args[0], ExprLoc)
+            if name == "CALL" and direct:
+                # Location names are presentation, not a numeric CFG contract.
+                callee = db.get_location_offset(line.args[0].loc_key)
+                if callee is None:
+                    raise ReturnFlowError("unresolved return dispatch callee", start)
                 if callee in blocks:
-                    visited = set()
-                    dfs(callee, blocks, offset, db_dict, visited, jump_table)
+                    callers[callee].add(offset)
                 else:
                     missing_callees.add(callee)
-            elif (
-                (line.name[0] == "J" or line.name == "CALL")
-                and not isinstance(line.args[0], ExprLoc)
-                or line.name == "RET"
+            elif name == "RET" or (
+                (name.startswith("J") or name == "CALL") and not direct
             ):
-                if offset not in jump_table:
-                    jump_table[offset] = []
+                jump_table.setdefault(offset, set())
+                if name == "RET":
+                    returns[start].add(offset)
+
+    # Walk each callee once for all its call sites. Shared tails contribute
+    # every continuation; no balanced-stack or matching-return assumption is
+    # introduced. Iteration also handles long linear CFGs and cycles without
+    # Python recursion, while an explicit budget bounds total graph work.
+    for callee, continuations in sorted(callers.items()):
+        pending, seen = [callee], set()
+        while pending:
+            start = pending.pop()
+            if start in seen:
+                continue
+            seen.add(start)
+            spend(1, start)
+            block = blocks[start]
+            if not block.lines:
+                raise ReturnFlowError("empty block in return dispatch", start)
+            for source in sorted(returns[start]):
+                spend(len(continuations), source)
+                jump_table[source].update(continuations)
+            targets = set()
+            for edge in block.bto:
+                spend(1, start)
+                target = db_dict[block].get_location_offset(edge.loc_key)
+                if target not in blocks:
+                    raise ReturnFlowError(
+                        "missing CFG successor in return dispatch", start
+                    )
+                targets.add(target)
+            pending.extend(sorted(targets - seen, reverse=True))
+
+    pre_jump_table.update(
+        {source: sorted(targets) for source, targets in jump_table.items()}
+    )
     return sorted(missing_callees)
 
 

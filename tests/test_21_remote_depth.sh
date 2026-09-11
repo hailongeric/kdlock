@@ -15,6 +15,14 @@ refusal=${KD_DEEP_REFUSAL:-0}
 refusal_numa=${KD_DEEP_REFUSAL_NUMA:-0}
 readmit=${KD_DEEP_READMIT:-0}
 readmit_layer=${KD_DEEP_READMIT_LAYER:-3}
+waiter_exit=${KD_DEEP_WAITER_EXIT:-0}
+[[ $waiter_exit =~ ^[01]$ ]]
+# Only the existing all-ancestors-unlocked case can delay its root without
+# withholding an owner ACK. Keep this opt-in out of other remote schedules.
+if [[ $waiter_exit == 1 ]]; then
+    test "$depth:$stage:$owner:$reverse:$renamed:$cross:$readmit:$refusal:$nodes" = 4:3:1:1:1:1:0:0:0
+    test -z "$defer"
+fi
 [[ $readmit =~ ^[012]$ ]]
 [[ $readmit_layer =~ ^[123]$ ]]
 if [[ $readmit != 0 ]]; then
@@ -61,7 +69,7 @@ finish() {
         rc=1
     else
         unload_modules
-        if [[ -n $defer || $nodes == 1 || $refusal != 0 || $readmit != 0 ]]; then
+        if [[ -n $defer || $nodes == 1 || $refusal != 0 || $readmit != 0 || $waiter_exit == 1 ]]; then
             make -C "$KM_DIR" KDLOCK_SELFTEST=0 KDLOCK_NUMA=0 W=1 -j8 > "$out/build-default.log" 2>&1 || rc=1
         fi
     fi
@@ -98,7 +106,7 @@ PY
 )
 build_all
 parameters=(remote_chain_depth="$depth")
-if [[ -n $defer || $nodes == 1 || $refusal != 0 || $readmit != 0 ]]; then
+if [[ -n $defer || $nodes == 1 || $refusal != 0 || $readmit != 0 || $waiter_exit == 1 ]]; then
     numa=$refusal_numa
     [[ -z $defer ]] || numa=1
     [[ $readmit == 0 ]] || numa=1
@@ -167,6 +175,18 @@ if [[ -n $defer ]]; then
     test -n "$addr"
     printf '0x%s\n' "$addr" > /sys/module/kdlock_km/parameters/spin_selftest_deferred_lock
 fi
+if [[ $waiter_exit == 1 ]]; then
+    addr=$(dmesg | sed -n 's/.*kd_deep lock: index=0 addr=\([0-9a-f]*\)$/\1/p')
+    test -n "$addr"
+    printf '0x%s\n' "$addr" > /sys/module/kdlock_km/parameters/spin_selftest_exit_lock
+    python3 - "$addr" > "$out/exit-gate.json" <<'PY'
+import json, sys
+from pathlib import Path
+value = int(Path('/sys/module/kdlock_km/parameters/spin_selftest_exit_lock').read_text())
+assert value == int(sys.argv[1], 16)
+print(json.dumps({"root_lock": hex(value), "waiter_exit": True}))
+PY
+fi
 if [[ $refusal != 0 ]]; then
     addr=$(dmesg | sed -n 's/.*kd_deep lock: index=3 addr=\([0-9a-f]*\)$/\1/p')
     test -n "$addr"
@@ -227,6 +247,7 @@ check_dmesg_ok
 dmesg > "$out/protocol.log"
 lock_ip=$(awk '$3 == "_raw_spin_lock" {print $1}' /proc/kallsyms)
 options=(--lock-ip "$lock_ip")
+[[ $waiter_exit == 0 ]] || options+=(--waiter-exit)
 [[ $refusal == 0 ]] || options+=(--refusal "$refusal")
 test "$owner" = 0 || options+=(--native-owner)
 test "$reverse" = 0 || options+=(--reverse)
@@ -234,4 +255,4 @@ test "$renamed" = 0 || options+=(--renamed)
 python3 "$KDLOCK_DIR/tests/remote_depth_protocol.py" "$out/protocol.log" \
     "$out/placement.json" "$stage" "${options[@]}"
 python3 "$node_protocol" validate "$out/protocol.log" "$out/placement.json" "$out/node-profile.json" | tee "$out/node-protocol.json"
-pass "$TEST_NAME depth=$depth stage=$stage owner=$owner reverse=$reverse rename=$renamed defer=${defer:-none} count=$defer_count refusal=$refusal refusal_numa=$refusal_numa readmit=$readmit readmit_layer=$readmit_layer"
+pass "$TEST_NAME depth=$depth stage=$stage owner=$owner reverse=$reverse rename=$renamed defer=${defer:-none} count=$defer_count refusal=$refusal refusal_numa=$refusal_numa readmit=$readmit readmit_layer=$readmit_layer waiter_exit=$waiter_exit"

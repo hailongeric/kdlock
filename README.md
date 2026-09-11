@@ -5,6 +5,10 @@ translates their existing machine code at runtime. The aim is TCLock-style
 delegation without rewriting each critical section's source. Existing guest
 lock hooks are still required; this is not an unmodified-kernel solution.
 
+Start reading or running this checkout with the Chinese
+[code map and step-by-step manual](docs/PROJECT_GUIDE.md). It indexes production
+code, test drivers and fixtures, and separates host commands from guest execution.
+
 ## Execution Model
 
 ```text
@@ -13,7 +17,7 @@ kernel lock hook -> native lock L + kdlock request queue
                  -> optional entry predicates before generated body
                     -> refusal: unstarted native execution, no body replay
                  -> combiner executes waiter state in generated JIT code
-                    -> lock control: update ownership, continue JIT
+                    -> lock control: update ownership, validate continuation
                     -> allowlisted hostcall: native service, continue JIT
                     -> ordinary CALL miss: original waiter finishes native suffix
                  -> physical owner unlocks L and acknowledges completion
@@ -25,6 +29,9 @@ virtual CALL stack, not at the critical-section entry. Earlier stores are not
 rolled back or replayed. Learning/recompilation affects future invocations.
 Admission and code generation use the same possible JIT range; a suffix
 reachable by another JIT path still requires checking.
+Unconditional context/backend bans cover every emitted block, including RET
+targets skipped by sequential value analysis. This is not a runtime memory-
+freshness or arbitrary concurrent-mutation guarantee.
 
 Spin and mutex delegation retain the original Linux lock as the exclusion
 authority. Private queues schedule requests; they do not replace native
@@ -36,42 +43,26 @@ before ACK; reclamation waits for RCU readers.
 
 ## Current Status
 
-Latest complete matrix, **2026-09-09 02:46 +08**: **65/65 pass**, comprising
-**49 actual-JIT cases, 12 context refusals, two native controls and two kernel
-protocol probes**. The last two test real RCU/owner ACK without JIT.
-Mode **0-8** pass actual-JIT checks, including guarded nested mode 1/4/8 and
-`mutex_jit=1` for mutex positives. Mode 1/4 register, held-B and pending-B
-continuations also pass, as do mode 8's stage-2/3 register cases.
-All **39 unit programs** and the independent **25-case admission audit** pass.
-Resource fixtures use production functions with explicitly documented
-substitutes. Busy-B probes connect actual JIT, virtual-ticket cancellation and
-native continuation; resource inputs are injected, not natural pool saturation.
-`test_22` separately checks real owner ACK and RCU in both unlock orders without
-JIT. See [the resource and lifecycle guide](docs/JIT_EXECUTION.md#6-资源拒绝与测试边界)
-for commands, execution flow and coverage limits.
+**2026-09-11 reading handoff:** purpose and ownership comments are supplemented
+without changing executable statements. The manual records current limitations,
+component flow, publication checks and ordered cleanup. This documentation-only
+increment does not re-certify the historical JIT results below; its checks are
+recorded separately in [VALIDATION](docs/VALIDATION.md#reading-handoff).
 
-Original-waiter tests cover real SIGUSR1/SIGKILL during native B waiting and
-in signal/release races after JIT progress. Ordinary B must finish its
-uninterruptible acquisition. Direct
-interruptible/killable API misses skip B on `-EINTR`, or enter/unlock B once
-on a real acquisition during a signal/release race. Both retain earlier stores
-and complete A's final owner ACK before userspace signal delivery/exit.
-This is not arbitrary delegated-request cancellation;
-[usage 6.4](docs/JIT_EXECUTION.md#64-原-waiter-的信号与退出) distinguishes
-forced signals from independent native peers, while
-[usage 6.5](docs/JIT_EXECUTION.md#65-原-waiter-与-b-释放的竞争) documents the
-pidfd/release race, real owner/return checks and scheduling limits.
+| Recorded validation | Result and boundary |
+| --- | --- |
+| [2026-09-09 complete matrix](docs/VALIDATION.md#parallel-native-frames) | 67/67: 51 actual-JIT cases, 12 refusals, two native controls and two kernel protocol probes |
+| [2026-09-10 scoped live run](docs/VALIDATION.md#static-per-cpu-ranges) | 24/24: 12 actual-JIT cases and 12 refusals for static core/module per-CPU screening |
+| [2026-09-11 reading handoff](docs/VALIDATION.md#reading-handoff) | Builds and six focused unit programs; no kernel-JIT rerun |
 
-Learned mutex-depth now executes the helper's translated lock calls, reaches
-real capacity exits and completes native continuation with physical-owner ACKs.
-Entry predicates and scoped CALL/RET checks are enforced in production;
-scope, refusal and continuation rules are in
-[the usage guide](docs/JIT_EXECUTION.md#5-入口条件与嵌套续点).
-
-These are bounded correctness observations, not a claim of complete support.
-Commands, failed cases, source identity and evidence are centralized in
-[VALIDATION](docs/VALIDATION.md). Do not substitute
-historical passes or successful native fallback for the current JIT gate.
+Main mode 0-8, guarded nested/register continuations, learned mutex helpers and
+bounded resource/lifetime combinations have actual-JIT evidence on their stated
+freezes. Mutex positives require `mutex_jit=1`. These observations are not
+complete support, a new run of the committed tree or a performance result.
+Per-case flows and coverage limits live in [JIT_EXECUTION](docs/JIT_EXECUTION.md);
+source identities, failures and historical results live in
+[VALIDATION](docs/VALIDATION.md). Remaining correctness work and explicit deferrals
+live in [TODO](docs/TODO.md), including the unimplemented use-time address guard.
 
 ## Quick Start
 
@@ -87,6 +78,7 @@ Normal mode exposes the host source through 9p. In recovery mode the same
 only changed files; do not move or recursively copy the repository.
 Confirm the VM and a usable snapshot following [AGENTS](docs/AGENTS.md) first.
 
+The following is initial environment acceptance, not a per-edit checklist.
 All commands below run in the guest:
 
 ```sh
@@ -101,19 +93,28 @@ cc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c \
   -o bench/klock_test -lpthread
 ```
 
-After confirming recovery, a focused single-lock mutex JIT test is:
+After initial acceptance, select affected complex tests rather than repeating
+basic smoke tests. Preview is read-only; live execution below is guest-only:
 
 ```sh
-KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_09_jit_execution_modes.sh 3
+bash tests/run_all.sh --suite mutex --dry-run
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --suite mutex
 ```
 
-This script explicitly enables `mutex_jit=1`, builds/loads the modules, runs
-the daemon and workload, checks returned generated-body evidence, then drains
-and unloads. It is not a harmless userspace test.
-See [JIT_EXECUTION](docs/JIT_EXECUTION.md) for the full flow, all main-mode
-commands, native-continuation tests and interpreting failures.
-The multi-mode script stops at its first failure; inspect each requested mode's
-returned execution evidence, not only the overall launch command.
+This selects modes 4/5, explicitly enables `mutex_jit=1`, builds/loads the modules,
+runs daemon/workloads and checks returned generated-body evidence before draining.
+These live tests are not harmless userspace tests. No-argument `run_all.sh` only
+lists scopes; `--case` selects one case, overlapping scopes are deduplicated and
+execution stops on failure. Covered diagnostics stay opt-in, not daily prerequisites.
+See [selection and consolidation](docs/JIT_EXECUTION.md#7-分层与增量回归) for independent
+contracts that must remain, and the [manual sequence](docs/PROJECT_GUIDE.md#3-一步一步运行)
+for individual component startup and cleanup.
+
+The runner retains frozen source, environment observations, logs and artifacts
+outside the checkout. Check an existing result with
+`python3 tests/verify_evidence.py "$RUN_DIR"`; this does not rerun JIT or certify
+current code. Capture errors and incomplete drain cannot create `accepted`.
+See [evidence handling](docs/JIT_EXECUTION.md#执行与证据) for the full contract.
 
 ## Benchmark Modes
 
@@ -137,8 +138,16 @@ Daemon `--mode 1/2` selects workspace layout, not any benchmark mode.
 ## Boundaries
 
 - Admission rejects GS memory, FS operands and recognized context-sensitive
-  operations in retained JIT code. This does not prove arbitrary aliases,
-  per-CPU concurrency or scheduling/IRQ/RCU equivalence.
+  operations in retained JIT code, including statically resolved addresses in
+  each possible CPU's [core static area and boot-reserved module arena](docs/DESIGN.md#722-static-per-cpu-ranges).
+  This requires the matching provider's module-range capability, not merely
+  readable symbol names; missing capability is a translation environment error.
+  This does not prove arbitrary aliases,
+  per-CPU concurrency or scheduling/IRQ/RCU equivalence. Unresolved runtime pointers and
+  concurrent pointer replacement can bypass this screening, as reproduced with
+  benign generated userspace code. `CONTEXT_SCREENING_ONLY` makes this limit
+  explicit; it does not add a guard. See the
+  [dynamic-address gap](docs/DESIGN.md#721-dynamic-address-gap).
 - The two-word input remains `args[0]=waiter GS base`,
   `args[1]=logical waiter task`; it does not switch hardware task context.
 - JIT is not a security sandbox. Memory guards and instruction semantics are
@@ -146,10 +155,13 @@ Daemon `--mode 1/2` selects workspace layout, not any benchmark mode.
   Flags can be clobbered by instrumentation and are not restored across exits.
 - Native continuation is supported at specific validated boundaries, not for
   arbitrary faults after progress. Unsupported post-entry states fail-stop.
-- Code is replaced in place without immutable versions or executor retirement.
+- Code is replaced in place without immutable versions or per-version reclamation.
   This risk is explicitly deferred, not solved by lock serialization.
 - Frames, lock tables, node pools and stacks are bounded. Source/lock address
-  reuse and hot module unload are not generally safe.
+  reuse and hot module unload are not generally safe. Non-target tasks also
+  call the guest hook predicates; stopping benchmark workers is not a reader
+  drain. The [lifetime assessment](docs/DESIGN.md#31-source-lock-and-hook-lifetimes)
+  separates source pins, lock-object retirement and missing hook capabilities.
 - `mutex_jit` defaults to 0; plain non-RT mutex and spin paths are the active
   scope. No userspace/futex frontend, rwsem, RT/PI/WW mutex or general IRQ/BH
   delegation. Only explicitly allowlisted hostcalls, not arbitrary printk.
@@ -166,7 +178,8 @@ Daemon `--mode 1/2` selects workspace layout, not any benchmark mode.
 | `tests/` | Units, protocol oracles and opt-in live tests |
 | `kernel_baseline/` | Existing guest patch/config/identity, read-only verifier |
 
-- [Execution and tests](docs/JIT_EXECUTION.md): primary usage guide.
+- [Code map and manual run](docs/PROJECT_GUIDE.md): file index and first-run steps.
+- [Execution and tests](docs/JIT_EXECUTION.md): complex-case flows and acceptance.
 - [Design](docs/DESIGN.md): implementation and ownership contracts.
 - [Register ABI](docs/JIT_REGISTER_ABI.md): entry, registers, stacks and exits.
 - [Operations](docs/AGENTS.md): host/guest safety, source sync and recovery.

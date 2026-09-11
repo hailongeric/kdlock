@@ -1,3 +1,6 @@
+# Lower virtual CALL/RET/stack/control operations that cannot use plain copying.
+# CALL pushes the source return address; POP/PUSH use virtual SP, not physical
+# wrapper RSP. Some legacy special instructions remain warning-only/deferred.
 import diagnostics
 from assist import get_inst_name, im64_abs, make_inst, make_mem_dict
 from conflict import (

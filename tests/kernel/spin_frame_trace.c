@@ -44,6 +44,140 @@ static struct kd_frame_trace_event {
 	bool valid, executed, returned;
 } kd_frame_events[KD_FRAME_TRACE_EVENTS];
 
+/* Observe the natural full held-lock ledger at the deepest CALL. Physical
+ * frames inherit ancestor entries, so the logical ledger rejects before the
+ * separate local-shadow check. Never fill locks or enlarge the shadow stack.
+ */
+static atomic_t kd_full_shadow_claimed = ATOMIC_INIT(0);
+static struct {
+	struct kd_exec_frame expected;
+	struct kd_combiner_state shadow;
+	struct pt_regs regs;
+	raw_spinlock_t *lock;
+	unsigned long return_ip;
+	unsigned int preempt;
+	int cpu, nodes, result;
+	bool irq, valid_before, ready, packet, frame, combiner, physical,
+		pending, context;
+} kd_full_shadow;
+
+static bool kd_spin_selftest_full_shadow_owned(void)
+{
+	const struct kd_exec_frame *frame = kd_exec_current_frame();
+	unsigned int depth = KD_EXEC_MAX_LOCK_DEPTH;
+
+	/* Match each genuine parent to the CPU ledger and its physical owner.
+	 * Only the owner byte is stable: peers may still publish queue tails.
+	 */
+	while (frame && depth) {
+		raw_spinlock_t *lock =
+			(void *)kd_full_shadow.shadow.lock_addr[--depth];
+
+		if (!lock || frame->depth != depth ||
+		    frame->outer_lock_addr != (unsigned long)lock ||
+		    kd_exec_frame_lock_depth(frame) != depth + 1 ||
+		    !kd_exec_frame_validate(frame) ||
+		    !raw_spin_is_locked(lock) ||
+		    kd_spin_debug_owner(lock) != (unsigned long)current ||
+		    READ_ONCE(kd_spin_word((void *)lock)->locked) !=
+			    _Q_LOCKED_COMBINER_VAL)
+			return false;
+		frame = frame->parent;
+	}
+	return !frame && !depth;
+}
+
+static bool kd_spin_selftest_full_shadow_pending(void)
+{
+	struct kd_spin_ref ref = { 0 };
+
+	/* B is uncontended in this workload and must not acquire even a ticket. */
+	return atomic_read(&((struct qspinlock *)kd_full_shadow.lock)->val) ==
+		       0 &&
+	       !kd_spin_entry_find(kd_full_shadow.lock, &ref);
+}
+
+static bool kd_spin_selftest_full_shadow_begin(raw_spinlock_t *lock,
+					       struct pt_regs *regs,
+					       struct kd_exec_frame *frame)
+{
+	struct shadow_stack *stack = this_cpu_ptr(&local_shadow_stack);
+
+	if (!frame || !frame->executed || !lock || !regs || !regs->sp ||
+	    kd_spin_lock_stack_depth(stack) != KD_EXEC_MAX_LOCK_DEPTH ||
+	    atomic_cmpxchg(&kd_full_shadow_claimed, 0, 1))
+		return false;
+
+	kd_full_shadow.regs = *regs;
+	kd_full_shadow.expected = *frame;
+	kd_full_shadow.lock = lock;
+	kd_full_shadow.return_ip = READ_ONCE(*(unsigned long *)regs->sp);
+	kd_full_shadow.preempt = preempt_count();
+	kd_full_shadow.irq = irqs_disabled();
+	kd_full_shadow.cpu = raw_smp_processor_id();
+	kd_full_shadow.nodes = this_cpu_ptr(&kd_spin_nodes[0])->count;
+	kd_spin_capture_combiner_state(&kd_full_shadow.shadow, stack);
+	kd_full_shadow.valid_before =
+		kd_full_shadow.preempt && !kd_full_shadow.irq &&
+		!kd_full_shadow.nodes && kd_exec_current_frame() == frame &&
+		kd_spin_selftest_full_shadow_owned() &&
+		kd_spin_selftest_full_shadow_pending() &&
+		!kd_exec_frame_lock_contains(frame, (unsigned long)lock);
+	/* Beginning the CALL is the only allowed frame change. Modify the private
+	 * expected snapshot, never the live frame or the waiter's return word.
+	 */
+	kd_full_shadow.valid_before &=
+		!kd_call_begin(&kd_full_shadow.expected.control_call, regs->ip,
+			       regs->sp, kd_full_shadow.return_ip);
+	return true;
+}
+
+static void kd_spin_selftest_full_shadow_end(const struct pt_regs *regs,
+					     const struct kd_exec_frame *frame,
+					     int result)
+{
+	kd_full_shadow.result = result;
+	kd_full_shadow.packet =
+		!memcmp(regs, &kd_full_shadow.regs, sizeof(*regs)) &&
+		READ_ONCE(*(unsigned long *)kd_full_shadow.regs.sp) ==
+			kd_full_shadow.return_ip;
+	kd_full_shadow.frame =
+		!memcmp(frame, &kd_full_shadow.expected, sizeof(*frame)) &&
+		frame->control_call.phase == KD_CALL_PENDING;
+	kd_full_shadow.combiner = kd_spin_combiner_state_matches(
+		&kd_full_shadow.shadow, this_cpu_ptr(&local_shadow_stack));
+	kd_full_shadow.physical = kd_spin_selftest_full_shadow_owned();
+	kd_full_shadow.pending = kd_spin_selftest_full_shadow_pending();
+	kd_full_shadow.context = kd_exec_current_frame() == frame &&
+				 kd_full_shadow.cpu == raw_smp_processor_id() &&
+				 kd_full_shadow.preempt == preempt_count() &&
+				 kd_full_shadow.irq == irqs_disabled() &&
+				 kd_full_shadow.nodes ==
+					 this_cpu_ptr(&kd_spin_nodes[0])->count;
+	/* Drain-time reporting keeps printk off the full physical frame chain. */
+	smp_store_release(&kd_full_shadow.ready, true);
+}
+
+static void kd_spin_selftest_full_shadow_report(void)
+{
+	if (!atomic_read(&kd_full_shadow_claimed))
+		return;
+	pr_info("kd_frame held refusal: ready=%u valid_before=%u cpu=%d task=%d entry=%lx outer=%lx lock=%lx target=%lx sp=%lx return=%lx depth=%u recorded=%u local=%u error=%d packet=%u frame=%u combiner=%u physical=%u pending=%u context=%u\n",
+		smp_load_acquire(&kd_full_shadow.ready),
+		kd_full_shadow.valid_before, kd_full_shadow.cpu,
+		kd_full_shadow.expected.logical_pid,
+		kd_full_shadow.expected.entry_ip,
+		kd_full_shadow.expected.outer_lock_addr,
+		(unsigned long)kd_full_shadow.lock, kd_full_shadow.regs.ip,
+		kd_full_shadow.regs.sp, kd_full_shadow.return_ip,
+		kd_full_shadow.expected.depth + 1,
+		kd_exec_frame_lock_depth(&kd_full_shadow.expected),
+		kd_full_shadow.shadow.lock_depth, kd_full_shadow.result,
+		kd_full_shadow.packet, kd_full_shadow.frame,
+		kd_full_shadow.combiner, kd_full_shadow.physical,
+		kd_full_shadow.pending, kd_full_shadow.context);
+}
+
 static noinline int
 kd_spin_selftest_frame_begin(const struct kd_exec_frame *frame)
 {
@@ -119,6 +253,7 @@ static void kd_spin_selftest_frames_report(void)
 
 	if (!kd_frame_trace)
 		return;
+	kd_spin_selftest_full_shadow_report();
 	if (kd_frame_capacity_probe)
 		kd_exec_selftest_capacity_report();
 	for (i = 0; i < min(count, KD_FRAME_TRACE_EVENTS); i++) {

@@ -84,6 +84,10 @@ bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct pt_regs *regs,
 	unsigned int i;
 	bool ok;
 
+	/* Reuse the existing CALL boundary for a passive real-chain observation. */
+	if (kd_frame_trace)
+		return kd_spin_selftest_full_shadow_begin(lock, regs, frame);
+
 	/* Read-only module parameter: one runtime request, never rearmed in flight. */
 	if (READ_ONCE(kd_shadow_fill_once) != 1 || !lock || !regs || !frame ||
 	    !frame->executed || !kd_exec_frame_validate(frame) ||
@@ -132,6 +136,11 @@ void kd_spin_selftest_shadow_end(struct pt_regs *regs,
 	unsigned int held = kd_shadow_pressure.held;
 	bool physical = true, unchanged, restored;
 	unsigned int i;
+
+	if (kd_frame_trace) {
+		kd_spin_selftest_full_shadow_end(regs, frame, result);
+		return;
+	}
 
 	for (i = 0; i < held; i++)
 		physical &= raw_spin_is_locked(&kd_shadow_test.held[i]);
@@ -470,6 +479,9 @@ static int kd_spin_shadow_selftest(void)
 	int ret = 0;
 
 	if (kd_shadow_fill_once < 0 || kd_shadow_fill_once > 1)
+		return -EINVAL;
+	/* An observed full chain must never include test-managed filler locks. */
+	if (kd_frame_trace && kd_shadow_fill_once)
 		return -EINVAL;
 	if (kd_frame_capacity_probe && !kd_frame_trace)
 		return -EINVAL;

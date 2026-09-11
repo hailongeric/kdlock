@@ -1,4 +1,13 @@
+# Guest-only workload module, built after kdlock for its exported interfaces.
+# tests/kernel fragments are included by source, not separately loaded modules.
 obj-m += klock_module.o
+# Build the second source only for the learned-depth dependency experiment.
+# Default workloads must not acquire a new mandatory module dependency.
+KDLOCK_SOURCE_HELPER ?= 0
+ifeq ($(KDLOCK_SOURCE_HELPER),1)
+obj-m += kd_depth_source.o
+ccflags-y += -DKDLOCK_SOURCE_HELPER
+endif
 # The contention oracle reads the actual non-RT mutex waiter type.
 ccflags-y += -I$(srctree)
 

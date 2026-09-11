@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #ifndef SPIN_GATE_MOCK_H
 #define SPIN_GATE_MOCK_H
+/* Minimal two-CPU/type/atomic substitutes shared by extracted C fixtures.
+ * Their deterministic results are not Linux memory-ordering guarantees. */
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>

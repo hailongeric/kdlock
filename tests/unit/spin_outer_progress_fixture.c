@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+/* Production spin batch/frame decisions around a substituted JIT body.
+ * Preserve tickets and complete packets across outer release and pool refusal. */
 #include "spin_gate_mock.h"
 #include <stddef.h>
 
@@ -153,6 +155,18 @@ static int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long ip,
 				   unsigned long lock);
 
 static int kd_exec_invariant_failure(void);
+/* Only the real pool takes leases; scripted outer frames are boundary packets. */
+static unsigned int source_frames;
+static bool kd_source_frame_get(void)
+{
+	source_frames++;
+	return true;
+}
+static void kd_source_frame_put(void)
+{
+	CHECK(source_frames > 0);
+	source_frames--;
+}
 /* Frame storage is an array in this CPU substitute; keep the allocator body. */
 #undef this_cpu_ptr
 #define this_cpu_ptr(p) (&(*(p))[mock_cpu])

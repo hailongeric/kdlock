@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+/* Substitute primitives around production frame allocation/validation. Fill
+ * real bounded slots and compare failed pushes; no scheduler or IRQ model. */
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -44,6 +46,24 @@ static unsigned int atomic_cmpxchg(atomic_t *value, unsigned int old,
 #define atomic64_inc(p) (++*(p))
 #define WARN_ON_ONCE(x) ((void)(x))
 static unsigned int probe_calls;
+/* Count the real allocator's lease balance; module and retirement primitives
+ * are exercised separately by test_source_lifetime, not emulated as frames. */
+static unsigned int source_frames;
+static bool source_open = true;
+static bool kd_source_frame_get(void)
+{
+	if (!source_open)
+		return false;
+	source_frames++;
+	return true;
+}
+static void kd_source_frame_put(void)
+{
+	if (!source_frames)
+		failures++;
+	else
+		source_frames--;
+}
 
 static struct kd_exec_frame *
 counted_frame_push(const struct pt_regs *regs, unsigned long entry,
@@ -119,11 +139,13 @@ static void refused(const struct pt_regs *regs, unsigned long gs,
 {
 	struct kd_exec_context before = *kd_exec_current_context();
 	struct kd_exec_frame *frame = kd_exec_current_frame();
+	unsigned int before_refs = source_frames;
 
 	CHECK(!kd_exec_frame_push(regs, 0x1000, 0x2000, task, task, held, gs,
 				  task));
 	CHECK(!memcmp(&before, kd_exec_current_context(), sizeof(before)));
 	CHECK(kd_exec_current_frame() == frame);
+	CHECK(source_frames == before_refs);
 }
 
 static void exercise(unsigned int depth)
@@ -142,6 +164,9 @@ static void exercise(unsigned int depth)
 	refused(NULL, 1, current, 1);
 	refused(&regs, 0, current, 1);
 	refused(&regs, 1, NULL, 1);
+	source_open = false;
+	refused(&regs, 1, current, 1);
+	source_open = true;
 	if (depth == KD_EXEC_MAX_NESTING) {
 		for (i = 0; i < 4; i++)
 			refused(&regs, 1, current, 1);
@@ -180,6 +205,7 @@ static void exercise(unsigned int depth)
 		CHECK(kd_exec_context_validate(ctx));
 	}
 	CHECK(!ctx->owner && !kd_exec_current_frame());
+	CHECK(source_frames == 0);
 }
 
 static void probe(unsigned int depth, unsigned int invalid)
@@ -243,7 +269,16 @@ static void probe(unsigned int depth, unsigned int invalid)
 		}
 	}
 	current = &owners[0];
-	kd_exec_context_reset(ctx);
+	/* Restore the deliberately invalid packet, then use the real release path
+	 * instead of clearing live frames and hiding a leaked source lease. */
+	if (depth)
+		ctx->frames[0].gsbase = 0x3000;
+	while (ctx->depth) {
+		frame = kd_exec_current_frame();
+		kd_exec_frame_set_state(frame, KD_EXEC_FRAME_ERROR);
+		CHECK(kd_exec_frame_pop(frame, NULL) == 0);
+	}
+	CHECK(source_frames == 0);
 }
 
 int main(void)

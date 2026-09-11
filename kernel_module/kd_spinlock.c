@@ -13,6 +13,11 @@
 //   - Uses kd_spin_node (renamed from komb_node) with embedded pt_regs
 //   - Delegation via sandbox JIT, not raw stack-switch
 
+/* Scheduling nodes carry packets, but kd_spin_entry owns origin tickets and
+ * kd_spin_gate owns native L. Keep these lifetimes separate when reading the
+ * nested queue paths: a remote executor may carry the same logical waiter.
+ * Physical shadow-stack switches still support combiners; JIT replaces the
+ * critical-section body handoff, not every stack switch in this backend. */
 #include "kd_spinlock.h"
 #include "utils.h"
 #include "exe.h"
@@ -1827,8 +1832,20 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		return -EBUSY;
 	parent->remote_result = KD_EXEC_REMOTE_IDLE;
 
+#ifdef KDLOCK_SELFTEST
+	/* NULL requests select only the read-only pre-allocation observer. The
+	 * context/node injection probes still start after a ticket is reserved.
+	 */
+	contexts = *this_cpu_ptr(&kd_spin_jit_contexts);
+	refusal_probe = kd_spin_selftest_virtual_begin(
+		lock, NULL, regs, parent, &contexts, initial_preempt);
+#endif
 	ret = kd_spin_entry_begin((raw_spinlock_t *)lock, KD_SPIN_ENTRY_VIRTUAL,
 				  &request);
+#ifdef KDLOCK_SELFTEST
+	if (refusal_probe)
+		kd_spin_selftest_virtual_end(&request, regs, parent, ret);
+#endif
 	if (ret)
 		return ret;
 	word = kd_spin_word(lock);
@@ -2001,6 +2018,9 @@ get_kd_spin_resume_stack(void)
  */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
+/* Software packet restoration only: neither entry below loads flags. The
+ * normal form consumes a saved stack return; the in-CS form pushes regs.ip.
+ * Do not reuse them for a new flags-live exit without its separate contract. */
 __attribute__((noipa)) noinline notrace void
 jump_to_saved_regs(struct pt_regs *regs)
 {

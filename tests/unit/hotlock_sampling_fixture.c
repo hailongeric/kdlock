@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+/* Deterministic TSC/allocation inputs for the extracted hotlock sampler.
+ * Promotion transitions are checked here, not natural contention or JIT. */
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>

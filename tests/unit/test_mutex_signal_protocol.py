@@ -1,3 +1,5 @@
+# Corrupt/partial log and client-protocol inputs must fail the signal oracle.
+# Real signal delivery and Linux mutex exclusion belong to the live driver.
 import sys
 import tempfile
 import unittest
@@ -7,6 +9,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mutex_signal_protocol import Entry, trigger_race, validate, wait_ready
 from native_waiter_signal_protocol import validate as validate_waiter_signal
+from native_waiter_signal_protocol import validate_pending_mutex
 
 
 def fixture(probe):
@@ -362,8 +365,111 @@ def waiter_race_fixture(api, acquired):
     return args
 
 
+def pending_shared_fixture():
+    """Extend the existing pending packet fixture, not a copied lock model."""
+    text, _, statuses = waiter_signal_fixture(10)
+    text = "\n".join(
+        line for line in text.splitlines() if not line.startswith("kd_waiter signal")
+    )
+    text = text.replace("mutex=1 cpu=3", "mutex=1 cpu=4")
+    text = text.replace("preserved=1", "preserved=1 cpu=4 preempt=0 irq=0")
+    cpus = {role: 4 if role in (0, 4, 6) else role for role in range(7)}
+    tasks = {0: (20, "2220"), 1: (30, "3330"), 4: (10, "1110")}
+    roles = []
+    for role, cpu in cpus.items():
+        pid, pointer = tasks.get(role, (100 + role, f"{0x4000 + role * 16:x}"))
+        roles.append(
+            f"kd_pending mutex role: role={role} task={pid} self={pointer} cpu={cpu} preempt=0 irq=0"
+        )
+    complete = f"kd_pending mutex complete: task=20 waiter=2220 cpu=4 preempt=0 irq=0 record=12001 before=1 called=1 after=1 value={((12002 * 3 + 17) ^ 0x5A5A):x} valid=1"
+    text = (
+        "\n".join(roles)
+        + "\n"
+        + text.replace("kd_native stats:", complete + "\nkd_native stats:")
+    )
+    return text, "\n".join(f"{role}\t{cpu}" for role, cpu in cpus.items()), statuses
+
+
 class NativeWaiterSignalTests(unittest.TestCase):
     """Missing or contradictory evidence must not turn a killed client green."""
+
+    def test_pending_waiter_can_share_its_owners_cpu(self):
+        text, placements, statuses = pending_shared_fixture()
+        result = validate_pending_mutex(text, True, placements, statuses)
+        self.assertEqual(
+            result,
+            {
+                "task": 20,
+                "native_frames": 1,
+                "acks": 1,
+                "shared_cpu": True,
+                "cpu": 4,
+                "owner_task": 10,
+                "record": 12001,
+            },
+        )
+        # Ordinary pending-B/signal cases keep their separate placement and
+        # signal contracts; they do not implicitly opt into this CPU schedule.
+        ordinary, _, _ = waiter_signal_fixture(10)
+        self.assertFalse(validate_pending_mutex(ordinary)["shared_cpu"])
+        with self.assertRaises(AssertionError):
+            validate_pending_mutex(ordinary, True, placements, statuses)
+
+    def test_shared_cpu_requires_real_identities_packet_and_final_ack(self):
+        text, placements, statuses = pending_shared_fixture()
+        for line in text.splitlines():
+            if line.startswith("kd_mutex tasks:"):
+                continue
+            for damaged in (
+                text.replace(line, ""),
+                text.replace(line, line + "\n" + line),
+            ):
+                with (
+                    self.subTest(line=line),
+                    self.assertRaises((AssertionError, ValueError)),
+                ):
+                    validate_pending_mutex(damaged, True, placements, statuses)
+        for before, after in (
+            ("self=1110", "self=2220"),
+            ("role=6", "role=4"),
+            ("task=20", "task=21"),
+            ("cpu=4", "cpu=0"),
+            ("preempt=0", "preempt=1"),
+            ("irq=0", "irq=1"),
+            ("a_owner=1110", "a_owner=2220"),
+            ("b_owner=3330", "b_owner=2220"),
+            ("staged_sp=0x8000", "staged_sp=0x8008"),
+            ("staged_ip=0x5678", "staged_ip=0x6000"),
+            ("record=12001", "record=12002"),
+            ("called=1", "called=2"),
+            ("preserved=1", "preserved=0"),
+            ("remaining=1", "remaining=0"),
+        ):
+            with self.subTest(field=before), self.assertRaises(AssertionError):
+                validate_pending_mutex(
+                    text.replace(before, after, 1), True, placements, statuses
+                )
+        lines = text.splitlines()
+        complete = next(
+            line for line in lines if line.startswith("kd_pending mutex complete:")
+        )
+        lines.remove(complete)
+        lines.insert(
+            next(
+                i for i, line in enumerate(lines) if line.startswith("kd_native ack:")
+            ),
+            complete,
+        )
+        with self.assertRaises(AssertionError):
+            validate_pending_mutex("\n".join(lines), True, placements, statuses)
+        for wrong_places, wrong_statuses in (
+            (placements.replace("0\t4", "0\t0"), statuses),
+            (placements + "\n0\t4", statuses),
+            (placements, statuses.replace("0\t0", "0\t137")),
+            (placements, statuses + "\n0\t0"),
+        ):
+            with self.assertRaises(AssertionError):
+                validate_pending_mutex(text, True, wrong_places, wrong_statuses)
 
     def test_nonfatal_and_fatal_completion(self):
         for signum in (9, 10):

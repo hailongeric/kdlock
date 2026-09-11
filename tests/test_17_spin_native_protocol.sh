@@ -54,8 +54,7 @@ wait_for_jit_quiescence 1 20 2
 run_with_timeout 90 env KD_TEST_MIXED=1 "$BENCH_BIN" \
     8 500 10000 1 0 > "$out/after-promotion.log"
 stop_daemon
-rmmod klock_module
-rmmod kdlock_km
+unload_modules || exit 1
 check_dmesg_ok
 check_dmesg_not_has 'WARNING:\|\[KD_JIT\]\[ERROR\]'
 check_complex_cs_integrity 18801 1

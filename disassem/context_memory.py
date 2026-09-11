@@ -180,15 +180,48 @@ class MemoryValues:
                 words[memory] = domain
         return result, default, self.bounded_words(words)
 
-    def clobber(self):
+    def clobber(self, *, checked_windows=(), window_bytes=0):
+        # Only the negotiated mutex boundary compares these bytes before
+        # returning to JIT. Membership requires the same exact address base
+        # and full coverage for EVERY possible RSP, not an entry disjointness
+        # predicate or an assumption that the waiter's stack is private.
+        windows = tuple(self.address(pointer) for pointer in checked_windows)
+        if (
+            not 0 < window_bytes <= self.MAX_BYTES
+            or not windows
+            or len(windows) > self.MAX_VALUES
+            or any(window is None for window in windows)
+        ):
+            windows = ()
+        if windows and not self.spend(
+            len(windows) * (len(self.cells) + len(self.words))
+        ):
+            self.cells, self.default, self.words = {}, None, {}
+            return
+
+        def covered(pointer, size):
+            if not windows:
+                return False
+            address = self.address(pointer)
+            return address is not None and all(
+                address[0] == base
+                and ((address[1] - start) & ((1 << 64) - 1)) + size <= window_bytes
+                for base, start in windows
+            )
+
         # A call/unmodelled instruction might leave an old value unchanged.
         self.cells = {
-            address: self.join(domain, UNKNOWN)
+            address: domain if covered(address, 1) else self.join(domain, UNKNOWN)
             for address, domain in self.cells.items()
         }
         # An unknown callee can change only part of a word, not merely select
-        # one complete old/new value. The byte fallback keeps that uncertainty.
-        self.words.clear()
+        # one complete old/new value. Preserve complete words only when every
+        # byte is checked; partial coverage still uses the byte fallback.
+        self.words = {
+            memory: domain
+            for memory, domain in self.words.items()
+            if covered(memory.ptr, memory.size // 8)
+        }
 
     def bounded_words(self, words):
         if (

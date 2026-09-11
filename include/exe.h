@@ -1,5 +1,8 @@
 #ifndef EXE_H
 #define EXE_H
+/* Registry and frame-backed executor interface. KD_EXE_RUN_* below are C
+ * dispatcher results, not the similarly named wrapper/wire status constants
+ * in exe_info.h; backends must preserve that distinction when handing off. */
 #include "exe_info.h"
 #include <asm/ptrace.h>
 
@@ -8,6 +11,7 @@ bool kd_exe_is_ready(unsigned int pid, unsigned long RIP);
 bool kd_exe_publish_status(struct kd_exe_info *exe, int status);
 int kd_exe_init(void);
 void kd_exe_exit(void);
+void kd_exe_retire_all(void);
 
 #define KD_EXE_NO_READY 1
 #define KD_EXE_NO_RUN 2

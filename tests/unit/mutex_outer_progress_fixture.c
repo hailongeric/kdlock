@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+/* Compile actual mutex combiner/outer-event code with deterministic peers.
+ * Track retained owner and exactly-once suffix decisions, not Linux scheduling. */
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -43,6 +45,12 @@ static unsigned int release_traces;
 static int preempt = 1;
 static bool other_holds;
 static int kd_mutex_batch_size = 16;
+
+/* CPU appears only in diagnostics; this fixture does not model scheduling. */
+static unsigned int raw_smp_processor_id(void)
+{
+	return 0;
+}
 
 #define CHECK(c)                                                            \
 	do {                                                                \

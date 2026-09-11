@@ -7,7 +7,8 @@
  * Follows the same JIT execution model as kd_spinlock: the combiner calls
  * kd_exe_on_call_hl_entry() with the waiter's saved pt_regs. The translated
  * sandbox runs the critical section and returns KD_EXE_RUN_TO_UNLOCK when it
- * reaches mutex_unlock. No raw context switches are used.
+ * reaches mutex_unlock. JIT replaces the body handoff, while queue execution
+ * still uses physical shadow stacks with their own lifetime constraints.
  *
  * The kd_mutex is a scheduling gate beside the kernel's struct mutex. Every
  * executor also acquires the original mutex; only that task releases it.
@@ -20,6 +21,8 @@
 
 struct kd_exec_frame;
 struct mutex;
+
+bool kd_mutex_check_idle(void);
 
 /*
  * kd_mutex_node — per-waiter queue node.

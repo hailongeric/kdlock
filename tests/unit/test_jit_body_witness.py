@@ -19,7 +19,7 @@ def render(raw, **kwargs):
     return render_source(raw, body_witness=True, **kwargs)
 
 
-def run_image(assembly, entries, initialize=None):
+def run_image(assembly, entries, initialize=None, *, resume=None):
     previous = Path.cwd()
     with tempfile.TemporaryDirectory(prefix="kdlock-body-witness-") as directory:
         directory = Path(directory)
@@ -52,6 +52,19 @@ def run_image(assembly, entries, initialize=None):
                 initialize(regs, stack)
             args[0], args[1] = 0xFEED, 0xBEEF
             invoke(regs, args)
+            # Optional bounded control bridge keeps the same real wrapper,
+            # register packet and virtual stack across generated continuations.
+            # Callers must state which native handler behavior they substitute.
+            if resume is not None:
+                for _ in range(16):
+                    if not resume(regs, args, stack):
+                        break
+                    # The wrapper reuses args for output; each real invocation
+                    # supplies the original GS/task inputs again, not exit codes.
+                    args[0], args[1] = 0xFEED, 0xBEEF
+                    invoke(regs, args)
+                else:
+                    raise AssertionError("generated continuation budget exhausted")
             result.append((list(regs), list(args)))
     return result
 

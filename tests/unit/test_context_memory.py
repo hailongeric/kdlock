@@ -1,3 +1,5 @@
+# Check sequential byte/word facts and alias clobbers with mocked source data.
+# These cases exercise analysis precision, not runtime memory freshness.
 import unittest
 from unittest.mock import patch
 
@@ -98,6 +100,79 @@ class MemoryValueTests(unittest.TestCase):
         self.assertIn(ExprInt(0, 64), self.load())
         self.memory.clobber()
         self.assertTrue(any(context_memory.is_wide(value) for value in self.load()))
+
+    def test_checked_window_requires_every_byte_and_matching_base(self):
+        # Boundary offsets include the CALL word below the checked interval,
+        # complete last word, partial overlap and first unchecked byte. Offset
+        # arithmetic must also work across modular symbolic displacements.
+        for start in (0, (1 << 64) - 16):
+            for offset in (-8, 0, 248, 249, 255, 256):
+                with self.subTest(start=start, offset=offset):
+                    self.setUp()
+                    window = self.memory.offset(self.rbp, start)
+                    slot = self.memory.offset(window, offset)
+                    self.store(slot, 0x1122334455667788)
+                    self.memory.clobber(checked_windows=(window,), window_bytes=256)
+                    complete = 0 <= offset <= 248
+                    self.assertEqual(ExprMem(slot, 64) in self.memory.words, complete)
+                    self.assertEqual(
+                        self.load(slot) == (ExprInt(0x1122334455667788, 64),), complete
+                    )
+        for window in (self.rdi, ExprInt(0x1000, 64), ExprId("unknown", 64)):
+            with self.subTest(window=window):
+                self.setUp()
+                self.store(self.rbp, 0x1234)
+                self.memory.clobber(checked_windows=(window,), window_bytes=256)
+                self.assertFalse(self.memory.words)
+                self.assertTrue(
+                    any(context_memory.is_wide(v) for v in self.load(self.rbp))
+                )
+
+    def test_checked_window_intersects_all_stack_alternatives(self):
+        for windows, kept in (
+            ((0, 16), (16, 248)),
+            ((0, 256), ()),
+            ((0,), (0, 16, 248)),
+        ):
+            with self.subTest(windows=windows):
+                self.setUp()
+                for offset in (0, 16, 248, 256):
+                    self.store(self.memory.offset(self.rbp, offset), 0x1234)
+                self.memory.clobber(
+                    checked_windows=tuple(
+                        self.memory.offset(self.rbp, n) for n in windows
+                    ),
+                    window_bytes=256,
+                )
+                self.assertEqual(
+                    set(self.memory.words),
+                    {ExprMem(self.memory.offset(self.rbp, n), 64) for n in kept},
+                )
+        # One opaque alternative invalidates preservation for all paths.
+        self.memory.clobber(
+            checked_windows=(self.rbp, ExprId("unknown", 64)), window_bytes=256
+        )
+        self.assertFalse(self.memory.words)
+
+    def test_checked_window_does_not_undo_alias_writes_or_refill_budget(self):
+        self.store(self.rbp, 0x2000)
+        self.store(ExprId("unknown", 64), 0x30, 8)
+        before = self.load(self.rbp)
+        self.memory.clobber(checked_windows=(self.rbp,), window_bytes=256)
+        self.assertEqual(self.load(self.rbp), before)
+        self.assertTrue(
+            ExprInt(0x3000, 64) in before
+            or any(context_memory.is_wide(v) for v in before)
+        )
+        self.store(self.rbp, 0x1234)
+        state, work = self.memory.snapshot(), self.memory.work
+        with patch.object(self.memory, "MAX_WORK", work):
+            self.memory.clobber(checked_windows=(self.rbp,), window_bytes=256)
+            self.assertEqual(self.memory.snapshot(), ({}, None, {}))
+            self.memory.restore(state)
+            self.memory.clobber(checked_windows=(self.rbp,), window_bytes=256)
+            self.assertEqual(self.memory.snapshot(), ({}, None, {}))
+            self.assertGreater(self.memory.work, work)
 
     def test_cell_and_value_limits_preserve_exhaustion(self):
         with patch.object(self.memory, "MAX_BYTES", 4):

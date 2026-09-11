@@ -1,6 +1,9 @@
 #!/bin/bash
 # common.sh — shared utilities for kdlock test scripts.
 # Source this file from each test: source "$(dirname "$0")/common.sh"
+# Driver library, not an interactive startup file: ROOT depends on $0 and the
+# EXIT trap stops its daemon and retires/unloads modules. start_daemon replaces
+# generated 0x* workspaces, so preserve evidence and drain the previous session.
 
 set -euo pipefail
 
@@ -51,8 +54,7 @@ build_all() {
 
 load_modules() {
     local target="${1:-$TARGET_PROCESS}"
-    rmmod klock_module 2>/dev/null || true
-    rmmod kdlock_km 2>/dev/null || true
+    unload_modules || return 1
     sleep 0.2
 
     sysctl -w kernel.randomize_va_space=0 >/dev/null 2>&1
@@ -63,9 +65,21 @@ load_modules() {
 }
 
 unload_modules() {
-    rmmod klock_module 2>/dev/null || true
+    # Pins can form a reverse source/provider dependency. Close admission and
+    # retire them only after callers/translators drain; never force either exit.
+    if [ -d /sys/module/kdlock_km ]; then
+        python3 "$KDLOCK_DIR/disassem/device_session.py" retire || {
+            fail "$TEST_NAME" "source retirement failed; retain modules for diagnosis"
+            return 1
+        }
+    fi
+    if [ -d /sys/module/klock_module ]; then
+        rmmod klock_module || return 1
+    fi
     sleep 0.1
-    rmmod kdlock_km 2>/dev/null || true
+    if [ -d /sys/module/kdlock_km ]; then
+        rmmod kdlock_km || return 1
+    fi
     sleep 0.1
 }
 
@@ -76,6 +90,9 @@ start_daemon() {
     cd "$DAEMON_DIR"
     rm -rf 0x* 2>/dev/null || true
     if [ -n "${DAEMON_LOG:-}" ]; then
+        # The runner collects this after drain, also when an oracle fails.
+        # Announce only this log, never scan unrelated temporary files.
+        info "Evidence file: $DAEMON_LOG"
         KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode "$mode" --quiet >"$DAEMON_LOG" 2>&1 &
     else
         KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode "$mode" --quiet &

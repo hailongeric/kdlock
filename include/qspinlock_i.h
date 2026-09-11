@@ -1,6 +1,9 @@
 #ifndef __QUEUED_SPINLOCK_INTERNAL_H__
 #define __QUEUED_SPINLOCK_INTERNAL_H__
 
+/* Local qspinlock-style layout/bit helpers for kdlock's private queue word.
+ * Linux's original lock remains separate; these helpers do not replace its
+ * ownership/exclusion protocol. Preserve the imported architecture definitions. */
 #include <linux/smp.h>
 #include <linux/bug.h>
 #include <linux/percpu.h>

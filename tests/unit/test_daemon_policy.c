@@ -10,13 +10,21 @@
 static void test_compiler_launch(void)
 {
 	char root[] = "/tmp/kdlock-compiler-launch.XXXXXX";
+	char session_path[] = "/tmp/kdlock-compiler-session.XXXXXX";
 	struct kd_exe_info exe = { .pid = 0, .tgid = 42, .RIP = 0x1234 };
 	const char *kinds[] = { "unknown", "spin", "mutex" };
 	struct daemon_config cfg = { .mode = MODE_V1 };
 	int original_dir = open(".", O_RDONLY | O_DIRECTORY);
 	FILE *script;
+	struct stat session_stat;
 
 	assert(original_dir >= 0);
+	/* This regular file substitutes only device I/O. Real fork/exec children
+	 * must inherit its open description even after the pathname disappears. */
+	sys_fd = mkstemp(session_path);
+	assert(sys_fd >= 3);
+	assert(!unlink(session_path));
+	assert(!fcntl(sys_fd, F_SETFD, FD_CLOEXEC));
 	assert(mkdtemp(root));
 	assert(!chdir(root));
 	assert(!mkdir("daemon", 0700));
@@ -40,7 +48,7 @@ static void test_compiler_launch(void)
 				script = fopen("../disassem/disassem.py", "w");
 				assert(script);
 				assert(fprintf(script,
-					       "import sys\nassert sys.argv[1:] == ['0', '0x1234', '%s']\nraise SystemExit(%d)\n",
+					       "import os, sys\nassert sys.argv[1:] == ['0', '0x1234', '%s']\nfd = int(os.environ['KD_DEVICE_FD'])\nassert os.write(fd, b'S') == 1\nraise SystemExit(%d)\n",
 					       kinds[kind], code) > 0);
 				assert(!fclose(script));
 				assert(compile_entry(&cfg, &exe) ==
@@ -56,6 +64,72 @@ static void test_compiler_launch(void)
 	assert(!rmdir("disassem"));
 	assert(!fchdir(original_dir));
 	close(original_dir);
+	assert(!rmdir(root));
+	assert(!fstat(sys_fd, &session_stat));
+	assert(session_stat.st_size == 18);
+	assert(fcntl(sys_fd, F_GETFD) == FD_CLOEXEC);
+	assert(!close(sys_fd));
+	sys_fd = -1;
+}
+
+static void test_chunk_session(void)
+{
+	char root[] = "/tmp/kdlock-chunk-session.XXXXXX";
+	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234 };
+	struct daemon_config cfg = { .mode = MODE_V1 };
+	unsigned char image[MAX_PAYLOAD * 2 + 17], chunk[MAX_PAYLOAD];
+	int original_dir = open(".", O_RDONLY | O_DIRECTORY);
+	char *argv[] = { "daemon", NULL };
+	FILE *binary;
+
+	assert(original_dir >= 0 && mkdtemp(root));
+	assert(!chdir(root));
+	assert(!mkdir("0x1234", 0700));
+	assert(!mkdir("0x1234/asm", 0700));
+	binary = fopen("0x1234/asm/jit.bin", "wb");
+	assert(binary);
+	for (size_t i = 0; i < sizeof(image); i++)
+		image[i] = (unsigned char)i;
+	assert(fwrite(image, 1, sizeof(image), binary) == sizeof(image));
+	assert(!fclose(binary));
+	sys_fd = open("transport", O_CREAT | O_RDWR | O_CLOEXEC, 0600);
+	assert(sys_fd >= 3);
+	assert(!unlink("transport"));
+	/* A dead path catches accidental reopen; headers/payload still travel
+	 * through one shared file description, including the final publication. */
+	sys_path = "/no-such-kdlock-device";
+	assert(!write_sys(&cfg, &exe));
+	assert(lseek(sys_fd, 0, SEEK_SET) == 0);
+	for (size_t offset = 0; offset < sizeof(image);) {
+		struct kd_recv_pkt packet;
+		size_t size = sizeof(image) - offset;
+
+		if (size > MAX_PAYLOAD)
+			size = MAX_PAYLOAD;
+		assert(read_sys(&packet, sizeof(packet)) == sizeof(packet));
+		assert(packet.pid == exe.pid && packet.RIP == exe.RIP);
+		assert(packet.offset == offset);
+		assert(packet.status_code == (offset + size == sizeof(image) ?
+						      KD_EXE_NORMAL :
+						      KD_EXE_UNINIT));
+		assert(read_sys(chunk, size) == (ssize_t)size);
+		assert(!memcmp(chunk, image + offset, size));
+		offset += size;
+	}
+	assert(read_sys(chunk, sizeof(chunk)) == 0);
+	assert(!close(sys_fd));
+	sys_fd = -1;
+	assert(write_sys(&cfg, &exe) == -1);
+	assert(read_sys(chunk, sizeof(chunk)) == -EBADF);
+	assert(!unlink("0x1234/asm/jit.bin"));
+	assert(!rmdir("0x1234/asm"));
+	assert(!rmdir("0x1234"));
+	/* Failure to acquire the provider must not clear existing workspaces. */
+	assert(!mkdir("0xretained", 0700));
+	assert(kd_daemon_main(1, argv) == EXIT_FAILURE);
+	assert(!rmdir("0xretained"));
+	assert(!fchdir(original_dir));
+	assert(!close(original_dir));
 	assert(!rmdir(root));
 }
 
@@ -74,6 +148,7 @@ int main(void)
 	assert(compile_result(SIGTERM) == -1);
 	assert(compile_result(-1) == -1);
 	test_compiler_launch();
+	test_chunk_session();
 	assert(!remember_cmd("rejected fixture", TRANSLATOR_NATIVE_ONLY));
 	assert(cmd_seen("rejected fixture", &result));
 	assert(result == TRANSLATOR_NATIVE_ONLY);
@@ -84,8 +159,10 @@ int main(void)
 
 	fd = mkstemp(path);
 	assert(fd >= 0);
-	sys_path = path;
+	sys_fd = fd;
+	assert(!unlink(path));
 	assert(!write_native_only(&exe));
+	assert(lseek(fd, 0, SEEK_SET) == 0);
 	assert(read(fd, &packet, sizeof(packet)) == sizeof(packet));
 	assert(packet.status_code == KD_EXE_NATIVE_ONLY);
 	assert(packet.pid == exe.pid && packet.RIP == exe.RIP);
@@ -99,7 +176,8 @@ int main(void)
 	assert(offsetof(struct kd_exe_info, tgt_addr) == 40);
 	assert(sizeof(struct kd_recv_pkt) == 24);
 	close(fd);
-	unlink(path);
+	sys_fd = -1;
+	assert(write_native_only(&exe) == -1);
 	for (int i = 0; i < cmd_cnt; i++)
 		free(cmd_hist[i]);
 	puts("[PASS] test_daemon_policy");

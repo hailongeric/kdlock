@@ -12,6 +12,28 @@ module_param_named(spin_gate_selftest, kd_gate_test_enabled, bool, 0444);
 static int kd_gate_test_cpus[4] = { 0, 1, 2, 3 };
 module_param_array_named(spin_gate_cpus, kd_gate_test_cpus, int, NULL, 0444);
 
+/* A read-only snapshot for the live ticket/native-continuation workload.
+ * Real hook acquisitions, not this observer, must populate every slot. */
+static int kd_gate_count_get(char *buffer, const struct kernel_param *param)
+{
+	unsigned long flags;
+	unsigned int i, count = 0;
+
+	(void)param;
+	raw_spin_lock_irqsave(&kd_spin_gate_map_lock, flags);
+	for (i = 0; i < KD_SPIN_GATE_SLOTS; i++)
+		count += !!kd_spin_gates[i].origin;
+	raw_spin_unlock_irqrestore(&kd_spin_gate_map_lock, flags);
+	return scnprintf(buffer, PAGE_SIZE, "%u\n", count);
+}
+
+static const struct kernel_param_ops kd_gate_count_ops = {
+	.get = kd_gate_count_get,
+};
+module_param_cb(spin_selftest_gate_count, &kd_gate_count_ops, NULL, 0444);
+MODULE_PARM_DESC(spin_selftest_gate_count,
+		 "selftest-only: observe allocated spin gate slots");
+
 #define KD_GATE_TEST_LOOPS 128
 #define KD_GATE_TEST_WORD 0x7abc0003U
 

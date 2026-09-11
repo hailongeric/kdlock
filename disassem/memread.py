@@ -1,3 +1,7 @@
+# Read bounded ELF PT_LOAD windows from kcore through the active device lease.
+# Pin source residency before reading; extend cold CFG windows without silently
+# treating missing bytes as a completed critical section. No execution occurs.
+import device_session
 from elftools.elf.elffile import ELFFile
 
 PAGE_SIZE = 0x1000
@@ -10,6 +14,9 @@ class TextReadLimit(RuntimeError):
 
 
 def read_kernel_addr_data(addr, size):
+    # Fixtures may substitute this I/O boundary; real reads must retain the
+    # same provider throughout decode/emission, including cold extensions.
+    device_session.pin_range(addr, size)
     with open("/proc/kcore", "rb") as f:
         elf = ELFFile(f)
         for segment in elf.iter_segments():

@@ -1,3 +1,6 @@
+# Map virtual special registers onto the bounded physical scratch pool.
+# Spill locations belong to wrapper.S, not the waiter's logical stack. Restore
+# stable mappings at block boundaries so dispatch and exits can find SP/BP.
 import diagnostics
 from assist import make_inst
 from miasm.expression.expression import ExprId

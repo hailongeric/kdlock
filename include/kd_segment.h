@@ -1,6 +1,8 @@
 #ifndef KD_SEGMENT_H
 #define KD_SEGMENT_H
 
+/* Capture the origin CPU's kernel GS base at a pinned hook entry. This is
+ * address metadata, not a remote current/IRQ/RCU or per-CPU concurrency switch. */
 #include <linux/smp.h>
 #include <asm/processor.h>
 

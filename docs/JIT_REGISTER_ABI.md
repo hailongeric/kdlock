@@ -11,7 +11,8 @@ GS lowering helper 保留，但生产准入拒绝保留 JIT 范围中的 GS 内�
 普通直接 CALL miss 后原 waiter 原生完成后缀，不返回本次 JIT；它不是入口重试。
 未来调用若采用学习后的直接 callee，准入传播实际 CALL 包及 RET 效果，并校验
 返回目标表；这不增加 wrapper 参数，也不假定普通 callee 保留哪些寄存器。
-本文件只说明已实现的状态契约，不保证 flags、任意指令或任意故障恢复正确。
+除明确标为待实现的 3.1 节外，本文件说明已实现的状态契约；不保证 flags、
+任意指令或任意故障恢复正确。
 
 ## 1. 状态边界
 
@@ -127,6 +128,41 @@ block budget 插桩破坏。需要用跨块 `CMP/JMP/Jcc`、`ADC/SBB` 等差分�
 
 同理，wrapper 不保存或恢复 XMM/YMM、x87、PKRU、debug/control registers。
 当前可翻译临界区不能依赖这些状态跨 sandbox 退出保持。
+
+### 3.1 访问时续跑的前置契约（待实现）
+
+这是 C5 动态地址检查的接口要求，**不是当前已有的恢复能力**。局部条件码保护
+仍待确认，不因这份设计而启动已延期的通用 flags 修复。已有入口条件只能在正文
+开始前拒绝；普通 CALL miss 的虚拟栈已经压入返回地址，也不能冒充内存指令前的状态。
+
+| 边界 | RIP / 虚拟栈 | 可否从入口重跑 |
+| --- | --- | --- |
+| 已有入口拒绝 | 原 entry / 原 SP，未执行正文 | 仅满足完整入口拒绝校验时可走未开始的 native 路径 |
+| 已有普通 CALL miss | callee / 已压入源返回地址 | 否，callee 开始原生后缀 |
+| 拟新增访问时拒绝 | 尚未执行的源内存指令 / 该指令前的 SP | 否，该指令开始原生后缀 |
+
+实现前必须满足以下条件：
+
+1. 先定义可强制执行的地址/对象范围与生命周期；静态 per-CPU denylist 不足以
+   证明未知指针安全。计算一次有效地址，检查宽度、边界及溢出，通过后用同一地址
+   执行访问，不能重新读取可被并发改写的指针。
+2. 在检查破坏条件码之前保存执行点状态。通过路径恢复原指令需要的条件码；拒绝
+   路径还须保存当前 GPR、虚拟 SP 和源 RIP，目的寄存器/内存保持该指令执行前的值。
+   不能使用入口的旧 `pt_regs.flags`，也不能在检查完成后才采样条件码。
+3. 为这个受检出口定义独立标记和校验，不能复用 `ENTRY_REFUSED`、普通 CALL miss
+   或通用 fault。两元素 `args` 不变；条件码是否有效必须有显式状态，不能仅凭
+   `pt_regs.flags` 非零判定。完整包校验成功后才发布 native frame。
+4. 原 waiter 在恢复当前 GPR/SP 后、第一条续跑指令前恢复所需条件码。拟评估的
+   局部范围是 CF/PF/AF/ZF/SF/OF（mask `0x8d5`），不是直接将 combiner 的整个
+   RFLAGS 交给 waiter；IF/TF/DF、IRQ、抢占及其他上下文不因此获得切换保证。
+   依赖范围外状态的访问必须另行处理，不能据此开放任意隐式指令。
+5. 保留此前内存写入与真实 owner，通过原 owner 的 unlock/ACK 完成，不返回本次
+   JIT、不重放前缀。验收同时检查通过路径的条件码消费者、拒绝后的第一条指令、
+   恰好一次副作用与所有 owner ACK；body witness 单独不足以通过。
+
+现有恢复桩的用户态实测及其非内核测试边界见
+[动态指针调查](VALIDATION.md#dynamic-pointer-screening-gap)。完成上述局部契约也
+不会修复 dispatcher/budget 的既有 flags 问题，或补齐所有危险指令语义。
 
 ## 4. 原生 waiter 的入口快照
 
@@ -297,7 +333,11 @@ wrapper 实栈来模拟 guest 调用。
 1. `CALL target` 先把原指令的 post-CALL RIP 压入 virtual stack，再 `JMP` 到
    translated target 或对应退出桩。
 2. 已翻译 callee 的 `RET` 从 virtual stack 弹出目标，经 IJ table 跳到匹配的
-   `loc_<rip>`。
+   `loc_<rip>`。这里匹配的是该 RET 的白名单目标，不保证与原 CALL 一一对应；
+   多调用点或共享尾部保留全部后继，改写返回槽可能跳到另一个调用点的后继。
+   分析器可按已证明的 RSP 事实分区，并用确切返回槽数值收窄效果传播；未知或
+   部分改写仍保留全部可能目标。这不改变运行时白名单、虚拟栈或 wrapper ABI。
+   scoped 分析因此检查全部生成返回边，而非假设虚拟调用栈平衡。
 3. 普通 call miss 保留虚拟 CALL frame，以原始 callee RIP、当前 GPR/RSP 返回
    原 waiter 执行 native callee；其 `RET` 使用保留的返回地址到达 post-CALL RIP。
 4. control call 和 hostcall 必须保留这个 CALL frame，kernel handler 才能从
@@ -419,6 +459,11 @@ RBP/RSP/后继 RIP 的期望地址由 caller 生成，并非独立证明所有�
 [最新寄存器验收](VALIDATION.md)。
 当前 mode 0/3 和嵌套 mode 1/4/8 的标记样本通过。mutex learned-depth 另行
 通过真实 JIT/容量续跑与保留锁检查，不等于它也运行了这套专用 GPR 标记探针。
+其两源码模块扩展使用两层真实 learned CALL，仍沿用同一虚拟 CALL/RET 栈和
+两元素 wrapper 输入。跨模块 RET 后到达容量出口的证据不替代本节的全 GPR
+标记检查；本地 helper 的后缀及 RET 在容量退出后原生完成。共享 RET 的合流
+使用有界分区，控制 CALL 后的栈事实仅在第 10 节受检窗口内保留，不能假定
+任意内存与保存 GPR 具有同样的保持约定。
 
 ## 10. Nested lock known-call 约定
 
@@ -435,6 +480,29 @@ frame/lock depth 都有八项限制；不同后端不得混用。
 `control_call` 保存 NONE/PENDING/ENTERED/ACQUIRED/COMPLETE 及原始 callee、
 CALL RSP、返回地址。合法 PENDING 资源失败恢复该 CALL 包，保留当前 GPR 和
 已完成写入；已经发布/获取的操作不能冒充未开始。native 注册也独立验证 phase。
+
+mutex 控制操作后的有界栈检查增加内部 `STACK_CHANGED` 状态，不改变结构大小或
+wrapper ABI。该状态要求 `regs.ip == control_call.return_ip`，
+`regs.sp == control_call.stack + 8` 且加法不回绕；检查器还核对原控制目标、CALL
+返回地址字和原 waiter 栈范围。它表示锁操作已经完成，原 waiter 从其后继继续，
+不能再次执行该 lock/unlock。当前内存和 GPR 不回滚，原 owner 继续持有未释放锁。
+窗口不足只在操作前使用 PENDING；普通 COMPLETE、spin 本地操作和损坏包不能
+冒用此状态。详细执行流与分析器的受检事实保留见
+[栈检查](JIT_EXECUTION.md#53-mutex-控制-call-的栈检查)。
+
+本地 spin 获取后另有内部 `SPIN_NATIVE` tag，不改变结构大小或 ABI。
+只有经核对 owner/锁记录、原 waiter 栈中的 CALL token 和相同 post-CALL
+RIP/RSP 的 EIO 检查点才可设置；它不恢复原 CALL、不改变 GPR，也不再次获取 B。
+native 注册只接受匹配后继的 spin 包，不能借此恢复通用 ACQUIRED 错误。
+具体执行流、单元与 live 观测边界见 [受检 spin 续跑](JIT_EXECUTION.md#611-spin-获取后的受检续跑)。
+
+`KD_JIT_CAPS` 在同一有效设备 lease 上查询这一固定运行时约定。它是独立的
+16 字节 ioctl 输出，不占用 `pt_regs`、两元素 args、64 字节 entry 或 24 字节
+上传头；也不新增 flags 保存或代码版本保证。字段、兼容处理及使用命令集中在
+上述栈检查指南。版本 2 复用原保留字段报告模块 per-CPU 预留区大小，不新增
+wrapper 参数；该范围能力与可选的 mutex 栈检查是不同约定。
+分析器先应用 CALL 压栈写入，只保留所有可能 RSP 的受检窗口
+共同覆盖的事实；窗口外、未知别名和其他控制调用仍保留原有 clobber。
 
 逻辑 requester/resume_target 链不同于物理 CPU 的 parent frame 栈。远端 child
 先清 resume_target，再 release-store DONE，此后不访问 parent；parent 即使
@@ -475,6 +543,10 @@ OOO 完成时也可以是最后一个 B unlock target。真正的续点来自 `[
 spin 和 mutex 的普通 CALL miss 都使用 `jump_to_saved_regs_in_cs()`：切换到
 `regs->sp` 后先压入 `regs->ip`，再 `retq`。这里的 IP 是退出时原始 callee 地址，
 不是原始 CS entry，也不是 JIT 机器码地址；callee 所需的返回地址仍在虚拟栈顶。
+普通目标在转交前取得源码 residency pin；失败属于不可续跑出口，不重跑入口。
+成功 push 的 frame 保留会话执行引用直到实际 pop，覆盖 native/remote 后缀。
+这些引用及独立 source ioctl 不增加 wrapper 参数，也不改变保存的寄存器包；
+退休顺序和 hook reader 边界见 [DESIGN 3.1](DESIGN.md#31-source-lock-and-hook-lifetimes)。
 
 队列返回值 `5` 表示 native 续跑，既不是原生获取锁后从入口返回，也不是已完成
 整个 CS。物理 waiter 恢复到 native 代码；虚拟 spin B waiter 则向 A 传递同一份退出
@@ -494,8 +566,22 @@ combiner 完成最后的解锁通知时减少 acquisition 引用再 ack。最后
 这些状态不占用 wrapper args；真实协议探针与构造寄存器包的边界见
 [生命周期测试](JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu)。
 
-`frame->control_call` 记录 NONE/PENDING/ENTERED/ACQUIRED/COMPLETE 以及原始
-callee RIP、CALL RSP、返回地址。仅 PENDING 的 `-ENOMEM`/`-E2BIG` 可续跑：
+独立任务的 native frame 可以同时存活；通知按 logical task、backend 和锁地址
+匹配，每个 waiter 使用自己原生栈上的 ACK 包，不共享一个全局返回包。
+[双队列测试](JIT_EXECUTION.md#66-独立队列的并行-native-frame) 使用真实 JIT 续点
+和两种排空顺序检查身份及 ACK 隔离，但不新增寄存器或 wrapper 参数，也不代替
+完整 GPR/返回栈测试或带存活读者的 RCU 测试。
+
+若同一 CPU 的 context 属于另一 combiner，`execute_cs()` 在 wrapper/frame push
+之前返回 NO_RUN。该未执行 waiter 走原生获取和原始 CS；不能复用另一 task 的
+寄存器包，也不能把这个入口路径用于已经执行的 JIT。
+[同 CPU 用例](JIT_EXECUTION.md#67-同-cpu-的-mutex-jit-拒绝) 验证拒绝身份和另一个
+frame 的续跑/ACK 不受干扰，但仍不替代完整 GPR 采样。
+其满槽扩展还检查未预留 node 的请求使用自己的原生栈等待并取得原锁；该请求
+没有 JIT 寄存器包或 owner ACK，不修改另一任务的续跑状态，也不扩展 wrapper ABI。
+
+控制 CALL 的阶段和原始 callee/栈包见第 10 节。原有资源恢复只允许
+PENDING 的 `-ENOMEM`/`-E2BIG` 续跑：
 spin 为构造远端请求而暂存的 post-CALL RIP/RSP 恢复到原始 CALL 位置；mutex
 此时还没有消费 CALL。当前 GPR 和已完成内存写入不回退。已入队、已获取 B、
 无效状态，或 A 已解锁但当前 frame 已无未释放本地锁的情况，不进入这个恢复分支。
@@ -504,9 +590,14 @@ native begin；不将 ENTERED/ACQUIRED/COMPLETE 失败改成可重试。
 
 native 注册入口现在也独立检查 phase，不再只在 A 已释放时检查。仅 NONE、
 目标/RSP/返回地址有效的 PENDING，以及已验证的 spin remote-native COMPLETE
-relay 可以登记；其他阶段在借用引用、发布 frame 和修改计数前拒绝。A 仍被
-持有不代表可恢复已发布/已获取的操作。此检查不改寄存器、flags 或两元素 args，
-也不新增后期错误恢复，详见 [phase 检查](VALIDATION.md#native-registration-phase-guard)。
+relay 和第 10 节独立的 mutex STACK_CHANGED、spin SPIN_NATIVE 可以登记；其他阶段在借用引用、
+发布 frame 和修改计数前拒绝。这两种受检 tag 必须匹配已完成 CALL 的后继 RIP/RSP，
+不能再次执行该控制操作。A 仍被持有不代表任意已发布/已获取阶段都可恢复。
+此检查不改变 flags 或两元素 args，也不授权任意后期错误恢复。
+首次收紧 phase 的历史验收见 [phase 检查](VALIDATION.md#native-registration-phase-guard)，
+栈检查的逐字节/坏包证据见 [运行时验收](VALIDATION.md#mutex-control-stack-check)，
+真实持 B 者写入 waiter 栈槽、post-CALL 包和两次 ACK 的证据见
+[并发栈变化验收](VALIDATION.md#real-mutex-stack-mutation)。
 
 spin 的本地 shadow 持锁表容量检查也放在 CALL 推进和获取 B 之前；满表时保持
 PENDING，原始 RIP/RSP 不会被消费。这张 CPU 本地表与 logical frame 的八项

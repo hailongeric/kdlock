@@ -68,6 +68,169 @@ Frequency is not measured contention or a guarantee that delegation pays off.
 Default work changes kdlock only. Missing hook capabilities and hook-reader
 lifetime need separate assessment, not incidental guest kernel edits.
 
+### 3.1 Source, Lock And Hook Lifetimes
+
+These are separate contracts, not solved by preserving a mutex's physical
+owner or by the deferred immutable-JIT work. The earlier capability audit is in
+[VALIDATION](VALIDATION.md#source-and-hook-lifetime-review).
+
+| Object | Current identity and retention | What is not established |
+| --- | --- | --- |
+| JIT entry/source text | `(0, RIP)` key; root/read/ordinary-target pins retain up to 64 LIVE modules for the session; retirement invalidates every used entry before releasing dependencies | No concurrent code versions or in-session source replacement; init/unknown source is refused |
+| Translation session | Daemon/cache/children share a writer open description; real kcore reads acquire source pins before inspection | The trusted publisher must follow this path; pins do not prove byte immutability or arbitrary pointer/resource lifetime |
+| Hotlock / mutex shadow | Append-only address-keyed maps for the kdlock session | A reused address inherits sampling/metadata; no lock allocation/free notification or per-object retirement |
+| Spin gate | Stable address-keyed gate; `generation` distinguishes physical ownership intervals | Not a lock allocation epoch or source-code version; an idle entry can serve the same address again |
+| Active request | Tickets, task records, native registrations and owner ACKs; successful frame push retains a provider ref/source lease until actual pop | No containing lock-allocation pin or protection before entering the guest hook/after frame pop |
+| Hook provider | Plain guest function pointers into kdlock; device fops has `.owner=THIS_MODULE` | A `/dev/kd_dev` reference is not protection for independent lock-hook readers |
+
+See [registration](../kernel_module/exe.c), [hook publication/removal](../kernel_module/kd_main.c),
+[mutex shadow lookup](../kernel_module/kd_lock.c) and
+[spin gate ownership](../kernel_module/kd_spin_gate.c). An idle reused lock
+address does not by itself establish broken exclusion: both backends still
+acquire the newly initialized original lock. But the tables cannot tell old
+and new object lifetimes apart, reset policy or prove safe reuse while any
+old request/physical owner still exists. A logical final A ACK can precede
+physical batch release; it is not permission to free a containing object
+still used by another request or owner.
+
+The captured guest has four plain spin/mutex lock/unlock dispatch sites.
+Each calls `is_kd_test()` or `is_kd()` before deciding whether the task is a
+target, so non-target kernel tasks are readers too. `exc_int3` also reads the
+shared spin predicate before checking the legacy `kd_do_int3` pointer, even
+though kdlock does not install that trap callback. Clearing the six lock-hook
+pointers and calling `synchronize_rcu()` does not provide these readers with a
+matching acquisition/lifetime protocol. Stopping benchmark callers and draining
+requests is necessary for current recovery experiments, not proof of generic
+hot unload. `rcu_barrier()` for task records solves a different lifetime.
+
+The current guest exports `try_module_get/put` and module notifier registration.
+`__module_address/__module_text_address` are not exported in its Module.symvers;
+the implementation resolves `__module_address` through existing kallsyms support.
+A raw spinlock keeps preemption disabled through lookup and successful reference
+acquisition. Such a reference
+must span source inspection, publication and any execution/native return using
+that source, including learned callees. A pointer lookup or text hash alone
+does not pin code or module-owned data. The normal delete-module path sets
+GOING, calls the module's `exit()`, then sends the GOING notifier. That notifier
+cannot veto an exit that has already destroyed source-owned resources.
+
+Blindly pinning every source module until kdlock exit is also insufficient:
+the current `klock_module.ko` already depends on `kdlock_km`, so pinning it in
+the reverse direction prevents either module being normally unloaded first.
+A separate terminal retirement boundary now releases source pins before either
+exit; force-unload is not a solution. The benchmark's own fops
+reference and module dependency protect its controlled ioctl lifetime, not an
+arbitrary module source or cached image after source reload.
+
+The device-session prerequisite is now implemented in userspace: one daemon
+descriptor spans requests, compilation and publication; only translator children
+inherit it, and Python validates the device identity before real text reads.
+An orphaned translator retains the same open description. The live cdev probe
+checks normal unload refusal at each stage, not reader protection after the last
+close. Detailed flow, control commands and direct-CLI restrictions live in
+[the daemon guide](../daemon/README.md#device-session). Wire structures and the
+two-word wrapper ABI are unchanged; source controls are separate ioctls.
+
+`kd_source.c` implements session-wide residency, not per-image reclamation:
+
+1. Root registration pins LIVE module core text before installing metadata.
+   Each real read pins its bounded range before kcore inspection, including
+   learned/cold windows. Core kernel init and module init ranges are refused.
+   Read windows can include resident data, but roots and ordinary native CALL
+   targets must be text. Dependencies are deduplicated and retained even after
+   partial refusal, because older images can still use them.
+2. A writer get and frame push serialize with OPEN-to-DRAINING. Frame leases
+   cover native/remote continuation through actual pop, including failed-push
+   rollback. Ordinary CALL miss pins the target before native transfer/learning;
+   failed target residency after progress is non-continuable, never entry replay.
+3. Retirement serializes against uploads, closes fresh selection/registration,
+   and refuses while writers/frames or known queue/task/origin state remain.
+   Existing task/origin routing survives closing for owner unlock notifications.
+   Existing leased reads/targets can finish while DRAINING, not new publication.
+4. With the external no-new-callers boundary and all holders drained, retirement
+   publishes NATIVE_ONLY under the registry gate, then drops source references
+   outside the raw lock. RETIRED is terminal; slots/images are not reused or
+   reopened. All source/provider modules can then exit in dependency order.
+
+The source limit is 64 distinct modules, with no hook-time allocation; each
+read is limited to 256 KiB. Built-in resident ranges need no module ref. These
+checks do not pin arbitrary dynamically freed objects or prove source bytes
+unchanged. Idle observations are not a generic hook-reader barrier. A frame's
+provider ref also cannot protect the earlier dispatch or code after its pop.
+
+The dual-queue lifecycle gate also fills the actual 64-block executable pool
+through real cold mutex CALL sites while both earlier native frames remain
+live. An independent three-client queue then hits pre-wrapper not-ready refusal
+and completes under each caller's own native ownership. Existing block identities
+and images survive; the old frames subsequently complete all owner ACKs. This
+does not compile the filler sites, exhaust all 511 registry slots, reclaim code
+or authorize replay after progress. The same gate then tests a surviving
+compiler-child writer and source replacement under terminal retirement. The
+writer can inspect pinned
+text while DRAINING but cannot publish, and it independently blocks retirement
+after frames finish. Once fully retired, the same provider/registry remains
+loaded while the test source is normally reloaded. ELF lock-CALL return sites,
+module bytes and runtime code/lock addresses must match; both native mutex wait
+lists must reach three callers. Six fresh records complete without JIT or owner
+ACKs from kdlock. This is a quiescent, retired-session reuse test, not concurrent
+source replacement or proof of arbitrary lock allocation lifetime. It does not
+exercise multiple live source modules. The separate learned-depth gate now
+executes a second module's translated seven-lock prefix and returns to its real
+local helper before the eighth-child capacity exit. Root and learned text each
+add one
+source pin. The helper's native loader reference is observed separately:
+1 before its CALL miss, 2 after pinning, 1 after retirement, 0 after the importing
+module unloads. Both sources normally unload with the old registry terminal.
+This is two-module coverage, not live saturation of the 64-module bound.
+
+The two-frame gate also tests task routing independently of target comm:
+both borrowed waiters rename in their native callees, then acquire/unlock
+independent C mutexes as their own physical owners while A/B remain borrowed.
+Both frames are live and source admission is still OPEN. The C unlock must
+not consume A's active-task reference or become a borrowed-owner ACK. The
+renamed identity remains through the later B/A ACKs and completion record.
+This uses existing routing and physical ownership, not owner handoff.
+
+Non-target callers then queue on both retained native B mutexes. Each actual
+wait list must contain its identified peer; pidfd SIGUSR1 cancels each native
+interruptible wait, returns EINTR to userspace and permits one explicit retry
+by that same caller. Both wait lists must be observed again before retirement.
+After the first frame's B release, its peer acquires/releases B as its own
+Linux owner while the other frame's B still rejects trylock. That frame cannot
+resume until this observation and the first original waiter's final ACK
+complete. No peer enters JIT, borrows a lock or adds a kdlock task reference.
+These are composed routing/native-peer checks, not arbitrary cancellation,
+fairness, object lifetime or additional hook-reader protection. Execution
+order, evidence and affected-only commands are maintained in
+[usage 6.6](JIT_EXECUTION.md#66-独立队列的并行-native-frame).
+
+Capability assessment under the no-guest-edit default:
+
+- Bounded source pins and terminal metadata retirement are implemented entirely
+  in kdlock. They require a real external no-new-callers boundary and are not
+  concurrent versioning or automatic subsystem lifetime integration.
+- Generic lock allocation/free identity is absent from the lock hooks. An
+  arbitrary `kfree()` or embedded-object reuse cannot be inferred from an
+  unlock. It needs subsystem lifetime integration or separately approved
+  allocation/free interfaces, not owner handoff or a guessed idle timer.
+- Generic provider hot unload requires protection before a guest reader
+  enters the predicate/callback, coherent hook publication, and draining of
+  dispatches plus retained requests. A reference added inside the callback
+  cannot protect the earlier jump into it. An unconditional put after the
+  hook call is not enough either: `jump_to_saved_regs*()` may bypass that C
+  return. Reference release must cover those nonlocal continuations too.
+- A future kernel-side design must audit at least the four existing lock
+  dispatch sites and the shared `exc_int3` reader, plus registration/drain and
+  nonlocal-exit interfaces. That is more than an unverified extra condition;
+  no implementation-backed line estimate or approval is claimed here. Actual
+  guest-kernel changes for this review: **zero**.
+
+Retain stable lock-allocation lifetimes during a session, retire source pins
+explicitly, and use only the controlled recovery procedure in
+[AGENTS](AGENTS.md#验收与清理). Replacing a source module requires a fresh kdlock
+and daemon session after draining, not merely a new TGID or clearing daemon
+workspaces. This remains an experimental boundary, not safe hot-reload support.
+
 ## 4. Spin Delegation Protocol
 
 ### 4.1 Native Lock And Private Queue
@@ -230,7 +393,8 @@ Nested B no longer creates a virtual mutex waiter or remote B combiner:
 
 An ordinary CALL miss instead preserves exit GPRs/RIP/virtual stack and resumes
 the original waiter natively. The combiner retains real A and any still-held B,
-stops processing other requests, and services that waiter's unlock messages.
+stops processing its own batch, and services that waiter's unlock messages.
+Other CPU-local combiners for independent lock queues are not globally paused.
 The waiter cannot directly unlock a mutex owned by the combiner. Native nested
 unlocks release B on the actual owner; outer unlock acknowledges logical
 completion while A stays held until the combiner finishes its own ownership
@@ -246,6 +410,48 @@ The combiner must not inspect a published waiter
 node after wakeup because it can already have been released and reused.
 Native continuation is counted by `kd_native`, not all-JIT completion counters;
 unhandled post-entry errors remain fail-stop, never entry replay.
+
+The original native waiter can share a CPU with its retained physical owner.
+Its new B acquisition uses the native route, not another JIT context; queued
+waits and owner/ACK waits must allow the peer task to run. The existing
+`native-4-4` gate now checks this with three A queue tasks on one CPU, real B
+contention and an injected PENDING exit. Only mutex workload barriers and
+observations change, not the production scheduling or ownership protocol.
+Flow, placement evidence and limits are in
+[usage 6.1](JIT_EXECUTION.md#61-mutex-资源与恢复包). This successful continuation
+is distinct from refusing another queue's unstarted JIT request below.
+
+Native registrations are matched by logical task, backend and retained lock,
+not by a single global "current waiter". The opt-in
+[dual-queue workload](JIT_EXECUTION.md#66-独立队列的并行-native-frame) keeps two
+real mutex native frames alive at once and checks both drain orders. Each has
+its own physical A/B owner, waiter record and stack-local ACKs. It uses separate
+published entries with the daemon stopped; an ordinary miss makes its entry
+not-ready, so this does not test concurrent code replacement or imply that a
+second invocation of the same entry can always start after that miss.
+
+A scheduled mutex combiner retains ownership of its CPU-local execution
+context, not only its physical mutexes. A different combiner on that CPU must
+refuse an unstarted JIT request even when its entry is ready, then use ordinary
+queue handoff and native ownership. The
+[same-CPU workload](JIT_EXECUTION.md#67-同-cpu-的-mutex-jit-拒绝) keeps the first
+frame live until the second queue finishes natively. Its one body/frame and
+two ACKs are distinct from the two-frame overlap case; the refused entry
+stays NORMAL. Neither path overwrites or borrows the foreign task's frame.
+Its pressure extension retains that frame while four genuine CPU-local nodes
+are occupied. The extra request reserves no node, waits for the private gate
+on its own stack and then acquires the original mutex as physical owner.
+This unstarted fallback neither borrows a frame nor sends owner ACKs. It is
+distinct from a progressed JIT continuation and does not establish gate fairness.
+The same test then injects one task-allocation failure for a different request
+before its A1 queue entry. A node-refused request already owns an A1 routing
+reference and waits for its scheduling gate; a task-refused request has no such
+reference and acquires original A1 directly. Its later native B1 hook can still
+establish its own bookkeeping. Both must finish their exact records and own
+unlocks before the older frame resumes and receives its retained owner ACKs.
+The added task diagnostic identifies the pre-entry branch; it does not change
+native ownership, task reclamation or the guest hook. This is one combined
+allocation-refusal schedule, not global memory saturation or arbitrary task exit.
 
 Signals do not transfer physical ownership or cancel a retained frame. The
 ordinary native `mutex_lock(B)` suffix waits uninterruptibly, including with a
@@ -340,6 +546,8 @@ KD_EXE_UNUSED -> KD_EXE_UNINIT -> KD_EXE_NORMAL
                         KD_EXE_CALL_MISS / KD_EXE_IJ_MISS
 
 KD_EXE_NORMAL -> KD_EXE_ERROR_INST  (terminal unsupported instruction)
+
+UNINIT / NORMAL / miss -> KD_EXE_NATIVE_ONLY  (terminal policy/backend refusal)
 ```
 
 `KD_EXE_HOSTCALL` and `KD_EXE_ENTRY_REFUSED` are deliberately absent from this
@@ -369,7 +577,9 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
    return address, save continuation state, and re-enter the same artifact.
 4. On a control-call exit, use `handle_known_call()` to acquire/release nested
    locks or recognize the matching outer unlock. Nested and OOO handling may
-   continue execution rather than complete the frame.
+   continue execution rather than complete the frame. Local mutex controls
+   first establish and then verify their stack checkpoint; a changed window
+   takes the separately validated native suffix after the completed CALL.
 5. On an ordinary CALL miss, retain the virtual CALL frame, record the target
    for future translation, and return `KD_EXE_RUN_NATIVE`. A remote child's
    native exit propagates through `KD_EXE_KNOWN_NATIVE` without re-entering JIT.
@@ -428,6 +638,12 @@ per-CPU/current/scheduling/preemption/IRQ/BH/RCU references, backend mismatches
 and other recognized unsupported context operations.
 The retained GS/current lowering helpers do not imply permission to delegate
 those operations. No read-only GS exception is granted.
+These unconditional byte/operand checks run across every selected emitted block
+before value propagation or its guarded retry. A rewritten RET may leave a
+connected block without a propagated input, but its code and whitelist target
+still exist. Such a block cannot bypass GS/FS, IRQ, known context-symbol or
+foreign-backend checks. This pass uses the already selected JIT episode; it
+does not reintroduce an ordinary CALL miss's waiter-only suffix.
 
 Analysis covers explicit operands and lifted IR memory effects, including
 implicit/internal-IR accesses, decoded CALL arguments/RET results and CALL
@@ -441,23 +657,224 @@ entry disjointness predicates. Every premise is enforced before generated body
 execution; independently enterable callees cannot borrow those root facts.
 For learned direct callees, a separate single-entry analysis seeds only the
 checked root and propagates real CALL packets and RET effects. It removes the
-fabricated immediate CALL fall-through, verifies every RET edge against the
-generated whitelist, and refuses unvisited selected blocks, indirect control,
-IJ history or adjusting RETs. Default independent-root analysis remains unchanged.
+fabricated immediate CALL fall-through and verifies the complete RET graph
+against the generated whitelist. Selected text must be structurally connected
+to the checked root before value-based refinement; disconnected targets,
+indirect control, IJ history and adjusting RETs are refused. Default
+independent-root analysis remains unchanged.
 This does not assume callee-saved registers or untouched source memory for an
 ordinary function. The predicate/continuation contract is in
 [JIT_EXECUTION](JIT_EXECUTION.md#5-入口条件与嵌套续点).
+
+Scoped flow keeps a bounded disjunction of RSP value/origin facts, preserving
+the relation between different CALL depths, saved registers and shared RETs.
+It checks the plain 64-bit pop IR, then reads its pre-pop target through the
+existing sequential memory model. Only an entirely exact numeric domain
+restricts effect propagation to its intersection with the emitted whitelist.
+An unknown, partially overwritten or widened slot keeps every target; those
+destinations join normally instead of enumerating hypothetical pop-depth cycles.
+No CALL/RET balancing, runtime stack read or private-stack assumption is added.
+Each block permits at most 64 partitions, and total partitions/visits remain
+bounded by the CFG work budget. Exhaustion refuses the entry. A structurally
+connected continuation skipped by a proven return-slot rewrite need not gain
+a fabricated input state. Unconditional checks still cover its emitted bytes;
+register/memory effects use the sequential model, not a proof that another
+executor cannot rewrite a return slot or pointer before its later load.
+
+The emitted return-table builder groups direct call sites by callee and walks
+each callee iteratively with a visited set. Shared RET tails retain the union
+of every caller continuation, including targets reached after return-slot
+rewrites; a matching source CALL is not assumed. Location offsets come from
+the decoded location database, not formatted label names. A 65536-unit work
+budget counts instructions, traversed nodes/edges and return-target additions.
+An unresolved location, missing walked successor/database or exhausted budget
+raises an explicit refusal without committing a partial table. Both scoped
+comparison and final emission handle that error as native-only. This is a
+translation graph budget, not a runtime instruction limit, hard memory/time
+bound or executable-version publication protocol.
+
+Preserving handler GPRs does not prove that saved stack words stayed unchanged.
+The two-level mutex helper therefore requires the following runtime checkpoint,
+not a private-stack or arbitrary callee-ABI assumption. RET emission, thunk
+mitigations and alias checks are unchanged.
+
+The runtime checkpoint for the checked mutex summary is wired into
+`handle_known_mutex_call()`. It snapshots 256 bytes above the virtual CALL word,
+bounded to the original waiter's live kernel stack, using nofault reads. After
+the real local mutex control, it compares those bytes and separately verifies
+the captured target/return token and exact post-CALL RIP/RSP. Equal contents
+permit the existing JIT continuation. Changed contents set a distinct
+`KD_CALL_STACK_CHANGED` phase: the original waiter resumes after the completed
+control, with current memory and registers, while the combiner retains native
+owners and services unlock ACKs. No writes are restored or acquisition replayed.
+An insufficient window exits before the control using a validated PENDING CALL;
+an invalid token/read/packet remains fail-stop after progress. Final completion
+does not need a preservation check because it never returns to this JIT episode.
+
+The real contention gate now extends the existing seven-role driver. B's native
+owner waits for the combiner in Linux's mutex wait_list before writing an
+explicitly exposed live waiter-local word. The original waiter observes the new
+value after the completed CALL, with A and B still owned by that combiner;
+the two unlock ACKs precede suffix completion. The oracle requires the distinct
+stack-change warning, actual source CALL successor and unchanged NORMAL root,
+not only successful native code. This is one bounded shared-slot history, not
+arbitrary concurrent mutation or a stack-privacy assumption; see
+[the execution gate](JIT_EXECUTION.md#53-mutex-控制-call-的栈检查).
+
+The provider now advertises this immutable implementation contract through
+the separate 16-byte `KD_JIT_CAPS` ioctl. Translation queries its validated
+device description once before text inspection, caches only that lease's bound
+and clears it on close. Absent/unknown contracts leave the bound zero; actual I/O
+errors abort inspection. Version 1 still describes the old mutex bound but lacks
+the module range required by current translation (7.2.2). Source INFO remains
+mandatory. This is not a mutable
+admission bit or executable generation. Guarded mutex analysis now uses the bound
+only at registered local controls whose IR matches the exact eight-byte CALL
+push and source return token. It first applies that write, then derives checked
+window starts from every possible post-push RSP+8. It never restores pre-CALL
+facts. Only identical-base, fully covered byte/word facts survive the clobber;
+partial words use the byte model. Unknown bases/packets, spin, hostcall and other
+memory retain the existing uncertainty and work limits. Coverage checks cannot
+refill the analysis budget or add an alias separation to assume membership.
+Spin remote controls can execute later source instructions, so this local mutex
+contract must not be generalized to them. The check compares
+values across this one control boundary; it is not protection from arbitrary
+concurrent writes outside that interval, a private-stack proof, or code-version
+isolation.
+
+The real depth gate now learns the local and external helpers in two separate,
+joined waves, without inlining either CALL level. The final JIT acquires seven
+children in the external helper, executes its RET, and reaches the local
+helper's eighth-child capacity exit. The remaining local suffix/RET runs natively
+with retained owners and ACKs. Source pins and native importer references are
+checked separately through retirement; generated userspace tests also execute
+both RETs across substituted control successes. This bounded increment is
+complete; broader context/alias work remains in TODO C5.
 
 This remains incomplete for arbitrary pointers, unlifted instructions and
 concurrent mutation. Improving precision is not grounds for removing safety
 probes. A refusal makes future entries native-only; it does not undo earlier
 work or validate owner-sensitive native suffixes.
 
+### 7.2.1 Dynamic Address Gap
+
+Unknown entry pointers and addresses loaded from runtime memory are admitted
+unless another rule rejects them. `mov rax,[rdi]; mov rax,[rax]` therefore can
+reach even a known sensitive interval without embedding its address in text.
+A sequentially tracked store does not prevent another thread from changing
+that word before a later load. Holding A only excludes users of A; it does not
+exclude per-CPU operations or another writer that does not acquire A.
+
+The bounded [pointer audit](VALIDATION.md#dynamic-pointer-screening-gap) executes
+these paths against harmless user allocations labelled by mock symbols.
+It confirms a missing check, not actual kernel context corruption or a rate of
+failure. The entry predicates, local mutex checkpoint, retained native owner
+and unconditional emitted-block scan do not close this gap. Successful code
+generation now reports `CONTEXT_SCREENING_ONLY`; no runtime guard is added.
+
+Implementation order, **not an implemented safety contract**:
+
+1. Define the enforceable address/object policy and its lifetime first. Linked
+   kallsyms intervals alone do not enumerate runtime per-CPU allocations, task
+   objects or aliases with context-sensitive behavior. A known-range denylist
+   would protect only that declared range, not establish context equivalence.
+   Core static and boot-reserved module ranges are handled below; object coverage remains
+   open. Assess existing kdlock/kernel APIs before considering any guest change.
+2. Separate entry-only predicates from use-time validation. Entry GPR checks
+   cannot validate a later memory-loaded pointer. An access guard must compute
+   and check the effective address once, then use that same address for the
+   original load/store/RMW, including width/overflow and implicit accesses.
+   Reloading a mutable pointer after checking it leaves a check/use race.
+3. Define a pre-instruction native exit with unchanged current GPRs, virtual
+   stack and required flags. Preserve completed stores and retained owners;
+   the original waiter continues at that instruction and unlocks through ACKs.
+   Do not reuse entry refusal after progress or treat a generic fault as a
+   validated escape. Local guard flags preservation requires an explicit scope
+   decision; the deferred general flags repair is not silently reopened. The
+   [pending packet contract](JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现)
+   separates pass-path preservation from native-target restoration; neither
+   reading the stale packet flags nor relying on the existing MOV/RET stubs
+   implements it.
+4. Validate memory/RET assumptions at their uses or conservatively join their
+   effects. Keep the complete emitted return whitelist; unconditional byte
+   bans alone do not check computed addresses in a dataflow-skipped block.
+5. Convert the bounded counterexamples into refusal/forward-continuation gates
+   in existing test programs, with exactly-once stores and owner ACK checks.
+   Keep affected complex spin/mutex modes actually executing JIT, including
+   `mutex_jit=1`; blanket unknown-pointer refusal is not a passing JIT result.
+
+Until an enforceable policy and these exits exist, limit use to audited
+experimental workloads. More static examples or successful stress runs cannot
+justify a claim that every context-sensitive critical section is refused.
+
+### 7.2.2 Static Per-CPU Ranges
+
+The captured x86-64 kernel's `__per_cpu_start` is zero; `current_task` and other
+static per-CPU symbol values are offsets, not each CPU's dereferenceable address.
+Translation now reads `nr_cpu_ids`, `__cpu_possible_mask` and `__per_cpu_offset`
+through its existing pinned kcore/device lease, before text admission. For every
+possible CPU it adds the interval starting at `__per_cpu_start + offset[cpu]`
+(modulo 64 bits), with size `__per_cpu_end - __per_cpu_start`. Offline possible
+CPUs remain covered. The linked section itself is not added as a low-address
+interval, which would incorrectly classify ordinary small immediates.
+
+This uses the captured boot-time initialization contract in
+`arch/x86/kernel/setup_percpu.c` and `smpboot.c`: possible CPUs are established
+before per-CPU setup and offsets become read-only after init. Each translation
+reads the metadata anew and compares a second read. Counts are bounded to 8192,
+the static section to 16 MiB, and offset reads to 64 KiB. Missing/ambiguous core
+symbols, invalid counts/masks/addresses, short or changed reads, wrapping or
+overlapping runtime intervals abort as infrastructure errors, not successful
+native-only verdicts.
+
+On the captured x86-64 SMP kernel, both first-chunk allocators reserve
+`PERCPU_MODULE_RESERVE` (8192 bytes) after the core section aligned to
+`PCPU_MIN_ALLOC_SIZE` (4 bytes). `kernel/module/main.c` uses
+`__alloc_reserved_percpu()`; `mm/percpu.c` serves it only from the reserved chunk
+when that boot-fixed chunk exists, failing rather than spilling to a dynamic
+chunk when full. Normal module unload frees allocations within that arena,
+not the arena's address classification. This does not pin or validate an object.
+
+The provider reports this bound using version 2 of the existing 16-byte CAPS
+packet on the same device lease. It checks the build constants and the non-NULL
+`pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
+the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
+base + ALIGN(core_size, 4) + module_bytes)` for each possible CPU. Version 1,
+unavailable or invalid capability cannot silently omit the module check: current
+translation reports an infrastructure error before reading source text. Source
+inspection/retirement can still query older providers. Neither the ioctl number
+nor its size, guest code or wrapper arguments change.
+
+Do not extend coverage to `pcpu_unit_size`: the embedded allocator returns unused
+tail pages to ordinary memory. Alignment padding is not claimed as module data,
+and ordinary dynamic chunks/objects remain outside this range contract.
+
+Whole-area coverage is separate from named-symbol intervals, so an interior
+symbol cannot truncate it. Existing explicit-operand, derived-address and IR
+checks then reject statically resolvable accesses, including boundary overlap.
+`STATIC_PERCPU_SCREENING` reports possible `cpus`, `core_bytes`, `module_bytes`
+and their sum `bytes_per_cpu`, not runtime address enforcement. Core and module
+arenas retain separate labels. The optional name-only/core-only parser remains
+for byte fixtures; the real translator must supply its leased reader and
+negotiated module bound. This is not a runtime memory snapshot
+of the protected areas, and it does not establish code-version isolation.
+
+The API audit found that `is_kernel_percpu_address()` only recognizes core
+static areas, while `is_module_percpu_address()` recognizes module static areas.
+Neither is an arbitrary dynamic-allocation classifier. `per_cpu_ptr_to_phys()`
+requires an already valid, live per-CPU pointer; the private allocator lookup
+assumes an allocator pointer and cannot safely classify arbitrary JIT addresses.
+Module/dynamic allocation lifetimes, other task/context objects, unresolved
+runtime pointers and concurrent pointer replacement therefore remain open.
+No such helper is called from generated code in this increment.
+
 ### 7.3 Build And Publication
 
 The daemon has flat RIP and RIP/tgid workspace modes, independent of benchmark
 mode. It maintains callee/indirect-target tables, reads /proc/kcore, combines
 generated assembly with the wrapper, assembles/links and transfers jit.bin.
+The [device session](../daemon/README.md#device-session) remains held across this
+flow; opening a new device after an error is not a supported recovery path.
 Policy refusal removes stale outputs and exits 2; launch failures/exceptions
 are errors/retry conditions, not successful native-only decisions.
 
@@ -580,10 +997,18 @@ the last required unlock return, including A-before-B execution.
 
 ### 9.3 Capacity And Refusal
 
-Frame, logical held-lock, CPU-local shadow-held-lock and node pools have
+Frame, logical held-lock, CPU-local shadow-held-lock, ticket and node pools have
 independent limits. Capacity checks precede acquiring/publishing a new B.
 A valid pre-acquisition PENDING resource failure can hand the original lock
 CALL to the waiter. Already entered/acquired operations cannot use that path.
+
+Spin's ticket refusal is earlier than virtual-node cancellation: a full
+32-slot physical-CPU pool returns E2BIG without publishing a B ticket or
+retaining its temporary preemption pin. The real-capacity gate holds 31
+additional hook-acquired locks across the A combiner, then checks B's PENDING
+packet, native suffix and A ACK. Only promotion is controlled; this does not
+prove the 1024-slot gate table's live saturation. Flow and test substitutions
+remain in [usage 6.3](JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑).
 
 A virtual pre-entry refusal preserves the caller's full register packet and
 queue connection. Already-progressed work cannot be recast as fresh native
@@ -612,6 +1037,13 @@ A zero-local-lock COMPLETE relay propagates the register packet only: no
 extra ACK, borrowed reference or unpin. The last real lock ACK ends the origin
 waiter's obligation. Deferred observation must not itself change queue state.
 
+A no-lock ancestor may finish after the waiter's final ACK and normal task
+exit. Its completion/pop must not dereference the old logical task, queue slot
+or waiter stack; diagnostics use the PID cached while the waiter was blocked.
+The bounded live schedule is maintained in
+[usage 6.9](JIT_EXECUTION.md#69-无锁祖先与-waiter-退出). It observes TID detachment,
+not completed task-memory reclamation or arbitrary request cancellation.
+
 ### 9.5 Forward Native Continuation
 
 For an ordinary CALL miss, keep current GPRs, callee RIP and virtual CALL RSP.
@@ -619,26 +1051,44 @@ The original waiter enters that callee, returns natively and finishes the suffix
 without reentering this JIT invocation. Memory writes and completed B sections
 remain committed; there is no transaction rollback.
 
-The combiner retains its acquired physical locks and pauses other delegation.
+The combiner retains its acquired physical locks and pauses its own batch;
+independent combiners can keep their separate native registrations active.
 The waiter borrows protection, not Linux ownership. Unlock requests return to
 the physical owner and wait for ACK. The ACK resides on the waiter's native
 stack; the executor drops borrow references before release-publishing done.
 The spin waiter ends its origin pin only on the last ACK; a mutex waiter has
 already restored migration/preemption state before entering its native suffix.
-No owner may reread a released/woken node or frame. A later completion log is
-not the ACK's linearization point.
+The owner must not reread a queue node after publishing its native wakeup, or
+a stack-local unlock request after publishing that request's ACK. The owner's
+live frame remains until its own completion/pop. A completion log is not the
+ACK's linearization point.
 
-Control-call phases are NONE/PENDING/ENTERED/ACQUIRED/COMPLETE. Only validated
-PENDING -ENOMEM/-E2BIG before acquisition/publication can restore the original
-lock callee RIP/CALL RSP while retaining current GPRs and effects.
-Native registration independently admits NONE, eligible PENDING or validated
-spin remote COMPLETE relay before borrowing/publishing/accounting. A still-held
-A does not make later-phase failures recoverable.
+Acquisition phases are NONE/PENDING/ENTERED/ACQUIRED/COMPLETE. Validated PENDING
+-ENOMEM/-E2BIG before acquisition/publication can restore the original lock
+callee RIP/CALL RSP while retaining current GPRs and effects. The mutex stack
+precheck can also hand off an unstarted CALL when the bounded window is too
+short, without inventing an allocation error. A changed post-control window
+instead uses the distinct STACK_CHANGED phase and exact already-consumed packet.
+For a local spin post-acquisition EIO, `finish_acquired_spin_call()` validates
+the unreleased top local lock record, current physical gate owner, original
+lock target/token in the waiter stack and exact post-CALL RIP/RSP. Only this
+checked boundary receives SPIN_NATIVE: B stays acquired and the waiter resumes
+after the CALL. Remote publication, missing records or a bad packet remain
+errors. See [flow and tests](JIT_EXECUTION.md#611-spin-获取后的受检续跑).
+Native registration independently checks these states, ordinary NONE and
+validated spin remote COMPLETE relay before borrowing/publishing/accounting.
+A still-held A does not make arbitrary later-phase failures recoverable; the
+checked local boundaries are not general ACQUIRED/COMPLETE recovery permission.
 
 If pending B is first acquired by the native waiter, B really belongs to that
 waiter; earlier combiner-owned locks still use notifications. After A release,
 continuation requires a consistent remaining ledger. Unhandled IJ/budget/fault
 and later-phase errors fail-stop, not entry retry.
+
+The existing [early-A dependency workload](JIT_EXECUTION.md#610-提前释放-a-的原生依赖)
+checks a native C owner needing the released A while B remains borrowed, then
+seven owner ACKs after real ledger exhaustion. It is selected separately from
+ordinary held-B register continuation; neither contract subsumes the other.
 
 Borrowed mutex execution does not satisfy mutex.owner == current on the waiter.
 Recursive acquisition, owner-sensitive code, lockdep or task-local locking
@@ -732,11 +1182,12 @@ The implementation boundaries are:
     verifier enforces the restriction, even without a wrapper exit.
 15. **Continuation is not rollback** — see 9.5; completed stores and child
     sections are retained. Register entry retry is limited to not-started work.
-16. **Publication and lifetime are incomplete** — code is overwritten in place;
-    no generation/refcount retirement handles concurrent execution, module-text
-    unload/reload, or reused lock addresses. Hook removal uses
-    `synchronize_rcu()`, but guest hook callers do not implement a matching
-    reader/drain protocol. Stop all callers and drain queues before unloading.
+16. **Publication and lifetime are incomplete** — concurrent code replacement
+    remains deferred under C3; source-module, lock-object and hook-provider
+    lifetimes are separate unresolved contracts in 3.1. Guest predicates are
+    called by non-target tasks too, without a matching reader/drain protocol.
+    Stopping benchmark callers and draining requests is an experimental
+    prerequisite, not a proof of safe provider hot unload.
 17. **Scope is narrower than all kernel lock APIs** — delegation supports plain
     raw spin lock/unlock and non-RT mutex lock/unlock. Native mutex participants
     include non-target tasks and successful trylock/interruptible/killable calls;

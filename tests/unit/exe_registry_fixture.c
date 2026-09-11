@@ -11,13 +11,15 @@
 #include <sys/types.h>
 
 #include "exe_info.h"
+#include "kd_call.h"
 #include "kd_hostcall.h"
+#include "kd_source_api.h"
 
 struct pt_regs {
 	unsigned long ax;
 };
 struct task_struct {
-	int tgid;
+	int tgid, pid;
 };
 struct file;
 typedef struct {
@@ -25,7 +27,8 @@ typedef struct {
 } atomic_t;
 typedef long long atomic64_t;
 
-static struct task_struct task = { .tgid = 42 };
+/* Type-check the production capacity diagnostic's real caller identity too. */
+static struct task_struct task = { .tgid = 42, .pid = 43 };
 static struct task_struct *current = &task;
 static int checks, failures, errors, warnings;
 
@@ -168,6 +171,20 @@ static size_t copy_from_user(void *to, const void *from, size_t size)
 }
 #define copy_to_user(to, from, size) copy_from_user(to, from, size)
 
+/* Source admission is an external boundary in this allocation fixture; the
+ * source-lifetime fixture executes its real locking and dependency decisions. */
+static bool source_open = true;
+static int source_root_error;
+static bool kd_source_is_open(void)
+{
+	return source_open;
+}
+static int kd_source_pin_root(unsigned long address)
+{
+	(void)address;
+	return source_root_error;
+}
+
 /* Match Kbuild's mixed-sign comparison policy only for unmodified production
  * functions; keep strict warnings on this fixture and its assertions. */
 #pragma GCC diagnostic push
@@ -185,6 +202,8 @@ static void reset(enum allocation_mode mode)
 	allocation_count = block_attempts = exec_attempts = 0;
 	errors = warnings = copy_calls = fail_copy = 0;
 	allocation_mode = mode;
+	source_open = true;
+	source_root_error = 0;
 }
 
 static unsigned long key(unsigned int i)
@@ -307,6 +326,11 @@ static void check_device(void)
 
 	reset(NORMAL);
 	CHECK(kd_exe_init() == 0);
+	source_root_error = -ESTALE;
+	kd_exe_add(0, key(0), KD_EXE_LOCK_MUTEX);
+	CHECK(kd_get_exe(0, key(0))->status_code == KD_EXE_UNUSED);
+	CHECK(kd_code_block_free == KD_CODE_BLOCK_POOL && warnings == 1);
+	source_root_error = 0;
 	kd_exe_add(0, key(0), KD_EXE_LOCK_MUTEX);
 	exe = kd_get_exe(0, key(0));
 	packet = (__typeof__(packet)){ .head = { KD_EXE_NORMAL, 0, key(0), 0 },
@@ -340,6 +364,10 @@ static void check_device(void)
 	CHECK(((unsigned char *)exe->code_block)[KD_CODE_BLOCK_SIZE - 1] ==
 	      0x5a);
 	CHECK(kd_exe_is_ready(0, key(0)));
+	source_open = false;
+	CHECK(!kd_exe_is_ready(0, key(0)));
+	CHECK(kd_dev_write_locked((char *)&packet, header + 1) == -ESHUTDOWN);
+	source_open = true;
 	packet.head = (struct kd_recv_pkt){ KD_EXE_NATIVE_ONLY, 0, key(0), 0 };
 	CHECK(kd_dev_write_locked((char *)&packet, header) == (ssize_t)header);
 	CHECK(!kd_exe_is_ready(0, key(0)));

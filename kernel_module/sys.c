@@ -1,15 +1,28 @@
+/* /dev/kd_dev is the daemon's registry/image channel and source-control API.
+ * Writable opens retain one translation-session writer; readonly status/CAPS
+ * opens do not. Retirement closes admission before releasing source pins.
+ * Chunk bounds checks do not provide immutable or atomic whole-image versions. */
+#include <linux/build_bug.h>
 #include <linux/cdev.h>
+#include <linux/capability.h>
 #include <linux/device.h>
 #include <linux/errno.h>
 #include <linux/fs.h>
+#include <linux/kallsyms.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
+#include <linux/percpu.h>
 #include <linux/string.h>
 #include <linux/types.h>
 #include <linux/uaccess.h>
 #include <linux/version.h>
 
 #include "exe.h"
+#include "kd_lock.h"
+#include "kd_mutex.h"
+#include "kd_source.h"
+#include "kd_spin_entry.h"
+#include "kd_spin_gate.h"
 #include "sys.h"
 #include "utils.h"
 
@@ -18,6 +31,110 @@ static struct cdev kd_cdev;
 static struct class *kd_class;
 /* Serializes uploads with rejection, not execution of already published code. */
 static DEFINE_MUTEX(kd_publish_lock);
+
+static int kd_dev_open(struct inode *inode, struct file *file)
+{
+	/* Do not expose a lease from a provider whose initialization can fail. */
+	if (READ_ONCE(THIS_MODULE->state) != MODULE_STATE_LIVE)
+		return -ENODEV;
+	file->private_data = NULL;
+	if (file->f_mode & FMODE_WRITE) {
+		if (!kd_source_writer_get())
+			return -ESHUTDOWN;
+		file->private_data = (void *)1;
+	}
+	return nonseekable_open(inode, file);
+}
+
+static int kd_dev_release(struct inode *inode, struct file *file)
+{
+	(void)inode;
+	/* dup/fork share one open description; only its final release drops this. */
+	if (file->private_data)
+		kd_source_writer_put();
+	return 0;
+}
+
+static struct kd_jit_caps kd_jit_capabilities(void)
+{
+	struct kd_jit_caps caps = {
+		.version = KD_JIT_CAPS_VERSION,
+		.features = KD_JIT_CAP_MUTEX_STACK,
+		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
+	};
+#if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
+	unsigned long *reserved;
+
+	/* x86 setup reserves this arena in either first-chunk allocator. A
+	 * non-NULL boot-fixed reserved chunk forces module allocations to use
+	 * it, even when full. Inspect only the pointer, never private chunk
+	 * layout or live allocation maps. Missing capability must not make a
+	 * translator assume all module per-CPU addresses have been checked. */
+	BUILD_BUG_ON(PERCPU_MODULE_RESERVE != KD_JIT_PERCPU_MODULE_BYTES);
+	BUILD_BUG_ON(PCPU_MIN_ALLOC_SIZE != KD_JIT_PERCPU_ALIGNMENT);
+	reserved = (unsigned long *)kallsyms_lookup_name("pcpu_reserved_chunk");
+	if (reserved && READ_ONCE(*reserved)) {
+		caps.features |= KD_JIT_CAP_PERCPU_MODULE;
+		caps.percpu_module_bytes = PERCPU_MODULE_RESERVE;
+	}
+#endif
+	return caps;
+}
+
+static long kd_dev_ioctl(struct file *file, unsigned int command,
+			 unsigned long arg)
+{
+	struct kd_jit_caps caps;
+	struct kd_source_range range;
+	struct kd_source_info info;
+	int ret;
+
+	switch (command) {
+	case KD_JIT_CAPS:
+		/* The open description pins this provider. Report immutable build
+		 * semantics even while draining; this query opens no admission,
+		 * reserves no resource and changes no existing packet layout. */
+		caps = kd_jit_capabilities();
+		return copy_to_user((void __user *)arg, &caps, sizeof(caps)) ?
+			       -EFAULT :
+			       0;
+	case KD_SOURCE_INFO:
+		kd_source_info(&info);
+		return copy_to_user((void __user *)arg, &info, sizeof(info)) ?
+			       -EFAULT :
+			       0;
+	case KD_SOURCE_PIN:
+		if (!file->private_data)
+			return -EBADF;
+		if (copy_from_user(&range, (void __user *)arg, sizeof(range)))
+			return -EFAULT;
+		return kd_source_pin_range(range.address, range.size);
+	case KD_SOURCE_RETIRE:
+		if (!capable(CAP_SYS_MODULE))
+			return -EPERM;
+		if (mutex_lock_interruptible(&kd_publish_lock))
+			return -ERESTARTSYS;
+		/* A readonly control FD does not count as its own writer. The caller
+		 * must stop new workloads; idle snapshots are not a hook-reader barrier. */
+		ret = kd_source_begin_retire();
+		if (!ret && (!kd_mutex_check_idle() || !kd_mutex_tasks_idle() ||
+			     kd_spin_entries_check_idle() ||
+			     kd_spin_gates_check_idle()))
+			ret = -EBUSY;
+		if (!ret) {
+			kd_exe_retire_all();
+			kd_source_finish_retire();
+		}
+		kd_source_info(&info);
+		pr_info("kd_source retire: result=%d state=%u modules=%u frames=%u writers=%u\n",
+			ret, info.state, info.modules, info.frames,
+			info.writers);
+		mutex_unlock(&kd_publish_lock);
+		return ret;
+	default:
+		return -ENOTTY;
+	}
+}
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
 #define kd_class_create(name) class_create(name)
@@ -64,6 +181,8 @@ static ssize_t kd_dev_write_locked(const char __user *buf, size_t count)
 	const char __user *payload;
 	size_t len;
 
+	if (!kd_source_is_open())
+		return -ESHUTDOWN;
 	if (count < sizeof(head))
 		return -EINVAL;
 	if (copy_from_user(&head, buf, sizeof(head)))
@@ -129,6 +248,9 @@ static ssize_t kd_dev_write(struct file *file, const char __user *buf,
 
 static const struct file_operations kd_dev_fops = {
 	.owner = THIS_MODULE,
+	.open = kd_dev_open,
+	.release = kd_dev_release,
+	.unlocked_ioctl = kd_dev_ioctl,
 	.read = kd_dev_read,
 	.write = kd_dev_write,
 };

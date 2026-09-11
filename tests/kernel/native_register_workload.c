@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
+/* Workload-side source instructions and callee samples for original-waiter
+ * GPR/CALL-stack validation. Arm only after the driver's JIT preparation wave. */
 #include <asm/linkage.h>
 #include "native_register_probe.h"
 

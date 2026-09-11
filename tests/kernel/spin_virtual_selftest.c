@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0
 /* SELFTEST only: join actual JIT progress to unpublished virtual-ticket cancel.
  * Mode 8 supplies real A/B owners and a Linux pending-bit contender. Only the
- * resource view is injected; no lock word, queue link or executable code changes.
+ * context/node views are injected. Kind 3 observes a genuinely full ticket
+ * pool without changing it; no lock word, queue link or code is modified.
  */
 static int kd_virtual_refusal_once;
 module_param_named(spin_selftest_virtual_refusal, kd_virtual_refusal_once, int,
 		   0444);
 MODULE_PARM_DESC(
 	spin_selftest_virtual_refusal,
-	"selftest-only: 1=missing virtual context, 2=full node count at one busy JIT lock CALL");
+	"selftest-only: 1=missing context, 2=full node count, 3=observe real ticket exhaustion");
 
 /* Keep snapshots off the small combiner stack and out of the default module. */
 static struct {
@@ -48,7 +49,8 @@ static bool kd_spin_selftest_virtual_begin(
 	/* Single-thread warmup cannot reach this busy-S branch. Never combine this
 	 * synthetic count with the trace of real reservations or shadow pressure.
 	 */
-	if ((kind != 1 && kind != 2) || !parent->executed ||
+	if ((kind < 1 || kind > 3) || (kind == 3) != !request ||
+	    !parent->executed ||
 	    cmpxchg(&kd_virtual_refusal_once, kind, 0) != kind)
 		return false;
 	KD_VIRTUAL_REQUIRE(!preempt_model_preemptible() && !kd_node_trace &&
@@ -59,10 +61,18 @@ static bool kd_spin_selftest_virtual_begin(
 			   !parent->remote_request &&
 			   parent->remote_result == KD_EXEC_REMOTE_IDLE);
 	KD_VIRTUAL_REQUIRE(base->count == 0 &&
-			   preempt_count() == initial_preempt + 1);
-	KD_VIRTUAL_REQUIRE(kd_spin_entry_find((void *)lock, &found) &&
-			   found.entry == request->entry &&
-			   found.sequence == request->sequence);
+			   preempt_count() == initial_preempt + (kind != 3));
+	if (kind == 3) {
+		/* The workload holds 31 distinct physical locks; A is ticket 32.
+		 * Snapshot before allocation to catch any failed-attempt mutation.
+		 */
+		KD_VIRTUAL_REQUIRE(initial_preempt == KD_SPIN_ENTRY_SLOTS &&
+				   !kd_spin_entry_find((void *)lock, &found));
+	} else {
+		KD_VIRTUAL_REQUIRE(kd_spin_entry_find((void *)lock, &found) &&
+				   found.entry == request->entry &&
+				   found.sequence == request->sequence);
+	}
 	KD_VIRTUAL_REQUIRE(raw_spin_is_locked((raw_spinlock_t *)lock) &&
 			   READ_ONCE(kd_spin_word(lock)->locked) == 1);
 	KD_VIRTUAL_REQUIRE(
@@ -93,7 +103,7 @@ static bool kd_spin_selftest_virtual_begin(
 	 */
 	if (kind == 1)
 		*contexts = NULL;
-	else
+	else if (kind == 2)
 		base->count = MAX_NODES;
 	return true;
 }
@@ -111,7 +121,7 @@ static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 	KD_VIRTUAL_REQUIRE(result ==
 			   (kd_virtual_test.kind == 1 ? -ENOMEM : -E2BIG));
 	KD_VIRTUAL_REQUIRE(base->count ==
-			   (kd_virtual_test.kind == 1 ? 0 : MAX_NODES));
+			   (kd_virtual_test.kind == 2 ? MAX_NODES : 0));
 	/* Undo only the synthetic count, after production has decremented its own
 	 * overflow attempt and retired its real ticket. A must remain owned.
 	 */
@@ -142,13 +152,14 @@ static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 				  ->locked) == _Q_LOCKED_COMBINER_VAL;
 	KD_VIRTUAL_REQUIRE(retired && pin && nodes && contexts && packet &&
 			   frame && owner);
-	pr_info("kd_spin virtual refusal: task=%d entry=%lx outer=%lx lock=%lx target=%lx cpu=%d kind=%d ret=%d phase=%u retired=%u pin=%u nodes=%u contexts=%u packet=%u frame=%u owner=%u executed=%u injected=1\n",
+	pr_info("kd_spin virtual refusal: task=%d entry=%lx outer=%lx lock=%lx target=%lx cpu=%d kind=%d ret=%d phase=%u retired=%u pin=%u nodes=%u contexts=%u packet=%u frame=%u owner=%u executed=%u allocated=%u injected=%u\n",
 		parent->logical_task->pid, parent->entry_ip,
 		parent->outer_lock_addr, (unsigned long)kd_virtual_test.lock,
 		parent->control_call.target, kd_virtual_test.cpu,
 		kd_virtual_test.kind, result, parent->control_call.phase,
 		retired, pin, nodes, contexts, packet, frame, owner,
-		parent->executed);
+		parent->executed, kd_virtual_test.kind != 3,
+		kd_virtual_test.kind != 3);
 }
 
 #undef KD_VIRTUAL_REQUIRE

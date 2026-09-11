@@ -125,7 +125,7 @@ def records(log, prefix):
     for line in log.splitlines():
         if prefix not in line:
             continue
-        fields = re.findall(r"(\w+)=([0-9a-f]+)(?=\s|$)", line.split(prefix, 1)[1])
+        fields = re.findall(r"(\w+)=(-?[0-9a-f]+)(?=\s|$)", line.split(prefix, 1)[1])
         assert len(dict(fields)) == len(fields), "duplicate evidence key"
         rows.append(dict(fields))
     return rows
@@ -616,6 +616,7 @@ def validate(log, placement, depth, numa, lock_ip):
         assert sp == staged_sp == begin["sp"]
     else:
         assert not records(log, "kd_native begin:")
+    held = validate_held_refusal(log, frames, locks, pending_return, lock_ip)
     buffered = validate_buffered(log, placement, locks, frames)
     capacity = validate_capacity(log, placement, frames)
     return {
@@ -626,9 +627,54 @@ def validate(log, placement, depth, numa, lock_ip):
         "sampled_left": min_left,
         "written_left": written_left,
         "pending_return": pending_return,
+        **({"held": held} if held is not None else {}),
         **({"buffered": buffered} if buffered is not None else {}),
         **({"capacity": capacity} if capacity is not None else {}),
     }
+
+
+def validate_held_refusal(log, frames, locks, return_ip, lock_ip):
+    """Check the full inherited ledger, not the later local-shadow branch.
+
+    A returned body and a final count alone cannot prove that the refusal kept
+    every GPR, the CALL word, physical owners and the untouched B packet.
+    """
+    rows = records(log, "kd_frame held refusal:")
+    if len(frames) < 8:
+        assert not rows, "a shorter physical chain cannot prove held-lock exhaustion"
+        return None
+    (row,) = rows
+    (begin,) = records(log, "kd_native begin:")
+    expected = dict.fromkeys(
+        (
+            "ready",
+            "valid_before",
+            "packet",
+            "frame",
+            "combiner",
+            "physical",
+            "pending",
+            "context",
+        ),
+        "1",
+    )
+    expected.update(
+        cpu="0",
+        task=frames[-1]["task"],
+        entry=frames[-1]["entry"],
+        outer=locks[7],
+        lock=locks[8],
+        target=lock_ip,
+        sp=begin["sp"],
+        return_ip=return_ip,
+        depth="8",
+        recorded="8",
+        local="8",
+        error="-7",
+    )
+    expected["return"] = expected.pop("return_ip")
+    assert row == expected, "incomplete or changed natural held-lock refusal packet"
+    return {"depth": 8, "recorded": 8, "local": 8, "packet_unchanged": True}
 
 
 def validate_capacity(log, placement, frames):

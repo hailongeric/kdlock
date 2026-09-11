@@ -1,3 +1,7 @@
+/* Provider lifecycle: allocate all services before publishing guest hooks.
+ * Selectors retain active-task routing even after admission closes or a waiter
+ * renames. Teardown requires the documented external no-new-callers boundary;
+ * clearing plain hook pointers is not a general hot-unload reader protocol. */
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/mutex.h>
@@ -8,6 +12,7 @@
 
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_source.h"
 #include "kd_hotlock.h"
 #include "kd_lock.h"
 #include "kd_mutex.h"
@@ -23,8 +28,9 @@ MODULE_DESCRIPTION("kdlock JIT lock delegation");
 extern int kd_spin_jit_fail_after_nested_lock;
 module_param_named(spin_jit_fail_after_nested_lock,
 		   kd_spin_jit_fail_after_nested_lock, int, 0644);
-MODULE_PARM_DESC(spin_jit_fail_after_nested_lock,
-		 "one-shot failure after a JIT nested spinlock acquisition");
+MODULE_PARM_DESC(
+	spin_jit_fail_after_nested_lock,
+	"one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint");
 
 static char *target_process = "kd_test";
 module_param(target_process, charp, S_IRUGO);
@@ -50,22 +56,34 @@ static bool kd_target_matches(void)
 
 static int __is_kd_test(void)
 {
-	return kd_target_matches() || kd_spin_entry_task_active() ? 2 : 0;
+	/* Closing stops fresh targets, not unlock routing for retained owners. */
+	return (kd_source_is_open() && kd_target_matches()) ||
+			       kd_spin_entry_task_active() ?
+		       2 :
+		       0;
 }
 
 /* A renamed task must still finish its queued or borrowed mutex acquisition. */
 static int __is_kd_mutex_task(void)
 {
-	return kd_target_matches() || kd_mutex_task_reroute(current) ? 2 : 0;
+	return (kd_source_is_open() && kd_target_matches()) ||
+			       kd_mutex_task_reroute(current) ?
+		       2 :
+		       0;
 }
 
+/* Error labels unwind only initialized services, in reverse dependency order.
+ * Optional component selftests finish before any guest callback is published. */
 static int __init kdlock_km_init(void)
 {
 	int ret;
 
-	ret = kd_hotlock_init();
+	ret = kd_source_init();
 	if (ret)
 		return ret;
+	ret = kd_hotlock_init();
+	if (ret)
+		goto err_source;
 
 	ret = kd_exe_init();
 	if (ret)
@@ -125,9 +143,13 @@ err_exec_context:
 	kd_exe_exit();
 err_hotlock:
 	kd_hotlock_exit();
+err_source:
+	kd_source_exit();
 	return ret;
 }
 
+/* Callers, translators and source leases must already be drained/retired.
+ * This RCU wait does not by itself protect the guest's unguarded hook readers. */
 static void __exit kdlock_km_exit(void)
 {
 	kd_raw_spin_unlock = NULL;
@@ -148,6 +170,7 @@ static void __exit kdlock_km_exit(void)
 	kd_sys_exit();
 	kd_exe_exit();
 	kd_hotlock_exit();
+	kd_source_exit();
 
 	KD_PR_INFO("kd kernel module exit\n");
 }

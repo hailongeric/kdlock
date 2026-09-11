@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
+/* Per-acquisition origin tickets, distinct from reusable scheduling nodes.
+ * Generation checks prevent a stale ref from addressing a recycled ticket.
+ * Hook and virtual nested requests retain their own task/CPU/native-L lifetime;
+ * native suffix borrowing ends only after the real owner's final ACK. */
 #include <linux/errno.h>
 #include <linux/limits.h>
 #include <linux/percpu.h>

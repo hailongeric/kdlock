@@ -1,3 +1,5 @@
+# Isolate supported miasm expression/accessor differences from the lowerer.
+# This is an API adapter, not a replacement decoder or instruction verifier.
 from miasm.expression.expression import ExprInt
 
 try:

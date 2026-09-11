@@ -193,8 +193,7 @@ failed=0
 for pid in "${pids[@]}"; do wait "$pid" || failed=1; done
 test "$failed" = 0
 test "$(cat /sys/module/kdlock_km/parameters/jit_fail_pending_lock)" = 0
-rmmod klock_module
-rmmod kdlock_km
+unload_modules || exit 1
 dmesg > "$out/dmesg.log"
 check_dmesg_ok
 check_dmesg_not_has 'kd_chain timeout:\|WARNING:\|\[KD_JIT\]\[ERROR\]'

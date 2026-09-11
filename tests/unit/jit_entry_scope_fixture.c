@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+/* Drive production entry/refusal decisions with a substituted wrapper.
+ * Keep complete packets so a refusal cannot hide writes or wrong child scope. */
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -21,6 +23,18 @@ static struct kd_exec_frame active, parent;
 static struct kd_exe_info entry_table[KD_MAX_EXE], *entry;
 static unsigned long stack[16];
 static int calls, known_calls, known_result, errors, warnings, checks, failures;
+/* Residency is substituted here; exercise the consumer's no-replay decision. */
+static int source_error, source_calls;
+static bool kd_source_is_open(void)
+{
+	return true;
+}
+static int kd_source_pin_target(unsigned long address)
+{
+	(void)address;
+	source_calls++;
+	return source_error;
+}
 static int kd_jit_hl_fault_after_known_call;
 static unsigned long kd_hostcall_exits, kd_hostcall_executed,
 	kd_hostcall_resumed;
@@ -165,6 +179,7 @@ static void reset(void)
 	calls = known_calls = errors = warnings =
 		kd_jit_hl_fault_after_known_call = 0;
 	known_result = 1;
+	source_error = source_calls = 0;
 }
 
 static int run(void)
@@ -366,12 +381,30 @@ static void check_registry_refusal(void)
 	}
 }
 
+static void check_source_target_refusal(void)
+{
+	for (int error = 0; error < 2; error++) {
+		reset();
+		known_result = 0;
+		source_error = error ? -ESTALE : 0;
+		steps[0] = (struct step){ KD_EXE_CALL_MISS, 0x2000, 1, -8 };
+		CHECK(run() == (error ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE));
+		CHECK(calls == 1 && source_calls == 1 && active.executed);
+		CHECK(active.regs.ip == 0x2000 &&
+		      active.regs.sp == (unsigned long)&stack[8]);
+		CHECK(entry->status_code ==
+		      (error ? KD_EXE_NORMAL : KD_EXE_CALL_MISS));
+		CHECK(errors == error);
+	}
+}
+
 int main(void)
 {
 	check_pristine_refusal();
 	check_local_continuation();
 	check_remote_scope();
 	check_registry_refusal();
+	check_source_target_refusal();
 	printf("production JIT entry scope: %d checks, %d failures\n", checks,
 	       failures);
 	return failures != 0;

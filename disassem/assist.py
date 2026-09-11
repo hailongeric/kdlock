@@ -1,3 +1,6 @@
+# Shared instruction spelling, operand formatting and branch classification.
+# These helpers serialize the lowerer's decisions; they do not admit a kernel
+# instruction or establish that a warning-only lowering preserves its semantics.
 import diagnostics
 from miasm.expression.expression import ExprId, ExprInt
 from miasm_compat import make_expr_int

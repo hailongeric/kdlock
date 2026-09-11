@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
+/* Execute the shared assembly register probe on a private userspace stack.
+ * Mutation checks validate its oracle, not kernel JIT or flags restoration. */
 #include <stdio.h>
 #include <string.h>
 

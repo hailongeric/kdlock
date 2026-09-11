@@ -1,3 +1,6 @@
+# Lower ordinary operands/instructions using conflict.py's physical mapping.
+# Segment handling describes address lowering only: production context policy
+# separately refuses GS/FS-sensitive JIT paths. No use-time bounds guard exists.
 import diagnostics
 from assist import make_inst
 from conflict import (

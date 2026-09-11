@@ -1,3 +1,6 @@
+# Reusable mocked-text translator harness and diagnostics/codegen checks.
+# Real kernel symbols/reads and publication are substituted; wrapper execution
+# is supplied separately by test_jit_body_witness and never counted as live JIT.
 import contextlib
 import hashlib
 import io
@@ -47,6 +50,7 @@ def render(
     memory_reader=None,
     body_witness=False,
     indirect_history=None,
+    mutex_stack_bytes=0,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
@@ -65,6 +69,23 @@ def render(
 
     with tempfile.TemporaryDirectory() as temp, contextlib.ExitStack() as stack:
         stack.enter_context(contextlib.redirect_stderr(output))
+        # Byte fixtures replace the validated device query, never open or
+        # load a provider merely to exercise analysis. Live tests keep the
+        # real lease; existing fixtures default to the old conservative bound.
+        stack.enter_context(
+            patch.object(
+                translator.memread.device_session,
+                "mutex_stack_bytes",
+                return_value=mutex_stack_bytes,
+            )
+        )
+        stack.enter_context(
+            patch.object(
+                translator.memread.device_session,
+                "percpu_module_bytes",
+                return_value=8192,
+            )
+        )
         stack.enter_context(
             patch.object(
                 translator.memread,
@@ -203,6 +224,7 @@ class JitDiagnosticsTests(unittest.TestCase):
         self.assertIn("FS:", log)
         self.assertEqual(assembly, b"")
         self.assertNotIn("FLAGS_UNPRESERVED", log)
+        self.assertNotIn("CONTEXT_SCREENING_ONLY", log)
         self.assertNotIn("CONTEXT_ADDRESS_WIDENED", log)
 
     def test_address_widening_reports_explicit_and_implicit_accesses(self):
@@ -259,11 +281,39 @@ class JitDiagnosticsTests(unittest.TestCase):
             self.assertEqual(len(text), 240)
             self.assertTrue(text.endswith("..."))
 
-    def test_ordinary_unknown_address_does_not_emit_widening_warning(self):
-        assembly, log, status = render("488b07c3", return_status=True)
-        self.assertEqual(status, 0, log)
-        self.assertTrue(assembly)
-        self.assertNotIn("CONTEXT_ADDRESS_WIDENED", log)
+    def test_admitted_unknown_address_reports_screening_not_precision_failure(self):
+        # Keep the diagnostic distinct from precision refusal, for direct and
+        # memory-loaded pointers in both backends. This is not an assertion of
+        # runtime safety; muted diagnostics must preserve the exact verdict/code.
+        for kind in ("spin", "mutex"):
+            for raw in ("488b07c3", "488b07488b00c3"):
+                with self.subTest(kind=kind, raw=raw):
+                    assembly, log, status = render(
+                        raw, lock_kind=kind, return_status=True
+                    )
+                    self.assertEqual(status, 0, log)
+                    self.assertTrue(assembly)
+                    self.assertNotIn("CONTEXT_ADDRESS_WIDENED", log)
+                    warnings = [
+                        line
+                        for line in log.splitlines()
+                        if "reason=CONTEXT_SCREENING_ONLY" in line
+                    ]
+                    self.assertEqual(len(warnings), 1, log)
+                    warning = warnings[0]
+                    for field in (
+                        'entry="0x1000"',
+                        'rip="0x1000"',
+                        'inst="<context admission scope>"',
+                        'action="emit_unchanged"',
+                        "runtime_address_guard=false",
+                        "concurrent_memory_validated=false",
+                    ):
+                        self.assertIn(field, warning)
+                    muted_assembly, _, muted_status = render(
+                        raw, lock_kind=kind, return_status=True, muted=True
+                    )
+                    self.assertEqual((assembly, status), (muted_assembly, muted_status))
 
     def test_build_failure_is_reraised(self):
         output = io.StringIO()

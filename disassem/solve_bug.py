@@ -1,3 +1,7 @@
+# Narrow decoder/assembly workarounds, not general x86 correctness fixes.
+# The LEA correction consults source encoding before changing a decoded scale;
+# the text postprocessor adjusts LOCK-related output before final assembly.
+# Both are called by the translator, not standalone project entry points.
 from miasm_compat import expr_args, expr_int_value, expr_ptr, set_expr_int_value
 
 

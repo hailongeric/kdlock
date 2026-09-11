@@ -1,3 +1,8 @@
+/* One device session bridges registry snapshots to Python translation/upload.
+ * Workspace mode controls paths only, not spin/mutex benchmark mode. A compile
+ * result of 2 is policy-native-only; launch/I/O errors must remain retry errors.
+ * Source leases survive compiler children, while code publication still lacks
+ * immutable generations. Use drained learning waves for manual experiments. */
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -18,6 +23,9 @@
 #define TRANSLATOR_NATIVE_ONLY 2
 
 static const char *sys_path = "/dev/kd_dev";
+/* One provider reference binds cached artifacts to this daemon session. Never
+ * reopen after an I/O error: a new device could belong to a different module. */
+static int sys_fd = -1;
 
 enum daemon_mode {
 	MODE_V1 = 1,
@@ -170,6 +178,8 @@ static int make_ij_cmd(char *cmd, size_t size, const struct daemon_config *cfg,
 		(void *)exe->tgt_addr, workspace);
 }
 
+/* Only the translator child inherits the writer description. It must not
+ * reopen a different provider if inheritance or capability checks fail. */
 static int compile_entry(const struct daemon_config *cfg,
 			 const struct kd_exe_info *exe)
 {
@@ -186,19 +196,27 @@ static int compile_entry(const struct daemon_config *cfg,
 	const char *kind = exe->lock_kind == KD_EXE_LOCK_SPIN  ? "spin" :
 			   exe->lock_kind == KD_EXE_LOCK_MUTEX ? "mutex" :
 								 "unknown";
-	char workspace[256], pid_text[32], rip_text[32];
+	char workspace[256], pid_text[32], rip_text[32], fd_text[32];
 	pid_t child, waited;
 	int status, result;
 
 	workspace_path(workspace, sizeof(workspace), cfg, exe);
 	snprintf(pid_text, sizeof(pid_text), "%d", exe->pid);
 	snprintf(rip_text, sizeof(rip_text), "%p", (void *)exe->RIP);
+	snprintf(fd_text, sizeof(fd_text), "%d", sys_fd);
 	child = fork();
 	if (child < 0) {
 		perror("fork translator");
 		return -1;
 	}
 	if (!child) {
+		/* Only the translator inherits the session. Workspace shell commands
+		 * retain CLOEXEC; an orphaned translator must keep its provider alive. */
+		if (fcntl(sys_fd, F_SETFD, 0) < 0 ||
+		    setenv("KD_DEVICE_FD", fd_text, 1)) {
+			perror("inherit translator device session");
+			_exit(126);
+		}
 		if (chdir(workspace)) {
 			perror("chdir translator workspace");
 			_exit(126);
@@ -232,16 +250,10 @@ static int write_native_only(const struct kd_exe_info *exe)
 		.offset = 0,
 	};
 	ssize_t written;
-	int fd = open(sys_path, O_WRONLY);
 
-	if (fd < 0) {
-		perror("open /dev/kd_dev for rejection");
-		return -1;
-	}
 	do {
-		written = write(fd, &pkt, sizeof(pkt));
+		written = write(sys_fd, &pkt, sizeof(pkt));
 	} while (written < 0 && errno == EINTR);
-	close(fd);
 	if (written != sizeof(pkt)) {
 		fprintf(stderr,
 			"daemon: native-only status write failed: %zd\n",
@@ -254,21 +266,21 @@ static int write_native_only(const struct kd_exe_info *exe)
 static ssize_t read_sys(void *buffer, size_t size)
 {
 	ssize_t len;
-	int fd;
 
-	fd = open(sys_path, O_RDONLY);
-	if (fd == -1)
-		return -errno;
-	len = read(fd, buffer, size);
+	do {
+		len = read(sys_fd, buffer, size);
+	} while (len < 0 && errno == EINTR);
 	if (len < 0) {
+		int error = errno;
+
 		perror("read /dev/kd_dev");
-		close(fd);
-		return len;
+		return -error;
 	}
-	close(fd);
 	return len;
 }
 
+/* Transfer bounded payload chunks on the original device. Final status marks
+ * readiness, not protection for an executor of a previous in-place image. */
 static int write_sys(const struct daemon_config *cfg,
 		     const struct kd_exe_info *exe)
 {
@@ -279,7 +291,6 @@ static int write_sys(const struct daemon_config *cfg,
 	size_t remaining;
 	long image_size;
 	FILE *fp;
-	int fd;
 
 	workspace_path(workspace, sizeof(workspace), cfg, exe);
 	snprintf(jit_path, sizeof(jit_path), "%s/asm/jit.bin", workspace);
@@ -305,13 +316,6 @@ static int write_sys(const struct daemon_config *cfg,
 	}
 	remaining = (size_t)image_size;
 
-	fd = open(sys_path, O_WRONLY);
-	if (fd == -1) {
-		perror("open /dev/kd_dev for write");
-		fclose(fp);
-		return -1;
-	}
-
 	pkt.pid = exe->pid;
 	pkt.RIP = exe->RIP;
 	pkt.offset = 0;
@@ -332,7 +336,7 @@ static int write_sys(const struct daemon_config *cfg,
 		memcpy(buffer, &pkt, sizeof(pkt));
 
 		do {
-			written = write(fd, buffer, packet_size);
+			written = write(sys_fd, buffer, packet_size);
 		} while (written < 0 && errno == EINTR);
 		if (written != (ssize_t)packet_size) {
 			if (written < 0)
@@ -348,12 +352,10 @@ static int write_sys(const struct daemon_config *cfg,
 		pkt.offset += chunk;
 	}
 
-	close(fd);
 	fclose(fp);
 	return 0;
 
 error:
-	close(fd);
 	fclose(fp);
 	return -1;
 }
@@ -383,6 +385,8 @@ static void log_status(const struct daemon_config *cfg,
 		printf("%5d %p %s", exe->pid, (void *)exe->RIP, msg);
 }
 
+/* Poll, classify status, update learned targets, compile, then publish. A miss
+ * informs future images; this daemon never resumes a waiter already native. */
 static void check_once(const struct daemon_config *cfg)
 {
 	static struct kd_exe_info entries[KD_MAX_EXE];
@@ -556,8 +560,19 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (run_cmd("rm -rf -- 0x*", "workspace cleanup"))
+	/* The device fops owner keeps this provider resident until the parent and
+	 * any translating children exit. This does not pin source text or protect
+	 * independent guest hook readers; those lifetimes need their own protocol. */
+	sys_fd = open(sys_path, O_RDWR | O_CLOEXEC);
+	if (sys_fd < 0) {
+		perror("open /dev/kd_dev session");
 		return EXIT_FAILURE;
+	}
+	if (run_cmd("rm -rf -- 0x*", "workspace cleanup")) {
+		close(sys_fd);
+		sys_fd = -1;
+		return EXIT_FAILURE;
+	}
 	while (1) {
 		check_once(&cfg);
 		usleep(cfg.poll_us);

@@ -1,3 +1,5 @@
+# Guest-only external-module build against the captured running kernel.
+# This compiles kdlock, not the guest kernel; SELFTEST/NUMA are explicit opt-ins.
 obj-m += kdlock_km.o
 
 ccflags-y += -I$(src)/../include
@@ -19,6 +21,7 @@ kdlock_km-objs := \
 	sys.o \
 	exe.o \
 	kd_exec.o \
+	kd_source.o \
 	kd_spinlock.o \
 	kd_spin_gate.o \
 	kd_spin_entry.o \

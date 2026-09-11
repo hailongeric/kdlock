@@ -1,3 +1,6 @@
+/* x86-64 pt_regs offsets and physical wrapper-frame slots used by jit.S.
+ * Keep this layout synchronized with wrapper.S and JIT_REGISTER_ABI.md.
+ * GS/task inputs occupy two existing words; no hardware context is switched. */
 #define PT_REG R14
 #define ARG_REG R15
 

@@ -112,6 +112,12 @@ def validate(text, probe_ip, requests, *, expect_jit=True):
         assert begins, "no actual native handoff"
     else:
         assert not begins, "native-only control unexpectedly delegated"
+        # Zero continuation counters alone do not exclude a JIT that returned
+        # normally. Native controls must also reject entry/body and owner events.
+        assert not re.search(
+            r"JIT_ENTRY|JIT body witness:|install JIT chunk:|kd_native (ack|complete):",
+            text,
+        ), "native-only control contains JIT or delegated owner evidence"
     matched = set()
     sample_tasks = {key[0] for key in by_stack}
     for begin in begins:

@@ -1,10 +1,19 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+/* Extracted hook and acquisition routing with deterministic target/CPU state.
+ * Native ownership, active tickets and closing must select the correct path;
+ * this does not run queue scheduling or an assembly continuation. */
 #include "spin_gate_mock.h"
 
 typedef unsigned int u32;
 static bool promoted, frame_active, context_busy;
 static unsigned int softirq, scenarios;
 static const char *target_process = "target";
+/* Drive closing independently from task identity and retained origin routing. */
+static bool source_open = true;
+static bool kd_source_is_open(void)
+{
+	return source_open;
+}
 
 #define CONFIG_NR_CPUS 64
 #define BUG_ON(c) CHECK(!(c))
@@ -118,12 +127,17 @@ static void promotion_and_rename(void)
 	gate = kd_spin_gate_find(&locks[0]);
 	CHECK(gate && gate->word.locked == 1 && locks[0].held);
 	CHECK(mock_preempt == 1 && kd_spin_entry_task_active());
+	source_open = false;
+	CHECK(__is_kd_test() == 2);
 	strcpy(current->comm, "renamed");
 	CHECK(__is_kd_test() == 2);
 	hook_unlock(&locks[0]);
 	CHECK(mock_preempt == 0 && !locks[0].held &&
 	      gate->word.val.counter == 0);
 	CHECK(__is_kd_test() == 0 && !kd_spin_entry_task_active());
+	strcpy(current->comm, "target");
+	CHECK(__is_kd_test() == 0);
+	source_open = true;
 	scenarios++;
 
 	__raw_spin_lock(&locks[0]);

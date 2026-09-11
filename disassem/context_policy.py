@@ -1,16 +1,22 @@
 """Conservative admission rules, not a complete kernel-context analysis."""
 
+# Reading map: symbol/range resolution -> abstract register/memory transfer ->
+# JIT-episode reachability -> whole-emission bans and lock-boundary checks.
+# Unknown pointers and concurrent mutation remain outside the static proof;
+# increasing analysis precision is not a substitute for a runtime address check.
 from bisect import bisect_right
 from collections import defaultdict, deque
 from collections.abc import Mapping
 from copy import copy, deepcopy
 from fnmatch import fnmatchcase
-from itertools import product
+from itertools import pairwise, product
+from struct import unpack
 
 import context_memory
 import diagnostics
 import indirect_jump
 import normal
+from device_session import PERCPU_ALIGNMENT, PERCPU_MODULE_BYTES
 from miasm.analysis.machine import Machine
 from miasm.arch.x86.regs import all_regs_ids, regs64_expr
 from miasm.core.locationdb import LocationDB
@@ -37,6 +43,17 @@ CONTROL_SYMBOLS = (
     "mutex_lock",
     "mutex_unlock",
 )
+PERCPU_METADATA_SYMBOLS = (
+    "__per_cpu_start",
+    "__per_cpu_end",
+    "__per_cpu_offset",
+    "nr_cpu_ids",
+    "__cpu_possible_mask",
+)
+MAX_PERCPU_CPUS = 8192
+MAX_PERCPU_STATIC_BYTES = 16 * 1024 * 1024
+KERNEL_ADDRESS_MIN = 0xFF00000000000000
+ADDRESS_LIMIT = 1 << 64
 IMPLICIT_SOURCE_MEMORY = {
     "MOVSB",
     "MOVSW",
@@ -111,10 +128,13 @@ def resolve_control_symbols(lookup):
 class ContextSymbols(Mapping):
     """Exact names plus conservative intervals, not ELF object-size claims."""
 
-    def __init__(self, names, ends):
+    def __init__(self, names, ends, *, percpu=None):
         self._names = names
         self._ends = ends
         self._starts = sorted(names)
+        # Keep whole per-CPU intervals separate: a shorter named symbol inside
+        # one must not truncate the surrounding static area's coverage.
+        self._percpu = percpu
 
     def __getitem__(self, address):
         return self._names[address]
@@ -128,6 +148,10 @@ class ContextSymbols(Mapping):
     def resolve(self, address, size=1):
         if address is None:
             return None
+        if self._percpu is not None:
+            symbol = self._percpu.resolve(address, size)
+            if symbol:
+                return symbol
         index = bisect_right(self._starts, address) - 1
         if index >= 0:
             start = self._starts[index]
@@ -140,9 +164,103 @@ class ContextSymbols(Mapping):
         return None
 
 
-def load_context_symbols(path="/proc/kallsyms"):
+def load_static_percpu_ranges(metadata, read_memory, *, module_bytes=0):
+    """Resolve fixed x86-64 core/module arenas, not allocation/object validity.
+
+    The supported guest initializes possible CPUs/offsets at boot; offsets are
+    ro_after_init. Use every possible CPU, including offline ones. The injected
+    reader is the production device-lease/pinned kcore boundary, never an
+    unleased fallback. Snapshot comparison detects inconsistent collection,
+    not an allocator lifetime guarantee or a runtime address guard. Version 2
+    supplies the boot-reserved module extent after the aligned core section;
+    never expand to unit_size, whose tail may have returned to ordinary memory.
+    """
+    if type(module_bytes) is not int or module_bytes not in (0, PERCPU_MODULE_BYTES):
+        raise ValueError("invalid module per-CPU range capability")
+    missing = set(PERCPU_METADATA_SYMBOLS) - metadata.keys()
+    if missing:
+        raise ValueError(
+            "unavailable static per-CPU metadata: " + ", ".join(sorted(missing))
+        )
+    start, end = metadata["__per_cpu_start"], metadata["__per_cpu_end"]
+    size = end - start
+    # __per_cpu_start == 0 is valid on x86-64. Do not treat section offsets as
+    # actual low-memory intervals, which would also reject ordinary immediates.
+    if not 0 <= start < end < ADDRESS_LIMIT or not 0 < size <= MAX_PERCPU_STATIC_BYTES:
+        raise ValueError("invalid static per-CPU section bounds")
+    module_offset = (size + PERCPU_ALIGNMENT - 1) // PERCPU_ALIGNMENT * PERCPU_ALIGNMENT
+    span = module_offset + module_bytes if module_bytes else size
+    snapshots = []
+
+    def read_field(name, length):
+        address = metadata[name]
+        if not KERNEL_ADDRESS_MIN <= address < address + length <= ADDRESS_LIMIT:
+            raise ValueError(f"invalid static per-CPU metadata address: {name}")
+        raw = read_memory(address, length)
+        if not isinstance(raw, (bytes, bytearray)) or len(raw) != length:
+            raise ValueError(f"incomplete static per-CPU metadata read: {name}")
+        raw = bytes(raw)
+        snapshots.append((name, address, raw))
+        return raw
+
+    nr_cpus = int.from_bytes(read_field("nr_cpu_ids", 4), "little")
+    if not 0 < nr_cpus <= MAX_PERCPU_CPUS:
+        raise ValueError("invalid or excessive static per-CPU CPU count")
+    mask = int.from_bytes(
+        read_field("__cpu_possible_mask", ((nr_cpus + 63) // 64) * 8), "little"
+    ) & ((1 << nr_cpus) - 1)
+    if not mask:
+        raise ValueError("empty possible CPU mask for static per-CPU areas")
+    offsets = unpack(f"<{nr_cpus}Q", read_field("__per_cpu_offset", nr_cpus * 8))
+    for name, address, raw in snapshots:
+        if read_memory(address, len(raw)) != raw:
+            raise ValueError(
+                f"static per-CPU metadata changed during inspection: {name}"
+            )
+
+    ranges = []
+    for cpu, offset in enumerate(offsets):
+        if not mask & (1 << cpu):
+            continue
+        base = (start + offset) % ADDRESS_LIMIT
+        if not KERNEL_ADDRESS_MIN <= base < base + span <= ADDRESS_LIMIT:
+            raise ValueError(f"invalid static per-CPU runtime range: cpu={cpu}")
+        ranges.append((base, base + size, f"kernel_percpu_cpu_{cpu}"))
+        if module_bytes:
+            module_start = base + module_offset
+            ranges.append(
+                (module_start, module_start + module_bytes, f"module_percpu_cpu_{cpu}")
+            )
+    ranges.sort()
+    if any(left[1] > right[0] for left, right in pairwise(ranges)):
+        raise ValueError("overlapping static per-CPU runtime ranges")
+    diagnostics.warn(
+        "STATIC_PERCPU_SCREENING",
+        "extend_static_ranges",
+        "core static/module reserved arenas only; dynamic allocations, object "
+        "lifetimes and unknown pointers are not validated",
+        cpus=mask.bit_count(),
+        bytes_per_cpu=size + module_bytes,
+        core_bytes=size,
+        module_bytes=module_bytes,
+    )
+    return ContextSymbols(
+        {base: name for base, _, name in ranges},
+        {base: limit for base, limit, _ in ranges},
+    )
+
+
+def load_context_symbols(
+    path="/proc/kallsyms", *, read_memory=None, percpu_module_bytes=0
+):
+    # Name-only parsing remains useful for byte fixtures. Production always
+    # supplies its leased reader and negotiated module extent. A standalone
+    # capability value cannot replace the CPU metadata or its read lifetime.
+    if percpu_module_bytes and read_memory is None:
+        raise ValueError("module per-CPU ranges require the leased memory reader")
     symbols = {}
     owners = {}
+    metadata = {}
     addresses = defaultdict(set)
     with open(path, encoding="ascii", errors="replace") as source:
         for line in source:
@@ -151,6 +269,15 @@ def load_context_symbols(path="/proc/kallsyms"):
                 continue
             address = int(fields[0], 16)
             owner = fields[3] if len(fields) > 3 else ""
+            if (
+                read_memory is not None
+                and not owner
+                and fields[2] in PERCPU_METADATA_SYMBOLS
+            ):
+                name = fields[2]
+                if name in metadata and metadata[name] != address:
+                    raise ValueError(f"ambiguous static per-CPU metadata: {name}")
+                metadata[name] = address
             if address:
                 addresses[owner].add(address)
             if is_context_symbol(fields[2]):
@@ -168,7 +295,14 @@ def load_context_symbols(path="/proc/kallsyms"):
         # Aliases do not truncate a range; module boundaries never extend it.
         # With no visible successor we know only the exact symbol address.
         ends[address] = values[index] if index < len(values) else address + 1
-    return ContextSymbols(symbols, ends)
+    percpu = (
+        load_static_percpu_ranges(
+            metadata, read_memory, module_bytes=percpu_module_bytes
+        )
+        if read_memory is not None
+        else None
+    )
+    return ContextSymbols(symbols, ends, percpu=percpu)
 
 
 def static_address(expr, db, next_rip):
@@ -303,9 +437,10 @@ class FlowConstants(RegisterConstants):
     MAX_COMBINATIONS = 256
     MAX_IR_BLOCKS = 64
     MAX_IR_VISITS = 1024
+    MAX_STACK_PARTITIONS = 64
     UNKNOWN = frozenset({None})
 
-    def __init__(self, guards=None):
+    def __init__(self, guards=None, *, scoped_calls=False, mutex_stack_bytes=0):
         super().__init__()
         self.instruction_lifted = {}
         self.unknown = {
@@ -322,7 +457,11 @@ class FlowConstants(RegisterConstants):
             frozenset(self.origins.values()), guards
         )
         self.control_calls = set()
+        self.mutex_calls = set()
+        self.mutex_stack_bytes = mutex_stack_bytes
         self.call_entries = {}
+        self.scoped_calls = scoped_calls
+        self.return_targets = {}
 
     def snapshot(self):
         return dict(self.values), dict(self.origins), self.memory.snapshot()
@@ -343,10 +482,10 @@ class FlowConstants(RegisterConstants):
             self.memory.merge(left[2], right[2]),
         )
 
-    def clobber(self):
+    def clobber(self, *, checked_windows=(), window_bytes=0):
         self.values.clear()
         self.origins.clear()
-        self.memory.clobber()
+        self.memory.clobber(checked_windows=checked_windows, window_bytes=window_bytes)
 
     def wide_dependency(self, value):
         return bool(
@@ -471,7 +610,9 @@ class FlowConstants(RegisterConstants):
             for name in ("RBX", "RBP", "RSP", "R12", "R13", "R14", "R15")
         }
         values, origins = dict(self.values), dict(self.origins)
-        self.update_effects(line, symbols)
+        self.update_effects(
+            line, symbols, checked_mutex_stack=id(line) in self.mutex_calls
+        )
         for reg in saved:
             for output, before in ((self.values, values), (self.origins, origins)):
                 if reg in before:
@@ -479,7 +620,7 @@ class FlowConstants(RegisterConstants):
                 else:
                     output.pop(reg, None)
 
-    def update_effects(self, line, symbols=None):
+    def update_effects(self, line, symbols=None, *, checked_mutex_stack=False):
         plan = self.instruction_plan(line)
         if plan is None:
             self.clobber()
@@ -487,11 +628,49 @@ class FlowConstants(RegisterConstants):
         entry, graph, temporaries = plan
         if graph is None:
             self.check_memory(line, entry, symbols)
+            if self.scoped_calls and line.name.upper() == "RET":
+                # Refine only the exact 64-bit pop emitted by special_inst.
+                # Read the old stack through the ordinary alias/clobber model;
+                # an unknown/partial/widened value permits every RET target.
+                stack = ExprId("RSP", 64)
+                pc = ExprId("RIP", 64)
+                returned = ExprMem(stack, 64)
+                if (
+                    not line.args
+                    and expr_simp(entry.get(pc, pc)) == returned
+                    and expr_simp(entry.get(stack, stack))
+                    == expr_simp(stack + ExprInt(8, 64))
+                ):
+                    values = self.resolve_many(returned, allow_wide=True)
+                    if values and all(isinstance(value, ExprInt) for value in values):
+                        self.return_targets[id(line)] = frozenset(map(int, values))
             # CALL writes its return address before any callee can clobber it.
             self.update_assignments(entry)
             if line.is_subcall():
                 self.call_entries[id(line)] = self.snapshot()
-                self.clobber()
+                windows = ()
+                stack = ExprId("RSP", 64)
+                pushed = expr_simp(stack - ExprInt(8, 64))
+                # Derive the checkpoint start from the actual post-push
+                # packet, not a pre-CALL memory snapshot. A CALL write may
+                # already have changed/aliased a tracked word. Unrecognized
+                # IR keeps the old clobber even for a registered mutex target.
+                if (
+                    checked_mutex_stack
+                    and self.mutex_stack_bytes
+                    and line.name.upper() == "CALL"
+                    and expr_simp(entry.get(stack, stack)) == pushed
+                    and {
+                        expr_simp(reg): static_address(value, self.lifter.loc_db, None)
+                        for reg, value in entry.items()
+                        if isinstance(reg, ExprMem)
+                    }
+                    == {ExprMem(pushed, 64): line.offset + line.l}
+                ):
+                    windows = self.resolve_many(stack + ExprInt(8, 64), allow_wide=True)
+                self.clobber(
+                    checked_windows=windows, window_bytes=self.mutex_stack_bytes
+                )
             return
         for reg in temporaries:
             self.unknown[reg] = ExprId(f"kd_unknown_{reg}", reg.size)
@@ -865,6 +1044,8 @@ def constant_blocks(
     *,
     roots=None,
     control_targets=(),
+    mutex_targets=(),
+    mutex_stack_bytes=0,
     native_exits=(),
     guards=None,
     scoped_calls=False,
@@ -889,6 +1070,7 @@ def constant_blocks(
     calls = defaultdict(list)
     callees = set()
     control_calls = set()
+    mutex_calls = set()
     for start, block in blocks.items():
         db = databases.get(block)
         if db is None:
@@ -921,6 +1103,8 @@ def constant_blocks(
             callee = static_address(line.args[0], db, offset)
             if guards is not None and callee in control_targets:
                 control_calls.add(id(line))
+                if callee in mutex_targets:
+                    mutex_calls.add(id(line))
             if callee in blocks and callee not in control_targets:
                 if scoped_calls and index != len(block.lines) - 1:
                     raise ContextFlowLimit(
@@ -937,14 +1121,14 @@ def constant_blocks(
         raise ContextFlowLimit("entry guards do not cover independently seeded callees")
     returns = call_return_edges(blocks, successors, calls, max_visits)
     if scoped_calls:
-        # A corrupted virtual return slot can select any emitted whitelist
-        # target, not necessarily its matching caller. Check all such edges,
-        # rather than assuming a balanced source stack or an ABI return value.
+        # A corrupted virtual return slot can select another caller. Keep the
+        # complete emitted whitelist even when sequential memory facts later
+        # prove that a particular packet cannot take some of its edges.
         emitted = {}
         try:
-            indirect_jump.find(blocks, databases, emitted)
-        except (KeyError, RecursionError) as error:
-            raise ContextFlowLimit("incomplete scoped return dispatch graph") from error
+            indirect_jump.find(blocks, databases, emitted, max_visits=max_visits)
+        except indirect_jump.ReturnFlowError as error:
+            raise ContextFlowLimit(str(error), error.offset) from error
         expected = {
             block.lines[-1].offset + block.lines[-1].l: set(returns[start])
             for start, block in blocks.items()
@@ -957,39 +1141,92 @@ def constant_blocks(
         for start, edges in calls.items():
             for _, _, continuation in edges:
                 successors[start].discard(continuation)
-    tracker = FlowConstants(guards)
+        # Reject disconnected learned text before value-based RET refinement.
+        # A connected continuation may subsequently prove unreachable (e.g. a
+        # callee overwrites its return slot); that is not an independent seed.
+        reachable, todo = set(), list(roots)
+        work = 0
+        while todo:
+            start = todo.pop()
+            if start in reachable:
+                continue
+            reachable.add(start)
+            edges = (
+                successors[start]
+                | returns[start]
+                | {callee for _, callee, _ in calls[start]}
+            )
+            work += len(edges) + 1
+            if work > max_visits:
+                raise ContextFlowLimit(
+                    "scoped reachability exceeds its work budget", start
+                )
+            todo.extend(sorted(edges - reachable, reverse=True))
+        if blocks.keys() - reachable:
+            raise ContextFlowLimit(
+                "unreached selected CFG blocks", min(blocks.keys() - reachable)
+            )
+    tracker = FlowConstants(
+        guards, scoped_calls=scoped_calls, mutex_stack_bytes=mutex_stack_bytes
+    )
     tracker.control_calls = control_calls
+    tracker.mutex_calls = mutex_calls
     initial = tracker.snapshot()
+
+    def state_key(start, state, *, unknown_return=False):
+        # This is a bounded disjunction of proven RSP facts, not a shadow call
+        # stack. Rewritten returns and arbitrary RSP changes remain real data.
+        # Joining different depths at a shared thunk would erase the relation
+        # between its return slot, saved registers and caller continuation.
+        # An unknown RET can form cycles through every whitelisted caller.
+        # Merge those destinations normally instead of allocating a partition
+        # for each hypothetical pop depth. Keep all register/memory values in
+        # the merge; this changes precision, not possible targets or effects.
+        if not scoped_calls or unknown_return:
+            return start, None, None
+        stack = ExprId("RSP", 64)
+        return start, state[0].get(stack, tracker.UNKNOWN), state[1].get(stack)
+
     # Independently learned callee inputs are not equal to the caller's entry
     # register identities. Numeric alternatives from real CALL edges still join.
-    incoming = {
-        start: (
+    incoming, partitions = {}, defaultdict(set)
+    for start in sorted(roots):
+        state = (
             dict(initial[0]),
             {} if start in callees and not scoped_calls else dict(initial[1]),
             initial[2],
         )
-        for start in roots
-    }
-    pending = deque(sorted(roots))
+        key = state_key(start, state)
+        incoming[key] = state
+        partitions[start].add(key)
+    pending = deque(incoming)
     queued = set(pending)
     seen = set()
     visits = 0
     while pending:
-        start = pending.popleft()
-        queued.remove(start)
+        key = pending.popleft()
+        queued.remove(key)
+        start = key[0]
         visits += 1
         if visits > max_visits:
             raise ContextFlowLimit(
                 "register-address CFG analysis exceeds its work budget", start
             )
         block = blocks[start]
-        tracker.restore(incoming[start])
+        tracker.restore(incoming[key])
         tracker.call_entries.clear()
+        tracker.return_targets.clear()
         seen.add(start)
         yield start, block, tracker
+        return_edges = returns[start]
+        possible = None
+        if scoped_calls and block.lines:
+            possible = tracker.return_targets.get(id(block.lines[-1]))
+            if possible is not None:
+                return_edges = return_edges & possible
         outgoing = [
             (target, tracker.snapshot())
-            for target in sorted(successors[start] | returns[start])
+            for target in sorted(successors[start] | return_edges)
         ]
         for line, callee, _ in calls[start]:
             state = tracker.call_entries.get(id(line))
@@ -997,19 +1234,34 @@ def constant_blocks(
                 raise ContextFlowLimit("missing decoded CALL input state", start, line)
             outgoing.append((callee, state))
         for target, state in outgoing:
+            key = state_key(
+                target,
+                state,
+                unknown_return=possible is None and target in return_edges,
+            )
             merged = (
                 state
-                if target not in incoming
-                else tracker.merge_state(incoming[target], state)
+                if key not in incoming
+                else tracker.merge_state(incoming[key], state)
             )
-            if target in incoming and merged == incoming[target]:
+            if key in incoming and merged == incoming[key]:
                 continue
-            incoming[target] = merged
-            if target not in queued:
-                pending.append(target)
-                queued.add(target)
+            if key not in incoming:
+                if scoped_calls and (
+                    len(partitions[target]) >= tracker.MAX_STACK_PARTITIONS
+                    or len(incoming) >= max_visits
+                ):
+                    raise ContextFlowLimit(
+                        "register-address CFG partitions exceed their work budget",
+                        target,
+                    )
+                partitions[target].add(key)
+            incoming[key] = merged
+            if key not in queued:
+                pending.append(key)
+                queued.add(key)
     unreached = blocks.keys() - seen
-    if unreached:
+    if unreached and not scoped_calls:
         raise ContextFlowLimit("unreached selected CFG blocks", min(unreached))
     if guards is not None:
         # Earlier propagation may already rely on collected separations. A

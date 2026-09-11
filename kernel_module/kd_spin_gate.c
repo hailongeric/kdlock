@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
+/* Map each Linux spinlock L to a separate private scheduling word S.
+ * S selects combiners; only L excludes native peers. A hold records the real
+ * owner and ownership interval, not the containing lock allocation's lifetime.
+ * The fixed map is append-only until controlled provider teardown. */
 #include <linux/errno.h>
 #include <linux/hash.h>
 #include <linux/limits.h>
@@ -52,7 +56,17 @@ static struct kd_spin_gate *kd_spin_gate_lookup(raw_spinlock_t *origin,
 
 struct kd_spin_gate *kd_spin_gate_get(raw_spinlock_t *origin)
 {
-	return kd_spin_gate_lookup(origin, true);
+	struct kd_spin_gate *gate = kd_spin_gate_lookup(origin, true);
+
+#ifdef KDLOCK_SELFTEST
+	/* Identify real allocation refusal without changing the bounded map or
+	 * manufacturing a ticket. Native participants do not call this lookup. */
+	if (origin && !gate)
+		pr_info("kd_gate refusal: task=%d cpu=%u lock=%lx\n",
+			current->pid, raw_smp_processor_id(),
+			(unsigned long)origin);
+#endif
+	return gate;
 }
 
 struct kd_spin_gate *kd_spin_gate_find(raw_spinlock_t *origin)

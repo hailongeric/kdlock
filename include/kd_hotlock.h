@@ -1,6 +1,8 @@
 #ifndef KD_HOTLOCK_H
 #define KD_HOTLOCK_H
 
+/* Append-only sampling state consumed by hooks before entry registration.
+ * Promotion authorizes considering JIT; it does not mean code is ready or ran. */
 #include <linux/atomic.h>
 #include <linux/types.h>
 

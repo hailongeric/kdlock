@@ -61,6 +61,29 @@ def fixture(depth=2, numa=0):
                 mutex=0,
                 cpu=0,
             ),
+            event(
+                "kd_frame held refusal",
+                ready=1,
+                valid_before=1,
+                cpu=0,
+                task=107,
+                entry="3000",
+                outer=locks[7],
+                lock=locks[8],
+                target="4000",
+                sp="5000",
+                depth=8,
+                recorded=8,
+                local=8,
+                error=-7,
+                packet=1,
+                frame=1,
+                combiner=1,
+                physical=1,
+                pending=1,
+                context=1,
+                **{"return": "3010"},
+            ),
         ]
     for i in range(depth):
         used = 680 + i * 700
@@ -523,6 +546,41 @@ class FrameTests(unittest.TestCase):
                         )
                 for value in (False, 1, "1"):
                     self.rejects(log, {**p, "probe_frames": value})
+
+    def test_natural_held_refusal_preserves_the_whole_contract(self):
+        for numa in (0, 1):
+            log, p = fixture(8, numa)
+            result = validate(log, p, 8, numa, "4000")
+            self.assertEqual(
+                result["held"],
+                {
+                    "depth": 8,
+                    "recorded": 8,
+                    "local": 8,
+                    "packet_unchanged": True,
+                },
+            )
+            row = next(
+                line
+                for line in log.splitlines()
+                if line.startswith("kd_frame held refusal:")
+            )
+            self.rejects(log.replace(row, ""), p)
+            self.rejects(log + "\n" + row, p)
+            self.rejects(log.replace(row, row + " unexpected=1"), p)
+            short_log, short_p = fixture(2, numa)
+            self.rejects(short_log + "\n" + row, short_p)
+            for key, value in records(log, "kd_frame held refusal:")[0].items():
+                with self.subTest(numa=numa, field=key):
+                    self.rejects(
+                        change(
+                            log,
+                            "kd_frame held refusal:",
+                            key,
+                            "0" if value != "0" else "1",
+                        ),
+                        p,
+                    )
 
     def test_capacity_with_deferred_lists(self):
         for depth, levels, count in (

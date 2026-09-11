@@ -1,3 +1,5 @@
+# Compare generated service stubs with the shared hostcall manifest.
+# Emitting a matching exit does not execute a Linux service or prove resumption.
 import os
 import re
 import sys

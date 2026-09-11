@@ -72,6 +72,7 @@ def fixture(
     readmit=0,
     readmit_layer=3,
     late_observer=False,
+    waiter_exit=False,
 ):
     p = placement(n, cross)
     if readmit:
@@ -112,6 +113,14 @@ def fixture(
                 cpu=executors[i],
                 outer_released=int(released),
                 remaining=int(not released),
+            )
+        if waiter_exit:
+            event(
+                "kd_relay_exit arm",
+                **exit_identity,
+                remaining=0,
+                alive=1,
+                valid=1,
             )
         event("kd_deep native probe", task=10, cpu=cpus[0], record=2, valid=1)
         if renamed:
@@ -157,6 +166,15 @@ def fixture(
         else:
             event("kd_native ack", task=10, lock=locks[i], mutex=0, last_spin=0)
 
+    exit_identity = {
+        "task": 10,
+        "cpu": executors[0],
+        "owner": owners[0],
+        "outer": locks[0],
+        "entry": "2000",
+        "ip": "4000",
+        "sp": "5000",
+    }
     for i, lock in enumerate(locks):
         event("kd_deep lock", index=i, addr=lock)
     event(
@@ -302,6 +320,8 @@ def fixture(
     )
     if stage != 1:
         for i in range(n):
+            if waiter_exit and i == 0:
+                continue
             event("kd_native complete", task=10, outer=locks[i], mutex=0)
         event("kd_native ack", task=10, lock=locks[n - 1], mutex=0, last_spin=1)
         if renamed:
@@ -329,6 +349,16 @@ def fixture(
         valid=1,
         armed=1,
     )
+    if waiter_exit:
+        event(
+            "kd_relay_exit release",
+            **exit_identity,
+            detached=1,
+            packet=1,
+            context=1,
+            valid=1,
+        )
+        event("kd_native complete", task=10, outer=locks[0], mutex=0)
     for i in range(n):
         event(
             "kd_deep state",
@@ -449,6 +479,57 @@ def fixture(
 
 
 class DepthOracleTests(unittest.TestCase):
+    def test_root_relay_outlives_the_actual_waiter_tid(self):
+        # Extend the existing late remote case, preserving its six RPCs and
+        # last-lock ACK. Invalid identities/packets/order must not pass just
+        # because the native frame counters balance.
+        options = {
+            "native_owner": True,
+            "renamed": True,
+            "reverse": True,
+            "waiter_exit": True,
+        }
+        text, p = fixture(
+            4, 3, owner=True, renamed=True, reverse=True, cross=True, waiter_exit=True
+        )
+        result = validate(text, p, 3, **options)
+        self.assertEqual(
+            (result["native_frames"], result["acks"], result["rpc"]), (4, 1, 6)
+        )
+        self.assertEqual(result["waiter_exit"]["detached"], "1")
+        for line in text.splitlines():
+            if not line.startswith("kd_relay_exit "):
+                continue
+            malformed = [text.replace(line, ""), text.replace(line, line + "\n" + line)]
+            for match in re.finditer(r"(\w+)=([\w-]+)", line):
+                value = "1" if match[2] == "0" else "0"
+                changed = line[: match.start(2)] + value + line[match.end(2) :]
+                malformed.append(text.replace(line, changed))
+            for damaged in malformed:
+                with (
+                    self.subTest(line=line, damaged=damaged),
+                    self.assertRaises(AssertionError),
+                ):
+                    validate(damaged, p, 3, **options)
+        for tag, before in (
+            ("kd_relay_exit arm:", "kd_deep native probe:"),
+            ("kd_relay_exit release:", "kd_native ack:"),
+            ("kd_native complete: task=10 outer=1000", "kd_relay_exit release:"),
+        ):
+            lines = text.splitlines()
+            line = next(item for item in lines if item.startswith(tag))
+            lines.remove(line)
+            index = next(i for i, item in enumerate(lines) if item.startswith(before))
+            # Arming after the native probe is too late; the other mutations
+            # complete/release before the event they are required to follow.
+            lines.insert(index + int(tag.endswith("arm:")), line)
+            with self.subTest(order=tag), self.assertRaises(AssertionError):
+                validate("\n".join(lines), p, 3, **options)
+        with self.assertRaises(AssertionError):
+            validate(text, p, 3, **{**options, "waiter_exit": False})
+        with self.assertRaises(AssertionError):
+            validate(text, p, 2, **options)
+
     def test_middle_late_observer_link(self):
         for layer, count, reverse in product((1, 2), (1, 2), (False, True)):
             text, p = fixture(

@@ -7,6 +7,10 @@
  * critical section.  When kdlock_km is loaded with target_process="klock_test",
  * these lock operations trigger the kdlock hooks and exercise the delegation
  * path.
+ * Workload records and their independent integrity checks must agree after
+ * drain. Optional tests/kernel fragments construct contention or observe it;
+ * they are not standalone modules and must not be mistaken for production
+ * lock code. Modes 10/11 are native-only negatives; mode 9 is fault diagnosis.
  */
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -23,6 +27,9 @@
 #include <linux/sched.h>
 #include <linux/jiffies.h>
 #include <kernel/locking/mutex.h>
+#ifdef KDLOCK_SOURCE_HELPER
+#include "kd_depth_source.h"
+#endif
 
 #define DRIVER_NAME "lock_dev"
 
@@ -65,6 +72,11 @@ static unsigned int native_resume_stage;
 module_param(native_resume_stage, uint, 0444);
 static bool native_resume_rename;
 static bool native_pending_contended;
+static bool native_acquired_queue;
+module_param(native_acquired_queue, bool, 0444);
+MODULE_PARM_DESC(
+	native_acquired_queue,
+	"Stage 3: acquire virtual B from a real private queue before native continuation");
 module_param(native_pending_contended, bool, 0444);
 MODULE_PARM_DESC(native_pending_contended,
 		 "Stage 4 oracle: hold B until the original waiter queues");
@@ -116,6 +128,7 @@ static unsigned long kd_test_mutex_owner(struct mutex *lock)
 }
 
 #include "../tests/kernel/native_waiter_signal_workload.c"
+#include "../tests/kernel/mutex_stack_workload.c"
 
 static bool kd_test_spin_origin_locked(u32 word)
 {
@@ -242,9 +255,10 @@ kd_resume_native_probe(struct kd_resume_record *record)
 		if (!preserved || pending_mutex_acquired)
 			atomic_inc(&resume_failures);
 		pending_mutex_acquired++;
-		pr_info("kd_pending mutex acquired: task=%d waiter=%lx a_owner=%lx b_owner=%lx preserved=%u\n",
+		pr_info("kd_pending mutex acquired: task=%d waiter=%lx a_owner=%lx b_owner=%lx preserved=%u cpu=%u preempt=%u irq=%u\n",
 			current->pid, (unsigned long)current, a_owner, b_owner,
-			preserved);
+			preserved, raw_smp_processor_id(), preempt_count(),
+			irqs_disabled());
 		kd_waiter_signal_acquired(record);
 	}
 	record->called++;
@@ -367,12 +381,20 @@ static __always_inline void kd_cs_step(enum kd_cs_state_id id)
 /* A normal missing CALL is learned first. With its caller's A still held,
  * seven acquisitions fill the frame; the eighth must fail before acquisition
  * and continue natively with the prior seven children still owned by A's owner.
- * Keep the calls explicit so the fixture does not depend on loop inference. */
+ * Keep the calls explicit so the fixture does not depend on loop inference.
+ * Keep this a real CALL in both builds. The optional source needs two learned
+ * levels, including saved-register reloads across checked mutex controls and
+ * the external helper's translated RET; inlining would bypass that contract. */
 static __attribute__((noipa)) noinline void
 kd_resume_depth_mutex(struct kd_resume_record *record)
 {
 	if (!record)
 		return;
+#ifdef KDLOCK_SOURCE_HELPER
+	/* Learn the cross-module CALL before the capacity wave. Moving only this
+	 * prefix keeps the native owner/record oracle in the original module. */
+	kd_depth_source_enter(resume_depth_locks);
+#else
 	mutex_lock(&resume_depth_locks[0]);
 	mutex_lock(&resume_depth_locks[1]);
 	mutex_lock(&resume_depth_locks[2]);
@@ -380,6 +402,7 @@ kd_resume_depth_mutex(struct kd_resume_record *record)
 	mutex_lock(&resume_depth_locks[4]);
 	mutex_lock(&resume_depth_locks[5]);
 	mutex_lock(&resume_depth_locks[6]);
+#endif
 	record->before++;
 	record->value *= 3;
 	mutex_lock(&resume_depth_locks[7]);
@@ -535,6 +558,13 @@ static void run_contention_test(unsigned long loop_count,
 	}
 }
 
+static void kd_acquired_spin_prepare(struct kd_resume_record *record,
+				     unsigned int role);
+static void kd_acquired_spin_observe(struct kd_resume_record *record);
+static void kd_acquired_spin_finish(struct kd_resume_record *record);
+static void kd_acquired_spin_role(unsigned int role);
+static unsigned int acquired_prefix;
+
 static void run_nested_spinlock_test(unsigned long loop_count,
 				     unsigned long work_load, unsigned int role)
 {
@@ -543,6 +573,11 @@ static void run_nested_spinlock_test(unsigned long loop_count,
 	bool irq = irqs_disabled();
 	volatile int dummy_computation = 0;
 
+	if (native_acquired_queue && (role & MODE_ROLE_SYNCHRONIZED) &&
+	    (role & ~MODE_ROLE_SYNCHRONIZED)) {
+		kd_acquired_spin_role(role & ~MODE_ROLE_SYNCHRONIZED);
+		return;
+	}
 	if (READ_ONCE(spin_ooo_dependency) && (role & MODE_ROLE_SYNCHRONIZED) &&
 	    (role & ~MODE_ROLE_SYNCHRONIZED)) {
 		kd_ooo_spin_role(role & ~MODE_ROLE_SYNCHRONIZED);
@@ -553,10 +588,20 @@ static void run_nested_spinlock_test(unsigned long loop_count,
 		struct kd_resume_record *record = kd_resume_begin();
 
 		kd_ooo_spin_prepare(record);
+		kd_acquired_spin_prepare(record, role);
 		spin_lock(&nested_lock_a);
+		/* A translated prefix detects replay across B without duplicating
+		 * B's complex state machine and its bounded admission workload.
+		 * Scheduling barriers stay outside this shared acquisition site. */
+		if (native_acquired_queue && (role & MODE_ROLE_SYNCHRONIZED)) {
+			WRITE_ONCE(acquired_prefix,
+				   READ_ONCE(acquired_prefix) + 1);
+		}
 		kd_resume_before_pending_lock(record);
 		spin_lock(&nested_lock_b);
 		kd_resume_after_pending_lock(record);
+		if (native_acquired_queue && (role & MODE_ROLE_SYNCHRONIZED))
+			kd_acquired_spin_observe(record);
 
 		kd_cs_step(KD_CS_SPIN_B);
 		for (j = 0; j < work_load; j++)
@@ -594,6 +639,8 @@ spin_ooo_after_a:
 		spin_unlock(&nested_lock_a);
 nested_spin_done:
 		kd_spin_check_context(count, irq);
+		if (native_acquired_queue && (role & MODE_ROLE_SYNCHRONIZED))
+			kd_acquired_spin_finish(record);
 		if (native_resume_rename)
 			kd_test_rename("klock_test");
 	}
@@ -815,6 +862,9 @@ static noinline void run_inner_direct_role(unsigned long work_load,
 	spin_unlock(&nested_lock_b);
 }
 
+#include "../tests/kernel/spin_ticket_workload.c"
+#include "../tests/kernel/spin_gate_workload.c"
+
 /* This fixture has one B pending-bit holder and one queued, CPU-pinned waiter.
  * While B is owned, its tail cannot drain or be replaced by another contender.
  * Observe the published tail, not merely a flag set before the lock CALL. */
@@ -879,6 +929,7 @@ static noinline void run_inner_holder_role(unsigned long work_load)
 	smp_mb__after_atomic();
 	if (native_pending_contended) {
 		wait_for_pending_spin_waiter();
+		kd_gate_capacity_hold();
 	} else {
 		while (atomic_read(&inner_direct_waiting) < 2 ||
 		       !atomic_read(&inner_nested_waiting) ||
@@ -935,12 +986,15 @@ static noinline void run_outer_direct_role(unsigned long work_load,
 	unsigned long j;
 	volatile int dummy_computation = 0;
 
+	/* Extra tickets belong to this physical candidate, not the JIT waiter. */
+	kd_ticket_hold(synchronized, true);
 	prepare_outer_direct_role(synchronized);
 	spin_lock(&nested_lock_a);
 	kd_cs_step(KD_CS_SPIN_A);
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	spin_unlock(&nested_lock_a);
+	kd_ticket_hold(synchronized, false);
 }
 
 static noinline void run_outer_holder_role(unsigned long work_load)
@@ -1010,6 +1064,8 @@ static noinline void run_outer_trailing_role(unsigned long work_load,
 	if (READ_ONCE(remote_spin_ooo) && !remote_spin_native_owner)
 		spin_unlock(dependency);
 }
+
+#include "../tests/kernel/spin_acquired_workload.c"
 
 static void run_inner_contention_spinlock_test(unsigned long loop_count,
 					       unsigned long work_load,
@@ -1261,15 +1317,25 @@ static int run_mutex_contention_test(unsigned long loop_count,
 	return 0;
 }
 
+/* These mutex-only role barriers may share a CPU. Yield so another role can
+ * publish its queue link or native ACK; unlike spin tests, no raw lock/pin is
+ * held here. A sleeping native mutex does not prohibit cond_resched().
+ */
+static __always_inline void kd_nested_mutex_relax(void)
+{
+	cpu_relax();
+	cond_resched();
+}
+
 static noinline void prepare_nested_mutex_role(void)
 {
 	while (!atomic_read(&mutex_inner_holder_ready) ||
 	       !atomic_read(&mutex_inner_direct_waiting) ||
 	       !atomic_read(&mutex_outer_holder_ready) ||
 	       !atomic_read(&mutex_outer_direct_waiting))
-		cpu_relax();
+		kd_nested_mutex_relax();
 	while (kd_mutex_debug_waiter_count(&nested_mutex_a) < 1)
-		cpu_relax();
+		kd_nested_mutex_relax();
 }
 
 static noinline void run_nested_mutex_cs(unsigned long work_load)
@@ -1277,8 +1343,11 @@ static noinline void run_nested_mutex_cs(unsigned long work_load)
 	unsigned long j;
 	int lock_ret = 0;
 	volatile int dummy_computation = 0;
+	volatile unsigned long stack_cookie = KD_MUTEX_STACK_OLD;
 	struct kd_resume_record *record = kd_resume_begin();
 
+	if (native_stack_change && READ_ONCE(native_stack_armed))
+		kd_stack_change_prepare(record, &stack_cookie);
 	kd_ooo_dependency_prepare(record);
 	if (native_pending_contended)
 		smp_store_release(&pending_mutex_record, record);
@@ -1312,6 +1381,8 @@ static noinline void run_nested_mutex_cs(unsigned long work_load)
 		kd_waiter_signal_cancelled(record, lock_ret);
 		goto unlock_outer;
 	}
+	if (native_stack_change && READ_ONCE(native_stack_armed))
+		kd_stack_change_observe(record, READ_ONCE(stack_cookie));
 	kd_resume_after_pending_lock(record);
 
 	kd_cs_step(KD_CS_MUTEX_B);
@@ -1356,6 +1427,26 @@ mutex_ooo_after_a:
 unlock_outer:
 	mutex_unlock(&nested_mutex_a);
 nested_mutex_done:
+	if (native_pending_contended && READ_ONCE(pending_mutex_observed) &&
+	    record == READ_ONCE(pending_mutex_record)) {
+		bool valid = record->task == current && !preempt_count() &&
+			     !irqs_disabled() && record->before == 1 &&
+			     record->called == 1 && record->after == 1;
+
+		/* The last ACK permits this waiter to leave. Do not inspect the
+		 * completed frame or assume its owner already released physical A.
+		 */
+		if (!valid)
+			atomic_inc(&resume_failures);
+		pr_info("kd_pending mutex complete: task=%d waiter=%lx cpu=%u preempt=%u irq=%u record=%ld before=%u called=%u after=%u value=%lx valid=%u\n",
+			current->pid, (unsigned long)current,
+			raw_smp_processor_id(), preempt_count(),
+			irqs_disabled(), record - resume_records,
+			record->before, record->called, record->after,
+			record->value, valid);
+	}
+	if (native_stack_change && READ_ONCE(native_stack_armed))
+		kd_stack_change_complete(record);
 	/* Signals are delivered to userspace only after this native suffix and ACK. */
 	kd_waiter_signal_complete(record);
 	if (native_resume_rename)
@@ -1403,7 +1494,7 @@ static noinline void run_inner_mutex_direct_role(unsigned long work_load)
 	volatile int dummy_computation = 0;
 
 	while (!atomic_read(&mutex_inner_holder_ready))
-		cpu_relax();
+		kd_nested_mutex_relax();
 	atomic_set(&mutex_inner_direct_waiting, 1);
 	smp_mb__after_atomic();
 	mutex_lock(&nested_mutex_b);
@@ -1484,14 +1575,16 @@ static noinline void run_inner_mutex_holder_role(unsigned long work_load)
 	while (!atomic_read(&mutex_inner_direct_waiting) ||
 	       !atomic_read(&mutex_inner_nested_waiting) ||
 	       !atomic_read(&mutex_inner_trailing_waiting))
-		cpu_relax();
-	if (native_pending_contended) {
+		kd_nested_mutex_relax();
+	if (native_stack_change) {
+		kd_stack_change_wait();
+	} else if (native_pending_contended) {
 		wait_for_pending_mutex_waiter();
 	} else {
 		/* The ordinary nested JIT case waits for the A executor, not
 		 * for the original waiter used by pending-CALL continuation. */
 		while (!kd_mutex_debug_nested_waiters())
-			cpu_relax();
+			kd_nested_mutex_relax();
 	}
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
@@ -1510,7 +1603,7 @@ static noinline void run_inner_mutex_trailing_role(unsigned long work_load)
 	volatile int dummy_computation = 0;
 
 	while (!atomic_read(&mutex_inner_nested_waiting))
-		cpu_relax();
+		kd_nested_mutex_relax();
 	atomic_set(&mutex_inner_trailing_waiting, 1);
 	smp_mb__after_atomic();
 	mutex_lock(&nested_mutex_b);
@@ -1526,7 +1619,7 @@ static noinline void run_outer_mutex_direct_role(unsigned long work_load)
 	volatile int dummy_computation = 0;
 
 	while (!atomic_read(&mutex_outer_holder_ready))
-		cpu_relax();
+		kd_nested_mutex_relax();
 	atomic_set(&mutex_outer_direct_waiting, 1);
 	smp_mb__after_atomic();
 	mutex_lock(&nested_mutex_a);
@@ -1553,9 +1646,9 @@ static noinline void run_outer_mutex_holder_role(unsigned long work_load)
 	while (!atomic_read(&mutex_outer_direct_waiting) ||
 	       !atomic_read(&mutex_outer_nested_waiting) ||
 	       !atomic_read(&mutex_outer_trailing_waiting))
-		cpu_relax();
+		kd_nested_mutex_relax();
 	while (kd_mutex_debug_waiter_count(&nested_mutex_a) < 3)
-		cpu_relax();
+		kd_nested_mutex_relax();
 	for (j = 0; j < work_load; j++)
 		dummy_computation++;
 	kd_cs_step(KD_CS_MUTEX_A);
@@ -1568,9 +1661,9 @@ static noinline void run_outer_mutex_trailing_role(unsigned long work_load)
 	volatile int dummy_computation = 0;
 
 	while (!atomic_read(&mutex_outer_nested_waiting))
-		cpu_relax();
+		kd_nested_mutex_relax();
 	while (kd_mutex_debug_waiter_count(&nested_mutex_a) < 2)
-		cpu_relax();
+		kd_nested_mutex_relax();
 	if (READ_ONCE(mutex_ooo_dependency) == 1)
 		kd_ooo_dependency_hold();
 	atomic_set(&mutex_outer_trailing_waiting, 1);
@@ -1594,6 +1687,14 @@ static void run_nested_mutex_test(unsigned long loop_count,
 	unsigned int sync_role = role & ~MODE_ROLE_SYNCHRONIZED;
 	bool synchronized = role & MODE_ROLE_SYNCHRONIZED;
 
+	/* Correlate requested affinity with actual tasks, not only userspace
+	 * placement. This runs before acquisition, outside the translated CS.
+	 */
+	if (synchronized && native_pending_contended)
+		pr_info("kd_pending mutex role: role=%u task=%d self=%lx cpu=%u preempt=%u irq=%u\n",
+			sync_role, current->pid, (unsigned long)current,
+			raw_smp_processor_id(), preempt_count(),
+			irqs_disabled());
 	for (i = 0; i < loop_count; i++) {
 		if (!synchronized || sync_role == 0)
 			run_nested_mutex_role(work_load, synchronized,
@@ -1639,6 +1740,7 @@ static void run_api_in_mutex_test(unsigned long loop_count,
 
 #include "../tests/kernel/spin_routing_workload.c"
 #include "../tests/kernel/mutex_signal_workload.c"
+#include "../tests/kernel/mutex_parallel_workload.c"
 
 static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
@@ -1648,6 +1750,12 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case IOC_RUN_TEST:
 		if (copy_from_user(&k_args, (void __user *)arg, sizeof(k_args)))
 			return -EFAULT;
+		/* Isolate the multi-frame workload from the ordinary mode ABI. */
+		if (mutex_parallel)
+			return k_args.mode == MODE_MUTEX_CONTENTION ?
+				       kd_parallel_run(k_args.loop_count,
+						       k_args.role) :
+				       -EINVAL;
 		if (mutex_signal_probe) {
 			if (k_args.mode != MODE_MUTEX_CONTENTION)
 				return -EINVAL;
@@ -1673,6 +1781,14 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			return k_args.mode == MODE_SPIN_INNER_CONTENTION ?
 				       kd_deep_run(k_args.loop_count,
 						   k_args.role) :
+				       -EINVAL;
+		/* Gate-pressure roles extend the existing paused ticket case, not
+		 * its JIT body or the ordinary mode-8 selector space. */
+		if (native_gate_pressure && (k_args.role & 0x40000000U))
+			return k_args.mode == MODE_SPIN_INNER_CONTENTION &&
+					       !(k_args.role & ~0x40000003U) ?
+				       kd_gate_capacity_run(k_args.loop_count,
+							    k_args.role & 3U) :
 				       -EINVAL;
 		if (k_args.mode == MODE_SPIN_CONTENTION) {
 			unsigned int api = k_args.role & 0x20000000U ?
@@ -1798,6 +1914,9 @@ static int __init my_module_init(void)
 	int cpu;
 	int ret;
 
+	ret = kd_parallel_init();
+	if (ret)
+		return ret;
 	ret = kd_signal_init();
 	if (ret)
 		return ret;
@@ -1807,6 +1926,23 @@ static int __init my_module_init(void)
 	if (native_resume_stage > 5)
 		return -EINVAL;
 	if (native_pending_contended && native_resume_stage != 4)
+		return -EINVAL;
+	if (native_acquired_queue &&
+	    (native_resume_stage != 3 || native_pending_contended ||
+	     native_resume_registers || mixed_lock_probe ||
+	     native_waiter_signal))
+		return -EINVAL;
+	ret = kd_ticket_init();
+	if (ret)
+		return ret;
+	ret = kd_gate_capacity_init();
+	if (ret)
+		return ret;
+	if (native_stack_armed ||
+	    (native_stack_change &&
+	     (!native_pending_contended || native_resume_stage != 4 ||
+	      native_waiter_signal || native_resume_registers ||
+	      mixed_lock_probe)))
 		return -EINVAL;
 	if (native_waiter_signal &&
 	    ((native_waiter_signal != SIGUSR1 &&
@@ -1882,6 +2018,7 @@ static void __exit my_module_exit(void)
 	int id, requests = atomic_read(&resume_requests);
 
 	misc_deregister(&my_misc_device);
+	kd_parallel_report();
 	kd_chain_report();
 	kd_deep_report();
 	kd_context_report();
@@ -1891,6 +2028,10 @@ static void __exit my_module_exit(void)
 	kd_ooo_report();
 	kd_remote_ooo_report();
 	kd_spin_oracle_report();
+	kd_stack_change_report();
+	kd_ticket_report();
+	kd_gate_capacity_report();
+	kd_acquired_spin_report();
 	for (id = 0; id < min(requests, KD_RESUME_RECORDS); id++) {
 		struct kd_resume_record *record = &resume_records[id];
 		unsigned long expected = (((unsigned long)id + 1) * 3 + 17) ^

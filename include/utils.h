@@ -1,6 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+/* Existing diagnostics shared by runtime modules. Log prefixes and source
+ * locations aid inspection; they are observations, not execution or ACK proof. */
 #include <linux/kernel.h>
 
 #define CONFIG_KD_DEBUG 1

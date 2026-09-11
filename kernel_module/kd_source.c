@@ -1,0 +1,241 @@
+// SPDX-License-Identifier: GPL-2.0
+
+/* Residency leases for original text/data, not executable-image versions.
+ * OPEN accepts writers/frames; DRAINING lets retained holders finish; RETIRED
+ * releases dependencies only after registry invalidation and complete drain.
+ * No path pins arbitrary heap objects or supplies missing guest hook readers. */
+#include <linux/bug.h>
+#include <linux/errno.h>
+#include <linux/kallsyms.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/spinlock.h>
+#include <linux/string.h>
+
+#include "kd_source.h"
+
+/* Session-wide dependencies avoid per-image reclamation while C3 is deferred.
+ * A reverse source/provider dependency is broken by explicit retirement before
+ * either exit. No allocation or sleeping occurs in lock hooks. */
+static DEFINE_RAW_SPINLOCK(kd_source_lock);
+static struct kd_source_info kd_sources;
+static struct module *kd_source_modules[KD_SOURCE_MAX_MODULES];
+static struct module *(*kd_module_address)(unsigned long address);
+static unsigned long kd_core_start, kd_core_text_end, kd_core_end;
+static unsigned long kd_init_start, kd_init_end;
+
+enum kd_source_scope {
+	KD_SOURCE_ROOT,
+	KD_SOURCE_WRITER,
+	KD_SOURCE_FRAME,
+};
+
+bool kd_source_is_open(void)
+{
+	return READ_ONCE(kd_sources.state) == KD_SOURCE_OPEN;
+}
+
+bool kd_source_writer_get(void)
+{
+	unsigned long flags;
+	bool ok;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	ok = kd_sources.state == KD_SOURCE_OPEN &&
+	     kd_sources.writers != UINT_MAX;
+	if (ok)
+		kd_sources.writers++;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	return ok;
+}
+
+void kd_source_writer_put(void)
+{
+	unsigned long flags;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	BUG_ON(!kd_sources.writers);
+	kd_sources.writers--;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+}
+
+bool kd_source_frame_get(void)
+{
+	unsigned long flags;
+	bool ok;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	ok = kd_sources.state == KD_SOURCE_OPEN &&
+	     kd_sources.frames != UINT_MAX && try_module_get(THIS_MODULE);
+	if (ok)
+		kd_sources.frames++;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	return ok;
+}
+
+void kd_source_frame_put(void)
+{
+	unsigned long flags;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	BUG_ON(!kd_sources.frames);
+	kd_sources.frames--;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	/* Spans the retained frame, not earlier guest dispatch or code after pop.
+	 * This is not the missing generic hook-reader lifetime protocol. */
+	module_put(THIS_MODULE);
+}
+
+/* The raw lock keeps preemption disabled through lookup and try_module_get.
+ * Read windows may include core rodata; roots/continuations require text. */
+static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
+{
+	struct module *module;
+	unsigned long base, size;
+	unsigned int i;
+
+	if (address >= kd_core_start && address < kd_core_end) {
+		if ((address >= kd_init_start && address < kd_init_end) ||
+		    (text && address >= kd_core_text_end))
+			return -EPERM;
+		*end = address < kd_init_start ? kd_init_start : kd_core_end;
+		return 0;
+	}
+	module = kd_module_address(address);
+	if (!module || READ_ONCE(module->state) != MODULE_STATE_LIVE)
+		return -ESTALE;
+	base = (unsigned long)module->core_layout.base;
+	size = module->core_layout.size;
+	if (address < base || address - base >= size ||
+	    (text && address - base >= module->core_layout.text_size))
+		return -EPERM;
+	*end = base + size;
+	if (*end <= address)
+		return -EOVERFLOW;
+	for (i = 0; i < kd_sources.modules; i++)
+		if (kd_source_modules[i] == module)
+			return 0;
+	if (kd_sources.modules == KD_SOURCE_MAX_MODULES)
+		return -ENOSPC;
+	if (!try_module_get(module))
+		return -ESTALE;
+	kd_source_modules[kd_sources.modules++] = module;
+	return 0;
+}
+
+static int kd_source_pin(unsigned long address, unsigned long size, bool text,
+			 enum kd_source_scope scope)
+{
+	unsigned long flags, cursor = address, limit;
+	int ret = 0;
+
+	if (!size || size > KD_SOURCE_MAX_READ || address + size < address)
+		return -EINVAL;
+	limit = address + size;
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	if (kd_sources.state == KD_SOURCE_RETIRED ||
+	    (scope == KD_SOURCE_ROOT && kd_sources.state != KD_SOURCE_OPEN) ||
+	    (scope == KD_SOURCE_WRITER && !kd_sources.writers) ||
+	    (scope == KD_SOURCE_FRAME && !kd_sources.frames)) {
+		ret = -ESHUTDOWN;
+		goto out;
+	}
+	while (cursor < limit) {
+		unsigned long end;
+
+		ret = kd_source_piece(cursor, text, &end);
+		if (ret)
+			break;
+		cursor = min(end, limit);
+	}
+out:
+	/* Partial failures retain pins used by older images. Existing writer/frame
+	 * holders may finish while admission is draining; release needs zero users. */
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	return ret;
+}
+
+int kd_source_pin_root(unsigned long address)
+{
+	return kd_source_pin(address, 1, true, KD_SOURCE_ROOT);
+}
+
+int kd_source_pin_range(unsigned long address, unsigned long size)
+{
+	return kd_source_pin(address, size, false, KD_SOURCE_WRITER);
+}
+
+int kd_source_pin_target(unsigned long address)
+{
+	return kd_source_pin(address, 1, true, KD_SOURCE_FRAME);
+}
+
+void kd_source_info(struct kd_source_info *info)
+{
+	unsigned long flags;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	*info = kd_sources;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+}
+
+int kd_source_begin_retire(void)
+{
+	unsigned long flags;
+	int ret = 0;
+
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	if (kd_sources.state != KD_SOURCE_RETIRED)
+		WRITE_ONCE(kd_sources.state, KD_SOURCE_DRAINING);
+	if (kd_sources.frames || kd_sources.writers)
+		ret = -EBUSY;
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	return ret;
+}
+
+void kd_source_finish_retire(void)
+{
+	struct module *modules[KD_SOURCE_MAX_MODULES];
+	unsigned long flags;
+	unsigned int count, i;
+
+	/* The publisher first invalidates entries under the registry gate. Never
+	 * hold this source lock while waiting for that gate or dropping modules. */
+	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	BUG_ON(kd_sources.state == KD_SOURCE_OPEN || kd_sources.frames ||
+	       kd_sources.writers);
+	count = kd_sources.modules;
+	memcpy(modules, kd_source_modules, count * sizeof(modules[0]));
+	memset(kd_source_modules, 0, sizeof(kd_source_modules));
+	kd_sources.modules = 0;
+	WRITE_ONCE(kd_sources.state, KD_SOURCE_RETIRED);
+	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	for (i = 0; i < count; i++)
+		module_put(modules[i]);
+}
+
+int kd_source_init(void)
+{
+	kd_module_address = (void *)kallsyms_lookup_name("__module_address");
+	kd_core_start = kallsyms_lookup_name("_stext");
+	kd_core_text_end = kallsyms_lookup_name("_etext");
+	kd_core_end = kallsyms_lookup_name("_end");
+	kd_init_start = kallsyms_lookup_name("__init_begin");
+	kd_init_end = kallsyms_lookup_name("__init_end");
+	if (!kd_module_address || !kd_core_start ||
+	    kd_core_start >= kd_core_text_end ||
+	    kd_core_text_end > kd_init_start || kd_init_start >= kd_init_end ||
+	    kd_init_end > kd_core_end)
+		return -EOPNOTSUPP;
+	memset(&kd_sources, 0, sizeof(kd_sources));
+	memset(kd_source_modules, 0, sizeof(kd_source_modules));
+	return 0;
+}
+
+void kd_source_exit(void)
+{
+	/* Normal unload cannot pass source/self pins. A used session retires
+	 * explicitly; an unused or init-failed session has no dependencies. */
+	BUG_ON(kd_source_begin_retire());
+	kd_source_finish_retire();
+}

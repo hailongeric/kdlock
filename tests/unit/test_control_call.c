@@ -11,7 +11,7 @@ int main(void)
 	const int errors[] = { -ENOMEM, -E2BIG,	     -EINVAL, -EDEADLK,
 			       -EIO,	-EOPNOTSUPP, 0,	      1 };
 
-	for (int phase = KD_CALL_NONE; phase <= KD_CALL_COMPLETE; phase++) {
+	for (int phase = KD_CALL_NONE; phase <= KD_CALL_SPIN_NATIVE; phase++) {
 		for (unsigned int i = 0; i < sizeof(errors) / sizeof(errors[0]);
 		     i++) {
 			assert(!kd_call_begin(&call, 0x1000,
@@ -37,6 +37,12 @@ int main(void)
 	assert(kd_call_begin(&call, 0x1000, (unsigned long)stack, 0) ==
 	       -EINVAL);
 	assert(!kd_call_resume_pending(&call, -ENOMEM, &ip, &sp));
-	puts("[PASS] test_control_call (40 phase/error combinations)");
+	assert(!kd_call_begin(&call, 0x1000, 0x3000, 0x2005));
+	assert(kd_call_after_matches(&call, 0x2005, 0x3008));
+	assert(!kd_call_after_matches(&call, 0x2006, 0x3008));
+	assert(!kd_call_after_matches(&call, 0x2005, 0x3000));
+	call.stack = ~0UL - 3;
+	assert(!kd_call_after_matches(&call, 0x2005, 4));
+	puts("[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)");
 	return 0;
 }

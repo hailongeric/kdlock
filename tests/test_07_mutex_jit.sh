@@ -2,9 +2,8 @@
 # test_07_mutex_jit.sh — opt-in repeated mutex JIT delegation and contention
 # validation.
 #
-# This is intentionally excluded from run_all.sh because mutex_jit=1 executes
-# translated kernel critical sections and can crash the guest while under
-# development.
+# Select this diagnostic explicitly (--case mode-3); daily mutex regression
+# uses nested and hostcall cases. All live suites require recovery confirmation.
 TEST_NAME="test_07_mutex_jit"
 source "$(dirname "$0")/common.sh"
 

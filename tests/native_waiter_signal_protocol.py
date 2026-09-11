@@ -1,5 +1,6 @@
-"""Match a signalled native waiter to its actual JIT prefix and final owner ACK.
+"""Match native waiters to actual JIT progress, Linux owners and final ACKs.
 
+The pending-B case also checks same-CPU owner/waiter scheduling when selected.
 Ordinary B must acquire; native interruptible/killable B may acquire or cancel
 in a release race. Cancellation must skip B. A fatal client exit alone is never
 success. Both paths retain JIT stores and the final owner ACK; this is bounded
@@ -13,6 +14,114 @@ import io
 import json
 import re
 from pathlib import Path
+
+
+def validate_pending_mutex(text, shared_cpu=False, placements=None, statuses=None):
+    """Keep the old pending-B oracle here, with an opt-in real CPU overlap gate.
+
+    A PENDING injection is not resource saturation. It exposes the same native
+    owner/ACK path under actual B contention; scheduling evidence must come from
+    kernel task/CPU observations, not the requested taskset mask alone.
+    """
+    assert type(shared_cpu) is bool
+
+    def rows(tag):
+        return [
+            (m.start(), dict(re.findall(r"(\w+)=([-\w]+)", m[1])))
+            for m in re.finditer(re.escape(tag) + r": ([^\n]+)", text)
+        ]
+
+    def one(tag):
+        found = rows(tag)
+        assert len(found) == 1, (tag, found)
+        return found[0]
+
+    begin_at, begin = one("kd_native begin")
+    blocked_at, blocked = one("kd_pending mutex blocked")
+    acquired_at, acquired = one("kd_pending mutex acquired")
+    finished_at, finished = one("kd_native complete")
+    ack_at, ack = one("kd_native ack")
+    pid = blocked["task"]
+    for row in (begin, acquired, finished, ack):
+        assert row["task"] == pid
+    assert begin["held"] == begin["mutex"] == begin["remaining"] == "1"
+    assert begin["outer_released"] == "0"
+    assert blocked["queued"] == blocked["valid"] == acquired["preserved"] == "1"
+    assert blocked["holder_comm"] == "kd_native"
+    assert blocked["waiter"] == acquired["waiter"] == acquired["b_owner"]
+    assert blocked["a_owner"] == acquired["a_owner"]
+    owners = {blocked[key] for key in ("waiter", "a_owner", "b_owner")}
+    assert len(owners) == 3 and all(int(owner, 16) for owner in owners)
+    assert finished["mutex"] == ack["mutex"] == "1" and ack["last_spin"] == "0"
+    assert finished["outer"] == ack["lock"] == begin["outer"]
+    assert re.findall(r"JIT body witness: entry=(\w+) lock=(\w+) body=1", text) == [
+        (begin["entry"], begin["outer"])
+    ]
+    (pending,) = list(re.finditer(r"reason=PENDING_LOCK_NATIVE ([^\n]+)", text))
+    packet = dict(re.findall(r"(\w+)=([-\w]+)", pending[1]))
+    assert packet["task"] == pid and packet["mutex"] == "1" and packet["error"] == "-7"
+    assert packet["outer_released"] == "0"
+    assert int(packet["entry"], 16) == int(begin["entry"], 16)
+    assert (
+        int(packet["target"], 16)
+        == int(packet["staged_ip"], 16)
+        == int(begin["ip"], 16)
+    )
+    assert int(packet["sp"], 16) == int(packet["staged_sp"], 16) == int(begin["sp"], 16)
+    assert int(packet["return"], 16) and int(begin["sp"], 16)
+    assert pending.start() < begin_at < blocked_at < acquired_at < finished_at < ack_at
+    _, stats = one("kd_native stats")
+    assert stats == {"started": "1", "completed": "1", "unlocks": "1"}
+    result = {"task": int(pid), "native_frames": 1, "acks": 1, "shared_cpu": shared_cpu}
+    if shared_cpu:
+        # Three real A queue tasks, one CPU: the original waiter can continue
+        # and obtain an ACK only if its physical executor also gets to run.
+        expected = {role: 4 if role in (0, 4, 6) else role for role in range(7)}
+        requested = list(csv.reader(io.StringIO(placements), delimiter="\t"))
+        exits = list(csv.reader(io.StringIO(statuses), delimiter="\t"))
+        assert len(requested) == len(exits) == 7
+        assert len({row[0] for row in requested}) == len({row[0] for row in exits}) == 7
+        assert {int(role): int(cpu) for role, cpu in requested} == expected
+        assert {int(role): int(status) for role, status in exits} == dict.fromkeys(
+            range(7), 0
+        )
+        roles = rows("kd_pending mutex role")
+        assert len(roles) == 7 and len({row["role"] for _, row in roles}) == 7
+        assert (
+            len({row["task"] for _, row in roles})
+            == len({row["self"] for _, row in roles})
+            == 7
+        )
+        by_role = {}
+        for at, row in roles:
+            role = int(row["role"])
+            assert (
+                int(row["cpu"]) == expected[role]
+                and row["preempt"] == row["irq"] == "0"
+            )
+            assert int(row["task"]) > 0 and int(row["self"], 16) and at < acquired_at
+            if role in (0, 4, 6):
+                assert at < begin_at
+            by_role[role] = row
+        assert by_role[0]["task"] == pid and by_role[0]["self"] == blocked["waiter"]
+        assert by_role[4]["self"] == blocked["a_owner"]
+        assert by_role[1]["self"] == blocked["b_owner"]
+        assert acquired["cpu"] == begin["cpu"] == "4"
+        assert acquired["preempt"] == acquired["irq"] == "0"
+        end_at, end = one("kd_pending mutex complete")
+        assert (
+            ack_at < end_at
+            and end["task"] == pid
+            and end["waiter"] == blocked["waiter"]
+        )
+        assert end["cpu"] == "4" and end["preempt"] == end["irq"] == "0"
+        assert end["before"] == end["called"] == end["after"] == end["valid"] == "1"
+        assert int(end["value"], 16) == ((int(end["record"]) + 1) * 3 + 17) ^ 0x5A5A
+        assert "valid=0" not in text
+        result.update(
+            cpu=4, owner_task=int(by_role[4]["task"]), record=int(end["record"])
+        )
+    return result
 
 
 def validate(

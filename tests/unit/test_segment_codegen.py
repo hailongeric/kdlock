@@ -1,3 +1,5 @@
+# Inspect GS lowering and wrapper layout without dereferencing kernel segments.
+# Helper support must not be confused with production context admission.
 import os
 import re
 import sys

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 
+/* RCU task membership bridges the address-less guest mutex selector.
+ * Acquisition references outlive comm changes and native borrowed suffixes.
+ * Last put removes routing immediately; deferred freeing waits for readers. */
 #include <linux/hashtable.h>
 #include <linux/moduleparam.h>
 #include <linux/rcupdate.h>
@@ -117,6 +120,12 @@ void kd_mutex_task_put(struct task_struct *task)
 	}
 	raw_spin_unlock_irqrestore(&kd_mutex_tasks_lock, flags);
 	WARN_ON_ONCE(1);
+}
+
+bool kd_mutex_tasks_idle(void)
+{
+	/* Snapshot guard, not a barrier against arbitrary new native callers. */
+	return !atomic_read(&kd_mutex_task_count);
 }
 
 void kd_mutex_tasks_exit(void)

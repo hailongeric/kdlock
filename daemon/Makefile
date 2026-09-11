@@ -1,3 +1,4 @@
+# Build the userspace registry/translator bridge in the guest; no module load.
 CC ?= gcc
 CPPFLAGS += -I../include
 CFLAGS ?= -O2

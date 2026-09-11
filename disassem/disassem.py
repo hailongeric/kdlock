@@ -1,3 +1,7 @@
+# Translation coordinator: leased kernel text -> decoded JIT scope -> admission
+# -> register-mapped assembly -> wrapper image. Refusal removes stale artifacts;
+# I/O/environment errors are not native-only verdicts. The daemon publishes the
+# resulting image; running this CLI alone neither uploads it nor proves JIT ran.
 import os
 import subprocess
 import sys
@@ -54,6 +58,7 @@ def find_segment_policy_error(
     native_exits=(),
     guards=None,
     scoped_calls=False,
+    mutex_stack_bytes=0,
 ):
     # A guarded verdict is conditional: its complete predicates must be emitted
     # before body execution. Analysis and emission share this same collector.
@@ -68,12 +73,39 @@ def find_segment_policy_error(
         if not getattr(block, "lines", None):
             diagnostics.set_instruction(block_start, "<undecodable/empty block>")
             return block_start, "undecodable or empty basic block"
+    # RET value refinement can leave a block without a propagated input, while
+    # emission still retains that block and its return-table target. Entry alias
+    # guards do not enforce runtime return-word contents. Apply unconditional
+    # context/backend bans to every emitted block, before any precision retry;
+    # native-only CALL suffixes have already been removed from this scope.
+    for block_start, block in sorted(selected.items()):
+        offset = block_start
+        for line in block.lines:
+            context_error = context_policy.instruction_rejection(
+                line, offset, db_dict.get(block), symbols, lock_kind, lock_symbols
+            )
+            if context_error:
+                reason, symbol = context_error
+                diagnostics.set_instruction(offset, line)
+                return offset, f"{reason}: {symbol}" if symbol else reason
+            reason = normal.segment_policy_error(line)
+            if reason:
+                diagnostics.set_instruction(offset, line)
+                return offset, reason
+            offset += line.l
     try:
         for block_start, block, constants in context_policy.constant_blocks(
             selected,
             db_dict,
             roots=roots,
             control_targets=lock_symbols or (),
+            mutex_targets={
+                address
+                for address, (kind, name) in (lock_symbols or {}).items()
+                if lock_kind == kind == "mutex"
+                and name in {"mutex_lock", "mutex_unlock"}
+            },
+            mutex_stack_bytes=mutex_stack_bytes,
             native_exits=native_exits,
             guards=guards,
             scoped_calls=scoped_calls,
@@ -93,10 +125,6 @@ def find_segment_policy_error(
                     reason, symbol = context_error
                     diagnostics.set_instruction(offset, line)
                     return offset, f"{reason}: {symbol}" if symbol else reason
-                reason = normal.segment_policy_error(line)
-                if reason:
-                    diagnostics.set_instruction(offset, line)
-                    return offset, reason
                 constants.update(line, symbols)
                 offset += line.l
     except context_policy.ContextFlowLimit as error:
@@ -264,6 +292,9 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack):
     return block_dict, db_dict
 
 
+# Complete text/CFG expansion and both admission passes before emitting bytes.
+# One selected block set drives checking and codegen; waiter-only CALL suffixes
+# stay outside this episode, but any alternate live path remains in scope.
 def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
     diagnostics.begin(pid, entry)
     os.makedirs("./asm", exist_ok=True)
@@ -275,8 +306,11 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
     diagnostics.set_instruction(entry, "<context symbol resolution>")
     try:
         control_symbols = context_policy.resolve_control_symbols(get_kernel_symbol)
-        context_symbols = context_policy.load_context_symbols()
-    except (OSError, ValueError) as error:
+        context_symbols = context_policy.load_context_symbols(
+            read_memory=memread.read_kernel_addr_data,
+            percpu_module_bytes=memread.device_session.percpu_module_bytes(),
+        )
+    except (OSError, ValueError, RuntimeError) as error:
         # Missing visibility is a retryable environment error, not a CS verdict.
         diagnostics.error(
             "CONTEXT_SYMBOLS_UNAVAILABLE", "retry_translation", str(error)
@@ -299,11 +333,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
         )
     }
     keep_call_stack = set(lock_symbols) | hostcall_targets
+    # Analysis may use only the bound negotiated on this translation's live
+    # device lease. Spin and hostcalls have no checked-memory summary.
+    mutex_stack_bytes = (
+        memread.device_session.mutex_stack_bytes() if lock_kind == "mutex" else 0
+    )
     jump_table = {}
     diagnostics.set_instruction(entry, "<CFG text coverage>")
     try:
         rets = memread.read(entry, jump_table, excluded_callees=hostcall_targets)
-    except memread.TextReadLimit as error:
+    except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
         return reject_translation(str(error))
 
     # Newly fetched branch targets inherit their caller's lock depth. Only
@@ -394,6 +433,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
             lock_symbols,
             roots=(discovered_targets | {entry}) & (block_dict.keys() - missing),
             native_exits=native_exits,
+            mutex_stack_bytes=mutex_stack_bytes,
         )
         if (
             segment_error
@@ -435,6 +475,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
                     native_exits=native_exits,
                     guards=candidate,
                     scoped_calls=bool(discovered_targets - {entry}),
+                    mutex_stack_bytes=mutex_stack_bytes,
                 )
                 if not segment_error:
                     entry_guards = candidate
@@ -447,6 +488,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
                         "conditional nested admission; check all premises before body",
                         guards=len(candidate.conditions()),
                         scoped_calls=bool(discovered_targets - {entry}),
+                        mutex_stack_bytes=mutex_stack_bytes,
                     )
         if segment_error:
             offset, reason = segment_error
@@ -465,10 +507,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
         )
         try:
             rets = memread.extend_regions(rets, missing)
-        except memread.TextReadLimit as error:
+        except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
             return reject_translation(str(error))
 
-    missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
+    # Final emission must also refuse an incomplete return graph when the
+    # unconditional admission path did not need a scoped-call comparison.
+    try:
+        missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
+    except indirect_jump.ReturnFlowError as error:
+        diagnostics.set_instruction(error.offset, "<return dispatch>")
+        return reject_translation(str(error))
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
     )
@@ -552,6 +600,18 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
     f.write(indirect_jump.make_jump_table(jump_table))
     f.write(indirect_jump.make_callee_table(missing_callees, resolved_hostcalls))
 
+    # A successful static/guarded analysis is not a runtime address or memory
+    # freshness check. Report the contract once per generated image, without
+    # pretending to enumerate every unknown access or changing its admission.
+    diagnostics.set_instruction(entry, "<context admission scope>")
+    diagnostics.warn(
+        "CONTEXT_SCREENING_ONLY",
+        "emit_unchanged",
+        "static context screening does not validate runtime pointer targets or "
+        "concurrent memory freshness; use only audited experimental workloads",
+        runtime_address_guard=False,
+        concurrent_memory_validated=False,
+    )
     diagnostics.set_instruction(entry, "<entry/branch instrumentation>")
     diagnostics.warn(
         "FLAGS_UNPRESERVED",
@@ -571,6 +631,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
 
 
 if __name__ == "__main__":
+    import device_session
+
     pid = int(sys.argv[1])
     entry = int(sys.argv[2], 16)
     lock_kind = sys.argv[3] if len(sys.argv) > 3 else "unknown"
@@ -578,7 +640,10 @@ if __name__ == "__main__":
         body_witness = os.environ.get("KD_JIT_BODY_WITNESS", "0")
         if body_witness not in {"0", "1"}:
             raise ValueError("KD_JIT_BODY_WITNESS must be 0 or 1")
-        sys.exit(dis_assem(pid, entry, lock_kind, body_witness=body_witness == "1"))
+        diagnostics.begin(pid, entry)
+        with device_session.session():
+            result = dis_assem(pid, entry, lock_kind, body_witness=body_witness == "1")
+        sys.exit(result)
     except Exception as error:
         diagnostics.error(
             "TRANSLATION_FAILED", "raise", f"{type(error).__name__}: {error}"

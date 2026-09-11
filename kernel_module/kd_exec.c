@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 
+/* Shared spin/mutex execution ledger and original-waiter rendezvous.
+ * A frame records logical state; its physical executor retains native locks.
+ * Native/remote requests are stack objects whose done ACK is the final access.
+ * The bounded per-CPU frame stack belongs to one physical task at a time. */
 #include <linux/percpu.h>
 #include <linux/atomic.h>
 #include <linux/bug.h>
@@ -9,6 +13,7 @@
 #include <linux/smp.h>
 
 #include "kd_exec.h"
+#include "kd_source.h"
 #include "kd_lock.h"
 #include "kd_spinlock.h"
 
@@ -156,6 +161,12 @@ bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)
 	       kd_exec_frame_has_unreleased_nested(frame);
 }
 
+#ifdef KDLOCK_SELFTEST
+#include "../tests/kernel/exec_relay_exit_probe.c"
+#endif
+
+/* Publish borrowing only for a validated continuation packet. This registers
+ * unlock routing; it neither transfers Linux ownership nor jumps to source. */
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
 	unsigned long flags;
@@ -164,6 +175,16 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 		     smp_load_acquire(&frame->remote_result) ==
 			     KD_EXEC_REMOTE_NATIVE &&
 		     frame->control_call.phase == KD_CALL_COMPLETE;
+	bool checked_mutex =
+		mutex && frame &&
+		frame->control_call.phase == KD_CALL_STACK_CHANGED &&
+		kd_call_after_matches(&frame->control_call, frame->regs.ip,
+				      frame->regs.sp);
+	bool checked_spin = !mutex && frame &&
+			    frame->control_call.phase == KD_CALL_SPIN_NATIVE &&
+			    kd_call_after_matches(&frame->control_call,
+						  frame->regs.ip,
+						  frame->regs.sp);
 	int ret;
 
 	if ((!kd_exec_frame_can_borrow_locks(frame) &&
@@ -180,11 +201,12 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	      frame->regs.ip != frame->control_call.target ||
 	      frame->regs.sp != frame->control_call.stack)))
 		return -EINVAL;
-	/* Only an ordinary miss, pristine PENDING call, or completed remote relay
-	 * has a continuation protocol. Still owning A does not make a partially
-	 * acquired/published control call safe to transfer to the waiter. */
+	/* These distinct tags authorize validated post-control boundaries. The
+	 * original owner retains acquired locks; the waiter must not call the
+	 * completed lock/unlock again. Other COMPLETE/partial phases stay refused. */
 	if (frame->control_call.phase != KD_CALL_NONE &&
-	    frame->control_call.phase != KD_CALL_PENDING && !relay)
+	    frame->control_call.phase != KD_CALL_PENDING && !relay &&
+	    !checked_mutex && !checked_spin)
 		return -EINVAL;
 	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
 		remaining += !frame->jit_lock_released[i];
@@ -207,9 +229,14 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 		frame->entry_ip, frame->regs.ip, frame->regs.sp,
 		frame->jit_lock_depth - frame->outer_lock_index, mutex,
 		raw_smp_processor_id(), frame->outer_unlock_seen, remaining);
+#ifdef KDLOCK_SELFTEST
+	kd_exec_selftest_relay_arm(frame, remaining);
+#endif
 	return 0;
 }
 
+/* Called on the original waiter's stack. A matching retained owner must finish
+ * the unlock before this local request can disappear on return. */
 bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 {
 	struct kd_native_request request = { .lock_addr = lock_addr };
@@ -264,7 +291,12 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 
 static int kd_exec_native_finish(struct kd_exec_frame *frame)
 {
-	int ret = kd_exec_remote_complete(frame);
+	int ret;
+
+#ifdef KDLOCK_SELFTEST
+	kd_exec_selftest_relay_finish(frame);
+#endif
+	ret = kd_exec_remote_complete(frame);
 
 	if (ret)
 		return ret;
@@ -276,6 +308,9 @@ static int kd_exec_native_finish(struct kd_exec_frame *frame)
 	return 0;
 }
 
+/* The physical owner pauses its batch here, servicing the waiter's unlocks.
+ * Remove routing/references before the final release ACK; an awakened waiter
+ * may immediately return, exit, or discard its request storage. */
 int kd_exec_native_wait(struct kd_exec_frame *frame)
 {
 	for (;;) {
@@ -487,6 +522,8 @@ bool kd_exec_context_busy(void)
 	return ctx->depth && ctx->owner != current;
 }
 
+/* Reserve fixed storage and its source/provider lease together. Failure leaves
+ * the caller's packet and existing context intact; no frame is published. */
 struct kd_exec_frame *
 kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 		   unsigned long outer_lock_addr, void *waiter,
@@ -501,6 +538,9 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 	    ctx->depth >= KD_EXEC_MAX_NESTING ||
 	    !kd_exec_context_validate(ctx) ||
 	    (ctx->depth && ctx->owner != current))
+		return NULL;
+	/* Closing and this get serialize so retirement cannot miss a new frame. */
+	if (!kd_source_frame_get())
 		return NULL;
 
 	first_frame = ctx->depth == 0;
@@ -530,12 +570,15 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 		memset(frame, 0, sizeof(*frame));
 		if (first_frame)
 			ctx->owner = NULL;
+		kd_source_frame_put();
 		return NULL;
 	}
 
 	return frame;
 }
 
+/* Retire in physical LIFO order only after child/remote references are gone.
+ * Copy the final packet before clearing reusable storage and dropping its pin. */
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
@@ -558,6 +601,8 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	memset(frame, 0, sizeof(*frame));
 	if (!ctx->depth)
 		ctx->owner = NULL;
+	/* The source lease covers native/remote continuation until actual pop. */
+	kd_source_frame_put();
 	if (!kd_exec_context_validate(ctx))
 		return kd_exec_invariant_failure();
 	return 0;

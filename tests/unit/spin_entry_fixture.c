@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+/* Extracted origin-ticket lifetime code over deterministic gate primitives.
+ * Allocation refusal, stale generations and borrow release are not live load. */
 #include "spin_gate_mock.h"
 
 static bool mock_alloc_fail;

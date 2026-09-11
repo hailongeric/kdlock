@@ -1,3 +1,6 @@
+# Per-instruction routing after admission: special/control lowering or ordinary
+# operands, followed by the required mapping cleanup. Policy lives in the
+# coordinator/context analyzer, not in this small dispatch function.
 from assist import conditional_branch, get_inst_name, unconditional_branch
 from conflict import release_conflict
 from normal import process_normal

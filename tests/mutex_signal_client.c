@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-/* One ioctl per process: no automatic EINTR retry or ambiguous thread target. */
+/* Single-process signal target. Only parallel-peer explicitly retries once
+ * after exposing EINTR to userspace; all other cases issue one ioctl. */
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
@@ -23,6 +24,30 @@ static void notice_signal(int sig)
 		signals++;
 }
 
+static int parallel_peer(int fd, struct test_args *args, int lane)
+{
+	int ret, error;
+
+	/* The first ioctl must expose cancellation to userspace. Retry exactly
+	 * once only after observing EINTR and the real signal handler; no generic
+	 * automatic retry may turn an unexpected native success into a pass. */
+	printf("parallel peer client enter: lane=%d pid=%ld\n", lane,
+	       (long)getpid());
+	fflush(stdout);
+	ret = ioctl(fd, IOC_RUN_TEST, args);
+	error = ret < 0 ? errno : 0;
+	printf("parallel peer client cancelled: lane=%d pid=%ld ret=%d errno=%d signals=%d\n",
+	       lane, (long)getpid(), ret, error, signals);
+	fflush(stdout);
+	if (ret != -1 || error != EINTR || signals != 1)
+		return 1;
+	ret = ioctl(fd, IOC_RUN_TEST, args);
+	error = ret < 0 ? errno : 0;
+	printf("parallel peer client return: lane=%d pid=%ld ret=%d errno=%d signals=%d\n",
+	       lane, (long)getpid(), ret, error, signals);
+	return ret != 0 || error || signals != 1;
+}
+
 int main(int argc, char **argv)
 {
 	struct test_args args = { .loop_count = 1, .work_load = 1, .mode = 3 };
@@ -31,6 +56,7 @@ int main(int argc, char **argv)
 	int race = 0;
 	int pending_signal = 0;
 	int pending_race = 0;
+	int parallel = 0;
 	sigset_t block, previous;
 
 	if ((argc != 3 && argc != 4) ||
@@ -39,6 +65,7 @@ int main(int argc, char **argv)
 		return 2;
 	role = argv[1][0] - '0';
 	if (argc == 4) {
+		parallel = !strcmp(argv[3], "parallel-peer");
 		pending_race = !strcmp(argv[3], "pending-race-int") ||
 			       !strcmp(argv[3], "pending-race-kill");
 		pending_signal = (!strcmp(argv[3], "pending-int") ||
@@ -51,10 +78,13 @@ int main(int argc, char **argv)
 		race = !strcmp(argv[3], "race-int")  ? 1 :
 		       !strcmp(argv[3], "race-kill") ? 2 :
 						       0;
-		if (role || (!race && !pending_signal))
+		if ((!parallel && (role || (!race && !pending_signal))) ||
+		    (parallel && strcmp(argv[2], "kd_native")))
 			return 2;
 	}
 	args.role = 0x10000000U | role;
+	if (parallel)
+		args.role = 22U + role;
 	if (pending_signal) {
 		/* One process, one ioctl, no EINTR retry: a fatal result must not
 		 * be confused with the timeout supervisor or a different pthread.
@@ -76,6 +106,11 @@ int main(int argc, char **argv)
 	if (fd < 0) {
 		perror("open");
 		return 1;
+	}
+	if (parallel) {
+		ret = parallel_peer(fd, &args, role);
+		close(fd);
+		return ret;
 	}
 	ret = ioctl(fd, IOC_RUN_TEST, &args);
 	error = ret < 0 ? errno : 0;

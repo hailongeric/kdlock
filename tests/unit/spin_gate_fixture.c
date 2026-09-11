@@ -1,4 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+/* Exercise the actual fixed gate map and physical-hold checks in userspace.
+ * Lock words/tasks below are substitutes; stale holds must still be rejected. */
 #include "spin_gate_mock.h"
 #include "gate_production.h"
 
