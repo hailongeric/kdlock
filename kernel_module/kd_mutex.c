@@ -86,8 +86,8 @@ int kd_mutex_debug_nested_waiters(void)
 }
 EXPORT_SYMBOL_GPL(kd_mutex_debug_nested_waiters);
 
-/* Delegation is opt-in; disabled requests use the original Linux mutex. */
-static int kd_mutex_jit_enabled;
+/* Project default: mutex delegation runs enabled unless explicitly disabled. */
+static int kd_mutex_jit_enabled = 1;
 module_param_named(mutex_jit, kd_mutex_jit_enabled, int, 0644);
 
 bool kd_mutex_jit_is_enabled(void)

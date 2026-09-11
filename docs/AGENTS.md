@@ -76,7 +76,8 @@ CPU/NUMA 拓扑和挂载类型。具体身份与重建限制见
    环境未变化时，直接选择受影响的复杂 live 用例，不再重复基础验收。
 5. 高风险加载前，从宿主机 monitor 确认可恢复快照；之后才设置
    `KDLOCK_RECOVERY_CONFIRMED=1`。环境变量本身不是快照存在的证据。
-6. mutex JIT 只在已授权且可恢复的测试中使用 `mutex_jit=1`；默认仍为 0。
+6. mutex JIT 只在已授权且可恢复的测试中使用 `mutex_jit=1`；
+   `mutex_jit=0` 仅作为显式原生对照开关，不能作为默认运行策略。
 7. 对 benchmark 和 SSH 都加外层 timeout。ConnectTimeout 只限制建连，
    不能限制已连接但卡住的远端命令。
 8. 测试后核查结果、dmesg 错误、调用者退出及模块排空，再运行下一项。

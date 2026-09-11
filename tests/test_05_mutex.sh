@@ -1,5 +1,5 @@
 #!/bin/bash
-# test_05_mutex.sh - mutex_jit=0 must use Linux mutexes even after promotion.
+# test_05_mutex.sh - native fallback baseline: explicit mutex_jit=0.
 TEST_NAME="test_05_mutex"
 source "$(dirname "$0")/common.sh"
 
@@ -13,7 +13,7 @@ run_mutex_mode() {
 
     info "Testing mode $mode ($mode_name), $runs run(s)..."
     clear_dmesg
-    load_modules || return 1
+    load_modules "$TARGET_PROCESS" mutex_jit=0 || return 1
     start_daemon 2
 
     # kd_hotlock_record() intentionally ignores the first 1e9 TSC cycles after

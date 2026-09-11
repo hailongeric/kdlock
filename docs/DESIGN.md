@@ -1125,7 +1125,7 @@ design, not restoring an old function.
 
 ## 11. Configuration
 
-`target_process` defaults to kd_test; `mutex_jit` defaults to 0.
+`target_process` defaults to kd_test; `mutex_jit` defaults to 1.
 Batch limits are fixed at 1024. Spin NUMA is opt-in via KDLOCK_NUMA=1.
 Recovery-only fault/capacity/rename probes are test controls, not production
 recovery guarantees. Use scripts and their preconditions from
