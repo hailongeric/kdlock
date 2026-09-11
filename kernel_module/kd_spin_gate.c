@@ -18,6 +18,9 @@
 static struct kd_spin_gate kd_spin_gates[KD_SPIN_GATE_SLOTS];
 static DEFINE_RAW_SPINLOCK(kd_spin_gate_map_lock);
 
+/* Find or create the gate that represents this raw spinlock.
+ * Gate creation is bounded and done without sleeping.
+ */
 static struct kd_spin_gate *kd_spin_gate_lookup(raw_spinlock_t *origin,
 						bool create)
 {
@@ -74,6 +77,9 @@ struct kd_spin_gate *kd_spin_gate_find(raw_spinlock_t *origin)
 	return kd_spin_gate_lookup(origin, false);
 }
 
+/* Acquire physical lock ownership on the gate's private ticket while keeping the
+ * task pinned in preemption-disabled context.
+ */
 int kd_spin_gate_claim(struct kd_spin_gate *gate, struct kd_spin_hold *hold)
 {
 	if (!gate || !gate->origin || !hold || !in_task() || irqs_disabled() ||
@@ -102,6 +108,9 @@ int kd_spin_gate_claim(struct kd_spin_gate *gate, struct kd_spin_hold *hold)
 	return 0;
 }
 
+/* Release private gate ownership and restore Linux-origin state.
+ * Caller must pass the same CPU/task/hold triple that was observed at claim.
+ */
 int kd_spin_gate_release(struct kd_spin_hold *hold)
 {
 	struct kd_spin_gate *gate;

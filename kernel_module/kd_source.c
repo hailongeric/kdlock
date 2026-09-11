@@ -35,6 +35,7 @@ bool kd_source_is_open(void)
 	return READ_ONCE(kd_sources.state) == KD_SOURCE_OPEN;
 }
 
+/* Register one writer pin for shared source mutation. */
 bool kd_source_writer_get(void)
 {
 	unsigned long flags;
@@ -59,6 +60,7 @@ void kd_source_writer_put(void)
 	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
 }
 
+/* Register one frame pin and hold a module ref for the translated frame lifetime. */
 bool kd_source_frame_get(void)
 {
 	unsigned long flags;
@@ -126,6 +128,9 @@ static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
 static int kd_source_pin(unsigned long address, unsigned long size, bool text,
 			 enum kd_source_scope scope)
 {
+	/* All address range checks happen under the source lock to coordinate with
+	 * retire transitions and pin state changes.
+	 */
 	unsigned long flags, cursor = address, limit;
 	int ret = 0;
 
@@ -181,6 +186,9 @@ void kd_source_info(struct kd_source_info *info)
 
 int kd_source_begin_retire(void)
 {
+	/* Move source lifecycle to draining only when both frame/writer usage is
+	 * finished, then let finish retire remove module refs.
+	 */
 	unsigned long flags;
 	int ret = 0;
 
@@ -216,6 +224,9 @@ void kd_source_finish_retire(void)
 
 int kd_source_init(void)
 {
+	/* Cache core/module boundaries once so hot paths do not repeatedly query
+	 * kallsyms while servicing lock events.
+	 */
 	kd_module_address = (void *)kallsyms_lookup_name("__module_address");
 	kd_core_start = kallsyms_lookup_name("_stext");
 	kd_core_text_end = kallsyms_lookup_name("_etext");

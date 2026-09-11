@@ -281,6 +281,10 @@ bool kd_spin_nested_shadow_has_space(void)
 	return kd_spin_lock_stack_depth(ptr) < ARRAY_SIZE(ptr->lock_addr);
 }
 
+/* Register a nested lock ownership record for this CPU's combiner stack.
+ * The stack is used to validate outer-unlock ordering and out-of-order unlock
+ * checks during delegated nested execution.
+ */
 int kd_spin_nested_shadow_push(struct qspinlock *lock)
 {
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
@@ -303,6 +307,9 @@ int kd_spin_nested_shadow_push(struct qspinlock *lock)
 	return 0;
 }
 
+/* Remove one lock from the nested shadow stack, allowing arbitrary hole compaction.
+ * This keeps lock addresses topologically ordered in lock-depth tracking.
+ */
 int kd_spin_nested_shadow_remove(struct qspinlock *lock)
 {
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
@@ -326,6 +333,9 @@ int kd_spin_nested_shadow_remove(struct qspinlock *lock)
 	return -ENOENT;
 }
 
+/* Pop requires exact top-of-stack match; used when this lock is the current
+ * nesting boundary being released.
+ */
 static int kd_spin_nested_shadow_pop(struct qspinlock *lock)
 {
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
@@ -406,6 +416,9 @@ static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
 	}
 }
 
+/* Verify a candidate unlock matches the latest expected nesting index.
+ * Detects accidental reordering before mutating spin/qspin states.
+ */
 static void kd_spin_diag_validate_outer_unlock(const struct shadow_stack *ptr,
 					       struct qspinlock *lock,
 					       int my_idx, int max_idx)
@@ -848,6 +861,10 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
 	return 0;
 }
 
+/* Reclaim the original waiter's outer lock on return from a native/remote
+ * delegation run. The holder must reacquire origin scheduling only, never
+ * open a new queue fast path through this packet.
+ */
 static void kd_spin_reclaim_outer(struct qspinlock *lock)
 {
 	struct kd_spin_ref ref = { 0 };
@@ -862,6 +879,12 @@ static void kd_spin_reclaim_outer(struct qspinlock *lock)
 
 #pragma GCC push_options
 #pragma GCC optimize("O3")
+/*
+ * Execute one waiter critical section in JIT mode.
+ * For native waiters run until outer unlock or delegated native path and publish
+ * the corresponding transition so combiner state and successor continuation stay
+ * deterministic.
+ */
 __attribute__((noipa)) noinline notrace static int
 execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	   struct kd_spin_batch *batch)
@@ -1158,6 +1181,11 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 
 #pragma GCC push_options
 #pragma GCC optimize("O3")
+/*
+ * Combiner loop over the currently-formed queue segment.
+ * Stops at batch boundary, native handoff, OOO release, or JIT failure and
+ * leaves the lock in a state expected by the successor waiter.
+ */
 __attribute__((noipa)) noinline notrace static void
 run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 {
@@ -1279,6 +1307,13 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 
 #pragma GCC push_options
 #pragma GCC optimize("O3")
+/*
+ * Core queue+combiner protocol entry.
+ * Returns:
+ *  0/2/4 -> delegated completion / queue acquisition / retry-path variants,
+ *  1/3   -> waiters resumed from JIT completion/native,
+ *  5     -> native relay wait.
+ */
 __attribute__((noipa)) noinline notrace static int
 __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		       register struct kd_spin_node *curr_node)
@@ -1524,6 +1559,11 @@ release:
 }
 #pragma GCC pop_options
 
+/*
+ * Slowpath entry for promoted locks:
+ * allocates a per-CPU node, initializes queue state, and either waits or runs
+ * combiner depending on queue position and contention.
+ */
 __attribute__((noipa)) noinline notrace static int
 __kd_spin_lock_slowpath(struct qspinlock *lock)
 {
@@ -1580,6 +1620,9 @@ __kd_spin_lock_slowpath(struct qspinlock *lock)
  * Public API
  */
 
+/* Free all spin-related per-CPU resources and shadow-node state.
+ * Callers must ensure no active delegations remain before draining.
+ */
 static void kd_spinlock_free_percpu(void)
 {
 	int cpu;
@@ -1600,6 +1643,10 @@ static void kd_spinlock_free_percpu(void)
 #endif
 }
 
+/*
+ * Initialize JIT/diagnostic state for all CPUs.
+ * Any allocation failure rolls back partially created per-CPU state.
+ */
 int kd_spinlock_init(void)
 {
 	int i, j;
@@ -1684,6 +1731,9 @@ err_free:
 	return -ENOMEM;
 }
 
+/* Print per-lock accounting and release per-CPU resources.
+ * Must be invoked after all active frames and waiters have drained.
+ */
 void kd_spinlock_exit(void)
 {
 	int i;
@@ -1740,6 +1790,9 @@ void kd_spinlock_exit(void)
 	kd_spinlock_free_percpu();
 }
 
+/* Build a virtual waiter packet from a logical frame for nested delegation.
+ * Parent frame lock vector is copied so nested ownership checks remain consistent.
+ */
 static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 				    struct kd_spin_jit_context *context,
 				    struct qspinlock *lock,
@@ -1778,6 +1831,9 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	return 0;
 }
 
+/* Restore a virtual node's continuation after the callee returns from nested
+ * critical-section execution.
+ */
 static int kd_spin_advance_jit_node(struct kd_spin_node *node,
 				    struct pt_regs *regs)
 {
@@ -1794,6 +1850,9 @@ static int kd_spin_advance_jit_node(struct kd_spin_node *node,
 	return 0;
 }
 
+/* Complete the virtual-node resume decision after delegated nested execution:
+ * parent done -> return to parent unlock path, else restore caller continuation.
+ */
 static int kd_spin_finish_remote_node(struct kd_spin_node *node,
 				      struct pt_regs *regs,
 				      struct kd_exec_frame *parent)
@@ -1811,6 +1870,9 @@ static int kd_spin_finish_remote_node(struct kd_spin_node *node,
 	return KD_SPIN_NESTED_DELEGATED;
 }
 
+/* Register a nested spinlock request in logical parent frame and run queue protocol.
+ * Returns acquired/delegated markers used by the parent CALL continuation handling.
+ */
 int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 			struct kd_exec_frame *parent)
 {
@@ -1944,6 +2006,9 @@ cancel:
 	return ret;
 }
 
+/* Resolve nested unlock for a delegated spinlock and propagate OOO condition.
+ * For normal fast-path release it only pops the logical shadow stack entry.
+ */
 int kd_spin_nested_unlock(struct qspinlock *lock)
 {
 	bool ooo;
@@ -1967,6 +2032,9 @@ get_shadow_stack_ptr(void)
 	return &(ptr->local_shadow_stack_ptr);
 }
 
+/* Resume node defaults to the current CPU node if no explicit wakeup target exists.
+ * This ensures direct return paths remain valid even without explicit set_resume.
+ */
 __attribute__((noipa)) noinline notrace static struct kd_spin_node *
 get_kd_spin_resume_node(void)
 {
@@ -1976,12 +2044,18 @@ get_kd_spin_resume_node(void)
 	return node ? node : this_cpu_ptr(&kd_spin_nodes[0]);
 }
 
+/* Native-input scratch slot is used as a temporary spill area for RSP handoff
+ * while executing queue/combiner on shadow stack.
+ */
 __attribute__((noipa)) noinline notrace static struct kd_spin_native_input *
 get_kd_spin_native_input(void)
 {
 	return this_cpu_ptr(&kd_spin_native_inputs);
 }
 
+/* Pick the earliest of node-rsp and logical-frame-rsp.
+ * This avoids returning into an already-unwound return slot.
+ */
 __attribute__((noipa)) noinline notrace static unsigned long
 get_kd_spin_resume_stack(void)
 {
@@ -2099,6 +2173,10 @@ kd_spin_resume_waiter(unsigned int mode)
 
 #pragma GCC push_options
 #pragma GCC optimize("O3")
+/* Bridge from slow-path result code to resumed execution.
+ * mode maps return classes from __kd_spin_lock_longjmp to:
+ * 0=delegated native handoff, 1/3/4/5=queue/native restore variants.
+ */
 __attribute__((noipa)) noinline notrace static void
 kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value)
 {
@@ -2158,6 +2236,9 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value)
 }
 #pragma GCC pop_options
 
+/* Hook entry for queued spin lock acquisition:
+ * handles fast path when possible, otherwise routes to qspin queue protocol.
+ */
 __attribute__((noipa)) noinline notrace void
 kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value)
 {

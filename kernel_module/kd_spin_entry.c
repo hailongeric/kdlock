@@ -42,6 +42,9 @@ struct kd_spin_entry_pool {
 
 static struct kd_spin_entry_pool __percpu *kd_spin_entries;
 
+/* Allocate and initialize the per-CPU origin ticket pool.
+ * No memory allocation is allowed while holding a lock admission stack.
+ */
 int kd_spin_entries_init(void)
 {
 	int cpu;
@@ -152,6 +155,9 @@ bool kd_spin_entry_native_active(void)
 	return kd_entry_lookup(NULL, true, NULL);
 }
 
+/* Reserve a new ticket for hook/native caller; this is the admission checkpoint
+ * before touching lock-specific gate state.
+ */
 int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 			struct kd_spin_ref *ref)
 {
@@ -263,11 +269,17 @@ int kd_spin_entry_claim(const struct kd_spin_ref *ref)
 	return kd_spin_entry_claim_from(ref, KD_ENTRY_WAITING);
 }
 
+/* Reclaim a released native/origin reference; used when original owner handed
+ * back delegated ownership and now needs to continue local execution.
+ */
 int kd_spin_entry_reclaim(const struct kd_spin_ref *ref)
 {
 	return kd_spin_entry_claim_from(ref, KD_ENTRY_RELEASED);
 }
 
+/* Release the physical origin lock ownership but keep the slot alive for potential
+ * follow-up state transitions and diagnostics.
+ */
 int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
@@ -297,6 +309,9 @@ out:
 	return ret;
 }
 
+/* Finalize the lifecycle. The caller must be on the pinned local CPU and no
+ * other protocol participants can still reference this ref.
+ */
 int kd_spin_entry_end(struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
