@@ -250,7 +250,7 @@ python3 disassem/device_session.py capabilities
 ```bash
 cd daemon
 set +m
-KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode 2 --verbose > "$RUN_DIR/daemon.log" 2>&1 &
+KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode per-tgid --verbose > "$RUN_DIR/daemon.log" 2>&1 &
 DAEMON_PID=$!
 cd ..
 timeout --kill-after=5s 10s bench/klock_test 1 1 1 1 3
