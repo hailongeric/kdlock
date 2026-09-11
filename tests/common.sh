@@ -54,13 +54,17 @@ build_all() {
 
 load_modules() {
     local target="${1:-$TARGET_PROCESS}"
+    local -a extra_args=("${@:2}")
     unload_modules || return 1
     sleep 0.2
 
     sysctl -w kernel.randomize_va_space=0 >/dev/null 2>&1
     sysctl -w kernel.numa_balancing=0 >/dev/null 2>&1
 
-    insmod "$KM_DIR/kdlock_km.ko" target_process="$target" || { fail "$TEST_NAME" "insmod kdlock_km failed"; return 1; }
+    insmod "$KM_DIR/kdlock_km.ko" target_process="$target" "${extra_args[@]}" || {
+        fail "$TEST_NAME" "insmod kdlock_km failed"
+        return 1
+    }
     insmod "$KLOCK_DIR/klock_module.ko" || { fail "$TEST_NAME" "insmod klock_module failed"; return 1; }
 }
 
@@ -86,6 +90,8 @@ unload_modules() {
 # --- Daemon management ---
 
 start_daemon() {
+    # Argument is daemon workspace mode (flat/per-tgid or legacy 1/2/v1/v2),
+    # independent from benchmark mode numbers used by workloads.
     local mode="${1:-2}"
     cd "$DAEMON_DIR"
     rm -rf 0x* 2>/dev/null || true
