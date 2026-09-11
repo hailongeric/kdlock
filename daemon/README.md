@@ -162,7 +162,7 @@ not current daemon implementation tasks; future work is retained in
 
 ## JIT Diagnostics
 
-`KD_JIT_BODY_WITNESS=1 ./daemon --mode 2` enables generated-body observation.
+`KD_JIT_BODY_WITNESS=1 ./daemon --mode per-tgid` (or `--mode 2`) enables generated-body observation.
 It defaults to 0; invalid values are translation errors, not policy refusals.
 Common integration-test launches force 1.
 
