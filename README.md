@@ -73,10 +73,18 @@ The guest needs the [captured Linux 6.1.159 hook baseline](kernel_baseline/READM
 x86-64, boot-time `nokaslr`, Python 3 with miasm 0.1.5 and access to
 `/proc/kcore`. A generic kernel with the same release string is insufficient.
 
-Normal mode exposes the host source through 9p. In recovery mode the same
-`/root/host_fs/kdlock` pathname is guest-local ext4. Compare hashes and transfer
-only changed files; do not move or recursively copy the repository.
-Confirm the VM and a usable snapshot following [AGENTS](docs/AGENTS.md) first.
+### Recovery / normal mode difference
+
+- normal mode: guest mounts host source via 9p, so edits in host are visible immediately
+  at `/root/host_fs/kdlock` inside guest.
+- recovery mode: guest runs `/root/host_fs/kdlock` from its own ext4 image, so edits are
+  not auto-visible and must be synced explicitly.
+- normal mode is for fast iteration and smoke-style checks.
+- recovery mode is for high-risk kernel-live tests, crash recovery, and snapshot-backed rollback.
+
+For normal operation in recovery mode, compare file hashes and sync only changed files;
+do not move or recursively copy the repository. Confirm VM recoverability and snapshot
+availability before live execution by following [AGENTS](docs/AGENTS.md) first.
 
 The following is initial environment acceptance, not a per-edit checklist.
 All commands below run in the guest:
@@ -133,7 +141,8 @@ See [evidence handling](docs/JIT_EXECUTION.md#执行与证据) for the full cont
 | 10 | Spin | GS/current rejection | Native-only negative test |
 | 11 | Mutex | GS/current rejection | Native-only negative test, `mutex_jit=1` |
 
-Daemon `--mode 1/2` selects workspace layout, not any benchmark mode.
+Daemon `--mode flat/per-tgid` (`1/2` and `v1/v2` remain as legacy aliases) selects
+workspace layout, not any benchmark mode.
 
 ## Boundaries
 
@@ -162,9 +171,10 @@ Daemon `--mode 1/2` selects workspace layout, not any benchmark mode.
   call the guest hook predicates; stopping benchmark workers is not a reader
   drain. The [lifetime assessment](docs/DESIGN.md#31-source-lock-and-hook-lifetimes)
   separates source pins, lock-object retirement and missing hook capabilities.
-- `mutex_jit` defaults to 0; plain non-RT mutex and spin paths are the active
-  scope. No userspace/futex frontend, rwsem, RT/PI/WW mutex or general IRQ/BH
-  delegation. Only explicitly allowlisted hostcalls, not arbitrary printk.
+- `mutex_jit` is enabled by default; `mutex_jit=0` is only for explicit native
+  baseline controls. No userspace/futex frontend, rwsem, RT/PI/WW mutex or
+  general IRQ/BH delegation. Only explicitly allowlisted hostcalls, not arbitrary
+  printk.
 
 ## Repository And Documentation
 
@@ -184,6 +194,7 @@ Daemon `--mode 1/2` selects workspace layout, not any benchmark mode.
 - [Register ABI](docs/JIT_REGISTER_ABI.md): entry, registers, stacks and exits.
 - [Operations](docs/AGENTS.md): host/guest safety, source sync and recovery.
 - [Validation](docs/VALIDATION.md): current evidence and historical index.
+- [Test examples](docs/TEST_EXAMPLES.md): all case/suite mapping and execution catalog.
 - [Tasks](docs/TODO.md): remaining main functionality and deferred work.
 - [Daemon](daemon/README.md): CLI, diagnostics and publication limits.
 - [Kernel baseline](kernel_baseline/README.md): prerequisite and reproduction.

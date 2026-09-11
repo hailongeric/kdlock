@@ -344,9 +344,9 @@ python3 -c 'import sys; sys.path.insert(0, "tests"); import regression; regressi
 | `/dev/lock_dev` | benchmark ioctl 入口，不接收 JIT 二进制。 |
 | `/dev/kd_dev` | 注册表快照、代码上传、source/CAPS 控制；不要手写任意 payload。 |
 | `target_process=klock_test` | 新目标按 task comm 匹配；改进程名可能使新请求不再代理。 |
-| `mutex_jit=1` | 显式启用 mutex JIT，默认 0；不代表代码已翻译或已执行。 |
+| `mutex_jit=1` | 显式要求 mutex JIT，项目默认路径。 |
 | `KD_JIT_BODY_WITNESS=1` | 翻译时加入返回后可观测的 body 标记；不能追溯修改旧产物。 |
-| daemon `--mode 1/2` | 分别是 `daemon/<RIP>/`、`daemon/<RIP>/<tgid>/` 工作区布局。 |
+| daemon `--mode flat|per-tgid` (`--mode 1|2` 为兼容) | 分别是 `daemon/<RIP>/`、`daemon/<RIP>/<tgid>/` 工作区布局。 |
 | benchmark 参数 | `线程数 每次ioctl的CS循环数 CS工作量 每线程ioctl次数 mode [role-base]`。 |
 | `callee_table.txt` / `ij_table.txt` | 学习的 CALL/IJ 目标；由 daemon 维护，不是随意开放的白名单。 |
 | `asm/jit.S` / `jit.bin` / `bin.txt` | 生成汇编、机器码、反汇编；存在不等于已上传或执行。 |

@@ -126,7 +126,7 @@ bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5
 相同 mode 按首次出现顺序只运行一次；遇到失败立即停止。检查每种模式时可
 分别传入一个 mode，不能因为前面通过就假定后面执行过。
 mode 3/4/5 脚本显式加载 `mutex_jit=1` 并检查实参。
-daemon 的 `--mode 1/2` 只选择工作目录布局，不是 benchmark 的 mode。
+daemon 的 `--mode flat/per-tgid` (`1/2` / `v1/v2` 为兼容别名) 只选择工作目录布局，不是 benchmark 的 mode。
 daemon 必须在 kdlock 加载后启动，并在一次设备会话内完成读取、翻译和发布。
 真实文本读取要求有效的设备引用；翻译子进程继承该引用，父进程退出后也可能
 继续持有。真实读之前还会 pin 源码所属 LIVE 模块；停止并等待所有翻译者和

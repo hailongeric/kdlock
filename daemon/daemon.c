@@ -503,10 +503,12 @@ static void check_once(const struct daemon_config *cfg)
 static void usage(const char *prog)
 {
 	fprintf(stderr,
-		"Usage: %s [--mode 1|2] [--quiet|--verbose] [--poll-us N]\n"
+		"Usage: %s [--mode flat|per-tgid|1|2|v1|v2] [--quiet|--verbose] [--poll-us N]\n"
 		"\n"
-		"  --mode 1     use flat layout: ./<RIP>/\n"
-		"  --mode 2     use per-tgid layout: ./<RIP>/<tgid>/ (default)\n"
+		"  --mode flat     use flat layout: ./<RIP>/\n"
+		"  --mode per-tgid use per-tgid layout: ./<RIP>/<tgid>/ (default)\n"
+		"  --mode 1|v1    legacy alias for flat layout\n"
+		"  --mode 2|v2    legacy alias for per-tgid layout\n"
 		"  --quiet      suppress normal progress logs\n"
 		"  --verbose    print normal progress logs\n"
 		"  --poll-us N  polling interval in microseconds, default 100000\n",
@@ -519,10 +521,13 @@ static int parse_args(int argc, char **argv, struct daemon_config *cfg)
 		if (!strcmp(argv[i], "--mode") || !strcmp(argv[i], "-m")) {
 			if (++i >= argc)
 				return -1;
-			if (!strcmp(argv[i], "1") || !strcmp(argv[i], "v1"))
+			if (!strcmp(argv[i], "flat") ||
+			    !strcmp(argv[i], "1") ||
+			    !strcmp(argv[i], "v1"))
 				cfg->mode = MODE_V1;
 			else if (!strcmp(argv[i], "2") ||
-				 !strcmp(argv[i], "v2"))
+				 !strcmp(argv[i], "v2") ||
+				 !strcmp(argv[i], "per-tgid"))
 				cfg->mode = MODE_V2;
 			else
 				return -1;

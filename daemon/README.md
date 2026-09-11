@@ -24,14 +24,15 @@ Build and run only in the recovery guest, from this directory:
 ```sh
 cd daemon
 make
-./daemon --mode 2
+./daemon --mode per-tgid
 ```
 
 Modes:
 
-- `--mode 1`: use one flat workspace per translated entry: `./<RIP>/`.
-- `--mode 2`: isolate workspaces by process: `./<RIP>/<tgid>/`. This is the
-  default.
+- `--mode flat` (or legacy `--mode 1`/`--mode v1`): use one flat workspace per translated
+  entry: `./<RIP>/`.
+- `--mode per-tgid` (or legacy `--mode 2`/`--mode v2`): isolate workspaces by
+  process: `./<RIP>/<tgid>/`. This is the default.
 
 These select workspace layout, not benchmark mode or hostcall policy. Kernel
 lock entries use `pid=0` as their lookup key, but retain the registering task's
