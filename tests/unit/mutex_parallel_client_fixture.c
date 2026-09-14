@@ -97,6 +97,24 @@ int main(void)
 		assert(calls == 1 && closes == 1);
 		rounds++;
 	}
+	/* The original waiter never retries EINTR. Only a successful one-ioctl
+	 * return with one delivered SIGUSR1 is accepted; fatal exit is live-only. */
+	args[2] = "klock_test";
+	args[3] = "parallel-waiter";
+	expected_mode = 3;
+	for (lane = 0; lane < 2; lane++) {
+		args[1] = lane ? "1" : "0";
+		expected_role = 8 * lane + 2;
+		for (variant = 0; variant < 4; variant++) {
+			calls = closes = signals = 0;
+			first_error = variant == 1 ? EINTR : 0;
+			delivered = variant == 2 ? 0 : variant == 3 ? 2 : 1;
+			assert(client_main(4, args) == (variant != 0));
+			assert(calls == 1 && closes == 1);
+			rounds++;
+		}
+	}
+	args[2] = "kd_native";
 	args[1] = "0";
 	for (variant = 0; variant < 2; variant++) {
 		calls = closes = signals = 0;
@@ -112,6 +130,9 @@ int main(void)
 	calls = closes = signals = 0;
 	args[3] = "parallel-peer";
 	args[2] = "klock_test";
+	assert(client_main(4, args) == 2 && !calls && !closes);
+	args[3] = "parallel-waiter";
+	args[2] = "kd_native";
 	assert(client_main(4, args) == 2 && !calls && !closes);
 	printf("parallel client fixture: %u valid/error rounds and invalid target pass\n",
 	       rounds);

@@ -23,6 +23,7 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/ktime.h>
+#include <linux/math.h>
 #include <linux/string.h>
 #include <linux/sched.h>
 #include <linux/jiffies.h>
@@ -64,6 +65,16 @@ static DEFINE_PER_CPU(unsigned long, kd_gs_probe_rmw);
 
 static unsigned long mode2_api_observations;
 static unsigned long mode5_api_observations;
+static unsigned long mode5_api_calls;
+/* Each counter pair belongs to the same physical lock as its mode's CS. */
+static unsigned long mode2_scalar_calls, mode2_scalar_failures;
+static unsigned long mode5_scalar_calls, mode5_scalar_failures;
+/* Switch only between joined workload phases: keep normal hostcall-return
+ * coverage, then exceed the per-invocation quota without changing its value. */
+static bool mode5_call_quota;
+module_param(mode5_call_quota, bool, 0644);
+MODULE_PARM_DESC(mode5_call_quota,
+		 "Mode 5: use 17 clock calls per critical section (normal: 1)");
 
 /* Each request has a distinct record: entry replay cannot hide behind an
  * aggregate counter. The ordinary noinline call deliberately starts missing. */
@@ -72,6 +83,10 @@ static unsigned int native_resume_stage;
 module_param(native_resume_stage, uint, 0444);
 static bool native_resume_rename;
 static bool native_pending_contended;
+static bool mutex_nested_schedule;
+module_param(mutex_nested_schedule, bool, 0444);
+MODULE_PARM_DESC(mutex_nested_schedule,
+		 "Mode 4: observe the A executor blocked on B on its holder's CPU");
 static bool native_acquired_queue;
 module_param(native_acquired_queue, bool, 0444);
 MODULE_PARM_DESC(
@@ -89,8 +104,8 @@ module_param(mixed_lock_probe, uint, 0644);
 MODULE_PARM_DESC(
 	mixed_lock_probe,
 	"Mode 3 admission probe: 0=off, 1=outer-only warmup, 2=mixed locks");
-/* Arm only after promotion so task_lock traffic cannot change the hot-lock
- * sampling window of the mutex under test. */
+/* Arm only after promotion so task_lock traffic and rename observations stay
+ * outside the mutex's frequency sample; unrelated locks no longer tune it. */
 module_param(native_resume_rename, bool, 0644);
 static atomic_t mutex_inside = ATOMIC_INIT(0);
 static atomic_t mutex_overlaps = ATOMIC_INIT(0);
@@ -377,6 +392,8 @@ static __always_inline void kd_cs_step(enum kd_cs_state_id id)
 #include "../tests/kernel/remote_outer_workload.c"
 #include "../tests/kernel/spin_chain_workload.c"
 #include "../tests/kernel/remote_depth_workload.c"
+#include "../tests/kernel/spin_multi_workload.c"
+#include "../tests/kernel/mutex_shared_workload.c"
 
 /* A normal missing CALL is learned first. With its caller's A still held,
  * seven acquisitions fill the frame; the eighth must fail before acquisition
@@ -1193,6 +1210,25 @@ static void run_abort_recovery_spinlock_test(unsigned long loop_count,
 	}
 }
 
+/* Exercise a genuine scalar argument and its consumed result, not a second
+ * zero-argument clock. With low < 2*root+1 and root < 2^32, root^2+low fits
+ * u64 and has floor(sqrt(...)) == root. High argument bits and bit 31 of the
+ * unsigned result expose truncation/sign-extension mistakes across the CALL.
+ * Keep this inline so only the kernel math helper leaves the generated CS.
+ */
+static __always_inline void kd_scalar_service_step(unsigned long sequence,
+						 unsigned long *calls,
+						 unsigned long *failures)
+{
+	unsigned long low = sequence & 0xffff;
+	unsigned long root = 0x80000000UL + low;
+	unsigned long result = int_sqrt(root * root + low);
+
+	(*calls)++;
+	if (result != root)
+		(*failures)++;
+}
+
 static void run_api_in_lock_test(unsigned long loop_count,
 				 unsigned long work_load)
 {
@@ -1208,6 +1244,8 @@ static void run_api_in_lock_test(unsigned long loop_count,
 		dummy_computation ^= (int)(now & 0xffff);
 		if (now)
 			mode2_api_observations++;
+		kd_scalar_service_step(mode2_api_observations,
+				       &mode2_scalar_calls, &mode2_scalar_failures);
 
 		for (j = 0; j < work_load; j++)
 			dummy_computation++;
@@ -1558,6 +1596,55 @@ static noinline void wait_for_pending_mutex_waiter(void)
 	}
 }
 
+/* Counted contention can precede the actual sleep. Hold B until its real
+ * wait_list contains A's physical owner, so sharing a CPU cannot turn the
+ * scheduling gate into a successful but uncontended JIT run. Snapshot task
+ * identity under wait_lock; do not retain/dereference a waiter afterward. */
+static noinline void wait_for_nested_mutex_executor(void)
+{
+	unsigned long deadline = jiffies + 10 * HZ;
+
+	for (;;) {
+		struct mutex_waiter *waiter;
+		unsigned long flags, a_owner, b_owner;
+		unsigned int executor_cpu = 0;
+		pid_t executor_pid = 0;
+
+		raw_spin_lock_irqsave(&nested_mutex_b.wait_lock, flags);
+		a_owner = kd_test_mutex_owner(&nested_mutex_a);
+		b_owner = kd_test_mutex_owner(&nested_mutex_b);
+		list_for_each_entry(waiter, &nested_mutex_b.wait_list, list) {
+			if ((unsigned long)waiter->task == a_owner) {
+				executor_pid = waiter->task->pid;
+				executor_cpu = task_cpu(waiter->task);
+				break;
+			}
+		}
+		raw_spin_unlock_irqrestore(&nested_mutex_b.wait_lock, flags);
+		if (executor_pid) {
+			bool valid = b_owner == (unsigned long)current &&
+				     a_owner != b_owner &&
+				     executor_cpu == raw_smp_processor_id() &&
+				     !preempt_count() && !irqs_disabled();
+
+			if (!valid)
+				atomic_inc(&resume_failures);
+			pr_info("kd_nested mutex blocked: holder=%d b_owner=%lx executor=%d a_owner=%lx cpu=%u executor_cpu=%u a=%lx b=%lx queued=1 valid=%u\n",
+				current->pid, b_owner, executor_pid, a_owner,
+				raw_smp_processor_id(), executor_cpu,
+				(unsigned long)&nested_mutex_a,
+				(unsigned long)&nested_mutex_b, valid);
+			return;
+		}
+		if (time_after_eq(jiffies, deadline)) {
+			atomic_inc(&resume_failures);
+			pr_err("kd_nested mutex: A executor did not queue on B\n");
+			return;
+		}
+		cond_resched();
+	}
+}
+
 static noinline void run_inner_mutex_holder_role(unsigned long work_load)
 {
 	unsigned long j;
@@ -1580,6 +1667,8 @@ static noinline void run_inner_mutex_holder_role(unsigned long work_load)
 		kd_stack_change_wait();
 	} else if (native_pending_contended) {
 		wait_for_pending_mutex_waiter();
+	} else if (mutex_nested_schedule) {
+		wait_for_nested_mutex_executor();
 	} else {
 		/* The ordinary nested JIT case waits for the A executor, not
 		 * for the original waiter used by pending-CALL continuation. */
@@ -1695,6 +1784,11 @@ static void run_nested_mutex_test(unsigned long loop_count,
 			sync_role, current->pid, (unsigned long)current,
 			raw_smp_processor_id(), preempt_count(),
 			irqs_disabled());
+	if (synchronized && mutex_nested_schedule)
+		pr_info("kd_nested mutex role: role=%u task=%d self=%lx cpu=%u preempt=%u irq=%u\n",
+			sync_role, current->pid, (unsigned long)current,
+			raw_smp_processor_id(), preempt_count(),
+			irqs_disabled());
 	for (i = 0; i < loop_count; i++) {
 		if (!synchronized || sync_role == 0)
 			run_nested_mutex_role(work_load, synchronized,
@@ -1714,6 +1808,12 @@ static void run_nested_mutex_test(unsigned long loop_count,
 		else if (sync_role == 7 && !gs_context)
 			run_mutex_native_dependency_role();
 	}
+	/* This runs on the original task after its unlock/restore, not in JIT. */
+	if (synchronized && mutex_nested_schedule)
+		pr_info("kd_nested mutex done: role=%u task=%d self=%lx cpu=%u preempt=%u irq=%u\n",
+			sync_role, current->pid, (unsigned long)current,
+			raw_smp_processor_id(), preempt_count(),
+			irqs_disabled());
 }
 
 static void run_api_in_mutex_test(unsigned long loop_count,
@@ -1721,20 +1821,38 @@ static void run_api_in_mutex_test(unsigned long loop_count,
 {
 	unsigned long i, j;
 	unsigned long now;
+	unsigned int call, repeats = READ_ONCE(mode5_call_quota) ? 17 : 1;
 	volatile int dummy_computation = 0;
 
 	for (i = 0; i < loop_count; i++) {
 		mutex_lock(&global_mutex);
 
 		kd_cs_step(KD_CS_MUTEX_GLOBAL);
-		now = (unsigned long)ktime_get_ns();
-		dummy_computation ^= (int)(now & 0xffff);
+		/* The counter before this loop detects entry replay. Count every
+		 * returned service so skipping/repeating the pending CALL also fails. */
+		for (call = 0; call < repeats; call++) {
+			now = (unsigned long)ktime_get_ns();
+			dummy_computation ^= (int)(now & 0xffff);
+			if (now)
+				mode5_api_calls++;
+		}
 		if (now)
 			mode5_api_observations++;
+		/* Keep the scalar call after the complete clock loop: quota still
+		 * exits at clock 17, and its waiter executes this native suffix once.
+		 */
+		kd_scalar_service_step(mode5_api_observations,
+				       &mode5_scalar_calls, &mode5_scalar_failures);
 		for (j = 0; j < work_load; j++)
 			dummy_computation++;
 
 		mutex_unlock(&global_mutex);
+		/* Outside the translated scope: observe the original caller only
+		 * after native completion/owner ACK, never read current inside JIT. */
+		if (repeats > 1)
+			pr_info("kd_hostcall quota done: task=%d repeats=%u cpu=%u preempt=%u irq=%u\n",
+				current->pid, repeats, raw_smp_processor_id(),
+				preempt_count(), irqs_disabled());
 	}
 }
 
@@ -1751,6 +1869,10 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		if (copy_from_user(&k_args, (void __user *)arg, sizeof(k_args)))
 			return -EFAULT;
 		/* Isolate the multi-frame workload from the ordinary mode ABI. */
+		if (spin_multi_roots)
+			return k_args.mode == MODE_SPIN_INNER_CONTENTION ?
+				       kd_multi_run(k_args.loop_count, k_args.role) :
+				       -EINVAL;
 		if (mutex_parallel)
 			return k_args.mode == MODE_MUTEX_CONTENTION ?
 				       kd_parallel_run(k_args.loop_count,
@@ -1782,13 +1904,13 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 				       kd_deep_run(k_args.loop_count,
 						   k_args.role) :
 				       -EINVAL;
-		/* Gate-pressure roles extend the existing paused ticket case, not
-		 * its JIT body or the ordinary mode-8 selector space. */
+		/* Gate roles extend the paused ticket case with native pressure and
+		 * a second prepared JIT root, not ordinary mode-8 selector values. */
 		if (native_gate_pressure && (k_args.role & 0x40000000U))
 			return k_args.mode == MODE_SPIN_INNER_CONTENTION &&
-					       !(k_args.role & ~0x40000003U) ?
+					       !(k_args.role & ~0x4000000fU) ?
 				       kd_gate_capacity_run(k_args.loop_count,
-							    k_args.role & 3U) :
+							    k_args.role & 15U) :
 				       -EINVAL;
 		if (k_args.mode == MODE_SPIN_CONTENTION) {
 			unsigned int api = k_args.role & 0x20000000U ?
@@ -1812,6 +1934,8 @@ static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			return run_mutex_contention_test(k_args.loop_count,
 							 k_args.work_load,
 							 k_args.role);
+		else if (k_args.mode == MODE_MUTEX_NESTED && mutex_shared)
+			return kd_shared_run(k_args.loop_count, k_args.role);
 		else if (k_args.mode == MODE_MUTEX_NESTED)
 			run_nested_mutex_test(k_args.loop_count,
 					      k_args.work_load, k_args.role,
@@ -1917,6 +2041,12 @@ static int __init my_module_init(void)
 	ret = kd_parallel_init();
 	if (ret)
 		return ret;
+	/* Shared-B gates start only after translation; reject ambiguous fixture
+	 * combinations rather than silently replacing another mode-4 workload. */
+	if (mutex_shared_armed ||
+	    (mutex_shared && (mutex_parallel || mutex_nested_schedule ||
+			      native_resume_stage || mixed_lock_probe)))
+		return -EINVAL;
 	ret = kd_signal_init();
 	if (ret)
 		return ret;
@@ -1986,6 +2116,11 @@ static int __init my_module_init(void)
 	}
 	mode2_api_observations = 0;
 	mode5_api_observations = 0;
+	mode5_api_calls = 0;
+	mode2_scalar_calls = mode2_scalar_failures = 0;
+	mode5_scalar_calls = mode5_scalar_failures = 0;
+	kd_multi_init();
+	kd_shared_init();
 	memset(kd_cs_states, 0, sizeof(kd_cs_states));
 	memset(kd_cs_completed, 0, sizeof(kd_cs_completed));
 	atomic64_set(&gs_spin_attempts, 0);
@@ -2019,6 +2154,7 @@ static void __exit my_module_exit(void)
 
 	misc_deregister(&my_misc_device);
 	kd_parallel_report();
+	kd_shared_report();
 	kd_chain_report();
 	kd_deep_report();
 	kd_context_report();
@@ -2066,6 +2202,12 @@ static void __exit my_module_exit(void)
 		cs_operations, cs_active_states, cs_failures);
 	pr_info("mode2 api observations: %lu\n", mode2_api_observations);
 	pr_info("mode5 api observations: %lu\n", mode5_api_observations);
+	pr_info("mode5 api calls: %lu\n", mode5_api_calls);
+	pr_info("kd_scalar service: mode=2 calls=%lu failures=%lu\n",
+		mode2_scalar_calls, mode2_scalar_failures);
+	pr_info("kd_scalar service: mode=5 calls=%lu failures=%lu\n",
+		mode5_scalar_calls, mode5_scalar_failures);
+	kd_multi_report();
 	pr_info("kd_gs spin stats: attempts=%lld successes=%lld failures=%lld\n",
 		(long long)atomic64_read(&gs_spin_attempts),
 		(long long)atomic64_read(&gs_spin_successes),

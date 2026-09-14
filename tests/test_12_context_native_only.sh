@@ -54,7 +54,7 @@ trap cleanup EXIT
 build_all
 unload_modules
 clear_dmesg
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit=1
 insmod "$KLOCK_DIR/klock_module.ko" "${module_args[@]}"
 test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1
 start_daemon 2

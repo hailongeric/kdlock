@@ -72,6 +72,8 @@ struct kd_mutex_node {
 
 	struct pt_regs regs; /* waiter context → JIT sandbox      */
 	bool native_resume;
+	/* Optional queue residence clock, not critical-section execution time. */
+	uint64_t queued_at_ns;
 };
 
 /*

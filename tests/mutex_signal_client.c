@@ -48,6 +48,22 @@ static int parallel_peer(int fd, struct test_args *args, int lane)
 	return ret != 0 || error || signals != 1;
 }
 
+/* One original waiter, one ioctl. A pending SIGKILL must prevent this return;
+ * SIGUSR1 is delivered only after the kernel suffix and both owner ACKs. */
+static int parallel_waiter(int fd, struct test_args *args, int lane)
+{
+	int ret, error;
+
+	printf("parallel waiter client enter: lane=%d pid=%ld\n", lane,
+	       (long)getpid());
+	fflush(stdout);
+	ret = ioctl(fd, IOC_RUN_TEST, args);
+	error = ret < 0 ? errno : 0;
+	printf("parallel waiter client return: lane=%d pid=%ld ret=%d errno=%d signals=%d\n",
+	       lane, (long)getpid(), ret, error, signals);
+	return ret != 0 || error || signals != 1;
+}
+
 int main(int argc, char **argv)
 {
 	struct test_args args = { .loop_count = 1, .work_load = 1, .mode = 3 };
@@ -57,6 +73,7 @@ int main(int argc, char **argv)
 	int pending_signal = 0;
 	int pending_race = 0;
 	int parallel = 0;
+	int waiter = 0;
 	sigset_t block, previous;
 
 	if ((argc != 3 && argc != 4) ||
@@ -66,6 +83,7 @@ int main(int argc, char **argv)
 	role = argv[1][0] - '0';
 	if (argc == 4) {
 		parallel = !strcmp(argv[3], "parallel-peer");
+		waiter = !strcmp(argv[3], "parallel-waiter");
 		pending_race = !strcmp(argv[3], "pending-race-int") ||
 			       !strcmp(argv[3], "pending-race-kill");
 		pending_signal = (!strcmp(argv[3], "pending-int") ||
@@ -78,13 +96,16 @@ int main(int argc, char **argv)
 		race = !strcmp(argv[3], "race-int")  ? 1 :
 		       !strcmp(argv[3], "race-kill") ? 2 :
 						       0;
-		if ((!parallel && (role || (!race && !pending_signal))) ||
-		    (parallel && strcmp(argv[2], "kd_native")))
+		if ((!parallel && !waiter && (role || (!race && !pending_signal))) ||
+		    (parallel && strcmp(argv[2], "kd_native")) ||
+		    (waiter && strcmp(argv[2], "klock_test")))
 			return 2;
 	}
 	args.role = 0x10000000U | role;
 	if (parallel)
 		args.role = 22U + role;
+	if (waiter)
+		args.role = 8U * role + 2;
 	if (pending_signal) {
 		/* One process, one ioctl, no EINTR retry: a fatal result must not
 		 * be confused with the timeout supervisor or a different pthread.
@@ -107,8 +128,9 @@ int main(int argc, char **argv)
 		perror("open");
 		return 1;
 	}
-	if (parallel) {
-		ret = parallel_peer(fd, &args, role);
+	if (parallel || waiter) {
+		ret = waiter ? parallel_waiter(fd, &args, role) :
+			       parallel_peer(fd, &args, role);
 		close(fd);
 		return ret;
 	}

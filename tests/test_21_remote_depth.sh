@@ -128,7 +128,7 @@ module_args=()
 [[ $nodes == 0 ]] || module_args+=(spin_selftest_trace_nodes=1)
 [[ $refusal == 0 ]] || module_args+=(spin_selftest_refusal="$refusal")
 [[ $readmit == 0 ]] || module_args+=(spin_selftest_readmit="$readmit")
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1 "${module_args[@]}"
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit=1 "${module_args[@]}"
 [[ $nodes == 0 ]] || test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_trace_nodes)" = Y
 [[ $refusal == 0 ]] || test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_refusal)" = "$refusal"
 [[ $readmit == 0 ]] || test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_readmit)" = "$readmit"

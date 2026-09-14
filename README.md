@@ -5,6 +5,14 @@ translates their existing machine code at runtime. The aim is TCLock-style
 delegation without rewriting each critical section's source. Existing guest
 lock hooks are still required; this is not an unmodified-kernel solution.
 
+The project targets **x86_64 machines only**. Implementation, testing and the
+task list do not include ports to other architectures.
+
+Development prioritizes supported main paths. Rare-scenario implementation and
+dedicated tests are optional, not current delivery gates; known gaps remain
+documented. Existing guards and actual-JIT acceptance are retained. See the
+[delivery scope](docs/TODO.md#delivery-scope).
+
 Start reading or running this checkout with the Chinese
 [code map and step-by-step manual](docs/PROJECT_GUIDE.md). It indexes production
 code, test drivers and fixtures, and separates host commands from guest execution.
@@ -43,26 +51,43 @@ before ACK; reclamation waits for RCU readers.
 
 ## Current Status
 
-**2026-09-11 reading handoff:** purpose and ownership comments are supplemented
-without changing executable statements. The manual records current limitations,
-component flow, publication checks and ordered cleanup. This documentation-only
-increment does not re-certify the historical JIT results below; its checks are
-recorded separately in [VALIDATION](docs/VALIDATION.md#reading-handoff).
+**2026-09-14:** this working-tree version is an experimental x86_64 kernel JIT
+delegation prototype. This checkpoint collects the implementation, consolidated
+tests and documentation developed since `1d5fc7259d96863aa143343d22c79aaf93023c9e`.
+The final cleanup makes timing-label mappings explicit and improves comments and
+formatting; it does not change the lock protocol or reopen deferred work. See
+the [checkpoint verification](docs/VALIDATION.md#repository-checkpoint).
 
-| Recorded validation | Result and boundary |
-| --- | --- |
-| [2026-09-09 complete matrix](docs/VALIDATION.md#parallel-native-frames) | 67/67: 51 actual-JIT cases, 12 refusals, two native controls and two kernel protocol probes |
-| [2026-09-10 scoped live run](docs/VALIDATION.md#static-per-cpu-ranges) | 24/24: 12 actual-JIT cases and 12 refusals for static core/module per-CPU screening |
-| [2026-09-11 reading handoff](docs/VALIDATION.md#reading-handoff) | Builds and six focused unit programs; no kernel-JIT rerun |
+The Chinese [version overview](docs/PROJECT_GUIDE.md#1-当前进展) is the single
+summary of completed capabilities, remaining work and explicit deferrals.
+Per-freeze test results stay in [VALIDATION](docs/VALIDATION.md); implementation
+contracts and priorities stay in [TODO](docs/TODO.md).
 
-Main mode 0-8, guarded nested/register continuations, learned mutex helpers and
-bounded resource/lifetime combinations have actual-JIT evidence on their stated
-freezes. Mutex positives require `mutex_jit=1`. These observations are not
-complete support, a new run of the committed tree or a performance result.
-Per-case flows and coverage limits live in [JIT_EXECUTION](docs/JIT_EXECUTION.md);
-source identities, failures and historical results live in
-[VALIDATION](docs/VALIDATION.md). Remaining correctness work and explicit deferrals
-live in [TODO](docs/TODO.md), including the unimplemented use-time address guard.
+- Implemented: contended spin/mutex JIT, nested delegation, allowlisted services
+  returning to JIT, supported forward native continuation, real native-owner
+  exclusion and ACKs, static admission, selected-test evidence and guest setup.
+  Modes 0-8 have evidence on their stated freezes; this is not a new full rerun.
+- Latest kernel-JIT run, before checkpoint cleanup: native-handoff timing adds
+  two default-off rows, for ten
+  enabled timing intervals. Six affected units, W=1 build, off-mode 4/8,
+  eight paired sessions and on-mode 4/5/8 pass on 211 frozen inputs, retaining
+  **1,252 returned JIT bodies**. Mutex positives use `mutex_jit=1`.
+  Owners, ACKs, frame/args layout and the guest kernel are unchanged. See
+  [this acceptance](docs/VALIDATION.md#native-handoff-timing), including the
+  initial invalid-repeat CLI rejection that started no workload.
+- Unresolved: the earlier two-CPU short mode-5 session published code but ran
+  zero JIT bodies. It remains a failure, not a performance PASS; queue/parking
+  strategy, complete cost attribution, speedup and a faithful TCLock comparison
+  are unfinished. No automatic retry or new rare-case matrix is added.
+- Deferred: access-time address guards and pre-instruction continuation,
+  local/general flags and special-instruction repairs, immutable JIT versions
+  and per-version reclamation. Static screening is not dynamic memory or
+  execution-context safety; broader service/lifetime support remains limited.
+
+The earlier isolated-runtime acceptance (40 unit programs, 25 admission cases,
+core 5/5) and the earlier 64/64 matrix remain historical, not merged with this
+increment. Rare scenarios may remain unimplemented and untested; existing
+actual-JIT and state/owner checks are not weakened.
 
 ## Quick Start
 
@@ -70,8 +95,13 @@ Host checkout: `/home/eric/vm/vm-shared/kdlock`.
 Build and execute **only in the recovery guest**, reached with
 `ssh -p 2222 root@127.0.0.1`; never load these modules on the host.
 The guest needs the [captured Linux 6.1.159 hook baseline](kernel_baseline/README.md),
-x86-64, boot-time `nokaslr`, Python 3 with miasm 0.1.5 and access to
+x86-64, boot-time `nokaslr`, the CPython 3.10
+[pinned runtime](disassem/requirements.txt) and access to
 `/proc/kcore`. A generic kernel with the same release string is insufficient.
+Install/activate the guest venv using the
+[single dependency procedure](docs/PROJECT_GUIDE.md#33-检查依赖与空闲状态) before the
+commands below. Tests and daemon translation children inherit its PATH; merely
+setting `VIRTUAL_ENV` is insufficient. No host or global pip installation is needed.
 
 ### Recovery / normal mode difference
 
@@ -144,6 +174,17 @@ See [evidence handling](docs/JIT_EXECUTION.md#执行与证据) for the full cont
 Daemon `--mode flat/per-tgid` (`1/2` and `v1/v2` remain as legacy aliases) selects
 workspace layout, not any benchmark mode.
 
+`KD_TEST_METRICS=1` adds structured ioctl measurements to the existing benchmark:
+worker-envelope time, ioctl p50/p99, summed worker CPU time and exact completed
+counts. Failed runs have null performance fields. Existing complex spin and
+mode-5 stress drivers retain measured logs and before/after kernel evidence.
+These are instrumented measurements, not a speedup or native-delegation baseline;
+see the [measurement flow and limits](docs/JIT_EXECUTION.md#33-带观测的负载测量).
+The [comparator assessment](docs/DESIGN.md#13-performance-comparator-contract)
+confirms that upstream TCLock mutex is not a drop-in module for this guest;
+broader matched native/JIT trials and a faithful native-delegation comparison
+group remain separate open work, all on x86_64.
+
 ## Boundaries
 
 - Admission rejects GS memory, FS operands and recognized context-sensitive
@@ -194,7 +235,7 @@ workspace layout, not any benchmark mode.
 - [Register ABI](docs/JIT_REGISTER_ABI.md): entry, registers, stacks and exits.
 - [Operations](docs/AGENTS.md): host/guest safety, source sync and recovery.
 - [Validation](docs/VALIDATION.md): current evidence and historical index.
-- [Test examples](docs/TEST_EXAMPLES.md): all case/suite mapping and execution catalog.
+- [Test inventory](docs/TEST_EXAMPLES.md): per-test purpose, overlap review and scoped execution.
 - [Tasks](docs/TODO.md): remaining main functionality and deferred work.
 - [Daemon](daemon/README.md): CLI, diagnostics and publication limits.
 - [Kernel baseline](kernel_baseline/README.md): prerequisite and reproduction.

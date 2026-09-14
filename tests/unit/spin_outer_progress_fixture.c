@@ -5,9 +5,20 @@
 #include <stddef.h>
 
 typedef uint32_t u32;
+typedef uint64_t u64;
 struct list_head {
 	struct list_head *next, *prev;
 };
+/* Native routing is empty for this scripted pool user; keep the production
+ * frame constructor/pop contract rather than replacing its new predicate. */
+#define INIT_LIST_HEAD(head)                         \
+	do {                                        \
+		(head)->next = (head)->prev = (head); \
+	} while (0)
+static bool list_empty(const struct list_head *head)
+{
+	return head->next == head;
+}
 #define kd_exec_frame_push real_frame_push
 #define kd_exec_frame_pop real_frame_pop
 #include "spin_outer_types.h"
@@ -35,6 +46,20 @@ static bool next_holds;
 static bool preentry_queue_case;
 static void preentry_queue_peer(void);
 static const unsigned int kd_combiner_batch_size = 1024;
+static bool queue_probe;
+static unsigned int queue_finishes;
+static unsigned int handoff_starts, handoff_ends;
+
+/* Observe the release API and the packet visible at that boundary. This is a
+ * deterministic compiler-contract check, not a Linux memory-order litmus. */
+static struct {
+	struct kd_spin_node *node;
+	struct pt_regs regs;
+	unsigned int count;
+	bool active, completed;
+} wake_probe;
+static void wake_before(const void *address, size_t size, uintptr_t value);
+static void wake_after(const void *address);
 
 #undef CHECK
 #ifdef KD_OUTER_MUTATION
@@ -64,7 +89,15 @@ static const unsigned int kd_combiner_batch_size = 1024;
 #define WARN_ON_ONCE(c) ((void)(c))
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define unlikely(x) (x)
-#define smp_store_release(p, v) (*(p) = (v))
+#define smp_store_release(p, v)                                            \
+	do {                                                             \
+		__auto_type publish_ptr = (p);                            \
+		__typeof__(*publish_ptr) publish_value = (v);              \
+		wake_before(publish_ptr, sizeof(*publish_ptr),             \
+			    (uintptr_t)publish_value);                    \
+		*publish_ptr = publish_value;                             \
+		wake_after(publish_ptr);                                  \
+	} while (0)
 #define smp_load_acquire(p) (*(p))
 #define smp_mb() ((void)0)
 #define atomic64_inc(p) (++*(p))
@@ -92,6 +125,37 @@ static const unsigned int kd_combiner_batch_size = 1024;
 #define KD_PR_INFO(...) pr_info(__VA_ARGS__)
 #define KD_PR_DEBUG(...) pr_info(__VA_ARGS__)
 #define print_debug(...) pr_info(__VA_ARGS__)
+
+/* Observe the producer's endpoint before any wake/pop, not duplicate executor
+ * statistics. test_jit_entry_scope compiles the real counter/clock policy. */
+static u64 kd_exe_queue_timing_start(void)
+{
+	return queue_probe ? 100 : 0;
+}
+static void kd_exe_queue_timing_end(bool mutex, uint64_t *queued_at, u64 end)
+{
+	if (!queue_probe)
+		return;
+	CHECK(!mutex && queued_at == &request.queued_at_ns && end == 100);
+	CHECK(*queued_at == 50 && active.executed && scripts == 1);
+	CHECK(request.locked && !request.native_resume && !pops && !native_waits);
+	*queued_at = 0;
+	queue_finishes++;
+}
+
+/* The production envelope must begin before borrowing/remote publication and
+ * consume only local scalars after the native wait has allowed node reuse. */
+static u64 kd_exe_native_timing_start(void)
+{
+	CHECK(request.locked && !request.native_resume && !native_waits && !pops);
+	handoff_starts++;
+	return 150;
+}
+static void kd_exe_native_handoff_timing_end(bool mutex, u64 start)
+{
+	CHECK(!mutex && start == 150 && native_waits == 1 && !pops);
+	handoff_ends++;
+}
 
 static void cpu_relax(void) __attribute__((unused));
 static bool kd_spin_jit_is_disabled(struct qspinlock *lock)
@@ -226,6 +290,7 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
 	CHECK(frame == &active && !mutex && origins[1].held);
+	CHECK(handoff_starts == 1 && !handoff_ends);
 	return 0;
 }
 int kd_exec_native_wait(struct kd_exec_frame *frame);
@@ -249,6 +314,47 @@ void kd_spin_unlock(struct qspinlock *lock)
 }
 
 #include "spin_outer_production.h"
+
+/* Only the designated node is disposable. Other releases still use the same
+ * substituted primitive without inventing an extra waiter or reference. */
+static bool wake_address(const void *address)
+{
+	if (!wake_probe.active)
+		return false;
+	return address == (wake_probe.completed ?
+			   (void *)&wake_probe.node->locked_completed :
+			   (void *)&wake_probe.node->locked);
+}
+
+static void wake_before(const void *address, size_t size, uintptr_t value)
+{
+	struct kd_spin_node *node = wake_probe.node;
+
+	if (!wake_address(address))
+		return;
+	CHECK(!wake_probe.count++);
+	CHECK(size == (wake_probe.completed ? sizeof(u16) : sizeof(u8)));
+	CHECK(value == (wake_probe.completed ? 1 : 0));
+	CHECK(node->locked && !node->completed && !node->native_resume);
+	CHECK(!node->exec_frame && node->task_struct_ptr == &waiter);
+	CHECK(!memcmp(&node->regs, &wake_probe.regs, sizeof(node->regs)));
+	CHECK(scripts == wake_probe.completed && pops == scripts);
+	CHECK(origins[0].held &&
+	      kd_spin_entry_gate(&executor_ref)->owner == current);
+	CHECK(kd_spin_entry_gate(&executor_ref)->word.locked ==
+	      (wake_probe.completed ? _Q_LOCKED_COMBINER_VAL : _Q_LOCKED_VAL_HL));
+}
+
+static void wake_after(const void *address)
+{
+	if (!wake_address(address))
+		return;
+	/* Model immediate slot reuse after the acquire-side waiter wakes. The
+	 * publisher must use its saved successor and never rewrite this packet. */
+	memset(&wake_probe.node->regs, 0xa5, sizeof(wake_probe.node->regs));
+	wake_probe.node->next = NULL;
+	wake_probe.node->task_struct_ptr = NULL;
+}
 
 static void checked_run_combiner(struct qspinlock *lock,
 				 struct kd_spin_node *node)
@@ -408,6 +514,10 @@ static int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long ip,
 		CHECK(!memcmp(regs, &readmission_regs, sizeof(*regs)));
 		CHECK(active.gsbase == 0x20000 &&
 		      active.logical_task == &waiter);
+		/* Give the publication observer an output packet that differs from
+		 * entry, so waking before the final register copy cannot pass. */
+		if (wake_probe.active)
+			regs->ax ^= 0x12345678UL;
 		return KD_EXE_RUN_TO_UNLOCK;
 	}
 	if (mode == 6) {
@@ -825,6 +935,159 @@ static unsigned int preentry_packet(void)
 
 #include "spin_queue_return_fixture.c"
 
+/* Exercise completion, cold batch handoff, lone waiter and both IRQ/native
+ * handoffs through the real combiner. No new routine test entry is needed. */
+static unsigned int publication_boundaries(void)
+{
+	unsigned long saved[8] = { 0 };
+	struct pt_regs reused;
+
+	memset(&reused, 0xa5, sizeof(reused));
+	for (unsigned int path = 0; path < 5; path++) {
+		struct kd_spin_gate *gate;
+
+		mode = path == 1 ? 4 : 10;
+		memset(&request, 0, sizeof(request));
+		memset(&successor, 0, sizeof(successor));
+		memset(shadow_states, 0, sizeof(shadow_states));
+		executor_ref = (struct kd_spin_ref){ 0 };
+		CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK,
+					  &executor_ref) == 0);
+		gate = kd_spin_entry_gate(&executor_ref);
+		gate->word.locked = _Q_LOCKED_COMBINER_VAL;
+		kd_spin_claim_origin(a_lock());
+		shadow_states[0].lock_addr[0] = (unsigned long)&origins[0];
+		shadow_states[0].curr_cs_cpu = shadow_states[0].prev_cs_cpu = -1;
+		memset(&readmission_regs, 0x3c, sizeof(readmission_regs));
+		readmission_regs.ip = 0x800;
+		readmission_regs.sp = (unsigned long)&saved[8];
+		readmission_regs.di = (unsigned long)&origins[0];
+		request.regs = readmission_regs;
+		request.native_regs_decoded = true;
+		request.gsbase = 0x20000;
+		request.cpuid = 1;
+		request.task_struct_ptr = successor.task_struct_ptr = &waiter;
+		request.locked = successor.locked = 1;
+		request.next = path == 2 ? NULL : &successor;
+		if (path == 3)
+			request.socket_id = IRQ_NUMA_NODE;
+		if (path == 4)
+			successor.socket_id = IRQ_NUMA_NODE;
+		wake_probe.node = &request;
+		wake_probe.regs = readmission_regs;
+		wake_probe.completed = path == 0;
+		if (wake_probe.completed)
+			wake_probe.regs.ax ^= 0x12345678UL;
+		wake_probe.count = scripts = pops = 0;
+		wake_probe.active = true;
+		run_combiner(a_lock(), &request);
+		wake_probe.active = false;
+		CHECK(wake_probe.count == 1);
+		CHECK(!memcmp(&request.regs, &reused, sizeof(reused)));
+		CHECK(!request.next && !request.task_struct_ptr);
+		CHECK(!request.locked && request.completed == (path == 0));
+		CHECK(successor.locked == (path != 0));
+		gate->word.val.counter = _Q_LOCKED_VAL_HL;
+		kd_spin_release_origin(a_lock());
+		CHECK(!mock_preempt && kd_spin_entries_check_idle() == 0);
+	}
+	return 5;
+}
+
+/* Saturate the actual append-only map through its API, not by writing its
+ * occupancy. A still owns its native lock and each CPU has 31 free tickets.
+ * Compare the complete producer state at ENOMEM; only the existing PENDING
+ * helper may subsequently restore callee/SP. JIT execution and Linux waiting
+ * are covered by the live gate-pressure case, not this deterministic fixture. */
+static unsigned int progressed_gate_refusal(void)
+{
+	static raw_spinlock_t fresh[KD_SPIN_GATE_SLOTS + 1];
+	static struct kd_spin_gate gates_before[KD_SPIN_GATE_SLOTS];
+	struct kd_spin_entry_pool tickets_before[2];
+	struct kd_spin_node nodes_before[MAX_NODES];
+	struct kd_spin_jit_context contexts_before[MAX_NODES];
+	struct shadow_stack shadows_before[2];
+	struct kd_spin_ref origin_ref = { 0 };
+	struct kd_exec_frame *frame;
+	struct kd_spin_gate *gate;
+	struct pt_regs regs, staged, original;
+	unsigned long stack[3] = { 0x90050, 0x100, 0x200 };
+	unsigned long locks[] = { (unsigned long)&origins[0] };
+	enum kd_exec_lock_kind kinds[] = { KD_EXEC_LOCK_QUEUE_OWNER };
+	unsigned int free_tickets = 0, populated = 0;
+	int ret;
+
+	for (unsigned int i = 0; i < KD_SPIN_GATE_SLOTS; i++)
+		(void)kd_spin_gate_get(&fresh[i]);
+	for (unsigned int i = 0; i < KD_SPIN_GATE_SLOTS; i++)
+		populated += kd_spin_gates[i].origin != NULL;
+	CHECK(populated == KD_SPIN_GATE_SLOTS);
+	CHECK(!kd_spin_gate_find(&fresh[KD_SPIN_GATE_SLOTS]));
+	mock_cpu = 1;
+	current = &tasks[1];
+	CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK, &origin_ref) == 0);
+	mock_cpu = 0;
+	current = &tasks[0];
+	executor_ref = (struct kd_spin_ref){ 0 };
+	CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK, &executor_ref) == 0);
+	gate = kd_spin_entry_gate(&executor_ref);
+	gate->word.locked = _Q_LOCKED_COMBINER_VAL;
+	kd_spin_claim_origin(a_lock());
+	memset(&regs, 0x57, sizeof(regs));
+	regs.di = (unsigned long)&fresh[KD_SPIN_GATE_SLOTS];
+	regs.ip = 0xf0000;
+	regs.sp = (unsigned long)stack;
+	original = regs;
+	frame = real_frame_push(&regs, 0x90000, locks[0], &request, NULL, 1,
+				0x20000, &tasks[1]);
+	CHECK(frame && source_frames == 1);
+	CHECK(kd_exec_frame_set_lock_entries(frame, locks, kinds, NULL, NULL, 1) == 0);
+	frame->spin_origin = origin_ref;
+	frame->executed = true;
+	CHECK(kd_call_begin(&frame->control_call, regs.ip, regs.sp, stack[0]) == 0);
+	regs.ip = stack[0];
+	regs.sp += sizeof(unsigned long);
+	staged = regs;
+	for (unsigned int i = 0; i < KD_SPIN_ENTRY_SLOTS; i++)
+		free_tickets += kd_spin_entries[0].entries[i].state == KD_ENTRY_FREE;
+	CHECK(free_tickets == KD_SPIN_ENTRY_SLOTS - 1);
+	memcpy(gates_before, kd_spin_gates, sizeof(gates_before));
+	memcpy(tickets_before, kd_spin_entries, sizeof(tickets_before));
+	memcpy(nodes_before, kd_spin_nodes, sizeof(nodes_before));
+	memcpy(contexts_before, queue_contexts, sizeof(contexts_before));
+	memcpy(shadows_before, shadow_states, sizeof(shadows_before));
+	memcpy(pool_before, kd_exec_context, sizeof(pool_before));
+	ret = kd_spin_nested_lock((struct qspinlock *)regs.di, &regs, frame);
+	CHECK(ret == -ENOMEM);
+	CHECK(!memcmp(&regs, &staged, sizeof(regs)));
+	CHECK(!memcmp(gates_before, kd_spin_gates, sizeof(gates_before)));
+	CHECK(!memcmp(tickets_before, kd_spin_entries, sizeof(tickets_before)));
+	CHECK(!memcmp(nodes_before, kd_spin_nodes, sizeof(nodes_before)));
+	CHECK(!memcmp(contexts_before, queue_contexts, sizeof(contexts_before)));
+	CHECK(!memcmp(shadows_before, shadow_states, sizeof(shadows_before)));
+	CHECK(!memcmp(pool_before, kd_exec_context, sizeof(pool_before)));
+	CHECK(mock_preempts[0] == 1 && mock_preempts[1] == 1 && !mock_irq);
+	CHECK(origins[0].held && gate->owner == current && source_frames == 1);
+	CHECK(kd_call_resume_pending(&frame->control_call, ret, &regs.ip, &regs.sp) == 1);
+	CHECK(!memcmp(&regs, &original, sizeof(regs)));
+	CHECK(stack[0] == 0x90050 && stack[1] == 0x100 && stack[2] == 0x200);
+	/* End only this fixture's retained locks through their original APIs.
+	 * This is not production post-JIT rollback or a substitute for owner ACK. */
+	CHECK(kd_exec_frame_lock_mark_released(frame, locks[0]) == 0);
+	frame->outer_unlock_seen = true;
+	CHECK(kd_exec_frame_complete(frame) == 0);
+	CHECK(real_frame_pop(frame, NULL) == 0 && source_frames == 0);
+	gate->word.val.counter = _Q_LOCKED_VAL_HL;
+	kd_spin_release_origin(a_lock());
+	mock_cpu = 1;
+	current = &tasks[1];
+	CHECK(kd_spin_entry_end(&origin_ref) == 0);
+	mock_cpu = 0;
+	current = &tasks[0];
+	CHECK(kd_spin_entries_check_idle() == 0 && !mock_preempts[0] && !mock_preempts[1]);
+	return 1;
+}
+
 int main(void)
 {
 #ifdef KD_OUTER_BUG_ONLY
@@ -834,6 +1097,8 @@ int main(void)
 	tasks[0].pid = 1;
 	tasks[1].pid = 2;
 	CHECK(kd_spin_entries_init() == 0);
+	unsigned int wake_cases = publication_boundaries();
+	queue_probe = true;
 	for (mode = 0; mode < 8; mode++) {
 		struct kd_spin_gate *gate;
 		bool early = mode != 0 && mode != 4 && mode != 6 && mode != 7;
@@ -855,6 +1120,9 @@ int main(void)
 			-1;
 		shadow_states[0].local_shadow_stack_ptr = 0x10000;
 		request.regs.sp = (unsigned long)saved;
+		request.queued_at_ns = 50;
+		queue_finishes = 0;
+		handoff_starts = handoff_ends = 0;
 		request.regs.di = (unsigned long)&origins[0];
 		request.task_struct_ptr = &waiter;
 		request.gsbase = 0x20000;
@@ -897,7 +1165,10 @@ int main(void)
 		next_holds = false;
 		run_combiner(a_lock(), &request);
 		CHECK(scripts == (mode != 4 && mode != 7) && pops == scripts);
+		CHECK(queue_finishes == scripts);
+		CHECK(request.queued_at_ns == (scripts ? 0 : 50));
 		CHECK(native_waits == (mode == 2 || mode == 3));
+		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
 		CHECK(origins[0].held && gate->owner == current &&
 		      !origins[1].held);
 		CHECK(mock_preempt == 1 && mock_preempts[1] == 0 &&
@@ -917,6 +1188,7 @@ int main(void)
 		kd_spin_release_origin(a_lock());
 		CHECK(!mock_preempt && kd_spin_entries_check_idle() == 0);
 	}
+	queue_probe = false;
 	unsigned int rejection_cases = 0;
 	for (unsigned int cpu = 0; cpu < 2; cpu++) {
 		rejection_cases += rejected_selection(false, cpu);
@@ -925,6 +1197,7 @@ int main(void)
 	unsigned int readmission_cases = repeated_admission();
 	unsigned int preentry_cases = preentry_packet();
 	unsigned int queue_cases = preentry_queue_return();
+	unsigned int gate_cases = progressed_gate_refusal();
 	CHECK(!kd_exec_invariant_failures && native_claims == native_releases);
 	CHECK(full_pool_calls == full_pool_batches && full_pool_calls > 0);
 	CHECK(kd_spin_gates_check_idle() == 0);
@@ -943,5 +1216,9 @@ int main(void)
 	       sizeof(struct kd_exec_frame), sizeof(struct kd_exec_context));
 	printf("spin preentry queue return: %u joined producer/combiner/acquisition cases\n",
 	       queue_cases);
+	printf("spin wake publication: %u release/packet/reuse boundaries\n",
+	       wake_cases);
+	printf("spin progressed gate refusal: %u full-map ENOMEM packet/ticket/frame checks\n",
+	       gate_cases);
 	return failures ? 1 : 0;
 }

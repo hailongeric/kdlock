@@ -180,6 +180,9 @@ def main():
             "static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state)",
             "bool kd_exec_frame_validate(const struct kd_exec_frame *frame)",
             "void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,",
+            "int kd_exec_frame_lock_push(struct kd_exec_frame *frame,",
+            "unsigned int kd_exec_frame_lock_depth(const struct kd_exec_frame *frame)",
+            "bool kd_exec_frame_lock_contains(const struct kd_exec_frame *frame,",
             "int kd_exec_frame_lock_pop(struct kd_exec_frame *frame, unsigned long lock_addr)",
             "int kd_exec_frame_lock_mark_released(struct kd_exec_frame *frame,",
             "kd_exec_frame_lock_kind(const struct kd_exec_frame *frame,",
@@ -194,7 +197,9 @@ def main():
             "int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)",
         ),
         "kernel_module/kd_lock.c": (
+            "static int kd_jit_begin_call(struct kd_exec_frame *frame, struct pt_regs *regs)",
             "static int kd_jit_advance_call(struct kd_exec_frame *frame,",
+            "int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,",
             "int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,",
         ),
         "kernel_module/exe.c": (

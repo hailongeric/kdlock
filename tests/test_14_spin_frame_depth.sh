@@ -103,7 +103,7 @@ module_args=()
 [[ $buffered == 0 ]] || module_args+=(spin_selftest_deferred_buffered=1)
 [[ $probe == 0 ]] || module_args+=(spin_selftest_probe_frames=1)
 [[ $nodes == 0 ]] || module_args+=(spin_selftest_trace_nodes=1)
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=0 spin_selftest_trace_frames=1 "${module_args[@]}"
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit=0 spin_selftest_trace_frames=1 "${module_args[@]}"
 [[ $nodes == 0 ]] || test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_trace_nodes)" = Y
 insmod "$KLOCK_DIR/klock_module.ko" spin_chain_depth="$depth" \
     spin_chain_defer="$defer_mask" spin_chain_defer_count="$defer_count"
@@ -113,7 +113,7 @@ for ((i=0; i<depth; i++)); do
 done
 sleep 1
 if [[ $forced == 1 ]]; then
-    # Isolate frame execution from the global adaptive sampling heuristic.
+    # Isolate frame execution from acquisition frequency and sampling timing.
     # Queue shape, requests, registers and all frame counts remain real.
     for ((i=0; i<depth; i++)); do
         addr=$(dmesg | sed -n "s/.*kd_chain lock: index=$i addr=\([0-9a-f]*\)$/\1/p")

@@ -1,6 +1,7 @@
 # JIT 范围、执行流与测试
 
-适用范围：x86-64 内核临界区；mutex 代理必须显式启用 `mutex_jit=1`。
+适用范围：仅 x86_64 机器上的内核临界区；不包含其他架构的适配或测试任务。
+mutex 代理必须显式启用 `mutex_jit=1`。
 2026-09-08 用户确认：只审查本次实际可能执行的 JIT 范围，普通 CALL miss
 交回原 waiter 后，从保存的退出状态原生完成剩余临界区，不再返回本次 JIT。
 这取代此前“普通 CALL 后的 native 后缀也必须整段准入”的要求。
@@ -15,7 +16,7 @@
 | --- | --- |
 | 普通直接 CALL，callee 不在当前解码块中 | 保留 CALL 本身和退出桩，删除该 CALL 的返回边 |
 | 同后端 lock/unlock 控制调用 | 保留可恢复的后继，仍检查嵌套临界区 |
-| allowlist hostcall | callee 原生执行，返回后继续 JIT；后继仍需检查 |
+| allowlist hostcall | 额度内 callee 由服务适配器执行，返回后继续 JIT；后继仍需检查。额度退出不缩小翻译审查范围 |
 | 已解码的普通 callee | 检查 callee 和返回后继，保留 CALL 入参及 RET 效果分析 |
 | 间接 CALL | 保守保留后继；不能假设一定 miss，已学习目标也需检查 |
 | 条件分支或其他 JIT 路径到达同一后缀 | 后缀仍在范围内，不能因另一条 CALL 边退出而删除 |
@@ -92,6 +93,45 @@ F 和后缀都在 waiter 上执行。daemon 可以学习 F 并为未来调用重
 [JIT_REGISTER_ABI.md](JIT_REGISTER_ABI.md)。非 CALL 故障续跑、flags 修复和
 不可变代码版本仍是已记录的限制，本次不扩展。
 
+### 2.1 Waiter 发布边界
+
+正常 JIT 完成时，combiner 先将最终寄存器包写回 node，再以 release 写入发布
+`completed=1/locked=0`；waiter 的 acquire 读取成功后才消费结果。尚未执行的
+单 waiter、IRQ/native 交接和批次末尾交接也使用 release，先完成队列链接再唤醒。
+这是私有队列的执行通知，不是把原生锁 owner 改为 waiter。
+
+node 发布后可能立即复用。combiner 必须提前保存后继，不再读写旧 node；native
+续跑期间的 owner ACK 是另一个、位于原 waiter 栈上的请求，其最后访问也必须
+是 release ACK。两类通知不能混成一个“完成”计数，原生后缀仍遵守上述保留 owner 的流程。
+
+`test_spin_outer_progress.py` 使用生产 combiner，检查五种发布路径、最终寄存器包、
+release API 和即时槽复用后的无覆盖，并拒绝普通写入/错误包/发布后覆盖的变异。
+`test_spin_shadow.py` 的容量交接计数只统计真实队首分支，不把普通批处理发布误计为
+容量拒绝。这些是确定性替代原语测试，不是硬件 memory-order litmus 或任意并发证明。
+修改此边界时在 guest 选择这两个程序及受影响的复杂 spin 用例；不要附带 mutex
+或被替代的 mode 0/1 基础诊断。本轮的精确命令、两次初始失败和冻结输入见
+[发布边界验收](VALIDATION.md#spin-waiter-publication)。
+
+远端 child 完成时，`kd_exec_remote_complete()` 先清空 child 的 `resume_target`，
+再 release 发布 parent 的 `remote_result=DONE`，之后不再访问 parent。
+无剩余锁的 parent 可能随即退休并复用；这与物理 waiter 的 node 唤醒、原生
+unlock 请求的 ACK 是三个不同边界。
+既有 `test_remote_outer.py` 检查生产远端协议、native 续跑确认、完整 guest x86-64
+`pt_regs` 和 CALL 返回字；普通返回只推进 IP/SP，终态 OOO 保留最后 unlock 的
+CALL 包。确定性观察器要求 DONE 前脱链，并立即覆盖可退休 parent 来检测迟到写入。
+这些比较包含软件包中的 flags 字段，但不执行硬件 flags 恢复，也不证明任意并发存活期。
+只改此 fixture/驱动时在 guest 运行以下一项，不因此重跑 live JIT：
+
+```sh
+make -C tests/unit run TESTS= PY_TESTS=test_remote_outer.py
+```
+
+十一种临时生产代码变异（含计量缺失、错后端、吞掉错误三项）须触发明确断言，
+BUG-only 退出不能充当检测成功。
+它们会额外编译运行临时代码，只随本单元被选中时执行，不增加 live case。
+验收与冻结输入见
+[远端包单元记录](VALIDATION.md#remote-packet-unit)。
+
 ## 3. 环境与操作
 
 第一次手动操作先读 [代码地图与逐步运行](PROJECT_GUIDE.md#3-一步一步运行)：
@@ -105,6 +145,8 @@ normal 模式共享源码无需复制；recovery 模式虽路径相同但使用 
 哈希不同的文件，不移动或整目录复制仓库。
 
 以下首次环境验收命令在 guest 的 `/root/host_fs/kdlock` 执行。
+先按 [依赖安装](PROJECT_GUIDE.md#33-检查依赖与空闲状态) 创建/激活 venv，确保
+`python3`、测试子进程及 daemon 继承同一 PATH；只设置 `VIRTUAL_ENV` 不够。
 开发后的日常增量使用[第 7 节](#7-分层与增量回归)，不重复执行本节全部命令：
 
 ```sh
@@ -142,9 +184,12 @@ mode 3 的 `test_07` 在生成物出现后，还通过现有 `wait_ready()` 读�
 `.published.json`；此准备检查不代替负载后的 body witness/计数验收，也不提供
 不可变版本或并发重编译保护。
 
-mode 8 需要串行准备六个翻译入口，`test_04` / `test_10` 为此单独等待最多
+mode 8 原有阶段需要串行准备六个翻译入口，`test_04` / `test_10` 为此单独等待最多
 90 秒并打印实际耗时。只延长产物初始化等待，不改变负载执行超时、必需产物、
 返回后 body witness、寄存器或互斥/副作用检查。
+`test_04 ... 8` 随后在两个新模块会话运行双根共享 B 的纯 JIT、混合完成阶段，
+每个会话另准备三个入口，
+执行流见 [6.14](#614-两个独立-root-共享-b-combiner)。`test_10` 的退出点变体不追加该阶段。
 
 普通 CALL 的真实寄存器/退出点续跑，以及上下文拒绝测试：
 
@@ -205,12 +250,411 @@ entry/body/install、native frame、owner ACK 或非零注册数都会使对照�
 归档器可能保留先前 daemon 工作区的文件，它们不是本次生成或执行证据。
 不能用纯原生对照通过替代 JIT 寄存器续跑正例；历史命令清单也不改写为新命令。
 
+### 3.2 热锁晋升与翻译准备
+
+热锁检测现在按每把锁自己的固定窗口判定，流程如下：
+
+```text
+模块第一次采样 -> module-wide 10 亿周期 warmup
+  -> 某把锁第一次有效采样：INIT -> CHECKING，固定 25 亿周期窗口
+  -> 在自身窗口到期前达到 10000 个样本：DELEGATE
+  -> 后续 hook 注册 entry -> daemon 翻译 -> 发布 NORMAL
+  -> 竞争请求执行 JIT -> 返回后 body witness + 完整状态验收
+```
+
+等于或超过自身窗口仍转为 `IGNORE`，本会话不重新采样。先遇到另一把更快的锁
+不再缩短新锁或在途锁的窗口；这解决跨锁发现顺序依赖，不保证任意调度下都会晋升。
+spin 的 hook 在 lock/unlock 采样，mutex 在 lock 采样，10000 个样本不等于
+10000 个临界区。单位是周期，不是固定秒数，也不是实际锁竞争率或 JIT 收益。
+
+保留各驱动的 warmup、连续采样和 NORMAL 发布等待；不要在已开始的采样中
+插入长 sleep。日志没有 `begin delegate` 时先检查采样频率、目标 comm 和时序，
+不能只增加翻译等待时间。晋升但没有 JIT 要分别查准入、生成、发布和实际竞争。
+SELFTEST 的受控晋升仍只用于已登记的资源/队列用例，不能冒充自然晋升或性能基线。
+
+修改共享采样策略时使用现有生产单元和受影响复杂代表，示例不是每轮前置：
+
+```sh
+# Guest only, with the recovery snapshot already confirmed.
+make -C tests/unit run TESTS= PY_TESTS='test_hotlock_sampling.py'
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --suite core --case parallel-drain-0
+```
+
+更新样本的 TSC 在表锁内读取，避免先读时间、后更新的调用用旧时间误判到期；
+锁外时间只用于 warmup 判断。这不证明跨 CPU 的 TSC 同步。
+单元以替代 TSC 检查快/慢发现顺序、两个实际 producer 的交错更新、在途窗口、
+严格到期边界、采样额度和表容量；live 仍要求实际 JIT、完整副作用、owner ACK
+和排空。两种证据不能互相代替。
+
+### 3.3 带观测的负载测量
+
+`bench/klock_test` 保留原位置参数和 ioctl ABI，显式设置 `KD_TEST_METRICS=1`
+后不再逐次打印完成信息，而在所有 worker join 后输出一行
+`KD_BENCH_METRICS {JSON}`。未设置或设为 `0` 时保留旧输出；旧 `Total Time`
+包含创建、回收和打印，使用毫秒墙钟，不能作为新测量结果。
+
+执行顺序如下。准备阶段仍沿用对应 mode 的晋升、翻译和发布检查，不能省略：
+
+```text
+构建/加载 -> 注册、晋升、翻译、发布 -> 准备完成
+  -> 分配样本数组、创建 worker、设置 comm/role
+  -> 全部 worker 到达 barrier
+  -> 各 worker 记录单调时钟/线程 CPU 起点
+  -> 逐次记录 ioctl 前后单调时钟和成功次数
+  -> 各 worker 记录终点并返回 -> join -> 汇总、排序、输出 JSON
+  -> 核对同阶段新增 body witness、生成物和完整状态 -> 排空/退休/卸载
+```
+
+| 字段 | 含义与边界 |
+| --- | --- |
+| `schema=1`, `complete` | 格式版本和本驱动是否完整成功；不表示 JIT 或内核 oracle 通过 |
+| `threads`, `mode`, `role_base`, `loops_per_ioctl`, `workload`, `ioctls_per_thread` | 请求参数；`KD_TEST_COMM`、`KD_TEST_MIXED`、绑核和模块参数仍须另存，混合角色不能当作同质负载 |
+| `requested_ioctls`, `completed_ioctls`, `workers` | 请求数、成功返回数及每个 worker 的完成数/错误码；不是锁次数、状态更新数或 JIT 次数 |
+| `wall_ns` | 最早 worker 起点到最晚终点；不含创建和 join，仍包含 barrier 释放后的调度差、计时及样本写入开销 |
+| `worker_cpu_ns` | 各 worker 的 `CLOCK_THREAD_CPUTIME_ID` 增量之和；不含 daemon、外部 peer/combiner 的 CPU 时间，可能大于 `wall_ns` |
+| `ioctls_per_second` | 完成 ioctl 数除以 `wall_ns`；不能直接称为临界区吞吐量 |
+| `ioctl_p50_ns`, `ioctl_p99_ns` | 全部成功 ioctl 延迟的 nearest-rank 分位数，秩为 `ceil(p*N/100)`；每次 ioctl 可含多轮 CS、等待和原生/JIT 混合路径 |
+
+测量最多保留 1048576 个 64 位样本，共 8 MiB，不静默抽样。测量模式要求
+正的 loops/runs；workload 可为 0。所有模式均拒绝负数、混杂字符、数值溢出、
+非法 mode 和 role 加法溢出，且在打开设备前报错。
+任一 ioctl、设置线程名或计时失败，退出码非零，`complete=false`，五个性能
+字段均为 `null`，但已经成功执行的 ioctl 仍计数。创建/打开设备/join 等致命
+失败可能没有 JSON；缺少记录不是空负载 PASS，也不能据此重放已有副作用。
+
+现有 `test_04` 的准备后主负载和 `test_08` mode 5 的 continuous stress 自动
+启用测量。日志路径为 daemon 日志名加 `.workload.log`，另外保留同名前缀的
+`.before.dmesg` / `.after.dmesg`；三者通过已有 `Evidence file:` 协议归档。
+mode 5 的前置轮次、pinned holder 和 quota/native 阶段不计入这一个测量。
+mode 8 的另外两场独立会话及 mode 4 的角色负载保持原有取证，不冒充已测量。
+按前后快照核对新增、entry/lock 匹配的返回后 body；旧阶段的 witness 不证明
+当前测量执行了 JIT。快照若截断或不能对应，保留为证据缺口。
+
+```sh
+# Guest: measurement/recording changes only, not a new daily smoke prerequisite.
+make -C tests/unit run TESTS= PY_TESTS='test_benchmark.py test_regression.py'
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --suite core
+```
+
+手动运行时，在[手动准备流程](PROJECT_GUIDE.md#36-拆开观察模块daemon-和负载可选)
+已经完成且确认对应入口发布后，可给原来的负载命令加上 `env KD_TEST_METRICS=1`，
+并重定向 stdout/stderr 保存；仍须按该流程记录 dmesg、生成物与最终状态。
+不要只在运行器外设置该变量期待它传入：运行器仍清除未声明的 `KD_*` 环境参数。
+
+这只是**带观测的 ioctl 测量基础**。JIT witness、内核打印、完整状态 oracle
+仍开启，调度/等待/hostcall/native 后缀仍包含在时间内；本 driver 不拆分这些成本，
+也没有冷/稳态摊销、缓存传输或三方性能结论。显式重复配对入口见下一节。少量样本的 p99
+仅是上述秩的观测值。`mutex_jit=0` 调用原生 mutex，是显式 debug/native 对照，
+不是“原生代理”实现，不能据此凑齐 native / native delegation / JIT 三组。
+测量不启用任何已延期的访问时 guard、flags 或版本隔离功能。
+
+三方对照的当前边界见 [比较契约](DESIGN.md#13-performance-comparator-contract)。
+本地原版 TCLock mutex 对象已在当前 guest 头文件上确认缺少任务字段，不能直接
+加载作为第三组；LiTL 的用户态拦截也不控制 ioctl 内部的锁。不要运行 TCLock
+上游的换内核/启动 VM/清理 QEMU 脚本来绕过当前环境约定。
+同内核的 native-with-hooks/JIT 配对实验使用下一节的独立入口；`target_process`
+不匹配的原生对照仍包含现有 selector hook 开销，不等于未修改 Linux。
+当前 guest 能看到 CPU PMU 节点，但 PATH 中没有 `perf`；未测到硬件事件不等于
+硬件不支持。只编译的兼容性调查不是新的 unit/live PASS 或性能测量，证据见
+[比较前置调查](VALIDATION.md#tclock-comparator-feasibility)。
+
+### 3.4 原生锁与 JIT 配对实验
+
+`tests/paired_benchmark.py` 显式选择普通 mode 2/5 的相同双服务临界区，复用
+`bench/klock_test`、内核完整状态 replay oracle 和 `regression.run()` 的空闲、
+冻结源码、停止边界与归档逻辑。它不进入 `CASES` 或日常套件，也不把依赖 JIT
+事件才能推进的 SELFTEST 角色变成原生负载。不要单独手动拼接 `benchmark_arm.sh`
+的内部环境；通过此入口保留配对和准备参数。
+
+```sh
+# Guest: confirm recovery/idle first; choose a NEW output directory.
+python3 tests/paired_benchmark.py --mode 2 5 --threads 4 8 \
+  --workload 100000 --loops 16 --runs 2 --cpus 0-7 --repeats 2 --dry-run
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/paired_benchmark.py \
+  --mode 2 5 --threads 4 8 --workload 100000 --loops 16 --runs 2 \
+  --cpus 0-7 --repeats 2 --timeout 300 --output /tmp/kdlock-paired-manual
+python3 tests/verify_evidence.py /tmp/kdlock-paired-manual
+```
+
+上述选择有四个参数点，每点两对，合计 16 个独立会话。每个参数点按
+`native -> jit`、`jit -> native` 交替；`--repeats` 必须为 2-100 的偶数，
+整个显式选择最多 128 对。`--mode`、`--threads`、`--workload` 可列出多个值，
+重复值去重后做笛卡尔积；不会把不同参数点的计时汇总为一个均值。
+至少两个线程；总 ioctl 样本不超过 `2^20`，包括准备在内的状态更新不超过
+已有完整校验上限一千万次。每个 benchmark 子命令另有 120 秒限制；超时仍是失败。
+
+每臂执行流为：
+
+```text
+确认前臂排空 -> 默认构建 -> 新 provider/source 模块会话
+  -> mutex_jit=1；native 目标 kd_unused，JIT 目标 klock_test
+  -> 保存模块参数、实际构建哈希、boot、物理 lock、控制台设置
+  -> JIT 臂启动 daemon --metrics；每次真实翻译子进程单独计量
+  -> 相同 warmup (1,1,1,1) -> 间隔 1 秒 -> promotion (1,12000,10,1)
+  -> JIT: 验证生成体和两服务桩，等待静止，停止 daemon/翻译者
+  -> 两组均静置 2 秒；确认无 writer/frame；JIT 为 NORMAL，native 无条目
+  -> before.dmesg -> 指定的计时负载 -> after.dmesg -> 再查注册项/镜像
+  -> 退休并卸载 -> 完整状态、完成数、时钟/标量、owner、hostcall 校验
+  -> 本臂归档 -> 下一臂；成对核对同输入和无重叠会话
+```
+
+准备括号依次是 threads、loops、workload、runs，mode 与计时负载相同。
+准备和测量都固定 benchmark comm 为 `klock_test`、role base 为 0，并记录相同
+请求及实际继承的 CPU mask；这是允许集合，不是每线程固定 CPU、实际 CPU 驻留
+轨迹或独占 CPU 预留。准备后的状态为 12001 次转移，最终必须等于
+`12001 + threads * loops * runs`，由已有内核 oracle 逐字段重放核对。
+翻译等待时长单独存在，不能据此声称两组缓存、温度或调度噪声完全相同。
+每个 phase 前后、发布观察和最终汇总都只读核对相同的控制台设置；跨臂也必须
+相同。这是离散采样，不保证两次采样之间没有外部改写。
+
+JIT 测量必须有前后快照之间**新增**的匹配 entry/物理 lock 的返回后 body，
+同一注册项前后为 NORMAL、代码地址和镜像哈希不变。每个已记录 body 必须对应
+两个成功执行并返回 JIT 的服务；本普通路径不允许 quota/native 续跑。
+原生臂无 daemon、条目、镜像、安装或 body。两组均保持 `mutex_jit=1`，区别只是
+目标筛选，不能用 debug 开关制造第三种“原生代理”。单个 JIT 臂仍可能混有直接
+原生获取，body 数不是全部 ioctl/临界区都执行 JIT 的证明。
+
+每臂的 `protocol.tar.gz` 保存 `initial.json`、三个 phase 的命令/状态/JSON 计时、
+发布记录、前后快照、最终日志和 `arm.json`；生成物另存于 `artifacts.tar.gz`。
+运行根的 `comparison.json` 按 repeat 保留原生/JIT 指标、测量 body 数、带观测
+吞吐比以及新的 `costs` / `console` 字段。没有新字段的历史配对仍可读取，但不会
+补造计量；新旧计量记录不能混成一对。失败时停止，保留失败臂和 `incomplete_pairs`，
+不自动重试、删除或平均；
+若连排空/捕获都未完成，离线校验失败，不能生成有效比较。`STOP` 仍只在臂边界
+生效，可能留下一对未完成结果。
+
+新计量按以下边界解释，不把可重叠的时段相加：
+
+| `costs` 字段 | 实际含义 |
+| --- | --- |
+| `preparation_elapsed_ns` | 模块加载后的 initial 记录至测量前 publication；包含 warmup、promotion、daemon/就绪等待及固定静置，不包含模块构建/加载，也不是纯翻译成本。 |
+| `phase_process_ns` | 各 phase 从控制器记录开始到 benchmark 子命令结束的区间，含启动/等待/输出及控制器开销。C driver 的 worker envelope 仍单独保留。 |
+| `translation` | 真实 translator 子进程的记录及 wall/user/system 汇总；还保留 fault/context-switch 计数，RSS 取最大值，不求和。原生臂次数为 0、RSS 为 null。 |
+| `measure_process_outside_workers_ns` | measure 控制器区间减去 C worker envelope；不是 kernel 锁或调度开销的单独测量。 |
+| `measured_cs` / `measured_jit_share` | 计时临界区次数及本阶段返回后 body 比例；不能外推到所有指令。 |
+
+翻译记录必须匹配已发布的 RIP/pid/tgid/lock kind，时间在本臂准备区间内、不重叠，
+且全部成功；缺失、失败、refusal、错误身份或控制台变化使配对失败。原始 daemon
+日志照常归档。具体 wait4/CPU/RSS 契约见 [daemon 计量](../daemon/README.md#translation-accounting)。
+结果仍包含 witness、日志、状态 oracle、调度、排队和服务开销。下方可选计量只拆分
+若干 C 边界，不提供完整 kernel 队列或纯 JIT 指令时间，未测硬件计数或 kernel 总内存，也没有
+完成 TCLock 第三组或普遍加速/摊销结论。发布前后检查不是不可变代码版本机制。
+仅改配对控制层时复用 `test_benchmark.py` / `test_regression.py`；改 daemon 计量
+再加入已有 `test_daemon_policy`，不额外跑基础或完整矩阵。实际结果仍以
+[VALIDATION](VALIDATION.md) 的冻结版本为准。
+
+长臂可能覆盖内核日志，导致前后快照与 body 证据丢失；输入上限不是日志容量
+保证。保留完整 witness/错误日志，按当前容量选择单臂工作量，以独立重复增加
+观测；不要通过删除日志、截掉丢失前缀或把缺失记录当零来制造通过。
+
+性能比较还要保留控制台设置。`mutex_debug` 的正常排队和 JIT 入口日志现为
+`KERN_INFO`，并未关闭 DSM_DEBUG 或删除日志；warning/error 和返回后 witness
+不变。控制台等级为 4 且 `ignore_loglevel=N` 时，INFO 留在内核缓冲区但不输出
+到控制台。若等级升到 7 或开启 ignore_loglevel，串口开销仍可能回来。日志属于
+原生 kdlock 框架，不是把 `printk` 翻译进临界区；INFO 本身也不是零成本。
+当前配对入口已自动采集并核对以下内容；手动实验也应保存，不要为获得更好数字
+而悄悄修改全局控制台设置：
+
+```sh
+cat /proc/sys/kernel/printk
+cat /sys/module/printk/parameters/ignore_loglevel
+cat /proc/consoles
+```
+
+此前 mode 5 的约 35 倍时间异常已有独立的
+[日志等级复测](VALIDATION.md#mutex-routine-log-severity)，不再作为当前未定位的
+JIT 翻译成本。修改该宏时复用 `test_mutex_outer_progress.py` 检查真实格式/等级及
+保留日志；实际调度影响用显式配对和已有复杂 mode 4 验证，不新增基础测试入口。
+
+#### CPU 受限的 mutex 测量
+
+`--threads` 是 worker 数，`--cpus` 是允许运行的 CPU 集合；线程较多不保证同时
+有足够的已链接 waiter。当前私有队首可以原生完成自己的请求，最后一个 follower
+也会自行成为 owner 原生执行，不必执行 JIT。因此“热点已晋升 + 代码已发布 + 负载成功”
+不能替代实际返回后 body。当前等待策略及 TCLock 对比见
+[设计边界](DESIGN.md#runnable-polling-and-event-parking)。
+
+下面仅预览同一负载在两个 CPU mask 上的选择，不执行测试：
+
+```sh
+python3 tests/paired_benchmark.py --mode 5 --threads 8 \
+  --workload 100000 10000 --loops 16 --runs 2 --repeats 2 --cpus 0-1 --dry-run
+python3 tests/paired_benchmark.py --mode 5 --threads 8 \
+  --workload 100000 10000 --loops 16 --runs 2 --repeats 2 --cpus 0-7 --dry-run
+```
+
+实际实验沿用上面的 recovery、独立 `--output`、逐臂清理和失败即停止流程；
+未指定 `--jit-timing` 时额外边界计时关闭，`mutex_jit=1` 仍必需。不自动重试
+缺少 body 的参数点，不增加隐藏的 force-promotion、角色 gate 或更多并发用例来
+制造通过。保存 `comparison.json` 的 incomplete pairs；可单独调查原计划未开始
+的 CPU 组，但不能改写原失败 journal，或把孤立的原生样本配成 JIT 性能结果。
+
+已有[实测](VALIDATION.md#mutex-oversubscription-assessment)中，2 CPU 短负载的
+245 次 slowpath 没有产生 combiner/JIT；状态虽正确，JIT 门槛仍失败。长负载也
+只有很少代理。这是常见配置的参与率限制，不归为可忽略的罕见错误。CPU/wall、
+p50/p99 必须结合实际 body 比例解释；这些短实验不证明轮询成本、睡眠唤醒收益、
+公平性或跨 CPU 配置的因果关系。CPU-mask 调查不是日常或完整回归的前置条件。
+
+#### 可选的 JIT 边界计时
+
+`kdlock_km` 增加 `jit_timing=1` 装载参数，默认关闭，sysfs 为只读 `Y/N`。
+它与必需的 `mutex_jit=1` 无关，也不是 daemon 的 `--metrics`。通过配对入口的
+`--jit-timing` 同时为 native/JIT 两臂选择相同参数；不能运行途中开关以混合统计。
+关闭时执行路径不额外读时钟、累计计数或打印计量记录，但仍有分支/辅助调用和
+入队时间字段的清零，不能宣称与加入计量前逐指令相同。模块初始化清零统计，
+所有 executor 排空后卸载汇总。
+
+```sh
+# Guest, explicit experiment only. Omit --jit-timing for the off comparison.
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/paired_benchmark.py \
+  --mode 2 5 --threads 8 --workload 100000 --loops 16 --runs 2 \
+  --cpus 0-7 --repeats 2 --jit-timing --timeout 300 \
+  --output /tmp/kdlock-jit-timing-manual
+```
+
+执行流：验证入口及 frame scope -> `dispatch` 开始 -> 每次 `wrapper` 调用 ->
+按退出包调用 `hostcall` 或 `control` -> 继续 wrapper 或按既有出口返回 ->
+`dispatch` 结束。失败/拒绝也按实际经过的边界计数；计时异常仅使记录无效，
+不会改变执行结果、入口重放判定、寄存器包或真实 owner。
+若既有出口要求原生续跑，backend 先开始 `native_*_handoff`，再验证/登记 borrowing、
+发布远端状态及本地 waiter。必须早于 spin 的 `kd_exec_remote_native()`，因为祖先
+可能在本地节点被唤醒之前就获知 native 出口。随后真实 owner 进入
+`kd_exec_native_wait()`，开始内层 `native_*_wait`，处理 unlock/ACK 并等待完成。
+公共等待函数返回前结束 wait，backend 收到成功返回后结束 handoff，再做 frame
+清理。最终 ACK 之后计时只用预先保存的局部时间与后端常量，不读取 waiter 的
+request/task/node。新增 handoff 不需要 frame 字段；下面的队列计时
+在 spin/mutex 节点末尾各增加一个 64 位字段，不修改 frame 或两元素 wrapper 参数。
+
+队列计时执行流：初始化节点 -> 在交换 tail 前记录 `queued_at_ns` -> 发布入队。
+若请求成为队首，在取得私有 gate 和原生 L 后结束计时，再处理其他 waiter；
+若由 combiner 代理，先保存 dispatch 调用前的时间，调用返回后仅在 `frame->executed`
+为真时按该时间记账，不把正文或 native 后缀算进本请求的等待。未执行正文的
+拒绝不消费起点，随后仍计到真正执行或原生获取。记账在 wake/native 发布之前
+清零节点时间，spin 也在释放节点计数、进入 combiner 之前结束自身等待；不在
+最终 slowpath 返回时读取已复用的节点时间。
+
+| 阶段 | `ktime_get_ns()` 观测边界 |
+| --- | --- |
+| `dispatch` | 准入/scope 通过后至高层 dispatcher 返回；含其记账、日志和内部计量开销，不含 backend frame 建立/清理、入口前等待。 |
+| `wrapper` | 实际 `translated(regs, args)` 的调用/返回，包括 wrapper 和生成代码；不是只有源临界区指令。合成故障没有实际 wrapper 调用，不计入本项。 |
+| `hostcall` | 服务查表、属性验证和 typed native invoke；不含后续 CALL 返回包推进。 |
+| `control` | 锁控制目标分类及处理，包括可能的阻塞和嵌套代理；不含 dispatcher 返回之后 waiter 的 native 后缀与 ACK 等待。 |
+| `native_spin_wait` | spin 真实 owner 进入公共 native wait 至其返回，含轮询、unlock/finish 和远端 relay 等待；失败返回也计数。 |
+| `native_mutex_wait` | mutex 真实 owner 的相同边界，含必要的调度等待；不转移 Linux mutex owner。 |
+| `spin_queue` | kdlock 节点入队前至原生 L 获取完成，或首次实际执行正文的 dispatch 调用前；含此前等待和准入准备，不含该正文与后续批次。 |
+| `mutex_queue` | mutex 私有队列的相同边界；嵌套 B 直接走 Linux mutex 获取，不属于本项。 |
+| `native_spin_handoff` | backend 决定 native 后、登记 borrowing 之前，至公共 owner wait 成功返回后；包含远端/本地发布、waiter 的早期 native 执行、等待和内层计量，不含前面的 dispatcher 或后面的 frame 清理。 |
+| `native_mutex_handoff` | mutex 的同一交接边界，保留原生 owner；不是在 waiter 上采样 CPU 时间。 |
+
+当前启用会话每次卸载有且仅有十行 `kd_jit timing: phase=... samples=... ns=... invalid=0`，
+原生对照臂十项均为零；关闭时无这些行。时钟倒退或累计超出有符号 64 位范围时
+对应 `invalid=1`，保留执行结果但拒绝本次计量，不把异常数据当零或回绕值使用。
+`arm.json` 和 `comparison.json` 的 `costs.jit_boundaries` 保留总数、总纳秒及每次
+调用均值；统计涵盖**整个模块会话，包括准备期**，不是只对应 measured phase。
+历史报告仍可读取，不补造新增字段；当前会话缺少新增两行时不能套用历史格式放行。
+开关不同的臂不能配成一对。
+
+仅普通 mode 2/5 的非嵌套双服务路径有如下计数契约：每 N 个返回后 body 对应
+N 次 dispatch、3N 次 wrapper、2N 次 hostcall、N 次 control、四项 native wait/handoff 为零。
+对应后端的 queue 次数匹配既有 slowpath 统计且不少于 N，另一后端为零；队首自己
+取得原锁也计入 queue，不能只按 JIT body 计数。服务/完整状态/native 计数仍满足
+原有判定。缺行、重复、非法值、计数不一致均使实验失败。
+此范围的 `dispatch_residual_ns` 是 dispatch 减去其他三段，包含日志、记账和
+计量自身等未拆分成本，不能叫作纯代理开销。其他嵌套模式的父子区间可能重叠，
+不能照搬这个减法；并发调用的累计 elapsed 也不能当成整轮墙钟或 CPU 时间。
+比较开/关的 worker 时间时同时保留 JIT 参与比例和调度差异，不据此直接推导
+单次观测成本。handoff 包含对应 wait，不能将二者相加；已完成的对应请求两者次数
+应相同且 handoff 总时间不小于 wait。handoff 覆盖旧 wait 漏掉的发布/早期后缀，
+但同时含借用准备、调度、unlock/ACK 和观测开销，不是纯 native 指令或 CPU 时间，
+也不含最后一次 unlock 返回后的代码。远端不同层的交接区间仍可能彼此重叠。
+队列时间只覆盖成功发布的 kdlock 节点：不含分配节点之前的时间、无节点回退，
+也不覆盖所有 fastpath 或原生 Linux 队列等待。等待区间可彼此重叠，不能从
+dispatch 中扣除或加到墙钟时间。完整锁获取、native 纯执行成本、观测成本、
+硬件计数及摊销仍是未完成任务。
+
+现有复杂用例可显式启用同一参数，统一入口会将选择写入每项环境，并核对该
+脚本每次装载的 sysfs 值；默认选择及目录中的固定用例身份不变：
+
+```sh
+# Guest; new evidence directory, same recovery and drain requirements.
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh \
+  --case mode-4 --case mode-5 --case mode-8 --jit-timing --timeout 300 \
+  --output /tmp/kdlock-native-handoff-manual
+```
+
+直接调用 shell 时可显式设置 `KD_JIT_TIMING=1`；统一入口会清除未宣告的 `KD_*`
+环境，所以使用 `--jit-timing`，不要只在外层导出变量。该选项负责选择和记录，
+不能代替计量 oracle：复杂脚本保留原有 JIT、完整状态、owner/ACK 判定；另按每次
+已排空会话核对十行、`invalid=0`、各后端 begin/complete 与 wait/handoff 次数，
+并检查 handoff 包含 wait。失败停机不产生完整交接计量，不能据缺行填零或制造通过。
+没有入队前资源拒绝的这些代表路径，再将 queue 次数与各后端已排空的 slowpath
+统计关联；不能把该等式推广到存在未入队回退的压力场景。
+不把同一会话在多个 phase 日志中的副本重复计数，也不在嵌套模式使用普通配对的减法。
+
+修改公共计量时复用 `test_jit_entry_scope.py`、`test_exe_registry.py`、
+`test_remote_outer.py` 和 `test_benchmark.py`；改 backend 交接起止点时还选
+`test_spin_outer_progress.py`、`test_mutex_outer_progress.py`，观察真实 producer 的
+开始/借用/发布/等待/结束顺序。修改队列记录点/布局时还选
+`test_spin_shadow.py`、`test_spin_outer_progress.py`、`test_mutex_outer_progress.py`、
+`test_mutex_resources.py` 和 `test_exec_capacity.py`。只有选择器/装载规则变化时再选
+`test_regression.py`；不增加新单元入口或日常套件，也不因计量改动扩展极端组合。
+
+### 3.5 翻译器剖析
+
+这是显式性能调查，不是新的日常用例或 daemon 选项。翻译 CLI 只生成文件，
+不会上传；先按[手动准备流程](PROJECT_GUIDE.md#36-拆开观察模块daemon-和负载可选)
+准备一个有效入口，再停止新负载、等待旧调用者和 daemon/翻译子进程退出。
+provider 必须仍为 ACTIVE，frames/writers 为零；尚未执行 retire/unload。
+不要在运行中的回归脚本里临时插入命令，或在仍有执行者时覆盖工作区。
+
+执行流为：
+
+```text
+普通 daemon 翻译并发布 -> 排空调用者/翻译者，保留 ACTIVE provider
+  -> 复制该条目的 callee/IJ 表到独立空目录
+  -> CLI 新建有效 device lease -> cProfile 记录同一翻译流程 -> 生成独立镜像
+  -> 比较 jit.S/jit.bin 与已发布生成物 -> 保存 profile/日志/退出码
+  -> 另跑既有负载验证已发布 JIT -> 排空/退休/卸载
+```
+
+以下变量必须来自**当前会话**：`ASM_DIR` 为已发布条目的 `asm/` 路径；
+`LOOKUP_PID` 为 registry 的 pid（内核条目通常为 0，不是 tgid）；`ENTRY_RIP`
+为十六进制入口；`LOCK_KIND` 为 `spin` 或 `mutex`。不要复用历史 RIP 或手工设置
+`KD_DEVICE_FD`。确认上述排空条件后，仅在 guest 运行：
+
+```sh
+PROFILE_WORKSPACE="$(mktemp -d /tmp/kdlock-profile.XXXXXX)"
+mkdir "$PROFILE_WORKSPACE/asm"
+cp "${ASM_DIR:?}/callee_table.txt" "$ASM_DIR/ij_table.txt" "$PROFILE_WORKSPACE/asm/"
+(
+    cd "$PROFILE_WORKSPACE" || exit 1
+    KD_JIT_BODY_WITNESS=1 timeout --kill-after=5s 60s python3 -B -m cProfile \
+        -o profile.pstats /root/host_fs/kdlock/disassem/disassem.py \
+        "${LOOKUP_PID:?}" "${ENTRY_RIP:?}" "${LOCK_KIND:?}" > translation.log 2>&1 || exit $?
+    python3 -B -c 'import pstats; pstats.Stats("profile.pstats").sort_stats("cumulative").print_stats(40)'
+)
+```
+
+非零退出不能计作成功样本。保留原始 `.pstats`、完整日志、生成物、源码和会话
+身份；用相同输入在另一空目录重复不带 `-m cProfile -o profile.pstats` 的 CLI
+命令，单独记录 wall/CPU。cProfile 有显著额外开销，且 cumulative 时间包含子调用，
+不能把父子行相加或当作生产 pass 的真实耗时。`build_jit_binary` 的时间包含等待
+外部汇编工具，Python profiler 不剖析这些进程内部。RSS 也包含测量进程树的影响。
+检查独立镜像不代表它被上传/执行，仍须保留既有 NORMAL、body 和状态验收。
+
+本次优化只把 `CONTEXT_SYMBOLS` 的固定 glob 合并预编译，仍逐次读取实时符号表，
+保留大小写、完整匹配和编译器克隆名规则，不缓存地址或准入结论。真实符号/区间、
+生成字节、新旧普通耗时及复杂 JIT 结果见
+[符号匹配验收](VALIDATION.md#context-symbol-matching)。改变匹配规则时选择
+[5.2 的相关单元/审计](#52-运行时续点)及受影响复杂/拒绝用例，不加重复基础 smoke。
+
 ## 4. 如何判读
 
 公共脚本强制 `KD_JIT_BODY_WITNESS=1`。实际 JIT 验收同时需要有效 `jit.bin`、
 匹配 entry/lock 且 wrapper 返回后的 `JIT body witness: ... body=1`，以及负载
 状态/计数检查。只看到翻译命令、安装日志或调用前 `execute_cs` IP 不足以通过。
-mode 2/5 还要确认 hostcall 执行和恢复成对出现。
+mode 2/5 还要确认额度内 hostcall 执行和恢复成对出现；mode 5 的超额度 CALL
+另由原 waiter 原生完成，按 [6.13](#613-call-次数额度与原生后缀) 单独关联。
 
 `body=1` 证明生成块确实进入且 wrapper 已返回，不证明每条指令/每条路径均执行。
 JIT 前缀加 native 后缀不能写成“整个临界区全由 JIT 完成”。`body=0` 也不能
@@ -391,7 +835,9 @@ RIP/RSP 且 witness 为零时才能清除保守的 executed 标记。专用拒�
 并发内存有效性验证。这不是某条指令已发生错误，也不是构建、发布或执行成功的
 证明。入口指针、从内存重载的指针及 JIT 运行期间被其他线程改写的指针，仍可能
 绕过静态敏感符号检查；无 warning 也不能用来证明安全。当前只用于经过人工
-审查的实验负载，具体缺口与后续实现顺序见
+审查的实验负载。用户于 2026-09-13 明确继续延期访问时 guard、从原内存指令交回
+waiter 的新出口及其局部条件码保护；当前没有对应开关或可运行验收，不再等待范围
+确认。现有 CALL miss/受检控制出口的原生续跑保持不变。具体缺口与未来实现契约见
 [动态地址边界](DESIGN.md#721-dynamic-address-gap)。不能在已经执行副作用后使用
 `ENTRY_REFUSED` 回到临界区入口，也不能把额外日志当作新增的恢复能力。
 
@@ -480,7 +926,7 @@ JIT 到达 mutex_lock/unlock 控制 CALL
 这些计数不是 JIT body witness，也不是窗口以外或任意并发写入的安全证明。
 检查只比较，不把快照写回，已完成的锁操作和业务副作用均不能重放。
 
-定向单元测试复用 `test_control_call`、`test_exec_frame` 和
+定向单元测试复用 `test_control_call`、`test_exec_capacity.py` 和
 `test_native_after_outer.py`；后者抽取生产 dispatcher/检查器/native-begin 代码，
 使用有界数组代替 task stack，并在 mock 解锁原语中逐字节改变窗口。
 它检查变化保留、返回包拒绝、保留 owner ledger 和 PENDING 边界，不证明真实
@@ -595,7 +1041,7 @@ JIT 已执行，新的 lock CALL 仍为合法 PENDING，尚未取得/发布新�
 | 高层 JIT 入口 | 表不存在、空槽、未就绪、native-only、无 code block 或查无空槽均在 wrapper 前返回 | `test_jit_entry_scope.py` 使用真实 lookup/ready 和高层执行器，检查 spin/mutex 的完整 GPR 包、虚拟栈和锁记录不变；wrapper/锁原语仍是替身 |
 | 上传边界 | 单块容量外的 payload 被设备拒绝；未知 key 不创建新条目 | 注册测试检查真实设备读写函数与最后一个合法字节；不证明完整镜像、并发替换或上传互斥锁语义 |
 | hotlock 表 | 131071 槽；新地址无法建立采样记录时不晋升，继续原生 | `test_hotlock_sampling.py` 的生产函数容量测试；不是同时访问十万把真实锁的压力测试 |
-| spin gate / acquisition ticket | gate 1024 槽、每 CPU 32 个 ticket；普通 hook 预留失败转原生；虚拟 B 必须遵守 CALL 阶段 | `test_spin_gate.py` / `test_spin_entry.py` 检查生产组件；6.3 组合真实 32-ticket 耗尽、存活 JIT/native frame、1024-slot gate 表满和新锁原生互斥；不能把新锁的未开始回退当作发布后恢复，也不能把 EOVERFLOW 等当作可恢复 ENOMEM |
+| spin gate / acquisition ticket | gate 1024 槽、每 CPU 32 个 ticket；普通 hook 预留失败转原生；虚拟 B 必须遵守 CALL 阶段 | gate/entry 组件及 outer production fixture 分层检查；6.3 组合真实 ticket/gate 满表、新锁原生互斥及第二个 JIT 前缀后的 PENDING ENOMEM；均发生在虚拟请求发布前，不支持任意发布后恢复或 EOVERFLOW |
 | mutex shadow / task 记录 | shadow 1024 槽；task 记录用 GFP_ATOMIC 分配；hook 中失败在入队前转原生 mutex | `test_mutex_resources.py` 检查生产组件；6.6 将真实 shadow 表满、原生竞争与两个存活 frame 组合；task/RCU/ACK 的独立 probe 见 6.2 |
 | spin / mutex node | 每 CPU 各 4 个；普通请求无 node 时用自己的栈等待私有 gate，再取得原锁；虚拟 spin 请求先取消预留再返回 | spin producer/队列与 live observer 有界覆盖；6.3 连接真实 JIT、虚拟 ticket 取消及原生续跑，但资源输入为注入；mutex 生产组合测试取代旧模型，`test_11` 有八 waiter 争用四槽，6.7 将真实四槽占满与存活 JIT/native frame 组合 |
 | frame / held-lock / shadow stack | 8 层 frame、8 个逻辑锁记录与 CPU-local held-lock 容量分别检查；栈空间不是相同资源 | 6.8 区分真实物理链的继承锁记录满与独立 local-shadow 拒绝；另有生产 frame 容量、spin producer、远端拒绝及 mutex learned-depth 有界测试，不能由一项容量通过推导全部耗尽场景 |
@@ -834,7 +1280,12 @@ preemption 增量，`released` 必须报告 31 把锁全空、pin 增量归零�
 
 `KD_NATIVE_GATE_PRESSURE=1` 只允许组合 mode 8 / stage 4 / pending contention /
 virtual resource 3。原七个角色和完整 PENDING/ticket/寄存器检查不变，另外需要
-CPU 9/10/11 的三个压力角色与 CPU 12 的控制脚本：
+CPU 9/10/11 的三个压力角色、CPU 12 的控制脚本和 CPU 13-18 的六个 A2/C 角色。
+准备时额外晋升 A2，走一次不获取 C 的 warmup，并等待第七份生成物和 A2 的
+NORMAL 发布。随后停止 daemon；C 仍是数组最后一把尚未分配 gate 的锁。
+高位 selector `0x40000000 | role` 仅用于这个测试：role 3 是 CPU 13 的 A2
+holder，4/5 是 CPU 14/15 的候选者，6 是 CPU 16 的逻辑 waiter，7 是 CPU 17
+的 trailer，8 是 CPU 18 的非目标 C holder；role 9 仅准备时 warmup 一次。
 
 ```text
 真实 JIT 写入 -> ticket E2BIG -> 原 waiter 在 B 的 Linux 队列中等待
@@ -844,29 +1295,62 @@ CPU 9/10/11 的三个压力角色与 CPU 12 的控制脚本：
   -> CPU 10 的非目标 holder 获取最后一把无 gate 的原生 L
   -> CPU 11 的目标线程真实分配 gate 失败，在同一 Linux L 上排队
      holder 观察公有锁字的 pending/tail；两个角色按原生互斥完成写入
-  -> join 三个新角色，再次确认 gate 满表与旧 native frame 仍存活
+  -> join 三个冷入口角色，旧 native frame 仍存活
+  -> CPU 18 的非目标 holder 再次持有最后一把无 gate 的 C
+  -> CPU 13-17 建立 A2 的 holder、两个候选者、逻辑 waiter、trailer 队列
+     两个候选者分别占用 pending bit 和 private head，实际有三个 MCS waiter
+  -> A2 combiner 执行已发布 JIT，提交 before/value 前缀，调用 lock(C)
+     ticket 仍有空位，但 gate 表满，真实返回 ENOMEM；没有发布 C 请求
+  -> PENDING 包恢复 callee 和原 CALL SP，原 waiter 在 C 的 Linux 锁上等待
+     不重放 A2 前缀；A2 仍归 combiner，旧 A/B 也仍被保留
+  -> CPU 18 观察真实 pending/tail，控制器读取 source frames=2，再允许 C 解锁
+  -> 原 waiter 取得 C，核对已提交前缀，完成一次 C/A2 后缀并自行解锁 C
+     A2 unlock 交给真实 owner 并等待 ACK，join 六个 A2/C 角色
+  -> drained 快照要求 gate 仍满、source frames 回到 1
   -> 控制脚本允许旧 B holder 解锁，原 waiter 完成后缀和 A 的最终 ACK
   -> 原候选者释放额外 ticket/pin，全部调用者排空，退休并卸载
 ```
 
 准备阶段只通过现有 SELFTEST 参数控制新锁的 promotion，不填造 gate 条目。
 `spin_selftest_gate_count` 只在 map guard 下读实际占用；`kd_gate refusal` 标识
-真实查找失败的 task/CPU/原锁。新角色使用相同的已定位 ELF CALL 入口，daemon
-已停止，不能把冷入口注册或这些原生写入计为 JIT。逐锁记录检查 membership、
+真实查找失败的 task/CPU/原锁。三个冷入口角色使用相同的已定位 ELF CALL，不能
+把注册或其原生写入计为 JIT。A2 的外层入口和内层 CALL 返回地址另从实际 E8
+指令及 ELF relocation 定位；`PENDING_LOCK_NATIVE error=-12` 必须匹配该入口、
+callee、原 SP 和已暂时推进的 return/SP+8，不能以普通 observer CALL miss 替代。
+新增请求的 JIT witness 必须对应 A2，不能借用旧 A 的 witness。逐锁记录检查 membership、
 写入次数和值、公有/私有锁字与 pin 配平；最终全数组检查不能只看循环总次数。
 
-`gate-pool.json` 保留模块 SHA256、真实数组/入口和 prepare/held/filled/drained
-快照；这里的 drained 只表示三个压力角色退出，旧 frame 此时必须仍为 1。
+`gate-pool.json` 保留模块 SHA256、真实数组/入口和 prepare/held/filled/progress/drained
+快照，frame 数依次为 0/1/1/2/1。每次快照均重查 A2 的 NORMAL/code 元数据和
+三份生成文件哈希；这不是不可变代码版本保证。最后两个快照分别位于 C holder
+的受控等待期间、六角色退出之后，旧 frame 始终仍存活。
 `gate-protocol.log` / `gate-result.json` / `gate-role-status.tsv` 进入统一归档。
-B holder 的有界等待不交接 owner；控制器出错仍释放这个测试等待条件、join
-已有角色并保留失败，不能因此生成 PASS。不得在仍持锁时强制卸载。
+B/C holder 的有界等待不交接 owner；控制器出错仍释放测试等待条件、join
+已有角色并保留失败，不能因此生成 PASS。`native_gate_progress_release` 仅释放 C
+测试 holder，`native_gate_release` 最后释放旧 B；不得在仍持锁时强制卸载。
 
-这是 gate 表的真实耗尽和新请求的 **未开始** 原生回退，不是 gate 失败后的
-JIT 重放、PENDING gate 失败或任意 pool/任务退出组合的证明。实际结果见
-[gate 压力验收](VALIDATION.md#spin-gate-pressure)。修改此扩展只运行
-`test_spin_gate.py`、`test_spin_entry.py`、`test_regression.py`，以及升级后的
-`virtual-ticket-refusal` 和共享驱动的 `virtual-node-refusal`；不要重跑基础 smoke。
-修改其他公共快照/取消分支时，再按受影响范围选对应复杂用例。
+旧 gate 压力阶段只检查 **未开始** 原生回退；新增 A2 检查 **已经执行 JIT** 后的
+PENDING gate 失败。两者不能互相替代，也不能证明任意资源组合、硬件 flags、
+访问时检查或任务退出。原逐锁数组仍有 1025+2 次更新；A2 使用独立 before/inner/
+after/value 记录，必须为 2/1/2 且满足精确值递推。整个会话恰好两个 native
+begin/complete 和两个最终 A ACK，按 task/entry 分别关联，不只检查总数。
+
+修改此扩展运行 `test_spin_gate.py` 和 `test_spin_outer_progress.py`，再运行
+`virtual-ticket-refusal`、共享驱动的 `virtual-node-refusal`，不加新 case 或基础
+smoke。outer fixture 用真实 map/ticket/nested producer 和 PENDING helper 对比
+完整软件包、frame/node/context/shadow；CPU/原锁原语是替代实现，实际 JIT 和
+Linux 排队由 live 用例验证。修改 entry API 或回归选择器时，才追加相应单元。
+在已确认 recovery 的 guest 中执行这组增量：
+
+```sh
+make -C tests/unit run TESTS= \
+  PY_TESTS='test_spin_gate.py test_spin_outer_progress.py'
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh \
+  --case virtual-ticket-refusal --case virtual-node-refusal
+```
+
+初版与后续验收分别记录在 [冷入口压力](VALIDATION.md#spin-gate-pressure) 和
+[已执行前缀的 gate 失败](VALIDATION.md#progressed-spin-gate-refusal)。
 
 修改共享 SELFTEST 加载/清理逻辑后，还应回归原有 CPU-local shadow 容量用例。
 它在 CALL advance 和虚拟 ticket 申请之前拒绝，不等同于上述两个出口：
@@ -1057,6 +1541,8 @@ probe 2/4 是非队首取消检查，probe 1/3 是队首获取检查，分别配
 `test_23_mutex_parallel_native.sh` 默认使用两组真实 mutex `A0/B0`、`A1/B1`，
 每组各有 holder、combiner、逻辑 waiter 和 trailing caller。八个 ioctl worker
 固定在 CPU 0-7；两组 combiner 分别在 CPU 1/5，逻辑 waiter 在 CPU 2/6。
+双 frame 首轮的两个逻辑 waiter 使用单进程信号客户端，其余角色和退休后重载
+仍使用 benchmark；不向 benchmark 的线程组或 timeout supervisor 发信号。
 每个 waiter 都有独立记录，B 仍由自己的 A combiner 获取，不新增远端 mutex frame。
 
 ```text
@@ -1078,6 +1564,7 @@ probe 2/4 是非队首取消检查，probe 1/3 是队首获取检查，分别配
   -> 两个旧 frame 仍存活；两名非目标 B 竞争者失败 trylock 并实际排队
   -> 核对单进程客户端身份，以 pidfd 发送 SIGUSR1；两个原生等待均取消
   -> 用户态观察 EINTR/一次信号，再明确重试一次；重新核对两张 B wait_list
+  -> 核对两个原 waiter 的单进程身份并保留 pidfd：先排空者 SIGKILL，另一名 SIGUSR1
   -> 真实 compiler fork/exec 建立 writer
   -> 父进程退出而子进程保留引用
   -> retire 返回 EBUSY，进入 DRAINING；子进程仍能读源码，但发布被 ESHUTDOWN 拒绝
@@ -1085,10 +1572,13 @@ probe 2/4 是非队首取消检查，probe 1/3 是队首获取检查，分别配
   -> 指定第一组完成后缀 -> B unlock/owner ACK -> A logical unlock/owner ACK
   -> 第一组以 kd_renamed 发布 post-unlock done，再恢复 klock_test 名称
   -> 第一名原生竞争者取得/释放 B，并确认另一 frame 的 B 仍拒绝 trylock
+  -> 第一个 waiter 在内核后缀/ACK 完成后因 SIGKILL 退出，不返回用户态 ioctl
+  -> pidfd 确认退出，source.frames=1，第二名 waiter 仍存活；释放第二组退出观察门
   -> 第二组再次核对自己的 A/B owner 和未完成记录，再完成后缀与两个 ACK
   -> 第二组仍以 kd_renamed 完成记录，再恢复名称
   -> 第二名原生竞争者取得/释放自己的 B
-  -> 原八个 caller 与两名 B 竞争者全部返回 -> 核对记录、镜像哈希和排空
+  -> 第二名 waiter 在 ioctl 返回前处理一次 SIGUSR1；其余 caller 与两名 B 竞争者返回
+  -> join 全部 supervisor（仅第一个 waiter 为 137）-> 核对记录、镜像哈希和排空
   -> 单独的 orphan writer 仍让 retire 返回 EBUSY -> 释放并确认子进程退出
   -> 源 pin 仍阻止测试模块卸载 -> retire 全部条目为 NATIVE_ONLY 后释放 pin
   -> 保留旧 kdlock/registry，卸载并重载测试源码模块，核对旧 RIP/原锁地址确实复用
@@ -1113,8 +1603,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_PARALLEL_FIRST=1 \
 `KD_MUTEX_PARALLEL_FIRST` 默认 0，仅接受 0/1，决定哪组先完成，不改变锁协议。
 脚本显式加载并读回 `mutex_jit=1`，只通过 `mutex_parallel=1` 的 opt-in workload
 复用 mode 3 ioctl；普通 mode 3 不变。`mutex_parallel_armed` 只能在准备完成后
-置 1；双 frame 分支还显式开启/读回 `native_resume_rename=1`。除下述内置改名及
-peer 信号流程外，不要与其他信号、资源注入、remote-chain
+置 1；双 frame 分支还显式开启/读回 `native_resume_rename=1`。除下述内置改名、
+peer 和原 waiter 信号流程外，不要与其他信号、资源注入、remote-chain
 或其他 workload 参数混用。
 脚本在非 shared-CPU 分支自动使用 `mutex_parallel_source_hold` 暂停两组 native
 callee，最长 10 秒；控制端等待两次 arrival 和原生 C 返回最多 6 秒，子进程
@@ -1203,11 +1693,12 @@ selector 分别为 22/23。不向 benchmark 的 pthread 或 timeout supervisor �
    再次 trylock 失败后进入普通 `mutex_lock(B)`；selector 24、loop_count=2 必须
    重新观察两名 peer，不能复用首次排队日志。两次设备快照都要求
    OPEN/modules=1/frames=2/writers=0。
-6. 只有两者取消并重新排队后才进入原来的 writer/retire 流程、释放暂停门。
+6. 只有两者取消并重新排队后才向两个原 waiter 发信号，再进入 writer/retire
+   流程、释放暂停门。
    第一组 waiter 解 B 时仍通过真实 owner 执行；它的原生竞争者随后取得 B，
    在持有这把 B 时尝试另一把 B，必须失败且其 owner 仍为另一 combiner。
 7. 第一名竞争者真实 `mutex_unlock(B)` 后才发布完成位。第二组原 waiter
-   同时等待第一组最终 ACK/done 和该完成位，然后重新检查自己保留的 A/B
+   同时等待第一组最终 ACK/done、该完成位和下面的任务退出观察门，再检查自己保留的 A/B
    再继续。第二名竞争者最终取得/释放自己的 B；所有 supervisor 均须 join。
 
 两名 peer 都使用原生 Linux mutex，不能成为 JIT 执行者、借用其他 owner 的锁或
@@ -1227,6 +1718,40 @@ cancelled/acquired/released 均为 2；`native_peer_signals` 另要求两个 pid
 退出/取消顺序或通用 hook reader 生命周期。原无取消的版本由同一用例升级，
 不再增加一轮基础前置；初次无取消验收仍保留在 VALIDATION 的历史记录。
 
+#### 原 Waiter 的信号与退出
+
+在相同两种排空顺序中，逻辑 waiter 的客户端参数为
+`0/1 klock_test parallel-waiter`，selector 为 `8 * lane + 2`。每名客户端只执行
+一次 ioctl，不自动重试 EINTR；在原生 callee 中仍改名为 `kd_renamed`。
+这不同于上面的非目标 peer 取消 Linux 等待：原 waiter 已有 JIT 副作用和借用的 A/B，
+不能丢弃请求、转移 owner 或重跑入口。
+
+1. 两个 frame 完成原生 C 操作、资源压力及 peer 重新排队后，控制器核对
+   OPEN/modules=1/frames=2/writers=0、两组 arrival 和当前均无 ACK/resume。
+   两个 pidfd 都要通过 PID/TGID、单线程、exe、完整 argv、comm 与 kernel task 检查。
+2. 两名原 waiter 都核对成功后，给 `FIRST` 对应进程发 SIGKILL，另一名发 SIGUSR1。
+   此时两者都必须仍存活；写出 `waiter-signals.ready` 后，主脚本才建立 orphan
+   writer、关闭 source 准入并释放 `mutex_parallel_source_hold`。
+3. 第一名 waiter 在原生代码中检查 pending/fatal 均为 1，完成原有 record 和
+   B/A owner ACK，再从系统调用退出时被 SIGKILL 终止。不得出现其用户态返回日志。
+4. 第二个真实 frame 最多在 `mutex_parallel_exit_hold` 等待 10 秒。控制器保留
+   同一个 pidfd，观察第一名任务确实退出，并等待 DRAINING/modules=1/frames=1/writers=1；
+   第二名 pidfd 必须尚未退出。此时 dmesg 中第一组已有完整 ACK/done，第二组还没有 resume。
+5. 控制器释放第二道测试门，第二名 waiter 核对原 A/B owner、pending=1/fatal=0，
+   完成后缀和两个 ACK；ioctl 成功返回并观察恰好一次 SIGUSR1。其余原检查继续执行。
+
+`waiter-signals.json` 保存发送时间、两个 pidfd 身份、退出后的 source 状态及
+当时 dmesg 前缀的长度/哈希；最终 oracle 将该前缀与完整日志核对。
+`waiter-controller.log`、两个 `role-*-2.log` 和 `role-status.tsv` 必须共同匹配：
+仅索引 `4 + FIRST` 的 supervisor 退出码为 137，其余七个为 0；超时的 124 不是通过。
+`protocol.json.original_waiter_signals` 要求两个信号、一个 fatal exit、一个保留的
+native frame 和一个非致命信号后的返回。只看到 137、ACK 或 `/proc` 消失都不够。
+
+成功与失败路径都释放测试门并 join 控制器，不替真实 owner 解锁，不额外持有
+task_struct 引用。共享 CPU、退休后重载和普通 mode 3 不启用这个扩展。
+这证明的是一次有界的“信号待处理直到内核后缀完成”流程，不支持 native 后缀
+直接 `do_exit`、遗弃未完成 frame、任意 task/RCU 生命周期或通用 hook 热卸载。
+
 仅该工作负载/路由观察器变化时，在 guest 选择相关单元和原有复杂用例：
 
 ```sh
@@ -1236,11 +1761,12 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh \
   --case parallel-drain-0 --case parallel-drain-1 --case parallel-node-pressure
 ```
 
-前两个入口组合改名路由、取消/重排、容量和退休；第三个保护共享驱动的真实
+前两个入口组合改名路由、peer 取消/重排、原 waiter 信号/退出、容量和退休；第三个保护共享驱动的真实
 节点压力。若修改共享信号客户端，再追加 `test_mutex_signal_protocol.py` 和
 `native-peer-1/3` 两项 live，分别保留 SIGUSR1/SIGKILL 协议；不把它们作为
-每次改名路由修改的前置条件。本次改名路由及历史冻结证据见
-[验收记录](VALIDATION.md#renamed-native-frame-routing)。
+每次改名路由修改的前置条件。原 waiter 信号/退出组合的本次冻结证据见
+[验收记录](VALIDATION.md#original-waiter-exit)，改名路由的初次验收保留在
+[历史记录](VALIDATION.md#renamed-native-frame-routing)。
 
 #### 代码池耗尽
 
@@ -1452,6 +1978,43 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh \
 frame-push 容量探针、单 frame 三锁 mode 6、寄存器/RCU 和注入取消出口也不是
 该用例的重复项。真实八层记录耗尽通过不证明所有资源或任意深度/IRQ 安全。
 
+#### Frame 回收门禁
+
+`kd_exec_frame_pop()` 除物理 LIFO、context 和 remote 引用外，还检查 native
+请求及解锁路由。ERROR/COMPLETE 只是状态，不能单独授权回收：
+
+```text
+frame_push -> 初始化空 native_link，保留 source/provider 引用
+  -> native_begin 挂接仍持锁的 frame，原 waiter 从当前 callee 续跑
+  -> waiter 发布解锁请求 -> 原 owner 执行、清空请求，最终移除 native 路由
+  -> owner 发布 request.done ACK，完成自身 frame，再调用 pop
+     -> 仍有 remote/native 引用：EBUSY，输出包/存储/引用不变
+     -> 已满足原有终态与 LIFO 条件：复制最终包、清零存储、释放 frame 引用
+```
+
+waiter 可能在 owner pop 后才输出 ACK 日志；要求的是 owner 的发布顺序，不是
+两个 CPU 的日志时间顺序。门禁自身不发送 ACK、不摘除路由、不解锁，也不提供
+失败重放或一般任务退出恢复；调用方仍必须完成原有 native 等待协议。
+
+现有 `test_exec_capacity.py` 在 ERROR/COMPLETE frame 上分别保留 native 请求、
+路由和两者，核对完整 context、输出 `pt_regs`、请求字及会话引用都不改变。
+覆盖两个后端和现有多层/双 CPU 替代环境；移除任一拒绝条件须触发断言，而非
+把编译失败、崩溃或超时当成检测。链表、CPU 和引用仍是替代原语，构造的坏终态
+不是已观测到的 live UAF；实际 ACK/排空由原有复杂 native/remote 用例验证。
+共享 allocator 的另一生产消费者是 spin combiner 单元，定向运行两项：
+
+```sh
+# Guest only; no extra baseline or new test entry.
+make -C tests/unit run TESTS= \
+  PY_TESTS='test_exec_capacity.py test_spin_outer_progress.py'
+```
+
+修改共同回收门禁时，live 选择应包含普通 JIT 完成、两后端 native/GPR、双 frame
+owner ACK、无锁 remote relay 和深层物理 frame；不要仅以一个 mode 的成功外推。
+它不改变两元素 args、656 字节 frame 布局、guest 内核或已延期的访问时检查。
+本次八项实际选择、带超时的执行命令、旧代码负例和修复版证据分别保存在
+[回收门禁验收](VALIDATION.md#native-frame-retirement)，没有新增日常 case。
+
 ### 6.9 无锁祖先与 Waiter 退出
 
 `remote-late-3` 复用四个真实执行者的 mode-8 跨 NUMA 链，在原有逆序解锁、
@@ -1613,11 +2176,328 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh \
 当前排队验收和此前 FAST/寄存器证据分开记录在
 [VALIDATION](VALIDATION.md#queued-spin-acquisition)，不拼接成新完整矩阵。
 
+### 6.12 同 CPU 的嵌套 Mutex JIT
+
+既有 `mode-4` 的第一阶段使用七角色、两个 CPU，替代此前七个角色各占一个 CPU 的放置。
+`test_08_mutex_jit_modes.sh` 加载测试模块时启用 `mutex_nested_schedule=1`；
+mode 5 显式关闭该观察器。生产锁、节点容量、物理 owner、两元素 args 和 guest
+内核不变；该观察器不是访问时 guard，也不新增条件码保护或 native 续跑出口。
+
+| 角色 | CPU | 用途 |
+| --- | --- | --- |
+| 0 | 1 | 被代理的 A/B 嵌套请求，最终回到自己的任务 |
+| 1 | 0 | B 初始原生 holder；确认 A executor 真实入队后才释放 B |
+| 2 | 1 | B 直接 waiter |
+| 3 | 0 | A 初始 holder |
+| 4 | 0 | A 直接 waiter，成为嵌套请求的 combiner/executor |
+| 5 | 1 | B 后继 waiter |
+| 6 | 1 | A 后继 waiter |
+
+```text
+warmup/promotion -> 翻译生成物 -> 对应 RIP/TGID 发布为 NORMAL
+  -> 先启动 A/B holder，再启动其他角色；原生准备屏障允许 cond_resched
+  -> A holder 释放 -> role 4 持有原生 A，执行 role 0 的 JIT
+  -> JIT 在嵌套 B lock CALL 退出 wrapper，留下实际 body witness
+  -> executor 走原生 mutex 等待 B；同 CPU 的 B holder 得以运行
+  -> holder 在 B.wait_lock 下发现 waiter.task 正是 A 的物理 owner
+  -> 核对双方 CPU 0 和不同 owner 身份，释放 B
+  -> executor 获取 B，恢复并完成本次 JIT，按原协议释放锁
+  -> 七个原始任务返回，随后停止 daemon、退休/卸载并核对最终状态
+```
+
+仅 `nested_queued` 增加不足以证明实际等待，因为该计数可能先于入队。
+观察器只读 B 的真实 wait_list，并在其 wait_lock 下采样 PID/CPU；释放该锁后不再
+解引用 waiter，也不增加 task 引用。等待十秒仍未观察到时记录错误并允许 holder
+继续释放 B，不能把超时后原生完成算成通过。角色 CPU/身份/IRQ/preempt 日志均在
+原始任务上采样，不进入翻译正文；退出时必须与入口一致，IRQ/preempt 均为零。
+
+`mutex_signal_protocol.py nested` 将实际角色、owner、等待事件、NORMAL 发布和唯一
+entry/A 匹配的 body witness 关联，并要求七个 worker 退出零、无 native frame/ACK。
+驱动另查 `jit_success>=1`、`nested_queued>=1`、`nested_jit>=1`、`jit_resume=1`、
+复杂 A/B 状态、精确总计数和零错误。`Evidence:` 目录保留角色日志、CPU/退出码 TSV、
+`published.json`、观察器开关、最终日志和 `protocol.json`，统一 runner 收入协议归档。
+daemon 在角色运行时仍然存在，只在工作完成后停止；该实验不提供不可变版本保证。
+
+```sh
+# Guest only: affected oracle and two existing mutex cases.
+make -C tests/unit run TESTS= PY_TESTS=test_mutex_signal_protocol.py
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-4 --case mode-5
+
+# Explicit OOO diagnostic when that branch is affected; not another routine case.
+KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_OOO=1 bash tests/test_08_mutex_jit_modes.sh 4
+```
+
+OOO 复用同一角色和判定，另保留原有 A-before-B 解锁分支/精确计数，仍须全程 JIT
+完成，没有原 waiter native 后缀。普通 `mode-4` 另包含下述
+[共享原生 B 阶段](#615-两个-a-combiner-共享原生-mutex-b)；显式 OOO 变体只运行
+本节阶段，不重复与 OOO 无关的共享 B 负载。此前三项的归档及实际结果见
+[VALIDATION](VALIDATION.md#mutex-nested-scheduling)。
+本节验证 executor 为同 CPU 的 holder 让出运行机会；6.1 的 `native-4-4` 则检查
+PENDING 后原 waiter 续跑和 owner ACK，6.7 的 `parallel-node-pressure` 检查独立队列
+context/node 拒绝。三者不能互相替代。四个角色安排在 CPU 1 不证明四个节点同时
+占满；这些有界观测不证明任意超额订阅、公平性、task/RCU 生命周期或 flags 正确性。
+
+### 6.13 CALL 次数额度与原生后缀
+
+此功能只处理第 17 次尚未分派的 CALL，不处理基本块指令预算或任意指令异常。
+访问时 guard、原指令续跑和局部条件码保护仍明确延期，见
+[未实现限制](TODO.md#deferred-access-time-guard)。
+
+```text
+同一 entry 发布 NORMAL -> 正常 mode 5 多轮/同 CPU waiter/持续竞争
+  -> 每个代理请求：时钟服务 -> JIT -> int_sqrt 服务 -> JIT
+  -> 最外层 unlock 后返回原 waiter
+  -> 全部调用者退出，再设置测试参数 mode5_call_quota=1
+  -> CPU 0 的一个 holder + CPU 1 的四个调用者，每人执行一次临界区
+  -> JIT 请求的前 16 次时钟服务：adapter 执行并回到同一镜像
+  -> 第 17 次：保留 callee RIP / CALL RSP / GPR，检查现有 CALL 包和服务策略
+  -> 原 waiter 执行第 17 次时钟、int_sqrt 及剩余原生临界区，不回本次 JIT
+  -> mutex unlock 交给保留原生锁的 owner，等待 ACK，调用者退出
+  -> 全部 join；恢复 mode5_call_quota=0，确认原注册仍 NORMAL
+  -> 停止 daemon、退休/卸载，核对完整状态与协议证据
+```
+
+`mode5_call_quota` 只是测试模块的两阶段开关，默认零；不是关闭 JIT 的 debug
+选项，也不改变生产额度。mode 5 始终启用 `mutex_jit=1`。只在调用者已经排空
+时切换；每次临界区固定调用 1 或 17 次 `ktime_get_ns()`，当前编译结果可能
+实际调用 `ktime_get`。复杂状态更新仍在循环前仅执行一次，`mode5_api_calls`
+统计每次时钟返回，`mode5_api_observations` 每个临界区一次，分别识别入口重跑、
+漏执行或重复执行待处理服务。task/IRQ/preempt 日志在 unlock 后的原始任务采集，
+不把 current/GS 探针插入翻译正文。
+
+mode 2 和 mode 5 还在整个时钟循环后调用 `int_sqrt(unsigned long)`。输入为
+`root*root+low`，其中 `low=observations & 0xffff`、`root=0x80000000+low`；
+该值不溢出 64 位且整数平方根恰为 root。参数使用高 32 位，结果的 bit 31 为一，
+用于发现参数截断、错误寄存器和符号扩展；结果必须被后续代码比较，而非丢弃。
+每个临界区只调用一次标量服务，卸载记录
+`kd_scalar service: mode=<2|5> calls=<完整临界区数> failures=0`。
+这项数值检查与原有完整复杂状态 oracle、时钟统计各自保留；mode 5 第 17 次
+时钟后的标量操作只在 native 后缀执行。服务 ABI 和支持范围见
+[DESIGN 8.4](DESIGN.md#84-native-hostcalls)。
+
+令 N 为原有正常阶段的 JIT 完成数，M 为额度阶段的 native frame 数，须 N>=2、M>0：
+
+| 证据 | 期望 |
+| --- | --- |
+| `jit_success` / `jit_resume` | N / N；不把 native suffix 当作 JIT 完成 |
+| entry/lock 匹配的返回后 body witness | N+M；额度阶段前恰为 N |
+| hostcall exits / executed / resumed / limit | 2N+17M / 2N+16M / 2N+16M / M |
+| hostcall rejected / failed | 0 / 0 |
+| native started / completed / unlocks | M / M / M；逐 task/lock 关联，不能只比总数 |
+| 完整临界区计数 | 正常阶段总数 + 5，复杂状态无失败 |
+| API observations / calls | 临界区总数 / 临界区总数 + 16*5 |
+| scalar calls / failures | 临界区总数 / 0；包含正常和额度 native 后缀 |
+
+`mutex_signal_protocol.py quota` 将 `CALL_LIMIT_NATIVE` 与真实 `kd_native begin`
+的 entry、callee RIP、RSP、task、原锁匹配，检查服务目标/返回标签属于当前
+生成物，并将 complete、owner ACK 与原 waiter unlock 后的返回记录关联。
+生成物必须同时有独立的时钟及 `int_sqrt` 服务目标。mode 2 不触发额度退出，
+其 hostcall exits/executed/resumed 均须为 `2*jit_success`，limit/rejected/failed 为零。
+五个调用者全部成功且 IRQ/preempt 干净；超额度请求不调用 adapter、不请求学习。
+前后同一注册的 entry/TGID/code/status 必须一致，daemon 翻译/安装次数不增加。
+这些观测不是不可变版本保证或完整硬件 GPR/flags 采样，C3/C4 仍延期。
+
+`Evidence:` 目录保留 normal 阶段日志、两个客户端日志/退出码、开关读回、
+前后发布 JSON、final.log 和 protocol.json；统一 runner 收入归档。没有额度
+JIT、警告被限流导致记录不完整或任一调用者失败，都不能记 PASS。
+
+```sh
+# Guest only; existing entries, not another daily test case.
+make -C tests/unit run TESTS= \
+  PY_TESTS='test_hostcall_codegen.py test_jit_entry_scope.py test_exe_registry.py test_mutex_signal_protocol.py'
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --suite hostcall
+```
+
+修改共享 executor 时，再选双后端 progress 单元和 mode 2/4、两后端寄存器续跑、
+learned mutex-depth；只改观察器则不重复所有 JIT。普通控制 CALL 的混合额度、
+`test_exe_registry.py` 同样提取真实服务表及 adapter：修改服务 manifest/adapter
+必须运行它，不能只运行导入其 helper 的 consumer 测试。注册替身不执行服务，
+但仍须提供真实参数字段和 typed primitive 的编译契约。
+坏包/目标/服务属性拒绝由生产 consumer 单元覆盖，不把 mode 5 的 hostcall
+实测泛化成普通 CALL 额度、远端额度或任意故障恢复都已实测。
+
+### 6.14 两个独立 Root 共享 B Combiner
+
+`mode-8` 有三个独立模块会话：原有复杂 CFG/内层竞争、
+`test_20_remote_outer.sh multi` 的双根纯 JIT、`multi quota` 的混合 native/JIT。
+测试模块只读开关 `spin_multi_roots=1` 选择
+`spin_multi_workload.c`，不创建测试 frame/node，也不修改原锁 owner。原有远端
+深链跟踪一个 logical waiter；本阶段检查两个独立 A 请求同时等待同一 B 队列。
+
+| 队列 | role / 固定 CPU | 分工 |
+| --- | --- | --- |
+| A0 | 0、1、2/3、4 | root、holder、pending/head 两个直接竞争者、尾随者 |
+| A1 | 5、6、7/8、9 | 第二条独立 root，其他角色同 A0 |
+| B | 10、11/12、13 | holder、pending/head 两个直接竞争者、尾随者 |
+
+需要 CPU 0-13 均在线且在允许集合中；采集实际拓扑，不按 CPU 数字推断 NUMA。
+pending-bit 参与者不算 MCS waiter。两个直接竞争者谁先到可变，oracle 接受
+各队列合法 head，但两个 remote child 必须使用同一个 B executor。
+
+纯 JIT 双根阶段的执行顺序：
+
+```text
+第一阶段通过 -> 保存其 dmesg 与全部生成物 -> 退休/卸载后的新模块会话
+  -> 分别 promotion 三把锁 -> 无竞争注册两条 root -> 三个入口发布 NORMAL
+  -> 停止 daemon/翻译者，保持代码不变 -> 启动 14 个固定 CPU 角色
+  -> 两个 A holder 等各自 root 和尾随者入队，再释放原锁
+  -> 各 A combiner 执行对应 root 的 JIT 前缀，再向 B 发布 virtual request
+  -> B holder 观察两条前缀已执行、后缀未执行及不同 A owner，然后释放
+  -> 同一个 B combiner 依次运行两条 child JIT
+  -> 各 A combiner 恢复对应 JIT 后缀 -> 所有原调用者 unlock 后返回
+  -> join、退休/卸载 -> 核对状态、身份、发布和返回后 body witness
+```
+
+每条 root 有独立 token/value、before/after 计数；A0/A1/B 复用复杂状态 oracle。
+含准备阶段在内，三个状态分别为 12007 / 12007 / 12009 次转换，总计 36023；
+两条 root 各执行两次，其中一次无竞争注册、一次实际代理。B 下记录的共享序号
+必须为 12006 和 12007。`remote_outer_protocol.py --multi` 关联两个逻辑 task、
+不同 A owner、共享 B owner/CPU、同一已发布 entry 和四个返回后 body witness；
+14 个调用者成功、原 task 身份不变且 IRQ/preempt 干净，native 计数全部零。
+不能只凭翻译成功或最终总计数接受，也不能将 native 回退作为本阶段通过。
+
+#### 混合完成、Waiter 退出与 B 后继
+
+`multi quota` 额外设置只读测试参数 `spin_multi_quota=1`。A1 holder 在释放前
+等待 B 队列已有 A0 virtual request，以真实排队保证 root 0 在前。两个 root
+仍必须已提交 A 前缀且未执行 A 后缀，B holder 才释放。此阶段单独构建 SELFTEST
+provider，设置只读 `spin_selftest_exit_after_ack=1`；准备完成后，根据已加载
+`multi_locks` 的地址和 ELF 数组大小，把 `spin_selftest_exit_lock` 绑定到 B。
+
+```text
+B combiner 执行 root 0 的 child JIT、复杂 B 更新
+  -> 前 16 次时钟服务返回 JIT，第 17 次触发现有 CALL_LIMIT_NATIVE
+  -> 保留同一 callee/CALL RSP，B frame 和 A0 relay 注册 native 借用
+  -> B native_begin 在唤醒原 waiter 前取得其 PID 身份引用，不增持 task 引用
+  -> 原 waiter 执行第 17 次服务、剩余原生后缀；不重跑入口或返回本次 JIT
+  -> 原生观察器在有界区间检查 B owner 未变、root 1 的 B 数据尚未更新
+  -> B unlock 交回真实 owner；清除 B 的 parent/路由并发布 ACK
+  -> B 在已校验的 frame pop 前暂停；A0 owner 独立完成最终 unlock/ACK
+  -> 原 waiter 正常返回 ioctl 并退出，RCU 读段内观察其 TID 已脱离
+  -> 旧 B frame/寄存器包及 CPU/preempt/IRQ 保持不变，释放 PID 引用并正常 pop
+  -> 同一个 B combiner 才执行 root 1 的 child JIT；root 1 正常完成
+  -> 两条 root 原调用者返回；确认原三个注册的 entry/TGID/code/status 未变
+```
+
+这是 SELFTEST 强制的单次执行顺序，不是新增的生产全局退出屏障。生产 B 只需
+完成自己的 native 协议；测试将等待放在 `native_wait()` 已发布 ACK 后的 pop
+边界，不能放在仍欠 B ACK 的 `native_finish()` 中。旧无锁 root 观察器仍使用
+另一条 finish 路径，见 [6.9](#69-无锁祖先与-waiter-退出)。两个观察器共用 PID/RCU
+轮询与完整 frame 比较；超时最多 5 秒后解除测试暂停，但 oracle 必须判失败。
+这期间不改 owner/队列、不增加 task ref，实际 source frame lease 一直保留到 pop。
+TID 脱离不等于 task 内存已完成 RCU 回收；退出后只使用缓存 PID 和不解引用的指针。
+
+此阶段仍为四条返回后 body witness 和 36023 次复杂状态转换，但必须恰好有
+两个 native frame、两次 complete 和 B/A0 两个 ACK，只属于 root 0。
+hostcall 为 17 exits / 16 executed / 16 resumed / 1 limit，rejected/failed 为零。
+临界区自己的时钟计数为 34：无竞争注册 17 次、竞争执行 17 次，其中最后一次
+在原 waiter 上运行。两次 native 观察均须 owner、task/CPU 和未执行的后继状态
+一致。此例 waiter 只有一个 root origin pin，native 时 `preempt_count=1`、
+IRQ 开启，最终 ACK 后恢复为 0；借用两把锁不等于增加两次 waiter 抢占固定。
+这不重建任意原生上下文数值，完整约定见 [ABI](JIT_REGISTER_ABI.md#11-返回原-waiter)。
+
+`remote_outer_protocol.py --multi --quota` 同时核对生成汇编中的时钟服务目标、
+CALL 返回标签、两帧保存的相同 RIP/RSP、原 owner 与后继 JIT 的顺序及前后发布。
+`kd_child_exit arm/release` 必须匹配首个 waiter、B owner/CPU、entry/callee/SP，
+要求最终 A0 ACK、role 0 返回、`detached=packet=context=valid=1` 及第二 child
+开始的顺序；单有 `kd_multi done` 不能证明 TID 已退出。
+不能用普通 CALL miss 替代额度出口：前者会将共享 entry 标记为待翻译，可能
+使后继不再由 B combiner 执行 JIT。daemon 在负载前已经停止，这不是并发重编译
+隔离，也没有引入新指令退出或 flags 保存机制。
+
+统一 runner 收集三个 `Evidence:` 目录。各阶段的 `protocol.log` 和内嵌
+`artifacts.tar.gz` 在下一阶段清理工作区前保存；case 最终 `dmesg.log` 只含
+混合阶段，不能据此丢弃或重复计算前两个阶段的 JIT 证据。
+第三阶段额外保留 `exit-gate.json`、SELFTEST 模块/构建命令和默认构建恢复日志。
+只有调用者已退出且模块排空时才恢复默认构建；失败时不强行卸载存活的 frame。
+
+```sh
+# Guest only; mode-8 includes all three phases, do not repeat "multi".
+make -C tests/unit run TESTS= PY_TESTS='test_exec_capacity.py test_remote_outer_protocol.py test_remote_depth_protocol.py'
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-8 --case remote-late-3
+```
+
+这是有界多请求作用域测试，不是任意调度、锁对象生命周期或并发版本证明。
+daemon 在共享 entry 的负载前已停止；没有访问时 guard、新原指令出口或 flags
+保护。上面的三单元/两 live 是退出观察器改动范围；frame 单元直接提取观察器和
+实际 pop，只替代 PID/RCU/time 原语，覆盖已退出、正常脱离、超时、包/上下文变化
+和 ACK 前不可暂停等条件，不替代真实 TID 退出。只改 oracle 时运行对应单元即可；
+修改共享 workload 时再选择 `registers-8-3`；修改服务策略时再运行
+`test_jit_entry_scope.py` 并选择 `mode-2`。选择/证据采集
+改动才需要 `test_regression.py`，不新增日常 case 或重复基础矩阵。
+
+### 6.15 两个 A Combiner 共享原生 Mutex B
+
+普通 `mode-4` 在七角色/双 CPU 阶段排空并保留生成物后，重新加载独立模块会话，
+以 `mutex_jit=1 mutex_shared=1` 检查 A0、A1 共用同一个原生 mutex B。
+这不是 spin 的远端 B combiner：两个 A executor 分别调用原生 mutex 获取 B。
+测试片段在 `tests/kernel/mutex_shared_workload.c`，仍由既有驱动/协议单元承接，
+不新增日常 case，也不取代独立 B 的双 frame 退休/信号用例。
+
+| 角色 | CPU | 用途 |
+| --- | --- | --- |
+| 0 / 4 | 0 / 4 | A0 / A1 初始 holder，等本地三个请求入队 |
+| 1 / 5 | 1 / 5 | A0 / A1 直接 waiter，成为各自物理 combiner |
+| 2 / 6 | 2 / 6 | 被代理的嵌套请求；A0 有普通 CALL miss，A1 完成 JIT |
+| 3 / 7 | 3 / 7 | A0 / A1 队尾，保留真实批处理/交接条件 |
+| 10 | 8 | 获取 B 前改名为非目标 `kd_native`，使用 Linux 原生 mutex |
+
+```text
+两条 root 分别 warmup 1 次、promotion 12000 次
+  -> 三个生成物（包括随 warmup 提升的 B）全部等待 NORMAL 发布
+  -> 从已加载模块的两个真实 mutex_lock CALL 返回地址选择 A0/A1 entry
+  -> 停止 daemon，记录镜像哈希，再设置 mutex_shared_armed=1
+  -> A0 executor 执行 JIT，写入前缀并持有原生 A0/B
+  -> 普通 CALL miss：保留 callee RIP/CALL SP，交回 role 2 原生续跑
+  -> role 2 的观察器开放 A1 holder 和非目标 peer 的工作负载门
+  -> A1 executor 执行自己的 JIT 前缀，在同一个 B 的 Linux wait_list 上等待
+  -> 原 waiter 在 B.wait_lock 下两次观察 A1 executor 与 peer 均实际入队
+  -> 确认 A0/B 仍属于 role 1，A1 属于 role 5，A1 尚未执行 B 数据操作
+  -> role 2 完成原生后缀，请求真实 owner 执行 B、A0 的 unlock/ACK
+  -> A1 获取 B 并完成 JIT；peer 以自身为真实 owner 获取/释放 B
+  -> 九个调用者全部返回，再退休/卸载、检查记录和模块排空
+```
+
+真实等待队列只读；锁内采样 task PID，离开 wait_lock 后不再解引用 waiter，
+也不增持 task/frame 引用。两次保留状态观察相隔约 10ms，等待超时记为失败，
+只允许工作负载的原 owner 正常释放锁，不伪造 ACK。观察器属于明确的普通
+CALL miss 原生后缀，不进入生成代码，不新增指令退出或 flags 保护。
+
+`mutex_signal_protocol.py shared` 关联两个源 CALL 返回地址选出的 NORMAL A entry、
+两个匹配 A/entry 的 `body=1`、一个 `held=2` 的 native frame、B/A0 两次 owner ACK，
+以及非目标 peer 的真实 owner。还要求 `jit_success=jit_resume=nested_queued=nested_jit=1`。
+两个 root 均应 `before=held=after=12002`、各有 12005 次 A 访问，完整数值按全部
+12002 次操作独立重算；B 的复杂状态总计 24005 次。A0 取得第 24003 次，后两次由
+A1 和 peer 分别完成，不假定二者获取顺序；ACK 日志位于原生 unlock 之后，不能要求
+它一定先于新 owner 的日志。所有原始任务最终 IRQ/preempt 均为零。
+
+每阶段各保留 `final.log`、`protocol.json`、发布/CPU/退出码及 `artifacts.tar.gz`。
+共享阶段还保留 source objdump、CALL 返回地址、所有生成物的发布记录和前后镜像哈希。
+额外 B 镜像不是额外远端 B 执行证据；case 最终 dmesg 也不能代替第一阶段的日志。
+
+```sh
+# Guest only; mode-4 already includes both phases.
+make -C tests/unit run TESTS= PY_TESTS='test_mutex_signal_protocol.py test_mutex_stack_protocol.py'
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-4 --case mode-5 --case registers-4-3
+```
+
+普通 CALL miss 会改变对应条目的学习状态，因此先停止 daemon，避免本轮重编译；
+这不是不可变版本机制。固定角色/有界等待不证明任意取消、公平性、锁对象生命周期，
+更不补齐已延期的访问检查、局部或通用 flags 语义。结果单独记入 VALIDATION。
+
 ## 7. 分层与增量回归
+
+按 2026-09-14 的[交付范围](TODO.md#delivery-scope)，极少出现的情况可以不补实现、
+不专项测试。极端资源组合、特殊取消/退出顺序和任意别名扩展不再自动成为下一项
+任务；已有用例保留供相关改动或显式诊断选择，不要求每轮覆盖所有边界。
+常见路径已复现的错误仍须处理，未测场景仍是限制而不是 PASS。
 
 基础验收通过后，不再把基础用例作为每轮回归的前置步骤。按修改的行为选择
 复杂代表用例及相关单元测试；这是减少重复运行，不是缓存旧 PASS 后假装重跑。
 翻译准备中的 warmup、promotion、发布检查仍必须保留，否则无法保证实际 JIT。
+40 个单元入口和 21 个 shell 驱动的逐项用途、重叠分析及精简进展见
+[测试用例分析](TEST_EXAMPLES.md)。节点、mutex 交接、frame、CALL 和 tail 模型已由生产测试承接；
+live 选择器的套件内容不变，本节说明何时选用；保留入口不等于要求例行运行。
 
 替代依据是执行路径和断言，而不是代码长度或循环次数。复杂用例必须覆盖同一
 后端/配置下原用例的关键结果和实际 JIT 执行证据，才可替代对应正例；不同退出
@@ -1668,7 +2548,9 @@ make -C tests/unit run TESTS= PY_TESTS='test_regression.py test_mutex_parallel_p
 | `mutex-parallel` | 两个真实 JIT/native frame 的两种顺序，合并代码池与 mutex shadow 表满/新队列回退、原生 B 竞争者取消后重排、退休与重载；另含同 CPU 满槽/上下文拒绝/task 分配失败组合 |
 | `extended` | 64 项独立/复杂代表用例，排除 baseline、native-controls 及十一项已覆盖诊断；保留 mode 6 的同一 frame 三锁检查，仅用于大范围变动或验收 |
 
-以上是按行为划分的起点，不是自动影响分析。wrapper/ABI、共享 executor、锁入口
+以上是按行为划分的起点，不是必跑列表或自动影响分析。不要仅因低概率扩展尚未
+覆盖而选择 `extended`、完整信号/资源矩阵。已显式选中的用例仍完整执行原有
+断言，不能静默跳过失败项或裁掉阶段后沿用其 PASS 名称。wrapper/ABI、共享 executor、锁入口
 或生命周期的改动可能影响多个范围，须取相关范围并集；内核基线变化先重新做
 基础验收。只改文档不运行 JIT；只改某个 oracle/测试驱动，验证该驱动及对应 live
 用例即可。不能因为复杂业务正例通过而删除尚未覆盖的错误分支或独立协议。
@@ -1785,7 +2667,7 @@ recovery 确认；特殊参数实验应直接调用相应脚本，不冒充命�
 | 文件 | 用途与边界 |
 | --- | --- |
 | `selection.json` | 精确脚本、参数与本次选定的注入环境，不包含未运行项目的通过结果 |
-| `source.json` / `source.tar.gz` / `source-archive.json` | 冻结运行/测试输入及逐文件、整包 SHA256；含 `guest.config` 和 guest 补丁，排除 Kbuild 生成文件 |
+| `source.json` / `source.tar.gz` / `source-archive.json` | 冻结运行/测试输入及逐文件、整包 SHA256；含 `requirements.txt`、`guest.config` 和 guest 补丁，排除任意生成文本及 Kbuild 生成文件 |
 | `environment.json` / `kernel.notes` | 用例开始前的 boot notes、uname、启动参数、CPU/NUMA、挂载/抢占/sysctl、工具和 Python 依赖查询；不是完整构建环境或执行中配置证明 |
 | 每项的 `output.log` / `exit-status` / `dmesg.log` | 脚本输出、原始退出码和结束时内核日志；日志读取失败也使验收失败 |
 | `artifacts.tar.gz` / `protocol.tar.gz` | 生成工作区，以及脚本明确宣告的协议/角色/daemon 文件，不扫描无关临时文件 |
@@ -1808,7 +2690,9 @@ Python 依赖通过 PATH 中的 `python3` 查询，不假定它与 runner 解释
 `stage=before_cases` 是起始观察，不是整个测试期间配置/依赖未变化的证明。
 脚本随后可能设置 sysctl 或重建 SELFTEST 镜像，仍以脚本和逐项协议证据为准。
 版本元数据和工具二进制哈希不覆盖全部导入代码、动态库、编译参数或加载镜像；
-不得据此自动跳过测试、把未运行项记 PASS，或宣称已有依赖锁定/可重复构建。
+不得据此自动跳过测试、把未运行项记 PASS，或宣称字节锁定/完整可重复构建。
+运行包版本另由 `disassem/requirements.txt` 固定，安装步骤只维护在手动指南；
+元数据采集本身不会强制版本、安装包或选择 venv，也不会打包其内容。
 
 `results.tsv` 的 0 只代表脚本退出码，不能替代 `accepted`。脚本通过也可能因
 缺少已宣告文件或归档失败而被拒绝；归档完整也不证明执行了 JIT，仍须保留本
@@ -1860,8 +2744,8 @@ case-specific JIT/协议检查。不得把离线校验记为新 JIT、当前源�
 尚未运行的受影响项，不重复已经覆盖且实现未变的路径。本轮冻结版本与失败
 记录见 [归档验收](VALIDATION.md#scoped-evidence-capture)。源码包不包含系统依赖的
 完整字节、guest 磁盘或整个内核构建目录。原生对照已改用 3.1 的仓库内驱动，
-起始工具/依赖元数据也已采集，但系统依赖交付、内核构建环境及历史镜像身份
-仍独立保留，不能宣称任意 fresh checkout 已能重现
+起始工具/依赖元数据也已采集，Python 运行包有版本配方；但完整系统依赖字节、
+内核构建环境及历史镜像身份仍独立保留，不能宣称任意 fresh checkout 已能重现
 全部历史结果。
 
 每项默认外层超时 600 秒，可显式调整；不要因此取消 SSH 的外层超时。

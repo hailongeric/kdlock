@@ -43,7 +43,7 @@ make -C "$KM_DIR" KDLOCK_SELFTEST=1 KDLOCK_NUMA=0 W=1 -j8 \
     >"$EVIDENCE/build-selftest.log" 2>&1
 cp "$KM_DIR/kdlock_km.ko" "$EVIDENCE/kdlock-selftest.ko"
 clear_dmesg
-timeout --kill-after=10s 60s insmod "$KM_DIR/kdlock_km.ko" \
+load_kdlock --timeout 60 \
     target_process=kd_mtask_unused mutex_task_selftest=1 mutex_task_cpus="$CPUS"
 check_dmesg_has "kd_mutex task selftest: cpus=$CPUS orders=2 acks=4 deferred_frees=2 failures=0 JIT=0"
 for order in B-A A-B; do

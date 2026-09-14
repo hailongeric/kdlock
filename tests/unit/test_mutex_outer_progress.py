@@ -24,6 +24,8 @@ def main():
     )
     for name in ("include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h"):
         types += without_includes((ROOT / name).read_text()) + "\n"
+    kernel = Path(f"/lib/modules/{os.uname().release}/build")
+    types += (kernel / "include/linux/kern_levels.h").read_text() + "\n"
     types += "\n".join(
         line
         for line in (ROOT / "include/exe.h").read_text().splitlines()
@@ -49,6 +51,11 @@ def main():
     ):
         code += definition(frame, marker) + "\n"
     mutex = (ROOT / "kernel_module/kd_mutex.c").read_text()
+    # Compile the real trace macro too: a substitute silently missed ALERT
+    # output on the hot path. Keep logging enabled; validate its severity/text.
+    start = mutex.index("#ifdef DSM_DEBUG")
+    end = mutex.index("#endif", start) + len("#endif")
+    code = "#define DSM_DEBUG 1\n" + mutex[start:end] + "\n" + code
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
     for marker in (
@@ -78,26 +85,42 @@ def main():
     with tempfile.TemporaryDirectory(prefix="kdlock-mutex-outer-unit-") as directory:
         path = Path(directory)
         (path / "mutex_outer_types.h").write_text(types)
-        (path / "mutex_outer_production.h").write_text(code)
-        binary = path / "outer-progress"
-        subprocess.run(
-            shlex.split(os.environ.get("CC", "cc"))
-            + [
-                "-std=gnu11",
-                "-O2",
-                "-Wall",
-                "-Wextra",
-                "-Werror",
-                "-I",
-                str(path),
-                str(ROOT / "tests/unit/mutex_outer_progress_fixture.c"),
-                "-o",
-                str(binary),
-            ],
-            check=True,
-            timeout=30,
-        )
-        subprocess.run([str(binary)], check=True, timeout=10)
+        assert code.count("printk(KERN_INFO ") == 1
+        # Each mutant must compile and then fail an explicit assertion. Turning
+        # off trace records is not an acceptable cure for serial-console cost.
+        candidates = {
+            "production": code,
+            "alert-regression": code.replace("printk(KERN_INFO ", "printk(KERN_ALERT "),
+            "disabled-trace": code.replace("#define DSM_DEBUG 1", "#undef DSM_DEBUG"),
+        }
+        for name, candidate in candidates.items():
+            (path / "mutex_outer_production.h").write_text(candidate)
+            binary = path / name
+            subprocess.run(
+                shlex.split(os.environ.get("CC", "cc"))
+                + [
+                    "-std=gnu11",
+                    "-O2",
+                    "-Wall",
+                    "-Wextra",
+                    "-Werror",
+                    "-I",
+                    str(path),
+                    str(ROOT / "tests/unit/mutex_outer_progress_fixture.c"),
+                    "-o",
+                    str(binary),
+                ],
+                check=True,
+                timeout=30,
+            )
+            result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=10)
+            if name == "production":
+                assert result.returncode == 0, (result.stdout, result.stderr)
+                print(result.stdout, end="")
+            else:
+                assert result.returncode == 1 and "FAIL mode=" in result.stderr, (
+                    name, result.returncode, result.stdout, result.stderr)
+                print(f"mutation detected: {name}")
 
 
 if __name__ == "__main__":

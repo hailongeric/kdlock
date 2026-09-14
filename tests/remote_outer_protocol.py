@@ -1,12 +1,232 @@
 """Strict evidence checks for the controlled mode-8 remote A/B/C dependency."""
 
 import argparse
+import csv
+import io
 import json
 import re
 from itertools import pairwise
 from pathlib import Path
 
 from cpu_placement import capture_topology, validate_topology
+
+
+def validate_multi_roots(
+    text, placement, publications, statuses, quota=False,
+    published_after=None, assemblies=None,
+):
+    """Two live A parents must send distinct logical packets to one B owner.
+
+    Queue counts only open the workload gates. Actual returned JIT bodies and
+    remote-start identities prove delegation; independent state records detect
+    exchanged/replayed continuations. No live flags or version proof is implied.
+    """
+    validate_topology(placement, 14)
+    assert placement["role_cpus"] == list(range(14))
+    exits = list(csv.reader(io.StringIO(statuses), delimiter="\t"))
+    assert len(exits) == 14
+    assert {int(role): int(status) for role, status in exits} == dict.fromkeys(
+        range(14), 0
+    )
+    published = [json.loads(line) for line in publications.splitlines()]
+    assert len(published) == 3
+    entries = {int(row["entry"], 16) for row in published}
+    assert len(entries) == 3 and 0 not in entries
+    assert all(
+        type(row["status"]) is int
+        and row["status"] == 0
+        and int(row["code"], 16)
+        for row in published
+    )
+
+    def rows(tag, separator=": "):
+        return [
+            (match.start(), dict(re.findall(r"(\w+)=([\w-]+)", match[1])))
+            for match in re.finditer(re.escape(tag + separator) + r"([^\n]+)", text)
+        ]
+
+    def one(tag):
+        found = rows(tag)
+        assert len(found) == 1, (tag, found)
+        return found[0]
+
+    starts, done = rows("kd_multi start"), rows("kd_multi done")
+    assert len(starts) == len(done) == 14
+    roles = {int(row["role"]): (at, row) for at, row in starts}
+    assert set(roles) == set(range(14))
+    assert {int(row["role"]) for _, row in done} == set(roles)
+    assert len({row["task"] for _, row in starts}) == 14
+    assert len({row["self"] for _, row in starts}) == 14
+    for at, row in done:
+        role = int(row["role"])
+        before, original = roles[role]
+        assert at > before and row == original
+        assert int(row["cpu"]) == placement["role_cpus"][role]
+        assert int(row["task"]) > 0 and int(row["self"], 16)
+        assert row["preempt"] == row["irq"] == "0"
+
+    queued_at, queued = one("kd_multi queued")
+    assert queued["count"] == "4" and queued["valid"] == "1"
+    a = [int(queued[f"a{i}"], 16) for i in (0, 1)]
+    b = int(queued["b"], 16)
+    assert len(set(a + [b])) == 3 and all(a + [b])
+    assert queued["first"] == roles[0][1]["task"]
+    assert queued["second"] == roles[5][1]["task"]
+    assert queued["b_owner"] == roles[10][1]["self"]
+    assert all(at < queued_at for at, _ in starts)
+    for lane, candidates in ((0, (2, 3)), (1, (7, 8))):
+        assert queued[f"owner{lane}"] in {roles[r][1]["self"] for r in candidates}
+
+    remote = rows("kd_remote start")
+    assert len(remote) == 2
+    assert {row["task"] for _, row in remote} == {
+        roles[0][1]["task"], roles[5][1]["task"]
+    }
+    assert len({row["owner_task"] for _, row in remote}) == 1
+    assert len({row["cpu"] for _, row in remote}) == 1
+    assert len({row["entry"] for _, row in remote}) == 1
+    nested_entry = int(remote[0][1]["entry"], 16)
+    assert nested_entry in entries
+    for at, row in remote:
+        lane = 0 if row["task"] == queued["first"] else 1
+        assert at > queued_at
+        assert int(row["parent_outer"], 16) == a[lane]
+        assert int(row["outer"], 16) == b and int(row["ip"], 16)
+        owner_roles = [
+            r for r in (11, 12) if roles[r][1]["self"] == row["owner_task"]
+        ]
+        assert len(owner_roles) == 1
+        assert row["cpu"] == roles[owner_roles[0]][1]["cpu"]
+        ended = next(position for position, end in done if end["task"] == row["task"])
+        assert at < ended
+    bodies = rows("JIT body witness")
+    assert len(bodies) == 4
+    assert all(
+        int(row["entry"], 16) == nested_entry and row["body"] == "1"
+        for _, row in bodies
+    )
+    for lock in a:
+        matching = [at for at, row in bodies if int(row["lock"], 16) == lock]
+        assert len(matching) == 1 and matching[0] < queued_at
+    inner = [at for at, row in bodies if int(row["lock"], 16) == b]
+    assert len(inner) == 2 and remote[0][0] < inner[0] < remote[1][0] < inner[1]
+
+    records = rows("kd_multi record")
+    assert len(records) == 2 and {row["lane"] for _, row in records} == {"0", "1"}
+    assert {int(row["shared"]) for _, row in records} == {12006, 12007}
+    for _, row in records:
+        lane = int(row["lane"])
+        token, expected = 0x12340001 + lane * 0x101, 0
+        for _ in range(2):
+            expected = (expected + token) ^ (token << 1)
+        assert row["before"] == row["after"] == "2"
+        assert int(row["value"], 16) == int(row["expected"], 16) == expected
+    _, stats = one("kd_multi stats")
+    assert stats == {
+        "started": "3fff", "finished": "3fff", "failures": "0", "aborted": "0"
+    }
+    _, native = one("kd_native stats")
+    _, services = one("kd_multi services")
+    if quota:
+        # Production needs B-local completion before the next child. This
+        # SELFTEST schedule additionally waits at the ACK-drained pop for the
+        # first TID to detach; it must never withhold an ACK needed for exit.
+        assert native == {"started": "2", "completed": "2", "unlocks": "2"}
+        assert services == {"quota": "1", "calls": "34", "observed": "1"}
+        assert remote[0][1]["task"] == queued["first"]
+        final = [json.loads(line) for line in published_after.splitlines()]
+        assert len(final) == len(published)
+        for before, after in zip(published, final):
+            for key in ("entry", "tgid", "pid", "status", "code"):
+                assert before[key] == after[key]
+            assert after["observed_ns"] > before["observed_ns"]
+        assembly = assemblies[nested_entry]
+        targets = re.findall(
+            r"/\* KD_HOSTCALL id=\d+ symbol=ktime_get(?:_ns)? \*/\nloc_([0-9a-f]+):",
+            assembly,
+        )
+        assert len(targets) == 1
+        limits = rows("reason=CALL_LIMIT_NATIVE", " ")
+        assert len(limits) == 1
+        limit_at, limit = limits[0]
+        assert limit["hostcall"] == "1" and limit["task"] == queued["first"]
+        assert int(limit["entry"], 16) == nested_entry
+        assert int(limit["ip"], 16) == int(targets[0], 16)
+        assert int(limit["lock"], 16) == b and int(limit["sp"], 16)
+        assert f"loc_{int(limit['return'], 16):x}:" in assembly
+        begins, completed, acks = (
+            rows("kd_native begin"), rows("kd_native complete"), rows("kd_native ack")
+        )
+        assert len(begins) == len(completed) == len(acks) == 2
+        observations = rows("kd_multi quota")
+        assert len(observations) == 2
+        assert inner[0] < limit_at < begins[0][0] < begins[1][0] < observations[0][0]
+        for phase, (at, row) in enumerate(observations):
+            assert row["phase"] == str(phase) and row["valid"] == "1"
+            assert row["task"] == queued["first"]
+            assert row["self"] == roles[0][1]["self"] and row["cpu"] == "0"
+            assert row["a0"] == queued["owner0"] and row["a1"] == queued["owner1"]
+            assert row["b"] == remote[0][1]["owner_task"]
+            assert row["other_before"] == "2" and row["preempt"] == "1"
+            assert row["other_after"] == "1" and row["irq"] == "0"
+            assert row["other_shared"] == "12003" and row["sequence"] == "12006"
+            assert row["calls"] == "34"
+        for index, lock in enumerate((b, a[0])):
+            begin_at, begin = begins[index]
+            complete_at, complete = completed[index]
+            ack_at, ack = acks[index]
+            assert observations[1][0] < complete_at < ack_at
+            assert begin["task"] == complete["task"] == ack["task"] == queued["first"]
+            assert int(begin["outer"], 16) == int(complete["outer"], 16) == lock
+            assert int(ack["lock"], 16) == lock
+            for key in ("entry", "ip", "sp"):
+                assert int(begin[key], 16) == int(limit[key], 16)
+            assert begin["held"] == begin["remaining"] == "1"
+            assert begin["outer_released"] == begin["mutex"] == "0"
+            assert complete["mutex"] == ack["mutex"] == "0"
+            assert ack["last_spin"] == str(index)
+            owner = remote[0][1]["owner_task"] if not index else queued["owner0"]
+            assert any(row["self"] == owner and row["cpu"] == begin["cpu"]
+                       for _, row in starts)
+        assert acks[0][0] < completed[1][0]
+        assert completed[0][0] < remote[1][0]
+        assert acks[1][0] < next(at for at, row in done if row["role"] == "0")
+        arm_at, arm = one("kd_child_exit arm")
+        exit_at, exited = one("kd_child_exit release")
+        assert begins[0][0] < arm_at < begins[1][0]
+        assert next(at for at, row in done if row["role"] == "0") < exit_at < remote[1][0]
+        for row in (arm, exited):
+            assert row["task"] == queued["first"] and row["valid"] == "1"
+            assert row["owner"] == remote[0][1]["owner_task"]
+            assert row["cpu"] == remote[0][1]["cpu"]
+            assert int(row["outer"], 16) == b
+            for key in ("entry", "ip", "sp"):
+                assert int(row[key], 16) == int(limit[key], 16)
+        assert arm["remaining"] == arm["alive"] == "1"
+        assert exited["detached"] == exited["packet"] == exited["context"] == "1"
+        assert not rows("kd_relay_exit arm") and not rows("kd_relay_exit release")
+        _, hostcalls = one("kd_hostcall stats")
+        assert hostcalls == {
+            "exits": "17", "executed": "16", "resumed": "16",
+            "rejected": "0", "failed": "0", "limit": "1",
+        }
+    else:
+        assert services == {"quota": "0", "calls": "0", "observed": "0"}
+        assert native == {"started": "0", "completed": "0", "unlocks": "0"}
+        assert not rows("kd_native begin") and not rows("kd_native ack")
+        assert not rows("kd_multi quota") and not rows("reason=CALL_LIMIT_NATIVE", " ")
+        assert not rows("kd_child_exit arm") and not rows("kd_child_exit release")
+    return {
+        "roots": 2,
+        "roles": 14,
+        "jit_bodies": 4,
+        "entry": hex(nested_entry),
+        "shared_lock": hex(b),
+        "waiters": [int(queued["first"]), int(queued["second"])],
+        "b_executor": remote[0][1]["owner_task"],
+        "quota_native": int(quota),
+        "waiter_exit": int(quota),
+    }
 
 
 def _role_count(depth):
@@ -383,8 +603,31 @@ def main():
     parser.add_argument("--depth", type=int, choices=(2, 3), default=2)
     parser.add_argument("--reverse", action="store_true")
     parser.add_argument("--placement", type=Path)
+    parser.add_argument("--multi", action="store_true")
+    parser.add_argument("--publications", type=Path)
+    parser.add_argument("--statuses", type=Path)
+    parser.add_argument("--result", type=Path)
+    parser.add_argument("--quota", action="store_true")
+    parser.add_argument("--published-after", type=Path)
+    parser.add_argument("--artifacts", type=Path, nargs="+")
     args = parser.parse_args()
     placement = json.loads(args.placement.read_text()) if args.placement else None
+    if args.multi:
+        assert args.stage == 1 and args.depth == 2
+        assert not (args.reverse or args.native_owner or args.renamed)
+        assert placement is not None and args.publications and args.statuses and args.result
+        result = validate_multi_roots(
+            args.log.read_text(), placement, args.publications.read_text(),
+            args.statuses.read_text(), args.quota,
+            args.published_after.read_text() if args.published_after else None,
+            {int(path.parents[1].name, 16): (path / "jit.S").read_text()
+             for path in args.artifacts} if args.artifacts else None,
+        )
+        args.result.write_text(json.dumps(result, indent=2) + "\n")
+        print("[PASS] two logical roots / shared B JIT: " + json.dumps(result))
+        return
+    assert args.publications is args.statuses is args.result is None
+    assert not args.quota and args.published_after is args.artifacts is None
     if args.depth == 3:
         execution = validate_chain(
             args.log.read_text(),

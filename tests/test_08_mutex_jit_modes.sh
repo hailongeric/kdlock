@@ -25,6 +25,7 @@ MODE5_STRESS_THREADS="${KD_MUTEX_HOSTCALL_JIT_STRESS_THREADS:-8}"
 MODE5_STRESS_LOOPS="${KD_MUTEX_HOSTCALL_JIT_STRESS_LOOPS:-64}"
 MODE5_STRESS_WORKLOAD="${KD_MUTEX_HOSTCALL_JIT_STRESS_WORKLOAD:-100000}"
 MODE5_MIN_JIT_SUCCESSES="${KD_MUTEX_HOSTCALL_JIT_MIN_SUCCESSES:-}"
+MODE5_QUOTA_THREADS=4
 
 for value in "$MODE5_ROUNDS" "$MODE5_ROUND_WORKLOAD" \
              "$MODE5_PINNED_HOLDER_WORKLOAD" \
@@ -66,21 +67,28 @@ build_all || exit 1
 
 run_nested_mutex_contention() {
     local mode="$1"
+    local out="$2"
     local -a pids=()
     local -a logs=()
-    local role pid failed=0
+    # The A executor (4) must sleep on B so its holder (1) can run on CPU 0.
+    # Four queued roles share CPU 1 without changing the production node limit.
+    local -a cpus=(1 0 1 0 0 1 1)
+    local role pid status failed=0
 
-    if [ "$(nproc)" -lt "$MODE4_ROLES" ]; then
-        fail "$TEST_NAME" \
-            "mode $mode requires at least $MODE4_ROLES online CPUs"
+    if ! python3 -c 'import os; assert {0, 1} <= os.sched_getaffinity(0)'; then
+        fail "$TEST_NAME" "mode $mode requires CPUs 0 and 1"
         return 1
     fi
+    for role in 0 1 2 3 4 5 6; do
+        printf '%s\t%s\n' "$role" "${cpus[role]}"
+    done > "$out/placements.tsv"
+    : > "$out/statuses.tsv"
 
-    # Start the two holders first. Every process is pinned to a distinct CPU so
-    # a scheduled parent execution frame cannot block the task that releases B.
+    # Both holders can yield at the workload barriers, even while retaining
+    # their native mutexes. No test task reference or owner handoff is added.
     for role in 1 3; do
-        logs[role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
-        timeout --kill-after=5s 60s taskset -c "$role" "$BENCH_BIN" \
+        logs[role]="$out/role-$role.log"
+        timeout --kill-after=5s 60s taskset -c "${cpus[role]}" "$BENCH_BIN" \
             1 1 "$MODE4_WORKLOAD" 1 "$mode" \
             "$((MODE4_ROLE_BASE + role))" \
             >"${logs[role]}" 2>&1 &
@@ -91,8 +99,8 @@ run_nested_mutex_contention() {
     # A's direct waiter becomes the target's combiner. B's native holder waits
     # until that combiner actually contends on B before allowing progress.
     for role in 2 4 0 5 6; do
-        logs[role]="$(mktemp "/tmp/kdlock-mode${mode}-role${role}.XXXXXX.log")"
-        timeout --kill-after=5s 60s taskset -c "$role" "$BENCH_BIN" \
+        logs[role]="$out/role-$role.log"
+        timeout --kill-after=5s 60s taskset -c "${cpus[role]}" "$BENCH_BIN" \
             1 1 "$MODE4_WORKLOAD" 1 "$mode" \
             "$((MODE4_ROLE_BASE + role))" \
             >"${logs[role]}" 2>&1 &
@@ -101,14 +109,15 @@ run_nested_mutex_contention() {
 
     for role in 0 1 2 3 4 5 6; do
         pid="${pids[role]}"
-        if ! wait "$pid"; then
+        if wait "$pid"; then
+            status=0
+        else
+            status=$?
             failed=1
             info "mode $mode role $role failed:"
             tail -n 10 "${logs[role]}" || true
         fi
-    done
-    for role in 0 1 2 3 4 5 6; do
-        rm -f "${logs[role]}"
+        printf '%s\t%s\n' "$role" "$status" >> "$out/statuses.tsv"
     done
 
     if [ "$failed" -ne 0 ]; then
@@ -156,13 +165,164 @@ run_mode5_hostcall_contention() {
         return 1
     fi
 
-    run_with_timeout 90 "$BENCH_BIN" \
+    # Keep this instrumented payload separate from preparation, pinned holders
+    # and quota continuation. Its ioctl percentiles are not per-lock latency.
+    local workload_log="${DAEMON_LOG}.workload.log"
+    info "Evidence file: $workload_log"
+    info "Evidence file: ${workload_log}.before.dmesg"
+    info "Evidence file: ${workload_log}.after.dmesg"
+    dmesg > "${workload_log}.before.dmesg" || return 1
+    run_with_timeout 90 env KD_TEST_METRICS=1 "$BENCH_BIN" \
         "$MODE5_STRESS_THREADS" "$MODE5_STRESS_LOOPS" \
-        "$MODE5_STRESS_WORKLOAD" 1 5 >/dev/null 2>&1 || {
+        "$MODE5_STRESS_WORKLOAD" 1 5 >"$workload_log" 2>&1 || {
         fail "$TEST_NAME" "mode 5 continuous hostcall JIT workload failed"
         return 1
     }
+    dmesg > "${workload_log}.after.dmesg" || return 1
     return 0
+}
+
+# Keep this under mode 4, not another routine case. Its distinct native-B
+# dependency complements (and cannot replace) the seven-role/two-CPU phase.
+run_mode4_shared_b() {
+    local out artifacts artifact lane role status failed=0
+    local -a pids=() selected=()
+
+    out=$(mktemp -d /tmp/kdlock-mutex-shared.XXXXXX) || return 1
+    info "Evidence: $out"
+    python3 -c 'import os; assert set(range(9)) <= os.sched_getaffinity(0)' || return 1
+    clear_dmesg || return 1
+    load_kdlock target_process="$TARGET_PROCESS" mutex_jit=1 || return 1
+    insmod "$KLOCK_DIR/klock_module.ko" mutex_shared=1 || return 1
+    test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1 || return 1
+    awk '$3 == "kd_shared_native" && $4 == "[klock_module]" {print $1}' \
+        /proc/kallsyms > "$out/probe.txt" || return 1
+    DAEMON_LOG="$out/daemon.log"
+    start_daemon 2 || return 1
+    for lane in 0 1; do
+        run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 4 "$((lane + 8))" \
+            > "$out/warm-$lane.log" 2>&1 || return 1
+    done
+    sleep 1
+    for lane in 0 1; do
+        run_with_timeout 30 "$BENCH_BIN" 1 12000 1 1 4 "$((lane + 8))" \
+            > "$out/promote-$lane.log" 2>&1 || return 1
+    done
+    # B also becomes hot during serial promotion. Preserve its extra image;
+    # select A entries by real source CALL returns, never artifact count/order.
+    artifacts=$(wait_for_jit_artifact_count 3 60) || return 1
+    while IFS= read -r artifact; do
+        check_jit_artifacts "$artifact" || return 1
+        check_complex_cs_artifact "$artifact" || return 1
+        selected+=("$artifact")
+    done <<< "$artifacts"
+    # Reuse the device-layout observer; do not arm from file/log presence.
+    PYTHONPATH="$KDLOCK_DIR/tests" python3 - "$out" "$KLOCK_DIR/klock_module.ko" "${selected[@]}" <<'PY' || return 1
+import json, subprocess, sys
+from pathlib import Path
+from mutex_signal_protocol import wait_ready
+from mutex_stack_protocol import control_returns
+out = Path(sys.argv[1])
+published = [wait_ready(Path(p)) for p in sys.argv[3:]]
+symbols = {row[2]: int(row[0], 16)
+           for row in (line.split() for line in Path('/proc/kallsyms').read_text().splitlines())
+           if len(row) == 4 and row[3] == '[klock_module]'}
+roots, returns = [], []
+for lane in range(2):
+    name = f'kd_shared_cs{lane}'
+    code = subprocess.check_output(['objdump', '-dr', f'--disassemble={name}', sys.argv[2]], text=True, timeout=10)
+    (out / f'source-{lane}.asm').write_text(code)
+    calls = control_returns(code, symbols[name], name)
+    assert len(calls) == 2
+    returns.extend(calls)
+    matches = [p for p in published if int(p['entry'], 16) == calls[0]]
+    assert len(matches) == 1
+    roots.extend(matches)
+assert len({p['entry'] for p in roots}) == 2
+assert all(int(p['entry'], 16) in returns for p in published)
+(out / 'published.json').write_text(json.dumps(roots, indent=2) + '\n')
+(out / 'all-published.json').write_text(json.dumps(published, indent=2) + '\n')
+(out / 'source-returns.json').write_text(json.dumps(returns) + '\n')
+PY
+    stop_daemon || return 1
+    find "$DAEMON_DIR" -name jit.bin -print0 | sort -z | xargs -0 sha256sum \
+        > "$out/images-before.sha256" || return 1
+    printf '1\n' > /sys/module/klock_module/parameters/mutex_shared_armed || return 1
+    : > "$out/statuses.tsv"
+    : > "$out/placements.tsv"
+    for role in 0 4 1 5 2 6 3 7 10; do
+        local cpu=$role
+        if [ "$role" = 10 ]; then cpu=8; fi
+        printf '%s\t%s\n' "$role" "$cpu" >> "$out/placements.tsv" || return 1
+        timeout --kill-after=5s 45s taskset -c "$cpu" "$BENCH_BIN" \
+            1 1 1 1 4 "$role" > "$out/role-$role.log" 2>&1 &
+        pids[role]=$!
+    done
+    for role in 0 4 1 5 2 6 3 7 10; do
+        status=0
+        wait "${pids[role]}" || status=$?
+        printf '%s\t%s\n' "$role" "$status" >> "$out/statuses.tsv"
+        if [ "$status" != 0 ]; then failed=1; fi
+    done
+    # A timed-out kernel caller may still own B. The shared cleanup's retire
+    # operation must refuse busy state; never force unload or recycle its image.
+    if [ "$failed" != 0 ]; then
+        fail "$TEST_NAME" "shared-B caller failed; retain its role log"
+        return 1
+    fi
+    find "$DAEMON_DIR" -name jit.bin -print0 | sort -z | xargs -0 sha256sum \
+        > "$out/images-after.sha256" || return 1
+    cmp "$out/images-before.sha256" "$out/images-after.sha256" || return 1
+    unload_modules || return 1
+    dmesg > "$out/final.log" || return 1
+    python3 "$KDLOCK_DIR/tests/mutex_signal_protocol.py" shared \
+        --output "$out" || return 1
+    check_mutex_jit_clean_stats 4 || return 1
+    check_complex_cs_integrity 24005 1 || return 1
+    check_dmesg_has "kd_exec invariant_failures=0" "shared-B frame invariants" || return 1
+    check_dmesg_ok || return 1
+    # The oracle requires both selected A images to execute. An extra B image
+    # is a publication artifact, not an additional remote-B JIT requirement.
+    (cd "$KDLOCK_DIR" && find daemon -path 'daemon/0x*' -type f -print0 |
+        tar --null -T - -czf "$out/artifacts.tar.gz") || return 1
+    info "  mode 4 shared native B: retained owner, native peer, next A JIT verified"
+}
+
+run_mode5_quota_contention() {
+    local out="$1" holder status failed=0
+
+    # Join the normal-return phases before arming. One CPU-0 holder lets four
+    # CPU-1 callers queue; the excess service must run only on its waiter.
+    dmesg > "$out/before-quota.log"
+    printf '1\n' > /sys/module/klock_module/parameters/mode5_call_quota
+    cat /sys/module/klock_module/parameters/mode5_call_quota > "$out/enabled.txt"
+    [ "$(cat "$out/enabled.txt")" = Y ] || return 1
+    timeout --kill-after=5s 90s taskset -c 0 "$BENCH_BIN" \
+        1 1 "$MODE5_PINNED_HOLDER_WORKLOAD" 1 5 > "$out/holder.log" 2>&1 &
+    holder=$!
+    sleep 0.1
+    if run_with_timeout 90 taskset -c 1 "$BENCH_BIN" \
+        "$MODE5_QUOTA_THREADS" 1 "$MODE5_PINNED_WAITER_WORKLOAD" 1 5 \
+        > "$out/waiters.log" 2>&1; then
+        status=0
+    else
+        status=$?
+        failed=1
+    fi
+    printf 'waiters\t%s\n' "$status" > "$out/statuses.tsv"
+    if wait "$holder"; then
+        status=0
+    else
+        status=$?
+        failed=1
+    fi
+    printf 'holder\t%s\n' "$status" >> "$out/statuses.tsv"
+    printf '0\n' > /sys/module/klock_module/parameters/mode5_call_quota
+    cat /sys/module/klock_module/parameters/mode5_call_quota > "$out/disabled.txt"
+    if [ "$failed" -ne 0 ] || [ "$(cat "$out/disabled.txt")" != N ]; then
+        fail "$TEST_NAME" "mode 5 quota workload failed; retain both client logs"
+        return 1
+    fi
 }
 
 check_mutex_jit_clean_stats() {
@@ -196,6 +356,7 @@ run_jit_mode() {
     local runtime_write_count runtime_target_count
     local expected_counter actual_counter
     local expected_cs_states=1
+    local nested_out quota_out
 
     info "Testing mutex JIT mode $mode ($mode_name)..."
     clear_dmesg
@@ -203,12 +364,12 @@ run_jit_mode() {
 
     sysctl -w kernel.randomize_va_space=0 >/dev/null 2>&1
     sysctl -w kernel.numa_balancing=0 >/dev/null 2>&1
-    insmod "$KM_DIR/kdlock_km.ko" \
+    load_kdlock \
         target_process="$TARGET_PROCESS" mutex_jit=1 || {
         fail "$TEST_NAME" "mode $mode: loading kdlock_km failed"
         return 1
     }
-    insmod "$KLOCK_DIR/klock_module.ko" || {
+    insmod "$KLOCK_DIR/klock_module.ko" mutex_nested_schedule="$((mode == 4))" || {
         fail "$TEST_NAME" "mode $mode: loading klock_module failed"
         return 1
     }
@@ -242,6 +403,7 @@ run_jit_mode() {
         check_complex_cs_artifact "$asm_dir" || return 1
         if [ "$mode" -eq 5 ]; then
             check_jit_hostcall_artifact "$asm_dir" "ktime_get" || return 1
+            check_jit_hostcall_artifact "$asm_dir" "int_sqrt" || return 1
         fi
     done <<< "$artifacts"
     check_daemon_read_kernel_text "$DAEMON_LOG" || return 1
@@ -267,14 +429,35 @@ run_jit_mode() {
         "$DAEMON_LOG" || true)"
 
     if [ "$mode" -eq 4 ]; then
+        nested_out="$(mktemp -d /tmp/kdlock-mutex-nested.XXXXXX)"
+        info "Evidence: $nested_out"
+        # Keep publication and requested/observed CPU identity with role logs.
+        python3 "$KDLOCK_DIR/tests/mutex_signal_protocol.py" ready \
+            --artifact "$artifacts" --output "$nested_out/published.json" || return 1
+        cat /sys/module/klock_module/parameters/mutex_nested_schedule \
+            > "$nested_out/enabled.txt"
+        if [ "$(cat "$nested_out/enabled.txt")" != Y ]; then
+            fail "$TEST_NAME" "mode 4 scheduling observer is disabled"
+            return 1
+        fi
         if [ "$MODE4_OOO" = 1 ]; then
             printf '1\n' > /sys/module/klock_module/parameters/jit_mutex_ooo
         fi
         info "Running deterministic A/B nested contention..."
-        run_nested_mutex_contention "$mode" || return 1
+        run_nested_mutex_contention "$mode" "$nested_out" || return 1
     else
+        quota_out="$(mktemp -d /tmp/kdlock-hostcall-quota.XXXXXX)"
+        info "Evidence: $quota_out"
+        python3 "$KDLOCK_DIR/tests/mutex_signal_protocol.py" ready \
+            --artifact "$artifacts" --output "$quota_out/published.json" || return 1
         info "Running repeated mode 5 hostcall contention..."
         run_mode5_hostcall_contention || return 1
+        info "Running mode 5 pre-dispatch CALL quota continuation..."
+        run_mode5_quota_contention "$quota_out" || return 1
+        # Quota is not a callee-learning miss: the same registration must still
+        # be NORMAL after all waiter suffixes and owner acknowledgements.
+        python3 "$KDLOCK_DIR/tests/mutex_signal_protocol.py" ready \
+            --artifact "$artifacts" --output "$quota_out/published-after.json" || return 1
     fi
     sleep 1
 
@@ -301,6 +484,9 @@ run_jit_mode() {
     if [ "$mode" -eq 4 ]; then
         local jit_success nested_queued nested_jit
 
+        dmesg > "$nested_out/final.log"
+        python3 "$KDLOCK_DIR/tests/mutex_signal_protocol.py" nested \
+            --output "$nested_out" || return 1
         jit_success="$(get_dmesg_stat jit_success)"
         nested_queued="$(get_dmesg_stat nested_queued)"
         nested_jit="$(get_dmesg_stat nested_jit)"
@@ -323,8 +509,6 @@ run_jit_mode() {
         fi
     else
         local jit_success jit_resume max_waiters
-        local hostcall_stats hostcall_exits hostcall_executed
-        local hostcall_resumed hostcall_rejected hostcall_failed hostcall_limit
 
         jit_success="$(get_dmesg_stat jit_success)"
         jit_resume="$(get_dmesg_stat jit_resume)"
@@ -346,36 +530,9 @@ run_jit_mode() {
             return 1
         fi
 
-        hostcall_stats="$(dmesg | sed -n \
-            '/kd_hostcall stats:/p' | tail -n 1)"
-        hostcall_exits="$(printf '%s\n' "$hostcall_stats" | sed -n \
-            's/.*exits=\([0-9][0-9]*\).*/\1/p')"
-        hostcall_executed="$(printf '%s\n' "$hostcall_stats" | sed -n \
-            's/.*executed=\([0-9][0-9]*\).*/\1/p')"
-        hostcall_resumed="$(printf '%s\n' "$hostcall_stats" | sed -n \
-            's/.*resumed=\([0-9][0-9]*\).*/\1/p')"
-        hostcall_rejected="$(printf '%s\n' "$hostcall_stats" | sed -n \
-            's/.*rejected=\([0-9][0-9]*\).*/\1/p')"
-        hostcall_failed="$(printf '%s\n' "$hostcall_stats" | sed -n \
-            's/.*failed=\([0-9][0-9]*\).*/\1/p')"
-        hostcall_limit="$(printf '%s\n' "$hostcall_stats" | sed -n \
-            's/.*limit=\([0-9][0-9]*\).*/\1/p')"
-        if [ -z "$hostcall_exits" ] || [ "$hostcall_exits" -eq 0 ] ||
-           [ "$hostcall_executed" != "$hostcall_exits" ] ||
-           [ "$hostcall_resumed" != "$hostcall_exits" ] ||
-           [ "$hostcall_exits" != "$jit_success" ]; then
-            fail "$TEST_NAME" \
-                "mode 5: hostcall/JIT accounting mismatch (jit=$jit_success, $hostcall_stats)"
-            return 1
-        fi
-        if [ "$hostcall_rejected" != "0" ] ||
-           [ "$hostcall_failed" != "0" ] ||
-           [ "$hostcall_limit" != "0" ]; then
-            fail "$TEST_NAME" \
-                "mode 5: hostcall diagnostics reported a failure"
-            printf '%s\n' "$hostcall_stats"
-            return 1
-        fi
+        dmesg > "$quota_out/final.log"
+        python3 "$KDLOCK_DIR/tests/mutex_signal_protocol.py" quota \
+            --output "$quota_out" --artifact "$artifacts" || return 1
     fi
     check_mutex_jit_clean_stats "$mode" || return 1
     check_dmesg_has "kd_exec invariant_failures=0" \
@@ -391,7 +548,8 @@ run_jit_mode() {
         expected_counter=$((1 + 12000 +
             MODE5_ROUNDS * MODE5_ROUND_THREADS * MODE5_ROUND_LOOPS +
             1 + MODE5_PINNED_THREADS * MODE5_PINNED_LOOPS +
-            MODE5_STRESS_THREADS * MODE5_STRESS_LOOPS))
+            MODE5_STRESS_THREADS * MODE5_STRESS_LOOPS +
+            1 + MODE5_QUOTA_THREADS))
     fi
     actual_counter="$(dmesg | sed -n \
         's/.*final counter: \([0-9][0-9]*\).*/\1/p' | tail -n 1)"
@@ -403,8 +561,12 @@ run_jit_mode() {
     check_complex_cs_integrity "$expected_counter" "$expected_cs_states" || return 1
 
     if [ "$mode" -eq 5 ]; then
-        local api_observations
+        local api_observations api_calls expected_calls
 
+        # Normal JIT and quota-native suffixes must each consume one correct
+        # full-width scalar result; the existing clock-call counts stay separate.
+        check_dmesg_has "kd_scalar service: mode=5 calls=$expected_counter failures=0" \
+            "mode 5 lost/repeated a scalar result or corrupted its 64-bit ABI" || return 1
         api_observations="$(dmesg | sed -n \
             's/.*mode5 api observations: \([0-9][0-9]*\).*/\1/p' |
             tail -n 1)"
@@ -413,10 +575,25 @@ run_jit_mode() {
                 "mode 5: post-hostcall observation mismatch, expected $expected_counter, got ${api_observations:-missing}"
             return 1
         fi
-        info "  mode 5 hostcalls: $jit_success exits executed and resumed"
+        api_calls="$(dmesg | sed -n \
+            's/.*mode5 api calls: \([0-9][0-9]*\).*/\1/p' | tail -n 1)"
+        expected_calls=$((expected_counter + 16 * (1 + MODE5_QUOTA_THREADS)))
+        if [ "$api_calls" != "$expected_calls" ]; then
+            fail "$TEST_NAME" \
+                "mode 5: repeated/skipped service call, expected $expected_calls, got ${api_calls:-missing}"
+            return 1
+        fi
+        info "  mode 5: normal JIT returns and quota native suffixes both verified"
     fi
 
     info "  mode $mode translated execution passed"
+    if [ "$mode" = 4 ] && [ "$MODE4_OOO" = 0 ]; then
+        # start_daemon replaces workspaces. Preserve this independent phase's
+        # images with its final dmesg before loading the shared-B session.
+        (cd "$KDLOCK_DIR" && find daemon -path 'daemon/0x*' -type f -print0 |
+            tar --null -T - -czf "$nested_out/artifacts.tar.gz") || return 1
+        run_mode4_shared_b || return 1
+    fi
     return 0
 }
 

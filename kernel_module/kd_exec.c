@@ -12,6 +12,7 @@
 #include <linux/string.h>
 #include <linux/smp.h>
 
+#include "exe.h"
 #include "kd_exec.h"
 #include "kd_source.h"
 #include "kd_lock.h"
@@ -313,6 +314,13 @@ static int kd_exec_native_finish(struct kd_exec_frame *frame)
  * may immediately return, exit, or discard its request storage. */
 int kd_exec_native_wait(struct kd_exec_frame *frame)
 {
+	u64 start = kd_exe_native_timing_start();
+	bool mutex = frame->mutex_backend;
+	int result;
+
+	/* Publication precedes this entry: an already-running waiter prefix is
+	 * outside this interval. Include unlock/finish work and error returns;
+	 * nested relay waits overlap and must not be summed as wall time. */
 	for (;;) {
 		struct kd_native_request *request =
 			smp_load_acquire(&frame->native_request);
@@ -357,13 +365,19 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 			request->result = ret < 0 ? ret : 0;
 			/* Last access: the waiter can return and discard request. */
 			smp_store_release(&request->done, true);
-			if (ret < 0)
-				return ret;
-			if (complete)
-				return 0;
+			if (ret < 0) {
+				result = ret;
+				break;
+			}
+			if (complete) {
+				result = 0;
+				break;
+			}
 		}
-		if (kd_exec_frame_can_complete(frame))
-			return kd_exec_native_finish(frame);
+		if (kd_exec_frame_can_complete(frame)) {
+			result = kd_exec_native_finish(frame);
+			break;
+		}
 		cpu_relax();
 		if (frame->mutex_backend && need_resched()) {
 			preempt_enable();
@@ -371,6 +385,10 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 			preempt_disable();
 		}
 	}
+	/* No request/task access after the final ACK; the caller still owns its
+	 * frame, but only the captured backend is needed for this observation. */
+	kd_exe_native_timing_end(mutex, start);
+	return result;
 }
 
 static int kd_exec_invariant_failure(void)
@@ -563,6 +581,9 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 	frame->outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
 	frame->state = KD_EXEC_FRAME_RUNNING;
 	frame->remote_result = 0;
+	/* Even an unborrowed frame needs an empty routing head: terminal state
+	 * alone must not authorize freeing a still-registered native frame. */
+	INIT_LIST_HEAD(&frame->native_link);
 	ctx->depth++;
 
 	if (!kd_exec_context_validate(ctx)) {
@@ -577,8 +598,9 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 	return frame;
 }
 
-/* Retire in physical LIFO order only after child/remote references are gone.
- * Copy the final packet before clearing reusable storage and dropping its pin. */
+/* Retire only after remote dependencies and native routing/requests are gone.
+ * A terminal state must not discard an outstanding owner ACK or the frame's
+ * source lease. Copy the final packet before clearing physical LIFO storage. */
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
@@ -591,10 +613,17 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	state = kd_exec_frame_state(frame);
 	if (kd_exec_frame_remote_pending(frame) || frame->resume_target ||
 	    READ_ONCE(frame->remote_request) ||
+	    READ_ONCE(frame->native_request) ||
+	    !list_empty(&frame->native_link) ||
 	    (state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR) ||
 	    !kd_exec_context_validate(ctx))
 		return -EBUSY;
 
+#ifdef KDLOCK_SELFTEST
+	/* Observe task exit only after native ACKs, before the real frame/lease
+	 * retires and this physical combiner can start the next logical root. */
+	kd_exec_selftest_relay_pop(frame);
+#endif
 	if (regs)
 		*regs = frame->regs;
 	ctx->depth--;

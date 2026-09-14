@@ -178,6 +178,7 @@ run_spinlock_mode() {
                 unload_modules
                 return 1
             }
+            check_jit_hostcall_artifact "$asm_dir" "int_sqrt" || return 1
         fi
     done
     check_dmesg_has "$JIT_INSTALL_PATTERN" \
@@ -201,15 +202,23 @@ run_spinlock_mode() {
     fi
 
     info "  Running translated workload..."
-    run_with_timeout "$TIMEOUT_SEC" "$BENCH_BIN" \
+    # Measure only the prepared payload, not promotion/translation. Keep the
+    # kernel witness/oracle gates: ioctl timings alone never establish JIT.
+    local workload_log="${DAEMON_LOG}.workload.log"
+    info "Evidence file: $workload_log"
+    info "Evidence file: ${workload_log}.before.dmesg"
+    info "Evidence file: ${workload_log}.after.dmesg"
+    dmesg > "${workload_log}.before.dmesg" || return 1
+    run_with_timeout "$TIMEOUT_SEC" env KD_TEST_METRICS=1 "$BENCH_BIN" \
         "$exec_threads" "$exec_loops" "$exec_workload" "$exec_syscount" \
         "$mode" "$exec_role_base" \
-        >/dev/null 2>&1 || {
+        >"$workload_log" 2>&1 || {
         fail "$TEST_NAME" "mode $mode ($mode_name) translated workload failed or timed out"
         stop_daemon
         unload_modules
         return 1
     }
+    dmesg > "${workload_log}.after.dmesg" || return 1
     sleep 2
 
     if [ "$mode" -eq 2 ]; then
@@ -370,7 +379,7 @@ run_spinlock_mode() {
     if [ "$mode" -eq 2 ]; then
         local hostcall_stats hostcall_exits hostcall_executed
         local hostcall_resumed hostcall_rejected hostcall_failed hostcall_limit
-        local api_observations
+        local api_observations jit_completions
 
         hostcall_stats="$(dmesg | sed -n '/kd_hostcall stats:/p' | tail -n 1)"
         hostcall_exits="$(printf '%s\n' "$hostcall_stats" | sed -n \
@@ -401,6 +410,19 @@ run_spinlock_mode() {
             printf '%s\n' "$hostcall_stats"
             return 1
         fi
+
+        # Each completed translated CS must return from both named services;
+        # a native-only scalar suffix cannot masquerade as full JIT success.
+        jit_completions="$(printf '%s\n' "$diag_lines" | awk '{
+            for (i = 1; i <= NF; i++)
+                if ($i ~ /^jit_success=/) { split($i, value, "="); total += value[2] }
+        } END { print total + 0 }')"
+        if [ "$hostcall_executed" -ne "$((2 * jit_completions))" ]; then
+            fail "$TEST_NAME" "mode 2 did not return from two services per JIT completion"
+            return 1
+        fi
+        check_dmesg_has "kd_scalar service: mode=2 calls=$expected_counter failures=0" \
+            "mode 2 lost/repeated a scalar result or corrupted its 64-bit ABI" || return 1
 
         api_observations="$(dmesg | sed -n \
             's/.*mode2 api observations: \([0-9][0-9]*\).*/\1/p' |
@@ -439,6 +461,22 @@ if [ "$#" -eq 0 ]; then
 fi
 for mode in "$@"; do
     run_selected_mode "$mode" || exit 1
+    # Keep the established mode-8 CFG/native-register workload intact. Its
+    # second joined phase adds independent logical roots, not a basic smoke.
+    if [ "$mode" = 8 ] && [ "${KD_MODE8_NOT_READY:-0}" = 0 ]; then
+        first_phase=$(mktemp -d /tmp/kdlock-mode8-first.XXXXXX)
+        info "Evidence: $first_phase"
+        dmesg > "$first_phase/protocol.log"
+        # The next daemon clears generated workspaces and dmesg. Preserve this
+        # completed phase first, rather than retaining only its PASS message.
+        (cd "$KDLOCK_DIR"
+         find daemon -path 'daemon/0x*' -type f -print0 |
+             tar --null -T - -czf "$first_phase/artifacts.tar.gz")
+        bash "$KDLOCK_DIR/tests/test_20_remote_outer.sh" multi || exit 1
+        # Keep pure remote completion distinct from quota/native relay: the
+        # latter must pause B's batch and then execute its other root in JIT.
+        bash "$KDLOCK_DIR/tests/test_20_remote_outer.sh" multi quota || exit 1
+    fi
 done
 
 pass "$TEST_NAME"

@@ -32,7 +32,7 @@ trap cleanup EXIT
 build_all
 unload_modules
 clear_dmesg
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit="$jit"
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit="$jit"
 insmod "$KLOCK_DIR/klock_module.ko"
 if [[ "$jit" = 1 ]]; then
     start_daemon 2

@@ -1,6 +1,7 @@
 """Corrupted-log tests, not a kernel concurrency or JIT-execution model."""
 
 import copy
+import json
 import re
 import sys
 import tempfile
@@ -12,6 +13,7 @@ from remote_outer_protocol import (
     capture_placement,
     validate,
     validate_chain,
+    validate_multi_roots,
     validate_placement,
 )
 
@@ -597,6 +599,208 @@ class PlacementOracleTests(unittest.TestCase):
             (root / "cpu20" / "node0").mkdir()
             with self.assertRaises(AssertionError):
                 capture_placement(text, 3, True, root, set(range(40)))
+
+
+def multi_fixture(reverse=False, quota=False):
+    """Log-only oracle fixture; do not model lock execution with this trace."""
+    lines = []
+    roles = [
+        f"role={r} task={100 + r} self={0xA00 + r:x} cpu={r} preempt=0 irq=0"
+        for r in range(14)
+    ]
+    lines.extend("kd_multi start: " + row for row in roles)
+    for lock in ("a", "c"):
+        lines.append(f"JIT body witness: entry=200 lock={lock} body=1")
+    lines.append(
+        "kd_multi queued: a0=a a1=c b=b first=100 second=105 "
+        "owner0=a03 owner1=a08 b_owner=a0a count=4 valid=1"
+    )
+    for lane in ((1, 0) if reverse else (0, 1)):
+        parent = "a" if lane == 0 else "c"
+        lines.append(
+            f"kd_remote start: task={100 + 5 * lane} cpu=12 entry=200 "
+            f"ip=210 outer=b parent_outer={parent} owner_task=a0c"
+        )
+        lines.append("JIT body witness: entry=200 lock=b body=1")
+        if quota and lane == 0:
+            lines.append(
+                "[KD_JIT][WARN] reason=CALL_LIMIT_NATIVE entry=0x200 "
+                "ip=0x500 sp=0x600 return=0x220 lock=0xb task=100 hostcall=1"
+            )
+            for lock, cpu in (("b", 12), ("a", 3)):
+                lines.append(
+                    f"kd_native begin: task=100 outer={lock} entry=200 "
+                    f"ip=500 sp=600 held=1 mutex=0 cpu={cpu} "
+                    "outer_released=0 remaining=1"
+                )
+                if lock == "b":
+                    lines.append(
+                        "kd_child_exit arm: task=100 cpu=12 owner=a0c outer=b "
+                        "entry=200 ip=500 sp=600 remaining=1 alive=1 valid=1"
+                    )
+            for phase in (0, 1):
+                lines.append(
+                    f"kd_multi quota: phase={phase} task=100 self=a00 cpu=0 "
+                    "a0=a03 a1=a08 b=a0c other_before=2 other_after=1 "
+                    "other_shared=12003 sequence=12006 calls=34 preempt=1 irq=0 valid=1"
+                )
+            lines.extend((
+                "kd_native complete: task=100 outer=b mutex=0",
+                "kd_native ack: task=100 lock=b mutex=0 last_spin=0",
+                "kd_native complete: task=100 outer=a mutex=0",
+                "kd_native ack: task=100 lock=a mutex=0 last_spin=1",
+                "kd_multi done: " + roles[0],
+                "kd_child_exit release: task=100 cpu=12 owner=a0c outer=b "
+                "entry=200 ip=500 sp=600 detached=1 packet=1 context=1 valid=1",
+            ))
+    lines.extend("kd_multi done: " + row for row in roles[int(quota):])
+    for lane in (0, 1):
+        token, value = 0x12340001 + lane * 0x101, 0
+        for _ in range(2):
+            value = (value + token) ^ (token << 1)
+        sequence = 12006 + (1 - lane if reverse else lane)
+        lines.append(
+            f"kd_multi record: lane={lane} before=2 after=2 value={value:x} "
+            f"expected={value:x} shared={sequence}"
+        )
+    lines.extend((
+        "kd_multi stats: started=3fff finished=3fff failures=0 aborted=0",
+        f"kd_native stats: started={2 * quota} completed={2 * quota} unlocks={2 * quota}",
+        f"kd_multi services: quota={int(quota)} calls={34 * quota} observed={int(quota)}",
+    ))
+    if quota:
+        lines.append(
+            "kd_hostcall stats: exits=17 executed=16 resumed=16 rejected=0 failed=0 limit=1"
+        )
+    placement = {
+        "role_cpus": list(range(14)),
+        "role_nodes": [0] * 14,
+        "allowed_cpus": list(range(40)),
+        "online_cpus": list(range(40)),
+    }
+    publications = "\n".join(
+        json.dumps({
+            "entry": entry, "status": 0, "code": "1000",
+            "tgid": 7, "pid": 0, "observed_ns": 10,
+        })
+        for entry in ("100", "200", "300")
+    )
+    statuses = "\n".join(f"{r}\t0" for r in range(14))
+    base = ("\n".join(lines), placement, publications, statuses)
+    if not quota:
+        return base
+    assembly = "/* KD_HOSTCALL id=1 symbol=ktime_get */\nloc_500:\nloc_220:\n"
+    return base + (True, publications.replace('"observed_ns": 10', '"observed_ns": 20'),
+                   {0x200: assembly})
+
+
+class MultiRootOracleTests(unittest.TestCase):
+    def test_both_orders_and_distinct_logical_packets(self):
+        for reverse, quota in ((False, False), (True, False), (False, True)):
+            with self.subTest(reverse=reverse, quota=quota):
+                result = validate_multi_roots(*multi_fixture(reverse, quota))
+                self.assertEqual(result["waiters"], [100, 105])
+                self.assertEqual(result["jit_bodies"], 4)
+                self.assertEqual(result["b_executor"], "a0c")
+                self.assertEqual(result["quota_native"], int(quota))
+                self.assertEqual(result["waiter_exit"], int(quota))
+
+    def test_reject_missing_duplicate_or_corrupted_evidence(self):
+        # Every witness is required. Mutations also distinguish successful
+        # native completion, swapped root packets and a different B executor.
+        text, placement, publications, statuses = multi_fixture()
+        broken_logs = []
+        for line in text.splitlines():
+            broken_logs.extend((text.replace(line, "", 1), text + "\n" + line))
+        for old, new in (
+            ("task=105 cpu=12", "task=100 cpu=12"),
+            ("parent_outer=c", "parent_outer=a"),
+            ("owner_task=a0c", "owner_task=a0b"),
+            ("owner0=a03", "owner0=a00"),
+            ("owner1=a08", "owner1=a03"),
+            ("b_owner=a0a", "b_owner=a0c"),
+            ("entry=200", "entry=400"),
+            ("cpu=12 entry", "cpu=11 entry"),
+            ("preempt=0", "preempt=1"),
+            ("irq=0", "irq=1"),
+            ("body=1", "body=0"),
+            ("shared=12007", "shared=12006"),
+            ("before=2", "before=3"),
+            ("after=2", "after=1"),
+            ("value=", "value=1"),
+            ("valid=1", "valid=0"),
+            ("failures=0", "failures=1"),
+            ("completed=0", "completed=1"),
+        ):
+            self.assertIn(old, text)
+            broken_logs.append(text.replace(old, new, 1))
+        for changed in broken_logs:
+            with self.subTest(log=changed), self.assertRaises(AssertionError):
+                validate_multi_roots(changed, placement, publications, statuses)
+        for changed in (
+            publications.replace('"status": 0', '"status": 1', 1),
+            publications.replace('"entry": "200"', '"entry": "100"'),
+            publications.replace('"code": "1000"', '"code": "0"', 1),
+        ):
+            with self.subTest(publications=changed), self.assertRaises(AssertionError):
+                validate_multi_roots(text, placement, changed, statuses)
+        for changed in (statuses.replace("0\t0", "0\t1", 1), statuses + "\n0\t0"):
+            with self.subTest(statuses=changed), self.assertRaises(AssertionError):
+                validate_multi_roots(text, placement, publications, changed)
+        invalid = copy.deepcopy(placement)
+        invalid["role_cpus"][12] = 11
+        with self.assertRaises(AssertionError):
+            validate_multi_roots(text, invalid, publications, statuses)
+
+        # This selected schedule pauses at B pop, not its pre-ACK finish. The
+        # first TID must detach before the same owner starts the next child;
+        # log corruption is not a substitute for the actual PID/RCU observer.
+        args = list(multi_fixture(quota=True))
+        text = args[0]
+        corruptions = []
+        for line in text.splitlines():
+            corruptions.extend((text.replace(line, "", 1), text + "\n" + line))
+        for old, new in (
+            ("phase=1", "phase=0"),
+            ("other_shared=12003", "other_shared=12006"),
+            ("b=a0c", "b=a0b"),
+            ("remaining=1", "remaining=2"),
+            ("hostcall=1", "hostcall=0"),
+            ("ip=0x500", "ip=0x510"),
+            ("resumed=16", "resumed=15"),
+            ("calls=34", "calls=35"),
+            ("preempt=1", "preempt=2"),
+            ("last_spin=0", "last_spin=1"),
+            ("alive=1", "alive=0"),
+            ("detached=1", "detached=0"),
+            ("packet=1", "packet=0"),
+            ("context=1", "context=0"),
+            ("owner=a0c", "owner=a0b"),
+        ):
+            self.assertIn(old, text)
+            corruptions.append(text.replace(old, new, 1))
+        completed = "kd_native complete: task=100 outer=b mutex=0"
+        corruptions.append(text.replace(completed, "") + "\n" + completed)
+        lines = text.splitlines()
+        for earlier, later in (
+            ("kd_child_exit arm:", "kd_native begin: task=100 outer=a"),
+            ("kd_multi done: role=0 ", "kd_child_exit release:"),
+            ("kd_child_exit release:", "kd_remote start: task=105 "),
+        ):
+            swapped = lines.copy()
+            left = next(i for i, line in enumerate(lines) if line.startswith(earlier))
+            right = next(i for i, line in enumerate(lines) if line.startswith(later))
+            swapped[left], swapped[right] = swapped[right], swapped[left]
+            corruptions.append("\n".join(swapped))
+        for changed in corruptions:
+            with self.subTest(quota_log=changed), self.assertRaises(AssertionError):
+                validate_multi_roots(changed, *args[1:])
+        after = args[5].replace('"code": "1000"', '"code": "2000"', 1)
+        with self.assertRaises(AssertionError):
+            validate_multi_roots(*args[:5], after, args[6])
+        for assembly in (args[6][0x200].replace("ktime_get", "unknown"), "loc_220:"):
+            with self.subTest(assembly=assembly), self.assertRaises(AssertionError):
+                validate_multi_roots(*args[:6], {0x200: assembly})
 
 
 if __name__ == "__main__":

@@ -4,6 +4,10 @@ Native L and ticket operations are real extracted code around deterministic
 CPU/lock primitives. Capacity-refusal cases fill the real frame allocator through
 its API and compare full guest pt_regs and contexts across combiner return.
 This is not natural JIT nesting, concurrent kernel or return-assembly execution.
+The existing fixture also observes release publication before node reuse; its
+primitive substitute checks API/packet ordering, not a hardware memory litmus.
+Full-map ENOMEM joins the actual gate/ticket/nested producer and PENDING packet
+helper, independently of ticket saturation. The live case supplies actual JIT.
 """
 
 import os
@@ -154,6 +158,43 @@ def main():
         frame, "void kd_exec_remote_cancel(struct kd_exec_frame *frame)"
     )
     mutations = {
+        "gate-refusal-consumes-sequence": (
+            "code",
+            "if (!gate) {\n\t\tret = -ENOMEM;",
+            "if (!gate) {\n\t\tpool->sequence++;\n\t\tret = -ENOMEM;",
+        ),
+        "gate-refusal-leaks-pin": (
+            "code",
+            "if (!gate) {\n\t\tret = -ENOMEM;\n\t\tgoto fail;",
+            "if (!gate) {\n\t\treturn -ENOMEM;",
+        ),
+        "completion-plain-write": (
+            "code",
+            "smp_store_release(&lock->locked_completed, 1);",
+            "WRITE_ONCE(lock->locked_completed, 1);",
+        ),
+        "early-handoff-plain-write": (
+            "code",
+            "smp_store_release(&curr_node->locked, false);",
+            "curr_node->locked = false;",
+        ),
+        "batch-handoff-plain-write": (
+            "code",
+            "smp_store_release(&next_node->locked, false);",
+            "next_node->locked = false;",
+        ),
+        "completion-packet-not-ready": (
+            "code",
+            "smp_store_release(&lock->locked_completed, 1);",
+            "lock->regs.ax ^= 1;\n\t"
+            "smp_store_release(&lock->locked_completed, 1);",
+        ),
+        "packet-overwrite-after-wake": (
+            "code",
+            "smp_store_release(&lock->locked_completed, 1);",
+            "smp_store_release(&lock->locked_completed, 1);\n\t"
+            "lock->regs.ax = 0;",
+        ),
         "refusal-writes-parent": (
             "pool",
             "ctx->depth >= KD_EXEC_MAX_NESTING",

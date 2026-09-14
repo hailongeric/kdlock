@@ -8,8 +8,9 @@ from bisect import bisect_right
 from collections import defaultdict, deque
 from collections.abc import Mapping
 from copy import copy, deepcopy
-from fnmatch import fnmatchcase
+from fnmatch import translate as translate_glob
 from itertools import pairwise, product
+import re
 from struct import unpack
 
 import context_memory
@@ -109,10 +110,16 @@ CONTEXT_SYMBOLS = (
     "cpu_number",
 )
 
+# One anchored union preserves fnmatchcase's whole-name/case-sensitive policy
+# while avoiding a Python glob loop for every kallsyms entry. Compile only the
+# fixed rules, never cache live symbol addresses or admission verdicts. Keep
+# each stdlib-translated branch intact, including its flags and end anchor.
+_CONTEXT_SYMBOL_RE = re.compile("|".join(map(translate_glob, CONTEXT_SYMBOLS)))
+
 
 def is_context_symbol(name):
     base = name.split(".", 1)[0]
-    return any(fnmatchcase(base, pattern) for pattern in CONTEXT_SYMBOLS)
+    return _CONTEXT_SYMBOL_RE.match(base) is not None
 
 
 def resolve_control_symbols(lookup):

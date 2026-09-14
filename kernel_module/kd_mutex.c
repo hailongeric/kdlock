@@ -34,10 +34,14 @@
 /* --------------------------------------------------------------------------
  * Debug
  * -------------------------------------------------------------------------- */
+/* Queue/JIT entry traces are ordinary events, not alerts. ALERT forces these
+ * frequent records onto a normal serial console while the mutex is held and
+ * distorts both batch timing and cost. Keep INFO records in the kernel buffer;
+ * actual warnings/errors and the returned-body witness retain their levels. */
 #ifdef DSM_DEBUG
 #define mutex_debug(fmt, ...)                                                \
 	({                                                                   \
-		printk(KERN_ALERT "[%d] [%d] kd_mutex (%s) lock(%px): " fmt, \
+		printk(KERN_INFO "[%d] [%d] kd_mutex (%s) lock(%px): " fmt,  \
 		       smp_processor_id(), current->pid, __func__,           \
 		       lock, ##__VA_ARGS__);                                 \
 	})
@@ -383,6 +387,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	void *lock_node[1];
 	int ret_flag;
 	int frame_ret;
+	u64 queue_end;
 
 	asm volatile("movq %%rsp, %0" : "=r"(outgoing_rsp));
 
@@ -473,15 +478,25 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	}
 
 	frame->outer_unlock_hook = &batch->outer;
+	queue_end = kd_exe_queue_timing_start();
 	ret_flag = kd_exe_on_call_hl_entry(&frame->regs, frame->entry_ip,
 					   frame->outer_lock_addr);
+	/* Refused dispatches remain queued. Account a real body's pre-dispatch
+	 * endpoint before the waiter can resume and recycle its slot. */
+	if (frame->executed)
+		kd_exe_queue_timing_end(true, &curr_node->queued_at_ns, queue_end);
 	if (ret_flag == KD_EXE_RUN_NATIVE) {
+		/* Include borrowing/publication before the waiter can run; the
+		 * inner owner-wait timer starts too late to cover that prefix. */
+		u64 handoff_start = kd_exe_native_timing_start();
+
 		BUG_ON(kd_exec_native_begin(frame, true));
 		curr_node->regs = frame->regs;
 		WRITE_ONCE(curr_node->native_resume, true);
 		smp_store_release(&curr_node->locked, 0);
 		/* Neither this frame nor its combiner may touch curr_node again. */
 		BUG_ON(kd_exec_native_wait(frame));
+		kd_exe_native_handoff_timing_end(true, handoff_start);
 		BUG_ON(kd_exec_frame_complete(frame));
 		BUG_ON(kd_exec_frame_pop(frame, NULL));
 		return KD_EXE_NATIVE_DONE;
@@ -633,6 +648,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	u32 old_tail;
 	int old_locked;
 
+	curr_node->queued_at_ns = kd_exe_queue_timing_start();
 	old_tail = xchg_tail(lock, tail);
 	kd_mutex_waiter_enter(lock);
 
@@ -660,6 +676,9 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 
 	/* --- become lock holder / combiner --- */
 	kd_mutex_wait_and_lock(lock);
+	/* End at physical acquisition, before processing another waiter's CS. */
+	kd_exe_queue_timing_end(true, &curr_node->queued_at_ns,
+				kd_exe_queue_timing_start());
 
 	/* Only waiter in queue? */
 	if (cmpxchg(&lock->tail,

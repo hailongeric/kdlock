@@ -24,6 +24,8 @@
 #include <linux/atomic.h>
 #include <linux/kallsyms.h>
 #include <linux/ktime.h>
+#include <linux/limits.h>
+#include <linux/math.h>
 #include <linux/moduleparam.h>
 #include <linux/mutex.h>
 #include <linux/ratelimit.h>
@@ -119,6 +121,17 @@ static int kd_hostcall_invoke_ktime_get_ns(struct pt_regs *regs)
 	return 0;
 }
 
+/* x86-64 unsigned long: consume the full saved RDI and replace only RAX.
+ * The native helper has at most 32 scalar iterations and no external memory,
+ * sleeping or task/CPU-context dependency; it does not run on the waiter stack.
+ * This CALL boundary requires no new flags or memory-access recovery contract.
+ */
+static int kd_hostcall_invoke_int_sqrt(struct pt_regs *regs)
+{
+	regs->ax = int_sqrt(regs->di);
+	return 0;
+}
+
 static struct kd_hostcall_desc kd_hostcalls[] = {
 #define KD_HOSTCALL(name, service_id, service_symbol, service_flags) \
 	{ KD_HOSTCALL_##name, #service_symbol, 0, service_flags,     \
@@ -137,19 +150,183 @@ static const struct kd_hostcall_desc *kd_hostcall_lookup(unsigned long addr)
 	return NULL;
 }
 
-static int kd_hostcall_dispatch(struct pt_regs *regs)
+/* Quota exits must validate the same service contract without invoking it. */
+static int kd_hostcall_validate(const struct kd_hostcall_desc *service)
 {
 	const unsigned int required_flags = KD_HOSTCALL_F_ATOMIC_SAFE |
 					    KD_HOSTCALL_F_NO_TASK_CONTEXT |
 					    KD_HOSTCALL_F_RETRY_SAFE;
-	const struct kd_hostcall_desc *service;
 
-	service = kd_hostcall_lookup(regs->ip);
 	if (!service)
 		return -ENOENT;
 	if ((service->flags & required_flags) != required_flags)
 		return -EPERM;
+	return 0;
+}
+
+static int kd_hostcall_dispatch(struct pt_regs *regs)
+{
+	const struct kd_hostcall_desc *service = kd_hostcall_lookup(regs->ip);
+	int ret = kd_hostcall_validate(service);
+
+	if (ret)
+		return ret;
 	return service->invoke(regs);
+}
+
+/* Optional inclusive C-boundary timings, not instruction or CPU time.
+ * Load-time selection keeps every invocation in one session under the same
+ * policy. Disabled invocations take no extra clock samples or atomic updates.
+ * Nested dispatch/control intervals may overlap; never sum them as wall time.
+ * Measurement failure cannot change an execution, replay or owner decision. */
+enum kd_jit_timing_phase {
+	KD_JIT_TIME_DISPATCH,
+	KD_JIT_TIME_WRAPPER,
+	KD_JIT_TIME_HOSTCALL,
+	KD_JIT_TIME_CONTROL,
+	KD_JIT_TIME_NATIVE_SPIN_WAIT,
+	KD_JIT_TIME_NATIVE_MUTEX_WAIT,
+	KD_JIT_TIME_SPIN_QUEUE,
+	KD_JIT_TIME_MUTEX_QUEUE,
+	KD_JIT_TIME_NATIVE_SPIN_HANDOFF,
+	KD_JIT_TIME_NATIVE_MUTEX_HANDOFF,
+	KD_JIT_TIME_COUNT,
+};
+static bool kd_jit_timing;
+module_param_named(jit_timing, kd_jit_timing, bool, 0444);
+MODULE_PARM_DESC(jit_timing, "Collect inclusive JIT boundary timings at unload");
+
+static struct kd_jit_timing_stat {
+	atomic64_t samples;
+	atomic64_t ns;
+	atomic_t invalid;
+} kd_jit_times[KD_JIT_TIME_COUNT];
+
+static inline u64 kd_jit_timing_start(void)
+{
+	return unlikely(kd_jit_timing) ? ktime_get_ns() : 0;
+}
+
+/* Keep overflow visible without wrapping signed counters or failing a CS. */
+static inline void kd_jit_timing_add(struct kd_jit_timing_stat *stat,
+				     atomic64_t *counter, u64 amount)
+{
+	s64 old = atomic64_read(counter);
+
+	for (;;) {
+		if (old < 0 || amount > (u64)(S64_MAX - old)) {
+			atomic_set(&stat->invalid, 1);
+			return;
+		}
+		if (atomic64_try_cmpxchg(counter, &old, old + (s64)amount))
+			return;
+	}
+}
+
+/* Queue service is confirmed only after dispatch returns. Accept the saved
+ * pre-dispatch endpoint so the generated body is not charged as queue wait. */
+static inline void kd_jit_timing_record(enum kd_jit_timing_phase phase,
+				       u64 start, u64 end)
+{
+	struct kd_jit_timing_stat *stat = &kd_jit_times[phase];
+
+	kd_jit_timing_add(stat, &stat->samples, 1);
+	if (end < start) {
+		atomic_set(&stat->invalid, 1);
+		return;
+	}
+	kd_jit_timing_add(stat, &stat->ns, end - start);
+}
+
+static inline void kd_jit_timing_end(enum kd_jit_timing_phase phase, u64 start)
+{
+	if (likely(!kd_jit_timing))
+		return;
+	kd_jit_timing_record(phase, start, ktime_get_ns());
+}
+
+static inline void kd_jit_timing_reset(void)
+{
+	int i;
+
+	for (i = 0; i < KD_JIT_TIME_COUNT; i++) {
+		atomic64_set(&kd_jit_times[i].samples, 0);
+		atomic64_set(&kd_jit_times[i].ns, 0);
+		atomic_set(&kd_jit_times[i].invalid, 0);
+	}
+}
+
+/* Teardown follows drain: paired readers require exactly one row per phase,
+ * including zero rows for a native-only session with measurement enabled. */
+static inline void kd_jit_timing_report(void)
+{
+	/* Bind log labels to their counters explicitly: declaration order must
+	 * not silently relabel an interval consumed by the evidence observer. */
+	static const char * const names[KD_JIT_TIME_COUNT] = {
+		[KD_JIT_TIME_DISPATCH] = "dispatch",
+		[KD_JIT_TIME_WRAPPER] = "wrapper",
+		[KD_JIT_TIME_HOSTCALL] = "hostcall",
+		[KD_JIT_TIME_CONTROL] = "control",
+		[KD_JIT_TIME_NATIVE_SPIN_WAIT] = "native_spin_wait",
+		[KD_JIT_TIME_NATIVE_MUTEX_WAIT] = "native_mutex_wait",
+		[KD_JIT_TIME_SPIN_QUEUE] = "spin_queue",
+		[KD_JIT_TIME_MUTEX_QUEUE] = "mutex_queue",
+		[KD_JIT_TIME_NATIVE_SPIN_HANDOFF] = "native_spin_handoff",
+		[KD_JIT_TIME_NATIVE_MUTEX_HANDOFF] = "native_mutex_handoff",
+	};
+	int i;
+
+	if (!kd_jit_timing)
+		return;
+	for (i = 0; i < KD_JIT_TIME_COUNT; i++)
+		KD_PR_INFO("kd_jit timing: phase=%s samples=%lld ns=%lld invalid=%d\n",
+			   names[i],
+			   (long long)atomic64_read(&kd_jit_times[i].samples),
+			   (long long)atomic64_read(&kd_jit_times[i].ns),
+			   atomic_read(&kd_jit_times[i].invalid));
+}
+
+/* Keep metrics private to the executor. The shared owner wait uses only a
+ * local timestamp/backend, never waiter storage that the final ACK releases. */
+u64 kd_exe_native_timing_start(void)
+{
+	return kd_jit_timing_start();
+}
+
+void kd_exe_native_timing_end(bool mutex, u64 start)
+{
+	kd_jit_timing_end(mutex ? KD_JIT_TIME_NATIVE_MUTEX_WAIT :
+				 KD_JIT_TIME_NATIVE_SPIN_WAIT, start);
+}
+
+/* This contains, rather than adds to, the owner-wait interval. The caller
+ * captures start before either remote or local waiter publication and supplies
+ * no waiter/node pointer after ACK. Nested remote envelopes may overlap. */
+void kd_exe_native_handoff_timing_end(bool mutex, u64 start)
+{
+	kd_jit_timing_end(mutex ? KD_JIT_TIME_NATIVE_MUTEX_HANDOFF :
+				 KD_JIT_TIME_NATIVE_SPIN_HANDOFF, start);
+}
+
+u64 kd_exe_queue_timing_start(void)
+{
+	return kd_jit_timing_start();
+}
+
+/* The queue owner and waiter consume this field in protocol order, not
+ * concurrently: dispatch finishes before wake; acquisition precedes node reuse.
+ * Zero means disabled, not queued or already accounted. Module-loaded clocks
+ * use nonzero monotonic uptime. Measurements never decide ownership or replay. */
+void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end)
+{
+	u64 start;
+
+	if (likely(!kd_jit_timing) || !*queued_at)
+		return;
+	start = *queued_at;
+	*queued_at = 0;
+	kd_jit_timing_record(mutex ? KD_JIT_TIME_MUTEX_QUEUE :
+				    KD_JIT_TIME_SPIN_QUEUE, start, end);
 }
 
 static struct kd_exe_info *kd_exes;
@@ -212,6 +389,7 @@ int kd_exe_init(void)
 {
 	int i, ret;
 
+	kd_jit_timing_reset();
 	/* Resolve unlock function addresses dynamically */
 	end_point_count = 0;
 	raw_spin_lock_addr = kallsyms_lookup_name("_raw_spin_lock");
@@ -290,6 +468,7 @@ void kd_exe_exit(void)
 {
 	int i;
 
+	kd_jit_timing_report();
 	KD_PR_INFO(
 		"kd_hostcall stats: exits=%lld executed=%lld resumed=%lld rejected=%lld failed=%lld limit=%lld\n",
 		(long long)atomic64_read(&kd_hostcall_exits),
@@ -608,6 +787,17 @@ static int handle_known_call(struct pt_regs *regs,
 	return handle_known_mutex_call(frame, regs, outer_lock_addr);
 }
 
+/* Include control classification, blocking and nested execution, but not the
+ * backend's later original-waiter native suffix/ACK wait after dispatch exits. */
+static int kd_jit_timed_control(struct pt_regs *regs, unsigned long outer)
+{
+	u64 start = kd_jit_timing_start();
+	int ret = handle_known_call(regs, outer);
+
+	kd_jit_timing_end(KD_JIT_TIME_CONTROL, start);
+	return ret;
+}
+
 void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
 {
 	void *mem = NULL;
@@ -738,6 +928,52 @@ static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,
 	       parent->outer_lock_index < frame->outer_lock_index;
 }
 
+/* The excess CALL has not executed: retain its pushed return word and let the
+ * original waiter run this callee and the native suffix. This is not an exit
+ * from an arbitrary instruction/budget trap and needs no new flags contract. */
+static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
+				    struct pt_regs *regs, bool hostcall)
+{
+	unsigned long base, end, return_ip;
+	int ret;
+
+	if (!regs || !regs->ip || !kd_exec_frame_can_borrow_locks(frame) ||
+	    !frame->executed || frame->logical_task == current ||
+	    kd_exec_frame_remote_pending(frame) || frame->remote_request ||
+	    frame->native_request ||
+	    (frame->control_call.phase != KD_CALL_NONE &&
+	     frame->control_call.phase != KD_CALL_COMPLETE))
+		return -EINVAL;
+	if (hostcall) {
+		ret = kd_hostcall_validate(kd_hostcall_lookup(regs->ip));
+		if (ret)
+			return ret;
+	}
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE)
+		return -EFAULT;
+	end = base + THREAD_SIZE;
+	if (regs->sp < base || regs->sp > end - sizeof(return_ip) ||
+	    copy_from_kernel_nofault(&return_ip, (void *)regs->sp,
+				     sizeof(return_ip)) || !return_ip)
+		return -EFAULT;
+	ret = kd_source_pin_target(regs->ip);
+	if (!ret)
+		ret = kd_source_pin_target(return_ip);
+	if (ret)
+		return ret;
+
+	/* A previous control CALL may be COMPLETE; it does not describe this new
+	 * unexecuted CALL. Do not pop the word, replay stores or request learning. */
+	frame->control_call.phase = KD_CALL_NONE;
+	kd_exec_frame_save_continuation(frame, regs);
+	pr_warn_ratelimited(
+		"[KD_JIT][WARN] reason=CALL_LIMIT_NATIVE entry=0x%lx ip=0x%lx sp=0x%lx return=0x%lx lock=0x%lx task=%d hostcall=%u\n",
+		frame->entry_ip, regs->ip, regs->sp, return_ip,
+		frame->outer_lock_addr, frame->logical_task->pid, hostcall);
+	return 0;
+}
+
 /* One logical invocation may cross several control/hostcall wrapper returns.
  * Keep exit classification here: backends must not infer replay permission
  * from an error number or from the optional generated-body witness. */
@@ -753,6 +989,7 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 	bool resume_after_hostcall = false;
 	bool body_reported = false;
 	bool pristine_root;
+	u64 dispatch_start;
 	int ret_flag;
 
 	if (!regs || !frame || !kd_exec_frame_validate(frame) ||
@@ -786,12 +1023,15 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 				    -EINVAL, 0, 0);
 		return KD_EXE_NO_RUN;
 	}
+	/* Exclude pre-entry rejections and the caller's frame setup/teardown. */
+	dispatch_start = kd_jit_timing_start();
 	pristine_root = !frame->resume_target && regs->ip == entry_ip;
 	translated = exe->code_block;
 	for (;;) {
 		int call_ret;
 		int fault_kind;
 		unsigned long entry_sp = regs->sp;
+		u64 boundary_start;
 
 		args[0] = frame->gsbase;
 		args[1] = (unsigned long)frame->logical_task;
@@ -820,7 +1060,9 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 			}
 		} else {
 			frame->executed = true;
+			boundary_start = kd_jit_timing_start();
 			translated(regs, args);
+			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, boundary_start);
 			if (args[0] == KD_EXE_ENTRY_REFUSED) {
 				/* Only this explicit pre-body exit can undo our conservative
 				 * executed mark. A zero witness by itself never permits replay.
@@ -835,12 +1077,15 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 						entry_ip,
 						frame->logical_task->pid,
 						outer_lock_addr);
+					kd_jit_timing_end(KD_JIT_TIME_DISPATCH,
+							  dispatch_start);
 					return KD_EXE_NO_RUN;
 				}
 				kd_jit_log_hl_error("INVALID_ENTRY_REFUSAL",
 						    frame, regs, args[0],
 						    -EINVAL, continuation_count,
 						    hostcall_count);
+				kd_jit_timing_end(KD_JIT_TIME_DISPATCH, dispatch_start);
 				return KD_EXE_RUN_ERROR;
 			}
 			/* Observational only: never use missing evidence to replay work. */
@@ -865,15 +1110,21 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 			if (hostcall_count >= KD_EXE_HL_MAX_HOSTCALLS ||
 			    continuation_count >= KD_EXE_HL_MAX_CONTINUATIONS) {
 				atomic64_inc(&kd_hostcall_limit);
-				kd_jit_log_hl_error("HOSTCALL_LIMIT", frame,
-						    regs, args[0], 0,
-						    continuation_count,
-						    hostcall_count);
-				ret_flag = KD_EXE_RUN_ERROR;
+				call_ret = fault_kind ? -EINVAL :
+					kd_jit_call_limit_native(frame, regs, true);
+				if (call_ret)
+					kd_jit_log_hl_error("HOSTCALL_LIMIT", frame,
+							    regs, args[0], call_ret,
+							    continuation_count,
+							    hostcall_count);
+				ret_flag = call_ret ? KD_EXE_RUN_ERROR :
+						     KD_EXE_RUN_NATIVE;
 				break;
 			}
 
+			boundary_start = kd_jit_timing_start();
 			call_ret = kd_hostcall_dispatch(regs);
+			kd_jit_timing_end(KD_JIT_TIME_HOSTCALL, boundary_start);
 			if (call_ret) {
 				if (call_ret == -ENOENT || call_ret == -EPERM)
 					atomic64_inc(&kd_hostcall_rejected);
@@ -907,8 +1158,7 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 		} else if (args[0] == KD_EXE_CALL_MISS) {
 			if (outer_lock_addr &&
 			    is_outer_lock_unlock(regs, outer_lock_addr)) {
-				call_ret = handle_known_call(regs,
-							     outer_lock_addr);
+				call_ret = kd_jit_timed_control(regs, outer_lock_addr);
 				if (call_ret == KD_EXE_KNOWN_OUTER_UNLOCK) {
 					ret_flag = KD_EXE_RUN_TO_UNLOCK;
 					break;
@@ -934,18 +1184,22 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 			} else {
 				if (continuation_count >=
 				    KD_EXE_HL_MAX_CONTINUATIONS) {
-					kd_jit_log_hl_error(
-						"CONTINUATION_LIMIT", frame,
-						regs, args[0], 0,
-						continuation_count,
-						hostcall_count);
-					ret_flag = KD_EXE_RUN_ERROR;
+					call_ret = fault_kind ? -EINVAL :
+						kd_jit_call_limit_native(frame, regs, false);
+					if (call_ret)
+						kd_jit_log_hl_error(
+							"CONTINUATION_LIMIT", frame,
+							regs, args[0], call_ret,
+							continuation_count,
+							hostcall_count);
+					ret_flag = call_ret ? KD_EXE_RUN_ERROR :
+							     KD_EXE_RUN_NATIVE;
 					break;
 				}
 
 				call_ret =
 					outer_lock_addr ?
-						handle_known_call(
+						kd_jit_timed_control(
 							regs, outer_lock_addr) :
 						0;
 				if (call_ret == KD_EXE_KNOWN_NATIVE) {
@@ -1021,5 +1275,6 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 	}
 
 	mb();
+	kd_jit_timing_end(KD_JIT_TIME_DISPATCH, dispatch_start);
 	return ret_flag;
 }

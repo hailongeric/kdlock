@@ -40,7 +40,7 @@ build_all
 make -C "$KM_DIR" KDLOCK_SELFTEST=1 W=1 -j8 > "$out/build-selftest.log" 2>&1
 cp "$KM_DIR/kdlock_km.ko" "$out/kdlock-selftest.ko"
 clear_dmesg
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=0
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit=0
 insmod "$KLOCK_DIR/klock_module.ko" spin_route_probe="$scenario" spin_route_cpus="$cpus"
 lock=$(awk '$3 == "global_lock" && $4 == "[klock_module]" { print $1 }' /proc/kallsyms)
 test -n "$lock"

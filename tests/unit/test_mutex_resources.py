@@ -1,4 +1,4 @@
-"""Guest-only production mutex node, shadow-table and hook resource tests.
+"""Guest-only production mutex tail, node, shadow-table, selector and hook tests.
 
 Keep the real capacities, guest pt_regs and decisions. Kernel scheduling,
 physical mutexes, task records, the assembly slowpath and resume trampolines
@@ -32,6 +32,9 @@ def production():
             "static inline struct kd_mutex_node *decode_tail"
         )
     ]
+    # Include the actual decoder, not a second copy of its field arithmetic.
+    # The fixture substitutes only per_cpu_ptr and verifies its node identity.
+    code += definition(mutex, "static inline struct kd_mutex_node *decode_tail(u32 tail)")
     code += (
         next(
             line
@@ -68,6 +71,14 @@ def production():
         "void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,",
     ):
         code += definition(hook, marker)
+    # The address-less guest callback runs before either mutex hook. Exercise
+    # its production decision through rename/closing, not a target-or-ref model.
+    selectors = (ROOT / "kernel_module/kd_main.c").read_text()
+    for marker in (
+        "static bool kd_target_matches(void)",
+        "static int __is_kd_mutex_task(void)",
+    ):
+        code += definition(selectors, marker)
     return code
 
 
@@ -81,6 +92,29 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
+        "tail-loses-empty-sentinel": (
+            "return (cpu + 1) << KD_MUTEX_TAIL_CPU_OFFSET |",
+            "return cpu << KD_MUTEX_TAIL_CPU_OFFSET |",
+        ),
+        "tail-loses-slot": (
+            "idx << KD_MUTEX_TAIL_IDX_OFFSET;",
+            "(idx & 0) << KD_MUTEX_TAIL_IDX_OFFSET;",
+        ),
+        "tail-decodes-next-cpu": (
+            "int cpu = (tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1;",
+            "int cpu = (tail >> KD_MUTEX_TAIL_CPU_OFFSET);",
+        ),
+        "tail-truncates-slot": (
+            "& KD_MUTEX_TAIL_IDX_MASK;",
+            "& 1;",
+        ),
+        "tail-ignores-remote-cpu": (
+            "return per_cpu_ptr(&kd_mutex_nodes[idx], cpu);",
+            (
+                "return per_cpu_ptr(&kd_mutex_nodes[idx], "
+                "(cpu & 0) + smp_processor_id());"
+            ),
+        ),
         "missing-stack-accepted": (
             "if (!node->shadow_stack_base)",
             "if (0 && !node->shadow_stack_base)",
@@ -112,6 +146,18 @@ def main():
         "hook-ignores-task-failure": (
             "if (!kd_mtx || !kd_mutex_task_get(current)) {",
             "if (!kd_mtx || (kd_mutex_task_get(current) && false)) {",
+        ),
+        "selector-drops-retained-task": (
+            "kd_mutex_task_reroute(current)",
+            "(false && kd_mutex_task_reroute(current))",
+        ),
+        "selector-admits-closed-source": (
+            "kd_source_is_open() && kd_target_matches()",
+            "(kd_source_is_open() || true) && kd_target_matches()",
+        ),
+        "borrowed-unlock-bypasses-notification": (
+            "if (kd_exec_native_unlock((unsigned long)lock, true))",
+            "if (false && kd_exec_native_unlock((unsigned long)lock, true))",
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-mutex-resources-") as tmp:

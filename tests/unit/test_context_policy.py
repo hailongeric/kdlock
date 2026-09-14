@@ -1,6 +1,7 @@
 # Admission corpus for context addresses, CFG scope and bounded CALL/RET facts.
 # Sensitive encodings are inspected, not executed in a kernel critical section.
 import contextlib
+from fnmatch import fnmatchcase
 import io
 import os
 import struct
@@ -1652,6 +1653,23 @@ with (
             "kd_resume_native_probe",
         ):
             self.assertFalse(context_policy.is_context_symbol(name), name)
+        # The faster matcher must retain every old glob's anchors, case and
+        # compiler-clone treatment. Near misses matter as much as refusals;
+        # do not add a time threshold or relax admission to make profiling pass.
+        candidates = {"", ".isra.0", "schedule\n", "SCHEDULE", "get_current_taskx"}
+        for pattern in context_policy.CONTEXT_SYMBOLS:
+            for wildcard in ("", "x", "_irq", "rcu", "[x]", "?", "\n"):
+                name = pattern.replace("*", wildcard)
+                for prefix in ("", "x", "_"):
+                    for suffix in ("", "x", ".isra.0", ".constprop.2", "\n"):
+                        candidates.add(prefix + name + suffix)
+                candidates.add(name.upper())
+        for name in sorted(candidates):
+            expected = any(
+                fnmatchcase(name.split(".", 1)[0], pattern)
+                for pattern in context_policy.CONTEXT_SYMBOLS
+            )
+            self.assertEqual(context_policy.is_context_symbol(name), expected, name)
         with (
             patch("builtins.open", side_effect=OSError("unavailable")),
             self.assertRaises(OSError),

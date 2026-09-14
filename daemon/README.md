@@ -19,6 +19,14 @@ Its kernel hooks/exports depend on the captured
 string. The read-only source/build/Build-ID check is an operator prerequisite;
 it is not a daemon publication/version-isolation change or a hot-unload guarantee.
 
+Install the [pinned Python runtime](../disassem/requirements.txt) with the
+[guest-only venv procedure](../docs/PROJECT_GUIDE.md#33-检查依赖与空闲状态) first.
+The daemon invokes `python3` with `execlp`, inheriting its launcher's PATH;
+put the selected venv's `bin` first before starting it or the test drivers.
+`VIRTUAL_ENV` alone does not select Python, and sudo may reset PATH. No daemon
+option or global dependency upgrade is needed. Version pins do not freeze the
+compiler, installed bytes or executable JIT generation.
+
 Build and run only in the recovery guest, from this directory:
 
 ```sh
@@ -44,12 +52,51 @@ Useful options:
 - `--verbose`: print initialization, miss, and compile messages.
 - `--poll-us N`: set the polling interval in microseconds. The default is
   `100000`.
+- `--metrics`: additionally record each reaped translator child's wall time,
+  CPU time and resource usage on stderr; disabled by default, independent of
+  `--quiet` and generated-body observation.
 
 For each new entry the daemon creates an isolated `asm/` workspace and empty
 `callee_table.txt` and `ij_table.txt` files. It updates those tables when the
 kernel reports a missing call or indirect jump, invokes the translator, and
 writes the generated `jit.bin` back through `/dev/kd_dev`. No pre-created
 workspace template is required.
+
+### Translation Accounting
+
+With `--metrics`, each completed child produces one `KD_TRANSLATION_METRICS`
+JSON record containing the entry RIP, pid/tgid, lock kind, child PID, raw wait
+status and classified result (`0` success, `2` native-only, `-1` error). Errors
+and refusals are retained, not filtered out of the measurements. The opt-in
+[paired experiment](../docs/JIT_EXECUTION.md#34-原生锁与-jit-配对实验) enables this
+option; normal regression/manual launches retain the default unmeasured path.
+
+`started_ns` / `finished_ns` use `CLOCK_MONOTONIC` immediately before fork and
+after wait4 reaps that child. `wall_ns` therefore includes process launch,
+Python imports, symbol/text inspection, analysis, code generation, assembler
+children and scheduling. It excludes daemon polling, workspace preparation,
+image upload and kernel JIT execution. It is not a breakdown of compiler passes.
+`user_ns` / `system_ns` come from wait4, including descendants reaped by the
+translator; their original CPU resolution is microseconds. `maxrss_kib` is
+Linux's largest-process high-water RSS, not summed concurrent process-tree
+memory or kernel code-pool consumption. Fault and context-switch counters are
+software resource observations, not hardware cache misses or lock queue time.
+
+The default still uses waitpid without these clocks/counters. In measured mode,
+clock/resource/output errors remain launch/experiment errors, never policy
+native-only results; do not infer a successful run from a partial record set.
+A successful translation record does not prove publication or execution. Keep
+the NORMAL/image and returned-body checks, and do not add translation duration
+to preparation duration: translation can overlap the promotion workload.
+
+For function-level profiling, use the existing translator CLI in a separate
+workspace after workers and the daemon have drained, with the provider still
+ACTIVE. This adds no daemon option and does not upload the profiled image; see
+the [profiling flow](../docs/JIT_EXECUTION.md#35-翻译器剖析).
+Context-symbol matching compiles only the fixed glob rules into one anchored
+regex union. It does not cache live names/addresses or remove any policy rule.
+The [measured increment](../docs/VALIDATION.md#context-symbol-matching) verifies
+the real symbol map and byte-identical images before reporting a compiler gain.
 
 ## Device Session
 

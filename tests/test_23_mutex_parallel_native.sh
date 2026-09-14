@@ -27,10 +27,22 @@ fi
 out=$(mktemp -d /tmp/kdlock-mutex-parallel.XXXXXX)
 info "Evidence: $out"
 DAEMON_LOG="$out/daemon.log"
+waiter_controller=
 
 cleanup() {
     local status=$?
     trap - EXIT
+    # Only fixture gates are released here. A retained physical owner still
+    # performs every unlock/ACK; never terminate its delegated kernel request.
+    for gate in mutex_parallel_source_hold mutex_parallel_exit_hold; do
+        if [[ -e /sys/module/klock_module/parameters/$gate ]]; then
+            printf '0\n' > "/sys/module/klock_module/parameters/$gate" || status=1
+        fi
+    done
+    if [[ -n $waiter_controller ]]; then
+        wait "$waiter_controller" || status=1
+        waiter_controller=
+    fi
     python3 "$KDLOCK_DIR/tests/source_retirement.py" release "$out" || status=1
     # A timed-out ioctl can still own a frame. Never force unload or remove
     # its evidence; retain the module for the documented VM recovery path.
@@ -67,7 +79,7 @@ if [[ $shared_cpu == 0 ]]; then
         -o "$out/mutex-signal-client"
 fi
 clear_dmesg
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit=1
 insmod "$KLOCK_DIR/klock_module.ko" mutex_parallel=1 mutex_parallel_first="$first" \
     mutex_parallel_shared_cpu="$shared_cpu" mutex_parallel_pressure="$pressure" \
     mutex_parallel_peers="$((1-shared_cpu))" mutex_parallel_shadow="$((1-shared_cpu))" \
@@ -85,8 +97,8 @@ for lane in 0 1; do
     role=$((lane * 8 + 4))
     run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 3 "$role" > "$out/warm-$lane.log"
 done
-# The warmup is module-wide. Sleeping after lane 1 starts its own sampling
-# would exceed the window tightened by lane 0 and permanently mark it IGNORE.
+# Prime both lanes before the module-wide warmup. Sleeping during either
+# lane's later sample would consume its own fixed window and may select IGNORE.
 sleep 1
 for lane in 0 1; do
     role=$((lane * 8 + 4))
@@ -126,9 +138,11 @@ fi
 printf '1\n' > /sys/module/klock_module/parameters/mutex_parallel_armed
 if [[ $shared_cpu == 0 ]]; then
     printf '1\n' > /sys/module/klock_module/parameters/mutex_parallel_source_hold
+    printf '1\n' > /sys/module/klock_module/parameters/mutex_parallel_exit_hold
 fi
 launch_wave() {
     local wave_out=$1 role lane cpu
+    local -a command
     pids=()
     for role in 0 1 2 3; do
         for lane in 0 1; do
@@ -139,21 +153,33 @@ launch_wave() {
             if [[ $shared_cpu == 1 && $lane == 1 && $role != 0 &&
                   ( $role == 1 || $pressure == 1 ) ]]; then cpu=1; fi
             printf '%s\t%s\t%s\n' "$lane" "$role" "$cpu" >> "$wave_out/role-cpus.tsv"
-            timeout --kill-after=5s 45s taskset -c "$cpu" "$BENCH_BIN" \
-                1 1 1 1 3 "$((lane * 8 + role))" > "$wave_out/role-$lane-$role.log" 2>&1 &
+            command=("$BENCH_BIN" 1 1 1 1 3 "$((lane * 8 + role))")
+            if [[ $shared_cpu == 0 && $wave_out == "$out" && $role == 2 ]]; then
+                # A single ioctl process gives pidfd an exact waiter identity,
+                # without signalling the benchmark's supervisor/pthread group.
+                command=("$out/mutex-signal-client" "$lane" klock_test parallel-waiter)
+            fi
+            timeout --kill-after=5s 45s taskset -c "$cpu" "${command[@]}" \
+                > "$wave_out/role-$lane-$role.log" 2>&1 &
             pids+=("$!")
         done
     done
 }
 
 join_wave() {
-    local wave_out=$1 index status
+    local wave_out=$1 index status expected
     failed=0
     for index in "${!pids[@]}"; do
         status=0
         wait "${pids[$index]}" || status=$?
         printf '%s\t%s\n' "$index" "$status" >> "$wave_out/role-status.tsv"
-        if [[ $status != 0 ]]; then failed=1; fi
+        expected=0
+        if [[ $shared_cpu == 0 && $wave_out == "$out" && $index == $((4 + first)) ]]; then
+            expected=137
+        fi
+        # SIGKILL status alone is not acceptance. The controller retains the
+        # original pidfd and the final oracle checks its suffix/ACK and exit.
+        if [[ $status != "$expected" ]]; then failed=1; fi
     done
     test "$failed" = 0
 }
@@ -234,12 +260,32 @@ if [[ $shared_cpu == 0 ]]; then
             fi
         fi
     fi
+    if [[ $failed == 0 ]]; then
+        timeout --kill-after=2s 20s python3 "$KDLOCK_DIR/tests/mutex_parallel_protocol.py" \
+            waiter-signals "$out" "$first" > "$out/waiter-controller.log" 2>&1 &
+        waiter_controller=$!
+        deadline=$((SECONDS + 5))
+        # The controller retains both pidfds while this shell performs busy
+        # retirement. A ready file is published only after both verified sends.
+        while [[ ! -e $out/waiter-signals.ready ]]; do
+            if ! kill -0 "$waiter_controller" 2>/dev/null || ((SECONDS >= deadline)); then
+                fail "$TEST_NAME" "original waiter signal controller did not become ready"
+                failed=1
+                break
+            fi
+            sleep 0.02
+        done
+    fi
     # Upgrade this existing complex case instead of adding a second baseline.
     # Always release the bounded fixture gate, even after a failed observation.
     if ! python3 "$KDLOCK_DIR/tests/source_retirement.py" busy "$out/source-busy.json"; then
         failed=1
     fi
     printf '0\n' > /sys/module/klock_module/parameters/mutex_parallel_source_hold
+    if [[ -n $waiter_controller ]]; then
+        wait "$waiter_controller" || failed=1
+        waiter_controller=
+    fi
 fi
 if [[ $pressure == 1 ]]; then
     printf '1\t5\t1\n' >> "$out/role-cpus.tsv"

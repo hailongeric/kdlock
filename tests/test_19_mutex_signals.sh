@@ -43,7 +43,7 @@ trap cleanup EXIT
 build_all
 gcc -O2 -Wall -Wextra -Werror "$KDLOCK_DIR/tests/mutex_signal_client.c" -o "$out/client"
 clear_dmesg
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit=1
 insmod "$KLOCK_DIR/klock_module.ko" native_resume_stage=1 mutex_signal_probe="$probe" \
     mutex_signal_race="$race" mutex_signal_handoff="$handoff"
 test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1

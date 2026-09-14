@@ -338,17 +338,35 @@ class SelectionTests(unittest.TestCase):
             for name in ("guest.config", "linux-6.1.159-guest.patch"):
                 (baseline / name).write_text("captured kernel input")
                 self.assertIn("kernel_baseline/" + name, r.source_hashes())
+            # Dependency pins must be frozen, while generated text stays out.
+            translator = r.ROOT / "disassem"
+            translator.mkdir()
+            requirements = translator / "requirements.txt"
+            requirements.write_text("miasm==0.1.5\n")
+            pinned = r.source_hashes()
+            self.assertEqual(pinned["disassem/requirements.txt"],
+                             r.evidence.digest(requirements.read_bytes()))
+            (translator / "generated.txt").write_text("not a source input")
+            self.assertEqual(r.source_hashes(), pinned)
+            requirements.write_text("miasm==0.1.3\n")
+            self.assertNotEqual(r.source_hashes(), pinned)
             source.write_text("changed source")
             self.assertNotEqual(r.source_hashes(), before)
 
     def test_listing_and_dry_run_never_check_or_execute_guest(self):
         with patch.object(r, "check_idle") as idle, patch.object(r, "run") as run:
             with contextlib.redirect_stdout(io.StringIO()) as output:
-                for args in ([], ["--list"], ["--suite", "mutex", "--dry-run"]):
+                for args in ([], ["--list"], ["--suite", "mutex", "--dry-run"],
+                             ["--case", "mode-5", "--jit-timing", "--dry-run"]):
                     self.assertEqual(r.main(args), 0)
             self.assertIn("mode-4", output.getvalue())
             self.assertIn("Covered diagnostics (--case only", output.getvalue())
             self.assertIn("mode-0: mode-2", output.getvalue())
+            self.assertIn("KD_JIT_TIMING=1", output.getvalue())
+            self.assertNotIn("KD_JIT_TIMING", r.CASES["mode-5"].env)
+            with contextlib.redirect_stdout(io.StringIO()) as ordinary:
+                self.assertEqual(r.main(["--case", "mode-5", "--dry-run"]), 0)
+            self.assertNotIn("KD_JIT_TIMING", ordinary.getvalue())
             idle.assert_not_called()
             run.assert_not_called()
 
@@ -370,6 +388,65 @@ class SelectionTests(unittest.TestCase):
             ):
                 r.main(["--case", "pipeline"])
             run.assert_not_called()
+
+    def test_explicit_timing_applies_to_loads_and_rejects_ambiguity(self):
+        # Exercise the real shell selection with all privileged operations
+        # substituted. The EXIT cleanup is removed before invoking any load.
+        script = r'''
+source "$1"
+trap - EXIT
+shift
+unload_modules() { echo unloaded; }
+insmod() { printf 'insmod:%s\n' "$*"; }
+sysctl() { :; }
+sleep() { :; }
+cat() { printf '%s\n' "$TIMING_LOADED"; }
+timeout() { printf 'timeout:%s %s\n' "$1" "$2"; shift 2; "$@"; }
+TEST_NAME=timing
+if [[ "$TIMING_LOADER" == direct ]]; then
+    load_kdlock --timeout 45 target_process=klock_test "$@"
+else
+    load_modules klock_test "$@"
+fi
+'''
+        scenarios = (
+            (None, "N", (), True), ("0", "N", (), True),
+            ("1", "Y", (), True), ("1", "N", (), False),
+            ("bad", "Y", (), False), ("1", "Y", ("jit_timing=1",), False),
+        )
+        for loader, (chosen, loaded, extra, success) in (
+            (loader, scenario) for loader in ("direct", "both") for scenario in scenarios
+        ):
+            env = r.child_environment(r.CASES["mode-5"])
+            env["TIMING_LOADED"] = loaded
+            env["TIMING_LOADER"] = loader
+            if chosen is not None:
+                env["KD_JIT_TIMING"] = chosen
+            result = subprocess.run(
+                ["bash", "-c", script, str(r.ROOT / "tests/test_08_mutex_jit_modes.sh"),
+                 str(r.ROOT / "tests/common.sh"), *extra],
+                env=env, capture_output=True, text=True, timeout=5,
+            )
+            with self.subTest(loader=loader, chosen=chosen, loaded=loaded, extra=extra):
+                self.assertEqual(result.returncode == 0, success, result)
+                if success:
+                    self.assertEqual(result.stdout.count("insmod:"), 1 if loader == "direct" else 2)
+                    if loader == "direct":
+                        self.assertIn("timeout:--kill-after=10s 45s", result.stdout)
+                    if chosen is not None:
+                        self.assertIn(f"jit_timing={chosen}", result.stdout)
+                        self.assertIn(f"JIT timing selection: loaded={loaded}", result.stdout)
+                    else:
+                        self.assertNotIn("jit_timing=", result.stdout)
+                elif chosen == "bad" or extra:
+                    if loader == "direct":
+                        self.assertNotIn("unloaded", result.stdout)
+                    self.assertNotIn("insmod:", result.stdout)
+                else:
+                    self.assertEqual(result.stdout.count("insmod:"), 1)
+        # A new direct insmod would silently bypass the declared experiment.
+        for path in (r.ROOT / "tests").glob("test_*.sh"):
+            self.assertNotRegex(path.read_text(), r"insmod[^\n]*kdlock_km\.ko")
 
     def test_leftover_optional_source_stops_another_case(self):
         # A failed optional-source cleanup must not be hidden by a default

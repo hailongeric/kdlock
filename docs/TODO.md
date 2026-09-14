@@ -1,14 +1,59 @@
 # kdlock Open Tasks
 
-Scope: x86-64 kernel spin/mutex delegation using existing guest hooks.
+Scope: **x86_64 machines only**, for kernel spin/mutex delegation using existing
+guest hooks. Cross-architecture ports and their tests are not project tasks or
+deferred deliverables. Userspace/futex and rwsem are also outside this scope.
 Do not modify/rebuild the guest kernel by default. Keep the two-word wrapper
 ABI and physical native owners. New code needs purpose/constraint comments.
 Complete the main behavior before optional features and performance work.
 
+## Current Checkpoint
+
+**2026-09-14:** the user requested code cleanup, documentation and a Git commit
+after pausing further implementation/experiments. Collect the completed changes
+since `1d5fc7259d96863aa143343d22c79aaf93023c9e` as one checkpoint; do not use this
+cleanup to implement another open feature or rerun a full matrix. Timing names
+now map explicitly to their enum counters; comments and formatting are aligned
+without changing owner/ACK or wrapper contracts. The
+[checkpoint verification](VALIDATION.md#repository-checkpoint) is separate from
+the earlier [native-handoff JIT run](VALIDATION.md#native-handoff-timing).
+The single [current-version overview](PROJECT_GUIDE.md#1-当前进展) lists completed,
+unfinished and explicitly deferred work. This checkpoint does not resolve the
+two-CPU missing-JIT result or claim whole-project completion. The wider task
+remains paused until the user chooses to resume it.
+
 The **2026-09-11 reading handoff** adds purpose/constraint comments and the
 [complete file map and manual sequence](PROJECT_GUIDE.md). It changes no runtime
-statements and does not implement or unblock the pending guard. Verification
+statements and does not implement the access-time guard. Verification
 and its no-live-rerun boundary are recorded in [VALIDATION](VALIDATION.md#reading-handoff).
+
+## Delivery Scope
+
+**2026-09-14 user decision:** extremely uncommon scenarios do not require further
+implementation or dedicated tests for the current delivery. Prioritize the
+supported x86_64 main paths; do not continually expand corner-case coverage.
+
+- Keep main-path acceptance: contended spin/mutex JIT, nested critical sections,
+  allowlisted services returning to JIT and supported native continuation.
+  Mutex positives use `mutex_jit=1`; require matching generated code, returned
+  body evidence, correct effects and native-owner/ACK completion.
+- Additional combinations of extreme pool pressure, exceptional cancellation/
+  exit order, remote schedules or arbitrary aliases are optional coverage,
+  not current completion gates. Do not add or run them merely because a broader
+  C1/C2/C5 contract remains unproven. Revisit when a supported workload exposes
+  a defect, a relevant main-path change needs regression, or the user requests it.
+- Keep unimplemented behavior and untested risk in the limitations. A scoped-out
+  case is not a PASS, and this priority decision is not a measured failure rate
+  or a claim of general correctness. Existing refusal checks, warnings, owner
+  rules and historical evidence stay intact; this is not a test-deletion task.
+- Run affected existing units and representative JIT cases for code changes,
+  not a mandatory full or rare-case matrix on every increment. A reproduced
+  main-path crash, deadlock, incorrect effect or missing JIT is still a defect;
+  do not dismiss it as rare or weaken the oracle to accept it.
+
+Below, **optional coverage/generalization** is not a pending delivery obligation.
+Ongoing protocol constraints apply when touching that code, not as standalone
+unfinished features. C3/C4 and access-time guard deferrals remain unchanged.
 
 ## Direction And Priority
 
@@ -23,42 +68,37 @@ task/RCU/owner-ACK probes without JIT remain distinct acceptance categories.
 Exact batch dates, counts and source identities live in [VALIDATION](VALIDATION.md),
 not repeated task summaries. Passing these gates does not close the whole project.
 
-Current correctness focus is C5's dynamic-address policy and checked use-time
-native exits. Core static per-CPU and boot-reserved module ranges are implemented;
-unresolved pointers and dynamic/module/context-object lifetimes are not. Resolve the local guard
-flags boundary before changing execution semantics. The tracks below remain
-open; their completed examples are coverage references, not tasks to rerun.
-The pending [pre-instruction packet contract](JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现)
-now distinguishes successful guard preservation from original-waiter restoration.
-Its flags changes are not yet authorized or implemented. Do not fill that decision
-gap with more routine basic tests or reinterpret a prior scoped PASS as closure.
+**2026-09-13 user decision:** continue deferring the access-time address guard,
+its pre-instruction original-waiter continuation and the required local
+CF/PF/AF/ZF/SF/OF preservation. These remain **unimplemented limitations**, not
+an outstanding authorization question or the next implementation step. The
+[deferred work](#deferred-access-time-guard) and
+[future packet contract](JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现) remain
+documented for a later explicit request to reopen this feature. C3/general C4
+deferrals, the existing guest kernel and the two-word wrapper ABI are unchanged.
 
-**Implementation blocked pending user decision:** allow or defer local
-CF/PF/AF/ZF/SF/OF preservation for the new use-time guard and native resume
-target. Existing C4 deferral remains binding; neither a guest-kernel change nor
-a third wrapper argument is requested. The audit and packet requirements are
-complete, not the guard or the project. Resume this implementation track only
-after the scope decision; all remaining correctness items below stay open.
+Core static per-CPU and boot-reserved module screening is implemented; it does
+not validate each actual access or establish dynamic/context-object lifetimes.
+Unknown or concurrently replaced pointers can still bypass static checks. Keep
+this limitation explicit and restrict use to audited experimental workloads.
+Completed examples are coverage references, not tasks to rerun or evidence that
+the deferred guard is complete. Broader C1/C2/C5 claims remain unproven, but their
+rare-case expansion is optional under the [delivery scope](#delivery-scope).
 
-Open implementation tracks, in order, are below. Completed increments remain
-checked off in their contract sections, not repeated as new work here.
+Current implementation priorities are:
 
-1. Broaden combined pre-entry/PENDING resource failures and task-lifecycle
-   schedules under [C1](#c1-forward-continuation-after-partial-execution).
-   Preserve full packets, retained owners and exactly-once effects. The existing
-   [resource coverage](#resource-coverage-increment) distinguishes production
-   fixtures, live exhaustion, injected refusal and task/RCU probes.
-2. Extend native-peer, cancellation, oversubscribed and multi-request remote
-   schedules under [C2](#c2-one-protocol-per-physical-lock). Source leases and
-   terminal retirement do not solve lock-object lifetime or arbitrary provider
-   hot unload. Missing guest-reader/nonlocal-exit support requires separate
-   assessment under [DESIGN 3.1](DESIGN.md#31-source-lock-and-hook-lifetimes).
-3. Broaden composed CALL/RET, aliases and context-address handling under
-   [C5](#c5-origin-context-and-nested-boundaries). Keep unconditional bans on
-   every emitted block, including RET targets skipped by sequential facts.
-   Checked mutex stack windows are not general stack privacy. Implement the
-   new use-time exit only after resolving the local flags boundary above.
-4. Validate each increment with affected complex cases and focused units using
+1. Fix concrete defects affecting supported main paths under
+   [C1](#c1-forward-continuation-after-partial-execution),
+   [C2](#c2-one-protocol-per-physical-lock) and
+   [C5](#c5-origin-context-and-nested-boundaries). Preserve packets, real lock
+   owners, exactly-once effects and existing admission checks. Do not choose
+   another extreme resource/schedule combination simply to extend coverage.
+2. After affected main paths pass, work on useful services, usability and
+   measurements under P1/P2 without first proving every rare interleaving.
+   Generic hot unload and lock-object integration remain unsupported; any
+   future expansion needs the separate assessment in
+   [DESIGN 3.1](DESIGN.md#31-source-lock-and-hook-lifetimes).
+3. Validate each increment with affected representative cases and focused units using
    [regression selection](JIT_EXECUTION.md#7-分层与增量回归). Keep independent
    shadow/three-lock, native-control and kernel-probe contracts; do not rerun
    covered basics by default or combine different source freezes into one PASS.
@@ -66,8 +106,67 @@ checked off in their contract sections, not repeated as new work here.
 [C3 versioning](#c3-immutable-jit-publication-and-lifetime) and
 [C4 instruction/flags semantics](#c4-instruction-flags-and-fault-semantics) remain
 explicitly deferred. [Evidence/services](#p1-evidence-and-useful-services) and
-[performance](#p2-performance-and-broader-scope) follow correctness. No completed
-bounded test closes C1/C2/C5 as a whole.
+[performance](#p2-performance-and-broader-scope) follow main-path correctness,
+not exhaustive rare-case coverage. No bounded test proves C1/C2/C5 in general.
+
+### Main-Plan Acceptance Audit
+
+**2026-09-13:** separate finite implemented contracts from open-ended coverage
+expansion and capability limits. The original objective is unchanged: actual
+JIT delegation of existing kernel critical sections, including nested A/B,
+services and forward native completion under real lock protection. A single
+new schedule or a union of old PASS results is not whole-plan acceptance.
+
+| Required behavior | Current implementation to inspect | Acceptance evidence and remaining boundary |
+| --- | --- | --- |
+| Discover, translate and execute an unchanged supported CS | `kd_lock.c` hooks, `daemon/daemon.c`, `disassem/disassem.py`, `exe.c:kd_exe_on_call_hl_entry` | Matching generated image, NORMAL publication, returned body and exact workload state; no validated unmodified production subsystem or speedup claim |
+| Delegate nested A/B and preserve physical/logical parents | `kd_spinlock.c:execute_cs`, `kd_exec.c` remote protocol, native nested mutex handlers | `core`, mode 6, physical/remote depth and learned mutex gates; mutex B remains a real acquisition by A, not a spin-style remote mutex |
+| Keep one physical lock protocol for target/native tasks | Spin L/S + origin tickets, native mutex owner + scheduling gate | Mixed/native-peer, same-CPU and parallel gates; a borrowed waiter is never made the Linux mutex owner |
+| Leave large supported services out of translated code and return to JIT | `include/kd_hostcalls.def`, `exe.c` typed dispatch/return | Mode 2/5 cover a resolved clock and scalar int_sqrt, including clock quota; the audit freeze below predates the scalar increment. General variadic printk and new service contracts remain P1 work |
+| Continue after partial progress without replay | Current CALL, PENDING, checked post-control and quota boundaries in C1 | Register/stack, retained-owner ACK and exact-effect gates; generic faults, IJ miss and instruction budget remain fail-stop, not recoverable exits |
+| Preserve the two-word register/context ABI | Wrapper, two restore stubs and `kd_exec_frame` | Production/codegen units and eight register gates; software flags copies do not establish live flags restoration |
+| Screen the actual possible JIT scope | `context_policy.py`, `context_memory.py`, entry predicates and range metadata | Twelve independent admission negatives plus generated-code units/audit; runtime pointer freshness/access checks remain explicitly deferred |
+| Finish requests and retire source metadata coherently | Native routing, task/RCU refs, `kd_source.c` and device-session retirement | Task probes, dual-frame retirement/reload and waiter-exit gates; generic hook-reader and lock-allocation lifetimes remain separate capability gaps |
+| Deliver usable commands and inspectable evidence | Manual/file map, existing selector, source/boot/archive verifier | One frozen input set, individual outcomes/drains/images and guest-local archives; no implied dependency-byte reproducibility or immutable JIT identity |
+
+Finite closure steps for this audit:
+
+1. [x] Inspect those production branches and distinguish supported continuation
+   packets from the explicitly deferred features and missing hook capabilities.
+2. [x] Freeze current host/guest inputs; run the existing 39 unit programs and
+   independent admission audit in the recovery guest. A compile error, SKIP or
+   missing prerequisite is a failure, not an accepted negative test.
+   All 206 runtime/test hashes match. The guest reports 39 passed unit programs
+   and 25 passed admission cases (17 expected refusals, eight accepted assembly
+   cases); the latter is not native or kernel-JIT execution. Logs and source
+   snapshots are in `/tmp/kdlock-acceptance-audit-units.sRPnuo` in the guest.
+3. [x] Run the existing 64-case `extended` scope on the same freeze. Do not add
+   baseline, native-controls or the eleven covered diagnostics. Mode 0/1/3
+   retain their documented complex replacements; this is not a fresh direct
+   run of those excluded modes or the historical 67-case selection.
+   The runner exits 0 with 64/64 accepted cases: 50 actual-JIT positives,
+   12 admission refusals and two kernel protocol probes without JIT.
+4. [x] Inspect every case outcome, distinguish JIT/refusal/kernel-probe evidence,
+   verify final drain/source/kernel identity and retain failures independently.
+   Fix an identified contract gap before considering another coverage variant;
+   never splice different freezes into a current-matrix PASS.
+   All 64 result/archive records pass independent checks. Saved phase logs have
+   1,538 distinct returned-body records with matching generated entries, not
+   immutable-version or full-instruction coverage. The guest-local 592-member
+   outer archive also verifies; final drain, 206 source hashes, boot and kernel
+   baseline are unchanged. Commands, scope and archive identity are recorded in
+   [VALIDATION](VALIDATION.md#main-plan-acceptance-audit).
+
+Maintaining node/owner/ACK invariants below is an ongoing constraint, not an
+unbounded invitation to add tests. Broader schedule/alias coverage is optional
+under the delivery scope; no bounded matrix proves arbitrary concurrency.
+Generic hot unload needs the guest reader/nonlocal-exit protocol assessed in
+DESIGN 3.1, and lock-object
+identity needs subsystem integration. They cannot be completed by an extra
+kdlock callback-local ref under the no-guest-edit default. C3/C4 and access-time
+guard deferrals are not pending permission questions. New services, environment
+packaging and performance remain distinct P1/P2 requirements, not silently
+removed by accepting the present supported execution contracts.
 
 ### Guarded Admission Increment
 
@@ -124,8 +223,9 @@ prefix. The implementation and execution flow are in
       no eligibility, wrapper ABI, flags or guest-kernel changes. The 1200-branch
       corpus tests table construction only; focused core/depth gates separately
       execute real JIT with mutex_jit=1. Do not repeat accepted basic cases.
-- [ ] Broaden composed CALL/RET and alias schedules before further eligibility
-      changes. These finite tests are not arbitrary-control-flow proofs.
+- [ ] Optional coverage: broaden composed CALL/RET and alias schedules.
+      Any future eligibility change still needs its own affected-path checks;
+      existing finite tests are not arbitrary-control-flow proofs.
 
 ## P0: Correctness Contracts
 
@@ -141,7 +241,40 @@ prefix. The implementation and execution flow are in
 - [x] Replace both mutex node/shadow copied models with one production resource
       fixture: 256 reservation inputs, full 1024-slot collisions, early hook
       failures, no-node acquisition and full-packet resume after slot reuse.
-      Test hook and direct entry paths and eight assertion-detected mutants.
+      Test hook and direct entry paths with assertion-detected mutants.
+- [x] Migrate retained node, mutex-transition, frame, CALL and tail model contracts
+      into existing production fixtures, then remove the five copied programs.
+      Cover rename/closing routes, dense ledger metadata, terminal/remote
+      retirement and backend cleanup without adding routine test entries.
+      Replace the obsolete early-outer deletion model with retained released
+      records; helper cleanup tests do not authorize post-JIT rollback. The
+      [per-contract map](TEST_EXAMPLES.md#52-单元精简进展与顺序) distinguishes
+      current focused evidence from earlier unchanged producer checks. Typed
+      service dispatch/return/budget checks and real nested mutex CALL producers
+      replace the old service and remote-mutex model; physical primitives remain
+      substitutes. Real mutex tail encode/decode now covers the 40-CPU/four-slot
+      fixture topology with fixed wire values and producer node identity; remove
+      the unused legacy mock/assert headers and rebuild the remaining C programs.
+      This does not prove per-CPU concurrency. C1/C2/C5 are not closed.
+- [x] Retain the independent remote protocol unit while replacing its three-field
+      register substitute with the guest's full x86-64 pt_regs. Check packet/CALL
+      preservation across ancestor RPC and native ACK, detach-before-DONE and
+      immediate no-lock parent reuse; reject eight assertion-detected mutants.
+      This extends one existing program, not the live selection. Deterministic
+      publication observations do not prove hardware flags or general lifetimes;
+      production and guest-kernel code remain unchanged in this increment.
+- [x] Enforce native-reference retirement at the common frame pop boundary.
+      Initialize empty routing on allocation; reject a terminal frame with a
+      native request or linked registration without changing packet/storage or
+      dropping its source lease. Reuse production frame and spin-combiner units,
+      including independent bad-state combinations and assertion-detected guard
+      mutants. This is a checked API invariant, not a reproduced live UAF or
+      permission to abandon an unfinished native suffix; existing owner/ACK
+      completion remains required. Flow is in
+      [frame retirement](JIT_EXECUTION.md#frame-回收门禁); two focused units and
+      eight affected complex JIT cases pass on the
+      [recorded freeze](VALIDATION.md#native-frame-retirement). This does not
+      close arbitrary resource/task-lifetime combinations under C1/C2.
 - [x] Connect production task get/put and deferred free to final owner ACK in
       opt-in kernel `test_22`. Verify B->A and A->B with real mutex ownership,
       shared acquisition refs, allocation refusal and an RCU reader spanning
@@ -169,8 +302,20 @@ prefix. The implementation and execution flow are in
       keep capacities/production ownership unchanged. Three focused units and
       the upgraded ticket plus shared-driver node-refusal complex gates pass;
       [gate pressure](VALIDATION.md#spin-gate-pressure) retains the evidence.
-      No new daily case or basic sweep; this does not validate a progressed
-      gate-allocation failure, arbitrary pressure combinations or cancellation.
+      No new daily case or basic sweep. That earlier freeze validates only
+      fresh-request gate fallback; the progressed increment follows below.
+- [x] Keep the old ticket/native frame live while a second prepared A2 root
+      executes JIT stores and reaches real gate-map ENOMEM at lock(C). Retain
+      A2's physical owner, preserve the PENDING callee/CALL stack, observe both
+      live frames and original-waiter Linux C contention, then require one
+      suffix and final A2 ACK before releasing the old B. No capacity, owner,
+      guest-kernel or recovery-ABI change. Two existing units plus upgraded
+      `virtual-ticket-refusal` and shared-driver `virtual-node-refusal` pass on
+      the [recorded freeze](VALIDATION.md#progressed-spin-gate-refusal).
+      The production fixture checks full map/ticket/frame/node/context/packet
+      preservation; actual JIT and Linux waiting remain separate live evidence.
+      No new routine test entry; broader pressure/cancellation and C1/C2/C5
+      remain open. This is a supported CALL boundary, not the deferred guard.
 - [x] Retain virtual cancellation, original-waiter signals/release races and main gates
       in the full-matrix manifest. Check shadow capacity separately, then units,
       audit, default build identity and drains on the same frozen inputs.
@@ -194,13 +339,23 @@ prefix. The implementation and execution flow are in
       bracket distinct from the release gate, and scheduling bias distinct
       from a proven result; flow and regressions are in
       [usage 6.5](JIT_EXECUTION.md#65-原-waiter-与-b-释放的竞争).
-- [ ] Broaden combined pressure, task exit/cancellation and multiple native
-      frame schedules. These bounded checks do not close C1/C2/C5 or prove
-      saturation of every live pool. `test_22` constructs its continuation and outer
+- [ ] Optional coverage: broaden combined pressure, task exit/cancellation and
+      multiple native frame schedules. These bounded checks do not close
+      C1/C2/C5 or prove saturation of every live pool. `test_22` constructs its continuation and outer
       batch callback; it does not replace the actual-JIT/queue matrix.
       Arbitrary cancellation order, exit inside the native suffix and dropping
       an unfinished delegated frame remain outside these bounded B API tests.
       Earlier freezes are indexed in VALIDATION rather than repeated here.
+- [x] Extend the existing dual-frame drain orders with two single-process
+      original waiters. Signal the first with SIGKILL and the survivor with
+      SIGUSR1 while both frames retain A/B. Keep the second native suffix at
+      a bounded fixture gate until a retained pidfd proves the first task exited
+      after both real owner ACKs; require one remaining frame, then finish its
+      exact record/ACKs and userspace signal return. Preserve pool pressure,
+      native-peer cancellation and terminal source retirement/reload. No extra
+      task refs, owner handoff, guest-kernel changes or new routine cases.
+      Both orders and three affected regressions pass with actual JIT; see
+      [original-waiter exit evidence](VALIDATION.md#original-waiter-exit).
 - [x] Upgrade `native-4-4` to a same-CPU owner/waiter/trailer queue, with mutex
       workload barriers yielding to peers. Preserve actual JIT, PENDING packet,
       real B wait-list/ownership and final A ACK; check actual task/CPU context
@@ -324,11 +479,26 @@ Remaining:
       changing analyzer limits. Both this case and the affected early-A
       dependency pass actual JIT; the first rejection is archived separately.
       FAST remains explicit diagnosis, not an additional daily prerequisite.
-- [ ] Prove/test each additional recoverable exit with registers, stack,
-      ownership and exactly-once side effects. Unsupported post-entry exits
-      remain fail-stop, not restart-at-entry fallbacks.
-- [ ] Exercise bounded exhaustion and partial progress across frame, node,
-      lock and code pools using production paths.
+- Ongoing constraint: if a new recoverable exit is added, verify registers,
+  stack, ownership and exactly-once effects for that exit. No additional exit
+  is required just to handle rare failures; unsupported post-entry exits remain
+  fail-stop, not restart-at-entry fallbacks.
+- [x] Implement checked call-count quota exits before dispatching the excess
+      callee. Keep its current GPR/callee RIP/CALL RSP and physical owners;
+      the original waiter finishes the native suffix without returning to this
+      JIT. Validate the existing hostcall policy without invoking the service,
+      and keep invalid packets/targets or post-dispatch failures fail-stop.
+      Do not classify quota as a callee-learning miss, consume the pending
+      return word, expand wrapper arguments, or change instruction-budget/flags
+      semantics. Extend the existing production consumer unit and mode 5's
+      complex service workload, preserving its normal JIT-return checks; no
+      additional routine test entry. Four affected guest units and six complex
+      JIT cases pass on their [recorded freeze](VALIDATION.md#call-quota-continuation).
+      Ordinary mixed-control quota/invalid packets are unit coverage, not
+      additional live quota cases. This increment is not access-time checking
+      and does not close general C1 recovery or the explicitly deferred guard.
+- [ ] Optional coverage: extend exhaustion/partial-progress combinations across
+      frame, node, lock and code pools using production paths.
       Code-pool root refusal now passes the two-frame live gate above, alongside
       prior node/context/task combinations. Both existing eight-frame spin gates
       now check real inherited-lock-record saturation, the complete PENDING
@@ -340,8 +510,41 @@ Remaining:
       branch order. Preserve the independent later shadow check, strengthen the
       complex chain observer without another workload, and retain the first
       failed premise as separate evidence. Flow and scope are in usage 6.8.
-- [ ] Expand multi-request/remote schedules and protocol oracles. Sampled stack
-      margins do not establish arbitrary IRQ/NMI depth safety.
+- [ ] Optional coverage: expand multi-request/remote schedules and protocol
+      oracles. Sampled stack margins do not establish arbitrary IRQ/NMI depth
+      safety.
+- [x] Extend the existing mode-8 complex driver with two independent A queues
+      feeding one B combiner. Keep both original logical task/outer-owner
+      identities, published entry and exact per-root prefix/suffix state; require
+      both remote children to execute JIT on the same B owner and all callers
+      to return with clean context. Reuse the remote protocol unit/driver, not
+      another routine case; preserve the original complex mode-8 phase. This
+      tests multi-request scope isolation, not access-time checks or flags.
+      Two focused units and three affected complex spin JIT cases pass on the
+      [recorded freeze](VALIDATION.md#shared-b-combiner), preserving both mode-8
+      phases. No production ownership change or new routine entry is needed;
+      arbitrary remote schedules and C1/C2 remain open.
+- [x] Extend that existing driver with mixed completion at the shared B:
+      first child hits the supported CALL quota/native exit, B retains its
+      owner while the original waiter runs, and the next logical root then
+      executes JIT on that same B combiner. Preserve pure-JIT phases, published
+      identity, exact per-root stores and owner ACKs; reuse existing units and
+      case names. Do not use an ordinary learning miss to invalidate the shared
+      entry or add a new flags/access-time exit.
+      Two focused units and four complex spin JIT cases pass on the
+      [corrected freeze](VALIDATION.md#shared-b-mixed-completion). The initial
+      test incorrectly equated borrowed-lock depth with waiter preemption pins;
+      preserve that failure separately and enforce the existing single origin
+      pin plus final-ACK contract. No production protocol change is needed.
+- [x] Upgrade the same mixed phase to observe the first waiter's normal TID
+      detachment before the same B combiner starts the next root. Hold only a
+      PID identity and the real frame/source lease at ACK-drained pop, never
+      delay an owed ACK or add a task ref. Require unchanged software packet,
+      CPU/preempt/IRQ, exact effects and the second JIT; retain the distinct
+      no-lock root-finish gate. Three existing units and two complex live cases
+      pass on the [recorded freeze](VALIDATION.md#shared-b-waiter-exit).
+      This is SELFTEST scheduling, not a new production exit barrier, task-RCU
+      reclamation guarantee or closure of general C1/C2 lifecycle work.
 
 ### C2. One Protocol Per Physical Lock
 
@@ -352,8 +555,30 @@ publication. Native signal/trylock participants use Linux exclusion.
 
 Remaining:
 
-- [ ] Broaden non-target, oversubscribed, cancellation and remote/deferred
-      follower schedules.
+- [ ] Optional coverage: broaden non-target, oversubscribed, cancellation and
+      remote/deferred follower combinations beyond maintained main paths.
+- [x] Extend ordinary mode 4 with two independent A combiners sharing one
+      native B: A0 retains physical A0/B across an ordinary CALL miss, while
+      A1's executor and a non-target peer appear together in B's Linux wait
+      list. Require A1's actual JIT, the original A0 waiter and two owner ACKs,
+      native peer ownership and exact complete records. Preserve the existing
+      two-CPU phase and separate independent-B retirement/signal contracts;
+      this is not a spin-style remote B combiner. Two existing protocol units
+      and three complex mutex JIT cases pass on the
+      [corrected freeze](VALIDATION.md#shared-native-mutex-b). The first candidate
+      wrongly expected only two generated artifacts; keep the extra hot-B image
+      and select A entries by their actual source CALL returns. No production
+      owner/queue change, guest patch, new routine entry or deferred feature.
+- [x] Upgrade the existing mode 4 gate from seven separate CPUs to seven roles
+      on two CPUs. Hold B until its real Linux wait list contains A's physical
+      executor on B's holder CPU; require published code, returned JIT body,
+      nested JIT completion and all original tasks returning with clean context.
+      Ordinary/OOO variants and the shared mode 5 driver pass with mutex_jit=1.
+      No new routine case, production owner/queue change or original-waiter
+      native exit is introduced. This bounded scheduling observation does not
+      prove arbitrary oversubscription/fairness or live node-pool exhaustion;
+      [usage 6.12](JIT_EXECUTION.md#612-同-cpu-的嵌套-mutex-jit) distinguishes
+      it from PENDING continuation and independent-queue context refusal.
 - [x] Join native B peers to both existing dual-frame drain orders. Require
       two genuine Linux wait lists, initial and cross-lock trylock exclusion,
       own native acquisition/exact records, and the second frame retaining B
@@ -417,13 +642,23 @@ Remaining:
          C5's bounded two-level increment is recorded separately below.
          Each increment retains its own frozen evidence.
          A device fops reference alone does not complete hook-reader protection.
-- [ ] Define a provider reader/drain and nonlocal-exit lifetime protocol before
-      claiming generic hot unload; no guest edits authorized by this audit.
+- [ ] Optional generalization: define a provider reader/drain and nonlocal-exit
+      lifetime protocol before claiming generic hot unload; no guest edits are
+      authorized.
       Lock allocation/free identity also needs separate subsystem integration.
-- [ ] Preserve strict node reservation, physical-owner/origin-ticket separation,
-      release-published ACK and no accesses after waking the waiter.
-- [ ] Keep IRQ/BH, RT/PI/WW, arbitrary signal schedules and new lock APIs outside
-      delegation until separately designed and tested.
+- Ongoing constraint: preserve strict node reservation, physical-owner/origin-ticket
+  separation, release-published ACK and no accesses after waking the waiter.
+- [x] Complete the spin node publication increment: replace plain completion
+      and lone/batch handoff stores with release publication. In the existing
+      production combiner fixture, check final register packets and immediate
+      slot reuse, with assertion-detected plain-store/packet-overwrite mutants.
+      Keep queue-head capacity accounting distinct from ordinary batch wakes.
+      Validate affected complex spin JIT paths without new routine cases;
+      this is not an arbitrary memory-ordering or task-lifetime proof.
+      Nine complex cases pass; initial contract/fixture failures and corrected
+      evidence remain separate in [spin publication](VALIDATION.md#spin-waiter-publication).
+- Scope boundary: IRQ/BH, RT/PI/WW, arbitrary signal schedules and new lock APIs
+  stay outside delegation until separately designed and tested.
 
 ### C3. Immutable JIT Publication And Lifetime
 
@@ -504,14 +739,27 @@ Remaining:
       units or infer module-object validity from a boot-fixed address range.
 - [x] Audit the actual two native restore stubs and wrapper in guest userspace:
       restored GPR/RIP/RSP and copied software packets do not establish live
-      condition-code restoration. Record the pending packet contract in the ABI,
+      condition-code restoration. Record the future packet contract in the ABI,
       not a new daily case. This is a prerequisite audit, not a runtime guard,
       kernel JIT result or permission to reopen C4.
+- [ ] Optional generalization: broader context equivalence, hidden/unresolved
+      calls and native suffix owner-sensitive operations need separate analysis
+      before support can be claimed. Logical current is not a scheduling, IRQ,
+      RCU or hardware GS switch; existing refusal policy is unchanged.
+
+#### Deferred Access-Time Guard
+
+**Deferred by explicit user decision on 2026-09-13.** The three items below,
+including local CF/PF/AF/ZF/SF/OF preservation on pass and native-resume paths,
+remain unimplemented. Keep these future requirements and the known safety gap;
+do not implement them or repeatedly request authorization unless the user
+explicitly reopens this feature. Existing entry checks and supported CALL/control
+continuations are unchanged and do not provide this pre-instruction exit.
+
 - [ ] Define enforceable dynamic/module/context object ranges and lifetimes
       before adding runtime checks. Core/module arena coverage is implemented, but
       kallsyms and entry alias separation are insufficient for the wider policy.
-      Resolve the local guard-flags scope separately from deferred C4 work.
-      Follow [the implementation order](DESIGN.md#721-dynamic-address-gap).
+      Retain [the future implementation order](DESIGN.md#721-dynamic-address-gap).
 - [ ] Validate each actual address once at its use, or reject before progress
       when the instruction/access cannot be supported. Establish a checked
       pre-instruction native packet, no replay, and physical-owner ACKs first.
@@ -519,9 +767,6 @@ Remaining:
       existing negative/continuation gates; preserve complex actual-JIT modes.
       Source RBP/RSP are not private memory and entry GPRs are not stable C
       arguments. Sequential facts and mutex checkpoints do not prove freshness.
-- [ ] Broader context equivalence, hidden/unresolved calls and native suffix
-      owner-sensitive operations need separate analysis. Logical current is
-      not a scheduling, IRQ, RCU or hardware GS switch.
 
 #### Checked Mutex Stack Increment
 
@@ -575,6 +820,20 @@ does not close the broader C5 context/alias work.
 - [ ] Make full-matrix evidence retention reproducible from a fresh checkout:
       commands/env, source/kernel/artifact identity, exit statuses and drains.
       Returned body witnesses are implemented; generation identity is not.
+      - [x] Deliver version-pinned Python runtime dependencies and an isolated
+        guest install procedure. Include the recipe in frozen source evidence;
+        do not rely on globally installed packages or alter the guest kernel.
+        Validate the clean environment with the existing unit/admission/core
+        gates, using the same interpreter through daemon PATH inheritance.
+        [Acceptance](VALIDATION.md#isolated-python-runtime): four runtime packages
+        in a fresh CPython 3.10 venv, 40 existing units, 25 admission cases and
+        core 5/5 with 484 returned bodies on 211 frozen inputs. No new test entry,
+        rare-case expansion or JIT implementation change. The manual owns the
+        install/PATH procedure; the recipe is included in captured sources.
+        Package versions do not prove byte-identical builds or loaded JIT identity;
+        full system/kernel reproduction remains open. Global distro pyparsing/
+        pyelftools omit file lists, so only their metadata was compared; all four
+        venv distributions' 411 recorded .py/.so files match before/after testing.
 - [x] Automatically retain each selected scope's frozen runtime/test source,
       captured kernel config/patch, boot notes, generated files and declared
       protocol/daemon logs. Preserve drained failures, record incomplete
@@ -610,18 +869,250 @@ does not close the broader C5 context/alias work.
       The existing selection/evidence unit program and prior success/failure
       captures validate it; this is not a new JIT run, trusted provenance,
       current-source acceptance or a replacement for case-specific oracles.
-- [ ] Broaden production-code fixtures, randomized schedules and exactly-once/
-      linearizability oracles; never accept missing dependencies as SKIP.
-- [ ] Improve deterministic nested promotion without weakening execution gates.
-      In-flight hotlock windows are snapshotted, but new-lock sampling remains
-      adaptive. Forced promotion is selftest-only, not a performance baseline.
-- [ ] After correctness work, add typed bounded services with explicit argument,
-      clobber, context, sleeping, overflow and side-effect contracts.
+- [ ] Optional coverage: broaden production-code fixtures, randomized schedules
+      and exactly-once/linearizability oracles beyond affected main-path tests.
+      Selected tests still cannot accept missing dependencies as SKIP.
+- [x] Improve deterministic nested promotion without weakening execution gates.
+      Forced promotion is selftest-only, not a performance baseline.
+      The current bounded implementation removes unrelated-lock discovery order
+      from the decision, without promising deterministic OS scheduling:
+      1. [x] Reproduce fast-first/slow-first decision differences using the
+         existing production sampler fixture and identical per-lock timestamps.
+      2. [x] Give each new lock the existing 2.5-billion-cycle window; remove
+         cross-lock shrinking, preserve warmup, 10000 samples, strict deadline,
+         sticky decisions, table bounds and ordinary JIT admission.
+         Also sample TSC under the table lock for state updates: two real
+         producer calls reproduce stale pre-lock time underflow and false
+         IGNORE when update order differs. Keep the warmup fast check outside;
+         this is not a proof of cross-CPU TSC synchronization.
+      3. [x] Validate the same fixture, mutation checks and affected complex
+         naturally promoted spin/mutex cases. Keep forced promotion confined
+         to existing SELFTEST workloads; update policy, usage and evidence.
+         The final fixture passes 211150 checks and four detected mutants;
+         core plus parallel-drain-0 passes 6/6 on that same 206-input freeze.
+         Keep the two reproduced defects and intermediate window-only pass
+         separate in [VALIDATION](VALIDATION.md#hotlock-promotion-ordering).
+      This closes cross-lock threshold coupling and pre-lock timestamp order,
+      not deterministic scheduling, TSC synchronization, sticky-state resampling
+      or performance/cost-based promotion. Those broader P2 questions remain.
+- [ ] After affected main-path acceptance, add typed bounded services with
+      explicit argument, clobber, context, sleeping, overflow and side-effect contracts.
       General variadic printk remains excluded.
+      The supported-contract acceptance above permits the following scalar
+      increment without reopening access-time checks or broad context claims:
+      1. [x] Inspect the running baseline's exported `int_sqrt(unsigned long)`:
+         x86-64 scalar input/output, at most 32 shift/subtract iterations, no
+         pointer argument, allocation, sleeping or task/per-CPU dependency.
+      2. [x] Add stable service ID 3 and a typed RDI-to-RAX adapter. Preserve all
+         other saved GPRs, the pending CALL word, existing flags policy and the
+         two-word wrapper ABI; use the native kernel implementation.
+      3. [x] Extend existing mode 2/5 after their clock calls with high-bit
+         integer inputs and consumed-result checks. Retain the full complex
+         state oracle and mode 5's 17th-clock native suffix. Normal requests
+         have two returning services; quota requests reach the scalar operation
+         only on the original waiter's native suffix.
+      4. [x] Run affected codegen/production-consumer/protocol units and complex
+         service JIT cases; retain artifacts, exact per-service return counts,
+         owner ACKs and drains. Update the ABI and execution-flow documents.
+         This does not authorize pointer/variadic or side-effecting services.
+         Four existing units and mode 2/5/8 pass on the same 206-input freeze;
+         444 returned bodies, unchanged clock-quota behavior and full scalar
+         results are recorded in [VALIDATION](VALIDATION.md#typed-scalar-service).
+         This bounded service increment does not close broader P1 or reuse the
+         prior full-matrix result as acceptance of the new implementation.
 - [ ] Evaluate mutex parking/wakeup only after queue and stack lifetimes are
       covered under oversubscription.
+      1. [x] Inspect ordinary waiters: migration remains pinned; acquire polling
+         yields with `schedule()` only when `need_resched()` is set. The private
+         gate uses the same policy. This is runnable polling, not event parking;
+         native B acquisition and native-owner ACK waits are separate paths.
+      2. [ ] Complete actual-JIT comparisons of ordinary mode 5 on CPU masks
+         0-1 and 0-7, workloads 10000/100000 and balanced native/JIT pairs.
+         Keep `mutex_jit=1`, default-off extra timing, body/state/drain gates and
+         source identity. Record worker CPU/wall time and actual JIT share;
+         do not substitute old eight-CPU results or add a daily/rare-case suite.
+         Initial eight-worker assessment is retained: 13 accepted sessions,
+         one short-work/two-CPU failure with a published image but no JIT,
+         and two unrun sessions. Six complete pairs have 829 returned bodies;
+         the two-CPU long-work pairs contain only two/three each. This is not
+         full acceptance. No automatic retry of the failed point or synthetic
+         promotion/queue pressure; first address actual delegation opportunity
+         and strategy under the P2 policy work. See
+         [evidence](VALIDATION.md#mutex-oversubscription-assessment).
+      3. [x] Compare the local TCLock wait state machine. Linked waiters can use
+         UNPROCESSED/PARKED/PROCESSING and explicit task wakeups; queue-head
+         gate waiting still polls, and the final node is handed onward rather
+         than delegated. kdlock has only UNPROCESSED/PROCESSED plus its separate
+         native-resume publication. The [wait-strategy boundary](DESIGN.md#runnable-polling-and-event-parking)
+         records why copying only `schedule()` or completion values is unsafe.
+      4. [ ] Establish a justified event-parking policy before implementation.
+         Current mask comparisons do not isolate polling cost or demonstrate
+         consistent CPU savings; keep runnable polling for now. Parking linked
+         followers alone does not address all gate waits or create JIT work.
+         Any future implementation must coordinate condition publication,
+         wakeup and node lifetime; a final release-store cannot be followed by
+         an unchecked node dereference. Preserve physical owners and two-word
+         args. An ordinary workload observation is not a proof of arbitrary
+         oversubscription, fairness or a new sleeping-wait protocol.
 
 ## P2: Performance And Broader Scope
+
+### Instrumented Measurement Foundation
+
+The existing benchmark's `Total Time` includes thread creation/join and
+per-ioctl printing and uses a millisecond wall clock. Establish a usable
+measurement boundary before drawing performance conclusions:
+
+1. [x] Add opt-in structured measurements to the existing ioctl driver: a
+   monotonic worker envelope after the start barrier and before return,
+   nearest-rank ioctl p50/p99, summed worker CPU time and exact completed counts.
+   Bound sample storage, reject malformed/overflowing input and make partial or
+   timing-error runs nonpassing; preserve the workload/role and ioctl ABI.
+2. [x] Exercise the production driver with real pthreads, deterministic clocks
+   and an ioctl double, plus a real-clock run. Cover setup, ioctl and timer
+   failures separately. This is measurement validation, not kernel JIT evidence.
+3. [x] Retain measured payload logs in existing complex spin/mutex drivers,
+   run affected units and complex JIT gates, and document commands and limits.
+   Keep promotion/translation preparation outside the measured invocation.
+   The final 208-input freeze passes 30 production-driver scenarios, 47
+   evidence-controller tests and 5/5 existing core JIT cases. Four measured
+   payloads have complete records and 451 new returned bodies with saved
+   images in their before/after snapshots; all phases total 481 bodies.
+   [VALIDATION](VALIDATION.md#instrumented-benchmark-measurements) records the
+   guest-only archive, source identity and separate historical runs.
+
+These are instrumented ioctl measurements, not pure CS/lock latency: generated
+body witnesses, logging, oracles, scheduling and measurement overhead remain.
+Worker CPU time excludes the daemon and external peers. `mutex_jit=0` uses the
+original mutex path; it is a debug/native control, not a native-delegation
+comparison group.
+This foundation does not close the comparison and amortization work below.
+
+### Comparator Feasibility And Matched Experiments
+
+All comparison groups below use x86_64; they differ in execution strategy, not
+machine architecture.
+
+1. [x] Assess actual TCLock/native/JIT paths before selecting a third comparison
+   group for native delegation.
+   The unchanged upstream mutex object cannot compile against this guest's
+   task layout; a normal external control object compiles. Preserve the failed
+   observer and compiler evidence in [VALIDATION](VALIDATION.md#tclock-comparator-feasibility).
+   The kernel has a CPU PMU node, but `perf` is not on the guest PATH; hardware
+   counting is unverified, not proven unsupported. No kernel or project runtime
+   change, new JIT run, native-comparator implementation or daily case is added.
+2. [x] Implement matched native-with-existing-hooks/JIT trials using the same
+   workload text, parameters/roles, state preparation and affinity. Preserve
+   `mutex_jit=1` and all JIT gates; native selection uses a nonmatching target,
+   not a second lock protocol. Record preparation separately, confirm published
+   JIT entries, isolate measured-stage bodies, retain failed pairs and rebuild
+   whole drained sessions when needed. Reuse existing workload/oracle logic.
+   The initial ordinary mode 2/5 scope passes 16/16 independent sessions,
+   eight pairs and 1,044 measured-stage returned bodies on 210 inputs;
+   native comparison groups have no JIT. Two existing unit entries cover the
+   driver and observer. Commands and interpretation live in the
+   [paired flow](JIT_EXECUTION.md#34-原生锁与-jit-配对实验), results in
+   [VALIDATION](VALIDATION.md#paired-native-jit-experiments). This does not
+   establish a nested/SELFTEST or unmodified production-subsystem comparator.
+3. [x] Add balanced repeat ordering and explicit thread/workload sweeps with
+   paired metadata, not averages across unrelated modes. Mode 2/5 with 4/8
+   threads and two opposite-order pairs per point are verified. No fixed live
+   case or daily suite is added; failed/incomplete pairs remain fail-stop.
+4. [x] Investigate the initial mode-5 anomaly before optimization: actual module
+   ELF and serial records show routine queue/JIT traces at ALERT under console
+   level 4. Move only these traces to INFO, retaining logs, errors and body
+   gates. The existing mutex outer unit detects severity/disabled-log mutants;
+   four mode-5 pairs and both mode-4 phases pass on the new 210-input freeze.
+   At workload 100000, eight-thread times fall from about 2.1 s to 57-65 ms;
+   four-thread participation rises from 2/128 to 94/128. This supports serial
+   logging as a major contributor, not complete cost attribution or speedup.
+   Source/console controls and scoped evidence are in
+   [VALIDATION](VALIDATION.md#mutex-routine-log-severity).
+5. [x] Record actual translator-child wall/CPU/RSS separately from preparation
+   and payload envelopes, with an opt-in daemon flag and unchanged default.
+   Join records to published entries, reject malformed/failed accounting,
+   retain console settings across phases and comparison groups, and preserve
+   historical pairs without inventing telemetry. Three existing unit programs and 32 sessions /
+   16 pairs pass: modes 2/5, workload 10000/100000, eight threads, four balanced
+   repeats per point. All 3,250 measured bodies have matching images and two
+   service returns. The 3.27-3.40 s translator child is distinct from 8.77-9.68 s
+   JIT preparation; no pure-compiler or whole-plan acceptance is inferred.
+   [VALIDATION](VALIDATION.md#translation-resource-accounting) records the
+   unchanged runtime/ABI scope and per-group sample sizing based on log capacity.
+6. [x] Profile actual leased translation before optimizing symbol/text inspection,
+   CFG/admission, emission and assembly. Context-name matching makes 4.32 million
+   glob calls per image. Compile the unchanged rules into one regex union,
+   without caching addresses or weakening checks. Five existing units, 25 audit
+   cases, mode 2/5 profile/JIT gates, mode 4/8 and 12 refusals pass. Real names,
+   intervals and generated bytes agree; plain translation falls from about
+   3.3 s to 1.6 s. Keep raw profiler overhead separate from unprofiled timings;
+   [VALIDATION](VALIDATION.md#context-symbol-matching) records both source freezes
+   and the initial archive-observer error, not a failed JIT or a whole-plan PASS.
+7. [ ] Separately measure kernel queueing, steady payload, hostcall/native and
+   observation costs; broaden inputs, affinities/sockets and repetitions beyond
+   the finite sweep above. Obtain verified counter tooling before reporting
+   hardware/memory/cache transfers. Keep console/JIT share and failures, establish
+   amortization, and use explicit experiments rather than new routine smokes.
+   - [x] Add default-off, load-time-only `jit_timing` for inclusive dispatch,
+     actual wrapper, typed service and lock-control C intervals. Report after
+     drain; clock/overflow failures invalidate metrics without changing work.
+     The initial paired entry validated loaded selection, four exact rows and
+     ordinary mode 2/5's 1/3/2/1 call counts per body. All 40 existing units,
+     external `W=1` build, 16 off/on sessions and five default-off core cases
+     pass on one 210-input freeze, with 2,083 returned bodies. The old scalar
+     adapter's registry-fixture compile regression is reproduced and repaired;
+     service edits now explicitly select that independent unit. See
+     [boundary evidence](VALIDATION.md#jit-boundary-timing).
+   - [x] Extend optional timing to spin/mutex physical-owner native waits.
+     Capture backend/timestamp locally, preserve every return and final ACK,
+     and report six phases. Route direct/secondary test loads through one
+     helper without changing their arguments or timeouts. On the new freeze,
+     40 existing units, external W=1 build, eight paired sessions, five default-off
+     core and five enabled complex cases pass. Six owner waits match native
+     completion/identity and nine unlocks; first compile failure and stopped
+     predecessor remain separate [evidence](VALIDATION.md#native-owner-wait-timing).
+   - [x] Measure private spin/mutex queue residence, now eight timing phases.
+     Record before tail publication and consume before node wake/reuse; stop
+     at native L acquisition or the first executed body's pre-dispatch point.
+     A refused no-body attempt retains its timestamp. Nine affected existing
+     units, external W=1 build, eight paired sessions, default-off core 5/5 and
+     enabled nested mode 4/8 pass on one 210-input freeze. Queue samples match
+     drained slowpath totals; source, first fixture type failure and 1,334
+     returned bodies are retained in [evidence](VALIDATION.md#private-queue-timing).
+     This adds one field per node, not a frame/args change or a new test entry.
+     Unpublished/fastpath acquisitions and direct nested mutex B waits are
+     outside the queue interval; rare resource/schedule combinations are not
+     added to this measurement increment.
+   - [ ] Measure complete acquisition, native execution and observation costs with
+     independently justified boundaries. Current elapsed totals include
+     preparation, nested overlap and scheduling, not pure instruction/CPU cost.
+     Owner wait starts after waiter publication; the wider handoff below includes
+     that early prefix but also preparation/ACK. Private queue totals exclude pre-node preparation and native-only
+     acquisition paths. Broader inputs, affinities, hardware tooling and
+     amortization above remain performance work, not rare-case correctness gates.
+     - [x] Add an opt-in native-handoff envelope around validated borrowing,
+       remote/local publication and owner waiting, separately from the existing
+       owner-wait interval. Start before remote publication can release an
+       ancestor; finish after wait returns, using only executor-local values.
+       Preserve owners, ACK order, frames and two-word args. Check disabled and
+       enabled behavior in existing units and representative nested/native JIT
+       cases; no new test entry or retry of the two-CPU missing-JIT experiment.
+       Inclusive handoff is not waiter CPU time, post-unlock work or complete
+       original lock acquisition; nested envelopes can overlap.
+       [Acceptance](VALIDATION.md#native-handoff-timing): six existing units,
+       W=1 external build, two off/nested cases, eight balanced paired sessions
+       and three on/native cases pass on 211 inputs (nine changed files).
+       Four per-owner handoffs match completion/inner-wait counts; 1,252 returned
+       bodies remain joined to saved images. Preserve the initial repeats=1
+       CLI rejection; it started no payload, and prior passing phases were not
+       repeated. Broader cost attribution/amortization remains open.
+8. [ ] Resolve a faithful native-delegation comparison separately. The checked
+   upstream kernel requires task/lifecycle/lock changes beyond existing hooks;
+   module-only adaptation is not yet designed or accepted. Do not boot/build
+   another kernel or invent a raw-native production mode under the current
+   default. The [comparator contract](DESIGN.md#13-performance-comparator-contract)
+   preserves this native-delegation comparison gap; completing the native-lock
+   and JIT groups does not close P2.
 
 - [ ] Compare native locks, native delegation and JIT on equivalent workloads;
       separate translation, steady-state, queueing, hostcall and fallback cost.
@@ -632,4 +1123,3 @@ does not close the broader C5 context/alias work.
       then code-pool sizing and optional NUMA policies.
 - [ ] Broaden opt-in spin NUMA tests before any default change; mutex currently
       has no NUMA-local delegation policy.
-- [ ] Keep userspace/futex, rwsem and other ISAs outside the active scope.

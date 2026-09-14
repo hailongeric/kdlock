@@ -52,6 +52,52 @@ build_all() {
 
 # --- Module management ---
 
+load_kdlock() {
+    local -a loader=(insmod "$KM_DIR/kdlock_km.ko")
+    local timing_arg expected_timing status
+    # Preserve bounded selftest insmod calls as well as ordinary direct loads.
+    # This helper does not drain, load klock_module, or change workload options.
+    if [[ "${1:-}" == --timeout ]]; then
+        if [[ ! "${2:-}" =~ ^[1-9][0-9]*$ ]]; then
+            fail "$TEST_NAME" "module-load timeout must be positive seconds"
+            return 1
+        fi
+        loader=(timeout --kill-after=10s "${2}s" "${loader[@]}")
+        shift 2
+    fi
+    local -a extra_args=("$@")
+    # Every session, including secondary phases, must honor the explicit opt-in.
+    # Paired arms have their own argument and loaded-parameter oracle; reject
+    # duplicate policy instead of letting insmod choose between two values.
+    if [[ -v KD_JIT_TIMING ]]; then
+        case "$KD_JIT_TIMING" in
+            0) expected_timing=N ;;
+            1) expected_timing=Y ;;
+            *) fail "$TEST_NAME" "KD_JIT_TIMING must be 0 or 1"; return 1 ;;
+        esac
+        for timing_arg in "${extra_args[@]}"; do
+            if [[ "$timing_arg" == jit_timing=* ]]; then
+                fail "$TEST_NAME" "duplicate JIT timing selection"
+                return 1
+            fi
+        done
+        extra_args+=("jit_timing=$KD_JIT_TIMING")
+    fi
+    "${loader[@]}" "${extra_args[@]}" || {
+        status=$?
+        fail "$TEST_NAME" "insmod kdlock_km failed"
+        return "$status"
+    }
+    if [[ -v KD_JIT_TIMING ]]; then
+        if [[ "$(cat /sys/module/kdlock_km/parameters/jit_timing)" != "$expected_timing" ]]; then
+            fail "$TEST_NAME" "loaded JIT timing selection differs"
+            return 1
+        fi
+        echo "JIT timing selection: loaded=$expected_timing"
+    fi
+    return 0
+}
+
 load_modules() {
     local target="${1:-$TARGET_PROCESS}"
     local -a extra_args=("${@:2}")
@@ -61,10 +107,7 @@ load_modules() {
     sysctl -w kernel.randomize_va_space=0 >/dev/null 2>&1
     sysctl -w kernel.numa_balancing=0 >/dev/null 2>&1
 
-    insmod "$KM_DIR/kdlock_km.ko" target_process="$target" "${extra_args[@]}" || {
-        fail "$TEST_NAME" "insmod kdlock_km failed"
-        return 1
-    }
+    load_kdlock target_process="$target" "${extra_args[@]}" || return $?
     insmod "$KLOCK_DIR/klock_module.ko" || { fail "$TEST_NAME" "insmod klock_module failed"; return 1; }
 }
 
@@ -93,15 +136,20 @@ start_daemon() {
     # Argument is daemon workspace mode (flat/per-tgid or legacy 1/2/v1/v2),
     # independent from benchmark mode numbers used by workloads.
     local mode="${1:-2}"
+    # Forward explicit daemon options as separate argv elements. Existing
+    # callers supply only a workspace mode and keep their previous defaults.
+    if [ "$#" -gt 0 ]; then
+        shift
+    fi
     cd "$DAEMON_DIR"
     rm -rf 0x* 2>/dev/null || true
     if [ -n "${DAEMON_LOG:-}" ]; then
         # The runner collects this after drain, also when an oracle fails.
         # Announce only this log, never scan unrelated temporary files.
         info "Evidence file: $DAEMON_LOG"
-        KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode "$mode" --quiet >"$DAEMON_LOG" 2>&1 &
+        KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode "$mode" --quiet "$@" >"$DAEMON_LOG" 2>&1 &
     else
-        KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode "$mode" --quiet &
+        KD_JIT_BODY_WITNESS=1 setsid ./daemon --mode "$mode" --quiet "$@" &
     fi
     DAEMON_PID=$!
     cd "$KDLOCK_DIR"

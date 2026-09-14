@@ -20,23 +20,27 @@ typedef struct {
 } atomic_t;
 struct task_struct {
 	int pid;
+	char comm[16];
 };
 struct mutex {
 	struct task_struct *owner;
 };
 #include "mutex_resource_types.h"
 
-static struct task_struct waiter = { 1 }, peer = { 2 };
+static struct task_struct waiter = { .pid = 1 }, peer = { .pid = 2 };
 static struct task_struct *current = &waiter;
+static const char *target_process = "target";
 static unsigned int checks, errors, preempt, migration, table_irq;
 static unsigned int gets, task_puts, refs, adds, acquires, releases, schedules;
 static unsigned int slow_calls, notify_calls, samples, mode;
+static unsigned int native_waits;
 static unsigned long kd_mutex_multi_slot_count, kd_mutex_frame_failure_count;
 static unsigned long kd_mutex_node_overflow_count, kd_mutex_jit_resume_count;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
 static atomic_t kd_mutex_reserved_nodes;
 static bool promoted, enabled, task_failure, active_override, borrowed;
 static bool schedule_wanted, recycle_on_enable, direct_packet;
+static bool source_open, native_owner_wait;
 static struct kd_mutex *waiting_gate, *release_gate;
 static struct kd_mutex_node *recycle_node;
 static struct pt_regs expected_regs, captured_regs;
@@ -76,6 +80,7 @@ static jmp_buf resume_target;
 #define BIT(n) (1UL << (n))
 #define DEFINE_PER_CPU_SHARED_ALIGNED(type, name) type name
 #define this_cpu_ptr(p) (p)
+#define per_cpu_ptr(p, cpu) tail_node_for_cpu(p, cpu)
 #define DEFINE_RAW_SPINLOCK(name) int name
 #define raw_spin_lock_irqsave(p, flags)     \
 	do {                                \
@@ -125,6 +130,8 @@ static void cpu_relax(void);
 static void kd_origin_mutex_lock(struct mutex *lock);
 static void kd_origin_mutex_unlock(struct mutex *lock, unsigned long ip);
 static bool kd_mutex_task_active(struct task_struct *task);
+static bool kd_mutex_task_reroute(struct task_struct *task);
+static bool kd_source_is_open(void);
 static bool kd_mutex_task_get(struct task_struct *task);
 static void kd_mutex_task_put(struct task_struct *task);
 static bool kd_hotlock_is_promoted(unsigned long addr);
@@ -136,6 +143,8 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 				      struct kd_mutex_node *node);
 static void jump_to_saved_regs(struct pt_regs *regs);
 static void jump_to_saved_regs_in_cs(struct pt_regs *regs);
+static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
+					       int cpu);
 #include "mutex_resource_code.h"
 
 /* Equal table-sized strides force collisions using actual mutex addresses;
@@ -146,6 +155,25 @@ struct origin_slot {
 };
 static struct origin_slot origins[KD_MUTEX_SHADOW_TABLE_SIZE + 1];
 static char shadow_stacks[KD_MUTEX_MAX_NODES][KD_MUTEX_SHADOW_STACK_SIZE];
+
+/* Model only per-CPU storage, not the codec. Use distinct addresses for the
+ * recorded 40-CPU topology; this_cpu_ptr still uses the existing local pool.
+ * These are finite codec inputs, not a claim about Linux per-CPU concurrency. */
+#define TAIL_TEST_CPUS 40
+static struct kd_mutex_node remote_nodes[TAIL_TEST_CPUS][KD_MUTEX_MAX_NODES];
+
+static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
+					       int cpu)
+{
+	CHECK(cpu >= 0 && cpu < TAIL_TEST_CPUS);
+	for (int idx = 0; idx < KD_MUTEX_MAX_NODES; idx++) {
+		if (node == &kd_mutex_nodes[idx])
+			return cpu == smp_processor_id() ? node :
+						  &remote_nodes[cpu][idx];
+	}
+	CHECK(false);
+	return NULL;
+}
 
 static void preempt_disable(void)
 {
@@ -212,7 +240,22 @@ static void cpu_relax(void)
 }
 static void kd_origin_mutex_lock(struct mutex *lock)
 {
-	CHECK(lock && !lock->owner && !preempt && !table_irq);
+	CHECK(lock && !preempt && !table_irq);
+	if (native_owner_wait) {
+		struct kd_mutex *gate = find_kd_mutex_shadow(lock);
+
+		/* A native peer acquired L between private-queue owners. Claiming
+		 * S cannot bypass that owner; substitute only its eventual unlock. */
+		CHECK(lock->owner == &peer && current == &waiter);
+		CHECK(gate && gate->locked == _Q_LOCKED_VAL &&
+		      !gate->physical_owner && !release_gate && refs == 1);
+		native_owner_wait = false;
+		native_waits++;
+		current = &peer;
+		kd_origin_mutex_unlock(lock, 0x9000);
+		current = &waiter;
+	}
+	CHECK(!lock->owner);
 	lock->owner = current;
 	acquires++;
 }
@@ -229,6 +272,16 @@ static bool kd_mutex_task_active(struct task_struct *task)
 {
 	CHECK(task == current);
 	return refs || active_override;
+}
+/* Task membership is a substitute; the real selector must still consult it
+ * when the name no longer matches or source admission has closed. */
+static bool kd_mutex_task_reroute(struct task_struct *task)
+{
+	return kd_mutex_task_active(task);
+}
+static bool kd_source_is_open(void)
+{
+	return source_open;
 }
 static bool kd_mutex_task_get(struct task_struct *task)
 {
@@ -287,6 +340,7 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	CHECK(node->cpuid == smp_processor_id() &&
 	      node->socket_id == numa_node_id());
 	CHECK(node->tail == (int)encode_tail(smp_processor_id(), node->slot));
+	CHECK(decode_tail(node->tail) == node);
 	CHECK(node->locked && !node->completed && !node->native_resume &&
 	      !node->next);
 	CHECK(node->saved_ret_addr == 0x8000);
@@ -343,6 +397,11 @@ static void reset(void)
 						     [KD_MUTEX_SHADOW_STACK_SIZE];
 	}
 	current = &waiter;
+	strcpy(waiter.comm, "target");
+	strcpy(peer.comm, "peer");
+	source_open = true;
+	native_owner_wait = false;
+	native_waits = 0;
 	errors = preempt = migration = table_irq = 0;
 	gets = task_puts = refs = adds = acquires = releases = schedules = 0;
 	slow_calls = notify_calls = samples = mode = 0;
@@ -359,6 +418,40 @@ static void reset(void)
 	expected_regs.sp = (unsigned long)&native_stack[20];
 	expected_regs.ip = 0x8765;
 	memset(&captured_regs, 0, sizeof(captured_regs));
+}
+
+static void check_tails(void)
+{
+	const struct {
+		int cpu, idx;
+		u32 word;
+	} golden[] = {
+		{ 0, 0, 0x10 },
+		{ 7, 3, 0x8c },
+		{ 39, 2, 0x288 },
+	};
+	u32 previous = 0;
+
+	/* Fixed wire values prevent matching bugs in encoder/decoder from hiding
+	 * behind a round trip. Zero is the caller's empty-queue sentinel: never
+	 * feed it to decode_tail(), which requires a published nonzero tail. */
+	for (unsigned int i = 0; i < sizeof(golden) / sizeof(golden[0]); i++)
+		CHECK(encode_tail(golden[i].cpu, golden[i].idx) == golden[i].word);
+	for (int cpu = 0; cpu < TAIL_TEST_CPUS; cpu++) {
+		for (int idx = 0; idx < KD_MUTEX_MAX_NODES; idx++) {
+			struct kd_mutex_node *expected =
+				cpu == smp_processor_id() ? &kd_mutex_nodes[idx] :
+							 &remote_nodes[cpu][idx];
+			u32 tail = encode_tail(cpu, idx);
+
+			/* Ascending distinct words also rule out zero and collisions
+			 * across CPUs/slots. Reserved low bits must not select a node. */
+			CHECK(tail > previous && !(tail & 3));
+			CHECK(decode_tail(tail) == expected);
+			CHECK(decode_tail(tail | 3) == expected);
+			previous = tail;
+		}
+	}
 }
 
 static void check_nodes(void)
@@ -533,6 +626,50 @@ static void hold_peer(struct kd_mutex *gate)
 	((struct mutex *)gate->origin_mutex_addr)->owner = &peer;
 	kd_mutex_origin_acquires = 1;
 }
+
+/* Connect promotion and renamed-owner routing to the actual hooks. The native
+ * wait is deterministic; real Linux exclusion and RCU remain live-test duties. */
+static void check_promotion_and_routing(void)
+{
+	struct mutex *lock = &origins[0].mutex;
+	struct kd_mutex *gate;
+
+	reset();
+	promoted = false;
+	CHECK(__is_kd_mutex_task() == 2);
+	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
+	CHECK(lock->owner == current && !refs && !shadow_count());
+	promoted = true;
+	__kd_mutex_unlock(lock, 0, 0x9000);
+	CHECK(!lock->owner && !task_puts && !shadow_count());
+
+	/* A native peer may win L before the promoted target's next acquisition;
+	 * no queue handoff is allowed to manufacture native ownership. */
+	current = &peer;
+	CHECK(__is_kd_mutex_task() == 0);
+	kd_origin_mutex_lock(lock);
+	current = &waiter;
+	native_owner_wait = true;
+	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
+	gate = find_kd_mutex_shadow(lock);
+	CHECK(!native_owner_wait && native_waits == 1);
+	CHECK(gate && gate->physical_owner == current && lock->owner == current);
+	CHECK(refs == 1 && gets == 1 && !task_puts);
+
+	source_open = false;
+	strcpy(current->comm, "renamed");
+	CHECK(__is_kd_mutex_task() == 2);
+	__kd_mutex_unlock(lock, 0, 0x9000);
+	CHECK(!lock->owner && !gate->physical_owner && !gate->locked);
+	CHECK(!refs && task_puts == 1 && __is_kd_mutex_task() == 0);
+	strcpy(current->comm, "target");
+	CHECK(__is_kd_mutex_task() == 0);
+	source_open = true;
+	CHECK(__is_kd_mutex_task() == 2);
+	CHECK(acquires == 3 && releases == 3 && !errors);
+	CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
+}
+
 static void check_hook_nodes(void)
 {
 	/* Full slots and absent stacks converge on the real no-node wait path.
@@ -642,6 +779,12 @@ static void check_slowpath_packets(void)
 				struct mutex *nested = &origins[1].mutex;
 				unsigned int count;
 
+				/* A borrowed suffix must keep using the real selector even
+				 * after rename and closing; C still belongs to the waiter. */
+				strcpy(current->comm, "renamed");
+				source_open = false;
+				CHECK(__is_kd_mutex_task() == 2);
+
 				/* The native suffix owns its unrelated C, not borrowed A.
 				 * Exercise absent and idle C shadows without consuming the
 				 * pre-existing routing ref or modifying A's physical owner.
@@ -667,8 +810,16 @@ static void check_slowpath_packets(void)
 				      !task_puts && refs == 1);
 				CHECK(gate->physical_owner == &peer &&
 				      lock->owner == &peer);
+				CHECK(__is_kd_mutex_task() == 2);
 			}
 			release_peer(gate);
+			if (mode == 5) {
+				/* The owner/ACK boundary is substituted here. Consume its
+				 * final routing ref only after the retained L is released. */
+				kd_mutex_task_put(current);
+				CHECK(!refs && task_puts == 1);
+				CHECK(__is_kd_mutex_task() == 0);
+			}
 		}
 		CHECK(!lock->owner && !gate->physical_owner && !gate->locked);
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
@@ -677,9 +828,11 @@ static void check_slowpath_packets(void)
 
 int main(void)
 {
+	check_tails();
 	check_nodes();
 	check_shadow_table();
 	check_hook_fallbacks();
+	check_promotion_and_routing();
 	check_hook_nodes();
 	check_slowpath_packets();
 	printf("production mutex resources: %u checks, 0 failures; nodes=%d shadow=%d regs=%zu\n",

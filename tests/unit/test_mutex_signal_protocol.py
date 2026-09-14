@@ -7,7 +7,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from mutex_signal_protocol import Entry, trigger_race, validate, wait_ready
+from mutex_signal_protocol import (
+    Entry,
+    trigger_race,
+    validate,
+    validate_call_quota,
+    validate_nested_schedule,
+    validate_shared_b,
+    wait_ready,
+)
 from native_waiter_signal_protocol import validate as validate_waiter_signal
 from native_waiter_signal_protocol import validate_pending_mutex
 
@@ -88,7 +96,179 @@ def race_fixture(probe, acquired, handoff):
     return "\n".join(before).replace("owner=1111", "owner=1110"), identities
 
 
+def nested_schedule_fixture():
+    """Distinct task packets let mutations separate waiter, executor and owner."""
+    cpus = (1, 0, 1, 0, 0, 1, 1)
+    roles = [
+        f"role={role} task={20 + role} self={0x1000 + role * 16:x} "
+        f"cpu={cpu} preempt=0 irq=0"
+        for role, cpu in enumerate(cpus)
+    ]
+    text = "\n".join(
+        [f"kd_nested mutex role: {row}" for row in roles]
+        + [
+            "JIT body witness: entry=cafe lock=aaaa body=1",
+            "kd_nested mutex blocked: holder=21 b_owner=1010 executor=24 "
+            "a_owner=1040 cpu=0 executor_cpu=0 a=aaaa b=bbbb queued=1 valid=1",
+        ]
+        + [f"kd_nested mutex done: {row}" for row in roles]
+        + ["kd_native stats: started=0 completed=0 unlocks=0"]
+    )
+    publication = {"status": 0, "entry": "0xcafe", "code": "0x8000"}
+    places = "\n".join(f"{role}\t{cpu}" for role, cpu in enumerate(cpus))
+    statuses = "\n".join(f"{role}\t0" for role in range(7))
+    return text, publication, places, statuses
+
+
+def shared_b_fixture():
+    """No copied lock model: these records exercise only the evidence parser.
+
+    A0's waiter is distinct from the retained owner, A1 executor and peer. Live
+    tests must produce these observations from the actual Linux wait list.
+    """
+    cpus = {**dict(enumerate(range(8))), 10: 8}
+    roles = {
+        role: f"role={role} task={20 + role} self={0x1000 + role * 16:x} "
+        f"cpu={cpu} preempt=0 irq=0 comm={'kd_native' if role == 10 else 'klock_test'}"
+        for role, cpu in cpus.items()
+    }
+    retained = (
+        "task=22 self=1020 cpu=2 a0=1010 a1=1050 b=1010 "
+        "outer0=aaaa outer1=cccc inner=bbbb executor=25 peer=30 queued=2 "
+        "before=12002 held=12001 after=12001 sequence=24003 preempt=0 irq=0 valid=1"
+    )
+    rows = [f"kd_shared role: {row}" for row in roles.values()] + [
+        "JIT body witness: entry=cafe lock=aaaa body=1",
+        "kd_native begin: task=22 outer=aaaa entry=cafe ip=1234 sp=5555 held=2 mutex=1 cpu=1 outer_released=0 remaining=2",
+        "JIT body witness: entry=beef lock=cccc body=1",
+        f"kd_shared retained: phase=0 {retained}",
+        f"kd_shared retained: phase=1 {retained}",
+        # Physical unlock precedes the ACK log; the new native owner may
+        # legitimately report first. Do not make logging a fake lock barrier.
+        "kd_shared peer: task=30 self=10a0 owner=10a0 lock=bbbb sequence=24005 comm=kd_native",
+        "kd_native ack: task=22 lock=bbbb mutex=1 last_spin=0",
+        "kd_native ack: task=22 lock=aaaa mutex=1 last_spin=0",
+    ] + [f"kd_shared done: {row}" for row in roles.values()]
+    for lane in range(2):
+        value, token = 0, 0x12340001 + lane * 0x101
+        for _ in range(12002):
+            value = ((value + token) & ((1 << 64) - 1)) ^ (token << 1)
+        rows.append(
+            f"kd_shared record: lane={lane} lock={'cccc' if lane else 'aaaa'} "
+            f"owner=0 visits=12005 before=12002 held=12002 after=12002 value={value:x} sequence={24003 + lane}"
+        )
+    rows += [
+        "kd_shared stats: claimed=4ff observed=1 peer_sequence=24005 owner=0 failures=0",
+        "kd_native stats: started=1 completed=1 unlocks=2",
+        "kd_mutex stats: jit_success=1 jit_resume=1 nested_queued=1 nested_jit=1",
+    ]
+    publication = [
+        {"entry": entry, "status": 0, "code": code}
+        for entry, code in (("0xcafe", "0x8000"), ("0xbeef", "0x9000"))
+    ]
+    return (
+        "\n".join(rows), publication,
+        "\n".join(f"{role}\t{cpu}" for role, cpu in cpus.items()),
+        "\n".join(f"{role}\t0" for role in cpus), "1234",
+    )
+
+
 class SignalOracleTests(unittest.TestCase):
+    def test_nested_executor_and_b_holder_share_cpu_through_jit(self):
+        result = validate_nested_schedule(*nested_schedule_fixture())
+        self.assertEqual(result["executor"], 24)
+        self.assertEqual(result["holder"], 21)
+        self.assertEqual(result["jit_bodies"], 1)
+        self.assertEqual(result["native_frames"], 0)
+        shared = validate_shared_b(*shared_b_fixture())
+        self.assertEqual(shared["jit_bodies"], 2)
+        self.assertEqual(shared["owner_acks"], 2)
+        self.assertEqual(shared["b_sequence"], 24005)
+
+    def test_nested_schedule_requires_each_ordered_kernel_witness(self):
+        text, *metadata = nested_schedule_fixture()
+        for line in text.splitlines():
+            for damaged in (
+                text.replace(line, ""),
+                text.replace(line, line + "\n" + line),
+            ):
+                with self.subTest(line=line), self.assertRaises(AssertionError):
+                    validate_nested_schedule(damaged, *metadata)
+        lines = text.splitlines()
+        for prefix in ("JIT body witness:", "kd_nested mutex blocked:"):
+            selected = next(line for line in lines if line.startswith(prefix))
+            reordered = [line for line in lines if line != selected] + [selected]
+            with self.subTest(prefix=prefix), self.assertRaises(AssertionError):
+                validate_nested_schedule("\n".join(reordered), *metadata)
+        text, *metadata = shared_b_fixture()
+        for line in text.splitlines():
+            for damaged in (text.replace(line, ""), text.replace(line, line + "\n" + line)):
+                with self.subTest(shared=line), self.assertRaises(AssertionError):
+                    validate_shared_b(damaged, *metadata)
+        for line in (r for r in text.splitlines() if r.startswith("kd_shared retained:")):
+            with self.assertRaises(AssertionError):
+                validate_shared_b(text.replace(line, "") + "\n" + line, *metadata)
+
+    def test_nested_schedule_rejects_wrong_identity_state_or_selection(self):
+        text, publication, places, statuses = nested_schedule_fixture()
+        for before, after in (
+            ("executor=24", "executor=20"),
+            ("holder=21", "holder=24"),
+            ("a_owner=1040", "a_owner=1000"),
+            ("b_owner=1010", "b_owner=1040"),
+            ("executor_cpu=0", "executor_cpu=1"),
+            ("a=aaaa", "a=bbbb"),
+            ("queued=1", "queued=0"),
+            ("valid=1", "valid=0"),
+            ("body=1", "body=0"),
+            ("entry=cafe", "entry=beef"),
+            ("lock=aaaa", "lock=bbbb"),
+            ("preempt=0", "preempt=1"),
+            ("irq=0", "irq=1"),
+            ("started=0", "started=1"),
+        ):
+            with self.subTest(field=before), self.assertRaises(AssertionError):
+                validate_nested_schedule(
+                    text.replace(before, after, 1), publication, places, statuses
+                )
+        for key, value in (("status", -1), ("entry", "0xbeef"), ("code", "0x0")):
+            with self.subTest(key=key), self.assertRaises(AssertionError):
+                validate_nested_schedule(
+                    text, {**publication, key: value}, places, statuses
+                )
+        for bad_places, bad_statuses in (
+            (places.replace("0\t1", "0\t0"), statuses),
+            (places + "\n0\t1", statuses),
+            (places, statuses.replace("0\t0", "0\t137")),
+            (places, statuses + "\n0\t0"),
+        ):
+            with self.assertRaises(AssertionError):
+                validate_nested_schedule(text, publication, bad_places, bad_statuses)
+        text, pubs, places, statuses, probe = shared_b_fixture()
+        for before, after in (
+            ("a0=1010", "a0=1020"), ("a1=1050", "a1=1060"),
+            ("b=1010", "b=1050"), ("executor=25", "executor=26"),
+            ("peer=30", "peer=22"), ("queued=2", "queued=1"),
+            ("before=12002 held=12001", "before=12002 held=12002"),
+            ("outer1=cccc", "outer1=aaaa"), ("phase=1", "phase=0"),
+            ("ip=1234", "ip=5678"), ("sp=5555", "sp=0"),
+            ("remaining=2", "remaining=1"), ("body=1", "body=0"),
+            ("entry=cafe", "entry=abcd"), ("visits=12005", "visits=12006"),
+            ("unlock", "missing_unlock"), ("nested_jit=1", "nested_jit=0"),
+            ("comm=kd_native", "comm=klock_test"),
+            ("preempt=0", "preempt=1"), ("failures=0", "failures=1"),
+        ):
+            with self.subTest(shared=before), self.assertRaises((AssertionError, KeyError)):
+                validate_shared_b(text.replace(before, after, 1), pubs, places, statuses, probe)
+        for bad_pubs, bad_places, bad_statuses in (
+            ([{**pubs[0], "status": -1}, pubs[1]], places, statuses),
+            ([pubs[0], pubs[0]], places, statuses),
+            (pubs, places.replace("10\t8", "10\t7"), statuses),
+            (pubs, places, statuses.replace("10\t0", "10\t137")),
+        ):
+            with self.assertRaises(AssertionError):
+                validate_shared_b(text, bad_pubs, bad_places, bad_statuses, probe)
+
     def test_ready_waits_for_matching_kernel_publication(self):
         def entry(status, rip=0x1234, tgid=42):
             return Entry(
@@ -811,6 +991,132 @@ class NativeWaiterRaceTests(unittest.TestCase):
                 self.assertEqual(result["signal"]["pidfd"], 1)
                 self.assertEqual(result["release"]["written"], 2)
                 self.assertEqual((params / "native_waiter_release").read_text(), "1\n")
+
+
+def call_quota_fixture():
+    # Synthetic logs exercise the oracle, not a kernel/clock implementation.
+    before = "JIT body witness: entry=1000 lock=8000 body=1\n" * 2
+    lines = []
+    for task in (20, 21):
+        lines += [
+            "JIT body witness: entry=1000 lock=8000 body=1",
+            f"[KD_JIT][WARN] reason=CALL_LIMIT_NATIVE entry=0x1000 ip=0x2000 sp=0x9000 return=0x1005 lock=0x8000 task={task} hostcall=1",
+            f"kd_native begin: task={task} outer=8000 entry=1000 ip=2000 sp=9000 held=1 mutex=1 cpu=0 outer_released=0 remaining=1",
+            f"kd_native complete: task={task} outer=8000 mutex=1",
+            f"kd_native ack: task={task} lock=8000 mutex=1 last_spin=0",
+            f"kd_hostcall quota done: task={task} repeats=17 cpu=1 preempt=0 irq=0",
+        ]
+    lines += [
+        f"kd_hostcall quota done: task={task} repeats=17 cpu=0 preempt=0 irq=0"
+        for task in (22, 23, 24)
+    ]
+    lines += [
+        "kd_native stats: started=2 completed=2 unlocks=2",
+        "kd_mutex stats: jit_success=2 jit_resume=2",
+        "kd_hostcall stats: exits=38 executed=36 resumed=36 rejected=0 failed=0 limit=2",
+    ]
+    publication = dict(
+        entry="0x1000", code="0x3000", tgid=0, pid=0, status=0, observed_ns=1
+    )
+    assembly = (
+        "/* KD_HOSTCALL id=1 symbol=ktime_get */\nloc_2000:\nloc_1005:\n"
+        "/* KD_HOSTCALL id=3 symbol=int_sqrt */\nloc_2100:\n"
+    )
+    return [
+        before + "\n".join(lines),
+        before,
+        publication,
+        dict(publication, observed_ns=2),
+        assembly,
+        "holder\t0\nwaiters\t0\n",
+    ]
+
+
+class CallQuotaTests(unittest.TestCase):
+    def test_normal_returns_and_quota_suffixes_are_distinct(self):
+        result = validate_call_quota(*call_quota_fixture())
+        self.assertEqual(result["normal_jit"], 2)
+        self.assertEqual(result["quota_native"], 2)
+        self.assertEqual(result["quota_callers"], 5)
+        self.assertEqual(result["jit_bodies"], 4)
+        self.assertEqual(result["hostcall_executed"], 36)
+
+    def test_packet_publication_and_ack_corruption_is_rejected(self):
+        for old, new in (
+            ("reason=CALL_LIMIT_NATIVE", "reason=HOSTCALL_LIMIT"),
+            ("ip=0x2000", "ip=0x3000"),
+            ("return=0x1005", "return=0x1006"),
+            ("sp=9000", "sp=9008"),
+            ("entry=1000 ip=2000", "entry=1001 ip=2000"),
+            ("held=1", "held=2"),
+            ("outer_released=0", "outer_released=1"),
+            ("remaining=1", "remaining=0"),
+            ("hostcall=1", "hostcall=0"),
+            ("task=20 lock=8000", "task=21 lock=8000"),
+            ("last_spin=0", "last_spin=1"),
+            ("repeats=17", "repeats=16"),
+            ("preempt=0", "preempt=1"),
+            ("unlocks=2", "unlocks=3"),
+            ("jit_resume=2", "jit_resume=1"),
+            ("resumed=36", "resumed=35"),
+            ("exits=38", "exits=36"),
+            ("executed=36", "executed=34"),
+            ("limit=2", "limit=0"),
+        ):
+            args = call_quota_fixture()
+            args[0] = args[0].replace(old, new, 1)
+            with self.subTest(old=old), self.assertRaises(AssertionError):
+                validate_call_quota(*args)
+        for tag in (
+            "CALL_LIMIT_NATIVE",
+            "kd_native begin:",
+            "kd_native ack:",
+            "kd_native complete:",
+            "kd_hostcall quota done:",
+        ):
+            for duplicate in (False, True):
+                args = call_quota_fixture()
+                line = next(line for line in args[0].splitlines() if tag in line)
+                args[0] = (
+                    args[0] + "\n" + line
+                    if duplicate
+                    else args[0].replace(line + "\n", "", 1)
+                )
+                with (
+                    self.subTest(tag=tag, duplicate=duplicate),
+                    self.assertRaises(AssertionError),
+                ):
+                    validate_call_quota(*args)
+        for key, value in (
+            ("status", -1),
+            ("code", "0x4000"),
+            ("entry", "0x1001"),
+            ("tgid", 1),
+            ("pid", 1),
+            ("observed_ns", 1),
+        ):
+            args = call_quota_fixture()
+            args[3][key] = value
+            with self.subTest(key=key), self.assertRaises(AssertionError):
+                validate_call_quota(*args)
+        for index, value in (
+            (1, ""),
+            (4, "loc_2000:\n"),
+            (
+                4,
+                "/* KD_HOSTCALL id=1 symbol=ktime_get */\nloc_2000:\nloc_1005:\n",
+            ),
+            (
+                4,
+                "/* KD_HOSTCALL id=1 symbol=ktime_get */\nloc_2000:\nloc_1005:\n"
+                "/* KD_HOSTCALL id=3 symbol=int_sqrt */\nloc_2000:\n",
+            ),
+            (5, "holder\t0\nwaiters\t124\n"),
+        ):
+            args = call_quota_fixture()
+            args[index] = value
+            with self.subTest(index=index), self.assertRaises(AssertionError):
+                validate_call_quota(*args)
 
 
 if __name__ == "__main__":

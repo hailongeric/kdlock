@@ -1,0 +1,7 @@
+# Tested CPython 3.10 runtime for the x86_64 translator and evidence readers.
+# Pin transitive runtime dependencies too; this is not a compiler/kernel lock
+# or a claim that installed package bytes are identical across distributions.
+miasm==0.1.5
+future==1.0.0
+pyparsing==2.4.7
+pyelftools==0.27

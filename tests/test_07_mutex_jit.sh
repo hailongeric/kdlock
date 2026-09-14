@@ -60,7 +60,7 @@ unload_modules
 
 sysctl -w kernel.randomize_va_space=0 >/dev/null 2>&1
 sysctl -w kernel.numa_balancing=0 >/dev/null 2>&1
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=1 || {
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit=1 || {
     fail "$TEST_NAME" "insmod kdlock_km with mutex_jit=1 failed"
     exit 1
 }

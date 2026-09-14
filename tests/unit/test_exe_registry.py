@@ -33,6 +33,13 @@ def lookup_code():
     return code
 
 
+def timing_code():
+    """Share actual optional counters across the lifecycle/dispatch fixtures."""
+    source = (ROOT / "kernel_module/exe.c").read_text()
+    return source[source.index("enum kd_jit_timing_phase {"):
+                  source.index("static struct kd_exe_info *kd_exes;")]
+
+
 def production():
     source = (ROOT / "kernel_module/exe.c").read_text()
     # Keep production capacities, gate and service declarations. Service calls
@@ -48,7 +55,7 @@ def production():
             )
         ]
     )
-    code += lookup_code()
+    code += timing_code() + lookup_code()
     for name in (
         "int kd_exe_init(void)",
         "void kd_exe_exit(void)",
@@ -69,6 +76,10 @@ def main():
     # Each mutation must compile and fail an assertion. A compiler error or
     # timeout is not evidence that a resource invariant is actually observed.
     mutations = {
+        "timing-session-not-reset": (
+            "\tkd_jit_timing_reset();", "\t/* injected stale timing session */"),
+        "timing-unload-not-reported": (
+            "\tkd_jit_timing_report();", "\t/* injected missing timing report */"),
         "partial-publish": (
             "if (!mem) {\n\t\tkd_code_block_gate_unlock();",
             (

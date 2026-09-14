@@ -13,7 +13,7 @@ import re
 import shlex
 import subprocess
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -399,7 +399,9 @@ def source_hashes():
                 if name.endswith(".mod.c"):
                     continue
                 path = Path(directory) / name
-                if name in ("Makefile", ".config") or path.suffix in (
+                # The install recipe affects translator behavior just like its
+                # source; retain it without capturing arbitrary generated text.
+                if name in ("Makefile", ".config", "requirements.txt") or path.suffix in (
                     ".c",
                     ".h",
                     ".S",
@@ -541,6 +543,11 @@ def main(argv=None):
         "--dry-run", action="store_true", help="print selected commands only"
     )
     parser.add_argument(
+        "--jit-timing",
+        action="store_true",
+        help="opt in to inclusive JIT/native-owner intervals for selected cases",
+    )
+    parser.add_argument(
         "--output", type=Path, help="new evidence directory (must not exist)"
     )
     parser.add_argument(
@@ -550,6 +557,13 @@ def main(argv=None):
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
     selected = select(args.suite, args.case)
+    # Record the opt-in with each case, including multi-session scripts. Do not
+    # mutate the catalog or inherit ambient KD_* settings into ordinary runs.
+    if args.jit_timing:
+        selected = [
+            replace(case, env={**case.env, "KD_JIT_TIMING": "1"})
+            for case in selected
+        ]
     if args.list or not selected:
         for name, cases in SUITES.items():
             print(f"{name} ({len(cases)}): {', '.join(cases)}")

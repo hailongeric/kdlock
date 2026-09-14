@@ -9,13 +9,8 @@ sys.path.insert(0, os.path.join(ROOT, "disassem"))
 
 import hostcall
 
-try:
-    import indirect_jump
-except ModuleNotFoundError as error:
-    if error.name != "miasm":
-        raise
-    print("[SKIP] test_hostcall_codegen: miasm is unavailable")
-    raise SystemExit(0) from error
+# Missing miasm must fail this required code-generation gate, not count as PASS.
+import indirect_jump
 
 
 def require(condition, message):
@@ -36,6 +31,7 @@ def main():
     by_symbol = {spec.symbol: spec for spec in specs}
     require("ktime_get" in by_symbol, "ktime_get is absent from manifest")
     require("ktime_get_ns" in by_symbol, "ktime_get_ns is absent from manifest")
+    require(by_symbol["int_sqrt"].service_id == 3, "scalar service ID drifted")
 
     with open(
         os.path.join(ROOT, "include", "exe_info.h"), "r", encoding="utf-8"
@@ -46,23 +42,27 @@ def main():
     require(match is not None, "KD_EXE_HOSTCALL is not defined")
     hostcall_exit = int(match.group(1))
 
-    service_address = 0x1000
     unknown_address = 0x2000
-    services = {service_address: by_symbol["ktime_get"]}
+    addresses = {spec.symbol: 0x1000 + i * 0x100 for i, spec in enumerate(specs)}
+    services = hostcall.resolve_hostcalls(lambda symbol, _: addresses.get(symbol))
+    require(len(services) == len(specs), "a declared service was not resolved")
     assembly = indirect_jump.make_callee_table(
-        [unknown_address, service_address], services
+        [unknown_address, *services], services
     )
-    service_stub = stub_for(assembly, service_address, unknown_address)
     unknown_stub = stub_for(assembly, unknown_address)
 
-    require("KD_HOSTCALL" in assembly, "hostcall marker is absent")
-    require(
-        f"0x{hostcall_exit:x}" in service_stub,
-        "hostcall stub uses the wrong exit reason",
-    )
-    require(
-        "R13 + 0x8" not in service_stub, "hostcall stub pops the virtual return address"
-    )
+    ordered = sorted(services) + [unknown_address]
+    for address, next_address in zip(ordered, ordered[1:]):
+        service = services[address]
+        service_stub = stub_for(assembly, address, next_address)
+        require(
+            f"KD_HOSTCALL id={service.service_id} symbol={service.symbol}" in assembly,
+            "named service marker is absent",
+        )
+        require(f"0x{hostcall_exit:x}" in service_stub, "wrong service exit reason")
+        require(f"0x{address:x}" in service_stub, "wrong native service target")
+        require("R13 + 0x8" not in service_stub, "service popped its CALL word")
+        require("RDI" not in service_stub, "stub overwrote the scalar argument")
     require("0x1" in unknown_stub, "unknown call does not use KD_EXE_CALL_MISS")
     require(
         "R13 + 0x8" not in unknown_stub,

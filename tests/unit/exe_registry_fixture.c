@@ -3,6 +3,7 @@
  * No generated machine code, kernel locks or executable permissions run here.
  */
 #include <errno.h>
+#include <limits.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -16,7 +17,7 @@
 #include "kd_source_api.h"
 
 struct pt_regs {
-	unsigned long ax;
+	unsigned long ax, di;
 };
 struct task_struct {
 	int tgid, pid;
@@ -26,11 +27,18 @@ typedef struct {
 	int counter;
 } atomic_t;
 typedef long long atomic64_t;
+typedef long long s64;
+typedef unsigned long long u64;
+#define S64_MAX LLONG_MAX
+#define module_param_named(...)
+#define MODULE_PARM_DESC(...)
+#define likely(x) (x)
+#define unlikely(x) (x)
 
 /* Type-check the production capacity diagnostic's real caller identity too. */
 static struct task_struct task = { .tgid = 42, .pid = 43 };
 static struct task_struct *current = &task;
-static int checks, failures, errors, warnings;
+static int checks, failures, errors, warnings, timing_rows;
 
 #define CHECK(expr)                                                     \
 	do {                                                            \
@@ -48,18 +56,22 @@ static int checks, failures, errors, warnings;
 #define smp_load_acquire(p) __atomic_load_n(p, __ATOMIC_ACQUIRE)
 #define smp_store_release(p, v) __atomic_store_n(p, v, __ATOMIC_RELEASE)
 #define atomic_set(p, v) __atomic_store_n(&(p)->counter, v, __ATOMIC_RELAXED)
+#define atomic_read(p) __atomic_load_n(&(p)->counter, __ATOMIC_RELAXED)
 #define atomic_set_release(p, v) smp_store_release(&(p)->counter, v)
 #define atomic64_set(p, v) (*(p) = (v))
 #define atomic64_read(p) (*(p))
 #define try_cmpxchg(p, old, v)                                          \
 	__atomic_compare_exchange_n(p, old, v, false, __ATOMIC_SEQ_CST, \
 				    __ATOMIC_SEQ_CST)
+#define atomic64_try_cmpxchg(p, old, v) try_cmpxchg(p, old, v)
 #define cpu_relax() __asm__ volatile("pause" ::: "memory")
 #define __user
-#define KD_PR_INFO(...)                      \
+#define KD_PR_INFO(format, ...)              \
 	do {                                 \
+		if (strstr(format, "kd_jit timing:")) \
+			timing_rows++;              \
 		if (0)                       \
-			printf(__VA_ARGS__); \
+			printf(format, ##__VA_ARGS__); \
 	} while (0)
 #define KD_PR_ERR(...)                                            \
 	do {                                                      \
@@ -160,6 +172,14 @@ static unsigned long ktime_get_ns(void)
 {
 	return 0;
 }
+/* Registration resolves the real manifest but does not execute services. Keep
+ * the scalar primitive/argument shape present so that table drift compiles. */
+static unsigned long int_sqrt(unsigned long argument)
+{
+	(void)argument;
+	CHECK(!"registration unexpectedly invoked a service");
+	return 0;
+}
 #define ktime_to_ns(value) (value)
 
 static size_t copy_from_user(void *to, const void *from, size_t size)
@@ -204,6 +224,14 @@ static void reset(enum allocation_mode mode)
 	allocation_mode = mode;
 	source_open = true;
 	source_root_error = 0;
+	kd_jit_timing = mode == PARTIAL;
+	timing_rows = 0;
+	/* Reinitialization must discard previous session measurements, including
+	 * error markers, even if allocation fails before a code pool is usable. */
+	for (int i = 0; i < KD_JIT_TIME_COUNT; i++) {
+		kd_jit_times[i].samples = kd_jit_times[i].ns = 17;
+		atomic_set(&kd_jit_times[i].invalid, 1);
+	}
 }
 
 static unsigned long key(unsigned int i)
@@ -233,6 +261,11 @@ static void check_pool(enum allocation_mode mode)
 
 	reset(mode);
 	CHECK(kd_exe_init() == 0);
+	for (int i = 0; i < KD_JIT_TIME_COUNT; i++) {
+		CHECK(!kd_jit_times[i].samples && !kd_jit_times[i].ns);
+		CHECK(!atomic_read(&kd_jit_times[i].invalid));
+	}
+	CHECK(!timing_rows);
 	available = kd_code_block_free;
 	CHECK(available == (mode == PARTIAL ?
 				    (KD_CODE_BLOCK_POOL + 1) / 2 -
@@ -283,6 +316,7 @@ static void check_pool(enum allocation_mode mode)
 	CHECK(!kd_exe_is_ready(0, key(0)));
 	CHECK(!kd_exe_publish_status(kd_get_exe(0, key(0)), KD_EXE_NORMAL));
 	kd_exe_exit();
+	CHECK(timing_rows == (mode == PARTIAL ? KD_JIT_TIME_COUNT : 0));
 }
 
 static void check_full_table(void)

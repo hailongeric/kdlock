@@ -9,6 +9,7 @@
 #include "spin_shadow_types.h"
 
 typedef uint32_t u32;
+typedef uint64_t u64;
 
 struct qspinlock {
 	union {
@@ -70,7 +71,21 @@ struct kd_spin_node {
 	struct task_struct *task_struct_ptr;
 	unsigned long gsbase;
 	struct kd_spin_ref spin_origin;
+	uint64_t queued_at_ns;
 };
+
+/* This queue/node fixture runs with optional timing disabled. The production
+ * timer and enabled dispatch endpoints are covered by the executor/outer units. */
+static u64 kd_exe_queue_timing_start(void)
+{
+	return 0;
+}
+static void kd_exe_queue_timing_end(bool mutex, uint64_t *queued_at, u64 end)
+{
+	(void)mutex;
+	(void)queued_at;
+	(void)end;
+}
 
 struct shadow_stack;
 static struct shadow_stack local_shadow_stack;
@@ -217,13 +232,17 @@ static void kd_spin_claim_origin(struct qspinlock *lock)
 	})
 #define atomic_cond_read_acquire(p, condition) \
 	smp_cond_load_relaxed_sched(p, condition)
-#define smp_store_release(p, value)                      \
-	do {                                             \
-		if (!producer_case) {                    \
-			CHECK(active_lock->locked == 1); \
-			handoffs++;                      \
-		}                                        \
-		*(p) = (value);                          \
+/* The handoff counter belongs to the queue-head capacity fallback. Ordinary
+ * combiner publication now uses release too, but is not that refusal event;
+ * spin_outer_progress_fixture checks its packet/reuse boundary separately. */
+#define smp_store_release(p, value)                                      \
+	do {                                                           \
+		if (!producer_case) {                                  \
+			CHECK(active_lock->locked == 1);               \
+			if (!strcmp(__func__, "__kd_spin_lock_longjmp")) \
+				handoffs++;                           \
+		}                                                      \
+		*(p) = (value);                                        \
 	} while (0)
 
 static int xchg_tail(struct qspinlock *lock, int tail)

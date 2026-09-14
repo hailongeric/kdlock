@@ -1,15 +1,45 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Production protocol with deterministic CPU switches, not a memory-model test. */
+/* Production protocol with deterministic CPU switches, not a memory-model test.
+ * Full pt_regs comparisons include software flags only, not hardware restore. */
 #include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-struct pt_regs {
-	unsigned long ip, sp, di;
-};
+typedef unsigned long long u64;
+typedef long long s64;
+typedef s64 atomic64_t;
+typedef int atomic_t;
+#define S64_MAX LLONG_MAX
+#define likely(x) (x)
+#define unlikely(x) (x)
+#define module_param_named(...)
+#define MODULE_PARM_DESC(...)
+#define atomic64_set(p, v) (*(p) = (v))
+#define atomic64_read(p) (*(p))
+#define atomic_set(p, v) (*(p) = (v))
+#define atomic_read(p) (*(p))
+
+/* Deterministic clock/atomic primitives, not concurrent counter or CPU-time
+ * evidence. The included production timer must leave owner packets unchanged. */
+static unsigned int timing_reads, mutex_puts;
+static u64 ktime_get_ns(void)
+{
+	return timing_reads++ * 10ULL;
+}
+static bool atomic64_try_cmpxchg(atomic64_t *ptr, s64 *old, s64 value)
+{
+	if (*ptr != *old) {
+		*old = *ptr;
+		return false;
+	}
+	*ptr = value;
+	return true;
+}
+
 struct task_struct {
 	int pid;
 };
@@ -24,10 +54,14 @@ typedef struct qspinlock raw_spinlock_t;
 struct mutex {
 	int unused;
 };
+#include "remote_types.h"
 struct kd_spin_node {
 	struct pt_regs regs;
 };
-#include "remote_types.h"
+
+_Static_assert(sizeof(struct pt_regs) == 168, "guest x86-64 pt_regs size");
+_Static_assert(offsetof(struct pt_regs, ip) == 0x80, "guest RIP offset");
+_Static_assert(offsetof(struct pt_regs, sp) == 0x98, "guest RSP offset");
 
 enum { CPUS = KD_EXEC_MAX_LOCK_DEPTH, WAITER_CPU = CPUS };
 static unsigned int cpu, checks, failures, wrong_owner, released;
@@ -39,31 +73,52 @@ static struct list_head kd_native_frames;
 static struct task_struct logical = { 10 }, executors[CPUS];
 static struct task_struct *current;
 static struct kd_exec_frame frames[CPUS];
+static struct pt_regs packets[CPUS];
 static struct kd_exec_outer_unlock hooks[CPUS];
 static raw_spinlock_t locks[CPUS];
 static unsigned int live_frames;
 static unsigned long stack[2];
 static void (*native_step)(void);
+static bool reuse_parent;
+static unsigned int done_publications, packet_checks;
+static struct kd_exec_frame reused_parent;
+static void check_packets(void);
+static void publish_before(const void *address, unsigned long value);
+static void publish_after(const void *address);
 
+#ifdef KD_REMOTE_MUTATION
+#define STOP_MUTATION() exit(1)
+#else
+#define STOP_MUTATION() ((void)0)
+#endif
 #define CHECK(c)                                                             \
 	do {                                                                 \
 		checks++;                                                    \
 		if (!(c)) {                                                  \
 			failures++;                                          \
 			fprintf(stderr, "FAIL line=%d: %s\n", __LINE__, #c); \
+			STOP_MUTATION();                                     \
 		}                                                            \
 	} while (0)
 #define BUG_ON(c)                                                           \
 	do {                                                                \
 		if (c) {                                                    \
 			fprintf(stderr, "BUG line=%d: %s\n", __LINE__, #c); \
-			abort();                                            \
+			exit(2);                                            \
 		}                                                           \
 	} while (0)
 #define READ_ONCE(x) (x)
 #define WRITE_ONCE(x, v) ((x) = (v))
 #define smp_load_acquire(p) (*(p))
-#define smp_store_release(p, v) (*(p) = (v))
+#define smp_store_release(p, v)                                   \
+	do {                                                     \
+		__auto_type publish_ptr = (p);                    \
+		__typeof__(*publish_ptr) publish_value = (v);      \
+		publish_before(publish_ptr,                       \
+			       (unsigned long)publish_value);    \
+		*publish_ptr = publish_value;                     \
+		publish_after(publish_ptr);                       \
+	} while (0)
 #define atomic64_inc(p) (++*(p))
 #define WARN_ON_ONCE(c) ((void)(c))
 #define cmpxchg(p, old, value)                  \
@@ -79,6 +134,7 @@ static void (*native_step)(void);
 		if (0)                       \
 			printf(__VA_ARGS__); \
 	} while (0)
+#define KD_PR_INFO(...) pr_info(__VA_ARGS__)
 #define raw_spin_lock_irqsave(lock, flags) \
 	do {                               \
 		(void)(lock);              \
@@ -146,8 +202,8 @@ static void preempt_disable(void)
 }
 static void kd_mutex_task_put(struct task_struct *task)
 {
-	(void)task;
-	BUG_ON(true);
+	CHECK(task == &logical && list_empty(&kd_native_frames));
+	mutex_puts++;
 }
 static int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
 					  struct kd_exec_frame *frame)
@@ -223,7 +279,45 @@ static int release_outer(struct kd_exec_frame *frame,
 int kd_spin_jit_nested_unlock_ctx(raw_spinlock_t *lock,
 				  struct kd_exec_frame *frame);
 static void cpu_relax(void);
+#include "timing_code.h"
 #include "remote_code.h"
+
+/* Every scheduler/RPC step must leave non-control registers and CALL words
+ * intact. RIP/RSP changes are checked separately when a return is consumed. */
+static void check_packets(void)
+{
+	for (unsigned int i = 0; i < live_frames; i++) {
+		CHECK(!memcmp(&frames[i].regs, &packets[i], sizeof(packets[i])));
+		packet_checks++;
+	}
+	CHECK(stack[0] == 0x300 && stack[1] == 0x400);
+}
+
+/* A parent can retire as soon as it sees DONE. Observe the link before the
+ * store, not just the final detached state after the publishing call returns. */
+static void publish_before(const void *address, unsigned long value)
+{
+	for (unsigned int i = 0; i + 1 < live_frames; i++) {
+		if (address != &frames[i].remote_result ||
+		    value != KD_EXEC_REMOTE_DONE)
+			continue;
+		CHECK(!frames[i + 1].resume_target);
+		CHECK(kd_exec_frame_can_complete(&frames[i + 1]));
+		check_packets();
+		done_publications++;
+	}
+}
+
+static void publish_after(const void *address)
+{
+	if (!reuse_parent || address != &frames[0].remote_result)
+		return;
+	CHECK(frames[0].remote_result == KD_EXEC_REMOTE_DONE);
+	CHECK(kd_exec_frame_can_complete(&frames[0]));
+	/* Only an all-unlocked parent is reusable here. No task/lock reference
+	 * is added; the poison makes a late publisher write directly observable. */
+	frames[0] = reused_parent;
+}
 
 /* Nested polling models C -> B -> A while all requests remain on live stacks. */
 static void cpu_relax(void)
@@ -235,11 +329,13 @@ static void cpu_relax(void)
 			continue;
 		select_cpu(i);
 		kd_exec_remote_poll(&frames[i]);
+		check_packets();
 		select_cpu(saved);
 		return;
 	}
 	if (native_step) {
 		native_step();
+		check_packets();
 		select_cpu(saved);
 		return;
 	}
@@ -248,11 +344,14 @@ static void cpu_relax(void)
 
 static void setup(unsigned int count)
 {
+	kd_jit_timing_reset();
+	timing_reads = mutex_puts = 0;
 	memset(frames, 0, sizeof(frames));
 	wrong_owner = released = borrows = borrow_puts = ends = refs = polls =
 		stages = 0;
 	kd_native_started = kd_native_completed = kd_native_unlocks = 0;
 	native_step = NULL;
+	reuse_parent = false;
 	live_frames = count;
 	logical.pid = 10;
 	INIT_LIST_HEAD(&kd_native_frames);
@@ -265,11 +364,6 @@ static void setup(unsigned int count)
 			(struct kd_exec_outer_unlock){ .release =
 							       release_outer };
 		frames[i] = (struct kd_exec_frame){
-			.regs = { .ip = 0x100,
-				  .sp = (unsigned long)stack,
-				  .di = i + 1 < count ?
-						(unsigned long)&locks[i + 1] :
-						0 },
 			.entry_ip = 0x100,
 			.outer_lock_addr = (unsigned long)&locks[i],
 			.gsbase = 1,
@@ -287,6 +381,14 @@ static void setup(unsigned int count)
 						 KD_EXEC_REMOTE_WAITING :
 						 KD_EXEC_REMOTE_IDLE,
 		};
+		/* Distinct nonzero bytes expose accidental partial packet copies.
+		 * Keep only the three control fields needed by the scripted calls. */
+		memset(&frames[i].regs, 0x21 + i, sizeof(frames[i].regs));
+		frames[i].regs.ip = 0x100;
+		frames[i].regs.sp = (unsigned long)stack;
+		frames[i].regs.di = i + 1 < count ?
+					 (unsigned long)&locks[i + 1] : 0;
+		packets[i] = frames[i].regs;
 		if (i + 1 < count) {
 			frames[i].control_call.phase = KD_CALL_ENTERED;
 			frames[i].control_call.return_ip = 0x300;
@@ -323,37 +425,76 @@ static void check_remote_chain(unsigned int count, bool reverse)
 					 KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
 	for (unsigned int j = count; j > 0; j--) {
+		select_cpu(j - 1);
 		CHECK(kd_exec_frame_can_complete(&frames[j - 1]));
 		CHECK(kd_exec_remote_complete(&frames[j - 1]) == 0);
 		CHECK(!frames[j - 1].resume_target);
 		CHECK(kd_exec_frame_complete(&frames[j - 1]) == 0);
 	}
+	check_packets();
 }
 
 static void check_final_call(void)
 {
 	struct kd_spin_node node;
 	struct pt_regs regs;
+	struct pt_regs expected;
+
 	setup(2);
 	node.regs = frames[1].regs;
+	memset(&regs, 0xcc, sizeof(regs));
+	expected = regs;
+	/* Refusal must leave both packets untouched, including non-control state. */
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) == -EINVAL);
+	CHECK(!memcmp(&regs, &expected, sizeof(regs)));
+	CHECK(!memcmp(&node.regs, &packets[1], sizeof(node.regs)));
 	CHECK(kd_exec_frame_record_event(&frames[1], KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
 	CHECK(kd_exec_remote_complete(&frames[1]) == 0);
+	select_cpu(0);
+	expected = node.regs;
+	expected.ip = stack[0];
+	expected.sp += sizeof(unsigned long);
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) ==
 	      KD_SPIN_NESTED_DELEGATED);
 	CHECK(regs.ip == stack[0] && regs.sp == (unsigned long)(stack + 1));
+	CHECK(!memcmp(&regs, &expected, sizeof(regs)));
+	CHECK(!memcmp(&node.regs, &expected, sizeof(node.regs)));
+	check_packets();
 	CHECK(!frames[0].outer_unlock_seen);
 	setup(2);
 	node.regs = frames[1].regs;
+	memset(&regs, 0xcc, sizeof(regs));
 	CHECK(kd_spin_jit_nested_unlock_ctx(&locks[0], &frames[1]) == 0);
 	CHECK(kd_exec_frame_record_event(&frames[1], KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
 	CHECK(kd_exec_remote_complete(&frames[1]) == 0);
+	select_cpu(0);
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) ==
 	      KD_SPIN_NESTED_PARENT_OOO);
 	CHECK(regs.ip == node.regs.ip && regs.sp == (unsigned long)stack);
+	CHECK(!memcmp(&regs, &packets[1], sizeof(regs)));
+	CHECK(!memcmp(&node.regs, &packets[1], sizeof(node.regs)));
 	CHECK(stack[0] == 0x300 && stack[1] == 0x400);
+	check_packets();
+}
+
+/* DONE permits a no-lock ancestor to disappear before the child returns from
+ * publication. Keep that boundary separate from borrowed native unlock ACK. */
+static void check_done_reuse(void)
+{
+	setup(2);
+	CHECK(kd_spin_jit_nested_unlock_ctx(&locks[0], &frames[1]) == 0);
+	CHECK(kd_exec_frame_record_event(&frames[1], KD_EXEC_EVENT_OUTER_UNLOCK,
+					 NULL) == 0);
+	CHECK(!kd_exec_frame_can_complete(&frames[0]));
+	memset(&reused_parent, 0xa5, sizeof(reused_parent));
+	reuse_parent = true;
+	CHECK(kd_exec_remote_complete(&frames[1]) == 0);
+	reuse_parent = false;
+	CHECK(!memcmp(&frames[0], &reused_parent, sizeof(reused_parent)));
+	CHECK(!frames[1].resume_target);
+	CHECK(!memcmp(&frames[1].regs, &packets[1], sizeof(packets[1])));
 }
 
 static void check_refusals(void)
@@ -397,6 +538,7 @@ static void check_refusals(void)
 	CHECK(frames[0].remote_result == KD_EXEC_REMOTE_WAITING &&
 	      !frames[1].resume_target);
 	CHECK(!kd_exec_frame_remote_pending(NULL));
+	check_packets();
 }
 
 /* A's executor waits after its last local ACK. W can return only after B's ACK. */
@@ -575,21 +717,79 @@ static void check_deep_native(unsigned int count)
 		      kd_exec_frame_can_complete(&frames[i]));
 }
 
+/* Nested waits enclose one another. N deterministic calls consume 2*N clock
+ * samples and N*N ticks, rather than N independent elapsed intervals. */
+static void check_native_timing(unsigned int count, bool mutex)
+{
+	unsigned int wanted = mutex ? KD_JIT_TIME_NATIVE_MUTEX_WAIT :
+				      KD_JIT_TIME_NATIVE_SPIN_WAIT;
+
+	CHECK(timing_reads == (kd_jit_timing ? 2 * count : 0));
+	for (unsigned int i = 0; i < KD_JIT_TIME_COUNT; i++) {
+		bool selected = kd_jit_timing && i == wanted;
+		CHECK(kd_jit_times[i].samples == (selected ? count : 0));
+		CHECK(kd_jit_times[i].ns == (selected ? count * count * 10 : 0));
+		CHECK(!kd_jit_times[i].invalid);
+	}
+	check_packets();
+}
+
+/* Exercise the shared wait's mutex completion and rejected unlock as well as
+ * spin relays. Errors must stay errors even when observation is enabled. This
+ * substitutes task-release/lock primitives, not Linux mutex ownership. */
+static void check_wait_returns(bool mutex, bool rejected)
+{
+	struct kd_native_request request;
+
+	setup(1);
+	frames[0].mutex_backend = mutex;
+	CHECK(kd_exec_native_begin(&frames[0], mutex) == 0);
+	if (rejected)
+		frames[0].state = KD_EXEC_FRAME_ERROR;
+	request = (struct kd_native_request){ .lock_addr = frames[0].outer_lock_addr };
+	frames[0].native_request = &request;
+	CHECK(kd_exec_native_wait(&frames[0]) == (rejected ? -EALREADY : 0));
+	CHECK(request.done && request.result == (rejected ? -EALREADY : 0));
+	CHECK(!frames[0].native_request && list_empty(&kd_native_frames));
+	CHECK(kd_native_started == 1 && kd_native_completed == !rejected);
+	CHECK(kd_native_unlocks == 1 && mutex_puts == (mutex && !rejected));
+	CHECK(!wrong_owner && !polls);
+	check_native_timing(1, mutex);
+}
+
 int main(void)
 {
+#ifdef KD_REMOTE_BUG_ONLY
+	BUG_ON(true);
+#endif
 	for (unsigned int i = 2; i <= CPUS; i++) {
 		check_remote_chain(i, false);
 		check_remote_chain(i, true);
 	}
 	check_final_call();
 	check_refusals();
-	check_native_chain(false);
-	check_native_chain(true);
 	check_relay_refusals();
-	check_three_native();
-	for (unsigned int i = 4; i <= CPUS; i++)
-		check_deep_native(i);
+	check_done_reuse();
+	for (unsigned int enabled = 0; enabled < 2; enabled++) {
+		kd_jit_timing = enabled;
+		check_native_chain(false);
+		check_native_timing(2, false);
+		check_native_chain(true);
+		check_native_timing(2, false);
+		check_three_native();
+		check_native_timing(3, false);
+		for (unsigned int i = 4; i <= CPUS; i++) {
+			check_deep_native(i);
+			check_native_timing(i, false);
+		}
+		for (unsigned int mutex = 0; mutex < 2; mutex++) {
+			check_wait_returns(mutex, false);
+			check_wait_returns(mutex, true);
+		}
+	}
 	printf("remote outer production: %u checks, %u failures\n", checks,
 	       failures);
+	printf("remote packet/publication: regs=%zu packet_checks=%u done=%u\n",
+	       sizeof(struct pt_regs), packet_checks, done_publications);
 	return failures != 0;
 }

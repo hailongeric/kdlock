@@ -13,6 +13,26 @@ int kd_exe_init(void);
 void kd_exe_exit(void);
 void kd_exe_retire_all(void);
 
+/*
+ * Optional inclusive physical-owner wait, not the complete waiter suffix or
+ * queue latency. These helpers do not change the two-word wrapper ABI.
+ */
+u64 kd_exe_native_timing_start(void);
+void kd_exe_native_timing_end(bool mutex, u64 start);
+
+/*
+ * Wider envelope: start before borrowing/remote publication and finish after
+ * owner wait, before frame cleanup. Only executor-local state crosses ACK.
+ */
+void kd_exe_native_handoff_timing_end(bool mutex, u64 start);
+
+/*
+ * Queue clocks stay outside JIT. Consume the node's timestamp before wake/reuse;
+ * a refused JIT attempt leaves it pending until actual service or acquisition.
+ */
+u64 kd_exe_queue_timing_start(void);
+void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end);
+
 #define KD_EXE_NO_READY 1
 #define KD_EXE_NO_RUN 2
 #define KD_EXE_RUN_ERROR 3

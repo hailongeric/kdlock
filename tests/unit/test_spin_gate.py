@@ -33,8 +33,16 @@ class GateProtocolTests(unittest.TestCase):
             "count": count,
             "module_sha256": "a" * 64,
             "snapshots": {},
+            "progress": {
+                "outer": 0x110000, "entry": 0x90000,
+                "target": 0xf0000, "return": 0x90050,
+                "publication": dict(entry=0x90000, code=0x99000, status=0,
+                                    kind=1, pid=40, tgid=40),
+                "artifacts": [dict(path=name, sha256="b" * 64)
+                              for name in ("jit.S", "jit.bin", "bin.txt")],
+            },
         }
-        for phase in ("prepare", "held", "filled", "drained"):
+        for phase in ("prepare", "held", "filled", "progress", "drained"):
             evidence["snapshots"][phase] = {
                 "allocated": 2
                 if phase == "prepare"
@@ -42,10 +50,12 @@ class GateProtocolTests(unittest.TestCase):
                 if phase == "held"
                 else capacity,
                 "phase": int(phase != "prepare"),
+                "progress_phase": 1 if phase == "progress" else 2 if phase == "drained" else 0,
+                "publication": dict(evidence["progress"]["publication"]),
                 "source": {
                     "state": 0,
                     "modules": 1,
-                    "frames": int(phase != "prepare"),
+                    "frames": 2 if phase == "progress" else int(phase != "prepare"),
                     "writers": 0,
                 },
             }
@@ -53,6 +63,7 @@ class GateProtocolTests(unittest.TestCase):
         for index in range(count):
             log.append(f"kd_hotlock selftest promote: lock={base + index * stride:x}")
         log += [
+            "reason=PENDING_LOCK_NATIVE task=100 error=-7",
             "kd_native begin: task=100 mutex=0 held=1",
             "kd_pending spin blocked: task=100",
             "kd_gate hold: task=200 cpu=1 a=a000 b=b000 valid=1",
@@ -80,17 +91,47 @@ class GateProtocolTests(unittest.TestCase):
             f"kd_gate queued: task=301 cpu=10 lock={base + (count - 1) * stride:x} value=101",
             record(count - 1, 1),
             record(count - 1, 2),
+        ]
+        prefix = (7 * 33 + 0x12340001 + 17) * 33 + 0x12340001
+        inner = base + (count - 1) * stride
+
+        def caller(role):
+            return (f"kd_gate progress caller: role={role} task={400 + role} "
+                    f"self=c00{role} cpu={role + 10} pins=0 valid=1")
+
+        log += [
+            caller(3), caller(4),
+            "JIT body witness: entry=90000 lock=110000 body=1",
+            f"kd_gate refusal: task=405 cpu=15 lock={inner:x}",
+            "reason=PENDING_LOCK_NATIVE entry=0x90000 target=0xf0000 sp=0xa000 "
+            "return=0x90050 staged_ip=0x90050 staged_sp=0xa008 mutex=0 error=-12 outer_released=0 task=406",
+            "kd_native begin: task=406 outer=110000 entry=90000 ip=f0000 sp=a000 "
+            "held=1 mutex=0 cpu=15 outer_released=0 remaining=1",
+            f"kd_gate progress blocked: task=408 self=c008 cpu=18 outer=110000 lock={inner:x} "
+            f"owner=c005 waiter=c006 word=101 before=2 inner=0 after=1 value={prefix:x} pins=1 valid=1",
+            f"kd_gate progress acquired: task=406 self=c006 cpu=16 outer=110000 lock={inner:x} "
+            f"owner=c005 before=2 inner=0 after=1 value={prefix:x} pins=2 valid=1",
+            "kd_native ack: task=406 lock=110000 mutex=0 last_spin=1",
+            "kd_native complete: task=406 outer=110000 mutex=0",
+            *(caller(role) for role in range(5, 9)),
             "kd_gate resume: task=200 cpu=1 a=a000 b=b000 valid=1",
             "kd_pending spin acquired: task=100",
-            "kd_gate stats: locks=1025 roles=7 phase=2 valid=1",
+            "kd_native ack: task=100 lock=1000 mutex=0 last_spin=1",
+            "kd_native complete: task=100 outer=1000 mutex=0",
+            "kd_gate stats: locks=1025 roles=1ff phase=2 valid=1",
+            f"kd_gate progress stats: before=2 inner=1 after=2 value={(prefix ^ 0x24680002) + 17:x} "
+            "direct=3 observed=1 phase=2 valid=1",
+            "kd_native stats: started=2 completed=2 unlocks=2",
         ]
-        return "\n".join(log), evidence, "0\t0\n1\t0\n2\t0\n"
+        return "\n".join(log), evidence, "".join(f"{role}\t0\n" for role in range(9))
 
     def test_real_capacity_records_and_native_interval_oracle(self):
         result = protocol.validate_gate_pool(*self.fixture())
         self.assertEqual(result["new_gates"], 960)
         self.assertEqual(result["filler_records"], 1025)
-        self.assertEqual(result["target_refusals"], 66)
+        self.assertEqual(result["target_refusals"], 67)
+        self.assertEqual(result["progressed_gate_refusals"], 1)
+        self.assertEqual(result["overlapping_frames"], 2)
 
     def test_missing_pressure_or_frame_snapshot_is_rejected(self):
         text, original, statuses = self.fixture()
@@ -98,6 +139,9 @@ class GateProtocolTests(unittest.TestCase):
             ("filled", "allocated", 1023),
             ("drained", "allocated", 1),
             ("held", "phase", 2),
+            ("progress", "source", dict(state=0, modules=1, frames=1, writers=0)),
+            ("progress", "progress_phase", 0),
+            ("drained", "publication", dict(original["progress"]["publication"], code=0x99001)),
             (
                 "drained",
                 "source",
@@ -125,6 +169,17 @@ class GateProtocolTests(unittest.TestCase):
             text.replace("kd_gate refusal: task=302", "ignored refusal: task=302"),
             text.replace("kd_gate queued:", "ignored queue:"),
             text + "\nJIT body witness: entry=88888 body=1\n",
+            text.replace("JIT body witness: entry=90000", "ignored witness: entry=90000"),
+            text.replace("error=-12", "error=-7"),
+            text.replace("staged_sp=0xa008", "staged_sp=0xa000"),
+            text.replace("return=0x90050", "return=0x90000"),
+            text.replace("owner=c005", "owner=c006"),
+            text.replace("before=2", "before=3", 1),
+            text.replace("inner=1 after=2", "inner=2 after=2"),
+            text.replace("pins=2 valid=1", "pins=3 valid=1"),
+            text.replace("kd_native ack: task=406", "ignored ack: task=406"),
+            text.replace("kd_gate refusal: task=405", "ignored refusal: task=405"),
+            text.replace("started=2 completed=2 unlocks=2", "started=1 completed=1 unlocks=1"),
         ]
         for index, mutated in enumerate(mutations):
             with (

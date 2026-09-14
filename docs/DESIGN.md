@@ -8,6 +8,13 @@ Priorities and explicit deferrals: [TODO](TODO.md).
 
 ## 1. Motivation And Scope
 
+The implementation, tests and planned work target x86_64 machines only.
+Cross-architecture adaptation is outside the project, not a deferred feature.
+The [delivery scope](TODO.md#delivery-scope) prioritizes supported main paths;
+rare-case generalization and dedicated tests are optional. The limits below
+describe unsupported or unproven behavior, not a requirement to implement and
+test every exceptional interleaving before current delivery.
+
 kdlock combines lock delegation with dynamic translation of existing kernel
 critical-section machine code. A combiner executes a waiter's supported code
 under real lock protection without rewriting that critical section's source.
@@ -58,12 +65,25 @@ delegation, never which physical exclusion lock protects the data.
 
 Hotlock sampling uses a bounded 131071-slot append-only table:
 `INIT -> CHECKING -> DELEGATE/IGNORE`. After a module-wide one-billion-cycle
-warmup, 10000 samples within the sampled window promote a lock. The global
-initial window is 2.5 billion cycles and can shrink; each in-flight sample
-captures its threshold at INIT-to-CHECKING. Another lock's promotion cannot
-retroactively tighten it. New samples use the current threshold.
+warmup, 10000 samples before the lock's own deadline promote it. Each lock
+captures the same fixed 2.5-billion-cycle window at INIT-to-CHECKING. Another
+lock's speed or discovery order cannot shrink either new or in-flight windows.
+The former global shrinking policy made a slower B permanently IGNORE after a
+fast A, even when B met the original threshold; that coupling is removed.
+Elapsed time equal to the deadline still selects IGNORE, including at sample
+10000. Frequency, warmup, bounded allocation and ordinary admission are not
+bypassed, and no production force-promotion switch is added.
+The initial TSC read serves only the warmup fast check; sample timestamps are
+read again under the table lock so their order matches state updates. Otherwise
+an earlier caller arriving at that lock later could subtract a newer begin
+timestamp, underflow elapsed time and select IGNORE. This serialization does
+not establish TSC synchronization across CPUs.
 Spin samples lock/unlock, mutex samples lock. Decisions are sticky.
 Frequency is not measured contention or a guarantee that delegation pays off.
+This is deterministic only for the same per-lock sample timestamps, not for
+arbitrary scheduling, CPU frequency or workload changes. Sticky IGNORE entries
+are not automatically resampled if a workload later becomes hotter. Timing and
+failure interpretation are in [usage 3.2](JIT_EXECUTION.md#32-热锁晋升与翻译准备).
 
 Default work changes kdlock only. Missing hook capabilities and hook-reader
 lifetime need separate assessment, not incidental guest kernel edits.
@@ -204,6 +224,17 @@ fairness, object lifetime or additional hook-reader protection. Execution
 order, evidence and affected-only commands are maintained in
 [usage 6.6](JIT_EXECUTION.md#66-独立队列的并行-native-frame).
 
+The same two drain orders now compose signals to the original borrowed waiters:
+SIGKILL for the first, SIGUSR1 for the survivor, after native-peer requeue and
+before source closing. Each waiter is one ioctl process. The first completes
+its native record and real B/A owner ACKs before fatal syscall exit. A bounded
+fixture gate keeps the second frame alive until the controller's retained
+pidfd observes that exit and source reports one frame. The second then completes
+under its unchanged physical owners and returns after one userspace signal.
+This adds no task reference or production lock policy; it is pending-signal
+completion, not permission to abandon a frame, call do_exit inside the suffix
+or claim arbitrary task/RCU/hook-reader lifetime safety.
+
 Capability assessment under the no-guest-edit default:
 
 - Bounded source pins and terminal metadata retirement are implemented entirely
@@ -262,6 +293,14 @@ nodes count as occupied; completion cannot release a different slot or use
 a held-only count. Reservation spans every published queue pointer, saved RSP,
 request and borrowed reference. Published/woken nodes may immediately be
 reused; snapshot needed data before wake and never read them afterward.
+
+Spin completion release-publishes the combined `completed=1/locked=0` word
+after the final register packet is copied. Lone/IRQ-native and batch-successor
+handoffs also use release stores; their acquire-side waiters may immediately
+consume or reuse the node. Queue splicing must finish before publication, and
+the publisher uses its saved successor afterward. This makes the publication
+contract explicit; it does not transfer physical ownership or prove arbitrary
+memory ordering, task lifetime or flags semantics through a userspace fixture.
 
 ### 4.3 Combiner And Native Returns
 
@@ -324,6 +363,22 @@ They are independent native callers, not cancellable delegated requests.
 The workload observers never rewrite owner flags or wait lists; bounded
 signal/release tests do not cover every internal interleaving.
 
+The existing nested mode 4 workload now tests a bounded seven-role/two-CPU
+schedule: B's holder observes A's physical executor in B's real wait list on
+the same CPU before releasing B. That executor subsequently completes JIT;
+this is not original-waiter native continuation or a change to mutex ownership.
+The [execution flow](JIT_EXECUTION.md#612-同-cpu-的嵌套-mutex-jit) distinguishes
+this scheduling check from PENDING recovery and independent-queue refusal.
+
+Mode 4 also has a separate shared-B session: A0's physical combiner retains
+A0/B across an ordinary CALL miss while A1's combiner and a non-target peer
+both wait on that exact Linux B. The waiter requests owner-side unlock/ACKs;
+A1 then completes its own JIT and the native peer acquires as its own owner.
+This exercises cross-frame exclusion, not a spin-style remote B combiner or
+owner transfer. The [shared-B flow](JIT_EXECUTION.md#615-两个-a-combiner-共享原生-mutex-b)
+keeps publication, actual JIT, real wait-list identities and exact effects
+distinct from merely completing all clients.
+
 ### 5.2 Entry, Completion, And Task Routing
 
 1. Cold locks, `mutex_jit=0`, shadow/task-record allocation failure, and nested
@@ -374,6 +429,42 @@ It covers both B-before-A and A-before-B unlock, shared acquisition refs and
 deferred callback execution. Its constructed continuation and outer batch
 callback do not exercise JIT or queue scheduling; see
 [the lifecycle guide](JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu).
+
+#### Runnable Polling And Event Parking
+
+`kd_cond_load_acquire_sched()` observes a linked waiter's `locked` byte with
+acquire ordering, calls `cpu_relax()`, and temporarily enables preemption for
+`schedule()` when `need_resched()` is set. It does not set a sleeping task state
+or register an event wakeup. The scheduling gate follows the same runnable
+polling policy. Migration remains pinned to retain the reserved CPU-local node
+and stack. Direct Linux mutex B acquisition and native-owner ACK handling are
+different waits, not covered by a linked-node parking change.
+
+A promoted, published entry does not guarantee a delegatable batch. A queue
+head can remove its sole tail and run its own original CS; `run_combiner()`
+hands the last follower onward when it has no successor. Eight userspace
+threads on two CPUs need not produce eight simultaneous queued requests.
+The [CPU-mask assessment](VALIDATION.md#mutex-oversubscription-assessment)
+records an actual prepared-but-unexecuted JIT point, not an admission failure
+or permission to count native completion as JIT.
+
+The local TCLock revision identified in section 13 has a different linked-waiter
+handshake in both `rcuht/locks/komb_mutex.c` and its Linux `kernel/locking/mutex.c`:
+when rescheduling is needed and another task can run, an UNPROCESSED waiter
+sets TASK_INTERRUPTIBLE and atomically enters PARKED. The waker changes it to
+PROCESSING and wakes a parked task with `wake_up_process()`. Its queue-head gate
+still polls, and its last-node handoff also avoids delegation. This is a source
+inspection, not a TCLock run or proof that it solves this measured workload.
+
+Do not copy those completion values into kdlock: here PROCESSED is 1, which
+TCLock uses for PARKED. A future module-only implementation needs an explicit
+sleep/wake handshake spanning normal completion, unexecuted handoff, early outer
+release and native-resume publication. The waker must retain the task/node until
+its last access; the existing final release-store permits immediate node reuse.
+Original Linux owners, pending native unlocks and final ACK order stay unchanged.
+Current measurements do not isolate polling cost or justify a default policy
+change. Event parking remains unimplemented performance work, not a guest-kernel
+edit, a flags change or a claim of arbitrary-oversubscription support.
 
 ### 5.3 Nested A -> B And Native Continuation
 
@@ -772,7 +863,11 @@ failure. The entry predicates, local mutex checkpoint, retained native owner
 and unconditional emitted-block scan do not close this gap. Successful code
 generation now reports `CONTEXT_SCREENING_ONLY`; no runtime guard is added.
 
-Implementation order, **not an implemented safety contract**:
+**2026-09-13 user decision:** the access-time guard, pre-instruction waiter
+continuation and their local condition-code preservation remain deferred and
+unimplemented. This is a retained limitation, not a pending scope decision.
+The following order is for a future explicit reopening of this feature,
+**not an implemented safety contract or the current implementation agenda**:
 
 1. Define the enforceable address/object policy and its lifetime first. Linked
    kallsyms intervals alone do not enumerate runtime per-CPU allocations, task
@@ -789,9 +884,9 @@ Implementation order, **not an implemented safety contract**:
    stack and required flags. Preserve completed stores and retained owners;
    the original waiter continues at that instruction and unlocks through ACKs.
    Do not reuse entry refusal after progress or treat a generic fault as a
-   validated escape. Local guard flags preservation requires an explicit scope
-   decision; the deferred general flags repair is not silently reopened. The
-   [pending packet contract](JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现)
+   validated escape. Necessary local guard flags preservation belongs to this
+   deferred feature; general flags repair is also still deferred. The
+   [future packet contract](JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现)
    separates pass-path preservation from native-target restoration; neither
    reading the stale packet flags nor relying on the existing MOV/RET stubs
    implements it.
@@ -949,19 +1044,54 @@ Each `kd_exe_on_call_hl_entry()` invocation has a 16-hostcall budget and shares
 a 16-continuation counter with normal known-call resumes. Child invocations
 have their own counters; the early outer-unlock/OOO branch bypasses the normal
 known-call limit check, so this is not a strict whole-nesting budget.
-Module-exit diagnostics report
-`exits`, `executed`, `resumed`, `rejected`, `failed`, and `limit`. Modes 2 and 5
-require the first three to be equal and nonzero, and the final three to be zero.
-Mode 5 additionally requires those three counts to equal both mutex
-`jit_success` and `jit_resume`, proving internal sandbox continuation and final
-waiter continuation occur once per delegated critical section.
 
-The initial services are `ktime_get` and `ktime_get_ns` when those symbols are
-available. They are fixed-signature, atomic-context-safe, independent of the
-proxy task's `current`, and retry-safe. Variadic `printk`, sleeping APIs,
-task-context-dependent APIs, and side-effecting calls are not allowed. A future
-side-effecting service needs a fixed ABI and an exactly-once rule for failures
-that occur after native execution.
+At either CALL-count limit, the next callee has not executed. The executor
+validates the frame/retained-lock scope, pending-request state, original task's
+bounded readable CALL word and source residency for both target and return RIP.
+For a HOSTCALL it also checks the existing manifest policy without invoking the
+service. A valid packet takes `KD_EXE_RUN_NATIVE`: retain all current GPRs, the
+callee RIP and pushed CALL RSP, clear only a previous completed control phase,
+and let the original waiter run the callee and remaining native suffix. Physical
+owners retain their locks and acknowledge unlocks; this request never reenters
+JIT. Quota is not a learning miss and leaves the published image NORMAL.
+Invalid packets/targets, synthetic faults and post-dispatch service failures
+remain fail-stop. Source pinning does not certify the stack's concurrent privacy.
+This is an existing CALL-boundary exit, not instruction-budget recovery,
+access-time checking or new flags preservation.
+
+Module-exit diagnostics report `exits`, `executed`, `resumed`, `rejected`,
+`failed`, and `limit`. Normal mode 2 and mode 5 service phases require matching
+nonzero execution/resume counts and no rejection/failure/limit. Mode 5 keeps
+those normal completions and adds a final quota phase in the same session;
+its excess callee runs natively on the waiter, not through the hostcall adapter.
+The combined counter equations and required CALL/native/ACK witnesses are in
+[the mode 5 flow](JIT_EXECUTION.md#613-call-次数额度与原生后缀), not the old
+one-service-per-JIT equality for the whole case.
+
+The current manifest has three fixed-signature services. Only symbols resolved
+in the running baseline are enabled; the x86-64 contracts are:
+
+| ID / symbol | Saved input | Saved output | Native execution contract |
+| --- | --- | --- | --- |
+| 1 / `ktime_get` | None | RAX: signed 64-bit nanoseconds | Existing atomic-safe clock adapter; no logical-task context switch |
+| 2 / `ktime_get_ns` | None | RAX: unsigned 64-bit nanoseconds | Same clock contract when this symbol is available |
+| 3 / `int_sqrt` | RDI: full unsigned 64-bit `unsigned long` | RAX: floor square root, 0 through `2^32-1` | At most 32 scalar iterations in the captured kernel implementation; no pointer argument, allocation, sleeping, lock, callback or task/per-CPU dependency |
+
+All three preserve other saved GPRs. Native execution uses the combiner's C
+stack; its ordinary compiler register clobbers do not replace the saved waiter
+packet. `int_sqrt` calls the exported kernel helper, not a copied algorithm.
+Its input covers the full unsigned range without truncation or signed-result
+extension; there is no caller-supplied memory whose lifetime must be validated.
+Mode 2/5 consume one scalar result after their clock loop. Thus each normal
+JIT completion returns from two services, while mode 5's quota suffix reaches
+the scalar operation only on the original waiter after the 17th clock call.
+
+These contracts are atomic-context-safe, independent of the proxy task's
+`current`, and retry-safe; they do not authorize replay of a progressed CS.
+Variadic `printk`, sleeping APIs, task-context-dependent APIs, opaque pointer
+services and side-effecting calls remain excluded. A future side-effecting
+service needs a fixed ABI and an exactly-once rule for failures after native
+execution. No new access-time check or flags contract is introduced here.
 
 
 ### 8.5 Workload Oracle
@@ -1007,8 +1137,17 @@ Spin's ticket refusal is earlier than virtual-node cancellation: a full
 retaining its temporary preemption pin. The real-capacity gate holds 31
 additional hook-acquired locks across the A combiner, then checks B's PENDING
 packet, native suffix and A ACK. Only promotion is controlled; this does not
-prove the 1024-slot gate table's live saturation. Flow and test substitutions
-remain in [usage 6.3](JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑).
+itself prove gate saturation. The same case now fills the real 1024-slot gate
+table during that suffix, then submits a separate prepared A2 JIT root. Its
+CPU has free tickets, but the new C gate cannot be allocated: ENOMEM must
+leave the virtual request unpublished and preserve the PENDING packet.
+The original waiter acquires Linux C while A2 remains owned by its combiner;
+only A2 needs a borrowed-owner unlock ACK. Existing A/B remain live throughout.
+An ordinary cold entry's unstarted fallback does not prove this progressed
+branch. Neither branch supplies access-time guards, generic fault recovery
+or lifetime/version guarantees. Flow and test substitutions remain in
+[usage 6.3](JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑); current evidence is
+[progressed gate refusal](VALIDATION.md#progressed-spin-gate-refusal).
 
 A virtual pre-entry refusal preserves the caller's full register packet and
 queue connection. Already-progressed work cannot be recast as fresh native
@@ -1044,6 +1183,16 @@ The bounded live schedule is maintained in
 [usage 6.9](JIT_EXECUTION.md#69-无锁祖先与-waiter-退出). It observes TID detachment,
 not completed task-memory reclamation or arbitrary request cancellation.
 
+The same terminal rule applies to an owned remote B after its native ACK.
+Mode 8's mixed phase pauses at B's validated pop, while A0 finishes its own
+ACK and the original waiter exits; only then may that same B combiner execute
+the next independent root. This is a SELFTEST schedule, not a production
+all-owner/exit barrier. It holds a PID identity, not a task ref, and keeps the
+real source-frame lease through pop. Waiting before B publishes its ACK would
+block the very exit being observed. The [shared-B flow](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner)
+distinguishes the full software-frame comparison from live register/flags or
+completed task-memory reclamation evidence.
+
 ### 9.5 Forward Native Continuation
 
 For an ordinary CALL miss, keep current GPRs, callee RIP and virtual CALL RSP.
@@ -1058,10 +1207,23 @@ the physical owner and wait for ACK. The ACK resides on the waiter's native
 stack; the executor drops borrow references before release-publishing done.
 The spin waiter ends its origin pin only on the last ACK; a mutex waiter has
 already restored migration/preemption state before entering its native suffix.
+Borrowing several remote frames does not add lexical lock-depth pins on the
+waiter: the existing root origin pin persists through the final ACK. This is
+not full preemption-count/context reconstruction; the concrete contract and
+mixed B/native-successor test are in [usage 6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner).
 The owner must not reread a queue node after publishing its native wakeup, or
 a stack-local unlock request after publishing that request's ACK. The owner's
 live frame remains until its own completion/pop. A completion log is not the
 ACK's linearization point.
+
+Every allocated frame initializes an empty native routing head. Physical-LIFO
+pop refuses both an outstanding `native_request` and a still-linked native
+registration, even in ERROR/COMPLETE state; refusal preserves the output packet,
+context storage and source lease. The owner must still finish the native wait
+protocol before popping. This final guard does not send an ACK, unlink routing,
+release physical locks, or make an arbitrary failed frame recoverable. The
+[retirement checks](JIT_EXECUTION.md#frame-回收门禁) separate direct bad-state
+unit inputs from real owner/ACK schedules; no live use-after-free is claimed.
 
 Acquisition phases are NONE/PENDING/ENTERED/ACQUIRED/COMPLETE. Validated PENDING
 -ENOMEM/-E2BIG before acquisition/publication can restore the original lock
@@ -1174,7 +1336,9 @@ The implementation boundaries are:
     `args[1]` body witness adds no processor-state restoration. See `docs/JIT_REGISTER_ABI.md`.
 12. **Memory checks are incomplete** — the translator currently emits no
     effective canonical-address or bounds guard, so the JIT must not be treated
-    as a security isolation boundary.
+    as a security isolation boundary. Access-time checking and its pre-instruction
+    native exit, including local condition-code preservation, remain explicitly
+    deferred and unimplemented; static screening can miss runtime pointer changes.
 13. **Batch limits are fixed** — spin and mutex combiners process at most 1024
     waiters per round; these constants are not module parameters.
 14. **Flags can be clobbered inside JIT** — entry predicates, dispatcher comparisons and inserted
@@ -1207,3 +1371,128 @@ The implementation boundaries are:
     codegen using registered entry kind. Unresolved targets/callees can still
     hide such calls; the runtime backend guard remains fail-stop if reached
     after JIT entry. This is not complete call-graph or native-suffix safety.
+
+## 13. Performance Comparator Contract
+
+The [instrumented driver](JIT_EXECUTION.md#33-带观测的负载测量) provides a timing
+boundary, not three interchangeable lock implementations. Keep these comparison
+groups distinct before interpreting a comparison; all target x86_64:
+
+| Candidate | Actual execution path | Valid comparison boundary |
+| --- | --- | --- |
+| Native with existing hooks | Same guest/module/workload, nonmatching `target_process`, original Linux locks | A possible same-kernel reference; still includes the installed selector hooks, not pristine unmodified Linux |
+| kdlock JIT | Matching task, published supported CS, `mutex_jit=1`, actual returned body and complete state | Instrumented delegation; measured invocations can also contain direct native acquisitions or checked native suffixes |
+| `mutex_jit=0` | `__kd_mutex_lock()` calls `kd_origin_mutex_lock()` before shadow scheduling | Explicit debug/native control with its own target/promotion overhead; **not native delegation** |
+| Upstream TCLock | Native stack-switch delegation with TCLock lock/task state | Not available as an unchanged mutex module on this guest; a different kernel or an explicitly assessed port is required |
+| TCLock LiTL userspace library | Interposes `pthread_mutex_*` through `LD_PRELOAD` | Does not replace the kernel locks reached through `/dev/lock_dev`; not a kernel comparator |
+
+The local read-only TCLock checkout is `~/TCLocks`, revision
+`bbfb9f00a12af51dff6ca291cb9829a82960c2ef`. The decisive source locations, relative
+to that checkout, are:
+
+- `src/kernel/rcuht/locks/komb_mutex.c`: `get_shadow_stack_ptr()`,
+  `get_komb_mutex_node()` and nested combiner paths directly access task fields.
+- `src/kernel/linux-5.14.16/include/linux/sched.h`: the `komb_*` task-state
+  block; `kernel/fork.c` allocates/initializes and frees its storage.
+- `src/kernel/linux-5.14.16/include/linux/mutex.h`: TCLock replaces the mutex
+  representation with tail/state/combiner fields. The nano-benchmark's separate
+  `src/kernel/rcuht/include/mutex/komb_mutex.h` likewise defines `komb_mutex`;
+  neither may be cast onto this guest's owner/wait_list-based Linux mutex.
+- `src/kernel/rcuht/rcuht.c`: explicit table/bucket lock adapters and kthread
+  state initialization. Its hash-table operations are not kdlock's CS workload.
+- `src/userspace/litl/README.md` and `src/liblock.in`: userspace interposition
+  contract; the latter path is relative to the LiTL directory.
+
+The [guest compile audit](VALIDATION.md#tclock-comparator-feasibility) builds a
+normal external control object but rejects the unchanged TCLock mutex object
+for nine missing task members. This is a concrete incompatibility, not a
+failed runtime test or proof that every possible module-only port is impossible.
+No TCLock module was linked/loaded; spin and LiTL were not compiled in this audit.
+
+An upstream-kernel comparison would change more than a condition and hook:
+task layout, task allocation/free and the physical lock representation/protocol
+are involved. It is outside the current no-guest-edit default. A module-owned
+task/stack table could be investigated separately, but its lifecycle, nested
+switching, cleanup and overhead need a new port contract and acceptance; it
+must be labelled an adaptation, not unmodified TCLock. Do not introduce a
+JIT-disabled production delegation mode merely to fill a results table.
+
+The opt-in [paired experiment](JIT_EXECUTION.md#34-原生锁与-jit-配对实验) implements
+native-with-hooks/JIT comparison groups on ordinary mode 2/5, without changing
+the guest kernel. The native-delegation comparison group stays explicitly open in
+[TODO](TODO.md#comparator-feasibility-and-matched-experiments). Each pair needs
+identical workload text, parameters, state preparation, affinity and accounting
+boundaries, fresh/drained sessions, retained failures and repeated balanced
+order. Native must have no JIT; JIT must have new matching returned bodies in
+the measured phase. Different mode timings or old runs are not paired trials.
+Do not turn a SELFTEST role that waits for a JIT frame, queue or combiner event
+into a native reference: its progress conditions can require delegation.
+Use matched ordinary CS paths for measurement and retain those specialized
+roles as independent correctness gates.
+The implementation retains even, alternating repetitions and explicit thread/
+workload sweeps, preparation records, full-session rebuilds and failed pairs.
+Generated images and NORMAL registry identity are checked before/after the
+payload with translators stopped; this is an experimental constraint, not C3
+version isolation. Equal CPU masks and state do not imply equal cache/thermal
+conditions, exclusive CPUs or identical native/JIT execution proportions.
+Cost separation and amortization remain work, not inferred from these gates.
+
+Routine mutex queue/JIT traces use INFO, not ALERT; their text and availability
+in dmesg are preserved. At console level 4 without `ignore_loglevel`, these
+records no longer force serial output from native framework code that may
+still hold the physical mutex. This is not a sandbox hostcall-policy change.
+The [severity follow-up](VALIDATION.md#mutex-routine-log-severity) diagnoses the
+initial mode-5 anomaly with unchanged console controls and actual-JIT gates;
+it does not remove logging cost or provide a complete cost breakdown. Retain
+console settings alongside comparisons, since verbose consoles can emit INFO
+again. The paired controller now collects them at initial, phase and publication
+boundaries, rejects changes and requires identical settings across groups; these
+samples do not prove continuous control of external sysctl writers.
+
+Opt-in daemon accounting measures each translator child from pre-fork to reap,
+with wait4 CPU and largest-process RSS, separately from the prepared payload.
+The controller joins each record to the published entry and retains both raw
+attempts and summaries. Preparation latency includes polling and settling;
+translation can overlap promotion, so those intervals cannot be summed as
+disjoint costs. Neither child CPU/RSS nor the process/worker-envelope difference
+measures kernel queue, hostcall or pure-JIT cost. Detailed boundaries live in
+the [paired flow](JIT_EXECUTION.md#34-原生锁与-jit-配对实验); P2 remains open.
+
+The separate, default-off `jit_timing` module parameter records inclusive C
+intervals for dispatch, actual wrapper calls, typed hostcall dispatch and lock
+control handling, plus spin/mutex physical-owner native waits, private-queue
+residence and native-handoff envelopes. Selection is read-only after load; drained unload emits ten
+aggregate rows. Invalid clocks/overflow invalidate measurements only, never
+execution or native-replay decisions. The paired controller's ordinary mode 2/5
+contract joins one body to 1/3/2/1 calls respectively, requires native-wait/handoff
+rows to be zero, matches the active backend's queue samples to drained slowpath
+counts and rejects missing or
+inconsistent timing rows. Statistics span the whole loaded session, including
+preparation; nested intervals can overlap and cumulative elapsed is not CPU or
+experiment wall time. Native wait starts after publication, so it may miss a
+waiter suffix prefix and includes unlock/ACK handling and scheduling. Only local
+timestamp/backend values are used after the final ACK, not waiter storage. Remote
+relay waits overlap; they cannot be added as disjoint costs.
+
+The wider `native_*_handoff` starts in the backend before validated borrowing,
+including before spin's remote-native publication can release an ancestor. It
+ends after successful owner-wait return and before frame cleanup. Thus it covers
+the early waiter work omitted by the inner wait, without adding fields or
+touching waiter/node storage after publication. Handoff contains wait; matching
+completed counts and nondecreasing outer elapsed totals are required. It is
+not pure waiter CPU time: borrowing, publication, scheduling, unlock/ACK and
+measurement overhead remain included. Remote parent/child envelopes overlap,
+and code after the last source unlock returns is outside this boundary.
+
+Each queue node has one additional 64-bit timestamp, initialized before tail
+publication. A queue owner consumes it after acquiring Linux L, before running
+followers or releasing its node. A combiner saves the dispatch-start endpoint,
+then accounts it only after a body actually ran and before waking/releasing the
+waiter. Thus body/native-suffix time is not charged to this queue interval, a
+pre-body refusal retains its start, and immediate node reuse cannot double count.
+This covers kdlock-published nodes, not every native/fastpath acquisition or
+pre-publication refusal; mutex's nested Linux B wait remains outside this queue
+metric. No frame, wrapper argument, instruction or flags contract changes.
+Complete acquisition, pure native execution and observation costs remain open. Commands and
+subtraction limits live in
+[boundary timing](JIT_EXECUTION.md#可选的-jit-边界计时).

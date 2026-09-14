@@ -172,6 +172,13 @@ class MutexStackTests(unittest.TestCase):
       46: R_X86_64_PLT32 kd_stack_change_observe-0x4
 """
         self.assertEqual(control_returns(source, 0x1000), [0x100A, 0x101A])
+        # Both constant-lane roots use the same relocation contract. An
+        # explicit symbol must match; another function cannot supply its RIP.
+        for name in ("kd_shared_cs0", "kd_shared_cs1"):
+            named = source.replace("run_nested_mutex_cs", name)
+            self.assertEqual(control_returns(named, 0x2000, name), [0x200A, 0x201A])
+            with self.assertRaises(AssertionError):
+                control_returns(named, 0x2000, "wrong_symbol")
         for old, new in (
             ("36: R_", "37: R_"),
             ("35: e8", "35: e9"),

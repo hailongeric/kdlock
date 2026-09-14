@@ -653,7 +653,9 @@ static inline bool check_irq_node(struct kd_spin_node *node)
 static __always_inline void
 clear_locked_set_completed(struct kd_spin_node *lock)
 {
-	WRITE_ONCE(lock->locked_completed, 1);
+	/* On x86 this word sets completed and clears locked together. Publish
+	 * the final register packet before the waiter can consume/reuse it. */
+	smp_store_release(&lock->locked_completed, 1);
 }
 
 static __always_inline void clear_pending_set_locked(struct qspinlock *lock)
@@ -894,6 +896,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	unsigned int frame_lock_depth;
 	struct kd_spin_jit_context *jit_context = curr_node->jit_context;
 	unsigned long entry_ip;
+	u64 queue_end;
 	bool abort_cleaned = false;
 #ifdef KDLOCK_SELFTEST
 	int frame_event;
@@ -1028,6 +1031,9 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	}
 #ifdef KDLOCK_SELFTEST
 	frame_event = kd_spin_selftest_frame_begin(frame);
+#endif
+	queue_end = kd_exe_queue_timing_start();
+#ifdef KDLOCK_SELFTEST
 	/* Exercise only an unexecuted child; never interrupt a live JIT body. */
 	if (!kd_spin_selftest_refuse(frame, curr_node, &ret_flag))
 #endif
@@ -1037,7 +1043,15 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	kd_spin_selftest_frame_end(frame_event, frame, ret_flag);
 	kd_spin_selftest_refusal_end(frame, ret_flag);
 #endif
+	/* A pre-body refusal is still waiting. Once a body ran, use its saved
+	 * dispatch boundary and consume metadata before native/completion wake. */
+	if (frame->executed)
+		kd_exe_queue_timing_end(false, &curr_node->queued_at_ns, queue_end);
 	if (ret_flag == KD_EXE_RUN_NATIVE) {
+		/* Remote publication can release an ancestor before this node is
+		 * woken. Start before both publications, not only local locked=0. */
+		u64 handoff_start = kd_exe_native_timing_start();
+
 		BUG_ON(kd_exec_native_begin(frame, false));
 		BUG_ON(kd_exec_remote_native(frame));
 		curr_node->regs = frame->regs;
@@ -1046,6 +1060,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		smp_store_release(&curr_node->locked, 0);
 		/* The waiter may reuse its queue slot after this publication. */
 		BUG_ON(kd_exec_native_wait(frame));
+		kd_exe_native_handoff_timing_end(false, handoff_start);
 		BUG_ON(kd_spin_jit_nested_cleanup(frame));
 		BUG_ON(!kd_spin_combiner_state_matches(&frame->saved_combiner,
 						       ptr));
@@ -1205,7 +1220,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 		 * Make this node spin on the locked variable and then it will
 		 * become the combiner.
 		 */
-		curr_node->locked = false;
+		smp_store_release(&curr_node->locked, false);
 		smp_mb();
 		return;
 	}
@@ -1297,11 +1312,9 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 
 	set_locked(lock);
 
-	/*
-	 * Make this node spin on the locked variable and then it will become
-	 * the combiner.
-	 */
-	next_node->locked = false;
+	/* Publish the finished queue splice before successor acquisition. This
+	 * is the last node access: its waiter can immediately reuse the slot. */
+	smp_store_release(&next_node->locked, false);
 }
 #pragma GCC pop_options
 
@@ -1335,6 +1348,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	struct kd_spin_node *prev_local_queue_tail;
 #endif
 
+	/* Publish the clock with the node, before any combiner can service it. */
+	curr_node->queued_at_ns = kd_exe_queue_timing_start();
 	old_tail = xchg_tail(lock, tail);
 	kd_spin_diag_waiter_enter(lock);
 
@@ -1451,6 +1466,10 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	/* Either somebody is queued behind us or _Q_PENDING_VAL_HL is set */
 	check_and_set_combiner(lock);
 	kd_spin_claim_origin(lock);
+	/* This request now owns Linux L. Record before releasing/reusing its node
+	 * to process followers; the combiner's batch is not this queue interval. */
+	kd_exe_queue_timing_end(false, &curr_node->queued_at_ns,
+				kd_exe_queue_timing_start());
 
 	/*
 	 * contended path; wait for next if not observed yet, release.
@@ -1548,6 +1567,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	return READ_ONCE(curr_node->jit_retry) ? 4 : 2;
 release:
 	kd_spin_claim_origin(lock);
+	kd_exe_queue_timing_end(false, &curr_node->queued_at_ns,
+				kd_exe_queue_timing_start());
 	/*
 	 * release the node
 	 */

@@ -23,7 +23,6 @@
 static struct kd_hotlock_state *kd_hotlocks;
 static DEFINE_RAW_SPINLOCK(kd_hotlock_table_lock);
 static atomic_long_t kd_hotlock_start_cycles;
-static atomic_long_t kd_hotlock_window_cycles;
 
 static struct kd_hotlock_state *
 kd_hotlock_lookup_locked(unsigned long lock_addr, bool create)
@@ -56,7 +55,6 @@ int kd_hotlock_init(void)
 		return -ENOMEM;
 
 	atomic_long_set(&kd_hotlock_start_cycles, 0);
-	atomic_long_set(&kd_hotlock_window_cycles, KD_HOTLOCK_INITIAL_WINDOW);
 	return 0;
 }
 
@@ -124,6 +122,11 @@ int kd_hotlock_record(unsigned long lock_addr)
 		goto out;
 	}
 
+	/* A caller can sample TSC first but acquire this lock after another
+	 * caller started the window. Read again in update order, otherwise an
+	 * older timestamp underflows elapsed time and permanently selects IGNORE.
+	 * The earlier read is only the module-wide warmup fast check. */
+	now = rdtsc_ordered();
 	state->samples++;
 	if (state->status == KD_HOTLOCK_IGNORE) {
 		if (state->samples == KD_HOTLOCK_SAMPLE_TARGET)
@@ -134,9 +137,11 @@ int kd_hotlock_record(unsigned long lock_addr)
 	if (state->status == KD_HOTLOCK_INIT) {
 		state->status = KD_HOTLOCK_CHECKING;
 		state->begin_cycles = now;
-		/* Another lock may tighten the global window while this sample is
-		 * in flight. Apply that threshold only to newly started samples. */
-		state->sample_window = atomic_long_read(&kd_hotlock_window_cycles);
+		/* Judge each lock against the same frequency threshold. A fast A
+		 * must not permanently suppress a later B by shrinking its window;
+		 * discovery order is not evidence of B's contention or JIT benefit.
+		 * This changes promotion only, never lock exclusion or admission. */
+		state->sample_window = KD_HOTLOCK_INITIAL_WINDOW;
 		goto out;
 	}
 
@@ -144,19 +149,8 @@ int kd_hotlock_record(unsigned long lock_addr)
 	if (state->end_cycles - state->begin_cycles >= state->sample_window) {
 		state->status = KD_HOTLOCK_IGNORE;
 	} else if (state->samples == KD_HOTLOCK_SAMPLE_TARGET) {
-		unsigned long old_window;
-		unsigned long new_window;
-		unsigned long elapsed = state->end_cycles - state->begin_cycles;
-
 		state->status = KD_HOTLOCK_DELEGATE;
 		KD_PR_INFO("uaddr %lx begin delegate\n", lock_addr);
-		old_window = atomic_long_read(&kd_hotlock_window_cycles);
-		new_window = old_window;
-		while (elapsed && new_window / elapsed >= 10)
-			new_window /= 10;
-		if (new_window != old_window)
-			atomic_long_cmpxchg(&kd_hotlock_window_cycles,
-					    old_window, new_window);
 		promoted = 1;
 	}
 

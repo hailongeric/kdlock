@@ -34,7 +34,7 @@ cleanup() {
 trap cleanup EXIT
 build_all
 clear_dmesg
-insmod "$KM_DIR/kdlock_km.ko" target_process="$TARGET_PROCESS" mutex_jit=0
+load_kdlock target_process="$TARGET_PROCESS" mutex_jit=0
 insmod "$KLOCK_DIR/klock_module.ko"
 start_daemon 2
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 0 > "$out/warmup.log"

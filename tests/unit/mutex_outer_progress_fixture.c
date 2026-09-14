@@ -5,12 +5,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef uint64_t u64;
 typedef struct {
 	int counter;
 } atomic_t;
@@ -42,9 +44,12 @@ static unsigned long kd_mutex_combiner_count, kd_mutex_handoff_count;
 static unsigned long kd_mutex_jit_success_count;
 static unsigned int checks, failures, mode, wakes, scripts, native_waits, pops;
 static unsigned int release_traces;
+static unsigned int routine_traces;
 static int preempt = 1;
 static bool other_holds;
 static int kd_mutex_batch_size = 16;
+static unsigned int queue_finishes;
+static unsigned int handoff_starts, handoff_ends;
 
 /* CPU appears only in diagnostics; this fixture does not model scheduling. */
 static unsigned int raw_smp_processor_id(void)
@@ -97,13 +102,62 @@ static unsigned int raw_smp_processor_id(void)
 	} while (0)
 #define KD_PR_DEBUG(...) pr_info(__VA_ARGS__)
 #define KD_PR_ERR(...) pr_info(__VA_ARGS__)
-#define mutex_debug(...) pr_info(__VA_ARGS__)
+#define smp_processor_id() raw_smp_processor_id()
+/* Substitute only the printk sink, not the production severity/format macro.
+ * The disabled-trace mutant intentionally leaves this sink unused. */
+static int __attribute__((unused)) routine_printk(const char *format, ...)
+{
+	char text[256];
+	va_list args;
+	int length;
+
+	va_start(args, format);
+	length = vsnprintf(text, sizeof(text), format, args);
+	va_end(args);
+	CHECK(length > 0 && (size_t)length < sizeof(text));
+	CHECK(!strncmp(text, KERN_INFO, strlen(KERN_INFO)));
+	CHECK(strstr(text, "[0] [1] kd_mutex (execute_cs)") != NULL);
+	CHECK(strstr(text, "JIT exec waiter cpu 0 ip 800 sp ") != NULL);
+	routine_traces++;
+	return length;
+}
+#define printk(...) routine_printk(__VA_ARGS__)
 #define _Q_LOCKED_VAL 1
 #define _Q_LOCKED_COMBINER_VAL 3
 #define _RET_IP_ 0x900
 #define KD_EXE_LOCK_MUTEX 2
 #define container_of(p, type, member) \
 	((type *)((char *)(p) - offsetof(type, member)))
+
+/* Observe the queue metadata at the real producer boundary. Actual timing
+ * accumulation/off-mode behavior is covered by the executor consumer unit. */
+static u64 kd_exe_queue_timing_start(void)
+{
+	return 100;
+}
+static void kd_exe_queue_timing_end(bool mutex, uint64_t *queued_at, u64 end)
+{
+	CHECK(mutex && queued_at == &request.queued_at_ns && end == 100);
+	CHECK(*queued_at == 50 && active.executed && scripts == 1);
+	CHECK(request.locked && !request.native_resume && !pops && !native_waits);
+	*queued_at = 0;
+	queue_finishes++;
+}
+
+/* Observe the real producer's envelope without sampling a test wall clock.
+ * After owner wait returns, the timing consumer must not depend on the node. */
+static u64 kd_exe_native_timing_start(void)
+{
+	CHECK(request.locked && !request.native_resume && !native_waits && !pops);
+	handoff_starts++;
+	return 150;
+}
+static void kd_exe_native_handoff_timing_end(bool mutex, u64 start)
+{
+	CHECK(mutex && start == 150 && native_waits == 1 && !pops);
+	handoff_ends++;
+}
+
 #define cmpxchg(p, old, value)                \
 	({                                    \
 		__typeof__(*(p)) seen = *(p); \
@@ -260,6 +314,7 @@ static int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long ip,
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
 	CHECK(frame == &active && mutex && b.owner == &executor);
+	CHECK(handoff_starts == 1 && !handoff_ends);
 	return 0;
 }
 int kd_exec_native_wait(struct kd_exec_frame *frame)
@@ -293,6 +348,9 @@ int main(void)
 		successor.task_struct_ptr = &other;
 		request.locked = successor.locked = 1;
 		request.regs.sp = (unsigned long)stack;
+		request.queued_at_ns = 50;
+		queue_finishes = 0;
+		handoff_starts = handoff_ends = 0;
 		request.gsbase = 1;
 		request.task_struct_ptr = &waiter;
 		request.saved_ret_addr = 0x800;
@@ -306,7 +364,10 @@ int main(void)
 		gate.locked = 3;
 		run_combiner(&gate, &request);
 		CHECK(scripts == expected && pops == expected);
+		CHECK(queue_finishes == expected);
+		CHECK(request.queued_at_ns == (expected ? 0 : 50));
 		CHECK(native_waits == (mode == 2 || mode == 3));
+		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
 		CHECK(gate.physical_owner == &executor && a.owner == &executor);
 		CHECK(!b.owner && preempt == 1 && !other_holds);
 		CHECK(kd_mutex_origin_acquires == (early ? 3 : 1));
@@ -320,7 +381,9 @@ int main(void)
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
 	}
 	CHECK(!kd_exec_invariant_failures && !kd_mutex_frame_failure_count);
+	CHECK(routine_traces == 5);
 	printf("mutex outer production progress: %u checks, %u failures, 5 scenarios\n",
 	       checks, failures);
+	printf("mutex routine INFO traces retained: %u\n", routine_traces);
 	return failures != 0;
 }

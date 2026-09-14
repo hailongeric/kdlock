@@ -1,11 +1,50 @@
-/* Test the production daemon's result cache and header-only wire encoding. */
+/* Test production result caching, wire encoding and opt-in child accounting. */
 #include <assert.h>
+#include <errno.h>
 #include <signal.h>
 #include <stddef.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <time.h>
+
+static int clock_calls, clock_fault, wait_calls;
+static int interrupt_wait;
+
+/* Keep real fork/exec/reaping; substitute only clock faults and one interrupted
+ * observation to prove telemetry cannot turn launch failures into refusals. */
+static int observed_clock(clockid_t id, struct timespec *value)
+{
+	clock_calls++;
+	if (clock_fault == clock_calls && clock_fault != 3) {
+		errno = EIO;
+		return -1;
+	}
+	if (clock_fault == 3) {
+		*value = (struct timespec){ .tv_sec = clock_calls == 1 ? 2 : 1 };
+		return 0;
+	}
+	return clock_gettime(id, value);
+}
+
+static pid_t observed_wait(pid_t child, int *status, int options,
+			   struct rusage *usage)
+{
+	wait_calls++;
+	if (interrupt_wait) {
+		interrupt_wait = 0;
+		errno = EINTR;
+		return -1;
+	}
+	return wait4(child, status, options, usage);
+}
 
 #define main kd_daemon_main
+#define clock_gettime observed_clock
+#define wait4 observed_wait
 #include "../../daemon/daemon.c"
 #undef main
+#undef clock_gettime
+#undef wait4
 
 static void test_compiler_launch(void)
 {
@@ -33,6 +72,8 @@ static void test_compiler_launch(void)
 
 	for (int mode = MODE_V1; mode <= MODE_V2; mode++) {
 		cfg.mode = mode;
+		cfg.metrics = mode == MODE_V2;
+		interrupt_wait = cfg.metrics;
 		/* Neither a missing workspace nor a missing script is a refusal. */
 		assert(compile_entry(&cfg, &exe) == -1);
 		if (mode == MODE_V1)
@@ -55,6 +96,20 @@ static void test_compiler_launch(void)
 				       (code == 1 ? -1 : code));
 			}
 		}
+		if (cfg.metrics) {
+			assert(clock_calls == 22 && wait_calls == 12);
+			/* Before-fork failure must launch nothing; after-wait failure
+			 * still reaps the child and must not cache its native-only result. */
+			for (int fault = 1; fault <= 3; fault++) {
+				clock_calls = 0;
+				clock_fault = fault;
+				assert(compile_entry(&cfg, &exe) == -1);
+			}
+			clock_fault = 0;
+			assert(wait_calls == 14);
+		} else {
+			assert(clock_calls == 0 && wait_calls == 0);
+		}
 		assert(!unlink("../disassem/disassem.py"));
 	}
 	assert(!rmdir("0x1234/42"));
@@ -66,10 +121,32 @@ static void test_compiler_launch(void)
 	close(original_dir);
 	assert(!rmdir(root));
 	assert(!fstat(sys_fd, &session_stat));
-	assert(session_stat.st_size == 18);
+	assert(session_stat.st_size == 20);
 	assert(fcntl(sys_fd, F_GETFD) == FD_CLOEXEC);
 	assert(!close(sys_fd));
 	sys_fd = -1;
+}
+
+static void test_metrics_contract(void)
+{
+	struct daemon_config cfg = { .mode = MODE_V2 };
+	char *argv[] = { "daemon", "--metrics", "--quiet", NULL };
+	struct kd_exe_info exe = { .RIP = 0x1234 };
+	struct rusage usage = { 0 };
+	uint64_t value;
+
+	assert(!cfg.metrics);
+	assert(!parse_args(3, argv, &cfg) && cfg.metrics && !cfg.verbose);
+	assert(!usage_ns((struct timeval){ 1, 999999 }, &value));
+	assert(value == 1999999000);
+	assert(usage_ns((struct timeval){ -1, 0 }, &value) == -1);
+	assert(usage_ns((struct timeval){ 0, 1000000 }, &value) == -1);
+	assert(usage_ns((struct timeval){ UINT64_MAX / 1000000000 + 1, 0 },
+			&value) == -1);
+	assert(report_translation(&exe, 1, 0, 0, 10, 10, &usage) == -1);
+	usage.ru_maxrss = -1;
+	assert(report_translation(&exe, 1, 0, 0, 10, 11, &usage) == -1);
+	puts("[PASS] daemon opt-in metrics, real children and observation faults");
 }
 
 static void test_chunk_session(void)
@@ -148,6 +225,7 @@ int main(void)
 	assert(compile_result(SIGTERM) == -1);
 	assert(compile_result(-1) == -1);
 	test_compiler_launch();
+	test_metrics_contract();
 	test_chunk_session();
 	assert(!remember_cmd("rejected fixture", TRANSLATOR_NATIVE_ONLY));
 	assert(cmd_seen("rejected fixture", &result));

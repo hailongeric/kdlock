@@ -8,6 +8,7 @@ static bool mutex_parallel_shared_cpu;
 static bool mutex_parallel_pressure;
 static bool mutex_parallel_pressure_release;
 static bool mutex_parallel_source_hold;
+static bool mutex_parallel_exit_hold;
 static bool mutex_parallel_retired;
 static bool mutex_parallel_peers;
 static bool mutex_parallel_shadow;
@@ -18,6 +19,7 @@ module_param(mutex_parallel_shared_cpu, bool, 0444);
 module_param(mutex_parallel_pressure, bool, 0444);
 module_param(mutex_parallel_pressure_release, bool, 0644);
 module_param(mutex_parallel_source_hold, bool, 0644);
+module_param(mutex_parallel_exit_hold, bool, 0644);
 module_param(mutex_parallel_retired, bool, 0444);
 module_param(mutex_parallel_peers, bool, 0444);
 module_param(mutex_parallel_shadow, bool, 0444);
@@ -35,6 +37,8 @@ MODULE_PARM_DESC(mutex_parallel_pressure_release,
 		 "Release lane 1 holder after observing both resource refusals");
 MODULE_PARM_DESC(mutex_parallel_source_hold,
 		 "Pause both real native frames for busy source retirement");
+MODULE_PARM_DESC(mutex_parallel_exit_hold,
+		 "Keep the second native frame until the first waiter exits");
 MODULE_PARM_DESC(
 	mutex_parallel_peers,
 	"Queue native B peers across the two retained JIT/native frames");
@@ -242,6 +246,21 @@ kd_parallel_native(struct kd_parallel_lane *lane,
 		    !kd_parallel_wait(lane, &parallel_peer_done,
 				      BIT(mutex_parallel_first)))
 			return;
+		/* A final ACK is not task exit. Keep the second real frame alive
+		 * until the controller observes the first client's pidfd becoming
+		 * readable. This gate adds no reference to either task or frame. */
+		if (mutex_parallel_peers && index != mutex_parallel_first) {
+			unsigned long deadline = jiffies + 10 * HZ;
+
+			while (READ_ONCE(mutex_parallel_exit_hold)) {
+				if (time_after_eq(jiffies, deadline)) {
+					kd_parallel_check(false, index,
+							  "waiter-exit-timeout");
+					break;
+				}
+				usleep_range(100, 200);
+			}
+		}
 		/* Neither new request's resource refusal may retire this older
 		 * frame. Wait for both own-owner completions, not just their logs
 		 * before entering A1, without assuming native/gate fairness. */
@@ -251,11 +270,17 @@ kd_parallel_native(struct kd_parallel_lane *lane,
 		valid = kd_parallel_owners(lane, record) &&
 			record->before == 1 && record->held == 1 &&
 			!record->called && !record->after;
+		if (mutex_parallel_peers)
+			valid &= signal_pending(current) &&
+				 !!fatal_signal_pending(current) ==
+					 (index == mutex_parallel_first);
 		kd_parallel_check(valid, index, "retained-owner");
-		pr_info("kd_parallel resume: lane=%u task=%d owner=%lx arrived=%u done=%u comm=%s valid=%u\n",
+		pr_info("kd_parallel resume: lane=%u task=%d owner=%lx arrived=%u done=%u comm=%s pending=%u fatal=%u valid=%u\n",
 			index, current->pid, record->owner,
 			atomic_read(&parallel_arrived),
-			atomic_read(&parallel_done), current->comm, valid);
+			atomic_read(&parallel_done), current->comm,
+			!!signal_pending(current), !!fatal_signal_pending(current),
+			valid);
 	}
 	record->called++;
 	record->value ^= 0x5a5a;
@@ -425,7 +450,8 @@ static int kd_parallel_init(void)
 	unsigned int i;
 
 	if (mutex_parallel_armed || mutex_parallel_pressure_release ||
-	    mutex_parallel_source_hold || mutex_parallel_first > 1 ||
+	    mutex_parallel_source_hold || mutex_parallel_exit_hold ||
+	    mutex_parallel_first > 1 ||
 	    (!mutex_parallel &&
 	     (mutex_parallel_first || mutex_parallel_shared_cpu ||
 	      mutex_parallel_pressure)) ||

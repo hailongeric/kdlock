@@ -131,9 +131,11 @@ block budget 插桩破坏。需要用跨块 `CMP/JMP/Jcc`、`ADC/SBB` 等差分�
 
 ### 3.1 访问时续跑的前置契约（待实现）
 
-这是 C5 动态地址检查的接口要求，**不是当前已有的恢复能力**。局部条件码保护
-仍待确认，不因这份设计而启动已延期的通用 flags 修复。已有入口条件只能在正文
-开始前拒绝；普通 CALL miss 的虚拟栈已经压入返回地址，也不能冒充内存指令前的状态。
+用户于 **2026-09-13 明确继续延期**访问时 guard、原指令处的 waiter 续跑，以及
+所需的局部 CF/PF/AF/ZF/SF/OF 保存/恢复。本节仅保留将来重新开展该功能时的
+前置契约，**不是当前已有的恢复能力，也不是待确认任务**；通用 flags 修复仍延期。
+已有入口条件只能在正文开始前拒绝；普通 CALL miss 的虚拟栈已经压入返回地址，
+也不能冒充内存指令前的状态。
 
 | 边界 | RIP / 虚拟栈 | 可否从入口重跑 |
 | --- | --- | --- |
@@ -141,7 +143,7 @@ block budget 插桩破坏。需要用跨块 `CMP/JMP/Jcc`、`ADC/SBB` 等差分�
 | 已有普通 CALL miss | callee / 已压入源返回地址 | 否，callee 开始原生后缀 |
 | 拟新增访问时拒绝 | 尚未执行的源内存指令 / 该指令前的 SP | 否，该指令开始原生后缀 |
 
-实现前必须满足以下条件：
+未来重新开展实现前必须满足以下条件：
 
 1. 先定义可强制执行的地址/对象范围与生命周期；静态 per-CPU denylist 不足以
    证明未知指针安全。计算一次有效地址，检查宽度、边界及溢出，通过后用同一地址
@@ -349,6 +351,12 @@ wrapper 实栈来模拟 guest 调用。
 按用户要求暂不扩展 flags ABI。普通 CALL miss 和尚未开始获取 B 的资源失败
 使用完整 CALL 边界；这不涵盖基本块预算退出。
 
+spin 的 gate 满表 `ENOMEM` 与 ticket 满表 `E2BIG` 均可发生在 CALL 已暂时推进
+之后。恢复依据是仍为 PENDING 的 `control_call.target/stack/return_ip`，不是
+入口寄存器快照。第二个 JIT 前缀后的真实 gate 失败、callee/SP 恢复和 owner ACK
+现由 [资源用例](JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑) 单独关联；生产单元
+比较完整 168 字节软件包，不代表新增了硬件 flags 采样或任意指令续跑能力。
+
 ## 8. Sandbox 退出 ABI
 
 公共 epilogue 约定：
@@ -396,8 +404,8 @@ sandbox 已经成为内存隔离边界。
 
 `KD_EXE_RUN_NATIVE=6`、`KD_EXE_NATIVE_DONE=7` 和 `KD_EXE_KNOWN_NATIVE=8`
 是高层 C 执行结果，不是新增的 wrapper `args[0]` 错误码。输入/输出仍各有两个
-元素。除已验证的 PENDING 锁获取资源失败外，其他运行错误仍 fail-stop，
-不能直接套用 CALL 的栈约定。
+元素。只有已验证的 CALL/锁控制边界可以续跑；新的 CALL 次数额度路径见第 9 节。
+其他运行错误仍 fail-stop，不能直接套用 CALL 的栈约定。
 
 ## 9. Mode 2/5 hostcall 的寄存器续跑约定
 
@@ -408,8 +416,10 @@ mode 2 和 mode 5 的 sandbox 退出及内部返回流程相同：
 2. hostcall stub 把 service target 放入 physical R14，设置
    `Stack_IJ = KD_EXE_HOSTCALL`，保留 physical R13 指向的 CALL frame 后退出。
 3. wrapper 回写后，`regs->ip` 是 service target，`regs->sp` 指向 post-CALL RIP。
-4. `kd_hostcall_dispatch()` 用精确 target 查白名单，并调用固定签名 handler。
+4. 未达到调用额度时，`kd_hostcall_dispatch()` 用精确 target 查白名单，并调用固定签名 handler。
    当前 `ktime_get`/`ktime_get_ns` 不读取参数，只把返回值写到 `regs->ax`。
+   `int_sqrt`（ID 3）从 `regs->di` 读取完整 64 位无符号参数，将整数平方根写入
+   `regs->ax`，不截断参数、不对返回值做有符号 32 位扩展。
 5. `advance_after_known_call()` 读取 `*(unsigned long *)regs->sp` 作为 continuation，
    然后执行 `regs->sp += 8` 和 `regs->ip = continuation`。
 6. 更新后的完整 `pt_regs` 保存到当前 `kd_exec_frame`，同一个 JIT artifact 再次
@@ -418,16 +428,31 @@ mode 2 和 mode 5 的 sandbox 退出及内部返回流程相同：
 
 当前 handler 只显式修改 RAX，其他 guest GPR 保留。新增服务时必须为每个服务
 定义参数、返回值和允许 clobber 的寄存器，不能直接按 `regs->ip` 调用任意内核
-函数。每次 `kd_exe_on_call_hl_entry()` 调用内，hostcall 上限为 16，并与普通
+函数。服务在 combiner 的原生 C 栈执行；这不切换 waiter 上下文，也不扩展
+两元素 `args`。完整服务清单和上下文约束见 [DESIGN 8.4](DESIGN.md#84-native-hostcalls)。
+每次 `kd_exe_on_call_hl_entry()` 调用内，hostcall 上限为 16，并与普通
 known-call 恢复共用 16 次 continuation 检查。嵌套子调用重新计数，提前 outer
 unlock 的 OOO 分支还绕过普通 known-call 的上限检查；这不是整个嵌套临界区的
 严格全局预算。
 
+第 17 次待处理 CALL 尚未执行时，`kd_jit_call_limit_native()` 检查 frame/锁记录、
+无在途 native/remote 请求、原 waiter 栈内的非零返回字以及 callee/return 的源码
+驻留；hostcall 另复用 manifest 校验，但不调用服务。成功后保留完整 `pt_regs`、
+callee RIP 和 CALL RSP，不弹出 `[RSP]`；清除前一条已完成控制调用的 phase，保存
+当前 continuation，返回已有的 `KD_EXE_RUN_NATIVE`。原 waiter 从 callee 入口开始
+执行，按正常 CALL ABI 返回后完成原生后缀，unlock 仍等待真实 owner ACK。
+本次不回 JIT，也不将注册状态改成 CALL_MISS 请求重新翻译。校验失败或服务已经
+执行后才出错，仍不能使用这条路径。它不校验每次访存，不保证并发栈私有性，
+也不扩展两元素 args；`KD_EXE_INST_LIMIT` 和已延期的 flags 问题保持原状。
+
 hostcall continuation 位于函数调用之后，因此不能依赖调用前 EFLAGS。外层锁和
 当前 `kd_exec_frame` 在 native service 执行期间保持有效。mode 5 在到达最外层
 `mutex_unlock` 后还有第二层恢复：mutex combiner 发布完成状态，原 waiter 通过
-`jump_to_saved_regs()` 从 unlock 后继续；严格测试要求该 `jit_resume` 次数与
-hostcall resume 及 `jit_success` 完全相等。
+`jump_to_saved_regs()` 从 unlock 后继续。当前正常阶段有时钟和标量两个服务，
+`jit_resume == jit_success == N`，hostcall executed/resumed 各为 `2N`。
+加入超额度阶段后，另有不返回 JIT 的
+native suffix，必须按 [使用指南 6.13](JIT_EXECUTION.md#613-call-次数额度与原生后缀)
+核对两类计数，不能沿用历史单时钟服务阶段的等式。
 
 ### 9.1 普通 CALL miss 的寄存器观察
 
@@ -545,6 +570,15 @@ spin 和 mutex 的普通 CALL miss 都使用 `jump_to_saved_regs_in_cs()`：切�
 不是原始 CS entry，也不是 JIT 机器码地址；callee 所需的返回地址仍在虚拟栈顶。
 普通目标在转交前取得源码 residency pin；失败属于不可续跑出口，不重跑入口。
 成功 push 的 frame 保留会话执行引用直到实际 pop，覆盖 native/remote 后缀。
+即使 frame 已标为 ERROR/COMPLETE，只要 native 请求尚未清空或解锁路由仍挂接，
+pop 就返回 `-EBUSY`，不复制输出寄存器、不清除存储、不释放会话引用。正常退出
+仍由 owner 完成请求并发布 ACK 后调用 pop；不要求 waiter 的 ACK 日志先于 pop。
+这只补充回收前置条件，不增加寄存器字段、native 出口或条件码恢复能力。
+mode 8 的 SELFTEST 在已发 ACK 的 B pop 前保留真实 frame/会话引用，等待首个
+waiter TID 脱离，再让同一 combiner 执行第二 root。它比较 arm 至 pop 的
+168 字节软件寄存器包和等待期间的整个 656 字节 frame；不访问旧 waiter 栈，
+仅使用缓存 PID。这个观测不是实时 GPR/flags 恢复测试，也不是生产任务退出屏障，
+执行顺序见 [6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner)。
 这些引用及独立 source ioctl 不增加 wrapper 参数，也不改变保存的寄存器包；
 退休顺序和 hook reader 边界见 [DESIGN 3.1](DESIGN.md#31-source-lock-and-hook-lifetimes)。
 
@@ -558,6 +592,11 @@ frame 清除后 waiter 仍轮询已释放内存。spin 的 ack 同时携带原 w
 是否为最后一个 native 引用；executor 在发布 done 前完成 `borrow_put()`，waiter
 收到最后确认后才 `end()`，不能远端解除固定。发布 native 唤醒后，combiner 不再读取或
 二次完成那个可能已被复用的队列节点。详见 `DESIGN.md` 9.5。
+
+该固定按 waiter 的 origin 请求计数，不按继承的锁数计数：一个 root 请求借用
+远端 A/B 两个 frame 时，两个 `borrow_get()` 共用 root 的一次抢占固定；此例
+native 期间 `preempt_count=1`，最后一个 ACK 后恢复为 0。不能用源码的两层
+`spin_lock()` 推断 waiter 计数为 2，也不能据此声称所有原生上下文数值都被重建。
 
 已由 combiner 获取的 mutex，其原生 owner 仍是 combiner，不会写成 waiter。waiter 仅借用其持锁
 保护执行 native 后缀；在途 task 记录保持改名后的 mutex unlock hook 路由，

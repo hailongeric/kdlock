@@ -37,7 +37,7 @@ trap cleanup EXIT
 make -C "$KM_DIR" KDLOCK_SELFTEST=1 W=1 -j8 >"$EVIDENCE/build-selftest.log" 2>&1
 cp "$KM_DIR/kdlock_km.ko" "$EVIDENCE/kdlock-selftest.ko"
 clear_dmesg
-timeout --kill-after=10s 60s insmod "$KM_DIR/kdlock_km.ko" \
+load_kdlock --timeout 60 \
     target_process=kd_gate_unused spin_gate_selftest=1 spin_gate_cpus="$CPUS"
 loaded=1
 check_dmesg_has "kd_spin gate selftest: cpus=$CPUS sequences=2 native_waits=2 loops=128 operations=516 native_while_gate_held=1 failures=0" || exit 1

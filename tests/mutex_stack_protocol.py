@@ -34,14 +34,18 @@ def snapshot():
     ]
 
 
-def control_returns(text, function):
+def control_returns(text, function, symbol="run_nested_mutex_cs"):
     """Relocate only actual E8 CALLs with the mutex_lock relocation.
 
     Use the module built/loaded by this test, not a guessed source label or
     the observer's own CALL successor. This is a source-packet check, not an
     assertion that every instruction in the published image was executed.
     """
-    starts = re.findall(r"^([0-9a-f]+) <run_nested_mutex_cs>:", text, re.MULTILINE)
+    # The shared-B workload has two constant-lane wrappers. Keep the same
+    # checked relocation parser instead of guessing their entry offsets.
+    starts = re.findall(
+        r"^([0-9a-f]+) <" + re.escape(symbol) + r">:", text, re.MULTILINE
+    )
     assert len(starts) == 1, "missing source function"
     base = int(starts[0], 16)
     calls = {}

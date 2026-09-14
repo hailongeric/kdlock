@@ -37,7 +37,7 @@ trap cleanup EXIT
 make -C "$KM_DIR" KDLOCK_SELFTEST=1 W=1 -j8 >"$EVIDENCE/build-selftest.log" 2>&1
 cp "$KM_DIR/kdlock_km.ko" "$EVIDENCE/kdlock-selftest.ko"
 clear_dmesg
-timeout --kill-after=10s 45s insmod "$KM_DIR/kdlock_km.ko" \
+load_kdlock --timeout 45 \
     target_process=kd_shadow_unused spin_selftest_cpus="$CPUS"
 loaded=1
 check_dmesg_has 'kd kernel module init' || exit 1

@@ -5,12 +5,62 @@ a later Git commit do not re-certify those inputs as a new run. The project is
 not accepted as complete; actual-JIT positives, refusals, native controls and
 kernel protocol probes are different categories.
 
+**Scope decision, 2026-09-13:** the user explicitly continues to defer access-time
+checking, its pre-instruction waiter exit and local condition-code preservation.
+These remain [unimplemented limitations](TODO.md#deferred-access-time-guard),
+not pending authorization. This documentation-only decision changes no runtime
+inputs and adds no build, unit or JIT result; earlier pending-decision statements
+below describe the state at their respective freezes.
+
+**Scope decision, 2026-09-14:** delivery prioritizes supported x86_64 main paths;
+extremely rare scenarios may remain unimplemented and untested under the
+[delivery scope](TODO.md#delivery-scope). This does not turn untested limitations
+into passes, remove existing guards or require another extended test matrix.
+
+**Documentation handoff, 2026-09-14:** the current increment ends after the
+native-handoff timing acceptance below. The README now links to one Chinese
+[version overview](PROJECT_GUIDE.md#1-当前进展) separating implemented behavior,
+unfinished work and explicit deferrals; duplicate chronological summaries were
+removed from those two entry documents. This final documentation pass does not
+change the 211 runtime/test inputs, add another live result or resolve the earlier
+two-CPU missing-JIT failure. No further experiment or Git commit is part of this
+handoff. The later user-requested cleanup/commit is recorded separately below;
+it does not resume the paused implementation/experiment plan.
+
 | Date (+08) | Evidence | Result and scope |
 | --- | --- | --- |
+| 2026-09-14 | [Repository checkpoint](#repository-checkpoint) | Five readability/mapping changes on 211 inputs; five focused unit programs, external W=1 module and strict daemon build pass; no kernel-JIT rerun or expanded matrix |
+| 2026-09-14 | [Native handoff timing](#native-handoff-timing) | 211 inputs, nine changed files: six affected units, W=1 build, two off/nested cases, eight paired sessions and three on/native cases pass; 1,252 returned bodies, four owner handoffs; initial CLI rejection retained |
+| 2026-09-14 | [Isolated Python runtime](#isolated-python-runtime) | 211 inputs, version recipe plus existing evidence/unit changes: fresh venv, 40 units, 25 admission cases and core 5/5 pass; 484 returned bodies; no JIT execution-code or test-inventory change |
+| 2026-09-14 | [Mutex oversubscription assessment](#mutex-oversubscription-assessment) | Same 210 inputs, no runtime edit: 13 sessions accepted, one two-CPU/short-work actual-JIT gate fails, two unrun; six complete pairs have 829 returned bodies; polling/parking decision remains open |
+| 2026-09-14 | [Private queue timing](#private-queue-timing) | Executor increment, 210 inputs: nine affected units, W=1 build, eight paired sessions, five off/core and two on/nested cases pass; 1,334 returned bodies; eight timing rows and 915 queue samples match drained slowpath totals |
+| 2026-09-14 | [Native owner wait timing](#native-owner-wait-timing) | Earlier 210-input freeze: 40 existing units, W=1 build, eight paired sessions, five off/core and five on/complex cases pass; 1,693 returned bodies; 3 spin + 3 mutex waits match native completion/identity and nine unlocks |
+| 2026-09-13 | [JIT boundary timing](#jit-boundary-timing) | Earlier 210-input freeze: 40 existing unit programs, external W=1 build, 16 off/on paired sessions and five default-off core cases pass; 2,083 returned bodies; scalar registry fixture compile regression reproduced and repaired |
+| 2026-09-13 | [Context-symbol matching](#context-symbol-matching) | Earlier 210-input freeze: five existing units / 234 methods, 25 audit cases, four JIT positives and 12 refusals pass; 427 returned bodies; byte-identical mode 2/5 images, ordinary translation about 3.3 s to 1.6 s |
+| 2026-09-13 | [Translation resource accounting](#translation-resource-accounting) | Earlier 210-input freeze: three existing units, 32/32 sessions / 16 pairs pass; 3,250 measured JIT bodies and 16 matching translation resource records; no native-arm JIT |
+| 2026-09-13 | [Mutex routine log severity](#mutex-routine-log-severity) | Earlier 210-input freeze: existing mutex unit, 8/8 mode-5 sessions / four pairs and both mode-4 phases pass; 632 measured plus three nested JIT bodies; INFO traces retained |
+| 2026-09-13 | [Paired native/JIT experiments](#paired-native-jit-experiments) | Earlier 210-input freeze: two focused units, 16/16 independent sessions and eight alternating pairs; 1,044 measured JIT bodies, no native-arm JIT; instrumented costs, not three-arm acceptance |
+| 2026-09-13 | [TCLock comparator feasibility](#tclock-comparator-feasibility) | External-object audit only: native control compiles, unchanged TCLock mutex lacks nine task fields; no new JIT or performance result |
+| 2026-09-13 | [Instrumented benchmark measurements](#instrumented-benchmark-measurements) | Earlier 208-input freeze: two focused units and 5/5 core JIT pass; four measured payloads contain 451 new returned bodies, 481 across all phases; no speedup claim |
+| 2026-09-13 | [Hotlock promotion ordering](#hotlock-promotion-ordering) | Earlier final freeze: production sampling unit and 6/6 complex actual-JIT cases pass, 468 returned bodies; independent windows and serialized TSC; both counterexamples retained |
+| 2026-09-13 | [Typed scalar service](#typed-scalar-service) | Earlier scoped increment: four affected units and mode 2/5/8 pass; full-width int_sqrt input/result, two-service JIT returns and unchanged clock-quota native suffix; 444 returned bodies |
+| 2026-09-13 | [Main-plan acceptance audit](#main-plan-acceptance-audit) | Earlier clock-only freeze: 64/64 on 206 inputs; 50 actual-JIT cases, 12 refusals, two kernel probes; 39 unit programs and 25 independent admission cases |
+| 2026-09-13 | [Shared B waiter exit](#shared-b-waiter-exit) | Earlier scoped live: 2/2 complex spin JIT cases, 14 returned-body witnesses; first TID detaches before the next root on the same B combiner, three existing units, no new routine entry |
+| 2026-09-13 | [Progressed spin gate refusal](#progressed-spin-gate-refusal) | 2/2 complex spin JIT cases, three returned-body witnesses; real gate ENOMEM after a second root's prefix, two existing units, no new routine entry |
+| 2026-09-13 | [Shared native mutex B](#shared-native-mutex-b) | 3/3 complex mutex JIT cases, 413 returned-body witnesses including both mode-4 phases; two focused units, initial artifact-selection failure retained |
+| 2026-09-13 | [Shared B mixed completion](#shared-b-mixed-completion) | 4/4 complex spin JIT cases, 20 returned-body witnesses including three mode-8 phases; two focused units, initial fixture failure retained |
+| 2026-09-13 | [Shared B combiner](#shared-b-combiner) | 3/3 complex spin JIT cases, 12 returned-body witnesses including both mode-8 phases; two focused units, no new routine entry |
+| 2026-09-13 | [CALL quota continuation](#call-quota-continuation) | 6/6 complex JIT cases, 444 returned-body witnesses; four focused units; mode 5 keeps normal JIT returns and adds a checked quota/native suffix |
+| 2026-09-13 | [Native frame retirement](#native-frame-retirement) | 8/8 complex JIT cases, 464 returned-body witnesses; two focused units verify native-reference pop refusal |
+| 2026-09-13 | [Mutex nested scheduling](#mutex-nested-scheduling) | 3/3 with `mutex_jit=1`, seven-role/two-CPU mode 4 and OOO plus mode 5; 432 returned-body witnesses |
+| 2026-09-13 | [Remote packet unit](#remote-packet-unit) | One existing guest unit passes; full software packet, DONE/reuse and eight mutants, no live JIT rerun |
+| 2026-09-12 | [Spin waiter publication](#spin-waiter-publication) | 9/9 complex spin JIT cases; 28 returned-body witnesses, no mutex rerun in that increment |
+| 2026-09-12 | [Original waiter exit](#original-waiter-exit) | 5/5 actual-JIT cases with `mutex_jit=1`; two-frame signals/exit, node pressure and shared-client regressions |
+| 2026-09-12 | [Test inventory review](#test-inventory-review) | 44-entry audit, then five models consolidated into production units; then 39 entries, no live rerun |
 | 2026-09-11 | [Reading handoff](#reading-handoff) | Builds and six focused unit programs; comment-only source changes, no kernel-JIT rerun |
-| 2026-09-10 | [Static per-CPU ranges](#static-per-cpu-ranges) | Latest scoped live: 24/24, with 12 JIT positives and 12 native-only refusals; mutex positives use `mutex_jit=1` |
+| 2026-09-10 | [Static per-CPU ranges](#static-per-cpu-ranges) | 24/24 scoped live, with 12 JIT positives and 12 native-only refusals; mutex positives use `mutex_jit=1` |
 | 2026-09-10 | [Dynamic-pointer and resume-boundary audits](#dynamic-pointer-screening-gap) | Guest-userspace counterexamples and packet review, not a passing access-time guard or kernel-JIT gate |
-| 2026-09-09 | [Parallel native frames](#parallel-native-frames) | Latest complete matrix: 67/67, with 51 JIT positives, 12 refusals, two native controls and two kernel probes |
+| 2026-09-09 | [Parallel native frames](#parallel-native-frames) | Historical complete selection: 67/67, with 51 JIT positives, 12 refusals, two native controls and two kernel probes |
 
 The scoped per-CPU run covers static core and boot-reserved module ranges, not
 dynamic pointers or arbitrary context-object lifetimes. The
@@ -20,7 +70,7 @@ into the latest live run. Current commands and acceptance interpretation are
 in [JIT_EXECUTION](JIT_EXECUTION.md); the
 [recorded matrix manifest](#recorded-matrix-manifest) preserves historical commands.
 
-Complete-matrix source identity: **183 runtime/test inputs** in
+The historical 2026-09-09 matrix's source identity is **183 runtime/test inputs** in
 `/tmp/kdlock-parallel-frames.ThpcFS/source.sha256`.
 Full source/log/artifact/command archive:
 `/tmp/kdlock-parallel-frames.ThpcFS.tar.gz`, SHA256:
@@ -43,6 +93,2552 @@ The 2026-09-11 documentation consolidation reorganizes navigation and repeated
 progress summaries only. It leaves all 211 runtime/test input hashes identical
 to the annotated reading-handoff freeze, with no new build, unit or live run.
 Historical evidence and the manual's source-file index remain intact.
+
+## Repository Checkpoint
+
+**2026-09-14, 16:31:40-16:32:11 +08.** The user requested code cleanup,
+documentation and a Git commit after the reading handoff. This checkpoint
+collects the accumulated implementation/test consolidation since
+`1d5fc7259d96863aa143343d22c79aaf93023c9e`; it is not a new whole-plan acceptance.
+The seven new runtime/test files and seven removed obsolete model/header files
+belong to those earlier increments, not additional tests introduced here.
+
+The final cleanup changes only five of the **211 runtime/test inputs**:
+
+- `include/exe.h`: separate and format the owner-wait, handoff and queue timing
+  contracts, preserving every function declaration.
+- `kernel_module/exe.c`: bind the ten log labels explicitly to their timing
+  enum entries and align the control-dispatch call. The enum order and label
+  mapping are checked against the preceding source archive and are unchanged.
+- `daemon/daemon.c`: wrap the usage string without changing its contents.
+- `tests/regression.py` / `tests/paired_benchmark.py`: format the opt-in arguments,
+  selection and timing table; add a purpose docstring to balanced pairing.
+  Parsed execution ASTs, excluding docstrings, match the preceding freeze.
+
+The same recovery guest, boot and isolated CPython 3.10 environment are used.
+`test_daemon_policy`, `test_exe_registry.py`, `test_jit_entry_scope.py`,
+`test_regression.py` and `test_benchmark.py` pass through the existing unit
+Makefile. The external module builds with `KDLOCK_SELFTEST=0 KDLOCK_NUMA=0 W=1`;
+daemon builds with `-O2 -Wall -Wextra -Werror`. Existing objtool/locale diagnostics
+remain in the logs. No new unit entry, case or suite, no module load, no guest
+kernel edit/build/install and no actual kernel-JIT rerun. The earlier 1,252 body
+witnesses remain evidence of the previous native-handoff freeze only.
+
+All 211 source hashes remain fixed during verification. Guest idle state and
+the captured 18-source/9-build/config/live-ID kernel baseline are checked; the
+previous JIT archive still matches its recorded SHA256. Commands, exit statuses,
+logs, source archive and binary hashes are retained guest-locally in
+`/tmp/kdlock-checkpoint.QPgJPY/`. README, the version overview and TODO now describe
+this commit checkpoint rather than an indefinitely uncommitted working tree.
+The two-CPU missing-JIT failure and all explicit deferrals remain open.
+The final guest-local bundle is `/tmp/kdlock-checkpoint.QPgJPY.tar.gz`; its
+adjacent `.archive.json` records SHA256, size and member count. These `/tmp`
+artifacts are retained evidence, not files provided by a fresh Git checkout.
+
+## Native Handoff Timing
+
+**2026-09-14, 15:16:02-15:25:34 +08.** The optional native handoff envelope
+starts in each backend before `kd_exec_native_begin`, including before spin's
+remote-native publication, and finishes after successful owner-wait return,
+before frame cleanup. It covers early waiter work that the inner wait omitted.
+The two new unload rows are `native_spin_handoff` and `native_mutex_handoff`.
+No owner, ACK, queue policy, guest kernel, frame/args layout or deferred flags/
+guard/version mechanism changes. All clocks/updates remain default-off.
+
+There are **211 frozen runtime/test inputs**, with nine changed since the
+Python-environment freeze: `include/exe.h`, the executor and two backends,
+`tests/paired_benchmark.py`, its existing unit driver and three existing
+entry/spin/mutex fixtures. No new test method, program, case or suite. Producer
+fixtures check start before borrowing and end after native wait but before pop;
+the production counter fixture checks both backends, off/on behavior, inner/
+outer containment and unchanged execution packets. Existing remote wait,
+registry and paired-oracle checks remain selected.
+
+The same recovery guest and CPython 3.10 venv from the previous increment are
+used, with its bin first in inherited PATH. Six existing unit programs and an
+external kdlock W=1 build pass; known objtool/locale diagnostics remain, not
+warning-free acceptance. Default-off mode 4 and 8 then pass. The controller's
+next command mistakenly uses `--repeats 1`; the paired CLI rejects it because
+balanced ordering requires an even value of at least two. This is exit 1 before
+creating its output directory or starting a workload, not a failed JIT session.
+`verification.json` and the error log remain intact. After drain/source checks,
+`run_remaining.py` runs only the previously unstarted phases with repeats=2;
+`remaining-verification.json` records their success. No prior unit/build/live
+phase is repeated and no different source freeze is spliced into acceptance.
+
+| Existing scope | Result |
+| --- | --- |
+| Six guest units | Pass; paired observer has 113 checks, production driver 30 scenarios. |
+| Timing off: mode 4/8 | 2/2 pass, 3+10 returned bodies; no timing rows. |
+| Timing on: paired mode 2/5 | Eight sessions/four balanced pairs pass, 761 measured and total bodies, 1522 returning services; native comparison groups have no JIT and ten zero timing rows. |
+| Timing on: mode 4/5/8 | 3/3 pass, 3+465+10 bodies across six loaded sessions; all original publication/state/service/owner gates retained. |
+
+The pair command uses eight threads, workload 100000, loops16, runs2, CPUs0-7,
+repeats2 and `--jit-timing`. Both complex commands use `tests/regression.py`,
+explicit `--case` choices and timeout300; the latter adds `--jit-timing`.
+Exact commands/environment/phase order are archived, and reusable commands
+remain in [the timing guide](JIT_EXECUTION.md#可选的-jit-边界计时). Mutex positives
+keep `mutex_jit=1`. No full-unit, basic live, extended, rare-case or two-CPU
+missing-JIT rerun is added. Earlier CPU-mask results remain unchanged.
+
+All **1,252** deduplicated returned-body records match saved entry images.
+Every enabled session has ten valid rows; ordinary paired bodies retain the
+1/3/2/1 dispatcher/wrapper/service/control counts and zero native waits/handoffs.
+Complex native-on sessions have these nonzero owner intervals:
+
+| Source case | Backend / owner intervals | Inner wait ns | Handoff ns | Native unlocks |
+| --- | --- | --- | --- | --- |
+| mode 4 shared native B | mutex / 1 | 58,582,030 | 58,590,898 | 2 |
+| mode 5 CALL quota | mutex / 1 | 27,675,061 | 27,679,264 | 1 |
+| mode 8 mixed completion | spin / 2 | 9,916,267 | 9,950,780 | 2 |
+
+Each owner interval joins backend/task/outer-lock begin and completion records;
+handoff and wait counts match, and handoff contains wait. Two remote spin owners
+may cover the same logical suffix, so these four intervals are not four distinct
+waiter executions. They include intentional test gates, borrowing/publication,
+scheduling, logging, ACK and measurement work. Neither the totals nor their
+difference isolate native instruction cost; nested intervals cannot be summed
+as disjoint wall time. Full acquisition, observation attribution, parking and
+performance/amortization claims remain P2 work.
+
+Guest-local offline-verified archive: **169 members, 22,928,864 bytes**, including
+source, both controller journals, original CLI error, units/builds, all selected
+captures, independent joins and final default binaries. It was not exported:
+
+```text
+/tmp/kdlock-native-handoff.hmcbbC.tar.gz
+655cae53edb6ae6f0f3d5469f455f17735428956ac4d61769d247e015f55a9c7
+source.tar.gz
+30b3cf02396720945b2299e831fb12286f07ca78821d6f91eeeb01a46dfc79dd
+review.json
+39cc501697f7be9e05633c719e5ddd1519b7c0eed5cd02d79c28f7f36d1bdff0
+```
+
+## Isolated Python Runtime
+
+**2026-09-14.** Setup runs at 14:45:43-14:46:31 +08; initial runtime acceptance
+at 14:48:39-14:53:01. This is a new Python-environment acceptance, not another
+CPU-mask experiment or expanded edge-case matrix. **211 frozen runtime/test
+inputs** differ from the queue-timing/oversubscription freeze only in:
+
+- New `disassem/requirements.txt`, pinning miasm 0.1.5, future 1.0.0,
+  pyparsing 2.4.7 and pyelftools 0.27 for CPython 3.10.
+- `tests/regression.py` retains that recipe in source evidence, without
+  collecting arbitrary generated `.txt` files.
+- Its existing source-hash unit method checks recipe presence, mutation and
+  generated-text exclusion. No new unit method, program, live case or suite.
+
+The recovery guest uses `/usr/bin/python3` 3.10.12. A read-only apt simulation
+is checked before adding exactly `python3.10-venv=3.10.12-1~22.04.18`,
+`python3-pip-whl=22.0.2+dfsg-1ubuntu0.7` and
+`python3-setuptools-whl=59.6.0-1.2ubuntu0.22.04.3`: three new packages, zero
+upgrades/removals. No guest-kernel edit/build/install or global runtime pip
+upgrade occurs. apt/debconf informational diagnostics remain in the setup log.
+
+The fresh environment is `/tmp/kdlock-python-env.QQhMIk/venv`, with system-site
+packages disabled. Its build helper is wheel 0.37.1; seeded pip/setuptools are
+22.0.2/59.6.0. The four runtime wheels are prepared from public PyPI without pip
+cache or dependency resolution, then installed with `--no-index --no-deps`.
+miasm's local native-extension build stays in the guest, not the guest kernel.
+`pip check` passes. The reusable commands and PATH/activation flow belong only
+to [manual 3.3](PROJECT_GUIDE.md#33-检查依赖与空闲状态), not a parallel setup script.
+
+The controller clears PYTHONHOME/PYTHONPATH, disables user-site imports and
+puts this venv's bin first in PATH. Both controller/core environment records
+identify its interpreter, prefix and all four package locations inside it;
+daemon `execlp("python3")` inherits that same launch environment. No source
+changes are needed to select the interpreter. These starting observations do
+not attest every imported module or loaded JIT image throughout execution.
+
+| Existing validation | Result |
+| --- | --- |
+| Guest `make -C tests/unit run` | 40/40 programs, no skipped dependency acceptance; 496 Python methods remain an inventory count, not the total assertion count. |
+| Independent admission audit | 25/25; assembly/IR fixtures, not kernel-JIT execution. |
+| Core mode 2 | Pass, four returned-body witnesses. |
+| Core mode 7 | Pass, two witnesses. |
+| Core mode 8, all three existing phases | Pass, ten witnesses. |
+| Core mode 4, both existing phases | Pass, three witnesses; `mutex_jit=1`. |
+| Core mode 5, normal and quota stages | Pass, 465 witnesses; `mutex_jit=1`. |
+
+The **484** deduplicated timestamped body records all have matching saved
+entry images. Original publication, service-return, full-state and physical
+owner/ACK checks remain enforced by the existing drivers. Extra `jit_timing`
+is off. Default driver builds run as usual; no separate W=1 build, basic live,
+native-control, extended or rare-case suite is added. Earlier short-work/two-CPU
+missing-JIT results are neither retried nor changed to PASS by this acceptance.
+
+Package observations match before/after testing. All four venv distributions
+provide 411 recorded `.py/.so` files (161/197/1/52), whose hashes are unchanged.
+Global miasm/future provide 358 such files, also unchanged; distro pyparsing and
+pyelftools provide no distribution file lists, so only their metadata was
+captured. The first offline review rejects the mistaken assumption that every
+global package has a nonempty list. Its script/error are retained; only the
+evidence-scope statement is corrected, with no payload retry. Historical setup
+fields named `global_unchanged`/`global_packages_unchanged` mean equality of the
+captured observations, not retroactive byte coverage of those two packages.
+No claim of byte-reproducible wheels, complete toolchain locking or immutable
+JIT publication is made.
+
+The guest-local, offline-verified archive has 100 regular members and
+13,136,005 bytes, including frozen source, setup/test commands and logs, package
+observations, four runtime wheels, all five captured cases, final default
+binaries and the initial review error. It deliberately excludes the venv tree
+and does not bundle a guest disk, kernel build or every build dependency:
+
+```text
+/tmp/kdlock-python-env.QQhMIk.tar.gz
+e88f95e2f080118f709fc6dc1aa472f835b98c7e271cd3c40b987f9c68f0a077
+source.tar.gz
+56d9b3f78a0af71ef54052c4c1d1e3668b8b396e74a6b5208329941e650540c5
+review.json
+298ba322a9dda1721c0a93d12a680114b85f5c5506e5ec07a58a60400462351a
+```
+
+Source identity, drain and the same running baseline/boot remain required;
+the archive stays in the guest and was not exported to the host. This closes
+the Python install-recipe increment, not all of P1 or broader project acceptance.
+
+## Mutex Oversubscription Assessment
+
+**2026-09-14, 14:11:04-14:18:55 +08.** Existing ordinary mode 5 is measured
+with eight workers on two CPU masks, 0-1 and 0-7. Both are on guest socket/node
+0; affinity is an inherited allowed set, not a per-worker residency trace or
+exclusive CPU reservation. All **210 runtime/test content hashes match the
+queue-timing freeze**. No production/test code, new unit entry, live case or
+suite is added. No unit, core or extended rerun; existing per-arm default
+external-module/daemon/benchmark preparation still builds as usual.
+
+The two planned commands differ only in CPU mask/output. Both retain
+`mutex_jit=1`, default-off `jit_timing`, full state and returned-body gates:
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/paired_benchmark.py \
+  --mode 5 --threads 8 --workload 100000 10000 --loops 16 --runs 2 \
+  --repeats 2 --cpus 0-1 --output /tmp/kdlock-mutex-oversub.ooLd7M/cpus-2
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/paired_benchmark.py \
+  --mode 5 --threads 8 --workload 100000 10000 --loops 16 --runs 2 \
+  --repeats 2 --cpus 0-7 --output /tmp/kdlock-mutex-oversub.ooLd7M/cpus-8
+```
+
+These are historical output paths, not destinations for retries. The first
+controller exits 1 at 14:12:24 after the two-CPU short-work JIT arm fails.
+Its six recorded sessions contain five accepted and one failed outcome; the
+last two short-work sessions remain unrun. After inspecting this failure and
+confirming drain, `run_remaining.py` runs only the previously unstarted
+eight-CPU group at 14:17:10-14:18:55, passing 8/8. Both journals remain intact.
+Thus the selected 16 sessions contain **13 accepted, one failed, two unrun**;
+the aggregate is incomplete, not 16/16 or a spliced all-PASS matrix.
+
+The failure is `measured JIT lacks matching returned bodies`, not a kernel
+crash or corrupt result. Its 1710-byte generated image is published NORMAL and
+unchanged before/after measurement, but the dmesg snapshots are identical:
+zero body/hostcall/frame execution. Final counters show slowpath=245,
+combiner=0, max_waiters=2, multi_slot=0 and no node overflow or context refusal.
+All 12257 transitions, clock/scalar results and 2256 native acquire/releases
+match; active tasks, waiters and reserved nodes are zero. The measured workload
+itself exits 0, but no `arm.json` or successful pair is fabricated. Its
+9.41 ms wall / 18.30 ms summed worker CPU record is **not a JIT performance
+result**. It was not retried with forced promotion or injected queue pressure.
+
+The six complete pairs retain the following individual-repeat ranges. Each
+measurement contains 256 critical sections and 16 completed ioctls; each JIT
+body joins its entry/lock to saved images and two successful native services
+returning into JIT. Total returned bodies are **829**, with 1658 service returns:
+
+| CPUs / work | Native wall ms | JIT-selected wall ms | Native worker CPU ms | JIT-selected worker CPU ms | JIT bodies per repeat |
+| --- | --- | --- | --- | --- | --- |
+| 2 / 100000 | 54.71-55.00 | 64.77-66.71 | 103.08-103.55 | 91.73-107.28 | 2, 3 |
+| 8 / 100000 | 58.74-59.89 | 54.25-54.72 | 345.58-359.99 | 318.49-376.94 | 192, 220 |
+| 8 / 10000 | 12.24-12.33 | 11.64-13.44 | 68.18-71.39 | 72.04-101.58 | 191, 221 |
+
+The two-CPU long-work JIT share is only 0.78%-1.17%, versus roughly 75%-86%
+on eight CPUs. One accepted two-CPU long-work session naturally records one
+pre-publication node fallback; it completes under the original mutex without
+frame/JIT failure or a leaked node. No capacity was reduced or stress role
+added. All successful bodies match `jit_success=jit_resume`, original-owner
+counts balance, native continuation is zero and extra timing rows are absent.
+
+This evidence does not isolate busy-poll CPU cost, demonstrate consistent CPU
+savings, establish parking benefit or prove fairness. The masks are measured
+in successive blocks and each point has only two pairs/16 ioctl samples per
+arm; scheduling, JIT share, logging and oracle cost remain included. No claim
+of a universal speedup, amortization or a complete short-work/two-CPU JIT gate
+is made. The short-work failure is a common-configuration participation limit,
+not silently classified as a rare correctness exception.
+
+A subsequent read-only review of local TCLock revision
+`bbfb9f00a12af51dff6ca291cb9829a82960c2ef` confirms its linked-node
+PARKED/PROCESSING handshake, while gate waiting and last-node handoff still
+poll/pass onward. The two clean source files inspected have SHA256:
+
+```text
+src/kernel/rcuht/locks/komb_mutex.c
+d4ae402d81307100ee2c03745643f458d3b42eab13e6e57735eebbd22643dc26
+src/kernel/linux-5.14.16/kernel/locking/mutex.c
+b7860666f3afe3b68c0b1f8696c9da0888321c34516bdf2fb16f3775ff226dce
+```
+
+These external files were not compiled, loaded or copied into the guest bundle.
+The [design assessment](DESIGN.md#runnable-polling-and-event-parking) records
+the required publication/lifetime handshake; copying only task sleep or enum
+values would not be a port. Keep current polling while participation/policy
+work remains open; no event parking, owner handoff or guest-kernel change is
+claimed. This is a main-path investigation, not a new daily test requirement.
+
+Independent review verifies all recorded byte/outcome archives, the failed
+point's raw state and publication, successful body/image joins, pair metadata
+and CPU records. It retains the helper's initial duplicate-`scope` report-key
+error separately; fixing that helper did not rerun any workload. Evidence is
+sealed **inside guest**:
+
+```text
+/tmp/kdlock-mutex-oversub.ooLd7M.tar.gz
+20,929,798 bytes; 161 members
+SHA256: 765b98f82d0b086bb8425abd2610625b74cf2a280c3238611c4d55c9b21292f2
+Source archive: 1446536bb63004df77561cf5960eef161d315d79a05b64ef8c108d9524ae91a0
+review.json: 433befd711cb483795d010d8e23c630b5e917155c8e43e1158102e92931af009
+```
+
+The recovery VM retains boot `e5f08f95-3b68-40f3-bc28-6a7ca42e7941` and the
+captured 6.1.159 baseline, live Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`.
+No host build/test, VM restart or Git commit occurred. Later documentation
+sync and final readback are separate from the immutable experiment archive.
+
+## Private Queue Timing
+
+**2026-09-14, 13:45:01-13:52:06 +08.** Five final verification phases finish
+with unchanged **210 runtime/test inputs** and an idle recovery guest. Twelve
+inputs differ from the native-owner timing freeze: three headers, `exe.c`,
+both queue backends, the paired observer and five unit fixtures/observers.
+No new unit entry, live case or suite is added; the inventory remains 40 unit
+programs, 496 Python methods, 21 numbered shell drivers and 80 named cases.
+
+Each spin/mutex node gains a 64-bit queue timestamp. Default-off, read-only
+`jit_timing` now reports eight phases; native owners, final ACK order, frame
+layout, two-word args and the guest kernel are unchanged. This is private
+queue residence, not complete Linux lock-acquisition time. Boundaries, node
+lifetime and commands are maintained in
+[optional timing](JIT_EXECUTION.md#可选的-jit-边界计时).
+
+The first freeze, `/tmp/kdlock-queue-timing.zh6qem`, fails its unit phase at
+13:41:28-13:42:15: six programs pass and three fail compilation. The new timer
+API uses `uint64_t`, but entry/registry/remote kernel-primitive fixtures provide
+`u64` without a stdint dependency. The API and local timing test now use `u64`;
+this repairs the compile dependency without changing width or behavior. Make
+exits 2 before build/live phases on that predecessor; its six passes are not
+combined with the new freeze. It is archived separately inside the final bundle.
+
+| Final phase | Time (+08) | Result |
+| --- | --- | --- |
+| Nine affected existing units | 13:45:01-13:46:16 | 9/9. Entry/scope 2,842 checks / 18 detected mutants; registry 8,473 / nine; remote 6,941 / 11; benchmark 30 driver scenarios / 109 observer checks. Queue backends, node/resource and frame-capacity fixtures also pass. |
+| External kdlock build | 13:46:16-13:46:20 | SELFTEST=0, NUMA=0, W=1, -j8 pass. Existing locale and nonstandard-stack/RETHUNK objtool diagnostics remain; not warning-free or a guest-kernel build. |
+| Enabled paired mode 2/5 | 13:46:20-13:48:07 | 8/8 sessions, four balanced pairs; 840 measured/all returned bodies and 1,680 service returns. Native comparison groups have no JIT and eight zero rows. |
+| Default-off core | 13:48:07-13:50:28 | 5/5; 481 bodies: mode 2=4, mode 7=2, mode 8=10, mode 4=3, mode 5=462. No timing rows. |
+| Enabled nested mode 4/8 | 13:50:28-13:52:06 | 2/2; mode 4 has three bodies in two module sessions, mode 8 has ten in three sessions. Each load confirms Y and each drained session has eight valid rows. |
+
+The paired commands use eight threads, workload 100000, loops 16, runs 2,
+CPUs 0-7 and two opposite-order repeats. Every mutex-positive session retains
+`mutex_jit=1`. Exact commands, exit codes and phase source checks are in
+`verification.json` and `*-control.{json,log}`. There are **1,334 returned-body
+witnesses** on this freeze, with matching saved image entries and original
+state/owner oracles; this is not full instruction coverage or immutable-version
+proof. No kernel fault signature or failed/rejected hostcall appears.
+
+Independent review joins each enabled ordinary body to 1/3/2/1 dispatch/wrapper/
+hostcall/control calls; native waits there are zero. Queue sample counts match
+the corresponding drained slowpath statistics, with zero remaining waiters and
+no pre-publication resource refusal in this selected scope:
+
+| Queue interval | Paired samples | Paired sum ns | Nested samples | Nested sum ns |
+| --- | --- | --- | --- | --- |
+| spin_queue | 431 | 574353299 | 42 | 62592040 |
+| mutex_queue | 431 | 550618412 | 11 | 428245738 |
+
+The 862 paired queue samples include queue owners, not only the 840 delegated
+bodies. Nested native waits retain two spin samples (8456971 ns) and one mutex
+sample (123216443 ns), matching three begin/complete task/outer/backend identities
+and four unlocks. Timestamped copies of the same session are deduplicated.
+Elapsed queue/native intervals include deliberate gates and scheduling and may
+overlap; do not add them to wall time or subtract queue time from dispatch.
+
+The real timer unit checks both backends, default-off zero clock reads,
+exactly-once timestamp consumption and an endpoint saved before simulated body
+time. Existing progress fixtures check consumption before native/wake/reuse and
+retention after no-body refusal. Those fixture doubles alone do not prove live
+queue-head behavior; the live slowpath joins supply separate evidence.
+
+Only these affected units and representative cases were run: no full 40-unit,
+admission audit, extended matrix, excluded basic 0/1/3 or new rare-schedule sweep.
+Other results remain historical. Complete acquisition/native-suffix accounting,
+observation overhead, hardware events, amortization and the native-delegation
+comparison remain open performance work. Deferred guards/flags/versioning are
+unchanged, and rare-case generalization is not a current delivery gate.
+
+`review.py` validates source/build/protocol archives, body/image publication,
+all eight rows, slowpath/native identities and final default binaries. The
+immutable bundle is retained **inside guest**, with the initial failed freeze:
+
+```text
+/tmp/kdlock-queue-timing.a6C070.tar.gz
+26,097,909 bytes; 186 members
+SHA256: 1dea3df2723fe98516335d6a2ca93bc96ffe66fa3fa5ba5d8965e638192c141b
+Final source archive: 3c6ba5bbcd4b9e83e37cdc4143f1ef4fbac719becd6f96ed9eb77f0718b7c9ab
+review.json: 41794c2478a7867f8752288680f85f01998fb5e052b77aa969d4e05f894761fe
+```
+
+Pre/post baseline checks match 18 source/interface files, nine build files, two
+bundles/config and live Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`;
+boot remains `e5f08f95-3b68-40f3-bc28-6a7ca42e7941`. No host test/build,
+guest-kernel edit, VM restart or Git commit was performed for this increment.
+Later document sync/readback is separate from the immutable evidence bundle.
+
+## Native Owner Wait Timing
+
+**2026-09-14, 00:03:29-00:12:08 +08.** All five final verification phases
+finish with unchanged inputs and an idle recovery guest. The **210-input**
+freeze changes `exe.c`, `kd_exec.c`, `exe.h`, the common loader/selection and
+paired observer, five unit driver/fixture files, and 16 scripts with mechanical
+load-site conversions.
+The latter preserve original module arguments and bounded insmod timeouts.
+No new unit program, fixed live case or suite is added: 40 programs, **496**
+Python methods, 21 shell drivers and 80 named cases. Guest kernel, two-element
+args, frame/node layouts, native owners, and deferred guard/flags/version work
+are unchanged. Flow and commands live in
+[optional timing](JIT_EXECUTION.md#可选的-jit-边界计时).
+
+Two predecessors are retained, not combined into final acceptance:
+
+- `/tmp/kdlock-native-timing.h9MnF4`: 23:49:07-23:50:57 on September 13,
+  39/40 units. The new remote fixture exposes a signed/unsigned comparison
+  warning under `-Werror`; make exits 2 before module build/live. An explicit
+  unsigned cast after the negative-value check preserves the overflow rule.
+- `/tmp/kdlock-native-timing.UxrYAe`: 40 units, W=1 build and eight paired
+  sessions pass. Review then finds direct script insmod calls bypassing the
+  optional selection. The outer controller is stopped, and the current core
+  runner drains through mode 8 and observes STOP before mode 4. Controller
+  termination/SSH 255 is deliberate, not a guest/JIT failure. Its child PID is
+  subsequently absent and idle is checked before any edit. Direct loads are
+  rewired before the final freeze; no enabled complex result from this
+  incomplete predecessor is claimed.
+
+| Final phase | Time (+08) | Result |
+| --- | --- | --- |
+| Units | 00:03:29-00:05:26 | 40/40. Remote production wait/packets: 6,797 checks, 11 detected mutants; entry/scope: 2,494 checks, 18 mutants; registry: 8,465 checks, nine mutants; benchmark: 30 driver scenarios / 102 observer checks; regression: 48 methods. |
+| External kdlock build | 00:05:26-00:05:28 | SELFTEST=0, NUMA=0, W=1, -j8 pass. Existing locale and non-standard-stack/RETHUNK objtool diagnostics remain; not warning-free. |
+| Timing-enabled paired mode 2/5 | 00:05:28-00:07:15 | 8/8 sessions, four balanced pairs, eight threads/workload 100000. 730 measured/all bodies, 1,460 service returns; six exact rows, native comparison rows zero. |
+| Default-off core | 00:07:15-00:09:35 | 5/5, 484 bodies: mode 2=4, mode 7=2, mode 8=10, mode 4=3, mode 5=465; no timing rows. |
+| Enabled complex native waits | 00:09:35-00:12:08 | 5/5, 479 bodies: mode 4=3, mode 5=464, mode 8=10, registers-1-3=1, registers-4-3=1. Every load confirms Y, including two mode-4 and three mode-8 sessions. |
+
+The final freeze has **1,693 returned bodies**, with saved images matching their
+entries, original full-state/owner oracles and drained teardown. Ordinary paired
+counts remain 1/3/2/1 per body; both native-wait phases are zero there. The explicit
+complex cases instead contain:
+
+| Native interval | Samples | Sum ns | Completed / unlocks |
+| --- | --- | --- | --- |
+| mode 4 shared native B, mutex owner | 1 | 152990184 | 1 / 2 |
+| mode 5 CALL quota, mutex owner | 1 | 31345991 | 1 / 1 |
+| mode 8 mixed shared-B relay, spin owners | 2 | 9954444 | 2 / 2 |
+| registers-1-3, spin owner | 1 | 15365 | 1 / 2 |
+| registers-4-3, mutex owner | 1 | 27710 | 1 / 2 |
+
+Thus three spin and three mutex wait samples match the begin/complete task,
+outer-lock and backend multisets: six completions and nine unlock records.
+No failed/rejected hostcalls or invalid timing row appears. The synthetic clock
+unit exercises two-to-eight nested waits, both backend classifications, unchanged
+full software packets, success/error returns and default-off zero clock reads.
+It does not restore hardware flags or prove arbitrary concurrent counter behavior.
+
+These intervals include deliberate test gates, scheduling, owner-side unlock and
+finish handling. They begin after publication, may miss a native prefix, and
+relay intervals overlap; sums are not independent wall/CPU costs or a native
+performance baseline. No default-off paired sweep, standalone admission audit,
+64-case extended run or excluded basic modes 0/1/3 was rerun on this freeze.
+Broader queue/suffix/observation costs, amortization, P1/P2 and C1/C2/C5 remain open.
+
+Independent `review.py` verifies the standard archives and raw per-phase logs,
+joins bodies/images and native identities, and deduplicates copied six-row
+sessions. It archives the final evidence and both predecessors **inside guest**:
+
+```text
+/tmp/kdlock-native-timing.e0ZC5F.tar.gz
+47,069,958 bytes; 342 members
+SHA256: b8494b5ddcc1196b968bdd8b5912a422d2ecdd804b3e314f6d03707f9037ff5a
+Final source archive: 0c567db89f340f810f067ebc75fb1d0a65542b864fdad6eaf12d9c66a6f799e2
+review.json: 200643649139fa8817c5ad29a83925bd431e48a364448479469ddc10234d4621
+```
+
+Pre/post baseline checks match 18 source/interface files, nine build files, two
+bundles/config and live Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`;
+boot remains `e5f08f95-3b68-40f3-bc28-6a7ca42e7941`. No host test/build, guest-kernel
+edit, VM restart or Git commit was performed for this increment. Later document
+sync/postflight is separate from the immutable archive above.
+
+## JIT Boundary Timing
+
+**2026-09-13, 23:08:09-23:15:58 +08.** All five verification phases finish with
+unchanged source and an idle recovery guest. Runtime changes are confined to
+`kernel_module/exe.c`: default-off, read-only-after-load `jit_timing`, inclusive
+C-boundary observations and drained unload totals. Seven existing driver/fixture
+files wire the option and verify its contract; all **210 runtime/test inputs**
+are frozen together. No new unit entry, fixed live case or suite, guest-kernel
+edit, wrapper argument/layout change, owner handoff, access-time guard or flags
+repair is introduced. Flow and interpretation live in
+[boundary timing](JIT_EXECUTION.md#可选的-jit-边界计时).
+
+Before these edits, the existing guest `test_exe_registry.py` fails to compile:
+the scalar service adapter uses `regs->di` and `int_sqrt`, but its registration
+fixture has only `ax` and no scalar primitive declaration. This is a real test
+dependency regression after the earlier scalar increment, not a JIT runtime
+failure or accepted negative. `registry-baseline-failure.json` preserves the
+command, exit 1 and compiler output. The fixture now supplies the typed field
+and a primitive that fails if registration unexpectedly invokes it; no copied
+sqrt algorithm or weaker service check is added. Service-change instructions
+now select this producer/lifecycle unit independently of its imported helpers.
+
+Guest commands, with per-phase command/exit/source records and bounded outer
+timeouts, are retained in `verification.json` and `*-control.{json,log}`:
+
+```sh
+cd /root/host_fs/kdlock
+make -C tests/unit run
+make -C kernel_module KDLOCK_SELFTEST=0 KDLOCK_NUMA=0 W=1 -j8
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/paired_benchmark.py \
+  --mode 2 5 --threads 8 --workload 100000 --loops 16 --runs 2 \
+  --cpus 0-7 --repeats 2 --output /tmp/kdlock-jit-timing.d2vPGs/paired-off
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/paired_benchmark.py \
+  --mode 2 5 --threads 8 --workload 100000 --loops 16 --runs 2 \
+  --cpus 0-7 --repeats 2 --jit-timing --output /tmp/kdlock-jit-timing.d2vPGs/paired-on
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/regression.py \
+  --suite core --timeout 300 --output /tmp/kdlock-jit-timing.d2vPGs/core
+```
+
+These are recorded historical destinations; manual repeats require new paths.
+The shared dispatcher change justifies the existing full unit inventory and
+complex core selection, not a new daily prerequisite or 64-case rerun.
+
+| Phase | Time (+08) | Result |
+| --- | --- | --- |
+| Units | 23:08:09-23:10:03 | 40/40 existing programs pass. Entry/scope/service/timing consumer: 2,362 checks, 18 detected mutations. Registry: 8,457 checks, nine detected mutations. Benchmark: 30 C-driver scenarios and 97 observer checks. |
+| External module build | 23:10:03-23:10:06 | Exit 0 with `W=1`. Existing locale and nonstandard-stack/RETHUNK objtool diagnostics remain in the log; not a warning-free claim or a guest-kernel build. |
+| Paired timing off | 23:10:06-23:11:52 | 8/8 sessions, four balanced pairs; 826 measured JIT bodies, no timing rows, no native-arm JIT. |
+| Paired timing on | 23:11:52-23:13:37 | 8/8 sessions, four balanced pairs; 773 measured JIT bodies; four validated timing rows per session, native rows all zero. |
+| Core, default timing off | 23:13:38-23:15:58 | 5/5: mode 2=4, mode 7=2, mode 8=10, mode 4=3, mode 5=465 distinct returned bodies across saved phases. |
+
+The enabled ordinary sessions have 773 dispatches, 2,319 actual wrapper calls,
+1,546 successful hostcalls/returns and 773 control calls, all timing invalid
+markers zero. Their body/entry/physical-lock identities match the published
+images; preparations happen to have no returned body in this freeze, although
+the counter contract covers the entire session. Off/on paired runs together
+have **1,599 bodies and 3,198 service returns**. Every arm completes 12,257 exact
+state transitions and clock/scalar observations, with no native continuation,
+kernel fault or leftover frame/writer/module. Normal JIT admission, witness,
+service and full-state checks are not replaced by timings.
+
+The default-off core adds **484 bodies**, for **2,083 in this freeze**. Mode 4
+includes its same-CPU and shared-native-B phases; mode 8 includes all three
+stages; mode 5 retains normal two-service returns and its separate 17th-clock
+native suffix with original-owner ACK. Enabled timing on these nested/quota
+kernel paths is not live-certified by this batch. Software fixtures compare
+complete frames, registry records and CALL stacks off/on through successful,
+refused, progressed-error, quota-native and synthetic-fault exits; they do not
+restore hardware flags or prove arbitrary concurrency.
+
+Illustrative enabled per-call means, not pure instruction/service latency:
+
+| Ordinary mode | Body counts in two repeats | Dispatch mean (us) | Wrapper-call mean (us) | Hostcall-dispatch mean (ns) | Control mean (ns) |
+| --- | --- | --- | --- | --- | --- |
+| 2 | 159 / 211 | 216.076-226.002 | 71.084-74.310 | 135.038-142.336 | 83.957-97.308 |
+| 5 | 222 / 181 | 214.472-225.030 | 70.184-73.580 | 136.730-143.180 | 102.284-110.061 |
+
+There are three wrapper samples per body, so its mean cannot be compared as
+one complete CS cost. The dispatcher residual contains observations/bookkeeping
+and clock overhead. Off/on JIT worker envelopes are mode 2: 57.608-58.527 /
+57.657-58.078 ms; mode 5: 56.269-60.203 / 56.253-57.584 ms. JIT participation
+differs between repeats; these whole-run differences do not isolate timing
+overhead or establish amortization. Nested inclusive intervals may overlap,
+and cumulative elapsed is not CPU or experiment wall time. Full queue/native
+suffix costs, hardware events, broader sweeps and TCLock's faithful third arm
+remain open; earlier profile/small-work/matrix evidence is not merged here.
+
+`review.py` independently reads archived raw phases and four timing rows, joins
+body counts to entry/lock/image hashes, checks state/service/native/origin
+oracles and verifies exact archive membership. The core phase observer
+deduplicates copied timestamped body lines. No archive/source export is made;
+all artifacts stay in the recovery guest. The complete guest-local package is:
+
+```text
+/tmp/kdlock-jit-timing.d2vPGs.tar.gz
+bytes: 31641605; members: 235
+SHA256: 89634b20f4758dbcf017be545e7fb2a2046c4d457ecd553951f2fc3c69bcbd35
+source archive: ce90a79fe8200061456c9a2a00f35e82f78a86c2de0e758320fcb72b705d2007
+review.json: 4c985ab353a613f97a576baf9aa0f415adda95d83d458ea8aaed9961fddcff8d
+```
+
+The archive retains the pre-edit failure, current source, units/build logs,
+both paired runs, every core phase/image, verification/review scripts and
+final default binaries. Loaded paired binaries are checked against each arm's
+own build archive; final binaries against the last core build, not assumed
+identical across SELFTEST rebuilds. Postflight confirms baseline 18 source /
+nine build / two bundle files and running Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`, unchanged boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941` and source hashes. No standalone admission
+audit, 64-case extended run or direct excluded mode 0/1/3 was rerun here.
+The final x86-64 module's `__param_jit_timing` record is also read directly:
+its permission field is `0444`, matching the load-time-only source declaration.
+
+## Context-Symbol Matching
+
+**2026-09-13 +08:** first profile the unchanged translator, then optimize only
+`disassem/context_policy.py` and extend the existing symbol-family method in
+`tests/unit/test_context_policy.py`. The new **210-input freeze** differs in
+exactly these two files. No guest-kernel, native-owner, wrapper/args, access-time
+guard, flags or code-version change. No new unit program, fixed live case or
+suite is added; the inventory remains 40 programs / 495 Python methods.
+
+The original matcher makes **4,316,572 fnmatchcase calls** for 148,986 kallsyms
+names per image. Use stdlib `fnmatch.translate` to compile the unchanged glob
+rules into one anchored regex union, retaining each branch's flags/end anchor,
+case sensitivity and clone-name stripping. No symbol/address/admission cache
+is introduced. Both real guest snapshots classify all names identically and
+produce identical maps of **326 sensitive names and interval ends**. The
+existing unit adds positive/near-miss/clone/newline/case differential inputs;
+it has no timing threshold. Broader dynamic-address safety remains deferred.
+
+The one-off guest observer follows [the profiling flow](JIT_EXECUTION.md#35-翻译器剖析):
+prepare/publish ordinary mode 2 or 5, stop the daemon after drain, and translate
+the same entry six more times into separate workspaces (three plain and three
+profiled, alternating order). Only then run the ordinary 8-thread, 16-loop,
+workload-100000, 2-ioctl-per-thread JIT payload. The profile images are never
+uploaded. `jit.S`, `jit.bin` and `bin.txt` agree byte-for-byte across all repeats,
+both implementations and the published image, at the same source RIP. Module,
+daemon and benchmark hashes match across the four profiling sessions.
+
+| Stage (+08) | Command / result |
+| --- | --- |
+| Original profile 22:09:30-22:11:01 | `/tmp/kdlock-compiler-profile.XJsD3o/profile.py`: 12 standalone translations, 6 raw profiles and 2 JIT payloads; 439 bodies / 878 service returns, original freeze only |
+| Units 22:16:10-22:16:25 | `make -C tests/unit run TESTS= 'PY_TESTS=test_context_policy.py test_context_guards.py test_context_memory.py test_jit_diagnostics.py test_text_regions.py'`: 5/5 programs, respectively 100/40/51/13/30 methods |
+| Audit 22:16:25-22:16:26 | `python3 -B tests/audit_context_spills.py`: 25/25, 17 expected refusals and 8 accepted assembly cases; not kernel JIT |
+| Optimized profile 22:16:27-22:17:32 | `/tmp/kdlock-symbol-union.s7AJib/profile.py`: 12 standalone translations, 6 raw profiles, 2 real symbol-map comparisons, mode 2/5 actual JIT |
+| Complex/refusal 22:17:32-22:21:06 | `KDLOCK_RECOVERY_CONFIRMED=1 python3 -B tests/regression.py --suite admission --case mode-4 --case mode-8 --timeout 300 --output /tmp/kdlock-symbol-union.s7AJib/live`: 14/14 accepted |
+
+On the optimized freeze, mode 2/5 return **192/222 bodies** with **828** total
+clock/scalar exits, executions and resumptions, no service failures or native
+continuation. Each completes all **12,257** state/clock/scalar updates. Mode 4
+adds **3 bodies** across both phases; mode 8 adds **10** across all three phases,
+including shared-B mixed completion. Thus **427** distinct returned-body records
+have matching saved images. Twelve admission cases have no body execution.
+Do not merge the original freeze's 439 bodies into this acceptance. No full
+core/extended matrix, quota-specific or small-work paired sweep was rerun.
+
+| Mode | Plain CLI wall, original (s) | Plain CLI wall, optimized (s) | Real daemon-child wall, original -> optimized (s) |
+| --- | --- | --- | --- |
+| 2 | 3.288529-3.311990 | 1.590299-1.597407 | 3.335381 -> 1.602690 |
+| 5 | 3.270619-3.311192 | 1.585216-1.616147 | 3.328917 -> 1.594221 |
+
+These are three plain samples per mode/version, plus one independent daemon
+child each; not a broad amortization or steady-state speedup claim. The daemon
+RSS changes from 50,392 to 50,488 KiB. The separate snapshot-reading observer's
+process-tree RSS is not directly comparable to compiler-only memory.
+Console settings remain `4 4 1 7`, `ignore_loglevel=N`, with ttyS0.
+
+The raw cProfile runs are much slower (about 7.0 s original, 2.8-2.9 s optimized).
+Selected **profiled cumulative** ranges below locate the hotspot; parent/child
+rows overlap and must not be added or interpreted as uninstrumented pass costs.
+Whole-script profiles also retain translator-import/initialization call records,
+not the interpreter startup before profiling begins.
+
+| Function | Original (s) | Optimized (s) |
+| --- | --- | --- |
+| `load_context_symbols` | 4.866-4.895 | 0.669-0.699 |
+| `is_context_symbol`, included above | 4.376-4.398 | 0.209-0.218 |
+| `get_kernel_symbol`, 9 calls | 0.492-0.496 | 0.498-0.505 |
+| `read_kernel_addr_data`, 7 text/metadata reads | 0.0196-0.0215 | 0.0187-0.0204 |
+| `decode_regions` | 0.097-0.106 | 0.096-0.107 |
+| `find_segment_policy_error` | 0.913-0.918 | 0.910-0.920 |
+| `translation.translate`, 74/81 instructions | 0.0047-0.0052 | 0.0047-0.0052 |
+| `build_jit_binary`, including child waits | 0.051-0.056 | 0.046-0.055 |
+
+Initial `review.py` stopped on an overstrict whole-ELF identity assertion after
+all tests passed. Mode 8 rebuilds the default external module after SELFTEST;
+its final ELF differs only in non-allocated `.BTF` bytes, with every other
+section's flags/bytes equal. The profile ELF remains in mode 4's build archive.
+`review-final.py` checks both recorded identities and retains the failed observer
+and diagnostic; no test rerun, source rollback or existing archive replacement.
+
+The final guest-only archive `/tmp/kdlock-symbol-union.tar.gz` contains both
+profile freezes, scripts, raw pstats, symbol snapshots, logs, images, the
+14-case evidence and both build identities: **27,913,092 bytes, 482 members**.
+Exact-member/hash verification succeeds. Archive SHA256:
+
+```text
+1652027f1b1ebb543d0d7cf66ec9aa586bc4c9efe6de2621510d740eed604aaf
+```
+
+Optimized source archive SHA256:
+`f573e8de01d44657e5313c59a86d4a94ef78d0232c981c61c0105a113b12e4fe`.
+Review SHA256: `99cd1735f9a3d9165b12f54236bbd475bb3c2c657e27811e65a00bd751ecef72`.
+The /tmp observer scripts are experiment evidence, not new checkout commands;
+the reusable CLI flow is documented above. Kernel queueing/hostcall costs,
+hardware counters, amortization and a faithful native-delegation arm remain open.
+
+## Translation Resource Accounting
+
+**2026-09-13, units 21:26:02-21:26:07, live 21:30:29-21:37:54 +08:**
+add optional daemon `--metrics`, explicit option forwarding in `start_daemon`,
+and preparation/translation/console accounting in the existing paired driver.
+Extend the existing daemon and benchmark units. These are **six changed inputs**
+relative to the severity freeze: `daemon/daemon.c`, `tests/common.sh`,
+`tests/benchmark_arm.sh`, `tests/paired_benchmark.py`,
+`tests/unit/test_daemon_policy.c`, and `tests/unit/test_benchmark.py`.
+All 210 runtime/test hashes match host, units, live and independent review.
+Only the daemon binary changes among the four archived experiment binaries;
+workload, lock modules, translator, guest kernel, two-word args and all explicitly
+deferred features remain unchanged. No fixed case, unit program or suite is added.
+
+Three affected guest unit programs pass: daemon production launch/cache/wire
+checks, **30 driver scenarios / 70 paired-observer checks**, and **47 existing
+evidence-controller methods**. The daemon tests retain real fork/exec/reaping
+with a substituted device, preserve the unmeasured default, and inject EINTR,
+before/after clock failures, regressing time and invalid resource values.
+Independent JSON inspection finds 11 actual measured child records: three
+successes, three deliberate native-only exits and five expected launch/script
+errors. These negative fixtures pass their assertions; they are not failed
+kernel workloads or JIT evidence. Unit evidence is
+`/tmp/kdlock-translation-cost-units.qBkEMg` in the guest.
+
+After baseline, idle and recovery snapshot checks, run:
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B -u tests/paired_benchmark.py \
+  --mode 2 5 --threads 8 --workload 10000 100000 --loops 16 --runs 2 \
+  --cpus 0-7 --repeats 4 --timeout 300 \
+  --output /tmp/kdlock-translation-cost-live.qBkEMg
+```
+
+The actual kernel log capacity is 524288 bytes; a prior 256-CS mutex arm saves
+about 139 KiB of dmesg. Instead of starting the initially considered 2048-CS
+arms that risk overwriting logs, this experiment retains 256 CS / 16 ioctl
+samples per arm and increases independent balanced repeats to four. This is
+a pre-run sizing decision, not a retry or relaxed body/log gate. No printk
+setting is changed and no witness/log is disabled. Per-phase, publication,
+final and cross-arm console observations agree: `4 4 1 7`, `ignore_loglevel=N`,
+ttyS0 present. Discrete observations do not prove continuous sysctl control.
+
+All **32 sessions / 16 pairs pass** with `mutex_jit=1`. Independent inspection
+checks exact phase commands and worker completions, identical loaded binaries,
+preparation, CPU mask, NORMAL publication, stable images, matching body entry/
+physical lock and full state/owner/drain oracles. Native arms contain no JIT
+entry, installation, image or body. All **3,250 returned bodies** occur between
+the measured dmesg snapshots; **6,500 exits/executed/resumed** match the two
+services, with zero rejects/failures/quota exits and no native-continuation
+frame. Each arm finishes at 12257 complete state transitions. No per-case
+kernel fault is found. These counts do not certify every CS/instruction or
+immutable code identity.
+
+Ranges below span four individual opposite-order pairs at each parameter point;
+ratios are calculated per pair, not from independent range endpoints or pooled
+modes. Every repeat remains in `comparison.json`.
+
+| Mode | Workload | N wall ms | J wall ms | JIT bodies / 256 measured CS | J/N throughput |
+| --- | --- | --- | --- | --- | --- |
+| 2 | 10000 | 11.612-12.492 | 13.416-15.512 | 189-210 | 0.755-0.865 |
+| 2 | 100000 | 121.330-131.468 | 53.537-59.212 | 221 | 2.134-2.266 |
+| 5 | 10000 | 10.780-12.629 | 12.858-14.586 | 160-222 | 0.768-0.867 |
+| 5 | 100000 | 57.256-59.840 | 55.224-58.738 | 191-222 | 0.975-1.064 |
+
+Each JIT arm has exactly one successful translator-child record, joined to
+the published RIP/pid/tgid/kind and bounded by its preparation interval. Raw
+daemon records independently reproduce the `costs` summaries. Child wall time
+is **3265.824-3398.470 ms**, summed child user/system CPU **3265.504-3398.064 ms**,
+and largest-process high-water RSS **50392 KiB** in every record. All have zero
+major faults. The record includes launch/imports, analysis, assembly and waited
+descendants, but excludes polling/workspace setup/upload and kernel JIT. It is
+not pure code-generation time, concurrent tree memory or a hardware counter.
+JIT preparation spans **8765.387-9681.484 ms**, versus native
+**3332.223-3375.239 ms**; fixed waits and preparation work are included.
+Translation can overlap promotion, so these intervals must not be added.
+
+The smaller workload does not benefit in these instrumented pairs; the larger
+mode-2 ratio does not establish universal speedup. Compiler-pass profiling,
+kernel queue/hostcall/observation costs, hardware events, socket/input coverage,
+stable tail estimates, measured amortization and a faithful third arm remain
+open. No nested/quota/core/extended or admission gate is rerun; prior evidence
+is not spliced into this freeze. Execution/field contracts are in the
+[paired flow](JIT_EXECUTION.md#34-原生锁与-jit-配对实验).
+
+The independent review creates and verifies the guest-only outer archive with
+exact member/hash checks, including units, raw phase/daemon logs, generated
+images, sources, observers and pre-run log-capacity metadata.
+`/tmp/kdlock-translation-cost-live.qBkEMg.tar.gz`: **41,135,284 bytes,
+308 members**, SHA256:
+
+```text
+c9d118eaa8529be09a6fce16267c49a5cde4e18c5a3abdd2df992d195b29aa1b
+```
+
+Source archive SHA256:
+`fae73383e29f88f2a86d260eb800d3fa76ad984d1f29cb3746429bf3614826bc`.
+`translation-review.json` SHA256:
+`1e58de2276e08b6603c5ae71d38faba3a10edf7ef20efd57987806d7a6cfd30f`.
+`comparison.json` SHA256:
+`20ca5e7692fbcc161727c214c9662501e8d018cb8ae96042545a3f85cb4b8a9e`.
+No guest archive is exported. Review ends idle on Linux 6.1.159, boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941`, with unchanged runtime/test sources.
+Before/after baseline checks pass 18 source files, nine build files, two
+bundles and config, with running Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`. Host static checks pass 11 Markdown
+files / 638 local links, the unchanged inventory and 210 source hashes, Python
+AST, shell syntax and `git diff --check`. No host build or test executes.
+The broader C1/C2/C5 and P1/P2 tasks remain open; this is not whole-plan acceptance.
+
+## Mutex Routine Log Severity
+
+**2026-09-13, unit 20:40:19-20:40:20, paired live 20:42:50-20:44:42,
+nested live 20:44:43-20:45:17 +08:** only the routine `mutex_debug` severity
+changes from `KERN_ALERT` to `KERN_INFO`, with a purpose comment. Its two
+queue/JIT-entry call sites, text, arguments, enabled logging and body witnesses
+remain intact. No warning/error branch, locking, JIT translation, owner, guest
+kernel, two-word args or deferred feature changes. The existing mutex outer
+unit and fixture are extended; these are the only three changed runtime/test
+inputs relative to the preceding paired freeze. All 210 hashes agree across
+host, units, live runs and the independent drained review.
+
+The diagnosis inspects actual archived module ELF strings: both routine
+formats in the prior module use ALERT (level 1), while both new formats use
+INFO (level 6). The former ELF SHA256 is
+`d4ac1d3916bfacf71874f190da292f9892d9439e0013aea88d6fe4cf4b7b5046`.
+The running guest uses a ttyS0 serial console, `/proc/sys/kernel/printk` is
+`4 4 1 7`, and `ignore_loglevel=N`; before/after controls for both commands
+are identical. On this earlier freeze the outer observer retains these controls;
+the paired controller did not yet collect them automatically. No console sysctl
+was changed. An exact timestamped old routine line appears in host serial;
+an exact new line remains in paired dmesg but is absent from serial at the
+follow-up observation. This is a bounded observation, not log authentication.
+
+Read-only source hashes match the guest's printk and serial sources: printk
+stores the message before console-level filtering, and a caller can flush
+console records synchronously; the serial driver emits characters through its
+console callback. Thus native kdlock debug output can delay execution while
+the physical mutex is retained. This is not a large `printk` callee being
+translated inside the sandbox; these mode-5 JIT services remain clock and
+`int_sqrt`. No ftrace, cycle or hardware-event attribution was performed.
+
+The existing guest unit passes **157 checks, five scenarios, zero failures**,
+retaining five INFO traces. It compiles the actual production macro against
+the guest kernel severity definitions and substitutes only the printk sink.
+Both ALERT-regression and disabled-trace mutants compile and then fail the
+explicit assertions; compiler failures/crashes are not accepted as detection.
+No additional unit program, Python `test_*` method or named live case is added.
+
+With recovery confirmed, the two commands are:
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B -u tests/paired_benchmark.py \
+  --mode 5 --threads 4 8 --workload 100000 --loops 16 --runs 2 \
+  --cpus 0-7 --repeats 2 --timeout 300 \
+  --output /tmp/kdlock-mutex-cost-live.EdI0Sf
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B -u tests/regression.py \
+  --case mode-4 --timeout 300 --output /tmp/kdlock-mutex-cost-nested.EdI0Sf
+```
+
+All **eight paired sessions / four pairs pass** with `mutex_jit=1` in both
+arms. The unchanged paired gates independently match phase commands, loaded
+binary hashes, preparation, inherited CPU mask, NORMAL entry/physical lock,
+stable saved images and complete state/owner/drain oracles. Native arms have
+no entry/image/install/body. All **632 returned JIT bodies** occur in the
+measured phases, with **1,264 exits/executed/resumed**, zero hostcall failures,
+rejects or quota exits, and no native-continuation frame. Full state counts
+remain 12129 / 12257 for four/eight threads.
+
+| Threads | Order | N wall ms | J wall ms | JIT bodies / measured CS | J/N throughput |
+| --- | --- | --- | --- | --- | --- |
+| 4 | N, J | 33.397 | 32.521 | 94 / 128 | 1.027 |
+| 4 | J, N | 35.247 | 31.978 | 94 / 128 | 1.102 |
+| 8 | N, J | 59.366 | 56.856 | 222 / 256 | 1.044 |
+| 8 | J, N | 60.468 | 64.926 | 222 / 256 | 0.931 |
+
+Each JIT arm retains 189/189/445/445 routine lines respectively, with one
+combiner, no handoff and no not-ready/frame/node/context failures. JIT success
+and service-resume counts equal its body count; physical origin acquisitions
+and releases balance. The prior 8-thread envelope was about 2.1 seconds and
+the prior 4-thread participation 2/128. These controls and the limited change
+support serial logging as a major contributor to that anomaly, including
+changed queue timing; they do not isolate every remaining cost or prove a
+general speedup. More verbose console settings can emit INFO again. Logging,
+body witnesses, full oracles, scheduling and services still affect the results.
+
+Mode 4 also passes both existing phases: seven roles/two CPUs produce one JIT
+body without a native frame; the fresh shared-B session produces two JIT
+bodies, one native frame and two owner ACKs. Independent phase-archive reading
+joins all three returned-body entries to saved images. Total scoped evidence
+is **635 returned bodies**, not a count of fully translated instructions or
+an immutable-version proof. No per-case kernel fault is found. No other mode,
+quota/OOO phase, unit program, core/extended matrix or admission audit is rerun;
+their earlier results are not combined into this freeze.
+
+The guest-local outer archive contains the paired run, nested run, units,
+observers, console/ELF audit metadata and control logs. Independent verification
+checks exact membership/hashes and confirms the preceding paired archive is
+unchanged. `/tmp/kdlock-mutex-cost-live.EdI0Sf.tar.gz`: **13,273,362 bytes,
+110 members**, SHA256:
+
+```text
+794d5390d3b0057ef97093884ed16b76370f2219735f2b62984a1003e059ec39
+```
+
+Source archive SHA256:
+`112ee1795b4486e20aee19a70edf2f0f6d637811b692a9f4f946b647a872f76d`.
+`cost-review.json` SHA256:
+`cb47ba8050da0a244897931af9c69e165704f1c6650f5ed2366988e894bde580`.
+`comparison.json` SHA256:
+`b284eaf3889a4089069a6b4861065f61c2ae1bcbc8f21a8279e3baf33c83d35d`.
+No guest archive is exported. The review confirms idle state, Linux 6.1.159,
+boot `e5f08f95-3b68-40f3-bc28-6a7ca42e7941` and unchanged runtime inputs.
+The separate post-review baseline check passes 18 source files, nine build
+files, two bundles and config, with running Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`. Host static checks pass all 11
+Markdown files / 630 local links, unchanged inventory and 210 runtime/test
+hashes, Python AST, shell syntax and `git diff --check`; no host test executes.
+The broader C1/C2/C5, reproducibility/cost decomposition and third-arm work
+remain open; access-time guards, flags and immutable versions remain deferred.
+
+## Paired Native-JIT Experiments
+
+**2026-09-13, unit 20:08:03-20:08:07, live 20:11:06-20:14:52 +08:**
+add an explicit paired controller and one-session shell driver, extending the
+existing benchmark unit only. All **210 runtime/test inputs** agree between
+host, units, live run and postflight. Relative to the 208-input measurement
+freeze, only `tests/paired_benchmark.py`, `tests/benchmark_arm.sh` and
+`tests/unit/test_benchmark.py` differ. No production workload, lock/module,
+guest-kernel, two-word ABI, owner, deferred guard/flags/version change occurs.
+
+Affected guest units pass **2/2**: 30 production-driver scenarios, 49 paired
+observer checks and 47 evidence-controller methods. Unit source/log/result
+evidence is `/tmp/kdlock-paired-units.aEjAK5`. The synthetic observer tests do
+not execute kernel JIT; the independent live experiment below supplies that
+evidence. The fixed inventory remains 40 unit entries, 495 Python `test_*`
+methods, 21 numbered shell drivers, 80 cases and 15 suites. The new experimental
+driver is not added to that fixed regression catalog or any daily scope.
+
+Guest command, with the existing recovery snapshot confirmed:
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B -u tests/paired_benchmark.py \
+  --mode 2 5 --threads 4 8 --workload 100000 --loops 16 --runs 2 \
+  --cpus 0-7 --repeats 2 --timeout 300 \
+  --output /tmp/kdlock-paired-live.aEjAK5
+```
+
+All **16 sessions / eight pairs pass**. Both arms retain `mutex_jit=1` and
+identical loaded binary hashes, ordinary workload/module parameters, inherited
+CPU mask 0-7 and preparation: one warmup operation, then 12000 promotion
+operations after a one-second gap. Native selects `kd_unused`; JIT selects
+`klock_test`. Every arm rebuilds a drained provider/source session. Translators
+are stopped before the payload; NORMAL publication, code address and image
+hashes are checked before/after. Detailed execution/evidence contracts are in
+the [paired flow](JIT_EXECUTION.md#34-原生锁与-jit-配对实验).
+
+Independent archive inspection checks every command/phase, exact worker and
+state counts, unchanged snapshot prefixes, entry/physical-lock matching bodies,
+saved images and owner/drain/service logs. The eight native arms contain no
+entry/image/install/body. The eight JIT arms contain **1,044 returned bodies**,
+all inside their measured phases, with **2,088 exits/executed/resumed** and zero
+hostcall rejects/failures/quota exits. No native-continuation frame starts.
+Four-thread arms finish at 12129 state transitions, eight-thread arms at 12257;
+full replay, completion, clock and scalar oracles pass. Mutex JIT success/resume
+counts match bodies, origin acquire/release counts balance, and no kernel fault
+is detected. These are not claims that every CS or instruction used JIT.
+
+Each row is one paired repeat, not an average. N is native-with-existing-hooks,
+J is JIT; ratios use the driver's instrumented ioctl throughput:
+
+| Mode | Threads | Order | N wall ms | J wall ms | JIT bodies / measured CS | J/N throughput |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2 | 4 | N, J | 33.854 | 34.462 | 93 / 128 | 0.982 |
+| 2 | 4 | J, N | 33.878 | 33.877 | 93 / 128 | 1.000 |
+| 2 | 8 | N, J | 117.187 | 59.275 | 221 / 256 | 1.977 |
+| 2 | 8 | J, N | 128.149 | 58.170 | 208 / 256 | 2.203 |
+| 5 | 4 | N, J | 32.513 | 51.418 | 2 / 128 | 0.632 |
+| 5 | 4 | J, N | 33.886 | 43.143 | 2 / 128 | 0.785 |
+| 5 | 8 | N, J | 58.956 | 2149.490 | 213 / 256 | 0.0274 |
+| 5 | 8 | J, N | 58.725 | 2088.644 | 212 / 256 | 0.0281 |
+
+`comparison.json` preserves all per-repeat p50/p99, worker CPU time, completed
+counts and ratios; per-arm archives also retain preparation records. With only
+8/16 ioctl samples per payload, these p99s are not stable tail estimates.
+Mode 2's eight-thread ratio is not a general speedup claim. Mode 5's eight-thread
+worker envelope is about 35x slower on this earlier ALERT-logging freeze; its
+four-thread JIT participation is only 2/128. The later
+[severity follow-up](#mutex-routine-log-severity) retains these results and
+investigates their console cost; it does not rewrite this historical table.
+Logging, witness, oracle, scheduling and services remain included, cache/thermal
+conditions are not equalized, and workers are not individually pinned or given
+exclusive CPUs. No third arm, hardware events, nested-role measurement or
+preparation amortization has been validated. C1/C2/C5 and P1/P2 remain open.
+
+The temporary `review.py` completed per-arm inspection and generated/verified
+the archive, then exited 1 by comparing the verifier's integer member count
+with its hash map. Keep that script and archive unchanged. The independent
+`/tmp/kdlock-paired-finalize.aEjAK5.py` reconstructs the expected file map and
+verifies the **original** archive; it does not rerun workloads or recreate the
+archive. Its final metadata is `/tmp/kdlock-paired-finalization.aEjAK5.json`.
+This observer error is not a failed kernel workload and is not silently erased.
+
+Guest-only evidence: `/tmp/kdlock-paired-live.aEjAK5.tar.gz`, **21,172,928 bytes,
+163 members**, SHA256:
+
+```text
+d9a992e5185eafc4ec42c146976a3a2c9140aeffba428970e061d6d7afb455af
+```
+
+Source archive SHA256:
+`65d602136791913e5b7775c96879c4de3478a836117d159d45f6a774120a0908`.
+`paired-review.json` SHA256:
+`67a86dab4964bb3f0bed20bb644066608cbcfd39d983ed4c0ffaa013492d1993`.
+`comparison.json` SHA256:
+`8a538492adf444e402929225f80178ad107dab63e756c493d79ee133412bb6d5`.
+The archive stays guest-local; no denied export is retried. Kernel baseline
+checks pass before/after (18 source, nine build and two bundle files); Linux
+6.1.159, Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`, boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941` and final idle state are unchanged.
+No core/extended, other unit programs, admission negatives or kernel probes are
+rerun by this increment; their older evidence is not spliced into this freeze.
+
+## TCLock Comparator Feasibility
+
+**2026-09-13, completed 19:42 +08:** inspect the clean local TCLock checkout at
+`~/TCLocks`, revision `bbfb9f00a12af51dff6ca291cb9829a82960c2ef`, and compile only
+external objects against `/root/linux-6.1.159` in the recovery guest.
+`KERNEL_SYNCSTRESS` selects the upstream nano-benchmark headers. Four upstream
+files were copied individually without edits; no upstream build/run script,
+kernel rebuild, new VM, module link/load or JIT workload was executed.
+
+The normal `control.o` build succeeded and its x86-64 relocatable ELF was
+verified. The unchanged `komb_mutex.o` build failed; diagnostics and the actual
+guest `sched.h` agree on nine missing task members: `komb_stack_curr_ptr`,
+`komb_mutex_node`, `komb_local_queue_head`, `komb_local_queue_tail`,
+`komb_curr_waiter_task`, `komb_prev_waiter_task`, `komb_next_waiter_task`,
+`komb_lock_addr`, and `counter_val`. The original source object's SHA256 is
+`d4ae402d81307100ee2c03745643f458d3b42eab13e6e57735eebbd22643dc26`.
+The positive control distinguishes this dependency failure from unavailable
+compiler/build infrastructure; it does not certify any TCLock port or runtime.
+
+The initial temporary observer exited 1 after compilation because its regex
+did not accept GCC's typographic quotes. Keep that observer and both compiler
+logs unchanged. `finish.py` independently reads the saved logs/object, checks
+the actual task header and packages them; it does **not** recompile or turn the
+compiler failure into a passing delegation test. No `.ko` was produced.
+
+The guest exposes a `cpu` PMU (`type=4`), but no `perf` executable is found on
+PATH, so hardware event counting was not executed. This is a tooling gap, not
+evidence that the PMU or all cache-transfer events are unsupported.
+The later [paired increment](#paired-native-jit-experiments) supplies the first
+same-kernel native-with-hooks/JIT experiment; the separate third-arm capability
+assessment remains in [TODO](TODO.md#comparator-feasibility-and-matched-experiments).
+
+Guest-local evidence: `/tmp/kdlock-comparator-guest.rm7uIs`.
+Its 17-member, 711,506-byte archive is
+`/tmp/kdlock-comparator-guest.rm7uIs.tar.gz`, SHA256
+`610349bb6f9bd28c198c952075b24eae0b191359bf77aad17d936253f97417b8`;
+`audit.json` SHA256 is
+`f2162ab373b4c46fa1eebc4498d95785b3094bacae2d82a669f2efbf48fd058e`.
+The archive includes frozen kdlock sources, upstream inputs, control object,
+logs and both observers; member hashes pass. It remains guest-local.
+All 208 kdlock runtime/test hashes, boot and idle state are unchanged. This
+documentation/compatibility increment adds no unit entry or named live case;
+the measurement run below was then the latest actual-JIT evidence, before the
+separate paired increment above.
+
+## Instrumented Benchmark Measurements
+
+**2026-09-13, unit 19:21:23-19:21:26, live 19:22:19-19:25:21 +08:**
+add `KD_TEST_METRICS=1` to the existing benchmark without changing the ioctl,
+two-word wrapper, native owners, guest kernel or deferred guards/flags/versions.
+Measure the post-barrier worker envelope and per-ioctl monotonic latency,
+sum worker CPU time and preserve exact successful counts on partial failure.
+Bound storage to 1048576 samples; invalid input is refused before device open.
+Existing `test_04` payloads and mode-5 continuous stress retain structured
+records and both kernel-log snapshots through the ordinary evidence collector.
+Execution boundaries and field definitions live in
+[usage 3.3](JIT_EXECUTION.md#33-带观测的负载测量).
+
+On the same **208 runtime/test inputs**, the guest standalone benchmark builds
+with `cc -O2 -Wall -Wextra -Werror -pthread`. The new production-driver fixture
+passes **30 scenarios**: real pthreads, controlled clock/IO primitives, exact
+envelope/nearest-rank quantiles, a real guest-clock path, mixed roles and setup,
+IO/timer/argument failures. The existing evidence controller passes 47 methods;
+`make ... run` reports **2 passed, 0 failed**. These units do not run a kernel CS.
+The earlier unit-only pass before the two snapshot additions remains separate
+in `/tmp/kdlock-benchmark-units.KMqFzu`; it is not the final source identity.
+
+The unchanged `core` selection passes **5/5 actual-JIT cases** with `mutex_jit=1`
+for mutex positives. Distinct returned-body records with saved entry images:
+mode 2 = 4, mode 7 = 2, mode 8 = 10 across three phases, mode 4 = 3 across two
+phases, mode 5 = 462 (461 normal JIT returns plus one quota/native suffix).
+All **481** records are phase-deduplicated. Full workload oracles pass, including
+mode-5 scalar count 12587 with zero failures, service exits/executed/resumed
+939/938/938, one quota exit and one real-owner unlock ACK.
+
+Four recorded payloads are independently joined to the *new* witness lines
+between intact before/after snapshots. They contain **451** returned bodies:
+
+| Measured payload | Completed ioctls | Loops/ioctl | Worker envelope (ms) | Ioctl p50 / p99 (ms) | New returned bodies |
+| --- | --- | --- | --- | --- | --- |
+| mode 2 | 8/8 | 1 | 23.280183 | 15.487023 / 23.149292 | 4 |
+| mode 7 | 8/8 | 1 | 23.242952 | 14.318951 / 23.159649 | 2 |
+| mode 8, original phase | 9/9 | 1 | 2.541042 | 1.799060 / 2.452807 | 2 |
+| mode 5, continuous stress | 8/8 | 64 | 4541.236616 | 4508.671886 / 4541.222288 | 443 |
+
+These values only verify the measurement pipeline for these executions. Modes
+have different workloads/roles, samples are few, and native paths, kernel
+logging, witnesses, state checks and instrumentation remain included. They
+are not comparable speedups, pure JIT/lock latency or stable p99 estimates.
+Mode 4 has actual-JIT evidence but no structured measurement in this increment.
+No baseline/native-controls, additional parallel case, complete 40-unit run
+or full live matrix is added; old freezes cannot certify this one.
+
+Guest commands:
+
+```sh
+make -C tests/unit run TESTS= PY_TESTS='test_benchmark.py test_regression.py'
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B tests/regression.py --suite core \
+  --timeout 300 --output /tmp/kdlock-benchmark-final-live.m7GxAl
+```
+
+Final guest units: `/tmp/kdlock-benchmark-final-units.m7GxAl`.
+The guest-only archive `/tmp/kdlock-benchmark-final-live.m7GxAl.tar.gz` has
+8,779,545 bytes and 63 regular members, SHA256
+`b14b9e8a94359cc63fd8793d7d03621e78d389e1f7b3e1edd17fe99b07c9afe5`.
+Its source archive SHA256 is
+`659b77eaaaea8bcb1711949c3e22162393404a0548145ce995664d61bf52da12`;
+`benchmark-review.json` SHA256 is
+`bfe7a81cebf49e7103f42b820be4fe9599b52590d000d2c97b199e8982fc9c4a`.
+The repository verifier, measured-payload joins and outer member hashes pass;
+source hashes, boot and running kernel notes are unchanged, callers/modules
+are drained, and no kernel fault is detected. No guest archive was exported.
+Broader P1/P2 comparisons, repeatability, cost separation and the recorded
+C1/C2/C5 capability limits remain open. Access-time checking remains deferred.
+
+## Hotlock Promotion Ordering
+
+**2026-09-13, final unit 18:46:56-18:46:58, live 18:47:41-18:51:14 +08:**
+remove cross-lock shrinking of the existing 2.5-billion-cycle sample window,
+and read the sample-update TSC under the table lock. Preserve the module-wide
+warmup, 10000-sample quota, strict deadline, sticky decisions, table capacity
+and JIT admission. Only `kd_hotlock.c` changes production behavior; two existing
+unit files add checks, and three workload/driver files only update comments.
+No guest-kernel, two-word ABI, ownership or deferred guard/flags/version change.
+
+The existing guest production sampler unit establishes two distinct failures
+before their fixes, using real `kd_hotlock_record()` calls with substituted
+TSC/lock primitives, never fabricated table states:
+
+| Attempt | Evidence and outcome |
+| --- | --- |
+| Cross-lock counterexample | Fast-first/slow-first samples expose 11 failed checks in the old global-window implementation; it compiles and the fixture exits 1, not a build failure |
+| Window-only increment | 211140 checks and three mutants pass; six complex cases pass with 429 returned bodies on their own freeze |
+| Timestamp counterexample | One caller reads TSC first but another calls the production updater before it acquires the table lock; two assertions show false IGNORE and an old end timestamp |
+| Final combined fix | 211150 checks, zero failures; four compiled mutants report checked failures: stale TSC, narrowed window, deadline equality, shortened quota |
+
+The final runner selects `--suite core --case parallel-drain-0 --timeout 300`.
+**6/6 actual-JIT cases pass on the same 206 runtime/test inputs as the final
+unit**, with the following returned-body counts. Mutex positives use
+`mutex_jit=1`; prefixes followed by native completion are not full-JIT CS claims.
+
+| Case | Bodies | Preserved contract |
+| --- | --- | --- |
+| `mode-2` | 4 | Natural root promotion, eight clock/scalar executions and resumes, 12009 correct scalar results |
+| `mode-7` | 2 | Non-LIFO nested spin execution and exact complete state |
+| `mode-8` | 10 (2+4+4) | All three complex/shared-B phases, including quota/native and waiter exit |
+| `mode-4` | 3 (1+2) | Same-CPU B-holder scheduling and two A roots sharing native B |
+| `mode-5` | 447 | 446 normal JIT completions, one quota-native frame, 908 service executions/resumes and 12587 correct scalar results |
+| `parallel-drain-0` | 2 | Two concurrent native frames, four owner ACKs, peer cancellation, resource pressure, rename and retirement/reload |
+
+All **468 distinct timestamped body records** have matching saved entry images.
+An independent join also checks mode 2/5 and both parallel root body locks
+against their natural `begin delegate` records. Existing SELFTEST resource
+promotion remains separately labelled, not evidence of natural frequency.
+All cases drained with complete evidence, unchanged source hashes and no
+detected kernel fault. Pre/post baseline checks match 18 source files, nine
+build files, two bundles/config and Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`; boot remains
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941`, kernel 6.1.159. No VM restart occurs.
+
+Guest evidence directories are `/tmp/kdlock-hotlock-before-units.4aUxnP`,
+`/tmp/kdlock-hotlock-units.I2k5mA`, `/tmp/kdlock-hotlock-live.I2k5mA`,
+`/tmp/kdlock-hotlock-clock-before-units.qymr88`,
+`/tmp/kdlock-hotlock-final-units.sk1fHz` and
+`/tmp/kdlock-hotlock-final-live.sk1fHz`. The verified, **guest-local** outer
+archive contains 78 members and 23,241,590 bytes, preserving earlier attempts
+as distinct nested archives, not additional accepted final cases:
+`/tmp/kdlock-hotlock-final-live.sk1fHz.tar.gz`, SHA256:
+
+```text
+802a6b7fa3f19a7662c838a5d6211835811e0c2ef472776c0e5e6a823a3d85bc
+```
+
+Final source archive SHA256:
+`c7d5d317b454fd202c3747b525837399d651a457754040c6a033c1c778f01d3d`;
+`hotlock-review.json` SHA256:
+`97717e978ea55ac0fe5577e14aed607df982ed977e2d32396eecbbf47051a5a8`.
+Host final source/static metadata is `/tmp/kdlock-hotlock-order-final.sk1fHz`.
+No archive is exported. No new routine test or full-matrix rerun is added;
+39 unit programs, 495 Python methods and 80 named cases remain unchanged.
+This bounded improvement does not prove TSC synchronization, deterministic OS
+scheduling, actual contention, speedup, resampling or broader C1/C2/C5/P1/P2
+completion. Policy and operation are in [usage 3.2](JIT_EXECUTION.md#32-热锁晋升与翻译准备).
+
+## Typed Scalar Service
+
+**2026-09-13, 18:12:11-18:15:09 +08:** add manifest ID 3, `int_sqrt`, using
+the native kernel helper with saved unsigned 64-bit RDI input and RAX output.
+Other saved GPRs, two-word wrapper arguments and the existing CALL-return
+protocol remain unchanged. This helper has no pointer argument, sleeping,
+allocation or task/per-CPU dependency in the inspected baseline implementation.
+The service contract and mode 2/5 flows are maintained in
+[DESIGN 8.4](DESIGN.md#84-native-hostcalls) and
+[JIT_EXECUTION 6.13](JIT_EXECUTION.md#613-call-次数额度与原生后缀).
+
+Ten runtime/test files change from the preceding audit; all **206 input hashes**
+match between host, unit run, live run and idle postflight. The recovery guest
+builds the external modules and runs the four affected existing units:
+`test_hostcall_codegen.py`, `test_jit_entry_scope.py`,
+`test_mutex_signal_protocol.py`, `test_jit_diagnostics.py`. All pass, including
+**1,837 production-consumer checks**, 14 detected mutations and 34/13 protocol/
+diagnostic methods. Each mutant must compile and report a checked failure, not
+crash or time out. The three scalar mutants truncate input, select RSI instead
+of RDI, or sign-extend a 32-bit result. Native primitives in that fixture remain
+test doubles; actual numerical correctness is established separately below.
+
+The existing runner selects only `mode-2`, `mode-5`, `mode-8`, with a 300-second
+per-case timeout and confirmed recovery. **3/3 pass**, with these observations:
+
+| Case | Returned bodies | Service and completion evidence |
+| --- | --- | --- |
+| `mode-2` | 4 | Four JIT completions; hostcall exits/executed/resumed 8/8/8, no rejection/failure/limit; all 12,009 CS scalar calls correct |
+| `mode-5`, `mutex_jit=1` | 430 | 429 normal JIT completions plus one quota-native frame; exits/executed/resumed 875/874/874, limit 1, rejection/failure 0; native begin/complete/unlock 1/1/1 |
+| `mode-8` | 10 (2+4+4) | All three existing complex/remote phases pass; mixed child quota remains clock-only, 17/16/16 exits/executed/resumed, first waiter exits before the next root on B |
+
+Mode 5 checks 12,587 complete critical sections, 12,667 clock returns and
+12,587 scalar calls with zero failures. The five final callers each run 17 clocks;
+one delegated request exits before clock 17, then its original waiter executes
+that clock and the scalar suffix before owner ACK. Normal requests each return
+from two services. Both modes consume high-bit scalar arguments/results and
+retain the independent complex-state oracle; total CS counts include native
+warmup/owners and are not JIT counts.
+
+Saved mode 2/5 assembly contains exactly the distinct ID 1 `ktime_get` and
+ID 3 `int_sqrt` stubs at live symbols `ffffffff81193700` and
+`ffffffff816b2e90`. All **444 distinct timestamped returned-body records** have
+matching saved entry images. Independent offline checks validate source/archive
+membership, hashes and recorded outcomes; all cases drained, and no kernel
+fault was detected. The boot remains `e5f08f95-3b68-40f3-bc28-6a7ca42e7941`,
+kernel 6.1.159, Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`.
+Pre/post baseline checks pass for 18 source files, nine build files, two bundles
+and config. No VM restart or guest-kernel edit/build occurs.
+
+Evidence remains **guest-local**: units in `/tmp/kdlock-scalar-units.lzyYlP`,
+live results in `/tmp/kdlock-scalar-live.lzyYlP`. The verified outer archive
+`/tmp/kdlock-scalar-live.lzyYlP.tar.gz` contains 44 members, 6,177,040 bytes,
+including frozen source, logs, images, build captures, unit records and the
+read-only math-source/inspection material. SHA256:
+
+```text
+72cce3a7a5448f28b3634e054b2c962e16cb4212e61681195920fafa745b5771
+```
+
+The shared source archive SHA256 is
+`14e03fd5955a1a5b140bad6e62778973faf2f3db78e38e0a392751432375aabd`;
+`scalar-review.json` is
+`bc0a7c5931eae8d818a54da93e8bf2b60add9b7f2a9d5fa402bdc2bfa533234a`.
+Host static/source metadata is in `/tmp/kdlock-scalar-service.lzyYlP`;
+no guest archive is exported. The current inventory is unchanged: 39 programs,
+495 Python methods, 80 named cases. The older 64-case audit is not a run of
+this new scalar freeze. C1/C2/C5 and broader P1/P2 remain open; access-time guards,
+flags, immutable JIT versions, pointer/variadic/side-effecting services and
+performance claims are not added or certified by this increment.
+
+## Main-Plan Acceptance Audit
+
+**2026-09-13, 16:56:08-17:23:17 +08:** the existing **64-case `extended`
+selection passes on one freeze of 206 runtime/test inputs**. No runtime or test
+source changed during this audit, and no new routine entry was added. This
+checks the currently implemented contracts together instead of combining older
+scoped PASS results. The inspected requirements and remaining boundaries are in
+[the task audit](TODO.md#main-plan-acceptance-audit).
+
+| Acceptance category | Result | Evidence boundary |
+| --- | --- | --- |
+| Actual kernel JIT | 50/50 | Returned generated-body witnesses, matching saved entry images and each driver's workload/protocol oracle |
+| Context admission refusal | 12/12 | Expected native-only refusal and correct native state, zero returned JIT body |
+| Kernel task/RCU protocol | 2/2 | Real reader/task/ACK probes, zero returned JIT body; not JIT positives |
+| Existing unit programs | 39/39 | Recovery-guest `make -C tests/unit run`; not a forced `make -B` rebuild |
+| Independent admission audit | 25/25 | 17 expected refusals and eight accepted assembly cases; concrete miasm IR and mocked text, no native/JIT machine-code execution |
+
+The first three rows are the 64 live cases. The last two are separate programs,
+not additional live cases. Baseline, `native-controls` and eleven covered
+diagnostics were not selected. In particular, ordinary mode 0/1/3 diagnostics
+retain their mode 2/8/5 replacements; the eight independent register gates still
+run. This is not a new direct run of every mode or the historical 67-case scope.
+
+After the runner exits 0, the existing offline verifier validates all 64 result
+records and source/protocol/generated/post-case-build archive memberships and
+hashes. A temporary read-only reviewer also inspects saved phase archives and
+joins **1,538 distinct timestamped returned-body records** to generated entries;
+no observed body entry lacks a saved image. Copied log records are counted once
+per case. Neither this join nor a body witness identifies an immutable loaded
+code version or proves every generated instruction/path executed.
+
+Representative multi-phase checks remain independently visible:
+
+| Existing case | Observed result |
+| --- | --- |
+| `mode-4` | Seven-role/two-CPU phase: one JIT body, no native frame. Shared-B phase: two JIT bodies, one native frame, two real-owner ACKs and a native peer. No mutex owner handoff |
+| `mode-5` | 450 normal JIT completions plus one quota/native continuation; 466 service executions and 466 returns to JIT, with the excess callee's original-waiter completion checked |
+| `mode-8` | Original, two-root pure JIT and mixed quota/exit phases: 2 + 4 + 4 bodies. The first waiter TID detaches before the same B combiner runs the second root |
+| Resource/lifetime/register scopes | Real gate and node pressure, local and physical capacities, cross-module learned calls, changed-stack continuation, physical/native peers, waiter signals and source retirement pass their existing individual oracles |
+
+All mutex JIT positives use `mutex_jit=1`. Spin-only drivers with
+`mutex_jit=0` still execute spin JIT; the two task/RCU probes deliberately do not
+execute JIT. Every case records `drained=true`, `source_unchanged=true`,
+`evidence_complete=true`, `kernel_fault=false` and no acceptance errors. The
+final read-only idle/source check also passes. This only establishes the
+documented experimental drain, not arbitrary hook-reader quiescence or safe
+provider hot unload.
+
+Recorded guest commands, with stdout/stderr retained in the evidence paths
+below, were equivalent to:
+
+```sh
+cd /root/host_fs/kdlock
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 make -C tests/unit run
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 python3 -B tests/audit_context_spills.py
+env LC_ALL=C KDLOCK_RECOVERY_CONFIRMED=1 PYTHONDONTWRITEBYTECODE=1 \
+  python3 -B tests/regression.py --suite extended --timeout 300 \
+  --output /tmp/kdlock-acceptance-audit-live.sRPnuo
+```
+
+These are recorded invocations, not instructions to reuse the existing output
+directory. Exact SSH/outer-timeout commands and preflight hashes are retained in
+`audit-context.json`. The live runner had a 7,200-second outer SSH timeout and
+300 seconds per case; it completed without a timeout or retry.
+
+The checkout still has uncommitted changes relative to
+`1d5fc7259d96863aa143343d22c79aaf93023c9e`. Host, unit and live source maps all
+match on the 206 inputs. Guest Linux 6.1.159 retains boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941` and Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`; before/after baseline checks match
+18 source/interface files, nine build files, two captured bundles and config.
+The existing 40-vCPU, 28-GiB, two-NUMA recovery guest and
+`pre_native_resume_20260905_1110` snapshot were confirmed; no guest-kernel edit,
+kernel rebuild, restart or snapshot restore occurred.
+
+Evidence directories remain **guest-local**:
+
+- `/tmp/kdlock-acceptance-audit-units.sRPnuo`: unit/admission logs, source
+  snapshot, recorded context and the temporary read-only reviewer.
+- `/tmp/kdlock-acceptance-audit-live.sRPnuo`: selection, source/environment,
+  all 64 per-case records/archives and `acceptance-review.json`.
+
+The live `source.tar.gz` SHA256 is
+`9422265f6369665bd57d9c1e1e6ea7e1f7289e876557aa62a4095d236db66970`;
+`acceptance-review.json` SHA256 is
+`5028d23f5b8b7dd2ba07d9e934852c9a3d89a8792059995b8151ce6c74443f0f`.
+Source/artifact archives were not exported to the host. Earlier failed attempts
+in other increments remain separate records, not retries silently folded into
+this run.
+
+The complete guest-local archive is
+`/tmp/kdlock-acceptance-audit-live.sRPnuo.tar.gz`, **98,060,721 bytes**, SHA256:
+
+```text
+34961d0a85096da252844026f83f6095c1a78b6f1d5de9454dc0b3e730cc081c
+```
+
+Its companion `.archive.json` lists all **592 members**. The live run keeps its
+directory prefix; unit/admission inputs, logs, reviewer and context/closeout
+metadata use `unit-` prefixes at archive root. Independent outer-archive
+verification passes, followed by another idle/source/boot check at
+**17:35:50 +08**. The package contains frozen execution evidence, not a copy of
+the subsequently edited progress documents. Host inventory/link/syntax checks
+retain 39 unit entries, 495 distinct Python methods, 21 shell drivers and the
+unchanged 80-case/15-suite catalog; they do not execute host test payloads.
+
+This completes the finite same-freeze acceptance audit, not the whole project.
+Broader C1/C2/C5 contracts and P1/P2 work remain open. Access-time checks, the new
+pre-instruction exit, local/general flags repair and immutable JIT versions
+remain explicitly deferred. No new safety capability follows from this PASS.
+
+## Shared B Waiter Exit
+
+**2026-09-13, 16:24:05-16:26:23 +08:** **2/2 selected complex spin JIT cases
+pass**, with `mutex_jit=1` and **206 frozen runtime/test inputs**. The existing
+mode-8 quota phase now observes the first native waiter's normal TID detachment
+before B pops its old frame and executes the next independent root. Only a
+SELFTEST pop observation point, the existing observer/driver/oracle and units
+change; no production owner/queue protocol, workload or new routine case.
+The execution flow and commands are in [usage 6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner).
+
+| Case / phase | Returned bodies | Native begin / complete / ACK | Scope |
+| --- | --- | --- | --- |
+| `mode-8`, original | 2 | 0 / 0 / 0 | Original complex single-root remote JIT |
+| `mode-8`, multi | 4 | 0 / 0 / 0 | Two independent pure-JIT roots on one B |
+| `mode-8`, multi quota | 4 | 2 / 2 / 2 | First waiter exit before the same B runs its second root |
+| `remote-late-3` | 4 | 4 / 4 / 1 | Existing no-lock root finish, cross-NUMA/rename/native-owner schedule |
+
+All **14 body witnesses** are linked to their separately retained generated
+images; final dmesg is not double-counted as another mode-8 phase. The mixed
+image at `ffffffffc0b4e17a` is **3,417 bytes**, SHA256
+`d17c19f8b17a016bfb1e017585d67ecaa48c5156a3e9b3dae23c9b957dd804e5`.
+Waiter **2405928** runs its supported quota suffix from callee
+`ffffffff81193700`, CALL SP `ffffc90008ac7c00`. Its B owner stays
+`ffff8883c1d4a080` on CPU **12**. After B and A0's actual ACKs and role 0's
+return, `kd_child_exit release` reports **detached=packet=context=valid=1**;
+only then does that same owner start waiter **2405927**'s child JIT.
+Both root records are `before=after=2`, values **`6cf80006` / `6cf8060c`**,
+shared sequence **12006 / 12007**; all 14 callers return with clean IRQ/preempt.
+Each multi phase retains **36,023** complex transitions. The quota phase has
+17/16/16 service exits/executions/resumes, one limit and no failed/rejected
+service; all three publication identities remain unchanged.
+
+Three focused guest units pass on the same corrected freeze. The production
+frame/observer fixture has **10,912 checks**, **20 assertion-detected mutants**
+and the unchanged **168-byte regs / 656-byte frame / 5,264-byte context** layout.
+It tests both observer boundaries, one-shot PID refs, already-detached/normal/
+timeout outcomes, packet/context corruption and ACK-before-pop ordering using
+substituted PID/RCU/time primitives, not a model of Linux task exit. The two
+protocol units retain **16 + 17 methods**, including missing/duplicate/wrong
+identity and reordered exit/second-JIT evidence. The first attempt passed the
+production fixture and both oracles, but a skip-observer mutant failed to
+compile under unused-function `-Werror`; that was not a detected behavior
+mutation. Keeping a non-calling function reference fixed the test, after which
+all three programs passed before any live run. Both freezes/logs are retained.
+
+At **16:30:08 +08**, the guest is idle and all 206 host/guest/source-freeze
+hashes agree. Boot `e5f08f95-3b68-40f3-bc28-6a7ca42e7941` and live Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5` are unchanged; the 18-source/nine-build
+baseline check passes. Both cases drain without kernel faults. Default and
+SELFTEST external-module build logs retain objtool stack/RETHUNK and locale
+warnings, so these are not warning-free builds. No VM restart or guest-kernel
+edit/build/install. Host freezes: `/tmp/kdlock-child-exit.Yr7QkG/` and corrected
+`/tmp/kdlock-child-exit-fixed.Yr7QkG/`.
+
+Guest-local source/log/image/unit archive:
+`/tmp/kdlock-child-exit-live.Yr7QkG.tar.gz`, SHA256:
+
+```text
+19b6fc9bef999cd0efdb92d6111b8124416d3014603c874b3e05311672e0c4fa
+```
+
+Frozen source archive SHA256:
+`762b6256eba9a2389fec5afa61e9335713593688b86aed5808cbc9f87779a7c5`.
+Guest-local offline verification returns 0, covering source plus **18/30**
+artifact, **61/37** protocol and **five** build members per case; no unrecorded
+selections. Initial failed and corrected passing units each retain their own
+source archive. Source/artifact export remains unapproved; the archive stays
+in the guest and only metrics/log excerpts/hashes were read back.
+
+This is TID detachment, not completed task-memory RCU reclamation, arbitrary
+cancellation or a production all-owner exit barrier. Broader C1/C2/C5 remain
+open; two-word args, access-time checks, local/general flags, immutable versions
+and guest hooks are unchanged. No new unit program/method or live case, no
+unselected live rerun, no Git commit. Host static/document checks are separate
+from the guest execution results above: all **11 Markdown files / 580 local
+links and anchors**, Python AST, shell syntax and `git diff --check` pass;
+all 206 runtime/test hashes remain equal to the accepted freeze. Inventory
+stays at **39 unit programs / 495 Python methods / 21 drivers / 80 cases**.
+
+## Progressed Spin Gate Refusal
+
+**2026-09-13, 15:39:17-15:41:27 +08:** **2/2 selected complex JIT cases pass**
+on **206 frozen runtime/test inputs**. The existing real ticket/gate-pressure
+case now adds A2/C while the original A/B native suffix is paused. This tests
+the existing production gate-ENOMEM/PENDING continuation, not a new recovery
+boundary. Only the workload, its selector, driver/oracle and two existing unit
+programs change; production lock code, capacities, guest kernel and two-word
+ABI do not change in this increment. Flow is in
+[usage 6.3](JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑).
+
+| Case | Returned bodies | Native begin / complete / ACK | Scope |
+| --- | --- | --- | --- |
+| `virtual-ticket-refusal` | 2 | 2 / 2 / 2 | Old real ticket E2BIG plus new progressed gate ENOMEM; Linux C contention and two live frames |
+| `virtual-node-refusal` | 1 | 1 / 1 / 1 | Existing injected count refusal and cancellation; gate-pressure extension disabled |
+
+Both cases execute the original **16,369-byte** image at
+`ffffffffc0b549e4`. The ticket case also executes the **738-byte** A2 image at
+`ffffffffc0b593d8`, SHA256
+`f6d01488452916d5d3188e3b862f7e4441e4d2b7bbc83b6616c91212205527c7`.
+These are returned-body witnesses linked to the archived images, not merely
+translation or installation logs. Seven/six generated images are not seven/six
+executed bodies. The original **12,003 requests / 12,011 protected transitions**
+remain checked independently of the new A2 record.
+
+Gate occupancy is **4 / 66 / 1024 / 1024 / 1024**, and source frame counts are
+**0 / 1 / 1 / 2 / 1** at prepare/held/filled/progress/drained. The filler acquires
+1,025 distinct locks, adds 958 gates and gets 67 genuine refusals; the cold
+target adds one, and the progressed combiner adds one: **69 total**. Cold
+native records remain separate from JIT evidence. The A2 NORMAL/code fields
+and all three image-file hashes remain unchanged across the snapshots.
+
+The old logical waiter **2395295**, executor CPU **4**, retains A while the
+new logical waiter **2395327** on CPU **16** receives the new callee packet.
+Its executor **2395330** on CPU **14** keeps A2's physical owner
+`ffff888107db8000`. Native C holder **2395324** on CPU **18** observes Linux
+word `0x440101`, committed prefix `before=2 inner=0 after=1`, and unchanged
+value `0x26ae8201a`. New PENDING errno is **-12**, target
+`ffffffff81e90a20`, CALL SP `ffffc9000b20fdc8`, return
+`ffffffffc0b59436`; the staged SP is exactly eight bytes higher. After C
+releases, the original waiter sees that prefix, completes `before=2 inner=1
+after=2`, value **`0x24e802029`**, and receives A2's final ACK. All six new
+roles join before the old B releases; old A/B owner observations stay equal.
+
+Two focused guest unit programs pass. The gate map/owner fixture retains
+**3,131 checks** and the three protocol methods now reject missing/incorrect
+JIT, errno, callee/stack, owner, effects, frame snapshots and ACKs. The outer
+production fixture passes **12,597 / 27,192 checks** with NUMA off/on, including
+actual API-filled gate ENOMEM, **168-byte pt_regs / 656-byte frame / 5,264-byte
+context** preservation, and PENDING callee/SP restoration. It detects 12
+temporary source mutants, including failed-map sequence consumption and pin
+leakage; a BUG-only control is not counted as an assertion detection. Its CPU,
+physical-lock and JIT primitives remain substitutes, not live concurrency.
+
+The initial unit attempt failed on a new fixture API-signature error and a
+WARN-row parser that expected a colon. Neither was a production failure or
+kernel-JIT run; corrected units passed before live execution. Initial and
+passing logs are retained. Initial host source freeze remains at
+`/tmp/kdlock-gate-progress.wOuGfL/`; the corrected host freeze is
+`/tmp/kdlock-gate-progress-fixed.wOuGfL/`. Default/SELFTEST external-module
+builds retain recorded objtool stack/RETHUNK and locale warnings; this is
+not a warning-free build. Both cases drain without kernel faults. At
+**15:46:26 +08**, all 206 host/guest/runtime-source hashes still agree, boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941` is unchanged, and the 18-file source,
+nine-file build and live Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`
+baseline still matches. No VM restart or guest-kernel build/edit/install.
+
+Guest-local source/log/image/unit archive:
+`/tmp/kdlock-gate-progress-live.wOuGfL.tar.gz`, SHA256:
+
+```text
+5b338e189845d6c869c39d475699475620132759716f998db86f93d790654988
+```
+
+Frozen source archive SHA256:
+`b86c1c81f20e0c1cb9d8c4363145f0dbe374d02632af6318b8c9a1f8e22dd663`.
+Guest-local offline verification returns 0 for both recorded cases with no
+unrecorded selections. It checks source plus 42/36 artifact, 38/22 protocol
+and five build members per case. An initial auxiliary-directory layout was
+rejected by that verifier; only the auxiliary notes were moved to flat files,
+without changing case evidence. Source/artifact export to the host remains
+unapproved, so this archive stays in the guest; only metrics/log excerpts and
+hashes were read back. The test catalog is still 39 unit programs, 495 Python
+methods, 21 shell drivers and 80 cases. Broader C1/C2/C5, access-time guards,
+local/general flags, immutable versions and arbitrary cancellation are not
+completed by this bounded increment. Unselected live cases were not rerun;
+no Git commit was requested or made.
+
+Host static checks cover all 11 Markdown files and 572 local links/anchors,
+Python AST, shell syntax and `git diff --check`; all 206 runtime/test input
+hashes still match the accepted live freeze. No host build or test payload ran.
+
+## Shared Native Mutex B
+
+**2026-09-13, 14:50:32-14:51:45 +08:** ordinary mode 4 now preserves its
+seven-role/two-CPU phase, then starts a separate shared-B module session.
+A0's original waiter completes an ordinary CALL-miss suffix while its real
+combiner retains A0/B; A1's combiner and a non-target peer both wait on that
+same Linux B. A1 subsequently completes JIT and the peer acquires as itself.
+This adds workload/oracle coverage, not production owner handoff, remote-B
+mutex delegation or new recovery boundaries. Flow and commands live in
+[usage 6.15](JIT_EXECUTION.md#615-两个-a-combiner-共享原生-mutex-b).
+
+The 206 runtime/test inputs in host
+`/tmp/kdlock-mutex-shared-fixed.6WnQZz/source.json` match the guest freeze and
+postflight. Guest evidence is
+`/tmp/kdlock-mutex-shared-fixed-live.6WnQZz`; its complete archive remains **in
+the guest**, not a host copy:
+`/tmp/kdlock-mutex-shared-fixed-live.6WnQZz.tar.gz`, SHA256
+`739ce1a01c247d599b08b63cc1fc90bd52e870cfe36da1b39ef28ec35f440723`.
+The archive's frozen-source SHA256 is
+`8854796d786c29173d49f17fa12aca422dcbc8a1f510908564fca2451075ed09`.
+Export of the initial source/artifact archive to host `/tmp` was denied by
+the approval layer; permission was requested and no alternate export attempted.
+Both runs remain available and verified in the guest. Host-side metadata and
+the locally created source freeze do not imply that the guest archive was copied.
+
+| Case / phase | Returned JIT bodies | Native start / complete / ACK |
+| --- | --- | --- |
+| mode 4, original two-CPU phase | 1 | 0 / 0 / 0 |
+| mode 4, shared native B phase | 2 | 1 / 1 / 2 |
+| mode 5, normal returns plus CALL quota | 409 | 1 / 1 / 1 |
+| registers-4-3 | 1 | 1 / 1 / 2 |
+
+All three selected cases pass with `mutex_jit=1`: **413 body witnesses**, no
+kernel faults and no remaining modules/callers/frames. Mode 4's final case
+dmesg contains only its last two bodies; its first phase retains its own
+`final.log`, protocol result and single-image archive. The shared phase
+preserves three images, both selected A publications, source objdump/CALL
+returns, unchanged image hashes and all nine role/CPU/exit records. The extra
+B image is not counted as a separately executed remote-B body.
+
+Shared-B evidence records original waiter **2388174** on CPU 2, not physical
+owner `ffff888132cfc100` on CPU 1. A0 entry is `ffffffffc0b3fc65`; the native
+packet resumes callee `ffffffffc0b3f910` with CALL SP `ffffc90005a33c78`,
+`held=remaining=2`. At both retained-state observations, A1 executor **2388172**
+and native peer **2388181** are in B's real wait list, B/A0 keep the first
+owner, and A1 has `before=12002 held=after=12001`. B remains at sequence 24003.
+B then A0 receive owner ACKs; A1 completes B transition 24004 and the native
+peer completes 24005 as its own owner. Both root records finish with
+`before=held=after=12002`, 12005 A visits, exact recomputed values and zero
+owners. The independent B state-machine replay verifies all 24005 transitions.
+All nine original tasks return with IRQ/preempt zero. No global ordering is
+inferred from ACK logs, which occur after physical unlock.
+
+Guest validation commands:
+
+```sh
+make -C klock_module -j8
+make -C tests/unit run TESTS= PY_TESTS='test_mutex_signal_protocol.py test_mutex_stack_protocol.py'
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B tests/regression.py \
+  --case mode-4 --case mode-5 --case registers-4-3 --timeout 240 \
+  --output /tmp/kdlock-mutex-shared-fixed-live.6WnQZz
+python3 -B tests/verify_evidence.py /tmp/kdlock-mutex-shared-fixed-live.6WnQZz
+```
+
+The two existing units pass **34 + 8 methods**, extending existing methods
+with shared-B packet/identity/ordering mutations and checked source-symbol
+relocation. No new unit program, Python method, shell driver or named live case
+is added. The default external test-module build succeeds with its two existing
+redundant-CLD objtool warnings. Core kdlock, guest kernel, two-word args,
+access-time guards, local/general flags and immutable versions are unchanged.
+Postflight at **14:54:45 +08** is idle on boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941`, kernel 6.1.159. Baseline remains
+18 source files, nine build files, two bundles and running Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`; the existing recovery snapshot was
+confirmed before loading. No VM restart or Git commit is performed.
+The guest offline verifier reports all three recorded acceptances and no
+unrecorded case; this is evidence consistency, not another JIT execution.
+
+**Initial rejected candidate, 14:43:20-14:43:53 +08:** the original phase
+passes, but the new preparation asserts exactly two artifacts. Serial warmup
+also promotes B, producing a third valid entry, so that assertion fails before
+arming any shared-B workload. No shared-B JIT or native frame runs; all state
+drains without a kernel fault. The remaining two cases are NOT RUN. Correction
+keeps all artifacts, reuses the checked E8/`mutex_lock` relocation parser to
+identify each A's first CALL return, and verifies both selected publications;
+it does not delete B or weaken body/owner/effect requirements. First evidence
+and its distinct source freeze remain at guest
+`/tmp/kdlock-mutex-shared-live.600WVz.tar.gz`, SHA256
+`280ac3101ed0a4885b7c28a6a7117c927aa3fdc9d8f900ca1485a29695b99e71`.
+The initial build/34-method unit result is not substituted for the corrected
+two-unit run. This bounded shared-lock schedule does not close C1/C2/C5,
+arbitrary cancellation/fairness, task/lock lifetime or deferred features.
+
+## Shared B Mixed Completion
+
+**2026-09-13, 14:10:10-14:13:17 +08:** the existing mode-8 driver now retains
+its original complex phase and pure dual-root phase, then adds quota/native
+completion before a different root's JIT on the same B combiner. This extends
+the workload and oracles, not production ownership or guest-kernel code.
+The full execution/evidence contract is in
+[usage 6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner).
+
+The first candidate, **14:03:23-14:04:44 +08**, failed its mode-8 oracle; the
+other three selected cases were not run. Its two native observations expected
+`preempt_count=2` merely because two locks were borrowed. Source review of
+`kd_spin_entry_begin/borrow_get/end`, native ACK routing and the existing
+origin-ticket probe confirms one retained root pin on the waiter. Actual
+borrowing adds references, not one waiter pin per remote frame. The corrected
+test requires exactly **1** during native execution and **0** after the final
+ACK. Both candidate observations had otherwise correct owners, task, blocked
+successor state and service count; all callers drained without a kernel fault.
+This is a fixture-premise correction, not a runtime crash fix or full native
+context reconstruction. The failed source and logs remain separate.
+
+On the corrected freeze, the external workload module builds with the same
+two redundant-CLD fixture warnings. Two focused guest unit programs pass:
+`test_remote_outer_protocol.py` has 16 methods; `test_jit_entry_scope.py`
+checks **1718 assertions** and rejects **11 mutants**. Its actual consumer now
+tests remote quota packets while verifying that the waiting parent's full
+software frame remains untouched. No new unit method/program or named live
+case is added; the inventory stays 39 programs, 495 Python methods and 80 cases.
+
+```sh
+# Guest only; snapshot and idle/source identity checks precede these commands.
+make -C klock_module
+make -C tests/unit run TESTS= PY_TESTS='test_remote_outer_protocol.py test_jit_entry_scope.py'
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B tests/regression.py \
+  --case mode-8 --case mode-2 --case remote-late-3 --case registers-8-3 \
+  --timeout 240 --output /tmp/kdlock-multi-quota-fixed-live.c1oHro
+```
+
+| Accepted case / phase | Returned-body witnesses | Native started / completed / unlocks |
+| --- | --- | --- |
+| `mode-8`, original complex | 2 | 0 / 0 / 0 |
+| `mode-8`, pure dual-root | 4 | 0 / 0 / 0 |
+| `mode-8`, quota/native plus JIT successor | 4 | 2 / 2 / 2 |
+| `mode-2` | 4 | 0 / 0 / 0 |
+| `remote-late-3` | 4 | 4 / 4 / 1 |
+| `registers-8-3` | 2 | 2 / 2 / 2 |
+
+All **4/4** cases pass with unchanged inputs and final drain, **20** body
+witnesses in total. The mixed phase's waiters **2377453 / 2377456** share
+entry `0xffffffffc0b3501a` (3417-byte image). CPU-11 B executor
+`ffff888121c94100` retains ownership while the first waiter completes its
+pending `ktime_get` CALL at `0xffffffff81193700`, then executes the second
+child's JIT after B-local native completion. Two native frames retain the same
+CALL RIP/RSP and different physical owners. The three publication records stay
+NORMAL with identical entry/TGID/code; no callee-learning miss substitutes for
+the quota. Service counts are **17 exits / 16 executed / 16 resumed / 1 limit**,
+no rejected/failed dispatches. Each dual-root phase separately checks **36023**
+state transitions, exact root values, 14 clean caller returns and correct B
+sequence numbers. This is neither a mutex rerun nor arbitrary scheduling proof.
+
+Postflight **14:14:29 +08** is idle on the same recovery boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941`, kernel 6.1.159, with all **205**
+host/frozen/guest runtime/test hashes matching. Baseline verifies 18 source
+files, nine build files, config and two bundles against live Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`. QEMU PID 2900511 remains alive;
+monitor confirms `pre_native_resume_20260905_1110`, no restart was needed.
+
+Host evidence directories are `/tmp/kdlock-multi-quota.L8vwaR/` (first) and
+`/tmp/kdlock-multi-quota-fixed.c1oHro/` (corrected). Both guest live archives are
+also retained on the host, with identical SHA256 values across copies:
+
+| Archive | Recorded outcome | SHA256 |
+| --- | --- | --- |
+| `/tmp/kdlock-multi-quota-live.L8vwaR.tar.gz` | Initial fixture failure, other cases not run | `a0225c2c39cb5bcf73e301d8c7a9aee475207c68c59d708c6612d1807d276d98` |
+| `/tmp/kdlock-multi-quota-fixed-live.c1oHro.tar.gz` | Four accepted cases | `08470a5424a5b2954723ef48e53b804c1420816441ddfddb2aadf98983aed185` |
+
+Offline verification preserves the first archive's failure (exit 1) and accepts
+all four corrected records (exit 0). Each mode-8 phase's nested logs/images
+remain captured; final dmesg alone is not the three-phase evidence. C1/C2/C5
+remain open; no access-time guard, local/general flags protection, immutable
+version, owner handoff or Git commit is added.
+Host static checks pass for 11 Markdown files / 554 local links, unchanged
+205 runtime inputs, all Python/shell syntax and the unchanged test inventory.
+These read-only checks execute no test or JIT payload.
+
+## Shared B Combiner
+
+**2026-09-13, 13:33:26-13:36:01 +08:** extend the existing mode-8 driver
+without changing production lock ownership. Two independent A roots send
+virtual B requests to one physical combiner, retaining separate logical tasks,
+outer owners and exact prefix/suffix state. The old complex phase remains;
+[usage 6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner) owns the role map,
+gates and evidence contract. No access-time check, flags protection, immutable
+code version or guest-kernel change is added.
+
+In the recovery guest, the external workload module builds with the existing
+two context-fixture redundant-CLD warnings. The focused unit invocation passes
+**2/2 programs**: `test_remote_outer_protocol.py` has 16 methods and
+`test_regression.py` 47. Two new methods in the existing oracle reject missing,
+duplicate or corrupted root/JIT/owner/state/publication/status evidence;
+synthetic ordering checks do not prove kernel concurrency. Inventory remains
+39 programs, 21 shell drivers and 80 named cases, with 495 Python test methods.
+
+```sh
+# Guest only; recovery snapshot confirmed before loading modules.
+make -C klock_module
+make -C tests/unit run TESTS= PY_TESTS='test_remote_outer_protocol.py test_regression.py'
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B tests/regression.py \
+  --case mode-8 --case remote-late-3 --case registers-8-3 --timeout 240 \
+  --output /tmp/kdlock-multi-roots-live.o62dXC
+```
+
+| Accepted case / phase | Returned-body witnesses | Native started / completed / unlocks |
+| --- | --- | --- |
+| `mode-8`, retained complex phase | 2 | 0 / 0 / 0 |
+| `mode-8`, two independent roots | 4 | 0 / 0 / 0 |
+| `remote-late-3` | 4 | 4 / 4 / 1 |
+| `registers-8-3` | 2 | 2 / 2 / 2 |
+
+All **3/3 cases** pass, with **12** body witnesses across four phases. Both
+mode-8 sessions retain their own artifacts and protocol logs; the final case
+dmesg alone contains only its second phase. That phase publishes three images;
+entry `0xffffffffc0b30294` is 2769 bytes. Waiters **2362665 / 2362668** run their
+B children on the same CPU-12 executor `ffff8883cc064100`, with distinct A owners.
+All 14 callers return successfully with matching task/CPU and clean IRQ/preempt.
+The three complex states total **36023** transitions; both root before/after
+counters equal two, values match, and shared B sequences are **12006 / 12007**.
+No native suffix, retry or state failure substitutes for actual JIT.
+
+Postflight at **13:37:49 +08** is idle on boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941`, kernel 6.1.159. All **205** host/frozen/guest
+runtime/test hashes match; baseline verifies 18 source and nine build files,
+config and two bundles, with live Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`.
+QEMU PID 2900511 remains alive; monitor confirms `pre_native_resume_20260905_1110`.
+All cases are drained, source-unchanged and fault-free under the runner's checks.
+
+Host source/build/unit/closeout evidence is `/tmp/kdlock-multi-roots.o62dXC/`.
+The complete guest live archive is also retained on the host as
+`/tmp/kdlock-multi-roots-live.o62dXC.tar.gz`; both copies have SHA256
+`ccf87fce5ae369a8e622d1e1b89575d37ed8f74e8ca0287b90d79b16bb98e8a4`.
+Offline verification accepts all three recorded cases with no missing cases;
+the nested first-phase archive still has its six generated images and two body
+witnesses. This is bounded spin multi-request evidence, not a mutex rerun,
+general C1/C2 completion or any of the explicitly deferred features. No Git
+commit is made for this increment.
+Host static checks pass for 11 Markdown files / 548 local links, the current
+inventory, all runtime Python/shell syntax and unchanged frozen input hashes;
+they do not execute tests or generated code.
+
+## CALL Quota Continuation
+
+**2026-09-13, 12:56:19-12:59:25 +08:** the excess, not-yet-dispatched CALL
+can finish on the original waiter using the existing native/owner-ACK path.
+Previously the quota branches returned RUN_ERROR after progress; that is a
+source-review finding, not a reproduced live crash. Validated quota packets
+retain callee RIP, pushed CALL RSP, GPRs and physical owners without replay,
+service invocation or callee learning. Packet/policy/source failures still
+fail-stop. This does not implement access-time guards, instruction-budget
+recovery, flags preservation, version isolation or guest-kernel changes.
+Contracts and counter equations are in [usage 6.13](JIT_EXECUTION.md#613-call-次数额度与原生后缀).
+
+The two external modules build in the recovery guest. Four existing focused
+unit programs pass on the frozen inputs:
+
+| Program | Result / boundary |
+| --- | --- |
+| `test_jit_entry_scope.py` | 1328 assertions; 11 assertion-detected mutants. Actual policy/consumer/CALL save code; wrapper, clocks, stack reads and pins use substitutes |
+| `test_mutex_signal_protocol.py` | 34 methods; new quota history checks reject lost/duplicate events, wrong packets, service counts or changed publication |
+| `test_mutex_outer_progress.py` | 136 assertions, five scenarios; existing backend packet/owner continuation contract |
+| `test_spin_outer_progress.py` | NUMA-off/on 10487/25082 assertions and ten mutants; shared backend regression, not additional live quota coverage |
+
+Commands, executed only in the guest (live runner outer timeout 1500 seconds):
+
+```sh
+make -C kernel_module KDLOCK_SELFTEST=0 KDLOCK_NUMA=0 W=1 -j8
+make -C klock_module W=1 -j8
+make -C tests/unit run TESTS= \
+  PY_TESTS='test_jit_entry_scope.py test_mutex_signal_protocol.py test_mutex_outer_progress.py test_spin_outer_progress.py'
+KDLOCK_RECOVERY_CONFIRMED=1 python3 -B tests/regression.py \
+  --case mode-5 --case mode-2 --case mode-4 --case registers-4-3 \
+  --case registers-8-3 --case native-mutex-depth --timeout 180 \
+  --output /tmp/kdlock-call-quota-live.AbY5N9
+```
+
+All **6/6** cases are accepted with unchanged inputs and final drain. Four
+mutex cases require `mutex_jit=1`; the other two exercise actual spin JIT.
+
+| Case | Returned-body witnesses | Native started / completed / unlocks |
+| --- | --- | --- |
+| `mode-5` | 431 | 1 / 1 / 1 |
+| `mode-2` | 4 | 0 / 0 / 0 |
+| `mode-4` | 1 | 0 / 0 / 0 |
+| `registers-4-3` | 1 | 1 / 1 / 2 |
+| `registers-8-3` | 2 | 2 / 2 / 2 |
+| `native-mutex-depth` | 5 | 5 / 5 / 26 |
+
+Mode 5 retains **430** ordinary JIT completions and adds one quota native
+frame among five callers. Its hostcall counts are **447 exits, 446 executed,
+446 resumed, one limit, zero rejected/failed**. The extra pending clock CALL
+runs on the original waiter, not the adapter. Entry `0xffffffffc0b41d54`, the
+1459-byte generated image, service `ktime_get` at `0xffffffff81193700`, saved
+CALL packet, completion/ACK and original-task return all match. Registration
+remains NORMAL without new installs/translation requests. Complex state records
+**12587** transitions, API observations **12587**, API calls **12667**, no
+state failures. Ordinary mixed-control quota and corrupted-packet checks remain
+unit coverage; none of this certifies arbitrary hardware GPR/flags exits.
+
+Recovery QEMU PID 2900511 remained alive; monitor listed
+`pre_native_resume_20260905_1110`. Before/after baseline verification reports
+18 source files, nine build files, config and two bundle files matching live
+Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`. Postflight at
+**13:00:33 +08** is idle on boot `e5f08f95-3b68-40f3-bc28-6a7ca42e7941`,
+kernel 6.1.159; all **204** host/frozen/guest runtime/test hashes match.
+No per-case kernel fault pattern or retained workload/module is reported.
+Existing locale/objtool RETHUNK/frame and fixture CLD warnings remain; these
+builds are not warning-free. No old quota crash, full basic matrix, arbitrary
+instruction recovery or access-time guard test was run.
+
+Host source/unit/build/closeout evidence: `/tmp/kdlock-call-quota.AbY5N9/`.
+Its `source.tar.gz` SHA256 is
+`0a60bff6e9467027322fa4c3dd0c44221279e0dcf04616973a34255ce1215843`.
+Guest run above is transferred to `/tmp/kdlock-call-quota-live.AbY5N9.tar.gz`;
+both sides have SHA256
+`9742f73a6093df1458ba8f218573fea24e4cd8a4b272a5d6a119a4596d5453e8`.
+The offline verifier exits zero, with six accepted records and no unrecorded
+cases. Host static checks pass for 11 Markdown files / 539 local links, all
+Python and shell syntax, archive member hashes and the unchanged 39-program
+inventory (493 distinct Python method bodies). These checks execute no test
+or JIT payload. This increment adds no routine case or unit program and does not close
+C1/C2/C5. No Git commit is made for this increment.
+
+## Native Frame Retirement
+
+**2026-09-13, 12:03:49-12:08:03 +08:** harden the common frame retirement
+predicate, not the native owner/ACK protocol. Initialize an empty native routing
+head on frame allocation; pop returns EBUSY for a pending native request or linked
+registration even in ERROR/COMPLETE state. Refusal changes no output packet,
+context bytes or source lease. Existing callers still finish native waiting
+before pop. This is not access-time checking, new native-exit authorization,
+flags repair, an ABI change or a guest-kernel modification. Flow is in
+[Frame retirement](JIT_EXECUTION.md#frame-回收门禁).
+
+First extend only the existing frame fixture against old production code:
+guest unit `test_exec_capacity.py` exits through four failed assertions, and
+`make` exits **2**. Old pop accepts the constructed pending-native ERROR frame,
+changes output/context and drops its source lease. This is a deterministic
+API-contract counterexample, not a reached live UAF; no module/JIT runs against
+that negative freeze. Its log and inputs remain separate from the correction.
+
+With the fix, run `make -C tests/unit run TESTS=` with
+`PY_TESTS='test_exec_capacity.py test_spin_outer_progress.py'` in the guest,
+under 240-second command / 255-second SSH limits: exit **0**, **2/2 programs**.
+Frame tests pass **10,362 assertions** and **14 assertion-detected mutants**,
+including separate missing-native-request and missing-native-route predicates.
+They cover two backend tags, ERROR/COMPLETE, full software packets and retained
+leases; list/CPU/source primitives are substitutes. Spin outer tests pass
+**10,487 / 25,082 checks** with NUMA off/on and **10 mutants**. No unit entry,
+Python test method or routine case is added; inventory remains 39 programs,
+491 distinct Python methods and 80 named live cases.
+
+Guest `make -C kernel_module KDLOCK_SELFTEST=0 KDLOCK_NUMA=0 W=1 -j8` exits **0**.
+Existing assembly/RETHUNK/frame objtool and locale-fallback warnings remain
+recorded. After checking the live recovery monitor's snapshots, run only:
+
+```sh
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 KDLOCK_RECOVERY_CONFIRMED=1 \
+  timeout --kill-after=10s 1800s python3 -B tests/regression.py \
+  --case mode-4 --case mode-5 --case registers-4-3 \
+  --case parallel-drain-0 --case parallel-drain-1 --case registers-8-3 \
+  --case remote-late-3 --case node-physical-8-1 \
+  --timeout 180 --output /tmp/kdlock-frame-native-live.OkcyAB
+```
+
+SSH also has an 1830-second timeout. Exit **0**, **8/8 accepted**, with generated
+images, matched returned-body evidence and their exact workload/owner oracles:
+
+| Case | `body=1` | Native started/completed/unlocks | Retained boundary |
+| --- | --- | --- | --- |
+| `mode-4` | 1 | 0/0/0 | Two-CPU nested mutex, ordinary JIT completion |
+| `mode-5` | 444 | 0/0/0 | 444 hostcall exits/executions/resumes and JIT completions |
+| `registers-4-3` | 1 | 1/1/2 | Local mutex GPR/native suffix and owner ACKs |
+| `parallel-drain-0` | 2 | 2/2/4 | Two live native frames, task exit, resources and first drain order |
+| `parallel-drain-1` | 2 | 2/2/4 | Opposite drain order with independent owners |
+| `registers-8-3` | 2 | 2/2/2 | Spin remote GPR/native continuation |
+| `remote-late-3` | 4 | 4/4/1 | No-lock ancestor survives original-waiter exit |
+| `node-physical-8-1` | 8 | 1/1/1 | Eight physical frames, real held-record capacity and NUMA-aware path |
+
+The five mutex cases use `mutex_jit=1`. The physical-spin case uses
+`mutex_jit=0` but executes spin JIT; it is not a mutex-JIT or no-JIT result.
+All **464** bodies belong to this freeze, not earlier runs. Every case reports
+zero invariants/kernel faults, unchanged inputs, complete evidence and drained
+callers/modules. Basic, unselected and full-matrix cases are **NOT RUN**. These
+normal live completions do not reproduce the deliberately invalid unit state
+or establish arbitrary task exit, cancellation or hardware flags semantics.
+
+Only four runtime/test files change and are synchronized. All **204 inputs**
+match host, synchronized guest and the **12:09:59 +08** idle postflight.
+Source/build/config/running baseline checks pass before and after: kernel
+6.1.159, Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`, unchanged boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941`; no VM restart or guest-kernel build/install.
+Offline verification exits **0**, with eight accepted and no unrecorded cases;
+it executes no payload. C1/C2/C5 remain open beyond these bounded contracts.
+
+| Host evidence directory | Scope | Source archive SHA256 |
+| --- | --- | --- |
+| `/tmp/kdlock-frame-native-before.72hPz3/` | Old-code negative unit, four assertions; no live run | `46fd9ffc265dc39a0eabaff18154039d11445400d3792d0cce24617c7bd19c7f` |
+| `/tmp/kdlock-frame-native.OkcyAB/` | Fixed units/build, commands, monitor, baselines, manifests and final results | `682cdc3476dfc1fb05a2356c8cb54ad22068336da64d5762000e94067b5df477` |
+
+Complete live source/log/artifact/protocol archive:
+`/tmp/kdlock-frame-native-live.OkcyAB.tar.gz`, matching host and guest SHA256:
+
+```text
+5faa10bfcb424e4bdac4688ded583744e4e2a65f1fcd435d4cd43678307cca89
+```
+
+Host close-out verifies 11 Markdown files / 527 local links and anchors, the
+unchanged test inventory, Python/shell syntax and `git diff --check`. All 204
+current/frozen/guest/archive inputs, eight results and 464 body counts match.
+The retained `static-check.py` and `static.log` execute no test or JIT payload.
+
+## Mutex Nested Scheduling
+
+**2026-09-13, 11:30:37-11:31:46 +08:** strengthen existing mode 4 placement and
+its observer/oracle, not production mutex scheduling. Seven roles use CPUs 0/1;
+B's native holder observes A's physical executor in its real Linux wait list on
+the same CPU before releasing B. The original nested waiter then completes JIT,
+not an original-waiter native suffix. Ordinary and OOO variants retain exact
+complex A/B state and all seven task identities/clean return contexts.
+[Usage 6.12](JIT_EXECUTION.md#612-同-cpu-的嵌套-mutex-jit) owns the role map,
+execution order, commands and independent coverage boundaries.
+
+Only four runtime/test inputs change: the test module, `test_08` driver, existing
+mutex protocol controller and its unit. No guest-kernel, production lock/owner,
+two-word ABI, translator, flags or access-time guard changes are made. No new
+routine entry is added: **39 unit programs**, now **491 distinct Python methods**;
+the source catalog remains **80 cases** with the same suite selection.
+
+Focused guest verification, each with an outer 195-second SSH timeout:
+
+```sh
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 timeout --kill-after=5s 180s \
+  make -C /root/host_fs/kdlock/tests/unit run TESTS= PY_TESTS=test_mutex_signal_protocol.py
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 timeout --kill-after=5s 180s \
+  make -C /root/host_fs/kdlock/klock_module W=1 -j8
+```
+
+Unit exit **0**, **32 methods / one program pass**, including three added
+scheduling methods and corrupted/missing/duplicate/wrong-order witnesses.
+External-module build exits **0**; the two pre-existing redundant-CLD objtool
+warnings and locale fallback remain recorded, not silently treated as fixed.
+There is no guest-kernel build/install.
+
+After a read-only monitor snapshot check, run three selected cases through the
+existing runner. The OOO variant uses an in-memory case registration solely to
+retain normal preflight, drain and evidence gates; it is not added to `CASES`
+or daily suites. Exact guest invocation follows; SSH also has a 750-second timeout:
+
+```sh
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 KDLOCK_RECOVERY_CONFIRMED=1 \
+  timeout --kill-after=10s 720s python3 -B - <<'PY'
+import sys
+sys.path.insert(0, '/root/host_fs/kdlock/tests')
+import regression as r
+r.add('mode-4-ooo', 'test_08_mutex_jit_modes.sh', 4, KD_MUTEX_OOO=1)
+sys.exit(r.main([
+    '--case', 'mode-4', '--case', 'mode-4-ooo', '--case', 'mode-5',
+    '--timeout', '180', '--output', '/tmp/kdlock-mutex-schedule-live.XZriH1',
+]))
+PY
+```
+
+The recorded command uses equivalent `python3 -c` quoting rather than this
+readable heredoc. Exit **0**, **3/3 accepted**, all with `mutex_jit=1` and valid
+images, matched entry/lock returned-body witnesses and exact workload oracles:
+
+| Run | `body=1` | Key observations |
+| --- | --- | --- |
+| `mode-4` | 1 | Holder PID 2326146 and executor 2326164 on CPU 0; queued/valid=1; nested_queued/nested_jit/jit_resume=1; counter 12008 |
+| `mode-4-ooo` | 1 | Holder PID 2327215 and executor 2327234 on CPU 0; same scheduling/JIT checks; OOO counter 12009 |
+| `mode-5` | 430 | JIT success/resume and hostcall exit/executed/resumed all 430; max_waiters=8; counter 12582 |
+
+Both mode 4 protocol records report seven roles, two CPUs, one body and zero
+native frames. All runs have native started/completed/unlocks=0, no kernel fault,
+unchanged inputs, complete evidence and drained callers/modules; hostcall
+rejected/failed/limit=0. Unselected, basic and extended cases are **NOT RUN**.
+These **432** body observations are not complete instruction coverage, immutable
+version identity or evidence for the explicitly deferred access-time guard.
+
+Only the four changed files are synchronized to recovery ext4. All **204 inputs**
+match the 11:26:35 synchronized freeze and 11:34:48 idle postflight. Source/build/
+config/running checks pass before and after with kernel 6.1.159, Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5` and unchanged boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941`; no VM restart occurs. Offline verification
+exits **0**, records three accepted cases and no unrecorded cases, without
+executing workloads. C1/C2/C5 remain open beyond these bounded observations.
+
+Host `/tmp/kdlock-mutex-schedule.XZriH1/` retains commands, unit/build logs,
+monitor output, baseline checks, manifests and result records. Its source archive
+SHA256 is `7af6818dc36704661466857e86b7dc2f15decb8fbdcc4db1efc93573597a78c3`.
+The full live archive `/tmp/kdlock-mutex-schedule-live.XZriH1.tar.gz` matches
+host and guest SHA256:
+
+```text
+fd636bb9dd9eefc0eeff66fef51f7e8bb50f7bc46537bff34cc53f57deea8ce3
+```
+
+Documentation close-out verifies 11 Markdown files and 519 local links/anchors,
+the 39-entry inventory, 491 distinct method bodies and unchanged live selection.
+Python/shell syntax, documented shell blocks, `git diff --check`, both archived
+source manifests and all 204 current input hashes pass. The retained
+`static-check.py` / `static.log` execute no unit, module or JIT payload.
+
+## Remote Packet Unit
+
+**2026-09-13, 00:22 +08:** strengthen only `test_remote_outer.py` and its existing
+fixture. Replace the hand-written IP/SP/DI-only struct with the actual guest
+x86-64 `pt_regs` definition, asserting its 168-byte layout and RIP/RSP offsets.
+Compare distinct full packets across ancestor RPC, cancellation and native ACK;
+check the normal return's IP/SP advance and the terminal OOO CALL packet.
+Observe child detachment before DONE and immediately poison an all-unlocked
+parent after publication to expose late publisher writes. No production change,
+extra task reference, wrapper argument or new unit/live entry is introduced.
+Flow, selection and limits are in [usage 2.1](JIT_EXECUTION.md#21-waiter-发布边界).
+
+Only the following guest unit command runs, with an outer 195-second SSH timeout:
+
+```sh
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 timeout --kill-after=5s 180s \
+  make -C /root/host_fs/kdlock/tests/unit run TESTS= PY_TESTS=test_remote_outer.py
+```
+
+Exit **0**, **1/1 program passes**, **4,637 assertions**, **2,439 full-packet
+comparisons** and **88 DONE observations**. All eight temporary-code mutants
+exit through explicit assertions: poll/cancel/native-begin/native-ACK register
+clobbers, partial normal/terminal copies, DONE-before-detach and write-after-DONE.
+The BUG-only control exits 2 with no assertion marker and is not accepted as
+mutation detection. These are deterministic substitute CPU/release observations,
+not a hardware memory-order test, architectural flags restoration or arbitrary
+concurrent lifetime proof. The inventory stays **39 programs**; no module build,
+load, daemon, workload or live JIT runs in this increment. The preceding nine-case
+spin gate remains historical, not re-certified with this unit's source freeze.
+
+The 00:21 preflight and 00:23 postflight find the guest idle, kernel 6.1.159 and
+unchanged boot `e5f08f95-3b68-40f3-bc28-6a7ca42e7941`. All **204 inputs** match
+host and guest after synchronizing only the two changed test files, and remain
+unchanged through the run. No VM restart or guest-kernel modification occurs.
+Host evidence directory `/tmp/kdlock-remote-packet.TKf6Z2/` retains the command,
+unit log, pre/sync/postflight manifests, result and source archive. Its
+`source.tar.gz` SHA256 is:
+
+```text
+b7ff02fd5668df3bf8a70b986d1103cef9b31e1481bcf84670ee5ccaf372ae55
+```
+
+Host static review confirms all 39 inventory rows, 488 distinct Python method
+bodies, 21 shell drivers and 508 local links/anchors across 11 Markdown files.
+Python syntax, `git diff --check` and all archived input hashes pass; these checks
+execute no unit or JIT payload. The checker and output are retained with evidence.
+
+## Spin Waiter Publication
+
+**2026-09-12, 23:53:39-23:59:21 +08; postflight on 2026-09-13:** replace three
+spin publication writes with `smp_store_release`: the combined completion word,
+the lone/IRQ-native handoff and the final batch-successor handoff. The existing
+early-handoff full barrier is retained. Final register copying and queue splicing
+precede publication; physical owners, node layout, two-word wrapper inputs,
+flags and guest-kernel code do not change. Flow and test interpretation are in
+[usage 2.1](JIT_EXECUTION.md#21-waiter-发布边界).
+
+The existing production combiner fixture now observes five release/packet/reuse
+boundaries and supplies a changed output register to catch premature publication.
+The simulated awakened node immediately loses its old packet, task and successor;
+the publisher must preserve those reused bytes and use its saved successor.
+This is a deterministic API/packet test, not a hardware memory-order litmus,
+observed CPU-reordering failure or proof of every possible post-wake read.
+No unit entry or routine live case is added; the inventory stays **39 programs**.
+
+Three frozen unit phases are kept separate:
+
+1. Against the old production stores, the new outer fixture reports **15 failed
+   assertions across five publication paths**. `make` exits **2** on its first
+   NUMA-off variant; later variants and mutants do not run. This establishes
+   detection of the missing explicit release contract, not a live kernel fault.
+2. With the production fix and five new mutants, only
+   `test_spin_outer_progress.py` runs: exit **0**, **10,487 / 25,082 assertions**
+   for NUMA off/on, and **10 assertion-detected mutants**. A separate affected
+   `test_spin_shadow.py --mutations` run then exits **1** before its mutants:
+   its old generic-release counter misclassifies ordinary batch publication as
+   capacity handoff, causing 16 queue-head and 441 nested-list failures. The
+   retained terminal failure log is explicitly partial/truncated.
+3. Only `spin_shadow_fixture.c` changes: capacity accounting identifies the
+   actual queue-head caller, retaining the owner and capacity assertions.
+   Rerun only `test_spin_shadow.py --mutations`: exit **0**, both NUMA variants
+   pass their 48 queue-head, 441 nested-list and producer/recursive/observer
+   checks; all **nine mutants** are rejected. The earlier outer pass is not
+   relabeled as a new two-program frozen run. Observer-allocation diagnostics
+   belong to deliberate substituted failures, not a kernel module load.
+
+Guest default `make -C kernel_module KDLOCK_SELFTEST=0 KDLOCK_NUMA=0 W=1 -j8`
+passes. Existing assembly/RETHUNK/frame objtool and locale-fallback warnings are
+retained in the log. After confirming snapshots through the live host monitor,
+run only the affected complex spin cases:
+
+```sh
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 KDLOCK_RECOVERY_CONFIRMED=1 \
+  timeout --kill-after=10s 1800s python3 -B tests/regression.py \
+  --case mode-2 --case mode-6 --case mode-7 --case mode-8 \
+  --case registers-1-3 --case registers-8-3 --case remote-multi-b \
+  --case virtual-ticket-refusal --case remote-late-3 \
+  --timeout 180 --output /tmp/kdlock-spin-publish-live.z7khuH
+```
+
+An outer SSH timeout is 1830 seconds. Exit **0**, **9/9 accepted**; unselected
+cases, mutex and covered basic diagnostics are **NOT RUN**. Every case has valid
+generated images, entry/lock-matched returned-body evidence and its workload
+oracle. All report unchanged source, complete capture, no kernel fault and drained
+callers/modules. Body counts are observations, not complete instruction coverage
+or immutable code-generation identity:
+
+| Case | Returned `body=1` witnesses | Retained contract |
+| --- | --- | --- |
+| `mode-2` | 4 | Single-lock JIT and four completed/resumed allowlisted hostcalls |
+| `mode-6` | 4 | Three locks in one frame |
+| `mode-7` | 2 | Non-LIFO outer unlock |
+| `mode-8` | 2 | Nested contended/remote queues |
+| `registers-1-3` | 1 | Local native suffix with original registers and owner ACKs |
+| `registers-8-3` | 2 | Remote native suffix and register packet |
+| `remote-multi-b` | 8 | Cross-NUMA eight-frame, multi-request/deferred progress |
+| `virtual-ticket-refusal` | 1 | Real ticket/gate saturation and checked PENDING/native completion |
+| `remote-late-3` | 4 | Waiter exit while a no-lock ancestor still retires |
+
+All **204 inputs** match the corrected freeze and the 2026-09-13 **00:00:36 +08**
+idle postflight. Source/build/config/running baseline checks pass before and after
+with kernel 6.1.159, Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5` and
+unchanged boot `e5f08f95-3b68-40f3-bc28-6a7ca42e7941`. No VM restart or guest-kernel
+change occurs. Offline verification exits **0**, with nine recorded accepted
+results and no unrecorded cases; it performs no payload execution or new JIT
+certification. C1/C2/C5 remain open broadly. At this freeze, local guard-flags
+scope was still pending, not implicitly authorized by the publication fix.
+
+| Host evidence | Scope | `source.tar.gz` SHA256 |
+| --- | --- | --- |
+| `/tmp/kdlock-spin-publish-before.brR2sT/` | Old stores rejected by the new fixture | `991735dfd65faad6725c6a3b526a49ec1daa653cf037c8cf39906630d311fe7d` |
+| `/tmp/kdlock-spin-publish.3wVVhI/` | Outer unit pass, separate node-counter failure | `287ddd1b1d1e9ee6c1dc406c261a7b3e61a307edb2c6bb6abd386a6bb2a0fcad` |
+| `/tmp/kdlock-spin-publish-corrected.z7khuH/` | Node-unit correction, build, commands, monitor, postflight and live summary | `47e707a39625e0675999d40f64b4187b5d73c6af71460d13b07ecfa0584cea7f` |
+
+The complete live source/log/artifact archive is
+`/tmp/kdlock-spin-publish-live.z7khuH.tar.gz`; host and guest SHA256 match:
+
+```text
+91087ab8cbe924ecff385bb87c25c6c18e268757807d69e06fdd99c3fff34e04
+```
+
+## Original Waiter Exit
+
+**2026-09-12, 23:16-23:18 +08:** extend the existing `parallel-drain-0/1`
+cases with signals to their original borrowed waiters. No routine case or unit
+entry is added: the inventory remains **39 programs**, with 488 distinct Python
+test-method bodies after three methods are added to the existing protocol unit.
+Only test workload/client/controller/oracle code changes; production lock,
+translator, two-word ABI and guest-kernel code remain unchanged. Execution order,
+incremental commands and limits are maintained in
+[usage 6.6](JIT_EXECUTION.md#66-独立队列的并行-native-frame).
+
+In the recovery guest, run only:
+
+```sh
+env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 KDLOCK_RECOVERY_CONFIRMED=1 \
+  timeout --kill-after=10s 1000s python3 -B tests/regression.py \
+  --case parallel-drain-0 --case parallel-drain-1 \
+  --case parallel-node-pressure --case native-peer-1 --case native-peer-3 \
+  --timeout 180 --output /tmp/kdlock-waiter-exit-live.2gA3XC
+```
+
+The outer SSH command also has a 1030-second timeout. Exit **0**, elapsed
+**120.61 seconds**, **5/5 accepted**. All five read back `mutex_jit=1`, have
+valid generated images, matching post-wrapper body witnesses and correct
+workload records. Per-case results report no kernel fault, unchanged source,
+complete evidence and drained callers/modules; unselected cases are **NOT RUN**.
+
+| Case | Actual JIT bodies / owner ACKs | Additional evidence |
+| --- | --- | --- |
+| `parallel-drain-0` | 2 / 4 | First lane 0 exits; lane 1 retains its frame and then returns after SIGUSR1 |
+| `parallel-drain-1` | 2 / 4 | Reverse drain order and the same retained-owner/exit checks |
+| `parallel-node-pressure` | 1 / 2 | Independent context, real node-pool and injected task refusals; a prepared second image does not execute |
+| `native-peer-1` | 1 / 1 | Shared client's native interruptible cancellation regression |
+| `native-peer-3` | 1 / 1 | Shared client's native killable cancellation regression |
+
+Each dual-frame case retains the real 64-block code-pool and 1024-slot shadow
+pressure, renamed waiter/native C routing, native-peer cancellation and requeue,
+six exact records with 24008 transitions, and terminal retirement/reload checks.
+The original waiters are single-process, single-ioctl clients. Identity-checked
+pidfds send SIGKILL to the first-draining waiter and SIGUSR1 to the survivor.
+Both real B/A owner ACKs and the first record complete before fatal syscall
+exit. Its retained pidfd then proves exit while source reports
+`DRAINING/modules=1/frames=1/writers=1` and the survivor remains alive. A bounded
+test gate holds that second frame until this observation; its unchanged owners,
+exact suffix/ACKs and one userspace signal return are then required. Only the
+first waiter's supervisor exits 137; the other seven exit 0. The saved dmesg
+prefix/hash links the intermediate observation to the final protocol log.
+
+This proves pending-signal completion in two bounded schedules, not `do_exit`
+inside a native suffix, abandoned delegated work, RCU reclamation or general
+hook-reader lifetime safety. No test task reference or owner handoff is added.
+C1/C2 remain open broadly; at this freeze the C5 access-time guard was awaiting
+agreement on local flags preservation, and was not implemented by this test.
+
+Before live execution, the first focused guest unit command selects
+`test_mutex_parallel_protocol.py test_mutex_signal_protocol.py`. It exits **2**:
+the parallel unit has four failed subtests, while the independent signal unit
+passes **29 methods**. The failures are fixture issues: `Path.touch()` reaches a
+mocked source-FD close counter, and a broad mutation changes an earlier native
+peer log instead of the original waiter's resume log. Only the protocol unit
+driver changes afterward. The corrected run selects only
+`test_mutex_parallel_protocol.py`: exit **0**, **38 methods pass**, including the
+actual C client's 24 fixture rounds and invalid-target checks. The earlier 29
+passes are not relabeled as a new two-program frozen run. The guest workload
+build `make -C klock_module W=1 -j8` also passes; existing redundant-CLD objtool
+warnings and locale fallback messages remain in its log.
+
+All **204 runtime/test inputs** match the corrected host freeze, guest postflight
+and live source archive. Baseline source/build/config/running-ID checks pass
+before and after: kernel 6.1.159, Build ID
+`6f9f2e9fec382e97f620553793aa90b527a30af5`, unchanged boot
+`e5f08f95-3b68-40f3-bc28-6a7ca42e7941`. Recovery snapshots are confirmed through
+the host monitor before loading. The 23:22 +08 postflight is idle; there is no
+VM restart or guest-kernel modification. Offline evidence verification exits 0
+with all five recorded accepted results and no unrecorded cases; this is stored
+evidence consistency, not another JIT run.
+
+| Host evidence | Scope | `source.tar.gz` SHA256 |
+| --- | --- | --- |
+| `/tmp/kdlock-waiter-exit.HoHFta/` | Failed first unit selection, including the separate signal-unit pass | `b1d03d5b1deed704f803bacb7dbfd422bfe69a8a4ace97a048b7719409d7c9a8` |
+| `/tmp/kdlock-waiter-exit-corrected.2gA3XC/` | Corrected unit, build, monitor, live summary and postflight | `05f02935dc2dff5d3a7accd4397cc9b93c7975be9f5fae6f8904989bbc8f9342` |
+
+The two unit source archives differ only in `test_mutex_parallel_protocol.py`.
+The corrected directory also retains `commands-results.json`, `static-check.py`
+and `static.log`: the 39-entry inventory, 488 distinct method bodies, all 21
+shell drivers, Python syntax, 499 local links/anchors across 11 Markdown files
+and `git diff --check` pass. Host checks only inspect stored bytes and syntax;
+they do not execute unit or JIT payloads.
+The complete live source/log/artifact archive is
+`/tmp/kdlock-waiter-exit-live.2gA3XC.tar.gz`; its SHA256 matches on host and guest:
+
+```text
+0fa0fff3cda6a7f22eda75a3a70d1eafdb288d0a58e3974b7bcab61ff8277ddf
+```
+
+## Test Inventory Review
+
+**2026-09-12:** the initial [test inventory review](TEST_EXAMPLES.md) covers
+44 unit entries (7 C and 37 Python programs), 21 shell drivers and 80 named
+cases. It distinguishes the 64-case `extended` scope, 11 already excluded
+diagnostics, script dispatch, production fixtures and evidence-oracle tests.
+Five models are removed below after covering their retained contracts in
+production tests; 39 programs remain, with distinct verification layers retained.
+
+Before removal, host-side static checks find no missing or duplicated inventory
+rows, 485 distinct Python test-method AST bodies, and 211 unchanged runtime/test
+input hashes. Distinct method bodies do not prove
+semantic independence. `run_all.sh --list` and the combined
+`--suite mutex --suite hostcall --case mode-5 --dry-run` confirm the documented
+selection, with mode 5 appearing only once. Local links/anchors, the catalog's
+shell-block syntax and `git diff --check` pass.
+
+The review corrects the former host/guest unit-test instruction, merges
+duplicate script/case descriptions, and links the existing manual instead of
+maintaining another full setup sequence. That static phase runs no unit or live
+workloads; its evidence is separate from the subsequent production-unit check.
+
+### Redundant Node Model Removal
+
+**2026-09-12:** remove `tests/unit/test_spin_node_count.c`, its Makefile target
+and generated-binary ignore entry. The three hand-written model checks already
+have production producer/count/return coverage in `test_spin_shadow.py` and
+`spin_node_pool_fixture.c`. After this first deletion, the inventory was **43
+programs: 6 C and 37 Python**. No production source or live-case selection changes
+in this removal.
+
+In the recovery guest, run only:
+
+```sh
+python3 -B tests/unit/test_spin_shadow.py --mutations
+```
+
+Exit status is **0**. The production queue-head, nested-list, producer,
+recursive-return and observer checks pass with NUMA off and on. All **nine
+mutants** are rejected by assertions, including native/virtual full-count leaks,
+cancel/native/complete/common-return leaks, double release and wrong logical
+origin/task. Mutations run in the final NUMA-on temporary build; production
+source is never mutated. The allocation-refusal diagnostic in the log belongs
+to the deliberate fixture failure check, not a kernel module load.
+
+Eight stale guest inputs match historical host versions and are synchronized
+before testing. All **210 remaining runtime/test inputs** match the host,
+frozen source archive and guest postflight. The running kernel baseline check
+passes; modules and callers are idle before and after. Guest `make -n run`
+confirms the removed target is absent without executing other unit programs.
+This is guest-userspace production C with substituted primitives, not kernel
+JIT, Linux concurrency or a full unit acceptance. No live modes are rerun.
+
+Host evidence: `/tmp/kdlock-node-model-prune.wdFYvh/` contains `unit.log`,
+`command.txt`, `timing.log`, `postflight.json`, `make-preview.txt`, the removal
+patch and the 210-input `source.json` / `source.tar.gz`. Archive members and
+their SHA256 hashes match the manifest. `source.tar.gz` SHA256:
+
+```text
+a8efd1fa2e015768bf2da3afcffcc39c246286b55c94f3020c03868369acc387
+```
+
+### Redundant Mutex Model Removal
+
+**2026-09-12:** remove `tests/unit/test_mutex_transition.c`, its Makefile target
+and generated-binary ignore entry after extending the existing
+`test_mutex_resources.py` / `mutex_resources_fixture.c`. After this second
+deletion, the inventory was **42 programs: 5 C and 37 Python**. No production
+source or live-case selection changes in this removal.
+
+The fixture now extracts the real `kd_main.c` target/selector functions, checks
+cold-lock promotion with an intervening native owner, and checks routing after
+rename and source closure. Borrowed A remains owned by the peer; the waiter
+owns only its unrelated C, and unlocking A must use the notification path.
+The retained-task route ends only after the final substituted reference is
+released. The four old model contracts and their production-test replacements
+are mapped in [the inventory](TEST_EXAMPLES.md#52-单元精简进展与顺序).
+
+In the recovery guest, run only:
+
+```sh
+make -C tests/unit run TESTS= \
+  PY_TESTS='test_mutex_resources.py test_mutex_outer_progress.py'
+```
+
+Exit status is **0**: **2 programs pass**, with **15,953 resource checks** and
+**136 outer-progress checks across five scenarios**. All **11 resource
+mutants** fail assertions, including the three added selector/admission/unlock
+mutants. Mutations affect only temporary extracted copies. Physical locks,
+task membership, scheduling and the owner/ACK boundary are substituted; this
+does not prove Linux wait-list behavior, RCU safety or actual kernel JIT. The
+existing live and task-lifecycle cases are retained and are not rerun here.
+
+All **209 remaining runtime/test inputs** match the host, frozen archive and
+guest postflight. Only the two changed fixture/driver files and scoped removal
+patch are synchronized. The previously verified guest boot is unchanged;
+modules and callers remain idle before and after. Guest `make -n run` confirms
+five C and 37 Python entries, with both removed targets and binaries absent.
+No other unit programs or live modes are rerun.
+
+Host evidence: `/tmp/kdlock-mutex-model-prune.aEMOhb/` contains `unit.log`,
+`command.txt`, `timing.log`, `postflight.json`, `make-preview.txt`, the removal
+patch and the 209-input `source.json` / `source.tar.gz`. Archive members and
+their SHA256 hashes match the manifest. `source.tar.gz` SHA256:
+
+```text
+69ac16a756ebaa057496baa12ddd27e27ff5fd765bee4f2d808b83ad1a719b2e
+```
+
+### Frame Model Consolidation
+
+**2026-09-12:** remove `tests/unit/test_exec_frame.c`, its Makefile target and
+binary ignore entry. Extend the existing `test_exec_capacity.py` fixture with
+production ledger/event functions and both backend cleanup helpers. After this
+third deletion, the inventory was **41 programs: 4 C and 37 Python**. No production
+code changes.
+
+The [11-contract map](TEST_EXAMPLES.md#52-单元精简进展与顺序) records replacements
+and the obsolete model behavior: early A release retains its record rather than
+removing it while B/C remain. Full-context and output-packet checks cover foreign
+owners and pending remote links; ledger checks cover metadata shifts, malformed
+inputs and capacity. Completion waits for nested releases and remote progress.
+Eight direct cleanup configurations check reverse order, already-released locks
+and retained A with substituted physical operations. They do not authorize
+cleanup or replay after JIT execution. The unchanged node producer's earlier GS
+inheritance evidence remains earlier evidence, not a new run.
+
+Only three guest unit programs run:
+
+```sh
+make -C tests/unit run TESTS= \
+  PY_TESTS='test_exec_capacity.py test_jit_entry_scope.py test_segment_codegen.py'
+```
+
+Exit status **0**: **8,010 frame checks**, **146 entry-scope checks** and segment
+codegen pass. All **12 frame mutants** compile and fail explicit assertions,
+including duplicate/missing-outer ledgers, shifted kind loss, repeated unlock,
+premature completion, a lost logical-parent dependency and double mutex cleanup
+unlock.
+The entry test checks actual high-level two-word argument setup using a wrapper
+substitute; the segment test checks lowering/layout. This is not a kernel-JIT,
+Linux scheduling or full unit acceptance. No other units or live modes rerun.
+
+All **208 runtime/test inputs** match host, frozen archive and guest postflight.
+Only the two changed test files and checked model-removal patch are synchronized;
+the old generated model binary is removed. The previously verified boot remains
+unchanged, callers/modules are idle, and guest `make -n run` confirms 4 C plus 37
+Python entries with all three removed model sources/binaries absent.
+
+Host evidence: `/tmp/kdlock-frame-model-prune.bZLz1e/` contains `unit.log`,
+`command.txt`, `timing.log`, `postflight.json`, `make-preview.txt`, the removal
+patch and 208-input `source.json` / `source.tar.gz`. Archive SHA256:
+
+```text
+f06384211ce22b6f9914eaa7f887deb57ffbff6cd90a47c0f6b4a9f124687990
+```
+
+### Call Model Consolidation
+
+**2026-09-12:** remove `test_jit_call_policy.c`, its target and binary ignore
+entry. After this fourth deletion, the inventory was **40 programs: 3 C and 37 Python**. Existing
+entry-scope and native-after-outer fixtures now compile the real service
+manifest/typed adapters, dispatch/advance and nested mutex lock producer.
+Clock, wrapper and physical-lock primitives are substitutes. The old remote
+mutex B assumption is replaced with current same-executor native acquisition;
+the [seven-contract map](TEST_EXAMPLES.md#52-单元精简进展与顺序) records the boundary.
+
+The first guest command selects three programs:
+
+```sh
+make -C tests/unit run TESTS= \
+  PY_TESTS='test_jit_entry_scope.py test_native_after_outer.py test_hostcall_codegen.py'
+```
+
+It exits **2**, with **2 programs passing and 1 failing**. Native-after-outer
+passes **3,297 production checks plus four Python methods**, and hostcall
+codegen passes. Entry-scope reports seven failed assertions: its test set SP to
+zero before admission, so the existing scope check correctly refused before
+the intended service-return failure. This is a fixture error, not a production
+fix. The six entry mutants do not run on that failed attempt.
+
+Only `jit_entry_scope_fixture.c` changes afterward: the valid root now produces
+the bad SP in its substituted wrapper exit packet. Rerun only:
+
+```sh
+make -C tests/unit run TESTS= PY_TESTS=test_jit_entry_scope.py
+```
+
+Exit **0**, **823 checks and six assertion-detected mutants**. Coverage includes
+all manifest flag combinations, unresolved/unknown services, typed returns,
+service/control shared budgets, intact excess-CALL packets, invoke/return errors
+without replay, and ordinary CALL_MISS to an allowlisted address without service
+execution. The earlier two passes are not relabeled as a new three-program
+frozen run. No production code, kernel baseline, live selection or JIT semantics
+changes; no modules or live JIT run in either attempt.
+
+The final **207 inputs** match host, source archive and guest postflight, with
+only that one fixture differing from the failed freeze. The boot remains the
+previously verified recovery boot; callers/modules are idle. Guest `make -n run`
+lists 3 C plus 37 Python entries, with all four removed sources/binaries absent.
+
+Evidence directories contain commands, logs, timings and frozen input manifests
+and archives; the corrected directory also has full postflight hashes and the
+Makefile preview. The removal patch is in the first directory.
+
+| Host evidence | Scope | `source.tar.gz` SHA256 |
+| --- | --- | --- |
+| `/tmp/kdlock-call-model-prune.LmBbOs/` | Failed first selection, including the two separate passes | `90f444251b5f7328909771c547827127497dbec790dec2fa2560e10da25c5966` |
+| `/tmp/kdlock-call-model-corrected.9XIibs/` | Corrected entry-only run | `e2dda4ff5668306ded7614078bd503cb1b3ce2015aa0ce57ae56849dfca885bd` |
+
+### Tail Model Consolidation
+
+**2026-09-12:** remove `test_tail_encoding.c`, its target and binary ignore
+entry after moving its five checks into the existing mutex resource fixture.
+The current inventory is **39 programs: 2 C and 37 Python**. The decoder is now
+extracted from `kd_mutex.c` alongside the encoder; only per-CPU storage is
+substituted. Fixed wire words, all 160 CPU/slot pairs and real slowpath node
+identity replace the copied field arithmetic. Zero is an empty-queue sentinel,
+not a valid decoder input. These are finite mutex codec checks, not spin codec
+coverage or Linux per-CPU concurrency validation.
+
+The old `mock_kernel.h` and `test_harness.h` have no remaining consumers. Remove
+them and the pattern rule's unused dependencies, plus stale hash/hotlock-model
+binary ignore entries. No production source or live-case selection changes.
+To verify that dependency cleanup, force a rebuild of both retained C programs
+and select only the affected Python fixture in the recovery guest:
+
+```sh
+make -B -C tests/unit run TESTS='test_control_call test_daemon_policy' \
+  PY_TESTS=test_mutex_resources.py
+```
+
+The command is issued at **22:45:49 +08**, finishes with exit **0** in **9.34 s**,
+and reports **3/3 programs passing**. The mutex fixture passes **16,768 checks**
+and all **16 assertion-detected mutants**, including five new CPU/slot/sentinel
+faults. Each mutant must compile and exit through a failed assertion; crashes,
+compiler errors and timeouts do not qualify. The control-CALL program covers
+56 phase/error combinations and post-CALL bounds; daemon error messages are
+expected fault-injection branches, followed by its explicit PASS. No live JIT,
+module loading or unrelated Python unit run occurs.
+
+All **204 runtime/test input hashes** match host, archive and guest postflight.
+Only two changed test files and the checked incremental removal/Makefile patch
+are synchronized; obsolete model binaries are absent. The guest baseline
+still matches 18 source files, nine build files, config and two bundle files,
+with running Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`.
+Final postflight at **22:47:19 +08** confirms unchanged boot ID and dmesg bytes,
+no test callers/modules/compiler processes, and the 2 C / 37 Python inventory.
+The 80-case live catalog and its selection rules remain unchanged.
+
+Host evidence: `/tmp/kdlock-tail-model-prune.5SW8ZX/` contains `unit.log`,
+pre/postflight JSON (including the command), `make-preview.log`, the checked
+patch and 204-input `source.json` / `source.tar.gz`. Archive SHA256:
+
+```text
+ea76ed212bc924d85df0cb4873e4fec40dbd837c6819ba79da4d3399c69c781c
+```
 
 ## Reading Handoff
 
@@ -230,8 +2826,9 @@ Independent offline checks validate the frozen sources, extracted stubs and
 128+2 records. Inputs, binaries/disassembly, wrapper image and report are in
 `/tmp/kdlock-resume-boundary.QWRqXr.tar.gz`, SHA256:
 `d1459da0344ab9e59c9ef722796fc1e75382b09dd8ae36345a8fbb2a604a8d8e`.
-The [pending packet contract](JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现)
-defines prerequisites only; local flags changes still require a scope decision.
+The [future packet contract](JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现)
+defines prerequisites only. At the time of this audit, local flags changes had
+not received a scope decision; the later explicit deferral is recorded above.
 
 ## Offline Evidence Verifier
 

@@ -62,7 +62,7 @@ case "$gate_pressure" in
 esac
 if [ "$gate_pressure" = 1 ]; then
     test "$mode:$stage:$virtual_resource:$pending_contended" = 8:4:3:1 || exit 1
-    python3 -c 'import os; assert {9, 10, 11, 12} <= os.sched_getaffinity(0)'
+    python3 -c 'import os; assert set(range(9, 19)) <= os.sched_getaffinity(0)'
 fi
 # Reuse the pending-B gate with A's owner, waiter and trailer sharing CPU 4.
 # Keep signal/stack/resource perturbations separate from this scheduling test.
@@ -298,7 +298,7 @@ if [ "$selftest" = 1 ]; then
 fi
 module_target="$TARGET_PROCESS"
 if [ "$native_control" = 1 ]; then module_target=kd_unused; fi
-insmod "$KM_DIR/kdlock_km.ko" target_process="$module_target" mutex_jit=1 "${module_args[@]}"
+load_kdlock target_process="$module_target" mutex_jit=1 "${module_args[@]}"
 if [ "$source_module" = 1 ]; then
     insmod "$KLOCK_DIR/kd_depth_source.ko"
     source_loaded=1
@@ -423,6 +423,13 @@ if [ "$mode" = 8 ]; then
     for role in 0 2 4; do
         run_with_timeout 10 "$BENCH_BIN" 1 1 10 1 8 "$role" >> "$out/registration.log"
     done
+fi
+if [ "$gate_pressure" = 1 ]; then
+    # Publish a separate root before the old native interval. Its warm branch
+    # skips C, so C still has no gate when the real table is later saturated.
+    python3 "$KDLOCK_DIR/tests/spin_gate_protocol.py" promote-root "$out"
+    run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 8 1073741833 > "$out/gate-warmup.log"
+    artifacts=$((artifacts + 1))
 fi
 artifact_started=$SECONDS
 artifact_output="$(wait_for_jit_artifact_count "$artifacts" "$artifact_timeout")"
@@ -770,6 +777,31 @@ elif [ "$mode:$stage" = 8:4 ]; then
                 printf '%s\t%s\n' "$((index + 1))" "$status" >> "$out/gate-role-status.tsv"
                 test "$status" = 0 || failed=1
             done
+        fi
+        if [ "$failed" = 0 ]; then
+            gate_pids=()
+            # Six new CPUs keep the old pinned A/B protocol undisturbed.
+            # C's non-target holder waits for Linux queue publication; A's
+            # second candidate delegates the already-published root to JIT.
+            for role in 3 4 5 6 7 8; do
+                comm="$TARGET_PROCESS"
+                test "$role" != 8 || comm=kd_native
+                timeout --kill-after=5s 20s env KD_TEST_COMM="$comm" \
+                    taskset -c "$((10 + role))" "$BENCH_BIN" \
+                    1 1 1 1 8 "$((1073741824 + role))" \
+                    > "$out/gate-role-$role.log" 2>&1 &
+                gate_pids+=("$!")
+            done
+            python3 "$KDLOCK_DIR/tests/spin_gate_protocol.py" progress "$out" || failed=1
+            # Release only the test holder, including on a failed observation;
+            # never repair queue/frame storage to manufacture a passing drain.
+            printf '1\n' > /sys/module/klock_module/parameters/native_gate_progress_release
+            for index in "${!gate_pids[@]}"; do
+                status=0
+                wait "${gate_pids[$index]}" || status=$?
+                printf '%s\t%s\n' "$((index + 3))" "$status" >> "$out/gate-role-status.tsv"
+                test "$status" = 0 || failed=1
+            done
             python3 "$KDLOCK_DIR/tests/spin_gate_protocol.py" drained "$out" || failed=1
         fi
         # Even a failed pressure oracle must let the original bounded case
@@ -824,10 +856,16 @@ print(json.dumps([dict(entry=hex(e.rip), target=hex(e.target), code=hex(e.code),
 ' > "$out/cancel-publication.json"
 elif [ "$stage" = 4 ]; then
     dmesg | grep 'reason=PENDING_LOCK_NATIVE' > "$out/pending-lock.log"
-    test "$(wc -l < "$out/pending-lock.log")" = 1
     python3 -c '
 import errno, re, sys
-line = open(sys.argv[1]).read()
+lines = open(sys.argv[1]).read().splitlines()
+assert len(lines) == 1 + int(sys.argv[5])
+# Keep the original ticket packet check separate. The progressed ENOMEM root
+# has its own ELF/identity/body/frame/owner oracle in spin_gate_protocol.py.
+if sys.argv[5] == "1":
+    lines = [line for line in lines if " error=-7 " in line]
+assert len(lines) == 1
+line = lines[0]
 fields = dict(re.findall(r"(\w+)=(0x[0-9a-f]+|[0-9-]+)", line))
 values = {k: int(v, 0) for k, v in fields.items()}
 assert values["target"] == int(sys.argv[2], 16)
@@ -835,7 +873,7 @@ assert values["error"] == (-errno.ENOMEM if sys.argv[4] == "1" else -errno.E2BIG
 pre_stage = values["mutex"] or sys.argv[3] == "1"
 assert values["staged_ip"] == (values["target"] if pre_stage else values["return"])
 assert values["staged_sp"] == values["sp"] + (0 if pre_stage else 8)
-' "$out/pending-lock.log" "$probe_ip" "$shadow_capacity" "$virtual_resource"
+' "$out/pending-lock.log" "$probe_ip" "$shadow_capacity" "$virtual_resource" "$gate_pressure"
 fi
 if [ "$virtual_resource" != 0 ]; then
     test "$(cat /sys/module/kdlock_km/parameters/spin_selftest_virtual_refusal)" = 0
@@ -1051,8 +1089,9 @@ events = [text.index(event) for event in (
     "kd_pending spin blocked:", "kd_pending spin acquired:",
     "kd_native complete: task=" + pid + " ")]
 assert events == sorted(events)
-assert "kd_native stats: started=1 completed=1 unlocks=1" in text
-' "$out/pending-contended.log" "$probe_ip"
+expected = 1 + int(sys.argv[3])
+assert f"kd_native stats: started={expected} completed={expected} unlocks={expected}" in text
+' "$out/pending-contended.log" "$probe_ip" "$gate_pressure"
 elif [ "$pending_contended" = 1 ] && [ "$waiter_api" = 0 ] && [ "$stack_change" = 0 ]; then
     check_dmesg_has 'kd_pending mutex: observed=1 acquired=1'
     dmesg > "$out/pending-contended.log"

@@ -47,6 +47,8 @@ struct kd_spin_node {
 	struct kd_spin_jit_context *jit_context;
 	/* Logical hook waiter, not this recyclable node's physical requester. */
 	struct kd_spin_ref spin_origin;
+	/* Optional queue residence clock; consumed before this node can be reused. */
+	uint64_t queued_at_ns;
 };
 
 #define _Q_COMPLETED_OFFSET (_Q_LOCKED_OFFSET_HL + _Q_LOCKED_BITS_HL)

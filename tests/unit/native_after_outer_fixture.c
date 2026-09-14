@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "kd_source_api.h"
 
@@ -48,6 +49,10 @@ static int failures, checks;
 static unsigned long raw_spin_lock_addr = 0x100, raw_spin_unlock_addr = 0x200;
 static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;
 static struct mutex a, b;
+static struct task_struct native_peer = { .pid = 13 }, *nested_owner;
+static bool track_nested_owner;
+static unsigned int nested_acquires, nested_waits;
+static int kd_jit_fail_pending_lock;
 
 /* Primitive observations only; the live case verifies real owner-side ACKs. */
 static unsigned long kd_spin_debug_owner(raw_spinlock_t *lock)
@@ -61,6 +66,16 @@ static unsigned int kd_spin_debug_word(raw_spinlock_t *lock)
 }
 
 #define READ_ONCE(x) (x)
+#define unlikely(x) (x)
+#define cmpxchg(p, old, value) __sync_val_compare_and_swap(p, old, value)
+#define BUG_ON(expr)                                                    \
+	do {                                                           \
+		if (expr) {                                            \
+			fprintf(stderr, "FAIL line %d: BUG_ON(%s)\n",   \
+				__LINE__, #expr);                       \
+			exit(1);                                       \
+		}                                                      \
+	} while (0)
 #define INIT_LIST_HEAD(p)        \
 	do {                     \
 		(p)->next = (p); \
@@ -130,6 +145,11 @@ static int kd_mutex_nested_unlock(struct mutex *lock)
 {
 	if (lock != &b)
 		return -EINVAL;
+	if (track_nested_owner) {
+		if (nested_owner != current)
+			return -EPERM;
+		nested_owner = NULL;
+	}
 	if (control_mutation)
 		*control_mutation ^= 0x5a;
 	unlocked++;
@@ -139,15 +159,7 @@ static void kd_mutex_note_nested_jit(void)
 {
 	nested_jit++;
 }
-static int kd_mutex_jit_nested_lock_ctx(struct mutex *lock,
-					struct pt_regs *regs,
-					struct kd_exec_frame *frame)
-{
-	(void)lock;
-	(void)regs;
-	(void)frame;
-	return -EOPNOTSUPP;
-}
+static int kd_mutex_nested_lock(struct mutex *lock);
 static int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock,
 				       struct pt_regs *regs,
 				       struct kd_exec_frame *frame)
@@ -185,6 +197,25 @@ static int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock,
 			failures++;                                     \
 		}                                                       \
 	} while (0)
+
+/* The native wait is deterministic. The actual nested-call producer must not
+ * publish B or consume its CALL until this substituted acquisition returns. */
+static int kd_mutex_nested_lock(struct mutex *lock)
+{
+	CHECK(track_nested_owner && lock == &b && current == &executor);
+	CHECK(active->control_call.phase == KD_CALL_ENTERED);
+	CHECK(active->regs.ip == mutex_lock_addr &&
+	      active->regs.sp == (unsigned long)&waiter_stack[32]);
+	CHECK(!kd_exec_frame_lock_contains(active, (unsigned long)lock));
+	if (nested_owner) {
+		CHECK(nested_owner == &native_peer);
+		nested_owner = NULL;
+		nested_waits++;
+	}
+	nested_owner = current;
+	nested_acquires++;
+	return 0;
+}
 
 static struct kd_exec_frame frame(bool mutex)
 {
@@ -776,6 +807,66 @@ static void check_acquired_spin_native(void)
 	}
 }
 
+/* The current mutex backend acquires B on A's executor, including after a
+ * native peer wait. It resumes after lock(B), never after a remote unlock(B). */
+static void check_mutex_call_pair(void)
+{
+	for (unsigned int contended = 0; contended < 2; contended++) {
+		struct kd_exec_frame f = frame(true);
+		struct pt_regs expected;
+		unsigned long *word = &waiter_stack[32];
+		int before_unlock = unlocked;
+
+		/* Start from an A-only fixture ledger, then use the real B producer. */
+		CHECK(kd_exec_frame_lock_pop(&f, (unsigned long)&b) == 0);
+		memset(waiter_stack, 0, sizeof(waiter_stack));
+		*word = 0x900;
+		memset(&f.regs, 0x5A, sizeof(f.regs));
+		f.regs.ip = mutex_lock_addr;
+		f.regs.sp = (unsigned long)word;
+		f.regs.di = (unsigned long)&b;
+		expected = f.regs;
+		expected.ip = *word;
+		expected.sp += sizeof(*word);
+		active = &f;
+		track_nested_owner = true;
+		nested_owner = contended ? &native_peer : NULL;
+		nested_acquires = nested_waits = 0;
+		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == 1);
+		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
+		CHECK(nested_owner == current && nested_acquires == 1 &&
+		      nested_waits == contended && unlocked == before_unlock);
+		CHECK(f.jit_lock_depth == 2 && f.jit_lock_kind[1] == KD_EXEC_LOCK_NATIVE &&
+		      f.jit_lock_node[1] == &b && f.jit_lock_addr[1] == (unsigned long)&b);
+		CHECK(f.control_call.phase == KD_CALL_COMPLETE && !f.resume_target &&
+		      f.logical_task == &waiter && !f.outer_unlock_seen);
+
+		*word = 0x901;
+		f.regs.ip = mutex_unlock_addr;
+		f.regs.sp = (unsigned long)word;
+		expected = f.regs;
+		expected.ip = *word;
+		expected.sp += sizeof(*word);
+		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == 1);
+		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
+		CHECK(!nested_owner && unlocked == before_unlock + 1 && f.jit_lock_depth == 1);
+		CHECK(f.jit_lock_addr[0] == f.outer_lock_addr && !f.jit_lock_released[0]);
+		CHECK(f.control_call.phase == KD_CALL_COMPLETE);
+
+		f.regs.ip = mutex_unlock_addr;
+		f.regs.sp = (unsigned long)word;
+		f.regs.di = f.outer_lock_addr;
+		expected = f.regs;
+		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == KD_EXE_KNOWN_OUTER_UNLOCK);
+		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
+		f.regs.ip = 0xDEAD;
+		expected = f.regs;
+		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == 0);
+		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
+		track_nested_owner = false;
+	}
+}
+
 int main(void)
 {
 	check_native(false);
@@ -790,6 +881,7 @@ int main(void)
 	check_mutex_stack_refusals();
 	check_completed_mutex_native();
 	check_acquired_spin_native();
+	check_mutex_call_pair();
 	CHECK(kd_exec_invariant_failures == 0);
 	printf("after-outer production functions: %d checks, %d failures\n",
 	       checks, failures);

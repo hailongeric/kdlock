@@ -1,6 +1,7 @@
 """Mutate multi-frame evidence so aggregate counters cannot hide misrouting."""
 
 import copy
+import hashlib
 import json
 import os
 import re
@@ -13,7 +14,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from mutex_parallel_protocol import signal_native_peers, validate, validate_peer_signals
+from mutex_parallel_protocol import (
+    signal_native_peers,
+    signal_original_waiters,
+    validate,
+    validate_peer_signals,
+    validate_waiter_signals,
+)
 
 PUBLISHED = [{"entry": 0x100 + i, "code": 0x200 + i, "kind": 2} for i in range(2)]
 
@@ -1199,8 +1206,203 @@ class PeerSignalTests(unittest.TestCase):
                 [str(executable)], check=True, text=True, capture_output=True, timeout=5
             )
             self.assertIn(
-                "16 valid/error rounds and invalid target pass", result.stdout
+                "24 valid/error rounds and invalid target pass", result.stdout
             )
+
+
+def waiter_signal_fixture(first):
+    """Compose task-exit evidence with the existing full two-frame oracle."""
+    text = with_native_peers(fixture(first), first)
+    text = "\n".join(
+        line + f" pending=1 fatal={int(f'lane={first} ' in line)}"
+        if line.startswith("kd_parallel resume:") else line
+        for line in text.splitlines()
+    )
+    prefix = text[:text.index(f"kd_parallel resume: lane={1 - first} ")]
+    evidence = {
+        "first": first, "complete": True, "client_sha256": "a" * 64,
+        "source": {
+            "before": {"state": 0, "modules": 1, "frames": 2, "writers": 0},
+            "after_exit": {"state": 1, "modules": 1, "frames": 1, "writers": 1},
+        },
+        "waiters": [
+            {"lane": lane, "pid": 20 + lane, "pidfd": True,
+             "signum": 9 if lane == first else 10, "before_ns": 100, "after_ns": 101}
+            for lane in (0, 1)
+        ],
+        "after_exit": {
+            "pidfd_exited": True, "survivor_alive": True, "observed_ns": 200,
+            "log_bytes": len(prefix.encode()),
+            "log_sha256": hashlib.sha256(prefix.encode()).hexdigest(),
+        },
+    }
+    clients = [
+        f"parallel waiter client enter: lane={lane} pid={20 + lane}\n"
+        + ("" if lane == first else
+           f"parallel waiter client return: lane={lane} pid={20 + lane} ret=0 errno=0 signals=1\n")
+        for lane in (0, 1)
+    ]
+    statuses = "\n".join(f"{i}\t{137 if i == 4 + first else 0}" for i in range(8))
+    return text, evidence, clients, statuses
+
+
+class OriginalWaiterSignalTests(unittest.TestCase):
+    def test_both_orders_keep_a_live_frame_after_verified_fatal_exit(self):
+        for first in (0, 1):
+            text, evidence, clients, statuses = waiter_signal_fixture(first)
+            result = validate(text, PUBLISHED, 0xFF, first, native_peers=True)
+            self.assertEqual(result["owner_acks"], 4)
+            self.assertEqual(result["jit_bodies"], 2)
+            self.assertEqual(
+                validate_waiter_signals(text, evidence, clients, statuses, first),
+                {"pidfd_signals": 2, "fatal_exits": 1, "surviving_native_frames": 1,
+                 "nonfatal_returns": 1},
+            )
+
+    def test_exit_status_cannot_replace_identity_ack_or_pending_signal(self):
+        text, evidence, clients, statuses = waiter_signal_fixture(0)
+        for path, value in (
+            (("complete",), False),
+            (("first",), 1),
+            (("source", "after_exit", "frames"), 0),
+            (("source", "after_exit", "writers"), 0),
+            (("after_exit", "pidfd_exited"), False),
+            (("after_exit", "survivor_alive"), False),
+            (("after_exit", "observed_ns"), 99),
+            (("after_exit", "log_sha256"), "a" * 64),
+            (("waiters", 0, "pid"), 99),
+            (("waiters", 0, "signum"), 10),
+            (("waiters", 1, "pidfd"), False),
+        ):
+            bad = copy.deepcopy(evidence)
+            item = bad
+            for key in path[:-1]:
+                item = item[key]
+            item[path[-1]] = value
+            with self.subTest(path=path), self.assertRaises(AssertionError):
+                validate_waiter_signals(text, bad, clients, statuses, 0)
+        for old, new in (
+            ("kd_native ack: task=20 lock=a0", "kd_native ack: task=21 lock=a0"),
+            ("kd_parallel done: lane=0 task=20", "kd_parallel done: lane=1 task=20"),
+            ("pending=1 fatal=1", "pending=0 fatal=1"),
+            ("comm=kd_renamed pending=1 fatal=0", "comm=kd_renamed pending=1 fatal=1"),
+        ):
+            # Recompute the prefix identity so semantic checks, not merely
+            # the archive hash mismatch, reject the altered history.
+            bad_text = text.replace(old, new, 1)
+            prefix = bad_text[:bad_text.index("kd_parallel resume: lane=1 ")]
+            bad = copy.deepcopy(evidence)
+            bad["after_exit"].update(log_bytes=len(prefix.encode()),
+                                     log_sha256=hashlib.sha256(prefix.encode()).hexdigest())
+            with self.subTest(old=old), self.assertRaises(AssertionError):
+                validate_waiter_signals(bad_text, bad, clients, statuses, 0)
+        for bad_clients, bad_status in (
+            ([clients[0] + "parallel waiter client return\n", clients[1]], statuses),
+            ([clients[0], clients[1].replace("signals=1", "signals=0")], statuses),
+            (clients, statuses.replace("137", "0")),
+            (clients, statuses.replace("137", "124")),
+            (clients, statuses + "\n4\t137"),
+        ):
+            with self.subTest(clients=bad_clients, status=bad_status), self.assertRaises(AssertionError):
+                validate_waiter_signals(text, evidence, bad_clients, bad_status, 0)
+
+    def test_controller_checks_real_client_contract_before_sending(self):
+        # Only proc/device/pidfd/signal primitives are substituted. Exercise
+        # the delivered controller, including both handle lifetimes and gate
+        # release on pre-send identity failure or missing post-send exit.
+        from source_retirement import source
+
+        for first, corrupt in [(0, ""), (1, "")] + [
+            (0, name) for name in ("comm", "argv", "threads", "exe", "frames", "exited", "no-exit")
+        ]:
+            with self.subTest(first=first, corrupt=corrupt), tempfile.TemporaryDirectory() as temp:
+                out = Path(temp)
+                client = out / "mutex-signal-client"
+                client.write_bytes(b"test client")
+                text, expected, clients, statuses = waiter_signal_fixture(first)
+                for lane, log in enumerate(clients):
+                    (out / f"role-{lane}-2.log").write_text(log.splitlines()[0] + "\n")
+                original_text, original_bytes, original_resolve, original_write = (
+                    Path.read_text, Path.read_bytes, Path.resolve, Path.write_text
+                )
+                released = []
+
+                def read_text(path, *args, **kwargs):
+                    if str(path).startswith("/sys/"):
+                        return "Y\n"
+                    if str(path).startswith("/proc/"):
+                        if path.name == "comm":
+                            return "klock_test\n" if corrupt == "comm" else "kd_renamed\n"
+                        if path.name == "status":
+                            return f"Tgid:\t{path.parent.name}\nThreads:\t{2 if corrupt == 'threads' else 1}\n"
+                    return original_text(path, *args, **kwargs)
+
+                def read_bytes(path, *args, **kwargs):
+                    if str(path).startswith("/proc/") and path.name == "cmdline":
+                        lane = int(path.parent.name) - 20
+                        args = [str(client), str(lane), "klock_test",
+                                "parallel-peer" if corrupt == "argv" else "parallel-waiter"]
+                        return b"\0".join(os.fsencode(a) for a in args) + b"\0"
+                    return original_bytes(path, *args, **kwargs)
+
+                def resolve(path, *args, **kwargs):
+                    if str(path).startswith("/proc/") and path.name == "exe":
+                        return out / "wrong" if corrupt == "exe" else client
+                    return original_resolve(path, *args, **kwargs)
+
+                def write_text(path, value, *args, **kwargs):
+                    if str(path).startswith("/sys/"):
+                        released.append((path.name, value))
+                        return len(value)
+                    return original_write(path, value, *args, **kwargs)
+
+                def selected(handles, writes, errors, timeout):
+                    ready = handles if (
+                        corrupt == "exited" or (timeout == 10 and corrupt != "no-exit")
+                    ) else []
+                    return ready, [], []
+
+                before = dict(expected["source"]["before"])
+                if corrupt == "frames":
+                    before["frames"] = 1
+                initial = text[:text.index(f"kd_parallel resume: lane={first} ")]
+                after = text.encode()[:expected["after_exit"]["log_bytes"]].decode()
+                with (
+                    patch("mutex_parallel_protocol.os.open", return_value=90),
+                    patch("mutex_parallel_protocol.os.close") as close,
+                    patch.object(source, "info", side_effect=[before, before, expected["source"]["after_exit"]]),
+                    patch("mutex_parallel_protocol.subprocess.check_output", side_effect=[initial, after]),
+                    patch("mutex_parallel_protocol.os.pidfd_open", side_effect=[77, 78]) as opened,
+                    patch("mutex_parallel_protocol.select.select", side_effect=selected),
+                    patch("mutex_parallel_protocol.signal.pidfd_send_signal") as send,
+                    patch.object(Path, "read_text", read_text),
+                    patch.object(Path, "read_bytes", read_bytes),
+                    patch.object(Path, "resolve", resolve),
+                    patch.object(Path, "write_text", write_text),
+                    # Path.touch also uses os.open/close. Substitute this
+                    # separate readiness file so it cannot alias the mocked
+                    # source descriptor, and assert the handshake explicitly.
+                    patch.object(Path, "touch", autospec=True) as ready,
+                ):
+                    if corrupt:
+                        with self.assertRaises(AssertionError):
+                            signal_original_waiters(out, first)
+                        self.assertEqual(send.call_count, 2 if corrupt == "no-exit" else 0)
+                    else:
+                        signal_original_waiters(out, first)
+                        self.assertEqual(
+                            [c.args for c in send.call_args_list],
+                            [(77, 9 if first == 0 else 10, None, 0),
+                             (78, 9 if first == 1 else 10, None, 0)],
+                        )
+                        saved = json.loads((out / "waiter-signals.json").read_text())
+                        validate_waiter_signals(text, saved, clients, statuses, first)
+                    self.assertEqual(close.call_count, 1 + opened.call_count)
+                    self.assertEqual(released, [("mutex_parallel_exit_hold", "0\n")])
+                    if not corrupt or corrupt == "no-exit":
+                        ready.assert_called_once_with(out / "waiter-signals.ready")
+                    else:
+                        ready.assert_not_called()
 
 
 def shadow_fixture(first=0):
