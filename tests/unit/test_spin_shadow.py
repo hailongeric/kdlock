@@ -12,6 +12,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -30,9 +32,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mutations", action="store_true")
     options = parser.parse_args()
-    source = (ROOT / "kernel_module/kd_spinlock.c").read_text()
-    spin_types = (ROOT / "include/kd_spinlock.h").read_text()
-    exec_types = (ROOT / "include/kd_exec.h").read_text()
+    source = read_source((ROOT / "kernel_module/kd_spinlock.c"))
+    spin_types = read_source((ROOT / "include/kd_spinlock.h"))
+    exec_types = read_source((ROOT / "include/kd_exec.h"))
     types = "\n".join(
         line
         for line in (spin_types + exec_types).splitlines()
@@ -47,10 +49,10 @@ def main():
     for header, marker in (
         (exec_types, "enum kd_exec_lock_kind {"),
         (exec_types, "enum kd_exec_remote_state {"),
-        ((ROOT / "include/kd_call.h").read_text(), "enum kd_call_phase {"),
+        (read_source((ROOT / "include/kd_call.h")), "enum kd_call_phase {"),
     ):
         types += "\n" + definition(header, marker).rstrip() + ";\n"
-    results = (ROOT / "include/exe.h").read_text().splitlines()
+    results = read_source((ROOT / "include/exe.h")).splitlines()
     body = ""
     for name in ("KD_EXE_NO_RUN", "KD_EXE_RUN_ERROR", "KD_EXE_NATIVE_DONE"):
         matching = [line for line in results if line.startswith(f"#define {name} ")]
@@ -103,7 +105,7 @@ def main():
         run_environment = dict(os.environ)
         run_environment.pop("KD_NODE_MUTATION", None)
         (path / "spin_shadow_types.h").write_text(types)
-        observer = (ROOT / "tests/kernel/spin_node_trace.c").read_text()
+        observer = read_source((ROOT / "tests/kernel/spin_node_trace.c"))
         (path / "spin_node_observer.h").write_text(
             re.sub(r"^#include .*\n", "", observer, flags=re.MULTILINE)
         )

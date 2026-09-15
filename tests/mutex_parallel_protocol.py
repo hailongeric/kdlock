@@ -658,7 +658,7 @@ def capture_code_pool(phase, out):
 
     path = out / "code-pool.json"
     evidence = {"snapshots": {}} if phase == "prepare" else json.loads(path.read_text())
-    module = root / "klock_module/klock_module.ko"
+    module = root / "workload_modules/lock_scenarios/klock_module.ko"
     digest = hashlib.sha256(module.read_bytes()).hexdigest()
     symbols = {
         row[2]: int(row[0], 16)

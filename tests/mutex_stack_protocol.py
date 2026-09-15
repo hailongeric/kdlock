@@ -210,7 +210,7 @@ def main():
                 "objdump",
                 "-dr",
                 "--disassemble=run_nested_mutex_cs",
-                str(ROOT / "klock_module/klock_module.ko"),
+                str(ROOT / "workload_modules/lock_scenarios/klock_module.ko"),
             ],
             text=True,
             timeout=10,

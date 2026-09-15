@@ -10,6 +10,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 from test_spin_gate import ROOT, without_includes
 from test_spin_shadow import definition
 
@@ -21,13 +23,13 @@ def production():
     types = definition(ptrace, "struct pt_regs {").rstrip() + ";\n"
     types += (
         definition(
-            (ROOT / "include/kd_spin_entry.h").read_text(), "struct kd_spin_ref {"
+            read_source((ROOT / "include/kd_spin_entry.h")), "struct kd_spin_ref {"
         ).rstrip()
         + ";\n"
     )
     for name in ("include/kd_call.h", "include/kd_exec.h"):
-        types += without_includes((ROOT / name).read_text()) + "\n"
-    source = (ROOT / "kernel_module/kd_exec.c").read_text()
+        types += without_includes(read_source((ROOT / name))) + "\n"
+    source = read_source((ROOT / "kernel_module/kd_exec.c"))
     code = "\n".join(
         definition(source, signature)
         for signature in (
@@ -64,14 +66,14 @@ def production():
     # Compile the actual SELFTEST observer into the real pop path. Substitute
     # only PID/RCU/time primitives; live TID detachment still needs mode 8.
     code = without_includes(
-        (ROOT / "tests/kernel/exec_relay_exit_probe.c").read_text()
+        read_source((ROOT / "tests/kernel/exec_relay_exit_probe.c"))
     ) + "\n" + code
     code += "\n#define kd_exec_frame_push counted_frame_push\n"
-    code += (ROOT / "tests/kernel/exec_capacity_probe.c").read_text()
+    code += read_source((ROOT / "tests/kernel/exec_capacity_probe.c"))
     code += "\n#undef kd_exec_frame_push\n"
     # Cleanup order belongs to the backend producer, not a copied frame model.
     # Keep its real kind/released decisions while substituting physical unlocks.
-    spin = (ROOT / "include/kd_spinlock.h").read_text()
+    spin = read_source((ROOT / "include/kd_spinlock.h"))
     code += (
         "\n".join(
             line for line in spin.splitlines()
@@ -79,7 +81,7 @@ def production():
         )
         + "\n"
     )
-    hook = (ROOT / "kernel_module/kd_lock.c").read_text()
+    hook = read_source((ROOT / "kernel_module/kd_lock.c"))
     for marker in (
         "int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)",
         "int kd_spin_jit_abort_cleanup(struct kd_exec_frame *frame)",

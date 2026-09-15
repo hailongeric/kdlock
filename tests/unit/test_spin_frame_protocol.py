@@ -10,6 +10,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from source_text import read_source
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tests"))
 
@@ -992,8 +994,8 @@ class FrameTests(unittest.TestCase):
             self.assertIn("buffering requires NUMA=1", result.stdout)
 
     def test_production_watermark_primitives(self):
-        source = (ROOT / "tests/kernel/spin_frame_trace.c").read_text()
-        spin = (ROOT / "kernel_module/kd_spinlock.c").read_text()
+        source = read_source((ROOT / "tests/kernel/spin_frame_trace.c"))
+        spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
         (size,) = re.findall(
             r"^#define SIZE_OF_SHADOW_STACK (\d+)L$", spin, re.MULTILINE
         )

@@ -385,7 +385,7 @@ def source_hashes():
         "disassem",
         "include",
         "kernel_module",
-        "klock_module",
+        "workload_modules",
         "tests",
         "kernel_baseline",
     ):
@@ -403,6 +403,7 @@ def source_hashes():
                 # source; retain it without capturing arbitrary generated text.
                 if name in ("Makefile", ".config", "requirements.txt") or path.suffix in (
                     ".c",
+                    ".inc",
                     ".h",
                     ".S",
                     ".def",

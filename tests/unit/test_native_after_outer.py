@@ -12,6 +12,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from source_text import read_source
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import spin_acquired_protocol as protocol
 from test_spin_gate import ROOT, without_includes
@@ -150,13 +152,13 @@ class AcquiredProtocolTests(unittest.TestCase):
 def main():
     types = (
         definition(
-            (ROOT / "include/kd_spin_entry.h").read_text(), "struct kd_spin_ref {"
+            read_source((ROOT / "include/kd_spin_entry.h")), "struct kd_spin_ref {"
         ).rstrip()
         + ";\n"
     )
     for name in ("include/kd_call.h", "include/kd_exec.h"):
-        types += without_includes((ROOT / name).read_text()) + "\n"
-    executor = (ROOT / "kernel_module/exe.c").read_text()
+        types += without_includes(read_source((ROOT / name))) + "\n"
+    executor = read_source((ROOT / "kernel_module/exe.c"))
     types += (
         next(
             line
@@ -168,7 +170,7 @@ def main():
     types += definition(executor, "struct kd_mutex_call_stack {").rstrip() + ";\n"
     types += "\n".join(
         line
-        for line in (ROOT / "include/exe.h").read_text().splitlines()
+        for line in read_source((ROOT / "include/exe.h")).splitlines()
         if line.startswith("#define KD_EXE_")
     )
     code = ""
@@ -214,7 +216,7 @@ def main():
         ),
     }
     for name, signatures in functions.items():
-        source = (ROOT / name).read_text()
+        source = read_source((ROOT / name))
         for signature in signatures:
             if signature.startswith("kd_exec_frame_lock_kind("):
                 code += "enum kd_exec_lock_kind\n"

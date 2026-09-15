@@ -1,5 +1,6 @@
 # Guest-only workload module, built after kdlock for its exported interfaces.
-# tests/kernel fragments are included by source, not separately loaded modules.
+# fragments/ sources are included, not separately loaded modules.
+# common/ and modes/ .inc files also share the original translation unit.
 obj-m += klock_module.o
 # Build the second source only for the learned-depth dependency experiment.
 # Default workloads must not acquire a new mandatory module dependency.
@@ -12,7 +13,7 @@ endif
 ccflags-y += -I$(srctree)
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
-KDLOCK_SYMVERS ?= $(abspath ../kernel_module/Module.symvers)
+KDLOCK_SYMVERS ?= $(abspath $(CURDIR)/../../kernel_module/Module.symvers)
 
 .PHONY: all clean
 

@@ -44,7 +44,7 @@ def module_snapshot(name):
     directory = Path("/sys/module") / name
     if not directory.exists():
         return None
-    path = ROOT / "klock_module" / f"{name}.ko"
+    path = ROOT / "workload_modules/lock_scenarios" / f"{name}.ko"
     with path.open("rb") as stream:
         elf = ELFFile(stream)
         text = elf.get_section_by_name(".text")

@@ -2,7 +2,10 @@
 
 本文只规定环境、安全边界和操作流程。执行流见
 [JIT_EXECUTION.md](JIT_EXECUTION.md)，协议见 [DESIGN.md](DESIGN.md)，
-测试结果只记录在 [VALIDATION.md](VALIDATION.md)，剩余任务见 [TODO.md](TODO.md)。
+测试与 benchmark 的说明、运行入口及新增结果分别维护在
+[tests/README.md](../tests/README.md)、[bench/README.md](../bench/README.md)
+及对应子目录 README；历史证据保留在 [VALIDATION.md](VALIDATION.md)。
+根 README 只保留项目介绍和目录导航。剩余任务见 [TODO.md](TODO.md)。
 逐文件阅读、目录索引及从零开始的手动步骤统一维护在
 [PROJECT_GUIDE.md](PROJECT_GUIDE.md)，不要再建立平行的安装/手动测试清单。
 
@@ -39,11 +42,19 @@
    模块对象存活或未知指针记为已覆盖；禁止按整个 unit 大小扩大范围。
 4. 默认只改 kdlock，不修改、编译或安装 guest 内核；现有 hook 无法支持的
    能力单独评估。不可变 JIT 版本和 flags/特殊指令语义修复已明确延期。
+   2026-09-15 用户在直接调用补丁草案后要求继续优化并定位耗时，已授权本轮
+   spin hook 独立实验内核的构建、启动和验证。保留原内核及捕获基线；实验
+   使用独立源码/build、release 和基线，不将这次授权扩展为任意内核改动。
 5. 不扩展两元素 wrapper 输入 ABI，不恢复已删除的 futex 执行入口。
 6. 提交前核对差异、测试证据和文档。仅在用户要求时提交 Git；不能把历史
    结果记为本次重跑，也不能把未通过的主功能写成已完成。
 7. 文档按职责维护单一入口。旧验收只保留关键结果与证据索引，详细调查通过
    Git 历史追溯；不要持续追加重复实现说明或保留已失效的下一步指令。
+   用户于 2026-09-15 再次明确：benchmark/test 信息不写入根 README，写入
+   各自目录的 README；不得把运行命令、模式表或成绩重新放回根文档。
+8. 测试与 benchmark 的 Demo 内核临界区模块统一放在 `workload_modules/`，
+   按负载分子目录；客户端、运行器与结果处理放在 `bench/` 或 `tests/`。
+   生产 provider 的专用观察器/组件自测继续放在 `tests/kernel/`，不混入 Demo 负载。
 
 ## 环境边界
 
@@ -142,6 +153,12 @@ CPU/NUMA 拓扑和挂载类型。具体身份与重建限制见
 hostcall 还要检查执行与恢复；native-only 负例必须没有 JIT。
 这些观测不是完整指令覆盖、版本证明或性能基线。
 
+独立 [spin_cacheline microbenchmark](../bench/spin_cacheline/README.md) 的专用
+provider 在 `bench/` 内构建，观测代码不得加入主项目源码或普通模块。其 quiet
+模式以匹配被测锁的只读 `bench_jit_bodies` 测量前后差值替代逐次正文日志，
+仍要求 wrapper 返回后的实际正文、有效生成/发布和完整数据校验。零差值为
+NO_JIT，只保留性能结果，不是实际 JIT 通过；既有回归继续使用原正文日志判定。
+
 生成物出现不代表设备已发布。mode 3/4/5 使用已有协议观察器等待对应 RIP/TGID
 条目为 NORMAL，再运行负载；不能用即时安装日志代替发布状态，或用发布状态
 代替实际 body witness。测试准备顺序见 [使用指南](JIT_EXECUTION.md#3-环境与操作)。
@@ -182,7 +199,9 @@ daemon 现在持续持有设备引用，翻译子进程也会继承。必须等�
 不要强制卸载。设备引用、单独的源码模块 pin 和 hook reader 保护是不同的保证；
 源码 pin 只有在全部入口失效、writer/frame 与已知队列排空后才会释放。
 guest hook 没有配套 reader/drain 保护，`synchronize_rcu()` 不保证压力下热卸载。
-更准确地说，非目标线程也会先调用 selector，`exc_int3` 还读取共享 selector；
+原指针接口下，非目标线程也会先调用 selector，`exc_int3` 还读取共享 selector；
+合并入口实验将 spin 的选择移入 provider，但仍保留 int3 selector 和相同的
+已知调用者排空前提，不能据此推导一般 reader 已经静止。
 停止 benchmark、查询不到已知 comm，只能确认已知 workload 排空，不能证明
 所有 hook reader 已经静止。当前卸载流程限于可恢复实验，不是通用安全热卸载。
 详细能力审查及内核修改边界见 [DESIGN 3.1](DESIGN.md#31-source-lock-and-hook-lifetimes)。
@@ -256,7 +275,8 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 说明实际改动、构建/测试命令和结果、是否加载模块及启用 mutex_jit、
 内核错误和排空状态、未执行/失败项目、Git 版本。
 本轮或历史证据必须标明来源和时间，不混用不同源码版本的通过结果。
-当前批次的时间、计数和源码身份只以 [最新验收](VALIDATION.md) 为准。
+当前批次的时间、计数和源码身份以对应 tests/bench README 链接的原始结果为准；
+[VALIDATION](VALIDATION.md) 保留已有冻结版本的历史索引。
 实际 JIT、上下文拒绝、纯原生对照和 JIT=0 的 RCU/ACK 探针必须分开报告；
 完整矩阵通过不代表所有资源、上下文和生命周期问题已解决。
 

@@ -81,6 +81,8 @@ struct kd_exec_outer_unlock {
 };
 
 struct kd_exec_frame {
+	/* Logical waiter state lives until frame pop, including native/remote
+	 * continuations. parent is physical nesting; resume_target is logical. */
 	struct pt_regs regs;
 	unsigned long entry_ip;
 	unsigned long outer_lock_addr;
@@ -120,11 +122,14 @@ struct kd_exec_frame {
 };
 
 struct kd_exec_context {
+	/* One physical owner while depth != 0; frames cannot migrate independently. */
 	struct kd_exec_frame frames[KD_EXEC_MAX_NESTING];
 	struct task_struct *owner;
 	unsigned int depth;
 };
 
+/* Module lifetime and CPU-local frame stack. Push/pop also balance the source
+ * lease; a completed event alone neither pops the frame nor releases its pin. */
 void kd_exec_context_init(void);
 void kd_exec_context_exit(void);
 
@@ -142,6 +147,8 @@ void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 				     const struct pt_regs *regs);
 unsigned int kd_exec_frame_lock_depth(const struct kd_exec_frame *frame);
 
+/* Logical lock ledger only. Backends perform physical acquisition/release;
+ * these mutations must describe that outcome, never grant ownership by fiat. */
 int kd_exec_frame_set_lock_stack(struct kd_exec_frame *frame,
 				 const unsigned long *lock_addr,
 				 unsigned int depth);
@@ -171,6 +178,8 @@ bool kd_exec_frame_locks_released(const struct kd_exec_frame *frame);
 bool kd_exec_frame_remote_pending(const struct kd_exec_frame *frame);
 /* Ledger admission only; physical locks and origin references stay backend-owned. */
 bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame);
+/* Completion requires every retained lock released and remote requests done.
+ * Aborting changes frame state; backend cleanup/owner ACKs still must finish. */
 int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 			       enum kd_exec_event event,
 			       const struct pt_regs *regs);

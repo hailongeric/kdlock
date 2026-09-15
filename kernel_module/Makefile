@@ -1,5 +1,7 @@
 # Guest-only external-module build against the captured running kernel.
 # This compiles kdlock, not the guest kernel; SELFTEST/NUMA are explicit opt-ins.
+# Private .inc components remain within their owning C translation unit;
+# Kbuild tracks include dependencies. Do not add them as separate objects.
 obj-m += kdlock_km.o
 
 ccflags-y += -I$(src)/../include

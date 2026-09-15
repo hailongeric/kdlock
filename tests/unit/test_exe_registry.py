@@ -11,16 +11,18 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 from test_spin_gate import ROOT
 from test_spin_shadow import definition
 
 
 def lookup_code():
     """Use the same production lookup in allocation and pre-body consumer tests."""
-    source = (ROOT / "kernel_module/exe.c").read_text()
+    source = read_source((ROOT / "kernel_module/exe.c"))
     code = "static struct kd_exe_info *kd_exes;\n"
     code += definition(
-        (ROOT / "include/exe.h").read_text(),
+        read_source((ROOT / "include/exe.h")),
         "static inline unsigned int zz_hash(unsigned int pid, unsigned long ip)",
     )
     for name in (
@@ -35,13 +37,13 @@ def lookup_code():
 
 def timing_code():
     """Share actual optional counters across the lifecycle/dispatch fixtures."""
-    source = (ROOT / "kernel_module/exe.c").read_text()
+    source = read_source((ROOT / "kernel_module/exe.c"))
     return source[source.index("enum kd_jit_timing_phase {"):
                   source.index("static struct kd_exe_info *kd_exes;")]
 
 
 def production():
-    source = (ROOT / "kernel_module/exe.c").read_text()
+    source = read_source((ROOT / "kernel_module/exe.c"))
     # Keep production capacities, gate and service declarations. Service calls
     # are not executed; their table is needed by the real init/exit functions.
     code = "\n".join(
@@ -62,7 +64,7 @@ def production():
         "void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)",
     ):
         code += definition(source, name)
-    device = (ROOT / "kernel_module/sys.c").read_text()
+    device = read_source((ROOT / "kernel_module/sys.c"))
     for name in (
         "static ssize_t kd_dev_read(struct file *file, char __user *buf, size_t count,",
         "static ssize_t kd_dev_write_locked(const char __user *buf, size_t count)",

@@ -11,6 +11,7 @@
 #include <linux/string.h>
 
 #include "kd_spin_entry.h"
+#include "kd_spin_fast.h"
 
 enum kd_spin_entry_state {
 	KD_ENTRY_FREE,
@@ -147,12 +148,12 @@ bool kd_spin_entry_find(raw_spinlock_t *origin, struct kd_spin_ref *ref)
 
 bool kd_spin_entry_task_active(void)
 {
-	return kd_entry_lookup(NULL, false, NULL);
+	return kd_spin_fast_native_active() || kd_entry_lookup(NULL, false, NULL);
 }
 
 bool kd_spin_entry_native_active(void)
 {
-	return kd_entry_lookup(NULL, true, NULL);
+	return kd_spin_fast_native_active() || kd_entry_lookup(NULL, true, NULL);
 }
 
 /* Reserve a new ticket for hook/native caller; this is the admission checkpoint
@@ -428,6 +429,10 @@ int kd_spin_entries_check_idle(void)
 	int cpu;
 	unsigned int i;
 
+	/* Native fast owners have no delegation ticket but still retain L and
+	 * the acquisition's CPU pin. Admission closing must not lose them. */
+	if (!kd_spin_fast_idle())
+		return -EBUSY;
 	if (!kd_spin_entries)
 		return 0;
 	for_each_possible_cpu(cpu) {

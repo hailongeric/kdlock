@@ -92,11 +92,18 @@ JIT 矩阵、稀有场景或两 CPU 失败点。
 
 ## 2. 先认识执行链
 
+按职责拆分后的目录阅读地图分别维护在
+[bench](../bench/README.md#代码组织)、[include](../include/README.md)、
+[kernel_module](../kernel_module/README.md) 和
+[workload_modules](../workload_modules/README.md)。下文保留公共入口及全项目索引；
+各入口内部的私有 `.inc` 组件以对应目录 README 为准。
+
 推荐先按这条链读代码，再查第 5 节的完整文件索引：
 
 ```text
 bench/klock_test.c                      用户线程 -> ioctl
-  -> klock_module/klock_module.c        按 mode 进入真实原生锁临界区
+  -> workload_modules/lock_scenarios/klock_module.c
+                                       按 mode 进入真实原生锁临界区
   -> guest 已有 hook                    不在本仓库重新实现 Linux 锁
   -> kernel_module/kd_main.c            判断新目标或仍有在途引用的任务
   -> kernel_module/kd_lock.c            原锁、私有 gate、hotlock/entry 路由
@@ -261,12 +268,12 @@ bash tests/run_all.sh --list
 
 ```bash
 make -C kernel_module W=1
-make -C klock_module W=1
+make -C workload_modules/lock_scenarios W=1
 make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'
 cc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c -o bench/klock_test -lpthread
 ```
 
-得到 `kernel_module/kdlock_km.ko`、`klock_module/klock_module.ko`、`daemon/daemon`、
+得到 `kernel_module/kdlock_km.ko`、`workload_modules/lock_scenarios/klock_module.ko`、`daemon/daemon`、
 `bench/klock_test`。先构建 provider，再构建依赖它导出符号的 workload。
 默认不启用 `KDLOCK_SELFTEST`、`KDLOCK_NUMA` 或第二源码模块；相关复杂驱动会自行
 选择并在结束后恢复默认构建。不要任意沿用另一个实验的编译开关。
@@ -349,7 +356,7 @@ dmesg -C
 sysctl -w kernel.randomize_va_space=0
 sysctl -w kernel.numa_balancing=0
 insmod kernel_module/kdlock_km.ko target_process=klock_test mutex_jit=1
-insmod klock_module/klock_module.ko
+insmod workload_modules/lock_scenarios/klock_module.ko
 cat /sys/module/kdlock_km/parameters/mutex_jit
 python3 disassem/device_session.py status
 python3 disassem/device_session.py capabilities
@@ -496,7 +503,7 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 | [JIT_REGISTER_ABI.md](JIT_REGISTER_ABI.md) | 两参数、GPR/栈槽、退出和待实现的访问时契约。 |
 | [JIT_EXECUTION.md](JIT_EXECUTION.md) | JIT 范围、复杂测试执行流、增量选择。 |
 | [TODO.md](TODO.md) | 已完成部分、未完成轨道、延期与阻塞。 |
-| [VALIDATION.md](VALIDATION.md) | 按时间和源码冻结记录真实结果，不替代运行指南。 |
+| [VALIDATION.md](VALIDATION.md) | 历史结果的时间、源码冻结与归档索引；新增测试/benchmark 结果维护在各自目录 README。 |
 | [PROJECT_GUIDE.md](PROJECT_GUIDE.md) | 本文：逐步操作、阅读顺序和文件索引。 |
 
 ### 5.2 生产模块 `kernel_module/`
@@ -531,6 +538,9 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 | [kd_spinlock.h](../include/kd_spinlock.h) | spin node/队列与 JIT 上下文布局。 |
 | [kd_spin_gate.h](../include/kd_spin_gate.h) | 原锁 gate 与物理 hold 的代际约束。 |
 | [kd_spin_entry.h](../include/kd_spin_entry.h) | hook/virtual ticket 与 origin ref。 |
+| [kd_spin_fast.h](../include/kd_spin_fast.h) | 已发布根入口的原生 trylock 快路径、per-CPU 缓存和持有/退休约束。 |
+| [kd_comm.h](../include/kd_comm.h) | 装载时准备的完整 task comm 掩码匹配，保留 NUL/超长名字语义。 |
+| [kd_spin_select.h](../include/kd_spin_select.h) | spin 的共同目标/保留 owner 选择规则，供旧 selector 与合并入口的慢路径使用。 |
 | [qspinlock_i.h](../include/qspinlock_i.h) | 私有调度字的 qspinlock 风格位布局/辅助宏。 |
 | [kd_segment.h](../include/kd_segment.h) | 在 origin CPU 记录 kernel GS base。 |
 | [kd_source.h](../include/kd_source.h) | source 生命周期内部接口。 |
@@ -566,14 +576,55 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 
 ### 5.5 桥接、负载与基线
 
+`workload_modules/` 统一保存 test/bench 的 Demo 内核临界区模块。
+`lock_scenarios/` 承接原 `klock_module/` 及其临界区片段，`spin_cacheline/`
+保存 cacheline microbenchmark 驱动。模块名 `klock_module`、`kd_depth_source`、
+`spin_cacheline` 以及设备/ioctl 接口保持原样；目录命名表达负载集合的职责。
+用户态客户端和扫描入口仍在 `bench/`，协议与回归入口仍在 `tests/`。
+
+```text
+workload_modules/
+  Makefile                          构建全部 Demo 模块
+  lock_scenarios/
+    Makefile, klock_module.c         多模式测试/benchmark 负载
+    kd_depth_source.c, .h           可选第二源码模块
+    fragments/                      被模块 include 的临界区片段
+  spin_cacheline/
+    Makefile, module.c               独立 spin cacheline 负载
+    payload.h, api.h                 展开临界区及共享 ioctl 定义
+```
+
+在 recovery guest 构建生产 provider 后，可用 `make -C workload_modules W=1`
+构建两组负载；只需一组时使用 `make -C workload_modules lock_scenarios`
+或 `make -C workload_modules spin_cacheline`。后者不依赖 kdlock 符号。
+原测试脚本通过 `KLOCK_DIR` 使用新的 `lock_scenarios/` 路径；cacheline 的
+`make -C bench/spin_cacheline module` 会委托给新的负载目录。
+
 | 文件 | 使用方式 |
 | --- | --- |
 | [daemon/daemon.c](../daemon/daemon.c) | 唯一常驻用户态桥接进程，维护目标学习和发布；`--metrics` 可选记录真实翻译子进程 wall/CPU/RSS，默认关闭。 |
 | [daemon/Makefile](../daemon/Makefile) / [README](../daemon/README.md) | daemon 构建、参数、会话和诊断说明。 |
 | [bench/klock_test.c](../bench/klock_test.c) | pthread ioctl 驱动及可选结构化测量，参数含义见第 4 节。 |
-| [klock_module/Makefile](../klock_module/Makefile) | workload 构建与可选第二源码模块开关。 |
-| [klock_module.c](../klock_module/klock_module.c) | mode 分派、复杂 CS 记录、独立完整性检查和测试片段宿主；mode 4 分会话检查同 CPU 的 B 等待及两 A 共用原生 B。 |
-| [kd_depth_source.c](../klock_module/kd_depth_source.c) / [头文件](../klock_module/kd_depth_source.h) | 两模块 learned-depth 实验的外部七锁 helper；普通启动不用加载。 |
+| [bench/README.md](../bench/README.md) | benchmark 总入口；具体伪代码、运行命令与结果维护在各负载的子目录 README。 |
+| [spin_cacheline/README.md](../bench/spin_cacheline/README.md) / [Makefile](../bench/spin_cacheline/Makefile) | 独立 cacheline 对比的构建、参数化扫描、临界区与测试伪代码、结果解释、汇编查看及排空入口。 |
+| [workload_modules/Makefile](../workload_modules/Makefile) | Demo 模块统一构建入口，可分别选择 lock_scenarios 或 spin_cacheline。 |
+| [spin_cacheline/Makefile](../workload_modules/spin_cacheline/Makefile) / [module.c](../workload_modules/spin_cacheline/module.c) / [payload.h](../workload_modules/spin_cacheline/payload.h) / [api.h](../workload_modules/spin_cacheline/api.h) | 不依赖 kdlock 符号的外部模块，64B 数据槽、五种展开 CS、布局/run/排空计数 ioctl。 |
+| [post_work.h](../workload_modules/spin_cacheline/post_work.h) / [post_work_fixture.c](../bench/spin_cacheline/post_work_fixture.c) | 正文返回后的固定寄存器乘加及其编译产物检查；负载定义见 benchmark README。 |
+| [provider/prepare.py](../bench/spin_cacheline/provider/prepare.py) / [observation.patch](../bench/spin_cacheline/provider/observation.patch) | 在 bench 私有副本应用观测层并构建 kdlock；严格检查补丁上下文，冻结原始/最终输入哈希，主项目源码和产物不被覆盖。 |
+| [provider/kd_bench.c](../bench/spin_cacheline/provider/kd_bench.c) / [kd_bench.h](../bench/spin_cacheline/provider/kd_bench.h) | 只加入 benchmark 专用 provider 的默认关闭 quiet 与锁地址选择，wrapper 返回后的 per-CPU 正文计数和只读排空查询。 |
+| [client.c](../bench/spin_cacheline/client.c) | 逐线程绑核、原子 ready/go/abort 起跑、单 ioctl 循环、wall/线程 CPU 汇总及全部数据槽差值检查。 |
+| [run.py](../bench/spin_cacheline/run.py) / [summarize.py](../bench/spin_cacheline/summarize.py) | 扫描入口、有效会话选择、kdlock 最佳吞吐/原生中位数及完整配对 CSV。 |
+| [bench_runtime.py](../bench/spin_cacheline/bench_runtime.py) / [bench_session.py](../bench/spin_cacheline/bench_session.py) | 计划/环境/数据检查，以及单会话的准备、发布确认、测量和排空。 |
+| [assembly.py](../bench/spin_cacheline/assembly.py) / [test_assembly.py](../bench/spin_cacheline/test_assembly.py) | 排空后导出原生/JIT 汇编、生成查看索引，并检查来源哈希和历史证据不变性。 |
+| [dispatch_floor/Makefile](../bench/spin_cacheline/dispatch_floor/Makefile) / [module.c](../bench/spin_cacheline/dispatch_floor/module.c) / [run.py](../bench/spin_cacheline/dispatch_floor/run.py) | 独立原生 selector/最小 callback 调用成本对照；复用实际负载和数据/排空检查，不计作 kdlock/JIT 成绩。 |
+| [kernel_identity.py](../bench/spin_cacheline/kernel_identity.py) | 使用原校验器验证显式选择的独立内核基线，保存配置/源码/build/live 身份；默认基线不变。 |
+| [profile.py](../bench/spin_cacheline/profile.py) / [profile_summary.py](../bench/spin_cacheline/profile_summary.py) | 独立低频内核 IP 采样及只读离线 period 加权汇总；复用真实负载、JIT 差值和排空，不计为正式性能样本。 |
+| [spin_static/README.md](../kernel_experiments/spin_static/README.md) / [guest-kernel.patch](../kernel_experiments/spin_static/guest-kernel.patch) / [capture.py](../kernel_experiments/spin_static/capture.py) | 经授权的独立 spin hook 直接调用内核实验与基线捕获；保留原内核和原基线。 |
+| [test_spin_cacheline.py](../bench/spin_cacheline/test_spin_cacheline.py) / [client_fixture.c](../bench/spin_cacheline/client_fixture.c) | guest 定向布局/真实客户端/聚合/配对/正文计数检查，并核对增大批次不增加 ioctl/时钟调用；替代设备与 CPU 原语不算实际内核 JIT。 |
+| [control_fixture.c](../bench/spin_cacheline/control_fixture.c) | 提取驱动实际原子准入函数，验证在途 writer 与独占计数快照相互排斥；客户端夹具另覆盖延迟 ready 和创建/绑核失败。 |
+| [workload_modules/lock_scenarios/Makefile](../workload_modules/lock_scenarios/Makefile) | workload 构建与可选第二源码模块开关。 |
+| [klock_module.c](../workload_modules/lock_scenarios/klock_module.c) | mode 分派、复杂 CS 记录、独立完整性检查和测试片段宿主；mode 4 分会话检查同 CPU 的 B 等待及两 A 共用原生 B。 |
+| [kd_depth_source.c](../workload_modules/lock_scenarios/kd_depth_source.c) / [头文件](../workload_modules/lock_scenarios/kd_depth_source.h) | 两模块 learned-depth 实验的外部七锁 helper；普通启动不用加载。 |
 | [kernel_baseline/README.md](../kernel_baseline/README.md) | 已捕获内核身份、已有 hook 差异和重建边界。 |
 | [verify.py](../kernel_baseline/verify.py) | 只读检查 source/build/running；不是安装脚本。 |
 | [manifest.json](../kernel_baseline/manifest.json) | 源码、构建文件和运行身份的基线哈希。 |
@@ -581,6 +632,9 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 | [linux-6.1.159-guest.patch](../kernel_baseline/linux-6.1.159-guest.patch) | 已有改动证据；字节和旧注释保持原样，不作阅读性重写。 |
 
 ### 5.6 测试入口 `tests/`
+
+文档入口为 [tests/README.md](../tests/README.md)，包含环境、用例选择、Demo
+模式和证据解释；根 README 不维护测试命令或成绩。
 
 测试入口通过 `run_all.sh --case/--suite` 选择，下面列原始驱动便于阅读。不要把
 每个 `.sh` 都依次运行。复杂驱动管理角色和超时，直接以默认参数运行也可能加载模块。
@@ -644,34 +698,35 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 | [source_retirement.py](../tests/source_retirement.py) | dual-frame 的 busy/finish/reuse source 阶段。 |
 | [source_session_driver.c](../tests/source_session_driver.c) / [source_session_child.py](../tests/source_session_child.py) | 实际 fork/exec 设备 lease 存活探针，不是假装翻译成功。 |
 
-### 5.8 内核测试片段 `tests/kernel/`
+### 5.8 Demo 临界区与内核测试片段
 
-workload 片段被 `klock_module.c` 或另一个 workload include；观察器/组件自测在
-`KDLOCK_SELFTEST` 下被 provider include。具体 include 点可用
-`rg 'tests/kernel|workload.c' kernel_module klock_module tests/kernel` 查找。
+`workload_modules/lock_scenarios/fragments/` 的片段被 `klock_module.c` 或另一个
+workload include；`tests/kernel/` 的观察器/组件自测在 `KDLOCK_SELFTEST` 下被
+provider include。具体 include 点可用
+`rg '#include.*(fragments|tests/kernel|workload)' workload_modules kernel_module` 查找。
 
 | 文件 | 用途 |
 | --- | --- |
-| [context_lock_workload.c](../tests/kernel/context_lock_workload.c) | IRQ/BH/per-CPU 原生拒绝源码。 |
-| [native_register_probe.h](../tests/kernel/native_register_probe.h) / [native_register_workload.c](../tests/kernel/native_register_workload.c) | 无 C prologue 的 GPR 样本和可翻译前缀。 |
-| [native_ooo_workload.c](../tests/kernel/native_ooo_workload.c) | A 提前解锁的本地 native/JIT 场景。 |
-| [native_waiter_signal_workload.c](../tests/kernel/native_waiter_signal_workload.c) | 原 waiter 信号后仍保留副作用和 A ACK。 |
-| [mutex_signal_workload.c](../tests/kernel/mutex_signal_workload.c) | 原生 peer 的 interruptible/killable 等等待。 |
-| [mutex_parallel_workload.c](../tests/kernel/mutex_parallel_workload.c) | 两独立队列的真实 native frame；第二 frame 的有界门用于观察第一 waiter 退出。 |
-| [mutex_shared_workload.c](../tests/kernel/mutex_shared_workload.c) | 两个 A executor 与非目标 peer 共用原生 B；保留 owner 的普通 CALL 后缀与后继 JIT、真实 Linux 等待队列和精确记录。 |
-| [mutex_parallel_peers.c](../tests/kernel/mutex_parallel_peers.c) | 双 B 原生 peer 的取消/重排和 owner 观察。 |
-| [mutex_code_pool_workload.c](../tests/kernel/mutex_code_pool_workload.c) | 64 个真实 cold CALL site 消耗代码池，不计 JIT。 |
-| [mutex_shadow_workload.c](../tests/kernel/mutex_shadow_workload.c) | 原 hook 获取造成 shadow map 耗尽。 |
-| [mutex_stack_workload.c](../tests/kernel/mutex_stack_workload.c) | B owner 改写共享栈字，触发受检 native 后继。 |
-| [spin_native_workload.c](../tests/kernel/spin_native_workload.c) | 原生 L 排斥和 alternate API 数据 oracle。 |
-| [spin_routing_workload.c](../tests/kernel/spin_routing_workload.c) | 可控目标/非目标 hook 路由。 |
-| [spin_chain_workload.c](../tests/kernel/spin_chain_workload.c) | 八层物理 queue/combiner 链。 |
-| [spin_multi_workload.c](../tests/kernel/spin_multi_workload.c) | 两个独立 A root 共享 B；14 角色门禁、逐 root 副作用，quota 变体检查原 waiter 的单 origin pin、B 暂停及后继 JIT。 |
-| [remote_depth_workload.c](../tests/kernel/remote_depth_workload.c) | 一个 logical waiter 的多物理执行者和 deferred 请求。 |
-| [remote_outer_workload.c](../tests/kernel/remote_outer_workload.c) | 远端祖先解锁及独立 owner 依赖。 |
-| [spin_ticket_workload.c](../tests/kernel/spin_ticket_workload.c) | 真实获取填满 32 个 ticket。 |
-| [spin_gate_workload.c](../tests/kernel/spin_gate_workload.c) | 旧后缀存活时填满 gate map，再执行已发布 A2 JIT 并在无 gate 的 C 上原生续跑；角色和控制参数见使用指南 6.3。 |
-| [spin_acquired_workload.c](../tests/kernel/spin_acquired_workload.c) | B 私有队首、后继竞争者与已提交 A 前缀。 |
+| [context_lock_workload.c](../workload_modules/lock_scenarios/fragments/context_lock_workload.c) | IRQ/BH/per-CPU 原生拒绝源码。 |
+| [native_register_probe.h](../workload_modules/lock_scenarios/fragments/native_register_probe.h) / [native_register_workload.c](../workload_modules/lock_scenarios/fragments/native_register_workload.c) | 无 C prologue 的 GPR 样本和可翻译前缀。 |
+| [native_ooo_workload.c](../workload_modules/lock_scenarios/fragments/native_ooo_workload.c) | A 提前解锁的本地 native/JIT 场景。 |
+| [native_waiter_signal_workload.c](../workload_modules/lock_scenarios/fragments/native_waiter_signal_workload.c) | 原 waiter 信号后仍保留副作用和 A ACK。 |
+| [mutex_signal_workload.c](../workload_modules/lock_scenarios/fragments/mutex_signal_workload.c) | 原生 peer 的 interruptible/killable 等等待。 |
+| [mutex_parallel_workload.c](../workload_modules/lock_scenarios/fragments/mutex_parallel_workload.c) | 两独立队列的真实 native frame；第二 frame 的有界门用于观察第一 waiter 退出。 |
+| [mutex_shared_workload.c](../workload_modules/lock_scenarios/fragments/mutex_shared_workload.c) | 两个 A executor 与非目标 peer 共用原生 B；保留 owner 的普通 CALL 后缀与后继 JIT、真实 Linux 等待队列和精确记录。 |
+| [mutex_parallel_peers.c](../workload_modules/lock_scenarios/fragments/mutex_parallel_peers.c) | 双 B 原生 peer 的取消/重排和 owner 观察。 |
+| [mutex_code_pool_workload.c](../workload_modules/lock_scenarios/fragments/mutex_code_pool_workload.c) | 64 个真实 cold CALL site 消耗代码池，不计 JIT。 |
+| [mutex_shadow_workload.c](../workload_modules/lock_scenarios/fragments/mutex_shadow_workload.c) | 原 hook 获取造成 shadow map 耗尽。 |
+| [mutex_stack_workload.c](../workload_modules/lock_scenarios/fragments/mutex_stack_workload.c) | B owner 改写共享栈字，触发受检 native 后继。 |
+| [spin_native_workload.c](../workload_modules/lock_scenarios/fragments/spin_native_workload.c) | 原生 L 排斥和 alternate API 数据 oracle。 |
+| [spin_routing_workload.c](../workload_modules/lock_scenarios/fragments/spin_routing_workload.c) | 可控目标/非目标 hook 路由。 |
+| [spin_chain_workload.c](../workload_modules/lock_scenarios/fragments/spin_chain_workload.c) | 八层物理 queue/combiner 链。 |
+| [spin_multi_workload.c](../workload_modules/lock_scenarios/fragments/spin_multi_workload.c) | 两个独立 A root 共享 B；14 角色门禁、逐 root 副作用，quota 变体检查原 waiter 的单 origin pin、B 暂停及后继 JIT。 |
+| [remote_depth_workload.c](../workload_modules/lock_scenarios/fragments/remote_depth_workload.c) | 一个 logical waiter 的多物理执行者和 deferred 请求。 |
+| [remote_outer_workload.c](../workload_modules/lock_scenarios/fragments/remote_outer_workload.c) | 远端祖先解锁及独立 owner 依赖。 |
+| [spin_ticket_workload.c](../workload_modules/lock_scenarios/fragments/spin_ticket_workload.c) | 真实获取填满 32 个 ticket。 |
+| [spin_gate_workload.c](../workload_modules/lock_scenarios/fragments/spin_gate_workload.c) | 旧后缀存活时填满 gate map，再执行已发布 A2 JIT 并在无 gate 的 C 上原生续跑；角色和控制参数见使用指南 6.3。 |
+| [spin_acquired_workload.c](../workload_modules/lock_scenarios/fragments/spin_acquired_workload.c) | B 私有队首、后继竞争者与已提交 A 前缀。 |
 | [mutex_shadow_trace.c](../tests/kernel/mutex_shadow_trace.c) | 只观察真实 shadow 表，不填造成员。 |
 | [spin_node_trace.c](../tests/kernel/spin_node_trace.c) | node reservation 排空记录。 |
 | [spin_frame_trace.c](../tests/kernel/spin_frame_trace.c) | frame 栈深度/watermark，深栈上不打印。 |

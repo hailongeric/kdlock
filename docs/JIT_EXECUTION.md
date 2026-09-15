@@ -2431,7 +2431,7 @@ daemon 在共享 entry 的负载前已停止；没有访问时 guard、新原指
 普通 `mode-4` 在七角色/双 CPU 阶段排空并保留生成物后，重新加载独立模块会话，
 以 `mutex_jit=1 mutex_shared=1` 检查 A0、A1 共用同一个原生 mutex B。
 这不是 spin 的远端 B combiner：两个 A executor 分别调用原生 mutex 获取 B。
-测试片段在 `tests/kernel/mutex_shared_workload.c`，仍由既有驱动/协议单元承接，
+测试片段在 `workload_modules/lock_scenarios/fragments/mutex_shared_workload.c`，仍由既有驱动/协议单元承接，
 不新增日常 case，也不取代独立 B 的双 frame 退休/信号用例。
 
 | 角色 | CPU | 用途 |
@@ -2756,5 +2756,6 @@ case-specific JIT/协议检查。不得把离线校验记为新 JIT、当前源�
 67 项矩阵：它不自动包含显式 `native-controls` 和上述已覆盖诊断，另含 shadow-capacity、
 两项 native-peer 和同 CPU context refusal/真实满槽扩展。历史矩阵的命令和结果
 仍按当时冻结版本记录，不改写为新的选择范围。
-最新结果见 [VALIDATION](VALIDATION.md)。每次只报告实际选择的项目；未选择项是
+结果入口见 [tests/README.md](../tests/README.md)，历史冻结索引保留在
+[VALIDATION](VALIDATION.md)。每次只报告实际选择的项目；未选择项是
 未重跑，不把旧结果合成当前版本的“全量通过”。

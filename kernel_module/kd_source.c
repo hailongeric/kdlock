@@ -18,7 +18,7 @@
  * A reverse source/provider dependency is broken by explicit retirement before
  * either exit. No allocation or sleeping occurs in lock hooks. */
 static DEFINE_RAW_SPINLOCK(kd_source_lock);
-static struct kd_source_info kd_sources;
+struct kd_source_info kd_sources;
 static struct module *kd_source_modules[KD_SOURCE_MAX_MODULES];
 static struct module *(*kd_module_address)(unsigned long address);
 static unsigned long kd_core_start, kd_core_text_end, kd_core_end;
@@ -29,11 +29,6 @@ enum kd_source_scope {
 	KD_SOURCE_WRITER,
 	KD_SOURCE_FRAME,
 };
-
-bool kd_source_is_open(void)
-{
-	return READ_ONCE(kd_sources.state) == KD_SOURCE_OPEN;
-}
 
 /* Register one writer pin for shared source mutation. */
 bool kd_source_writer_get(void)

@@ -9,7 +9,7 @@ set -euo pipefail
 
 KDLOCK_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 KM_DIR="$KDLOCK_DIR/kernel_module"
-KLOCK_DIR="$KDLOCK_DIR/klock_module"
+KLOCK_DIR="$KDLOCK_DIR/workload_modules/lock_scenarios"
 DAEMON_DIR="$KDLOCK_DIR/daemon"
 BENCH_DIR="$KDLOCK_DIR/bench"
 BENCH_BIN="$BENCH_DIR/klock_test"

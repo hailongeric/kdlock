@@ -87,6 +87,24 @@ failure interpretation are in [usage 3.2](JIT_EXECUTION.md#32-热锁晋升与翻
 
 Default work changes kdlock only. Missing hook capabilities and hook-reader
 lifetime need separate assessment, not incidental guest kernel edits.
+The separately authorized [spin-static experiment](../kernel_experiments/spin_static/README.md)
+uses a distinct kernel release/build and captured baseline. It replaces spin
+selector/callback indirect calls with `static_call` while retaining the saved
+RSP, register clobbers, callback arguments and two-element JIT wrapper. The
+provider detects that interface at build time; legacy builds retain the original
+pointer interface. Installation/removal updates are serialized outside the hot
+path. The experiment retains the legacy int3 selector and does not add a generic
+hook-reader lifetime guarantee; its performance and correctness evidence belong
+to its own kernel identity.
+The combined-interface revision uses a load-time static key to bypass the
+separate spin selector call. The provider handles both native and selected
+paths in one callback, while int3 keeps the original selector. A cached hit
+authorizes only a native try of L, even for a non-target caller at the same
+already pinned/published site; it does not grant JIT permission. Misses retain
+target/active-owner selection, and fast unlock uses acquisition provenance.
+Miss-only pin cleanup and selection live in cold helpers; successful acquisition
+retains its original CPU pin and owner record through unlock. The legacy
+selector/callback installation API remains available for independent controls.
 
 ### 3.1 Source, Lock And Hook Lifetimes
 
@@ -275,6 +293,24 @@ Native plain/trylock/IRQ-save/BH participants use Linux L. Their mutual
 exclusion does not imply that IRQ/BH operations can be delegated; known
 context-sensitive wrappers refuse translation.
 The old shared-tail protocol and its compatibility claims are obsolete.
+
+Already published spin roots have an additional native fast path. A per-CPU
+cache keys the original lock and entry RIP to stable gate storage, populated
+only after the ordinary source pin/registration and NORMAL publication.
+With source admission OPEN, no existing preemption pin, IRQs enabled and no
+migration-disabled context, an idle entire S permits a Linux trylock on L.
+Success executes the original critical section without acquiring S or creating
+a delegation ticket. A competing combiner may race the S observation but must
+still acquire L, preserving exclusion; a visible pending/tail word sends the
+caller to the existing path. This is not a thread-count switch or a JIT claim.
+
+The successful try retains a CPU pin and a per-CPU task/origin record until L
+is released. That record preserves unlock routing through rename/closing and
+blocks controlled retirement while held. Nested hooks remain native during
+this interval. Clear the record after releasing L and before enabling
+preemption. The cache does not dispatch code and is not an image-version cache;
+its pointers retain the existing session-wide source/gate lifetime constraints.
+General hook-reader hot-unload limitations in 3.1 remain unchanged.
 
 ### 4.2 Acquisition Tickets And Node Lifetime
 

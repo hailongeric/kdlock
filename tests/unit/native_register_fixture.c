@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define ASM_RET "ret\n\t"
-#include "../kernel/native_register_probe.h"
+#include "../../workload_modules/lock_scenarios/fragments/native_register_probe.h"
 
 static unsigned int checks, failures;
 #define CHECK(condition)            \

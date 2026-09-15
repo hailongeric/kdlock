@@ -313,6 +313,12 @@ void kd_spin_unlock(struct qspinlock *lock)
 		gate->word.locked = 7;
 }
 
+/* These scripted combiner requests enter through real tickets, never the
+ * root native-fast hook. Keep its unrelated per-CPU ownership empty here;
+ * test_spin_routing exercises the production fast path and retirement guard. */
+static bool kd_spin_fast_native_active(void) { return false; }
+static bool kd_spin_fast_idle(void) { return true; }
+
 #include "spin_outer_production.h"
 
 /* Only the designated node is disposable. Other releases still use the same

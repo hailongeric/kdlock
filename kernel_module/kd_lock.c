@@ -30,8 +30,15 @@
 #include "kd_hotlock.h"
 #include "kd_lock.h"
 #include "kd_mutex.h"
+#include "kd_spin_fast.h"
+#include "kd_spin_select.h"
 #include "kd_spinlock.h"
 #include "utils.h"
+
+/* Hook entry, native fast paths and the mutex shadow map stay in this file.
+ * lock/mutex_calls.inc and lock/spin_calls.inc own translated nested CALL
+ * admission/cleanup. Their static helpers share this translation unit so a
+ * file split does not add dispatch calls or change hot-path inlining. */
 
 /* --- module parameters ---------------------------------------------------- */
 
@@ -129,13 +136,14 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
  * Raw spinlock hooks
  * ========================================================================== */
 
-void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
-			  unsigned long ret_addr)
+DEFINE_PER_CPU(struct kd_spin_fast_cpu, kd_spin_fast_cpu);
+
+/* Keep ticket objects and the general route's stack protector outside the
+ * common native return. The saved kernel rsp still belongs to the original
+ * guest hook and is passed unchanged through the cold acquisition helper. */
+static noinline void kd_raw_spin_unlock_slow(raw_spinlock_t *lock)
 {
 	struct kd_spin_ref ref = { 0 };
-
-	(void)ret_addr;
-	(void)ret_rsp;
 
 	if (kd_exec_native_unlock((unsigned long)lock, false))
 		return;
@@ -149,8 +157,9 @@ void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 	origin_raw_spin_unlock(lock);
 }
 
-void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
-			unsigned long ret_addr)
+static noinline void kd_raw_spin_lock_slow(raw_spinlock_t *lock,
+					 unsigned long ret_rsp,
+					 unsigned long ret_addr)
 {
 	if (kd_spin_entry_native_active() ||
 	    !kd_hotlock_is_promoted((unsigned long)lock)) {
@@ -160,225 +169,76 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 	}
 
 	kd_exe_add(0, ret_addr, KD_EXE_LOCK_SPIN);
+	kd_spin_fast_remember(lock, ret_addr);
 	kd_spin_lock((struct qspinlock *)lock, ret_rsp);
 }
 
-/* ==========================================================================
- * Mutex hooks
- * ========================================================================== */
-
-/* Native owner bits are only inspected; delegation never changes the owner. */
-#define KD_MUTEX_OWNER_FLAGS 0x7UL
-
-bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
+void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
+			  unsigned long ret_addr)
 {
-	return (atomic_long_read(&lock->owner) & ~KD_MUTEX_OWNER_FLAGS) ==
-	       (unsigned long)task;
-}
-
-void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
-		     unsigned long ret_addr)
-{
-	struct kd_mutex *kd_mtx;
-	/*
-	 * Capture callee-saved registers NOW, before any function calls
-	 * in this hook can clobber them. At this point they hold the values
-	 * that mutex_lock preserved from the original caller.
-	 *
-	 * We store them in local variables; they'll be passed to
-	 * _kd_mutex_lock which saves them into the per-CPU node.
-	 */
-	unsigned long s_rbx, s_r12, s_r13, s_r14, s_r15, s_rbp;
-	asm volatile("movq %%rbx, %0\n"
-		     "movq %%r12, %1\n"
-		     "movq %%r13, %2\n"
-		     "movq %%r14, %3\n"
-		     "movq %%r15, %4\n"
-		     "movq %%rbp, %5\n"
-		     : "=m"(s_rbx), "=m"(s_r12), "=m"(s_r13), "=m"(s_r14),
-		       "=m"(s_r15), "=m"(s_rbp)
-		     :
-		     : "memory");
-
-	/* Nested native calls and borrowed continuations must not join another
-	 * delegation queue. Their original mutexes still provide mutual exclusion. */
-	if (kd_mutex_task_active(current)) {
-		kd_origin_mutex_lock(lock);
-		return;
-	}
-	if (!kd_hotlock_is_promoted((unsigned long)lock)) {
-		kd_hotlock_record((unsigned long)lock);
-		kd_origin_mutex_lock(lock);
-		return;
-	}
-	if (!kd_mutex_jit_is_enabled()) {
-		kd_origin_mutex_lock(lock);
-		return;
-	}
-
-	kd_mtx = get_kd_mutex_shadow(lock);
-	if (!kd_mtx || !kd_mutex_task_get(current)) {
-		/* Distinguish shadow exhaustion from task allocation refusal and
-		 * node shortage. Neither branch acquired a routing reference. */
-		if (kd_mtx)
-			KD_PR_INFO(
-				"mutex task fallback: task=%d entry=%lx lock=%px cpu=%u\n",
-				current->pid, ret_addr, lock,
-				raw_smp_processor_id());
-		else
-			KD_PR_INFO(
-				"mutex shadow fallback: task=%d entry=%lx lock=%px cpu=%u\n",
-				current->pid, ret_addr, lock,
-				raw_smp_processor_id());
-		kd_origin_mutex_lock(lock);
-		return;
-	}
-	kd_exe_add(0, ret_addr, KD_EXE_LOCK_MUTEX);
-	_kd_mutex_lock(kd_mtx, ret_rsp, ret_addr, s_rbx, s_r12, s_r13, s_r14,
-		       s_r15, s_rbp);
-}
-
-/* A borrowed unlock is a request, not permission to unlock another task's
- * Linux mutex. Queue owners also have bookkeeping beyond the native unlock. */
-void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
-		       unsigned long ret_addr)
-{
-	struct kd_mutex *kd_mtx;
-
 	(void)ret_rsp;
-	if (kd_exec_native_unlock((unsigned long)lock, true))
+	(void)ret_addr;
+	if (likely(kd_spin_fast_unlock(lock)))
 		return;
-	kd_mtx = find_kd_mutex_shadow(lock);
-	if (kd_mtx && READ_ONCE(kd_mtx->physical_owner) == current) {
-		_kd_mutex_unlock(kd_mtx);
-		kd_mutex_task_put(current);
+	kd_raw_spin_unlock_slow(lock);
+}
+
+void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
+			unsigned long ret_addr)
+{
+	if (likely(kd_spin_fast_trylock(lock, ret_addr)))
 		return;
-	}
-	kd_origin_mutex_unlock(lock, ret_addr);
+	kd_raw_spin_lock_slow(lock, ret_rsp, ret_addr);
 }
 
-static int kd_jit_begin_call(struct kd_exec_frame *frame, struct pt_regs *regs)
+static noinline void kd_spin_dispatch_lock_slow(raw_spinlock_t *lock,
+		unsigned long ret_rsp, unsigned long ret_addr,
+		enum kd_spin_fast_result result)
 {
-	if (!frame || !regs || !regs->sp || !kd_exec_frame_validate(frame))
-		return -EINVAL;
-	return kd_call_begin(&frame->control_call, regs->ip, regs->sp,
-			     READ_ONCE(*(unsigned long *)regs->sp));
+	if (result == KD_SPIN_FAST_MISS_PINNED)
+		preempt_enable();
+	if (kd_spin_task_selected())
+		kd_raw_spin_lock_slow(lock, ret_rsp, ret_addr);
+	else
+		origin_raw_spin_lock(lock);
 }
 
-static int kd_jit_advance_call(struct kd_exec_frame *frame,
-			       struct pt_regs *regs)
+static noinline void kd_spin_dispatch_unlock_slow(raw_spinlock_t *lock)
 {
-	unsigned long return_ip;
-
-	if (!frame || !regs || !regs->sp)
-		return -EINVAL;
-	return_ip = READ_ONCE(*(unsigned long *)regs->sp);
-	if (!return_ip)
-		return -EINVAL;
-	regs->sp += sizeof(unsigned long);
-	regs->ip = return_ip;
-	kd_exec_frame_save_continuation(frame, regs);
-	return 0;
+	if (kd_spin_task_selected())
+		kd_raw_spin_unlock_slow(lock);
+	else
+		origin_raw_spin_unlock(lock);
 }
 
-int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,
-				 struct kd_exec_frame *frame)
+/* The cache proves a pinned, published site, not permission to execute JIT.
+ * A hit performs only the original Linux acquisition and can also serve a
+ * non-target caller of that same site. S, admission, CPU context and native L
+ * still gate the try. Misses select the original target/retained-owner route;
+ * no non-target miss is promoted, registered or delegated here. */
+void kd_spin_dispatch_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
+			   unsigned long ret_addr)
 {
-	int ret;
+	enum kd_spin_fast_result result = kd_spin_fast_acquire(lock, ret_addr);
 
-	if (!lock || !regs || !regs->sp || !frame ||
-	    !kd_exec_frame_validate(frame))
-		return -EINVAL;
-	ret = kd_jit_begin_call(frame, regs);
-	if (ret)
-		return ret;
-	if (kd_exec_frame_lock_contains(frame, (unsigned long)lock))
-		return -EDEADLK;
-	if (kd_exec_frame_lock_depth(frame) >= KD_EXEC_MAX_LOCK_DEPTH)
-		return -E2BIG;
-	if (!READ_ONCE(*(unsigned long *)regs->sp))
-		return -EINVAL;
-	ret = kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_LOCK,
-					 regs);
-	if (ret)
-		return ret;
-	if (unlikely(cmpxchg(&kd_jit_fail_pending_lock, 2, 0) == 2))
-		return -E2BIG;
-
-	frame->control_call.phase = KD_CALL_ENTERED;
-	ret = kd_mutex_nested_lock(lock);
-	if (ret)
-		return ret;
-	frame->control_call.phase = KD_CALL_ACQUIRED;
-	ret = kd_exec_frame_lock_push(frame, (unsigned long)lock,
-				      KD_EXEC_LOCK_NATIVE, lock);
-	if (ret) {
-		BUG_ON(kd_mutex_nested_unlock(lock));
-		return ret;
-	}
-	/* The CALL is consumed only after the physical lock and its record exist. */
-	ret = kd_jit_advance_call(frame, regs);
-	if (!ret)
-		frame->control_call.phase = KD_CALL_COMPLETE;
-	return ret ? ret : 1;
+	if (likely(result == KD_SPIN_FAST_OWNED))
+		return;
+	kd_spin_dispatch_lock_slow(lock, ret_rsp, ret_addr, result);
 }
 
-int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
-				   struct kd_exec_frame *frame)
+void kd_spin_dispatch_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
+			     unsigned long ret_addr)
 {
-	int ret;
-
-	if (!lock || !frame || !kd_exec_frame_validate(frame))
-		return -EINVAL;
-	if (kd_exec_frame_lock_kind(frame, (unsigned long)lock) !=
-		    KD_EXEC_LOCK_NATIVE ||
-	    kd_exec_frame_lock_node(frame, (unsigned long)lock) != lock)
-		return -ENOENT;
-	ret = kd_exec_frame_record_event(frame, KD_EXEC_EVENT_NESTED_UNLOCK,
-					 NULL);
-	if (ret)
-		return ret;
-	ret = kd_mutex_nested_unlock(lock);
-	return ret ? ret : kd_exec_frame_lock_pop(frame, (unsigned long)lock);
+	(void)ret_rsp;
+	(void)ret_addr;
+	/* Acquisition provenance is sufficient for this native unlock, including
+	 * a renamed task or closed admission; do not repeat target selection. */
+	if (likely(kd_spin_fast_unlock(lock)))
+		return;
+	kd_spin_dispatch_unlock_slow(lock);
 }
 
-int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
-{
-	if (!frame || !kd_exec_frame_validate(frame) ||
-	    frame->outer_lock_index >= frame->jit_lock_depth)
-		return -EINVAL;
-
-	while (frame->jit_lock_depth > frame->outer_lock_index + 1) {
-		unsigned int i = frame->jit_lock_depth - 1;
-		struct mutex *lock = (struct mutex *)frame->jit_lock_addr[i];
-		int ret;
-
-		if (frame->jit_lock_kind[i] != KD_EXEC_LOCK_NATIVE ||
-		    frame->jit_lock_node[i] != lock)
-			return -EINVAL;
-		if (!frame->jit_lock_released[i]) {
-			ret = kd_mutex_nested_unlock(lock);
-			if (ret)
-				return ret;
-			kd_mutex_note_nested_abort_release();
-		}
-		ret = kd_exec_frame_lock_pop(frame, (unsigned long)lock);
-		if (ret)
-			return ret;
-	}
-	return 0;
-}
-
-int kd_mutex_debug_waiter_count(struct mutex *lock)
-{
-	struct kd_mutex *kd_mtx;
-
-	if (!lock)
-		return -EINVAL;
-	kd_mtx = find_kd_mutex_shadow(lock);
-	return kd_mtx ? kd_mutex_waiter_count(kd_mtx) : -ENOENT;
-}
-EXPORT_SYMBOL_GPL(kd_mutex_debug_waiter_count);
+#include "lock/mutex_calls.inc"
 
 /* ==========================================================================
  * origin_* — original kernel lock paths (fallback when not delegating)
@@ -394,315 +254,7 @@ static void origin_raw_spin_unlock(raw_spinlock_t *lock)
 	__raw_spin_unlock(lock);
 }
 
-static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
-					  struct pt_regs *regs,
-					  struct kd_exec_frame *frame)
-{
-	struct kd_exec_frame *active_frame = frame;
-	bool promoted;
-	int ret;
-
-	if (!lock)
-		return -EINVAL;
-
-	promoted = kd_hotlock_is_promoted((unsigned long)lock);
-	if (!active_frame)
-		active_frame = kd_exec_current_frame();
-	if (regs && kd_jit_begin_call(active_frame, regs))
-		return -EINVAL;
-
-	if (active_frame) {
-		if (kd_exec_frame_lock_contains(active_frame,
-						(unsigned long)lock))
-			return -EDEADLK;
-		if (kd_exec_frame_lock_depth(active_frame) >=
-		    KD_EXEC_MAX_LOCK_DEPTH)
-			return -E2BIG;
-	}
-
-	/* The CPU's combiner stack can be fuller than this logical frame. */
-	if (!kd_spin_nested_shadow_has_space())
-		return -E2BIG;
-
-	if (!regs || !regs->sp)
-		goto fallback;
-	if (!active_frame || kd_jit_advance_call(active_frame, regs))
-		return -EINVAL;
-	if (promoted && !kd_exe_is_ready(0, regs->ip))
-		kd_exe_add(0, regs->ip, KD_EXE_LOCK_SPIN);
-
-	if (kd_exec_frame_record_event(active_frame, KD_EXEC_EVENT_NESTED_LOCK,
-				       regs))
-		return -EINVAL;
-	/* Exercise the real staged-RIP case without publishing a B request. */
-	if (unlikely(cmpxchg(&kd_jit_fail_pending_lock, 1, 0) == 1))
-		return -E2BIG;
-
-	if (promoted) {
-		enum kd_exec_lock_kind kind;
-
-		ret = kd_spin_nested_lock((struct qspinlock *)lock, regs,
-					  active_frame);
-		if (ret < 0)
-			return ret;
-		if (ret == KD_SPIN_NESTED_NATIVE)
-			return KD_EXE_KNOWN_NATIVE;
-
-		kd_spin_debug_nested_lock(lock, false);
-		if (ret == KD_SPIN_NESTED_DELEGATED ||
-		    ret == KD_SPIN_NESTED_PARENT_OOO) {
-			kd_spin_debug_nested_unlock(lock);
-			kd_spin_debug_nested_remote(lock);
-			kd_exec_frame_save_continuation(active_frame, regs);
-			if (ret == KD_SPIN_NESTED_PARENT_OOO) {
-				if (!kd_exec_frame_can_complete(active_frame))
-					return -EINVAL;
-				return KD_EXE_KNOWN_OUTER_UNLOCK;
-			}
-			return KD_JIT_NESTED_REMOTE;
-		}
-		kind = ret == KD_SPIN_NESTED_ACQUIRED_QUEUE ?
-			       KD_EXEC_LOCK_QUEUE_OWNER :
-			       KD_EXEC_LOCK_FAST;
-
-		ret = kd_spin_nested_shadow_push((struct qspinlock *)lock);
-		if (ret) {
-			kd_spin_unlock((struct qspinlock *)lock);
-			return ret;
-		}
-		if (kd_exec_frame_lock_push(active_frame, (unsigned long)lock,
-					    kind, NULL)) {
-			kd_spin_unlock((struct qspinlock *)lock);
-			kd_spin_nested_shadow_remove((struct qspinlock *)lock);
-			return -E2BIG;
-		}
-		if ((kind == KD_EXEC_LOCK_FAST ||
-		     kind == KD_EXEC_LOCK_QUEUE_OWNER) &&
-		    unlikely(cmpxchg(&kd_spin_jit_fail_after_nested_lock, 1,
-				     0) == 1)) {
-			KD_PR_INFO(
-				"spin JIT injected failure after nested lock=%px outer=%lx val=%x kind=%d\n",
-				lock, active_frame->outer_lock_addr,
-				atomic_read(&((struct qspinlock *)lock)->val),
-				kind);
-			return -EIO;
-		}
-		active_frame->control_call.phase = KD_CALL_COMPLETE;
-		return KD_JIT_NESTED_CONSUMED;
-	}
-
-fallback:
-	if (active_frame && !regs &&
-	    kd_exec_frame_record_event(active_frame, KD_EXEC_EVENT_NESTED_LOCK,
-				       NULL))
-		return -EINVAL;
-
-	kd_hotlock_record((unsigned long)lock);
-	if (active_frame)
-		active_frame->control_call.phase = KD_CALL_ENTERED;
-	origin_raw_spin_lock(lock);
-	if (active_frame)
-		active_frame->control_call.phase = KD_CALL_ACQUIRED;
-	if (kd_spin_nested_shadow_push((struct qspinlock *)lock)) {
-		origin_raw_spin_unlock(lock);
-		return -E2BIG;
-	}
-	if (active_frame &&
-	    kd_exec_frame_lock_push(active_frame, (unsigned long)lock,
-				    KD_EXEC_LOCK_NATIVE, NULL)) {
-		kd_spin_nested_shadow_remove((struct qspinlock *)lock);
-		origin_raw_spin_unlock(lock);
-		return -E2BIG;
-	}
-	kd_spin_debug_nested_lock(lock, true);
-	if (active_frame)
-		active_frame->control_call.phase = KD_CALL_COMPLETE;
-	return regs ? KD_JIT_NESTED_CONSUMED : KD_JIT_NESTED_NATIVE;
-}
-
-int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
-				struct kd_exec_frame *frame)
-{
-#ifdef KDLOCK_SELFTEST
-	bool pressure = kd_spin_selftest_shadow_begin(lock, regs, frame);
-	int ret = kd_spin_jit_nested_lock_common(lock, regs, frame);
-
-	if (pressure)
-		kd_spin_selftest_shadow_end(regs, frame, ret);
-	return ret;
-#else
-	return kd_spin_jit_nested_lock_common(lock, regs, frame);
-#endif
-}
-
-int kd_spin_jit_nested_unlock_ctx(raw_spinlock_t *lock,
-				  struct kd_exec_frame *frame)
-{
-	struct kd_exec_frame *active_frame = frame;
-	enum kd_exec_lock_kind kind;
-	unsigned int i;
-
-	if (!lock)
-		return -EINVAL;
-	if (!active_frame)
-		active_frame = kd_exec_current_frame();
-	if (!kd_exec_frame_validate(active_frame) ||
-	    active_frame->outer_lock_index >= active_frame->jit_lock_depth)
-		return -EINVAL;
-	for (i = 0; i < active_frame->outer_lock_index; i++) {
-		int ret;
-
-		if (active_frame->jit_lock_addr[i] != (unsigned long)lock)
-			continue;
-		if (active_frame->jit_lock_released[i])
-			return -EALREADY;
-		ret = kd_exec_remote_unlock(active_frame, (unsigned long)lock);
-		return ret ? ret :
-			     kd_exec_frame_lock_mark_released(
-				     active_frame, (unsigned long)lock);
-	}
-
-	kind = kd_exec_frame_lock_kind(active_frame, (unsigned long)lock);
-	if (kind == KD_EXEC_LOCK_NONE)
-		return -ENOENT;
-
-	if (kd_exec_frame_record_event(active_frame,
-				       KD_EXEC_EVENT_NESTED_UNLOCK, NULL))
-		return -EINVAL;
-
-	if (kind == KD_EXEC_LOCK_NATIVE) {
-		kd_spin_debug_nested_unlock(lock);
-		origin_raw_spin_unlock(lock);
-		if (kd_spin_nested_shadow_remove((struct qspinlock *)lock))
-			return -EINVAL;
-		if (kd_exec_frame_lock_pop(active_frame, (unsigned long)lock))
-			return -EINVAL;
-		if (kd_exec_frame_can_complete(active_frame))
-			return KD_EXE_KNOWN_OUTER_UNLOCK;
-		return 0;
-	}
-
-	kd_spin_debug_nested_unlock(lock);
-	{
-		int unlock_ret =
-			kd_spin_nested_unlock((struct qspinlock *)lock);
-
-		if (unlock_ret < 0)
-			return unlock_ret;
-		if (unlock_ret == KD_SPIN_NESTED_UNLOCK_OOO)
-			return kd_exec_frame_lock_mark_released(
-				active_frame, (unsigned long)lock);
-	}
-	if (kd_exec_frame_lock_pop(active_frame, (unsigned long)lock))
-		return -EINVAL;
-	if (kd_exec_frame_can_complete(active_frame))
-		return KD_EXE_KNOWN_OUTER_UNLOCK;
-	return 0;
-}
-
-int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
-				     struct kd_exec_frame *frame)
-{
-	if (!lock || !frame || frame->outer_lock_addr != (unsigned long)lock ||
-	    !kd_exec_frame_has_unreleased_nested(frame))
-		return -EINVAL;
-
-	if (kd_exec_frame_record_event(frame, KD_EXEC_EVENT_OUTER_UNLOCK, regs))
-		return -EINVAL;
-
-	/* The local batch callback already opened L/S. Never mark a successor's
-	 * scheduling word OOO after publication. Inherited ancestors use the
-	 * logical-parent request protocol above, never another CPU's ticket. */
-	if (frame->outer_unlock_hook && frame->outer_unlock_hook->released)
-		return 0;
-	kd_spin_unlock((struct qspinlock *)lock);
-	return 0;
-}
-
-int kd_spin_jit_nested_cleanup(struct kd_exec_frame *frame)
-{
-	unsigned int i;
-
-	if (!frame || !kd_exec_frame_can_complete(frame))
-		return -EINVAL;
-
-	for (i = frame->jit_lock_depth; i > frame->outer_lock_index + 1; i--) {
-		unsigned long lock_addr = frame->jit_lock_addr[i - 1];
-		int ret;
-
-		if (!frame->jit_lock_released[i - 1])
-			return -EBUSY;
-		ret = kd_spin_nested_shadow_remove(
-			(struct qspinlock *)lock_addr);
-		if (ret && ret != -ENOENT)
-			return ret;
-		ret = kd_exec_frame_lock_pop(frame, lock_addr);
-		if (ret)
-			return ret;
-	}
-
-	return 0;
-}
-
-int kd_spin_jit_abort_cleanup(struct kd_exec_frame *frame)
-{
-	unsigned int cleaned = 0;
-
-	if (!frame || !kd_exec_frame_validate(frame) ||
-	    frame->outer_lock_index >= frame->jit_lock_depth)
-		return -EINVAL;
-
-	while (frame->jit_lock_depth > frame->outer_lock_index + 1) {
-		unsigned int index = frame->jit_lock_depth - 1;
-		unsigned long lock_addr = frame->jit_lock_addr[index];
-		enum kd_exec_lock_kind kind = frame->jit_lock_kind[index];
-		bool released = frame->jit_lock_released[index];
-		int before = atomic_read(&((struct qspinlock *)lock_addr)->val);
-		int ret;
-
-		if (!released) {
-			if (kind == KD_EXEC_LOCK_NATIVE) {
-				kd_spin_debug_nested_unlock(
-					(raw_spinlock_t *)lock_addr);
-				origin_raw_spin_unlock(
-					(raw_spinlock_t *)lock_addr);
-			} else if (kind == KD_EXEC_LOCK_FAST ||
-				   kind == KD_EXEC_LOCK_QUEUE_OWNER) {
-				kd_spin_debug_nested_unlock(
-					(raw_spinlock_t *)lock_addr);
-				ret = kd_spin_nested_unlock(
-					(struct qspinlock *)lock_addr);
-				if (ret < 0)
-					return ret;
-				if (ret == KD_SPIN_NESTED_UNLOCK_OK)
-					goto pop_entry;
-			} else {
-				return -EINVAL;
-			}
-		}
-
-		/* OOO unlocks and native locks retain a shadow entry. */
-		ret = kd_spin_nested_shadow_remove(
-			(struct qspinlock *)lock_addr);
-		if (ret && ret != -ENOENT)
-			return ret;
-
-pop_entry:
-		ret = kd_exec_frame_lock_pop(frame, lock_addr);
-		if (ret)
-			return ret;
-		KD_PR_INFO(
-			"spin JIT abort release: lock=%lx kind=%d was_released=%d before=%x after=%x\n",
-			lock_addr, kind, released, before,
-			atomic_read(&((struct qspinlock *)lock_addr)->val));
-		cleaned++;
-	}
-	if (cleaned)
-		KD_PR_INFO("spin JIT abort cleanup: outer=%lx released=%u\n",
-			   frame->outer_lock_addr, cleaned);
-
-	return 0;
-}
+#include "lock/spin_calls.inc"
 
 static __always_inline bool kd_mutex_trylock_fast(struct mutex *lock)
 {

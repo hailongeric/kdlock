@@ -17,7 +17,7 @@ extremely rare scenarios may remain unimplemented and untested under the
 [delivery scope](TODO.md#delivery-scope). This does not turn untested limitations
 into passes, remove existing guards or require another extended test matrix.
 
-**Documentation handoff, 2026-09-14:** the current increment ends after the
+**Documentation handoff, 2026-09-14:** that documentation increment ended after the
 native-handoff timing acceptance below. The README now links to one Chinese
 [version overview](PROJECT_GUIDE.md#1-当前进展) separating implemented behavior,
 unfinished work and explicit deferrals; duplicate chronological summaries were
@@ -29,6 +29,9 @@ it does not resume the paused implementation/experiment plan.
 
 | Date (+08) | Evidence | Result and scope |
 | --- | --- | --- |
+| 2026-09-15 | [Spin static dispatch and profiling](#spin-static-dispatch-profiling) | Two authorized experimental kernels built/booted; final 60-session comparison correct/drained, single-thread NO_JIT 50–57 ns/op versus native 38–45, all five sizes execute measured JIT at four threads; flat hardware samples locate native dispatch and request waiting |
+| 2026-09-14 | [Native spin fast path](#native-fast-path-optimization) | Module optimization, scoped units and six complex spin JIT cases pass; final 40-session single-thread scan is correct/drained with zero measured JIT; 102–107 ns/op versus native 37–44 ns/op, so near-native performance is not yet achieved |
+| 2026-09-14 | [Spin cacheline microbenchmark](#continuous-lock-contention-scan) | Continuous-loop 35-point/140-session scan completes with 1/4/8/12/16/20/24 threads; 17,000,000 operations, 8,283,218 measured JIT bodies, all five sizes verified; ten single-thread NO_JIT sessions and cross-node 24-thread placement remain explicit |
 | 2026-09-14 | [Repository checkpoint](#repository-checkpoint) | Five readability/mapping changes on 211 inputs; five focused unit programs, external W=1 module and strict daemon build pass; no kernel-JIT rerun or expanded matrix |
 | 2026-09-14 | [Native handoff timing](#native-handoff-timing) | 211 inputs, nine changed files: six affected units, W=1 build, two off/nested cases, eight paired sessions and three on/native cases pass; 1,252 returned bodies, four owner handoffs; initial CLI rejection retained |
 | 2026-09-14 | [Isolated Python runtime](#isolated-python-runtime) | 211 inputs, version recipe plus existing evidence/unit changes: fresh venv, 40 units, 25 admission cases and core 5/5 pass; 484 returned bodies; no JIT execution-code or test-inventory change |
@@ -93,6 +96,686 @@ The 2026-09-11 documentation consolidation reorganizes navigation and repeated
 progress summaries only. It leaves all 211 runtime/test input hashes identical
 to the annotated reading-handoff freeze, with no new build, unit or live run.
 Historical evidence and the manual's source-file index remain intact.
+
+## Demo workload module layout
+
+**2026-09-14, 19:46:57–19:49:28 +08.** Demo critical-section modules are now
+grouped under `workload_modules/`: `lock_scenarios/` contains the former
+`klock_module/` and 21 workload fragments, while `spin_cacheline/` contains the
+cacheline driver, payload and ioctl header. Clients, runners and provider
+observations keep their existing bench/test roles. Of 28 moved source/build
+inputs, 26 are byte-identical; the scenario driver and Makefile only adjust
+includes, the symbol-file path and comments. Module/device names and ioctl
+interfaces are preserved. Historical evidence below retains its original paths.
+
+Recovery-guest W=1 builds pass through the aggregate entry, optional source
+helper, restoration of the default dependency, and the benchmark's delegated
+module target. All **11 cacheline tests** and **10 affected unit programs** pass;
+the default cacheline preview still lists 20 configurations/80 sessions, and the
+mode-4 regression preview passes. Both workload modules' executable ELF sections
+match their pre-move builds byte for byte; whole-file hashes are recorded
+separately. Kernel baseline, unchanged ordinary provider artifact, frozen-input
+and final idle checks pass. No live kernel or performance matrix was rerun.
+
+Guest evidence: `/tmp/workload-modules-layout-20260914`; host evidence:
+`/tmp/workload-modules-layout-evidence-20260914`. The archive
+`workload-modules-layout-20260914.tar.gz` retains the migration map, old layout,
+271 frozen source/support files, build/test logs, module metadata and binary
+comparisons, SHA256
+`8797ee18137127a2dbd2b5d4723300c5f8aa541a273ea532202fc74828cbf476`.
+The initial verification wrapper misparsed the dry-run's summary following its
+JSON; the finishing check validates both parts of that saved successful output,
+without rerunning the already-passed builds or tests.
+
+## Spin Cacheline Microbenchmark
+
+### Spin static dispatch profiling
+
+**2026-09-15, recovery guest.** The user's continuation authorizes the scoped
+spin-hook kernel experiment prepared in the previous increment. Two independent
+source/build trees and releases are built and booted; the original source,
+captured baseline, installed kernel and default boot entry are preserved.
+Both experiments retain the original configuration except `CONFIG_LOCALVERSION`,
+including mitigation/debug settings, `nokaslr` and voluntary preemption.
+Each performance pair uses its own running kernel's native control.
+
+| Kernel | Build ID | Role |
+| --- | --- | --- |
+| `6.1.159` | `6f9f2e9fec382e97f620553793aa90b527a30af5` | Original hook-patched baseline; new diagnostic profiles, previous increment's formal comparison |
+| `6.1.159-kdstatic1` | `c377e3f66f35aaab46bc38ebc79803d9a0e0388e` | R1: direct `static_call` selector and callbacks |
+| `6.1.159-kdstatic2` | `460d77502af4709a0cca794b322cedc20c2cc478` | R2: combined dispatch, selection and miss-only cleanup outside the cached native path |
+
+The [kernel experiment](../kernel_experiments/spin_static/README.md) preserves
+RSP capture, register clobbers, callback arguments, int3 selection and the
+two-element wrapper ABI. R2's native hit still checks context, source admission,
+the cached site, the entire S word and the real Linux trylock; the owner remains
+pinned through unlock and retirement checks. A cache hit cannot authorize JIT.
+The cold helpers remove miss-path scheduling calls and extra register saves
+from successful acquisition. Both combined callbacks save only RBP in the
+compiled prologue. This does not mean that every machine CALL disappears:
+PV alternatives and disabled fentry sites remain in the ELF.
+
+The final R2 single-thread scan uses CPU 0, sizes 1/2/4/8/16, **1,000,000
+operations per worker's one RUN ioctl**, four alternating native/kdlock pairs
+per size. All **40 sessions / 20 pairs / 40,000,000 operations** are correct and
+drained. All 20 kdlock sessions have valid, stable NORMAL artifacts but **zero
+measured JIT bodies**; they remain NO_JIT. Median wall and worker CPU ns/op:
+
+| Payload lines | Native wall | kdlock wall | Native CPU | kdlock CPU | Median paired kdlock/native throughput |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 38.61 | 50.21 | 36.31 | 48.07 | 0.7673 |
+| 2 | 38.35 | 52.46 | 35.94 | 49.28 | 0.7366 |
+| 4 | 38.56 | 51.61 | 36.72 | 49.83 | 0.7479 |
+| 8 | 41.24 | 54.39 | 40.11 | 52.71 | 0.7600 |
+| 16 | 44.71 | 57.05 | 42.06 | 54.56 | 0.7831 |
+
+R1 independently completes the same 40-session selection, all correct/drained
+and all single-thread kdlock samples NO_JIT. Across sizes 1/2/4/8/16 its native
+wall medians are 37.47/38.84/38.77/42.28/44.07 ns/op, kdlock medians
+69.35/70.17/70.78/72.40/75.88, and paired ratios
+0.5404/0.5603/0.5500/0.5840/0.5839. The N=1 progression is therefore about
+**101.66 → 69.35 → 50.21 ns/op** for kdlock, with native controls
+37.14 → 37.47 → 38.61. The first point is explicitly the previous increment;
+these are different kernel freezes, not one pooled sample or a statistical
+significance claim. R2 still adds roughly 12–14 ns/op and reaches 74–78% of
+native throughput; **near-native performance has not yet been achieved**.
+
+Independent bench-only dispatch controls use N=1, CPU 0, 1,000,000 operations
+and four repetitions per arm in forward/reverse order. All R1 12 controls and
+R2 16 controls are correct and drained; they contain no kdlock/JIT machinery:
+
+| Control | R1 wall ns/op | R2 wall ns/op | R2 CPU ns/op |
+| --- | ---: | ---: | ---: |
+| Provider absent | 37.52 | 37.00 | 35.49 |
+| Selector returns native | 48.63 | 45.70 | 42.98 |
+| Selector plus minimal original-L callbacks | 62.35 | 60.27 | 57.21 |
+| Combined unconditional original-L callbacks | Not available | 46.58 | 45.45 |
+
+The final native fast path is close to the combined callback control. This
+supports the remaining guest hook/callback framework as a substantial cost;
+it does not isolate an exact number of nanoseconds per function or establish
+a universal hardware lower bound. Further progress needs to address that
+framework, rather than treating the retained ownership checks as dispensable.
+
+R2 also completes **20 sessions / 10 pairs / 80,000,000 operations** with four
+workers pinned to CPUs 0–3, the same five sizes and 1,000,000 operations per
+worker. All data, artifacts and drain checks pass; each size has measured JIT
+in both kdlock sessions, totaling **26,782,877 returned bodies**. Medians:
+
+| Payload lines | Native wall ns/op | kdlock wall ns/op | Paired throughput ratio | Measured JIT share |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 292.50 | 2922.12 | 0.1001 | 62.57% |
+| 2 | 320.05 | 2974.67 | 0.1076 | 64.57% |
+| 4 | 353.67 | 2873.30 | 0.1233 | 68.85% |
+| 8 | 421.51 | 2609.00 | 0.1617 | 70.31% |
+| 16 | 482.53 | 2720.75 | 0.1791 | 68.49% |
+
+Actual JIT therefore remains much slower than native for this short payload.
+This is a focused 1/4-thread optimization increment, not another complete
+35-point/140-session scan. Wall ns/op is batch time divided by completed
+operations, not lock-acquisition or waiter latency. Four-thread CPU ns/op sums
+all workers' CPU time, including simultaneous spinning.
+
+Separate diagnostics use `perf record -e cycles:k -F 499`, **flat IP sampling
+only**, with ftrace `nop` and function profiling disabled. No clock/probe is
+inserted into the lock loop. On each of the three kernels, native T=1 and
+kdlock T=1 execute 100,000,000 operations; kdlock T=4 executes 4,000,000 total.
+All nine profile sessions are correct/drained with zero lost samples. T=1
+kdlock is NO_JIT on all three; the T=4 profiles return 2,696,114 (original),
+2,471,967 (R1), and 2,350,312 (R2) measured bodies. These sessions have
+`performance_result=false` and are excluded from the performance pairs.
+
+R2 period-weighted hotspots, with 2,154 single-thread and 21,701 four-thread
+worker samples:
+
+| Single thread, NO_JIT | Sample weight | Four threads, 58.76% measured JIT | Sample weight |
+| --- | ---: | --- | ---: |
+| `kd_spin_dispatch_lock` | 38.59% | `__kd_spin_lock_longjmp` | 52.80% |
+| PV queued-spin unlock | 17.66% | PV queued-spin lock slowpath | 10.87% |
+| Kernel `_raw_spin_lock` | 13.65% | Kernel `_raw_spin_lock_irqsave` | 10.23% |
+| `sc_body_1` wrapper | 12.52% | PV queued-spin unlock | 3.48% |
+| `sc_ioctl` batch loop | 7.75% | Spin `execute_cs` | 3.28% |
+| Kernel `_raw_spin_unlock` | 5.27% | `kd_spin_gate_lookup` | 2.44% |
+| `kd_spin_dispatch_unlock` | 4.51% | `kd_exec_frame_validate` | 1.92% |
+
+The single-thread lock callback includes the actual locked CMPXCHG: its hottest
+offset, +0x99, is the branch immediately after that instruction. Its entire
+38.59% must not be labeled redundant dispatch code. Similarly, `sc_body_1`
+includes call setup and return, not just the counter update. The update's
++0x19..+0x32 envelope receives only 24 samples, about 1.12%; that is too sparse
+for precise instruction timing. The original profile's separate selector was
+24.67% of sample weight, R1's 10.42%; R2 has no sampled separate selector.
+Those earlier selector-entry samples may include indirect-call stalls/skid,
+not just comm comparison.
+
+Exact saved R2 disassembly resolves **46.06%** of all four-thread sample weight
+to `__kd_spin_lock_longjmp` +0xc6..+0xfd, the `curr_node->locked`/PAUSE wait loop;
+another **4.26%** lies at +0xfd..+0x108, polling S locked/pending. Both ranges
+exclude their upper bound. The generated image has only 20 samples (0.092%).
+Thus the observed multicore cost concentrates in request waiting and lock/
+executor protocol, not the tiny counter body. The gate map's source also
+contains a serialized irqsave lookup, making repeated metadata lookups a
+concrete optimization candidate. Flat samples cannot attribute every kernel
+spinlock sample to a particular caller or prove how often ownership changes.
+They describe sampled execution locations, not exact function times, contention
+probability, single-operation latency or an instruction-coverage proof.
+
+Verification and evidence boundaries:
+
+- R1's initial full unit inventory has 39 passes and one compile failure:
+  the outer-progress fixture lacked two native-fast state stubs introduced
+  previously. Adding the empty fast-state stubs preserves its existing ticket
+  assertions; the affected program passes. The independent 25-case admission
+  audit also passes. This is not an initial 40/40 pass.
+- R2 runs the affected routing, entry and source-lifetime units on the final
+  kernel. Routing exercises 14 scenarios / 3,796 checks including combined
+  selection, native peers, context/miss pin balance, nesting, rename, closing
+  and retirement. W=1 provider and benchmark builds and all 13 benchmark tests
+  pass; earlier old-interface compatibility builds also pass. Existing
+  assembly/trampoline objtool warnings remain, not a warning-free build claim.
+- Each experimental kernel independently passes eight complex actual-JIT
+  cases: mode 2/7/8/4/5, mixed-spin, registers-1-3 and native-spin-acquired.
+  Mode 4/5 use `mutex_jit=1`; their inclusion checks the retained shared/int3
+  behavior. R2's offline live verifier accepts all eight on 236 frozen files,
+  with no unrecorded cases. The R2 performance/profile freeze has 127 files.
+- Offline checks recompute counter deltas, unused slots, worker affinity,
+  completion/CPU aggregation, alternating pair order/ratios, binary/source
+  hashes and published image hashes. The final three profiles and both grids
+  retain the same source. Single-grid and later provider ELF hashes differ
+  only in non-allocated `.BTF`; all other 73 sections are byte-identical.
+  The initial cross-run whole-binary postflight assertion is retained as a
+  metadata mismatch, then resolved by this full section comparison, without
+  repeating a workload or altering a recorded sample.
+- Final live Build ID, original captured source/config/build, binaries, idle
+  state and dmesg checks pass; no new kernel fault, workload timeout or
+  undrained session occurs. The guest remains on R2; default boot stays original.
+  The recovery snapshot `pre_static_boot_20260915` is confirmed before kernel
+  boot/testing; the monitor save reply timeout is resolved by later snapshot
+  queries, without issuing another save. Early boot SSH readiness delay and
+  a missing `/tmp` perf preflight are resolved before workload loading. Perf
+  is then built at a persistent guest path. Draft unit import-path and archive
+  compression-wrapper failures are retained separately from passing runs.
+
+This remains a 40-vCPU recovery VM, 64-byte lines, node-0 measurement placement,
+without host physical-core exclusivity. Quiet observation is not zero overhead,
+and the generic hook-reader/hot-unload limitation remains. No guards,
+mitigations, counters, natural-discovery criteria or workload instructions are
+removed to manufacture the speedup. The only host operations are source edits,
+VM control and read-only evidence analysis; all builds/tests/profiles run in
+the recovery guest.
+
+Host `/tmp` archives (not distributed by a fresh checkout):
+
+| Archive | SHA256 |
+| --- | --- |
+| `kdlock-profile-old-evidence-20260915.tar.gz` | `43dbf9437b99cd6ad2d3bae09d4905e9154735325633352868941849d284f81f` |
+| `kdlock-static-kernel-preboot-final-20260915.tar.gz` | `6fe26435c3f75e507cf747304f13722c43e860b0106be7e5c39d7e267c3f8de1` |
+| `kdlock-static-r1-evidence-20260915.tar.gz` | `e318bcb7a001e1d35d9604bf1dd05116874acf9dc1290b5b245b1bce6ffa2eb4` |
+| `kdlock-static2-kernel-preboot-20260915.tar.gz` | `b1024d1f4a163146045cf1fff5dd696bbea42c4fdc624c3d619093729051a5d0` |
+| `kdlock-static2-runtime-evidence-20260915.tar.gz` | `c6b5fca8ee9109055844784e7d18972baadfbf4554051775192a5a827603dabd` |
+
+Kernel archives include exact named source/config/build files and installation
+records, including vmlinux; runtime archives preserve raw CSV/JSON, profiles,
+frozen source and ELF files, generated artifacts, units/builds/live logs and
+postflight records. R2's runtime archive contains 3,475 regular files. Readable
+results and later read-only audits are under
+`/tmp/kdlock-static2-runtime-evidence-20260915/`; its
+`instruction-attribution.json` resolves the byte intervals above. These later
+audit files are separate from the already hashed archive. The final experiment
+patch SHA256 is `e621077111e6c2d3483456d4e265f64ab09bf406cd3c328179dda40cfd71e62b`.
+
+### Native fast path optimization
+
+**2026-09-14, recovery guest, after the single-thread investigation.** The
+later authorized kernel experiment and its results are recorded
+[above](#spin-static-dispatch-profiling); the scope and draft status below
+describe this earlier freeze. This
+increment changes the production spin path, retaining the captured guest
+kernel, original Linux lock L, natural discovery/publication and two-element
+wrapper ABI. A per-CPU cache of a normally registered/published root entry
+permits native trylock when the entire scheduling word S is idle. A successful
+hit avoids registration, gate lookup and ticket machinery; misses and contention
+retain the general route. Ownership stays CPU-pinned through native unlock and
+participates in retained-owner routing and retirement checks. The final revision
+also inlines the unchanged source-state read, prepares bounded comm comparisons
+at load time, and separates the general callback stack frame. Contracts are in
+[DESIGN](DESIGN.md#41-native-lock-and-private-queue), and the workload/measurement pseudocode remains
+in the [bench README](../bench/spin_cacheline/README.md#临界区与测试伪代码).
+
+The final single-thread run uses CPU 0 on node 0, payload sizes 1/2/4/8/16,
+**1,000,000 lock operations per RUN ioctl** and four alternating native/kdlock
+pairs per size. All **40 sessions / 20 pairs / 40,000,000 operations** complete
+with correct counter deltas and normal drain. All 20 kdlock sessions have stable
+NORMAL entries and valid generated artifacts, but **zero measured JIT bodies**;
+they remain NO_JIT, not actual-JIT acceptance. Medians below include the batch
+boundary and framework costs; wall ns/op is not lock-acquisition latency.
+
+| Payload lines | Native wall ns/op | kdlock wall ns/op | Native CPU ns/op | kdlock CPU ns/op | Median paired kdlock/native throughput |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 37.14 | 101.66 | 35.64 | 101.33 | 0.3654 |
+| 2 | 38.08 | 102.46 | 36.70 | 102.16 | 0.3714 |
+| 4 | 37.92 | 103.28 | 37.48 | 101.12 | 0.3640 |
+| 8 | 40.45 | 103.69 | 38.95 | 101.49 | 0.3873 |
+| 16 | 44.32 | 107.30 | 40.84 | 106.36 | 0.4120 |
+
+**Near-native single-thread performance is not yet achieved.** A separate
+bench-only `dispatch_floor` provider runs the same payload/client on CPU 0,
+with 1,000,000 operations and four samples per arm in alternating order. It
+has no kdlock discovery, S, tickets, source leases, JIT or per-operation
+observation. All 12 controls / 12,000,000 operations are correct and drained:
+
+| Independent dispatch control | Median wall ns/op | Median CPU ns/op |
+| --- | ---: | ---: |
+| Provider absent, native | 38.00 | 36.16 |
+| Selector called, returning native | 65.69 | 63.80 |
+| Selector plus minimal original-L callbacks | 96.69 | 95.72 |
+
+This control is close to the optimized kdlock's 101.66 ns/op and supports hook
+dispatch as the dominant remaining cost on this guest. It is not a universal
+hardware lower bound or a per-function timing breakdown. The captured kernel
+uses indirect selector/callback calls with RETPOLINE and RETHUNK enabled;
+static-call support is also enabled. A direct-call patch and provider adapter
+were prepared only as an **unapplied, unbuilt draft** in
+`/tmp/kdlock-static-dispatch-proposal-20260914/`; offline patch applicability
+checks pass. No guest-kernel source, configuration, build or boot identity has
+been changed. Further kernel work needs the original no-kernel-change scope
+to be adjusted; this draft has no performance or JIT acceptance result.
+
+Earlier development runs remain distinct from this final long batch. R1 adds
+the native path; R2 also reduces selector/general-frame overhead. Each runs
+16 sessions at N=1, T=1/4, I=100,000, four pairs per point, with 4,000,000
+operations and correct/drained outcomes:
+
+| Revision | T=1 native wall ns/op | T=1 kdlock wall ns/op | T=1 paired ratio | T=4 paired ratio | T=4 measured JIT bodies |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| R1 | 81.10 | 220.44 | 0.3791 | 0.1016 | 1,097,776 |
+| R2 | 80.75 | 180.44 | 0.4476 | 0.1229 | 1,115,907 |
+
+All four T=1 kdlock sessions in each revision are NO_JIT; all four T=4 sessions
+execute actual JIT. The earlier 100,000-operation dispatch diagnostic has
+12 passing controls, with native/selector/callback wall medians
+84.10/141.80/170.02 ns/op. Absolute times change substantially between those
+short batches and the later long batches, including the native arms. The R2
+and final provider ELF sections are identical except BTF metadata, and the
+workload/client/daemon binaries are byte-identical. The long-batch result is
+therefore not another code optimization; no claim isolates batch size from
+VM scheduling/frequency effects. Four samples do not establish significance.
+Earlier 10,000-operation results are also not controlled speedup comparisons.
+
+Focused recovery-guest checks:
+
+- R1: production spin-entry, spin-routing and source-lifetime units pass.
+  R2: spin-routing and source-lifetime units pass again after their affected
+  code changes: 14 routing scenarios / 3,724 checks, and 42,820 lifetime checks
+  with all 13 mutation checks detected. The routing fixture directly exercises
+  the production fast path, native-peer/S-busy fallback, nesting, rename,
+  closing and busy retirement, plus exact bounded comm equivalence.
+- W=1 external provider builds and the strict daemon build pass. Existing
+  assembly/trampoline objtool warnings remain; they are not new clean-build
+  claims. All 11 directed benchmark tests pass with unchanged one-ioctl and
+  clock-call budgets, counter oracles and NO_JIT/pair classification.
+- `tests/run_all.sh --suite spin --case mixed-spin --case registers-1-3
+  --case native-spin-acquired` passes all six selected complex cases:
+  mode 2, non-LIFO mode 7, multi-queue/nested mode 8, original native peers,
+  register continuation and acquired-child continuation. Each retains its
+  actual returned-body and data oracle; all are accepted, source-unchanged,
+  fault-free and drained. The offline evidence verifier confirms 232 frozen
+  files and all six recorded outcomes and artifact/protocol archives.
+- The final scan's offline audit checks all phase counter deltas, affinities,
+  aggregation, pair order/ratios, 119 frozen source files, four binaries and
+  40 generated image/assembly hashes. Final guest idle, matching binaries and
+  captured source/config/build/live baseline checks pass. Function profiling
+  remains disabled, tracer is `nop`; no new kernel fault was observed. An
+  initial read-only postflight wrapper had a tuple/list concatenation error;
+  its corrected completion does not rerun any workload.
+
+This scoped increment does not rerun the full 35-point contention scan or
+mutex matrix. Sizes 2/4/8/16 have no measured actual-JIT performance acceptance
+on this new freeze; the historical full scan is not substituted for it.
+The native baseline remains the existing hook-patched kernel in a VM, without
+host physical-core exclusivity. The generic hook-reader/hot-unload limitation
+also remains; cleanup is the controlled, drained recovery-guest procedure.
+
+Guest output directories use the archive basenames below. Host readable CSVs,
+offline audits, postflight/build/unit records and snapshot confirmation are in
+`/tmp/kdlock-native-fast-evidence-20260914/`. Archives in host `/tmp`:
+
+| Evidence archive | SHA256 |
+| --- | --- |
+| `kdlock-native-fast-single-final-20260914.tar.gz` | `177b1cd96246927b48946b39ebc65918109d77fe5983524ab5accb2444ae7951` |
+| `kdlock-dispatch-floor-long-20260914.tar.gz` | `e784bb26ec3f258e452815aa0c4ea3fbd00bdc9d9c4943ae9a682fa0f1a600dd` |
+| `kdlock-native-fast-protocol-20260914.tar.gz` | `475fd045cdf4e6ade982cc200d8641ce5013be13a453b6cb2c422ef618c40182` |
+| `kdlock-native-fast-r1-20260914.tar.gz` | `fa0094028e34cd915ae5f6e875a3f8a92822beca338e9d21329560f10f77db67` |
+| `kdlock-native-fast-r2-20260914.tar.gz` | `b89ec10910900578247d914f129d20b67ca6900df7b7cb886b7b4bf1bcd3fa45` |
+| `kdlock-dispatch-floor-20260914.tar.gz` | `0b25bb37ead9e636d5199507ea328bfcb2c0a015226b487aa6e24e3af41a767b` |
+
+### Continuous lock contention scan
+
+**2026-09-14, 21:42:57–21:53:24 +08.** The workload now executes a fixed
+batch of consecutive lock acquisitions without the former per-256-iteration
+`cond_resched()` and signal polling. The critical section remains N unrolled
+counter increments under the same shared spinlock. The default thread grid is
+**1/4/8/12/16/20/24**, with 10,000 operations per worker in one RUN ioctl,
+1/2/4/8/16 payload lines and two alternating native/kdlock pairs per point.
+Setup uses the existing atomic start gate; no delay or extra wait is added to
+the measured workload loop.
+
+The recovery guest's default CPUs 0–19 belong to node 0; CPUs 20–23 belong
+to node 1. Thus the 24-thread point crosses nodes. Plans and sessions retain
+the per-worker CPU/node mapping; CSV and terminal summaries identify each
+point as single-node or cross-node. The latter includes placement effects and
+is not presented as a same-node comparison.
+
+All **140 sessions / 70 pairs** finish with correct data and normal drain:
+**17,000,000 measured operations**, **8,283,218 measured JIT bodies**, 70 native
+sessions, 60 multi-thread kdlock sessions with actual JIT and 10 single-thread
+`NO_JIT` sessions. All five payload sizes have actual-JIT coverage. Single-thread
+NO_JIT keeps its ratio without passing JIT acceptance. The new uncontended
+reference is visible, for example, in the 1-line native median throughput:
+10.724 million op/s at one thread, 2.022 at four and 3.184 at 24. These short VM
+trials do not quantify lock wait/hold time or holder changes, or establish
+statistical significance. Earlier yielding-loop results below remain separate.
+
+The recovery-guest W=1 workload build and all **11 directed tests** pass,
+including the 1/24-worker atomic gate, actual default CLI grid, fixed ioctl/clock
+call budget, NUMA labels and rejection of mismatched pair placement. Module
+imports and disassembly confirm no workload scheduling call. Post-run checks
+verify phase counter deltas, affinities, every pair ratio, 112 frozen source
+files, four binaries and 140 generated image/assembly hashes. All 70 kdlock
+sessions retire with state=2 and zero modules/frames/writers. Final idle and
+kernel-baseline checks pass; the ordinary provider artifact is unchanged.
+
+Guest scan: `/tmp/spin-cacheline-continuous-20260914`; precheck and final audit:
+`/tmp/spin-cacheline-continuous-precheck-20260914` and
+`/tmp/spin-cacheline-continuous-verification-20260914`. Host evidence, readable
+`results.md` and CSVs: `/tmp/spin-cacheline-continuous-evidence-20260914`.
+Archive `spin-cacheline-continuous-20260914.tar.gz`, SHA256
+`175d9da64ab58009acbb0786eb5f112dab9d773a8e6427d99259ed570e97f81b`,
+contains the scan, builds/tests, snapshot confirmation, source and binary
+copies, generated code and audit scripts. Host offline checks independently
+verify all 140 sessions, pair ratios and archived hashes, including 76 source
+files present in the current host checkout.
+
+### Single-thread investigation
+
+**2026-09-14, after the continuous scan.** Reanalysis of the archived scan,
+not a new performance run: all ten one-thread kdlock sessions published valid
+NORMAL entries but measured zero JIT bodies. Each arm has two samples per size;
+the following values are median batch-amortized ns/op, not acquisition latency.
+
+| Payload lines | Native wall ns/op | kdlock wall ns/op | kdlock thread CPU ns/op |
+| --- | ---: | ---: | ---: |
+| 1 | 94.3 | 1584.0 | 1354.0 |
+| 2 | 87.4 | 1536.9 | 1536.2 |
+| 4 | 88.4 | 1563.1 | 1491.9 |
+| 8 | 94.0 | 1610.4 | 1609.7 |
+| 16 | 108.1 | 1505.4 | 1390.8 |
+
+The roughly 1.4–1.5 us additional cost changes little with payload size and is
+also visible in CPU time. The promoted uncontended source path still registers
+the known entry, scans ticket slots, looks up gates and acquires metadata locks.
+The [benchmark explanation](../bench/spin_cacheline/README.md#单线程为什么仍有-kdlock-开销)
+separates static path counts from measured timing; no per-function cost shares
+or isolated causal speedups have been measured. The original scan archive and
+its SHA256 above remain unchanged.
+
+A separate attempt to profile selected kdlock functions with ftrace failed:
+SSH became unresponsive and serial recorded `BUG: TASK stack guard page was hit`
+at guest uptime 695854.205189. The diagnostic intended one 1-line/1-thread batch
+after normal preparation; no complete result or per-function statistics were
+recovered, and normal request drain/retirement could not be established.
+This is a failed diagnostic, not another benchmark sample. Its exact fault
+mechanism has not been established; the failing method was not retried.
+
+The old VM was stopped and verified exited before restarting in recovery mode.
+By **22:28:45 +08**, SSH, idle checks, the captured 6.1.159 kernel baseline,
+241 source hashes, the unchanged ordinary provider artifact and CPU/node mapping
+were verified. Tracing is `nop`, function profiling is disabled, filters are
+reset, and the new boot log has no kernel fault signatures. The failed session
+directory in guest `/tmp` did not survive reboot; the host retained serial,
+diagnostic inputs/snapshot proof, the previous one-thread sessions, and recovery
+checks at `/tmp/spin-cacheline-single-profile-failure-20260914`.
+No production or guest-kernel code was changed for this investigation; no new
+performance matrix or function profile passed. Checkout HEAD remains
+`43b27c04d4381014ecc8c67138999a2cf0e42295` with the existing uncommitted work.
+
+### Full rescan after workload consolidation
+
+**2026-09-14, 20:41:19–20:47:18 +08.** Reran the complete default grid using
+the atomic worker gate and `workload_modules/spin_cacheline/` driver: 1/2/4/8/16
+payload lines, 2/4/8/16 threads on guest node-0 CPUs 0–15, 10,000 operations per
+thread in one RUN ioctl, two pairs per configuration in native→kdlock then
+kdlock→native order. The recovery snapshot was checked through the host monitor;
+all 241 current checkout files matched before the run. No benchmark source was
+changed and no extra unit, baseline workload or rare-scenario matrix was added.
+
+All **80 sessions / 40 pairs** finish with exact data and normal drain:
+**6,000,000 measured operations**, **2,677,776 measured JIT bodies**, 40 native
+sessions, 30 kdlock sessions with actual JIT and 10 `NO_JIT` sessions. Every
+2-thread kdlock session has zero measured JIT; every 4/8/16-thread kdlock session
+has measured JIT, so all five payload sizes have actual-JIT coverage. NO_JIT
+retains its performance ratio without being counted as JIT acceptance.
+
+The table shows the median of each configuration's two **kdlock/native
+throughput ratios**; values below 1 mean lower kdlock throughput. The 2-thread
+column is entirely NO_JIT. These short VM samples do not establish statistical
+significance or lock saturation; native still uses the existing hook kernel.
+
+| Payload lines | 2 threads (NO_JIT) | 4 threads | 8 threads | 16 threads |
+| --- | --- | --- | --- | --- |
+| 1 | 0.2975 | 0.1520 | 0.1415 | 0.1288 |
+| 2 | 0.3339 | 0.1574 | 0.1553 | 0.1496 |
+| 4 | 0.3252 | 0.1787 | 0.1727 | 0.1620 |
+| 8 | 0.3721 | 0.2129 | 0.1995 | 0.1804 |
+| 16 | 0.5150 | 0.2097 | 0.2491 | 0.2100 |
+
+The final audit checks all phase-to-phase counter deltas, affinities, pair order
+and ratios, publication/body deltas, 112 frozen source/support files, four
+binaries and 80 generated image/assembly hashes. All 40 kdlock sessions retire
+with state=2 and zero modules/frames/writers. Final idle and source/build/running
+kernel baseline checks pass; the ordinary provider artifact is unchanged and
+the workload/client have no mutex, condition-variable or libatomic imports.
+
+Guest results: `/tmp/spin-cacheline-rerun-20260914`; verification:
+`/tmp/spin-cacheline-rerun-verification-20260914`. Host evidence and readable
+`results.md`, `raw.csv`, `pairs.csv`, `summary.csv`:
+`/tmp/spin-cacheline-rerun-evidence-20260914`. Archive
+`spin-cacheline-rerun-20260914.tar.gz`, SHA256
+`57c9206dae1b1cc9305889f2f1a1d64bb80305a2b6b2d119d53f2db2dc212e49`,
+contains the complete scan, source/binary copies, topology, snapshot/launch
+records, generated code, logs and final verification. Host offline checking
+independently confirms every session and archived hash, including 76 source
+files present in the host checkout.
+
+### Batch calls and timing documentation
+
+**2026-09-14, 19:34:14–19:34:18 +08.** The guide now shows the unrolled
+critical section, client/worker/kernel pseudocode and timing boundaries. The
+existing runtime already executes all iterations in one RUN per worker; its
+source and binaries are unchanged. A fixture-only API counter checks batches
+of 1, 10,000 and 100,000 operations at 1/2 workers: T RUN calls, one layout and
+two count queries, T+1 monotonic and 2T thread-CPU clock reads, with exact
+payload deltas. These are API counts, not syscall tracing or a measurement of
+clock overhead. No observations were added to the performance client.
+
+All **11 directed tests** pass in the recovery guest. Kernel baseline, frozen
+inputs, four unchanged binaries and final idle checks pass; no live performance
+scan was rerun. Guest evidence: `/tmp/spin-cacheline-batching-verification-20260914`;
+host copy: `/tmp/spin-cacheline-batching-evidence-20260914`. The archive
+`spin-cacheline-batching-verification-20260914.tar.gz` includes 113 frozen
+source/support files and the test log, SHA256
+`fb334f62d2a119c13c9db1f62ba9b50b9069106ba75743bc662c0a452ffcd9b7`.
+
+### Atomic worker coordination
+
+**2026-09-14, 19:12:21–19:17:32 +08.** The user's follow-up removes mutexes
+from the worker path. `work()` now publishes readiness and waits on C11 atomic
+`ready/go/abort` with `pause`; the main thread releases go after starting the
+wall clock. The source driver's admission/snapshot state is also atomic, with
+a snapshot reserving -1 rather than racing a new writer after checking zero.
+Implementation and tests remain under `bench/spin_cacheline/`.
+
+Guest W=1 source-module/client builds and **ten** directed tests pass. New checks
+cover delayed readiness at 2/16 workers, partial creation and affinity failure
+without entering the device, and actual driver admission helpers with an
+in-flight writer and an exclusive snapshot. The built client and source module
+have no mutex, condition-variable or libatomic fallback imports.
+
+The focused **4-line, 16-thread, 10,000-iteration, two-pair** rerun passes all four
+sessions: **640,000** exact measured operations and **318,627** returned JIT
+bodies (159,215 and 159,412). All callers drain, both kdlock sessions retire with
+state=2 and zero modules/frames/writers, and modules unload normally. Final idle,
+kernel baseline and per-session fault checks pass. The ordinary provider artifact
+is unchanged. Evidence verifies 111 source/support files, four binaries and four
+generated image/assembly hashes. Existing provider objtool/locale warnings remain.
+Earlier scans below use the previous synchronization and are not results for
+this version; the full 80-session grid was not rerun. These checks do not measure
+contention probability or establish saturated-lock performance.
+
+Guest results: `/tmp/spin-cacheline-atomics-20260914`; host evidence:
+`/tmp/spin-cacheline-atomics-evidence-20260914`. Archive
+`spin-cacheline-atomics-20260914.tar.gz`, SHA256
+`787c890767940dc852fe1468c142eb4967d94cc4121117858edb8b20a6241a31`,
+contains source/binary identities, build/unit output, snapshot confirmation,
+session data, generated code, CSV/JSON, baseline and final drain checks.
+
+### Benchmark-only build separation
+
+**2026-09-14, 17:55:49–18:00:55 +08.** Following the user's separation request,
+all new benchmark code, including its driver and provider observations, lives
+under `bench/spin_cacheline/`. The main `include/`, `kernel_module/` and existing
+test fixtures have no changes relative to the checkpoint. The benchmark copies
+the provider inputs into its own `.build/provider/` and applies the reviewed
+`provider/observation.patch` there with fuzzy matching disabled. No production
+source or ordinary provider build artifact is overwritten. See the
+[build contract](../bench/spin_cacheline/README.md#编译和运行).
+
+Both W=1 builds and all **eight** directed benchmark tests pass in the recovery
+guest, including the new isolation/context-mismatch check. The ordinary module
+has no `bench_*` parameters or `kd_bench` symbols. All **35** prepared provider
+source files match the initial complete scan's instrumented sources byte for
+byte. Independent Kbuild outputs have different whole-file hashes; the evidence
+records both build identities and verifies the actual loaded binary separately,
+without claiming binary reproducibility.
+
+The focused rerun uses **4 lines, 4 threads, 10,000 iterations/thread, two pairs**:
+all four sessions pass, with 160,000 exact measured operations and **59,181**
+returned JIT bodies (29,318 and 29,863 in the kdlock sessions). Both pairs have
+valid ratios; their median is 0.1766. All workers drain, both provider sessions
+retire with state=2 and zero modules/frames/writers, modules unload normally, and
+the final guest is idle. Kernel baseline and per-session fault checks pass;
+existing objtool/locale build warnings remain. Source/binary capture verifies
+110 files, four binaries and four generated image/assembly hashes. The ordinary
+provider binary remains unchanged by both benchmark builds and the live scan.
+The earlier 80-session scan below is historical; it was not rerun for this
+directory/build isolation change.
+
+Guest results: `/tmp/spin-cacheline-isolation-20260914`; host evidence:
+`/tmp/spin-cacheline-isolation-evidence-20260914`. The archive
+`spin-cacheline-isolation-20260914.tar.gz` has SHA256
+`9d343867ebed1ff4ce86f7552628eabb6e9f7b3ccfb48abe2db16795a1d6f0cf`.
+It includes the actual loaded sources/binaries, unit/build output, both build
+identities, the initial postflight hash-assumption failure and corrected identity
+check, snapshot confirmation, session logs, CSV/JSON, baseline and drain checks.
+
+### Initial full scan
+
+**2026-09-14, 17:28:12–17:34:11 +08.** The user requested an independent
+`bench/spin_cacheline/` implementation and the complete default scan. This is
+new work after the checkpoint, based on host commit
+`43b27c04d4381014ecc8c67138999a2cf0e42295`, with uncommitted changes. The guest's
+older Git metadata is retained separately; actual content hashes identify this
+run. No existing benchmark, guest kernel, mutex workload or deferred correctness
+feature was changed/added by this experiment. Shared quiet-mode logging and
+returned-body accounting are the provider changes.
+
+The final scan uses 73 frozen source/support files, four captured binaries,
+Linux 6.1.159 Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`, `nokaslr`,
+voluntary preemption, and guest CPUs 0–15 on NUMA node 0 with 64B cachelines.
+The four Python dependencies match `disassem/requirements.txt` in the existing
+guest interpreter; no package or kernel installation was needed. The host
+monitor confirmed snapshot `pre_native_resume_20260905_1110` before live loading.
+Both benchmark and SSH had outer timeouts. This does not establish exclusive
+host cores or a new hook-reader lifetime guarantee.
+
+| Final scan check | Result |
+| --- | --- |
+| Default grid | 1/2/4/8/16 lines × 2/4/8/16 threads; 10,000 iterations/thread; native→kdlock and kdlock→native per point |
+| Measurement sessions | 80/80 completed: 40 native without kdlock loaded, 30 with actual JIT, 10 NO_JIT |
+| Exact data and affinity | All 6,000,000 measured CS operations reconcile; active-line deltas, unchanged unused counters, per-worker binding and CPU/wall aggregation pass |
+| Measured body evidence | 2,681,893 matching returned JIT bodies; all five cacheline sizes have evidence; preparation body totals were zero and were still subtracted explicitly |
+| NO_JIT | Both kdlock sessions at two threads for each size have zero bodies; performance/ratios retained, no actual-JIT pass claimed for those points |
+| Publication and quiet | Every kdlock session has one matching NORMAL entry, valid unchanged image hashes, exited translators, zero measurement writers/frames, and `jit_timing=0`; routine body/delegation/NO_RUN logs are absent |
+| Cleanup | All 40 provider sessions retired with state=2, modules=frames=writers=0 before ordinary unload; all 80 sessions drained; final guest idle check passes |
+| Kernel observations | No fault/error in the final scan's complete per-session kernel streams; no timeout or log overrun in that scan |
+
+Median paired kdlock/native throughput ratios (two pairs per point):
+
+| Payload lines | 2 threads (NO_JIT) | 4 threads | 8 threads | 16 threads |
+| --- | --- | --- | --- | --- |
+| 1 | 0.7318 | 0.1598 | 0.1493 | 0.1255 |
+| 2 | 0.2887 | 0.1733 | 0.1513 | 0.1479 |
+| 4 | 0.6733 | 0.1962 | 0.1722 | 0.1680 |
+| 8 | 0.4545 | 0.2098 | 0.1992 | 0.1765 |
+| 16 | 0.3891 | 0.2047 | 0.2425 | 0.2074 |
+
+All ratios in these short VM trials are below one. They do not establish
+statistical significance, lock-acquisition latency, zero observation cost or
+a host-native baseline. Detailed throughput, amortized ns/op, thread CPU time,
+per-pair ratios and JIT shares remain in the CSV/JSON results. Usage and the
+measurement contract are in the [benchmark README](../bench/spin_cacheline/README.md).
+
+Guest verification ran the new benchmark's seven directed tests (real client
+with substituted device, real unrolled payload, data corruption, aggregation,
+pair/CSV logic, default-off logging and returned-body counting), plus the seven
+affected existing unit programs: `test_jit_body_witness.py`,
+`test_jit_entry_scope.py`, `test_spin_outer_progress.py`, `test_remote_outer.py`,
+`test_native_after_outer.py`, `test_mutex_outer_progress.py` and
+`test_mutex_resources.py`. All pass after fixing the missing diagnostics include
+and the logging fixture's unused variable in its disabled-trace mutation.
+External modules build with W=1 and the client/daemon with strict warnings;
+existing objtool unwind/RETHUNK and guest locale warnings are retained. The final
+quiet fix reran the seven new tests and the affected spin outer unit. No basic,
+extended or rare live matrix was added.
+
+The initial batch `/tmp/spin-cacheline-20260914-a` stopped at session 6 during
+preparation: a routine `KD_EXE_NO_RUN` log was mistakenly left outside quiet,
+overwriting unread `/dev/kmsg` records and causing EPIPE. Five sessions had
+finished; the sixth did not enter measurement. The runner stopped and preserved
+the session. Inspection confirmed correct preparation data, exited callers and
+translator, and zero frames; the identified daemon was then stopped, retirement
+succeeded and both modules unloaded normally. `manual-drain.json` records this
+later cleanup without converting the failed session into a pass. The corrected
+routine branch now honors quiet while the real error branch remains visible;
+the directed fixture exercises both. The new complete `-b` batch is one fresh
+freeze, with no results borrowed from `-a` and no automatic retry of a failed
+live session.
+
+Commands and evidence:
+
+```sh
+make -C bench/spin_cacheline all test
+make -C kernel_module W=1
+make -C tests/unit run TESTS= PY_TESTS='test_jit_body_witness.py test_jit_entry_scope.py test_spin_outer_progress.py test_remote_outer.py test_native_after_outer.py test_mutex_outer_progress.py test_mutex_resources.py'
+KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_native_resume_20260905_1110 \
+  timeout 3600s python3 bench/spin_cacheline/run.py --output /tmp/spin-cacheline-20260914-b
+```
+
+Guest full results: `/tmp/spin-cacheline-20260914-b`; host evidence directory:
+`/tmp/spin-cacheline-evidence-20260914`. The host retains readable raw/pair/summary
+CSV, JSON, synchronization hashes, the pre-report tracked patch and both archives.
+Archive validation reconciled the 73 sources, four binaries, 80 session records
+and 80 generated image/assembly hashes (237 checks). The source-manifest SHA256
+is `2cc1a2f5ce81bfe8fe5b02887c3a1d921133589e0a80b1c7bbedeb01b2a3c5b7`.
+
+| Archive | SHA256 |
+| --- | --- |
+| `spin-cacheline-20260914-b.tar.gz` (complete) | `177920566f22a3bcbac4ac53bd9283eaefb6524a5754a0d7ca28153924596039` |
+| `spin-cacheline-20260914-a.tar.gz` (incomplete, separate) | `0aee4ff9c10ad801bedccf51d182fb8eaf65ce02cc69324dbdea21721f6484bd` |
+
+These external `/tmp` artifacts are not supplied by a fresh checkout. The
+post-run documentation adds no runtime result and does not change the captured
+runtime inputs. No Git commit was requested or created.
 
 ## Repository Checkpoint
 

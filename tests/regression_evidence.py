@@ -312,8 +312,8 @@ def collect_case(root, run, case):
         name: root / name
         for name in (
             "kernel_module/kdlock_km.ko",
-            "klock_module/klock_module.ko",
-            "klock_module/kd_depth_source.ko",
+            "workload_modules/lock_scenarios/klock_module.ko",
+            "workload_modules/lock_scenarios/kd_depth_source.ko",
             "daemon/daemon",
             "bench/klock_test",
         )

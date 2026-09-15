@@ -1,0 +1,179 @@
+--- /dev/null
++++ b/include/linux/kd_spin_hooks.h
+@@ -0,0 +1,22 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _LINUX_KD_SPIN_HOOKS_H
++#define _LINUX_KD_SPIN_HOOKS_H
++
++#include <linux/spinlock_types.h>
++#define KD_SPIN_STATIC_HOOKS 1
++#define KD_SPIN_STATIC_DISPATCH 1
++
++typedef int (*kd_spin_selector_fn)(void);
++typedef void (*kd_spin_callback_fn)(raw_spinlock_t *, unsigned long, unsigned long);
++
++/* Sleepable, controlled module boundaries only; never call from a lock hook.
++ * Callers/frames must drain before removal. The existing legacy int3 selector
++ * and source pins keep their documented lifetime limitations. */
++int kd_spin_static_install(kd_spin_selector_fn select,
++			  kd_spin_callback_fn lock, kd_spin_callback_fn unlock);
++/* Opt-in combined callbacks must handle non-target tasks with native locking,
++ * retaining owner routing after comm changes or source admission closes. */
++int kd_spin_static_install_dispatch(kd_spin_selector_fn select,
++			 kd_spin_callback_fn lock, kd_spin_callback_fn unlock);
++void kd_spin_static_remove(void);
++#endif
+--- a/kernel/locking/spinlock.c
++++ b/kernel/locking/spinlock.c
+@@ -21,6 +21,11 @@
+ #include <linux/interrupt.h>
+ #include <linux/debug_locks.h>
+ #include <linux/export.h>
++#include <linux/errno.h>
++#include <linux/mutex.h>
++#include <linux/static_call.h>
++#include <linux/jump_label.h>
++#include <linux/kd_spin_hooks.h>
+ 
+ #ifdef CONFIG_MMIOWB
+ #ifndef arch_mmiowb_state
+@@ -156,6 +161,97 @@
+ EXPORT_SYMBOL(kd_raw_spin_lock);
+ EXPORT_SYMBOL(kd_raw_spin_unlock);
+ 
++/* Updated only during controlled provider install/removal, after callers and
++ * leases have drained. This does not add a general hook-reader lifetime ABI. */
++static DEFINE_MUTEX(kd_spin_hook_update_lock);
++static DEFINE_STATIC_KEY_FALSE(kd_spin_combined_dispatch);
++
++static int kd_spin_native_select(void)
++{
++	return 0;
++}
++
++static void kd_spin_native_lock(raw_spinlock_t *lock, unsigned long rsp,
++				unsigned long rip)
++{
++	(void)rsp;
++	(void)rip;
++	__raw_spin_lock(lock);
++}
++
++static void kd_spin_native_unlock(raw_spinlock_t *lock, unsigned long rsp,
++				  unsigned long rip)
++{
++	(void)rsp;
++	(void)rip;
++	__raw_spin_unlock(lock);
++}
++
++DEFINE_STATIC_CALL(kd_spin_select, kd_spin_native_select);
++DEFINE_STATIC_CALL(kd_spin_lock_call, kd_spin_native_lock);
++DEFINE_STATIC_CALL(kd_spin_unlock_call, kd_spin_native_unlock);
++
++static int kd_spin_install(kd_spin_selector_fn select,
++			   kd_spin_callback_fn lock, kd_spin_callback_fn unlock,
++			   bool combined)
++{
++	int ret = 0;
++
++	if (!select || !lock || !unlock)
++		return -EINVAL;
++	mutex_lock(&kd_spin_hook_update_lock);
++	if (is_kd_test || kd_raw_spin_lock || kd_raw_spin_unlock) {
++		ret = -EBUSY;
++		goto out;
++	}
++	static_call_update(kd_spin_select, select);
++	static_call_update(kd_spin_lock_call, lock);
++	static_call_update(kd_spin_unlock_call, unlock);
++	if (combined)
++		static_branch_enable(&kd_spin_combined_dispatch);
++	WRITE_ONCE(kd_raw_spin_lock, lock);
++	WRITE_ONCE(kd_raw_spin_unlock, unlock);
++	/* Retain the legacy selector for the existing int3 consumer. Expose it
++	 * only after all direct call sites and callback pointers are ready. */
++	smp_wmb();
++	WRITE_ONCE(is_kd_test, select);
++out:
++	mutex_unlock(&kd_spin_hook_update_lock);
++	return ret;
++}
++
++int kd_spin_static_install(kd_spin_selector_fn select,
++			  kd_spin_callback_fn lock, kd_spin_callback_fn unlock)
++{
++	return kd_spin_install(select, lock, unlock, false);
++}
++EXPORT_SYMBOL_GPL(kd_spin_static_install);
++
++/* Combined callbacks perform their own target/retained-owner routing.
++ * Preserve the separate selector for the unchanged int3 consumer. */
++int kd_spin_static_install_dispatch(kd_spin_selector_fn select,
++			 kd_spin_callback_fn lock, kd_spin_callback_fn unlock)
++{
++	return kd_spin_install(select, lock, unlock, true);
++}
++EXPORT_SYMBOL_GPL(kd_spin_static_install_dispatch);
++
++void kd_spin_static_remove(void)
++{
++	mutex_lock(&kd_spin_hook_update_lock);
++	/* Requires the existing external no-new-callers/retired boundary. Plain
++	 * legacy selector readers are still not a generally safe hot-unload API. */
++	WRITE_ONCE(is_kd_test, NULL);
++	WRITE_ONCE(kd_raw_spin_lock, NULL);
++	WRITE_ONCE(kd_raw_spin_unlock, NULL);
++	static_branch_disable(&kd_spin_combined_dispatch);
++	static_call_update(kd_spin_select, kd_spin_native_select);
++	static_call_update(kd_spin_lock_call, kd_spin_native_lock);
++	static_call_update(kd_spin_unlock_call, kd_spin_native_unlock);
++	mutex_unlock(&kd_spin_hook_update_lock);
++}
++EXPORT_SYMBOL_GPL(kd_spin_static_remove);
++
+ #ifndef CONFIG_INLINE_SPIN_LOCK
+ #pragma GCC push_options
+ // #pragma GCC optimize ("O0")
+@@ -164,7 +260,10 @@
+ {
+ 	//! kd mod
+ 	asm volatile ("" : : :  "r15", "r14","r13","r12","rbx");
+-	if (is_kd_test != NULL && is_kd_test() == 2 && kd_raw_spin_lock != NULL){
++	if (READ_ONCE(is_kd_test) != NULL &&
++	    (static_branch_unlikely(&kd_spin_combined_dispatch) ||
++	     static_call(kd_spin_select)() == 2) &&
++	    READ_ONCE(kd_raw_spin_lock) != NULL){
+ 		unsigned long rsp;
+ 		asm volatile (
+ 			"movq %%rsp, %0"
+@@ -196,7 +295,7 @@
+         //              : "rm"(ret)
+         //              : "rsi", "rdi", "memory");
+ 		// unsigned long ret_addr = _RET_IP_;
+-		kd_raw_spin_lock(lock,rsp,_RET_IP_);
++		static_call(kd_spin_lock_call)(lock, rsp, _RET_IP_);
+ 		return;
+ 	}    
+ 	__raw_spin_lock(lock);
+@@ -235,7 +334,10 @@
+ noinline void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
+ {
+ 	//! kd mod
+-	if (is_kd_test != NULL && is_kd_test() == 2 && kd_raw_spin_unlock != NULL){
++	if (READ_ONCE(is_kd_test) != NULL &&
++	    (static_branch_unlikely(&kd_spin_combined_dispatch) ||
++	     static_call(kd_spin_select)() == 2) &&
++	    READ_ONCE(kd_raw_spin_unlock) != NULL){
+ 		unsigned long rsp;
+ 		asm volatile (
+ 			"movq %%rsp, %0"
+@@ -243,7 +345,7 @@
+ 			:
+ 			: "memory"
+ 		);
+-		kd_raw_spin_unlock(lock,rsp,_RET_IP_);
++		static_call(kd_spin_unlock_call)(lock, rsp, _RET_IP_);
+ 		return;
+ 	} 
+ 	__raw_spin_unlock(lock);

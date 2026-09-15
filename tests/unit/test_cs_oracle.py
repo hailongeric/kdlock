@@ -6,6 +6,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 ROOT = Path(__file__).resolve().parents[2]
 
 PREAMBLE = r"""
@@ -64,7 +66,7 @@ int main(void)
 
 
 def main():
-    source = (ROOT / "klock_module/klock_module.c").read_text()
+    source = read_source((ROOT / "workload_modules/lock_scenarios/klock_module.c"))
     start = source.index("#define KD_CS_LANES ")
     step = source.index("static __always_inline void kd_cs_step(", start)
     end = source.index("\n}", step) + 2

@@ -4,10 +4,10 @@
 /*
  * kd_lock.h — kdlock hook declarations.
  *
- * These are the function signatures the patched kernel calls on every
- * spinlock and mutex operation for the target process.  The module
- * installs its implementations (kd_lock.c) during init and clears them
- * during exit.
+ * Entry signatures installed by kd_main.c into the patched kernel. Legacy
+ * hooks arrive after selection; the combined spin dispatcher performs its
+ * own target/active-owner routing and native fallback. kd_lock.c owns entry
+ * handling; kernel_module/lock/ owns translated nested CALL handling.
  *
  * The inline helpers preserve lockdep accounting for native fallback paths.
  */
@@ -51,6 +51,12 @@ void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 			unsigned long ret_addr);
 void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 			  unsigned long ret_addr);
+
+/* Optional combined spin interface; non-target callers remain native. */
+void kd_spin_dispatch_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
+			   unsigned long ret_addr);
+void kd_spin_dispatch_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
+			     unsigned long ret_addr);
 
 /* --- mutex hooks ---------------------------------------------------------- */
 

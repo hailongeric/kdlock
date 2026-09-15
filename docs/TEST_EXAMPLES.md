@@ -166,7 +166,8 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 
 以下文件均在 `tests/unit/`。这里的“保留”表示有独立验证目的，后续按改动选择，
 不表示每轮必跑。`*_fixture.c` 是相应 Python 驱动的编译输入，
-`tests/kernel/*` 是被模块 include 的 workload/观察器/自测片段，都不另算独立入口。
+`workload_modules/lock_scenarios/fragments/*` 是 Demo 临界区片段，
+`tests/kernel/*` 是 provider 观察器/组件自测；均由模块 include，不另算独立入口。
 完整文件对应关系见 [目录索引](PROJECT_GUIDE.md#59-单元测试-testsunit)。
 
 ### 4.1 两个 C 程序

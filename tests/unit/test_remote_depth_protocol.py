@@ -11,6 +11,8 @@ import unittest
 from itertools import product
 from pathlib import Path
 
+from source_text import read_source
+
 from test_spin_gate import without_includes
 from test_spin_shadow import definition
 
@@ -1024,7 +1026,7 @@ class DepthOracleTests(unittest.TestCase):
 
     def test_workload_wait_negative_count_and_publication(self):
         root = Path(__file__).resolve().parents[2]
-        source = (root / "tests/kernel/remote_depth_workload.c").read_text()
+        source = read_source(root / "workload_modules/lock_scenarios/fragments/remote_depth_workload.c")
         code = r"""
 #include <assert.h>
 #include <stdbool.h>

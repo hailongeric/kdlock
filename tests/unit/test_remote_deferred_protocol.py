@@ -8,6 +8,8 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+
+from source_text import read_source
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -533,7 +535,7 @@ class DeferredTests(unittest.TestCase):
 
     def test_production_queue_selection_and_trace_lifetimes(self):
         root = Path(__file__).resolve().parents[2]
-        source = (root / "kernel_module/kd_spinlock.c").read_text()
+        source = read_source(root / "kernel_module/kd_spinlock.c")
         code = without_includes(
             (root / "tests/kernel/spin_deferred_trace.c").read_text()
         )

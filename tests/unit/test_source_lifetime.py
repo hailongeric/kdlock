@@ -10,12 +10,15 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 from test_spin_gate import ROOT, without_includes
 from test_spin_shadow import definition
 
 
 def production():
-    code = without_includes((ROOT / "kernel_module/kd_source.c").read_text())
+    code = without_includes(read_source((ROOT / "include/kd_source.h")))
+    code += without_includes(read_source((ROOT / "kernel_module/kd_source.c")))
     for path, signatures in {
         "kernel_module/exe.c": (
             "bool kd_exe_publish_status(struct kd_exe_info *exe, int status)",
@@ -28,7 +31,7 @@ def production():
             "static long kd_dev_ioctl(struct file *file, unsigned int command,",
         ),
     }.items():
-        source = (ROOT / path).read_text()
+        source = read_source((ROOT / path))
         code += "\n".join(definition(source, name) for name in signatures) + "\n"
     return code
 

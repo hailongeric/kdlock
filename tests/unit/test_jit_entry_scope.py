@@ -12,6 +12,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 from test_exe_registry import lookup_code, timing_code
 from test_exec_capacity import production
 from test_spin_gate import ROOT, without_includes
@@ -20,15 +22,15 @@ from test_spin_shadow import definition
 
 def main():
     types, _ = production()
-    types += without_includes((ROOT / "include/exe_info.h").read_text())
+    types += without_includes(read_source((ROOT / "include/exe_info.h")))
     types += '#include "kd_hostcall.h"\n'
-    executor = (ROOT / "kernel_module/exe.c").read_text()
+    executor = read_source((ROOT / "kernel_module/exe.c"))
     types += definition(executor, "struct kd_hostcall_desc {").rstrip() + ";\n"
     for path in ("include/exe.h", "kernel_module/exe.c"):
         types += (
             "\n".join(
                 line
-                for line in (ROOT / path).read_text().splitlines()
+                for line in read_source((ROOT / path)).splitlines()
                 if line.startswith("#define KD_EXE_")
             )
             + "\n"
@@ -55,7 +57,7 @@ def main():
             "int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,",
         ),
     }.items():
-        source = (ROOT / path).read_text()
+        source = read_source((ROOT / path))
         code += "\n".join(definition(source, name) for name in signatures) + "\n"
     # Include the production manifest/table and adapters, substituting only the
     # service primitives. A handwritten dispatcher would not detect policy drift.

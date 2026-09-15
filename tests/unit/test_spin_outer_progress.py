@@ -16,6 +16,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 from test_spin_gate import ROOT, without_includes
 from test_spin_shadow import definition
 
@@ -27,7 +29,7 @@ def main():
     types = definition(ptrace, "struct pt_regs {").rstrip() + ";\n"
     types += (
         definition(
-            (ROOT / "include/qspinlock_i.h").read_text(), "struct orig_qspinlock {"
+            read_source((ROOT / "include/qspinlock_i.h")), "struct orig_qspinlock {"
         ).rstrip()
         + ";\n"
     )
@@ -38,24 +40,24 @@ def main():
         "include/kd_exec.h",
         "include/kd_spinlock.h",
     ):
-        types += without_includes((ROOT / name).read_text()) + "\n"
+        types += without_includes(read_source((ROOT / name))) + "\n"
     types += (
         "\n".join(
             line
-            for line in (ROOT / "include/exe.h").read_text().splitlines()
+            for line in read_source((ROOT / "include/exe.h")).splitlines()
             if line.startswith("#define KD_EXE_")
         )
         + "\n"
     )
-    spin = (ROOT / "kernel_module/kd_spinlock.c").read_text()
+    spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
     for marker in ("struct shadow_stack {", "struct kd_spin_jit_context {"):
         types += definition(spin, marker).rstrip() + ";\n"
     if "kd_spin_entry_reclaim(" not in types:
         types += "#define kd_spin_entry_reclaim kd_spin_entry_claim\n"
     code = ""
     for name in ("kernel_module/kd_spin_gate.c", "kernel_module/kd_spin_entry.c"):
-        code += without_includes((ROOT / name).read_text()) + "\n"
-    frame = (ROOT / "kernel_module/kd_exec.c").read_text()
+        code += without_includes(read_source((ROOT / name))) + "\n"
+    frame = read_source((ROOT / "kernel_module/kd_exec.c"))
     pool = "\n".join(
         definition(frame, marker)
         for marker in (
@@ -140,7 +142,7 @@ def main():
         marker = next(line for line in spin.splitlines() if line.startswith(name + "("))
         code += prefix + definition(spin, marker) + "\n"
     code += definition(
-        (ROOT / "kernel_module/kd_lock.c").read_text(),
+        read_source((ROOT / "kernel_module/kd_lock.c")),
         "int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,",
     )
     queue = "static int\n" + definition(

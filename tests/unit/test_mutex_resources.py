@@ -11,13 +11,15 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 from test_spin_gate import ROOT, without_includes
 from test_spin_shadow import definition
 
 
 def production():
-    mutex = (ROOT / "kernel_module/kd_mutex.c").read_text()
-    hook = (ROOT / "kernel_module/kd_lock.c").read_text()
+    mutex = read_source((ROOT / "kernel_module/kd_mutex.c"))
+    hook = read_source((ROOT / "kernel_module/kd_lock.c"))
     # This boundary is substituted, so pin its normal owner result to the
     # actual producer. A consumer accepting other values is not equivalence.
     slowpath = definition(
@@ -73,7 +75,7 @@ def production():
         code += definition(hook, marker)
     # The address-less guest callback runs before either mutex hook. Exercise
     # its production decision through rename/closing, not a target-or-ref model.
-    selectors = (ROOT / "kernel_module/kd_main.c").read_text()
+    selectors = read_source((ROOT / "kernel_module/kd_main.c"))
     for marker in (
         "static bool kd_target_matches(void)",
         "static int __is_kd_mutex_task(void)",
@@ -87,7 +89,7 @@ def main():
     ptrace = (kernel / "arch/x86/include/asm/ptrace.h").read_text()
     ptrace = ptrace.split("#else /* __i386__ */", 1)[1]
     types = definition(ptrace, "struct pt_regs {").rstrip() + ";\n"
-    types += without_includes((ROOT / "include/kd_mutex.h").read_text())
+    types += without_includes(read_source((ROOT / "include/kd_mutex.h")))
     code = production()
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.

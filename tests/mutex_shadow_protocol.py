@@ -126,7 +126,7 @@ def capture(phase, out):
     sys.path.insert(0, str(root / "disassem"))
     import device_session as source
 
-    module = root / "klock_module/klock_module.ko"
+    module = root / "workload_modules/lock_scenarios/klock_module.ko"
     digest = hashlib.sha256(module.read_bytes()).hexdigest()
     path = out / "shadow-pool.json"
     symbols = {

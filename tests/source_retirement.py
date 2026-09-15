@@ -261,7 +261,7 @@ def lock_return_sites(symbols, published):
     # a function's range. Reload uses the same module bytes and runtime bases;
     # each completed native record must therefore pass the same outer-lock RIP.
     sites = {}
-    with (ROOT / "klock_module/klock_module.ko").open("rb") as stream:
+    with (ROOT / "workload_modules/lock_scenarios/klock_module.ko").open("rb") as stream:
         elf = ELFFile(stream)
         symtab = elf.get_section_by_name(".symtab")
         for name in ("kd_parallel_cs0", "kd_parallel_cs1"):
@@ -312,7 +312,7 @@ def reload_source(fd, out):
     )
     before = source_symbols()
     sites = lock_return_sites(before, json.loads((out / "published.json").read_text()))
-    module = ROOT / "klock_module/klock_module.ko"
+    module = ROOT / "workload_modules/lock_scenarios/klock_module.ko"
     digest = hashlib.sha256(module.read_bytes()).hexdigest()
     # All old callers/frames/writers have drained. Keep kdlock and its retired
     # registry loaded, so unloading the provider cannot erase a stale-entry bug.

@@ -11,6 +11,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 from test_spin_gate import ROOT, without_includes
 from test_spin_shadow import definition
 
@@ -18,20 +20,20 @@ from test_spin_shadow import definition
 def main():
     types = (
         definition(
-            (ROOT / "include/kd_spin_entry.h").read_text(), "struct kd_spin_ref {"
+            read_source((ROOT / "include/kd_spin_entry.h")), "struct kd_spin_ref {"
         ).rstrip()
         + ";\n"
     )
     for name in ("include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h"):
-        types += without_includes((ROOT / name).read_text()) + "\n"
+        types += without_includes(read_source((ROOT / name))) + "\n"
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     types += (kernel / "include/linux/kern_levels.h").read_text() + "\n"
     types += "\n".join(
         line
-        for line in (ROOT / "include/exe.h").read_text().splitlines()
+        for line in read_source((ROOT / "include/exe.h")).splitlines()
         if line.startswith("#define KD_EXE_")
     )
-    frame = (ROOT / "kernel_module/kd_exec.c").read_text()
+    frame = read_source((ROOT / "kernel_module/kd_exec.c"))
     code = ""
     for marker in (
         "static int kd_exec_invariant_failure(void)",
@@ -50,7 +52,7 @@ def main():
         "int kd_exec_frame_abort(struct kd_exec_frame *frame)",
     ):
         code += definition(frame, marker) + "\n"
-    mutex = (ROOT / "kernel_module/kd_mutex.c").read_text()
+    mutex = read_source((ROOT / "kernel_module/kd_mutex.c"))
     # Compile the real trace macro too: a substitute silently missed ALERT
     # output on the hot path. Keep logging enabled; validate its severity/text.
     start = mutex.index("#ifdef DSM_DEBUG")

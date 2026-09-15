@@ -7,6 +7,11 @@ static bool mock_alloc_fail;
 #define alloc_percpu(type) (mock_alloc_fail ? NULL : calloc(2, sizeof(type)))
 #define free_percpu(p) free(p)
 
+/* This fixture owns tickets only. The routing fixture separately exercises
+ * the production native fast owner and its integration with these queries. */
+static bool kd_spin_fast_native_active(void) { return false; }
+static bool kd_spin_fast_idle(void) { return true; }
+
 #include "entry_production.h"
 
 static raw_spinlock_t locks[KD_SPIN_GATE_SLOTS + 1];

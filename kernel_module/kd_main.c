@@ -9,9 +9,14 @@
 #include <linux/sched.h>
 #include <linux/spinlock.h>
 #include <linux/string.h>
+#if __has_include(<linux/kd_spin_hooks.h>)
+#include <linux/kd_spin_hooks.h>
+#endif
 
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_comm.h"
+#include "kd_spin_select.h"
 #include "kd_source.h"
 #include "kd_hotlock.h"
 #include "kd_lock.h"
@@ -33,6 +38,7 @@ MODULE_PARM_DESC(
 	"one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint");
 
 static char *target_process = "kd_test";
+struct kd_comm_key kd_spin_target;
 module_param(target_process, charp, S_IRUGO);
 MODULE_PARM_DESC(target_process, "task comm routed through kdlock hooks");
 
@@ -56,11 +62,7 @@ static bool kd_target_matches(void)
 
 static int __is_kd_test(void)
 {
-	/* Closing stops fresh targets, not unlock routing for retained owners. */
-	return (kd_source_is_open() && kd_target_matches()) ||
-			       kd_spin_entry_task_active() ?
-		       2 :
-		       0;
+	return kd_spin_task_selected() ? 2 : 0;
 }
 
 /* A renamed task must still finish its queued or borrowed mutex acquisition. */
@@ -78,6 +80,7 @@ static int __init kdlock_km_init(void)
 {
 	int ret;
 
+	kd_comm_init(&kd_spin_target, target_process);
 	ret = kd_source_init();
 	if (ret)
 		return ret;
@@ -117,9 +120,21 @@ static int __init kdlock_km_init(void)
 		goto err_mutex;
 #endif
 
+#ifdef KD_SPIN_STATIC_DISPATCH
+	ret = kd_spin_static_install_dispatch(__is_kd_test,
+				kd_spin_dispatch_lock, kd_spin_dispatch_unlock);
+	if (ret)
+		goto err_mutex;
+#elif defined(KD_SPIN_STATIC_HOOKS)
+	ret = kd_spin_static_install(__is_kd_test, __kd_raw_spin_lock,
+				     __kd_raw_spin_unlock);
+	if (ret)
+		goto err_mutex;
+#else
 	is_kd_test = __is_kd_test;
 	kd_raw_spin_unlock = __kd_raw_spin_unlock;
 	kd_raw_spin_lock = __kd_raw_spin_lock;
+#endif
 	is_kd = __is_kd_mutex_task;
 	kd_mutex_lock = __kd_mutex_lock;
 	kd_mutex_unlock = __kd_mutex_unlock;
@@ -128,7 +143,7 @@ static int __init kdlock_km_init(void)
 		   target_process);
 	return 0;
 
-#ifdef KDLOCK_SELFTEST
+#if defined(KDLOCK_SELFTEST) || defined(KD_SPIN_STATIC_HOOKS)
 err_mutex:
 	kd_mutex_exit();
 #endif
@@ -152,9 +167,13 @@ err_source:
  * This RCU wait does not by itself protect the guest's unguarded hook readers. */
 static void __exit kdlock_km_exit(void)
 {
+#ifdef KD_SPIN_STATIC_HOOKS
+	kd_spin_static_remove();
+#else
 	kd_raw_spin_unlock = NULL;
 	kd_raw_spin_lock = NULL;
 	is_kd_test = NULL;
+#endif
 	kd_mutex_unlock = NULL;
 	kd_mutex_lock = NULL;
 	is_kd = NULL;
