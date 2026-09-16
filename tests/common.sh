@@ -1,13 +1,13 @@
 #!/bin/bash
 # common.sh — shared utilities for kdlock test scripts.
-# Source this file from each test: source "$(dirname "$0")/common.sh"
-# Driver library, not an interactive startup file: ROOT depends on $0 and the
-# EXIT trap stops its daemon and retires/unloads modules. start_daemon replaces
+# Source this file from each test: source "$(dirname "$0")/../common.sh"
+# Driver library, not an interactive startup file: the EXIT trap stops its
+# daemon and retires/unloads modules. start_daemon replaces
 # generated 0x* workspaces, so preserve evidence and drain the previous session.
 
 set -euo pipefail
 
-KDLOCK_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+KDLOCK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KM_DIR="$KDLOCK_DIR/kernel_module"
 KLOCK_DIR="$KDLOCK_DIR/workload_modules/lock_scenarios"
 DAEMON_DIR="$KDLOCK_DIR/daemon"

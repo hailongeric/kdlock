@@ -102,47 +102,6 @@ bool kd_mutex_jit_is_enabled(void)
 }
 
 /* --------------------------------------------------------------------------
- * Spin-with-schedule macros (for waiter spinning)
- * -------------------------------------------------------------------------- */
-#ifndef smp_cond_load_relaxed_sched
-#define smp_cond_load_relaxed_sched(ptr, cond_expr) \
-	({                                          \
-		typeof(ptr) __PTR = (ptr);          \
-		__unqual_scalar_typeof(*ptr) VAL;   \
-		for (;;) {                          \
-			VAL = READ_ONCE(*__PTR);    \
-			if (cond_expr)              \
-				break;              \
-			cpu_relax();                \
-			if (need_resched()) {       \
-				preempt_enable();   \
-				schedule();         \
-				preempt_disable();  \
-			}                           \
-		}                                   \
-		(typeof(*ptr))VAL;                  \
-	})
-#endif
-
-#define kd_cond_load_acquire_sched(ptr, cond_expr)     \
-	({                                             \
-		typeof(ptr) __PTR = (ptr);             \
-		__unqual_scalar_typeof(*ptr) VAL;      \
-		for (;;) {                             \
-			VAL = smp_load_acquire(__PTR); \
-			if (cond_expr)                 \
-				break;                 \
-			cpu_relax();                   \
-			if (need_resched()) {          \
-				preempt_enable();      \
-				schedule();            \
-				preempt_disable();     \
-			}                              \
-		}                                      \
-		(typeof(*ptr))VAL;                     \
-	})
-
-/* --------------------------------------------------------------------------
  * Per-CPU shadow stack
  * -------------------------------------------------------------------------- */
 struct kd_mutex_shadow {
@@ -229,8 +188,9 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 		return;
 	}
 
-	/* Waiters may schedule, so pin each one to the CPU that owns its reserved
-	 * node and private shadow-stack slot. */
+	/* Published waiters keep preemption disabled until completion or native
+	 * handoff: their origin GS storage must not be reused by another task.
+	 * Migration stays pinned when an executor acquires a real sleeping mutex. */
 	migrate_disable();
 	preempt_disable();
 	{

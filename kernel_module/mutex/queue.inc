@@ -87,14 +87,14 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock)
 	}
 }
 
-/* Called with preemption disabled and migration pinned. */
-static void kd_mutex_schedule_if_needed(void)
+/* Called with preemption disabled from before request publication. Keep the
+ * origin task on its CPU while another CPU executes GS accesses on its behalf.
+ * The acquire pairs with completion/native-handoff publication; PAUSE is only
+ * a polling hint and does not supply that ordering or disable interrupts. */
+static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 {
-	if (!need_resched())
-		return;
-	preempt_enable();
-	schedule();
-	preempt_disable();
+	while (smp_load_acquire(&node->locked))
+		cpu_relax();
 }
 
 /* The scheduling gate cannot authorize a CS without the original mutex. */
@@ -109,23 +109,23 @@ static void kd_mutex_claim_origin(struct kd_mutex *lock)
 static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
 {
 	for (;;) {
-		while (smp_load_acquire(&lock->locked)) {
+		while (smp_load_acquire(&lock->locked))
 			cpu_relax();
-			kd_mutex_schedule_if_needed();
-		}
 		if (cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0) {
+			/* This request now owns the gate and cannot be delegated.
+			 * Only the real mutex owner may execute/release its body. */
 			preempt_enable();
 			kd_mutex_claim_origin(lock);
 			preempt_disable();
 			return;
 		}
 		cpu_relax();
-		kd_mutex_schedule_if_needed();
 	}
 }
 
 /* Reservation is serialized by preemption disable on this migration-pinned
- * CPU. A separate stack per slot permits the reservation to survive schedule(). */
+ * CPU. An executor can later sleep acquiring the real mutex; its reserved
+ * stack must survive that sleep. Published delegation waiters never schedule. */
 static struct kd_mutex_node *kd_mutex_reserve_node(void)
 {
 	struct kd_mutex_shadow *shadow = this_cpu_ptr(&kd_mutex_shadows);

@@ -189,7 +189,7 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_spin_node,
 				     kd_spin_nodes[MAX_NODES]);
 
 #ifdef KDLOCK_SELFTEST
-#include "../../tests/kernel/spin_node_trace.c"
+#include "../../tests/kernel/spin/spin_node_trace.c"
 #else
 #define kd_spin_selftest_node_event(event) \
 	do {                               \

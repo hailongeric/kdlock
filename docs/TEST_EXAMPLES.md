@@ -37,11 +37,14 @@ dispatch 端点不含正文时间、单次消费、拒绝保留和 native 发布
 
 ## 1. 数量与结论
 
+以下库存于 2026-09-16 按分组目录核对；运行约定为基础简单功能加直接相关功能，
+不因保留完整库存而自动全量运行。目录和命令见 [测试入口](../tests/README.md)。
+
 | 统计对象 | 当前数量 | 含义 |
 | --- | --- | --- |
-| `tests/unit/Makefile` 的入口 | 40 | 2 个 C 程序、38 个 Python 程序；无参数 `make ... run` 全部执行 |
-| Python `test_*` 方法定义 | 496 | 静态 AST 计数；不含 C 断言、`main()` 驱动和 `subTest` 参数展开，不能作为全部用例数 |
-| `tests/test_*.sh` | 21 | 编号有空缺，不能按最大编号 23 计数；其中有调度器和组件自测 |
+| `tests/unit/Makefile` 的入口 | 40 | 2 个 C 程序、38 个 Python 程序；`make ... run` 默认仅两个基础 C，`run-all` 显式全量 |
+| Python `test_*` 方法定义 | 500 | 静态 AST 计数；不含 C 断言、`main()` 驱动和 `subTest` 参数展开，不能作为全部用例数 |
+| `tests/live/test_*.sh` | 22 | 编号有空缺，不能按最大编号 24 计数；包括调度器、组件自测和 GS 正例 |
 | `regression.py` 的 `CASES` | 80 | 固定回归的唯一命名用例；不含配对实验按参数生成的会话 |
 | `SUITES` | 15 | 可重叠的选择视图，不能相加计算独立用例数 |
 | `extended` | 64 | 排除 3 项 baseline、2 项 native control 和 11 项已覆盖诊断 |
@@ -93,7 +96,7 @@ bash tests/run_all.sh --suite mutex --suite hostcall --case mode-5 --dry-run
 make -C tests/unit run TESTS= PY_TESTS=test_regression.py
 
 # Guest: only the changed pending-CALL helper and its production consumer.
-make -C tests/unit run TESTS=test_control_call PY_TESTS=test_native_after_outer.py
+make -C tests/unit run TESTS=basic/test_control_call PY_TESTS=test_native_after_outer.py
 
 # Guest: initial acceptance or an explicitly requested full unit run.
 make -C tests/unit run
@@ -145,7 +148,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_09_jit_execution_modes.sh` | `mode-0` 至 `mode-5` | 调度上述实现；也可显式分发 mode 10/11 拒绝检查；不是另一份 JIT 测试，不应连同子脚本再跑一遍 |
 | `test_10_native_resume.sh` | `registers-*`、`control-*`、`native-*`（不含 peer）、`virtual-*`、`shadow-capacity`、`late-*`、`waiter-*`，共 35 项 | 原生续跑主驱动；CALL miss、PENDING、已完成控制 CALL、提前 A 解锁、资源/信号边界各有独立断言；不能只因共用脚本而去重 |
 | `test_11_mutex_native_protocol.sh` | `mixed-mutex` | 目标与非目标线程共享同一 Linux mutex，包含 promotion 和节点不足回退；`mixed` 指参与者，不是 spin/mutex 混用 |
-| `test_12_context_native_only.sh` | `context-*`，共 12 项 | GS、IRQ/BH、混合锁后端及多种 per-CPU 地址传播拒绝；必须保持 native，各传播路径不能由一种 GS 负例替代 |
+| `test_12_context_native_only.sh` / `test_24_gs_jit.sh` | `context-*` | GS read/write/RMW/current 为实际 JIT 正例；IRQ/BH、混合锁后端及多种线性 per-CPU 地址传播仍须拒绝 |
 | `test_13_spin_shadow_capacity.sh` | 独立手动组件诊断 | 实际内核 full-shadow 队首路径，JIT=0；与 `shadow-capacity` 的 JIT 退出前缀及 PENDING 包检查不同，已不在套件中 |
 | `test_14_spin_frame_depth.sh` | `node-physical-{1,2,8}-{0,1}`，共 6 项 | 物理 frame 链、继承的锁记录和 watermark；日常只选八层的两种配置，浅层点选 |
 | `test_15_spin_native_gate.sh` | 独立手动组件诊断 | 真实原锁 L/私有队列 S 排斥与原生进度，JIT=0；不同于用户态替代原语，也不同于 gate 表满压力 |
@@ -188,7 +191,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_context_guards.py` | 有界 CALL/RET 范围与实际执行的入口谓词、拒绝时状态不变 | 生成机器码语义不同于静态准入结论；保留 |
 | `test_context_spill_audit.py` | 独立 audit 的具体 witness、错误分类、无镜像拒绝条件 | 验证 audit 能发现错误，不等于运行整个 audit corpus；保留 |
 | `test_hostcall_codegen.py` | 三个 manifest 服务的解析、精确目标/出口编号、不覆盖 RDI、未知 CALL/服务出口不弹虚拟返回地址 | 与生产 hostcall consumer 分属生成/消费两端，保留；缺失 miasm 不能记 SKIP 通过 |
-| `test_segment_codegen.py` | GS lowering、logical task、FS/base 指令拒绝、双元素 wrapper 布局 | 检查底层生成支持；生产准入仍可拒绝 GS 临界区，两者目的不同，保留 |
+| `test_segment_codegen.py` | GS lowering、logical task、FS/base 指令拒绝、双元素 wrapper 布局 | 通过实际 wrapper 和独立 origin storage 执行 GS 正例；FS/base 仍拒绝，保留 |
 | `test_text_regions.py` | 跨文本窗口 CFG、读预算、lease/CAPS、设备身份和关闭 | 文本获取与会话边界不被普通上下文语料替代，保留 |
 | `test_jit_diagnostics.py` | warning/error 定位、去重、flags/特殊指令现状及构建错误 | 验证诊断而非修复指令语义；其 helper 供其他单元复用，保留 |
 | `test_jit_body_witness.py` | 实际 wrapper/body marker、dispatcher 负例、entry/lock 匹配日志 | 与 guards 共用用户态执行工具，但专测执行证据是否可信，保留 |
@@ -260,7 +263,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 
 已删除 `test_spin_node_count.c`、其 Makefile 入口和生成物忽略项。
 原来的三个断言组分别对应到
-[`spin_node_pool_fixture.c`](../tests/unit/spin_node_pool_fixture.c) 的
+[`spin_node_pool_fixture.c`](../tests/unit/spin/spin_node_pool_fixture.c) 的
 `producer_path_case()` / `producer_live_prefix()` / `run_producer_cases()`：
 
 | 模型行为 | 已有生产测试依据 |
@@ -271,7 +274,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 
 生产函数由 `test_spin_shadow.py` 从 `kd_spinlock.c` 提取；fixture 的锁/CPU/peer
 仍是替代原语，不能据此声称 Linux 并发已经通过。精简后在 guest 运行
-`python3 tests/unit/test_spin_shadow.py --mutations`：生产路径的 NUMA off/on
+`python3 tests/unit/run.py spin/test_spin_shadow.py --mutations`：生产路径的 NUMA off/on
 配置通过，九种故障变异全部被拒绝。该参数只改临时提取副本，不修改生产源文件。
 源码身份、命令与日志见 [本次验证](VALIDATION.md#redundant-node-model-removal)，
 未因此重复其他单元或 live 矩阵。

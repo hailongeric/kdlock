@@ -365,6 +365,12 @@ worker 或其他快照时，计数查询返回 EBUSY。最后一个 worker 的 r
 
 ## 临界区与测试伪代码
 
+kdlock 内部的首次发现/注册、已发布原生快路径、排队代理、wrapper/JIT 正文及
+waiter 恢复，另见 [执行路径与开销伪代码](EXECUTION_PATHS.md)。该文展开全局查表、
+原子操作、frame 校验和复制，并区分准备期开销与测量期每次执行的成本。
+发生代理时，锁外乘加由原 waiter 恢复后执行；combiner 连续代理多个正文期间
+仍持有原锁，不在相邻 JIT 正文之间执行这段乘加。
+
 所有线程更新模块全局的同一个 `sc_data` 数组，并争用同一把 `sc_lock`。
 例如 N=4 时，[payload.h](../../workload_modules/spin_cacheline/payload.h)
 展开的临界区如下；N=1/2/8/16 只改变显式更新的槽数，每次获取锁完成一次 op。
@@ -550,18 +556,28 @@ python3 bench/spin_cacheline/summarize.py /tmp/spin-cacheline-scan-20260914
 ### 汇编查看目录
 
 `run.py` 和 `profile.py` 在每个 kdlock 会话成功完成测量、排空、停止翻译者及
-正常卸载后，自动复制汇编到：
+正常卸载后，按临界区归类汇编。不同线程数、不同 repeat 的相同汇编只保存一份：
 
 ```text
 bench/.tmp/spin_cacheline/<结果目录名>-<随机后缀>/
-  README.md                      # 可点击的逐会话索引，随会话完成更新
-  index.json                     # 参数、JIT 状态/次数/占比和 SHA256
-  c01-t04-r01-kdlock/
+  README.md                      # 按临界区列出的查看索引
+  index.json                     # schema=2，临界区和合并的来源记录
+  sc_body_1/
     native.S                     # 翻译前的 sc_body_1，模块反汇编及重定位注释
     JIT.S                        # 生成器 asm/jit.S 原样复制，仅改文件名大小写
     bin.txt                      # JIT 机器码（含 wrapper）的 objdump 反汇编
-    metadata.json                # 来源路径、入口/TGID、会话参数、文件 SHA256
+    metadata.json                # 临界区、文件 SHA256、来源路径及入口/TGID
+  sc_body_2/                     # 同样的三种汇编与元数据
+  sc_body_4/
+  sc_body_8/
+  sc_body_16/
 ```
+
+去重键为临界区规模及三种文件的内容哈希，不包含线程数、CPU 或重复轮次。
+同一内容再次出现时，仅向 `metadata.json` 的 `sources` 追加来源，不重新复制代码。
+如同一规模确实生成不同字节内容，则增加 `sc_body_N-<内容哈希>` 目录保留差异，
+不擅自忽略指令或重定位地址的变化。查看索引不列线程数和 repeat；这些运行参数
+仍在原始 `session.json` 中。每次扫描和补导出各自使用新目录，不混合不同运行。
 
 **`bin.txt` 来自 `objdump ... asm/jit.bin`，是 JIT 之后的代码。** 翻译前请查看
 `native.S`，它从该次运行的 `payload-disassembly.txt` 提取对应完整 `sc_body_N`，
@@ -569,7 +585,8 @@ bench/.tmp/spin_cacheline/<结果目录名>-<随机后缀>/
 `JIT.S` 中还保留了生成器的原指令注释，实际运行入口和代码地址见 `metadata.json`。
 
 运行器输出 `Assembly: ...`，并在原始结果目录写入 `assembly-export.json`，指向
-本次查看目录。各会话的文件完整写入后才公开目录，索引逐次更新；复制和哈希
+本次查看目录，同时记录 `exported_critical_sections` 和 `source_sessions`。
+只有新增代码组时打印 `Assembly:`；各组文件完整写入后才公开目录。复制和哈希
 核对都位于计时区间之外，热循环不增加文件操作、时钟调用或 syscall。
 每次扫描、每次补导出均创建新目录，不覆盖已有副本；目录由 Git 忽略且不进入
 源码冻结。原始 workspace、生成器命名和测量结果保留不变。
@@ -577,7 +594,8 @@ bench/.tmp/spin_cacheline/<结果目录名>-<随机后缀>/
 导出按记录的 RIP/TGID 定位生成物，核对测量前后的发布记录与 SHA256。
 新会话同时记录 `jit.bin`、`jit.S`、`bin.txt` 的测量前后哈希；旧结果只记录前两者，
 补导出时将 `bin_txt_hashed_during_measurement` 标为 `false`，另存复制时哈希。
-NO_JIT 仍保存已生成的汇编并标明正文数为 0，不能据文件存在判定实际执行了 JIT。
+NO_JIT 和实际 JIT 会话若生成相同代码，共用一组文件，各自在来源记录中保留
+真实正文计数；不能把一个会话的 JIT 证据归到另一个会话。
 原生组没有 JIT 生成物；失败、未完成或未排空的会话不读取 workspace、不导出。
 应有的文件缺失或已记录的哈希不符时停止导出，原始证据不覆盖。
 
@@ -604,24 +622,32 @@ timeout 60s scp -r -P 2222 \
 
 <a id="assembly-validation"></a>
 
-#### 汇编导出验证（2026-09-15）
+#### 按临界区去重的验证
 
-recovery guest 已通过 9 项定向检查：`test_assembly.py` 的 6 项检查，以及既有
-单 ioctl/固定时钟调用次数、NO_JIT/配对比值、计划顺序检查。导出检查覆盖
-RIP/TGID 匹配、未排空会话不读取 workspace、缺失/变更产物拒绝、完整目录发布、
-新目录不覆盖旧副本，以及新旧发布哈希格式。
+定向检查入口为 `test_assembly.py`，覆盖跨线程/轮次合并、代码文件不重复写入、
+不同内容保留、RIP/TGID 匹配、未排空会话不读取 workspace、损坏产物拒绝、
+新旧发布哈希及原始证据不变性。只在 recovery guest 运行：
 
-随后从[锁外乘加完整扫描](results/20260915-post-work.md)补导出 60 个 kdlock
-会话，每个包含 `native.S`、`JIT.S`、`bin.txt`，合计 180 份汇编文件；
-50 个会话为实际 JIT、10 个为 NO_JIT。全部副本与原始证据逐文件核对，原始
-3889 个普通文件和源码冻结清单保持不变。此步骤未重新运行性能负载。
+```sh
+cd /root/host_fs/kdlock
+timeout 30s python3 bench/spin_cacheline/test_assembly.py
+```
 
-当前宿主机本地副本的
-[逐会话索引](../.tmp/spin_cacheline/spin-cacheline-best-post-work-20260915-uhgjgmxe/README.md)
-包含全部参数和文件链接。该目录是 Git 忽略的临时查看副本，不随提交或克隆分发；
-清理后可用上面的补导出命令从保留的原始结果重新生成。
-验证日志保存在 `/tmp/kdlock-bench-assembly-20260915/guest-checks/unit.log`，
-导出及证据不变性记录为同目录的 `verification.json`。
+最近一次[锁外乘加完整扫描](results/20260915-post-work.md)的 60 个 kdlock 会话
+对应五种临界区；每种规模的 12 份原生/JIT 汇编均逐字节相同，可合并为五组、
+15 份汇编文件。原始 50 个 JIT、10 个 NO_JIT 会话的运行结果仍分别保留。
+
+2026-09-15 在 recovery guest 完成上述 7 项检查，并从该次扫描重新导出去重
+副本。每组代码与全部 12 个来源逐文件一致；原始结果的 3889 个普通文件和源码
+冻结清单保持不变，没有重新运行性能负载。验证日志位于
+`/tmp/kdlock-assembly-grouping-20260915/guest-checks/unit.log`，同目录的
+`verification.json` 记录去重数量、来源及哈希核对结果。
+
+当前宿主机的[临界区索引](../.tmp/spin_cacheline/spin-cacheline-best-post-work-20260915-77_wqtnu/README.md)
+只列 `sc_body_1`、`sc_body_2`、`sc_body_4`、`sc_body_8`、`sc_body_16` 五组。
+此前按线程分目录的重复副本已移到 `bench/` 外的临时备份，`.tmp` 查看目录中
+只保留这五组。查看副本由 Git 忽略，不随提交或克隆分发；清理后可从保留的原始
+结果用上述命令重新生成。
 
 ### 单线程为什么仍有 kdlock 开销
 

@@ -414,10 +414,10 @@ static __always_inline int kd_spin_trylock(struct qspinlock *lock)
 
 #ifdef KDLOCK_SELFTEST
 /* Keep access to private queue state out of the production API. */
-#include "../tests/kernel/spin_frame_trace.c"
-#include "../tests/kernel/spin_readmission_trace.c"
-#include "../tests/kernel/spin_refusal_trace.c"
-#include "../tests/kernel/spin_deferred_trace.c"
-#include "../tests/kernel/spin_shadow_selftest.c"
-#include "../tests/kernel/spin_virtual_selftest.c"
+#include "../tests/kernel/spin/spin_frame_trace.c"
+#include "../tests/kernel/spin/spin_readmission_trace.c"
+#include "../tests/kernel/spin/spin_refusal_trace.c"
+#include "../tests/kernel/spin/spin_deferred_trace.c"
+#include "../tests/kernel/spin/spin_shadow_selftest.c"
+#include "../tests/kernel/spin/spin_virtual_selftest.c"
 #endif

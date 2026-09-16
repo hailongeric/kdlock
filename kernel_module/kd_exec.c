@@ -389,5 +389,5 @@ static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state)
 }
 
 #ifdef KDLOCK_SELFTEST
-#include "../tests/kernel/exec_capacity_probe.c"
+#include "../tests/kernel/execution/exec_capacity_probe.c"
 #endif

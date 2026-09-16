@@ -51,7 +51,7 @@ CASES = {}
 def add(name, script, *args, **env):
     if name in CASES:
         raise ValueError(f"duplicate case: {name}")
-    CASES[name] = Case(name, script, args, {k: str(v) for k, v in env.items()})
+    CASES[name] = Case(name, f"live/{script}", args, {k: str(v) for k, v in env.items()})
 
 
 # Keep small diagnostics addressable, not prerequisites of every complex case.
@@ -82,7 +82,7 @@ for mode in (0, 3):
         KD_NATIVE_CONTROL=1,
     )
 for name, mode in (("spin", 10), ("mutex", 11), ("mixed", 3)):
-    add(f"context-{name}", "test_12_context_native_only.sh", mode)
+    add(f"context-{name}", "test_12_context_native_only.sh" if mode == 3 else "test_24_gs_jit.sh", mode)
 for api in (
     "irqsave",
     "bh",

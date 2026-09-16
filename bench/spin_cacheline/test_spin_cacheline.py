@@ -18,7 +18,7 @@ import summarize
 import profile_summary
 from provider.prepare import prepare, production_files, digest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests/unit"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests/unit/infrastructure"))
 from source_text import read_source
 
 HERE = Path(__file__).resolve().parent

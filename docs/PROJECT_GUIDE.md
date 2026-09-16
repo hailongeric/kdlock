@@ -10,24 +10,23 @@
 
 ## 1. 当前进展
 
-截至 **2026-09-14**，本阶段汇总 native 交接计时及此前改动，完成代码整理、
-文档更新和 Git 提交。此次整理不恢复已暂停的新功能与实验。当前是可用于
-受控实验的 x86_64 JIT 代理原型，不是全部任务
-完成、任意内核代码可安全代理或已经证明性能收益的版本。
+截至 **2026-09-16**，spinlock 和 mutex 默认均支持显式 GS 代理；被代理线程
+等待结果时均保持禁止抢占并 PAUSE 轮询，不睡眠或调度。spinlock 已有该等待
+行为，mutex 现已对齐；测试代码按用途分组，默认仅验证基础简单功能和
+直接相关功能。这是受控实验用的 x86_64 JIT 代理原型，尚未完成全部任务，
+也不保证任意内核代码均可代理或已经取得性能收益。
 
 ### 1.1 版本与验收范围
 
-- 本次提交汇总自 `1d5fc7259d96863aa143343d22c79aaf93023c9e` 以来的改动，
-  未改动、编译或安装 guest 内核。提交后版本身份以 `git log -1` 为准。
-- 当前运行/测试冻结仍为 **211 个输入**。提交前整理相对最近 JIT 验收只改变
-  5 个文件：计时枚举到日志名的显式映射、注释和排版。Python 执行 AST（不含
-  docstring）及十项标签对应关系与整理前一致；并非重新实现执行协议。
-- 沿用 recovery guest、已捕获的 Linux 6.1.159 hook 基线和隔离的 CPython 3.10
-  环境。不同日期的 PASS 只属于各自冻结输入，不拼接为当前版本全量通过。
-- 最近 JIT 验收增量增加两项默认关闭的计时区间；本次整理不再增加计时项，
-  不改变物理 owner、最终 ACK、frame 布局、两元素 args、队列策略或已延期的
-  访问时 guard/flags/JIT 版本机制。提交检查见
-  [本次整理验证](VALIDATION.md#repository-checkpoint)。
+- 当前提交汇总 GS 准入与 waiter 等待策略、测试目录与运行入口，以及已有的
+  benchmark 汇编按临界区去重和执行路径文档。版本身份以 `git log -1` 为准。
+- GS 与目录整理的验证使用 recovery guest `6.1.159-kdstatic2` 和固定版本
+  CPython 3.10 venv；这两项工作没有修改、编译或安装 guest 内核。独立实验
+  内核的构建与基线历史见 [spin hook 实验](../kernel_experiments/spin_static/README.md)。
+- 每次 PASS 只属于对应的冻结输入。GS 的实际 JIT 验证、目录整理的定向检查
+  及 benchmark 历史测量分开记录，不拼接为当前版本的全量通过。
+- 本次文档更新与 Git 提交只核对差异、引用和已有证据，不重复测试，不启动
+  新实验；物理 owner/ACK、两元素 args、访问时 guard/flags/JIT 版本延期保持原约定。
 
 ### 1.2 已完成
 
@@ -38,8 +37,9 @@
 | 原生互斥与完成协议 | spin/mutex 保留真实原锁，非目标线程仍受同一把原锁保护。native 后缀由 waiter 执行，原 owner 处理 unlock 并确认；没有 mutex owner handoff。 |
 | 前进续跑 | 普通 CALL miss、CALL 次数额度及已有受检边界从当前寄存器/栈状态续跑，不从入口重放、不撤销既有写入；不是任意故障恢复。 |
 | 服务退出和返回 | mode 2/5 的时钟和有界标量 `int_sqrt` 服务原生执行后返回 JIT；额度超限交回 waiter 完成后缀。通用可变参数 `printk` 未实现。 |
+| GS 与等待策略 | spinlock/mutex 默认均支持显式 GS 读/写/RMW，使用 origin base；受支持的 current_task 读取使用 logical waiter。两种已发布请求的 waiter 都禁止抢占并轮询至结果或 native handoff，不睡眠或调度。IRQ/NMI 并发及 native service 上下文仍有限制。 |
 | 翻译准入 | 审查实际可能执行的 JIT 范围，已有入口谓词、受检 mutex 栈事实及静态 core/module per-CPU 筛查；动态地址的访问时保护不在其中。 |
-| 测试与复现入口 | 按行为合并、显式选择测试，保留实际正文证据、完整负载状态、owner/ACK 和排空检查；已有源码/环境/生成物归档及离线校验。40 个单元入口、21 个 shell driver 是库存，不是每轮必跑项。 |
+| 测试与复现入口 | 按行为合并、显式选择测试，保留实际正文证据、完整负载状态、owner/ACK 和排空检查；已有源码/环境/生成物归档及离线校验。40 个单元入口、22 个 shell driver 按用途分组；默认两个基础 C，相关 Python 显式选择，全量仅按要求运行。 |
 | 运行环境与可读性 | 固定四个 Python 运行依赖，提供 guest venv 安装、目录/文件索引、手动步骤及关键函数/协议操作的用途注释；不声称每个函数逐一完成审查。 |
 | 测量基础 | 已有原生/JIT 配对、翻译 wall/CPU/RSS、负载计量和默认关闭的 `jit_timing`。当前十项边界包括 queue、owner wait 和新增 native handoff；翻译器符号匹配已做局部优化。 |
 
@@ -47,37 +47,25 @@
 [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md)，逐项历史证据只维护在
 [VALIDATION](VALIDATION.md)。
 
-### 1.3 最近一次 JIT 验收
+### 1.3 最近验证与历史结果
 
-以下是提交整理之前的独立验收，不是本次整理重新运行的结果。
-该增量新增 `native_spin_handoff` / `native_mutex_handoff`，从 borrowing/发布之前
-计时到 owner wait 成功返回之后，覆盖旧等待区间遗漏的早期 native 工作。
-`jit_timing=0` 仍是默认值；开启时卸载报告十项计时，不是改变锁 owner 的交接。
-
-| 该轮已执行范围 | 结果 |
+| 已完成范围 | 结果与证据入口 |
 | --- | --- |
-| 六个受影响的已有单元程序、外部模块 W=1 构建 | 通过；保留构建诊断，不宣称无警告。 |
-| 计时关闭的 mode 4/8 | 2/2 通过。 |
-| 计时开启的 mode 2/5 配对 | 八个会话、四对通过。 |
-| 计时开启的 mode 4/5/8 | 3/3 通过。 |
-| 执行证据 | 合计 **1,252** 个返回后的 JIT 正文记录；四个按 owner 计数的 native 交接区间与完成记录吻合，包含内层等待。 |
+| GS 实际 JIT | mode 10 spin 与 mode 11 mutex 均通过，包含 GS read/write/RMW/current、正文见证、数据及排空；8 组相关单元与准入审计通过，详见 [GS 验证](../tests/README.md#gs-polling-validation)。 |
+| 测试目录整理 | 两个基础 C 和选择器、benchmark 夹具两个相关 Python 程序通过；另做入口导入和命令预览。未跑全量或 kernel live，详见 [目录验证](../tests/README.md#test-directory-validation)。 |
+| 汇编按临界区归档 | 7 项定向检查通过，历史扫描的 60 个来源会话合并为 5 组汇编；原始证据保持不变，详见 [benchmark 验证](../bench/spin_cacheline/README.md#assembly-inspection)。 |
 
-mutex 正例均为 `mutex_jit=1`；生成/发布日志本身不能作为 JIT PASS。
-最初 `--repeats 1` 被 CLI 拒绝且未启动负载，改为合法的 2 后只运行未开始的
-阶段，没有重复已通过部分。详细命令、输入哈希、归档及区间含义见
-[本轮验收](VALIDATION.md#native-handoff-timing)。嵌套计时可能重叠，不能相加
-当作互不重叠的总耗时，也不能由此宣称 JIT 加速。提交整理不补跑基础、全量、
-JIT 矩阵、稀有场景或两 CPU 失败点。
-
-此前隔离环境验收的 40 个单元、25 项准入审计、core 5/5，以及更早的
-64/64 矩阵均保留为历史结果，不计入本次提交检查的通过数量。
+mutex 正例为 `mutex_jit=1`；生成/发布日志本身不能作为 JIT PASS。
+历史的 native handoff、core/extended 和性能扫描仍分别见
+[VALIDATION](VALIDATION.md) 与 [benchmark README](../bench/spin_cacheline/README.md)。
+测试结果不证明任意上下文/指令语义，也不构成通用性能收益结论。
 
 ### 1.4 未完成与明确延期
 
 | 分类 | 事项与当前处理 |
 | --- | --- |
-| 已复现、未解决 | 八线程/两 CPU 的短 mode 5 曾发布代码却没有执行 JIT；16 个选择中 13 个会话接受、1 个失败、2 个未运行。不能以原生完成视为 JIT 通过。代理机会、批处理及等待策略尚未调整，未重跑失败点。 |
-| 尚未实现 | 事件驱动的 mutex parking/wakeup；当前仍是可调度轮询，未照搬 TCLock 的等待状态机。 |
+| 历史未通过 | 旧可调度轮询策略下，八线程/两 CPU 的短 mode 5 曾发布代码却没有执行 JIT。该失败点未重跑；当前禁止抢占轮询需要重新设计 CPU 放置，旧超额订阅记录不验证新策略。 |
+| 当前使用限制 | 已发布请求的 waiter 保持禁止抢占轮询，sleep/parking 不属于当前设计。依赖 waiter 让出同一 CPU 的旧场景需要重新放置线程；不能直接沿用旧通过记录。 |
 | 尚未完成 | 更多有明确契约的服务、通用 `printk`；真实未修改生产子系统负载；完整可复现系统/工具链与运行代码代际身份。 |
 | 尚未完成 | 完整锁获取/纯 native/观测成本归因、摊销与速度收益、等价 TCLock 原生代理三方比较。原版 TCLock mutex 不是当前 guest 的可直接加载模块，不为此另改内核。 |
 | 明确延期 | 访问时动态地址 guard、原指令处 waiter 续跑及必要的局部条件码保存；动态指针和并发改写仍可能绕过静态筛查。 |
@@ -280,15 +268,16 @@ cc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c -o bench/klock_test -l
 当前 `W=1` 构建仍有手写恢复/切栈汇编及测试 CLD 的 objtool warning，构建成功
 不表示这些语义已经修复。若出现新的 error 或不同 warning，先保留日志排查。
 
-首次环境验收可以运行以下两条；基础已验收且环境没有改变时不必每轮重跑：
+默认只检查两个基础 C 程序；按改动用 `PY_TESTS` 增加相关功能，不自动全量运行：
 
 ```bash
 make -C tests/unit run
-python3 tests/audit_context_spills.py
+# 测试选择器有改动时增加对应检查：
+make -C tests/unit run TESTS= PY_TESTS=infrastructure/test_regression.py
 ```
 
 只改某类代码时，按 [增量回归选择](JIT_EXECUTION.md#7-分层与增量回归) 选相关
-unit 和复杂 live。单元测试中的用户态机器码执行也留在 guest，不计为内核 JIT。
+unit，确有需要时再选择相关 live。单元测试中的用户态机器码执行也留在 guest，不计为内核 JIT。
 
 ### 3.5 按用例手动运行（推荐）
 
@@ -390,7 +379,7 @@ find daemon -type f -path '*/asm/jit.bin'
 mapfile -t IMAGES < <(find daemon -type f -path '*/asm/jit.bin')
 test "${#IMAGES[@]}" -eq 1
 ASM_DIR=$(dirname "${IMAGES[0]}")
-python3 tests/mutex_signal_protocol.py ready --artifact "$ASM_DIR" \
+python3 tests/protocols/mutex_signal_protocol.py ready --artifact "$ASM_DIR" \
   --output "$RUN_DIR/published.json"
 ```
 
@@ -607,6 +596,7 @@ workload_modules/
 | [bench/klock_test.c](../bench/klock_test.c) | pthread ioctl 驱动及可选结构化测量，参数含义见第 4 节。 |
 | [bench/README.md](../bench/README.md) | benchmark 总入口；具体伪代码、运行命令与结果维护在各负载的子目录 README。 |
 | [spin_cacheline/README.md](../bench/spin_cacheline/README.md) / [Makefile](../bench/spin_cacheline/Makefile) | 独立 cacheline 对比的构建、参数化扫描、临界区与测试伪代码、结果解释、汇编查看及排空入口。 |
+| [spin_cacheline/EXECUTION_PATHS.md](../bench/spin_cacheline/EXECUTION_PATHS.md) | 首次发现/注册、原生快路径、队列代理、JIT wrapper 与恢复的源码伪代码，以及按路径区分的性能检查点。 |
 | [workload_modules/Makefile](../workload_modules/Makefile) | Demo 模块统一构建入口，可分别选择 lock_scenarios 或 spin_cacheline。 |
 | [spin_cacheline/Makefile](../workload_modules/spin_cacheline/Makefile) / [module.c](../workload_modules/spin_cacheline/module.c) / [payload.h](../workload_modules/spin_cacheline/payload.h) / [api.h](../workload_modules/spin_cacheline/api.h) | 不依赖 kdlock 符号的外部模块，64B 数据槽、五种展开 CS、布局/run/排空计数 ioctl。 |
 | [post_work.h](../workload_modules/spin_cacheline/post_work.h) / [post_work_fixture.c](../bench/spin_cacheline/post_work_fixture.c) | 正文返回后的固定寄存器乘加及其编译产物检查；负载定义见 benchmark README。 |
@@ -615,7 +605,7 @@ workload_modules/
 | [client.c](../bench/spin_cacheline/client.c) | 逐线程绑核、原子 ready/go/abort 起跑、单 ioctl 循环、wall/线程 CPU 汇总及全部数据槽差值检查。 |
 | [run.py](../bench/spin_cacheline/run.py) / [summarize.py](../bench/spin_cacheline/summarize.py) | 扫描入口、有效会话选择、kdlock 最佳吞吐/原生中位数及完整配对 CSV。 |
 | [bench_runtime.py](../bench/spin_cacheline/bench_runtime.py) / [bench_session.py](../bench/spin_cacheline/bench_session.py) | 计划/环境/数据检查，以及单会话的准备、发布确认、测量和排空。 |
-| [assembly.py](../bench/spin_cacheline/assembly.py) / [test_assembly.py](../bench/spin_cacheline/test_assembly.py) | 排空后导出原生/JIT 汇编、生成查看索引，并检查来源哈希和历史证据不变性。 |
+| [assembly.py](../bench/spin_cacheline/assembly.py) / [test_assembly.py](../bench/spin_cacheline/test_assembly.py) | 排空后按临界区及文件内容去重导出原生/JIT 汇编，生成查看索引并核对来源。 |
 | [dispatch_floor/Makefile](../bench/spin_cacheline/dispatch_floor/Makefile) / [module.c](../bench/spin_cacheline/dispatch_floor/module.c) / [run.py](../bench/spin_cacheline/dispatch_floor/run.py) | 独立原生 selector/最小 callback 调用成本对照；复用实际负载和数据/排空检查，不计作 kdlock/JIT 成绩。 |
 | [kernel_identity.py](../bench/spin_cacheline/kernel_identity.py) | 使用原校验器验证显式选择的独立内核基线，保存配置/源码/build/live 身份；默认基线不变。 |
 | [profile.py](../bench/spin_cacheline/profile.py) / [profile_summary.py](../bench/spin_cacheline/profile_summary.py) | 独立低频内核 IP 采样及只读离线 period 加权汇总；复用真实负载、JIT 差值和排空，不计为正式性能样本。 |
@@ -642,30 +632,31 @@ workload_modules/
 | 文件 | 覆盖/用途 |
 | --- | --- |
 | [run_all.sh](../tests/run_all.sh) / [regression.py](../tests/regression.py) | 统一选择、去重、空闲门禁、执行和证据；`--jit-timing` 显式选择每个 case 的计量，不改变固定目录。 |
-| [paired_benchmark.py](../tests/paired_benchmark.py) / [benchmark_arm.sh](../tests/benchmark_arm.sh) | 显式同负载原生锁/JIT 配对、交替重复及扫描；文件名中的 `arm` 指实验组，不是架构适配。shell 管理新会话，Python 校验准备/计时/发布/body，关联翻译资源和控制台设置；不进入固定回归目录。 |
+| [paired_benchmark.py](../tests/tools/paired_benchmark.py) / [benchmark_arm.sh](../tests/tools/benchmark_arm.sh) | 显式同负载原生锁/JIT 配对、交替重复及扫描；文件名中的 `arm` 指实验组，不是架构适配。shell 管理新会话，Python 校验准备/计时/发布/body，关联翻译资源和控制台设置；不进入固定回归目录。 |
 | [common.sh](../tests/common.sh) | 驱动共享的构建、JIT 检查、daemon/清理函数；`load_kdlock` 统一各阶段装载/计量检查，保留可选 insmod 超时；start_daemon 透传显式选项，不交互 source。 |
 | [regression_evidence.py](../tests/regression_evidence.py) / [verify_evidence.py](../tests/verify_evidence.py) | 捕获冻结输入与输出；离线一致性校验。 |
-| [test_01_module_load.sh](../tests/test_01_module_load.sh) | 基础模块/设备显式诊断。 |
-| [test_02_jit_engine.sh](../tests/test_02_jit_engine.sh) | promotion/翻译/上传管线诊断，不执行 JIT。 |
-| [test_04_spinlock.sh](../tests/test_04_spinlock.sh) | spin 主模式、复杂记录及生成体证据；mode 8 追加独立双根阶段并保存前一阶段证据。 |
-| [test_05_mutex.sh](../tests/test_05_mutex.sh) | mutex_jit=0 的原生互斥对照。 |
-| [test_07_mutex_jit.sh](../tests/test_07_mutex_jit.sh) | mode 3 的发布门禁、重复/same-CPU 竞争。 |
-| [test_08_mutex_jit_modes.sh](../tests/test_08_mutex_jit_modes.sh) | mode 4 同 CPU 和共享原生 B 两阶段；OOO 只运行第一阶段。mode 5 服务返回和额度后缀。执行流见 [6.12](JIT_EXECUTION.md#612-同-cpu-的嵌套-mutex-jit)、[6.13](JIT_EXECUTION.md#613-call-次数额度与原生后缀)、[6.15](JIT_EXECUTION.md#615-两个-a-combiner-共享原生-mutex-b)。 |
-| [test_09_jit_execution_modes.sh](../tests/test_09_jit_execution_modes.sh) | 显式 mode 兼容入口；无参只列清单。 |
-| [test_10_native_resume.sh](../tests/test_10_native_resume.sh) | CALL/native 后缀、寄存器、资源、信号和受检边界的主驱动。 |
-| [test_11_mutex_native_protocol.sh](../tests/test_11_mutex_native_protocol.sh) | 目标/非目标共享 Linux mutex。 |
-| [test_12_context_native_only.sh](../tests/test_12_context_native_only.sh) | 上下文拒绝负例，必须没有实际 JIT。 |
-| [test_13_spin_shadow_capacity.sh](../tests/test_13_spin_shadow_capacity.sh) | 显式 full-shadow 队首诊断。 |
-| [test_14_spin_frame_depth.sh](../tests/test_14_spin_frame_depth.sh) | 自然物理 frame 链和继承的锁容量。 |
-| [test_15_spin_native_gate.sh](../tests/test_15_spin_native_gate.sh) | 原锁 L/私有 S 内核组件检查。 |
-| [test_16_spin_entry.sh](../tests/test_16_spin_entry.sh) | origin ticket/task/CPU 原生引用组件检查。 |
-| [test_17_spin_native_protocol.sh](../tests/test_17_spin_native_protocol.sh) | spin 与非目标原生 API 的 Linux 互斥。 |
-| [test_18_spin_routing.sh](../tests/test_18_spin_routing.sh) | 真实 hook 路由，刻意不执行 JIT。 |
-| [test_19_mutex_signals.sh](../tests/test_19_mutex_signals.sh) | 非目标原生 mutex peer 的信号取消。 |
-| [test_20_remote_outer.sh](../tests/test_20_remote_outer.sh) | 远端祖先提前释放和 owner 依赖；mode 8 调用 `multi` 纯 JIT 与 `multi quota` 混合完成两个变体。 |
-| [test_21_remote_depth.sh](../tests/test_21_remote_depth.sh) | 四至八层、多请求、跨 NUMA/deferred 组合。 |
-| [test_22_mutex_task_lifecycle.sh](../tests/test_22_mutex_task_lifecycle.sh) | 真实 task/RCU/final ACK，不计 JIT。 |
-| [test_23_mutex_parallel_native.sh](../tests/test_23_mutex_parallel_native.sh) | 双队列 frame、资源压力、rename、peer、source 退休。 |
+| [test_01_module_load.sh](../tests/live/test_01_module_load.sh) | 基础模块/设备显式诊断。 |
+| [test_02_jit_engine.sh](../tests/live/test_02_jit_engine.sh) | promotion/翻译/上传管线诊断，不执行 JIT。 |
+| [test_04_spinlock.sh](../tests/live/test_04_spinlock.sh) | spin 主模式、复杂记录及生成体证据；mode 8 追加独立双根阶段并保存前一阶段证据。 |
+| [test_05_mutex.sh](../tests/live/test_05_mutex.sh) | mutex_jit=0 的原生互斥对照。 |
+| [test_07_mutex_jit.sh](../tests/live/test_07_mutex_jit.sh) | mode 3 的发布门禁与独立 origin CPU 单锁竞争。 |
+| [test_08_mutex_jit_modes.sh](../tests/live/test_08_mutex_jit_modes.sh) | mode 4 同 CPU 和共享原生 B 两阶段；OOO 只运行第一阶段。mode 5 服务返回和额度后缀。执行流见 [6.12](JIT_EXECUTION.md#612-同-cpu-的嵌套-mutex-jit)、[6.13](JIT_EXECUTION.md#613-call-次数额度与原生后缀)、[6.15](JIT_EXECUTION.md#615-两个-a-combiner-共享原生-mutex-b)。 |
+| [test_09_jit_execution_modes.sh](../tests/live/test_09_jit_execution_modes.sh) | 显式 mode 兼容入口；无参只列清单。 |
+| [test_10_native_resume.sh](../tests/live/test_10_native_resume.sh) | CALL/native 后缀、寄存器、资源、信号和受检边界的主驱动。 |
+| [test_11_mutex_native_protocol.sh](../tests/live/test_11_mutex_native_protocol.sh) | 目标/非目标共享 Linux mutex。 |
+| [test_12_context_native_only.sh](../tests/live/test_12_context_native_only.sh) | 上下文拒绝负例，必须没有实际 JIT。 |
+| [test_13_spin_shadow_capacity.sh](../tests/live/test_13_spin_shadow_capacity.sh) | 显式 full-shadow 队首诊断。 |
+| [test_14_spin_frame_depth.sh](../tests/live/test_14_spin_frame_depth.sh) | 自然物理 frame 链和继承的锁容量。 |
+| [test_15_spin_native_gate.sh](../tests/live/test_15_spin_native_gate.sh) | 原锁 L/私有 S 内核组件检查。 |
+| [test_16_spin_entry.sh](../tests/live/test_16_spin_entry.sh) | origin ticket/task/CPU 原生引用组件检查。 |
+| [test_17_spin_native_protocol.sh](../tests/live/test_17_spin_native_protocol.sh) | spin 与非目标原生 API 的 Linux 互斥。 |
+| [test_18_spin_routing.sh](../tests/live/test_18_spin_routing.sh) | 真实 hook 路由，刻意不执行 JIT。 |
+| [test_19_mutex_signals.sh](../tests/live/test_19_mutex_signals.sh) | 非目标原生 mutex peer 的信号取消。 |
+| [test_20_remote_outer.sh](../tests/live/test_20_remote_outer.sh) | 远端祖先提前释放和 owner 依赖；mode 8 调用 `multi` 纯 JIT 与 `multi quota` 混合完成两个变体。 |
+| [test_21_remote_depth.sh](../tests/live/test_21_remote_depth.sh) | 四至八层、多请求、跨 NUMA/deferred 组合。 |
+| [test_22_mutex_task_lifecycle.sh](../tests/live/test_22_mutex_task_lifecycle.sh) | 真实 task/RCU/final ACK，不计 JIT。 |
+| [test_23_mutex_parallel_native.sh](../tests/live/test_23_mutex_parallel_native.sh) | 双队列 frame、资源压力、rename、peer、source 退休。 |
+| [test_24_gs_jit.sh](../tests/live/test_24_gs_jit.sh) | mode 10/11 的 GS 读、写、RMW 和 current 代理正例。 |
 
 ### 5.7 测试控制器和 oracle
 
@@ -674,29 +665,29 @@ workload_modules/
 
 | 文件 | 用途 |
 | --- | --- |
-| [cpu_placement.py](../tests/cpu_placement.py) | 采集真实 CPU/NUMA 拓扑。 |
-| [audit_context_spills.py](../tests/audit_context_spills.py) | 独立静态准入 corpus，不执行危险指令。 |
-| [audit_spin_native.py](../tests/audit_spin_native.py) | 历史 shared-word 审计，当前协议故意不满足其旧前提；不作日常入口。 |
-| [mutex_signal_client.c](../tests/mutex_signal_client.c) | pidfd/信号实验的单进程客户端；双 frame 原 waiter 只执行一次 ioctl，原生 peer 取消后显式重试。 |
-| [mutex_signal_protocol.py](../tests/mutex_signal_protocol.py) | 就绪检查、mode 4 同 CPU 及两 A/共享原生 B 的身份/JIT/ACK、mode 5 超额度 CALL，以及 signal peer 控制/判定。 |
-| [mutex_parallel_protocol.py](../tests/mutex_parallel_protocol.py) | 双 frame、原 waiter 的 pidfd 信号/退出、共享 CPU 和资源组合协调。 |
-| [mutex_shadow_protocol.py](../tests/mutex_shadow_protocol.py) | 双 frame 内真实 shadow map 压力。 |
-| [mutex_stack_protocol.py](../tests/mutex_stack_protocol.py) | 共享栈变化后的 post-control 续跑判定。 |
-| [native_only_protocol.py](../tests/native_only_protocol.py) | 真实设备拒绝协议，不执行代码。 |
-| [native_ooo_protocol.py](../tests/native_ooo_protocol.py) | 原 waiter 的 A-before-B 完成顺序。 |
-| [native_register_protocol.py](../tests/native_register_protocol.py) | CALL-entry GPR/SP/IP 样本与 native frame 关联。 |
-| [native_waiter_signal_protocol.py](../tests/native_waiter_signal_protocol.py) | 原 waiter 的信号、B 获取/取消和最终 A ACK。 |
-| [native_waiter_signal_race.py](../tests/native_waiter_signal_race.py) | pidfd signal 与真实 B release 竞争。 |
-| [readmission_protocol.py](../tests/readmission_protocol.py) | 两次尝试的真实队列重入契约。 |
-| [remote_depth_protocol.py](../tests/remote_depth_protocol.py) | 深层远端 chain 和请求证据。 |
-| [remote_outer_protocol.py](../tests/remote_outer_protocol.py) | 远端祖先/原生依赖及两个独立 root 共享 B 的逐请求证据；quota 阶段还关联首 waiter TID 退出与第二 root JIT。 |
-| [spin_acquired_protocol.py](../tests/spin_acquired_protocol.py) | 本地已获取 B 的受检 post-CALL native。 |
-| [spin_frame_protocol.py](../tests/spin_frame_protocol.py) | 物理 shadow-stack frame 及 watermark 判定。 |
-| [spin_gate_protocol.py](../tests/spin_gate_protocol.py) | gate map 饱和、冷入口原生互斥，以及第二个 JIT 前缀的 PENDING ENOMEM/双 frame/最终 ACK。 |
-| [spin_node_protocol.py](../tests/spin_node_protocol.py) | 排空后的节点 reservation 检查。 |
-| [source_depth_protocol.py](../tests/source_depth_protocol.py) | 两层/两模块学习及 loader ref 与 source pin 区分。 |
-| [source_retirement.py](../tests/source_retirement.py) | dual-frame 的 busy/finish/reuse source 阶段。 |
-| [source_session_driver.c](../tests/source_session_driver.c) / [source_session_child.py](../tests/source_session_child.py) | 实际 fork/exec 设备 lease 存活探针，不是假装翻译成功。 |
+| [cpu_placement.py](../tests/protocols/cpu_placement.py) | 采集真实 CPU/NUMA 拓扑。 |
+| [audit_context_spills.py](../tests/tools/audit_context_spills.py) | 独立静态准入 corpus，不执行危险指令。 |
+| [audit_spin_native.py](../tests/tools/audit_spin_native.py) | 历史 shared-word 审计，当前协议故意不满足其旧前提；不作日常入口。 |
+| [mutex_signal_client.c](../tests/clients/mutex_signal_client.c) | pidfd/信号实验的单进程客户端；双 frame 原 waiter 只执行一次 ioctl，原生 peer 取消后显式重试。 |
+| [mutex_signal_protocol.py](../tests/protocols/mutex_signal_protocol.py) | 就绪检查、mode 4 同 CPU 及两 A/共享原生 B 的身份/JIT/ACK、mode 5 超额度 CALL，以及 signal peer 控制/判定。 |
+| [mutex_parallel_protocol.py](../tests/protocols/mutex_parallel_protocol.py) | 双 frame、原 waiter 的 pidfd 信号/退出、共享 CPU 和资源组合协调。 |
+| [mutex_shadow_protocol.py](../tests/protocols/mutex_shadow_protocol.py) | 双 frame 内真实 shadow map 压力。 |
+| [mutex_stack_protocol.py](../tests/protocols/mutex_stack_protocol.py) | 共享栈变化后的 post-control 续跑判定。 |
+| [native_only_protocol.py](../tests/protocols/native_only_protocol.py) | 真实设备拒绝协议，不执行代码。 |
+| [native_ooo_protocol.py](../tests/protocols/native_ooo_protocol.py) | 原 waiter 的 A-before-B 完成顺序。 |
+| [native_register_protocol.py](../tests/protocols/native_register_protocol.py) | CALL-entry GPR/SP/IP 样本与 native frame 关联。 |
+| [native_waiter_signal_protocol.py](../tests/protocols/native_waiter_signal_protocol.py) | 原 waiter 的信号、B 获取/取消和最终 A ACK。 |
+| [native_waiter_signal_race.py](../tests/protocols/native_waiter_signal_race.py) | pidfd signal 与真实 B release 竞争。 |
+| [readmission_protocol.py](../tests/protocols/readmission_protocol.py) | 两次尝试的真实队列重入契约。 |
+| [remote_depth_protocol.py](../tests/protocols/remote_depth_protocol.py) | 深层远端 chain 和请求证据。 |
+| [remote_outer_protocol.py](../tests/protocols/remote_outer_protocol.py) | 远端祖先/原生依赖及两个独立 root 共享 B 的逐请求证据；quota 阶段还关联首 waiter TID 退出与第二 root JIT。 |
+| [spin_acquired_protocol.py](../tests/protocols/spin_acquired_protocol.py) | 本地已获取 B 的受检 post-CALL native。 |
+| [spin_frame_protocol.py](../tests/protocols/spin_frame_protocol.py) | 物理 shadow-stack frame 及 watermark 判定。 |
+| [spin_gate_protocol.py](../tests/protocols/spin_gate_protocol.py) | gate map 饱和、冷入口原生互斥，以及第二个 JIT 前缀的 PENDING ENOMEM/双 frame/最终 ACK。 |
+| [spin_node_protocol.py](../tests/protocols/spin_node_protocol.py) | 排空后的节点 reservation 检查。 |
+| [source_depth_protocol.py](../tests/protocols/source_depth_protocol.py) | 两层/两模块学习及 loader ref 与 source pin 区分。 |
+| [source_retirement.py](../tests/protocols/source_retirement.py) | dual-frame 的 busy/finish/reuse source 阶段。 |
+| [source_session_driver.c](../tests/clients/source_session_driver.c) / [source_session_child.py](../tests/clients/source_session_child.py) | 实际 fork/exec 设备 lease 存活探针，不是假装翻译成功。 |
 
 ### 5.8 Demo 临界区与内核测试片段
 
@@ -727,75 +718,77 @@ provider include。具体 include 点可用
 | [spin_ticket_workload.c](../workload_modules/lock_scenarios/fragments/spin_ticket_workload.c) | 真实获取填满 32 个 ticket。 |
 | [spin_gate_workload.c](../workload_modules/lock_scenarios/fragments/spin_gate_workload.c) | 旧后缀存活时填满 gate map，再执行已发布 A2 JIT 并在无 gate 的 C 上原生续跑；角色和控制参数见使用指南 6.3。 |
 | [spin_acquired_workload.c](../workload_modules/lock_scenarios/fragments/spin_acquired_workload.c) | B 私有队首、后继竞争者与已提交 A 前缀。 |
-| [mutex_shadow_trace.c](../tests/kernel/mutex_shadow_trace.c) | 只观察真实 shadow 表，不填造成员。 |
-| [spin_node_trace.c](../tests/kernel/spin_node_trace.c) | node reservation 排空记录。 |
-| [spin_frame_trace.c](../tests/kernel/spin_frame_trace.c) | frame 栈深度/watermark，深栈上不打印。 |
-| [spin_refusal_trace.c](../tests/kernel/spin_refusal_trace.c) | 拒绝包、owner/ledger 的只读快照。 |
-| [spin_readmission_trace.c](../tests/kernel/spin_readmission_trace.c) | bounded readmission 观察。 |
-| [spin_deferred_trace.c](../tests/kernel/spin_deferred_trace.c) | 真实 deferred 队列选择/接链观察。 |
-| [exec_capacity_probe.c](../tests/kernel/exec_capacity_probe.c) | 固定 frame 容量拒绝及包不变观察。 |
-| [exec_relay_exit_probe.c](../tests/kernel/exec_relay_exit_probe.c) | 无锁 root finish 或已发 ACK 的远端 B pop 等待原 waiter TID 脱离；仅持有 PID 身份，不加 task ref、不伪造 ACK。 |
-| [spin_gate_selftest.c](../tests/kernel/spin_gate_selftest.c) | hook 发布前的原生 L/私有 S 组件测试。 |
-| [spin_entry_selftest.c](../tests/kernel/spin_entry_selftest.c) | task/CPU pins、tickets 与原生锁组件。 |
-| [spin_shadow_selftest.c](../tests/kernel/spin_shadow_selftest.c) | full-shadow 队首路径。 |
-| [spin_virtual_selftest.c](../tests/kernel/spin_virtual_selftest.c) | virtual 请求资源拒绝/取消检查。 |
-| [mutex_task_selftest.c](../tests/kernel/mutex_task_selftest.c) | task 路由删除、跨 reader RCU 与 final ACK。 |
+| [mutex_shadow_trace.c](../tests/kernel/mutex/mutex_shadow_trace.c) | 只观察真实 shadow 表，不填造成员。 |
+| [spin_node_trace.c](../tests/kernel/spin/spin_node_trace.c) | node reservation 排空记录。 |
+| [spin_frame_trace.c](../tests/kernel/spin/spin_frame_trace.c) | frame 栈深度/watermark，深栈上不打印。 |
+| [spin_refusal_trace.c](../tests/kernel/spin/spin_refusal_trace.c) | 拒绝包、owner/ledger 的只读快照。 |
+| [spin_readmission_trace.c](../tests/kernel/spin/spin_readmission_trace.c) | bounded readmission 观察。 |
+| [spin_deferred_trace.c](../tests/kernel/spin/spin_deferred_trace.c) | 真实 deferred 队列选择/接链观察。 |
+| [exec_capacity_probe.c](../tests/kernel/execution/exec_capacity_probe.c) | 固定 frame 容量拒绝及包不变观察。 |
+| [exec_relay_exit_probe.c](../tests/kernel/execution/exec_relay_exit_probe.c) | 无锁 root finish 或已发 ACK 的远端 B pop 等待原 waiter TID 脱离；仅持有 PID 身份，不加 task ref、不伪造 ACK。 |
+| [spin_gate_selftest.c](../tests/kernel/spin/spin_gate_selftest.c) | hook 发布前的原生 L/私有 S 组件测试。 |
+| [spin_entry_selftest.c](../tests/kernel/spin/spin_entry_selftest.c) | task/CPU pins、tickets 与原生锁组件。 |
+| [spin_shadow_selftest.c](../tests/kernel/spin/spin_shadow_selftest.c) | full-shadow 队首路径。 |
+| [spin_virtual_selftest.c](../tests/kernel/spin/spin_virtual_selftest.c) | virtual 请求资源拒绝/取消检查。 |
+| [mutex_task_selftest.c](../tests/kernel/mutex/mutex_task_selftest.c) | task 路由删除、跨 reader RCU 与 final ACK。 |
 
 ### 5.9 单元测试 `tests/unit/`
 
 `Makefile` 中的程序才是通常运行入口；`*_fixture.c` 多由对应 Python 程序生成
 生产代码头后编译，不能脱离该驱动直接编译。模型、替代原语和 log mutation
 不证明 Linux 并发正确；程序自身标明何处执行真实生成机器码。
-当前为 2 个 C 和 37 个 Python 入口，不要求每轮全跑。逐项的覆盖重叠、模型
+当前为 2 个 C 和 38 个 Python 入口，默认仅基础 C；Python 通过 `unit/run.py`
+按分组路径或唯一文件名选择，完整库存只供显式全量。逐项的覆盖重叠、模型
 精简进展和保留理由见 [测试分析](TEST_EXAMPLES.md#4-单元入口逐项分析)；
 本节保留源码与 fixture 的阅读索引。
 
 | 文件 | 用途 |
 | --- | --- |
-| [Makefile](../tests/unit/Makefile) | 2 个 C 程序与 Python unit 列表；支持 TESTS/PY_TESTS 显式选择。 |
-| [spin_gate_mock.h](../tests/unit/spin_gate_mock.h) | 提取式 C fixture 共用的 CPU/lock/atomic 替代原语。 |
-| [test_control_call.c](../tests/unit/test_control_call.c) | 直接使用生产 kd_call 规则。 |
-| [test_daemon_policy.c](../tests/unit/test_daemon_policy.c) | 编译生产 daemon，测试结果缓存、真实子进程 lease/reap 和 wire；计量默认关闭、wait4 中断重试与时钟/资源失败。 |
-| [test_context_policy.py](../tests/unit/test_context_policy.py) | 上下文/CFG/静态范围/有界分析 corpus。 |
-| [test_context_memory.py](../tests/unit/test_context_memory.py) | byte/word、alias、RMW、clobber 顺序事实。 |
-| [test_context_guards.py](../tests/unit/test_context_guards.py) | 实际运行入口谓词及有界 CALL/RET 生成体。 |
-| [test_context_spill_audit.py](../tests/unit/test_context_spill_audit.py) | 独立 spill audit 的错误分类。 |
-| [test_hostcall_codegen.py](../tests/unit/test_hostcall_codegen.py) | manifest 与服务出口生成一致性。 |
-| [test_segment_codegen.py](../tests/unit/test_segment_codegen.py) | segment lowering 与 wrapper 偏移。 |
-| [test_text_regions.py](../tests/unit/test_text_regions.py) | cold text、CFG 扩展、设备 session/CAPS。 |
-| [test_jit_diagnostics.py](../tests/unit/test_jit_diagnostics.py) | 可复用 mocked-text harness 和定位/告警判定。 |
-| [test_jit_body_witness.py](../tests/unit/test_jit_body_witness.py) | guest 用户态运行真实 wrapper 和生成体 marker。 |
-| [test_jit_entry_scope.py](../tests/unit/test_jit_entry_scope.py) / [jit_entry_scope_fixture.c](../tests/unit/jit_entry_scope_fixture.c) | 生产 JIT 入口/scope/拒绝包，typed hostcall 策略、完整 RDI/RAX 参数返回与共同额度；额度出口不弹 CALL 栈、不重放或触发学习。边界计时开关前后完整 frame/包一致；服务和计时原语为替代，实际执行需 live 验证。 |
-| [test_exe_registry.py](../tests/unit/test_exe_registry.py) / [exe_registry_fixture.c](../tests/unit/exe_registry_fixture.c) | 生产 registry、代码池及上传边界、服务表编译契约和计量重置/卸载。服务 manifest/adapter 变化也须独立运行本入口。 |
-| [test_exec_capacity.py](../tests/unit/test_exec_capacity.py) / [exec_capacity_fixture.c](../tests/unit/exec_capacity_fixture.c) | 生产 frame/ledger/完成状态、remote/native 未排空的回收拒绝、两后端清理和实际退出观察器；PID/RCU/time 等原语替代，不替代真实 ACK/退出。 |
-| [test_hotlock_sampling.py](../tests/unit/test_hotlock_sampling.py) / [hotlock_sampling_fixture.c](../tests/unit/hotlock_sampling_fixture.c) | 替代 TSC 下的生产采样逻辑，快/慢发现顺序、交错更新、严格到期边界、采样额度、容量及错误策略变异；不是实际 JIT。 |
-| [test_mutex_resources.py](../tests/unit/test_mutex_resources.py) / [mutex_resources_fixture.c](../tests/unit/mutex_resources_fixture.c) | 生产 tail/node/shadow/hook、selector 改名/关闭路由及完整 packet；per-CPU 存储为替代原语。 |
-| [test_mutex_outer_progress.py](../tests/unit/test_mutex_outer_progress.py) / [mutex_outer_progress_fixture.c](../tests/unit/mutex_outer_progress_fixture.c) | 生产 mutex combiner/outer-event、原 owner/后继进度；编译真实日志宏，仅替代 printk sink，检查 INFO/格式/保留次数和两个日志变异，不模拟串口或调度耗时。 |
-| [test_native_after_outer.py](../tests/unit/test_native_after_outer.py) / [native_after_outer_fixture.c](../tests/unit/native_after_outer_fixture.c) | 生产 native/control 边界和 mutex B 获取/解锁，原语为替代实现。 |
-| [test_native_registers.py](../tests/unit/test_native_registers.py) / [native_register_fixture.c](../tests/unit/native_register_fixture.c) | 实际用户态汇编 probe 与 GPR oracle。 |
-| [test_spin_gate.py](../tests/unit/test_spin_gate.py) / [spin_gate_fixture.c](../tests/unit/spin_gate_fixture.c) | 生产 gate/hold map 与过期代际；检出 PENDING ENOMEM、JIT/owner/副作用或双 frame 证据缺失。 |
-| [test_spin_entry.py](../tests/unit/test_spin_entry.py) / [spin_entry_fixture.c](../tests/unit/spin_entry_fixture.c) | 生产 origin ticket/ref 生命周期。 |
-| [test_spin_routing.py](../tests/unit/test_spin_routing.py) / [spin_routing_fixture.c](../tests/unit/spin_routing_fixture.c) | 生产 hook/selector 路由。 |
-| [test_spin_shadow.py](../tests/unit/test_spin_shadow.py) / [spin_shadow_fixture.c](../tests/unit/spin_shadow_fixture.c) | 提取实际队首和 combiner 路径；区分容量交接与普通批次发布。 |
-| [spin_node_pool_fixture.c](../tests/unit/spin_node_pool_fixture.c) / [spin_queue_return_fixture.c](../tests/unit/spin_queue_return_fixture.c) | 上述 fixture include 的真实 producer、容量和嵌套返回。 |
-| [spin_native_fixture.c](../tests/unit/spin_native_fixture.c) | 历史 spin 审计 witness，不是新的 qspinlock。 |
-| [test_spin_outer_progress.py](../tests/unit/test_spin_outer_progress.py) / [spin_outer_progress_fixture.c](../tests/unit/spin_outer_progress_fixture.c) | 生产 spin batch/frame/outer-release、满 gate 表时 nested ENOMEM/PENDING 包，以及 release 发布和槽复用；不执行实际 JIT。 |
-| [test_remote_outer.py](../tests/unit/test_remote_outer.py) / [remote_outer_fixture.c](../tests/unit/remote_outer_fixture.c) | 生产远端/祖先解锁及 native ACK；完整 pt_regs、CALL 包、DONE 前脱链和发布后父 frame 复用；计量开关下的完整包、错误返回及两后端分类。CPU/发布/时钟为替代，不恢复硬件 flags。 |
-| [test_remote_deferred_protocol.py](../tests/unit/test_remote_deferred_protocol.py) / [deferred_trace_fixture.c](../tests/unit/deferred_trace_fixture.c) | deferred oracle 与实际选队/trace 代码。 |
-| [test_spin_frame_protocol.py](../tests/unit/test_spin_frame_protocol.py) / [spin_refusal_trace_fixture.c](../tests/unit/spin_refusal_trace_fixture.c) | frame/refusal 日志与提取的观察器。 |
-| [test_source_lifetime.py](../tests/unit/test_source_lifetime.py) / [source_lifetime_fixture.c](../tests/unit/source_lifetime_fixture.c) | 生产 source/CAPS/retire，内核原语替代。 |
-| [test_source_depth_protocol.py](../tests/unit/test_source_depth_protocol.py) | 破坏 source/loader-ref 记录，确认 oracle 拒绝。 |
-| [test_mutex_parallel_protocol.py](../tests/unit/test_mutex_parallel_protocol.py) / [mutex_parallel_client_fixture.c](../tests/unit/mutex_parallel_client_fixture.c) | 双 frame oracle、pidfd 退出协调、实际客户端的单次 waiter 与两次 peer ioctl 路由。 |
-| [test_mutex_stack_protocol.py](../tests/unit/test_mutex_stack_protocol.py) | 拒绝伪造的栈变化/post-control 日志。 |
-| [test_mutex_signal_protocol.py](../tests/unit/test_mutex_signal_protocol.py) | 同 CPU 嵌套 JIT、CALL 额度包/计数/ACK、signal/peer/原 waiter 的坏日志、身份/顺序和参数。 |
-| [test_native_ooo_protocol.py](../tests/unit/test_native_ooo_protocol.py) | A-before-B 日志 oracle。 |
-| [test_remote_outer_protocol.py](../tests/unit/test_remote_outer_protocol.py) | 远端祖先依赖及双根身份、owner、JIT/副作用的坏日志拒绝。 |
-| [test_remote_depth_protocol.py](../tests/unit/test_remote_depth_protocol.py) | 深链记录及真实 workload wait predicate。 |
-| [test_spin_node_protocol.py](../tests/unit/test_spin_node_protocol.py) | reservation/drain 坏记录。 |
-| [test_cs_oracle.py](../tests/unit/test_cs_oracle.py) | 实际 workload 状态更新与完整性函数。 |
-| [test_benchmark.py](../tests/unit/test_benchmark.py)、[benchmark_fixture.c](../tests/unit/benchmark_fixture.c) | 真实 pthread 驱动的 30 项测量/失败场景及 113 项配对观测检查；含翻译身份/区间/资源、可选十项 JIT/native/队列计数及无效记录、控制台和历史字段边界。替代 ioctl/确定时钟，另验证真实 guest 时钟；日志替身不证明实际 JIT，不加载内核模块。 |
-| [test_kernel_baseline.py](../tests/unit/test_kernel_baseline.py) | 基线 reader 的损坏/伪造输入，不读取 live kernel。 |
-| [test_regression.py](../tests/unit/test_regression.py) | 用例选择去重、停止边界、证据捕获和离线 verifier；计量选择覆盖直接/组合装载和原超时，拒绝重复配置。 |
+| [run.py](../tests/unit/run.py) | 单项 Python 入口，统一配置跨组夹具导入；无参数只列出库存。 |
+| [Makefile](../tests/unit/Makefile) | 默认 2 个基础 C 程序；PY_TESTS 按需增加，run-all 显式全量。 |
+| [spin_gate_mock.h](../tests/unit/spin/spin_gate_mock.h) | 提取式 C fixture 共用的 CPU/lock/atomic 替代原语。 |
+| [test_control_call.c](../tests/unit/basic/test_control_call.c) | 直接使用生产 kd_call 规则。 |
+| [test_daemon_policy.c](../tests/unit/basic/test_daemon_policy.c) | 编译生产 daemon，测试结果缓存、真实子进程 lease/reap 和 wire；计量默认关闭、wait4 中断重试与时钟/资源失败。 |
+| [test_context_policy.py](../tests/unit/admission/test_context_policy.py) | 上下文/CFG/静态范围/有界分析 corpus。 |
+| [test_context_memory.py](../tests/unit/admission/test_context_memory.py) | byte/word、alias、RMW、clobber 顺序事实。 |
+| [test_context_guards.py](../tests/unit/admission/test_context_guards.py) | 实际运行入口谓词及有界 CALL/RET 生成体。 |
+| [test_context_spill_audit.py](../tests/unit/admission/test_context_spill_audit.py) | 独立 spill audit 的错误分类。 |
+| [test_hostcall_codegen.py](../tests/unit/codegen/test_hostcall_codegen.py) | manifest 与服务出口生成一致性。 |
+| [test_segment_codegen.py](../tests/unit/codegen/test_segment_codegen.py) | segment lowering 与 wrapper 偏移。 |
+| [test_text_regions.py](../tests/unit/admission/test_text_regions.py) | cold text、CFG 扩展、设备 session/CAPS。 |
+| [test_jit_diagnostics.py](../tests/unit/codegen/test_jit_diagnostics.py) | 可复用 mocked-text harness 和定位/告警判定。 |
+| [test_jit_body_witness.py](../tests/unit/codegen/test_jit_body_witness.py) | guest 用户态运行真实 wrapper 和生成体 marker。 |
+| [test_jit_entry_scope.py](../tests/unit/execution/test_jit_entry_scope.py) / [jit_entry_scope_fixture.c](../tests/unit/execution/jit_entry_scope_fixture.c) | 生产 JIT 入口/scope/拒绝包，typed hostcall 策略、完整 RDI/RAX 参数返回与共同额度；额度出口不弹 CALL 栈、不重放或触发学习。边界计时开关前后完整 frame/包一致；服务和计时原语为替代，实际执行需 live 验证。 |
+| [test_exe_registry.py](../tests/unit/execution/test_exe_registry.py) / [exe_registry_fixture.c](../tests/unit/execution/exe_registry_fixture.c) | 生产 registry、代码池及上传边界、服务表编译契约和计量重置/卸载。服务 manifest/adapter 变化也须独立运行本入口。 |
+| [test_exec_capacity.py](../tests/unit/execution/test_exec_capacity.py) / [exec_capacity_fixture.c](../tests/unit/execution/exec_capacity_fixture.c) | 生产 frame/ledger/完成状态、remote/native 未排空的回收拒绝、两后端清理和实际退出观察器；PID/RCU/time 等原语替代，不替代真实 ACK/退出。 |
+| [test_hotlock_sampling.py](../tests/unit/infrastructure/test_hotlock_sampling.py) / [hotlock_sampling_fixture.c](../tests/unit/infrastructure/hotlock_sampling_fixture.c) | 替代 TSC 下的生产采样逻辑，快/慢发现顺序、交错更新、严格到期边界、采样额度、容量及错误策略变异；不是实际 JIT。 |
+| [test_mutex_resources.py](../tests/unit/mutex/test_mutex_resources.py) / [mutex_resources_fixture.c](../tests/unit/mutex/mutex_resources_fixture.c) | 生产 tail/node/shadow/hook、selector 改名/关闭路由及完整 packet；per-CPU 存储为替代原语。 |
+| [test_mutex_outer_progress.py](../tests/unit/mutex/test_mutex_outer_progress.py) / [mutex_outer_progress_fixture.c](../tests/unit/mutex/mutex_outer_progress_fixture.c) | 生产 mutex combiner/outer-event、原 owner/后继进度；编译真实日志宏，仅替代 printk sink，检查 INFO/格式/保留次数和两个日志变异，不模拟串口或调度耗时。 |
+| [test_native_after_outer.py](../tests/unit/execution/test_native_after_outer.py) / [native_after_outer_fixture.c](../tests/unit/execution/native_after_outer_fixture.c) | 生产 native/control 边界和 mutex B 获取/解锁，原语为替代实现。 |
+| [test_native_registers.py](../tests/unit/execution/test_native_registers.py) / [native_register_fixture.c](../tests/unit/execution/native_register_fixture.c) | 实际用户态汇编 probe 与 GPR oracle。 |
+| [test_spin_gate.py](../tests/unit/spin/test_spin_gate.py) / [spin_gate_fixture.c](../tests/unit/spin/spin_gate_fixture.c) | 生产 gate/hold map 与过期代际；检出 PENDING ENOMEM、JIT/owner/副作用或双 frame 证据缺失。 |
+| [test_spin_entry.py](../tests/unit/spin/test_spin_entry.py) / [spin_entry_fixture.c](../tests/unit/spin/spin_entry_fixture.c) | 生产 origin ticket/ref 生命周期。 |
+| [test_spin_routing.py](../tests/unit/spin/test_spin_routing.py) / [spin_routing_fixture.c](../tests/unit/spin/spin_routing_fixture.c) | 生产 hook/selector 路由。 |
+| [test_spin_shadow.py](../tests/unit/spin/test_spin_shadow.py) / [spin_shadow_fixture.c](../tests/unit/spin/spin_shadow_fixture.c) | 提取实际队首和 combiner 路径；区分容量交接与普通批次发布。 |
+| [spin_node_pool_fixture.c](../tests/unit/spin/spin_node_pool_fixture.c) / [spin_queue_return_fixture.c](../tests/unit/spin/spin_queue_return_fixture.c) | 上述 fixture include 的真实 producer、容量和嵌套返回。 |
+| [spin_native_fixture.c](../tests/unit/spin/spin_native_fixture.c) | 历史 spin 审计 witness，不是新的 qspinlock。 |
+| [test_spin_outer_progress.py](../tests/unit/spin/test_spin_outer_progress.py) / [spin_outer_progress_fixture.c](../tests/unit/spin/spin_outer_progress_fixture.c) | 生产 spin batch/frame/outer-release、满 gate 表时 nested ENOMEM/PENDING 包，以及 release 发布和槽复用；不执行实际 JIT。 |
+| [test_remote_outer.py](../tests/unit/execution/test_remote_outer.py) / [remote_outer_fixture.c](../tests/unit/execution/remote_outer_fixture.c) | 生产远端/祖先解锁及 native ACK；完整 pt_regs、CALL 包、DONE 前脱链和发布后父 frame 复用；计量开关下的完整包、错误返回及两后端分类。CPU/发布/时钟为替代，不恢复硬件 flags。 |
+| [test_remote_deferred_protocol.py](../tests/unit/execution/test_remote_deferred_protocol.py) / [deferred_trace_fixture.c](../tests/unit/execution/deferred_trace_fixture.c) | deferred oracle 与实际选队/trace 代码。 |
+| [test_spin_frame_protocol.py](../tests/unit/spin/test_spin_frame_protocol.py) / [spin_refusal_trace_fixture.c](../tests/unit/spin/spin_refusal_trace_fixture.c) | frame/refusal 日志与提取的观察器。 |
+| [test_source_lifetime.py](../tests/unit/infrastructure/test_source_lifetime.py) / [source_lifetime_fixture.c](../tests/unit/infrastructure/source_lifetime_fixture.c) | 生产 source/CAPS/retire，内核原语替代。 |
+| [test_source_depth_protocol.py](../tests/unit/infrastructure/test_source_depth_protocol.py) | 破坏 source/loader-ref 记录，确认 oracle 拒绝。 |
+| [test_mutex_parallel_protocol.py](../tests/unit/mutex/test_mutex_parallel_protocol.py) / [mutex_parallel_client_fixture.c](../tests/unit/mutex/mutex_parallel_client_fixture.c) | 双 frame oracle、pidfd 退出协调、实际客户端的单次 waiter 与两次 peer ioctl 路由。 |
+| [test_mutex_stack_protocol.py](../tests/unit/mutex/test_mutex_stack_protocol.py) | 拒绝伪造的栈变化/post-control 日志。 |
+| [test_mutex_signal_protocol.py](../tests/unit/mutex/test_mutex_signal_protocol.py) | 同 CPU 嵌套 JIT、CALL 额度包/计数/ACK、signal/peer/原 waiter 的坏日志、身份/顺序和参数。 |
+| [test_native_ooo_protocol.py](../tests/unit/execution/test_native_ooo_protocol.py) | A-before-B 日志 oracle。 |
+| [test_remote_outer_protocol.py](../tests/unit/execution/test_remote_outer_protocol.py) | 远端祖先依赖及双根身份、owner、JIT/副作用的坏日志拒绝。 |
+| [test_remote_depth_protocol.py](../tests/unit/execution/test_remote_depth_protocol.py) | 深链记录及真实 workload wait predicate。 |
+| [test_spin_node_protocol.py](../tests/unit/spin/test_spin_node_protocol.py) | reservation/drain 坏记录。 |
+| [test_cs_oracle.py](../tests/unit/infrastructure/test_cs_oracle.py) | 实际 workload 状态更新与完整性函数。 |
+| [test_benchmark.py](../tests/unit/infrastructure/test_benchmark.py)、[benchmark_fixture.c](../tests/unit/infrastructure/benchmark_fixture.c) | 真实 pthread 驱动的 30 项测量/失败场景及 113 项配对观测检查；含翻译身份/区间/资源、可选十项 JIT/native/队列计数及无效记录、控制台和历史字段边界。替代 ioctl/确定时钟，另验证真实 guest 时钟；日志替身不证明实际 JIT，不加载内核模块。 |
+| [test_kernel_baseline.py](../tests/unit/infrastructure/test_kernel_baseline.py) | 基线 reader 的损坏/伪造输入，不读取 live kernel。 |
+| [test_regression.py](../tests/unit/infrastructure/test_regression.py) | 用例选择去重、停止边界、证据捕获和离线 verifier；计量选择覆盖直接/组合装载和原超时，拒绝重复配置。 |
 
 ## 6. 阅读完以后改哪里
 

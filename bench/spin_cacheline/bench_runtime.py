@@ -21,7 +21,7 @@ from summarize import write_json
 ROOT = Path(__file__).resolve().parents[2]
 HERE = ROOT / "bench/spin_cacheline"
 WORKLOAD = ROOT / "workload_modules/spin_cacheline"
-sys.path.insert(0, str(ROOT / "tests"))
+sys.path.insert(0, str(ROOT / "tests/protocols"))
 sys.path.insert(0, str(ROOT / "disassem"))
 from native_only_protocol import entries
 from cpu_placement import capture_topology
@@ -127,7 +127,7 @@ def source_state():
                  path.name in ("Makefile", "requirements.txt", "guest.config")) and
                 not path.name.endswith(".mod.c")):
                 sources[str(path.relative_to(ROOT))] = digest(path)
-    for name in ("tests/native_only_protocol.py", "tests/cpu_placement.py"):
+    for name in ("tests/protocols/native_only_protocol.py", "tests/protocols/cpu_placement.py"):
         sources[name] = digest(ROOT / name)
     return sources
 

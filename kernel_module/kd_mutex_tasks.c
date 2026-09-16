@@ -141,5 +141,5 @@ void kd_mutex_tasks_exit(void)
 }
 
 #ifdef KDLOCK_SELFTEST
-#include "../tests/kernel/mutex_task_selftest.c"
+#include "../tests/kernel/mutex/mutex_task_selftest.c"
 #endif

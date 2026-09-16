@@ -7,7 +7,7 @@
 
 唯一执行入口是 frame-backed `kd_exe_on_call_hl_entry()`。两元素输入保持
 `{waiter GS base, logical waiter task}`，不增加 FS base 或第三个 task 元素。
-GS lowering helper 保留，但生产准入拒绝保留 JIT 范围中的 GS 内存操作。
+GS 内存按 origin GS base 翻译；等待代理结果的线程保持禁止抢占并用 PAUSE 轮询。
 普通直接 CALL miss 后原 waiter 原生完成后缀，不返回本次 JIT；它不是入口重试。
 未来调用若采用学习后的直接 callee，准入传播实际 CALL 包及 RET 效果，并校验
 返回目标表；这不增加 wrapper 参数，也不假定普通 callee 保留哪些寄存器。
@@ -306,17 +306,19 @@ R15”。只有 dispatcher 和退出协议对 physical R14/R15 的含义是固�
 
 ### 6.3 GS 和 logical `current`
 
-生产准入拒绝保留 JIT 范围中的所有 GS 内存操作，包括只读及 current_task
-读取；FS/base 操作也不受支持。下述是保留并由单元测试覆盖的 lowering helper，
-不是生产代理许可。
+spinlock 和 mutex 的生产准入默认均允许显式 GS 内存读、写和 RMW，
+以及受支持的 current_task 读取；两种被代理 waiter 都在禁止抢占状态下轮询等待。
+FS、直接 segment/base 操作和尚未实现 lowering 的隐式 GS string/XLAT 仍拒绝。
 
 翻译器不写硬件 GS base。普通 GS 操作数降为显式
 `[Stack_RGS + offset]`；匹配 current_task 偏移的 64-bit MOV 则从
 `Stack_RCT` 取得 logical waiter。写入/RMW current_task 不允许。
 原 waiter 在入队 origin CPU 上捕获 GS/task，嵌套 spin 继承，mutex 保持同一 frame。
 
-显式地址和 logical task 不切换实际调度、IRQ、RCU 或抢占状态。远端访问 origin
-per-CPU 内存仍可能与本地操作冲突；native service 的真实 current/GS 仍属于
+原 waiter 从发布请求前到 acquire 观察到完成或 native handoff 一直禁止抢占，
+等待循环只有 cpu_relax（x86 PAUSE），不调用 schedule/cond_resched，不睡眠。
+这防止 origin CPU 上其他任务替换该 waiter，但不能排除 IRQ/NMI 对同一 per-CPU
+数据的访问，也不切换 IRQ/RCU 上下文；native service 的真实 current/GS 仍属于
 combiner。已排除的普通 CALL native 后缀在 waiter 上运行，但这也不消除
 borrowed mutex 的 owner-sensitive 限制。
 
@@ -679,8 +681,8 @@ API 的 callee RIP 和返回栈。Linux 在原 waiter 上返回 `-EINTR` 时，�
 7. `args[0]`/`args[1]` 在入口时必须分别为 waiter kernel GS base 和 logical
    task，每次 continuation 都必须重新安装；返回后 `args[1]` 是 0/1 body witness，
    不能当作指令计数或未执行任何副作用的证明，也不能据此决定回退重跑。
-8. 不得依赖硬件 FS/GS 切换。GS 内存当前不准入；保留的 GS 显式基址降级和 logical
-   `current_task` helper 仅保留代码生成能力和测试，不代表允许生产代理。
+8. 不得依赖硬件 FS/GS 切换。GS 使用固定 origin base，`current_task` 使用 logical
+   waiter；等待结果时不得解抢占，IRQ/NMI 和 native service 的上下文仍有边界。
 9. EFLAGS 和 SIMD/FPU 状态仍不是完整的跨边界 ABI。
 10. 修改 `struct pt_regs` 偏移、wrapper push 顺序或 `Stack_*` 宏时必须同步修改
    三者，并反汇编最终 `jit.bin` 验证实际编码。

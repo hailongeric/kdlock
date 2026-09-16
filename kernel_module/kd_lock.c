@@ -129,7 +129,7 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
 
 #ifdef KDLOCK_SELFTEST
 /* Read-only capacity evidence; no test may manufacture table membership. */
-#include "../tests/kernel/mutex_shadow_trace.c"
+#include "../tests/kernel/mutex/mutex_shadow_trace.c"
 #endif
 
 /* ==========================================================================

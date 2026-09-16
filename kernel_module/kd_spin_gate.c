@@ -156,5 +156,5 @@ int kd_spin_gates_check_idle(void)
 }
 
 #ifdef KDLOCK_SELFTEST
-#include "../tests/kernel/spin_gate_selftest.c"
+#include "../tests/kernel/spin/spin_gate_selftest.c"
 #endif

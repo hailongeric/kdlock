@@ -30,9 +30,11 @@ mutex 代理必须显式启用 `mutex_jit=1`。
 这不增加独立的准入根，不让冷分支借用新的入口寄存器假设。补读和补充解码
 入口共用 32 轮扩展上限；真正不可解码或预算耗尽仍拒绝，不跳过缺失块。
 
-范围内发现 GS/current 访存、已识别的 per-CPU/调度/IRQ/RCU 符号或其他既有
+spinlock 和 mutex 默认都支持显式 GS 访存，按 pinned waiter base 翻译；
+current_task 读取使用 logical waiter，无需单独启用 GS 开关。
+范围内发现 FS/base 操作、已识别的线性 per-CPU/调度/IRQ/RCU 符号或其他既有
 拒绝条件时，整个候选拒绝并删除本次汇编/二进制产物，daemon 发布 native-only。
-只存在于已排除后缀的 GS/current 操作不再导致该 JIT 前缀被拒绝，因为它们
+只存在于已排除后缀的不支持的上下文操作不再导致该 JIT 前缀被拒绝，因为它们
 由原 waiter 原生执行，不是交给 combiner 的 hostcall。
 这不是任意指针、并发内存、所有指令或所有内核上下文的安全证明。
 
@@ -89,7 +91,12 @@ F 和后缀都在 waiter 上执行。daemon 可以学习 F 并为未来调用重
 必须重新检查这些代码；之前前缀通过不等于新范围也通过。
 
 两元素输入 ABI 不变：`args[0]=waiter GS base`、`args[1]=logical waiter task`。
-这两个值不切换真实调度/IRQ/RCU 上下文。寄存器及输出含义见
+spinlock 和 mutex 的被代理 waiter 等待结果时均保持禁止抢占并 PAUSE 轮询，
+不会睡眠或调度；spinlock 原有等待路径已经满足此规则。
+mutex 取得 gate 后的真实锁获取和 native owner/ACK 路径仍保留原调度语义。
+此规则不排除 IRQ/NMI 对 origin per-CPU 的访问；owner/依赖任务必须能在其他
+CPU 推进，同 CPU 的 sleeping owner 与 busy waiter 组合不支持。旧版依赖 waiter
+调度的同 CPU 用例证据不适用于本策略。寄存器及输出含义见
 [JIT_REGISTER_ABI.md](JIT_REGISTER_ABI.md)。非 CALL 故障续跑、flags 修复和
 不可变代码版本仍是已记录的限制，本次不扩展。
 
@@ -153,7 +160,7 @@ normal 模式共享源码无需复制；recovery 模式虽路径相同但使用 
 cd /root/host_fs/kdlock
 python3 kernel_baseline/verify.py --source /root/linux-6.1.159 --build --running
 make -C tests/unit run
-python3 tests/audit_context_spills.py
+python3 tests/tools/audit_context_spills.py
 ```
 
 首次验收或需要全主模式确认时，在恢复快照确认后执行以下命令。
@@ -161,7 +168,7 @@ python3 tests/audit_context_spills.py
 
 ```sh
 export KDLOCK_RECOVERY_CONFIRMED=1
-bash tests/test_09_jit_execution_modes.sh 0 1 2 3 4 5
+bash tests/live/test_09_jit_execution_modes.sh 0 1 2 3 4 5
 ```
 
 该入口无参数时只列出测试范围，不再默认运行全主模式。显式参数先全部校验，
@@ -194,16 +201,16 @@ mode 8 原有阶段需要串行准备六个翻译入口，`test_04` / `test_10` 
 普通 CALL 的真实寄存器/退出点续跑，以及上下文拒绝测试：
 
 ```sh
-KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 0 1
-KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 3 1
-KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 1 2
-KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 4 2
-bash tests/test_04_spinlock.sh 8
-KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 8 2
-KD_NATIVE_REGISTERS=1 bash tests/test_10_native_resume.sh 8 3
-bash tests/test_12_context_native_only.sh 10
-bash tests/test_12_context_native_only.sh 11
-KD_CONTEXT_LOCK_API=percpu-spill bash tests/test_12_context_native_only.sh 3
+KD_NATIVE_REGISTERS=1 bash tests/live/test_10_native_resume.sh 0 1
+KD_NATIVE_REGISTERS=1 bash tests/live/test_10_native_resume.sh 3 1
+KD_NATIVE_REGISTERS=1 bash tests/live/test_10_native_resume.sh 1 2
+KD_NATIVE_REGISTERS=1 bash tests/live/test_10_native_resume.sh 4 2
+bash tests/live/test_04_spinlock.sh 8
+KD_NATIVE_REGISTERS=1 bash tests/live/test_10_native_resume.sh 8 2
+KD_NATIVE_REGISTERS=1 bash tests/live/test_10_native_resume.sh 8 3
+bash tests/live/test_12_context_native_only.sh 10
+bash tests/live/test_12_context_native_only.sh 11
+KD_CONTEXT_LOCK_API=percpu-spill bash tests/live/test_12_context_native_only.sh 3
 ```
 
 普通 CALL 测试检查当前退出状态、waiter 身份、返回栈及副作用恰好一次；不能用
@@ -234,7 +241,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case native-mutex-depth
 KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --suite native-controls
 # Equivalent explicit diagnosis of the mutex reference only:
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_CONTROL=1 KD_NATIVE_REGISTERS=1 \
-  bash tests/test_10_native_resume.sh 3 1
+  bash tests/live/test_10_native_resume.sh 3 1
 ```
 
 执行流：确认空闲 -> 共用构建/加载 -> provider 设为 `target_process=kd_unused`
@@ -360,7 +367,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --suite core
 
 ### 3.4 原生锁与 JIT 配对实验
 
-`tests/paired_benchmark.py` 显式选择普通 mode 2/5 的相同双服务临界区，复用
+`tests/tools/paired_benchmark.py` 显式选择普通 mode 2/5 的相同双服务临界区，复用
 `bench/klock_test`、内核完整状态 replay oracle 和 `regression.run()` 的空闲、
 冻结源码、停止边界与归档逻辑。它不进入 `CASES` 或日常套件，也不把依赖 JIT
 事件才能推进的 SELFTEST 角色变成原生负载。不要单独手动拼接 `benchmark_arm.sh`
@@ -368,9 +375,9 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --suite core
 
 ```sh
 # Guest: confirm recovery/idle first; choose a NEW output directory.
-python3 tests/paired_benchmark.py --mode 2 5 --threads 4 8 \
+python3 tests/tools/paired_benchmark.py --mode 2 5 --threads 4 8 \
   --workload 100000 --loops 16 --runs 2 --cpus 0-7 --repeats 2 --dry-run
-KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/paired_benchmark.py \
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/tools/paired_benchmark.py \
   --mode 2 5 --threads 4 8 --workload 100000 --loops 16 --runs 2 \
   --cpus 0-7 --repeats 2 --timeout 300 --output /tmp/kdlock-paired-manual
 python3 tests/verify_evidence.py /tmp/kdlock-paired-manual
@@ -477,9 +484,9 @@ JIT 翻译成本。修改该宏时复用 `test_mutex_outer_progress.py` 检查�
 下面仅预览同一负载在两个 CPU mask 上的选择，不执行测试：
 
 ```sh
-python3 tests/paired_benchmark.py --mode 5 --threads 8 \
+python3 tests/tools/paired_benchmark.py --mode 5 --threads 8 \
   --workload 100000 10000 --loops 16 --runs 2 --repeats 2 --cpus 0-1 --dry-run
-python3 tests/paired_benchmark.py --mode 5 --threads 8 \
+python3 tests/tools/paired_benchmark.py --mode 5 --threads 8 \
   --workload 100000 10000 --loops 16 --runs 2 --repeats 2 --cpus 0-7 --dry-run
 ```
 
@@ -506,7 +513,7 @@ p50/p99 必须结合实际 body 比例解释；这些短实验不证明轮询成
 
 ```sh
 # Guest, explicit experiment only. Omit --jit-timing for the off comparison.
-KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/paired_benchmark.py \
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/tools/paired_benchmark.py \
   --mode 2 5 --threads 8 --workload 100000 --loops 16 --runs 2 \
   --cpus 0-7 --repeats 2 --jit-timing --timeout 300 \
   --output /tmp/kdlock-jit-timing-manual
@@ -707,7 +714,7 @@ JIT，不能计入实际 JIT 正例。主模式、寄存器、held-B、pending-B
 callee-saved 分析事实，普通函数按实际指令传播效果，不获得 ABI 保留假设；
 未建模/native 调用和控制服务仍保留内存 clobber；唯一新增的局部例外是
 5.3 中由运行时逐字节检查的 mutex 栈窗口。
-GS/current、IRQ 及已知敏感符号拒绝规则不变。
+不支持的 segment/base、IRQ 及已知敏感符号仍拒绝；显式 GS 使用 origin base。
 
 ### 5.1 学习后的直接 callee
 
@@ -732,12 +739,12 @@ IJ 历史时，可以尝试把学习后的代码作为该 root 的直接控制�
 损坏的虚拟返回地址可能命中该 RET 的其他白名单目标，不能假定调用栈一定
 平衡。生成表不删除任何目标；仅有顺序内存事实证明本次状态不可能取某条边时，
 才不沿那条边传播。确切改写返回槽可以跳过一个已连通后继，不给该后继伪造
-入口状态。但这些后继的代码和 RET 目标仍会生成，所以 GS/FS、IRQ、已知敏感
+入口状态。但这些后继的代码和 RET 目标仍会生成，所以不支持的 segment/base、IRQ、已知敏感
 符号和异类锁引用的无条件检查必须先遍历全部生成块，不能只检查获得数据流
 输入的块。检查范围仍是当前 JIT episode，普通 CALL miss 后只由 waiter 执行的
 后缀不重新纳入。入口别名条件不会校验运行时返回槽内容；这里没有证明任意
 并发修改下的指针或 RET 值仍然有效。游离学习目标、间接 CALL/JMP、带栈调整
-的 RET、返回表不一致或预算耗尽都会拒绝此条件路径。GS/current 等拒绝仍然
+的 RET、返回表不一致或预算耗尽都会拒绝此条件路径。不支持的 segment/base 等拒绝仍然
 适用。诊断 `ENTRY_GUARDED_ADMISSION scoped_calls=true` 表示使用了这条路径，
 不是新的 daemon 参数，也不代表所有已学习 callee 都能通过。
 
@@ -869,11 +876,11 @@ scope/续点时再选择对应 fixture 和 live 寄存器/远端用例：
 ```sh
 make -C tests/unit run TESTS= \
   PY_TESTS='test_context_guards.py test_context_policy.py test_context_memory.py test_jit_diagnostics.py test_text_regions.py'
-python3 tests/audit_context_spills.py
+python3 tests/tools/audit_context_spills.py
 
 # Runtime scope/continuation changes only; separate from translator-only work.
-python3 tests/unit/test_jit_entry_scope.py
-python3 tests/unit/test_native_after_outer.py
+python3 tests/unit/run.py execution/test_jit_entry_scope.py
+python3 tests/unit/run.py execution/test_native_after_outer.py
 ```
 
 修改上述跨后端、全生成范围的静态准入时，用以下复杂组合检查主模式、返回型
@@ -895,7 +902,7 @@ JIT body witness，mutex 正例仍须加载并回读 `mutex_jit=1`。
 scope fixture 提取生产 executor，覆盖首次拒绝、错误包、已执行后拒绝及
 远端父子校验；它替代锁原语和 wrapper 边界，不是锁并发测试。前述 live 命令
 另行验证真实 JIT、嵌套竞争及寄存器续跑。文本窗口测试检查新增可达块、块内
-入口分割、GS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
+入口分割、GS lowering、FS/坏指令拒绝和扩展预算；它本身不代替内核中的 body witness。
 结果只维护在 [验证记录](VALIDATION.md)，后续顺序见
 [TODO](TODO.md#direction-and-priority)。
 
@@ -1055,9 +1062,9 @@ JIT 已执行，新的 lock CALL 仍为合法 PENDING，尚未取得/发布新�
 在 guest 按改动点选择以下单元测试，不要求每次依次执行：
 
 ```sh
-python3 tests/unit/test_exe_registry.py
-python3 tests/unit/test_jit_entry_scope.py
-python3 tests/unit/test_mutex_resources.py
+python3 tests/unit/run.py execution/test_exe_registry.py
+python3 tests/unit/run.py execution/test_jit_entry_scope.py
+python3 tests/unit/run.py mutex/test_mutex_resources.py
 ```
 
 注册测试的七个变异负例必须成功编译、再由断言检测；编译错误或超时不算通过。
@@ -1177,9 +1184,9 @@ task get -> 发布 RCU 可读记录 -> 保留物理 owner 的 native_begin
 在已确认 recovery 快照且没有模块/调用者运行的 guest 执行：
 
 ```sh
-KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_22_mutex_task_lifecycle.sh
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/live/test_22_mutex_task_lifecycle.sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_TASK_CPUS=0,20,21 \
-  bash tests/test_22_mutex_task_lifecycle.sh
+  bash tests/live/test_22_mutex_task_lifecycle.sh
 ```
 
 第二条使用当前双 NUMA guest 的 CPU 编号；其他拓扑须先核对。
@@ -1216,9 +1223,9 @@ combiner 持有 A -> JIT 执行前缀写入 -> lock(B) CALL 为 PENDING
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
-  KD_NATIVE_VIRTUAL_RESOURCE=1 bash tests/test_10_native_resume.sh 8 4
+  KD_NATIVE_VIRTUAL_RESOURCE=1 bash tests/live/test_10_native_resume.sh 8 4
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
-  KD_NATIVE_VIRTUAL_RESOURCE=2 bash tests/test_10_native_resume.sh 8 4
+  KD_NATIVE_VIRTUAL_RESOURCE=2 bash tests/live/test_10_native_resume.sh 8 4
 ```
 
 脚本检查 CPU 0/1/2/3/4/6/8 可用，自动构建 SELFTEST，并始终保持
@@ -1259,7 +1266,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case virtual-ticket-refusal
 # Equivalent direct invocation in the confirmed recovery guest:
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
   KD_NATIVE_VIRTUAL_RESOURCE=3 KD_NATIVE_GATE_PRESSURE=1 \
-  bash tests/test_10_native_resume.sh 8 4
+  bash tests/live/test_10_native_resume.sh 8 4
 ```
 
 每个候选者的 `kd_ticket held` 检查 31 个真实 gate owner、公有/私有锁字与
@@ -1357,7 +1364,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh \
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_SHADOW_CAPACITY=1 \
-  bash tests/test_10_native_resume.sh 1 4
+  bash tests/live/test_10_native_resume.sh 1 4
 ```
 
 ### 6.4 原 Waiter 的信号与退出
@@ -1413,15 +1420,15 @@ B API 的 `-EINTR` 由负载的错误分支处理，所以 SIGUSR1 客户端的 
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
-  KD_NATIVE_WAITER_SIGNAL=10 bash tests/test_10_native_resume.sh 4 4
+  KD_NATIVE_WAITER_SIGNAL=10 bash tests/live/test_10_native_resume.sh 4 4
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
-  KD_NATIVE_WAITER_SIGNAL=9 bash tests/test_10_native_resume.sh 4 4
+  KD_NATIVE_WAITER_SIGNAL=9 bash tests/live/test_10_native_resume.sh 4 4
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
   KD_NATIVE_WAITER_SIGNAL=10 KD_NATIVE_WAITER_API=1 \
-  bash tests/test_10_native_resume.sh 4 4
+  bash tests/live/test_10_native_resume.sh 4 4
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
   KD_NATIVE_WAITER_SIGNAL=9 KD_NATIVE_WAITER_API=2 \
-  bash tests/test_10_native_resume.sh 4 4
+  bash tests/live/test_10_native_resume.sh 4 4
 ```
 
 脚本使用 CPU 0-6 的现有 mode 4 角色配置，读取 `mutex_jit=1`，并将 role 0
@@ -1459,8 +1466,8 @@ body witness、B 排队、完整副作用、final ACK 和客户端结果：
 这两项将信号发给 native peer，不是已经执行 JIT 的逻辑 waiter：
 
 ```sh
-KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_19_mutex_signals.sh 1
-KDLOCK_RECOVERY_CONFIRMED=1 bash tests/test_19_mutex_signals.sh 3
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/live/test_19_mutex_signals.sh 1
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/live/test_19_mutex_signals.sh 3
 ```
 
 ### 6.5 原 Waiter 与 B 释放的竞争
@@ -1503,10 +1510,10 @@ A combiner 执行 JIT stores -> CALL miss -> 原 waiter 原生进入 B API
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
   KD_NATIVE_WAITER_SIGNAL=10 KD_NATIVE_WAITER_API=1 KD_NATIVE_WAITER_RACE=1 \
-  bash tests/test_10_native_resume.sh 4 4
+  bash tests/live/test_10_native_resume.sh 4 4
 KDLOCK_RECOVERY_CONFIRMED=1 KD_NATIVE_PENDING_CONTENDED=1 \
   KD_NATIVE_WAITER_SIGNAL=9 KD_NATIVE_WAITER_API=2 KD_NATIVE_WAITER_RACE=1 \
-  bash tests/test_10_native_resume.sh 4 4
+  bash tests/live/test_10_native_resume.sh 4 4
 ```
 
 在上述命令的 `bash` 之前增加环境变量
@@ -1595,9 +1602,9 @@ probe 2/4 是非队首取消检查，probe 1/3 是队首获取检查，分别配
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_PARALLEL_FIRST=0 \
-  bash tests/test_23_mutex_parallel_native.sh
+  bash tests/live/test_23_mutex_parallel_native.sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_PARALLEL_FIRST=1 \
-  bash tests/test_23_mutex_parallel_native.sh
+  bash tests/live/test_23_mutex_parallel_native.sh
 ```
 
 `KD_MUTEX_PARALLEL_FIRST` 默认 0，仅接受 0/1，决定哪组先完成，不改变锁协议。
@@ -1849,7 +1856,7 @@ CPU；逻辑 waiter 仍在 CPU 2/6。两组 entry 都必须先发布 NORMAL，da
 KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case parallel-shared-cpu
 # Equivalent direct invocation, only in the confirmed recovery guest:
 KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_PARALLEL_SHARED_CPU=1 \
-  KD_MUTEX_PARALLEL_FIRST=1 bash tests/test_23_mutex_parallel_native.sh
+  KD_MUTEX_PARALLEL_FIRST=1 bash tests/live/test_23_mutex_parallel_native.sh
 ```
 
 ```text
@@ -1893,7 +1900,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case parallel-node-pressure
 # Equivalent direct invocation, only in the confirmed recovery guest:
 KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_PARALLEL_FIRST=1 \
   KD_MUTEX_PARALLEL_SHARED_CPU=1 KD_MUTEX_PARALLEL_PRESSURE=1 \
-  bash tests/test_23_mutex_parallel_native.sh
+  bash tests/live/test_23_mutex_parallel_native.sh
 ```
 
 `KD_MUTEX_PARALLEL_PRESSURE` 默认 0，仅接受 0/1；启用必须同时使用 shared CPU
@@ -2224,7 +2231,7 @@ make -C tests/unit run TESTS= PY_TESTS=test_mutex_signal_protocol.py
 KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-4 --case mode-5
 
 # Explicit OOO diagnostic when that branch is affected; not another routine case.
-KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_OOO=1 bash tests/test_08_mutex_jit_modes.sh 4
+KDLOCK_RECOVERY_CONFIRMED=1 KD_MUTEX_OOO=1 bash tests/live/test_08_mutex_jit_modes.sh 4
 ```
 
 OOO 复用同一角色和判定，另保留原有 A-before-B 解锁分支/精确计数，仍须全程 JIT
@@ -2492,10 +2499,12 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-4 --case mode-5 --
 任务；已有用例保留供相关改动或显式诊断选择，不要求每轮覆盖所有边界。
 常见路径已复现的错误仍须处理，未测场景仍是限制而不是 PASS。
 
-基础验收通过后，不再把基础用例作为每轮回归的前置步骤。按修改的行为选择
-复杂代表用例及相关单元测试；这是减少重复运行，不是缓存旧 PASS 后假装重跑。
+按 2026-09-16 的约定，每次只验证基础简单功能与修改直接影响的功能。
+`make -C tests/unit run` 默认只跑两个基础 C 程序；用 `PY_TESTS` 增加相关单元
+测试。下面的复杂套件保留为按需选项，不是每轮必跑项；全量仅在明确要求时
+使用 `run-all`。旧 PASS 仍只属于其冻结输入。
 翻译准备中的 warmup、promotion、发布检查仍必须保留，否则无法保证实际 JIT。
-40 个单元入口和 21 个 shell 驱动的逐项用途、重叠分析及精简进展见
+40 个单元入口和 22 个 shell 驱动的逐项用途、重叠分析及精简进展见
 [测试用例分析](TEST_EXAMPLES.md)。节点、mutex 交接、frame、CALL 和 tail 模型已由生产测试承接；
 live 选择器的套件内容不变，本节说明何时选用；保留入口不等于要求例行运行。
 
@@ -2540,13 +2549,13 @@ make -C tests/unit run TESTS= PY_TESTS='test_regression.py test_mutex_parallel_p
 | `core` | `spin` 与 `mutex` 的五个复杂代表用例；不是全部功能验收 |
 | `hostcall` | mode 2/5，不能用普通深层嵌套替代 native service 返回 JIT 的检查 |
 | `registers` | 八个退出边界的 GPR/返回栈检查，不被普通业务状态正确所替代 |
-| `admission` | 十二项上下文/GS/别名拒绝负例；修改分析器还须运行独立 admission audit |
+| `admission` | GS JIT 正例与上下文/别名拒绝负例；修改分析器还须运行独立 admission audit |
 | `spin-native` / `mutex-native` | 对应后端的退出点续跑、提前 A 释放/原生依赖、资源拒绝/容量、后续 native-only 策略；spin 另含受检获取后续跑；mutex 还含真实栈变化、同队列同 CPU 续跑、两项并行 frame 与跨队列同 CPU 满槽/拒绝组合 |
 | `spin-remote` | 八层物理 frame 的同/跨 NUMA、多请求远端和三种 late-exit，日常不先重复一层/两层 |
 | `mutex-signals` | 原 waiter 的两种不可中断信号、两种 API 的取消/获得/无偏置竞争、独立 native peer |
 | `protocol` | 原生参与者互斥和两种 RCU/owner ACK 探针；JIT=0 的探针不能计为 JIT 正例 |
 | `mutex-parallel` | 两个真实 JIT/native frame 的两种顺序，合并代码池与 mutex shadow 表满/新队列回退、原生 B 竞争者取消后重排、退休与重载；另含同 CPU 满槽/上下文拒绝/task 分配失败组合 |
-| `extended` | 64 项独立/复杂代表用例，排除 baseline、native-controls 及十一项已覆盖诊断；保留 mode 6 的同一 frame 三锁检查，仅用于大范围变动或验收 |
+| `extended` | 64 项独立/复杂代表用例，排除 baseline、native-controls 及十一项已覆盖诊断；保留 mode 6 的同一 frame 三锁检查，仅在明确要求完整 live 范围时运行 |
 
 以上是按行为划分的起点，不是必跑列表或自动影响分析。不要仅因低概率扩展尚未
 覆盖而选择 `extended`、完整信号/资源矩阵。已显式选中的用例仍完整执行原有
@@ -2556,7 +2565,7 @@ make -C tests/unit run TESTS= PY_TESTS='test_regression.py test_mutex_parallel_p
 用例即可。不能因为复杂业务正例通过而删除尚未覆盖的错误分支或独立协议。
 如果只修改测试选择规则，运行
 `make -C tests/unit run TESTS= PY_TESTS=test_regression.py` 与 `--dry-run` 即可，
-不加载模块或重复 live 验收；单元测试清单仍保留完整入口供首次/显式全量检查。
+不加载模块或重复 live 验收；单元测试清单仍保留 `run-all` 入口供显式全量检查。
 纯原生对照入口的改动选择 `test_regression.py`、`test_native_registers.py`，
 两项 `native-controls` 和受影响的嵌套寄存器 JIT 正例。只是修改选择规则时仍
 只做单元/预览，不把原生对照变成每轮必跑的基础检查。

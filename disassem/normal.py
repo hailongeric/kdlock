@@ -1,6 +1,6 @@
 # Lower ordinary operands/instructions using conflict.py's physical mapping.
-# Segment handling describes address lowering only: production context policy
-# separately refuses GS/FS-sensitive JIT paths. No use-time bounds guard exists.
+# GS memory uses the pinned waiter's base; current_task uses its logical task.
+# FS/base manipulation remains unsupported. No use-time bounds guard exists.
 import diagnostics
 from assist import make_inst
 from conflict import (

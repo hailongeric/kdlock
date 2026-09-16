@@ -466,15 +466,28 @@ deferred callback execution. Its constructed continuation and outer batch
 callback do not exercise JIT or queue scheduling; see
 [the lifecycle guide](JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu).
 
-#### Runnable Polling And Event Parking
+#### Pinned Busy Polling
 
-`kd_cond_load_acquire_sched()` observes a linked waiter's `locked` byte with
-acquire ordering, calls `cpu_relax()`, and temporarily enables preemption for
-`schedule()` when `need_resched()` is set. It does not set a sleeping task state
-or register an event wakeup. The scheduling gate follows the same runnable
-polling policy. Migration remains pinned to retain the reserved CPU-local node
-and stack. Direct Linux mutex B acquisition and native-owner ACK handling are
-different waits, not covered by a linked-node parking change.
+Both spinlock and mutex delegation support explicit GS memory operations by
+default. Spinlock waiters already keep preemption disabled from entry-ticket
+reservation through their queued wait: the acquire poll in `spin/slowpath.inc`
+uses `cpu_relax()` (x86 PAUSE), without sleeping or scheduling. The mutex waiter
+uses the same origin-task constraint; GS support is not a mutex-only option.
+
+`kd_mutex_wait_for_result()` observes the linked waiter's `locked` byte with
+acquire ordering and executes `cpu_relax()` (x86 PAUSE) until completion or
+native handoff. Preemption remains disabled from before publication through
+consuming the result; neither this loop nor the scheduling-gate poll schedules
+or parks. Other tasks therefore cannot replace the origin waiter while its GS
+storage is being accessed remotely. IRQ/NMI access remains possible.
+
+After taking the gate, the request is no longer eligible for delegation. Its
+physical executor may acquire the real sleeping mutex, including nested B;
+original-owner/native-suffix ACK handling retains its existing protocol.
+Migration remains pinned for those executor paths and their reserved stacks.
+Busy waiters require independently runnable owners/dependencies: a sleeping
+owner pinned to a waiter's occupied CPU cannot make progress. Old same-CPU
+waiter-scheduling/oversubscription evidence does not validate this new contract.
 
 A promoted, published entry does not guarantee a delegatable batch. A queue
 head can remove its sole tail and run its own original CS; `run_combiner()`
@@ -492,15 +505,11 @@ PROCESSING and wakes a parked task with `wake_up_process()`. Its queue-head gate
 still polls, and its last-node handoff also avoids delegation. This is a source
 inspection, not a TCLock run or proof that it solves this measured workload.
 
-Do not copy those completion values into kdlock: here PROCESSED is 1, which
-TCLock uses for PARKED. A future module-only implementation needs an explicit
-sleep/wake handshake spanning normal completion, unexecuted handoff, early outer
-release and native-resume publication. The waker must retain the task/node until
-its last access; the existing final release-store permits immediate node reuse.
-Original Linux owners, pending native unlocks and final ACK order stay unchanged.
-Current measurements do not isolate polling cost or justify a default policy
-change. Event parking remains unimplemented performance work, not a guest-kernel
-edit, a flags change or a claim of arbitrary-oversubscription support.
+Do not copy those completion values or parking transitions into kdlock: here
+PROCESSED is 1, which TCLock uses for PARKED. The requested GS policy requires
+published waiters to keep polling with preemption disabled. Event parking is
+outside this design; existing final release publication still permits immediate
+node reuse, and original owners and final ACK ordering remain authoritative.
 
 ### 5.3 Nested A -> B And Native Continuation
 
@@ -614,7 +623,7 @@ the scope of the separately bounded fixtures are recorded in [VALIDATION](VALIDA
 | Queue structure | Per-CPU `kd_spin_node[4]` | Bitmap-reserved per-CPU `kd_mutex_node[4]` |
 | Exclusion | Original Linux qspinlock L, held by the physical executor | Original Linux mutex and its actual owner |
 | Scheduler state | Private S word/tail, never overlaid on L | `kd_mutex.locked/tail`, never sufficient for exclusion |
-| Scheduling | Non-sleeping spin protocol | Waiters may schedule while migration-pinned |
+| Scheduling | Non-sleeping spin protocol | Delegation waiters PAUSE with preemption disabled; native executors may sleep |
 | Nested contention | Virtual spin waiter and combiner snapshot | Same combiner waits for native B |
 | OOO unlock | Owner-side A/S release, logical-parent rendezvous and ticket-preserving reclaim | Native A/S early release, same-owner B and A reacquisition after suffix |
 | JIT disabled | Per-lock spin readiness policy | All mutex calls use original native protocol |
@@ -760,15 +769,17 @@ reseeding share the 32-expansion bound; genuine undecodable blocks still refuse.
 
 ### 7.2 Context And Memory Admission
 
-Production admission rejects retained GS memory, FS/base operations, known
-per-CPU/current/scheduling/preemption/IRQ/BH/RCU references, backend mismatches
-and other recognized unsupported context operations.
-The retained GS/current lowering helpers do not imply permission to delegate
-those operations. No read-only GS exception is granted.
+Production admission accepts explicit GS memory reads, writes and RMW through
+the pinned origin base, and supported current_task MOV loads through logical
+task input. GS displacements are not linear kernel addresses. FS/base operations,
+implicit GS string/XLAT without lowering, known linear per-CPU/current addresses,
+scheduling/preemption/IRQ/BH/RCU references and backend mismatches still refuse.
+Waiter pinning protects against task replacement, not IRQ/NMI or arbitrary
+remote accesses; this is not general per-CPU context equivalence.
 These unconditional byte/operand checks run across every selected emitted block
 before value propagation or its guarded retry. A rewritten RET may leave a
 connected block without a propagated input, but its code and whitelist target
-still exist. Such a block cannot bypass GS/FS, IRQ, known context-symbol or
+still exist. Such a block cannot bypass unsupported segment, IRQ, known context-symbol or
 foreign-backend checks. This pass uses the already selected JIT episode; it
 does not reintroduce an ordinary CALL miss's waiter-only suffix.
 
@@ -1365,9 +1376,9 @@ The implementation boundaries are:
 10. **Hostcalls are an explicit allowlist** — only fixed-signature, atomic-safe,
     task-context-independent, retry-safe services are currently accepted.
     General variadic `printk` and side-effecting services are unsupported.
-11. **Persistent processor state is partial** — GS/current lowering helpers
-    remain, but GS memory and known context operations are refused before JIT
-    publication. Hardware FS/GS switching, FS operands, EFLAGS, and SIMD/FPU
+11. **Persistent processor state is partial** — GS memory uses the pinned
+    origin base and logical current; known unsupported context operations are
+    refused. Hardware FS/GS switching, FS operands, EFLAGS, and SIMD/FPU
     state are not supported as general cross-exit state. The optional
     `args[1]` body witness adds no processor-state restoration. See `docs/JIT_REGISTER_ABI.md`.
 12. **Memory checks are incomplete** — the translator currently emits no

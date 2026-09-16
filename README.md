@@ -77,8 +77,14 @@ setup, recoverability and controlled module lifecycle remain explicit
 
 ## Boundaries
 
-- Admission rejects GS memory, FS operands and recognized context-sensitive
-  operations in retained JIT code, including statically resolved addresses in
+- Both spinlock and mutex delegation support explicit GS memory operands by
+  default, using the pinned waiter's kernel GS base; a supported
+  `current_task` load uses the logical waiter task. Queued waiters poll with
+  `cpu_relax()` (`pause` on x86), with preemption disabled until completion or
+  native handoff. This prevents other tasks from running on the origin CPU
+  during delegation; it does not exclude IRQ/NMI access to the same storage.
+- Admission rejects FS operands, hardware segment/base manipulation and
+  recognized context-sensitive operations, including statically resolved addresses in
   each possible CPU's [core static area and boot-reserved module arena](docs/DESIGN.md#722-static-per-cpu-ranges).
   This requires the matching provider's module-range capability, not merely
   readable symbol names; missing capability is a translation environment error.

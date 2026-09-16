@@ -25,7 +25,8 @@ class AssemblyTests(unittest.TestCase):
             "  5: add $0x1,%rax\n  9: ret\n\n0000000000000010 <sc_body_2>:\n"
             " 10: nop\nDisassembly of section .init.text:\n 0: ret\n")
 
-    def session(self, name="c01-t04-r00-kdlock", *, jit=True, legacy=False):
+    def session(self, name="c01-t04-r00-kdlock", *, jit=True, legacy=False,
+                cachelines=1, threads=4):
         """A saved publication and its matching workspace, not a running JIT."""
         session = self.run / name
         folder = session / "workspace/daemon/0x1000/42/asm"
@@ -38,16 +39,16 @@ class AssemblyTests(unittest.TestCase):
                            source=dict(state=0, frames=0, modules=1, writers=0),
                            images={p.name: assembly.sha256(p.read_bytes())
                                    for p in folder.iterdir() if not legacy or p.name != "bin.txt"})
-        record = dict(name=name, arm="kdlock", cachelines=1, threads=4, iterations=100000,
-                      repeat=0, cpus=[0, 1, 2, 3], execution_status="OK", drained=True,
-                      jit_status="JIT" if jit else "NO_JIT", jit_bodies=400000 if jit else 0,
+        record = dict(name=name, arm="kdlock", cachelines=cachelines, threads=threads, iterations=100000,
+                      repeat=0, cpus=list(range(threads)), execution_status="OK", drained=True,
+                      jit_status="JIT" if jit else "NO_JIT", jit_bodies=threads * 100000 if jit else 0,
                       jit_share=1.0 if jit else 0.0, published_before=publication,
                       published_after=publication, entry_range=[0x1000, 0x1100],
                       retired=dict(state=2, modules=0, frames=0, writers=0))
         (session / "session.json").write_text(json.dumps(record))
         return session, folder, record
 
-    def test_copies_matching_entry_and_indexes_jit_and_no_jit(self):
+    def test_groups_threads_and_repeats_by_critical_section(self):
         session, folder, _ = self.session()
         # An unrelated earlier workspace must not supply either requested file.
         other = session / "workspace/daemon/0x1/1/asm"
@@ -56,27 +57,60 @@ class AssemblyTests(unittest.TestCase):
         original = {p: p.read_bytes() for p in session.rglob("*") if p.is_file()}
         with contextlib.redirect_stdout(io.StringIO()):
             assembly.capture_completed(self.archive, session)
-        dest = self.archive.path / session.name
+        dest = self.archive.path / "sc_body_1"
         for target, source in (("JIT.S", "jit.S"), ("bin.txt", "bin.txt")):
             self.assertEqual((dest / target).read_bytes(), (folder / source).read_bytes())
         native = (dest / "native.S").read_text()
         self.assertIn("_raw_spin_lock-0x4", native)
         self.assertNotIn("<sc_body_2>", native)
         self.assertIn("ELF section offsets", native)
-        second, _, _ = self.session("c01-t01-r01-kdlock", jit=False)
-        self.archive.capture(second)
-        rows = json.loads((self.archive.path / "index.json").read_text())["sessions"]
-        self.assertEqual([r["jit_status"] for r in rows], ["JIT", "NO_JIT"])
-        self.assertEqual(rows[1]["jit_share"], 0)
-        self.assertTrue(rows[0]["bin_txt_hashed_during_measurement"])
+        code_mtimes = {name: (dest / name).stat().st_mtime_ns
+                       for name in ("native.S", "JIT.S", "bin.txt")}
+        second, _, _ = self.session("c01-t01-r01-kdlock", jit=False, threads=1)
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            assembly.capture_completed(self.archive, second)
+        self.assertEqual(output.getvalue(), "", "duplicate code should not print a new export")
+        self.assertEqual(code_mtimes, {name: (dest / name).stat().st_mtime_ns for name in code_mtimes})
+        third, _, _ = self.session("c02-t04-r00-kdlock", cachelines=2)
+        with contextlib.redirect_stdout(io.StringIO()):
+            assembly.capture_completed(self.archive, third)
+        index = json.loads((self.archive.path / "index.json").read_text())
+        self.assertEqual(index["schema"], 2)
+        self.assertEqual(index["source_sessions"], 3)
+        rows = index["critical_sections"]
+        self.assertEqual([r["directory"] for r in rows], ["sc_body_1", "sc_body_2"])
+        self.assertEqual([r["jit_status"] for r in rows[0]["sources"]], ["JIT", "NO_JIT"])
+        self.assertEqual(rows[0]["sources"][1]["jit_share"], 0)
+        self.assertTrue(rows[0]["sources"][0]["bin_txt_hashed_during_measurement"])
         for row in rows:
+            self.assertNotIn("threads", row)
             for name, digest in row["sha256"].items():
-                self.assertEqual(assembly.sha256((self.archive.path / row["name"] / name).read_bytes()),
+                self.assertEqual(assembly.sha256((self.archive.path / row["directory"] / name).read_bytes()),
                                  digest)
+        self.assertEqual(sorted(p.name for p in self.archive.path.iterdir() if p.is_dir()),
+                         ["sc_body_1", "sc_body_2"])
+        self.assertNotIn("| 线程 |", (self.archive.path / "README.md").read_text())
         self.assertEqual(original, {p: p.read_bytes() for p in original})
         pointer = json.loads((self.run / "assembly-export.json").read_text())
         self.assertEqual(pointer["directory"], str(self.archive.path))
+        self.assertEqual(pointer["exported_critical_sections"], 2)
+        self.assertEqual(pointer["source_sessions"], 3)
         self.assertFalse(list(self.archive.path.glob(".pending-*")))
+
+    def test_changed_code_at_same_size_keeps_a_content_variant(self):
+        first, _, _ = self.session()
+        original = self.archive.capture(first)
+        second, folder, record = self.session("c01-t08-r01-kdlock", threads=8)
+        changed = folder / "jit.S"
+        changed.write_bytes(changed.read_bytes() + b"NOP\n")
+        record["published_before"]["images"]["jit.S"] = assembly.sha256(changed.read_bytes())
+        (second / "session.json").write_text(json.dumps(record))
+        variant = self.archive.capture(second)
+        self.assertEqual(original.name, "sc_body_1")
+        self.assertRegex(variant.name, r"^sc_body_1-[0-9a-f]{12}$")
+        self.assertNotEqual((original / "JIT.S").read_bytes(), (variant / "JIT.S").read_bytes())
+        self.assertEqual(len(self.archive.sections), 2)
 
     def test_native_failed_and_undrained_do_not_read_workspace(self):
         for i, (arm, status, drained) in enumerate((
@@ -133,10 +167,13 @@ class AssemblyTests(unittest.TestCase):
                               side_effect=lambda run: cls(run, self.root / "views")):
                 with contextlib.redirect_stdout(output):
                     self.assertEqual(assembly.main([str(self.run)]), 0)
-            exports.append(json.loads(output.getvalue())["directory"])
+            result = json.loads(output.getvalue())
+            self.assertEqual(result["source_sessions"], 1)
+            self.assertEqual(result["exported_critical_sections"], 1)
+            exports.append(result["directory"])
         self.assertNotEqual(*exports)
-        row = json.loads((Path(exports[0]) / "index.json").read_text())["sessions"][0]
-        self.assertFalse(row["bin_txt_hashed_during_measurement"])
+        row = json.loads((Path(exports[0]) / "index.json").read_text())["critical_sections"][0]
+        self.assertFalse(row["sources"][0]["bin_txt_hashed_during_measurement"])
         self.assertEqual(before, {p: p.read_bytes() for p in self.run.rglob("*") if p.is_file()})
         self.archive.capture(session)
         with self.assertRaises(FileExistsError):

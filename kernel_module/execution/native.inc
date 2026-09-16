@@ -21,7 +21,7 @@ bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)
 }
 
 #ifdef KDLOCK_SELFTEST
-#include "../../tests/kernel/exec_relay_exit_probe.c"
+#include "../../tests/kernel/execution/exec_relay_exit_probe.c"
 #endif
 
 /* Publish borrowing only for a validated continuation packet. This registers

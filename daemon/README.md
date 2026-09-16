@@ -291,8 +291,9 @@ hostcalls, decoded callees and indirect calls retain their relevant successors.
 Every recompile rechecks learned targets; a previously admitted prefix is not
 blanket approval for an expanded callee or suffix.
 
-Retained GS memory, FS operands, recognized context-sensitive calls and backend
-mismatches refuse publication. Memory checks include lifted implicit effects,
+Explicit GS memory operands use the pinned origin base; supported `current_task`
+loads use the logical waiter. FS operands, hardware segment/base manipulation,
+recognized context-sensitive calls and backend mismatches refuse publication. Memory checks include lifted implicit effects,
 CALL stack writes and bounded cross-block facts. The analysis does not read
 runtime memory or assume private source stacks. Unknown aliases, incomplete
 lifting and concurrent mutation remain limits, not a security boundary.

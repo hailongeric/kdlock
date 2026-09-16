@@ -1281,6 +1281,16 @@ def constant_blocks(
 
 
 def context_reference(expr, db, next_rip, symbols, size=1):
+    # A GS displacement names origin-CPU storage, not a linear kernel address.
+    # Lowering adds the pinned waiter's GS base (or supplies logical current).
+    # Do not mistake an offset equal to current_task for an absolute reference;
+    # ordinary linear per-CPU aliases still go through the checks below.
+    if (
+        isinstance(expr, ExprOp)
+        and expr_op(expr) == "segm"
+        and str(expr_args(expr)[0]).upper() == "GS"
+    ):
+        return None
     address = static_address(expr, db, next_rip)
     if isinstance(symbols, ContextSymbols):
         symbol = symbols.resolve(address, size)
@@ -1323,10 +1333,6 @@ def instruction_rejection(
                 and not 0x40 <= byte <= 0x4F
             ):
                 break
-    for arg in line.args:
-        segment, _ = normal.segment_operand(arg)
-        if segment == "GS":
-            return "GS/current memory access requires native context", ""
     if line.name.upper() in {"CLI", "STI"}:
         return "IRQ state modification requires native context", ""
 

@@ -28,8 +28,10 @@ bool kd_mutex_check_idle(void);
  * kd_mutex_node — per-waiter queue node.
  *
  * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
- * owns its shadow stack, so a scheduled waiter cannot have its stack reused by
- * another target task running on the same CPU. The combiner feeds node->regs
+ * owns its shadow stack, so an executor acquiring a sleeping native mutex cannot
+ * have its stack reused by another target task running on the same CPU.
+ * A published delegation waiter keeps preemption disabled while polling.
+ * The combiner feeds node->regs
  * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
  * inside the JIT sandbox.
  */

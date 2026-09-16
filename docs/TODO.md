@@ -9,23 +9,27 @@ Complete the main behavior before optional features and performance work.
 
 ## Current Checkpoint
 
-**2026-09-14:** the user requested code cleanup, documentation and a Git commit
-after pausing further implementation/experiments. Collect the completed changes
-since `1d5fc7259d96863aa143343d22c79aaf93023c9e` as one checkpoint; do not use this
-cleanup to implement another open feature or rerun a full matrix. Timing names
-now map explicitly to their enum counters; comments and formatting are aligned
-without changing owner/ACK or wrapper contracts. The
-[checkpoint verification](VALIDATION.md#repository-checkpoint) is separate from
-the earlier [native-handoff JIT run](VALIDATION.md#native-handoff-timing).
-The single [current-version overview](PROJECT_GUIDE.md#1-当前进展) lists completed,
-unfinished and explicitly deferred work. This checkpoint does not resolve the
-two-CPU missing-JIT result or claim whole-project completion. The wider task
-remains paused until the user chooses to resume it.
+**2026-09-16:** spinlock and mutex delegation both support explicit GS memory
+operations by default, using the origin waiter's base;
+supported `current_task` reads use the logical task. Published delegation
+waiters remain preemption-disabled and PAUSE-poll until completion or native
+handoff. IRQ/NMI access and native-service context remain separate limits.
+[GS validation](../tests/README.md#gs-polling-validation) records the two actual
+JIT positives and affected unit checks; it does not validate old same-CPU
+schedules that depend on a queued waiter yielding.
 
-The **2026-09-11 reading handoff** adds purpose/constraint comments and the
-[complete file map and manual sequence](PROJECT_GUIDE.md). It changes no runtime
-statements and does not implement the access-time guard. Verification
-and its no-live-rerun boundary are recorded in [VALIDATION](VALIDATION.md#reading-handoff).
+Tests are grouped by purpose, with two basic C programs as the default and
+affected Python drivers selected explicitly. The
+[directory validation](../tests/README.md#test-directory-validation) covers
+basic and related functionality without a full or live rerun. Benchmark
+assembly exports also group identical code by critical section while retaining
+source sessions; their validation stays in the
+[benchmark README](../bench/spin_cacheline/README.md#assembly-inspection).
+
+The [current-version overview](PROJECT_GUIDE.md#1-当前进展) lists implemented and
+deferred capabilities. This documentation/commit step adds no new experiments
+or runtime changes. Earlier checkpoints remain in [VALIDATION](VALIDATION.md);
+their PASS results are not acceptance of the complete current tree.
 
 ## Delivery Scope
 
@@ -50,6 +54,11 @@ supported x86_64 main paths; do not continually expand corner-case coverage.
   not a mandatory full or rare-case matrix on every increment. A reproduced
   main-path crash, deadlock, incorrect effect or missing JIT is still a defect;
   do not dismiss it as rare or weaken the oracle to accept it.
+
+**2026-09-16 test-scope decision:** use basic simple checks plus directly
+affected functionality. Full unit and live suites require explicit selection;
+directory, documentation and selector changes do not trigger a live matrix.
+See [test commands](../tests/README.md#环境与单元测试).
 
 Below, **optional coverage/generalization** is not a pending delivery obligation.
 Ongoing protocol constraints apply when touching that code, not as standalone
@@ -182,14 +191,14 @@ Current results and remaining gates are in
       retain memory clobbers and conservative ordinary/decoded call effects.
       Guarded mode 1/4 and their register continuations execute actual JIT.
 - [x] Connect guarded analysis to code generation with a verified pre-body
-      refusal path. Preserve two arguments, GS/current refusal and progressed
+      refusal path. Preserve two arguments, unsupported-context refusal and progressed
       fail-stop behavior. Validate a non-root child's published logical parent,
       CALL phase/packet, task, GS and lock depth before first dispatch. This is
       logical scope, not a version certificate; C3 remains deferred. Conditional
       analysis permits one explicit root and no independently seeded callee.
 - [x] Complete mode 8's cross-window CFG and interior-root dispatch labels.
-      Decoder seeds do not become independent admission roots; GS, genuine bad
-      instructions and expansion exhaustion still refuse. Ordinary mode 8 and
+      Decoder seeds do not become independent admission roots; unsupported
+      context operations, bad instructions and expansion exhaustion still refuse. Ordinary mode 8 and
       its two register gates execute actual JIT with the probes retained.
 - [x] Close mutex learned-depth admission without deleting register probes or
       borrowing root facts for independent callees. Keep generated tests and
@@ -210,8 +219,9 @@ prefix. The implementation and execution flow are in
 - [x] Enforce the complete predicate set before body and retain bounded work,
       two-word ABI, physical owners and no replay. No kernel/flags/version change.
 - [x] Add eight focused methods with generated-code positives, callee-pointer
-      corruption, GS, return-table mismatch, disconnected/indirect entry and
-      budget negatives. Run real helper learning and capacity/owner ACK checks
+      corruption, context operations, return-table mismatch, disconnected/indirect
+      entry and budget negatives. Explicit GS cases now expect origin-context
+      execution under the 2026-09-16 policy. Run real helper learning and capacity/owner ACK checks
       with `mutex_jit=1`, then the complete 51-case frozen-source matrix.
 - [x] Add multi-callsite/shared-tail and actual rewritten-return execution to
       the existing guard test program, with exact callee/continuation stores.
@@ -686,8 +696,8 @@ are fixed or broadening recovery based on a body marker.
 
 ### C5. Origin Context And Nested Boundaries
 
-Implemented: admission of the actual possible JIT scope; GS/FS/context and
-backend checks; reachable text/CFG handling; IR memory-effect/address analysis;
+Implemented: admission of the actual possible JIT scope; origin-based GS
+lowering, unsupported FS/context and backend checks; reachable text/CFG handling; IR memory-effect/address analysis;
 decoded CALL/RET effects; bounded memory facts and alias-origin diagnostics.
 Known unsafe code on a retained JIT path is native-only, never a combiner
 hostcall escape disguised as context restoration.
@@ -920,40 +930,13 @@ does not close the broader C5 context/alias work.
          results are recorded in [VALIDATION](VALIDATION.md#typed-scalar-service).
          This bounded service increment does not close broader P1 or reuse the
          prior full-matrix result as acceptance of the new implementation.
-- [ ] Evaluate mutex parking/wakeup only after queue and stack lifetimes are
-      covered under oversubscription.
-      1. [x] Inspect ordinary waiters: migration remains pinned; acquire polling
-         yields with `schedule()` only when `need_resched()` is set. The private
-         gate uses the same policy. This is runnable polling, not event parking;
-         native B acquisition and native-owner ACK waits are separate paths.
-      2. [ ] Complete actual-JIT comparisons of ordinary mode 5 on CPU masks
-         0-1 and 0-7, workloads 10000/100000 and balanced native/JIT pairs.
-         Keep `mutex_jit=1`, default-off extra timing, body/state/drain gates and
-         source identity. Record worker CPU/wall time and actual JIT share;
-         do not substitute old eight-CPU results or add a daily/rare-case suite.
-         Initial eight-worker assessment is retained: 13 accepted sessions,
-         one short-work/two-CPU failure with a published image but no JIT,
-         and two unrun sessions. Six complete pairs have 829 returned bodies;
-         the two-CPU long-work pairs contain only two/three each. This is not
-         full acceptance. No automatic retry of the failed point or synthetic
-         promotion/queue pressure; first address actual delegation opportunity
-         and strategy under the P2 policy work. See
-         [evidence](VALIDATION.md#mutex-oversubscription-assessment).
-      3. [x] Compare the local TCLock wait state machine. Linked waiters can use
-         UNPROCESSED/PARKED/PROCESSING and explicit task wakeups; queue-head
-         gate waiting still polls, and the final node is handed onward rather
-         than delegated. kdlock has only UNPROCESSED/PROCESSED plus its separate
-         native-resume publication. The [wait-strategy boundary](DESIGN.md#runnable-polling-and-event-parking)
-         records why copying only `schedule()` or completion values is unsafe.
-      4. [ ] Establish a justified event-parking policy before implementation.
-         Current mask comparisons do not isolate polling cost or demonstrate
-         consistent CPU savings; keep runnable polling for now. Parking linked
-         followers alone does not address all gate waits or create JIT work.
-         Any future implementation must coordinate condition publication,
-         wakeup and node lifetime; a final release-store cannot be followed by
-         an unchecked node dereference. Preserve physical owners and two-word
-         args. An ordinary workload observation is not a proof of arbitrary
-         oversubscription, fairness or a new sleeping-wait protocol.
+- The 2026-09-16 GS policy supersedes the prior parking investigation: published
+  delegation waiters remain preemption-disabled and PAUSE-poll until result or
+  native handoff. Sleeping/parking these waiters is outside the requested design.
+  Earlier oversubscription measurements remain historical evidence in
+  [VALIDATION](VALIDATION.md#mutex-oversubscription-assessment); they do not
+  validate this contract. Native mutex acquisition and owner ACK service keep
+  their existing protocol. See [pinned busy polling](DESIGN.md#pinned-busy-polling).
 
 ## P2: Performance And Broader Scope
 

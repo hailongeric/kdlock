@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export completed sessions' assembly for inspection, without executing a workload.
+"""Export distinct critical sections' assembly, without executing a workload.
 
 The runner calls capture only after Session.execute has joined workers, stopped
 translators and retired/unloaded modules. Saved evidence can use the same path.
@@ -114,76 +114,111 @@ def replace_text(path, text):
 
 
 class AssemblyArchive:
-    """A fresh directory per invocation; existing runs and source evidence stay intact."""
+    """One copy per payload/content pair, independent of threads and repeats.
+
+    Each invocation has its own directory so separate frozen runs stay distinct.
+    Content hashes avoid hiding a changed translation behind its symbol.
+    """
 
     def __init__(self, run, root=TEMP_ROOT):
         self.run = Path(run).resolve()
         self.root = Path(root)
         self.path = None
-        self.sessions = []
+        self.sessions = set()
+        self.sections = {}
 
     def capture(self, session):
         session = Path(session).resolve()
         if session.parent != self.run:
             raise ValueError("session does not belong to this run")
+        if session.name in self.sessions:
+            raise FileExistsError(f"assembly source already recorded: {session}")
         result = artifacts(session)
         if result is None:
             return None
         files, metadata = result
+        symbol = f"sc_body_{metadata['cachelines']}"
+        # Include all three views. JIT output may differ at the same payload
+        # size; keep such content distinct without introducing thread groups.
+        fingerprint = sha256(json.dumps(metadata["sha256"], sort_keys=True).encode())
+        key = (symbol, fingerprint)
+        source = {k: v for k, v in metadata.items() if k not in (
+            "cachelines", "threads", "iterations", "repeat", "cpus", "sha256", "source_names")}
+        if key in self.sections:
+            section = self.sections[key]
+            section["sources"].append(source)
+            destination = self.path / section["directory"]
+            replace_text(destination / "metadata.json", json.dumps(section, indent=2) + "\n")
+            self.sessions.add(session.name)
+            self.index()
+            return destination
         if self.path is None:
             self.root.mkdir(parents=True, exist_ok=True)
             self.path = Path(tempfile.mkdtemp(prefix=self.run.name[:80] + "-", dir=self.root))
-        destination = self.path / session.name
+        directory = symbol
+        if any(existing[0] == symbol for existing in self.sections):
+            directory += "-" + fingerprint[:12]
+        destination = self.path / directory
         if destination.exists() or destination.is_symlink():
-            raise FileExistsError(f"assembly session already exported: {destination}")
-        # A session becomes visible only when every file and its metadata exist.
+            raise FileExistsError(f"assembly content already exported: {destination}")
+        section = dict(critical_section=symbol, cachelines=metadata["cachelines"],
+                       directory=directory, sha256=metadata["sha256"],
+                       source_names=metadata["source_names"], sources=[source])
+        # A critical section becomes visible only when all views exist. Later
+        # matching sessions extend provenance, never create another code copy.
         staging = Path(tempfile.mkdtemp(prefix=".pending-", dir=self.path))
         try:
             for name, data in files.items():
                 (staging / name).write_bytes(data)
-            (staging / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+            (staging / "metadata.json").write_text(json.dumps(section, indent=2) + "\n")
             staging.rename(destination)
         finally:
             if staging.exists():
                 shutil.rmtree(staging)
-        self.sessions.append(metadata)
+        self.sections[key] = section
+        self.sessions.add(session.name)
         self.index()
         return destination
 
     def index(self):
+        sections = sorted(self.sections.values(), key=lambda r: (r["cachelines"], r["directory"]))
         replace_text(self.path / "index.json", json.dumps(dict(
-            schema=1, source_run=str(self.run), sessions=self.sessions), indent=2) + "\n")
+            schema=2, source_run=str(self.run), source_sessions=len(self.sessions),
+            critical_sections=sections), indent=2) + "\n")
         lines = [
             "# Spinlock 汇编查看目录", "", f"原始结果：`{self.run}`。", "",
-            "每行来自一个已完成并排空的 kdlock 会话。NO_JIT 表示测量期未执行正文；",
-            "有生成文件不能作为实际 JIT 执行证据。原生组没有 JIT 生成物。", "",
+            "按临界区分组，不按线程数或 repeat 分目录。相同临界区的相同汇编只保存一份；",
+            "来源会话记录在 metadata.json 中，执行证据仍按各自的测量期 JIT 计数判定。",
+            "同一规模若出现不同文件内容，则用内容哈希后缀保留区别，不覆盖已有代码。", "",
             "- `native.S`：翻译前的完整 `sc_body_N`，提取自已保存模块的反汇编；",
             "  地址为 ELF 节内偏移，保留重定位注释，不是 guest 运行地址。",
             "- `JIT.S`：生成器 `asm/jit.S` 的原样副本（仅改变文件名大小写）。",
             "- `bin.txt`：JIT 机器码（含 wrapper）的反汇编，地址从二进制偏移 0 开始。",
-            "- `metadata.json`：原始路径、入口/TGID、参数、JIT 次数/占比和文件 SHA256。", "",
+            "- `metadata.json`：临界区、文件 SHA256 和全部已排空来源会话。", "",
             "索引随已排空会话更新；导出不执行汇编、不重跑测试、不改变历史结果。", "",
-            "| 会话 | cacheline | 线程 | repeat | JIT 状态 | JIT 次数 | JIT 占比 | 翻译前 | 生成源码 | JIT 反汇编 |",
-            "| --- | ---: | ---: | ---: | --- | ---: | ---: | --- | --- | --- |",
+            "| 临界区 | cacheline | 来源会话数 | 翻译前 | 生成源码 | JIT 反汇编 |",
+            "| --- | ---: | ---: | --- | --- | --- |",
         ]
-        for row in self.sessions:
-            name = row["name"]
+        for row in sections:
+            name = row["directory"]
             lines.append(
-                f"| [{name}]({name}/metadata.json) | {row['cachelines']} | {row['threads']} | "
-                f"{row['repeat']} | {row['jit_status']} | {row['jit_bodies']} | "
-                f"{row['jit_share']:.4%} | [native.S]({name}/native.S) | "
+                f"| [{name}]({name}/metadata.json) | {row['cachelines']} | {len(row['sources'])} | "
+                f"[native.S]({name}/native.S) | "
                 f"[JIT.S]({name}/JIT.S) | [bin.txt]({name}/bin.txt) |")
         replace_text(self.path / "README.md", "\n".join(lines) + "\n")
 
 
 def capture_completed(archive, session):
     """Runner boundary: export and record its location after successful cleanup."""
+    previous = len(archive.sections)
     destination = archive.capture(session)
     if destination is not None:
         replace_text(archive.run / "assembly-export.json", json.dumps(dict(
             directory=str(archive.path), index=str(archive.path / "README.md"),
-            exported_sessions=len(archive.sessions)), indent=2) + "\n")
-        print(f"  Assembly: {destination}", flush=True)
+            source_sessions=len(archive.sessions),
+            exported_critical_sections=len(archive.sections)), indent=2) + "\n")
+        if len(archive.sections) > previous:
+            print(f"  Assembly: {destination}", flush=True)
 
 
 def main(argv=None):
@@ -197,7 +232,8 @@ def main(argv=None):
             archive.capture(session)
     # Offline export deliberately does not add a pointer to immutable old evidence.
     print(json.dumps(dict(directory=str(archive.path) if archive.path else None,
-                          exported_sessions=len(archive.sessions))))
+                          source_sessions=len(archive.sessions),
+                          exported_critical_sections=len(archive.sections))))
     return 0
 
 

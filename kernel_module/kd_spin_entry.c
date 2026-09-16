@@ -453,5 +453,5 @@ int kd_spin_entries_check_idle(void)
 }
 
 #ifdef KDLOCK_SELFTEST
-#include "../tests/kernel/spin_entry_selftest.c"
+#include "../tests/kernel/spin/spin_entry_selftest.c"
 #endif

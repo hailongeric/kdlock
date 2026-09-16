@@ -17,8 +17,8 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 | [spin_cacheline/bench_session.py](spin_cacheline/bench_session.py) | 一个会话的准备、发布确认、测量和排空 |
 | [spin_cacheline/client.c](spin_cacheline/client.c) | 原子起跑、绑核、一次 ioctl 内的批量操作 |
 | [spin_cacheline/summarize.py](spin_cacheline/summarize.py) | kdlock 最佳吞吐/原生中位数、最佳会话来源、有效配对和 CSV |
-| [spin_cacheline/assembly.py](spin_cacheline/assembly.py) | 排空后将原生/JIT 汇编复制到 `bench/.tmp/spin_cacheline/`，生成会话索引和 SHA256 |
-| [spin_cacheline/test_assembly.py](spin_cacheline/test_assembly.py) | 导出的会话匹配、排空门禁、哈希、NO_JIT 分类及历史证据不变性检查 |
+| [spin_cacheline/assembly.py](spin_cacheline/assembly.py) | 排空后按临界区及文件内容去重，生成 `bench/.tmp/spin_cacheline/` 汇编索引与来源哈希 |
+| [spin_cacheline/test_assembly.py](spin_cacheline/test_assembly.py) | 临界区去重、内容差异保留、排空门禁、来源哈希及历史证据不变性检查 |
 | `spin_cacheline/provider/` | 私有观测覆盖层，不修改生产源码 |
 | `spin_cacheline/profile*.py`、`dispatch_floor/` | 独立采样和入口成本诊断，复用同一会话检查 |
 
@@ -35,6 +35,10 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 并显示最佳会话的 JIT 状态与两组有效样本数。这是观测最佳值，不保证每次解锁
 都发生线程交接。详细口径见[结果解释](spin_cacheline/README.md#结果解释)。
 
+[执行路径与开销伪代码](spin_cacheline/EXECUTION_PATHS.md) 从首次注册展开到
+JIT wrapper 返回及 waiter 恢复，列出重复查表、全局锁、frame 校验/复制和
+诊断计数。锁外乘加发生在原 waiter 恢复后；combiner 的连续代理批次仍持有原锁。
+
 [锁外乘加后的最新完整结果](spin_cacheline/results/20260915-post-work.md) 已按
 每线程 10 万次、1/4/8/12/16/20 线程完成 120 个会话。带实际 JIT 的最高观测
 吞吐为 0.461 Mops/s（1 条 cacheline、4 线程），多线程最高 best/median 为
@@ -49,12 +53,13 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 `dispatch_floor/` 和硬件采样是单独诊断，不计入正式性能扫描。
 
 正常扫描和 `profile.py` 在每个 kdlock 会话测量、排空和卸载后，自动在
-`bench/.tmp/spin_cacheline/<结果目录名>-<随机后缀>/<会话名>/` 保存
-`bin.txt`、`JIT.S`，以及用于翻译前对照的 `native.S`。查看目录内的 `README.md`
-可按 cacheline、线程数、repeat 和实际 JIT 占比选择汇编；索引随会话完成更新。
+`bench/.tmp/spin_cacheline/<结果目录名>-<随机后缀>/sc_body_N/` 保存
+`bin.txt`、`JIT.S`，以及用于翻译前对照的 `native.S`。**按临界区分组，不按线程数
+或 repeat 建目录**；同一临界区的相同汇编只保存一次，来源会话合并到元数据。
+查看目录内的 `README.md` 可按 cacheline 规模选择汇编。
 `bin.txt` 实际是 **JIT 机器码**的反汇编；三种文件的含义、历史结果补导出命令和
 guest 到宿主机的复制方法见[汇编查看目录](spin_cacheline/README.md#assembly-inspection)。
-最近完整扫描的 60 组汇编已补导出，当前本地查看位置和验证范围见
+最近完整扫描的 60 个 kdlock 会话对应 5 组不同临界区，当前本地查看位置和验证范围见
 [汇编导出验证](spin_cacheline/README.md#assembly-validation)。
 
 ## 既有场景客户端

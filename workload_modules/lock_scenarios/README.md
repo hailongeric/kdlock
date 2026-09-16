@@ -14,7 +14,7 @@
 | `klock_module.c` | [common/integrity.inc](common/integrity.inc) | Deterministic per-lock payload transitions and completion counters. |
 | `klock_module.c` | [common/depth.inc](common/depth.inc) | Learned deep-mutex callee used by the bounded lock-depth workload. |
 | `klock_module.c` | [common/roles.inc](common/roles.inc) | Role synchronization gates and stable mode numbers for the ioctl driver. |
-| `klock_module.c` | [common/gs_probe.inc](common/gs_probe.inc) | Native GS/current oracle, sampled before/inside/after the protected scope. |
+| `klock_module.c` | [common/gs_probe.inc](common/gs_probe.inc) | GS/current oracle for native and delegated bodies, with origin CPU storage. |
 | `klock_module.c` | [modes/spin_basic.inc](modes/spin_basic.inc) | Single, nested, deep and out-of-order spin critical sections (modes 0/1/6/7). |
 | `klock_module.c` | [modes/spin_inner.inc](modes/spin_inner.inc) | Inner-B participants, pending-lock observations and native/JIT continuation. |
 | `klock_module.c` | [modes/spin_outer.inc](modes/spin_outer.inc) | Holder/successor roles and mode-8 routing for independent A/B contention. |

@@ -20,6 +20,8 @@ Module.symvers
 
 # User-space binaries
 /daemon/daemon
+/tests/unit/basic/test_control_call
+/tests/unit/basic/test_daemon_policy
 disassem/asm/
 daemon/0x*
 /bench/klock_test

@@ -1,5 +1,5 @@
 /*
- * Native GS/current oracle, sampled before/inside/after the protected scope.
+ * GS/current oracle for native and delegated bodies, with origin CPU storage.
  * Private implementation included only by klock_module.c.
  * Keep this translation unit: static state, inlining and assembly labels
  * are shared with the adjacent components. This is not a standalone object.

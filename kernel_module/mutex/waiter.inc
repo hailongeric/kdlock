@@ -31,7 +31,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 		WRITE_ONCE(prev_node->next, curr_node);
 
 		mutex_debug("Mutex waiter spinning\n");
-		kd_cond_load_acquire_sched(&curr_node->locked, !VAL);
+		kd_mutex_wait_for_result(curr_node);
 		if (READ_ONCE(curr_node->native_resume)) {
 			WRITE_ONCE(ptr->resume_node, curr_node);
 			kd_mutex_waiter_exit(lock);
@@ -61,8 +61,11 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 		goto release;
 
 	/* Wait for next waiter to appear */
-	while (!next_node)
+	while (!next_node) {
 		next_node = READ_ONCE(curr_node->next);
+		if (!next_node)
+			cpu_relax();
+	}
 
 	/* --- combiner path --- */
 	old_locked = lock->locked;
