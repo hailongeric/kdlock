@@ -2,6 +2,8 @@
 /* Exercise the actual fixed gate map and physical-hold checks in userspace.
  * Lock words/tasks below are substitutes; stale holds must still be rejected. */
 #include "spin_gate_mock.h"
+#define smp_store_release(p, v) __atomic_store_n((p), (v), __ATOMIC_RELEASE)
+#define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 #include "gate_production.h"
 
 int main(void)
@@ -27,16 +29,15 @@ int main(void)
 	mock_in_task = false;
 	CHECK(kd_spin_gate_claim(gate, &hold) == -EINVAL);
 	mock_in_task = true;
+	/* IRQ-off task ownership must preserve the caller IRQ state. */
 	mock_irq = true;
-	CHECK(kd_spin_gate_claim(gate, &hold) == -EINVAL);
-	mock_irq = false;
 	gate->word.val.counter = 0;
 	CHECK(kd_spin_gate_claim(gate, &hold) == -EINVAL);
 	gate->word.val.counter = marker;
 	CHECK(kd_spin_gate_claim(gate, &hold) == 0);
 	CHECK(hold.gate == gate && hold.owner == current &&
 	      hold.cpu == mock_cpu);
-	CHECK(gate->held && locks[0].held && mock_preempt == 1);
+	CHECK(gate->held && locks[0].held && mock_preempt == 1 && mock_irq);
 	CHECK((unsigned int)gate->word.val.counter == marker);
 	CHECK(kd_spin_gate_claim(gate, &hold) == -EBUSY);
 	CHECK(kd_spin_gate_claim(gate, &second) == -EBUSY);
@@ -60,6 +61,8 @@ int main(void)
 	      (unsigned int)gate->word.val.counter == marker);
 	CHECK(kd_spin_gate_release(&hold) == -EINVAL);
 	CHECK(kd_spin_gate_release(&stale) == -ESTALE);
+	CHECK(mock_irq);
+	mock_irq = false;
 	CHECK(kd_spin_gates_check_idle() == -EBUSY);
 	gate->word.val.counter = 0;
 	CHECK(kd_spin_gates_check_idle() == 0);

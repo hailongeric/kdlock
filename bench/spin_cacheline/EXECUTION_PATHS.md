@@ -1,7 +1,7 @@
 # spin_cacheline：首次执行、代理 JIT 与开销路径
 
 本文从 `SC_RUN` 展开到原 waiter 恢复，供对照源码和汇编查找性能问题。
-描述的是当前实现，不是优化后的设计；本次只整理文档，没有重跑或修改性能代码。
+伪代码随当前实现更新；历史采样与性能结果仍只属于各自冻结版本。
 负载、测量口径和操作入口见 [README](README.md#临界区与测试伪代码)。
 
 阅读条件：x86_64，普通任务上下文，单层 `sc_body_N`，同一把 spinlock，
@@ -121,13 +121,12 @@ kd_raw_spin_lock_slow(L, saved_RSP, RIP):
         origin_raw_spin_lock(L)
         return                                 // 调用者执行原生正文及 unlock
     kd_exe_add(0, RIP, SPIN)                     // 见 2.3；已注册也调用！
-    kd_spin_fast_remember(L, RIP)               // NORMAL 且已有 gate 才能填缓存
-    kd_spin_lock(L, saved_RSP)                  // 第 4 节；仍不保证 JIT
+    kd_spin_lock(L, saved_RSP, RIP)                  // 第 4 节；仍不保证 JIT
 
 kd_hotlock_is_promoted(L):
-    raw_spin_lock_irqsave(global_hotlock_table_lock)
-    对 L 做哈希/线性探测；读取是否 DELEGATE
-    raw_spin_unlock_irqrestore(...)
+    对只追加的表做哈希/线性探测；acquire 读取已发布的地址
+    命中 L 后 READ_ONCE(status) == DELEGATE；遇到空槽/探测完毕则 false
+    查询不加锁、不关闭中断、不做原子 RMW
 
 kd_hotlock_record(L):
     now = rdtsc_ordered()
@@ -145,10 +144,15 @@ kd_hotlock_record(L):
 未晋升的 lock/unlock 都可能采样；**样本不是失败的 trylock 次数，也不是等待次数**。
 因此单线程也能晋升、注册并生成 JIT，却没有其他 waiter 可供代理。
 `rdtsc_ordered()` 属于发现过程，不能解释已发布单线程快路径的每次耗时。
-`kd_spin_entry_native_active()` 还包含 per-CPU 32 个 ticket 的扫描；其在本路径和
-下文 `kd_spin_lock()` 的检查均保留，并非仅初始化时执行。
+表项地址由写侧 release 发布，状态转换使用 WRITE_ONCE；查询与新建/晋升并发时
+允许返回 false，调用者继续经过采样器和原生锁。采样器仍使用全局写锁，
+尤其 IGNORE 锁仍会采样；无锁查询不等于整个冷锁路径无锁。表项在模块存活期间
+不删除、不复用，释放整张表前仍要求调用者排空。
+`kd_spin_entry_native_active()` 在没有已有 preempt pin 时直接返回 false，不扫描
+ticket；已有 pin 的调用者才可能扫描 per-CPU 的 32 个槽。查询复用已有 pin，
+不再临时 disable/enable 抢占；其在本路径和下文 `kd_spin_lock()` 的调用均保留。
 
-### 2.3 注册不是编译；已有条目也经过全局锁
+### 2.3 注册不是编译；已发布条目只读确认
 
 对应 [registry_publish.inc](../../kernel_module/execution/registry_publish.inc)、
 [registry_lifecycle.inc](../../kernel_module/execution/registry_lifecycle.inc)、
@@ -156,6 +160,9 @@ kd_hotlock_record(L):
 
 ```text
 kd_exe_add(0, RIP, SPIN):
+    exe = kd_get_exe(0, RIP)                    // acquire 读取发布状态后比较 key
+    if exe 已发布（不是 UNUSED）and pid/RIP/SPIN/代码指针匹配 and source.OPEN:
+        return                                 // 已注册，不代表 NORMAL 或允许执行
     while cmpxchg_acquire(global_code_block_gate, 0, 1) != 0: cpu_relax()
     kd_source_pin_root(RIP):
         raw_spin_lock_irqsave(global_source_lock)
@@ -171,20 +178,21 @@ kd_exe_add(0, RIP, SPIN):
     store_release(exe.status, UNINIT)
     store_release(global_code_block_gate, 0)
 
-kd_spin_fast_remember(L, RIP):
-    检查普通可抢占上下文
+kd_spin_fast_remember(L, RIP, gate):            // 在第 4.1 节 begin 成功后调用
+    检查仅有新 root ticket 的一个 preempt pin；复用入口的 task/migration 准入
     再 kd_get_exe(0, RIP)；检查身份、SPIN、NORMAL、source.OPEN
-    gate = kd_spin_gate_find(L)                 // 全局 map irqsave 查找
-    if gate 存在:
-        preempt_disable()
-        更新 per_cpu.fast 的 origin=L、rip=RIP、gate 字段
-        preempt_enable()
+    使用传入 gate 更新 per_cpu.fast 的 origin=L、rip=RIP、gate 字段
+    // 不再查 gate，也不额外增减 pin
 ```
 
-条目尚未 NORMAL 或 gate 尚未创建时不填缓存；后续慢入口再尝试。
+条目尚未 NORMAL 或 ticket/gate 创建失败时不填缓存；后续慢入口再尝试。
 `vmalloc/set_memory_x` 在 provider 初始化时预分配代码池，不在每次抢锁内分配。
-但 `kd_exe_add` 的全局 gate、source 地址检查及查表在**每次已晋升的慢入口**重复，
-不是仅首次执行；这是应优先检查的固定成本。
+每次已晋升慢入口仍调用 `kd_exe_add`，但同身份/后端且 source OPEN 的已发布
+条目现在只做读取，不再进入全局 gate、source irqsave 或模块地址查询。
+UNINIT、miss 和 native-only 也可确认已注册；是否执行仍由 NORMAL 与 frame
+准入决定。首次注册、冲突或关闭准入时保留原串行化检查。并发发布后的身份
+须重新核对，不能把 lookup 返回的空槽误当作已有条目；退休同步见
+[source 生命周期](../../docs/DESIGN.md#31-source-lock-and-hook-lifetimes)。
 
 ### 2.4 daemon 的首次翻译与测量前准备
 
@@ -230,7 +238,7 @@ Python 编译：若 combiner 发现 JIT 未就绪，返回 `NO_RUN`，让请求�
 
 ```text
 kd_spin_fast_acquire(L, RIP):
-    if preempt_count != 0 or IRQ disabled or migration disabled: return CONTEXT
+    if preempt_count != 0 or migration disabled: return CONTEXT
     preempt_disable()
     fast = 当前 CPU 的缓存
     if fast.origin == L and fast.rip == RIP
@@ -273,34 +281,36 @@ kd_spin_dispatch_unlock(L):
 [state.inc](../../kernel_module/spin/state.inc) 和 [queue.inc](../../kernel_module/spin/queue.inc)。
 
 ```text
-kd_spin_lock(L, saved_RSP):
-    检查 task/IRQ/softirq/migration/native-active；不适用则走原生 L
+kd_spin_lock(L, saved_RSP, RIP):
+    检查 softirq/migration/native-active；不适用则走原生 L
     kd_spin_entry_begin(L, HOOK):
+        检查 task 和请求参数；不适用则失败，调用者走原生 L
         preempt_disable()
         扫描当前 CPU 的 32 个 ticket：找空槽、拒绝同任务重复获取 L
-        gate = kd_spin_gate_get(L)              // 全局 map irqsave 查找/首次创建
+        gate = kd_spin_gate_get(L)              // acquire 读 origin；未命中才锁内复查/创建
         raw_spin_lock_irqsave(ticket.guard)
         写 task/L/gate/sequence/cpu/state=WAITING，清 hold/native_refs
         raw_spin_unlock_irqrestore(...)
     检查本 CPU 无当前 JIT frame/其他任务占用的执行上下文；否则结束 ticket 再原生
-    S = kd_spin_word(L)                         // 再次全局 map irqsave 查找
+    request = {ref=本次 ticket, S=entry_gate(ref).word} // 本地 gate 读取不加 guard
+    S = request.S；kd_spin_fast_remember(L, RIP, gate)
     old = cmpxchg_acquire(S, 0, LOCKED)
     if old == 0: goto acquired
     if old 只有 PENDING: 有界轮询 S
     if old 含 tail/pending 等非 locked 位: goto queue
-    old = fetch_or_acquire(S, PENDING)          // helper 内再次 kd_spin_word(L)
+    old = fetch_or_acquire(S, PENDING)          // 直接传 S，不查 map
     if old 出现其他等待者:
         必要时清本次设置的 pending 位；goto queue
-    等待原 locked 清除；clear_pending_set_locked(L)
+    等待原 locked 清除；clear_pending_set_locked(S)
     goto acquired
 queue:
-    kd_spin_lock_slowpath(L, saved_RSP)         // 见 4.2；代理完成者不从这里普通返回
+    kd_spin_lock_slowpath(L, saved_RSP, request)         // 见 4.2；代理完成者不从这里普通返回
 acquired:
-    kd_spin_claim_origin(L)
+    kd_spin_claim_origin(request)
     return                                    // 自己执行原生 sc_body_N 正文
 
-kd_spin_claim_origin(L):
-    kd_spin_entry_find(L)                      // 本 CPU ticket 扫描、临时 preempt pin
+kd_spin_claim_origin(request):
+    使用 request.ref                          // 不重新扫描 ticket/map
     guard irqsave：检查 ticket 代次/任务/CPU/状态
     if 已 OWNED: 解开 guard，直接成功           // queue 已 claim 时仍重复做这次检查
     WAITING → CLAIMING；解开 guard
@@ -311,68 +321,73 @@ kd_spin_claim_origin(L):
 ```
 
 只有 S 成功还不能访问负载。`kd_spin_gate_claim` 必须取得 L，以排斥没有使用 S
-的原生线程。map 查找即使 `create=false` 也拿同一把全局 irqsave 锁；ticket 的
-guard 则是每个 ticket 独立的锁，二者不能混为同一个全局瓶颈。
+的原生线程。gate 创建在全局 irqsave 锁内复查碰撞链，初始化后用
+`store_release(origin, L)` 发布；读取用 `load_acquire(origin)`，已有条目无须
+map 锁。表在会话内不删除或换键，受控排空后才卸载。ticket 的 guard 仍独立
+保护代次、owner 和状态；稳定 gate 指针不代表已获取 L 或通过 source 准入。
+`entry_gate` 在已有 pin 下检查 CPU/task/代次后直接读取本地 gate；只有原任务
+改变槽的归属，远端仅在 guard 下修改 native_refs，因此这个读取不再 irqsave。
+当前默认自愿抢占内核；覆盖整个请求生命周期的 pin 仍保留到最终结束/ACK。
 
 ### 4.2 发布请求、等待和恢复入口
 
-对应 [slowpath.inc](../../kernel_module/spin/slowpath.inc) 与 `kd_spin_lock_slowpath`。
+对应 [slowpath.inc](../../kernel_module/spin/slowpath.inc)、
+[wait.inc](../../kernel_module/spin/wait.inc) 与
+[kd_spin_lock_slowpath](../../kernel_module/kd_spinlock.c)。
 
 ```text
-kd_spin_lock_slowpath(L, saved_RSP):
-    保存调用者 C 栈 RSP、原 hook 寄存器栈 RSP
-    切换到当前 CPU 的 8KB shadow C 栈
+kd_spin_lock_slowpath(L, saved_RSP, request):
+    保存并关闭本 CPU 的 IRQ；继续使用 task 内核栈
+    准备期局部 input 保存调用者 C 栈 RSP、原 hook 寄存器栈 RSP、原 IRQ flags
     记录 SLOWPATH 诊断：查找诊断槽 + atomic64_inc(event)
     idx = per_cpu.node_count++                 // 每 CPU 最多 4 个 node
     若耗尽：还原 count；轮询 trylock(S) 后返回 acquired（本负载不嵌套）
     初始化 node 的 locked/completed/next/tail、CPU/NUMA、RSP、L、current、GS base
+    将 input 中的 RSP/IRQ flags 复制进 node，供非局部恢复使用
     清 exec_frame/jit_waiter/jit_retry/native_resume/native_regs_decoded/jit_context
-    记录 pinned_context；kd_spin_entry_find(L) 保存 origin ticket 引用
-    __kd_spin_lock_longjmp(L, node):
-        S = kd_spin_word(L)
+    记录 pinned_context；复制 request.ref 为普通 node 的 origin ticket 引用
+    __kd_spin_lock_longjmp(L, node, request):
+        S = request.S
         node.queued_at = timing_start()        // jit_timing=0 时返回 0，不读时钟
-        old_tail = xchg_tail(L, node.tail)     // helper 也查 gate，再原子交换 S.tail
+        old_tail = xchg_tail(S, node.tail)     // 直接原子交换 S.tail
         诊断槽 atomic_inc(waiter_count)
         if old_tail 有前驱:
             previous = decode_tail(old_tail)  // CPU/index → 对应 per-CPU node
-            previous.next = node              // 链接完成后前驱可观察此请求
-            while load_acquire(node.locked):
-                if node.jit_waiter: remote_poll // 普通 bench waiter 此条件为 false
-                cpu_relax()                   // x86 PAUSE，保留 CPU 执行上下文
-            smp_rmb()
-            if node.native_resume: 转原 waiter native 后缀路径（非本负载正常路径）
-            if node.completed:                // 别的 CPU 已执行完本请求
-                扫描 shadow 锁栈，检查嵌套/OOO 返回分支
-                node_count--；prefetchw 原栈的 6 条 cacheline
-                诊断槽 atomic_dec_return(waiter_count)
-                保存 resume_node；返回“代理完成” → 第 5.4 节
+            普通物理 waiter：一段连续汇编发布 previous.next 并轮询 locked
+                不 call/push/pop，不读写旧 C 栈；PAUSE 等待 release 唤醒
+                若 completed/native_resume：放弃旧帧，直接进入安全栈上的恢复函数
+                node_count--；退出 waiter 诊断；快照寄存器/ticket/IRQ flags
+                完成 ticket 或标记 native；恢复原 IRQ 状态；跳到续点
+                只有未执行正文的队头唤醒才返回 C
+            虚拟 waiter：原有 C 等待及 remote_poll，保留 owner/ACK 协议
         等待 acquire(S.locked | S.pending) == 0 // 到队首后仍可能等待
         if 自己是唯一队尾 and CAS(S, tail, LOCKED) 成功:
-            claim_origin(L)；结束 queue timing；node_count--；退出 waiter 诊断
-            恢复原 C 栈，返回 acquired
-        设置 S.locked=COMBINER；claim_origin(L)
+            claim_origin(request)；结束 queue timing；node_count--；退出 waiter 诊断
+            恢复原 IRQ 状态，正常返回 acquired
+        设置 S.locked=COMBINER；claim_origin(request)
         结束本队首的 queue timing
         while node.next == NULL: cpu_relax()
         检查 shadow 锁栈容量；保存 combiner 状态、RSP
         node_count--；临时置自己 node.rsp=0；将 L 压入 shadow 锁栈并校验
-        run_combiner(L, node.next)             // 服务跟在自己后面的请求
+        run_combiner(L, node.next, request)             // 服务跟在自己后面的请求
         弹出 L、校验并恢复 shadow 状态/RSP；还原 S 的持锁状态
-        退出 waiter 诊断；恢复原 C 栈，返回 acquired
+        退出 waiter 诊断；恢复原 IRQ 状态，正常返回 acquired
 ```
 
 源码宏 `smp_cond_load_relaxed_sched` 名字带 `sched`，但这里的定义只有
 `READ_ONCE` 和 `cpu_relax()`，没有主动调度。`preempt_enable()` 在释放对应 pin
 时仍可能允许调度，不能据此宣称完全不会被切走。
-上面展开正常获取与代理完成。桥接函数还识别：未执行正文的 `jit_retry` 返回 4，
-在已取得 L 后恢复到保存的正文入口；`native_resume` 返回 5，转原 waiter 后缀及
-owner ACK 协议。它们与完成返回 1/3、普通获取返回 0/2 不能混用。
+普通物理 waiter 完成/native 唤醒不再经过旧 C 返回链。桥接函数仍处理
+普通获取返回 0/2，以及未执行正文的 `jit_retry` 返回 4；虚拟 waiter 保留
+返回 1/3/5 以通知现有父 frame。所有恢复都保留原 IRQ 状态。
 
 ### 4.3 combiner 的批次不是每个 waiter 一次物理解锁
 
 对应 [combiner.inc](../../kernel_module/spin/combiner.inc)。
 
 ```text
-run_combiner(L, first_follower):                // 进入时 combiner 已持有 L
+run_combiner(L, first_follower, request):                // 进入时 combiner 已持有 L
+    batch.request = request；S = request.S
     curr = first_follower; next = curr.next
     if next == NULL or curr/next 是 IRQ 特殊节点:
         S.locked = LOCKED
@@ -390,7 +405,7 @@ run_combiner(L, first_follower):                // 进入时 combiner 已持有 
         if result != NATIVE_DONE:
             store_release(curr.locked_completed, 1) // 同时 completed=1、locked=0
         // 此后不能再访问已完成 node；它的 waiter 可马上复用 node
-        if 复杂嵌套路径已提前释放 outer: reclaim_outer(L); return
+        if 复杂嵌套路径已提前释放 outer: reclaim_outer(request); return
         if next == NULL or next.next == NULL or counter >= 1024: break
         curr = next
     S.locked = LOCKED
@@ -424,7 +439,7 @@ combiner 自己：恢复原 C 栈 → 原生执行自己的 N 次读改写 → �
 
 ```text
 execute_cs(L, node, batch):
-    S = kd_spin_word(L)                         // 全局 map irqsave 查找
+    S = batch.request.S                        // 复用物理请求的私有字
     per_cpu.shadow.curr_cs_cpu = node.cpuid
     检查 node 非额外 pinned 的普通 waiter
     查诊断槽的 jit_disabled latch；禁用则 NO_RUN
@@ -432,7 +447,8 @@ execute_cs(L, node, batch):
         从 waiter 原 hook 栈取 r15/r14/r13/r12/rbx/rbp/RIP
         node.regs.sp = saved_hook_RSP + 64
         node.native_regs_decoded = true        // 预执行拒绝后不可重复消费同一栈包
-    if !kd_exe_is_ready(0, node.regs.ip):
+    exe = kd_exe_find_ready(0, RIP)             // 一次 kd_get_exe + 就绪检查
+    if exe == NULL:
         记录 NOT_READY 原子诊断；kd_exe_add(...); return NO_RUN
 
     frame = kd_exec_frame_push(node.regs, RIP, L, node, shadow, depth, GS, task):
@@ -451,7 +467,7 @@ execute_cs(L, node, batch):
     capture_combiner_state：复制 8 项锁地址及 CPU/栈/IRQ 等状态
     frame.outer_unlock_hook = batch.outer
     queue_end = timing_start()                 // 关闭时不读时钟
-    result = kd_exe_on_call_hl_entry(frame.regs, RIP, L)
+    result = kd_exe_on_call_hl_entry(exe, frame.regs, RIP, L)
     if frame.executed: queue_timing_end(...)   // 关闭时直接返回
     完成处理见 5.4
 ```
@@ -468,11 +484,11 @@ frame 来自固定 per-CPU 数组，仍会逐请求清零、复制和校验；�
 [observation.patch](provider/observation.patch) 和 [kd_bench.h](provider/kd_bench.h)。
 
 ```text
-kd_exe_on_call_hl_entry(regs, RIP, L):
+kd_exe_on_call_hl_entry(exe, regs, RIP, L):
     frame = kd_exec_current_frame()
     validate_frame；检查 GS/logical_task
-    exe = kd_get_exe(0, RIP)
-    kd_exe_is_ready(0, RIP)                     // 内部再次 kd_get_exe
+    kd_exe_entry_is_ready(exe, 0, RIP)          // 复查同一条目，不再哈希
+        source.OPEN；acquire 读取 NORMAL；校验 PID/RIP/代码指针
     检查 SPIN 类型、RUNNING/未执行/未 outer unlock、原始入口和栈有效
     dispatch_start = timing_start()
     body_reported = false
@@ -592,15 +608,18 @@ execute_cs 收到 RUN_TO_UNLOCK：
     返回 run_combiner；由它 release-store node.completed/locked
 
 原 waiter 在第 4.2 节的等待循环醒来：
-    消费 completed 和最终 regs；node_count--；prefetch；退出 waiter 诊断
-    将真实 RSP 切回 min(node.rsp, node.regs.sp) 下方的原任务栈空间
-    kd_spin_resume_waiter(0):
-        在原栈复制 node.regs、origin ref 到局部变量
-        kd_spin_entry_end(ref):
-            ticket.guard irqsave；核对代次/任务/CPU、无 hold/native_refs
-            清 ticket 成员；state=FREE；清 ref；unlock_irqrestore
-            preempt_enable()                  // 之后不再读可复用的 per-CPU node/ticket
-        jump_to_saved_regs：恢复 GPR 和虚拟 SP，RET 消费模拟 CALL 的返回地址
+    连续汇编观察 locked=0、completed=1；不返回旧 C 帧
+    RSP = min(node.rsp, node.regs.sp) 向下对齐 16 字节
+    在此 RSP 下方调用 kd_spin_resume_completed(node):
+        node_count--；记录 REMOTE_RETURN；退出 waiter 诊断
+        kd_spin_resume_waiter(node, 0):
+            在有效 task 栈上复制 node.regs、origin ref、原 IRQ flags 到局部变量
+            kd_spin_entry_end(ref):
+                ticket.guard irqsave；核对代次/任务/CPU、无 hold/native_refs
+                清 ticket 成员；state=FREE；清 ref；unlock_irqrestore
+                preempt_enable()              // 之后不再读可复用的 per-CPU node/ticket
+            local_irq_restore(原 IRQ flags)    // IRQ-off 入口保持关闭
+            jump_to_saved_regs：恢复 GPR 和虚拟 SP，RET 消费模拟 CALL 的返回地址
     从原 sc_body_N 的 unlock 后继继续，函数返回
     执行自己的 sc_post_work；completed++；提交下一次 lock
 ```
@@ -618,12 +637,12 @@ execute_cs 收到 RUN_TO_UNLOCK：
     fast_unlock 未命中 → target/retained-owner 选择
     kd_raw_spin_unlock_slow(L):
         kd_exec_native_unlock(L, false)        // 本负载 native_frames 为空，立即 false
-        if kd_spin_entry_find(L):              // 扫描本 CPU ticket
-            kd_spin_unlock(L):
-                S = kd_spin_word(L)           // 全局 map irqsave 查找
+        if kd_spin_entry_find(L, ref):         // 扫描本 CPU ticket
+            kd_spin_unlock_ref(L, ref):
+                request = {ref, S=entry_gate(ref).word}
                 常见 S.locked=LOCKED：
-                    kd_spin_release_origin(L):
-                        再 kd_spin_word(L)；再 kd_spin_entry_find(L)
+                    kd_spin_release_origin(request):
+                        使用 request.ref 和 S，不再查 map/ticket
                         guard irqsave：OWNED → RELEASING；解开 guard
                         gate_release：检查 owner/task/CPU/generation
                         do_raw_spin_unlock(L)；清 gate.held/owner/hold
@@ -649,10 +668,10 @@ owner 仍需等到 S/L 允许获取；不能删掉 S 的等待就让它并行修
 
 | 工作 | 当前路径与频率 | 应检查的改进方向 |
 | --- | --- | --- |
-| 重复注册/来源确认 | 每个已晋升慢入口都 `kd_exe_add`：全局 CAS gate → source irqsave → 模块查询 → registry；已有 NORMAL 也如此 | 检查能否为已注册且仍有效的条目提供读取路径，保留关闭准入和 source 生命周期约束 |
-| 重复 gate map 查询 | `remember/begin/kd_spin_word`，以及 pending/tail/claim 邻近 helper、`execute_cs`、unlock 多次查询；只读 find 也拿全局 irqsave 锁 | 将已有稳定 gate/S 沿一次请求传递，避免同一 L 的重复查找；不能只把读者锁删除而不处理发布可见性 |
-| ticket 查找/状态迁移 | native-active 检查、32 槽准入扫描、多次 find；claim/release/end 的独立 guard 操作 | 复用已验证 ref、减少同一次调用中重复扫描；保留代次、owner、ACK 和 pin 的终点 |
-| 执行注册表查找 | 每次成功 `execute_cs` 中 ready 查一次；dispatcher 的 get + ready 又查两次，共 3 次 `kd_get_exe`，不含请求入口 | 传递已校验的 exe，核对发布/退休同步后再决定哪些检查可合并 |
+| 重复注册/来源确认 | 每个已晋升慢入口仍调用 `kd_exe_add`；已发布且同身份/后端、source OPEN 时只读返回，新注册及冲突才走原串行化路径，关闭准入仍拒绝 | 已去除命中路径的全局 CAS gate、source irqsave 和模块查询；保留发布、关闭准入和 source 生命周期约束，实际耗时收益尚未测量 |
+| 重复 gate map 查询 | 已有 gate 的慢入口在 begin 查一次，随后 request/batch 传递 S 和物理 ticket；remember、pending/tail、execute_cs 和普通 unlock 不再查 map | 已实现 origin release/acquire 发布与无锁读取；创建仍在锁内复查，诊断/无本地 ticket 的 OOO 查询保留；实际耗时收益尚未测量 |
+| ticket 查找/状态迁移 | 无 pin 的 native-active 查询不扫描；begin 仍扫描 32 槽；find 复用已有 pin，entry_gate 无 guard；状态修改仍使用 guard | 已移除临时 pin/unpin 和本地 gate 读取锁，合并重复准入检查；保留代次、owner、ACK 和 pin 的终点 |
+| 执行注册表查找 | spin/mutex 的 `execute_cs` 通过 `kd_exe_find_ready` 查一次，将 exe 传入 dispatcher；成功路径由 3 次 `kd_get_exe` 减为 1 次，不含请求入口 | 已复用稳定条目；frame 准备后仍 acquire 复查 NORMAL、source OPEN、身份和后端，保留退休同步；实际耗时收益尚未测量 |
 | frame/context 校验 | 常见成功路径 8 次完整 `validate_frame`；push/pop 合计 4 次 `validate_context`，每次遍历 8 个 frame 槽 | 区分状态转换必须验证的字段与同一阶段重复验证；不能据低耗时猜测移除正确性条件 |
 | frame 清零/复制 | 每次 push/pop 各清零整个 frame；设置锁栈再清 4 个容量 8 的数组；node→frame 复制一次，frame→node 在完成处及 pop 各一次 | 优先核查重复复制、重复清零；若使用单层专用路径，必须保持初始化/未使用项不变量 |
 | source frame lease | 每代理一次，get/put 各一次全局 source irqsave；provider module 引用增减 | 评估按仍存活的 batch 保留 lease 的可能性及退休语义；不可凭没有 translator 就取消 frame 生命周期保护 |
@@ -684,7 +703,7 @@ owner 仍需等到 S/L 允许获取；不能删掉 S 的等待就让它并行修
 第 6.1 节多数 frame/queue 开销只会影响慢入口或真实代理，不能改善已命中的
 单线程 native fast 路径。
 
-建议先检查重复注册、gate 传递和 frame 重复搬运，再用相同源码/内核/参数的
+重复注册、gate 传递和执行条目复用已完成优化，frame 重复搬运仍待检查；收益需要相同源码/内核/参数的
 独立 [profile.py](profile.py) 核对改变后的开销位置与 JIT 差值。队列等待占比、
 实际 batch 大小和服务速度需要一起解释；本文没有新采样，以上候选项没有给出
 未经测量的提速比例，也不能把最近扫描的 best/median 当作这些修改的收益。

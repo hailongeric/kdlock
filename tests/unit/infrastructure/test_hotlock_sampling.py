@@ -1,7 +1,8 @@
 """Compile actual hot-lock sampling with a deterministic TSC in the guest.
 
-The clock/allocation/atomic primitives are substitutes, not a concurrent kernel
-test. The live JIT suite independently requires natural lock promotion.
+The clock/allocation/IRQ primitives are substitutes. Pthreads and compiler
+atomics exercise concurrent producers/readers, not concurrent kernel hooks.
+The live JIT suite independently requires natural lock promotion.
 """
 
 import os
@@ -37,6 +38,14 @@ def main():
             "state->samples == KD_HOTLOCK_SAMPLE_TARGET - 1",
             2,
         ),
+        "query-takes-writer-lock": (
+            "struct kd_hotlock_state *table = READ_ONCE(kd_hotlocks);",
+            "unsigned long flags;\n"
+            "\traw_spin_lock_irqsave(&kd_hotlock_table_lock, flags);\n"
+            "\traw_spin_unlock_irqrestore(&kd_hotlock_table_lock, flags);\n"
+            "\tstruct kd_hotlock_state *table = READ_ONCE(kd_hotlocks);",
+            1,
+        ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-hotlock-sampling-") as directory:
         path = Path(directory)
@@ -56,6 +65,7 @@ def main():
                     "-Wall",
                     "-Wextra",
                     "-Werror",
+                    "-pthread",
                     "-I",
                     str(path),
                     str(ROOT / "tests/unit/infrastructure/hotlock_sampling_fixture.c"),

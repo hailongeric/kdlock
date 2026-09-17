@@ -12,15 +12,18 @@
 /*
  * Core queue+combiner protocol entry.
  * Returns:
- *  0/2/4 -> delegated completion / queue acquisition / retry-path variants,
- *  1/3   -> waiters resumed from JIT completion/native,
- *  5     -> native relay wait.
+ *  0/2   -> queue acquisition (without/with a combiner batch),
+ *  4     -> acquired pre-body retry,
+ *  1/3   -> virtual waiter completion,
+ *  5     -> virtual native relay.
+ * Physical completion/native wake abandons these C frames in wait.inc.
  */
 __attribute__((noipa)) noinline notrace static int
 __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
-		       register struct kd_spin_node *curr_node)
+		       register struct kd_spin_node *curr_node,
+		       struct kd_spin_request *request)
 {
-	struct qspinlock *word = kd_spin_word(lock);
+	struct qspinlock *word = request->word;
 	register struct kd_spin_node *prev_node = NULL, *next_node = NULL;
 	struct qspinlock *parent_lock;
 	int old_tail, val, j;
@@ -39,7 +42,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 
 	/* Publish the clock with the node, before any combiner can service it. */
 	curr_node->queued_at_ns = kd_exe_queue_timing_start();
-	old_tail = xchg_tail(lock, tail);
+	old_tail = xchg_tail(word, tail);
 	kd_spin_diag_waiter_enter(lock);
 
 	if (old_tail & _Q_TAIL_MASK_HL) {
@@ -50,11 +53,18 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		int previous_cpu = prev_node->cpuid;
 #endif
 
-		prev_node->next = curr_node;
 #ifdef KDLOCK_SELFTEST
+		/* Observe before publication: the physical waiter cannot call C
+		 * once a remote executor is allowed to overwrite its old frames. */
 		kd_spin_selftest_link(curr_node, prev_node, previous_task,
 				      previous_cpu);
 #endif
+		if (!curr_node->jit_waiter) {
+			kd_spin_publish_wait(curr_node, prev_node);
+			/* Only an unexecuted queue-head handoff returns here. */
+			goto queue_head;
+		}
+		smp_store_release(&prev_node->next, curr_node);
 
 		while (smp_load_acquire(&curr_node->locked)) {
 			if (curr_node->jit_waiter) {
@@ -78,11 +88,6 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 
 		if (curr_node->completed) {
 			print_debug("wakeup\n");
-#ifdef ENABLE_IRQS_CHECK
-			if (curr_node->irqs_disabled) {
-				ptr->irqs_disabled = curr_node->irqs_disabled;
-			}
-#endif
 			for (j = 7; j >= 0; j--)
 				if (ptr->lock_addr[j] != 0)
 					break;
@@ -134,6 +139,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	 *
 	 */
 
+queue_head:
 	val = atomic_cond_read_acquire(&word->val,
 				       !(VAL & _Q_LOCKED_PENDING_MASK));
 
@@ -153,8 +159,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		goto release; /* No contention */
 
 	/* Either somebody is queued behind us or _Q_PENDING_VAL_HL is set */
-	check_and_set_combiner(lock);
-	kd_spin_claim_origin(lock);
+	check_and_set_combiner(word);
+	kd_spin_claim_origin(request);
 	/* This request now owns Linux L. Record before releasing/reusing its node
 	 * to process followers; the combiner's batch is not this queue interval. */
 	kd_exe_queue_timing_end(false, &curr_node->queued_at_ns,
@@ -178,7 +184,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		 * until our caller unlocks. No saved context has been changed and
 		 * the common exit releases this node exactly once.
 		 */
-		set_locked(lock);
+		set_locked(word);
 		smp_store_release(&next_node->locked, false);
 		goto release;
 	}
@@ -219,7 +225,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	ptr->lock_addr[j] = (uint64_t)(unsigned long)lock;
 	kd_spin_diag_validate_lock_stack(ptr);
 
-	run_combiner(lock, next_node);
+	run_combiner(lock, next_node, request);
 
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(this_cpu_ptr(&local_shadow_stack)->lock_addr[j] !=
@@ -255,7 +261,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	kd_spin_set_resume_node(curr_node);
 	return READ_ONCE(curr_node->jit_retry) ? 4 : 2;
 release:
-	kd_spin_claim_origin(lock);
+	kd_spin_claim_origin(request);
 	kd_exe_queue_timing_end(false, &curr_node->queued_at_ns,
 				kd_exe_queue_timing_start());
 	/*
@@ -275,10 +281,11 @@ release:
  * combiner depending on queue position and contention.
  */
 __attribute__((noipa)) noinline notrace static int
-__kd_spin_lock_slowpath(struct qspinlock *lock)
+__kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
+		       const struct kd_spin_native_input *input)
 {
+	struct qspinlock *word = request->word;
 	struct kd_spin_node *base, *curr_node;
-	struct kd_spin_native_input *input;
 	int tail, idx;
 
 	base = this_cpu_ptr(&kd_spin_nodes[0]);
@@ -289,13 +296,12 @@ __kd_spin_lock_slowpath(struct qspinlock *lock)
 	if (unlikely(idx >= MAX_NODES)) {
 		base->count--;
 		kd_spin_selftest_node_event(KD_NODE_NATIVE_FULL);
-		while (!kd_spin_trylock(lock))
+		while (!kd_spin_trylock(word))
 			cpu_relax();
 		return 0;
 	}
 	kd_spin_selftest_node_event(KD_NODE_NATIVE_RESERVE);
 	curr_node = base + idx;
-	input = this_cpu_ptr(&kd_spin_native_inputs);
 	tail = encode_tail(smp_processor_id(), idx);
 
 	/*
@@ -309,7 +315,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock)
 	curr_node->cpuid = smp_processor_id();
 	curr_node->rsp = READ_ONCE(input->rsp);
 	curr_node->regs.sp = READ_ONCE(input->regs_sp);
-	curr_node->irqs_disabled = false;
+	curr_node->irq_flags = READ_ONCE(input->irq_flags);
 	curr_node->lock = lock;
 	curr_node->task_struct_ptr = current;
 	curr_node->gsbase = kd_read_kernel_gsbase();
@@ -320,10 +326,9 @@ __kd_spin_lock_slowpath(struct qspinlock *lock)
 	curr_node->pinned_context = (preempt_count() & PREEMPT_MASK) != 1;
 	curr_node->native_regs_decoded = false;
 	curr_node->jit_context = NULL;
-	BUG_ON(!kd_spin_entry_find((raw_spinlock_t *)lock,
-				   &curr_node->spin_origin));
+	curr_node->spin_origin = request->ref;
 
-	return __kd_spin_lock_longjmp(lock, tail, curr_node);
+	return __kd_spin_lock_longjmp(lock, tail, curr_node, request);
 }
 
 /*

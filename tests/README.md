@@ -66,6 +66,66 @@ make -C tests/unit run-all
 继续使用原有替代原语；不复制函数实现，也不放宽协议断言。冻结源码和
 benchmark 专用 provider 的复制清单同样包含 `.inc`。
 
+`infrastructure/test_hotlock_sampling.py` 还检查无锁 promotion 查询：持有写锁时
+查询仍能完成，碰撞探测跨表尾回绕，两个采样线程与两个查询线程并发创建/晋升。
+时钟及 IRQ 原语仍是替代实现，pthread 并发不代替真实内核 hook 验证。
+2026-09-17 在已核对 source/build/live 身份的 recovery guest
+`6.1.159-kdstatic2` 执行
+`make -C tests/unit run PY_TESTS='infrastructure/test_hotlock_sampling.py'`，
+两个基础程序和 hotlock 程序全部通过；hotlock 231187 项检查、五种错误变异均被
+检出，包括重新引入查询写锁。SELFTEST hotlock 对象和默认 provider `W=1` 构建
+成功；完整链接仍报告未改动汇编路径的 objtool 警告。查询函数反汇编无读侧锁调用、
+IRQ 屏蔽或原子 RMW。日志、源码哈希、内核身份和反汇编保存在 guest 与宿主的
+`/tmp/kdlock-hotlock-lockless-20260917/`。本次未加载模块、未启动 daemon、未执行
+kernel live/JIT 或性能测试；不将查询指令减少折算为端到端加速比。
+
+同日的 spin 准入精简按当前 voluntary 内核验证。运行
+`make -C tests/unit run PY_TESTS='spin/test_spin_entry.py spin/test_spin_routing.py'`，
+两个基础程序及两个定向程序全部通过：ticket 3660 项检查，路由 14 个场景、
+6233 项检查。新增断言覆盖无 pin 时不访问 ticket 池、查询不增加临时 pin、
+guard 持有期间仍可读取本地 gate，以及错误 CPU/task/代次的拒绝。
+`W=1` 构建通过，保留既有汇编 objtool 警告；gate 读取反汇编无 guard 调用。
+确认 recovery 快照后，`test_16_spin_entry.sh` 的双 CPU 真实原锁/借用引用自测
+通过（JIT=0），`tests/run_all.sh --case mode-0` 的单锁实际 JIT 通过，记录到
+4 次正文 witness；退出码、数据检查、排空及内核错误检查均通过。
+测试加载了 provider，保留默认 `mutex_jit=1` 但仅执行 spin；结束后模块及调用者
+已排空。未运行全量、mutex 用例或性能对比。证据位于宿主与 guest 的
+`/tmp/kdlock-spin-entry-checks-20260917/`，
+组件自测原始目录为 guest `/tmp/kdlock-spin-entry-kernel.lf8oaR/`。
+
+<a id="spin-stackless-validation"></a>
+
+### 2026-09-17：Spin 无栈等待与 IRQ-off 入口
+
+同日继续实现 spin 无栈等待和 IRQ-off task 准入。删除 spin 每 CPU 的 8KB
+执行栈；发布前保存/关闭 IRQ，物理 waiter 的发布与轮询使用连续汇编，完成或
+native 唤醒直接恢复上下文。`spin/test_spin_wait.py` 在 guest 执行生产汇编，
+另一个线程覆盖真实旧 C 栈后分别验证 32 次完成、32 次 native 恢复，以及
+32 次普通队头返回；它不模拟内核 IRQ，也不代替实际 JIT。
+两个基础程序和 entry/gate/routing/wait/shadow/outer-progress/frame 七项定向
+程序共九项通过；随后 node/frame 观察器共 27 个 Python 用例通过。IRQ-off
+是合法 task 状态，节点观察器仍检查 pin、计数、节点归还和异常状态。
+frame 观察器改为记录实际 task 栈边界；不再给活 task 栈填色或在任务退出后
+读取它。新日志明确 `stack_kind=1`、`written_left=null`；旧 8KB watermark
+证据仍由原严格分支校验，不能把 RSP 采样称为写入高水位。
+
+在相同 `6.1.159-kdstatic2` voluntary 内核、已确认的 recovery 快照下通过：
+
+- `test_16_spin_entry.sh`：双 CPU 真实 ticket/native-ref 协议，JIT=0。
+- `mode-0`：IRQ-on 普通入口与 `KD_SPIN_IRQ_OFF=1` 入口各一次实际 JIT；
+  两者各有 4 次 body witness，互斥、真实 L 和上下文 oracle 均为零错误。
+- `mode-1`、`registers-0-1`：嵌套实际 JIT，以及 CALL miss 的寄存器/原生后缀/ACK。
+- `node-physical-2-0`：同 CPU 两层真实 combiner C frame，40 CPU 节点排空；
+  task 栈大小 16384，观测点最小剩余 14168 字节，仅是本次采样结果。
+
+默认和 SELFTEST 的 `W=1` 构建、加载及正常卸载通过；保留既有汇编 objtool
+警告。初版增加静态 per-CPU 暂存曾使模块加载 ENOMEM，后改为准备期局部变量、
+复用节点旧 IRQ 字段；最终默认静态 per-CPU 为 8000 字节，未修改内核预留区。
+本批次加载 provider 并保留默认 `mutex_jit=1`，只运行 spin 用例；最终模块、
+daemon 和调用者均排空，成功运行中无内核故障。没有执行全量、mutex live 或
+性能 benchmark。宿主与 guest 证据为 `/tmp/kdlock-spin-stackless-20260917/`；
+各 live 输出独立保存源码快照，保留早期失败日志与修复后的结果，不合并成全量矩阵。
+
 ## 选择 kernel live 用例
 
 ```sh
@@ -85,6 +145,24 @@ KDLOCK_RECOVERY_CONFIRMED=1 timeout 360s \
 场景矩阵。`--suite mutex` 选择 mode 4/5，并显式启用 `mutex_jit=1`。
 完整模块/daemon 启动、逐用例协议和清理顺序见
 [执行流](../docs/JIT_EXECUTION.md#3-环境与操作)。
+
+验证 spin 的发布/栈恢复改动时，可在 guest 将生产汇编测试加入基础检查：
+
+```sh
+timeout 120s make -C tests/unit run PY_TESTS='spin/test_spin_wait.py'
+```
+
+IRQ-off task 入口复用 `mode-0`，在同样的 recovery 准备完成后显式运行：
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 KD_SPIN_IRQ_OFF=1 timeout 360s \
+  bash tests/run_all.sh --case mode-0 --timeout 300 \
+  --output /tmp/kdlock-spin-irq-off-new
+```
+
+该开关只支持 mode 0：负载在 spin lock/unlock 对外层关闭 IRQ，并检查状态保持。
+普通 `mode-0` 使用 IRQ-on 入口；这两个变体均为 task 上下文，不能当作
+hardirq/softirq 代理测试。以上为按改动选用的命令，不扩大默认测试范围。
 
 ## Demo 模式
 
@@ -227,3 +305,117 @@ guest 日志为 `/tmp/kdlock-test-layout-20260916.log` 和
 宿主副本及迁移清单、源码哈希、验证命令保存在
 `/tmp/kdlock-test-layout-20260916/`。随后文档更新与 Git 提交仅核对差异和引用，
 未重复运行上述测试；这些记录不代表完整当前版本的全量验收。
+
+<a id="registration-read-path"></a>
+
+### 2026-09-16：重复注册的读取路径
+
+`kd_exe_add` 对已发布、PID/RIP/后端匹配且 source OPEN 的条目只读返回，
+避免重复进入注册 gate、source 锁及模块地址查询。UNINIT/miss/native-only
+同样可确认已注册，但不能据此执行 JIT；首次注册、冲突及关闭准入保留原路径。
+
+在 recovery guest `6.1.159-kdstatic2` 上完成基础及相关验证：
+
+```sh
+make -C tests/unit run PY_TESTS='execution/test_exe_registry.py infrastructure/test_source_lifetime.py execution/test_jit_entry_scope.py'
+make -C kernel_module W=1
+# 核对 recovery 快照后，只选择一个单锁 spin JIT 用例：
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-0 --timeout 150 \
+  --output /tmp/kdlock-registry-read-live-20260916
+```
+
+5 个程序通过：注册表 11062、source 生命周期 42820、JIT 入口 3150 项检查，
+以及两个基础 C 程序。注册表夹具验证两后端共 1400 次重复调用不再取注册锁、
+调用 source pin 或消耗代码块，覆盖未发布槽、并发发布后身份变化、24 线程
+注册竞争、后端冲突与退休；15 个破坏注册行为的变体全部检出。
+
+模块构建通过，保留现有恢复/切栈汇编的 objtool 警告。mode 0 的翻译、实际
+JIT 正文、12009 次负载状态变换及排空通过；离线证据校验通过，冻结源码
+288 文件。内核源码/build/live Build ID 核对通过，模块及 workload/daemon
+均已退出。未运行全量套件或性能扫描，不据此宣称具体耗时或吞吐提升。
+
+guest 日志在 `/tmp/kdlock-registry-read-20260916/`，live 证据在上述输出目录。
+宿主证据包为
+`/tmp/kdlock-registry-read-evidence-20260916/kdlock-registry-read-evidence-20260916.tar.gz`，
+SHA256 为 `527eb9a4a7f7ac217f4a78a3d045d7c5688ea3e70324bda6516a6e6a6b8b5e78`。
+
+<a id="gate-request-reuse"></a>
+
+### 2026-09-16：gate 发布与请求内复用
+
+gate 创建初始化后 release 发布 `origin`，find/get 命中通过 acquire 读取，
+创建仍锁内复查。物理 request/batch 传递 ticket 和 S，覆盖 remember、pending、
+tail、claim、execute_cs、提前释放/reclaim 和 unlock；逻辑 waiter 的祖先
+`spin_origin` 不替代物理请求。协议说明见 [DESIGN 4.1/4.2](../docs/DESIGN.md#41-native-lock-and-private-queue)。
+
+recovery guest `6.1.159-kdstatic2` 上选择两个基础 C 程序及五组相关 spin 测试：
+
+```sh
+make -C tests/unit run PY_TESTS='spin/test_spin_gate.py spin/test_spin_entry.py spin/test_spin_routing.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py'
+make -C kernel_module W=1
+KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-0 --timeout 150 \
+  --output /tmp/kdlock-gate-request-live-20260916
+```
+
+七个程序经增量修正全部通过。新发布夹具用 12 个线程、48 个碰撞键检查唯一
+gate、初始化先于发布和无锁读；路由夹具强制 100 次缓存 miss，验证已有 gate
+的获取/解锁每次只哈希一次。ticket、NUMA off/on 队列、嵌套物理请求、提前释放
+及重新获取的现有检查通过，combiner 的 12 个变异全部检出。
+
+默认模块及 `KDLOCK_SELFTEST=1` 的编译通过，随后恢复默认构建；可选变体未
+加载。保留已有切栈/返回汇编的 objtool 警告。mode 0 验证 2508 字节生成物、
+实际 JIT 正文和 12009 次状态变换；离线证据校验通过（冻结源码 289 文件），退休后
+frames/modules/writers 均为 0，workload/daemon/模块已退出。未运行全量套件、
+复杂 live 矩阵或性能采样。
+
+首次 combiner 夹具编译失败是测试仍把 L 传给改为接收 S 的 helper；修正后只
+重跑 gate、routing、outer-progress 与基础程序。可选内核观察器另有两处
+slowpath 调用缺少 request 参数，补齐后只重编译该变体及默认模块；生产路径
+未再修改，未重复 live。失败和修正后的日志均保留在 guest
+`/tmp/kdlock-gate-request-20260916/`，live 证据为上述输出目录。
+宿主证据包为
+`/tmp/kdlock-gate-request-evidence-20260916/kdlock-gate-request-evidence-20260916.tar.gz`，
+SHA256 为 `9c8178e4d9e8a574de42d5290e898bc3a4dfd5e1574a410dab41073c2fe26040`。
+
+<a id="execution-entry-reuse"></a>
+
+### 2026-09-16：执行条目复用
+
+spin/mutex 的 `execute_cs` 查找一次就绪条目并传给 dispatcher，成功路径的
+`kd_get_exe` 从三次降为一次（不含请求入口的注册/发现）。frame 准备后仍重新
+检查 source OPEN、acquire 发布状态、PID/RIP/代码指针及后端、逻辑入口范围。
+退休继续通过 frame lease 等待执行及其续跑排空；稳定槽位不代表不可变代码版本。
+
+在 recovery guest `6.1.159-kdstatic2` 上完成以下基础及相关验证，基线源码、
+build/live Build ID 与恢复快照均已核对：
+
+```sh
+make -C tests/unit run PY_TESTS='execution/test_exe_registry.py execution/test_jit_entry_scope.py infrastructure/test_source_lifetime.py spin/test_spin_outer_progress.py mutex/test_mutex_outer_progress.py'
+# 修正测试夹具后，仅重跑首轮失败的两项：
+make -C tests/unit run TESTS= PY_TESTS='execution/test_jit_entry_scope.py mutex/test_mutex_outer_progress.py'
+make -C kernel_module W=1 -j4
+KDLOCK_RECOVERY_CONFIRMED=1 timeout 400s bash tests/run_all.sh \
+  --case mode-0 --case mode-3 --timeout 180 \
+  --output /tmp/kdlock-exe-reuse-live-20260916
+```
+
+七个不同程序经上述增量验证全部通过。入口夹具 3278 项检查及 22 个变异检出，
+覆盖两后端的单次查表、查找后关闭准入/状态变化、身份及后端不匹配，并检查
+dispatcher 保留 acquire 读取。注册表 11062、source 生命周期 42820、spin
+outer-progress NUMA off/on 分别 12909/27864、mutex outer-progress 194 项检查
+及两个基础 C 程序通过。模块构建通过，保留现有切栈/返回汇编的 objtool 警告。
+
+mode 0 的实际 JIT 正文及 12009 次状态变换通过；mode 3 的发布、实际 JIT、
+12934 次状态变换和 732 次完成/resume 通过。运行器过滤外层 `KD_*` 环境变量，
+因此尝试设置的少量 mutex 轮次没有生效，实际使用该基础用例的默认 32 轮及
+8 线程 × 100 次 stress；未更改用例判定或追加重跑。两项均无内核故障，退休后
+frames/modules/writers 为 0，workload/daemon/模块已退出。离线证据校验通过，
+冻结源码 289 文件；未执行全量套件、复杂 live 矩阵或性能采样。
+
+首轮失败均来自夹具：新增重新查表变异已触发断言，但夹具继续运行到空指针
+场景后崩溃；改为变异首次断言失败即退出。mutex 夹具还保留了已废弃且未使用的
+调度 stub，删除后编译通过。初次失败与修正后日志均保留，生产实现未因此改动。
+guest 日志为 `/tmp/kdlock-exe-reuse-20260916/`，live 证据为上述输出目录。
+宿主证据包为
+`/tmp/kdlock-exe-reuse-evidence-20260916/kdlock-exe-reuse-evidence-20260916.tar.gz`，
+SHA256 为 `524c6f0bda53c5a319dcf162ad43622ecd320f7231df7f1578191e69972f8cc2`。

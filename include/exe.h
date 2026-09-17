@@ -8,6 +8,11 @@
 
 void kd_exe_add(int pid, unsigned long RIP, enum kd_exe_lock_kind kind);
 bool kd_exe_is_ready(unsigned int pid, unsigned long RIP);
+struct kd_exe_info *kd_exe_find_ready(unsigned int pid, unsigned long ip);
+/* Recheck a live registry slot without hashing. Neither a ready result nor
+ * a stable slot pointer is an execution lease or an immutable image version. */
+bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, unsigned int pid,
+			   unsigned long ip);
 bool kd_exe_publish_status(struct kd_exe_info *exe, int status);
 int kd_exe_init(void);
 void kd_exe_exit(void);
@@ -42,8 +47,11 @@ void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end);
 #define KD_EXE_NATIVE_DONE 7
 #define KD_EXE_KNOWN_NATIVE 8
 
-/* Kernel-only entry: requires the caller's validated spin/mutex execution frame. */
-int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
+/* Kernel-only entry: pass the slot returned by find_ready and a validated
+ * spin/mutex frame. Dispatch rechecks publication/admission after frame setup;
+ * the admitted frame retains source residency through all continuations. */
+int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
+			    unsigned long entry_ip,
 			    unsigned long outer_lock_addr);
 
 /* Resume a waiter after its critical section has already run in the sandbox. */

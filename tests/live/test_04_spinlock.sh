@@ -94,6 +94,15 @@ run_spinlock_mode() {
     info "Testing mode $mode ($mode_name)..."
     clear_dmesg
     load_modules || return 1
+    if [ "${KD_SPIN_IRQ_OFF:-0}" = 1 ]; then
+        if [ "$mode" != 0 ]; then
+            fail "$TEST_NAME" "KD_SPIN_IRQ_OFF currently selects mode 0"
+            unload_modules
+            return 1
+        fi
+        echo 1 > /sys/module/klock_module/parameters/spin_irq_off || return 1
+        info "  mode 0 incoming IRQs masked; context oracle checks both sides of restore"
+    fi
     start_daemon 2
 
     info "  Priming hot-lock timer..."

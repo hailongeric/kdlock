@@ -149,7 +149,7 @@ static noinline void kd_raw_spin_unlock_slow(raw_spinlock_t *lock)
 		return;
 	/* Acquisition provenance wins over today's promotion state or comm. */
 	if (kd_spin_entry_find(lock, &ref)) {
-		kd_spin_unlock((struct qspinlock *)lock);
+		kd_spin_unlock_ref((struct qspinlock *)lock, &ref);
 		return;
 	}
 	if (!kd_hotlock_is_promoted((unsigned long)lock))
@@ -169,8 +169,7 @@ static noinline void kd_raw_spin_lock_slow(raw_spinlock_t *lock,
 	}
 
 	kd_exe_add(0, ret_addr, KD_EXE_LOCK_SPIN);
-	kd_spin_fast_remember(lock, ret_addr);
-	kd_spin_lock((struct qspinlock *)lock, ret_rsp);
+	kd_spin_lock((struct qspinlock *)lock, ret_rsp, ret_addr);
 }
 
 void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,

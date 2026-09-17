@@ -190,6 +190,19 @@ two-word wrapper ABI are unchanged; source controls are separate ioctls.
    outside the raw lock. RETIRED is terminal; slots/images are not reused or
    reopened. All source/provider modules can then exit in dependency order.
 
+Repeated `kd_exe_add()` calls use a read-only registration check: acquire the
+published slot, match PID/RIP/backend and code storage, and observe source OPEN.
+The initial UNINIT release publishes both immutable metadata and completed root
+pinning. UNINIT, miss and terminal native-only entries need no new registration;
+they do not become executable by passing this check. An UNUSED slot is only a
+lookup candidate and must not count as registered, even if its key is visible.
+Misses, backend conflicts and closed admission retain the registration gate and
+source checks. A concurrent retire may follow the OPEN observation, but the fast
+return only skips redundant work: it reads no source bytes, calls no code and
+acquires no execution lease. Readiness and frame admission still gate execution;
+pins are released only after invalidation and drain. Slots are never reused
+within the session, and controlled module teardown still requires no callers.
+
 The source limit is 64 distinct modules, with no hook-time allocation; each
 read is limited to 256 KiB. Built-in resident ranges need no module ref. These
 checks do not pin arbitrary dynamically freed objects or prove source bytes
@@ -289,6 +302,15 @@ separate scheduler word/tail **S** and private nodes; native and kdlock queue
 encodings must never share L's tail. A scheduler handoff alone does not permit
 critical-section execution: the physical executor first acquires L.
 
+The fixed gate map is append-only for the provider session. Creation remains
+serialized by the map's irqsave lock and rechecks the probe chain after a miss.
+The creator initializes the slot before release-publishing `origin`; readers
+acquire-load that key before using S. Existing `get`/`find` hits take no map lock.
+A concurrent insertion may make a read miss transient, but cannot expose a
+partially initialized gate. Slots are neither removed nor reassigned until
+controlled drain and teardown. This does not pin the lock allocation or admit
+an execution frame; source retirement and physical-owner checks still apply.
+
 Native plain/trylock/IRQ-save/BH participants use Linux L. Their mutual
 exclusion does not imply that IRQ/BH operations can be delegated; known
 context-sensitive wrappers refuse translation.
@@ -297,7 +319,13 @@ The old shared-tail protocol and its compatibility claims are obsolete.
 Already published spin roots have an additional native fast path. A per-CPU
 cache keys the original lock and entry RIP to stable gate storage, populated
 only after the ordinary source pin/registration and NORMAL publication.
-With source admission OPEN, no existing preemption pin, IRQs enabled and no
+On a slow root entry, cache population now reuses the gate returned through
+the new ticket, under its single preemption pin, without another map lookup.
+Hook admission checks task context in `kd_spin_entry_begin` and the additional
+BH/migration/native-active conditions in `kd_spin_lock`. Cache population has
+no intervening scheduling point and reuses that admission; only its root-depth
+check remains, alongside entry publication and source-state validation.
+With source admission OPEN, no existing preemption pin and no
 migration-disabled context, an idle entire S permits a Linux trylock on L.
 Success executes the original critical section without acquiring S or creating
 a delegation ticket. A competing combiner may race the S observation but must
@@ -319,6 +347,24 @@ The physical hold and original waiter acquisition are different objects.
 `kd_spin_ref` points into a stable origin-ticket pool with a generation.
 A virtual B request carries the original HOOK waiter's `spin_origin`, while
 its physical executor's acquisition ticket belongs to that executor.
+
+The current runtime assumes voluntary kernel preemption. Ticket lifetime still
+retains the begin/end preemption pin, including native suffix execution and ACK
+waiting. A caller without that pin cannot own a ticket, so lookup returns before
+scanning the per-CPU pool. A pinned lookup adds no temporary pin/unpin pair.
+Reading a local ticket's gate also takes no guard: CPU/task/generation checks
+remain, only its local task changes slot membership, and remote borrowers modify
+`native_refs` only. Mutations still serialize with those borrowers under guard.
+IRQ-off task callers are admitted; hardirq/softirq contexts remain native.
+Physical-owner checks remain independent of the kernel's preemption model.
+
+One stack-local `kd_spin_request` carries that physical ticket and S through
+pending/tail helpers, node admission, queue-head claims and combiner batches.
+The batch retains it across early outer release and reclaim; neither a recycled
+node nor a nested waiter's ancestor `spin_origin` substitutes for this request.
+Hook unlock passes its already-found ticket through release. Nested unlock
+resolves S once and reuses it for the OOO result; diagnostics and an OOO ancestor
+without a local ticket can still use the acquire-reading map.
 
 Only the original waiter can end its pin/preemption obligation. A combiner
 cannot remotely unpin it. Native borrow references defer completion until
@@ -345,12 +391,43 @@ readiness/context, reconstructs waiter registers and enters a frame.
 Unstarted work can receive native handoff. Partial JIT progress cannot be
 converted into entry replay.
 
-Ordinary acquisition returns restore `kd_spin_native_input.rsp`.
-Nonlocal paths restore the lower of saved node RSP and virtual RSP before
-copying state, preserving virtual CALL frames that grew into the old hook
-frame. Completed paths end their own ticket only after taking the needed
-snapshots. Return 5 means native continuation and retains the origin pin
-until the final native ACK, not full completion.
+Spin no longer allocates a private C stack. Before queue publication, the root
+saves its incoming IRQ flags in preparation locals and then in the reserved node,
+with local IRQs masked. One assembly region links the physical waiter and
+polls its release-published wake without calls, pushes or compiler spills.
+An unexecuted queue-head wake returns through intact C frames. Completion or
+native suffix handoff instead abandons every old hook/queue frame and starts
+the restoration helper below both saved physical RSP and final virtual RSP,
+aligned for the C ABI. This protects virtual CALL frames even when they have
+overwritten the old queue return addresses.
+
+IRQ-off task context is a valid entry state, not a reason to refuse delegation.
+The queue interval uses `local_irq_save()` / `local_irq_restore()` for both
+incoming states; it never unconditionally enables IRQs. This interval covers
+publication, waiting and any combiner work, not just each delegated body.
+The original preemption pin remains necessary for per-CPU ticket/node lifetime.
+Hardirq/softirq admission and translation of IRQ/BH-changing code retain their
+existing exclusions. Masking ordinary local IRQs does not mask NMI or establish
+general exception safety.
+
+| Physical slowpath exit | Stack and continuation |
+| --- | --- |
+| Queue-head/combiner acquisition (`0/2`) | Body has not run on behalf of this caller; restore IRQs and return through intact C frames. |
+| Remote completion or native suffix | `spin/wait.inc` selects an aligned safe RSP and calls `kd_spin_resume_completed(node)` directly; old C frames never return. |
+| Pre-body retry after acquisition (`4`) | Restore the node's IRQ flags from the still-intact preparation local, then enter `kd_spin_resume_waiter(node, 1)` on the safe stack. |
+
+Virtual waiters keep their independent executor C stack and the existing
+`1/3/5` parent-notification returns. These are no longer physical waiter
+completion returns.
+
+The restoration helper snapshots registers, ticket and incoming IRQ flags,
+ends the completed ticket or marks the native continuation, and restores IRQs
+only on the valid task stack after its final per-CPU/node access. It then
+jumps to the saved continuation. Incoming IRQ-off state stays off; an IRQ-on
+caller regains its original state. Ordinary queue-head/combiner returns also
+restore their incoming IRQ flags. A native suffix retains the origin pin
+until the final native ACK; its wake is not full completion. This is IRQ state
+preservation, not a new general RFLAGS ABI.
 
 The combiner eventually executes its own original critical section.
 If logical A was released early, it must reacquire A first; see 9.4.
@@ -363,10 +440,14 @@ It uses the root/parent artifact with B's continuation RIP, not a separately
 truncated B artifact that cannot represent A's later flow.
 
 Logical requester/`resume_target` chains differ from physical C-frame chains.
-A physical parent may wait on its own shadow stack while a child executes on
-another CPU. Its C locals, frame and stack remain live until child completion.
+A physical parent waits on its own task stack while a child executes on
+another CPU using the original logical waiter stack. Its C locals, frame and
+stack remain live until child completion; virtual waiters still service remote
+owner/ACK requests. Their queue interval saves, masks and restores local IRQs.
 
-Each shadow stack is 8 KiB; frame and held-lock depths are bounded at eight.
+Spin combiners use the task kernel stack; the former per-CPU 8 KiB execution
+allocation is removed. The shadow-named lock ledger and wrapper RSP scratch
+remain metadata. Frame and held-lock depths are bounded at eight.
 Frame count, logical depth, held-lock count and node reservations are distinct
 resources. Sampled stack margins are not an arbitrary IRQ/NMI safety proof.
 NUMA-local batching is opt-in; it is not a different physical lock protocol.
@@ -469,10 +550,12 @@ callback do not exercise JIT or queue scheduling; see
 #### Pinned Busy Polling
 
 Both spinlock and mutex delegation support explicit GS memory operations by
-default. Spinlock waiters already keep preemption disabled from entry-ticket
-reservation through their queued wait: the acquire poll in `spin/slowpath.inc`
-uses `cpu_relax()` (x86 PAUSE), without sleeping or scheduling. The mutex waiter
-uses the same origin-task constraint; GS support is not a mutex-only option.
+default. Spinlock waiters keep preemption disabled from entry-ticket reservation
+through their queued wait. Physical waiters publish and PAUSE-poll in the
+stack-free assembly in `spin/wait.inc`, with local IRQs masked; virtual waiters
+retain C polling and remote owner/ACK service on their executor stack. Neither
+wait sleeps or schedules. The mutex waiter uses the same origin-task constraint;
+GS support is not a mutex-only option.
 
 `kd_mutex_wait_for_result()` observes the linked waiter's `locked` byte with
 acquire ordering and executes `cpu_relax()` (x86 PAUSE) until completion or
@@ -653,8 +736,21 @@ RW-staging/RX-publication transition or code-generation lifetime protocol.
 
 Kernel critical-section text is shared across all tasks, so kernel-lock JIT
 entries use a **RIP-only key**: the hook calls `kd_exe_add(0, ret_addr, kind)` and
-`kd_exe_on_call_hl_entry()` looks up `kd_get_exe(0, entry_ip)`. This avoids binding a
-translation to one short-lived benchmark thread or process ID.
+spin/mutex `execute_cs()` resolves `kd_exe_find_ready(0, entry_ip)` and passes that
+slot to `kd_exe_on_call_hl_entry()`. This avoids binding a translation to one
+short-lived benchmark thread or process ID. A successful execution now probes
+the registry once across these two functions, excluding registration/discovery.
+
+The dispatcher rechecks the same slot with `kd_exe_entry_is_ready()` after frame
+setup: source must still be OPEN, an acquire load must observe NORMAL, and
+PID/RIP/code storage must match. It also retains backend and logical-scope
+validation. Passing a pointer eliminates the second and third hash lookups,
+not the second readiness observation. Closure before frame push refuses its
+lease; closure observed by the dispatcher refuses before the body. Closure
+racing after that check must wait for the admitted frame and its continuations
+to drain before invalidation and source release. Slot storage/keys are stable
+until controlled provider teardown. This is not a code-version lease and does
+not solve the existing in-place upload limitation.
 
 Registration records immutable `KD_EXE_LOCK_SPIN` or `KD_EXE_LOCK_MUTEX` in
 `kd_exe_info.lock_kind`, using offset 12's former alignment padding. The entry

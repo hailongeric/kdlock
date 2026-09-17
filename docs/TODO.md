@@ -9,11 +9,22 @@ Complete the main behavior before optional features and performance work.
 
 ## Current Checkpoint
 
-**2026-09-16:** spinlock and mutex delegation both support explicit GS memory
+**2026-09-17:** spin delegation accepts IRQ-off task entries and no longer
+allocates a per-CPU 8 KiB C execution stack. Physical waiters save/mask local
+IRQs before publication, publish and PAUSE-poll without stack accesses, and
+restore completed/native packets on a safe task-stack continuation. The
+incoming IRQ state is preserved; virtual waiters retain remote owner/ACK
+service and mutex retains its separate stacks. Task/CPU pins and ownership
+checks remain. The [targeted validation](../tests/README.md#spin-stackless-validation)
+records affected units, IRQ-on/off JIT, nested/native continuation and a
+two-frame live case; no full suite or performance benchmark was run.
+
+Spinlock and mutex delegation both support explicit GS memory
 operations by default, using the origin waiter's base;
 supported `current_task` reads use the logical task. Published delegation
 waiters remain preemption-disabled and PAUSE-poll until completion or native
-handoff. IRQ/NMI access and native-service context remain separate limits.
+handoff. Spin queue intervals mask local IRQs; NMI, mutex IRQ access and
+native-service context remain separate limits.
 [GS validation](../tests/README.md#gs-polling-validation) records the two actual
 JIT positives and affected unit checks; it does not validate old same-CPU
 schedules that depend on a queued waiter yielding.
@@ -27,8 +38,8 @@ source sessions; their validation stays in the
 [benchmark README](../bench/spin_cacheline/README.md#assembly-inspection).
 
 The [current-version overview](PROJECT_GUIDE.md#1-当前进展) lists implemented and
-deferred capabilities. This documentation/commit step adds no new experiments
-or runtime changes. Earlier checkpoints remain in [VALIDATION](VALIDATION.md);
+deferred capabilities. Documentation updates add no new runtime evidence.
+Earlier checkpoints remain in [VALIDATION](VALIDATION.md);
 their PASS results are not acceptance of the complete current tree.
 
 ## Delivery Scope

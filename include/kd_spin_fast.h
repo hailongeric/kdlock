@@ -56,8 +56,7 @@ kd_spin_fast_acquire(raw_spinlock_t *lock, unsigned long rip)
 {
 	struct kd_spin_fast_cpu *fast;
 
-	if (unlikely(preempt_count() || irqs_disabled() ||
-		     current->migration_disabled))
+	if (unlikely(preempt_count() || current->migration_disabled))
 		return KD_SPIN_FAST_CONTEXT;
 	preempt_disable();
 	fast = raw_cpu_ptr(&kd_spin_fast_cpu);
@@ -109,28 +108,27 @@ static __always_inline bool kd_spin_fast_unlock(raw_spinlock_t *lock)
  * preparation unchanged; cache hits execute native code and cannot dispatch
  * an obsolete JIT image. No cache is shared with a nested/borrowed caller.
  */
-static inline void kd_spin_fast_remember(raw_spinlock_t *lock, unsigned long rip)
+static inline void kd_spin_fast_remember(raw_spinlock_t *lock, unsigned long rip,
+					 struct kd_spin_gate *gate)
 {
 	struct kd_spin_fast_cpu *fast;
-	struct kd_spin_gate *gate;
 	struct kd_exe_info *exe;
 
-	if (preempt_count() || irqs_disabled() || current->migration_disabled)
+	/* Called only by kd_spin_lock after admission, with a non-NULL gate and
+	 * the new ticket's pin. No scheduling point intervenes, so task/
+	 * migration checks need not be repeated. Keep the depth test: a nested
+	 * caller must not replace a root cache record. */
+	if (preempt_count() != 1)
 		return;
 	exe = kd_get_exe(0, rip);
 	if (!exe || exe->pid || exe->RIP != rip ||
 	    exe->lock_kind != KD_EXE_LOCK_SPIN ||
 	    READ_ONCE(exe->status_code) != KD_EXE_NORMAL || !kd_source_is_open())
 		return;
-	gate = kd_spin_gate_find(lock);
-	if (!gate)
-		return;
-	preempt_disable();
 	fast = raw_cpu_ptr(&kd_spin_fast_cpu);
 	fast->origin = lock;
 	fast->rip = rip;
 	fast->gate = gate;
-	preempt_enable();
 }
 
 static inline bool kd_spin_fast_idle(void)

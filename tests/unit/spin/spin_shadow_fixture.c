@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <setjmp.h>
 
 #include "spin_shadow_types.h"
 
@@ -34,6 +35,7 @@ struct kd_spin_ref {
 	void *entry;
 	unsigned long sequence;
 };
+#include "spin_request_type.h"
 struct kd_exec_frame {
 	bool valid, complete;
 	unsigned int jit_lock_depth;
@@ -72,6 +74,7 @@ struct kd_spin_node {
 	unsigned long gsbase;
 	struct kd_spin_ref spin_origin;
 	uint64_t queued_at_ns;
+	unsigned long irq_flags;
 };
 
 /* This queue/node fixture runs with optional timing disabled. The production
@@ -145,6 +148,8 @@ struct kd_spin_batch;
 #define BUG_ON(x) CHECK(!(x))
 #define in_task() true
 #define irqs_disabled() false
+#define local_irq_save(flags) ((flags) = 0)
+#define local_irq_restore(flags) ((void)(flags))
 #define module_param_named(...)
 #define MODULE_PARM_DESC(...)
 #define __percpu
@@ -203,9 +208,9 @@ static void cpu_relax(void)
 			peer_result == 5 ? KD_EXEC_REMOTE_NATIVE :
 					   KD_EXEC_REMOTE_DONE;
 }
-static struct qspinlock *kd_spin_word(struct qspinlock *lock)
+static struct qspinlock *kd_spin_request_word(const struct kd_spin_ref *ref)
 {
-	CHECK(lock == active_lock);
+	CHECK(ref->entry == active_lock);
 	return &scheduling_word;
 }
 
@@ -215,9 +220,10 @@ static bool kd_spin_is_ooo(struct qspinlock *lock)
 	return parent_ooo;
 }
 
-static void kd_spin_claim_origin(struct qspinlock *lock)
+static void kd_spin_claim_origin(const struct kd_spin_request *request)
 {
-	CHECK(lock == active_lock && scheduling_word.locked);
+	struct qspinlock *lock = active_lock;
+	CHECK(request->word == &scheduling_word && scheduling_word.locked);
 	if (!lock->locked)
 		origin_claims++;
 	lock->locked = 1;
@@ -247,7 +253,7 @@ static void kd_spin_claim_origin(struct qspinlock *lock)
 
 static int xchg_tail(struct qspinlock *lock, int tail)
 {
-	lock = kd_spin_word(lock);
+	CHECK(lock == &scheduling_word);
 	int old = lock->val;
 
 	if (producer_case) {
@@ -285,13 +291,13 @@ static bool atomic_try_cmpxchg_relaxed(int *value, int *old, int replacement)
 
 static void set_locked(struct qspinlock *lock)
 {
-	lock = kd_spin_word(lock);
+	CHECK(lock == &scheduling_word);
 	lock->locked = 1;
 }
 
 static void check_and_set_combiner(struct qspinlock *lock)
 {
-	lock = kd_spin_word(lock);
+	CHECK(lock == &scheduling_word);
 	CHECK(!lock->locked && !lock->pending);
 	lock->locked = 3;
 }
@@ -304,13 +310,14 @@ static struct kd_spin_node *decode_tail(int tail)
 
 static bool kd_spin_trylock(struct qspinlock *lock)
 {
-	CHECK(producer_case && !producer_virtual && lock == active_lock);
+	CHECK(producer_case && !producer_virtual && lock == &scheduling_word);
 	CHECK(kd_spin_nodes[0].count == producer_count);
 	if (++try_calls == 1)
 		return false;
 	CHECK(try_calls == 2);
 	scheduling_word.val = 1;
-	kd_spin_claim_origin(lock);
+	struct kd_spin_request request = { .word = lock };
+	kd_spin_claim_origin(&request);
 	return true;
 }
 static int encode_tail(int cpu, int index)
@@ -401,7 +408,8 @@ static void clear_locked_set_completed(struct kd_spin_node *node)
 }
 
 static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr);
-static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next);
+static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
+			 struct kd_spin_request *request);
 static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
 		      struct kd_spin_batch *batch);
 static int kd_spin_release_outer(void *frame, struct kd_exec_outer_unlock *hook)
@@ -410,9 +418,9 @@ static int kd_spin_release_outer(void *frame, struct kd_exec_outer_unlock *hook)
 	(void)hook;
 	abort(); /* Early outer release is covered by spin_outer_progress_fixture. */
 }
-static void kd_spin_reclaim_outer(struct qspinlock *lock)
+static void kd_spin_reclaim_outer(struct kd_spin_request *request)
 {
-	(void)lock;
+	(void)request;
 	abort();
 }
 static void kd_spin_debug_combiner(struct qspinlock *lock, unsigned int depth)
@@ -423,7 +431,59 @@ static void kd_spin_debug_combiner(struct qspinlock *lock, unsigned int depth)
 
 #include "spin_node_observer.h"
 #define kd_node_observations (*kd_node_records)
+/* Physical completion no longer returns through the production queue frame.
+ * Model only that transfer here; test_spin_wait executes the real assembly
+ * against destructively overwritten C frames. */
+static jmp_buf *native_return;
+static void kd_spin_publish_wait(struct kd_spin_node *node,
+				 struct kd_spin_node *previous)
+{
+	previous->next = node;
+	while (node->locked)
+		cpu_relax();
+	if (node->completed || node->native_resume) {
+		kd_spin_nodes[0].count--;
+		kd_spin_selftest_node_event(node->native_resume ?
+			KD_NODE_NATIVE_RETURN : KD_NODE_REMOTE_RETURN);
+		kd_spin_diag_waiter_exit(node->lock);
+		kd_spin_set_resume_node(node);
+		CHECK(native_return != NULL);
+		longjmp(*native_return, node->native_resume ? 5 : 3);
+	}
+}
 #include "spin_shadow_production.h"
+
+static int test_longjmp(struct qspinlock *lock, int tail, struct kd_spin_node *node)
+{
+	struct kd_spin_request request = { .word = &scheduling_word };
+	CHECK(kd_spin_entry_find(lock, &request.ref));
+	jmp_buf continuation;
+	jmp_buf *saved = native_return;
+	int ret = setjmp(continuation);
+
+	native_return = &continuation;
+	if (!ret)
+		ret = __kd_spin_lock_longjmp(lock, tail, node, &request);
+	native_return = saved;
+	return ret;
+}
+static int test_slowpath(struct qspinlock *lock)
+{
+	struct kd_spin_request request = { .word = &scheduling_word };
+	CHECK(kd_spin_entry_find(lock, &request.ref));
+	jmp_buf continuation;
+	jmp_buf *saved = native_return;
+	int ret = setjmp(continuation);
+
+	native_return = &continuation;
+	if (!ret)
+		ret = __kd_spin_lock_slowpath(lock, &request, &kd_spin_native_inputs);
+	native_return = saved;
+	return ret;
+}
+#define __kd_spin_lock_longjmp test_longjmp
+#define __kd_spin_lock_slowpath test_slowpath
+
 
 static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
 {
@@ -437,7 +497,8 @@ static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
 	}
 }
 
-static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next)
+static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
+			 struct kd_spin_request *request)
 {
 	combined++;
 	CHECK(lock->val == 1 && origin_claims >= 1);
@@ -451,7 +512,7 @@ static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next)
 	CHECK(!local_shadow_stack.local_queue_head);
 	CHECK(!local_shadow_stack.local_queue_tail);
 #endif
-	production_run_combiner(lock, next);
+	production_run_combiner(lock, next, request);
 #ifdef NUMA_AWARE
 	CHECK(!local_shadow_stack.local_queue_head);
 	CHECK(!local_shadow_stack.local_queue_tail);
@@ -483,7 +544,6 @@ static void run_case(int depth, int count, bool queued, bool retry)
 	local_shadow_stack.curr_cs_cpu = 19;
 	local_shadow_stack.prev_cs_cpu = UINT32_MAX;
 	local_shadow_stack.irqs_disabled = 1;
-	local_shadow_stack.ptr = &lock;
 	local_shadow_stack.local_shadow_stack_ptr = 0x87654321;
 #ifdef NUMA_AWARE
 	local_shadow_stack.local_queue_head = &next;

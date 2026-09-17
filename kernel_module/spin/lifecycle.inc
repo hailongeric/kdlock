@@ -17,9 +17,6 @@ static void kd_spinlock_free_percpu(void)
 
 		vfree(*per_cpu_ptr(&kd_spin_jit_contexts, cpu));
 		*per_cpu_ptr(&kd_spin_jit_contexts, cpu) = NULL;
-		if (stack->ptr)
-			vfree((char *)stack->ptr - SIZE_OF_SHADOW_STACK);
-		stack->ptr = NULL;
 		stack->local_shadow_stack_ptr = 0;
 	}
 #ifdef KDLOCK_SELFTEST
@@ -55,28 +52,17 @@ int kd_spinlock_init(void)
 		return ret;
 #endif
 	for_each_possible_cpu(i) {
-		void *stack_ptr = vzalloc(SIZE_OF_SHADOW_STACK);
 		struct shadow_stack *ptr = per_cpu_ptr(&local_shadow_stack, i);
 		struct kd_spin_jit_context *contexts;
 
-		if (!stack_ptr)
-			goto err_free;
 		contexts = vzalloc(array_size(MAX_NODES, sizeof(*contexts)));
-		if (!contexts) {
-			vfree(stack_ptr);
+		if (!contexts)
 			goto err_free;
-		}
 		*per_cpu_ptr(&kd_spin_jit_contexts, i) = contexts;
 
-#ifdef KDLOCK_SELFTEST
-		kd_spin_selftest_stack_init(stack_ptr);
-#endif
-		ptr->ptr = stack_ptr + SIZE_OF_SHADOW_STACK;
 		for (j = 0; j < 8; j++)
 			ptr->lock_addr[j] = 0;
-		ptr->local_shadow_stack_ptr =
-			(uint64_t)(unsigned long)stack_ptr +
-			SIZE_OF_SHADOW_STACK - 8;
+		ptr->local_shadow_stack_ptr = 0;
 		ptr->curr_cs_cpu = -1;
 		ptr->prev_cs_cpu = -1;
 #ifdef NUMA_AWARE
@@ -85,8 +71,6 @@ int kd_spinlock_init(void)
 #endif
 
 		ptr->irqs_disabled = false;
-		memset(per_cpu_ptr(&kd_spin_native_inputs, i), 0,
-		       sizeof(struct kd_spin_native_input));
 		*per_cpu_ptr(&kd_spin_resume_nodes, i) = NULL;
 
 		for (j = 0; j < MAX_NODES; j++) {

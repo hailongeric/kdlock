@@ -166,9 +166,8 @@ static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
  */
 static void kd_spin_diag_validate_outer_unlock(const struct shadow_stack *ptr,
 					       struct qspinlock *lock,
-					       int my_idx, int max_idx)
+					       struct qspinlock *word, int my_idx, int max_idx)
 {
-	struct qspinlock *word = kd_spin_word(lock);
 	if (my_idx < 0)
 		return;
 

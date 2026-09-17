@@ -1,4 +1,4 @@
-"""Evidence for physical shadow-stack nesting, not cross-CPU logical depth."""
+"""Physical frame nesting: current task stacks and archived shadow-stack logs."""
 
 import argparse
 import itertools
@@ -10,7 +10,8 @@ from pathlib import Path
 
 from cpu_placement import capture_topology, validate_topology
 
-STACK_SIZE = 8192
+STACK_SIZE = 8192  # Archived private-stack evidence.
+TASK_STACK_SIZE = 16384  # Captured x86_64 guest kernel.
 ENTRY_RESERVE = 1024
 WRITE_GUARD = 256
 
@@ -522,6 +523,10 @@ def validate(log, placement, depth, numa, lock_ip):
     assert len(lock_rows) == len(locks) == n + 1
     assert set(locks) == set(range(n + 1)) and len(set(locks.values())) == n + 1
     assert all(int(address, 16) for address in locks.values())
+    (summary,) = records(log, "kd_frame summary:")
+    stack_kind = int(summary.get("stack_kind", "0"))
+    assert stack_kind in (0, 1)
+    stack_size = TASK_STACK_SIZE if stack_kind else STACK_SIZE
     frames = records(log, "kd_frame trace:")
     assert len(frames) == n
     assert len({row["task"] for row in frames}) == n
@@ -541,7 +546,7 @@ def validate(log, placement, depth, numa, lock_ip):
         assert frame["valid"] == frame["executed"] == frame["returned"] == "1"
         assert int(frame["ret"]) == (6 if n == 8 and i == 7 else 4)
         assert int(frame["used"]) > last_used and int(frame["left"]) >= ENTRY_RESERVE
-        assert int(frame["used"]) + int(frame["left"]) == STACK_SIZE
+        assert int(frame["used"]) + int(frame["left"]) == stack_size
         last_used = int(frame["used"])
         request = requests[i]
         assert request["task"] == frame["task"] and int(request["cpu"]) == i + 1
@@ -560,22 +565,28 @@ def validate(log, placement, depth, numa, lock_ip):
     (summary,) = records(log, "kd_frame summary:")
     assert summary["failures"] == "0" and int(summary["max_depth"]) == n
     assert int(summary["events"]) == n and int(summary["numa"]) == numa
-    assert int(summary["stack_size"]) == STACK_SIZE
+    assert int(summary["stack_size"]) == stack_size
     min_left = min(int(row["left"]) for row in frames)
     assert int(summary["sampled_min_left"]) == min_left
     watermark_rows = records(log, "kd_stack watermark:")
-    watermarks = {int(row["cpu"]): row for row in watermark_rows}
-    assert len(watermarks) == len(watermark_rows)
-    assert set(placement["online_cpus"]) <= set(watermarks)
-    for cpu, row in watermarks.items():
-        assert cpu >= 0 and row["valid"] == "1" and int(row["size"]) == STACK_SIZE
-        untouched, written = int(row["untouched"]), int(row["written"])
-        assert WRITE_GUARD <= untouched <= STACK_SIZE and 0 <= written <= STACK_SIZE
-        assert untouched + written == STACK_SIZE
-    written_left = int(watermarks[0]["untouched"])
-    assert written_left <= min_left, (
-        "watermark must include observed frame stack writes"
-    )
+    if stack_kind:
+        # Live task stacks cannot be repainted or read after task exit. This
+        # is a sampled RSP bound, explicitly not the former write watermark.
+        assert not watermark_rows
+        written_left = None
+    else:
+        watermarks = {int(row["cpu"]): row for row in watermark_rows}
+        assert len(watermarks) == len(watermark_rows)
+        assert set(placement["online_cpus"]) <= set(watermarks)
+        for cpu, row in watermarks.items():
+            assert cpu >= 0 and row["valid"] == "1" and int(row["size"]) == STACK_SIZE
+            untouched, written = int(row["untouched"]), int(row["written"])
+            assert WRITE_GUARD <= untouched <= STACK_SIZE and 0 <= written <= STACK_SIZE
+            assert untouched + written == STACK_SIZE
+        written_left = int(watermarks[0]["untouched"])
+        assert written_left <= min_left, (
+            "watermark must include observed frame stack writes"
+        )
     state_rows = records(log, "kd_chain state:")
     states = {int(row["lock"]): row for row in state_rows}
     assert len(states) == len(state_rows) == n and set(states) == set(range(n))
@@ -623,7 +634,8 @@ def validate(log, placement, depth, numa, lock_ip):
         "depth": n,
         "numa": numa,
         "entry": entry,
-        "stack_size": STACK_SIZE,
+        "stack_size": stack_size,
+        "stack_kind": stack_kind,
         "sampled_left": min_left,
         "written_left": written_left,
         "pending_return": pending_return,
@@ -715,7 +727,9 @@ def validate_capacity(log, placement, frames):
             "valid_after",
         ):
             assert row[key] == "1", f"invalid full-context probe: {key}={row[key]}"
-        assert row["depth"] == "8" and row["cpu"] == row["irq"] == "0"
+        assert row["depth"] == "8" and row["cpu"] == "0"
+        (summary,) = records(log, "kd_frame summary:")
+        assert row["irq"] == ("1" if summary.get("stack_kind") == "1" else "0")
         assert int(row["preempt"]) > 0
         for key in ("task", "entry", "outer"):
             assert row[key] == frames[-1][key]

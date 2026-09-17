@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Included only in KDLOCK_SELFTEST builds; never print on a deep shadow stack. */
+/* Included only in KDLOCK_SELFTEST builds; record the real task-stack RSP. */
+#include <linux/sched/task_stack.h>
 #include <linux/moduleparam.h>
 
 static bool kd_frame_trace;
 module_param_named(spin_selftest_trace_frames, kd_frame_trace, bool, 0444);
 MODULE_PARM_DESC(
 	spin_selftest_trace_frames,
-	"selftest-only: record frame RSP and drained shadow-stack write watermark");
+	"selftest-only: sample combiner task-stack bounds and physical frame depth");
 
 static bool kd_frame_capacity_probe;
 module_param_named(spin_selftest_probe_frames, kd_frame_capacity_probe, bool,
@@ -14,26 +15,6 @@ module_param_named(spin_selftest_probe_frames, kd_frame_capacity_probe, bool,
 MODULE_PARM_DESC(
 	spin_selftest_probe_frames,
 	"selftest-only: probe the real full frame context without changing capacity");
-
-#define KD_STACK_WATERMARK_BYTE 0xa5
-
-static void kd_spin_selftest_stack_init(void *base)
-{
-	/* Hooks are not installed yet; never repaint a live or suspended stack. */
-	if (kd_frame_trace)
-		memset(base, KD_STACK_WATERMARK_BYTE, SIZE_OF_SHADOW_STACK);
-}
-
-static unsigned long kd_spin_selftest_stack_untouched(const void *base)
-{
-	const unsigned char *bytes = base;
-	unsigned long untouched = 0;
-
-	while (untouched < SIZE_OF_SHADOW_STACK &&
-	       bytes[untouched] == KD_STACK_WATERMARK_BYTE)
-		untouched++;
-	return untouched;
-}
 
 #define KD_FRAME_TRACE_EVENTS 64
 static atomic_t kd_frame_event_count = ATOMIC_INIT(0);
@@ -118,7 +99,7 @@ static bool kd_spin_selftest_full_shadow_begin(raw_spinlock_t *lock,
 	kd_full_shadow.nodes = this_cpu_ptr(&kd_spin_nodes[0])->count;
 	kd_spin_capture_combiner_state(&kd_full_shadow.shadow, stack);
 	kd_full_shadow.valid_before =
-		kd_full_shadow.preempt && !kd_full_shadow.irq &&
+		kd_full_shadow.preempt && kd_full_shadow.irq &&
 		!kd_full_shadow.nodes && kd_exec_current_frame() == frame &&
 		kd_spin_selftest_full_shadow_owned() &&
 		kd_spin_selftest_full_shadow_pending() &&
@@ -196,9 +177,9 @@ kd_spin_selftest_frame_begin(const struct kd_exec_frame *frame)
 	event = &kd_frame_events[index];
 	stack = this_cpu_ptr(&local_shadow_stack);
 	asm volatile("mov %%rsp, %0" : "=r"(sp));
-	top = (unsigned long)stack->ptr;
+	top = (unsigned long)task_stack_page(current) + THREAD_SIZE;
 	event->used = top - sp;
-	event->left = sp - (top - SIZE_OF_SHADOW_STACK);
+	event->left = sp - (top - THREAD_SIZE);
 	event->entry = frame->entry_ip;
 	event->outer = frame->outer_lock_addr;
 	event->parent = frame->parent ? frame->parent->outer_lock_addr : 0;
@@ -207,7 +188,7 @@ kd_spin_selftest_frame_begin(const struct kd_exec_frame *frame)
 	event->cpu = raw_smp_processor_id();
 	event->task = frame->logical_task->pid;
 	event->valid = kd_exec_current_frame() == frame && sp <= top &&
-		       sp >= top - SIZE_OF_SHADOW_STACK;
+		       sp >= top - THREAD_SIZE;
 	depth = event->depth;
 	for (parent = frame; parent; parent = parent->parent) {
 		if (!depth || parent->depth != --depth ||
@@ -241,10 +222,10 @@ static void kd_spin_selftest_frame_end(int index,
 
 static void kd_spin_selftest_frames_report(void)
 {
-	int cpu, i, count = atomic_read(&kd_frame_event_count);
+	int i, count = atomic_read(&kd_frame_event_count);
 	unsigned int failures = count > KD_FRAME_TRACE_EVENTS;
 	unsigned int max_depth = 0;
-	unsigned long min_left = SIZE_OF_SHADOW_STACK;
+	unsigned long min_left = THREAD_SIZE;
 #ifdef NUMA_AWARE
 	const unsigned int numa = 1;
 #else
@@ -269,21 +250,9 @@ static void kd_spin_selftest_frames_report(void)
 			event->left, event->valid, event->executed,
 			event->returned, event->ret);
 	}
-	pr_info("kd_frame summary: events=%d max_depth=%u sampled_min_left=%lu failures=%u numa=%u stack_size=%ld\n",
+	pr_info("kd_frame summary: events=%d max_depth=%u sampled_min_left=%lu failures=%u numa=%u stack_size=%ld stack_kind=1\n",
 		count, max_depth, min_left, failures, numa,
-		SIZE_OF_SHADOW_STACK);
-	/* Callers are drained before unload. This is an overwritten-byte bound,
-	 * not minimum RSP: untouched holes or writes of 0xa5 can hide stack use. */
-	for_each_possible_cpu(cpu) {
-		const struct shadow_stack *stack =
-			per_cpu_ptr(&local_shadow_stack, cpu);
-		unsigned long untouched = 0;
-
-		if (stack->ptr)
-			untouched = kd_spin_selftest_stack_untouched(
-				(char *)stack->ptr - SIZE_OF_SHADOW_STACK);
-		pr_info("kd_stack watermark: cpu=%d size=%ld untouched=%lu written=%lu valid=%u\n",
-			cpu, SIZE_OF_SHADOW_STACK, untouched,
-			SIZE_OF_SHADOW_STACK - untouched, !!stack->ptr);
-	}
+		THREAD_SIZE);
+	/* Task stacks cannot be repainted or dereferenced after their tasks exit.
+	 * Report sampled bounds only; do not claim an overwritten-byte watermark. */
 }

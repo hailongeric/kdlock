@@ -10,6 +10,7 @@
 struct kd_spin_batch {
 	struct kd_exec_outer_unlock outer;
 	struct kd_spin_node *next;
+	struct kd_spin_request *request;
 };
 
 /* A's executor keeps its ticket pin and local frame stack, not ownership of
@@ -20,18 +21,16 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
 	struct kd_spin_batch *batch =
 		container_of(hook, struct kd_spin_batch, outer);
 	struct qspinlock *lock = (struct qspinlock *)frame->outer_lock_addr;
-	struct qspinlock *word = kd_spin_word(lock);
+	struct qspinlock *word = batch->request->word;
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
 	struct kd_spin_node *next = batch->next;
-	struct kd_spin_ref ref = { 0 };
 	unsigned int i, remaining = 0;
 	int ret;
 
 	if (frame->mutex_backend || !next || !next->task_struct_ptr ||
 	    frame->jit_lock_kind[frame->outer_lock_index] !=
 		    KD_EXEC_LOCK_QUEUE_OWNER ||
-	    READ_ONCE(word->locked) != _Q_LOCKED_COMBINER_VAL ||
-	    !kd_spin_entry_find((raw_spinlock_t *)lock, &ref))
+	    READ_ONCE(word->locked) != _Q_LOCKED_COMBINER_VAL)
 		return -EINVAL;
 #ifdef NUMA_AWARE
 	if (ptr->local_queue_head) {
@@ -56,7 +55,7 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
 		raw_smp_processor_id(), frame->outer_lock_addr,
 		next->task_struct_ptr->pid, next->cpuid, remaining,
 		kd_exec_frame_remote_pending(frame));
-	ret = kd_spin_entry_release_origin(&ref);
+	ret = kd_spin_entry_release_origin(&batch->request->ref);
 	if (ret)
 		return ret;
 	kd_spin_debug_ooo_unlock(lock, kd_spin_lock_stack_depth(ptr));
@@ -69,16 +68,13 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
  * delegation run. The holder must reacquire origin scheduling only, never
  * open a new queue fast path through this packet.
  */
-static void kd_spin_reclaim_outer(struct qspinlock *lock)
+static void kd_spin_reclaim_outer(struct kd_spin_request *request)
 {
-	struct kd_spin_ref ref = { 0 };
-
-	BUG_ON(!kd_spin_entry_find((raw_spinlock_t *)lock, &ref));
 	/* Like node-capacity fallback, wait for all of S, including pending/tail.
 	 * Reentering the stack-switch slowpath would overwrite our live C stack. */
-	while (!kd_spin_trylock(lock))
+	while (!kd_spin_trylock(request->word))
 		cpu_relax();
-	BUG_ON(kd_spin_entry_reclaim(&ref));
+	BUG_ON(kd_spin_entry_reclaim(&request->ref));
 }
 
 #pragma GCC push_options
@@ -93,8 +89,9 @@ __attribute__((noipa)) noinline notrace static int
 execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	   struct kd_spin_batch *batch)
 {
-	struct qspinlock *word = kd_spin_word(lock);
+	struct qspinlock *word = batch->request->word;
 	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
+	struct kd_exe_info *exe;
 	unsigned int frame_lock_depth;
 	struct kd_spin_jit_context *jit_context = curr_node->jit_context;
 	unsigned long entry_ip;
@@ -125,11 +122,6 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(curr_node->cpuid == smp_processor_id());
-	if ((ptr->ptr - (ptr->local_shadow_stack_ptr)) > SIZE_OF_SHADOW_STACK) {
-		printk(KERN_ALERT "%d %px %px\n", smp_processor_id(), ptr->ptr,
-		       ptr->local_shadow_stack_ptr);
-		BUG_ON(true);
-	}
 #endif
 
 	incoming_rsp_ptr = (void *)curr_node->regs.sp;
@@ -139,12 +131,11 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	/* Native waiters expose the saved callee-register frame via their RSP. */
 #ifdef DEBUG_KD_SPIN
 #ifdef ENABLE_IRQS_CHECK
-	BUG_ON(irqs_disabled());
+	BUG_ON(!irqs_disabled());
 #endif
 
 	if (!curr_node->jit_waiter && !curr_node->native_regs_decoded)
 		BUG_ON(*(uint64_t *)incoming_rsp_ptr == NULL);
-	BUG_ON(*(uint64_t *)outgoing_rsp_ptr == NULL);
 #endif
 	/* Admission can fail before JIT entry. Later combiners must reuse the
 	 * decoded packet, not consume another callee-save frame from its RSP. */
@@ -172,7 +163,8 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	 * starts at lexical depth one and can stop at an inherited A unlock. */
 	entry_ip = curr_node->jit_waiter ? jit_context->requester->entry_ip :
 					   curr_node->regs.ip;
-	if (!kd_exe_is_ready(0, entry_ip)) {
+	exe = kd_exe_find_ready(0, entry_ip);
+	if (!exe) {
 		kd_spin_debug_jit_not_ready(lock,
 					    kd_spin_lock_stack_depth(ptr));
 		kd_exe_add(0, entry_ip, KD_EXE_LOCK_SPIN);
@@ -240,7 +232,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	if (!kd_spin_selftest_refuse(frame, curr_node, &ret_flag))
 #endif
 		ret_flag = kd_exe_on_call_hl_entry(
-			&frame->regs, frame->entry_ip, frame->outer_lock_addr);
+			exe, &frame->regs, frame->entry_ip, frame->outer_lock_addr);
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_frame_end(frame_event, frame, ret_flag);
 	kd_spin_selftest_refusal_end(frame, ret_flag);
@@ -369,14 +361,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		return ret_flag;
 	}
 
-#ifdef DEBUG_KD_SPIN
-	if ((ptr->ptr - (ptr->local_shadow_stack_ptr)) > SIZE_OF_SHADOW_STACK) {
-		printk(KERN_ALERT "%d %px %px\n", smp_processor_id(), ptr->ptr,
-		       ptr->local_shadow_stack_ptr);
-		BUG_ON(true);
-	}
-	BUG_ON(ptr->ptr - (ptr->local_shadow_stack_ptr) > SIZE_OF_SHADOW_STACK);
-#endif
+
 
 	if (!batch->outer.released && word->locked == _Q_UNLOCKED_OOO_VAL) {
 		print_debug("Combiner got control back OOO unlock\n");
@@ -404,7 +389,8 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
  * leaves the lock in a state expected by the successor waiter.
  */
 __attribute__((noipa)) noinline notrace static void
-run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
+run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
+	     struct kd_spin_request *request)
 {
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(curr_node == NULL);
@@ -412,12 +398,13 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 	struct kd_spin_node *next_node = curr_node->next;
 	struct kd_spin_batch batch = {
 		.outer.release = kd_spin_release_outer,
+		.request = request,
 	};
 	int counter = 0;
 
 	if (next_node == NULL || check_irq_node(curr_node) ||
 	    check_irq_node(next_node)) {
-		set_locked(lock);
+		set_locked(request->word);
 		/*
 		 * Make this node spin on the locked variable and then it will
 		 * become the combiner.
@@ -482,7 +469,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 		if (batch.outer.released) {
 			/* B and this logical frame have finished. A's queue was already
 			 * published; only reacquire for our own original request. */
-			kd_spin_reclaim_outer(lock);
+			kd_spin_reclaim_outer(request);
 			return;
 		}
 
@@ -512,7 +499,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)
 	BUG_ON(next_node == NULL);
 #endif
 
-	set_locked(lock);
+	set_locked(request->word);
 
 	/* Publish the finished queue splice before successor acquisition. This
 	 * is the last node access: its waiter can immediately reuse the slot. */

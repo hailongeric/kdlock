@@ -89,7 +89,9 @@ def validate(log, placement, profile):
         )
         if reserved:
             assert row["peak_task"] > 0 and row["peak_preempt"] & 255
-            assert row["peak_irq"] == 0
+            # IRQ-off task callers are valid. This observes reservation,
+            # which can precede masking for a virtual request from mutex.
+            assert row["peak_irq"] in (0, 1)
         else:
             assert row["peak_task"] == row["peak_preempt"] == row["peak_irq"] == 0
             assert row["poll"] == 0

@@ -30,24 +30,27 @@ def main():
     source += "DEFINE_PER_CPU(struct kd_spin_fast_cpu, kd_spin_fast_cpu);\n"
     source += "#define qspinlock orig_qspinlock\n"
     spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
+    source += definition(spin, "struct kd_spin_request {").rstrip() + ";\n"
     for marker in (
-        "static struct qspinlock *kd_spin_word(struct qspinlock *lock)",
-        "static void kd_spin_claim_origin(struct qspinlock *lock)",
-        "static void kd_spin_release_origin(struct qspinlock *lock)",
-        "static __always_inline void clear_pending_set_locked(struct qspinlock *lock)",
-        "static __always_inline void clear_pending(struct qspinlock *lock)",
+        "static struct qspinlock *kd_spin_request_word(const struct kd_spin_ref *ref)",
+        "static void kd_spin_claim_origin(const struct kd_spin_request *request)",
+        "static void kd_spin_release_origin(struct kd_spin_request *request)",
+        "static __always_inline void clear_pending_set_locked(struct qspinlock *word)",
+        "static __always_inline void clear_pending(struct qspinlock *word)",
     ):
         source += definition(spin, marker)
     source += "static unsigned int\n" + definition(
-        spin, "kd_spin_fetch_set_pending_acquire(struct qspinlock *lock)"
+        spin, "kd_spin_fetch_set_pending_acquire(struct qspinlock *word)"
     )
     source += "void\n" + definition(
-        spin, "kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value)"
+        spin, "kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,"
     )
     source += """
-static void kd_spin_unlock(struct qspinlock *lock)
+static void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref *ref)
 {
-    kd_spin_release_origin(lock);
+    struct kd_spin_request request = { .ref = *ref, .word = kd_spin_request_word(ref) };
+    (void)lock;
+    kd_spin_release_origin(&request);
 }
 """
     hooks = read_source((ROOT / "kernel_module/kd_lock.c"))

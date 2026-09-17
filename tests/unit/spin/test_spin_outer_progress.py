@@ -50,7 +50,7 @@ def main():
         + "\n"
     )
     spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
-    for marker in ("struct shadow_stack {", "struct kd_spin_jit_context {"):
+    for marker in ("struct shadow_stack {", "struct kd_spin_jit_context {", "struct kd_spin_request {"):
         types += definition(spin, marker).rstrip() + ";\n"
     if "kd_spin_entry_reclaim(" not in types:
         types += "#define kd_spin_entry_reclaim kd_spin_entry_claim\n"
@@ -95,9 +95,10 @@ def main():
     ):
         code += definition(frame, marker) + "\n"
     for marker, prefix in (
+        ("static struct qspinlock *kd_spin_request_word(const struct kd_spin_ref *ref)", ""),
         ("static struct qspinlock *kd_spin_word(struct qspinlock *lock)", ""),
-        ("static void kd_spin_claim_origin(struct qspinlock *lock)", ""),
-        ("static void kd_spin_release_origin(struct qspinlock *lock)", ""),
+        ("static void kd_spin_claim_origin(const struct kd_spin_request *request)", ""),
+        ("static void kd_spin_release_origin(struct kd_spin_request *request)", ""),
         (
             "kd_spin_lock_stack_depth(const struct shadow_stack *ptr)",
             "static inline unsigned int\n",
@@ -112,7 +113,7 @@ def main():
         ),
         ("static inline bool check_irq_node(struct kd_spin_node *node)", ""),
         ("clear_locked_set_completed(struct kd_spin_node *lock)", "static void\n"),
-        ("static __always_inline void set_locked(struct qspinlock *lock)", ""),
+        ("static __always_inline void set_locked(struct qspinlock *word)", ""),
         (
             "__always_inline static void add_to_local_queue(struct kd_spin_node *node)",
             "#ifdef NUMA_AWARE\n",
@@ -121,7 +122,7 @@ def main():
             "get_next_node(struct kd_spin_node *my_node)",
             "static struct kd_spin_node *\n",
         ),
-        ("static __always_inline int kd_spin_trylock(struct qspinlock *lock)", ""),
+        ("static __always_inline int kd_spin_trylock(struct qspinlock *word)", ""),
     ):
         code += prefix + definition(spin, marker) + "\n"
         if "add_to_local_queue" in marker:

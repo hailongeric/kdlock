@@ -37,13 +37,13 @@ dispatch 端点不含正文时间、单次消费、拒绝保留和 native 发布
 
 ## 1. 数量与结论
 
-以下库存于 2026-09-16 按分组目录核对；运行约定为基础简单功能加直接相关功能，
+以下库存于 2026-09-17 按分组目录核对；运行约定为基础简单功能加直接相关功能，
 不因保留完整库存而自动全量运行。目录和命令见 [测试入口](../tests/README.md)。
 
 | 统计对象 | 当前数量 | 含义 |
 | --- | --- | --- |
-| `tests/unit/Makefile` 的入口 | 40 | 2 个 C 程序、38 个 Python 程序；`make ... run` 默认仅两个基础 C，`run-all` 显式全量 |
-| Python `test_*` 方法定义 | 500 | 静态 AST 计数；不含 C 断言、`main()` 驱动和 `subTest` 参数展开，不能作为全部用例数 |
+| `tests/unit/Makefile` 的入口 | 41 | 2 个 C 程序、39 个 Python 程序；`make ... run` 默认仅两个基础 C，`run-all` 显式全量 |
+| Python `test_*` 方法定义 | 501 | 静态 AST 计数；不含 C 断言、`main()` 驱动和 `subTest` 参数展开，不能作为全部用例数 |
 | `tests/live/test_*.sh` | 22 | 编号有空缺，不能按最大编号 24 计数；包括调度器、组件自测和 GS 正例 |
 | `regression.py` 的 `CASES` | 80 | 固定回归的唯一命名用例；不含配对实验按参数生成的会话 |
 | `SUITES` | 15 | 可重叠的选择视图，不能相加计算独立用例数 |
@@ -57,7 +57,7 @@ dispatch 端点不含正文时间、单次消费、拒绝保留和 native 发布
 模型改为验证当前的保留记录语义。`test_jit_call_policy.c` 的保留检查已迁入生产
 CALL/hostcall 测试，移除过时的远端 mutex B 模型。`test_tail_encoding.c` 的五项
 检查已迁入生产 mutex 编解码测试，移除该模型和仅供旧模型使用的两个头文件。
-补充原 waiter 退出、嵌套调度、CALL 额度、双根和显式计量装载检查后，当前 496 个 Python 方法
+此前补充原 waiter 退出、嵌套调度、CALL 额度、双根和显式计量装载检查时，受检的 496 个 Python 方法
 未发现完全相同的 AST 方法体；这只排除直接复制，
 不证明它们在语义上全无重叠。
 
@@ -150,7 +150,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_11_mutex_native_protocol.sh` | `mixed-mutex` | 目标与非目标线程共享同一 Linux mutex，包含 promotion 和节点不足回退；`mixed` 指参与者，不是 spin/mutex 混用 |
 | `test_12_context_native_only.sh` / `test_24_gs_jit.sh` | `context-*` | GS read/write/RMW/current 为实际 JIT 正例；IRQ/BH、混合锁后端及多种线性 per-CPU 地址传播仍须拒绝 |
 | `test_13_spin_shadow_capacity.sh` | 独立手动组件诊断 | 实际内核 full-shadow 队首路径，JIT=0；与 `shadow-capacity` 的 JIT 退出前缀及 PENDING 包检查不同，已不在套件中 |
-| `test_14_spin_frame_depth.sh` | `node-physical-{1,2,8}-{0,1}`，共 6 项 | 物理 frame 链、继承的锁记录和 watermark；日常只选八层的两种配置，浅层点选 |
+| `test_14_spin_frame_depth.sh` | `node-physical-{1,2,8}-{0,1}`，共 6 项 | task 栈物理 frame 链、继承的锁记录和 RSP 采样余量；按受影响深度显式选择，八层检查锁记录容量拒绝，不是默认全跑 |
 | `test_15_spin_native_gate.sh` | 独立手动组件诊断 | 真实原锁 L/私有队列 S 排斥与原生进度，JIT=0；不同于用户态替代原语，也不同于 gate 表满压力 |
 | `test_16_spin_entry.sh` | 独立手动组件诊断 | 真实 ticket 容量、跨 CPU 通知、task pin 与保留 B，JIT=0；组件定位时保留 |
 | `test_17_spin_native_protocol.sh` | `mixed-spin` | JIT 与非目标原生 spin API 的互斥、数据完整性；不能替代无 JIT 的确定性路由观测 |
@@ -196,7 +196,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_jit_diagnostics.py` | warning/error 定位、去重、flags/特殊指令现状及构建错误 | 验证诊断而非修复指令语义；其 helper 供其他单元复用，保留 |
 | `test_jit_body_witness.py` | 实际 wrapper/body marker、dispatcher 负例、entry/lock 匹配日志 | 与 guards 共用用户态执行工具，但专测执行证据是否可信，保留 |
 
-### 4.3 生产资源与控制流：十四个 Python 程序
+### 4.3 生产资源与控制流：十五个 Python 程序
 
 这些程序提取或包含生产 C，通常以确定性原语替代锁、CPU、调度或 JIT body，
 不是内核并发证明。代码提取 helper 的 import 不会运行提供方的 `main()`；
@@ -213,6 +213,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_spin_entry.py` | 生产 ticket、origin 引用、task/CPU pins 的生命周期 | 与 gate 不同资源层，保留 |
 | `test_spin_routing.py` | 生产 selector/hook 和获取分支，替代队列等待 | 入口分流不同于 ticket 分配或 combiner 执行，保留 |
 | `test_spin_shadow.py` | 生产队首、combiner、native/virtual node producer、取消与嵌套返回 | 已覆盖被删除的节点计数模型；保留此生产测试 |
+| `test_spin_wait.py` | guest 用户态执行生产 `spin/wait.inc` 汇编，另一线程覆盖旧 C 栈后检查完成/native 恢复，以及普通队首返回 | 专门检查发布后无栈等待和非局部恢复；不模拟内核 IRQ，不替代实际 JIT |
 | `test_spin_outer_progress.py` | 生产 batch/frame/ticket、提前 outer-release、frame 池拒绝、真实 gate 满表 ENOMEM 的完整包不变，以及 release 前的包和唤醒后槽复用 | gate 失败由真实 nested producer 产生、PENDING helper 恢复 callee/SP；与 shadow 队首部分交叉，但保留 frame/原锁和发布边界；不证明实际 JIT 或硬件内存序 |
 | `test_remote_outer.py` | 生产远端祖先解锁/native ACK，完整 168 字节寄存器包、CALL 返回字和 DONE 后父 frame 复用；两后端 native wait 计量开关、错误返回及多层区间重叠；含十一种故障变异 | 本地 outer 验证 node 发布，本项验证跨执行者关系，protocol 单元验证坏日志；三者不能互相替代。CPU/发布/时钟观察为替代，不证明硬件 flags/并发 |
 | `test_mutex_resources.py` | 生产 tail 编解码、node mask、shadow 表、hook/selector、完整 slowpath 包、改名/关闭准入路由 | 接替 mutex/tail 模型；per-CPU 存储和 task 引用仍为替代原语，保留资源边界与故障变异 |
@@ -233,7 +234,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_remote_outer_protocol.py` | 两/三执行者祖先释放、owner 依赖、RPC 和 placement；两个独立 root 的逐请求/JIT/副作用日志 | 深链不替代独立 logical task 隔离；坏日志与真实执行分层，复用同一程序 |
 | `test_remote_depth_protocol.py` | 深链/refusal/readmission/TID 退出日志；实际等待谓词/观察器 | 与 outer 是不同驱动契约；保留 |
 | `test_remote_deferred_protocol.py` | 多 deferred、取消与接链顺序；实际选队和 trace | 深度大并不自动覆盖 deferred 选队规则；保留 |
-| `test_spin_frame_protocol.py` | 物理 frame、watermark、held/PENDING refusal、与 deferred 的组合记录 | frame 级身份与 stack 状态不同于 node 计数；保留 |
+| `test_spin_frame_protocol.py` | task 栈物理 frame/RSP 余量、历史独立栈 watermark、held/PENDING refusal、与 deferred 的组合记录 | 区分 `stack_kind=1` 的采样与旧填色指标；frame 身份与栈状态不同于 node 计数，保留 |
 | `test_spin_node_protocol.py` | reservation/drain、CPU 覆盖、profile 及坏计数 | 与真实 producer 是观察结果的判定层；保留 |
 | `test_source_depth_protocol.py` | 两模块学习、loader ref/source pin、逐波 body 与终态日志 | live/生产 source 状态机不能替代引用归因判定；保留 |
 | `test_mutex_parallel_protocol.py` | 双 frame 重叠/退出顺序、单 frame 拒绝、池压力、peer 信号重排、退休；实际客户端 peer 两次 ioctl、原 waiter 一次 ioctl | 与单 frame 信号检查部分交叉，但独立队列的 owner/ACK/存活区间不能删；保留 |

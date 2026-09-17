@@ -47,49 +47,44 @@ clear_locked_set_completed(struct kd_spin_node *lock)
 	smp_store_release(&lock->locked_completed, 1);
 }
 
-static __always_inline void clear_pending_set_locked(struct qspinlock *lock)
+static __always_inline void clear_pending_set_locked(struct qspinlock *word)
 {
-	struct qspinlock *word = kd_spin_word(lock);
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(word->locked != 0);
 #endif
 	WRITE_ONCE(word->locked_pending, _Q_LOCKED_VAL_HL);
 }
 
-static __always_inline u32 xchg_tail(struct qspinlock *lock, u32 tail)
+static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)
 {
-	struct qspinlock *word = kd_spin_word(lock);
 	return ((u32)xchg(&word->tail, tail >> _Q_TAIL_OFFSET_HL))
 	       << _Q_TAIL_OFFSET_HL;
 }
 
 /**
  * clear_pending - clear the pending bit.
- * @lock: Pointer to queued spinlock structure
+ * @word: Private scheduling word S
  *
  * *,1,* -> *,0,*
  */
-static __always_inline void clear_pending(struct qspinlock *lock)
+static __always_inline void clear_pending(struct qspinlock *word)
 {
-	struct qspinlock *word = kd_spin_word(lock);
 	atomic_andnot(_Q_PENDING_VAL_HL, &word->val);
 }
 
 /**
  * set_locked - Set the lock bit and own the lock
- * @lock: Pointer to queued spinlock structure
+ * @word: Private scheduling word S
  *
  * *,*,0 -> *,0,1
  */
-static __always_inline void set_locked(struct qspinlock *lock)
+static __always_inline void set_locked(struct qspinlock *word)
 {
-	struct qspinlock *word = kd_spin_word(lock);
 	WRITE_ONCE(word->locked, _Q_LOCKED_VAL_HL);
 }
 
-static __always_inline void check_and_set_combiner(struct qspinlock *lock)
+static __always_inline void check_and_set_combiner(struct qspinlock *word)
 {
-	struct qspinlock *word = kd_spin_word(lock);
 	u32 val, new_val;
 
 #ifdef DEBUG_KD_SPIN
@@ -119,15 +114,14 @@ static __always_inline void check_and_set_combiner(struct qspinlock *lock)
 
 /**
  * kd_spin_fetch_set_pending_acquire - fetch lock value and set pending
- * @lock : Pointer to queued spinlock structure
+ * @word : Private scheduling word S
  * Return: The previous lock value
  *
  * *,*,* -> *,1,*
  */
 static __always_inline u32
-kd_spin_fetch_set_pending_acquire(struct qspinlock *lock)
+kd_spin_fetch_set_pending_acquire(struct qspinlock *word)
 {
-	struct qspinlock *word = kd_spin_word(lock);
 	return atomic_fetch_or_acquire(_Q_PENDING_VAL_HL, &word->val);
 }
 

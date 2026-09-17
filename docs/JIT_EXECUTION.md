@@ -92,10 +92,12 @@ F 和后缀都在 waiter 上执行。daemon 可以学习 F 并为未来调用重
 
 两元素输入 ABI 不变：`args[0]=waiter GS base`、`args[1]=logical waiter task`。
 spinlock 和 mutex 的被代理 waiter 等待结果时均保持禁止抢占并 PAUSE 轮询，
-不会睡眠或调度；spinlock 原有等待路径已经满足此规则。
+不会睡眠或调度。spin 的物理 waiter 在关本地 IRQ 后用连续汇编发布和等待，
+完成后从寄存器包恢复，不返回可能已被远端 JIT 覆盖的旧 C 帧；详见 2.2 节。
 mutex 取得 gate 后的真实锁获取和 native owner/ACK 路径仍保留原调度语义。
-此规则不排除 IRQ/NMI 对 origin per-CPU 的访问；owner/依赖任务必须能在其他
-CPU 推进，同 CPU 的 sleeping owner 与 busy waiter 组合不支持。旧版依赖 waiter
+mutex 等待仍可能受到 IRQ/NMI 访问；spin 关本地 IRQ 也不排除 NMI。
+owner/依赖任务必须能在其他 CPU 推进，同 CPU 的 sleeping owner 与 busy waiter
+组合不支持。旧版依赖 waiter
 调度的同 CPU 用例证据不适用于本策略。寄存器及输出含义见
 [JIT_REGISTER_ABI.md](JIT_REGISTER_ABI.md)。非 CALL 故障续跑、flags 修复和
 不可变代码版本仍是已记录的限制，本次不扩展。
@@ -138,6 +140,34 @@ BUG-only 退出不能充当检测成功。
 它们会额外编译运行临时代码，只随本单元被选中时执行，不增加 live case。
 验收与冻结输入见
 [远端包单元记录](VALIDATION.md#remote-packet-unit)。
+
+### 2.2 Spin 的 task 栈与 IRQ 状态
+
+当前实现接受 IRQ-on 和 IRQ-off 的 task 入口。`kd_spin_entry_begin()`、
+gate claim 和缓存快路径均不再因 `irqs_disabled()` 拒绝；task/BH、migration、
+native-active、owner 与 ticket 代次等适用检查仍保留。自愿抢占的假设没有取消
+ticket 生命周期内的 CPU pin，也没有允许 hardirq/softirq 或 IRQ/BH 操作代码进入 JIT。
+
+spin 不再分配每 CPU 8KB shadow C 栈，准备、队首和 combiner 使用 task 内核栈：
+
+```text
+进入队列前保存并关闭本地 IRQ -> 在 node 保存原 flags、物理 RSP 和 hook RSP
+  -> 物理 waiter：连续汇编链接前驱并 PAUSE 轮询；发布后不调用 C 或访问旧 C 栈
+     -> 尚未代理的队首：返回完整 C 帧，取得原锁后恢复原 IRQ 状态
+     -> 已完成/native 后缀：放弃旧 C 帧，在 min(物理 RSP, 最终虚拟 RSP)
+        对齐后的栈下方调用恢复函数，快照寄存器/ticket/flags
+        -> 完成 ticket 或标记 native -> 恢复原 IRQ 状态 -> 跳转续点
+```
+
+IRQ 屏蔽覆盖发布、等待和 combiner 执行，恢复时保留入口状态：原来关闭的仍然
+关闭，原来开启的才重新开启。native 后缀继续保留 ticket pin 到最终 owner ACK。
+虚拟 waiter 使用父执行者的独立 C 栈，仍需轮询并服务远端 owner/ACK；它的
+队列区间同样保存、关闭并恢复本地 IRQ。原生快路径不借出任务栈。
+
+`shadow_stack` 的锁记录和 wrapper RSP 暂存仍保留；mutex 的独立执行栈也保留。
+返回码与准备期 retry 见 [Spin 协议](DESIGN.md#43-combiner-and-native-returns)，
+逐步伪代码见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md#42-发布请求等待和恢复入口)，
+已运行范围见 [定向验证](../tests/README.md#spin-stackless-validation)。
 
 ## 3. 环境与操作
 
@@ -479,7 +509,7 @@ JIT 翻译成本。修改该宏时复用 `test_mutex_outer_progress.py` 检查�
 有足够的已链接 waiter。当前私有队首可以原生完成自己的请求，最后一个 follower
 也会自行成为 owner 原生执行，不必执行 JIT。因此“热点已晋升 + 代码已发布 + 负载成功”
 不能替代实际返回后 body。当前等待策略及 TCLock 对比见
-[设计边界](DESIGN.md#runnable-polling-and-event-parking)。
+[设计边界](DESIGN.md#pinned-busy-polling)。
 
 下面仅预览同一负载在两个 CPU mask 上的选择，不执行测试：
 
@@ -1051,7 +1081,7 @@ JIT 已执行，新的 lock CALL 仍为合法 PENDING，尚未取得/发布新�
 | spin gate / acquisition ticket | gate 1024 槽、每 CPU 32 个 ticket；普通 hook 预留失败转原生；虚拟 B 必须遵守 CALL 阶段 | gate/entry 组件及 outer production fixture 分层检查；6.3 组合真实 ticket/gate 满表、新锁原生互斥及第二个 JIT 前缀后的 PENDING ENOMEM；均发生在虚拟请求发布前，不支持任意发布后恢复或 EOVERFLOW |
 | mutex shadow / task 记录 | shadow 1024 槽；task 记录用 GFP_ATOMIC 分配；hook 中失败在入队前转原生 mutex | `test_mutex_resources.py` 检查生产组件；6.6 将真实 shadow 表满、原生竞争与两个存活 frame 组合；task/RCU/ACK 的独立 probe 见 6.2 |
 | spin / mutex node | 每 CPU 各 4 个；普通请求无 node 时用自己的栈等待私有 gate，再取得原锁；虚拟 spin 请求先取消预留再返回 | spin producer/队列与 live observer 有界覆盖；6.3 连接真实 JIT、虚拟 ticket 取消及原生续跑，但资源输入为注入；mutex 生产组合测试取代旧模型，`test_11` 有八 waiter 争用四槽，6.7 将真实四槽占满与存活 JIT/native frame 组合 |
-| frame / held-lock / shadow stack | 8 层 frame、8 个逻辑锁记录与 CPU-local held-lock 容量分别检查；栈空间不是相同资源 | 6.8 区分真实物理链的继承锁记录满与独立 local-shadow 拒绝；另有生产 frame 容量、spin producer、远端拒绝及 mutex learned-depth 有界测试，不能由一项容量通过推导全部耗尽场景 |
+| frame / held-lock / 执行栈 | 8 层 frame、8 个逻辑锁记录与 CPU-local held-lock 容量分别检查；spin 使用 task 栈，mutex 保留独立栈，均不同于 shadow 锁记录容量 | 6.8 区分真实物理链的继承锁记录满与独立 local-shadow 拒绝；另有生产 frame 容量、spin producer、远端拒绝及 mutex learned-depth 有界测试，不能由一项容量通过推导全部耗尽场景 |
 | 源码依赖 / 会话退休 | 每会话最多 pin 64 个 LIVE 模块；单次读取不超过 256 KiB；OPEN -> DRAINING -> RETIRED 不可逆 | `test_source_lifetime.py` 执行真实 source/device/registry 决策，模块/IRQ/VFS 为替身；6.6 连接两个真实 frame、busy retire、后缀 ACK、源 pin 阻止卸载及失效后释放；5.1 的深度扩展另行验证两份真实模块源码 pin |
 
 代码池组件测试在真实初始化流程的分配 API 上注入失败，不修改生产容量，也不
@@ -1948,7 +1978,14 @@ refusal，两个额外请求都完成于 lane 0 resume 之前；核对独立 tas
 
 ### 6.8 物理 Frame 链与容量检查
 
-八层物理 frame 用例中的每个新 frame 都从 CPU-local 栈继承此前的锁记录，
+当前 spin 物理 frame 使用执行者 task 内核栈。观察器从实际 task 栈边界计算
+RSP 采样余量，日志标记 `stack_kind=1`；不向活栈填色，也不在任务退出后读取
+该栈，因此输出 `written_left=null`。历史 8KB shadow 栈日志仍由旧 watermark
+分支严格校验；两种指标不能混用。最新两层定向结果见
+[spin 栈验证](../tests/README.md#spin-stackless-validation)，旧八层结果不代表
+删除独立栈后已重跑八层，也不能用一次采样证明任意栈深度或异常安全。
+
+八层物理 frame 用例中的每个新 frame 都从 CPU-local 锁记录栈继承此前记录，
 不是每层只有自己的一个记录。第八层的 `jit_lock_depth=8`、local depth=8；
 它调用第九把锁时，先触发逻辑记录容量检查，尚未到达后面的 local-shadow
 容量检查。native continuation 只向本 frame 的 owner 借用自己的外锁，
@@ -1970,7 +2007,8 @@ refusal，两个额外请求都完成于 lane 0 resume 之前；核对独立 tas
 计数和抢占/IRQ 状态。快照使用静态存储，深层路径不分配、不打印、不填锁或
 修改执行状态；未到八层时不得出现这条证据。它不是完整 RFLAGS 语义证明。
 
-只修改该观察器时，运行相关单元程序和现有两项复杂用例，不增加简单前置测试：
+修改该观察器时，先选基础和相关单元；仅涉及日志判定时无须 live。需要验证
+深层继承锁记录拒绝时，再显式选择以下两项八层用例；它们不是日常必跑清单：
 
 ```sh
 make -C tests/unit run TESTS= PY_TESTS='test_regression.py test_spin_frame_protocol.py'
@@ -2504,7 +2542,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-4 --case mode-5 --
 测试。下面的复杂套件保留为按需选项，不是每轮必跑项；全量仅在明确要求时
 使用 `run-all`。旧 PASS 仍只属于其冻结输入。
 翻译准备中的 warmup、promotion、发布检查仍必须保留，否则无法保证实际 JIT。
-40 个单元入口和 22 个 shell 驱动的逐项用途、重叠分析及精简进展见
+41 个单元入口和 22 个 shell 驱动的逐项用途、重叠分析及精简进展见
 [测试用例分析](TEST_EXAMPLES.md)。节点、mutex 交接、frame、CALL 和 tail 模型已由生产测试承接；
 live 选择器的套件内容不变，本节说明何时选用；保留入口不等于要求例行运行。
 

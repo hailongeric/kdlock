@@ -174,9 +174,6 @@ static void preempt_disable(void)
 {
 	preempt++;
 }
-static void kd_mutex_schedule_if_needed(void)
-{
-}
 static void cpu_relax(void)
 {
 	CHECK(other_holds && current == &executor);
@@ -213,11 +210,13 @@ bool kd_mutex_jit_is_enabled(void)
 {
 	return true;
 }
-static bool kd_exe_is_ready(int pid, unsigned long ip)
+/* Opaque lookup token: the production backend must pass this exact slot. */
+static struct kd_exe_info { int token; } ready_entry;
+static struct kd_exe_info *kd_exe_find_ready(int pid, unsigned long ip)
 {
 	(void)pid;
 	(void)ip;
-	return mode != 4;
+	return mode != 4 ? &ready_entry : NULL;
 }
 static void kd_exe_add(int pid, unsigned long ip, int kind)
 {
@@ -293,9 +292,11 @@ static void early_unlock_a(void)
 					 NULL) == -EINVAL);
 	successor_progress();
 }
-static int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long ip,
+static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
+				   struct pt_regs *regs, unsigned long ip,
 				   unsigned long lock)
 {
+	CHECK(exe == &ready_entry);
 	CHECK(regs == &active.regs && ip == 0x800 && lock == (unsigned long)&a);
 	scripts++;
 	active.executed = true;

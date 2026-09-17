@@ -110,8 +110,11 @@ static bool kd_entry_ref_present(const struct kd_spin_ref *ref)
 	return ref && ref->entry && ref->sequence;
 }
 
-/* Only the pinned task changes slot membership/state. Remote executors may
- * change native_refs under guard, but never recycle a slot or migrate its task.
+/* Every live ticket retains its begin() preemption pin until end(). An
+ * unpinned caller therefore has no ticket to find. Reuse that existing pin:
+ * this read-only walk cannot schedule and needs no temporary pin/unpin pair.
+ * Only the local task changes membership/state; remote executors change only
+ * native_refs under guard, never recycle a slot or migrate its task.
  */
 static bool kd_entry_lookup(raw_spinlock_t *origin, bool native,
 			    struct kd_spin_ref *ref)
@@ -120,9 +123,8 @@ static bool kd_entry_lookup(raw_spinlock_t *origin, bool native,
 	unsigned int i;
 	bool found = false;
 
-	if (!kd_spin_entries || !in_task())
+	if (!kd_entry_pinned() || !kd_spin_entries)
 		return false;
-	preempt_disable();
 	pool = this_cpu_ptr(kd_spin_entries);
 	for (i = 0; i < KD_SPIN_ENTRY_SLOTS; i++) {
 		struct kd_spin_entry *entry = &pool->entries[i];
@@ -137,7 +139,6 @@ static bool kd_entry_lookup(raw_spinlock_t *origin, bool native,
 		found = true;
 		break;
 	}
-	preempt_enable();
 	return found;
 }
 
@@ -171,7 +172,9 @@ int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 
 	if (!kd_spin_entries)
 		return -ENODEV;
-	if (!origin || !ref || ref->entry || !in_task() || irqs_disabled() ||
+	/* IRQ-off task callers are valid. Queue publication masks IRQs itself;
+	 * ticket guards preserve whichever IRQ state the caller brought in. */
+	if (!origin || !ref || ref->entry || !in_task() ||
 	    (kind != KD_SPIN_ENTRY_HOOK && kind != KD_SPIN_ENTRY_VIRTUAL))
 		return -EINVAL;
 	preempt_disable();
@@ -220,18 +223,21 @@ fail:
 
 struct kd_spin_gate *kd_spin_entry_gate(const struct kd_spin_ref *ref)
 {
-	struct kd_spin_gate *gate = NULL;
-	unsigned long flags;
+	struct kd_spin_entry *entry;
 
 	if (!kd_entry_ref_present(ref))
 		return NULL;
 	if (!kd_entry_pinned())
 		return NULL;
-	raw_spin_lock_irqsave(&ref->entry->guard, flags);
-	if (!kd_entry_local(ref))
-		gate = ref->entry->gate;
-	raw_spin_unlock_irqrestore(&ref->entry->guard, flags);
-	return gate;
+	entry = ref->entry;
+	/* Reject a remote ref before reading task-owned metadata. On this CPU
+	 * the request pin excludes another task's slot reuse, and IRQ callers
+	 * cannot create/end tickets. Remote borrow operations touch native_refs
+	 * only, so reading this stable gate requires neither guard nor IRQ save. */
+	if (READ_ONCE(entry->cpu) != raw_smp_processor_id() ||
+	    entry->task != current || kd_entry_valid(ref))
+		return NULL;
+	return entry->gate;
 }
 
 static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,

@@ -1,16 +1,12 @@
-"""Guest-only physical-frame oracle and extracted stack-watermark checks."""
+"""Guest-only task-stack frame oracle and archived watermark validation."""
 
 import copy
 import os
 import re
-import shlex
 import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
-
-from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "tests"))
@@ -27,7 +23,6 @@ from spin_frame_protocol import (
     validate_placement,
     worker_cpus,
 )
-from test_spin_shadow import definition
 
 
 def event(prefix, **fields):
@@ -993,77 +988,28 @@ class FrameTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("buffering requires NUMA=1", result.stdout)
 
-    def test_production_watermark_primitives(self):
-        source = read_source((ROOT / "tests/kernel/spin/spin_frame_trace.c"))
-        spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
-        (size,) = re.findall(
-            r"^#define SIZE_OF_SHADOW_STACK (\d+)L$", spin, re.MULTILINE
-        )
-        (byte,) = re.findall(
-            r"^#define KD_STACK_WATERMARK_BYTE (0x[0-9a-f]+)$", source, re.MULTILINE
-        )
-        code = "#include <stdbool.h>\n#include <stdio.h>\n#include <string.h>\n"
-        code += f"#define SIZE_OF_SHADOW_STACK {size}L\n#define KD_STACK_WATERMARK_BYTE {byte}\n"
-        code += "static bool kd_frame_trace;\n"
-        for marker in (
-            "static void kd_spin_selftest_stack_init(void *base)",
-            "static unsigned long kd_spin_selftest_stack_untouched(const void *base)",
-        ):
-            code += definition(source, marker) + "\n"
-        code += r"""
-static unsigned int checks;
-#define CHECK(condition) do { checks++; if (!(condition)) return 1; } while (0)
-int main(void)
-{
-    unsigned char storage[SIZE_OF_SHADOW_STACK + 2] = {0};
-    unsigned char *base = storage + 1;
-    unsigned long offsets[] = {0, 1, 255, 256, 1023, 1024, SIZE_OF_SHADOW_STACK - 1};
-    unsigned int i;
-    storage[0] = 0x31;
-    storage[SIZE_OF_SHADOW_STACK + 1] = 0x32;
-    kd_spin_selftest_stack_init(base);
-    CHECK(base[0] == 0 && base[SIZE_OF_SHADOW_STACK - 1] == 0);
-    kd_frame_trace = true;
-    kd_spin_selftest_stack_init(base);
-    CHECK(kd_spin_selftest_stack_untouched(base) == SIZE_OF_SHADOW_STACK);
-    CHECK(storage[0] == 0x31 && storage[SIZE_OF_SHADOW_STACK + 1] == 0x32);
-    for (i = 0; i < sizeof(offsets) / sizeof(offsets[0]); i++) {
-        base[offsets[i]] = 0;
-        CHECK(kd_spin_selftest_stack_untouched(base) == offsets[i]);
-        base[offsets[i]] = KD_STACK_WATERMARK_BYTE;
-        CHECK(kd_spin_selftest_stack_untouched(base) == SIZE_OF_SHADOW_STACK);
-    }
-    base[1024] = 0;
-    base[256] = 0;
-    CHECK(kd_spin_selftest_stack_untouched(base) == 256);
-    kd_frame_trace = false;
-    kd_spin_selftest_stack_init(base);
-    CHECK(base[256] == 0 && base[1024] == 0);
-    CHECK(storage[0] == 0x31 && storage[SIZE_OF_SHADOW_STACK + 1] == 0x32);
-    printf("production watermark checks=%u PASS\n", checks);
-    return 0;
-}
-"""
-        with tempfile.TemporaryDirectory(prefix="kdlock-frame-watermark-unit-") as tmp:
-            path = Path(tmp)
-            (path / "watermark.c").write_text(code)
-            command = shlex.split(os.environ.get("CC", "cc"))
-            subprocess.run(
-                command
-                + [
-                    "-std=gnu11",
-                    "-O2",
-                    "-Wall",
-                    "-Wextra",
-                    "-Werror",
-                    str(path / "watermark.c"),
-                    "-o",
-                    str(path / "watermark"),
-                ],
-                check=True,
-                timeout=30,
-            )
-            subprocess.run([str(path / "watermark")], check=True, timeout=10)
+    def test_task_stack_evidence(self):
+        # New task-stack observations must validate their own larger bounds;
+        # archived private-stack logs still require all watermark records.
+        log, placement = fixture(2)
+        lines = []
+        for line in log.splitlines():
+            if line.startswith("kd_stack watermark:"):
+                continue
+            if line.startswith("kd_frame trace:"):
+                line = re.sub(r"left=(\d+)", lambda m: f"left={int(m[1]) + 8192}", line)
+            if line.startswith("kd_frame summary:"):
+                line = re.sub(r"sampled_min_left=(\d+)",
+                              lambda m: f"sampled_min_left={int(m[1]) + 8192}", line)
+                line = line.replace("stack_size=8192", "stack_size=16384 stack_kind=1")
+            lines.append(line)
+        log = "\n".join(lines)
+        result = validate(log, placement, 2, 0, "4000")
+        self.assertEqual(result["stack_size"], 16384)
+        self.assertIsNone(result["written_left"])
+        self.rejects(change(log, "kd_frame trace:", "left", 1023), placement)
+        self.rejects(change(log, "kd_frame summary:", "stack_size", 8192), placement)
+        self.rejects(change(log, "kd_frame summary:", "stack_kind", 2), placement)
 
 
 if __name__ == "__main__":

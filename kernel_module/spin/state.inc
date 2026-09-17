@@ -7,14 +7,30 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
-#define SIZE_OF_SHADOW_STACK 8192L
 #define IRQ_NUMA_NODE 255
 #define KD_SPIN_DIAG_SLOTS 32
 #define KD_SPIN_NUM_PREFETCH_LINES 6
 
 static const unsigned int kd_combiner_batch_size = 1024;
 
-static __always_inline int kd_spin_trylock(struct qspinlock *lock);
+static __always_inline int kd_spin_trylock(struct qspinlock *word);
+
+/* Physical request state lives on the caller's stack, not a recyclable node
+ * or the logical waiter's spin_origin (which can belong to an ancestor).
+ * The entry pin keeps this request local; stable S is passed through the
+ * queue/batch, including early release and reclaim, without another map scan. */
+struct kd_spin_request {
+	struct kd_spin_ref ref;
+	struct qspinlock *word;
+};
+
+static struct qspinlock *kd_spin_request_word(const struct kd_spin_ref *ref)
+{
+	struct kd_spin_gate *gate = kd_spin_entry_gate(ref);
+
+	BUG_ON(!gate);
+	return &gate->word;
+}
 
 /* L is the public identity; only these private words contain kdlock tails. */
 static struct qspinlock *kd_spin_word(struct qspinlock *lock)
@@ -25,6 +41,23 @@ static struct qspinlock *kd_spin_word(struct qspinlock *lock)
 	return &gate->word;
 }
 
+/* Normal unlocks recover S from their live ticket. An OOO ancestor can be
+ * represented only by shadow/frame state on this CPU, so keep one read-only
+ * map fallback for that case; it grants no right to release physical L. */
+static struct kd_spin_request kd_spin_unlock_lookup(struct qspinlock *lock)
+{
+	struct kd_spin_request request = { 0 };
+
+	if (kd_spin_entry_find((raw_spinlock_t *)lock, &request.ref))
+		request.word = kd_spin_request_word(&request.ref);
+	else
+		request.word = kd_spin_word(lock);
+	return request;
+}
+
+static void kd_spin_unlock_request(struct qspinlock *lock,
+				   struct kd_spin_request *request);
+
 static bool kd_spin_is_ooo(struct qspinlock *lock)
 {
 	struct kd_spin_gate *gate = kd_spin_gate_find((raw_spinlock_t *)lock);
@@ -33,31 +66,25 @@ static bool kd_spin_is_ooo(struct qspinlock *lock)
 	return gate && READ_ONCE(gate->word.locked) == 7;
 }
 
-static void kd_spin_claim_origin(struct qspinlock *lock)
+static void kd_spin_claim_origin(const struct kd_spin_request *request)
 {
-	struct kd_spin_ref ref = { 0 };
 	int ret;
 
-	BUG_ON(!kd_spin_entry_find((raw_spinlock_t *)lock, &ref));
-	ret = kd_spin_entry_claim(&ref);
+	ret = kd_spin_entry_claim(&request->ref);
 	if (unlikely(ret)) {
 		KD_PR_ERR(
-			"spin origin claim failed lock=%px cpu=%d task=%d ret=%d\n",
-			lock, raw_smp_processor_id(), current->pid, ret);
+			"spin origin claim failed word=%px cpu=%d task=%d ret=%d\n",
+			request->word, raw_smp_processor_id(), current->pid, ret);
 		BUG();
 	}
 }
 
-static void kd_spin_release_origin(struct qspinlock *lock)
+static void kd_spin_release_origin(struct kd_spin_request *request)
 {
-	struct kd_spin_ref ref = { 0 };
-	struct qspinlock *word = kd_spin_word(lock);
-
-	BUG_ON(!kd_spin_entry_find((raw_spinlock_t *)lock, &ref));
-	BUG_ON(kd_spin_entry_release_origin(&ref));
-	smp_store_release(&word->locked, 0);
+	BUG_ON(kd_spin_entry_release_origin(&request->ref));
+	smp_store_release(&request->word->locked, 0);
 	/* No per-CPU accesses after this may schedule. */
-	BUG_ON(kd_spin_entry_end(&ref));
+	BUG_ON(kd_spin_entry_end(&request->ref));
 }
 
 #ifdef KDLOCK_SELFTEST
@@ -67,7 +94,6 @@ static void kd_spin_selftest_frame_end(int event,
 				       const struct kd_exec_frame *frame,
 				       int ret);
 static void kd_spin_selftest_frames_report(void);
-static void kd_spin_selftest_stack_init(void *base);
 static bool kd_spin_selftest_refuse(struct kd_exec_frame *frame,
 				    const struct kd_spin_node *node, int *ret);
 static void kd_spin_selftest_refusal_cancel(const struct kd_exec_frame *frame);
@@ -155,14 +181,13 @@ struct shadow_stack {
 	 */
 	uint64_t lock_addr[8];
 
-	/* Base of the private execution stack. */
-	void *ptr;
 	/*
 	 * Used by the combiner to identify for which CPU is the critical section
 	 * currently executing.
 	 */
 	uint32_t curr_cs_cpu;
 	uint32_t prev_cs_cpu;
+	/* Wrapper RSP scratch only; execution uses the combiner's task stack. */
 	uint64_t local_shadow_stack_ptr;
 #ifdef NUMA_AWARE
 	/*
@@ -199,9 +224,9 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_spin_node,
 struct kd_spin_native_input {
 	unsigned long rsp;
 	unsigned long regs_sp;
+	unsigned long irq_flags;
 };
 
-static DEFINE_PER_CPU(struct kd_spin_native_input, kd_spin_native_inputs);
 static DEFINE_PER_CPU(struct kd_spin_node *, kd_spin_resume_nodes);
 
 struct kd_spin_jit_context {
@@ -226,11 +251,7 @@ static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 					 int result);
 #endif
 
-/*
- * 8KB shadow stack used by all the threads. For waiter threads, switch to
- * shadow stack, because of IRQs. For combiner thread, switch to shadow stack
- * to handle nesting
- */
+/* Lock ledger and wrapper scratch; no separately allocated execution stack. */
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct shadow_stack, local_shadow_stack);
 
 #define _Q_LOCKED_PENDING_MASK (_Q_LOCKED_MASK_HL | _Q_PENDING_MASK_HL)

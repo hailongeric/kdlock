@@ -6,6 +6,7 @@
 #include <linux/kthread.h>
 #include <linux/moduleparam.h>
 #include <linux/sched/task.h>
+#include <linux/sched/task_stack.h>
 
 #define KD_SHADOW_TEST_ROUNDS 8
 
@@ -210,12 +211,13 @@ static void kd_shadow_unlock(void)
 static void kd_shadow_owner(void)
 {
 	struct kd_spin_node *head, *successor;
+	struct kd_spin_request request = kd_spin_unlock_lookup(kd_shadow_test.lock);
 
-	if (!KD_SHADOW_CHECK(kd_spin_trylock(kd_shadow_test.lock))) {
+	if (!KD_SHADOW_CHECK(kd_spin_trylock(request.word))) {
 		WRITE_ONCE(kd_shadow_test.abort, true);
 		return;
 	}
-	kd_spin_claim_origin(kd_shadow_test.lock);
+	kd_spin_claim_origin(&request);
 	kd_shadow_enter(0);
 	smp_store_release(&kd_shadow_test.owner_ready, true);
 	if (!KD_SHADOW_WAIT(kd_spin_debug_waiter_count(
@@ -246,7 +248,7 @@ static void kd_shadow_owner(void)
 	KD_SHADOW_CHECK(!READ_ONCE(successor->completed));
 	KD_SHADOW_CHECK(READ_ONCE(successor->count) == 1);
 	KD_SHADOW_CHECK(!READ_ONCE(kd_shadow_test.successor_acquired));
-	if (!KD_SHADOW_CHECK(!kd_spin_trylock(kd_shadow_test.lock)))
+	if (!KD_SHADOW_CHECK(!kd_spin_trylock(kd_shadow_test.word)))
 		kd_spin_unlock(kd_shadow_test.lock);
 	smp_store_release(&kd_shadow_test.observed, true);
 }
@@ -328,12 +330,20 @@ static void kd_shadow_head(void)
 	smp_store_release(&kd_shadow_test.head, node);
 	smp_store_release(&kd_shadow_test.head_ready, true);
 
-	/* Real stack switch, real node reservation and real xchg-tail publication. */
-	kd_spin_lock_slowpath(kd_shadow_test.lock, 0);
+	/* Real task-stack queue, node reservation and xchg-tail publication. */
+	{
+		struct kd_spin_request request =
+			kd_spin_unlock_lookup(kd_shadow_test.lock);
+
+		kd_spin_lock_slowpath(kd_shadow_test.lock, 0, &request);
+	}
 	KD_SHADOW_CHECK(kd_spin_combiner_state_matches(&saved, ptr));
 	KD_SHADOW_CHECK(node->count == 0);
-	KD_SHADOW_CHECK(node->rsp &&
-			node->rsp == this_cpu_ptr(&kd_spin_native_inputs)->rsp);
+	/* The saved preparation RSP now belongs to this task, with no per-CPU
+	 * execution stack or input scratch allocation. */
+	KD_SHADOW_CHECK(node->rsp >= (unsigned long)task_stack_page(current) &&
+			node->rsp < (unsigned long)task_stack_page(current) +
+					    THREAD_SIZE);
 	KD_SHADOW_CHECK(READ_ONCE(kd_shadow_test.word->locked) == 1);
 	kd_shadow_enter(1);
 	smp_store_release(&kd_shadow_test.head_acquired, true);
@@ -360,11 +370,19 @@ static void kd_shadow_successor(void)
 				    1))
 		return;
 	smp_store_release(&kd_shadow_test.successor, node);
-	kd_spin_lock_slowpath(kd_shadow_test.lock, 0);
+	{
+		struct kd_spin_request request =
+			kd_spin_unlock_lookup(kd_shadow_test.lock);
+
+		kd_spin_lock_slowpath(kd_shadow_test.lock, 0, &request);
+	}
 	KD_SHADOW_CHECK(smp_load_acquire(&kd_shadow_test.head_releasing));
 	KD_SHADOW_CHECK(node->count == 0);
-	KD_SHADOW_CHECK(node->rsp &&
-			node->rsp == this_cpu_ptr(&kd_spin_native_inputs)->rsp);
+	/* The saved preparation RSP now belongs to this task, with no per-CPU
+	 * execution stack or input scratch allocation. */
+	KD_SHADOW_CHECK(node->rsp >= (unsigned long)task_stack_page(current) &&
+			node->rsp < (unsigned long)task_stack_page(current) +
+					    THREAD_SIZE);
 	KD_SHADOW_CHECK(READ_ONCE(kd_shadow_test.word->tail) == 0);
 	kd_shadow_enter(2);
 	smp_store_release(&kd_shadow_test.successor_acquired, true);

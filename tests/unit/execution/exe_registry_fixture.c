@@ -39,6 +39,30 @@ typedef unsigned long long u64;
 static struct task_struct task = { .tgid = 42, .pid = 43 };
 static struct task_struct *current = &task;
 static int checks, failures, errors, warnings, timing_rows;
+static int gate_attempts, source_pin_calls;
+
+/* Publish between lookup's UNUSED observation and the registration check's
+ * acquire reload. This deterministic interleaving tests full-key validation;
+ * it does not replace the separate real pthread registration contention. */
+static struct kd_exe_info *publish_after_lookup;
+static struct kd_exe_info pending_publication;
+
+static int load_acquire_int(const int *pointer)
+{
+	int value = __atomic_load_n(pointer, __ATOMIC_ACQUIRE);
+	struct kd_exe_info *slot = publish_after_lookup;
+
+	if (slot && pointer == &slot->status_code && value == KD_EXE_UNUSED) {
+		publish_after_lookup = NULL;
+		slot->pid = pending_publication.pid;
+		slot->RIP = pending_publication.RIP;
+		slot->lock_kind = pending_publication.lock_kind;
+		slot->code_block = pending_publication.code_block;
+		__atomic_store_n(&slot->status_code, KD_EXE_UNINIT,
+				 __ATOMIC_RELEASE);
+	}
+	return value;
+}
 
 #define CHECK(expr)                                                     \
 	do {                                                            \
@@ -53,7 +77,7 @@ static int checks, failures, errors, warnings, timing_rows;
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define ATOMIC_INIT(value) { value }
 #define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
-#define smp_load_acquire(p) __atomic_load_n(p, __ATOMIC_ACQUIRE)
+#define smp_load_acquire(p) load_acquire_int(p)
 #define smp_store_release(p, v) __atomic_store_n(p, v, __ATOMIC_RELEASE)
 #define atomic_set(p, v) __atomic_store_n(&(p)->counter, v, __ATOMIC_RELAXED)
 #define atomic_read(p) __atomic_load_n(&(p)->counter, __ATOMIC_RELAXED)
@@ -86,6 +110,7 @@ static int checks, failures, errors, warnings, timing_rows;
 
 static int atomic_cmpxchg_acquire(atomic_t *p, int old, int value)
 {
+	__atomic_add_fetch(&gate_attempts, 1, __ATOMIC_RELAXED);
 	__atomic_compare_exchange_n(&p->counter, &old, value, false,
 				    __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
 	return old;
@@ -197,12 +222,13 @@ static bool source_open = true;
 static int source_root_error;
 static bool kd_source_is_open(void)
 {
-	return source_open;
+	return READ_ONCE(source_open);
 }
 static int kd_source_pin_root(unsigned long address)
 {
 	(void)address;
-	return source_root_error;
+	__atomic_add_fetch(&source_pin_calls, 1, __ATOMIC_RELAXED);
+	return kd_source_is_open() ? source_root_error : -ESHUTDOWN;
 }
 
 /* Match Kbuild's mixed-sign comparison policy only for unmodified production
@@ -221,6 +247,8 @@ static void reset(enum allocation_mode mode)
 		CHECK(kd_code_block_pool[i] == NULL);
 	allocation_count = block_attempts = exec_attempts = 0;
 	errors = warnings = copy_calls = fail_copy = 0;
+	gate_attempts = source_pin_calls = 0;
+	publish_after_lookup = NULL;
 	allocation_mode = mode;
 	source_open = true;
 	source_root_error = 0;
@@ -410,6 +438,107 @@ static void check_device(void)
 	kd_exe_exit();
 }
 
+static void check_registration_reads(void)
+{
+	const int states[] = { KD_EXE_UNINIT, KD_EXE_NORMAL, KD_EXE_CALL_MISS,
+		KD_EXE_IJ_MISS, KD_EXE_ERROR_INST, KD_EXE_INST_LIMIT,
+		KD_EXE_NATIVE_ONLY };
+	struct kd_exe_info *exe, snapshot;
+	int gate_before, pins_before, free_before;
+
+	reset(NORMAL);
+	CHECK(kd_exe_init() == 0);
+	for (int backend = KD_EXE_LOCK_SPIN; backend <= KD_EXE_LOCK_MUTEX;
+	     backend++) {
+		gate_before = gate_attempts;
+		pins_before = source_pin_calls;
+		kd_exe_add(0, key(backend), backend);
+		exe = kd_get_exe(0, key(backend));
+		CHECK(gate_attempts == gate_before + 1);
+		CHECK(source_pin_calls == pins_before + 1);
+		free_before = kd_code_block_free;
+		gate_before = gate_attempts;
+		pins_before = source_pin_calls;
+		for (unsigned int i = 0; i < ARRAY_SIZE(states); i++) {
+			CHECK(kd_exe_publish_status(exe, states[i]));
+			snapshot = *exe;
+			for (int repeat = 0; repeat < 100; repeat++)
+				kd_exe_add(0, key(backend), backend);
+			CHECK(gate_attempts == gate_before);
+			CHECK(source_pin_calls == pins_before);
+			CHECK(kd_code_block_free == free_before);
+			CHECK(memcmp(&snapshot, exe, sizeof(snapshot)) == 0);
+			CHECK(kd_exe_is_ready(0, key(backend)) ==
+			      (states[i] == KD_EXE_NORMAL));
+		}
+	}
+
+	/* An incompatible backend must retain the old terminal conflict path,
+	 * including when there are still free code blocks available. */
+	kd_exe_add(0, key(3), KD_EXE_LOCK_SPIN);
+	exe = kd_get_exe(0, key(3));
+	CHECK(kd_exe_publish_status(exe, KD_EXE_NORMAL));
+	gate_before = gate_attempts;
+	pins_before = source_pin_calls;
+	free_before = kd_code_block_free;
+	kd_exe_add(0, key(3), KD_EXE_LOCK_MUTEX);
+	CHECK(gate_attempts == gate_before + 1 && source_pin_calls == pins_before + 1);
+	CHECK(exe->status_code == KD_EXE_NATIVE_ONLY && warnings == 1);
+	CHECK(kd_code_block_free == free_before);
+
+	/* DRAINING can precede registry invalidation. Neither a NORMAL hit nor
+	 * a new root can bypass source admission or mutate the table after close. */
+	kd_exe_add(0, key(4), KD_EXE_LOCK_SPIN);
+	exe = kd_get_exe(0, key(4));
+	CHECK(kd_exe_publish_status(exe, KD_EXE_NORMAL));
+	source_open = false;
+	snapshot = *exe;
+	free_before = kd_code_block_free;
+	CHECK(!kd_exe_registered(0, key(4), KD_EXE_LOCK_SPIN));
+	CHECK(!kd_exe_is_ready(0, key(4)));
+	pins_before = source_pin_calls;
+	kd_exe_add(0, key(4), KD_EXE_LOCK_SPIN);
+	kd_exe_add(0, key(5), KD_EXE_LOCK_SPIN);
+	CHECK(source_pin_calls == pins_before + 2);
+	CHECK(memcmp(&snapshot, exe, sizeof(snapshot)) == 0);
+	CHECK(kd_get_exe(0, key(5))->status_code == KD_EXE_UNUSED);
+	CHECK(kd_code_block_free == free_before);
+	kd_exe_retire_all();
+	CHECK(exe->status_code == KD_EXE_NATIVE_ONLY);
+	CHECK(!kd_exe_registered(0, key(4), KD_EXE_LOCK_SPIN));
+	CHECK(!kd_exe_publish_status(exe, KD_EXE_NORMAL));
+	kd_exe_add(0, key(4), KD_EXE_LOCK_SPIN);
+	CHECK(exe->status_code == KD_EXE_NATIVE_ONLY && kd_code_block_free == free_before);
+	kd_exe_exit();
+}
+
+static void check_lookup_publication(void)
+{
+	struct kd_exe_info *slot;
+
+	reset(NORMAL);
+	CHECK(kd_exe_init() == 0);
+	slot = kd_get_exe(0, key(0));
+	pending_publication = (struct kd_exe_info) {
+		.pid = 0, .RIP = key(0), .lock_kind = KD_EXE_LOCK_SPIN,
+		.code_block = kd_code_block_pool[0], .status_code = KD_EXE_UNUSED,
+	};
+	*slot = pending_publication;
+	CHECK(!kd_exe_registered(0, key(0), KD_EXE_LOCK_SPIN));
+	for (int identity = 0; identity < 3; identity++) {
+		/* Only the matching winner may satisfy this registration. The slot
+		 * was still UNUSED when the real lookup chose it in all three cases. */
+		slot->status_code = KD_EXE_UNUSED;
+		pending_publication.pid = identity == 1 ? 1 : 0;
+		pending_publication.RIP = identity == 2 ? key(1) : key(0);
+		publish_after_lookup = slot;
+		CHECK(kd_exe_registered(0, key(0), KD_EXE_LOCK_SPIN) == (identity == 0));
+		CHECK(publish_after_lookup == NULL);
+	}
+	CHECK(gate_attempts == 0 && source_pin_calls == 0);
+	kd_exe_exit();
+}
+
 static pthread_barrier_t start;
 
 static void *register_worker(void *arg)
@@ -430,8 +559,8 @@ static void check_concurrent_registration(void)
 
 	reset(NORMAL);
 	CHECK(kd_exe_init() == 0);
-	/* Run real gate contention, with all table readers after join. This tests
-	 * registration serialization, not Linux IRQ/preemption or lock ownership. */
+	/* Fast readers race first publication and colliding registrations. Only
+	 * inspect totals after join; this does not model Linux IRQ/preemption. */
 	if (pthread_barrier_init(&start, NULL, ARRAY_SIZE(threads)))
 		abort();
 	for (unsigned long i = 0; i < ARRAY_SIZE(threads); i++)
@@ -461,6 +590,8 @@ int main(void)
 	check_pool(PARTIAL);
 	check_full_table();
 	check_device();
+	check_registration_reads();
+	check_lookup_publication();
 	check_concurrent_registration();
 	reset(NORMAL);
 	printf("production exe registry: %d checks, %d failures; pool=%d table=%d\n",

@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 typedef long long s64;
@@ -35,6 +36,8 @@ static struct task_struct *current = &executor;
 static struct kd_exec_frame active, parent;
 static struct kd_exe_info entry_table[KD_MAX_EXE], *entry;
 static int calls, known_calls, known_result, errors, warnings, checks, failures;
+static unsigned int registry_lookups, readiness_acquires;
+static bool source_open = true;
 static struct pt_regs last_wrapper_output;
 static char last_error[1024];
 static unsigned int service_calls[3], failed_service_calls;
@@ -70,7 +73,7 @@ static int copy_from_kernel_nofault(void *to, const void *from, size_t size)
 }
 static bool kd_source_is_open(void)
 {
-	return true;
+	return source_open;
 }
 static int kd_source_pin_target(unsigned long address)
 {
@@ -87,7 +90,13 @@ static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
 
 #define READ_ONCE(x) (x)
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-#define smp_load_acquire(p) (*(p))
+/* Count the real status acquire separately from the frame-state reads. */
+#define smp_load_acquire(p)                                                \
+	({                                                                \
+		if (entry && (const void *)(p) == &entry->status_code)      \
+			readiness_acquires++;                            \
+		__atomic_load_n((p), __ATOMIC_ACQUIRE);                    \
+	})
 #define smp_store_release(p, value) (*(p) = (value))
 #define try_cmpxchg(p, old, value)                                          \
 	__atomic_compare_exchange_n(p, old, value, false, __ATOMIC_SEQ_CST, \
@@ -123,6 +132,13 @@ static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
 		snprintf(last_error, sizeof(last_error), __VA_ARGS__); \
 	} while (0)
 
+/* A detected mutant must stop before a later synthetic invalid-pointer case;
+ * a crash is never accepted as invariant detection by the Python driver. */
+#ifdef KD_ENTRY_MUTATION
+#define STOP_MUTATION() exit(1)
+#else
+#define STOP_MUTATION() ((void)0)
+#endif
 #define CHECK(expr)                                                     \
 	do {                                                            \
 		checks++;                                               \
@@ -130,6 +146,7 @@ static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
 			fprintf(stderr, "FAIL line %d: %s\n", __LINE__, \
 				#expr);                                 \
 			failures++;                                     \
+			STOP_MUTATION();                                \
 		}                                                       \
 	} while (0)
 
@@ -293,6 +310,8 @@ static void reset(void)
 				       .lock_kind = KD_EXE_LOCK_SPIN,
 				       .code_block = translated,
 				       .status_code = KD_EXE_NORMAL };
+	source_open = true;
+	registry_lookups = readiness_acquires = 0;
 	calls = known_calls = errors = warnings =
 		kd_jit_hl_fault_after_known_call = 0;
 	known_result = 1;
@@ -302,7 +321,9 @@ static void reset(void)
 
 static int run(void)
 {
-	return kd_exe_on_call_hl_entry(&active.regs, active.entry_ip,
+	struct kd_exe_info *exe = kd_exe_find_ready(0, active.entry_ip);
+
+	return kd_exe_on_call_hl_entry(exe, &active.regs, active.entry_ip,
 				       active.outer_lock_addr);
 }
 
@@ -495,6 +516,55 @@ static void check_registry_refusal(void)
 			CHECK(memcmp(stack_before, stack, sizeof(stack)) == 0);
 			CHECK(memcmp(table_before, entry_table,
 				     sizeof(entry_table)) == 0);
+		}
+	}
+}
+
+/* Model the setup gap between execute_cs's lookup and dispatcher entry.
+ * The pointer is stable, but publication/readiness can change during the gap.
+ * Source frame leasing itself is exercised by test_source_lifetime. */
+static void check_cached_entry(void)
+{
+	for (int backend = 0; backend < 2; backend++) {
+		for (int change = -1; change < 9; change++) {
+			struct kd_exe_info *cached;
+			struct kd_exec_frame before;
+			unsigned int acquires;
+
+			reset();
+			active.mutex_backend = backend;
+			entry->lock_kind = backend ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN;
+			CHECK(kd_exe_is_ready(0, active.entry_ip));
+			registry_lookups = 0;
+			cached = kd_exe_find_ready(0, active.entry_ip);
+			CHECK(cached == entry && registry_lookups == 1);
+			steps[0] = (struct step){ KD_EXE_CALL_MISS, 0x9000, 1, 0 };
+			switch (change) {
+			case 0: source_open = false; break; /* DRAINING before invalidation */
+			case 1: kd_exe_publish_status(entry, KD_EXE_UNINIT); break;
+			case 2: kd_exe_publish_status(entry, KD_EXE_CALL_MISS); break;
+			case 3: kd_exe_publish_status(entry, KD_EXE_NATIVE_ONLY); break;
+			case 4: entry->code_block = NULL; break;
+			case 5: entry->pid = 1; break;
+			case 6: entry->RIP += 8; break;
+			case 7: entry->lock_kind = backend ? KD_EXE_LOCK_SPIN : KD_EXE_LOCK_MUTEX; break;
+			case 8: cached = NULL; break;
+			}
+			before = active;
+			acquires = readiness_acquires;
+			CHECK(kd_exe_on_call_hl_entry(cached, &active.regs,
+				active.entry_ip, active.outer_lock_addr) ==
+			      (change < 0 ? KD_EXE_RUN_TO_UNLOCK : KD_EXE_NO_RUN));
+			CHECK(registry_lookups == 1); /* no second/third hash in dispatch */
+			if (change < 0) {
+				CHECK(calls == 1 && active.executed);
+				CHECK(readiness_acquires > acquires);
+			} else {
+				CHECK(!calls && !known_calls && !active.executed);
+				CHECK(!memcmp(&before, &active, sizeof(active)));
+				if (change == 7)
+					CHECK(entry->status_code == KD_EXE_NATIVE_ONLY);
+			}
 		}
 	}
 }
@@ -1059,6 +1129,7 @@ int main(void)
 	check_local_continuation();
 	check_remote_scope();
 	check_registry_refusal();
+	check_cached_entry();
 	check_source_target_refusal();
 	check_service_dispatch();
 	check_scalar_arguments();

@@ -18,11 +18,32 @@
 static struct kd_spin_gate kd_spin_gates[KD_SPIN_GATE_SLOTS];
 static DEFINE_RAW_SPINLOCK(kd_spin_gate_map_lock);
 
-/* Find or create the gate that represents this raw spinlock.
- * Gate creation is bounded and done without sleeping.
- */
-static struct kd_spin_gate *kd_spin_gate_lookup(raw_spinlock_t *origin,
-						bool create)
+/* origin is the publication word. Readers that observe it also observe the
+ * initialized gate; entries are never removed/reassigned before drain and
+ * provider teardown. A concurrent insertion may turn a miss into a hit, so
+ * creators must still recheck under the map lock. No origin is dereferenced. */
+struct kd_spin_gate *kd_spin_gate_find(raw_spinlock_t *origin)
+{
+	unsigned int start, step;
+
+	if (!origin)
+		return NULL;
+	start = hash_long((unsigned long)origin, KD_SPIN_GATE_BITS);
+	for (step = 0; step < KD_SPIN_GATE_SLOTS; step++) {
+		struct kd_spin_gate *entry =
+			&kd_spin_gates[(start + step) & (KD_SPIN_GATE_SLOTS - 1)];
+		raw_spinlock_t *key = smp_load_acquire(&entry->origin);
+
+		if (key == origin)
+			return entry;
+		if (!key)
+			return NULL;
+	}
+	return NULL;
+}
+
+/* Creation is bounded and serialized; an existing gate needs no writer lock. */
+static struct kd_spin_gate *kd_spin_gate_lookup(raw_spinlock_t *origin)
 {
 	struct kd_spin_gate *gate = NULL;
 	unsigned long flags;
@@ -30,6 +51,9 @@ static struct kd_spin_gate *kd_spin_gate_lookup(raw_spinlock_t *origin,
 
 	if (!origin)
 		return NULL;
+	gate = kd_spin_gate_find(origin);
+	if (gate)
+		return gate;
 	start = hash_long((unsigned long)origin, KD_SPIN_GATE_BITS);
 	raw_spin_lock_irqsave(&kd_spin_gate_map_lock, flags);
 	for (step = 0; step < KD_SPIN_GATE_SLOTS; step++) {
@@ -42,11 +66,10 @@ static struct kd_spin_gate *kd_spin_gate_lookup(raw_spinlock_t *origin,
 			break;
 		}
 		if (!entry->origin) {
-			if (create) {
-				entry->owner_cpu = -1;
-				entry->origin = origin;
-				gate = entry;
-			}
+			entry->owner_cpu = -1;
+			/* Other fields start zero in static storage. Publish last. */
+			smp_store_release(&entry->origin, origin);
+			gate = entry;
 			break;
 		}
 	}
@@ -59,7 +82,7 @@ static struct kd_spin_gate *kd_spin_gate_lookup(raw_spinlock_t *origin,
 
 struct kd_spin_gate *kd_spin_gate_get(raw_spinlock_t *origin)
 {
-	struct kd_spin_gate *gate = kd_spin_gate_lookup(origin, true);
+	struct kd_spin_gate *gate = kd_spin_gate_lookup(origin);
 
 #ifdef KDLOCK_SELFTEST
 	/* Identify real allocation refusal without changing the bounded map or
@@ -72,17 +95,12 @@ struct kd_spin_gate *kd_spin_gate_get(raw_spinlock_t *origin)
 	return gate;
 }
 
-struct kd_spin_gate *kd_spin_gate_find(raw_spinlock_t *origin)
-{
-	return kd_spin_gate_lookup(origin, false);
-}
-
 /* Acquire physical lock ownership on the gate's private ticket while keeping the
  * task pinned in preemption-disabled context.
  */
 int kd_spin_gate_claim(struct kd_spin_gate *gate, struct kd_spin_hold *hold)
 {
-	if (!gate || !gate->origin || !hold || !in_task() || irqs_disabled() ||
+	if (!gate || !gate->origin || !hold || !in_task() ||
 	    !(preempt_count() & PREEMPT_MASK) || !READ_ONCE(gate->word.locked))
 		return -EINVAL;
 	if (hold->gate || cmpxchg(&gate->owner, NULL, current))

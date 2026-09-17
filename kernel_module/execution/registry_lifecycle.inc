@@ -18,7 +18,10 @@ struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip)
 	for (probes = 0; probes < KD_MAX_EXE; probes++) {
 		struct kd_exe_info *exe = &kd_exes[pos];
 
-		if (READ_ONCE(exe->status_code) == KD_EXE_UNUSED ||
+		/* Published keys are immutable until controlled module teardown.
+		 * Pair with initial UNINIT publication before comparing their fields.
+		 * An UNUSED result is only a candidate, not a registered entry. */
+		if (smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED ||
 		    (READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == ip))
 			return exe;
 		pos = (pos + 1) % KD_MAX_EXE;
@@ -46,19 +49,31 @@ bool kd_exe_publish_status(struct kd_exe_info *exe, int status)
 	}
 }
 
-bool kd_exe_is_ready(unsigned int pid, unsigned long ip)
+bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, unsigned int pid,
+			   unsigned long ip)
 {
-	struct kd_exe_info *exe;
-
-	if (!kd_exes || !ip || !kd_source_is_open())
+	if (!exe || !ip || !kd_source_is_open())
 		return false;
-	exe = kd_get_exe(pid, ip);
-	if (!exe)
-		return false;
+	/* Pair with code upload/status publication on every dispatch, including
+	 * when the caller resolved this stable slot before acquiring its frame.
+	 * Source closing or a later miss/native-only status invalidates readiness;
+	 * the slot itself is not reused until controlled provider teardown. */
 	if (smp_load_acquire(&exe->status_code) != KD_EXE_NORMAL)
 		return false;
 	return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == ip &&
 	       READ_ONCE(exe->code_block) != NULL;
+}
+
+struct kd_exe_info *kd_exe_find_ready(unsigned int pid, unsigned long ip)
+{
+	struct kd_exe_info *exe = kd_get_exe(pid, ip);
+
+	return kd_exe_entry_is_ready(exe, pid, ip) ? exe : NULL;
+}
+
+bool kd_exe_is_ready(unsigned int pid, unsigned long ip)
+{
+	return kd_exe_find_ready(pid, ip) != NULL;
 }
 
 int kd_exe_init(void)

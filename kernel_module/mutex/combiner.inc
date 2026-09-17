@@ -66,6 +66,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	void *outgoing_rsp_ptr = &outgoing_rsp;
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
 	struct kd_exec_frame *frame;
+	struct kd_exe_info *exe;
 	struct pt_regs retry_regs;
 	unsigned long lock_addr[1];
 	enum kd_exec_lock_kind lock_kind[1];
@@ -102,7 +103,8 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	mutex_debug("JIT exec waiter cpu %d ip %lx sp %lx\n", curr_node->cpuid,
 		    curr_node->regs.ip, curr_node->regs.sp);
 
-	if (!kd_exe_is_ready(0, curr_node->regs.ip)) {
+	exe = kd_exe_find_ready(0, curr_node->regs.ip);
+	if (!exe) {
 		atomic64_inc(&kd_mutex_jit_not_ready_count);
 		/* A missing/cold image is an unstarted request, not a progressed
 		 * frame failure. Keep its identity distinct from context refusal. */
@@ -164,7 +166,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	frame->outer_unlock_hook = &batch->outer;
 	queue_end = kd_exe_queue_timing_start();
-	ret_flag = kd_exe_on_call_hl_entry(&frame->regs, frame->entry_ip,
+	ret_flag = kd_exe_on_call_hl_entry(exe, &frame->regs, frame->entry_ip,
 					   frame->outer_lock_addr);
 	/* Refused dispatches remain queued. Account a real body's pre-dispatch
 	 * endpoint before the waiter can resume and recycle its slot. */

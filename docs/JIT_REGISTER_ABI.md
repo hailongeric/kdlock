@@ -44,7 +44,13 @@ final pt_regs -> original waiter resume
 | --- | --- | --- |
 | waiter 逻辑栈 | `pt_regs.sp`，JIT 内主要由物理 R13 表示 | 原临界区的局部变量、保存寄存器和虚拟 `CALL` 返回地址 |
 | wrapper 实栈 | 物理 RSP | 保存 combiner 的 C ABI 状态和 JIT 私有槽；不能当作 guest RSP 使用 |
-| lock shadow stack | spin/mutex 后端保存的真实内核栈 | 运行 queue/combiner C 代码；不等于 JIT 的虚拟调用栈 |
+| 后端 C 栈 | spin 使用执行者自己的 task 内核栈；mutex 使用其独立 waiter 栈 | 运行 queue/combiner C 代码；不等于 JIT 的虚拟调用栈 |
+
+spin 的普通物理 waiter 在发布前保存并关闭本 CPU 的 IRQ，发布和等待是同一段
+不访问旧 C 栈的汇编。代理完成后直接在安全位置重建恢复帧，不逐层返回旧
+slowpath；恢复原 IRQ 状态后转到续点。8KB spin shadow C 栈已经删除，名称中
+仍有 shadow 的锁地址账本不是执行栈。虚拟 waiter 的 owner/ACK 轮询仍使用
+执行者独立的 C 栈。
 
 `struct pt_regs` 是 wrapper 调用之间的规范寄存器状态。嵌套锁或 hostcall
 退出 sandbox 后，任何需要再次进入 JIT 的状态都必须先落实到这份结构中。
@@ -543,18 +549,19 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 恢复迁移/抢占状态，不把 spin 的 pin 生命周期套用到 mutex。
 
 默认实测布局为 frame 656、context 5264、spin JIT context 184、spin node 280
-字节，静态 per-CPU 7904 字节。布局不是动态栈峰值或任意深度安全证明。
+字节，当前默认构建静态 per-CPU 8000 字节。布局不是动态栈峰值或任意深度安全证明。
 精确节点预留、OOO、远端发布和 readmission 约束见 DESIGN 第 4/9 节；
 相关测试参数与失败记录集中在使用/验收文档，不在 ABI 中复制历史流水。
 
 ## 11. 返回原 waiter
 
-spin 队列普通获取返回 0/2 时恢复 `kd_spin_native_input.rsp`，包括未分配节点的
-容量回退。非局部返回先恢复 `min(node->rsp, node->regs.sp)`，再在该原生栈上
-复制 `pt_regs` 与凭证；这避免覆盖已经长入旧 hook 帧的虚拟 CALL 返回地址。
-完成代理的 1/3 路径随后结束自己的 ticket，可能重新调度，因此不得再读取原
-per-CPU 节点。返回 5 只标记 native 状态并保留 pin；最后一个 native ack 才
-由原 waiter 结束它。返回 4 的旧重试路径不提前消耗仍持有的凭证。
+spin 队列普通获取返回 0/2 时直接沿原 C 调用链返回并恢复原 IRQ 状态，包括
+未分配节点的容量回退。物理 waiter 的发布与轮询位于同一段无栈汇编；完成或
+native 唤醒直接放弃旧调用链，在对齐后的 `min(node->rsp, node->regs.sp)` 下方
+建立恢复帧，快照 `pt_regs`、ticket 和原 IRQ flags。完成路径结束 ticket，native
+路径标记状态并保留 pin 到最后 ACK；最后访问 per-CPU 数据后才恢复原 IRQ 状态。
+未执行正文的 retry 返回 4 仍保留已持有的 ticket；虚拟 waiter 保留 1/3/5 返回
+分类以通知父 frame。它们不再是物理 waiter 的旧 C 栈返回链。
 
 成功代理后使用 `jump_to_saved_regs()`：
 

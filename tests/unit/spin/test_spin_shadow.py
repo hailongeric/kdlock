@@ -83,7 +83,7 @@ def main():
     # production scan, cancellation, splice or queue-head save/restore bodies.
     body += "#define run_combiner production_run_combiner\nstatic void\n"
     body += definition(
-        source, "run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node)"
+        source, "run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,"
     )
     body += "#undef run_combiner\n"
     body += "static int\n" + definition(
@@ -91,7 +91,7 @@ def main():
     )
     body += definition(source, "struct kd_spin_native_input {").rstrip() + ";\n"
     body += "static int\n" + definition(
-        source, "__kd_spin_lock_slowpath(struct qspinlock *lock)"
+        source, "__kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,"
     )
     for marker in (
         "static int kd_spin_prepare_jit_node(struct kd_spin_node *node,",
@@ -105,6 +105,9 @@ def main():
         run_environment = dict(os.environ)
         run_environment.pop("KD_NODE_MUTATION", None)
         (path / "spin_shadow_types.h").write_text(types)
+        (path / "spin_request_type.h").write_text(
+            definition(source, "struct kd_spin_request {").rstrip() + ";\n"
+        )
         observer = read_source((ROOT / "tests/kernel/spin/spin_node_trace.c"))
         (path / "spin_node_observer.h").write_text(
             re.sub(r"^#include .*\n", "", observer, flags=re.MULTILINE)

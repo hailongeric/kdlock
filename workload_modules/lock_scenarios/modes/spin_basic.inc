@@ -5,6 +5,12 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
+/* Exercise the same hook/JIT entry with both incoming IRQ states. The saved
+ * flags live in the original caller frame and must survive delegated calls. */
+static bool spin_irq_off;
+module_param(spin_irq_off, bool, 0644);
+MODULE_PARM_DESC(spin_irq_off, "mode 0: mask IRQs around the spin pair and verify restoration");
+
 static void run_contention_test(unsigned long loop_count,
 				unsigned long work_load)
 {
@@ -15,7 +21,11 @@ static void run_contention_test(unsigned long loop_count,
 
 	for (i = 0; i < loop_count; i++) {
 		struct kd_resume_record *record = kd_resume_begin();
+		unsigned long flags = 0;
+		bool mask_irq = READ_ONCE(spin_irq_off);
 
+		if (mask_irq)
+			local_irq_save(flags);
 		spin_lock(&global_lock);
 		kd_spin_oracle_enter();
 		kd_cs_step(KD_CS_SPIN_GLOBAL);
@@ -25,6 +35,9 @@ static void run_contention_test(unsigned long loop_count,
 		kd_resume_probe(record, 1);
 		atomic_dec(&spin_inside);
 		spin_unlock(&global_lock);
+		kd_spin_check_context(count, irq || mask_irq);
+		if (mask_irq)
+			local_irq_restore(flags);
 		kd_spin_check_context(count, irq);
 		if (native_resume_rename)
 			kd_test_rename("klock_test");

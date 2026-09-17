@@ -14,7 +14,7 @@
 | [sys.c](sys.c) | `/dev/kd_dev` 的读取、上传、状态与 retire ioctl |
 | [kd_source.c](kd_source.c) | 来源状态和 module/frame/writer pins |
 | [kd_hotlock.c](kd_hotlock.c) | 按锁地址采样、发现热锁并注册入口 |
-| [kd_spin_gate.c](kd_spin_gate.c) | 私有 gate、真实 owner 与原锁引用 |
+| [kd_spin_gate.c](kd_spin_gate.c) | 私有 gate、真实 owner 与原锁引用；`origin` release/acquire 发布，已有条目无锁查找，创建仍串行化 |
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 
@@ -22,7 +22,9 @@
 
 下表按所属编译单元和原声明顺序列出组件；文件头说明用途和依赖。
 `spin/combiner.inc` 内的 `execute_cs` 执行委托正文，`run_combiner` 组织批次；
-`spin/slowpath.inc` 管理队首等待与恢复。`execution/native.inc` 的原生续跑
+`spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后发布普通
+waiter 并无栈轮询。spin combiner 使用 task 内核栈，不再分配每 CPU 的 8KB C 栈；
+`shadow` 锁地址账本和 wrapper RSP 暂存仍是元数据。`execution/native.inc` 的原生续跑
 保留 physical owner，最终 unlock 仍由该 owner 服务并 ACK。
 
 | 所属入口 | 组件 | 职责 |
@@ -32,14 +34,15 @@
 | `kd_spinlock.c` | [spin/diagnostics.inc](spin/diagnostics.inc) | Per-lock diagnostic counters, waiter observations and JIT-disable latch. |
 | `kd_spinlock.c` | [spin/queue.inc](spin/queue.inc) | Tail encoding, node publication and optional NUMA successor selection. |
 | `kd_spinlock.c` | [spin/combiner.inc](spin/combiner.inc) | Delegated body execution, outer release and bounded combiner batches. |
+| `kd_spinlock.c` | [spin/wait.inc](spin/wait.inc) | IRQ-off physical publication/polling and direct packet restoration without old C frames. |
 | `kd_spinlock.c` | [spin/slowpath.inc](spin/slowpath.inc) | Queue-head waiting, nested combiner restoration and native node admission. |
 | `kd_spinlock.c` | [spin/lifecycle.inc](spin/lifecycle.inc) | Per-CPU allocation, partial-init rollback and drained shutdown reporting. |
 | `kd_spinlock.c` | [spin/nested.inc](spin/nested.inc) | Virtual nested waiters, remote completion and out-of-order unlock results. |
 | `exe.c` | [execution/hostcalls.inc](execution/hostcalls.inc) | Allowlisted native services and bounded mutex CALL stack observations. |
 | `exe.c` | [execution/timing.inc](execution/timing.inc) | Optional inclusive boundary timing; disabled runs take no clock samples. |
-| `exe.c` | [execution/registry_lifecycle.inc](execution/registry_lifecycle.inc) | Executable-slot lookup/readiness and startup/shutdown of the bounded pool. |
+| `exe.c` | [execution/registry_lifecycle.inc](execution/registry_lifecycle.inc) | 有界代码池与条目查找；execute_cs 传递就绪条目，dispatcher 不再查表，但重新核对发布状态和 source 准入。 |
 | `exe.c` | [execution/control_calls.inc](execution/control_calls.inc) | Known spin/mutex CALL handling, continuation advancement and stack checks. |
-| `exe.c` | [execution/registry_publish.inc](execution/registry_publish.inc) | Bounded registration and retirement; publication is not a JIT body witness. |
+| `exe.c` | [execution/registry_publish.inc](execution/registry_publish.inc) | 已发布、同身份/后端且 source OPEN 的重复注册只读返回；新注册、冲突和退休保留串行化。注册不等于 JIT 就绪或正文执行。 |
 | `kd_exec.c` | [execution/remote.inc](execution/remote.inc) | Remote frame requests and release/acquire ACKs between physical executors. |
 | `kd_exec.c` | [execution/native.inc](execution/native.inc) | Original-waiter native continuation and owner-serviced final unlock ACKs. |
 | `kd_exec.c` | [execution/lock_ledger.inc](execution/lock_ledger.inc) | Frame lock-vector mutations and completion predicates; this never acquires L. |

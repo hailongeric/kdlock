@@ -5,6 +5,22 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
+static bool kd_exe_registered(unsigned int pid, unsigned long rip,
+			      enum kd_exe_lock_kind kind)
+{
+	struct kd_exe_info *exe = kd_get_exe(pid, rip);
+
+	/* A lookup can return an UNUSED slot whose writer is still initializing
+	 * its key. Only publication proves that root pinning and all immutable
+	 * metadata are complete. UNINIT/miss/native-only entries also need no
+	 * duplicate registration; this check does not claim JIT readiness. */
+	if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED)
+		return false;
+	return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == rip &&
+	       READ_ONCE(exe->lock_kind) == kind &&
+	       READ_ONCE(exe->code_block) && kd_source_is_open();
+}
+
 void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
 {
 	void *mem = NULL;
@@ -12,6 +28,14 @@ void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
 	int ret;
 
 	if (kind != KD_EXE_LOCK_SPIN && kind != KD_EXE_LOCK_MUTEX)
+		return;
+	/* Root pins outlive the append-only registry within this source session.
+	 * Repeated registrations read metadata only, without taking the global
+	 * gate or repeating source/module lookup. Retirement can race this no-op:
+	 * it neither dereferences source/code nor grants an execution lease.
+	 * Actual dispatch still requires readiness and an admitted source frame.
+	 * Misses, backend conflicts and closed admission keep the serialized path. */
+	if (kd_exe_registered(pid, rip, kind))
 		return;
 	kd_code_block_gate_lock();
 	ret = kd_source_pin_root(rip);

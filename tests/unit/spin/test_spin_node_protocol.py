@@ -60,6 +60,12 @@ class NodeProtocolTests(unittest.TestCase):
                 self.assertEqual(result["virtual"], depth - 1)
                 self.assertEqual(result["combiner"], 2 * depth)
 
+    def test_irq_off_reservations(self):
+        for row in self.rows:
+            if row["peak"]:
+                row["peak_irq"] = 1
+        self.assertEqual(self.check()["peak"], 1)
+
     def test_remote_requires_virtual_and_poll(self):
         self.profile["kind"] = "remote"
         self.assertTrue(self.check()["enabled"])
@@ -122,7 +128,7 @@ class NodeProtocolTests(unittest.TestCase):
             "peak": 2,
             "peak_task": 0,
             "peak_preempt": 256,
-            "peak_irq": 1,
+            "peak_irq": 2,
             "native_full": 1,
             "virtual_full": 1,
             "context_missing": 1,

@@ -228,6 +228,17 @@ def main():
             timeout=30,
         )
         subprocess.run([str(binary)], check=True, timeout=10)
+        # The second fixture drives concurrent creators through one collision
+        # chain and observes initialization at the actual release publication.
+        binary = path / "spin-gate-publish"
+        command = shlex.split(os.environ.get("CC", "cc")) + [
+            "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror", "-pthread",
+            "-I", str(path),
+            str(ROOT / "tests/unit/spin/spin_gate_publish_fixture.c"),
+            "-o", str(binary),
+        ]
+        subprocess.run(command, check=True, timeout=30)
+        subprocess.run([str(binary)], check=True, timeout=15)
 
 
 if __name__ == "__main__":

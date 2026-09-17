@@ -203,11 +203,13 @@ static void kd_spin_diag_invariant_failure(void)
 {
 	CHECK(false);
 }
-static bool kd_exe_is_ready(int pid, unsigned long ip)
+/* Opaque lookup token: the production backend must pass this exact slot. */
+static struct kd_exe_info { int token; } ready_entry;
+static struct kd_exe_info *kd_exe_find_ready(int pid, unsigned long ip)
 {
 	(void)pid;
 	CHECK(ip == (request.jit_waiter ? 0x900UL : 0x800UL));
-	return mode != 4;
+	return mode != 4 ? &ready_entry : NULL;
 }
 static void kd_exe_add(int pid, unsigned long ip, int kind)
 {
@@ -215,7 +217,8 @@ static void kd_exe_add(int pid, unsigned long ip, int kind)
 	(void)ip;
 	CHECK(kind == KD_EXE_LOCK_SPIN);
 }
-static int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long ip,
+static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
+				   struct pt_regs *regs, unsigned long ip,
 				   unsigned long lock);
 
 static int kd_exec_invariant_failure(void);
@@ -319,7 +322,31 @@ void kd_spin_unlock(struct qspinlock *lock)
 static bool kd_spin_fast_native_active(void) { return false; }
 static bool kd_spin_fast_idle(void) { return true; }
 
+#undef request
 #include "spin_outer_production.h"
+#define request kd_spin_nodes[0]
+
+static struct kd_spin_request test_request(struct qspinlock *lock)
+{
+	struct kd_spin_request physical = { 0 };
+
+	CHECK(kd_spin_entry_find((raw_spinlock_t *)lock, &physical.ref));
+	physical.word = kd_spin_request_word(&physical.ref);
+	return physical;
+}
+static void test_claim_origin(struct qspinlock *lock)
+{
+	struct kd_spin_request physical = test_request(lock);
+	kd_spin_claim_origin(&physical);
+}
+static void test_release_origin(struct qspinlock *lock)
+{
+	struct kd_spin_request physical = test_request(lock);
+	kd_spin_release_origin(&physical);
+}
+#define kd_spin_claim_origin test_claim_origin
+#define kd_spin_release_origin test_release_origin
+
 
 /* Only the designated node is disposable. Other releases still use the same
  * substituted primitive without inventing an extra waiter or reference. */
@@ -388,7 +415,8 @@ static void checked_run_combiner(struct qspinlock *lock,
 		}
 		memcpy(pool_before, kd_exec_context, sizeof(pool_before));
 	}
-	run_combiner(lock, node);
+	struct kd_spin_request physical = test_request(lock);
+	run_combiner(lock, node, &physical);
 	if (full) {
 		CHECK(full_pool_calls == calls + 1);
 		CHECK(!memcmp(pool_before, kd_exec_context,
@@ -410,6 +438,16 @@ static void checked_run_combiner(struct qspinlock *lock,
 }
 
 #define run_combiner checked_run_combiner
+
+static void checked_queue_combiner(struct qspinlock *lock,
+		struct kd_spin_node *node, struct kd_spin_request *physical)
+{
+	struct kd_spin_request local = test_request(lock);
+	CHECK(local.word == physical->word &&
+	      local.ref.entry == physical->ref.entry &&
+	      local.ref.sequence == physical->ref.sequence);
+	checked_run_combiner(lock, node);
+}
 
 static struct qspinlock *a_lock(void)
 {
@@ -499,9 +537,11 @@ static void early_a(bool native)
 	successor_progress();
 }
 
-static int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long ip,
+static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
+				   struct pt_regs *regs, unsigned long ip,
 				   unsigned long lock)
 {
+	CHECK(exe == &ready_entry);
 	CHECK(regs == &active.regs &&
 	      ip == (request.jit_waiter ? 0x900UL : 0x800UL) &&
 	      lock == (unsigned long)&origins[0]);
@@ -1120,7 +1160,7 @@ int main(void)
 		gate->word.locked = 3;
 		gate->word.tail = 4;
 		kd_spin_claim_origin(a_lock());
-		CHECK(!kd_spin_trylock(a_lock()));
+		CHECK(!kd_spin_trylock(kd_spin_word(a_lock())));
 		shadow_states[0].lock_addr[0] = (unsigned long)&origins[0];
 		shadow_states[0].curr_cs_cpu = shadow_states[0].prev_cs_cpu =
 			-1;

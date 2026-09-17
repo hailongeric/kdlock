@@ -1,43 +1,55 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Deterministic TSC/allocation inputs for the extracted hotlock sampler.
- * Promotion transitions are checked here, not natural contention or JIT. */
+ * Promotion transitions and concurrent lookups are checked here, not kernel
+ * IRQ behavior, natural contention or JIT. Pthreads serialize real producers. */
 #include <errno.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef unsigned long atomic_long_t;
-static unsigned long now;
+static _Thread_local unsigned long now;
 static int checks, failures;
 static bool fail_alloc;
 /* Inject another caller before the table lock is acquired, never while held. */
-static void (*before_table_lock)(void);
+static _Thread_local void (*before_table_lock)(void);
+static _Thread_local bool forbid_table_lock;
 
 /* Run one queued producer before acquisition, without recursively injecting. */
 static void run_table_interleave(void)
 {
 	void (*call)(void) = before_table_lock;
 
+	if (forbid_table_lock) {
+		fprintf(stderr, "FAIL line %d: promotion query took writer lock\n",
+			__LINE__);
+		exit(1);
+	}
 	before_table_lock = NULL;
 	if (call)
 		call();
 }
 
 #define ____cacheline_aligned __attribute__((aligned(64)))
-#define DEFINE_RAW_SPINLOCK(name) int name
-#define atomic_long_read(p) (*(p))
-#define atomic_long_set(p, value) (*(p) = (value))
+#define DEFINE_RAW_SPINLOCK(name) pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
+#define READ_ONCE(value) __atomic_load_n(&(value), __ATOMIC_RELAXED)
+#define WRITE_ONCE(value, new) __atomic_store_n(&(value), (new), __ATOMIC_RELAXED)
+#define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
+#define smp_store_release(p, value) __atomic_store_n((p), (value), __ATOMIC_RELEASE)
+#define atomic_long_read(p) READ_ONCE(*(p))
+#define atomic_long_set(p, value) WRITE_ONCE(*(p), (value))
 #define array_size(count, size) ((count) * (size))
 #define raw_spin_lock_irqsave(lock, flags) \
 	do {                               \
-		(void)(lock);              \
 		(flags) = 0;               \
 		run_table_interleave();    \
+		pthread_mutex_lock(lock);  \
 	} while (0)
 #define raw_spin_unlock_irqrestore(lock, flags) \
 	do {                                    \
-		(void)(lock);                   \
+		pthread_mutex_unlock(lock);      \
 		(void)(flags);                  \
 	} while (0)
 #define KD_PR_INFO(...)                      \
@@ -62,10 +74,9 @@ static unsigned long rdtsc_ordered(void)
 static unsigned long atomic_long_cmpxchg(atomic_long_t *p, unsigned long old,
 					 unsigned long value)
 {
-	unsigned long actual = *p;
-	if (actual == old)
-		*p = value;
-	return actual;
+	__atomic_compare_exchange_n(p, &old, value, false, __ATOMIC_SEQ_CST,
+				    __ATOMIC_SEQ_CST);
+	return old;
 }
 static void *vzalloc(size_t size)
 {
@@ -199,6 +210,114 @@ static void check_serialized_timestamp(void)
 	kd_hotlock_exit();
 }
 
+/* A lookup must complete while a writer holds the lock, including collisions
+ * across the table's end. Populate each status through the actual sampler. */
+static void check_lockless_lookup(void)
+{
+	unsigned long base = KD_HOTLOCK_TABLE_SIZE - 1;
+	unsigned long flags;
+
+	start_sampling();
+	CHECK(sample_lock(base, 1000) == 1);
+	CHECK(kd_hotlock_state_get(base + KD_HOTLOCK_TABLE_SIZE) != NULL);
+	CHECK(kd_hotlock_record(base + 2 * KD_HOTLOCK_TABLE_SIZE) == 0);
+	CHECK(sample_lock(base + 3 * KD_HOTLOCK_TABLE_SIZE,
+			  KD_HOTLOCK_INITIAL_WINDOW) == 0);
+	raw_spin_lock_irqsave(&kd_hotlock_table_lock, flags);
+	forbid_table_lock = true;
+	CHECK(kd_hotlock_is_promoted(base));
+	CHECK(!kd_hotlock_is_promoted(0));
+	for (unsigned int i = 1; i <= 4; i++)
+		CHECK(!kd_hotlock_is_promoted(base + i * KD_HOTLOCK_TABLE_SIZE));
+	forbid_table_lock = false;
+	raw_spin_unlock_irqrestore(&kd_hotlock_table_lock, flags);
+	kd_hotlock_exit();
+}
+
+enum { CONCURRENT_LOCKS = 4, WRITERS = 2, READERS = 2 };
+static pthread_barrier_t start_workers;
+static unsigned int writers_done;
+
+static unsigned long concurrent_addr(unsigned int i)
+{
+	return KD_HOTLOCK_TABLE_SIZE - 1 + (unsigned long)i * KD_HOTLOCK_TABLE_SIZE;
+}
+
+static void *sample_concurrently(void *unused)
+{
+	(void)unused;
+	/* Equal timestamps keep the deterministic window open regardless of
+	 * thread scheduling; sample counts still come from concurrent producers. */
+	now = KD_HOTLOCK_WARMUP_CYCLES + 1;
+	pthread_barrier_wait(&start_workers);
+	for (unsigned int n = 0; n < KD_HOTLOCK_SAMPLE_TARGET / WRITERS; n++)
+		for (unsigned int i = 0; i < CONCURRENT_LOCKS; i++)
+			kd_hotlock_record(concurrent_addr(i));
+	__atomic_add_fetch(&writers_done, 1, __ATOMIC_RELEASE);
+	return NULL;
+}
+
+static void *lookup_concurrently(void *result)
+{
+	bool seen[CONCURRENT_LOCKS] = { false };
+	bool *valid = result;
+
+	*valid = true;
+	forbid_table_lock = true;
+	pthread_barrier_wait(&start_workers);
+	do {
+		for (unsigned int i = 0; i < CONCURRENT_LOCKS; i++) {
+			bool promoted = kd_hotlock_is_promoted(concurrent_addr(i));
+
+			if (seen[i] && !promoted)
+				*valid = false;
+			seen[i] = promoted;
+		}
+		/* An INIT entry and an absent colliding key must never inherit
+		 * another entry's promotion during insertion or probing. */
+		if (kd_hotlock_is_promoted(concurrent_addr(CONCURRENT_LOCKS)) ||
+		    kd_hotlock_is_promoted(concurrent_addr(CONCURRENT_LOCKS + 1)))
+			*valid = false;
+	} while (smp_load_acquire(&writers_done) != WRITERS);
+	for (unsigned int i = 0; i < CONCURRENT_LOCKS; i++)
+		if (!kd_hotlock_is_promoted(concurrent_addr(i)))
+			*valid = false;
+	return NULL;
+}
+
+/* Readers race with both slot creation and promotion; two writers contend on
+ * the same keys. This is userspace concurrency, not a kernel memory-model proof. */
+static void check_concurrent_lookup(void)
+{
+	pthread_t writers[WRITERS], readers[READERS];
+	bool valid[READERS] = { false };
+
+	start_sampling();
+	CHECK(kd_hotlock_state_get(concurrent_addr(CONCURRENT_LOCKS)) != NULL);
+	WRITE_ONCE(writers_done, 0);
+	CHECK(pthread_barrier_init(&start_workers, NULL, WRITERS + READERS) == 0);
+	for (unsigned int i = 0; i < WRITERS; i++)
+		if (pthread_create(&writers[i], NULL, sample_concurrently, NULL))
+			exit(2);
+	for (unsigned int i = 0; i < READERS; i++)
+		if (pthread_create(&readers[i], NULL, lookup_concurrently, &valid[i]))
+			exit(2);
+	for (unsigned int i = 0; i < WRITERS; i++)
+		CHECK(pthread_join(writers[i], NULL) == 0);
+	for (unsigned int i = 0; i < READERS; i++) {
+		CHECK(pthread_join(readers[i], NULL) == 0);
+		CHECK(valid[i]);
+	}
+	for (unsigned int i = 0; i < CONCURRENT_LOCKS; i++) {
+		struct kd_hotlock_state *state = kd_hotlock_state_get(concurrent_addr(i));
+
+		CHECK(state && state->samples == KD_HOTLOCK_SAMPLE_TARGET);
+		CHECK(kd_hotlock_is_promoted(concurrent_addr(i)));
+	}
+	CHECK(pthread_barrier_destroy(&start_workers) == 0);
+	kd_hotlock_exit();
+}
+
 static void check_lifecycle_and_capacity(void)
 {
 	struct kd_hotlock_state *first, *second;
@@ -234,6 +353,8 @@ int main(void)
 	check_inflight_window();
 	check_discovery_order();
 	check_serialized_timestamp();
+	check_lockless_lookup();
+	check_concurrent_lookup();
 	check_lifecycle_and_capacity();
 	printf("hotlock production sampling: %d checks, %d failures, slot=%zu bytes\n",
 	       checks, failures, sizeof(struct kd_hotlock_state));

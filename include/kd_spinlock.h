@@ -25,8 +25,8 @@ struct kd_spin_node {
 	uint64_t rsp;
 	struct qspinlock *lock;
 	struct task_struct *task_struct_ptr;
-	int irqs_disabled;
-	char dummy1[4];
+	/* Physical caller's IRQ state, saved before its stack is lent to JIT. */
+	unsigned long irq_flags;
 	union {
 		struct {
 			u8 completed;
@@ -63,8 +63,11 @@ struct kd_spin_node {
 int kd_spinlock_init(void);
 void kd_spinlock_exit(void);
 
-void kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value);
+void kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,
+		  unsigned long rip);
 void kd_spin_unlock(struct qspinlock *lock);
+/* The hook already found this acquisition ticket; reuse it through release. */
+void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref *ref);
 /*
  * Acquire a lock for a translated waiter without switching the C stack.
  * The queue path can execute this virtual waiter remotely and return updated

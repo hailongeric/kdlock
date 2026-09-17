@@ -7,6 +7,8 @@
 
 /* The scheduling word is never overlaid on origin. Entries remain stable
  * until controlled module teardown; an idle entry may serve a reused address.
+ * origin is release-published after initialization and acquire-read by find.
+ * A pointer proves map membership, never current ownership of Linux L.
  */
 struct kd_spin_gate {
 	struct orig_qspinlock word;

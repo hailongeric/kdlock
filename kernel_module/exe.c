@@ -194,12 +194,12 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 /* One logical invocation may cross several control/hostcall wrapper returns.
  * Keep exit classification here: backends must not infer replay permission
  * from an error number or from the optional generated-body witness. */
-int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
+int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
+			    unsigned long entry_ip,
 			    unsigned long outer_lock_addr)
 {
 	struct kd_exec_frame *frame = kd_exec_current_frame();
 	void (*translated)(struct pt_regs *regs, unsigned long *args);
-	struct kd_exe_info *exe;
 	unsigned long args[2];
 	int continuation_count = 0;
 	int hostcall_count = 0;
@@ -213,14 +213,14 @@ int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
 	    !frame->gsbase || !frame->logical_task)
 		return KD_EXE_RUN_ERROR;
 
-	/* Kernel critical sections share translations by RIP, independent of PID. */
-	exe = kd_get_exe(0, entry_ip);
-	if (!exe || !kd_exe_is_ready(0, entry_ip)) {
-		if (!exe) {
-			KD_PR_INFO("translation table exhausted: entry=%lx\n",
-				   entry_ip);
+	/* Reuse the caller's slot, not its earlier readiness result. A successful
+	 * frame push admitted a source lease; closure before that push refuses,
+	 * closure observed here refuses, and closure racing after this check must
+	 * retain pins while this frame drains. Slot storage/keys are never reused
+	 * in-session. This does not make in-place code uploads immutable. */
+	if (!kd_exe_entry_is_ready(exe, 0, entry_ip)) {
+		if (!exe)
 			return KD_EXE_NO_RUN;
-		}
 		KD_PR_INFO(
 			"translation not ready: exe=%px status=%d entry=%lx ip=%lx pid=%d\n",
 			exe, exe->status_code, exe->RIP, regs->ip, exe->pid);

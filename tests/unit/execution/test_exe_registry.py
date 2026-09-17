@@ -29,6 +29,8 @@ def lookup_code():
         "struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip)",
         "const struct kd_exe_info *kd_exe_get_slot(unsigned int index)",
         "bool kd_exe_publish_status(struct kd_exe_info *exe, int status)",
+        "bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, unsigned int pid,",
+        "struct kd_exe_info *kd_exe_find_ready(unsigned int pid, unsigned long ip)",
         "bool kd_exe_is_ready(unsigned int pid, unsigned long ip)",
     ):
         code += definition(source, name)
@@ -61,7 +63,9 @@ def production():
     for name in (
         "int kd_exe_init(void)",
         "void kd_exe_exit(void)",
+        "static bool kd_exe_registered(unsigned int pid, unsigned long rip,",
         "void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)",
+        "void kd_exe_retire_all(void)",
     ):
         code += definition(source, name)
     device = read_source((ROOT / "kernel_module/sys.c"))
@@ -115,6 +119,30 @@ def main():
         "upload-past-end": (
             "head.offset > KD_CODE_BLOCK_SIZE",
             "head.offset > KD_CODE_BLOCK_SIZE + 1",
+        ),
+        "repeat-enters-registration-gate": (
+            "if (kd_exe_registered(pid, rip, kind))",
+            "if (kd_exe_registered(pid, rip, kind) && false)",
+        ),
+        "unpublished-registration-hit": (
+            "if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED)",
+            "if (!exe)",
+        ),
+        "registered-wrong-pid": (
+            "return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == rip &&",
+            "return READ_ONCE(exe->RIP) == rip &&",
+        ),
+        "registered-wrong-rip": (
+            "return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == rip &&",
+            "return READ_ONCE(exe->pid) == pid &&",
+        ),
+        "registered-wrong-backend": (
+            "READ_ONCE(exe->lock_kind) == kind &&",
+            "(kind != KD_EXE_LOCK_UNKNOWN) &&",
+        ),
+        "registered-after-close": (
+            "READ_ONCE(exe->code_block) && kd_source_is_open();",
+            "READ_ONCE(exe->code_block);",
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-exe-registry-") as tmp:

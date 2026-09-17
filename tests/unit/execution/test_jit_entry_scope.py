@@ -54,7 +54,7 @@ def main():
             "static void kd_jit_log_hl_error(const char *reason,",
             "static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,",
             "static int kd_jit_call_limit_native(struct kd_exec_frame *frame,",
-            "int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,",
+            "int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,",
         ),
     }.items():
         source = read_source((ROOT / path))
@@ -80,7 +80,28 @@ def main():
         "static int kd_hostcall_dispatch(struct pt_regs *regs)",
     ):
         hostcalls += definition(executor, name)
+    # Instrument only lookup entry; keep the production probe/ready decisions.
+    lookup = lookup_code().replace(
+        "\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
+        "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
+    )
     mutations = {
+        "dispatch-rehashes-entry": (
+            "if (!kd_exe_entry_is_ready(exe, 0, entry_ip))",
+            "if (!kd_exe_is_ready(0, entry_ip))",
+        ),
+        "dispatch-reuses-old-ready-result": (
+            "if (!kd_exe_entry_is_ready(exe, 0, entry_ip))",
+            "if (!exe)",
+        ),
+        "ready-ignores-closing": (
+            "if (!exe || !ip || !kd_source_is_open())",
+            "if (!exe || !ip || (!kd_source_is_open() && false))",
+        ),
+        "ready-plain-status-read": (
+            "if (smp_load_acquire(&exe->status_code) != KD_EXE_NORMAL)",
+            "if (READ_ONCE(exe->status_code) != KD_EXE_NORMAL)",
+        ),
         "timing-clock-ignores-disable": (
             "unlikely(kd_jit_timing) ? ktime_get_ns() : 0",
             "ktime_get_ns()",
@@ -159,10 +180,9 @@ def main():
     with tempfile.TemporaryDirectory(prefix="kdlock-jit-entry-scope-") as tmp:
         directory = Path(tmp)
         (directory / "frame_types.h").write_text(types)
-        (directory / "registry_lookup.h").write_text(lookup_code())
         for name, mutation in [("production", None), *mutations.items()]:
             sources = {"frame_code.h": code, "hostcall_code.h": hostcalls,
-                       "timing_code.h": timing_code()}
+                       "timing_code.h": timing_code(), "registry_lookup.h": lookup}
             if mutation:
                 before, after = mutation
                 count = sum(source.count(before) for source in sources.values())
@@ -184,6 +204,7 @@ def main():
                     "-Wall",
                     "-Wextra",
                     "-Werror",
+                    *(["-DKD_ENTRY_MUTATION"] if mutation else []),
                     "-I",
                     str(directory),
                     "-I",

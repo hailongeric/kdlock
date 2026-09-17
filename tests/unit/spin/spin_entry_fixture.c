@@ -2,10 +2,20 @@
 /* Extracted origin-ticket lifetime code over deterministic gate primitives.
  * Allocation refusal, stale generations and borrow release are not live load. */
 #include "spin_gate_mock.h"
+#define smp_store_release(p, v) __atomic_store_n((p), (v), __ATOMIC_RELEASE)
+#define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 
 static bool mock_alloc_fail;
 #define alloc_percpu(type) (mock_alloc_fail ? NULL : calloc(2, sizeof(type)))
 #define free_percpu(p) free(p)
+
+/* Count temporary pins and per-CPU pool access separately from final balance.
+ * A read-only query must not add a scheduling boundary or take a guard. */
+static unsigned int lookup_pins, pool_reads;
+#undef preempt_disable
+#define preempt_disable() (lookup_pins++, mock_preempt++)
+#undef this_cpu_ptr
+#define this_cpu_ptr(p) (pool_reads++, &(p)[mock_cpu])
 
 /* This fixture owns tickets only. The routing fixture separately exercises
  * the production native fast owner and its integration with these queries. */
@@ -33,8 +43,9 @@ static void lifecycle(void)
 	CHECK(!kd_spin_entry_task_active() && !kd_spin_entry_native_active());
 	CHECK(kd_spin_entry_begin(NULL, KD_SPIN_ENTRY_HOOK, &ref) == -EINVAL);
 	mock_irq = true;
-	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) ==
-	      -EINVAL);
+	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) == 0);
+	CHECK(mock_irq && mock_preempt == 1);
+	CHECK(kd_spin_entry_end(&ref) == 0 && mock_irq && !mock_preempt);
 	mock_irq = false;
 	mock_in_task = false;
 	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) ==
@@ -57,6 +68,8 @@ static void lifecycle(void)
 	CHECK(kd_spin_entry_mark_native(&ref) == -EPERM);
 	CHECK(kd_spin_entry_end(&ref) == -EPERM);
 	CHECK(mock_preempt == 0 && ref.entry);
+	CHECK(!kd_spin_entry_find(&locks[0], &found));
+	CHECK(!kd_spin_entry_task_active() && !kd_spin_entry_native_active());
 	mock_preempt = 1;
 	current = &tasks[1];
 	CHECK(kd_spin_entry_end(&ref) == -EPERM);
@@ -82,12 +95,54 @@ static void lifecycle(void)
 	CHECK(kd_spin_entry_end(&ref) == 0 && !ref.entry && mock_preempt == 0);
 	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_VIRTUAL, &ref) == 0);
 	CHECK(ref.entry == stale.entry && ref.sequence != stale.sequence);
+	CHECK(kd_spin_entry_gate(&stale) == NULL);
 	CHECK(kd_spin_entry_end(&stale) == -ESTALE);
 	CHECK(kd_spin_entry_borrow_get(&stale) == -ESTALE);
 	CHECK(kd_spin_entry_borrow_put(&stale, &last) == -ESTALE);
 	CHECK(kd_spin_entry_borrow_get(&ref) == -EINVAL);
 	CHECK(kd_spin_entry_mark_native(&ref) == -EINVAL);
 	CHECK(kd_spin_entry_end(&ref) == 0);
+}
+
+/* Live tickets keep their own pin, while root callers cannot own a ticket.
+ * Exercise those two cases, including read-only access while guard is held. */
+static void read_only_queries(void)
+{
+	struct kd_spin_ref ref = { 0 }, found = { 0 };
+	struct kd_spin_gate *gate;
+	unsigned int pins = lookup_pins, reads = pool_reads, guards = map_locks;
+	unsigned long flags;
+
+	CHECK(mock_preempt == 0);
+	CHECK(!kd_spin_entry_task_active() && !kd_spin_entry_native_active());
+	CHECK(!kd_spin_entry_find(&locks[0], &found));
+	CHECK(lookup_pins == pins && pool_reads == reads && map_locks == guards);
+	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) == 0);
+	gate = kd_spin_gate_find(&locks[0]);
+	pins = lookup_pins;
+	guards = map_locks;
+	CHECK(kd_spin_entry_task_active() && !kd_spin_entry_native_active());
+	CHECK(kd_spin_entry_find(&locks[0], &found));
+	CHECK(found.entry == ref.entry && found.sequence == ref.sequence);
+	CHECK(kd_spin_entry_gate(&ref) == gate);
+	CHECK(lookup_pins == pins && map_locks == guards && mock_preempt == 1);
+	raw_spin_lock_irqsave(&ref.entry->guard, flags);
+	CHECK(kd_spin_entry_gate(&ref) == gate);
+	raw_spin_unlock_irqrestore(&ref.entry->guard, flags);
+	/* CPU/task/generation checks still protect the guard-free read. */
+	current = &tasks[1];
+	CHECK(kd_spin_entry_gate(&ref) == NULL);
+	current = &tasks[0];
+	select_cpu(1);
+	preempt_disable();
+	CHECK(kd_spin_entry_gate(&ref) == NULL);
+	preempt_enable();
+	select_cpu(0);
+	mock_in_task = false;
+	CHECK(kd_spin_entry_gate(&ref) == NULL);
+	CHECK(!kd_spin_entry_find(&locks[0], &found));
+	mock_in_task = true;
+	CHECK(kd_spin_entry_end(&ref) == 0 && mock_preempt == 0);
 }
 
 static void remote_native(void)
@@ -250,6 +305,7 @@ int main(void)
 	CHECK(kd_spin_entries_init() == 0);
 	CHECK(kd_spin_entries_init() == -EBUSY);
 	lifecycle();
+	read_only_queries();
 	remote_native();
 	reclaim();
 	capacity();

@@ -13,7 +13,9 @@ enum kd_hotlock_status {
 	KD_HOTLOCK_IGNORE,
 };
 
-/* Entries never move after publication, so lock hooks may retain this pointer. */
+/* Entries never move after release-publication of lock_addr. Promotion readers
+ * acquire the address and READ_ONCE(status); other fields require the writer
+ * lock. Pointers remain valid only until callers drain before module teardown. */
 struct kd_hotlock_state {
 	unsigned long lock_addr;
 	unsigned long begin_cycles;

@@ -37,9 +37,8 @@ static int encode_tail(int cpu, int index)
 	return 1 << 16;
 }
 
-static int xchg_tail(struct qspinlock *lock, int tail)
+static int xchg_tail(struct qspinlock *word, int tail)
 {
-	struct qspinlock *word = kd_spin_word(lock);
 	int old = atomic_read(&word->val);
 
 	CHECK(preentry_queue_case && mock_cpu == 0 && word->locked == 3);
@@ -75,10 +74,10 @@ static bool kd_spin_is_ooo(struct qspinlock *lock)
 	return kd_spin_word(lock)->locked == _Q_UNLOCKED_OOO_VAL;
 }
 
-static void check_and_set_combiner(struct qspinlock *lock)
+static void check_and_set_combiner(struct qspinlock *word)
 {
-	CHECK(kd_spin_word(lock)->locked == 0);
-	kd_spin_word(lock)->locked = _Q_LOCKED_COMBINER_VAL;
+	CHECK(word->locked == 0);
+	word->locked = _Q_LOCKED_COMBINER_VAL;
 }
 
 void kd_exec_remote_poll(struct kd_exec_frame *frame)
@@ -93,8 +92,26 @@ static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
 	CHECK(kd_spin_lock_stack_depth(ptr) <= KD_EXEC_MAX_LOCK_DEPTH);
 }
 
+/* These scenarios exclusively queue virtual waiters on their executor's
+ * stable C stack. Physical stack abandonment is tested by test_spin_wait. */
+#define local_irq_save(flags) ((flags) = 0)
+#define local_irq_restore(flags) ((void)(flags))
+static void kd_spin_publish_wait(struct kd_spin_node *node,
+				 struct kd_spin_node *previous)
+{
+	(void)node;
+	(void)previous;
+	abort();
+}
+
 #undef request
+#undef run_combiner
+#undef kd_spin_claim_origin
+#define run_combiner checked_queue_combiner
 #include "spin_queue_return_production.h"
+#undef run_combiner
+#define run_combiner checked_run_combiner
+#define kd_spin_claim_origin test_claim_origin
 #define request kd_spin_nodes[0]
 
 static void preentry_queue_peer(void)

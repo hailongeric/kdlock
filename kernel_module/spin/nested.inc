@@ -93,11 +93,12 @@ static int kd_spin_finish_remote_node(struct kd_spin_node *node,
 int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 			struct kd_exec_frame *parent)
 {
-	struct kd_spin_ref request = { 0 };
+	struct kd_spin_request request = { 0 };
 	struct qspinlock *word;
 	struct kd_spin_node *base, *node;
 	struct kd_spin_jit_context *contexts;
 	u32 tail;
+	unsigned long irq_flags;
 	int idx, ret;
 #ifdef KDLOCK_SELFTEST
 	int initial_preempt = preempt_count();
@@ -120,16 +121,16 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		lock, NULL, regs, parent, &contexts, initial_preempt);
 #endif
 	ret = kd_spin_entry_begin((raw_spinlock_t *)lock, KD_SPIN_ENTRY_VIRTUAL,
-				  &request);
+				  &request.ref);
 #ifdef KDLOCK_SELFTEST
 	if (refusal_probe)
-		kd_spin_selftest_virtual_end(&request, regs, parent, ret);
+		kd_spin_selftest_virtual_end(&request.ref, regs, parent, ret);
 #endif
 	if (ret)
 		return ret;
-	word = kd_spin_word(lock);
+	word = request.word = kd_spin_request_word(&request.ref);
 	if (atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL) == 0) {
-		kd_spin_claim_origin(lock);
+		kd_spin_claim_origin(&request);
 		parent->control_call.phase = KD_CALL_ACQUIRED;
 		return KD_SPIN_NESTED_ACQUIRED;
 	}
@@ -139,7 +140,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 #ifdef KDLOCK_SELFTEST
 	/* Exercise real post-ticket cancellation before any node is published. */
 	refusal_probe = kd_spin_selftest_virtual_begin(
-		lock, &request, regs, parent, &contexts, initial_preempt);
+		lock, &request.ref, regs, parent, &contexts, initial_preempt);
 #endif
 	if (!contexts) {
 		kd_spin_selftest_node_event(KD_NODE_CONTEXT_MISSING);
@@ -167,7 +168,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	node->lock = lock;
 	node->task_struct_ptr = NULL;
 	node->gsbase = 0;
-	node->irqs_disabled = false;
+	node->irq_flags = 0; /* Virtual nodes never restore the physical waiter. */
 	node->exec_frame = NULL;
 	node->jit_retry = false;
 	node->native_resume = false;
@@ -185,7 +186,11 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		kd_spin_lock_stack_depth(this_cpu_ptr(&local_shadow_stack)));
 	parent->control_call.phase = KD_CALL_ENTERED;
 	smp_store_release(&parent->remote_result, KD_EXEC_REMOTE_WAITING);
-	ret = __kd_spin_lock_longjmp(lock, tail, node);
+	/* The executor's C stack is independent of the logical waiter stack.
+	 * Keep this entire queue/combiner interval IRQ-off, then restore it. */
+	local_irq_save(irq_flags);
+	ret = __kd_spin_lock_longjmp(lock, tail, node, &request);
+	local_irq_restore(irq_flags);
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_refusal_return(parent, node, ret);
 #endif
@@ -195,7 +200,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		*regs = node->regs;
 		parent->control_call.phase = KD_CALL_COMPLETE;
 		/* Retire B's physical request, not the logical waiter's native ref. */
-		BUG_ON(kd_spin_entry_end(&request));
+		BUG_ON(kd_spin_entry_end(&request.ref));
 		return KD_SPIN_NESTED_NATIVE;
 	}
 	if (ret == 0) {
@@ -212,13 +217,13 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		return -EIO;
 	ret = kd_spin_finish_remote_node(node, regs, parent);
 	parent->control_call.phase = KD_CALL_COMPLETE;
-	BUG_ON(kd_spin_entry_end(&request));
+	BUG_ON(kd_spin_entry_end(&request.ref));
 	return ret;
 cancel:
-	BUG_ON(kd_spin_entry_end(&request));
+	BUG_ON(kd_spin_entry_end(&request.ref));
 #ifdef KDLOCK_SELFTEST
 	if (refusal_probe)
-		kd_spin_selftest_virtual_end(&request, regs, parent, ret);
+		kd_spin_selftest_virtual_end(&request.ref, regs, parent, ret);
 #endif
 	return ret;
 }
@@ -228,13 +233,15 @@ cancel:
  */
 int kd_spin_nested_unlock(struct qspinlock *lock)
 {
+	struct kd_spin_request request;
 	bool ooo;
 
 	if (!lock)
 		return -EINVAL;
 
-	kd_spin_unlock(lock);
-	ooo = kd_spin_is_ooo(lock);
+	request = kd_spin_unlock_lookup(lock);
+	kd_spin_unlock_request(lock, &request);
+	ooo = READ_ONCE(request.word->locked) == _Q_UNLOCKED_OOO_VAL;
 	if (ooo)
 		return KD_SPIN_NESTED_UNLOCK_OOO;
 

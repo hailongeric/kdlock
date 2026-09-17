@@ -122,13 +122,15 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 			      path == PRODUCER_NATIVE ||
 			      path == PRODUCER_PARENT_OOO;
 
+		/* Physical completion now uses one nonlocal restore for both old
+		 * return classes 1/3; virtual returns retain their parent result. */
 		expected =
 			path == PRODUCER_COMBINER ?
 				(virtual ? KD_SPIN_NESTED_ACQUIRED_QUEUE : 2) :
 			path == PRODUCER_NATIVE ?
 				(virtual ? KD_SPIN_NESTED_NATIVE : 5) :
 			path == PRODUCER_PARENT_OOO ?
-				1 :
+				(virtual ? 1 : 3) :
 			path == PRODUCER_COMPLETE ?
 				(virtual ?
 					 (complete ? KD_SPIN_NESTED_PARENT_OOO :

@@ -35,6 +35,7 @@ static struct task_struct *current = &tasks[0];
 static int mock_cpu, mock_preempts[2];
 static bool mock_irq, mock_in_task = true;
 static unsigned int native_claims, native_releases, checks;
+static unsigned int map_locks, gate_hashes;
 
 #define mock_preempt mock_preempts[mock_cpu]
 #define CHECK(condition)           \
@@ -75,11 +76,13 @@ static unsigned long hash_long(unsigned long key, unsigned int bits)
 {
 	(void)key;
 	(void)bits;
+	gate_hashes++;
 	return 0; /* Force all map entries through the same probe chain. */
 }
 
 static void mock_map_lock(raw_spinlock_t *lock, unsigned long *flags)
 {
+	map_locks++;
 	CHECK(!lock->held);
 	lock->held = true;
 	*flags = mock_irq;

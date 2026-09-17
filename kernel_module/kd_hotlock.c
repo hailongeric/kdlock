@@ -2,7 +2,8 @@
  * Hot-lock detection for deciding when delegation is worth its setup cost.
  *
  * The table is append-only for the lifetime of the module. A single raw lock
- * protects slot publication and sampling because hooks may run with IRQs off.
+ * serializes writers because hooks may run with IRQs off. Promotion queries
+ * only read published slots; teardown still requires callers to be drained.
  */
 #include <asm/tsc.h>
 #include <linux/errno.h>
@@ -25,7 +26,7 @@ static DEFINE_RAW_SPINLOCK(kd_hotlock_table_lock);
 static atomic_long_t kd_hotlock_start_cycles;
 
 static struct kd_hotlock_state *
-kd_hotlock_lookup_locked(unsigned long lock_addr, bool create)
+kd_hotlock_get_locked(unsigned long lock_addr)
 {
 	unsigned int pos = lock_addr % KD_HOTLOCK_TABLE_SIZE;
 	unsigned int probes;
@@ -36,9 +37,9 @@ kd_hotlock_lookup_locked(unsigned long lock_addr, bool create)
 		if (state->lock_addr == lock_addr)
 			return state;
 		if (!state->lock_addr) {
-			if (!create)
-				return NULL;
-			state->lock_addr = lock_addr;
+			/* Publish the zero-initialized slot to lockless readers. Slots
+			 * are never removed, reused or moved while hooks can run. */
+			smp_store_release(&state->lock_addr, lock_addr);
 			return state;
 		}
 		pos = (pos + 1) % KD_HOTLOCK_TABLE_SIZE;
@@ -89,7 +90,7 @@ struct kd_hotlock_state *kd_hotlock_state_get(unsigned long lock_addr)
 		return NULL;
 
 	raw_spin_lock_irqsave(&kd_hotlock_table_lock, flags);
-	state = kd_hotlock_lookup_locked(lock_addr, true);
+	state = kd_hotlock_get_locked(lock_addr);
 	raw_spin_unlock_irqrestore(&kd_hotlock_table_lock, flags);
 	return state;
 }
@@ -113,7 +114,7 @@ int kd_hotlock_record(unsigned long lock_addr)
 		return 0;
 
 	raw_spin_lock_irqsave(&kd_hotlock_table_lock, flags);
-	state = kd_hotlock_lookup_locked(lock_addr, true);
+	state = kd_hotlock_get_locked(lock_addr);
 	if (!state)
 		goto out;
 
@@ -135,7 +136,7 @@ int kd_hotlock_record(unsigned long lock_addr)
 	}
 
 	if (state->status == KD_HOTLOCK_INIT) {
-		state->status = KD_HOTLOCK_CHECKING;
+		WRITE_ONCE(state->status, KD_HOTLOCK_CHECKING);
 		state->begin_cycles = now;
 		/* Judge each lock against the same frequency threshold. A fast A
 		 * must not permanently suppress a later B by shrinking its window;
@@ -147,9 +148,9 @@ int kd_hotlock_record(unsigned long lock_addr)
 
 	state->end_cycles = now;
 	if (state->end_cycles - state->begin_cycles >= state->sample_window) {
-		state->status = KD_HOTLOCK_IGNORE;
+		WRITE_ONCE(state->status, KD_HOTLOCK_IGNORE);
 	} else if (state->samples == KD_HOTLOCK_SAMPLE_TARGET) {
-		state->status = KD_HOTLOCK_DELEGATE;
+		WRITE_ONCE(state->status, KD_HOTLOCK_DELEGATE);
 		KD_PR_INFO("uaddr %lx begin delegate\n", lock_addr);
 		promoted = 1;
 	}
@@ -161,19 +162,30 @@ out:
 
 bool kd_hotlock_is_promoted(unsigned long lock_addr)
 {
-	struct kd_hotlock_state *state;
-	unsigned long flags;
-	bool promoted = false;
+	struct kd_hotlock_state *table = READ_ONCE(kd_hotlocks);
+	unsigned int pos = lock_addr % KD_HOTLOCK_TABLE_SIZE;
+	unsigned int probes;
 
-	if (!lock_addr || !kd_hotlocks)
+	if (!lock_addr || !table)
 		return false;
 
-	raw_spin_lock_irqsave(&kd_hotlock_table_lock, flags);
-	state = kd_hotlock_lookup_locked(lock_addr, false);
-	if (state)
-		promoted = state->status == KD_HOTLOCK_DELEGATE;
-	raw_spin_unlock_irqrestore(&kd_hotlock_table_lock, flags);
-	return promoted;
+	/* Match the writer's probe order. An empty slot ends the search because
+	 * entries are append-only. A racing insertion/promotion may return false;
+	 * callers then use the serialized sampler and the original native lock.
+	 * Status is only an admission hint, not publication of sampling data or
+	 * JIT code. No reader lock/RMW or IRQ masking is needed here. */
+	for (probes = 0; probes < KD_HOTLOCK_TABLE_SIZE; probes++) {
+		struct kd_hotlock_state *state = &table[pos];
+		unsigned long addr = smp_load_acquire(&state->lock_addr);
+
+		if (addr == lock_addr)
+			return READ_ONCE(state->status) == KD_HOTLOCK_DELEGATE;
+		if (!addr)
+			return false;
+		pos = (pos + 1) % KD_HOTLOCK_TABLE_SIZE;
+	}
+
+	return false;
 }
 
 #ifdef KDLOCK_SELFTEST
@@ -193,9 +205,9 @@ static int kd_hotlock_test_promote_set(const char *value,
 	if (!kd_hotlocks)
 		return -EAGAIN;
 	raw_spin_lock_irqsave(&kd_hotlock_table_lock, flags);
-	state = kd_hotlock_lookup_locked(addr, true);
+	state = kd_hotlock_get_locked(addr);
 	if (state) {
-		state->status = KD_HOTLOCK_DELEGATE;
+		WRITE_ONCE(state->status, KD_HOTLOCK_DELEGATE);
 		*(unsigned long *)param->arg = addr;
 	}
 	raw_spin_unlock_irqrestore(&kd_hotlock_table_lock, flags);

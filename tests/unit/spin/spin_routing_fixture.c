@@ -3,6 +3,9 @@
  * Native ownership, active tickets and closing must select the correct path;
  * this does not run queue scheduling or an assembly continuation. */
 #include "spin_gate_mock.h"
+#include <stddef.h>
+#define container_of(p, type, member) ((type *)((char *)(p) - offsetof(type, member)))
+#define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 
 typedef unsigned int u32;
 static bool promoted, frame_active, context_busy;
@@ -93,9 +96,11 @@ static struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long rip)
 }
 
 struct orig_qspinlock;
+struct kd_spin_request;
 static void kd_spin_lock_slowpath(struct orig_qspinlock *lock,
-				  unsigned long rsp)
+				  unsigned long rsp, struct kd_spin_request *request)
 {
+	(void)request;
 	(void)lock;
 	(void)rsp;
 	CHECK(false); /* This fixture never represents a queue or JIT completion. */
@@ -181,7 +186,16 @@ static void promotion_and_rename(void)
 
 static void native_contexts(void)
 {
-	for (unsigned int context = 0; context < 6; context++) {
+	/* Unlike hardirq/BH contexts, task context with IRQs masked is admitted. */
+	mock_irq = true;
+	hook_lock(&locks[0]);
+	CHECK(mock_irq && mock_preempt == 1 && locks[0].held);
+	CHECK(kd_spin_entry_task_active());
+	hook_unlock(&locks[0]);
+	CHECK(mock_irq && !mock_preempt && !locks[0].held);
+	mock_irq = false;
+	scenarios++;
+	for (unsigned int context = 1; context < 6; context++) {
 		mock_irq = context == 0;
 		softirq = context == 1;
 		current->migration_disabled = context == 2;
@@ -266,7 +280,9 @@ static void native_fast_root(void)
 	unsigned long generation = gate->generation;
 
 	registered.status_code = KD_EXE_NORMAL;
-	kd_spin_fast_remember(&locks[0], 0x1000);
+	preempt_disable();
+	kd_spin_fast_remember(&locks[0], 0x1000, gate);
+	preempt_enable();
 	adds = registrations;
 	for (unsigned int i = 0; i < 4; i++) {
 		hook_lock(&locks[0]);
@@ -345,6 +361,26 @@ static void native_fast_root(void)
 	scenarios++;
 }
 
+/* A promoted root with an existing gate should hash L only once, in begin.
+ * Cache population and physical claim/unlock must reuse that gate/ticket.
+ * Force cache misses to measure the ticket path, not native-fast success. */
+static void request_reuses_gate(void)
+{
+	registered.status_code = KD_EXE_NORMAL;
+	for (unsigned int i = 0; i < 100; i++) {
+		unsigned int before = gate_hashes;
+
+		memset(&kd_spin_fast_cpu[mock_cpu], 0,
+		       sizeof(kd_spin_fast_cpu[mock_cpu]));
+		hook_lock(&locks[0]);
+		CHECK(kd_spin_fast_cpu[mock_cpu].origin == &locks[0]);
+		CHECK(locks[0].held && mock_preempt == 1);
+		hook_unlock(&locks[0]);
+		CHECK(!locks[0].held && !mock_preempt);
+		CHECK(gate_hashes == before + 1);
+	}
+}
+
 int main(void)
 {
 	/* Exact name equivalence, including embedded terminator/stale tail bytes
@@ -368,6 +404,7 @@ int main(void)
 	native_contexts();
 	native_continuation_helpers();
 	native_fast_root();
+	request_reuses_gate();
 	bounded_fallback();
 	CHECK(kd_spin_entries_check_idle() == 0 &&
 	      kd_spin_gates_check_idle() == 0);
