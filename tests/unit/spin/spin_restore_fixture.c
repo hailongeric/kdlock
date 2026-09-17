@@ -60,8 +60,8 @@ asm(".text\n.type capture,@function\ncapture:\n"
 int main(void)
 {
 	volatile unsigned int iteration;
-	_Static_assert(offsetof(struct kd_spin_exec_request, frame.regs) == 0,
-		       "restore packet must begin at the request address");
+	_Static_assert(offsetof(struct kd_spin_exec_request, frame.regs) == 64,
+		       "restore packet follows the hot header");
 	for (iteration = 0; iteration < 96; iteration++) {
 		unsigned long flags, *packet = (void *)&execution.frame.regs;
 		unsigned int mode = iteration % 3;
@@ -71,6 +71,7 @@ int main(void)
 			packet[i] = 0x12340000UL + i;
 		extra_user = mode == 2;
 		execution.users = 1 + extra_user;
+		execution.frame.spin_simple = !mode && iteration % 2;
 		execution.frame.regs.ip = (unsigned long)capture;
 		execution.frame.regs.sp = (unsigned long)(stack + sizeof(stack) -
 							(mode ? 8 : 16));

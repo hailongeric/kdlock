@@ -27,14 +27,14 @@ kd_spin_publish_wait(struct kd_spin_node *node, struct kd_spin_node *previous,
 		"jmp 1b\n"
 		/* These loads acquire the release wakeup on x86. A head wake did
 		 * not execute our body, so its C frames are still intact. */
-		"2: cmpb $0, %c[native](%[node])\n"
+		"2: movq %c[execution](%[node]), %%rdi\n"
+		"cmpb $0, %c[native](%%rdi)\n"
 		"jne 3f\n"
 		"cmpb $0, %c[completed](%[node])\n"
 		"je 4f\n"
 		/* Discard every old hook/queue frame. Only start C again below both
 		 * the saved physical RSP and the final logical RSP. */
-		"3: movq %[node], %%rdi\n"
-		"movq %c[rsp](%%rdi), %%rax\n"
+		"3: movq %c[rsp](%[node]), %%rax\n"
 		"movq %c[regs](%%rdi), %%rdi\n"
 		"cmpq %c[sp](%%rdi), %%rax\n"
 		"cmovaq %c[sp](%%rdi), %%rax\n"
@@ -49,10 +49,11 @@ kd_spin_publish_wait(struct kd_spin_node *node, struct kd_spin_node *previous,
 		  [stack_top] "r"(wait_stack_top),
 		  [next] "i"(offsetof(struct kd_spin_node, next)),
 		  [locked] "i"(offsetof(struct kd_spin_node, locked)),
-		  [native] "i"(offsetof(struct kd_spin_node, native_resume)),
+		  [execution] "i"(offsetof(struct kd_spin_node, execution)),
+		  [native] "i"(offsetof(struct kd_spin_exec_request, native_resume)),
 		  [completed] "i"(offsetof(struct kd_spin_node, completed)),
 		  [rsp] "i"(offsetof(struct kd_spin_node, rsp)),
-		  [regs] "i"(offsetof(struct kd_spin_node, regs)),
+		  [regs] "i"(offsetof(struct kd_spin_exec_request, frame.regs_ref)),
 		  [sp] "i"(offsetof(struct pt_regs, sp)),
 		  [resume] "i"(kd_spin_resume_completed)
 		: "rax", "rdi", "cc", "memory");

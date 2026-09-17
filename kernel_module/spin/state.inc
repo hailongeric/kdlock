@@ -9,7 +9,6 @@
 
 #define IRQ_NUMA_NODE 255
 #define KD_SPIN_DIAG_SLOTS 32
-#define KD_SPIN_NUM_PREFETCH_LINES 6
 
 static const unsigned int kd_combiner_batch_size = 1024;
 
@@ -137,15 +136,28 @@ enum kd_spin_diag_event {
 
 struct kd_spin_diag_slot {
 	atomic_long_t addr;
-	atomic64_t event[KD_SPIN_DIAG_EVENT_COUNT];
-	atomic_t max_depth;
 	atomic_t waiter_count;
 	atomic_t jit_disabled;
 };
 
+/* Slots keep their identity for the module session. Only live observations
+ * and the disable latch are shared; drained reporting folds these CPU-local
+ * counters, avoiding a shared atomic RMW for every delegated body. */
+struct kd_spin_diag_counts {
+	u64 event[KD_SPIN_DIAG_EVENT_COUNT];
+	int max_depth;
+};
+
+struct kd_spin_diag_cpu {
+	struct kd_spin_diag_counts slot[KD_SPIN_DIAG_SLOTS];
+	u64 overflow;
+	u64 invariant_failures;
+	u64 batch_entries;
+	u64 ww_jumps;
+};
+
 static struct kd_spin_diag_slot kd_spin_diag_slots[KD_SPIN_DIAG_SLOTS];
-static atomic64_t kd_spin_diag_overflow;
-static atomic64_t kd_spin_diag_invariant_failures;
+static struct kd_spin_diag_cpu __percpu *kd_spin_diag_cpu;
 
 #define smp_cond_load_relaxed_sched(ptr, cond_expr) \
 	({                                          \

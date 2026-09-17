@@ -42,7 +42,7 @@ dispatch 端点不含正文时间、单次消费、拒绝保留和 native 发布
 
 | 统计对象 | 当前数量 | 含义 |
 | --- | --- | --- |
-| `tests/unit/Makefile` 的入口 | 41 | 2 个 C 程序、39 个 Python 程序；`make ... run` 默认仅两个基础 C，`run-all` 显式全量 |
+| `tests/unit/Makefile` 的入口 | 42 | 2 个 C 程序、40 个 Python 程序；`make ... run` 默认仅两个基础 C，`run-all` 显式全量 |
 | Python `test_*` 方法定义 | 501 | 静态 AST 计数；不含 C 断言、`main()` 驱动和 `subTest` 参数展开，不能作为全部用例数 |
 | `tests/live/test_*.sh` | 22 | 编号有空缺，不能按最大编号 24 计数；包括调度器、组件自测和 GS 正例 |
 | `regression.py` 的 `CASES` | 80 | 固定回归的唯一命名用例；不含配对实验按参数生成的会话 |
@@ -196,7 +196,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_jit_diagnostics.py` | warning/error 定位、去重、flags/特殊指令现状及构建错误 | 验证诊断而非修复指令语义；其 helper 供其他单元复用，保留 |
 | `test_jit_body_witness.py` | 实际 wrapper/body marker、dispatcher 负例、entry/lock 匹配日志 | 与 guards 共用用户态执行工具，但专测执行证据是否可信，保留 |
 
-### 4.3 生产资源与控制流：十五个 Python 程序
+### 4.3 生产资源与控制流
 
 这些程序提取或包含生产 C，通常以确定性原语替代锁、CPU、调度或 JIT body，
 不是内核并发证明。代码提取 helper 的 import 不会运行提供方的 `main()`；
@@ -205,8 +205,8 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | 文件 | 实际被测内容 | 重叠判断 |
 | --- | --- | --- |
 | `test_exe_registry.py` | registry 探测、真实代码池、注册/上传设备边界；实际服务表的编译契约及计量重置/卸载 | 与 entry-scope 是发布者/执行消费者关系；服务 manifest/adapter 变化也须运行，保留 |
-| `test_exec_capacity.py` | 生产 frame 分配/ledger/完成状态、完整包、容量及 remote/native 引用未排空的 pop 拒绝、两后端清理和 TID 退出观察器 | 已接替旧 frame 模型；实际 pop/观察器检查不同于真实 ACK/退出，链表、物理解锁、PID/RCU/time 仍为替代，保留 |
-| `test_jit_entry_scope.py` | 生产入口/续点、远端准入/source 拒绝、typed hostcall allowlist、完整 RDI 参数/RAX 返回/共同额度，以及超额度 CALL 包的前进续跑与坏包拒绝；可选边界计时及开关前后完整 frame/包一致性 | 承接 CALL 模型的高层策略；wrapper/服务/时钟是替代原语，不能取代 guards 或真实服务数值验证，保留 |
+| `test_exec_capacity.py` | 生产 frame 分配/ledger/完成状态、单锁冷区保持不变及按需展开、完整包、容量及 remote/native 引用未排空的 pop 拒绝、两后端清理和 TID 退出观察器 | 已接替旧 frame 模型；实际 pop/观察器检查不同于真实 ACK/退出，链表、物理解锁、PID/RCU/time 仍为替代，保留 |
+| `test_jit_entry_scope.py` | 生产入口/续点、批次准入与已执行出口只消费一次、远端准入/source 拒绝、typed hostcall allowlist、完整 RDI 参数/RAX 返回/共同额度，以及超额度 CALL 包的前进续跑与坏包拒绝；可选边界计时及开关前后完整 frame/包一致性 | 承接 CALL 模型的高层策略；wrapper/服务/时钟是替代原语，不能取代 guards 或真实服务数值验证，保留 |
 | `test_source_lifetime.py` | source pin、设备能力、OPEN/retire、writer/frame 计数 | 与 source-depth 日志测试及 live 退休是不同层次，保留 |
 | `test_hotlock_sampling.py` | 替代 TSC 下的生产采样：快/慢锁两种发现顺序、两个实际 producer 的交错更新、在途窗口、严格截止/样本数量、容量；四种策略变异 | 精确时间边界不被自然 promotion 成功覆盖，保留；旧生产实现被新断言拒绝，不新增单元入口 |
 | `test_spin_gate.py` | 生产 gate/hold map、代际/原锁 owner；另测冷入口和已执行 JIT 的 gate-pressure 日志 | 后者要求独立 ENOMEM/CALL 包、双 frame、一次副作用与 ACK；与 entry/routing 共用实现但直接验证表和 owner 边界，保留 |
@@ -215,8 +215,10 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_spin_shadow.py` | 生产队首、combiner、native/virtual node producer、取消与嵌套返回 | 已覆盖被删除的节点计数模型；保留此生产测试 |
 | `test_spin_wait.py` | guest 用户态执行生产 `spin/wait.inc` 汇编，另一线程覆盖旧 C 栈后检查完成/native 恢复，以及普通队首返回 | 专门检查发布后无栈等待和非局部恢复；不模拟内核 IRQ，不替代实际 JIT |
 | `test_spin_outer_progress.py` | 生产 batch/frame/ticket、提前 outer-release、frame 池拒绝、真实 gate 满表 ENOMEM 的完整包不变，以及 release 前的包和唤醒后槽复用 | gate 失败由真实 nested producer 产生、PENDING helper 恢复 callee/SP；与 shadow 队首部分交叉，但保留 frame/原锁和发布边界；不证明实际 JIT 或硬件内存序 |
+| `test_spin_wwjump.py` | guest 用户态执行真实 `spin_batch.S` 和 wrapper 普通/批次入口，核对单锁最小回写、hostcall/CALL miss/refusal 完整包、每次正文只执行一次及两元素 args | 使用小型生成正文替身；真实队列和 JIT 正文通过 live/benchmark 核对，不验证硬件 IRQ/flags |
+| `test_spin_batch.py` | 生产批内 exe 缓存/readiness 失效、per-CPU 计数与最大深度汇总、真实结构布局下的 physical/virtual 预取地址与栈界限 | CPU、IRQ 和 prefetch 是确定性替身；检查缓存命中仍拒绝失效条目、汇总含离线 CPU，不能证明真实 CPU 热插拔或缓存性能 |
 | `test_remote_outer.py` | 生产远端祖先解锁/native ACK，完整 168 字节寄存器包、CALL 返回字和 DONE 后父 frame 复用；两后端 native wait 计量开关、错误返回及多层区间重叠；含十一种故障变异 | 本地 outer 验证 node 发布，本项验证跨执行者关系，protocol 单元验证坏日志；三者不能互相替代。CPU/发布/时钟观察为替代，不证明硬件 flags/并发 |
-| `test_mutex_resources.py` | 生产 tail 编解码、node mask、shadow 表、hook/selector、完整 slowpath 包、改名/关闭准入路由 | 接替 mutex/tail 模型；per-CPU 存储和 task 引用仍为替代原语，保留资源边界与故障变异 |
+| `test_mutex_resources.py` | 生产 tail 编解码、node mask、同 CPU 同队列未发布回退、shadow 表、hook/selector、完整 slowpath 包、改名/关闭准入路由 | 接替 mutex/tail 模型；per-CPU 存储和 task 引用仍为替代原语，保留资源边界与故障变异 |
 | `test_mutex_outer_progress.py` | 生产 mutex executor/combiner/outer-event、owner 保留和后继进度；真实日志宏的 INFO/格式/次数，以及 ALERT/关闭日志两个变异 | 与 spin outer 是不同后端；提供被删除 mutex 模型的生产控制流检查。仅替代 printk sink，不证明串口或调度成本；定向结果见 [日志验收](VALIDATION.md#mutex-routine-log-severity) |
 | `test_native_after_outer.py` | 生产 native/control CALL、mutex B 获取/解锁、提前 A、栈变化、已获取 spin 续点；附 acquired oracle | 与 combiner 是事件生产者/消费者关系；原生 B 等待替代，CALL 阶段与拒绝不变性保留 |
 

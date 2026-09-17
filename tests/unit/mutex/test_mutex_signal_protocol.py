@@ -1033,6 +1033,12 @@ def call_quota_fixture():
 
 
 class CallQuotaTests(unittest.TestCase):
+    def test_quota_callers_use_available_independent_cpus(self):
+        for cpu in (2, 3, 4):
+            args = call_quota_fixture()
+            args[0] = args[0].replace("cpu=1", f"cpu={cpu}")
+            self.assertEqual(validate_call_quota(*args)["quota_native"], 2)
+
     def test_normal_returns_and_quota_suffixes_are_distinct(self):
         result = validate_call_quota(*call_quota_fixture())
         self.assertEqual(result["normal_jit"], 2)
@@ -1055,6 +1061,7 @@ class CallQuotaTests(unittest.TestCase):
             ("task=20 lock=8000", "task=21 lock=8000"),
             ("last_spin=0", "last_spin=1"),
             ("repeats=17", "repeats=16"),
+            ("cpu=1", "cpu=5"),
             ("preempt=0", "preempt=1"),
             ("unlocks=2", "unlocks=3"),
             ("jit_resume=2", "jit_resume=1"),

@@ -25,6 +25,8 @@ static void kd_spinlock_free_percpu(void)
 		}
 		stack->local_shadow_stack_ptr = 0;
 	}
+	free_percpu(kd_spin_diag_cpu);
+	kd_spin_diag_cpu = NULL;
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_nodes_free();
 #endif
@@ -41,13 +43,8 @@ int kd_spinlock_init(void)
 	int ret;
 #endif
 
-	atomic64_set(&kd_spin_diag_overflow, 0);
-	atomic64_set(&kd_spin_diag_invariant_failures, 0);
 	for (i = 0; i < KD_SPIN_DIAG_SLOTS; i++) {
 		atomic_long_set(&kd_spin_diag_slots[i].addr, 0);
-		for (j = 0; j < KD_SPIN_DIAG_EVENT_COUNT; j++)
-			atomic64_set(&kd_spin_diag_slots[i].event[j], 0);
-		atomic_set(&kd_spin_diag_slots[i].max_depth, 0);
 		atomic_set(&kd_spin_diag_slots[i].waiter_count, 0);
 		atomic_set(&kd_spin_diag_slots[i].jit_disabled, 0);
 	}
@@ -57,10 +54,18 @@ int kd_spinlock_init(void)
 	if (ret)
 		return ret;
 #endif
+	/* Keep diagnostic storage outside the kernel's fixed module per-CPU
+	 * reservation. Allocate once at startup, never on a request path. */
+	kd_spin_diag_cpu = alloc_percpu(struct kd_spin_diag_cpu);
+	if (!kd_spin_diag_cpu)
+		goto err_free;
 	for_each_possible_cpu(i) {
 		struct shadow_stack *ptr = per_cpu_ptr(&local_shadow_stack, i);
 		struct kd_spin_jit_context *contexts;
 		void *wait_stack;
+
+		memset(per_cpu_ptr(kd_spin_diag_cpu, i), 0,
+		       sizeof(struct kd_spin_diag_cpu));
 
 		/* Allocate once, outside the lock path, as in TCLock komb_init(). */
 		wait_stack = vzalloc(KD_SPIN_WAIT_STACK_SIZE);
@@ -94,13 +99,8 @@ int kd_spinlock_init(void)
 			struct kd_spin_node *node =
 				per_cpu_ptr(&kd_spin_nodes[j], i);
 
-			node->jit_waiter = false;
-			node->jit_retry = false;
-			node->native_regs_decoded = false;
-			node->jit_context = NULL;
 			node->execution = NULL;
-			node->regs = NULL;
-			node->gsbase = 0;
+
 		}
 	}
 
@@ -124,6 +124,8 @@ err_free:
 void kd_spinlock_exit(void)
 {
 	int i, cpu;
+	u64 overflow = 0, invariant_failures = 0;
+	u64 batch_entries = 0, ww_jumps = 0;
 
 	for_each_possible_cpu(cpu) {
 		struct kd_spin_exec_request *pool =
@@ -131,6 +133,11 @@ void kd_spinlock_exit(void)
 
 		for (i = 0; i < KD_SPIN_REQUEST_SLOTS; i++)
 			BUG_ON(atomic_read(&pool[i].users));
+		batch_entries += per_cpu_ptr(kd_spin_diag_cpu, cpu)->batch_entries;
+		ww_jumps += per_cpu_ptr(kd_spin_diag_cpu, cpu)->ww_jumps;
+		overflow += per_cpu_ptr(kd_spin_diag_cpu, cpu)->overflow;
+		invariant_failures +=
+			per_cpu_ptr(kd_spin_diag_cpu, cpu)->invariant_failures;
 	}
 
 #ifdef KDLOCK_SELFTEST
@@ -141,17 +148,21 @@ void kd_spinlock_exit(void)
 	kd_spin_selftest_deferred_report();
 #endif
 #endif
+	KD_PR_INFO("kd_spin batch: entries=%llu ww_jumps=%llu\n",
+		   (unsigned long long)batch_entries, (unsigned long long)ww_jumps);
 	KD_PR_INFO("kd_spin diag overflow=%lld\n",
-		   (long long)atomic64_read(&kd_spin_diag_overflow));
+		   (long long)overflow);
 	KD_PR_INFO("kd_spin diag invariant_failures=%lld\n",
-		   (long long)atomic64_read(&kd_spin_diag_invariant_failures));
+		   (long long)invariant_failures);
 	for (i = 0; i < KD_SPIN_DIAG_SLOTS; i++) {
 		struct kd_spin_diag_slot *slot = &kd_spin_diag_slots[i];
+		struct kd_spin_diag_counts sum;
 		unsigned long addr =
 			(unsigned long)atomic_long_read(&slot->addr);
 
 		if (!addr)
 			continue;
+		kd_spin_diag_sum(i, &sum);
 		KD_PR_INFO(
 			"kd_spin lock stats: lock=%lx depth=%d slowpath=%lld "
 			"combiner=%lld jit_success=%lld jit_not_ready=%lld "
@@ -159,25 +170,16 @@ void kd_spinlock_exit(void)
 			"nested_unlock=%lld nested_remote=%lld "
 			"native_fallback=%lld ooo_unlock=%lld "
 			"jit_disabled=%d waiters=%d\n",
-			addr, atomic_read(&slot->max_depth),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_SLOWPATH]),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_COMBINER]),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_JIT_SUCCESS]),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_JIT_NOT_READY]),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_NESTED_LOCK]),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_NESTED_UNLOCK]),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_NESTED_REMOTE]),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_NATIVE_FALLBACK]),
-			(long long)atomic64_read(
-				&slot->event[KD_SPIN_DIAG_OOO_UNLOCK]),
+			addr, sum.max_depth,
+			(long long)sum.event[KD_SPIN_DIAG_SLOWPATH],
+			(long long)sum.event[KD_SPIN_DIAG_COMBINER],
+			(long long)sum.event[KD_SPIN_DIAG_JIT_SUCCESS],
+			(long long)sum.event[KD_SPIN_DIAG_JIT_NOT_READY],
+			(long long)sum.event[KD_SPIN_DIAG_NESTED_LOCK],
+			(long long)sum.event[KD_SPIN_DIAG_NESTED_UNLOCK],
+			(long long)sum.event[KD_SPIN_DIAG_NESTED_REMOTE],
+			(long long)sum.event[KD_SPIN_DIAG_NATIVE_FALLBACK],
+			(long long)sum.event[KD_SPIN_DIAG_OOO_UNLOCK],
 			atomic_read(&slot->jit_disabled),
 			atomic_read(&slot->waiter_count));
 	}

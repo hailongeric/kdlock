@@ -126,6 +126,24 @@ static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
 /* Reservation is serialized by preemption disable on this migration-pinned
  * CPU. An executor can later sleep acquiring the real mutex; its reserved
  * stack must survive that sleep. Published delegation waiters never schedule. */
+/* A reserved local predecessor may have enabled preemption while acquiring
+ * the original mutex. Publishing another non-scheduling waiter on its CPU
+ * would prevent that predecessor from ever resuming. Refuse before publication;
+ * the new caller can sleep on the original mutex without exposing GS state. */
+static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)
+{
+	struct kd_mutex_shadow *shadow = this_cpu_ptr(&kd_mutex_shadows);
+	unsigned long slots = READ_ONCE(shadow->node_slots);
+	int idx;
+
+	for (idx = 0; idx < KD_MUTEX_MAX_NODES; idx++) {
+		if ((slots & BIT(idx)) &&
+		    READ_ONCE(this_cpu_ptr(&kd_mutex_nodes[idx])->lock) == lock)
+			return true;
+	}
+	return false;
+}
+
 static struct kd_mutex_node *kd_mutex_reserve_node(void)
 {
 	struct kd_mutex_shadow *shadow = this_cpu_ptr(&kd_mutex_shadows);

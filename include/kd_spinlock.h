@@ -23,6 +23,15 @@ struct kd_spin_exec_request {
 	struct kd_exec_frame frame;
 	struct kd_spin_exec_request *packet_owner;
 	atomic_t users;
+	/* Request-owned return/routing state survives recycling of the node. */
+	unsigned long irq_flags;
+	bool jit_waiter;
+	bool jit_retry;
+	bool native_resume;
+	bool pinned_context;
+	bool native_regs_decoded;
+	struct kd_spin_jit_context *jit_context;
+	u64 queued_at_ns;
 };
 
 struct kd_spin_node {
@@ -31,35 +40,14 @@ struct kd_spin_node {
 	int count;
 	int socket_id;
 	int cpuid;
-	unsigned long gsbase;
+	/* Scheduler stack sentinel, not the logical register packet. */
 	uint64_t rsp;
-	struct qspinlock *lock;
-	struct task_struct *task_struct_ptr;
-	/* Physical caller's IRQ state, saved before its stack is lent to JIT. */
-	unsigned long irq_flags;
+	/* Queue notification only; execution completion belongs to frame.state. */
 	union {
-		struct {
-			u8 completed;
-			u8 locked;
-		};
-		struct {
-			u16 locked_completed;
-		};
+		struct { u8 completed; u8 locked; };
+		struct { u16 locked_completed; };
 	};
-	struct pt_regs *regs;
 	struct kd_spin_exec_request *execution;
-	struct kd_exec_frame *exec_frame;
-	bool jit_waiter;
-	bool jit_retry;
-	bool native_resume;
-	bool pinned_context;
-	/* regs holds the decoded packet, not the original callee-save RSP. */
-	bool native_regs_decoded;
-	struct kd_spin_jit_context *jit_context;
-	/* Logical hook waiter, not this recyclable node's physical requester. */
-	struct kd_spin_ref spin_origin;
-	/* Optional queue residence clock; consumed before this node can be reused. */
-	uint64_t queued_at_ns;
 };
 
 #define _Q_COMPLETED_OFFSET (_Q_LOCKED_OFFSET_HL + _Q_LOCKED_BITS_HL)

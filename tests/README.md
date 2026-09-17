@@ -6,6 +6,119 @@
 生产 provider 的专用协议观察器在 `tests/kernel/`。
 性能对比使用 [bench/README.md](../bench/README.md) 的独立入口。
 
+<a id="spin-wwjump-validation"></a>
+
+## 2026-09-17：单份 request、热状态和锁侧 WWJUMP
+
+本轮基于 `903d8a5` 的工作区，将 spin node 缩至 48 字节，只保留队列/调度状态
+和 request 引用；frame 前 64 字节为普通单锁热状态，冷字段按需启用。
+`spin_batch.S` 与 wrapper 的专用入口减少逐请求 combiner 保存和通用 dispatcher
+往返；当前请求结束后由锁侧选择下一请求，C step 自身的 ABI 保存仍逐次发生。
+精确最终 unlock 使用缩小的回写集合，
+其他出口保留完整支持的 GPR，并只消费已执行出口一次。协议见
+[寄存器 ABI](../docs/JIT_REGISTER_ABI.md#23-批次入口与退出保存集合)和
+[共享请求](../docs/DESIGN.md#911-reuse-before-copy-contract)。
+
+最终基础及直接相关的 **14 个单元入口全部通过**，包括真实等待/恢复汇编、
+驻留 shell 和两个 wrapper ABI、共享包生命周期、冷区不被普通路径触碰、
+批次准入/续跑、NUMA 开关下队列/outer-release、ticket 位图、codegen 和 mutex
+同 CPU 队首保护；benchmark 的 **22 项检查通过**。生产普通/SELFTEST 构建通过，
+保留自定义切栈/返回的 objtool 警告；新增 shell 也有自定义 RBP 修改警告，
+不能把构建通过写成 objtool 无警告或已证明完整内核栈展开。
+
+最终冻结版本 **mode-0、完整 mode-8、mode-5 三项 live 通过**。分别验证实际
+单锁 JIT，两个 root 共享 B 的纯 JIT/native relay/首 waiter 退出三阶段，以及
+普通 clock/scalar hostcall 返回与超额度 native 后缀、真实 owner ACK。
+最终运行及随后 benchmark 无内核 fault，模块、frame、已知调用者排空。
+
+2026-09-18 文档更新及提交前仅做静态检查，没有重跑上述用例或加载模块。
+对最终 live/benchmark 冻结清单的并集复核，301 个运行与测试输入哈希一致，
+涵盖此次提交的全部 50 个非文档改动；见[提交前离线核对](/tmp/kdlock-commit-audit-20260918.json)。
+
+验证过程中保留了两次 mode 5 失败：
+
+- 第一轮在同 CPU 等待阶段 soft lockup。现场中队首与后继位于 CPU 1，队首
+  尚未取得原生 mutex，后继禁止抢占轮询使其无法继续。新增发布前本 CPU
+  同队列节点检查；命中时请求不发布、归还路由引用，在原生 mutex 上可调度地
+  等待，不释放别人的私有 gate。未做旧版对照，不将故障归因于 wrapper 改动。
+- 修复后同 CPU 阶段通过，但原 quota 放置仍将四个调用者限制在 CPU 1，结果
+  没有实际 quota JIT，严格 oracle 判定失败。保留同 CPU 进度检查，将独立 quota
+  阶段改用 CPU 1–4，CPU 0 保留 holder；仍要求五名调用者、正 JIT quota 次数、
+  17 次服务、单次副作用及完整 ACK，未允许 NO_JIT 通过。最终三项重新验证通过。
+
+这项保护针对本 CPU 的同队列前驱，不解决任意跨锁/跨队列 owner 调度依赖。
+首次失败未排空，随后保存串口/monitor 现场、重启保留 ext4，使用已有 GRUB
+一次性启动项恢复同一 kdstatic2 内核；没有修改或重建 guest 内核。原始失败
+记录分别保留在证据的 `live/`、`live-mutex-fix/`，最终通过在 `live-final/`。
+
+实际命令（恢复 guest，先确认 monitor 快照）：
+
+```sh
+make -C tests/unit run PY_TESTS='execution/test_exec_capacity.py execution/test_jit_entry_scope.py spin/test_spin_entry.py spin/test_spin_batch.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py spin/test_spin_wait.py spin/test_spin_wwjump.py codegen/test_segment_codegen.py codegen/test_jit_body_witness.py mutex/test_mutex_resources.py mutex/test_mutex_signal_protocol.py'
+python3 -m unittest discover -s bench/spin_cacheline -p 'test_*.py'
+LC_ALL=C KDIR=/root/linux-6.1.159-kdstatic2 KDLOCK_RECOVERY_CONFIRMED=1 \
+  timeout --kill-after=10s 1300s python3 tests/regression.py \
+  --case mode-0 --case mode-8 --case mode-5 --timeout 600 \
+  --output /root/kdlock-evidence/wwjump-20260917/live-final
+```
+
+未运行全量单元或 live 矩阵。内核 Build ID 为
+`460d77502af4709a0cca794b322cedc20c2cc478`，voluntary、nokaslr，恢复快照
+`pre_static_boot_20260915`。证据：
+[最终单元记录](/tmp/kdlock-wwjump-20260917/validation-final.log)、
+[live 离线核验](/tmp/kdlock-wwjump-20260917/live-offline-verification.json)、
+[失败串口](/tmp/kdlock-wwjump-20260917/hang-serial.log)、
+[完整运行归档](/tmp/kdlock-wwjump-20260917/evidence.tar.gz)（SHA256
+`d753b9c1c4bd0fd79420438d5c44e8486597073578c49b9b234d950e40c01144`）。
+四点性能及 WWJUMP 计数见[独立结果](../bench/spin_cacheline/results/20260917-wwjump.md)。
+
+<a id="spin-batch-validation"></a>
+
+## 2026-09-17：per-CPU 统计、批内 exe 复用与下一请求预取
+
+在 `903d8a5` 上实现三项主路径优化，保留 JIT、逐次发布/准入检查及 owner/ACK。
+实现约束见[执行说明](../docs/JIT_EXECUTION.md#23-frame-复用与单锁完成)。
+本轮仅运行基础及直接相关功能，没有运行全量回归。
+
+- 最终版本 **6 个单元入口通过**：两个基础 C 程序及
+  `spin/test_spin_batch.py`、`spin/test_spin_shadow.py`、
+  `spin/test_spin_outer_progress.py`、`execution/test_jit_entry_scope.py`。
+  新 fixture 提取生产代码，验证连续 100 个同 entry 请求只查表一次、命中后
+  OPEN/status/key/code 失效仍拒绝、换 entry/backend 或批次不误用缓存；
+  三 CPU 汇总及被 IRQ 中断的最大值更新使用确定性替身，预取使用真实结构
+  布局和独立 root 寄存器包，检查地址、栈边界以及包不被修改。
+- 普通模块 `W=1` 构建通过；反汇编确认统计为 `%gs` 本地 inc/cmpxchg，
+  recorder 中无共享 `LOCK` 前缀，缓存与预取进入主路径。保留既有切栈/返回
+  汇编的 objtool 警告。benchmark 的 15 个行为检查及 7 个汇编检查通过，
+  专用观察补丁以 `--fuzz=0` 应用成功。
+- 最终 **mode-0 和完整 mode-8 两项 live 通过**：实际 JIT 正文、负载状态、
+  嵌套竞争、双 root 共享 B 的纯 JIT 及 quota/native relay 三阶段、native ACK、
+  waiter 退出后状态存活、退休排空均通过；无内核 fault，退出统计 waiters=0。
+
+首次新 fixture 编译沿用了生产函数的有符号比较，补齐同类 fixture 的编译
+选项后通过；首次 live 止于模块加载，静态 per-CPU 体积 9984 字节超过现有
+预留区。最终改为模块初始化时一次性 `alloc_percpu()`，修复后重新运行上述
+6 个入口、普通构建和两项 live。失败记录保留，没有修改 guest 内核。
+
+guest 使用既有 `6.1.159-kdstatic2`，Build ID
+`460d77502af4709a0cca794b322cedc20c2cc478`，voluntary、nokaslr；已从 monitor
+确认 `pre_static_boot_20260915` 快照。命令为：
+
+```sh
+make -C tests/unit run PY_TESTS='spin/test_spin_batch.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py execution/test_jit_entry_scope.py'
+KDLOCK_RECOVERY_CONFIRMED=1 KDIR=/root/linux-6.1.159-kdstatic2 \
+  bash tests/run_all.sh --case mode-0 --case mode-8 --timeout 300 \
+  --output /root/kdlock-evidence/spin-batch-20260917/live-final
+```
+
+[最终单元与构建记录](/tmp/kdlock-spin-batch-20260917/validation-final.log)、
+[live 离线校验](/tmp/kdlock-spin-batch-20260917/live-offline-verification.json)、
+[完整证据归档](/tmp/kdlock-spin-batch-20260917/evidence.tar.gz)（含首次加载失败、
+最终 live 及 benchmark；SHA256
+`c11cb68aaedd98aee13657617e1059633b3874614f0b5a12086df52e8c2457c8`）。
+同版本的 [spin 四点性能结果](../bench/spin_cacheline/results/20260917-batch.md)
+单独记录吞吐，不能将 fixture 的地址检查作为硬件预取收益证明。
+
 <a id="spin-nested-state-validation"></a>
 
 ## 2026-09-17：嵌套锁记录直写与虚拟 waiter 空轮询

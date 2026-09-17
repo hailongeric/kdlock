@@ -38,6 +38,8 @@ struct kd_spin_entry {
 
 struct kd_spin_entry_pool {
 	unsigned long sequence;
+	/* CPU-pinned task-only membership; remote peers never allocate/end. */
+	unsigned long occupied;
 	struct kd_spin_entry entries[KD_SPIN_ENTRY_SLOTS];
 };
 
@@ -120,14 +122,15 @@ static bool kd_entry_lookup(raw_spinlock_t *origin, bool native,
 			    struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry_pool *pool;
-	unsigned int i;
+	unsigned long occupied;
 	bool found = false;
 
 	if (!kd_entry_pinned() || !kd_spin_entries)
 		return false;
 	pool = this_cpu_ptr(kd_spin_entries);
-	for (i = 0; i < KD_SPIN_ENTRY_SLOTS; i++) {
-		struct kd_spin_entry *entry = &pool->entries[i];
+	for (occupied = pool->occupied; occupied; occupied &= occupied - 1) {
+		struct kd_spin_entry *entry =
+			&pool->entries[__builtin_ctzl(occupied)];
 
 		if (READ_ONCE(entry->state) == KD_ENTRY_FREE ||
 		    entry->task != current ||
@@ -167,7 +170,8 @@ int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 	struct kd_spin_entry *entry = NULL;
 	struct kd_spin_gate *gate;
 	unsigned long flags;
-	unsigned int i;
+	unsigned long occupied, available;
+	unsigned int index;
 	int ret = -E2BIG;
 
 	if (!kd_spin_entries)
@@ -179,20 +183,21 @@ int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 		return -EINVAL;
 	preempt_disable();
 	pool = this_cpu_ptr(kd_spin_entries);
-	for (i = 0; i < KD_SPIN_ENTRY_SLOTS; i++) {
-		struct kd_spin_entry *candidate = &pool->entries[i];
+	/* Walk only live tickets for recursive acquisition detection. The usual
+	 * empty pool does no slot reads; allocation finds a free bit directly. */
+	for (occupied = pool->occupied; occupied; occupied &= occupied - 1) {
+		struct kd_spin_entry *candidate = &pool->entries[__builtin_ctzl(occupied)];
 
-		if (candidate->state == KD_ENTRY_FREE) {
-			if (!entry)
-				entry = candidate;
-		} else if (candidate->task == current &&
-			   candidate->origin == origin) {
+		if (candidate->task == current && candidate->origin == origin) {
 			ret = -EDEADLK;
 			goto fail;
 		}
 	}
-	if (!entry)
+	available = ~pool->occupied & ((1UL << KD_SPIN_ENTRY_SLOTS) - 1);
+	if (!available)
 		goto fail;
+	index = __builtin_ctzl(available);
+	entry = &pool->entries[index];
 	if (pool->sequence == ULONG_MAX) {
 		ret = -EOVERFLOW;
 		goto fail;
@@ -213,6 +218,7 @@ int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 	entry->kind = kind;
 	entry->cpu = raw_smp_processor_id();
 	WRITE_ONCE(entry->state, KD_ENTRY_WAITING);
+	pool->occupied |= 1UL << index;
 	*ref = (struct kd_spin_ref){ entry, entry->sequence };
 	raw_spin_unlock_irqrestore(&entry->guard, flags);
 	return 0;
@@ -340,6 +346,13 @@ int kd_spin_entry_end(struct kd_spin_ref *ref)
 	     entry->state != KD_ENTRY_NATIVE)) {
 		ret = -EBUSY;
 		goto out;
+	}
+	/* Only the pinned allocating task changes membership. Keep guard for
+	 * generation/native-ref retirement; it is protocol state, not statistics. */
+	{
+		struct kd_spin_entry_pool *pool = this_cpu_ptr(kd_spin_entries);
+
+		pool->occupied &= ~(1UL << (entry - pool->entries));
 	}
 	entry->task = NULL;
 	entry->origin = NULL;

@@ -23,12 +23,15 @@
 #define notrace
 
 struct pt_regs { unsigned long sp; };
+struct kd_spin_exec_request {
+	struct { struct pt_regs *regs_ref; } frame;
+	bool native_resume;
+};
 struct kd_spin_node {
 	struct kd_spin_node *next;
 	unsigned char locked, completed;
-	bool native_resume;
 	unsigned long rsp;
-	struct pt_regs *regs;
+	struct kd_spin_exec_request *execution;
 };
 #include "wait_production.h"
 
@@ -37,6 +40,7 @@ static _Alignas(16) unsigned char shadow_stack[8192];
 static _Alignas(16) unsigned char signal_stack[65536];
 static struct kd_spin_node node, previous;
 static struct pt_regs packet;
+static struct kd_spin_exec_request execution;
 static jmp_buf caller;
 static unsigned int mode, restored;
 static pthread_t waiter;
@@ -62,9 +66,9 @@ kd_spin_resume_completed(struct kd_spin_node *packet)
 
 	asm volatile("movq %%rsp, %0" : "=r"(sp));
 	assert(packet == &node && mode);
-	assert(sp < node.regs->sp && sp >= (unsigned long)task_stack);
+	assert(sp < execution.frame.regs_ref->sp && sp >= (unsigned long)task_stack);
 	assert(node.completed == (mode == 1));
-	assert(node.native_resume == (mode == 2));
+	assert(execution.native_resume == (mode == 2));
 	/* The producer has overwritten every old wait/helper return address. */
 	assert(task_stack[sizeof(task_stack) - 8] == 0xa7);
 	restored++;
@@ -80,7 +84,7 @@ static __attribute__((used, noipa, noreturn)) void test_wait_entry(void)
 	asm volatile("movq %%rsp, %0" : "=r"(after));
 	/* Only the unexecuted head handoff may return through ordinary C. */
 	assert(before == after);
-	assert(mode == 0 && !node.completed && !node.native_resume);
+	assert(mode == 0 && !node.completed && !execution.native_resume);
 	longjmp(caller, 1);
 }
 
@@ -115,7 +119,7 @@ static void *producer(void *unused)
 		 * for the fresh restoration helper to use after release. */
 		memset(task_stack + sizeof(task_stack) - 8192, 0xa7, 8192);
 		node.completed = mode == 1;
-		node.native_resume = mode == 2;
+		execution.native_resume = mode == 2;
 	}
 	__atomic_store_n(&node.locked, 0, __ATOMIC_RELEASE);
 	return NULL;
@@ -143,10 +147,12 @@ int main(void)
 		memset(&node, 0, sizeof(node));
 		memset(&previous, 0, sizeof(previous));
 		memset(task_stack, 0x53, sizeof(task_stack));
-		node.regs = &packet;
+		node.execution = &execution;
+		execution.native_resume = false;
+		execution.frame.regs_ref = &packet;
 		node.locked = 1;
 		node.rsp = (unsigned long)(task_stack + sizeof(task_stack) - 16);
-		node.regs->sp = node.rsp - 2048;
+		execution.frame.regs_ref->sp = node.rsp - 2048;
 		assert(pthread_create(&worker, NULL, producer, NULL) == 0);
 		if (!setjmp(caller))
 			enter_test_stack(task_stack + sizeof(task_stack));

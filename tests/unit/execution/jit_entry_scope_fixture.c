@@ -294,6 +294,7 @@ static void reset(void)
 	kd_hostcall_exits = kd_hostcall_executed = kd_hostcall_resumed = 0;
 	kd_hostcall_limit = kd_hostcall_rejected = kd_hostcall_failed = 0;
 	active = (struct kd_exec_frame){
+		.complex_ready = true,
 		.entry_ip = 0x1000,
 		.outer_lock_addr = 0x8000,
 		.gsbase = 0xFEED,
@@ -1195,8 +1196,67 @@ static void check_simple_spin(void)
 	      !memcmp(&packet, &before, sizeof(packet)));
 }
 
+/* A batch exit has already executed its prefix. Import it once, then permit
+ * only the required continuation wrapper call; a refusal remains unstarted. */
+static void check_batch_admission(void)
+{
+	unsigned char code[32] = { 0 };
+	struct kd_jit_batch_call call;
+
+	reset();
+	active.spin_simple = active.request_frame = true;
+	active.complex_ready = false;
+	entry->code_block = code;
+	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+	memcpy(code + 9, "KDWB001", 7);
+	CHECK(kd_exe_spin_batch_prepare(entry, &active, &call));
+	CHECK(call.code == code + KD_JIT_BATCH_OFFSET && call.regs == &active.regs &&
+	      call.args[0] == active.gsbase && call.args[1] == (unsigned long)&waiter);
+	source_open = false;
+	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+	source_open = true;
+	entry->status_code = KD_EXE_CALL_MISS;
+	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+	entry->status_code = KD_EXE_NORMAL;
+	active.executed = true;
+	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+	active.executed = false;
+	active.regs.sp = 0;
+	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+	active.regs.sp = (unsigned long)&stack[9];
+	active.complex_ready = true;
+	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+}
+
+static void check_pending_batch_exit(void)
+{
+	struct kd_jit_batch_call pending;
+
+	for (int refuse = 0; refuse < 2; refuse++) {
+		reset();
+		active.spin_simple = true;
+		pending = (struct kd_jit_batch_call){
+			.regs = &active.regs, .entry_sp = active.regs.sp,
+			.args = { active.gsbase, (unsigned long)&waiter },
+		};
+		steps[0] = refuse ? (struct step){ KD_EXE_ENTRY_REFUSED, 0, 0, 0 } :
+			(struct step){ KD_EXE_HOSTCALL, kd_hostcalls[0].addr, 1, -8 };
+		steps[1] = (struct step){ KD_EXE_CALL_MISS, 0x9000, 1, 0 };
+		active.executed = true;
+		translated(pending.regs, pending.args);
+		CHECK(calls == 1);
+		int result = kd_exe_spin_batch_resume(entry, &pending);
+		CHECK(result == (refuse ? KD_EXE_NO_RUN : KD_EXE_RUN_TO_UNLOCK));
+		CHECK(calls == (refuse ? 1 : 2));
+		CHECK(service_calls[0] == (refuse ? 0U : 1U));
+		CHECK(active.executed == !refuse && complex_preparations == 1);
+	}
+}
+
 int main(void)
 {
+	check_batch_admission();
+	check_pending_batch_exit();
 	check_simple_spin();
 	check_pristine_refusal();
 	check_local_continuation();

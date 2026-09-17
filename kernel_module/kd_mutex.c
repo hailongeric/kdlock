@@ -193,6 +193,15 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 	 * Migration stays pinned when an executor acquires a real sleeping mutex. */
 	migrate_disable();
 	preempt_disable();
+	if (unlikely(kd_mutex_has_local_predecessor(lock))) {
+		/* No node/packet has been published. This acquisition therefore owns
+		 * only the native mutex and must not release the private queue gate. */
+		preempt_enable();
+		migrate_enable();
+		kd_mutex_task_put(current);
+		kd_origin_mutex_lock((struct mutex *)lock->origin_mutex_addr);
+		return;
+	}
 	{
 		struct kd_mutex_node *curr_node = kd_mutex_reserve_node();
 

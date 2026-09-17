@@ -146,6 +146,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 	 * run; it has not changed this executor's combiner metadata. Capture now,
 	 * before nested acquisition, hostcall or native/remote publication. */
 	if (frame->spin_simple) {
+		kd_exec_frame_prepare_complex(frame);
 		kd_exec_frame_own_regs(frame);
 		kd_spin_capture_combiner_state(&frame->saved_combiner,
 					       this_cpu_ptr(&local_shadow_stack));
@@ -155,7 +156,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 
 static __always_inline void kd_spin_diag_invariant_failure(void)
 {
-	atomic64_inc(&kd_spin_diag_invariant_failures);
+	this_cpu_inc(kd_spin_diag_cpu->invariant_failures);
 	WARN_ON_ONCE(1);
 }
 

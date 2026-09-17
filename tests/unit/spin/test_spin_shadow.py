@@ -53,6 +53,7 @@ def main():
     ):
         types += "\n" + definition(header, marker).rstrip() + ";\n"
     results = read_source((ROOT / "include/exe.h")).splitlines()
+    types += (ROOT / "include/kd_jit_batch.h").read_text()
     body = ""
     for name in ("KD_EXE_NO_RUN", "KD_EXE_RUN_ERROR", "KD_EXE_NATIVE_DONE"):
         matching = [line for line in results if line.startswith(f"#define {name} ")]
@@ -80,6 +81,7 @@ def main():
         source, "get_next_node(struct kd_spin_node *my_node)"
     )
     body += definition(source, "struct kd_spin_batch {").rstrip() + ";\n"
+    body += definition(source, "static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)")
     # The wrapper observes recursive entry/return; it does not replace the
     # production scan, cancellation, splice or queue-head save/restore bodies.
     body += "#define run_combiner production_run_combiner\nstatic void\n"
@@ -119,7 +121,7 @@ def main():
             binary = path / f"spin-shadow-{numa}"
             command = shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=gnu11",
-                "-O2",
+                "-O2", "-g",
                 "-Wall",
                 "-Wextra",
                 "-Werror",
@@ -133,7 +135,8 @@ def main():
             if numa:
                 command.append("-DNUMA_AWARE")
             subprocess.run(command, check=True, timeout=30)
-            subprocess.run([str(binary)], check=True, timeout=10, env=run_environment)
+            result = subprocess.run([str(binary)], timeout=10, env=run_environment)
+            result.check_returncode()
         if options.mutations:
             mutations = (
                 (

@@ -81,27 +81,35 @@ struct kd_exec_outer_unlock {
 };
 
 struct kd_exec_frame {
-	/* Logical waiter state lives until frame pop, including native/remote
-	 * continuations. parent is physical nesting; resume_target is logical. */
-	struct pt_regs regs;
+	/* Ordinary single-lock execution touches this 64-byte header and the
+	 * referenced packet. The cold ledger below is activated only on promotion;
+	 * no allocation, zero-fill or packet copy is needed at that boundary. */
+	struct pt_regs *regs_ref;
 	unsigned long entry_ip;
 	unsigned long outer_lock_addr;
+	unsigned long gsbase;
+	struct task_struct *logical_task;
+	struct kd_exec_frame *parent;
+	int state;
+	unsigned int depth;
+	bool executed;
+	bool mutex_backend;
+	bool spin_simple;
+	bool request_frame;
+	bool batch_lease;
+	bool complex_ready;
+	bool regs_borrowed;
+	bool completion_seen;
+	struct pt_regs regs;
+
+	/* Cold storage: unread until complex_ready, including all eight locks,
+	 * control/native routing and the combiner checkpoint. */
 	unsigned long continuation_ip;
-	/* A simple physical root has no continuation yet. Reuse its SP slot to
-	 * borrow the node packet, preserving the fixed per-CPU frame footprint.
-	 * Own the packet before saving a continuation or allowing node reuse. */
 	union {
 		unsigned long continuation_sp;
 		struct pt_regs *borrowed_regs;
 	};
-	unsigned long gsbase;
-	struct task_struct *logical_task;
-	/* Remote executors share the logical packet, but keep owner/control state
-	 * in their own frame. The request pool retains the packet's storage. */
-	struct pt_regs *regs_ref;
 	unsigned long delegated_lock_addr;
-	struct kd_exec_frame *parent;
-	/* Logical requester, distinct from the CPU-local physical parent above. */
 	struct kd_exec_frame *resume_target;
 	struct kd_remote_request *remote_request;
 	struct kd_combiner_state saved_combiner;
@@ -109,24 +117,13 @@ struct kd_exec_frame {
 	enum kd_exec_lock_kind jit_lock_kind[KD_EXEC_MAX_LOCK_DEPTH];
 	void *jit_lock_node[KD_EXEC_MAX_LOCK_DEPTH];
 	bool jit_lock_released[KD_EXEC_MAX_LOCK_DEPTH];
-	unsigned int depth;
 	unsigned int held_lock_depth;
 	unsigned int outer_lock_depth;
 	unsigned int outer_lock_index;
 	unsigned int jit_lock_depth;
 	int logical_pid;
-	bool regs_borrowed;
 	bool outer_unlock_seen;
-	bool completion_seen;
-	bool batch_lease;
-	int state;
 	int remote_result;
-	bool executed;
-	bool mutex_backend;
-	/* Root spin invocation before its first service/control continuation.
-	 * A different wrapper exit materializes saved_combiner and clears this. */
-	bool spin_simple;
-	bool request_frame;
 	struct kd_exec_outer_unlock *outer_unlock_hook;
 	struct kd_call_state control_call;
 	struct list_head native_link;
@@ -169,6 +166,7 @@ bool kd_exec_context_busy(void);
 
 /* Prepare once on the producer; bind only changes physical execution state.
  * batch_lease requires an enclosing source lease through the final unbind. */
+void kd_exec_frame_prepare_complex(struct kd_exec_frame *frame);
 void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
 			   unsigned long lock, unsigned long gsbase,
 			   struct task_struct *task);

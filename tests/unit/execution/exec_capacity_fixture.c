@@ -1,3 +1,4 @@
+#include <stddef.h>
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Substitute primitives around production frame allocation, ledger and cleanup.
  * Compare complete failed packets and backend release order, not Linux locks
@@ -987,13 +988,50 @@ static void shared_requests(void)
 	CHECK(!source_frames && !kd_exec_current_frame());
 }
 
+/* Poison all cold bytes: ordinary completion must neither initialize nor read
+ * them. Promotion then constructs the exact single-lock owner ledger in place. */
+static void lazy_single(void)
+{
+	struct kd_exec_frame frame, before;
+	const size_t cold = offsetof(struct kd_exec_frame, continuation_ip);
+
+	cpu = 0;
+	current = &owners[0];
+	for (unsigned int promote = 0; promote < 2; promote++) {
+		memset(&frame, 0xa5, sizeof(frame));
+		kd_exec_frame_prepare(&frame, 0x1000, 0x2000, 0x3000, &waiters[0]);
+		frame.regs.di = 0x2000;
+		before = frame;
+		CHECK(kd_source_frame_get());
+		CHECK(!kd_exec_frame_bind(&frame, 1, true));
+		CHECK(frame.spin_simple && !frame.complex_ready);
+		CHECK(kd_exec_frame_validate(&frame));
+		frame.executed = true;
+		if (promote) {
+			kd_exec_frame_prepare_complex(&frame);
+			CHECK(frame.complex_ready && frame.jit_lock_depth == 1 &&
+			      frame.jit_lock_addr[0] == 0x2000 &&
+			      frame.jit_lock_kind[0] == KD_EXEC_LOCK_QUEUE_OWNER &&
+			      !frame.native_request && !frame.remote_request &&
+			      frame.control_call.phase == KD_CALL_NONE);
+		}
+		CHECK(!kd_exec_frame_complete_single_spin(&frame));
+		CHECK(!kd_exec_frame_pop(&frame, NULL));
+		kd_source_frame_put();
+		if (!promote)
+			CHECK(!memcmp((char *)&frame + cold, (char *)&before + cold,
+				      sizeof(frame) - cold));
+	}
+}
+
 int main(void)
 {
 	unsigned int depth, cycle, last_released;
 	enum kd_exec_lock_kind kind;
 
 	CHECK(sizeof(struct pt_regs) == 168 &&
-	      sizeof(struct kd_exec_frame) == 656);
+	      offsetof(struct kd_exec_frame, regs) == 64);
+	lazy_single();
 	shared_requests();
 	if (failures)
 		return 1;

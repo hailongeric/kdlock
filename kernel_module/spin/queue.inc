@@ -157,17 +157,6 @@ get_next_node(struct kd_spin_node *my_node)
 			goto next_node_null;
 
 		if (next_node->socket_id == numa_node_id()) {
-#ifdef PREFETCHING
-			void *rsp_ptr = (per_cpu_ptr(&kd_spin_nodes[0],
-						     next_node->cpuid)
-						 ->rsp);
-			prefetchw(rsp_ptr);
-			int i;
-			for (i = 1; i < KD_SPIN_NUM_PREFETCH_LINES; i++)
-				prefetchw(rsp_ptr + (64 * i));
-
-			prefetch(next_node->next);
-#endif
 			return next_node;
 		}
 
@@ -190,19 +179,19 @@ next_node_null:
 
 /* Decode the physical hook packet on its originating CPU before publication.
  * After publication the waiter lends its C stack and only polls locked; JIT
- * may update node->regs in place until the release wake. Caller-saved values
+ * may update node->execution->frame.regs_ref in place until the release wake. Caller-saved values
  * keep the existing hook ABI; this is the saved callee-register/return frame. */
 static void kd_spin_prepare_regs(struct kd_spin_node *node)
 {
-	const unsigned long *saved = (const unsigned long *)node->regs->sp;
+	const unsigned long *saved = (const unsigned long *)node->execution->frame.regs_ref->sp;
 
-	node->regs->bx = saved[1];
-	node->regs->r12 = saved[2];
-	node->regs->r13 = saved[3];
-	node->regs->r14 = saved[4];
-	node->regs->r15 = saved[5];
-	node->regs->bp = saved[6];
-	node->regs->ip = saved[7];
-	node->regs->sp = (unsigned long)(saved + 8);
-	node->native_regs_decoded = true;
+	node->execution->frame.regs_ref->bx = saved[1];
+	node->execution->frame.regs_ref->r12 = saved[2];
+	node->execution->frame.regs_ref->r13 = saved[3];
+	node->execution->frame.regs_ref->r14 = saved[4];
+	node->execution->frame.regs_ref->r15 = saved[5];
+	node->execution->frame.regs_ref->bp = saved[6];
+	node->execution->frame.regs_ref->ip = saved[7];
+	node->execution->frame.regs_ref->sp = (unsigned long)(saved + 8);
+	node->execution->native_regs_decoded = true;
 }

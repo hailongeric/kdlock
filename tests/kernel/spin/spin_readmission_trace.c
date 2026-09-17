@@ -76,7 +76,7 @@ kd_spin_selftest_readmit_attempt(struct kd_exec_frame *frame,
 	unsigned int index;
 
 	if (!kd_readmit_refusals || kd_readmit_refusals > 2 ||
-	    !node->jit_waiter || !parent || frame->executed ||
+	    !node->execution->jit_waiter || !parent || frame->executed ||
 	    !parent->executed)
 		return false;
 	if (frame->outer_lock_addr != READ_ONCE(kd_readmit_lock)) {
@@ -90,8 +90,8 @@ kd_spin_selftest_readmit_attempt(struct kd_exec_frame *frame,
 	}
 	if (!index) {
 		kd_readmit.entry = frame->entry_ip;
-		kd_readmit.ip = node->regs->ip;
-		kd_readmit.sp = node->regs->sp;
+		kd_readmit.ip = node->execution->frame.regs_ref->ip;
+		kd_readmit.sp = node->execution->frame.regs_ref->sp;
 		kd_readmit.lock = frame->outer_lock_addr;
 		kd_readmit.outer = parent->outer_lock_addr;
 		kd_readmit.gs = frame->gsbase;
@@ -99,7 +99,7 @@ kd_spin_selftest_readmit_attempt(struct kd_exec_frame *frame,
 		kd_readmit.pid = frame->logical_pid;
 		kd_readmit.node = (unsigned long)node;
 		kd_readmit.parent_regs = *kd_exec_frame_regs(parent);
-		kd_readmit.node_regs = *node->regs;
+		kd_readmit.node_regs = *node->execution->frame.regs_ref;
 		WRITE_ONCE(kd_readmit.parent, parent);
 	}
 	kd_readmit.owner[index] = (unsigned long)current;
@@ -125,11 +125,11 @@ kd_spin_selftest_readmit_attempt(struct kd_exec_frame *frame,
 		frame->logical_pid == kd_readmit.pid &&
 		parent->remote_result == KD_EXEC_REMOTE_WAITING &&
 		parent->control_call.phase == KD_CALL_ENTERED &&
-		!node->completed && !node->jit_retry && !node->native_resume &&
+		!node->completed && !node->execution->jit_retry && !node->execution->native_resume &&
 		!memcmp(kd_exec_frame_regs(parent), &kd_readmit.parent_regs,
 			sizeof(parent->regs)) &&
-		!memcmp(node->regs, &kd_readmit.node_regs,
-			sizeof(*node->regs)) &&
+		!memcmp(node->execution->frame.regs_ref, &kd_readmit.node_regs,
+			sizeof(*node->execution->frame.regs_ref)) &&
 		!memcmp(kd_exec_frame_regs(frame), &kd_readmit.node_regs,
 			sizeof(frame->regs));
 	kd_readmit.attempts++;
@@ -170,7 +170,7 @@ kd_spin_selftest_readmit_return(const struct kd_exec_frame *parent,
 	bool local = kd_readmit_refusals == 2;
 
 	if (!kd_readmit.parent || parent != READ_ONCE(kd_readmit.parent) ||
-	    (unsigned long)node->lock != kd_readmit.lock ||
+	    (unsigned long)((struct qspinlock *)node->execution->frame.outer_lock_addr) != kd_readmit.lock ||
 	    parent->logical_pid != kd_readmit.pid)
 		return;
 	kd_readmit.returned++;
@@ -184,7 +184,7 @@ kd_spin_selftest_readmit_return(const struct kd_exec_frame *parent,
 		parent->control_call.phase == KD_CALL_ENTERED &&
 		parent->executed && parent->gsbase == kd_readmit.gs &&
 		(unsigned long)parent->logical_task == kd_readmit.task &&
-		!node->jit_retry && !node->native_resume &&
+		!node->execution->jit_retry && !node->execution->native_resume &&
 		ret == (local ? 2 : 3) && node->completed == !local &&
 		parent->remote_result ==
 			(local ? KD_EXEC_REMOTE_WAITING : KD_EXEC_REMOTE_DONE);
@@ -197,8 +197,8 @@ kd_spin_selftest_readmit_return(const struct kd_exec_frame *parent,
 				(raw_spinlock_t *)kd_readmit.outer) &&
 			!memcmp(kd_exec_frame_regs(parent), &kd_readmit.parent_regs,
 				sizeof(parent->regs)) &&
-			!memcmp(node->regs, &kd_readmit.node_regs,
-				sizeof(*node->regs));
+			!memcmp(node->execution->frame.regs_ref, &kd_readmit.node_regs,
+				sizeof(*node->execution->frame.regs_ref));
 }
 
 static noinline void

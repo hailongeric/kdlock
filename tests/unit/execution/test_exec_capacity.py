@@ -179,6 +179,7 @@ def main():
     }
     source = read_source(ROOT / "kernel_module/kd_exec.c")
     extra = "\n".join(definition(source, marker) for marker in (
+        "void kd_exec_frame_prepare_complex(struct kd_exec_frame *frame)",
         "void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,",
         "int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,",
     ))

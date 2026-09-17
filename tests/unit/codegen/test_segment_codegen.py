@@ -192,8 +192,8 @@ def main():
         os.path.join(ROOT, "include", "wrapper.S"), "r", encoding="utf-8"
     ) as wrapper_file:
         wrapper = wrapper_file.read()
-    gs_push = re.search(r"\bpush\s+PT_GS\b", wrapper)
-    task_push = re.search(r"\bpush\s+PT_TASK\b", wrapper)
+    gs_push = re.search(r"\bmov\s+rax,\s*PT_GS\b", wrapper)
+    task_push = re.search(r"\bmov\s+rax,\s*PT_TASK\b", wrapper)
     require(
         gs_push is not None and task_push is not None,
         "wrapper does not save both two-word context inputs",

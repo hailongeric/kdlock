@@ -49,6 +49,7 @@ def main():
         )
         + "\n"
     )
+    types += (ROOT / "include/kd_jit_batch.h").read_text()
     spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
     for marker in ("struct shadow_stack {", "struct kd_spin_jit_context {", "struct kd_spin_request {"):
         types += definition(spin, marker).rstrip() + ";\n"
@@ -65,7 +66,8 @@ def main():
             "static struct kd_exec_context *kd_exec_current_context(void)",
             "struct kd_exec_frame *kd_exec_current_frame(void)",
             "bool kd_exec_context_busy(void)",
-            "void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,",
+            "void kd_exec_frame_prepare_complex(struct kd_exec_frame *frame)",
+        "void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,",
             "int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,",
             "static struct kd_exec_frame *kd_exec_frame_push_internal(",
             "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
@@ -136,6 +138,9 @@ def main():
             code += "#endif\n"
     if "struct kd_spin_batch {" in spin:
         code += definition(spin, "struct kd_spin_batch {").rstrip() + ";\n"
+        code += "static struct kd_exe_info *\n" + definition(
+            spin, "kd_spin_batch_find_ready(struct kd_spin_batch *batch, unsigned long entry_ip)"
+        )
         for name in ("kd_spin_release_outer", "kd_spin_reclaim_outer"):
             marker = next(
                 line
@@ -143,6 +148,7 @@ def main():
                 if line.startswith("static ") and name + "(" in line
             )
             code += definition(spin, marker) + "\n"
+    code += definition(spin, "static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)")
     for name, prefix in (
         ("execute_cs", "static int\n"),
         ("run_combiner", "static void\n"),
@@ -151,7 +157,7 @@ def main():
         part = definition(spin, marker)
         if name == "execute_cs":
             # Model the omitted enqueue producer, using its production decoder.
-            part = part.replace("\tstruct qspinlock *word = batch->request->word;", "\tif (!curr_node->jit_waiter && !curr_node->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame, curr_node->jit_waiter ? curr_node->jit_context->requester->entry_ip : curr_node->regs->ip, (unsigned long)lock, curr_node->gsbase, curr_node->task_struct_ptr);\n\tcurr_node->execution->frame.regs_ref = curr_node->regs;\n\tstruct qspinlock *word = batch->request->word;", 1)
+            part = part.replace("\tstruct qspinlock *word = batch->request->word;", '\tstruct pt_regs *packet = curr_node->execution->frame.regs_ref;\n\tif (!curr_node->execution->jit_waiter && !curr_node->execution->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame,\n\t\tcurr_node->execution->jit_waiter ? curr_node->execution->jit_context->requester->entry_ip : packet->ip,\n\t\t(unsigned long)lock, curr_node->execution->frame.gsbase,\n\t\tcurr_node->execution->frame.logical_task);\n\tcurr_node->execution->frame.regs_ref = packet;\n\tstruct qspinlock *word = batch->request->word;', 1)
         code += prefix + part + "\n"
     code += definition(
         read_source((ROOT / "kernel_module/kd_lock.c")),
@@ -200,14 +206,14 @@ def main():
         "completion-packet-not-ready": (
             "code",
             "smp_store_release(&lock->locked_completed, 1);",
-            "lock->regs->ax ^= 1;\n\t"
+            "lock->execution->frame.regs_ref->ax ^= 1;\n\t"
             "smp_store_release(&lock->locked_completed, 1);",
         ),
         "packet-overwrite-after-wake": (
             "code",
             "smp_store_release(&lock->locked_completed, 1);",
             "smp_store_release(&lock->locked_completed, 1);\n\t"
-            "lock->regs->ax = 0;",
+            "lock->execution->frame.regs_ref->ax = 0;",
         ),
         "refusal-writes-parent": (
             "pool",
@@ -224,14 +230,14 @@ def main():
             refusal,
             refusal.replace(
                 "{\n",
-                "{\n\t\tif (curr_node->jit_waiter)\n"
+                "{\n\t\tif (curr_node->execution->jit_waiter)\n"
                 "\t\t\tjit_context->requester->remote_result = KD_EXEC_REMOTE_IDLE;\n",
             ),
         ),
         "virtual-native-trampoline": (
             "code",
-            "curr_node->jit_retry = !curr_node->jit_waiter &&",
-            "curr_node->jit_retry =",
+            "curr_node->execution->jit_retry = !curr_node->execution->jit_waiter &&",
+            "curr_node->execution->jit_retry =",
         ),
         "child-cancel-ends-parent-wait": (
             "code",

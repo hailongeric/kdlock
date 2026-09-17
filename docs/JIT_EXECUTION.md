@@ -193,7 +193,7 @@ child 另保留 root 引用。物理 waiter 的恢复汇编在最后一次读取
 远端邮箱，只有非空时才调用解锁/ACK 处理函数；物理 waiter 的 shadow 等待不变。
 状态与生命周期边界见[嵌套 JIT waiter](JIT_REGISTER_ABI.md#42-嵌套-jit-waiter)。
 
-每 CPU 预分配 12 个 672 字节 request，共 8064 字节；frame/context 为 656/5272
+每 CPU 预分配 12 个 712 字节 request，共 8544 字节；frame/context 为 664/5336
 字节。模块静态 per-CPU 节减少是因为 node 去掉了内嵌寄存器包，不代表总内存减少。
 嵌套 `kd_spin_jit_context` 在 x86-64 上从 184 缩为 16 字节，四槽的请求大小从
 736 降到 64 字节；两者的 `vzalloc` 仍占一页，不能计作每 CPU 释放一页内存。
@@ -204,7 +204,29 @@ mutex 仍使用旧的 per-CPU frame 分配及包处理。
 spin bind 检查 OPEN，但不再逐 frame 增减全局计数和 module 引用。设备状态里的
 `frames` 是租约计数，不能再解释为批次内 spin frame 的个数。
 正常单锁完成跳过通用事件链；复杂出口才保存物理 combiner 快照。
-当前仍逐请求调用 JIT wrapper/C dispatcher，未实现 TCLock WWJUMP 或融合 wrapper。
+同批次的同 entry/SPIN backend 复用已找到的 `exe` 槽指针，仍逐次 acquire
+检查 NORMAL、OPEN、entry/pid 和代码指针，dispatcher 的 backend/scope 检查
+也保留；不缓存代码版本或把 source lease 当成代码不可变保证。
+执行当前请求前预取下一已发布请求的实际寄存器包、frame 热字段，以及逻辑
+waiter task 栈范围内的虚拟 SP/push 槽。虚拟子请求使用共享 root 包，不再按
+CPU 的 node-zero RSP 猜栈范围；提前 outer release 后不访问旧 successor。
+SLOWPATH、COMBINER、JIT_SUCCESS 等事件、最大深度、overflow 和 invariant
+统计改为初始化时一次性 `alloc_percpu()` 分配，避免挤占模块静态 per-CPU
+预留区；排空退出后遍历所有 possible CPU 汇总，日志字段不变。
+实时 waiter 数量、JIT 禁用 latch 和 owner/ACK 仍是共享协议/观察状态。
+普通请求只初始化 64 字节 frame 热头部及寄存器包；锁数组、remote/native 控制和
+快照位于预分配冷区，由 `complex_ready` 在首次复杂出口启用。node 为 48 字节，
+只保留队列通知、链接、调度栈标记及 execution 引用。
+`kd_spin_batch_enter` 每批保存一次原始 combiner 寄存器；C step 自身的 ABI 保存
+仍逐请求发生。锁侧 `kd_spin_batch_step`
+处理正常完成、发布 waiter、选择并准入下一请求，再进入 alternate wrapper。
+正常单锁跳过逐请求 `execute_cs`/通用 dispatcher；复杂出口用
+`kd_exe_spin_batch_resume` 消费已经执行的出口，禁止重放当前前缀。
+最终 unlock 只回写 callee-saved 集及 RIP/SP、RDI；其他出口仍保存完整 GPR。
+wrapper 入口加载与物理 waiter 的最终 GPR 恢复尚未按普通单锁边界缩小。
+排空日志 `kd_spin batch: entries=... ww_jumps=...` 证明实际批次入口/连续交接次数。
+普通单用户 request 最终 release store 归还；有 native/child 使用者时仍原子递减。
+ticket 分配/查询只访问活跃位图中的槽，状态变更 guard 仍保护远端引用和代次。
 协议及完整生命周期见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)，逐步操作见
 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。TCLock 原生切栈与当前 JIT
 路径、初始寄存器范围及剩余状态保存的对照统一见
@@ -2097,7 +2119,7 @@ make -C tests/unit run TESTS= \
 
 修改共同回收门禁时，live 选择应包含普通 JIT 完成、两后端 native/GPR、双 frame
 owner ACK、无锁 remote relay 和深层物理 frame；不要仅以一个 mode 的成功外推。
-它不改变两元素 args、656 字节 frame 布局、guest 内核或已延期的访问时检查。
+它不改变两元素 args、frame 的生命周期约束、guest 内核或已延期的访问时检查。
 本次八项实际选择、带超时的执行命令、旧代码负例和修复版证据分别保存在
 [回收门禁验收](VALIDATION.md#native-frame-retirement)，没有新增日常 case。
 
@@ -2339,7 +2361,7 @@ context/node 拒绝。三者不能互相替代。四个角色安排在 CPU 1 不
   -> 每个代理请求：时钟服务 -> JIT -> int_sqrt 服务 -> JIT
   -> 最外层 unlock 后返回原 waiter
   -> 全部调用者退出，再设置测试参数 mode5_call_quota=1
-  -> CPU 0 的一个 holder + CPU 1 的四个调用者，每人执行一次临界区
+  -> CPU 0 的一个 holder + CPU 1–4 的四个调用者，每人执行一次临界区
   -> JIT 请求的前 16 次时钟服务：adapter 执行并回到同一镜像
   -> 第 17 次：保留 callee RIP / CALL RSP / GPR，检查现有 CALL 包和服务策略
   -> 原 waiter 执行第 17 次时钟、int_sqrt 及剩余原生临界区，不回本次 JIT

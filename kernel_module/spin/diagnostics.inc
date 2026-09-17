@@ -32,7 +32,7 @@ static struct kd_spin_diag_slot *kd_spin_diag_find(unsigned long addr)
 		}
 	}
 
-	atomic64_inc(&kd_spin_diag_overflow);
+	this_cpu_inc(kd_spin_diag_cpu->overflow);
 	return NULL;
 }
 
@@ -41,6 +41,7 @@ static void kd_spin_diag_record_addr(unsigned long addr,
 				     unsigned int depth)
 {
 	struct kd_spin_diag_slot *slot;
+	unsigned int index;
 	int old_depth;
 
 	if (event >= KD_SPIN_DIAG_EVENT_COUNT)
@@ -50,15 +51,38 @@ static void kd_spin_diag_record_addr(unsigned long addr,
 	if (!slot)
 		return;
 
-	atomic64_inc(&slot->event[event]);
-	old_depth = atomic_read(&slot->max_depth);
+	index = slot - kd_spin_diag_slots;
+	/* x86 this_cpu operations also tolerate an IRQ interrupting a recorder.
+	 * The local cmpxchg prevents a shallower interrupted update from losing
+	 * a deeper maximum; it needs no cross-CPU LOCK prefix. */
+	this_cpu_inc(kd_spin_diag_cpu->slot[index].event[event]);
+	old_depth = this_cpu_read(kd_spin_diag_cpu->slot[index].max_depth);
 	while (old_depth < (int)depth) {
 		int previous =
-			atomic_cmpxchg(&slot->max_depth, old_depth, depth);
+			this_cpu_cmpxchg(kd_spin_diag_cpu->slot[index].max_depth,
+					 old_depth, depth);
 
 		if (previous == old_depth)
 			break;
 		old_depth = previous;
+	}
+}
+
+/* Shutdown only, after callers/frames drain. Include CPUs which went offline
+ * after recording; this is intentionally not a live statistical snapshot. */
+static void kd_spin_diag_sum(unsigned int index, struct kd_spin_diag_counts *sum)
+{
+	int cpu, event;
+
+	memset(sum, 0, sizeof(*sum));
+	for_each_possible_cpu(cpu) {
+		const struct kd_spin_diag_counts *counts =
+			&per_cpu_ptr(kd_spin_diag_cpu, cpu)->slot[index];
+
+		for (event = 0; event < KD_SPIN_DIAG_EVENT_COUNT; event++)
+			sum->event[event] += counts->event[event];
+		if (counts->max_depth > sum->max_depth)
+			sum->max_depth = counts->max_depth;
 	}
 }
 

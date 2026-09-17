@@ -5,7 +5,8 @@
 锁和 frame 生命周期见 [DESIGN.md](DESIGN.md)，结果见
 [VALIDATION.md](VALIDATION.md)。
 
-唯一执行入口是 frame-backed `kd_exe_on_call_hl_entry()`。两元素输入保持
+通用执行入口是 frame-backed `kd_exe_on_call_hl_entry()`；普通 spin 批次可使用
+锁侧 `kd_spin_batch_enter()` 和第 2.3 节的专用 wrapper 入口。两元素输入保持
 `{waiter GS base, logical waiter task}`，不增加 FS base 或第三个 task 元素。
 GS 内存按 origin GS base 翻译；等待代理结果的线程保持禁止抢占并用 PAUSE 轮询。
 普通直接 CALL miss 后原 waiter 原生完成后缀，不返回本次 JIT；它不是入口重试。
@@ -24,7 +25,7 @@ native waiter hook stack
         |
         | decode saved callee registers + RIP/RSP before publication
         v
-request.frame.regs <--- node->regs
+request.frame.regs <--- node->execution->frame.regs_ref
         |
         | bind the same request.frame; virt_ptr(regs, args)
         v
@@ -59,11 +60,13 @@ shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队�
 
 ### 1.1 与 TCLock spinlock 的执行路径和状态保存对比
 
-本节为 **2026-09-17 源码对照**：TCLock 使用本地 `~/TCLocks` 的
+本节为 **2026-09-18 源码与既有构建产物对照**：TCLock 使用本地 `~/TCLocks` 的
 `bbfb9f00a12af51dff6ca291cb9829a82960c2ef`，比较范围是
 `src/kernel/rcuht/locks/komb.c`、`lib/combiner.c` 和
-`include/lib/combiner.h`；kdlock 使用当前共享 request/frame 实现。
-这不是 TCLock 运行结果，也不将 mutex 或用户态 LiTL 的行为套用到 spin 路径。
+`include/lib/combiner.h`；kdlock 使用当前共享 request/frame 和锁侧批次实现，
+反汇编来自 [2026-09-17 benchmark 冻结模块](../bench/spin_cacheline/results/20260917-wwjump.md)。
+此次没有重跑测试或 benchmark；该 benchmark 的原生基线是 Linux qspinlock，
+不是 TCLock，也不将 mutex 或用户态 LiTL 的行为套用到 spin 路径。
 
 ```text
 TCLock:
@@ -74,8 +77,10 @@ TCLock:
 
 kdlock:
   waiter: prepare shared request -> switch to shadow wait stack -> publish
-  combiner: bind request.frame -> wrapper -> JIT CS -> write back same packet
-    -> C dispatcher -> complete, or service a continuation and reenter wrapper
+  combiner: batch shell -> C step admission/bind -> wrapper loads -> JIT CS
+    -> wrapper writeback -> batch shell -> C step completion/pop/publication
+    -> next admission/bind -> wrapper loads -> next JIT CS
+    (complex exits are consumed once by the generic dispatcher)
   waiter: wake -> abandon old C frames -> restore CPU from request -> continue
 ```
 
@@ -83,22 +88,32 @@ TCLock 的 `execute_cs()` 调用 `komb_context_switch()`，在 combiner CPU 上
 将物理 RSP 换成 waiter 的原栈并执行原生代码。`komb_spin_unlock()` 保存当前
 续点后切走。本地上述头文件启用 `WWJUMP`：批次条件满足时，从当前 waiter 的
 unlock 直接切到下一 waiter 的 lock 返回点，离开旧栈后才发布上一 waiter 完成；
-关闭该选项则逐个回到 combiner 循环。末节点、批次上限等条件仍会结束代理批次。
+关闭该选项则逐个回到 combiner 循环。末节点、批次上限、IRQ 节点及
+`need_resched()` 等条件仍会结束代理批次。WWJUMP 仍执行 unlock 和下一 lock
+尾部的 C 逻辑，不能把六组 push/pop 当成 TCLock 交接的全部成本。
 
 kdlock 的物理 RSP 留在 combiner task 栈上；JIT 的虚拟 RSP 指向 waiter 原栈，
 因此原栈仍被远端执行访问，物理 waiter 必须先离开它再发布请求。
-当前 C combiner 逐请求调用 wrapper，同一请求在控制/服务边界还可能多次进出。
-批次 source lease 和真实锁持有已摊销，WWJUMP 与多请求融合 wrapper 尚未实现。
+驻留汇编外壳每批保存一次原始 combiner callee-saved 寄存器，省掉 batch
+wrapper 自身的重复保存。正常请求仍逐个返回锁侧 C step，完成/解绑、发布后
+再准入和绑定下一请求；这不是 TCLock 的原生 waiter 续点直接切换。
+冻结模块中，`kd_spin_batch_step()` 的函数序言每次仍保存 RBX/RBP/R12–R15；
+`spin_batch.S` 每轮调用 step 和 wrapper 的两处 `CALL_NOSPEC` 均引用
+`__x86_indirect_thunk_rax`。因此“每批保存一次”只描述外层原始状态，不能推广
+为所有 C ABI 保存均按批次摊销；静态 ELF 也不能确定运行时 thunk 补丁和周期开销。
+队列选择和 WWJUMP 交接由锁层负责，JIT 只执行当前临界区。
+嵌套、hostcall、native 或拒绝出口交给原通用处理，已执行前缀不会重跑。
+普通入口仍支持旧 wrapper 调用，批次入口见第 2.3 节。
 
 | 保存对象 | TCLock spin 路径 | 当前 kdlock spin 路径 |
 | --- | --- | --- |
 | 初始续点 | 六个 callee-saved 寄存器留在原栈，node 保存 RSP，返回地址留在栈上 | 从 hook 栈解码 RBX、RBP、R12–R15、RIP/RSP，直接写入 `request.frame.regs`；不是完整 CPU 快照 |
-| 代理执行的寄存器 | 原生代码直接使用寄存器；切换汇编显式 push/pop 六个 callee-saved 寄存器并交换 RSP | wrapper 装载逻辑寄存器，退出时回写 GPR 和虚拟 RIP/RSP；R11–R15 等映射见第 3 节 |
-| combiner 自身状态 | shadow 栈上的 C 帧、寄存器与嵌套局部状态 | task 栈上的 C/wrapper 帧保存执行者状态；复杂路径另有 `saved_combiner` checkpoint |
+| 代理执行的寄存器 | 原生代码直接使用寄存器；切换汇编显式 push/pop 六个 callee-saved 寄存器并交换 RSP | wrapper 装载逻辑寄存器，最终单锁 unlock 回写 callee-saved 与 RIP/SP、RDI；其他出口完整回写 GPR，映射见第 3 节 |
+| combiner 自身状态 | shadow 栈上的 C 帧、寄存器与嵌套局部状态 | 外层原始状态每批保存一次；C step 每次仍有自己的 ABI 保存；复杂路径另有 `saved_combiner` checkpoint |
 | 物理 waiter 等待 | 慢路径使用 per-CPU shadow 栈 | 独立 8 KiB 等待栈只保存旧 C RSP 并汇编轮询；队首可恢复旧帧，完成/native 唤醒放弃旧帧 |
 | 嵌套续跑 | 真实栈续点、锁栈和保存的 combiner 局部变量 | child frame 共用 root 寄存器包，但独立保留 owner/control、锁记录、物理 parent 和逻辑 resume_target |
 | task/GS | node 保存 task 指针并提供 `komb_get_current()`；该切栈函数不切换硬件 task/GS | 显式传入 logical task 和 origin GS base，供翻译代码使用；不切换硬件 task/GS |
-| 最终恢复 | 加载 node 保存的 RSP，恢复 callee-saved 寄存器，沿原生 unlock 返回 | 直接从稳定 request 恢复 GPR/RSP，最后一次包读取后归还引用，再恢复 IRQ flags 并返回续点 |
+| 最终恢复 | 加载 node 保存的 RSP，恢复 callee-saved 寄存器，沿原生 unlock 返回 | 仍从稳定 request 加载 15 个 GPR 及 RSP，最后一次包读取后归还引用，再恢复 IRQ flags 并返回续点 |
 
 因此需要分别看待三类保存：同一逻辑包在软件对象间的复制、CPU 与逻辑包之间的
 装载/回写，以及必须同时存活的独立执行者状态。当前 spin 主路径已去掉第一类
@@ -108,6 +123,11 @@ frame 在进入时保存。嵌套锁记录在发布前由 parent 直接准备到
 验证同一份记录后启用，不再经 `jit_context` 中转，见
 [共享请求协议](DESIGN.md#911-reuse-before-copy-contract)。不能将“共享包”写成
 “无需状态保存”，也不能据此直接推导吞吐或每次切换的总开销。
+
+剩余差异还包括逐请求准入/绑定、实时 waiter 计数的共享原子更新，以及调度锁字
+S 与原 Linux 锁 L 的 ticket/owner 协议。原锁通常按批次持有，不是每个代理正文
+重新获取；普通等待循环中的 PAUSE 也不能单独解释服务时间。成本及后续检查顺序
+统一见 [执行路径第 6 节](../bench/spin_cacheline/EXECUTION_PATHS.md#costs)。
 
 两者均不提供完整 RFLAGS 上下文切换：TCLock 的上述切换汇编没有保存 RFLAGS；
 kdlock wrapper 不回写 live flags，最终 `popfq` 使用物理 waiter 入队前保存的
@@ -159,6 +179,34 @@ entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志
 执行器每次高层调用只记录第一个正标记，不承诺每次内部续跑都有单独日志。
 此值不独立授权失败恢复、锁交接或重放；未开启观测的代码即使执行也返回 0。
 专用入口拒绝协议将零值作为必要的包校验之一，还必须满足第 8 节的其他条件。
+
+### 2.3 批次入口与退出保存集合
+
+新 wrapper 在偏移 9 放置 `KDWB001` 签名，偏移 16 是专用批次入口；偏移 0
+仍是普通 C ABI 入口。锁侧准入每次校验 OPEN、NORMAL、entry/backend、未执行
+单锁 root、有效 SP 和签名。旧生成物没有该签名时走通用路径。
+普通入口保存/恢复物理 combiner 的六个 callee-saved 寄存器；批次入口由
+`kernel_module/spin_batch.S` 的驻留外壳保存一次，wrapper 只预留相同栈布局。
+`args[2]` 仍输入 GS/task、输出 exit/witness。专用入口额外从 RDX 接收
+`kd_jit_batch_call` 指针，包含当前 L 和解锁入口；该指针不包含 node/队列或
+调度回调，不能用于在 JIT 内切换 waiter。
+
+原有 wrapper 槽偏移保持不变；新增 `Stack_BATCH` 在 `RBP-160`，先分配栈空间
+再写入，不使用内核 red zone。最外层批次外壳在每次 wrapper 返回后调用锁侧
+step，并在批次结束恢复原 combiner 寄存器。
+step 的普通 C ABI 保存仍逐次发生。普通入口与批次入口共用 `load_packet`，
+仍加载完整支持的逻辑 GPR；物理 waiter 的最终恢复也尚未按单锁 ABI 缩小。
+本次缩小的是下表第一行的出口回写，不能称为入口、出口和最终恢复均已最小化。
+
+| 返回边界 | 写回集合 |
+| --- | --- |
+| 专用批次的首次 CALL_MISS，目标恰为 spin unlock 且 RDI=L | RBX/RBP/R12–R15、虚拟 RIP/SP、用于完成分类的 RDI，以及 exit/witness |
+| hostcall、其他 CALL miss、nested/native、错误或入口拒绝 | 原完整 GPR 包、虚拟 RIP/SP、exit/witness |
+| 普通 C ABI wrapper 入口，包括 mutex 和后续续跑 | 原完整 GPR 包、虚拟 RIP/SP、exit/witness |
+
+缩小集合只适用于最终 lock/unlock ABI 边界，不适用于 JIT 中途出口。
+复杂出口进入 `kd_exe_spin_batch_resume` 时已经执行过正文；通用 dispatcher 先
+消费这次返回，再决定服务或续跑，不能再次调用原入口。下表描述完整保存路径。
 
 ## 3. `pt_regs` 输入输出约定
 
@@ -271,7 +319,7 @@ node、恢复抢占/迁移状态，最后使用该副本跳转。node 可能在�
 
 ### 4.2 嵌套 JIT waiter
 
-嵌套 spin waiter 不重新解析 native hook 栈。`node->regs = regs` 和 child frame
+嵌套 spin waiter 不重新解析 native hook 栈。`node->execution` 指向独立 child request；child frame
 的 `regs_ref` 引用同一逻辑 root 寄存器包，不复制父 JIT 的 GPR/RIP/RSP；child
 request 通过 `packet_owner` 保留 root 引用，直到自己的最后一个使用者结束。
 它另行保存 owner/control 状态，在发布前把父 lock stack 的有效前缀直接复制到
@@ -618,8 +666,8 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 结束自己的 pin，combiner 不能远端解除固定。mutex 则在进入 native 后缀前已
 恢复迁移/抢占状态，不把 spin 的 pin 生命周期套用到 mutex。
 
-默认 frame/context/request 为 656/5272/672 字节，spin node 为 136 字节，
-spin JIT context 仍为 184 字节。普通模块静态 per-CPU 为 7424 字节，另在初始化时
+默认 frame/context/request 为 664/5336/712 字节，spin node 为 48 字节，
+spin JIT context 为 16 字节。本轮普通模块静态 per-CPU 为 7104 字节，另在初始化时
 为每可能 CPU 预分配 12 个 request；静态节减小不代表总内存下降。布局不是动态
 栈峰值或任意深度安全证明。生产 spin 的 node、combiner 与恢复路径引用同一份包，
 复杂出口不再复制寄存器。frame 的物理链与包引用见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)。
@@ -631,10 +679,11 @@ spin JIT context 仍为 184 字节。普通模块静态 per-CPU 为 7424 字节�
 
 spin 队列普通获取返回 0/2 时直接沿原 C 调用链返回并恢复原 IRQ 状态，包括
 未分配节点的容量回退。物理 waiter 在连续汇编中先切到 shadow 栈，再发布和轮询；完成或
-native 唤醒直接放弃旧调用链，在对齐后的 `min(node->rsp, node->regs->sp)` 下方
+native 唤醒直接放弃旧调用链，在对齐后的 `min(node->rsp, node->execution->frame.regs_ref->sp)` 下方
 建立恢复帧，只保留 request 指针、ticket 和原 IRQ flags。完成路径结束 ticket，native
 路径标记状态并保留 pin 到最后 ACK。`kd_spin_restore_request()` 直接读取共享包，
-最后一次读取后原子归还 request 引用，再恢复原 IRQ flags 并跳转；不做软件寄存器快照。
+最后一次读取后归还 request 引用（普通单锁用 release store，共享/native 用原子递减），
+再恢复原 IRQ flags 并跳转；不做软件寄存器快照。
 未执行正文的 retry 返回 4 仍保留已持有的 ticket；虚拟 waiter 保留 1/3/5 返回
 分类以通知父 frame。它们不再是物理 waiter 的旧 C 栈返回链。
 
@@ -663,7 +712,7 @@ pop 就返回 `-EBUSY`，不复制输出寄存器、不清除存储、不释放�
 不是从 JIT 虚拟执行重建 live condition codes；既有 flags 语义限制仍在。
 mode 8 的 SELFTEST 在已发 ACK 的 B pop 前保留真实 frame/会话引用，等待首个
 waiter TID 脱离，再让同一 combiner 执行第二 root。它比较 arm 至 pop 的
-168 字节软件寄存器包和等待期间的整个 656 字节 frame；不访问旧 waiter 栈，
+168 字节软件寄存器包和等待期间的整个 664 字节 frame；不访问旧 waiter 栈，
 仅使用缓存 PID。这个观测不是实时 GPR/flags 恢复测试，也不是生产任务退出屏障，
 执行顺序见 [6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner)。
 这些引用及独立 source ioctl 不增加 wrapper 参数，也不改变保存的寄存器包；

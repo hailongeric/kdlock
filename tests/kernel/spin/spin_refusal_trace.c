@@ -32,14 +32,14 @@ static noinline bool kd_spin_selftest_refuse(struct kd_exec_frame *frame,
 
 	if (kd_readmit_refusals)
 		return kd_spin_selftest_readmit_attempt(frame, node, ret);
-	if (!kd_refusal_kind || kd_refusal_kind > 2 || !node->jit_waiter ||
+	if (!kd_refusal_kind || kd_refusal_kind > 2 || !node->execution->jit_waiter ||
 	    frame->outer_lock_addr != READ_ONCE(kd_refusal_lock) || !parent ||
 	    frame->executed || !parent->executed ||
 	    atomic_cmpxchg(&kd_refusal_claimed, 0, 1))
 		return false;
 	kd_refusal.entry = frame->entry_ip;
-	kd_refusal.ip = node->regs->ip;
-	kd_refusal.sp = node->regs->sp;
+	kd_refusal.ip = node->execution->frame.regs_ref->ip;
+	kd_refusal.sp = node->execution->frame.regs_ref->sp;
 	kd_refusal.lock = frame->outer_lock_addr;
 	kd_refusal.outer = parent->outer_lock_addr;
 	kd_refusal.gs = frame->gsbase;
@@ -48,7 +48,7 @@ static noinline bool kd_spin_selftest_refuse(struct kd_exec_frame *frame,
 	kd_refusal.reject_owner = (unsigned long)current;
 	kd_refusal.reject_cpu = raw_smp_processor_id();
 	kd_refusal.parent_regs = *kd_exec_frame_regs(parent);
-	kd_refusal.node_regs = *node->regs;
+	kd_refusal.node_regs = *node->execution->frame.regs_ref;
 	kd_refusal.initial = !frame->executed && parent->executed &&
 			     kd_exec_frame_validate(frame) &&
 			     kd_exec_frame_validate(parent) &&
@@ -89,7 +89,7 @@ kd_spin_selftest_refusal_return(const struct kd_exec_frame *parent,
 	if (kd_readmit_refusals)
 		kd_spin_selftest_readmit_return(parent, node, ret);
 	if (parent != READ_ONCE(kd_refusal.parent) ||
-	    (unsigned long)node->lock != kd_refusal.lock ||
+	    (unsigned long)((struct qspinlock *)node->execution->frame.outer_lock_addr) != kd_refusal.lock ||
 	    parent->logical_pid != kd_refusal.pid)
 		return;
 	kd_refusal.acquired++;
@@ -100,7 +100,7 @@ kd_spin_selftest_refusal_return(const struct kd_exec_frame *parent,
 		(ret == 0 || ret == 2) &&
 		parent->remote_result == KD_EXEC_REMOTE_WAITING &&
 		parent->control_call.phase == KD_CALL_ENTERED &&
-		!node->jit_retry && !node->completed && !node->native_resume &&
+		!node->execution->jit_retry && !node->completed && !node->execution->native_resume &&
 		kd_spin_debug_owner((void *)kd_refusal.lock) ==
 			(unsigned long)current &&
 		raw_spin_is_locked((raw_spinlock_t *)kd_refusal.lock) &&
@@ -109,7 +109,7 @@ kd_spin_selftest_refusal_return(const struct kd_exec_frame *parent,
 		(unsigned long)parent->logical_task == kd_refusal.task &&
 		!memcmp(kd_exec_frame_regs(parent), &kd_refusal.parent_regs,
 			sizeof(parent->regs)) &&
-		!memcmp(node->regs, &kd_refusal.node_regs, sizeof(*node->regs));
+		!memcmp(node->execution->frame.regs_ref, &kd_refusal.node_regs, sizeof(*node->execution->frame.regs_ref));
 }
 
 static noinline void

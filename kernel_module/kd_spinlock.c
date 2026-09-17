@@ -22,11 +22,13 @@
 #include "utils.h"
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_jit_batch.h"
 #include "kd_source.h"
 #include "kd_segment.h"
 #include "kd_spin_entry.h"
 #include "kd_spin_fast.h"
 #include <linux/sched.h>
+#include <linux/sched/task_stack.h>
 #include <linux/topology.h>
 #include <linux/vmalloc.h>
 #include <linux/kernel.h>
@@ -151,30 +153,39 @@ kd_spin_restore_request(struct kd_spin_exec_request *execution,
 		"jz 1f\n"
 		"pushq %c[ip](%%rdi)\n"
 		"1: pushq %%rsi\n"
-		"pushq 0x70(%%rdi)\n"
-		"movq 0x00(%%rdi), %%r15\n"
-		"movq 0x08(%%rdi), %%r14\n"
-		"movq 0x10(%%rdi), %%r13\n"
-		"movq 0x18(%%rdi), %%r12\n"
-		"movq 0x20(%%rdi), %%rbp\n"
-		"movq 0x28(%%rdi), %%rbx\n"
-		"movq 0x30(%%rdi), %%r11\n"
-		"movq 0x38(%%rdi), %%r10\n"
-		"movq 0x40(%%rdi), %%r9\n"
-		"movq 0x48(%%rdi), %%r8\n"
-		"movq 0x50(%%rdi), %%rax\n"
-		"movq 0x58(%%rdi), %%rcx\n"
-		"movq 0x60(%%rdi), %%rdx\n"
-		"movq 0x68(%%rdi), %%rsi\n"
-		"lock decl %c[users](%%rdi)\n"
+		"pushq %c[packet]+0x70(%%rdi)\n"
+		"movq %c[packet]+0x00(%%rdi), %%r15\n"
+		"movq %c[packet]+0x08(%%rdi), %%r14\n"
+		"movq %c[packet]+0x10(%%rdi), %%r13\n"
+		"movq %c[packet]+0x18(%%rdi), %%r12\n"
+		"movq %c[packet]+0x20(%%rdi), %%rbp\n"
+		"movq %c[packet]+0x28(%%rdi), %%rbx\n"
+		"movq %c[packet]+0x30(%%rdi), %%r11\n"
+		"movq %c[packet]+0x38(%%rdi), %%r10\n"
+		"movq %c[packet]+0x40(%%rdi), %%r9\n"
+		"movq %c[packet]+0x48(%%rdi), %%r8\n"
+		"movq %c[packet]+0x50(%%rdi), %%rax\n"
+		"movq %c[packet]+0x58(%%rdi), %%rcx\n"
+		"movq %c[packet]+0x60(%%rdi), %%rdx\n"
+		"movq %c[packet]+0x68(%%rdi), %%rsi\n"
+		/* A pristine completed root never published child/native users. Its
+		 * sole waiter retires with a release store; shared lifetimes keep RMW. */
+		"cmpb $0, %c[simple](%%rdi)\n"
+		"je 2f\n"
+		"movl $0, %c[users](%%rdi)\n"
+		"jmp 3f\n"
+		"2: lock decl %c[users](%%rdi)\n"
+		"3:\n"
 		"popq %%rdi\n"
 		"popfq\n"
 		"retq\n"
 		:
 		: "D"(execution), "S"(flags), "d"(mode),
+		  [packet] "i"(offsetof(struct kd_spin_exec_request, frame.regs)),
 		  [sp] "i"(offsetof(struct kd_spin_exec_request, frame.regs.sp)),
 		  [ip] "i"(offsetof(struct kd_spin_exec_request, frame.regs.ip)),
-		  [users] "i"(offsetof(struct kd_spin_exec_request, users))
+		  [users] "i"(offsetof(struct kd_spin_exec_request, users)),
+		  [simple] "i"(offsetof(struct kd_spin_exec_request, frame.spin_simple))
 		: "memory", "cc");
 	__builtin_unreachable();
 }
@@ -183,12 +194,12 @@ __attribute__((noipa)) noinline notrace static void
 kd_spin_resume_waiter(struct kd_spin_node *node, unsigned int mode)
 {
 	struct kd_spin_exec_request *execution = node->execution;
-	unsigned long irq_flags = node->irq_flags;
-	struct kd_spin_ref ref = node->spin_origin;
+	unsigned long irq_flags = node->execution->irq_flags;
+	struct kd_spin_ref ref = node->execution->frame.spin_origin;
 
-	if (node->jit_retry)
+	if (node->execution->jit_retry)
 		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
-			   node, node->cpuid, node->regs->ip);
+			   node, node->cpuid, node->execution->frame.regs_ref->ip);
 	if (mode == 2)
 		BUG_ON(kd_spin_entry_mark_native(&ref));
 	else if (!mode)
@@ -204,14 +215,14 @@ kd_spin_resume_waiter(struct kd_spin_node *node, unsigned int mode)
 static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_spin_resume_completed(struct kd_spin_node *node)
 {
-	unsigned int mode = READ_ONCE(node->native_resume) ? 2 : 0;
+	unsigned int mode = READ_ONCE(node->execution->native_resume) ? 2 : 0;
 
 	this_cpu_ptr(&kd_spin_nodes[0])->count--;
 	if (mode)
 		kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
 	else
 		kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);
-	kd_spin_diag_waiter_exit(node->lock);
+	kd_spin_diag_waiter_exit((struct qspinlock *)node->execution->frame.outer_lock_addr);
 	kd_spin_resume_waiter(node, mode);
 	__builtin_unreachable();
 }
@@ -247,8 +258,8 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
 
 		/* Queue-head combiners can recycle node slots for nested requests.
 		 * This unexecuted physical caller still owns its intact flags local. */
-		node->irq_flags = flags;
-		sp = min(node->rsp, node->regs->sp) & ~15UL;
+		node->execution->irq_flags = flags;
+		sp = min(node->rsp, node->execution->frame.regs_ref->sp) & ~15UL;
 		asm volatile("movq %0, %%rsp\n"
 			     "callq %P3\n"
 			     "ud2\n"

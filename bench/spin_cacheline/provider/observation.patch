@@ -71,8 +71,18 @@ diff --git a/kernel_module/Makefile b/kernel_module/Makefile
 diff --git a/kernel_module/exe.c b/kernel_module/exe.c
 --- a/kernel_module/exe.c
 +++ b/kernel_module/exe.c
-@@ -221,7 +221,7 @@
- 	if (!kd_exe_entry_is_ready(exe, 0, entry_ip)) {
+@@ -195,7 +195,8 @@
+ static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,
+ 			     unsigned long witness)
+ {
+-	KD_PR_INFO("JIT body witness: entry=%lx lock=%lx body=%lu\n",
++	kd_bench_note_body(outer_lock_addr);
++	KD_PR_ROUTINE("JIT body witness: entry=%lx lock=%lx body=%lu\n",
+ 		   entry_ip, outer_lock_addr, witness);
+ }
+ 
+@@ -273,7 +274,7 @@
+ 	if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip)) {
  		if (!exe)
  			return KD_EXE_NO_RUN;
 -		KD_PR_INFO(
@@ -80,18 +90,6 @@ diff --git a/kernel_module/exe.c b/kernel_module/exe.c
  			"translation not ready: exe=%px status=%d entry=%lx ip=%lx pid=%d\n",
  			exe, exe->status_code, exe->RIP, regs->ip, exe->pid);
  		return KD_EXE_NO_RUN;
-@@ -305,7 +305,10 @@
- 			}
- 			/* Observational only: never use missing evidence to replay work. */
- 			if (!body_reported && args[1] == 1) {
--				KD_PR_INFO(
-+				/* Once per logical dispatcher invocation, after the real
-+				 * wrapper returns; continuations cannot count it twice. */
-+				kd_bench_note_body(outer_lock_addr);
-+				KD_PR_ROUTINE(
- 					"JIT body witness: entry=%lx lock=%lx body=%lu\n",
- 					entry_ip, outer_lock_addr, args[1]);
- 				body_reported = true;
 diff --git a/kernel_module/execution/native.inc b/kernel_module/execution/native.inc
 --- a/kernel_module/execution/native.inc
 +++ b/kernel_module/execution/native.inc
@@ -174,13 +172,13 @@ diff --git a/kernel_module/kd_mutex.c b/kernel_module/kd_mutex.c
 diff --git a/kernel_module/kd_spinlock.c b/kernel_module/kd_spinlock.c
 --- a/kernel_module/kd_spinlock.c
 +++ b/kernel_module/kd_spinlock.c
-@@ -179,7 +179,7 @@
- 	struct kd_spin_ref ref = node->spin_origin;
+@@ -198,7 +198,7 @@
+ 	struct kd_spin_ref ref = node->execution->frame.spin_origin;
  
- 	if (node->jit_retry)
+ 	if (node->execution->jit_retry)
 -		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
 +		KD_PR_ROUTINE("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
- 			   node, node->cpuid, node->regs->ip);
+ 			   node, node->cpuid, node->execution->frame.regs_ref->ip);
  	if (mode == 2)
  		BUG_ON(kd_spin_entry_mark_native(&ref));
 diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
@@ -216,7 +214,7 @@ diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
 diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
 --- a/kernel_module/spin/combiner.inc
 +++ b/kernel_module/spin/combiner.inc
-@@ -51,7 +51,7 @@
+@@ -133,7 +133,7 @@
  	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
  		remaining += !frame->jit_lock_released[i];
  	/* Log before L opens: a native successor may run immediately afterward. */
@@ -224,8 +222,8 @@ diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
 +	KD_PR_ROUTINE("kd_spin outer release: task=%d owner=%d owner_task=%lx cpu=%u outer=%lx next_task=%d next_cpu=%d remaining=%u remote=%u\n",
  		frame->logical_task->pid, current->pid, (unsigned long)current,
  		raw_smp_processor_id(), frame->outer_lock_addr,
- 		next->task_struct_ptr->pid, next->cpuid, remaining,
-@@ -225,7 +225,7 @@
+ 		next->execution->frame.logical_task->pid, next->cpuid, remaining,
+@@ -284,7 +284,7 @@
  			       frame->logical_task ||
  		       smp_load_acquire(&frame->resume_target->remote_result) !=
  			       KD_EXEC_REMOTE_WAITING);
@@ -234,16 +232,16 @@ diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
  			frame->logical_pid, raw_smp_processor_id(),
  			frame->entry_ip, kd_exec_frame_regs(frame)->ip, frame->outer_lock_addr,
  			frame->resume_target->outer_lock_addr,
-@@ -339,7 +339,7 @@
- 	curr_node->jit_retry = !curr_node->jit_waiter &&
+@@ -404,7 +404,7 @@
+ 	curr_node->execution->jit_retry = !curr_node->execution->jit_waiter &&
  			       ret_flag != KD_EXE_RUN_TO_UNLOCK;
- 	if (curr_node->jit_retry)
+ 	if (curr_node->execution->jit_retry)
 -		KD_PR_INFO(
 +		KD_PR_ROUTINE(
  			"spin JIT retry regs: node=%px cpu=%d ip=%lx failed_ip=%lx\n",
- 			curr_node, curr_node->cpuid, curr_node->regs->ip,
+ 			curr_node, curr_node->cpuid, curr_node->execution->frame.regs_ref->ip,
  			ret_flag == KD_EXE_RUN_TO_UNLOCK ?
-@@ -363,7 +363,7 @@
+@@ -430,7 +430,7 @@
  		KD_PR_DEBUG("delegation ok lock=%px depth=%u\n", lock,
  			    kd_spin_lock_stack_depth(ptr));
  	} else {
@@ -252,15 +250,8 @@ diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
  		if (ret_flag == KD_EXE_RUN_ERROR)
  			kd_spin_jit_disable(lock);
  		return ret_flag;
-@@ -463,12 +463,14 @@
- 		}
- #endif
- 		if (exe_flag == KD_EXE_NO_RUN) {
-+			/* Translation still being prepared is a routine native fallback,
-+			 * not a runtime error; quiet must cover this frequent path too. */
- 			print_debug("can't assembly\n");
- 			next_node = curr_node;
- 			break;
+@@ -579,7 +579,7 @@
+ 			return NULL;
  		}
  		if (exe_flag == KD_EXE_RUN_ERROR) {
 -			print_debug("run error\n");

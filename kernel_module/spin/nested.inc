@@ -33,9 +33,9 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	frame = &node->execution->frame;
 	kd_exec_frame_prepare(frame, parent->entry_ip, (unsigned long)lock,
 		parent->gsbase, parent->logical_task);
+	kd_exec_frame_prepare_complex(frame);
 	frame->regs_ref = regs;
 	frame->spin_origin = parent->spin_origin;
-	node->regs = regs;
 	/* Production roots reside in request storage. Legacy component probes
 	 * keep their parent frame synchronously alive instead. */
 	if (parent->request_frame) {
@@ -43,12 +43,9 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 		atomic_inc(&owner->users);
 		node->execution->packet_owner = owner;
 	}
-	node->gsbase = parent->gsbase;
-	node->task_struct_ptr = parent->logical_task;
-	node->spin_origin = parent->spin_origin;
-	node->jit_waiter = true;
-	node->pinned_context = false;
-	node->jit_context = context;
+	node->execution->jit_waiter = true;
+	node->execution->pinned_context = false;
+	node->execution->jit_context = context;
 	context->requester = parent;
 	context->lock_depth = depth + 1;
 	for (i = 0; i < depth; i++) {
@@ -72,13 +69,13 @@ static int kd_spin_advance_jit_node(struct kd_spin_node *node,
 {
 	unsigned long return_ip;
 
-	if (!node || !regs || !node->regs->sp)
+	if (!node || !regs || !node->execution->frame.regs_ref->sp)
 		return -EINVAL;
-	return_ip = READ_ONCE(*(unsigned long *)node->regs->sp);
+	return_ip = READ_ONCE(*(unsigned long *)node->execution->frame.regs_ref->sp);
 	if (!return_ip)
 		return -EINVAL;
-	node->regs->sp += sizeof(unsigned long);
-	node->regs->ip = return_ip;
+	node->execution->frame.regs_ref->sp += sizeof(unsigned long);
+	node->execution->frame.regs_ref->ip = return_ip;
 	return 0;
 }
 
@@ -187,14 +184,14 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	node->socket_id = numa_node_id();
 	node->cpuid = smp_processor_id();
 	node->rsp = regs->sp;
-	node->lock = lock;
-	node->task_struct_ptr = NULL;
-	node->gsbase = 0;
-	node->irq_flags = 0; /* Virtual nodes never restore the physical waiter. */
-	node->exec_frame = NULL;
-	node->jit_retry = false;
-	node->native_resume = false;
-	node->native_regs_decoded = false;
+
+	node->execution->frame.logical_task = NULL;
+	node->execution->frame.gsbase = 0;
+	node->execution->irq_flags = 0; /* Virtual nodes never restore the physical waiter. */
+
+	node->execution->jit_retry = false;
+	node->execution->native_resume = false;
+	node->execution->native_regs_decoded = false;
 	ret = kd_spin_prepare_jit_node(node, &contexts[idx], lock, regs,
 				       parent);
 	if (ret) {

@@ -25,6 +25,7 @@ kdlock_km-objs := \
 	kd_exec.o \
 	kd_source.o \
 	kd_spinlock.o \
+	spin_batch.o \
 	kd_spin_gate.o \
 	kd_spin_entry.o \
 	kd_mutex.o \

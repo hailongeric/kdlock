@@ -11,7 +11,89 @@ struct kd_spin_batch {
 	struct kd_exec_outer_unlock outer;
 	struct kd_spin_node *next;
 	struct kd_spin_request *request;
+	struct kd_exe_info *exe;
+	unsigned long entry_ip;
+	struct qspinlock *lock;
+	struct kd_spin_node *cursor;
+	struct kd_jit_batch_call call;
+	bool pending;
+	bool reclaimed;
+	bool fast_previous;
+	int counter;
+	u64 queue_end;
+#ifdef KDLOCK_SELFTEST
+	int frame_event;
+#endif
+#ifdef NUMA_AWARE
+	struct kd_spin_node *saved_tail;
+#endif
 };
+
+/* The batch's source lease keeps registry slots alive until the last unbind.
+ * Cache identity, never publication/readiness or the mutable code pointer.
+ * Spin is the fixed backend of this batch; a foreign registration still goes
+ * through the ordinary dispatcher rejection, without becoming a cache hit. */
+static struct kd_exe_info *
+kd_spin_batch_find_ready(struct kd_spin_batch *batch, unsigned long entry_ip)
+{
+	struct kd_exe_info *exe = batch->exe;
+
+	if (exe && batch->entry_ip == entry_ip &&
+	    READ_ONCE(exe->lock_kind) == KD_EXE_LOCK_SPIN)
+		return kd_exe_entry_is_ready(exe, 0, entry_ip) ? exe : NULL;
+
+	exe = kd_exe_find_ready(0, entry_ip);
+	if (exe && READ_ONCE(exe->lock_kind) == KD_EXE_LOCK_SPIN) {
+		batch->exe = exe;
+		batch->entry_ip = entry_ip;
+	}
+	return exe;
+}
+
+/* Called while the successor is still queued, before current execution can
+ * release the outer lock. Touch only prepared packets: a virtual child aliases
+ * its logical parent's registers/stack, not the per-CPU node-zero RSP used by
+ * TCLock. Hints confer neither ownership nor permission to execute. */
+static void kd_spin_prefetch_request(struct kd_spin_node *node)
+{
+	struct kd_spin_exec_request *execution;
+	struct kd_exec_frame *frame;
+	struct pt_regs *regs;
+	struct task_struct *task;
+	unsigned long sp, base;
+	unsigned int offset;
+
+	if (!node || check_irq_node(node))
+		return;
+	execution = READ_ONCE(node->execution);
+	if (!execution)
+		return;
+	regs = READ_ONCE(execution->frame.regs_ref);
+	if (!regs)
+		return;
+	frame = &execution->frame;
+	for (offset = 0; offset < sizeof(*regs); offset += L1_CACHE_BYTES)
+		prefetchw((char *)regs + offset);
+	prefetchw(frame);
+	if (READ_ONCE(frame->complex_ready)) {
+		prefetchw(&frame->jit_lock_addr[0]);
+		prefetchw(&frame->jit_lock_kind[0]);
+		prefetchw(&frame->jit_lock_node[0]);
+	}
+
+	/* The queued logical waiter keeps its task stack alive through ACK. Only
+	 * warm the virtual SP and adjacent push slot within that stack; no read,
+	 * copy or guessed whole-stack range is needed. */
+	task = READ_ONCE(node->execution->frame.logical_task);
+	if (!task)
+		return;
+	sp = READ_ONCE(regs->sp);
+	base = (unsigned long)task_stack_page(task);
+	if (sp >= base + sizeof(unsigned long) && sp - base < THREAD_SIZE) {
+		prefetchw((void *)sp);
+		prefetchw((void *)(sp - sizeof(unsigned long)));
+	}
+}
 
 /* A's executor keeps its ticket pin and local frame stack, not ownership of
  * A. No published successor can be inspected again by this detached batch. */
@@ -27,7 +109,7 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
 	unsigned int i, remaining = 0;
 	int ret;
 
-	if (frame->mutex_backend || !next || !next->task_struct_ptr ||
+	if (frame->mutex_backend || !next || !next->execution->frame.logical_task ||
 	    frame->jit_lock_kind[frame->outer_lock_index] !=
 		    KD_EXEC_LOCK_QUEUE_OWNER ||
 	    READ_ONCE(word->locked) != _Q_LOCKED_COMBINER_VAL)
@@ -53,7 +135,7 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
 	pr_info("kd_spin outer release: task=%d owner=%d owner_task=%lx cpu=%u outer=%lx next_task=%d next_cpu=%d remaining=%u remote=%u\n",
 		frame->logical_task->pid, current->pid, (unsigned long)current,
 		raw_smp_processor_id(), frame->outer_lock_addr,
-		next->task_struct_ptr->pid, next->cpuid, remaining,
+		next->execution->frame.logical_task->pid, next->cpuid, remaining,
 		kd_exec_frame_remote_pending(frame));
 	ret = kd_spin_entry_release_origin(&batch->request->ref);
 	if (ret)
@@ -94,7 +176,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	int ret_flag;
 	struct kd_exe_info *exe;
 	unsigned int frame_lock_depth;
-	struct kd_spin_jit_context *jit_context = curr_node->jit_context;
+	struct kd_spin_jit_context *jit_context = curr_node->execution->jit_context;
 	unsigned long entry_ip;
 	u64 queue_end;
 	bool abort_cleaned = false;
@@ -104,14 +186,27 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
 
+	if (batch->pending) {
+		frame = &curr_node->execution->frame;
+		exe = batch->exe;
+		queue_end = batch->queue_end;
+#ifdef KDLOCK_SELFTEST
+		frame_event = batch->frame_event;
+#endif
+		ret_flag = kd_exe_spin_batch_resume(exe, &batch->call);
+		frame->outer_unlock_hook = &batch->outer;
+		batch->pending = false;
+		goto dispatched;
+	}
+
 	ptr->curr_cs_cpu = curr_node->cpuid;
 
 	/* A plain waiter cannot describe locks/context pinned before this request.
 	 * Keep its private-queue position, but let it execute on its own stack. */
-	if (!curr_node->jit_waiter && curr_node->pinned_context) {
+	if (!curr_node->execution->jit_waiter && curr_node->execution->pinned_context) {
 		pr_warn_ratelimited(
 			"[KD_JIT][WARN] reason=PINNED_NATIVE_WAITER task=%d cpu=%d lock=%px\n",
-			curr_node->task_struct_ptr->pid, curr_node->cpuid,
+			curr_node->execution->frame.logical_task->pid, curr_node->cpuid,
 			lock);
 		return KD_EXE_NO_RUN;
 	}
@@ -126,15 +221,15 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 #endif
 
 	/* Physical packets are fully prepared before the waiter publishes next. */
-	if (!curr_node->jit_waiter && !curr_node->native_regs_decoded)
+	if (!curr_node->execution->jit_waiter && !curr_node->execution->native_regs_decoded)
 		return KD_EXE_RUN_ERROR;
-	if (curr_node->jit_waiter && (!jit_context || !jit_context->requester))
+	if (curr_node->execution->jit_waiter && (!jit_context || !jit_context->requester))
 		return KD_EXE_RUN_ERROR;
 	/* B is a continuation in A's admitted code. An independent B translation
 	 * starts at lexical depth one and can stop at an inherited A unlock. */
-	entry_ip = curr_node->jit_waiter ? jit_context->requester->entry_ip :
-					   curr_node->regs->ip;
-	exe = kd_exe_find_ready(0, entry_ip);
+	entry_ip = curr_node->execution->jit_waiter ? jit_context->requester->entry_ip :
+					   curr_node->execution->frame.regs_ref->ip;
+	exe = kd_spin_batch_find_ready(batch, entry_ip);
 	if (!exe) {
 		kd_spin_debug_jit_not_ready(lock,
 					    kd_spin_lock_stack_depth(ptr));
@@ -143,10 +238,10 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	}
 	print_debug(
 		"r15 %lx r14 %lx r13 %lx r12 %lx bx %lx bp %lx ip %lx sp %lx\n",
-		curr_node->regs->r15, curr_node->regs->r14, curr_node->regs->r13,
-		curr_node->regs->r12, curr_node->regs->bx, curr_node->regs->bp,
-		curr_node->regs->ip, curr_node->regs->sp);
-	frame_lock_depth = curr_node->jit_waiter ?
+		curr_node->execution->frame.regs_ref->r15, curr_node->execution->frame.regs_ref->r14, curr_node->execution->frame.regs_ref->r13,
+		curr_node->execution->frame.regs_ref->r12, curr_node->execution->frame.regs_ref->bx, curr_node->execution->frame.regs_ref->bp,
+		curr_node->execution->frame.regs_ref->ip, curr_node->execution->frame.regs_ref->sp);
+	frame_lock_depth = curr_node->execution->jit_waiter ?
 				   jit_context->lock_depth :
 				   kd_spin_lock_stack_depth(ptr);
 	frame = &curr_node->execution->frame;
@@ -154,20 +249,20 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		KD_PR_ERR("spin JIT frame stack overflow lock=%px\n", lock);
 		return KD_EXE_RUN_ERROR;
 	}
-	curr_node->exec_frame = frame;
-	frame->spin_origin = curr_node->spin_origin;
-	if ((curr_node->jit_waiter &&
+
+	kd_exec_frame_prepare_complex(frame);
+	if ((curr_node->execution->jit_waiter &&
 	     kd_exec_frame_set_lock_entries(
 		     frame, frame->jit_lock_addr, frame->jit_lock_kind,
 		     frame->jit_lock_node, frame->jit_lock_released,
 		     jit_context->lock_depth)) ||
-	    (!curr_node->jit_waiter &&
+	    (!curr_node->execution->jit_waiter &&
 	     kd_exec_frame_set_lock_stack(frame,
 					  (const unsigned long *)ptr->lock_addr,
 					  kd_spin_lock_stack_depth(ptr)))) {
 		KD_PR_ERR("spin JIT frame lock stack invalid lock=%px\n", lock);
 		kd_exec_frame_abort(frame);
-		curr_node->exec_frame = NULL;
+
 		if (kd_exec_frame_pop(frame, NULL))
 			KD_PR_ERR("spin JIT frame abort pop failed lock=%px\n",
 				  lock);
@@ -176,12 +271,12 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	/* The generic ledger initializes only its live prefix. Keep one entry
 	 * for a simple root so promotion to nested/native needs no reconstruction;
 	 * delay the large combiner snapshot until the first non-final exit. */
-	frame->spin_simple = !curr_node->jit_waiter && !frame->parent &&
+	frame->spin_simple = !curr_node->execution->jit_waiter && !frame->parent &&
 			     frame_lock_depth == 1;
 	if (!frame->spin_simple)
 		kd_spin_capture_combiner_state(&frame->saved_combiner, ptr);
 	frame->outer_unlock_hook = &batch->outer;
-	if (curr_node->jit_waiter) {
+	if (curr_node->execution->jit_waiter) {
 		frame->resume_target = jit_context->requester;
 		BUG_ON(!frame->resume_target ||
 		       frame->resume_target->logical_task !=
@@ -205,6 +300,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		ret_flag = kd_exe_on_call_hl_entry(
 			exe, kd_exec_frame_regs(frame), frame->entry_ip,
 			frame->outer_lock_addr);
+dispatched:
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_frame_end(frame_event, frame, ret_flag);
 	kd_spin_selftest_refusal_end(frame, ret_flag);
@@ -212,7 +308,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	/* A pre-body refusal is still waiting. Once a body ran, use its saved
 	 * dispatch boundary and consume metadata before native/completion wake. */
 	if (frame->executed)
-		kd_exe_queue_timing_end(false, &curr_node->queued_at_ns, queue_end);
+		kd_exe_queue_timing_end(false, &curr_node->execution->queued_at_ns, queue_end);
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK && frame->spin_simple) {
 		BUG_ON(kd_exec_frame_complete_single_spin(frame));
 		goto finish_frame;
@@ -228,8 +324,8 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		 * slot and original task can disappear before this owner unbinds. */
 		atomic_inc(&execution->users);
 		BUG_ON(kd_exec_remote_native(frame));
-		curr_node->exec_frame = NULL;
-		WRITE_ONCE(curr_node->native_resume, true);
+
+		WRITE_ONCE(curr_node->execution->native_resume, true);
 		smp_store_release(&curr_node->locked, 0);
 		/* The waiter may reuse its queue slot after this publication. */
 		BUG_ON(kd_exec_native_wait(frame));
@@ -304,16 +400,16 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 finish_frame:
 	/* Only a native waiter needs the saved-entry return trampoline. A
 	 * virtual waiter acquires B and continues its existing parent frame. */
-	curr_node->jit_retry = !curr_node->jit_waiter &&
+	curr_node->execution->jit_retry = !curr_node->execution->jit_waiter &&
 			       ret_flag != KD_EXE_RUN_TO_UNLOCK;
-	if (curr_node->jit_retry)
+	if (curr_node->execution->jit_retry)
 		KD_PR_INFO(
 			"spin JIT retry regs: node=%px cpu=%d ip=%lx failed_ip=%lx\n",
-			curr_node, curr_node->cpuid, curr_node->regs->ip,
+			curr_node, curr_node->cpuid, curr_node->execution->frame.regs_ref->ip,
 			ret_flag == KD_EXE_RUN_TO_UNLOCK ?
 				0UL :
 				frame->continuation_ip);
-	curr_node->exec_frame = NULL;
+
 	if (!frame->spin_simple) {
 		if (ret_flag == KD_EXE_RUN_TO_UNLOCK)
 			BUG_ON(kd_exec_remote_complete(frame));
@@ -339,8 +435,6 @@ finish_frame:
 		return ret_flag;
 	}
 
-
-
 	if (!batch->outer.released && word->locked == _Q_UNLOCKED_OOO_VAL) {
 		print_debug("Combiner got control back OOO unlock\n");
 
@@ -358,6 +452,158 @@ finish_frame:
 	return 0;
 }
 #pragma GCC pop_options
+
+/* Single-root admission and binding touch only hot state. Complex/virtual,
+ * legacy wrapper and refused candidates stay on execute_cs's existing path. */
+static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
+					 struct kd_spin_node *node)
+{
+	struct kd_spin_exec_request *execution = node->execution;
+	struct kd_exec_frame *frame = &execution->frame;
+	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_exe_info *exe;
+
+	if (execution->jit_waiter || execution->pinned_context ||
+	    !execution->native_regs_decoded || kd_exec_current_frame() ||
+	    kd_spin_lock_stack_depth(ptr) != 1 || kd_spin_jit_is_disabled(batch->lock))
+		return false;
+	exe = kd_spin_batch_find_ready(batch, frame->entry_ip);
+	if (!exe)
+		return false;
+	/* Eligibility precedes binding so a legacy upload needs no undo/pop. */
+	frame->spin_simple = true;
+	if (!kd_exe_spin_batch_prepare(exe, frame, &batch->call)) {
+		frame->spin_simple = false;
+		return false;
+	}
+	if (kd_exec_frame_bind(frame, 1, true)) {
+		frame->spin_simple = false;
+		return false;
+	}
+	ptr->curr_cs_cpu = node->cpuid;
+#ifdef KDLOCK_SELFTEST
+	/* Observers inspect ledgers; production roots leave this storage cold. */
+	kd_exec_frame_prepare_complex(frame);
+	batch->frame_event = kd_spin_selftest_frame_begin(frame);
+#endif
+	batch->queue_end = kd_exe_queue_timing_start();
+	frame->executed = true;
+	batch->pending = true;
+	this_cpu_inc(kd_spin_diag_cpu->batch_entries);
+	if (batch->fast_previous)
+		this_cpu_inc(kd_spin_diag_cpu->ww_jumps);
+	return true;
+}
+
+/* WWJUMP lives here: finish the current waiter, publish its result, select and
+ * admit the successor, then return its wrapper entry to the resident shell.
+ * No queue or lifecycle decision is made in the generated code. */
+static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)
+{
+	struct kd_spin_batch *batch = opaque;
+	struct qspinlock *lock = batch->lock;
+	struct shadow_stack *ptr __maybe_unused = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_node *curr_node, *next_node;
+	int exe_flag;
+	for (;;) {
+		curr_node = batch->cursor;
+		if (batch->pending) {
+			next_node = batch->next;
+			if (kd_exe_spin_batch_completed(&batch->call)) {
+				struct kd_exec_frame *frame = &curr_node->execution->frame;
+				BUG_ON(kd_exec_frame_complete_single_spin(frame));
+#ifdef KDLOCK_SELFTEST
+				kd_spin_selftest_frame_end(batch->frame_event, frame,
+							   KD_EXE_RUN_TO_UNLOCK);
+#endif
+				kd_exe_queue_timing_end(false,
+					&curr_node->execution->queued_at_ns, batch->queue_end);
+				BUG_ON(kd_exec_frame_pop(frame, NULL));
+				kd_spin_debug_jit_success(lock, 1);
+				batch->pending = false;
+				batch->fast_previous = true;
+				exe_flag = 0;
+			} else {
+				/* Promote before the generic dispatcher consumes this exit.
+				 * Install the lock hook before a service can release L. */
+				kd_spin_jit_prepare_complex(&curr_node->execution->frame);
+				curr_node->execution->frame.outer_unlock_hook = &batch->outer;
+				batch->fast_previous = false;
+				exe_flag = execute_cs(lock, curr_node, batch);
+			}
+		} else {
+#ifdef NUMA_AWARE
+			batch->saved_tail = ptr->local_queue_tail;
+#endif
+			batch->counter++;
+
+			next_node = get_next_node(curr_node);
+			batch->next = next_node;
+			batch->outer.released = false;
+			kd_spin_prefetch_request(next_node);
+
+			if (kd_spin_batch_prepare_simple(batch, curr_node))
+				return &batch->call;
+			batch->fast_previous = false;
+			exe_flag = execute_cs(lock, curr_node, batch);
+		}
+
+#ifdef NUMA_AWARE
+		if (exe_flag == KD_EXE_NO_RUN || exe_flag == KD_EXE_RUN_ERROR) {
+#ifdef KDLOCK_SELFTEST
+			struct kd_spin_node *discarded_tail =
+				ptr->local_queue_tail;
+#endif
+			/* The rejected waiter's next still owns this scan's followers.
+			 * Discard only speculative deferrals; the final splice attaches
+			 * any previously committed prefix to the rejected waiter. */
+			if (!batch->saved_tail)
+				ptr->local_queue_head = NULL;
+			ptr->local_queue_tail = batch->saved_tail;
+#ifdef KDLOCK_SELFTEST
+			if (discarded_tail != batch->saved_tail)
+				kd_spin_selftest_restore(lock, curr_node,
+							 discarded_tail,
+							 exe_flag);
+#endif
+		}
+#endif
+		if (exe_flag == KD_EXE_NO_RUN) {
+			print_debug("can't assembly\n");
+			next_node = curr_node;
+			batch->next = next_node;
+			return NULL;
+		}
+		if (exe_flag == KD_EXE_RUN_ERROR) {
+			print_debug("run error\n");
+			/* No JIT body ran. Keep the packet queued and uncompleted until
+			 * it acquires the lock. Native packets may need ret4; virtual
+			 * packets use the ordinary acquired return to their parent. */
+			next_node = curr_node;
+			batch->next = next_node;
+			return NULL;
+		}
+
+		if (exe_flag != KD_EXE_NATIVE_DONE)
+			clear_locked_set_completed(curr_node);
+
+		if (batch->outer.released) {
+			/* B and this logical frame have finished. A's queue was already
+			 * published; only reacquire for our own original request. */
+			batch->reclaimed = true;
+			return NULL;
+		}
+
+		if (next_node == NULL || next_node->next == NULL ||
+		    batch->counter >= kd_combiner_batch_size) {
+			batch->next = next_node;
+			return NULL;
+		}
+
+		batch->cursor = next_node;
+	}
+
+}
 
 #pragma GCC push_options
 #pragma GCC optimize("O3")
@@ -378,7 +624,6 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		.outer.release = kd_spin_release_outer,
 		.request = request,
 	};
-	int counter = 0;
 
 	if (next_node == NULL || check_irq_node(curr_node) ||
 	    check_irq_node(next_node) || !kd_source_frame_get()) {
@@ -395,69 +640,15 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
 	kd_spin_debug_combiner(lock, kd_spin_lock_stack_depth(ptr));
 
-	while (curr_node) {
-#ifdef NUMA_AWARE
-		struct kd_spin_node *saved_tail = ptr->local_queue_tail;
-#endif
-		counter++;
-
-		next_node = get_next_node(curr_node);
-		batch.next = next_node;
-		batch.outer.released = false;
-
-		int exe_flag = execute_cs(lock, curr_node, &batch);
-
-#ifdef NUMA_AWARE
-		if (exe_flag == KD_EXE_NO_RUN || exe_flag == KD_EXE_RUN_ERROR) {
-#ifdef KDLOCK_SELFTEST
-			struct kd_spin_node *discarded_tail =
-				ptr->local_queue_tail;
-#endif
-			/* The rejected waiter's next still owns this scan's followers.
-			 * Discard only speculative deferrals; the final splice attaches
-			 * any previously committed prefix to the rejected waiter. */
-			if (!saved_tail)
-				ptr->local_queue_head = NULL;
-			ptr->local_queue_tail = saved_tail;
-#ifdef KDLOCK_SELFTEST
-			if (discarded_tail != saved_tail)
-				kd_spin_selftest_restore(lock, curr_node,
-							 discarded_tail,
-							 exe_flag);
-#endif
-		}
-#endif
-		if (exe_flag == KD_EXE_NO_RUN) {
-			print_debug("can't assembly\n");
-			next_node = curr_node;
-			break;
-		}
-		if (exe_flag == KD_EXE_RUN_ERROR) {
-			print_debug("run error\n");
-			/* No JIT body ran. Keep the packet queued and uncompleted until
-			 * it acquires the lock. Native packets may need ret4; virtual
-			 * packets use the ordinary acquired return to their parent. */
-			next_node = curr_node;
-			break;
-		}
-
-		if (exe_flag != KD_EXE_NATIVE_DONE)
-			clear_locked_set_completed(curr_node);
-
-		if (batch.outer.released) {
-			/* B and this logical frame have finished. A's queue was already
-			 * published; only reacquire for our own original request. */
-			kd_spin_reclaim_outer(request);
-			kd_source_frame_put();
-			return;
-		}
-
-		if (next_node == NULL || next_node->next == NULL ||
-		    counter >= kd_combiner_batch_size)
-			break;
-
-		curr_node = next_node;
+	batch.lock = lock;
+	batch.cursor = curr_node;
+	kd_spin_batch_enter(&batch, kd_spin_batch_step);
+	if (batch.reclaimed) {
+		kd_spin_reclaim_outer(request);
+		kd_source_frame_put();
+		return;
 	}
+	next_node = batch.next;
 
 #ifdef NUMA_AWARE
 	if (ptr->local_queue_head != NULL) {

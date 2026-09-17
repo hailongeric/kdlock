@@ -296,7 +296,7 @@ def validate_call_quota(text, before, publication, after, assembly, statuses):
     assert len({row["task"] for _, row in quota}) == count
     for at, row in done:
         assert at >= len(before) and int(row["task"]) > 0
-        assert row["repeats"] == "17" and row["cpu"] in ("0", "1")
+        assert row["repeats"] == "17" and row["cpu"] in ("0", "1", "2", "3", "4")
         assert row["preempt"] == row["irq"] == "0"
 
     def task_row(found, task):

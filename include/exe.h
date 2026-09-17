@@ -54,6 +54,15 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 			    unsigned long entry_ip,
 			    unsigned long outer_lock_addr);
 
+struct kd_exec_frame;
+struct kd_jit_batch_call;
+bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
+			       struct kd_exec_frame *frame,
+			       struct kd_jit_batch_call *call);
+bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call);
+int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
+			     const struct kd_jit_batch_call *call);
+
 /* Resume a waiter after its critical section has already run in the sandbox. */
 void jump_to_saved_regs(struct pt_regs *regs);
 void jump_to_saved_regs_in_cs(struct pt_regs *regs);

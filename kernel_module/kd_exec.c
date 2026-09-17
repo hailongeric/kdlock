@@ -66,6 +66,11 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 		return false;
 
 	state = kd_exec_frame_state(frame);
+	if (frame->spin_simple && !frame->complex_ready)
+		return frame->request_frame && !frame->parent && !frame->depth &&
+		       frame->gsbase && frame->logical_task && frame->outer_lock_addr &&
+		       (state == KD_EXEC_FRAME_RUNNING ||
+			(state == KD_EXEC_FRAME_COMPLETE && frame->completion_seen));
 	if (!kd_exec_frame_state_is_active(state) ||
 	    frame->depth >= KD_EXEC_MAX_NESTING || !frame->gsbase ||
 	    !frame->logical_task ||
@@ -180,41 +185,58 @@ bool kd_exec_context_busy(void)
 
 /* The producer owns the unqueued request. Inactive arrays and register bytes
  * are deliberately untouched; their live depths and packet producer own them. */
+/* Materialize branch-local discriminators once. Never clear inactive arrays or
+ * copy the shared register packet. A pristine single-lock ledger is implicit
+ * until the first service/control boundary requires an explicit owner record. */
+void kd_exec_frame_prepare_complex(struct kd_exec_frame *frame)
+{
+	if (frame->complex_ready)
+		return;
+	frame->continuation_ip = 0;
+	frame->continuation_sp = 0;
+	frame->logical_pid = frame->logical_task->pid;
+	frame->delegated_lock_addr = 0;
+	frame->resume_target = NULL;
+	frame->remote_request = NULL;
+	frame->held_lock_depth = frame->spin_simple ? 1 : 0;
+	frame->outer_lock_depth = frame->held_lock_depth;
+	frame->outer_lock_index = frame->spin_simple ? 0 : KD_EXEC_MAX_LOCK_DEPTH;
+	frame->jit_lock_depth = frame->held_lock_depth;
+	frame->outer_unlock_seen = false;
+	frame->outer_unlock_hook = NULL;
+	frame->control_call.phase = KD_CALL_NONE;
+	frame->native_request = NULL;
+	frame->remote_result = KD_EXEC_REMOTE_IDLE;
+	INIT_LIST_HEAD(&frame->native_link);
+	if (frame->spin_simple) {
+		frame->jit_lock_addr[0] = frame->outer_lock_addr;
+		frame->jit_lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
+		frame->jit_lock_node[0] = NULL;
+		frame->jit_lock_released[0] = false;
+	}
+	frame->complex_ready = true;
+}
+
 void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
 			   unsigned long lock, unsigned long gsbase,
 			   struct task_struct *task)
 {
+	frame->regs_ref = &frame->regs;
 	frame->entry_ip = entry_ip;
 	frame->outer_lock_addr = lock;
-	frame->continuation_ip = 0;
-	frame->continuation_sp = 0;
 	frame->gsbase = gsbase;
 	frame->logical_task = task;
-	frame->logical_pid = task->pid;
-	frame->regs_ref = NULL;
-	frame->regs_borrowed = false;
-	frame->delegated_lock_addr = 0;
 	frame->parent = NULL;
-	frame->resume_target = NULL;
-	frame->remote_request = NULL;
 	frame->depth = 0;
-	frame->held_lock_depth = 0;
-	frame->outer_lock_depth = 0;
-	frame->outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
-	frame->jit_lock_depth = 0;
-	frame->outer_unlock_seen = false;
-	frame->completion_seen = false;
 	frame->executed = false;
 	frame->mutex_backend = false;
 	frame->spin_simple = false;
 	frame->request_frame = true;
 	frame->batch_lease = false;
-	frame->outer_unlock_hook = NULL;
-	frame->control_call.phase = KD_CALL_NONE;
-	frame->native_request = NULL;
+	frame->complex_ready = false;
+	frame->regs_borrowed = false;
+	frame->completion_seen = false;
 	frame->state = KD_EXEC_FRAME_RUNNING;
-	frame->remote_result = KD_EXEC_REMOTE_IDLE;
-	INIT_LIST_HEAD(&frame->native_link);
 }
 
 int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
@@ -235,8 +257,12 @@ int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
 		return -EBUSY;
 	frame->parent = ctx->top;
 	frame->depth = ctx->depth;
-	frame->held_lock_depth = lock_depth;
-	frame->outer_lock_depth = lock_depth;
+	frame->spin_simple = !frame->complex_ready && !ctx->depth && lock_depth == 1;
+	if (!frame->spin_simple) {
+		kd_exec_frame_prepare_complex(frame);
+		frame->held_lock_depth = lock_depth;
+		frame->outer_lock_depth = lock_depth;
+	}
 	frame->batch_lease = batch_lease;
 	frame->state = KD_EXEC_FRAME_RUNNING;
 	ctx->owner = current;
@@ -312,6 +338,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	frame->mutex_backend = false;
 	frame->spin_simple = false;
 	frame->request_frame = false;
+	frame->complex_ready = true;
 	frame->batch_lease = false;
 	frame->outer_unlock_hook = NULL;
 	frame->control_call.phase = KD_CALL_NONE;
@@ -373,11 +400,15 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 		return -EINVAL;
 
 	state = kd_exec_frame_state(frame);
-	if (kd_exec_frame_remote_pending(frame) || frame->resume_target ||
+	if (frame->complex_ready &&
+	    (kd_exec_frame_remote_pending(frame) || frame->resume_target ||
 	    READ_ONCE(frame->remote_request) ||
 	    READ_ONCE(frame->native_request) ||
 	    !list_empty(&frame->native_link) ||
-	    (state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR))
+	    (state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR)))
+		return -EBUSY;
+	if (!frame->complex_ready &&
+	    (state != KD_EXEC_FRAME_COMPLETE || !frame->completion_seen))
 		return -EBUSY;
 
 #ifdef KDLOCK_SELFTEST
@@ -414,12 +445,16 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
 {
 	if (!frame || !frame->spin_simple || !frame->executed ||
-	    frame->mutex_backend || frame->outer_unlock_seen ||
-	    frame->jit_lock_depth != 1 || frame->outer_lock_index != 0 ||
+	    frame->mutex_backend || frame->parent || frame->depth ||
+	    frame->completion_seen ||
 	    kd_exec_frame_regs(frame)->di != frame->outer_lock_addr)
 		return -EINVAL;
-	frame->jit_lock_released[0] = true;
-	frame->outer_unlock_seen = true;
+	if (frame->complex_ready) {
+		if (frame->jit_lock_depth != 1 || frame->outer_lock_index != 0)
+			return -EINVAL;
+		frame->jit_lock_released[0] = true;
+		frame->outer_unlock_seen = true;
+	}
 	frame->completion_seen = true;
 	kd_exec_frame_set_state(frame, KD_EXEC_FRAME_COMPLETE);
 	return 0;

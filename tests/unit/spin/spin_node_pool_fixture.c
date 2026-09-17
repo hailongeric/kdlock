@@ -149,9 +149,9 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 		      relax_calls == remote);
 		CHECK(produced_node->rsp ==
 		      (virtual ? regs_before.sp : 0x12345678));
-		CHECK(produced_node->gsbase == (virtual ? 0x34000 : 0x12000));
-		CHECK(!produced_node->pinned_context &&
-		      produced_node->native_regs_decoded == !virtual);
+		CHECK(fixture_request(produced_node)->frame.gsbase == (virtual ? 0x34000 : 0x12000));
+		CHECK(!fixture_request(produced_node)->pinned_context &&
+		      fixture_request(produced_node)->native_regs_decoded == !virtual);
 		if (remote)
 			CHECK(peer.next == produced_node &&
 			      !producer_lock.locked);
@@ -176,8 +176,8 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 			      KD_EXEC_LOCK_QUEUE_OWNER);
 			CHECK(child->jit_lock_node[1] == produced_node &&
 			      !child->jit_lock_released[1]);
-			CHECK(produced_node->spin_origin.entry == &peer &&
-			      produced_node->spin_origin.sequence == 17);
+			CHECK(fixture_request(produced_node)->frame.spin_origin.entry == &peer &&
+			      fixture_request(produced_node)->frame.spin_origin.sequence == 17);
 		}
 	}
 	CHECK(result == expected);

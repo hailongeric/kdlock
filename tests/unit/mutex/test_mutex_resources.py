@@ -50,6 +50,7 @@ def production():
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
+        "static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)",
         "static struct kd_mutex_node *kd_mutex_reserve_node(void)",
         "static void kd_mutex_release_node(struct kd_mutex_node *node)",
     ):
@@ -94,6 +95,10 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
+        "local-predecessor-still-publishes": (
+            "if (unlikely(kd_mutex_has_local_predecessor(lock)))",
+            "if (unlikely(false && kd_mutex_has_local_predecessor(lock)))",
+        ),
         "tail-loses-empty-sentinel": (
             "return (cpu + 1) << KD_MUTEX_TAIL_CPU_OFFSET |",
             "return cpu << KD_MUTEX_TAIL_CPU_OFFSET |",

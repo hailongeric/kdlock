@@ -20,6 +20,7 @@
 #include "exe.h"
 #include "kd_exec.h"
 #include "kd_source.h"
+#include "kd_jit_batch.h"
 
 #include <asm/current.h>
 #include <asm-generic/set_memory.h>
@@ -190,12 +191,67 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 	return 0;
 }
 
+/* Called after a real wrapper return, once per logical invocation. */
+static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,
+			     unsigned long witness)
+{
+	KD_PR_INFO("JIT body witness: entry=%lx lock=%lx body=%lu\n",
+		   entry_ip, outer_lock_addr, witness);
+}
+
+/* This is a root-only admission, not a bypass around translated entry guards.
+ * Source OPEN, slot key/backend/status/code and the versioned alternate entry
+ * are checked for every candidate. Code storage remains pinned by the batch. */
+bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
+			       struct kd_exec_frame *frame,
+			       struct kd_jit_batch_call *call)
+{
+	void *code;
+	struct pt_regs *regs = kd_exec_frame_regs(frame);
+
+	if (!frame->spin_simple || frame->parent || frame->depth ||
+	    !frame->request_frame || frame->mutex_backend || frame->complex_ready ||
+	    frame->completion_seen || frame->state != KD_EXEC_FRAME_RUNNING ||
+	    !frame->outer_lock_addr || !regs->sp || regs != &frame->regs ||
+	    frame->executed || !frame->gsbase || !frame->logical_task ||
+	    regs->ip != frame->entry_ip ||
+	    !kd_exe_entry_is_ready(exe, 0, frame->entry_ip) ||
+	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_SPIN)
+		return false;
+	code = READ_ONCE(exe->code_block);
+	if (!code || memcmp((char *)code + 9, "KDWB001", 7))
+		return false;
+	call->regs = regs;
+	call->args[0] = frame->gsbase;
+	call->args[1] = (unsigned long)frame->logical_task;
+	call->code = (char *)code + KD_JIT_BATCH_OFFSET;
+	call->lock = frame->outer_lock_addr;
+	call->unlock = raw_spin_unlock_addr;
+	call->entry_sp = regs->sp;
+	call->dispatch_start = kd_jit_timing_start();
+	call->wrapper_start = kd_jit_timing_start();
+	return true;
+}
+
+bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
+{
+	if (call->args[0] != KD_EXE_CALL_MISS ||
+	    call->regs->ip != call->unlock || call->regs->di != call->lock)
+		return false;
+	kd_jit_timing_end(KD_JIT_TIME_WRAPPER, call->wrapper_start);
+	kd_jit_timing_end(KD_JIT_TIME_DISPATCH, call->dispatch_start);
+	if (call->args[1] == 1)
+		kd_exe_note_body(kd_exec_current_frame()->entry_ip,
+				 call->lock, call->args[1]);
+	return true;
+}
+
 /* One logical invocation may cross several control/hostcall wrapper returns.
  * Keep exit classification here: backends must not infer replay permission
  * from an error number or from the optional generated-body witness. */
-int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
-			    unsigned long entry_ip,
-			    unsigned long outer_lock_addr)
+static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,
+			  unsigned long entry_ip, unsigned long outer_lock_addr,
+			  const struct kd_jit_batch_call *pending)
 {
 	struct kd_exec_frame *frame = kd_exec_current_frame();
 	void (*translated)(struct pt_regs *regs, unsigned long *args);
@@ -217,7 +273,7 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 	 * closure observed here refuses, and closure racing after this check must
 	 * retain pins while this frame drains. Slot storage/keys are never reused
 	 * in-session. This does not make in-place code uploads immutable. */
-	if (!kd_exe_entry_is_ready(exe, 0, entry_ip)) {
+	if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip)) {
 		if (!exe)
 			return KD_EXE_NO_RUN;
 		KD_PR_INFO(
@@ -234,14 +290,14 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 			entry_ip, exe->lock_kind, frame->mutex_backend);
 		return KD_EXE_NO_RUN;
 	}
-	if (!kd_jit_entry_has_scope(frame, regs, entry_ip)) {
+	if (!pending && !kd_jit_entry_has_scope(frame, regs, entry_ip)) {
 		kd_jit_log_hl_error("ENTRY_SCOPE_MISMATCH", frame, regs, 0,
 				    -EINVAL, 0, 0);
 		return KD_EXE_NO_RUN;
 	}
 	/* Exclude pre-entry rejections and the caller's frame setup/teardown. */
-	dispatch_start = kd_jit_timing_start();
-	pristine_root = !frame->resume_target && regs->ip == entry_ip;
+	dispatch_start = pending ? pending->dispatch_start : kd_jit_timing_start();
+	pristine_root = pending || (!frame->resume_target && regs->ip == entry_ip);
 	translated = exe->code_block;
 	for (;;) {
 		int call_ret;
@@ -249,6 +305,17 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 		unsigned long entry_sp = regs->sp;
 		u64 boundary_start;
 
+		/* The batch wrapper already ran. Consume that exit exactly once; an
+		 * extra invocation here would repeat stores before handling the miss. */
+		if (pending) {
+			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, pending->wrapper_start);
+			args[0] = pending->args[0];
+			args[1] = pending->args[1];
+			entry_sp = pending->entry_sp;
+			pending = NULL;
+			fault_kind = 0;
+			goto returned_wrapper;
+		}
 		args[0] = frame->gsbase;
 		args[1] = (unsigned long)frame->logical_task;
 		fault_kind =
@@ -279,6 +346,7 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 			boundary_start = kd_jit_timing_start();
 			translated(regs, args);
 			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, boundary_start);
+returned_wrapper:
 			if (args[0] == KD_EXE_ENTRY_REFUSED) {
 				/* Only this explicit pre-body exit can undo our conservative
 				 * executed mark. A zero witness by itself never permits replay.
@@ -306,9 +374,7 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 			}
 			/* Observational only: never use missing evidence to replay work. */
 			if (!body_reported && args[1] == 1) {
-				KD_PR_INFO(
-					"JIT body witness: entry=%lx lock=%lx body=%lu\n",
-					entry_ip, outer_lock_addr, args[1]);
+				kd_exe_note_body(entry_ip, outer_lock_addr, args[1]);
 				body_reported = true;
 			}
 			if (resume_after_hostcall)
@@ -508,4 +574,22 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 	mb();
 	kd_jit_timing_end(KD_JIT_TIME_DISPATCH, dispatch_start);
 	return ret_flag;
+}
+
+int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
+			    unsigned long entry_ip, unsigned long outer_lock_addr)
+{
+	return kd_exe_dispatch(exe, regs, entry_ip, outer_lock_addr, NULL);
+}
+
+int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
+			     const struct kd_jit_batch_call *call)
+{
+	struct kd_exec_frame *frame = kd_exec_current_frame();
+
+	/* A non-final exit needs the explicit ledger before generic validation,
+	 * logging or any service side effect. The packet itself stays shared. */
+	kd_spin_jit_prepare_complex(frame);
+	return kd_exe_dispatch(exe, call->regs, frame->entry_ip,
+			       frame->outer_lock_addr, call);
 }

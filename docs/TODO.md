@@ -989,14 +989,37 @@ handoff and bounded combining. The spin implementation now follows the
       it in place; keep parent/child owner ledgers independent.
 - [x] Skip the out-of-line remote handler for an empty virtual-waiter mailbox;
       retain per-iteration notification checks and the existing unlock/ACK path.
+- [x] Separate the 64-byte ordinary frame header from lazily initialized cold
+      ledger/control/checkpoint state; keep the logical register packet shared.
+- [x] Add the lock-side resident batch shell and versioned wrapper entry. Normal
+      single-lock requests bypass the generic executor; complex exits are
+      consumed once. Final unlock writeback is reduced, not every boundary.
+- [x] Move pure spin statistics to per-CPU storage, reuse same-entry/backend exe
+      slots within a batch, and prefetch the queued successor's packet/hot state.
+- [x] Use occupied-slot ticket scans and a release store for sole-user ordinary
+      request retirement; retain shared-lifetime RMWs and ownership guards.
 - [ ] Measure nested contention separately: the completed
       [120-session spin scan](../bench/spin_cacheline/results/20260917-current-spin.md)
       uses one lock and does not exercise either nested optimization.
-- [ ] Investigate the measured common-path regression, including request metadata
-      layout and cross-CPU traffic; the throughput comparison alone does not
-      attribute the cause.
-- [ ] Evaluate wrapper/dispatcher amortization across adjacent JIT requests.
-      Current batching does not implement native TCLock WWJUMP or fused wrappers.
+- [ ] Attribute remaining common-path costs after the
+      [four-point WWJUMP measurements](../bench/spin_cacheline/results/20260917-wwjump.md).
+      Those native controls are Linux qspinlock, not TCLock; throughput alone
+      does not identify the cause, and the old shared-request regression is
+      historical evidence for an earlier implementation.
+- [ ] Reduce per-request lock-side callback/helper overhead and duplicate
+      readiness/frame checks. The outer checkpoint is saved once per batch,
+      but the C step still saves callee registers on every callback and the
+      shell has two indirect calls per admitted request. Keep scheduling
+      outside generated JIT code and preserve final admission/lifetime checks.
+- [ ] Study ordinary wrapper-entry and waiter-restoration save sets; these
+      still load the full supported GPR set despite reduced final writeback.
+      Intermediate hostcall/CALL-miss/native continuations retain their state.
+- [ ] Cache diagnostic slot references and reduce shared live waiter-count
+      updates while preserving workload/test observations; the JIT-disable
+      latch is not a pure statistical counter.
+- [ ] Measure generated entry dispatch and address/virtual-stack rewriting
+      before specializing the body. Implementation differences and candidate
+      order are maintained in [execution costs](../bench/spin_cacheline/EXECUTION_PATHS.md#costs).
 - [ ] Extend the same storage design to mutex only with its own lifetime analysis.
 
 ### Instrumented Measurement Foundation

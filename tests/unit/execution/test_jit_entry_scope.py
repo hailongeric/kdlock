@@ -23,6 +23,7 @@ from test_spin_shadow import definition
 def main():
     types, _ = production()
     types += without_includes(read_source((ROOT / "include/exe_info.h")))
+    types += without_includes(read_source(ROOT / "include/kd_jit_batch.h"))
     types += '#include "kd_hostcall.h"\n'
     executor = read_source((ROOT / "kernel_module/exe.c"))
     types += definition(executor, "struct kd_hostcall_desc {").rstrip() + ";\n"
@@ -54,7 +55,11 @@ def main():
             "static void kd_jit_log_hl_error(const char *reason,",
             "static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,",
             "static int kd_jit_call_limit_native(struct kd_exec_frame *frame,",
+            "static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,",
+            "bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,",
+            "static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,",
             "int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,",
+            "int kd_exe_spin_batch_resume(struct kd_exe_info *exe,",
         ),
     }.items():
         source = read_source((ROOT / path))
@@ -87,11 +92,11 @@ def main():
     )
     mutations = {
         "dispatch-rehashes-entry": (
-            "if (!kd_exe_entry_is_ready(exe, 0, entry_ip))",
+            "if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip))",
             "if (!kd_exe_is_ready(0, entry_ip))",
         ),
         "dispatch-reuses-old-ready-result": (
-            "if (!kd_exe_entry_is_ready(exe, 0, entry_ip))",
+            "if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip))",
             "if (!exe)",
         ),
         "ready-ignores-closing": (

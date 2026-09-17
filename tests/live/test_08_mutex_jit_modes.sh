@@ -291,8 +291,14 @@ PY
 run_mode5_quota_contention() {
     local out="$1" holder status failed=0
 
-    # Join the normal-return phases before arming. One CPU-0 holder lets four
-    # CPU-1 callers queue; the excess service must run only on its waiter.
+    # Same-CPU progress is checked above. Quota needs a delegatable queue:
+    # published waiters cannot schedule, so use distinct available CPUs rather
+    # than depending on a local predecessor being suspended before acquisition.
+    # Keep all five callers and require a real JIT quota exit plus owner ACK.
+    if ! python3 -c 'import os; assert set(range(5)) <= os.sched_getaffinity(0)'; then
+        fail "$TEST_NAME" "mode 5 quota requires CPUs 0-4"
+        return 1
+    fi
     dmesg > "$out/before-quota.log"
     printf '1\n' > /sys/module/klock_module/parameters/mode5_call_quota
     cat /sys/module/klock_module/parameters/mode5_call_quota > "$out/enabled.txt"
@@ -301,7 +307,7 @@ run_mode5_quota_contention() {
         1 1 "$MODE5_PINNED_HOLDER_WORKLOAD" 1 5 > "$out/holder.log" 2>&1 &
     holder=$!
     sleep 0.1
-    if run_with_timeout 90 taskset -c 1 "$BENCH_BIN" \
+    if run_with_timeout 90 taskset -c 1-4 "$BENCH_BIN" \
         "$MODE5_QUOTA_THREADS" 1 "$MODE5_PINNED_WAITER_WORKLOAD" 1 5 \
         > "$out/waiters.log" 2>&1; then
         status=0

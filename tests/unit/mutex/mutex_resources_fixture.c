@@ -632,6 +632,38 @@ static void check_hook_fallbacks(void)
 	}
 }
 
+/* Reproduce a queue head suspended before original-mutex acquisition. A local
+ * follower must stay unpublished and acquire natively with scheduling enabled;
+ * neither its return nor unlock may touch the predecessor's gate/reservation. */
+static void check_local_predecessor(void)
+{
+	struct mutex *lock = &origins[0].mutex;
+	struct kd_mutex_node *head;
+	struct kd_mutex *gate;
+	struct kd_mutex other = {0};
+
+	reset();
+	gate = get_kd_mutex_shadow(lock);
+	preempt = migration = 1;
+	head = kd_mutex_reserve_node();
+	head->lock = gate;
+	head->task_struct_ptr = &peer;
+	gate->locked = _Q_LOCKED_VAL;
+	CHECK(kd_mutex_has_local_predecessor(gate));
+	CHECK(!kd_mutex_has_local_predecessor(&other));
+	preempt = migration = 0;
+	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
+	CHECK(!preempt && !migration && !slow_calls && !refs && task_puts == 1);
+	CHECK(lock->owner == current && gate->locked && !gate->physical_owner);
+	CHECK(head->lock == gate && cpu_shadows.node_slots == BIT(head->slot));
+	__kd_mutex_unlock(lock, 0, 0x9000);
+	CHECK(!lock->owner && gate->locked && !gate->physical_owner);
+	CHECK(task_puts == 1 && releases == 1 && !errors);
+	preempt = migration = 1;
+	kd_mutex_release_node(head);
+	CHECK(!kd_mutex_has_local_predecessor(gate));
+}
+
 static void hold_peer(struct kd_mutex *gate)
 {
 	gate->locked = _Q_LOCKED_COMBINER_VAL;
@@ -864,6 +896,7 @@ int main(void)
 	check_nodes();
 	check_shadow_table();
 	check_hook_fallbacks();
+	check_local_predecessor();
 	check_promotion_and_routing();
 	check_hook_nodes();
 	check_slowpath_packets();

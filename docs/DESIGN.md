@@ -583,6 +583,12 @@ After taking the gate, the request is no longer eligible for delegation. Its
 physical executor may acquire the real sleeping mutex, including nested B;
 original-owner/native-suffix ACK handling retains its existing protocol.
 Migration remains pinned for those executor paths and their reserved stacks.
+Before publication, a mutex follower checks the reserved local nodes for the
+same queue. If a predecessor is already reserved on this CPU, the new caller
+drops its unneeded routing reference and acquires the original mutex natively
+with scheduling enabled. It publishes no packet and never releases the private
+gate. This prevents a local follower from blocking a queue head suspended while
+claiming the original mutex; it does not solve arbitrary cross-lock dependencies.
 Busy waiters require independently runnable owners/dependencies: a sleeping
 owner pinned to a waiter's occupied CPU cannot make progress. Old same-CPU
 waiter-scheduling/oversubscription evidence does not validate this new contract.
@@ -1302,10 +1308,10 @@ from this spin path. Mutex and the legacy frame-push API retain their own packet
 handling. This is not a replacement of every state snapshot in the repository.
 
 Each CPU preallocates `KD_EXEC_MAX_NESTING + MAX_NODES` (12) execution records.
-A record contains a 656-byte frame, optional logical-packet owner and atomic user
-count (672 bytes total). The 5272-byte execution context retains its legacy array
+A record contains a 664-byte frame, optional logical-packet owner, user count and
+request-owned return/routing metadata (712 bytes total). The 5336-byte execution context retains its legacy array
 and adds one stack-top pointer. This pool is independent of the four recyclable
-queue nodes and costs 8064 bytes per possible CPU, allocated at module init.
+queue nodes and costs 8544 bytes per possible CPU, allocated at module init.
 There is no allocation or global lock in request reservation. Only pinned task
 producers allocate on their own CPU; other CPUs can release users. An acquire
 read of users==0 precedes reuse. Exhaustion refuses delegation and preserves the
@@ -1315,11 +1321,13 @@ The implemented protocol is:
 
 1. The producer reserves a record with one queue/waiter user, decodes the hook
    registers directly into `request.frame.regs`, and initializes readable frame
-   state. The node carries request/packet pointers. No whole-frame memset runs.
+   state. The 48-byte node carries one execution reference plus queue linkage/notification
+   and scheduler stack metadata. Registers, task/GS, origin and native/retry
+   state belong to the request. No whole-frame memset runs.
 2. Release queue publication transfers access to the combiner. It binds that
    frame by pointer into its physical chain and supplies actual lock-owner and
    batch metadata. The JIT wrapper reads/writes the same packet throughout
-   simple, control and native execution; there is no complex-path materialization.
+   simple, control and native execution; no complex-path register copy is needed.
 3. The combiner holds L across the bounded batch. One source/provider lease is
    acquired before the batch and released after its final handoff or outer-lock
    reclaim. Individual spin binds borrow that lease and still check admission
@@ -1327,8 +1335,9 @@ The implemented protocol is:
    The status ABI field named `frames` now counts these leases plus legacy frame
    leases, not every spin frame inside a batch.
 4. Normal completion unbinds the frame before release-publishing completed/locked.
-   The physical waiter restores GPRs directly from the record. Its final atomic
-   decrement follows every packet load, then flags and the return are restored.
+   The physical waiter restores GPRs directly from the record. Its final release follows every packet load, then flags and the return are
+   restored. A pristine single-lock root has one user and uses a release store;
+   native/remote lifetimes retain the atomic decrement.
    No node/request access occurs after the corresponding lifetime ends. IRQ-off
    entry stays IRQ-off; IRQ-on entry is restored only at the final boundary.
 5. Native handoff first adds an owner user, then publishes continuation/wake.
@@ -1346,10 +1355,63 @@ ordinary wrapper entry/exit adds no request reference. A queue wake or node reus
 is not permission to recycle execution storage. The record's users count, source
 lease, ticket/native references and Linux lock ownership serve different lifetimes.
 
-The batching is a C combiner loop calling the existing JIT wrapper for each
-request. It amortizes source lease acquisition and physical L ownership, but
-does not implement TCLock's WWJUMP between waiter stacks or a fused multi-request
-JIT wrapper. Full wrapper register loads/spills and dispatcher checks remain.
+The ordinary frame state is a 64-byte header followed by the shared packet and
+preallocated cold storage. `complex_ready` gates the eight-lock ledger, remote/
+native discriminators and combiner snapshot. Prepare/bind/validate/complete/pop
+of a pristine single-lock root do not initialize or inspect that cold storage.
+The first non-final wrapper exit materializes a one-lock ledger in place before
+control/hostcall/native handling. It never copies the register packet.
+
+`kd_spin_batch_enter` saves the original physical combiner's callee registers once and
+runs a lock-side callback, `kd_spin_batch_step`, between wrapper invocations.
+For an admitted single-lock root, the callback supplies the versioned alternate
+wrapper entry. Normal completion unbinds and publishes the current waiter, then
+selects/adopts the next request without returning through `execute_cs` and the
+generic dispatcher. This implements lock-side batching for a JIT executor, not
+TCLock's direct native waiter-continuation switch. The C callback still runs
+for every request and has its own callee-register saves in the measured build;
+only the outer checkpoint and redundant wrapper saves are amortized. The lock
+scheduler owns every queue decision; generated code neither switches waiter
+stacks nor calls the scheduler. Batch limits, NUMA deferral rollback and outer
+release/reclaim remain lock-side operations.
+
+Only the exact final spin-unlock CALL and matching L use reduced ABI writeback:
+RBX/RBP/R12–R15, virtual RIP/SP and the RDI classification field. All other exits
+write the full supported GPR packet. `kd_exe_spin_batch_resume` consumes an already
+returned packet once, preserving the original entry SP for unstarted-refusal
+validation; it must not invoke the JIT again before processing that exit. Legacy
+uploads without the alternate-entry signature use the ordinary wrapper path.
+Both wrapper entries still import the full supported logical GPR set, and the
+physical waiter still restores 15 GPRs. Reduced final writeback does not imply
+reduced entry or final CPU-restore traffic; intermediate continuation boundaries
+retain their full register requirements.
+
+Within that lease, a batch reuses its resolved executable slot for the same
+entry and SPIN backend. Each hit rechecks OPEN, acquired NORMAL publication,
+pid/entry and the current code pointer; dispatcher backend/scope checks remain.
+The cache dies with the batch and is neither a code-pointer cache nor an
+immutable-code version mechanism. Before executing the current request, the
+combiner prefetches its queued successor's actual register packet and frame hot
+fields, plus the virtual SP/push slot only inside the logical waiter's task
+stack. This precedes any completion or outer-release publication; it grants no
+ownership and never follows successors after early outer release.
+
+Spin diagnostic events, maximum depth and overflow/invariant counters are
+CPU-local, allocated once at module initialization with `alloc_percpu()` to
+stay outside the fixed module per-CPU reservation. x86 `this_cpu` RMWs avoid
+shared LOCK-prefixed updates; the local maximum uses cmpxchg so an interrupted
+shallower recorder cannot overwrite a
+deeper IRQ observation. Drained shutdown sums all possible CPUs, including
+offline CPUs. The separate `kd_spin batch` report records alternate entries and
+consecutive WWJUMPs; these counts are also per-CPU until shutdown. Slot identity, the live waiter
+count and JIT-disable latch remain shared. Reporting is not a live snapshot.
+
+Ticket pools maintain a task-owned live bitmap: allocation finds a free bit,
+and duplicate/lookup scans visit only occupied slots. Generation/native-reference
+state mutations retain `entry.guard`; remote readers can race retirement, so
+this guard is not interchangeable with a diagnostic counter. Source/provider
+references remain once per batch, and genuinely shared request users retain RMW.
+
 Independent owner ledgers/checkpoints also remain. The virtual producer copies
 the parent's live lock-ledger prefix directly into the child's stable request
 and appends the delegated lock before publishing the node. `kd_spin_jit_context`

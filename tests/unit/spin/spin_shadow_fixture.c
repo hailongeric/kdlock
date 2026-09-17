@@ -10,6 +10,8 @@
 
 #include "spin_shadow_types.h"
 
+typedef uint8_t u8;
+typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
@@ -39,7 +41,8 @@ struct kd_spin_ref {
 #include "spin_request_type.h"
 struct kd_exec_frame {
 	struct pt_regs regs, *regs_ref;
-	unsigned long entry_ip, delegated_lock_addr;
+	unsigned long entry_ip, delegated_lock_addr, outer_lock_addr;
+	struct kd_exec_outer_unlock *outer_unlock_hook;
 	bool request_frame;
 	bool valid, complete;
 	unsigned int jit_lock_depth;
@@ -61,6 +64,15 @@ struct kd_spin_exec_request {
 	struct kd_exec_frame frame;
 	struct kd_spin_exec_request *packet_owner;
 	atomic_t users;
+	/* Request-owned return/routing state survives recycling of the node. */
+	unsigned long irq_flags;
+	bool jit_waiter;
+	bool jit_retry;
+	bool native_resume;
+	bool pinned_context;
+	bool native_regs_decoded;
+	struct kd_spin_jit_context *jit_context;
+	u64 queued_at_ns;
 };
 #define KD_SPIN_REQUEST_SLOTS 12
 static struct kd_spin_exec_request request_pool[KD_SPIN_REQUEST_SLOTS];
@@ -82,30 +94,38 @@ static void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long ip,
 	frame->entry_ip = ip;
 	frame->gsbase = gs;
 	frame->logical_task = task;
-	frame->regs_ref = NULL;
+	frame->regs_ref = &frame->regs;
+	frame->outer_lock_addr = lock;
 	frame->request_frame = true;
 }
+static void kd_exec_frame_prepare_complex(struct kd_exec_frame *frame) { (void)frame; }
 struct kd_spin_jit_context {
 	struct kd_exec_frame *requester;
 	unsigned int lock_depth;
 };
 struct kd_spin_node {
 	struct kd_spin_node *next;
-	struct qspinlock *lock;
+	int tail;
+	int count;
+	int socket_id;
+	int cpuid;
+	/* Scheduler stack sentinel, not the logical register packet. */
 	uint64_t rsp;
-	int count, socket_id, tail, cpuid;
-	bool locked, completed, native_resume, jit_retry, irqs_disabled,
-		jit_waiter, pinned_context, native_regs_decoded;
-	struct kd_spin_jit_context *jit_context;
-	struct pt_regs *regs;
+	/* Queue notification only; execution completion belongs to frame.state. */
+	union {
+		struct { u8 completed; u8 locked; };
+		struct { u16 locked_completed; };
+	};
 	struct kd_spin_exec_request *execution;
-	struct kd_exec_frame *exec_frame;
-	struct task_struct *task_struct_ptr;
-	unsigned long gsbase;
-	struct kd_spin_ref spin_origin;
-	uint64_t queued_at_ns;
-	unsigned long irq_flags;
 };
+
+
+static struct kd_spin_exec_request *fixture_request(struct kd_spin_node *node)
+{
+	if (!node->execution)
+		node->execution = calloc(1, sizeof(*node->execution));
+	return node->execution;
+}
 
 /* This queue/node fixture runs with optional timing disabled. The production
  * timer and enabled dispatch endpoints are covered by the executor/outer units. */
@@ -221,11 +241,11 @@ static void node_record_free(void *ptr)
 static void kd_exec_remote_poll(void *frame)
 {
 	CHECK(producer_case && producer_virtual && produced_node);
-	CHECK(frame == produced_node->jit_context->requester);
+	CHECK(frame == fixture_request(produced_node)->jit_context->requester);
 	CHECK(kd_spin_nodes[0].count == producer_count + 1);
-	CHECK(mailbox_case && produced_node->jit_context->requester->remote_request ==
+	CHECK(mailbox_case && fixture_request(produced_node)->jit_context->requester->remote_request ==
 	      &mailbox_token);
-	produced_node->jit_context->requester->remote_request = NULL;
+	fixture_request(produced_node)->jit_context->requester->remote_request = NULL;
 	poll_calls++;
 }
 static void cpu_relax(void)
@@ -234,7 +254,7 @@ static void cpu_relax(void)
 		abort();
 	relax_calls++;
 	if (mailbox_case && relax_calls < 3) {
-		struct kd_exec_frame *parent = produced_node->jit_context->requester;
+		struct kd_exec_frame *parent = fixture_request(produced_node)->jit_context->requester;
 
 		if (relax_calls == 1) {
 			CHECK(!poll_calls);
@@ -249,10 +269,10 @@ static void cpu_relax(void)
 		return;
 	CHECK(kd_spin_nodes[0].count == producer_count + 1);
 	produced_node->locked = false;
-	produced_node->native_resume = peer_result == 5;
+	fixture_request(produced_node)->native_resume = peer_result == 5;
 	produced_node->completed = peer_result != 5;
 	if (producer_virtual)
-		produced_node->jit_context->requester->remote_result =
+		fixture_request(produced_node)->jit_context->requester->remote_result =
 			peer_result == 5 ? KD_EXEC_REMOTE_NATIVE :
 					   KD_EXEC_REMOTE_DONE;
 }
@@ -309,16 +329,16 @@ static int xchg_tail(struct qspinlock *lock, int tail)
 		CHECK(kd_spin_nodes[0].count == producer_count + 1);
 		CHECK(produced_node->locked && !produced_node->completed);
 		CHECK(!produced_node->next && produced_node->tail == tail);
-		CHECK(produced_node->jit_waiter == producer_virtual);
-		CHECK(produced_node->cpuid == 0 && produced_node->gsbase);
-		CHECK(produced_node->task_struct_ptr ==
+		CHECK(fixture_request(produced_node)->jit_waiter == producer_virtual);
+		CHECK(produced_node->cpuid == 0 && fixture_request(produced_node)->frame.gsbase);
+		CHECK(fixture_request(produced_node)->frame.logical_task ==
 		      (producer_virtual ? &logical_task : current));
 		/* Observe readiness at queue publication, before any peer can run JIT. */
 		if (!producer_virtual) {
-			CHECK(produced_node->native_regs_decoded);
-			CHECK(produced_node->regs->bx == 1 && produced_node->regs->r12 == 2 &&
-			      produced_node->regs->r13 == 3 && produced_node->regs->r14 == 4 &&
-			      produced_node->regs->r15 == 5 && produced_node->regs->bp == 6);
+			CHECK(fixture_request(produced_node)->native_regs_decoded);
+			CHECK(fixture_request(produced_node)->frame.regs_ref->bx == 1 && fixture_request(produced_node)->frame.regs_ref->r12 == 2 &&
+			      fixture_request(produced_node)->frame.regs_ref->r13 == 3 && fixture_request(produced_node)->frame.regs_ref->r14 == 4 &&
+			      fixture_request(produced_node)->frame.regs_ref->r15 == 5 && fixture_request(produced_node)->frame.regs_ref->bp == 6);
 		}
 		if (kd_spin_nodes[0].count > producer_peak)
 			producer_peak = kd_spin_nodes[0].count;
@@ -467,6 +487,30 @@ static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
 			 struct kd_spin_request *request);
 static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
 		      struct kd_spin_batch *batch);
+/* Address/bounds semantics use real layouts in spin_batch_fixture. */
+#define __maybe_unused __attribute__((unused))
+/* Queue/owner scenarios substitute JIT; the actual alternate ABI is executed
+ * separately by test_spin_wwjump. A fabricated request cannot enter that ABI. */
+static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
+					 struct kd_spin_node *node)
+{ (void)batch; (void)node; return false; }
+static bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
+{ (void)call; abort(); }
+void kd_spin_batch_enter(void *batch, struct kd_jit_batch_call *(*step)(void *))
+{ if (step(batch)) abort(); }
+static int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
+{ (void)frame; abort(); }
+static int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
+{ (void)frame; (void)regs; abort(); }
+static void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
+{ (void)frame; abort(); }
+static void kd_spin_debug_jit_success(struct qspinlock *lock, unsigned int depth)
+{ (void)lock; (void)depth; abort(); }
+
+static void kd_spin_prefetch_request(struct kd_spin_node *node)
+{
+	(void)node;
+}
 static int kd_spin_release_outer(void *frame, struct kd_exec_outer_unlock *hook)
 {
 	(void)frame;
@@ -498,16 +542,16 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 	previous->next = node;
 	while (node->locked)
 		cpu_relax();
-	if (node->completed || node->native_resume) {
+	if (node->completed || fixture_request(node)->native_resume) {
 		kd_spin_nodes[0].count--;
-		kd_spin_selftest_node_event(node->native_resume ?
+		kd_spin_selftest_node_event(fixture_request(node)->native_resume ?
 			KD_NODE_NATIVE_RETURN : KD_NODE_REMOTE_RETURN);
-		kd_spin_diag_waiter_exit(node->lock);
+		kd_spin_diag_waiter_exit((struct qspinlock *)fixture_request(node)->frame.outer_lock_addr);
 		kd_spin_set_resume_node(node);
 		CHECK(native_return != NULL);
 		if (node->execution)
 			kd_spin_request_put(node->execution);
-		longjmp(*native_return, node->native_resume ? 5 : 3);
+		longjmp(*native_return, fixture_request(node)->native_resume ? 5 : 3);
 	}
 }
 #include "spin_shadow_production.h"
@@ -515,6 +559,7 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 static int test_longjmp(struct qspinlock *lock, int tail, struct kd_spin_node *node)
 {
 	struct kd_spin_request request = { .word = &scheduling_word };
+	(void)fixture_request(node);
 	CHECK(kd_spin_entry_find(lock, &request.ref));
 	jmp_buf continuation;
 	jmp_buf *saved = native_return;
@@ -597,9 +642,11 @@ static void run_case(int depth, int count, bool queued, bool retry)
 	memset(kd_spin_nodes, 0, sizeof(kd_spin_nodes));
 	memset(&local_shadow_stack, 0, sizeof(local_shadow_stack));
 	kd_spin_nodes[0].count = count;
+	(void)fixture_request(node);
+	(void)fixture_request(&next);
 	node->next = &next;
 	node->rsp = 0x12345678;
-	node->jit_retry = retry;
+	fixture_request(node)->jit_retry = retry;
 	local_shadow_stack.curr_cs_cpu = 19;
 	local_shadow_stack.prev_cs_cpu = UINT32_MAX;
 	local_shadow_stack.irqs_disabled = 1;

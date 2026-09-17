@@ -38,11 +38,11 @@ static noinline void kd_spin_selftest_link(const struct kd_spin_node *node,
 					   int previous_task, int previous_cpu)
 {
 	/* The holder's userspace gate needs these live, even in buffered mode. */
-	if (!kd_deferred_selected(node->lock))
+	if (!kd_deferred_selected(((struct qspinlock *)node->execution->frame.outer_lock_addr)))
 		return;
 	pr_info("kd_defer link: lock=%lx node=%lx task=%d cpu=%u previous=%lx previous_task=%d previous_cpu=%u\n",
-		(unsigned long)node->lock, (unsigned long)node,
-		node->task_struct_ptr->pid, node->cpuid,
+		(unsigned long)((struct qspinlock *)node->execution->frame.outer_lock_addr), (unsigned long)node,
+		node->execution->frame.logical_task->pid, node->cpuid,
 		(unsigned long)previous, previous_task, previous_cpu);
 }
 
@@ -172,19 +172,19 @@ static noinline void kd_spin_selftest_defer(const struct kd_spin_node *request,
 {
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
 
-	if (!kd_deferred_selected(node->lock))
+	if (!kd_deferred_selected(((struct qspinlock *)node->execution->frame.outer_lock_addr)))
 		return;
 	if (kd_deferred_buffered) {
 		struct kd_deferred_trace_event *event =
-			kd_deferred_event(KD_DEFER_APPEND, node->lock);
+			kd_deferred_event(KD_DEFER_APPEND, ((struct qspinlock *)node->execution->frame.outer_lock_addr));
 
 		if (!event)
 			return;
 		event->request = (unsigned long)request;
-		event->request_task = request->task_struct_ptr->pid;
+		event->request_task = request->execution->frame.logical_task->pid;
 		event->request_cpu = request->cpuid;
 		event->node = (unsigned long)node;
-		event->task = node->task_struct_ptr->pid;
+		event->task = node->execution->frame.logical_task->pid;
 		event->node_cpu = node->cpuid;
 		event->node_socket = node->socket_id;
 		event->head = (unsigned long)ptr->local_queue_head;
@@ -193,10 +193,10 @@ static noinline void kd_spin_selftest_defer(const struct kd_spin_node *request,
 		return;
 	}
 	pr_info("kd_defer append: lock=%lx owner=%d cpu=%u socket=%u request=%lx request_task=%d request_cpu=%u node=%lx task=%d node_cpu=%u node_socket=%u head=%lx tail=%lx\n",
-		(unsigned long)node->lock, current->pid, raw_smp_processor_id(),
+		(unsigned long)((struct qspinlock *)node->execution->frame.outer_lock_addr), current->pid, raw_smp_processor_id(),
 		numa_node_id(), (unsigned long)request,
-		request->task_struct_ptr->pid, request->cpuid,
-		(unsigned long)node, node->task_struct_ptr->pid, node->cpuid,
+		request->execution->frame.logical_task->pid, request->cpuid,
+		(unsigned long)node, node->execution->frame.logical_task->pid, node->cpuid,
 		node->socket_id, (unsigned long)ptr->local_queue_head,
 		(unsigned long)ptr->local_queue_tail);
 }
@@ -222,7 +222,7 @@ static noinline void kd_spin_selftest_splice(struct qspinlock *lock,
 		event->head_cpu = head->cpuid;
 		event->tail = (unsigned long)tail;
 		event->next = (unsigned long)next;
-		event->next_task = next->task_struct_ptr->pid;
+		event->next_task = next->execution->frame.logical_task->pid;
 		event->next_cpu = next->cpuid;
 		event->outer = outer;
 		event->linked = READ_ONCE(tail->next) == next;
@@ -233,7 +233,7 @@ static noinline void kd_spin_selftest_splice(struct qspinlock *lock,
 		(unsigned long)lock, current->pid, raw_smp_processor_id(),
 		outer, (unsigned long)head, head->task_struct_ptr->pid,
 		head->cpuid, (unsigned long)tail, (unsigned long)next,
-		next->task_struct_ptr->pid, next->cpuid,
+		next->execution->frame.logical_task->pid, next->cpuid,
 		READ_ONCE(tail->next) == next);
 }
 
@@ -255,7 +255,7 @@ kd_spin_selftest_restore(struct qspinlock *lock,
 		if (!event)
 			return;
 		event->request = (unsigned long)request;
-		event->request_task = request->task_struct_ptr->pid;
+		event->request_task = request->execution->frame.logical_task->pid;
 		event->request_cpu = request->cpuid;
 		event->first = (unsigned long)first;
 		event->last = (unsigned long)discarded_tail;
@@ -268,7 +268,7 @@ kd_spin_selftest_restore(struct qspinlock *lock,
 	}
 	pr_info("kd_defer restore: lock=%lx owner=%d cpu=%u request=%lx request_task=%d request_cpu=%u first=%lx last=%lx head=%lx tail=%lx next=%lx result=%d\n",
 		(unsigned long)lock, current->pid, raw_smp_processor_id(),
-		(unsigned long)request, request->task_struct_ptr->pid,
+		(unsigned long)request, request->execution->frame.logical_task->pid,
 		request->cpuid, (unsigned long)first,
 		(unsigned long)discarded_tail,
 		(unsigned long)ptr->local_queue_head, (unsigned long)tail,

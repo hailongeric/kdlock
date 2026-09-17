@@ -129,8 +129,8 @@ static void preentry_queue_peer(void)
 	mock_cpu = 1;
 	current = &tasks[1];
 	run_combiner(a_lock(), &request);
-	CHECK(!request.completed && !request.native_resume &&
-	      !request.jit_retry);
+	CHECK(!request.completed && !fixture_request(&request)->native_resume &&
+	      !fixture_request(&request)->jit_retry);
 	CHECK(queue_parent->remote_result == KD_EXEC_REMOTE_WAITING);
 	CHECK(!request.locked && successor.locked && origins[0].held);
 	kd_spin_release_origin(a_lock());
@@ -192,7 +192,7 @@ static unsigned int preentry_queue_return(void)
 		kd_spin_claim_origin(a_lock());
 		shadow_states[1].lock_addr[0] = (unsigned long)a_lock();
 		successor.locked = true;
-		successor.task_struct_ptr = &waiter;
+		fixture_request(&successor)->frame.logical_task = &waiter;
 		successor.cpuid = 1;
 		mock_cpu = 0;
 		current = &tasks[0];
@@ -211,15 +211,15 @@ static unsigned int preentry_queue_return(void)
 		CHECK(queue_parent->remote_result == KD_EXEC_REMOTE_IDLE &&
 		      queue_parent->control_call.phase == KD_CALL_ACQUIRED);
 		CHECK(!memcmp(&regs, &before, sizeof(regs)));
-		CHECK(request.gsbase == 0x20000 &&
-		      request.task_struct_ptr == &waiter);
+		CHECK(fixture_request(&request)->frame.gsbase == 0x20000 &&
+		      fixture_request(&request)->frame.logical_task == &waiter);
 		/* No ancestor notification arrives during this queue-head handoff. */
 		CHECK(scripts == (mode != 8) && pops == scripts &&
 		      !queue_polls && queue_switches == 1 &&
 		      queue_enters == 1 && queue_exits == 1);
 		CHECK(queue_resume == &request && !request.count &&
-		      !request.completed && !request.native_resume &&
-		      !request.exec_frame);
+		      !request.completed && !fixture_request(&request)->native_resume &&
+		      (kd_exec_current_frame() != &fixture_request(&request)->frame));
 		CHECK(origins[0].held && origins[1].held &&
 		      gate->owner == current && mock_preempt == 2 &&
 		      !mock_preempts[1]);

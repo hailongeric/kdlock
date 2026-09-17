@@ -36,14 +36,13 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	bool prev_locked_val;
 	uint64_t prev_rsp;
 	struct kd_spin_exec_request *prev_execution;
-	struct pt_regs *prev_regs;
 #ifdef NUMA_AWARE
 	struct kd_spin_node *prev_local_queue_head;
 	struct kd_spin_node *prev_local_queue_tail;
 #endif
 
 	/* Publish the clock with the node, before any combiner can service it. */
-	curr_node->queued_at_ns = kd_exe_queue_timing_start();
+	curr_node->execution->queued_at_ns = kd_exe_queue_timing_start();
 	old_tail = xchg_tail(word, tail);
 	kd_spin_diag_waiter_enter(lock);
 
@@ -51,7 +50,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		prev_node = decode_tail(old_tail);
 #ifdef KDLOCK_SELFTEST
 		/* Publication can let the predecessor finish and recycle its node. */
-		int previous_task = prev_node->task_struct_ptr->pid;
+		int previous_task = prev_node->execution->frame.logical_task->pid;
 		int previous_cpu = prev_node->cpuid;
 #endif
 
@@ -61,7 +60,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		kd_spin_selftest_link(curr_node, prev_node, previous_task,
 				      previous_cpu);
 #endif
-		if (!curr_node->jit_waiter) {
+		if (!curr_node->execution->jit_waiter) {
 			kd_spin_publish_wait(curr_node, prev_node,
 				this_cpu_ptr(&local_shadow_stack)->wait_stack_top);
 			/* Only an unexecuted queue-head handoff returns here. */
@@ -72,7 +71,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		/* This is a virtual waiter: its independent executor stack stays live
 		 * while the child runs. Poll the mailbox inline on the empty path, but
 		 * service every observed request so ancestor unlock/ACK can progress. */
-		struct kd_exec_frame *requester = curr_node->jit_context->requester;
+		struct kd_exec_frame *requester = curr_node->execution->jit_context->requester;
 
 		while (smp_load_acquire(&curr_node->locked)) {
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_POLL);
@@ -81,7 +80,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 			cpu_relax();
 		}
 		smp_rmb();
-		if (READ_ONCE(curr_node->native_resume)) {
+		if (READ_ONCE(curr_node->execution->native_resume)) {
 			this_cpu_ptr(&kd_spin_nodes[0])->count--;
 			kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
 			kd_spin_diag_waiter_exit(lock);
@@ -100,7 +99,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 			this_cpu_ptr(&kd_spin_nodes[0])->count--;
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);
 
-			if (!curr_node->jit_waiter && j >= 0) {
+			if (!curr_node->execution->jit_waiter && j >= 0) {
 				parent_lock =
 					(struct qspinlock *)(unsigned long)
 						ptr->lock_addr[j];
@@ -168,7 +167,7 @@ queue_head:
 	kd_spin_claim_origin(request);
 	/* This request now owns Linux L. Record before releasing/reusing its node
 	 * to process followers; the combiner's batch is not this queue interval. */
-	kd_exe_queue_timing_end(false, &curr_node->queued_at_ns,
+	kd_exe_queue_timing_end(false, &curr_node->execution->queued_at_ns,
 				kd_exe_queue_timing_start());
 
 	/*
@@ -215,7 +214,6 @@ queue_head:
 	word->locked = _Q_LOCKED_COMBINER_VAL;
 	prev_rsp = curr_node->rsp;
 	prev_execution = curr_node->execution;
-	prev_regs = curr_node->regs;
 	curr_node->rsp = 0;
 
 #ifdef NUMA_AWARE
@@ -252,7 +250,6 @@ queue_head:
 
 	curr_node->rsp = prev_rsp;
 	curr_node->execution = prev_execution;
-	curr_node->regs = prev_regs;
 
 	if (word->locked == _Q_UNLOCKED_OOO_VAL) {
 		if (prev_cs_cpu != -1) {
@@ -268,10 +265,10 @@ queue_head:
 
 	kd_spin_diag_waiter_exit(lock);
 	kd_spin_set_resume_node(curr_node);
-	return READ_ONCE(curr_node->jit_retry) ? 4 : 2;
+	return READ_ONCE(curr_node->execution->jit_retry) ? 4 : 2;
 release:
 	kd_spin_claim_origin(request);
-	kd_exe_queue_timing_end(false, &curr_node->queued_at_ns,
+	kd_exe_queue_timing_end(false, &curr_node->execution->queued_at_ns,
 				kd_exe_queue_timing_start());
 	/*
 	 * release the node
@@ -280,7 +277,7 @@ release:
 	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
 	kd_spin_diag_waiter_exit(lock);
 	kd_spin_set_resume_node(curr_node);
-	return READ_ONCE(curr_node->jit_retry) ? 4 : 0;
+	return READ_ONCE(curr_node->execution->jit_retry) ? 4 : 0;
 }
 #pragma GCC pop_options
 
@@ -320,7 +317,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	kd_spin_selftest_node_event(KD_NODE_NATIVE_RESERVE);
 	curr_node = base + idx;
 	curr_node->execution = execution;
-	curr_node->regs = &execution->frame.regs;
+	curr_node->execution->frame.regs_ref = &execution->frame.regs;
 	tail = encode_tail(smp_processor_id(), idx);
 
 	/*
@@ -333,22 +330,22 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->socket_id = numa_node_id();
 	curr_node->cpuid = smp_processor_id();
 	curr_node->rsp = READ_ONCE(input->rsp);
-	curr_node->regs->sp = READ_ONCE(input->regs_sp);
-	curr_node->irq_flags = READ_ONCE(input->irq_flags);
-	curr_node->lock = lock;
-	curr_node->task_struct_ptr = current;
-	curr_node->gsbase = kd_read_kernel_gsbase();
-	curr_node->exec_frame = NULL;
-	curr_node->jit_waiter = false;
-	curr_node->jit_retry = false;
-	curr_node->native_resume = false;
-	curr_node->pinned_context = (preempt_count() & PREEMPT_MASK) != 1;
-	curr_node->native_regs_decoded = false;
-	curr_node->jit_context = NULL;
-	curr_node->spin_origin = request->ref;
+	curr_node->execution->frame.regs_ref->sp = READ_ONCE(input->regs_sp);
+	curr_node->execution->irq_flags = READ_ONCE(input->irq_flags);
+
+	curr_node->execution->frame.logical_task = current;
+	curr_node->execution->frame.gsbase = kd_read_kernel_gsbase();
+
+	curr_node->execution->jit_waiter = false;
+	curr_node->execution->jit_retry = false;
+	curr_node->execution->native_resume = false;
+	curr_node->execution->pinned_context = (preempt_count() & PREEMPT_MASK) != 1;
+	curr_node->execution->native_regs_decoded = false;
+	curr_node->execution->jit_context = NULL;
+	curr_node->execution->frame.spin_origin = request->ref;
 	kd_spin_prepare_regs(curr_node);
-	kd_exec_frame_prepare(&execution->frame, curr_node->regs->ip,
-		(unsigned long)lock, curr_node->gsbase, current);
+	kd_exec_frame_prepare(&execution->frame, curr_node->execution->frame.regs_ref->ip,
+		(unsigned long)lock, curr_node->execution->frame.gsbase, current);
 	execution->frame.spin_origin = request->ref;
 
 	ret = __kd_spin_lock_longjmp(lock, tail, curr_node, request);
