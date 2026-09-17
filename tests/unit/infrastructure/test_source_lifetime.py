@@ -56,11 +56,11 @@ def main():
             "false",
         ),
         "busy-writer-ignored": (
-            "if (kd_sources.frames || kd_sources.writers)",
-            "if (kd_sources.frames)",
+            "if (kd_source_frame_count() || kd_sources.writers)",
+            "if (kd_source_frame_count())",
         ),
         "busy-frame-ignored": (
-            "if (kd_sources.frames || kd_sources.writers)",
+            "if (kd_source_frame_count() || kd_sources.writers)",
             "if (kd_sources.writers)",
         ),
         "stale-entry": ("kd_exe_retire_all();", "(void)kd_exe_retire_all;"),
@@ -68,7 +68,14 @@ def main():
             "kd_sources.state == KD_SOURCE_OPEN &&\n\t     kd_sources.writers",
             "kd_sources.state != KD_SOURCE_RETIRED &&\n\t     kd_sources.writers",
         ),
-        "frame-leak": ("kd_sources.frames--;", "/* omitted frame release */"),
+        "frame-leak": (
+            "atomic64_dec_return(&kd_source_frame_gate)",
+            "atomic64_read(&kd_source_frame_gate)",
+        ),
+        "frame-after-close": (
+            "(old & KD_SOURCE_FRAME_CLOSED) ||",
+            "false ||",
+        ),
         "wrong-stack-capability": (
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,",
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES + 8,",

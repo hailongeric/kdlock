@@ -550,6 +550,9 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 
 默认实测布局为 frame 656、context 5264、spin JIT context 184、spin node 280
 字节，当前默认构建静态 per-CPU 8000 字节。布局不是动态栈峰值或任意深度安全证明。
+普通单锁物理 root 直接使用 waiter 发布前准备的 node 寄存器包；借用指针复用
+尚未生效的 continuation SP 槽，不改变 `pt_regs` 或两元素 args ABI。首次复杂
+出口在副作用和节点复用前保存独立包；具体生命周期见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)。
 精确节点预留、OOO、远端发布和 readmission 约束见 DESIGN 第 4/9 节；
 相关测试参数与失败记录集中在使用/验收文档，不在 ABI 中复制历史流水。
 

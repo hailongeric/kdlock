@@ -54,7 +54,7 @@ def main():
         types += definition(spin, marker).rstrip() + ";\n"
     if "kd_spin_entry_reclaim(" not in types:
         types += "#define kd_spin_entry_reclaim kd_spin_entry_claim\n"
-    code = ""
+    code = definition(spin, "static void kd_spin_prepare_regs(struct kd_spin_node *node)") + "\n"
     for name in ("kernel_module/kd_spin_gate.c", "kernel_module/kd_spin_entry.c"):
         code += without_includes(read_source((ROOT / name))) + "\n"
     frame = read_source((ROOT / "kernel_module/kd_exec.c"))
@@ -65,13 +65,16 @@ def main():
             "static struct kd_exec_context *kd_exec_current_context(void)",
             "struct kd_exec_frame *kd_exec_current_frame(void)",
             "bool kd_exec_context_busy(void)",
+            "static struct kd_exec_frame *kd_exec_frame_push_internal(",
             "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
+            "kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,",
             "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)",
         )
     )
     pool = pool.replace(
         "\nkd_exec_frame_push(", "\nstruct kd_exec_frame *\nkd_exec_frame_push("
     )
+    pool = pool.replace("\nkd_exec_frame_push_spin(", "\nstruct kd_exec_frame *\nkd_exec_frame_push_spin(")
     for marker in (
         "static int kd_exec_invariant_failure(void)",
         "static bool kd_exec_frame_state_is_active(int state)",
@@ -143,7 +146,11 @@ def main():
         ("run_combiner", "static void\n"),
     ):
         marker = next(line for line in spin.splitlines() if line.startswith(name + "("))
-        code += prefix + definition(spin, marker) + "\n"
+        part = definition(spin, marker)
+        if name == "execute_cs":
+            # Model the omitted enqueue producer, using its production decoder.
+            part = part.replace("\tstruct qspinlock *word = batch->request->word;", "\tif (!curr_node->jit_waiter && !curr_node->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tstruct qspinlock *word = batch->request->word;", 1)
+        code += prefix + part + "\n"
     code += definition(
         read_source((ROOT / "kernel_module/kd_lock.c")),
         "int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,",

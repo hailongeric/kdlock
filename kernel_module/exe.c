@@ -329,6 +329,7 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 				break;
 			}
 			kd_spin_jit_prepare_complex(frame);
+			regs = &frame->regs;
 		}
 
 		if (args[0] == KD_EXE_NORMAL) {

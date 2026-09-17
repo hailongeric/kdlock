@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <pthread.h>
+#include <sched.h>
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <stdio.h>
@@ -11,6 +12,17 @@
 #include <string.h>
 #include "exe_info.h"
 #include "kd_source_api.h"
+
+typedef long long s64;
+typedef _Atomic long long atomic64_t;
+#define ATOMIC64_INIT(v) ATOMIC_VAR_INIT(v)
+#define atomic64_read(p) atomic_load(p)
+#define atomic64_set(p, v) atomic_store(p, v)
+#define atomic64_try_cmpxchg(p, old, v) atomic_compare_exchange_strong(p, old, v)
+#define atomic64_dec_return(p) (atomic_fetch_sub(p, 1) - 1)
+#define atomic64_fetch_or(v, p) atomic_fetch_or(p, v)
+static atomic_bool pause_frame_get, frame_get_paused, release_frame_get;
+static _Thread_local unsigned int source_lock_calls;
 
 static atomic_uint checks;
 #define CHECK(expr)                                                     \
@@ -44,7 +56,7 @@ static atomic_uint checks;
 static _Thread_local unsigned int preempt_depth;
 #define raw_spin_lock_irqsave(lock, flags)        \
 	do {                                      \
-		(flags) = preempt_depth++;        \
+		(flags) = preempt_depth++; source_lock_calls++;        \
 		CHECK(!pthread_mutex_lock(lock)); \
 	} while (0)
 #define raw_spin_unlock_irqrestore(lock, flags)     \
@@ -90,7 +102,13 @@ struct file {
 
 static bool try_module_get(struct module *module)
 {
-	CHECK(preempt_depth > 0);
+	if (module != THIS_MODULE)
+                CHECK(preempt_depth > 0);
+        if (module == THIS_MODULE && atomic_load(&pause_frame_get)) {
+                atomic_store(&frame_get_paused, true);
+                while (!atomic_load(&release_frame_get))
+                        sched_yield();
+        }
 	if (module->state == MODULE_STATE_GOING || module->fail_get)
 		return false;
 	atomic_fetch_add(&module->refs, 1);
@@ -407,6 +425,84 @@ static void concurrent_pins(void)
 	kd_source_exit();
 }
 
+/* Hold acquisition between its count reservation and module reference. Close
+ * must report busy and reject new frames until this exact holder drains. */
+static void *closing_frame_worker(void *unused)
+{
+        unsigned int locks = source_lock_calls;
+        (void)unused;
+        CHECK(kd_source_frame_get());
+        kd_source_frame_put();
+        CHECK(source_lock_calls == locks);
+        return NULL;
+}
+
+static void atomic_frame_admission(void)
+{
+        pthread_t thread;
+        unsigned int locks;
+
+        reset();
+        locks = source_lock_calls;
+        atomic64_set(&kd_source_frame_gate, UINT_MAX);
+        CHECK(!kd_source_frame_get() && !provider.refs);
+        CHECK(kd_source_frame_count() == UINT_MAX);
+        atomic64_set(&kd_source_frame_gate, 0);
+        provider.fail_get = true;
+        CHECK(!kd_source_frame_get() && !kd_source_frame_count());
+        provider.fail_get = false;
+        CHECK(kd_source_frame_get() && kd_source_frame_count() == 1);
+        kd_source_frame_put();
+        CHECK(!kd_source_frame_count() && !provider.refs &&
+              source_lock_calls == locks);
+
+        atomic_store(&pause_frame_get, true);
+        atomic_store(&frame_get_paused, false);
+        atomic_store(&release_frame_get, false);
+        CHECK(!pthread_create(&thread, NULL, closing_frame_worker, NULL));
+        while (!atomic_load(&frame_get_paused))
+                sched_yield();
+        CHECK(kd_source_begin_retire() == -EBUSY);
+        CHECK(status().frames == 1 && !provider.refs);
+        CHECK(!kd_source_frame_get());
+        atomic_store(&release_frame_get, true);
+        CHECK(!pthread_join(thread, NULL));
+        atomic_store(&pause_frame_get, false);
+        CHECK(!status().frames && !provider.refs && !retire());
+        CHECK(!kd_source_frame_get());
+}
+
+static void *frame_loop_worker(void *unused)
+{
+        unsigned int locks = source_lock_calls;
+        (void)unused;
+        pthread_barrier_wait(&start);
+        for (unsigned int i = 0; i < 2000; i++) {
+                if (!kd_source_frame_get())
+                        break;
+                kd_source_frame_put();
+        }
+        CHECK(source_lock_calls == locks);
+        return NULL;
+}
+
+static void concurrent_frame_close(void)
+{
+        pthread_t threads[4];
+        reset();
+        CHECK(!pthread_barrier_init(&start, NULL, 5));
+        for (unsigned int i = 0; i < 4; i++)
+                CHECK(!pthread_create(&threads[i], NULL, frame_loop_worker, NULL));
+        pthread_barrier_wait(&start);
+        int result = kd_source_begin_retire();
+        CHECK(result == 0 || result == -EBUSY);
+        for (unsigned int i = 0; i < 4; i++)
+                CHECK(!pthread_join(threads[i], NULL));
+        CHECK(!pthread_barrier_destroy(&start));
+        CHECK(!status().frames && !provider.refs && !kd_source_frame_get());
+        CHECK(!retire());
+}
+
 int main(void)
 {
 	_Static_assert(sizeof(struct kd_source_info) == 16, "info ABI");
@@ -430,6 +526,8 @@ int main(void)
 	residency();
 	draining();
 	concurrent_pins();
+	atomic_frame_admission();
+	concurrent_frame_close();
 	printf("production source lifetime: %u checks, 0 failures; cap=%u\n",
 	       atomic_load(&checks), KD_SOURCE_MAX_MODULES);
 	return 0;

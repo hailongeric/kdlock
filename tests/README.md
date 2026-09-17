@@ -6,6 +6,57 @@
 生产 provider 的专用协议观察器在 `tests/kernel/`。
 性能对比使用 [bench/README.md](../bench/README.md) 的独立入口。
 
+<a id="waiter-packet-validation"></a>
+
+## 2026-09-17：Waiter 预备寄存器包与原子 frame lease
+
+在 `f190b65` 上实现物理 waiter 发布前准备 node 寄存器包，普通单锁 root
+直接使用该包；复杂出口在副作用及节点复用前保存独立包。source frame get/put
+改用原子关闭位与计数，继续保留 provider 引用和退休排空。借用指针与尚未生效的
+continuation SP 共用存储，frame/context 仍为 656/5264 字节，普通/bench
+provider 的 per-CPU 节分别为 8000/8064 字节。
+
+最终同一源码版本在 recovery guest `6.1.159-kdstatic2`、voluntary 下验证：
+
+- 两个基础程序及 source lifetime、exec capacity、JIT entry scope、spin outer
+  progress、spin shadow、spin wait、remote outer、native after outer、mutex outer
+  progress、spin frame protocol，共 **12 个单元入口通过**。检查发布前 packet
+  完备性、借用时私有包不被写入、复杂切换、节点复用、嵌套独立性，以及准入/退休
+  并发、模块引用失败回滚和关闭后拒绝；已有对应变异测试全部检出。
+- W=1 普通 provider 构建通过，保留既有恢复/返回汇编的 objtool 警告。反汇编确认
+  frame get/put 无 raw spinlock 或 IRQ 开关，push/pop 无整块 memset 或完整
+  context 扫描；原子操作和模块引用仍有成本。
+- `mode-0`、`mode-1`、`mode-3`、`registers-0-1`、`node-physical-2-0`、完整三阶段
+  `mode-8`，**6/6 live 用例通过**；实际 JIT、数据、owner/ACK、排空及冻结输入
+  检查通过，最终运行无内核故障。仅运行基础及受影响范围，未执行全量套件。
+
+内核源码/build/live Build ID 均核对通过，Build ID 为
+`460d77502af4709a0cca794b322cedc20c2cc478`。恢复快照为
+`pre_static_boot_20260915`；没有修改、重编译内核或扩大 module per-CPU 预留。
+性能结果与原始会话见 [四点复测](../bench/spin_cacheline/results/20260917-waiter-packet.md)。
+
+首轮失败单独保留：早期 unit 夹具仍有旧 packet/布局假设，以及变异断言失败后
+继续解引用的问题，修正后最终 12 项重新通过。队列 SELFTEST 绕过汇编 hook 并
+传入 RSP=0，前移解码后在 init 触发 NULL 读取；现提供完整的 8-word 保存包，
+并核对发布前 callee 寄存器值，未放宽原判定。最初新增独立指针使 frame 增长
+8 字节，bench provider 的 per-CPU 节达 8128 字节，首个 kdlock 会话加载返回
+ENOMEM，未进入 JIT 测量；改为复用互斥阶段的存储后恢复原大小。两次故障均先
+归档，再重启同一实验内核，以新的证据目录验证最终版本，不拼接为一次通过。
+
+[上一轮 mode-4 soft lockup](#mutex-pinned-mode4-failure) 本次未重跑，仍是已知
+未解决场景，不由 mode-3 或 mode-8 的通过替代。
+
+guest 证据为 `/root/kdlock-evidence/waiter-packet-20260917/`；最终 live 位于
+其中 `live-compact-final/`，unit/build 命令与退出码在 `compact-verification.json`。
+guest 与宿主离线校验均通过，live 冻结源码 292 项；bench 冻结源码 186 项、
+生成映像 24 项哈希核对通过，61 个生产文件与宿主相同。所有已知 workload/daemon
+已退出，模块及 frame/writer 正常排空。
+
+[宿主证据目录](/tmp/kdlock-waiter-packet-20260917/) 包含完整早期失败、最终成功、
+反汇编和独立复算；[完整归档](/tmp/kdlock-waiter-packet-20260917/evidence.tar.gz)
+SHA256 为 `3f297ec5b52a09d61553836dcabbb133ed448b0351fc43a1f0abe74ca8623dc5`。
+本节与性能结果页在测量结束后补写，说明文件的冻结版本以各次证据为准。
+
 <a id="frame-fast-validation"></a>
 
 ## 2026-09-17：Frame 复用与单锁路径

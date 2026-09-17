@@ -299,6 +299,22 @@ pop:
 	return ok;
 }
 
+/* This queue-only probe bypasses the assembly hook. Supply its complete saved
+ * packet even though no JIT is admitted here: the physical producer decodes
+ * it before publication, not lazily when a combiner selects a JIT entry. */
+static void kd_shadow_queue_wait(void)
+{
+	unsigned long hook_regs[8] = { 0, 1, 2, 3, 4, 5, 6,
+				      (unsigned long)kd_shadow_return_site };
+	struct kd_spin_request request = kd_spin_unlock_lookup(kd_shadow_test.lock);
+	struct kd_spin_node *node = this_cpu_ptr(&kd_spin_nodes[0]);
+
+	kd_spin_lock_slowpath(kd_shadow_test.lock, (unsigned long)hook_regs, &request);
+	KD_SHADOW_CHECK(node->native_regs_decoded && node->regs.bx == 1 &&
+			node->regs.r12 == 2 && node->regs.r13 == 3 &&
+			node->regs.r14 == 4 && node->regs.r15 == 5 && node->regs.bp == 6);
+}
+
 static void kd_shadow_head(void)
 {
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
@@ -331,12 +347,7 @@ static void kd_shadow_head(void)
 	smp_store_release(&kd_shadow_test.head_ready, true);
 
 	/* Real task-stack queue, node reservation and xchg-tail publication. */
-	{
-		struct kd_spin_request request =
-			kd_spin_unlock_lookup(kd_shadow_test.lock);
-
-		kd_spin_lock_slowpath(kd_shadow_test.lock, 0, &request);
-	}
+	kd_shadow_queue_wait();
 	KD_SHADOW_CHECK(kd_spin_combiner_state_matches(&saved, ptr));
 	KD_SHADOW_CHECK(node->count == 0);
 	/* The saved preparation RSP now belongs to this task, with no per-CPU
@@ -370,12 +381,7 @@ static void kd_shadow_successor(void)
 				    1))
 		return;
 	smp_store_release(&kd_shadow_test.successor, node);
-	{
-		struct kd_spin_request request =
-			kd_spin_unlock_lookup(kd_shadow_test.lock);
-
-		kd_spin_lock_slowpath(kd_shadow_test.lock, 0, &request);
-	}
+	kd_shadow_queue_wait();
 	KD_SHADOW_CHECK(smp_load_acquire(&kd_shadow_test.head_releasing));
 	KD_SHADOW_CHECK(node->count == 0);
 	/* The saved preparation RSP now belongs to this task, with no per-CPU

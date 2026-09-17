@@ -44,7 +44,9 @@ def production():
             "static struct kd_exec_context *kd_exec_current_context(void)",
             "struct kd_exec_frame *kd_exec_current_frame(void)",
             "bool kd_exec_context_busy(void)",
+            "static struct kd_exec_frame *kd_exec_frame_push_internal(",
             "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
+            "kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,",
             "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)",
             "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
             "int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,",
@@ -64,6 +66,7 @@ def production():
     code = code.replace(
         "\nkd_exec_frame_push(", "\nstruct kd_exec_frame *\nkd_exec_frame_push("
     )
+    code = code.replace("\nkd_exec_frame_push_spin(", "\nstruct kd_exec_frame *\nkd_exec_frame_push_spin(")
     # Compile the actual SELFTEST observer into the real pop path. Substitute
     # only PID/RCU/time primitives; live TID detachment still needs mode 8.
     code = without_includes(

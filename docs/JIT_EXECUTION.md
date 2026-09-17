@@ -173,15 +173,23 @@ IRQ 屏蔽覆盖发布、等待和 combiner 执行，恢复时保留入口状态
 
 context 的 `depth` 和 frame 的 `jit_lock_depth` 分别界定有效槽位；push 显式
 初始化可读状态，pop 验证生命周期后退休槽位，均不清空整个 frame 或无效锁记录。
-输入仍复制到独立 `frame->regs`；普通完成由 pop 写回一次，native 交接则在
-唤醒 waiter 前写回，ACK 后 pop 不再复制。depth 不能替代这些包和所有权检查。
+物理 waiter 在发布前解码 hook 寄存器包。普通单锁 root 的 frame 通过
+`borrowed_regs` 直接使用 node 包，正常完成不再做 node→frame→node 两次复制。
+首次复杂出口先把当前包复制进独立 `frame->regs`，后续分发切换到该包；native
+交接在唤醒 waiter 前写回，ACK 后 pop 不再复制。远端、物理嵌套和 mutex frame
+从入口即使用独立包。depth 不能替代这些包和所有权检查。
+`regs_borrowed` 区分当前阶段；借用指针与尚未生效的 `continuation_sp` 共用槽位，
+转为私有包后才保存 continuation，frame/context 保持 656/5264 字节。
 
 单锁、无物理父 frame 的 spin root 首次在匹配的 outer unlock 退出时直接完成；
 需要通用分发的其他出口先建立 combiner 快照，再处理控制调用、native 或远端工作。
 远端/物理嵌套请求在入口就建立快照；尚未执行的入口拒绝不需要快照。
+source frame get/put 使用同一个原子字中的关闭标志和引用计数，取消逐请求的
+两次全局 source irqsave；模块引用与退休排空仍保留，依赖登记及 native 路由
+等复杂路径仍有各自的锁。
 完整约束见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)，逐步操作见
 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)，验证见
-[frame 记录](../tests/README.md#frame-fast-validation)。
+[waiter 包与 frame 验证](../tests/README.md#waiter-packet-validation)。
 
 ## 3. 环境与操作
 
@@ -2048,7 +2056,7 @@ frame_push -> 初始化空 native_link，保留 source/provider 引用
   -> waiter 发布解锁请求 -> 原 owner 执行、清空请求，最终移除 native 路由
   -> owner 发布 request.done ACK，完成自身 frame，再调用 pop
      -> 仍有 remote/native 引用：EBUSY，输出包/存储/引用不变
-     -> 已满足原有终态与 LIFO 条件：复制最终包、清零存储、释放 frame 引用
+     -> 已满足原有终态与 LIFO 条件：按需复制输出包、退休有效槽、释放 frame 引用
 ```
 
 waiter 可能在 owner pop 后才输出 ACK 日志；要求的是 owner 的发布顺序，不是

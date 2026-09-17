@@ -31,7 +31,7 @@ void kd_exec_selftest_capacity_probe(const struct kd_exec_frame *frame)
 				   kd_exec_context_validate(ctx);
 	if (!kd_capacity.valid_before)
 		goto out;
-	/* One claimant owns this static snapshot; never put 5264 bytes on the stack. */
+	/* One claimant owns this static snapshot; never put the whole context on the stack. */
 	memcpy(&kd_capacity.before, ctx, sizeof(*ctx));
 	kd_capacity.attempted = true;
 	kd_capacity.rejected = !kd_exec_frame_push(

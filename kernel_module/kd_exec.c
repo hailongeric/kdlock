@@ -181,11 +181,12 @@ bool kd_exec_context_busy(void)
 
 /* Reserve fixed storage and its source/provider lease together. Failure leaves
  * the caller's packet and existing context intact; no frame is published. */
-struct kd_exec_frame *
-kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
+static struct kd_exec_frame *kd_exec_frame_push_internal(
+		   const struct pt_regs *regs, unsigned long entry_ip,
 		   unsigned long outer_lock_addr, void *waiter,
 		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
-		   unsigned long gsbase, struct task_struct *logical_task)
+		   unsigned long gsbase, struct task_struct *logical_task,
+		   struct pt_regs *borrowed_regs)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
@@ -200,7 +201,7 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 #endif
 	    (ctx->depth && ctx->owner != current))
 		return NULL;
-	/* Closing and this get serialize so retirement cannot miss a new frame. */
+	/* Atomic admission and closure order retirement against every new frame. */
 	if (!kd_source_frame_get())
 		return NULL;
 
@@ -209,14 +210,21 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 		ctx->owner = current;
 	frame = &ctx->frames[ctx->depth];
 	/* Initialize every readable discriminator, not the inactive arrays or
-	 * branch-local payloads. regs must outlive queue-node reuse on native ACK.
+	 * branch-local payloads. Only an unnested physical spin root may borrow;
+	 * complex dispatch takes a private packet before node reuse on native ACK.
 	 * control_call's payload is initialized by kd_call_begin before use;
 	 * saved_combiner is initialized only by the spin complex-path producer. */
-	frame->regs = *regs;
+	frame->regs_borrowed = first_frame && held_lock_depth == 1 &&
+			       borrowed_regs;
+	if (!frame->regs_borrowed)
+		frame->regs = *regs;
 	frame->entry_ip = entry_ip;
 	frame->outer_lock_addr = outer_lock_addr;
 	frame->continuation_ip = 0;
-	frame->continuation_sp = 0;
+	if (frame->regs_borrowed)
+		frame->borrowed_regs = borrowed_regs;
+	else
+		frame->continuation_sp = 0;
 	frame->gsbase = gsbase;
 	frame->logical_task = logical_task;
 	frame->logical_pid = logical_task->pid;
@@ -259,6 +267,26 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 	return frame;
 }
 
+struct kd_exec_frame *
+kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
+		   unsigned long outer_lock_addr, void *waiter,
+		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		   unsigned long gsbase, struct task_struct *logical_task)
+{
+	return kd_exec_frame_push_internal(regs, entry_ip, outer_lock_addr,
+		waiter, outgoing_rsp_ptr, held_lock_depth, gsbase, logical_task, NULL);
+}
+
+struct kd_exec_frame *
+kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,
+		       unsigned long outer_lock_addr, void *waiter,
+		       void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		       unsigned long gsbase, struct task_struct *logical_task)
+{
+	return kd_exec_frame_push_internal(regs, entry_ip, outer_lock_addr,
+		waiter, outgoing_rsp_ptr, held_lock_depth, gsbase, logical_task, regs);
+}
+
 /* Retire only after remote dependencies and native routing/requests are gone.
  * A terminal state must not discard an outstanding owner ACK or the frame's
  * source lease. Copy the final packet before retiring physical LIFO storage.
@@ -287,8 +315,10 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	 * retires and this physical combiner can start the next logical root. */
 	kd_exec_selftest_relay_pop(frame);
 #endif
-	if (regs)
-		*regs = frame->regs;
+	/* Borrowed output already occupies the waiter's packet. Retirement must
+	 * precede its release wake; no node access is allowed after that wake. */
+	if (regs && regs != kd_exec_frame_regs(frame))
+		*regs = *kd_exec_frame_regs(frame);
 	ctx->depth--;
 	frame->state = KD_EXEC_FRAME_UNUSED;
 	if (!ctx->depth)
@@ -312,7 +342,7 @@ int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
 	if (!frame || !frame->spin_simple || !frame->executed ||
 	    frame->mutex_backend || frame->outer_unlock_seen ||
 	    frame->jit_lock_depth != 1 || frame->outer_lock_index != 0 ||
-	    frame->regs.di != frame->outer_lock_addr)
+	    kd_exec_frame_regs(frame)->di != frame->outer_lock_addr)
 		return -EINVAL;
 	frame->jit_lock_released[0] = true;
 	frame->outer_unlock_seen = true;

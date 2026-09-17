@@ -12,16 +12,21 @@ Complete the main behavior before optional features and performance work.
 **2026-09-17, frame optimization:** frame and lock storage now reuse inactive
 slots using their live depths, with explicit initialization of readable state.
 The ordinary physical single-spin-lock path defers combiner snapshots and
-skips generic completion walks; independent input/output register packets and
-owner/ACK/source lifetimes remain. See [frame protocol](DESIGN.md#91-frames-and-lock-ledger).
-The [focused validation](../tests/README.md#frame-fast-validation) records nine
-unit programs and live results, including a full mode-8 rerun after fixing its
-IRQ-off SELFTEST observer. The seven-role/two-CPU mutex mode-4 run soft-locked;
-it remains a failure, without an old-code comparison establishing attribution.
-The [four-point benchmark](../bench/spin_cacheline/results/20260917-frame-fast.md)
-compares this change with the
-[preceding full spin scan](../bench/spin_cacheline/results/20260917-stackless.md).
-Neither is a full functional-suite PASS.
+skips generic completion walks. Physical waiters now prepare register packets
+before publication; single-lock roots bind these packets directly and materialize
+an independent copy on complex dispatch. Frame leases use an atomic closed/count
+word instead of get/put raw spinlocks; owner/ACK/source lifetimes remain.
+See [frame protocol](DESIGN.md#91-frames-and-lock-ledger).
+The [current focused validation](../tests/README.md#waiter-packet-validation)
+records 12 unit entrypoints and six live cases on the final frozen version,
+including all three mode-8 stages. Frame/context remain 656/5264 bytes by sharing
+the borrowed pointer with the inactive continuation-SP slot. Initial SELFTEST
+packet and per-CPU-size failures were fixed and retained as separate evidence.
+The earlier seven-role/two-CPU mutex mode-4 soft lockup remains unresolved and
+was not rerun. The [latest four-point benchmark](../bench/spin_cacheline/results/20260917-waiter-packet.md)
+shows 20-thread improvements and slight 4-thread declines against the
+[frame-only optimization](../bench/spin_cacheline/results/20260917-frame-fast.md).
+These are focused results, not a full functional-suite PASS or universal speedup.
 
 **2026-09-17:** spin delegation accepts IRQ-off task entries and no longer
 allocates a per-CPU 8 KiB C execution stack. Physical waiters save/mask local

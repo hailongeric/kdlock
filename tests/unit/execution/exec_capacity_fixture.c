@@ -836,6 +836,55 @@ static void reuse_single(void)
 	CHECK(!kd_exec_current_frame() && kd_exec_context_validate(ctx));
 }
 
+/* A root can execute in the published packet without touching private regs.
+ * Complex promotion must capture the last wrapper result before node reuse;
+ * a nested physical frame must never borrow even when it has only one lock. */
+static void borrowed_packets(void)
+{
+	struct kd_exec_frame *frame, *child;
+	struct pt_regs packet = registers(17), expected, poison;
+	unsigned long lock = 0x2000;
+
+	for (unsigned int promote = 0; promote < 2; promote++) {
+		memset(&kd_exec_current_context()->frames[0].regs, 0xa5,
+		       sizeof(packet));
+		poison = kd_exec_current_context()->frames[0].regs;
+		packet.di = lock;
+		frame = kd_exec_frame_push_spin(&packet, 0x1000, lock, NULL,
+					       NULL, 1, 0x3000, &waiters[0]);
+		CHECK(frame && frame->borrowed_regs == &packet &&
+		      kd_exec_frame_regs(frame) == &packet);
+		if (!frame || failures)
+			return;
+		CHECK(!memcmp(&frame->regs, &poison, sizeof(poison)));
+		CHECK(!kd_exec_frame_set_lock_stack(frame, &lock, 1));
+		frame->spin_simple = true;
+		frame->executed = true;
+		packet.ax ^= 0xabcdef;
+		expected = packet;
+		if (promote) {
+			kd_exec_frame_own_regs(frame);
+			CHECK(!frame->regs_borrowed &&
+			      !memcmp(&frame->regs, &expected, sizeof(expected)));
+			memset(&packet, 0xcc, sizeof(packet));
+			child = kd_exec_frame_push_spin(&expected, 0x1000, lock,
+				NULL, NULL, 1, 0x3000, &waiters[1]);
+			CHECK(child && child->parent == frame && !child->regs_borrowed);
+			if (!child || failures)
+				return;
+			CHECK(!memcmp(&child->regs, &expected, sizeof(expected)));
+			CHECK(!kd_exec_frame_abort(child) && !kd_exec_frame_pop(child, NULL));
+		}
+		CHECK(!kd_exec_frame_complete_single_spin(frame));
+		CHECK(!kd_exec_frame_pop(frame, &packet));
+		CHECK(!memcmp(&packet, &expected, sizeof(packet)) && !source_frames);
+		if (!promote)
+			CHECK(!memcmp(&frame->regs, &poison, sizeof(poison)));
+		if (failures)
+			return;
+	}
+}
+
 int main(void)
 {
 	unsigned int depth, cycle, last_released;
@@ -844,6 +893,11 @@ int main(void)
 	CHECK(sizeof(struct pt_regs) == 168 &&
 	      sizeof(struct kd_exec_frame) == 656);
 	reuse_single();
+	if (failures)
+		return 1;
+	borrowed_packets();
+	if (failures)
+		return 1;
 	for (cycle = 0; cycle < 3; cycle++) {
 		for (depth = 0; depth <= KD_EXEC_MAX_NESTING; depth++) {
 			for (cpu = 0; cpu < 2; cpu++) {

@@ -177,8 +177,13 @@ two-word wrapper ABI are unchanged; source controls are separate ioctls.
    Read windows can include resident data, but roots and ordinary native CALL
    targets must be text. Dependencies are deduplicated and retained even after
    partial refusal, because older images can still use them.
-2. A writer get and frame push serialize with OPEN-to-DRAINING. Frame leases
-   cover native/remote continuation through actual pop, including failed-push
+2. Writer admission uses the source lock. Frame admission uses a single atomic
+   word containing a closed bit and a 32-bit live count. Retirement atomically
+   sets the closed bit before checking the count: a racing frame either reserves
+   a counted lease first or fails admission. Module-reference failure rolls the
+   reservation back. Frame get/put take no source raw spinlock; snapshots read
+   the atomic count. Closure remains terminal even when retirement returns busy.
+   Frame leases cover native/remote continuation through actual pop, including failed-push
    rollback. Ordinary CALL miss pins the target before native transfer/learning;
    failed target residency after progress is non-continuable, never entry replay.
 3. Retirement serializes against uploads, closes fresh selection/registration,
@@ -1278,16 +1283,28 @@ the frame complete; physical batch ownership remains unchanged. Other exits
 entering generic dispatch capture the combiner checkpoint and clear
 `spin_simple` before servicing a control/hostcall or publishing native/remote
 work. Remote requests and physically nested frames initialize their checkpoint
-at entry. An unstarted
-refusal needs no checkpoint. This avoids snapshot/compare, generic event and
-nested cleanup walks for the ordinary single-lock completion.
+at entry. An unstarted refusal needs no checkpoint. This avoids snapshot/compare,
+generic event and nested cleanup walks for the ordinary single-lock completion.
 
-The frame retains its own `pt_regs`: push copies the queued input once, and
-normal pop writes the result back once before waiter completion is published.
-Native handoff instead copies the continuation before waking the waiter, then
-pops without another copy after ACK. The waiter may reuse its node during that
-interval, so aliasing `frame->regs` to node storage would break its lifetime.
-The queued input also stays intact for a pre-body refusal. These software
+Physical waiters decode the hook's callee-register/return packet into their
+preallocated node before publishing it. A single-lock physical root binds
+`borrowed_regs` to this packet; dispatch updates it in place and pop skips the
+copy back to that same packet. The waiter only polls until a release wake, which
+must follow frame retirement and the executor's final node access. Entry guard
+refusal preserves the complete input packet under the existing generated ABI.
+
+Before a root's first complex dispatch, `kd_exec_frame_own_regs()` copies the
+current wrapper result into `frame->regs` and clears the borrow tag and slot. All
+subsequent service/control/native/remote work uses this independent storage.
+The borrowed pointer shares `continuation_sp` storage: a simple root has no
+continuation, and ownership transfers before a continuation can be saved. The
+tag occupies a formerly unused boolean, keeping frames at 656 bytes and the
+eight-frame CPU context at 5264 bytes without increasing module per-CPU usage.
+Remote children, physically nested frames and mutex frames own their packet
+from entry. Native handoff copies the continuation to the node before wake,
+then pops without another copy after ACK; node reuse cannot invalidate the
+retained frame. The executor's physical frame stack, parent, batch hook and
+source lease remain separate from the producer's request. These software
 packets do not themselves switch the executor's CPU registers or C stack.
 
 ### 9.2 A/B Execution

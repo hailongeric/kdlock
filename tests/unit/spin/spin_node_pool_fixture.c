@@ -13,6 +13,9 @@ enum producer_path {
 static struct qspinlock producer_lock;
 static struct kd_exec_frame producer_frame;
 static unsigned long producer_return;
+/* Physical producer reads eight hook words before publication; the virtual
+ * producer instead consumes the single CALL return word above. */
+static unsigned long producer_saved[8] = { 0, 1, 2, 3, 4, 5, 6, 0x78900 };
 static struct pt_regs producer_regs;
 
 static void producer_setup(int count, bool virtual, enum producer_path path)
@@ -75,7 +78,7 @@ static void producer_setup(int count, bool virtual, enum producer_path path)
 					  .sp = (unsigned long)&producer_return,
 					  .di = (unsigned long)active_lock };
 	kd_spin_native_inputs.rsp = 0x12345678;
-	kd_spin_native_inputs.regs_sp = producer_regs.sp;
+	kd_spin_native_inputs.regs_sp = (unsigned long)producer_saved;
 }
 
 static void producer_live_prefix(const struct kd_spin_node *before,
@@ -147,7 +150,7 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 		      (virtual ? regs_before.sp : 0x12345678));
 		CHECK(produced_node->gsbase == (virtual ? 0x34000 : 0x12000));
 		CHECK(!produced_node->pinned_context &&
-		      !produced_node->native_regs_decoded);
+		      produced_node->native_regs_decoded == !virtual);
 		if (remote)
 			CHECK(peer.next == produced_node &&
 			      !producer_lock.locked);

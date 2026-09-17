@@ -15,7 +15,8 @@
 task 入口，使用 task 内核栈，物理 waiter 在关本地 IRQ 后无栈发布/轮询，
 完成时恢复原 IRQ 状态和上下文；已删除每 CPU 8KB spin 执行栈。
 frame 与锁记录按有效深度复用，push/pop 不再整块清零；普通单锁完成跳过
-通用清理链，复杂出口才建立 combiner 快照，保留独立寄存器包和 owner/ACK 生命周期。
+通用清理链。waiter 发布前准备寄存器包，普通单锁直接使用该包，复杂出口才保存
+独立包及 combiner 快照；source frame get/put 使用原子关闭标志/计数，保留 owner/ACK 生命周期。
 测试代码按用途分组，默认仅验证基础简单功能和
 直接相关功能。这是受控实验用的 x86_64 JIT 代理原型，尚未完成全部任务，
 也不保证任意内核代码均可代理或已经取得性能收益。
@@ -44,7 +45,7 @@ frame 与锁记录按有效深度复用，push/pop 不再整块清零；普通�
 | 服务退出和返回 | mode 2/5 的时钟和有界标量 `int_sqrt` 服务原生执行后返回 JIT；额度超限交回 waiter 完成后缀。通用可变参数 `printk` 未实现。 |
 | GS 与等待策略 | spinlock/mutex 默认均支持显式 GS 读/写/RMW，使用 origin base；受支持的 current_task 读取使用 logical waiter。两种已发布请求的 waiter 都禁止抢占并轮询至结果或 native handoff，不睡眠或调度。spin 队列区间关闭本地 IRQ；NMI、mutex IRQ 并发及 native service 上下文仍有限制。 |
 | Spin 栈与 IRQ | IRQ-on/off task 均可进入代理；spin 使用 task 栈，物理 waiter 发布后无栈轮询，完成/native 唤醒直接从保存包恢复并保留原 IRQ 状态。shadow 锁记录和 wrapper 暂存仍在，mutex 独立栈保留。 |
-| Frame 与单锁路径 | 有效深度界定 frame/锁记录范围，复用时显式初始化可读状态；单锁物理 root 的首次正常 unlock 可直接完成，其他执行分支按需维护复杂状态。寄存器仍独立复制，pop 仍验证 LIFO、终态和 owner/ACK 依赖。 |
+| Frame 与单锁路径 | 有效深度界定 frame/锁记录范围，普通单锁 root 直接使用 waiter 准备的包，首次正常 unlock 可直接完成；复杂分支先保存独立包再执行。source frame 引用不再取全局 raw spinlock，pop 仍验证 LIFO、终态和 owner/ACK 依赖。 |
 | 翻译准入 | 审查实际可能执行的 JIT 范围，已有入口谓词、受检 mutex 栈事实及静态 core/module per-CPU 筛查；动态地址的访问时保护不在其中。 |
 | 测试与复现入口 | 按行为合并、显式选择测试，保留实际正文证据、完整负载状态、owner/ACK 和排空检查；已有源码/环境/生成物归档及离线校验。41 个单元入口、22 个 shell driver 按用途分组；默认两个基础 C，相关 Python 显式选择，全量仅按要求运行。 |
 | 运行环境与可读性 | 固定四个 Python 运行依赖，提供 guest venv 安装、目录/文件索引、手动步骤及关键函数/协议操作的用途注释；不声称每个函数逐一完成审查。 |
@@ -58,8 +59,8 @@ frame 与锁记录按有效深度复用，push/pop 不再整块清零；普通�
 
 | 已完成范围 | 结果与证据入口 |
 | --- | --- |
-| Frame 复用与单锁路径 | 9 项单元通过；五项定向 live 通过，mode-8 修正 IRQ-off 观察器后完整重跑通过；mode-4 soft lockup 未修复。不同冻结版本分别记录，详见 [frame 验证](../tests/README.md#frame-fast-validation)。 |
-| Spin 性能 | 先完成 [30 配置完整扫描](../bench/spin_cacheline/results/20260917-stackless.md)，再完成 [frame 精简后的四点对比](../bench/spin_cacheline/results/20260917-frame-fast.md)；保留原生对照、JIT 比例与测量限制，不外推为通用收益。 |
+| Frame 复用与单锁路径 | waiter 预备包及原子 frame lease 的最终版本通过 12 项单元、6 项定向 live，frame/context 大小不变；早期 SELFTEST 空 RSP 和 per-CPU 空间失败已修复并保留记录。mode-4 soft lockup 未重跑或修复，详见 [本轮验证](../tests/README.md#waiter-packet-validation)。 |
+| Spin 性能 | [30 配置完整扫描](../bench/spin_cacheline/results/20260917-stackless.md)、[frame 精简](../bench/spin_cacheline/results/20260917-frame-fast.md)及最新 [waiter 包复用四点对比](../bench/spin_cacheline/results/20260917-waiter-packet.md)分别保留；最新 20 线程两点提高，4 线程两点略降，不外推为通用收益。 |
 | Spin 无栈等待与 IRQ | 定向单元和 IRQ-on/off 单锁、嵌套/native 续跑、两层物理 frame 实际 JIT 通过；该阶段未测全量、mutex live 或性能，详见 [spin 验证](../tests/README.md#spin-stackless-validation)。 |
 | GS 实际 JIT | mode 10 spin 与 mode 11 mutex 均通过，包含 GS read/write/RMW/current、正文见证、数据及排空；8 组相关单元与准入审计通过，详见 [GS 验证](../tests/README.md#gs-polling-validation)。 |
 | 测试目录整理 | 两个基础 C 和选择器、benchmark 夹具两个相关 Python 程序通过；另做入口导入和命令预览。未跑全量或 kernel live，详见 [目录验证](../tests/README.md#test-directory-validation)。 |

@@ -20,9 +20,11 @@ static bool list_empty(const struct list_head *head)
 	return head->next == head;
 }
 #define kd_exec_frame_push real_frame_push
+#define kd_exec_frame_push_spin real_frame_push_spin
 #define kd_exec_frame_pop real_frame_pop
 #include "spin_outer_types.h"
 #undef kd_exec_frame_push
+#undef kd_exec_frame_push_spin
 #undef kd_exec_frame_pop
 
 static raw_spinlock_t origins[2];
@@ -238,9 +240,11 @@ static void kd_source_frame_put(void)
 #undef this_cpu_ptr
 #define this_cpu_ptr(p) (&(*(p))[mock_cpu])
 #define kd_exec_frame_push real_frame_push
+#define kd_exec_frame_push_spin real_frame_push_spin
 #define kd_exec_frame_pop real_frame_pop
 #include "spin_frame_pool_production.h"
 #undef kd_exec_frame_push
+#undef kd_exec_frame_push_spin
 #undef kd_exec_frame_pop
 #undef this_cpu_ptr
 #define this_cpu_ptr(p) (&(p)[mock_cpu])
@@ -280,13 +284,26 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 	active.outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
 	return &active;
 }
+struct kd_exec_frame *kd_exec_frame_push_spin(struct pt_regs *regs,
+                unsigned long ip, unsigned long lock, void *node, void *rsp,
+                unsigned int depth, unsigned long gs, struct task_struct *task)
+{
+        struct kd_exec_frame *frame = kd_exec_frame_push(regs, ip, lock, node,
+                                                       rsp, depth, gs, task);
+        if (frame && !frame->parent && depth == 1) {
+                frame->borrowed_regs = regs;
+                frame->regs_borrowed = true;
+                memset(&frame->regs, 0xa5, sizeof(frame->regs));
+        }
+        return frame;
+}
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 {
 	CHECK(frame == &active &&
 	      (frame->completion_seen ||
 	       (!frame->executed && frame->state == KD_EXEC_FRAME_ERROR)));
-	if (regs)
-		*regs = frame->regs;
+	if (regs && regs != kd_exec_frame_regs(frame))
+		*regs = *kd_exec_frame_regs(frame);
 	pops++;
 	return 0;
 }
@@ -542,7 +559,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 				   unsigned long lock)
 {
 	CHECK(exe == &ready_entry);
-	CHECK(regs == &active.regs &&
+	CHECK(regs == kd_exec_frame_regs(&active) &&
 	      ip == (request.jit_waiter ? 0x900UL : 0x800UL) &&
 	      lock == (unsigned long)&origins[0]);
 	scripts++;
@@ -552,7 +569,8 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 			      sizeof(request.regs)));
 		/* Staging may change the frame packet, never the queued input.
 		 * No instruction body, unlock, native publication or node reuse. */
-		memset(regs, 0xcc, sizeof(*regs));
+		if (!active.regs_borrowed)
+			memset(regs, 0xcc, sizeof(*regs));
 		return mode == 11 ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
 	}
 	active.executed = true;
@@ -575,6 +593,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 	/* Substitute the dispatch boundary, then use the real checkpoint helper
 	 * before mutating nested ownership just as the production dispatcher does. */
 	kd_spin_jit_prepare_complex(&active);
+	regs = &active.regs;
 	CHECK(kd_spin_entry_begin(&origins[1], KD_SPIN_ENTRY_VIRTUAL, &b_ref) ==
 	      0);
 	kd_spin_word((struct qspinlock *)&origins[1])->locked = 1;
@@ -685,7 +704,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 					request.jit_context = &request_context;
 					parent_before = requester;
 					context_before = request_context;
-				} else if (mode == 4 || mode == 8) {
+				} else {
 					expected_regs.bx = 1;
 					expected_regs.r12 = 2;
 					expected_regs.r13 = 3;
@@ -731,7 +750,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				CHECK(!memcmp(&request.regs, &expected_regs,
 					      sizeof(expected_regs)));
 				CHECK(request.native_regs_decoded ==
-				      (!virtual && (mode == 4 || mode == 8)));
+				      !virtual);
 				if (virtual) {
 					CHECK(!memcmp(&requester,
 						      &parent_before,
@@ -958,7 +977,7 @@ static unsigned int preentry_packet(void)
 			      active.state == KD_EXEC_FRAME_ERROR);
 			CHECK(!memcmp(&request.regs, &readmission_regs,
 				      sizeof(request.regs)));
-			CHECK(!memcmp(&active.regs, &readmission_regs,
+			CHECK(!memcmp(kd_exec_frame_regs(&active), &readmission_regs,
 				      sizeof(active.regs)));
 			CHECK(!request.exec_frame && !request.completed &&
 			      !request.native_resume &&

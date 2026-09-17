@@ -87,7 +87,13 @@ struct kd_exec_frame {
 	unsigned long entry_ip;
 	unsigned long outer_lock_addr;
 	unsigned long continuation_ip;
-	unsigned long continuation_sp;
+	/* A simple physical root has no continuation yet. Reuse its SP slot to
+	 * borrow the node packet, preserving the fixed per-CPU frame footprint.
+	 * Own the packet before saving a continuation or allowing node reuse. */
+	union {
+		unsigned long continuation_sp;
+		struct pt_regs *borrowed_regs;
+	};
 	unsigned long gsbase;
 	struct task_struct *logical_task;
 	void *waiter;
@@ -107,7 +113,7 @@ struct kd_exec_frame {
 	unsigned int outer_lock_index;
 	unsigned int jit_lock_depth;
 	int logical_pid;
-	bool nested;
+	bool regs_borrowed;
 	bool outer_unlock_seen;
 	bool completion_seen;
 	int state;
@@ -131,6 +137,20 @@ struct kd_exec_context {
 	unsigned int depth;
 };
 
+static inline struct pt_regs *kd_exec_frame_regs(struct kd_exec_frame *frame)
+{
+	return frame->regs_borrowed ? frame->borrowed_regs : &frame->regs;
+}
+
+static inline void kd_exec_frame_own_regs(struct kd_exec_frame *frame)
+{
+	if (frame->regs_borrowed) {
+		frame->regs = *frame->borrowed_regs;
+		frame->continuation_sp = 0;
+		frame->regs_borrowed = false;
+	}
+}
+
 /* Module lifetime and CPU-local frame stack. Push/pop also balance the source
  * lease; a completed event alone neither pops the frame nor releases its pin. */
 void kd_exec_context_init(void);
@@ -144,6 +164,12 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 		   unsigned long outer_lock_addr, void *waiter,
 		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task);
+/* Bind a physical spin packet; nested physical contexts retain a private copy. */
+struct kd_exec_frame *
+kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,
+		       unsigned long outer_lock_addr, void *waiter,
+		       void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		       unsigned long gsbase, struct task_struct *logical_task);
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs);
 int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame);
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame);

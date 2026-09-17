@@ -26,7 +26,7 @@ typedef struct qspinlock raw_spinlock_t;
 
 /* Only producer-visible fields; this fixture does not test the register ABI. */
 struct pt_regs {
-	unsigned long ip, sp, di;
+	unsigned long ip, sp, di, bx, r12, r13, r14, r15, bp;
 };
 struct task_struct {
 	int pid;
@@ -265,6 +265,13 @@ static int xchg_tail(struct qspinlock *lock, int tail)
 		CHECK(produced_node->cpuid == 0 && produced_node->gsbase);
 		CHECK(produced_node->task_struct_ptr ==
 		      (producer_virtual ? &logical_task : current));
+		/* Observe readiness at queue publication, before any peer can run JIT. */
+		if (!producer_virtual) {
+			CHECK(produced_node->native_regs_decoded);
+			CHECK(produced_node->regs.bx == 1 && produced_node->regs.r12 == 2 &&
+			      produced_node->regs.r13 == 3 && produced_node->regs.r14 == 4 &&
+			      produced_node->regs.r15 == 5 && produced_node->regs.bp == 6);
+		}
 		if (kd_spin_nodes[0].count > producer_peak)
 			producer_peak = kd_spin_nodes[0].count;
 		if (contended)
@@ -716,6 +723,7 @@ static void run_level(int number)
 	const int saved_depth = initial_depth, saved_count = initial_count;
 	const int saved_level = current_level;
 	const uint64_t rsp = 0x10000 + number * 0x100;
+	unsigned long saved[8] = {0, 1, 2, 3, 4, 5, 6, 0x800};
 	struct kd_spin_native_input saved_input = kd_spin_native_inputs;
 	struct kd_spin_node *saved_successor = producer_successor;
 
@@ -740,7 +748,7 @@ static void run_level(int number)
 		producer_count = 0;
 		producer_successor = &level->queue[0];
 		kd_spin_native_inputs.rsp = rsp;
-		kd_spin_native_inputs.regs_sp = rsp + 64;
+		kd_spin_native_inputs.regs_sp = (unsigned long)saved;
 		if (producer_chain_virtual) {
 			scheduling_word.locked = 1;
 			CHECK(kd_spin_nested_lock(&level->lock, &regs,

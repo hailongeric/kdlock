@@ -5,6 +5,7 @@
  * releases dependencies only after registry invalidation and complete drain.
  * No path pins arbitrary heap objects or supplies missing guest hook readers. */
 #include <linux/bug.h>
+#include <linux/atomic.h>
 #include <linux/errno.h>
 #include <linux/kallsyms.h>
 #include <linux/kernel.h>
@@ -19,6 +20,23 @@
  * either exit. No allocation or sleeping occurs in lock hooks. */
 static DEFINE_RAW_SPINLOCK(kd_source_lock);
 struct kd_source_info kd_sources;
+/* Admission and live count share one atomic word: closing cannot observe zero
+ * between an OPEN check and a later increment. The upper bit is irreversible
+ * until module init; low 32 bits retain the source-info counter ABI. Writers
+ * and dependency registration are cold paths protected by kd_source_lock. */
+#define KD_SOURCE_FRAME_CLOSED (1ULL << 32)
+static atomic64_t kd_source_frame_gate = ATOMIC64_INIT(0);
+
+static unsigned int kd_source_frame_count(void)
+{
+	return (unsigned int)atomic64_read(&kd_source_frame_gate);
+}
+
+static void kd_source_frame_release(void)
+{
+	/* A zero-count release wraps the low word, even when admission is closed. */
+	BUG_ON((unsigned int)atomic64_dec_return(&kd_source_frame_gate) == UINT_MAX);
+}
 static struct module *kd_source_modules[KD_SOURCE_MAX_MODULES];
 static struct module *(*kd_module_address)(unsigned long address);
 static unsigned long kd_core_start, kd_core_text_end, kd_core_end;
@@ -58,26 +76,23 @@ void kd_source_writer_put(void)
 /* Register one frame pin and hold a module ref for the translated frame lifetime. */
 bool kd_source_frame_get(void)
 {
-	unsigned long flags;
-	bool ok;
+	s64 old = atomic64_read(&kd_source_frame_gate);
 
-	raw_spin_lock_irqsave(&kd_source_lock, flags);
-	ok = kd_sources.state == KD_SOURCE_OPEN &&
-	     kd_sources.frames != UINT_MAX && try_module_get(THIS_MODULE);
-	if (ok)
-		kd_sources.frames++;
-	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
-	return ok;
+	do {
+		if ((old & KD_SOURCE_FRAME_CLOSED) || (unsigned int)old == UINT_MAX)
+			return false;
+	} while (!atomic64_try_cmpxchg(&kd_source_frame_gate, &old, old + 1));
+	/* Count covers this in-progress acquisition as well as the retained frame.
+	 * A close racing here must see it or follow the rollback decrement. */
+	if (try_module_get(THIS_MODULE))
+		return true;
+	kd_source_frame_release();
+	return false;
 }
 
 void kd_source_frame_put(void)
 {
-	unsigned long flags;
-
-	raw_spin_lock_irqsave(&kd_source_lock, flags);
-	BUG_ON(!kd_sources.frames);
-	kd_sources.frames--;
-	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
+	kd_source_frame_release();
 	/* Spans the retained frame, not earlier guest dispatch or code after pop.
 	 * This is not the missing generic hook-reader lifetime protocol. */
 	module_put(THIS_MODULE);
@@ -136,7 +151,7 @@ static int kd_source_pin(unsigned long address, unsigned long size, bool text,
 	if (kd_sources.state == KD_SOURCE_RETIRED ||
 	    (scope == KD_SOURCE_ROOT && kd_sources.state != KD_SOURCE_OPEN) ||
 	    (scope == KD_SOURCE_WRITER && !kd_sources.writers) ||
-	    (scope == KD_SOURCE_FRAME && !kd_sources.frames)) {
+	    (scope == KD_SOURCE_FRAME && !kd_source_frame_count())) {
 		ret = -ESHUTDOWN;
 		goto out;
 	}
@@ -176,21 +191,22 @@ void kd_source_info(struct kd_source_info *info)
 
 	raw_spin_lock_irqsave(&kd_source_lock, flags);
 	*info = kd_sources;
+	info->frames = kd_source_frame_count();
 	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
 }
 
 int kd_source_begin_retire(void)
 {
-	/* Move source lifecycle to draining only when both frame/writer usage is
-	 * finished, then let finish retire remove module refs.
-	 */
+	/* Close admission atomically before testing drain. A successful racing get
+	 * is counted; every later get fails. EBUSY leaves admission closed. */
 	unsigned long flags;
 	int ret = 0;
 
 	raw_spin_lock_irqsave(&kd_source_lock, flags);
+	atomic64_fetch_or(KD_SOURCE_FRAME_CLOSED, &kd_source_frame_gate);
 	if (kd_sources.state != KD_SOURCE_RETIRED)
 		WRITE_ONCE(kd_sources.state, KD_SOURCE_DRAINING);
-	if (kd_sources.frames || kd_sources.writers)
+	if (kd_source_frame_count() || kd_sources.writers)
 		ret = -EBUSY;
 	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
 	return ret;
@@ -205,7 +221,7 @@ void kd_source_finish_retire(void)
 	/* The publisher first invalidates entries under the registry gate. Never
 	 * hold this source lock while waiting for that gate or dropping modules. */
 	raw_spin_lock_irqsave(&kd_source_lock, flags);
-	BUG_ON(kd_sources.state == KD_SOURCE_OPEN || kd_sources.frames ||
+	BUG_ON(kd_sources.state == KD_SOURCE_OPEN || kd_source_frame_count() ||
 	       kd_sources.writers);
 	count = kd_sources.modules;
 	memcpy(modules, kd_source_modules, count * sizeof(modules[0]));
@@ -234,6 +250,7 @@ int kd_source_init(void)
 	    kd_init_end > kd_core_end)
 		return -EOPNOTSUPP;
 	memset(&kd_sources, 0, sizeof(kd_sources));
+	atomic64_set(&kd_source_frame_gate, 0);
 	memset(kd_source_modules, 0, sizeof(kd_source_modules));
 	return 0;
 }

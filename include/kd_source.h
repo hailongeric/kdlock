@@ -8,9 +8,10 @@
 #include <linux/compiler.h>
 #include "kd_source_api.h"
 
-/* Internal to the provider (not exported). Mutations remain under the source
- * lock in kd_source.c. Inline this read of the same state, rather than adding
- * an independently synchronized admission flag to every hot hook. */
+/* Internal to the provider (not exported). Lifecycle/dependency mutations use
+ * the source lock. frames is filled only in kd_source_info() from the atomic
+ * admission/count word; do not read kd_sources.frames. This readiness hint is
+ * revalidated by frame admission, which linearizes against session closure. */
 extern struct kd_source_info kd_sources;
 static __always_inline bool kd_source_is_open(void)
 {

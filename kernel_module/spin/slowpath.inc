@@ -327,6 +327,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->native_regs_decoded = false;
 	curr_node->jit_context = NULL;
 	curr_node->spin_origin = request->ref;
+	kd_spin_prepare_regs(curr_node);
 
 	return __kd_spin_lock_longjmp(lock, tail, curr_node, request);
 }

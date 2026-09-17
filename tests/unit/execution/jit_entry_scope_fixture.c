@@ -264,6 +264,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 {
 	CHECK(frame->spin_simple && !frame->mutex_backend);
 	complex_preparations++;
+	kd_exec_frame_own_regs(frame);
 	frame->spin_simple = false;
 }
 #include "frame_code.h"
@@ -334,7 +335,7 @@ static int run(void)
 {
 	struct kd_exe_info *exe = kd_exe_find_ready(0, active.entry_ip);
 
-	return kd_exe_on_call_hl_entry(exe, &active.regs, active.entry_ip,
+	return kd_exe_on_call_hl_entry(exe, kd_exec_frame_regs(&active), active.entry_ip,
 				       active.outer_lock_addr);
 }
 
@@ -1136,22 +1137,40 @@ static void check_native_handoff_timings(void)
 
 static void check_simple_spin(void)
 {
+	struct pt_regs packet, before;
+
 	reset();
 	active.spin_simple = true;
+	packet = active.regs;
+	active.borrowed_regs = &packet;
+	active.regs_borrowed = true;
+	memset(&active.regs, 0xa5, sizeof(active.regs));
+	before = active.regs;
 	steps[0] = (struct step){ KD_EXE_CALL_MISS, 0x9000, 1, 0 };
 	CHECK(run() == KD_EXE_RUN_TO_UNLOCK);
 	CHECK(active.executed && active.spin_simple && calls == 1 &&
 	      !known_calls && !complex_preparations);
+	CHECK(packet.ip == 0x9000 && active.borrowed_regs == &packet &&
+	      !memcmp(&active.regs, &before, sizeof(before)));
 
 	/* A service promotes once, before the service runs; its eventual outer
 	 * unlock uses the generic continuation path even when the ledger is 1. */
 	reset();
 	active.spin_simple = true;
+	packet = active.regs;
+	active.borrowed_regs = &packet;
+	active.regs_borrowed = true;
+	memset(&active.regs, 0xa5, sizeof(active.regs));
 	steps[0] = (struct step){ KD_EXE_HOSTCALL, kd_hostcalls[0].addr, 1, -8 };
 	steps[1] = (struct step){ KD_EXE_CALL_MISS, 0x9000, 1, 0 };
 	CHECK(run() == KD_EXE_RUN_TO_UNLOCK);
 	CHECK(!active.spin_simple && complex_preparations == 1 &&
 	      calls == 2 && known_calls == 1 && service_calls[0] == 1);
+	CHECK(!active.regs_borrowed && active.regs.ip == 0x9000 &&
+	      active.regs.ax == service_values[0]);
+	/* After promotion the old node packet stops changing, including the CALL
+	 * return advance and the resumed wrapper. */
+	CHECK(packet.ip == kd_hostcalls[0].addr && packet.sp != active.regs.sp);
 
 	/* The CALL target alone is insufficient; a different lock must take the
 	 * existing control/error handling instead of completing this frame. */
@@ -1166,8 +1185,13 @@ static void check_simple_spin(void)
 	reset();
 	active.spin_simple = true;
 	steps[0].reason = KD_EXE_ENTRY_REFUSED;
+	packet = before = active.regs;
+	active.borrowed_regs = &packet;
+	active.regs_borrowed = true;
 	CHECK(run() == KD_EXE_NO_RUN);
 	CHECK(active.spin_simple && !active.executed && !complex_preparations);
+	CHECK(active.borrowed_regs == &packet &&
+	      !memcmp(&packet, &before, sizeof(packet)));
 }
 
 int main(void)

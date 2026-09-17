@@ -90,6 +90,7 @@ def main():
         source, "__kd_spin_lock_longjmp(struct qspinlock *lock, int tail,"
     )
     body += definition(source, "struct kd_spin_native_input {").rstrip() + ";\n"
+    body += definition(source, "static void kd_spin_prepare_regs(struct kd_spin_node *node)")
     body += "static int\n" + definition(
         source, "__kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,"
     )

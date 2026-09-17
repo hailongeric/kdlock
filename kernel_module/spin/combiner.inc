@@ -90,7 +90,9 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	   struct kd_spin_batch *batch)
 {
 	struct qspinlock *word = batch->request->word;
-	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
+	void *outgoing_rsp_ptr;
+	struct kd_exec_frame *frame;
+	int ret_flag;
 	struct kd_exe_info *exe;
 	unsigned int frame_lock_depth;
 	struct kd_spin_jit_context *jit_context = curr_node->jit_context;
@@ -124,39 +126,11 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	BUG_ON(curr_node->cpuid == smp_processor_id());
 #endif
 
-	incoming_rsp_ptr = (void *)curr_node->regs.sp;
-	print_debug("incoming_rsp_ptr: %px\n", incoming_rsp_ptr);
 	outgoing_rsp_ptr = &(ptr->local_shadow_stack_ptr);
 
-	/* Native waiters expose the saved callee-register frame via their RSP. */
-#ifdef DEBUG_KD_SPIN
-#ifdef ENABLE_IRQS_CHECK
-	BUG_ON(!irqs_disabled());
-#endif
-
+	/* Physical packets are fully prepared before the waiter publishes next. */
 	if (!curr_node->jit_waiter && !curr_node->native_regs_decoded)
-		BUG_ON(*(uint64_t *)incoming_rsp_ptr == NULL);
-#endif
-	/* Admission can fail before JIT entry. Later combiners must reuse the
-	 * decoded packet, not consume another callee-save frame from its RSP. */
-	if (!curr_node->jit_waiter && !curr_node->native_regs_decoded) {
-		curr_node->regs.r15 =
-			get_rsp_from_regs(r15, incoming_rsp_ptr, 5);
-		curr_node->regs.r14 =
-			get_rsp_from_regs(r14, incoming_rsp_ptr, 4);
-		curr_node->regs.r13 =
-			get_rsp_from_regs(r13, incoming_rsp_ptr, 3);
-		curr_node->regs.r12 =
-			get_rsp_from_regs(r12, incoming_rsp_ptr, 2);
-		curr_node->regs.bx =
-			get_rsp_from_regs(rbx, incoming_rsp_ptr, 1);
-		curr_node->regs.bp =
-			get_rsp_from_regs(rbp, incoming_rsp_ptr, 6);
-		curr_node->regs.ip =
-			get_rsp_from_regs(rip, incoming_rsp_ptr, 7);
-		curr_node->regs.sp = ((unsigned long)incoming_rsp_ptr) + 64;
-		curr_node->native_regs_decoded = true;
-	}
+		return KD_EXE_RUN_ERROR;
 	if (curr_node->jit_waiter && (!jit_context || !jit_context->requester))
 		return KD_EXE_RUN_ERROR;
 	/* B is a continuation in A's admitted code. An independent B translation
@@ -178,11 +152,16 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	frame_lock_depth = curr_node->jit_waiter ?
 				   jit_context->lock_depth :
 				   kd_spin_lock_stack_depth(ptr);
-	struct kd_exec_frame *frame = kd_exec_frame_push(
-		&curr_node->regs, entry_ip, (unsigned long)lock, curr_node,
-		outgoing_rsp_ptr, frame_lock_depth, curr_node->gsbase,
-		curr_node->task_struct_ptr);
-	int ret_flag;
+	if (curr_node->jit_waiter)
+		frame = kd_exec_frame_push(
+			&curr_node->regs, entry_ip, (unsigned long)lock, curr_node,
+			outgoing_rsp_ptr, frame_lock_depth, curr_node->gsbase,
+			curr_node->task_struct_ptr);
+	else
+		frame = kd_exec_frame_push_spin(
+			&curr_node->regs, entry_ip, (unsigned long)lock, curr_node,
+			outgoing_rsp_ptr, frame_lock_depth, curr_node->gsbase,
+			curr_node->task_struct_ptr);
 
 	if (!frame) {
 		KD_PR_ERR("spin JIT frame stack overflow lock=%px\n", lock);
@@ -237,7 +216,8 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	if (!kd_spin_selftest_refuse(frame, curr_node, &ret_flag))
 #endif
 		ret_flag = kd_exe_on_call_hl_entry(
-			exe, &frame->regs, frame->entry_ip, frame->outer_lock_addr);
+			exe, kd_exec_frame_regs(frame), frame->entry_ip,
+			frame->outer_lock_addr);
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_frame_end(frame_event, frame, ret_flag);
 	kd_spin_selftest_refusal_end(frame, ret_flag);
@@ -330,7 +310,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 				"spin JIT frame error transition failed lock=%px\n",
 				lock);
 	}
-	if (ret_flag != KD_EXE_RUN_TO_UNLOCK) {
+	if (ret_flag != KD_EXE_RUN_TO_UNLOCK && !frame->regs_borrowed) {
 		/* Before JIT starts the queued input is unchanged and cannot be
 		 * reused. Keep that packet off the recursively nested C stack. */
 		frame->regs = curr_node->regs;
