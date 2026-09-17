@@ -425,7 +425,7 @@ Virtual waiters keep their independent executor C stack and the existing
 `1/3/5` parent-notification returns. These are no longer physical waiter
 completion returns.
 
-The restoration helper snapshots registers, ticket and incoming IRQ flags,
+The restoration helper retains the shared request pointer, ticket and incoming IRQ flags,
 ends the completed ticket or marks the native continuation, and restores IRQs
 only on the valid task stack after its final per-CPU/node access. It then
 jumps to the saved continuation. Incoming IRQ-off state stays off; an IRQ-on
@@ -439,8 +439,10 @@ If logical A was released early, it must reacquire A first; see 9.4.
 
 ### 4.4 Nested Contention And Stack Resources
 
-At B's lock CALL, a virtual spin waiter copies current GPR/RIP/RSP, explicit
-held locks, GS/task and origin reference. A remote B combiner can execute it.
+At B's lock CALL, a virtual spin waiter prepares its own request/frame but
+references the existing logical GPR/RIP/RSP packet. Explicit held-lock and
+physical owner state, GS/task and origin references remain independently
+recorded. A remote B combiner can execute it.
 It uses the root/parent artifact with B's continuation RIP, not a separately
 truncated B artifact that cannot represent A's later flow.
 
@@ -450,9 +452,17 @@ another CPU using the original logical waiter stack. Its C locals, frame and
 stack remain live until child completion; virtual waiters still service remote
 owner/ACK requests. Their queue interval saves, masks and restores local IRQs.
 
-Spin combiners use the task kernel stack; the former per-CPU 8 KiB execution
-allocation is removed. The shadow-named lock ledger and wrapper RSP scratch
-remain metadata. Frame and held-lock depths are bounded at eight.
+Spin combiners use the task kernel stack. Each possible CPU has a preallocated
+8 KiB shadow stack for physical waiter polling, following TCLock's separation
+of the suspended task stack from the waiting CPU's live RSP. One assembly region
+switches stacks before publication and saves only the old C RSP. An unexecuted
+head handoff restores it; completed/native wakes abandon the old C chain and
+start restoration below both the saved physical and final logical RSP. The CPU
+leaves the shadow stack before releasing its pin or restoring IRQs. Virtual
+waiters keep their executor C stack for nested owner/ACK service. Allocation
+failure rolls back initialization; drained shutdown frees the stacks. The lock
+ledger and wrapper RSP scratch are separate metadata. Frame and held-lock
+depths are bounded at eight.
 Frame count, logical depth, held-lock count and node reservations are distinct
 resources. Sampled stack margins are not an arbitrary IRQ/NMI safety proof.
 NUMA-local batching is opt-in; it is not a different physical lock protocol.
@@ -556,8 +566,8 @@ callback do not exercise JIT or queue scheduling; see
 
 Both spinlock and mutex delegation support explicit GS memory operations by
 default. Spinlock waiters keep preemption disabled from entry-ticket reservation
-through their queued wait. Physical waiters publish and PAUSE-poll in the
-stack-free assembly in `spin/wait.inc`, with local IRQs masked; virtual waiters
+through their queued wait. Physical waiters switch to the per-CPU shadow stack,
+publish and PAUSE-poll in `spin/wait.inc`, with local IRQs masked; virtual waiters
 retain C polling and remote owner/ACK service on their executor stack. Neither
 wait sleeps or schedules. The mutex waiter uses the same origin-task constraint;
 GS support is not a mutex-only option.
@@ -1266,46 +1276,104 @@ not inferred from logical depth. Cross-backend controls are rejected.
 Pre-entry context/resource refusal leaves valid queue/native ownership intact;
 it does not grant permission to replay an executed frame.
 
-The per-CPU context's `depth` owns the live frame prefix; `jit_lock_depth`
-owns each frame's live lock prefix. Push initializes readable discriminators,
-request pointers and the active register packet, without clearing the entire
-frame or inactive lock slots. Pop still checks physical LIFO ownership,
-terminal state, remote dependencies and native routing/ACKs before releasing
-the source lease. It marks the slot UNUSED and decreases depth without clearing
-its payload. Whole-context scans at push/pop are SELFTEST diagnostics; production
-retains capacity, owner and lifetime checks. Lock readers never inspect the
-inactive tail. Control-CALL payload is initialized before publishing its phase.
+The per-CPU context's `top`/`parent` links and `depth` describe the physical
+execution chain. Spin frames live in producer-owned request storage; mutex
+frames retain the fixed per-CPU array. Bind changes the physical parent, depth
+and batch association without copying the request frame. Pop is the common
+unbind/retirement check: physical LIFO ownership, terminal state, remote
+requests and native routing/ACKs must be clear. It does not reclaim a spin
+request or copy its packet. Whole-context scans remain SELFTEST diagnostics.
+`jit_lock_depth` bounds the live lock prefix; inactive arrays are not cleared.
 
 A physical spin root with one lock starts with `spin_simple`. Its first wrapper
-return can complete directly only for CALL_MISS at the exact spin-unlock target
-with the matching outer lock. This marks that single ledger entry released and
-the frame complete; physical batch ownership remains unchanged. Other exits
-entering generic dispatch capture the combiner checkpoint and clear
-`spin_simple` before servicing a control/hostcall or publishing native/remote
-work. Remote requests and physically nested frames initialize their checkpoint
-at entry. An unstarted refusal needs no checkpoint. This avoids snapshot/compare,
-generic event and nested cleanup walks for the ordinary single-lock completion.
+return completes directly only for CALL_MISS at the exact spin-unlock target
+with the matching outer lock. Other dispatch exits capture the independent
+combiner checkpoint before servicing controls/hostcalls or publishing native
+work. Remote and physically nested frames capture that checkpoint at entry.
+These are distinct physical executor states, not copies of logical registers.
 
-Physical waiters decode the hook's callee-register/return packet into their
-preallocated node before publishing it. A single-lock physical root binds
-`borrowed_regs` to this packet; dispatch updates it in place and pop skips the
-copy back to that same packet. The waiter only polls until a release wake, which
-must follow frame retirement and the executor's final node access. Entry guard
-refusal preserves the complete input packet under the existing generated ABI.
+### 9.1.1 Reuse-Before-Copy Contract
 
-Before a root's first complex dispatch, `kd_exec_frame_own_regs()` copies the
-current wrapper result into `frame->regs` and clears the borrow tag and slot. All
-subsequent service/control/native/remote work uses this independent storage.
-The borrowed pointer shares `continuation_sp` storage: a simple root has no
-continuation, and ownership transfers before a continuation can be saved. The
-tag occupies a formerly unused boolean, keeping frames at 656 bytes and the
-eight-frame CPU context at 5264 bytes without increasing module per-CPU usage.
-Remote children, physically nested frames and mutex frames own their packet
-from entry. Native handoff copies the continuation to the node before wake,
-then pops without another copy after ACK; node reuse cannot invalidate the
-retained frame. The executor's physical frame stack, parent, batch hook and
-source lease remain separate from the producer's request. These software
-packets do not themselves switch the executor's CPU registers or C stack.
+**2026-09-17: implemented for the spin request path; JIT remains the backend.**
+Reusable register/frame state has one authoritative object shared by waiter and
+combiner. Initial CPU capture and final CPU restoration are necessary boundaries;
+node-to-frame, frame-to-node and final software restoration snapshots are absent
+from this spin path. Mutex and the legacy frame-push API retain their own packet
+handling. This is not a replacement of every state snapshot in the repository.
+
+Each CPU preallocates `KD_EXEC_MAX_NESTING + MAX_NODES` (12) execution records.
+A record contains a 656-byte frame, optional logical-packet owner and atomic user
+count (672 bytes total). The 5272-byte execution context retains its legacy array
+and adds one stack-top pointer. This pool is independent of the four recyclable
+queue nodes and costs 8064 bytes per possible CPU, allocated at module init.
+There is no allocation or global lock in request reservation. Only pinned task
+producers allocate on their own CPU; other CPUs can release users. An acquire
+read of users==0 precedes reuse. Exhaustion refuses delegation and preserves the
+existing native/queue fallback; it never overwrites a live request.
+
+The implemented protocol is:
+
+1. The producer reserves a record with one queue/waiter user, decodes the hook
+   registers directly into `request.frame.regs`, and initializes readable frame
+   state. The node carries request/packet pointers. No whole-frame memset runs.
+2. Release queue publication transfers access to the combiner. It binds that
+   frame by pointer into its physical chain and supplies actual lock-owner and
+   batch metadata. The JIT wrapper reads/writes the same packet throughout
+   simple, control and native execution; there is no complex-path materialization.
+3. The combiner holds L across the bounded batch. One source/provider lease is
+   acquired before the batch and released after its final handoff or outer-lock
+   reclaim. Individual spin binds borrow that lease and still check admission
+   is open. Native/remote waits and frame retirement finish before batch release.
+   The status ABI field named `frames` now counts these leases plus legacy frame
+   leases, not every spin frame inside a batch.
+4. Normal completion unbinds the frame before release-publishing completed/locked.
+   The physical waiter restores GPRs directly from the record. Its final atomic
+   decrement follows every packet load, then flags and the return are restored.
+   No node/request access occurs after the corresponding lifetime ends. IRQ-off
+   entry stays IRQ-off; IRQ-on entry is restored only at the final boundary.
+5. Native handoff first adds an owner user, then publishes continuation/wake.
+   The queue/waiter user and owner user may retire independently. The owner
+   releases its user only after native ACK, cleanup and frame pop, so a waiter
+   can finish or exit before the owner without invalidating its frame.
+6. A virtual child has distinct owner/control state but aliases the same logical
+   root packet through `regs_ref`. It holds one root-record reference until its
+   own final user ends. Ancestors use saved scalar CALL return/stack and
+   `delegated_lock_addr` facts, never changing packet fields as frozen scope.
+   Suspended owners only service their own lock mailboxes until handoff returns.
+
+The native owner's extra user and remote packet dependency are branch-specific;
+ordinary wrapper entry/exit adds no request reference. A queue wake or node reuse
+is not permission to recycle execution storage. The record's users count, source
+lease, ticket/native references and Linux lock ownership serve different lifetimes.
+
+The batching is a C combiner loop calling the existing JIT wrapper for each
+request. It amortizes source lease acquisition and physical L ownership, but
+does not implement TCLock's WWJUMP between waiter stacks or a fused multi-request
+JIT wrapper. Full wrapper register loads/spills and dispatcher checks remain.
+Independent owner ledgers/checkpoints also remain; the virtual producer currently
+stages its lock ledger in `kd_spin_jit_context` before installing the child ledger.
+Further reduction of those metadata transfers is tracked in
+[shared request storage](TODO.md#shared-request-storage).
+
+### 9.1.2 TCLock Spin Reference And State Boundaries
+
+The source comparison uses TCLock revision
+`bbfb9f00a12af51dff6ca291cb9829a82960c2ef`, specifically its kernel
+`rcuht/locks/komb.c` and `rcuht/lib/combiner.c`. TCLock executes original
+critical-section instructions after switching physical RSP to a waiter's stack.
+Its switch saves/restores six callee-saved GPRs and RSP, with return addresses
+on the stack; the local reference enables WWJUMP between eligible waiters.
+kdlock keeps physical RSP on the combiner task stack and represents the waiter's
+stack through virtual RSP. Its independent shadow stack isolates physical waiter
+polling; it does not replace wrapper entry/exit or execute the JIT body.
+
+Sharing the logical register packet removes copies between software packets,
+not wrapper register loads/spills or independently live executor checkpoints.
+The hook initializes only the callee-saved registers and RIP/RSP. Restoring the
+physical waiter's saved IRQ flags does not restore JIT live condition codes.
+The canonical path/state table and source scope are in the
+[register ABI comparison](JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比).
+This is source analysis, not a native TCLock runtime or performance result.
 
 ### 9.2 A/B Execution
 

@@ -141,22 +141,25 @@ BUG-only 退出不能充当检测成功。
 验收与冻结输入见
 [远端包单元记录](VALIDATION.md#remote-packet-unit)。
 
-### 2.2 Spin 的 task 栈与 IRQ 状态
+### 2.2 Spin 的等待栈与 IRQ 状态
 
 当前实现接受 IRQ-on 和 IRQ-off 的 task 入口。`kd_spin_entry_begin()`、
 gate claim 和缓存快路径均不再因 `irqs_disabled()` 拒绝；task/BH、migration、
 native-active、owner 与 ticket 代次等适用检查仍保留。自愿抢占的假设没有取消
 ticket 生命周期内的 CPU pin，也没有允许 hardirq/softirq 或 IRQ/BH 操作代码进入 JIT。
 
-spin 不再分配每 CPU 8KB shadow C 栈，准备、队首和 combiner 使用 task 内核栈：
+spin 为每个 possible CPU 预分配一份 8KB shadow 等待栈，准备、队首和 combiner
+仍使用 task 内核栈。它采用 TCLock 的等待栈隔离方式，执行后端继续使用 JIT：
 
 ```text
 进入队列前保存并关闭本地 IRQ -> 在 node 保存原 flags、物理 RSP 和 hook RSP
-  -> 物理 waiter：连续汇编链接前驱并 PAUSE 轮询；发布后不调用 C 或访问旧 C 栈
-     -> 尚未代理的队首：返回完整 C 帧，取得原锁后恢复原 IRQ 状态
+  -> 物理 waiter：在同一段汇编中切到 shadow 栈，压入一个旧 C RSP
+     -> 链接前驱，PAUSE 轮询；不调用 C 或访问旧 C 栈
+     -> 尚未代理的队首：弹出旧 RSP，返回完整 C 帧，取得原锁后恢复原 IRQ 状态
      -> 已完成/native 后缀：放弃旧 C 帧，在 min(物理 RSP, 最终虚拟 RSP)
-        对齐后的栈下方调用恢复函数，快照寄存器/ticket/flags
-        -> 完成 ticket 或标记 native -> 恢复原 IRQ 状态 -> 跳转续点
+        对齐后的栈下方调用恢复函数，保留 request 指针和 ticket/flags
+        -> 完成 ticket 或标记 native -> 直接装载共享寄存器包
+        -> 最后一次包读取后归还 request 引用 -> 恢复原 IRQ 状态 -> 跳转续点
 ```
 
 IRQ 屏蔽覆盖发布、等待和 combiner 执行，恢复时保留入口状态：原来关闭的仍然
@@ -164,32 +167,41 @@ IRQ 屏蔽覆盖发布、等待和 combiner 执行，恢复时保留入口状态
 虚拟 waiter 使用父执行者的独立 C 栈，仍需轮询并服务远端 owner/ACK；它的
 队列区间同样保存、关闭并恢复本地 IRQ。原生快路径不借出任务栈。
 
-`shadow_stack` 的锁记录和 wrapper RSP 暂存仍保留；mutex 的独立执行栈也保留。
+`shadow_stack.wait_stack_top` 指向独立分配的等待栈顶，和锁记录、wrapper RSP
+暂存分开。模块初始化时分配，失败统一回滚，所有请求排空后释放；热路径没有
+分配或整栈清零。切回 task 栈后才释放 CPU pin 或恢复 IRQ，避免栈仍被使用时
+被同 CPU 的下一请求复用。mutex 的独立执行栈保留。
 返回码与准备期 retry 见 [Spin 协议](DESIGN.md#43-combiner-and-native-returns)，
 逐步伪代码见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md#42-发布请求等待和恢复入口)，
-已运行范围见 [定向验证](../tests/README.md#spin-stackless-validation)。
+已运行范围见 [shadow 等待栈验证](../tests/README.md#spin-shadow-wait-validation)。
 
 ### 2.3 Frame 复用与单锁完成
 
-context 的 `depth` 和 frame 的 `jit_lock_depth` 分别界定有效槽位；push 显式
-初始化可读状态，pop 验证生命周期后退休槽位，均不清空整个 frame 或无效锁记录。
-物理 waiter 在发布前解码 hook 寄存器包。普通单锁 root 的 frame 通过
-`borrowed_regs` 直接使用 node 包，正常完成不再做 node→frame→node 两次复制。
-首次复杂出口先把当前包复制进独立 `frame->regs`，后续分发切换到该包；native
-交接在唤醒 waiter 前写回，ACK 后 pop 不再复制。远端、物理嵌套和 mutex frame
-从入口即使用独立包。depth 不能替代这些包和所有权检查。
-`regs_borrowed` 区分当前阶段；借用指针与尚未生效的 `continuation_sp` 共用槽位，
-转为私有包后才保存 continuation，frame/context 保持 656/5264 字节。
+spin 的物理 waiter 在发布前从预分配池领取 request，直接准备其中的寄存器包和
+frame。node 只引用这份存储；combiner 用 `kd_exec_frame_bind()` 把它接到本 CPU
+的 `context.top/parent` 链，depth 保留物理嵌套上限。`kd_exec_frame_pop(frame, NULL)`
+只做生命周期检查和解绑，不复制包，也不归还等待者尚在使用的 request。
 
-单锁、无物理父 frame 的 spin root 首次在匹配的 outer unlock 退出时直接完成；
-需要通用分发的其他出口先建立 combiner 快照，再处理控制调用、native 或远端工作。
-远端/物理嵌套请求在入口就建立快照；尚未执行的入口拒绝不需要快照。
-source frame get/put 使用同一个原子字中的关闭标志和引用计数，取消逐请求的
-两次全局 source irqsave；模块引用与退休排空仍保留，依赖登记及 native 路由
-等复杂路径仍有各自的锁。
-完整约束见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)，逐步操作见
-[执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)，验证见
-[waiter 包与 frame 验证](../tests/README.md#waiter-packet-validation)。
+普通、复杂出口和 native 续跑共用原包；远端 child 的独立 frame 通过 `regs_ref`
+引用逻辑 root 包。各 owner 的 CALL/锁事实和锁记录独立保留，避免把正在变化的
+寄存器当作旧准入快照。原生回退在发布前增加 owner 引用，ACK/pop 后才归还；
+child 另保留 root 引用。物理 waiter 的恢复汇编在最后一次读取后归还自己的引用。
+因此 node 复用、原 waiter 返回甚至退出，都不提前回收仍有 owner 使用的 frame。
+
+每 CPU 预分配 12 个 672 字节 request，共 8064 字节；frame/context 为 656/5272
+字节。模块静态 per-CPU 节减少是因为 node 去掉了内嵌寄存器包，不代表总内存减少。
+准备和解绑不清空整个 frame 或无效锁记录；池满时使用原有原生/队列回退。
+mutex 仍使用旧的 per-CPU frame 分配及包处理。
+
+批次持续持有 L，并在整个 combining 区间持有一次 source/provider lease；每个
+spin bind 检查 OPEN，但不再逐 frame 增减全局计数和 module 引用。设备状态里的
+`frames` 是租约计数，不能再解释为批次内 spin frame 的个数。
+正常单锁完成跳过通用事件链；复杂出口才保存物理 combiner 快照。
+当前仍逐请求调用 JIT wrapper/C dispatcher，未实现 TCLock WWJUMP 或融合 wrapper。
+协议及完整生命周期见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)，逐步操作见
+[执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。TCLock 原生切栈与当前 JIT
+路径、初始寄存器范围及剩余状态保存的对照统一见
+[寄存器 ABI 对比](JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比)。
 
 ## 3. 环境与操作
 
