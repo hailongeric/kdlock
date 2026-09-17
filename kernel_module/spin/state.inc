@@ -243,10 +243,6 @@ static DEFINE_PER_CPU(struct kd_spin_exec_request *, kd_spin_requests);
 struct kd_spin_jit_context {
 	struct kd_exec_frame *requester;
 	unsigned int lock_depth;
-	unsigned long lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
-	enum kd_exec_lock_kind lock_kind[KD_EXEC_MAX_LOCK_DEPTH];
-	void *lock_node[KD_EXEC_MAX_LOCK_DEPTH];
-	bool lock_released[KD_EXEC_MAX_LOCK_DEPTH];
 };
 
 static DEFINE_PER_CPU(struct kd_spin_jit_context *, kd_spin_jit_contexts);

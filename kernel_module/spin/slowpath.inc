@@ -69,13 +69,15 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		}
 		smp_store_release(&prev_node->next, curr_node);
 
+		/* This is a virtual waiter: its independent executor stack stays live
+		 * while the child runs. Poll the mailbox inline on the empty path, but
+		 * service every observed request so ancestor unlock/ACK can progress. */
+		struct kd_exec_frame *requester = curr_node->jit_context->requester;
+
 		while (smp_load_acquire(&curr_node->locked)) {
-			if (curr_node->jit_waiter) {
-				kd_spin_selftest_node_event(
-					KD_NODE_REMOTE_POLL);
-				kd_exec_remote_poll(
-					curr_node->jit_context->requester);
-			}
+			kd_spin_selftest_node_event(KD_NODE_REMOTE_POLL);
+			if (smp_load_acquire(&requester->remote_request))
+				kd_exec_remote_poll(requester);
 			cpu_relax();
 		}
 		smp_rmb();

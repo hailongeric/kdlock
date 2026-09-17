@@ -493,6 +493,18 @@ static void ledger(void)
 	REJECTS(kd_exec_frame_lock_push(frame, 0xFFFF, KD_EXEC_LOCK_NATIVE,
 				      NULL), -E2BIG);
 	CHECK(kd_exec_frame_lock_mark_released(frame, locks[4]) == 0);
+	/* A producer-prepared ledger still passes the same admission checks.
+	 * Reusing its columns must preserve every byte, including owner metadata. */
+	before = *frame;
+	CHECK(kd_exec_frame_set_lock_entries(frame, frame->jit_lock_addr,
+		frame->jit_lock_kind, frame->jit_lock_node,
+		frame->jit_lock_released, frame->jit_lock_depth) == 0);
+	CHECK(!memcmp(&before, frame, sizeof(before)));
+	frame->jit_lock_addr[1] = frame->jit_lock_addr[0];
+	REJECTS(kd_exec_frame_set_lock_entries(frame, frame->jit_lock_addr,
+		frame->jit_lock_kind, frame->jit_lock_node,
+		frame->jit_lock_released, frame->jit_lock_depth), -EDEADLK);
+	frame->jit_lock_addr[1] = locks[1];
 	before = *frame;
 	CHECK(kd_exec_frame_lock_pop(frame, locks[3]) == 0);
 	CHECK(frame->jit_lock_depth == KD_EXEC_MAX_LOCK_DEPTH - 1 &&

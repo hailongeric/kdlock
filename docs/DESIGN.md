@@ -1350,10 +1350,20 @@ The batching is a C combiner loop calling the existing JIT wrapper for each
 request. It amortizes source lease acquisition and physical L ownership, but
 does not implement TCLock's WWJUMP between waiter stacks or a fused multi-request
 JIT wrapper. Full wrapper register loads/spills and dispatcher checks remain.
-Independent owner ledgers/checkpoints also remain; the virtual producer currently
-stages its lock ledger in `kd_spin_jit_context` before installing the child ledger.
-Further reduction of those metadata transfers is tracked in
-[shared request storage](TODO.md#shared-request-storage).
+Independent owner ledgers/checkpoints also remain. The virtual producer copies
+the parent's live lock-ledger prefix directly into the child's stable request
+and appends the delegated lock before publishing the node. `kd_spin_jit_context`
+holds only the requester and prepared depth. After binding, the executor validates
+those same child columns and publishes their live depth/outer index without a
+second copy. Parent and child ledgers must stay independent while both owners
+are live; the shared logical register packet does not replace owner state.
+
+A queued virtual waiter caches its requester and acquire-loads that owner's
+remote mailbox each iteration. An empty mailbox skips `kd_exec_remote_poll()`;
+a nonempty mailbox still enters the existing validation/unlock/ACK handler.
+This keeps ancestor unlocks progressing while the child executes. It cannot be
+replaced with a completion-only PAUSE loop like the physical waiter. Remaining
+work is tracked in [shared request storage](TODO.md#shared-request-storage).
 
 ### 9.1.2 TCLock Spin Reference And State Boundaries
 

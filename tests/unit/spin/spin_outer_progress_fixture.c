@@ -55,6 +55,25 @@ static struct kd_exec_context kd_exec_context[2], pool_before[2];
 static struct task_struct pressure_tasks[KD_EXEC_MAX_NESTING];
 static unsigned int full_pool_calls, full_pool_batches;
 static struct kd_spin_jit_context request_context;
+
+/* Model the omitted producer's direct preparation of the child ledger. The
+ * real combiner must validate and reuse these columns without staging them. */
+static void prepare_virtual_ledger(void)
+{
+	struct kd_exec_frame *frame = &request.execution->frame;
+
+	request_context = (struct kd_spin_jit_context){
+		.requester = &requester,
+		.lock_depth = 2,
+	};
+	frame->jit_lock_addr[0] = requester.outer_lock_addr;
+	frame->jit_lock_addr[1] = (unsigned long)&origins[0];
+	for (unsigned int i = 0; i < 2; i++) {
+		frame->jit_lock_kind[i] = KD_EXEC_LOCK_QUEUE_OWNER;
+		frame->jit_lock_node[i] = NULL;
+		frame->jit_lock_released[i] = false;
+	}
+}
 static struct pt_regs readmission_regs;
 static unsigned long kd_exec_invariant_failures;
 static unsigned int mode, failures, scripts, pops, native_waits;
@@ -680,15 +699,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 						.remote_result =
 							KD_EXEC_REMOTE_WAITING,
 					};
-					request_context = (struct kd_spin_jit_context){
-						.requester = &requester,
-						.lock_depth = 2,
-						.lock_addr = { 0x1000,
-							       (unsigned long)&origins
-								       [0] },
-						.lock_kind = { KD_EXEC_LOCK_QUEUE_OWNER,
-							       KD_EXEC_LOCK_QUEUE_OWNER },
-					};
+					prepare_virtual_ledger();
 					request.jit_waiter = true;
 					request.jit_context = &request_context;
 					parent_before = requester;
@@ -946,15 +957,7 @@ static unsigned int preentry_packet(void)
 					.state = KD_EXEC_FRAME_RUNNING,
 					.remote_result = KD_EXEC_REMOTE_WAITING,
 				};
-				request_context = (struct kd_spin_jit_context){
-					.requester = &requester,
-					.lock_depth = 2,
-					.lock_addr = { 0x1000,
-						       (unsigned long)&origins
-							       [0] },
-					.lock_kind = { KD_EXEC_LOCK_QUEUE_OWNER,
-						       KD_EXEC_LOCK_QUEUE_OWNER },
-				};
+				prepare_virtual_ledger();
 				request.jit_waiter = true;
 				request.jit_context = &request_context;
 			}
@@ -1193,14 +1196,7 @@ int main(void)
 				.state = KD_EXEC_FRAME_RUNNING,
 				.remote_result = KD_EXEC_REMOTE_WAITING,
 			};
-			request_context = (struct kd_spin_jit_context){
-				.requester = &requester,
-				.lock_depth = 2,
-				.lock_addr = { 0x1000,
-					       (unsigned long)&origins[0] },
-				.lock_kind = { KD_EXEC_LOCK_QUEUE_OWNER,
-					       KD_EXEC_LOCK_QUEUE_OWNER },
-			};
+			prepare_virtual_ledger();
 			request.jit_waiter = true;
 			request.jit_context = &request_context;
 			request.regs->ip = 0x801;

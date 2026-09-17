@@ -37,14 +37,21 @@ int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,
 	if (frame->outer_lock_addr && outer_index == KD_EXEC_MAX_LOCK_DEPTH)
 		return -ENOENT;
 
-	/* jit_lock_depth bounds all readers; unused tail entries need no writes. */
-	for (i = 0; i < depth; i++) {
-		frame->jit_lock_addr[i] = lock_addr[i];
-		frame->jit_lock_kind[i] = lock_kind ? lock_kind[i] :
-						      KD_EXEC_LOCK_QUEUE_OWNER;
-		frame->jit_lock_node[i] = lock_node ? lock_node[i] : NULL;
-		frame->jit_lock_released[i] = lock_released ? lock_released[i] :
-							      false;
+	/* A spin producer can prepare this exact ledger before publication. Keep
+	 * all admission checks above, but do not copy its fields back to themselves.
+	 * Other callers still install their inputs; depth bounds the live prefix. */
+	if (lock_addr != frame->jit_lock_addr ||
+	    lock_kind != frame->jit_lock_kind ||
+	    lock_node != frame->jit_lock_node ||
+	    lock_released != frame->jit_lock_released) {
+		for (i = 0; i < depth; i++) {
+			frame->jit_lock_addr[i] = lock_addr[i];
+			frame->jit_lock_kind[i] = lock_kind ? lock_kind[i] :
+							      KD_EXEC_LOCK_QUEUE_OWNER;
+			frame->jit_lock_node[i] = lock_node ? lock_node[i] : NULL;
+			frame->jit_lock_released[i] = lock_released ? lock_released[i] :
+								      false;
+		}
 	}
 	frame->jit_lock_depth = depth;
 	frame->outer_lock_index = outer_index;

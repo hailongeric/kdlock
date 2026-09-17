@@ -6,6 +6,46 @@
 生产 provider 的专用协议观察器在 `tests/kernel/`。
 性能对比使用 [bench/README.md](../bench/README.md) 的独立入口。
 
+<a id="spin-nested-state-validation"></a>
+
+## 2026-09-17：嵌套锁记录直写与虚拟 waiter 空轮询
+
+在 `6fc6e73` 上保留 JIT，将 parent → jit_context → child 的两次锁记录复制
+改为发布前直接准备 child，绑定后原地验证。虚拟 waiter 每轮 acquire 检查远端
+邮箱，空邮箱不再调用处理函数；非空时保留原有 owner 校验、解锁和 ACK。
+parent/child owner ledger 仍独立，物理 waiter 的 shadow 等待路径不变。
+
+在已核对 source/build/live 身份的 recovery guest `6.1.159-kdstatic2`、voluntary
+下完成以下定向功能验证；该阶段未运行全量回归或吞吐 benchmark：
+
+- 两个基础程序及 `execution/test_exec_capacity.py`、`spin/test_spin_shadow.py`、
+  `spin/test_spin_outer_progress.py`，**5 个入口通过**。新增断言检查原地 ledger
+  保留 owner 状态且拒绝重复锁；生产 waiter 循环经历空邮箱、随后通知、处理后
+  再次空邮箱，三轮只调用一次替身处理函数，分别以远端完成和 native 续跑结束。
+  spin 路径覆盖 NUMA off/on。首次运行有一项旧 fixture 仍期待空邮箱调用处理
+  函数；修正预期后完整重跑上述 5 项通过，首次日志保留。
+- 普通模块 `W=1` 构建通过，保留既有 naked-return、frame-pointer 和栈状态
+  objtool 警告。`pahole` 确认 `kd_spin_jit_context` 为 16 字节；普通模块反汇编
+  确认空邮箱直接跳过 `kd_exec_remote_poll` 调用。
+- **2 项 live 通过**：`mode-0` 和完整 `mode-8`。后者的嵌套竞争、双逻辑 root
+  共享 B combiner、quota/native relay 三个阶段全部通过，包含真实远端解锁、
+  native ACK、waiter 退出后 packet/context 保持有效，以及帧/租约排空。
+  运行器未发现 dmesg 故障，结束后模块和测试进程均已排空。
+
+这证明一次 ledger 中转复制和每轮空邮箱函数调用已消除，不代表已测得吞吐提升。
+结构大小与按页分配的区别见[执行说明](../docs/JIT_EXECUTION.md#23-frame-复用与单锁完成)。
+随后同一实现的 [spin benchmark 完整扫描](../bench/spin_cacheline/results/20260917-current-spin.md)
+已完成 120/120 会话；该单锁负载不能量化嵌套优化的收益，性能结论以结果页为准。
+
+命令：guest 中执行 `make -C tests/unit run PY_TESTS='execution/test_exec_capacity.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py'`；
+确认恢复快照后，执行 `KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --case mode-0 --case mode-8 --timeout 300 --output /root/kdlock-evidence/spin-nested-state-20260917`。
+
+证据：guest `/root/kdlock-evidence/spin-nested-state-20260917`；
+[构建、单元、基线和反汇编记录](/tmp/kdlock-nested-state-20260917/)，
+[完整 live 归档](/tmp/kdlock-nested-state-20260917/evidence.tar.gz)。
+归档包含 294 个冻结运行/测试输入，已在 guest 和宿主离线校验；SHA256：
+`91f7b664236100db8ff413934ebd829849f20aad0201da20f7004a97f988c702`。
+
 <a id="spin-shadow-wait-validation"></a>
 
 ## 2026-09-17：TCLock 式物理 waiter shadow 等待栈

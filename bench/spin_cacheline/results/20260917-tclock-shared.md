@@ -6,7 +6,8 @@ remote 路径共用逻辑寄存器包，最终恢复后归还引用；source/pro
 
 本页测量冻结在随后恢复 shadow 等待栈之前；后续
 [shadow 等待栈验证](../../../tests/README.md#spin-shadow-wait-validation)
-只包含定向功能检查，未重跑性能 bench，不能将本页数值当作最终等待栈版本的测量。
+只包含定向功能检查，不能将本页数值当作最终等待栈版本的测量。
+包含 shadow 栈和后续嵌套优化的性能重跑见[当前完整扫描](20260917-current-spin.md)。
 
 **16/16 会话通过，但未测得整体提速。** 对比
 [上一版 waiter 包与原子 frame lease](20260917-waiter-packet.md)，20 线程两点

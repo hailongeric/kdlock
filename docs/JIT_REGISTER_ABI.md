@@ -104,7 +104,8 @@ kdlock 的物理 RSP 留在 combiner task 栈上；JIT 的虚拟 RSP 指向 wait
 装载/回写，以及必须同时存活的独立执行者状态。当前 spin 主路径已去掉第一类
 node/frame/最终临时包复制；第二类仍发生于 wrapper 进出，第三类仍服务嵌套和
 owner/ACK 生命周期。单锁 root 到首次复杂退出才保存 checkpoint；远端/物理嵌套
-frame 在进入时保存。嵌套锁记录仍经 `jit_context` 暂存再安装到 child，见
+frame 在进入时保存。嵌套锁记录在发布前由 parent 直接准备到 child，combiner
+验证同一份记录后启用，不再经 `jit_context` 中转，见
 [共享请求协议](DESIGN.md#911-reuse-before-copy-contract)。不能将“共享包”写成
 “无需状态保存”，也不能据此直接推导吞吐或每次切换的总开销。
 
@@ -273,11 +274,15 @@ node、恢复抢占/迁移状态，最后使用该副本跳转。node 可能在�
 嵌套 spin waiter 不重新解析 native hook 栈。`node->regs = regs` 和 child frame
 的 `regs_ref` 引用同一逻辑 root 寄存器包，不复制父 JIT 的 GPR/RIP/RSP；child
 request 通过 `packet_owner` 保留 root 引用，直到自己的最后一个使用者结束。
-它另行保存 owner/control 状态，将显式 lock stack 经 `jit_context` 安装到 child，
-并继承父 frame 的 waiter GS base 和 logical task。B 锁的远端 combiner 更新
+它另行保存 owner/control 状态，在发布前把父 lock stack 的有效前缀直接复制到
+child frame 并追加 B。combiner 绑定后保留深度、锁类型、重复锁和 outer membership
+检查，输入即 child 自身四列时跳过复制，再设置有效深度和 outer index。
+child 继承父 frame 的 waiter GS base 和 logical task。B 锁的远端 combiner 更新
 同一逻辑包；父级暂停期间使用独立 CALL/锁事实，不把包内变化的值当作旧快照。
-`jit_context` 位于初始化分配的 per-CPU 池，按请求节点槽位使用；父 combiner
-的 C 栈仍保留暂停的控制流和局部快照，在 B 返回前必须保持有效，不能将
+`jit_context` 只保留 requester 和预备深度，位于初始化分配的 per-CPU 池，
+按请求节点槽位使用。虚拟 waiter 缓存 requester，每轮 acquire 检查其远端邮箱；
+空邮箱跳过处理函数，有通知则执行原有 owner 检查、解锁和 ACK，不能只等 completed。
+父 combiner 的 C 栈仍保留暂停的控制流和局部快照，在 B 返回前必须保持有效，不能将
 “续点显式化”理解成“不依赖宿主栈的生命周期”。
 
 mutex B 不再创建虚拟 waiter 或子 frame。A combiner 获取原生 B 后，在同一

@@ -7,8 +7,9 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
-/* Build a virtual waiter packet from a logical frame for nested delegation.
- * Parent frame lock vector is copied so nested ownership checks remain consistent.
+/* Share the logical packet, but prepare the child's independent owner ledger
+ * directly in stable request storage. The producer owns this frame until
+ * publication; no intermediate context copy is needed before remote binding.
  */
 static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 				    struct kd_spin_jit_context *context,
@@ -51,15 +52,15 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	context->requester = parent;
 	context->lock_depth = depth + 1;
 	for (i = 0; i < depth; i++) {
-		context->lock_addr[i] = parent->jit_lock_addr[i];
-		context->lock_kind[i] = parent->jit_lock_kind[i];
-		context->lock_node[i] = parent->jit_lock_node[i];
-		context->lock_released[i] = parent->jit_lock_released[i];
+		frame->jit_lock_addr[i] = parent->jit_lock_addr[i];
+		frame->jit_lock_kind[i] = parent->jit_lock_kind[i];
+		frame->jit_lock_node[i] = parent->jit_lock_node[i];
+		frame->jit_lock_released[i] = parent->jit_lock_released[i];
 	}
-	context->lock_addr[depth] = (unsigned long)lock;
-	context->lock_kind[depth] = KD_EXEC_LOCK_QUEUE_OWNER;
-	context->lock_node[depth] = node;
-	context->lock_released[depth] = false;
+	frame->jit_lock_addr[depth] = (unsigned long)lock;
+	frame->jit_lock_kind[depth] = KD_EXEC_LOCK_QUEUE_OWNER;
+	frame->jit_lock_node[depth] = node;
+	frame->jit_lock_released[depth] = false;
 	return 0;
 }
 

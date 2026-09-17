@@ -985,8 +985,13 @@ handoff and bounded combining. The spin implementation now follows the
 - [x] Restore directly from the shared packet and release its user after the last
       assembly load; preserve entry IRQ state and ticket/native ACK lifetimes.
 - [x] Hold one source/provider lease across a bounded combining batch.
-- [ ] Further reduce duplicate nested lock-ledger staging; it still passes through
-      `kd_spin_jit_context` before the child frame.
+- [x] Prepare the nested lock ledger directly in the child request and validate
+      it in place; keep parent/child owner ledgers independent.
+- [x] Skip the out-of-line remote handler for an empty virtual-waiter mailbox;
+      retain per-iteration notification checks and the existing unlock/ACK path.
+- [ ] Measure nested contention separately: the completed
+      [120-session spin scan](../bench/spin_cacheline/results/20260917-current-spin.md)
+      uses one lock and does not exercise either nested optimization.
 - [ ] Investigate the measured common-path regression, including request metadata
       layout and cross-CPU traffic; the throughput comparison alone does not
       attribute the cause.

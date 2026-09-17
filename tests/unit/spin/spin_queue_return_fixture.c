@@ -213,8 +213,9 @@ static unsigned int preentry_queue_return(void)
 		CHECK(!memcmp(&regs, &before, sizeof(regs)));
 		CHECK(request.gsbase == 0x20000 &&
 		      request.task_struct_ptr == &waiter);
+		/* No ancestor notification arrives during this queue-head handoff. */
 		CHECK(scripts == (mode != 8) && pops == scripts &&
-		      queue_polls == 1 && queue_switches == 1 &&
+		      !queue_polls && queue_switches == 1 &&
 		      queue_enters == 1 && queue_exits == 1);
 		CHECK(queue_resume == &request && !request.count &&
 		      !request.completed && !request.native_resume &&

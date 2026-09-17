@@ -88,10 +88,6 @@ static void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long ip,
 struct kd_spin_jit_context {
 	struct kd_exec_frame *requester;
 	unsigned int lock_depth;
-	unsigned long lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
-	enum kd_exec_lock_kind lock_kind[KD_EXEC_MAX_LOCK_DEPTH];
-	void *lock_node[KD_EXEC_MAX_LOCK_DEPTH];
-	bool lock_released[KD_EXEC_MAX_LOCK_DEPTH];
 };
 struct kd_spin_node {
 	struct kd_spin_node *next;
@@ -137,6 +133,8 @@ static int origin_claims;
 static bool nested_case;
 static bool producer_case, producer_virtual, parent_ooo;
 static bool producer_chain, producer_chain_virtual;
+static bool mailbox_case;
+static int mailbox_token;
 static int peer_result, poll_calls, relax_calls, try_calls, ticket_count;
 static int begin_error, producer_preempt = 1, producer_count, producer_peak;
 static struct kd_spin_node peer, follower;
@@ -225,12 +223,28 @@ static void kd_exec_remote_poll(void *frame)
 	CHECK(producer_case && producer_virtual && produced_node);
 	CHECK(frame == produced_node->jit_context->requester);
 	CHECK(kd_spin_nodes[0].count == producer_count + 1);
+	CHECK(mailbox_case && produced_node->jit_context->requester->remote_request ==
+	      &mailbox_token);
+	produced_node->jit_context->requester->remote_request = NULL;
 	poll_calls++;
 }
 static void cpu_relax(void)
 {
-	if (!producer_case || ++relax_calls != 1)
+	if (!producer_case)
 		abort();
+	relax_calls++;
+	if (mailbox_case && relax_calls < 3) {
+		struct kd_exec_frame *parent = produced_node->jit_context->requester;
+
+		if (relax_calls == 1) {
+			CHECK(!poll_calls);
+			parent->remote_request = &mailbox_token;
+		} else {
+			CHECK(poll_calls == 1 && !parent->remote_request);
+		}
+		return;
+	}
+	CHECK(relax_calls == (mailbox_case ? 3 : 1));
 	if (!produced_node) /* Native full-pool direct-spin retry. */
 		return;
 	CHECK(kd_spin_nodes[0].count == producer_count + 1);
@@ -924,6 +938,7 @@ int main(void)
 	printf("spin nested lists: %d cases, %d checks, %d failures\n", cases,
 	       checks - previous_checks, failures - previous_failures);
 	run_producer_cases(true);
+	run_mailbox_cases();
 	kd_node_trace = true;
 	run_producer_cases(true);
 	run_observer_checks();

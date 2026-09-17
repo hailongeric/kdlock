@@ -188,8 +188,15 @@ frame。node 只引用这份存储；combiner 用 `kd_exec_frame_bind()` 把它�
 child 另保留 root 引用。物理 waiter 的恢复汇编在最后一次读取后归还自己的引用。
 因此 node 复用、原 waiter 返回甚至退出，都不提前回收仍有 owner 使用的 frame。
 
+嵌套 producer 在发布前将父锁记录直接写入 child 的独立 ledger；combiner 验证
+原地记录后启用，不再通过 `jit_context` 复制第二遍。虚拟 waiter 每轮仍检查
+远端邮箱，只有非空时才调用解锁/ACK 处理函数；物理 waiter 的 shadow 等待不变。
+状态与生命周期边界见[嵌套 JIT waiter](JIT_REGISTER_ABI.md#42-嵌套-jit-waiter)。
+
 每 CPU 预分配 12 个 672 字节 request，共 8064 字节；frame/context 为 656/5272
 字节。模块静态 per-CPU 节减少是因为 node 去掉了内嵌寄存器包，不代表总内存减少。
+嵌套 `kd_spin_jit_context` 在 x86-64 上从 184 缩为 16 字节，四槽的请求大小从
+736 降到 64 字节；两者的 `vzalloc` 仍占一页，不能计作每 CPU 释放一页内存。
 准备和解绑不清空整个 frame 或无效锁记录；池满时使用原有原生/队列回退。
 mutex 仍使用旧的 per-CPU frame 分配及包处理。
 

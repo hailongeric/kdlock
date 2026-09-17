@@ -29,6 +29,7 @@ static void producer_setup(int count, bool virtual, enum producer_path path)
 	memset(&scheduling_word, 0, sizeof(scheduling_word));
 	memset(&producer_frame, 0, sizeof(producer_frame));
 	producer_case = true;
+	mailbox_case = false;
 	producer_virtual = virtual;
 	producer_count = count;
 	producer_peak = count;
@@ -144,7 +145,7 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 		      resume_node == produced_node);
 		CHECK(producer_peak == count + 1 && entries == 1 && exits == 1);
 		CHECK(combined == (path == PRODUCER_COMBINER));
-		CHECK(poll_calls == (virtual && remote) &&
+		CHECK(!poll_calls &&
 		      relax_calls == remote);
 		CHECK(produced_node->rsp ==
 		      (virtual ? regs_before.sp : 0x12345678));
@@ -159,21 +160,22 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 		if (virtual) {
 			struct kd_spin_jit_context *context =
 				&producer_contexts[count];
+			struct kd_exec_frame *child = &produced_node->execution->frame;
 
 			CHECK(context->requester == &producer_frame &&
 			      context->lock_depth == 2);
-			CHECK(context->lock_addr[0] ==
+			CHECK(child->jit_lock_addr[0] ==
 			      producer_frame.jit_lock_addr[0]);
-			CHECK(context->lock_kind[0] ==
+			CHECK(child->jit_lock_kind[0] ==
 			      producer_frame.jit_lock_kind[0]);
-			CHECK(context->lock_node[0] == &peer &&
-			      !context->lock_released[0]);
-			CHECK(context->lock_addr[1] ==
+			CHECK(child->jit_lock_node[0] == &peer &&
+			      !child->jit_lock_released[0]);
+			CHECK(child->jit_lock_addr[1] ==
 			      (unsigned long)active_lock);
-			CHECK(context->lock_kind[1] ==
+			CHECK(child->jit_lock_kind[1] ==
 			      KD_EXEC_LOCK_QUEUE_OWNER);
-			CHECK(context->lock_node[1] == produced_node &&
-			      !context->lock_released[1]);
+			CHECK(child->jit_lock_node[1] == produced_node &&
+			      !child->jit_lock_released[1]);
 			CHECK(produced_node->spin_origin.entry == &peer &&
 			      produced_node->spin_origin.sequence == 17);
 		}
@@ -231,6 +233,22 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 		      (reserved ? current->pid : 0));
 	}
 	producer_case = parent_ooo = false;
+}
+
+/* An empty first poll must not enter the handler. A later mailbox request
+ * must still be serviced before either remote completion or native relay. */
+static void run_mailbox_cases(void)
+{
+	for (unsigned int native = 0; native < 2; native++) {
+		producer_setup(0, true, native ? PRODUCER_NATIVE : PRODUCER_COMPLETE);
+		mailbox_case = true;
+		CHECK(kd_spin_nested_lock(active_lock, &producer_regs, &producer_frame) ==
+		      (native ? KD_SPIN_NESTED_NATIVE : KD_SPIN_NESTED_DELEGATED));
+		CHECK(poll_calls == 1 && relax_calls == 3);
+		CHECK(!producer_frame.remote_request && !ticket_count);
+		CHECK(!kd_spin_nodes[0].count);
+	}
+	mailbox_case = producer_case = false;
 }
 
 static void producer_cancel_case(int count, unsigned int failure)

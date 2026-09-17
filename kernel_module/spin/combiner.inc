@@ -158,8 +158,8 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	frame->spin_origin = curr_node->spin_origin;
 	if ((curr_node->jit_waiter &&
 	     kd_exec_frame_set_lock_entries(
-		     frame, jit_context->lock_addr, jit_context->lock_kind,
-		     jit_context->lock_node, jit_context->lock_released,
+		     frame, frame->jit_lock_addr, frame->jit_lock_kind,
+		     frame->jit_lock_node, frame->jit_lock_released,
 		     jit_context->lock_depth)) ||
 	    (!curr_node->jit_waiter &&
 	     kd_exec_frame_set_lock_stack(frame,
