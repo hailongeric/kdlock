@@ -121,5 +121,7 @@ int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
 				     struct kd_exec_frame *frame);
 int kd_spin_jit_nested_cleanup(struct kd_exec_frame *frame);
 int kd_spin_jit_abort_cleanup(struct kd_exec_frame *frame);
+/* Materialize the combiner checkpoint before the first complex wrapper exit. */
+void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame);
 
 #endif /* __KD_SPINLOCK_H__ */

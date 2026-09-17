@@ -71,10 +71,10 @@ diff --git a/kernel_module/Makefile b/kernel_module/Makefile
 diff --git a/kernel_module/exe.c b/kernel_module/exe.c
 --- a/kernel_module/exe.c
 +++ b/kernel_module/exe.c
-@@ -219,7 +219,7 @@
- 				   entry_ip);
+@@ -221,7 +221,7 @@
+ 	if (!kd_exe_entry_is_ready(exe, 0, entry_ip)) {
+ 		if (!exe)
  			return KD_EXE_NO_RUN;
- 		}
 -		KD_PR_INFO(
 +		KD_PR_ROUTINE(
  			"translation not ready: exe=%px status=%d entry=%lx ip=%lx pid=%d\n",

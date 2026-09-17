@@ -9,6 +9,20 @@ Complete the main behavior before optional features and performance work.
 
 ## Current Checkpoint
 
+**2026-09-17, frame optimization:** frame and lock storage now reuse inactive
+slots using their live depths, with explicit initialization of readable state.
+The ordinary physical single-spin-lock path defers combiner snapshots and
+skips generic completion walks; independent input/output register packets and
+owner/ACK/source lifetimes remain. See [frame protocol](DESIGN.md#91-frames-and-lock-ledger).
+The [focused validation](../tests/README.md#frame-fast-validation) records nine
+unit programs and live results, including a full mode-8 rerun after fixing its
+IRQ-off SELFTEST observer. The seven-role/two-CPU mutex mode-4 run soft-locked;
+it remains a failure, without an old-code comparison establishing attribution.
+The [four-point benchmark](../bench/spin_cacheline/results/20260917-frame-fast.md)
+compares this change with the
+[preceding full spin scan](../bench/spin_cacheline/results/20260917-stackless.md).
+Neither is a full functional-suite PASS.
+
 **2026-09-17:** spin delegation accepts IRQ-off task entries and no longer
 allocates a per-CPU 8 KiB C execution stack. Physical waiters save/mask local
 IRQs before publication, publish and PAUSE-poll without stack accesses, and
@@ -17,7 +31,8 @@ incoming IRQ state is preserved; virtual waiters retain remote owner/ACK
 service and mutex retains its separate stacks. Task/CPU pins and ownership
 checks remain. The [targeted validation](../tests/README.md#spin-stackless-validation)
 records affected units, IRQ-on/off JIT, nested/native continuation and a
-two-frame live case; no full suite or performance benchmark was run.
+two-frame live case. That earlier implementation stage did not run a full suite
+or benchmark; the subsequent measurements are linked above.
 
 Spinlock and mutex delegation both support explicit GS memory
 operations by default, using the origin waiter's base;
@@ -82,8 +97,10 @@ ends this JIT invocation and the original waiter completes the native suffix.
 Admission and emission share the same scope. This replaces the old requirement
 to admit that waiter-only suffix; it does not allow unchecked live JIT paths.
 
-Main mode 0-8, guarded nested/register continuation and learned mutex-depth
-gates pass actual JIT. Context refusals, native controls and real kernel
+Historical main mode 0-8, guarded nested/register continuation and learned
+mutex-depth gates have actual JIT evidence for their frozen versions; current
+pinned polling does not inherit the old same-CPU mode-4 PASS. Context refusals,
+native controls and real kernel
 task/RCU/owner-ACK probes without JIT remain distinct acceptance categories.
 Exact batch dates, counts and source identities live in [VALIDATION](VALIDATION.md),
 not repeated task summaries. Passing these gates does not close the whole project.

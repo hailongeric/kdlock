@@ -572,6 +572,9 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 		      active.jit_lock_depth == 2);
 		return KD_EXE_RUN_TO_UNLOCK;
 	}
+	/* Substitute the dispatch boundary, then use the real checkpoint helper
+	 * before mutating nested ownership just as the production dispatcher does. */
+	kd_spin_jit_prepare_complex(&active);
 	CHECK(kd_spin_entry_begin(&origins[1], KD_SPIN_ENTRY_VIRTUAL, &b_ref) ==
 	      0);
 	kd_spin_word((struct qspinlock *)&origins[1])->locked = 1;

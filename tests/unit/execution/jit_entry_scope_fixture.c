@@ -256,6 +256,16 @@ static int handle_known_call(struct pt_regs *regs, unsigned long outer)
 	}
 	return known_result;
 }
+static unsigned int complex_preparations;
+static unsigned long raw_spin_unlock_addr = 0x9000;
+/* CPU combiner storage belongs to the backend fixture. Observe its transition
+ * here; all wrapper classification and continuation decisions are production. */
+void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
+{
+	CHECK(frame->spin_simple && !frame->mutex_backend);
+	complex_preparations++;
+	frame->spin_simple = false;
+}
 #include "frame_code.h"
 
 static void reset(void)
@@ -264,6 +274,7 @@ static void reset(void)
 	static bool captured;
 
 	kd_jit_timing = false;
+	complex_preparations = 0;
 	kd_jit_timing_reset();
 	timing_clock_active = false;
 	timing_clock = timing_reads = 0;
@@ -1123,8 +1134,45 @@ static void check_native_handoff_timings(void)
 	reset();
 }
 
+static void check_simple_spin(void)
+{
+	reset();
+	active.spin_simple = true;
+	steps[0] = (struct step){ KD_EXE_CALL_MISS, 0x9000, 1, 0 };
+	CHECK(run() == KD_EXE_RUN_TO_UNLOCK);
+	CHECK(active.executed && active.spin_simple && calls == 1 &&
+	      !known_calls && !complex_preparations);
+
+	/* A service promotes once, before the service runs; its eventual outer
+	 * unlock uses the generic continuation path even when the ledger is 1. */
+	reset();
+	active.spin_simple = true;
+	steps[0] = (struct step){ KD_EXE_HOSTCALL, kd_hostcalls[0].addr, 1, -8 };
+	steps[1] = (struct step){ KD_EXE_CALL_MISS, 0x9000, 1, 0 };
+	CHECK(run() == KD_EXE_RUN_TO_UNLOCK);
+	CHECK(!active.spin_simple && complex_preparations == 1 &&
+	      calls == 2 && known_calls == 1 && service_calls[0] == 1);
+
+	/* The CALL target alone is insufficient; a different lock must take the
+	 * existing control/error handling instead of completing this frame. */
+	reset();
+	active.spin_simple = true;
+	active.regs.di++;
+	known_result = -EINVAL;
+	steps[0] = (struct step){ KD_EXE_CALL_MISS, 0x9000, 1, 0 };
+	CHECK(run() == KD_EXE_RUN_ERROR);
+	CHECK(!active.spin_simple && complex_preparations == 1 && known_calls == 1);
+
+	reset();
+	active.spin_simple = true;
+	steps[0].reason = KD_EXE_ENTRY_REFUSED;
+	CHECK(run() == KD_EXE_NO_RUN);
+	CHECK(active.spin_simple && !active.executed && !complex_preparations);
+}
+
 int main(void)
 {
+	check_simple_spin();
 	check_pristine_refusal();
 	check_local_continuation();
 	check_remote_scope();

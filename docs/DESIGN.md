@@ -1261,6 +1261,35 @@ not inferred from logical depth. Cross-backend controls are rejected.
 Pre-entry context/resource refusal leaves valid queue/native ownership intact;
 it does not grant permission to replay an executed frame.
 
+The per-CPU context's `depth` owns the live frame prefix; `jit_lock_depth`
+owns each frame's live lock prefix. Push initializes readable discriminators,
+request pointers and the active register packet, without clearing the entire
+frame or inactive lock slots. Pop still checks physical LIFO ownership,
+terminal state, remote dependencies and native routing/ACKs before releasing
+the source lease. It marks the slot UNUSED and decreases depth without clearing
+its payload. Whole-context scans at push/pop are SELFTEST diagnostics; production
+retains capacity, owner and lifetime checks. Lock readers never inspect the
+inactive tail. Control-CALL payload is initialized before publishing its phase.
+
+A physical spin root with one lock starts with `spin_simple`. Its first wrapper
+return can complete directly only for CALL_MISS at the exact spin-unlock target
+with the matching outer lock. This marks that single ledger entry released and
+the frame complete; physical batch ownership remains unchanged. Other exits
+entering generic dispatch capture the combiner checkpoint and clear
+`spin_simple` before servicing a control/hostcall or publishing native/remote
+work. Remote requests and physically nested frames initialize their checkpoint
+at entry. An unstarted
+refusal needs no checkpoint. This avoids snapshot/compare, generic event and
+nested cleanup walks for the ordinary single-lock completion.
+
+The frame retains its own `pt_regs`: push copies the queued input once, and
+normal pop writes the result back once before waiter completion is published.
+Native handoff instead copies the continuation before waking the waiter, then
+pops without another copy after ACK. The waiter may reuse its node during that
+interval, so aliasing `frame->regs` to node storage would break its lifetime.
+The queued input also stays intact for a pre-body refusal. These software
+packets do not themselves switch the executor's CPU registers or C stack.
+
 ### 9.2 A/B Execution
 
 Spin B may enqueue a virtual request and resume remotely; mutex B is acquired

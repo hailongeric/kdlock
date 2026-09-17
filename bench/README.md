@@ -39,10 +39,17 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 JIT wrapper 返回及 waiter 恢复，列出重复查表、全局锁、frame 校验/复制和
 诊断计数。锁外乘加发生在原 waiter 恢复后；combiner 的连续代理批次仍持有原锁。
 
-[锁外乘加后的最新完整结果](spin_cacheline/results/20260915-post-work.md) 已按
+[2026-09-17 的最新完整结果](spin_cacheline/results/20260917-stackless.md) 已按
 每线程 10 万次、1/4/8/12/16/20 线程完成 120 个会话。带实际 JIT 的最高观测
-吞吐为 0.461 Mops/s（1 条 cacheline、4 线程），多线程最高 best/median 为
-0.1871（16 条 cacheline、20 线程）；所有测量及排空检查通过。
+吞吐为 **0.647 Mops/s**（1 条 cacheline、4 线程），多线程最高 best/median 为
+**0.2935**（16 条 cacheline、16 线程）；所有测量及排空检查通过。
+相较 [9/15 的相同负载](spin_cacheline/results/20260915-post-work.md)，
+多线程最佳吞吐提升幅度中位数为 **52.9%**，仍明显慢于原生。
+
+随后完成 [frame 单锁路径精简的四点定向复测](spin_cacheline/results/20260917-frame-fast.md)：
+16/16 会话通过，20 线程的 1/16 cacheline 吞吐为 **0.855/0.850 Mops/s**，
+较同日完整扫描对应点提升 **49.5%/48.6%**；4 线程提升 **12.0%/15.5%**。
+这是部分配置、每组两个样本的观测结果；JIT 比例变化和重启因素见结果页。
 
 增加锁外乘加前，2026-09-15 的[十万次完整重跑](spin_cacheline/README.md#rerun-100k-no24)
 选择 1、4、8、12、16、20 线程，排除 24 线程；五种 cacheline 规模共 120 个

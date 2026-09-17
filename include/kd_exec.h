@@ -114,6 +114,9 @@ struct kd_exec_frame {
 	int remote_result;
 	bool executed;
 	bool mutex_backend;
+	/* Root spin invocation before its first service/control continuation.
+	 * A different wrapper exit materializes saved_combiner and clears this. */
+	bool spin_simple;
 	struct kd_exec_outer_unlock *outer_unlock_hook;
 	struct kd_call_state control_call;
 	struct list_head native_link;
@@ -142,6 +145,7 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task);
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs);
+int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame);
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame);
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 				     const struct pt_regs *regs);

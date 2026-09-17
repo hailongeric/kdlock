@@ -6,6 +6,36 @@
 生产 provider 的专用协议观察器在 `tests/kernel/`。
 性能对比使用 [bench/README.md](../bench/README.md) 的独立入口。
 
+<a id="frame-fast-validation"></a>
+
+## 2026-09-17：Frame 复用与单锁路径
+
+2026-09-17 的 frame 主路径精简在 recovery guest `6.1.159-kdstatic2`
+（Build ID `460d77502af4709a0cca794b322cedc20c2cc478`）验证：两个基础程序及
+`test_exec_capacity`、`test_jit_entry_scope`、`test_spin_outer_progress`、
+`test_remote_outer`、`test_native_after_outer`、`test_mutex_outer_progress`、
+`test_spin_shadow` 共 9 项通过。新增检查覆盖带旧数据的 frame 槽复用、寄存器包
+独立性、单锁完成与复杂分支切换。live 的 `mode-0`、`mode-1`、`mode-3`、
+`registers-0-1`、`node-physical-2-0` 通过；`mode-8` 在以下观察器修正后完整重跑通过。
+
+远端退出 SELFTEST 原先要求 IRQ-on，与当前 spin 全程 IRQ-off 的等待合同冲突，
+首次 `mode-8` 因观察器 `valid=0` 跳过退出等待而失败，数据正确且会话已排空。
+现在允许任一初始 IRQ 状态，同时继续检查整个观察期间 IRQ、CPU、preempt 不变；
+单元检查覆盖 IRQ-off 成功和中途 IRQ 改变的拒绝。真实任务退出、ACK 后才 pop、
+下一请求不得越过该观察点的原断言均保留，修正后完整三阶段 `mode-8` 通过。
+
+<a id="mutex-pinned-mode4-failure"></a>
+
+本轮另一次 `mode-4` **失败，未修复或计作通过**：七角色/双 CPU 场景出现
+soft lockup，SSH 超时后按恢复流程保存宿主串口/CPU 状态并重启。两个 RIP
+与未改动的 `kd_mutex_wait_and_lock+0x1c` gate 轮询吻合，符合已有
+[忙等 waiter 需要独立可运行依赖](../docs/DESIGN.md#pinned-busy-polling) 的限制；
+没有以旧版对照重跑证明归因，也不把独立 CPU 的 `mode-3` 当成该场景的替代通过。
+故障前 guest 临时目录随重启清理，宿主保留串口与 monitor 记录；后续证据改存
+guest `/root/kdlock-evidence/frame-fast-20260917/`，各次冻结版本分别保留。
+宿主归档和可读副本位于
+[`/tmp/kdlock-frame-fast-20260917/`](/tmp/kdlock-frame-fast-20260917/)。
+
 ## 目录
 
 | 子目录 | 内容 |

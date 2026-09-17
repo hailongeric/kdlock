@@ -87,18 +87,12 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 	    frame->outer_lock_index != KD_EXEC_MAX_LOCK_DEPTH)
 		return false;
 
-	for (i = 0; i < KD_EXEC_MAX_LOCK_DEPTH; i++) {
-		if (i < frame->jit_lock_depth) {
-			if (!frame->jit_lock_addr[i] ||
-			    frame->jit_lock_kind[i] <= KD_EXEC_LOCK_NONE ||
-			    frame->jit_lock_kind[i] > KD_EXEC_LOCK_NATIVE)
-				return false;
-		} else if (frame->jit_lock_addr[i] ||
-			   frame->jit_lock_kind[i] != KD_EXEC_LOCK_NONE ||
-			   frame->jit_lock_node[i] ||
-			   frame->jit_lock_released[i]) {
+	/* Slots outside the live prefix are deliberately left untouched on reuse. */
+	for (i = 0; i < frame->jit_lock_depth; i++) {
+		if (!frame->jit_lock_addr[i] ||
+		    frame->jit_lock_kind[i] <= KD_EXEC_LOCK_NONE ||
+		    frame->jit_lock_kind[i] > KD_EXEC_LOCK_NATIVE)
 			return false;
-		}
 	}
 
 	return true;
@@ -114,14 +108,8 @@ static bool kd_exec_context_validate(const struct kd_exec_context *ctx)
 	    (!!ctx->depth != !!ctx->owner))
 		return false;
 
-	for (i = 0; i < KD_EXEC_MAX_NESTING; i++) {
+	for (i = 0; i < ctx->depth; i++) {
 		const struct kd_exec_frame *frame = &ctx->frames[i];
-
-		if (i >= ctx->depth) {
-			if (kd_exec_frame_state(frame) != KD_EXEC_FRAME_UNUSED)
-				return false;
-			continue;
-		}
 
 		if (!kd_exec_frame_validate(frame) || frame->depth != i ||
 		    (i == 0 ? frame->parent != NULL :
@@ -204,8 +192,12 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 	bool first_frame;
 
 	if (!regs || !gsbase || !logical_task ||
+	    held_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
 	    ctx->depth >= KD_EXEC_MAX_NESTING ||
+	    (!!ctx->depth != !!ctx->owner) ||
+#ifdef KDLOCK_SELFTEST
 	    !kd_exec_context_validate(ctx) ||
+#endif
 	    (ctx->depth && ctx->owner != current))
 		return NULL;
 	/* Closing and this get serialize so retirement cannot miss a new frame. */
@@ -216,20 +208,36 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 	if (first_frame)
 		ctx->owner = current;
 	frame = &ctx->frames[ctx->depth];
-	memset(frame, 0, sizeof(*frame));
+	/* Initialize every readable discriminator, not the inactive arrays or
+	 * branch-local payloads. regs must outlive queue-node reuse on native ACK.
+	 * control_call's payload is initialized by kd_call_begin before use;
+	 * saved_combiner is initialized only by the spin complex-path producer. */
 	frame->regs = *regs;
 	frame->entry_ip = entry_ip;
 	frame->outer_lock_addr = outer_lock_addr;
+	frame->continuation_ip = 0;
+	frame->continuation_sp = 0;
 	frame->gsbase = gsbase;
 	frame->logical_task = logical_task;
 	frame->logical_pid = logical_task->pid;
 	frame->waiter = waiter;
 	frame->outgoing_rsp_ptr = outgoing_rsp_ptr;
 	frame->parent = kd_exec_current_frame();
+	frame->resume_target = NULL;
+	frame->remote_request = NULL;
 	frame->depth = ctx->depth;
 	frame->held_lock_depth = held_lock_depth;
 	frame->outer_lock_depth = held_lock_depth;
 	frame->outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
+	frame->jit_lock_depth = 0;
+	frame->outer_unlock_seen = false;
+	frame->completion_seen = false;
+	frame->executed = false;
+	frame->mutex_backend = false;
+	frame->spin_simple = false;
+	frame->outer_unlock_hook = NULL;
+	frame->control_call.phase = KD_CALL_NONE;
+	frame->native_request = NULL;
 	frame->state = KD_EXEC_FRAME_RUNNING;
 	frame->remote_result = 0;
 	/* Even an unborrowed frame needs an empty routing head: terminal state
@@ -237,21 +245,24 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 	INIT_LIST_HEAD(&frame->native_link);
 	ctx->depth++;
 
+#ifdef KDLOCK_SELFTEST
 	if (!kd_exec_context_validate(ctx)) {
 		ctx->depth--;
-		memset(frame, 0, sizeof(*frame));
+		frame->state = KD_EXEC_FRAME_UNUSED;
 		if (first_frame)
 			ctx->owner = NULL;
 		kd_source_frame_put();
 		return NULL;
 	}
+#endif
 
 	return frame;
 }
 
 /* Retire only after remote dependencies and native routing/requests are gone.
  * A terminal state must not discard an outstanding owner ACK or the frame's
- * source lease. Copy the final packet before clearing physical LIFO storage. */
+ * source lease. Copy the final packet before retiring physical LIFO storage.
+ * Inactive slots have no readers: depth, not zero-filled memory, owns them. */
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
@@ -266,11 +277,12 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	    READ_ONCE(frame->remote_request) ||
 	    READ_ONCE(frame->native_request) ||
 	    !list_empty(&frame->native_link) ||
-	    (state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR) ||
-	    !kd_exec_context_validate(ctx))
+	    (state != KD_EXEC_FRAME_COMPLETE && state != KD_EXEC_FRAME_ERROR))
 		return -EBUSY;
 
 #ifdef KDLOCK_SELFTEST
+	if (!kd_exec_context_validate(ctx))
+		return -EBUSY;
 	/* Observe task exit only after native ACKs, before the real frame/lease
 	 * retires and this physical combiner can start the next logical root. */
 	kd_exec_selftest_relay_pop(frame);
@@ -278,13 +290,34 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	if (regs)
 		*regs = frame->regs;
 	ctx->depth--;
-	memset(frame, 0, sizeof(*frame));
+	frame->state = KD_EXEC_FRAME_UNUSED;
 	if (!ctx->depth)
 		ctx->owner = NULL;
 	/* The source lease covers native/remote continuation until actual pop. */
 	kd_source_frame_put();
+#ifdef KDLOCK_SELFTEST
 	if (!kd_exec_context_validate(ctx))
 		return kd_exec_invariant_failure();
+#endif
+	return 0;
+}
+
+/* Only the first wrapper return of a single-lock physical root can use this
+ * transition. The dispatcher already matched the spin unlock CALL and L.
+ * Any service/nesting/native exit clears spin_simple before doing work, so
+ * there are no child locks or remote publications to visit here. Physical L
+ * remains owned by the batch until it publishes completion/handoff. */
+int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
+{
+	if (!frame || !frame->spin_simple || !frame->executed ||
+	    frame->mutex_backend || frame->outer_unlock_seen ||
+	    frame->jit_lock_depth != 1 || frame->outer_lock_index != 0 ||
+	    frame->regs.di != frame->outer_lock_addr)
+		return -EINVAL;
+	frame->jit_lock_released[0] = true;
+	frame->outer_unlock_seen = true;
+	frame->completion_seen = true;
+	kd_exec_frame_set_state(frame, KD_EXEC_FRAME_COMPLETE);
 	return 0;
 }
 

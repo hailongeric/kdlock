@@ -32,6 +32,7 @@ static struct task_struct waiters[KD_EXEC_MAX_NESTING];
 static struct task_struct *current = &owners[0];
 static unsigned int cpu, checks, failures;
 static unsigned int fixture_preempt = 1;
+static bool fixture_irq;
 static unsigned long kd_exec_invariant_failures;
 static char report[1024];
 typedef unsigned int atomic_t;
@@ -46,7 +47,7 @@ struct mutex {
 #define atomic_read(p) (*(p))
 #define raw_smp_processor_id() cpu
 #define preempt_count() fixture_preempt
-#define irqs_disabled() false
+#define irqs_disabled() fixture_irq
 #define pr_info(...) ((void)snprintf(report, sizeof(report), __VA_ARGS__))
 #define KDLOCK_SELFTEST 1
 #define module_param_named(...)
@@ -188,6 +189,8 @@ static void cpu_relax(void)
 		exit_frame->regs.ax ^= 1;
 	if (exit_behavior == 4)
 		fixture_preempt++;
+	if (exit_behavior == 6)
+		fixture_irq = !fixture_irq;
 }
 
 static unsigned long release_order[KD_EXEC_MAX_LOCK_DEPTH];
@@ -425,8 +428,8 @@ static void exercise(unsigned int depth)
 		CHECK(!memcmp(&regs, &output, sizeof(regs)));
 		CHECK(!memcmp(before.frames, ctx->frames,
 			      ctx->depth * sizeof(*frame)));
-		CHECK(!memcmp(frame, &(struct kd_exec_frame){ 0 },
-			      sizeof(*frame)));
+		CHECK(kd_exec_frame_state(frame) == KD_EXEC_FRAME_UNUSED &&
+		      !kd_exec_frame_validate(frame));
 		CHECK(kd_exec_context_validate(ctx));
 	}
 	CHECK(!ctx->owner && !kd_exec_current_frame());
@@ -489,9 +492,9 @@ static void ledger(void)
 		CHECK(frame->jit_lock_node[i] == before.jit_lock_node[from]);
 		CHECK(frame->jit_lock_released[i] == before.jit_lock_released[from]);
 	}
-	CHECK(!frame->jit_lock_addr[i] && !frame->jit_lock_node[i] &&
-	      frame->jit_lock_kind[i] == KD_EXEC_LOCK_NONE &&
-	      !frame->jit_lock_released[i] && !frame->outer_lock_index);
+	CHECK(!frame->outer_lock_index && kd_exec_frame_validate(frame));
+	/* A removed tail is outside the ledger, regardless of its stale bytes. */
+	CHECK(!kd_exec_frame_lock_contains(frame, locks[3]));
 	REJECTS(kd_exec_frame_lock_pop(frame, 0xFFFF), -ENOENT);
 
 	/* Removing an inherited ancestor shifts the current outer's index too. */
@@ -716,6 +719,7 @@ static void waiter_exit_observer(bool after_ack, unsigned int behavior)
 	struct pt_regs expected, output;
 	unsigned long locks[2] = { 0x6000, 0x2000 };
 	bool successful = behavior < 2;
+	bool incoming_irq = fixture_irq;
 
 	if (!frame)
 		return;
@@ -786,6 +790,50 @@ static void waiter_exit_observer(bool after_ack, unsigned int behavior)
 	CHECK(!memcmp(&expected, &output, sizeof(output)));
 	fixture_preempt = 1;
 	kd_relay_exit_lock = 0;
+	fixture_irq = incoming_irq;
+}
+
+/* Reuse poisoned storage rather than zero-initialized fixtures. Only published
+ * prefixes/phase-tagged payloads may be read, and each new invocation owns its
+ * register packet even if the input node is immediately overwritten. */
+static void reuse_single(void)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+	struct kd_exec_frame *frame;
+	struct pt_regs input = registers(42), expected = input, output;
+	unsigned long lock = 0x2000;
+
+	CHECK(!ctx->depth && !ctx->owner && !source_frames);
+	memset(ctx->frames, 0xa5, sizeof(ctx->frames));
+	CHECK(kd_exec_context_validate(ctx));
+	frame = kd_exec_frame_push(&input, 0x1000, lock, NULL, NULL, 1,
+				   0x3000, &waiters[0]);
+	CHECK(frame && kd_exec_frame_validate(frame));
+	if (!frame)
+		return;
+	CHECK(!frame->executed && !frame->completion_seen &&
+	      !frame->outer_unlock_seen && !frame->mutex_backend &&
+	      !frame->spin_simple && !frame->resume_target &&
+	      !frame->remote_request && !frame->native_request &&
+	      !frame->remote_result && !frame->jit_lock_depth &&
+	      !frame->outer_unlock_hook && list_empty(&frame->native_link) &&
+	      frame->control_call.phase == KD_CALL_NONE);
+	memset(&input, 0xcc, sizeof(input));
+	CHECK(!memcmp(&expected, &frame->regs, sizeof(expected)));
+	CHECK(kd_exec_frame_set_lock_stack(frame, &lock, 1) == 0);
+	CHECK(frame->jit_lock_addr[0] == lock && !frame->jit_lock_node[0] &&
+	      !frame->jit_lock_released[0]);
+	frame->spin_simple = true;
+	CHECK(kd_exec_frame_complete_single_spin(frame) == -EINVAL);
+	frame->executed = true;
+	frame->regs.di = lock;
+	expected.di = lock;
+	CHECK(kd_exec_frame_complete_single_spin(frame) == 0);
+	CHECK(kd_exec_frame_validate(frame) && kd_exec_frame_can_complete(frame));
+	CHECK(kd_exec_frame_complete_single_spin(frame) == -EINVAL);
+	CHECK(kd_exec_frame_pop(frame, &output) == 0 && !source_frames);
+	CHECK(!memcmp(&expected, &output, sizeof(expected)));
+	CHECK(!kd_exec_current_frame() && kd_exec_context_validate(ctx));
 }
 
 int main(void)
@@ -795,6 +843,7 @@ int main(void)
 
 	CHECK(sizeof(struct pt_regs) == 168 &&
 	      sizeof(struct kd_exec_frame) == 656);
+	reuse_single();
 	for (cycle = 0; cycle < 3; cycle++) {
 		for (depth = 0; depth <= KD_EXEC_MAX_NESTING; depth++) {
 			for (cpu = 0; cpu < 2; cpu++) {
@@ -838,6 +887,14 @@ int main(void)
 				return 1;
 		}
 	}
+	/* The spin queue now holds IRQs masked across native/remote execution.
+	 * Exercise the same actual ACK/exit predicates in that captured state. */
+	fixture_irq = true;
+	for (cycle = 0; cycle < 2; cycle++) {
+		waiter_exit_observer(cycle, 0);
+		waiter_exit_observer(cycle, 6);
+	}
+	fixture_irq = false;
 	CHECK(kd_exec_invariant_failures == 0);
 	printf("production frame capacity: checks=%u failures=%u regs=%zu frame=%zu context=%zu\n",
 	       checks, failures, sizeof(struct pt_regs),

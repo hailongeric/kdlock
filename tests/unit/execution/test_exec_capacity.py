@@ -46,6 +46,7 @@ def production():
             "bool kd_exec_context_busy(void)",
             "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
             "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)",
+            "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
             "int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,",
             "int kd_exec_frame_set_lock_stack(struct kd_exec_frame *frame,",
             "int kd_exec_frame_lock_push(struct kd_exec_frame *frame,",

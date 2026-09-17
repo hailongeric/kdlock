@@ -201,14 +201,19 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 					  kd_spin_lock_stack_depth(ptr)))) {
 		KD_PR_ERR("spin JIT frame lock stack invalid lock=%px\n", lock);
 		kd_exec_frame_abort(frame);
-		curr_node->regs = frame->regs;
 		curr_node->exec_frame = NULL;
 		if (kd_exec_frame_pop(frame, &curr_node->regs))
 			KD_PR_ERR("spin JIT frame abort pop failed lock=%px\n",
 				  lock);
 		return KD_EXE_RUN_ERROR;
 	}
-	kd_spin_capture_combiner_state(&frame->saved_combiner, ptr);
+	/* The generic ledger initializes only its live prefix. Keep one entry
+	 * for a simple root so promotion to nested/native needs no reconstruction;
+	 * delay the large combiner snapshot until the first non-final exit. */
+	frame->spin_simple = !curr_node->jit_waiter && !frame->parent &&
+			     frame_lock_depth == 1;
+	if (!frame->spin_simple)
+		kd_spin_capture_combiner_state(&frame->saved_combiner, ptr);
 	frame->outer_unlock_hook = &batch->outer;
 	if (curr_node->jit_waiter) {
 		frame->resume_target = jit_context->requester;
@@ -241,6 +246,10 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	 * dispatch boundary and consume metadata before native/completion wake. */
 	if (frame->executed)
 		kd_exe_queue_timing_end(false, &curr_node->queued_at_ns, queue_end);
+	if (ret_flag == KD_EXE_RUN_TO_UNLOCK && frame->spin_simple) {
+		BUG_ON(kd_exec_frame_complete_single_spin(frame));
+		goto finish_frame;
+	}
 	if (ret_flag == KD_EXE_RUN_NATIVE) {
 		/* Remote publication can release an ancestor before this node is
 		 * woken. Start before both publications, not only local locked=0. */
@@ -292,7 +301,8 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		}
 		abort_cleaned = true;
 	}
-	if (!kd_spin_combiner_state_matches(&frame->saved_combiner, ptr)) {
+	if (!frame->spin_simple &&
+	    !kd_spin_combiner_state_matches(&frame->saved_combiner, ptr)) {
 		KD_PR_ERR(
 			"nested combiner state restore mismatch lock=%px depth=%u\n",
 			lock, frame->depth);
@@ -325,7 +335,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		 * reused. Keep that packet off the recursively nested C stack. */
 		frame->regs = curr_node->regs;
 	}
-	curr_node->regs = frame->regs;
+finish_frame:
 	/* Only a native waiter needs the saved-entry return trampoline. A
 	 * virtual waiter acquires B and continues its existing parent frame. */
 	curr_node->jit_retry = !curr_node->jit_waiter &&
@@ -338,10 +348,12 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 				0UL :
 				frame->continuation_ip);
 	curr_node->exec_frame = NULL;
-	if (ret_flag == KD_EXE_RUN_TO_UNLOCK)
-		BUG_ON(kd_exec_remote_complete(frame));
-	else
-		kd_exec_remote_cancel(frame);
+	if (!frame->spin_simple) {
+		if (ret_flag == KD_EXE_RUN_TO_UNLOCK)
+			BUG_ON(kd_exec_remote_complete(frame));
+		else
+			kd_exec_remote_cancel(frame);
+	}
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_refusal_cancel(frame);
 #endif

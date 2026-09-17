@@ -37,10 +37,7 @@ int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,
 	if (frame->outer_lock_addr && outer_index == KD_EXEC_MAX_LOCK_DEPTH)
 		return -ENOENT;
 
-	memset(frame->jit_lock_addr, 0, sizeof(frame->jit_lock_addr));
-	memset(frame->jit_lock_kind, 0, sizeof(frame->jit_lock_kind));
-	memset(frame->jit_lock_node, 0, sizeof(frame->jit_lock_node));
-	memset(frame->jit_lock_released, 0, sizeof(frame->jit_lock_released));
+	/* jit_lock_depth bounds all readers; unused tail entries need no writes. */
 	for (i = 0; i < depth; i++) {
 		frame->jit_lock_addr[i] = lock_addr[i];
 		frame->jit_lock_kind[i] = lock_kind ? lock_kind[i] :
@@ -111,11 +108,6 @@ int kd_exec_frame_lock_pop(struct kd_exec_frame *frame, unsigned long lock_addr)
 			frame->jit_lock_released[i - 1] =
 				frame->jit_lock_released[i];
 		}
-		frame->jit_lock_addr[frame->jit_lock_depth - 1] = 0;
-		frame->jit_lock_kind[frame->jit_lock_depth - 1] =
-			KD_EXEC_LOCK_NONE;
-		frame->jit_lock_node[frame->jit_lock_depth - 1] = NULL;
-		frame->jit_lock_released[frame->jit_lock_depth - 1] = false;
 		frame->jit_lock_depth--;
 		if (frame->held_lock_depth)
 			frame->held_lock_depth--;

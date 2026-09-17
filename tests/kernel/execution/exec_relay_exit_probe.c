@@ -53,11 +53,14 @@ static void kd_exec_selftest_relay_arm(struct kd_exec_frame *frame,
 	kd_relay_exit.preempt = preempt_count();
 	kd_relay_exit.irq = irqs_disabled();
 	kd_relay_exit.after_ack = after_ack;
+	/* Stackless spin combiners retain the queue's IRQ mask. Either incoming
+	 * state is admissible here; release must preserve the captured state,
+	 * CPU and preemption pin while observing the real waiter exit. */
 	kd_relay_exit.valid =
 		alive && !frame->parent && frame->executed &&
 		kd_exec_current_frame() == frame &&
 		!frame->native_request && !frame->remote_request &&
-		kd_relay_exit.preempt && !kd_relay_exit.irq;
+		kd_relay_exit.preempt;
 	if (after_ack)
 		kd_relay_exit.valid &=
 			remaining == 1 && frame->outer_lock_index > 0 &&
@@ -72,11 +75,12 @@ static void kd_exec_selftest_relay_arm(struct kd_exec_frame *frame,
 			frame->control_call.phase == KD_CALL_COMPLETE &&
 			frame->remote_result == KD_EXEC_REMOTE_NATIVE;
 	kd_relay_exit.frame = frame;
-	pr_info("%s arm: task=%d cpu=%u owner=%lx outer=%lx entry=%lx ip=%lx sp=%lx remaining=%u alive=%u valid=%u\n",
+	pr_info("%s arm: task=%d cpu=%u owner=%lx outer=%lx entry=%lx ip=%lx sp=%lx remaining=%u alive=%u valid=%u preempt=%u irq=%u\n",
 		after_ack ? "kd_child_exit" : "kd_relay_exit",
 		frame->logical_pid, kd_relay_exit.cpu, (unsigned long)current,
 		frame->outer_lock_addr, frame->entry_ip, frame->regs.ip,
-		frame->regs.sp, remaining, alive, kd_relay_exit.valid);
+		frame->regs.sp, remaining, alive, kd_relay_exit.valid,
+		kd_relay_exit.preempt, kd_relay_exit.irq);
 }
 
 static void kd_exec_selftest_relay_release(struct kd_exec_frame *frame)

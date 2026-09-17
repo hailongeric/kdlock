@@ -140,6 +140,18 @@ kd_spin_combiner_state_matches(const struct kd_combiner_state *saved,
 	return true;
 }
 
+void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
+{
+	/* Before the first service/control exit only translated waiter code has
+	 * run; it has not changed this executor's combiner metadata. Capture now,
+	 * before nested acquisition, hostcall or native/remote publication. */
+	if (frame->spin_simple) {
+		kd_spin_capture_combiner_state(&frame->saved_combiner,
+					       this_cpu_ptr(&local_shadow_stack));
+		frame->spin_simple = false;
+	}
+}
+
 static __always_inline void kd_spin_diag_invariant_failure(void)
 {
 	atomic64_inc(&kd_spin_diag_invariant_failures);

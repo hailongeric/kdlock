@@ -452,19 +452,21 @@ execute_cs(L, node, batch):
         记录 NOT_READY 原子诊断；kd_exe_add(...); return NO_RUN
 
     frame = kd_exec_frame_push(node.regs, RIP, L, node, shadow, depth, GS, task):
-        检查 CPU context owner/depth；validate_context 扫描 8 个 frame 槽
+        检查 CPU context owner/depth/held_lock_depth
+        SELFTEST 构建才做 push 前后的完整 context 校验
         kd_source_frame_get():
             global_source_lock irqsave；检查 OPEN/frames 上限
             try_module_get(provider)；frames++；unlock_irqrestore
-        memset(frame, 0, sizeof(frame))
         frame.regs = node.regs                 // 整个 pt_regs 复制
         设置 entry/L/GS/logical_task/parent/depth/state=RUNNING 等字段
-        初始化 native_link；context.depth++；再次 validate_context
+        重置请求指针/完成标志/phase 等有效状态；不清空整个 frame
+        初始化 native_link；context.depth++
     node.exec_frame = frame；frame.spin_origin = node.spin_origin
     kd_exec_frame_set_lock_stack(frame, shadow.lock_addr, depth=1):
         检查输入锁、重复项、outer 的位置
-        清空 4 个完整锁向量数组，各容量 8；填入 L；validate_frame
-    capture_combiner_state：复制 8 项锁地址及 CPU/栈/IRQ 等状态
+        只填入有效项 L；validate_frame 只遍历有效锁前缀
+    frame.spin_simple = true                   // 物理 root、单锁
+    暂不 capture_combiner_state；复杂入口在进入时保存
     frame.outer_unlock_hook = batch.outer
     queue_end = timing_start()                 // 关闭时不读时钟
     result = kd_exe_on_call_hl_entry(exe, frame.regs, RIP, L)
@@ -473,8 +475,8 @@ execute_cs(L, node, batch):
 ```
 
 每个被代理请求都有自己的 frame push/pop，并不是整个批次只创建一次。
-frame 来自固定 per-CPU 数组，仍会逐请求清零、复制和校验；“没有动态分配”
-不意味着这些内存操作免费。`kd_source_frame_get/put` 还逐请求更新全局生命周期状态。
+frame 来自固定 per-CPU 数组，depth 决定有效槽和锁前缀，不再清零整个 frame。
+仍需初始化可读状态并复制寄存器；`kd_source_frame_get/put` 逐请求更新全局生命周期状态。
 
 ### 5.2 C dispatcher 的常见一次 wrapper 路径
 
@@ -505,14 +507,12 @@ kd_exe_on_call_hl_entry(exe, regs, RIP, L):
         body_reported = true
 
     // 当前 sc_body_N 正常返回 args[0]=CALL_MISS
-    if regs.ip == 原 _raw_spin_unlock 地址 and regs.di == L:
-        timing_start()
-        handle_known_call：
-            清 control_call.phase；检查无混合 spin/mutex 后端
-            判断为 outer unlock 且没有未释放的 nested lock
-            return KNOWN_OUTER_UNLOCK         // 不调用 Linux unlock，不再次进入 wrapper
-        timing_end(CONTROL)
+    if frame.spin_simple and args[0] == CALL_MISS
+       and regs.ip == 原 _raw_spin_unlock 地址 and regs.di == L:
         result = RUN_TO_UNLOCK
+    else:
+        若仍是 simple，先保存 combiner 快照、清除标志
+        进入原有 CALL/hostcall/native/异常处理；复杂 control 保留 CONTROL 计时
     mb()                                      // dispatcher 退出公共全屏障
     timing_end(DISPATCH, dispatch_start)
     return result
@@ -582,27 +582,20 @@ JIT 机器码反汇编**。只数 `JIT.S` 的计数更新会漏掉 wrapper 和�
 
 ```text
 execute_cs 收到 RUN_TO_UNLOCK：
-    record_event(OUTER_UNLOCK):
-        validate_frame；检查 L/状态/regs.di
-        outer_unlock_seen = true
-        lock_mark_released(L)：再次 validate_frame；查向量，标记逻辑释放
-        没有 nested/remote 依赖 → 不执行 batch.outer.release，不释放物理 L
-    kd_spin_jit_nested_cleanup(frame):
-        检查 can_complete：逻辑锁已释放且无 remote pending
-        当前 depth=1，没有 nested 项需要实际清理
-    combiner_state_matches：检查深度/CPU/栈/IRQ，比较 8 项锁地址
-    frame_complete：validate_frame；can_complete；completion_seen=true
-                    发布 COMPLETE；再次 validate_frame
-    node.regs = frame.regs                     // 一次完整复制
+    if frame.spin_simple:
+        complete_single_spin：检查单锁/执行状态/regs.di
+        标记唯一锁逻辑释放、outer_unlock_seen、completion_seen，发布 COMPLETE
+        不释放物理 L；跳过 generic event、nested cleanup、snapshot compare
+    else:
+        使用原有 outer event、nested cleanup、combiner compare、complete
     node.jit_retry = false；node.exec_frame = NULL
-    remote_complete(frame)：无 parent，立即返回
+    非 simple 才处理 remote_complete
     frame_pop(frame, &node.regs):
         检查当前 owner、LIFO、terminal 状态、remote/native 请求与链表
-        validate_context
-        node.regs = frame.regs                 // 当前源码在 pop 中又复制一次
-        context.depth--；memset(frame, 0, sizeof(frame))；清 context.owner
+        SELFTEST 构建才做 pop 前后的完整 context 校验
+        node.regs = frame.regs                 // 正常完成唯一一次回写
+        context.depth--；state=UNUSED；空栈时清 context.owner；不清空 frame
         source_frame_put：全局 source irqsave 下 frames--；module_put(provider)
-        再次 validate_context
     查诊断槽；atomic64_inc(JIT_SUCCESS)，检查 max_depth
     if !bench_quiet: 打印成功日志
     返回 run_combiner；由它 release-store node.completed/locked
@@ -672,17 +665,17 @@ owner 仍需等到 S/L 允许获取；不能删掉 S 的等待就让它并行修
 | 重复 gate map 查询 | 已有 gate 的慢入口在 begin 查一次，随后 request/batch 传递 S 和物理 ticket；remember、pending/tail、execute_cs 和普通 unlock 不再查 map | 已实现 origin release/acquire 发布与无锁读取；创建仍在锁内复查，诊断/无本地 ticket 的 OOO 查询保留；实际耗时收益尚未测量 |
 | ticket 查找/状态迁移 | 无 pin 的 native-active 查询不扫描；begin 仍扫描 32 槽；find 复用已有 pin，entry_gate 无 guard；状态修改仍使用 guard | 已移除临时 pin/unpin 和本地 gate 读取锁，合并重复准入检查；保留代次、owner、ACK 和 pin 的终点 |
 | 执行注册表查找 | spin/mutex 的 `execute_cs` 通过 `kd_exe_find_ready` 查一次，将 exe 传入 dispatcher；成功路径由 3 次 `kd_get_exe` 减为 1 次，不含请求入口 | 已复用稳定条目；frame 准备后仍 acquire 复查 NORMAL、source OPEN、身份和后端，保留退休同步；实际耗时收益尚未测量 |
-| frame/context 校验 | 常见成功路径 8 次完整 `validate_frame`；push/pop 合计 4 次 `validate_context`，每次遍历 8 个 frame 槽 | 区分状态转换必须验证的字段与同一阶段重复验证；不能据低耗时猜测移除正确性条件 |
-| frame 清零/复制 | 每次 push/pop 各清零整个 frame；设置锁栈再清 4 个容量 8 的数组；node→frame 复制一次，frame→node 在完成处及 pop 各一次 | 优先核查重复复制、重复清零；若使用单层专用路径，必须保持初始化/未使用项不变量 |
+| frame/context 校验 | 普通构建单锁成功路径 2 次 `validate_frame`，只遍历有效锁；push/pop 完整 context 扫描仅 SELFTEST 保留 | 单锁完成专用分支跳过通用事件链；保留源租约、owner、容量、ACK 和终态约束 |
+| frame 清零/复制 | 无逐请求整块 frame/锁数组清零；node→frame、frame→node 各一次 | depth 限定有效前缀；复用时仍初始化状态标签；独立寄存器包跨越 native 唤醒后的节点复用 |
 | source frame lease | 每代理一次，get/put 各一次全局 source irqsave；provider module 引用增减 | 评估按仍存活的 batch 保留 lease 的可能性及退休语义；不可凭没有 translator 就取消 frame 生命周期保护 |
 | 常规诊断计数 | SLOWPATH、COMBINER、JIT_SUCCESS、waiter_count 在同锁共享诊断槽上做全局原子 RMW；quiet 不关闭 | 区分统计量与协议状态；可评估纯统计转 per-CPU，不能删除拒绝 latch 或排空检查 |
 | wrapper 和生成代码 | 每次 JIT 保存/恢复寄存器、spill、写虚拟 CALL 栈、间接调用和返回；正文存在地址重写指令 | 依据已证明的寄存器活跃性/出口契约减少搬运；保持两元素 ABI 和实际正文标记 |
 | 屏障、pin 与原锁 | dispatcher `mb()`、队列 acquire/release、ticket pin、原 L 原子获取/释放 | 按具体先后关系证明是否冗余；不能将真实排斥和完成发布删掉作为提速 |
 
-8 次 `validate_frame` 的来源：push 后 context 校验 1 次、设置锁栈 1 次、dispatcher
-入口 1 次、outer event 与 lock-mark 各 1 次、complete 前后各 1 次、pop 前 context
-校验 1 次。它每次检查全部 8 个锁槽，包括应为空的尾部，不是只检查实际的一个 L。
-`context` 在空栈时不调用 frame 校验，但仍遍历 8 个槽的 UNUSED 状态。
+单锁的 2 次 `validate_frame` 分别来自设置锁记录和 dispatcher 入口。
+第一次 wrapper 返回只有精确匹配 spin unlock 的 CALL_MISS 才保留 `spin_simple`；
+其他返回在处理服务/CALL/native/remote 之前保存 combiner 快照并清除该标志。
+因此正常单锁路径也省去了完整 combiner 快照与比较；复杂路径继续使用原协议。
 
 ### 6.2 已有采样支持什么结论
 
@@ -703,7 +696,7 @@ owner 仍需等到 S/L 允许获取；不能删掉 S 的等待就让它并行修
 第 6.1 节多数 frame/queue 开销只会影响慢入口或真实代理，不能改善已命中的
 单线程 native fast 路径。
 
-重复注册、gate 传递和执行条目复用已完成优化，frame 重复搬运仍待检查；收益需要相同源码/内核/参数的
+重复注册、gate 传递、执行条目复用与单锁 frame 精简已实现；开销归因需要对应版本的
 独立 [profile.py](profile.py) 核对改变后的开销位置与 JIT 差值。队列等待占比、
 实际 batch 大小和服务速度需要一起解释；本文没有新采样，以上候选项没有给出
 未经测量的提速比例，也不能把最近扫描的 best/median 当作这些修改的收益。

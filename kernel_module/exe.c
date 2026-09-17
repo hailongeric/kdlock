@@ -317,6 +317,20 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 		}
 		resume_after_hostcall = false;
 
+		/* A fresh physical single-lock root needs no control transaction or
+		 * combiner checkpoint for its final unlock. Match the backend's exact
+		 * CALL target as well as L; mixed mutex/spin exits stay rejected below.
+		 * Every other exit materializes complex state BEFORE its side effects. */
+		if (frame->spin_simple) {
+			if (args[0] == KD_EXE_CALL_MISS &&
+			    regs->ip == raw_spin_unlock_addr &&
+			    regs->di == outer_lock_addr) {
+				ret_flag = KD_EXE_RUN_TO_UNLOCK;
+				break;
+			}
+			kd_spin_jit_prepare_complex(frame);
+		}
+
 		if (args[0] == KD_EXE_NORMAL) {
 			kd_jit_log_hl_error("UNSUPPORTED_SYSCALL", frame, regs,
 					    args[0], regs->ax,

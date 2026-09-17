@@ -91,6 +91,7 @@ def main():
         "bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame)",
         "int kd_exec_frame_record_event(struct kd_exec_frame *frame,",
         "int kd_exec_frame_complete(struct kd_exec_frame *frame)",
+        "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
         "int kd_exec_frame_abort(struct kd_exec_frame *frame)",
     ):
         code += definition(frame, marker) + "\n"
@@ -112,6 +113,7 @@ def main():
             "static bool\n",
         ),
         ("static inline bool check_irq_node(struct kd_spin_node *node)", ""),
+        ("void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)", ""),
         ("clear_locked_set_completed(struct kd_spin_node *lock)", "static void\n"),
         ("static __always_inline void set_locked(struct qspinlock *word)", ""),
         (

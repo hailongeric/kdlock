@@ -169,6 +169,20 @@ IRQ 屏蔽覆盖发布、等待和 combiner 执行，恢复时保留入口状态
 逐步伪代码见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md#42-发布请求等待和恢复入口)，
 已运行范围见 [定向验证](../tests/README.md#spin-stackless-validation)。
 
+### 2.3 Frame 复用与单锁完成
+
+context 的 `depth` 和 frame 的 `jit_lock_depth` 分别界定有效槽位；push 显式
+初始化可读状态，pop 验证生命周期后退休槽位，均不清空整个 frame 或无效锁记录。
+输入仍复制到独立 `frame->regs`；普通完成由 pop 写回一次，native 交接则在
+唤醒 waiter 前写回，ACK 后 pop 不再复制。depth 不能替代这些包和所有权检查。
+
+单锁、无物理父 frame 的 spin root 首次在匹配的 outer unlock 退出时直接完成；
+需要通用分发的其他出口先建立 combiner 快照，再处理控制调用、native 或远端工作。
+远端/物理嵌套请求在入口就建立快照；尚未执行的入口拒绝不需要快照。
+完整约束见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)，逐步操作见
+[执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)，验证见
+[frame 记录](../tests/README.md#frame-fast-validation)。
+
 ## 3. 环境与操作
 
 第一次手动操作先读 [代码地图与逐步运行](PROJECT_GUIDE.md#3-一步一步运行)：
@@ -2223,6 +2237,11 @@ KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh \
 
 ### 6.12 同 CPU 的嵌套 Mutex JIT
 
+以下保留该用例的角色和判定定义。当前禁止抢占忙等策略下，2026-09-17 的
+重跑出现 soft lockup，详见 [失败记录](../tests/README.md#mutex-pinned-mode4-failure)。
+旧版可调度等待的 PASS 不适用于当前策略；同 CPU 的进度依赖需要满足
+[独立可运行条件](DESIGN.md#pinned-busy-polling)，未进行旧版对照来确定本次故障归因。
+
 既有 `mode-4` 的第一阶段使用七角色、两个 CPU，替代此前七个角色各占一个 CPU 的放置。
 `test_08_mutex_jit_modes.sh` 加载测试模块时启用 `mutex_nested_schedule=1`；
 mode 5 显式关闭该观察器。生产锁、节点容量、物理 owner、两元素 args 和 guest
@@ -2429,6 +2448,9 @@ B combiner 执行 root 0 的 child JIT、复杂 B 更新
 边界，不能放在仍欠 B ACK 的 `native_finish()` 中。旧无锁 root 观察器仍使用
 另一条 finish 路径，见 [6.9](#69-无锁祖先与-waiter-退出)。两个观察器共用 PID/RCU
 轮询与完整 frame 比较；超时最多 5 秒后解除测试暂停，但 oracle 必须判失败。
+观察器接受 IRQ-on/off 两种初始状态，arm 时保存 CPU、preempt 和 IRQ，等待期间
+要求三者不变；禁止抢占仍是前提。IRQ-off 修正前的失败与修正后的完整 mode-8
+重跑见 [frame 验证](../tests/README.md#frame-fast-validation)。
 这期间不改 owner/队列、不增加 task ref，实际 source frame lease 一直保留到 pop。
 TID 脱离不等于 task 内存已完成 RCU 回收；退出后只使用缓存 PID 和不解引用的指针。
 
