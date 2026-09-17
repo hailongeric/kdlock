@@ -12,18 +12,20 @@
 
 截至 **2026-09-17**，spinlock 和 mutex 默认均支持显式 GS 代理；被代理线程
 等待结果时均保持禁止抢占并 PAUSE 轮询，不睡眠或调度。spin 接受 IRQ-off
-task 入口，使用 task 内核栈，物理 waiter 在关本地 IRQ 后无栈发布/轮询，
-完成时恢复原 IRQ 状态和上下文；已删除每 CPU 8KB spin 执行栈。
+task 入口，准备与 combiner 使用 task 内核栈；物理 waiter 在关本地 IRQ 后，
+先切到每 CPU 预分配的 8KB shadow 等待栈再发布/轮询，完成时回到 task 栈
+恢复原 IRQ 状态和上下文。虚拟 waiter 仍在执行者 C 栈上服务 owner/ACK。
 frame 与锁记录按有效深度复用，push/pop 不再整块清零；普通单锁完成跳过
-通用清理链。waiter 发布前准备寄存器包，普通单锁直接使用该包，复杂出口才保存
-独立包及 combiner 快照；source frame get/put 使用原子关闭标志/计数，保留 owner/ACK 生命周期。
+通用清理链。spin waiter 发布前在独立预分配 request 中准备 frame/寄存器，
+combiner 按指针绑定；复杂/native/remote 路径共用逻辑包，物理 owner 状态独立。
+source/provider lease 按批次持有，request 引用保留到最后读取与 owner ACK/pop。
 测试代码按用途分组，默认仅验证基础简单功能和
 直接相关功能。这是受控实验用的 x86_64 JIT 代理原型，尚未完成全部任务，
 也不保证任意内核代码均可代理或已经取得性能收益。
 
 ### 1.1 版本与验收范围
 
-- 当前工作树包含 GS 准入、spin 无栈等待与 IRQ 状态保持、frame/单锁路径精简、测试目录与运行入口，
+- 当前工作树包含 GS 准入、spin shadow 等待栈与 IRQ 状态保持、frame/单锁路径精简、测试目录与运行入口，
   以及 benchmark 汇编按临界区去重和执行路径文档。以 `git log -1` 和
   `git status --short` 区分提交基线与未提交改动；验收身份以各批冻结源码为准。
 - GS 与目录整理的验证使用 recovery guest `6.1.159-kdstatic2` 和固定版本
@@ -31,8 +33,8 @@ frame 与锁记录按有效深度复用，push/pop 不再整块清零；普通�
   内核的构建与基线历史见 [spin hook 实验](../kernel_experiments/spin_static/README.md)。
 - 每次 PASS 只属于对应的冻结输入。GS 的实际 JIT 验证、目录整理的定向检查
   及 benchmark 历史测量分开记录，不拼接为当前版本的全量通过。
-- 本次文档更新只核对差异、引用和已有证据，不重复测试，不启动
-  新实验；物理 owner/ACK、两元素 args、访问时 guard/flags/JIT 版本延期保持原约定。
+- 本轮共享 spin request 的验证与性能结果见下表；物理 owner/ACK、两元素 args、
+  访问时 guard/flags/JIT 版本延期保持原约定。
 
 ### 1.2 已完成
 
@@ -44,8 +46,8 @@ frame 与锁记录按有效深度复用，push/pop 不再整块清零；普通�
 | 前进续跑 | 普通 CALL miss、CALL 次数额度及已有受检边界从当前寄存器/栈状态续跑，不从入口重放、不撤销既有写入；不是任意故障恢复。 |
 | 服务退出和返回 | mode 2/5 的时钟和有界标量 `int_sqrt` 服务原生执行后返回 JIT；额度超限交回 waiter 完成后缀。通用可变参数 `printk` 未实现。 |
 | GS 与等待策略 | spinlock/mutex 默认均支持显式 GS 读/写/RMW，使用 origin base；受支持的 current_task 读取使用 logical waiter。两种已发布请求的 waiter 都禁止抢占并轮询至结果或 native handoff，不睡眠或调度。spin 队列区间关闭本地 IRQ；NMI、mutex IRQ 并发及 native service 上下文仍有限制。 |
-| Spin 栈与 IRQ | IRQ-on/off task 均可进入代理；spin 使用 task 栈，物理 waiter 发布后无栈轮询，完成/native 唤醒直接从保存包恢复并保留原 IRQ 状态。shadow 锁记录和 wrapper 暂存仍在，mutex 独立栈保留。 |
-| Frame 与单锁路径 | 有效深度界定 frame/锁记录范围，普通单锁 root 直接使用 waiter 准备的包，首次正常 unlock 可直接完成；复杂分支先保存独立包再执行。source frame 引用不再取全局 raw spinlock，pop 仍验证 LIFO、终态和 owner/ACK 依赖。 |
+| Spin 栈与 IRQ | IRQ-on/off task 均可进入代理；combiner 使用 task 栈，物理 waiter 发布前切到每 CPU 8KB shadow 等待栈，完成/native 唤醒回 task 栈并从共享包恢复，保留原 IRQ 状态。shadow 锁记录和 wrapper 暂存独立，mutex 栈保留。 |
+| Frame 与单锁路径 | 有效深度界定 frame/锁记录范围，spin 共用 waiter 预备的 request/frame，按指针绑定；首次正常 unlock 可直接完成，复杂分支保存独立 owner 状态并继续用共享包。source lease 按批次持有，pop 仍验证 LIFO、终态和 owner/ACK 依赖。 |
 | 翻译准入 | 审查实际可能执行的 JIT 范围，已有入口谓词、受检 mutex 栈事实及静态 core/module per-CPU 筛查；动态地址的访问时保护不在其中。 |
 | 测试与复现入口 | 按行为合并、显式选择测试，保留实际正文证据、完整负载状态、owner/ACK 和排空检查；已有源码/环境/生成物归档及离线校验。41 个单元入口、22 个 shell driver 按用途分组；默认两个基础 C，相关 Python 显式选择，全量仅按要求运行。 |
 | 运行环境与可读性 | 固定四个 Python 运行依赖，提供 guest venv 安装、目录/文件索引、手动步骤及关键函数/协议操作的用途注释；不声称每个函数逐一完成审查。 |
@@ -59,7 +61,8 @@ frame 与锁记录按有效深度复用，push/pop 不再整块清零；普通�
 
 | 已完成范围 | 结果与证据入口 |
 | --- | --- |
-| Frame 复用与单锁路径 | waiter 预备包及原子 frame lease 的最终版本通过 12 项单元、6 项定向 live，frame/context 大小不变；早期 SELFTEST 空 RSP 和 per-CPU 空间失败已修复并保留记录。mode-4 soft lockup 未重跑或修复，详见 [本轮验证](../tests/README.md#waiter-packet-validation)。 |
+| Spin shadow 等待栈 | 5 个单元入口、4 项 live 及 IRQ-off mode-0 变体通过；实际 polling RSP 采样、旧 C 栈覆盖与完整寄存器恢复通过，未重跑 bench，见 [本轮验证](../tests/README.md#spin-shadow-wait-validation)。 |
+| Frame 复用与单锁路径 | 共享 request 通过 11 项定向单元入口、五项首轮 live 及修正观察器后完整 mode-8 重跑；16 会话 bench 未测得整体提速。失败证据与 mode-4 未解决限制见 [本轮验证](../tests/README.md#tclock-shared-validation)。 |
 | Spin 性能 | [30 配置完整扫描](../bench/spin_cacheline/results/20260917-stackless.md)、[frame 精简](../bench/spin_cacheline/results/20260917-frame-fast.md)及最新 [waiter 包复用四点对比](../bench/spin_cacheline/results/20260917-waiter-packet.md)分别保留；最新 20 线程两点提高，4 线程两点略降，不外推为通用收益。 |
 | Spin 无栈等待与 IRQ | 定向单元和 IRQ-on/off 单锁、嵌套/native 续跑、两层物理 frame 实际 JIT 通过；该阶段未测全量、mutex live 或性能，详见 [spin 验证](../tests/README.md#spin-stackless-validation)。 |
 | GS 实际 JIT | mode 10 spin 与 mode 11 mutex 均通过，包含 GS read/write/RMW/current、正文见证、数据及排空；8 组相关单元与准入审计通过，详见 [GS 验证](../tests/README.md#gs-polling-validation)。 |
@@ -519,8 +522,9 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 | [exe.c](../kernel_module/exe.c) | RIP 注册、代码池、wrapper 退出分派、控制/服务处理；默认关闭的 `jit_timing` 只读装载开关及排空后边界统计。 |
 | [kd_exec.c](../kernel_module/kd_exec.c) | frame/锁 ledger、远端关系、native 请求与 owner ACK；pop 拒绝未排空的 remote/native 引用。 |
 | [kd_source.c](../kernel_module/kd_source.c) | source pin、writer/frame lease、终止式退休。 |
-| [kd_spinlock.c](../kernel_module/kd_spinlock.c) | spin 排队、嵌套代理、task 栈上的 IRQ 保存/恢复与非局部恢复桩；无每 CPU shadow C 栈。 |
-| [spin/wait.inc](../kernel_module/spin/wait.inc) | 物理 waiter 连续汇编发布/轮询，完成或 native 唤醒后放弃旧 C 帧并转入安全栈恢复。 |
+| [kd_spinlock.c](../kernel_module/kd_spinlock.c) | spin 排队、嵌套代理、IRQ 保存/恢复与非局部恢复桩；combiner 使用 task 栈，物理 waiter 使用每 CPU shadow 等待栈。 |
+| [spin/request.inc](../kernel_module/spin/request.inc) | 独立于 node 的预分配 request 槽领取和最后用户归还。 |
+| [spin/wait.inc](../kernel_module/spin/wait.inc) | 物理 waiter 连续汇编切入 shadow 栈再发布/轮询；未执行的队首恢复旧 RSP，完成或 native 唤醒放弃旧 C 帧并转入 task 栈的安全位置恢复。 |
 | [kd_spin_gate.c](../kernel_module/kd_spin_gate.c) | 原锁 L 与私有调度 S 分离，真实 owner/hold。 |
 | [kd_spin_entry.c](../kernel_module/kd_spin_entry.c) | origin ticket、代际、task/CPU 引用与借用生命周期。 |
 | [kd_mutex.c](../kernel_module/kd_mutex.c) | mutex 节点池、combiner、原生 owner、waiter 续跑；正常 queue/JIT 日志保留为 INFO。 |
@@ -783,7 +787,7 @@ provider include。具体 include 点可用
 | [test_spin_entry.py](../tests/unit/spin/test_spin_entry.py) / [spin_entry_fixture.c](../tests/unit/spin/spin_entry_fixture.c) | 生产 origin ticket/ref 生命周期。 |
 | [test_spin_routing.py](../tests/unit/spin/test_spin_routing.py) / [spin_routing_fixture.c](../tests/unit/spin/spin_routing_fixture.c) | 生产 hook/selector 路由。 |
 | [test_spin_shadow.py](../tests/unit/spin/test_spin_shadow.py) / [spin_shadow_fixture.c](../tests/unit/spin/spin_shadow_fixture.c) | 提取实际队首和 combiner 路径；区分容量交接与普通批次发布。 |
-| [test_spin_wait.py](../tests/unit/spin/test_spin_wait.py) / [spin_wait_fixture.c](../tests/unit/spin/spin_wait_fixture.c) | guest 用户态执行生产发布/等待汇编；覆盖旧 C 栈后验证完成/native 非局部恢复，以及未执行队首的正常返回。 |
+| [test_spin_wait.py](../tests/unit/spin/test_spin_wait.py) / [spin_wait_fixture.c](../tests/unit/spin/spin_wait_fixture.c) | guest 用户态执行生产发布/等待汇编；覆盖旧 C 栈后验证完成/native 非局部恢复，以及未执行队首的正常返回；[spin_restore_fixture.c](../tests/unit/spin/spin_restore_fixture.c) 执行共享包恢复汇编，核对 GPR 与最后读取后归还引用。 |
 | [spin_node_pool_fixture.c](../tests/unit/spin/spin_node_pool_fixture.c) / [spin_queue_return_fixture.c](../tests/unit/spin/spin_queue_return_fixture.c) | 上述 fixture include 的真实 producer、容量和嵌套返回。 |
 | [spin_native_fixture.c](../tests/unit/spin/spin_native_fixture.c) | 历史 spin 审计 witness，不是新的 qspinlock。 |
 | [test_spin_outer_progress.py](../tests/unit/spin/test_spin_outer_progress.py) / [spin_outer_progress_fixture.c](../tests/unit/spin/spin_outer_progress_fixture.c) | 生产 spin batch/frame/outer-release、满 gate 表时 nested ENOMEM/PENDING 包，以及 release 发布和槽复用；不执行实际 JIT。 |

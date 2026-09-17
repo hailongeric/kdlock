@@ -115,13 +115,13 @@ def main():
             done_store + "\n\tparent->remote_result = KD_EXEC_REMOTE_DONE;",
         ),
         "advance-loses-r15": (
-            "*regs = node->regs;\n\treturn 0;",
-            "*regs = node->regs;\n\tregs->r15 = 0;\n\treturn 0;",
+            "node->regs->ip = return_ip;\n\treturn 0;",
+            "node->regs->ip = return_ip;\n\tregs->r15 = 0;\n\treturn 0;",
         ),
-        "terminal-copy-loses-rax": (
+        "terminal-packet-loses-rax": (
             finish,
             finish.replace(
-                "*regs = node->regs;", "*regs = node->regs;\n\t\tregs->ax = 0;"
+                "return KD_SPIN_NESTED_PARENT_OOO;", "regs->ax = 0;\n\t\treturn KD_SPIN_NESTED_PARENT_OOO;"
             ),
         ),
         "native-begin-clobbers-r10": (

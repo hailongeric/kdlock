@@ -6,6 +6,92 @@
 生产 provider 的专用协议观察器在 `tests/kernel/`。
 性能对比使用 [bench/README.md](../bench/README.md) 的独立入口。
 
+<a id="spin-shadow-wait-validation"></a>
+
+## 2026-09-17：TCLock 式物理 waiter shadow 等待栈
+
+在 `81a82ce` 加同日共享 request/frame 的未提交实现上，为每个 possible CPU
+预分配 8KB 等待栈。物理 waiter 在连续汇编中切栈、只保存一个旧 RSP，然后
+发布节点并 PAUSE 轮询。未代理的队头恢复旧 RSP；完成/native 唤醒在 task 栈
+的安全位置直接恢复共享包。JIT、批次 lease、frame 共享和 owner/ACK 保持原协议，
+虚拟 waiter 在执行者 task 栈上处理远端通知。分配、回滚和排空释放见
+[执行流](../docs/JIT_EXECUTION.md#22-spin-的等待栈与-irq-状态)。
+
+本轮在既有 recovery guest `6.1.159-kdstatic2`、voluntary 下验证：
+
+- 两个基础程序及 `spin/test_spin_wait.py`、`spin/test_spin_shadow.py`、
+  `spin/test_spin_outer_progress.py`，**5 个入口通过**。实际汇编等待测试用
+  alternate signal stack 采样被中断的 RSP，96 次均位于 shadow 栈；队头、
+  完成、native 各 32 次。完成/native 前覆盖旧 C 栈，队头则核对 RSP 精确恢复。
+  另有 96 次共享包最终恢复，检查全部 15 个 GPR；这不是内核 IRQ/NMI 模拟。
+- `W=1` 普通模块构建通过，live 的 SELFTEST 构建/加载/卸载通过；保留原有
+  naked-return、frame-pointer 与栈状态 objtool 警告，未宣称解决 unwind。
+- **4 项 live 通过**：`mode-0`、`mode-1`、`registers-0-1`、
+  `node-physical-2-0`，验证实际 JIT、负载状态、native 后缀的寄存器和 ACK。
+  两层真实 combiner frame 仍位于 task 栈，观察点最小余量 13608/16384 字节；
+  这是采样值，不是 shadow 栈高水位或任意栈深度保证。
+- 同一生产源码另跑 **IRQ-off mode-0 变体通过**，将 `KD_SPIN_IRQ_OFF=1`
+  显式写入 case 环境并归档，检查入口和返回两侧 IRQ 状态。标准选择器会清除
+  环境里的 `KD_*`，不能仅在它外部设置该变量就称 IRQ-off 已覆盖。
+
+294 个冻结运行输入在两轮 live 间一致，测试后源码未变，模块、daemon、调用者
+均排空且没有内核 fault。源码/build/live Build ID 核对为
+`460d77502af4709a0cca794b322cedc20c2cc478`，快照为
+`pre_static_boot_20260915`，未修改或重编译内核。实际加载了 provider，保留默认
+`mutex_jit=1`，仅运行 spin 用例；未执行全量、mutex live 或性能 bench。
+
+证据：guest `/root/kdlock-evidence/spin-shadow-wait-20260917` 和
+`/root/kdlock-evidence/spin-shadow-wait-irqoff-20260917`；
+[宿主构建/单元/live 日志](/tmp/kdlock-shadow-wait-20260917/)、
+[IRQ-off 显式选择脚本](/tmp/kdlock-shadow-wait-20260917/run-irqoff.py)。
+[完整 live 归档](/tmp/kdlock-shadow-wait-20260917/evidence.tar.gz) 已离线校验，
+确认四项常规及一项 IRQ-off 均通过；SHA256 为
+`d0be053d2cfe72aab2a5f1a044194621e939a55441cde03d02320cfc883e14b0`。
+本节为测试后补写的记录，不属于冻结的说明文件。
+
+<a id="tclock-shared-validation"></a>
+
+## 2026-09-17：TCLock 式共享请求，保留 JIT
+
+在 `81a82ce` 上实现独立于 node 的预分配 request/frame、共享逻辑寄存器包、
+物理 frame 指针链和批次 source lease。正常完成、native ACK 后解绑、远端 child
+保留 root 包引用和最终汇编归还引用的约束见 [设计](../docs/DESIGN.md#91-frames-and-lock-ledger)。
+
+本轮在既有 recovery guest `6.1.159-kdstatic2`、voluntary 下做增量验证：
+
+- 两个基础程序及 exec capacity、JIT entry scope、remote outer、native after outer、
+  spin wait、spin shadow、spin outer progress、spin frame protocol、mutex outer
+  progress，共 **11 个入口通过**。不是全量套件；旧夹具适配失败后只重跑受影响项。
+  保留对应故障注入断言，新增共享池占用/回收、外部 frame 绑定、包别名及最后一次
+  读取后的归还检查。spin wait 还执行真实恢复汇编的 96 次完成/retry/native 出口，
+  核对全部 15 个 GPR；用户态测试不证明内核 IRQ 行为。
+- 普通、SELFTEST、专用 bench provider 均构建通过。恢复汇编保留 naked-return/
+  栈状态 objtool 警告，新恢复函数也有此类警告；不把编译成功当作 unwind 正确性证明。
+- 首轮 `mode-0`、`mode-1`、`mode-3`、`registers-0-1`、`node-physical-2-0` 通过。
+  `mode-8` 最后阶段失败：退出观察器仍比较 child 内嵌 regs，未比较 `regs_ref`
+  指向的实际包，因而提前结束等待。观察器现在显式保存/比较完整活动包；容量
+  观察器也沿物理链保存外部 frame 和包，保留原有完整状态断言。
+- 修正观察器后的 exec capacity 及其 20 项变异检查通过，随后 **完整三阶段 mode-8
+  重跑通过**，包括两个 root 共用 B、native/JIT 混合及 waiter 在 B pop 前退出。
+  首轮五项与重跑不是一轮无失败矩阵；两轮及 bench 的 60 个共同生产文件哈希相同，
+  仅相关测试/观察器和 bench 日志补丁发生变化。失败证据独立保留。
+
+真实 JIT、负载副作用、owner/ACK 和最终排空均验证，结束后没有内核 fault。
+Build ID 为 `460d77502af4709a0cca794b322cedc20c2cc478`，源码/build/live 身份
+均核对；快照为 `pre_static_boot_20260915`。没有修改、重编译内核。
+四点 16 会话 bench 通过，但 20 线程吞吐较上一版下降，见
+[结果和限制](../bench/spin_cacheline/results/20260917-tclock-shared.md)。
+既有七角色/双 CPU mutex mode-4 soft lockup 本轮未重跑或修复。
+
+证据：guest `/root/kdlock-evidence/tclock-shared-jit-20260917`、
+`/root/kdlock-evidence/tclock-shared-jit-mode8-20260917-r2`；
+[宿主日志与审计](/tmp/kdlock-tclock-jit-20260917/)、
+[两轮生产源码一致性](/tmp/kdlock-tclock-jit-20260917/source-audit.json)。
+离线校验确认首轮五过一败与重跑一过，未把首轮 mode-8 标为通过。
+[完整 live/bench 归档](/tmp/kdlock-tclock-jit-20260917/evidence.tar.gz)
+SHA256 为 `c668405de0ea788b12c653dea1a3c735cb7510d4a5ec46db1251bbca9efe1ced`。
+本节是测量后补写的记录，不属于当时冻结的说明文件。
+
 <a id="waiter-packet-validation"></a>
 
 ## 2026-09-17：Waiter 预备寄存器包与原子 frame lease
@@ -237,10 +323,10 @@ IRQ-off task 入口复用 `mode-0`，在同样的 recovery 准备完成后显式
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KD_SPIN_IRQ_OFF=1 timeout 360s \
-  bash tests/run_all.sh --case mode-0 --timeout 300 \
-  --output /tmp/kdlock-spin-irq-off-new
+  bash tests/live/test_04_spinlock.sh 0
 ```
 
+直接脚本保留此开关；标准选择器会清除外部 `KD_*` 环境变量。
 该开关只支持 mode 0：负载在 spin lock/unlock 对外层关闭 IRQ，并检查状态保持。
 普通 `mode-0` 使用 IRQ-on 入口；这两个变体均为 task 上下文，不能当作
 hardirq/softirq 代理测试。以上为按改动选用的命令，不扩大默认测试范围。

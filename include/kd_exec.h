@@ -96,8 +96,10 @@ struct kd_exec_frame {
 	};
 	unsigned long gsbase;
 	struct task_struct *logical_task;
-	void *waiter;
-	void *outgoing_rsp_ptr;
+	/* Remote executors share the logical packet, but keep owner/control state
+	 * in their own frame. The request pool retains the packet's storage. */
+	struct pt_regs *regs_ref;
+	unsigned long delegated_lock_addr;
 	struct kd_exec_frame *parent;
 	/* Logical requester, distinct from the CPU-local physical parent above. */
 	struct kd_exec_frame *resume_target;
@@ -116,6 +118,7 @@ struct kd_exec_frame {
 	bool regs_borrowed;
 	bool outer_unlock_seen;
 	bool completion_seen;
+	bool batch_lease;
 	int state;
 	int remote_result;
 	bool executed;
@@ -123,6 +126,7 @@ struct kd_exec_frame {
 	/* Root spin invocation before its first service/control continuation.
 	 * A different wrapper exit materializes saved_combiner and clears this. */
 	bool spin_simple;
+	bool request_frame;
 	struct kd_exec_outer_unlock *outer_unlock_hook;
 	struct kd_call_state control_call;
 	struct list_head native_link;
@@ -133,13 +137,17 @@ struct kd_exec_frame {
 struct kd_exec_context {
 	/* One physical owner while depth != 0; frames cannot migrate independently. */
 	struct kd_exec_frame frames[KD_EXEC_MAX_NESTING];
+	struct kd_exec_frame *top;
 	struct task_struct *owner;
 	unsigned int depth;
 };
 
-static inline struct pt_regs *kd_exec_frame_regs(struct kd_exec_frame *frame)
+static inline struct pt_regs *kd_exec_frame_regs(const struct kd_exec_frame *frame)
 {
-	return frame->regs_borrowed ? frame->borrowed_regs : &frame->regs;
+	if (frame->regs_ref)
+		return frame->regs_ref;
+	return frame->regs_borrowed ? frame->borrowed_regs :
+		(struct pt_regs *)&frame->regs;
 }
 
 static inline void kd_exec_frame_own_regs(struct kd_exec_frame *frame)
@@ -158,6 +166,14 @@ void kd_exec_context_exit(void);
 
 struct kd_exec_frame *kd_exec_current_frame(void);
 bool kd_exec_context_busy(void);
+
+/* Prepare once on the producer; bind only changes physical execution state.
+ * batch_lease requires an enclosing source lease through the final unbind. */
+void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
+			   unsigned long lock, unsigned long gsbase,
+			   struct task_struct *task);
+int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
+		       bool batch_lease);
 
 struct kd_exec_frame *
 kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,

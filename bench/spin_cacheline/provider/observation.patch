@@ -102,7 +102,7 @@ diff --git a/kernel_module/execution/native.inc b/kernel_module/execution/native
 -	pr_info("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u outer_released=%u remaining=%u\n",
 +	KD_PR_ROUTINE("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u outer_released=%u remaining=%u\n",
  		frame->logical_task->pid, frame->outer_lock_addr,
- 		frame->entry_ip, frame->regs.ip, frame->regs.sp,
+ 		frame->entry_ip, kd_exec_frame_regs(frame)->ip, kd_exec_frame_regs(frame)->sp,
  		frame->jit_lock_depth - frame->outer_lock_index, mutex,
 @@ -143,7 +143,7 @@
  		BUG_ON(kd_spin_entry_end(&request.spin_origin));
@@ -180,7 +180,7 @@ diff --git a/kernel_module/kd_spinlock.c b/kernel_module/kd_spinlock.c
  	if (node->jit_retry)
 -		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
 +		KD_PR_ROUTINE("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
- 			   node, node->cpuid, regs.ip);
+ 			   node, node->cpuid, node->regs->ip);
  	if (mode == 2)
  		BUG_ON(kd_spin_entry_mark_native(&ref));
 diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
@@ -232,7 +232,7 @@ diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
 -		pr_info("kd_remote start: task=%d cpu=%u entry=%lx ip=%lx outer=%lx parent_outer=%lx owner_task=%lx\n",
 +		KD_PR_ROUTINE("kd_remote start: task=%d cpu=%u entry=%lx ip=%lx outer=%lx parent_outer=%lx owner_task=%lx\n",
  			frame->logical_pid, raw_smp_processor_id(),
- 			frame->entry_ip, frame->regs.ip, frame->outer_lock_addr,
+ 			frame->entry_ip, kd_exec_frame_regs(frame)->ip, frame->outer_lock_addr,
  			frame->resume_target->outer_lock_addr,
 @@ -339,7 +339,7 @@
  	curr_node->jit_retry = !curr_node->jit_waiter &&
@@ -241,7 +241,7 @@ diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
 -		KD_PR_INFO(
 +		KD_PR_ROUTINE(
  			"spin JIT retry regs: node=%px cpu=%d ip=%lx failed_ip=%lx\n",
- 			curr_node, curr_node->cpuid, curr_node->regs.ip,
+ 			curr_node, curr_node->cpuid, curr_node->regs->ip,
  			ret_flag == KD_EXE_RUN_TO_UNLOCK ?
 @@ -363,7 +363,7 @@
  		KD_PR_DEBUG("delegation ok lock=%px depth=%u\n", lock,

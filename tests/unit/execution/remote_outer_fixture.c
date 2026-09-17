@@ -56,7 +56,7 @@ struct mutex {
 };
 #include "remote_types.h"
 struct kd_spin_node {
-	struct pt_regs regs;
+	struct pt_regs *regs;
 };
 
 _Static_assert(sizeof(struct pt_regs) == 168, "guest x86-64 pt_regs size");
@@ -390,6 +390,7 @@ static void setup(unsigned int count)
 					 (unsigned long)&locks[i + 1] : 0;
 		packets[i] = frames[i].regs;
 		if (i + 1 < count) {
+			frames[i].delegated_lock_addr = frames[i].regs.di;
 			frames[i].control_call.phase = KD_CALL_ENTERED;
 			frames[i].control_call.return_ip = 0x300;
 		}
@@ -441,30 +442,30 @@ static void check_final_call(void)
 	struct pt_regs expected;
 
 	setup(2);
-	node.regs = frames[1].regs;
-	memset(&regs, 0xcc, sizeof(regs));
+	regs = frames[1].regs;
+	node.regs = &regs;
 	expected = regs;
 	/* Refusal must leave both packets untouched, including non-control state. */
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) == -EINVAL);
 	CHECK(!memcmp(&regs, &expected, sizeof(regs)));
-	CHECK(!memcmp(&node.regs, &packets[1], sizeof(node.regs)));
+	CHECK(!memcmp(node.regs, &packets[1], sizeof(*node.regs)));
 	CHECK(kd_exec_frame_record_event(&frames[1], KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
 	CHECK(kd_exec_remote_complete(&frames[1]) == 0);
 	select_cpu(0);
-	expected = node.regs;
+	expected = *node.regs;
 	expected.ip = stack[0];
 	expected.sp += sizeof(unsigned long);
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) ==
 	      KD_SPIN_NESTED_DELEGATED);
 	CHECK(regs.ip == stack[0] && regs.sp == (unsigned long)(stack + 1));
 	CHECK(!memcmp(&regs, &expected, sizeof(regs)));
-	CHECK(!memcmp(&node.regs, &expected, sizeof(node.regs)));
+	CHECK(!memcmp(node.regs, &expected, sizeof(*node.regs)));
 	check_packets();
 	CHECK(!frames[0].outer_unlock_seen);
 	setup(2);
-	node.regs = frames[1].regs;
-	memset(&regs, 0xcc, sizeof(regs));
+	regs = frames[1].regs;
+	node.regs = &regs;
 	CHECK(kd_spin_jit_nested_unlock_ctx(&locks[0], &frames[1]) == 0);
 	CHECK(kd_exec_frame_record_event(&frames[1], KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
@@ -472,9 +473,9 @@ static void check_final_call(void)
 	select_cpu(0);
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) ==
 	      KD_SPIN_NESTED_PARENT_OOO);
-	CHECK(regs.ip == node.regs.ip && regs.sp == (unsigned long)stack);
+	CHECK(regs.ip == node.regs->ip && regs.sp == (unsigned long)stack);
 	CHECK(!memcmp(&regs, &packets[1], sizeof(regs)));
-	CHECK(!memcmp(&node.regs, &packets[1], sizeof(node.regs)));
+	CHECK(!memcmp(node.regs, &packets[1], sizeof(*node.regs)));
 	CHECK(stack[0] == 0x300 && stack[1] == 0x400);
 	check_packets();
 }
@@ -509,7 +510,7 @@ static void check_refusals(void)
 	frames[0].logical_task = &executors[0];
 	CHECK(kd_spin_jit_nested_unlock_ctx(&locks[0], &frames[1]) == -EINVAL);
 	frames[0] = parent;
-	frames[0].regs.di = 0;
+	frames[0].delegated_lock_addr = 0;
 	CHECK(kd_spin_jit_nested_unlock_ctx(&locks[0], &frames[1]) == -EINVAL);
 	frames[0] = parent;
 	frames[0].control_call.phase = KD_CALL_COMPLETE;

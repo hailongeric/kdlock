@@ -165,7 +165,7 @@ def main():
             "detached = true;",
         ),
         "exit-observer-loses-packet-check": (
-            "packet &= !memcmp(frame, &kd_relay_exit.expected, sizeof(*frame));",
+            "packet &= !memcmp(frame, &kd_relay_exit.expected, sizeof(*frame)) &&\n\t\t  !memcmp(kd_exec_frame_regs(frame), &kd_relay_exit.expected_regs,\n\t\t\t  sizeof(kd_relay_exit.expected_regs));",
             "packet &= true;",
         ),
         "exit-observer-loses-context-check": (
@@ -177,6 +177,14 @@ def main():
             "(void)put_pid; (void)kd_relay_exit.pid;",
         ),
     }
+    source = read_source(ROOT / "kernel_module/kd_exec.c")
+    extra = "\n".join(definition(source, marker) for marker in (
+        "void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,",
+        "int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,",
+    ))
+    extra += "\n#undef this_cpu_ptr\n#define this_cpu_ptr(p) (p)\n"
+    extra += read_source(ROOT / "kernel_module/spin/request.inc")
+    extra += "\n#undef this_cpu_ptr\n#define this_cpu_ptr(p) (&(*(p))[cpu])\n"
     with tempfile.TemporaryDirectory(prefix="kdlock-exec-capacity-unit-") as tmp:
         path = Path(tmp)
         (path / "frame_types.h").write_text(types)
@@ -186,7 +194,7 @@ def main():
                 before, after = mutation
                 assert code.count(before) == 1, (name, code.count(before))
                 candidate = code.replace(before, after)
-            (path / "frame_code.h").write_text(candidate)
+            (path / "frame_code.h").write_text(candidate + extra)
             binary = path / name
             subprocess.run(
                 shlex.split(os.environ.get("CC", "cc"))

@@ -10,18 +10,19 @@
 //
 // Key differences from TCLocks komb.c:
 //   - Calls kd_exe_on_call_hl_entry() inside execute_cs() for JIT delegation
-//   - Uses kd_spin_node (renamed from komb_node) with embedded pt_regs
-//   - Delegation via sandbox JIT, not raw stack-switch
+//   - Uses kd_spin_node with a shared request/frame/register packet
+//   - Delegation via sandbox JIT; a per-CPU shadow stack isolates waiter polling
 
 /* Scheduling nodes carry packets, but kd_spin_entry owns origin tickets and
  * kd_spin_gate owns native L. Keep these lifetimes separate when reading the
  * nested queue paths: a remote executor may carry the same logical waiter.
- * Combiners use their task stack. Published physical waiters stop using it
- * until a release wake hands back a complete restoration packet. */
+ * Combiners use their task stack. Physical waiters switch to a shadow stack
+ * before publication and return to their task stack after the release wake. */
 #include "kd_spinlock.h"
 #include "utils.h"
 #include "exe.h"
 #include "kd_exec.h"
+#include "kd_source.h"
 #include "kd_segment.h"
 #include "kd_spin_entry.h"
 #include "kd_spin_fast.h"
@@ -41,6 +42,8 @@
 #include "spin/diagnostics.inc"
 
 #include "spin/queue.inc"
+
+#include "spin/request.inc"
 
 #include "spin/combiner.inc"
 
@@ -135,27 +138,64 @@ jump_to_saved_regs_in_cs(struct pt_regs *regs)
 }
 #pragma GCC pop_options
 
+/* Restore directly from the stable request. The final decrement follows every
+ * packet load; only two return-stack words remain after it. IRQs are restored
+ * after that decrement, so node/pool reuse cannot race a late register read. */
+static __attribute__((noipa, noreturn)) noinline notrace void
+kd_spin_restore_request(struct kd_spin_exec_request *execution,
+			unsigned long flags, unsigned int mode)
+{
+	asm volatile(
+		"movq %c[sp](%%rdi), %%rsp\n"
+		"testl %%edx, %%edx\n"
+		"jz 1f\n"
+		"pushq %c[ip](%%rdi)\n"
+		"1: pushq %%rsi\n"
+		"pushq 0x70(%%rdi)\n"
+		"movq 0x00(%%rdi), %%r15\n"
+		"movq 0x08(%%rdi), %%r14\n"
+		"movq 0x10(%%rdi), %%r13\n"
+		"movq 0x18(%%rdi), %%r12\n"
+		"movq 0x20(%%rdi), %%rbp\n"
+		"movq 0x28(%%rdi), %%rbx\n"
+		"movq 0x30(%%rdi), %%r11\n"
+		"movq 0x38(%%rdi), %%r10\n"
+		"movq 0x40(%%rdi), %%r9\n"
+		"movq 0x48(%%rdi), %%r8\n"
+		"movq 0x50(%%rdi), %%rax\n"
+		"movq 0x58(%%rdi), %%rcx\n"
+		"movq 0x60(%%rdi), %%rdx\n"
+		"movq 0x68(%%rdi), %%rsi\n"
+		"lock decl %c[users](%%rdi)\n"
+		"popq %%rdi\n"
+		"popfq\n"
+		"retq\n"
+		:
+		: "D"(execution), "S"(flags), "d"(mode),
+		  [sp] "i"(offsetof(struct kd_spin_exec_request, frame.regs.sp)),
+		  [ip] "i"(offsetof(struct kd_spin_exec_request, frame.regs.ip)),
+		  [users] "i"(offsetof(struct kd_spin_exec_request, users))
+		: "memory", "cc");
+	__builtin_unreachable();
+}
+
 __attribute__((noipa)) noinline notrace static void
 kd_spin_resume_waiter(struct kd_spin_node *node, unsigned int mode)
 {
-	struct pt_regs regs = node->regs;
+	struct kd_spin_exec_request *execution = node->execution;
 	unsigned long irq_flags = node->irq_flags;
 	struct kd_spin_ref ref = node->spin_origin;
 
 	if (node->jit_retry)
 		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
-			   node, node->cpuid, regs.ip);
+			   node, node->cpuid, node->regs->ip);
 	if (mode == 2)
 		BUG_ON(kd_spin_entry_mark_native(&ref));
 	else if (!mode)
 		BUG_ON(kd_spin_entry_end(&ref));
-	/* Our packet now lives below the final logical stack. Restore IRQs only
-	 * after the last per-CPU/node access and ticket transition. */
-	local_irq_restore(irq_flags);
-	/* After end(), only native-stack locals may be read. */
-	if (mode)
-		jump_to_saved_regs_in_cs(&regs);
-	jump_to_saved_regs(&regs);
+	/* No node/per-CPU access after end(). The request user remains valid even
+	 * if the task resumes on another CPU; assembly releases it after reading. */
+	kd_spin_restore_request(execution, irq_flags, mode);
 	__builtin_unreachable();
 }
 
@@ -208,7 +248,7 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
 		/* Queue-head combiners can recycle node slots for nested requests.
 		 * This unexecuted physical caller still owns its intact flags local. */
 		node->irq_flags = flags;
-		sp = min(node->rsp, node->regs.sp) & ~15UL;
+		sp = min(node->rsp, node->regs->sp) & ~15UL;
 		asm volatile("movq %0, %%rsp\n"
 			     "callq %P3\n"
 			     "ud2\n"

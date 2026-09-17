@@ -5,6 +5,7 @@
  * reusable; origin refs and physical holds have separate generation checks.
  * The qspinlock alias below denotes private scheduling storage, not Linux L. */
 #include <asm/ptrace.h>
+#include <linux/atomic.h>
 #include "qspinlock_i.h"
 #include "kd_exec.h"
 
@@ -14,6 +15,15 @@
 #define MAX_NODES 4
 
 struct kd_spin_jit_context;
+
+/* Stable request storage, independent of the recyclable scheduling node.
+ * Ordinary completion has one waiter user. Native handoff adds an owner user;
+ * remote requests also retain the root packet until their own final release. */
+struct kd_spin_exec_request {
+	struct kd_exec_frame frame;
+	struct kd_spin_exec_request *packet_owner;
+	atomic_t users;
+};
 
 struct kd_spin_node {
 	struct kd_spin_node *next;
@@ -36,7 +46,8 @@ struct kd_spin_node {
 			u16 locked_completed;
 		};
 	};
-	struct pt_regs regs;
+	struct pt_regs *regs;
+	struct kd_spin_exec_request *execution;
 	struct kd_exec_frame *exec_frame;
 	bool jit_waiter;
 	bool jit_retry;

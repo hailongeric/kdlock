@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <setjmp.h>
+#include <stddef.h>
 
 #include "spin_shadow_types.h"
 
@@ -37,6 +38,9 @@ struct kd_spin_ref {
 };
 #include "spin_request_type.h"
 struct kd_exec_frame {
+	struct pt_regs regs, *regs_ref;
+	unsigned long entry_ip, delegated_lock_addr;
+	bool request_frame;
 	bool valid, complete;
 	unsigned int jit_lock_depth;
 	unsigned long gsbase, jit_lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
@@ -52,6 +56,35 @@ struct kd_exec_frame {
 	} control_call;
 };
 
+typedef int atomic_t;
+struct kd_spin_exec_request {
+	struct kd_exec_frame frame;
+	struct kd_spin_exec_request *packet_owner;
+	atomic_t users;
+};
+#define KD_SPIN_REQUEST_SLOTS 12
+static struct kd_spin_exec_request request_pool[KD_SPIN_REQUEST_SLOTS];
+static struct kd_spin_exec_request *kd_spin_requests = request_pool;
+#define atomic_read_acquire(p) (*(p))
+#define atomic_set(p,v) (*(p) = (v))
+#define atomic_inc(p) (++*(p))
+#define atomic_dec(p) (--*(p))
+#define atomic_dec_and_test(p) (--*(p) == 0)
+#define container_of(p,t,m) ((t *)((char *)(p) - offsetof(t,m)))
+static bool kd_source_frame_get(void) { return true; }
+static void kd_source_frame_put(void) { }
+static struct pt_regs *kd_exec_frame_regs(struct kd_exec_frame *frame)
+{ return frame->regs_ref ? frame->regs_ref : &frame->regs; }
+static void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long ip,
+	unsigned long lock, unsigned long gs, struct task_struct *task)
+{
+	(void)lock;
+	frame->entry_ip = ip;
+	frame->gsbase = gs;
+	frame->logical_task = task;
+	frame->regs_ref = NULL;
+	frame->request_frame = true;
+}
 struct kd_spin_jit_context {
 	struct kd_exec_frame *requester;
 	unsigned int lock_depth;
@@ -68,7 +101,8 @@ struct kd_spin_node {
 	bool locked, completed, native_resume, jit_retry, irqs_disabled,
 		jit_waiter, pinned_context, native_regs_decoded;
 	struct kd_spin_jit_context *jit_context;
-	struct pt_regs regs;
+	struct pt_regs *regs;
+	struct kd_spin_exec_request *execution;
 	struct kd_exec_frame *exec_frame;
 	struct task_struct *task_struct_ptr;
 	unsigned long gsbase;
@@ -268,9 +302,9 @@ static int xchg_tail(struct qspinlock *lock, int tail)
 		/* Observe readiness at queue publication, before any peer can run JIT. */
 		if (!producer_virtual) {
 			CHECK(produced_node->native_regs_decoded);
-			CHECK(produced_node->regs.bx == 1 && produced_node->regs.r12 == 2 &&
-			      produced_node->regs.r13 == 3 && produced_node->regs.r14 == 4 &&
-			      produced_node->regs.r15 == 5 && produced_node->regs.bp == 6);
+			CHECK(produced_node->regs->bx == 1 && produced_node->regs->r12 == 2 &&
+			      produced_node->regs->r13 == 3 && produced_node->regs->r14 == 4 &&
+			      produced_node->regs->r15 == 5 && produced_node->regs->bp == 6);
 		}
 		if (kd_spin_nodes[0].count > producer_peak)
 			producer_peak = kd_spin_nodes[0].count;
@@ -442,9 +476,11 @@ static void kd_spin_debug_combiner(struct qspinlock *lock, unsigned int depth)
  * Model only that transfer here; test_spin_wait executes the real assembly
  * against destructively overwritten C frames. */
 static jmp_buf *native_return;
+static void kd_spin_request_put(struct kd_spin_exec_request *request);
 static void kd_spin_publish_wait(struct kd_spin_node *node,
-				 struct kd_spin_node *previous)
+				 struct kd_spin_node *previous, void *wait_stack_top)
 {
+	(void)wait_stack_top;
 	previous->next = node;
 	while (node->locked)
 		cpu_relax();
@@ -455,6 +491,8 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 		kd_spin_diag_waiter_exit(node->lock);
 		kd_spin_set_resume_node(node);
 		CHECK(native_return != NULL);
+		if (node->execution)
+			kd_spin_request_put(node->execution);
 		longjmp(*native_return, node->native_resume ? 5 : 3);
 	}
 }

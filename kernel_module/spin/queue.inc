@@ -194,15 +194,15 @@ next_node_null:
  * keep the existing hook ABI; this is the saved callee-register/return frame. */
 static void kd_spin_prepare_regs(struct kd_spin_node *node)
 {
-	const unsigned long *saved = (const unsigned long *)node->regs.sp;
+	const unsigned long *saved = (const unsigned long *)node->regs->sp;
 
-	node->regs.bx = saved[1];
-	node->regs.r12 = saved[2];
-	node->regs.r13 = saved[3];
-	node->regs.r14 = saved[4];
-	node->regs.r15 = saved[5];
-	node->regs.bp = saved[6];
-	node->regs.ip = saved[7];
-	node->regs.sp = (unsigned long)(saved + 8);
+	node->regs->bx = saved[1];
+	node->regs->r12 = saved[2];
+	node->regs->r13 = saved[3];
+	node->regs->r14 = saved[4];
+	node->regs->r15 = saved[5];
+	node->regs->bp = saved[6];
+	node->regs->ip = saved[7];
+	node->regs->sp = (unsigned long)(saved + 8);
 	node->native_regs_decoded = true;
 }

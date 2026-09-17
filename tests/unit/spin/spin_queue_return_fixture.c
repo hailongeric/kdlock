@@ -97,8 +97,9 @@ static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
 #define local_irq_save(flags) ((flags) = 0)
 #define local_irq_restore(flags) ((void)(flags))
 static void kd_spin_publish_wait(struct kd_spin_node *node,
-				 struct kd_spin_node *previous)
+				 struct kd_spin_node *previous, void *wait_stack_top)
 {
+	(void)wait_stack_top;
 	(void)node;
 	(void)previous;
 	abort();

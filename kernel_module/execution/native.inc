@@ -37,13 +37,13 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	bool checked_mutex =
 		mutex && frame &&
 		frame->control_call.phase == KD_CALL_STACK_CHANGED &&
-		kd_call_after_matches(&frame->control_call, frame->regs.ip,
-				      frame->regs.sp);
+		kd_call_after_matches(&frame->control_call, kd_exec_frame_regs(frame)->ip,
+				      kd_exec_frame_regs(frame)->sp);
 	bool checked_spin = !mutex && frame &&
 			    frame->control_call.phase == KD_CALL_SPIN_NATIVE &&
 			    kd_call_after_matches(&frame->control_call,
-						  frame->regs.ip,
-						  frame->regs.sp);
+						  kd_exec_frame_regs(frame)->ip,
+						  kd_exec_frame_regs(frame)->sp);
 	int ret;
 
 	if ((!kd_exec_frame_can_borrow_locks(frame) &&
@@ -53,12 +53,12 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	       kd_exec_frame_locks_released(frame) &&
 	       frame->jit_lock_addr[frame->outer_lock_index] ==
 		       frame->outer_lock_addr)) ||
-	    !frame->regs.ip || !frame->regs.sp ||
+	    !kd_exec_frame_regs(frame)->ip || !kd_exec_frame_regs(frame)->sp ||
 	    frame->logical_task == current || frame->mutex_backend != mutex ||
 	    (frame->control_call.phase == KD_CALL_PENDING &&
 	     (!frame->control_call.return_ip ||
-	      frame->regs.ip != frame->control_call.target ||
-	      frame->regs.sp != frame->control_call.stack)))
+	      kd_exec_frame_regs(frame)->ip != frame->control_call.target ||
+	      kd_exec_frame_regs(frame)->sp != frame->control_call.stack)))
 		return -EINVAL;
 	/* These distinct tags authorize validated post-control boundaries. The
 	 * original owner retains acquired locks; the waiter must not call the
@@ -85,7 +85,7 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	atomic64_inc(&kd_native_started);
 	pr_info("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u outer_released=%u remaining=%u\n",
 		frame->logical_task->pid, frame->outer_lock_addr,
-		frame->entry_ip, frame->regs.ip, frame->regs.sp,
+		frame->entry_ip, kd_exec_frame_regs(frame)->ip, kd_exec_frame_regs(frame)->sp,
 		frame->jit_lock_depth - frame->outer_lock_index, mutex,
 		raw_smp_processor_id(), frame->outer_unlock_seen, remaining);
 #ifdef KDLOCK_SELFTEST

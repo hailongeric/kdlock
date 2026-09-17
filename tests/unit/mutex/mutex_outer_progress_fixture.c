@@ -239,8 +239,8 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 	active.regs = *regs;
 	active.entry_ip = ip;
 	active.outer_lock_addr = lock;
-	active.waiter = node;
-	active.outgoing_rsp_ptr = rsp;
+	(void)node;
+	(void)rsp;
 	active.gsbase = gs;
 	active.logical_task = task;
 	active.state = KD_EXEC_FRAME_RUNNING;

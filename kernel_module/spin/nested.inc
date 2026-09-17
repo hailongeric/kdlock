@@ -13,20 +13,35 @@
 static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 				    struct kd_spin_jit_context *context,
 				    struct qspinlock *lock,
-				    const struct pt_regs *regs,
+				    struct pt_regs *regs,
 				    struct kd_exec_frame *parent)
 {
 	unsigned int i, depth;
+	struct kd_exec_frame *frame;
+	struct kd_spin_exec_request *owner;
 
 	if (!node || !context || !lock || !regs || !parent ||
-	    !kd_exec_frame_validate(parent))
+	    !kd_exec_frame_validate(parent) ||
+	    (parent->request_frame && regs != kd_exec_frame_regs(parent)))
 		return -EINVAL;
 
 	depth = kd_exec_frame_lock_depth(parent);
 	if (depth >= KD_EXEC_MAX_LOCK_DEPTH)
 		return -E2BIG;
 
-	node->regs = *regs;
+	frame = &node->execution->frame;
+	kd_exec_frame_prepare(frame, parent->entry_ip, (unsigned long)lock,
+		parent->gsbase, parent->logical_task);
+	frame->regs_ref = regs;
+	frame->spin_origin = parent->spin_origin;
+	node->regs = regs;
+	/* Production roots reside in request storage. Legacy component probes
+	 * keep their parent frame synchronously alive instead. */
+	if (parent->request_frame) {
+		owner = container_of(regs, struct kd_spin_exec_request, frame.regs);
+		atomic_inc(&owner->users);
+		node->execution->packet_owner = owner;
+	}
 	node->gsbase = parent->gsbase;
 	node->task_struct_ptr = parent->logical_task;
 	node->spin_origin = parent->spin_origin;
@@ -56,14 +71,13 @@ static int kd_spin_advance_jit_node(struct kd_spin_node *node,
 {
 	unsigned long return_ip;
 
-	if (!node || !regs || !node->regs.sp)
+	if (!node || !regs || !node->regs->sp)
 		return -EINVAL;
-	return_ip = READ_ONCE(*(unsigned long *)node->regs.sp);
+	return_ip = READ_ONCE(*(unsigned long *)node->regs->sp);
 	if (!return_ip)
 		return -EINVAL;
-	node->regs.sp += sizeof(unsigned long);
-	node->regs.ip = return_ip;
-	*regs = node->regs;
+	node->regs->sp += sizeof(unsigned long);
+	node->regs->ip = return_ip;
 	return 0;
 }
 
@@ -79,7 +93,6 @@ static int kd_spin_finish_remote_node(struct kd_spin_node *node,
 	/* The physical waiter trampoline still needs the final unlock CALL word.
 	 * Consume it only when this parent will resume more translated code. */
 	if (kd_exec_frame_can_complete(parent)) {
-		*regs = node->regs;
 		return KD_SPIN_NESTED_PARENT_OOO;
 	}
 	if (kd_spin_advance_jit_node(node, regs))
@@ -97,6 +110,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	struct qspinlock *word;
 	struct kd_spin_node *base, *node;
 	struct kd_spin_jit_context *contexts;
+	struct kd_spin_exec_request *execution;
 	u32 tail;
 	unsigned long irq_flags;
 	int idx, ret;
@@ -155,7 +169,14 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		goto cancel;
 	}
 	kd_spin_selftest_node_event(KD_NODE_VIRTUAL_RESERVE);
+	execution = kd_spin_request_reserve();
+	if (!execution) {
+		base->count--;
+		ret = -ENOMEM;
+		goto cancel;
+	}
 	node = base + idx;
+	node->execution = execution;
 	tail = encode_tail(smp_processor_id(), idx);
 
 	node->locked = true;
@@ -176,6 +197,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	ret = kd_spin_prepare_jit_node(node, &contexts[idx], lock, regs,
 				       parent);
 	if (ret) {
+		kd_spin_request_put(execution);
 		base->count--;
 		kd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);
 		goto cancel;
@@ -185,6 +207,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		lock, KD_SPIN_DIAG_SLOWPATH,
 		kd_spin_lock_stack_depth(this_cpu_ptr(&local_shadow_stack)));
 	parent->control_call.phase = KD_CALL_ENTERED;
+	parent->delegated_lock_addr = (unsigned long)lock;
 	smp_store_release(&parent->remote_result, KD_EXEC_REMOTE_WAITING);
 	/* The executor's C stack is independent of the logical waiter stack.
 	 * Keep this entire queue/combiner interval IRQ-off, then restore it. */
@@ -194,10 +217,12 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_refusal_return(parent, node, ret);
 #endif
+	/* The parent already owns the packet. A native child retains its extra
+	 * user until ACK/pop, independently of this queue user's lifetime. */
+	kd_spin_request_put(execution);
 	if (ret == 5) {
 		BUG_ON(smp_load_acquire(&parent->remote_result) !=
 		       KD_EXEC_REMOTE_NATIVE);
-		*regs = node->regs;
 		parent->control_call.phase = KD_CALL_COMPLETE;
 		/* Retire B's physical request, not the logical waiter's native ref. */
 		BUG_ON(kd_spin_entry_end(&request.ref));

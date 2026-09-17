@@ -140,8 +140,7 @@ static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,
 	       parent->control_call.phase == KD_CALL_ENTERED &&
 	       parent->control_call.return_ip == regs->ip &&
 	       parent->control_call.stack + sizeof(unsigned long) == regs->sp &&
-	       parent->regs.ip == regs->ip && parent->regs.sp == regs->sp &&
-	       parent->regs.di == frame->outer_lock_addr &&
+	       parent->delegated_lock_addr == frame->outer_lock_addr &&
 	       parent->outer_lock_index < frame->outer_lock_index;
 }
 
@@ -329,7 +328,7 @@ int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
 				break;
 			}
 			kd_spin_jit_prepare_complex(frame);
-			regs = &frame->regs;
+			regs = kd_exec_frame_regs(frame);
 		}
 
 		if (args[0] == KD_EXE_NORMAL) {

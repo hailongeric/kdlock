@@ -59,6 +59,7 @@ def main():
         if len(matching) != 1 or not matching[0].split()[-1].isdigit():
             raise AssertionError(f"expected one numeric definition of {name}")
         body += matching[0] + "\n"
+    body += read_source(ROOT / "kernel_module/spin/request.inc")
     body += definition(source, "struct shadow_stack {").rstrip() + ";\n"
     body += "static inline unsigned int\n" + definition(
         source, "kd_spin_lock_stack_depth(const struct shadow_stack *ptr)"

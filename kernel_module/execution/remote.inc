@@ -39,7 +39,7 @@ int kd_exec_remote_unlock(struct kd_exec_frame *frame, unsigned long lock_addr)
 	    smp_load_acquire(&parent->remote_result) !=
 		    KD_EXEC_REMOTE_WAITING ||
 	    parent->control_call.phase != KD_CALL_ENTERED ||
-	    parent->regs.di != frame->outer_lock_addr)
+	    parent->delegated_lock_addr != frame->outer_lock_addr)
 		return -EINVAL;
 	if (cmpxchg(&parent->remote_request, NULL, &request))
 		return -EBUSY;

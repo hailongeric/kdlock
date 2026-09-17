@@ -38,8 +38,8 @@ static noinline bool kd_spin_selftest_refuse(struct kd_exec_frame *frame,
 	    atomic_cmpxchg(&kd_refusal_claimed, 0, 1))
 		return false;
 	kd_refusal.entry = frame->entry_ip;
-	kd_refusal.ip = node->regs.ip;
-	kd_refusal.sp = node->regs.sp;
+	kd_refusal.ip = node->regs->ip;
+	kd_refusal.sp = node->regs->sp;
 	kd_refusal.lock = frame->outer_lock_addr;
 	kd_refusal.outer = parent->outer_lock_addr;
 	kd_refusal.gs = frame->gsbase;
@@ -47,8 +47,8 @@ static noinline bool kd_spin_selftest_refuse(struct kd_exec_frame *frame,
 	kd_refusal.pid = frame->logical_pid;
 	kd_refusal.reject_owner = (unsigned long)current;
 	kd_refusal.reject_cpu = raw_smp_processor_id();
-	kd_refusal.parent_regs = parent->regs;
-	kd_refusal.node_regs = node->regs;
+	kd_refusal.parent_regs = *kd_exec_frame_regs(parent);
+	kd_refusal.node_regs = *node->regs;
 	kd_refusal.initial = !frame->executed && parent->executed &&
 			     kd_exec_frame_validate(frame) &&
 			     kd_exec_frame_validate(parent) &&
@@ -76,9 +76,9 @@ kd_spin_selftest_refusal_cancel(const struct kd_exec_frame *frame)
 	kd_refusal.cancel_valid =
 		!frame->resume_target &&
 		parent->remote_result == KD_EXEC_REMOTE_WAITING &&
-		!memcmp(&parent->regs, &kd_refusal.parent_regs,
+		!memcmp(kd_exec_frame_regs(parent), &kd_refusal.parent_regs,
 			sizeof(parent->regs)) &&
-		!memcmp(&frame->regs, &kd_refusal.node_regs,
+		!memcmp(kd_exec_frame_regs(frame), &kd_refusal.node_regs,
 			sizeof(frame->regs));
 }
 
@@ -107,9 +107,9 @@ kd_spin_selftest_refusal_return(const struct kd_exec_frame *parent,
 		raw_spin_is_locked((raw_spinlock_t *)kd_refusal.outer) &&
 		parent->executed && parent->gsbase == kd_refusal.gs &&
 		(unsigned long)parent->logical_task == kd_refusal.task &&
-		!memcmp(&parent->regs, &kd_refusal.parent_regs,
+		!memcmp(kd_exec_frame_regs(parent), &kd_refusal.parent_regs,
 			sizeof(parent->regs)) &&
-		!memcmp(&node->regs, &kd_refusal.node_regs, sizeof(node->regs));
+		!memcmp(node->regs, &kd_refusal.node_regs, sizeof(*node->regs));
 }
 
 static noinline void

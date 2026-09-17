@@ -103,21 +103,20 @@ static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state);
 static bool kd_exec_context_validate(const struct kd_exec_context *ctx)
 {
 	unsigned int i;
+	const struct kd_exec_frame *frame;
 
 	if (!ctx || ctx->depth > KD_EXEC_MAX_NESTING ||
-	    (!!ctx->depth != !!ctx->owner))
+	    (!!ctx->depth != !!ctx->owner) || (!!ctx->depth != !!ctx->top))
 		return false;
 
-	for (i = 0; i < ctx->depth; i++) {
-		const struct kd_exec_frame *frame = &ctx->frames[i];
-
-		if (!kd_exec_frame_validate(frame) || frame->depth != i ||
-		    (i == 0 ? frame->parent != NULL :
-			      frame->parent != &ctx->frames[i - 1]))
+	frame = ctx->top;
+	for (i = ctx->depth; i; i--) {
+		if (!kd_exec_frame_validate(frame) || frame->depth != i - 1)
 			return false;
+		frame = frame->parent;
 	}
 
-	return true;
+	return !frame;
 }
 
 static void kd_exec_context_reset(struct kd_exec_context *ctx)
@@ -169,7 +168,7 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 
 	if (!ctx->depth || ctx->owner != current)
 		return NULL;
-	return &ctx->frames[ctx->depth - 1];
+	return ctx->top;
 }
 
 bool kd_exec_context_busy(void)
@@ -177,6 +176,73 @@ bool kd_exec_context_busy(void)
 	struct kd_exec_context *ctx = kd_exec_current_context();
 
 	return ctx->depth && ctx->owner != current;
+}
+
+/* The producer owns the unqueued request. Inactive arrays and register bytes
+ * are deliberately untouched; their live depths and packet producer own them. */
+void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
+			   unsigned long lock, unsigned long gsbase,
+			   struct task_struct *task)
+{
+	frame->entry_ip = entry_ip;
+	frame->outer_lock_addr = lock;
+	frame->continuation_ip = 0;
+	frame->continuation_sp = 0;
+	frame->gsbase = gsbase;
+	frame->logical_task = task;
+	frame->logical_pid = task->pid;
+	frame->regs_ref = NULL;
+	frame->regs_borrowed = false;
+	frame->delegated_lock_addr = 0;
+	frame->parent = NULL;
+	frame->resume_target = NULL;
+	frame->remote_request = NULL;
+	frame->depth = 0;
+	frame->held_lock_depth = 0;
+	frame->outer_lock_depth = 0;
+	frame->outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
+	frame->jit_lock_depth = 0;
+	frame->outer_unlock_seen = false;
+	frame->completion_seen = false;
+	frame->executed = false;
+	frame->mutex_backend = false;
+	frame->spin_simple = false;
+	frame->request_frame = true;
+	frame->batch_lease = false;
+	frame->outer_unlock_hook = NULL;
+	frame->control_call.phase = KD_CALL_NONE;
+	frame->native_request = NULL;
+	frame->state = KD_EXEC_FRAME_RUNNING;
+	frame->remote_result = KD_EXEC_REMOTE_IDLE;
+	INIT_LIST_HEAD(&frame->native_link);
+}
+
+int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
+		       bool batch_lease)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+
+	if (!frame || !frame->request_frame || !frame->gsbase ||
+	    !frame->logical_task || frame->executed ||
+	    lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
+	    ctx->depth >= KD_EXEC_MAX_NESTING ||
+	    (!!ctx->depth != !!ctx->owner) ||
+	    (ctx->depth && ctx->owner != current))
+		return -EINVAL;
+	/* Admission can close during a batch. Its enclosing lease retains source
+	 * storage, but never permits a new request after closure was observed. */
+	if (batch_lease ? !kd_source_is_open() : !kd_source_frame_get())
+		return -EBUSY;
+	frame->parent = ctx->top;
+	frame->depth = ctx->depth;
+	frame->held_lock_depth = lock_depth;
+	frame->outer_lock_depth = lock_depth;
+	frame->batch_lease = batch_lease;
+	frame->state = KD_EXEC_FRAME_RUNNING;
+	ctx->owner = current;
+	ctx->top = frame;
+	ctx->depth++;
+	return 0;
 }
 
 /* Reserve fixed storage and its source/provider lease together. Failure leaves
@@ -192,6 +258,8 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	struct kd_exec_frame *frame;
 	bool first_frame;
 
+	(void)waiter;
+	(void)outgoing_rsp_ptr;
 	if (!regs || !gsbase || !logical_task ||
 	    held_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
 	    ctx->depth >= KD_EXEC_MAX_NESTING ||
@@ -228,8 +296,8 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	frame->gsbase = gsbase;
 	frame->logical_task = logical_task;
 	frame->logical_pid = logical_task->pid;
-	frame->waiter = waiter;
-	frame->outgoing_rsp_ptr = outgoing_rsp_ptr;
+	frame->regs_ref = NULL;
+	frame->delegated_lock_addr = 0;
 	frame->parent = kd_exec_current_frame();
 	frame->resume_target = NULL;
 	frame->remote_request = NULL;
@@ -243,6 +311,8 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	frame->executed = false;
 	frame->mutex_backend = false;
 	frame->spin_simple = false;
+	frame->request_frame = false;
+	frame->batch_lease = false;
 	frame->outer_unlock_hook = NULL;
 	frame->control_call.phase = KD_CALL_NONE;
 	frame->native_request = NULL;
@@ -251,11 +321,13 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	/* Even an unborrowed frame needs an empty routing head: terminal state
 	 * alone must not authorize freeing a still-registered native frame. */
 	INIT_LIST_HEAD(&frame->native_link);
+	ctx->top = frame;
 	ctx->depth++;
 
 #ifdef KDLOCK_SELFTEST
 	if (!kd_exec_context_validate(ctx)) {
 		ctx->depth--;
+		ctx->top = frame->parent;
 		frame->state = KD_EXEC_FRAME_UNUSED;
 		if (first_frame)
 			ctx->owner = NULL;
@@ -297,7 +369,7 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	int state;
 
 	if (!frame || !ctx->depth || ctx->owner != current ||
-	    frame != &ctx->frames[ctx->depth - 1])
+	    frame != ctx->top)
 		return -EINVAL;
 
 	state = kd_exec_frame_state(frame);
@@ -320,11 +392,13 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	if (regs && regs != kd_exec_frame_regs(frame))
 		*regs = *kd_exec_frame_regs(frame);
 	ctx->depth--;
+	ctx->top = frame->parent;
 	frame->state = KD_EXEC_FRAME_UNUSED;
 	if (!ctx->depth)
 		ctx->owner = NULL;
 	/* The source lease covers native/remote continuation until actual pop. */
-	kd_source_frame_put();
+	if (!frame->batch_lease)
+		kd_source_frame_put();
 #ifdef KDLOCK_SELFTEST
 	if (!kd_exec_context_validate(ctx))
 		return kd_exec_invariant_failure();
@@ -362,7 +436,8 @@ void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 
 	frame->continuation_ip = regs->ip;
 	frame->continuation_sp = regs->sp;
-	frame->regs = *regs;
+	if (regs != kd_exec_frame_regs(frame))
+		*kd_exec_frame_regs(frame) = *regs;
 	kd_exec_frame_set_state(frame, KD_EXEC_FRAME_RESUME);
 }
 

@@ -400,6 +400,7 @@ static void remote(void)
 	active.jit_lock_kind[1] = KD_EXEC_LOCK_QUEUE_OWNER;
 	active.resume_target = &parent;
 	parent.regs = active.regs;
+	parent.delegated_lock_addr = active.outer_lock_addr;
 	parent.executed = true;
 	parent.remote_result = KD_EXEC_REMOTE_WAITING;
 	parent.control_call.phase = KD_CALL_ENTERED;
@@ -447,14 +448,14 @@ static void check_remote_scope(void)
 			parent.control_call.stack++;
 			break;
 		case 8:
-			parent.regs.di++;
+			parent.delegated_lock_addr++;
 			break;
 		case 9:
 			active.parent = &parent;
 			active.resume_target = NULL;
 			break;
 		case 10:
-			parent.regs.sp++;
+			active.regs.sp++;
 			break;
 		case 11:
 			parent.mutex_backend = true;

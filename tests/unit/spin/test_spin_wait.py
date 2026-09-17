@@ -1,4 +1,4 @@
-"""Guest-only x86 execution of the production stack-free waiter assembly."""
+"""Guest-only x86 execution and RSP sampling of the production shadow wait."""
 
 import os
 import shlex
@@ -7,6 +7,11 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+
+
+from source_text import read_source
+from test_exec_capacity import production
+from test_spin_shadow import definition
 
 
 def main():
@@ -25,6 +30,22 @@ def main():
                 "-o", str(binary),
             ],
             check=True, timeout=30,
+        )
+        subprocess.run([str(binary)], check=True, timeout=15)
+        types, _ = production()
+        (path / "restore_types.h").write_text(types)
+        code = definition(read_source(ROOT / "kernel_module/kd_spinlock.c"),
+                          "kd_spin_restore_request(struct kd_spin_exec_request *execution,")
+        (path / "restore_production.h").write_text(
+            "static __attribute__((noipa, noreturn)) noinline notrace void\n" + code)
+        binary = path / "spin-restore"
+        subprocess.run(
+            shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
+                "-mno-red-zone", "-fno-stack-protector", "-I", str(path),
+                str(ROOT / "tests/unit/spin/spin_restore_fixture.c"),
+                "-o", str(binary),
+            ], check=True, timeout=30,
         )
         subprocess.run([str(binary)], check=True, timeout=15)
 

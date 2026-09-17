@@ -90,7 +90,6 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	   struct kd_spin_batch *batch)
 {
 	struct qspinlock *word = batch->request->word;
-	void *outgoing_rsp_ptr;
 	struct kd_exec_frame *frame;
 	int ret_flag;
 	struct kd_exe_info *exe;
@@ -126,8 +125,6 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	BUG_ON(curr_node->cpuid == smp_processor_id());
 #endif
 
-	outgoing_rsp_ptr = &(ptr->local_shadow_stack_ptr);
-
 	/* Physical packets are fully prepared before the waiter publishes next. */
 	if (!curr_node->jit_waiter && !curr_node->native_regs_decoded)
 		return KD_EXE_RUN_ERROR;
@@ -136,7 +133,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	/* B is a continuation in A's admitted code. An independent B translation
 	 * starts at lexical depth one and can stop at an inherited A unlock. */
 	entry_ip = curr_node->jit_waiter ? jit_context->requester->entry_ip :
-					   curr_node->regs.ip;
+					   curr_node->regs->ip;
 	exe = kd_exe_find_ready(0, entry_ip);
 	if (!exe) {
 		kd_spin_debug_jit_not_ready(lock,
@@ -146,24 +143,14 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	}
 	print_debug(
 		"r15 %lx r14 %lx r13 %lx r12 %lx bx %lx bp %lx ip %lx sp %lx\n",
-		curr_node->regs.r15, curr_node->regs.r14, curr_node->regs.r13,
-		curr_node->regs.r12, curr_node->regs.bx, curr_node->regs.bp,
-		curr_node->regs.ip, curr_node->regs.sp);
+		curr_node->regs->r15, curr_node->regs->r14, curr_node->regs->r13,
+		curr_node->regs->r12, curr_node->regs->bx, curr_node->regs->bp,
+		curr_node->regs->ip, curr_node->regs->sp);
 	frame_lock_depth = curr_node->jit_waiter ?
 				   jit_context->lock_depth :
 				   kd_spin_lock_stack_depth(ptr);
-	if (curr_node->jit_waiter)
-		frame = kd_exec_frame_push(
-			&curr_node->regs, entry_ip, (unsigned long)lock, curr_node,
-			outgoing_rsp_ptr, frame_lock_depth, curr_node->gsbase,
-			curr_node->task_struct_ptr);
-	else
-		frame = kd_exec_frame_push_spin(
-			&curr_node->regs, entry_ip, (unsigned long)lock, curr_node,
-			outgoing_rsp_ptr, frame_lock_depth, curr_node->gsbase,
-			curr_node->task_struct_ptr);
-
-	if (!frame) {
+	frame = &curr_node->execution->frame;
+	if (kd_exec_frame_bind(frame, frame_lock_depth, true)) {
 		KD_PR_ERR("spin JIT frame stack overflow lock=%px\n", lock);
 		return KD_EXE_RUN_ERROR;
 	}
@@ -181,7 +168,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		KD_PR_ERR("spin JIT frame lock stack invalid lock=%px\n", lock);
 		kd_exec_frame_abort(frame);
 		curr_node->exec_frame = NULL;
-		if (kd_exec_frame_pop(frame, &curr_node->regs))
+		if (kd_exec_frame_pop(frame, NULL))
 			KD_PR_ERR("spin JIT frame abort pop failed lock=%px\n",
 				  lock);
 		return KD_EXE_RUN_ERROR;
@@ -203,7 +190,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 			       KD_EXEC_REMOTE_WAITING);
 		pr_info("kd_remote start: task=%d cpu=%u entry=%lx ip=%lx outer=%lx parent_outer=%lx owner_task=%lx\n",
 			frame->logical_pid, raw_smp_processor_id(),
-			frame->entry_ip, frame->regs.ip, frame->outer_lock_addr,
+			frame->entry_ip, kd_exec_frame_regs(frame)->ip, frame->outer_lock_addr,
 			frame->resume_target->outer_lock_addr,
 			(unsigned long)current);
 	}
@@ -234,10 +221,13 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		/* Remote publication can release an ancestor before this node is
 		 * woken. Start before both publications, not only local locked=0. */
 		u64 handoff_start = kd_exe_native_timing_start();
+		struct kd_spin_exec_request *execution = curr_node->execution;
 
 		BUG_ON(kd_exec_native_begin(frame, false));
+		/* Publish the extra owner user before either native wake. The queue
+		 * slot and original task can disappear before this owner unbinds. */
+		atomic_inc(&execution->users);
 		BUG_ON(kd_exec_remote_native(frame));
-		curr_node->regs = frame->regs;
 		curr_node->exec_frame = NULL;
 		WRITE_ONCE(curr_node->native_resume, true);
 		smp_store_release(&curr_node->locked, 0);
@@ -249,18 +239,19 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 						       ptr));
 		BUG_ON(kd_exec_frame_complete(frame));
 		BUG_ON(kd_exec_frame_pop(frame, NULL));
+		kd_spin_request_put(execution);
 		return KD_EXE_NATIVE_DONE;
 	}
 	if (ret_flag != KD_EXE_RUN_TO_UNLOCK && frame->executed) {
 		KD_PR_ERR(
 			"spin JIT non-continuable exit: entry=%lx ip=%lx ret=%d\n",
-			frame->entry_ip, frame->regs.ip, ret_flag);
+			frame->entry_ip, kd_exec_frame_regs(frame)->ip, ret_flag);
 		BUG();
 	}
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
 		if (!frame->outer_unlock_seen &&
 		    kd_exec_frame_record_event(
-			    frame, KD_EXEC_EVENT_OUTER_UNLOCK, &frame->regs)) {
+			    frame, KD_EXEC_EVENT_OUTER_UNLOCK, kd_exec_frame_regs(frame))) {
 			KD_PR_ERR(
 				"spin JIT outer unlock event invalid lock=%px\n",
 				lock);
@@ -310,11 +301,6 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 				"spin JIT frame error transition failed lock=%px\n",
 				lock);
 	}
-	if (ret_flag != KD_EXE_RUN_TO_UNLOCK && !frame->regs_borrowed) {
-		/* Before JIT starts the queued input is unchanged and cannot be
-		 * reused. Keep that packet off the recursively nested C stack. */
-		frame->regs = curr_node->regs;
-	}
 finish_frame:
 	/* Only a native waiter needs the saved-entry return trampoline. A
 	 * virtual waiter acquires B and continues its existing parent frame. */
@@ -323,7 +309,7 @@ finish_frame:
 	if (curr_node->jit_retry)
 		KD_PR_INFO(
 			"spin JIT retry regs: node=%px cpu=%d ip=%lx failed_ip=%lx\n",
-			curr_node, curr_node->cpuid, curr_node->regs.ip,
+			curr_node, curr_node->cpuid, curr_node->regs->ip,
 			ret_flag == KD_EXE_RUN_TO_UNLOCK ?
 				0UL :
 				frame->continuation_ip);
@@ -337,7 +323,7 @@ finish_frame:
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_refusal_cancel(frame);
 #endif
-	if (kd_exec_frame_pop(frame, &curr_node->regs)) {
+	if (kd_exec_frame_pop(frame, NULL)) {
 		KD_PR_ERR("spin JIT frame pop mismatch lock=%px\n", lock);
 		BUG();
 	}
@@ -395,7 +381,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	int counter = 0;
 
 	if (next_node == NULL || check_irq_node(curr_node) ||
-	    check_irq_node(next_node)) {
+	    check_irq_node(next_node) || !kd_source_frame_get()) {
 		set_locked(request->word);
 		/*
 		 * Make this node spin on the locked variable and then it will
@@ -462,6 +448,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 			/* B and this logical frame have finished. A's queue was already
 			 * published; only reacquire for our own original request. */
 			kd_spin_reclaim_outer(request);
+			kd_source_frame_put();
 			return;
 		}
 
@@ -496,5 +483,8 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	/* Publish the finished queue splice before successor acquisition. This
 	 * is the last node access: its waiter can immediately reuse the slot. */
 	smp_store_release(&next_node->locked, false);
+	/* One lease covers the complete synchronous batch, including native ACK
+	 * waits and every child unbind. New requests still check admission. */
+	kd_source_frame_put();
 }
 #pragma GCC pop_options

@@ -173,6 +173,8 @@ static atomic64_t kd_spin_diag_invariant_failures;
 #define atomic_cond_read_acquire_sched(v, c) \
 	smp_cond_load_acquire_sched(&(v)->counter, (c))
 
+#define KD_SPIN_WAIT_STACK_SIZE 8192
+
 struct shadow_stack {
 	/*
 	 * Locks acquired by the current CPU. Tracking them separately from the
@@ -189,6 +191,10 @@ struct shadow_stack {
 	uint32_t prev_cs_cpu;
 	/* Wrapper RSP scratch only; execution uses the combiner's task stack. */
 	uint64_t local_shadow_stack_ptr;
+	/* TCLock-style physical waiter stack, distinct from wrapper scratch.
+	 * IRQs stay masked and the ticket pins the sole polling user to this CPU.
+	 * Virtual waiters retain their executor stack for nested owner/ACK work. */
+	void *wait_stack_top;
 #ifdef NUMA_AWARE
 	/*
 	 * Create a queue which is used by the combiner to store nodes which belong to
@@ -229,6 +235,11 @@ struct kd_spin_native_input {
 
 static DEFINE_PER_CPU(struct kd_spin_node *, kd_spin_resume_nodes);
 
+/* Queue slots can be recycled while native owners finish. Requests therefore
+ * have their own bounded, boot-allocated pool; no allocation occurs in a CS. */
+#define KD_SPIN_REQUEST_SLOTS (KD_EXEC_MAX_NESTING + MAX_NODES)
+static DEFINE_PER_CPU(struct kd_spin_exec_request *, kd_spin_requests);
+
 struct kd_spin_jit_context {
 	struct kd_exec_frame *requester;
 	unsigned int lock_depth;
@@ -251,7 +262,7 @@ static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 					 int result);
 #endif
 
-/* Lock ledger and wrapper scratch; no separately allocated execution stack. */
+/* Lock ledger, wrapper scratch and the separately allocated polling stack. */
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct shadow_stack, local_shadow_stack);
 
 #define _Q_LOCKED_PENDING_MASK (_Q_LOCKED_MASK_HL | _Q_PENDING_MASK_HL)

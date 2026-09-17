@@ -3,6 +3,8 @@
 static atomic_t kd_capacity_claimed = ATOMIC_INIT(0);
 static struct {
 	struct kd_exec_context before;
+	struct kd_exec_frame live[KD_EXEC_MAX_NESTING];
+	struct pt_regs packets[KD_EXEC_MAX_NESTING];
 	unsigned long entry, outer;
 	unsigned int depth, cpu, preempt;
 	int task, owner;
@@ -13,6 +15,8 @@ static struct {
 void kd_exec_selftest_capacity_probe(const struct kd_exec_frame *frame)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
+	const struct kd_exec_frame *cursor;
+	unsigned int i;
 
 	if (!frame || frame->depth + 1 != KD_EXEC_MAX_NESTING ||
 	    atomic_cmpxchg(&kd_capacity_claimed, 0, 1))
@@ -33,12 +37,24 @@ void kd_exec_selftest_capacity_probe(const struct kd_exec_frame *frame)
 		goto out;
 	/* One claimant owns this static snapshot; never put the whole context on the stack. */
 	memcpy(&kd_capacity.before, ctx, sizeof(*ctx));
+	/* External request frames are reached through top/parent, not the legacy
+	 * array in before. Preserve the same full-state refusal oracle. */
+	for (cursor = ctx->top, i = 0; cursor; cursor = cursor->parent, i++) {
+		kd_capacity.live[i] = *cursor;
+		kd_capacity.packets[i] = *kd_exec_frame_regs(cursor);
+	}
 	kd_capacity.attempted = true;
 	kd_capacity.rejected = !kd_exec_frame_push(
-		&frame->regs, frame->entry_ip, frame->outer_lock_addr,
-		frame->waiter, frame->outgoing_rsp_ptr, frame->held_lock_depth,
+		kd_exec_frame_regs(frame), frame->entry_ip, frame->outer_lock_addr,
+		NULL, NULL, frame->held_lock_depth,
 		frame->gsbase, frame->logical_task);
 	kd_capacity.unchanged = !memcmp(&kd_capacity.before, ctx, sizeof(*ctx));
+	for (cursor = ctx->top, i = 0; cursor && i < KD_EXEC_MAX_NESTING;
+	     cursor = cursor->parent, i++)
+		kd_capacity.unchanged &=
+			!memcmp(&kd_capacity.live[i], cursor, sizeof(*cursor)) &&
+			!memcmp(&kd_capacity.packets[i], kd_exec_frame_regs(cursor),
+				sizeof(kd_capacity.packets[i]));
 	kd_capacity.valid_after = kd_exec_current_frame() == frame &&
 				  kd_exec_context_validate(ctx);
 out:

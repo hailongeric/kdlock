@@ -9,35 +9,34 @@ Complete the main behavior before optional features and performance work.
 
 ## Current Checkpoint
 
-**2026-09-17, frame optimization:** frame and lock storage now reuse inactive
-slots using their live depths, with explicit initialization of readable state.
-The ordinary physical single-spin-lock path defers combiner snapshots and
-skips generic completion walks. Physical waiters now prepare register packets
-before publication; single-lock roots bind these packets directly and materialize
-an independent copy on complex dispatch. Frame leases use an atomic closed/count
-word instead of get/put raw spinlocks; owner/ACK/source lifetimes remain.
+**2026-09-17, shared spin requests:** spin waiters and combiners now share one
+preallocated execution record. Remote frames alias the logical root packet,
+native owners retain a separate user through ACK/pop, and final restoration
+reads that packet directly. The bounded batch holds one source/provider lease.
+Mutex retains its previous frame path. Further wrapper and ledger reductions
+remain separate performance work.
 See [frame protocol](DESIGN.md#91-frames-and-lock-ledger).
-The [current focused validation](../tests/README.md#waiter-packet-validation)
-records 12 unit entrypoints and six live cases on the final frozen version,
-including all three mode-8 stages. Frame/context remain 656/5264 bytes by sharing
-the borrowed pointer with the inactive continuation-SP slot. Initial SELFTEST
-packet and per-CPU-size failures were fixed and retained as separate evidence.
-The earlier seven-role/two-CPU mutex mode-4 soft lockup remains unresolved and
-was not rerun. The [latest four-point benchmark](../bench/spin_cacheline/results/20260917-waiter-packet.md)
-shows 20-thread improvements and slight 4-thread declines against the
-[frame-only optimization](../bench/spin_cacheline/results/20260917-frame-fast.md).
-These are focused results, not a full functional-suite PASS or universal speedup.
+The [focused validation](../tests/README.md#tclock-shared-validation) records
+11 unit entrypoints, five initial live passes and a complete mode-8 rerun after
+fixing its shared-packet observer. The unchanged production implementation also
+completed 16 benchmark sessions. Frame/context/request are 656/5272/672 bytes;
+12 requests per possible CPU are allocated at module init.
+The [four-point benchmark](../bench/spin_cacheline/results/20260917-tclock-shared.md)
+shows 20-thread throughput declining 12.0%/4.9% against the preceding version.
+This storage refactor is not a demonstrated speedup. The earlier mutex mode-4
+soft lockup remains unresolved and was not rerun. No full-suite PASS is claimed.
 
-**2026-09-17:** spin delegation accepts IRQ-off task entries and no longer
-allocates a per-CPU 8 KiB C execution stack. Physical waiters save/mask local
-IRQs before publication, publish and PAUSE-poll without stack accesses, and
-restore completed/native packets on a safe task-stack continuation. The
-incoming IRQ state is preserved; virtual waiters retain remote owner/ACK
-service and mutex retains its separate stacks. Task/CPU pins and ownership
-checks remain. The [targeted validation](../tests/README.md#spin-stackless-validation)
-records affected units, IRQ-on/off JIT, nested/native continuation and a
-two-frame live case. That earlier implementation stage did not run a full suite
-or benchmark; the subsequent measurements are linked above.
+**2026-09-17, waiter shadow stack:** spin delegation accepts IRQ-off task
+entries. Physical waiters save/mask local IRQs, switch to a preallocated per-CPU
+8 KiB shadow stack before publication, and PAUSE-poll there. Only one old C RSP
+is saved: an unexecuted head restores it, while completed/native wakes use a
+safe task-stack continuation. JIT, shared request/frame storage and batch leases
+are retained. Combiners and virtual owner/ACK polling use the executor task
+stack. Incoming IRQ state, CPU pins and ownership checks remain; the CPU leaves
+the waiting stack before unpinning or restoring IRQs. Initialization rolls back
+partial allocation and drained shutdown frees all stacks. See the
+[targeted validation](../tests/README.md#spin-shadow-wait-validation); historical
+stackless validation and earlier benchmarks describe their own frozen inputs.
 
 Spinlock and mutex delegation both support explicit GS memory
 operations by default, using the origin waiter's base;
@@ -972,6 +971,28 @@ does not close the broader C5 context/alias work.
   their existing protocol. See [pinned busy polling](DESIGN.md#pinned-busy-polling).
 
 ## P2: Performance And Broader Scope
+
+### Shared Request Storage
+
+**2026-09-17 user decision:** retain JIT and use TCLock-style reference/state
+handoff and bounded combining. The spin implementation now follows the
+[shared request contract](DESIGN.md#911-reuse-before-copy-contract).
+
+- [x] Preallocate execution records independently of node reuse and waiter C stacks.
+- [x] Prepare frames on producers and bind them by reference on executors.
+- [x] Share logical register storage across spin native/remote continuations;
+      retain independent owner records and scalar scope facts.
+- [x] Restore directly from the shared packet and release its user after the last
+      assembly load; preserve entry IRQ state and ticket/native ACK lifetimes.
+- [x] Hold one source/provider lease across a bounded combining batch.
+- [ ] Further reduce duplicate nested lock-ledger staging; it still passes through
+      `kd_spin_jit_context` before the child frame.
+- [ ] Investigate the measured common-path regression, including request metadata
+      layout and cross-CPU traffic; the throughput comparison alone does not
+      attribute the cause.
+- [ ] Evaluate wrapper/dispatcher amortization across adjacent JIT requests.
+      Current batching does not implement native TCLock WWJUMP or fused wrappers.
+- [ ] Extend the same storage design to mutex only with its own lifetime analysis.
 
 ### Instrumented Measurement Foundation
 

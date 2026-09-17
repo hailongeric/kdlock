@@ -17,6 +17,12 @@ static void kd_spinlock_free_percpu(void)
 
 		vfree(*per_cpu_ptr(&kd_spin_jit_contexts, cpu));
 		*per_cpu_ptr(&kd_spin_jit_contexts, cpu) = NULL;
+		vfree(*per_cpu_ptr(&kd_spin_requests, cpu));
+		*per_cpu_ptr(&kd_spin_requests, cpu) = NULL;
+		if (stack->wait_stack_top) {
+			vfree((char *)stack->wait_stack_top - KD_SPIN_WAIT_STACK_SIZE);
+			stack->wait_stack_top = NULL;
+		}
 		stack->local_shadow_stack_ptr = 0;
 	}
 #ifdef KDLOCK_SELFTEST
@@ -54,11 +60,22 @@ int kd_spinlock_init(void)
 	for_each_possible_cpu(i) {
 		struct shadow_stack *ptr = per_cpu_ptr(&local_shadow_stack, i);
 		struct kd_spin_jit_context *contexts;
+		void *wait_stack;
+
+		/* Allocate once, outside the lock path, as in TCLock komb_init(). */
+		wait_stack = vzalloc(KD_SPIN_WAIT_STACK_SIZE);
+		if (!wait_stack)
+			goto err_free;
+		ptr->wait_stack_top = (char *)wait_stack + KD_SPIN_WAIT_STACK_SIZE;
 
 		contexts = vzalloc(array_size(MAX_NODES, sizeof(*contexts)));
 		if (!contexts)
 			goto err_free;
 		*per_cpu_ptr(&kd_spin_jit_contexts, i) = contexts;
+		*per_cpu_ptr(&kd_spin_requests, i) = vzalloc(array_size(
+			KD_SPIN_REQUEST_SLOTS, sizeof(struct kd_spin_exec_request)));
+		if (!*per_cpu_ptr(&kd_spin_requests, i))
+			goto err_free;
 
 		for (j = 0; j < 8; j++)
 			ptr->lock_addr[j] = 0;
@@ -81,6 +98,8 @@ int kd_spinlock_init(void)
 			node->jit_retry = false;
 			node->native_regs_decoded = false;
 			node->jit_context = NULL;
+			node->execution = NULL;
+			node->regs = NULL;
 			node->gsbase = 0;
 		}
 	}
@@ -104,7 +123,15 @@ err_free:
  */
 void kd_spinlock_exit(void)
 {
-	int i;
+	int i, cpu;
+
+	for_each_possible_cpu(cpu) {
+		struct kd_spin_exec_request *pool =
+			*per_cpu_ptr(&kd_spin_requests, cpu);
+
+		for (i = 0; i < KD_SPIN_REQUEST_SLOTS; i++)
+			BUG_ON(atomic_read(&pool[i].users));
+	}
 
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_nodes_report();

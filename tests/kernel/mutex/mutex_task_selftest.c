@@ -127,9 +127,9 @@ static void kd_task_owner(void)
 
 	/* These nonzero RIP/RSP fields admit the native protocol, but are never
 	 * jumped to. Real generated-code/continuation tests remain separate gates. */
-	frame->regs.ip = (unsigned long)kd_task_owner;
-	frame->regs.sp = (unsigned long)&frame->regs;
-	frame->entry_ip = frame->regs.ip;
+	kd_exec_frame_regs(frame)->ip = (unsigned long)kd_task_owner;
+	kd_exec_frame_regs(frame)->sp = (unsigned long)&frame->regs;
+	frame->entry_ip = kd_exec_frame_regs(frame)->ip;
 	frame->gsbase = kd_task_test.gsbase;
 	frame->logical_task = waiter;
 	frame->outer_lock_addr = locks[0];

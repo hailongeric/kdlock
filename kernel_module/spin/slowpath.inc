@@ -35,6 +35,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	uint32_t prev_cs_cpu;
 	bool prev_locked_val;
 	uint64_t prev_rsp;
+	struct kd_spin_exec_request *prev_execution;
+	struct pt_regs *prev_regs;
 #ifdef NUMA_AWARE
 	struct kd_spin_node *prev_local_queue_head;
 	struct kd_spin_node *prev_local_queue_tail;
@@ -60,7 +62,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 				      previous_cpu);
 #endif
 		if (!curr_node->jit_waiter) {
-			kd_spin_publish_wait(curr_node, prev_node);
+			kd_spin_publish_wait(curr_node, prev_node,
+				this_cpu_ptr(&local_shadow_stack)->wait_stack_top);
 			/* Only an unexecuted queue-head handoff returns here. */
 			goto queue_head;
 		}
@@ -209,6 +212,8 @@ queue_head:
 #endif
 	word->locked = _Q_LOCKED_COMBINER_VAL;
 	prev_rsp = curr_node->rsp;
+	prev_execution = curr_node->execution;
+	prev_regs = curr_node->regs;
 	curr_node->rsp = 0;
 
 #ifdef NUMA_AWARE
@@ -244,6 +249,8 @@ queue_head:
 #endif
 
 	curr_node->rsp = prev_rsp;
+	curr_node->execution = prev_execution;
+	curr_node->regs = prev_regs;
 
 	if (word->locked == _Q_UNLOCKED_OOO_VAL) {
 		if (prev_cs_cpu != -1) {
@@ -286,7 +293,8 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 {
 	struct qspinlock *word = request->word;
 	struct kd_spin_node *base, *curr_node;
-	int tail, idx;
+	struct kd_spin_exec_request *execution;
+	int tail, idx, ret;
 
 	base = this_cpu_ptr(&kd_spin_nodes[0]);
 	kd_spin_diag_record(
@@ -300,8 +308,17 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 			cpu_relax();
 		return 0;
 	}
+	execution = kd_spin_request_reserve();
+	if (unlikely(!execution)) {
+		base->count--;
+		while (!kd_spin_trylock(word))
+			cpu_relax();
+		return 0;
+	}
 	kd_spin_selftest_node_event(KD_NODE_NATIVE_RESERVE);
 	curr_node = base + idx;
+	curr_node->execution = execution;
+	curr_node->regs = &execution->frame.regs;
 	tail = encode_tail(smp_processor_id(), idx);
 
 	/*
@@ -314,7 +331,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->socket_id = numa_node_id();
 	curr_node->cpuid = smp_processor_id();
 	curr_node->rsp = READ_ONCE(input->rsp);
-	curr_node->regs.sp = READ_ONCE(input->regs_sp);
+	curr_node->regs->sp = READ_ONCE(input->regs_sp);
 	curr_node->irq_flags = READ_ONCE(input->irq_flags);
 	curr_node->lock = lock;
 	curr_node->task_struct_ptr = current;
@@ -328,8 +345,16 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->jit_context = NULL;
 	curr_node->spin_origin = request->ref;
 	kd_spin_prepare_regs(curr_node);
+	kd_exec_frame_prepare(&execution->frame, curr_node->regs->ip,
+		(unsigned long)lock, curr_node->gsbase, current);
+	execution->frame.spin_origin = request->ref;
 
-	return __kd_spin_lock_longjmp(lock, tail, curr_node, request);
+	ret = __kd_spin_lock_longjmp(lock, tail, curr_node, request);
+	/* Delegated waiters leave through the restore assembly, which drops this
+	 * user after its final packet load. An intact head return needs no packet. */
+	if (ret == 0 || ret == 2)
+		kd_spin_request_put(execution);
+	return ret;
 }
 
 /*

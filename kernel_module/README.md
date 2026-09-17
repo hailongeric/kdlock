@@ -22,8 +22,9 @@
 
 下表按所属编译单元和原声明顺序列出组件；文件头说明用途和依赖。
 `spin/combiner.inc` 内的 `execute_cs` 执行委托正文，`run_combiner` 组织批次；
-`spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后发布普通
-waiter 并无栈轮询。spin combiner 使用 task 内核栈，不再分配每 CPU 的 8KB C 栈；
+`spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后先切到
+每 CPU 预分配的 8KB shadow 等待栈，再发布普通 waiter 并轮询。
+spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核栈；
 `shadow` 锁地址账本和 wrapper RSP 暂存仍是元数据。`execution/native.inc` 的原生续跑
 保留 physical owner，最终 unlock 仍由该 owner 服务并 ACK。
 
@@ -33,8 +34,9 @@ waiter 并无栈轮询。spin combiner 使用 task 内核栈，不再分配每 C
 | `kd_spinlock.c` | [spin/shadow.inc](spin/shadow.inc) | Nested lock-vector push/pop, saved combiner state and invariant checks. |
 | `kd_spinlock.c` | [spin/diagnostics.inc](spin/diagnostics.inc) | Per-lock diagnostic counters, waiter observations and JIT-disable latch. |
 | `kd_spinlock.c` | [spin/queue.inc](spin/queue.inc) | Tail encoding, node publication and optional NUMA successor selection. |
+| `kd_spinlock.c` | [spin/request.inc](spin/request.inc) | Preallocated shared request reservation and final-user release, including remote root-packet references. |
 | `kd_spinlock.c` | [spin/combiner.inc](spin/combiner.inc) | Delegated body execution, outer release and bounded combiner batches. |
-| `kd_spinlock.c` | [spin/wait.inc](spin/wait.inc) | IRQ-off physical publication/polling and direct packet restoration without old C frames. |
+| `kd_spinlock.c` | [spin/wait.inc](spin/wait.inc) | IRQ-off physical shadow-stack switch before publication/polling; head RSP restoration or direct completed/native packet restoration. |
 | `kd_spinlock.c` | [spin/slowpath.inc](spin/slowpath.inc) | Queue-head waiting, nested combiner restoration and native node admission. |
 | `kd_spinlock.c` | [spin/lifecycle.inc](spin/lifecycle.inc) | Per-CPU allocation, partial-init rollback and drained shutdown reporting. |
 | `kd_spinlock.c` | [spin/nested.inc](spin/nested.inc) | Virtual nested waiters, remote completion and out-of-order unlock results. |

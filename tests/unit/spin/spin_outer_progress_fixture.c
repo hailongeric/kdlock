@@ -21,10 +21,12 @@ static bool list_empty(const struct list_head *head)
 }
 #define kd_exec_frame_push real_frame_push
 #define kd_exec_frame_push_spin real_frame_push_spin
+#define kd_exec_frame_bind real_frame_bind
 #define kd_exec_frame_pop real_frame_pop
 #include "spin_outer_types.h"
 #undef kd_exec_frame_push
 #undef kd_exec_frame_push_spin
+#undef kd_exec_frame_bind
 #undef kd_exec_frame_pop
 
 static raw_spinlock_t origins[2];
@@ -34,7 +36,21 @@ static struct kd_spin_node kd_spin_nodes[MAX_NODES], successor, deferred;
 #define request kd_spin_nodes[0]
 static struct shadow_stack shadow_states[2];
 #define local_shadow_stack shadow_states[0]
-static struct kd_exec_frame active, requester;
+static struct kd_spin_exec_request test_execution;
+static struct kd_exec_frame *active_frame = &test_execution.frame;
+#define active (*active_frame)
+static struct kd_exec_frame requester;
+static struct kd_spin_exec_request request_pool[12];
+static struct kd_spin_exec_request *kd_spin_requests = request_pool;
+static void reset_request(void)
+{
+	memset(&request, 0, sizeof(request));
+	active_frame = &test_execution.frame;
+	memset(&test_execution, 0, sizeof(test_execution));
+	request.execution = &test_execution;
+	request.regs = &active.regs;
+	test_execution.users.counter = 1;
+}
 static struct kd_exec_context kd_exec_context[2], pool_before[2];
 static struct task_struct pressure_tasks[KD_EXEC_MAX_NESTING];
 static unsigned int full_pool_calls, full_pool_batches;
@@ -58,7 +74,7 @@ static struct {
 	struct kd_spin_node *node;
 	struct pt_regs regs;
 	unsigned int count;
-	bool active, completed;
+	bool enabled, completed;
 } wake_probe;
 static void wake_before(const void *address, size_t size, uintptr_t value);
 static void wake_after(const void *address);
@@ -102,6 +118,12 @@ static void wake_after(const void *address);
 	} while (0)
 #define smp_load_acquire(p) (*(p))
 #define smp_mb() ((void)0)
+#define KD_SPIN_REQUEST_SLOTS 12
+#define atomic_read_acquire(p) ((p)->counter)
+#define atomic_set(p, v) ((p)->counter = (v))
+#define atomic_inc(p) (++(p)->counter)
+#define atomic_dec(p) (--(p)->counter)
+#define atomic_dec_and_test(p) (--(p)->counter == 0)
 #define atomic64_inc(p) (++*(p))
 #define atomic_cmpxchg_acquire(p, old, v) cmpxchg(&(p)->counter, old, v)
 #define alloc_percpu(type) calloc(2, sizeof(type))
@@ -226,6 +248,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 static int kd_exec_invariant_failure(void);
 /* Only the real pool takes leases; scripted outer frames are boundary packets. */
 static unsigned int source_frames;
+static bool kd_source_is_open(void) { return true; }
 static bool kd_source_frame_get(void)
 {
 	source_frames++;
@@ -241,61 +264,30 @@ static void kd_source_frame_put(void)
 #define this_cpu_ptr(p) (&(*(p))[mock_cpu])
 #define kd_exec_frame_push real_frame_push
 #define kd_exec_frame_push_spin real_frame_push_spin
+#define kd_exec_frame_bind real_frame_bind
 #define kd_exec_frame_pop real_frame_pop
 #include "spin_frame_pool_production.h"
 #undef kd_exec_frame_push
 #undef kd_exec_frame_push_spin
+#undef kd_exec_frame_bind
 #undef kd_exec_frame_pop
 #undef this_cpu_ptr
 #define this_cpu_ptr(p) (&(p)[mock_cpu])
 
-struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
-					 unsigned long ip, unsigned long lock,
-					 void *node, void *rsp,
-					 unsigned int depth, unsigned long gs,
-					 struct task_struct *task)
+int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int depth, bool lease)
 {
+	active_frame = frame;
+	CHECK(frame == &request.execution->frame);
+	CHECK(request.regs == kd_exec_frame_regs(frame));
 	if (mode == 8) {
-		struct kd_exec_frame *result;
-
-		CHECK(regs && gs && task && depth <= KD_EXEC_MAX_LOCK_DEPTH);
-		CHECK(node == &request && regs == &request.regs &&
-		      task == request.task_struct_ptr && gs == request.gsbase);
 		CHECK(kd_exec_current_context()->depth == KD_EXEC_MAX_NESTING &&
-		      kd_exec_current_context()->owner == current &&
 		      kd_exec_context_validate(kd_exec_current_context()));
 		full_pool_calls++;
-		result = real_frame_push(regs, ip, lock, node, rsp, depth, gs,
-					 task);
-		CHECK(!result);
-		return result;
+		return real_frame_bind(frame, depth, lease);
 	}
-	memset(&active, 0, sizeof(active));
-	active.regs = *regs;
-	active.entry_ip = ip;
-	active.outer_lock_addr = lock;
-	active.waiter = node;
-	active.outgoing_rsp_ptr = rsp;
-	active.gsbase = gs;
-	active.logical_task = task;
-	active.logical_pid = task->pid;
-	active.state = KD_EXEC_FRAME_RUNNING;
-	active.held_lock_depth = active.outer_lock_depth = depth;
-	active.outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
-	return &active;
-}
-struct kd_exec_frame *kd_exec_frame_push_spin(struct pt_regs *regs,
-                unsigned long ip, unsigned long lock, void *node, void *rsp,
-                unsigned int depth, unsigned long gs, struct task_struct *task)
-{
-        struct kd_exec_frame *frame = kd_exec_frame_push(regs, ip, lock, node,
-                                                       rsp, depth, gs, task);
-        if (frame && !frame->parent && depth == 1) {
-                frame->borrowed_regs = regs;
-                frame->regs_borrowed = true;
-                memset(&frame->regs, 0xa5, sizeof(frame->regs));
-        }
-        return frame;
+	frame->held_lock_depth = frame->outer_lock_depth = depth;
+	frame->batch_lease = lease;
+	return 0;
 }
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 {
@@ -369,7 +361,7 @@ static void test_release_origin(struct qspinlock *lock)
  * substituted primitive without inventing an extra waiter or reference. */
 static bool wake_address(const void *address)
 {
-	if (!wake_probe.active)
+	if (!wake_probe.enabled)
 		return false;
 	return address == (wake_probe.completed ?
 			   (void *)&wake_probe.node->locked_completed :
@@ -387,7 +379,7 @@ static void wake_before(const void *address, size_t size, uintptr_t value)
 	CHECK(value == (wake_probe.completed ? 1 : 0));
 	CHECK(node->locked && !node->completed && !node->native_resume);
 	CHECK(!node->exec_frame && node->task_struct_ptr == &waiter);
-	CHECK(!memcmp(&node->regs, &wake_probe.regs, sizeof(node->regs)));
+	CHECK(!memcmp(node->regs, &wake_probe.regs, sizeof(*node->regs)));
 	CHECK(scripts == wake_probe.completed && pops == scripts);
 	CHECK(origins[0].held &&
 	      kd_spin_entry_gate(&executor_ref)->owner == current);
@@ -401,7 +393,7 @@ static void wake_after(const void *address)
 		return;
 	/* Model immediate slot reuse after the acquire-side waiter wakes. The
 	 * publisher must use its saved successor and never rewrite this packet. */
-	memset(&wake_probe.node->regs, 0xa5, sizeof(wake_probe.node->regs));
+	memset(wake_probe.node->regs, 0xa5, sizeof(*wake_probe.node->regs));
 	wake_probe.node->next = NULL;
 	wake_probe.node->task_struct_ptr = NULL;
 }
@@ -415,7 +407,7 @@ static void checked_run_combiner(struct qspinlock *lock,
 	if (full) {
 		CHECK(sizeof(struct pt_regs) == 168 &&
 		      sizeof(struct kd_exec_frame) == 656 &&
-		      sizeof(struct kd_exec_context) == 5264);
+		      sizeof(struct kd_exec_context) == 5272);
 		CHECK(!kd_exec_current_context()->depth);
 		for (unsigned int i = 0; i < KD_EXEC_MAX_NESTING; i++) {
 			struct pt_regs regs;
@@ -564,13 +556,10 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 	      lock == (unsigned long)&origins[0]);
 	scripts++;
 	if (mode == 11 || mode == 12) {
-		CHECK(!active.executed && active.waiter == &request);
-		CHECK(!memcmp(&request.regs, &readmission_regs,
-			      sizeof(request.regs)));
-		/* Staging may change the frame packet, never the queued input.
-		 * No instruction body, unlock, native publication or node reuse. */
-		if (!active.regs_borrowed)
-			memset(regs, 0xcc, sizeof(*regs));
+		CHECK(!active.executed && &request.execution->frame == &active);
+		CHECK(!memcmp(request.regs, &readmission_regs,
+			      sizeof(*request.regs)));
+		/* A prebody refusal preserves the single shared input packet. */
 		return mode == 11 ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
 	}
 	active.executed = true;
@@ -580,7 +569,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 		      active.logical_task == &waiter);
 		/* Give the publication observer an output packet that differs from
 		 * entry, so waking before the final register copy cannot pass. */
-		if (wake_probe.active)
+		if (wake_probe.enabled)
 			regs->ax ^= 0x12345678UL;
 		return KD_EXE_RUN_TO_UNLOCK;
 	}
@@ -652,7 +641,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				struct kd_exec_frame parent_before;
 				struct kd_spin_jit_context context_before;
 
-				memset(&request, 0, sizeof(request));
+				reset_request();
 				memset(&successor, 0, sizeof(successor));
 				memset(shadow_states, 0, sizeof(shadow_states));
 				executor_ref = (struct kd_spin_ref){ 0 };
@@ -666,11 +655,11 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 					(unsigned long)&origins[0];
 				shadow_states[cpu].curr_cs_cpu =
 					shadow_states[cpu].prev_cs_cpu = -1;
-				memset(&request.regs, 0x5a,
-				       sizeof(request.regs));
-				request.regs.sp = (unsigned long)saved;
-				request.regs.di = (unsigned long)&origins[0];
-				request.regs.ip = 0x801;
+				memset(request.regs, 0x5a,
+				       sizeof(*request.regs));
+				request.regs->sp = (unsigned long)saved;
+				request.regs->di = (unsigned long)&origins[0];
+				request.regs->ip = 0x801;
 				request.gsbase = 0x20000;
 				request.task_struct_ptr = &waiter;
 				request.cpuid = cpu ^ 1;
@@ -679,10 +668,10 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				request.next = count ? &nodes[prefix] :
 						       &successor;
 				successor.task_struct_ptr = &tasks[cpu ^ 1];
-				expected_regs = request.regs;
+				expected_regs = *request.regs;
 				if (virtual) {
 					requester = (struct kd_exec_frame){
-						.regs = request.regs,
+						.regs = *request.regs,
 						.entry_ip = 0x900,
 						.outer_lock_addr = 0x1000,
 						.logical_task = &waiter,
@@ -747,7 +736,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				      !request.jit_retry &&
 				      request.gsbase == 0x20000 &&
 				      request.task_struct_ptr == &waiter);
-				CHECK(!memcmp(&request.regs, &expected_regs,
+				CHECK(!memcmp(request.regs, &expected_regs,
 					      sizeof(expected_regs)));
 				CHECK(request.native_regs_decoded ==
 				      !virtual);
@@ -805,11 +794,11 @@ static unsigned int repeated_admission(void)
 			for (unsigned int i = 0; i < 7; i++)
 				saved[i] = i;
 			saved[7] = 0x800;
-			memset(&request, 0, sizeof(request));
+			reset_request();
 			memset(&successor, 0, sizeof(successor));
 			memset(shadow_states, 0, sizeof(shadow_states));
-			request.regs.sp = (unsigned long)saved;
-			request.regs.di = (unsigned long)&origins[0];
+			request.regs->sp = (unsigned long)saved;
+			request.regs->di = (unsigned long)&origins[0];
 			request.task_struct_ptr = &waiter;
 			request.cpuid = 2;
 			request.gsbase = 0x20000;
@@ -865,8 +854,8 @@ static unsigned int repeated_admission(void)
 				add_to_local_queue(&prefix);
 #endif
 				run_combiner(a_lock(), &request);
-				CHECK(!memcmp(&request.regs, &readmission_regs,
-					      sizeof(request.regs)));
+				CHECK(!memcmp(request.regs, &readmission_regs,
+					      sizeof(*request.regs)));
 				CHECK(request.completed == ready &&
 				      scripts == ready && pops == ready &&
 				      !request.exec_frame);
@@ -912,7 +901,7 @@ static unsigned int preentry_packet(void)
 			unsigned long saved[8] = { 0, 1, 2, 3, 4, 5, 6, 0x800 };
 			struct kd_spin_gate *gate;
 
-			memset(&request, 0, sizeof(request));
+			reset_request();
 			memset(&successor, 0, sizeof(successor));
 			memset(shadow_states, 0, sizeof(shadow_states));
 			executor_ref = (struct kd_spin_ref){ 0 };
@@ -937,8 +926,8 @@ static unsigned int preentry_packet(void)
 				.r15 = 5,
 				.bp = 6,
 			};
-			request.regs = readmission_regs;
-			request.regs.sp = (unsigned long)saved;
+			*request.regs = readmission_regs;
+			request.regs->sp = (unsigned long)saved;
 			request.gsbase = 0x20000;
 			request.cpuid = 1;
 			request.task_struct_ptr = &waiter;
@@ -948,7 +937,7 @@ static unsigned int preentry_packet(void)
 			if (virtual) {
 				readmission_regs.ip = 0x801;
 				readmission_regs.sp = (unsigned long)saved;
-				request.regs = readmission_regs;
+				*request.regs = readmission_regs;
 				requester = (struct kd_exec_frame){
 					.entry_ip = 0x900,
 					.outer_lock_addr = 0x1000,
@@ -975,8 +964,8 @@ static unsigned int preentry_packet(void)
 			CHECK(jit_disables == (mode == 11));
 			CHECK(!active.executed && !active.completion_seen &&
 			      active.state == KD_EXEC_FRAME_ERROR);
-			CHECK(!memcmp(&request.regs, &readmission_regs,
-				      sizeof(request.regs)));
+			CHECK(!memcmp(request.regs, &readmission_regs,
+				      sizeof(*request.regs)));
 			CHECK(!memcmp(kd_exec_frame_regs(&active), &readmission_regs,
 				      sizeof(active.regs)));
 			CHECK(!request.exec_frame && !request.completed &&
@@ -1015,7 +1004,7 @@ static unsigned int publication_boundaries(void)
 		struct kd_spin_gate *gate;
 
 		mode = path == 1 ? 4 : 10;
-		memset(&request, 0, sizeof(request));
+		reset_request();
 		memset(&successor, 0, sizeof(successor));
 		memset(shadow_states, 0, sizeof(shadow_states));
 		executor_ref = (struct kd_spin_ref){ 0 };
@@ -1030,7 +1019,7 @@ static unsigned int publication_boundaries(void)
 		readmission_regs.ip = 0x800;
 		readmission_regs.sp = (unsigned long)&saved[8];
 		readmission_regs.di = (unsigned long)&origins[0];
-		request.regs = readmission_regs;
+		*request.regs = readmission_regs;
 		request.native_regs_decoded = true;
 		request.gsbase = 0x20000;
 		request.cpuid = 1;
@@ -1047,11 +1036,11 @@ static unsigned int publication_boundaries(void)
 		if (wake_probe.completed)
 			wake_probe.regs.ax ^= 0x12345678UL;
 		wake_probe.count = scripts = pops = 0;
-		wake_probe.active = true;
+		wake_probe.enabled = true;
 		run_combiner(a_lock(), &request);
-		wake_probe.active = false;
+		wake_probe.enabled = false;
 		CHECK(wake_probe.count == 1);
-		CHECK(!memcmp(&request.regs, &reused, sizeof(reused)));
+		CHECK(!memcmp(request.regs, &reused, sizeof(reused)));
 		CHECK(!request.next && !request.task_struct_ptr);
 		CHECK(!request.locked && request.completed == (path == 0));
 		CHECK(successor.locked == (path != 0));
@@ -1170,7 +1159,7 @@ int main(void)
 	for (mode = 0; mode < 8; mode++) {
 		struct kd_spin_gate *gate;
 		bool early = mode != 0 && mode != 4 && mode != 6 && mode != 7;
-		memset(&request, 0, sizeof(request));
+		reset_request();
 		memset(&successor, 0, sizeof(successor));
 		memset(&deferred, 0, sizeof(deferred));
 		memset(shadow_states, 0, sizeof(shadow_states));
@@ -1187,11 +1176,11 @@ int main(void)
 		shadow_states[0].curr_cs_cpu = shadow_states[0].prev_cs_cpu =
 			-1;
 		shadow_states[0].local_shadow_stack_ptr = 0x10000;
-		request.regs.sp = (unsigned long)saved;
+		request.regs->sp = (unsigned long)saved;
 		request.queued_at_ns = 50;
 		queue_finishes = 0;
 		handoff_starts = handoff_ends = 0;
-		request.regs.di = (unsigned long)&origins[0];
+		request.regs->di = (unsigned long)&origins[0];
 		request.task_struct_ptr = &waiter;
 		request.gsbase = 0x20000;
 		request.pinned_context = mode == 7;
@@ -1214,7 +1203,7 @@ int main(void)
 			};
 			request.jit_waiter = true;
 			request.jit_context = &request_context;
-			request.regs.ip = 0x801;
+			request.regs->ip = 0x801;
 		}
 		request.cpuid = 1;
 		request.next = &successor;

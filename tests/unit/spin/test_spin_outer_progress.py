@@ -54,7 +54,7 @@ def main():
         types += definition(spin, marker).rstrip() + ";\n"
     if "kd_spin_entry_reclaim(" not in types:
         types += "#define kd_spin_entry_reclaim kd_spin_entry_claim\n"
-    code = definition(spin, "static void kd_spin_prepare_regs(struct kd_spin_node *node)") + "\n"
+    code = read_source(ROOT / "kernel_module/spin/request.inc") + definition(spin, "static void kd_spin_prepare_regs(struct kd_spin_node *node)") + "\n"
     for name in ("kernel_module/kd_spin_gate.c", "kernel_module/kd_spin_entry.c"):
         code += without_includes(read_source((ROOT / name))) + "\n"
     frame = read_source((ROOT / "kernel_module/kd_exec.c"))
@@ -65,6 +65,8 @@ def main():
             "static struct kd_exec_context *kd_exec_current_context(void)",
             "struct kd_exec_frame *kd_exec_current_frame(void)",
             "bool kd_exec_context_busy(void)",
+            "void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,",
+            "int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,",
             "static struct kd_exec_frame *kd_exec_frame_push_internal(",
             "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
             "kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,",
@@ -149,7 +151,7 @@ def main():
         part = definition(spin, marker)
         if name == "execute_cs":
             # Model the omitted enqueue producer, using its production decoder.
-            part = part.replace("\tstruct qspinlock *word = batch->request->word;", "\tif (!curr_node->jit_waiter && !curr_node->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tstruct qspinlock *word = batch->request->word;", 1)
+            part = part.replace("\tstruct qspinlock *word = batch->request->word;", "\tif (!curr_node->jit_waiter && !curr_node->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame, curr_node->jit_waiter ? curr_node->jit_context->requester->entry_ip : curr_node->regs->ip, (unsigned long)lock, curr_node->gsbase, curr_node->task_struct_ptr);\n\tcurr_node->execution->frame.regs_ref = curr_node->regs;\n\tstruct qspinlock *word = batch->request->word;", 1)
         code += prefix + part + "\n"
     code += definition(
         read_source((ROOT / "kernel_module/kd_lock.c")),
@@ -165,7 +167,7 @@ def main():
         "int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,",
     ):
         queue += definition(spin, marker)
-    refusal = 'if (!frame) {\n\t\tKD_PR_ERR("spin JIT frame stack overflow'
+    refusal = 'if (kd_exec_frame_bind(frame, frame_lock_depth, true)) {\n\t\tKD_PR_ERR("spin JIT frame stack overflow'
     cancel = definition(
         frame, "void kd_exec_remote_cancel(struct kd_exec_frame *frame)"
     )
@@ -198,19 +200,19 @@ def main():
         "completion-packet-not-ready": (
             "code",
             "smp_store_release(&lock->locked_completed, 1);",
-            "lock->regs.ax ^= 1;\n\t"
+            "lock->regs->ax ^= 1;\n\t"
             "smp_store_release(&lock->locked_completed, 1);",
         ),
         "packet-overwrite-after-wake": (
             "code",
             "smp_store_release(&lock->locked_completed, 1);",
             "smp_store_release(&lock->locked_completed, 1);\n\t"
-            "lock->regs.ax = 0;",
+            "lock->regs->ax = 0;",
         ),
         "refusal-writes-parent": (
             "pool",
-            "ctx->depth >= KD_EXEC_MAX_NESTING",
-            "(ctx->depth >= KD_EXEC_MAX_NESTING && (ctx->frames[0].regs.ax = 0, true))",
+            "\t    lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||\n\t    ctx->depth >= KD_EXEC_MAX_NESTING",
+            "\t    lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||\n\t    (ctx->depth >= KD_EXEC_MAX_NESTING && (ctx->frames[0].regs.ax = 0, true))",
         ),
         "refusal-publishes-completion": (
             "code",

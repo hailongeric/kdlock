@@ -36,6 +36,18 @@ static bool fixture_irq;
 static unsigned long kd_exec_invariant_failures;
 static char report[1024];
 typedef unsigned int atomic_t;
+struct kd_spin_exec_request {
+	struct kd_exec_frame frame;
+	struct kd_spin_exec_request *packet_owner;
+	atomic_t users;
+};
+#define KD_SPIN_REQUEST_SLOTS (KD_EXEC_MAX_NESTING + 4)
+static struct kd_spin_exec_request request_pool[KD_SPIN_REQUEST_SLOTS];
+static struct kd_spin_exec_request *kd_spin_requests = request_pool;
+#define atomic_read_acquire(p) (*(p))
+#define atomic_set(p,v) (*(p) = (v))
+#define atomic_dec(p) (--*(p))
+#define atomic_dec_and_test(p) (--*(p) == 0)
 struct qspinlock {
 	atomic_t val;
 };
@@ -126,6 +138,7 @@ static unsigned int probe_calls;
  * are exercised separately by test_source_lifetime, not emulated as frames. */
 static unsigned int source_frames;
 static bool source_open = true;
+static bool kd_source_is_open(void) { return source_open; }
 static bool kd_source_frame_get(void)
 {
 	if (!source_open)
@@ -186,7 +199,7 @@ static void cpu_relax(void)
 	if (exit_behavior != 2)
 		exit_pid.task = NULL;
 	if (exit_behavior == 3)
-		exit_frame->regs.ax ^= 1;
+		kd_exec_frame_regs(exit_frame)->ax ^= 1;
 	if (exit_behavior == 4)
 		fixture_preempt++;
 	if (exit_behavior == 6)
@@ -286,8 +299,8 @@ static struct kd_exec_frame *push(unsigned int index)
 	CHECK(frame->gsbase == 0x3000 + index &&
 	      frame->logical_task == &waiters[index]);
 	CHECK(frame->logical_pid == 100 + (int)index &&
-	      frame->waiter == &waiters[index]);
-	CHECK(frame->outgoing_rsp_ptr == &waiters[index]);
+	      !frame->request_frame && !frame->regs_ref);
+	CHECK(!frame->batch_lease && !frame->delegated_lock_addr);
 	CHECK(kd_exec_current_frame() == frame && !kd_exec_context_busy());
 	CHECK(kd_exec_current_context()->owner == current);
 	CHECK(kd_exec_context_validate(kd_exec_current_context()));
@@ -716,13 +729,17 @@ static void waiter_exit_observer(bool after_ack, unsigned int behavior)
 {
 	struct kd_exec_frame *frame = push(0), remote = { 0 };
 	struct list_head routing;
-	struct pt_regs expected, output;
+	struct pt_regs expected, output, shared;
 	unsigned long locks[2] = { 0x6000, 0x2000 };
 	bool successful = behavior < 2;
 	bool incoming_irq = fixture_irq;
 
 	if (!frame)
 		return;
+	/* Remote owners retain a pointer to the root packet, not an inline copy. */
+	shared = frame->regs;
+	if (after_ack)
+		frame->regs_ref = &shared;
 	exit_pid.refs = exit_polls = 0;
 	jiffies = 0;
 	fixture_preempt = 1;
@@ -767,11 +784,11 @@ static void waiter_exit_observer(bool after_ack, unsigned int behavior)
 	if (behavior == 1)
 		exit_pid.task = NULL;
 	if (behavior == 5)
-		frame->regs.ax ^= 1;
+		kd_exec_frame_regs(frame)->ax ^= 1;
 	/* Cached identity is all the terminal observer may use, even before the
 	 * substituted RCU task link is detached. Never infer a live task from it. */
 	frame->logical_task->pid = -99;
-	expected = frame->regs;
+	expected = *kd_exec_frame_regs(frame);
 	if (!after_ack)
 		kd_exec_selftest_relay_finish(frame);
 	CHECK(kd_exec_frame_complete(frame) == 0);
@@ -885,6 +902,79 @@ static void borrowed_packets(void)
 	}
 }
 
+/* A queue slot is not request storage. Exhaustion must preserve live bytes;
+ * native owner/queue releases may arrive in either order; remote children keep
+ * the root packet alive after the root execution frame is already unbound. */
+static void shared_requests(void)
+{
+	struct kd_spin_exec_request *live[KD_SPIN_REQUEST_SLOTS], *root, *child;
+	struct pt_regs expected = registers(73);
+	struct kd_exec_context before;
+
+	cpu = 0;
+	current = &owners[0];
+	CHECK(!source_frames && !kd_exec_current_context()->depth);
+	for (unsigned int i = 0; i < KD_SPIN_REQUEST_SLOTS; i++) {
+		live[i] = kd_spin_request_reserve();
+		CHECK(live[i] && live[i]->users == 1);
+		live[i]->frame.regs = expected;
+	}
+	CHECK(!kd_spin_request_reserve());
+	for (unsigned int i = 0; i < KD_SPIN_REQUEST_SLOTS; i++) {
+		CHECK(!memcmp(&live[i]->frame.regs, &expected, sizeof(expected)));
+		kd_spin_request_put(live[i]);
+	}
+	root = kd_spin_request_reserve();
+	root->frame.regs = expected;
+	kd_exec_frame_prepare(&root->frame, 0x1000, 0, 0x3000, &waiters[0]);
+	CHECK(!memcmp(&root->frame.regs, &expected, sizeof(expected)));
+	before = *kd_exec_current_context();
+	source_open = false;
+	CHECK(kd_exec_frame_bind(&root->frame, 0, true) == -EBUSY);
+	CHECK(!memcmp(&before, kd_exec_current_context(), sizeof(before)));
+	source_open = true;
+	CHECK(kd_source_frame_get());
+	CHECK(!kd_exec_frame_bind(&root->frame, 0, true));
+	CHECK(kd_exec_current_frame() == &root->frame && source_frames == 1);
+	child = kd_spin_request_reserve();
+	root->users++; /* Child packet dependency precedes publication. */
+	child->packet_owner = root;
+	kd_exec_frame_prepare(&child->frame, 0x1000, 0, 0x3000, &waiters[0]);
+	child->frame.regs_ref = &root->frame.regs;
+	CHECK(!kd_exec_frame_bind(&child->frame, 0, true));
+	CHECK(child->frame.parent == &root->frame && source_frames == 1);
+	kd_exec_frame_regs(&child->frame)->ax ^= 0x55;
+	expected.ax ^= 0x55;
+	CHECK(!memcmp(&root->frame.regs, &expected, sizeof(expected)));
+	CHECK(!kd_exec_frame_abort(&child->frame));
+	CHECK(!kd_exec_frame_pop(&child->frame, NULL));
+	CHECK(kd_exec_current_frame() == &root->frame);
+	CHECK(!kd_exec_frame_abort(&root->frame));
+	CHECK(!kd_exec_frame_pop(&root->frame, NULL) && source_frames == 1);
+	kd_spin_request_put(root);
+	CHECK(root->users == 1); /* Child still owns the packet. */
+	CHECK(kd_spin_request_reserve() != root);
+	kd_spin_request_put(child);
+	CHECK(!root->users && !child->users);
+	kd_source_frame_put();
+	/* Return the one temporary reservation from the exclusion check. */
+	for (unsigned int i = 0; i < KD_SPIN_REQUEST_SLOTS; i++)
+		if (request_pool[i].users)
+			kd_spin_request_put(&request_pool[i]);
+	for (unsigned int owner_first = 0; owner_first < 2; owner_first++) {
+		root = kd_spin_request_reserve();
+		root->users++; /* native owner reference */
+		kd_spin_request_put(root);
+		CHECK(root->users == 1);
+		child = kd_spin_request_reserve();
+		CHECK(child && child != root);
+		kd_spin_request_put(root);
+		CHECK(!root->users);
+		kd_spin_request_put(child);
+	}
+	CHECK(!source_frames && !kd_exec_current_frame());
+}
+
 int main(void)
 {
 	unsigned int depth, cycle, last_released;
@@ -892,6 +982,9 @@ int main(void)
 
 	CHECK(sizeof(struct pt_regs) == 168 &&
 	      sizeof(struct kd_exec_frame) == 656);
+	shared_requests();
+	if (failures)
+		return 1;
 	reuse_single();
 	if (failures)
 		return 1;

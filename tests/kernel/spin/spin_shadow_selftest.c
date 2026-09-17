@@ -310,9 +310,9 @@ static void kd_shadow_queue_wait(void)
 	struct kd_spin_node *node = this_cpu_ptr(&kd_spin_nodes[0]);
 
 	kd_spin_lock_slowpath(kd_shadow_test.lock, (unsigned long)hook_regs, &request);
-	KD_SHADOW_CHECK(node->native_regs_decoded && node->regs.bx == 1 &&
-			node->regs.r12 == 2 && node->regs.r13 == 3 &&
-			node->regs.r14 == 4 && node->regs.r15 == 5 && node->regs.bp == 6);
+	KD_SHADOW_CHECK(node->native_regs_decoded && node->regs->bx == 1 &&
+			node->regs->r12 == 2 && node->regs->r13 == 3 &&
+			node->regs->r14 == 4 && node->regs->r15 == 5 && node->regs->bp == 6);
 }
 
 static void kd_shadow_head(void)

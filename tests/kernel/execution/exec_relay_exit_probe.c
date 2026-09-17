@@ -24,6 +24,7 @@ static atomic_t kd_relay_exit_claimed = ATOMIC_INIT(0);
 static struct {
 	struct kd_exec_frame *frame;
 	struct kd_exec_frame expected;
+	struct pt_regs expected_regs;
 	struct pid *pid;
 	unsigned int cpu, preempt;
 	bool irq, valid, after_ack;
@@ -49,6 +50,7 @@ static void kd_exec_selftest_relay_arm(struct kd_exec_frame *frame,
 	alive = pid_task(kd_relay_exit.pid, PIDTYPE_PID) == frame->logical_task;
 	rcu_read_unlock();
 	kd_relay_exit.expected = *frame;
+	kd_relay_exit.expected_regs = *kd_exec_frame_regs(frame);
 	kd_relay_exit.cpu = raw_smp_processor_id();
 	kd_relay_exit.preempt = preempt_count();
 	kd_relay_exit.irq = irqs_disabled();
@@ -78,8 +80,8 @@ static void kd_exec_selftest_relay_arm(struct kd_exec_frame *frame,
 	pr_info("%s arm: task=%d cpu=%u owner=%lx outer=%lx entry=%lx ip=%lx sp=%lx remaining=%u alive=%u valid=%u preempt=%u irq=%u\n",
 		after_ack ? "kd_child_exit" : "kd_relay_exit",
 		frame->logical_pid, kd_relay_exit.cpu, (unsigned long)current,
-		frame->outer_lock_addr, frame->entry_ip, frame->regs.ip,
-		frame->regs.sp, remaining, alive, kd_relay_exit.valid,
+		frame->outer_lock_addr, frame->entry_ip, kd_exec_frame_regs(frame)->ip,
+		kd_exec_frame_regs(frame)->sp, remaining, alive, kd_relay_exit.valid,
 		kd_relay_exit.preempt, kd_relay_exit.irq);
 }
 
@@ -88,7 +90,9 @@ static void kd_exec_selftest_relay_release(struct kd_exec_frame *frame)
 	unsigned long deadline = jiffies + 5 * HZ;
 	bool detached = false, packet, context;
 
-	packet = !memcmp(frame, &kd_relay_exit.expected, sizeof(*frame));
+	packet = !memcmp(frame, &kd_relay_exit.expected, sizeof(*frame)) &&
+		 !memcmp(kd_exec_frame_regs(frame), &kd_relay_exit.expected_regs,
+			 sizeof(kd_relay_exit.expected_regs));
 	if (kd_relay_exit.valid && packet &&
 	    kd_exec_frame_can_complete(frame)) {
 		do {
@@ -100,7 +104,9 @@ static void kd_exec_selftest_relay_release(struct kd_exec_frame *frame)
 			cpu_relax();
 		} while (time_before(jiffies, deadline));
 	}
-	packet &= !memcmp(frame, &kd_relay_exit.expected, sizeof(*frame));
+	packet &= !memcmp(frame, &kd_relay_exit.expected, sizeof(*frame)) &&
+		  !memcmp(kd_exec_frame_regs(frame), &kd_relay_exit.expected_regs,
+			  sizeof(kd_relay_exit.expected_regs));
 	context = kd_exec_current_frame() == frame &&
 		  raw_smp_processor_id() == kd_relay_exit.cpu &&
 		  preempt_count() == kd_relay_exit.preempt &&
@@ -116,7 +122,7 @@ static void kd_exec_selftest_relay_release(struct kd_exec_frame *frame)
 		kd_relay_exit.after_ack ? "kd_child_exit" : "kd_relay_exit",
 		frame->logical_pid, raw_smp_processor_id(),
 		(unsigned long)current, frame->outer_lock_addr, frame->entry_ip,
-		frame->regs.ip, frame->regs.sp, detached, packet, context,
+		kd_exec_frame_regs(frame)->ip, kd_exec_frame_regs(frame)->sp, detached, packet, context,
 		kd_relay_exit.valid && detached && packet && context);
 }
 
@@ -146,7 +152,7 @@ static void kd_exec_selftest_relay_pop(struct kd_exec_frame *frame)
 		kd_exec_frame_can_complete(frame) && !frame->resume_target &&
 		!frame->remote_request && !frame->native_request &&
 		list_empty(&frame->native_link) &&
-		!memcmp(&frame->regs, &kd_relay_exit.expected.regs,
+		!memcmp(kd_exec_frame_regs(frame), &kd_relay_exit.expected_regs,
 			sizeof(frame->regs));
 	/* Unlock/completion legitimately changed the ledger since arm. Snapshot
 	 * that terminal frame now, then require every byte to survive the wait.
