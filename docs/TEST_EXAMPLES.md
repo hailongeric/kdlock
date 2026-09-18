@@ -215,7 +215,7 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_spin_shadow.py` | 生产队首、combiner、native/virtual node producer、取消与嵌套返回 | 已覆盖被删除的节点计数模型；保留此生产测试 |
 | `test_spin_wait.py` | guest 用户态执行生产 `spin/wait.inc` 汇编，另一线程覆盖旧 C 栈后检查完成/native 恢复，以及普通队首返回 | 专门检查发布后无栈等待和非局部恢复；不模拟内核 IRQ，不替代实际 JIT |
 | `test_spin_outer_progress.py` | 生产 batch/frame/ticket、提前 outer-release、frame 池拒绝、真实 gate 满表 ENOMEM 的完整包不变，以及 release 前的包和唤醒后槽复用 | gate 失败由真实 nested producer 产生、PENDING helper 恢复 callee/SP；与 shadow 队首部分交叉，但保留 frame/原锁和发布边界；不证明实际 JIT 或硬件内存序 |
-| `test_spin_wwjump.py` | guest 用户态执行真实 `spin_batch.S` 和 wrapper 普通/批次入口，核对单锁最小回写、hostcall/CALL miss/refusal 完整包、每次正文只执行一次及两元素 args | 使用小型生成正文替身；真实队列和 JIT 正文通过 live/benchmark 核对，不验证硬件 IRQ/flags |
+| `test_spin_wwjump.py` | guest 用户态执行真实编译器 clobber 调用边界、旧驻留外壳兼容夹具和 wrapper 普通/批次入口，核对单锁最小回写、hostcall/CALL miss/refusal 完整包、每次正文只执行一次及两元素 args | 使用小型生成正文替身；真实队列和 JIT 正文通过 live/benchmark 核对，不验证硬件 IRQ/flags |
 | `test_spin_batch.py` | 生产批内 exe 缓存/readiness 失效、per-CPU 计数与最大深度汇总、真实结构布局下的 physical/virtual 预取地址与栈界限 | CPU、IRQ 和 prefetch 是确定性替身；检查缓存命中仍拒绝失效条目、汇总含离线 CPU，不能证明真实 CPU 热插拔或缓存性能 |
 | `test_remote_outer.py` | 生产远端祖先解锁/native ACK，完整 168 字节寄存器包、CALL 返回字和 DONE 后父 frame 复用；两后端 native wait 计量开关、错误返回及多层区间重叠；含十一种故障变异 | 本地 outer 验证 node 发布，本项验证跨执行者关系，protocol 单元验证坏日志；三者不能互相替代。CPU/发布/时钟观察为替代，不证明硬件 flags/并发 |
 | `test_mutex_resources.py` | 生产 tail 编解码、node mask、同 CPU 同队列未发布回退、shadow 表、hook/selector、完整 slowpath 包、改名/关闭准入路由 | 接替 mutex/tail 模型；per-CPU 存储和 task 引用仍为替代原语，保留资源边界与故障变异 |

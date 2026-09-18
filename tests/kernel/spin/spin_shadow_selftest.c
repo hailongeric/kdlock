@@ -309,7 +309,10 @@ static void kd_shadow_queue_wait(void)
 	struct kd_spin_request request = kd_spin_unlock_lookup(kd_shadow_test.lock);
 	struct kd_spin_node *node = this_cpu_ptr(&kd_spin_nodes[0]);
 
-	kd_spin_lock_slowpath(kd_shadow_test.lock, (unsigned long)hook_regs, &request);
+	/* This synthetic queue probe intentionally exercises the saved legacy
+	 * packet, independently of the kernel's default ordinary caller ABI. */
+	kd_spin_lock_slowpath(kd_shadow_test.lock, (unsigned long)hook_regs, &request,
+			      0, 0, KD_ENTRY_ABI_LEGACY);
 	KD_SHADOW_CHECK(node->execution->native_regs_decoded && node->execution->frame.regs_ref->bx == 1 &&
 			node->execution->frame.regs_ref->r12 == 2 && node->execution->frame.regs_ref->r13 == 3 &&
 			node->execution->frame.regs_ref->r14 == 4 && node->execution->frame.regs_ref->r15 == 5 && node->execution->frame.regs_ref->bp == 6);

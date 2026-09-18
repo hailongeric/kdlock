@@ -237,6 +237,35 @@ void kd_spin_dispatch_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 	kd_spin_dispatch_unlock_slow(lock);
 }
 
+void kd_spin_dispatch_clobber_lock_v1(raw_spinlock_t *lock, unsigned long sp,
+                                    unsigned long ip, unsigned long bp)
+{
+	enum kd_spin_fast_result result = kd_spin_fast_acquire(lock, ip);
+
+	if (likely(result == KD_SPIN_FAST_OWNED))
+		return;
+	if (result == KD_SPIN_FAST_MISS_PINNED)
+		preempt_enable();
+	if (!kd_spin_task_selected() || kd_spin_entry_native_active()) {
+		origin_raw_spin_lock(lock);
+		return;
+	}
+	if (!kd_hotlock_is_promoted((unsigned long)lock)) {
+		kd_hotlock_record((unsigned long)lock);
+		origin_raw_spin_lock(lock);
+		return;
+	}
+	kd_exe_add_abi(0, ip, KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+	kd_spin_lock_abi((struct qspinlock *)lock, sp, ip, bp,
+	                 KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+}
+
+void kd_spin_dispatch_clobber_unlock_v1(raw_spinlock_t *lock, unsigned long sp,
+                                      unsigned long ip, unsigned long bp)
+{
+	kd_spin_dispatch_unlock(lock, sp, ip);
+}
+
 #include "lock/mutex_calls.inc"
 
 /* ==========================================================================

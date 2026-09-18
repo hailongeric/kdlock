@@ -13,6 +13,7 @@ import conflict
 import context_guards
 import context_policy
 import diagnostics
+import entry_abi
 import hostcall
 import indirect_jump
 import memread
@@ -59,6 +60,8 @@ def find_segment_policy_error(
     guards=None,
     scoped_calls=False,
     mutex_stack_bytes=0,
+    entry_spill_guards=False,
+    readonly_targets=(),
 ):
     # A guarded verdict is conditional: its complete predicates must be emitted
     # before body execution. Analysis and emission share this same collector.
@@ -99,6 +102,9 @@ def find_segment_policy_error(
             db_dict,
             roots=roots,
             control_targets=lock_symbols or (),
+            clobber_targets={address for address, (_, name) in (lock_symbols or {}).items()
+                             if name.endswith("_clobber_v1")},
+            readonly_targets=readonly_targets,
             mutex_targets={
                 address
                 for address, (kind, name) in (lock_symbols or {}).items()
@@ -109,6 +115,7 @@ def find_segment_policy_error(
             native_exits=native_exits,
             guards=guards,
             scoped_calls=scoped_calls,
+            entry_spill_guards=entry_spill_guards,
         ):
             offset = block_start
             for line in block.lines:
@@ -152,7 +159,7 @@ def run_build_step(command, **kwargs):
         raise
 
 
-def build_jit_binary():
+def build_jit_binary(abi=0):
     diagnostics.set_instruction(None, "<assemble/objcopy/objdump>")
     include_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "include"
@@ -161,6 +168,7 @@ def build_jit_binary():
         [
             "gcc",
             f"-I{include_dir}",
+            f"-DKD_GENERATED_ENTRY_ABI={abi}",
             "-I./asm/",
             "-c",
             "-fPIC",
@@ -295,11 +303,11 @@ def decode_regions(rets, raw_spin_unlock, keep_call_stack):
 # Complete text/CFG expansion and both admission passes before emitting bytes.
 # One selected block set drives checking and codegen; waiter-only CALL suffixes
 # stay outside this episode, but any alternate live path remains in scope.
-def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
+def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     diagnostics.begin(pid, entry)
     os.makedirs("./asm", exist_ok=True)
 
-    if lock_kind not in {"spin", "mutex"}:
+    if lock_kind not in {"spin", "mutex"} or abi not in {0, 1} or (abi == 1 and lock_kind != "spin"):
         diagnostics.set_instruction(entry, "<entry lock kind>")
         return reject_translation("missing or invalid entry lock kind")
 
@@ -319,22 +327,31 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
 
     resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
     hostcall_targets = set(resolved_hostcalls)
+    readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi == 1 else set()
     raw_spin_lock = control_symbols["_raw_spin_lock"]
     raw_spin_unlock = control_symbols["_raw_spin_unlock"]
     mutex_lock = control_symbols["mutex_lock"]
     mutex_unlock = control_symbols["mutex_unlock"]
+    clobber_lock = get_kernel_symbol("kd_raw_spin_lock_clobber_v1")
+    clobber_unlock = get_kernel_symbol("kd_raw_spin_unlock_clobber_v1")
+    if abi == 1 and not (clobber_lock and clobber_unlock):
+        return reject_translation("clobber entry symbols unavailable")
     lock_symbols = {
         addr: (kind, name)
         for addr, kind, name in (
             (raw_spin_lock, "spin", "_raw_spin_lock"),
             (raw_spin_unlock, "spin", "_raw_spin_unlock"),
+            (clobber_lock, "spin", "kd_raw_spin_lock_clobber_v1"),
+            (clobber_unlock, "spin", "kd_raw_spin_unlock_clobber_v1"),
             (mutex_lock, "mutex", "mutex_lock"),
             (mutex_unlock, "mutex", "mutex_unlock"),
         )
     }
+    lock_symbols.pop(0, None)
     keep_call_stack = set(lock_symbols) | hostcall_targets
     # Analysis may use only the bound negotiated on this translation's live
-    # device lease. Spin and hostcalls have no checked-memory summary.
+    # device lease. New spin/scalar service summaries describe typed sequential
+    # effects; they do not claim this mutex runtime stack-comparison capability.
     mutex_stack_bytes = (
         memread.device_session.mutex_stack_bytes() if lock_kind == "mutex" else 0
     )
@@ -368,8 +385,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
             block_dict,
             db_dict,
             entry,
-            {raw_spin_lock, mutex_lock},
-            {raw_spin_unlock, mutex_unlock},
+            {raw_spin_lock, clobber_lock, mutex_lock},
+            {raw_spin_unlock, clobber_unlock, mutex_unlock},
             discovered_targets,
             native_exits=native_exits,
         )
@@ -434,6 +451,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
             roots=(discovered_targets | {entry}) & (block_dict.keys() - missing),
             native_exits=native_exits,
             mutex_stack_bytes=mutex_stack_bytes,
+            readonly_targets=readonly_targets,
         )
         if (
             segment_error
@@ -445,7 +463,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
                 and context_policy.static_address(
                     line.args[0], db_dict[block], line.offset + line.l
                 )
-                in {raw_spin_lock, mutex_lock}
+                in {raw_spin_lock, clobber_lock, mutex_lock}
                 for block in selected.values()
                 for line in block.lines
             )
@@ -476,6 +494,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
                     guards=candidate,
                     scoped_calls=bool(discovered_targets - {entry}),
                     mutex_stack_bytes=mutex_stack_bytes,
+                    entry_spill_guards=abi == 1,
+                    readonly_targets=readonly_targets,
                 )
                 if not segment_error:
                     entry_guards = candidate
@@ -517,6 +537,15 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
     except indirect_jump.ReturnFlowError as error:
         diagnostics.set_instruction(error.offset, "<return dispatch>")
         return reject_translation(str(error))
+    if abi == 1:
+        reason = entry_abi.check_minimal_entry(
+            block_dict, db_dict, entry, {clobber_lock, clobber_unlock},
+            set(lock_symbols), jump_table,
+        )
+        if reason:
+            return reject_translation(reason)
+        if entry_guards is not None and entry_guards.register_dependencies() - {"RSP", "RBP"}:
+            return reject_translation("entry guard requires an uncaptured GPR")
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
     )
@@ -626,7 +655,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False):
 
     solve_bug.solve_cond_jmp_lock_cmpxchg("./asm/jit.S")
 
-    build_jit_binary()
+    build_jit_binary(abi)
     return 0
 
 
@@ -642,7 +671,8 @@ if __name__ == "__main__":
             raise ValueError("KD_JIT_BODY_WITNESS must be 0 or 1")
         diagnostics.begin(pid, entry)
         with device_session.session():
-            result = dis_assem(pid, entry, lock_kind, body_witness=body_witness == "1")
+            result = dis_assem(pid, entry, lock_kind, body_witness=body_witness == "1",
+                               abi=int(sys.argv[4]) if len(sys.argv) > 4 else 0)
         sys.exit(result)
     except Exception as error:
         diagnostics.error(

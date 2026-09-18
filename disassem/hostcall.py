@@ -61,3 +61,17 @@ def resolve_hostcalls(symbol_lookup, path=None):
         if address and address not in resolved:
             resolved[address] = spec
     return resolved
+
+
+def readonly_waiter_targets(resolved):
+    """Exact typed services whose handlers only replace saved RAX.
+
+    These audited scalar/time helpers run on the executor stack and do not
+    write waiter memory. Keep unknown/future manifest services opaque. This
+    summarizes sequential effects only, not concurrent memory freshness.
+    See kernel_module/execution/hostcalls.inc for the matching invocations.
+    """
+    audited = {("KTIME_GET", 1, "ktime_get"),
+               ("KTIME_GET_NS", 2, "ktime_get_ns"),
+               ("INT_SQRT", 3, "int_sqrt")}
+    return {address for address, spec in resolved.items() if tuple(spec) in audited}

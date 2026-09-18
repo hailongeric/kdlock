@@ -18,7 +18,8 @@ static int is_end_point(unsigned long addr)
 static int is_outer_lock_unlock(struct pt_regs *regs,
 				unsigned long outer_lock_addr)
 {
-	if (regs->ip != raw_spin_unlock_addr && regs->ip != mutex_unlock_addr)
+	if (regs->ip != raw_spin_unlock_addr &&
+	    regs->ip != clobber_spin_unlock_addr && regs->ip != mutex_unlock_addr)
 		return 0;
 	if (!outer_lock_addr)
 		return 1;
@@ -67,7 +68,8 @@ static int finish_acquired_spin_call(struct kd_exec_frame *frame,
 		return result;
 	call = &frame->control_call;
 	if (call->phase != KD_CALL_ACQUIRED ||
-	    call->target != raw_spin_lock_addr ||
+	    (call->target != raw_spin_lock_addr &&
+	     call->target != clobber_spin_lock_addr) ||
 	    !kd_call_after_matches(call, regs->ip, regs->sp))
 		return result;
 	index = frame->jit_lock_depth - 1;
@@ -256,19 +258,19 @@ static int handle_known_call(struct pt_regs *regs,
 	/* Backend-specific lock stacks cannot represent mixed spin/mutex nesting.
 	 * In particular, never enter a sleeping mutex service from a spin frame. */
 	if (frame &&
-	    ((frame->mutex_backend && (regs->ip == raw_spin_lock_addr ||
-				       regs->ip == raw_spin_unlock_addr)) ||
+	    ((frame->mutex_backend && ((regs->ip == raw_spin_lock_addr || regs->ip == clobber_spin_lock_addr) ||
+				       (regs->ip == raw_spin_unlock_addr || regs->ip == clobber_spin_unlock_addr))) ||
 	     (!frame->mutex_backend && mutex_lock_addr && mutex_unlock_addr &&
 	      (regs->ip == mutex_lock_addr || regs->ip == mutex_unlock_addr))))
 		return -EOPNOTSUPP;
 
-	if (regs->ip == raw_spin_lock_addr) {
+	if ((regs->ip == raw_spin_lock_addr || regs->ip == clobber_spin_lock_addr)) {
 		ret = kd_spin_jit_nested_lock_ctx((raw_spinlock_t *)regs->di,
 						  regs, frame);
 		return finish_known_lock_call(frame, regs, ret);
 	}
 
-	if (regs->ip == raw_spin_unlock_addr) {
+	if ((regs->ip == raw_spin_unlock_addr || regs->ip == clobber_spin_unlock_addr)) {
 		if (regs->di == outer_lock_addr) {
 			/* An early outer unlock is a real OOO release.  Keep executing
 			 * until every nested lock has released, then finish A once. */

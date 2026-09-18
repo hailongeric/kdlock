@@ -49,6 +49,8 @@ def main():
         )
         + "\n"
     )
+    for marker in ("enum kd_entry_abi {", "enum kd_packet_state {"):
+        types += definition((ROOT / "include/exe_info.h").read_text(), marker).rstrip() + ";\n"
     types += (ROOT / "include/kd_jit_batch.h").read_text()
     spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
     for marker in ("struct shadow_stack {", "struct kd_spin_jit_context {", "struct kd_spin_request {"):
@@ -148,7 +150,7 @@ def main():
                 if line.startswith("static ") and name + "(" in line
             )
             code += definition(spin, marker) + "\n"
-    code += definition(spin, "static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)")
+    code += definition(spin, "static void kd_spin_batch_run(void *opaque)")
     for name, prefix in (
         ("execute_cs", "static int\n"),
         ("run_combiner", "static void\n"),

@@ -5,6 +5,8 @@
 #include <string.h>
 
 #define ASM_RET "ret\n\t"
+register unsigned long current_stack_pointer asm("rsp");
+#define ASM_CALL_CONSTRAINT "+r"(current_stack_pointer)
 #include "../../../workload_modules/lock_scenarios/fragments/native_register_probe.h"
 
 static unsigned int checks, failures;

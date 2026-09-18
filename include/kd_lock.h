@@ -73,4 +73,7 @@ int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
 int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame);
 int kd_mutex_debug_waiter_count(struct mutex *lock);
 
+void kd_spin_dispatch_clobber_lock_v1(raw_spinlock_t *, unsigned long, unsigned long, unsigned long);
+void kd_spin_dispatch_clobber_unlock_v1(raw_spinlock_t *, unsigned long, unsigned long, unsigned long);
+
 #endif /* KD_LOCK_H */

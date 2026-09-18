@@ -2,6 +2,10 @@
 
 适用范围：仅 x86_64 机器上的内核临界区；不包含其他架构的适配或测试任务。
 mutex 代理必须显式启用 `mutex_jit=1`。
+普通 spin 的 caller-clobber v1 由独立 `kdclobber1` 内核入口启用：物理请求
+最初仅有 RIP/RSP/RBP，正常 outer unlock 返回精简完成；中间出口先物化 FULL
+包再进入下述通用处理。旧 ABI 和 mutex 保留完整契约。身份、状态表和调用约束
+统一见 [寄存器 ABI 1.0](JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1)。
 2026-09-08 用户确认：只审查本次实际可能执行的 JIT 范围，普通 CALL miss
 交回原 waiter 后，从保存的退出状态原生完成剩余临界区，不再返回本次 JIT。
 这取代此前“普通 CALL 后的 native 后缀也必须整段准入”的要求。
@@ -217,13 +221,15 @@ SLOWPATH、COMBINER、JIT_SUCCESS 等事件、最大深度、overflow 和 invari
 普通请求只初始化 64 字节 frame 热头部及寄存器包；锁数组、remote/native 控制和
 快照位于预分配冷区，由 `complex_ready` 在首次复杂出口启用。node 为 48 字节，
 只保留队列通知、链接、调度栈标记及 execution 引用。
-`kd_spin_batch_enter` 每批保存一次原始 combiner 寄存器；C step 自身的 ABI 保存
-仍逐请求发生。锁侧 `kd_spin_batch_step`
-处理正常完成、发布 waiter、选择并准入下一请求，再进入 alternate wrapper。
+`kd_spin_batch_run` 在同一个 C 帧中连续处理新、旧及混合 ABI 请求，编译器
+按 clobber 约束保护 combiner 活跃值。旧 wrapper 适配只额外保护物理 RBP；
+新 wrapper 自己保护 RBP。正常请求不逐次退出/重入循环，也没有外层汇编
+成组保存。循环完成/解绑/发布当前 waiter 后选择并准入下一请求。
 正常单锁跳过逐请求 `execute_cs`/通用 dispatcher；复杂出口用
 `kd_exe_spin_batch_resume` 消费已经执行的出口，禁止重放当前前缀。
-最终 unlock 只回写 callee-saved 集及 RIP/SP、RDI；其他出口仍保存完整 GPR。
-wrapper 入口加载与物理 waiter 的最终 GPR 恢复尚未按普通单锁边界缩小。
+新 ABI 正常入口、完成和最终恢复只访问 RIP/RSP/RBP；旧 ABI 最终 unlock
+回写 callee-saved 集及 RIP/SP、RDI，保留原入口导入及最终 GPR 恢复。
+中途出口仍在进入 C 前物化完整逻辑 GPR。
 排空日志 `kd_spin batch: entries=... ww_jumps=...` 证明实际批次入口/连续交接次数。
 普通单用户 request 最终 release store 归还；有 native/child 使用者时仍原子递减。
 ticket 分配/查询只访问活跃位图中的槽，状态变更 guard 仍保护远端引用和代次。

@@ -51,6 +51,7 @@ def render(
     body_witness=False,
     indirect_history=None,
     mutex_stack_bytes=0,
+    abi=0,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
@@ -121,7 +122,7 @@ def render(
         os.chdir(temp)
         try:
             status = translator.dis_assem(
-                0, entry, lock_kind, body_witness=body_witness
+                0, entry, lock_kind, body_witness=body_witness, abi=abi
             )
             path = Path("asm/jit.S")
             assembly = path.read_bytes() if path.exists() else b""

@@ -52,7 +52,9 @@ FIXTURE = r'''
 #include <stdio.h>
 #include <string.h>
 struct pt_regs { unsigned long w[21]; };
+#define __KERNEL__
 #include "kd_jit_batch.h"
+extern void kd_spin_batch_enter(void *, struct kd_jit_batch_call *(*)(void *));
 extern void main_wrapper(struct pt_regs *, unsigned long *);
 static struct pt_regs packets[4];
 static unsigned long bodies[4];
@@ -98,6 +100,9 @@ int main(void)
     assert(offsetof(struct kd_jit_batch_call, lock) == 32);
     assert(offsetof(struct kd_jit_batch_call, unlock) == 40);
     assert(!memcmp((char *)main_wrapper + 9, "KDWB001", 7));
+    for (int unified=0; unified<2; unified++) {
+    index_=0;
+    memset(bodies,0,sizeof(bodies));
     for (int i=0; i<4; i++) {
         for (int j=0;j<21;j++) packets[i].w[j]=0xdead;
         packets[i].w[5]=(unsigned long)&bodies[i];
@@ -106,8 +111,13 @@ int main(void)
         packets[i].w[16]=0x3000;
         packets[i].w[19]=0x9000;
     }
-    kd_spin_batch_enter(packets, step);
+    if (!unified) kd_spin_batch_enter(packets, step);
+    else {
+        struct kd_jit_batch_call *next;
+        while ((next=step(packets))) kd_jit_legacy_batch_call(next);
+    }
     assert(index_ == 4);
+    }
     /* Normal C ABI still writes all GPRs, including a final unlock. */
     unsigned long args[2]={0x7000,0x8000};
     packets[0].w[5]=(unsigned long)&bodies[0];
@@ -115,7 +125,7 @@ int main(void)
     main_wrapper(&packets[0], args);
     assert(packets[0].w[6] == 0x107 && packets[0].w[11] == 0x108);
     assert(bodies[0] == 2 && args[1] == 1);
-    puts("[PASS] resident WWJUMP, reduced final ABI, full continuation/refusal ABI");
+    puts("[PASS] legacy resident/unified C loop, reduced final ABI, full continuation/refusal ABI");
 }
 '''
 
@@ -124,16 +134,19 @@ def main():
     with tempfile.TemporaryDirectory(prefix="kdlock-wwjump-") as directory:
         path=Path(directory)
         (path/'linux').mkdir(); (path/'asm').mkdir()
+        # Userspace has no objtool pass; the kernel build validates real hints.
+        (path/'linux/objtool.h').write_text('#define UNWIND_HINT(...) ""\n')
         (path/'linux/linkage.h').write_text('#define SYM_FUNC_START(x) .globl x; .type x,@function; x:\n#define SYM_FUNC_END(x) .size x, .-x\n')
-        (path/'asm/nospec-branch.h').write_text('.macro CALL_NOSPEC reg\ncall *%\\reg\n.endm\n#define RET ret\n')
+        (path/'asm/asm.h').write_text('register unsigned long current_stack_pointer asm("rsp");\n#define ASM_CALL_CONSTRAINT "+r"(current_stack_pointer)\n')
+        (path/'asm/nospec-branch.h').write_text('#ifdef __ASSEMBLER__\n.macro CALL_NOSPEC reg\ncall *%\\reg\n.endm\n#define RET ret\n#else\n#define CALL_NOSPEC "call *%[thunk_target]\\n"\n#endif\n')
         (path/'jit.S').write_text(BODY)
         (path/'wrapper.S').write_text((ROOT/'include/wrapper.S').read_text()+'\n.globl main\n.section .note.GNU-stack,"",@progbits\n')
         (path/'fixture.c').write_text(FIXTURE)
         cc=shlex.split(os.environ.get('CC','cc'))
         for src,out,extra in [(path/'wrapper.S',path/'wrapper.o',['-Dmain=main_wrapper']),
-                              (ROOT/'kernel_module/spin_batch.S',path/'runner.o',[])]:
+                              (ROOT/'tests/unit/spin/legacy_batch.S',path/'runner.o',[])]:
             subprocess.run(cc+['-c','-I'+str(path),'-I'+str(ROOT/'include'),*extra,str(src),'-o',str(out)],check=True,timeout=30)
-        subprocess.run(cc+['-O2','-fno-omit-frame-pointer','-Wall','-Wextra','-Werror','-I'+str(ROOT/'include'),str(path/'fixture.c'),str(path/'wrapper.o'),str(path/'runner.o'),'-o',str(path/'check')],check=True,timeout=30)
+        subprocess.run(cc+['-O2','-fno-omit-frame-pointer','-Wall','-Wextra','-Werror','-mno-red-zone','-I'+str(path),'-I'+str(ROOT/'include'),str(path/'fixture.c'),str(path/'wrapper.o'),str(path/'runner.o'),'-o',str(path/'check')],check=True,timeout=30)
         subprocess.run([str(path/'check')],check=True,timeout=10)
 
 if __name__ == '__main__':

@@ -72,8 +72,13 @@ static void kd_spin_prefetch_request(struct kd_spin_node *node)
 	if (!regs)
 		return;
 	frame = &execution->frame;
-	for (offset = 0; offset < sizeof(*regs); offset += L1_CACHE_BYTES)
-		prefetchw((char *)regs + offset);
+	if (frame->packet_state == KD_PACKET_FULL) {
+		for (offset = 0; offset < sizeof(*regs); offset += L1_CACHE_BYTES)
+			prefetchw((char *)regs + offset);
+	} else {
+		prefetchw(&regs->bp);
+		prefetchw(&regs->sp);
+	}
 	prefetchw(frame);
 	if (READ_ONCE(frame->complex_ready)) {
 		prefetchw(&frame->jit_lock_addr[0]);
@@ -233,9 +238,11 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	if (!exe) {
 		kd_spin_debug_jit_not_ready(lock,
 					    kd_spin_lock_stack_depth(ptr));
-		kd_exe_add(0, entry_ip, KD_EXE_LOCK_SPIN);
+		kd_exe_add_abi(0, entry_ip, KD_EXE_LOCK_SPIN,
+		               curr_node->execution->frame.entry_abi);
 		return KD_EXE_NO_RUN;
 	}
+	if (curr_node->execution->frame.packet_state == KD_PACKET_FULL)
 	print_debug(
 		"r15 %lx r14 %lx r13 %lx r12 %lx bx %lx bp %lx ip %lx sp %lx\n",
 		curr_node->execution->frame.regs_ref->r15, curr_node->execution->frame.regs_ref->r14, curr_node->execution->frame.regs_ref->r13,
@@ -495,10 +502,12 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 	return true;
 }
 
-/* WWJUMP lives here: finish the current waiter, publish its result, select and
- * admit the successor, then return its wrapper entry to the resident shell.
- * No queue or lifecycle decision is made in the generated code. */
-static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)
+/* Like TCLock's WWJUMP, keep one combiner continuation for the entire batch.
+ * Finish and unbind before publishing completion, then admit the successor.
+ * Both wrapper ABIs clobber compiler-owned registers inside this same C frame;
+ * neither a mixed boundary nor a new waiter returns through an outer runner.
+ * Physical RSP stays on this stack; only the JIT's logical stack is switched. */
+static void kd_spin_batch_run(void *opaque)
 {
 	struct kd_spin_batch *batch = opaque;
 	struct qspinlock *lock = batch->lock;
@@ -542,8 +551,13 @@ static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)
 			batch->outer.released = false;
 			kd_spin_prefetch_request(next_node);
 
-			if (kd_spin_batch_prepare_simple(batch, curr_node))
-				return &batch->call;
+			if (kd_spin_batch_prepare_simple(batch, curr_node)) {
+				if (batch->call.entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
+					kd_jit_clobber_call_v1(&batch->call);
+				else
+					kd_jit_legacy_batch_call(&batch->call);
+				continue;
+			}
 			batch->fast_previous = false;
 			exe_flag = execute_cs(lock, curr_node, batch);
 		}
@@ -572,7 +586,7 @@ static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)
 			print_debug("can't assembly\n");
 			next_node = curr_node;
 			batch->next = next_node;
-			return NULL;
+			return;
 		}
 		if (exe_flag == KD_EXE_RUN_ERROR) {
 			print_debug("run error\n");
@@ -581,7 +595,7 @@ static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)
 			 * packets use the ordinary acquired return to their parent. */
 			next_node = curr_node;
 			batch->next = next_node;
-			return NULL;
+			return;
 		}
 
 		if (exe_flag != KD_EXE_NATIVE_DONE)
@@ -591,13 +605,13 @@ static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)
 			/* B and this logical frame have finished. A's queue was already
 			 * published; only reacquire for our own original request. */
 			batch->reclaimed = true;
-			return NULL;
+			return;
 		}
 
 		if (next_node == NULL || next_node->next == NULL ||
 		    batch->counter >= kd_combiner_batch_size) {
 			batch->next = next_node;
-			return NULL;
+			return;
 		}
 
 		batch->cursor = next_node;
@@ -642,7 +656,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 
 	batch.lock = lock;
 	batch.cursor = curr_node;
-	kd_spin_batch_enter(&batch, kd_spin_batch_step);
+	kd_spin_batch_run(&batch);
 	if (batch.reclaimed) {
 		kd_spin_reclaim_outer(request);
 		kd_source_frame_put();

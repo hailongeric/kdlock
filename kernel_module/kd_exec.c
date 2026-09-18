@@ -222,6 +222,8 @@ void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
 			   struct task_struct *task)
 {
 	frame->regs_ref = &frame->regs;
+	frame->entry_abi = KD_ENTRY_ABI_LEGACY;
+	frame->packet_state = KD_PACKET_FULL;
 	frame->entry_ip = entry_ip;
 	frame->outer_lock_addr = lock;
 	frame->gsbase = gsbase;
@@ -323,6 +325,8 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	frame->logical_task = logical_task;
 	frame->logical_pid = logical_task->pid;
 	frame->regs_ref = NULL;
+	frame->entry_abi = KD_ENTRY_ABI_LEGACY;
+	frame->packet_state = KD_PACKET_FULL;
 	frame->delegated_lock_addr = 0;
 	frame->parent = kd_exec_current_frame();
 	frame->resume_target = NULL;
@@ -447,7 +451,10 @@ int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
 	if (!frame || !frame->spin_simple || !frame->executed ||
 	    frame->mutex_backend || frame->parent || frame->depth ||
 	    frame->completion_seen ||
-	    kd_exec_frame_regs(frame)->di != frame->outer_lock_addr)
+	    (frame->packet_state == KD_PACKET_COMPLETE ?
+	     frame->entry_abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1 :
+	     (frame->packet_state != KD_PACKET_FULL ||
+	      kd_exec_frame_regs(frame)->di != frame->outer_lock_addr)))
 		return -EINVAL;
 	if (frame->complex_ready) {
 		if (frame->jit_lock_depth != 1 || frame->outer_lock_index != 0)

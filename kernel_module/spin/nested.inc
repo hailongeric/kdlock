@@ -35,6 +35,8 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 		parent->gsbase, parent->logical_task);
 	kd_exec_frame_prepare_complex(frame);
 	frame->regs_ref = regs;
+	frame->entry_abi = parent->entry_abi;
+	frame->packet_state = KD_PACKET_FULL;
 	frame->spin_origin = parent->spin_origin;
 	/* Production roots reside in request storage. Legacy component probes
 	 * keep their parent frame synchronously alive instead. */

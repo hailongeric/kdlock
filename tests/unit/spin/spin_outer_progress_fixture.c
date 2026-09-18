@@ -276,8 +276,10 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 { (void)batch; (void)node; return false; }
 static bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
 { (void)call; abort(); }
-void kd_spin_batch_enter(void *batch, struct kd_jit_batch_call *(*step)(void *))
-{ if (step(batch)) abort(); }
+static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
+{ (void)call; abort(); }
+static void kd_jit_legacy_batch_call(struct kd_jit_batch_call *call)
+{ (void)call; abort(); }
 static int execute_cs(struct qspinlock *, struct kd_spin_node *, struct kd_spin_batch *);
 static int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
 				    const struct kd_jit_batch_call *call)
@@ -294,11 +296,12 @@ static struct kd_exe_info *kd_exe_find_ready(int pid, unsigned long ip)
 	CHECK(ip == (fixture_request(&request)->jit_waiter ? 0x900UL : 0x800UL));
 	return mode != 4 ? &ready_entry : NULL;
 }
-static void kd_exe_add(int pid, unsigned long ip, int kind)
+static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
 {
 	(void)pid;
 	(void)ip;
 	CHECK(kind == KD_EXE_LOCK_SPIN);
+	CHECK(abi == KD_ENTRY_ABI_LEGACY);
 }
 static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 				   struct pt_regs *regs, unsigned long ip,
@@ -466,7 +469,7 @@ static void checked_run_combiner(struct qspinlock *lock,
 	if (full) {
 		CHECK(sizeof(struct pt_regs) == 168 &&
 		      offsetof(struct kd_exec_frame, regs) == 64 &&
-		      sizeof(struct kd_exec_context) == 5336);
+		      sizeof(struct kd_exec_context) == 5400);
 		CHECK(!kd_exec_current_context()->depth);
 		for (unsigned int i = 0; i < KD_EXEC_MAX_NESTING; i++) {
 			struct pt_regs regs;

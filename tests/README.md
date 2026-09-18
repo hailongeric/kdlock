@@ -13,7 +13,8 @@
 本轮基于 `903d8a5` 的工作区，将 spin node 缩至 48 字节，只保留队列/调度状态
 和 request 引用；frame 前 64 字节为普通单锁热状态，冷字段按需启用。
 `spin_batch.S` 与 wrapper 的专用入口减少逐请求 combiner 保存和通用 dispatcher
-往返；当前请求结束后由锁侧选择下一请求，C step 自身的 ABI 保存仍逐次发生。
+往返；当时请求结束后由锁侧选择下一请求，C step 自身的 ABI 保存仍逐次发生。
+后续当前实现见[统一 combiner 现场](#tclock-context-loop)。
 精确最终 unlock 使用缩小的回写集合，
 其他出口保留完整支持的 GPR，并只消费已执行出口一次。协议见
 [寄存器 ABI](../docs/JIT_REGISTER_ABI.md#23-批次入口与退出保存集合)和
@@ -739,3 +740,134 @@ guest 日志为 `/tmp/kdlock-exe-reuse-20260916/`，live 证据为上述输出�
 宿主证据包为
 `/tmp/kdlock-exe-reuse-evidence-20260916/kdlock-exe-reuse-evidence-20260916.tar.gz`，
 SHA256 为 `524c6f0bda53c5a319dcf162ad43622ecd320f7231df7f1578191e69972f8cc2`。
+
+<a id="spin-clobber-v1"></a>
+
+### 2026-09-18：普通 spin caller-clobber v1
+
+本轮在独立 recovery 内核 `6.1.159-kdclobber1` 完成；Build ID 为
+`db937d722ee2f2668acb12dc6f105aeea33b7c5c`。从 `kdstatic2` 派生，配置仅改
+LOCALVERSION，保留 frame pointer、retpoline、return thunk、IBT、旧内核及
+默认启动项。实现以 Git `0034d7ffa873030e96f004f8e30880beedede6e7` 加验证时的工作区
+修改为基础。契约见 [寄存器 ABI](../docs/JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1)，
+实验补丁及独立基线操作见 [spin_clobber](../kernel_experiments/spin_clobber/README.md)。
+
+所有构建、机器码测试和 live 均在 guest 执行，采用增量定向验证：
+
+- 两个基础程序通过。真实新 wrapper 测试覆盖 128 个 poisoned packet，正常完成、
+  正文前拒绝、完整 hostcall/native 中间包；真实 caller asm 强制破坏所有可 clobber
+  GPR，检查高寄存器压力、局部栈、循环/helper、RSP/RBP 及精确续点。
+- 旧 wrapper/驻留 batch、请求恢复、注册表、入口身份、frame 容量和队列相关检查
+  通过。补充真实新旧 wrapper 交替测试，在驻留汇编和 C 两种调用外壳中完成
+  8 个混合入口，分别核对 FULL/COMPLETE 包和单次副作用。
+  真实等待栈 96 次；最终恢复 160 次（含最小完成与最小重试各 32 次）；
+  注册表 11062、入口范围 3346 项；NUMA off/on outer-progress 为 11407/24706 项。
+  入口/生成物 ABI 不匹配被拒绝，旧包及 FULL 中间状态继续使用原恢复规则。
+- 最后准入验证通过 14 项新 ABI 测试、40 项既有 guard、51 项内存事实测试和
+  hostcall codegen。覆盖未捕获寄存器、部分写、分支合并、锁别名、栈槽边界、
+  未知写入/callee 失效、实际移位地址回绕、有限预算及重复 guard 区间合并。
+- 原生寄存器探针保留全部 GPR、两个栈标签和返回值 oracle；改由编译器保存活跃
+  C 值后，真实汇编 150 项检查通过。默认模块、可选 SELFTEST 模块及 daemon 构建
+  通过；仍有自定义切栈/返回路径的 objtool 警告，不能称为 objtool 无警告通过。
+
+最终同一冻结版本的六项 live 全部通过，未运行无关全量套件：
+
+| 用例 | 实际验证 |
+| --- | --- |
+| mode-0 | 普通 spin JIT，12009 次状态变换 |
+| mode-2 | 普通 spin hostcall，8 次退出均执行并续跑；12009 次状态变换 |
+| mode-8 | 初始嵌套 12014 次；双 root 纯 JIT 与 quota/native 两阶段各 36023 次；每阶段 4 次实际正文，后者确认 owner ACK 后首 waiter 退出 |
+| mixed-spin | native L/private S 互操作，实际 JIT 和 18801 次状态变换 |
+| mode-5 | legacy mutex 服务/额度退出；463 次实际正文，940 次 hostcall 执行/恢复，5 名 quota 调用者及最终 ACK |
+| clobber-irq-off | 复用 mode 0 的 `KD_SPIN_IRQ_OFF=1` task 入口，12009 次状态变换；IRQ/preempt 状态保持 |
+
+`mode-5` 和 mode-8 的 quota 阶段显式启用 `mutex_jit=1`。各用例退出码为 0，
+无检测到的内核故障，最终 frames/modules/writers 均排空，workload、daemon 和
+模块均退出。最终证据离线校验通过，冻结源码 304 文件；这是字节及记录一致性
+审计，不能代替实际正文和各协议 oracle。
+
+复现时在 guest 使用上述实验 KDIR 和固定依赖 venv，普通五项可运行：
+
+```sh
+KDIR=/root/linux-6.1.159-kdclobber1 KDLOCK_RECOVERY_CONFIRMED=1 \
+  timeout --kill-after=10s 2200s python3 tests/regression.py \
+  --case mode-0 --case mode-2 --case mode-8 --case mixed-spin --case mode-5 \
+  --timeout 600 --output /root/kdlock-evidence/clobber-repeat
+```
+
+IRQ-off 的已有直接入口见本页前文。本次 `run-directed.py` 仅将它注册为一个
+临时显式用例，复用同一运行器和证据判定；未更改默认套件。
+
+原始材料在 guest `/root/kdlock-evidence/clobber-20260918/`：
+`live-final/`、`live-final-audit.json`、`run-directed.py`、`unit-final-core.log`、
+`unit-boundaries-3.log`、`unit-probe-fix.log`、`unit-guard-union.log`、
+`unit-mixed-final.log` 及构建/反汇编日志。
+调查期间的正文前拒绝、宏/夹具构建错误和可选观察器接口遗漏均保留；失败运行
+没有计为通过。准入修复保留地址检查，增加了受检入口 spill、现有 typed 服务
+的精确顺序效果及有界分析容量，没有删除负载副作用或寄存器探针。
+访问时 guard、并发内存新鲜度、flags 语义和原地代码版本的既有限制未解决。
+性能单独记录在 [spin_cacheline](../bench/spin_cacheline/README.md)。
+
+宿主完整证据包为 `/tmp/kdclobber-20260918/final.tar.gz`（约 40 MiB），SHA256：
+`fe4ea9f8ba76aff97996f14cc906ebe8b8f87c865e467d416e082e254e3b724b`。
+与 guest 原包一致，内含最终源码快照 339 文件、全部成功及失败日志。
+宿主只读审计结果在 `/tmp/kdclobber-20260918/final-audit.json`：核对性能冻结
+源码 203 文件、5 个二进制、120 个会话及其生成物/计数，独立重算 24 组中位数，
+并核对六项 live 的接受、无故障及排空记录；全部通过。旧内核及默认启动文件
+最终哈希复查通过。上述源码身份与结果属于提交前的冻结版本。
+
+<a id="tclock-context-loop"></a>
+
+### 2026-09-18：对照 TCLock 统一 combiner 现场
+
+在 caller-clobber v1 完成版本上继续改造，依据本地 TCLocks 提交
+`bbfb9f00a12af51dff6ca291cb9829a82960c2ef` 的内核 spin 实现。
+新、旧及混合入口都在同一个 `kd_spin_batch_run()` C 帧中连续执行；旧 wrapper
+调用只额外保护 RBP，移除生产汇编外壳的成组保存及逐旧请求的 C callback
+退出/重入。旧外壳保留在 `unit/spin/legacy_batch.S` 作兼容夹具。
+完整对照和保留中途逻辑 GPR 的原因见
+[寄存器 ABI](../docs/JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比)。
+
+沿用同一 recovery 内核 `6.1.159-kdclobber1`，Build ID
+`db937d722ee2f2668acb12dc6f105aeea33b7c5c`；未修改内核或启动项。
+验证时 Git 基线为 `0034d7ffa873030e96f004f8e30880beedede6e7` 加工作区改动；
+后续提交不改变这些冻结源码与结果的身份。
+所有构建和执行检查均在 guest 完成，只选择基础及直接相关项：
+
+- 两个基础程序，以及 `spin/test_spin_{clobber,wwjump,shadow,outer_progress,batch,wait}.py`
+  均通过。真实汇编覆盖 128 个 poisoned 新入口、16 个新旧混合入口、旧 wrapper
+  最终/完整/拒绝出口、96 次等待栈和 160 次最终恢复（含最小完成/重试各 32 次）。
+  outer-progress 的 NUMA off/on 分别通过 11407/24706 项；队列/嵌套 fixture 通过。
+- 队列夹具首次编译发现缺少上轮新增的 `entry_abi/packet_state` 类型，补齐后
+  重跑通过。新增 RBP 保存曾引发 objtool 将内层恢复当作外层尾声，加入精确的
+  SAVE/RESTORE 元数据后该警告消失；没有关闭检查。既有特殊切栈/返回及负载的
+  objtool 警告仍存在，不能称为全构建无警告。
+- 真实模块反汇编确认循环合入 `run_combiner`，RBX/R12–R15 各只有一个序言
+  push 位置，原 `kd_spin_batch_enter/step` 不再出现在该路径。旧入口另有一对
+  RBP push/pop；两个入口返回同一循环。该结构证据不等于周期或吞吐测量。
+
+最终同一冻结运行的五项 live 全部通过：
+
+| 用例 | 结果 |
+| --- | --- |
+| mode-0 | 新 ABI 普通 spin，12009 次状态变换 |
+| mode-2 | 新 ABI hostcall，12009 次状态变换，8 次服务退出全部续跑 |
+| mode-8 | 嵌套阶段 12014 次；双 root 纯 JIT/native 后缀阶段各 36023 次、4 个实际正文；后者确认 owner ACK 后首 waiter 退出 |
+| mixed-spin | Linux 原锁 L/private S 互操作，18801 次状态变换 |
+| legacy-spin | 仅目标模块使用 `CFLAGS_klock_module.o=-DKD_SPIN_LEGACY_CALLER`，12009 次状态变换；冻结生成物 ABI 字节确认为 0 |
+
+其余普通用例的冻结生成物 ABI 字节确认为 1，均有 wrapper 返回后的实际正文。
+mode-8 quota 阶段沿用显式 `mutex_jit=1`。每项退出码 0、无检测到的内核故障、
+source 未变、证据完整且最终排空。已恢复默认目标模块构建，daemon/workload/
+模块均未运行。未运行无关全量套件、单独 mutex live 或性能矩阵；旧成绩仍只
+属于前文冻结版本，不将减少保存指令写成吞吐提升。
+
+guest 原始证据：`/root/kdlock-evidence/tclock-context-20260918/`，包括
+`live/`、`live-audit.json`、`review.json`、`run-directed.py`、全部成功/失败构建与
+单元日志、`run-combiner-final.asm`、`kdlock_km.ko` 和相对上轮完成版本的
+`implementation.diff`。离线证据及 ABI/汇编审核均通过；实际模块 SHA256 为
+`19694866288b81d95c69ef3c42a8c5a142db06a0c8d24440e281abd47eff12c0`。
+
+宿主证据包：`/tmp/kd-tclock-context/evidence.tar.gz`（约 11 MiB），与 guest 原包
+SHA256 一致：`3707f5f38ad6691887e45a22168f7418d6e9a88f530cc72317c7c5b50531a0a0`。
+包内含 339 文件的最终源码快照、TCLock 三个参考文件的哈希及本轮全部日志。

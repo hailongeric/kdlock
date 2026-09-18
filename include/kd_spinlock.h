@@ -64,6 +64,8 @@ void kd_spinlock_exit(void);
 
 void kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,
 		  unsigned long rip);
+void kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,
+                      unsigned long ip, unsigned long bp, unsigned int abi);
 void kd_spin_unlock(struct qspinlock *lock);
 /* The hook already found this acquisition ticket; reuse it through release. */
 void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref *ref);

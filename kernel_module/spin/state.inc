@@ -242,6 +242,9 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_spin_node,
 struct kd_spin_native_input {
 	unsigned long rsp;
 	unsigned long regs_sp;
+	unsigned long ip;
+	unsigned long bp;
+	unsigned int entry_abi;
 	unsigned long irq_flags;
 };
 

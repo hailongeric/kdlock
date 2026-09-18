@@ -27,7 +27,7 @@ def production():
         ).rstrip()
         + ";\n"
     )
-    for name in ("include/kd_call.h", "include/kd_exec.h"):
+    for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
     source = read_source((ROOT / "kernel_module/kd_exec.c"))
     code = "\n".join(

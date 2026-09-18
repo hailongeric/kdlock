@@ -256,6 +256,8 @@ static int compile_entry(const struct daemon_config *cfg,
 	const char *script = cfg->mode == MODE_V1 ?
 				     "../../disassem/disassem.py" :
 				     "../../../disassem/disassem.py";
+	const char *abi = exe->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ? "1" :
+			  exe->entry_abi == KD_ENTRY_ABI_LEGACY ? "0" : "invalid";
 	const char *kind = exe->lock_kind == KD_EXE_LOCK_SPIN  ? "spin" :
 			   exe->lock_kind == KD_EXE_LOCK_MUTEX ? "mutex" :
 								 "unknown";
@@ -291,7 +293,7 @@ static int compile_entry(const struct daemon_config *cfg,
 			_exit(126);
 		}
 		execlp("python3", "python3", "-c", bootstrap, script, pid_text,
-		       rip_text, kind, (char *)NULL);
+		       rip_text, kind, abi, (char *)NULL);
 		perror("exec translator");
 		_exit(127);
 	}
@@ -388,6 +390,25 @@ static int write_sys(const struct daemon_config *cfg,
 			jit_path);
 		fclose(fp);
 		return -1;
+	}
+	{
+		unsigned char header[46];
+		bool directory;
+
+		if (fread(header, 1, sizeof(header), fp) != sizeof(header)) {
+			fclose(fp);
+			return -1;
+		}
+		directory = !memcmp(header + 25, "KDWC001", 7) &&
+		            !memcmp(header + 41, "KDAB", 4);
+		if ((exe->entry_abi != KD_ENTRY_ABI_LEGACY &&
+		     exe->entry_abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1) ||
+		    (exe->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 && !directory) ||
+		    (directory && header[45] != exe->entry_abi) || fseek(fp, 0, SEEK_SET)) {
+			fprintf(stderr, "daemon: JIT entry ABI mismatch\n");
+			fclose(fp);
+			return -1;
+		}
 	}
 	remaining = (size_t)image_size;
 

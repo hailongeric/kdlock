@@ -20,7 +20,8 @@ class Entry(ctypes.Structure):
         ("code", ctypes.c_ulong),
         ("jump_from", ctypes.c_ulong),
         ("target", ctypes.c_ulong),
-        ("padding", ctypes.c_byte * 16),
+        ("entry_abi", ctypes.c_uint),
+        ("padding", ctypes.c_byte * 12),
     ]
 
 

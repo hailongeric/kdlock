@@ -47,6 +47,8 @@ def main():
         )
     )
     for header, marker in (
+        ((ROOT / "include/exe_info.h").read_text(), "enum kd_entry_abi {"),
+        ((ROOT / "include/exe_info.h").read_text(), "enum kd_packet_state {"),
         (exec_types, "enum kd_exec_lock_kind {"),
         (exec_types, "enum kd_exec_remote_state {"),
         (read_source((ROOT / "include/kd_call.h")), "enum kd_call_phase {"),
@@ -81,7 +83,7 @@ def main():
         source, "get_next_node(struct kd_spin_node *my_node)"
     )
     body += definition(source, "struct kd_spin_batch {").rstrip() + ";\n"
-    body += definition(source, "static struct kd_jit_batch_call *kd_spin_batch_step(void *opaque)")
+    body += definition(source, "static void kd_spin_batch_run(void *opaque)")
     # The wrapper observes recursive entry/return; it does not replace the
     # production scan, cancellation, splice or queue-head save/restore bodies.
     body += "#define run_combiner production_run_combiner\nstatic void\n"

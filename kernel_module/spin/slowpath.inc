@@ -342,10 +342,19 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->execution->pinned_context = (preempt_count() & PREEMPT_MASK) != 1;
 	curr_node->execution->native_regs_decoded = false;
 	curr_node->execution->jit_context = NULL;
-	curr_node->execution->frame.spin_origin = request->ref;
-	kd_spin_prepare_regs(curr_node);
+	if (input->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1) {
+		/* No prologue parsing or GPR capture: the caller spilled live values. */
+		execution->frame.regs.ip = input->ip;
+		execution->frame.regs.bp = input->bp;
+		execution->native_regs_decoded = true;
+	} else {
+		kd_spin_prepare_regs(curr_node);
+	}
 	kd_exec_frame_prepare(&execution->frame, curr_node->execution->frame.regs_ref->ip,
 		(unsigned long)lock, curr_node->execution->frame.gsbase, current);
+	execution->frame.entry_abi = input->entry_abi;
+	execution->frame.packet_state = input->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ?
+		KD_PACKET_MINIMAL : KD_PACKET_FULL;
 	execution->frame.spin_origin = request->ref;
 
 	ret = __kd_spin_lock_longjmp(lock, tail, curr_node, request);

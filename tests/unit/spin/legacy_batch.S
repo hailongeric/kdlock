@@ -1,3 +1,5 @@
+/* Frozen pre-unified runner: exercise compatibility with KDWB001 images.
+ * Test-only; production uses the compiler clobber boundary for both ABIs. */
 /* SPDX-License-Identifier: GPL-2.0 */
 /* The lock scheduler, not generated JIT code, chooses every successor. Save the
  * original combiner once; neither virtual registers nor a wrapper C frame must

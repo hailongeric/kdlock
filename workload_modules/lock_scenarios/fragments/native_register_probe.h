@@ -72,13 +72,11 @@ asm(".pushsection .text,\"ax\",@progbits\n\t"
 static inline __attribute__((always_inline)) void
 kd_register_probe(struct kd_register_sample *sample)
 {
+	/* Let the compiler preserve live C values. Saving every incoming GPR
+	 * here would observe registers deliberately undefined by clobber-v1.
+	 * The callee still captures every stamped GPR and both stack tags. */
 	asm volatile(
-		"pushq %%rbx\n\t"
-		"pushq %%r12\n\t"
-		"pushq %%r13\n\t"
-		"pushq %%r14\n\t"
-		"pushq %%r15\n\t"
-		"subq $24, %%rsp\n\t"
+		"subq $32, %%rsp\n\t"
 		"leaq -8(%%rsp), %%rax\n\t"
 		"movq %%rax, 152(%%rdi)\n\t"
 		"movq %%rbp, 160(%%rdi)\n\t"
@@ -95,15 +93,11 @@ kd_register_probe(struct kd_register_sample *sample)
 								  KD_REG_SET) "call kd_resume_register_capture\n"
 									      "1:\n\t"
 									      "movq %%rax, 176(%%rdi)\n\t"
-									      "addq $24, %%rsp\n\t"
-									      "popq %%r15\n\t"
-									      "popq %%r14\n\t"
-									      "popq %%r13\n\t"
-									      "popq %%r12\n\t"
-									      "popq %%rbx\n\t"
-		: "+D"(sample)
+									      "addq $32, %%rsp\n\t"
+		: "+D"(sample), ASM_CALL_CONSTRAINT
 		:
-		: "rax", "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11",
+		: "rax", "rbx", "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11",
+		  "r12", "r13", "r14", "r15",
 		  "memory", "cc");
 }
 #undef KD_REG_SET

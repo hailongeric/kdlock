@@ -494,7 +494,7 @@ static void check_registration_reads(void)
 	source_open = false;
 	snapshot = *exe;
 	free_before = kd_code_block_free;
-	CHECK(!kd_exe_registered(0, key(4), KD_EXE_LOCK_SPIN));
+	CHECK(!kd_exe_registered(0, key(4), KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_LEGACY));
 	CHECK(!kd_exe_is_ready(0, key(4)));
 	pins_before = source_pin_calls;
 	kd_exe_add(0, key(4), KD_EXE_LOCK_SPIN);
@@ -505,7 +505,7 @@ static void check_registration_reads(void)
 	CHECK(kd_code_block_free == free_before);
 	kd_exe_retire_all();
 	CHECK(exe->status_code == KD_EXE_NATIVE_ONLY);
-	CHECK(!kd_exe_registered(0, key(4), KD_EXE_LOCK_SPIN));
+	CHECK(!kd_exe_registered(0, key(4), KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_LEGACY));
 	CHECK(!kd_exe_publish_status(exe, KD_EXE_NORMAL));
 	kd_exe_add(0, key(4), KD_EXE_LOCK_SPIN);
 	CHECK(exe->status_code == KD_EXE_NATIVE_ONLY && kd_code_block_free == free_before);
@@ -524,7 +524,7 @@ static void check_lookup_publication(void)
 		.code_block = kd_code_block_pool[0], .status_code = KD_EXE_UNUSED,
 	};
 	*slot = pending_publication;
-	CHECK(!kd_exe_registered(0, key(0), KD_EXE_LOCK_SPIN));
+	CHECK(!kd_exe_registered(0, key(0), KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_LEGACY));
 	for (int identity = 0; identity < 3; identity++) {
 		/* Only the matching winner may satisfy this registration. The slot
 		 * was still UNUSED when the real lookup chose it in all three cases. */
@@ -532,7 +532,7 @@ static void check_lookup_publication(void)
 		pending_publication.pid = identity == 1 ? 1 : 0;
 		pending_publication.RIP = identity == 2 ? key(1) : key(0);
 		publish_after_lookup = slot;
-		CHECK(kd_exe_registered(0, key(0), KD_EXE_LOCK_SPIN) == (identity == 0));
+		CHECK(kd_exe_registered(0, key(0), KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_LEGACY) == (identity == 0));
 		CHECK(publish_after_lookup == NULL);
 	}
 	CHECK(gate_attempts == 0 && source_pin_calls == 0);

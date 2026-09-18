@@ -56,6 +56,8 @@ def main():
             "static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,",
             "static int kd_jit_call_limit_native(struct kd_exec_frame *frame,",
             "static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,",
+            "static bool kd_jit_image_matches(const struct kd_exe_info *exe,",
+            "static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,",
             "bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,",
             "static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,",
             "int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,",

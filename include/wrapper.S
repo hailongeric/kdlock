@@ -2,6 +2,9 @@
  * virtual SP/BP and spilled GPRs belong to waiter. args has exactly two words,
  * reused for exit kind and body witness. Current flags are not written back. */
 #include "asm_head.h"
+#ifndef KD_GENERATED_ENTRY_ABI
+#define KD_GENERATED_ENTRY_ABI 0
+#endif
 
 	.intel_syntax noprefix
 
@@ -13,7 +16,18 @@ main:
 	.ascii "KDWB001"
 batch_entry:
 	endbr64
-	/* The lock-side runner already saved the native combiner registers.
+	.byte 0xe9
+	.long batch_body - . - 4
+	.ascii "KDWC001"
+clobber_entry_v1:
+	endbr64
+	.byte 0xe9
+	.long clobber_body - . - 4
+	.ascii "KDAB"
+	.byte KD_GENERATED_ENTRY_ABI
+	.balign 16
+batch_body:
+	/* The lock-side clobber caller owns the native combiner live values.
 	 * Reserve the same frame slots without writing six redundant values. */
 	sub rsp, 6*8
 	lea rbp, [rsp + 5*8]
@@ -32,8 +46,9 @@ load_packet:
 	push rsi
 	/* Allocate before stores: no kernel red-zone use. The additional slot
 	 * keeps the original jit.S offsets and both args words unchanged. */
-	sub rsp, 13*8
+	sub rsp, 14*8
 	mov Stack_BATCH, rdx
+	mov Stack_CLOBBER, 0
 	mov PT_REG, rdi
 	mov ARG_REG, rsi
 	mov rax, PT_RBP
@@ -68,6 +83,39 @@ load_packet:
 	mov R13, Stack_RSP
 	mov R12, Stack_RBP
 
+	jmp generated_body
+
+clobber_body:
+	cmp QWORD PTR[rdx + 72], 1
+	jne clobber_invalid
+	mov rax, QWORD PTR[rdx + 80]
+	cmp DWORD PTR[rax], 1
+	jne clobber_invalid
+	/* Same JIT scratch offsets, without a thread GPR import or group save. */
+	push rbp
+	mov rbp, rsp
+	sub rsp, 5*8
+	push rdi
+	push rsi
+	sub rsp, 14*8
+	mov Stack_BATCH, 0
+	mov Stack_CLOBBER, rdx
+	mov PT_REG, rdi
+	mov ARG_REG, rsi
+	mov R12, PT_RBP
+	mov R13, PT_RSP
+	mov Stack_RBP, R12
+	mov Stack_RSP, R13
+	mov rax, PT_GS
+	mov Stack_RGS, rax
+	mov rax, PT_TASK
+	mov Stack_TASK, rax
+	mov Stack_JIT_WITNESS, 0
+	/* The fixed directory is usable only by a matching generated image. */
+#if KD_GENERATED_ENTRY_ABI != 1
+	ud2
+#endif
+generated_body:
 #include "jit.S"
 
 comp_syscall:
@@ -92,6 +140,49 @@ inst_limit:
 	jmp	exit
 
 exit:
+	mov R15, Stack_CLOBBER
+	test R15, R15
+	jz legacy_exit
+	/* Entry refusal preserves the three-word input without materializing GPRs. */
+	cmp Stack_IJ, 6
+	je clobber_refused
+	cmp QWORD PTR[R15 + 88], 0
+	je full_exit
+	cmp Stack_IJ, 1
+	jne full_exit
+	cmp R14, QWORD PTR[R15 + 40]
+	jne full_exit
+	cmp RDI, QWORD PTR[R15 + 32]
+	jne full_exit
+	/* Prove the exact post-CALL boundary before granting minimal completion. */
+	lea R14, [R13 + 8]
+	cmp RSI, R14
+	jne clobber_bad_metadata
+	cmp RCX, R12
+	jne clobber_bad_metadata
+	cmp RDX, QWORD PTR[R13]
+	jne clobber_bad_metadata
+	mov PT_REG, Stack_PT_REG
+	mov PT_RIP, rdx
+	mov PT_RSP, rsi
+	mov PT_RBP, R12
+	mov rax, QWORD PTR[R15 + 80]
+	mov DWORD PTR[rax], 2
+	mov ARG_REG, Stack_ARG_REG
+	mov MEM_ARG, 7
+	jmp clobber_result
+clobber_bad_metadata:
+	/* Keep the actual target for a full, checked control exit. */
+	mov R14, QWORD PTR[R15 + 40]
+	jmp full_exit
+clobber_refused:
+	mov ARG_REG, Stack_ARG_REG
+	mov MEM_ARG, 6
+clobber_result:
+	mov rax, Stack_JIT_WITNESS
+	mov MEM_ARG2, rax
+	jmp clobber_return
+legacy_exit:
 	/* Only a lock-side admitted pristine root can take the reduced ABI exit.
 	 * R15 is translator scratch here; the logical R15 is already spilled.
 	 * Every other exit writes the full packet for hostcall/native/continuation. */
@@ -158,6 +249,13 @@ full_exit:
 	mov	PT_RDI, rdi
 
 	add	rsp, 2*8		/* Discard Stack_PT_REG and Stack_ARG_REG. */
+	cmp Stack_CLOBBER, 0
+	je legacy_return
+	mov rax, Stack_CLOBBER
+	mov rax, QWORD PTR[rax + 80]
+	mov DWORD PTR[rax], 0
+	jmp clobber_return
+legacy_return:
 	cmp Stack_BATCH, 0
 	jne batch_return
 	pop	r15
@@ -166,6 +264,13 @@ full_exit:
 	pop	r12
 	pop	rbx
 	pop	rbp
+	ret
+
+clobber_invalid:
+	ud2
+clobber_return:
+	mov rsp, rbp
+	pop rbp
 	ret
 
 batch_return:

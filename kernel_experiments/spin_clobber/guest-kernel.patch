@@ -1,0 +1,163 @@
+--- a/include/linux/kd_spin_hooks.h
++++ b/include/linux/kd_spin_hooks.h
+@@ -5,6 +5,11 @@
+ #include <linux/spinlock_types.h>
+ #define KD_SPIN_STATIC_HOOKS 1
+ #define KD_SPIN_STATIC_DISPATCH 1
++#define KD_SPIN_CLOBBER_V1 1
++
++typedef void (*kd_spin_clobber_fn)(raw_spinlock_t *, unsigned long,
++                                    unsigned long, unsigned long);
++
+ 
+ typedef int (*kd_spin_selector_fn)(void);
+ typedef void (*kd_spin_callback_fn)(raw_spinlock_t *, unsigned long, unsigned long);
+@@ -18,5 +23,8 @@
+  * retaining owner routing after comm changes or source admission closes. */
+ int kd_spin_static_install_dispatch(kd_spin_selector_fn select,
+ 			 kd_spin_callback_fn lock, kd_spin_callback_fn unlock);
++int kd_spin_static_install_clobber_v1(kd_spin_selector_fn select,
++        kd_spin_callback_fn lock, kd_spin_callback_fn unlock,
++        kd_spin_clobber_fn clobber_lock, kd_spin_clobber_fn clobber_unlock);
+ void kd_spin_static_remove(void);
+ #endif
+--- a/include/linux/spinlock.h
++++ b/include/linux/spinlock.h
+@@ -214,7 +214,30 @@
+  */
+ #define raw_spin_trylock(lock)	__cond_lock(lock, _raw_spin_trylock(lock))
+ 
+-#define raw_spin_lock(lock)	_raw_spin_lock(lock)
++/* The compiler owns all live GPRs across this versioned ordinary boundary.
++ * The local label is the CALL continuation, including when this is inlined.
++ * RSP/RBP remain architectural frame registers; no saved-prologue decoding.
++ * IRQ/BH/try/nested variants retain their original contracts. */
++#if defined(CONFIG_X86_64) && defined(CONFIG_SMP) && defined(CONFIG_FRAME_POINTER) && !defined(KD_SPIN_LEGACY_CALLER)
++#include <asm/asm.h>
++#define __kd_spin_clobber_call_v1(symbol, lock) ({                 \
++        raw_spinlock_t *kd_lock_arg = (lock);                       \
++        unsigned long kd_sp_out, kd_ip_out, kd_bp_out;               \
++        asm volatile("movq %%rsp, %%rsi\n\t"                         \
++                     "leaq 1f(%%rip), %%rdx\n\t"                   \
++                     "movq %%rbp, %%rcx\n\t"                       \
++                     "call " #symbol "\n\t1:\n\t"                \
++                     : "+D" (kd_lock_arg), "=S" (kd_sp_out),       \
++                       "=d" (kd_ip_out), "=c" (kd_bp_out),         \
++                       ASM_CALL_CONSTRAINT                         \
++                     :                                             \
++                     : "rax", "rbx", "r8", "r9", "r10", "r11",   \
++                       "r12", "r13", "r14", "r15", "cc", "memory"); \
++})
++#define raw_spin_lock(lock) __kd_spin_clobber_call_v1(kd_raw_spin_lock_clobber_v1, lock)
++#else
++#define raw_spin_lock(lock) _raw_spin_lock(lock)
++#endif
+ 
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+ # define raw_spin_lock_nested(lock, subclass) \
+@@ -273,7 +296,11 @@
+ 
+ #define raw_spin_lock_irq(lock)		_raw_spin_lock_irq(lock)
+ #define raw_spin_lock_bh(lock)		_raw_spin_lock_bh(lock)
+-#define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
++#ifdef __kd_spin_clobber_call_v1
++#define raw_spin_unlock(lock) __kd_spin_clobber_call_v1(kd_raw_spin_unlock_clobber_v1, lock)
++#else
++#define raw_spin_unlock(lock) _raw_spin_unlock(lock)
++#endif
+ #define raw_spin_unlock_irq(lock)	_raw_spin_unlock_irq(lock)
+ 
+ #define raw_spin_unlock_irqrestore(lock, flags)		\
+--- a/kernel/locking/spinlock.c
++++ b/kernel/locking/spinlock.c
+@@ -191,9 +191,38 @@
+ DEFINE_STATIC_CALL(kd_spin_lock_call, kd_spin_native_lock);
+ DEFINE_STATIC_CALL(kd_spin_unlock_call, kd_spin_native_unlock);
+ 
++/* These bridges receive metadata before any compiler prologue. Native
++ * helpers use __raw_* and cannot reenter the caller-visible macros. */
++static void kd_clobber_native_lock(raw_spinlock_t *lock, unsigned long sp,
++                                  unsigned long ip, unsigned long bp)
++{
++        __raw_spin_lock(lock);
++}
++static void kd_clobber_native_unlock(raw_spinlock_t *lock, unsigned long sp,
++                                    unsigned long ip, unsigned long bp)
++{
++        __raw_spin_unlock(lock);
++}
++DEFINE_STATIC_CALL(kd_clobber_lock_call, kd_clobber_native_lock);
++DEFINE_STATIC_CALL(kd_clobber_unlock_call, kd_clobber_native_unlock);
++
++noinline notrace void kd_raw_spin_lock_clobber_v1(raw_spinlock_t *lock,
++                unsigned long sp, unsigned long ip, unsigned long bp)
++{
++        static_call(kd_clobber_lock_call)(lock, sp, ip, bp);
++}
++EXPORT_SYMBOL(kd_raw_spin_lock_clobber_v1);
++noinline notrace void kd_raw_spin_unlock_clobber_v1(raw_spinlock_t *lock,
++                unsigned long sp, unsigned long ip, unsigned long bp)
++{
++        static_call(kd_clobber_unlock_call)(lock, sp, ip, bp);
++}
++EXPORT_SYMBOL(kd_raw_spin_unlock_clobber_v1);
++
+ static int kd_spin_install(kd_spin_selector_fn select,
+ 			   kd_spin_callback_fn lock, kd_spin_callback_fn unlock,
+-			   bool combined)
++			   bool combined, kd_spin_clobber_fn clobber_lock,
++                           kd_spin_clobber_fn clobber_unlock)
+ {
+ 	int ret = 0;
+ 
+@@ -204,6 +233,10 @@
+ 		ret = -EBUSY;
+ 		goto out;
+ 	}
++	if (clobber_lock && clobber_unlock) {
++                static_call_update(kd_clobber_lock_call, clobber_lock);
++                static_call_update(kd_clobber_unlock_call, clobber_unlock);
++        }
+ 	static_call_update(kd_spin_select, select);
+ 	static_call_update(kd_spin_lock_call, lock);
+ 	static_call_update(kd_spin_unlock_call, unlock);
+@@ -223,7 +256,7 @@
+ int kd_spin_static_install(kd_spin_selector_fn select,
+ 			  kd_spin_callback_fn lock, kd_spin_callback_fn unlock)
+ {
+-	return kd_spin_install(select, lock, unlock, false);
++	return kd_spin_install(select, lock, unlock, false, NULL, NULL);
+ }
+ EXPORT_SYMBOL_GPL(kd_spin_static_install);
+ 
+@@ -232,9 +265,20 @@
+ int kd_spin_static_install_dispatch(kd_spin_selector_fn select,
+ 			 kd_spin_callback_fn lock, kd_spin_callback_fn unlock)
+ {
+-	return kd_spin_install(select, lock, unlock, true);
++	return kd_spin_install(select, lock, unlock, true, NULL, NULL);
+ }
+ EXPORT_SYMBOL_GPL(kd_spin_static_install_dispatch);
++
++int kd_spin_static_install_clobber_v1(kd_spin_selector_fn select,
++                kd_spin_callback_fn lock, kd_spin_callback_fn unlock,
++                kd_spin_clobber_fn clobber_lock, kd_spin_clobber_fn clobber_unlock)
++{
++        if (!clobber_lock || !clobber_unlock)
++                return -EINVAL;
++        return kd_spin_install(select, lock, unlock, true,
++                               clobber_lock, clobber_unlock);
++}
++EXPORT_SYMBOL_GPL(kd_spin_static_install_clobber_v1);
+ 
+ void kd_spin_static_remove(void)
+ {
+@@ -245,6 +289,8 @@
+ 	WRITE_ONCE(kd_raw_spin_lock, NULL);
+ 	WRITE_ONCE(kd_raw_spin_unlock, NULL);
+ 	static_branch_disable(&kd_spin_combined_dispatch);
++	static_call_update(kd_clobber_lock_call, kd_clobber_native_lock);
++        static_call_update(kd_clobber_unlock_call, kd_clobber_native_unlock);
+ 	static_call_update(kd_spin_select, kd_spin_native_select);
+ 	static_call_update(kd_spin_lock_call, kd_spin_native_lock);
+ 	static_call_update(kd_spin_unlock_call, kd_spin_native_unlock);

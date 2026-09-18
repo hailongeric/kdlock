@@ -118,6 +118,7 @@ def source_state():
     for directory in ("bench/spin_cacheline", "workload_modules/spin_cacheline",
                       "include", "kernel_module", "daemon",
                       "disassem", "kernel_baseline", "kernel_experiments/spin_static",
+                      "kernel_experiments/spin_clobber",
                       "bench/spin_cacheline/.build/provider"):
         for path in (ROOT / directory).rglob("*"):
             if (path.is_file() and "__pycache__" not in path.parts and
@@ -164,7 +165,7 @@ def registry():
     require(ctypes.sizeof(__import__("native_only_protocol").Entry) == 64,
             "unexpected registry ABI")
     return [dict(entry=e.rip, code=e.code, status=e.status, pid=e.pid,
-                 tgid=e.tgid, lock_kind=e.lock_kind) for e in entries()]
+                 tgid=e.tgid, lock_kind=e.lock_kind, entry_abi=e.entry_abi) for e in entries()]
 
 
 def children(pid):

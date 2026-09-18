@@ -21,7 +21,12 @@
 ## 私有实现组件
 
 下表按所属编译单元和原声明顺序列出组件；文件头说明用途和依赖。
-`spin/combiner.inc` 内的 `execute_cs` 执行委托正文，`run_combiner` 组织批次；
+`spin/combiner.inc` 内的 `execute_cs` 处理复杂委托出口，`run_combiner` 组织批次；
+`kd_spin_batch_run` 在同一个 C 帧中处理新、旧及混合 ABI，编译器保护跨 wrapper
+活跃值。调用边界见 [kd_jit_batch.h](../include/kd_jit_batch.h)；旧汇编外壳仅留在
+[兼容夹具](../tests/unit/spin/legacy_batch.S)，不参与生产构建。
+新 ABI 的普通 root 正常路径只捕获/回写/恢复 RIP/RSP/RBP，中途出口在进入 C
+前物化完整逻辑 GPR；旧 ABI 和 mutex 保留原调用规则。
 `spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后先切到
 每 CPU 预分配的 8KB shadow 等待栈，再发布普通 waiter 并轮询。
 spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核栈；

@@ -1335,7 +1335,8 @@ The implemented protocol is:
    The status ABI field named `frames` now counts these leases plus legacy frame
    leases, not every spin frame inside a batch.
 4. Normal completion unbinds the frame before release-publishing completed/locked.
-   The physical waiter restores GPRs directly from the record. Its final release follows every packet load, then flags and the return are
+   The physical waiter restores the record's valid state: RIP/RSP/RBP for a
+   caller-clobber MINIMAL/COMPLETE packet, or GPRs for FULL/legacy. Its final release follows every packet load, then flags and the return are
    restored. A pristine single-lock root has one user and uses a release store;
    native/remote lifetimes retain the atomic decrement.
    No node/request access occurs after the corresponding lifetime ends. IRQ-off
@@ -1362,20 +1363,18 @@ of a pristine single-lock root do not initialize or inspect that cold storage.
 The first non-final wrapper exit materializes a one-lock ledger in place before
 control/hostcall/native handling. It never copies the register packet.
 
-`kd_spin_batch_enter` saves the original physical combiner's callee registers once and
-runs a lock-side callback, `kd_spin_batch_step`, between wrapper invocations.
-For an admitted single-lock root, the callback supplies the versioned alternate
-wrapper entry. Normal completion unbinds and publishes the current waiter, then
-selects/adopts the next request without returning through `execute_cs` and the
-generic dispatcher. This implements lock-side batching for a JIT executor, not
-TCLock's direct native waiter-continuation switch. The C callback still runs
-for every request and has its own callee-register saves in the measured build;
-only the outer checkpoint and redundant wrapper saves are amortized. The lock
-scheduler owns every queue decision; generated code neither switches waiter
-stacks nor calls the scheduler. Batch limits, NUMA deferral rollback and outer
-release/reclaim remain lock-side operations.
+`kd_spin_batch_run` keeps one physical combiner C frame across the complete
+batch, including mixed caller ABIs. Its inline assembly calls expose all GPR
+clobbers except RSP/RBP to the compiler. The legacy KDWB001 adapter protects only
+RBP, which that wrapper does not restore; KDWC001 restores RBP itself. There is
+no outer assembly register group save or per-waiter callback return/reentry.
+This follows TCLock's retained combiner continuation while keeping the JIT's
+physical scratch frame separate from the logical waiter stack. Admission,
+completion/unbind/publication and successor selection remain in the lock loop.
+Batch limits, NUMA deferral rollback and outer release/reclaim remain lock-side
+operations; generated code has no queue/scheduler callback.
 
-Only the exact final spin-unlock CALL and matching L use reduced ABI writeback:
+In that legacy ABI, only the exact final spin-unlock CALL and matching L use reduced ABI writeback:
 RBX/RBP/R12–R15, virtual RIP/SP and the RDI classification field. All other exits
 write the full supported GPR packet. `kd_exe_spin_batch_resume` consumes an already
 returned packet once, preserving the original entry SP for unstarted-refusal
@@ -1385,6 +1384,17 @@ Both wrapper entries still import the full supported logical GPR set, and the
 physical waiter still restores 15 GPRs. Reduced final writeback does not imply
 reduced entry or final CPU-restore traffic; intermediate continuation boundaries
 retain their full register requirements.
+
+Caller-clobber v1 has a separate offset-32 wrapper and explicit `entry_abi`
+identity from kernel entry through registry, translator and frame. The caller
+compiler owns live-value spills. Its initial packet is MINIMAL (RIP/RSP/RBP),
+and the normal root result is COMPLETE with an independently checked outer
+unlock continuation. The wrapper imports no thread GPR bundle and protects only
+physical RBP; the lock-side C step calls it through an inline asm clobber
+boundary. Every intermediate exit materializes FULL before existing C handling.
+The ordinary request/reference/owner protocol above is unchanged; only valid
+packet fields and the compiler call contract differ. Detailed states and mixed
+ABI rules live in [the register ABI](JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1).
 
 Within that lease, a batch reuses its resolved executable slot for the same
 entry and SPIN backend. Each hit rechecks OPEN, acquired NORMAL publication,

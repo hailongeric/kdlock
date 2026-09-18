@@ -88,6 +88,10 @@ int kd_exe_init(void)
 	end_points[end_point_count] = raw_spin_unlock_addr;
 	if (raw_spin_unlock_addr)
 		end_point_count++;
+	clobber_spin_lock_addr = kallsyms_lookup_name("kd_raw_spin_lock_clobber_v1");
+	clobber_spin_unlock_addr = kallsyms_lookup_name("kd_raw_spin_unlock_clobber_v1");
+	if (clobber_spin_unlock_addr)
+		end_points[end_point_count++] = clobber_spin_unlock_addr;
 	mutex_lock_addr = kallsyms_lookup_name("mutex_lock");
 	mutex_unlock_addr = kallsyms_lookup_name("mutex_unlock");
 	end_points[end_point_count] = mutex_unlock_addr;

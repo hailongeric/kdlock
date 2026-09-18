@@ -89,7 +89,7 @@ static void test_compiler_launch(void)
 				script = fopen("../disassem/disassem.py", "w");
 				assert(script);
 				assert(fprintf(script,
-					       "import os, sys\nassert sys.argv[1:] == ['0', '0x1234', '%s']\nfd = int(os.environ['KD_DEVICE_FD'])\nassert os.write(fd, b'S') == 1\nraise SystemExit(%d)\n",
+					       "import os, sys\nassert sys.argv[1:] == ['0', '0x1234', '%s', '0']\nfd = int(os.environ['KD_DEVICE_FD'])\nassert os.write(fd, b'S') == 1\nraise SystemExit(%d)\n",
 					       kinds[kind], code) > 0);
 				assert(!fclose(script));
 				assert(compile_entry(&cfg, &exe) ==

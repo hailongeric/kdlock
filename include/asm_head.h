@@ -45,6 +45,7 @@
 #define Stack_RIP QWORD PTR[RBP - 8 * 17]
 #define Stack_IJ QWORD PTR[RBP - 8 * 18]
 #define Stack_BATCH QWORD PTR[RBP - 8 * 20]
+#define Stack_CLOBBER QWORD PTR[RBP - 8 * 21]
 #define Stack_JIT_WITNESS QWORD PTR[RBP - 8 * 19]
 
 #define PT_GS QWORD PTR[ARG_REG]

@@ -147,6 +147,32 @@ static __attribute__((noipa, noreturn)) noinline notrace void
 kd_spin_restore_request(struct kd_spin_exec_request *execution,
 			unsigned long flags, unsigned int mode)
 {
+	if (execution->frame.entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
+	    execution->frame.packet_state != KD_PACKET_FULL) {
+		BUG_ON(mode == 2);
+		asm volatile(
+			"movq %c[sp](%%rdi), %%rsp\n"
+			"pushq %c[ip](%%rdi)\n"
+			"pushq %%rsi\n"
+			"movq %c[bp](%%rdi), %%rbp\n"
+			/* No request access after the last user's release. */
+			"cmpb $0, %c[simple](%%rdi)\n"
+			"je 1f\n"
+			"movl $0, %c[users](%%rdi)\n"
+			"jmp 2f\n"
+			"1: lock decl %c[users](%%rdi)\n"
+			"2: popfq\n"
+			"retq\n"
+			:
+			: "D"(execution), "S"(flags),
+			  [sp] "i"(offsetof(struct kd_spin_exec_request, frame.regs.sp)),
+			  [ip] "i"(offsetof(struct kd_spin_exec_request, frame.regs.ip)),
+			  [bp] "i"(offsetof(struct kd_spin_exec_request, frame.regs.bp)),
+			  [users] "i"(offsetof(struct kd_spin_exec_request, users)),
+			  [simple] "i"(offsetof(struct kd_spin_exec_request, frame.spin_simple))
+			: "memory", "cc");
+		__builtin_unreachable();
+	}
 	asm volatile(
 		"movq %c[sp](%%rdi), %%rsp\n"
 		"testl %%edx, %%edx\n"
@@ -233,7 +259,8 @@ kd_spin_resume_completed(struct kd_spin_node *node)
  * in locals: JIT is allowed to overwrite this function's original frame. */
 __attribute__((noipa)) noinline notrace static void
 kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
-		      struct kd_spin_request *request)
+		      struct kd_spin_request *request, unsigned long ip,
+                      unsigned long bp, unsigned int abi)
 {
 	struct kd_spin_native_input input;
 	unsigned long flags, sp;
@@ -244,6 +271,9 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
 	input.rsp = sp;
 	input.regs_sp = rsp_value;
 	input.irq_flags = flags;
+	input.ip = ip;
+	input.bp = bp;
+	input.entry_abi = abi;
 	ret = __kd_spin_lock_slowpath(lock, request, &input);
 	if (ret == 0 || ret == 2) {
 		local_irq_restore(flags);
@@ -276,8 +306,8 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
  * handles fast path when possible, otherwise routes to qspin queue protocol.
  */
 __attribute__((noipa)) noinline notrace void
-kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,
-	     unsigned long rip)
+kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
+	     unsigned long rip, unsigned long bp, unsigned int abi)
 {
 	struct kd_spin_request request = { 0 };
 	struct qspinlock *word;
@@ -321,12 +351,16 @@ kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,
 	clear_pending_set_locked(word);
 	goto acquired;
 queue:
-	kd_spin_lock_slowpath(lock, rsp_value, &request);
+	kd_spin_lock_slowpath(lock, rsp_value, &request, rip, bp, abi);
 acquired:
 	kd_spin_claim_origin(&request);
 	return;
 native:
 	__raw_spin_lock((raw_spinlock_t *)lock);
+}
+void kd_spin_lock(struct qspinlock *lock, unsigned long sp, unsigned long ip)
+{
+	kd_spin_lock_abi(lock, sp, ip, 0, KD_ENTRY_ABI_LEGACY);
 }
 EXPORT_SYMBOL_GPL(kd_spin_lock);
 

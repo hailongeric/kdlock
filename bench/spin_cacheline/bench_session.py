@@ -20,7 +20,8 @@ from bench_runtime import (
 
 
 class Session:
-    def __init__(self, out, spec):
+    def __init__(self, out, spec, *, workload_module=None):
+        self.workload_module = workload_module or WORKLOAD / "spin_cacheline.ko"
         self.path = out / spec["name"]
         self.path.mkdir()
         self.record = dict(spec, schema=1, execution_status="PREPARING", drained=False)
@@ -107,6 +108,9 @@ class Session:
         require(len(r) == 1 and r[0]["status"] == 0 and r[0]["pid"] == 0 and
                 r[0]["lock_kind"] == 1 and r[0]["code"] != 0, "entry is not NORMAL")
         entry = r[0]
+        if "caller_abi" in self.record:
+            require(entry["entry_abi"] == (self.record["caller_abi"] == "clobber"),
+                    "published entry has the wrong caller ABI")
         begin, end = self.record["entry_range"]
         require(begin <= entry["entry"] < end, "published entry belongs to another CS")
         folder = (self.path / "workspace/daemon" / hex(entry["entry"]) /
@@ -128,7 +132,7 @@ class Session:
 
     def prepare(self):
         """Load fresh state, promote naturally and wait for translator exit."""
-        self.run(["insmod", WORKLOAD / "spin_cacheline.ko"], "load-source.log")
+        self.run(["insmod", self.workload_module], "load-source.log")
         self.loaded_source = True
         layout = json.loads(self.run([HERE / "client", "--layout"], "layout.json"))
         self.record["layout"] = layout
@@ -148,7 +152,7 @@ class Session:
             symbols = [line.split() for line in Path("/proc/kallsyms").read_text().splitlines()]
             found = [int(s[0], 16) for s in symbols if len(s) == 4 and
                      s[2:] == [symbol, "[spin_cacheline]"]]
-            nm = self.run(["nm", "-S", WORKLOAD / "spin_cacheline.ko"], "symbols.txt")
+            nm = self.run(["nm", "-S", self.workload_module], "symbols.txt")
             sizes = [int(s[1], 16) for line in nm.splitlines()
                      if len(s := line.split()) == 4 and s[3] == symbol]
             require(len(found) == len(sizes) == 1 and found[0] != 0, "unknown CS symbol")

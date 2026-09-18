@@ -9,34 +9,30 @@ Complete the main behavior before optional features and performance work.
 
 ## Current Checkpoint
 
-**2026-09-17, shared spin requests:** spin waiters and combiners now share one
-preallocated execution record. Remote frames alias the logical root packet,
-native owners retain a separate user through ACK/pop, and final restoration
-reads that packet directly. The bounded batch holds one source/provider lease.
-Mutex retains its previous frame path. Further wrapper and ledger reductions
-remain separate performance work.
-See [frame protocol](DESIGN.md#91-frames-and-lock-ledger).
-The [focused validation](../tests/README.md#tclock-shared-validation) records
-11 unit entrypoints, five initial live passes and a complete mode-8 rerun after
-fixing its shared-packet observer. The unchanged production implementation also
-completed 16 benchmark sessions. Frame/context/request are 656/5272/672 bytes;
-12 requests per possible CPU are allocated at module init.
-The [four-point benchmark](../bench/spin_cacheline/results/20260917-tclock-shared.md)
-shows 20-thread throughput declining 12.0%/4.9% against the preceding version.
-This storage refactor is not a demonstrated speedup. The earlier mutex mode-4
-soft lockup remains unresolved and was not rerun. No full-suite PASS is claimed.
+**2026-09-18, ordinary spin caller-clobber and combiner context:** the independent
+`kdclobber1` experiment exposes a compiler-visible clobber boundary for ordinary
+spin lock/unlock. Normal requests capture and restore only RIP/RSP/RBP; every
+intermediate exit materializes the complete logical GPR packet before C handles
+hostcall, nested or native continuation. Entry ABI identity is checked across the
+registry, daemon, translator and wrapper. Legacy, IRQ/BH/irqsave/trylock and mutex
+caller contracts remain supported. See the [ABI](JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1)
+and [kernel experiment](../kernel_experiments/spin_clobber/README.md).
 
-**2026-09-17, waiter shadow stack:** spin delegation accepts IRQ-off task
-entries. Physical waiters save/mask local IRQs, switch to a preallocated per-CPU
-8 KiB shadow stack before publication, and PAUSE-poll there. Only one old C RSP
-is saved: an unexecuted head restores it, while completed/native wakes use a
-safe task-stack continuation. JIT, shared request/frame storage and batch leases
-are retained. Combiners and virtual owner/ACK polling use the executor task
-stack. Incoming IRQ state, CPU pins and ownership checks remain; the CPU leaves
-the waiting stack before unpinning or restoring IRQs. Initialization rolls back
-partial allocation and drained shutdown frees all stacks. See the
-[targeted validation](../tests/README.md#spin-shadow-wait-validation); historical
-stackless validation and earlier benchmarks describe their own frozen inputs.
+One preallocated request/frame remains authoritative through final reads and
+owner ACK/pop. Physical waiters move to their shadow stack before publishing.
+Following TCLock's retained combiner continuation, new, legacy and mixed wrappers
+now execute in one C loop; only RBP needs explicit protection at the old batch
+entry. The compiler owns live C values, and the old group-save shell is test-only.
+The JIT keeps its physical scratch frame on the combiner stack and changes only
+the logical waiter stack. This does not remove intermediate register state or
+native-peer/source/owner dependencies.
+
+[Caller-clobber validation](../tests/README.md#spin-clobber-v1) and the subsequent
+[unified-loop validation](../tests/README.md#tclock-context-loop) describe separate
+freezes. The [120-session comparison](../bench/spin_cacheline/results/20260918-clobber-v1.md)
+precedes loop unification and shows no consistent large throughput gain; the
+unified loop has no new performance measurement. The earlier mutex mode-4 soft
+lockup remains unresolved. No full-suite PASS or general speedup is claimed.
 
 Spinlock and mutex delegation both support explicit GS memory
 operations by default, using the origin waiter's base;

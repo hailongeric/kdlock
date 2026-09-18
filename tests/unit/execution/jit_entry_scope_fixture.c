@@ -39,6 +39,13 @@ static int calls, known_calls, known_result, errors, warnings, checks, failures;
 static unsigned int registry_lookups, readiness_acquires;
 static bool source_open = true;
 static struct pt_regs last_wrapper_output;
+static unsigned long clobber_spin_lock_addr = 0x3110;
+static unsigned long clobber_spin_unlock_addr = 0x3120;
+static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
+{
+	(void)call;
+	abort(); /* Minimal machine code is exercised by test_spin_clobber. */
+}
 static char last_error[1024];
 static unsigned int service_calls[3], failed_service_calls;
 static const unsigned long service_values[] = {
@@ -1200,7 +1207,7 @@ static void check_simple_spin(void)
  * only the required continuation wrapper call; a refusal remains unstarted. */
 static void check_batch_admission(void)
 {
-	unsigned char code[32] = { 0 };
+	unsigned char code[64] = { 0 };
 	struct kd_jit_batch_call call;
 
 	reset();
@@ -1226,6 +1233,43 @@ static void check_batch_admission(void)
 	active.regs.sp = (unsigned long)&stack[9];
 	active.complex_ready = true;
 	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+}
+
+/* Entry identity and materialization state are independent of publication.
+ * None of these mismatches may invoke the wrapper or read the absent GPRs. */
+static void check_clobber_identity(void)
+{
+	unsigned char code[64] = { 0 };
+	struct kd_jit_batch_call call;
+
+	reset();
+	active.spin_simple = active.request_frame = true;
+	active.complex_ready = false;
+	entry->code_block = code;
+	memcpy(code + 9, "KDWB001", 7);
+	active.entry_abi = entry->entry_abi = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
+	active.packet_state = KD_PACKET_MINIMAL;
+	active.regs.di = 0xdead; /* deliberately not the root lock */
+	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+	memcpy(code + 25, "KDWC001", 7);
+	memcpy(code + 41, "KDAB", 4);
+	code[45] = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
+	CHECK(kd_exe_spin_batch_prepare(entry, &active, &call));
+	CHECK(call.code == code + KD_JIT_CLOBBER_OFFSET && call.complete);
+	CHECK(call.packet_state == &active.packet_state && call.entry_abi == 1);
+	for (unsigned int bad = 0; bad < 4; bad++) {
+		if (bad == 0) entry->entry_abi = KD_ENTRY_ABI_LEGACY;
+		if (bad == 1) code[45] = KD_ENTRY_ABI_LEGACY;
+		if (bad == 2) active.packet_state = KD_PACKET_FULL;
+		if (bad == 3) active.packet_state = KD_PACKET_COMPLETE;
+		CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+		entry->entry_abi = code[45] = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
+		active.packet_state = KD_PACKET_MINIMAL;
+	}
+	active.entry_abi = entry->entry_abi = KD_ENTRY_ABI_LEGACY;
+	active.packet_state = KD_PACKET_FULL;
+	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+	CHECK(calls == 0 && !active.executed);
 }
 
 static void check_pending_batch_exit(void)
@@ -1256,6 +1300,7 @@ static void check_pending_batch_exit(void)
 int main(void)
 {
 	check_batch_admission();
+	check_clobber_identity();
 	check_pending_batch_exit();
 	check_simple_spin();
 	check_pristine_refusal();

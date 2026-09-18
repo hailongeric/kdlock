@@ -42,6 +42,7 @@ struct kd_spin_ref {
 struct kd_exec_frame {
 	struct pt_regs regs, *regs_ref;
 	unsigned long entry_ip, delegated_lock_addr, outer_lock_addr;
+	unsigned int entry_abi, packet_state;
 	struct kd_exec_outer_unlock *outer_unlock_hook;
 	bool request_frame;
 	bool valid, complete;
@@ -97,6 +98,8 @@ static void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long ip,
 	frame->regs_ref = &frame->regs;
 	frame->outer_lock_addr = lock;
 	frame->request_frame = true;
+	frame->entry_abi = KD_ENTRY_ABI_LEGACY;
+	frame->packet_state = KD_PACKET_FULL;
 }
 static void kd_exec_frame_prepare_complex(struct kd_exec_frame *frame) { (void)frame; }
 struct kd_spin_jit_context {
@@ -496,8 +499,10 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 { (void)batch; (void)node; return false; }
 static bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
 { (void)call; abort(); }
-void kd_spin_batch_enter(void *batch, struct kd_jit_batch_call *(*step)(void *))
-{ if (step(batch)) abort(); }
+static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
+{ (void)call; abort(); }
+static void kd_jit_legacy_batch_call(struct kd_jit_batch_call *call)
+{ (void)call; abort(); }
 static int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
 { (void)frame; abort(); }
 static int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)

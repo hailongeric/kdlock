@@ -6,7 +6,7 @@
  */
 
 static bool kd_exe_registered(unsigned int pid, unsigned long rip,
-			      enum kd_exe_lock_kind kind)
+			      enum kd_exe_lock_kind kind, enum kd_entry_abi abi)
 {
 	struct kd_exe_info *exe = kd_get_exe(pid, rip);
 
@@ -18,16 +18,20 @@ static bool kd_exe_registered(unsigned int pid, unsigned long rip,
 		return false;
 	return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == rip &&
 	       READ_ONCE(exe->lock_kind) == kind &&
+	       READ_ONCE(exe->entry_abi) == abi &&
 	       READ_ONCE(exe->code_block) && kd_source_is_open();
 }
 
-void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
+void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
+                    enum kd_entry_abi abi)
 {
 	void *mem = NULL;
 	struct kd_exe_info *exe;
 	int ret;
 
-	if (kind != KD_EXE_LOCK_SPIN && kind != KD_EXE_LOCK_MUTEX)
+	if ((kind != KD_EXE_LOCK_SPIN && kind != KD_EXE_LOCK_MUTEX) ||
+	    (abi != KD_ENTRY_ABI_LEGACY &&
+	     (abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1 || kind != KD_EXE_LOCK_SPIN)))
 		return;
 	/* Root pins outlive the append-only registry within this source session.
 	 * Repeated registrations read metadata only, without taking the global
@@ -35,7 +39,7 @@ void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
 	 * it neither dereferences source/code nor grants an execution lease.
 	 * Actual dispatch still requires readiness and an admitted source frame.
 	 * Misses, backend conflicts and closed admission keep the serialized path. */
-	if (kd_exe_registered(pid, rip, kind))
+	if (kd_exe_registered(pid, rip, kind, abi))
 		return;
 	kd_code_block_gate_lock();
 	ret = kd_source_pin_root(rip);
@@ -54,7 +58,7 @@ void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
 	}
 	if (exe->pid == pid && exe->RIP == rip) {
 		/* A RIP may be shared by locks, but not by incompatible backends. */
-		if (exe->lock_kind != kind) {
+		if (exe->lock_kind != kind || exe->entry_abi != abi) {
 			kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);
 			pr_warn_ratelimited(
 				"[KD_JIT][WARN] reason=ENTRY_LOCK_KIND_CONFLICT entry=0x%lx registered=%d requested=%d\n",
@@ -87,12 +91,18 @@ void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
 	exe->RIP = rip;
 	exe->tgid = current->tgid;
 	exe->lock_kind = kind;
+	exe->entry_abi = abi;
 	exe->code_block = mem;
 
 	smp_store_release(&exe->status_code, KD_EXE_UNINIT);
 	kd_code_block_gate_unlock();
 	KD_PR_INFO("exe added %d %lx %d lock_kind=%d\n", pid, rip,
 		   current->tgid, kind);
+}
+
+void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
+{
+	kd_exe_add_abi(pid, rip, kind, KD_ENTRY_ABI_LEGACY);
 }
 
 void kd_exe_retire_all(void)

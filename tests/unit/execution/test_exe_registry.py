@@ -64,6 +64,7 @@ def production():
         "int kd_exe_init(void)",
         "void kd_exe_exit(void)",
         "static bool kd_exe_registered(unsigned int pid, unsigned long rip,",
+        "void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,",
         "void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)",
         "void kd_exe_retire_all(void)",
     ):
@@ -121,8 +122,8 @@ def main():
             "head.offset > KD_CODE_BLOCK_SIZE + 1",
         ),
         "repeat-enters-registration-gate": (
-            "if (kd_exe_registered(pid, rip, kind))",
-            "if (kd_exe_registered(pid, rip, kind) && false)",
+            "if (kd_exe_registered(pid, rip, kind, abi))",
+            "if (kd_exe_registered(pid, rip, kind, abi) && false)",
         ),
         "unpublished-registration-hit": (
             "if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED)",

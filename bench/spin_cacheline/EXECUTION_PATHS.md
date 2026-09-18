@@ -6,9 +6,18 @@
 
 阅读条件：x86_64，普通任务上下文，单层 `sc_body_N`，同一把 spinlock，
 `KDLOCK_SELFTEST=0 KDLOCK_NUMA=0`，`bench_quiet=1 jit_timing=0`。
-内核入口按最近运行的 `6.1.159-kdstatic2` 合并 static-call 接口展开；旧接口的差异
+后续详细伪代码按 `6.1.159-kdstatic2` 的旧调用者 ABI 展开；接口的差异
 在第 2 节注明。伪代码合并错误处理，但保留影响主路径成本的查表、原子操作、
 复制、校验和等待；辅助函数名不等于最终机器码一定存在一次 CALL，须对照反汇编。
+
+`kdclobber1` 的普通调用者先由编译器保存跨 lock/unlock 活跃值，asm 传递
+RDI=锁、RSI=SP、RDX=续点、RCX=BP，经独立 static-call bridge 进入同一锁层。
+排队请求只记录三个续点字段；锁侧统一循环通过内联 asm 调用偏移 32 的 wrapper，
+正常完成只回写并恢复三个字段。hostcall/nested/native 中间退出仍完整保存并走
+下文通用处理。新、旧及混合 ABI 均在同一个 C 栈帧内连续处理；旧偏移 16
+入口的内联适配只额外保护 RBP，原汇编外壳已退出生产构建。
+两种调用者都保留 L/S、ticket、source、owner/ACK 及 IRQ 协议；完整定义见
+[寄存器 ABI](../../docs/JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1)。
 
 | 符号/状态 | 含义 |
 | --- | --- |
@@ -404,17 +413,17 @@ run_combiner(L, first_follower, request):                // 进入时 combiner �
         return                                // follower 留作下一任 owner，没有 JIT
     // 本批次已取得一次 source/provider lease，覆盖每个请求及其 ACK/pop
     记录 COMBINER 诊断 this_cpu_inc
-    进入 kd_spin_batch_enter：每批保存一次 native combiner 的 callee 寄存器
+    进入 kd_spin_batch_run：编译器管理整批 combiner 的活跃 C 值
     counter = 0
-    锁侧 step 循环 while curr:
+    同一个 C 栈帧内循环 while curr:
         counter++
         next = curr.next                       // NUMA_AWARE=0，直接取后继
         batch.next = next；batch.outer.released = false
         预取 next 的实际寄存器包、frame 热字段和栈内 SP/push 槽
         if 普通单锁准入成功:
-            shell 调用 alternate wrapper；JIT 只执行当前请求
+            内联 clobber 调用 alternate wrapper；JIT 只执行当前请求
             if 正常最终 unlock:
-                最小寄存器回写；step 完成/pop 当前 frame
+                按入口 ABI 回写；循环完成/pop 当前 frame
             else:
                 完整包回写；execute_cs 消费现有出口，不重跑已执行前缀
         else:
@@ -428,7 +437,7 @@ run_combiner(L, first_follower, request):                // 进入时 combiner �
             reclaim_outer(request); source_frame_put(); return
         if next == NULL or next.next == NULL or counter >= 1024: break
         curr = next；继续专用准入，正常连续请求形成 WWJUMP
-    批次 shell 恢复一次 native combiner 状态
+    批次结束返回，编译器恢复 enclosing C 调用所需状态
     S.locked = LOCKED
     store_release(next.locked, false)          // 留下一个后继负责后续 owner 工作
     source_frame_put()                         // 归还整批租约
@@ -455,25 +464,21 @@ combiner 自己：恢复原 C 栈 → 原生执行自己的 N 次读改写 → �
 ### 5.1 锁侧驻留批次与单锁准入
 
 对应 [combiner.inc](../../kernel_module/spin/combiner.inc)、
-[spin_batch.S](../../kernel_module/spin_batch.S)、[kd_exec.c](../../kernel_module/kd_exec.c)。
+[kd_jit_batch.h](../../include/kd_jit_batch.h)、[kd_exec.c](../../kernel_module/kd_exec.c)。
 
 ```text
 run_combiner(L, node, request):
     获得整个批次的 source/provider lease
     保存外层队列与真实 L 的既有所有权
-    kd_spin_batch_enter(batch, kd_spin_batch_step):
-        保存一次原 combiner 的 RBX/RBP/R12–R15
-        repeat:
-            call = kd_spin_batch_step(batch)       // 锁侧选后继/发布完成
-            if call == NULL: break
-            调用 call.code 的专用 wrapper 入口
-        恢复一次原 combiner 寄存器
+    kd_spin_batch_run(batch):
+        编译器序言/尾声管理 combiner 现场
+        在同一个 C 帧中循环执行以下请求逻辑
     执行末节点交接，或提前释放后的 outer reclaim
     归还 source/provider lease
 
-kd_spin_batch_step(batch):
+kd_spin_batch_run 的循环体:
     若已有 wrapper 返回：
-        if 精确 CALL_MISS + spin unlock 目标 + RDI=L:
+        if 本次入口 ABI 对应的精确最终 unlock 分类通过:
             观察真实正文标记；完成/解绑 frame；发布当前 waiter 完成
         else:
             按分支启用 cold ledger/snapshot
@@ -487,7 +492,7 @@ kd_spin_batch_step(batch):
     复查 OPEN/NORMAL/entry/backend/code、未执行 root、有效 SP、KDWB001 签名
     frame_bind(node.execution.frame, depth=1, batch_lease=true)
     准备 args[2]、原始 entry SP 和当前 L/unlock 地址
-    标记 executed，返回专用 wrapper 调用描述
+    标记 executed，以对应内联 clobber 边界调用 wrapper，回到本循环
 ```
 
 正常单锁不再逐请求经过 `execute_cs → kd_exe_on_call_hl_entry`。队列选择、
@@ -495,17 +500,18 @@ kd_spin_batch_step(batch):
 切换 waiter。原有 NUMA 拒绝回滚、最后一名 waiter、batch-size 和提前释放规则保留。
 旧代码没有 `KDWB001` 签名时走普通 wrapper。
 
-这里的“保存一次”只针对原始 combiner 和 wrapper 原有的重复保存。当前每个
-请求仍调用普通 C ABI 的 step；9/17 冻结模块中，该回调每次保存六个 callee-saved
-寄存器。shell 每轮还有 step、wrapper 两处间接调用，ELF 均引用
-`__x86_indirect_thunk_rax`；运行时补丁和实际成本未由静态反汇编确定。
-TCLock 则从当前 unlock 续点切到下一 lock 续点，仍执行两端的锁侧 C 逻辑。
+9/17 冻结版本曾在每个请求间返回 C step 和汇编 shell；当前统一循环已消除
+这次退出/重入及外层成组保护。新旧混合队列也不会退到普通 C ABI wrapper。
+旧入口只额外保护 RBP，两个入口均向编译器声明其他 GPR clobber。编译器仍
+可能产生函数级保存及活跃局部值 spill，不能宣称所有现场成本为零。
+TCLock 从当前 unlock 续点切到下一 lock 续点；kdlock 保留物理 combiner 栈
+供 JIT 暂存槽使用，只更新逻辑 waiter 栈。两者都运行锁侧 C 交接逻辑。
 完整状态对照见 [寄存器 ABI](../../docs/JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比)。
 
 frame 的常用头部为 64 字节；其后是寄存器包和预分配冷区。普通 prepare/bind/
 complete/pop 不初始化、检查八层数组、remote/native 控制或快照。复杂出口先
 原地建立单锁 ledger，再调用通用处理；SELFTEST 观察器需要 ledger 时提前启用。
-完整 frame/context 为 664/5336 字节，request 为 712 字节，node 为 48 字节。
+frame/context/request 保持预分配，node 为 48 字节。
 12 个 request 槽独立于四个可复用 node；这是减少热路径访问，不是缩小整个对象。
 
 ### 5.2 已执行出口如何进入通用处理
@@ -530,8 +536,8 @@ slot 缓存不保存 readiness 或代码版本，source/provider lease 也不是
 ### 5.3 wrapper 的两种边界
 
 [wrapper.S](../../include/wrapper.S) 的偏移 0 保留普通 C ABI，偏移 16 是带版本
-签名的专用入口。普通入口保存/恢复原 callee-saved 寄存器，专用入口由驻留外壳
-保存一次，只预留同样的栈槽。`args[2]` 和全部原 JIT 栈槽偏移不变。
+签名的旧 ABI 专用入口。普通入口保存/恢复原 callee-saved 寄存器；专用入口
+只预留同样的栈槽，编译器管理 combiner 活跃值，内联适配保护 RBP。`args[2]` 和全部原 JIT 栈槽偏移不变。
 新增 `Stack_BATCH` 位于 `RBP-160`，保存专用描述指针；先分配栈再写，避免 red zone。
 
 | 出口 | 写回 |
@@ -622,7 +628,7 @@ owner 仍需等到 S/L 允许获取；不能删掉 S 的等待就让它并行修
 | source frame lease | 每批次一次 CAS 获取、原子递减和 provider module 引用增减；逐 bind 检查 OPEN | 关闭标志和计数在同一原子字中协调退休，仍有共享计数缓存行与模块引用成本，不是零同步 |
 | 常规诊断计数 | 纯事件、最大深度及 overflow/invariant 已 per-CPU；每个排队 waiter 仍有共享 `atomic_inc`/`atomic_dec_return`，计数紧邻 JIT 禁用 latch；多个诊断入口重复查槽 | 复用诊断槽，评估实时计数按需观测或其他低开销表示；该计数用于测试/workload 阶段协调，不能直接删除或只在退出后汇总 |
 | 下一请求预取 | 当前正文执行前预取下一已发布请求的寄存器包、frame 热字段及逻辑 task 栈内的虚拟 SP/push 槽 | 虚拟子请求跟随共享 root 包；不猜 node-zero RSP，不改变 owner/ACK，不在提前 outer release 后访问旧 successor |
-| wrapper 和生成代码 | 原始 combiner 每批保存一次；C step 的六个 callee-saved 保存仍逐次发生；wrapper 入口加载未缩小，最终 waiter 仍恢复 15 个 GPR；仅精确最终 unlock 缩小回写 | 固定 step 可改直接调用；按普通 lock/unlock ABI 继续检查入口/最终恢复；JIT 仍有入口分派、地址重写及虚拟栈操作，保持完整中间出口和实际正文标记 |
+| wrapper 和生成代码 | 同一个 C 帧跨新旧及混合批次；旧入口适配仅保护 RBP；新 ABI 仅捕获/回写/恢复三字段；旧 ABI 保留 GPR 导入和最终恢复 | 编译器仍产生函数级保存和活跃值 spill；JIT 仍有入口分派、地址重写及虚拟栈操作；完整中间出口和实际正文标记保留，历史成绩不代表此次循环改动的性能 |
 | 屏障、pin 与原锁 | 复杂 dispatcher `mb()`、队列 acquire/release、ticket guard/pin、原 L 获取/释放；普通批次持续持有 L，不逐代理正文重获 | S/L 双层所有权用于兼容原生 peer，不能直接套用 TCLock 单锁字而删除排斥或 owner/ACK 协议 |
 
 普通单锁不读取未启用的冷区，也不进入通用 dispatcher；复杂出口先物化

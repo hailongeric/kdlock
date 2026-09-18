@@ -15,6 +15,7 @@
 #include <linux/list.h>
 #include <asm/ptrace.h>
 #include "kd_call.h"
+#include "exe_info.h"
 #include "kd_spin_entry.h"
 
 struct task_struct;
@@ -101,6 +102,8 @@ struct kd_exec_frame {
 	bool regs_borrowed;
 	bool completion_seen;
 	struct pt_regs regs;
+	unsigned int entry_abi;
+	unsigned int packet_state;
 
 	/* Cold storage: unread until complex_ready, including all eight locks,
 	 * control/native routing and the combiner checkpoint. */

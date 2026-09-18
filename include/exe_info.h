@@ -30,6 +30,21 @@
 #define KD_EXE_ENTRY_REFUSED \
 	6 /* entry predicate failed before any CS instruction */
 
+/* Identity comes from the physical hook, never inferred from code bytes. */
+enum kd_entry_abi {
+	KD_ENTRY_ABI_LEGACY = 0,
+	KD_ENTRY_ABI_SPIN_CLOBBER_V1 = 1,
+};
+
+/* Only FULL permits reading all GPR slots. MINIMAL and COMPLETE contain
+ * ip/sp/bp; complete ip/sp already describe the post-unlock boundary. */
+enum kd_packet_state {
+	KD_PACKET_FULL = 0,
+	KD_PACKET_MINIMAL = 1,
+	KD_PACKET_COMPLETE = 2,
+};
+#define KD_EXE_CLOBBER_COMPLETE 7
+
 enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,
 	KD_EXE_LOCK_SPIN = 1,
@@ -45,6 +60,7 @@ struct kd_exe_info {
 	void *code_block; /* vmalloc'd executable page for JIT code   */
 	unsigned long jump_from; /* source address for indirect jump fixup   */
 	unsigned long tgt_addr; /* target address for call-miss / ij-miss   */
+	unsigned int entry_abi; /* immutable; occupies existing cacheline padding */
 } __attribute__((aligned(64)));
 
 /*

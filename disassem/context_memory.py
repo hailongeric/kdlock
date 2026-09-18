@@ -85,6 +85,10 @@ class MemoryValues:
         self.default = UNKNOWN
         self.words = {}
         self.work = 0
+        # FlowConstants carries this bit in its CFG snapshot and joins it by
+        # OR: an opaque write/callee forbids further initial-stack identities.
+        # UNKNOWN byte data alone cannot distinguish untouched from overwritten.
+        self.entry_spills_blocked = False
 
     def spend(self, amount):
         # Work is translation-local, not path-local: restoring a CFG snapshot
@@ -95,9 +99,48 @@ class MemoryValues:
     def snapshot(self):
         return dict(self.cells), self.default, dict(self.words)
 
+    def entry_stack_value(self, memory):
+        """Keep an initial spill identity only when every prior store is disjoint.
+
+        Unknown writes, overwritten slots and widened paths cannot acquire a
+        fresh entry identity. Collected alias premises are checked before body.
+        """
+        if (self.guards is None or memory.size != 64 or self.default != UNKNOWN
+                or self.entry_spills_blocked):
+            return None
+        address = self.address(memory.ptr)
+        if address is None or self.guards.base_name(address[0]) not in {"RSP", "RBP"}:
+            return None
+        if not self.spend(8 * len(self.cells)):
+            return None
+        for i in range(8):
+            pointer = self.offset(memory.ptr, i)
+            if any(self.relation(pointer, written) is not False for written in self.cells):
+                return None
+        name = self.guards.stack_value(address)
+        if name is None:
+            return None
+        value = ExprId("kd_entry_" + name, 64)
+        self.bases = self.bases | {value}
+        return value
+
     def restore(self, state):
         self.cells, self.default = dict(state[0]), state[1]
         self.words = dict(state[2])
+
+    def scaled_entry_value(self, value):
+        """Name the exact scaled value, so its writes still need alias guards."""
+        if self.guards is None or not isinstance(value, ExprOp) or value.op != '<<':
+            return None
+        if len(value.args) != 2 or not isinstance(value.args[1], ExprInt):
+            return None
+        name = self.guards.scaled_stack_value(
+            self.guards.base_name(value.args[0]), int(value.args[1]))
+        if name is None:
+            return None
+        origin = ExprId('kd_entry_' + name, 64)
+        self.bases = self.bases | {origin}
+        return origin
 
     def join(self, left, right):
         if left is None or right is None:
@@ -181,6 +224,7 @@ class MemoryValues:
         return result, default, self.bounded_words(words)
 
     def clobber(self, *, checked_windows=(), window_bytes=0):
+        self.entry_spills_blocked = True
         # Only the negotiated mutex boundary compares these bytes before
         # returning to JIT. Membership requires the same exact address base
         # and full coverage for EVERY possible RSP, not an entry disjointness
@@ -424,6 +468,7 @@ class MemoryValues:
                 address = self.address(pointer)
                 alternatives.append(address)
                 if address is None:
+                    self.entry_spills_blocked = True
                     default = self.join(default, any_byte)
                 else:
                     keys.update(self.offset(pointer, i) for i in range(size))

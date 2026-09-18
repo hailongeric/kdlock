@@ -7,6 +7,8 @@
 #include <asm/ptrace.h>
 
 void kd_exe_add(int pid, unsigned long RIP, enum kd_exe_lock_kind kind);
+void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
+                    enum kd_entry_abi abi);
 bool kd_exe_is_ready(unsigned int pid, unsigned long RIP);
 struct kd_exe_info *kd_exe_find_ready(unsigned int pid, unsigned long ip);
 /* Recheck a live registry slot without hashing. Neither a ready result nor

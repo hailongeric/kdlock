@@ -12,6 +12,7 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 | [klock_test.c](klock_test.c) | 既有场景的参数检查、线程创建/join、结果状态 |
 | [lock_scenarios/worker.inc](lock_scenarios/worker.inc) | 起跑 barrier、单个 worker 的 ioctl 与可选计时 |
 | [lock_scenarios/metrics.inc](lock_scenarios/metrics.inc) | 完整运行的聚合和精确 ioctl 分位数 |
+| [spin_cacheline/clobber_compare.py](spin_cacheline/clobber_compare.py) | 同一实验内核上两种 caller ABI × native/kdlock，交替五轮并报告中位数、JIT 比例及调用者汇编 |
 | [spin_cacheline/run.py](spin_cacheline/run.py) | CLI、构建/冻结、扫描和汇总调度 |
 | [spin_cacheline/bench_runtime.py](spin_cacheline/bench_runtime.py) | 计划、CPU/布局/计数检查、命令超时、来源状态和源码冻结 |
 | [spin_cacheline/bench_session.py](spin_cacheline/bench_session.py) | 一个会话的准备、发布确认、测量和排空 |
@@ -28,6 +29,10 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 
 ## Spinlock cacheline 对比
 
+最新测量为 [9/18 caller-clobber 同内核四组对照](spin_cacheline/results/20260918-clobber-v1.md)，
+报告五轮中位数。随后统一 combiner 循环的版本仅完成定向功能验证，未重跑性能。
+下文旧扫描的 best/median 口径与四组对照不同，成绩只属于各自冻结输入。
+
 入口为 [spin_cacheline/README.md](spin_cacheline/README.md)，包括同一把原锁下的
 展开临界区、原子起跑、每线程一次 ioctl 批量抢锁、原生/kdlock 配对、实际 JIT
 正文计数和 CSV 解释。当前每次正文返回后执行相同的 4 组局部乘加，为下一次
@@ -39,7 +44,7 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 JIT wrapper 返回及 waiter 恢复，列出重复查表、全局锁、frame 校验/复制和
 诊断计数。锁外乘加发生在原 waiter 恢复后；combiner 的连续代理批次仍持有原锁。
 
-[2026-09-17 的最新完整结果](spin_cacheline/results/20260917-stackless.md) 已按
+[2026-09-17 的完整扫描结果](spin_cacheline/results/20260917-stackless.md) 已按
 每线程 10 万次、1/4/8/12/16/20 线程完成 120 个会话。带实际 JIT 的最高观测
 吞吐为 **0.647 Mops/s**（1 条 cacheline、4 线程），多线程最高 best/median 为
 **0.2935**（16 条 cacheline、16 线程）；所有测量及排空检查通过。
@@ -51,7 +56,7 @@ JIT wrapper 返回及 waiter 恢复，列出重复查表、全局锁、frame 校
 较同日完整扫描对应点提升 **49.5%/48.6%**；4 线程提升 **12.0%/15.5%**。
 这是部分配置、每组两个样本的观测结果；JIT 比例变化和重启因素见结果页。
 
-最新 [waiter 包复用与原子 frame lease 的四点复测](spin_cacheline/results/20260917-waiter-packet.md)
+同日 [waiter 包复用与原子 frame lease 的四点复测](spin_cacheline/results/20260917-waiter-packet.md)
 同样 16/16 会话通过：20 线程的两点达到 **1.029/0.951 Mops/s**，较 frame
 精简版提高 **20.3%/11.9%**；4 线程两点下降 **2.4%/1.7%**，未观察到收益。
 

@@ -447,7 +447,8 @@ class FlowConstants(RegisterConstants):
     MAX_STACK_PARTITIONS = 64
     UNKNOWN = frozenset({None})
 
-    def __init__(self, guards=None, *, scoped_calls=False, mutex_stack_bytes=0):
+    def __init__(self, guards=None, *, scoped_calls=False, mutex_stack_bytes=0,
+                 entry_spill_guards=False):
         super().__init__()
         self.instruction_lifted = {}
         self.unknown = {
@@ -463,19 +464,33 @@ class FlowConstants(RegisterConstants):
         self.memory = context_memory.MemoryValues(
             frozenset(self.origins.values()), guards
         )
+        if entry_spill_guards:
+            # Caller-owned spills add byte/alias work to the same CFG proof.
+            # The measured nested register oracle needs ~1.92M operations;
+            # retain a finite 4M ceiling without changing any address rule or
+            # the legacy budget. An exhausted proof still refuses admission.
+            self.memory.MAX_WORK *= 4
+            # The two-root workload has 292 simultaneously tracked bytes once
+            # scalar indices spill. Keep the byte domain bounded at 512.
+            self.memory.MAX_BYTES *= 2
         self.control_calls = set()
+        self.clobber_calls = set()
+        self.readonly_calls = set()
         self.mutex_calls = set()
         self.mutex_stack_bytes = mutex_stack_bytes
         self.call_entries = {}
         self.scoped_calls = scoped_calls
         self.return_targets = {}
+        self.entry_spill_guards = entry_spill_guards
 
     def snapshot(self):
-        return dict(self.values), dict(self.origins), self.memory.snapshot()
+        return (dict(self.values), dict(self.origins), self.memory.snapshot(),
+                self.memory.entry_spills_blocked)
 
     def restore(self, state):
         self.values, self.origins = dict(state[0]), dict(state[1])
         self.memory.restore(state[2])
+        self.memory.entry_spills_blocked = state[3]
 
     def merge_state(self, left, right):
         origins = {
@@ -487,6 +502,7 @@ class FlowConstants(RegisterConstants):
             self.merge(left[0], right[0]),
             origins,
             self.memory.merge(left[2], right[2]),
+            left[3] or right[3],
         )
 
     def clobber(self, *, checked_windows=(), window_bytes=0):
@@ -616,9 +632,22 @@ class FlowConstants(RegisterConstants):
             ExprId(name, 64)
             for name in ("RBX", "RBP", "RSP", "R12", "R13", "R14", "R15")
         }
+        if id(line) in self.clobber_calls:
+            saved = {ExprId(name, 64) for name in ("RBP", "RSP")}
+        # The versioned spin control handler changes its lock word and consumes
+        # the virtual CALL, without running an opaque callee on the logical
+        # stack. Model those writes through the existing alias/guard rules.
+        # In particular, a lock may alias a saved pointer; do not preserve that
+        # pointer just because the caller ABI spills it to memory.
+        lock_pointers = (
+            frozenset(self.resolve_many(ExprId("RDI", 64), allow_wide=True))
+            if id(line) in self.clobber_calls else None
+        )
         values, origins = dict(self.values), dict(self.origins)
         self.update_effects(
-            line, symbols, checked_mutex_stack=id(line) in self.mutex_calls
+            line, symbols, checked_mutex_stack=id(line) in self.mutex_calls,
+            clobber_lock=lock_pointers,
+            readonly_call=id(line) in self.readonly_calls,
         )
         for reg in saved:
             for output, before in ((self.values, values), (self.origins, origins)):
@@ -627,7 +656,8 @@ class FlowConstants(RegisterConstants):
                 else:
                     output.pop(reg, None)
 
-    def update_effects(self, line, symbols=None, *, checked_mutex_stack=False):
+    def update_effects(self, line, symbols=None, *, checked_mutex_stack=False,
+                       clobber_lock=None, readonly_call=False):
         plan = self.instruction_plan(line)
         if plan is None:
             self.clobber()
@@ -655,6 +685,13 @@ class FlowConstants(RegisterConstants):
             self.update_assignments(entry)
             if line.is_subcall():
                 self.call_entries[id(line)] = self.snapshot()
+                if (clobber_lock is not None or readonly_call) and line.name.upper() == "CALL":
+                    if clobber_lock is not None:
+                        self.memory.store([(clobber_lock,
+                            frozenset({context_memory.wide_value(32)}), 32)])
+                    self.values.clear()
+                    self.origins.clear()
+                    return
                 windows = ()
                 stack = ExprId("RSP", 64)
                 pushed = expr_simp(stack - ExprInt(8, 64))
@@ -915,6 +952,14 @@ class FlowConstants(RegisterConstants):
                     memory_writes[reg] = pointers, contents
                     continue
                 for value in resolved:
+                    if self.entry_spill_guards and isinstance(value, ExprMem):
+                        origin = self.memory.entry_stack_value(value)
+                        if origin is not None:
+                            value = origin
+                    if self.entry_spill_guards:
+                        origin = self.memory.scaled_entry_value(value)
+                        if origin is not None:
+                            value = origin
                     domain = (
                         None
                         if self.wide_dependency(value)
@@ -1051,11 +1096,14 @@ def constant_blocks(
     *,
     roots=None,
     control_targets=(),
+    clobber_targets=(),
+    readonly_targets=(),
     mutex_targets=(),
     mutex_stack_bytes=0,
     native_exits=(),
     guards=None,
     scoped_calls=False,
+    entry_spill_guards=False,
 ):
     """Seed real entries, then propagate to previously unvisited successors.
 
@@ -1077,6 +1125,8 @@ def constant_blocks(
     calls = defaultdict(list)
     callees = set()
     control_calls = set()
+    clobber_calls = set()
+    readonly_calls = set()
     mutex_calls = set()
     for start, block in blocks.items():
         db = databases.get(block)
@@ -1108,7 +1158,11 @@ def constant_blocks(
             # Endpoint calls may lack a decoder edge, yet a nested unlock has
             # a selected continuation. Do not create new code beyond the scope.
             callee = static_address(line.args[0], db, offset)
-            if guards is not None and callee in control_targets:
+            if callee in clobber_targets:
+                clobber_calls.add(id(line))
+            if callee in readonly_targets:
+                readonly_calls.add(id(line))
+            if callee in readonly_targets or ((guards is not None or callee in clobber_targets) and callee in control_targets):
                 control_calls.add(id(line))
                 if callee in mutex_targets:
                     mutex_calls.add(id(line))
@@ -1174,9 +1228,12 @@ def constant_blocks(
                 "unreached selected CFG blocks", min(blocks.keys() - reachable)
             )
     tracker = FlowConstants(
-        guards, scoped_calls=scoped_calls, mutex_stack_bytes=mutex_stack_bytes
+        guards, scoped_calls=scoped_calls, mutex_stack_bytes=mutex_stack_bytes,
+        entry_spill_guards=entry_spill_guards,
     )
     tracker.control_calls = control_calls
+    tracker.clobber_calls = clobber_calls
+    tracker.readonly_calls = readonly_calls
     tracker.mutex_calls = mutex_calls
     initial = tracker.snapshot()
 
@@ -1202,6 +1259,7 @@ def constant_blocks(
             dict(initial[0]),
             {} if start in callees and not scoped_calls else dict(initial[1]),
             initial[2],
+            initial[3],
         )
         key = state_key(start, state)
         incoming[key] = state

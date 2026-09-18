@@ -82,6 +82,8 @@ static unsigned long end_points[4];
 static int end_point_count;
 static unsigned long raw_spin_lock_addr;
 static unsigned long raw_spin_unlock_addr;
+static unsigned long clobber_spin_lock_addr;
+static unsigned long clobber_spin_unlock_addr;
 static unsigned long mutex_lock_addr;
 static unsigned long mutex_unlock_addr;
 
@@ -202,6 +204,37 @@ static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_ad
 /* This is a root-only admission, not a bypass around translated entry guards.
  * Source OPEN, slot key/backend/status/code and the versioned alternate entry
  * are checked for every candidate. Code storage remains pinned by the batch. */
+static bool kd_jit_image_matches(const struct kd_exe_info *exe,
+                                 const struct kd_exec_frame *frame)
+{
+	const unsigned char *code = READ_ONCE(exe->code_block);
+	bool directory = code && !memcmp(code + 25, "KDWC001", 7) &&
+	                 !memcmp(code + 41, "KDAB", 4);
+
+	if (READ_ONCE(exe->entry_abi) != frame->entry_abi)
+		return false;
+	if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
+		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
+		       clobber_spin_lock_addr && clobber_spin_unlock_addr;
+	return frame->entry_abi == KD_ENTRY_ABI_LEGACY &&
+	       (!directory || code[KD_JIT_ABI_OFFSET] == KD_ENTRY_ABI_LEGACY);
+}
+
+static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
+                                  struct kd_exec_frame *frame, void *code)
+{
+	call->regs = kd_exec_frame_regs(frame);
+	call->args[0] = frame->gsbase;
+	call->args[1] = (unsigned long)frame->logical_task;
+	call->code = (char *)code + KD_JIT_CLOBBER_OFFSET;
+	call->lock = frame->outer_lock_addr;
+	call->unlock = clobber_spin_unlock_addr;
+	call->entry_sp = call->regs->sp;
+	call->entry_abi = frame->entry_abi;
+	call->packet_state = &frame->packet_state;
+	call->complete = frame->spin_simple && !frame->parent && !frame->depth;
+}
+
 bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 			       struct kd_exec_frame *frame,
 			       struct kd_jit_batch_call *call)
@@ -216,7 +249,10 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	    frame->executed || !frame->gsbase || !frame->logical_task ||
 	    regs->ip != frame->entry_ip ||
 	    !kd_exe_entry_is_ready(exe, 0, frame->entry_ip) ||
-	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_SPIN)
+	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_SPIN ||
+	    !kd_jit_image_matches(exe, frame) ||
+	    frame->packet_state != (frame->entry_abi == KD_ENTRY_ABI_LEGACY ?
+	                          KD_PACKET_FULL : KD_PACKET_MINIMAL))
 		return false;
 	code = READ_ONCE(exe->code_block);
 	if (!code || memcmp((char *)code + 9, "KDWB001", 7))
@@ -228,6 +264,11 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	call->lock = frame->outer_lock_addr;
 	call->unlock = raw_spin_unlock_addr;
 	call->entry_sp = regs->sp;
+	call->entry_abi = frame->entry_abi;
+	call->packet_state = &frame->packet_state;
+	call->complete = false;
+	if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
+		kd_jit_prepare_clobber(call, frame, code);
 	call->dispatch_start = kd_jit_timing_start();
 	call->wrapper_start = kd_jit_timing_start();
 	return true;
@@ -235,8 +276,11 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 
 bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
 {
-	if (call->args[0] != KD_EXE_CALL_MISS ||
-	    call->regs->ip != call->unlock || call->regs->di != call->lock)
+	if (call->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ?
+	    (call->args[0] != KD_EXE_CLOBBER_COMPLETE ||
+	     *call->packet_state != KD_PACKET_COMPLETE || !call->complete) :
+	    (call->args[0] != KD_EXE_CALL_MISS ||
+	     call->regs->ip != call->unlock || call->regs->di != call->lock))
 		return false;
 	kd_jit_timing_end(KD_JIT_TIME_WRAPPER, call->wrapper_start);
 	kd_jit_timing_end(KD_JIT_TIME_DISPATCH, call->dispatch_start);
@@ -281,6 +325,9 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,
 			exe, exe->status_code, exe->RIP, regs->ip, exe->pid);
 		return KD_EXE_NO_RUN;
 	}
+
+	if (!kd_jit_image_matches(exe, frame))
+		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
 
 	if (READ_ONCE(exe->lock_kind) !=
 	    (frame->mutex_backend ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN)) {
@@ -344,7 +391,17 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,
 		} else {
 			frame->executed = true;
 			boundary_start = kd_jit_timing_start();
-			translated(regs, args);
+			if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
+			    frame->packet_state == KD_PACKET_MINIMAL) {
+				struct kd_jit_batch_call call;
+
+				kd_jit_prepare_clobber(&call, frame, (void *)translated);
+				kd_jit_clobber_call_v1(&call);
+				args[0] = call.args[0];
+				args[1] = call.args[1];
+			} else {
+				translated(regs, args);
+			}
 			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, boundary_start);
 returned_wrapper:
 			if (args[0] == KD_EXE_ENTRY_REFUSED) {
@@ -386,6 +443,21 @@ returned_wrapper:
 		 * combiner checkpoint for its final unlock. Match the backend's exact
 		 * CALL target as well as L; mixed mutex/spin exits stay rejected below.
 		 * Every other exit materializes complex state BEFORE its side effects. */
+		if (args[0] == KD_EXE_CLOBBER_COMPLETE) {
+			/* A minimal result never enters the general register dispatcher. */
+			if (frame->entry_abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
+			    frame->packet_state != KD_PACKET_COMPLETE ||
+			    !frame->spin_simple || frame->parent || frame->depth) {
+				ret_flag = KD_EXE_RUN_ERROR;
+				break;
+			}
+			ret_flag = KD_EXE_RUN_TO_UNLOCK;
+			break;
+		}
+		if (frame->packet_state != KD_PACKET_FULL) {
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
 		if (frame->spin_simple) {
 			if (args[0] == KD_EXE_CALL_MISS &&
 			    regs->ip == raw_spin_unlock_addr &&

@@ -120,7 +120,13 @@ static int __init kdlock_km_init(void)
 		goto err_mutex;
 #endif
 
-#ifdef KD_SPIN_STATIC_DISPATCH
+#ifdef KD_SPIN_CLOBBER_V1
+	ret = kd_spin_static_install_clobber_v1(__is_kd_test,
+		kd_spin_dispatch_lock, kd_spin_dispatch_unlock,
+		kd_spin_dispatch_clobber_lock_v1, kd_spin_dispatch_clobber_unlock_v1);
+	if (ret)
+		goto err_mutex;
+#elif defined(KD_SPIN_STATIC_DISPATCH)
 	ret = kd_spin_static_install_dispatch(__is_kd_test,
 				kd_spin_dispatch_lock, kd_spin_dispatch_unlock);
 	if (ret)

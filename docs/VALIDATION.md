@@ -29,6 +29,8 @@ it does not resume the paused implementation/experiment plan.
 
 | Date (+08) | Evidence | Result and scope |
 | --- | --- | --- |
+| 2026-09-18 | [Caller-clobber v1](../tests/README.md#spin-clobber-v1), [same-kernel comparison](../bench/spin_cacheline/results/20260918-clobber-v1.md) | Independent kdclobber1 kernel, scoped unit/assembly checks, six live cases and 120 benchmark sessions; no consistent large throughput gain |
+| 2026-09-18 | [TCLock context comparison and unified loop](../tests/README.md#tclock-context-loop) | Subsequent freeze: eight basic/affected unit entrypoints and five live cases pass; old/new/mixed wrappers share one C frame; no new performance matrix |
 | 2026-09-15 | [Spin static dispatch and profiling](#spin-static-dispatch-profiling) | Two authorized experimental kernels built/booted; final 60-session comparison correct/drained, single-thread NO_JIT 50–57 ns/op versus native 38–45, all five sizes execute measured JIT at four threads; flat hardware samples locate native dispatch and request waiting |
 | 2026-09-14 | [Native spin fast path](#native-fast-path-optimization) | Module optimization, scoped units and six complex spin JIT cases pass; final 40-session single-thread scan is correct/drained with zero measured JIT; 102–107 ns/op versus native 37–44 ns/op, so near-native performance is not yet achieved |
 | 2026-09-14 | [Spin cacheline microbenchmark](#continuous-lock-contention-scan) | Continuous-loop 35-point/140-session scan completes with 1/4/8/12/16/20/24 threads; 17,000,000 operations, 8,283,218 measured JIT bodies, all five sizes verified; ten single-thread NO_JIT sessions and cross-node 24-thread placement remain explicit |
