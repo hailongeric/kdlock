@@ -12,6 +12,7 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 | [klock_test.c](klock_test.c) | 既有场景的参数检查、线程创建/join、结果状态 |
 | [lock_scenarios/worker.inc](lock_scenarios/worker.inc) | 起跑 barrier、单个 worker 的 ioctl 与可选计时 |
 | [lock_scenarios/metrics.inc](lock_scenarios/metrics.inc) | 完整运行的聚合和精确 ioctl 分位数 |
+| [tclock_compare/README.md](tclock_compare/README.md) | 完整 TCLock 原生栈委托、Linux 原生、kdlock JIT 的同负载六臂对照及独立硬件采样 |
 | [spin_cacheline/clobber_compare.py](spin_cacheline/clobber_compare.py) | 同一实验内核上两种 caller ABI × native/kdlock，交替五轮并报告中位数、JIT 比例及调用者汇编 |
 | [spin_cacheline/run.py](spin_cacheline/run.py) | CLI、构建/冻结、扫描和汇总调度 |
 | [spin_cacheline/bench_runtime.py](spin_cacheline/bench_runtime.py) | 计划、CPU/布局/计数检查、命令超时、来源状态和源码冻结 |
@@ -29,8 +30,14 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 
 ## Spinlock cacheline 对比
 
-最新测量为 [9/18 caller-clobber 同内核四组对照](spin_cacheline/results/20260918-clobber-v1.md)，
-报告五轮中位数。随后统一 combiner 循环的版本仅完成定向功能验证，未重跑性能。
+最新测量为 [9/18 TCLock 原生栈委托三方对照](tclock_compare/results/20260918-native-stack.md)：
+180/180 稳态会话正确并排空，覆盖两种 caller ABI。竞争配置 TCLock 为 kdlock
+中位吞吐的 1.06–2.05 倍，但并不普遍超过 Linux；六场独立采样定位共享诊断
+状态与请求元数据热点。并发冷晋升失败仍未修复，稳态准备策略和失败记录均保留。
+
+此前的 [9/18 统一 combiner 现场后四组对照](spin_cacheline/results/20260918-unified-context.md)，
+120/120 会话完成，报告五轮中位数。新 ABI 的 20 线程吞吐为 1.6294/1.6370 Mops/s，
+与统一循环前基本持平，仍低于对应原生；实际 JIT、数据和排空检查通过。
 下文旧扫描的 best/median 口径与四组对照不同，成绩只属于各自冻结输入。
 
 入口为 [spin_cacheline/README.md](spin_cacheline/README.md)，包括同一把原锁下的

@@ -1,0 +1,738 @@
+--- a/locks/komb.c
++++ b/komb.c
+@@ -7,16 +7,8 @@
+  * Currently nested locking becomes TTAS lock.
+  * irqs_disabled() will hurt performance when running in VM.
+  */
+-#ifdef KERNEL_SYNCSTRESS
+-#include "spinlock/komb.h"
+-#include "timing_stats.h"
+-#else
+-#include <asm-generic/qspinlock.h>
+-#include <linux/sched.h>
+-#include <linux/combiner.h>
+-#define LOCK_START_TIMING_PER_CPU(combiner_loop)
+-#define LOCK_END_TIMING_PER_CPU(combiner_loop)
+-#endif
++/* Linux 6.1 external-module adaptation; see port.patch and README.md. */
++#include "compat.h"
+ #include <linux/topology.h>
+ #include <linux/vmalloc.h>
+ 
+@@ -93,14 +85,14 @@
+ 	smp_cond_load_acquire_sched(&(v)->counter, (c))
+ 
+ struct shadow_stack {
+-	/* 
++	/*
+ 	 * lock_addr represents the lock addresses acquired by the current CPU.
+ 	 * when acquiring multiple locks on the same CPU (level locking). Each
+ 	 * lock address is stored in the lock_addr array. This helps when locks
+ 	 * are released out of order [Example : Acquire(A), Acquire(B),
+ 	 * Release(A), Release(B)]
+ 	 *
+-	 * TODO (Space Optimization): Fix this to be at the base of the shadow 
++	 * TODO (Space Optimization): Fix this to be at the base of the shadow
+ 	 * stack.
+ 	 */
+ 	uint64_t lock_addr[8];
+@@ -110,7 +102,7 @@
+ 	 */
+ 	void *ptr;
+ 	/*
+- * Used by the combiner to identify for which CPU is the critical section 
++ * Used by the combiner to identify for which CPU is the critical section
+  * currently executing.
+  */
+ 	uint32_t curr_cs_cpu;
+@@ -120,7 +112,7 @@
+ 	uint64_t local_shadow_stack_ptr;
+ #ifdef NUMA_AWARE
+ 	/*
+- * Create a queue which is used by the combiner to store nodes which belong to 
++ * Create a queue which is used by the combiner to store nodes which belong to
+  * different socket.
+  */
+ 
+@@ -130,7 +122,7 @@
+ 
+ 	int irqs_disabled;
+ 
+-} __cacheline_aligned_in_smp;
++} ____cacheline_aligned_in_smp;
+ 
+ #ifdef LOCK_MEASURE_TIME
+ static DEFINE_PER_CPU_ALIGNED(uint64_t, combiner_loop);
+@@ -152,8 +144,8 @@
+ static DEFINE_PER_CPU_SHARED_ALIGNED(struct komb_node, komb_nodes[MAX_NODES]);
+ 
+ /*
+- * 8KB shadow stack used by all the threads. For waiter threads, switch to 
+- * shadow stack, because of IRQs. For combiner thread, switch to shadow stack 
++ * 8KB shadow stack used by all the threads. For waiter threads, switch to
++ * shadow stack, because of IRQs. For combiner thread, switch to shadow stack
+  * to handle nesting
+  */
+ static DEFINE_PER_CPU_SHARED_ALIGNED(struct shadow_stack, local_shadow_stack);
+@@ -196,7 +188,9 @@
+ 
+ __always_inline void clear_locked_set_completed(struct komb_node *lock)
+ {
+-	WRITE_ONCE(lock->locked_completed, 1);
++	/* Count only completed borrowed stacks, before their release wake. */
++	this_cpu_inc(tc_completed);
++	smp_store_release(&lock->locked_completed, 1);
+ }
+ 
+ __always_inline void clear_pending_set_locked(struct qspinlock *lock)
+@@ -272,7 +266,7 @@
+ }
+ 
+ /**
+- * queued_fetch_set_pending_acquire - fetch the whole lock value and set pending
++ * komb_fetch_set_pending_acquire - fetch the whole lock value and set pending
+  * @lock : Pointer to queued spinlock structure
+  * Return: The previous lock value
+  *
+@@ -320,7 +314,7 @@
+ 		if (next_node->socket_id == numa_node_id()) {
+ #ifdef PREFETCHING
+ 			void *rsp_ptr =
+-				(per_cpu_ptr(&komb_nodes[0], next_node->cpuid)
++				(void *)(unsigned long)(per_cpu_ptr(&komb_nodes[0], next_node->cpuid)
+ 					 ->rsp);
+ 			prefetchw(rsp_ptr);
+ 			int i;
+@@ -443,13 +437,13 @@
+ 	BUG_ON(curr_node == NULL);
+ #endif
+ 	struct komb_node *next_node = curr_node->next;
+-	int counter = 0;
++	int counter __maybe_unused = 0;
+ 
+ 	if (next_node == NULL || check_irq_node(curr_node) ||
+ 	    check_irq_node(next_node)) {
+ 		set_locked(lock);
+ 		/*
+-		 * Make this node spin on the locked variable and then it will 
++		 * Make this node spin on the locked variable and then it will
+ 		 * become the combiner.
+ 		 */
+ 		curr_node->locked = false;
+@@ -477,6 +471,7 @@
+ 	}
+ #else
+ 	ptr->counter_val = 0;
++	this_cpu_inc(tc_batches);
+ 
+ 	print_debug("Combiner %d giving control to %d\n", smp_processor_id(),
+ 		    curr_node->cpuid);
+@@ -522,8 +517,8 @@
+ #ifdef WWJUMP
+ 	ptr->curr_cs_cpu = -1;
+ #endif
+-	/* 
+-	 * Make this node spin on the locked variable and then it will become 
++	/*
++	 * Make this node spin on the locked variable and then it will become
+ 	 * the combiner.
+ 	 */
+ 	next_node->locked = false;
+@@ -563,7 +558,7 @@
+ 
+ 		prev_node->next = curr_node;
+ 
+-		int count = 0;
++		int count __maybe_unused = 0;
+ 
+ 		smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
+ 
+@@ -584,13 +579,13 @@
+ 			}
+ #endif
+ 			for (j = 7; j >= 0; j--)
+-				if (ptr->lock_addr[j] != NULL)
++				if (ptr->lock_addr[j] != 0)
+ 					break;
+ 
+ 			curr_node->count--;
+ 
+ 			if (j >= 0) {
+-				parent_lock = ptr->lock_addr[j];
++				parent_lock = (void *)(unsigned long)ptr->lock_addr[j];
+ #ifdef DEBUG_KOMB
+ 				BUG_ON(parent_lock == lock);
+ #endif
+@@ -601,12 +596,12 @@
+ 				}
+ 			}
+ 
+-			prefetchw(curr_node->rsp);
+-			prefetchw(curr_node->rsp + 64);
+-			prefetchw(curr_node->rsp + 128);
+-			prefetchw(curr_node->rsp + 192);
+-			prefetchw(curr_node->rsp + 256);
+-			prefetchw(curr_node->rsp + 320);
++			prefetchw((void *)(unsigned long)(curr_node->rsp));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 64));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 128));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 192));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 256));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 320));
+ 			LOCK_START_TIMING_PER_CPU(unlock_stack_switch);
+ 			return 0;
+ 		}
+@@ -670,7 +665,7 @@
+ 	BUG_ON(ptr->prev_cs_cpu != -1);
+ #endif
+ 	/*
+-	 * curr_node at the head of the queue. 
++	 * curr_node at the head of the queue.
+ 	 * Release the node and run_combiner.
+ 	 */
+ 	curr_node->count--;
+@@ -680,7 +675,7 @@
+ #endif
+ 	lock->locked = _Q_LOCKED_COMBINER_VAL;
+ 	prev_rsp = curr_node->rsp;
+-	curr_node->rsp = NULL;
++	curr_node->rsp = 0;
+ 
+ 	prev_counter_val = ptr->counter_val;
+ 	ptr->counter_val = 0;
+@@ -698,13 +693,13 @@
+ 
+ 	j = 7;
+ 	for (j = 7; j >= 0; j--)
+-		if (ptr->lock_addr[j] != NULL)
++		if (ptr->lock_addr[j] != 0)
+ 			break;
+ 	j += 1;
+ #ifdef DEBUG_KOMB
+ 	BUG_ON(j >= 8 || j < 0);
+ #endif
+-	ptr->lock_addr[j] = lock;
++	ptr->lock_addr[j] = (unsigned long)lock;
+ 
+ 	run_combiner(lock, next_node);
+ 
+@@ -712,7 +707,7 @@
+ 	BUG_ON(this_cpu_ptr(&local_shadow_stack)->lock_addr[j] != lock);
+ #endif
+ 
+-	ptr->lock_addr[j] = NULL;
++	ptr->lock_addr[j] = 0;
+ 
+ 	ptr->next_node_ptr = prev_next_node_ptr;
+ 	ptr->counter_val = prev_counter_val;
+@@ -738,7 +733,7 @@
+ 
+ 	return 0;
+ release:
+-	/* 
++	/*
+ 	 * release the node
+ 	 */
+ 	curr_node->count--;
+@@ -746,7 +741,7 @@
+ }
+ #pragma GCC pop_options
+ 
+-__attribute__((noipa)) noinline notrace static int
++__attribute__((noipa)) noinline notrace int
+ __komb_spin_lock_slowpath(struct qspinlock *lock)
+ {
+ 	struct komb_node *curr_node;
+@@ -778,22 +773,23 @@
+  * Public API
+  */
+ 
+-void komb_init(void)
++int komb_init(void)
+ {
+ 	int i, j;
+ 	for_each_possible_cpu (i) {
+ 		void *stack_ptr = vzalloc(SIZE_OF_SHADOW_STACK);
+ 		struct shadow_stack *ptr = per_cpu_ptr(&local_shadow_stack, i);
+ 
+-#ifdef DEBUG_KOMB
+-		BUG_ON(stack_ptr == NULL);
+-#endif
++		if (!stack_ptr) {
++			komb_free();
++			return -ENOMEM;
++		}
+ 
+ 		ptr->ptr = stack_ptr + SIZE_OF_SHADOW_STACK;
+ 		for (j = 0; j < 8; j++)
+ 			ptr->lock_addr[j] = 0;
+ 		ptr->local_shadow_stack_ptr =
+-			stack_ptr + SIZE_OF_SHADOW_STACK - 8;
++			(unsigned long)(stack_ptr + SIZE_OF_SHADOW_STACK - 8);
+ 		ptr->curr_cs_cpu = -1;
+ 		ptr->prev_cs_cpu = -1;
+ 		ptr->counter_val = 0;
+@@ -809,14 +805,18 @@
+ 		*per_cpu_ptr(&combiner_loop, i) = UINT64_MAX;
+ #endif
+ 	}
++	return 0;
+ }
+ 
+ void komb_free(void)
+ {
+ 	int i;
+ 	for_each_possible_cpu (i) {
+-		vfree(per_cpu_ptr(&local_shadow_stack, i)->ptr -
+-		      SIZE_OF_SHADOW_STACK);
++		struct shadow_stack *ptr = per_cpu_ptr(&local_shadow_stack, i);
++		if (ptr->ptr) {
++			vfree(ptr->ptr - SIZE_OF_SHADOW_STACK);
++			ptr->ptr = NULL;
++		}
+ 	}
+ }
+ 
+@@ -825,7 +825,7 @@
+ 	atomic_set(&lock->val, 0);
+ }
+ 
+-__attribute__((noipa)) noinline notrace static uint64_t
++__attribute__((noipa)) noinline notrace u64 *
+ get_shadow_stack_ptr(void)
+ {
+ 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+@@ -833,13 +833,13 @@
+ 	return &(ptr->local_shadow_stack_ptr);
+ }
+ 
+-__attribute__((noipa)) noinline notrace static struct komb_node *
+-get_komb_node(void)
+-{
+-	return this_cpu_ptr(&komb_nodes[0]);
+-}
+-
+-/* 
++__attribute__((noipa)) noinline notrace u64 *
++get_komb_rsp_ptr(void)
++{
++	return &this_cpu_ptr(&komb_nodes[0])->rsp;
++}
++
++/*
+  * When the following function is called, the compiler in caller frame does
+  * this sequence:
+  *
+@@ -863,95 +863,8 @@
+  * registers.
+  */
+ 
+-#pragma GCC push_options
+-#pragma GCC optimize("O3")
+-__attribute__((noipa)) noinline notrace void
+-komb_spin_lock_slowpath(struct qspinlock *lock)
+-{
+-	register int ret_val;
+-	/* 
+-	 * We must save the callee-saved registers now, since we will resume
+-	 * execution at the return address currently at top of stack. If we
+-	 * defer saving to when context switch happens later, the C function
+-	 * may have saved callee-saved registers and will restore them before
+-	 * returning.
+-	 *
+-	 * Due to unstructured control flow, do the saving now.
+-	 *
+-	 * NOTE: When we touch the stack inside this function, so a 16-byte
+-	 * stack's alignment will change to 8-byte alignment when callq pushes
+-	 * our return address, but Linux only assumes 8-byte stack alignment,
+-	 * so it isn't a problem for us.
+-	 */
+-#ifdef KOMB_DEBUG
+-#ifdef ENABLE_IRQS_CHECK
+-	BUG_ON(irqs_disabled());
+-#endif
+-#endif
+-	//local_irq_disable();
+-	asm volatile("pushq %%rbp\n"
+-		     "pushq %%rbx\n"
+-		     "pushq %%r12\n"
+-		     "pushq %%r13\n"
+-		     "pushq %%r14\n"
+-		     "pushq %%r15\n"
+-		     :
+-		     :
+-		     : "memory");
+-	asm volatile("callq %P0\n"
+-		     "movq %%rsp, %c1(%%rax)\n"
+-		     :
+-		     : "i"(get_komb_node), "i"(offsetof(struct komb_node, rsp))
+-		     : "memory");
+-	asm volatile("callq %P0\n"
+-		     "movq (%%rax), %%rsp\n"
+-		     :
+-		     : "i"(get_shadow_stack_ptr)
+-		     : "memory");
+-	//local_irq_enable();
+-
+-	ret_val = __komb_spin_lock_slowpath(lock);
+-
+-	//local_irq_disable();
+-	if (ret_val) {
+-		asm volatile("callq %P0\n"
+-			     "movq (%%rax), %%rsp\n"
+-			     "popq %%r15\n"
+-			     "popq %%r14\n"
+-			     "popq %%r13\n"
+-			     "popq %%r12\n"
+-			     "popq %%rbx\n"
+-			     "popq %%rbp\n"
+-			     "retq\n"
+-			     :
+-			     : "i"(get_shadow_stack_ptr)
+-			     : "memory");
+-	} else {
+-		asm volatile("callq %P0\n"
+-			     "movq %%rsp, (%%rax)\n"
+-			     :
+-			     : "i"(get_shadow_stack_ptr)
+-			     : "memory");
+-		asm volatile("callq %P0\n"
+-			     "movq %c1(%%rax), %%rsp\n"
+-			     :
+-			     : "i"(get_komb_node),
+-			       "i"(offsetof(struct komb_node, rsp))
+-			     : "memory");
+-		asm volatile("popq %%r15\n"
+-			     "popq %%r14\n"
+-			     "popq %%r13\n"
+-			     "popq %%r12\n"
+-			     "popq %%rbx\n"
+-			     "popq %%rbp\n"
+-			     "retq\n"
+-			     :
+-			     :
+-			     : "memory");
+-	}
+-	//local_irq_enable();
+-}
+-#pragma GCC pop_options
++/* The six-register save/switch/restore lives in context.S so compiler
++ * frame-pointer prologues cannot change the continuation layout. */
+ 
+ __attribute__((noipa)) noinline notrace void
+ komb_spin_lock(struct qspinlock *lock)
+@@ -1213,13 +1126,13 @@
+ {
+ 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+ 
+-	int j, my_idx;
++	int j, my_idx __maybe_unused;
+ 
+ 	j = 0;
+ 	my_idx = -1;
+ 
+ 	for (j = 0; j < 8; j++) {
+-		if (ptr->lock_addr[j] == lock) {
++		if (ptr->lock_addr[j] == (unsigned long)lock) {
+ #ifdef DEBUG_KOMB
+ 			BUG_ON(ptr->curr_cs_cpu < 0);
+ #endif
+@@ -1237,7 +1150,7 @@
+ 	smp_mb();
+ }
+ 
+-/* 
++/*
+  * No IPA is even more relevant here, because even if assembly is removed,
+  * compiler shouldn't assume which caller-saved registers are in use inside
+  * the function. When we jump from the spin loop to the return address after
+@@ -1267,11 +1180,11 @@
+ 
+ 	for (j = 0; j < 8; j++) {
+ 		temp_lock_addr = ptr->lock_addr[j];
+-		if (temp_lock_addr != NULL)
++		if (temp_lock_addr != 0)
+ 			max_idx = j;
+-		if (temp_lock_addr == lock)
++		if (temp_lock_addr == (unsigned long)lock)
+ 			my_idx = j;
+-		if (temp_lock_addr == NULL)
++		if (temp_lock_addr == 0)
+ 			break;
+ 	}
+ 
+@@ -1316,6 +1229,9 @@
+ 
+ 	struct komb_node *curr_node = per_cpu_ptr(&komb_nodes[0], from_cpuid);
+ 
++	/* Payload has reached its delegated unlock; no translation-start proxy. */
++	this_cpu_inc(tc_delegated);
++
+ #ifdef WWJUMP
+ 	struct komb_node *next_node = ptr->next_node_ptr;
+ 
+@@ -1406,3 +1322,22 @@
+ {
+ 	return !atomic_read(&lock.val);
+ }
++
++/* Read only after all benchmark clients have joined. This is an unload oracle,
++ * not a concurrent admission gate or a general hook reader lifetime protocol. */
++int tc_contexts_idle(void)
++{
++    int cpu, i;
++    for_each_possible_cpu(cpu) {
++        struct shadow_stack *s = per_cpu_ptr(&local_shadow_stack, cpu);
++        for (i = 0; i < MAX_NODES; i++)
++            if (READ_ONCE(per_cpu_ptr(&komb_nodes[i], cpu)->count))
++                return 0;
++        for (i = 0; i < ARRAY_SIZE(s->lock_addr); i++)
++            if (READ_ONCE(s->lock_addr[i]))
++                return 0;
++        if (s->curr_cs_cpu != (u32)-1 || s->prev_cs_cpu != (u32)-1)
++            return 0;
++    }
++    return 1;
++}
+--- a/lib/combiner.c
++++ b/context.S
+@@ -1,126 +1,78 @@
+-// SPDX-License-Identifier: GPL-2.0
+-// Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi
+-
+-#ifdef KERNEL_SYNCSTRESS
+-#include "lib/combiner.h"
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Port of TCLocks lib/combiner.c and komb_spin_lock_slowpath(), copyright
++ * (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi. Keep their six-register/RSP
++ * contract, with explicit entry/return code independent of C prologues.
++ * CALL continuations, including unlock, stay on the borrowed native stack.
++ */
++#ifndef TC_CONTEXT_TEST
++#include <linux/linkage.h>
++#include <asm/nospec-branch.h>
++#include <asm/ibt.h>
++#include <asm/unwind_hints.h>
+ #else
+-#include <linux/combiner.h>
+-long komb_batch_size = 1024; //262144;
++#define SYM_FUNC_START(name) .globl name; .type name,@function; name:
++#define SYM_FUNC_END(name) .size name,.-name
++#define ENDBR
++#define RET ret
++#define UNWIND_HINT_EMPTY
+ #endif
+ 
+-#include <linux/syscalls.h>
+-/*
+- * incoming_rsp_ptr -> rdi
+- * outgoing_rsp_ptr -> rsi
+- *
+- * Assume IRQ is disabled. Will enable when returning.
+- */
+-#pragma GCC push_options
+-#pragma GCC optimize("O3")
+-__attribute__((noipa)) noinline notrace void
+-komb_context_switch(void *incoming_rsp_ptr, void *outgoing_rsp_ptr)
+-{
+-	asm volatile("pushq %%rbp\n"
+-		     "pushq %%rbx\n"
+-		     "pushq %%r12\n"
+-		     "pushq %%r13\n"
+-		     "pushq %%r14\n"
+-		     "pushq %%r15\n"
+-		     "movq %%rsp, (%%rsi)\n"
+-		     "movq (%%rdi), %%rsp\n"
+-		     "popq %%r15\n"
+-		     "popq %%r14\n"
+-		     "popq %%r13\n"
+-		     "popq %%r12\n"
+-		     "popq %%rbx\n"
+-		     "popq %%rbp\n"
+-		     :
+-		     :
+-		     : "memory");
+-}
+-#pragma GCC pop_options
++.text
++.macro tc_save
++    pushq %rbp
++    pushq %rbx
++    pushq %r12
++    pushq %r13
++    pushq %r14
++    pushq %r15
++.endm
++.macro tc_restore
++    popq %r15
++    popq %r14
++    popq %r13
++    popq %r12
++    popq %rbx
++    popq %rbp
++.endm
+ 
+-#ifdef KOMB_STATS
+-SYSCALL_DEFINE0(komb_stats)
+-{
+-	printk(KERN_ALERT "======== KOMB spinlock stats ========\n");
+-	int i;
+-	uint64_t total_counters[16] = { 0 };
+-	for_each_online_cpu (i) {
+-		total_counters[0] += per_cpu(combiner_count, i);
+-		total_counters[1] += per_cpu(waiter_combined, i);
+-		total_counters[2] += per_cpu(ooo_unlocks, i);
+-		total_counters[3] += per_cpu(ooo_combiner_count, i);
+-		total_counters[4] += per_cpu(ooo_waiter_combined, i);
+-		total_counters[5] += per_cpu(lock_not_in_task, i);
+-		total_counters[6] += per_cpu(mutex_combiner_count, i);
+-		total_counters[7] += per_cpu(mutex_waiter_combined, i);
+-		total_counters[8] += per_cpu(mutex_ooo_unlocks, i);
+-		total_counters[9] += per_cpu(mutex_ooo_combiner_count, i);
+-		total_counters[10] += per_cpu(mutex_ooo_waiter_combined, i);
+-		total_counters[11] += per_cpu(rwsem_combiner_count, i);
+-		total_counters[12] += per_cpu(rwsem_waiter_combined, i);
+-		total_counters[13] += per_cpu(rwsem_ooo_unlocks, i);
+-		total_counters[14] += per_cpu(rwsem_ooo_combiner_count, i);
+-		total_counters[15] += per_cpu(rwsem_ooo_waiter_combined, i);
+-	}
++SYM_FUNC_START(komb_context_switch)
++    ENDBR
++    tc_save
++    movq %rsp, (%rsi)
++    movq (%rdi), %rsp
++    UNWIND_HINT_EMPTY
++    tc_restore
++    RET
++SYM_FUNC_END(komb_context_switch)
+ 
+-	printk(KERN_ALERT "Combiner_count: %ld\n", total_counters[0]);
+-	printk(KERN_ALERT "waiter_combined: %ld\n", total_counters[1]);
+-	printk(KERN_ALERT "ooo_unlocks: %ld\n", total_counters[2]);
+-	printk(KERN_ALERT "ooo_combiner_count: %ld\n", total_counters[3]);
+-	printk(KERN_ALERT "ooo_waiter_combined: %ld\n", total_counters[4]);
+-	printk(KERN_ALERT "lock_not_in_task: %ld\n", total_counters[5]);
+-	printk(KERN_ALERT "mutex_Combiner_count: %ld\n", total_counters[6]);
+-	printk(KERN_ALERT "mutex_waiter_combined: %ld\n", total_counters[7]);
+-	printk(KERN_ALERT "mutex_ooo_unlocks: %ld\n", total_counters[8]);
+-	printk(KERN_ALERT "mutex_ooo_combiner_count: %ld\n", total_counters[9]);
+-	printk(KERN_ALERT "mutex_ooo_waiter_combined: %ld\n", total_counters[10]);
+-	printk(KERN_ALERT "rwsem_Combiner_count: %ld\n", total_counters[11]);
+-	printk(KERN_ALERT "rwsem_waiter_combined: %ld\n", total_counters[12]);
+-	printk(KERN_ALERT "rwsem_ooo_unlocks: %ld\n", total_counters[13]);
+-	printk(KERN_ALERT "rwsem_ooo_combiner_count: %ld\n", total_counters[14]);
+-	printk(KERN_ALERT "rwsem_ooo_waiter_combined: %ld\n", total_counters[15]);
++SYM_FUNC_START(komb_spin_lock_slowpath)
++    ENDBR
++    tc_save
++    /* Helpers use an ordinary C ABI; preserve the lock across both calls. */
++    movq %rdi, %r12
++    call get_komb_rsp_ptr
++    movq %rsp, (%rax)
++    call get_shadow_stack_ptr
++    movq (%rax), %rsp
++    UNWIND_HINT_EMPTY
++    movq %r12, %rdi
++    call __komb_spin_lock_slowpath
++    testl %eax, %eax
++    jnz .Ltc_parent_return
++    call get_shadow_stack_ptr
++    movq %rsp, (%rax)
++    call get_komb_rsp_ptr
++    movq (%rax), %rsp
++    UNWIND_HINT_EMPTY
++    tc_restore
++    RET
++.Ltc_parent_return:
++    /* Upstream out-of-order parent continuation; benchmark uses one lock. */
++    call get_shadow_stack_ptr
++    movq (%rax), %rsp
++    UNWIND_HINT_EMPTY
++    tc_restore
++    RET
++SYM_FUNC_END(komb_spin_lock_slowpath)
+ 
+-	return 0;
+-}
+-
+-SYSCALL_DEFINE0(komb_clear_stats)
+-{
+-	printk(KERN_ALERT "======== KOMB stats cleared ========\n");
+-	int i;
+-	for_each_online_cpu (i) {
+-		*per_cpu_ptr(&combiner_count, i) = 0;
+-		*per_cpu_ptr(&waiter_combined, i) = 0;
+-		*per_cpu_ptr(&ooo_unlocks, i) = 0;
+-		*per_cpu_ptr(&ooo_combiner_count, i) = 0;
+-		*per_cpu_ptr(&ooo_waiter_combined, i) = 0;
+-		*per_cpu_ptr(&lock_not_in_task, i) = 0;
+-		*per_cpu_ptr(&mutex_combiner_count, i) = 0;
+-		*per_cpu_ptr(&mutex_waiter_combined, i) = 0;
+-		*per_cpu_ptr(&mutex_ooo_unlocks, i) = 0;
+-		*per_cpu_ptr(&mutex_ooo_combiner_count, i) = 0;
+-		*per_cpu_ptr(&mutex_ooo_waiter_combined, i) = 0;
+-		*per_cpu_ptr(&rwsem_combiner_count, i) = 0;
+-		*per_cpu_ptr(&rwsem_waiter_combined, i) = 0;
+-		*per_cpu_ptr(&rwsem_ooo_unlocks, i) = 0;
+-		*per_cpu_ptr(&rwsem_ooo_combiner_count, i) = 0;
+-		*per_cpu_ptr(&rwsem_ooo_waiter_combined, i) = 0;
+-
+-	}
+-	return 0;
+-}
+-
+-#else
+-#ifndef KERNEL_SYNCSTRESS
+-SYSCALL_DEFINE0(komb_stats)
+-{
+-	return 0;
+-}
+-
+-SYSCALL_DEFINE0(komb_clear_stats)
+-{
+-	return 0;
+-}
+-#endif
+-#endif
++.section .note.GNU-stack,"",@progbits
+--- a/include/spinlock/komb.h
++++ b/include/spinlock/komb.h
+@@ -17,7 +17,7 @@
+ //#define KOMB_STATS 1
+ 
+ /*
+- * TODO (Correctness optimization): 
++ * TODO (Correctness optimization):
+  * Add for BIG ENDIAN
+  */
+ struct komb_node {
+@@ -53,7 +53,7 @@
+  * komb_init and komb_free should be called only when the system boots up and
+  * shut down. They are used to setup and free per-core variables.
+  */
+-void komb_init(void);
++int komb_init(void);
+ void komb_free(void);
+ 
+ /*
+@@ -67,6 +67,9 @@
+ extern void komb_spin_lock(struct qspinlock *lock);
+ extern void komb_spin_unlock(struct qspinlock *lock);
+ 
++void komb_spin_lock_nested(struct qspinlock *lock, int level);
++void komb_assert_spin_locked(struct qspinlock *lock);
++
+ struct task_struct *komb_get_current(spinlock_t *lock);
+ void komb_set_current_state(spinlock_t *lock, unsigned int state);
+ #endif
+--- a/include/lib/combiner.h
++++ b/include/lib/combiner.h
+@@ -12,7 +12,7 @@
+ 
+ #define NUMA_AWARE 1
+ #define PREFETCHING 1
+-#define WWJUMP 1 
++#define WWJUMP 1
+ 
+ #define NUM_PREFETCH_LINES 6
+ 

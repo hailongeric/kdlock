@@ -119,6 +119,10 @@ ABI；新图像的 ABI 必须匹配 registry/frame。嵌套混合边界使用 FU
 `src/kernel/rcuht/locks/komb.c`、`src/kernel/rcuht/lib/combiner.c` 和
 `src/kernel/rcuht/include/lib/combiner.h`。该头文件启用 `WWJUMP`。
 这里比较实现，不把 Linux qspinlock benchmark 当成 TCLock 性能对照。
+独立 [tclock_backend](../tclock_backend/README.md) 已保留该来源的完整普通 spin
+执行路径，通过同一内核 hook 物理切换 waiter 栈；同负载的
+[三方实测](../bench/tclock_compare/results/20260918-native-stack.md)另行报告。
+该后端的现场恢复没有经过 kdlock wrapper，不能拿它替代 JIT 中途完整物化。
 
 TCLock 的 `komb_spin_lock_slowpath()` 先把六个 callee-saved 寄存器压到
 waiter 原栈，node 仅记 RSP；CALL 返回地址也在该栈上。caller-saved 活跃值由
@@ -137,6 +141,10 @@ combiner 续点，完成发布后不再访问旧请求。`kd_spin_batch_run()` �
 编译器负责保存跨 wrapper 活跃的 C 值；旧偏移 16 wrapper 会破坏物理 RBP，
 其调用适配只保存/恢复这一个寄存器，并保持 RSP 与 CALL 对齐。
 没有额外的 RBX/R12–R15 成组汇编保护，也不解析编译器序言。
+这不保证机器码不再保存这些寄存器：caller 所在函数仍须满足对外 C ABI，
+combiner 的活跃 C 值也需要跨 clobber 保存。显式状态搬运减少与端到端成本
+下降是不同结论；函数级保存、逐请求校验等抵消点见
+[实现与成本对照](../bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)。
 
 ```text
 TCLock:

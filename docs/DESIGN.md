@@ -1451,11 +1451,15 @@ polling; it does not replace wrapper entry/exit or execute the JIT body.
 
 Sharing the logical register packet removes copies between software packets,
 not wrapper register loads/spills or independently live executor checkpoints.
-The hook initializes only the callee-saved registers and RIP/RSP. Restoring the
-physical waiter's saved IRQ flags does not restore JIT live condition codes.
+Caller-clobber v1 initializes only RIP/RSP/RBP for a normal request; legacy
+entries retain their saved-register contract. Restoring the physical waiter's
+saved IRQ flags does not restore JIT live condition codes.
 The canonical path/state table and source scope are in the
 [register ABI comparison](JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比).
-This is source analysis, not a native TCLock runtime or performance result.
+The independent [TCLock backend](../tclock_backend/README.md) now runs the native
+stack-delegation path through the same spin hook. Its scoped runtime acceptance
+and three-way results are in the [benchmark report](../bench/tclock_compare/results/20260918-native-stack.md);
+they do not validate arbitrary task/per-CPU or nested native critical sections.
 
 ### 9.2 A/B Execution
 
@@ -1723,6 +1727,7 @@ groups distinct before interpreting a comparison; all target x86_64:
 | kdlock JIT | Matching task, published supported CS, `mutex_jit=1`, actual returned body and complete state | Instrumented delegation; measured invocations can also contain direct native acquisitions or checked native suffixes |
 | `mutex_jit=0` | `__kd_mutex_lock()` calls `kd_origin_mutex_lock()` before shadow scheduling | Explicit debug/native control with its own target/promotion overhead; **not native delegation** |
 | Upstream TCLock | Native stack-switch delegation with TCLock lock/task state | Not available as an unchanged mutex module on this guest; a different kernel or an explicitly assessed port is required |
+| Independent TCLock spin port | Upstream pending/queue, six-register/RSP switching and native critical-section continuation through the existing hook | Implemented in `tclock_backend/`; same workload and caller binaries as Linux/kdlock, validated for the single-lock global-counter workload |
 | TCLock LiTL userspace library | Interposes `pthread_mutex_*` through `LD_PRELOAD` | Does not replace the kernel locks reached through `/dev/lock_dev`; not a kernel comparator |
 
 The local read-only TCLock checkout is `~/TCLocks`, revision
@@ -1758,8 +1763,10 @@ JIT-disabled production delegation mode merely to fill a results table.
 
 The opt-in [paired experiment](JIT_EXECUTION.md#34-原生锁与-jit-配对实验) implements
 native-with-hooks/JIT comparison groups on ordinary mode 2/5, without changing
-the guest kernel. The native-delegation comparison group stays explicitly open in
-[TODO](TODO.md#comparator-feasibility-and-matched-experiments). Each pair needs
+the guest kernel. Ordinary spin now has the independent
+[native-delegation comparison](../bench/tclock_compare/README.md), using two
+caller ABIs and balanced six-arm trials. Mutex native delegation and broader
+context acceptance remain open in [TODO](TODO.md#comparator-feasibility-and-matched-experiments). Each pair needs
 identical workload text, parameters, state preparation, affinity and accounting
 boundaries, fresh/drained sessions, retained failures and repeated balanced
 order. Native must have no JIT; JIT must have new matching returned bodies in

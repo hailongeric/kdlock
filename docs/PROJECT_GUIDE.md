@@ -30,7 +30,7 @@ ABI 在同一个 combiner C 帧中连续执行；IRQ/BH/irqsave/trylock 和 mute
 ### 1.1 版本与验收范围
 
 - 当前工作树包含 GS 准入、spin shadow 等待栈与 IRQ 状态保持、frame/单锁路径精简、测试目录与运行入口，
-  以及 caller-clobber v1、统一 combiner 循环、benchmark 汇编按临界区去重和执行路径文档。以 `git log -1` 和
+  以及 caller-clobber v1、统一 combiner 循环、独立 TCLock 后端及三方比较、benchmark 汇编按临界区去重和执行路径文档。以 `git log -1` 和
   `git status --short` 区分提交基线与未提交改动；验收身份以各批冻结源码为准。
 - GS 与目录整理的验证使用 recovery guest `6.1.159-kdstatic2` 和固定版本
   CPython 3.10 venv；这两项工作没有修改、编译或安装 guest 内核。独立实验
@@ -57,6 +57,7 @@ ABI 在同一个 combiner C 帧中连续执行；IRQ/BH/irqsave/trylock 和 mute
 | 测试与复现入口 | 按行为合并、显式选择测试，保留实际正文证据、完整负载状态、owner/ACK 和排空检查；已有源码/环境/生成物归档及离线校验。单元入口和 shell driver 按用途分组；默认两个基础 C，相关 Python 显式选择，全量仅按要求运行。 |
 | 运行环境与可读性 | 固定四个 Python 运行依赖，提供 guest venv 安装、目录/文件索引、手动步骤及关键函数/协议操作的用途注释；不声称每个函数逐一完成审查。 |
 | 测量基础 | 已有原生/JIT 配对、翻译 wall/CPU/RSS、负载计量和默认关闭的 `jit_timing`。当前十项边界包括 queue、owner wait 和新增 native handoff；翻译器符号匹配已做局部优化。 |
+| TCLock 独立后端 | [tclock_backend](../tclock_backend/README.md) 保留上游完整 spin 队列、shadow 等待栈、六寄存器/RSP 切换及 WWJUMP，在同一 hook 下运行原生正文；本轮仅验收单锁全局计数器负载。 |
 
 具体执行链见下一节；协议见 [DESIGN](DESIGN.md)，寄存器和输入约定见
 [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md)，逐项历史证据只维护在
@@ -66,9 +67,10 @@ ABI 在同一个 combiner C 帧中连续执行；IRQ/BH/irqsave/trylock 和 mute
 
 | 已完成范围 | 结果与证据入口 |
 | --- | --- |
+| TCLock 三方对照 | [180 场稳态矩阵、六场采样和 20 场长批次原生检查](../bench/tclock_compare/results/20260918-native-stack.md)完成；基础/汇编 3 个入口和 benchmark 22 项检查通过。冷晋升失败另记，未宣称修复或全量通过。 |
 | Caller-clobber v1 | 独立 `kdclobber1` 内核、真实 caller/wrapper 和准入检查、六项 live 通过；见 [ABI 验证](../tests/README.md#spin-clobber-v1)。 |
-| TCLock 现场对照与统一循环 | 后续冻结版本的 8 个基础/相关单元入口、5 项 live 通过；包含新旧真实生成物身份与最终排空，未重跑性能，见 [统一循环验证](../tests/README.md#tclock-context-loop)。 |
-| Caller-clobber 性能 | 统一循环前的 [120 会话同内核对照](../bench/spin_cacheline/results/20260918-clobber-v1.md) 报告五轮中位数；20 线程代理基本持平，不能据结构变化宣称整体提速。 |
+| TCLock 现场对照与统一循环 | 后续冻结版本的 8 个基础/相关单元入口、5 项 live 通过；包含新旧真实生成物身份与最终排空，见 [统一循环验证](../tests/README.md#tclock-context-loop)。 |
+| Caller-clobber 性能 | 统一循环后的 [120 会话同内核对照](../bench/spin_cacheline/results/20260918-unified-context.md) 已完成，实际 JIT、数据和排空通过；新 ABI 的 20 线程吞吐与前轮基本持平，没有一致提速。 |
 | Spin shadow 等待栈 | 5 个单元入口、4 项 live 及 IRQ-off mode-0 变体通过；实际 polling RSP 采样、旧 C 栈覆盖与完整寄存器恢复通过，未重跑 bench，见 [本轮验证](../tests/README.md#spin-shadow-wait-validation)。 |
 | Frame 复用与单锁路径 | 共享 request 通过 11 项定向单元入口、五项首轮 live 及修正观察器后完整 mode-8 重跑；16 会话 bench 未测得整体提速。失败证据与 mode-4 未解决限制见 [本轮验证](../tests/README.md#tclock-shared-validation)。 |
 | Spin 性能 | [30 配置完整扫描](../bench/spin_cacheline/results/20260917-stackless.md)、[frame 精简](../bench/spin_cacheline/results/20260917-frame-fast.md)及 [waiter 包复用四点对比](../bench/spin_cacheline/results/20260917-waiter-packet.md)分别保留；该 waiter 版本 20 线程两点提高，4 线程两点略降，不外推为通用收益。 |
@@ -86,11 +88,12 @@ mutex 正例为 `mutex_jit=1`；生成/发布日志本身不能作为 JIT PASS�
 
 | 分类 | 事项与当前处理 |
 | --- | --- |
+| 当前未通过 | 2026-09-18 三方比较尝试中，kdlock 的 c16/t4/clobber 并发 promotion 超时并出现 RCU stall；正式计时尚未开始。根因未修复，后续完整稳态矩阵统一单 CPU 准备，见[故障及结果](../bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界)。 |
 | 当前未通过 | 2026-09-17 七角色/双 CPU mutex mode-4 出现 soft lockup；现场符合禁止抢占忙等的依赖可运行性限制，但没有旧版对照证明归因。保留 [失败证据](../tests/README.md#mutex-pinned-mode4-failure)，不以其他 mutex 用例替代该场景通过。 |
 | 历史未通过 | 旧可调度轮询策略下，八线程/两 CPU 的短 mode 5 曾发布代码却没有执行 JIT。该失败点未重跑；当前禁止抢占轮询需要重新设计 CPU 放置，旧超额订阅记录不验证新策略。 |
 | 当前使用限制 | 已发布请求的 waiter 保持禁止抢占轮询，sleep/parking 不属于当前设计。依赖 waiter 让出同一 CPU 的旧场景需要重新放置线程；不能直接沿用旧通过记录。 |
 | 尚未完成 | 更多有明确契约的服务、通用 `printk`；真实未修改生产子系统负载；完整可复现系统/工具链与运行代码代际身份。 |
-| 尚未完成 | 完整锁获取/纯 native/观测成本归因、摊销与速度收益、等价 TCLock 原生代理三方比较。原版 TCLock mutex 不是当前 guest 的可直接加载模块，不为此另改内核。 |
+| 尚未完成 | 完整锁获取/观测成本的独立因果归因与摊销。普通 spin 三方对照已完成；诊断共享行与元数据热点仍需隔离实验。原版 TCLock mutex 不是当前 guest 的可直接加载模块，不为此另改内核。 |
 | 明确延期 | 访问时动态地址 guard、原指令处 waiter 续跑及必要的局部条件码保存；动态指针和并发改写仍可能绕过静态筛查。 |
 | 明确延期 | 通用 flags、特殊指令及故障语义修复；INT-to-NOP、部分 warning-only 行为仍在。任意 JIT 故障、间接跳转 miss 和基本块预算不是已支持的恢复出口。 |
 | 明确延期 | 不可变 JIT 代码版本、完整发布校验与按执行代际回收；当前仍原地覆盖，锁互斥不能排除跨锁并发风险。 |
@@ -629,6 +632,8 @@ workload_modules/
 | [daemon/Makefile](../daemon/Makefile) / [README](../daemon/README.md) | daemon 构建、参数、会话和诊断说明。 |
 | [bench/klock_test.c](../bench/klock_test.c) | pthread ioctl 驱动及可选结构化测量，参数含义见第 4 节。 |
 | [bench/README.md](../bench/README.md) | benchmark 总入口；具体伪代码、运行命令与结果维护在各负载的子目录 README。 |
+| [tclock_backend/README.md](../tclock_backend/README.md) | 独立 TCLock 原生后端：上游来源、完整栈切换逻辑、hook 与验收边界。 |
+| [tclock_compare/README.md](../bench/tclock_compare/README.md) | 同负载三方六臂交替矩阵、采样、计时外 allocator guard、冻结输入与结果。 |
 | [spin_cacheline/README.md](../bench/spin_cacheline/README.md) / [Makefile](../bench/spin_cacheline/Makefile) | 独立 cacheline 对比的构建、参数化扫描、临界区与测试伪代码、结果解释、汇编查看及排空入口。 |
 | [spin_cacheline/EXECUTION_PATHS.md](../bench/spin_cacheline/EXECUTION_PATHS.md) | 首次发现/注册、原生快路径、队列代理、JIT wrapper 与恢复的源码伪代码，以及按路径区分的性能检查点。 |
 | [workload_modules/Makefile](../workload_modules/Makefile) | Demo 模块统一构建入口，可分别选择 lock_scenarios 或 spin_cacheline。 |

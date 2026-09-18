@@ -9,6 +9,29 @@ Complete the main behavior before optional features and performance work.
 
 ## Current Checkpoint
 
+**2026-09-18, independent complete TCLock spin backend:**
+[tclock_backend](../tclock_backend/README.md) ports the upstream pending/queue,
+shadow wait stack, six-register/RSP switching and WWJUMP path to the existing
+experimental hook. The [matched comparison](../bench/tclock_compare/results/20260918-native-stack.md)
+passes 180 steady-state sessions, six flat-IP profiles and 20 long native checks;
+three basic/assembly entrypoints and 22 benchmark checks also pass. Contended
+TCLock medians are 1.06–2.05 times kdlock, without a general win over Linux.
+Shared diagnostic-slot and request metadata accesses are measured hotspots;
+their independent causal costs still require A/B work. Production kdlock and
+the guest kernel were not changed for this backend.
+The [implementation/cost comparison](../bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)
+records caller spill transfer, shared diagnostic lines, repeated per-request
+checks and prefetch dependencies. First isolate diagnostic lookup/layout changes,
+then simplify ordinary admission/metadata reads, then measure prefetch, batching
+and wrapper costs; these are candidates, not completed optimizations.
+
+The earlier concurrent-promotion matrix stopped at c16/t4/clobber/kdlock with
+an RCU stall before measurement. Its root cause remains unresolved. The final
+matrix prepares every arm on one CPU before starting measured contention;
+this is a steady-state comparison, not a cold-path fix. Keep the failed run
+and recovery evidence separate. General TCLock task/per-CPU, nested and
+cross-NUMA semantics are outside this single-lock validation.
+
 **2026-09-18, ordinary spin caller-clobber and combiner context:** the independent
 `kdclobber1` experiment exposes a compiler-visible clobber boundary for ordinary
 spin lock/unlock. Normal requests capture and restore only RIP/RSP/RBP; every
@@ -29,9 +52,10 @@ native-peer/source/owner dependencies.
 
 [Caller-clobber validation](../tests/README.md#spin-clobber-v1) and the subsequent
 [unified-loop validation](../tests/README.md#tclock-context-loop) describe separate
-freezes. The [120-session comparison](../bench/spin_cacheline/results/20260918-clobber-v1.md)
-precedes loop unification and shows no consistent large throughput gain; the
-unified loop has no new performance measurement. The earlier mutex mode-4 soft
+freezes. The [unified-loop 120-session comparison](../bench/spin_cacheline/results/20260918-unified-context.md)
+is now complete, with actual JIT, correct data and drain. The new ABI's 20-thread
+throughput is essentially unchanged from the preceding freeze; no consistent
+speedup was measured. The earlier mutex mode-4 soft
 lockup remains unresolved. No full-suite PASS or general speedup is claimed.
 
 Spinlock and mutex delegation both support explicit GS memory
@@ -997,22 +1021,24 @@ handoff and bounded combining. The spin implementation now follows the
 - [ ] Measure nested contention separately: the completed
       [120-session spin scan](../bench/spin_cacheline/results/20260917-current-spin.md)
       uses one lock and does not exercise either nested optimization.
-- [ ] Attribute remaining common-path costs after the
-      [four-point WWJUMP measurements](../bench/spin_cacheline/results/20260917-wwjump.md).
-      Those native controls are Linux qspinlock, not TCLock; throughput alone
-      does not identify the cause, and the old shared-request regression is
-      historical evidence for an earlier implementation.
+- [x] Add matched complete TCLock/Linux/kdlock measurements and first hardware
+      hotspot attribution; see the [three-way results](../bench/tclock_compare/results/20260918-native-stack.md).
+      Hotspots are not independent causal costs or an isolated save-set experiment.
 - [ ] Reduce per-request lock-side callback/helper overhead and duplicate
-      readiness/frame checks. The outer checkpoint is saved once per batch,
-      but the C step still saves callee registers on every callback and the
-      shell has two indirect calls per admitted request. Keep scheduling
-      outside generated JIT code and preserve final admission/lifetime checks.
-- [ ] Study ordinary wrapper-entry and waiter-restoration save sets; these
-      still load the full supported GPR set despite reduced final writeback.
-      Intermediate hostcall/CALL-miss/native continuations retain their state.
+      readiness/frame checks. The unified C loop already removes the old
+      callback shell and grouped saves; dependent successor/frame/task reads
+      remain measured hotspots. Keep queue selection outside generated JIT
+      code and preserve final admission/lifetime checks.
+- [x] Reduce ordinary wrapper-entry and waiter-restoration save sets with
+      caller-clobber v1: normal paths use RIP/RSP/RBP, with live values owned
+      by the caller compiler. Legacy and intermediate hostcall/CALL-miss/native
+      continuations retain their required complete state.
 - [ ] Cache diagnostic slot references and reduce shared live waiter-count
       updates while preserving workload/test observations; the JIT-disable
-      latch is not a pure statistical counter.
+      latch is not a pure statistical counter. First isolate immutable identity
+      from the mutable waiter count and measure an independent A/B.
+- [ ] Diagnose the c16/t4/clobber concurrent cold-promotion stall; single-CPU
+      preparation in the completed benchmark does not close this failure.
 - [ ] Measure generated entry dispatch and address/virtual-stack rewriting
       before specializing the body. Implementation differences and candidate
       order are maintained in [execution costs](../bench/spin_cacheline/EXECUTION_PATHS.md#costs).
@@ -1059,9 +1085,10 @@ machine architecture.
    The unchanged upstream mutex object cannot compile against this guest's
    task layout; a normal external control object compiles. Preserve the failed
    observer and compiler evidence in [VALIDATION](VALIDATION.md#tclock-comparator-feasibility).
-   The kernel has a CPU PMU node, but `perf` is not on the guest PATH; hardware
-   counting is unverified, not proven unsupported. No kernel or project runtime
-   change, new JIT run, native-comparator implementation or daily case is added.
+   That earlier audit added no runtime comparator. Subsequent ordinary-spin
+   work now provides the [complete native stack-delegation comparator](../bench/tclock_compare/README.md)
+   and verified `cycles:k` sampling with the exact 6.1.159 perf binary; it does
+   not resolve the unchanged upstream mutex's task-layout incompatibility.
 2. [x] Implement matched native-with-existing-hooks/JIT trials using the same
    workload text, parameters/roles, state preparation and affinity. Preserve
    `mutex_jit=1` and all JIT gates; native selection uses a nonmatching target,
@@ -1167,17 +1194,17 @@ machine architecture.
        bodies remain joined to saved images. Preserve the initial repeats=1
        CLI rejection; it started no payload, and prior passing phases were not
        repeated. Broader cost attribution/amortization remains open.
-8. [ ] Resolve a faithful native-delegation comparison separately. The checked
-   upstream kernel requires task/lifecycle/lock changes beyond existing hooks;
-   module-only adaptation is not yet designed or accepted. Do not boot/build
-   another kernel or invent a raw-native production mode under the current
-   default. The [comparator contract](DESIGN.md#13-performance-comparator-contract)
-   preserves this native-delegation comparison gap; completing the native-lock
-   and JIT groups does not close P2.
+8. [x] Implement a faithful ordinary-spin native-delegation comparison in an
+   independent module. [TCLock native-stack results](../bench/tclock_compare/results/20260918-native-stack.md)
+   retain upstream queueing, six-register/RSP switches and WWJUMP, with matched
+   Linux/kdlock callers and full measured data/delegation/drain checks. No
+   production JIT-disabled delegation mode or further kernel change was added.
+   This closes the single-lock spin comparator gap, not mutex adaptation or P2.
 
-- [ ] Compare native locks, native delegation and JIT on equivalent workloads;
-      separate translation, steady-state, queueing, hostcall and fallback cost.
-      Measure throughput, p50/p99, CPU time, memory and cache transfers.
+- [ ] Extend the completed ordinary-spin three-way throughput comparison with
+      separate translation, queueing, hostcall, fallback and observation costs.
+      Add justified p50/p99, memory and cache-transfer measurements; current
+      flat-IP samples and whole-operation throughput do not isolate these costs.
 - [ ] Vary contention, CS size, input/state, threads and sockets with repeated
       trials. Establish amortization before claiming a JIT speedup.
 - [ ] Evaluate contention/cost-based promotion, demotion, fairness and batching,

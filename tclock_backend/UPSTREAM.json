@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/rs3lab/TCLocks",
+  "local_source": "/home/eric/TCLocks",
+  "commit": "bbfb9f00a12af51dff6ca291cb9829a82960c2ef",
+  "sha256": {
+    "locks/komb.c": "fec2b362d7636cb01f5854774a60043f6558a8f18d9b6b6abe3358f154034ce7",
+    "lib/combiner.c": "db340f4a4c99bc95d655902dfd73c102f8192a9e2821d6df065327a9accae986",
+    "include/lib/combiner.h": "dc84cd6fe55e52667ce52111c88448e6df75a79e9d7b735d26c64ac39ceca04e",
+    "include/spinlock/komb.h": "5666f599e57ee68d5ce1330bd67eb63c2d6cb15324ad10f5a3bba2f8df0ac415"
+  }
+}

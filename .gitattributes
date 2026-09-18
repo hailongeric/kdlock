@@ -4,3 +4,9 @@ kernel_baseline/linux-6.1.159-guest.patch -whitespace
 bench/spin_cacheline/provider/observation.patch -whitespace
 kernel_experiments/spin_static/guest-kernel.patch -whitespace
 kernel_experiments/spin_clobber/guest-kernel.patch -whitespace
+# Preserve exact upstream bytes and unified-diff context prefixes.
+tclock_backend/upstream/** -whitespace
+# The tested port retains upstream comment indentation; keep all other checks.
+tclock_backend/komb.c whitespace=-space-before-tab
+tclock_backend/port.patch -whitespace
+bench/tclock_compare/workload-observation.patch -whitespace

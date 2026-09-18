@@ -250,8 +250,8 @@ diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
  		if (ret_flag == KD_EXE_RUN_ERROR)
  			kd_spin_jit_disable(lock);
  		return ret_flag;
-@@ -579,7 +579,7 @@
- 			return NULL;
+@@ -588,7 +588,7 @@
+ 			return;
  		}
  		if (exe_flag == KD_EXE_RUN_ERROR) {
 -			print_debug("run error\n");

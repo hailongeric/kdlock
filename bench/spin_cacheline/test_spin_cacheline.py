@@ -416,10 +416,12 @@ struct kernel_param_ops { int (*get)(char *, const struct kernel_param *); };
         end = spin.index("if (exe_flag != KD_EXE_NATIVE_DONE)", start)
         source += "\n#define KD_EXE_NO_RUN -1\n#define KD_EXE_RUN_ERROR -2\n"
         source += "static struct { void *next; } fallback_state;\n"
-        source += "static void *fallback_step(int exe_flag) { void *lock = NULL; "
+        # The unified combiner returns directly after recording its successor.
+        # Keep the real void-return blocks and reject accidental fallthrough.
+        source += "static void fallback_step(int exe_flag) { void *lock = NULL; "
         source += "void *next_node = NULL, *curr_node = (void *)1; __typeof__(fallback_state) *batch = &fallback_state;\n"
         source += spin[start:end]
-        source += "\nreturn (void *)2; }\nstatic void fallback(int code) { assert(!fallback_step(code)); assert(fallback_state.next == (void *)1); }\n"
+        source += "\nassert(0); }\nstatic void fallback(int code) { fallback_state.next = NULL; fallback_step(code); assert(fallback_state.next == (void *)1); }\n"
         source += r'''
 int main(void) {
     char buffer[4096]; void *lock = NULL; bool reported;

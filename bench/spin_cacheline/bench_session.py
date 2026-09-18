@@ -56,9 +56,12 @@ class Session:
     def counts(self, label):
         return json.loads(self.run([HERE / "client", "--counts"], f"{label}.counts.json"))
 
-    def phase(self, label, iterations):
+    def phase(self, label, iterations, *, spec=None):
+        # A comparator may prepare an entry with one CPU before measuring
+        # contention. Validate against that phase's explicit worker geometry.
+        spec = self.record if spec is None else spec
         args = [HERE / "client", "--cachelines", self.record["cachelines"],
-                "--iterations", iterations, "--cpus", ",".join(map(str, self.record["cpus"]))]
+                "--iterations", iterations, "--cpus", ",".join(map(str, spec["cpus"]))]
         try:
             raw = self.run(args, f"{label}.json", timeout=120)
         except Failure as error:
@@ -67,7 +70,7 @@ class Session:
             raise
         self.faults()
         m = json.loads(raw)
-        validate_measurement(m, self.record, iterations)
+        validate_measurement(m, spec, iterations)
         require(self.counts(label)["active"] == 0, "workers did not drain", "UNDRAINED")
         return m
 

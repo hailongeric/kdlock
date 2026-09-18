@@ -17,19 +17,27 @@
 
 ## 最新对比
 
-[2026-09-18 caller-clobber v1 同内核四组对照](results/20260918-clobber-v1.md)
-完成 120/120 会话，以五次交替测量的中位数比较两种 caller ABI 的 native/kdlock
-路径。20 线程新旧代理基本持平，4 线程变化为 −0.54% / +5.89%；单线程原生
-增加约 10.7–13.3 ns/op，包含调用者保存与桥接成本。完整 JIT 比例和 NO_JIT
-分类见结果页，不能将减少状态搬运直接写成普遍提速。
+后续已完成 [完整 TCLock / Linux / kdlock 三方对照](../tclock_compare/results/20260918-native-stack.md)，
+在两种 caller ABI、1/16 cacheline、1/4/20 线程下共 180 场，全部稳态测量正确
+并排空。独立后端真实切换 waiter 栈；运行方法见
+[tclock_compare](../tclock_compare/README.md)。该轮统一单 CPU 准备，不能与
+下面早期矩阵拼接，也不表示已修复测试中发现的 kdlock 并发冷晋升停滞。
 
-随后对照 TCLock 统一了新旧及混合 ABI 的 combiner C 循环，移除旧外壳的成组
-保存及逐请求 callback 往返。该后续版本完成
-[定向功能验证](../../tests/README.md#tclock-context-loop)，尚未重跑性能矩阵；
-上面的成绩属于统一循环之前的冻结版本。实现与必要差异见
+[2026-09-18 统一 combiner 现场后的四组对照](results/20260918-unified-context.md)
+完成 120/120 会话、1 亿次完整操作，以五次交替测量的中位数比较两种 caller ABI
+的 native/kdlock。新 ABI 的 20 线程、1/16 cacheline 为 **1.6294/1.6370 Mops/s**，
+实际 JIT 约 99.8%，仍低于对应原生的 **2.9487/1.8030 Mops/s**。
+与[统一循环前](results/20260918-clobber-v1.md)相比，新 ABI 的 20 线程基本持平，
+4 线程分别变化 +6.96%/−2.40%，没有一致提速。完整表格、调用者成本、波动和
+NO_JIT 分类见结果页。
+
+上述四组测量覆盖对照 TCLock 后的新旧及混合 ABI 共用 combiner C 循环版本，
+此前的[定向功能验证](../../tests/README.md#tclock-context-loop)独立保留。
+开跑前修复私有观测补丁与旧测试夹具的返回类型适配，22 项 benchmark 检查通过；
+生产锁代码未改。实现与必要差异见
 [现场对照](../../docs/JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比)，
 剩余开销见[执行路径第 6 节](EXECUTION_PATHS.md#costs)。原生对照为 Linux
-qspinlock，没有 TCLock 同环境运行结果。
+qspinlock；该次四组矩阵未含 TCLock，后续三方结果见本节首段。
 
 以下保留此前各冻结版本的测量入口及各自统计口径。
 [9/17 单份 request、热状态和锁侧 WWJUMP 四点结果](results/20260917-wwjump.md)
@@ -831,7 +839,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 `STOP` 文件只在排空后的会话边界生效。新内核操作见
 [实验说明](../../kernel_experiments/spin_clobber/README.md)。
 
-统一循环改造前的 120 个会话和调用者保存成本见
-[2026-09-18 caller-clobber v1 对照](results/20260918-clobber-v1.md)。
-20 线程代理吞吐基本持平，4 线程变化为 −0.54% / +5.89%；单线程原生成本增加
-约 10.7–13.3 ns/op。结构性状态搬运减少不等于完整操作必然提速。
+最新 120 会话及调用者成本见[统一 combiner 现场结果](results/20260918-unified-context.md)；
+改造前的[caller-clobber v1 对照](results/20260918-clobber-v1.md)保留为历史数据。
+两轮采用相同五轮中位数口径，但没有交替执行两个 provider 版本，不能据此独立
+归因。结构性状态搬运减少不等于完整操作必然提速。

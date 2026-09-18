@@ -1,0 +1,32 @@
+--- a/module.c
++++ b/module.c
+@@ -52,6 +52,8 @@
+ 	struct sc_run run;
+ 	void (*body)(void);
+ 	__u64 post_state = 1;
++	unsigned int before_preempt;
++	bool before_irqs;
+ 	int i;
+ 
+ 	(void)file;
+@@ -81,6 +83,8 @@
+ 		}
+ 		if (!sc_run_enter())
+ 			return -EBUSY;
++		before_preempt = preempt_count();
++		before_irqs = irqs_disabled();
+ 		/* One ioctl owns this full batch. A small register dependency chain
+ 		 * after unlock leaves an acquisition gap without scheduling or a
+ 		 * shared counter. Count both the CS and this work in batch time. */
+@@ -90,6 +94,11 @@
+ 			post_state = sc_post_work(post_state);
+ 		}
+ 		sc_run_exit();
++		/* Stack delegation must return with the caller's execution state.
++		 * Check once per ioctl, identically in all comparison arms. */
++		if (WARN_ON_ONCE(before_preempt != preempt_count() ||
++				 before_irqs != irqs_disabled()))
++			return -EUCLEAN;
+ 		if (copy_to_user(user, &run, sizeof(run)))
+ 			return -EFAULT;
+ 		return 0;

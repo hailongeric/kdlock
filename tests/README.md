@@ -6,6 +6,23 @@
 生产 provider 的专用协议观察器在 `tests/kernel/`。
 性能对比使用 [bench/README.md](../bench/README.md) 的独立入口。
 
+<a id="tclock-native-validation"></a>
+
+## 2026-09-18：独立 TCLock 原生栈切换
+
+新增 [test_tclock_context.py](unit/spin/test_tclock_context.py) 编译并执行后端实际
+`context.S`：检查六个 callee-saved 寄存器、RSP、128 轮双栈往返、64 次 lock
+获取返回和 64 次委托 unlock 续点，共 128 次副作用。恢复 guest 中
+`make -C tests/unit run PY_TESTS=spin/test_tclock_context.py` 的三个基础/相关入口
+通过，`make -C bench/spin_cacheline test` 的 22 项检查通过。
+
+之后单锁短测及 c16/t4 六臂短测正确并排空；完整三方 180 场稳态矩阵、六场
+独立采样、20 场长批次原生测试及失败记录统一放在
+[benchmark 结果页](../bench/tclock_compare/results/20260918-native-stack.md)。
+保留 objtool 自定义栈告警，没有重跑无关全量、mutex 或复杂嵌套回归。
+早期 kdlock 并发 promotion 曾发生 RCU stall，未修复；后续统一单 CPU 准备
+不能当作该冷路径通过，也不验证任意 task/per-CPU 或跨 NUMA 的 TCLock 正文。
+
 <a id="spin-wwjump-validation"></a>
 
 ## 2026-09-17：单份 request、热状态和锁侧 WWJUMP
