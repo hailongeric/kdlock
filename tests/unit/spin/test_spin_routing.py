@@ -43,8 +43,9 @@ def main():
         spin, "kd_spin_fetch_set_pending_acquire(struct qspinlock *word)"
     )
     source += "void\n" + definition(
-        spin, "kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,"
+        spin, "kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,"
     )
+    source += definition(spin, "void kd_spin_lock(struct qspinlock *lock, unsigned long sp, unsigned long ip)")
     source += """
 static void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref *ref)
 {
@@ -55,6 +56,7 @@ static void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref 
 """
     hooks = read_source((ROOT / "kernel_module/kd_lock.c"))
     for marker in (
+        "noinline void kd_spin_fast_release_gate(struct kd_spin_fast_cpu *fast)",
         "static void origin_raw_spin_lock(raw_spinlock_t *lock)",
         "static void origin_raw_spin_unlock(raw_spinlock_t *lock)",
         "static noinline void kd_raw_spin_unlock_slow(raw_spinlock_t *lock)",
@@ -73,6 +75,8 @@ static void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref 
         "static noinline void kd_spin_dispatch_unlock_slow(raw_spinlock_t *lock)",
         "void kd_spin_dispatch_lock(raw_spinlock_t *lock, unsigned long ret_rsp,",
         "void kd_spin_dispatch_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,",
+        "static noinline void kd_spin_dispatch_clobber_lock_slow(raw_spinlock_t *lock,",
+        "void kd_spin_dispatch_clobber_lock_v1(raw_spinlock_t *lock, unsigned long sp,",
     ):
         source += definition(hooks, marker)
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-routing-unit-") as directory:

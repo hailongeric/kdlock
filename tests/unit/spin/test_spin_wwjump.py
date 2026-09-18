@@ -74,7 +74,9 @@ static struct kd_jit_batch_call *step(void *opaque)
             for (int j=0; j<6; j++) assert(v[j] == 0x101UL+j);
             assert(v[19] == 0x9000 && v[14] == 0x6000);
             if (kind == 1) {
-                assert(v[6] == 0xdead && v[11] == 0xdead);
+                /* R11's JIT spill already lives in the packet. RCX is CPU
+                 * resident and the reduced final exit still need not save it. */
+                assert(v[6] == 0x107 && v[11] == 0xdead);
                 assert(call.args[0] == 1 && v[16] == 0x4000);
             } else {
                 assert(v[6] == 0x107 && v[11] == 0x108);

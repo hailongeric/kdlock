@@ -19,6 +19,7 @@ static unsigned int lookup_pins, pool_reads;
 
 /* This fixture owns tickets only. The routing fixture separately exercises
  * the production native fast owner and its integration with these queries. */
+static bool kd_spin_fast_active(void) { return false; }
 static bool kd_spin_fast_native_active(void) { return false; }
 static bool kd_spin_fast_idle(void) { return true; }
 
@@ -31,6 +32,26 @@ static void select_cpu(unsigned int cpu)
 	CHECK(!mock_irq);
 	mock_cpu = cpu;
 	current = &tasks[cpu];
+}
+
+/* A contended root transfers its existing pin only on successful admission.
+ * Wrong-gate/duplicate/refusal paths must neither repin nor consume it. */
+static void pinned_admission(void)
+{
+	struct kd_spin_ref ref = { 0 }, duplicate = { 0 };
+	struct kd_spin_gate *gate = kd_spin_gate_get(&locks[0]);
+	unsigned int hashes = gate_hashes, pins = lookup_pins;
+
+	CHECK(kd_spin_entry_begin_pinned(&locks[0], gate, &ref) == -EPERM);
+	preempt_disable();
+	CHECK(kd_spin_entry_begin_pinned(&locks[1], gate, &ref) == -EINVAL);
+	CHECK(mock_preempt == 1 && !ref.entry);
+	CHECK(kd_spin_entry_begin_pinned(&locks[0], gate, &ref) == 0);
+	CHECK(kd_spin_entry_begin_pinned(&locks[0], gate, &duplicate) == -EDEADLK);
+	CHECK(mock_preempt == 1 && !duplicate.entry);
+	CHECK(gate_hashes == hashes && lookup_pins == pins + 1);
+	CHECK(kd_spin_entry_gate(&ref) == gate);
+	CHECK(kd_spin_entry_end(&ref) == 0 && !mock_preempt);
 }
 
 static void lifecycle(void)
@@ -304,6 +325,7 @@ int main(void)
 	mock_alloc_fail = false;
 	CHECK(kd_spin_entries_init() == 0);
 	CHECK(kd_spin_entries_init() == -EBUSY);
+	pinned_admission();
 	lifecycle();
 	read_only_queries();
 	remote_native();

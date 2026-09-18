@@ -633,7 +633,8 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(curr_node == NULL);
 #endif
-	struct kd_spin_node *next_node = curr_node->next;
+	struct kd_spin_node *next_node =
+		kd_spin_linked_successor(request->word, curr_node);
 	struct kd_spin_batch batch = {
 		.outer.release = kd_spin_release_outer,
 		.request = request,

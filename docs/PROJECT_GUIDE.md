@@ -563,7 +563,7 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 | [kd_spinlock.h](../include/kd_spinlock.h) | spin node/队列与 JIT 上下文布局。 |
 | [kd_spin_gate.h](../include/kd_spin_gate.h) | 原锁 gate 与物理 hold 的代际约束。 |
 | [kd_spin_entry.h](../include/kd_spin_entry.h) | hook/virtual ticket 与 origin ref。 |
-| [kd_spin_fast.h](../include/kd_spin_fast.h) | 已发布根入口的原生 trylock 快路径、per-CPU 缓存和持有/退休约束。 |
+| [kd_spin_fast.h](../include/kd_spin_fast.h) | 可关闭的原生站点缓存与独立 S/L hold；匹配缓存不重复查询，保留解锁/退休约束。 |
 | [kd_comm.h](../include/kd_comm.h) | 装载时准备的完整 task comm 掩码匹配，保留 NUL/超长名字语义。 |
 | [kd_spin_select.h](../include/kd_spin_select.h) | spin 的共同目标/保留 owner 选择规则，供旧 selector 与合并入口的慢路径使用。 |
 | [qspinlock_i.h](../include/qspinlock_i.h) | 私有调度字的 qspinlock 风格位布局/辅助宏。 |
@@ -572,7 +572,7 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 | [kd_source_api.h](../include/kd_source_api.h) | source/CAPS ioctl 常量和固定布局。 |
 | [kd_hostcall.h](../include/kd_hostcall.h) | 服务 ID 和安全属性定义。 |
 | [kd_hostcalls.def](../include/kd_hostcalls.def) | 唯一服务清单：两个 ktime 服务及标量 int_sqrt，不支持任意 printk 或指针服务。 |
-| [asm_head.h](../include/asm_head.h) | pt_regs 与 wrapper 私有槽的汇编偏移。 |
+| [asm_head.h](../include/asm_head.h) | pt_regs 共享 GPR backing 与 wrapper 独立控制槽的汇编偏移；R11 为包基址。 |
 | [wrapper.S](../include/wrapper.S) | 装载/回写寄存器，包含生成的 jit.S；flags 不持久化。 |
 | [sys.h](../include/sys.h) | 设备初始化/退出接口。 |
 | [utils.h](../include/utils.h) | 日志辅助，不是成功判定器。 |
@@ -799,6 +799,7 @@ provider include。具体 include 点可用
 | [test_text_regions.py](../tests/unit/admission/test_text_regions.py) | cold text、CFG 扩展、设备 session/CAPS。 |
 | [test_jit_diagnostics.py](../tests/unit/codegen/test_jit_diagnostics.py) | 可复用 mocked-text harness 和定位/告警判定。 |
 | [test_jit_body_witness.py](../tests/unit/codegen/test_jit_body_witness.py) | guest 用户态运行真实 wrapper 和生成体 marker。 |
+| [test_shared_reg_bank.py](../tests/unit/codegen/test_shared_reg_bank.py) | 返回前验证 backing 双向共用，高寄存器压力、部分 R11、hostcall 续跑和 block 额度出口。 |
 | [test_jit_entry_scope.py](../tests/unit/execution/test_jit_entry_scope.py) / [jit_entry_scope_fixture.c](../tests/unit/execution/jit_entry_scope_fixture.c) | 生产 JIT 入口/scope/拒绝包，typed hostcall 策略、完整 RDI/RAX 参数返回与共同额度；额度出口不弹 CALL 栈、不重放或触发学习。边界计时开关前后完整 frame/包一致；服务和计时原语为替代，实际执行需 live 验证。 |
 | [test_exe_registry.py](../tests/unit/execution/test_exe_registry.py) / [exe_registry_fixture.c](../tests/unit/execution/exe_registry_fixture.c) | 生产 registry、代码池及上传边界、服务表编译契约和计量重置/卸载。服务 manifest/adapter 变化也须独立运行本入口。 |
 | [test_exec_capacity.py](../tests/unit/execution/test_exec_capacity.py) / [exec_capacity_fixture.c](../tests/unit/execution/exec_capacity_fixture.c) | 生产 frame/ledger/完成状态、remote/native 未排空的回收拒绝、两后端清理和实际退出观察器；PID/RCU/time 等原语替代，不替代真实 ACK/退出。 |

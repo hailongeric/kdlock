@@ -17,7 +17,19 @@
 
 ## 最新对比
 
-后续已完成 [完整 TCLock / Linux / kdlock 三方对照](../tclock_compare/results/20260918-native-stack.md)，
+[获取入口与原生缓存对照](results/20260918-spin-entry.md)：root 首次 CAS 提前、
+竞争后建立 ticket，复用 gate/pin；相同缓存键不再重复查表回填。无缓存试验的
+60 场交替 A/B 显示单线程下降 47%–51%，因此缓存默认保留，并提供装载参数
+`spin_native_cache=0`。最终默认配置的另 60 场全部正确排空：1 cacheline/4 线程
+约提高 12%，其余竞争点基本持平，未证明普遍提速。另 20 场千万次单线程对照
+显示完整操作仍增加约 0.9–1.5 ns；最终关闭缓存的单场实际 JIT 验证也通过。
+
+[共享 JIT 寄存器 backing 的定向对照](results/20260918-shared-reg-bank.md)完成
+新旧各 12 场：4 线程、1/16 cacheline、两种 caller ABI，各三轮。重复搬运已从
+汇编中删除，但 16 cacheline 吞吐基本持平，尚未证明一致提速；结果保留 JIT 比例
+与前后整批测量的限制，不替代下列完整矩阵。
+
+此前已完成 [完整 TCLock / Linux / kdlock 三方对照](../tclock_compare/results/20260918-native-stack.md)，
 在两种 caller ABI、1/16 cacheline、1/4/20 线程下共 180 场，全部稳态测量正确
 并排空。独立后端真实切换 waiter 栈；运行方法见
 [tclock_compare](../tclock_compare/README.md)。该轮统一单 CPU 准备，不能与

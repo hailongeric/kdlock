@@ -82,6 +82,7 @@ def main():
     body += "static struct kd_spin_node *\n" + definition(
         source, "get_next_node(struct kd_spin_node *my_node)"
     )
+    body += definition(source, "static struct kd_spin_node *kd_spin_linked_successor(struct qspinlock *word,")
     body += definition(source, "struct kd_spin_batch {").rstrip() + ";\n"
     body += definition(source, "static void kd_spin_batch_run(void *opaque)")
     # The wrapper observes recursive entry/return; it does not replace the

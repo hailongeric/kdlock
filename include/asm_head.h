@@ -3,6 +3,9 @@
  * GS/task inputs occupy two existing words; no hardware context is switched. */
 #define PT_REG R14
 #define ARG_REG R15
+/* Physical R11 is reserved for the authoritative packet throughout the body.
+ * Logical R11 is virtualized by conflict.py, just like logical R12--R15. */
+#define REG_BANK R11
 
 #define MEM_ARG QWORD PTR[ARG_REG]
 #define MEM_ARG2 QWORD PTR[ARG_REG + 8]
@@ -30,13 +33,19 @@
 #define Stack_PT_REG QWORD PTR[RBP - 8 * 6]
 #define Stack_ARG_REG QWORD PTR[RBP - 8 * 7]
 
-#define Stack_RBP QWORD PTR[RBP - 8 * 8]
-#define Stack_RSP QWORD PTR[RBP - 8 * 9]
-#define Stack_R15 QWORD PTR[RBP - 8 * 10]
-#define Stack_R14 QWORD PTR[RBP - 8 * 11]
-#define Stack_R13 QWORD PTR[RBP - 8 * 12]
-#define Stack_R12 QWORD PTR[RBP - 8 * 13]
-#define Stack_R11 QWORD PTR[RBP - 8 * 14]
+/* Historical Stack_* names now address the same storage as PT_*; they are
+ * JIT backing slots, not a second entry snapshot on the combiner stack.
+ * Physical R12/R13 still cache logical BP/SP and must be flushed on exit. */
+#define Stack_RBP QWORD PTR[REG_BANK + 8 * 4]
+#define Stack_RSP QWORD PTR[REG_BANK + 8 * 19]
+#define Stack_R15 QWORD PTR[REG_BANK]
+#define Stack_R14 QWORD PTR[REG_BANK + 8 * 1]
+#define Stack_R13 QWORD PTR[REG_BANK + 8 * 2]
+#define Stack_R12 QWORD PTR[REG_BANK + 8 * 3]
+#define Stack_R11 QWORD PTR[REG_BANK + 8 * 6]
+/* Reuse one vacated slot for the per-invocation block budget. Other vacated
+ * words stay reserved so independent control/context offsets do not move. */
+#define Stack_BUDGET QWORD PTR[RBP - 8 * 8]
 
 #define Stack_RGS QWORD PTR[RBP - 8 * 15]
 #define Stack_TASK QWORD PTR[RBP - 8 * 16]
@@ -54,4 +63,4 @@
 #define Stack_RIPL DWORD PTR[RBP - 8 * 17]
 #define Stack_RIPH DWORD PTR[RBP - 8 * 17 + 4]
 
-/* R13: virtual RSP; R14: RIP/target; R15: indirect-jump source. */
+/* R11: packet base; R13: virtual RSP; R14: RIP/target; R15: IJ source. */

@@ -137,6 +137,24 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
  * ========================================================================== */
 
 DEFINE_PER_CPU(struct kd_spin_fast_cpu, kd_spin_fast_cpu);
+int kd_spin_native_cache __read_mostly = 1;
+module_param_named(spin_native_cache, kd_spin_native_cache, bint, 0400);
+MODULE_PARM_DESC(spin_native_cache,
+	"Cache published native spin sites (default on; disable for entry-cost comparisons)");
+
+/* Only an S/L owner needs the gate-release call and its two live pointers.
+ * Keep them in this frame so cached native unlocks do not acquire additional
+ * callee-saved register spills merely because this path exists. */
+noinline void kd_spin_fast_release_gate(struct kd_spin_fast_cpu *fast)
+{
+	struct kd_spin_gate *gate = fast->hold.gate;
+
+	BUG_ON(kd_spin_gate_release(&fast->hold));
+	/* Release L before S; preserve a concurrent pending/tail. */
+	smp_store_release(&gate->word.locked, 0);
+	WRITE_ONCE(fast->held, NULL);
+	preempt_enable();
+}
 
 /* Keep ticket objects and the general route's stack protector outside the
  * common native return. The saved kernel rsp still belongs to the original
@@ -237,13 +255,13 @@ void kd_spin_dispatch_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
 	kd_spin_dispatch_unlock_slow(lock);
 }
 
-void kd_spin_dispatch_clobber_lock_v1(raw_spinlock_t *lock, unsigned long sp,
-                                    unsigned long ip, unsigned long bp)
+/* Preserve the four continuation arguments only on a cache miss. Keeping
+ * registration and scheduling calls here avoids saving them across C calls
+ * in every successful native acquisition, just as in the legacy dispatcher. */
+static noinline void kd_spin_dispatch_clobber_lock_slow(raw_spinlock_t *lock,
+        unsigned long sp, unsigned long ip, unsigned long bp,
+        enum kd_spin_fast_result result)
 {
-	enum kd_spin_fast_result result = kd_spin_fast_acquire(lock, ip);
-
-	if (likely(result == KD_SPIN_FAST_OWNED))
-		return;
 	if (result == KD_SPIN_FAST_MISS_PINNED)
 		preempt_enable();
 	if (!kd_spin_task_selected() || kd_spin_entry_native_active()) {
@@ -258,6 +276,16 @@ void kd_spin_dispatch_clobber_lock_v1(raw_spinlock_t *lock, unsigned long sp,
 	kd_exe_add_abi(0, ip, KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
 	kd_spin_lock_abi((struct qspinlock *)lock, sp, ip, bp,
 	                 KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+}
+
+void kd_spin_dispatch_clobber_lock_v1(raw_spinlock_t *lock, unsigned long sp,
+                                    unsigned long ip, unsigned long bp)
+{
+	enum kd_spin_fast_result result = kd_spin_fast_acquire(lock, ip);
+
+	if (likely(result == KD_SPIN_FAST_OWNED))
+		return;
+	kd_spin_dispatch_clobber_lock_slow(lock, sp, ip, bp, result);
 }
 
 void kd_spin_dispatch_clobber_unlock_v1(raw_spinlock_t *lock, unsigned long sp,

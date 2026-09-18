@@ -1,5 +1,5 @@
 /* Callable shell around generated jit.S. Physical RSP/RBP belong to combiner;
- * virtual SP/BP and spilled GPRs belong to waiter. args has exactly two words,
+ * virtual SP/BP and spilled GPRs belong to the shared packet. args has two words,
  * reused for exit kind and body witness. Current flags are not written back. */
 #include "asm_head.h"
 #ifndef KD_GENERATED_ENTRY_ABI
@@ -50,28 +50,16 @@ load_packet:
 	mov Stack_BATCH, rdx
 	mov Stack_CLOBBER, 0
 	mov PT_REG, rdi
+	mov REG_BANK, rdi
 	mov ARG_REG, rsi
-	mov rax, PT_RBP
-	mov Stack_RBP, rax
-	mov rax, PT_RSP
-	mov Stack_RSP, rax
-	mov rax, PT_R15
-	mov Stack_R15, rax
-	mov rax, PT_R14
-	mov Stack_R14, rax
-	mov rax, PT_R13
-	mov Stack_R13, rax
-	mov rax, PT_R12
-	mov Stack_R12, rax
-	mov rax, PT_R11
-	mov Stack_R11, rax
+	/* Spilled virtual GPRs already live in regs; only CPU-resident values
+	 * need importing. R11 holds their backing pointer, never logical R11. */
 	mov rax, PT_GS
 	mov Stack_RGS, rax
 	mov rax, PT_TASK
 	mov Stack_TASK, rax
 	mov Stack_JIT_WITNESS, 0
 	mov rbx, PT_RBX
-	mov r11, PT_R11
 	mov r10, PT_R10
 	mov r9, PT_R9
 	mov r8, PT_R8
@@ -101,11 +89,10 @@ clobber_body:
 	mov Stack_BATCH, 0
 	mov Stack_CLOBBER, rdx
 	mov PT_REG, rdi
+	mov REG_BANK, rdi
 	mov ARG_REG, rsi
 	mov R12, PT_RBP
 	mov R13, PT_RSP
-	mov Stack_RBP, R12
-	mov Stack_RSP, R13
 	mov rax, PT_GS
 	mov Stack_RGS, rax
 	mov rax, PT_TASK
@@ -200,14 +187,7 @@ legacy_exit:
 	mov PT_RBP, R12
 	mov PT_RSP, R13
 	mov PT_RDI, rdi
-	mov rax, Stack_R15
-	mov PT_R15, rax
-	mov rax, Stack_R14
-	mov PT_R14, rax
-	mov rax, Stack_R13
-	mov PT_R13, rax
-	mov rax, Stack_R12
-	mov PT_R12, rax
+	/* R11--R15 backing values were written directly by the JIT spills. */
 	mov rax, QWORD PTR[R15 + 40]
 	mov PT_RIP, rax
 	mov ARG_REG, Stack_ARG_REG
@@ -228,15 +208,7 @@ full_exit:
 	pop	MEM_ARG2		/* args[1] <- Stack_JIT_WITNESS */
 	pop	MEM_ARG			/* args[0] <- Stack_IJ */
 	pop	PT_RIP
-	add	RSP, 2*8		/* Discard Stack_RGS and Stack_TASK. */
-
-	pop	PT_R11
-	pop	PT_R12
-	pop	PT_R13
-	pop	PT_R14
-	pop	PT_R15
-	pop	PT_RSP
-	pop	PT_RBP
+	/* SP/BP above and all virtual GPR spills already use the packet. */
 
 	mov	PT_RBX, rbx
 	mov	PT_R10, r10
@@ -248,7 +220,7 @@ full_exit:
 	mov	PT_RSI, rsi
 	mov	PT_RDI, rdi
 
-	add	rsp, 2*8		/* Discard Stack_PT_REG and Stack_ARG_REG. */
+	lea	rsp, [rbp - 5*8]	/* Skip private slots and argument pointers. */
 	cmp Stack_CLOBBER, 0
 	je legacy_return
 	mov rax, Stack_CLOBBER

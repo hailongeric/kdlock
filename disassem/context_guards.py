@@ -185,7 +185,11 @@ class EntryGuards:
         return True
 
     def emit(self, output, entry):
-        """Use only already-spilled R14/R15 and the non-guest R11 scratch slot."""
+        """Borrow R11 only before execution, restoring its packet-base role.
+
+        No virtual spills run during these predicates. Both accepted and refused
+        edges must restore R11 before the body or full-exit materialization.
+        """
         conditions = self.conditions()
         if not conditions and not self.spills:
             return
@@ -227,6 +231,6 @@ class EntryGuards:
             output.write(f"NEG R14\nCMP R14, {n}\nJB kd_entry_guard_refused\n")
         output.write("JMP kd_entry_guards_done\nkd_entry_guard_refused:\n")
         output.write("MOV R14, Stack_PT_REG\nMOV R14, [R14 + 0x80]\n")
-        output.write(f"MOV Stack_IJ, {ENTRY_REFUSED}\nJMP exit\n")
+        output.write(f"MOV Stack_IJ, {ENTRY_REFUSED}\nMOV REG_BANK, Stack_PT_REG\nJMP exit\n")
         # The existing dispatcher still expects PT_REG (R14) to be a pointer.
-        output.write("kd_entry_guards_done:\nMOV R14, Stack_PT_REG\n")
+        output.write("kd_entry_guards_done:\nMOV REG_BANK, Stack_PT_REG\nMOV R14, Stack_PT_REG\n")

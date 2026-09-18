@@ -138,6 +138,7 @@ def main():
         code += prefix + definition(spin, marker) + "\n"
         if "add_to_local_queue" in marker:
             code += "#endif\n"
+    code += definition(spin, "static struct kd_spin_node *kd_spin_linked_successor(struct qspinlock *word,")
     if "struct kd_spin_batch {" in spin:
         code += definition(spin, "struct kd_spin_batch {").rstrip() + ";\n"
         code += "static struct kd_exe_info *\n" + definition(
@@ -180,6 +181,11 @@ def main():
         frame, "void kd_exec_remote_cancel(struct kd_exec_frame *frame)"
     )
     mutations = {
+        "tail-before-link-misclassified": (
+            "code",
+            "if (tail && decode_tail(tail) != node) {",
+            "if (tail && decode_tail(tail) != node && false) {",
+        ),
         "gate-refusal-consumes-sequence": (
             "code",
             "if (!gate) {\n\t\tret = -ENOMEM;",
@@ -187,8 +193,8 @@ def main():
         ),
         "gate-refusal-leaks-pin": (
             "code",
-            "if (!gate) {\n\t\tret = -ENOMEM;\n\t\tgoto fail;",
-            "if (!gate) {\n\t\treturn -ENOMEM;",
+            "if (ret)\n\t\tpreempt_enable();\n\treturn ret;",
+            "/* injected: failed admission leaks caller pin */\n\treturn ret;",
         ),
         "completion-plain-write": (
             "code",

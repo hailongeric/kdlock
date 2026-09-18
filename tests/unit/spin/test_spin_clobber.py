@@ -164,8 +164,15 @@ int main(void) {
                 assert(state==(mode==0?2:1));
                 assert(packet.w[16]==(mode==0?0x7000:0x3000));
                 assert(packet.w[19]==before.w[19]+(mode==0?8:0));
-                for(int i=0;i<21;i++) if(i!=4&&i!=16&&i!=19)
-                    assert(packet.w[i]==before.w[i]);
+                /* COMPLETE validates only three words, but executed JIT
+                 * spills now share the preallocated packet. A refusal must
+                 * still preserve every input byte because no body ran. */
+                for(int i=0;i<21;i++) if(i!=4&&i!=16&&i!=19) {
+                    unsigned long expected=before.w[i];
+                    if(mode==0 && i<4) expected=0x101UL+i;
+                    if(mode==0 && i==6) expected=0x107;
+                    assert(packet.w[i]==expected);
+                }
             } else {
                 assert(state==0 && call.args[0]==(mode==1?5:1));
                 assert(packet.w[16]==0x5000 && packet.w[19]==before.w[19]);

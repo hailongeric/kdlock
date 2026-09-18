@@ -152,23 +152,27 @@ bool kd_spin_entry_find(raw_spinlock_t *origin, struct kd_spin_ref *ref)
 
 bool kd_spin_entry_task_active(void)
 {
-	return kd_spin_fast_native_active() || kd_entry_lookup(NULL, false, NULL);
+	return kd_spin_fast_active() || kd_entry_lookup(NULL, false, NULL);
 }
 
 bool kd_spin_entry_native_active(void)
 {
+	/* A lightweight S/L root is ordinary physical ownership, not a native
+	 * continuation. Its nested hooks still need discovery and their own
+	 * tickets; only a native suffix or cached native-L owner suppresses that admission. */
 	return kd_spin_fast_native_active() || kd_entry_lookup(NULL, true, NULL);
 }
 
-/* Reserve a new ticket for hook/native caller; this is the admission checkpoint
- * before touching lock-specific gate state.
- */
-int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
-			struct kd_spin_ref *ref)
+/* Reserve under a caller-owned pin. A contended root supplies the gate it
+ * already probed for its first CAS, avoiding a second map lookup and pin pair.
+ * Failure leaves the pin with the caller; successful end() consumes it. */
+static int kd_spin_entry_reserve(raw_spinlock_t *origin,
+				enum kd_spin_entry_kind kind,
+				struct kd_spin_gate *gate,
+				struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry_pool *pool;
 	struct kd_spin_entry *entry = NULL;
-	struct kd_spin_gate *gate;
 	unsigned long flags;
 	unsigned long occupied, available;
 	unsigned int index;
@@ -181,7 +185,8 @@ int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 	if (!origin || !ref || ref->entry || !in_task() ||
 	    (kind != KD_SPIN_ENTRY_HOOK && kind != KD_SPIN_ENTRY_VIRTUAL))
 		return -EINVAL;
-	preempt_disable();
+	if (!kd_entry_pinned())
+		return -EPERM;
 	pool = this_cpu_ptr(kd_spin_entries);
 	/* Walk only live tickets for recursive acquisition detection. The usual
 	 * empty pool does no slot reads; allocation finds a free bit directly. */
@@ -202,7 +207,8 @@ int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 		ret = -EOVERFLOW;
 		goto fail;
 	}
-	gate = kd_spin_gate_get(origin);
+	if (!gate)
+		gate = kd_spin_gate_get(origin);
 	if (!gate) {
 		ret = -ENOMEM;
 		goto fail;
@@ -223,8 +229,27 @@ int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 	raw_spin_unlock_irqrestore(&entry->guard, flags);
 	return 0;
 fail:
-	preempt_enable();
 	return ret;
+}
+
+int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
+			struct kd_spin_ref *ref)
+{
+	int ret;
+
+	preempt_disable();
+	ret = kd_spin_entry_reserve(origin, kind, NULL, ref);
+	if (ret)
+		preempt_enable();
+	return ret;
+}
+
+int kd_spin_entry_begin_pinned(raw_spinlock_t *origin, struct kd_spin_gate *gate,
+			       struct kd_spin_ref *ref)
+{
+	if (!gate || gate->origin != origin)
+		return -EINVAL;
+	return kd_spin_entry_reserve(origin, KD_SPIN_ENTRY_HOOK, gate, ref);
 }
 
 struct kd_spin_gate *kd_spin_entry_gate(const struct kd_spin_ref *ref)

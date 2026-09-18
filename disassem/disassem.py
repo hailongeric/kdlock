@@ -215,7 +215,8 @@ def write_entry_dispatch(f, entry, block_dict, continuation_targets=None):
     dispatch_targets = set(block_dict)
     dispatch_targets.update(continuation_targets or set())
 
-    f.write("MOV     R11, 0\n")
+    # R11 addresses shared pt_regs spill slots; the budget is independent state.
+    f.write("MOV     Stack_BUDGET, 0\n")
     f.write("MOV     R14, PT_RIP\n")
     f.write(f"CMP     R14, 0x{entry:x}\n")
     f.write(f"JZ      loc_{entry:x}\n")
@@ -579,8 +580,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             if first_budget_rip is None:
                 first_budget_rip = offset
             f.write(make_inst("MOVABS", ["R14", hex(offset)]))
-            f.write("INC             R11\n")
-            f.write("TEST            R11, 0x1000000\n")
+            f.write("INC             Stack_BUDGET\n")
+            f.write("TEST            Stack_BUDGET, 0x1000000\n")
             f.write("JNZ             inst_limit\n")
 
         temp_i = 0

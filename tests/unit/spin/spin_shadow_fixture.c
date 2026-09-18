@@ -380,8 +380,15 @@ static void check_and_set_combiner(struct qspinlock *lock)
 	lock->locked = 3;
 }
 
+/* The fixture's synthetic 2/9 tail codes refer to the last linked node;
+ * code 3 retains the existing producer-predecessor meaning. */
+static struct kd_spin_node *mock_tail_node;
 static struct kd_spin_node *decode_tail(int tail)
 {
+	if (tail != 0x30000) {
+		CHECK((tail == 0x20000 || tail == 0x90000) && mock_tail_node);
+		return mock_tail_node;
+	}
 	CHECK(producer_case && tail == 0x30000);
 	return &peer;
 }
@@ -621,7 +628,12 @@ static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
 	CHECK(!local_shadow_stack.local_queue_head);
 	CHECK(!local_shadow_stack.local_queue_tail);
 #endif
+	struct kd_spin_node *saved_tail_node = mock_tail_node;
+	mock_tail_node = next;
+	while (mock_tail_node->next)
+		mock_tail_node = mock_tail_node->next;
 	production_run_combiner(lock, next, request);
+	mock_tail_node = saved_tail_node;
 #ifdef NUMA_AWARE
 	CHECK(!local_shadow_stack.local_queue_head);
 	CHECK(!local_shadow_stack.local_queue_tail);

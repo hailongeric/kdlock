@@ -33,7 +33,7 @@ RDI=锁、RSI=SP、RDX=续点、RCX=BP，经独立 static-call bridge 进入同�
 
 1. [批次边界](#batch)：哪些操作每次 ioctl 一次，哪些每次抢锁一次。
 2. [首次执行与注册](#cold)：热锁发现、准备翻译以及重复注册检查。
-3. [已发布的原生快路径](#native-fast)：单线程 NO_JIT 通常走这里。
+3. [先 CAS 的无竞争路径](#native-fast)：单线程 NO_JIT 通常走这里。
 4. [竞争与队列](#queue)：ticket、原锁、waiter 等待和 combiner 批次。
 5. [一次实际 JIT](#jit)：frame、dispatcher、wrapper、生成正文和恢复。
 6. [开销核对表](#costs)：常见成功路径的重复操作和优化优先级。
@@ -106,16 +106,15 @@ _raw_spin_lock(L):
     __raw_spin_lock(L)                          // Linux 原生获取
 
 kd_spin_dispatch_lock(L, saved_RSP, RIP):
-    result = kd_spin_fast_acquire(L, RIP)       // 首次该 CPU 的缓存尚未建立
-    if result == OWNED: return                 // 第 3 节
-    if result == MISS_PINNED: preempt_enable() // 归还失败尝试的 CPU pin
+    尝试可选的原生站点缓存：命中且成功获取 L 则返回
+    失败若临时 pin 则先归还；关闭 spin_native_cache 不尝试缓存
     selected = (source.OPEN and comm 两个机器字掩码匹配 sc_worker)
                or 当前任务仍有未结束的原生 fast/ticket
     if !selected: origin_raw_spin_lock(L); return
     kd_raw_spin_lock_slow(L, saved_RSP, RIP)
 ```
 
-R2 在快路径失败时才做 target/retained-owner 选择。旧指针 hook 接口先调用独立
+当前 R2 在可选缓存未完成获取后做 target/retained-owner 选择。旧指针 hook 接口先调用独立
 selector，再间接调用 `__kd_raw_spin_lock`；不能把旧接口的额外 selector 成本
 直接计到 R2 上。原生对照不加载 kdlock，但仍使用带既有 hook 的同一实验内核。
 
@@ -187,14 +186,11 @@ kd_exe_add(0, RIP, SPIN):
     store_release(exe.status, UNINIT)
     store_release(global_code_block_gate, 0)
 
-kd_spin_fast_remember(L, RIP, gate):            // 在第 4.1 节 begin 成功后调用
-    检查仅有新 root ticket 的一个 preempt pin；复用入口的 task/migration 准入
-    再 kd_get_exe(0, RIP)；检查身份、SPIN、NORMAL、source.OPEN
-    使用传入 gate 更新 per_cpu.fast 的 origin=L、rip=RIP、gate 字段
-    // 不再查 gate，也不额外增减 pin
 ```
 
-条目尚未 NORMAL 或 ticket/gate 创建失败时不填缓存；后续慢入口再尝试。
+`kd_spin_fast_remember` 只在 root 且缓存启用时处理。L/RIP/gate 键完全相同
+则立即返回，删除旧代码在每次竞争 miss 后仍进行的重复 NORMAL 查询；新键
+才查询注册表并检查 NORMAL/source.OPEN。缓存本身不授权 JIT 执行。
 `vmalloc/set_memory_x` 在 provider 初始化时预分配代码池，不在每次抢锁内分配。
 每次已晋升慢入口仍调用 `kd_exe_add`，但同身份/后端且 source OPEN 的已发布
 条目现在只做读取，不再进入全局 gate、source irqsave 或模块地址查询。
@@ -241,46 +237,52 @@ Python 编译：若 combiner 发现 JIT 未就绪，返回 `NO_RUN`，让请求�
 
 <a id="native-fast"></a>
 
-## 3. 已发布但不代理：单线程常见路径
+## 3. 无竞争 root：缓存原生获取与先 CAS 的入口
 
-对应 [kd_spin_fast.h](../../include/kd_spin_fast.h)。
+对应 [kd_spin_fast.h](../../include/kd_spin_fast.h) 和
+[kd_spinlock.c](../../kernel_module/kd_spinlock.c)。`spin_native_cache=1` 默认保留
+原生站点缓存；装载 provider 时设为 `0` 可关闭，参数在会话中只读。缓存键与
+本次物理 hold 分开：前者可跨获取复用，后者必须在本次 unlock 清除。
+
+缓存命中要求 root、source.OPEN 和整个 S 空闲，再实际 trylock Linux L；成功
+不建立 ticket/S owner。解锁只释放 L 和 pin，嵌套调用沿用原生路径。关闭缓存
+或未完成获取时，进入以下与 TCLock 相同的“先 CAS、再准备竞争请求”顺序：
 
 ```text
-kd_spin_fast_acquire(L, RIP):
-    if preempt_count != 0 or migration disabled: return CONTEXT
+kd_spin_lock_abi(L, SP, IP, BP, abi):
+    已完成目标选择、热锁晋升检查和 entry 注册
+    检查 task/softirq/migration/native-active；不适用则原生
     preempt_disable()
-    fast = 当前 CPU 的缓存
-    if fast.origin == L and fast.rip == RIP
-       and atomic_read(fast.gate.S) == 0 and source.OPEN:
-        spin_acquire(lockdep)                  // 是否生成实质代码取决于内核配置
-        if do_raw_spin_trylock(L):             // 真正的 Linux 原锁原子获取
-            fast.owner = current; WRITE_ONCE(fast.held, L)
-            return OWNED                      // pin 一直持有到 unlock
-        spin_release(lockdep)
-    return MISS_PINNED
-
-sc_body_N 原生展开正文
+    检查当前 frame/执行上下文；不适用则归还 pin 后原生
+    gate = kd_spin_gate_get(L)
+    if 无 gate: 归还 pin 后原生
+    缓存启用时尝试记住新键；已有相同键不再查翻译表
+    if 是 root 且 cmpxchg_acquire(gate.S, 0, LOCKED) == 0:
+        kd_spin_gate_claim(gate, fast.hold)   // 复用 pin，获取 L；保留 owner/代次
+        fast.held = L                        // claim 失败则释放 S、归还 pin 后原生
+        return                               // 自己执行原生正文
+    否则进入第 4 节，以同一 gate/pin 建立 ticket
 
 kd_spin_dispatch_unlock(L):
-    if 普通任务且有 preemption pin
-       and fast.held == L and fast.owner == current:
-        spin_release(lockdep)
-        do_raw_spin_unlock(L)
-        WRITE_ONCE(fast.held, NULL); fast.owner = NULL
+    if 本任务/CPU 的 fast.held == L 且持有 S/L:
+        gate = fast.hold.gate
+        kd_spin_gate_release(fast.hold)       // 检查 owner/代次，释放 L
+        store_release(gate.S.locked, 0)  // 保留并发 pending/tail 位
+        fast.held = NULL                     // hold 已清零，缓存键保留
         preempt_enable()
         return
-    进入第 5.5 节的 slow unlock
+    缓存原生 L-only 持有者释放 L/pin；其他进入第 5.5 节的 slow unlock
 ```
 
-命中后没有热锁表、注册 gate、ticket、node、frame、wrapper 和 JIT 正文计数。
-仍有 hook 栈布局、static-call、上下文/缓存/S/来源状态判断、per-CPU 记录及原锁操作。
-测量刚开始时若某 CPU 缓存尚未建立，仍需先走慢入口；“单线程 NO_JIT”不等于
-每一次获取都命中快路径。S 非零时优先进入现有排队协议；S 为零也只是提示，
-原生 fast 与 combiner 最终都必须获取 L。
+无竞争获取不创建 ticket、node、frame，也不捕获寄存器。成功后同时持有 S/L，
+以 L 排斥原生 peer；先释放 L 再打开 S。线程改名、关闭准入及嵌套调用不丢失外层持有记录。
+内层仍正常发现/注册条目并建立独立 ticket；轻量 root 不是 native suffix，
+不能据此禁止内层准入，否则无竞争预热会漏掉内层 JIT。与 TCLock 相同的是先尝试锁字、竞争后准备请求；仍存在
+目标/热锁/翻译条目/gate 查询和双锁字成本，不能据此宣称已等同 TCLock。
 
 <a id="queue"></a>
 
-## 4. 快路径失败后的竞争、原锁所有权和队列
+## 4. 竞争后的 ticket、原锁所有权和队列
 
 ### 4.1 准入与 S 的获取
 
@@ -290,22 +292,20 @@ kd_spin_dispatch_unlock(L):
 [state.inc](../../kernel_module/spin/state.inc) 和 [queue.inc](../../kernel_module/spin/queue.inc)。
 
 ```text
-kd_spin_lock(L, saved_RSP, RIP):
-    检查 softirq/migration/native-active；不适用则走原生 L
-    kd_spin_entry_begin(L, HOOK):
-        检查 task 和请求参数；不适用则失败，调用者走原生 L
-        preempt_disable()
-        只扫描当前 CPU occupied 位图中的活跃 ticket，拒绝同任务重复获取 L
-        对 ~occupied 找首个空位；保留 32 槽容量
-        gate = kd_spin_gate_get(L)              // acquire 读 origin；未命中才锁内复查/创建
+kd_spin_lock_abi(L, saved_RSP, RIP, BP, abi):
+    执行第 3 节的准入、pin 和 gate 查询
+    root 已尝试 S 的 CAS；成功已返回，失败保留 old
+    kd_spin_entry_begin_pinned(L, gate, ref):
+        检查 task、已有 pin、参数及 gate 对应 L
+        扫描 occupied 活跃 ticket，拒绝同任务重复获取 L
+        对 ~occupied 找首个空位，检查 32 槽容量与 sequence 溢出
         raw_spin_lock_irqsave(ticket.guard)
-        置 occupied 对应位；写 task/L/gate/sequence/cpu/state=WAITING，清 hold/native_refs
-        raw_spin_unlock_irqrestore(...)
-    检查本 CPU 无当前 JIT frame/其他任务占用的执行上下文；否则结束 ticket 再原生
-    request = {ref=本次 ticket, S=entry_gate(ref).word} // 本地 gate 读取不加 guard
-    S = request.S；kd_spin_fast_remember(L, RIP, gate)
-    old = cmpxchg_acquire(S, 0, LOCKED)
-    if old == 0: goto acquired
+        写 task/L/gate/sequence/cpu/state=WAITING，清 hold/native_refs
+        置 occupied；raw_spin_unlock_irqrestore(...)
+        成功将已有 pin 的结束责任交给 ticket；失败不消耗 pin
+    准入失败：归还 pin 后原生获取 L，不发布请求
+    request = {ref=本次 ticket, S=gate.word}   // 不再次查询 gate
+    非 root 先建立 ticket，再 CAS S；成功 goto acquired
     if old 只有 PENDING: 有界轮询 S
     if old 含 tail/pending 等非 locked 位: goto queue
     old = fetch_or_acquire(S, PENDING)          // 直接传 S，不查 map
@@ -406,7 +406,10 @@ kd_spin_lock_slowpath(L, saved_RSP, request):
 ```text
 run_combiner(L, first_follower, request):                // 进入时 combiner 已持有 L
     batch.request = request；S = request.S
-    curr = first_follower; next = curr.next
+    curr = first_follower; next = load_acquire(curr.next)
+    if next == NULL and S.tail 非零且 decode_tail(S.tail) != curr:
+        等待 producer 发布 curr.next，再 acquire 读取
+        // 首次进入且仍持有 S/L，尚无 NUMA 拼接；真正队尾不等待
     if next == NULL or curr/next 是 IRQ 特殊节点 or source_frame_get() 失败:
         S.locked = LOCKED
         store_release(curr.locked, false)；smp_mb()
@@ -537,7 +540,7 @@ slot 缓存不保存 readiness 或代码版本，source/provider lease 也不是
 
 [wrapper.S](../../include/wrapper.S) 的偏移 0 保留普通 C ABI，偏移 16 是带版本
 签名的旧 ABI 专用入口。普通入口保存/恢复原 callee-saved 寄存器；专用入口
-只预留同样的栈槽，编译器管理 combiner 活跃值，内联适配保护 RBP。`args[2]` 和全部原 JIT 栈槽偏移不变。
+只预留同样的栈空间，编译器管理 combiner 活跃值，内联适配保护 RBP。`args[2]` 和控制槽偏移不变。
 新增 `Stack_BATCH` 位于 `RBP-160`，保存专用描述指针；先分配栈再写，避免 red zone。
 
 | 出口 | 写回 |
@@ -547,6 +550,11 @@ slot 缓存不保存 readiness 或代码版本，source/provider lease 也不是
 | 普通入口及续跑 | 完整受支持 GPR、虚拟 RIP/SP、exit/witness |
 
 精简保存集合只应用于已知最终 lock/unlock ABI；中间出口仍保留有效寄存器。
+R11–R15、SP/BP 的 `Stack_*` backing 直接使用请求的对应 `pt_regs` 字段，
+入口不复制到 wrapper 栈，出口不再复制回来。物理 R11 固定作包基址；原 block
+计数改用 `Stack_BUDGET` 内存槽。CPU 中的脏逻辑寄存器仍需 spill/完整物化。
+这减少边界搬运，但可能增加循环计数访问和请求包的缓存流量，不能按删除的
+指令数直接推算吞吐收益。布局与有效性规则见 [寄存器 ABI](../../docs/JIT_REGISTER_ABI.md#3-pt_regs-输入输出约定)。
 生成正文继续按虚拟寄存器和地址重写执行；`bin.txt` 包含 wrapper，不能只数
 `JIT.S` 中计数更新的指令来估计执行成本。
 
@@ -620,7 +628,7 @@ owner 仍需等到 S/L 允许获取；不能删掉 S 的等待就让它并行修
 | 工作 | 当前路径与频率 | 应检查的改进方向 |
 | --- | --- | --- |
 | 重复注册/来源确认 | 每个已晋升慢入口仍调用 `kd_exe_add`；已发布且同身份/后端、source OPEN 时只读返回，新注册及冲突才走原串行化路径，关闭准入仍拒绝 | 已去除命中路径的全局 CAS gate、source irqsave 和模块查询；保留发布、关闭准入和 source 生命周期约束，实际耗时收益尚未测量 |
-| 重复 gate map 查询 | 已有 gate 的慢入口在 begin 查一次，随后 request/batch 传递 S 和物理 ticket；remember、pending/tail、execute_cs 和普通 unlock 不再查 map | 已实现 origin release/acquire 发布与无锁读取；创建仍在锁内复查，诊断/无本地 ticket 的 OOO 查询保留；实际耗时收益尚未测量 |
+| 重复 gate map 查询 | 入口查一次 gate；root 先 CAS S，失败后 ticket 复用 gate/pin；pending/tail、execute_cs 和普通 unlock 不再查 map | 已实现 origin release/acquire 发布与无锁读取；创建仍在锁内复查，诊断/无本地 ticket 的 OOO 查询保留；实际耗时收益尚未测量 |
 | ticket 查找/状态迁移 | 无 pin 的 native-active 查询不扫描；begin 从空闲位直接分配，只扫描活跃槽检查重复；find 复用已有 pin，entry_gate 无 guard；状态修改仍使用 guard | 已移除临时 pin/unpin 和本地 gate 读取锁，合并重复准入检查；保留代次、owner、ACK 和 pin 的终点 |
 | 执行注册表查找 | spin 在同批次同 entry/SPIN backend 上复用 exe 指针；缓存命中的 `find_ready` 和后续 `batch_prepare` 仍各检查一次 readiness，prepare 每次还检查 wrapper 签名；mutex 仍逐请求查表 | 合并重复校验，保留最终准入的 OPEN/NORMAL、身份及代码检查；批次 lease 保证槽存活，不等于 readiness 或代码版本不可变 |
 | frame/context 校验 | 普通路径只访问 frame 热状态及寄存器包，不启用冷区；仍逐请求调用完成判定、complete/pop、prepare/bind 和计时辅助函数；完整 context 扫描仅 SELFTEST 保留 | 专门化普通完成与下一请求绑定，减少函数往返和重复检查；保留源租约、owner、容量、ACK 和终态约束 |
@@ -628,7 +636,7 @@ owner 仍需等到 S/L 允许获取；不能删掉 S 的等待就让它并行修
 | source frame lease | 每批次一次 CAS 获取、原子递减和 provider module 引用增减；逐 bind 检查 OPEN | 关闭标志和计数在同一原子字中协调退休，仍有共享计数缓存行与模块引用成本，不是零同步 |
 | 常规诊断计数 | 纯事件、最大深度及 overflow/invariant 已 per-CPU；每个排队 waiter 仍有共享 `atomic_inc`/`atomic_dec_return`，计数紧邻 JIT 禁用 latch；多个诊断入口重复查槽 | 复用诊断槽，评估实时计数按需观测或其他低开销表示；该计数用于测试/workload 阶段协调，不能直接删除或只在退出后汇总 |
 | 下一请求预取 | 当前正文执行前预取下一已发布请求的寄存器包、frame 热字段及逻辑 task 栈内的虚拟 SP/push 槽 | 虚拟子请求跟随共享 root 包；不猜 node-zero RSP，不改变 owner/ACK，不在提前 outer release 后访问旧 successor |
-| wrapper 和生成代码 | 同一个 C 帧跨新旧及混合批次；旧入口适配仅保护 RBP；新 ABI 仅捕获/回写/恢复三字段；旧 ABI 保留 GPR 导入和最终恢复 | 编译器仍产生函数级保存和活跃值 spill；JIT 仍有入口分派、地址重写及虚拟栈操作；完整中间出口和实际正文标记保留，历史成绩不代表此次循环改动的性能 |
+| wrapper 和生成代码 | 同一个 C 帧跨新旧及混合批次；旧入口适配仅保护 RBP；新 ABI 仅捕获/最终恢复三字段；新生成物直接复用请求 GPR backing，旧 ABI 仍装载 CPU 状态及最终恢复 | 编译器仍产生函数级保存和活跃值 spill；JIT 仍有入口分派、地址重写及虚拟栈操作；R11 包基址把 block 计数移至内存；完整中间出口和正文标记保留，历史成绩不能代表此次改动 |
 | 屏障、pin 与原锁 | 复杂 dispatcher `mb()`、队列 acquire/release、ticket guard/pin、原 L 获取/释放；普通批次持续持有 L，不逐代理正文重获 | S/L 双层所有权用于兼容原生 peer，不能直接套用 TCLock 单锁字而删除排斥或 owner/ACK 协议 |
 
 普通单锁不读取未启用的冷区，也不进入通用 dispatcher；复杂出口先物化
@@ -674,9 +682,15 @@ caller-clobber v1。原生互操作、source 生命周期和中途续跑等职�
 完整后端的吞吐差距不能全部归因于保存几组寄存器。性能数值、失败记录及
 冻结身份只维护在[三方结果页](../tclock_compare/results/20260918-native-stack.md)。
 
+TCLock 与 Linux 可以保留相同调用接口，但不能直接混用同一目标锁的竞争协议：
+tail 对应不同的 per-CPU 节点，代理 unlock 也需要自己的续点/完成处理。
+[兼容边界](../../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界)
+说明为何 kdlock 的 L/S 成本部分用于原生互操作。当前对照分会话加载后端，
+不证明 TCLock 能与未修改原生调用者共同竞争目标锁。
+
 | 环节 | TCLock 原生后端 | 当前 kdlock | 成本差别 |
 | --- | --- | --- | --- |
-| 获取入口 | 目标锁身份判断后直接进入原锁字的 CAS/pending/队列 | 原生快路径缓存；失败后目标选择、晋升、条目确认与 ticket 准备 | kdlock 进入队列前有更多工作；命中注册/已有 gate 并不每次获取全局创建锁 |
+| 获取入口 | 目标锁身份判断后直接进入原锁字的 CAS/pending/队列 | 可选原生站点缓存；miss 后目标选择、晋升、条目确认和 gate 查询，先尝试 S，竞争后建立 ticket | kdlock 进入队列前有更多工作；命中注册/已有 gate 并不每次获取全局创建锁 |
 | 锁协议 | 被测目标锁完全由 TCLock 协议管理 | 私有调度字 S 加真实 Linux 锁 L | L 用于排斥原生 peer；普通批次持续持有 L，不能按每个代理正文重获 L 计价 |
 | 入口现场 | 六个 callee-saved 和 CALL 续点留在原栈，node 记 RSP | 请求仅捕获 RIP/RSP/RBP，其余活跃值由 caller 保存 | 减少显式搬运，但保存责任部分转移到编译器 |
 | 连续交接 | unlock 保存原生续点，物理切到下一 waiter 栈；离栈后发布完成 | wrapper 返回、完成分类、frame complete/pop、发布、下一请求 prepare/bind | 同一个 C 循环已去除旧 callback shell，逐请求管理仍存在 |
@@ -705,6 +719,13 @@ caller-clobber v1。原生互操作、source 生命周期和中途续跑等职�
    [预取路径](../../kernel_module/spin/combiner.inc)先读 execution、regs_ref、task
    与 SP，再触发预取。本轮热点包含这些依赖读取；没有预取开关对照，不能把
    命中收益或额外访存成本任一方当成已测净效果。
+
+本轮的[入口/缓存独立对照](results/20260918-spin-entry.md)进一步验证了另一种
+抵消：把 S/L 释放直接内联进公共解锁，会使缓存命中路径也保存 RBX/R12。
+现将该调用移到独立函数，保留 owner 校验与释放顺序；guest 汇编确认这组
+额外函数级保存已消失。获取入口另将注册/调度移入冷函数，并用标准 `bint`
+保存装载开关，避免 UBSAN bool 读取冷调用迫使命中路径提前保存参数；内核
+检查配置未关闭。省下 ticket 准备不保证完整操作自动提速。
 
 ### 6.4 后续优化顺序
 

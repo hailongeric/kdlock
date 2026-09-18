@@ -31,7 +31,7 @@ request.frame.regs <--- node->execution->frame.regs_ref
         |
         | bind the same request.frame; virt_ptr(regs, args)
         v
-wrapper real stack + translated register state
+wrapper control stack + CPU registers + shared packet spill slots
         |
         | exit writes back the same register packet and args[]
         v
@@ -84,7 +84,10 @@ IRQ/BH/irqsave/trylock、显式 nested 入口和 mutex 保持原契约。
 生成物的 `entry_abi` 字节。RDX 传递独立元数据描述符；原两元素 `args` 不变。
 `kd_jit_clobber_call_v1()` 为 combiner 提供编译器可见的 clobber 调用边界，
 wrapper 只保护物理 RBP，不导入线程 GPR、不手写保护 RBX/R12–R15。
-JIT 的虚拟 GPR 暂存槽仍预留，与线程入口快照分开；准入证明禁止正文观察
+JIT 的虚拟 GPR 暂存直接复用预分配 `pt_regs` 字段，不另建入口副本。
+MINIMAL/COMPLETE 中未捕获字段可以在正文执行后成为 JIT spill，但不能因此
+当作有效的初始或完整恢复状态；只有 FULL 出口补齐 CPU 中的当前逻辑值后
+才允许 C 消费完整包。准入证明禁止正文观察
 未捕获的初始 GPR，包括部分寄存器、内存地址、存储值和分支条件。
 入口 guard 仅允许 SP/BP 寄存器依赖；新 ABI 可引用未被正文先前写入影响的
 初始 64-bit 栈槽。guard 在读取任何槽前先检查所有源槽完整位于入口 SP/BP
@@ -170,8 +173,9 @@ kdlock caller-clobber v1:
 | task/GS | node.task 和 `komb_get_current()`，不切硬件 GS/task | 显式 logical task/origin GS，同样不切硬件 GS/task |
 | 等待与回收 | 离开被代理原栈后通知完成 | shadow 发布、frame unbind、release wake；request 最后一次读取之后才归还使用权 |
 
-kdlock 的物理 RSP 必须留在 combiner 栈：wrapper 的虚拟寄存器暂存槽、地址
-重写和逻辑 SP/BP 映射依赖这个帧。它只切换 JIT 的逻辑 waiter 栈，不能直接
+kdlock 的物理 RSP 必须留在 combiner 栈：wrapper 的控制槽、地址
+重写和逻辑 SP/BP 映射依赖这个帧。虚拟 GPR backing 已改为直接使用共享包，
+没有 `pt_regs → wrapper spill → pt_regs` 的复制链。它只切换 JIT 的逻辑 waiter 栈，不能直接
 套用 TCLock 的物理 RSP 切换汇编；那样会破坏现有 JIT 寄存器映射。
 中途退出也不能只保存六个 callee-saved，因为已执行的逻辑 caller-saved 值
 可能仍被后缀使用。只有明确的 caller-clobber 最终边界允许丢弃这些值。
@@ -215,7 +219,7 @@ wrapper 保存宿主 RBX、RBP、R12-R15，因此对调用它的 C 代码遵守 
 参数数组始终只有两个元素，没有第三个 task 参数。wrapper 在
 返回时会覆盖这两个输入，所以 executor 每次首次进入或 continuation
 续跑前，都要从当前 `kd_exec_frame` 重新写入 GS base 和 logical task。
-当前代码不得读取返回后的 `args[1]` 作为执行计数：R11 中虽有运行时 block
+当前代码不得读取返回后的 `args[1]` 作为执行计数：`Stack_BUDGET` 中虽有运行时 block
 budget，但 epilogue 不会把它复制到 `Stack_JIT_WITNESS`。此布尔标记不是指令
 数量、完整路径覆盖率或代码 generation 身份。
 
@@ -240,10 +244,11 @@ entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志
 `kd_jit_batch_call` 指针，包含当前 L 和解锁入口；该指针不包含 node/队列或
 调度回调，不能用于在 JIT 内切换 waiter。
 
-原有 wrapper 槽偏移保持不变；新增 `Stack_BATCH` 在 `RBP-160`，先分配栈空间
+原有 wrapper 控制槽偏移保持不变；`Stack_BATCH` 在 `RBP-160`，先分配栈空间
 再写入，不使用内核 red zone。wrapper 返回同一个锁侧循环，完成当前请求后
 继续下一请求，整批结束才退出这个 C 帧。旧 ABI 的普通入口与批次入口共用
-`load_packet`，仍加载完整逻辑 GPR，物理 waiter 也保持原最终恢复规则。
+`load_packet`，只装载实际驻留 CPU 的逻辑 GPR；R11–R15 的 backing 已在共享包中，
+不再先复制到实栈。物理 waiter 保持原最终恢复规则。
 下表描述旧 ABI；新 caller-clobber 的 MINIMAL/COMPLETE 规则见第 1.0 节。
 
 | 返回边界 | 写回集合 |
@@ -274,11 +279,26 @@ entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志
 | 字段 | 进入 JIT | 退出 JIT |
 | --- | --- | --- |
 | RAX、RBX、RCX、RDX、RSI、RDI、R8-R10 | 直接装入同名物理寄存器 | 从同名物理寄存器写回 |
-| R11-R15 | 先保存到 wrapper 私有槽，按需映射到 R12-R15 | 从私有槽写回 |
+| R11-R15 | 留在 `pt_regs`，按需映射到物理 R12-R15 | 翻译器 spill 直接写同一字段，无 epilogue 整组复制 |
 | RSP | 装入物理 R13，作为虚拟 RSP | 从物理 R13 写回 |
 | RBP | 装入物理 R12，作为虚拟 RBP | 从物理 R12 写回 |
 | RIP | 由入口 dispatcher 读取；控制流中作为合成地址处理 | 从协议寄存器 R14 写回 |
 | `orig_rax`、CS、EFLAGS、SS | 不装入 translated state | wrapper 不修改 |
+
+上述表格描述 FULL/旧 ABI。物理 R11 固定指向本次 `regs`，`Stack_R11`–
+`Stack_R15`、`Stack_RSP`、`Stack_RBP` 使用该基址，与对应 `PT_*` 指向同一字节。
+物理 R12/R13 仍缓存逻辑 BP/SP，映射池中的脏值仍须按既有 block/控制出口规则
+spill，直接执行的其他 GPR 仍须在完整出口写回。共享 backing 不意味着 CPU
+寄存器和内存自动同步，也不能删除这些必要写回。
+
+入口 guard 暂借 R11 做地址比较，所有通过、拒绝和 continuation 路径在跳入
+正文或出口前恢复包基址。guard 只在执行前读取入口事实；执行后 `regs` 表示
+当前状态，不再是不可变入口快照。使用权仍由原有 frame/request 与 owner/ACK
+协议交接，父级不能在子级执行时读取同一包当作旧快照。
+
+本次只变更生成物内部寄存器分工；C ABI、两元素 args、入口目录与 `entry_abi`
+不变。旧完整 `jit.bin` 保留自身保存/恢复代码，仍可使用原入口；新翻译体必须
+配套当前 `wrapper.S` 和 `asm_head.h` 重建，不能把旧的 R11 计数代码拼入新 wrapper。
 
 EFLAGS 不是跨 wrapper 边界的持久状态。相邻 translated 指令会自然使用 CPU
 flags，但入口条件的地址比较、dispatcher 的 `CMP` 以及 branch-block budget 的 `INC`/`TEST` 都会
@@ -401,21 +421,19 @@ frame 记录 `KD_EXEC_LOCK_NATIVE`，然后才弹出 lock CALL 的返回地址�
 | --- | --- | --- |
 | `-0x30` | `Stack_PT_REG` | 原 `struct pt_regs *` |
 | `-0x38` | `Stack_ARG_REG` | 原 `args *` |
-| `-0x40` | `Stack_RBP` | guest RBP spill |
-| `-0x48` | `Stack_RSP` | guest RSP spill |
-| `-0x50` | `Stack_R15` | guest R15 spill |
-| `-0x58` | `Stack_R14` | guest R14 spill |
-| `-0x60` | `Stack_R13` | guest R13 spill |
-| `-0x68` | `Stack_R12` | guest R12 spill |
-| `-0x70` | `Stack_R11` | guest R11 spill |
+| `-0x40` | `Stack_BUDGET` | 本次调用的 block 额度计数，复用空出的槽 |
+| `-0x48` 至 `-0x70` | 保留空间 | 不初始化、不用作 GPR 副本，保持控制槽偏移 |
 | `-0x78` | `Stack_RGS` | 入口 `args[0]`，waiter kernel GS base |
 | `-0x80` | `Stack_TASK` / `Stack_RCT` | 入口 `args[1]`，logical waiter task |
 | `-0x88` | `Stack_RIP` | 退出 RIP 临时槽 |
 | `-0x90` | `Stack_IJ` | 退出原因或 IJ 源地址 |
 | `-0x98` | `Stack_JIT_WITNESS` | 复用旧计数槽；prologue 写 0，观测用生成块写 1 |
+| `-0xa0` | `Stack_BATCH` | 旧批次描述指针 |
+| `-0xa8` | `Stack_CLOBBER` | 新 ABI 描述指针 |
 
-`Stack_RIP`、`Stack_IJ`、`Stack_JIT_WITNESS` 由一次 `sub rsp, 24` 分配；prologue
-显式清零 `Stack_JIT_WITNESS`。正常退出桩必须先定义 R14 和 `Stack_IJ`，再跳到公共
+两个输入指针入栈后，一次 `sub rsp, 14*8` 分配保留空间与控制槽；prologue
+显式清零 `Stack_JIT_WITNESS`，dispatcher 清零 `Stack_BUDGET`。
+正常退出桩必须先定义 R14 和 `Stack_IJ`，再跳到公共
 `exit`。
 
 `Stack_TASK` 直接复用旧的第二个 segment 槽；`Stack_RIP` 及其后的物理偏移
@@ -424,18 +442,18 @@ frame 记录 `KD_EXEC_LOCK_NATIVE`，然后才弹出 lock CALL 的返回地址�
 
 ## 6. Translated code 的物理寄存器分工
 
-进入 `jit.S` 后，R14/R15 已不再长期保存输入指针。原指针只保存在
-`Stack_PT_REG` 和 `Stack_ARG_REG`，到 epilogue 才重新装回。
+进入 `jit.S` 后，R14/R15 已不再长期保存输入指针。`regs` 在物理 R11 和
+`Stack_PT_REG` 中保持，`args` 指针保存在 `Stack_ARG_REG`，供 epilogue 使用。
 
 | 物理寄存器 | translated code 中的角色 |
 | --- | --- |
 | RAX、RBX、RCX、RDX、RSI、RDI、R8-R10 | guest 同名寄存器，直接执行 |
-| R11 | translated basic-block budget 计数器；guest R11 位于 spill 槽/映射池 |
+| R11 | 固定 `REG_BANK` 指针；guest R11 位于共享 `pt_regs.r11` / 映射池 |
 | R12 | 特殊寄存器映射池；每个 block 初始代表虚拟 RBP |
 | R13 | 特殊寄存器映射池；每个 block 初始代表虚拟 RSP |
 | R14 | 映射池；在 dispatcher/退出桩中固定表示当前 RIP 或目标 RIP |
 | R15 | 映射池；IJ miss 退出时固定表示源 RIP |
-| RBP | wrapper 的真实 frame pointer，所有 `Stack_*` 宏的基址 |
+| RBP | wrapper 的真实 frame pointer，独立控制/上下文槽基址 |
 | RSP | wrapper 的真实 stack pointer，不是 guest RSP |
 
 ### 6.1 R11-R15、RSP、RBP 的动态映射
@@ -466,12 +484,12 @@ R15”。只有 dispatcher 和退出协议对 physical R14/R15 的含义是固�
 
 ### 6.2 RIP 和计数器
 
-- dispatcher 先执行 `R11 = 0`，再把 `pt_regs.ip` 读入 R14，并跳到匹配的
+- dispatcher 先执行 `Stack_BUDGET = 0`，再把 `pt_regs.ip` 读入 R14，并跳到匹配的
   `loc_<rip>` 标签。hostcall/known-call continuation 也通过同一张入口表恢复。
 - translated block 需要 RIP-relative 值时，translator 以当前原始指令地址生成
   immediate，而不是让 guest 直接读 wrapper 的真实 RIP。
-- 分支 block 入口递增 physical R11，并测试 bit 24；命中后以
-  `KD_EXE_INST_LIMIT` 退出。R11 在每次 wrapper 进入时重新清零，因此这是单次
+- 分支 block 入口递增 `Stack_BUDGET`，并测试 bit 24；命中后以
+  `KD_EXE_INST_LIMIT` 退出。该槽在每次 wrapper 进入时重新清零，因此这是单次
   sandbox 运行的 branch-block budget，不是整个临界区的精确 retired-instruction
   数。
 

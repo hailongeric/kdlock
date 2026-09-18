@@ -6,6 +6,129 @@
 生产 provider 的专用协议观察器在 `tests/kernel/`。
 性能对比使用 [bench/README.md](../bench/README.md) 的独立入口。
 
+<a id="spin-entry-first-cas"></a>
+
+## 2026-09-18：先尝试获取 S，再准备竞争入口
+
+在上轮共享寄存器 backing 的工作区上，普通 root 先尝试 S；成功时用独立
+per-CPU physical hold，失败后才把已有 gate/pin 转入 ticket。原生缓存默认
+开启、装载时可关闭；重复键不再查表回填。首次 batch 入口等待 tail 已证明
+存在但尚未 release-link 的后继，避免过早 native handoff。
+协议见[设计](../docs/DESIGN.md#41-native-lock-and-private-queue)，性能与两轮
+独立 A/B 见[结果页](../bench/spin_cacheline/results/20260918-spin-entry.md)。
+
+同一 recovery guest `6.1.159-kdclobber1` 中，最终 **8 个单元入口通过**，
+包含两个基础程序和以下六个直接相关驱动；未运行全量套件或重建内核：
+
+```sh
+make -C tests/unit run PY_TESTS='spin/test_spin_entry.py spin/test_spin_routing.py spin/test_spin_gate.py spin/test_spin_outer_progress.py spin/test_spin_clobber.py spin/test_spin_shadow.py'
+```
+
+- 入口 3684、gate 3121、routing 15 场景/8569 项检查；覆盖无 ticket 快速获取、
+  一次 pin/gate、失败平衡、改名/closing 解锁、嵌套独立 ticket、真实 owner、
+  pending/tail 保留及反复快慢交接。缓存开启时，100 次重复竞争不再重复回填查表。
+- outer-progress 在 NUMA 关闭/开启时分别完成 11419/24718 项检查，13 个
+  mutation 均被 oracle 检出；新增生产者暂停于 tail/next 之间的定向检查。
+  既有夹具的模拟 tail 映射到其实际准备的链尾，未改变生产队列或 JIT 判定。
+- clobber 探针保持 128 个 poisoned 入口、16 个 mixed ABI 入口及完整中途包；
+  shadow 驱动覆盖生产节点、嵌套队列、返回与 NUMA 两种配置。
+
+最终同一冻结版本的五项 live **全部通过**：模块加载、mode-0 普通 spin、
+mode-2 hostcall、mode-8 嵌套/远端三阶段、mixed-spin 原生互操作。四项功能用例
+均保留实际 JIT oracle；mode-8 的双 root 纯 JIT、quota/native/首 waiter 退出
+两阶段各 36023 次变换、各 4 次 JIT body，真实 B owner 与 ACK 正确。
+quota 阶段沿用 `mutex_jit=1`。所有用例退出码 0，无检测到的内核故障、源码
+输入未变化、最终排空。离线 `tests/verify_evidence.py` 检查也通过。
+
+```sh
+python3 tests/regression.py --case module --case mode-0 --case mode-2 \
+  --case mode-8 --case mixed-spin --timeout 180 \
+  --output /root/kdlock-evidence/spin-entry-20260918/live-entry
+```
+
+上述命令沿用实验 `KDIR`、固定依赖 venv、已确认快照的 recovery 变量及外层
+超时。普通/SELFTEST 与私有 benchmark provider 均在 guest 构建；保留原有
+自定义切栈/返回的 objtool 告警，不能将构建通过称为无告警或通用展开证明。
+
+此次开发保留了失败记录：初次无缓存版本把普通 S/L owner 误判为 native
+continuation，阻止嵌套发现；修正后又暴露轻量 owner 缺少真实 gate hold，改为
+复用既有 claim/release。其修复版在 `live-owner/` 的五项回归通过后，才运行
+无缓存 60 场 A/B。恢复默认缓存后的 `live-final/` 仍出现 mode-8 quota 阶段
+原生交接、未发生要求的远端 JIT；数据及排空正确也仍判失败。最终增加了
+初始 batch 的 tail/link 检查，未删减原 oracle。该版五项 live 在
+`live-final-link/` 通过；随后性能和汇编发现冷释放分支增加原生解锁的函数级保存，
+将其移到独立函数后，`live-release/` 五项通过，但长批次仍测得原生成本增加。
+最后把 clobber 获取的 C 慢路径移出，且用标准 `bint` 避免热路径上的 UBSAN
+bool 读取诊断调用；保留内核检查配置。最终 `live-entry/` 重新验证同样五项。
+获取及解锁快路径的反汇编检查均要求没有 RBX/R12–R15 序言保存，保留 RBP。
+中间“仅拆分获取函数”的汇编断言失败、单元抽取与模拟 tail 适配失败均保留。
+
+原始证据：guest `/root/kdlock-evidence/spin-entry-20260918/`。最终单元日志为
+`unit-bint.log`；此前失败日志及不同源码版本各自保留，不拼接为一次通过。
+既有冷并发晋升、flags、代码版本及任意 hook 热卸载限制未解决。
+
+宿主归档 `/tmp/kd-spin-entry-20260918/evidence.tar.gz` 的 SHA256 为
+`9eb69cedba80b18de16d888b6cd0602860f21596b01ae7c29fa10ffd05722f83`，与 guest 一致。
+[最终审核](/tmp/kd-spin-entry-20260918/audit-entry-ab.json) 核对五项 live、冻结
+312 个运行/测试源码、实际 JIT 和排空；各中间版本、失败与主动停止分别保存。性能
+的最终 60 场、20 场长批次及缓存关闭验证均见上述独立结果页，不替代功能判定。
+
+<a id="shared-register-bank"></a>
+
+## 2026-09-18：JIT 暂存直接复用寄存器包
+
+在 `d8875887eff8917e7527e986e8943c9d14ea80b1` 上改造 wrapper 内部 backing：
+R11 固定指向当前 `pt_regs`，R11–R15、SP/BP 的 `Stack_*` 槽直接使用对应字段，
+去掉入口/出口的重复搬运。控制槽独立，block 计数移至 `Stack_BUDGET`；
+完整出口仍补齐 CPU 中的逻辑寄存器。布局及新旧生成物约束见
+[ABI](../docs/JIT_REGISTER_ABI.md#3-pt_regs-输入输出约定)。本轮未修改内核。
+
+全部构建、机器码和 live 验证在 recovery guest、`6.1.159-kdclobber1` 完成，
+Build ID 为 `db937d722ee2f2668acb12dc6f105aeea33b7c5c`。最终定向单元 **12 个入口
+通过、0 失败**：两个基础 C 程序，加以下十个 Python 驱动；未运行全量套件。
+
+```sh
+make -C tests/unit run PY_TESTS='codegen/test_shared_reg_bank.py spin/test_spin_clobber.py spin/test_spin_wwjump.py codegen/test_jit_body_witness.py admission/test_context_guards.py codegen/test_segment_codegen.py codegen/test_jit_diagnostics.py admission/test_clobber_entry.py execution/test_jit_entry_scope.py spin/test_spin_batch.py'
+```
+
+新增探针在 epilogue 前双向读写两种寻址，确认是真正共享存储；真实翻译器覆盖
+三逻辑操作数同时占用、SP/BP 借用及恢复、部分 R11 写入、hostcall 完整物化/续跑、
+bit-24 额度退出。既有探针覆盖 128 个 poisoned 精简入口、16 个混合 ABI 入口、
+正文前拒绝和原始输入保持。正常 COMPLETE 中执行过的 spill 可以改变包中暂存
+字段，不能把这些字段当作已捕获入口值或有效的 FULL 恢复包。
+
+压力用例先发现分配器按物理编号排除逻辑操作数的旧问题，改为检查映射的逻辑
+身份后通过。随后修正测试夹具把 ModRM 的 `0xe8` 错认成 CALL 的编码位置；
+该次用户态段错误及前次失败日志均保留，不计为通过。最终源版本重跑上述全部
+定向项通过；历史诊断汇编哈希仅归一化计数器重定位，其他字节仍按旧基线检查。
+
+同一冻结版本的五项 live 全部通过，均验证实际 JIT、正确副作用、退出码 0、
+无检测到的内核故障和最终排空：
+
+| 用例 | 本轮结果 |
+| --- | --- |
+| mode-0 | 普通 spin，12009 次状态变换 |
+| mode-2 | spin hostcall，服务退出并续跑，12009 次状态变换 |
+| mode-8 | 嵌套/远端、双 root 共享 B、native 后缀及 owner ACK；双 root 两阶段各 36023 次变换 |
+| mixed-spin | Linux 原锁/private S 互操作，18801 次状态变换 |
+| mode-5 | legacy mutex：416 次正文、846 次 hostcall 执行/恢复、5 名 quota 调用者及最终 ACK |
+
+`mode-5` 与 mode-8 quota 阶段沿用显式 `mutex_jit=1`。执行命令仍使用上述实验
+`KDIR`、固定依赖 venv 和 `KDLOCK_RECOVERY_CONFIRMED=1`，选择
+`tests/regression.py --case mode-0 --case mode-2 --case mode-8 --case mixed-spin --case mode-5`。
+离线 `tests/verify_evidence.py` 核对 312 个冻结源码文件和五项完整证据通过；
+该审核是字节/记录一致性检查，不替代各用例的运行判定。
+
+本轮原始材料位于 guest `/root/kdlock-evidence/shared-reg-bank-20260918/`，包括
+`unit-final.log`、失败及修正日志、`live/`、`live-audit.json`、`assembly/`。
+性能单独维护在 [spin benchmark](../bench/spin_cacheline/README.md)。本轮不宣称
+解决既有 flags、并发内存新鲜度、原地代码版本或冷并发晋升限制。
+
+宿主归档 `/tmp/kd-shared-reg-bank-20260918/evidence.tar.gz` 包含本轮测试与性能
+材料，SHA256：`72e00c01134ba5522ad1c3ac45054f73e5ab9aff8892bcd85424ee130f66358e`。
+宿主只读 [audit.json](/tmp/kd-shared-reg-bank-20260918/audit.json) 再次核对五项 live
+记录、当前 312 个运行/测试文件、两版 benchmark 冻结字节及逐场数据；全部通过。
+
 <a id="tclock-native-validation"></a>
 
 ## 2026-09-18：独立 TCLock 原生栈切换

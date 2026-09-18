@@ -9,6 +9,40 @@ Complete the main behavior before optional features and performance work.
 
 ## Current Checkpoint
 
+**2026-09-18, spin acquisition ordering and cache policy:** an ordinary root
+attempts private S before reserving a ticket, reusing the pinned gate on
+contention. A successful root keeps the existing physical hold in a separate
+per-CPU record, retaining native L and owner/generation checks. A stable cache
+key no longer repeats the registry lookup for cache population. The native-site
+cache remains enabled by default, with read-only `spin_native_cache=0` available
+at module load. The [60-session uncached trial](../bench/spin_cacheline/results/20260918-spin-entry.md)
+regressed single-thread throughput by 47–51%; it does not justify default removal.
+Initial combiner entry also waits for a tail-proven successor's release-link,
+fixing a reproduced premature native handoff. [Directed validation](../tests/README.md#spin-entry-first-cas)
+passes eight basic/affected unit entrypoints and five live cases, including
+nested owner/ACK, actual JIT and native interoperability. The final 60-session
+comparison passes and drains: c1/t4 improves about 12%, other contended groups
+are essentially unchanged. Cold dispatch/release helpers and integer-backed
+boolean parameter storage avoid extra hot-path callee-saved spills, keeping
+UBSAN enabled. Twenty long single-thread sessions pass but retain a 0.9–1.5 ns
+complete-operation regression; the cache-off JIT smoke also passes. The result page separates these checks and failed
+or superseded development versions; no general throughput gain is established.
+No kernel rebuild, full suite, new TCLock matrix or multi-lock cache study.
+
+**2026-09-18, shared JIT register backing:** virtual R11-R15 and SP/BP spill
+slots now address the request's `pt_regs` directly through reserved physical
+R11. Entry/exit no longer copy those slots through the wrapper stack. CPU value
+materialization, private control/context slots and owner/ACK lifetime remain.
+The block budget moved to private memory; boundary instruction savings alone
+do not establish a throughput gain. A pressure probe also fixed the allocator's
+physical/logical victim-name confusion. [Directed validation](../tests/README.md#shared-register-bank)
+passes 12 unit entrypoints and five actual-JIT live cases, including hostcall,
+remote/native continuation and legacy mutex. No full suite or kernel rebuild.
+The [24-session directed comparison](../bench/spin_cacheline/results/20260918-shared-reg-bank.md)
+is correct and drained; 16-cacheline throughput is essentially unchanged.
+Three samples per group and sequential before/after versions do not establish
+a general speedup; JIT-share changes remain visible in the report.
+
 **2026-09-18, independent complete TCLock spin backend:**
 [tclock_backend](../tclock_backend/README.md) ports the upstream pending/queue,
 shadow wait stack, six-register/RSP switching and WWJUMP path to the existing

@@ -30,7 +30,13 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 
 ## Spinlock cacheline 对比
 
-最新测量为 [9/18 TCLock 原生栈委托三方对照](tclock_compare/results/20260918-native-stack.md)：
+最新入口改造与缓存取舍见[定向对照](spin_cacheline/results/20260918-spin-entry.md)。
+root 把 ticket 推迟到首次 CAS 失败后建立；缓存重复回填查询已省掉。无缓存
+60 场试验显示单线程明显退化，当前保留默认缓存并提供装载关闭选项。最终
+默认配置的独立 60 场正确排空，只有 1 cacheline/4 线程测得约 12% 改善，
+其余竞争点基本持平；长批次成本、JIT 比例及中间退化修复均见结果页。
+
+完整三方比较为 [9/18 TCLock 原生栈委托三方对照](tclock_compare/results/20260918-native-stack.md)：
 180/180 稳态会话正确并排空，覆盖两种 caller ABI。竞争配置 TCLock 为 kdlock
 中位吞吐的 1.06–2.05 倍，但并不普遍超过 Linux；六场独立采样定位共享诊断
 状态与请求元数据热点。并发冷晋升失败仍未修复，稳态准备策略和失败记录均保留。

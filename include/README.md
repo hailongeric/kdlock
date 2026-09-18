@@ -10,7 +10,7 @@ Demo ioctl 和数据布局见 [workload_modules/README.md](../workload_modules/R
 | hook 与嵌套 CALL | [kd_lock.h](kd_lock.h) | 原生、已选择和合并 spin 入口不同 |
 | spin 调度 | [kd_spinlock.h](kd_spinlock.h)、[qspinlock_i.h](qspinlock_i.h) | 调度节点/私有队列字与 Linux 原锁 L 分离 |
 | spin gate/引用 | [kd_spin_gate.h](kd_spin_gate.h)、[kd_spin_entry.h](kd_spin_entry.h) | physical owner、ticket、logical origin 各有生命周期 |
-| 原生快路径 | [kd_spin_fast.h](kd_spin_fast.h)、[kd_spin_select.h](kd_spin_select.h)、[kd_comm.h](kd_comm.h) | 发布站点缓存、目标名和在途 owner；不按线程数跳过协议 |
+| 原生快路径 | [kd_spin_fast.h](kd_spin_fast.h)、[kd_spin_select.h](kd_spin_select.h)、[kd_comm.h](kd_comm.h) | 可关闭的原生站点缓存、无竞争 S/L hold 和在途 owner；缓存键不重复回填 |
 | mutex 调度 | [kd_mutex.h](kd_mutex.h) | 原 mutex owner 保留，原 waiter 可继续后缀 |
 | frame/控制事务 | [kd_exec.h](kd_exec.h)、[kd_call.h](kd_call.h) | physical parent、logical resume_target、锁记录、最后 ACK |
 | 注册/执行 | [exe.h](exe.h)、[exe_info.h](exe_info.h) | 注册槽、entry_abi 身份与 packet_state；NORMAL 不证明正文执行 |

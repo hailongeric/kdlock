@@ -321,29 +321,69 @@ exclusion does not imply that IRQ/BH operations can be delegated; known
 context-sensitive wrappers refuse translation.
 The old shared-tail protocol and its compatibility claims are obsolete.
 
-Already published spin roots have an additional native fast path. A per-CPU
-cache keys the original lock and entry RIP to stable gate storage, populated
-only after the ordinary source pin/registration and NORMAL publication.
-On a slow root entry, cache population now reuses the gate returned through
-the new ticket, under its single preemption pin, without another map lookup.
-Hook admission checks task context in `kd_spin_entry_begin` and the additional
-BH/migration/native-active conditions in `kd_spin_lock`. Cache population has
-no intervening scheduling point and reuses that admission; only its root-depth
-check remains, alongside entry publication and source-state validation.
-With source admission OPEN, no existing preemption pin and no
-migration-disabled context, an idle entire S permits a Linux trylock on L.
-Success executes the original critical section without acquiring S or creating
-a delegation ticket. A competing combiner may race the S observation but must
-still acquire L, preserving exclusion; a visible pending/tail word sends the
-caller to the existing path. This is not a thread-count switch or a JIT claim.
+The independent TCLock backend instead owns its target lock word exclusively.
+Retaining the `spin_lock` API does not make its protocol interchangeable with
+unmodified Linux qspinlock: the same tail encoding resolves to different
+per-CPU node arrays, and a delegated unlock needs TCLock's continuation and
+completion handling. All accesses to such a target must use a compatible
+protocol; uncontended CAS success cannot establish contended interoperability.
+The backend's ordinary-spin hooks do not establish mixed native/IRQ/BH/trylock
+support for that target. See the [TCLock compatibility boundary](../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界).
 
-The successful try retains a CPU pin and a per-CPU task/origin record until L
-is released. That record preserves unlock routing through rename/closing and
-blocks controlled retirement while held. Nested hooks remain native during
-this interval. Clear the record after releasing L and before enabling
-preemption. The cache does not dispatch code and is not an image-version cache;
-its pointers retain the existing session-wide source/gate lifetime constraints.
-General hook-reader hot-unload limitations in 3.1 remain unchanged.
+kdlock preserves native interoperability by keeping those private queue tails
+out of L. Normal delegated batches retain L across multiple critical sections;
+they do not release/reacquire it for each waiter. Removing this layer requires
+a unified protocol for every participant of that lock, or a separately verified
+interoperability mechanism. Acquisition-order optimizations do not change that
+requirement.
+
+Spin acquisition retains an optional per-CPU L/RIP/gate lookup cache. The
+read-only module parameter `spin_native_cache` defaults to 1; disabling it
+selects the S-first path for every admitted root. A matching published site,
+OPEN source, root CPU context and idle entire S permit a Linux trylock on L.
+A successful cached try keeps a native-L owner record/pin through unlock, with
+nested hooks remaining native as before. This does not acquire S or admit JIT.
+The cache never replaces origin exclusion or source/frame lifetime checks.
+The parameter uses the kernel's `bint` parser and integer storage, accepting
+boolean inputs and reading back 0/1. This avoids a per-read UBSAN bool-load
+handler path without disabling instrumentation. Clobber dispatch also puts
+registration/scheduling in its cold helper, retaining continuation arguments
+across C calls only after a cache miss.
+
+On a cache miss, acquisition follows TCLock's ordering: attempt the scheduling
+word before reserving a contended request. After selection, promotion/entry
+registration and context checks, pin the CPU, resolve the stable gate once, and
+CAS S from zero to LOCKED. An uncontended root acquires Linux L through the
+existing gate claim and retains its physical hold token in a per-CPU record.
+It needs no ticket, node, frame or register capture; owner/CPU/generation checks
+remain. A matching cache key also skips the old repeated NORMAL registry lookup
+during cache population. Only a new key requires that eligibility lookup; cached
+acquisition still checks OPEN and idle S on every attempt.
+
+A failed root CAS transfers the existing pin and known gate into
+`kd_spin_entry_begin_pinned`, then enters the existing pending/queue protocol.
+Failure leaves the pin with its caller for balanced native fallback. Nested and
+virtual requests retain ticket ownership; no remote owner/ACK rule changes.
+Unlike TCLock's exclusive use of the original word, kdlock must still acquire L
+because unmodified Linux participants do not use S. S ownership alone never
+permits a critical-section access. Discovery and entry registration remain;
+removing them would change which critical sections become translatable.
+
+Both owner records preserve unlock routing through rename/closing and block
+controlled retirement. An S/L root is ordinary ownership: nested hooks continue
+to discover/register entries and acquire independent tickets. It must not be
+classified as a native suffix. Unlock checks/releases the physical hold, releases
+only S's locked byte (preserving pending/tail), clears ownership and unpins.
+A cached L-only owner instead releases L and its pin without modifying S.
+The S/L release call and its live pointers stay in a separate non-inlined helper;
+otherwise the compiler adds callee-saved spills even to cached native unlocks.
+The cache may persist after unlock, but never carries ownership into the next
+acquisition. All source/frame and hook-reader hot-unload limits in 3.1 remain.
+
+The cache-off experiment preserves a usable comparison but is not the default:
+it substantially regressed the measured uncontended case. Structural preparation
+savings and the measured cache/entry tradeoff are recorded in the
+[entry benchmark](../bench/spin_cacheline/results/20260918-spin-entry.md).
 
 ### 4.2 Acquisition Tickets And Node Lifetime
 
@@ -382,12 +422,20 @@ request and borrowed reference. Published/woken nodes may immediately be
 reused; snapshot needed data before wake and never read them afterward.
 
 Spin completion release-publishes the combined `completed=1/locked=0` word
-after the final register packet is copied. Lone/IRQ-native and batch-successor
+after final register state is ready in the shared packet. Lone/IRQ-native and batch-successor
 handoffs also use release stores; their acquire-side waiters may immediately
 consume or reuse the node. Queue splicing must finish before publication, and
 the publisher uses its saved successor afterward. This makes the publication
 contract explicit; it does not transfer physical ownership or prove arbitrary
 memory ordering, task lifetime or flags semantics through a userspace fixture.
+
+At initial spin batch entry, a NULL `next` does not by itself prove the node is
+last: the producer exchanges S's tail before release-linking the predecessor.
+With S/L still held and before any NUMA splicing, a different nonzero decoded
+tail proves a successor is in flight. Wait for that link, then acquire-read it.
+A real tail node still receives the ordinary native handoff; this check is not
+used on detached deferred lists. No body executes until the existing JIT
+admission succeeds. The directed delayed-link mutation guards this boundary.
 
 ### 4.3 Combiner And Native Returns
 
@@ -1158,7 +1206,10 @@ Inputs are reinstalled for every continuation. Hardware GS/current, scheduler,
 IRQ/RCU state, flags and SIMD/FPU are not switched to the waiter.
 
 Physical RSP/RBP belong to the wrapper; R13/R12 initially represent virtual
-RSP/RBP. R11 is the branch-block budget. R12-R15 also form the special-register
+RSP/RBP. R11 is the shared `pt_regs` backing pointer; virtual GPR spills use
+that packet directly, with no wrapper-stack copy on entry or exit. CPU-resident
+values still require materialization before C consumes a full packet.
+R12-R15 also form the special-register
 mapping pool; ordinary instructions cannot hardcode guest R14/R15 locations.
 R14 is target RIP at exit, R15 carries an IJ source. Exact slots and supported
 GPR persistence are defined only in [the ABI](JIT_REGISTER_ABI.md).
@@ -1171,7 +1222,8 @@ witness only after wrapper return. Public tests force this on; manual daemon
 launches default off. A marker proves entry into generated body, not full
 instruction/path coverage or version identity. Zero never authorizes replay.
 
-Branch-ending blocks increment R11 and test bit 24; the counter resets at each
+Branch-ending blocks increment the private `Stack_BUDGET` slot and test bit 24;
+the counter resets at each
 wrapper entry. It is not a retired-instruction or whole-CS budget.
 Entry predicates, dispatcher CMP and budget INC/TEST can clobber flags. No
 flags liveness verifier enforces the limitation. INT-to-NOP and warning-only
@@ -1380,10 +1432,11 @@ write the full supported GPR packet. `kd_exe_spin_batch_resume` consumes an alre
 returned packet once, preserving the original entry SP for unstarted-refusal
 validation; it must not invoke the JIT again before processing that exit. Legacy
 uploads without the alternate-entry signature use the ordinary wrapper path.
-Both wrapper entries still import the full supported logical GPR set, and the
-physical waiter still restores 15 GPRs. Reduced final writeback does not imply
-reduced entry or final CPU-restore traffic; intermediate continuation boundaries
-retain their full register requirements.
+Both legacy entries import CPU-resident logical GPRs; virtual R11-R15 backing
+now stays directly in the shared packet instead of being copied into a second
+wrapper frame. The physical waiter still restores 15 GPRs. Reduced final
+writeback does not reduce final CPU-restore traffic; intermediate continuation
+boundaries retain their full register requirements.
 
 Caller-clobber v1 has a separate offset-32 wrapper and explicit `entry_abi`
 identity from kernel entry through registry, translator and frame. The caller
@@ -1449,8 +1502,10 @@ kdlock keeps physical RSP on the combiner task stack and represents the waiter's
 stack through virtual RSP. Its independent shadow stack isolates physical waiter
 polling; it does not replace wrapper entry/exit or execute the JIT body.
 
-Sharing the logical register packet removes copies between software packets,
-not wrapper register loads/spills or independently live executor checkpoints.
+Sharing the logical register packet now also removes the wrapper's GPR backing
+copy. Necessary CPU register loads/spills and independently live executor
+checkpoints remain. Reserving R11 for the packet moves the branch budget to a
+private stack slot; less boundary copying does not guarantee lower total cost.
 Caller-clobber v1 initializes only RIP/RSP/RBP for a normal request; legacy
 entries retain their saved-register contract. Restoring the physical waiter's
 saved IRQ flags does not restore JIT live condition codes.

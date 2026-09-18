@@ -27,6 +27,10 @@ void kd_spin_entries_exit(void);
 int kd_spin_entries_check_idle(void);
 int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 			struct kd_spin_ref *ref);
+/* Contended root: reuse a known gate and transfer exactly one existing pin
+ * to the ticket on success. On failure caller still owns/balances its pin. */
+int kd_spin_entry_begin_pinned(raw_spinlock_t *origin, struct kd_spin_gate *gate,
+			       struct kd_spin_ref *ref);
 bool kd_spin_entry_find(raw_spinlock_t *origin, struct kd_spin_ref *ref);
 bool kd_spin_entry_task_active(void);
 bool kd_spin_entry_native_active(void);

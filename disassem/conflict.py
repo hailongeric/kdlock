@@ -1,6 +1,7 @@
 # Map virtual special registers onto the bounded physical scratch pool.
-# Spill locations belong to wrapper.S, not the waiter's logical stack. Restore
-# stable mappings at block boundaries so dispatch and exits can find SP/BP.
+# GPR spills address shared pt_regs through reserved physical R11; context and
+# control slots stay on the wrapper stack. R11 is never in this physical pool.
+# Restore stable mappings at block boundaries so dispatch/exits find SP/BP.
 import diagnostics
 from assist import make_inst
 from miasm.expression.expression import ExprId
@@ -81,7 +82,10 @@ def conflict_resolve(reg_map, conflict_regs, offset=0):
     possible_stable_victims = [
         p
         for p, v in reg_map.items()
-        if p not in conflict_regs and v in stable_regs and v[0] != "T"
+        # conflict_regs names logical operands, not physical pool numbers.
+        # A source using logical R12/R13 may still evict physical R12/R13
+        # when those hold BP/SP; excluding by p exhausts a usable pool.
+        if v not in conflict_regs and v in stable_regs and v[0] != "T"
     ]
 
     to_be_resolved = sorted(conflict_regs - resolved_regs)

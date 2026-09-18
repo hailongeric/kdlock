@@ -202,8 +202,8 @@ class JitDiagnosticsTests(unittest.TestCase):
         self.assertIn("budget_blocks=1", log)
         self.assertIn('first_budget_rip="0x1000"', log)
         self.assertIn('action="emit_mov_add"', log)
-        self.assertIn(b"INC             R11\n", assembly)
-        self.assertIn(b"TEST            R11, 0x1000000\n", assembly)
+        self.assertIn(b"INC             Stack_BUDGET\n", assembly)
+        self.assertIn(b"TEST            Stack_BUDGET, 0x1000000\n", assembly)
         self.assertEqual(assembly, render("4f8d2c344839d8750190c3", muted=True)[0])
 
     def test_pre_log_miasm_015_assembly_baselines(self):
@@ -215,6 +215,9 @@ class JitDiagnosticsTests(unittest.TestCase):
         for raw, expected in fixtures.items():
             with self.subTest(raw=raw):
                 assembly, _ = render(raw)
+                # Keep the historical oracle for all other emitted bytes;
+                # relocating the budget is tested above and by execution.
+                assembly = assembly.replace(b"Stack_BUDGET", b"R11")
                 self.assertEqual(hashlib.sha256(assembly).hexdigest(), expected)
 
     def test_segment_rejection_does_not_generate_an_error_stub(self):

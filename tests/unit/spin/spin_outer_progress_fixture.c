@@ -390,11 +390,37 @@ void kd_spin_unlock(struct qspinlock *lock)
 /* These scripted combiner requests enter through real tickets, never the
  * root native-fast hook. Keep its unrelated per-CPU ownership empty here;
  * test_spin_routing exercises the production fast path and retirement guard. */
+static bool kd_spin_fast_active(void) { return false; }
 static bool kd_spin_fast_native_active(void) { return false; }
 static bool kd_spin_fast_idle(void) { return true; }
 
 #undef request
+/* Deterministic producer pause between tail exchange and release-link. The
+ * consumer must wait only when tail proves a successor, never for a true tail. */
+#define _Q_TAIL_MASK_HL 0xffff0000u
+static struct kd_spin_node *link_tail, *link_parent, *link_publish;
+static unsigned int link_waits;
+static struct kd_spin_node *link_decode_tail(int tail)
+{
+	CHECK(((unsigned int)tail & _Q_TAIL_MASK_HL) && link_tail);
+	return link_tail;
+}
+#define smp_cond_load_relaxed_sched(p, condition) \
+	({ \
+		if (!*(p) && link_publish) { \
+			CHECK((p) == &link_parent->next); \
+			*(p) = link_publish; \
+			link_publish = NULL; \
+			link_waits++; \
+		} \
+		__typeof__(*(p)) VAL = *(p); \
+		CHECK(condition); \
+		VAL; \
+	})
+
+#define decode_tail link_decode_tail
 #include "spin_outer_production.h"
+#undef decode_tail
 #define request kd_spin_nodes[0]
 
 static struct kd_spin_request test_request(struct qspinlock *lock)
@@ -487,7 +513,15 @@ static void checked_run_combiner(struct qspinlock *lock,
 		memcpy(pool_before, kd_exec_context, sizeof(pool_before));
 	}
 	struct kd_spin_request physical = test_request(lock);
+	/* These existing fixtures use synthetic tail codes. Map them to the
+	 * actual last node of their prepared chain; the delayed-link test sets
+	 * a distinct in-flight tail explicitly before calling the helper. */
+	struct kd_spin_node *saved_link_tail = link_tail;
+	link_tail = node;
+	while (link_tail->next)
+		link_tail = link_tail->next;
 	run_combiner(lock, node, &physical);
+	link_tail = saved_link_tail;
 	if (full) {
 		CHECK(full_pool_calls == calls + 1);
 		CHECK(!memcmp(pool_before, kd_exec_context,
@@ -1035,6 +1069,7 @@ static unsigned int preentry_packet(void)
 	return cases;
 }
 
+#undef smp_cond_load_relaxed_sched
 #include "spin_queue_return_fixture.c"
 
 /* Exercise completion, cold batch handoff, lone waiter and both IRQ/native
@@ -1190,8 +1225,27 @@ static unsigned int progressed_gate_refusal(void)
 	return 1;
 }
 
+static void tail_before_link(void)
+{
+	struct kd_spin_node node = { 0 }, next = { 0 };
+	struct orig_qspinlock word = { .val.counter = 3 };
+
+	CHECK(!kd_spin_linked_successor(&word, &node));
+	word.val.counter = 0x10003;
+	link_tail = &node;
+	CHECK(!kd_spin_linked_successor(&word, &node) && !link_waits);
+	link_tail = &next;
+	link_parent = &node;
+	link_publish = &next;
+	CHECK(kd_spin_linked_successor(&word, &node) == &next);
+	CHECK(link_waits == 1 && !link_publish && word.val.counter == 0x10003);
+	CHECK(kd_spin_linked_successor(&word, &node) == &next && link_waits == 1);
+	link_tail = link_parent = NULL;
+}
+
 int main(void)
 {
+	tail_before_link();
 #ifdef KD_OUTER_BUG_ONLY
 	BUG_ON(true);
 #endif

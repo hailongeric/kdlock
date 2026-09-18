@@ -33,7 +33,8 @@ static bool kd_source_is_open(void)
 #define per_cpu(name, cpu) ((name)[cpu])
 #define KD_PR_ERR(...) ((void)0)
 #define KD_EXE_LOCK_SPIN 1
-#define KD_EXE_NORMAL 0
+#define KD_ENTRY_ABI_LEGACY 0
+#define KD_ENTRY_ABI_SPIN_CLOBBER_V1 1
 #define alloc_percpu(type) calloc(2, sizeof(type))
 #define free_percpu(p) free(p)
 #define softirq_count() softirq
@@ -75,6 +76,19 @@ static void __raw_spin_unlock(raw_spinlock_t *lock)
 	preempt_enable();
 }
 
+/* Most scenarios force the cache off to exercise S-first admission directly.
+ * The cache scenario below separately proves real hits and avoids duplicate
+ * translation-table probes after the key has been populated. */
+int kd_spin_native_cache;
+static unsigned int cache_queries;
+#define KD_EXE_NORMAL 0
+struct kd_exe_info { int pid, lock_kind, status_code; unsigned long RIP; };
+static struct kd_exe_info registered = {0, KD_EXE_LOCK_SPIN, KD_EXE_NORMAL, 0x1000};
+static struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long rip)
+{
+	cache_queries++;
+	return pid == 0 && rip == registered.RIP ? &registered : NULL;
+}
 static bool do_raw_spin_trylock(raw_spinlock_t *lock)
 {
 	CHECK(mock_preempt > 0);
@@ -84,27 +98,12 @@ static bool do_raw_spin_trylock(raw_spinlock_t *lock)
 	return true;
 }
 
-struct kd_exe_info {
-	int pid, lock_kind, status_code;
-	unsigned long RIP;
-};
-static struct kd_exe_info registered = { 0, KD_EXE_LOCK_SPIN, -1, 0x1000 };
-static struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long rip)
-{
-	return pid == (unsigned int)registered.pid && rip == registered.RIP ?
-		&registered : NULL;
-}
-
 struct orig_qspinlock;
 struct kd_spin_request;
+static bool expect_queue;
 static void kd_spin_lock_slowpath(struct orig_qspinlock *lock,
-				  unsigned long rsp, struct kd_spin_request *request)
-{
-	(void)request;
-	(void)lock;
-	(void)rsp;
-	CHECK(false); /* This fixture never represents a queue or JIT completion. */
-}
+	unsigned long rsp, struct kd_spin_request *request,
+	unsigned long ip, unsigned long bp, unsigned int abi);
 
 static bool kd_hotlock_is_promoted(unsigned long lock)
 {
@@ -122,6 +121,12 @@ static void kd_exe_add(int pid, unsigned long ip, int kind)
 	registrations++;
 }
 
+static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
+{
+	CHECK(abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+	kd_exe_add(pid, ip, kind);
+}
+
 static bool kd_exec_native_unlock(unsigned long lock, bool mutex)
 {
 	(void)lock;
@@ -130,6 +135,24 @@ static bool kd_exec_native_unlock(unsigned long lock, bool mutex)
 }
 
 #include "routing_production.h"
+
+/* Deterministic predecessor handoff, not a simulated JIT success. Assert the
+ * real acquisition has reserved exactly one ticket/pin before queue entry. */
+static void kd_spin_lock_slowpath(struct orig_qspinlock *lock,
+	unsigned long rsp, struct kd_spin_request *request,
+	unsigned long ip, unsigned long bp, unsigned int abi)
+{
+	struct kd_spin_ref found = { 0 };
+	(void)rsp; (void)bp;
+	CHECK(expect_queue && mock_preempt == 1 && ip == 0x1000);
+	CHECK(abi == KD_ENTRY_ABI_LEGACY || abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+	CHECK(kd_spin_entry_find((raw_spinlock_t *)lock, &found));
+	CHECK(found.entry == request->ref.entry && kd_spin_fast_idle());
+	CHECK(request->word == &kd_spin_entry_gate(&found)->word);
+	CHECK(request->word->val.counter & ~_Q_LOCKED_MASK_HL);
+	request->word->val.counter = _Q_LOCKED_VAL_HL;
+	expect_queue = false;
+}
 
 static raw_spinlock_t locks[KD_SPIN_GATE_SLOTS + 1];
 
@@ -269,116 +292,132 @@ static void bounded_fallback(void)
 	scenarios++;
 }
 
-/* A published, uncontended root must really own Linux L without a ticket or
- * private S. Test native-peer exclusion, queue priority, nesting, comm changes
- * and admission closing; timing and live queue/JIT are checked in the guest. */
+/* Uncontended S ownership precedes ticket allocation, with native L still
+ * excluding Linux peers. No previous site registration/cache is required. */
 static void native_fast_root(void)
 {
 	struct kd_spin_gate *gate = kd_spin_gate_find(&locks[0]);
 	struct kd_spin_ref ref = { 0 };
-	unsigned int adds;
 	unsigned long generation = gate->generation;
+	unsigned long sequence = kd_spin_entries[mock_cpu].sequence;
+	unsigned int adds = registrations;
 
-	registered.status_code = KD_EXE_NORMAL;
-	preempt_disable();
-	kd_spin_fast_remember(&locks[0], 0x1000, gate);
-	preempt_enable();
-	adds = registrations;
 	for (unsigned int i = 0; i < 4; i++) {
 		hook_lock(&locks[0]);
 		CHECK(locks[0].held && mock_preempt == 1);
-		CHECK(kd_spin_entry_task_active() && kd_spin_entry_native_active());
+		CHECK(kd_spin_entry_task_active() && !kd_spin_entry_native_active());
 		CHECK(!kd_spin_entry_find(&locks[0], &ref));
-		CHECK(!gate->word.val.counter && !gate->owner);
+		CHECK(gate->word.locked == 1 && gate->owner == current && gate->held);
 		CHECK(kd_spin_entries_check_idle() == -EBUSY);
+		CHECK(kd_spin_gates_check_idle() == -EBUSY);
 		hook_unlock(&locks[0]);
-		CHECK(!locks[0].held && mock_preempt == 0);
+		CHECK(!locks[0].held && !mock_preempt && !gate->word.val.counter);
+		CHECK(!gate->held && !gate->owner);
 		CHECK(kd_spin_entries_check_idle() == 0);
 	}
-	CHECK(registrations == adds && gate->generation == generation);
+	CHECK(registrations == adds + 4 && gate->generation == generation + 4);
+	CHECK(kd_spin_entries[mock_cpu].sequence == sequence);
 
-	/* Native fast ownership survives both nested hooks and lost target name. */
 	hook_lock(&locks[0]);
 	strcpy(current->comm, "renamed");
 	source_open = false;
 	CHECK(__is_kd_test() == 2);
 	hook_lock(&locks[1]);
 	CHECK(locks[0].held && locks[1].held && mock_preempt == 2);
+	CHECK(kd_spin_entry_find(&locks[1], &ref));
+	CHECK(!kd_spin_entry_native_active());
 	hook_unlock(&locks[1]);
 	CHECK(locks[0].held && !locks[1].held && mock_preempt == 1);
+	/* A concurrent tail must survive the root's byte-sized S release. */
+	gate->word.val.counter |= 0x10000;
 	hook_unlock(&locks[0]);
+	ref = (struct kd_spin_ref){ 0 };
 	CHECK(!locks[0].held && !mock_preempt && __is_kd_test() == 0);
-	CHECK(!kd_spin_fast_trylock(&locks[0], 0x1000));
-	strcpy(current->comm, "target");
-	source_open = true;
-
-	/* Either the original lock or a private queued tail must defeat the try. */
-	locks[0].held = true;
-	CHECK(!kd_spin_fast_trylock(&locks[0], 0x1000));
-	CHECK(locks[0].held && !mock_preempt && kd_spin_fast_idle());
-	locks[0].held = false;
-	gate->word.val.counter = 0x100;
-	CHECK(!kd_spin_fast_trylock(&locks[0], 0x1000));
-	CHECK(gate->word.val.counter == 0x100 && !locks[0].held && !mock_preempt);
-	CHECK(kd_spin_fast_acquire(&locks[0], 0x1000) == KD_SPIN_FAST_MISS_PINNED);
-	CHECK(mock_preempt == 1 && !locks[0].held && kd_spin_fast_idle());
-	CHECK(kd_spin_fast_acquire(&locks[0], 0x1000) == KD_SPIN_FAST_CONTEXT);
-	CHECK(mock_preempt == 1);
-	preempt_enable();
+	CHECK(gate->word.val.counter == 0x10000);
 	gate->word.val.counter = 0;
-	CHECK(!kd_spin_fast_trylock(&locks[0], 0x2000));
-	CHECK(!kd_spin_fast_trylock(&locks[1], 0x1000));
-	CHECK(kd_spin_entries_check_idle() == 0 && registrations == adds);
 
-	/* Combined entry: cached native L works for a caller that has lost its
-	 * target name, without inventing a JIT/ticket. Cold non-target sites must
-	 * retain Linux fallback; closing and nested ownership still route safely. */
-	strcpy(current->comm, "non-target");
-	CHECK(__is_kd_test() == 0);
+	/* Closing/non-target calls retain the Linux path, with no cached bypass. */
+	adds = registrations;
 	kd_spin_dispatch_lock(&locks[0], 0, 0x1000);
-	CHECK(locks[0].held && mock_preempt == 1 && !kd_spin_fast_idle());
-	CHECK(!kd_spin_entry_find(&locks[0], &ref) && registrations == adds);
-	source_open = false;
-	kd_spin_dispatch_lock(&locks[1], 0, 0x1000);
-	CHECK(locks[0].held && locks[1].held && mock_preempt == 2);
-	kd_spin_dispatch_unlock(&locks[1], 0, 0x1000);
+	CHECK(locks[0].held && mock_preempt == 1 && kd_spin_fast_idle());
 	kd_spin_dispatch_unlock(&locks[0], 0, 0x1000);
-	CHECK(!locks[0].held && !locks[1].held && !mock_preempt);
-	CHECK(kd_spin_fast_idle() && __is_kd_test() == 0);
+	source_open = true;
+	strcpy(current->comm, "non-target");
 	kd_spin_dispatch_lock(&locks[1], 0, 0x2000);
 	CHECK(locks[1].held && mock_preempt == 1 && kd_spin_fast_idle());
 	kd_spin_dispatch_unlock(&locks[1], 0, 0x2000);
 	CHECK(!locks[1].held && !mock_preempt && registrations == adds);
-	source_open = true;
 	strcpy(current->comm, "target");
-	/* A selected cache miss still uses the actual ticket/gate producer. */
-	kd_spin_dispatch_lock(&locks[1], 0, 0x1000);
-	CHECK(locks[1].held && mock_preempt == 1);
-	CHECK(kd_spin_entry_find(&locks[1], &ref));
+	kd_spin_dispatch_clobber_lock_v1(&locks[1], 0, 0x1000, 0);
+	CHECK(locks[1].held && mock_preempt == 1 && !kd_spin_fast_idle());
+	CHECK(!kd_spin_entry_find(&locks[1], &ref));
 	kd_spin_dispatch_unlock(&locks[1], 0, 0x1000);
-	CHECK(!locks[1].held && !mock_preempt && kd_spin_entries_check_idle() == 0);
-	registered.status_code = -1;
+	CHECK(!mock_preempt && kd_spin_entries_check_idle() == 0);
 	scenarios++;
 }
 
-/* A promoted root with an existing gate should hash L only once, in begin.
- * Cache population and physical claim/unlock must reuse that gate/ticket.
- * Force cache misses to measure the ticket path, not native-fast success. */
+/* Both uncontended and queued roots hash once. The contended ticket adopts
+ * that gate/pin, without creating a second gate lookup or a native fast owner. */
 static void request_reuses_gate(void)
 {
-	registered.status_code = KD_EXE_NORMAL;
+	struct kd_spin_gate *gate = kd_spin_gate_find(&locks[0]);
 	for (unsigned int i = 0; i < 100; i++) {
 		unsigned int before = gate_hashes;
-
-		memset(&kd_spin_fast_cpu[mock_cpu], 0,
-		       sizeof(kd_spin_fast_cpu[mock_cpu]));
+		unsigned long sequence = kd_spin_entries[mock_cpu].sequence;
+		expect_queue = i & 1;
+		gate->word.val.counter = expect_queue ? 0x10000 : 0;
 		hook_lock(&locks[0]);
-		CHECK(kd_spin_fast_cpu[mock_cpu].origin == &locks[0]);
-		CHECK(locks[0].held && mock_preempt == 1);
+		CHECK(!expect_queue && locks[0].held && mock_preempt == 1);
+		CHECK(kd_spin_entries[mock_cpu].sequence == sequence + (i & 1));
 		hook_unlock(&locks[0]);
-		CHECK(!locks[0].held && !mock_preempt);
+		CHECK(!locks[0].held && !mock_preempt && !gate->word.val.counter);
 		CHECK(gate_hashes == before + 1);
 	}
+}
+
+static void optional_native_cache(void)
+{
+	struct kd_spin_gate *gate = kd_spin_gate_find(&locks[0]);
+	struct kd_spin_ref ref = { 0 };
+	unsigned int queries = cache_queries, adds;
+
+	kd_spin_native_cache = true;
+	hook_lock(&locks[0]); /* first key: S/L owner, not a cached native owner */
+	CHECK(gate->held && !kd_spin_entry_native_active());
+	hook_unlock(&locks[0]);
+	CHECK(cache_queries == queries + 1);
+	adds = registrations;
+	hook_lock(&locks[0]);
+	CHECK(locks[0].held && !gate->word.val.counter && !gate->held);
+	CHECK(kd_spin_entry_native_active() && !kd_spin_entry_find(&locks[0], &ref));
+	CHECK(registrations == adds && cache_queries == queries + 1);
+	strcpy(current->comm, "renamed");
+	source_open = false;
+	hook_lock(&locks[1]);
+	CHECK(locks[1].held && mock_preempt == 2 && !kd_spin_entry_find(&locks[1], &ref));
+	hook_unlock(&locks[1]);
+	hook_unlock(&locks[0]);
+	CHECK(!mock_preempt && kd_spin_fast_idle());
+	source_open = true;
+	strcpy(current->comm, "target");
+	/* Busy S must bypass the native try. The unchanged cached key must not
+	 * trigger another kd_get_exe while the real ticket enters the queue. */
+	for (unsigned int i = 0; i < 100; i++) {
+		expect_queue = true;
+		gate->word.val.counter = 0x10000;
+		hook_lock(&locks[0]);
+		CHECK(!expect_queue && gate->held && mock_preempt == 1);
+		CHECK(kd_spin_entry_find(&locks[0], &ref));
+		hook_unlock(&locks[0]);
+		CHECK(!mock_preempt && !gate->word.val.counter);
+	}
+	CHECK(cache_queries == queries + 1);
+	kd_spin_native_cache = false;
+	kd_spin_dispatch_lock(&locks[0], 0, 0x1000);
+	CHECK(gate->held && gate->word.locked && !kd_spin_entry_native_active());
+	kd_spin_dispatch_unlock(&locks[0], 0, 0x1000);
+	CHECK(!mock_preempt && kd_spin_fast_idle());
+	scenarios++;
 }
 
 int main(void)
@@ -405,12 +444,13 @@ int main(void)
 	native_continuation_helpers();
 	native_fast_root();
 	request_reuses_gate();
+	optional_native_cache();
 	bounded_fallback();
 	CHECK(kd_spin_entries_check_idle() == 0 &&
 	      kd_spin_gates_check_idle() == 0);
 	CHECK(native_claims == native_releases && mock_preempt == 0);
 	kd_spin_entries_exit();
-	CHECK(scenarios == 14);
+	CHECK(scenarios == 15);
 	printf("[PASS] test_spin_routing (%u scenarios, %u checks, production hooks/acquisition/helpers)\n",
 	       scenarios, checks);
 	return 0;

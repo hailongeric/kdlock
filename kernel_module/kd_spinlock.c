@@ -310,28 +310,45 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	     unsigned long rip, unsigned long bp, unsigned int abi)
 {
 	struct kd_spin_request request = { 0 };
+	struct kd_spin_gate *gate;
 	struct qspinlock *word;
 	u32 val, cnt;
 
-	/* begin() checks task context before touching its pool.
-	 * Keep only the additional hook admission rules here. */
-	if (softirq_count() || current->migration_disabled ||
+	if (!in_task() || softirq_count() || current->migration_disabled ||
 	    kd_spin_entry_native_active())
 		goto native;
-	if (kd_spin_entry_begin((raw_spinlock_t *)lock, KD_SPIN_ENTRY_HOOK,
-				&request.ref))
-		goto native;
-	/* A native helper called by JIT must not reenter its private C stack. */
-	if (kd_exec_current_frame() || kd_exec_context_busy()) {
-		BUG_ON(kd_spin_entry_end(&request.ref));
-		goto native;
+	/* Pin before consulting per-CPU execution state. Like TCLock, attempt
+	 * the scheduling word before building a contended request. Unlike
+	 * TCLock, S is private: Linux peers still require us to acquire L. */
+	preempt_disable();
+	if (kd_exec_current_frame() || kd_exec_context_busy())
+		goto unpin_native;
+	gate = kd_spin_gate_get((raw_spinlock_t *)lock);
+	if (!gate)
+		goto unpin_native;
+	kd_spin_fast_remember((raw_spinlock_t *)lock, rip, gate);
+	word = request.word = &gate->word;
+	if (preempt_count() == 1) {
+		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
+		if (!val) {
+			if (unlikely(kd_spin_fast_claim(gate))) {
+				smp_store_release(&word->locked, 0);
+				goto unpin_native;
+			}
+			return;
+		}
+		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, gate,
+					       &request.ref))
+			goto unpin_native;
+	} else {
+		/* Nested/virtual ownership keeps the established ticket protocol. */
+		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, gate,
+					       &request.ref))
+			goto unpin_native;
+		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
+		if (!val)
+			goto acquired;
 	}
-	word = request.word = kd_spin_request_word(&request.ref);
-	kd_spin_fast_remember((raw_spinlock_t *)lock, rip,
-			      container_of(word, struct kd_spin_gate, word));
-	val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
-	if (!val)
-		goto acquired;
 	if (val == _Q_PENDING_VAL_HL) {
 		cnt = _Q_PENDING_LOOPS_HL;
 		val = atomic_cond_read_relaxed(
@@ -355,6 +372,8 @@ queue:
 acquired:
 	kd_spin_claim_origin(&request);
 	return;
+unpin_native:
+	preempt_enable();
 native:
 	__raw_spin_lock((raw_spinlock_t *)lock);
 }

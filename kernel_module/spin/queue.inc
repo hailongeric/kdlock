@@ -125,6 +125,27 @@ kd_spin_fetch_set_pending_acquire(struct qspinlock *word)
 	return atomic_fetch_or_acquire(_Q_PENDING_VAL_HL, &word->val);
 }
 
+/* Called only at initial batch entry, while this executor owns S/L and before
+ * any NUMA splicing. A producer publishes tail before linking prev->next.
+ * A different nonzero tail therefore proves a successor exists: wait for its
+ * release publication instead of mistaking that window for the final waiter.
+ * No wait is allowed for an actual tail node, or a detached deferred list. */
+static struct kd_spin_node *kd_spin_linked_successor(struct qspinlock *word,
+						    struct kd_spin_node *node)
+{
+	struct kd_spin_node *next = smp_load_acquire(&node->next);
+
+	if (!next) {
+		u32 tail = atomic_read_acquire(&word->val) & _Q_TAIL_MASK_HL;
+
+		if (tail && decode_tail(tail) != node) {
+			smp_cond_load_relaxed_sched(&node->next, VAL);
+			next = smp_load_acquire(&node->next);
+		}
+	}
+	return next;
+}
+
 #ifdef NUMA_AWARE
 __always_inline static void add_to_local_queue(struct kd_spin_node *node)
 {

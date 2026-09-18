@@ -18,6 +18,13 @@
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 
+普通 spin 的 `spin_native_cache` 装载参数默认开启；设为 `0` 可关闭原生站点
+缓存做对照，会话中不可切换。使用内核 `bint` 解析，sysfs 读回 `0/1`。
+缓存 miss 后 root 先尝试私有 S，竞争后才分配 ticket；
+成功的 S/L root 保留独立 physical hold。缓存键不变时不重复查询翻译表回填。
+具体锁与生命周期约束见 [DESIGN 4.1](../docs/DESIGN.md#41-native-lock-and-private-queue)，
+实测取舍见 [入口对照](../bench/spin_cacheline/results/20260918-spin-entry.md)。
+
 ## 私有实现组件
 
 下表按所属编译单元和原声明顺序列出组件；文件头说明用途和依赖。

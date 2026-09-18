@@ -35,6 +35,48 @@ hook 接入同一个 `spin_cacheline` 工作负载。锁字、队列、pending�
 全部退出、`quiescent=1`、delegated/completed 相等，再卸载后端，最后卸载 workload。
 该已知调用者边界不是通用 hook 热卸载保证。不得强制卸载。
 
+## 与 Linux 原生 spinlock 的协议兼容边界
+
+这里比较当前 x86 实验中的 Linux qspinlock 与本目录固定版本的 TCLock。
+**调用接口可以保持 `spin_lock()/spin_unlock()`，但同一把锁不能混用未修改的
+Linux qspinlock 与 TCLock 两套后端。** 当前目标锁必须在整个会话内由 TCLock
+独占管理，其他独立锁仍可使用 Linux 实现。
+
+| 环节 | Linux qspinlock | TCLock |
+| --- | --- | --- |
+| 无竞争/轻竞争 | CAS 获取，或走 pending 路径 | 保留类似 CAS/pending 路径，成功后自己执行正文 |
+| 排队与执行 | MCS 类队列组织获取顺序，每个调用者在自己的 CPU 上执行正文 | 队列节点另带 RSP、完成状态；combiner 可切到等待者栈代执行正文 |
+| unlock 与交接 | 释放物理锁后，后继才可获取；队首资格交接本身不授权正文执行 | 代理 unlock 保存续点，可直接切向下一 waiter，批内保持物理互斥 |
+| 等待结束 | 获取锁后执行自己的正文 | 被代理者在完成发布后，从自己的 unlock 返回链继续，不能重放正文 |
+| 现场 | 锁协议不另建可供其他 CPU 恢复的现场 | 保存六个 callee-saved、RSP，复用原生栈上的 CALL 返回地址，无完整 `pt_regs` 包 |
+
+锁字布局相似不等于队列兼容。两者都把 CPU/节点编号编码进 tail，但
+[Linux `decode_tail()`](https://github.com/torvalds/linux/blob/v6.1/kernel/locking/qspinlock.c)
+访问该 CPU 的 `qnodes[idx].mcs`，本目录 [komb.c](komb.c) 的同名函数访问
+`komb_nodes[idx]`。若 TCLock 等待者已经发布 tail，原生调用者排队时会将它
+解码到另一套节点，并把后继链接到错误位置；反向混入同样不成立。
+无竞争 CAS 或个别 pending 交接可能表面正常，不能据此证明慢路径互操作。
+
+TCLock 还使用 combiner、IRQ 和乱序解锁状态。代理 unlock 必须配合
+[context.S](context.S) 保存续点、切栈，离开借用栈后才能 release 发布完成；
+直接替换为原生 unlock 会绕过这套协议。所谓“其他 CPU 抢锁”只允许按协议
+竞争并在条件满足后获取，不表示可以强行夺走仍由执行者持有的锁。
+
+因此保留 API 的前提是同一目标锁的所有访问入口都统一到兼容协议。当前
+[provider.c](provider.c) 只接管目标普通 spin 入口；它没有给这把目标锁提供
+未修改原生调用者、绕过 hook 的调用、IRQ/BH/irqsave 或 trylock 的混用保证。
+三方 benchmark 在不同会话中切换后端，不是这些调用者同时竞争同一把锁的测试。
+切换原生栈也不会自动切换 Linux `current`、GS 或 per-CPU 身份；前述全局计数器
+负载的通过结果不扩大为任意临界区的透明替换保证。
+
+kdlock 的选择不同：原生参与者只访问 Linux 锁 **L**，代理队列使用私有字 **S**，
+实际执行者必须获取 L 才能访问正文。普通代理批次可以一直持有 L，而不逐请求
+重新获取它。L/S 带来的部分成本用于原生互操作；若要改成 TCLock 的单锁字，
+必须统一该锁所有参与者的协议，或另行实现并验证互操作层，不能只删掉 L。
+所有权与生命周期规则统一见 [DESIGN 4.1](../docs/DESIGN.md#41-native-lock-and-private-queue)，
+性能收益及抵消因素见[执行路径对照](../bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)。
+本节是源码协议审查，没有新增混用测试，也不宣称不支持的混用方式已经验证。
+
 ## 文件与验证入口
 
 | 文件 | 用途 |
