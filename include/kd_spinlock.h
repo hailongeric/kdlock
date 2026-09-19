@@ -19,18 +19,25 @@ struct kd_spin_jit_context;
 /* Stable request storage, independent of the recyclable scheduling node.
  * Ordinary completion has one waiter user. Native handoff adds an owner user;
  * remote requests also retain the root packet until their own final release. */
+struct kd_spin_diag_slot;
+
 struct kd_spin_exec_request {
-	struct kd_exec_frame frame;
-	struct kd_spin_exec_request *packet_owner;
+	/* The common producer/combiner/restore metadata precedes the frame.
+	 * Align pool slots so another request's release cannot invalidate this
+	 * header. Keep one authoritative value for each state discriminator. */
+	struct kd_spin_diag_slot *diag __attribute__((aligned(64)));
 	atomic_t users;
-	/* Request-owned return/routing state survives recycling of the node. */
-	unsigned long irq_flags;
 	bool jit_waiter;
 	bool jit_retry;
 	bool native_resume;
 	bool pinned_context;
 	bool native_regs_decoded;
+	struct kd_exec_frame frame;
+	/* These fields survive node reuse but are not ordinary JIT admission
+	 * inputs. The frame/packet is still retained until the last user exits. */
+	struct kd_spin_exec_request *packet_owner;
 	struct kd_spin_jit_context *jit_context;
+	unsigned long irq_flags;
 	u64 queued_at_ns;
 };
 
@@ -47,7 +54,13 @@ struct kd_spin_node {
 		struct { u8 completed; u8 locked; };
 		struct { u16 locked_completed; };
 	};
+	/* Immutable while queued; hints only, never restoration/admission state.
+	 * Flags occupy old padding; two addresses make this node one cache line. */
+	u8 prefetch_full;
+	u8 prefetch_complex;
 	struct kd_spin_exec_request *execution;
+	struct pt_regs *prefetch_regs;
+	unsigned long prefetch_sp;
 };
 
 #define _Q_COMPLETED_OFFSET (_Q_LOCKED_OFFSET_HL + _Q_LOCKED_BITS_HL)

@@ -467,6 +467,28 @@ int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
 	return 0;
 }
 
+/* A normal batch root has no parent, remote/native publication or private
+ * source lease to retire. Validate its physical owner and final packet using
+ * the same terminal check as the generic path, then unbind in one operation.
+ * The queue layer still owns completion publication and successor selection. */
+int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+	int ret;
+
+	if (!frame || frame->complex_ready || !frame->batch_lease ||
+	    ctx->depth != 1 || ctx->owner != current || ctx->top != frame)
+		return -EINVAL;
+	ret = kd_exec_frame_complete_single_spin(frame);
+	if (ret)
+		return ret;
+	ctx->depth = 0;
+	ctx->top = NULL;
+	ctx->owner = NULL;
+	frame->state = KD_EXEC_FRAME_UNUSED;
+	return 0;
+}
+
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 				     const struct pt_regs *regs)
 {

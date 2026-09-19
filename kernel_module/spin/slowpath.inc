@@ -44,7 +44,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	/* Publish the clock with the node, before any combiner can service it. */
 	curr_node->execution->queued_at_ns = kd_exe_queue_timing_start();
 	old_tail = xchg_tail(word, tail);
-	kd_spin_diag_waiter_enter(lock);
+	curr_node->execution->diag = kd_spin_diag_waiter_enter(lock);
 
 	if (old_tail & _Q_TAIL_MASK_HL) {
 		prev_node = decode_tail(old_tail);
@@ -83,7 +83,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		if (READ_ONCE(curr_node->execution->native_resume)) {
 			this_cpu_ptr(&kd_spin_nodes[0])->count--;
 			kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
-			kd_spin_diag_waiter_exit(lock);
+			kd_spin_diag_waiter_exit(curr_node->execution->diag);
 			kd_spin_set_resume_node(curr_node);
 			return 5;
 		}
@@ -108,7 +108,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 #endif
 				if (kd_spin_is_ooo(parent_lock)) {
 					print_debug("Waiter unlocked OOO\n");
-					kd_spin_diag_waiter_exit(lock);
+					kd_spin_diag_waiter_exit(curr_node->execution->diag);
 					kd_spin_set_resume_node(curr_node);
 					return 1;
 				}
@@ -124,7 +124,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 				(void *)(unsigned long)(curr_node->rsp + 256));
 			prefetchw(
 				(void *)(unsigned long)(curr_node->rsp + 320));
-			kd_spin_diag_waiter_exit(lock);
+			kd_spin_diag_waiter_exit(curr_node->execution->diag);
 			kd_spin_set_resume_node(curr_node);
 			return 3;
 		}
@@ -263,7 +263,7 @@ queue_head:
 	}
 	word->locked = prev_locked_val;
 
-	kd_spin_diag_waiter_exit(lock);
+	kd_spin_diag_waiter_exit(curr_node->execution->diag);
 	kd_spin_set_resume_node(curr_node);
 	return READ_ONCE(curr_node->execution->jit_retry) ? 4 : 2;
 release:
@@ -275,7 +275,7 @@ release:
 	 */
 	this_cpu_ptr(&kd_spin_nodes[0])->count--;
 	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
-	kd_spin_diag_waiter_exit(lock);
+	kd_spin_diag_waiter_exit(curr_node->execution->diag);
 	kd_spin_set_resume_node(curr_node);
 	return READ_ONCE(curr_node->execution->jit_retry) ? 4 : 0;
 }
@@ -356,6 +356,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	execution->frame.packet_state = input->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ?
 		KD_PACKET_MINIMAL : KD_PACKET_FULL;
 	execution->frame.spin_origin = request->ref;
+	kd_spin_prepare_prefetch(curr_node, &execution->frame.regs);
 
 	ret = __kd_spin_lock_longjmp(lock, tail, curr_node, request);
 	/* Delegated waiters leave through the restore assembly, which drops this

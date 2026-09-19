@@ -6,6 +6,84 @@
 生产 provider 的专用协议观察器在 `tests/kernel/`。
 性能对比使用 [bench/README.md](../bench/README.md) 的独立入口。
 
+<a id="spin-state-access"></a>
+
+## 2026-09-18：诊断引用、热字段与普通批次处理
+
+recovery guest `6.1.159-kdclobber1` 上，**10 个基础/受影响单元入口、6 项 live
+全部通过并排空**。没有重建内核或运行全量套件。
+
+```sh
+make -C tests/unit run PY_TESTS='spin/test_spin_batch.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py spin/test_spin_clobber.py spin/test_spin_wwjump.py spin/test_spin_wait.py execution/test_jit_entry_scope.py execution/test_exec_capacity.py'
+python3 tests/regression.py --case module --case mode-0 --case mode-2 \
+  --case mode-8 --case mixed-spin --case mode-3 --timeout 180 \
+  --output /root/kdlock-evidence/spin-state-20260918/live-repeat
+```
+
+按操作手册配置 KDIR、固定 venv、已核实的 recovery 快照及外层 timeout。
+本次单元按变更范围分次运行，证据为 `unit-1/2/4.log` 与 `unit-capacity.log`，
+不是声称上述合并命令整组重跑。首次两个夹具仍断言旧偏移；修正后恢复夹具又
+暴露其手写 request 模型滞后，已改为直接提取生产布局并补齐 `u64` 类型。
+失败尝试保留在 `unit-1/2/3.log`，通过项均使用最终运行代码。
+
+batch 夹具验证 slot 身份复用、禁用状态变化、表满/null 处理、128 字节诊断
+slot 的计数隔离，以及 768 字节对齐 request 的热字段边界。生产普通 root 退休
+验证 owner/depth、复杂状态、租约、两种 ABI 终态和重复退休拒绝。
+真实恢复汇编执行 160 次完成/重试/native/精简返回；等待栈夹具采样 96 次。
+预取保护页探针继续证明消费时不读取 request 或实际包；新布局预热两条头部行。
+准入测试保留 source 关闭、发布状态和 hostcall/native 不重放检查及 mutation。
+
+live 包括普通 spin、hostcall、mode-8 三阶段嵌套/remote、原生 spin 互操作和
+legacy mutex。保留实际 JIT、owner/ACK、完整数据、IRQ/preempt 和退休/排空判定。
+证据目录为 guest `/root/kdlock-evidence/spin-state-20260918/`；性能与完整归档索引
+见[状态访问对照](../bench/spin_cacheline/results/20260918-state-access.md)。
+
+<a id="spin-prefetch-hints"></a>
+
+## 2026-09-18：发布前准备后继预取地址
+
+`spin_prefetch=2` 在原生/虚拟生产者发布队列前准备地址提示，combiner 不再为
+预取解引用下一请求的 frame、task 或寄存器包。节点增至 64 字节；恢复包、
+request 引用、原生 L、owner/ACK 和两元素 wrapper ABI 保持原协议。
+装载模式 0/1 分别关闭后继预取、保留旧查询策略，其他既有栈预取不变。
+
+recovery guest `6.1.159-kdclobber1` 中，**7 个基础/受影响单元入口通过**：
+
+```sh
+make -C tests/unit run PY_TESTS='spin/test_spin_batch.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py spin/test_spin_clobber.py spin/test_spin_wwjump.py'
+```
+
+batch 夹具编译真实生产 helper 和布局，核对 64 字节节点、独立/借用寄存器包、
+FULL/MINIMAL、复杂/普通状态和七个栈边界位置的预取地址集合。每次准备覆盖
+旧节点提示，消费不改寄存器、请求和完成标记；NULL/IRQ/缺少 task 的路径也
+保留。使用 `mprotect(PROT_NONE)` 将 request 和实际寄存器包设为不可读，
+prepared 消费仍完成；关闭模式甚至不读取无效节点指针。该测试证明地址读取
+边界，不测硬件预取延迟。其他夹具保留真实队列生产/交接、13 项 mutation、
+128 个 poisoned clobber 入口和 16 个新旧 ABI 混合入口。
+
+同一运行代码的 **5 项 live 全部通过并排空**：module、mode-0 普通 spin、
+mode-2 hostcall、mode-8 嵌套/远端三阶段、mixed-spin 原生互操作。mode-8 的
+双 root 纯 JIT 与 quota/native/首 waiter 退出阶段，各验证 36023 次变换和
+4 次实际 JIT body，真实 owner 与 ACK 正确；quota 沿用 `mutex_jit=1`。
+所有用例退出码 0，无检测到的内核错误，离线证据校验通过。
+
+```sh
+python3 tests/regression.py --case module --case mode-0 --case mode-2 \
+  --case mode-8 --case mixed-spin --timeout 180 \
+  --output /root/kdlock-evidence/spin-prefetch-20260918/live-prepared
+```
+
+命令使用既有实验 KDIR、固定依赖 venv、recovery 快照确认及外层 timeout。
+普通/SELFTEST 和 benchmark provider 均在 guest 构建，保留既有 objtool
+自定义栈/返回告警。首次构建缺少模块参数声明头文件，补上 `<linux/module.h>`
+后构建与 live 通过；失败日志保留。未重建内核、未运行全量套件。
+证据在 guest `/root/kdlock-evidence/spin-prefetch-20260918/`，包括 `unit-1.log`、
+`build-1/2.log`、`live-prepared/` 及审核；`node-layout.txt` 和 `spin-all.asm`
+记录真实节点偏移和 prepared 分支仅从 node 读取提示的汇编。
+性能四路 120 场与长批次 20 场的输入、结果和完整归档 SHA256 统一见
+[预取结果页](../bench/spin_cacheline/results/20260918-prefetch.md)。宿主独立复核
+313 个 live 运行/测试文件与当前工作区一致；文档后补，不记作重跑。
+
 <a id="spin-entry-first-cas"></a>
 
 ## 2026-09-18：先尝试获取 S，再准备竞争入口

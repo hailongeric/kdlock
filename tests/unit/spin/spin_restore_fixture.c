@@ -11,12 +11,10 @@
 #include <string.h>
 struct task_struct { int pid; };
 struct list_head { struct list_head *next, *prev; };
+typedef int atomic_t;
+typedef uint64_t u64;
 #include "restore_types.h"
-struct kd_spin_exec_request {
-	struct kd_exec_frame frame;
-	struct kd_spin_exec_request *packet_owner;
-	int users;
-};
+
 #define noinline __attribute__((noinline))
 #define BUG_ON(x) assert(!(x))
 #define notrace
@@ -69,8 +67,8 @@ asm(".text\n.type capture,@function\ncapture:\n"
 int main(void)
 {
 	volatile unsigned int iteration;
-	_Static_assert(offsetof(struct kd_spin_exec_request, frame.regs) == 64,
-		       "restore packet follows the hot header");
+	_Static_assert(offsetof(struct kd_spin_exec_request, frame.regs) == 96,
+		       "restore packet follows request metadata and the admission header");
 	for (iteration = 0; iteration < 160; iteration++) {
 		unsigned long flags, *packet = (void *)&execution.frame.regs;
 		volatile unsigned int mode = iteration < 96 ? iteration % 3 : iteration % 2;

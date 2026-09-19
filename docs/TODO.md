@@ -9,6 +9,46 @@ Complete the main behavior before optional features and performance work.
 
 ## Current Checkpoint
 
+**2026-09-19, current spin three-way comparison:** the optimized runtime was
+measured against Linux and complete TCLock with the same clobber caller.
+[Ninety comparison sessions and thirty long single-thread sessions](../bench/tclock_compare/results/20260919-state-access.md)
+pass and drain, totaling 375 million complete operations; three basic/assembly
+unit entrypoints also pass. At 20 threads, kdlock reaches 2.965/2.904 Mops/s
+for 1/16 cacheline, 29.0%/71.1% above TCLock, with about 99.8% actual JIT.
+Four-thread throughput remains 45.7%/27.9% below TCLock. Delegation variation
+and whole-operation single-thread costs remain explicit; this does not isolate
+save/restore costs. No runtime changes, legacy rerun, new profile or full suite.
+Concurrent cold-promotion stalls remain unresolved.
+
+**2026-09-18, ordinary spin state access:** batches and queued requests retain
+stable diagnostic identities; waiter counts occupy separate cache lines.
+Aligned requests place common admission metadata in the first two lines,
+without another mutable snapshot. Ordinary admission checks readiness once in
+prepare, and normal roots use terminal validation plus direct physical unbind.
+Complex/source/owner/ACK semantics and both wrapper ABIs remain unchanged.
+[Ten basic/affected units and six live cases](../tests/README.md#spin-state-access)
+pass; the [100-session staged comparison](../bench/spin_cacheline/results/20260918-state-access.md)
+measures +68.6%/+66.0% at 20 threads and 1/16 cacheline, with about 99.8% actual
+JIT. Four-thread differences are smaller and partly change the native/JIT mix.
+Twenty long single-thread sessions also pass, with +0.04/+0.23 ns median
+complete-operation costs (below 0.5%). Shared waiter-count atomics, complex-path identity lookups and JIT body costs
+remain. No kernel rebuild, full suite or new TCLock/native comparison.
+
+**2026-09-18, producer-prepared successor prefetch:** queue nodes now carry
+immutable hint addresses and flags in 64 bytes. Ordinary producers use their
+inline packet; virtual producers keep the retained parent packet. The default
+consumer no longer loads the next frame/task/register packet to discover hint
+addresses. Read-only `spin_prefetch=0/1/2` allows off/consumer/prepared policies;
+request lifetime, L/S, admission and owner/ACK remain unchanged.
+[Seven affected/basic units and five live cases](../tests/README.md#spin-prefetch-hints)
+pass, including protected-page hints, nested/remote/native completion and drain.
+The [120-session comparison](../bench/spin_cacheline/results/20260918-prefetch.md)
+passes: 20-thread throughput improves 7.3%/9.3% against the old image, with
+about 99.8% actual JIT; four-thread results are essentially unchanged. Twenty
+long single-thread sessions show no observed native-operation regression.
+Same-image policy comparisons and the old-layout baseline remain separate.
+No full suite, kernel rebuild, fresh TCLock comparison or general speedup claim.
+
 **2026-09-18, spin acquisition ordering and cache policy:** an ordinary root
 attempts private S before reserving a ticket, reusing the pinned gate on
 contention. A successful root keeps the existing physical hold in a separate
@@ -1043,7 +1083,7 @@ handoff and bounded combining. The spin implementation now follows the
       it in place; keep parent/child owner ledgers independent.
 - [x] Skip the out-of-line remote handler for an empty virtual-waiter mailbox;
       retain per-iteration notification checks and the existing unlock/ACK path.
-- [x] Separate the 64-byte ordinary frame header from lazily initialized cold
+- [x] Separate the 72-byte ordinary frame header from lazily initialized cold
       ledger/control/checkpoint state; keep the logical register packet shared.
 - [x] Add the lock-side resident batch shell and versioned wrapper entry. Normal
       single-lock requests bypass the generic executor; complex exits are
@@ -1058,19 +1098,22 @@ handoff and bounded combining. The spin implementation now follows the
 - [x] Add matched complete TCLock/Linux/kdlock measurements and first hardware
       hotspot attribution; see the [three-way results](../bench/tclock_compare/results/20260918-native-stack.md).
       Hotspots are not independent causal costs or an isolated save-set experiment.
-- [ ] Reduce per-request lock-side callback/helper overhead and duplicate
-      readiness/frame checks. The unified C loop already removes the old
-      callback shell and grouped saves; dependent successor/frame/task reads
-      remain measured hotspots. Keep queue selection outside generated JIT
-      code and preserve final admission/lifetime checks.
+- [x] Reduce ordinary-root helper overhead and duplicate readiness/frame checks:
+      retain the unified C loop, check readiness in final batch prepare, and
+      combine terminal validation with physical unbind. Complex paths keep
+      their existing checks; queue selection remains outside generated JIT.
+- [x] Prepare bounded successor-prefetch addresses before queue publication,
+      and group ordinary request metadata in the first two cache lines.
+      Compare off/lookup/prepared modes and retain one authoritative state.
 - [x] Reduce ordinary wrapper-entry and waiter-restoration save sets with
       caller-clobber v1: normal paths use RIP/RSP/RBP, with live values owned
       by the caller compiler. Legacy and intermediate hostcall/CALL-miss/native
       continuations retain their required complete state.
-- [ ] Cache diagnostic slot references and reduce shared live waiter-count
-      updates while preserving workload/test observations; the JIT-disable
-      latch is not a pure statistical counter. First isolate immutable identity
-      from the mutable waiter count and measure an independent A/B.
+- [x] Cache diagnostic slot references and separate immutable identity/disable
+      state from the live waiter-count line; measure these stages separately.
+      Retain acquire disable checks, live atomic counts and existing observers.
+- [ ] Measure the remaining shared waiter-count update cost before changing
+      accounting semantics; the JIT-disable latch is not a statistical counter.
 - [ ] Diagnose the c16/t4/clobber concurrent cold-promotion stall; single-CPU
       preparation in the completed benchmark does not close this failure.
 - [ ] Measure generated entry dispatch and address/virtual-stack rewriting

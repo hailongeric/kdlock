@@ -12,6 +12,8 @@ struct kd_spin_batch {
 	struct kd_spin_node *next;
 	struct kd_spin_request *request;
 	struct kd_exe_info *exe;
+	/* Slots are append-only until drained module shutdown. */
+	struct kd_spin_diag_slot *diag;
 	unsigned long entry_ip;
 	struct qspinlock *lock;
 	struct kd_spin_node *cursor;
@@ -34,15 +36,15 @@ struct kd_spin_batch {
  * Spin is the fixed backend of this batch; a foreign registration still goes
  * through the ordinary dispatcher rejection, without becoming a cache hit. */
 static struct kd_exe_info *
-kd_spin_batch_find_ready(struct kd_spin_batch *batch, unsigned long entry_ip)
+kd_spin_batch_lookup(struct kd_spin_batch *batch, unsigned long entry_ip)
 {
 	struct kd_exe_info *exe = batch->exe;
 
 	if (exe && batch->entry_ip == entry_ip &&
 	    READ_ONCE(exe->lock_kind) == KD_EXE_LOCK_SPIN)
-		return kd_exe_entry_is_ready(exe, 0, entry_ip) ? exe : NULL;
+		return exe;
 
-	exe = kd_exe_find_ready(0, entry_ip);
+	exe = kd_get_exe(0, entry_ip);
 	if (exe && READ_ONCE(exe->lock_kind) == KD_EXE_LOCK_SPIN) {
 		batch->exe = exe;
 		batch->entry_ip = entry_ip;
@@ -50,54 +52,14 @@ kd_spin_batch_find_ready(struct kd_spin_batch *batch, unsigned long entry_ip)
 	return exe;
 }
 
-/* Called while the successor is still queued, before current execution can
- * release the outer lock. Touch only prepared packets: a virtual child aliases
- * its logical parent's registers/stack, not the per-CPU node-zero RSP used by
- * TCLock. Hints confer neither ownership nor permission to execute. */
-static void kd_spin_prefetch_request(struct kd_spin_node *node)
+/* Resolution is not admission. Ordinary roots validate publication once in
+ * kd_exe_spin_batch_prepare; the generic path needs its own readiness check. */
+static struct kd_exe_info *
+kd_spin_batch_find_ready(struct kd_spin_batch *batch, unsigned long entry_ip)
 {
-	struct kd_spin_exec_request *execution;
-	struct kd_exec_frame *frame;
-	struct pt_regs *regs;
-	struct task_struct *task;
-	unsigned long sp, base;
-	unsigned int offset;
+	struct kd_exe_info *exe = kd_spin_batch_lookup(batch, entry_ip);
 
-	if (!node || check_irq_node(node))
-		return;
-	execution = READ_ONCE(node->execution);
-	if (!execution)
-		return;
-	regs = READ_ONCE(execution->frame.regs_ref);
-	if (!regs)
-		return;
-	frame = &execution->frame;
-	if (frame->packet_state == KD_PACKET_FULL) {
-		for (offset = 0; offset < sizeof(*regs); offset += L1_CACHE_BYTES)
-			prefetchw((char *)regs + offset);
-	} else {
-		prefetchw(&regs->bp);
-		prefetchw(&regs->sp);
-	}
-	prefetchw(frame);
-	if (READ_ONCE(frame->complex_ready)) {
-		prefetchw(&frame->jit_lock_addr[0]);
-		prefetchw(&frame->jit_lock_kind[0]);
-		prefetchw(&frame->jit_lock_node[0]);
-	}
-
-	/* The queued logical waiter keeps its task stack alive through ACK. Only
-	 * warm the virtual SP and adjacent push slot within that stack; no read,
-	 * copy or guessed whole-stack range is needed. */
-	task = READ_ONCE(node->execution->frame.logical_task);
-	if (!task)
-		return;
-	sp = READ_ONCE(regs->sp);
-	base = (unsigned long)task_stack_page(task);
-	if (sp >= base + sizeof(unsigned long) && sp - base < THREAD_SIZE) {
-		prefetchw((void *)sp);
-		prefetchw((void *)(sp - sizeof(unsigned long)));
-	}
+	return kd_exe_entry_is_ready(exe, 0, entry_ip) ? exe : NULL;
 }
 
 /* A's executor keeps its ticket pin and local frame stack, not ownership of
@@ -215,7 +177,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 			lock);
 		return KD_EXE_NO_RUN;
 	}
-	if (kd_spin_jit_is_disabled(lock)) {
+	if (kd_spin_jit_is_disabled(batch->diag)) {
 		kd_spin_diag_record(lock, KD_SPIN_DIAG_NATIVE_FALLBACK,
 				    kd_spin_lock_stack_depth(ptr));
 		return KD_EXE_NO_RUN;
@@ -236,7 +198,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 					   curr_node->execution->frame.regs_ref->ip;
 	exe = kd_spin_batch_find_ready(batch, entry_ip);
 	if (!exe) {
-		kd_spin_debug_jit_not_ready(lock,
+		kd_spin_debug_jit_not_ready(batch->diag,
 					    kd_spin_lock_stack_depth(ptr));
 		kd_exe_add_abi(0, entry_ip, KD_EXE_LOCK_SPIN,
 		               curr_node->execution->frame.entry_abi);
@@ -432,7 +394,7 @@ finish_frame:
 	}
 
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
-		kd_spin_debug_jit_success(lock, kd_spin_lock_stack_depth(ptr));
+		kd_spin_debug_jit_success(batch->diag, kd_spin_lock_stack_depth(ptr));
 		KD_PR_DEBUG("delegation ok lock=%px depth=%u\n", lock,
 			    kd_spin_lock_stack_depth(ptr));
 	} else {
@@ -472,9 +434,9 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 
 	if (execution->jit_waiter || execution->pinned_context ||
 	    !execution->native_regs_decoded || kd_exec_current_frame() ||
-	    kd_spin_lock_stack_depth(ptr) != 1 || kd_spin_jit_is_disabled(batch->lock))
+	    kd_spin_lock_stack_depth(ptr) != 1 || kd_spin_jit_is_disabled(batch->diag))
 		return false;
-	exe = kd_spin_batch_find_ready(batch, frame->entry_ip);
+	exe = kd_spin_batch_lookup(batch, frame->entry_ip);
 	if (!exe)
 		return false;
 	/* Eligibility precedes binding so a legacy upload needs no undo/pop. */
@@ -520,15 +482,19 @@ static void kd_spin_batch_run(void *opaque)
 			next_node = batch->next;
 			if (kd_exe_spin_batch_completed(&batch->call)) {
 				struct kd_exec_frame *frame = &curr_node->execution->frame;
-				BUG_ON(kd_exec_frame_complete_single_spin(frame));
+
 #ifdef KDLOCK_SELFTEST
+				/* Observers require the completed ledger before its pop. */
+				BUG_ON(kd_exec_frame_complete_single_spin(frame));
 				kd_spin_selftest_frame_end(batch->frame_event, frame,
 							   KD_EXE_RUN_TO_UNLOCK);
+				BUG_ON(kd_exec_frame_pop(frame, NULL));
+#else
+				BUG_ON(kd_exec_frame_retire_single_spin(frame));
 #endif
 				kd_exe_queue_timing_end(false,
 					&curr_node->execution->queued_at_ns, batch->queue_end);
-				BUG_ON(kd_exec_frame_pop(frame, NULL));
-				kd_spin_debug_jit_success(lock, 1);
+				kd_spin_debug_jit_success(batch->diag, 1);
 				batch->pending = false;
 				batch->fast_previous = true;
 				exe_flag = 0;
@@ -653,7 +619,8 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	}
 
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
-	kd_spin_debug_combiner(lock, kd_spin_lock_stack_depth(ptr));
+	batch.diag = kd_spin_diag_find((unsigned long)lock);
+	kd_spin_debug_combiner(batch.diag, kd_spin_lock_stack_depth(ptr));
 
 	batch.lock = lock;
 	batch.cursor = curr_node;

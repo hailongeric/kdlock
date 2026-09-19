@@ -17,7 +17,13 @@ hook，避免将绕过分派的 direct-call 结果冒充等价后端。原生 ar
 本对照不覆盖二者同时竞争同一目标锁。原因和访问入口限制见
 [协议兼容边界](../../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界)。
 
-[2026-09-18 实测结果](results/20260918-native-stack.md)：180/180 场稳态测量正确
+[2026-09-19 当前版本复测](results/20260919-state-access.md)：clobber ABI 三方
+90 场对照及 30 场长批次单线程检查全部正确排空。20 线程、1/16 cacheline 下，
+kdlock 中位吞吐为 2.965/2.904 Mops/s，比本轮 TCLock 高 29.0%/71.1%，
+实际 JIT 约 99.8%；4 线程仍比 TCLock 低 45.7%/27.9%。结果保留三方代理比例
+与波动，不能将收益全部归因于某一项状态访问优化。
+
+此前 [2026-09-18 实测结果](results/20260918-native-stack.md)：180/180 场稳态测量正确
 并排空，竞争配置 TCLock 中位吞吐为 kdlock 的 1.06–2.05 倍；另有六场独立
 硬件采样和 20 场长批次单线程原生检查。结果页包含全部 ABI、代理比例、失败
 记录和开销分析，不能只取最快的 TCLock 样本。
@@ -79,5 +85,6 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 运行器保留源文件、上游身份、私有 kdlock provider 副本、两份 workload、后端
 二进制、内核 Build ID、逐场数据与正文计数。`records.json` 包含未执行/失败
 记录；`summary.json/csv` 只从数据正确且已排空的样本计算中位数。
-性能与限制以[实际结果页](results/20260918-native-stack.md)为准；本轮没有验证
+当前性能与限制见[最新结果页](results/20260919-state-access.md)，两种 ABI 的
+历史矩阵与采样见[首次结果页](results/20260918-native-stack.md)；尚未验证
 任意 task/per-CPU 临界区、跨 NUMA 或嵌套 TCLock。

@@ -1030,7 +1030,7 @@ int main(void)
 	enum kd_exec_lock_kind kind;
 
 	CHECK(sizeof(struct pt_regs) == 168 &&
-	      offsetof(struct kd_exec_frame, regs) == 64);
+	      offsetof(struct kd_exec_frame, regs) == 72);
 	lazy_single();
 	shared_requests();
 	if (failures)

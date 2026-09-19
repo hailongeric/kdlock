@@ -32,6 +32,7 @@
 #include <linux/topology.h>
 #include <linux/vmalloc.h>
 #include <linux/kernel.h>
+#include <linux/module.h>
 
 /* This file owns the public entry/return trampolines below. The ordered
  * components supply private state -> queues -> execution -> nested requests.
@@ -46,6 +47,8 @@
 #include "spin/queue.inc"
 
 #include "spin/request.inc"
+
+#include "spin/prefetch.inc"
 
 #include "spin/combiner.inc"
 
@@ -248,7 +251,7 @@ kd_spin_resume_completed(struct kd_spin_node *node)
 		kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
 	else
 		kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);
-	kd_spin_diag_waiter_exit((struct qspinlock *)node->execution->frame.outer_lock_addr);
+	kd_spin_diag_waiter_exit(node->execution->diag);
 	kd_spin_resume_waiter(node, mode);
 	__builtin_unreachable();
 }

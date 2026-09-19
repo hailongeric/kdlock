@@ -10,7 +10,7 @@
 
 ## 1. 当前进展
 
-截至 **2026-09-18**，spinlock 和 mutex 默认均支持显式 GS 代理；被代理线程
+截至 **2026-09-19**，spinlock 和 mutex 默认均支持显式 GS 代理；被代理线程
 等待结果时均保持禁止抢占并 PAUSE 轮询，不睡眠或调度。spin 接受 IRQ-off
 task 入口，准备与 combiner 使用 task 内核栈；物理 waiter 在关本地 IRQ 后，
 先切到每 CPU 预分配的 8KB shadow 等待栈再发布/轮询，完成时回到 task 栈
@@ -18,7 +18,8 @@ task 入口，准备与 combiner 使用 task 内核栈；物理 waiter 在关本
 frame 与锁记录按有效深度复用，push/pop 不再整块清零；普通单锁完成跳过
 通用清理链。spin waiter 发布前在独立预分配 request 中准备 frame/寄存器，
 combiner 按指针绑定；复杂/native/remote 路径共用逻辑包，物理 owner 状态独立。
-source/provider lease 按批次持有，request 引用保留到最后读取与 owner ACK/pop。
+诊断 slot 由批次/请求复用，计数与身份分行；普通请求元数据集中在前两条
+缓存行，普通完成合并终态检查和解绑。source/provider lease 按批次持有，request 引用保留到最后读取与 owner ACK/pop。
 独立 `kdclobber1` 内核的普通 spin 使用 caller-clobber v1：编译器保存活跃值，
 正常请求只捕获/恢复 RIP/RSP/RBP，中途退出完整物化逻辑 GPR。新旧及混合
 ABI 在同一个 combiner C 帧中连续执行；IRQ/BH/irqsave/trylock 和 mutex
@@ -67,6 +68,8 @@ ABI 在同一个 combiner C 帧中连续执行；IRQ/BH/irqsave/trylock 和 mute
 
 | 已完成范围 | 结果与证据入口 |
 | --- | --- |
+| 当前版本三方复测 | [9/19 clobber ABI 对照](../bench/tclock_compare/results/20260919-state-access.md)：90 场三方测量和 30 场长批次单线程检查全部正确排空，共 3.75 亿次操作；3 个基础/汇编入口通过。20 线程 kdlock 超过 TCLock，4 线程仍落后，代理比例与波动单独报告。 |
+| Spin 状态访问 | [诊断/布局/普通批次五阶段对照](../bench/spin_cacheline/results/20260918-state-access.md)完成 100 场竞争测量；10 个单元入口、6 项 live 通过，保留完整 JIT、owner/ACK 和排空检查。 |
 | TCLock 三方对照 | [180 场稳态矩阵、六场采样和 20 场长批次原生检查](../bench/tclock_compare/results/20260918-native-stack.md)完成；基础/汇编 3 个入口和 benchmark 22 项检查通过。冷晋升失败另记，未宣称修复或全量通过。 |
 | Caller-clobber v1 | 独立 `kdclobber1` 内核、真实 caller/wrapper 和准入检查、六项 live 通过；见 [ABI 验证](../tests/README.md#spin-clobber-v1)。 |
 | TCLock 现场对照与统一循环 | 后续冻结版本的 8 个基础/相关单元入口、5 项 live 通过；包含新旧真实生成物身份与最终排空，见 [统一循环验证](../tests/README.md#tclock-context-loop)。 |
@@ -93,7 +96,7 @@ mutex 正例为 `mutex_jit=1`；生成/发布日志本身不能作为 JIT PASS�
 | 历史未通过 | 旧可调度轮询策略下，八线程/两 CPU 的短 mode 5 曾发布代码却没有执行 JIT。该失败点未重跑；当前禁止抢占轮询需要重新设计 CPU 放置，旧超额订阅记录不验证新策略。 |
 | 当前使用限制 | 已发布请求的 waiter 保持禁止抢占轮询，sleep/parking 不属于当前设计。依赖 waiter 让出同一 CPU 的旧场景需要重新放置线程；不能直接沿用旧通过记录。 |
 | 尚未完成 | 更多有明确契约的服务、通用 `printk`；真实未修改生产子系统负载；完整可复现系统/工具链与运行代码代际身份。 |
-| 尚未完成 | 完整锁获取/观测成本的独立因果归因与摊销。普通 spin 三方对照已完成；诊断共享行与元数据热点仍需隔离实验。原版 TCLock mutex 不是当前 guest 的可直接加载模块，不为此另改内核。 |
+| 尚未完成 | 完整锁获取/观测成本的独立因果归因与摊销。诊断引用、缓存行布局、请求元数据及普通批次处理已有递进对照；共享计数原子更新、实际批长和 wrapper/正文重写成本仍待独立测量。原版 TCLock mutex 不是当前 guest 的可直接加载模块，不为此另改内核。 |
 | 明确延期 | 访问时动态地址 guard、原指令处 waiter 续跑及必要的局部条件码保存；动态指针和并发改写仍可能绕过静态筛查。 |
 | 明确延期 | 通用 flags、特殊指令及故障语义修复；INT-to-NOP、部分 warning-only 行为仍在。任意 JIT 故障、间接跳转 miss 和基本块预算不是已支持的恢复出口。 |
 | 明确延期 | 不可变 JIT 代码版本、完整发布校验与按执行代际回收；当前仍原地覆盖，锁互斥不能排除跨锁并发风险。 |
@@ -813,7 +816,7 @@ provider include。具体 include 点可用
 | [test_spin_routing.py](../tests/unit/spin/test_spin_routing.py) / [spin_routing_fixture.c](../tests/unit/spin/spin_routing_fixture.c) | 生产 hook/selector 路由。 |
 | [test_spin_clobber.py](../tests/unit/spin/test_spin_clobber.py) | guest 执行真实 caller clobber、精简/完整 wrapper 出口及新旧混合交接，检查 poisoned packet 和高寄存器压力。 |
 | [test_spin_wwjump.py](../tests/unit/spin/test_spin_wwjump.py) / [legacy_batch.S](../tests/unit/spin/legacy_batch.S) | 当前旧入口 clobber 适配与历史外壳兼容对照；后者仅为测试夹具。 |
-| [test_spin_batch.py](../tests/unit/spin/test_spin_batch.py) / [spin_batch_fixture.c](../tests/unit/spin/spin_batch_fixture.c) | 批内条目失效、预取边界及 per-CPU 统计的确定性检查。 |
+| [test_spin_batch.py](../tests/unit/spin/test_spin_batch.py) / [spin_batch_fixture.c](../tests/unit/spin/spin_batch_fixture.c) | 批内失效、三种预取策略、共享/独立包与栈边界；不可读页验证预取不追读 frame/包，另验 per-CPU 统计。 |
 | [test_spin_shadow.py](../tests/unit/spin/test_spin_shadow.py) / [spin_shadow_fixture.c](../tests/unit/spin/spin_shadow_fixture.c) | 提取实际队首和 combiner 路径；区分容量交接与普通批次发布。 |
 | [test_spin_wait.py](../tests/unit/spin/test_spin_wait.py) / [spin_wait_fixture.c](../tests/unit/spin/spin_wait_fixture.c) | guest 用户态执行生产发布/等待汇编；覆盖旧 C 栈后验证完成/native 非局部恢复，以及未执行队首的正常返回；[spin_restore_fixture.c](../tests/unit/spin/spin_restore_fixture.c) 执行共享包恢复汇编，核对 GPR 与最后读取后归还引用。 |
 | [spin_node_pool_fixture.c](../tests/unit/spin/spin_node_pool_fixture.c) / [spin_queue_return_fixture.c](../tests/unit/spin/spin_queue_return_fixture.c) | 上述 fixture include 的真实 producer、容量和嵌套返回。 |

@@ -25,6 +25,16 @@
 具体锁与生命周期约束见 [DESIGN 4.1](../docs/DESIGN.md#41-native-lock-and-private-queue)，
 实测取舍见 [入口对照](../bench/spin_cacheline/results/20260918-spin-entry.md)。
 
+`spin_prefetch=0/1/2` 是只读装载参数，分别关闭后继请求预取、保留 combiner
+查询地址的旧策略、使用发布前准备的地址提示（默认）。它不关闭其他既有队列
+返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
+节点为 64 字节，request 继续独立存活。约束见 [DESIGN](../docs/DESIGN.md#911-reuse-before-copy-contract)。
+
+普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
+共享 waiter 计数与身份/禁用状态分离到不同缓存行。request 按 64 字节对齐，
+普通准入元数据位于前两条缓存行。普通批次只在最终准入处检查 readiness，
+正常完成合并终态验证和解绑；复杂处理仍使用原协议。
+
 ## 私有实现组件
 
 下表按所属编译单元和原声明顺序列出组件；文件头说明用途和依赖。
@@ -47,6 +57,7 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `kd_spinlock.c` | [spin/diagnostics.inc](spin/diagnostics.inc) | Per-lock diagnostic counters, waiter observations and JIT-disable latch. |
 | `kd_spinlock.c` | [spin/queue.inc](spin/queue.inc) | Tail encoding, node publication and optional NUMA successor selection. |
 | `kd_spinlock.c` | [spin/request.inc](spin/request.inc) | Preallocated shared request reservation and final-user release, including remote root-packet references. |
+| `kd_spinlock.c` | [spin/prefetch.inc](spin/prefetch.inc) | Producer-prepared queue hints and off/consumer/prepared successor-prefetch policies. |
 | `kd_spinlock.c` | [spin/combiner.inc](spin/combiner.inc) | Delegated body execution, outer release and bounded combiner batches. |
 | `kd_spinlock.c` | [spin/wait.inc](spin/wait.inc) | IRQ-off physical shadow-stack switch before publication/polling; head RSP restoration or direct completed/native packet restoration. |
 | `kd_spinlock.c` | [spin/slowpath.inc](spin/slowpath.inc) | Queue-head waiting, nested combiner restoration and native node admission. |

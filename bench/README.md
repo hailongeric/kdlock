@@ -30,7 +30,23 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 
 ## Spinlock cacheline 对比
 
-最新入口改造与缓存取舍见[定向对照](spin_cacheline/results/20260918-spin-entry.md)。
+最新 [9/19 当前版本三方复测](tclock_compare/results/20260919-state-access.md)
+完成 clobber ABI 下 90 场对照和 30 场长批次单线程检查，全部正确排空。
+20 线程、1/16 cacheline 下，kdlock 为 2.965/2.904 Mops/s，比 TCLock 高
+29.0%/71.1%，相对 Linux 为 −1.7%/+61.5%；4 线程仍明显落后。
+本轮没有改锁实现，三方实际代理比例、波动及单线程成本均在结果页。
+
+此前[状态访问五阶段对照](spin_cacheline/results/20260918-state-access.md)完成
+100 场竞争测量：20 线程、1/16 cacheline 从 1.770/1.734 提升到 2.985/2.877
+Mops/s（+68.6%/+66.0%），JIT 均约 99.8%。四线程增量较小，且部分配置
+代理比例变化，不能全部归因于状态访问成本。
+另 20 场千万次单线程检查全部正确排空，中位成本增加约 0.04/0.23 ns（均小于 0.5%）。
+
+此前[后继预取对照](spin_cacheline/results/20260918-prefetch.md)完成 120 场四路
+测量和 20 场长批次检查，全部正确排空。生产者提前准备地址，combiner 只读节点
+提示；20 线程吞吐相对旧版本提高约 7.3%/9.3%，JIT 仍约 99.8%，4 线程基本持平。
+
+此前入口改造与缓存取舍见[定向对照](spin_cacheline/results/20260918-spin-entry.md)。
 root 把 ticket 推迟到首次 CAS 失败后建立；缓存重复回填查询已省掉。无缓存
 60 场试验显示单线程明显退化，当前保留默认缓存并提供装载关闭选项。最终
 默认配置的独立 60 场正确排空，只有 1 cacheline/4 线程测得约 12% 改善，

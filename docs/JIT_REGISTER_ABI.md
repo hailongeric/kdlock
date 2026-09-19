@@ -732,8 +732,12 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 结束自己的 pin，combiner 不能远端解除固定。mutex 则在进入 native 后缀前已
 恢复迁移/抢占状态，不把 spin 的 pin 生命周期套用到 mutex。
 
-默认 frame/context/request 为 664/5336/712 字节，spin node 为 48 字节，
-spin JIT context 为 16 字节。本轮普通模块静态 per-CPU 为 7104 字节，另在初始化时
+默认 frame/context/request 为 672/5400/768 字节，spin node 为 64 字节。
+request 按 64 字节对齐，frame 起于偏移 24，寄存器包起于 96；等待和恢复汇编
+从 `offsetof` 取得偏移，两种 wrapper 的 `pt_regs` 内部布局与输入 ABI 不变。
+普通准入元数据位于 request 前两条缓存行；spin JIT context 为 16 字节。node 比共享包改造时的 48 字节多两个预取地址；
+它们只在排队期间提供提示，不参与恢复。共享包改造时普通模块静态 per-CPU 为
+7104 字节，该历史数值不作为后续布局的现值；另在初始化时
 为每可能 CPU 预分配 12 个 request；静态节减小不代表总内存下降。布局不是动态
 栈峰值或任意深度安全证明。生产 spin 的 node、combiner 与恢复路径引用同一份包，
 复杂出口不再复制寄存器。frame 的物理链与包引用见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)。
@@ -778,7 +782,7 @@ pop 就返回 `-EBUSY`，不复制输出寄存器、不清除存储、不释放�
 不是从 JIT 虚拟执行重建 live condition codes；既有 flags 语义限制仍在。
 mode 8 的 SELFTEST 在已发 ACK 的 B pop 前保留真实 frame/会话引用，等待首个
 waiter TID 脱离，再让同一 combiner 执行第二 root。它比较 arm 至 pop 的
-168 字节软件寄存器包和等待期间的整个 664 字节 frame；不访问旧 waiter 栈，
+168 字节软件寄存器包和等待期间的整个 frame；不访问旧 waiter 栈，
 仅使用缓存 PID。这个观测不是实时 GPR/flags 恢复测试，也不是生产任务退出屏障，
 执行顺序见 [6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner)。
 这些引用及独立 source ioctl 不增加 wrapper 参数，也不改变保存的寄存器包；

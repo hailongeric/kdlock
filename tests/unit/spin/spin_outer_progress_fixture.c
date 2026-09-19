@@ -209,7 +209,9 @@ static void kd_exe_native_handoff_timing_end(bool mutex, u64 start)
 }
 
 static void cpu_relax(void) __attribute__((unused));
-static bool kd_spin_jit_is_disabled(struct qspinlock *lock)
+static struct kd_spin_diag_slot *kd_spin_diag_find(unsigned long lock)
+{ return (void *)lock; }
+static bool kd_spin_jit_is_disabled(const struct kd_spin_diag_slot *lock)
 {
 	(void)lock;
 	return mode == 9;
@@ -227,19 +229,19 @@ static void kd_spin_diag_record(struct qspinlock *lock, int event,
 	(void)event;
 	(void)depth;
 }
-static void kd_spin_debug_jit_not_ready(struct qspinlock *lock,
+static void kd_spin_debug_jit_not_ready(struct kd_spin_diag_slot *lock,
 					unsigned int depth)
 {
 	(void)lock;
 	(void)depth;
 }
-static void kd_spin_debug_jit_success(struct qspinlock *lock,
+static void kd_spin_debug_jit_success(struct kd_spin_diag_slot *lock,
 				      unsigned int depth)
 {
 	(void)lock;
 	(void)depth;
 }
-static void kd_spin_debug_combiner(struct qspinlock *lock, unsigned int depth)
+static void kd_spin_debug_combiner(struct kd_spin_diag_slot *lock, unsigned int depth)
 {
 	(void)lock;
 	(void)depth;
@@ -285,12 +287,18 @@ static int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
 				    const struct kd_jit_batch_call *call)
 { (void)exe; (void)call; abort(); }
 
+/* Real hint preparation/bounds and protected-page checks live in the
+ * batch fixture; this queue fixture retains only its publication interface. */
+static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
+                                     struct pt_regs *regs)
+{ (void)node; (void)regs; }
+
 static void kd_spin_prefetch_request(struct kd_spin_node *node)
 {
 	if (node)
 		CHECK(node->locked && !node->completed);
 }
-static struct kd_exe_info *kd_exe_find_ready(int pid, unsigned long ip)
+static struct kd_exe_info *kd_get_exe(int pid, unsigned long ip)
 {
 	(void)pid;
 	CHECK(ip == (fixture_request(&request)->jit_waiter ? 0x900UL : 0x800UL));
@@ -494,7 +502,7 @@ static void checked_run_combiner(struct qspinlock *lock,
 
 	if (full) {
 		CHECK(sizeof(struct pt_regs) == 168 &&
-		      offsetof(struct kd_exec_frame, regs) == 64 &&
+		      offsetof(struct kd_exec_frame, regs) == 72 &&
 		      sizeof(struct kd_exec_context) == 5400);
 		CHECK(!kd_exec_current_context()->depth);
 		for (unsigned int i = 0; i < KD_EXEC_MAX_NESTING; i++) {

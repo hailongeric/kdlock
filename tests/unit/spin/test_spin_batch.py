@@ -29,7 +29,7 @@ def main():
         (read_source(ROOT / "include/kd_spin_entry.h"), ("struct kd_spin_ref {",)),
         (read_source(ROOT / "include/kd_call.h"), ("enum kd_call_phase {", "struct kd_call_state {")),
         (read_source(ROOT / "include/kd_exec.h"), (
-            "enum kd_exec_lock_kind {", "struct kd_combiner_state {",
+            "enum kd_exec_frame_state {", "enum kd_exec_lock_kind {", "struct kd_combiner_state {",
             "struct kd_exec_outer_unlock {", "struct kd_exec_frame {")),
         (read_source(ROOT / "include/kd_spinlock.h"), (
             "struct kd_spin_exec_request {", "struct kd_spin_node {")),
@@ -43,18 +43,28 @@ def main():
     for source, marker, prefix in (
         (registry, "bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, unsigned int pid,", ""),
         (registry, "struct kd_exe_info *kd_exe_find_ready(unsigned int pid, unsigned long ip)", ""),
+        (spin, "kd_spin_batch_lookup(struct kd_spin_batch *batch, unsigned long entry_ip)", "static struct kd_exe_info *\n"),
         (spin, "kd_spin_batch_find_ready(struct kd_spin_batch *batch, unsigned long entry_ip)", "static struct kd_exe_info *\n"),
         (spin, "static inline bool check_irq_node(struct kd_spin_node *node)", ""),
+        (spin, "static void kd_spin_prepare_prefetch(struct kd_spin_node *node,", ""),
+        (spin, "static void kd_spin_prefetch_lookup(struct kd_spin_node *node)", ""),
         (spin, "static void kd_spin_prefetch_request(struct kd_spin_node *node)", ""),
         (spin, "static __always_inline void kd_spin_diag_invariant_failure(void)", ""),
         (spin, "static struct kd_spin_diag_slot *kd_spin_diag_find(unsigned long addr)", ""),
+        (spin, "static void kd_spin_diag_record_slot(struct kd_spin_diag_slot *slot,", ""),
         (spin, "static void kd_spin_diag_record_addr(unsigned long addr,", ""),
         (spin, "static void kd_spin_diag_sum(unsigned int index, struct kd_spin_diag_counts *sum)", ""),
-        (spin, "static void kd_spin_diag_waiter_enter(struct qspinlock *lock)", ""),
-        (spin, "static void kd_spin_diag_waiter_exit(struct qspinlock *lock)", ""),
-        (spin, "static bool kd_spin_jit_is_disabled(struct qspinlock *lock)", ""),
+        (spin, "static struct kd_spin_diag_slot *kd_spin_diag_waiter_enter(struct qspinlock *lock)", ""),
+        (spin, "static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)", ""),
+        (spin, "static bool kd_spin_jit_is_disabled(const struct kd_spin_diag_slot *slot)", ""),
     ):
         body += prefix + definition(source, marker) + "\n"
+    frame = read_source(ROOT / "kernel_module/kd_exec.c")
+    for marker in (
+        "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
+        "int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)",
+    ):
+        body += definition(frame, marker) + "\n"
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-batch-") as directory:
         path = Path(directory)
         (path / "spin_batch_types.h").write_text(types)

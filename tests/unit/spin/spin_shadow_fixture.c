@@ -61,7 +61,9 @@ struct kd_exec_frame {
 };
 
 typedef int atomic_t;
+struct kd_spin_diag_slot;
 struct kd_spin_exec_request {
+	struct kd_spin_diag_slot *diag;
 	struct kd_exec_frame frame;
 	struct kd_spin_exec_request *packet_owner;
 	atomic_t users;
@@ -469,15 +471,16 @@ static int atomic_cmpxchg_acquire(int *value, int old, int replacement)
 	return seen;
 }
 
-static void kd_spin_diag_waiter_enter(struct qspinlock *lock)
+static struct kd_spin_diag_slot *kd_spin_diag_waiter_enter(struct qspinlock *lock)
 {
 	CHECK(lock == active_lock);
 	entries++;
+	return (void *)lock;
 }
 
-static void kd_spin_diag_waiter_exit(struct qspinlock *lock)
+static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)
 {
-	CHECK(lock == active_lock);
+	CHECK((void *)slot == active_lock);
 	exits++;
 }
 
@@ -510,14 +513,19 @@ static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 { (void)call; abort(); }
 static void kd_jit_legacy_batch_call(struct kd_jit_batch_call *call)
 { (void)call; abort(); }
-static int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
+static int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)
 { (void)frame; abort(); }
-static int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
-{ (void)frame; (void)regs; abort(); }
+
 static void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 { (void)frame; abort(); }
-static void kd_spin_debug_jit_success(struct qspinlock *lock, unsigned int depth)
+static void kd_spin_debug_jit_success(struct kd_spin_diag_slot *lock, unsigned int depth)
 { (void)lock; (void)depth; abort(); }
+
+/* Real hint preparation/bounds and protected-page checks live in the
+ * batch fixture; this queue fixture retains only its publication interface. */
+static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
+                                     struct pt_regs *regs)
+{ (void)node; (void)regs; }
 
 static void kd_spin_prefetch_request(struct kd_spin_node *node)
 {
@@ -534,9 +542,11 @@ static void kd_spin_reclaim_outer(struct kd_spin_request *request)
 	(void)request;
 	abort();
 }
-static void kd_spin_debug_combiner(struct qspinlock *lock, unsigned int depth)
+static struct kd_spin_diag_slot *kd_spin_diag_find(unsigned long lock)
+{ return (void *)lock; }
+static void kd_spin_debug_combiner(struct kd_spin_diag_slot *lock, unsigned int depth)
 {
-	CHECK(lock == active_lock);
+	CHECK((void *)lock == active_lock);
 	CHECK(depth == (unsigned int)initial_depth + 1);
 }
 
@@ -558,7 +568,7 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 		kd_spin_nodes[0].count--;
 		kd_spin_selftest_node_event(fixture_request(node)->native_resume ?
 			KD_NODE_NATIVE_RETURN : KD_NODE_REMOTE_RETURN);
-		kd_spin_diag_waiter_exit((struct qspinlock *)fixture_request(node)->frame.outer_lock_addr);
+		kd_spin_diag_waiter_exit(fixture_request(node)->diag);
 		kd_spin_set_resume_node(node);
 		CHECK(native_return != NULL);
 		if (node->execution)

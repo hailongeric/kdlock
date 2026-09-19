@@ -357,7 +357,7 @@ kd_spin_lock_slowpath(L, saved_RSP, request):
     node.execution = execution；node 只保留执行对象引用和队列/调度字段
     初始化 node 的 locked/completed/next/tail、CPU/NUMA、RSP
     将 IRQ flags、jit_waiter/retry/native/pinned 等请求标志放入 execution
-    frame_prepare(execution.frame)：只初始化前 64 字节热状态，不访问冷区
+    frame_prepare(execution.frame)：只初始化前 72 字节热状态，不访问冷区
     保存 entry/L/GS/task、origin；regs_ref 指向 frame 内唯一寄存器包
     kd_spin_prepare_regs(node)：在本 CPU 解码 hook 保存的 callee 寄存器、RIP/SP
     execution.native_regs_decoded = true       // 在任何队列发布之前完成
@@ -511,10 +511,10 @@ TCLock 从当前 unlock 续点切到下一 lock 续点；kdlock 保留物理 com
 供 JIT 暂存槽使用，只更新逻辑 waiter 栈。两者都运行锁侧 C 交接逻辑。
 完整状态对照见 [寄存器 ABI](../../docs/JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比)。
 
-frame 的常用头部为 64 字节；其后是寄存器包和预分配冷区。普通 prepare/bind/
+frame 的常用头部为 72 字节；其后是寄存器包和预分配冷区。普通 prepare/bind/
 complete/pop 不初始化、检查八层数组、remote/native 控制或快照。复杂出口先
 原地建立单锁 ledger，再调用通用处理；SELFTEST 观察器需要 ledger 时提前启用。
-frame/context/request 保持预分配，node 为 48 字节。
+frame/context/request 保持预分配，node 为 64 字节，包含两个排队期间有效的预取地址。
 12 个 request 槽独立于四个可复用 node；这是减少热路径访问，不是缩小整个对象。
 
 ### 5.2 已执行出口如何进入通用处理
@@ -693,9 +693,9 @@ tail 对应不同的 per-CPU 节点，代理 unlock 也需要自己的续点/完
 | 获取入口 | 目标锁身份判断后直接进入原锁字的 CAS/pending/队列 | 可选原生站点缓存；miss 后目标选择、晋升、条目确认和 gate 查询，先尝试 S，竞争后建立 ticket | kdlock 进入队列前有更多工作；命中注册/已有 gate 并不每次获取全局创建锁 |
 | 锁协议 | 被测目标锁完全由 TCLock 协议管理 | 私有调度字 S 加真实 Linux 锁 L | L 用于排斥原生 peer；普通批次持续持有 L，不能按每个代理正文重获 L 计价 |
 | 入口现场 | 六个 callee-saved 和 CALL 续点留在原栈，node 记 RSP | 请求仅捕获 RIP/RSP/RBP，其余活跃值由 caller 保存 | 减少显式搬运，但保存责任部分转移到编译器 |
-| 连续交接 | unlock 保存原生续点，物理切到下一 waiter 栈；离栈后发布完成 | wrapper 返回、完成分类、frame complete/pop、发布、下一请求 prepare/bind | 同一个 C 循环已去除旧 callback shell，逐请求管理仍存在 |
-| 状态访问 | node、原生栈及 per-CPU combiner 状态 | node → execution → frame/regs，加 ticket、翻译条目等 | 更多依赖读取；请求预分配，不是每次抢锁动态分配或整块清零 |
-| 诊断 | 三个直接 per-CPU 计数 | 事件 per-CPU，共享 slot 查找和 waiter_count 原子更新仍在 | 已有热点证据；共享行争用的净成本还需隔离实验 |
+| 连续交接 | unlock 保存原生续点，物理切到下一 waiter 栈；离栈后发布完成 | wrapper 返回、完成分类、普通 root 合并终态验证/解绑、发布、下一请求 prepare/bind | 同一个 C 循环已去除旧 callback shell，逐请求管理仍存在 |
+| 状态访问 | node、原生栈及 per-CPU combiner 状态 | node → execution，内嵌 frame/regs 或借用 regs_ref，加 ticket、翻译条目等 | 热元数据集中到请求前两条缓存行；frame/regs 内嵌不是额外指针跳转，仍有真实间接读取 |
+| 诊断 | 三个直接 per-CPU 计数 | 事件 per-CPU，批次/请求复用 slot，waiter_count 独立缓存行 | 重复查找和读写混用已减少；共享原子计数成本仍在 |
 | 正文 | 原生指令 | wrapper、虚拟寄存器/地址重写与出口判定 | 本负载的自增不因 JIT 减少业务读写；两者都能从批次中的数据局部性获益 |
 | 批次结束 | 队列/IRQ 条件、上限 1024、need_resched | 队列、上限 1024、准入/执行结果等；普通循环没有相同的 need_resched 条件 | 相同 batch 上限不等于相同实际批长、覆盖率或调度行为 |
 
@@ -707,18 +707,25 @@ tail 对应不同的 per-CPU 节点，代理 unlock 也需要自己的续点/完
    同一 ABI 的 TCLock arm 也承担 caller 这部分成本。长批次原生 ABI 差值包含
    桥接和代码布局，不能全部记作 spill，也不能仅凭 push/pop 数量预测吞吐。
 2. **事件计数本地化，共享行仍可能迁移。** [slot](../../kernel_module/spin/state.inc)
-   将 addr、waiter_count 和 jit_disabled 放在同一 16B 对象；waiter 原子增减与
-   combiner 查找/禁用检查访问同一缓存行。缓存 slot 指针可减少重复查找，但
-   不会自动去掉这条共享行的失效，分离字段也须独立测量，保留实时计数和禁用语义。
+   此前将 addr、waiter_count 和 jit_disabled 放在同一 16B 对象。当前 slot
+   扩为对齐的 128B，计数单独占一行；batch 解析一次身份，waiter 退出复用
+   入队记录。禁用状态仍逐次 acquire 读取，计数仍实时原子更新。
+   [递进对照](results/20260918-state-access.md)区分引用复用与缓存行分离；
+   两者都没有删除全局计数本身的写入成本。
 3. **批次摊销所有权成本，逐请求成本不随批长消失。**
-   [find_ready](../../kernel_module/spin/combiner.inc) 和
-   [batch_prepare](../../kernel_module/exe.c) 仍分别检查 readiness；后者还检查
-   ABI、镜像标识、frame 等。source lease 按批次持有，不能据此认定可变状态或
+   [lookup](../../kernel_module/spin/combiner.inc) 仅解析身份，普通 root 在
+   [batch_prepare](../../kernel_module/exe.c) 集中检查 readiness、ABI、镜像标识
+   和 frame；复杂路径保留原检查。source lease 按批次持有，不能据此认定可变状态或
    代码版本不可变。高 JIT 比例只证明代理覆盖，不能证明单次服务便宜。
-4. **预取也有前置读取。** TCLock 主要预取下一 waiter 的原生栈；kdlock 的
-   [预取路径](../../kernel_module/spin/combiner.inc)先读 execution、regs_ref、task
-   与 SP，再触发预取。本轮热点包含这些依赖读取；没有预取开关对照，不能把
-   命中收益或额外访存成本任一方当成已测净效果。
+4. **预取地址准备也有成本。** TCLock 主要预取下一 waiter 的原生栈；历史采样
+   中 kdlock 先读 execution、regs_ref、task 与 SP，再触发预取。当前
+   [预取路径](../../kernel_module/spin/prefetch.inc)默认把地址准备移到发布前：
+   combiner 只从 node 取得实际包指针、受检 SP 和 full/complex 标记，先预热
+   request 的两条热元数据行，再预热寄存器和栈。普通请求直接提供内嵌包，虚拟请求沿用共享父包。
+   装载参数 `spin_prefetch=0/1/2` 支持关闭、旧查询、生产者提示；只控制后继
+   请求预取。准备工作和新增字段仍有成本，不能用 combiner 读取减少代替总吞吐。
+   [四路对照](results/20260918-prefetch.md)已完成：20 线程相对旧版本提高约
+   7.3%/9.3%，JIT 均约 99.8%；4 线程基本持平，不能推为普遍收益。
 
 本轮的[入口/缓存独立对照](results/20260918-spin-entry.md)进一步验证了另一种
 抵消：把 S/L 释放直接内联进公共解锁，会使缓存命中路径也保存 RBX/R12。
@@ -727,14 +734,24 @@ tail 对应不同的 per-CPU 节点，代理 unlock 也需要自己的续点/完
 保存装载开关，避免 UBSAN bool 读取冷调用迫使命中路径提前保存参数；内核
 检查配置未关闭。省下 ticket 准备不保证完整操作自动提速。
 
-### 6.4 后续优化顺序
+### 6.4 当前落地与后续测量
 
-1. 缓存诊断 slot 引用，分离只读身份与共享 waiter_count，分别测量查找和
-   缓存行布局变化；保留禁用 latch、实时观察及失败诊断。
-2. 合并普通 root 的重复准入检查，减少完成/解绑与下一请求绑定的辅助往返和
-   依赖读取；先证明 source 退休、发布状态和 owner/ACK 边界仍成立。
-3. 独立比较预取和实际批次策略，再测 wrapper/正文重写成本。一起记录完整操作
-   吞吐、实际代理比例、批长及等待权重，不以降低覆盖率或删除检查解释为提速。
+诊断 slot 引用复用、计数行分离、请求热字段布局及普通 root 准入/完成处理已实现。
+frame、寄存器包和可变分类仍各保留一份权威状态；672 字节 frame 未缩小，
+request 由本轮实际基线的 720 字节增至按行对齐的 768 字节。增加少量预分配空间
+用于减少分散访问及相邻 request 共行，不能解释为内存占用下降。
+十项基础/受影响 unit 和六项 live 验证见[测试记录](../../tests/README.md#spin-state-access)，
+五个递进版本的性能证据统一见[状态访问对照](results/20260918-state-access.md)。
 
-这些是后续候选，不是本次已实施优化。并发冷晋升停滞仍是独立未修复问题，
-稳态单 CPU 准备不关闭该缺口。现有性能矩阵也不验证任意嵌套或 task/per-CPU 正文。
+随后 [9/19 当前版本三方复测](../tclock_compare/results/20260919-state-access.md)
+重新测量 Linux、TCLock 与 kdlock：90 场对照和 30 场长批次全部正确排空。
+20 线程的 kdlock 超过 TCLock，4 线程仍落后；TCLock 的实际委托比例波动明显。
+这是完整后端比较，不能将全部差距归因于现场保存或单个状态访问机制。
+
+后续仍可测实际批长、等待权重、共享 waiter_count 更新，以及 wrapper/正文重写
+成本。诊断表未覆盖的复杂入口仍会按锁地址查询；ticket、source、native/remote
+ACK 的生命周期不同，不能因 node 可复用就删掉它们。性能判断继续同时报告
+完整操作吞吐和实际 JIT 比例。
+
+并发冷晋升停滞仍是独立未修复问题，稳态单 CPU 准备不关闭该缺口。
+现有性能矩阵也不验证任意嵌套或 task/per-CPU 正文。

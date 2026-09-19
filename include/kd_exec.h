@@ -82,7 +82,7 @@ struct kd_exec_outer_unlock {
 };
 
 struct kd_exec_frame {
-	/* Ordinary single-lock execution touches this 64-byte header and the
+	/* Ordinary single-lock execution touches this 72-byte header and the
 	 * referenced packet. The cold ledger below is activated only on promotion;
 	 * no allocation, zero-fill or packet copy is needed at that boundary. */
 	struct pt_regs *regs_ref;
@@ -101,9 +101,9 @@ struct kd_exec_frame {
 	bool complex_ready;
 	bool regs_borrowed;
 	bool completion_seen;
-	struct pt_regs regs;
 	unsigned int entry_abi;
 	unsigned int packet_state;
+	struct pt_regs regs;
 
 	/* Cold storage: unread until complex_ready, including all eight locks,
 	 * control/native routing and the combiner checkpoint. */
@@ -189,6 +189,7 @@ kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,
 		       unsigned long gsbase, struct task_struct *logical_task);
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs);
 int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame);
+int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame);
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame);
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 				     const struct pt_regs *regs);

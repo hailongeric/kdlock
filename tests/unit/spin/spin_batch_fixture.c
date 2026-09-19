@@ -7,6 +7,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <errno.h>
+#define ____cacheline_aligned_in_smp __attribute__((aligned(64)))
 typedef uint64_t u64;
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -78,11 +82,25 @@ static struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip)
 }
 static const void *hints[16];
 static unsigned int hint_count;
+static unsigned int kd_spin_prefetch_mode = 1;
 static void prefetchw(const void *p)
 {
 	CHECK(hint_count < 16);
 	hints[hint_count++] = p;
 }
+/* Only physical CPU/task accessors are substitutes for real root retirement. */
+static struct task_struct physical_task, other_task;
+#define current (&physical_task)
+static struct kd_exec_context {
+	struct kd_exec_frame *top;
+	struct task_struct *owner;
+	unsigned int depth;
+} context;
+static struct kd_exec_context *kd_exec_current_context(void) { return &context; }
+static struct pt_regs *kd_exec_frame_regs(struct kd_exec_frame *f)
+{ return f->regs_ref ? f->regs_ref : &f->regs; }
+static void kd_exec_frame_set_state(struct kd_exec_frame *f, int state)
+{ f->state = state; }
 #include "spin_batch_production.h"
 
 static void test_cache(void)
@@ -134,7 +152,7 @@ static void test_stats(void)
 	struct kd_spin_diag_slot *slot = kd_spin_diag_find(addr);
 	unsigned int index = slot - kd_spin_diag_slots;
 	struct kd_spin_diag_counts sum;
-	kd_spin_diag_waiter_enter(&lock);
+	CHECK(kd_spin_diag_waiter_enter(&lock) == slot);
 	for (cpu = 0; cpu < 3; cpu++) {
 		for (unsigned int e = 0; e < KD_SPIN_DIAG_EVENT_COUNT; e++)
 			for (unsigned int n = 0; n <= cpu; n++)
@@ -145,11 +163,11 @@ static void test_stats(void)
 	cpu = 0;
 	interrupt_max = true;
 	kd_spin_diag_record_addr(addr, KD_SPIN_DIAG_SLOWPATH, 4);
-	kd_spin_diag_waiter_exit(&lock);
+	kd_spin_diag_waiter_exit(slot);
 	CHECK(!atomic_read(&slot->waiter_count));
 	slot->jit_disabled.counter = 1;
 	cpu = 1;
-	CHECK(kd_spin_jit_is_disabled(&lock));
+	CHECK(kd_spin_jit_is_disabled(slot));
 	kd_spin_diag_sum(index, &sum);
 	CHECK(sum.max_depth == 8);
 	for (unsigned int e = 0; e < KD_SPIN_DIAG_EVENT_COUNT; e++)
@@ -162,6 +180,61 @@ static void test_stats(void)
 	CHECK(sum.max_depth == 8 && sum.event[0] == 7);
 	kd_spin_diag_invariant_failure();
 	CHECK(cpu_stats[1].invariant_failures == 1 && !cpu_stats[0].invariant_failures);
+}
+
+/* Retained identities must keep observing mutable latches/counts, including
+ * table exhaustion; neither a missing slot nor a new lock aliases an old one. */
+static void test_retained_slot(void)
+{
+	struct kd_spin_diag_slot *slot = kd_spin_diag_find(0x400000);
+	CHECK(slot);
+	CHECK(offsetof(struct kd_spin_diag_slot, waiter_count) == 64);
+	CHECK(sizeof(*slot) == 128);
+	for (unsigned long a = 0x800000; a < 0x800000 + 64 * 64; a += 64)
+		kd_spin_diag_find(a);
+	CHECK(!kd_spin_diag_waiter_enter((void *)0xdead000));
+	kd_spin_diag_waiter_exit(NULL);
+	CHECK(kd_spin_diag_find(0x400000) == slot);
+	CHECK(!kd_spin_jit_is_disabled(slot));
+	slot->jit_disabled.counter = 1;
+	CHECK(kd_spin_jit_is_disabled(slot));
+	kd_spin_diag_record_slot(slot, KD_SPIN_DIAG_JIT_SUCCESS, 1);
+	CHECK(cpu_stats[cpu].slot[slot-kd_spin_diag_slots].event[KD_SPIN_DIAG_JIT_SUCCESS] == 1);
+}
+
+static void test_root_retirement(void)
+{
+	struct kd_spin_exec_request request = { 0 };
+	struct kd_exec_frame *f = &request.frame;
+	CHECK(sizeof(request) == 768 && _Alignof(struct kd_spin_exec_request) == 64);
+	CHECK(offsetof(struct kd_spin_exec_request, frame.packet_state) < 128);
+	for (int abi = 0; abi < 2; abi++) {
+		*f = (struct kd_exec_frame){ .spin_simple = true, .executed = true,
+			.batch_lease = true, .request_frame = true, .state = KD_EXEC_FRAME_RUNNING,
+			.entry_abi = abi, .packet_state = abi ? KD_PACKET_COMPLETE : KD_PACKET_FULL,
+			.outer_lock_addr = 0x9000, .regs.di = 0x9000 };
+		context = (struct kd_exec_context){ .top = f, .owner = current, .depth = 1 };
+		struct kd_exec_frame before = *f;
+		context.owner = &other_task;
+		CHECK(kd_exec_frame_retire_single_spin(f) == -EINVAL && !memcmp(f, &before, sizeof(*f)));
+		context.owner = current;
+		context.depth = 2;
+		CHECK(kd_exec_frame_retire_single_spin(f) == -EINVAL);
+		context.depth = 1;
+		f->complex_ready = true;
+		CHECK(kd_exec_frame_retire_single_spin(f) == -EINVAL);
+		f->complex_ready = false;
+		f->batch_lease = false;
+		CHECK(kd_exec_frame_retire_single_spin(f) == -EINVAL);
+		f->batch_lease = true;
+		f->packet_state = KD_PACKET_MINIMAL;
+		CHECK(kd_exec_frame_retire_single_spin(f) == -EINVAL);
+		f->packet_state = before.packet_state;
+		CHECK(!kd_exec_frame_retire_single_spin(f));
+		CHECK(f->completion_seen && f->state == KD_EXEC_FRAME_UNUSED);
+		CHECK(!context.top && !context.owner && !context.depth);
+		CHECK(kd_exec_frame_retire_single_spin(f) == -EINVAL);
+	}
 }
 
 static void test_prefetch(void)
@@ -211,11 +284,99 @@ static void test_prefetch(void)
 	CHECK(hints[0] == request.frame.regs_ref && hint_count == with_stack);
 }
 
+/* Prepared hints must match the old bounded targets for both inline and
+ * borrowed packets, and overwrite stale node hints before each publication. */
+static void test_prepared_prefetch(void)
+{
+	char stack[THREAD_SIZE];
+	struct task_struct task = { .stack = stack };
+	struct kd_spin_exec_request request = { 0 };
+	struct pt_regs borrowed = { 0 };
+	struct kd_spin_node node = { .execution = &request, .locked = 1 };
+	const void *lookup[16];
+	CHECK(sizeof(node) == 64);
+	request.frame.logical_task = &task;
+	for (unsigned int alias = 0; alias < 2; alias++) {
+		struct pt_regs *regs = alias ? &borrowed : &request.frame.regs;
+		request.frame.regs_ref = regs;
+		for (unsigned int full = 0; full < 2; full++) {
+			request.frame.packet_state = full ? KD_PACKET_FULL : KD_PACKET_MINIMAL;
+			for (unsigned int complex = 0; complex < 2; complex++) {
+				request.frame.complex_ready = complex;
+				unsigned long offsets[] = { 0, 7, 8, 64, 128, THREAD_SIZE - 1, THREAD_SIZE };
+				for (unsigned int j = 0; j < sizeof(offsets)/sizeof(offsets[0]); j++) {
+					regs->sp = (unsigned long)stack + offsets[j];
+					kd_spin_prefetch_mode = 1; hint_count = 0;
+					kd_spin_prefetch_request(&node);
+					unsigned int expected = hint_count;
+					memcpy(lookup, hints, sizeof(lookup));
+					kd_spin_prefetch_mode = 2;
+					kd_spin_prepare_prefetch(&node, regs);
+					struct kd_spin_exec_request before = request;
+					struct pt_regs saved = *regs;
+					hint_count = 0;
+					kd_spin_prefetch_request(&node);
+					CHECK(hint_count == expected);
+					/* Frame warming moves first; the address multiset stays equal. */
+					for (unsigned int h = 0; h < expected; h++) {
+						unsigned int a = 0, b = 0;
+						for (unsigned int k = 0; k < expected; k++) {
+							a += hints[k] == lookup[h]; b += lookup[k] == lookup[h];
+						}
+						CHECK(a == b);
+					}
+					CHECK(!memcmp(&before, &request, sizeof(request)));
+					CHECK(!memcmp(&saved, regs, sizeof(saved)));
+					CHECK(node.locked && !node.completed);
+				}
+			}
+		}
+	}
+	request.frame.logical_task = NULL;
+	kd_spin_prepare_prefetch(&node, &borrowed);
+	CHECK(!node.prefetch_sp);
+	kd_spin_prepare_prefetch(&node, NULL);
+	CHECK(!node.prefetch_regs && !node.prefetch_sp);
+
+	/* Guard pages prove the consumer reads neither frame nor logical packet.
+	 * prefetchw records addresses without touching memory in this fixture. */
+	size_t page = sysconf(_SC_PAGESIZE);
+	size_t bytes = (sizeof(request) + page - 1) / page * page;
+	void *area = mmap(NULL, bytes + page, PROT_READ | PROT_WRITE,
+			  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	CHECK(area != MAP_FAILED);
+	struct kd_spin_exec_request *protected = area;
+	struct pt_regs *packet = (void *)((char *)area + bytes);
+	protected->frame.logical_task = &task;
+	protected->frame.packet_state = KD_PACKET_FULL;
+	protected->frame.complex_ready = true;
+	packet->sp = (unsigned long)stack + 128;
+	node.execution = protected;
+	kd_spin_prepare_prefetch(&node, packet);
+	CHECK(mprotect(area, bytes + page, PROT_NONE) == 0);
+	hint_count = 0;
+	kd_spin_prefetch_request(&node);
+	CHECK(hint_count == 10 && hints[hint_count - 2] == stack + 128);
+	/* Disabled mode must not follow even a deliberately unusable node. */
+	kd_spin_prefetch_mode = 0; hint_count = 0;
+	kd_spin_prefetch_request((void *)1);
+	CHECK(!hint_count);
+	kd_spin_prefetch_mode = 2;
+	node.socket_id = IRQ_NUMA_NODE;
+	kd_spin_prefetch_request(&node);
+	kd_spin_prefetch_request(NULL);
+	CHECK(!hint_count);
+	CHECK(munmap(area, bytes + page) == 0);
+}
+
 int main(void)
 {
 	test_cache();
 	test_stats();
+	test_retained_slot();
+	test_root_retirement();
 	test_prefetch();
+	test_prepared_prefetch();
 	puts("spin batch PASS: cache invalidation, per-CPU sum/max, physical/virtual prefetch");
 	return 0;
 }

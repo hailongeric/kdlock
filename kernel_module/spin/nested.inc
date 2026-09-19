@@ -60,6 +60,7 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	frame->jit_lock_kind[depth] = KD_EXEC_LOCK_QUEUE_OWNER;
 	frame->jit_lock_node[depth] = node;
 	frame->jit_lock_released[depth] = false;
+	kd_spin_prepare_prefetch(node, regs);
 	return 0;
 }
 

@@ -1360,10 +1360,10 @@ from this spin path. Mutex and the legacy frame-push API retain their own packet
 handling. This is not a replacement of every state snapshot in the repository.
 
 Each CPU preallocates `KD_EXEC_MAX_NESTING + MAX_NODES` (12) execution records.
-A record contains a 664-byte frame, optional logical-packet owner, user count and
-request-owned return/routing metadata (712 bytes total). The 5336-byte execution context retains its legacy array
+A record contains a 672-byte frame, optional logical-packet owner, user count and
+request-owned return/routing metadata (768 bytes, aligned to 64). The 5400-byte execution context retains its legacy array
 and adds one stack-top pointer. This pool is independent of the four recyclable
-queue nodes and costs 8544 bytes per possible CPU, allocated at module init.
+queue nodes and costs 9216 bytes per possible CPU, allocated at module init.
 There is no allocation or global lock in request reservation. Only pinned task
 producers allocate on their own CPU; other CPUs can release users. An acquire
 read of users==0 precedes reuse. Exhaustion refuses delegation and preserves the
@@ -1373,7 +1373,7 @@ The implemented protocol is:
 
 1. The producer reserves a record with one queue/waiter user, decodes the hook
    registers directly into `request.frame.regs`, and initializes readable frame
-   state. The 48-byte node carries one execution reference plus queue linkage/notification
+   state. The 64-byte node carries one execution reference plus queue linkage/notification
    and scheduler stack metadata. Registers, task/GS, origin and native/retry
    state belong to the request. No whole-frame memset runs.
 2. Release queue publication transfers access to the combiner. It binds that
@@ -1408,10 +1408,15 @@ ordinary wrapper entry/exit adds no request reference. A queue wake or node reus
 is not permission to recycle execution storage. The record's users count, source
 lease, ticket/native references and Linux lock ownership serve different lifetimes.
 
-The ordinary frame state is a 64-byte header followed by the shared packet and
+The ordinary frame state is a 72-byte header followed by the shared packet and
 preallocated cold storage. `complex_ready` gates the eight-lock ledger, remote/
 native discriminators and combiner snapshot. Prepare/bind/validate/complete/pop
 of a pristine single-lock root do not initialize or inspect that cold storage.
+Request flags and users now precede the frame; entry ABI and packet state
+precede its register packet. These ordinary admission fields fit in the first
+two aligned request cache lines. Each pool record has its own cache-line
+boundaries; no second mutable state cache is introduced. The packet starts at
+request offset 96; restore/wait assembly uses compiler-derived offsets.
 The first non-final wrapper exit materializes a one-lock ledger in place before
 control/hostcall/native handling. It never copies the register packet.
 
@@ -1423,6 +1428,11 @@ no outer assembly register group save or per-waiter callback return/reentry.
 This follows TCLock's retained combiner continuation while keeping the JIT's
 physical scratch frame separate from the logical waiter stack. Admission,
 completion/unbind/publication and successor selection remain in the lock loop.
+Normal production batch roots combine terminal validation and physical unbind
+in `kd_exec_frame_retire_single_spin`: exact physical owner/top/depth, batch
+lease, non-complex state and the existing final-packet checks are mandatory.
+SELFTEST observers retain the complete/observe/pop sequence; complex returns
+retain generic retirement. Queue completion is still published afterward.
 Batch limits, NUMA deferral rollback and outer release/reclaim remain lock-side
 operations; generated code has no queue/scheduler callback.
 
@@ -1450,14 +1460,47 @@ packet fields and the compiler call contract differ. Detailed states and mixed
 ABI rules live in [the register ABI](JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1).
 
 Within that lease, a batch reuses its resolved executable slot for the same
-entry and SPIN backend. Each hit rechecks OPEN, acquired NORMAL publication,
-pid/entry and the current code pointer; dispatcher backend/scope checks remain.
+entry and SPIN backend. Resolution alone grants no admission. Ordinary roots
+check OPEN, acquired NORMAL publication, pid/entry and the current code pointer
+once in batch prepare; generic dispatch keeps its readiness check. Backend,
+scope, image ABI and bind-time OPEN checks remain.
 The cache dies with the batch and is neither a code-pointer cache nor an
 immutable-code version mechanism. Before executing the current request, the
 combiner prefetches its queued successor's actual register packet and frame hot
 fields, plus the virtual SP/push slot only inside the logical waiter's task
 stack. This precedes any completion or outer-release publication; it grants no
 ownership and never follows successors after early outer release.
+
+Diagnostic identities are append-only for the module session. A batch resolves
+one slot for disable checks and events; each queued request retains the slot
+returned by waiter entry for its matching exit. Only the identity is cached:
+disable loads remain acquire operations and waiter counts remain live atomics.
+The 128-byte diagnostic slot separates the addr/disable cache line from its
+waiter-count line. Full-table/null-slot behavior still refuses accounting;
+slots are not reclaimed before all callers drain. Complex callers without a
+retained identity may still resolve by lock address.
+
+The read-only module parameter `spin_prefetch` selects successor warming:
+0 disables it, 1 retains the consumer-side lookup, and 2 (default) uses producer
+hints. Other existing queue-return stack hints are unchanged in every mode.
+Mode 2 prepares the packet pointer, bounded logical-stack SP and full/complex
+flags before queue publication. A physical producer passes its inline packet;
+a virtual producer passes the retained parent packet. Two pointers extend the
+node from 48 to 64 bytes; flags occupy former padding. The consumer can issue
+frame/register/stack hints using only node fields, before running the current
+body, without loading the successor's frame, task or packet to discover them.
+
+These immutable queue-interval hints are not another register snapshot or an
+executable SP. They neither pin objects nor replace admission: existing request
+users, task/stack lifetime, source lease and owner/ACK rules remain necessary.
+The node still becomes reusable independently of the request. Prepared addresses
+must be overwritten for each new queued request, and no old hint may be followed
+after wake/outer release. A missing/out-of-stack SP suppresses only stack hints.
+Modes 0/1 skip producer hint preparation; values outside 0..2 fail module init.
+Current layout-aware warming covers both request header lines; packet and
+logical-stack hints still use the same bounds. Notification fields and wrapper
+ABI do not change. Compare modes within one image to isolate the hint policy; compare
+the retained old image separately to include node layout and option overhead.
 
 Spin diagnostic events, maximum depth and overflow/invariant counters are
 CPU-local, allocated once at module initialization with `alloc_percpu()` to

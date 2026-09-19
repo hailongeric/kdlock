@@ -36,18 +36,16 @@ static struct kd_spin_diag_slot *kd_spin_diag_find(unsigned long addr)
 	return NULL;
 }
 
-static void kd_spin_diag_record_addr(unsigned long addr,
+static void kd_spin_diag_record_slot(struct kd_spin_diag_slot *slot,
 				     enum kd_spin_diag_event event,
 				     unsigned int depth)
 {
-	struct kd_spin_diag_slot *slot;
 	unsigned int index;
 	int old_depth;
 
 	if (event >= KD_SPIN_DIAG_EVENT_COUNT)
 		return;
 
-	slot = kd_spin_diag_find(addr);
 	if (!slot)
 		return;
 
@@ -66,6 +64,15 @@ static void kd_spin_diag_record_addr(unsigned long addr,
 			break;
 		old_depth = previous;
 	}
+}
+
+/* Resolve once when a caller has no retained request/batch identity. */
+static void kd_spin_diag_record_addr(unsigned long addr,
+				     enum kd_spin_diag_event event,
+				     unsigned int depth)
+{
+	if (event < KD_SPIN_DIAG_EVENT_COUNT)
+		kd_spin_diag_record_slot(kd_spin_diag_find(addr), event, depth);
 }
 
 /* Shutdown only, after callers/frames drain. Include CPUs which went offline
@@ -93,10 +100,8 @@ static void kd_spin_diag_record(struct qspinlock *lock,
 	kd_spin_diag_record_addr((unsigned long)lock, event, depth);
 }
 
-static bool kd_spin_jit_is_disabled(struct qspinlock *lock)
+static bool kd_spin_jit_is_disabled(const struct kd_spin_diag_slot *slot)
 {
-	struct kd_spin_diag_slot *slot = kd_spin_diag_find((unsigned long)lock);
-
 	return slot && atomic_read_acquire(&slot->jit_disabled);
 }
 
@@ -112,18 +117,17 @@ static void kd_spin_jit_disable(struct qspinlock *lock)
 					    this_cpu_ptr(&local_shadow_stack)));
 }
 
-static void kd_spin_diag_waiter_enter(struct qspinlock *lock)
+static struct kd_spin_diag_slot *kd_spin_diag_waiter_enter(struct qspinlock *lock)
 {
 	struct kd_spin_diag_slot *slot = kd_spin_diag_find((unsigned long)lock);
 
 	if (slot)
 		atomic_inc(&slot->waiter_count);
+	return slot;
 }
 
-static void kd_spin_diag_waiter_exit(struct qspinlock *lock)
+static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)
 {
-	struct kd_spin_diag_slot *slot = kd_spin_diag_find((unsigned long)lock);
-
 	if (!slot)
 		return;
 	if (unlikely(atomic_dec_return(&slot->waiter_count) < 0)) {
@@ -176,21 +180,21 @@ static void kd_spin_diag_record_nested(raw_spinlock_t *lock,
 					 KD_SPIN_DIAG_NATIVE_FALLBACK, depth);
 }
 
-static void kd_spin_debug_combiner(struct qspinlock *lock, unsigned int depth)
+static void kd_spin_debug_combiner(struct kd_spin_diag_slot *slot, unsigned int depth)
 {
-	kd_spin_diag_record(lock, KD_SPIN_DIAG_COMBINER, depth);
+	kd_spin_diag_record_slot(slot, KD_SPIN_DIAG_COMBINER, depth);
 }
 
-static void kd_spin_debug_jit_success(struct qspinlock *lock,
+static void kd_spin_debug_jit_success(struct kd_spin_diag_slot *slot,
 				      unsigned int depth)
 {
-	kd_spin_diag_record(lock, KD_SPIN_DIAG_JIT_SUCCESS, depth);
+	kd_spin_diag_record_slot(slot, KD_SPIN_DIAG_JIT_SUCCESS, depth);
 }
 
-static void kd_spin_debug_jit_not_ready(struct qspinlock *lock,
+static void kd_spin_debug_jit_not_ready(struct kd_spin_diag_slot *slot,
 					unsigned int depth)
 {
-	kd_spin_diag_record(lock, KD_SPIN_DIAG_JIT_NOT_READY, depth);
+	kd_spin_diag_record_slot(slot, KD_SPIN_DIAG_JIT_NOT_READY, depth);
 }
 
 void kd_spin_debug_nested_lock(raw_spinlock_t *lock, bool native_fallback)

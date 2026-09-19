@@ -33,6 +33,8 @@ def main():
         )
         subprocess.run([str(binary)], check=True, timeout=15)
         types, _ = production()
+        types += definition((ROOT / "include/kd_spinlock.h").read_text(),
+                            "struct kd_spin_exec_request {").rstrip() + ";\n"
         (path / "restore_types.h").write_text(types)
         code = definition(read_source(ROOT / "kernel_module/kd_spinlock.c"),
                           "kd_spin_restore_request(struct kd_spin_exec_request *execution,")

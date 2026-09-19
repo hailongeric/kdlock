@@ -197,7 +197,7 @@ child 另保留 root 引用。物理 waiter 的恢复汇编在最后一次读取
 远端邮箱，只有非空时才调用解锁/ACK 处理函数；物理 waiter 的 shadow 等待不变。
 状态与生命周期边界见[嵌套 JIT waiter](JIT_REGISTER_ABI.md#42-嵌套-jit-waiter)。
 
-每 CPU 预分配 12 个 712 字节 request，共 8544 字节；frame/context 为 664/5336
+每 CPU 预分配 12 个按 64 字节对齐的 768 字节 request，共 9216 字节；frame/context 为 672/5400
 字节。模块静态 per-CPU 节减少是因为 node 去掉了内嵌寄存器包，不代表总内存减少。
 嵌套 `kd_spin_jit_context` 在 x86-64 上从 184 缩为 16 字节，四槽的请求大小从
 736 降到 64 字节；两者的 `vzalloc` 仍占一页，不能计作每 CPU 释放一页内存。
@@ -207,9 +207,13 @@ mutex 仍使用旧的 per-CPU frame 分配及包处理。
 批次持续持有 L，并在整个 combining 区间持有一次 source/provider lease；每个
 spin bind 检查 OPEN，但不再逐 frame 增减全局计数和 module 引用。设备状态里的
 `frames` 是租约计数，不能再解释为批次内 spin frame 的个数。
-正常单锁完成跳过通用事件链；复杂出口才保存物理 combiner 快照。
+正常单锁完成合并终态验证与物理解绑，仍检查 owner/top/depth、batch lease
+和实际出口包，完成发布继续由锁层负责；SELFTEST 保留 complete/观察/pop 顺序。
+复杂出口才保存物理 combiner 快照。普通 request 标志移至 frame 前，ABI/包分类
+移至寄存器包前，准入元数据集中在请求前两条缓存行；不复制可变状态。
 同批次的同 entry/SPIN backend 复用已找到的 `exe` 槽指针，仍逐次 acquire
-检查 NORMAL、OPEN、entry/pid 和代码指针，dispatcher 的 backend/scope 检查
+检查 NORMAL、OPEN、entry/pid 和代码指针；普通路径在最终 batch prepare
+集中检查，身份 lookup 本身不授权执行，dispatcher 的 backend/scope 检查
 也保留；不缓存代码版本或把 source lease 当成代码不可变保证。
 执行当前请求前预取下一已发布请求的实际寄存器包、frame 热字段，以及逻辑
 waiter task 栈范围内的虚拟 SP/push 槽。虚拟子请求使用共享 root 包，不再按
@@ -218,9 +222,10 @@ SLOWPATH、COMBINER、JIT_SUCCESS 等事件、最大深度、overflow 和 invari
 统计改为初始化时一次性 `alloc_percpu()` 分配，避免挤占模块静态 per-CPU
 预留区；排空退出后遍历所有 possible CPU 汇总，日志字段不变。
 实时 waiter 数量、JIT 禁用 latch 和 owner/ACK 仍是共享协议/观察状态。
-普通请求只初始化 64 字节 frame 热头部及寄存器包；锁数组、remote/native 控制和
-快照位于预分配冷区，由 `complex_ready` 在首次复杂出口启用。node 为 48 字节，
-只保留队列通知、链接、调度栈标记及 execution 引用。
+普通请求只初始化 72 字节 frame 热头部及有效寄存器字段；锁数组、remote/native 控制和
+快照位于预分配冷区，由 `complex_ready` 在首次复杂出口启用。node 为 64 字节，
+保留队列通知、链接、调度栈标记、execution 引用及发布前准备的预取地址提示。
+提示只在排队期间使用，不参与准入或最终恢复。
 `kd_spin_batch_run` 在同一个 C 帧中连续处理新、旧及混合 ABI 请求，编译器
 按 clobber 约束保护 combiner 活跃值。旧 wrapper 适配只额外保护物理 RBP；
 新 wrapper 自己保护 RBP。正常请求不逐次退出/重入循环，也没有外层汇编

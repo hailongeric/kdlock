@@ -101,6 +101,7 @@ def main():
         "int kd_exec_frame_record_event(struct kd_exec_frame *frame,",
         "int kd_exec_frame_complete(struct kd_exec_frame *frame)",
         "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
+        "int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)",
         "int kd_exec_frame_abort(struct kd_exec_frame *frame)",
     ):
         code += definition(frame, marker) + "\n"
@@ -141,6 +142,9 @@ def main():
     code += definition(spin, "static struct kd_spin_node *kd_spin_linked_successor(struct qspinlock *word,")
     if "struct kd_spin_batch {" in spin:
         code += definition(spin, "struct kd_spin_batch {").rstrip() + ";\n"
+        code += "static struct kd_exe_info *\n" + definition(
+            spin, "kd_spin_batch_lookup(struct kd_spin_batch *batch, unsigned long entry_ip)"
+        )
         code += "static struct kd_exe_info *\n" + definition(
             spin, "kd_spin_batch_find_ready(struct kd_spin_batch *batch, unsigned long entry_ip)"
         )
