@@ -76,7 +76,7 @@
 | 只读离线归档校验 | 宿主机或 guest；不执行用例或访问 JIT 设备 |
 | 编译、单元测试、模块、daemon、benchmark | guest `/root/host_fs/kdlock` |
 | SSH | `root@127.0.0.1:2222` |
-| guest 内核源码/build | `/root/linux-6.1.159` |
+| 当前普通 spin 实验源码/build | `/root/linux-6.1.159-kdclobber1`；原 `/root/linux-6.1.159` 和 `kdstatic2` 基线保留 |
 | QEMU 脚本 | 宿主机 `/home/eric/vm/qemu-scripts/run_vm.sh` |
 
 不要在宿主机执行 make、模块加载、daemon 或 benchmark。
@@ -89,10 +89,14 @@ normal 模式用 9p 共享源码，不需要同步；recovery 模式同一路径
 
 ```sh
 cd /root/host_fs/kdlock
-python3 kernel_baseline/verify.py --source /root/linux-6.1.159 --build --running
+python3 bench/spin_cacheline/kernel_identity.py \
+  --kernel-source /root/linux-6.1.159-kdclobber1 \
+  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918
 ```
 
-该命令核对捕获材料、18 个源码/接口文件、配置、九个构建文件及 live Build ID，
+按实际运行内核选择对应 source/build/baseline；原 `6.1.159` 的核验命令见
+[手动指南 3.2](PROJECT_GUIDE.md#32-进入-guest-并检查基线)。上述命令核对所选
+捕获材料、源码/接口文件、配置、构建文件及 live Build ID，
 不代替完整源码扫描或运行配置检查。另查 `nokaslr`、voluntary 动态抢占、
 CPU/NUMA 拓扑和挂载类型。具体身份与重建限制见
 [baseline](../kernel_baseline/README.md)。不匹配时先查原因，不能自动改内核。

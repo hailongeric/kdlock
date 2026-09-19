@@ -47,6 +47,9 @@ before ACK; reclamation waits for RCU readers.
 This is an experimental kernel JIT delegation prototype. It implements
 contended spin/mutex delegation, nested requests, allowlisted services,
 supported forward native continuation, native-owner exclusion and ACKs.
+Ordinary spin on the separate `kdclobber1` kernel uses caller-clobber v1:
+normal requests retain RIP/RSP/RBP and intermediate exits materialize full
+logical GPR state. Legacy spin and mutex retain their existing contracts.
 The Chinese [version overview](docs/PROJECT_GUIDE.md#1-当前进展) describes supported
 capabilities; [DESIGN](docs/DESIGN.md) defines their contracts and
 [TODO](docs/TODO.md) tracks unfinished and deferred work.
@@ -126,6 +129,7 @@ setup, recoverability and controlled module lifecycle remain explicit
 | [tests/](tests/README.md) | Verification documentation and entry points |
 | `kernel_baseline/` | Captured guest patch, configuration and identity verifier |
 | `kernel_experiments/` | Separately authorized kernel experiments |
+| [tclock_backend/](tclock_backend/README.md) | Independent TCLock native stack-delegation backend |
 
 - [Code map and manual](docs/PROJECT_GUIDE.md): source index and environment setup.
 - [Execution](docs/JIT_EXECUTION.md): execution flows and protocol contracts.

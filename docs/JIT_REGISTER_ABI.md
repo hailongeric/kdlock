@@ -117,14 +117,15 @@ ABI；新图像的 ABI 必须匹配 registry/frame。嵌套混合边界使用 FU
 
 ### 1.1 与 TCLock spinlock 的执行路径和状态保存对比
 
-对照本地 `/home/eric/TCLocks` 提交
-`bbfb9f00a12af51dff6ca291cb9829a82960c2ef` 的实际内核代码：
+对照仓库内 [TCLock 上游快照](../tclock_backend/upstream/)；其固定提交为
+`bbfb9f00a12af51dff6ca291cb9829a82960c2ef`，来源与哈希见
+[UPSTREAM.json](../tclock_backend/UPSTREAM.json)。对应上游内核代码：
 `src/kernel/rcuht/locks/komb.c`、`src/kernel/rcuht/lib/combiner.c` 和
 `src/kernel/rcuht/include/lib/combiner.h`。该头文件启用 `WWJUMP`。
 这里比较实现，不把 Linux qspinlock benchmark 当成 TCLock 性能对照。
 独立 [tclock_backend](../tclock_backend/README.md) 已保留该来源的完整普通 spin
 执行路径，通过同一内核 hook 物理切换 waiter 栈；同负载的
-[三方实测](../bench/tclock_compare/results/20260918-native-stack.md)另行报告。
+[当前三方实测](../bench/tclock_compare/results/20260919-state-access.md)另行报告。
 该后端的现场恢复没有经过 kdlock wrapper，不能拿它替代 JIT 中途完整物化。
 
 TCLock 的 `komb_spin_lock_slowpath()` 先把六个 callee-saved 寄存器压到
@@ -192,7 +193,9 @@ kdlock 的物理 RSP 必须留在 combiner 栈：wrapper 的控制槽、地址
 
 ## 2. JIT 函数调用 ABI
 
-生成的代码块从 `wrapper.S:main` 开始，C 侧按以下类型调用：
+生成物的偏移 0 为 `wrapper.S:main`，本节描述这个普通 C ABI 入口。
+普通 spin 批次实际使用偏移 16/32 的 clobber 调用边界（第 1.0、2.3 节），
+不能把它们转换成下列普通函数指针调用。偏移 0 的类型为：
 
 ```c
 void (*virt_ptr)(struct pt_regs *regs, unsigned long args[2]);
@@ -355,7 +358,10 @@ block budget 插桩破坏。需要用跨块 `CMP/JMP/Jcc`、`ADC/SBB` 等差分�
 
 ### 4.1 Spin 和 mutex 公共 hook 栈布局
 
-原生 waiter 不是从异常入口得到完整 `pt_regs`。hook 调用点已经按 C ABI 保存
+本节仅描述 **legacy spin 与 mutex** 的 hook 保存栈。caller-clobber v1
+直接接收显式 IP/SP/BP，不解析本节布局，入口捕获见第 1.0 节。
+
+旧入口的原生 waiter 不是从异常入口得到完整 `pt_regs`。hook 调用点已按 C ABI 保存
 callee-saved 寄存器。spin 由 origin CPU 的 `kd_spin_prepare_regs()` 在发布前
 直接解码到共享 request；mutex 仍由 `execute_cs()` 重建。二者使用以下布局：
 
@@ -414,8 +420,10 @@ frame 记录 `KD_EXEC_LOCK_NATIVE`，然后才弹出 lock CALL 的返回地址�
 
 ## 5. Wrapper 私有栈布局
 
-`wrapper.S` 先建立真实 RBP frame 并保存宿主 callee-saved 寄存器，随后建立
-以下 JIT 私有槽。偏移均相对物理 RBP：
+三个入口保留相同的 JIT 私有槽偏移，但序言保存不同：偏移 0 的普通 C ABI
+入口保存 RBP、RBX、R12–R15；偏移 16 的旧批次入口只预留这六个字的位置，
+物理 RBP 由调用适配器保护；偏移 32 的新入口只压入 RBP，预留其余五个字。
+批次调用者编译器按 clobber 管理其他活跃值。以下偏移均相对物理 RBP：
 
 | 偏移 | 宏 | 内容 |
 | --- | --- | --- |

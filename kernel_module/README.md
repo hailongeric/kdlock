@@ -13,7 +13,7 @@
 | [kd_exec.c](kd_exec.c) | frame 栈、上下文验证和状态事件 |
 | [sys.c](sys.c) | `/dev/kd_dev` 的读取、上传、状态与 retire ioctl |
 | [kd_source.c](kd_source.c) | 来源状态和 module/frame/writer pins |
-| [kd_hotlock.c](kd_hotlock.c) | 按锁地址采样、发现热锁并注册入口 |
+| [kd_hotlock.c](kd_hotlock.c) | 按锁地址统计频率并决定晋升；入口注册由 `kd_lock.c` 调用执行注册表 |
 | [kd_spin_gate.c](kd_spin_gate.c) | 私有 gate、真实 owner 与原锁引用；`origin` release/acquire 发布，已有条目无锁查找，创建仍串行化 |
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
@@ -30,6 +30,11 @@
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
 节点为 64 字节，request 继续独立存活。约束见 [DESIGN](../docs/DESIGN.md#911-reuse-before-copy-contract)。
 
+热锁检测仍使用 `INIT → CHECKING → DELEGATE/IGNORE` 和固定采样窗口。
+普通 clobber 入口在已晋升后跳过 `kd_hotlock_record()`；IGNORE 仍会更新计数，
+没有自动降级或按收益选择执行方式。现有行为见
+[热锁检测](../docs/DESIGN.md#hotlock-monitoring)，改进属于[待办](../docs/TODO.md#hotlock-monitoring-and-adaptive-admission)。
+
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
 共享 waiter 计数与身份/禁用状态分离到不同缓存行。request 按 64 字节对齐，
 普通准入元数据位于前两条缓存行。普通批次只在最终准入处检查 readiness，
@@ -41,7 +46,7 @@
 `spin/combiner.inc` 内的 `execute_cs` 处理复杂委托出口，`run_combiner` 组织批次；
 `kd_spin_batch_run` 在同一个 C 帧中处理新、旧及混合 ABI，编译器保护跨 wrapper
 活跃值。调用边界见 [kd_jit_batch.h](../include/kd_jit_batch.h)；旧汇编外壳仅留在
-[兼容夹具](../tests/unit/spin/legacy_batch.S)，不参与生产构建。
+[兼容测试夹具](../tests/unit/spin/legacy_batch.S)，不参与生产构建。
 新 ABI 的普通 root 正常路径只捕获/回写/恢复 RIP/RSP/RBP，中途出口在进入 C
 前物化完整逻辑 GPR；旧 ABI 和 mutex 保留原调用规则。
 `spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后先切到

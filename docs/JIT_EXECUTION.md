@@ -1,7 +1,7 @@
 # JIT 范围、执行流与测试
 
 适用范围：仅 x86_64 机器上的内核临界区；不包含其他架构的适配或测试任务。
-mutex 代理必须显式启用 `mutex_jit=1`。
+`mutex_jit` 默认开启；mutex 正例按 `mutex_jit=1` 验收，`0` 仅用于显式原生对照。
 普通 spin 的 caller-clobber v1 由独立 `kdclobber1` 内核入口启用：物理请求
 最初仅有 RIP/RSP/RBP，正常 outer unlock 返回精简完成；中间出口先物化 FULL
 包再进入下述通用处理。旧 ABI 和 mutex 保留完整契约。身份、状态表和调用约束
@@ -51,7 +51,7 @@ waiter 获取/请求 L，记录原临界区入口
   |
   +-- combiner 持有原生 L --> 校验入口/逻辑子请求的执行范围
                               |
-                         wrapper 装载 waiter 的 pt_regs
+                         wrapper 按 entry_abi 导入有效入口状态
                               |
                          必要时检查入口地址区间
                               +-- 条件不满足 --> 尚未开始，走原生路径
@@ -76,7 +76,10 @@ waiter 获取/请求 L，记录原临界区入口
                                             本次代理结束
 ```
 
-图中的控制 CALL 继续 JIT 是正常路径。局部 mutex 控制另有
+图中控制 CALL 的续跑指中间 lock/unlock：进入 C 前须物化 FULL。
+普通 clobber root 的最终 outer unlock 另走 COMPLETE，写回 RIP/RSP/RBP，
+回到锁侧循环完成/发布，再由 waiter 恢复；不把精简包交给通用 dispatcher。
+局部 mutex 控制另有
 [有界栈检查](#53-mutex-控制-call-的栈检查)：窗口不足时在 CALL 前交回 waiter，
 窗口变化时在已完成 CALL 的后继交回 waiter；两者均不返回本次 JIT。
 
@@ -108,12 +111,16 @@ owner/依赖任务必须能在其他 CPU 推进，同 CPU 的 sleeping owner 与
 
 ### 2.1 Waiter 发布边界
 
-正常 JIT 完成时，combiner 先将最终寄存器包写回 node，再以 release 写入发布
-`completed=1/locked=0`；waiter 的 acquire 读取成功后才消费结果。尚未执行的
-单 waiter、IRQ/native 交接和批次末尾交接也使用 release，先完成队列链接再唤醒。
+正常 spin JIT 完成时，wrapper 先更新共享 request 的有效结果，combiner 完成
+终态检查和解绑，再在 node 上 release 发布 `completed=1/locked=0`；waiter
+acquire 观察完成后才消费结果。新 ABI 的 COMPLETE 只含 RIP/RSP/RBP；FULL
+中间出口和旧 ABI 遵守各自寄存器规则。node 仅引用 request，不保存另一份整包。
+mutex 仍保留自身 node/frame 的包处理。
+尚未执行的单 waiter、IRQ/native 交接和批次末尾交接也使用 release，先完成
+队列链接再唤醒。
 这是私有队列的执行通知，不是把原生锁 owner 改为 waiter。
 
-node 发布后可能立即复用。combiner 必须提前保存后继，不再读写旧 node；native
+node 完成通知发布后可能立即复用。combiner 必须提前保存后继，不再读写旧 node；native
 续跑期间的 owner ACK 是另一个、位于原 waiter 栈上的请求，其最后访问也必须
 是 release ACK。两类通知不能混成一个“完成”计数，原生后缀仍遵守上述保留 owner 的流程。
 
@@ -373,10 +380,14 @@ entry/body/install、native frame、owner ACK 或非零注册数都会使对照�
   -> 竞争请求执行 JIT -> 返回后 body witness + 完整状态验收
 ```
 
-等于或超过自身窗口仍转为 `IGNORE`，本会话不重新采样。先遇到另一把更快的锁
-不再缩短新锁或在途锁的窗口；这解决跨锁发现顺序依赖，不保证任意调度下都会晋升。
+等于或超过自身窗口仍转为 `IGNORE`，本会话不重新评估晋升。IGNORE 的后续
+`record` 调用仍获取全局表锁、读取时间并递增计数。先遇到另一把更快的锁不再缩短新锁或在途锁的窗口；这解决跨锁发现顺序依赖，不保证任意调度下都会晋升。
 spin 的 hook 在 lock/unlock 采样，mutex 在 lock 采样，10000 个样本不等于
 10000 个临界区。单位是周期，不是固定秒数，也不是实际锁竞争率或 JIT 收益。
+普通 clobber 入口已晋升后不再调用 `record`；是否执行 JIT 还取决于队列、准入
+和批次交接。当前没有自动降级，也没有强制 99% JIT 的策略。诊断、正文观察与
+热锁采样是不同计数，不能以降低实际代理覆盖率冒充同路径提速。
+[监测优化](TODO.md#hotlock-monitoring-and-adaptive-admission)仍是待办。
 
 保留各驱动的 warmup、连续采样和 NORMAL 发布等待；不要在已开始的采样中
 插入长 sleep。日志没有 `begin delegate` 时先检查采样频率、目标 comm 和时序，

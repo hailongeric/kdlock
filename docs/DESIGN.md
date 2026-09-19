@@ -24,8 +24,9 @@ workloads, not a validated unmodified production subsystem.
 The design is inspired by TCLock-style delegation and BCD's binary execution
 machinery, but adapting user execution to kernel code requires additional
 ownership, context and lifetime rules. Address substitution is not a context
-switch. JIT is not a security boundary, and a performance benefit remains to
-be demonstrated separately from correctness tests.
+switch. JIT is not a security boundary. Measured benefits are workload-specific;
+current results and native/TCLock comparisons live in [bench](../bench/README.md),
+separately from correctness evidence.
 
 ## 2. System Overview
 
@@ -53,15 +54,20 @@ Only the frame-backed spin/mutex entry remains; no user/futex frontend is active
 
 ## 3. Kernel Hook Layer
 
-Existing spin and mutex hook pointers pass the lock address, saved hook RSP
-and return RIP. The latter is the instruction after lock acquisition.
-Exact hook stack offsets are defined in the ABI document and the captured
-[kernel baseline](../kernel_baseline/README.md).
+The legacy spin/mutex hooks pass lock address, saved hook RSP and return RIP.
+Ordinary spin on the separate `kdclobber1` kernel instead uses versioned bridges
+with RDI=lock, RSI=pre-CALL RSP, RDX=the local post-CALL label and RCX=caller RBP.
+The compiler spills live values across the declared GPR clobbers; RSP/RBP obey
+the call boundary. This path does not decode a compiler-generated prologue.
+Legacy hook offsets and the new ABI are defined in [the register ABI](JIT_REGISTER_ABI.md);
+[kernel baselines](../kernel_baseline/README.md) remain distinct.
 
 `target_process` matches an exact task comm. Spin also recognizes live local
 acquisition tickets; mutex recognizes active task records. These preserve
 unlock routing through rename and native continuation. Eligibility affects
 delegation, never which physical exclusion lock protects the data.
+
+<a id="hotlock-monitoring"></a>
 
 Hotlock sampling uses a bounded 131071-slot append-only table:
 `INIT -> CHECKING -> DELEGATE/IGNORE`. After a module-wide one-billion-cycle
@@ -81,9 +87,16 @@ not establish TSC synchronization across CPUs.
 Spin samples lock/unlock, mutex samples lock. Decisions are sticky.
 Frequency is not measured contention or a guarantee that delegation pays off.
 This is deterministic only for the same per-lock sample timestamps, not for
-arbitrary scheduling, CPU frequency or workload changes. Sticky IGNORE entries
-are not automatically resampled if a workload later becomes hotter. Timing and
-failure interpretation are in [usage 3.2](JIT_EXECUTION.md#32-热锁晋升与翻译准备).
+arbitrary scheduling, CPU frequency or workload changes. IGNORE entries still
+take the writer lock and update counters when recorded,
+but are not reconsidered if the workload becomes hotter; DELEGATE does not demote.
+`kd_hotlock_is_promoted` is a lockless status lookup. The ordinary clobber entry
+skips `record` once promoted, so low steady-state JIT share on an already-ready
+lock is not evidence of a late promotion decision. Native successes and short
+batches also affect the share. Diagnostic/body counters are separate from this
+frequency sampler and cannot all be removed as monitoring overhead.
+Adaptive native/probe/delegate selection is only [proposed work](TODO.md#hotlock-monitoring-and-adaptive-admission).
+Timing and failure interpretation are in [usage 3.2](JIT_EXECUTION.md#32-热锁晋升与翻译准备).
 
 Default work changes kdlock only. Missing hook capabilities and hook-reader
 lifetime need separate assessment, not incidental guest kernel edits.

@@ -289,7 +289,7 @@ LC_ALL=C KDIR=/root/linux-6.1.159-kdstatic2 KDLOCK_RECOVERY_CONFIRMED=1 \
 [失败串口](/tmp/kdlock-wwjump-20260917/hang-serial.log)、
 [完整运行归档](/tmp/kdlock-wwjump-20260917/evidence.tar.gz)（SHA256
 `d753b9c1c4bd0fd79420438d5c44e8486597073578c49b9b234d950e40c01144`）。
-四点性能及 WWJUMP 计数见[独立结果](../bench/spin_cacheline/results/20260917-wwjump.md)。
+四点性能及 WWJUMP 计数见[独立结果](../bench/spin_cacheline/results/HISTORY.md#20260917-wwjump)。
 
 <a id="spin-batch-validation"></a>
 
@@ -335,7 +335,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDIR=/root/linux-6.1.159-kdstatic2 \
 [完整证据归档](/tmp/kdlock-spin-batch-20260917/evidence.tar.gz)（含首次加载失败、
 最终 live 及 benchmark；SHA256
 `c11cb68aaedd98aee13657617e1059633b3874614f0b5a12086df52e8c2457c8`）。
-同版本的 [spin 四点性能结果](../bench/spin_cacheline/results/20260917-batch.md)
+同版本的 [spin 四点性能结果](../bench/spin_cacheline/results/HISTORY.md#20260917-batch)
 单独记录吞吐，不能将 fixture 的地址检查作为硬件预取收益证明。
 
 <a id="spin-nested-state-validation"></a>
@@ -366,7 +366,7 @@ parent/child owner ledger 仍独立，物理 waiter 的 shadow 等待路径不�
 
 这证明一次 ledger 中转复制和每轮空邮箱函数调用已消除，不代表已测得吞吐提升。
 结构大小与按页分配的区别见[执行说明](../docs/JIT_EXECUTION.md#23-frame-复用与单锁完成)。
-随后同一实现的 [spin benchmark 完整扫描](../bench/spin_cacheline/results/20260917-current-spin.md)
+随后同一实现的 [spin benchmark 完整扫描](../bench/spin_cacheline/results/HISTORY.md#20260917-current-spin)
 已完成 120/120 会话；该单锁负载不能量化嵌套优化的收益，性能结论以结果页为准。
 
 命令：guest 中执行 `make -C tests/unit run PY_TESTS='execution/test_exec_capacity.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py'`；
@@ -452,7 +452,7 @@ parent/child owner ledger 仍独立，物理 waiter 的 shadow 等待路径不�
 Build ID 为 `460d77502af4709a0cca794b322cedc20c2cc478`，源码/build/live 身份
 均核对；快照为 `pre_static_boot_20260915`。没有修改、重编译内核。
 四点 16 会话 bench 通过，但 20 线程吞吐较上一版下降，见
-[结果和限制](../bench/spin_cacheline/results/20260917-tclock-shared.md)。
+[结果和限制](../bench/spin_cacheline/results/HISTORY.md#20260917-tclock-shared)。
 既有七角色/双 CPU mutex mode-4 soft lockup 本轮未重跑或修复。
 
 证据：guest `/root/kdlock-evidence/tclock-shared-jit-20260917`、
@@ -491,7 +491,7 @@ provider 的 per-CPU 节分别为 8000/8064 字节。
 内核源码/build/live Build ID 均核对通过，Build ID 为
 `460d77502af4709a0cca794b322cedc20c2cc478`。恢复快照为
 `pre_static_boot_20260915`；没有修改、重编译内核或扩大 module per-CPU 预留。
-性能结果与原始会话见 [四点复测](../bench/spin_cacheline/results/20260917-waiter-packet.md)。
+性能结果与原始会话见 [四点复测](../bench/spin_cacheline/results/HISTORY.md#20260917-waiter-packet)。
 
 首轮失败单独保留：早期 unit 夹具仍有旧 packet/布局假设，以及变异断言失败后
 继续解引用的问题，修正后最终 12 项重新通过。队列 SELFTEST 绕过汇编 hook 并

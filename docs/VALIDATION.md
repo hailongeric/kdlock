@@ -17,15 +17,14 @@ extremely rare scenarios may remain unimplemented and untested under the
 [delivery scope](TODO.md#delivery-scope). This does not turn untested limitations
 into passes, remove existing guards or require another extended test matrix.
 
-**Documentation handoff, 2026-09-14:** that documentation increment ended after the
-native-handoff timing acceptance below. The README now links to one Chinese
-[version overview](PROJECT_GUIDE.md#1-当前进展) separating implemented behavior,
-unfinished work and explicit deferrals; duplicate chronological summaries were
-removed from those two entry documents. This final documentation pass does not
-change the 211 runtime/test inputs, add another live result or resolve the earlier
-two-CPU missing-JIT failure. No further experiment or Git commit is part of this
-handoff. The later user-requested cleanup/commit is recorded separately below;
-it does not resume the paused implementation/experiment plan.
+Current commands and behavior are maintained in [the manual](PROJECT_GUIDE.md),
+[execution contracts](JIT_EXECUTION.md), [tests](../tests/README.md) and
+[benchmarks](../bench/README.md). Historical statements below such as “not yet
+implemented”, old polling behavior or full-suite commands apply only to their
+dated freezes; they are not current instructions. Superseded early spin reports
+are consolidated in [the history index](../bench/spin_cacheline/results/HISTORY.md),
+with fixed Git references and archive hashes. The [current task list](TODO.md)
+retains unresolved defects and explicit deferrals without completed task logs.
 
 | Date (+08) | Evidence | Result and scope |
 | --- | --- | --- |
@@ -1074,11 +1073,12 @@ b7860666f3afe3b68c0b1f8696c9da0888321c34516bdf2fb16f3775ff226dce
 ```
 
 These external files were not compiled, loaded or copied into the guest bundle.
-The [design assessment](DESIGN.md#runnable-polling-and-event-parking) records
-the required publication/lifetime handshake; copying only task sleep or enum
-values would not be a port. Keep current polling while participation/policy
-work remains open; no event parking, owner handoff or guest-kernel change is
-claimed. This is a main-path investigation, not a new daily test requirement.
+This historical investigation considered event parking and its required
+publication/lifetime handshake; copying task sleep or enum values alone would
+not have been a port. No parking, owner handoff or kernel change was implemented.
+The later user-selected [pinned busy-polling contract](DESIGN.md#pinned-busy-polling)
+supersedes that investigation as the current policy; parking is not a pending
+implementation step or a new daily test requirement.
 
 Independent review verifies all recorded byte/outcome archives, the failed
 point's raw state and publication, successful body/image joins, pair metadata

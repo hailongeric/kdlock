@@ -6,6 +6,13 @@ The captured configuration and patch are evidence, not a recommendation to use
 this historical kernel on production machines. Rebuilding/installing the guest
 kernel still requires separate approval under `docs/AGENTS.md`.
 
+This is the original `6.1.159` baseline, not the current ordinary-spin ABI.
+The separate [spin-static](../kernel_experiments/spin_static/README.md) and
+[caller-clobber](../kernel_experiments/spin_clobber/README.md) experiments retain
+independent source/build trees and external captured bundles. Select the bundle
+matching the running kernel as described in [the manual](../docs/PROJECT_GUIDE.md#32-进入-guest-并检查基线);
+do not overwrite this original capture or delete it as an obsolete artifact.
+
 ## Contents
 
 - `linux-6.1.159-guest.patch`: the 13 existing content differences against

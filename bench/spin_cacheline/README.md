@@ -17,98 +17,26 @@
 
 ## 最新对比
 
-[9/19 当前版本的 Linux/TCLock/kdlock 对照](../tclock_compare/results/20260919-state-access.md)：
-clobber ABI 下 90 场对照及 30 场长批次单线程检查全部正确排空。20 线程、
-1/16 cacheline 的 kdlock 中位吞吐为 2.965/2.904 Mops/s，比 TCLock 高
-29.0%/71.1%，实际 JIT 约 99.8%；4 线程仍比 TCLock 低 45.7%/27.9%。
-三后端均为本轮实测，完整结果保留 Linux 对照、代理比例和波动。
+[9/19 Linux/TCLock/kdlock 对照](../tclock_compare/results/20260919-state-access.md)
+是当前成绩入口：clobber ABI 下 90 场对照及 30 场长批次单线程检查全部正确排空。
+20 线程、1/16 cacheline 的 kdlock 中位吞吐为 2.965/2.904 Mops/s，实际 JIT
+约 99.8%；4 线程仍明显落后。三方使用同一 caller，分别报告吞吐、代理比例和波动。
+已有日志复算显示四线程平均每批约 2 个 JIT 正文、二十线程约 554/603 个，
+见[批长分析](../tclock_compare/results/20260919-state-access.md#batch-length)。
 
-[状态访问五阶段对照](results/20260918-state-access.md)：诊断引用复用、计数行
-分离、热字段布局及普通准入/完成处理，共 100 场竞争测量正确排空。20 线程
-1/16 cacheline 中位吞吐提高 68.6%/66.0%，JIT 均约 99.8%；四线程变化较小，
-部分配置还存在原生/JIT 混合比例变化。功能验证为 10 个单元入口和 6 项 live。
-另 20 场千万次单线程检查全部正确排空，中位成本增加约 0.04/0.23 ns（均小于 0.5%）。
+| 历史对照 | 用途 |
+| --- | --- |
+| [状态访问五阶段](results/20260918-state-access.md) | 诊断引用、布局及普通准入/完成合并；100 场竞争和 20 场长批次 |
+| [后继预取](results/20260918-prefetch.md) | 同镜像 `spin_prefetch=0/1/2` 与旧布局分开比较；默认 2 |
+| [获取入口与缓存](results/20260918-spin-entry.md) | 首次 CAS 前移、缓存重复查询消除；无缓存试验退化，默认保留 `spin_native_cache=1` |
+| [PT/Stack 共用](results/20260918-shared-reg-bank.md) | 24 场定向测量；减少搬运未证明一致提速 |
+| [首次 TCLock 三方矩阵](../tclock_compare/results/20260918-native-stack.md) | 两种 ABI、180 场稳态、独立采样，保留并发冷晋升失败 |
+| [统一 C 循环](results/20260918-unified-context.md)、[clobber 初版](results/20260918-clobber-v1.md) | 不同冻结版本的四臂比较，均非当前三方成绩 |
+| [9/15–9/17 历史索引](results/HISTORY.md) | 已被替代的阶段报告、关键结果、固定 Git 版本和证据哈希 |
 
-[后继预取地址前移](results/20260918-prefetch.md)：120 场四路对照全部正确排空，
-新默认策略在 20 线程、1/16 cacheline 下相对旧版本提高约 7.3%/9.3%，实际
-JIT 仍约 99.8%；4 线程基本持平。另 20 场长批次单线程未观察到原生成本退化。
-`spin_prefetch=0/1/2` 可分别关闭后继预取、使用旧查询策略、使用生产者提示；
-结果区分同镜像策略对照与旧节点布局的额外基线，不据此推算新的 TCLock 倍率。
-
-[获取入口与原生缓存对照](results/20260918-spin-entry.md)：root 首次 CAS 提前、
-竞争后建立 ticket，复用 gate/pin；相同缓存键不再重复查表回填。无缓存试验的
-60 场交替 A/B 显示单线程下降 47%–51%，因此缓存默认保留，并提供装载参数
-`spin_native_cache=0`。最终默认配置的另 60 场全部正确排空：1 cacheline/4 线程
-约提高 12%，其余竞争点基本持平，未证明普遍提速。另 20 场千万次单线程对照
-显示完整操作仍增加约 0.9–1.5 ns；最终关闭缓存的单场实际 JIT 验证也通过。
-
-[共享 JIT 寄存器 backing 的定向对照](results/20260918-shared-reg-bank.md)完成
-新旧各 12 场：4 线程、1/16 cacheline、两种 caller ABI，各三轮。重复搬运已从
-汇编中删除，但 16 cacheline 吞吐基本持平，尚未证明一致提速；结果保留 JIT 比例
-与前后整批测量的限制，不替代下列完整矩阵。
-
-此前已完成 [完整 TCLock / Linux / kdlock 三方对照](../tclock_compare/results/20260918-native-stack.md)，
-在两种 caller ABI、1/16 cacheline、1/4/20 线程下共 180 场，全部稳态测量正确
-并排空。独立后端真实切换 waiter 栈；运行方法见
-[tclock_compare](../tclock_compare/README.md)。该轮统一单 CPU 准备，不能与
-下面早期矩阵拼接，也不表示已修复测试中发现的 kdlock 并发冷晋升停滞。
-
-[2026-09-18 统一 combiner 现场后的四组对照](results/20260918-unified-context.md)
-完成 120/120 会话、1 亿次完整操作，以五次交替测量的中位数比较两种 caller ABI
-的 native/kdlock。新 ABI 的 20 线程、1/16 cacheline 为 **1.6294/1.6370 Mops/s**，
-实际 JIT 约 99.8%，仍低于对应原生的 **2.9487/1.8030 Mops/s**。
-与[统一循环前](results/20260918-clobber-v1.md)相比，新 ABI 的 20 线程基本持平，
-4 线程分别变化 +6.96%/−2.40%，没有一致提速。完整表格、调用者成本、波动和
-NO_JIT 分类见结果页。
-
-上述四组测量覆盖对照 TCLock 后的新旧及混合 ABI 共用 combiner C 循环版本，
-此前的[定向功能验证](../../tests/README.md#tclock-context-loop)独立保留。
-开跑前修复私有观测补丁与旧测试夹具的返回类型适配，22 项 benchmark 检查通过；
-生产锁代码未改。实现与必要差异见
-[现场对照](../../docs/JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比)，
-剩余开销见[执行路径第 6 节](EXECUTION_PATHS.md#costs)。原生对照为 Linux
-qspinlock；该次四组矩阵未含 TCLock，后续三方结果见本节首段。
-
-以下保留此前各冻结版本的测量入口及各自统计口径。
-[9/17 单份 request、热状态和锁侧 WWJUMP 四点结果](results/20260917-wwjump.md)
-完成 16/16 会话，20 线程的 1/16 cacheline 为 1.550/1.519 Mops/s；其旧 C step
-逐次保存描述仅属于该版本。
-
-旧扫描的主指标为 **kdlock 最高有效吞吐 / 原生有效吞吐中位数**，用于观察该批样本中的
-最佳表现；完整定义见[结果解释](#结果解释)。查询优化和 spin 栈改动后的
-[2026-09-17 完整扫描](results/20260917-stackless.md) 已完成 30 个配置、
-120/120 个会话，使用每线程 10 万次、1/4/8/12/16/20 线程。
-多线程 kdlock 最佳吞吐为 **0.544–0.647 Mops/s**，为原生中位数的
-**16.6%–29.3%**；相较 [9/15 的相同负载](results/20260915-post-work.md)，
-25 个多线程配置的最佳吞吐提升幅度中位数为 **52.9%**。全部测量和排空通过。
-结果页保留完整表格、最佳会话的 JIT 占比、构建时观测补丁修正及原始 CSV。
-
-同日后续 [frame 精简的定向结果](results/20260917-frame-fast.md) 覆盖
-1/16 cacheline、4/20 线程，16/16 会话通过。20 线程吞吐提高到
-**0.855/0.850 Mops/s**，比上一轮对应点高 **49.5%/48.6%**；4 线程高
-**12.0%/15.5%**。该复测保留每组两个样本及 JIT 比例，不能外推为完整扫描。
-
-随后 [waiter 寄存器包与原子 frame lease 的四点复测](results/20260917-waiter-packet.md)
-完成 16/16 会话。20 线程的 1/16 cacheline 达 **1.029/0.951 Mops/s**，
-较 frame 精简版提高 **20.3%/11.9%**；4 线程分别下降 **2.4%/1.7%**。
-完整表格保留原生对照和 JIT 比例；该档未测得收益，不据此宣称普遍提升。
-
-[共享 request 与批次 lease 四点复测](results/20260917-tclock-shared.md)
-完成 16/16 会话，但未测得整体提速。20 线程两点均约 **0.905 Mops/s**，
-较上一版下降 **12.0%/4.9%**；4 线程分别变化 **-4.4%/+0.9%**。
-原始 CSV、独立复算及实现边界均保留，不能把减少复制直接等同于性能收益。
-
-此前[当前 spin 实现完整扫描](results/20260917-current-spin.md)完成
-**120/120 会话**。8–20 线程 kdlock 最佳吞吐为 **0.880–0.940 Mops/s**，
-为原生中位数的 **27.3%–47.3%**。与共享 request 版四个对应点相比变化为
-**+3.8%、−1.8%、−1.3%、+0.4%**，未显示一致的整体提速。本轮包含 shadow
-等待栈及最新嵌套优化；该单锁负载不能衡量嵌套 child/虚拟 waiter 的收益。
-
-同日 [per-CPU 统计、批内 exe 缓存与预取四点复测](results/20260917-batch.md)
-完成 **16/16 会话**。1/16 cacheline 的 20 线程最佳吞吐为
-**1.299/1.285 Mops/s**，比上一版对应点提高 **46.2%/41.4%**；4 线程提高
-**6.5%/14.9%**。这是三项改动合并后的定向测量，每臂两个样本，没有独立归因
-或 TCLock 同环境运行结果。实际 JIT、数据校验、退休和最终排空均通过。
+当前保存/恢复、TCLock 对照和成本分类见 [执行路径](EXECUTION_PATHS.md)。
+旧扫描 `run.py` 仍报告 best/median；`clobber_compare.py` 和三方运行器使用五轮
+中位数。以下保留运行方法及有独立证据的历史章节；不同口径和冻结输入不可混用。
 
 <a id="source-organization"></a>
 
@@ -164,6 +92,7 @@ sleep/yield、额外自旋等待或定期信号轮询。进入循环后执行完
 ```sh
 cd /root/host_fs/kdlock
 export LC_ALL=C
+export KDIR=/root/linux-6.1.159-kdclobber1
 make -C bench/spin_cacheline all test
 
 # 只预览参数和配对顺序；不构建、不加载、不创建结果目录。
@@ -171,9 +100,11 @@ python3 bench/spin_cacheline/run.py --dry-run
 
 # 从宿主机 monitor 实际确认 recovery 快照后才设置。
 export KDLOCK_RECOVERY_CONFIRMED=1
-export KDLOCK_SNAPSHOT_TAG=pre_native_resume_20260905_1110
+export KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915
 timeout 3600s python3 bench/spin_cacheline/run.py \
-  --output /tmp/spin-cacheline-scan-20260914
+  --kernel-source "$KDIR" \
+  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918 \
+  --output /root/kdlock-evidence/spin-cacheline-new
 ```
 
 快照 tag 是当前环境的示例，填写实际确认的 tag；环境变量不是快照证明。
@@ -720,7 +651,7 @@ cd /root/host_fs/kdlock
 timeout 30s python3 bench/spin_cacheline/test_assembly.py
 ```
 
-最近一次[锁外乘加完整扫描](results/20260915-post-work.md)的 60 个 kdlock 会话
+2026-09-15 的历史[锁外乘加完整扫描](results/HISTORY.md#20260915-post-work)的 60 个 kdlock 会话
 对应五种临界区；每种规模的 12 份原生/JIT 汇编均逐字节相同，可合并为五组、
 15 份汇编文件。原始 50 个 JIT、10 个 NO_JIT 会话的运行结果仍分别保留。
 
@@ -792,13 +723,13 @@ lock/unlock 回调，不做 selector、缓存或 JIT。旧三组仍使用原安�
 
 ### 独立内核实验与热点采样
 
-默认仍验证捕获的原内核。已构建并启动的
-[`spin_static` 实验](../../kernel_experiments/spin_static/README.md) 必须显式
-指定自己的源码和基线；普通扫描、调用成本对照和采样入口均支持：
+脚本默认参数仍指向原捕获内核，当前 `kdclobber1` 必须显式选择自己的源码和
+基线；普通扫描、调用成本对照和采样入口均支持以下参数。原
+[spin_static](../../kernel_experiments/spin_static/README.md) 基线保留作历史对照。
 
 ```sh
---kernel-source /root/linux-6.1.159-kdstatic2 \
---kernel-baseline /root/kdlock-kernel-baselines/spin-static2-20260915
+--kernel-source /root/linux-6.1.159-kdclobber1 \
+--kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918
 ```
 
 检查仍覆盖配置、命名源码、构建产物及 live Build ID。每份输出保存所选基线；
@@ -806,11 +737,13 @@ lock/unlock 回调，不做 selector、缓存或 JIT。旧三组仍使用原安�
 
 [`profile.py`](profile.py) 在正常准备和发布后，用 `perf record` 对实际 worker
 做低频内核 IP 采样。每线程仍只有一个 RUN ioctl，不在锁循环中增加时钟或探针。
-先用正常扫描构建并验证二进制，再单独采样，例如在原内核上：
+先用正常扫描构建并验证二进制，再单独采样，例如在当前 clobber 内核上：
 
 ```sh
 LC_ALL=C KDLOCK_RECOVERY_CONFIRMED=1 timeout 240s \
   python3 bench/spin_cacheline/profile.py \
+  --kernel-source /root/linux-6.1.159-kdclobber1 \
+  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918 \
   --perf /root/kdlock-tools/perf-6.1.159/perf \
   --arm kdlock --threads 1 --cachelines 1 --iterations 100000000 \
   --output /tmp/spin-profile-new
@@ -859,7 +792,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/spin_cacheline/clobber_compare.py \
   --kernel-source /root/linux-6.1.159-kdclobber1 \
   --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918 \
-  --output /root/kdlock-evidence/clobber-20260918/compare
+  --output /root/kdlock-evidence/clobber-new/compare
 ```
 
 沿用既有实际正文计数、数据检查、退休和排空要求。`summary.csv/json` 报告完整
@@ -869,7 +802,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 `STOP` 文件只在排空后的会话边界生效。新内核操作见
 [实验说明](../../kernel_experiments/spin_clobber/README.md)。
 
-最新 120 会话及调用者成本见[统一 combiner 现场结果](results/20260918-unified-context.md)；
+该四臂入口的历史 120 会话及调用者成本见[统一 combiner 现场结果](results/20260918-unified-context.md)；
 改造前的[caller-clobber v1 对照](results/20260918-clobber-v1.md)保留为历史数据。
 两轮采用相同五轮中位数口径，但没有交替执行两个 provider 版本，不能据此独立
 归因。结构性状态搬运减少不等于完整操作必然提速。

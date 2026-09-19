@@ -66,28 +66,23 @@ ABI 在同一个 combiner C 帧中连续执行；IRQ/BH/irqsave/trylock 和 mute
 
 ### 1.3 最近验证与历史结果
 
-| 已完成范围 | 结果与证据入口 |
-| --- | --- |
-| 当前版本三方复测 | [9/19 clobber ABI 对照](../bench/tclock_compare/results/20260919-state-access.md)：90 场三方测量和 30 场长批次单线程检查全部正确排空，共 3.75 亿次操作；3 个基础/汇编入口通过。20 线程 kdlock 超过 TCLock，4 线程仍落后，代理比例与波动单独报告。 |
-| Spin 状态访问 | [诊断/布局/普通批次五阶段对照](../bench/spin_cacheline/results/20260918-state-access.md)完成 100 场竞争测量；10 个单元入口、6 项 live 通过，保留完整 JIT、owner/ACK 和排空检查。 |
-| TCLock 三方对照 | [180 场稳态矩阵、六场采样和 20 场长批次原生检查](../bench/tclock_compare/results/20260918-native-stack.md)完成；基础/汇编 3 个入口和 benchmark 22 项检查通过。冷晋升失败另记，未宣称修复或全量通过。 |
-| Caller-clobber v1 | 独立 `kdclobber1` 内核、真实 caller/wrapper 和准入检查、六项 live 通过；见 [ABI 验证](../tests/README.md#spin-clobber-v1)。 |
-| TCLock 现场对照与统一循环 | 后续冻结版本的 8 个基础/相关单元入口、5 项 live 通过；包含新旧真实生成物身份与最终排空，见 [统一循环验证](../tests/README.md#tclock-context-loop)。 |
-| Caller-clobber 性能 | 统一循环后的 [120 会话同内核对照](../bench/spin_cacheline/results/20260918-unified-context.md) 已完成，实际 JIT、数据和排空通过；新 ABI 的 20 线程吞吐与前轮基本持平，没有一致提速。 |
-| Spin shadow 等待栈 | 5 个单元入口、4 项 live 及 IRQ-off mode-0 变体通过；实际 polling RSP 采样、旧 C 栈覆盖与完整寄存器恢复通过，未重跑 bench，见 [本轮验证](../tests/README.md#spin-shadow-wait-validation)。 |
-| Frame 复用与单锁路径 | 共享 request 通过 11 项定向单元入口、五项首轮 live 及修正观察器后完整 mode-8 重跑；16 会话 bench 未测得整体提速。失败证据与 mode-4 未解决限制见 [本轮验证](../tests/README.md#tclock-shared-validation)。 |
-| Spin 性能 | [30 配置完整扫描](../bench/spin_cacheline/results/20260917-stackless.md)、[frame 精简](../bench/spin_cacheline/results/20260917-frame-fast.md)及 [waiter 包复用四点对比](../bench/spin_cacheline/results/20260917-waiter-packet.md)分别保留；该 waiter 版本 20 线程两点提高，4 线程两点略降，不外推为通用收益。 |
-| Spin 无栈等待与 IRQ | 定向单元和 IRQ-on/off 单锁、嵌套/native 续跑、两层物理 frame 实际 JIT 通过；该阶段未测全量、mutex live 或性能，详见 [spin 验证](../tests/README.md#spin-stackless-validation)。 |
-| GS 实际 JIT | mode 10 spin 与 mode 11 mutex 均通过，包含 GS read/write/RMW/current、正文见证、数据及排空；8 组相关单元与准入审计通过，详见 [GS 验证](../tests/README.md#gs-polling-validation)。 |
-| 测试目录整理 | 两个基础 C 和选择器、benchmark 夹具两个相关 Python 程序通过；另做入口导入和命令预览。未跑全量或 kernel live，详见 [目录验证](../tests/README.md#test-directory-validation)。 |
-| 汇编按临界区归档 | 7 项定向检查通过，历史扫描的 60 个来源会话合并为 5 组汇编；原始证据保持不变，详见 [benchmark 验证](../bench/spin_cacheline/README.md#assembly-inspection)。 |
+验证结果统一从以下入口查看，避免在多份当前说明中维护阶段计数：
 
-mutex 正例为 `mutex_jit=1`；生成/发布日志本身不能作为 JIT PASS。
-历史的 native handoff、core/extended 和性能扫描仍分别见
-[VALIDATION](VALIDATION.md) 与 [benchmark README](../bench/spin_cacheline/README.md)。
-测试结果不证明任意上下文/指令语义，也不构成通用性能收益结论。
+| 范围 | 入口与解释 |
+| --- | --- |
+| 当前 spin 三方成绩 | [9/19 结果](../bench/tclock_compare/results/20260919-state-access.md)：三方同环境、clobber caller；另有已有日志的批长复算，不是新 benchmark |
+| 当前实现的功能验证 | [tests/README](../tests/README.md)：按 clobber、共用寄存器、入口、预取和状态访问等冻结阶段分别记录 |
+| 运行与汇编查看 | [bench/README](../bench/README.md)：入口和统计口径；[执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)负责当前实现及 TCLock 对照 |
+| 早期 benchmark | [历史索引](../bench/spin_cacheline/results/HISTORY.md)：已被替代的阶段报告、Git 版本和归档哈希 |
+| 其他历史验收 | [VALIDATION](VALIDATION.md)：时间、源码身份、限制和失败记录 |
+
+mutex 正例按 `mutex_jit=1` 验收；生成/发布日志本身不能作为 JIT PASS。
+不同阶段的通过项不拼接成当前版本全量通过，也不证明任意上下文或通用提速。
 
 ### 1.4 未完成与明确延期
+
+`record` 当前仅按频率晋升；低开销采样及原生/探测/代理切换尚未实现，见
+[监测与准入待办](TODO.md#hotlock-monitoring-and-adaptive-admission)。
 
 | 分类 | 事项与当前处理 |
 | --- | --- |
@@ -189,27 +184,38 @@ cd /home/eric/vm/qemu-scripts
 
 ### 3.2 进入 guest 并检查基线
 
-下文默认命令对应原捕获内核。普通 caller-clobber 实验使用独立的
-`/root/linux-6.1.159-kdclobber1` 与外部 `spin-clobber1-20260918` baseline，
-按[实验说明](../kernel_experiments/spin_clobber/README.md)核对 source/config/build
-及 live Build ID，并将 `KDIR` 指向该树。不能用原基线验证实验内核，也不能
-用实验材料覆盖原基线；两者都沿用下文依赖、排空和恢复流程。
+当前普通 spin 实验使用 `6.1.159-kdclobber1`；下文以该树为例，保留原
+`6.1.159` 和 `kdstatic2` 作为可恢复基线。先检查实际运行内核，再选择对应的
+source/build/baseline。不能用原基线核验新内核，也不能覆盖旧基线。
 
 ```bash
 ssh -p 2222 root@127.0.0.1
 bash
 cd /root/host_fs/kdlock
 findmnt -T /root/host_fs/kdlock
-python3 kernel_baseline/verify.py --source /root/linux-6.1.159 --build --running
+uname -r
+export KDIR=/root/linux-6.1.159-kdclobber1
+python3 bench/spin_cacheline/kernel_identity.py \
+  --kernel-source "$KDIR" \
+  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918
 cat /proc/cmdline
 cat /sys/kernel/debug/sched/preempt
 lscpu -e=CPU,NODE,ONLINE
 ```
 
-后续 guest 示例使用 **Bash**，每一步失败都应先停下排查。期望基线是 Linux
-`6.1.159`、Build ID `6f9f2e9fec382e97f620553793aa90b527a30af5`，启动参数含
-`nokaslr`，动态抢占选择为 `(voluntary)`；现有用例按 40 个 CPU、两个 NUMA 节点
-布置角色。缺少文件、CPU 不足或基线不匹配不是 SKIP/PASS，不要自行重建 guest 内核。
+后续 guest 示例使用 **Bash**。该实验的捕获 Build ID 为
+`db937d722ee2f2668acb12dc6f105aeea33b7c5c`；命令同时核对 source/config/build
+及实际运行身份，不能只看 release。启动参数保留 `nokaslr`，动态抢占为
+`(voluntary)`，既有角色按 40 CPU、双 NUMA 布置。缺失或不匹配应停止排查，
+不是 SKIP/PASS，也不应自动重建内核。实验构建历史见
+[spin_clobber](../kernel_experiments/spin_clobber/README.md)。
+
+如果明确启动原始 `6.1.159`，改用 `KDIR=/root/linux-6.1.159` 和
+`python3 kernel_baseline/verify.py --source "$KDIR" --build --running`；其
+Build ID 为 `6f9f2e9fec382e97f620553793aa90b527a30af5`。`kdstatic2` 按其
+[独立基线](../kernel_experiments/spin_static/README.md)核验。后续 benchmark runner 的
+`--kernel-source/--kernel-baseline` 也须匹配所选树；已有脚本默认值并未随本次
+文档更新改变。
 
 normal 的 9p 源码是共享的，不需要搬动。recovery 同名路径是 ext4，修改后要比较
 两侧 SHA256，只传输变化文件。例如宿主机比较并按需同步一个文件：
@@ -526,7 +532,7 @@ source 错误；`CONTEXT_NATIVE_ONLY` 是拒绝，不是翻译成功；
 | [DESIGN.md](DESIGN.md) | 原锁/队列、frame、source、hostcall、续跑协议。 |
 | [JIT_REGISTER_ABI.md](JIT_REGISTER_ABI.md) | 两参数、GPR/栈槽、退出和待实现的访问时契约。 |
 | [JIT_EXECUTION.md](JIT_EXECUTION.md) | JIT 范围、复杂测试执行流、增量选择。 |
-| [TODO.md](TODO.md) | 已完成部分、未完成轨道、延期与阻塞。 |
+| [TODO.md](TODO.md) | 当前待办、已知失败、可选扩展与明确延期；完成日志转查历史证据。 |
 | [VALIDATION.md](VALIDATION.md) | 历史结果的时间、源码冻结与归档索引；新增测试/benchmark 结果维护在各自目录 README。 |
 | [PROJECT_GUIDE.md](PROJECT_GUIDE.md) | 本文：逐步操作、阅读顺序和文件索引。 |
 

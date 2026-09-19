@@ -90,9 +90,9 @@ kdlock 的选择不同：原生参与者只访问 Linux 锁 **L**，代理队列
 [`tests/unit/spin/test_tclock_context.py`](../tests/unit/spin/test_tclock_context.py)。
 三方运行方法、实际执行结果和性能解释维护在
 [`bench/tclock_compare/`](../bench/tclock_compare/README.md)。
-已完成的[三方实测](../bench/tclock_compare/results/20260918-native-stack.md)覆盖
-180 场稳态会话；保存/恢复对照、实际代理比例、独立采样及 kdlock 并发冷晋升
-失败均在该页记录。真实汇编单元验证六个寄存器、RSP 和 lock/unlock 续点，
+当前成绩见 [9/19 clobber 三方复测](../bench/tclock_compare/results/20260919-state-access.md)。
+[首次三方实测](../bench/tclock_compare/results/20260918-native-stack.md)保留两种 ABI
+的 180 场稳态、独立采样和 kdlock 并发冷晋升失败；旧采样占比不是当前热点占比。真实汇编单元验证六个寄存器、RSP 和 lock/unlock 续点，
 不能据此宣称任意内核栈展开或复杂临界区已通过。
 与 kdlock 的入口、L/S 协议、逐请求处理及收益抵消见
 [执行路径对照](../bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)。

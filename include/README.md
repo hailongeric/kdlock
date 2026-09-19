@@ -14,7 +14,7 @@ Demo ioctl 和数据布局见 [workload_modules/README.md](../workload_modules/R
 | mutex 调度 | [kd_mutex.h](kd_mutex.h) | 原 mutex owner 保留，原 waiter 可继续后缀 |
 | frame/控制事务 | [kd_exec.h](kd_exec.h)、[kd_call.h](kd_call.h) | physical parent、logical resume_target、锁记录、最后 ACK |
 | 注册/执行 | [exe.h](exe.h)、[exe_info.h](exe_info.h) | 注册槽、entry_abi 身份与 packet_state；NORMAL 不证明正文执行 |
-| 热锁 | [kd_hotlock.h](kd_hotlock.h) | 访问频率采样，不是等待次数统计 |
+| 热锁 | [kd_hotlock.h](kd_hotlock.h) | 固定窗口频率晋升；sticky IGNORE/DELEGATE，无自适应降级 |
 | 来源生命周期 | [kd_source.h](kd_source.h)、[kd_source_api.h](kd_source_api.h) | 内部 pin 接口与设备 ABI；retire 不可撤销 |
 | 设备/诊断 | [sys.h](sys.h)、[utils.h](utils.h) | 设备注册和既有日志，benchmark quiet 仅在专用 provider |
 | 批次调用边界 | [kd_jit_batch.h](kd_jit_batch.h) | 新旧 wrapper 的版本目录和编译器 clobber；旧批次入口只额外保护物理 RBP，args 仍为两个元素 |

@@ -1,757 +1,714 @@
-# spin_cacheline：首次执行、代理 JIT 与开销路径
+# spin_cacheline：kdlock、TCLock 与 Linux 的执行路径
 
-本文从 `SC_RUN` 展开到原 waiter 恢复，供对照源码和汇编查找性能问题。
-伪代码随当前实现更新；历史采样与性能结果仍只属于各自冻结版本。
-负载、测量口径和操作入口见 [README](README.md#临界区与测试伪代码)。
+本文按 **2026-09-19、提交 `2b16d6f`** 的实现重写，主线是 `kdclobber1` 的
+普通 spin caller-clobber v1。对照同一负载的 Linux 原生、完整 TCLock 原生栈委托、
+kdlock JIT 三种后端，重点解释获取、排队、批次交接及现场保存/恢复。
+伪代码合并低频错误分支，保留影响正常路径的状态访问和同步；函数名不表示
+机器码必然保留一次 CALL。本文是源码说明，不是新的运行或采样结果。
 
-阅读条件：x86_64，普通任务上下文，单层 `sc_body_N`，同一把 spinlock，
-`KDLOCK_SELFTEST=0 KDLOCK_NUMA=0`，`bench_quiet=1 jit_timing=0`。
-后续详细伪代码按 `6.1.159-kdstatic2` 的旧调用者 ABI 展开；接口的差异
-在第 2 节注明。伪代码合并错误处理，但保留影响主路径成本的查表、原子操作、
-复制、校验和等待；辅助函数名不等于最终机器码一定存在一次 CALL，须对照反汇编。
+范围为 x86_64 普通 IRQ-on task 入口、单锁 `sc_body_N`、全局计数器正文。
+kdlock 按 `KDLOCK_SELFTEST=0 KDLOCK_NUMA=0 spin_native_cache=1 spin_prefetch=2`、
+`bench_quiet=1 jit_timing=0` 展开。TCLock 保留 `WWJUMP`、`NUMA_AWARE` 和
+六条 cacheline 预取，关闭 `KERNEL_SYNCSTRESS` 的调度等待分支；最近测量的
+CPU 全在同一 NUMA 节点。两者批次参数均为 1024，实际批长不一定相同。
 
-`kdclobber1` 的普通调用者先由编译器保存跨 lock/unlock 活跃值，asm 传递
-RDI=锁、RSI=SP、RDX=续点、RCX=BP，经独立 static-call bridge 进入同一锁层。
-排队请求只记录三个续点字段；锁侧统一循环通过内联 asm 调用偏移 32 的 wrapper，
-正常完成只回写并恢复三个字段。hostcall/nested/native 中间退出仍完整保存并走
-下文通用处理。新、旧及混合 ABI 均在同一个 C 栈帧内连续处理；旧偏移 16
-入口的内联适配只额外保护 RBP，原汇编外壳已退出生产构建。
-两种调用者都保留 L/S、ticket、source、owner/ACK 及 IRQ 协议；完整定义见
-[寄存器 ABI](../../docs/JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1)。
-
-| 符号/状态 | 含义 |
+| 记号 | 含义 |
 | --- | --- |
-| `L` | workload 的 `sc_lock`，真正排斥原生参与者的 Linux 锁 |
-| `S` | `gate->word`，kdlock 私有队列调度字；包含 locked、pending、tail，不能替代 L |
-| `RIP` | `sc_body_N` 内 `_raw_spin_lock` 调用后的原始入口地址；不是函数起始地址 |
-| waiter | 提交请求的线程，保留自己的内核栈、寄存器包和 origin ticket |
-| combiner | 获得 S 并实际持有 L、在自己的 CPU 上替 waiter 执行正文的线程 |
-| `NORMAL` | JIT 已发布；单凭此状态不能证明本次测量执行过 JIT |
-| `NO_JIT` | 测量前后实际正文计数差为零；仍可能走过 kdlock 管理或等待路径 |
+| `L` | workload 的原锁 `sc_lock`；Linux/kdlock 会话中由 Linux 原生协议管理 |
+| `S` | kdlock 的 `gate->word`，只负责私有排队与调度；正文执行仍须持有 L |
+| `Q` | TCLock 会话中的同一目标锁地址，由 TCLock 协议独占管理，无另一个 S |
+| `IP/SP/BP` | 调用者 asm 的 CALL 后续地址、CALL 前 RSP、调用者 RBP |
+| waiter | 提交请求的原线程及其 CPU；正文可能由另一个 CPU 代执行 |
+| combiner | 在自己的 CPU 上持有物理互斥并服务多个 waiter 的线程 |
+| 物理栈 / 逻辑栈 | CPU RSP 实际指向的栈 / JIT 模拟的原线程 RSP 所指向的栈 |
 
-建议按以下顺序阅读：
+**TCLock 的委托执行是物理切换 RSP 后运行原生正文；kdlock 的普通 JIT 执行
+保持 combiner 物理栈，只切换逻辑寄存器和栈。** 两者的原 waiter 都先离开
+可被代理访问的 task 栈，等待完成后再回来；两者都不能在完成发布后继续使用
+可复用的队列节点。
 
-1. [批次边界](#batch)：哪些操作每次 ioctl 一次，哪些每次抢锁一次。
-2. [首次执行与注册](#cold)：热锁发现、准备翻译以及重复注册检查。
-3. [先 CAS 的无竞争路径](#native-fast)：单线程 NO_JIT 通常走这里。
-4. [竞争与队列](#queue)：ticket、原锁、waiter 等待和 combiner 批次。
-5. [一次实际 JIT](#jit)：frame、dispatcher、wrapper、生成正文和恢复。
-6. [开销核对表](#costs)：常见成功路径的重复操作和优化优先级。
+```mermaid
+flowchart TD
+    A[同一 sc_body_N 和 clobber 调用者] --> B[内核普通 spin static-call bridge]
+    B --> N[Linux：获取原锁]
+    N --> N2[原 CPU / 原 task 栈执行正文并解锁]
+    B --> T[TCLock：目标锁 CAS / pending / queue]
+    T --> T1[waiter 保存六寄存器，转到 shadow 栈等待]
+    T1 --> T2[combiner 切到 waiter task 栈，执行原生正文]
+    T2 --> T3[unlock 切到下一 waiter 或 combiner shadow 栈]
+    T3 --> T4[离栈后发布完成，原 waiter 从 unlock 返回链恢复]
+    B --> K[kdlock：原生缓存 / 选择注册 / S 与 L]
+    K --> K1[waiter 准备最小 request，转到 shadow 栈等待]
+    K1 --> K2[combiner task 栈执行 wrapper / JIT]
+    K2 --> K3[回写最小完成状态，解绑并发布完成]
+    K3 --> K4[原 waiter 恢复 IP/SP/BP，到 unlock 后续点]
+```
+
+图中 TCLock/kdlock 展开的是排队后实际被代理的分支；CAS/pending 获取成功
+以及批次末尾留下的 owner 均可能自己执行正文。源码入口：
+
+| 环节 | kdlock | TCLock |
+| --- | --- | --- |
+| hook 分派与快路径 | [kd_lock.c](../../kernel_module/kd_lock.c)、[kd_spin_fast.h](../../include/kd_spin_fast.h) | [provider.c](../../tclock_backend/provider.c) |
+| 获取、排队和等待 | [kd_spinlock.c](../../kernel_module/kd_spinlock.c)、[slowpath.inc](../../kernel_module/spin/slowpath.inc)、[wait.inc](../../kernel_module/spin/wait.inc) | [komb.c](../../tclock_backend/komb.c)：`komb_spin_lock` / `__komb_spin_lock_longjmp` |
+| 批次与后继 | [combiner.inc](../../kernel_module/spin/combiner.inc)、[prefetch.inc](../../kernel_module/spin/prefetch.inc) | [komb.c](../../tclock_backend/komb.c)：`run_combiner` / `get_next_node` / `komb_spin_unlock` |
+| 保存与恢复 | [wrapper.S](../../include/wrapper.S)、[kd_jit_batch.h](../../include/kd_jit_batch.h)、`kd_spin_restore_request` | [context.S](../../tclock_backend/context.S) |
+
+阅读索引：[测量边界](#batch)、[调用入口与冷准备](#cold)、[无竞争路径](#native-fast)、
+[kdlock 队列](#queue)、[TCLock 队列与 WWJUMP](#tclock-path)、
+[现场保存/恢复](#jit)、[成本和性能对照](#tclock-cost-comparison)。
 
 <a id="batch"></a>
 
-## 1. 一次 ioctl 的测量边界
+## 1. 三方共用的负载与测量边界
 
 对应 [client.c](client.c)、[module.c](../../workload_modules/spin_cacheline/module.c)、
 [payload.h](../../workload_modules/spin_cacheline/payload.h) 和
 [post_work.h](../../workload_modules/spin_cacheline/post_work.h)。
 
 ```text
-用户态主线程：
-    读取初始数据；创建 T 个线程
-    等待所有线程完成绑核、设置 sc_worker 名称并发布 atomic ready
-    wall_start = now(CLOCK_MONOTONIC)
-    store_release(go, true)
-
+主线程：创建 T 个 worker → 等待绑核/设置 comm/ready → 记录 wall_start → 放行
 每个 worker：
-    load_acquire(go) 放行后：
-        cpu_start = now(CLOCK_THREAD_CPUTIME_ID)
-        ioctl(SC_RUN, N, I)                     // 每线程一次，不是每个 op 一次
-        finished = now(CLOCK_MONOTONIC)
-        cpu_time = now(CLOCK_THREAD_CPUTIME_ID) - cpu_start
-
-内核 SC_RUN：
-    copy_from_user；检查参数；选择固定展开的 sc_body_N
-    atomic_add_unless(sc_control, +1, -1)        // 整批准入；-1 表示快照独占
-    post_state = 1
-    for completed = 0 .. I-1:
-        sc_body_N():
-            spin_lock(L)                       // 后续章节展开此调用
-            EXPAND_N(READ_ONCE(slot[i]) + 1 → WRITE_ONCE(slot[i]))
-            spin_unlock(L)                     // 或代理完成后直接恢复到它的后继
-        post_state = sc_post_work(post_state)  // 4 组依赖乘加，8 条寄存器指令
-    atomic_dec_return_release(sc_control)
-    copy_to_user(completed)；返回
-
-用户态主线程：
-    join；读取最终数据并检查所有 16 个槽
-    wall = max(worker.finished) - wall_start
-    throughput = sum(completed) * 1e9 / wall    // wall 单位 ns，吞吐单位 op/s
+    ioctl(SC_RUN, cachelines=N, iterations=I)       // 每线程每批一次 ioctl
+        检查参数、整批准入
+        repeat I 次：
+            sc_body_N():
+                spin_lock(sc_lock)
+                对 N 个间距 64B 的计数器各做一次展开的读改写
+                spin_unlock(sc_lock)
+            sc_post_work()                       // 锁外四组依赖乘加
+        归还批次引用，返回 completed
+    记录 finished 与线程 CPU 时间
+主线程：join → 核对全部 16 个槽 → 检查后端计数和排空
+    wall_ns = max(finished) - wall_start
+    ops/s = sum(completed) * 1e9 / wall_ns
 ```
 
-`EXPAND_N` 是编译时展开的 N 次读改写，不是锁内循环。全部线程访问同一数组，
-每个槽间距 64B；锁内没有时钟、syscall、日志、mutex 或服务调用。
-原子起跑等待只在 ioctl 前；热循环没有 `cond_resched()`、sleep/yield 或强制交接。
-时钟在批次边界调用，开销按 I 摊销；`ns/op` 包括正文、锁协议和锁外计算，
-不是单次锁获取延迟。
+锁内没有循环、时钟、syscall 或 helper；热循环不插入 sleep/yield。
+完整操作包含获取、正文、解锁/恢复和锁外计算，`ns/op` 不是纯锁指令延迟。
+代理批次不会替 waiter 执行 `sc_post_work`：它在原 waiter 恢复后执行；combiner
+仍可持锁服务其他 waiter，所以锁外计算不保证相邻正文之间发生物理解锁。
+
+当前三方运行器是 [run.py](../tclock_compare/run.py) 与
+[session.py](../tclock_compare/session.py)。三方每场均先在一个 CPU 上预热 1 次，
+等待后准备 12000 次；kdlock 等待对应入口 NORMAL、生成物有效并停止 daemon/
+translator，再开始 T 线程测量。准备、翻译、上传及共用 allocator guard 均在
+计时外；单 CPU 准备不表示并发冷晋升停滞已修复。
+
+TCLock 使用实际代理 unlock 与离栈完成数，kdlock 使用 wrapper 返回后的实际
+正文 witness。`NORMAL` 只说明发布状态，不能代替 JIT 正文；TCLock 委托也不叫
+JIT。具体数据、IRQ/preempt、正文和排空判定见[三方运行说明](../tclock_compare/README.md)。
 
 <a id="cold"></a>
 
-## 2. 首次执行：原生、发现热锁、注册和翻译
+## 2. 调用者入口与 kdlock 冷准备
 
-### 2.1 每次 spin_lock 的内核入口
+### 2.1 三方共用的 clobber 调用边界
 
-对应 [guest-kernel.patch](../../kernel_experiments/spin_static/guest-kernel.patch)、
-[kd_lock.c](../../kernel_module/kd_lock.c) 和
-[kd_spin_select.h](../../include/kd_spin_select.h)。
+[实验内核补丁](../../kernel_experiments/spin_clobber/guest-kernel.patch)把普通
+`raw_spin_lock/unlock` 展开为内联 asm；`spin_lock/unlock` 经过相同边界。
 
 ```text
-_raw_spin_lock(L):
-    保留现有 hook 所要求的 callee-saved 寄存器栈布局
-    if selector 指针存在 and (combined static key 开启 or select() == 2)
-       and lock callback 指针存在:
-        保存原始 RSP；取得调用后的 RIP
-        static_call(kd_spin_lock_call)(L, saved_RSP, RIP)
-        return
-    __raw_spin_lock(L)                          // Linux 原生获取
+caller 编译器保存跨边界的活跃值
+asm volatile:
+    RDI = lock
+    RSI = 当前 RSP
+    RDX = 本段 asm 内 CALL 后的局部标签
+    RCX = 当前 RBP
+    CALL kd_raw_spin_lock_clobber_v1            // unlock 用对应的新符号
+后续标签：caller 编译器重新装载需要的活跃值
 
-kd_spin_dispatch_lock(L, saved_RSP, RIP):
-    尝试可选的原生站点缓存：命中且成功获取 L 则返回
-    失败若临时 pin 则先归还；关闭 spin_native_cache 不尝试缓存
-    selected = (source.OPEN and comm 两个机器字掩码匹配 sc_worker)
-               or 当前任务仍有未结束的原生 fast/ticket
-    if !selected: origin_raw_spin_lock(L); return
-    kd_raw_spin_lock_slow(L, saved_RSP, RIP)
+内核 bridge：
+    static_call(kd_clobber_lock_call)(lock, SP, IP, BP)
+    Linux arm → __raw_spin_lock(lock)
+    TCLock arm → tc_clobber_lock → tc_lock
+    kdlock arm → kd_spin_dispatch_clobber_lock_v1
 ```
 
-当前 R2 在可选缓存未完成获取后做 target/retained-owner 选择。旧指针 hook 接口先调用独立
-selector，再间接调用 `__kd_raw_spin_lock`；不能把旧接口的额外 selector 成本
-直接计到 R2 上。原生对照不加载 kdlock，但仍使用带既有 hook 的同一实验内核。
+输入/输出约束与 clobber 覆盖除 RSP/RBP 外的 GPR，并有 `cc`、`memory` 和
+`ASM_CALL_CONSTRAINT`。续点不是外层函数的 `_RET_IP_`；新 ABI 不解析编译器
+序言。原生回退使用 `__raw_*`，不会重新进入宏。三方共用同一个 caller，因此
+TCLock 也承担该 caller 的 spill 和函数级保存；它自己的六寄存器切栈协议仍在。
 
-### 2.2 冷锁：只执行原生正文，累计访问频率
+旧 `_raw_spin_lock` ABI、IRQ/BH/irqsave/trylock 和 mutex 不能据此使用精简包。
+旧请求与新请求按实际入口记录 `entry_abi`，翻译条目、生成物和 wrapper 校验
+身份；两种 ABI 可以经过同一个 combiner C 循环，不能混用保存/恢复规则。
 
-对应 [kd_hotlock.c](../../kernel_module/kd_hotlock.c)。
+### 2.2 kdlock：缓存未完成获取后，才走选择、晋升和注册
 
 ```text
-kd_raw_spin_lock_slow(L, saved_RSP, RIP):
-    if kd_spin_entry_native_active() or !kd_hotlock_is_promoted(L):
+kd_spin_dispatch_clobber_lock_v1(L, SP, IP, BP):
+    result = kd_spin_fast_acquire(L, IP)       // 第 3 节
+    if result == OWNED: return
+    若缓存 miss 临时 pin 了 CPU：归还该 pin
+    if !kd_spin_task_selected() or kd_spin_entry_native_active():
+        origin_raw_spin_lock(L); return
+    if !kd_hotlock_is_promoted(L):
         kd_hotlock_record(L)
-        origin_raw_spin_lock(L)
-        return                                 // 调用者执行原生正文及 unlock
-    kd_exe_add(0, RIP, SPIN)                     // 见 2.3；已注册也调用！
-    kd_spin_lock(L, saved_RSP, RIP)                  // 第 4 节；仍不保证 JIT
-
-kd_hotlock_is_promoted(L):
-    对只追加的表做哈希/线性探测；acquire 读取已发布的地址
-    命中 L 后 READ_ONCE(status) == DELEGATE；遇到空槽/探测完毕则 false
-    查询不加锁、不关闭中断、不做原子 RMW
-
-kd_hotlock_record(L):
-    now = rdtsc_ordered()
-    首次用 atomic cmpxchg 建立模块级起始 TSC
-    if 模块预热不足 1,000,000,000 cycles: return
-    raw_spin_lock_irqsave(global_hotlock_table_lock)
-    查找/创建 L 的记录；已 DELEGATE 则直接退出
-    now = rdtsc_ordered()                       // 按持锁更新顺序重新取时间
-    samples++
-    INIT → CHECKING，记录起点及 2,500,000,000 cycles 的窗口
-    后续采样：窗口到期 → IGNORE；到期前累计 10,000 个样本 → DELEGATE
-    IGNORE 保留该状态；退出时 unlock_irqrestore
+        origin_raw_spin_lock(L); return
+    kd_exe_add_abi(0, IP, SPIN, CLOBBER_V1)
+    kd_spin_lock_abi(L, SP, IP, BP, CLOBBER_V1)
 ```
 
-未晋升的 lock/unlock 都可能采样；**样本不是失败的 trylock 次数，也不是等待次数**。
-因此单线程也能晋升、注册并生成 JIT，却没有其他 waiter 可供代理。
-`rdtsc_ordered()` 属于发现过程，不能解释已发布单线程快路径的每次耗时。
-表项地址由写侧 release 发布，状态转换使用 WRITE_ONCE；查询与新建/晋升并发时
-允许返回 false，调用者继续经过采样器和原生锁。采样器仍使用全局写锁，
-尤其 IGNORE 锁仍会采样；无锁查询不等于整个冷锁路径无锁。表项在模块存活期间
-不删除、不复用，释放整张表前仍要求调用者排空。
-`kd_spin_entry_native_active()` 在没有已有 preempt pin 时直接返回 false，不扫描
-ticket；已有 pin 的调用者只扫描 per-CPU 活跃位图中的槽。查询复用已有 pin，
-不再临时 disable/enable 抢占；其在本路径和下文 `kd_spin_lock()` 的调用均保留。
+[kd_hotlock.c](../../kernel_module/kd_hotlock.c) 的已晋升查询只读只追加表；记录
+阶段才读 TSC 并在全局 irqsave 锁内更新窗口/样本。样本是访问次数，不是失败
+trylock 或等待次数。单线程可以晋升并生成 JIT，但没有其他 waiter 可供代理。
+当前决策是固定窗口的 sticky DELEGATE/IGNORE；IGNORE 仍会在 `record` 中更新
+计数，DELEGATE 不会因短批次降级。普通已晋升 clobber 入口跳过 `record`，
+故已就绪锁的低 JIT 比例不能简单归因于监测。按收益切换执行方式仍是
+[未实现待办](../../docs/TODO.md#hotlock-monitoring-and-adaptive-admission)。
 
-### 2.3 注册不是编译；已发布条目只读确认
+### 2.3 注册、翻译和准入是三个不同步骤
 
-对应 [registry_publish.inc](../../kernel_module/execution/registry_publish.inc)、
-[registry_lifecycle.inc](../../kernel_module/execution/registry_lifecycle.inc)、
-[exe.c](../../kernel_module/exe.c)、[kd_source.c](../../kernel_module/kd_source.c)。
+[registry_publish.inc](../../kernel_module/execution/registry_publish.inc) 中，
+同 pid/IP/backend/ABI、代码指针存在且 source OPEN 的已有记录只读确认后返回。
+miss/冲突等路径才进入全局 code gate、source pin 和来源模块查询。代码池在
+模块初始化时预分配，不在每次锁操作里 `vmalloc`。
 
-```text
-kd_exe_add(0, RIP, SPIN):
-    exe = kd_get_exe(0, RIP)                    // acquire 读取发布状态后比较 key
-    if exe 已发布（不是 UNUSED）and pid/RIP/SPIN/代码指针匹配 and source.OPEN:
-        return                                 // 已注册，不代表 NORMAL 或允许执行
-    while cmpxchg_acquire(global_code_block_gate, 0, 1) != 0: cpu_relax()
-    kd_source_pin_root(RIP):
-        raw_spin_lock_irqsave(global_source_lock)
-        检查 OPEN、地址属于有效 text；查找 module 及已有 source pin
-        首次依赖该 module 才 try_module_get 并加入来源表
-        raw_spin_unlock_irqrestore(...)
-    exe = kd_get_exe(0, RIP)                    // 哈希/线性探测
-    if 已有同一 pid/RIP:
-        检查 lock_kind 一致；不重复生成或分配代码
-        store_release(global_code_block_gate, 0); return
-    从装载时预分配的 64 个 executable block 中取一个
-    设置 pid=0、RIP、tgid、SPIN、code_block
-    store_release(exe.status, UNINIT)
-    store_release(global_code_block_gate, 0)
+[daemon.c](../../daemon/daemon.c) 发现 UNINIT 条目后启动
+[translator](../../disassem/disassem.py)，读取代码与符号、检查上下文、生成
+`jit.S`，与 wrapper 汇编成 `jit.bin`，再通过设备发布 NORMAL。上传 mutex 在
+控制面；稳态 benchmark 不把这些工作计作每次正文的开销。
 
-```
+精简入口另经 [entry_abi.py](../../disassem/entry_abi.py) 证明：除了 SP/BP，
+未捕获的初始 GPR 不能影响地址、写入、控制流或锁参数；新 clobber 边界之后
+不能沿用旧 callee-saved 事实。证明失败时拒绝翻译，不靠初始化垃圾寄存器
+通过准入。运行时仍检查 source OPEN、条目身份/状态、frame 和 wrapper 身份。
 
-`kd_spin_fast_remember` 只在 root 且缓存启用时处理。L/RIP/gate 键完全相同
-则立即返回，删除旧代码在每次竞争 miss 后仍进行的重复 NORMAL 查询；新键
-才查询注册表并检查 NORMAL/source.OPEN。缓存本身不授权 JIT 执行。
-`vmalloc/set_memory_x` 在 provider 初始化时预分配代码池，不在每次抢锁内分配。
-每次已晋升慢入口仍调用 `kd_exe_add`，但同身份/后端且 source OPEN 的已发布
-条目现在只做读取，不再进入全局 gate、source irqsave 或模块地址查询。
-UNINIT、miss 和 native-only 也可确认已注册；是否执行仍由 NORMAL 与 frame
-准入决定。首次注册、冲突或关闭准入时保留原串行化检查。并发发布后的身份
-须重新核对，不能把 lookup 返回的空槽误当作已有条目；退休同步见
-[source 生命周期](../../docs/DESIGN.md#31-source-lock-and-hook-lifetimes)。
-
-### 2.4 daemon 的首次翻译与测量前准备
-
-对应 [daemon.c](../../daemon/daemon.c)、[disassem.py](../../disassem/disassem.py)、
-[sys.c](../../kernel_module/sys.c) 和 [Session.prepare](bench_session.py)。
-
-```text
-daemon（用户态，持有设备会话）：
-    read /dev/kd_dev，发现 UNINIT 的 pid=0、RIP、SPIN 条目
-    fork/exec Python translator；保留设备 lease
-    读取原始内核字节与符号，解码控制流、检查上下文及支持的指令
-    寄存器/栈映射；生成入口分派、正文标记、已知 unlock 的退出代码
-    输出 asm/jit.S
-    gcc 汇编 wrapper.S（包含 jit.S）→ jit.o
-    objcopy → jit.bin；objdump → bin.txt
-    等待 translator 成功退出，分块 write /dev/kd_dev 上传 jit.bin
-
-内核上传：
-    mutex_lock_interruptible(kd_publish_lock)    // 上传控制面，不在 worker 抢锁路径
-    检查设备 lease、条目和写入范围；copy_from_user 到 code_block
-    最后一块完整写入后，用 kd_exe_publish_status 的 cmpxchg 发布 NORMAL
-    mutex_unlock(kd_publish_lock)
-
-bench 准备一个新会话：
-    加载新 workload/provider；启动 daemon
-    同样 T 个绑核 worker：每线程 1 次 → sleep(1s) → 每线程 12,000 次
-    等待唯一匹配 RIP 的条目 NORMAL、生成物有效、translator 成功退出
-    检查 worker/frame 排空；停止 daemon；确认 writers=0
-    两组均 sleep(2s)
-    读取 jit_before，再开始第 1 节的测量批次
-```
-
-翻译、上传以及这里的 sleep 都在准备阶段。worker 不在某次 lock 内同步等待
-Python 编译：若 combiner 发现 JIT 未就绪，返回 `NO_RUN`，让请求获取原锁后
-执行原生正文。正式测量时 daemon 已停止，不能把编译时间或上传 mutex 当作
-测量期每次 JIT 的开销；生成物按临界区去重的导出也发生在测量与排空之后。
+TCLock 不经过这套热锁、注册表、daemon 和准入过程；其 provider 按目标锁
+地址选择后端，非目标锁走 `__raw_*`。临界区是否适合借栈执行由实验范围约束，
+没有 kdlock 的翻译筛查和受检 hostcall/native 续跑协议。
 
 <a id="native-fast"></a>
 
-## 3. 无竞争 root：缓存原生获取与先 CAS 的入口
+## 3. 无竞争与轻竞争：谁自己执行正文
 
-对应 [kd_spin_fast.h](../../include/kd_spin_fast.h) 和
-[kd_spinlock.c](../../kernel_module/kd_spinlock.c)。`spin_native_cache=1` 默认保留
-原生站点缓存；装载 provider 时设为 `0` 可关闭，参数在会话中只读。缓存键与
-本次物理 hold 分开：前者可跨获取复用，后者必须在本次 unlock 清除。
+| 分支 | 获取成功后保留的状态 | unlock |
+| --- | --- | --- |
+| Linux 原生 | 原锁 L、原生 preempt 状态 | 原生释放 L 并归还 pin |
+| TCLock CAS/pending | 目标锁 Q；provider 的 preempt pin | `komb_spin_unlock` 普通分支清 locked，`tc_unlock` 归还 pin |
+| kdlock 缓存命中 | 实际 trylock 得到 L，per-CPU `fast.held/owner`；没有 S hold/ticket/request | `kd_spin_fast_unlock` 释放 L，清 hold 并归还 pin |
+| kdlock root 首次 CAS S 成功 | S 加实际 L，per-CPU `fast.hold` 保存 gate/owner/generation；没有 ticket/request | 校验 hold 后先释放 L，再释放 S.locked，清 hold 并归还 pin |
+| kdlock pending 或 queue head 获取 | S/L 和本次 ticket；未代理队头正常返回时归还 request | 按 ticket/gate 释放 L/S，结束 ticket/pin |
 
-缓存命中要求 root、source.OPEN 和整个 S 空闲，再实际 trylock Linux L；成功
-不建立 ticket/S owner。解锁只释放 L 和 pin，嵌套调用沿用原生路径。关闭缓存
-或未完成获取时，进入以下与 TCLock 相同的“先 CAS、再准备竞争请求”顺序：
+三方在这些分支都由原 CPU 自己执行原生正文；有请求或有已发布 JIT 不代表
+这次操作一定代理。
+
+### 3.1 kdlock 的可选原生站点缓存
+
+```text
+kd_spin_fast_acquire(L, IP):
+    缓存开启，且满足无额外 preempt/migration pin 等条件
+    preempt_disable()
+    if cached_origin/IP 匹配 and 整个 S 为 0 and source OPEN:
+        if do_raw_spin_trylock(L) 成功:
+            记录 fast.held=L、owner=current；返回 OWNED
+    返回 MISS_PINNED，由冷 helper 归还 pin
+```
+
+这是实际获取原锁的缓存，不是“看到 L 空闲就认为已获得锁”。S 空闲只是提示，
+并发 combiner 也必须获取 L。缓存键可跨操作存活，物理 hold 只属于当前操作；
+二者独立。缓存命中绕过本次 target/热锁/注册/gate 查找，但仍检查 OPEN 和 S。
+新键只在 root、NORMAL/source OPEN 等条件下记住；相同键不重复查询注册表。
+默认保留 `spin_native_cache=1`，不是上次关缓存试验的版本。
+
+### 3.2 缓存未完成获取后的 root CAS
 
 ```text
 kd_spin_lock_abi(L, SP, IP, BP, abi):
-    已完成目标选择、热锁晋升检查和 entry 注册
-    检查 task/softirq/migration/native-active；不适用则原生
-    preempt_disable()
-    检查当前 frame/执行上下文；不适用则归还 pin 后原生
+    检查 task/上下文；preempt_disable()
     gate = kd_spin_gate_get(L)
-    if 无 gate: 归还 pin 后原生
-    缓存启用时尝试记住新键；已有相同键不再查翻译表
-    if 是 root 且 cmpxchg_acquire(gate.S, 0, LOCKED) == 0:
-        kd_spin_gate_claim(gate, fast.hold)   // 复用 pin，获取 L；保留 owner/代次
-        fast.held = L                        // claim 失败则释放 S、归还 pin 后原生
-        return                               // 自己执行原生正文
-    否则进入第 4 节，以同一 gate/pin 建立 ticket
-
-kd_spin_dispatch_unlock(L):
-    if 本任务/CPU 的 fast.held == L 且持有 S/L:
-        gate = fast.hold.gate
-        kd_spin_gate_release(fast.hold)       // 检查 owner/代次，释放 L
-        store_release(gate.S.locked, 0)  // 保留并发 pending/tail 位
-        fast.held = NULL                     // hold 已清零，缓存键保留
-        preempt_enable()
-        return
-    缓存原生 L-only 持有者释放 L/pin；其他进入第 5.5 节的 slow unlock
+    不适用或无 gate：归还 pin，原生获取 L
+    root 且缓存启用时记住合格的新键
+    if root and cmpxchg_acquire(S, 0, LOCKED) 成功:
+        kd_spin_fast_claim(gate)               // 保留 owner/代次，真正获取 L
+        成功则返回；失败按原回退处理
+    用同一 gate 和已有 pin 创建 ticket          // 竞争后才准备
+    非 root：先建 ticket，再 CAS S
+    若可走 pending：等待旧 owner，取 S 后 claim L，返回
+    否则进入队列
 ```
 
-无竞争获取不创建 ticket、node、frame，也不捕获寄存器。成功后同时持有 S/L，
-以 L 排斥原生 peer；先释放 L 再打开 S。线程改名、关闭准入及嵌套调用不丢失外层持有记录。
-内层仍正常发现/注册条目并建立独立 ticket；轻量 root 不是 native suffix，
-不能据此禁止内层准入，否则无竞争预热会漏掉内层 JIT。与 TCLock 相同的是先尝试锁字、竞争后准备请求；仍存在
-目标/热锁/翻译条目/gate 查询和双锁字成本，不能据此宣称已等同 TCLock。
+TCLock 的顺序也是先 CAS Q，再 pending，最后准备队列/切栈；但它只管理 Q。
+kdlock 已把 ticket/request 推迟到竞争后，入口前面的选择、注册和 gate 仍是
+额外工作。Linux 原生 peer 只认识 L，因此取得 S 不能替代取得 L。
 
 <a id="queue"></a>
 
-## 4. 竞争后的 ticket、原锁所有权和队列
+## 4. 竞争、批次交接与原线程继续执行
 
-### 4.1 准入与 S 的获取
+### 4.1 kdlock：ticket 与原锁所有权
 
-对应 [kd_spinlock.c](../../kernel_module/kd_spinlock.c)、
-[kd_spin_entry.c](../../kernel_module/kd_spin_entry.c)、
-[kd_spin_gate.c](../../kernel_module/kd_spin_gate.c)、
-[state.inc](../../kernel_module/spin/state.inc) 和 [queue.inc](../../kernel_module/spin/queue.inc)。
+[kd_spin_entry.c](../../kernel_module/kd_spin_entry.c) 复用已有 gate/pin，在每 CPU
+32 个 ticket 槽中检查活跃占用、同任务重复锁及 sequence；在 ticket guard 下
+发布 task/L/gate/代次和 WAITING。容量不足不发布代理请求，按原生回退处理。
+gate 已有项只读查找，创建仍在全局锁内复查和 release 发布。
 
 ```text
-kd_spin_lock_abi(L, saved_RSP, RIP, BP, abi):
-    执行第 3 节的准入、pin 和 gate 查询
-    root 已尝试 S 的 CAS；成功已返回，失败保留 old
-    kd_spin_entry_begin_pinned(L, gate, ref):
-        检查 task、已有 pin、参数及 gate 对应 L
-        扫描 occupied 活跃 ticket，拒绝同任务重复获取 L
-        对 ~occupied 找首个空位，检查 32 槽容量与 sequence 溢出
-        raw_spin_lock_irqsave(ticket.guard)
-        写 task/L/gate/sequence/cpu/state=WAITING，清 hold/native_refs
-        置 occupied；raw_spin_unlock_irqrestore(...)
-        成功将已有 pin 的结束责任交给 ticket；失败不消耗 pin
-    准入失败：归还 pin 后原生获取 L，不发布请求
-    request = {ref=本次 ticket, S=gate.word}   // 不再次查询 gate
-    非 root 先建立 ticket，再 CAS S；成功 goto acquired
-    if old 只有 PENDING: 有界轮询 S
-    if old 含 tail/pending 等非 locked 位: goto queue
-    old = fetch_or_acquire(S, PENDING)          // 直接传 S，不查 map
-    if old 出现其他等待者:
-        必要时清本次设置的 pending 位；goto queue
-    等待原 locked 清除；clear_pending_set_locked(S)
-    goto acquired
-queue:
-    kd_spin_lock_slowpath(L, saved_RSP, request)         // 见 4.2；代理完成者不从这里普通返回
-acquired:
-    kd_spin_claim_origin(request)
-    return                                    // 自己执行原生 sc_body_N 正文
-
-kd_spin_claim_origin(request):
-    使用 request.ref                          // 不重新扫描 ticket/map
-    guard irqsave：检查 ticket 代次/任务/CPU/状态
-    if 已 OWNED: 解开 guard，直接成功           // queue 已 claim 时仍重复做这次检查
-    WAITING → CLAIMING；解开 guard
-    cmpxchg(gate.owner, NULL, current)
-    kd_preempt_disable_raw_spin_lock(L)        // 真正获取 Linux L；不再增加一次 pin
-    增加 gate.generation；写 held/owner_cpu/hold
-    guard irqsave：CLAIMING → OWNED；解开 guard
+claim_origin(ticket):
+    guard 下检查代次、任务、CPU 和状态
+    已 OWNED：直接成功
+    否则 WAITING → CLAIMING
+    gate_claim：确认物理 owner，真正获取 Linux L，记录 generation/hold
+    guard 下 CLAIMING → OWNED
 ```
 
-只有 S 成功还不能访问负载。`kd_spin_gate_claim` 必须取得 L，以排斥没有使用 S
-的原生线程。gate 创建在全局 irqsave 锁内复查碰撞链，初始化后用
-`store_release(origin, L)` 发布；读取用 `load_acquire(origin)`，已有条目无须
-map 锁。表在会话内不删除或换键，受控排空后才卸载。ticket 的 guard 仍独立
-保护代次、owner 和状态；稳定 gate 指针不代表已获取 L 或通过 source 准入。
-`entry_gate` 在已有 pin 下检查 CPU/task/代次后直接读取本地 gate；只有原任务
-改变槽的归属，远端仅在 guard 下修改 native_refs，因此这个读取不再 irqsave。
-当前默认自愿抢占内核；覆盖整个请求生命周期的 pin 仍保留到最终结束/ACK。
+pending、队列调度字操作和普通 unlock 复用该 gate，不每次重查 map。
+稳定指针不授予 L 所有权；source lease、ticket pin 和 request 用户引用各有
+不同寿命，不能相互代替。
 
 ### 4.2 发布请求、等待和恢复入口
 
-对应 [slowpath.inc](../../kernel_module/spin/slowpath.inc)、
-[wait.inc](../../kernel_module/spin/wait.inc) 与
-[kd_spin_lock_slowpath](../../kernel_module/kd_spinlock.c)。
+[slowpath.inc](../../kernel_module/spin/slowpath.inc) 在 task 栈准备请求，
+[wait.inc](../../kernel_module/spin/wait.inc) 只负责物理等待栈切换和发布/轮询。
 
 ```text
-kd_spin_lock_slowpath(L, saved_RSP, request):
-    保存并关闭本 CPU 的 IRQ；继续使用 task 内核栈
-    准备期局部 input 保存调用者 C 栈 RSP、原 hook 寄存器栈 RSP、原 IRQ flags
-    记录 SLOWPATH 诊断：查找诊断槽 + this_cpu_inc(event)
-    idx = per_cpu.node_count++                 // 每 CPU 最多 4 个 node
-    若耗尽：还原 count；轮询 trylock(S) 后返回 acquired（本负载不嵌套）
-    execution = 从当前 CPU 的 12 槽预分配池领取 users=0 的 request
-    acquire 读零后设 users=1；池满则回到原生/队列路径，不分配内存
-    node.execution = execution；node 只保留执行对象引用和队列/调度字段
-    初始化 node 的 locked/completed/next/tail、CPU/NUMA、RSP
-    将 IRQ flags、jit_waiter/retry/native/pinned 等请求标志放入 execution
-    frame_prepare(execution.frame)：只初始化前 72 字节热状态，不访问冷区
-    保存 entry/L/GS/task、origin；regs_ref 指向 frame 内唯一寄存器包
-    kd_spin_prepare_regs(node)：在本 CPU 解码 hook 保存的 callee 寄存器、RIP/SP
-    execution.native_regs_decoded = true       // 在任何队列发布之前完成
-    __kd_spin_lock_longjmp(L, node, request):
-        S = request.S
-        node.execution.queued_at_ns = timing_start()        // jit_timing=0 时返回 0，不读时钟
-        old_tail = xchg_tail(S, node.tail)     // 直接原子交换 S.tail
-        诊断槽 atomic_inc(waiter_count)
-        if old_tail 有前驱:
-            previous = decode_tail(old_tail)  // CPU/index → 对应 per-CPU node
-            普通物理 waiter：在一段连续汇编内切到本 CPU 的 8KB shadow 等待栈
-                在 shadow 栈压入一个旧 C RSP，再发布 previous.next
-                不调用 C、不读写旧 C 栈；PAUSE 轮询 locked 等待 release 唤醒
-                若 completed/native_resume：放弃旧帧，直接进入安全栈上的恢复函数
-                node_count--；退出 waiter 诊断；保存 request 指针、ticket/IRQ flags
-                完成 ticket 或标记 native；直接装载共享包
-                最后一次读取后归还 request（单锁 release store；共享/复杂原子递减）
-                恢复原 IRQ 状态；跳到续点
-                只有未执行正文的队头唤醒才弹出旧 RSP 并返回 C
-            虚拟 waiter：原有 C 等待及 remote_poll，保留 owner/ACK 协议
-        等待 acquire(S.locked | S.pending) == 0 // 到队首后仍可能等待
-        if 自己是唯一队尾 and CAS(S, tail, LOCKED) 成功:
-            claim_origin(request)；结束 queue timing；node_count--；退出 waiter 诊断
-            恢复原 IRQ 状态，正常返回 acquired
-        设置 S.locked=COMBINER；claim_origin(request)
-        结束本队首的 queue timing
-        while node.next == NULL: cpu_relax()
-        检查 shadow 锁栈容量；保存 combiner 状态、RSP
-        node_count--；临时置自己 node.rsp=0；将 L 压入 shadow 锁栈并校验
-        run_combiner(L, node.next, request)             // 服务跟在自己后面的请求
-        弹出 L、校验并恢复 shadow 状态/RSP；还原 S 的持锁状态
-        退出 waiter 诊断；恢复原 IRQ 状态，正常返回 acquired
+kd_spin_lock_slowpath：保存原 IRQ flags，关闭本 CPU IRQ
+    从本 CPU 的四个 node 槽中领一个
+    从十二个预分配 request 槽中 acquire 读取 users=0，置 users=1
+    node.execution = request
+    regs_ref = &request.frame.regs
+    保存 IP/SP/BP、GS/task、origin ticket、原 IRQ flags
+    frame.entry_abi = CLOBBER_V1；packet_state = MINIMAL
+    native_regs_decoded = true                 // 表示准备完毕，新 ABI 没有解码旧序言
+    初始化必要 frame/请求标志，不清零或捕获整个寄存器包
+    prepare_prefetch(node, regs_ref)           // 第 5.4 节
+
+入队：
+    old_tail = xchg_tail(S, node.tail)
+    request.diag = waiter_enter(L)             // 查 slot、原子加实时 waiter 数
+    if 存在前驱：
+        连续 asm：保存旧 C RSP → 换到本 CPU 8KB shadow 栈
+        shadow 栈保存一个旧 C RSP
+        发布 previous.next = node
+        PAUSE 轮询 node.locked                 // 不调用 C、不触碰旧 task 栈
+        若完成/native 唤醒：放弃旧 C 帧，进入安全恢复栈上的处理
+        若仅队头唤醒：取回旧 C RSP，继续获取 S/L
+    否则/成为队头后：等待 S 的 locked/pending 清除
+    仅自己在队尾：CAS S 后 claim L，正常返回，由自己执行正文
+    有后继：claim L，准备 combiner，进入 4.3
 ```
 
-源码宏 `smp_cond_load_relaxed_sched` 名字带 `sched`，但这里的定义只有
-`READ_ONCE` 和 `cpu_relax()`，没有主动调度。`preempt_enable()` 在释放对应 pin
-时仍可能允许调度，不能据此宣称完全不会被切走。
-普通物理 waiter 完成/native 唤醒不再经过旧 C 返回链。桥接函数仍处理
-普通获取返回 0/2，以及未执行正文的 `jit_retry` 返回 4；虚拟 waiter 保留
-返回 1/3/5 以通知现有父 frame。所有恢复都保留原 IRQ 状态。
+顺序上 **tail 交换先发生，真正允许前驱执行本请求的 `previous.next` 发布在
+切离 task 栈之后**。不能把“先切栈再发布”误写为所有 tail 操作都在 shadow
+栈上。首次 combiner 若从 tail 看见已有后继、但 next 尚未发布，会等到链接
+可见；不能据此过早原生交接。
 
-### 4.3 combiner 的批次不是每个 waiter 一次物理解锁
+物理 waiter 的等待汇编只使用 shadow 栈，IRQ 仍关闭；node 耗尽/request 池满
+时有获取 S 的回退，不动态分配。虚拟/嵌套 waiter 继续使用执行者 C 栈和既有
+remote/owner 服务，不套用这段物理轮询汇编。
 
-对应 [combiner.inc](../../kernel_module/spin/combiner.inc)。
+### 4.3 kdlock：一个 C 循环服务多个请求
 
 ```text
-run_combiner(L, first_follower, request):                // 进入时 combiner 已持有 L
-    batch.request = request；S = request.S
-    curr = first_follower; next = load_acquire(curr.next)
-    if next == NULL and S.tail 非零且 decode_tail(S.tail) != curr:
-        等待 producer 发布 curr.next，再 acquire 读取
-        // 首次进入且仍持有 S/L，尚无 NUMA 拼接；真正队尾不等待
-    if next == NULL or curr/next 是 IRQ 特殊节点 or source_frame_get() 失败:
-        S.locked = LOCKED
-        store_release(curr.locked, false)；smp_mb()
-        return                                // follower 留作下一任 owner，没有 JIT
-    // 本批次已取得一次 source/provider lease，覆盖每个请求及其 ACK/pop
-    记录 COMBINER 诊断 this_cpu_inc
-    进入 kd_spin_batch_run：编译器管理整批 combiner 的活跃 C 值
-    counter = 0
-    同一个 C 栈帧内循环 while curr:
-        counter++
-        next = curr.next                       // NUMA_AWARE=0，直接取后继
-        batch.next = next；batch.outer.released = false
-        预取 next 的实际寄存器包、frame 热字段和栈内 SP/push 槽
-        if 普通单锁准入成功:
-            内联 clobber 调用 alternate wrapper；JIT 只执行当前请求
-            if 正常最终 unlock:
-                按入口 ABI 回写；循环完成/pop 当前 frame
-            else:
-                完整包回写；execute_cs 消费现有出口，不重跑已执行前缀
-        else:
-            result = execute_cs(L, curr, batch)  // 原通用处理；第 5 节
-        if result == NO_RUN or 未执行正文的 RUN_ERROR:
-            next = curr；break                 // 留待原生，不标 completed
-        if result != NATIVE_DONE:
-            store_release(curr.locked_completed, 1) // 同时 completed=1、locked=0
-        // 此后不能再访问已完成 node；它的 waiter 可马上复用 node
-        if 复杂嵌套路径已提前释放 outer:
-            reclaim_outer(request); source_frame_put(); return
-        if next == NULL or next.next == NULL or counter >= 1024: break
-        curr = next；继续专用准入，正常连续请求形成 WWJUMP
-    批次结束返回，编译器恢复 enclosing C 调用所需状态
-    S.locked = LOCKED
-    store_release(next.locked, false)          // 留下一个后继负责后续 owner 工作
-    source_frame_put()                         // 归还整批租约
-    return                                    // 仍持有 Linux L
-
-combiner 自己：恢复原 C 栈 → 原生执行自己的 N 次读改写 → 原生 unlock L
+run_combiner(L, first_follower, ticket):         // 已持有 S/L
+    next = linked_successor(S, first_follower)
+    if 没有可留作 owner 的后继、IRQ 特殊节点或 source lease 失败：
+        S.locked = LOCKED；只唤醒 first_follower 的队头资格；返回
+    取得一次 source/provider batch lease
+    batch.diag = 解析一次诊断 slot
+    进入 kd_spin_batch_run，在同一个 C 栈帧内：
+        选择 curr 及 next；预取 next 的已准备提示
+        lookup 当前 exe 身份，可复用批内同 entry/SPIN 槽
+        普通准入：最终 prepare 检查 OPEN/NORMAL、ABI/镜像、原始 root/包状态
+        bind request.frame；标记 executed
+        compiler-clobber asm 调用对应 wrapper
+        if 精确正常完成：
+            检查分类/witness；retire_single_spin 合并终态验证与物理解绑
+        else：
+            物化必要复杂状态，execute_cs 消费已返回出口；不重放前缀
+        if 未执行的拒绝/失败：将 curr 留作 owner，结束本批
+        if 非 NATIVE_DONE：release 发布 curr.completed=1、locked=0
+        此后不再读取 curr node
+        若 outer 已提前释放：按原协议 reclaim，结束本批
+        若后继不足或到达 batch 上限：结束本批
+        否则下一请求仍回到这个 C 循环
+    S.locked = LOCKED；唤醒留下的后继队头
+    归还 batch lease
+    返回 combiner 自己原先的 lock 调用
 ```
 
-`NATIVE_DONE` 由原 waiter 后缀和 owner ACK 路径处理，不再访问/完成旧 node。
-本负载正常的 `RUN_TO_UNLOCK` 不走这条分支。
-普通入口开始代理需要观察到至少两个 follower：一个待代理，一个后继 owner；
-两线程即使发生争抢也未必有可代理批次。之后 follower 可以完成、再次提交，
-批次实际长度取决于当时队列，1024 只是上限，不能当作每批大小。
+普通生产 root 完成走 `kd_exec_frame_retire_single_spin`，检查物理
+owner/top/depth、batch lease、非 complex 及原有终态；不是旧的逐项
+`complete → pop` 重复检查。SELFTEST 为观察 ledger 保留 complete/observe/pop。
+绑定仍检查 source OPEN；批内缓存仅缓存槽身份，没有缓存准入结果或代码版本。
 
-**当前 combiner 对多个 waiter 的 JIT 正文连续执行时一直持有 L。** 每个 waiter
-的“逻辑 unlock”不会物理释放 L。`sc_post_work()` 由被唤醒的原 waiter 在
-`sc_body_N()` 返回后执行，combiner 的上述循环不会在相邻 JIT 正文间插入它。
-因此锁外乘加只间隔各请求线程的再次提交，不保证逐正文发生原锁或 CPU 交接。
+**普通批次一直持有 L。** waiter 的逻辑 unlock 只产生完成结果，不释放 L。
+combiner 服务完 follower 后，自己再执行一次原生正文，按 hold/ticket 释放
+L、S 并归还 pin。提前唤醒的下任 owner 仍须等 S/L，不能立即并行访问正文。
+正常启动批次需一个可代理 follower 加一个后继 owner；1024 是限制参数，
+不是实际批长保证。当前普通循环没有 TCLock 同样的 `need_resched()` 退出条件。
+
+<a id="tclock-path"></a>
+
+### 4.4 TCLock：先保存原生续点，再在 shadow 栈排队
+
+`tc_lock` 对目标锁执行 `preempt_disable()`，然后调用 `komb_spin_lock(Q)`。
+非目标锁回退 Linux。CAS/pending 失败后的普通 task 分支如下：
+该分支要求本 CPU 没有占用中的 node、IRQ 开启且没有 migration-disable；
+其他上下文走源码中的特殊节点路径，不在本次单锁展开范围内。
+
+```text
+komb_spin_lock_slowpath（context.S，在原 waiter task 栈上）：
+    push RBP, RBX, R12, R13, R14, R15
+    R12 暂存 lock，跨普通 C helper 调用保留
+    node[0].rsp = 当前 RSP                     // 指向六寄存器保存区
+    RSP = 本 CPU local_shadow_stack_ptr
+    CALL __komb_spin_lock_slowpath(Q)          // C 慢路径和等待都在 shadow 栈
+        初始化 node 的 next/locked/completed/CPU/NUMA/lock/task 等
+        old_tail = xchg_tail(Q, node.tail)
+        若有前驱：链接 previous.next，轮询 node.locked
+        若 completed：归还 node 占用并返回
+        否则作为队头等待 Q.locked/pending
+        唯一队尾成功获取：归还 node 占用并返回
+        否则取得 combiner 状态，服务 follower（4.5）
+    保存 shadow RSP；RSP = node[0].rsp
+    pop R15, R14, R13, R12, RBX, RBP
+    RET
+```
+
+最后的 RET 去向取决于 `node.rsp` 是否已被代理 unlock 更新：
+
+- 没有代理正文：仍指向 lock 入口保存区，返回 lock 后自己执行正文。
+- 已代理完成：已指向 unlock 内的保存区，从 unlock 返回链继续，跳过已执行正文。
+
+节点本身不放 `pt_regs`。寄存器与 CALL 返回地址留在原生栈中，`rsp` 是续点
+存储的地址；它在 lock 时写入，在代理 unlock 时改为另一处保存区。
+本移植固定保留六寄存器协议，没有改为 kdlock 的三个逻辑字段。
+
+### 4.5 TCLock：WWJUMP 从当前 unlock 直接接下一 lock
+
+以下是当前 `WWJUMP=1` 的分支，而不是 `#ifndef WWJUMP` 的逐次返回循环。
+
+```text
+run_combiner(Q, W1)：                         // 在 combiner 自己的 shadow 栈
+    若 follower/后继不足或 IRQ 特殊节点：只交接队头资格
+    建立 curr_cs_cpu、counter、lock_addr 等 per-CPU 状态
+    execute_cs(Q, W1):
+        komb_context_switch(&W1.rsp, &combiner.shadow_rsp)
+            在当前栈保存六寄存器和 CALL 续点，记到 outgoing_rsp
+            RSP = *incoming_rsp；恢复六寄存器；RET
+
+combiner CPU 现在在 W1 的 task 栈：
+    RET 抵达 W1 的 komb_spin_lock_slowpath 返回链
+    komb_spin_lock 的 WWJUMP 部分：
+        get_next_node(W1)，保存 next_node_ptr，预取后继原生栈
+        若有上一已离栈 waiter：发布上一 waiter 完成
+    返回 caller，执行 W1 的原生临界区
+    进入 W1 的 komb_spin_unlock(Q)：
+        确认当前代理锁；tc_delegated++
+        if 后继/其后继不足、IRQ、counter 达上限或 need_resched()：
+            incoming_rsp = combiner.shadow_rsp
+        else：
+            incoming_rsp = W2.rsp；更新 curr/prev CPU 与 counter
+        komb_context_switch(incoming_rsp, &W1.rsp)
+            在 W1 栈保存六寄存器及 unlock 的 CALL 后续点
+            记住 W1 新 rsp，然后切到 W2 lock 续点或 combiner shadow 栈
+
+若切到 W2：W2 的 lock 返回链发布 W1 完成，然后执行 W2 正文
+若返回 combiner：run_combiner 发布最后一个 waiter 完成
+    拼回 NUMA 暂存队列，交接下一 owner，恢复自身获取过程
+    combiner 回自己 task 栈，执行自己的原生正文并解锁 Q
+```
+
+这条路径中，相邻代理正文之间不用回到外层 `run_combiner`；选择后继、结束
+条件和切栈调用在原生 lock/unlock 代码中执行。kdlock 的连续处理则每次回到
+同一个 `kd_spin_batch_run` C 循环；wrapper 内没有队列调度器。
+
+TCLock 的 `get_next_node` 按 NUMA 选择/暂存后继；符合预取分支时读取
+`per_cpu(komb_nodes[0], next->cpuid).rsp`，预取从该 RSP 起的六条 64B 行，并预取
+后继节点。它也有 node→CPU→per-CPU RSP 的读取，不是完全没有依赖访问。
+当前实测同 NUMA，不能把保留 NUMA 代码等同于已验证跨 NUMA 收益。
+
+### 4.6 完成发布：为什么必须先离开 waiter 栈
+
+以 W1 → W2 为例，所有“代理侧”步骤都在 combiner 的 CPU 上发生：
+
+| 时刻 | TCLock | kdlock clobber |
+| --- | --- | --- |
+| W1 等待 | W1 CPU 在其 shadow 栈运行等待 C 代码 | W1 CPU 在其 shadow 栈的连续 asm 中轮询，IRQ-off |
+| 执行 W1 正文 | combiner 的 RSP 真正指向 W1 task 栈 | combiner 的 RSP 在自己 task 栈；JIT 以虚拟 SP 访问 W1 栈 |
+| W1 到 unlock | 原生 unlock 保存六寄存器和返回链到 W1 栈 | wrapper 核对精确 unlock 边界，写回 IP/SP/BP 和 COMPLETE |
+| 停止访问 W1 执行状态 | `komb_context_switch` 已切到 W2 或 combiner shadow 栈 | wrapper 已返回，frame 终态验证及物理解绑已完成 |
+| 发布 W1 完成 | 新栈上 `clear_locked_set_completed(W1)`，release store | 锁侧 C 循环 release store 完成标记 |
+| W1 CPU 恢复 | shadow C 返回后加载更新的 W1.rsp，恢复六寄存器，从 unlock 返回链继续 | 放弃旧 C 帧，结束 ticket，直接从共享 request 恢复三个字段和原 IRQ flags |
+| W2 执行 | 接 W2 的 lock 原生返回链 | 校验/bind W2 frame，调用 W2 wrapper |
+
+TCLock 的 `tc_completed` 在离栈完成发布时增加，排空后须与 `tc_delegated`
+相等。若在还用 W1 栈时就唤醒 W1，两个 CPU 会同时使用它；因此不能把完成
+发布随意前移到 unlock 刚入口。kdlock 虽不物理借栈，JIT 仍可能改写 W1 的
+逻辑栈，故也不能让原 waiter 沿已被覆盖的旧 C 返回链继续。
 
 <a id="jit"></a>
 
-## 5. 一次实际 JIT：frame → wrapper → 正文 → 完成
+## 5. 现场到底保存在什么地方
 
-### 5.1 锁侧驻留批次与单锁准入
+### 5.1 三种需要区分的状态
 
-对应 [combiner.inc](../../kernel_module/spin/combiner.inc)、
-[kd_jit_batch.h](../../include/kd_jit_batch.h)、[kd_exec.c](../../kernel_module/kd_exec.c)。
+| 状态 | kdlock | TCLock |
+| --- | --- | --- |
+| 原线程跨调用的活跃值 | clobber caller 编译器按需保存，跨 lock/unlock 后重新装载 | 同一 benchmark caller 做相同工作；后端内部还遵守普通 C ABI |
+| 委托请求的继续执行位置 | request 中唯一的 frame/regs；新普通入口只初始化 IP/SP/BP | waiter 原生栈上的六寄存器和 CALL 返回地址，node.rsp 定位 |
+| 物理 combiner 的继续执行位置 | resident C 循环的编译器现场、wrapper 物理栈帧；复杂控制另有独立 owner 状态 | combiner shadow 栈上的 C 帧和 `komb_context_switch` 保存区 |
 
-```text
-run_combiner(L, node, request):
-    获得整个批次的 source/provider lease
-    保存外层队列与真实 L 的既有所有权
-    kd_spin_batch_run(batch):
-        编译器序言/尾声管理 combiner 现场
-        在同一个 C 帧中循环执行以下请求逻辑
-    执行末节点交接，或提前释放后的 outer reclaim
-    归还 source/provider lease
+这些是不同线程/执行者的状态，不能因为都叫“现场”就合并成一份。kdlock
+已经共用逻辑请求和寄存器 backing；物理 owner/combiner 必须同时存活的状态
+仍独立。TCLock 没有 `pt_regs` 包，但并非没有保存：其保存区就是原生栈。
 
-kd_spin_batch_run 的循环体:
-    若已有 wrapper 返回：
-        if 本次入口 ABI 对应的精确最终 unlock 分类通过:
-            观察真实正文标记；完成/解绑 frame；发布当前 waiter 完成
-        else:
-            按分支启用 cold ledger/snapshot
-            execute_cs 消费已经返回的出口；不再次执行当前前缀
-            使用原有 nested/native/拒绝/outer-release 处理
-    检查批次上限、末节点和 outer-release
-    保存 NUMA 暂存队列边界；选择下一请求；预取其后继
-    if 非普通单锁 root、额外 pinned 或禁用:
-        进入 execute_cs 通用处理
-    exe = 批内同 entry/SPIN backend 缓存，未命中才查表
-    复查 OPEN/NORMAL/entry/backend/code、未执行 root、有效 SP、KDWB001 签名
-    frame_bind(node.execution.frame, depth=1, batch_lease=true)
-    准备 args[2]、原始 entry SP 和当前 L/unlock 地址
-    标记 executed，以对应内联 clobber 边界调用 wrapper，回到本循环
-```
+### 5.2 kdlock wrapper：精简入口与完整中间出口
 
-正常单锁不再逐请求经过 `execute_cs → kd_exe_on_call_hl_entry`。队列选择、
-完成发布和 WWJUMP 都在锁层；wrapper 不持有队列或调度回调，不在生成 JIT 内
-切换 waiter。原有 NUMA 拒绝回滚、最后一名 waiter、batch-size 和提前释放规则保留。
-旧代码没有 `KDWB001` 签名时走普通 wrapper。
+[wrapper.S](../../include/wrapper.S) 的目录保留三种入口：
 
-9/17 冻结版本曾在每个请求间返回 C step 和汇编 shell；当前统一循环已消除
-这次退出/重入及外层成组保护。新旧混合队列也不会退到普通 C ABI wrapper。
-旧入口只额外保护 RBP，两个入口均向编译器声明其他 GPR clobber。编译器仍
-可能产生函数级保存及活跃局部值 spill，不能宣称所有现场成本为零。
-TCLock 从当前 unlock 续点切到下一 lock 续点；kdlock 保留物理 combiner 栈
-供 JIT 暂存槽使用，只更新逻辑 waiter 栈。两者都运行锁侧 C 交接逻辑。
-完整状态对照见 [寄存器 ABI](../../docs/JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比)。
+| 偏移 | 调用契约 | 物理 combiner 保存 | 逻辑 waiter 输入 |
+| --- | --- | --- | --- |
+| 0 | 普通 C ABI 的旧入口 | wrapper 保存/恢复 RBP、RBX、R12–R15 | FULL 逻辑寄存器包 |
+| 16 | `KDWB001` 旧 ABI 批次入口 | 编译器负责活跃 GPR；内联适配另保护 RBP | FULL 包，仍导入 CPU 中执行的逻辑值 |
+| 32 | `KDWC001` clobber v1 入口 | 编译器负责活跃 GPR；wrapper 只保护 RBP、建立必要栈帧 | MINIMAL 包：IP/SP/BP、GS/task 和出口元数据 |
 
-frame 的常用头部为 72 字节；其后是寄存器包和预分配冷区。普通 prepare/bind/
-complete/pop 不初始化、检查八层数组、remote/native 控制或快照。复杂出口先
-原地建立单锁 ledger，再调用通用处理；SELFTEST 观察器需要 ledger 时提前启用。
-frame/context/request 保持预分配，node 为 64 字节，包含两个排队期间有效的预取地址。
-12 个 request 槽独立于四个可复用 node；这是减少热路径访问，不是缩小整个对象。
-
-### 5.2 已执行出口如何进入通用处理
-
-对应 [exe.c](../../kernel_module/exe.c) 和
-[observation.patch](provider/observation.patch)。
-
-`kd_exe_spin_batch_resume()` 接收已返回的寄存器包、exit/witness 和原 entry SP。
-通用 dispatcher 先消费该出口，再决定处理 CALL/hostcall、续跑或原生后缀。
-它不能先调用一次 wrapper；否则会重放已经执行过的前缀。
-入口拒绝仍必须同时满足原 entry/SP、零 witness 和专用拒绝标记，才能撤销
-`executed` 并走未开始的原生路径。正文运行后的异常不能按原入口重试。
-
-通用入口仍执行原有 frame、backend、scope 和就绪检查。批次入口在执行前用
-仅适用于 pristine root 的检查完成准入；不能把一个 continuation 当作新 root。
-slot 缓存不保存 readiness 或代码版本，source/provider lease 也不是代码不可变保证。
-
-普通与批次路径都在真实 wrapper 返回后调用同一正文观察点；bench 的
-`bench_jit_bodies` 只统计匹配 L 且 witness=1 的逻辑调用，续跑不会重复计数。
-`jit_timing=0` 不读时钟；启用时批次路径仍记录 wrapper/dispatch 区间。
-
-### 5.3 wrapper 的两种边界
-
-[wrapper.S](../../include/wrapper.S) 的偏移 0 保留普通 C ABI，偏移 16 是带版本
-签名的旧 ABI 专用入口。普通入口保存/恢复原 callee-saved 寄存器；专用入口
-只预留同样的栈空间，编译器管理 combiner 活跃值，内联适配保护 RBP。`args[2]` 和控制槽偏移不变。
-新增 `Stack_BATCH` 位于 `RBP-160`，保存专用描述指针；先分配栈再写，避免 red zone。
-
-| 出口 | 写回 |
-| --- | --- |
-| 专用入口，第一次精确到达当前 L 的 spin unlock | RBX/RBP/R12–R15、虚拟 RIP/SP、分类用 RDI、exit/witness |
-| hostcall、其他 CALL miss、嵌套/native、错误、入口拒绝 | 完整受支持 GPR、虚拟 RIP/SP、exit/witness |
-| 普通入口及续跑 | 完整受支持 GPR、虚拟 RIP/SP、exit/witness |
-
-精简保存集合只应用于已知最终 lock/unlock ABI；中间出口仍保留有效寄存器。
-R11–R15、SP/BP 的 `Stack_*` backing 直接使用请求的对应 `pt_regs` 字段，
-入口不复制到 wrapper 栈，出口不再复制回来。物理 R11 固定作包基址；原 block
-计数改用 `Stack_BUDGET` 内存槽。CPU 中的脏逻辑寄存器仍需 spill/完整物化。
-这减少边界搬运，但可能增加循环计数访问和请求包的缓存流量，不能按删除的
-指令数直接推算吞吐收益。布局与有效性规则见 [寄存器 ABI](../../docs/JIT_REGISTER_ABI.md#3-pt_regs-输入输出约定)。
-生成正文继续按虚拟寄存器和地址重写执行；`bin.txt` 包含 wrapper，不能只数
-`JIT.S` 中计数更新的指令来估计执行成本。
-
-### 5.4 完成发布与 request 退休
+两个批次入口都不是可直接当普通 C 函数调用的符号；必须使用
+[kd_jit_batch.h](../../include/kd_jit_batch.h) 的 asm clobber 边界。编译器仍可能
+在函数序言保存 callee-saved，或在调用附近 spill 活跃局部值；“删除手写成组
+保护”不等于“机器码中没有 push/pop”。
 
 ```text
-单锁正常返回：
-    检查执行状态、当前锁及完成状态，标记 frame COMPLETE
-    frame_pop(frame, NULL)：检查物理 owner/LIFO 和终态，解绑
-        不读取未启用的冷状态；不复制寄存器；不归还 waiter 的 request
-    per-CPU JIT_SUCCESS 计数
-    release-store node.completed/locked           // 发布前结果已就绪
-    之后不再访问这个可立即复用的 node
-    取得下一请求继续，或结束批次
+clobber wrapper 入口：
+    核对 entry ABI 和 MINIMAL 状态
+    保护物理 RBP，建立 wrapper 栈帧，保留控制/暂存槽
+    R11 = regs backing 基址
+    R12 = 逻辑 BP；R13 = 逻辑 SP
+    args[0/1] 的 GS/task 存入控制槽；witness = 0
+    进入对应生成正文；不导入整包 GPR
 
-原 waiter 醒来：
-    放弃旧 C 帧，RSP = min(node.rsp, request.regs.sp) 向下对齐
-    从 request 读取 origin ticket、IRQ flags 和最终寄存器
-    ticket_end：检查代次/owner/native 引用，清活跃位并归还 pin
-    直接恢复 request 中的 CPU 寄存器
-    在最后一次包读取后归还 request：
-        pristine 单锁只有一个用户：release store users=0
-        复杂/native/remote：原子递减，保留尚未结束的 owner
-    恢复 IRQ flags，返回 unlock 后继，执行自己的锁外计算
+到达精确正常 outer unlock：
+    要求普通 root 的 complete 资格
+    核对 exit、unlock 符号和锁地址
+    核对 unlock 元数据：RSI = 虚拟 CALL 栈顶 + 8
+                       RCX = 逻辑 BP
+                       RDX = 虚拟 CALL 栈上的返回地址
+    regs.ip = unlock 后续点；regs.sp = 调用后 SP；regs.bp = 逻辑 BP
+    packet_state = COMPLETE
+    args[0] = KD_EXE_CLOBBER_COMPLETE；args[1] = witness
+    恢复物理 RBP/RSP，返回锁侧 C 循环
 ```
 
-普通请求的完成不释放物理 L，L 由整个批次持有。原 waiter 不再次执行正文或
-物理 unlock。复杂分支继续遵循原 owner/ACK、cleanup、remote 与终态约束。
-退出日志 `kd_spin batch: entries=... ww_jumps=...` 按所有 possible CPU 汇总：
-`entries` 是专用入口调用数，`ww_jumps` 是上一专用请求正常完成后继续进入下一
-专用请求的次数；二者不同于总 JIT 正文数，也不替代负载正确性检查。
+两元素 `args` 仍用于输入 GS/task、输出分类/witness；batch 元数据是独立描述
+指针，没有把 args 扩成第三个元素。`PT_GS/PT_TASK` 名称指向 args，不是向
+`pt_regs` 增加字段。物理 GS/current 并不随 wrapper 切换；受支持的 GS/task
+语义通过生成代码和逻辑元数据实现。
 
-### 5.5 combiner 或未代理线程的 slow unlock
+| 新 ABI 请求状态 | 允许读取/恢复什么 | 后续处理 |
+| --- | --- | --- |
+| MINIMAL，尚未执行 | IP/SP/BP 与必要元数据；其他初始 GPR 未定义 | 不准入时原生获取后回 lock 续点；wrapper 入口拒绝须证明零正文、原 IP/SP 和专用分类 |
+| COMPLETE，正常最终 unlock | unlock 后续 IP、调用后 SP、逻辑 BP | 锁侧校验/解绑/完成发布；原 waiter 恢复最小状态 |
+| FULL，已执行的中间出口 | 当前所有有效逻辑 GPR、虚拟 IP/SP/BP | 消费 hostcall/nested/native/续跑协议，不能从入口重放 |
+| legacy | 保留已有完整入口和恢复契约 | 即使使用偏移 16 的精简最终写回，也不能冒充新 ABI COMPLETE |
 
-对应 `kd_raw_spin_unlock_slow`、`kd_spin_release_origin` 及 gate/entry release。
+中间出口要在进入 C 处理前 spill 仍在 CPU 中的逻辑值，已有 backing 值不需
+再次搬运。这里的 FULL 是受支持的逻辑 GPR 包，**不表示完整硬件上下文**：
+当前 wrapper 不回写 live RFLAGS，物理 waiter 的 IRQ flags 另存另恢复；不能
+据此声称任意 flags-live 指令边界都可安全续跑。
+
+### 5.3 `PT_*` 与 `Stack_*` 已经共用的部分
+
+定义见 [asm_head.h](../../include/asm_head.h)。历史 `Stack_*` 名称不一定表示
+combiner 栈地址；下列寄存器 backing 已直接指向同一 request 包：
+
+| 逻辑状态 | 共享位置 | JIT 执行时的物理职责 |
+| --- | --- | --- |
+| R11 | `Stack_R11` 与 `PT_R11` 对应同一 regs 字段 | 物理 R11 固定为包基址，逻辑 R11 需虚拟化 |
+| R12–R15 | `Stack_R12`…`Stack_R15` 与对应 PT 字段共享 | 物理 R12/R13 保持逻辑 BP/SP；R14/R15 作生成器临时状态 |
+| BP/SP | `Stack_RBP/Stack_RSP` 与 PT 字段共享 | CPU 中的 R12/R13 如已更新，出口仍须写回有效值 |
+| 其他 CPU 驻留逻辑 GPR | 对应 PT 字段在 spill/完整出口时更新 | 新普通入口不先加载未捕获值；正文定义后按需使用 |
+| GS/task、出口分类、witness、block budget、batch 指针 | wrapper 独立控制槽 | 是执行控制信息，不可与任意逻辑 GPR 覆盖复用 |
+
+因此普通新路径没有“入口整包捕获 → 复制到 Stack 槽 → 出口复制回 PT → 最终
+整包恢复”。入口快照与正文中逐步产生的 backing 值也不是同一有效性状态；
+不能因存储共用就在 MINIMAL 阶段读取尚未定义的字段。
+
+当前布局为 node **64B**、request **768B/64B 对齐**、frame **672B**。
+request 的 frame 从偏移 24 开始，frame 热头部为 72B，内嵌 regs 从 request
+偏移 96 开始；普通标志与 ABI/包分类集中在前两条缓存行。每 CPU 十二个
+request 共 9216B，与四个可复用 node 独立；对象预分配，没有逐请求整包清零。
+数组/remote/control 冷区由首次复杂出口启用，不表示总对象变小。
+
+### 5.4 预取提示与权威状态分开
 
 ```text
-内核 _raw_spin_unlock → kd_spin_dispatch_unlock：
-    fast_unlock 未命中 → target/retained-owner 选择
-    kd_raw_spin_unlock_slow(L):
-        kd_exec_native_unlock(L, false)        // 本负载 native_frames 为空，立即 false
-        if kd_spin_entry_find(L, ref):         // 扫描本 CPU ticket
-            kd_spin_unlock_ref(L, ref):
-                request = {ref, S=entry_gate(ref).word}
-                常见 S.locked=LOCKED：
-                    kd_spin_release_origin(request):
-                        使用 request.ref 和 S，不再查 map/ticket
-                        guard irqsave：OWNED → RELEASING；解开 guard
-                        gate_release：检查 owner/task/CPU/generation
-                        do_raw_spin_unlock(L)；清 gate.held/owner/hold
-                        guard irqsave：RELEASING → RELEASED；解开 guard
-                        store_release(S.locked, 0)
-                        entry_end：清 ticket；preempt_enable()
-            return
-        if !kd_hotlock_is_promoted(L): kd_hotlock_record(L)
-        origin_raw_spin_unlock(L)
+producer，仍独占 request：
+    node.prefetch_regs = 当前实际 regs 指针
+    node.prefetch_full / prefetch_complex = 当前分类提示
+    SP 在保留的 logical_task 栈范围内才记录 node.prefetch_sp
+    普通请求直接传内嵌包；虚拟请求传仍被引用的父包
+
+combiner，执行当前正文之前：
+    只读 next node 的 execution / prefetch_regs / SP / 标志
+    预热 next request 前两条元数据行
+    按 FULL/MINIMAL 提示预热寄存器，必要时预热复杂 ledger
+    预热受检 SP 和一个 push 槽
+    不为决定预取地址再加载 next frame、task 或 regs 内容
 ```
 
-物理顺序是先释放 L，再打开 S，再结束 ticket/pin。第 4.3 节提前放行的下一任
-owner 仍需等到 S/L 允许获取；不能删掉 S 的等待就让它并行修改正文。
+`spin_prefetch=0/1/2` 分别为关闭后继预取、consumer 查地址、producer 提示。
+这是只读装载参数；不关闭其他既有队列返回栈预取。提示在排队期间不变，只作
+缓存预热，不参与准入/恢复，也不增加引用或覆盖真实 SP。node 回收或 outer
+提前释放后不得跟随旧提示。TCLock 则围绕真实原生保存栈预取，无 frame/包
+分类；kdlock 的请求/包布局不同，不能机械复制六条原生栈预取。
+
+### 5.5 TCLock 六寄存器保存区与恢复链
+
+[context.S](../../tclock_backend/context.S) 中 `komb_context_switch(in, out)`
+的核心动作是：
+
+```text
+CALL 已将返回地址压入当前栈
+push rbp; push rbx; push r12; push r13; push r14; push r15
+*out = rsp
+rsp = *in
+pop r15; pop r14; pop r13; pop r12; pop rbx; pop rbp
+RET 到新栈中原先保存的 CALL 后续点
+```
+
+从保存的 RSP 向高地址依次为 **R15、R14、R13、R12、RBX、RBP、返回地址**。
+RIP 通过 CALL/RET 链保留，不作为独立字段装入节点；caller-saved 活跃值由
+普通 C 调用者编译器处理。实际调用链还可能有编译器序言保存，不能把所有成本
+简化成“每次操作恰好六 push 六 pop”。
+
+一个被代理的 waiter 有两个续点：lock 时的保存区让 combiner 进入其原生正文；
+unlock 时的新保存区让原 waiter 跳过正文继续返回。combiner 自己的续点在
+shadow 栈，只有批次结束或特定控制路径才回到那里。原 waiter 的
+`tc_unlock → preempt_enable()` 在它恢复自己的 unlock 返回链后执行，不能在
+代理 CPU 上提前归还另一个物理 waiter 的 pin。
+
+切换 RSP 不切换 CPU、Linux `current`、GS 或 per-CPU 身份。当前实验正文只
+访问全局计数器；不能据此将 TCLock 描述为任意 task/per-CPU 临界区的透明
+替换。其普通等待为纯轮询，但与 kdlock 的 IRQ-off 连续汇编等待不是同一机制。
+
+### 5.6 kdlock 原 waiter 的最终恢复与中途续跑
+
+正常完成后，等待汇编将恢复 C 栈放到原保存 RSP 和最终逻辑 SP 的较低处，
+向下对齐；它不再沿原先的 hook/queue C 返回链展开。
+
+```text
+kd_spin_resume_completed / kd_spin_resume_waiter：
+    归还 node 计数，复用 request.diag 原子减少实时 waiter 数
+    取出仍存活的 request、原 IRQ flags 和 origin ticket
+    正常完成：entry_end，结束 ticket/pin
+    native 后缀：mark_native，保留必要所有权和 ACK 关系
+    之后不再读取旧 node 或 per-CPU 槽
+
+kd_spin_restore_request，新 ABI MINIMAL/COMPLETE：
+    RSP = regs.sp；把目标 IP 和原 IRQ flags 放到返回栈
+    RBP = regs.bp
+    所有包读取结束后归还 request user
+        pristine 单锁：release store users=0
+        共享/复杂：原子递减，保留其他使用者
+    恢复 IRQ flags；RET 到目标后续点
+    caller 编译器重新加载自己的活跃值
+```
+
+FULL/legacy 走对应完整 GPR 恢复。IRQ 状态属于原物理 waiter，不把 combiner
+当前 IF 当作另一个 CPU 的恢复状态。完成后的 node 可复用，也不等于 request
+可释放；request 必须存活到最后一次读取与必要 owner/ACK 结束。
+
+hostcall、嵌套锁、native 后缀或其他已执行出口由
+`kd_exe_spin_batch_resume`/通用 dispatcher 先消费当前 FULL 出口，再服务或续跑。
+它不能先重新调用 wrapper 重跑前缀。提前 outer unlock 的 owner 回调、后续
+reclaim、source/remote ACK 沿原协议处理；本单锁 benchmark 不测这些分支的成本。
 
 <a id="costs"></a>
 
-## 6. 哪些代码最值得检查
-
-### 6.1 当前源码的重复工作清单
-
-以下按单层、首次 wrapper 即成功到达 outer unlock 的请求计算，是源码执行次数，
-不是精确耗时或汇编指令数；拒绝、嵌套、native continuation 的次数不同。
-
-| 工作 | 当前路径与频率 | 应检查的改进方向 |
-| --- | --- | --- |
-| 重复注册/来源确认 | 每个已晋升慢入口仍调用 `kd_exe_add`；已发布且同身份/后端、source OPEN 时只读返回，新注册及冲突才走原串行化路径，关闭准入仍拒绝 | 已去除命中路径的全局 CAS gate、source irqsave 和模块查询；保留发布、关闭准入和 source 生命周期约束，实际耗时收益尚未测量 |
-| 重复 gate map 查询 | 入口查一次 gate；root 先 CAS S，失败后 ticket 复用 gate/pin；pending/tail、execute_cs 和普通 unlock 不再查 map | 已实现 origin release/acquire 发布与无锁读取；创建仍在锁内复查，诊断/无本地 ticket 的 OOO 查询保留；实际耗时收益尚未测量 |
-| ticket 查找/状态迁移 | 无 pin 的 native-active 查询不扫描；begin 从空闲位直接分配，只扫描活跃槽检查重复；find 复用已有 pin，entry_gate 无 guard；状态修改仍使用 guard | 已移除临时 pin/unpin 和本地 gate 读取锁，合并重复准入检查；保留代次、owner、ACK 和 pin 的终点 |
-| 执行注册表查找 | spin 在同批次同 entry/SPIN backend 上复用 exe 指针；缓存命中的 `find_ready` 和后续 `batch_prepare` 仍各检查一次 readiness，prepare 每次还检查 wrapper 签名；mutex 仍逐请求查表 | 合并重复校验，保留最终准入的 OPEN/NORMAL、身份及代码检查；批次 lease 保证槽存活，不等于 readiness 或代码版本不可变 |
-| frame/context 校验 | 普通路径只访问 frame 热状态及寄存器包，不启用冷区；仍逐请求调用完成判定、complete/pop、prepare/bind 和计时辅助函数；完整 context 扫描仅 SELFTEST 保留 | 专门化普通完成与下一请求绑定，减少函数往返和重复检查；保留源租约、owner、容量、ACK 和终态约束 |
-| frame 清零/复制 | 无逐请求整块清零；spin 直接使用 waiter 准备的 request/frame，无 node→frame→node 或最终软件快照 | 复杂/native/remote 共用逻辑包，独立 owner 控制状态仍保留，mutex 未改用该池 |
-| source frame lease | 每批次一次 CAS 获取、原子递减和 provider module 引用增减；逐 bind 检查 OPEN | 关闭标志和计数在同一原子字中协调退休，仍有共享计数缓存行与模块引用成本，不是零同步 |
-| 常规诊断计数 | 纯事件、最大深度及 overflow/invariant 已 per-CPU；每个排队 waiter 仍有共享 `atomic_inc`/`atomic_dec_return`，计数紧邻 JIT 禁用 latch；多个诊断入口重复查槽 | 复用诊断槽，评估实时计数按需观测或其他低开销表示；该计数用于测试/workload 阶段协调，不能直接删除或只在退出后汇总 |
-| 下一请求预取 | 当前正文执行前预取下一已发布请求的寄存器包、frame 热字段及逻辑 task 栈内的虚拟 SP/push 槽 | 虚拟子请求跟随共享 root 包；不猜 node-zero RSP，不改变 owner/ACK，不在提前 outer release 后访问旧 successor |
-| wrapper 和生成代码 | 同一个 C 帧跨新旧及混合批次；旧入口适配仅保护 RBP；新 ABI 仅捕获/最终恢复三字段；新生成物直接复用请求 GPR backing，旧 ABI 仍装载 CPU 状态及最终恢复 | 编译器仍产生函数级保存和活跃值 spill；JIT 仍有入口分派、地址重写及虚拟栈操作；R11 包基址把 block 计数移至内存；完整中间出口和正文标记保留，历史成绩不能代表此次改动 |
-| 屏障、pin 与原锁 | 复杂 dispatcher `mb()`、队列 acquire/release、ticket guard/pin、原 L 获取/释放；普通批次持续持有 L，不逐代理正文重获 | S/L 双层所有权用于兼容原生 peer，不能直接套用 TCLock 单锁字而删除排斥或 owner/ACK 协议 |
-
-普通单锁不读取未启用的冷区，也不进入通用 dispatcher；复杂出口先物化
-owner/control 状态再处理。ticket guard、实时 waiter 计数、共享 request 引用和
-批次 source 原子操作仍有成本；并发协议与实时观察字段不能当作纯统计删除。
-
-### 6.2 已有采样支持什么结论
-
-已有 R2 四线程 N=1 的 `cycles:k`、499Hz、period 加权 IP 采样中，
-`__kd_spin_lock_longjmp` 占 **52.80%**；其中 node.locked/PAUSE 范围占总权重
-**46.06%**，S locked/pending 等待范围占 **4.26%**。`kd_spin_gate_lookup` 为
-**2.44%**，`kd_exec_frame_validate` 为 **1.92%**；生成映像只有 **0.092%**
-（20 个样本）。这些是增加锁外乘加前的历史诊断；测量期 JIT 占比 58.76%，
-完整来源和限制见 [历史采样记录](../../docs/VALIDATION.md#spin-static-dispatch-profiling)。
-
-这支持先查请求等待、全局元数据锁和逐请求管理成本。等待样本高表示 CPU 在等待
-服务或所有权，并不能单独证明 PAUSE 指令本身是瓶颈；删掉 PAUSE 或加入 yield
-不等于缩短 combiner 服务时间。现有 flat IP 采样也不能把所有
-`_raw_spin_lock_irqsave` 样本归到某一个内部锁，更不能直接给出锁交接率。
-
-单线程历史 `kd_spin_dispatch_lock` 的 38.59% 包含真正的 locked CMPXCHG，
-不能全部称为无效调度代码。优化单线程应重点检查第 3 节及 kernel hook；
-第 6.1 节多数 frame/queue 开销只会影响慢入口或真实代理，不能改善已命中的
-单线程 native fast 路径。
-
-重复注册、gate 传递、执行条目复用与单锁 frame 精简已实现；开销归因需要对应版本的
-独立 [profile.py](profile.py) 核对改变后的开销位置与 JIT 差值。队列等待占比、
-实际 batch 大小和服务速度需要一起解释，不能把历史扫描的 best/median 当作
-单项修改的收益。
-
-后续 [2026-09-18 三方采样](../tclock_compare/results/20260918-native-stack.md#为什么当前-kdlock-仍慢)
-已经覆盖同环境 TCLock、Linux 与 kdlock。新版本的明确热点包括共享诊断槽、
-waiter 计数更新及后继请求的依赖读取；不是仍按旧版本的全局锁/整包搬运解释。
-生成镜像的采样权重很小，但分母包括所有等待 worker，不能据此直接给出
-wrapper 的串行服务成本上限。采样权重不是删除某段代码后可获得的提速比例。
+## 6. 按执行阶段对比成本
 
 <a id="tclock-cost-comparison"></a>
 
-### 6.3 TCLock 与 kdlock 的实现差异及收益抵消
+### 6.1 TCLock 与 kdlock 的对应步骤
 
-以下比较独立 [TCLock 后端](../../tclock_backend/README.md)与当前普通
-caller-clobber v1。原生互操作、source 生命周期和中途续跑等职责不同，
-完整后端的吞吐差距不能全部归因于保存几组寄存器。性能数值、失败记录及
-冻结身份只维护在[三方结果页](../tclock_compare/results/20260918-native-stack.md)。
-
-TCLock 与 Linux 可以保留相同调用接口，但不能直接混用同一目标锁的竞争协议：
-tail 对应不同的 per-CPU 节点，代理 unlock 也需要自己的续点/完成处理。
-[兼容边界](../../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界)
-说明为何 kdlock 的 L/S 成本部分用于原生互操作。当前对照分会话加载后端，
-不证明 TCLock 能与未修改原生调用者共同竞争目标锁。
-
-| 环节 | TCLock 原生后端 | 当前 kdlock | 成本差别 |
+| 阶段 | TCLock 原生委托 | 当前 kdlock clobber | 成本含义 |
 | --- | --- | --- | --- |
-| 获取入口 | 目标锁身份判断后直接进入原锁字的 CAS/pending/队列 | 可选原生站点缓存；miss 后目标选择、晋升、条目确认和 gate 查询，先尝试 S，竞争后建立 ticket | kdlock 进入队列前有更多工作；命中注册/已有 gate 并不每次获取全局创建锁 |
-| 锁协议 | 被测目标锁完全由 TCLock 协议管理 | 私有调度字 S 加真实 Linux 锁 L | L 用于排斥原生 peer；普通批次持续持有 L，不能按每个代理正文重获 L 计价 |
-| 入口现场 | 六个 callee-saved 和 CALL 续点留在原栈，node 记 RSP | 请求仅捕获 RIP/RSP/RBP，其余活跃值由 caller 保存 | 减少显式搬运，但保存责任部分转移到编译器 |
-| 连续交接 | unlock 保存原生续点，物理切到下一 waiter 栈；离栈后发布完成 | wrapper 返回、完成分类、普通 root 合并终态验证/解绑、发布、下一请求 prepare/bind | 同一个 C 循环已去除旧 callback shell，逐请求管理仍存在 |
-| 状态访问 | node、原生栈及 per-CPU combiner 状态 | node → execution，内嵌 frame/regs 或借用 regs_ref，加 ticket、翻译条目等 | 热元数据集中到请求前两条缓存行；frame/regs 内嵌不是额外指针跳转，仍有真实间接读取 |
-| 诊断 | 三个直接 per-CPU 计数 | 事件 per-CPU，批次/请求复用 slot，waiter_count 独立缓存行 | 重复查找和读写混用已减少；共享原子计数成本仍在 |
-| 正文 | 原生指令 | wrapper、虚拟寄存器/地址重写与出口判定 | 本负载的自增不因 JIT 减少业务读写；两者都能从批次中的数据局部性获益 |
-| 批次结束 | 队列/IRQ 条件、上限 1024、need_resched | 队列、上限 1024、准入/执行结果等；普通循环没有相同的 need_resched 条件 | 相同 batch 上限不等于相同实际批长、覆盖率或调度行为 |
+| 目标获取入口 | 锁地址匹配，preempt pin，Q 的 CAS/pending | 可选原生缓存；miss 后选择、晋升/注册、gate、S CAS，竞争后 ticket | kdlock 在真正排队前有更多元数据工作；缓存命中可绕过多数步骤 |
+| 物理互斥 | Q 的单套协议 | 私有 S 加真实 Linux L | L 保留原生 peer 排斥；普通批次内不会每个正文重新获取 L |
+| 请求保存 | 六寄存器与 CALL 续点在原生栈，node 记 RSP | 编译器保存活跃值，request 只捕获 IP/SP/BP 及元数据 | 显式保存集合更小，但 compiler spill、请求准备和生命周期仍有成本 |
+| 等待 | 原线程在 per-CPU shadow 栈轮询 | 原线程在 IRQ-off shadow 汇编中轮询 | 两者均腾出可被代理使用的原栈；等待采样高不等于 PAUSE 本身昂贵 |
+| 后继预取 | 从后继 CPU 的 node-zero RSP 预热六条原生栈行 | 从 node 提示预热 request 头、逻辑包与受检 SP/push 槽 | kdlock 已删除 consumer 为选地址而追读 frame/task/regs 的链，producer 准备仍有成本 |
+| 正文入口 | 物理切栈，沿 lock 原生返回链进入正文 | prepare/bind、版本化 wrapper、JIT 入口和地址/寄存器重写 | TCLock 没有翻译状态与 frame 准入；kdlock 不需要逐 waiter 物理切栈 |
+| 正文出口 | 原生 unlock 选择后继，保存续点并切栈 | wrapper 验证精确 unlock，写三个字段，返回锁侧循环 | 两者均持物理互斥跨多个正文；出口验证和恢复表示不同 |
+| 连续执行 | WWJUMP：当前 unlock 直接切到下一 lock 返回链 | 同一个 C 栈帧：retire、发布、下一 prepare/bind | kdlock 已去掉旧外层 callback/shell 往返，但逐请求管理仍在 |
+| 完成发布 | 离开借用栈后 release 通知 | wrapper 返回、终态检查和解绑后 release 通知 | 都必须先结束代理对当前执行状态的使用 |
+| 原线程恢复 | 六寄存器恢复到原生 unlock 返回链 | 结束 ticket，恢复最小三字段/IRQ，最后归还 request | kdlock 请求存活与 node 复用分开；复杂路径另有 owner/ACK |
+| 批次结束 | 后继/IRQ/上限/need_resched 等 | 后继/上限/准入结果/outer release 等 | 参数相同不意味着批长、代理比例或调度行为相同 |
+| 观察计数 | 直接 per-CPU batches/delegated/completed | per-CPU 事件和正文观察，加共享实时 waiter_count、禁用 latch | 身份复用和计数行分离已实现，实时共享原子更新尚在 |
 
-四处需要特别区分“删除了重复工作”与“总成本消失”：
+TCLock 的 `need_resched()` 在此用于结束代理批次，不表示本移植会在 shadow
+等待循环中调用 `schedule()`。普通 kdlock 循环没有同一终止条件；吞吐差距
+包含批次策略，不能只用寄存器保存条数解释。
 
-1. **手写保存减少，函数级保存仍在。** 冻结的 `sc_body_1/16` 反汇编显示，
-   caller-clobber 使函数保存/恢复 RBX、R12–R15，即使正文没有跨边界活跃局部值，
-   也须履行函数对外的普通 C ABI。combiner 的活跃 C 值同样要跨 wrapper 保存。
-   同一 ABI 的 TCLock arm 也承担 caller 这部分成本。长批次原生 ABI 差值包含
-   桥接和代码布局，不能全部记作 spill，也不能仅凭 push/pop 数量预测吞吐。
-2. **事件计数本地化，共享行仍可能迁移。** [slot](../../kernel_module/spin/state.inc)
-   此前将 addr、waiter_count 和 jit_disabled 放在同一 16B 对象。当前 slot
-   扩为对齐的 128B，计数单独占一行；batch 解析一次身份，waiter 退出复用
-   入队记录。禁用状态仍逐次 acquire 读取，计数仍实时原子更新。
-   [递进对照](results/20260918-state-access.md)区分引用复用与缓存行分离；
-   两者都没有删除全局计数本身的写入成本。
-3. **批次摊销所有权成本，逐请求成本不随批长消失。**
-   [lookup](../../kernel_module/spin/combiner.inc) 仅解析身份，普通 root 在
-   [batch_prepare](../../kernel_module/exe.c) 集中检查 readiness、ABI、镜像标识
-   和 frame；复杂路径保留原检查。source lease 按批次持有，不能据此认定可变状态或
-   代码版本不可变。高 JIT 比例只证明代理覆盖，不能证明单次服务便宜。
-4. **预取地址准备也有成本。** TCLock 主要预取下一 waiter 的原生栈；历史采样
-   中 kdlock 先读 execution、regs_ref、task 与 SP，再触发预取。当前
-   [预取路径](../../kernel_module/spin/prefetch.inc)默认把地址准备移到发布前：
-   combiner 只从 node 取得实际包指针、受检 SP 和 full/complex 标记，先预热
-   request 的两条热元数据行，再预热寄存器和栈。普通请求直接提供内嵌包，虚拟请求沿用共享父包。
-   装载参数 `spin_prefetch=0/1/2` 支持关闭、旧查询、生产者提示；只控制后继
-   请求预取。准备工作和新增字段仍有成本，不能用 combiner 读取减少代替总吞吐。
-   [四路对照](results/20260918-prefetch.md)已完成：20 线程相对旧版本提高约
-   7.3%/9.3%，JIT 均约 99.8%；4 线程基本持平，不能推为普遍收益。
+### 6.2 哪些成本可以摊销，哪些仍逐请求发生
 
-本轮的[入口/缓存独立对照](results/20260918-spin-entry.md)进一步验证了另一种
-抵消：把 S/L 释放直接内联进公共解锁，会使缓存命中路径也保存 RBX/R12。
-现将该调用移到独立函数，保留 owner 校验与释放顺序；guest 汇编确认这组
-额外函数级保存已消失。获取入口另将注册/调度移入冷函数，并用标准 `bint`
-保存装载开关，避免 UBSAN bool 读取冷调用迫使命中路径提前保存参数；内核
-检查配置未关闭。省下 ticket 准备不保证完整操作自动提速。
+| 频率 | kdlock 当前工作 | 与 TCLock 的差别 |
+| --- | --- | --- |
+| 会话初始化/首次准备 | 分配池、hotlock 采样、首次注册/source pin、翻译上传 | TC 分配 shadow 状态并安装目标 hook，无翻译；这些不在稳态计时内 |
+| 每次已晋升慢入口 | 已注册条目只读确认、gate/上下文检查；非缓存 fast 获取仍需真实 L | TC 直接围绕目标 Q；不能把注册确认误算成每次编译或全局写锁 |
+| 每个排队请求 | ticket guard、node/request 准备、SLOWPATH 与 waiter-enter 诊断解析、实时 waiter 数增减 | TC 使用 node/原生栈；KD 退出复用 slot，未删除入口所有解析 |
+| 每个 combiner 批次 | 一次 source/provider lease、一次 batch 诊断身份解析；物理 L 跨批内正文保留 | TC 保留 combiner shadow 续点，无 kdlock source lease |
+| 每个被代理正文 | 最终 readiness/ABI/frame 准入、bind、wrapper、终态解绑/发布；必要时实际 JIT 观察 | TC 运行原生 lock/unlock 续链、切栈及完成观察 |
+| 每个返回线程 | 原子 waiter 数减；结束 ticket/pin；读取并归还 request；恢复续点 | TC 恢复已保存的原生 unlock 链，归还自己的 preempt pin |
+| 中途控制出口 | FULL 物化、dispatcher、服务/嵌套/native/ACK | 不属于当前 TC 单锁计数器对照，不能当作正常 KD 每次必经成本 |
 
-### 6.4 当前落地与后续测量
+诊断 slot 为 128B，身份/禁用与 waiter_count 位于不同缓存行；slot 在受控排空
+前不回收。batch/request 缓存其身份，禁用仍逐次 acquire 读取，waiter 数仍实时
+原子更新。不能把它们当纯日志直接删除，也不能说布局分行已经消除了共享 RMW。
 
-诊断 slot 引用复用、计数行分离、请求热字段布局及普通 root 准入/完成处理已实现。
-frame、寄存器包和可变分类仍各保留一份权威状态；672 字节 frame 未缩小，
-request 由本轮实际基线的 720 字节增至按行对齐的 768 字节。增加少量预分配空间
-用于减少分散访问及相邻 request 共行，不能解释为内存占用下降。
-十项基础/受影响 unit 和六项 live 验证见[测试记录](../../tests/README.md#spin-state-access)，
-五个递进版本的性能证据统一见[状态访问对照](results/20260918-state-access.md)。
+`PT/Stack` 共用减少搬运；R11 包基址和内存 block budget、生成器虚拟栈操作、
+caller spill 仍可能抵消一部分收益。预分配减少分配成本，但对齐 request 增大
+总空间；缓存复用减少查找，但不能跳过可变 readiness/source 检查。
+完整操作实测才回答这些取舍的净效果。
 
-随后 [9/19 当前版本三方复测](../tclock_compare/results/20260919-state-access.md)
-重新测量 Linux、TCLock 与 kdlock：90 场对照和 30 场长批次全部正确排空。
-20 线程的 kdlock 超过 TCLock，4 线程仍落后；TCLock 的实际委托比例波动明显。
-这是完整后端比较，不能将全部差距归因于现场保存或单个状态访问机制。
+### 6.3 当前结果与历史热点分开看
 
-后续仍可测实际批长、等待权重、共享 waiter_count 更新，以及 wrapper/正文重写
-成本。诊断表未覆盖的复杂入口仍会按锁地址查询；ticket、source、native/remote
-ACK 的生命周期不同，不能因 node 可复用就删掉它们。性能判断继续同时报告
-完整操作吞吐和实际 JIT 比例。
+[2026-09-19 同环境复测](../tclock_compare/results/20260919-state-access.md)中，
+三方共用 clobber caller，每配置交替五次取中位数；单位 Mops/s：
 
-并发冷晋升停滞仍是独立未修复问题，稳态单 CPU 准备不关闭该缺口。
-现有性能矩阵也不验证任意嵌套或 task/per-CPU 正文。
+| cacheline | 线程 | Linux | TCLock | kdlock | TC 委托 | KD JIT |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 4 | 2.894 | 1.670 | 0.907 | 43.78% | 55.24% |
+| 1 | 20 | 3.015 | 2.299 | 2.965 | 80.33% | 99.74% |
+| 16 | 4 | 1.959 | 1.199 | 0.864 | 45.60% | 51.94% |
+| 16 | 20 | 1.798 | 1.697 | 2.904 | 79.25% | 99.79% |
+
+该冻结版本 20 线程的 kdlock 比 TC 高约 29%/71%，4 线程仍低约 46%/28%。
+TC 的 20 线程委托比例在五轮间约为 53%–99.7%，结果页保留全部范围；不能
+只选其最高委托轮次，也不能把不同批次策略当成单项保存/恢复的因果实验。
+单线程千万次长批次中，KD 比 Linux 多约 8 ns、比 TC 少约 7–8 ns；均未代理，
+反映完整无竞争操作而非 JIT/wrapper 成本。90 场矩阵及 30 场长批次全部正确排空。
+
+[预取四路对照](results/20260918-prefetch.md)和
+[状态访问五阶段对照](results/20260918-state-access.md)分别冻结输入，提供
+改造前后证据，不与本轮 TC 样本拼接。
+[更早的三方采样](../tclock_compare/results/20260918-native-stack.md#为什么当前-kdlock-仍慢)
+发现诊断共享行和后继元数据读取热点；这些机制随后已修改，原采样百分比不能
+作为当前占比。大量 worker 的等待样本还会放大分母，不能由“JIT 映像占比小”
+直接推导 wrapper 串行服务开销可忽略。
+
+已有 20 场多线程 kdlock 日志进一步显示：四线程每批平均约 1.95/1.99 个
+JIT 正文，二十线程约 553.79/602.79 个（分别为 1/16 cacheline，逐场平均后取
+五轮中位数）。目标锁均已晋升且 `jit_not_ready=0`，因此不是简单的翻译准备
+不足。短批次更频繁承担交接成本，但未分别计数结束原因，不能据此断言单一
+瓶颈。公式、计数等式及限制见[日志复算](../tclock_compare/results/20260919-state-access.md#batch-length)。
+
+### 6.4 保留的协议差别和后续测量边界
+
+TCLock 与 Linux 的 tail 虽都编码 CPU/index，分别解码到 `komb_nodes` 和
+Linux `qnodes`，且 unlock/完成含义不同。TCLock 目标锁须统一使用其协议；
+三方是在独立会话切换后端，不是同一时刻混用一把锁。kdlock 的 L/S 分工用于
+兼容原生 peer，删除 L 需要另一个经过验证的协议。详细边界见
+[TCLock 后端](../../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界)。
+
+已落地的是先 CAS 后建竞争请求、共享寄存器 backing、驻留 C 循环、producer
+预取提示、诊断引用复用/分行、热字段布局及普通 root 准入/完成合并。
+仍可独立测量共享计数 RMW、真实批长/结束原因、生成正文和 wrapper 的串行
+服务成本，以及四线程混合原生/JIT 路径；这不是本次文档更新已执行的新实验。
+
+本对照不解决既有并发冷晋升停滞，也不证明任意 task/per-CPU、嵌套 TCLock 或
+跨 NUMA 临界区适用。kdlock 的中途续跑、原生互操作和 owner/ACK 验证范围继续
+以[测试记录](../../tests/README.md#spin-state-access)及[执行协议](../../docs/JIT_EXECUTION.md)
+为准。本次只重写说明，没有改运行代码或重跑 benchmark。

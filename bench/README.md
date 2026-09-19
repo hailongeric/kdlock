@@ -36,76 +36,27 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 29.0%/71.1%，相对 Linux 为 −1.7%/+61.5%；4 线程仍明显落后。
 本轮没有改锁实现，三方实际代理比例、波动及单线程成本均在结果页。
 
-此前[状态访问五阶段对照](spin_cacheline/results/20260918-state-access.md)完成
-100 场竞争测量：20 线程、1/16 cacheline 从 1.770/1.734 提升到 2.985/2.877
-Mops/s（+68.6%/+66.0%），JIT 均约 99.8%。四线程增量较小，且部分配置
-代理比例变化，不能全部归因于状态访问成本。
-另 20 场千万次单线程检查全部正确排空，中位成本增加约 0.04/0.23 ns（均小于 0.5%）。
+当前说明与历史证据按职责分开：
 
-此前[后继预取对照](spin_cacheline/results/20260918-prefetch.md)完成 120 场四路
-测量和 20 场长批次检查，全部正确排空。生产者提前准备地址，combiner 只读节点
-提示；20 线程吞吐相对旧版本提高约 7.3%/9.3%，JIT 仍约 99.8%，4 线程基本持平。
+| 查阅内容 | 入口 |
+| --- | --- |
+| 当前三方运行方法与统计口径 | [tclock_compare](tclock_compare/README.md)；默认两种 ABI，可用 `--abis clobber` 选择新 ABI |
+| 获取、等待、现场恢复及 TCLock 对照 | [EXECUTION_PATHS](spin_cacheline/EXECUTION_PATHS.md) |
+| 当前实际批长与 JIT 比例 | [9/19 日志复算](tclock_compare/results/20260919-state-access.md#batch-length)；不是新 benchmark |
+| 两后端扫描及汇编查看 | [spin_cacheline](spin_cacheline/README.md)；`run.py` 的 best/median 不同于三方五轮中位数 |
+| 状态访问、预取与入口取舍 | [状态访问](spin_cacheline/results/20260918-state-access.md)、[预取](spin_cacheline/results/20260918-prefetch.md)、[入口与缓存](spin_cacheline/results/20260918-spin-entry.md) |
+| 首次两 ABI 三方矩阵、采样与冷晋升失败 | [9/18 三方结果](tclock_compare/results/20260918-native-stack.md) |
+| 已被替代的早期阶段 | [历史索引](spin_cacheline/results/HISTORY.md)；保留原报告 Git 版本、归档及哈希 |
 
-此前入口改造与缓存取舍见[定向对照](spin_cacheline/results/20260918-spin-entry.md)。
-root 把 ticket 推迟到首次 CAS 失败后建立；缓存重复回填查询已省掉。无缓存
-60 场试验显示单线程明显退化，当前保留默认缓存并提供装载关闭选项。最终
-默认配置的独立 60 场正确排空，只有 1 cacheline/4 线程测得约 12% 改善，
-其余竞争点基本持平；长批次成本、JIT 比例及中间退化修复均见结果页。
+`spin_native_cache=1` 和 `spin_prefetch=2` 是当前默认。热锁检测仍为固定频率
+阈值；按收益切换原生/探测/代理尚未实现，见 [待办](../docs/TODO.md#hotlock-monitoring-and-adaptive-admission)。
 
-完整三方比较为 [9/18 TCLock 原生栈委托三方对照](tclock_compare/results/20260918-native-stack.md)：
-180/180 稳态会话正确并排空，覆盖两种 caller ABI。竞争配置 TCLock 为 kdlock
-中位吞吐的 1.06–2.05 倍，但并不普遍超过 Linux；六场独立采样定位共享诊断
-状态与请求元数据热点。并发冷晋升失败仍未修复，稳态准备策略和失败记录均保留。
-
-此前的 [9/18 统一 combiner 现场后四组对照](spin_cacheline/results/20260918-unified-context.md)，
-120/120 会话完成，报告五轮中位数。新 ABI 的 20 线程吞吐为 1.6294/1.6370 Mops/s，
-与统一循环前基本持平，仍低于对应原生；实际 JIT、数据和排空检查通过。
-下文旧扫描的 best/median 口径与四组对照不同，成绩只属于各自冻结输入。
-
-入口为 [spin_cacheline/README.md](spin_cacheline/README.md)，包括同一把原锁下的
-展开临界区、原子起跑、每线程一次 ioctl 批量抢锁、原生/kdlock 配对、实际 JIT
-正文计数和 CSV 解释。当前每次正文返回后执行相同的 4 组局部乘加，为下一次
-抢锁留一个短间隔；主指标为 **kdlock 最高有效吞吐 / 原生有效吞吐中位数**，
-并显示最佳会话的 JIT 状态与两组有效样本数。这是观测最佳值，不保证每次解锁
-都发生线程交接。详细口径见[结果解释](spin_cacheline/README.md#结果解释)。
-
-[执行路径与开销伪代码](spin_cacheline/EXECUTION_PATHS.md) 从首次注册展开到
-JIT wrapper 返回及 waiter 恢复，列出重复查表、全局锁、frame 校验/复制和
-诊断计数。锁外乘加发生在原 waiter 恢复后；combiner 的连续代理批次仍持有原锁。
-
-[2026-09-17 的完整扫描结果](spin_cacheline/results/20260917-stackless.md) 已按
-每线程 10 万次、1/4/8/12/16/20 线程完成 120 个会话。带实际 JIT 的最高观测
-吞吐为 **0.647 Mops/s**（1 条 cacheline、4 线程），多线程最高 best/median 为
-**0.2935**（16 条 cacheline、16 线程）；所有测量及排空检查通过。
-相较 [9/15 的相同负载](spin_cacheline/results/20260915-post-work.md)，
-多线程最佳吞吐提升幅度中位数为 **52.9%**，仍明显慢于原生。
-
-随后完成 [frame 单锁路径精简的四点定向复测](spin_cacheline/results/20260917-frame-fast.md)：
-16/16 会话通过，20 线程的 1/16 cacheline 吞吐为 **0.855/0.850 Mops/s**，
-较同日完整扫描对应点提升 **49.5%/48.6%**；4 线程提升 **12.0%/15.5%**。
-这是部分配置、每组两个样本的观测结果；JIT 比例变化和重启因素见结果页。
-
-同日 [waiter 包复用与原子 frame lease 的四点复测](spin_cacheline/results/20260917-waiter-packet.md)
-同样 16/16 会话通过：20 线程的两点达到 **1.029/0.951 Mops/s**，较 frame
-精简版提高 **20.3%/11.9%**；4 线程两点下降 **2.4%/1.7%**，未观察到收益。
-
-增加锁外乘加前，2026-09-15 的[十万次完整重跑](spin_cacheline/README.md#rerun-100k-no24)
-选择 1、4、8、12、16、20 线程，排除 24 线程；五种 cacheline 规模共 120 个
-会话完成并通过校验，具体性能、NO_JIT 分类及此前失败记录放在该 README。
-
-专用观测 provider、客户端和脚本在 `spin_cacheline/`，Demo 临界区模块在
-[`workload_modules/spin_cacheline/`](../workload_modules/spin_cacheline/)。
-`dispatch_floor/` 和硬件采样是单独诊断，不计入正式性能扫描。
-
-正常扫描和 `profile.py` 在每个 kdlock 会话测量、排空和卸载后，自动在
-`bench/.tmp/spin_cacheline/<结果目录名>-<随机后缀>/sc_body_N/` 保存
-`bin.txt`、`JIT.S`，以及用于翻译前对照的 `native.S`。**按临界区分组，不按线程数
-或 repeat 建目录**；同一临界区的相同汇编只保存一次，来源会话合并到元数据。
-查看目录内的 `README.md` 可按 cacheline 规模选择汇编。
-`bin.txt` 实际是 **JIT 机器码**的反汇编；三种文件的含义、历史结果补导出命令和
-guest 到宿主机的复制方法见[汇编查看目录](spin_cacheline/README.md#assembly-inspection)。
-最近完整扫描的 60 个 kdlock 会话对应 5 组不同临界区，当前本地查看位置和验证范围见
-[汇编导出验证](spin_cacheline/README.md#assembly-validation)。
+专用 provider、客户端及脚本在 `spin_cacheline/`，Demo 内核模块在
+[workload_modules/spin_cacheline](../workload_modules/spin_cacheline/)。
+硬件采样和 `dispatch_floor/` 是单独诊断，不计入无采样吞吐成绩。
+扫描和采样排空后生成按临界区去重的 `native.S`、`JIT.S`、`bin.txt`；后者是
+JIT 机器码反汇编。目录、来源哈希及补导出方法见
+[汇编查看](spin_cacheline/README.md#assembly-inspection)。
 
 ## 既有场景客户端
 
