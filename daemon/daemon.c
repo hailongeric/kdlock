@@ -257,6 +257,7 @@ static int compile_entry(const struct daemon_config *cfg,
 				     "../../disassem/disassem.py" :
 				     "../../../disassem/disassem.py";
 	const char *abi = exe->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ? "1" :
+			  exe->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ? "2" :
 			  exe->entry_abi == KD_ENTRY_ABI_LEGACY ? "0" : "invalid";
 	const char *kind = exe->lock_kind == KD_EXE_LOCK_SPIN  ? "spin" :
 			   exe->lock_kind == KD_EXE_LOCK_MUTEX ? "mutex" :
@@ -401,9 +402,8 @@ static int write_sys(const struct daemon_config *cfg,
 		}
 		directory = !memcmp(header + 25, "KDWC001", 7) &&
 		            !memcmp(header + 41, "KDAB", 4);
-		if ((exe->entry_abi != KD_ENTRY_ABI_LEGACY &&
-		     exe->entry_abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1) ||
-		    (exe->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 && !directory) ||
+		if (!kd_entry_abi_valid(exe->lock_kind, exe->entry_abi) ||
+		    (kd_entry_abi_clobber(exe->entry_abi) && !directory) ||
 		    (directory && header[45] != exe->entry_abi) || fseek(fp, 0, SEEK_SET)) {
 			fprintf(stderr, "daemon: JIT entry ABI mismatch\n");
 			fclose(fp);

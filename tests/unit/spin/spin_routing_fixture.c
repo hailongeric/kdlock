@@ -9,6 +9,8 @@
 
 typedef unsigned int u32;
 static bool promoted, frame_active, context_busy;
+static bool cpu_hot = true, trace_admission, sampled_first;
+static unsigned int comm_queries, sample_calls;
 static unsigned int softirq, scenarios, registrations;
 static const char *target_process = "target";
 /* Drive closing independently from task identity and retained origin routing. */
@@ -105,15 +107,12 @@ static void kd_spin_lock_slowpath(struct orig_qspinlock *lock,
 	unsigned long rsp, struct kd_spin_request *request,
 	unsigned long ip, unsigned long bp, unsigned int abi);
 
-static bool kd_hotlock_is_promoted(unsigned long lock)
+static int kd_hotlock_record(unsigned long lock)
 {
-	(void)lock;
-	return promoted;
-}
-
-static void kd_hotlock_record(unsigned long lock)
-{
-	(void)lock;
+	CHECK(lock);
+	sample_calls++;
+	sampled_first = true;
+	return cpu_hot && promoted;
 }
 static void kd_exe_add(int pid, unsigned long ip, int kind)
 {
@@ -158,12 +157,41 @@ static raw_spinlock_t locks[KD_SPIN_GATE_SLOTS + 1];
 
 static void hook_lock(raw_spinlock_t *lock)
 {
-	__kd_raw_spin_lock(lock, 0, 0x1000);
+	kd_spin_dispatch_lock(lock, 0, 0x1000);
 }
 
 static void hook_unlock(raw_spinlock_t *lock)
 {
-	__kd_raw_spin_unlock(lock, 0, 0x1000);
+	kd_spin_dispatch_unlock(lock, 0, 0x1000);
+}
+
+/* Cold CPU/lock cannot inspect comm. Non-target traffic still reaches the
+ * sampler, and an existing owner can unlock after its CPU cools down. */
+static void frequency_before_task(void)
+{
+	for (unsigned int abi = 0; abi < 2; abi++) {
+		for (unsigned int stage = 0; stage < 3; stage++) {
+			unsigned int queries = comm_queries, seen = sample_calls;
+			cpu_hot = stage != 0;
+			promoted = stage != 1;
+			strcpy(current->comm, "non-target");
+			sampled_first = false;
+			trace_admission = true;
+			if (abi) kd_spin_dispatch_clobber_lock_v1(&locks[0], 0, 0x1000, 0);
+			else hook_lock(&locks[0]);
+			CHECK(sample_calls == seen + 1 && locks[0].held);
+			CHECK(comm_queries == queries + (stage == 2));
+			CHECK(!kd_spin_entry_task_active());
+			queries = comm_queries;
+			cpu_hot = promoted = false;
+			hook_unlock(&locks[0]);
+			CHECK(comm_queries == queries && sample_calls == seen + 1);
+			CHECK(!locks[0].held && !mock_preempt);
+			trace_admission = false;
+		}
+	}
+	cpu_hot = promoted = true;
+	strcpy(current->comm, "target");
 }
 
 static void promotion_and_rename(void)
@@ -186,6 +214,7 @@ static void promotion_and_rename(void)
 	gate = kd_spin_gate_find(&locks[0]);
 	CHECK(gate && gate->word.locked == 1 && locks[0].held);
 	CHECK(mock_preempt == 1 && kd_spin_entry_task_active());
+	cpu_hot = false;
 	source_open = false;
 	CHECK(__is_kd_test() == 2);
 	strcpy(current->comm, "renamed");
@@ -197,6 +226,7 @@ static void promotion_and_rename(void)
 	strcpy(current->comm, "target");
 	CHECK(__is_kd_test() == 0);
 	source_open = true;
+	cpu_hot = true;
 	scenarios++;
 
 	__raw_spin_lock(&locks[0]);
@@ -439,6 +469,7 @@ int main(void)
 	CHECK(!kd_comm_matches(&kd_spin_target, current->comm));
 	kd_comm_init(&kd_spin_target, target_process);
 	CHECK(kd_spin_entries_init() == 0);
+	frequency_before_task();
 	promotion_and_rename();
 	native_contexts();
 	native_continuation_helpers();

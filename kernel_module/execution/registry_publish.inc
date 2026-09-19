@@ -29,9 +29,7 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 	struct kd_exe_info *exe;
 	int ret;
 
-	if ((kind != KD_EXE_LOCK_SPIN && kind != KD_EXE_LOCK_MUTEX) ||
-	    (abi != KD_ENTRY_ABI_LEGACY &&
-	     (abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1 || kind != KD_EXE_LOCK_SPIN)))
+	if (!kd_entry_abi_valid(kind, abi))
 		return;
 	/* Root pins outlive the append-only registry within this source session.
 	 * Repeated registrations read metadata only, without taking the global

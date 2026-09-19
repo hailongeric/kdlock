@@ -47,9 +47,13 @@ before ACK; reclamation waits for RCU readers.
 This is an experimental kernel JIT delegation prototype. It implements
 contended spin/mutex delegation, nested requests, allowlisted services,
 supported forward native continuation, native-owner exclusion and ACKs.
-Ordinary spin on the separate `kdclobber1` kernel uses caller-clobber v1:
+The default provider requires the `kdclobber2` caller-clobber v1 kernel interface.
+Fresh admission checks CPU-local activity, then that CPU’s per-lock frequency,
+then task identity; only locally qualified addresses enter the shared hot set.
+Ordinary spin and mutex use separate versioned caller identities:
 normal requests retain RIP/RSP/RBP and intermediate exits materialize full
-logical GPR state. Legacy spin and mutex retain their existing contracts.
+logical GPR state. Legacy callers and special lock APIs retain
+their existing contracts; older kernel hook installers are no longer supported.
 The Chinese [version overview](docs/PROJECT_GUIDE.md#1-当前进展) describes supported
 capabilities; [DESIGN](docs/DESIGN.md) defines their contracts and
 [TODO](docs/TODO.md) tracks unfinished and deferred work.

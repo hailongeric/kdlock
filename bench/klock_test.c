@@ -38,6 +38,7 @@
 #include <inttypes.h>
 #include <limits.h>
 #include <pthread.h>
+#include <sched.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -61,6 +62,7 @@ struct test_args {
 };
 
 #define IOC_RUN_TEST _IOW(IOC_MAGIC, 1, struct test_args)
+#define IOC_PREPARE_TEST _IOW(IOC_MAGIC, 2, struct test_args)
 
 #define MODE_SPIN_CONTENTION 0
 #define MODE_SPIN_NESTED 1

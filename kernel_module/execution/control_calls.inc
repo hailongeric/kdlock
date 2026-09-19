@@ -19,7 +19,8 @@ static int is_outer_lock_unlock(struct pt_regs *regs,
 				unsigned long outer_lock_addr)
 {
 	if (regs->ip != raw_spin_unlock_addr &&
-	    regs->ip != clobber_spin_unlock_addr && regs->ip != mutex_unlock_addr)
+	    regs->ip != clobber_spin_unlock_addr &&
+	    regs->ip != mutex_unlock_addr && regs->ip != clobber_mutex_unlock_addr)
 		return 0;
 	if (!outer_lock_addr)
 		return 1;
@@ -210,13 +211,13 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 
 	/* Final outer completion does not resume this JIT, so needs no memory
 	 * preservation check. All other local mutex controls use one checkpoint. */
-	if (regs->ip == mutex_unlock_addr && regs->di == outer_lock_addr &&
+	if ((regs->ip == mutex_unlock_addr || regs->ip == clobber_mutex_unlock_addr) && regs->di == outer_lock_addr &&
 	    !kd_exec_frame_has_unreleased_nested(frame))
 		return KD_EXE_KNOWN_OUTER_UNLOCK;
 	ret = kd_mutex_stack_prepare(frame, regs, &saved);
 	if (ret)
 		return ret;
-	if (regs->ip == mutex_lock_addr) {
+	if (regs->ip == mutex_lock_addr || regs->ip == clobber_mutex_lock_addr) {
 		ret = kd_mutex_jit_nested_lock_ctx((struct mutex *)regs->di,
 						   regs, frame);
 		ret = finish_known_lock_call(frame, regs, ret);
@@ -261,7 +262,7 @@ static int handle_known_call(struct pt_regs *regs,
 	    ((frame->mutex_backend && ((regs->ip == raw_spin_lock_addr || regs->ip == clobber_spin_lock_addr) ||
 				       (regs->ip == raw_spin_unlock_addr || regs->ip == clobber_spin_unlock_addr))) ||
 	     (!frame->mutex_backend && mutex_lock_addr && mutex_unlock_addr &&
-	      (regs->ip == mutex_lock_addr || regs->ip == mutex_unlock_addr))))
+	      ((regs->ip == mutex_lock_addr || regs->ip == clobber_mutex_lock_addr) || (regs->ip == mutex_unlock_addr || regs->ip == clobber_mutex_unlock_addr)))))
 		return -EOPNOTSUPP;
 
 	if ((regs->ip == raw_spin_lock_addr || regs->ip == clobber_spin_lock_addr)) {
@@ -294,7 +295,8 @@ static int handle_known_call(struct pt_regs *regs,
 	if (!mutex_lock_addr || !mutex_unlock_addr)
 		return 0;
 
-	if (regs->ip != mutex_lock_addr && regs->ip != mutex_unlock_addr)
+	if (regs->ip != mutex_lock_addr && regs->ip != clobber_mutex_lock_addr &&
+	    regs->ip != mutex_unlock_addr && regs->ip != clobber_mutex_unlock_addr)
 		return 0;
 
 	return handle_known_mutex_call(frame, regs, outer_lock_addr);

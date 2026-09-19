@@ -56,6 +56,13 @@ Useful options:
   CPU time and resource usage on stderr; disabled by default, independent of
   `--quiet` and generated-body observation.
 
+Entry identity comes from the kernel registration: `entry_abi=0` is legacy,
+`1` is ordinary spin clobber v1, and `2` is ordinary mutex clobber v1.
+The daemon passes it to the translator and validates the emitted directory's
+identity and lock kind before upload. A minimal entry requires the versioned
+wrapper; a legacy image cannot be reused under a clobber identity. The current
+provider requires the [kdclobber2 interface](../kernel_experiments/mutex_clobber/README.md).
+
 For each new entry the daemon creates an isolated `asm/` workspace and empty
 `callee_table.txt` and `ij_table.txt` files. It updates those tables when the
 kernel reports a missing call or indirect jump, invokes the translator, and
@@ -305,6 +312,6 @@ verdicts; they remain diagnostic/retry failures. Do not turn arbitrary Python
 failures into accepted native fallback.
 
 Actual runtime continuation and test commands are maintained in
-[JIT_EXECUTION](../docs/JIT_EXECUTION.md). Current results, including learned
-mutex-depth JIT and native continuation, are in
-[VALIDATION](../docs/VALIDATION.md), not duplicated here.
+[JIT_EXECUTION](../docs/JIT_EXECUTION.md). Latest scoped results are in [tests](../tests/README.md); earlier learned
+mutex-depth and native-continuation evidence is indexed by frozen version in
+[VALIDATION](../docs/VALIDATION.md).

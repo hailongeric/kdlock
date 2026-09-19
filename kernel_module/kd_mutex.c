@@ -25,6 +25,8 @@
 #include <linux/topology.h>
 #include <linux/errno.h>
 #include <linux/mutex.h>
+#include <asm/asm.h>
+#include <linux/objtool.h>
 
 #include "kd_mutex.h"
 #include "kd_lock.h"
@@ -54,7 +56,6 @@
 /* --------------------------------------------------------------------------
  * Constants
  * -------------------------------------------------------------------------- */
-#define KD_MUTEX_WAITER_UNPROCESSED 0
 #define KD_MUTEX_WAITER_PROCESSED 1
 
 #define _Q_LOCKED_COMBINER_VAL 3
@@ -168,21 +169,22 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
  * -------------------------------------------------------------------------- */
 
 #include "mutex/lifecycle.inc"
+#include "mutex/clobber.inc"
 
 /*
- * _kd_mutex_lock — fastpath cmpxchg, slowpath delegation queue.
+ * _kd_mutex_lock_abi — fastpath cmpxchg, slowpath delegation queue.
  */
 __attribute__((noipa)) noinline notrace void
-_kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
-	       unsigned long ret_addr, unsigned long s_rbx, unsigned long s_r12,
-	       unsigned long s_r13, unsigned long s_r14, unsigned long s_r15,
-	       unsigned long s_rbp)
+_kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
+	       unsigned long ret_addr, unsigned long bp, unsigned int abi)
 {
 	struct pt_regs resume_regs;
 	bool resume_ready = false;
 	bool native_resume = false;
 	int ret_val;
 
+	BUG_ON(abi != KD_ENTRY_ABI_LEGACY &&
+	       abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	if (likely(cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)) {
 		kd_mutex_claim_origin(lock);
 		return;
@@ -222,7 +224,16 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 			goto scheduler_restore;
 		}
 
-		memset(&curr_node->regs, 0, sizeof(curr_node->regs));
+		/* A clobber entry has no other incoming GPR state. */
+		if (abi == KD_ENTRY_ABI_LEGACY)
+			memset(&curr_node->regs, 0, sizeof(curr_node->regs));
+		else {
+			curr_node->regs.ip = ret_addr;
+			curr_node->regs.bp = bp;
+		}
+		curr_node->entry_abi = abi;
+		curr_node->packet_state = abi == KD_ENTRY_ABI_LEGACY ?
+			KD_PACKET_FULL : KD_PACKET_MINIMAL;
 		curr_node->regs.sp = rsp_value;
 		curr_node->locked = true;
 		curr_node->completed = false;
@@ -230,20 +241,13 @@ _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->next = NULL;
 		curr_node->tail =
 			encode_tail(smp_processor_id(), curr_node->slot);
-		curr_node->socket_id = numa_node_id();
-		curr_node->cpuid = smp_processor_id();
 		curr_node->lock = lock;
 		curr_node->task_struct_ptr = current;
 		curr_node->gsbase = kd_read_kernel_gsbase();
-		/* Store callee-saved registers captured at hook entry */
-		curr_node->saved_rbx = s_rbx;
-		curr_node->saved_r12 = s_r12;
-		curr_node->saved_r13 = s_r13;
-		curr_node->saved_r14 = s_r14;
-		curr_node->saved_r15 = s_r15;
-		curr_node->saved_rbp = s_rbp;
 		curr_node->saved_ret_addr = ret_addr;
-		ret_val = kd_mutex_lock_slowpath_asm(lock, curr_node);
+		ret_val = abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ?
+			kd_mutex_clobber_wait(lock, curr_node) :
+			kd_mutex_lock_slowpath_asm(lock, curr_node);
 		if (ret_val == 3 || ret_val == 5) {
 			struct kd_mutex_shadow *shadow =
 				this_cpu_ptr(&kd_mutex_shadows);

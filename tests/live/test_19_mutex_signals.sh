@@ -51,7 +51,6 @@ probe_ip=$(awk '$3 == "kd_resume_native_probe" && $4 == "[klock_module]" { print
 test -n "$probe_ip"
 start_daemon 2
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 3 > "$out/warmup.log"
-sleep 1
 run_with_timeout 30 "$BENCH_BIN" 1 12000 10 1 3 > "$out/promotion.log"
 artifact=$(wait_for_jit_artifacts 30)
 check_jit_artifacts "$artifact"

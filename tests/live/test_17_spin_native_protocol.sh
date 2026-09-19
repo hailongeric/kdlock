@@ -38,7 +38,6 @@ load_kdlock target_process="$TARGET_PROCESS" mutex_jit=0
 insmod "$KLOCK_DIR/klock_module.ko"
 start_daemon 2
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 0 > "$out/warmup.log"
-sleep 1
 run_with_timeout 60 env KD_TEST_MIXED=1 "$BENCH_BIN" \
     8 100 1000 1 0 > "$out/before-promotion.log"
 # This overlaps workloads, not a deterministic promotion/rename witness.

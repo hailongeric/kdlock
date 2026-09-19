@@ -34,6 +34,7 @@
 enum kd_entry_abi {
 	KD_ENTRY_ABI_LEGACY = 0,
 	KD_ENTRY_ABI_SPIN_CLOBBER_V1 = 1,
+	KD_ENTRY_ABI_MUTEX_CLOBBER_V1 = 2,
 };
 
 /* Only FULL permits reading all GPR slots. MINIMAL and COMPLETE contain
@@ -50,6 +51,21 @@ enum kd_exe_lock_kind {
 	KD_EXE_LOCK_SPIN = 1,
 	KD_EXE_LOCK_MUTEX = 2,
 };
+
+/* A versioned register contract never changes a translation's lock backend. */
+static inline int kd_entry_abi_valid(int kind, unsigned int abi)
+{
+	return (kind == KD_EXE_LOCK_SPIN || kind == KD_EXE_LOCK_MUTEX) &&
+	       (abi == KD_ENTRY_ABI_LEGACY ||
+		(abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 && kind == KD_EXE_LOCK_SPIN) ||
+		(abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 && kind == KD_EXE_LOCK_MUTEX));
+}
+
+static inline int kd_entry_abi_clobber(unsigned int abi)
+{
+	return abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
+	       abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+}
 
 struct kd_exe_info {
 	int status_code; /* KD_EXE_NATIVE_ONLY through KD_EXE_INST_LIMIT */

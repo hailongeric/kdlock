@@ -86,6 +86,8 @@ static unsigned long clobber_spin_lock_addr;
 static unsigned long clobber_spin_unlock_addr;
 static unsigned long mutex_lock_addr;
 static unsigned long mutex_unlock_addr;
+static unsigned long clobber_mutex_lock_addr;
+static unsigned long clobber_mutex_unlock_addr;
 
 #include "execution/hostcalls.inc"
 
@@ -216,8 +218,27 @@ static bool kd_jit_image_matches(const struct kd_exe_info *exe,
 	if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
 		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
 		       clobber_spin_lock_addr && clobber_spin_unlock_addr;
+	if (frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
+		       clobber_mutex_lock_addr && clobber_mutex_unlock_addr;
 	return frame->entry_abi == KD_ENTRY_ABI_LEGACY &&
 	       (!directory || code[KD_JIT_ABI_OFFSET] == KD_ENTRY_ABI_LEGACY);
+}
+
+/* Minimal completion is possible only on the first wrapper invocation of a
+ * pristine physical root. A mutex root has a real owner ledger even before
+ * its first body; subsequent nested/service exits always use FULL instead. */
+static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
+{
+	if (frame->parent || frame->depth)
+		return false;
+	if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
+		return !frame->mutex_backend && frame->spin_simple;
+	return frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+	       frame->mutex_backend && frame->jit_lock_depth == 1 &&
+	       frame->outer_lock_index == 0 && !frame->outer_unlock_seen &&
+	       !frame->jit_lock_released[0] && !frame->completion_seen &&
+	       !kd_exec_frame_remote_pending(frame);
 }
 
 static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
@@ -228,11 +249,12 @@ static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
 	call->args[1] = (unsigned long)frame->logical_task;
 	call->code = (char *)code + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
-	call->unlock = clobber_spin_unlock_addr;
+	call->unlock = frame->mutex_backend ? clobber_mutex_unlock_addr :
+					     clobber_spin_unlock_addr;
 	call->entry_sp = call->regs->sp;
 	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
-	call->complete = frame->spin_simple && !frame->parent && !frame->depth;
+	call->complete = kd_jit_minimal_complete_allowed(frame);
 }
 
 bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
@@ -391,7 +413,7 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,
 		} else {
 			frame->executed = true;
 			boundary_start = kd_jit_timing_start();
-			if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
+			if (kd_entry_abi_clobber(frame->entry_abi) &&
 			    frame->packet_state == KD_PACKET_MINIMAL) {
 				struct kd_jit_batch_call call;
 
@@ -445,9 +467,8 @@ returned_wrapper:
 		 * Every other exit materializes complex state BEFORE its side effects. */
 		if (args[0] == KD_EXE_CLOBBER_COMPLETE) {
 			/* A minimal result never enters the general register dispatcher. */
-			if (frame->entry_abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
-			    frame->packet_state != KD_PACKET_COMPLETE ||
-			    !frame->spin_simple || frame->parent || frame->depth) {
+			if (frame->packet_state != KD_PACKET_COMPLETE ||
+			    !kd_jit_minimal_complete_allowed(frame)) {
 				ret_flag = KD_EXE_RUN_ERROR;
 				break;
 			}
@@ -457,6 +478,13 @@ returned_wrapper:
 		if (frame->packet_state != KD_PACKET_FULL) {
 			ret_flag = KD_EXE_RUN_ERROR;
 			break;
+		}
+		/* A native mutex waiter releases its node before the owner ACK/pop.
+		 * Detach only after a real FULL exit, before any C control service or
+		 * publication can outlive that node. Normal COMPLETE never copies it. */
+		if (frame->mutex_backend && frame->regs_borrowed) {
+			kd_exec_frame_own_regs(frame);
+			regs = kd_exec_frame_regs(frame);
 		}
 		if (frame->spin_simple) {
 			if (args[0] == KD_EXE_CALL_MISS &&

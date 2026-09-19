@@ -109,7 +109,7 @@ def find_segment_policy_error(
                 address
                 for address, (kind, name) in (lock_symbols or {}).items()
                 if lock_kind == kind == "mutex"
-                and name in {"mutex_lock", "mutex_unlock"}
+                and name in {"mutex_lock", "mutex_unlock", "kd_mutex_lock_clobber_v1", "kd_mutex_unlock_clobber_v1"}
             },
             mutex_stack_bytes=mutex_stack_bytes,
             native_exits=native_exits,
@@ -308,7 +308,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     diagnostics.begin(pid, entry)
     os.makedirs("./asm", exist_ok=True)
 
-    if lock_kind not in {"spin", "mutex"} or abi not in {0, 1} or (abi == 1 and lock_kind != "spin"):
+    if lock_kind not in {"spin", "mutex"} or abi not in {0, 1, 2} or (abi == 1 and lock_kind != "spin") or (abi == 2 and lock_kind != "mutex"):
         diagnostics.set_instruction(entry, "<entry lock kind>")
         return reject_translation("missing or invalid entry lock kind")
 
@@ -328,14 +328,18 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
 
     resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
     hostcall_targets = set(resolved_hostcalls)
-    readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi == 1 else set()
+    readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2} else set()
     raw_spin_lock = control_symbols["_raw_spin_lock"]
     raw_spin_unlock = control_symbols["_raw_spin_unlock"]
     mutex_lock = control_symbols["mutex_lock"]
     mutex_unlock = control_symbols["mutex_unlock"]
     clobber_lock = get_kernel_symbol("kd_raw_spin_lock_clobber_v1")
     clobber_unlock = get_kernel_symbol("kd_raw_spin_unlock_clobber_v1")
-    if abi == 1 and not (clobber_lock and clobber_unlock):
+    clobber_mutex_lock = get_kernel_symbol("kd_mutex_lock_clobber_v1")
+    clobber_mutex_unlock = get_kernel_symbol("kd_mutex_unlock_clobber_v1")
+    clobber_targets = {clobber_lock, clobber_unlock, clobber_mutex_lock, clobber_mutex_unlock} - {0, None}
+    if ((abi == 1 and not (clobber_lock and clobber_unlock)) or
+        (abi == 2 and not (clobber_mutex_lock and clobber_mutex_unlock))):
         return reject_translation("clobber entry symbols unavailable")
     lock_symbols = {
         addr: (kind, name)
@@ -346,9 +350,12 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             (clobber_unlock, "spin", "kd_raw_spin_unlock_clobber_v1"),
             (mutex_lock, "mutex", "mutex_lock"),
             (mutex_unlock, "mutex", "mutex_unlock"),
+            (clobber_mutex_lock, "mutex", "kd_mutex_lock_clobber_v1"),
+            (clobber_mutex_unlock, "mutex", "kd_mutex_unlock_clobber_v1"),
         )
     }
     lock_symbols.pop(0, None)
+    lock_symbols.pop(None, None)
     keep_call_stack = set(lock_symbols) | hostcall_targets
     # Analysis may use only the bound negotiated on this translation's live
     # device lease. New spin/scalar service summaries describe typed sequential
@@ -386,8 +393,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             block_dict,
             db_dict,
             entry,
-            {raw_spin_lock, clobber_lock, mutex_lock},
-            {raw_spin_unlock, clobber_unlock, mutex_unlock},
+            {raw_spin_lock, clobber_lock, mutex_lock, clobber_mutex_lock},
+            {raw_spin_unlock, clobber_unlock, mutex_unlock, clobber_mutex_unlock},
             discovered_targets,
             native_exits=native_exits,
         )
@@ -464,7 +471,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                 and context_policy.static_address(
                     line.args[0], db_dict[block], line.offset + line.l
                 )
-                in {raw_spin_lock, clobber_lock, mutex_lock}
+                in {raw_spin_lock, clobber_lock, mutex_lock, clobber_mutex_lock}
                 for block in selected.values()
                 for line in block.lines
             )
@@ -495,7 +502,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                     guards=candidate,
                     scoped_calls=bool(discovered_targets - {entry}),
                     mutex_stack_bytes=mutex_stack_bytes,
-                    entry_spill_guards=abi == 1,
+                    entry_spill_guards=abi in {1, 2},
                     readonly_targets=readonly_targets,
                 )
                 if not segment_error:
@@ -538,9 +545,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     except indirect_jump.ReturnFlowError as error:
         diagnostics.set_instruction(error.offset, "<return dispatch>")
         return reject_translation(str(error))
-    if abi == 1:
+    if abi in {1, 2}:
         reason = entry_abi.check_minimal_entry(
-            block_dict, db_dict, entry, {clobber_lock, clobber_unlock},
+            block_dict, db_dict, entry, clobber_targets,
             set(lock_symbols), jump_table,
         )
         if reason:

@@ -54,7 +54,8 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
  *   [1] = saved rbx             [5] = saved r15
  *   [2] = saved r12             [6] = saved rbp (caller's)
  *   [3] = saved r13             [7] = return address (CS entry)
- * ret_rsp + 64 = caller's RSP.  Identical to the spinlock path.
+ * Only legacy callers use that layout. Versioned callers explicitly supply
+ * their post-CALL IP/SP/BP and must never decode a compiler-generated frame.
  * -------------------------------------------------------------------------- */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
@@ -67,7 +68,8 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
 	struct kd_exec_frame *frame;
 	struct kd_exe_info *exe;
-	struct pt_regs retry_regs;
+	struct pt_regs retry_regs, *regs;
+	bool clobber = curr_node->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	unsigned long lock_addr[1];
 	enum kd_exec_lock_kind lock_kind[1];
 	void *lock_node[1];
@@ -85,14 +87,16 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	if (!kd_mutex_jit_is_enabled())
 		return KD_EXE_NO_RUN;
 
-	curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
-	curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
-	curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
-	curr_node->regs.r14 = ((unsigned long *)incoming_rsp_ptr)[4];
-	curr_node->regs.r15 = ((unsigned long *)incoming_rsp_ptr)[5];
-	curr_node->regs.bp = ((unsigned long *)incoming_rsp_ptr)[6];
-	curr_node->regs.ip = ((unsigned long *)incoming_rsp_ptr)[7];
-	curr_node->regs.sp = (unsigned long)incoming_rsp_ptr + 64;
+	if (!clobber) {
+		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
+		curr_node->regs.r12 = ((unsigned long *)incoming_rsp_ptr)[2];
+		curr_node->regs.r13 = ((unsigned long *)incoming_rsp_ptr)[3];
+		curr_node->regs.r14 = ((unsigned long *)incoming_rsp_ptr)[4];
+		curr_node->regs.r15 = ((unsigned long *)incoming_rsp_ptr)[5];
+		curr_node->regs.bp = ((unsigned long *)incoming_rsp_ptr)[6];
+		curr_node->regs.ip = ((unsigned long *)incoming_rsp_ptr)[7];
+		curr_node->regs.sp = (unsigned long)incoming_rsp_ptr + 64;
+	}
 	if (!curr_node->regs.ip ||
 	    (curr_node->saved_ret_addr &&
 	     curr_node->regs.ip != curr_node->saved_ret_addr)) {
@@ -100,7 +104,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		return KD_EXE_RUN_ERROR;
 	}
 
-	mutex_debug("JIT exec waiter cpu %d ip %lx sp %lx\n", curr_node->cpuid,
+	mutex_debug("JIT exec waiter cpu %d ip %lx sp %lx\n", (curr_node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1,
 		    curr_node->regs.ip, curr_node->regs.sp);
 
 	exe = kd_exe_find_ready(0, curr_node->regs.ip);
@@ -112,7 +116,8 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			    current->pid, curr_node->task_struct_ptr->pid,
 			    curr_node->regs.ip, lock->origin_mutex_addr,
 			    raw_smp_processor_id());
-		kd_exe_add(0, curr_node->regs.ip, KD_EXE_LOCK_MUTEX);
+		kd_exe_add_abi(0, curr_node->regs.ip, KD_EXE_LOCK_MUTEX,
+			       curr_node->entry_abi);
 		return KD_EXE_NO_RUN;
 	}
 	if (kd_exec_context_busy()) {
@@ -129,11 +134,18 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		return KD_EXE_NO_RUN;
 	}
 
-	retry_regs = curr_node->regs;
-	frame = kd_exec_frame_push(
-		&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr,
-		curr_node, outgoing_rsp_ptr, 1,
-		curr_node->gsbase, curr_node->task_struct_ptr);
+	if (!clobber)
+		retry_regs = curr_node->regs;
+	if (clobber)
+		frame = kd_exec_frame_push_borrowed(
+			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr,
+			curr_node, outgoing_rsp_ptr, 1,
+			curr_node->gsbase, curr_node->task_struct_ptr);
+	else
+		frame = kd_exec_frame_push(
+			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr,
+			curr_node, outgoing_rsp_ptr, 1,
+			curr_node->gsbase, curr_node->task_struct_ptr);
 	if (!frame) {
 		atomic64_inc(&kd_mutex_frame_failure_count);
 		return KD_EXE_RUN_ERROR;
@@ -141,6 +153,8 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	lock_addr[0] = lock->origin_mutex_addr;
 	frame->mutex_backend = true;
+	frame->entry_abi = curr_node->entry_abi;
+	frame->packet_state = curr_node->packet_state;
 	lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
 	lock_node[0] = lock;
 	frame_ret = kd_exec_frame_set_lock_entries(
@@ -166,8 +180,10 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	frame->outer_unlock_hook = &batch->outer;
 	queue_end = kd_exe_queue_timing_start();
-	ret_flag = kd_exe_on_call_hl_entry(exe, &frame->regs, frame->entry_ip,
+	regs = kd_exec_frame_regs(frame);
+	ret_flag = kd_exe_on_call_hl_entry(exe, regs, frame->entry_ip,
 					   frame->outer_lock_addr);
+	regs = kd_exec_frame_regs(frame);
 	/* Refused dispatches remain queued. Account a real body's pre-dispatch
 	 * endpoint before the waiter can resume and recycle its slot. */
 	if (frame->executed)
@@ -178,7 +194,9 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		u64 handoff_start = kd_exe_native_timing_start();
 
 		BUG_ON(kd_exec_native_begin(frame, true));
-		curr_node->regs = frame->regs;
+		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
+		curr_node->regs = *regs;
+		curr_node->packet_state = KD_PACKET_FULL;
 		WRITE_ONCE(curr_node->native_resume, true);
 		smp_store_release(&curr_node->locked, 0);
 		/* Neither this frame nor its combiner may touch curr_node again. */
@@ -190,14 +208,15 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	}
 	if (ret_flag != KD_EXE_RUN_TO_UNLOCK && frame->executed) {
 		KD_PR_ERR("mutex JIT non-continuable exit: entry=%lx ip=%lx ret=%d\n",
-			  frame->entry_ip, frame->regs.ip, ret_flag);
+			  frame->entry_ip, regs->ip, ret_flag);
 		BUG();
 	}
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
 		frame_ret = 0;
 		if (!frame->outer_unlock_seen)
 			frame_ret = kd_exec_frame_record_event(
-				frame, KD_EXEC_EVENT_OUTER_UNLOCK, &frame->regs);
+				frame, KD_EXEC_EVENT_OUTER_UNLOCK,
+				frame->packet_state == KD_PACKET_COMPLETE ? NULL : regs);
 		if (!frame_ret)
 			frame_ret = kd_exec_frame_complete(frame);
 		if (unlikely(frame_ret)) {
@@ -222,9 +241,11 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		if (kd_exec_frame_state(frame) != KD_EXEC_FRAME_COMPLETE &&
 		    kd_exec_frame_abort(frame))
 			atomic64_inc(&kd_mutex_frame_failure_count);
-		frame->regs = retry_regs;
+		if (!clobber)
+			*regs = retry_regs;
 	}
 
+	curr_node->packet_state = frame->packet_state;
 	frame_ret = kd_exec_frame_pop(frame, &curr_node->regs);
 	if (frame_ret) {
 		atomic64_inc(&kd_mutex_frame_failure_count);

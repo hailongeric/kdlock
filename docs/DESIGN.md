@@ -55,7 +55,7 @@ Only the frame-backed spin/mutex entry remains; no user/futex frontend is active
 ## 3. Kernel Hook Layer
 
 The legacy spin/mutex hooks pass lock address, saved hook RSP and return RIP.
-Ordinary spin on the separate `kdclobber1` kernel instead uses versioned bridges
+Ordinary spin and mutex on `kdclobber2` instead use distinct versioned bridges
 with RDI=lock, RSI=pre-CALL RSP, RDX=the local post-CALL label and RCX=caller RBP.
 The compiler spills live values across the declared GPR clobbers; RSP/RBP obey
 the call boundary. This path does not decode a compiler-generated prologue.
@@ -69,55 +69,55 @@ delegation, never which physical exclusion lock protects the data.
 
 <a id="hotlock-monitoring"></a>
 
-Hotlock sampling uses a bounded 131071-slot append-only table:
-`INIT -> CHECKING -> DELEGATE/IGNORE`. After a module-wide one-billion-cycle
-warmup, 10000 samples before the lock's own deadline promote it. Each lock
-captures the same fixed 2.5-billion-cycle window at INIT-to-CHECKING. Another
-lock's speed or discovery order cannot shrink either new or in-flight windows.
-The former global shrinking policy made a slower B permanently IGNORE after a
-fast A, even when B met the original threshold; that coupling is removed.
-Elapsed time equal to the deadline still selects IGNORE, including at sample
-10000. Frequency, warmup, bounded allocation and ordinary admission are not
-bypassed, and no production force-promotion switch is added.
-The initial TSC read serves only the warmup fast check; sample timestamps are
-read again under the table lock so their order matches state updates. Otherwise
-an earlier caller arriving at that lock later could subtract a newer begin
-timestamp, underflow elapsed time and select IGNORE. This serialization does
-not establish TSC synchronization across CPUs.
-Spin samples lock/unlock, mutex samples lock. Decisions are sticky.
-Frequency is not measured contention or a guarantee that delegation pays off.
-This is deterministic only for the same per-lock sample timestamps, not for
-arbitrary scheduling, CPU frequency or workload changes. IGNORE entries still
-take the writer lock and update counters when recorded,
-but are not reconsidered if the workload becomes hotter; DELEGATE does not demote.
-`kd_hotlock_is_promoted` is a lockless status lookup. The ordinary clobber entry
-skips `record` once promoted, so low steady-state JIT share on an already-ready
-lock is not evidence of a late promotion decision. Native successes and short
-batches also affect the share. Diagnostic/body counters are separate from this
-frequency sampler and cannot all be removed as monitoring overhead.
-Adaptive native/probe/delegate selection is only [proposed work](TODO.md#hotlock-monitoring-and-adaptive-admission).
-Timing and failure interpretation are in [usage 3.2](JIT_EXECUTION.md#32-热锁晋升与翻译准备).
+Fresh ordinary acquisitions follow **CPU-local frequency -> CPU-local lock
+frequency -> process selection -> entry registration/admission**. There is no
+shared warmup origin, counter, CHECKING or IGNORE state. Both selected and
+non-selected ordinary callers supply observations; only selected callers may
+register JIT. The address-less mutex selector dispatches into the address-aware
+hook. Unlock follows retained ownership, never fresh frequency or comm selection.
 
-Default work changes kdlock only. Missing hook capabilities and hook-reader
-lifetime need separate assessment, not incidental guest kernel edits.
-The separately authorized [spin-static experiment](../kernel_experiments/spin_static/README.md)
-uses a distinct kernel release/build and captured baseline. It replaces spin
-selector/callback indirect calls with `static_call` while retaining the saved
-RSP, register clobbers, callback arguments and two-element JIT wrapper. The
-provider detects that interface at build time; legacy builds retain the original
-pointer interface. Installation/removal updates are serialized outside the hot
-path. The experiment retains the legacy int3 selector and does not add a generic
-hook-reader lifetime guarantee; its performance and correctness evidence belong
-to its own kernel identity.
-The combined-interface revision uses a load-time static key to bypass the
-separate spin selector call. The provider handles both native and selected
-paths in one callback, while int3 keeps the original selector. A cached hit
-authorizes only a native try of L, even for a non-target caller at the same
-already pinned/published site; it does not grant JIT permission. Misses retain
-target/active-owner selection, and fast unlock uses acquisition provenance.
-Miss-only pin cleanup and selection live in cold helpers; successful acquisition
-retains its original CPU pin and owner record through unlock. The legacy
-selector/callback installation API remains available for independent controls.
+After the first local origin read, each CPU reads TSC exactly once per **10240**
+observations, also checking all 64 resident lock candidates with that same sample.
+The CPU block must finish in less than 40 billion TSC ticks: scaling the window
+with the batch preserves the previous 256 / one-billion-TSC frequency threshold.
+This is a coarser detector, not the old detection latency. Timeout, equality or a
+backwards sample closes fresh admission; subsequent observations may reopen it.
+A previously hot CPU may admit 10239 more observations before its next check.
+Idle CPUs need no timer. Other CPUs cannot open this CPU's gate.
+
+Once the CPU gate is open, a 64-slot direct-mapped cache stores each candidate's
+address, local window origin, saturating count (up to 10000) and positive hint.
+At a CPU clock boundary, a continuous hot CPU publishes candidates with at least
+10000 local observations inside a strict 2.5-billion-TSC window. The initial
+origin is the preceding CPU clock sample, conservatively earlier than the first
+hit; new addresses and collisions do not read TSC. Expiry/backwards time resets
+only that CPU's candidate window/count for later retry; it creates no shared
+negative. Cooling also resets unfinished windows. Counts are never aggregated
+across CPUs. Cache replacement discards approximate history and any old hint;
+it never transfers either to the new address. This can delay recognition.
+
+Only a locally qualified candidate accesses the global promoted-address set.
+The set has 131071 unsigned-long slots (about 1 MiB, down from 8 MiB). A nonzero
+word is the complete immutable identity; one CAS inserts it, and duplicate
+publishers converge on the same slot. There is no separate readiness field,
+shared increment, window origin or diagnostic timestamp. Full capacity means
+native admission and a later local retry, not an unregistered positive. A cached
+positive hit never reads the shared set, even at later CPU clock boundaries.
+Positive identities persist for the module lifetime, including across cooling.
+An evicted positive or a new CPU must establish local lock frequency again.
+
+The 1600-byte per-CPU object is dynamically preallocated for every possible CPU
+before hooks are installed. The allocation base pointer is immutable while hooks
+run; it is the only shared infrastructure pointer read on the record fast path.
+A preemption pin and CPU-local non-waiting cmpxchg serialize local IRQ/NMI reentry
+without IRQ masking or a global statistics lock; reentry drops its observation.
+Drained shutdown frees the set and CPU objects without flushing candidates.
+
+`kd_hotlock_is_promoted` remains a read-only global identity query for existing
+nested protocols and diagnostics. It cannot admit a fresh root. SELFTEST can
+publish an identity explicitly for those protocols, but does not bypass a fresh
+root's CPU/local frequency checks. Cooling does not revoke tickets, owners,
+native suffixes or owner ACK, retire code, or guarantee 0%/99% JIT coverage.
 
 ### 3.1 Source, Lock And Hook Lifetimes
 
@@ -144,7 +144,8 @@ old request/physical owner still exists. A logical final A ACK can precede
 physical batch release; it is not permission to free a containing object
 still used by another request or owner.
 
-The captured guest has four plain spin/mutex lock/unlock dispatch sites.
+The preserved legacy hooks have four plain spin/mutex lock/unlock dispatch
+sites; the current kernel adds distinct versioned spin and mutex bridges.
 Each calls `is_kd_test()` or `is_kd()` before deciding whether the task is a
 target, so non-target kernel tasks are readers too. `exc_int3` also reads the
 shared spin predicate before checking the legacy `kd_do_int3` pointer, even
@@ -329,6 +330,10 @@ partially initialized gate. Slots are neither removed nor reassigned until
 controlled drain and teardown. This does not pin the lock allocation or admit
 an execution frame; source retirement and physical-owner checks still apply.
 
+Each gate is 64-byte aligned with a 64-byte array stride, so independent locks
+do not share a scheduling-word cache line. The 1024-slot table occupies 64 KiB.
+This separates different gates; communication within one gate remains shared.
+
 Native plain/trylock/IRQ-save/BH participants use Linux L. Their mutual
 exclusion does not imply that IRQ/BH operations can be delegated; known
 context-sensitive wrappers refuse translation.
@@ -352,7 +357,7 @@ requirement.
 
 Spin acquisition retains an optional per-CPU L/RIP/gate lookup cache. The
 read-only module parameter `spin_native_cache` defaults to 1; disabling it
-selects the S-first path for every admitted root. A matching published site,
+selects the S-first path for every admitted root. After the CPU/lock frequency filters, a matching published site,
 OPEN source, root CPU context and idle entire S permit a Linux trylock on L.
 A successful cached try keeps a native-L owner record/pin through unlock, with
 nested hooks remaining native as before. This does not acquire S or admit JIT.
@@ -364,7 +369,7 @@ registration/scheduling in its cold helper, retaining continuation arguments
 across C calls only after a cache miss.
 
 On a cache miss, acquisition follows TCLock's ordering: attempt the scheduling
-word before reserving a contended request. After selection, promotion/entry
+word before reserving a contended request. After frequency filtering, selection and entry
 registration and context checks, pin the CPU, resolve the stable gate once, and
 CAS S from zero to LOCKED. An uncontended root acquires Linux L through the
 existing gate claim and retains its physical hold token in a per-CPU record.
@@ -579,14 +584,20 @@ distinct from merely completing all clients.
 2. A promoted, eligible request registers its task before entering the scheduler.
    Winning the gate calls `kd_mutex_claim_origin()`, which acquires the original
    mutex and records `physical_owner=current`, before entering any CS.
-3. Queued waiters capture the hook stack and waiter GS/task. Their combiner
-   verifies real ownership, reconstructs `pt_regs`, checks exact entry readiness,
+3. Queued waiters retain the hook stack address and waiter GS/task. Their combiner
+   verifies real ownership, checks exact entry/ABI readiness,
    and executes the translated CS in a frame. Missing code or a busy per-CPU
    frame context receives an unexecuted queue handoff. That next owner must
    acquire the original mutex; it cannot inherit exclusion from the gate alone.
+   Ordinary clobber callers supply IP/SP/BP directly and switch to their reserved
+   shadow stack before publication. Their root frame borrows node->regs; normal
+   COMPLETE validates the unlock and restores only these three fields. Legacy
+   callers still decode the kernel hook frame, without a duplicate hook snapshot.
+   A FULL intermediate exit detaches into frame-owned storage before C handling:
+   the native waiter may recycle its node while its owner still waits for ACK.
 4. Successful JIT execution reaches the final required unlock and completes its
    frame: normally A, or the last nested B after an earlier logical A unlock.
-   The waiter snapshots published registers, releases its exact bitmap slot,
+   The waiter retains the valid published fields, releases its exact bitmap slot,
    restores preemption/migration state, drops its task record, and resumes
    after the logical unlock. The combiner can retain the original mutex across
    several requests, then run its own CS before unlocking as its real owner.
@@ -1009,6 +1020,13 @@ comparison and final emission handle that error as native-only. This is a
 translation graph budget, not a runtime instruction limit, hard memory/time
 bound or executable-version publication protocol.
 
+New clobber boundaries retain SP/BP facts only; the compiler spills other live
+values. Entry predicates may prove an entire BP-relative spill lies inside the
+256-byte SP-relative checkpoint. All prior checkpoint obligations are joined
+by intersection of coverage (union of predicates); opaque writes/callees still
+block new entry identities. Neither the checkpoint size nor address screening
+is relaxed to admit these spills.
+
 Preserving handler GPRs does not prove that saved stack words stayed unchanged.
 The two-level mutex helper therefore requires the following runtime checkpoint,
 not a private-stack or arbitrary callee-ABI assumption. RET emission, thunk
@@ -1386,7 +1404,7 @@ The implemented protocol is:
 
 1. The producer reserves a record with one queue/waiter user, decodes the hook
    registers directly into `request.frame.regs`, and initializes readable frame
-   state. The 64-byte node carries one execution reference plus queue linkage/notification
+   state. The 128-byte, 64-byte-aligned node carries one execution reference plus queue linkage/notification
    and scheduler stack metadata. Registers, task/GS, origin and native/retry
    state belong to the request. No whole-frame memset runs.
 2. Release queue publication transfers access to the combiner. It binds that
@@ -1498,8 +1516,10 @@ The read-only module parameter `spin_prefetch` selects successor warming:
 hints. Other existing queue-return stack hints are unchanged in every mode.
 Mode 2 prepares the packet pointer, bounded logical-stack SP and full/complex
 flags before queue publication. A physical producer passes its inline packet;
-a virtual producer passes the retained parent packet. Two pointers extend the
-node from 48 to 64 bytes; flags occupy former padding. The consumer can issue
+a virtual producer passes the retained parent packet. The current 128-byte node keeps links,
+execution and hints in its first line; completed/locked occupy offsets 64/65
+on a separate polling line. Type alignment and stride isolate all four slots,
+including nested nodes. The consumer can issue
 frame/register/stack hints using only node fields, before running the current
 body, without loading the successor's frame, task or packet to discover them.
 
@@ -1511,7 +1531,7 @@ must be overwritten for each new queued request, and no old hint may be followed
 after wake/outer release. A missing/out-of-stack SP suppresses only stack hints.
 Modes 0/1 skip producer hint preparation; values outside 0..2 fail module init.
 Current layout-aware warming covers both request header lines; packet and
-logical-stack hints still use the same bounds. Notification fields and wrapper
+logical-stack hints still use the same bounds. Notification semantics and wrapper
 ABI do not change. Compare modes within one image to isolate the hint policy; compare
 the retained old image separately to include node layout and option overhead.
 

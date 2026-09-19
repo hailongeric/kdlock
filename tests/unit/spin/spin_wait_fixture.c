@@ -27,12 +27,9 @@ struct kd_spin_exec_request {
 	struct { struct pt_regs *regs_ref; } frame;
 	bool native_resume;
 };
-struct kd_spin_node {
-	struct kd_spin_node *next;
-	unsigned char locked, completed;
-	unsigned long rsp;
-	struct kd_spin_exec_request *execution;
-};
+typedef uint8_t u8;
+typedef uint16_t u16;
+#include "wait_node.h"
 #include "wait_production.h"
 
 static _Alignas(16) unsigned char task_stack[65536];

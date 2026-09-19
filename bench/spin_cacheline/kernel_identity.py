@@ -15,8 +15,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def arguments(parser):
-    parser.add_argument('--kernel-source', type=Path, default=Path('/root/linux-6.1.159'))
-    parser.add_argument('--kernel-baseline', type=Path, default=ROOT / 'kernel_baseline')
+    parser.add_argument('--kernel-source', type=Path,
+                        default=Path('/root/linux-6.1.159-kdclobber2'))
+    parser.add_argument('--kernel-baseline', type=Path,
+                        default=Path('/root/kdlock-kernel-baselines/mutex-clobber2-20260919'))
 
 
 def check(source, bundle):

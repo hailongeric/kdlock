@@ -58,8 +58,8 @@ class BackendSession(Session):
                 'TCLock identity/initial state differs')
         self.record['parameters'] = params
         self.phase('warmup', 1)
-        time.sleep(1)
-        self.phase('promotion', 12000)
+        # Match the continuous preparation used by the kdlock/native arms.
+        self.phase('promotion', 48000)
         time.sleep(2)
         self.record['prepared_ns'] = time.monotonic_ns()
         self.save()

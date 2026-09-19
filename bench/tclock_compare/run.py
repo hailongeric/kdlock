@@ -88,7 +88,9 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,16), default=[1,16])
-    p.add_argument('--threads', type=int, nargs='+', choices=(1,4,20), default=[1,4,20])
+    # Keep the historical default; allow the intermediate contention levels
+    # without changing CPU placement, per-thread work or backend ordering.
+    p.add_argument('--threads', type=int, nargs='+', choices=(1,4,8,16,20), default=[1,4,20])
     p.add_argument('--repeats', type=int, default=5)
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])

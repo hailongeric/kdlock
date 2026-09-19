@@ -4,10 +4,14 @@
 构建和启动。原 `kernel_baseline/` 及 `/root/linux-6.1.159` 保持原身份。
 性能和回归结果统一见 [VALIDATION](../../docs/VALIDATION.md)。
 
+本目录现在是历史基线及 clobber 内核的补丁前置。当前 provider 默认要求
+[spin/mutex clobber v1](../mutex_clobber/README.md)，已删除下述旧内核安装分支；重现旧版
+性能须使用对应冻结源码，不能直接构建当前 provider。
+
 [guest-kernel.patch](guest-kernel.patch) 在捕获的 6.1.159 上，将 spin selector
 和 lock/unlock callback 的间接调用改为内核 `static_call`。缓解配置保持开启；
 未装载 provider 时保留原生分支。回调 `(lock, rsp, rip)` 和两元素 JIT wrapper
-ABI 不变。生产 provider 与独立 bench dispatch 对照通过新头文件检测接口，
+ABI 不变。当时的生产 provider 与独立 bench dispatch 对照通过新头文件检测接口，
 旧内核继续使用原指针接口；实验内核需要重建 provider。
 
 第二版增加可选的合并入口安装接口。装载时的 static key 让 spin 路径跳过

@@ -20,12 +20,12 @@ static bool list_empty(const struct list_head *head)
 	return head->next == head;
 }
 #define kd_exec_frame_push real_frame_push
-#define kd_exec_frame_push_spin real_frame_push_spin
+#define kd_exec_frame_push_borrowed real_frame_push_spin
 #define kd_exec_frame_bind real_frame_bind
 #define kd_exec_frame_pop real_frame_pop
 #include "spin_outer_types.h"
 #undef kd_exec_frame_push
-#undef kd_exec_frame_push_spin
+#undef kd_exec_frame_push_borrowed
 #undef kd_exec_frame_bind
 #undef kd_exec_frame_pop
 
@@ -333,12 +333,12 @@ static void kd_source_frame_put(void)
 #undef this_cpu_ptr
 #define this_cpu_ptr(p) (&(*(p))[mock_cpu])
 #define kd_exec_frame_push real_frame_push
-#define kd_exec_frame_push_spin real_frame_push_spin
+#define kd_exec_frame_push_borrowed real_frame_push_spin
 #define kd_exec_frame_bind real_frame_bind
 #define kd_exec_frame_pop real_frame_pop
 #include "spin_frame_pool_production.h"
 #undef kd_exec_frame_push
-#undef kd_exec_frame_push_spin
+#undef kd_exec_frame_push_borrowed
 #undef kd_exec_frame_bind
 #undef kd_exec_frame_pop
 #undef this_cpu_ptr

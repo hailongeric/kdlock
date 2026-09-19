@@ -37,43 +37,27 @@ bool kd_mutex_check_idle(void);
  */
 struct kd_mutex_node {
 	struct kd_mutex_node *next;
-	int tail; /* encoded tail (cpu+idx)            */
-	int slot; /* reserved per-CPU slot index       */
-	int socket_id; /* NUMA node id                      */
-	int cpuid; /* CPU that owns this node           */
 	unsigned long gsbase; /* logical waiter's kernel GS base   */
 	uint64_t rsp; /* saved real stack ptr (for restore) */
 	void *shadow_stack_base;
 	uint64_t shadow_stack_ptr;
 	struct kd_mutex *lock;
 	struct task_struct *task_struct_ptr;
-	int irqs_disabled;
-
-	union {
-		struct {
-			u8 completed;
-			u8 locked;
-		};
-		struct {
-			u16 locked_completed;
-		};
-	};
-
-	/*
-	 * Callee-saved registers captured at __kd_mutex_lock entry.
-	 * Redundant with reading from the stack at regs.sp (which is the
-	 * primary path in execute_cs), but kept for debugging/validation.
-	 */
-	unsigned long saved_rbx;
-	unsigned long saved_rbp;
-	unsigned long saved_r12;
-	unsigned long saved_r13;
-	unsigned long saved_r14;
-	unsigned long saved_r15;
+	/* Explicit clobber continuation, or legacy hook return-slot validation. */
 	unsigned long saved_ret_addr; /* CS entry point (ret_addr)         */
 
-	struct pt_regs regs; /* waiter context → JIT sandbox      */
+	/* Removing unused snapshots must not make adjacent reservations share
+	 * a cache line. Keep a four-line stride and put notification bytes on a
+	 * different line from next, which a successor writes during polling.
+	 * Unlike spin, mutex has no combined locked/completed word consumer. */
+	u8 completed __attribute__((aligned(64)));
+	u8 locked;
 	bool native_resume;
+	u8 entry_abi; /* immutable acquisition identity; CPU is encoded in tail */
+	unsigned int packet_state; /* published with completed/native_resume */
+	int tail; /* encoded tail (cpu+idx)            */
+	int slot; /* reserved per-CPU slot index       */
+	struct pt_regs regs; /* waiter context → JIT sandbox      */
 	/* Optional queue residence clock, not critical-section execution time. */
 	uint64_t queued_at_ns;
 };
@@ -94,22 +78,12 @@ struct kd_mutex {
 	atomic_t waiter_count;
 };
 
-#define __KD_MUTEX_INITIALIZER(lockname) \
-	{ .tail = NULL,                  \
-	  .state = ATOMIC_INIT(0),       \
-	  .physical_owner = NULL,        \
-	  .origin_mutex_addr = 0,        \
-	  .waiter_count = ATOMIC_INIT(0) }
-
 void kd_mutex_init(struct kd_mutex *lock);
 int kd_mutex_init_percpu(void);
 void kd_mutex_exit(void);
 
-void _kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,
-		    unsigned long ret_addr, unsigned long s_rbx,
-		    unsigned long s_r12, unsigned long s_r13,
-		    unsigned long s_r14, unsigned long s_r15,
-		    unsigned long s_rbp);
+void _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
+		       unsigned long ret_addr, unsigned long bp, unsigned int abi);
 int _kd_mutex_unlock_checked(struct kd_mutex *lock);
 void _kd_mutex_unlock(struct kd_mutex *lock);
 

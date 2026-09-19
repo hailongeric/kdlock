@@ -5,23 +5,33 @@
 两种 caller ABI 各编译一次，三种后端复用同一份 workload 二进制；完整操作、
 锁外四组乘加、亲和性、准备等待与数据判定相同。三方均在一个 CPU 上预热和
 晋升；kdlock 等待唯一入口发布并停止 translator/daemon 后，才启动指定数量的
-测量线程。这测量已准备好的稳态路径，不覆盖并发冷晋升；首次完整尝试在该
-kdlock 阶段发生过停滞，失败证据与后续稳态矩阵分开保留，不能视为已修复。
+测量线程。翻译条目已准备，但当前采样器要求每个 CPU 独立发现锁；单 CPU
+准备不保证所有测量 CPU 都已晋升。完整操作中必须报告实际 JIT 比例。
+此前并发冷晋升发生过停滞，失败与后续单 CPU 准备矩阵分开保留，未视为修复。
 
 `run.py` 默认 1/16 cacheline × 1/4/20 线程 × 三种后端 × 两种 ABI × 五轮，
 每线程 100000 次，共 180 场；奇数轮逆序，汇总中位数。TCLock 也经同一内核
 hook，避免将绕过分派的 direct-call 结果冒充等价后端。原生 arm 不加载 provider。
+
+`--threads 1 4 8 16 20 --abis clobber` 可展开为五档线程的 150 场三方对照，
+保持 1/16 cacheline、每线程 100000 次及五轮交替顺序；默认矩阵仍为上述 180 场。
 
 三种后端在独立会话中运行；TCLock 会话的目标锁由 TCLock 协议独占管理。
 保留 `spin_lock` 接口不表示与未修改 Linux qspinlock 的队列/解锁协议兼容，
 本对照不覆盖二者同时竞争同一目标锁。原因和访问入口限制见
 [协议兼容边界](../../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界)。
 
-[2026-09-19 当前版本复测](results/20260919-state-access.md)：clobber ABI 三方
-90 场对照及 30 场长批次单线程检查全部正确排空。20 线程、1/16 cacheline 下，
-kdlock 中位吞吐为 2.965/2.904 Mops/s，比本轮 TCLock 高 29.0%/71.1%，
-实际 JIT 约 99.8%；4 线程仍比 TCLock 低 45.7%/27.9%。结果保留三方代理比例
-与波动，不能将收益全部归因于某一项状态访问优化。
+随后已完成 [kdlock node/gate 隔离修复与 40 场交替对照](../spin_cacheline/results/20260919-cacheline-isolation.md)：
+20 线程改善，4 线程回退。该轮仅重测旧/新 kdlock；以下三方成绩属于修复前基线。
+
+[2026-09-19 五档线程复测](results/20260919-thread-scaling.md)：1/4/8/16/20 线程、
+clobber ABI 的 150 场三方对照全部正确排空。20 线程、1/16 cacheline 下，kdlock
+中位吞吐为 2.990/2.894 Mops/s；16/20 线程实际 JIT 超过 99%，4 线程仍明显
+落后。结果包含批长、各轮波动及本次模块的伪共享布局检查；没有修改锁实现，
+也没有将布局候选直接归因为性能瓶颈。
+
+此前 [同日 90 场复测及 30 场长单线程对照](results/20260919-state-access.md)
+保留独立证据；长批次单线程成本未在五档线程矩阵中重测。
 
 此前 [2026-09-18 实测结果](results/20260918-native-stack.md)：180/180 场稳态测量正确
 并排空，竞争配置 TCLock 中位吞吐为 kdlock 的 1.06–2.05 倍；另有六场独立
@@ -52,8 +62,8 @@ per-CPU 区域，不安装 hook，随后立即卸载。Linux 6.1.159 的 reserve
 make -C tests/unit run PY_TESTS=spin/test_tclock_context.py
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
-  --kernel-source /root/linux-6.1.159-kdclobber1 \
-  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918 \
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
   --output /root/kdlock-evidence/tclock-native-new/compare
 ```
 
@@ -71,8 +81,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --output /root/kdlock-evidence/tclock-native-new/profile-c01-tclock \
   --perf /root/kdlock-tools/perf-6.1.159/perf \
   --arm tclock --abi clobber --threads 20 --cachelines 1 --iterations 1000000 \
-  --kernel-source /root/linux-6.1.159-kdclobber1 \
-  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919
 ```
 
 分别选择三种 `--arm` 与两种 `--cachelines`，每场使用新输出目录。该入口只采
@@ -85,6 +95,12 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 运行器保留源文件、上游身份、私有 kdlock provider 副本、两份 workload、后端
 二进制、内核 Build ID、逐场数据与正文计数。`records.json` 包含未执行/失败
 记录；`summary.json/csv` 只从数据正确且已排空的样本计算中位数。
-当前性能与限制见[最新结果页](results/20260919-state-access.md)，两种 ABI 的
+最近完整三方成绩见[五档线程结果](results/20260919-thread-scaling.md)，随后布局
+修复的旧/新两臂见[隔离对照](../spin_cacheline/results/20260919-cacheline-isolation.md)。两种 ABI 的
 历史矩阵与采样见[首次结果页](results/20260918-native-stack.md)；尚未验证
 任意 task/per-CPU 临界区、跨 NUMA 或嵌套 TCLock。
+
+当前热锁采样按 CPU 独立发现，准备阶段已改为单 CPU 连续 48000 次；其余
+测量 CPU 仍可能在测量中建立自己的频率和锁历史。旧冻结版本的成绩保留为
+历史结果。本轮没有重新验证完整操作吞吐或 99% JIT，后续对照必须同时报告
+实际 JIT 比例，不能将减少代理覆盖误当作提速。

@@ -19,6 +19,11 @@ def main():
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-wait-") as directory:
         path = Path(directory)
         (path / "wait_production.h").write_text(source)
+        # Execute with the real node layout so moved polling bytes cannot be
+        # hidden by a compact mock struct with unrelated offsets.
+        (path / "wait_node.h").write_text(definition(
+            (ROOT / "include/kd_spinlock.h").read_text(),
+            "struct kd_spin_node {").rstrip() + ";\n")
         binary = path / "spin-wait"
         subprocess.run(
             shlex.split(os.environ.get("CC", "cc"))

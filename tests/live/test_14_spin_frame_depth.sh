@@ -111,7 +111,6 @@ start_daemon 2
 for ((i=0; i<depth; i++)); do
     run_with_timeout 10 taskset -c "$((1+i))" "$BENCH_BIN" 1 1 1 1 8 "$i" >> "$out/warmup.log"
 done
-sleep 1
 if [[ $forced == 1 ]]; then
     # Isolate frame execution from acquisition frequency and sampling timing.
     # Queue shape, requests, registers and all frame counts remain real.

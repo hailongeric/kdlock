@@ -482,15 +482,17 @@ class FlowConstants(RegisterConstants):
         self.scoped_calls = scoped_calls
         self.return_targets = {}
         self.entry_spill_guards = entry_spill_guards
+        self.memory.allow_checked_entry_spills = entry_spill_guards
 
     def snapshot(self):
         return (dict(self.values), dict(self.origins), self.memory.snapshot(),
-                self.memory.entry_spills_blocked)
+                self.memory.entry_spills_blocked, self.memory.checked_spill_windows)
 
     def restore(self, state):
         self.values, self.origins = dict(state[0]), dict(state[1])
         self.memory.restore(state[2])
         self.memory.entry_spills_blocked = state[3]
+        self.memory.checked_spill_windows = state[4]
 
     def merge_state(self, left, right):
         origins = {
@@ -498,11 +500,14 @@ class FlowConstants(RegisterConstants):
             for reg, origin in left[1].items()
             if right[1].get(reg) == origin
         }
+        windows = left[4] | right[4]
+        blocked = left[3] or right[3] or len(windows) > 64
         return (
             self.merge(left[0], right[0]),
             origins,
             self.memory.merge(left[2], right[2]),
-            left[3] or right[3],
+            blocked,
+            frozenset() if blocked else windows,
         )
 
     def clobber(self, *, checked_windows=(), window_bytes=0):
@@ -634,6 +639,9 @@ class FlowConstants(RegisterConstants):
         }
         if id(line) in self.clobber_calls:
             saved = {ExprId(name, 64) for name in ("RBP", "RSP")}
+        # Mutex keeps its checked-stack/opaque-memory effect: native mutex
+        # acquisition can write much more than a 32-bit spin word. Its new
+        # ABI drops register facts without weakening that memory contract.
         # The versioned spin control handler changes its lock word and consumes
         # the virtual CALL, without running an opaque callee on the logical
         # stack. Model those writes through the existing alias/guard rules.
@@ -641,7 +649,7 @@ class FlowConstants(RegisterConstants):
         # pointer just because the caller ABI spills it to memory.
         lock_pointers = (
             frozenset(self.resolve_many(ExprId("RDI", 64), allow_wide=True))
-            if id(line) in self.clobber_calls else None
+            if id(line) in self.clobber_calls and id(line) not in self.mutex_calls else None
         )
         values, origins = dict(self.values), dict(self.origins)
         self.update_effects(
@@ -1260,6 +1268,7 @@ def constant_blocks(
             {} if start in callees and not scoped_calls else dict(initial[1]),
             initial[2],
             initial[3],
+            initial[4],
         )
         key = state_key(start, state)
         incoming[key] = state

@@ -140,7 +140,6 @@ fi
 test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1
 start_daemon 2
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 8 3 > "$out/warmup.log"
-sleep 1
 for ((i=0; i<depth; i++)); do
     loops=12001
     test "$i" != 0 || loops=12000

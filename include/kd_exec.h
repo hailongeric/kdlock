@@ -82,7 +82,7 @@ struct kd_exec_outer_unlock {
 };
 
 struct kd_exec_frame {
-	/* Ordinary single-lock execution touches this 72-byte header and the
+	/* Ordinary spin execution touches this 72-byte header and the
 	 * referenced packet. The cold ledger below is activated only on promotion;
 	 * no allocation, zero-fill or packet copy is needed at that boundary. */
 	struct pt_regs *regs_ref;
@@ -183,7 +183,7 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 		   unsigned long gsbase, struct task_struct *logical_task);
 /* Bind a physical spin packet; nested physical contexts retain a private copy. */
 struct kd_exec_frame *
-kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,
+kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,
 		       unsigned long outer_lock_addr, void *waiter,
 		       void *outgoing_rsp_ptr, unsigned int held_lock_depth,
 		       unsigned long gsbase, struct task_struct *logical_task);

@@ -1,35 +1,19 @@
 #ifndef KD_HOTLOCK_H
 #define KD_HOTLOCK_H
 
-/* Append-only sampling state consumed by hooks before entry registration.
- * Promotion authorizes considering JIT; it does not mean code is ready or ran. */
-#include <linux/atomic.h>
 #include <linux/types.h>
 
-enum kd_hotlock_status {
-	KD_HOTLOCK_INIT = 0,
-	KD_HOTLOCK_CHECKING,
-	KD_HOTLOCK_DELEGATE,
-	KD_HOTLOCK_IGNORE,
-};
-
-/* Entries never move after release-publication of lock_addr. Promotion readers
- * acquire the address and READ_ONCE(status); other fields require the writer
- * lock. Pointers remain valid only until callers drain before module teardown. */
-struct kd_hotlock_state {
-	unsigned long lock_addr;
-	unsigned long begin_cycles;
-	unsigned long end_cycles;
-	unsigned long sample_window;
-	unsigned int samples;
-	enum kd_hotlock_status status;
-} ____cacheline_aligned;
+/* Discovery counters/windows are private per-CPU implementation details.
+ * The shared set contains promoted addresses only, never warming-up locks. */
+#define KD_HOTLOCK_LOCAL_DISCOVERY_V1 1
 
 int kd_hotlock_init(void);
 void kd_hotlock_exit(void);
 
-struct kd_hotlock_state *kd_hotlock_state_get(unsigned long lock_addr);
+/* Fresh acquisition: local CPU frequency -> local lock frequency -> caller
+ * may select task. A true result is a hint, never permission to execute JIT. */
 int kd_hotlock_record(unsigned long lock_addr);
+/* Read-only identity query for existing/nested protocols and diagnostics. */
 bool kd_hotlock_is_promoted(unsigned long lock_addr);
 
 #endif /* KD_HOTLOCK_H */

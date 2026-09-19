@@ -28,7 +28,7 @@ from verify_evidence import require, unique_object, verify_run
 ROOT = regression.ROOT
 PREFIX = "KD_BENCH_METRICS "
 TRANSLATION_PREFIX = "KD_TRANSLATION_METRICS "
-PREPARATION = {"warmup": (1, 1, 1, 1), "promotion": (1, 12000, 10, 1)}
+PREPARATION = {"warmup": (1, 1, 1, 1), "promotion": (1, 48000, 10, 1)}
 BODY = re.compile(r"JIT body witness: entry=([0-9a-f]+) lock=([0-9a-f]+) body=1\b")
 BINARIES = (
     "kernel_module/kdlock_km.ko",
@@ -74,7 +74,7 @@ def validate_trial(trial):
             "positive loops/runs and at least two contending threads required")
     require(0 <= trial["workload"] < 2**64, "workload exceeds the ioctl ABI")
     require(trial["threads"] * trial["runs"] <= 2**20, "measurement sample limit")
-    require(12001 + trial["threads"] * trial["runs"] * trial["loops"] <= 10000000,
+    require(48001 + trial["threads"] * trial["runs"] * trial["loops"] <= 10000000,
             "work exceeds the existing full-state oracle limit")
     cpus = trial["cpus"]
     require(isinstance(cpus, list) and cpus and
@@ -362,7 +362,7 @@ def jit_boundary_costs(initial, text, bodies):
         else:
             queue = stats(text, "kd_mutex stats")
         queued = queue.get("slowpath")
-        operations = 12001 + math.prod(initial["trial"][k] for k in ("threads", "loops", "runs"))
+        operations = 48001 + math.prod(initial["trial"][k] for k in ("threads", "loops", "runs"))
         require(type(queued) is int and bodies <= queued <= operations,
                 "invalid ordinary queue/slowpath count")
     # Ordinary services return to JIT, not native-owner waits. Native references
@@ -415,7 +415,7 @@ def finish_arm(out):
             "kernel fault or incomplete final log")
     publications = [read_json(out / f"published-{name}.json") for name in ("before", "after")]
     body_count = validate_body_phase(before, after, *publications, initial["lock"], arm)
-    operations = 12001 + trial["threads"] * trial["loops"] * trial["runs"]
+    operations = 48001 + trial["threads"] * trial["loops"] * trial["runs"]
     integrity = stats(final, "kd_cs integrity")
     require(integrity == dict(operations=operations, active_states=1, failures=0),
             "full complex-state oracle failed")

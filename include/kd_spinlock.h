@@ -49,18 +49,22 @@ struct kd_spin_node {
 	int cpuid;
 	/* Scheduler stack sentinel, not the logical register packet. */
 	uint64_t rsp;
-	/* Queue notification only; execution completion belongs to frame.state. */
-	union {
-		struct { u8 completed; u8 locked; };
-		struct { u16 locked_completed; };
-	};
 	/* Immutable while queued; hints only, never restoration/admission state.
-	 * Flags occupy old padding; two addresses make this node one cache line. */
+	 * Keep these addresses with the queue links in the first cache line. */
 	u8 prefetch_full;
 	u8 prefetch_complex;
 	struct kd_spin_exec_request *execution;
 	struct pt_regs *prefetch_regs;
 	unsigned long prefetch_sp;
+	/* A successor writes next while this CPU polls locked. Isolate those
+	 * accesses; only the release notification belongs on the polling line.
+	 * Align the member so the type/array stride also covers whole x86 lines,
+	 * including nested nodes. Keep the two bytes adjacent for one wake store.
+	 * Execution completion itself still belongs to frame.state. */
+	union {
+		struct { u8 completed; u8 locked; };
+		struct { u16 locked_completed; };
+	} __attribute__((aligned(64)));
 };
 
 #define _Q_COMPLETED_OFFSET (_Q_LOCKED_OFFSET_HL + _Q_LOCKED_BITS_HL)

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 
-/* RCU task membership bridges the address-less guest mutex selector.
+/* RCU task membership preserves mutex ownership routing inside the hooks.
  * Acquisition references outlive comm changes and native borrowed suffixes.
  * Last put removes routing immediately; deferred freeing waits for readers. */
 #include <linux/hashtable.h>
@@ -12,8 +12,8 @@
 
 #include "kd_lock.h"
 
-/* The kernel's existing is_kd callback cannot take a lock address. Keep task
- * routing alive through queue waits, the owner's CS, and borrowed native CSs.
+/* Keep task routing alive through queue waits, the owner's CS, and borrowed
+ * native CSs, independently of CPU frequency or target-process selection.
  * Reads neither sleep nor allocate; writers serialize membership and refs. */
 struct kd_mutex_task {
 	struct hlist_node link;

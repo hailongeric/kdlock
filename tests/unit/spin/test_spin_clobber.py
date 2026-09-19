@@ -193,7 +193,7 @@ int main(void) {
 '''
 
 
-def main():
+def main(entry_abi=1):
     with tempfile.TemporaryDirectory(prefix="kdlock-clobber-") as directory:
         path=Path(directory)
         (path/'asm').mkdir()
@@ -204,13 +204,19 @@ def main():
         (path/'asm/asm.h').write_text('register unsigned long current_stack_pointer asm("rsp");\n#define ASM_CALL_CONSTRAINT "+r"(current_stack_pointer)\n')
         (path/'asm/nospec-branch.h').write_text('#ifdef __ASSEMBLER__\n.macro CALL_NOSPEC reg\ncall *%\\reg\n.endm\n#define RET ret\n#else\n#define CALL_NOSPEC "call *%[thunk_target]\\n"\n#endif\n')
         # Extract the reviewed experiment macro, rather than maintaining a second ABI.
-        patch=(ROOT/'kernel_experiments/spin_clobber/guest-kernel.patch').read_text()
+        patch=(ROOT/f'kernel_experiments/{"mutex" if entry_abi == 2 else "spin"}_clobber/guest-kernel.patch').read_text()
         added='\n'.join(line[1:] for line in patch.splitlines() if line.startswith('+') and not line.startswith('+++'))
-        macro=added[added.index('#define __kd_spin_clobber_call_v1'):added.index('#else',added.index('#define __kd_spin_clobber_call_v1'))]
+        marker = '#define __kd_mutex_clobber_call_v1' if entry_abi == 2 else '#define __kd_spin_clobber_call_v1'
+        macro=added[added.index(marker):added.index('#else',added.index(marker))] if entry_abi == 1 else added[added.index(marker):added.index('#endif',added.index(marker))]
+        if entry_abi == 2:
+            macro = macro.replace('struct mutex', 'raw_spinlock_t').replace('__kd_mutex_clobber_call_v1', '__kd_spin_clobber_call_v1').replace('kd_mutex_', 'kd_raw_spin_').replace('mutex_lock(', 'raw_spin_lock(').replace('mutex_unlock(', 'raw_spin_unlock(')
         (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t;\n'+macro+'\n#define raw_spin_unlock(lock) __kd_spin_clobber_call_v1(kd_raw_spin_unlock_clobber_v1, lock)\n')
         (path/'jit.S').write_text(BODY)
         (path/'wrapper.S').write_text((ROOT/'include/wrapper.S').read_text()+'\n.globl main\n.section .note.GNU-stack,"",@progbits\n')
-        (path/'fixture.c').write_text(FIXTURE)
+        fixture = FIXTURE
+        if entry_abi == 2:
+            fixture = fixture.replace('.entry_abi=abi,', '.entry_abi=abi?2:0,').replace('.entry_abi=1,', '.entry_abi=2,').replace('main_wrapper+45)==1', 'main_wrapper+45)==2')
+        (path/'fixture.c').write_text(fixture)
         stubs='.text\n.globl kd_raw_spin_lock_clobber_v1, kd_raw_spin_unlock_clobber_v1\nkd_raw_spin_lock_clobber_v1:\nkd_raw_spin_unlock_clobber_v1:\n'
         stubs+='lea 8(%rsp), %rax\ncmp %rax,%rsi\njne 1f\ncmp (%rsp),%rdx\njne 1f\ncmp %rbp,%rcx\njne 1f\nincq (%rdi)\n'
         for reg in ('rax','rbx','rcx','rdx','rsi','rdi',*(f'r{i}' for i in range(8,16))):
@@ -218,7 +224,7 @@ def main():
         stubs+='ret\n1: ud2\n.section .note.GNU-stack,"",@progbits\n'
         (path/'stubs.S').write_text(stubs)
         cc=shlex.split(os.environ.get('CC','gcc'))
-        subprocess.run(cc+['-c','-DKD_GENERATED_ENTRY_ABI=1','-Dmain=main_wrapper','-I'+str(path),'-I'+str(ROOT/'include'),str(path/'wrapper.S'),'-o',str(path/'wrapper.o')],check=True,timeout=30)
+        subprocess.run(cc+['-c',f'-DKD_GENERATED_ENTRY_ABI={entry_abi}','-Dmain=main_wrapper','-I'+str(path),'-I'+str(ROOT/'include'),str(path/'wrapper.S'),'-o',str(path/'wrapper.o')],check=True,timeout=30)
         subprocess.run(cc+['-c','-Dmain=legacy_wrapper','-I'+str(path),'-I'+str(ROOT/'include'),str(path/'wrapper.S'),'-o',str(path/'legacy.o')],check=True,timeout=30)
         subprocess.run(cc+['-c','-I'+str(path),'-I'+str(ROOT/'include'),str(ROOT/'tests/unit/spin/legacy_batch.S'),'-o',str(path/'runner.o')],check=True,timeout=30)
         subprocess.run(cc+['-O2','-fno-omit-frame-pointer','-mno-red-zone','-Wall','-Wextra','-Werror','-I'+str(path),'-I'+str(ROOT/'include'),str(path/'fixture.c'),str(path/'stubs.S'),str(path/'wrapper.o'),str(path/'legacy.o'),str(path/'runner.o'),'-o',str(path/'fixture')],check=True,timeout=30)

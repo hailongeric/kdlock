@@ -39,6 +39,8 @@ static int calls, known_calls, known_result, errors, warnings, checks, failures;
 static unsigned int registry_lookups, readiness_acquires;
 static bool source_open = true;
 static struct pt_regs last_wrapper_output;
+static unsigned long clobber_mutex_lock_addr = 0x4110;
+static unsigned long clobber_mutex_unlock_addr = 0x4120;
 static unsigned long clobber_spin_lock_addr = 0x3110;
 static unsigned long clobber_spin_unlock_addr = 0x3120;
 static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
@@ -1270,6 +1272,26 @@ static void check_clobber_identity(void)
 	active.packet_state = KD_PACKET_FULL;
 	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
 	CHECK(calls == 0 && !active.executed);
+	active.entry_abi = entry->entry_abi = code[45] = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	active.mutex_backend = true;
+	active.spin_simple = false;
+	active.jit_lock_depth = 1;
+	active.outer_lock_index = 0;
+	active.jit_lock_released[0] = false;
+	CHECK(kd_jit_image_matches(entry, &active));
+	kd_jit_prepare_clobber(&call, &active, code);
+	CHECK(call.complete && call.unlock == clobber_mutex_unlock_addr);
+	CHECK(call.entry_abi == 2 && call.regs == kd_exec_frame_regs(&active));
+	active.jit_lock_depth = 2;
+	CHECK(!kd_jit_minimal_complete_allowed(&active));
+	active.jit_lock_depth = 1;
+	active.outer_unlock_seen = true;
+	CHECK(!kd_jit_minimal_complete_allowed(&active));
+	active.outer_unlock_seen = false;
+	active.mutex_backend = false;
+	CHECK(!kd_jit_minimal_complete_allowed(&active));
+	code[45] = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
+	CHECK(!kd_jit_image_matches(entry, &active));
 }
 
 static void check_pending_batch_exit(void)

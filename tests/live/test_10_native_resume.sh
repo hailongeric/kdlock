@@ -410,6 +410,12 @@ threads=8
 states=1
 operations=12009
 requests=12009
+promotion_loops=12000
+if [ "$registers" = 1 ]; then
+    promotion_loops=48000
+    operations=48009
+    requests=48009
+fi
 case "$mode" in
     1) artifacts=2 ;;
     # Six guarded translations are serial; keep the native/JIT execution
@@ -417,8 +423,7 @@ case "$mode" in
     8) promotion_mode=1; artifacts=6; artifact_timeout=90 ;;
 esac
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 "$promotion_mode" > "$out/warmup.log"
-sleep 1
-run_with_timeout 30 "$BENCH_BIN" 1 12000 10 1 "$promotion_mode" > "$out/promotion.log"
+run_with_timeout 30 "$BENCH_BIN" 1 "$promotion_loops" 10 1 "$promotion_mode" > "$out/promotion.log"
 if [ "$mode" = 8 ]; then
     for role in 0 2 4; do
         run_with_timeout 10 "$BENCH_BIN" 1 1 10 1 8 "$role" >> "$out/registration.log"
@@ -469,6 +474,8 @@ if [ "$gate_pressure" = 1 ]; then
     taskset -pc 12 "$$" > "$out/gate-controller.log"
 fi
 if [ "$registers" = 1 ]; then
+    printf '1\n' > /sys/module/klock_module/parameters/cpu_frequency_prepare
+    export KD_TEST_LOCAL_PREPARE=1
     printf '1\n' > /sys/module/klock_module/parameters/native_regs_armed
 fi
 if [ "$spin_acquired" != 0 ]; then

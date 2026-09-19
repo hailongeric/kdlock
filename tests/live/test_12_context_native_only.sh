@@ -58,7 +58,6 @@ test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1
 start_daemon 2
 # Keep each probe on its own CPU; its prepare/finish span both native locks.
 run_with_timeout 10 taskset -c 0 "$BENCH_BIN" 1 1 1 1 "$mode" 0 > "$out/warmup.log"
-sleep 1
 run_with_timeout 30 taskset -c 0 "$BENCH_BIN" 1 12000 10 1 "$mode" 0 > "$out/promotion.log"
 python3 "$KDLOCK_DIR/tests/protocols/native_only_protocol.py" --all --protocol --lock-kind "$kind" > "$out/rejection-before.json"
 check_daemon_read_kernel_text "$DAEMON_LOG"

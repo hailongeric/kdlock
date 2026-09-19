@@ -1,6 +1,6 @@
 # TCLock 原生委托后端
 
-这个独立实验使用完整 TCLock spinlock 执行路径，经现有 `kdclobber1` 普通 spin
+这个独立实验使用完整 TCLock spinlock 执行路径，经现有 `kdclobber2` 普通 spin
 hook 接入同一个 `spin_cacheline` 工作负载。锁字、队列、pending、shadow 栈、
 六个 callee-saved 寄存器保存、物理 RSP 切换及 WWJUMP 均来自上游 TCLocks。
 不使用 kdlock 的 shadow lock、JIT、翻译注册表、寄存器包或 daemon。
@@ -90,7 +90,10 @@ kdlock 的选择不同：原生参与者只访问 Linux 锁 **L**，代理队列
 [`tests/unit/spin/test_tclock_context.py`](../tests/unit/spin/test_tclock_context.py)。
 三方运行方法、实际执行结果和性能解释维护在
 [`bench/tclock_compare/`](../bench/tclock_compare/README.md)。
-当前成绩见 [9/19 clobber 三方复测](../bench/tclock_compare/results/20260919-state-access.md)。
+最近完整三方基线见 [9/19 五档线程复测](../bench/tclock_compare/results/20260919-thread-scaling.md)。
+随后 kdlock 的 [node/gate 隔离修复](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
+只重测旧/新 kdlock，没有重测 TCLock/Linux；此前长单线程成本仍见
+[同日独立对照](../bench/tclock_compare/results/20260919-state-access.md#单线程长批次)。
 [首次三方实测](../bench/tclock_compare/results/20260918-native-stack.md)保留两种 ABI
 的 180 场稳态、独立采样和 kdlock 并发冷晋升失败；旧采样占比不是当前热点占比。真实汇编单元验证六个寄存器、RSP 和 lock/unlock 续点，
 不能据此宣称任意内核栈展开或复杂临界区已通过。

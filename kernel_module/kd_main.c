@@ -12,6 +12,15 @@
 #if __has_include(<linux/kd_spin_hooks.h>)
 #include <linux/kd_spin_hooks.h>
 #endif
+#ifndef KD_SPIN_CLOBBER_V1
+#error "kdlock requires the spin caller-clobber v1 (kdclobber2 or compatible)"
+#endif
+#if __has_include(<linux/kd_mutex_hooks.h>)
+#include <linux/kd_mutex_hooks.h>
+#endif
+#ifndef KD_MUTEX_CLOBBER_V1
+#error "kdlock requires ordinary mutex clobber v1 (kdclobber2 or compatible)"
+#endif
 
 #include "exe.h"
 #include "kd_exec.h"
@@ -42,36 +51,17 @@ struct kd_comm_key kd_spin_target;
 module_param(target_process, charp, S_IRUGO);
 MODULE_PARM_DESC(target_process, "task comm routed through kdlock hooks");
 
-extern int (*is_kd_test)(void);
-
-extern void (*kd_raw_spin_lock)(raw_spinlock_t *lock, unsigned long ret_rsp,
-				unsigned long ret_addr);
-extern void (*kd_raw_spin_unlock)(raw_spinlock_t *lock, unsigned long ret_rsp,
-				  unsigned long ret_addr);
-
-extern int (*is_kd)(void);
-extern void (*kd_mutex_lock)(struct mutex *lock, unsigned long ret_rsp,
-			     unsigned long ret_addr);
-extern void (*kd_mutex_unlock)(struct mutex *lock, unsigned long ret_rsp,
-			       unsigned long ret_addr);
-
-static bool kd_target_matches(void)
-{
-	return target_process && !strcmp(current->comm, target_process);
-}
-
 static int __is_kd_test(void)
 {
 	return kd_spin_task_selected() ? 2 : 0;
 }
 
-/* A renamed task must still finish its queued or borrowed mutex acquisition. */
-static int __is_kd_mutex_task(void)
+/* This kernel selector has no lock argument. Dispatch without reading comm;
+ * the lock hook performs CPU -> address -> task admission, and the unlock
+ * hook independently preserves every retained owner's route. */
+static int kd_mutex_dispatch_enabled(void)
 {
-	return (kd_source_is_open() && kd_target_matches()) ||
-			       kd_mutex_task_reroute(current) ?
-		       2 :
-		       0;
+	return 2;
 }
 
 /* Error labels unwind only initialized services, in reverse dependency order.
@@ -120,39 +110,28 @@ static int __init kdlock_km_init(void)
 		goto err_mutex;
 #endif
 
-#ifdef KD_SPIN_CLOBBER_V1
+	/* Ordinary callers use clobber v1. The legacy callbacks remain necessary
+	 * for explicit nested APIs and modules compiled with the old caller ABI;
+	 * supporting those callers does not require an older kernel installer. */
 	ret = kd_spin_static_install_clobber_v1(__is_kd_test,
 		kd_spin_dispatch_lock, kd_spin_dispatch_unlock,
 		kd_spin_dispatch_clobber_lock_v1, kd_spin_dispatch_clobber_unlock_v1);
 	if (ret)
 		goto err_mutex;
-#elif defined(KD_SPIN_STATIC_DISPATCH)
-	ret = kd_spin_static_install_dispatch(__is_kd_test,
-				kd_spin_dispatch_lock, kd_spin_dispatch_unlock);
+	ret = kd_mutex_static_install_clobber_v1(kd_mutex_dispatch_enabled,
+		__kd_mutex_lock, __kd_mutex_unlock,
+		__kd_mutex_lock_clobber_v1, __kd_mutex_unlock_clobber_v1);
 	if (ret)
-		goto err_mutex;
-#elif defined(KD_SPIN_STATIC_HOOKS)
-	ret = kd_spin_static_install(__is_kd_test, __kd_raw_spin_lock,
-				     __kd_raw_spin_unlock);
-	if (ret)
-		goto err_mutex;
-#else
-	is_kd_test = __is_kd_test;
-	kd_raw_spin_unlock = __kd_raw_spin_unlock;
-	kd_raw_spin_lock = __kd_raw_spin_lock;
-#endif
-	is_kd = __is_kd_mutex_task;
-	kd_mutex_lock = __kd_mutex_lock;
-	kd_mutex_unlock = __kd_mutex_unlock;
+		goto err_spin_hooks;
 
-	KD_PR_INFO("kd kernel module init: target_process=%s\n",
+	KD_PR_INFO("kd kernel module init: spin_abi=clobber-v1 mutex_abi=clobber-v1 target_process=%s\n",
 		   target_process);
 	return 0;
 
-#if defined(KDLOCK_SELFTEST) || defined(KD_SPIN_STATIC_HOOKS)
+err_spin_hooks:
+	kd_spin_static_remove();
 err_mutex:
 	kd_mutex_exit();
-#endif
 err_spinlock:
 	kd_spinlock_exit();
 err_sys:
@@ -173,16 +152,8 @@ err_source:
  * This RCU wait does not by itself protect the guest's unguarded hook readers. */
 static void __exit kdlock_km_exit(void)
 {
-#ifdef KD_SPIN_STATIC_HOOKS
 	kd_spin_static_remove();
-#else
-	kd_raw_spin_unlock = NULL;
-	kd_raw_spin_lock = NULL;
-	is_kd_test = NULL;
-#endif
-	kd_mutex_unlock = NULL;
-	kd_mutex_lock = NULL;
-	is_kd = NULL;
+	kd_mutex_static_remove();
 
 	synchronize_rcu();
 	kd_mutex_exit();

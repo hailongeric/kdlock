@@ -61,14 +61,12 @@ static void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref 
         "static void origin_raw_spin_unlock(raw_spinlock_t *lock)",
         "static noinline void kd_raw_spin_unlock_slow(raw_spinlock_t *lock)",
         "static noinline void kd_raw_spin_lock_slow(raw_spinlock_t *lock,",
-        "void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,",
-        "void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,",
     ):
         source += definition(hooks, marker)
     main_source = read_source((ROOT / "kernel_module/kd_main.c"))
-    source += without_includes(read_source((ROOT / "include/kd_comm.h")))
+    source += without_includes(read_source((ROOT / "include/kd_comm.h"))).replace("kd_comm_matches(", "kd_comm_matches_real(")
+    source += '\nstatic bool kd_comm_matches(const struct kd_comm_key *key, const char comm[TASK_COMM_LEN])\n{\n    comm_queries++;\n    if (trace_admission) CHECK(sampled_first);\n    return kd_comm_matches_real(key, comm);\n}\nstruct kd_comm_key kd_spin_target;\n'
     source += without_includes(read_source((ROOT / "include/kd_spin_select.h")))
-    source += "struct kd_comm_key kd_spin_target;\n"
     source += definition(main_source, "static int __is_kd_test(void)")
     for marker in (
         "static noinline void kd_spin_dispatch_lock_slow(raw_spinlock_t *lock,",

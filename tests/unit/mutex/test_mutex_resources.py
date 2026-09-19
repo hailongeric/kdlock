@@ -28,7 +28,9 @@ def production():
     assert "release:\n\tkd_mutex_waiter_exit(lock);\n\treturn 2;" in slowpath
     # These statics belong to separate production translation units. Rename
     # only the per-CPU symbol so both unchanged paths can share one fixture.
-    code = "#define kd_mutex_shadows cpu_shadows\n"
+    code = without_includes(read_source(ROOT / "include/kd_comm.h")).replace("kd_comm_matches(", "kd_comm_matches_real(")
+    code += '\nstatic bool kd_comm_matches(const struct kd_comm_key *key, const char comm[TASK_COMM_LEN])\n{\n    comm_queries++;\n    if (trace_admission) CHECK(sampled_first);\n    return kd_comm_matches_real(key, comm);\n}\nstruct kd_comm_key kd_spin_target;\n'
+    code += "#define kd_mutex_shadows cpu_shadows\n"
     code += mutex[
         mutex.index("struct kd_mutex_shadow {") : mutex.index(
             "static inline struct kd_mutex_node *decode_tail"
@@ -56,7 +58,7 @@ def production():
     ):
         code += definition(mutex, marker)
     for marker, result in (
-        ("_kd_mutex_lock(struct kd_mutex *lock, unsigned long rsp_value,", "void"),
+        ("_kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,", "void"),
         ("_kd_mutex_unlock_checked(struct kd_mutex *lock)", "int"),
         ("_kd_mutex_unlock(struct kd_mutex *lock)", "void"),
     ):
@@ -70,18 +72,15 @@ def production():
     for marker in (
         "static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)",
         "static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)",
+        "static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,",
         "void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,",
+        "void __kd_mutex_lock_clobber_v1(struct mutex *lock, unsigned long sp,",
         "void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,",
     ):
         code += definition(hook, marker)
-    # The address-less guest callback runs before either mutex hook. Exercise
-    # its production decision through rename/closing, not a target-or-ref model.
-    selectors = read_source((ROOT / "kernel_module/kd_main.c"))
-    for marker in (
-        "static bool kd_target_matches(void)",
-        "static int __is_kd_mutex_task(void)",
-    ):
-        code += definition(selectors, marker)
+    # The address-less callback must dispatch without target-name lookup.
+    selectors = read_source(ROOT / "kernel_module/kd_main.c")
+    code += definition(selectors, "static int kd_mutex_dispatch_enabled(void)")
     return code
 
 
@@ -163,13 +162,13 @@ def main():
             "if (!kd_mtx || !kd_mutex_task_get(current)) {",
             "if (!kd_mtx || (kd_mutex_task_get(current) && false)) {",
         ),
-        "selector-drops-retained-task": (
+        "unlock-drops-retained-task": (
             "kd_mutex_task_reroute(current)",
             "(false && kd_mutex_task_reroute(current))",
         ),
-        "selector-admits-closed-source": (
-            "kd_source_is_open() && kd_target_matches()",
-            "(kd_source_is_open() || true) && kd_target_matches()",
+        "hook-admits-closed-source": (
+            "!kd_source_is_open() ||",
+            "(false && !kd_source_is_open()) ||",
         ),
         "borrowed-unlock-bypasses-notification": (
             "if (kd_exec_native_unlock((unsigned long)lock, true))",

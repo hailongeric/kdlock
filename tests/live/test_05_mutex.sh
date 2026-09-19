@@ -16,14 +16,12 @@ run_mutex_mode() {
     load_modules "$TARGET_PROCESS" mutex_jit=0 || return 1
     start_daemon 2
 
-    # kd_hotlock_record() intentionally ignores the first 1e9 TSC cycles after
-    # the first observed lock. Prime that timer, then wait before the real
-    # workload; the workload must cross promotion while staying on the native path.
+    # Consecutive acquisitions open the CPU gate and then promote the lock.
+    # The workload must cross promotion while staying on the native path.
     run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 "$mode" >/dev/null 2>&1 || {
         fail "$TEST_NAME" "mode $mode warmup failed"
         stop_daemon; unload_modules; return 1
     }
-    sleep 1
 
     for i in $(seq 1 "$runs"); do
         info "  run $i/$runs..."

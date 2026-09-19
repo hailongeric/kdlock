@@ -21,7 +21,7 @@ run_spinlock_mode() {
     local exec_role_base=0
     local warmup_threads=1
     local promotion_threads=1
-    local promotion_loops=12000
+    local promotion_loops=48000
     local promotion_mode=$mode
     local registration_calls=0
     local nested_registration_role=0
@@ -105,7 +105,8 @@ run_spinlock_mode() {
     fi
     start_daemon 2
 
-    info "  Priming hot-lock timer..."
+    # Continue directly into promotion: elapsed idle time cannot warm a CPU.
+    info "  Preparing hot-lock workload..."
     run_with_timeout 10 "$BENCH_BIN" \
         "$warmup_threads" 1 1 1 "$mode" >/dev/null 2>&1 || {
         fail "$TEST_NAME" "mode $mode ($mode_name) warmup failed"
@@ -113,7 +114,6 @@ run_spinlock_mode() {
         unload_modules
         return 1
     }
-    sleep 1
 
     info "  Promoting and translating..."
     run_with_timeout 20 "$BENCH_BIN" \
@@ -190,6 +190,25 @@ run_spinlock_mode() {
             check_jit_hostcall_artifact "$asm_dir" "int_sqrt" || return 1
         fi
     done
+    # Artifact files precede upload, and the final-chunk log precedes its copy.
+    # Reuse the exact entry/TGID observer before launching any JIT waiter.
+    local publication_log="${DAEMON_LOG%.log}.published.json"
+    info "Evidence file: $publication_log"
+    if ! python3 - "$KDLOCK_DIR" "$publication_log" "${asm_dirs[@]}" <<'PY'
+import json
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(sys.argv[1]) / "tests/protocols"))
+from mutex_signal_protocol import wait_ready
+Path(sys.argv[2]).write_text(json.dumps(
+    [wait_ready(path, lock_kind=1) for path in sys.argv[3:]], indent=2) + "\n")
+PY
+    then
+        fail "$TEST_NAME" "spin JIT entries were not published before workload"
+        stop_daemon
+        unload_modules
+        return 1
+    fi
     check_dmesg_has "$JIT_INSTALL_PATTERN" \
         "mode $mode ($mode_name) did not write JIT code back" || {
         stop_daemon
@@ -210,15 +229,17 @@ run_spinlock_mode() {
         stop_daemon
     fi
 
+    # Short probes need their own CPU-local lock history after publication.
+    # Client preparation precedes the shared barrier and measured ioctl.
+    printf '1\n' > /sys/module/klock_module/parameters/cpu_frequency_prepare
     info "  Running translated workload..."
-    # Measure only the prepared payload, not promotion/translation. Keep the
-    # kernel witness/oracle gates: ioctl timings alone never establish JIT.
+    # Keep all kernel witness/oracle gates; timings alone never establish JIT.
     local workload_log="${DAEMON_LOG}.workload.log"
     info "Evidence file: $workload_log"
     info "Evidence file: ${workload_log}.before.dmesg"
     info "Evidence file: ${workload_log}.after.dmesg"
     dmesg > "${workload_log}.before.dmesg" || return 1
-    run_with_timeout "$TIMEOUT_SEC" env KD_TEST_METRICS=1 "$BENCH_BIN" \
+    run_with_timeout "$TIMEOUT_SEC" env KD_TEST_METRICS=1 KD_TEST_LOCAL_PREPARE=1 "$BENCH_BIN" \
         "$exec_threads" "$exec_loops" "$exec_workload" "$exec_syscount" \
         "$mode" "$exec_role_base" \
         >"$workload_log" 2>&1 || {

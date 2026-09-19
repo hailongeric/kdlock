@@ -131,14 +131,4 @@ struct orig_qspinlock {
 #define _Q_PENDING_LOOPS_HL 1
 #endif
 
-/*
- * Bitfields in the non-atomic socket_and_count value:
- * 0- 1: queue node index (always < 4)
- * 2-31: socket id
- */
-#define _Q_IDX_OFFSET 0
-#define _Q_IDX_BITS 2
-#define _Q_IDX_MASK _Q_SET_MASK_HL(IDX)
-#define _Q_NODE_OFFSET (_Q_IDX_OFFSET + _Q_IDX_BITS)
-
 #endif /* __QUEUED_SPINLOCK_INTERNAL_H__ */

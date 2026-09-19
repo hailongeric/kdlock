@@ -154,7 +154,7 @@ def capture(phase, out):
                     if (
                         0 <= offset < function["st_size"]
                         and linked.get_symbol(relocation["r_info_sym"]).name
-                        == "mutex_lock"
+                        in {"mutex_lock", "kd_mutex_lock_clobber_v1"}
                     ):
                         assert relocation["r_info_type"] in (2, 4)
                         calls.append(symbols[function.name] + offset + 4)

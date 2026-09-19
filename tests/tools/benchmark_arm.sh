@@ -39,7 +39,7 @@ if [ "$KD_BENCH_ARM" = jit ]; then
     start_daemon per-tgid --metrics
 fi
 python3 "$ROOT/tests/tools/paired_benchmark.py" arm warmup "$out"
-sleep 1
+# CPU admission requires frequency; do not expire the lock window by idling.
 python3 "$ROOT/tests/tools/paired_benchmark.py" arm promotion "$out"
 if [ "$KD_BENCH_ARM" = jit ]; then
     artifacts="$(wait_for_jit_artifact_count 1 30)"

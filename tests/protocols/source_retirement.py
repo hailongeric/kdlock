@@ -279,7 +279,7 @@ def lock_return_sites(symbols, published):
                     if (
                         0 <= offset < symbol["st_size"]
                         and linked.get_symbol(relocation["r_info_sym"]).name
-                        == "mutex_lock"
+                        in {"mutex_lock", "kd_mutex_lock_clobber_v1"}
                     ):
                         assert relocation["r_info_type"] in (2, 4), relocation.entry
                         calls.append(symbols[name] + offset + 4)

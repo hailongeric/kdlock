@@ -53,6 +53,12 @@ struct test_args {
 
 #define IOC_MAGIC 'k'
 #define IOC_RUN_TEST _IOW(IOC_MAGIC, 1, struct test_args)
+#define IOC_PREPARE_TEST _IOW(IOC_MAGIC, 2, struct test_args)
+
+/* Explicit protocol preparation; never enabled by performance drivers. */
+static bool cpu_frequency_prepare;
+module_param(cpu_frequency_prepare, bool, 0644);
+MODULE_PARM_DESC(cpu_frequency_prepare, "Prepare local CPU and lock frequency before short probes");
 
 #include "common/resume.inc"
 
@@ -95,11 +101,59 @@ struct test_args {
 #include "fragments/mutex_signal_workload.c"
 #include "fragments/mutex_parallel_workload.c"
 
+/* A one-shot probe cannot supply 10000 local lock observations. Once code
+ * is published, selected tests enable this native, empty-CS preparation. Use
+ * the actual lock and CPU but a non-target comm, so preparation cannot register
+ * entries, execute JIT, or change payload/register records. Migration pinning
+ * permits mutex sleep and ends before the original ioctl workload begins. */
+static void prepare_cpu_frequency(unsigned int mode)
+{
+	char comm[TASK_COMM_LEN];
+	spinlock_t *spin = NULL;
+	struct mutex *mutex = NULL;
+	unsigned int i;
+
+	if (!cpu_frequency_prepare)
+		return;
+	if (mode == MODE_SPIN_CONTENTION || mode == MODE_SPIN_API_IN_LOCK)
+		spin = &global_lock;
+	else if (mode == MODE_MUTEX_CONTENTION)
+		mutex = &global_mutex;
+	else if (mode == MODE_SPIN_NESTED || mode == MODE_SPIN_DEEP_NESTED ||
+		 mode == MODE_SPIN_OOO_NESTED)
+		spin = &nested_lock_a;
+	else
+		return;
+	get_task_comm(comm, current);
+	kd_test_rename("kd_cpu_prepare");
+	migrate_disable();
+	/* Four batches cover a stale CPU block, reopen, and a full local window.
+	 * No sampler internals or forced promotion interfaces are used. */
+	for (i = 0; i < 40960; i++) {
+		if (spin) {
+			spin_lock(spin);
+			spin_unlock(spin);
+		} else {
+			mutex_lock(mutex);
+			mutex_unlock(mutex);
+		}
+	}
+	migrate_enable();
+	kd_test_rename(comm);
+}
+
 static long my_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	struct test_args k_args;
 
 	switch (cmd) {
+	case IOC_PREPARE_TEST:
+		if (!cpu_frequency_prepare)
+			return -EACCES;
+		if (copy_from_user(&k_args, (void __user *)arg, sizeof(k_args)))
+			return -EFAULT;
+		prepare_cpu_frequency(k_args.mode);
+		return 0;
 	case IOC_RUN_TEST:
 		if (copy_from_user(&k_args, (void __user *)arg, sizeof(k_args)))
 			return -EFAULT;

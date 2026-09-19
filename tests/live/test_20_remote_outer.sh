@@ -40,7 +40,6 @@ PY
     test "$(cat /sys/module/klock_module/parameters/spin_multi_roots)" = Y
     start_daemon 2
     run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 8 2 > "$out/warmup.log"
-    sleep 1
     run_with_timeout 30 "$BENCH_BIN" 1 12000 1 1 8 2 > "$out/promotion.log"
     for role in 7 11; do
         run_with_timeout 30 "$BENCH_BIN" 1 12001 1 1 8 "$role" >> "$out/promotion.log"
@@ -224,10 +223,9 @@ insmod "$KLOCK_DIR/klock_module.ko" native_resume_stage="$resume_stage"
 test "$(cat /sys/module/kdlock_km/parameters/mutex_jit)" = 1
 start_daemon 2
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 1 > "$out/warmup.log"
-sleep 1
 run_with_timeout 30 "$BENCH_BIN" 1 12000 10 1 1 > "$out/promotion.log"
 if test "$depth" = 3; then
-    # Global warmup is over: a pause after C's first sample marks it cold.
+    # Keep C's samples consecutive within its own fixed observation window.
     run_with_timeout 30 "$BENCH_BIN" 1 12001 10 1 8 11 > "$out/c-promotion.log"
 fi
 for role in 0 2 4; do

@@ -45,6 +45,8 @@
    2026-09-15 用户在直接调用补丁草案后要求继续优化并定位耗时，已授权本轮
    spin hook 独立实验内核的构建、启动和验证。保留原内核及捕获基线；实验
    使用独立源码/build、release 和基线，不将这次授权扩展为任意内核改动。
+   2026-09-19 用户进一步授权本轮普通 mutex caller-clobber；从 `kdclobber1`
+   派生独立 `kdclobber2`，保留旧内核、基线与缓解/帧指针配置。
 5. 不扩展两元素 wrapper 输入 ABI，不恢复已删除的 futex 执行入口。
 6. 提交前核对差异、测试证据和文档。仅在用户要求时提交 Git；不能把历史
    结果记为本次重跑，也不能把未通过的主功能写成已完成。
@@ -76,10 +78,13 @@
 | 只读离线归档校验 | 宿主机或 guest；不执行用例或访问 JIT 设备 |
 | 编译、单元测试、模块、daemon、benchmark | guest `/root/host_fs/kdlock` |
 | SSH | `root@127.0.0.1:2222` |
-| 当前普通 spin 实验源码/build | `/root/linux-6.1.159-kdclobber1`；原 `/root/linux-6.1.159` 和 `kdstatic2` 基线保留 |
+| 当前默认内核源码/build | `/root/linux-6.1.159-kdclobber2`；原 `/root/linux-6.1.159` 和 `kdstatic2` 基线保留 |
 | QEMU 脚本 | 宿主机 `/home/eric/vm/qemu-scripts/run_vm.sh` |
 
 不要在宿主机执行 make、模块加载、daemon 或 benchmark。
+当前 provider 要求 spin 与 mutex 两组 clobber v1 接口，不再自动支持旧内核；旧树仅用于恢复和
+对应历史源码的重现。普通 mutex 的接入在独立 `kdclobber2` 中构建和验证，`kdclobber1` 及其捕获基线保留。
+新 build 实际位于 `/mnt/kdlock-builds/` 辅助盘，`/root/linux-6.1.159-kdclobber2` 为链接。
 normal 模式用 9p 共享源码，不需要同步；recovery 模式同一路径是 guest ext4，
 不会自动同步。比较单文件 SHA256，只 scp 变化文件，必要时先建对应子目录。
 禁止移动、递归覆盖或清空 `/root/host_fs`；避免两侧同时编辑。
@@ -90,8 +95,8 @@ normal 模式用 9p 共享源码，不需要同步；recovery 模式同一路径
 ```sh
 cd /root/host_fs/kdlock
 python3 bench/spin_cacheline/kernel_identity.py \
-  --kernel-source /root/linux-6.1.159-kdclobber1 \
-  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919
 ```
 
 按实际运行内核选择对应 source/build/baseline；原 `6.1.159` 的核验命令见

@@ -47,6 +47,8 @@ static struct list_head kd_native_frames;
 static int kd_native_lock, borrowed, published, unlocked, nested_jit;
 static int failures, checks;
 static unsigned long raw_spin_lock_addr = 0x100, raw_spin_unlock_addr = 0x200;
+static unsigned long clobber_spin_lock_addr = 0x110, clobber_spin_unlock_addr = 0x210;
+static unsigned long clobber_mutex_lock_addr = 0x310, clobber_mutex_unlock_addr = 0x410;
 static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;
 static struct mutex a, b;
 static struct task_struct native_peer = { .pid = 13 }, *nested_owner;

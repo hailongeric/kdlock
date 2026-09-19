@@ -42,6 +42,12 @@ int kd_mutex_init_percpu(void)
 {
 	int i, j;
 
+	/* Per-CPU alignment alone does not isolate the four array elements. */
+	BUILD_BUG_ON(__alignof__(struct kd_mutex_node) < L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_mutex_node) != 4 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != L1_CACHE_BYTES + 1);
+
 	atomic64_set(&kd_mutex_slowpath_count, 0);
 	atomic64_set(&kd_mutex_combiner_count, 0);
 	atomic64_set(&kd_mutex_handoff_count, 0);

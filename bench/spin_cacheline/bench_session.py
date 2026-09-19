@@ -164,8 +164,8 @@ class Session:
         else:
             require(not Path("/sys/module/kdlock_km").exists(), "native arm has kdlock loaded")
         self.phase("warmup", 1)
-        time.sleep(1)  # Existing global TSC discovery warmup, equal in both arms.
-        self.phase("promotion", 12000)
+        # CPU admission is frequency-based; keep lock samples consecutive.
+        self.phase("promotion", 48000)
         if self.loaded_kd:
             deadline = time.monotonic() + 90
             while True:

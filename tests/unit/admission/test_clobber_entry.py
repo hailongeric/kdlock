@@ -37,8 +37,31 @@ class ClobberEntryTests(unittest.TestCase):
         # One arm fails to define RAX: cannot authorize the joined store.
         self.assertEqual(self.generate('48833c2400740748c7c00100000048890424c3')[2],2)
 
-    def test_clobber_contract_is_spin_only(self):
-        self.assertEqual(render('c3',abi=1,lock_kind='mutex',return_status=True,muted=True)[2],2)
+    def test_contract_identity_matches_backend(self):
+        mutex_symbols = {"kd_mutex_lock_clobber_v1": 0x5000,
+                         "kd_mutex_unlock_clobber_v1": 0x6000}
+        for abi, kind, expected in ((1, 'mutex', 2), (2, 'spin', 2), (2, 'mutex', 0)):
+            self.assertEqual(render('c3', abi=abi, lock_kind=kind,
+                                    kernel_symbols=SYMBOLS | mutex_symbols,
+                                    return_status=True, muted=True)[2], expected)
+        for code in ('488b45f848890424c3', '48890424c3'):
+            self.assertEqual(render(code, abi=2, lock_kind='mutex',
+                                    kernel_symbols=mutex_symbols, return_status=True,
+                                    muted=True)[2], 0 if code.startswith('488b45') else 2)
+
+    def test_mutex_clobber_cannot_use_spin_word_memory_summary(self):
+        tracker = FlowConstants(EntryGuards())
+        tracker.update(decode('48bc0030000000000000'))
+        tracker.update(decode('48bf0020000000000000'))
+        pointer = ExprInt(0x4000, 64)
+        tracker.memory.store([({pointer}, {ExprInt(0x12345678, 64)}, 64)])
+        call = decode('e800000000')
+        tracker.control_calls.add(id(call))
+        tracker.clobber_calls.add(id(call))
+        tracker.mutex_calls.add(id(call))
+        tracker.update(call)
+        self.assertNotEqual(tracker.memory.load(ExprMem(pointer, 64)),
+                            (ExprInt(0x12345678, 64),))
 
     def test_new_control_drops_saved_register_facts(self):
         for new_contract in (False, True):
@@ -72,6 +95,68 @@ class ClobberEntryTests(unittest.TestCase):
             tracker.update(call)
             values = tracker.memory.load(ExprMem(pointer, 64))
             self.assertEqual(values == (ExprInt(0x12345678, 64),), not aliased)
+
+    def test_checked_mutex_preserves_late_entry_spill_with_range_guard(self):
+        tracker = FlowConstants(EntryGuards(), entry_spill_guards=True,
+                                mutex_stack_bytes=256)
+        call = decode('e800000000')
+        tracker.control_calls.add(id(call))
+        tracker.clobber_calls.add(id(call))
+        tracker.mutex_calls.add(id(call))
+        tracker.update(call)
+        tracker.update(decode('488b7df8'))
+        self.assertTrue(str(tracker.origins[ExprId('RDI', 64)]).startswith('kd_entry_SPILL_'))
+        self.assertTrue(tracker.memory.guards.checked_windows)
+        # Unknown callee or store on either incoming path must still block
+        # recreation of an entry identity after the join.
+        before = tracker.snapshot()
+        tracker.memory.clobber()
+        blocked = tracker.snapshot()
+        tracker.restore(tracker.merge_state(before, blocked))
+        tracker.update(decode('488b75f0'))
+        self.assertNotIn(ExprId('RSI', 64), tracker.origins)
+
+    def test_checked_mutex_windows_intersect_at_cfg_join(self):
+        tracker = FlowConstants(EntryGuards(), entry_spill_guards=True)
+        sp = tracker.origins[ExprId('RSP', 64)]
+        clean = tracker.snapshot()
+        tracker.memory.clobber(checked_windows=(sp,), window_bytes=256)
+        first = tracker.snapshot()
+        tracker.restore(clean)
+        tracker.memory.clobber(checked_windows=(sp + ExprInt(16, 64),), window_bytes=256)
+        second = tracker.snapshot()
+        tracker.restore(tracker.merge_state(first, second))
+        tracker.update(decode('488b7df8'))
+        guards = tracker.memory.guards
+        # Slot BP-8 must belong to both checked windows, including all bytes.
+        for delta, accepted in ((8, False), (24, True), (256, True), (264, False)):
+            registers = {'RSP': 0x1000, 'RBP': 0x1000 + delta}
+            self.assertEqual(guards.accepts(registers, {registers['RBP']-8: 0x7000}), accepted)
+
+    def test_checked_window_history_is_bounded_and_opaque_is_sticky(self):
+        tracker = FlowConstants(EntryGuards(), entry_spill_guards=True)
+        sp = tracker.origins[ExprId('RSP', 64)]
+        for offset in range(65):
+            tracker.memory.clobber(checked_windows=(sp + ExprInt(offset, 64),), window_bytes=256)
+        self.assertTrue(tracker.memory.entry_spills_blocked)
+        self.assertFalse(tracker.memory.checked_spill_windows)
+        tracker.memory.clobber(checked_windows=(sp,), window_bytes=256)
+        self.assertTrue(tracker.memory.entry_spills_blocked)
+        self.assertFalse(tracker.memory.checked_spill_windows)
+
+    def test_machine_code_checked_window_guard_covers_entire_word(self):
+        guards = EntryGuards()
+        bp, sp = ExprId('kd_entry_RBP', 64), ExprId('kd_entry_RSP', 64)
+        self.assertTrue(guards.inside_checked_window((bp, -8), (sp, 0), 8, 256))
+        output = StringIO()
+        guards.emit(output, 0x1000)
+        assembly = (output.getvalue() + '\nMOV Stack_JIT_WITNESS, 1\nMOV R14, 0x2000\nMOV Stack_IJ, 1\nJMP exit\n').encode()
+        for offset in (0, 8, 256, 257, 264):
+            expected = 1 if 8 <= offset <= 256 else 6
+            def initialize(regs, stack):
+                regs[4] = regs[19] + offset
+            _, args = run_image(assembly, [0x1000], initialize)[0]
+            self.assertEqual(args, [expected, int(expected == 1)])
 
     def test_initial_spill_identity_requires_an_untouched_slot(self):
         for overwritten in (False, True):

@@ -15,14 +15,26 @@
 环境准备与恢复快照遵循 [操作手册](../../docs/AGENTS.md)；编译、单元测试及
 模块运行都只在 recovery guest `/root/host_fs/kdlock` 中进行。
 
-## 最新对比
+## 冻结性能结果
 
-[9/19 Linux/TCLock/kdlock 对照](../tclock_compare/results/20260919-state-access.md)
-是当前成绩入口：clobber ABI 下 90 场对照及 30 场长批次单线程检查全部正确排空。
-20 线程、1/16 cacheline 的 kdlock 中位吞吐为 2.965/2.904 Mops/s，实际 JIT
-约 99.8%；4 线程仍明显落后。三方使用同一 caller，分别报告吞吐、代理比例和波动。
-已有日志复算显示四线程平均每批约 2 个 JIT 正文、二十线程约 554/603 个，
-见[批长分析](../tclock_compare/results/20260919-state-access.md#batch-length)。
+当前本地发现版本仅有[36 场采样组件对照](../hotlock_record/results/20260919-local-discovery.md)，
+尚未重测完整 spinlock 吞吐及 JIT 比例。以下完整操作数据属于此前冻结版本。
+
+[热锁批量采样](../hotlock_record/results/20260919-batched.md)完成 90 场采样函数
+和 40 场完整操作对照：20 线程稳态 −0.41%/+1.14%，JIT 约 99.7%；主要收益
+在热锁发现和未晋升路径，不能将组件降本折算为完整 spinlock 加速比。
+
+上一轮 [node/gate 缓存行隔离](results/20260919-cacheline-isolation.md)把 node 通知
+分至第二行、gate 步长改为 64B。40 场旧/新交替对照全部通过：20 线程提高
+6.55%/7.56%，4 线程下降 6.49%/5.91%（1/16 cacheline），没有重测三方倍率。
+
+[9/19 五档线程三方对照](../tclock_compare/results/20260919-thread-scaling.md)
+是隔离前最后一次完整三方基线：clobber ABI、1/4/8/16/20 线程的 150 场全部正确排空。
+20 线程、1/16 cacheline 的 kdlock 中位吞吐为 2.990/2.894 Mops/s；16/20 线程
+实际 JIT 超过 99%，4 线程仍明显落后。三方共用 caller，分别报告吞吐、代理
+比例和波动；结果页同时给出批长与 node/gate 等对象的伪共享审计。
+此前[长批次单线程成本](../tclock_compare/results/20260919-state-access.md#单线程长批次)
+保留独立证据，本轮未重测。
 
 | 历史对照 | 用途 |
 | --- | --- |
@@ -40,20 +52,8 @@
 
 <a id="source-organization"></a>
 
-## 代码整理回归（2026-09-15）
-
-以下是增加锁外计算前的历史回归。拆分运行器与内核私有组件后，在同一
-`6.1.159-kdstatic2` recovery guest
-验证 `--cachelines 1 16 --threads 1 4 --cpus 0-3 --iterations 100000 --repeats 2`：
-**16/16 会话完成、数据校验和排空通过**，共 4,000,000 次临界区操作。
-8 个原生会话、4 个单线程 NO_JIT 会话、4 个多线程实际 JIT 会话；测量期
-正文合计 1,081,670 次。最长测量批次 1.261 秒，watchdog 保持不变。
-此轮用于验证代码组织和运行流程，没有运行 24 线程，也没有替代下文的完整扫描。
-
-源码冻结包含 176 个输入文件，其中 44 个 `.inc` 分别属于生产源码和专用
-provider 副本；4 个二进制与生成物哈希均已核对。原始结果在
-`/tmp/kdlock-organization-bench-20260915`，归档及收尾检查说明见
-[tests/README.md](../../tests/README.md#source-organization)。本次不据此宣称性能变化。
+旧阶段的代码整理回归（2026-09-15）已收录在[历史索引](results/HISTORY.md#source-organization)；
+当时的内核和源码冻结不适用于当前运行命令。
 
 ## 默认实验
 
@@ -92,7 +92,7 @@ sleep/yield、额外自旋等待或定期信号轮询。进入循环后执行完
 ```sh
 cd /root/host_fs/kdlock
 export LC_ALL=C
-export KDIR=/root/linux-6.1.159-kdclobber1
+export KDIR=/root/linux-6.1.159-kdclobber2
 make -C bench/spin_cacheline all test
 
 # 只预览参数和配对顺序；不构建、不加载、不创建结果目录。
@@ -103,7 +103,7 @@ export KDLOCK_RECOVERY_CONFIRMED=1
 export KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915
 timeout 3600s python3 bench/spin_cacheline/run.py \
   --kernel-source "$KDIR" \
-  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
   --output /root/kdlock-evidence/spin-cacheline-new
 ```
 
@@ -114,184 +114,8 @@ timeout 3600s python3 bench/spin_cacheline/run.py \
 
 <a id="rerun-100k-no24"></a>
 
-### 2026-09-15：每线程十万次完整重跑（不含 24 线程）
-
-本节保留当时**尚无锁外乘加、采用配对比值中位数**的结果；不是当前负载的成绩。
-当前的最佳值/中位数口径见[结果解释](#结果解释)，旧归档不覆盖或重新标记。
-
-用户确认后，将每线程批次由 1,000,000 次缩短为 **100,000 次**，在正常排空、
-保存上次故障证据后，重启到同一 `6.1.159-kdstatic2` 实验内核。
-Build ID 为 `460d77502af4709a0cca794b322cedc20c2cc478`，临界区、一次 ioctl
-批量抢锁、watchdog 和内核配置均保持不变。以下结果来自新的完整扫描，
-不混入此前百万次批次的部分结果。
-
-```sh
-# recovery guest；先从宿主 monitor 确认恢复快照，宿主 SSH 外层限时 4000 秒。
-LC_ALL=C KDLOCK_RECOVERY_CONFIRMED=1 \
-KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 timeout 3900s \
-  python3 bench/spin_cacheline/run.py \
-  --kernel-source /root/linux-6.1.159-kdstatic2 \
-  --kernel-baseline /root/kdlock-kernel-baselines/spin-static2-20260915 \
-  --cachelines 1 2 4 8 16 --threads 1 4 8 12 16 20 --cpus 0-19 \
-  --iterations 100000 --repeats 2 \
-  --output /tmp/spin-cacheline-no24-100k-20260915
-```
-
-**30 个配置、60 对、120/120 个会话完成并通过校验**，共完成
-**122,000,000 次临界区操作**。60 个原生会话、10 个单线程 NO_JIT 会话、
-50 个多线程实际 JIT 会话；测量期正文计数合计 **58,787,194** 次。
-五种 cacheline 规模均获得有效的测量期实际 JIT 证据。所有 worker 固定在
-guest CPU 0–19、NUMA 节点 0，未运行 24 线程。
-
-下面吞吐量单位为 **百万次完整临界区/秒（Mops/s）**，是全部线程的总吞吐。
-原生与 kdlock 吞吐各取两个会话的中位数；吞吐比取两对 kdlock/原生比值的
-中位数，JIT 占比也取两个测量会话的中位数。只做两对，不宣称统计显著性。
-
-| cacheline | 线程 | 原生 Mops/s | kdlock Mops/s | 配对吞吐比 | JIT 占比 |
-| ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 1 | 11.923 | 8.421 | 0.7064 | 0.00% |
-| 1 | 4 | 3.088 | 0.462 | 0.1498 | 77.41% |
-| 1 | 8 | 3.365 | 0.359 | 0.1068 | 99.46% |
-| 1 | 12 | 3.255 | 0.363 | 0.1116 | 99.71% |
-| 1 | 16 | 3.479 | 0.369 | 0.1059 | 99.81% |
-| 1 | 20 | 3.293 | 0.369 | 0.1119 | 99.82% |
-| 2 | 1 | 11.419 | 8.598 | 0.7559 | 0.00% |
-| 2 | 4 | 2.905 | 0.426 | 0.1463 | 74.55% |
-| 2 | 8 | 3.021 | 0.364 | 0.1207 | 99.54% |
-| 2 | 12 | 2.849 | 0.368 | 0.1291 | 99.78% |
-| 2 | 16 | 3.006 | 0.373 | 0.1240 | 99.78% |
-| 2 | 20 | 2.854 | 0.374 | 0.1309 | 99.87% |
-| 4 | 1 | 12.231 | 8.766 | 0.7181 | 0.00% |
-| 4 | 4 | 2.642 | 0.367 | 0.1388 | 68.04% |
-| 4 | 8 | 2.718 | 0.366 | 0.1347 | 99.68% |
-| 4 | 12 | 2.591 | 0.375 | 0.1448 | 99.83% |
-| 4 | 16 | 2.770 | 0.373 | 0.1347 | 99.75% |
-| 4 | 20 | 2.663 | 0.377 | 0.1417 | 99.84% |
-| 8 | 1 | 10.704 | 7.729 | 0.7246 | 0.00% |
-| 8 | 4 | 2.423 | 0.445 | 0.1834 | 75.97% |
-| 8 | 8 | 2.351 | 0.369 | 0.1570 | 99.39% |
-| 8 | 12 | 2.339 | 0.371 | 0.1586 | 99.75% |
-| 8 | 16 | 2.430 | 0.375 | 0.1545 | 99.68% |
-| 8 | 20 | 2.308 | 0.375 | 0.1628 | 99.82% |
-| 16 | 1 | 10.415 | 13.207 | 1.3356 | 0.00% |
-| 16 | 4 | 2.017 | 0.330 | 0.1635 | 70.03% |
-| 16 | 8 | 1.923 | 0.378 | 0.1966 | 99.50% |
-| 16 | 12 | 1.932 | 0.364 | 0.1882 | 99.73% |
-| 16 | 16 | 1.969 | 0.371 | 0.1886 | 99.76% |
-| 16 | 20 | 1.972 | 0.374 | 0.1895 | 99.80% |
-
-单线程均为 **NO_JIT、JIT 占比 0**。1/2/4/8 条 cacheline 的单线程 kdlock
-吞吐为原生的 70.6%–75.6%，仍有开销差距。
-16 条 cacheline 的单线程两对比值分别为 **0.6081、2.0631**；
-kdlock 两次 wall 时间分别为 14.451、5.130 ms，原生为 8.787、10.583 ms，
-波动明显。原始有效样本全部保留；不能由其中位数 1.3356 认定稳定性能提升，
-这些批次边界时间也不能单独确定波动来自哪个函数。本次多线程吞吐比为
-**0.1059–0.1966**，kdlock 仍明显慢于原生。
-缩短批次解决了本次扫描的持续占用时间问题，没有改变锁算法；实际 JIT 发生
-不代表性能提升。该环境为虚拟机，不宣称宿主物理核独占，也不把吞吐比当作
-锁等待概率或持有线程切换次数。
-
-最长测量批次为 **5.44 秒**，全程未出现 watchdog、
-kernel fault 或数据错误。每会话均确认 worker/请求排空，kdlock 正常 retire
-到 state=2、modules/frames/writers=0，再正常卸载；结束后再次确认 guest 空闲、
-内核身份和冻结源码一致。`watchdog_thresh=10`、`soft_watchdog=1` 未改动。
-原始 CSV 同时保留摊销 ns/op 和线程 CPU 时间；ns/op 是整批 wall 时间除以
-完成次数，不是单次获取锁延迟。时钟只在批次边界读取。
-
-guest 原始目录为 `/tmp/spin-cacheline-no24-100k-20260915`；宿主可读副本位于
-`/tmp/spin-cacheline-no24-100k-evidence-20260915/`，其中同名子目录提供
-[汇总 CSV](/tmp/spin-cacheline-no24-100k-evidence-20260915/spin-cacheline-no24-100k-20260915/summary.csv)、
-[逐会话 CSV](/tmp/spin-cacheline-no24-100k-evidence-20260915/spin-cacheline-no24-100k-20260915/raw.csv) 和
-[逐对 CSV](/tmp/spin-cacheline-no24-100k-evidence-20260915/spin-cacheline-no24-100k-20260915/pairs.csv)。离线核对了 127 个冻结输入、
-4 个二进制、全部计数器差值/聚合/配对，以及 240 次生成物哈希；
-离线核对只证明已保存文件的一致性，运行和排空另有 guest 原始记录。
-
-归档 `/tmp/spin-cacheline-no24-100k-20260915.tar.gz` 保存 3859 个普通文件，
-包括源码/二进制、原始会话、生成物、日志、重启/快照记录和最终排空检查。
-SHA256：
-
-```text
-7cf0995137e6014eb5a6f6c92968fa861307acdd3a80ce1fb36919003ee488f5
-```
-
-本结果段落在扫描结束后补写，归档中的 README 是运行前的冻结版本。
-
-### 百万次批次：实际命令（故障后停止）
-
-2026-09-15 首次批次选择 **1、4、8、12、16、20 线程**，CPU 0–19，全部位于当前
-guest 的节点 0。五种 cacheline 规模，每线程 1,000,000 次，每点两对，合计
-**30 个配置、60 对、120 个会话**。沿用上一轮优化的独立实验内核：
-
-**此百万次扫描未完成**：12 线程的 kdlock 长批次触发 watchdog，运行器已停止。
-以下保留实际使用的命令，不能把百万次批次视为高线程档的已验证配置。
-
-```sh
-# recovery guest；快照须已经从宿主 monitor 实际确认。
-LC_ALL=C KDLOCK_RECOVERY_CONFIRMED=1 \
-KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 timeout 3900s \
-  python3 bench/spin_cacheline/run.py \
-  --kernel-source /root/linux-6.1.159-kdstatic2 \
-  --kernel-baseline /root/kdlock-kernel-baselines/spin-static2-20260915 \
-  --cachelines 1 2 4 8 16 --threads 1 4 8 12 16 20 --cpus 0-19 \
-  --iterations 1000000 --repeats 2 \
-  --output /tmp/spin-cacheline-no24-20260915
-```
-
-宿主 SSH 外层时限设为 4000 秒。追加 `--dry-run` 可检查本次 120 会话计划；
-这次显式排除 24 线程，不更改运行器支持的线程档位。
-
-### 百万次批次：保留的失败结果
-
-计划 120 个会话，实际 **13 个通过、1 个 KERNEL_FAULT、106 个 NOT_RUN**。
-24 线程不在计划中，也未执行。此前通过的会话共完成 64,000,000 次操作，
-其中 7 个原生会话、2 个单线程 NO_JIT、4 个实际 JIT 会话；有效配对 6 对，
-测量期 JIT 正文合计 21,116,765 次。完整配对都属于 1 条 cacheline：
-
-| 线程 | 原生摊销 ns/op | kdlock 摊销 ns/op | 配对吞吐比中位数 | 测量期 JIT 次数 |
-| --- | ---: | ---: | ---: | ---: |
-| 1 | 38.59 | 50.57 | 0.7631 | 0（NO_JIT） |
-| 4 | 286.37 | 3001.74 | 0.0954 | 5,151,572 |
-| 8 | 281.31 | 2759.34 | 0.1020 | 15,965,193 |
-
-第 14 个会话 `c01-t12-r00-kdlock` 在测量期报告：
-
-```text
-watchdog: BUG: soft lockup - CPU#0 stuck for 25s! [sc_worker:23888]
-```
-
-CPU 0–11 均出现同类报告；等待线程的 RIP 位于
-`__kd_spin_lock_longjmp+0xc8/+0xcc`，另一个 CPU 位于生成代码。
-实际内核 `watchdog_thresh=10`，soft-lockup 阈值按该源码为其两倍；
-`soft_watchdog=1`、`softlockup_panic=0`。这一批 12,000,000 次操作耗时
-**32.62 秒**。证据指向百万次长批次在 voluntary 内核中持续占用 CPU，
-使 watchdog 线程迟迟得不到调度；并非 syscall 次数过多。
-
-客户端最终返回，所有线程各完成 1,000,000 次、数据差值正确；这不取消
-KERNEL_FAULT，也不生成该会话的有效性能比。诊断时已无 worker/daemon，
-active/frame/writer 为零，计数稳定；随后正常 retire 到 state=2、
-modules/frame/writer 全零，再按顺序卸载两个模块。未强制卸载、未关闭 watchdog、
-未在热循环加入让出或延时。运行器的原始失败状态保留，未自动重试。
-
-1 条 cacheline 的 JIT 已有本次证据；2/4/8/16 条 cacheline 尚未运行，
-本轮仍为 UNVERIFIED。12 线程仅有一个有效原生会话，缺少有效 kdlock 配对；
-16/20 线程未执行，不能称为完整扫描通过。此后经用户确认，已用新目录完成
-[每线程 100,000 次的独立扫描](#rerun-100k-no24)；两次结果不合并。
-
-guest 故障时的原始目录为 `/tmp/spin-cacheline-no24-20260915`，诊断目录为
-`/tmp/spin-cacheline-no24-fault-20260915`；已在重启前归档，guest 的这些临时
-目录随重启清理。宿主可读结果、CSV 及部分扫描离线
-校验位于 `/tmp/spin-cacheline-no24-evidence-20260915/`。
-归档 `spin-cacheline-no24-failed-20260915.tar.gz` 保存 610 个普通文件，包括
-全部已获得的冻结源码/二进制、命令、原始 JSON/CSV、生成物、故障日志和清理
-记录，SHA256：
-
-```text
-4760ac4e8f132bd40f17c86ac2362f7e86b0f371a2ef3b791e0d3a7ff2a1fb05
-```
-
-离线检查覆盖 127 个冻结输入、有效会话数据和配对、24 次生成物哈希核对，
-失败与未运行项保持原分类。正文循环和生产实现本轮没有改动；此结果段落在
-扫描停止后补写，归档中的 README 是运行前的冻结版本。
+旧阶段的十万次重跑与百万次失败记录已收录在[历史索引](results/HISTORY.md#rerun-100k-no24)；
+当时的内核和源码冻结不适用于当前运行命令。
 
 ### 构建产物和单点选择
 
@@ -640,32 +464,8 @@ timeout 60s scp -r -P 2222 \
 
 <a id="assembly-validation"></a>
 
-#### 按临界区去重的验证
-
-定向检查入口为 `test_assembly.py`，覆盖跨线程/轮次合并、代码文件不重复写入、
-不同内容保留、RIP/TGID 匹配、未排空会话不读取 workspace、损坏产物拒绝、
-新旧发布哈希及原始证据不变性。只在 recovery guest 运行：
-
-```sh
-cd /root/host_fs/kdlock
-timeout 30s python3 bench/spin_cacheline/test_assembly.py
-```
-
-2026-09-15 的历史[锁外乘加完整扫描](results/HISTORY.md#20260915-post-work)的 60 个 kdlock 会话
-对应五种临界区；每种规模的 12 份原生/JIT 汇编均逐字节相同，可合并为五组、
-15 份汇编文件。原始 50 个 JIT、10 个 NO_JIT 会话的运行结果仍分别保留。
-
-2026-09-15 在 recovery guest 完成上述 7 项检查，并从该次扫描重新导出去重
-副本。每组代码与全部 12 个来源逐文件一致；原始结果的 3889 个普通文件和源码
-冻结清单保持不变，没有重新运行性能负载。验证日志位于
-`/tmp/kdlock-assembly-grouping-20260915/guest-checks/unit.log`，同目录的
-`verification.json` 记录去重数量、来源及哈希核对结果。
-
-当前宿主机的[临界区索引](../.tmp/spin_cacheline/spin-cacheline-best-post-work-20260915-77_wqtnu/README.md)
-只列 `sc_body_1`、`sc_body_2`、`sc_body_4`、`sc_body_8`、`sc_body_16` 五组。
-此前按线程分目录的重复副本已移到 `bench/` 外的临时备份，`.tmp` 查看目录中
-只保留这五组。查看副本由 Git 忽略，不随提交或克隆分发；清理后可从保留的原始
-结果用上述命令重新生成。
+旧阶段的按临界区去重的验证已收录在[历史索引](results/HISTORY.md#assembly-validation)；
+当时的内核和源码冻结不适用于当前运行命令。
 
 ### 单线程为什么仍有 kdlock 开销
 
@@ -723,13 +523,13 @@ lock/unlock 回调，不做 selector、缓存或 JIT。旧三组仍使用原安�
 
 ### 独立内核实验与热点采样
 
-脚本默认参数仍指向原捕获内核，当前 `kdclobber1` 必须显式选择自己的源码和
-基线；普通扫描、调用成本对照和采样入口均支持以下参数。原
+脚本默认参数已指向 `kdclobber2` 源码和独立捕获基线；普通扫描、调用成本
+对照和采样入口也可显式传入以下参数，仍执行相同的身份校验。原
 [spin_static](../../kernel_experiments/spin_static/README.md) 基线保留作历史对照。
 
 ```sh
---kernel-source /root/linux-6.1.159-kdclobber1 \
---kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918
+--kernel-source /root/linux-6.1.159-kdclobber2 \
+--kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919
 ```
 
 检查仍覆盖配置、命名源码、构建产物及 live Build ID。每份输出保存所选基线；
@@ -742,8 +542,8 @@ lock/unlock 回调，不做 selector、缓存或 JIT。旧三组仍使用原安�
 ```sh
 LC_ALL=C KDLOCK_RECOVERY_CONFIRMED=1 timeout 240s \
   python3 bench/spin_cacheline/profile.py \
-  --kernel-source /root/linux-6.1.159-kdclobber1 \
-  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918 \
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
   --perf /root/kdlock-tools/perf-6.1.159/perf \
   --arm kdlock --threads 1 --cachelines 1 --iterations 100000000 \
   --output /tmp/spin-profile-new
@@ -781,7 +581,7 @@ mutex、NUMA 策略、访问时 guard、flags 修复或其他延期正确性功�
 
 ## Caller-clobber 对照入口
 
-`clobber_compare.py` 在同一 `kdclobber1` 内核上构建两份 workload：默认新调用者
+`clobber_compare.py` 在同一 `kdclobber2` 内核上构建两份 workload：默认新调用者
 和 `KCFLAGS=-DKD_SPIN_LEGACY_CALLER` 旧调用者。每份分别运行 native/kdlock，
 每配置五轮，奇数轮逆序；默认覆盖 1/16 cacheline × 1/4/20 线程。
 单线程 native 两组用于观察新增调用者保存及桥接成本，不能把该差值解释为纯
@@ -790,8 +590,8 @@ spill 周期。每组保存调用者反汇编，保持原 payload、锁外运算
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/spin_cacheline/clobber_compare.py \
-  --kernel-source /root/linux-6.1.159-kdclobber1 \
-  --kernel-baseline /root/kdlock-kernel-baselines/spin-clobber1-20260918 \
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
   --output /root/kdlock-evidence/clobber-new/compare
 ```
 
@@ -806,3 +606,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 改造前的[caller-clobber v1 对照](results/20260918-clobber-v1.md)保留为历史数据。
 两轮采用相同五轮中位数口径，但没有交替执行两个 provider 版本，不能据此独立
 归因。结构性状态搬运减少不等于完整操作必然提速。
+
+当前热锁采样按 CPU 独立发现，准备阶段已改为单 CPU 连续 48000 次；其余
+测量 CPU 仍可能在测量中建立自己的频率和锁历史。旧冻结版本的成绩保留为
+历史结果。本轮没有重新验证完整操作吞吐或 99% JIT，后续对照必须同时报告
+实际 JIT 比例，不能将减少代理覆盖误当作提速。

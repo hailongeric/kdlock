@@ -11,7 +11,10 @@
  * A pointer proves map membership, never current ownership of Linux L.
  */
 struct kd_spin_gate {
-	struct orig_qspinlock word;
+	/* Align each gate, not just the table: unrelated locks must never share
+	 * the cache line containing their independently modified scheduling words.
+	 * Member alignment also rounds the array stride up to a full x86 line. */
+	struct orig_qspinlock word __attribute__((aligned(64)));
 	raw_spinlock_t *origin;
 	struct task_struct *owner;
 	unsigned long generation;

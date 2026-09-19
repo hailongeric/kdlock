@@ -203,7 +203,6 @@ run_mode4_shared_b() {
         run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 4 "$((lane + 8))" \
             > "$out/warm-$lane.log" 2>&1 || return 1
     done
-    sleep 1
     for lane in 0 1; do
         run_with_timeout 30 "$BENCH_BIN" 1 12000 1 1 4 "$((lane + 8))" \
             > "$out/promote-$lane.log" 2>&1 || return 1
@@ -392,7 +391,6 @@ run_jit_mode() {
         fail "$TEST_NAME" "mode $mode: warmup failed"
         return 1
     }
-    sleep 1
     run_with_timeout 30 "$BENCH_BIN" 1 12000 10 1 "$mode" \
         >/dev/null 2>&1 || {
         fail "$TEST_NAME" "mode $mode: promotion workload failed"

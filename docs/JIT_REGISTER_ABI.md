@@ -19,8 +19,8 @@ GS 内存按 origin GS base 翻译；等待代理结果的线程保持禁止抢�
 
 spin 代理执行使用一份预分配的共享寄存器包。`entry_abi` 由实际内核入口确定，
 沿 registry、daemon、生成物目录、frame 和 wrapper 逐层核对，不能由调用点
-形状猜测。下图描述旧 ABI；新普通 spin 路径见 1.0 节。mutex 仍保留
-节点与 frame 间的包复制，见第 4 节：
+形状猜测。下图描述旧 ABI；新普通 spin 路径见 1.0 节，普通 mutex 见其后的 mutex 小节。
+mutex 的最小入口借用 node 包，中途 FULL 出口才取得独立状态，见第 4 节：
 
 ```text
 native waiter hook stack
@@ -62,13 +62,16 @@ shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队�
 
 ### 1.0 普通 spin 的 caller-clobber v1
 
-独立实验内核的 `raw_spin_lock/unlock`（包括其 `spin_lock/unlock` 调用者）
+默认 `kdclobber2` 内核的 `raw_spin_lock/unlock`（包括其 `spin_lock/unlock` 调用者）
 用内联 asm 调用 `kd_raw_spin_{lock,unlock}_clobber_v1`。RDI 为锁，RSI 为
 CALL 前 RSP，RDX 为同一 asm 内的 CALL 后标签，RCX 为调用者 RBP。
 RDI 使用读写约束，元数据寄存器为输出，其余 GPR、`cc`、`memory` 明确破坏；
 `ASM_CALL_CONSTRAINT` 保留，RSP/RBP 必须满足调用边界。跨边界活跃值由
 调用者编译器保存。函数级 callee-saved 序言仍可能存在，不承诺消除所有 push/pop。
-IRQ/BH/irqsave/trylock、显式 nested 入口和 mutex 保持原契约。
+IRQ/BH/irqsave/trylock 和显式 nested 入口保持原契约；普通 mutex 使用独立 ABI=2。
+provider 构建要求 `KD_SPIN_CLOBBER_V1`；旧内核安装分支已删除，缺失接口时报错。
+这不删除同一内核上的旧调用者支持：`KD_SPIN_LEGACY_CALLER` 对照、显式 nested
+入口和 FULL 续跑仍有实际消费者，不能把它们当成废代码。
 
 | `packet_state` | 有效状态及消费者 |
 | --- | --- |
@@ -114,6 +117,43 @@ ABI；新图像的 ABI 必须匹配 registry/frame。嵌套混合边界使用 FU
 不再进入成组保存寄存器的汇编外壳，也不因旧入口返回外层循环。下一 waiter
 选择、完成发布、原生 peer 排斥、source pin 和 owner/ACK 仍由锁层负责。
 实验补丁、构建与基线操作见 [spin_clobber](../kernel_experiments/spin_clobber/README.md)。
+
+<a id="mutex-clobber-assessment"></a>
+
+#### 普通 mutex 的 caller-clobber v1
+
+`kdclobber2` 的普通 `mutex_lock/unlock` 宏调用独立
+`kd_mutex_{lock,unlock}_clobber_v1`；寄存器参数与 spin 相同，`entry_abi=2`。
+spin 为 1、旧 ABI 为 0，registry、daemon、translator 和 wrapper 必须匹配
+后端及身份。内核桥接通过 static call 选择 provider，原生回退直接调用
+原 mutex fast/slowpath，避免宏递归。interruptible/killable/trylock、IO、
+显式 nested 和取函数地址的调用者保留旧契约。
+
+node 发布前只写 IP/SP/BP。`kd_mutex_clobber_wait()` 先进入该预约的 8 KiB
+shadow 栈，再运行排队代码；只有未执行的队首可以返回旧 C 帧。已完成请求
+在两个栈位置以下重建恢复帧，清理 slot、恢复抢占/迁移及 task 引用后直接
+回到续点，不再经过可能被 JIT 覆盖的 hook 帧。
+
+首个物理 root frame 通过 `kd_exec_frame_push_borrowed()` 借用 node 的同一包。
+只有单一 A 账本、没有嵌套/remote/提前释放的首轮调用允许 COMPLETE；wrapper
+还检查精确的新 unlock 目标、锁和续点元数据。正常路径无整包初始化、导入、
+node/frame 复制或最终完整恢复。JIT 暂存字段不等于有效入口 GPR。
+
+中间出口先物化 FULL，再在任何 C 控制服务前复制到 frame 自有包。这个副本
+有独立生命周期：原生 waiter 释放 node 后，combiner 仍必须等待 owner ACK。
+FULL 正常或 native 返回在释放 node 前另存恢复包；不能从已复用的 node 恢复。
+原生 owner 不转交给 waiter，真实 mutex 获取可以睡眠，A/B 解锁仍由实际 owner
+执行并 ACK。正文已经执行时不允许回到入口重放。
+
+翻译器在新 mutex 边界丢弃 callee-saved 事实，但保留原有 opaque-memory 和
+256 字节受检栈协议；不能套用 spin 的 32-bit 锁字写入摘要。
+RBP spill 与 RSP 检查窗口的覆盖关系可由入口谓词证明；每个字的全部字节
+必须位于所有先前控制调用的窗口内，CFG 合并取这些约束的交集。原生处理器
+仍比较完整窗口。未知写入/普通 callee 不允许重新取得入口槽身份。
+旧 ABI 仍解码原内核保存栈并完整恢复；重复六寄存器副本已删除。node 为
+256B/64B 对齐，next 与 64/65 偏移的通知字节分行，CPU 从 tail 解码。
+补丁及基线操作见 [mutex_clobber](../kernel_experiments/mutex_clobber/README.md)。
+已知 pinned mode-4 调度缺口仍见 [TODO](TODO.md#current-checkpoint)。
 
 ### 1.1 与 TCLock spinlock 的执行路径和状态保存对比
 
@@ -258,7 +298,7 @@ entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志
 | --- | --- |
 | 专用批次的首次 CALL_MISS，目标恰为 spin unlock 且 RDI=L | RBX/RBP/R12–R15、虚拟 RIP/SP、用于完成分类的 RDI，以及 exit/witness |
 | hostcall、其他 CALL miss、nested/native、错误或入口拒绝 | 原完整 GPR 包、虚拟 RIP/SP、exit/witness |
-| 普通 C ABI wrapper 入口，包括 mutex 和后续续跑 | 原完整 GPR 包、虚拟 RIP/SP、exit/witness |
+| 普通 C ABI wrapper 入口，包括旧 mutex 和 FULL 后续续跑 | 原完整 GPR 包、虚拟 RIP/SP、exit/witness |
 
 缩小集合只适用于最终 lock/unlock ABI 边界，不适用于 JIT 中途出口。
 复杂出口进入 `kd_exe_spin_batch_resume` 时已经执行过正文；通用 dispatcher 先
@@ -363,7 +403,7 @@ block budget 插桩破坏。需要用跨块 `CMP/JMP/Jcc`、`ADC/SBB` 等差分�
 
 旧入口的原生 waiter 不是从异常入口得到完整 `pt_regs`。hook 调用点已按 C ABI 保存
 callee-saved 寄存器。spin 由 origin CPU 的 `kd_spin_prepare_regs()` 在发布前
-直接解码到共享 request；mutex 仍由 `execute_cs()` 重建。二者使用以下布局：
+直接解码到共享 request；旧 ABI mutex 由 `execute_cs()` 重建。二者的 legacy 路径使用以下布局：
 
 ```text
 [ret_rsp + 0x00] padding / lock 临时槽
@@ -383,13 +423,16 @@ RAX、RCX、RDX、RSI、RDI、R8-R11 作为 lock 函数的 caller-saved 状态�
 重用时可能保留旧值。翻译代码必须遵守正常内核函数调用 ABI，不能依赖这些
 未定义的入口值。
 
-mutex waiter 收到已完成或 native 续跑结果后，`_kd_mutex_lock()` 先将
+旧 ABI mutex waiter 收到已完成或 native 续跑结果后，`_kd_mutex_lock_abi()` 先将
 `resume_node->regs` 复制到自己的局部 `resume_regs`，再清除发布指针、释放
 node、恢复抢占/迁移状态，最后使用该副本跳转。node 可能在恢复抢占后立即被
 另一请求复用，不能继续从旧 node 读取恢复状态。
 生产资源测试在此处主动复用 node 并比较整个 168 字节软件包；它不执行汇编
 跳转、不验证硬件 flags 恢复。测试边界见
 [mutex 资源与恢复包](JIT_EXECUTION.md#61-mutex-资源与恢复包)。
+
+clobber mutex 的 COMPLETE 在 `kd_mutex_resume_completed()` 中只保留三个续点字段；
+FULL/native 仍须在释放 node 前保留完整包。新路径直接放弃旧 hook C 帧。
 
 ### 4.2 嵌套 JIT waiter
 
@@ -740,16 +783,18 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 结束自己的 pin，combiner 不能远端解除固定。mutex 则在进入 native 后缀前已
 恢复迁移/抢占状态，不把 spin 的 pin 生命周期套用到 mutex。
 
-默认 frame/context/request 为 672/5400/768 字节，spin node 为 64 字节。
+默认 frame/context/request 为 672/5400/768 字节，spin node 为 128 字节、64 字节对齐。
 request 按 64 字节对齐，frame 起于偏移 24，寄存器包起于 96；等待和恢复汇编
 从 `offsetof` 取得偏移，两种 wrapper 的 `pt_regs` 内部布局与输入 ABI 不变。
-普通准入元数据位于 request 前两条缓存行；spin JIT context 为 16 字节。node 比共享包改造时的 48 字节多两个预取地址；
-它们只在排队期间提供提示，不参与恢复。共享包改造时普通模块静态 per-CPU 为
+普通准入元数据位于 request 前两条缓存行；spin JIT context 为 16 字节。
+node 首行保留链接、execution 与两个预取地址，通知字段位于第二行偏移 64/65；
+数组步长为 128 字节，嵌套槽之间也隔离。预取提示不参与恢复，gate 另以 64 字节
+步长对齐以隔离不同锁。共享包改造时普通模块静态 per-CPU 为
 7104 字节，该历史数值不作为后续布局的现值；另在初始化时
 为每可能 CPU 预分配 12 个 request；静态节减小不代表总内存下降。布局不是动态
 栈峰值或任意深度安全证明。生产 spin 的 node、combiner 与恢复路径引用同一份包，
 复杂出口不再复制寄存器。frame 的物理链与包引用见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)。
-`pt_regs` 和两元素 args ABI 未改变；mutex 保留原有包处理。
+`pt_regs` 和两元素 args ABI 未改变；mutex 的最小状态与独立 FULL 生命周期见 1.0 节。
 精确节点预留、OOO、远端发布和 readmission 约束见 DESIGN 第 4/9 节；
 相关测试参数与失败记录集中在使用/验收文档，不在 ABI 中复制历史流水。
 
@@ -765,8 +810,9 @@ native 唤醒直接放弃旧调用链，在对齐后的 `min(node->rsp, node->ex
 未执行正文的 retry 返回 4 仍保留已持有的 ticket；虚拟 waiter 保留 1/3/5 返回
 分类以通知父 frame。它们不再是物理 waiter 的旧 C 栈返回链。
 
-spin 成功代理使用 `kd_spin_restore_request(..., mode=0)`；mutex 仍使用
-`jump_to_saved_regs()`。两者的寄存器/续点语义为：
+spin 成功代理使用 `kd_spin_restore_request(..., mode=0)`；mutex COMPLETE 使用
+`kd_mutex_resume_completed()` 的三字段恢复，FULL/旧 ABI 使用
+`jump_to_saved_regs()`。以下只描述 FULL/旧 ABI 的寄存器与续点语义：
 
 1. 从 `pt_regs` 装入 R15、R14、R13、R12、RBP、RBX、R11、R10、R9、R8、
    RAX、RCX、RDX、RSI、RDI。

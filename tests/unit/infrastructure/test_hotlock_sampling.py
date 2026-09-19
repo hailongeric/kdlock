@@ -1,6 +1,6 @@
 """Compile actual hot-lock sampling with a deterministic TSC in the guest.
 
-The clock/allocation/IRQ primitives are substitutes. Pthreads and compiler
+The clock/allocation/CPU-local primitives are substitutes. Pthreads and compiler
 atomics exercise concurrent producers/readers, not concurrent kernel hooks.
 The live JIT suite independently requires natural lock promotion.
 """
@@ -20,31 +20,38 @@ def main():
         for name in ("include/kd_hotlock.h", "kernel_module/kd_hotlock.c")
     )
     mutations = {
-        "unserialized-timestamp": (
-            "now = rdtsc_ordered();\n\tstate->samples++;",
-            "state->samples++;",
-            1,
+        "cpu-skips-frequency-gate": (
+            "if (!kd_hotlock_cpu_frequent(cpu))", "if (false && !kd_hotlock_cpu_frequent(cpu))", 1,
         ),
-        "narrowed-window": (
-            "state->sample_window = KD_HOTLOCK_INITIAL_WINDOW;",
-            "state->sample_window = KD_HOTLOCK_INITIAL_WINDOW / 1000;",
-            1,
+        "cpu-deadline-equality-hot": (
+            "now - cpu->rate_begin < KD_HOTLOCK_CPU_WINDOW",
+            "now - cpu->rate_begin <= KD_HOTLOCK_CPU_WINDOW", 1,
+        ),
+        "cold-cpu-touches-shared-table": (
+            "cpu = this_cpu_ptr(kd_hotlock_cpu);",
+            "kd_hotlock_lookup(lock_addr, false); cpu = this_cpu_ptr(kd_hotlock_cpu);", 1,
+        ),
+        "local-quota-bypassed": (
+            "local->samples >= KD_HOTLOCK_SAMPLE_TARGET", "local->samples > 0", 1,
         ),
         "deadline-equality-promoted": (
-            ">= state->sample_window", "> state->sample_window", 1,
+            "now - local->begin_cycles >= KD_HOTLOCK_INITIAL_WINDOW",
+            "now - local->begin_cycles > KD_HOTLOCK_INITIAL_WINDOW", 1,
         ),
-        "sample-quota-shortened": (
-            "state->samples == KD_HOTLOCK_SAMPLE_TARGET",
-            "state->samples == KD_HOTLOCK_SAMPLE_TARGET - 1",
-            2,
+        "collision-inherits-hot-hint": (
+            "local->promoted = 0;", "/* stale identity retained */", 1,
         ),
-        "query-takes-writer-lock": (
-            "struct kd_hotlock_state *table = READ_ONCE(kd_hotlocks);",
-            "unsigned long flags;\n"
-            "\traw_spin_lock_irqsave(&kd_hotlock_table_lock, flags);\n"
-            "\traw_spin_unlock_irqrestore(&kd_hotlock_table_lock, flags);\n"
-            "\tstruct kd_hotlock_state *table = READ_ONCE(kd_hotlocks);",
-            1,
+        "collision-inherits-samples": (
+            "local->samples = 0;\n\t\tlocal->promoted = 0;",
+            "local->promoted = 0;", 1,
+        ),
+        "full-set-admits-unpublished": (
+            "local->promoted = kd_hotlock_lookup(local->lock_addr, true);",
+            "kd_hotlock_lookup(local->lock_addr, true); local->promoted = 1;", 1,
+        ),
+        "per-call-clock": (
+            "cpu = this_cpu_ptr(kd_hotlock_cpu);",
+            "rdtsc_ordered(); cpu = this_cpu_ptr(kd_hotlock_cpu);", 1,
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-hotlock-sampling-") as directory:

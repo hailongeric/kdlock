@@ -91,17 +91,6 @@ kd_spin_fast_acquire(raw_spinlock_t *lock, unsigned long rip)
 	return KD_SPIN_FAST_MISS_PINNED;
 }
 
-/* Preserve the legacy boolean helper's balanced-miss contract. */
-static __always_inline bool
-kd_spin_fast_trylock(raw_spinlock_t *lock, unsigned long rip)
-{
-	enum kd_spin_fast_result result = kd_spin_fast_acquire(lock, rip);
-
-	if (result == KD_SPIN_FAST_MISS_PINNED)
-		preempt_enable();
-	return result == KD_SPIN_FAST_OWNED;
-}
-
 /* S is owned and CPU pinned. Keep the existing physical-owner token and
  * generation checks: queued peers and diagnostics must still see the real
  * owner, and a stale hold must never release a later acquisition. No ticket

@@ -74,7 +74,7 @@ load_packet:
 	jmp generated_body
 
 clobber_body:
-	cmp QWORD PTR[rdx + 72], 1
+	cmp QWORD PTR[rdx + 72], KD_GENERATED_ENTRY_ABI
 	jne clobber_invalid
 	mov rax, QWORD PTR[rdx + 80]
 	cmp DWORD PTR[rax], 1
@@ -99,7 +99,7 @@ clobber_body:
 	mov Stack_TASK, rax
 	mov Stack_JIT_WITNESS, 0
 	/* The fixed directory is usable only by a matching generated image. */
-#if KD_GENERATED_ENTRY_ABI != 1
+#if KD_GENERATED_ENTRY_ABI != 1 && KD_GENERATED_ENTRY_ABI != 2
 	ud2
 #endif
 generated_body:

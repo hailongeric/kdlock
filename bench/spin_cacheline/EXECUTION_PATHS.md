@@ -1,7 +1,8 @@
 # spin_cacheline：kdlock、TCLock 与 Linux 的执行路径
 
-本文按 **2026-09-19、提交 `2b16d6f`** 的实现重写，主线是 `kdclobber1` 的
-普通 spin caller-clobber v1。对照同一负载的 Linux 原生、完整 TCLock 原生栈委托、
+本文按 **2026-09-19 当前工作树** 的实现维护，默认要求 `kdclobber2` 的
+普通 spin caller-clobber v1 接口；旧调用者在同一内核上仍有兼容路径。
+对照同一负载的 Linux 原生、完整 TCLock 原生栈委托、
 kdlock JIT 三种后端，重点解释获取、排队、批次交接及现场保存/恢复。
 伪代码合并低频错误分支，保留影响正常路径的状态访问和同步；函数名不表示
 机器码必然保留一次 CALL。本文是源码说明，不是新的运行或采样结果。
@@ -49,7 +50,7 @@ flowchart TD
 
 | 环节 | kdlock | TCLock |
 | --- | --- | --- |
-| hook 分派与快路径 | [kd_lock.c](../../kernel_module/kd_lock.c)、[kd_spin_fast.h](../../include/kd_spin_fast.h) | [provider.c](../../tclock_backend/provider.c) |
+| hook 分派、频率筛选与快路径 | [kd_lock.c](../../kernel_module/kd_lock.c)、[kd_spin_fast.h](../../include/kd_spin_fast.h) | [provider.c](../../tclock_backend/provider.c) |
 | 获取、排队和等待 | [kd_spinlock.c](../../kernel_module/kd_spinlock.c)、[slowpath.inc](../../kernel_module/spin/slowpath.inc)、[wait.inc](../../kernel_module/spin/wait.inc) | [komb.c](../../tclock_backend/komb.c)：`komb_spin_lock` / `__komb_spin_lock_longjmp` |
 | 批次与后继 | [combiner.inc](../../kernel_module/spin/combiner.inc)、[prefetch.inc](../../kernel_module/spin/prefetch.inc) | [komb.c](../../tclock_backend/komb.c)：`run_combiner` / `get_next_node` / `komb_spin_unlock` |
 | 保存与恢复 | [wrapper.S](../../include/wrapper.S)、[kd_jit_batch.h](../../include/kd_jit_batch.h)、`kd_spin_restore_request` | [context.S](../../tclock_backend/context.S) |
@@ -91,7 +92,7 @@ flowchart TD
 
 当前三方运行器是 [run.py](../tclock_compare/run.py) 与
 [session.py](../tclock_compare/session.py)。三方每场均先在一个 CPU 上预热 1 次，
-等待后准备 12000 次；kdlock 等待对应入口 NORMAL、生成物有效并停止 daemon/
+随后连续准备 48000 次；kdlock 等待对应入口 NORMAL、生成物有效并停止 daemon/
 translator，再开始 T 线程测量。准备、翻译、上传及共用 allocator guard 均在
 计时外；单 CPU 准备不表示并发冷晋升停滞已修复。
 
@@ -130,33 +131,37 @@ asm volatile:
 序言。原生回退使用 `__raw_*`，不会重新进入宏。三方共用同一个 caller，因此
 TCLock 也承担该 caller 的 spill 和函数级保存；它自己的六寄存器切栈协议仍在。
 
-旧 `_raw_spin_lock` ABI、IRQ/BH/irqsave/trylock 和 mutex 不能据此使用精简包。
+旧 `_raw_spin_lock` ABI、IRQ/BH/irqsave/trylock 不能据此使用精简包；普通 mutex 使用独立 ABI=2 和自己的终态检查。
 旧请求与新请求按实际入口记录 `entry_abi`，翻译条目、生成物和 wrapper 校验
 身份；两种 ABI 可以经过同一个 combiner C 循环，不能混用保存/恢复规则。
 
-### 2.2 kdlock：缓存未完成获取后，才走选择、晋升和注册
+### 2.2 kdlock：CPU 频率、单锁频率通过后，才选择进程和注册
 
 ```text
 kd_spin_dispatch_clobber_lock_v1(L, SP, IP, BP):
-    result = kd_spin_fast_acquire(L, IP)       // 第 3 节
+    if !kd_hotlock_record(L):                // CPU -> 单锁频率
+        origin_raw_spin_lock(L); return
+    result = kd_spin_fast_acquire(L, IP)      // 第 3 节：已发布站点的原生尝试
     if result == OWNED: return
     若缓存 miss 临时 pin 了 CPU：归还该 pin
     if !kd_spin_task_selected() or kd_spin_entry_native_active():
-        origin_raw_spin_lock(L); return
-    if !kd_hotlock_is_promoted(L):
-        kd_hotlock_record(L)
         origin_raw_spin_lock(L); return
     kd_exe_add_abi(0, IP, SPIN, CLOBBER_V1)
     kd_spin_lock_abi(L, SP, IP, BP, CLOBBER_V1)
 ```
 
-[kd_hotlock.c](../../kernel_module/kd_hotlock.c) 的已晋升查询只读只追加表；记录
-阶段才读 TSC 并在全局 irqsave 锁内更新窗口/样本。样本是访问次数，不是失败
-trylock 或等待次数。单线程可以晋升并生成 JIT，但没有其他 waiter 可供代理。
-当前决策是固定窗口的 sticky DELEGATE/IGNORE；IGNORE 仍会在 `record` 中更新
-计数，DELEGATE 不会因短批次降级。普通已晋升 clobber 入口跳过 `record`，
-故已就绪锁的低 JIT 比例不能简单归因于监测。按收益切换执行方式仍是
-[未实现待办](../../docs/TODO.md#hotlock-monitoring-and-adaptive-admission)。
+[kd_hotlock.c](../../kernel_module/kd_hotlock.c) 的计数、起点和候选锁均在 per-CPU
+对象中。首次起点之后每 10240 次读一次 TSC，同时检查 CPU 和 64 槽本地候选。
+CPU 窗口折算为 400 亿 TSC；单锁本地 10000 次 / 不足 25 亿 TSC 才发布到全局
+已晋升地址集合。未达标和正向缓存命中都不访问全局集合；本地过期重测，冲突
+丢弃历史，其他 CPU 的冷样本不合并。全局约 1 MiB，每 CPU 约 1.6 KiB。
+
+普通 spin/mutex 获取先供样后筛选进程，unlock 只按既有 owner/票据路由。
+CPU 降温最多延迟 10239 次才关闭新准入，不影响在途释放和 owner ACK。
+新 CPU 或正向缓存被逐出后需重新本地达标。单 CPU 准备不等于其他测量 CPU
+也已晋升；不能把 JIT 比例下降导致的吞吐变化解释为代理加速。
+[采样协议](../../docs/DESIGN.md#hotlock-monitoring) 记录完整近似边界。
+此前性能表属于各自冻结版本，不代表本轮本地识别策略。
 
 ### 2.3 注册、翻译和准入是三个不同步骤
 
@@ -525,7 +530,9 @@ combiner 栈地址；下列寄存器 backing 已直接指向同一 request 包�
 整包恢复”。入口快照与正文中逐步产生的 backing 值也不是同一有效性状态；
 不能因存储共用就在 MINIMAL 阶段读取尚未定义的字段。
 
-当前布局为 node **64B**、request **768B/64B 对齐**、frame **672B**。
+当前布局为 node **128B/64B 对齐**、request **768B/64B 对齐**、frame **672B**。
+node 首行放链接与执行/预取元数据，通知字节 completed/locked 位于 64/65，
+数组步长保证四个槽的通知行互不重叠；gate 则为 **64B/64B 对齐**，隔离不同锁。
 request 的 frame 从偏移 24 开始，frame 热头部为 72B，内嵌 regs 从 request
 偏移 96 开始；普通标志与 ABI/包分类集中在前两条缓存行。每 CPU 十二个
 request 共 9216B，与四个可复用 node 独立；对象预分配，没有逐请求整包清零。
@@ -658,6 +665,16 @@ TCLock 的 `need_resched()` 在此用于结束代理批次，不表示本移植�
 前不回收。batch/request 缓存其身份，禁用仍逐次 acquire 读取，waiter 数仍实时
 原子更新。不能把它们当纯日志直接删除，也不能说布局分行已经消除了共享 RMW。
 
+此前布局审计发现 KD 的 `next=0` 与 `locked=33` 共行、40B gate 项跨锁共行。
+[隔离修复](results/20260919-cacheline-isolation.md)已把 node 通知移到独立第二行、
+node 步长扩为 128B，并把每个 gate 对齐为 64B。TC 常用 node 0 的 `next=0`、
+`locked=69` 分行，但其 120B 数组步长不能保证相邻 node 互不共行。
+768B request 池和上述诊断 slot 也已隔离相邻项。
+source 状态与 frame 计数实际分行；frame 计数和 waiter_count 的共享 RMW 属于
+真共享。旧布局的字段偏移与访问角色见
+[修复前审计](../tclock_compare/results/20260919-thread-scaling.md#false-sharing)；
+新旧布局 A/B 不等于分别量化 node 和 gate 的收益，也没有测跨锁 gate 吞吐。
+
 `PT/Stack` 共用减少搬运；R11 包基址和内存 block budget、生成器虚拟栈操作、
 caller spill 仍可能抵消一部分收益。预分配减少分配成本，但对齐 request 增大
 总空间；缓存复用减少查找，但不能跳过可变 readiness/source 检查。
@@ -665,21 +682,35 @@ caller spill 仍可能抵消一部分收益。预分配减少分配成本，但�
 
 ### 6.3 当前结果与历史热点分开看
 
-[2026-09-19 同环境复测](../tclock_compare/results/20260919-state-access.md)中，
-三方共用 clobber caller，每配置交替五次取中位数；单位 Mops/s：
+最新 [node/gate 隔离对照](results/20260919-cacheline-isolation.md)交替重跑旧、新
+两臂，40 场均正确排空。20 线程、1/16 cacheline 的新版本为 3.208/3.109 Mops/s，
+比同场旧版本高 6.55%/7.56%，JIT 约 99.7%；4 线程下降 6.49%/5.91%。
+增加访问行数有成本，不能承诺普遍提速。该轮没有重测 TCLock/Linux，下面完整
+三方表属于隔离前基线，不能与新 kdlock 混用。
+
+[2026-09-19 五档线程复测](../tclock_compare/results/20260919-thread-scaling.md)中，
+三方共用 clobber caller，每配置交替五次取中位数；单位 Mops/s。完整结果页
+另含单线程、五轮范围和布局审计；以下只列竞争档位：
 
 | cacheline | 线程 | Linux | TCLock | kdlock | TC 委托 | KD JIT |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 4 | 2.894 | 1.670 | 0.907 | 43.78% | 55.24% |
-| 1 | 20 | 3.015 | 2.299 | 2.965 | 80.33% | 99.74% |
-| 16 | 4 | 1.959 | 1.199 | 0.864 | 45.60% | 51.94% |
-| 16 | 20 | 1.798 | 1.697 | 2.904 | 79.25% | 99.79% |
+| 1 | 4 | 2.925 | 1.652 | 0.875 | 48.50% | 53.61% |
+| 1 | 8 | 3.076 | 2.023 | 1.879 | 66.78% | 91.62% |
+| 1 | 16 | 3.137 | 2.319 | 2.938 | 76.25% | 99.56% |
+| 1 | 20 | 3.030 | 2.770 | 2.990 | 94.22% | 99.75% |
+| 16 | 4 | 1.906 | 1.202 | 0.863 | 45.69% | 52.23% |
+| 16 | 8 | 1.745 | 1.492 | 1.917 | 59.12% | 92.52% |
+| 16 | 16 | 1.758 | 1.855 | 2.893 | 97.06% | 99.62% |
+| 16 | 20 | 1.794 | 1.518 | 2.894 | 53.98% | 99.80% |
 
-该冻结版本 20 线程的 kdlock 比 TC 高约 29%/71%，4 线程仍低约 46%/28%。
-TC 的 20 线程委托比例在五轮间约为 53%–99.7%，结果页保留全部范围；不能
-只选其最高委托轮次，也不能把不同批次策略当成单项保存/恢复的因果实验。
-单线程千万次长批次中，KD 比 Linux 多约 8 ns、比 TC 少约 7–8 ns；均未代理，
-反映完整无竞争操作而非 JIT/wrapper 成本。90 场矩阵及 30 场长批次全部正确排空。
+150 场全部正确排空。16/20 线程的 kdlock JIT 超过 99%；1 cacheline 仍略低于
+Linux，16 cacheline 则高约 65%/61%。4 线程明显落后；8 线程的两个正文规模
+已呈现不同净收益。TC 的批长与委托比例波动仍大，不能把不同批次策略当成
+单项保存/恢复的因果实验。
+
+[此前同日独立长批次](../tclock_compare/results/20260919-state-access.md#单线程长批次)
+中，KD 比 Linux 多约 8 ns、比 TC 少约 7–8 ns；均未代理，反映完整无竞争
+操作而非 JIT/wrapper 成本。这 30 场是历史证据，本轮没有重测长单线程。
 
 [预取四路对照](results/20260918-prefetch.md)和
 [状态访问五阶段对照](results/20260918-state-access.md)分别冻结输入，提供
@@ -689,11 +720,12 @@ TC 的 20 线程委托比例在五轮间约为 53%–99.7%，结果页保留全�
 作为当前占比。大量 worker 的等待样本还会放大分母，不能由“JIT 映像占比小”
 直接推导 wrapper 串行服务开销可忽略。
 
-已有 20 场多线程 kdlock 日志进一步显示：四线程每批平均约 1.95/1.99 个
-JIT 正文，二十线程约 553.79/602.79 个（分别为 1/16 cacheline，逐场平均后取
-五轮中位数）。目标锁均已晋升且 `jit_not_ready=0`，因此不是简单的翻译准备
-不足。短批次更频繁承担交接成本，但未分别计数结束原因，不能据此断言单一
-瓶颈。公式、计数等式及限制见[日志复算](../tclock_compare/results/20260919-state-access.md#batch-length)。
+本轮四十场多线程 kdlock 的日志显示：4 线程平均每批约 2 个 JIT 正文，8 线程
+约 12–14 个，16 线程约 337/348 个，20 线程约 572/689 个（后两项分别为
+1/16 cacheline，逐场平均后取五轮中位数）。目标锁均已晋升且
+`jit_not_ready=0`，因此不是简单的翻译准备不足。短批次更频繁承担交接成本，
+但未分别计数结束原因，不能据此断言单一瓶颈。公式、计数等式及限制见
+[日志复算](../tclock_compare/results/20260919-thread-scaling.md#batch-length)。
 
 ### 6.4 保留的协议差别和后续测量边界
 

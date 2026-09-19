@@ -123,7 +123,7 @@ def check_pair_protocol():
         paired.write_json(out / "published-after.json", ready_after)
         (out / "before.dmesg").write_text(before)
         (out / "after.dmesg").write_text(after)
-        operations = 12019
+        operations = 48019
         final = after + (
             f"[3] kd_cs integrity: operations={operations} active_states=1 failures=0\n"
             f"[4] module unloaded, final counter: {operations}\n"

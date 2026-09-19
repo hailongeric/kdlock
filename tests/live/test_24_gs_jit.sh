@@ -35,7 +35,6 @@ load_kdlock target_process="$TARGET_PROCESS" mutex_jit=1
 insmod "$KLOCK_DIR/klock_module.ko"
 start_daemon 2
 run_with_timeout 10 taskset -c 0 "$BENCH_BIN" 1 1 1 1 "$mode" 0 > "$out/warmup.log"
-sleep 1
 run_with_timeout 30 taskset -c 0 "$BENCH_BIN" 1 12000 10 1 "$mode" 0 > "$out/promotion.log"
 artifact_output=$(wait_for_jit_artifact_count "$expected_artifacts" 60)
 mapfile -t asm_dirs <<< "$artifact_output"

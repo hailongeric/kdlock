@@ -35,7 +35,7 @@ def snapshot():
 
 
 def control_returns(text, function, symbol="run_nested_mutex_cs"):
-    """Relocate only actual E8 CALLs with the mutex_lock relocation.
+    """Relocate only actual E8 CALLs with a legacy or versioned mutex lock relocation.
 
     Use the module built/loaded by this test, not a guessed source label or
     the observer's own CALL successor. This is a source-packet check, not an
@@ -57,7 +57,7 @@ def control_returns(text, function, symbol="run_nested_mutex_cs"):
             calls[int(match[1], 16) + 1] = int(match[1], 16) + len(raw)
     returns = []
     for relocation in re.findall(
-        r"^\s*([0-9a-f]+):\s+R_X86_64_PLT32\s+mutex_lock-0x4\s*$", text, re.MULTILINE
+        r"^\s*([0-9a-f]+):\s+R_X86_64_PLT32\s+(?:mutex_lock|kd_mutex_lock_clobber_v1)-0x4\s*$", text, re.MULTILINE
     ):
         position = int(relocation, 16)
         if position in calls:
@@ -201,6 +201,7 @@ def main():
             words = line.split()
             if words[2] in (
                 "mutex_lock",
+                "kd_mutex_lock_clobber_v1",
                 "run_nested_mutex_cs",
                 "kd_stack_change_observe",
             ):
@@ -217,7 +218,7 @@ def main():
         )
         (args.out / "stack-source.asm").write_text(code)
         source = {
-            "mutex_lock": symbols["mutex_lock"],
+            "mutex_lock": symbols["kd_mutex_lock_clobber_v1" if "kd_mutex_lock_clobber_v1-0x4" in code else "mutex_lock"],
             "observer": symbols["kd_stack_change_observe"],
             "returns": control_returns(code, symbols["run_nested_mutex_cs"]),
         }

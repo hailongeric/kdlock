@@ -43,7 +43,13 @@ int kd_spinlock_init(void)
 	int ret;
 #endif
 
-	BUILD_BUG_ON(sizeof(struct kd_spin_node) != 64);
+	/* Protect both the in-node notification split and adjacent array slots. */
+	BUILD_BUG_ON(__alignof__(struct kd_spin_node) < L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_spin_node) != 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_spin_node, completed) != L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_spin_node, locked) != L1_CACHE_BYTES + 1);
+	BUILD_BUG_ON(__alignof__(struct kd_spin_gate) < L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_spin_gate) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_spin_diag_slot, waiter_count) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_spin_exec_request, frame.packet_state) >= 2 * L1_CACHE_BYTES);

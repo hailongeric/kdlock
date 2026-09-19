@@ -3,6 +3,16 @@
 先读 `kd_main.c` 的 hook 安装，再读 `kd_lock.c` 的路由，随后进入对应后端。
 原生锁、私有队列、逻辑 frame 和来源 pin 各自承担不同职责。
 
+默认构建要求 `kdclobber2` 的 `KD_SPIN_CLOBBER_V1` 和 `KD_MUTEX_CLOBBER_V1` 接口；缺失时编译直接报错，
+不再自动降为旧内核 hook。普通 spin/mutex 使用各自 clobber 身份；同一内核上的旧 ABI 调用者
+仍通过兼容 dispatcher 执行，嵌套和原生续跑需要的 FULL 状态也继续保留。
+普通 mutex 的 MINIMAL/COMPLETE 借用 node 寄存器包，正常完成仅恢复 IP/SP/BP；
+首次 FULL 出口为 owner ACK 的独立生命周期取得 frame 自有包。
+实现约束见 [ABI 文档](../docs/JIT_REGISTER_ABI.md#mutex-clobber-assessment)。
+mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，重新排列为
+256 字节、64 字节对齐；next 与 completed/locked 分行，避免缩减字段后
+引入相邻 node 共行。生产构建对大小、对齐和通知偏移做静态检查。
+
 | 编译入口 | 保留职责 |
 | --- | --- |
 | [kd_main.c](kd_main.c) | 模块初始化、hook 安装/撤销、目标选择 |
@@ -13,7 +23,7 @@
 | [kd_exec.c](kd_exec.c) | frame 栈、上下文验证和状态事件 |
 | [sys.c](sys.c) | `/dev/kd_dev` 的读取、上传、状态与 retire ioctl |
 | [kd_source.c](kd_source.c) | 来源状态和 module/frame/writer pins |
-| [kd_hotlock.c](kd_hotlock.c) | 按锁地址统计频率并决定晋升；入口注册由 `kd_lock.c` 调用执行注册表 |
+| [kd_hotlock.c](kd_hotlock.c) | 本 CPU 频率及本地单锁候选达标后发布共享身份；入口注册由 `kd_lock.c` 调用执行注册表 |
 | [kd_spin_gate.c](kd_spin_gate.c) | 私有 gate、真实 owner 与原锁引用；`origin` release/acquire 发布，已有条目无锁查找，创建仍串行化 |
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
@@ -28,12 +38,17 @@
 `spin_prefetch=0/1/2` 是只读装载参数，分别关闭后继请求预取、保留 combiner
 查询地址的旧策略、使用发布前准备的地址提示（默认）。它不关闭其他既有队列
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
-节点为 64 字节，request 继续独立存活。约束见 [DESIGN](../docs/DESIGN.md#911-reuse-before-copy-contract)。
+节点为 128 字节，next 与通知字分行，request 继续独立存活。约束见 [DESIGN](../docs/DESIGN.md#911-reuse-before-copy-contract)。
 
-热锁检测仍使用 `INIT → CHECKING → DELEGATE/IGNORE` 和固定采样窗口。
-普通 clobber 入口在已晋升后跳过 `kd_hotlock_record()`；IGNORE 仍会更新计数，
-没有自动降级或按收益选择执行方式。现有行为见
-[热锁检测](../docs/DESIGN.md#hotlock-monitoring)，改进属于[待办](../docs/TODO.md#hotlock-monitoring-and-adaptive-admission)。
+热锁识别依次检查本 CPU 频率、本 CPU 的单锁频率、进程身份。首次起点之后，
+每 10240 次 lock 访问读一次时间，CPU 与 64 槽单锁候选共用该读数；CPU 窗口
+按批量折算为 400 亿 TSC，单锁仍以不足 25 亿 TSC 内至少 10000 次为标准。
+计数、窗口和正向缓存都在动态 per-CPU 对象中，约 1.6 KiB/CPU。只有本地达标
+才将地址 CAS 发布到约 1 MiB 的共享集合，已缓存的热锁不再查共享表。
+本地过期重测，碰撞可丢样；没有全局预热、共享计数或全局 IGNORE。降温在下一
+检查点关闭新准入，不影响既有解锁和 owner ACK。完整边界见
+[热锁检测](../docs/DESIGN.md#hotlock-monitoring)；实际收益控制仍是
+[待办](../docs/TODO.md#hotlock-monitoring-and-adaptive-admission)。
 
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
 共享 waiter 计数与身份/禁用状态分离到不同缓存行。request 按 64 字节对齐，
@@ -48,7 +63,7 @@
 活跃值。调用边界见 [kd_jit_batch.h](../include/kd_jit_batch.h)；旧汇编外壳仅留在
 [兼容测试夹具](../tests/unit/spin/legacy_batch.S)，不参与生产构建。
 新 ABI 的普通 root 正常路径只捕获/回写/恢复 RIP/RSP/RBP，中途出口在进入 C
-前物化完整逻辑 GPR；旧 ABI 和 mutex 保留原调用规则。
+前物化完整逻辑 GPR；旧 ABI 与 FULL 续跑保留完整恢复规则。
 `spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后先切到
 每 CPU 预分配的 8KB shadow 等待栈，再发布普通 waiter 并轮询。
 spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核栈；
@@ -79,6 +94,7 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `kd_mutex.c` | [mutex/queue.inc](mutex/queue.inc) | Per-CPU slot reservation, native mutex acquisition and private tail helpers. |
 | `kd_mutex.c` | [mutex/combiner.inc](mutex/combiner.inc) | Delegated mutex bodies, detached outer batches and successor publication. |
 | `kd_mutex.c` | [mutex/waiter.inc](mutex/waiter.inc) | Queue waiting and nested native acquisition; preserve owner/ACK semantics. |
+| `kd_mutex.c` | [mutex/clobber.inc](mutex/clobber.inc) | 发布前切栈，完成后放弃旧 C 帧，按 COMPLETE/FULL 恢复。 |
 | `kd_mutex.c` | [mutex/lifecycle.inc](mutex/lifecycle.inc) | Gate initialization, per-CPU stack allocation, rollback and drained teardown. |
 | `kd_lock.c` | [lock/mutex_calls.inc](lock/mutex_calls.inc) | Mutex hook ownership and nested CALL admission/cleanup against real owners. |
 | `kd_lock.c` | [lock/spin_calls.inc](lock/spin_calls.inc) | Nested spin CALL routing, private tickets, out-of-order release and cleanup. |

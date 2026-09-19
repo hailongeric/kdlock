@@ -2,7 +2,7 @@
 
 这些阶段报告的实现已经被后续版本替代。重复的操作命令与实现说明从当前目录
 删除，保留本页的结果、证据身份及固定 Git 版本入口。当前路径见
-[执行路径](../EXECUTION_PATHS.md)，当前成绩见
+[执行路径](../EXECUTION_PATHS.md)，此前三方成绩见
 [2026-09-19 三方复测](../../tclock_compare/results/20260919-state-access.md)。
 
 下列结果均为历史记录，**本次文档整理没有重跑实验**。旧扫描通常使用
@@ -96,3 +96,13 @@ SHA256：`c11cb68aaedd98aee13657617e1059633b3874614f0b5a12086df52e8c2457c8`。
 [原始报告与完整证据索引](https://github.com/hailongeric/kdlock/blob/2b16d6fa20801c1dd7a9c25c3bac5b8d0d046c24/bench/spin_cacheline/results/20260917-wwjump.md)。
 归档：`/tmp/kdlock-wwjump-20260917/evidence.tar.gz`。
 SHA256：`d753b9c1c4bd0fd79420438d5c44e8486597073578c49b9b234d950e40c01144`。
+
+## 旧 README 中的阶段记录
+
+这些阶段的运行命令也已从当前指南删除。结果与失败详情固定到整理前提交：
+
+| 记录 | 原文 |
+| --- | --- |
+| <a id="source-organization"></a>2026-09-15 代码整理回归 | [冻结记录](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/bench/spin_cacheline/README.md#source-organization) |
+| <a id="rerun-100k-no24"></a>十万次扫描与百万次批次故障 | [冻结记录](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/bench/spin_cacheline/README.md#rerun-100k-no24) |
+| <a id="assembly-validation"></a>汇编按临界区去重验证 | [冻结记录](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/bench/spin_cacheline/README.md#assembly-validation) |

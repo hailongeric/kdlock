@@ -131,7 +131,7 @@ static void test_metrics_contract(void)
 {
 	struct daemon_config cfg = { .mode = MODE_V2 };
 	char *argv[] = { "daemon", "--metrics", "--quiet", NULL };
-	struct kd_exe_info exe = { .RIP = 0x1234 };
+	struct kd_exe_info exe = { .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_MUTEX };
 	struct rusage usage = { 0 };
 	uint64_t value;
 
@@ -152,7 +152,7 @@ static void test_metrics_contract(void)
 static void test_chunk_session(void)
 {
 	char root[] = "/tmp/kdlock-chunk-session.XXXXXX";
-	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234 };
+	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_MUTEX };
 	struct daemon_config cfg = { .mode = MODE_V1 };
 	unsigned char image[MAX_PAYLOAD * 2 + 17], chunk[MAX_PAYLOAD];
 	int original_dir = open(".", O_RDONLY | O_DIRECTORY);
@@ -213,7 +213,7 @@ static void test_chunk_session(void)
 int main(void)
 {
 	char path[] = "/tmp/kdlock-daemon-policy.XXXXXX";
-	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234 };
+	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_MUTEX };
 	struct kd_recv_pkt packet;
 	int result = -1;
 	int fd;

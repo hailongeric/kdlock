@@ -39,6 +39,8 @@ static unsigned long kd_mutex_node_overflow_count, kd_mutex_jit_resume_count;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
 static atomic_t kd_mutex_reserved_nodes;
 static bool promoted, enabled, task_failure, active_override, borrowed;
+static bool cpu_hot = true, trace_admission, sampled_first;
+static unsigned int comm_queries;
 static bool schedule_wanted, recycle_on_enable, direct_packet;
 static bool source_open, native_owner_wait;
 static struct kd_mutex *waiting_gate, *release_gate;
@@ -68,6 +70,8 @@ static jmp_buf resume_target;
 		if (c)         \
 			BUG(); \
 	} while (0)
+#define TASK_COMM_LEN 16
+#define BUILD_BUG_ON(c) _Static_assert(!(c), "kernel build contract")
 #define likely(c) (c)
 #define unlikely(c) (c)
 #define READ_ONCE(v) (v)
@@ -98,7 +102,6 @@ static jmp_buf resume_target;
 	} while (0)
 #define smp_processor_id() 3
 #define raw_smp_processor_id() smp_processor_id()
-#define numa_node_id() 1
 #define _Q_LOCKED_VAL 1
 #define _RET_IP_ 0x9000UL
 #define KD_PR_DEBUG(...)                     \
@@ -135,9 +138,8 @@ static bool kd_mutex_task_reroute(struct task_struct *task);
 static bool kd_source_is_open(void);
 static bool kd_mutex_task_get(struct task_struct *task);
 static void kd_mutex_task_put(struct task_struct *task);
-static bool kd_hotlock_is_promoted(unsigned long addr);
-static void kd_hotlock_record(unsigned long addr);
-static void kd_exe_add(int pid, unsigned long ip, enum kd_exe_lock_kind kind);
+static int kd_hotlock_record(unsigned long addr);
+static void kd_exe_add_abi(int pid, unsigned long ip, enum kd_exe_lock_kind kind, enum kd_entry_abi abi);
 static bool kd_exec_native_unlock(unsigned long addr, bool mutex);
 static unsigned long kd_read_kernel_gsbase(void);
 static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
@@ -146,6 +148,7 @@ static void jump_to_saved_regs(struct pt_regs *regs);
 static void jump_to_saved_regs_in_cs(struct pt_regs *regs);
 static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 					       int cpu);
+static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *node);
 #include "mutex_resource_code.h"
 
 /* Equal table-sized strides force collisions using actual mutex addresses;
@@ -286,8 +289,8 @@ static bool kd_mutex_task_active(struct task_struct *task)
 	CHECK(task == current);
 	return refs || active_override;
 }
-/* Task membership is a substitute; the real selector must still consult it
- * when the name no longer matches or source admission has closed. */
+/* Task membership is a substitute; the real unlock hook must consult it
+ * when the CPU cools, the name changes or source admission has closed. */
 static bool kd_mutex_task_reroute(struct task_struct *task)
 {
 	return kd_mutex_task_active(task);
@@ -311,23 +314,21 @@ static void kd_mutex_task_put(struct task_struct *task)
 	refs--;
 	task_puts++;
 }
-static bool kd_hotlock_is_promoted(unsigned long addr)
-{
-	CHECK(addr);
-	return promoted;
-}
-static void kd_hotlock_record(unsigned long addr)
+static int kd_hotlock_record(unsigned long addr)
 {
 	CHECK(addr);
 	samples++;
+	sampled_first = true;
+	return cpu_hot && promoted;
 }
 bool kd_mutex_jit_is_enabled(void)
 {
 	return enabled;
 }
-static void kd_exe_add(int pid, unsigned long ip, enum kd_exe_lock_kind kind)
+static void kd_exe_add_abi(int pid, unsigned long ip, enum kd_exe_lock_kind kind, enum kd_entry_abi abi)
 {
 	CHECK(!pid && ip == 0x8000 && kind == KD_EXE_LOCK_MUTEX && refs);
+	CHECK(abi == KD_ENTRY_ABI_LEGACY || abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	adds++;
 }
 static bool kd_exec_native_unlock(unsigned long addr, bool mutex)
@@ -350,18 +351,12 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	CHECK(preempt == 1 && migration == 1 && refs == 1);
 	CHECK(node->lock == lock && node->task_struct_ptr == current);
 	CHECK(node->gsbase == kd_read_kernel_gsbase());
-	CHECK(node->cpuid == smp_processor_id() &&
-	      node->socket_id == numa_node_id());
 	CHECK(node->tail == (int)encode_tail(smp_processor_id(), node->slot));
 	CHECK(decode_tail(node->tail) == node);
 	CHECK(node->locked && !node->completed && !node->native_resume &&
 	      !node->next);
 	CHECK(node->saved_ret_addr == 0x8000);
 	CHECK(memcmp(&node->regs, &entry, sizeof(entry)) == 0);
-	if (direct_packet)
-		CHECK(node->saved_rbx == 11 && node->saved_r12 == 12 &&
-		      node->saved_r13 == 13 && node->saved_r14 == 14 &&
-		      node->saved_r15 == 15 && node->saved_rbp == 16);
 	if (mode == 2) {
 		release_peer(lock);
 		lock->locked = _Q_LOCKED_VAL;
@@ -378,6 +373,27 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	}
 	return mode;
 }
+/* Exercise the real minimal entry producer without simulating its nonlocal
+ * restoration here; that assembly is run separately and in live mutex tests. */
+static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+	CHECK(node->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	CHECK(node->packet_state == KD_PACKET_MINIMAL);
+	CHECK(node->regs.ip == 0x8000 && node->regs.bp == 0xabc0);
+	CHECK(node->regs.sp == (unsigned long)&native_stack[16]);
+	struct pt_regs before = node->regs;
+	before.ip = before.sp = before.bp = 0xa7a7a7a7a7a7a7a7UL;
+	struct pt_regs poison;
+	memset(&poison, 0xa7, sizeof(poison));
+	CHECK(!memcmp(&before, &poison, sizeof(before)));
+	release_peer(lock);
+	lock->locked = _Q_LOCKED_VAL;
+	preempt_enable();
+	kd_mutex_claim_origin(lock);
+	preempt_disable();
+	return 2;
+}
+
 static void capture_resume(struct pt_regs *regs, int result)
 {
 	CHECK(!preempt && !migration && !table_irq);
@@ -422,7 +438,10 @@ static void reset(void)
 	kd_mutex_node_overflow_count = kd_mutex_jit_resume_count = 0;
 	kd_mutex_origin_acquires = kd_mutex_origin_releases = 0;
 	kd_mutex_reserved_nodes.counter = 0;
-	promoted = enabled = true;
+	promoted = enabled = cpu_hot = true;
+	trace_admission = sampled_first = false;
+	comm_queries = 0;
+	kd_comm_init(&kd_spin_target, target_process);
 	task_failure = active_override = borrowed = false;
 	schedule_wanted = recycle_on_enable = direct_packet = false;
 	waiting_gate = release_gate = NULL;
@@ -620,7 +639,7 @@ static void check_hook_fallbacks(void)
 			      !task_puts && !refs && !adds);
 			CHECK(shadow_count() ==
 			      (unsigned int)(existing || reason == 3));
-			CHECK(samples == (unsigned int)(reason == 1));
+			CHECK(samples == 1);
 			CHECK(!slow_calls && !cpu_shadows.node_slots &&
 			      !kd_mutex_reserved_nodes.counter);
 			__kd_mutex_unlock(lock, 0, 0x9000);
@@ -674,6 +693,30 @@ static void hold_peer(struct kd_mutex *gate)
 
 /* Connect promotion and renamed-owner routing to the actual hooks. The native
  * wait is deterministic; real Linux exclusion and RCU remain live-test duties. */
+static void check_frequency_order(void)
+{
+	for (unsigned int abi = 0; abi < 2; abi++) {
+		for (unsigned int stage = 0; stage < 4; stage++) {
+			reset();
+			struct mutex *lock = &origins[0].mutex;
+			cpu_hot = stage != 0;
+			promoted = stage != 1;
+			source_open = stage != 3;
+			if (stage != 3) strcpy(current->comm, "non-target");
+			trace_admission = true;
+			CHECK(kd_mutex_dispatch_enabled() == 2 && !comm_queries);
+			if (abi) __kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0);
+			else __kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
+			CHECK(samples == 1 && lock->owner == current && !gets && !adds);
+			CHECK(comm_queries == (stage == 2));
+			unsigned int queries = comm_queries;
+			__kd_mutex_unlock(lock, 0, 0x9000);
+			CHECK(!lock->owner && comm_queries == queries && samples == 1);
+			CHECK(!notify_calls && !refs && !shadow_count());
+		}
+	}
+}
+
 static void check_promotion_and_routing(void)
 {
 	struct mutex *lock = &origins[0].mutex;
@@ -681,7 +724,7 @@ static void check_promotion_and_routing(void)
 
 	reset();
 	promoted = false;
-	CHECK(__is_kd_mutex_task() == 2);
+	CHECK(kd_mutex_dispatch_enabled() == 2);
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
 	CHECK(lock->owner == current && !refs && !shadow_count());
 	promoted = true;
@@ -691,8 +734,9 @@ static void check_promotion_and_routing(void)
 	/* A native peer may win L before the promoted target's next acquisition;
 	 * no queue handoff is allowed to manufacture native ownership. */
 	current = &peer;
-	CHECK(__is_kd_mutex_task() == 0);
-	kd_origin_mutex_lock(lock);
+	CHECK(kd_mutex_dispatch_enabled() == 2);
+	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
+	CHECK(!refs && !shadow_count());
 	current = &waiter;
 	native_owner_wait = true;
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
@@ -701,16 +745,17 @@ static void check_promotion_and_routing(void)
 	CHECK(gate && gate->physical_owner == current && lock->owner == current);
 	CHECK(refs == 1 && gets == 1 && !task_puts);
 
+	cpu_hot = false;
 	source_open = false;
 	strcpy(current->comm, "renamed");
-	CHECK(__is_kd_mutex_task() == 2);
+	CHECK(kd_mutex_dispatch_enabled() == 2);
 	__kd_mutex_unlock(lock, 0, 0x9000);
 	CHECK(!lock->owner && !gate->physical_owner && !gate->locked);
-	CHECK(!refs && task_puts == 1 && __is_kd_mutex_task() == 0);
+	CHECK(!refs && task_puts == 1 && kd_mutex_dispatch_enabled() == 2);
 	strcpy(current->comm, "target");
-	CHECK(__is_kd_mutex_task() == 0);
+	CHECK(kd_mutex_dispatch_enabled() == 2);
 	source_open = true;
-	CHECK(__is_kd_mutex_task() == 2);
+	CHECK(kd_mutex_dispatch_enabled() == 2);
 	CHECK(acquires == 3 && releases == 3 && !errors);
 	CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
 }
@@ -786,9 +831,9 @@ static void check_slowpath_packets(void)
 		resumed = setjmp(resume_target);
 		if (!resumed) {
 			if (direct_packet)
-				_kd_mutex_lock(gate,
+				_kd_mutex_lock_abi(gate,
 					       (unsigned long)&native_stack[16],
-					       0x8000, 11, 12, 13, 14, 15, 16);
+					       0x8000, 0, KD_ENTRY_ABI_LEGACY);
 			else
 				__kd_mutex_lock(
 					lock, (unsigned long)&native_stack[16],
@@ -827,7 +872,7 @@ static void check_slowpath_packets(void)
 				 * after rename and closing; C still belongs to the waiter. */
 				strcpy(current->comm, "renamed");
 				source_open = false;
-				CHECK(__is_kd_mutex_task() == 2);
+				CHECK(kd_mutex_dispatch_enabled() == 2);
 
 				/* The native suffix owns its unrelated C, not borrowed A.
 				 * Exercise absent and idle C shadows without consuming the
@@ -854,7 +899,7 @@ static void check_slowpath_packets(void)
 				      !task_puts && refs == 1);
 				CHECK(gate->physical_owner == &peer &&
 				      lock->owner == &peer);
-				CHECK(__is_kd_mutex_task() == 2);
+				CHECK(kd_mutex_dispatch_enabled() == 2);
 			}
 			release_peer(gate);
 			if (mode == 5) {
@@ -862,7 +907,7 @@ static void check_slowpath_packets(void)
 				 * final routing ref only after the retained L is released. */
 				kd_mutex_task_put(current);
 				CHECK(!refs && task_puts == 1);
-				CHECK(__is_kd_mutex_task() == 0);
+				CHECK(kd_mutex_dispatch_enabled() == 2);
 			}
 		}
 		CHECK(!lock->owner && !gate->physical_owner && !gate->locked);
@@ -889,14 +934,31 @@ static void check_poll_result(void)
 	poll_node = NULL;
 }
 
+static void check_minimal_entry(void)
+{
+	reset();
+	struct mutex *lock = &origins[0].mutex;
+	struct kd_mutex *gate = get_kd_mutex_shadow(lock);
+	hold_peer(gate);
+	for (unsigned int i = 0; i < KD_MUTEX_MAX_NODES; i++)
+		memset(&kd_mutex_nodes[i].regs, 0xa7, sizeof(struct pt_regs));
+	__kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0xabc0);
+	CHECK(!preempt && !migration && !cpu_shadows.node_slots);
+	CHECK(gate->physical_owner == current && refs == 1);
+	__kd_mutex_unlock(lock, 0, 0x9000);
+	CHECK(!refs && !gate->locked);
+}
+
 int main(void)
 {
+	check_minimal_entry();
 	check_poll_result();
 	check_tails();
 	check_nodes();
 	check_shadow_table();
 	check_hook_fallbacks();
 	check_local_predecessor();
+	check_frequency_order();
 	check_promotion_and_routing();
 	check_hook_nodes();
 	check_slowpath_packets();

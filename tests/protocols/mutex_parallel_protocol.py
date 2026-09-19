@@ -676,7 +676,7 @@ def capture_code_pool(phase, out):
                     continue
                 linked = elf.get_section(section["sh_link"])
                 for relocation in section.iter_relocations():
-                    if linked.get_symbol(relocation["r_info_sym"]).name == "mutex_lock":
+                    if linked.get_symbol(relocation["r_info_sym"]).name in {"mutex_lock", "kd_mutex_lock_clobber_v1"}:
                         assert relocation["r_info_type"] in (2, 4)
                         lock_calls.setdefault(section["sh_info"], []).append(
                             relocation["r_offset"]

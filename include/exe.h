@@ -40,7 +40,6 @@ void kd_exe_native_handoff_timing_end(bool mutex, u64 start);
 u64 kd_exe_queue_timing_start(void);
 void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end);
 
-#define KD_EXE_NO_READY 1
 #define KD_EXE_NO_RUN 2
 #define KD_EXE_RUN_ERROR 3
 #define KD_EXE_RUN_TO_UNLOCK 4

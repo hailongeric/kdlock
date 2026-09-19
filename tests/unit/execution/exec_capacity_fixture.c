@@ -880,7 +880,7 @@ static void borrowed_packets(void)
 		       sizeof(packet));
 		poison = kd_exec_current_context()->frames[0].regs;
 		packet.di = lock;
-		frame = kd_exec_frame_push_spin(&packet, 0x1000, lock, NULL,
+		frame = kd_exec_frame_push_borrowed(&packet, 0x1000, lock, NULL,
 					       NULL, 1, 0x3000, &waiters[0]);
 		CHECK(frame && frame->borrowed_regs == &packet &&
 		      kd_exec_frame_regs(frame) == &packet);
@@ -897,7 +897,7 @@ static void borrowed_packets(void)
 			CHECK(!frame->regs_borrowed &&
 			      !memcmp(&frame->regs, &expected, sizeof(expected)));
 			memset(&packet, 0xcc, sizeof(packet));
-			child = kd_exec_frame_push_spin(&expected, 0x1000, lock,
+			child = kd_exec_frame_push_borrowed(&expected, 0x1000, lock,
 				NULL, NULL, 1, 0x3000, &waiters[1]);
 			CHECK(child && child->parent == frame && !child->regs_borrowed);
 			if (!child || failures)

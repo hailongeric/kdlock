@@ -18,38 +18,26 @@ bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 	       (unsigned long)task;
 }
 
-void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
-		     unsigned long ret_addr)
+static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
+		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
 	struct kd_mutex *kd_mtx;
-	/*
-	 * Capture callee-saved registers NOW, before any function calls
-	 * in this hook can clobber them. At this point they hold the values
-	 * that mutex_lock preserved from the original caller.
-	 *
-	 * We store them in local variables; they'll be passed to
-	 * _kd_mutex_lock which saves them into the per-CPU node.
-	 */
-	unsigned long s_rbx, s_r12, s_r13, s_r14, s_r15, s_rbp;
-	asm volatile("movq %%rbx, %0\n"
-		     "movq %%r12, %1\n"
-		     "movq %%r13, %2\n"
-		     "movq %%r14, %3\n"
-		     "movq %%r15, %4\n"
-		     "movq %%rbp, %5\n"
-		     : "=m"(s_rbx), "=m"(s_r12), "=m"(s_r13), "=m"(s_r14),
-		       "=m"(s_r15), "=m"(s_rbp)
-		     :
-		     : "memory");
+	/* The legacy kernel hook already saved the caller on its native stack.
+	 * execute_cs reads that authoritative frame. The clobber bridge supplies
+	 * IP/SP/BP explicitly; neither ABI needs a second hook snapshot. */
 
-	/* Nested native calls and borrowed continuations must not join another
-	 * delegation queue. Their original mutexes still provide mutual exclusion. */
-	if (kd_mutex_task_active(current)) {
+	/* The address-less kernel selector only dispatches. Frequency checks
+	 * precede process selection, so all callers may supply observations but
+	 * cold CPUs/locks never inspect comm or allocate task/shadow records. */
+	if (!kd_hotlock_record((unsigned long)lock)) {
 		kd_origin_mutex_lock(lock);
 		return;
 	}
-	if (!kd_hotlock_is_promoted((unsigned long)lock)) {
-		kd_hotlock_record((unsigned long)lock);
+	/* Nested native calls and borrowed continuations must not join another
+	 * delegation queue. Their original mutexes still provide mutual exclusion. */
+	if (!kd_source_is_open() ||
+	    !kd_comm_matches(&kd_spin_target, current->comm) ||
+	    kd_mutex_task_active(current)) {
 		kd_origin_mutex_lock(lock);
 		return;
 	}
@@ -75,9 +63,20 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 		kd_origin_mutex_lock(lock);
 		return;
 	}
-	kd_exe_add(0, ret_addr, KD_EXE_LOCK_MUTEX);
-	_kd_mutex_lock(kd_mtx, ret_rsp, ret_addr, s_rbx, s_r12, s_r13, s_r14,
-		       s_r15, s_rbp);
+	kd_exe_add_abi(0, ret_addr, KD_EXE_LOCK_MUTEX, abi);
+	_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);
+}
+
+void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
+		     unsigned long ret_addr)
+{
+	kd_mutex_lock_entry(lock, ret_rsp, ret_addr, 0, KD_ENTRY_ABI_LEGACY);
+}
+
+void __kd_mutex_lock_clobber_v1(struct mutex *lock, unsigned long sp,
+			       unsigned long ip, unsigned long bp)
+{
+	kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 }
 
 /* A borrowed unlock is a request, not permission to unlock another task's
@@ -88,6 +87,12 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 	struct kd_mutex *kd_mtx;
 
 	(void)ret_rsp;
+	/* Always reached, even after CPU cooling, rename or source closing. Task
+	 * membership is an ownership lookup here, not a fresh-admission filter. */
+	if (!kd_mutex_task_reroute(current)) {
+		kd_origin_mutex_unlock(lock, ret_addr);
+		return;
+	}
 	if (kd_exec_native_unlock((unsigned long)lock, true))
 		return;
 	kd_mtx = find_kd_mutex_shadow(lock);
@@ -97,6 +102,13 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 		return;
 	}
 	kd_origin_mutex_unlock(lock, ret_addr);
+}
+
+void __kd_mutex_unlock_clobber_v1(struct mutex *lock, unsigned long sp,
+				 unsigned long ip, unsigned long bp)
+{
+	(void)bp;
+	__kd_mutex_unlock(lock, sp, ip);
 }
 
 static int kd_jit_begin_call(struct kd_exec_frame *frame, struct pt_regs *regs)

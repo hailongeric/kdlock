@@ -2,10 +2,10 @@
  * kd_lock.c — kdlock hook implementations.
  *
  * This file implements the hook callbacks that the patched kernel calls on
- * every spinlock and mutex operation for the target process:
+ * ordinary spinlock and mutex operations before target-process selection:
  *
- *   Raw spinlock: __kd_raw_spin_lock  → kd_spin_lock()  (kd_spinlock.c)
- *                 __kd_raw_spin_unlock → kd_spin_unlock()
+ *   Ordinary spin: kd_spin_dispatch_clobber_*_v1 → kd_spin_lock_abi()
+ *   Legacy caller: kd_spin_dispatch_{lock,unlock} → full-state spin path
  *
  *   Mutex:        __kd_mutex_lock  → _kd_mutex_lock()   (kd_mutex.c)
  *                 __kd_mutex_unlock → _kd_mutex_unlock()
@@ -170,8 +170,6 @@ static noinline void kd_raw_spin_unlock_slow(raw_spinlock_t *lock)
 		kd_spin_unlock_ref((struct qspinlock *)lock, &ref);
 		return;
 	}
-	if (!kd_hotlock_is_promoted((unsigned long)lock))
-		kd_hotlock_record((unsigned long)lock);
 	origin_raw_spin_unlock(lock);
 }
 
@@ -179,33 +177,13 @@ static noinline void kd_raw_spin_lock_slow(raw_spinlock_t *lock,
 					 unsigned long ret_rsp,
 					 unsigned long ret_addr)
 {
-	if (kd_spin_entry_native_active() ||
-	    !kd_hotlock_is_promoted((unsigned long)lock)) {
-		kd_hotlock_record((unsigned long)lock);
+	if (kd_spin_entry_native_active()) {
 		origin_raw_spin_lock(lock);
 		return;
 	}
 
 	kd_exe_add(0, ret_addr, KD_EXE_LOCK_SPIN);
 	kd_spin_lock((struct qspinlock *)lock, ret_rsp, ret_addr);
-}
-
-void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
-			  unsigned long ret_addr)
-{
-	(void)ret_rsp;
-	(void)ret_addr;
-	if (likely(kd_spin_fast_unlock(lock)))
-		return;
-	kd_raw_spin_unlock_slow(lock);
-}
-
-void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
-			unsigned long ret_addr)
-{
-	if (likely(kd_spin_fast_trylock(lock, ret_addr)))
-		return;
-	kd_raw_spin_lock_slow(lock, ret_rsp, ret_addr);
 }
 
 static noinline void kd_spin_dispatch_lock_slow(raw_spinlock_t *lock,
@@ -222,21 +200,29 @@ static noinline void kd_spin_dispatch_lock_slow(raw_spinlock_t *lock,
 
 static noinline void kd_spin_dispatch_unlock_slow(raw_spinlock_t *lock)
 {
-	if (kd_spin_task_selected())
-		kd_raw_spin_unlock_slow(lock);
-	else
-		origin_raw_spin_unlock(lock);
+	/* Unlock routing follows acquisition provenance, never current frequency
+	 * or comm. Cold/unselected acquisitions have no ticket and release L. */
+	kd_raw_spin_unlock_slow(lock);
 }
 
 /* The cache proves a pinned, published site, not permission to execute JIT.
  * A hit performs only the original Linux acquisition and can also serve a
  * non-target caller of that same site. S, admission, CPU context and native L
  * still gate the try. Misses select the original target/retained-owner route;
- * no non-target miss is promoted, registered or delegated here. */
+ * all callers contribute frequency observations, but only selected misses
+ * may register/delegate. */
 void kd_spin_dispatch_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 			   unsigned long ret_addr)
 {
-	enum kd_spin_fast_result result = kd_spin_fast_acquire(lock, ret_addr);
+	enum kd_spin_fast_result result;
+
+	/* First sample CPU traffic, then this address, before consulting comm or
+	 * task records. A cold CPU must not search the shared hotlock table. */
+	if (!kd_hotlock_record((unsigned long)lock)) {
+		origin_raw_spin_lock(lock);
+		return;
+	}
+	result = kd_spin_fast_acquire(lock, ret_addr);
 
 	if (likely(result == KD_SPIN_FAST_OWNED))
 		return;
@@ -268,11 +254,6 @@ static noinline void kd_spin_dispatch_clobber_lock_slow(raw_spinlock_t *lock,
 		origin_raw_spin_lock(lock);
 		return;
 	}
-	if (!kd_hotlock_is_promoted((unsigned long)lock)) {
-		kd_hotlock_record((unsigned long)lock);
-		origin_raw_spin_lock(lock);
-		return;
-	}
 	kd_exe_add_abi(0, ip, KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
 	kd_spin_lock_abi((struct qspinlock *)lock, sp, ip, bp,
 	                 KD_ENTRY_ABI_SPIN_CLOBBER_V1);
@@ -281,7 +262,13 @@ static noinline void kd_spin_dispatch_clobber_lock_slow(raw_spinlock_t *lock,
 void kd_spin_dispatch_clobber_lock_v1(raw_spinlock_t *lock, unsigned long sp,
                                     unsigned long ip, unsigned long bp)
 {
-	enum kd_spin_fast_result result = kd_spin_fast_acquire(lock, ip);
+	enum kd_spin_fast_result result;
+
+	if (!kd_hotlock_record((unsigned long)lock)) {
+		origin_raw_spin_lock(lock);
+		return;
+	}
+	result = kd_spin_fast_acquire(lock, ip);
 
 	if (likely(result == KD_SPIN_FAST_OWNED))
 		return;

@@ -14,12 +14,10 @@ check_dmesg_has "end_point\[1\]" "end_point[1] (mutex_unlock) not resolved" || e
 info "end_point resolved for spin_unlock and mutex_unlock"
 
 # --- Test 2: trigger exe_add after hot-lock promotion ---
-# kd_hotlock_record() ignores the first 1e9 TSC cycles after the first observed
-# lock. Prime that timer before the real workload, otherwise this test can pass
-# through the original spinlock path and never allocate an exe entry.
-info "Priming hot-lock timer..."
+# CPU frequency admission needs consecutive acquisitions, not a startup wait.
+# Keep preparation adjacent to promotion so the lock window cannot expire.
+info "Preparing hot-lock workload..."
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 0 >/dev/null 2>&1
-sleep 1
 
 info "Running single-thread spinlock workload to trigger exe_add..."
 run_with_timeout 20 "$BENCH_BIN" 1 12000 10 1 0 >/dev/null 2>&1

@@ -7,16 +7,20 @@ logs have been removed from this task list; Git history retains their detail.
 
 ## Current Checkpoint
 
-Ordinary spin on `kdclobber1` uses caller-clobber v1: normal requests capture
+The default provider requires `kdclobber2`'s caller-clobber v1 interface; older
+kernel installers have been removed. Ordinary spin/mutex requests capture
 and restore RIP/RSP/RBP; intermediate exits materialize FULL logical GPRs.
 Waiter and combiner share one preallocated request/frame/register packet.
 Both caller ABIs use one resident C batch loop. Shared PT/Stack backing,
 producer-prepared hints, diagnostic identity reuse and normal-root admission/
 retirement specialization are implemented. The independent TCLock backend
 switches waiter stacks to execute native code; it does not replace kdlock JIT.
+Spin nodes now separate links/hints from notifications in a 128-byte aligned
+stride; 64-byte gate slots isolate independent locks. Exact shared waiter
+accounting remains unchanged.
 See [current execution paths](../bench/spin_cacheline/EXECUTION_PATHS.md).
 
-[Latest measurements](../bench/tclock_compare/results/20260919-state-access.md)
+[Earlier paired measurements](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
 belong to their frozen source and do not imply a general speedup or a current
 full-suite PASS. Known unresolved failures remain:
 
@@ -28,16 +32,22 @@ full-suite PASS. Known unresolved failures remain:
 - The older oversubscribed mode-5 run published code but missed actual JIT.
   Its polling strategy differs from today's; see [historical evidence](VALIDATION.md#mutex-oversubscription-assessment).
 
-Hotlock decisions still use frequency thresholds and sticky states. Adaptive
-native/probe/delegate selection, demotion and sparse monitoring are **not
-implemented**; proposed work is listed below.
+Hotlock discovery now keeps CPU/lock counters and windows per CPU, reads TSC
+every 10240 observations and publishes only qualified addresses. Cooling closes
+fresh admission; published identities remain until provider teardown. Sparse
+monitoring is implemented. Benefit-based native/probe/delegate selection and
+shared-identity retirement remain unimplemented. The latest
+[component comparison](../bench/hotlock_record/results/20260919-local-discovery.md)
+does not establish current complete-operation throughput or JIT share.
 
 ## Delivery Scope
 
 Scope is **x86_64 kernel spin/mutex delegation** with existing guest hooks.
 Userspace/futex, rwsem and cross-architecture ports are outside the project.
-Ordinary spin's new ABI does not replace IRQ/BH/irqsave/trylock, explicit nested
-or mutex caller contracts. Preserve two-word wrapper args and physical owners.
+Ordinary spin and mutex use separate clobber identities. IRQ/BH/irqsave/trylock,
+explicit nested and special mutex APIs retain their contracts. Preserve two-word
+wrapper args and physical owners. Mutex minimal roots borrow the node packet;
+FULL exits detach it before control services and native owner ACK.
 New protocol code needs purpose and constraint comments.
 
 The user decisions of 2026-09-14 and 2026-09-16 prioritize supported main paths
@@ -178,16 +188,22 @@ references remain necessary; removing every atomic is not the objective.
   and wrapper service cost separately where feasible.
 - [ ] Measure nested contention; single-lock benchmarks cannot evaluate child
   ledger or virtual-waiter optimizations.
-- [ ] Extend shared storage to mutex only after its own lifetime analysis.
+- [ ] Further mutex frame/packet sharing must preserve the independent frame
+  lifetime after a native waiter releases its node; ordinary minimal roots already borrow it.
 
 ### Hotlock Monitoring And Adaptive Admission
 
-Proposed work, **not current behavior**:
+Implemented: CPU-local frequency and per-lock discovery before process selection.
+One TSC sample per 10240 observations evaluates local candidates. Only qualified
+addresses enter the shared positive set; cached positives never read it. There
+are no shared warmup counters/windows or negative states. Local expiry retries,
+collisions may lose approximate history, and each CPU qualifies independently.
+Cooling changes new admission only; unlock and owner ACK remain independent.
+See [sampling protocol](DESIGN.md#hotlock-monitoring) and
+[component comparison](../bench/hotlock_record/README.md).
 
-- [ ] Reduce native/ignored-lock monitoring with sparse per-CPU samples and
-  infrequent aggregation, avoiding per-operation shared writes and clock reads.
-  Preserve timestamp ordering: deleting the second TSC read alone reintroduces
-  the reproduced false-IGNORE bug.
+Remaining work, **not current behavior**:
+
 - [ ] Evaluate native/probe/delegate selection using contention and actual batch
   amortization, bounded probes, cooldown and hysteresis. Validate complete
   operation throughput and latency against matched native runs; frequency and
@@ -197,7 +213,8 @@ Proposed work, **not current behavior**:
   compiled entries where valid; demotion is not source retirement.
 - [ ] Record batch-ending reasons and compare short/long batches. Four-thread
   samples are already promoted and ready; lowering the promotion threshold
-  does not explain or fix their roughly two-body batches. See [log analysis](../bench/tclock_compare/results/20260919-state-access.md#batch-length).
+  does not explain or fix their roughly two-body batches. The new 8/16-thread
+  points show the transition to longer batches; see [log analysis](../bench/tclock_compare/results/20260919-thread-scaling.md#batch-length).
 
 The desired steady state is inexpensive native execution when delegation does
 not pay, sustained delegation when it does. Probes and workload transitions
@@ -216,6 +233,12 @@ Functional ioctl p50/p99 includes instrumentation and scheduling.
   observation costs with justified boundaries; do not add overlapping timers.
 - [ ] Obtain suitable latency distributions and memory/cache-transfer evidence;
   existing flat-IP samples do not measure causal transfers or pure wrapper cost.
+- [ ] Evaluate exact waiter accounting independently; its shared RMWs remain
+  true sharing. Node notification/gate isolation is implemented and
+  [paired measurements](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
+  show a 20-thread gain and a 4-thread regression. Separate the two layout
+  contributions and quantify gate isolation with a multi-lock experiment;
+  the single-lock comparison does not measure cross-lock interference.
 
 ### Comparator Feasibility And Matched Experiments
 

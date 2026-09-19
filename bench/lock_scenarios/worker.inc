@@ -44,6 +44,34 @@ static void *worker_thread(void *arg)
 	if (comm)
 		data->error = pthread_setname_np(pthread_self(), comm);
 
+	/* Explicit protocol-only preparation, outside timings and before the
+	 * shared start barrier. Keep preparation and payload on the same CPU;
+	 * honor the caller's affinity (including intentional single-CPU cases).
+	 * No sampler fields, payload records or JIT tables are written here. */
+	if (!data->error && getenv("KD_TEST_LOCAL_PREPARE")) {
+		cpu_set_t allowed, chosen;
+		int index, cpu, count;
+
+		if (sched_getaffinity(0, sizeof(allowed), &allowed))
+			data->error = errno;
+		else if (!(count = CPU_COUNT(&allowed)))
+			data->error = EINVAL;
+		else {
+			index = data->thread_id % count;
+			CPU_ZERO(&chosen);
+			for (cpu = 0; cpu < CPU_SETSIZE; cpu++)
+				if (CPU_ISSET(cpu, &allowed) && !index--) {
+					CPU_SET(cpu, &chosen);
+					break;
+				}
+			data->error = pthread_setaffinity_np(pthread_self(),
+							  sizeof(chosen), &chosen);
+			if (!data->error && ioctl(data->fd, IOC_PREPARE_TEST,
+						 &data->args) < 0)
+				data->error = errno ? errno : EIO;
+		}
+	}
+
 	error = pthread_barrier_wait(&start_barrier);
 	if (error && error != PTHREAD_BARRIER_SERIAL_THREAD)
 		data->error = error;

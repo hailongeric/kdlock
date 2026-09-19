@@ -73,14 +73,14 @@ def main():
             "int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,",
             "static struct kd_exec_frame *kd_exec_frame_push_internal(",
             "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
-            "kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,",
+            "kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,",
             "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)",
         )
     )
     pool = pool.replace(
         "\nkd_exec_frame_push(", "\nstruct kd_exec_frame *\nkd_exec_frame_push("
     )
-    pool = pool.replace("\nkd_exec_frame_push_spin(", "\nstruct kd_exec_frame *\nkd_exec_frame_push_spin(")
+    pool = pool.replace("\nkd_exec_frame_push_borrowed(", "\nstruct kd_exec_frame *\nkd_exec_frame_push_borrowed(")
     for marker in (
         "static int kd_exec_invariant_failure(void)",
         "static bool kd_exec_frame_state_is_active(int state)",

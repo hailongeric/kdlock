@@ -89,6 +89,8 @@ class MemoryValues:
         # OR: an opaque write/callee forbids further initial-stack identities.
         # UNKNOWN byte data alone cannot distinguish untouched from overwritten.
         self.entry_spills_blocked = False
+        self.allow_checked_entry_spills = False
+        self.checked_spill_windows = frozenset()
 
     def spend(self, amount):
         # Work is translation-local, not path-local: restoring a CFG snapshot
@@ -110,6 +112,9 @@ class MemoryValues:
             return None
         address = self.address(memory.ptr)
         if address is None or self.guards.base_name(address[0]) not in {"RSP", "RBP"}:
+            return None
+        if any(not self.checked_coverage(address, window, 8, size)
+               for window, size in self.checked_spill_windows):
             return None
         if not self.spend(8 * len(self.cells)):
             return None
@@ -223,11 +228,18 @@ class MemoryValues:
                 words[memory] = domain
         return result, default, self.bounded_words(words)
 
+    def checked_coverage(self, address, window, size, window_bytes):
+        if address is None or window is None:
+            return False
+        if address[0] == window[0]:
+            return ((address[1] - window[1]) & ((1 << 64) - 1)) + size <= window_bytes
+        return (self.allow_checked_entry_spills and self.guards is not None
+                and self.guards.inside_checked_window(address, window, size, window_bytes))
+
     def clobber(self, *, checked_windows=(), window_bytes=0):
-        self.entry_spills_blocked = True
         # Only the negotiated mutex boundary compares these bytes before
-        # returning to JIT. Membership requires the same exact address base
-        # and full coverage for EVERY possible RSP, not an entry disjointness
+        # returning to JIT. Membership requires exact or entry-guarded address coverage
+        # for EVERY possible RSP, not just an entry disjointness
         # predicate or an assumption that the waiter's stack is private.
         windows = tuple(self.address(pointer) for pointer in checked_windows)
         if (
@@ -237,6 +249,17 @@ class MemoryValues:
             or any(window is None for window in windows)
         ):
             windows = ()
+        if self.allow_checked_entry_spills and windows and not self.entry_spills_blocked:
+            # A spill first read after B may still be the entry value only if
+            # EVERY prior native checkpoint covered it. CFG joins union these
+            # obligations; opaque calls/writes keep the irreversible block bit.
+            self.checked_spill_windows |= frozenset((window, window_bytes) for window in windows)
+            if len(self.checked_spill_windows) > 64:
+                self.entry_spills_blocked = True
+        else:
+            self.entry_spills_blocked = True
+        if self.entry_spills_blocked:
+            self.checked_spill_windows = frozenset()
         if windows and not self.spend(
             len(windows) * (len(self.cells) + len(self.words))
         ):
@@ -248,9 +271,8 @@ class MemoryValues:
                 return False
             address = self.address(pointer)
             return address is not None and all(
-                address[0] == base
-                and ((address[1] - start) & ((1 << 64) - 1)) + size <= window_bytes
-                for base, start in windows
+                self.checked_coverage(address, window, size, window_bytes)
+                for window in windows
             )
 
         # A call/unmodelled instruction might leave an old value unchanged.

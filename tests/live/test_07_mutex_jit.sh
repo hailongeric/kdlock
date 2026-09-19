@@ -77,16 +77,15 @@ fi
 DAEMON_LOG="$(mktemp /tmp/kdlock-test07-daemon.XXXXXX.log)"
 start_daemon 2
 
-# Prime kd_hotlock_record's 1e9-cycle startup window.
+# Keep preparation adjacent to promotion under CPU frequency admission.
 run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 3 >/dev/null 2>&1 || {
     fail "$TEST_NAME" "warmup failed"
     exit 1
 }
-sleep 1
 
 # Promote and translate the mutex without contention, so no waiter executes
 # JIT code before the daemon has written a complete sandbox back.
-run_with_timeout 20 "$BENCH_BIN" 1 12000 10 1 3 >/dev/null 2>&1 || {
+run_with_timeout 20 "$BENCH_BIN" 1 48000 10 1 3 >/dev/null 2>&1 || {
     fail "$TEST_NAME" "promotion workload failed"
     exit 1
 }
@@ -112,6 +111,10 @@ wait_for_jit_quiescence 1 20 2 || {
     fail "$TEST_NAME" "mutex translation did not become quiet"
     exit 1
 }
+
+# Supply local frequency before one-shot workers enter the real payload.
+printf '1\n' > /sys/module/klock_module/parameters/cpu_frequency_prepare
+export KD_TEST_LOCAL_PREPARE=1
 
 # Recreate the deterministic owner/three-waiter topology repeatedly. One long
 # critical section gives the remaining workers time to queue, exercising node
@@ -202,7 +205,7 @@ check_dmesg_has "kd_exec invariant_failures=0" \
     "execution-frame invariant failed" || exit 1
 check_jit_entry_executed "$asm_dir" || exit 1
 
-expected_counter=$((1 + 12000 +
+expected_counter=$((1 + 48000 +
     JIT_ROUNDS * ROUND_THREADS * ROUND_LOOPS +
     1 + PINNED_THREADS * PINNED_LOOPS +
     STRESS_THREADS * STRESS_LOOPS))

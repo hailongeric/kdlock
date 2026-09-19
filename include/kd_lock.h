@@ -4,9 +4,9 @@
 /*
  * kd_lock.h — kdlock hook declarations.
  *
- * Entry signatures installed by kd_main.c into the patched kernel. Legacy
- * hooks arrive after selection; the combined spin dispatcher performs its
- * own target/active-owner routing and native fallback. kd_lock.c owns entry
+ * Entry signatures installed by kd_main.c into the clobber kernel. Mutex
+ * selectors preserve active-owner routing; fresh spin/mutex hooks check
+ * CPU/local-lock frequency before task selection. kd_lock.c owns entry
  * handling; kernel_module/lock/ owns translated nested CALL handling.
  *
  * The inline helpers preserve lockdep accounting for native fallback paths.
@@ -40,19 +40,9 @@ static inline void kd_preempt_disable_raw_spin_lock(raw_spinlock_t *lock)
 	LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
 }
 
-static __always_inline void kd_preempt_disable_spin_lock(spinlock_t *lock)
-{
-	kd_preempt_disable_raw_spin_lock(&lock->rlock);
-}
-
 /* --- raw spinlock hooks --------------------------------------------------- */
 
-void __kd_raw_spin_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
-			unsigned long ret_addr);
-void __kd_raw_spin_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
-			  unsigned long ret_addr);
-
-/* Optional combined spin interface; non-target callers remain native. */
+/* Compatibility caller ABI on the clobber kernel; non-targets stay native. */
 void kd_spin_dispatch_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
 			   unsigned long ret_addr);
 void kd_spin_dispatch_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
@@ -64,6 +54,10 @@ void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
 		     unsigned long ret_addr);
 void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 		       unsigned long ret_addr);
+void __kd_mutex_lock_clobber_v1(struct mutex *, unsigned long, unsigned long,
+				unsigned long);
+void __kd_mutex_unlock_clobber_v1(struct mutex *, unsigned long, unsigned long,
+				  unsigned long);
 
 /* Known-call handlers used by the high-lock JIT continuation path. */
 int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,

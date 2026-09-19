@@ -2,13 +2,19 @@
 
 适用范围：仅 x86_64 机器上的内核临界区；不包含其他架构的适配或测试任务。
 `mutex_jit` 默认开启；mutex 正例按 `mutex_jit=1` 验收，`0` 仅用于显式原生对照。
-普通 spin 的 caller-clobber v1 由独立 `kdclobber1` 内核入口启用：物理请求
+普通 spin/mutex 的 caller-clobber v1 由独立 `kdclobber2` 内核入口启用：物理请求
 最初仅有 RIP/RSP/RBP，正常 outer unlock 返回精简完成；中间出口先物化 FULL
-包再进入下述通用处理。旧 ABI 和 mutex 保留完整契约。身份、状态表和调用约束
+包再进入下述通用处理。旧 ABI 和中途 FULL 续跑保留完整契约。身份、状态表和调用约束
 统一见 [寄存器 ABI 1.0](JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1)。
 2026-09-08 用户确认：只审查本次实际可能执行的 JIT 范围，普通 CALL miss
 交回原 waiter 后，从保存的退出状态原生完成剩余临界区，不再返回本次 JIT。
 这取代此前“普通 CALL 后的 native 后缀也必须整段准入”的要求。
+
+当前默认接口为 `kdclobber2` 的普通 spin/mutex clobber（ABI 1/2）。本 CPU
+累计频率与锁频率先于目标进程筛选，每 10240 次统一读时钟；准备方法见 3.2。
+本文件后半保留专门协议的角色、断言及诊断入口。部分旧准备仍为 12000 次，
+且依赖旧 CPU 放置，未全部适配/重验本地发现；只能作为协议库存按需诊断。
+当前通过范围以 [tests](../tests/README.md#当前验证范围) 的冻结记录为准。
 
 ## 1. 准入范围
 
@@ -115,7 +121,7 @@ owner/依赖任务必须能在其他 CPU 推进，同 CPU 的 sleeping owner 与
 终态检查和解绑，再在 node 上 release 发布 `completed=1/locked=0`；waiter
 acquire 观察完成后才消费结果。新 ABI 的 COMPLETE 只含 RIP/RSP/RBP；FULL
 中间出口和旧 ABI 遵守各自寄存器规则。node 仅引用 request，不保存另一份整包。
-mutex 仍保留自身 node/frame 的包处理。
+mutex MINIMAL/COMPLETE 借用 node 包，首次 FULL 退出才取得独立 frame 包。
 尚未执行的单 waiter、IRQ/native 交接和批次末尾交接也使用 release，先完成
 队列链接再唤醒。
 这是私有队列的执行通知，不是把原生锁 owner 改为 waiter。
@@ -209,7 +215,7 @@ child 另保留 root 引用。物理 waiter 的恢复汇编在最后一次读取
 嵌套 `kd_spin_jit_context` 在 x86-64 上从 184 缩为 16 字节，四槽的请求大小从
 736 降到 64 字节；两者的 `vzalloc` 仍占一页，不能计作每 CPU 释放一页内存。
 准备和解绑不清空整个 frame 或无效锁记录；池满时使用原有原生/队列回退。
-mutex 仍使用旧的 per-CPU frame 分配及包处理。
+mutex 使用 per-CPU frame 分配；最小 root 借用 node 包，FULL 续跑保留独立生命周期。
 
 批次持续持有 L，并在整个 combining 区间持有一次 source/provider lease；每个
 spin bind 检查 OPEN，但不再逐 frame 增减全局计数和 module 引用。设备状态里的
@@ -230,8 +236,9 @@ SLOWPATH、COMBINER、JIT_SUCCESS 等事件、最大深度、overflow 和 invari
 预留区；排空退出后遍历所有 possible CPU 汇总，日志字段不变。
 实时 waiter 数量、JIT 禁用 latch 和 owner/ACK 仍是共享协议/观察状态。
 普通请求只初始化 72 字节 frame 热头部及有效寄存器字段；锁数组、remote/native 控制和
-快照位于预分配冷区，由 `complex_ready` 在首次复杂出口启用。node 为 64 字节，
-保留队列通知、链接、调度栈标记、execution 引用及发布前准备的预取地址提示。
+快照位于预分配冷区，由 `complex_ready` 在首次复杂出口启用。node 为 128 字节，
+首行保留链接、调度栈标记、execution 引用及发布前准备的预取地址提示，
+第二行独立放置 completed/locked，避免后继入队干扰 waiter 轮询；各槽均对齐 64 字节。
 提示只在排队期间使用，不参与准入或最终恢复。
 `kd_spin_batch_run` 在同一个 C 帧中连续处理新、旧及混合 ABI 请求，编译器
 按 clobber 约束保护 combiner 活跃值。旧 wrapper 适配只额外保护物理 RBP；
@@ -257,7 +264,7 @@ ticket 分配/查询只访问活跃位图中的槽，状态变更 guard 仍保�
 本节及后续章节维护复杂用例的协议、参数和判定，不要求把所有命令顺序执行。
 
 只在可恢复的 guest 中构建和运行，不能在宿主机加载模块。当前 guest SSH
-端口为 2222，已有 Linux 6.1.159 hook/exports；本次不修改 guest 内核。
+端口为 2222，默认要求 `6.1.159-kdclobber2` 的 hook/exports。
 先确认恢复快照和空闲状态，完整流程见 [AGENTS.md](AGENTS.md)。
 normal 模式共享源码无需复制；recovery 模式虽路径相同但使用 ext4，只同步
 哈希不同的文件，不移动或整目录复制仓库。
@@ -269,12 +276,13 @@ normal 模式共享源码无需复制；recovery 模式虽路径相同但使用 
 
 ```sh
 cd /root/host_fs/kdlock
-python3 kernel_baseline/verify.py --source /root/linux-6.1.159 --build --running
+export KDIR=/root/linux-6.1.159-kdclobber2
+python3 bench/spin_cacheline/kernel_identity.py
 make -C tests/unit run
 python3 tests/tools/audit_context_spills.py
 ```
 
-首次验收或需要全主模式确认时，在恢复快照确认后执行以下命令。
+仅在明确需要历史主模式诊断时，确认恢复快照并核对各脚本的本地频率准备后执行以下命令。
 脚本负责编译、加载、检查、停止 daemon 和卸载：
 
 ```sh
@@ -292,7 +300,7 @@ daemon 必须在 kdlock 加载后启动，并在一次设备会话内完成读�
 继续持有。真实读之前还会 pin 源码所属 LIVE 模块；停止并等待所有翻译者和
 执行者退出后，须成功 `retire` 再卸载，不能将 `in use` 当作强卸载理由。
 执行流及手工 CLI 的边界只维护在 [daemon 文档](../daemon/README.md#device-session)。
-mode 1/4 的入口条件及 mode 8 的跨窗口解码已通过实际 JIT 检查；这不代表
+mode 1/4 的入口条件及 mode 8 的跨窗口解码有历史实际 JIT 证据；本地发现改造后未重跑这些专门阶段，这不代表
 所有远端或资源耗尽场景也通过，完整结果及未通过项见验证记录。
 
 mode 3 的 `test_07` 在生成物出现后，还通过现有 `wait_ready()` 读取
@@ -370,43 +378,51 @@ entry/body/install、native frame、owner ACK 或非零注册数都会使对照�
 
 ### 3.2 热锁晋升与翻译准备
 
-热锁检测现在按每把锁自己的固定窗口判定，流程如下：
+新 lock 入口按本 CPU 频率、本 CPU 的单锁频率、进程身份依次筛选：
 
 ```text
-模块第一次采样 -> module-wide 10 亿周期 warmup
-  -> 某把锁第一次有效采样：INIT -> CHECKING，固定 25 亿周期窗口
-  -> 在自身窗口到期前达到 10000 个样本：DELEGATE
-  -> 后续 hook 注册 entry -> daemon 翻译 -> 发布 NORMAL
-  -> 竞争请求执行 JIT -> 返回后 body witness + 完整状态验收
+每 CPU 首次建立时间起点，此后每 10240 次普通 lock 访问读一次 TSC
+  -> CPU 批次少于 400 亿 TSC：开启/维持本 CPU 准入
+  -> CPU 开启后，只更新本地 64 槽中的地址、计数、窗口及晋升缓存
+  -> 时间检查点复用同一次 TSC，检查本地候选锁
+  -> 单锁本地计数 >= 10000 且不足 25 亿 TSC：CAS 发布全局热锁地址
+  -> 本地晋升缓存命中：不查全局表，随后才筛选进程和注册 entry
+  -> daemon 翻译 -> NORMAL 发布 -> 实际正文及完整状态验收
 ```
 
-等于或超过自身窗口仍转为 `IGNORE`，本会话不重新评估晋升。IGNORE 的后续
-`record` 调用仍获取全局表锁、读取时间并递增计数。先遇到另一把更快的锁不再缩短新锁或在途锁的窗口；这解决跨锁发现顺序依赖，不保证任意调度下都会晋升。
-spin 的 hook 在 lock/unlock 采样，mutex 在 lock 采样，10000 个样本不等于
-10000 个临界区。单位是周期，不是固定秒数，也不是实际锁竞争率或 JIT 收益。
-普通 clobber 入口已晋升后不再调用 `record`；是否执行 JIT 还取决于队列、准入
-和批次交接。当前没有自动降级，也没有强制 99% JIT 的策略。诊断、正文观察与
-热锁采样是不同计数，不能以降低实际代理覆盖率冒充同路径提速。
-[监测优化](TODO.md#hotlock-monitoring-and-adaptive-admission)仍是待办。
+CPU 窗口按 10240 / 256 比例放大，保持旧的 256 次 / 10 亿 TSC 频率标准，
+检测精度则变粗；降温、等于期限或时间倒退在下一个检查点关闭新准入，最多
+延迟 10239 次访问，后续可重新达标。已有解锁、续跑、票据和 owner ACK 不受影响。
 
-保留各驱动的 warmup、连续采样和 NORMAL 发布等待；不要在已开始的采样中
-插入长 sleep。日志没有 `begin delegate` 时先检查采样频率、目标 comm 和时序，
-不能只增加翻译等待时间。晋升但没有 JIT 要分别查准入、生成、发布和实际竞争。
-SELFTEST 的受控晋升仍只用于已登记的资源/队列用例，不能冒充自然晋升或性能基线。
+单锁起点复用上一个 CPU 时间检查点，可能早于真实首个样本，因此判断偏保守。
+本地窗口过期会清零重测，不再维护全局 CHECKING/IGNORE。不同 CPU 的计数不
+汇总，本地直接映射冲突丢弃旧历史及旧正向缓存，可能推迟识别。只有本地达标
+才访问共享集合，表满仍走原生；已缓存的热锁不再读共享地址。全局只保存
+131071 个已晋升地址，约 1 MiB；per-CPU 结构约 1.6 KiB。首次起点以外，CPU
+和单锁共用每 10240 次一次的时钟读取，没有逐地址读时间或共享原子计数。
 
-修改共享采样策略时使用现有生产单元和受影响复杂代表，示例不是每轮前置：
+普通根入口仅采样 lock，非目标访问也供样，但不注册 JIT。既有嵌套协议可以
+只读查询全局热锁身份；新 root 仍须本地达标。SELFTEST 发布全局身份不绕过
+本地门槛。详细布局、生命周期和近似边界见[设计](DESIGN.md#hotlock-monitoring)。
+
+准备负载需要覆盖 CPU 和本地单锁两个阶段；当前普通 spin/mutex 验证与 bench
+使用连续 48000 次准备，发布仍须等待 NORMAL。每线程只执行一次的协议探针
+须另建立该 CPU 的锁历史；相关 live 用例显式启用场景模块的原生空临界区
+准备，客户端在共同屏障前完成并固定 CPU，正文和副作用计数保持独立。
+该测试选项默认关闭，不用于性能测量。其余专门协议用例未重新验证本地频率
+准备，不能沿用旧的全局热锁通过记录。频率判断不测真实竞争，也不保证 99% JIT。
+
+共享采样改动的定向入口如下；编译和运行均在 recovery guest：
 
 ```sh
-# Guest only, with the recovery snapshot already confirmed.
-make -C tests/unit run TESTS= PY_TESTS='test_hotlock_sampling.py'
-KDLOCK_RECOVERY_CONFIRMED=1 bash tests/run_all.sh --suite core --case parallel-drain-0
+make -C tests/unit run PY_TESTS='infrastructure/test_hotlock_sampling.py'
+KDLOCK_RECOVERY_CONFIRMED=1 python3 tests/regression.py \
+  --case mode-0 --case mode-3 --output /root/kdlock-evidence/hotlock-live-new
 ```
 
-更新样本的 TSC 在表锁内读取，避免先读时间、后更新的调用用旧时间误判到期；
-锁外时间只用于 warmup 判断。这不证明跨 CPU 的 TSC 同步。
-单元以替代 TSC 检查快/慢发现顺序、两个实际 producer 的交错更新、在途窗口、
-严格到期边界、采样额度和表容量；live 仍要求实际 JIT、完整副作用、owner ACK
-和排空。两种证据不能互相代替。
+单元覆盖批量门槛、独立窗口、碰撞、并发发布、重入、时间倒退与终态；
+live 仍要求自然晋升、实际 JIT、完整副作用和排空。直接采样函数的成本与
+稳态锁操作测量分开，见[专用对照](../bench/hotlock_record/README.md)。
 
 ### 3.3 带观测的负载测量
 
@@ -512,7 +528,7 @@ python3 tests/verify_evidence.py /tmp/kdlock-paired-manual
   -> mutex_jit=1；native 目标 kd_unused，JIT 目标 klock_test
   -> 保存模块参数、实际构建哈希、boot、物理 lock、控制台设置
   -> JIT 臂启动 daemon --metrics；每次真实翻译子进程单独计量
-  -> 相同 warmup (1,1,1,1) -> 间隔 1 秒 -> promotion (1,12000,10,1)
+  -> 相同准备调用 (1,1,1,1) -> 连续 promotion (1,48000,10,1)
   -> JIT: 验证生成体和两服务桩，等待静止，停止 daemon/翻译者
   -> 两组均静置 2 秒；确认无 writer/frame；JIT 为 NORMAL，native 无条目
   -> before.dmesg -> 指定的计时负载 -> after.dmesg -> 再查注册项/镜像
@@ -1189,27 +1205,28 @@ python3 tests/unit/run.py mutex/test_mutex_resources.py
 ### 6.1 Mutex 资源与恢复包
 
 ```text
-__kd_mutex_lock
+__kd_mutex_lock_clobber_v1 / __kd_mutex_lock（旧调用者）
   task 已在代理路径 / 未晋升 / mutex_jit=0 -> 原生 mutex
   shadow 表满 / task 登记失败 -> 原生 mutex；不登记 JIT、不预留 node
-  登记 task、请求翻译 -> _kd_mutex_lock
+  登记 task、请求翻译及 ABI -> _kd_mutex_lock_abi
     gate 空闲 -> 获取原生 mutex；physical_owner=current
     gate 忙且没有 node -> 保留 task 登记，在自身栈上等 gate，再获取原锁
     gate 忙且有 node -> 保存入口状态 -> 汇编 slowpath / 队列
       未执行交接 -> 先取得原锁，再释放 node、恢复调度状态，返回原临界区
-      已完成 / native 续跑 -> 复制整个 pt_regs，清除 resume_node，释放 node
-        -> 恢复抢占/迁移状态 -> 已完成跳到 unlock 后 / native 跳到当前续点
+      clobber COMPLETE -> 放弃旧 C 帧，仅保存三个续点字段，清理 node/task 后恢复
+      FULL / 旧 ABI / native -> 释放 node 前保留完整 pt_regs，恢复调度状态
+        -> 已完成跳到 unlock 后 / native 跳到当前续点并保留 owner ACK
 ```
 
 `test_mutex_resources.py` 提取生产的节点函数、shadow 查找、hook、入口与
 原锁获取/释放辅助函数。它检查 256 个占用/可用栈组合、顺序与乱序复用、
 非法释放、满表碰撞及已有条目不变，以及 cold/已有 shadow 下的 hook 回退。
-真实 `_kd_mutex_lock` 分别从 hook 和直接 API 接收三种合法 slowpath 结果。
+真实 `_kd_mutex_lock_abi` 分别从 hook 和直接 API 接收三种合法 slowpath 结果。
 在恢复抢占的替身中立即复用刚释放的 node，随后比较整个 guest `pt_regs`
 （当前 168 字节），确认 consumer 使用自己的副本。native 续跑保留 task
 登记与物理 owner；borrowed unlock 只能交给通知入口，不能由 waiter 直接解锁。
 
-八个变异负例同样要求先编译成功，再由断言检出。物理锁、task API、调度、
+变异负例同样要求先编译成功，再由断言检出。物理锁、task API、调度、
 汇编 slowpath 和跳转指令均为替身：这里不执行 JIT，也不证明真实 owner ACK、
 RCU、抢占并发或硬件 flags 恢复。它不模拟任意故障或授权入口重放。
 真实执行继续由 mode 3/4/5、寄存器续跑、`test_11` 和深度/远端矩阵验收。
@@ -1668,7 +1685,7 @@ probe 2/4 是非队首取消检查，probe 1/3 是队首获取检查，分别配
 每个 waiter 都有独立记录，B 仍由自己的 A combiner 获取，不新增远端 mutex frame。
 
 ```text
-两组串行预热 -> 共用一次 module-wide 等待 -> 连续执行两组晋升采样
+两组串行负载准备 -> 驱动保留间隔（不打开 CPU 门槛） -> 连续执行两组频率采样
   -> 两个实际 entry 均已发布 NORMAL -> 停止 daemon -> 独立锁晋升（无翻译）
   -> arm 竞争
 每组 holder 持 A，等待真实私有队列出现 combiner / waiter / trailing 三个节点
@@ -1777,7 +1794,7 @@ oracle 先严格检查两个 reload marker 之间的原生记录和零 JIT/ACK�
 内核 API、不新增 task 引用，也不在 JIT 中执行改名。先观察两名 waiter 的
 arrival，再分别调用普通 `mutex_lock/unlock(C)`，C 为各 lane 独立的新 mutex。
 
-此时 source 仍 OPEN，comm 已不匹配目标；现有 selector 必须依赖 active-task
+此时 source 仍 OPEN，comm 已不匹配目标；解锁 hook 必须依赖 active-task
 记录进入 hook。C 的获取走原生路径，其真实 owner 为 waiter 自己；C 的 unlock
 不得消耗 A 的路由引用或生成 A/B 的 owner ACK。`kd_parallel routed native:`
 检查 C 的获取/释放各一次、释放后 owner=0，以及 A/B 仍由原 combiner 持有。

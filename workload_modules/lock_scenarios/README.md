@@ -33,6 +33,13 @@
 排空后重算校验；`common/resume.inc` 保留每请求 before/called/after 记录，
 防止重放被总计数掩盖。不能在工作期间重置记录来制造通过。
 
+`cpu_frequency_prepare=1` 与客户端 `KD_TEST_LOCAL_PREPARE=1` 仅供短协议探针。
+客户端为各 worker 从允许 CPU 集合中选择并绑定 CPU，在共同启动屏障和计时前
+通过独立 prepare ioctl 执行 40960 次真实目标锁的空临界区。准备临时使用非目标
+comm 并恢复，不能注册 JIT 或修改正文/寄存器记录；随后仍要求实际 JIT/native
+和 owner ACK 证据。支持普通 spin、spin service、mutex 和嵌套 spin 的 root A。
+默认关闭，性能驱动不启用；本地历史在准备后被碰撞逐出仍可能走原生。
+
 `.c` 片段和 `.inc` 仍在同一编译单元中，必须保持包含顺序、static 原锁/记录
 和内联正文，不能单独加载。`fragments/remote_depth_workload.c` 与
 `fragments/mutex_parallel_workload.c` 保留参数、分派和生命周期，具体参与者

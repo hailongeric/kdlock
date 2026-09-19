@@ -97,9 +97,8 @@ for lane in 0 1; do
     role=$((lane * 8 + 4))
     run_with_timeout 10 "$BENCH_BIN" 1 1 1 1 3 "$role" > "$out/warm-$lane.log"
 done
-# Prime both lanes before the module-wide warmup. Sleeping during either
-# lane's later sample would consume its own fixed window and may select IGNORE.
-sleep 1
+# Continue into promotion without an idle gap: each lane's lock already may
+# have started its fixed observation window once this CPU became frequent.
 for lane in 0 1; do
     role=$((lane * 8 + 4))
     run_with_timeout 30 "$BENCH_BIN" 1 12000 1 1 3 "$role" > "$out/promote-$lane.log"

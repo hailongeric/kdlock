@@ -67,6 +67,7 @@ class EntryGuards:
         self.failed = False
         self.spills = {}
         self.scaled_spills = {}
+        self.checked_windows = {}
 
     def base_name(self, base):
         if base is None:
@@ -121,7 +122,29 @@ class EntryGuards:
 
     def register_dependencies(self):
         names = {name for condition in self.conditions() for name in (condition[0], condition[3]) if name}
+        names |= {name for key in self.checked_windows for name in (key[0], key[2])}
         return (names - self.spills.keys() - self.scaled_spills.keys()) | ({"RSP", "RBP"} if self.spills else set())
+
+    def inside_checked_window(self, address, window, size, window_bytes):
+        """Prove cross-SP/BP coverage only under an emitted entry predicate.
+
+        This never assumes stack privacy: the native mutex handler must still
+        compare the entire negotiated window before resuming translated code.
+        Intersect requirements for the same delta instead of emitting one per byte.
+        """
+        if self.failed or address is None or window is None or not 0 < size <= window_bytes:
+            return False
+        a, b = self.base_name(address[0]), self.base_name(window[0])
+        if a not in {"RSP", "RBP"} or b not in {"RSP", "RBP"} or a == b:
+            return False
+        x, y = signed_offset(address[1]), signed_offset(window[1])
+        key = (a, x - y, b)
+        limit = window_bytes - size
+        self.checked_windows[key] = min(limit, self.checked_windows.get(key, limit))
+        if len(self.checked_windows) > self.MAX_GUARDS:
+            self.failed = True
+            return False
+        return True
 
     def separate(self, left, right, left_size=1, right_size=1):
         if self.failed or left is None or right is None or left[0] == right[0]:
@@ -161,7 +184,7 @@ class EntryGuards:
                     if max(end_x - x, end_y - y) >= 1 << 31:
                         raise ValueError("entry guard range exceeds encoding limit")
                     conditions.append((a, x, end_x - x, b, y, end_y - y))
-                    if len(conditions) > self.MAX_GUARDS:
+                    if len(conditions) + len(self.checked_windows) > self.MAX_GUARDS:
                         raise ValueError("entry disjointness guard count exhausted")
         return conditions
 
@@ -182,6 +205,9 @@ class EntryGuards:
             delta = (left + x - right - y) & MASK
             if delta < m or (-delta & MASK) < n:
                 return False
+        for (a, delta, b), limit in self.checked_windows.items():
+            if ((registers[a] + delta - registers[b]) & MASK) > limit:
+                return False
         return True
 
     def emit(self, output, entry):
@@ -191,7 +217,7 @@ class EntryGuards:
         edges must restore R11 before the body or full-exit materialization.
         """
         conditions = self.conditions()
-        if not conditions and not self.spills:
+        if not conditions and not self.spills and not self.checked_windows:
             return
         output.write("/* Verify entry alias premises before any JIT body label. */\n")
         output.write("MOV R14, Stack_PT_REG\nMOV R14, [R14 + 0x80]\n")
@@ -207,6 +233,12 @@ class EntryGuards:
             output.write("LEA R11, [R14 + 8]\nCMP R11, R14\nJB kd_entry_guard_refused\n")
             output.write("MOV R15, Stack_PT_REG\nMOV R15, [R15 + 0x20]\n")
             output.write("CMP R11, R15\nJA kd_entry_guard_refused\n")
+        for (a, delta, b), limit in sorted(self.checked_windows.items()):
+            output.write(f"MOV R14, Stack_PT_REG\nMOV R14, [R14 + {REGISTER_OFFSETS[a]}]\n")
+            output.write(f"MOV R15, Stack_PT_REG\nMOV R15, [R15 + {REGISTER_OFFSETS[b]}]\n")
+            output.write("SUB R14, R15\n")
+            output.write(f"MOVABS R11, 0x{delta & MASK:x}\nADD R14, R11\n")
+            output.write(f"CMP R14, {limit}\nJA kd_entry_guard_refused\n")
         for a, x, n, b, y, m in conditions:
             for name, register in ((a, "R14"), (b, "R15")):
                 shift = 0

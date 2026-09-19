@@ -306,7 +306,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 		ctx->owner = current;
 	frame = &ctx->frames[ctx->depth];
 	/* Initialize every readable discriminator, not the inactive arrays or
-	 * branch-local payloads. Only an unnested physical spin root may borrow;
+	 * branch-local payloads. Only an unnested physical root may borrow;
 	 * complex dispatch takes a private packet before node reuse on native ACK.
 	 * control_call's payload is initialized by kd_call_begin before use;
 	 * saved_combiner is initialized only by the spin complex-path producer. */
@@ -381,7 +381,7 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 }
 
 struct kd_exec_frame *
-kd_exec_frame_push_spin(struct pt_regs *regs, unsigned long entry_ip,
+kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,
 		       unsigned long outer_lock_addr, void *waiter,
 		       void *outgoing_rsp_ptr, unsigned int held_lock_depth,
 		       unsigned long gsbase, struct task_struct *logical_task)

@@ -294,7 +294,7 @@ static void test_prepared_prefetch(void)
 	struct pt_regs borrowed = { 0 };
 	struct kd_spin_node node = { .execution = &request, .locked = 1 };
 	const void *lookup[16];
-	CHECK(sizeof(node) == 64);
+	CHECK(sizeof(node) == 2 * L1_CACHE_BYTES);
 	request.frame.logical_task = &task;
 	for (unsigned int alias = 0; alias < 2; alias++) {
 		struct pt_regs *regs = alias ? &borrowed : &request.frame.regs;
