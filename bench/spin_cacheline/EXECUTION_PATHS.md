@@ -52,7 +52,7 @@ flowchart TD
 | --- | --- | --- |
 | hook 分派、频率筛选与快路径 | [kd_lock.c](../../kernel_module/kd_lock.c)、[kd_spin_fast.h](../../include/kd_spin_fast.h) | [provider.c](../../tclock_backend/provider.c) |
 | 获取、排队和等待 | [kd_spinlock.c](../../kernel_module/kd_spinlock.c)、[slowpath.inc](../../kernel_module/spin/slowpath.inc)、[wait.inc](../../kernel_module/spin/wait.inc) | [komb.c](../../tclock_backend/komb.c)：`komb_spin_lock` / `__komb_spin_lock_longjmp` |
-| 批次与后继 | [combiner.inc](../../kernel_module/spin/combiner.inc)、[prefetch.inc](../../kernel_module/spin/prefetch.inc) | [komb.c](../../tclock_backend/komb.c)：`run_combiner` / `get_next_node` / `komb_spin_unlock` |
+| 批次与后继 | [combiner.inc](../../kernel_module/spin/combiner.inc)、[execute.inc](../../kernel_module/spin/execute.inc)、[prefetch.inc](../../kernel_module/spin/prefetch.inc) | [komb.c](../../tclock_backend/komb.c)：`run_combiner` / `get_next_node` / `komb_spin_unlock` |
 | 保存与恢复 | [wrapper.S](../../include/wrapper.S)、[kd_jit_batch.h](../../include/kd_jit_batch.h)、`kd_spin_restore_request` | [context.S](../../tclock_backend/context.S) |
 
 阅读索引：[测量边界](#batch)、[调用入口与冷准备](#cold)、[无竞争路径](#native-fast)、
@@ -743,4 +743,5 @@ Linux `qnodes`，且 unlock/完成含义不同。TCLock 目标锁须统一使用
 本对照不解决既有并发冷晋升停滞，也不证明任意 task/per-CPU、嵌套 TCLock 或
 跨 NUMA 临界区适用。kdlock 的中途续跑、原生互操作和 owner/ACK 验证范围继续
 以[测试记录](../../tests/README.md#spin-state-access)及[执行协议](../../docs/JIT_EXECUTION.md)
-为准。本次只重写说明，没有改运行代码或重跑 benchmark。
+为准。结构整理保持运行逻辑不变，没有重跑 benchmark；下一阶段实验及验收条件统一见
+[性能任务](../../docs/PERFORMANCE_PLAN.md)。

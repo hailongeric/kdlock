@@ -109,7 +109,7 @@ Node reuse, waiter wake and frame retirement are separate boundaries.
 
 - [ ] Optional generalization: generic hook-reader/drain and nonlocal-exit
   lifetime requires kernel integration; source pins do not supply it. Lock
-  allocation/free identity needs subsystem integration. See [the assessment](DESIGN.md#31-source-lock-and-hook-lifetimes).
+  allocation/free identity needs subsystem integration. See [the assessment](design/lifetimes.md#31-source-lock-and-hook-lifetimes).
 - [ ] Optional coverage: wider native-peer, cancellation and oversubscription
   schedules. Preserve live waiter accounting, release publication, origin/
   ticket identity and no-access-after-final-ACK rules in current changes.
@@ -151,7 +151,7 @@ a hardware task, scheduling, IRQ or RCU context switch.
 **Deferred by user decision on 2026-09-13.** Dynamic/module/context object
 ranges and lifetimes, per-access validation, pre-instruction native continuation
 and local CF/PF/AF/ZF/SF/OF preservation are unimplemented. Known dynamic-pointer
-and concurrent-replacement counterexamples remain in [DESIGN](DESIGN.md#721-dynamic-address-gap).
+and concurrent-replacement counterexamples remain in [DESIGN](design/admission.md#721-dynamic-address-gap).
 Entry predicates and bounded mutex stack checks do not close that gap. Future
 packet requirements remain in [the ABI](JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现).
 
@@ -174,84 +174,40 @@ dependency must not silently restore the obsolete polling contract.
 
 ## P2: Performance And Broader Scope
 
+The authoritative, ordered performance backlog is now
+[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md). It separates implemented changes from
+experiments and defines evidence, file boundaries and acceptance criteria.
+These links preserve existing topic entry points without duplicating checklists.
+
 ### Shared Request Storage
 
-The [shared spin request contract](DESIGN.md#911-reuse-before-copy-contract),
-clobber ABI, common C loop, PT/Stack backing, prepared hints and diagnostic
-identity reuse are implemented. Independent owner ledgers and shared-lifetime
-references remain necessary; removing every atomic is not the objective.
-
-- [ ] Measure remaining waiter-count RMWs and duplicate entry lookups before
-  changing accounting. JIT-disable is a safety latch, not a statistic or
-  performance-demotion switch.
-- [ ] Measure generated dispatch, address/virtual-stack rewriting, caller spills
-  and wrapper service cost separately where feasible.
-- [ ] Measure nested contention; single-lock benchmarks cannot evaluate child
-  ledger or virtual-waiter optimizations.
-- [ ] Further mutex frame/packet sharing must preserve the independent frame
-  lifetime after a native waiter releases its node; ordinary minimal roots already borrow it.
+Clobber, shared PT/Stack storage, prepared hints and normal completion are
+implemented. Next measure true-sharing RMWs and per-body generated/wrapper cost:
+[performance P2](PERFORMANCE_PLAN.md#4-p2减少逐请求同步和生成代码成本).
+Independent owner state and final-user lifetimes remain required.
 
 ### Hotlock Monitoring And Adaptive Admission
 
-Implemented: CPU-local frequency and per-lock discovery before process selection.
-One TSC sample per 10240 observations evaluates local candidates. Only qualified
-addresses enter the shared positive set; cached positives never read it. There
-are no shared warmup counters/windows or negative states. Local expiry retries,
-collisions may lose approximate history, and each CPU qualifies independently.
-Cooling changes new admission only; unlock and owner ACK remain independent.
-See [sampling protocol](DESIGN.md#hotlock-monitoring) and
-[component comparison](../bench/hotlock_record/README.md).
-
-Remaining work, **not current behavior**:
-
-- [ ] Evaluate native/probe/delegate selection using contention and actual batch
-  amortization, bounded probes, cooldown and hysteresis. Validate complete
-  operation throughput and latency against matched native runs; frequency and
-  JIT percentage alone cannot decide profitability.
-- [ ] Change admission of future roots only. Outstanding tickets, batches,
-  native owners and final ACKs finish under their original protocol. Retain
-  compiled entries where valid; demotion is not source retirement.
-- [ ] Record batch-ending reasons and compare short/long batches. Four-thread
-  samples are already promoted and ready; lowering the promotion threshold
-  does not explain or fix their roughly two-body batches. The new 8/16-thread
-  points show the transition to longer batches; see [log analysis](../bench/tclock_compare/results/20260919-thread-scaling.md#batch-length).
-
-The desired steady state is inexpensive native execution when delegation does
-not pay, sustained delegation when it does. Probes and workload transitions
-naturally mix paths. Do not accumulate waiters just to report 99% JIT or count
-native bodies as JIT. Zero JIT can still cost more than Linux. Cold-promotion
-correctness remains a separate open defect.
+Local frequency discovery and cooling are implemented. Benefit-based selection
+is not: [performance P1](PERFORMANCE_PLAN.md#3-p1避免不划算的代理并降低原生入口成本)
+proposes bounded native/probe/delegate admission for future roots only.
+Do not reuse the permanent safety latch or source retirement for demotion.
 
 ### Instrumented Measurement Foundation
 
-Complete-operation throughput, actual body counts, translation wall/CPU/RSS
-and opt-in jit_timing exist. Ten phases include queue, owner wait and native
-handoff; nested inclusive intervals overlap and are not pure CPU cost.
-Functional ioctl p50/p99 includes instrumentation and scheduling.
-
-- [ ] Separate acquisition, queueing, body, hostcall, native suffix and
-  observation costs with justified boundaries; do not add overlapping timers.
-- [ ] Obtain suitable latency distributions and memory/cache-transfer evidence;
-  existing flat-IP samples do not measure causal transfers or pure wrapper cost.
-- [ ] Evaluate exact waiter accounting independently; its shared RMWs remain
-  true sharing. Node notification/gate isolation is implemented and
-  [paired measurements](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
-  show a 20-thread gain and a 4-thread regression. Separate the two layout
-  contributions and quantify gate isolation with a multi-lock experiment;
-  the single-lock comparison does not measure cross-lock interference.
+First obtain a matched current-version baseline and distinguish preparation,
+complete-operation throughput, actual JIT share and observation cost:
+[performance P0](PERFORMANCE_PLAN.md#2-p0建立当前版本的可信基线).
+Historical flat-IP samples and overlapping inclusive timers are not causal
+cache-transfer measurements or additive pure CPU costs.
 
 ### Comparator Feasibility And Matched Experiments
 
-The ordinary-spin [Linux/TCLock/kdlock comparison](../bench/tclock_compare/README.md)
-exists with matching callers, fresh sessions, actual delegation and drain checks.
-Earlier upstream mutex incompatibility remains separate; disabling mutex JIT
-is not a native-delegation comparator.
-
-- [ ] Expand contention, CS size, input/state, affinity and sockets with balanced
-  repeated trials; establish amortization.
-- [ ] Evaluate fairness, batching, code-pool sizing and optional NUMA policy.
-  Spin NUMA needs broader opt-in evidence before a default change; mutex has
-  no NUMA-local delegation policy.
+The Linux/TCLock/kdlock spin comparison exists. Wider contention, NUMA, nested
+and mutex work follows the current baseline and correctness gates:
+[performance P3](PERFORMANCE_PLAN.md#5-p3嵌套mutex-与更广负载).
+The known cold-promotion and pinned-mutex failures remain unresolved evidence;
+steady-state workarounds do not fix them.
 
 Earlier phases are indexed in [benchmark history](../bench/spin_cacheline/results/HISTORY.md).
-Current results do not erase failures or make old source versions current acceptance.
+Current scoped results do not make old source versions current acceptance.

@@ -32,13 +32,13 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 缓存做对照，会话中不可切换。使用内核 `bint` 解析，sysfs 读回 `0/1`。
 缓存 miss 后 root 先尝试私有 S，竞争后才分配 ticket；
 成功的 S/L root 保留独立 physical hold。缓存键不变时不重复查询翻译表回填。
-具体锁与生命周期约束见 [DESIGN 4.1](../docs/DESIGN.md#41-native-lock-and-private-queue)，
+具体锁与生命周期约束见 [DESIGN 4.1](../docs/design/locking.md#41-native-lock-and-private-queue)，
 实测取舍见 [入口对照](../bench/spin_cacheline/results/20260918-spin-entry.md)。
 
 `spin_prefetch=0/1/2` 是只读装载参数，分别关闭后继请求预取、保留 combiner
 查询地址的旧策略、使用发布前准备的地址提示（默认）。它不关闭其他既有队列
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
-节点为 128 字节，next 与通知字分行，request 继续独立存活。约束见 [DESIGN](../docs/DESIGN.md#911-reuse-before-copy-contract)。
+节点为 128 字节，next 与通知字分行，request 继续独立存活。约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
 热锁识别依次检查本 CPU 频率、本 CPU 的单锁频率、进程身份。首次起点之后，
 每 10240 次 lock 访问读一次时间，CPU 与 64 槽单锁候选共用该读数；CPU 窗口
@@ -58,7 +58,8 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 ## 私有实现组件
 
 下表按所属编译单元和原声明顺序列出组件；文件头说明用途和依赖。
-`spin/combiner.inc` 内的 `execute_cs` 处理复杂委托出口，`run_combiner` 组织批次；
+`spin/execute.inc` 内的 `execute_cs` 处理复杂委托出口，
+`spin/combiner.inc` 的 `run_combiner` 组织批次；
 `kd_spin_batch_run` 在同一个 C 帧中处理新、旧及混合 ABI，编译器保护跨 wrapper
 活跃值。调用边界见 [kd_jit_batch.h](../include/kd_jit_batch.h)；旧汇编外壳仅留在
 [兼容测试夹具](../tests/unit/spin/legacy_batch.S)，不参与生产构建。
@@ -78,7 +79,8 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `kd_spinlock.c` | [spin/queue.inc](spin/queue.inc) | Tail encoding, node publication and optional NUMA successor selection. |
 | `kd_spinlock.c` | [spin/request.inc](spin/request.inc) | Preallocated shared request reservation and final-user release, including remote root-packet references. |
 | `kd_spinlock.c` | [spin/prefetch.inc](spin/prefetch.inc) | Producer-prepared queue hints and off/consumer/prepared successor-prefetch policies. |
-| `kd_spinlock.c` | [spin/combiner.inc](spin/combiner.inc) | Delegated body execution, outer release and bounded combiner batches. |
+| `kd_spinlock.c` | [spin/combiner.inc](spin/combiner.inc) | 批内查找、outer release、统一 clobber 批次及队列交接。 |
+| `kd_spinlock.c` | [spin/execute.inc](spin/execute.inc) | 复杂出口的 frame 绑定、dispatcher 调用、native/remote 处理；在 combiner 的原声明位置包含。 |
 | `kd_spinlock.c` | [spin/wait.inc](spin/wait.inc) | IRQ-off physical shadow-stack switch before publication/polling; head RSP restoration or direct completed/native packet restoration. |
 | `kd_spinlock.c` | [spin/slowpath.inc](spin/slowpath.inc) | Queue-head waiting, nested combiner restoration and native node admission. |
 | `kd_spinlock.c` | [spin/lifecycle.inc](spin/lifecycle.inc) | Per-CPU allocation, partial-init rollback and drained shutdown reporting. |
@@ -86,8 +88,10 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `exe.c` | [execution/hostcalls.inc](execution/hostcalls.inc) | Allowlisted native services and bounded mutex CALL stack observations. |
 | `exe.c` | [execution/timing.inc](execution/timing.inc) | Optional inclusive boundary timing; disabled runs take no clock samples. |
 | `exe.c` | [execution/registry_lifecycle.inc](execution/registry_lifecycle.inc) | 有界代码池与条目查找；execute_cs 传递就绪条目，dispatcher 不再查表，但重新核对发布状态和 source 准入。 |
+| `exe.c` | [execution/wrapper_entry.inc](execution/wrapper_entry.inc) | wrapper 范围/镜像/ABI 核对、正文证据及批次准入；不读取 MINIMAL 未捕获的 GPR。 |
 | `exe.c` | [execution/control_calls.inc](execution/control_calls.inc) | Known spin/mutex CALL handling, continuation advancement and stack checks. |
 | `exe.c` | [execution/registry_publish.inc](execution/registry_publish.inc) | 已发布、同身份/后端且 source OPEN 的重复注册只读返回；新注册、冲突和退休保留串行化。注册不等于 JIT 就绪或正文执行。 |
+| `kd_exec.c` | [execution/frame_lifecycle.inc](execution/frame_lifecycle.inc) | frame prepare/bind/push/pop、普通完成及退休，保留有效范围和最后使用者约束。 |
 | `kd_exec.c` | [execution/remote.inc](execution/remote.inc) | Remote frame requests and release/acquire ACKs between physical executors. |
 | `kd_exec.c` | [execution/native.inc](execution/native.inc) | Original-waiter native continuation and owner-serviced final unlock ACKs. |
 | `kd_exec.c` | [execution/lock_ledger.inc](execution/lock_ledger.inc) | Frame lock-vector mutations and completion predicates; this never acquires L. |

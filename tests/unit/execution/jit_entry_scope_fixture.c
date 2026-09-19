@@ -46,7 +46,7 @@ static unsigned long clobber_spin_unlock_addr = 0x3120;
 static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 {
 	(void)call;
-	abort(); /* Minimal machine code is exercised by test_spin_clobber. */
+	abort(); /* Minimal machine code is exercised by test_clobber_abi. */
 }
 static char last_error[1024];
 static unsigned int service_calls[3], failed_service_calls;

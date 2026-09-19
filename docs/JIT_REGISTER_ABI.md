@@ -429,7 +429,7 @@ node、恢复抢占/迁移状态，最后使用该副本跳转。node 可能在�
 另一请求复用，不能继续从旧 node 读取恢复状态。
 生产资源测试在此处主动复用 node 并比较整个 168 字节软件包；它不执行汇编
 跳转、不验证硬件 flags 恢复。测试边界见
-[mutex 资源与恢复包](JIT_EXECUTION.md#61-mutex-资源与恢复包)。
+[mutex 资源与恢复包](testing/mutex_protocols.md#61-mutex-资源与恢复包)。
 
 clobber mutex 的 COMPLETE 在 `kd_mutex_resume_completed()` 中只保留三个续点字段；
 FULL/native 仍须在释放 node 前保留完整包。新路径直接放弃旧 hook C 帧。
@@ -597,7 +597,7 @@ wrapper 实栈来模拟 guest 调用。
 spin 的 gate 满表 `ENOMEM` 与 ticket 满表 `E2BIG` 均可发生在 CALL 已暂时推进
 之后。恢复依据是仍为 PENDING 的 `control_call.target/stack/return_ip`，不是
 入口寄存器快照。第二个 JIT 前缀后的真实 gate 失败、callee/SP 恢复和 owner ACK
-现由 [资源用例](JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑) 单独关联；生产单元
+现由 [资源用例](testing/spin_protocols.md#63-spin-虚拟请求取消与续跑) 单独关联；生产单元
 比较完整 168 字节软件包，不代表新增了硬件 flags 采样或任意指令续跑能力。
 
 ## 8. Sandbox 退出 ABI
@@ -635,7 +635,7 @@ args[1]    = Stack_JIT_WITNESS   (0/1，只供观测)
 保守的 executed 标记并返回 `KD_EXE_NO_RUN`；条件未通过不废弃其他输入可用的
 已发布代码。其他时机或错误包返回 `KD_EXE_RUN_ERROR`，不允许入口重放。
 非 root 续点的逻辑父子校验及版本限制见
-[执行指南](JIT_EXECUTION.md#5-入口条件与嵌套续点)。
+[执行指南](testing/entry_admission.md#5-入口条件与嵌套续点)。
 
 `KD_EXE_IJ_MISS == 2` 是 `kd_exe_info.status_code` 的 daemon 状态，不是普通 IJ
 miss 时 wrapper 返回在 `args[0]` 的值。wrapper 返回源 RIP，kernel executor
@@ -756,13 +756,13 @@ wrapper ABI。该状态要求 `regs.ip == control_call.return_ip`，
 不能再次执行该 lock/unlock。当前内存和 GPR 不回滚，原 owner 继续持有未释放锁。
 窗口不足只在操作前使用 PENDING；普通 COMPLETE、spin 本地操作和损坏包不能
 冒用此状态。详细执行流与分析器的受检事实保留见
-[栈检查](JIT_EXECUTION.md#53-mutex-控制-call-的栈检查)。
+[栈检查](testing/entry_admission.md#53-mutex-控制-call-的栈检查)。
 
 本地 spin 获取后另有内部 `SPIN_NATIVE` tag，不改变结构大小或 ABI。
 只有经核对 owner/锁记录、原 waiter 栈中的 CALL token 和相同 post-CALL
 RIP/RSP 的 EIO 检查点才可设置；它不恢复原 CALL、不改变 GPR，也不再次获取 B。
 native 注册只接受匹配后继的 spin 包，不能借此恢复通用 ACQUIRED 错误。
-具体执行流、单元与 live 观测边界见 [受检 spin 续跑](JIT_EXECUTION.md#611-spin-获取后的受检续跑)。
+具体执行流、单元与 live 观测边界见 [受检 spin 续跑](testing/spin_protocols.md#611-spin-获取后的受检续跑)。
 
 `KD_JIT_CAPS` 在同一有效设备 lease 上查询这一固定运行时约定。它是独立的
 16 字节 ioctl 输出，不占用 `pt_regs`、两元素 args、64 字节 entry 或 24 字节
@@ -793,7 +793,7 @@ node 首行保留链接、execution 与两个预取地址，通知字段位于�
 7104 字节，该历史数值不作为后续布局的现值；另在初始化时
 为每可能 CPU 预分配 12 个 request；静态节减小不代表总内存下降。布局不是动态
 栈峰值或任意深度安全证明。生产 spin 的 node、combiner 与恢复路径引用同一份包，
-复杂出口不再复制寄存器。frame 的物理链与包引用见 [Frame 协议](DESIGN.md#91-frames-and-lock-ledger)。
+复杂出口不再复制寄存器。frame 的物理链与包引用见 [Frame 协议](design/frames.md#91-frames-and-lock-ledger)。
 `pt_regs` 和两元素 args ABI 未改变；mutex 的最小状态与独立 FULL 生命周期见 1.0 节。
 精确节点预留、OOO、远端发布和 readmission 约束见 DESIGN 第 4/9 节；
 相关测试参数与失败记录集中在使用/验收文档，不在 ABI 中复制历史流水。
@@ -838,9 +838,9 @@ mode 8 的 SELFTEST 在已发 ACK 的 B pop 前保留真实 frame/会话引用�
 waiter TID 脱离，再让同一 combiner 执行第二 root。它比较 arm 至 pop 的
 168 字节软件寄存器包和等待期间的整个 frame；不访问旧 waiter 栈，
 仅使用缓存 PID。这个观测不是实时 GPR/flags 恢复测试，也不是生产任务退出屏障，
-执行顺序见 [6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner)。
+执行顺序见 [6.14](testing/spin_protocols.md#614-两个独立-root-共享-b-combiner)。
 这些引用及独立 source ioctl 不增加 wrapper 参数，也不改变保存的寄存器包；
-退休顺序和 hook reader 边界见 [DESIGN 3.1](DESIGN.md#31-source-lock-and-hook-lifetimes)。
+退休顺序和 hook reader 边界见 [DESIGN 3.1](design/lifetimes.md#31-source-lock-and-hook-lifetimes)。
 
 队列返回值 `5` 表示 native 续跑，既不是原生获取锁后从入口返回，也不是已完成
 整个 CS。物理 waiter 恢复到 native 代码；虚拟 spin B waiter 则向 A 传递同一份退出
@@ -863,18 +863,18 @@ native 期间 `preempt_count=1`，最后一个 ACK 后恢复为 0。不能用源
 combiner 完成最后的解锁通知时减少 acquisition 引用再 ack。最后一个引用将
 记录从查找表移除，内存与真实 task 引用在 RCU 读者退出后的回调中释放。
 这些状态不占用 wrapper args；真实协议探针与构造寄存器包的边界见
-[生命周期测试](JIT_EXECUTION.md#62-task-引用最终-ack-与-rcu)。
+[生命周期测试](testing/mutex_protocols.md#62-task-引用最终-ack-与-rcu)。
 
 独立任务的 native frame 可以同时存活；通知按 logical task、backend 和锁地址
 匹配，每个 waiter 使用自己原生栈上的 ACK 包，不共享一个全局返回包。
-[双队列测试](JIT_EXECUTION.md#66-独立队列的并行-native-frame) 使用真实 JIT 续点
+[双队列测试](testing/native_protocols.md#66-独立队列的并行-native-frame) 使用真实 JIT 续点
 和两种排空顺序检查身份及 ACK 隔离，但不新增寄存器或 wrapper 参数，也不代替
 完整 GPR/返回栈测试或带存活读者的 RCU 测试。
 
 若同一 CPU 的 context 属于另一 combiner，`execute_cs()` 在 wrapper/frame push
 之前返回 NO_RUN。该未执行 waiter 走原生获取和原始 CS；不能复用另一 task 的
 寄存器包，也不能把这个入口路径用于已经执行的 JIT。
-[同 CPU 用例](JIT_EXECUTION.md#67-同-cpu-的-mutex-jit-拒绝) 验证拒绝身份和另一个
+[同 CPU 用例](testing/mutex_protocols.md#67-同-cpu-的-mutex-jit-拒绝) 验证拒绝身份和另一个
 frame 的续跑/ACK 不受干扰，但仍不替代完整 GPR 采样。
 其满槽扩展还检查未预留 node 的请求使用自己的原生栈等待并取得原锁；该请求
 没有 JIT 寄存器包或 owner ACK，不修改另一任务的续跑状态，也不扩展 wrapper ABI。
@@ -918,7 +918,7 @@ API 的 callee RIP 和返回栈。Linux 在原 waiter 上返回 `-EINTR` 时，�
 返回，不由 combiner 伪造，也不重新进入本次 wrapper。获取后的最终 ACK 可早于
 信号；测试客户端只在用户态等待该信号，不修改寄存器包或生产 frame 生命周期。
 这两类路径的实际 JIT 测试及其限制见
-[原 waiter 信号测试](JIT_EXECUTION.md#64-原-waiter-的信号与退出)，不新增 wrapper 状态。
+[原 waiter 信号测试](testing/native_protocols.md#64-原-waiter-的信号与退出)，不新增 wrapper 状态。
 
 两个恢复函数都不恢复 EFLAGS、硬件 segment base 或 SIMD/FPU。
 这些限制不能由寄存器观察测试通过推断为已解决。

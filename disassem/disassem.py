@@ -19,7 +19,7 @@ import indirect_jump
 import memread
 import normal
 import solve_bug
-import translation
+import special_inst
 from assist import make_inst
 from miasm.analysis.machine import Machine
 from miasm.arch.x86.arch import mn_x86
@@ -629,7 +629,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                 line_cnt = line_cnt + 1
                 block_end = line_cnt == len_block
 
-            f.write(translation.translate(line, offset, db, reg_map, block_end))
+            f.write(special_inst.translate(line, offset, db, reg_map, block_end))
             temp_i += 1
             if temp_j > 0:
                 temp_j -= 1

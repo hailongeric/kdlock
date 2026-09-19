@@ -8,6 +8,9 @@ README，根 README 只保留目录导航。所有构建和执行都在 recovery
 内核身份参数默认使用 `kdclobber2` 及其独立捕获基线；当前 provider 构建要求
 clobber v1 接口。legacy caller 仍可在同一内核上显式构建作 ABI 对照。
 
+后续优化顺序、待验证假设及验收条件见 [性能任务](../docs/PERFORMANCE_PLAN.md)。
+当前源码整理不产生新性能成绩；各结果仅适用于记录的冻结输入。
+
 ## 代码组织
 
 | 入口/组件 | 职责 |
@@ -90,6 +93,6 @@ cc -O2 -Wall -Wextra -Werror -Iinclude bench/klock_test.c \
 `KD_TEST_METRICS=1` 为这些场景添加 worker 总时间、ioctl p50/p99、线程 CPU
 时间和完成次数；失败样本的性能字段为空。这些是带观测的功能负载，不能与
 cacheline 对比或纯原生基线混合，详见
-[测量流程](../docs/JIT_EXECUTION.md#33-带观测的负载测量)。
+[测量流程](lock_scenarios/README.md#33-带观测的负载测量)。
 上游 TCLock mutex 与当前 guest 的接口差异及比较边界见
 [比较器评估](../docs/DESIGN.md#13-performance-comparator-contract)。

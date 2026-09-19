@@ -9,7 +9,7 @@ hold，解锁按原协议先释放 Linux L，再释放 S.locked，保留并发 p
 原生站点缓存默认保留，装载时可用 `spin_native_cache=0` 关闭。相同 L/RIP/gate
 键的竞争入口不再调用 `kd_get_exe()` 回填缓存；新键仍检查已发布 NORMAL/SPIN
 及 source.OPEN。缓存不授权 JIT，命中仍须实际获取 Linux L。
-实现见[执行路径](../EXECUTION_PATHS.md#cold)和[设计](../../../docs/DESIGN.md#41-native-lock-and-private-queue)。
+实现见[执行路径](../EXECUTION_PATHS.md#cold)和[设计](../../../docs/design/locking.md#41-native-lock-and-private-queue)。
 
 ## 删除缓存的试验
 

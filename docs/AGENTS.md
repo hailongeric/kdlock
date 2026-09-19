@@ -6,8 +6,9 @@
 [tests/README.md](../tests/README.md)、[bench/README.md](../bench/README.md)
 及对应子目录 README；历史证据保留在 [VALIDATION.md](VALIDATION.md)。
 根 README 只保留项目介绍和目录导航。剩余任务见 [TODO.md](TODO.md)。
-逐文件阅读、目录索引及从零开始的手动步骤统一维护在
-[PROJECT_GUIDE.md](PROJECT_GUIDE.md)，不要再建立平行的安装/手动测试清单。
+主执行链、阅读顺序和手动步骤统一维护在 [PROJECT_GUIDE.md](PROJECT_GUIDE.md)，
+逐文件索引维护在 [CODE_MAP.md](CODE_MAP.md)。设计及测试专题从上述入口导航，
+性能优化任务统一维护在 [PERFORMANCE_PLAN.md](PERFORMANCE_PLAN.md)；不要建立平行清单。
 
 ## 开发约定
 
@@ -68,7 +69,7 @@
     最终 CPU 恢复及必须同时保留的独立状态另行说明。共享对象必须存活到最后
     一个使用者结束；node 可复用、waiter 被唤醒均不等于 frame 可回收。
     这是后续实现约束，当前剩余复制及改造边界见
-    [共享请求设计](DESIGN.md#911-reuse-before-copy-contract)。
+    [共享请求设计](design/frames.md#911-reuse-before-copy-contract)。
 
 ## 环境边界
 
@@ -148,18 +149,18 @@ CPU/NUMA 拓扑和挂载类型。具体身份与重建限制见
 
 | 行为 | 执行流与增量选择 |
 | --- | --- |
-| 同队列同 CPU 的 PENDING 续跑 | [6.1](JIT_EXECUTION.md#61-mutex-资源与恢复包)；不同于跨队列 context refusal |
-| 真实 ticket/gate 压力与注入取消 | [6.3](JIT_EXECUTION.md#63-spin-虚拟请求取消与续跑)；核对额外 CPU 9-18，第二个 JIT 前缀的 gate ENOMEM 与旧 ticket E2BIG 分开验收 |
-| 双 frame、代码/shadow 池、原生 peer 与退休 | [6.6](JIT_EXECUTION.md#66-独立队列的并行-native-frame) |
-| 跨队列 context/node/task 拒绝 | [6.7](JIT_EXECUTION.md#67-同-cpu-的-mutex-jit-拒绝) |
-| 物理 frame 链与锁记录容量 | [6.8](JIT_EXECUTION.md#68-物理-frame-链与容量检查)；不能替代 local shadow 容量 |
-| 无锁 root 与 waiter 正常退出 | [6.9](JIT_EXECUTION.md#69-无锁祖先与-waiter-退出)；TID 脱离不等于 RCU 回收 |
-| 提前释放 A 后的原生 owner 依赖 | [6.10](JIT_EXECUTION.md#610-提前释放-a-的原生依赖)；不同于普通 held-B CALL miss |
-| 私有队首已获取 B 后的受检续跑 | [6.11](JIT_EXECUTION.md#611-spin-获取后的受检续跑)；不同于 FAST、PENDING 或远端发布失败 |
-| A executor 与 B holder 同 CPU 的嵌套 JIT | [6.12](JIT_EXECUTION.md#612-同-cpu-的嵌套-mutex-jit)；七角色/双 CPU，不交回原 waiter 跑 native 后缀 |
-| 两个 mutex A executor 共用原生 B | [6.15](JIT_EXECUTION.md#615-两个-a-combiner-共享原生-mutex-b)；普通 mode 4 的独立第二阶段，一个保留 owner 的 native 后缀、另一个 JIT 和非目标 peer，不是远端 B combiner |
+| 同队列同 CPU 的 PENDING 续跑 | [6.1](testing/mutex_protocols.md#61-mutex-资源与恢复包)；不同于跨队列 context refusal |
+| 真实 ticket/gate 压力与注入取消 | [6.3](testing/spin_protocols.md#63-spin-虚拟请求取消与续跑)；核对额外 CPU 9-18，第二个 JIT 前缀的 gate ENOMEM 与旧 ticket E2BIG 分开验收 |
+| 双 frame、代码/shadow 池、原生 peer 与退休 | [6.6](testing/native_protocols.md#66-独立队列的并行-native-frame) |
+| 跨队列 context/node/task 拒绝 | [6.7](testing/mutex_protocols.md#67-同-cpu-的-mutex-jit-拒绝) |
+| 物理 frame 链与锁记录容量 | [6.8](testing/spin_protocols.md#68-物理-frame-链与容量检查)；不能替代 local shadow 容量 |
+| 无锁 root 与 waiter 正常退出 | [6.9](testing/spin_protocols.md#69-无锁祖先与-waiter-退出)；TID 脱离不等于 RCU 回收 |
+| 提前释放 A 后的原生 owner 依赖 | [6.10](testing/spin_protocols.md#610-提前释放-a-的原生依赖)；不同于普通 held-B CALL miss |
+| 私有队首已获取 B 后的受检续跑 | [6.11](testing/spin_protocols.md#611-spin-获取后的受检续跑)；不同于 FAST、PENDING 或远端发布失败 |
+| A executor 与 B holder 同 CPU 的嵌套 JIT | [6.12](testing/mutex_protocols.md#612-同-cpu-的嵌套-mutex-jit)；七角色/双 CPU，不交回原 waiter 跑 native 后缀 |
+| 两个 mutex A executor 共用原生 B | [6.15](testing/mutex_protocols.md#615-两个-a-combiner-共享原生-mutex-b)；普通 mode 4 的独立第二阶段，一个保留 owner 的 native 后缀、另一个 JIT 和非目标 peer，不是远端 B combiner |
 | mode 5 服务返回和 CALL 次数额度退出 | [6.13](JIT_EXECUTION.md#613-call-次数额度与原生后缀)；保留正常 JIT 返回，再关联超额 callee 的 waiter/native/ACK，不是访问时 guard |
-| 两个独立 A root 共用 B executor | [6.14](JIT_EXECUTION.md#614-两个独立-root-共享-b-combiner)；mode 8 已含原复杂、双根纯 JIT、混合完成三个阶段；第三阶段在 B 发出 ACK 后的 pop 观察首 waiter TID 退出，再执行第二 root，不再另跑 `multi` |
+| 两个独立 A root 共用 B executor | [6.14](testing/spin_protocols.md#614-两个独立-root-共享-b-combiner)；mode 8 已含原复杂、双根纯 JIT、混合完成三个阶段；第三阶段在 B 发出 ACK 后的 pop 观察首 waiter TID 退出，再执行第二 root，不再另跑 `multi` |
 
 覆盖关系按协议而非深度数字判断，单 frame 三锁和 local shadow 容量仍是独立检查。
 不得为通过而填造 frame/队列、改容量、改原 owner 或添加改变 task 生命周期的测试引用。
@@ -201,7 +202,7 @@ NO_JIT，只保留性能结果，不是实际 JIT 通过；既有回归继续使
 原 waiter 的释放竞争须支持 pidfd，并留存真实 B owner 的 unlock 时间与 API
 返回值；提前发信号不保证取消，sysfs 写成功不证明已解锁。偏置期望不符仍须
 保留为失败，不能据此改写 owner/ACK/副作用判定，详见
-[竞争测试](JIT_EXECUTION.md#65-原-waiter-与-b-释放的竞争)。
+[竞争测试](testing/native_protocols.md#65-原-waiter-与-b-释放的竞争)。
 
 先停止新 workload，等待已有 workload/hook 调用者退出，确认队列/frame 无在途请求，
 再停止 daemon/翻译者。执行 `python3 disassem/device_session.py retire` 成功后，
@@ -225,7 +226,7 @@ guest hook 没有配套 reader/drain 保护，`synchronize_rcu()` 不保证压�
 已知调用者排空前提，不能据此推导一般 reader 已经静止。
 停止 benchmark、查询不到已知 comm，只能确认已知 workload 排空，不能证明
 所有 hook reader 已经静止。当前卸载流程限于可恢复实验，不是通用安全热卸载。
-详细能力审查及内核修改边界见 [DESIGN 3.1](DESIGN.md#31-source-lock-and-hook-lifetimes)。
+详细能力审查及内核修改边界见 [DESIGN 3.1](design/lifetimes.md#31-source-lock-and-hook-lifetimes)。
 只有 daemon 已停止、执行者已排空时才可清理明确生成的 `daemon/0x*`；
 不要清理未知源码、证据或用户文件。
 

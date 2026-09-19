@@ -127,6 +127,8 @@ provider 源码和头文件复制到 `.build/provider/`，只在副本应用
 `provider/observation.patch` 并加入 `provider/kd_bench.c`、`provider/kd_bench.h`，
 再按 `KDLOCK_SELFTEST=0 KDLOCK_NUMA=0` 构建。补丁仅包含常规日志开关和
 wrapper 返回后的正文计数接入，不改变锁协议、准入检查或 wrapper ABI。
+wrapper 入口和复杂 spin 执行的观察补丁分别跟随
+`execution/wrapper_entry.inc` 与 `spin/execute.inc`，同时保留 dispatcher 的拒绝观测。
 不维护另一份完整 kdlock 源码；项目更新导致补丁上下文不匹配时构建直接失败，
 需要先检查并更新观测补丁，不能用模糊匹配绕过。
 
@@ -208,7 +210,7 @@ worker 或其他快照时，计数查询返回 EBUSY。最后一个 worker 的 r
 ## 临界区与测试伪代码
 
 kdlock 内部的首次发现/注册、已发布原生快路径、排队代理、wrapper/JIT 正文及
-waiter 恢复，另见 [执行路径与开销伪代码](EXECUTION_PATHS.md)。该文展开全局查表、
+waiter 恢复，另见 [执行路径与开销伪代码](EXECUTION_PATHS.md)。该文展开本地发现、达标后的共享发布、
 原子操作、frame 校验和复制，并区分准备期开销与测量期每次执行的成本。
 发生代理时，锁外乘加由原 waiter 恢复后执行；combiner 连续代理多个正文期间
 仍持有原锁，不在相邻 JIT 正文之间执行这段乘加。

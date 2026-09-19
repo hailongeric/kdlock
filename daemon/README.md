@@ -75,7 +75,7 @@ With `--metrics`, each completed child produces one `KD_TRANSLATION_METRICS`
 JSON record containing the entry RIP, pid/tgid, lock kind, child PID, raw wait
 status and classified result (`0` success, `2` native-only, `-1` error). Errors
 and refusals are retained, not filtered out of the measurements. The opt-in
-[paired experiment](../docs/JIT_EXECUTION.md#34-原生锁与-jit-配对实验) enables this
+[paired experiment](../bench/lock_scenarios/README.md#34-原生锁与-jit-配对实验) enables this
 option; normal regression/manual launches retain the default unmeasured path.
 
 `started_ns` / `finished_ns` use `CLOCK_MONOTONIC` immediately before fork and
@@ -99,11 +99,26 @@ to preparation duration: translation can overlap the promotion workload.
 For function-level profiling, use the existing translator CLI in a separate
 workspace after workers and the daemon have drained, with the provider still
 ACTIVE. This adds no daemon option and does not upload the profiled image; see
-the [profiling flow](../docs/JIT_EXECUTION.md#35-翻译器剖析).
+the [profiling flow](../bench/lock_scenarios/README.md#35-翻译器剖析).
 Context-symbol matching compiles only the fixed glob rules into one anchored
 regex union. It does not cache live names/addresses or remove any policy rule.
 The [measured increment](../docs/VALIDATION.md#context-symbol-matching) verifies
 the real symbol map and byte-identical images before reporting a compiler gain.
+
+## Source organization
+
+[daemon.c](daemon.c) owns configuration, the device session and the polling loop.
+Private components remain in the same C translation unit, preserving static
+state and declaration order:
+
+| Component | Responsibility |
+| --- | --- |
+| [workspace.inc](workspace.inc) | Workspace commands, learned targets and result cache |
+| [compiler.inc](compiler.inc) | Child launch/reap and optional wall/CPU/RSS measurements |
+| [publication.inc](publication.inc) | Artifact ABI checks, native-only status and upload |
+
+Both the daemon build and the basic daemon test track these include dependencies.
+This organization does not change the CLI, cache policy or wire protocol.
 
 ## Device Session
 
@@ -133,7 +148,7 @@ provider, not an environment override or second device. The guarantees are not
 a `mutex_jit` switch or executable generation. Guarded stack analysis uses only
 its optional mutex bound; module ranges guide static address refusal, not object
 liveness or runtime access validation. The protocol and boundaries are in
-[the stack-check guide](../docs/JIT_EXECUTION.md#53-mutex-控制-call-的栈检查).
+[the stack-check guide](../docs/testing/entry_admission.md#53-mutex-控制-call-的栈检查).
 
 A missing, closed or mismatched inherited descriptor is `TRANSLATION_FAILED`,
 not native-only policy. It is never silently replaced. Stop and wait for both
@@ -147,7 +162,7 @@ This does not pin arbitrary dynamic lock allocations or protect hook readers.
 The learned-depth gate now exercises root/learned text in two modules. A
 module's sysfs refcnt includes native importers too, so it is not interchangeable
 with the source-control module count; the test observes both separately through
-retirement and normal unload. Flow is in the [usage guide](../docs/JIT_EXECUTION.md#5-入口条件与嵌套续点).
+retirement and normal unload. Flow is in the [usage guide](../docs/testing/entry_admission.md#5-入口条件与嵌套续点).
 
 The source controls use a separate ioctl ABI, not extra wrapper words or changed
 entry packets. From the guest repository root:
@@ -177,7 +192,7 @@ to resume JIT. `tests/common.sh` enforces this before normal test cleanup.
 No command forcibly cancels callers, unloads modules or reopens the session.
 Hook-reader and lock-allocation lifetime remain [TODO C2](../docs/TODO.md#c2-one-protocol-per-physical-lock).
 
-The [parallel lifecycle test](../docs/JIT_EXECUTION.md#66-独立队列的并行-native-frame)
+The [parallel lifecycle test](../docs/testing/native_protocols.md#66-独立队列的并行-native-frame)
 exercises the real compiler fork/exec with a substituted lease-probe script.
 After its parent exits, the child reads pinned text in DRAINING, checks both its
 cached bound and a new capability query on the same descriptor, and observes
@@ -247,14 +262,14 @@ sum `bytes_per_cpu`). Missing module capability or unavailable, invalid or
 unstable metadata produces `CONTEXT_SYMBOLS_UNAVAILABLE` and a translation error,
 not an empty safe range set or a native-only verdict. Dynamic allocations,
 object lifetimes and unknown pointers remain outside this guarantee; the
-[static-range contract](../docs/DESIGN.md#722-static-per-cpu-ranges) records the limits.
+[static-range contract](../docs/design/admission.md#722-static-per-cpu-ranges) records the limits.
 `CONTEXT_SCREENING_ONLY` is emitted once after successful code generation,
 before assembly/build. It identifies the entry and explicitly reports
 `runtime_address_guard=false` and `concurrent_memory_validated=false`.
 It is a contract warning, not a detected fault, per-access analysis report,
 successful build/publication or runtime protection. Unknown pointers are not
 automatically rejected; see the
-[dynamic-address gap](../docs/DESIGN.md#721-dynamic-address-gap).
+[dynamic-address gap](../docs/design/admission.md#721-dynamic-address-gap).
 During admission an eligible nested entry may report `ENTRY_GUARD_WAIT_TEXT` while fetching
 cold branches, followed by `ENTRY_GUARDED_ADMISSION` on conditional success.
 Its `scoped_calls=true` field identifies the single-entry learned-callee path:
@@ -281,7 +296,7 @@ The generated image checks all collected entry predicates before body; runtime
 `ENTRY_GUARD_REFUSED` means that invocation remains unstarted and native, not
 that the daemon should disable the entry or replay completed work. No extra
 daemon switch is needed. Scope and protocol are documented in
-[the usage guide](../docs/JIT_EXECUTION.md#5-入口条件与嵌套续点).
+[the usage guide](../docs/testing/entry_admission.md#5-入口条件与嵌套续点).
 Existing INT/special-instruction and flags diagnostics describe limitations;
 they do not repair semantics or establish a general privilege verifier.
 

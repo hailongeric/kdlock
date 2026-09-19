@@ -18,8 +18,8 @@
 
 | 统计对象 | 当前数量 | 含义 |
 | --- | --- | --- |
-| `tests/unit/Makefile` 的入口 | 49 | 2 个 C 程序、47 个 Python 程序；`make ... run` 默认仅两个基础 C，`run-all` 显式全量 |
-| Python `test_*` 方法定义 | 524 | 静态 AST 计数；不含 C 断言、`main()` 驱动和 `subTest` 参数展开，不能作为全部用例数 |
+| `tests/unit/Makefile` 的入口 | 48 | 2 个 C 程序、46 个 Python 程序；`make ... run` 默认仅两个基础 C，`run-all` 显式全量 |
+| Python `test_*` 方法定义 | 524 | 静态 AST 计数（含拆出的 case 组件）；不含 C 断言、`main()` 驱动和 `subTest` 参数展开，不能作为全部用例数 |
 | `tests/live/test_*.sh` | 22 | 编号有空缺，不能按最大编号 24 计数；包括调度器、组件自测和 GS 正例 |
 | `regression.py` 的 `CASES` | 80 | 固定回归的唯一命名用例；不含配对实验按参数生成的会话 |
 | `SUITES` | 15 | 可重叠的选择视图，不能相加计算独立用例数 |
@@ -143,11 +143,13 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 
 ## 4. 单元入口逐项分析
 
-以下文件均在 `tests/unit/`。这里的“保留”表示有独立验证目的，后续按改动选择，
+以下文件均在 `tests/unit/`。`test_context_policy.py`、`test_mutex_parallel_protocol.py`
+和 `test_regression.py` 保留选择入口，分别显式加载相邻的 case/fixture 组件；
+拆分不增加或减少断言，辅助文件不进入 Makefile 库存。这里的“保留”表示有独立验证目的，后续按改动选择，
 不表示每轮必跑。`*_fixture.c` 是相应 Python 驱动的编译输入，
 `workload_modules/lock_scenarios/fragments/*` 是 Demo 临界区片段，
 `tests/kernel/*` 是 provider 观察器/组件自测；均由模块 include，不另算独立入口。
-完整文件对应关系见 [目录索引](PROJECT_GUIDE.md#59-单元测试-testsunit)。
+完整文件对应关系见 [目录索引](CODE_MAP.md#59-单元测试-testsunit)。
 
 ### 4.1 两个 C 程序
 
@@ -193,12 +195,12 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_spin_shadow.py` | 生产队首、combiner、native/virtual node producer、取消与嵌套返回 | 已覆盖被删除的节点计数模型；保留此生产测试 |
 | `test_spin_wait.py` | guest 用户态执行生产 `spin/wait.inc` 汇编，另一线程覆盖旧 C 栈后检查完成/native 恢复，以及普通队首返回 | 专门检查发布后无栈等待和非局部恢复；不模拟内核 IRQ，不替代实际 JIT |
 | `test_spin_outer_progress.py` | 生产 batch/frame/ticket、提前 outer-release、frame 池拒绝、真实 gate 满表 ENOMEM 的完整包不变，以及 release 前的包和唤醒后槽复用 | gate 失败由真实 nested producer 产生、PENDING helper 恢复 callee/SP；与 shadow 队首部分交叉，但保留 frame/原锁和发布边界；不证明实际 JIT 或硬件内存序 |
-| `test_spin_clobber.py` | ABI 1 wrapper、poisoned 入口、COMPLETE/FULL/拒绝及混合调用边界 | 验证精简状态有效性，配合生产 wait 汇编和 live |
+| `codegen/test_clobber_abi.py` | ABI 1/2 共用 wrapper、poisoned 入口、COMPLETE/FULL/拒绝及混合调用边界 | 合并原 spin 驱动和 mutex 转发入口，默认执行两种 ABI；保留全部原断言 |
 | `test_tclock_context.py` | 独立 TCLock 六寄存器/RSP 切换与原生续点 | 与 kdlock JIT ABI 不同；不证明任意嵌套或 Linux 混用 |
 | `test_spin_wwjump.py` | guest 用户态执行真实编译器 clobber 调用边界、旧驻留外壳兼容夹具和 wrapper 普通/批次入口，核对单锁最小回写、hostcall/CALL miss/refusal 完整包、每次正文只执行一次及两元素 args | 使用小型生成正文替身；真实队列和 JIT 正文通过 live/benchmark 核对，不验证硬件 IRQ/flags |
 | `test_spin_batch.py` | 生产批内 exe 缓存/readiness 失效、per-CPU 计数与最大深度汇总、真实结构布局下的 physical/virtual 预取地址与栈界限 | CPU、IRQ 和 prefetch 是确定性替身；检查缓存命中仍拒绝失效条目、汇总含离线 CPU，不能证明真实 CPU 热插拔或缓存性能 |
 | `test_remote_outer.py` | 生产远端祖先解锁/native ACK，完整 168 字节寄存器包、CALL 返回字和 DONE 后父 frame 复用；两后端 native wait 计量开关、错误返回及多层区间重叠；含十一种故障变异 | 本地 outer 验证 node 发布，本项验证跨执行者关系，protocol 单元验证坏日志；三者不能互相替代。CPU/发布/时钟观察为替代，不证明硬件 flags/并发 |
-| `test_mutex_clobber.py` / `test_mutex_wait_clobber.py` | 真实 ABI=2 wrapper、caller clobber 与生产 shadow 换栈/毁栈恢复 | poisoned 输入、精简完成/拒绝、FULL 中途出口及未执行 C 返回；真实睡眠/owner ACK 仍由 live 验证 |
+| `test_mutex_wait_clobber.py` | ABI 2 生产 shadow 换栈/毁栈恢复 | 与共用 wrapper 入口分工，验证真实换栈及未执行 C 返回；睡眠/owner ACK 仍由 live 验证 |
 | `test_mutex_resources.py` | 生产 tail 编解码、node mask、同 CPU 同队列未发布回退、shadow 表、hook/selector、完整 slowpath 包、改名/关闭准入路由 | 接替 mutex/tail 模型；per-CPU 存储和 task 引用仍为替代原语，保留资源边界与故障变异 |
 | `test_mutex_outer_progress.py` | 生产 mutex executor/combiner/outer-event、owner 保留和后继进度；真实日志宏的 INFO/格式/次数，以及 ALERT/关闭日志两个变异 | 与 spin outer 是不同后端；提供被删除 mutex 模型的生产控制流检查。仅替代 printk sink，不证明串口或调度成本；定向结果见 [日志验收](VALIDATION.md#mutex-routine-log-severity) |
 | `test_native_after_outer.py` | 生产 native/control CALL、mutex B 获取/解锁、提前 A、栈变化、已获取 spin 续点；附 acquired oracle | 与 combiner 是事件生产者/消费者关系；原生 B 等待替代，CALL 阶段与拒绝不变性保留 |
@@ -307,7 +309,7 @@ guest 定向运行 frame、entry-scope、segment 三个程序通过，frame 的�
 pop 接受坏终态并提前改包/释放引用，定向单元拒绝该行为；增加回收门禁后，
 两个后端的 ERROR/COMPLETE 组合和两种新增 guard 变异通过检查，共十四种变异。
 正常 ACK 的发生与路由生命周期仍由独立 protocol/live 验证，不用这个替代环境
-宣称实际并发 UAF 已复现。执行流和选择见 [Frame 回收门禁](JIT_EXECUTION.md#frame-回收门禁)。
+宣称实际并发 UAF 已复现。执行流和选择见 [Frame 回收门禁](testing/spin_protocols.md#frame-回收门禁)。
 
 第四步删除 `test_jit_call_policy.c`、入口和生成物忽略项。扩展已有 entry-scope
 和 native-after-outer 程序，不新增入口，七项原模型检查对应如下：
@@ -371,7 +373,7 @@ guest 强制重建并运行剩余两个 C 程序及 mutex 资源程序，3/3 通
 `regression_evidence.py` / `verify_evidence.py` 分别采集证据和离线校验；
 `audit_context_spills.py` 是独立准入审计。旧 shared-word spin 审计及专用夹具
 已删除，可通过 Git 历史追溯；当前互操作验证使用 routing 单元和 `mixed-spin`。
-各文件用途只维护在 [控制器与 oracle 索引](PROJECT_GUIDE.md#57-测试控制器和-oracle)。
+各文件用途只维护在 [控制器与 oracle 索引](CODE_MAP.md#57-测试控制器和-oracle)。
 
 后续运行按 [选择范围](JIT_EXECUTION.md#选择范围) 选择受影响单元和复杂 live；
 首次环境验收才按 [手动指南](PROJECT_GUIDE.md#3-一步一步运行) 做完整准备。

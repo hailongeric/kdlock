@@ -7,7 +7,7 @@
 
 这些改动没有复制可变状态、取消准入检查或改变 source、原生 L/S、owner/ACK。
 复杂出口、SELFTEST 的 complete/观察/pop、借用包及两种 wrapper ABI 均保留。
-实现边界见 [DESIGN](../../../docs/DESIGN.md#911-reuse-before-copy-contract)，
+实现边界见 [DESIGN](../../../docs/design/frames.md#911-reuse-before-copy-contract)，
 功能验证见[测试记录](../../../tests/README.md#spin-state-access)。
 
 ## 五个递进版本

@@ -2,7 +2,8 @@
 # CALL pushes the source return address; POP/PUSH use virtual SP, not physical
 # wrapper RSP. Some legacy special instructions remain warning-only/deferred.
 import diagnostics
-from assist import get_inst_name, im64_abs, make_inst, make_mem_dict
+from assist import (conditional_branch, get_inst_name, im64_abs, make_inst,
+                    make_mem_dict, unconditional_branch)
 from conflict import (
     conflict_resolve,
     release_conflict,
@@ -145,3 +146,16 @@ def process_pop(arg, offset, reg_map):
         reg_map,
     )
     return ret_str
+
+
+def translate(line, offset, db, reg_map, block_end):
+    args = line.args
+    name = get_inst_name(line)
+    if line.name in special_instruction:
+        return special_inst_dispatch(line, args, offset, db, reg_map, block_end)
+    elif line.name in conditional_branch or line.name in unconditional_branch:
+        return process_jump(line.name, line, args[0], offset, db, reg_map)
+    else:
+        return process_normal(name, args, offset, reg_map) + release_conflict(
+            reg_map, block_end
+        )

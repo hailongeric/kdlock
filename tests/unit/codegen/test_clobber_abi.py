@@ -193,7 +193,7 @@ int main(void) {
 '''
 
 
-def main(entry_abi=1):
+def exercise_abi(entry_abi):
     with tempfile.TemporaryDirectory(prefix="kdlock-clobber-") as directory:
         path=Path(directory)
         (path/'asm').mkdir()
@@ -230,5 +230,15 @@ def main(entry_abi=1):
         subprocess.run(cc+['-O2','-fno-omit-frame-pointer','-mno-red-zone','-Wall','-Wextra','-Werror','-I'+str(path),'-I'+str(ROOT/'include'),str(path/'fixture.c'),str(path/'stubs.S'),str(path/'wrapper.o'),str(path/'legacy.o'),str(path/'runner.o'),'-o',str(path/'fixture')],check=True,timeout=30)
         subprocess.run([str(path/'fixture')],check=True,timeout=30)
 
-if __name__=='__main__':
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--entry-abi", choices=("spin", "mutex", "both"), default="both")
+    args = parser.parse_args()
+    for abi in ((1, 2) if args.entry_abi == "both" else (1 if args.entry_abi == "spin" else 2,)):
+        exercise_abi(abi)
+        print(f"caller-clobber ABI {abi}: PASS")
+
+
+if __name__ == "__main__":
     main()

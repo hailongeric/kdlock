@@ -15,7 +15,54 @@
 其他协议脚本仍保留原断言，其中部分准备量和 CPU 放置尚未适配新准入；其
 历史通过不表示当前可直接通过。按改动选择并核对准备，不能放宽 JIT oracle。
 
-## 2026-09-19：本次整理验证
+## 2026-09-19：按职责拆分与文档重组
+
+在 `33026fa799b79b73339665df5d2d1dfa9fcf6095` 之后整理源码：准入分析拆为符号、
+值传播和 CFG 策略；daemon 拆出工作区、编译、发布；内核拆出 wrapper 入口检查、
+frame 生命周期及复杂 spin 出口。C 私有 `.inc` 保持原编译单元与声明顺序。
+单条指令的薄分派合并进 `special_inst.py`；spin/mutex wrapper 测试合并为
+`codegen/test_clobber_abi.py --entry-abi spin|mutex|both`，默认两种 ABI。
+大型准入、双 frame 协议和回归基础设施测试拆出 case/fixture，入口不重复收集。
+
+静态核对确认四个 C 编译单元展开 `.inc` 后 token 顺序一致，准入分析及双 frame
+协议函数体 AST 一致；三个拆分测试组的函数体/断言保持不变，仅更新 mock 的
+模块路径。合并后的分派函数与每种 ABI 的执行函数体也保持不变。
+Python `test_*` 方法仍为 **524**；总入口从 49 减至 **48（2 C + 46 Python）**，
+少一个是消除了独立 mutex 转发程序，不是删除 ABI 2 检查。
+
+recovery guest `6.1.159-kdclobber2` 核对内核身份后，两个基础 C 程序及以下
+11 个相关 Python 入口通过，合计 **13 passed / 0 failed**：
+
+- admission：context_policy、context_memory、context_guards、clobber_entry。
+- codegen：clobber_abi（两种 ABI）、jit_diagnostics。
+- execution：jit_entry_scope、exec_capacity；spin：spin_outer_progress。
+- mutex：mutex_parallel_protocol；infrastructure：regression。
+
+首轮因拆分漏保留 `context_policy.context_memory` 接口和 mock 的旧模块路径而
+失败，日志已保留；修复导出及 mock 定位后取得上述通过。最后去除拆分测试的
+未使用导入，又运行两个基础 C 与 mutex_parallel_protocol、regression，
+**4 passed / 0 failed**。没有修改或放宽协议 oracle。
+
+生产 provider `W=1`、daemon `-O2 -Wall -Wextra -Werror` 强制构建和 benchmark
+专用 provider `W=1` 构建通过。观察补丁按移动后的文件重新定位，在 guest 严格
+应用，无 fuzz/offset；保留原观测内容。provider 仍有既有换栈/恢复 objtool 告警，
+环境另有 Perl locale 回退提示，不能称为零告警构建。
+
+构建及 13 个入口冻结 **405** 个输入；导入清理后定向复验冻结 **406** 个输入，
+生产输入未变，两轮结束均核验哈希一致和 guest 空闲。本文最后的记录及一个旧测试名
+注释另存最终清单。本轮没有加载模块、运行 live、完整单元或 benchmark，不能将
+旧六项 live 和此次单元拼成当前全量通过，也没有新的吞吐结论。
+
+文档按设计、测试协议、计量方法和文件地图分开维护，旧章节保留导航锚点；
+性能任务集中在 [PERFORMANCE_PLAN](../docs/PERFORMANCE_PLAN.md)。静态核对
+50 份 Markdown 的本地链接/锚点及 132 个固定 Git 文件引用，126 个 Python 和
+25 个 shell 文件语法通过；23 个非文档内核基线/实验及 TCLock 文件保持原字节。
+
+证据：guest `/root/kdlock-evidence/code-organization-20260919/`，宿主
+`/tmp/kd-code-organization-20260919/`。包含整理前备份、结构核对、每轮冻结输入、
+首轮失败及最终通过日志、构建日志、内核身份和最终源码归档。
+
+## 2026-09-19：默认化后的旧代码清理验证
 
 清理无消费者的 spin 适配函数、mutex 初始化宏、未使用返回分类和旧
 socket/count 位域定义；此前已删除的旧内核安装分支及专用审计/夹具一起纳入提交。
@@ -52,7 +99,8 @@ provider 保留既有换栈/恢复的 objtool 告警。377 个冻结输入核验
 | `unit/{codegen,admission,spin,mutex,execution,infrastructure}/` | 按功能分组的 Python 测试和配套 C 夹具 |
 
 顶层保留公共 shell 库、live 选择器及证据读写入口；Python 单元测试通过
-`unit/run.py` 运行，统一处理跨组夹具导入。保留有独立协议覆盖的用例，已被生产夹具替代的模型和旧内核审计已删除。
+`unit/run.py` 运行，统一处理跨组夹具导入。当前库存为 2 个 C 和 46 个 Python
+入口；`*_cases.py`/共享 fixture 由对应驱动显式加载，不重复收集。保留有独立协议覆盖的用例，已被生产夹具替代的模型和旧内核审计已删除。
 
 ## 环境与单元测试
 
@@ -83,6 +131,8 @@ timeout 120s make -C tests/unit run PY_TESTS='infrastructure/test_regression.py'
 
 ```sh
 python3 tests/unit/run.py codegen/test_segment_codegen.py
+# 共用 wrapper 检查：默认 both，也可明确选择 spin 或 mutex
+python3 tests/unit/run.py codegen/test_clobber_abi.py --entry-abi both
 make -C tests/unit list
 make -C tests/unit run-all
 ```

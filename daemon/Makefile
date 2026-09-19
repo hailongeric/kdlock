@@ -8,7 +8,7 @@ CFLAGS += -Wall -Wextra
 
 all: daemon
 
-daemon: daemon.c ../include/exe_info.h
+daemon: daemon.c $(wildcard *.inc) ../include/exe_info.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 clean:

@@ -7,8 +7,9 @@ lock hooks are still required; this is not an unmodified-kernel solution.
 
 The project targets **x86_64 machines only**. Development priorities and explicit
 deferrals are maintained in the [delivery scope](docs/TODO.md#delivery-scope).
-Start with the Chinese [code map and manual](docs/PROJECT_GUIDE.md) for the
-implementation index and host/guest environment setup.
+Start with the Chinese [project guide](docs/PROJECT_GUIDE.md) for the main
+execution chain and host/guest setup; use the [code map](docs/CODE_MAP.md) to
+locate implementation components.
 
 ## Execution Model
 
@@ -92,7 +93,7 @@ setup, recoverability and controlled module lifecycle remain explicit
   during delegation; it does not exclude IRQ/NMI access to the same storage.
 - Admission rejects FS operands, hardware segment/base manipulation and
   recognized context-sensitive operations, including statically resolved addresses in
-  each possible CPU's [core static area and boot-reserved module arena](docs/DESIGN.md#722-static-per-cpu-ranges).
+  each possible CPU's [core static area and boot-reserved module arena](docs/design/admission.md#722-static-per-cpu-ranges).
   This requires the matching provider's module-range capability, not merely
   readable symbol names; missing capability is a translation environment error.
   This does not prove arbitrary aliases,
@@ -100,7 +101,7 @@ setup, recoverability and controlled module lifecycle remain explicit
   concurrent pointer replacement can bypass this screening, as reproduced with
   benign generated userspace code. `CONTEXT_SCREENING_ONLY` makes this limit
   explicit; it does not add a guard. See the
-  [dynamic-address gap](docs/DESIGN.md#721-dynamic-address-gap).
+  [dynamic-address gap](docs/design/admission.md#721-dynamic-address-gap).
 - The two-word input remains `args[0]=waiter GS base`,
   `args[1]=logical waiter task`; it does not switch hardware task context.
 - JIT is not a security sandbox. Memory guards and instruction semantics are
@@ -113,7 +114,7 @@ setup, recoverability and controlled module lifecycle remain explicit
 - Frames, lock tables, node pools and stacks are bounded. Source/lock address
   reuse and hot module unload are not generally safe. Non-target tasks also
   call the guest hook predicates; stopping known workload callers is not a reader
-  drain. The [lifetime assessment](docs/DESIGN.md#31-source-lock-and-hook-lifetimes)
+  drain. The [lifetime assessment](docs/design/lifetimes.md#31-source-lock-and-hook-lifetimes)
   separates source pins, lock-object retirement and missing hook capabilities.
 - `mutex_jit` is enabled by default; `mutex_jit=0` is only for explicit native
   baseline controls. No userspace/futex frontend, rwsem, RT/PI/WW mutex or
@@ -135,11 +136,13 @@ setup, recoverability and controlled module lifecycle remain explicit
 | `kernel_experiments/` | Separately authorized kernel experiments |
 | [tclock_backend/](tclock_backend/README.md) | Independent TCLock native stack-delegation backend |
 
-- [Code map and manual](docs/PROJECT_GUIDE.md): source index and environment setup.
+- [Project guide](docs/PROJECT_GUIDE.md): reading order and environment setup.
+- [Code map](docs/CODE_MAP.md): current source and documentation index.
 - [Execution](docs/JIT_EXECUTION.md): execution flows and protocol contracts.
 - [Design](docs/DESIGN.md): implementation and ownership contracts.
 - [Register ABI](docs/JIT_REGISTER_ABI.md): entry, registers, stacks and exits.
 - [Operations](docs/AGENTS.md): host/guest boundaries, source sync and recovery.
 - [Tasks](docs/TODO.md): remaining main functionality and deferred work.
+- [Performance plan](docs/PERFORMANCE_PLAN.md): prioritized experiments and acceptance criteria.
 - [Daemon](daemon/README.md): CLI, diagnostics and publication limits.
 - [Kernel baseline](kernel_baseline/README.md): prerequisite and reproduction.

@@ -73,7 +73,7 @@ kdlock 的选择不同：原生参与者只访问 Linux 锁 **L**，代理队列
 实际执行者必须获取 L 才能访问正文。普通代理批次可以一直持有 L，而不逐请求
 重新获取它。L/S 带来的部分成本用于原生互操作；若要改成 TCLock 的单锁字，
 必须统一该锁所有参与者的协议，或另行实现并验证互操作层，不能只删掉 L。
-所有权与生命周期规则统一见 [DESIGN 4.1](../docs/DESIGN.md#41-native-lock-and-private-queue)，
+所有权与生命周期规则统一见 [DESIGN 4.1](../docs/design/locking.md#41-native-lock-and-private-queue)，
 性能收益及抵消因素见[执行路径对照](../bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)。
 本节是源码协议审查，没有新增混用测试，也不宣称不支持的混用方式已经验证。
 

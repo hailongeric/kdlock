@@ -15,7 +15,7 @@ ALL_PY_TESTS := $(sort $(wildcard */test_*.py))
 
 all: $(TESTS)
 
-basic/test_daemon_policy: ../../daemon/daemon.c ../../include/exe_info.h
+basic/test_daemon_policy: ../../daemon/daemon.c $(wildcard ../../daemon/*.inc) ../../include/exe_info.h
 basic/test_control_call: ../../include/kd_call.h
 
 basic/test_%: basic/test_%.c
