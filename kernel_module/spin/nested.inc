@@ -12,16 +12,16 @@
  * publication; no intermediate context copy is needed before remote binding.
  */
 static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
-				    struct kd_spin_jit_context *context,
 				    struct qspinlock *lock,
 				    struct pt_regs *regs,
 				    struct kd_exec_frame *parent)
 {
 	unsigned int i, depth;
 	struct kd_exec_frame *frame;
+	struct kd_spin_jit_context *context;
 	struct kd_spin_exec_request *owner;
 
-	if (!node || !context || !lock || !regs || !parent ||
+	if (!node || !lock || !regs || !parent ||
 	    !kd_exec_frame_validate(parent) ||
 	    (parent->request_frame && regs != kd_exec_frame_regs(parent)))
 		return -EINVAL;
@@ -47,7 +47,7 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	}
 	node->execution->jit_waiter = true;
 	node->execution->pinned_context = false;
-	node->execution->jit_context = context;
+	context = &node->execution->jit_context;
 	context->requester = parent;
 	context->lock_depth = depth + 1;
 	for (i = 0; i < depth; i++) {
@@ -110,7 +110,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	struct kd_spin_request request = { 0 };
 	struct qspinlock *word;
 	struct kd_spin_node *base, *node;
-	struct kd_spin_jit_context *contexts;
+	struct kd_spin_exec_request *requests;
 	struct kd_spin_exec_request *execution;
 	u32 tail;
 	unsigned long irq_flags;
@@ -131,9 +131,9 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	/* NULL requests select only the read-only pre-allocation observer. The
 	 * context/node injection probes still start after a ticket is reserved.
 	 */
-	contexts = *this_cpu_ptr(&kd_spin_jit_contexts);
+	requests = *this_cpu_ptr(&kd_spin_requests);
 	refusal_probe = kd_spin_selftest_virtual_begin(
-		lock, NULL, regs, parent, &contexts, initial_preempt);
+		lock, NULL, regs, parent, &requests, initial_preempt);
 #endif
 	ret = kd_spin_entry_begin((raw_spinlock_t *)lock, KD_SPIN_ENTRY_VIRTUAL,
 				  &request.ref);
@@ -151,20 +151,20 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	}
 
 	base = this_cpu_ptr(&kd_spin_nodes[0]);
-	contexts = *this_cpu_ptr(&kd_spin_jit_contexts);
+	requests = *this_cpu_ptr(&kd_spin_requests);
 #ifdef KDLOCK_SELFTEST
 	/* Exercise real post-ticket cancellation before any node is published. */
 	refusal_probe = kd_spin_selftest_virtual_begin(
-		lock, &request.ref, regs, parent, &contexts, initial_preempt);
+		lock, &request.ref, regs, parent, &requests, initial_preempt);
 #endif
-	if (!contexts) {
+	if (!requests) {
 		kd_spin_selftest_node_event(KD_NODE_CONTEXT_MISSING);
 		ret = -ENOMEM;
 		goto cancel;
 	}
-	idx = base->count++;
+	idx = this_cpu_ptr(&kd_spin_cpu)->node_count++;
 	if (unlikely(idx < 0 || idx >= MAX_NODES)) {
-		base->count--;
+		this_cpu_ptr(&kd_spin_cpu)->node_count--;
 		kd_spin_selftest_node_event(KD_NODE_VIRTUAL_FULL);
 		ret = -E2BIG;
 		goto cancel;
@@ -172,7 +172,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	kd_spin_selftest_node_event(KD_NODE_VIRTUAL_RESERVE);
 	execution = kd_spin_request_reserve();
 	if (!execution) {
-		base->count--;
+		this_cpu_ptr(&kd_spin_cpu)->node_count--;
 		ret = -ENOMEM;
 		goto cancel;
 	}
@@ -183,7 +183,6 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	node->locked = true;
 	node->completed = false;
 	node->next = NULL;
-	node->tail = tail;
 	node->socket_id = numa_node_id();
 	node->cpuid = smp_processor_id();
 	node->rsp = regs->sp;
@@ -195,18 +194,18 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	node->execution->jit_retry = false;
 	node->execution->native_resume = false;
 	node->execution->native_regs_decoded = false;
-	ret = kd_spin_prepare_jit_node(node, &contexts[idx], lock, regs,
+	ret = kd_spin_prepare_jit_node(node, lock, regs,
 				       parent);
 	if (ret) {
 		kd_spin_request_put(execution);
-		base->count--;
+		this_cpu_ptr(&kd_spin_cpu)->node_count--;
 		kd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);
 		goto cancel;
 	}
 
 	kd_spin_diag_record(
 		lock, KD_SPIN_DIAG_SLOWPATH,
-		kd_spin_lock_stack_depth(this_cpu_ptr(&local_shadow_stack)));
+		kd_spin_lock_stack_depth(this_cpu_ptr(&kd_spin_cpu)));
 	parent->control_call.phase = KD_CALL_ENTERED;
 	parent->delegated_lock_addr = (unsigned long)lock;
 	smp_store_release(&parent->remote_result, KD_EXEC_REMOTE_WAITING);

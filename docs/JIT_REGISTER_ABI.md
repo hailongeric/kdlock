@@ -49,7 +49,7 @@ shared packet -> CPU restore -> release packet user -> original waiter resume
 | waiter 逻辑栈 | `pt_regs.sp`，JIT 内主要由物理 R13 表示 | 原临界区的局部变量、保存寄存器和虚拟 `CALL` 返回地址 |
 | wrapper 实栈 | 物理 RSP | 保存 combiner 的 C ABI 状态和 JIT 私有槽；不能当作 guest RSP 使用 |
 | 后端 C 栈 | spin 使用执行者自己的 task 内核栈；mutex 使用其独立 waiter 栈 | 运行 queue/combiner C 代码；不等于 JIT 的虚拟调用栈 |
-| spin shadow 等待栈 | 每 CPU 预分配 8KB，`shadow_stack.wait_stack_top` | 物理 waiter 发布前切入，保存一个旧 C RSP 并 PAUSE 轮询；不承载 JIT 或 frame |
+| spin shadow 等待栈 | 每 CPU 预分配 8KB，`kd_spin_cpu_state.wait_stack_top` | 物理 waiter 发布前切入，保存一个旧 C RSP 并 PAUSE 轮询；不承载 JIT 或 frame |
 
 spin 的普通物理 waiter 在发布前保存并关闭本 CPU 的 IRQ，同一段汇编先切到
 shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队首交接恢复旧 RSP；

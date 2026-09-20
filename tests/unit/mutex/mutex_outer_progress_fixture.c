@@ -12,6 +12,7 @@
 
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef uint32_t u32;
 typedef uint64_t u64;
 typedef struct {
 	int counter;
@@ -211,18 +212,19 @@ bool kd_mutex_jit_is_enabled(void)
 	return true;
 }
 /* Opaque lookup token: the production backend must pass this exact slot. */
-static struct kd_exe_info { int token; } ready_entry;
+static struct kd_exe_info ready_entry;
 static struct kd_exe_info *kd_exe_find_ready(int pid, unsigned long ip)
 {
 	(void)pid;
 	(void)ip;
 	return mode != 4 ? &ready_entry : NULL;
 }
-static void kd_exe_add(int pid, unsigned long ip, int kind)
+static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
 {
 	(void)pid;
 	(void)ip;
 	CHECK(kind == KD_EXE_LOCK_MUTEX);
+	CHECK(abi == KD_ENTRY_ABI_LEGACY);
 }
 bool kd_exec_context_busy(void)
 {
@@ -231,7 +233,6 @@ bool kd_exec_context_busy(void)
 
 struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 					 unsigned long ip, unsigned long lock,
-					 void *node, void *rsp,
 					 unsigned int depth, unsigned long gs,
 					 struct task_struct *task)
 {
@@ -239,14 +240,19 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 	active.regs = *regs;
 	active.entry_ip = ip;
 	active.outer_lock_addr = lock;
-	(void)node;
-	(void)rsp;
 	active.gsbase = gs;
 	active.logical_task = task;
 	active.state = KD_EXEC_FRAME_RUNNING;
 	active.held_lock_depth = active.outer_lock_depth = depth;
 	active.outer_lock_index = KD_EXEC_MAX_LOCK_DEPTH;
 	return &active;
+}
+/* This fixture drives legacy packets; preserve the alternate API's signature. */
+struct kd_exec_frame *kd_exec_frame_push_borrowed(struct pt_regs *regs,
+ unsigned long ip, unsigned long lock, unsigned int depth, unsigned long gs,
+ struct task_struct *task)
+{
+ return kd_exec_frame_push(regs, ip, lock, depth, gs, task);
 }
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 {
@@ -345,6 +351,7 @@ int main(void)
 		a.owner = NULL;
 		b.owner = NULL;
 		gate.origin_mutex_addr = (unsigned long)&a;
+		request.tail = 1U << KD_MUTEX_TAIL_CPU_OFFSET;
 		request.next = &successor;
 		successor.task_struct_ptr = &other;
 		request.locked = successor.locked = 1;

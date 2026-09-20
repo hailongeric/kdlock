@@ -25,6 +25,10 @@ static bool list_empty(const struct list_head *head)
 {
 	return head->next == head;
 }
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+static bool kd_hotlock_role_trace;
 #include "frame_types.h"
 
 static struct kd_exec_context kd_exec_context[2];
@@ -157,12 +161,12 @@ static void kd_source_frame_put(void)
 
 static struct kd_exec_frame *
 counted_frame_push(const struct pt_regs *regs, unsigned long entry,
-		   unsigned long outer, void *waiter, void *outgoing,
+		   unsigned long outer,
 		   unsigned int held, unsigned long gs,
 		   struct task_struct *task)
 {
 	probe_calls++;
-	return kd_exec_frame_push(regs, entry, outer, waiter, outgoing, held,
+	return kd_exec_frame_push(regs, entry, outer, held,
 				  gs, task);
 }
 
@@ -283,8 +287,7 @@ static struct kd_exec_frame *push(unsigned int index)
 	struct kd_exec_frame *frame;
 
 	waiters[index].pid = 100 + index;
-	frame = kd_exec_frame_push(&regs, 0x1000 + index, 0x2000 + index,
-				   &waiters[index], &waiters[index], index + 1,
+	frame = kd_exec_frame_push(&regs, 0x1000 + index, 0x2000 + index, index + 1,
 				   0x3000 + index, &waiters[index]);
 	CHECK(frame == &kd_exec_current_context()->frames[index]);
 	if (!frame)
@@ -318,7 +321,7 @@ static void refused(const struct pt_regs *regs, unsigned long gs,
 	struct kd_exec_frame *frame = kd_exec_current_frame();
 	unsigned int before_refs = source_frames;
 
-	CHECK(!kd_exec_frame_push(regs, 0x1000, 0x2000, task, task, held, gs,
+	CHECK(!kd_exec_frame_push(regs, 0x1000, 0x2000, held, gs,
 				  task));
 	CHECK(!memcmp(&before, kd_exec_current_context(), sizeof(before)));
 	CHECK(kd_exec_current_frame() == frame);
@@ -535,6 +538,7 @@ static void ledger(void)
 	before = *frame;
 	CHECK(kd_exec_frame_abort(frame) == 0);
 	before.state = KD_EXEC_FRAME_ERROR;
+	before.role = KD_ROLE_DONE;
 	CHECK(!memcmp(&before, frame, sizeof(before)));
 	REJECTS(kd_exec_frame_abort(frame), -EALREADY);
 	CHECK(kd_exec_frame_pop(frame, NULL) == 0 && !source_frames);
@@ -836,7 +840,7 @@ static void reuse_single(void)
 	CHECK(!ctx->depth && !ctx->owner && !source_frames);
 	memset(ctx->frames, 0xa5, sizeof(ctx->frames));
 	CHECK(kd_exec_context_validate(ctx));
-	frame = kd_exec_frame_push(&input, 0x1000, lock, NULL, NULL, 1,
+	frame = kd_exec_frame_push(&input, 0x1000, lock, 1,
 				   0x3000, &waiters[0]);
 	CHECK(frame && kd_exec_frame_validate(frame));
 	if (!frame)
@@ -880,8 +884,7 @@ static void borrowed_packets(void)
 		       sizeof(packet));
 		poison = kd_exec_current_context()->frames[0].regs;
 		packet.di = lock;
-		frame = kd_exec_frame_push_borrowed(&packet, 0x1000, lock, NULL,
-					       NULL, 1, 0x3000, &waiters[0]);
+		frame = kd_exec_frame_push_borrowed(&packet, 0x1000, lock, 1, 0x3000, &waiters[0]);
 		CHECK(frame && frame->borrowed_regs == &packet &&
 		      kd_exec_frame_regs(frame) == &packet);
 		if (!frame || failures)
@@ -897,8 +900,7 @@ static void borrowed_packets(void)
 			CHECK(!frame->regs_borrowed &&
 			      !memcmp(&frame->regs, &expected, sizeof(expected)));
 			memset(&packet, 0xcc, sizeof(packet));
-			child = kd_exec_frame_push_borrowed(&expected, 0x1000, lock,
-				NULL, NULL, 1, 0x3000, &waiters[1]);
+			child = kd_exec_frame_push_borrowed(&expected, 0x1000, lock, 1, 0x3000, &waiters[1]);
 			CHECK(child && child->parent == frame && !child->regs_borrowed);
 			if (!child || failures)
 				return;

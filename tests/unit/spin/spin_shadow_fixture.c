@@ -63,6 +63,10 @@ struct kd_exec_frame {
 
 typedef int atomic_t;
 struct kd_spin_diag_slot;
+struct kd_spin_jit_context {
+	struct kd_exec_frame *requester;
+	unsigned int lock_depth;
+};
 struct kd_spin_exec_request {
 	struct kd_spin_diag_slot *diag;
 	struct kd_exec_frame frame;
@@ -75,7 +79,7 @@ struct kd_spin_exec_request {
 	bool native_resume;
 	bool pinned_context;
 	bool native_regs_decoded;
-	struct kd_spin_jit_context *jit_context;
+	struct kd_spin_jit_context jit_context;
 	u64 queued_at_ns;
 };
 #define KD_SPIN_REQUEST_SLOTS 12
@@ -105,14 +109,8 @@ static void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long ip,
 	frame->packet_state = KD_PACKET_FULL;
 }
 static void kd_exec_frame_prepare_complex(struct kd_exec_frame *frame) { (void)frame; }
-struct kd_spin_jit_context {
-	struct kd_exec_frame *requester;
-	unsigned int lock_depth;
-};
 struct kd_spin_node {
 	struct kd_spin_node *next;
-	int tail;
-	int count;
 	int socket_id;
 	int cpuid;
 	/* Scheduler stack sentinel, not the logical register packet. */
@@ -146,8 +144,8 @@ static void kd_exe_queue_timing_end(bool mutex, uint64_t *queued_at, u64 end)
 	(void)end;
 }
 
-struct shadow_stack;
-static struct shadow_stack local_shadow_stack;
+struct kd_spin_cpu_state;
+static struct kd_spin_cpu_state kd_spin_cpu;
 static struct kd_spin_node kd_spin_nodes[MAX_NODES];
 static struct kd_spin_node *resume_node;
 static int entries, exits, combined, checks, failures, handoffs;
@@ -166,8 +164,6 @@ static int begin_error, producer_preempt = 1, producer_count, producer_peak;
 static struct kd_spin_node peer, follower;
 static struct kd_spin_node *produced_node;
 static struct kd_spin_node *producer_successor;
-static struct kd_spin_jit_context producer_contexts[MAX_NODES];
-static struct kd_spin_jit_context *kd_spin_jit_contexts = producer_contexts;
 static struct kd_spin_native_input kd_spin_native_inputs;
 static struct task_struct task = { .pid = 101 };
 static struct task_struct logical_task = { .pid = 202 };
@@ -247,11 +243,11 @@ static void node_record_free(void *ptr)
 static void kd_exec_remote_poll(void *frame)
 {
 	CHECK(producer_case && producer_virtual && produced_node);
-	CHECK(frame == fixture_request(produced_node)->jit_context->requester);
-	CHECK(kd_spin_nodes[0].count == producer_count + 1);
-	CHECK(mailbox_case && fixture_request(produced_node)->jit_context->requester->remote_request ==
+	CHECK(frame == fixture_request(produced_node)->jit_context.requester);
+	CHECK(kd_spin_cpu.node_count == producer_count + 1);
+	CHECK(mailbox_case && fixture_request(produced_node)->jit_context.requester->remote_request ==
 	      &mailbox_token);
-	fixture_request(produced_node)->jit_context->requester->remote_request = NULL;
+	fixture_request(produced_node)->jit_context.requester->remote_request = NULL;
 	poll_calls++;
 }
 static void cpu_relax(void)
@@ -260,7 +256,7 @@ static void cpu_relax(void)
 		abort();
 	relax_calls++;
 	if (mailbox_case && relax_calls < 3) {
-		struct kd_exec_frame *parent = fixture_request(produced_node)->jit_context->requester;
+		struct kd_exec_frame *parent = fixture_request(produced_node)->jit_context.requester;
 
 		if (relax_calls == 1) {
 			CHECK(!poll_calls);
@@ -273,12 +269,12 @@ static void cpu_relax(void)
 	CHECK(relax_calls == (mailbox_case ? 3 : 1));
 	if (!produced_node) /* Native full-pool direct-spin retry. */
 		return;
-	CHECK(kd_spin_nodes[0].count == producer_count + 1);
+	CHECK(kd_spin_cpu.node_count == producer_count + 1);
 	produced_node->locked = false;
 	fixture_request(produced_node)->native_resume = peer_result == 5;
 	produced_node->completed = peer_result != 5;
 	if (producer_virtual)
-		fixture_request(produced_node)->jit_context->requester->remote_result =
+		fixture_request(produced_node)->jit_context.requester->remote_result =
 			peer_result == 5 ? KD_EXEC_REMOTE_NATIVE :
 					   KD_EXEC_REMOTE_DONE;
 }
@@ -332,9 +328,9 @@ static int xchg_tail(struct qspinlock *lock, int tail)
 
 	if (producer_case) {
 		produced_node = &kd_spin_nodes[producer_count];
-		CHECK(kd_spin_nodes[0].count == producer_count + 1);
+		CHECK(kd_spin_cpu.node_count == producer_count + 1);
 		CHECK(produced_node->locked && !produced_node->completed);
-		CHECK(!produced_node->next && produced_node->tail == tail);
+		CHECK(!produced_node->next && tail == ((producer_count + 1) << 16));
 		CHECK(fixture_request(produced_node)->jit_waiter == producer_virtual);
 		CHECK(produced_node->cpuid == 0 && fixture_request(produced_node)->frame.gsbase);
 		CHECK(fixture_request(produced_node)->frame.logical_task ==
@@ -346,8 +342,8 @@ static int xchg_tail(struct qspinlock *lock, int tail)
 			      fixture_request(produced_node)->frame.regs_ref->r13 == 3 && fixture_request(produced_node)->frame.regs_ref->r14 == 4 &&
 			      fixture_request(produced_node)->frame.regs_ref->r15 == 5 && fixture_request(produced_node)->frame.regs_ref->bp == 6);
 		}
-		if (kd_spin_nodes[0].count > producer_peak)
-			producer_peak = kd_spin_nodes[0].count;
+		if (kd_spin_cpu.node_count > producer_peak)
+			producer_peak = kd_spin_cpu.node_count;
 		if (contended)
 			produced_node->next = producer_successor;
 		/* The scripted prior owner releases S before the head can claim it. */
@@ -399,7 +395,7 @@ static struct kd_spin_node *decode_tail(int tail)
 static bool kd_spin_trylock(struct qspinlock *lock)
 {
 	CHECK(producer_case && !producer_virtual && lock == &scheduling_word);
-	CHECK(kd_spin_nodes[0].count == producer_count);
+	CHECK(kd_spin_cpu.node_count == producer_count);
 	if (++try_calls == 1)
 		return false;
 	CHECK(try_calls == 2);
@@ -496,7 +492,7 @@ static void clear_locked_set_completed(struct kd_spin_node *node)
 	node->completed = true;
 }
 
-static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr);
+static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr);
 static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
 			 struct kd_spin_request *request);
 static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
@@ -566,7 +562,7 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 	while (node->locked)
 		cpu_relax();
 	if (node->completed || fixture_request(node)->native_resume) {
-		kd_spin_nodes[0].count--;
+		kd_spin_cpu.node_count--;
 		kd_spin_selftest_node_event(fixture_request(node)->native_resume ?
 			KD_NODE_NATIVE_RETURN : KD_NODE_REMOTE_RETURN);
 		kd_spin_diag_waiter_exit(fixture_request(node)->diag);
@@ -612,7 +608,7 @@ static int test_slowpath(struct qspinlock *lock)
 #define __kd_spin_lock_slowpath test_slowpath
 
 
-static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
+static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr)
 {
 	bool empty = false;
 
@@ -629,15 +625,14 @@ static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
 {
 	combined++;
 	CHECK(lock->val == 1 && origin_claims >= 1);
-	CHECK(kd_spin_nodes[0].count == initial_count - 1);
-	CHECK(kd_spin_lock_stack_depth(&local_shadow_stack) ==
+	CHECK(kd_spin_cpu.node_count == initial_count - 1);
+	CHECK(kd_spin_lock_stack_depth(&kd_spin_cpu) ==
 	      initial_depth + 1);
-	CHECK(local_shadow_stack.lock_addr[initial_depth] == (uintptr_t)lock);
-	CHECK(local_shadow_stack.curr_cs_cpu == UINT32_MAX);
-	CHECK(!local_shadow_stack.irqs_disabled);
+	CHECK(kd_spin_cpu.lock_addr[initial_depth] == (uintptr_t)lock);
+	CHECK(kd_spin_cpu.curr_cs_cpu == UINT32_MAX);
 #ifdef NUMA_AWARE
-	CHECK(!local_shadow_stack.local_queue_head);
-	CHECK(!local_shadow_stack.local_queue_tail);
+	CHECK(!kd_spin_cpu.local_queue_head);
+	CHECK(!kd_spin_cpu.local_queue_tail);
 #endif
 	struct kd_spin_node *saved_tail_node = mock_tail_node;
 	mock_tail_node = next;
@@ -646,8 +641,8 @@ static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
 	production_run_combiner(lock, next, request);
 	mock_tail_node = saved_tail_node;
 #ifdef NUMA_AWARE
-	CHECK(!local_shadow_stack.local_queue_head);
-	CHECK(!local_shadow_stack.local_queue_tail);
+	CHECK(!kd_spin_cpu.local_queue_head);
+	CHECK(!kd_spin_cpu.local_queue_tail);
 #endif
 }
 
@@ -656,7 +651,7 @@ static void run_case(int depth, int count, bool queued, bool retry)
 	struct qspinlock lock = { 0 };
 	struct kd_spin_node next = { .locked = true };
 	struct kd_spin_node *node = &kd_spin_nodes[count - 1];
-	struct shadow_stack before;
+	struct kd_spin_cpu_state before;
 	int ret;
 
 	initial_depth = depth;
@@ -668,29 +663,26 @@ static void run_case(int depth, int count, bool queued, bool retry)
 	entries = exits = combined = handoffs = 0;
 	resume_node = NULL;
 	memset(kd_spin_nodes, 0, sizeof(kd_spin_nodes));
-	memset(&local_shadow_stack, 0, sizeof(local_shadow_stack));
-	kd_spin_nodes[0].count = count;
+	memset(&kd_spin_cpu, 0, sizeof(kd_spin_cpu));
+	kd_spin_cpu.node_count = count;
 	(void)fixture_request(node);
 	(void)fixture_request(&next);
 	node->next = &next;
 	node->rsp = 0x12345678;
 	fixture_request(node)->jit_retry = retry;
-	local_shadow_stack.curr_cs_cpu = 19;
-	local_shadow_stack.prev_cs_cpu = UINT32_MAX;
-	local_shadow_stack.irqs_disabled = 1;
-	local_shadow_stack.local_shadow_stack_ptr = 0x87654321;
+	kd_spin_cpu.curr_cs_cpu = 19;
 #ifdef NUMA_AWARE
-	local_shadow_stack.local_queue_head = &next;
-	local_shadow_stack.local_queue_tail = node;
+	kd_spin_cpu.local_queue_head = &next;
+	kd_spin_cpu.local_queue_tail = node;
 #endif
 	for (int i = 0; i < depth; i++)
-		local_shadow_stack.lock_addr[i] = 0x1000 + i * 8;
-	before = local_shadow_stack;
+		kd_spin_cpu.lock_addr[i] = 0x1000 + i * 8;
+	before = kd_spin_cpu;
 	CHECK(kd_spin_nested_shadow_has_space() == (depth < 8));
 
 	ret = __kd_spin_lock_longjmp(&lock, 0x10000, node);
 	CHECK(ret == (retry ? 4 : (queued && depth < 8 ? 2 : 0)));
-	CHECK(kd_spin_nodes[0].count == count - 1);
+	CHECK(kd_spin_cpu.node_count == count - 1);
 	CHECK(node->rsp == 0x12345678);
 	CHECK(resume_node == node);
 	CHECK(entries == 1 && exits == 1);
@@ -700,10 +692,9 @@ static void run_case(int depth, int count, bool queued, bool retry)
 	CHECK(combined == (queued && depth < 8));
 	CHECK(next.locked == !queued);
 	CHECK(handoffs == (queued && depth == 8));
-	/* Normal combiner execution deliberately resets its IRQ tracking. */
-	if (queued && depth < 8)
-		before.irqs_disabled = 0;
-	CHECK(!memcmp(&local_shadow_stack, &before, sizeof(before)));
+	/* The reservation count is CPU metadata and must retire exactly once. */
+	before.node_count--;
+	CHECK(!memcmp(&kd_spin_cpu, &before, sizeof(before)));
 }
 
 enum {
@@ -747,13 +738,13 @@ static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
 	CHECK(index >= 0 && index < REQUESTS * stride);
 	CHECK(scheduling_word.locked == _Q_LOCKED_COMBINER_VAL);
 	CHECK(!node->completed && node->locked && !batch->outer.released);
-	CHECK(kd_spin_nodes[0].count == 0);
+	CHECK(kd_spin_cpu.node_count == 0);
 	level->executions++;
 #ifdef NUMA_AWARE
 	CHECK(index % stride == 0);
 	CHECK(batch->next == &level->queue[(request + 1) * stride]);
-	CHECK(local_shadow_stack.local_queue_head == &level->queue[1]);
-	CHECK(local_shadow_stack.local_queue_tail ==
+	CHECK(kd_spin_cpu.local_queue_head == &level->queue[1]);
+	CHECK(kd_spin_cpu.local_queue_tail ==
 	      &level->queue[request * stride + follower_count]);
 #else
 	CHECK(batch->next == node->next);
@@ -766,7 +757,7 @@ static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
 
 	if (request == 1 && current_level + 1 < nested_depth) {
 		struct kd_spin_node before[QUEUE_NODES];
-		struct shadow_stack shadow_before = local_shadow_stack;
+		struct kd_spin_cpu_state shadow_before = kd_spin_cpu;
 
 		/* Request 0 committed the first group. The scan for request 1
 		 * appended a second group before this child combiner entry. */
@@ -778,7 +769,7 @@ static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
 		run_level(current_level + 1);
 		CHECK(lock == active_lock && lock->locked == 1);
 		CHECK(!memcmp(before, level->queue, sizeof(before)));
-		CHECK(!memcmp(&shadow_before, &local_shadow_stack,
+		CHECK(!memcmp(&shadow_before, &kd_spin_cpu,
 			      sizeof(shadow_before)));
 	}
 	return 0;
@@ -844,7 +835,7 @@ static void check_level_queue(int number)
 static void run_level(int number)
 {
 	struct nested_level *level = &levels[number];
-	struct shadow_stack before = local_shadow_stack;
+	struct kd_spin_cpu_state before = kd_spin_cpu;
 	struct qspinlock saved_word = scheduling_word;
 	struct qspinlock *saved_lock = active_lock;
 	const int saved_depth = initial_depth, saved_count = initial_count;
@@ -858,7 +849,7 @@ static void run_level(int number)
 	initial_count = 1;
 	active_lock = &level->lock;
 	memset(&scheduling_word, 0, sizeof(scheduling_word));
-	CHECK(kd_spin_nodes[0].count == 0);
+	CHECK(kd_spin_cpu.node_count == 0);
 	if (producer_chain) {
 		struct kd_exec_frame parent = {
 			.valid = true,
@@ -888,17 +879,17 @@ static void run_level(int number)
 			CHECK(__kd_spin_lock_slowpath(&level->lock) == 2);
 		}
 		CHECK(ticket_count == tickets_before);
-		CHECK(kd_spin_nodes[0].count == 0 &&
+		CHECK(kd_spin_cpu.node_count == 0 &&
 		      resume_node == &kd_spin_nodes[0]);
 		/* Child producers may reuse all metadata except the saved parent RSP. */
 		CHECK(kd_spin_nodes[0].rsp == rsp && producer_peak == 1);
 	} else {
-		kd_spin_nodes[0].count = 1;
+		kd_spin_cpu.node_count = 1;
 		level->head.next = &level->queue[0];
 		level->head.rsp = rsp;
 		CHECK(__kd_spin_lock_longjmp(&level->lock, 0x10000,
 					     &level->head) == 2);
-		CHECK(kd_spin_nodes[0].count == 0 &&
+		CHECK(kd_spin_cpu.node_count == 0 &&
 		      resume_node == &level->head);
 		CHECK(level->head.rsp == rsp &&
 		      level->head.next == &level->queue[0]);
@@ -906,8 +897,7 @@ static void run_level(int number)
 	CHECK(level->lock.val == 1 && scheduling_word.locked == 1);
 	CHECK(scheduling_word.tail == (producer_chain ? 9 : 2) &&
 	      scheduling_word.pending == 0);
-	before.irqs_disabled = false;
-	CHECK(!memcmp(&local_shadow_stack, &before, sizeof(before)));
+	CHECK(!memcmp(&kd_spin_cpu, &before, sizeof(before)));
 	check_level_queue(number);
 	/* Model the caller's eventual unlock, not the native release protocol. */
 	level->lock.locked = 0;
@@ -933,16 +923,13 @@ static void run_nested_case(int depth, int followers, int parent, int leaf,
 	leaf_reject_at = reject_at;
 	memset(levels, 0, sizeof(levels));
 	memset(kd_spin_nodes, 0, sizeof(kd_spin_nodes));
-	memset(&local_shadow_stack, 0, sizeof(local_shadow_stack));
+	memset(&kd_spin_cpu, 0, sizeof(kd_spin_cpu));
 	memset(&scheduling_word, 0, sizeof(scheduling_word));
 	memset(&kd_node_observations, 0, sizeof(kd_node_observations));
 	active_lock = NULL;
 	current_level = 0;
 	entries = exits = combined = handoffs = origin_claims = 0;
-	local_shadow_stack.curr_cs_cpu = 19;
-	local_shadow_stack.prev_cs_cpu = UINT32_MAX;
-	local_shadow_stack.local_shadow_stack_ptr = 0x87654321;
-	local_shadow_stack.irqs_disabled = true;
+	kd_spin_cpu.curr_cs_cpu = 19;
 	for (int level = 0; level < depth; level++) {
 		for (int i = 0; i <= last; i++) {
 			struct kd_spin_node *node = &levels[level].queue[i];
@@ -956,9 +943,9 @@ static void run_nested_case(int depth, int followers, int parent, int leaf,
 	run_level(0);
 	CHECK(entries == depth && exits == depth && combined == depth);
 	CHECK(origin_claims == depth && handoffs == 0);
-	CHECK(kd_spin_lock_stack_depth(&local_shadow_stack) == 0);
-	CHECK(local_shadow_stack.curr_cs_cpu == 19);
-	CHECK(kd_spin_nodes[0].count == 0);
+	CHECK(kd_spin_lock_stack_depth(&kd_spin_cpu) == 0);
+	CHECK(kd_spin_cpu.curr_cs_cpu == 19);
+	CHECK(kd_spin_cpu.node_count == 0);
 	for (int level = 0; level < depth; level++)
 		CHECK(!levels[level].lock.locked);
 	nested_case = false;

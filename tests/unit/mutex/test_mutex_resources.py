@@ -32,7 +32,7 @@ def production():
     code += '\nstatic bool kd_comm_matches(const struct kd_comm_key *key, const char comm[TASK_COMM_LEN])\n{\n    comm_queries++;\n    if (trace_admission) CHECK(sampled_first);\n    return kd_comm_matches_real(key, comm);\n}\nstruct kd_comm_key kd_spin_target;\n'
     code += "#define kd_mutex_shadows cpu_shadows\n"
     code += mutex[
-        mutex.index("struct kd_mutex_shadow {") : mutex.index(
+        mutex.index("struct kd_mutex_cpu_state {") : mutex.index(
             "static inline struct kd_mutex_node *decode_tail"
         )
     ]

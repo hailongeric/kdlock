@@ -66,7 +66,7 @@ struct kd_mutex_node {
  * Scheduling state beside one original Linux mutex.
  */
 struct kd_mutex {
-	struct kd_mutex_node *tail; /* queue tail (NULL if empty)        */
+	u32 tail; /* encoded CPU/slot; zero means no queued tail */
 	union {
 		atomic_t state;
 		struct {

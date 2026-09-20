@@ -100,8 +100,7 @@ int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
  * the caller's packet and existing context intact; no frame is published. */
 static struct kd_exec_frame *kd_exec_frame_push_internal(
 		   const struct pt_regs *regs, unsigned long entry_ip,
-		   unsigned long outer_lock_addr, void *waiter,
-		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		   unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task,
 		   struct pt_regs *borrowed_regs)
 {
@@ -109,8 +108,6 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	struct kd_exec_frame *frame;
 	bool first_frame;
 
-	(void)waiter;
-	(void)outgoing_rsp_ptr;
 	if (!regs || !gsbase || !logical_task ||
 	    held_lock_depth > KD_EXEC_MAX_LOCK_DEPTH ||
 	    ctx->depth >= KD_EXEC_MAX_NESTING ||
@@ -202,22 +199,20 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 
 struct kd_exec_frame *
 kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
-		   unsigned long outer_lock_addr, void *waiter,
-		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		   unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task)
 {
 	return kd_exec_frame_push_internal(regs, entry_ip, outer_lock_addr,
-		waiter, outgoing_rsp_ptr, held_lock_depth, gsbase, logical_task, NULL);
+		held_lock_depth, gsbase, logical_task, NULL);
 }
 
 struct kd_exec_frame *
 kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,
-		       unsigned long outer_lock_addr, void *waiter,
-		       void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		       unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		       unsigned long gsbase, struct task_struct *logical_task)
 {
 	return kd_exec_frame_push_internal(regs, entry_ip, outer_lock_addr,
-		waiter, outgoing_rsp_ptr, held_lock_depth, gsbase, logical_task, regs);
+		held_lock_depth, gsbase, logical_task, regs);
 }
 
 /* Retire only after remote dependencies and native routing/requests are gone.

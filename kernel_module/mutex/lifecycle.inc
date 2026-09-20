@@ -9,7 +9,7 @@
 
 void kd_mutex_init(struct kd_mutex *lock)
 {
-	lock->tail = NULL;
+	lock->tail = 0;
 	atomic_set(&lock->state, 0);
 	lock->physical_owner = NULL;
 	lock->origin_mutex_addr = 0;
@@ -21,7 +21,7 @@ static void kd_mutex_free_percpu_stacks(void)
 	int cpu;
 
 	for_each_possible_cpu(cpu) {
-		struct kd_mutex_shadow *shadow =
+		struct kd_mutex_cpu_state *shadow =
 			per_cpu_ptr(&kd_mutex_shadows, cpu);
 		int slot;
 
@@ -72,7 +72,7 @@ int kd_mutex_init_percpu(void)
 	atomic_set(&kd_mutex_reserved_nodes, 0);
 
 	for_each_possible_cpu(i) {
-		struct kd_mutex_shadow *p = per_cpu_ptr(&kd_mutex_shadows, i);
+		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
 
 		memset(per_cpu_ptr(&kd_mutex_nodes[0], i), 0,
 		       sizeof(struct kd_mutex_node) * KD_MUTEX_MAX_NODES);
@@ -148,7 +148,7 @@ void kd_mutex_exit(void)
 		(long long)atomic64_read(&kd_mutex_origin_releases));
 
 	for_each_possible_cpu(i) {
-		struct kd_mutex_shadow *p = per_cpu_ptr(&kd_mutex_shadows, i);
+		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
 
 		if (READ_ONCE(p->node_slots))
 			KD_PR_ERR("kd_mutex: cpu %d leaked waiter slots=%lx\n",

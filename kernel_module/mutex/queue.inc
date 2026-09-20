@@ -31,8 +31,7 @@ static inline struct kd_mutex_node *decode_tail(u32 tail)
 
 static inline u32 xchg_tail(struct kd_mutex *lock, u32 tail)
 {
-	return (u32)(unsigned long)xchg(&lock->tail,
-					(void *)(unsigned long)tail);
+	return xchg(&lock->tail, tail);
 }
 
 /* --------------------------------------------------------------------------
@@ -132,7 +131,7 @@ static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
  * the new caller can sleep on the original mutex without exposing GS state. */
 static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)
 {
-	struct kd_mutex_shadow *shadow = this_cpu_ptr(&kd_mutex_shadows);
+	struct kd_mutex_cpu_state *shadow = this_cpu_ptr(&kd_mutex_shadows);
 	unsigned long slots = READ_ONCE(shadow->node_slots);
 	int idx;
 
@@ -146,7 +145,7 @@ static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)
 
 static struct kd_mutex_node *kd_mutex_reserve_node(void)
 {
-	struct kd_mutex_shadow *shadow = this_cpu_ptr(&kd_mutex_shadows);
+	struct kd_mutex_cpu_state *shadow = this_cpu_ptr(&kd_mutex_shadows);
 	unsigned long slots = READ_ONCE(shadow->node_slots);
 	int idx;
 
@@ -170,7 +169,7 @@ static struct kd_mutex_node *kd_mutex_reserve_node(void)
 
 static void kd_mutex_release_node(struct kd_mutex_node *node)
 {
-	struct kd_mutex_shadow *shadow = this_cpu_ptr(&kd_mutex_shadows);
+	struct kd_mutex_cpu_state *shadow = this_cpu_ptr(&kd_mutex_shadows);
 	unsigned long slots = READ_ONCE(shadow->node_slots);
 	unsigned long bit;
 

@@ -575,7 +575,7 @@ static unsigned int shadow_count(void)
 {
 	unsigned int count = 0;
 	for (int i = 0; i < KD_MUTEX_SHADOW_TABLE_SIZE; i++)
-		count += kd_mutex_shadows[i].mutex_addr != 0;
+		count += kd_mutex_shadows[i].kd_mtx.origin_mutex_addr != 0;
 	return count;
 }
 static void check_shadow_table(void)

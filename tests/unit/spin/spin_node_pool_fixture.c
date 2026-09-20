@@ -21,8 +21,7 @@ static struct pt_regs producer_regs;
 static void producer_setup(int count, bool virtual, enum producer_path path)
 {
 	memset(kd_spin_nodes, 0, sizeof(kd_spin_nodes));
-	memset(producer_contexts, 0, sizeof(producer_contexts));
-	memset(&local_shadow_stack, 0, sizeof(local_shadow_stack));
+	memset(&kd_spin_cpu, 0, sizeof(kd_spin_cpu));
 	memset(&peer, 0, sizeof(peer));
 	memset(&follower, 0, sizeof(follower));
 	memset(&producer_lock, 0, sizeof(producer_lock));
@@ -43,22 +42,21 @@ static void producer_setup(int count, bool virtual, enum producer_path path)
 	contended = path == PRODUCER_COMBINER || path == PRODUCER_SHADOW_FULL;
 	parent_ooo = path == PRODUCER_PARENT_OOO;
 	peer_result = path == PRODUCER_NATIVE ? 5 : 3;
-	kd_spin_jit_contexts = producer_contexts;
+	kd_spin_requests = request_pool;
 	begin_error = ticket_count = poll_calls = relax_calls = try_calls = 0;
 	entries = exits = combined = handoffs = origin_claims = 0;
 	producer_preempt = 1;
-	kd_spin_nodes[0].count = count;
+	kd_spin_cpu.node_count = count;
 	memset(&kd_node_observations, 0, sizeof(kd_node_observations));
 	/* Seed only this deterministic refusal test, never the kernel observer. */
 	kd_node_observations.live = count;
 	for (int i = 0; i < MAX_NODES; i++) {
 		kd_spin_nodes[i].rsp = 0x80000 + i * 0x100;
-		producer_contexts[i].lock_depth = 7;
+		fixture_request(&kd_spin_nodes[i])->jit_context.lock_depth = 7;
 	}
-	local_shadow_stack.curr_cs_cpu = 19;
-	local_shadow_stack.prev_cs_cpu = UINT32_MAX;
+	kd_spin_cpu.curr_cs_cpu = 19;
 	for (int i = 0; i < initial_depth; i++)
-		local_shadow_stack.lock_addr[i] = 0x40000 + i * 0x100;
+		kd_spin_cpu.lock_addr[i] = 0x40000 + i * 0x100;
 	if (path == PRODUCER_COMPLETE || path == PRODUCER_NATIVE || parent_ooo)
 		scheduling_word.tail = 3;
 	else if (virtual && path != PRODUCER_FAST)
@@ -85,14 +83,14 @@ static void producer_setup(int count, bool virtual, enum producer_path path)
 static void producer_live_prefix(const struct kd_spin_node *before,
 				 const struct kd_spin_jit_context *contexts)
 {
-	CHECK(kd_spin_nodes[0].count == producer_count);
+	CHECK(kd_spin_cpu.node_count == producer_count);
 	if (kd_node_trace)
 		CHECK(!kd_node_observations.first_event &&
 		      kd_node_observations.live == producer_count);
 	for (int i = 0; i < producer_count; i++) {
 		CHECK(!memcmp(&kd_spin_nodes[i], &before[i],
 			      sizeof(before[i])));
-		CHECK(!memcmp(&producer_contexts[i], &contexts[i],
+		CHECK(!memcmp(&fixture_request(&kd_spin_nodes[i])->jit_context, &contexts[i],
 			      sizeof(contexts[i])));
 	}
 }
@@ -109,7 +107,8 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 	producer_frame.complete = complete;
 	regs_before = producer_regs;
 	memcpy(before, kd_spin_nodes, sizeof(before));
-	memcpy(contexts, producer_contexts, sizeof(contexts));
+	for (int i = 0; i < MAX_NODES; i++)
+		contexts[i] = fixture_request(&kd_spin_nodes[i])->jit_context;
 	result = virtual ? kd_spin_nested_lock(active_lock, &producer_regs,
 					       &producer_frame) :
 			   __kd_spin_lock_slowpath(active_lock);
@@ -159,7 +158,7 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 			CHECK(producer_lock.locked == 1 && origin_claims == 1);
 		if (virtual) {
 			struct kd_spin_jit_context *context =
-				&producer_contexts[count];
+				&produced_node->execution->jit_context;
 			struct kd_exec_frame *child = &produced_node->execution->frame;
 
 			CHECK(context->requester == &producer_frame &&
@@ -246,7 +245,7 @@ static void run_mailbox_cases(void)
 		      (native ? KD_SPIN_NESTED_NATIVE : KD_SPIN_NESTED_DELEGATED));
 		CHECK(poll_calls == 1 && relax_calls == 3);
 		CHECK(!producer_frame.remote_request && !ticket_count);
-		CHECK(!kd_spin_nodes[0].count);
+		CHECK(!kd_spin_cpu.node_count);
 	}
 	mailbox_case = producer_case = false;
 }
@@ -268,7 +267,7 @@ static void producer_cancel_case(int count, unsigned int failure)
 		expected = -E2BIG;
 		break;
 	case 2:
-		kd_spin_jit_contexts = NULL;
+		kd_spin_requests = NULL;
 		expected = -ENOMEM;
 		break;
 	case 3:
@@ -294,7 +293,8 @@ static void producer_cancel_case(int count, unsigned int failure)
 	}
 	regs_before = producer_regs;
 	memcpy(before, kd_spin_nodes, sizeof(before));
-	memcpy(contexts, producer_contexts, sizeof(contexts));
+	for (int i = 0; i < MAX_NODES; i++)
+		contexts[i] = fixture_request(&kd_spin_nodes[i])->jit_context;
 	CHECK(kd_spin_nested_lock(failure == 8 ? NULL : active_lock,
 				  failure == 6 ? NULL : &producer_regs,
 				  failure == 7 ? NULL : &producer_frame) ==
@@ -398,15 +398,15 @@ static void run_observer_checks(void)
 
 	memset(&kd_node_observations, 0, sizeof(kd_node_observations));
 	kd_node_trace = false;
-	kd_spin_nodes[0].count = 3;
+	kd_spin_cpu.node_count = 3;
 	kd_spin_selftest_node_event(KD_NODE_NATIVE_RESERVE);
 	CHECK(!kd_node_observations.peak && !kd_node_observations.events[0]);
 	kd_node_trace = true;
-	kd_spin_nodes[0].count = 1;
+	kd_spin_cpu.node_count = 1;
 	kd_spin_selftest_node_event(KD_NODE_NATIVE_RESERVE);
 	CHECK(kd_node_observations.peak == 1 &&
 	      !kd_node_observations.first_event);
-	kd_spin_nodes[0].count = 0;
+	kd_spin_cpu.node_count = 0;
 	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
 	CHECK(!kd_node_observations.first_event);
 	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
@@ -417,7 +417,7 @@ static void run_observer_checks(void)
 	kd_spin_selftest_node_event(KD_NODE_REMOTE_POLL);
 	CHECK(kd_node_observations.first_event == before.first_event);
 	CHECK(kd_node_observations.first_expected == before.first_expected);
-	CHECK(kd_spin_nodes[0].count ==
+	CHECK(kd_spin_cpu.node_count ==
 	      0); /* The observer cannot repair count. */
 	memset(&kd_node_observations, 0, sizeof(kd_node_observations));
 	producer_preempt = 0;

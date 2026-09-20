@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* SELFTEST only: join actual JIT progress to unpublished virtual-ticket cancel.
  * A matching explicit KD workload must supply A/B owners and a KD contender. Only the
- * context/node views are injected. Kind 3 observes a genuinely full ticket
+ * request-pool/node views are injected. Kind 3 observes a genuinely full ticket
  * pool without changing it; no lock word, queue link or code is modified.
  */
 static int kd_virtual_refusal_once;
@@ -9,15 +9,15 @@ module_param_named(spin_selftest_virtual_refusal, kd_virtual_refusal_once, int,
 		   0444);
 MODULE_PARM_DESC(
 	spin_selftest_virtual_refusal,
-	"selftest-only: 1=missing context, 2=full node count, 3=observe real ticket exhaustion");
+	"selftest-only: 1=missing request storage, 2=full node count, 3=observe real ticket exhaustion");
 
 /* Keep snapshots off the small combiner stack and out of the default module. */
 static struct {
 	struct kd_exec_frame frame;
 	struct pt_regs regs;
 	struct kd_spin_node nodes[MAX_NODES];
-	struct kd_spin_jit_context contexts[MAX_NODES];
-	struct kd_spin_jit_context *context_base;
+	struct kd_spin_exec_request requests[KD_SPIN_REQUEST_SLOTS];
+	struct kd_spin_exec_request *request_base;
 	struct kd_combiner_state shadow;
 	struct qspinlock *lock;
 	unsigned long return_ip;
@@ -40,7 +40,7 @@ static struct {
 static bool kd_spin_selftest_virtual_begin(
 	struct qspinlock *lock, const struct kd_spin_ref *request,
 	const struct pt_regs *regs, const struct kd_exec_frame *parent,
-	struct kd_spin_jit_context **contexts, int initial_preempt)
+	struct kd_spin_exec_request **requests, int initial_preempt)
 {
 	struct kd_spin_node *base = this_cpu_ptr(&kd_spin_nodes[0]);
 	struct kd_spin_ref found = { 0 };
@@ -55,12 +55,12 @@ static bool kd_spin_selftest_virtual_begin(
 		return false;
 	KD_VIRTUAL_REQUIRE(!preempt_model_preemptible() && !kd_node_trace &&
 			   !kd_shadow_fill_once);
-	KD_VIRTUAL_REQUIRE(kd_exec_frame_validate(parent) && *contexts);
+	KD_VIRTUAL_REQUIRE(kd_exec_frame_validate(parent) && *requests);
 	KD_VIRTUAL_REQUIRE(parent->control_call.phase == KD_CALL_PENDING);
 	KD_VIRTUAL_REQUIRE(kd_exec_frame_lock_depth(parent) == 1 &&
 			   !parent->remote_request &&
 			   parent->remote_result == KD_EXEC_REMOTE_IDLE);
-	KD_VIRTUAL_REQUIRE(base->count == 0 &&
+	KD_VIRTUAL_REQUIRE(this_cpu_ptr(&kd_spin_cpu)->node_count == 0 &&
 			   preempt_count() == initial_preempt + (kind != 3));
 	if (kind == 3) {
 		/* The workload holds 31 distinct physical locks; A is ticket 32.
@@ -92,19 +92,19 @@ static bool kd_spin_selftest_virtual_begin(
 	kd_virtual_test.frame = *parent;
 	kd_virtual_test.return_ip =
 		READ_ONCE(*(unsigned long *)parent->control_call.stack);
-	kd_virtual_test.context_base = *contexts;
-	memcpy(kd_virtual_test.contexts, *contexts,
-	       sizeof(kd_virtual_test.contexts));
+	kd_virtual_test.request_base = *requests;
+	memcpy(kd_virtual_test.requests, *requests,
+	       sizeof(kd_virtual_test.requests));
 	memcpy(kd_virtual_test.nodes, base, sizeof(kd_virtual_test.nodes));
 	kd_spin_capture_combiner_state(&kd_virtual_test.shadow,
-				       this_cpu_ptr(&local_shadow_stack));
+				       this_cpu_ptr(&kd_spin_cpu));
 	/* Use the existing error branches, not an early artificial return. Count
 	 * four is an injected refusal input, never evidence of four live requests.
 	 */
 	if (kind == 1)
-		*contexts = NULL;
+		*requests = NULL;
 	else if (kind == 2)
-		base->count = MAX_NODES;
+		this_cpu_ptr(&kd_spin_cpu)->node_count = MAX_NODES;
 	return true;
 }
 
@@ -120,30 +120,30 @@ static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 	KD_VIRTUAL_REQUIRE(smp_processor_id() == kd_virtual_test.cpu);
 	KD_VIRTUAL_REQUIRE(result ==
 			   (kd_virtual_test.kind == 1 ? -ENOMEM : -E2BIG));
-	KD_VIRTUAL_REQUIRE(base->count ==
+	KD_VIRTUAL_REQUIRE(this_cpu_ptr(&kd_spin_cpu)->node_count ==
 			   (kd_virtual_test.kind == 2 ? MAX_NODES : 0));
 	/* Undo only the synthetic count, after production has decremented its own
 	 * overflow attempt and retired its real ticket. A must remain owned.
 	 */
 	if (kd_virtual_test.kind == 2)
-		base->count = 0;
+		this_cpu_ptr(&kd_spin_cpu)->node_count = 0;
 	retired = !request->entry && !request->sequence &&
 		  !kd_spin_entry_find((void *)kd_virtual_test.lock, &found);
 	pin = preempt_count() == kd_virtual_test.initial_preempt;
 	nodes = !memcmp(base, kd_virtual_test.nodes,
 			sizeof(kd_virtual_test.nodes));
-	contexts = *this_cpu_ptr(&kd_spin_jit_contexts) ==
-			   kd_virtual_test.context_base &&
-		   !memcmp(kd_virtual_test.context_base,
-			   kd_virtual_test.contexts,
-			   sizeof(kd_virtual_test.contexts));
+	contexts = *this_cpu_ptr(&kd_spin_requests) ==
+			   kd_virtual_test.request_base &&
+		   !memcmp(kd_virtual_test.request_base,
+			   kd_virtual_test.requests,
+			   sizeof(kd_virtual_test.requests));
 	packet = !memcmp(regs, &kd_virtual_test.regs, sizeof(*regs)) &&
 		 READ_ONCE(*(unsigned long *)parent->control_call.stack) ==
 			 kd_virtual_test.return_ip;
 	frame = !memcmp(parent, &kd_virtual_test.frame, sizeof(*parent)) &&
 		kd_spin_combiner_state_matches(
 			&kd_virtual_test.shadow,
-			this_cpu_ptr(&local_shadow_stack));
+			this_cpu_ptr(&kd_spin_cpu));
 	owner = raw_spin_is_locked((raw_spinlock_t *)kd_virtual_test.lock) &&
 		atomic_read(&kd_spin_word(kd_virtual_test.lock)->val) ==
 			kd_virtual_test.word &&

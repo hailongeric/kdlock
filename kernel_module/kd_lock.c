@@ -58,8 +58,8 @@ static void origin_raw_spin_unlock(raw_spinlock_t *lock);
 
 #define KD_MUTEX_SHADOW_TABLE_SIZE 1024
 
+/* The initialized original address is also the immutable map key. */
 struct kd_mutex_shadow_entry {
-	unsigned long mutex_addr;
 	struct kd_mutex kd_mtx;
 };
 
@@ -82,13 +82,12 @@ static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)
 
 	raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
 	do {
-		if (kd_mutex_shadows[pos].mutex_addr == mutex_addr) {
+		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {
 			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
 						   flags);
 			return &kd_mutex_shadows[pos].kd_mtx;
 		}
-		if (kd_mutex_shadows[pos].mutex_addr == 0) {
-			kd_mutex_shadows[pos].mutex_addr = mutex_addr;
+		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == 0) {
 			kd_mutex_init(&kd_mutex_shadows[pos].kd_mtx);
 			kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr =
 				mutex_addr;
@@ -113,12 +112,12 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
 
 	raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
 	do {
-		if (kd_mutex_shadows[pos].mutex_addr == mutex_addr) {
+		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {
 			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
 						   flags);
 			return &kd_mutex_shadows[pos].kd_mtx;
 		}
-		if (kd_mutex_shadows[pos].mutex_addr == 0) {
+		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == 0) {
 			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
 						   flags);
 			return NULL;

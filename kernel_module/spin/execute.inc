@@ -18,7 +18,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	int ret_flag;
 	struct kd_exe_info *exe;
 	unsigned int frame_lock_depth;
-	struct kd_spin_jit_context *jit_context = curr_node->execution->jit_context;
+	struct kd_spin_jit_context *jit_context = &curr_node->execution->jit_context;
 	unsigned long entry_ip;
 	u64 queue_end;
 	bool abort_cleaned = false;
@@ -26,7 +26,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	int frame_event;
 #endif
 
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 
 	if (batch->pending) {
 		frame = &curr_node->execution->frame;
@@ -65,7 +65,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	/* Physical packets are fully prepared before the waiter publishes next. */
 	if (!curr_node->execution->jit_waiter && !curr_node->execution->native_regs_decoded)
 		return KD_EXE_RUN_ERROR;
-	if (curr_node->execution->jit_waiter && (!jit_context || !jit_context->requester))
+	if (curr_node->execution->jit_waiter && !jit_context->requester)
 		return KD_EXE_RUN_ERROR;
 	/* B is a continuation in A's admitted code. An independent B translation
 	 * starts at lexical depth one and can stop at an inherited A unlock. */
@@ -289,7 +289,6 @@ finish_frame:
 		/* JIT waiters carry their continuation in pt_regs.  The native
 		 * TCLock path copies a real RSP here, but the combiner's base node
 		 * deliberately has rsp == NULL while run_combiner() is active. */
-		ptr->prev_cs_cpu = -1;
 		ptr->curr_cs_cpu = -1;
 		word->locked = _Q_LOCKED_COMBINER_VAL;
 	}

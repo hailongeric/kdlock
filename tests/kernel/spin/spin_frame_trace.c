@@ -82,7 +82,7 @@ static bool kd_spin_selftest_full_shadow_begin(raw_spinlock_t *lock,
 					       struct pt_regs *regs,
 					       struct kd_exec_frame *frame)
 {
-	struct shadow_stack *stack = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *stack = this_cpu_ptr(&kd_spin_cpu);
 
 	if (!frame || !frame->executed || !lock || !regs || !regs->sp ||
 	    kd_spin_lock_stack_depth(stack) != KD_EXEC_MAX_LOCK_DEPTH ||
@@ -96,7 +96,7 @@ static bool kd_spin_selftest_full_shadow_begin(raw_spinlock_t *lock,
 	kd_full_shadow.preempt = preempt_count();
 	kd_full_shadow.irq = irqs_disabled();
 	kd_full_shadow.cpu = raw_smp_processor_id();
-	kd_full_shadow.nodes = this_cpu_ptr(&kd_spin_nodes[0])->count;
+	kd_full_shadow.nodes = this_cpu_ptr(&kd_spin_cpu)->node_count;
 	kd_spin_capture_combiner_state(&kd_full_shadow.shadow, stack);
 	kd_full_shadow.valid_before =
 		kd_full_shadow.preempt && kd_full_shadow.irq &&
@@ -126,7 +126,7 @@ static void kd_spin_selftest_full_shadow_end(const struct pt_regs *regs,
 		!memcmp(frame, &kd_full_shadow.expected, sizeof(*frame)) &&
 		frame->control_call.phase == KD_CALL_PENDING;
 	kd_full_shadow.combiner = kd_spin_combiner_state_matches(
-		&kd_full_shadow.shadow, this_cpu_ptr(&local_shadow_stack));
+		&kd_full_shadow.shadow, this_cpu_ptr(&kd_spin_cpu));
 	kd_full_shadow.physical = kd_spin_selftest_full_shadow_owned();
 	kd_full_shadow.pending = kd_spin_selftest_full_shadow_pending();
 	kd_full_shadow.context = kd_exec_current_frame() == frame &&
@@ -134,7 +134,7 @@ static void kd_spin_selftest_full_shadow_end(const struct pt_regs *regs,
 				 kd_full_shadow.preempt == preempt_count() &&
 				 kd_full_shadow.irq == irqs_disabled() &&
 				 kd_full_shadow.nodes ==
-					 this_cpu_ptr(&kd_spin_nodes[0])->count;
+					 this_cpu_ptr(&kd_spin_cpu)->node_count;
 	/* Drain-time reporting keeps printk off the full physical frame chain. */
 	smp_store_release(&kd_full_shadow.ready, true);
 }
@@ -162,7 +162,7 @@ static void kd_spin_selftest_full_shadow_report(void)
 static noinline int
 kd_spin_selftest_frame_begin(const struct kd_exec_frame *frame)
 {
-	struct shadow_stack *stack;
+	struct kd_spin_cpu_state *stack;
 	struct kd_frame_trace_event *event;
 	const struct kd_exec_frame *parent;
 	unsigned long sp, top;
@@ -175,7 +175,7 @@ kd_spin_selftest_frame_begin(const struct kd_exec_frame *frame)
 	if (index >= KD_FRAME_TRACE_EVENTS)
 		return -1;
 	event = &kd_frame_events[index];
-	stack = this_cpu_ptr(&local_shadow_stack);
+	stack = this_cpu_ptr(&kd_spin_cpu);
 	asm volatile("mov %%rsp, %0" : "=r"(sp));
 	top = (unsigned long)task_stack_page(current) + THREAD_SIZE;
 	event->used = top - sp;

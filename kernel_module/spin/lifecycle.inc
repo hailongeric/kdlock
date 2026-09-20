@@ -12,18 +12,15 @@ static void kd_spinlock_free_percpu(void)
 	int cpu;
 
 	for_each_possible_cpu(cpu) {
-		struct shadow_stack *stack =
-			per_cpu_ptr(&local_shadow_stack, cpu);
+		struct kd_spin_cpu_state *stack =
+			per_cpu_ptr(&kd_spin_cpu, cpu);
 
-		vfree(*per_cpu_ptr(&kd_spin_jit_contexts, cpu));
-		*per_cpu_ptr(&kd_spin_jit_contexts, cpu) = NULL;
 		vfree(*per_cpu_ptr(&kd_spin_requests, cpu));
 		*per_cpu_ptr(&kd_spin_requests, cpu) = NULL;
 		if (stack->wait_stack_top) {
 			vfree((char *)stack->wait_stack_top - KD_SPIN_WAIT_STACK_SIZE);
 			stack->wait_stack_top = NULL;
 		}
-		stack->local_shadow_stack_ptr = 0;
 	}
 	free_percpu(kd_spin_diag_cpu);
 	kd_spin_diag_cpu = NULL;
@@ -73,8 +70,7 @@ int kd_spinlock_init(void)
 	if (!kd_spin_diag_cpu)
 		goto err_free;
 	for_each_possible_cpu(i) {
-		struct shadow_stack *ptr = per_cpu_ptr(&local_shadow_stack, i);
-		struct kd_spin_jit_context *contexts;
+		struct kd_spin_cpu_state *ptr = per_cpu_ptr(&kd_spin_cpu, i);
 		void *wait_stack;
 
 		memset(per_cpu_ptr(kd_spin_diag_cpu, i), 0,
@@ -86,10 +82,6 @@ int kd_spinlock_init(void)
 			goto err_free;
 		ptr->wait_stack_top = (char *)wait_stack + KD_SPIN_WAIT_STACK_SIZE;
 
-		contexts = vzalloc(array_size(MAX_NODES, sizeof(*contexts)));
-		if (!contexts)
-			goto err_free;
-		*per_cpu_ptr(&kd_spin_jit_contexts, i) = contexts;
 		*per_cpu_ptr(&kd_spin_requests, i) = vzalloc(array_size(
 			KD_SPIN_REQUEST_SLOTS, sizeof(struct kd_spin_exec_request)));
 		if (!*per_cpu_ptr(&kd_spin_requests, i))
@@ -97,15 +89,13 @@ int kd_spinlock_init(void)
 
 		for (j = 0; j < 8; j++)
 			ptr->lock_addr[j] = 0;
-		ptr->local_shadow_stack_ptr = 0;
+		ptr->node_count = 0;
 		ptr->curr_cs_cpu = -1;
-		ptr->prev_cs_cpu = -1;
 #ifdef NUMA_AWARE
 		ptr->local_queue_head = NULL;
 		ptr->local_queue_tail = NULL;
 #endif
 
-		ptr->irqs_disabled = false;
 		*per_cpu_ptr(&kd_spin_resume_nodes, i) = NULL;
 
 		for (j = 0; j < MAX_NODES; j++) {

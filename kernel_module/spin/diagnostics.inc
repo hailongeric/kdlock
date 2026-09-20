@@ -114,7 +114,7 @@ static void kd_spin_jit_disable(struct qspinlock *lock)
 	if (atomic_cmpxchg(&slot->jit_disabled, 0, 1) == 0)
 		kd_spin_diag_record(lock, KD_SPIN_DIAG_NATIVE_FALLBACK,
 				    kd_spin_lock_stack_depth(
-					    this_cpu_ptr(&local_shadow_stack)));
+					    this_cpu_ptr(&kd_spin_cpu)));
 }
 
 static struct kd_spin_diag_slot *kd_spin_diag_waiter_enter(struct qspinlock *lock)
@@ -165,7 +165,7 @@ static void kd_spin_diag_record_nested(raw_spinlock_t *lock,
 				       enum kd_spin_diag_event event,
 				       bool native_fallback)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	unsigned int depth = kd_spin_lock_stack_depth(ptr);
 
 	kd_spin_diag_record_addr((unsigned long)lock, event, depth);

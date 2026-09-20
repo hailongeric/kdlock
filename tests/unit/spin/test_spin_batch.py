@@ -32,7 +32,7 @@ def main():
             "enum kd_exec_frame_state {", "enum kd_exec_lock_kind {", "struct kd_combiner_state {",
             "enum kd_request_role {", "struct kd_exec_outer_unlock {", "struct kd_exec_frame {")),
         (read_source(ROOT / "include/kd_spinlock.h"), (
-            "struct kd_spin_exec_request {", "struct kd_spin_node {")),
+            "struct kd_spin_jit_context {", "struct kd_spin_exec_request {", "struct kd_spin_node {")),
         (spin, ("struct kd_spin_batch {", "enum kd_spin_diag_event {",
                 "struct kd_spin_diag_slot {", "struct kd_spin_diag_counts {",
                 "struct kd_spin_diag_cpu {")),

@@ -19,7 +19,6 @@ struct kd_spin_batch {
 	struct kd_spin_node *cursor;
 	struct kd_jit_batch_call call;
 	bool pending;
-	bool reclaimed;
 	bool fast_previous;
 	int counter;
 	u64 queue_end;
@@ -71,7 +70,7 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
 		container_of(hook, struct kd_spin_batch, outer);
 	struct qspinlock *lock = (struct qspinlock *)frame->outer_lock_addr;
 	struct qspinlock *word = batch->request->word;
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	struct kd_spin_node *next = batch->next;
 	unsigned int i, remaining = 0;
 	int ret;
@@ -135,7 +134,7 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 {
 	struct kd_spin_exec_request *execution = node->execution;
 	struct kd_exec_frame *frame = &execution->frame;
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	struct kd_exe_info *exe;
 
 	if (execution->jit_waiter || execution->pinned_context ||
@@ -179,7 +178,7 @@ static void kd_spin_batch_run(void *opaque)
 {
 	struct kd_spin_batch *batch = opaque;
 	struct qspinlock *lock = batch->lock;
-	struct shadow_stack *ptr __maybe_unused = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr __maybe_unused = this_cpu_ptr(&kd_spin_cpu);
 	struct kd_spin_node *curr_node, *next_node;
 	int exe_flag;
 	for (;;) {
@@ -276,7 +275,6 @@ static void kd_spin_batch_run(void *opaque)
 		if (batch->outer.released) {
 			/* B and this logical frame have finished. A's queue was already
 			 * published; only reacquire for our own original request. */
-			batch->reclaimed = true;
 			return;
 		}
 
@@ -324,14 +322,14 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		return;
 	}
 
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	batch.diag = kd_spin_diag_find((unsigned long)lock);
 	kd_spin_debug_combiner(batch.diag, kd_spin_lock_stack_depth(ptr));
 
 	batch.lock = lock;
 	batch.cursor = curr_node;
 	kd_spin_batch_run(&batch);
-	if (batch.reclaimed) {
+	if (batch.outer.released) {
 		kd_spin_reclaim_outer(request);
 		kd_source_frame_put();
 		return;

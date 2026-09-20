@@ -101,7 +101,7 @@ kd_deferred_event(enum kd_deferred_event_kind kind, struct qspinlock *lock)
 	event->cpu = raw_smp_processor_id();
 	event->socket = numa_node_id();
 	event->depth =
-		kd_spin_lock_stack_depth(this_cpu_ptr(&local_shadow_stack));
+		kd_spin_lock_stack_depth(this_cpu_ptr(&kd_spin_cpu));
 	return event;
 }
 
@@ -140,7 +140,7 @@ static void kd_spin_selftest_deferred_report(void)
 static noinline void kd_spin_selftest_queue_context(struct qspinlock *lock,
 						    bool entering)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	struct kd_spin_node *head = ptr->local_queue_head;
 	struct kd_spin_node *tail = ptr->local_queue_tail;
 	struct kd_deferred_trace_event *event;
@@ -170,7 +170,7 @@ static noinline void kd_spin_selftest_queue_context(struct qspinlock *lock,
 static noinline void kd_spin_selftest_defer(const struct kd_spin_node *request,
 					    const struct kd_spin_node *node)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 
 	if (!kd_deferred_selected(((struct qspinlock *)node->execution->frame.outer_lock_addr)))
 		return;
@@ -205,7 +205,7 @@ static noinline void kd_spin_selftest_splice(struct qspinlock *lock,
 					     const struct kd_spin_node *next,
 					     bool outer)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	struct kd_spin_node *head = ptr->local_queue_head;
 	struct kd_spin_node *tail = ptr->local_queue_tail;
 
@@ -218,7 +218,7 @@ static noinline void kd_spin_selftest_splice(struct qspinlock *lock,
 		if (!event)
 			return;
 		event->head = (unsigned long)head;
-		event->head_task = head->task_struct_ptr->pid;
+		event->head_task = head->execution->frame.logical_task->pid;
 		event->head_cpu = head->cpuid;
 		event->tail = (unsigned long)tail;
 		event->next = (unsigned long)next;
@@ -231,7 +231,7 @@ static noinline void kd_spin_selftest_splice(struct qspinlock *lock,
 	}
 	pr_info("kd_defer splice: lock=%lx owner=%d cpu=%u outer=%u head=%lx head_task=%d head_cpu=%u tail=%lx next=%lx next_task=%d next_cpu=%u linked=%u\n",
 		(unsigned long)lock, current->pid, raw_smp_processor_id(),
-		outer, (unsigned long)head, head->task_struct_ptr->pid,
+		outer, (unsigned long)head, head->execution->frame.logical_task->pid,
 		head->cpuid, (unsigned long)tail, (unsigned long)next,
 		next->execution->frame.logical_task->pid, next->cpuid,
 		READ_ONCE(tail->next) == next);
@@ -242,7 +242,7 @@ kd_spin_selftest_restore(struct qspinlock *lock,
 			 const struct kd_spin_node *request,
 			 const struct kd_spin_node *discarded_tail, int result)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	struct kd_spin_node *tail = ptr->local_queue_tail;
 	struct kd_spin_node *first = tail ? tail->next : request->next;
 

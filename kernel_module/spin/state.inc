@@ -181,7 +181,7 @@ static struct kd_spin_diag_cpu __percpu *kd_spin_diag_cpu;
 
 #define KD_SPIN_WAIT_STACK_SIZE 8192
 
-struct shadow_stack {
+struct kd_spin_cpu_state {
 	/*
 	 * Locks acquired by the current CPU. Tracking them separately from the
 	 * execution stack supports sequences such as acquire A, acquire B,
@@ -194,10 +194,9 @@ struct shadow_stack {
 	 * currently executing.
 	 */
 	uint32_t curr_cs_cpu;
-	uint32_t prev_cs_cpu;
-	/* Wrapper RSP scratch only; execution uses the combiner's task stack. */
-	uint64_t local_shadow_stack_ptr;
-	/* TCLock-style physical waiter stack, distinct from wrapper scratch.
+	/* CPU-owned reservation depth; not part of any published queue node. */
+	int node_count;
+	/* TCLock-style physical waiter stack, separate from the logical frame.
 	 * IRQs stay masked and the ticket pins the sole polling user to this CPU.
 	 * Virtual waiters retain their executor stack for nested owner/ACK work. */
 	void *wait_stack_top;
@@ -210,9 +209,10 @@ struct shadow_stack {
 	struct kd_spin_node *local_queue_head;
 	struct kd_spin_node *local_queue_tail;
 #endif
-
-	int irqs_disabled;
 };
+
+/* CPU lock ledger, node reservation depth and separately allocated polling stack. */
+static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_spin_cpu_state, kd_spin_cpu);
 
 #ifdef KD_SPIN_STATS
 DEFINE_PER_CPU_ALIGNED(uint64_t, ooo_combiner_count);
@@ -249,30 +249,20 @@ static DEFINE_PER_CPU(struct kd_spin_node *, kd_spin_resume_nodes);
 #define KD_SPIN_REQUEST_SLOTS (KD_EXEC_MAX_NESTING + MAX_NODES)
 static DEFINE_PER_CPU(struct kd_spin_exec_request *, kd_spin_requests);
 
-struct kd_spin_jit_context {
-	struct kd_exec_frame *requester;
-	unsigned int lock_depth;
-};
-
-static DEFINE_PER_CPU(struct kd_spin_jit_context *, kd_spin_jit_contexts);
-
 #ifdef KDLOCK_SELFTEST
 static bool kd_spin_selftest_virtual_begin(
 	struct qspinlock *lock, const struct kd_spin_ref *request,
 	const struct pt_regs *regs, const struct kd_exec_frame *parent,
-	struct kd_spin_jit_context **contexts, int initial_preempt);
+	struct kd_spin_exec_request **requests, int initial_preempt);
 static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 					 const struct pt_regs *regs,
 					 const struct kd_exec_frame *parent,
 					 int result);
 #endif
 
-/* Lock ledger, wrapper scratch and the separately allocated polling stack. */
-static DEFINE_PER_CPU_SHARED_ALIGNED(struct shadow_stack, local_shadow_stack);
-
 #define _Q_LOCKED_PENDING_MASK (_Q_LOCKED_MASK_HL | _Q_PENDING_MASK_HL)
 #define _Q_LOCKED_COMBINER_VAL 3
 #define _Q_UNLOCKED_OOO_VAL 7 /* Lock released out of order. */
 #define _Q_LOCKED_IRQ_VAL 15 /* Lock stolen by an IRQ context. */
 
-static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr);
+static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr);

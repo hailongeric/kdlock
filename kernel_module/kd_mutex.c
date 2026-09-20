@@ -105,14 +105,14 @@ bool kd_mutex_jit_is_enabled(void)
 /* --------------------------------------------------------------------------
  * Per-CPU shadow stack
  * -------------------------------------------------------------------------- */
-struct kd_mutex_shadow {
+struct kd_mutex_cpu_state {
 	unsigned long node_slots; /* reserved per-CPU waiter slots     */
 	struct kd_mutex_node *resume_node; /* valid while waiter is CPU-pinned */
 };
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
-static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_shadow, kd_mutex_shadows);
+static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows);
 
 #include "mutex/queue.inc"
 
@@ -249,7 +249,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 			kd_mutex_clobber_wait(lock, curr_node) :
 			kd_mutex_lock_slowpath_asm(lock, curr_node);
 		if (ret_val == 3 || ret_val == 5) {
-			struct kd_mutex_shadow *shadow =
+			struct kd_mutex_cpu_state *shadow =
 				this_cpu_ptr(&kd_mutex_shadows);
 			struct kd_mutex_node *resume_node =
 				READ_ONCE(shadow->resume_node);

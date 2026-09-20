@@ -62,7 +62,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 #endif
 		if (!curr_node->execution->jit_waiter) {
 			kd_spin_publish_wait(curr_node, prev_node,
-				this_cpu_ptr(&local_shadow_stack)->wait_stack_top);
+				this_cpu_ptr(&kd_spin_cpu)->wait_stack_top);
 			/* Only an unexecuted queue-head handoff returns here. */
 			goto queue_head;
 		}
@@ -71,7 +71,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		/* This is a virtual waiter: its independent executor stack stays live
 		 * while the child runs. Poll the mailbox inline on the empty path, but
 		 * service every observed request so ancestor unlock/ACK can progress. */
-		struct kd_exec_frame *requester = curr_node->execution->jit_context->requester;
+		struct kd_exec_frame *requester = curr_node->execution->jit_context.requester;
 
 		while (smp_load_acquire(&curr_node->locked)) {
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_POLL);
@@ -81,14 +81,14 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		}
 		smp_rmb();
 		if (READ_ONCE(curr_node->execution->native_resume)) {
-			this_cpu_ptr(&kd_spin_nodes[0])->count--;
+			this_cpu_ptr(&kd_spin_cpu)->node_count--;
 			kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
 			kd_spin_diag_waiter_exit(curr_node->execution->diag);
 			kd_spin_set_resume_node(curr_node);
 			return 5;
 		}
 
-		struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+		struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 
 		if (curr_node->completed) {
 			print_debug("wakeup\n");
@@ -96,7 +96,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 				if (ptr->lock_addr[j] != 0)
 					break;
 
-			this_cpu_ptr(&kd_spin_nodes[0])->count--;
+			this_cpu_ptr(&kd_spin_cpu)->node_count--;
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);
 
 			if (!curr_node->execution->jit_waiter && j >= 0) {
@@ -178,7 +178,7 @@ queue_head:
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(next_node == NULL);
 #endif
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 
 	j = kd_spin_lock_stack_depth(ptr);
 	if (unlikely(j >= ARRAY_SIZE(ptr->lock_addr))) {
@@ -196,16 +196,11 @@ queue_head:
 	prev_cs_cpu = ptr->curr_cs_cpu;
 	ptr->curr_cs_cpu = -1;
 
-	ptr->irqs_disabled = false;
-
-#ifdef DEBUG_KD_SPIN
-	BUG_ON(ptr->prev_cs_cpu != -1);
-#endif
 	/*
 	 * curr_node at the head of the queue.
 	 * Release the node and run_combiner.
 	 */
-	this_cpu_ptr(&kd_spin_nodes[0])->count--;
+	this_cpu_ptr(&kd_spin_cpu)->node_count--;
 	kd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);
 	prev_locked_val = word->locked;
 #ifdef DEBUG_KD_SPIN
@@ -233,7 +228,7 @@ queue_head:
 	run_combiner(lock, next_node, request);
 
 #ifdef DEBUG_KD_SPIN
-	BUG_ON(this_cpu_ptr(&local_shadow_stack)->lock_addr[j] !=
+	BUG_ON(this_cpu_ptr(&kd_spin_cpu)->lock_addr[j] !=
 	       (uint64_t)(unsigned long)lock);
 #endif
 
@@ -273,7 +268,7 @@ release:
 	/*
 	 * release the node
 	 */
-	this_cpu_ptr(&kd_spin_nodes[0])->count--;
+	this_cpu_ptr(&kd_spin_cpu)->node_count--;
 	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
 	kd_spin_diag_waiter_exit(curr_node->execution->diag);
 	kd_spin_set_resume_node(curr_node);
@@ -298,10 +293,10 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	base = this_cpu_ptr(&kd_spin_nodes[0]);
 	kd_spin_diag_record(
 		lock, KD_SPIN_DIAG_SLOWPATH,
-		kd_spin_lock_stack_depth(this_cpu_ptr(&local_shadow_stack)));
-	idx = base->count++;
+		kd_spin_lock_stack_depth(this_cpu_ptr(&kd_spin_cpu)));
+	idx = this_cpu_ptr(&kd_spin_cpu)->node_count++;
 	if (unlikely(idx >= MAX_NODES)) {
-		base->count--;
+		this_cpu_ptr(&kd_spin_cpu)->node_count--;
 		kd_spin_selftest_node_event(KD_NODE_NATIVE_FULL);
 		while (!kd_spin_trylock(word))
 			cpu_relax();
@@ -309,7 +304,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	}
 	execution = kd_spin_request_reserve();
 	if (unlikely(!execution)) {
-		base->count--;
+		this_cpu_ptr(&kd_spin_cpu)->node_count--;
 		while (!kd_spin_trylock(word))
 			cpu_relax();
 		return 0;
@@ -326,7 +321,6 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->locked = true;
 	curr_node->completed = false;
 	curr_node->next = NULL;
-	curr_node->tail = tail;
 	curr_node->socket_id = numa_node_id();
 	curr_node->cpuid = smp_processor_id();
 	curr_node->rsp = READ_ONCE(input->rsp);
@@ -341,7 +335,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->execution->native_resume = false;
 	curr_node->execution->pinned_context = (preempt_count() & PREEMPT_MASK) != 1;
 	curr_node->execution->native_regs_decoded = false;
-	curr_node->execution->jit_context = NULL;
+	curr_node->execution->jit_context.requester = NULL;
 	if (input->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1) {
 		/* No prologue parsing or GPR capture: the caller spilled live values. */
 		execution->frame.regs.ip = input->ip;

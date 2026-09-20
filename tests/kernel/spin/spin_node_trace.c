@@ -63,7 +63,7 @@ kd_spin_selftest_node_event(enum kd_node_event event)
 	if (!kd_node_trace)
 		return;
 	record = this_cpu_ptr(kd_node_records);
-	count = READ_ONCE(this_cpu_ptr(&kd_spin_nodes[0])->count);
+	count = READ_ONCE(this_cpu_ptr(&kd_spin_cpu)->node_count);
 	expected = record->live;
 	if (event <= KD_NODE_VIRTUAL_RESERVE)
 		expected++;
@@ -119,7 +119,7 @@ static void kd_spin_selftest_nodes_report(void)
 			r->events[KD_NODE_COMBINER_ENTER],
 			r->events[KD_NODE_HEAD_RETURN],
 			r->events[KD_NODE_REMOTE_POLL], r->live,
-			READ_ONCE(per_cpu_ptr(&kd_spin_nodes[0], cpu)->count),
+			READ_ONCE(per_cpu_ptr(&kd_spin_cpu, cpu)->node_count),
 			r->peak, r->peak_task, r->peak_preempt, r->peak_irq,
 			r->first_event, r->first_count, r->first_expected,
 			r->first_task, r->first_preempt, r->first_irq);

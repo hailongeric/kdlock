@@ -41,8 +41,8 @@ static struct kd_spin_ref executor_ref, b_ref, next_ref;
 static struct task_struct waiter = { .pid = 3 };
 static struct kd_spin_node kd_spin_nodes[MAX_NODES], successor, deferred;
 #define request kd_spin_nodes[0]
-static struct shadow_stack shadow_states[2];
-#define local_shadow_stack shadow_states[0]
+static struct kd_spin_cpu_state shadow_states[2];
+#define kd_spin_cpu shadow_states[0]
 static struct kd_spin_exec_request test_execution;
 static struct kd_exec_frame *active_frame = &test_execution.frame;
 #define active (*active_frame)
@@ -502,7 +502,7 @@ static void checked_run_combiner(struct qspinlock *lock,
 	if (full) {
 		CHECK(sizeof(struct pt_regs) == 168 &&
 		      offsetof(struct kd_exec_frame, regs) == 72 &&
-		      sizeof(struct kd_exec_context) == 5400);
+		      sizeof(struct kd_exec_context) == 5208);
 		CHECK(!kd_exec_current_context()->depth);
 		for (unsigned int i = 0; i < KD_EXEC_MAX_NESTING; i++) {
 			struct pt_regs regs;
@@ -510,8 +510,7 @@ static void checked_run_combiner(struct qspinlock *lock,
 
 			memset(&regs, 0x31 + i, sizeof(regs));
 			pressure_tasks[i].pid = 100 + i;
-			frame = real_frame_push(&regs, 0x1000 + i, 0, NULL,
-						NULL, 0, 0x3000 + i,
+			frame = real_frame_push(&regs, 0x1000 + i, 0, 0, 0x3000 + i,
 						&pressure_tasks[i]);
 			CHECK(frame == &kd_exec_current_context()->frames[i]);
 			CHECK(frame &&
@@ -756,8 +755,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				kd_spin_claim_origin(a_lock());
 				shadow_states[cpu].lock_addr[0] =
 					(unsigned long)&origins[0];
-				shadow_states[cpu].curr_cs_cpu =
-					shadow_states[cpu].prev_cs_cpu = -1;
+				shadow_states[cpu].curr_cs_cpu = -1;
 				memset(fixture_request(&request)->frame.regs_ref, 0x5a,
 				       sizeof(*fixture_request(&request)->frame.regs_ref));
 				fixture_request(&request)->frame.regs_ref->sp = (unsigned long)saved;
@@ -785,7 +783,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 					};
 					prepare_virtual_ledger();
 					fixture_request(&request)->jit_waiter = true;
-					fixture_request(&request)->jit_context = &request_context;
+					fixture_request(&request)->jit_context = request_context;
 					parent_before = requester;
 					context_before = request_context;
 				} else {
@@ -942,7 +940,6 @@ static unsigned int repeated_admission(void)
 				shadow_states[mock_cpu].lock_addr[0] =
 					(unsigned long)&origins[0];
 				shadow_states[mock_cpu].curr_cs_cpu = -1;
-				shadow_states[mock_cpu].prev_cs_cpu = -1;
 				request.locked = 1;
 #ifdef NUMA_AWARE
 				add_to_local_queue(&prefix);
@@ -1007,8 +1004,7 @@ static unsigned int preentry_packet(void)
 			kd_spin_claim_origin(a_lock());
 			shadow_states[0].lock_addr[0] =
 				(unsigned long)&origins[0];
-			shadow_states[0].curr_cs_cpu =
-				shadow_states[0].prev_cs_cpu = -1;
+			shadow_states[0].curr_cs_cpu = -1;
 			readmission_regs = (struct pt_regs){
 				.ip = 0x800,
 				.sp = (unsigned long)&saved[8],
@@ -1042,7 +1038,7 @@ static unsigned int preentry_packet(void)
 				};
 				prepare_virtual_ledger();
 				fixture_request(&request)->jit_waiter = true;
-				fixture_request(&request)->jit_context = &request_context;
+				fixture_request(&request)->jit_context = request_context;
 			}
 			scripts = pops = jit_disables = 0;
 			run_combiner(a_lock(), &request);
@@ -1101,7 +1097,7 @@ static unsigned int publication_boundaries(void)
 		gate->locked = _Q_LOCKED_COMBINER_VAL;
 		kd_spin_claim_origin(a_lock());
 		shadow_states[0].lock_addr[0] = (unsigned long)&origins[0];
-		shadow_states[0].curr_cs_cpu = shadow_states[0].prev_cs_cpu = -1;
+		shadow_states[0].curr_cs_cpu = -1;
 		memset(&readmission_regs, 0x3c, sizeof(readmission_regs));
 		readmission_regs.ip = 0x800;
 		readmission_regs.sp = (unsigned long)&saved[8];
@@ -1191,9 +1187,7 @@ int main(void)
 		kd_spin_claim_origin(a_lock());
 		CHECK(!kd_spin_trylock(kd_spin_word(a_lock())));
 		shadow_states[0].lock_addr[0] = (unsigned long)&origins[0];
-		shadow_states[0].curr_cs_cpu = shadow_states[0].prev_cs_cpu =
-			-1;
-		shadow_states[0].local_shadow_stack_ptr = 0x10000;
+		shadow_states[0].curr_cs_cpu = -1;
 		fixture_request(&request)->frame.regs_ref->sp = (unsigned long)saved;
 		fixture_request(&request)->queued_at_ns = 50;
 		queue_finishes = 0;
@@ -1213,7 +1207,7 @@ int main(void)
 			};
 			prepare_virtual_ledger();
 			fixture_request(&request)->jit_waiter = true;
-			fixture_request(&request)->jit_context = &request_context;
+			fixture_request(&request)->jit_context = request_context;
 			fixture_request(&request)->frame.regs_ref->ip = 0x801;
 		}
 		request.cpuid = 1;

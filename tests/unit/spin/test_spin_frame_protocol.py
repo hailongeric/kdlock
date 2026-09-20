@@ -472,7 +472,7 @@ def capacity_fixture(log, placement):
         ),
         0,
     )
-    fields["snapshot"] = 5400
+    fields["snapshot"] = 5208
     if placement["depth"] == 8:
         for key in (
             "claimed",
@@ -521,7 +521,7 @@ class FrameTests(unittest.TestCase):
                     {
                         "attempted": int(depth == 8),
                         "depth": 8 if depth == 8 else 0,
-                        "snapshot": 5400,
+                        "snapshot": 5208,
                     },
                 )
                 row = next(

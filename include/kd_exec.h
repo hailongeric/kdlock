@@ -76,11 +76,8 @@ struct kd_combiner_state {
 	unsigned long lock_addr[KD_EXEC_MAX_LOCK_DEPTH];
 	unsigned int lock_depth;
 	int curr_cs_cpu;
-	int prev_cs_cpu;
 	void *local_queue_head;
 	void *local_queue_tail;
-	unsigned long local_shadow_stack_ptr;
-	int irqs_disabled;
 };
 
 struct kd_exec_frame;
@@ -190,14 +187,12 @@ int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
 
 struct kd_exec_frame *
 kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
-		   unsigned long outer_lock_addr, void *waiter,
-		   void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		   unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task);
-/* Bind a physical spin packet; nested physical contexts retain a private copy. */
+/* Borrow a physical mutex packet; nested physical contexts retain a private copy. */
 struct kd_exec_frame *
 kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,
-		       unsigned long outer_lock_addr, void *waiter,
-		       void *outgoing_rsp_ptr, unsigned int held_lock_depth,
+		       unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		       unsigned long gsbase, struct task_struct *logical_task);
 int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs);
 int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame);

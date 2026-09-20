@@ -64,9 +64,9 @@ def main():
             raise AssertionError(f"expected one numeric definition of {name}")
         body += matching[0] + "\n"
     body += read_source(ROOT / "kernel_module/spin/request.inc")
-    body += definition(source, "struct shadow_stack {").rstrip() + ";\n"
+    types += definition(source, "struct kd_spin_cpu_state {").rstrip() + ";\n"
     body += "static inline unsigned int\n" + definition(
-        source, "kd_spin_lock_stack_depth(const struct shadow_stack *ptr)"
+        source, "kd_spin_lock_stack_depth(const struct kd_spin_cpu_state *ptr)"
     )
     body += definition(source, "bool kd_spin_nested_shadow_has_space(void)")
     body += definition(
@@ -145,48 +145,48 @@ def main():
             mutations = (
                 (
                     "native-full-count-leak",
-                    "if (unlikely(idx >= MAX_NODES)) {\n\t\tbase->count--;",
+                    "if (unlikely(idx >= MAX_NODES)) {\n\t\tthis_cpu_ptr(&kd_spin_cpu)->node_count--;",
                     "if (unlikely(idx >= MAX_NODES)) {",
                 ),
                 (
                     "virtual-full-count-leak",
-                    "if (unlikely(idx < 0 || idx >= MAX_NODES)) {\n\t\tbase->count--;",
+                    "if (unlikely(idx < 0 || idx >= MAX_NODES)) {\n\t\tthis_cpu_ptr(&kd_spin_cpu)->node_count--;",
                     "if (unlikely(idx < 0 || idx >= MAX_NODES)) {",
                 ),
                 (
                     "prepare-cancel-count-leak",
-                    "base->count--;\n\t\tkd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);",
+                    "this_cpu_ptr(&kd_spin_cpu)->node_count--;\n\t\tkd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);",
                     "kd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);",
                 ),
                 (
                     "native-resume-count-leak",
-                    "if (READ_ONCE(curr_node->native_resume)) {\n\t\t\tthis_cpu_ptr(&kd_spin_nodes[0])->count--;",
-                    "if (READ_ONCE(curr_node->native_resume)) {",
+                    "if (READ_ONCE(curr_node->execution->native_resume)) {\n\t\t\tthis_cpu_ptr(&kd_spin_cpu)->node_count--;",
+                    "if (READ_ONCE(curr_node->execution->native_resume)) {",
                 ),
                 (
                     "completed-count-leak",
-                    "this_cpu_ptr(&kd_spin_nodes[0])->count--;\n\t\t\tkd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);",
+                    "this_cpu_ptr(&kd_spin_cpu)->node_count--;\n\t\t\tkd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);",
                     "kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);",
                 ),
                 (
                     "head-count-double-release",
-                    "this_cpu_ptr(&kd_spin_nodes[0])->count--;\n\tkd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);",
-                    "this_cpu_ptr(&kd_spin_nodes[0])->count -= 2;\n\tkd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);",
+                    "this_cpu_ptr(&kd_spin_cpu)->node_count--;\n\tkd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);",
+                    "this_cpu_ptr(&kd_spin_cpu)->node_count -= 2;\n\tkd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);",
                 ),
                 (
                     "common-exit-count-leak",
-                    "this_cpu_ptr(&kd_spin_nodes[0])->count--;\n\tkd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);",
+                    "this_cpu_ptr(&kd_spin_cpu)->node_count--;\n\tkd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);",
                     "kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);",
                 ),
                 (
                     "lost-logical-origin",
-                    "node->spin_origin = parent->spin_origin;",
-                    "node->spin_origin = (struct kd_spin_ref){ 0 };",
+                    "frame->spin_origin = parent->spin_origin;",
+                    "frame->spin_origin = (struct kd_spin_ref){ 0 };",
                 ),
                 (
                     "physical-task-instead-of-waiter",
-                    "node->task_struct_ptr = parent->logical_task;",
-                    "node->task_struct_ptr = current;",
+                    "parent->gsbase, parent->logical_task);",
+                    "parent->gsbase, current);",
                 ),
             )
             # Mutate only the temporary extracted copy, never project/kernel files.

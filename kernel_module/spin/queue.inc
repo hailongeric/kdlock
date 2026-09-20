@@ -63,7 +63,7 @@ static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)
 
 /**
  * clear_pending - clear the pending bit.
- * @word: Private scheduling word S
+ * @word: The single KD exclusion/scheduling word
  *
  * *,1,* -> *,0,*
  */
@@ -74,7 +74,7 @@ static __always_inline void clear_pending(struct qspinlock *word)
 
 /**
  * set_locked - Set the lock bit and own the lock
- * @word: Private scheduling word S
+ * @word: The single KD exclusion/scheduling word
  *
  * *,*,0 -> *,0,1
  */
@@ -149,7 +149,7 @@ static struct kd_spin_node *kd_spin_linked_successor(struct qspinlock *word,
 #ifdef NUMA_AWARE
 __always_inline static void add_to_local_queue(struct kd_spin_node *node)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 
 	if (ptr->local_queue_head == NULL) {
 		ptr->local_queue_head = node;

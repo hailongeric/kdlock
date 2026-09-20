@@ -64,7 +64,7 @@ struct kd_spin_node {
 };
 static struct {
 	struct kd_spin_node *local_queue_head, *local_queue_tail;
-} local_shadow_stack;
+} kd_spin_cpu;
 static struct task_struct tasks[3];
 static struct task_struct *current;
 static unsigned int cpu;
@@ -134,8 +134,8 @@ static void test_readmit(void)
 			child.resume_target = &parent;
 			current = &tasks[1];
 			cpu = 1;
-			local_shadow_stack.local_queue_head = &node;
-			local_shadow_stack.local_queue_tail = &node;
+			kd_spin_cpu.local_queue_head = &node;
+			kd_spin_cpu.local_queue_tail = &node;
 			assert(kd_spin_selftest_refuse(&child, &node, &ret));
 			assert(ret == KD_EXE_NO_RUN && kd_readmit.initial[0]);
 			kd_spin_selftest_refusal_end(&child, ret);
@@ -145,8 +145,8 @@ static void test_readmit(void)
 			child.resume_target = &parent;
 			current = &tasks[2];
 			cpu = 2;
-			local_shadow_stack.local_queue_head = NULL;
-			local_shadow_stack.local_queue_tail = NULL;
+			kd_spin_cpu.local_queue_head = NULL;
+			kd_spin_cpu.local_queue_tail = NULL;
 			if (fault == 1)
 				parent.regs.other[18] ^= 1;
 			if (fault == 2)

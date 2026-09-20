@@ -39,8 +39,8 @@ from this spin path. Mutex and the legacy frame-push API retain their own packet
 handling. This is not a replacement of every state snapshot in the repository.
 
 Each CPU preallocates `KD_EXEC_MAX_NESTING + MAX_NODES` (12) execution records.
-A record contains a 672-byte frame, optional logical-packet owner, user count and
-request-owned return/routing metadata (768 bytes, aligned to 64). The 5400-byte execution context retains its legacy array
+A record contains a 648-byte frame, optional logical-packet owner, user count and
+request-owned return/routing metadata (768 bytes, aligned to 64). The 5208-byte execution context retains its legacy array
 and adds one stack-top pointer. This pool is independent of the four recyclable
 queue nodes and costs 9216 bytes per possible CPU, allocated at module init.
 There is no allocation or global lock in request reservation. Only pinned task
@@ -202,7 +202,10 @@ references remain once per batch, and genuinely shared request users retain RMW.
 Independent owner ledgers/checkpoints also remain. The virtual producer copies
 the parent's live lock-ledger prefix directly into the child's stable request
 and appends the delegated lock before publishing the node. `kd_spin_jit_context`
-holds only the requester and prepared depth. After binding, the executor validates
+is embedded in the stable request and holds only the requester and prepared
+depth; it no longer needs a separate per-CPU allocation or a node-indexed
+lifetime. Cancellation may detach `resume_target`, so the immutable producer
+context remains available for unstarted readmission. After binding, the executor validates
 those same child columns and publishes their live depth/outer index without a
 second copy. Parent and child ledgers must stay independent while both owners
 are live; the shared logical register packet does not replace owner state.
@@ -213,6 +216,30 @@ a nonempty mailbox still enters the existing validation/unlock/ACK handler.
 This keeps ancestor unlocks progressing while the child executes. It cannot be
 replaced with a completion-only PAUSE loop like the physical waiter. Remaining
 work is tracked in [shared request storage](../TODO.md#shared-request-storage).
+
+The physical CPU scheduler is `kd_spin_cpu_state`: its lock ledger, current
+logical CPU, node reservation depth and polling-stack pointer belong to the CPU.
+Optional NUMA queue head/tail remain CPU state. `node_count` is not queue-node
+identity and is not restored with a frame checkpoint: node reuse and frame
+retirement have different boundaries. Nodes retain links, execution reference,
+CPU/NUMA identity, scheduler RSP and cache-line-separated notifications; the
+unused encoded-tail copy was removed. The default CPU state is 80 bytes (96
+with NUMA), while nodes retain their 128-byte stride and notification offsets.
+
+The 88-byte `kd_combiner_state` preserves the lock ledger/depth, current logical
+CPU and NUMA queue pointers. Former constant `prev_cs_cpu`, wrapper-RSP scratch
+and IRQ mirror fields were removed from both CPU state and checkpoints. Actual
+IRQ restoration still uses the request's `irq_flags`. `kd_spin_batch` uses
+`outer.released` directly for outer-lock reclaim, without a second boolean.
+The legacy frame-push APIs no longer accept unused waiter/outgoing-RSP arguments.
+
+Mutex keeps a separate `kd_mutex_cpu_state` and its own ownership protocol.
+Its scheduling object's tail is an encoded `u32`, not a pointer. The immutable
+`origin_mutex_addr` also supplies the protected shadow-map key, removing a
+second address column. These changes leave physical-owner checks, waiter
+accounting and owner ACKs intact. Register-reference representation, ledger
+counters and role transitions remain separate possible work; none is folded
+into hotlock candidates or recyclable nodes.
 
 ### 9.1.2 TCLock Spin Reference And State Boundaries
 

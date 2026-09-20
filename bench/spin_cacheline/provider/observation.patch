@@ -181,7 +181,7 @@ diff --git a/kernel_module/kd_spinlock.c b/kernel_module/kd_spinlock.c
  	if (node->execution->jit_retry)
 -		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
 +		KD_PR_ROUTINE("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
- 			   node, node->cpuid, node->execution->frame.regs_ref->ip);
+ 				   node, node->cpuid, node->execution->frame.regs_ref->ip);
  	if (mode == 2)
  		BUG_ON(kd_spin_entry_mark_native(&ref));
 diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc

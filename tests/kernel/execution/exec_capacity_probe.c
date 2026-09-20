@@ -45,8 +45,7 @@ void kd_exec_selftest_capacity_probe(const struct kd_exec_frame *frame)
 	}
 	kd_capacity.attempted = true;
 	kd_capacity.rejected = !kd_exec_frame_push(
-		kd_exec_frame_regs(frame), frame->entry_ip, frame->outer_lock_addr,
-		NULL, NULL, frame->held_lock_depth,
+		kd_exec_frame_regs(frame), frame->entry_ip, frame->outer_lock_addr, frame->held_lock_depth,
 		frame->gsbase, frame->logical_task);
 	kd_capacity.unchanged = !memcmp(&kd_capacity.before, ctx, sizeof(*ctx));
 	for (cursor = ctx->top, i = 0; cursor && i < KD_EXEC_MAX_NESTING;

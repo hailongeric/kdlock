@@ -39,18 +39,20 @@ static struct task_struct *current = &task;
 struct qspinlock {
 	int value;
 } lock, child_lock;
+struct kd_spin_exec_request {
+ struct { struct task_struct *logical_task; unsigned long outer_lock_addr; } frame;
+};
 struct kd_spin_node {
 	struct kd_spin_node *next;
-	struct qspinlock *lock;
-	struct task_struct *task_struct_ptr;
+	struct kd_spin_exec_request *execution;
 	int socket_id, cpuid;
 	unsigned long rsp;
 };
-struct shadow_stack {
+struct kd_spin_cpu_state {
 	struct kd_spin_node *local_queue_head, *local_queue_tail;
 	unsigned long lock_addr[8];
-} local_shadow_stack;
-static unsigned int kd_spin_lock_stack_depth(const struct shadow_stack *ptr)
+} kd_spin_cpu;
+static unsigned int kd_spin_lock_stack_depth(const struct kd_spin_cpu_state *ptr)
 {
 	(void)ptr;
 	return 2;
@@ -82,31 +84,28 @@ static void reset_trace(void)
 	kd_deferred_buffered = false;
 	atomic_set(&kd_deferred_event_count, 0);
 	atomic_set(&kd_deferred_overflow, 0);
-	local_shadow_stack = (struct shadow_stack){};
+	kd_spin_cpu = (struct kd_spin_cpu_state){};
 	task.pid = 99;
 	events = 0;
 }
 
 static void live_trace(void)
 {
-	struct kd_spin_node s = { .lock = &lock,
-				  .task_struct_ptr = &stask,
+	struct kd_spin_node s = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &stask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 3 };
-	struct kd_spin_node r = { .lock = &lock,
-				  .task_struct_ptr = &rtask,
+	struct kd_spin_node r = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &rtask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 20,
 				  .socket_id = 1,
 				  .next = &s };
-	struct kd_spin_node w = { .lock = &lock,
-				  .task_struct_ptr = &request_task,
+	struct kd_spin_node w = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &request_task, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 0,
 				  .next = &r };
 
 	reset_trace();
 	kd_deferred_trace_lock = (unsigned long)&lock;
 	CHECK(get_next_node(&w) == &s);
-	CHECK(local_shadow_stack.local_queue_head == &r &&
-	      local_shadow_stack.local_queue_tail == &r);
+	CHECK(kd_spin_cpu.local_queue_head == &r &&
+	      kd_spin_cpu.local_queue_tail == &r);
 	CHECK(events == 1 && strstr(message, "kd_defer append:"));
 	CHECK(strstr(message, "request_task=10") && strstr(message, "task=40"));
 	CHECK(strstr(message, "node_cpu=20") &&
@@ -122,9 +121,9 @@ static void live_trace(void)
 	CHECK(events == 4 && strstr(message, "previous=1234"));
 	CHECK(strstr(message, "previous_task=32") &&
 	      strstr(message, "previous_cpu=7"));
-	local_shadow_stack = (struct shadow_stack){};
+	kd_spin_cpu = (struct kd_spin_cpu_state){};
 	r.next = NULL;
-	CHECK(get_next_node(&w) == &r && !local_shadow_stack.local_queue_head &&
+	CHECK(get_next_node(&w) == &r && !kd_spin_cpu.local_queue_head &&
 	      events == 4);
 	r.next = &s;
 	r.socket_id = 0;
@@ -138,16 +137,16 @@ static void live_trace(void)
 	kd_spin_selftest_restore(&lock, &w, &r, 2);
 	CHECK(events == 5 && strstr(message, "kd_defer restore:"));
 	CHECK(strstr(message, "head=0 tail=0") && strstr(message, "result=2"));
-	CHECK(!local_shadow_stack.local_queue_head &&
-	      !local_shadow_stack.local_queue_tail);
+	CHECK(!kd_spin_cpu.local_queue_head &&
+	      !kd_spin_cpu.local_queue_tail);
 	CHECK(w.next == &r && r.next == &s);
 	struct kd_spin_node prefix = { .next = &r };
-	local_shadow_stack.local_queue_head = &prefix;
-	local_shadow_stack.local_queue_tail = &prefix;
+	kd_spin_cpu.local_queue_head = &prefix;
+	kd_spin_cpu.local_queue_tail = &prefix;
 	kd_spin_selftest_restore(&lock, &w, &r, 3);
 	CHECK(events == 6 && strstr(message, "result=3"));
-	CHECK(local_shadow_stack.local_queue_head == &prefix &&
-	      local_shadow_stack.local_queue_tail == &prefix);
+	CHECK(kd_spin_cpu.local_queue_head == &prefix &&
+	      kd_spin_cpu.local_queue_tail == &prefix);
 	CHECK(prefix.next == &r && w.next == &r && r.next == &s);
 	kd_spin_selftest_queue_context(&child_lock, true);
 	kd_spin_selftest_deferred_report();
@@ -178,16 +177,13 @@ static void selection(void)
 
 static void buffered_trace(void)
 {
-	struct kd_spin_node s = { .lock = &lock,
-				  .task_struct_ptr = &stask,
+	struct kd_spin_node s = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &stask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 3 };
-	struct kd_spin_node r = { .lock = &lock,
-				  .task_struct_ptr = &rtask,
+	struct kd_spin_node r = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &rtask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 20,
 				  .socket_id = 1,
 				  .next = &s };
-	struct kd_spin_node w = { .lock = &lock,
-				  .task_struct_ptr = &request_task,
+	struct kd_spin_node w = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &request_task, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 0,
 				  .next = &r };
 	struct kd_deferred_trace_event *e = kd_deferred_events;
@@ -196,12 +192,12 @@ static void buffered_trace(void)
 	kd_deferred_buffered = true;
 	kd_deferred_trace_locks[0] = (unsigned long)&lock;
 	kd_deferred_trace_lock_count = 1;
-	local_shadow_stack.lock_addr[1] = (unsigned long)&lock;
+	kd_spin_cpu.lock_addr[1] = (unsigned long)&lock;
 	CHECK(get_next_node(&w) == &s);
 	kd_spin_selftest_queue_context(&child_lock, true);
 	kd_spin_selftest_queue_context(&child_lock, false);
 	kd_spin_selftest_splice(&lock, &s, true);
-	local_shadow_stack = (struct shadow_stack){};
+	kd_spin_cpu = (struct kd_spin_cpu_state){};
 	kd_spin_selftest_restore(&lock, &w, (void *)0x1234, 2);
 	CHECK(events == 0 && atomic_read(&kd_deferred_event_count) == 5);
 	CHECK(e[0].kind == KD_DEFER_APPEND &&
@@ -253,9 +249,9 @@ static void buffered_trace(void)
 	      strstr(messages[5], "result=2"));
 	CHECK(strstr(message, "events=5 capacity=256 overflow=0 incomplete=0"));
 	/* Saved node addresses are identities, never a license to dereference. */
-	local_shadow_stack.lock_addr[1] = (unsigned long)&lock;
-	local_shadow_stack.local_queue_head = (void *)0x1234;
-	local_shadow_stack.local_queue_tail = (void *)0x5678;
+	kd_spin_cpu.lock_addr[1] = (unsigned long)&lock;
+	kd_spin_cpu.local_queue_head = (void *)0x1234;
+	kd_spin_cpu.local_queue_tail = (void *)0x5678;
 	kd_spin_selftest_queue_context(&child_lock, false);
 	CHECK(atomic_read(&kd_deferred_event_count) == 6);
 	CHECK(e[5].head == 0x1234 && e[5].tail == 0x5678 && !e[5].next);

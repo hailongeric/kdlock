@@ -24,7 +24,7 @@ def main():
         ).rstrip()
         + ";\n"
     )
-    for name in ("include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h"):
+    for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     types += (kernel / "include/linux/kern_levels.h").read_text() + "\n"
@@ -34,7 +34,7 @@ def main():
         if line.startswith("#define KD_EXE_")
     )
     frame = read_source((ROOT / "kernel_module/kd_exec.c"))
-    code = ""
+    code = "#define KD_MUTEX_TAIL_CPU_OFFSET 4\n"
     for marker in (
         "static int kd_exec_invariant_failure(void)",
         "static bool kd_exec_frame_state_is_active(int state)",

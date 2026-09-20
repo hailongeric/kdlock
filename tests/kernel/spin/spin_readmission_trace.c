@@ -106,10 +106,10 @@ kd_spin_selftest_readmit_attempt(struct kd_exec_frame *frame,
 	kd_readmit.cpu[index] = raw_smp_processor_id();
 #ifdef NUMA_AWARE
 	kd_readmit.head[index] =
-		(unsigned long)this_cpu_ptr(&local_shadow_stack)
+		(unsigned long)this_cpu_ptr(&kd_spin_cpu)
 			->local_queue_head;
 	kd_readmit.tail[index] =
-		(unsigned long)this_cpu_ptr(&local_shadow_stack)
+		(unsigned long)this_cpu_ptr(&kd_spin_cpu)
 			->local_queue_tail;
 #endif
 	kd_readmit.initial[index] =

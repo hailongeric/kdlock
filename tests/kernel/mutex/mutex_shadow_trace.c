@@ -11,7 +11,7 @@ static int kd_mutex_shadow_count_get(char *buffer,
 	(void)param;
 	raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
 	for (i = 0; i < ARRAY_SIZE(kd_mutex_shadows); i++)
-		count += !!kd_mutex_shadows[i].mutex_addr;
+		count += !!kd_mutex_shadows[i].kd_mtx.origin_mutex_addr;
 	raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
 	return scnprintf(buffer, PAGE_SIZE, "%u\n", count);
 }

@@ -8,7 +8,7 @@
  */
 
 static inline unsigned int
-kd_spin_lock_stack_depth(const struct shadow_stack *ptr)
+kd_spin_lock_stack_depth(const struct kd_spin_cpu_state *ptr)
 {
 	unsigned int depth = 0;
 
@@ -21,7 +21,7 @@ kd_spin_lock_stack_depth(const struct shadow_stack *ptr)
 
 bool kd_spin_nested_shadow_has_space(void)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 
 	return kd_spin_lock_stack_depth(ptr) < ARRAY_SIZE(ptr->lock_addr);
 }
@@ -32,7 +32,7 @@ bool kd_spin_nested_shadow_has_space(void)
  */
 int kd_spin_nested_shadow_push(struct qspinlock *lock)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	unsigned int depth;
 
 	if (!lock)
@@ -57,7 +57,7 @@ int kd_spin_nested_shadow_push(struct qspinlock *lock)
  */
 int kd_spin_nested_shadow_remove(struct qspinlock *lock)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	unsigned int depth, i;
 
 	if (!lock)
@@ -83,7 +83,7 @@ int kd_spin_nested_shadow_remove(struct qspinlock *lock)
  */
 static int kd_spin_nested_shadow_pop(struct qspinlock *lock)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	unsigned int depth;
 
 	if (!lock)
@@ -95,7 +95,7 @@ static int kd_spin_nested_shadow_pop(struct qspinlock *lock)
 }
 
 static void kd_spin_capture_combiner_state(struct kd_combiner_state *saved,
-					   const struct shadow_stack *ptr)
+					   const struct kd_spin_cpu_state *ptr)
 {
 	unsigned int i;
 
@@ -103,8 +103,6 @@ static void kd_spin_capture_combiner_state(struct kd_combiner_state *saved,
 		saved->lock_addr[i] = READ_ONCE(ptr->lock_addr[i]);
 	saved->lock_depth = kd_spin_lock_stack_depth(ptr);
 	saved->curr_cs_cpu = ptr->curr_cs_cpu;
-	saved->prev_cs_cpu = ptr->prev_cs_cpu;
-	saved->local_shadow_stack_ptr = ptr->local_shadow_stack_ptr;
 #ifdef NUMA_AWARE
 	saved->local_queue_head = ptr->local_queue_head;
 	saved->local_queue_tail = ptr->local_queue_tail;
@@ -112,21 +110,17 @@ static void kd_spin_capture_combiner_state(struct kd_combiner_state *saved,
 	saved->local_queue_head = NULL;
 	saved->local_queue_tail = NULL;
 #endif
-	saved->irqs_disabled = ptr->irqs_disabled;
 }
 
 static bool
 kd_spin_combiner_state_matches(const struct kd_combiner_state *saved,
-			       const struct shadow_stack *ptr)
+			       const struct kd_spin_cpu_state *ptr)
 {
 	unsigned int i;
 
 	if (!saved || !ptr ||
 	    saved->lock_depth != kd_spin_lock_stack_depth(ptr) ||
-	    saved->curr_cs_cpu != ptr->curr_cs_cpu ||
-	    saved->prev_cs_cpu != ptr->prev_cs_cpu ||
-	    saved->local_shadow_stack_ptr != ptr->local_shadow_stack_ptr ||
-	    saved->irqs_disabled != ptr->irqs_disabled)
+	    saved->curr_cs_cpu != ptr->curr_cs_cpu)
 		return false;
 #ifdef NUMA_AWARE
 	if (saved->local_queue_head != ptr->local_queue_head ||
@@ -149,7 +143,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 		kd_exec_frame_prepare_complex(frame);
 		kd_exec_frame_own_regs(frame);
 		kd_spin_capture_combiner_state(&frame->saved_combiner,
-					       this_cpu_ptr(&local_shadow_stack));
+					       this_cpu_ptr(&kd_spin_cpu));
 		frame->spin_simple = false;
 	}
 }
@@ -160,7 +154,7 @@ static __always_inline void kd_spin_diag_invariant_failure(void)
 	WARN_ON_ONCE(1);
 }
 
-static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
+static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr)
 {
 	bool hole_seen = false;
 	unsigned int i;
@@ -178,7 +172,7 @@ static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
 /* Verify a candidate unlock matches the latest expected nesting index.
  * Detects accidental reordering before mutating spin/qspin states.
  */
-static void kd_spin_diag_validate_outer_unlock(const struct shadow_stack *ptr,
+static void kd_spin_diag_validate_outer_unlock(const struct kd_spin_cpu_state *ptr,
 					       struct qspinlock *lock,
 					       struct qspinlock *word, int my_idx, int max_idx)
 {

@@ -17,7 +17,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 			 struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *prev_node = NULL, *next_node = NULL;
-	struct kd_mutex_shadow *ptr = this_cpu_ptr(&kd_mutex_shadows);
+	struct kd_mutex_cpu_state *ptr = this_cpu_ptr(&kd_mutex_shadows);
 	u32 old_tail;
 	int old_locked;
 
@@ -55,9 +55,9 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 
 	/* Only waiter in queue? */
 	if (cmpxchg(&lock->tail,
-		    (struct kd_mutex_node *)(unsigned long)curr_node->tail,
-		    NULL) ==
-	    (struct kd_mutex_node *)(unsigned long)curr_node->tail)
+		    (u32)curr_node->tail,
+		    0) ==
+	    (u32)curr_node->tail)
 		goto release;
 
 	/* Wait for next waiter to appear */

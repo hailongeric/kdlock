@@ -93,25 +93,25 @@ __attribute__((noipa)) noinline notrace void
 jump_to_saved_regs(struct pt_regs *regs)
 {
 	asm volatile("movq 0x00(%%rdi), %%r15\n"
-		     "movq 0x08(%%rdi), %%r14\n"
-		     "movq 0x10(%%rdi), %%r13\n"
-		     "movq 0x18(%%rdi), %%r12\n"
-		     "movq 0x20(%%rdi), %%rbp\n"
-		     "movq 0x28(%%rdi), %%rbx\n"
-		     "movq 0x30(%%rdi), %%r11\n"
-		     "movq 0x38(%%rdi), %%r10\n"
-		     "movq 0x40(%%rdi), %%r9\n"
-		     "movq 0x48(%%rdi), %%r8\n"
-		     "movq 0x50(%%rdi), %%rax\n"
-		     "movq 0x58(%%rdi), %%rcx\n"
-		     "movq 0x60(%%rdi), %%rdx\n"
-		     "movq 0x68(%%rdi), %%rsi\n"
-		     "movq 0x98(%%rdi), %%rsp\n"
-		     "movq 0x70(%%rdi), %%rdi\n"
-		     "retq\n"
-		     :
-		     :
-		     : "memory");
+				 "movq 0x08(%%rdi), %%r14\n"
+				 "movq 0x10(%%rdi), %%r13\n"
+				 "movq 0x18(%%rdi), %%r12\n"
+				 "movq 0x20(%%rdi), %%rbp\n"
+				 "movq 0x28(%%rdi), %%rbx\n"
+				 "movq 0x30(%%rdi), %%r11\n"
+				 "movq 0x38(%%rdi), %%r10\n"
+				 "movq 0x40(%%rdi), %%r9\n"
+				 "movq 0x48(%%rdi), %%r8\n"
+				 "movq 0x50(%%rdi), %%rax\n"
+				 "movq 0x58(%%rdi), %%rcx\n"
+				 "movq 0x60(%%rdi), %%rdx\n"
+				 "movq 0x68(%%rdi), %%rsi\n"
+				 "movq 0x98(%%rdi), %%rsp\n"
+				 "movq 0x70(%%rdi), %%rdi\n"
+				 "retq\n"
+				 :
+				 :
+				 : "memory");
 	__builtin_unreachable();
 }
 
@@ -120,26 +120,26 @@ __attribute__((noipa)) noinline notrace void
 jump_to_saved_regs_in_cs(struct pt_regs *regs)
 {
 	asm volatile("movq 0x00(%%rdi), %%r15\n"
-		     "movq 0x08(%%rdi), %%r14\n"
-		     "movq 0x10(%%rdi), %%r13\n"
-		     "movq 0x18(%%rdi), %%r12\n"
-		     "movq 0x20(%%rdi), %%rbp\n"
-		     "movq 0x28(%%rdi), %%rbx\n"
-		     "movq 0x30(%%rdi), %%r11\n"
-		     "movq 0x38(%%rdi), %%r10\n"
-		     "movq 0x40(%%rdi), %%r9\n"
-		     "movq 0x48(%%rdi), %%r8\n"
-		     "movq 0x50(%%rdi), %%rax\n"
-		     "movq 0x58(%%rdi), %%rcx\n"
-		     "movq 0x60(%%rdi), %%rdx\n"
-		     "movq 0x68(%%rdi), %%rsi\n"
-		     "movq 0x98(%%rdi), %%rsp\n"
-		     "pushq 0x80(%%rdi)\n"
-		     "movq 0x70(%%rdi), %%rdi\n"
-		     "retq\n"
-		     :
-		     :
-		     : "memory");
+				 "movq 0x08(%%rdi), %%r14\n"
+				 "movq 0x10(%%rdi), %%r13\n"
+				 "movq 0x18(%%rdi), %%r12\n"
+				 "movq 0x20(%%rdi), %%rbp\n"
+				 "movq 0x28(%%rdi), %%rbx\n"
+				 "movq 0x30(%%rdi), %%r11\n"
+				 "movq 0x38(%%rdi), %%r10\n"
+				 "movq 0x40(%%rdi), %%r9\n"
+				 "movq 0x48(%%rdi), %%r8\n"
+				 "movq 0x50(%%rdi), %%rax\n"
+				 "movq 0x58(%%rdi), %%rcx\n"
+				 "movq 0x60(%%rdi), %%rdx\n"
+				 "movq 0x68(%%rdi), %%rsi\n"
+				 "movq 0x98(%%rdi), %%rsp\n"
+				 "pushq 0x80(%%rdi)\n"
+				 "movq 0x70(%%rdi), %%rdi\n"
+				 "retq\n"
+				 :
+				 :
+				 : "memory");
 	__builtin_unreachable();
 }
 #pragma GCC pop_options
@@ -149,10 +149,11 @@ jump_to_saved_regs_in_cs(struct pt_regs *regs)
  * after that decrement, so node/pool reuse cannot race a late register read. */
 static __attribute__((noipa, noreturn)) noinline notrace void
 kd_spin_restore_request(struct kd_spin_exec_request *execution,
-			unsigned long flags, unsigned int mode)
+						unsigned long flags, unsigned int mode)
 {
 	if (execution->frame.entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
-	    execution->frame.packet_state != KD_PACKET_FULL) {
+		execution->frame.packet_state != KD_PACKET_FULL)
+	{
 		BUG_ON(mode == 2);
 		asm volatile(
 			"movq %c[sp](%%rdi), %%rsp\n"
@@ -229,7 +230,7 @@ kd_spin_resume_waiter(struct kd_spin_node *node, unsigned int mode)
 
 	if (node->execution->jit_retry)
 		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
-			   node, node->cpuid, node->execution->frame.regs_ref->ip);
+				   node, node->cpuid, node->execution->frame.regs_ref->ip);
 	if (mode == 2)
 		BUG_ON(kd_spin_entry_mark_native(&ref));
 	else if (!mode)
@@ -247,7 +248,7 @@ kd_spin_resume_completed(struct kd_spin_node *node)
 {
 	unsigned int mode = READ_ONCE(node->execution->native_resume) ? 2 : 0;
 
-	this_cpu_ptr(&kd_spin_nodes[0])->count--;
+	this_cpu_ptr(&kd_spin_cpu)->node_count--;
 	if (mode)
 		kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
 	else
@@ -263,8 +264,8 @@ kd_spin_resume_completed(struct kd_spin_node *node)
  * in locals: JIT is allowed to overwrite this function's original frame. */
 __attribute__((noipa)) noinline notrace static void
 kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
-		      struct kd_spin_request *request, unsigned long ip,
-                      unsigned long bp, unsigned int abi)
+					  struct kd_spin_request *request, unsigned long ip,
+					  unsigned long bp, unsigned int abi)
 {
 	struct kd_spin_native_input input;
 	unsigned long flags, sp;
@@ -279,14 +280,16 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
 	input.bp = bp;
 	input.entry_abi = abi;
 	ret = __kd_spin_lock_slowpath(lock, request, &input);
-	if (ret == 0 || ret == 2) {
+	if (ret == 0 || ret == 2)
+	{
 		local_irq_restore(flags);
 		return;
 	}
 	/* A pre-body refusal can acquire the queue and retry from its decoded
 	 * entry. It has not touched the caller's stack; completed/native wakes
 	 * already left through kd_spin_resume_completed and cannot return here. */
-	if (ret == 4) {
+	if (ret == 4)
+	{
 		struct kd_spin_node *node =
 			READ_ONCE(*this_cpu_ptr(&kd_spin_resume_nodes));
 
@@ -295,12 +298,12 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
 		node->execution->irq_flags = flags;
 		sp = min(node->rsp, node->execution->frame.regs_ref->sp) & ~15UL;
 		asm volatile("movq %0, %%rsp\n"
-			     "callq %P3\n"
-			     "ud2\n"
-			     :
-			     : "r"(sp), "D"(node), "S"(1U),
-			       "i"(kd_spin_resume_waiter)
-			     : "memory");
+					 "callq %P3\n"
+					 "ud2\n"
+					 :
+					 : "r"(sp), "D"(node), "S"(1U),
+					   "i"(kd_spin_resume_waiter)
+					 : "memory");
 		__builtin_unreachable();
 	}
 	BUG();
@@ -311,16 +314,16 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
  * cannot steal the queue head. These callers execute their own body only. */
 void kd_spin_lock_nondelegated(kd_spinlock_t *lock)
 {
- preempt_disable();
- this_cpu_inc(kd_spin_fast_cpu.nondelegated);
- while (atomic_cmpxchg_acquire(&lock->val, 0, _Q_LOCKED_VAL_HL))
-  cpu_relax();
+	preempt_disable();
+	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
+	while (atomic_cmpxchg_acquire(&lock->val, 0, _Q_LOCKED_VAL_HL))
+		cpu_relax();
 }
 void kd_spin_unlock_nondelegated(kd_spinlock_t *lock)
 {
- smp_store_release(&lock->locked, 0);
- this_cpu_dec(kd_spin_fast_cpu.nondelegated);
- preempt_enable();
+	smp_store_release(&lock->locked, 0);
+	this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+	preempt_enable();
 }
 
 /* Hook entry for queued spin lock acquisition:
@@ -328,9 +331,9 @@ void kd_spin_unlock_nondelegated(kd_spinlock_t *lock)
  */
 __attribute__((noipa)) noinline notrace void
 kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
-	     unsigned long rip, unsigned long bp, unsigned int abi)
+				 unsigned long rip, unsigned long bp, unsigned int abi)
 {
-	struct kd_spin_request request = { 0 };
+	struct kd_spin_request request = {0};
 	struct qspinlock *word;
 	u32 val, cnt;
 
@@ -339,7 +342,7 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	if (!kd_hotlock_record_spin((unsigned long)lock))
 		goto native;
 	if (!in_task() || softirq_count() || current->migration_disabled ||
-	    kd_spin_entry_native_active())
+		kd_spin_entry_native_active())
 		goto native;
 	/* Pin before consulting per-CPU execution state. Like TCLock, attempt
 	 * sole word before building a contended request. Linux lock objects
@@ -348,25 +351,30 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	if (kd_exec_current_frame() || kd_exec_context_busy())
 		goto unpin_native;
 	word = request.word = lock;
-	if (preempt_count() == 1) {
+	if (preempt_count() == 1)
+	{
 		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
-		if (!val) {
+		if (!val)
+		{
 			kd_spin_fast_claim(lock);
 			return;
 		}
 		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock,
-					       &request.ref))
+									   &request.ref))
 			goto unpin_native;
-	} else {
+	}
+	else
+	{
 		/* Nested/virtual ownership keeps the established ticket protocol. */
 		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock,
-					       &request.ref))
+									   &request.ref))
 			goto unpin_native;
 		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
 		if (!val)
 			goto acquired;
 	}
-	if (val == _Q_PENDING_VAL_HL) {
+	if (val == _Q_PENDING_VAL_HL)
+	{
 		cnt = _Q_PENDING_LOOPS_HL;
 		val = atomic_cond_read_relaxed(
 			&word->val, (VAL != _Q_PENDING_VAL_HL) || !cnt--);
@@ -374,14 +382,15 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	if (val & ~_Q_LOCKED_MASK_HL)
 		goto queue;
 	val = kd_spin_fetch_set_pending_acquire(word);
-	if (unlikely(val & ~_Q_LOCKED_MASK_HL)) {
+	if (unlikely(val & ~_Q_LOCKED_MASK_HL))
+	{
 		if (!(val & _Q_PENDING_MASK_HL))
 			clear_pending(word);
 		goto queue;
 	}
 	if (val & _Q_LOCKED_MASK_HL)
 		atomic_cond_read_acquire(&word->val,
-					 !(VAL & _Q_LOCKED_MASK_HL));
+								 !(VAL & _Q_LOCKED_MASK_HL));
 	clear_pending_set_locked(word);
 	goto acquired;
 queue:
@@ -413,8 +422,8 @@ int kd_spin_prepare(struct qspinlock *lock, unsigned long ip, unsigned int abi)
 	kd_exe_add_abi(0, ip, KD_EXE_LOCK_SPIN, abi);
 	exe = kd_get_exe(0, ip);
 	if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED ||
-	    exe->RIP != ip || exe->entry_abi != abi ||
-	    exe->lock_kind != KD_EXE_LOCK_SPIN || !exe->code_block)
+		exe->RIP != ip || exe->entry_abi != abi ||
+		exe->lock_kind != KD_EXE_LOCK_SPIN || !exe->code_block)
 		return -EINVAL;
 	return READ_ONCE(exe->status_code) == KD_EXE_NATIVE_ONLY ? -EOPNOTSUPP : 0;
 }
@@ -422,7 +431,7 @@ EXPORT_SYMBOL_GPL(kd_spin_prepare);
 
 __attribute__((noipa)) noinline notrace void
 kd_spin_lock_clobber_v1(struct qspinlock *lock, unsigned long sp,
-			unsigned long ip, unsigned long bp)
+						unsigned long ip, unsigned long bp)
 {
 	kd_spin_lock_abi(lock, sp, ip, bp, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
 }
@@ -439,7 +448,7 @@ __attribute__((noipa)) noinline notrace static void
 kd_spin_unlock_request(struct qspinlock *lock, struct kd_spin_request *request)
 {
 	struct qspinlock *word = request->word;
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	int j, max_idx, my_idx;
 
 	uint64_t temp_lock_addr;
@@ -449,12 +458,14 @@ kd_spin_unlock_request(struct qspinlock *lock, struct kd_spin_request *request)
 	my_idx = -1;
 
 	if (word->locked == _Q_LOCKED_VAL_HL ||
-	    word->locked == _Q_LOCKED_IRQ_VAL) {
+		word->locked == _Q_LOCKED_IRQ_VAL)
+	{
 		kd_spin_release_origin(request);
 		return;
 	}
 
-	for (j = 0; j < 8; j++) {
+	for (j = 0; j < 8; j++)
+	{
 		temp_lock_addr = ptr->lock_addr[j];
 		if (temp_lock_addr != 0)
 			max_idx = j;
@@ -466,16 +477,19 @@ kd_spin_unlock_request(struct qspinlock *lock, struct kd_spin_request *request)
 	kd_spin_diag_validate_lock_stack(ptr);
 	kd_spin_diag_validate_outer_unlock(ptr, lock, word, my_idx, max_idx);
 
-	if (my_idx == -1) {
-		if (word->locked == _Q_LOCKED_COMBINER_VAL) {
+	if (my_idx == -1)
+	{
+		if (word->locked == _Q_LOCKED_COMBINER_VAL)
+		{
 #ifdef KD_SPIN_STATS
 			this_cpu_inc(ooo_unlocks);
 #endif
 			kd_spin_debug_ooo_unlock(lock,
-						 kd_spin_lock_stack_depth(ptr));
+									 kd_spin_lock_stack_depth(ptr));
 			word->locked = _Q_UNLOCKED_OOO_VAL;
 			print_debug("OOO unlock\n");
-		} else
+		}
+		else
 			BUG_ON(true);
 		return;
 	}
@@ -486,12 +500,14 @@ kd_spin_unlock_request(struct qspinlock *lock, struct kd_spin_request *request)
 
 	BUG_ON(ptr->curr_cs_cpu == -1);
 
-	if (max_idx < 0) {
+	if (max_idx < 0)
+	{
 		BUG_ON(true);
 	}
 
 #endif
-	if (my_idx < max_idx) {
+	if (my_idx < max_idx)
+	{
 #ifdef KD_SPIN_STATS
 		this_cpu_inc(ooo_unlocks);
 #endif
@@ -530,13 +546,14 @@ kd_spin_unlock_protocol(struct qspinlock *lock)
 __attribute__((noipa)) noinline notrace void
 kd_spin_unlock(struct qspinlock *lock)
 {
-	struct kd_spin_ref ref = { 0 };
+	struct kd_spin_ref ref = {0};
 
 	if (kd_spin_fast_unlock((raw_spinlock_t *)lock))
 		return;
 	if (kd_exec_native_unlock((unsigned long)lock, false))
 		return;
-	if (kd_spin_entry_find((raw_spinlock_t *)lock, &ref)) {
+	if (kd_spin_entry_find((raw_spinlock_t *)lock, &ref))
+	{
 		kd_spin_unlock_ref(lock, &ref);
 		return;
 	}
@@ -546,7 +563,7 @@ EXPORT_SYMBOL_GPL(kd_spin_unlock);
 
 __attribute__((noipa)) noinline notrace void
 kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
-			  unsigned long ip, unsigned long bp)
+						  unsigned long ip, unsigned long bp)
 {
 	kd_spin_unlock(lock);
 }

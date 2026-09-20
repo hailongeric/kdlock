@@ -81,7 +81,7 @@ static void kd_shadow_release_pressure(void)
 bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct pt_regs *regs,
 				   struct kd_exec_frame *frame)
 {
-	struct shadow_stack *ptr;
+	struct kd_spin_cpu_state *ptr;
 	unsigned int i;
 	bool ok;
 
@@ -99,7 +99,7 @@ bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct pt_regs *regs,
 	kd_shadow_pressure.preempt_count = preempt_count();
 	preempt_disable();
 	kd_shadow_pressure.cpu = smp_processor_id();
-	ptr = this_cpu_ptr(&local_shadow_stack);
+	ptr = this_cpu_ptr(&kd_spin_cpu);
 	kd_shadow_pressure.held = 0;
 	kd_shadow_pressure.lock = (void *)lock;
 	kd_shadow_pressure.regs = *regs;
@@ -107,7 +107,7 @@ bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct pt_regs *regs,
 	ok = KD_SHADOW_CHECK(kd_spin_lock_stack_depth(ptr) == 1);
 	ok &= KD_SHADOW_CHECK(kd_exec_frame_lock_depth(frame) == 1);
 	ok &= KD_SHADOW_CHECK(ptr->lock_addr[0] == frame->outer_lock_addr);
-	ok &= KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_nodes[0])->count == 0);
+	ok &= KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_cpu)->node_count == 0);
 	ok &= KD_SHADOW_CHECK(atomic_read(&kd_shadow_pressure.lock->val) == 0);
 	if (!ok)
 		goto fail;
@@ -132,7 +132,7 @@ fail:
 void kd_spin_selftest_shadow_end(struct pt_regs *regs,
 				 struct kd_exec_frame *frame, int result)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	unsigned int local = kd_spin_lock_stack_depth(ptr);
 	unsigned int held = kd_shadow_pressure.held;
 	bool physical = true, unchanged, restored;
@@ -152,7 +152,7 @@ void kd_spin_selftest_shadow_end(struct pt_regs *regs,
 	KD_SHADOW_CHECK(unchanged && frame->executed);
 	KD_SHADOW_CHECK(kd_exec_frame_lock_depth(frame) == 1);
 	KD_SHADOW_CHECK(smp_processor_id() == kd_shadow_pressure.cpu);
-	KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_nodes[0])->count == 0);
+	KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_cpu)->node_count == 0);
 	KD_SHADOW_CHECK(atomic_read(&kd_shadow_pressure.lock->val) == 0);
 	KD_SHADOW_CHECK(READ_ONCE(kd_spin_word((void *)frame->outer_lock_addr)
 					  ->locked) == _Q_LOCKED_COMBINER_VAL);
@@ -234,8 +234,8 @@ static void kd_shadow_owner(void)
 		kd_shadow_unlock();
 		return;
 	}
-	KD_SHADOW_CHECK(READ_ONCE(head->count) == 1);
-	KD_SHADOW_CHECK(READ_ONCE(successor->count) == 1);
+	KD_SHADOW_CHECK(READ_ONCE(per_cpu_ptr(&kd_spin_cpu, head->cpuid)->node_count) == 1);
+	KD_SHADOW_CHECK(READ_ONCE(per_cpu_ptr(&kd_spin_cpu, successor->cpuid)->node_count) == 1);
 	KD_SHADOW_CHECK(READ_ONCE(head->rsp) != 0);
 	KD_SHADOW_CHECK(READ_ONCE(successor->rsp) != 0);
 	kd_shadow_unlock();
@@ -246,7 +246,7 @@ static void kd_shadow_owner(void)
 	KD_SHADOW_CHECK(READ_ONCE(kd_shadow_test.word->locked) == 1);
 	KD_SHADOW_CHECK(!READ_ONCE(successor->locked));
 	KD_SHADOW_CHECK(!READ_ONCE(successor->completed));
-	KD_SHADOW_CHECK(READ_ONCE(successor->count) == 1);
+	KD_SHADOW_CHECK(READ_ONCE(per_cpu_ptr(&kd_spin_cpu, successor->cpuid)->node_count) == 1);
 	KD_SHADOW_CHECK(!READ_ONCE(kd_shadow_test.successor_acquired));
 	if (!KD_SHADOW_CHECK(!kd_spin_trylock(kd_shadow_test.word)))
 		kd_spin_unlock_protocol(kd_shadow_test.lock);
@@ -273,7 +273,7 @@ static bool kd_shadow_check_admission(void)
 	bool ok;
 	int ret;
 
-	frame = kd_exec_frame_push(&regs, stack[0], outer, current, NULL, 1,
+	frame = kd_exec_frame_push(&regs, stack[0], outer, 1,
 				   kd_read_kernel_gsbase(), current);
 	if (!KD_SHADOW_CHECK(frame != NULL))
 		return false;
@@ -320,7 +320,7 @@ static void kd_shadow_queue_wait(void)
 
 static void kd_shadow_head(void)
 {
-	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	struct kd_combiner_state saved;
 	struct kd_spin_node *node = this_cpu_ptr(&kd_spin_nodes[0]);
 	unsigned int depth = 0, i;
@@ -352,7 +352,7 @@ static void kd_shadow_head(void)
 	/* Real task-stack queue, node reservation and xchg-tail publication. */
 	kd_shadow_queue_wait();
 	KD_SHADOW_CHECK(kd_spin_combiner_state_matches(&saved, ptr));
-	KD_SHADOW_CHECK(node->count == 0);
+	KD_SHADOW_CHECK(per_cpu_ptr(&kd_spin_cpu, node->cpuid)->node_count == 0);
 	/* The saved preparation RSP now belongs to this task, with no per-CPU
 	 * execution stack or input scratch allocation. */
 	KD_SHADOW_CHECK(node->rsp >= (unsigned long)task_stack_page(current) &&
@@ -386,7 +386,7 @@ static void kd_shadow_successor(void)
 	smp_store_release(&kd_shadow_test.successor, node);
 	kd_shadow_queue_wait();
 	KD_SHADOW_CHECK(smp_load_acquire(&kd_shadow_test.head_releasing));
-	KD_SHADOW_CHECK(node->count == 0);
+	KD_SHADOW_CHECK(per_cpu_ptr(&kd_spin_cpu, node->cpuid)->node_count == 0);
 	/* The saved preparation RSP now belongs to this task, with no per-CPU
 	 * execution stack or input scratch allocation. */
 	KD_SHADOW_CHECK(node->rsp >= (unsigned long)task_stack_page(current) &&
@@ -410,20 +410,20 @@ static int kd_shadow_worker(void *argument)
 	BUG_ON(kd_spin_entry_begin(&kd_shadow_test.origin, KD_SPIN_ENTRY_HOOK,
 				   &ref));
 	KD_SHADOW_CHECK(smp_processor_id() == kd_shadow_cpus[role]);
-	KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_nodes[0])->count == 0);
+	KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_cpu)->node_count == 0);
 	KD_SHADOW_CHECK(!kd_exec_current_frame());
 	KD_SHADOW_CHECK(
-		!kd_spin_lock_stack_depth(this_cpu_ptr(&local_shadow_stack)));
+		!kd_spin_lock_stack_depth(this_cpu_ptr(&kd_spin_cpu)));
 	if (role == 0)
 		kd_shadow_owner();
 	else if (role == 1)
 		kd_shadow_head();
 	else
 		kd_shadow_successor();
-	KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_nodes[0])->count == 0);
+	KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_cpu)->node_count == 0);
 	KD_SHADOW_CHECK(!kd_exec_current_frame());
 	KD_SHADOW_CHECK(
-		!kd_spin_lock_stack_depth(this_cpu_ptr(&local_shadow_stack)));
+		!kd_spin_lock_stack_depth(this_cpu_ptr(&kd_spin_cpu)));
 	if (kd_spin_entry_find(&kd_shadow_test.origin, &ref))
 		BUG_ON(kd_spin_entry_end(&ref));
 	preempt_enable();

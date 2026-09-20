@@ -191,6 +191,15 @@ implemented. Next measure true-sharing RMWs and per-body generated/wrapper cost:
 [performance P2](PERFORMANCE_PLAN.md#4-p2减少逐请求同步和生成代码成本).
 Independent owner state and final-user lifetimes remain required.
 
+The 2026-09-20 structural cleanup embeds producer JIT context in stable requests,
+moves node reservation depth into CPU state, removes unused checkpoint/API
+fields and duplicate batch/map state, and types the mutex encoded tail as `u32`.
+See [current layout](design/frames.md#911-reuse-before-copy-contract) and
+[scoped validation](../tests/README.md#2026-09-20-结构体整理验证).
+Register-reference representation, lock-ledger counters and role-transition
+consolidation remain unimplemented follow-ups; preserve independent owners and
+last-user retirement when evaluating them.
+
 ### Hotlock Monitoring And Adaptive Admission
 
 Per-CPU typed hash discovery, conservative score/error admission, cooling and stable roles are implemented. Benefit-based selection

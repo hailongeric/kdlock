@@ -63,8 +63,6 @@ __attribute__((noipa)) noinline notrace static int
 execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	   struct kd_mutex_batch *batch)
 {
-	unsigned long outgoing_rsp;
-	void *outgoing_rsp_ptr = &outgoing_rsp;
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
 	struct kd_exec_frame *frame;
 	struct kd_exe_info *exe;
@@ -76,8 +74,6 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	int ret_flag;
 	int frame_ret;
 	u64 queue_end;
-
-	asm volatile("movq %%rsp, %0" : "=r"(outgoing_rsp));
 
 	BUG_ON(READ_ONCE(lock->physical_owner) != current);
 	BUG_ON(!kd_origin_mutex_owned((struct mutex *)lock->origin_mutex_addr,
@@ -138,13 +134,11 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		retry_regs = curr_node->regs;
 	if (clobber)
 		frame = kd_exec_frame_push_borrowed(
-			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr,
-			curr_node, outgoing_rsp_ptr, 1,
+			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr, 1,
 			curr_node->gsbase, curr_node->task_struct_ptr);
 	else
 		frame = kd_exec_frame_push(
-			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr,
-			curr_node, outgoing_rsp_ptr, 1,
+			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr, 1,
 			curr_node->gsbase, curr_node->task_struct_ptr);
 	if (!frame) {
 		atomic64_inc(&kd_mutex_frame_failure_count);

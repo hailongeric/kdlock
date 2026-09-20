@@ -62,7 +62,8 @@ OWNER/ticket 及 request frame 的角色独立于热表；解锁不查询热度�
 `spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后先切到
 每 CPU 预分配的 8KB shadow 等待栈，再发布普通 waiter 并轮询。
 spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核栈；
-`shadow` 锁地址账本和 wrapper RSP 暂存仍是元数据。`execution/native.inc` 的原生续跑
+`kd_spin_cpu_state` 保存 CPU 锁账本、节点预留深度和等待栈指针；
+嵌套 JIT 的 requester/depth 内嵌于稳定 request。旧 wrapper RSP 暂存已删除。`execution/native.inc` 的原生续跑
 保留 physical owner，最终 unlock 仍由该 owner 服务并 ACK。
 
 | 所属入口 | 组件 | 职责 |

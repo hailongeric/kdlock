@@ -13,6 +13,8 @@ struct task_struct { int pid; };
 struct list_head { struct list_head *next, *prev; };
 typedef int atomic_t;
 typedef uint64_t u64;
+typedef uint8_t u8;
+typedef uint16_t u16;
 #include "restore_types.h"
 
 #define noinline __attribute__((noinline))

@@ -1,7 +1,5 @@
 /* Included after the production executor. CPU handoff is deterministic;
  * producer, rejection, queue acquisition and nested return bodies are real. */
-static struct kd_spin_jit_context queue_contexts[MAX_NODES];
-static struct kd_spin_jit_context *kd_spin_jit_contexts = queue_contexts;
 static struct kd_spin_node queue_peer, *queue_resume;
 static struct kd_exec_frame *queue_parent;
 static unsigned int queue_polls, queue_switches, queue_enters, queue_exits;
@@ -88,7 +86,7 @@ void kd_exec_remote_poll(struct kd_exec_frame *frame)
 	queue_polls++;
 }
 
-static void kd_spin_diag_validate_lock_stack(const struct shadow_stack *ptr)
+static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr)
 {
 	CHECK(kd_spin_lock_stack_depth(ptr) <= KD_EXEC_MAX_LOCK_DEPTH);
 }
@@ -122,7 +120,7 @@ static void preentry_queue_peer(void)
 
 	BUG_ON(queue_switches++ || mock_cpu != 0);
 	CHECK(queue_peer.next == &request && request.locked &&
-	      request.count == 1);
+	      kd_spin_cpu.node_count == 1);
 	CHECK(queue_parent->remote_result == KD_EXEC_REMOTE_WAITING);
 	/* Publish a real trailing node before the rejected waiter takes the head. */
 	request.next = &successor;
@@ -170,8 +168,7 @@ static unsigned int preentry_queue_return(void)
 					  &b_ref) == 0);
 		kd_spin_entry_word(&b_ref)->locked = 3;
 		kd_spin_claim_origin((struct qspinlock *)&origins[1]);
-		queue_parent = real_frame_push(&regs, 0x900, locks[0], NULL,
-					       NULL, 1, 0x20000, &waiter);
+		queue_parent = real_frame_push(&regs, 0x900, locks[0], 1, 0x20000, &waiter);
 		BUG_ON(!queue_parent);
 		CHECK(kd_exec_frame_set_lock_entries(queue_parent, locks, kinds,
 						     NULL, NULL, 1) == 0);
@@ -180,7 +177,6 @@ static unsigned int preentry_queue_return(void)
 		shadow_states[0].lock_addr[0] = locks[0];
 		for (unsigned int cpu = 0; cpu < 2; cpu++) {
 			shadow_states[cpu].curr_cs_cpu = -1;
-			shadow_states[cpu].prev_cs_cpu = -1;
 		}
 		mock_cpu = 1;
 		current = &tasks[1];
@@ -218,7 +214,7 @@ static unsigned int preentry_queue_return(void)
 		CHECK(scripts == (mode != 8) && pops == scripts &&
 		      !queue_polls && queue_switches == 1 &&
 		      queue_enters == 1 && queue_exits == 1);
-		CHECK(queue_resume == &request && !request.count &&
+		CHECK(queue_resume == &request && !kd_spin_cpu.node_count &&
 		      !request.completed && !fixture_request(&request)->native_resume &&
 		      (kd_exec_current_frame() != &fixture_request(&request)->frame));
 		CHECK(origins[0].held && origins[1].held &&

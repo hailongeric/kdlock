@@ -46,7 +46,7 @@ def main():
         types += definition((ROOT / "include/exe_info.h").read_text(), marker).rstrip() + ";\n"
     types += (ROOT / "include/kd_jit_batch.h").read_text()
     spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
-    for marker in ("struct shadow_stack {", "struct kd_spin_jit_context {", "struct kd_spin_request {"):
+    for marker in ("struct kd_spin_cpu_state {", "struct kd_spin_request {"):
         types += definition(spin, marker).rstrip() + ";\n"
     if "kd_spin_entry_reclaim(" not in types:
         types += "#define kd_spin_entry_reclaim kd_spin_entry_claim\n"
@@ -104,7 +104,7 @@ def main():
         ("static void kd_spin_claim_origin(const struct kd_spin_request *request)", ""),
         ("static void kd_spin_release_origin(struct kd_spin_request *request)", ""),
         (
-            "kd_spin_lock_stack_depth(const struct shadow_stack *ptr)",
+            "kd_spin_lock_stack_depth(const struct kd_spin_cpu_state *ptr)",
             "static inline unsigned int\n",
         ),
         (
@@ -157,7 +157,7 @@ def main():
         part = definition(spin, marker)
         if name == "execute_cs":
             # Model the omitted enqueue producer, using its production decoder.
-            part = part.replace("\tstruct qspinlock *word = batch->request->word;", '\tstruct pt_regs *packet = curr_node->execution->frame.regs_ref;\n\tif (!curr_node->execution->jit_waiter && !curr_node->execution->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame,\n\t\tcurr_node->execution->jit_waiter ? curr_node->execution->jit_context->requester->entry_ip : packet->ip,\n\t\t(unsigned long)lock, curr_node->execution->frame.gsbase,\n\t\tcurr_node->execution->frame.logical_task);\n\tcurr_node->execution->frame.regs_ref = packet;\n\tstruct qspinlock *word = batch->request->word;', 1)
+            part = part.replace("\tstruct qspinlock *word = batch->request->word;", '\tstruct pt_regs *packet = curr_node->execution->frame.regs_ref;\n\tif (!curr_node->execution->jit_waiter && !curr_node->execution->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame,\n\t\tcurr_node->execution->jit_waiter ? curr_node->execution->jit_context.requester->entry_ip : packet->ip,\n\t\t(unsigned long)lock, curr_node->execution->frame.gsbase,\n\t\tcurr_node->execution->frame.logical_task);\n\tcurr_node->execution->frame.regs_ref = packet;\n\tstruct qspinlock *word = batch->request->word;', 1)
         code += prefix + part + "\n"
     code += definition(
         read_source((ROOT / "kernel_module/kd_lock.c")),

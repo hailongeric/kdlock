@@ -82,3 +82,61 @@ Python/脚本语法、当前入口预览、文档本地链接及 `git diff --che
 归档为 guest `/root/kdlock-evidence/tidy-20260920.tar.gz`，SHA256：
 `127c52f50eecbd7b11b26fe75e70ca3cb15aa072b2b911f3ae190cb590cc8aa2`。
 大型归档和构建产物不提交。
+
+
+## 2026-09-20 结构体整理验证
+
+以 `1686fbc` 为基线，删除无消费者的字段及参数，把 spin 节点预留计数移至
+CPU 状态，把嵌套 requester/depth 内嵌到稳定 request；复用 outer release 状态和
+mutex 原锁地址，mutex 编码 tail 改为 `u32`。寄存器引用、锁账本计数和角色状态机
+未重写。当前布局及生命周期边界见 [frames](../docs/design/frames.md#911-reuse-before-copy-contract)。
+
+本次 guest ELF 的 `pahole` 布局：
+
+| 对象 | 原大小 → 当前大小（字节） |
+| --- | --- |
+| `kd_combiner_state` | 112 → 88 |
+| `kd_exec_frame` | 672 → 648 |
+| `kd_exec_context` | 5400 → 5208 |
+| spin CPU 状态（非 NUMA） | 96 → 80 |
+| `kd_spin_exec_request` / `kd_spin_node` | 768 / 128，均未改变 |
+| `kd_mutex` / mutex shadow 条目 | 40 / 48 → 32 / 32 |
+
+spin 通知偏移仍为 64/65，request 池仍为每 CPU 9216 字节；取消独立 JIT context
+池。mutex 1024 项静态映射减少 16 KiB。上述是结构布局结果，不代表吞吐收益。
+
+全部构建和运行均在 kdclobber2 recovery guest。本次分批执行两个基础程序及
+10 个相关驱动：`spin/{test_spin_wait,test_spin_outer_progress,test_spin_shadow,
+test_spin_batch,test_spin_frame_protocol}.py`、
+`execution/{test_exec_capacity,test_remote_deferred_protocol,test_remote_depth_protocol}.py`、
+`mutex/{test_mutex_resources,test_mutex_outer_progress}.py`，最终均通过。
+覆盖生产代码的队列/取消/重入、节点复用、frame 退休、outer release、remote ACK；
+等待栈与寄存器恢复实际执行通过。shadow 的 9 个变异均被断言拒绝，NUMA 开关
+两种 fixture 通过；观察层隔离和 wrapper 返回后正文计数两个测试通过。
+这些确定性 fixture/oracle 不等于真实内核并发覆盖。
+
+普通 provider 和 SELFTEST + NUMA 的 `W=1` 构建通过；保留原有手写栈切换的
+objtool 警告。直接运行器使用 c1/t4、observe、100000 iterations、单次重复：
+
+| 场景 | 完成操作 | 实际 JIT 正文 | 业务检查 / 排空 |
+| --- | --- | --- | --- |
+| plain | 400000 | 234846 | PASS / PASS |
+| nested | 400000 | 389888 | PASS / PASS |
+| early | 400000 | 53995 | PASS / PASS |
+
+各场都核对入口/锁身份、IRQ/preempt、数据、内核错误及 source retire，最终
+frames/modules/writers 均为 0。未跑全量套件、性能矩阵、mutex JIT live 或更广
+remote/native live 组合；后两者本轮仅有相关 fixture/oracle 覆盖，不能记为 live PASS。
+
+证据目录为 guest `/root/kdlock-evidence/structs-20260920/`。初次 fixture 类型/布局
+失配、SELFTEST 声明顺序/旧成员引用以及 plain 观察 patch 上下文失配均保留。
+`unit-fix2.log`、`related.log`、`shadow-mutations.log`、`observation-final.log`、
+`build-normal-final.log`、`build-selftest-numa-final2.log` 和
+`plain-final/`、`nested/`、`early/` 为对应最终结果；`unit-fix1.log` 保留真实等待栈通过项。
+每场源码、ELF、内核身份和哈希已冻结；最终源码仅补充注释和文档，不改变协议。
+大型证据和构建产物不提交。
+
+归档：guest `/root/kdlock-evidence/structs-20260920.tar.gz`，SHA256：
+`56a766d7220247d898c328e3397ca4528ef987de4c6503fe7dbd41dc9b0347a4`。
+归档使用 guest 已有冻结材料；补充的宿主机完整 diff 留在 `/tmp/kd-struct-final.patch`，
+未上传到 guest。最终空闲检查通过。

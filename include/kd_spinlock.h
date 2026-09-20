@@ -14,7 +14,12 @@
 
 #define MAX_NODES 4
 
-struct kd_spin_jit_context;
+/* Immutable producer context while queued. Cancellation may detach the frame's
+ * resume_target, so retain this source for a later unstarted readmission. */
+struct kd_spin_jit_context {
+	struct kd_exec_frame *requester;
+	unsigned int lock_depth;
+};
 
 /* Stable request storage, independent of the recyclable scheduling node.
  * Ordinary completion has one waiter user. Native handoff adds an owner user;
@@ -36,15 +41,13 @@ struct kd_spin_exec_request {
 	/* These fields survive node reuse but are not ordinary JIT admission
 	 * inputs. The frame/packet is still retained until the last user exits. */
 	struct kd_spin_exec_request *packet_owner;
-	struct kd_spin_jit_context *jit_context;
+	struct kd_spin_jit_context jit_context;
 	unsigned long irq_flags;
 	u64 queued_at_ns;
 };
 
 struct kd_spin_node {
 	struct kd_spin_node *next;
-	int tail;
-	int count;
 	int socket_id;
 	int cpuid;
 	/* Scheduler stack sentinel, not the logical register packet. */
