@@ -1,16 +1,8 @@
-# Guest-only build entry for the demo critical-section modules.
-# Build kernel_module first for the interfaces used by lock_scenarios.
+# Current explicit API workload; the obsolete hook workload was removed.
 KDIR ?= /lib/modules/$(shell uname -r)/build
-
-.PHONY: all lock_scenarios spin_cacheline clean
-all: lock_scenarios spin_cacheline
-
-lock_scenarios:
-	$(MAKE) -C $(CURDIR)/lock_scenarios KDIR=$(KDIR)
-
+.PHONY: all spin_cacheline clean
+all: spin_cacheline
 spin_cacheline:
-	$(MAKE) -C $(CURDIR)/spin_cacheline KDIR=$(KDIR)
-
+	$(MAKE) -C $(CURDIR)/spin_cacheline KDIR=$(KDIR) SC_BACKEND=native
 clean:
-	$(MAKE) -C $(CURDIR)/lock_scenarios KDIR=$(KDIR) clean
 	$(MAKE) -C $(CURDIR)/spin_cacheline KDIR=$(KDIR) clean

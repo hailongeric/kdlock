@@ -105,7 +105,7 @@ static int __init kdlock_km_init(void)
 		goto err_mutex;
 #endif
 
-#if 0 /* Temporarily disable unified spin/mutex interception for direct calls.
+#if 0 /* Retain disabled mutex interception for future explicit integration.
        * Keep this block together with its removal/error unwind below. */
 	/* Ordinary callers use clobber v1. The legacy callbacks remain necessary
 	 * for explicit nested APIs and modules compiled with the old caller ABI;

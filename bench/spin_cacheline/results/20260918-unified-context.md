@@ -18,7 +18,7 @@
 固定在 guest node 0 的 CPU 0–19；voluntary preemption、nokaslr、ext4、watchdog=1。
 保留 frame pointer 和原有缓解配置，没有重建或重启内核。
 
-使用 [clobber_compare.py](../clobber_compare.py)，保持既有 payload 和锁外四组
+使用 [clobber_compare.py](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/bench/spin_cacheline/clobber_compare.py)，保持既有 payload 和锁外四组
 依赖乘加。1/16 cacheline × 1/4/20 线程，每线程 100000 次；每配置交替五轮
 legacy-native、clobber-native、legacy-kdlock、clobber-kdlock，奇数轮逆序。
 准备、自然 promotion、翻译、发布和稳定等待不计入测量；测量前 daemon 已退出。

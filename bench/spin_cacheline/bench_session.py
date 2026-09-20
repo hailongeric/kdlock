@@ -1,6 +1,6 @@
-"""One native/kdlock session: prepare, measure, validate and drain.
+"""Shared direct-session measurement, publication and drain.
 
-Keep promotion and publication outside measurement. Only successful caller
+BackendSession owns explicit preparation and publication. Only successful caller
 exit plus explicit drain permits retirement/unload; unsafe failures stop here.
 """
 import fcntl
@@ -142,67 +142,6 @@ class Session:
                     # Hash the inspection disassembly at the same boundaries;
                     # exporting it later never adds I/O to the measured batch.
                     images={p.name: digest(p) for p in (image, assembly, disassembly)})
-
-    def prepare(self):
-        """Load fresh state, promote naturally and wait for translator exit."""
-        self.run(["insmod", self.workload_module], "load-source.log")
-        self.loaded_source = True
-        layout = json.loads(self.run([HERE / "client", "--layout"], "layout.json"))
-        self.record["layout"] = layout
-        require(self.counts("initial")["values"] == [0] * 16, "source was not reset")
-        if self.record["arm"] == "kdlock":
-            self.run(["insmod", PROVIDER,
-                      "target_process=sc_worker", "bench_quiet=1", "jit_timing=0",
-                      f"bench_lock_addr={layout['lock_addr']}"], "load-kdlock.log")
-            self.loaded_kd = True
-            params = parameters()
-            self.record["parameters"] = params
-            require(params["bench_quiet"] == "Y" and params["jit_timing"] == "N" and
-                    int(params["bench_lock_addr"]) == layout["lock_addr"],
-                    "loaded observation parameters differ")
-            require("spin_selftest_promote" not in params, "SELFTEST provider is forbidden")
-            symbol = f"sc_body_{self.record['cachelines']}"
-            symbols = [line.split() for line in Path("/proc/kallsyms").read_text().splitlines()]
-            found = [int(s[0], 16) for s in symbols if len(s) == 4 and
-                     s[2:] == [symbol, "[spin_cacheline]"]]
-            nm = self.run(["nm", "-S", self.workload_module], "symbols.txt")
-            sizes = [int(s[1], 16) for line in nm.splitlines()
-                     if len(s := line.split()) == 4 and s[3] == symbol]
-            require(len(found) == len(sizes) == 1 and found[0] != 0, "unknown CS symbol")
-            self.record["entry_range"] = [found[0], found[0] + sizes[0]]
-            self.start_daemon()
-        else:
-            require(not Path("/sys/module/kdlock_km").exists(), "native arm has kdlock loaded")
-        self.phase("warmup", 1)
-        # CPU admission is frequency-based; keep lock samples consecutive.
-        self.phase("promotion", 48000)
-        if self.loaded_kd:
-            deadline = time.monotonic() + 90
-            while True:
-                self.faults()
-                require(self.daemon.poll() is None, "daemon exited during preparation")
-                log = (self.path / "daemon.log").read_text()
-                require(not re.search(r"\[KD_JIT\]\[ERROR\]|Traceback|command failed", log),
-                        "translator failed; see daemon.log")
-                metrics = [json.loads(line.split(" ", 1)[1]) for line in log.splitlines()
-                           if line.startswith("KD_TRANSLATION_METRICS ")]
-                require(all(m["result"] == 0 and m["status"] == 0 for m in metrics),
-                        "translation failed or refused")
-                r = registry()
-                require(all(e["status"] in (-1, 0) for e in r), "unexpected entry state")
-                if len(r) == 1 and r[0]["status"] == 0 and metrics and not children(self.daemon.pid):
-                    self.record["translation"] = metrics
-                    self.publication()
-                    break
-                if time.monotonic() >= deadline:
-                    raise Failure("TIMEOUT", "natural promotion/publication timed out",
-                                  unsafe=True)
-                time.sleep(0.1)
-            self.stop_daemon()
-            require(status()["writers"] == 0, "translator writer still open", "UNDRAINED")
-        time.sleep(2)  # Same fixed post-preparation settling in each arm.
-        self.record["prepared_ns"] = time.monotonic_ns()
-        self.save()
 
     def measure(self):
         """Count returned JIT bodies only across the joined measurement batch."""

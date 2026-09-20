@@ -13,7 +13,7 @@ import re
 import shlex
 import subprocess
 import tempfile
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,7 +21,7 @@ import regression_evidence as evidence
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKERS = re.compile(
-    r"klock_test|daemon|kd_native|kd_renamed|kd_shadow_[0-2]|kd_mtask_[0-2]|kd_gate_[0-3]"
+    r"sc_worker|kd_test|daemon|klock_test|kd_native|kd_renamed|kd_shadow_[0-2]|kd_mtask_[0-2]|kd_gate_[0-3]"
 )
 FAULTS = re.compile(
     r"BUG:|panic|double fault|soft lockup|unable to handle|WARNING:|scheduling while atomic",
@@ -54,310 +54,10 @@ def add(name, script, *args, **env):
     CASES[name] = Case(name, f"live/{script}", args, {k: str(v) for k, v in env.items()})
 
 
-# Keep small diagnostics addressable, not prerequisites of every complex case.
-for name, script in (
-    ("module", "test_01_module_load.sh"),
-    ("pipeline", "test_02_jit_engine.sh"),
-    ("mutex-off", "test_05_mutex.sh"),
-):
-    add(name, script)
-for mode in range(9):
-    script = "test_09_jit_execution_modes.sh" if mode < 6 else "test_04_spinlock.sh"
-    add(f"mode-{mode}", script, mode)
-for mode, stage in ((0, 1), (3, 1), (1, 2), (4, 2), (1, 3), (4, 3), (8, 2), (8, 3)):
-    add(
-        f"registers-{mode}-{stage}",
-        "test_10_native_resume.sh",
-        mode,
-        stage,
-        KD_NATIVE_REGISTERS=1,
-    )
-for mode in (0, 3):
-    add(
-        f"control-{mode}",
-        "test_10_native_resume.sh",
-        mode,
-        1,
-        KD_NATIVE_REGISTERS=1,
-        KD_NATIVE_CONTROL=1,
-    )
-for name, mode in (("spin", 10), ("mutex", 11), ("mixed", 3)):
-    add(f"context-{name}", "test_12_context_native_only.sh" if mode == 3 else "test_24_gs_jit.sh", mode)
-for api in (
-    "irqsave",
-    "bh",
-    "percpu",
-    "percpu-reg",
-    "percpu-flow",
-    "percpu-spill",
-    "percpu-implicit",
-    "percpu-rotate",
-    "percpu-cmov",
-):
-    add(f"context-{api}", "test_12_context_native_only.sh", 3, KD_CONTEXT_LOCK_API=api)
-add("mixed-spin", "test_17_spin_native_protocol.sh")
-add("mixed-mutex", "test_11_mutex_native_protocol.sh", 1)
-for mode in (1, 4):
-    for stage in (3, 4):
-        # Upgrade the accepted PENDING diagnostic to real native B contention
-        # and same-CPU owner/waiter progress, without adding a daily case.
-        env = (
-            {"KD_NATIVE_PENDING_CONTENDED": 1, "KD_NATIVE_SHARED_CPU": 1}
-            if (mode, stage) == (4, 4)
-            else {}
-        )
-        add(f"native-{mode}-{stage}", "test_10_native_resume.sh", mode, stage, **env)
-# Early A release must break the native C-owner dependency while B and six
-# child locks remain borrowed. Ordinary held-B/register cases never exercise
-# that progress contract; reuse the existing complex driver in each backend.
-for backend, mode in (("spin", 1), ("mutex", 4)):
-    add(
-        f"native-{backend}-outer-dependency",
-        "test_10_native_resume.sh",
-        mode,
-        3,
-        KD_NATIVE_OOO=3,
-        KD_NATIVE_OOO_DEPENDENCY=2,
-    )
-# Upgrade the existing depth case: the root and learned helper live in separate
-# modules, while the same real capacity exit remains the execution oracle.
-add("native-mutex-depth", "test_10_native_resume.sh", 4, 5, KD_NATIVE_SOURCE_MODULE=1)
-# Upgrade the local checkpoint to a genuine queued acquisition plus follower.
-# Value 1 remains a direct-script FAST diagnostic, not another daily case.
-add("native-spin-acquired", "test_10_native_resume.sh", 1, 3, KD_NATIVE_SPIN_ACQUIRED=2)
-# Same real B-owner topology, but a completed control detects a shared-stack
-# write. This does not replace PENDING resource or ordinary CALL-miss exits.
-add(
-    "native-mutex-stack-change",
-    "test_10_native_resume.sh",
-    4,
-    4,
-    KD_NATIVE_PENDING_CONTENDED=1,
-    KD_NATIVE_STACK_CHANGE=1,
-)
-add("shadow-capacity", "test_10_native_resume.sh", 1, 4, KD_NATIVE_SHADOW_CAPACITY=1)
-for kind, value in (("context", 1), ("node", 2), ("ticket", 3)):
-    add(
-        f"virtual-{kind}-refusal",
-        "test_10_native_resume.sh",
-        8,
-        4,
-        KD_NATIVE_PENDING_CONTENDED=1,
-        KD_NATIVE_VIRTUAL_RESOURCE=value,
-        # Reuse the real ticket gate for map pressure during native progress.
-        **({"KD_NATIVE_GATE_PRESSURE": 1} if value == 3 else {}),
-    )
-for name, mode in (("spin", 0), ("mutex", 3)):
-    add(
-        f"late-{name}-policy",
-        "test_10_native_resume.sh",
-        mode,
-        1,
-        KD_NATIVE_POLICY_COMPLETION=1,
-    )
-for depth in (1, 2, 8):
-    for numa in (0, 1):
-        add(
-            f"node-physical-{depth}-{numa}",
-            "test_14_spin_frame_depth.sh",
-            depth,
-            KD_CHAIN_TRACE_NODES=1,
-            KD_CHAIN_NUMA=numa,
-            KD_CHAIN_FORCE_PROMOTION=1,
-        )
-add("node-remote-plain", "test_21_remote_depth.sh", 4, 1, KD_DEEP_TRACE_NODES=1)
-# These placements keep every role distinct on the documented 40-vCPU guest.
-REMOTE_CPUS = "0,39,20,21,22,23,1,2,3,4,24,25,26,27,5,6,7,8"
-REMOTE_ENV = {
-    "KD_DEEP_NATIVE_OWNER": 1,
-    "KD_DEEP_REVERSE": 1,
-    "KD_NATIVE_RENAME": 1,
-    "KD_DEEP_CROSS_NUMA": 1,
-}
-for stage in (2, 3, 4):
-    add(
-        f"remote-late-{stage}",
-        "test_21_remote_depth.sh",
-        4,
-        stage,
-        KD_DEEP_CPUS=REMOTE_CPUS,
-        # Reuse the late all-unlocked schedule for actual waiter TID exit;
-        # do not add another daily case or replay its simpler predecessor.
-        **({"KD_DEEP_WAITER_EXIT": 1} if stage == 3 else {}),
-        **REMOTE_ENV,
-    )
-add(
-    "remote-multi-b",
-    "test_21_remote_depth.sh",
-    8,
-    5,
-    KD_DEEP_CPUS=REMOTE_CPUS
-    + ",28,29,30,31,9,10,11,12,32,33,34,17,13,14,15,16,18,19,35",
-    KD_DEEP_DEFER_LAYER=6,
-    KD_DEEP_DEFER_COUNT=3,
-    KD_DEEP_TRACE_NODES=1,
-    **REMOTE_ENV,
-)
-add("kernel-task-local", "test_22_mutex_task_lifecycle.sh")
-add(
-    "kernel-task-cross-numa",
-    "test_22_mutex_task_lifecycle.sh",
-    KD_MUTEX_TASK_CPUS="0,20,21",
-)
-for first in (0, 1):
-    add(
-        f"parallel-drain-{first}",
-        "test_23_mutex_parallel_native.sh",
-        KD_MUTEX_PARALLEL_FIRST=first,
-    )
-add(
-    "parallel-shared-cpu",
-    "test_23_mutex_parallel_native.sh",
-    KD_MUTEX_PARALLEL_FIRST=1,
-    KD_MUTEX_PARALLEL_SHARED_CPU=1,
-)
-add(
-    "parallel-node-pressure",
-    "test_23_mutex_parallel_native.sh",
-    KD_MUTEX_PARALLEL_FIRST=1,
-    KD_MUTEX_PARALLEL_SHARED_CPU=1,
-    KD_MUTEX_PARALLEL_PRESSURE=1,
-)
-# Forced cancellation holds native B through the waiter's final A ACK. The
-# release races below allow B to unlock earlier, so they cannot replace this
-# independent progress check even when their API return is also -EINTR.
-for name, signal, api in (
-    ("usr1", 10, 0),
-    ("kill", 9, 0),
-    ("interruptible", 10, 1),
-    ("killable", 9, 2),
-):
-    add(
-        f"waiter-{name}",
-        "test_10_native_resume.sh",
-        4,
-        4,
-        KD_NATIVE_PENDING_CONTENDED=1,
-        KD_NATIVE_WAITER_SIGNAL=signal,
-        KD_NATIVE_WAITER_API=api,
-    )
-for name, signal, api in (("int", 10, 1), ("kill", 9, 2)):
-    for outcome, delay in (("cancelled", -50000), ("acquired", 50000), ("either", 0)):
-        add(
-            f"waiter-race-{name}-{outcome}",
-            "test_10_native_resume.sh",
-            4,
-            4,
-            KD_NATIVE_PENDING_CONTENDED=1,
-            KD_NATIVE_WAITER_SIGNAL=signal,
-            KD_NATIVE_WAITER_API=api,
-            KD_NATIVE_WAITER_RACE=1,
-            KD_NATIVE_WAITER_RACE_US=delay,
-            KD_NATIVE_WAITER_EXPECT=outcome,
-        )
-for mode in (1, 3):
-    add(f"native-peer-{mode}", "test_19_mutex_signals.sh", mode)
-
-
-SUITES = {
-    "baseline": ("module", "pipeline", "mutex-off"),
-    # Pure-native reference measurements are explicit, not daily prerequisites
-    # or actual-JIT positives. Reuse the register driver, not an external helper.
-    "native-controls": ("control-0", "control-3"),
-    # Deeper ordinary cases replace repeated single-lock smoke in daily runs.
-    # Hostcall, out-of-order unlock and native recovery are separate semantics.
-    "spin": ("mode-2", "mode-7", "mode-8"),
-    "mutex": ("mode-4", "mode-5"),
-    "hostcall": ("mode-2", "mode-5"),
-    "registers": tuple(n for n in CASES if n.startswith("registers-")),
-    "admission": tuple(n for n in CASES if n.startswith("context-")),
-    "spin-native": (
-        "registers-8-2",
-        "registers-8-3",
-        "native-spin-outer-dependency",
-        "native-spin-acquired",
-        "virtual-ticket-refusal",
-        "shadow-capacity",
-        "virtual-context-refusal",
-        "virtual-node-refusal",
-        "late-spin-policy",
-    ),
-    "mutex-native": (
-        "registers-4-2",
-        "registers-4-3",
-        "native-mutex-outer-dependency",
-        "native-4-4",
-        "native-mutex-depth",
-        "native-mutex-stack-change",
-        "late-mutex-policy",
-        "parallel-drain-0",
-        "parallel-drain-1",
-        "parallel-node-pressure",
-    ),
-    "spin-remote": (
-        "node-physical-8-0",
-        "node-physical-8-1",
-        "node-remote-plain",
-        "remote-multi-b",
-        "remote-late-2",
-        "remote-late-3",
-        "remote-late-4",
-    ),
-    "mutex-signals": (
-        "waiter-usr1",
-        "waiter-kill",
-        "native-peer-1",
-        "native-peer-3",
-        *(n for n in CASES if n.startswith("waiter-race-")),
-    ),
-    "protocol": (
-        "mixed-spin",
-        "mixed-mutex",
-        "kernel-task-local",
-        "kernel-task-cross-numa",
-    ),
-    # Real node pressure includes the earlier same-CPU refusal contract. Keep
-    # the simpler placement point-selectable, not a repeated daily precursor.
-    "mutex-parallel": (
-        "parallel-drain-0",
-        "parallel-drain-1",
-        "parallel-node-pressure",
-    ),
-}
-SUITES["core"] = (*SUITES["spin"], *SUITES["mutex"])
-# These reviewed ordinary-success checks are covered by the named complex
-# cases. This is selection policy, not a dependency graph or a historical PASS
-# cache: --case still runs the diagnostic itself, without adding its replacement.
-# Do not include mode-6: three locks in one frame are not the same assertion as
-# a deeper chain of separate physical frames. Keep that distinction in extended.
-# Nor shadow-capacity: physical frames inherit the earlier lock records and
-# reject at logical depth eight, before the separate local-shadow capacity check.
-COVERED_DIAGNOSTICS = {
-    "mode-0": "mode-2",
-    "mode-1": "mode-8",
-    "mode-3": "mode-5",
-    "node-physical-1-0": "node-physical-8-0",
-    "node-physical-1-1": "node-physical-8-1",
-    "node-physical-2-0": "node-physical-8-0",
-    "node-physical-2-1": "node-physical-8-1",
-    "parallel-shared-cpu": "parallel-node-pressure",
-    "native-1-4": "virtual-ticket-refusal",
-    # The same stage-3 workload, native probe and LIFO suffix remain, with
-    # additional raw-register/CALL-stack checks. This does not cover early A.
-    "native-1-3": "registers-1-3",
-    "native-4-3": "registers-4-3",
-}
-# Even a broad regression need not repeat superseded diagnostics. Independent
-# failure/register/protocol probes remain; this is not an exhaustive parameter
-# sweep or the historical 67-case matrix. Pure-native controls have their own
-# explicit scope even after replacing the historical external helper.
-SUITES["extended"] = tuple(
-    n
-    for n in CASES
-    if n not in SUITES["baseline"]
-    and n not in SUITES["native-controls"]
-    and n not in COVERED_DIAGNOSTICS
-)
+# Current module lifecycle only. Actual direct JIT scenarios are selected by
+# bench/tclock_compare/run.py; obsolete transparent-hook cases are not runnable.
+add("module", "test_01_module_load.sh")
+SUITES = {"baseline": ("module",)}
 
 
 def select(suites, names):
@@ -420,9 +120,11 @@ def source_hashes():
 
 
 def check_idle():
+    # Also reject legacy leftovers; deleted launchers do not prove they are absent.
     modules = Path("/proc/modules").read_text().splitlines()
     if any(
-        line.split()[0] in ("kdlock_km", "klock_module", "kd_depth_source")
+        line.split()[0] in ("kdlock_km", "spin_cacheline", "tclock_backend_km", "tc_allocator_guard",
+                               "hotlock_record_bench", "klock_module", "kd_depth_source")
         for line in modules
     ):
         raise RuntimeError(
@@ -544,11 +246,6 @@ def main(argv=None):
         "--dry-run", action="store_true", help="print selected commands only"
     )
     parser.add_argument(
-        "--jit-timing",
-        action="store_true",
-        help="opt in to inclusive JIT/native-owner intervals for selected cases",
-    )
-    parser.add_argument(
         "--output", type=Path, help="new evidence directory (must not exist)"
     )
     parser.add_argument(
@@ -558,19 +255,9 @@ def main(argv=None):
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
     selected = select(args.suite, args.case)
-    # Record the opt-in with each case, including multi-session scripts. Do not
-    # mutate the catalog or inherit ambient KD_* settings into ordinary runs.
-    if args.jit_timing:
-        selected = [
-            replace(case, env={**case.env, "KD_JIT_TIMING": "1"})
-            for case in selected
-        ]
     if args.list or not selected:
         for name, cases in SUITES.items():
             print(f"{name} ({len(cases)}): {', '.join(cases)}")
-        print("Covered diagnostics (--case only; ordinary coverage shown below):")
-        for name, replacement in COVERED_DIAGNOSTICS.items():
-            print(f"  {name}: {replacement}")
     if args.dry_run or args.list or not selected:
         for case in selected:
             print(f"{case.name}: {case.display()}")

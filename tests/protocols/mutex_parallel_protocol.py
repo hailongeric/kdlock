@@ -1,4 +1,4 @@
-"""Multi-frame validation and CLI; protocol details live in adjacent components."""
+"""Offline multi-frame validation; protocol details live in adjacent components."""
 import argparse
 import json
 import re
@@ -13,7 +13,7 @@ from mutex_parallel_signals import (
     verified_client, signal_native_peers, validate_peer_signals, waiter_hold, signal_original_waiters, validate_waiter_signals,
 )
 from mutex_parallel_pools import (
-    validate_code_pool, capture_code_pool, retired_reload,
+    validate_code_pool, retired_reload,
 )
 
 def validate(
@@ -337,70 +337,3 @@ def validate(
         "native_routing": routing,
         "shadow_pool": shadows,
     }
-
-
-if __name__ == "__main__":
-    if sys.argv[1:2] == ["waiter-signals"]:
-        parser = argparse.ArgumentParser(description=signal_original_waiters.__doc__)
-        parser.add_argument("output", type=Path)
-        parser.add_argument("first", type=int, choices=(0, 1))
-        args = parser.parse_args(sys.argv[2:])
-        signal_original_waiters(args.output, args.first)
-        raise SystemExit(0)
-    if sys.argv[1:2] == ["native-peers"]:
-        parser = argparse.ArgumentParser(description=signal_native_peers.__doc__)
-        parser.add_argument("phase", choices=("signal", "requeued"))
-        parser.add_argument("output", type=Path)
-        args = parser.parse_args(sys.argv[2:])
-        signal_native_peers(args.phase, args.output)
-        raise SystemExit(0)
-    if sys.argv[1:2] == ["code-pool"]:
-        parser = argparse.ArgumentParser(description=capture_code_pool.__doc__)
-        parser.add_argument("phase", choices=("prepare", "held", "filled", "drained"))
-        parser.add_argument("output", type=Path)
-        args = parser.parse_args(sys.argv[2:])
-        capture_code_pool(args.phase, args.output)
-        raise SystemExit(0)
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("log", type=Path)
-    parser.add_argument("published", type=Path)
-    parser.add_argument("probe", type=lambda value: int(value, 16))
-    parser.add_argument("first", type=int, choices=(0, 1))
-    parser.add_argument("--shared-cpu", type=int, choices=(0, 1), default=0)
-    parser.add_argument("--pressure", type=int, choices=(0, 1), default=0)
-    parser.add_argument("--after", type=Path, required=True)
-    parser.add_argument("--reload-metadata", type=Path)
-    parser.add_argument("--code-pool-metadata", type=Path)
-    parser.add_argument("--native-peers", type=Path)
-    parser.add_argument("--shadow-pool-metadata", type=Path)
-    args = parser.parse_args()
-    result = validate(
-        args.log.read_text(),
-        json.loads(args.published.read_text()),
-        args.probe,
-        args.first,
-        args.shared_cpu,
-        json.loads(args.after.read_text()),
-        args.pressure,
-        json.loads(args.reload_metadata.read_text()) if args.reload_metadata else None,
-        json.loads(args.code_pool_metadata.read_text())
-        if args.code_pool_metadata
-        else None,
-        bool(args.native_peers),
-        json.loads(args.shadow_pool_metadata.read_text())
-        if args.shadow_pool_metadata
-        else None,
-    )
-    if args.native_peers:
-        result["native_peer_signals"] = validate_peer_signals(
-            args.log.read_text(),
-            json.loads((args.native_peers / "signal.json").read_text()),
-            [(args.native_peers / f"role-{lane}.log").read_text() for lane in (0, 1)],
-        )
-        out = args.native_peers.parent
-        result["original_waiter_signals"] = validate_waiter_signals(
-            args.log.read_text(), json.loads((out / "waiter-signals.json").read_text()),
-            [(out / f"role-{lane}-2.log").read_text() for lane in (0, 1)],
-            (out / "role-status.tsv").read_text(), args.first,
-        )
-    print(json.dumps(result))

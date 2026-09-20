@@ -4,8 +4,7 @@
 translator in `../disassem/disassem.py`.
 
 For a complete host/guest setup, publication check and ordered shutdown, start
-with the [manual sequence](../docs/PROJECT_GUIDE.md#3-一步一步运行). Do not source
-`tests/common.sh` interactively or start a second daemon alongside a test driver.
+with the [manual sequence](../docs/PROJECT_GUIDE.md#3-一步一步运行). Do not start a second daemon alongside a direct-API test driver.
 
 See [the execution and test guide](../docs/JIT_EXECUTION.md) for the current
 JIT-scope contract. An ordinary direct CALL miss transfers this invocation to
@@ -74,9 +73,8 @@ workspace template is required.
 With `--metrics`, each completed child produces one `KD_TRANSLATION_METRICS`
 JSON record containing the entry RIP, pid/tgid, lock kind, child PID, raw wait
 status and classified result (`0` success, `2` native-only, `-1` error). Errors
-and refusals are retained, not filtered out of the measurements. The opt-in
-[paired experiment](../bench/lock_scenarios/README.md#34-原生锁与-jit-配对实验) enables this
-option; normal regression/manual launches retain the default unmeasured path.
+and refusals are retained, not filtered out of the measurements. Enable this option explicitly for a translation measurement; normal direct
+regression/manual launches retain the default unmeasured path.
 
 `started_ns` / `finished_ns` use `CLOCK_MONOTONIC` immediately before fork and
 after wait4 reaps that child. `wall_ns` therefore includes process launch,
@@ -99,7 +97,7 @@ to preparation duration: translation can overlap the promotion workload.
 For function-level profiling, use the existing translator CLI in a separate
 workspace after workers and the daemon have drained, with the provider still
 ACTIVE. This adds no daemon option and does not upload the profiled image; see
-the [profiling flow](../bench/lock_scenarios/README.md#35-翻译器剖析).
+the [历史：profiling flow](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/bench/lock_scenarios/README.md#35-翻译器剖析).
 Context-symbol matching compiles only the fixed glob rules into one anchored
 regex union. It does not cache live names/addresses or remove any policy rule.
 The [measured increment](../docs/VALIDATION.md#context-symbol-matching) verifies
@@ -148,7 +146,7 @@ provider, not an environment override or second device. The guarantees are not
 a `mutex_jit` switch or executable generation. Guarded stack analysis uses only
 its optional mutex bound; module ranges guide static address refusal, not object
 liveness or runtime access validation. The protocol and boundaries are in
-[the stack-check guide](../docs/testing/entry_admission.md#53-mutex-控制-call-的栈检查).
+[历史：the stack-check guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#53-mutex-控制-call-的栈检查).
 
 A missing, closed or mismatched inherited descriptor is `TRANSLATION_FAILED`,
 not native-only policy. It is never silently replaced. Stop and wait for both
@@ -162,7 +160,7 @@ This does not pin arbitrary dynamic lock allocations or protect hook readers.
 The learned-depth gate now exercises root/learned text in two modules. A
 module's sysfs refcnt includes native importers too, so it is not interchangeable
 with the source-control module count; the test observes both separately through
-retirement and normal unload. Flow is in the [usage guide](../docs/testing/entry_admission.md#5-入口条件与嵌套续点).
+retirement and normal unload. Flow is in the [历史：usage guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#5-入口条件与嵌套续点).
 
 The source controls use a separate ioctl ABI, not extra wrapper words or changed
 entry packets. From the guest repository root:
@@ -192,7 +190,7 @@ to resume JIT. `tests/common.sh` enforces this before normal test cleanup.
 No command forcibly cancels callers, unloads modules or reopens the session.
 Hook-reader and lock-allocation lifetime remain [TODO C2](../docs/TODO.md#c2-one-protocol-per-physical-lock).
 
-The [parallel lifecycle test](../docs/testing/native_protocols.md#66-独立队列的并行-native-frame)
+The [历史：parallel lifecycle test](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/native_protocols.md#66-独立队列的并行-native-frame)
 exercises the real compiler fork/exec with a substituted lease-probe script.
 After its parent exits, the child reads pinned text in DRAINING, checks both its
 cached bound and a new capability query on the same descriptor, and observes
@@ -296,7 +294,7 @@ The generated image checks all collected entry predicates before body; runtime
 `ENTRY_GUARD_REFUSED` means that invocation remains unstarted and native, not
 that the daemon should disable the entry or replay completed work. No extra
 daemon switch is needed. Scope and protocol are documented in
-[the usage guide](../docs/testing/entry_admission.md#5-入口条件与嵌套续点).
+[历史：the usage guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#5-入口条件与嵌套续点).
 Existing INT/special-instruction and flags diagnostics describe limitations;
 they do not repair semantics or establish a general privilege verifier.
 

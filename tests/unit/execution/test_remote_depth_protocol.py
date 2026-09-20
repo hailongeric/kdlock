@@ -13,7 +13,7 @@ from pathlib import Path
 
 from source_text import read_source
 
-from test_spin_gate import without_includes
+from source_text import without_includes
 from test_spin_shadow import definition
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -1023,92 +1023,6 @@ class DepthOracleTests(unittest.TestCase):
             bad[key] = value
             with self.subTest(key=key), self.assertRaises(AssertionError):
                 validate_placement(bad, 8)
-
-    def test_workload_wait_negative_count_and_publication(self):
-        root = Path(__file__).resolve().parents[3]
-        source = read_source(root / "workload_modules/lock_scenarios/fragments/remote_depth_workload.c")
-        code = r"""
-#include <assert.h>
-#include <stdbool.h>
-#include <stdio.h>
-static bool deep_abort, deep_holder[4], deep_published[4];
-static int deep_direct[4], deep_failures, count;
-static unsigned int remote_chain_readmit_layer;
-static unsigned long jiffies;
-static struct { int rlock; } deep_locks[4];
-#define HZ 1
-#define READ_ONCE(x) (x)
-#define WRITE_ONCE(x,v) ((x)=(v))
-#define smp_load_acquire(p) (*(p))
-#define atomic_read(p) (*(p))
-#define atomic_inc(p) (++*(p))
-#define time_after_eq(a,b) ((a)>=(b))
-#define pr_err(...) ((void)0)
-#define raw_smp_processor_id() 0
-static int kd_spin_debug_waiter_count(int *p) { (void)p; return count; }
-static void cpu_relax(void) { ++jiffies; }
-"""
-        code += definition(
-            source, "static bool kd_deep_wait(unsigned int id, unsigned int queued)"
-        )
-        code += definition(
-            source, "static bool kd_deep_readmit_wait(unsigned int queued)"
-        )
-        code += r"""
-int main(void) {
-    unsigned int checks = 0;
-    for (int holder=0; holder<2; holder++)
-    for (int published=0; published<2; published++)
-    for (int direct=0; direct<3; direct++)
-    for (int c=-28; c<=3; c++)
-    for (int queued=0; queued<4; queued++) {
-        count=c; deep_holder[0]=holder; deep_published[0]=published;
-        deep_direct[0]=direct; deep_abort=false; deep_failures=0; jiffies=0;
-        bool expected=holder && (!queued || (c>=queued && direct==2 && (queued<2 || published)));
-        assert(kd_deep_wait(0, queued)==expected);
-        assert(deep_failures==!expected && deep_abort==!expected);
-        checks++;
-    }
-    printf("deep workload wait: %u conditions PASS\n", checks);
-    checks=0;
-    for (remote_chain_readmit_layer=1; remote_chain_readmit_layer<=3; remote_chain_readmit_layer++)
-    for (int holder=0; holder<2; holder++)
-    for (int published=0; published<2; published++)
-    for (int direct=0; direct<5; direct++)
-    for (int c=-28; c<=5; c++)
-    for (unsigned int queued=1; queued<=3; queued++) {
-        unsigned int id=remote_chain_readmit_layer;
-        count=c; deep_holder[id]=holder; deep_published[id]=published;
-        deep_direct[id]=direct; deep_abort=false; deep_failures=0; jiffies=0;
-        bool expected=holder && c >= (int)queued && direct >= (int)queued+1;
-        assert(kd_deep_readmit_wait(queued)==expected);
-        assert(deep_failures==!expected && deep_abort==!expected);
-        checks++;
-    }
-    remote_chain_readmit_layer=3; deep_abort=true; deep_failures=0;
-    assert(!kd_deep_readmit_wait(1) && !deep_failures);
-    printf("readmission pre-publication wait: %u conditions and prior abort PASS\n", checks);
-}
-"""
-        with tempfile.TemporaryDirectory(prefix="kd-deep-wait-") as directory:
-            path = Path(directory)
-            (path / "wait.c").write_text(code)
-            subprocess.run(
-                shlex.split(os.environ.get("CC", "cc"))
-                + [
-                    "-std=gnu11",
-                    "-O2",
-                    "-Wall",
-                    "-Wextra",
-                    "-Werror",
-                    str(path / "wait.c"),
-                    "-o",
-                    str(path / "wait"),
-                ],
-                check=True,
-                timeout=30,
-            )
-            subprocess.run([str(path / "wait")], check=True, timeout=10)
 
 
 if __name__ == "__main__":

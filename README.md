@@ -2,8 +2,8 @@
 
 kdlock delegates contended x86-64 kernel critical sections to a combiner and
 translates their existing machine code at runtime. The aim is TCLock-style
-delegation without rewriting each critical section's source. Existing guest
-lock hooks are still required; this is not an unmodified-kernel solution.
+delegation without rewriting each critical section's source. The current spin frontend uses explicit KD objects and a direct caller ABI.
+The captured guest kernel interfaces remain required.
 
 The project targets **x86_64 machines only**. Development priorities and explicit
 deferrals are maintained in the [delivery scope](docs/TODO.md#delivery-scope).
@@ -14,7 +14,7 @@ locate implementation components.
 ## Execution Model
 
 ```text
-kernel lock hook -> native lock L + kdlock request queue
+explicit KD API -> one KD word + stable request queue
                  -> validate root / logical-child scope
                  -> optional entry predicates before generated body
                     -> refusal: unstarted native execution, no body replay
@@ -22,7 +22,7 @@ kernel lock hook -> native lock L + kdlock request queue
                     -> lock control: update ownership, validate continuation
                     -> allowlisted hostcall: native service, continue JIT
                     -> ordinary CALL miss: original waiter finishes native suffix
-                 -> physical owner unlocks L and acknowledges completion
+                 -> physical owner releases the KD word and acknowledges completion
 ```
 
 An ordinary direct CALL to an undecoded callee ends the current JIT episode.
@@ -35,9 +35,9 @@ Unconditional context/backend bans cover every emitted block, including RET
 targets skipped by sequential value analysis. This is not a runtime memory-
 freshness or arbitrary concurrent-mutation guarantee.
 
-Spin and mutex delegation retain the original Linux lock as the exclusion
-authority. Private queues schedule requests; they do not replace native
-ownership. During native continuation the combiner retains its acquired locks
+KD spin exclusion resides in the explicit 32-bit KD word. Mutex delegation
+retains the original Linux mutex and its physical owner. Queue/frame metadata
+never substitutes for ownership. During native continuation the combiner retains its acquired locks
 and services waiter unlock notifications. Mutex owner handoff is not added.
 Final logical ACK can precede physical A release when its combiner still owns
 the batch. Dropping the last acquisition reference removes task membership
@@ -49,8 +49,11 @@ This is an experimental kernel JIT delegation prototype. It implements
 contended spin/mutex delegation, nested requests, allowlisted services,
 supported forward native continuation, native-owner exclusion and ACKs.
 The default provider requires the `kdclobber2` caller-clobber v1 kernel interface.
-Fresh admission checks CPU-local activity, then that CPU’s per-lock frequency,
-then task identity; only locally qualified addresses enter the shared hot set.
+Fresh admission uses typed CPU-local hash tables and conservative score/error
+thresholds; observe mode fixes admission while recording the same samples.
+There is no global promoted set. Global spin dispatch is removed and the mutex
+hook installer remains disabled; loading the module does not intercept ordinary
+Linux locks.
 Ordinary spin and mutex use separate versioned caller identities:
 normal requests retain RIP/RSP/RBP and intermediate exits materialize full
 logical GPR state. Legacy callers and special lock APIs retain
@@ -112,9 +115,8 @@ setup, recoverability and controlled module lifecycle remain explicit
 - Code is replaced in place without immutable versions or per-version reclamation.
   This risk is explicitly deferred, not solved by lock serialization.
 - Frames, lock tables, node pools and stacks are bounded. Source/lock address
-  reuse and hot module unload are not generally safe. Non-target tasks also
-  call the guest hook predicates; stopping known workload callers is not a reader
-  drain. The [lifetime assessment](docs/design/lifetimes.md#31-source-lock-and-hook-lifetimes)
+  reuse and hot module unload are not generally safe. Direct callers must retain their objects through the last physical release.
+  Re-enabling historical hooks would require a separate reader-lifetime protocol. The [lifetime assessment](docs/design/lifetimes.md#31-source-lock-and-hook-lifetimes)
   separates source pins, lock-object retirement and missing hook capabilities.
 - `mutex_jit` is enabled by default; `mutex_jit=0` is only for explicit native
   baseline controls. No userspace/futex frontend, rwsem, RT/PI/WW mutex or
@@ -125,7 +127,7 @@ setup, recoverability and controlled module lifecycle remain explicit
 
 | Path | Responsibility |
 | --- | --- |
-| `kernel_module/` | Hooks, native locks, queues, frames and execution |
+| `kernel_module/` | Explicit KD spin API, mutex protocol, queues, frames and execution |
 | `disassem/` | Decode, admission, register lowering and code generation |
 | `daemon/` | Translation requests, workspaces and publication |
 | `include/` | Shared ABI, protocol headers and wrapper assembly |

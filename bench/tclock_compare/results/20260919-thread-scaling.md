@@ -119,7 +119,7 @@ kdlock 目前把 node 压到一行，也减少了 combiner 的读取和预取足
 | `kd_spin_gates[1024]` | 每项 **40B**；数组在 `.bss+0xd820`，相对行偏移 **32**；`word=0, origin=8, owner=16, generation=24, owner_cpu=32, held=36` | 相邻 gate 可共享一行；不同 CPU 更新不同锁的 gate 会互相失效。有的项跨行，同一 gate 的调度字与 owner 元数据也可能互相干扰。本次是单锁正文，不能据此解释全部差距 |
 | `kd_spin_entry` ticket | 每项 **88B**，pool 中 entries 从偏移 **16** 开始；`native_refs=72`，无逐项 cacheline 对齐 | 相邻 ticket 可共行。普通 root 的 ticket 主要由原 CPU 操作；远端 native borrow 修改 guard/native_refs 时才可能干扰同池其他 ticket。本次没有嵌套/native 后缀，优先级低于 node |
 
-[gate 查找与写入](../../../kernel_module/kd_spin_gate.c)、
+[gate 查找与写入](https://github.com/hailongeric/kdlock/blob/7e2460c/kernel_module/kd_spin_gate.c)、
 [ticket 生命周期](../../../kernel_module/kd_spin_entry.c)保留真实 owner、原生 L
 及 ACK 规则。gate 从 40B 扩到 64B 会把表从 40KiB 增至 64KiB；只对齐数组
 起点不能解决 40B 步长问题。若验证跨锁伪共享，需要独立多锁负载及各项地址，

@@ -60,7 +60,7 @@ indirect control, IJ history and adjusting RETs are refused. Default
 independent-root analysis remains unchanged.
 This does not assume callee-saved registers or untouched source memory for an
 ordinary function. The predicate/continuation contract is in
-[JIT_EXECUTION](../testing/entry_admission.md#5-入口条件与嵌套续点).
+[历史：JIT_EXECUTION](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#5-入口条件与嵌套续点).
 
 Scoped flow keeps a bounded disjunction of RSP value/origin facts, preserving
 the relation between different CALL depths, saved registers and shared RETs.
@@ -129,7 +129,7 @@ the two unlock ACKs precede suffix completion. The oracle requires the distinct
 stack-change warning, actual source CALL successor and unchanged NORMAL root,
 not only successful native code. This is one bounded shared-slot history, not
 arbitrary concurrent mutation or a stack-privacy assumption; see
-[the execution gate](../testing/entry_admission.md#53-mutex-控制-call-的栈检查).
+[历史：the execution gate](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#53-mutex-控制-call-的栈检查).
 
 The provider now advertises this immutable implementation contract through
 the separate 16-byte `KD_JIT_CAPS` ioctl. Translation queries its validated

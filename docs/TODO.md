@@ -32,7 +32,7 @@ full-suite PASS. Known unresolved failures remain:
   preparation. Single-CPU preparation avoids this phase in steady-state
   measurements; it does not fix it. See [the failure record](../bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界).
 - Seven-role/two-CPU mutex mode 4 hit a soft lockup with pinned busy polling.
-  Other mutex passes do not replace this case; see [the failure](../tests/README.md#mutex-pinned-mode4-failure).
+  Other mutex passes do not replace this case; see [历史：the failure](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-pinned-mode4-failure).
 - The older oversubscribed mode-5 run published code but missed actual JIT.
   Its polling strategy differs from today's; see [historical evidence](VALIDATION.md#mutex-oversubscription-assessment).
 
@@ -46,7 +46,8 @@ remain unimplemented. Current measurements are linked from the
 
 ## Delivery Scope
 
-Scope is **x86_64 kernel spin/mutex delegation** with existing guest hooks.
+Scope is **x86_64 kernel spin/mutex delegation** with captured guest interfaces.
+Current spin integration is explicit; global mutex hook installation is disabled.
 Userspace/futex, rwsem and cross-architecture ports are outside the project.
 Ordinary spin and mutex use separate clobber identities. IRQ/BH/irqsave/trylock,
 explicit nested and special mutex APIs retain their contracts. Preserve two-word
@@ -57,7 +58,7 @@ New protocol code needs purpose and constraint comments.
 The user decisions of 2026-09-14 and 2026-09-16 prioritize supported main paths
 and basic plus directly affected checks. Extremely uncommon resource/schedule/
 alias combinations are optional coverage, not delivery gates. Full suites
-require explicit selection. Do not delete existing tests, relax admission or
+require explicit selection. Do not remove valid protocol checks or relax admission to
 classify reproduced main-path failures as rare to manufacture a PASS.
 
 Builds, tests and benchmarks run only in the recovery guest. Kernel changes
@@ -88,7 +89,7 @@ refusals and kernel protocol probes remain separate categories.
 The [historical audit](VALIDATION.md#main-plan-acceptance-audit) belongs to its
 frozen source. Later scoped passes cannot be joined into a whole-project PASS;
 old scheduling-dependent cases do not validate pinned polling. Current test
-selection is in [JIT_EXECUTION](JIT_EXECUTION.md#7-分层与增量回归).
+selection is in [历史：JIT_EXECUTION](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/JIT_EXECUTION.md#7-分层与增量回归).
 
 ## P0: Correctness Contracts
 

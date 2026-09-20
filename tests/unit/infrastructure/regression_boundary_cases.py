@@ -39,7 +39,8 @@ class BoundaryTests(unittest.TestCase):
         output.__enter__()
         self.addCleanup(output.__exit__, None, None, None)
         # Boundary fixtures need two cases, not the live scope's growing list.
-        self.cases = r.select([], ["parallel-drain-0", "parallel-drain-1"])
+        self.cases = [r.Case("fixture-0", "unused-0.sh"),
+                      r.Case("fixture-1", "unused-1.sh")]
 
     def test_two_successful_cases_and_evidence(self):
         self.assertEqual(r.run(self.cases, self.out, 60), 0)

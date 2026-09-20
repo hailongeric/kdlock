@@ -1,9 +1,4 @@
-"""Observe two learned source pins inside the existing mutex depth workload.
-
-Only run controls at joined-wave boundaries with the daemon stopped/paused.
-ELF identity, loader references and source pins are different observations;
-actual JIT execution still requires the depth workload's retained-owner oracle.
-"""
+"""Offline source-pin evidence validation; no retired workload loader controls."""
 
 import argparse
 import fcntl
@@ -20,7 +15,6 @@ from elftools.elf.elffile import ELFFile
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "disassem"))
 import device_session as source
 from native_only_protocol import entries
-from source_retirement import writer_refused
 
 ROOT = Path(__file__).resolve().parents[2]
 MAIN, HELPER = "klock_module", "kd_depth_source"
@@ -40,53 +34,8 @@ PHASES = {
 }
 
 
-def module_snapshot(name):
-    directory = Path("/sys/module") / name
-    if not directory.exists():
-        return None
-    path = ROOT / "workload_modules/lock_scenarios" / f"{name}.ko"
-    with path.open("rb") as stream:
-        elf = ELFFile(stream)
-        text = elf.get_section_by_name(".text")
-        (symbol,) = elf.get_section_by_name(".symtab").get_symbol_by_name(SYMBOLS[name])
-        assert elf.get_section(symbol["st_shndx"]).name == ".text"
-        start = int((directory / "sections/.text").read_text(), 16)
-        end = start + text["sh_size"]
-        address = start + symbol["st_value"]
-    # Check the relocated ELF symbol against the actual live module, not a
-    # symbol name in a generated comment or the mere existence of a .ko file.
-    (live,) = [
-        int(row[0], 16)
-        for line in Path("/proc/kallsyms").read_text().splitlines()
-        if len(row := line.split()) == 4 and row[2:] == [SYMBOLS[name], f"[{name}]"]
-    ]
-    assert address == live
-    return {
-        "text_start": start,
-        "text_end": end,
-        "callee": address,
-        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        "refcnt": int((directory / "refcnt").read_text()),
-        "holders": sorted(path.name for path in (directory / "holders").iterdir()),
-    }
 
 
-def snapshot(fd):
-    return {
-        "info": source.info(fd),
-        "modules": {name: module_snapshot(name) for name in SYMBOLS},
-        "registry": [
-            {
-                "entry": entry.rip,
-                "code": entry.code,
-                "tgid": entry.tgid,
-                "kind": entry.lock_kind,
-                "status": entry.status,
-                "target": entry.target,
-            }
-            for entry in entries()
-        ],
-    }
 
 
 def validate(phase, observation, entry, baseline=None):
@@ -182,78 +131,3 @@ def validate_learning(before, after, entry, target):
             )
             == 1
         )
-
-
-def observe(fd, out, phase, entry):
-    baseline = (
-        None if phase == "root" else json.loads((out / "source-root.json").read_text())
-    )
-    current = snapshot(fd)
-    # Save a failing observation too; never manufacture the expected state.
-    (out / f"source-{phase}.json").write_text(json.dumps(current, indent=2) + "\n")
-    validate(phase, current, entry, baseline)
-    if phase in {"local-miss", "foreign-miss"}:
-        owner = MAIN if phase == "local-miss" else HELPER
-        name = SYMBOLS[owner]
-        validate_learning(
-            (out / f"before-learning-{name}.log").read_text(),
-            (out / f"after-learning-{name}.log").read_text(),
-            entry,
-            current["modules"][owner]["callee"],
-        )
-    return current
-
-
-def retire(fd, out, entry):
-    observe(fd, out, "drained", entry)
-    refusals = {}
-    for name in (MAIN, HELPER):
-        result = subprocess.run(
-            ["rmmod", name], capture_output=True, text=True, timeout=5, check=False
-        )
-        assert result.returncode != 0 and "in use" in result.stderr, result
-        refusals[name] = result.stderr
-    (out / "source-unload-refusals.json").write_text(
-        json.dumps(refusals, indent=2) + "\n"
-    )
-    # MAIN's sole source pin must drop before its normal unload. HELPER still
-    # has its loader holder until MAIN exits; these are not two source pins.
-    fcntl.ioctl(fd, source.RETIRE)
-    observe(fd, out, "retired", entry)
-    writer_refused()
-    subprocess.run(["rmmod", MAIN], check=True, timeout=5)
-    observe(fd, out, "detached", entry)
-    subprocess.run(["rmmod", HELPER], check=True, timeout=5)
-    observe(fd, out, "unloaded", entry)
-    writer_refused()
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "phase",
-        choices=(
-            "root",
-            "local-miss",
-            "local-ready",
-            "foreign-miss",
-            "ready",
-            "retire",
-        ),
-    )
-    parser.add_argument("out", type=Path)
-    parser.add_argument("entry", type=lambda value: int(value, 16))
-    args = parser.parse_args()
-    fd = os.open(source.DEVICE, os.O_RDONLY | os.O_CLOEXEC)
-    try:
-        if args.phase == "retire":
-            retire(fd, args.out, args.entry)
-        else:
-            observe(fd, args.out, args.phase, args.entry)
-    finally:
-        os.close(fd)
-    print(f"PASS source-depth: {args.phase}")
-
-
-if __name__ == "__main__":
-    main()

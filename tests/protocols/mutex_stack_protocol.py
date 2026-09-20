@@ -1,4 +1,4 @@
-"""Verify the real shared-stack control exit, not an ordinary native CALL miss.
+"""Validate recorded shared-stack control exits, not ordinary native CALL misses.
 
 The holder supplies the write; production kdlock supplies the guard/native/ACK
 events. Registry snapshots and the loaded module's CALL relocations distinguish
@@ -19,19 +19,6 @@ OLD = 0x123456789ABCDEF0
 NEW = 0x0FEDCBA987654321
 
 
-def snapshot():
-    return [
-        {
-            "entry": e.rip,
-            "target": e.target,
-            "code": e.code,
-            "pid": e.pid,
-            "tgid": e.tgid,
-            "kind": e.lock_kind,
-            "status": e.status,
-        }
-        for e in entries()
-    ]
 
 
 def control_returns(text, function, symbol="run_nested_mutex_cs"):
@@ -182,67 +169,3 @@ def validate(text, before, after, source, assembly, statuses):
         "jit_bodies": 1,
         "requests": 12002,
     }
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("prepare", "snapshot", "check"))
-    parser.add_argument("out", type=Path)
-    parser.add_argument("artifact", nargs="?", type=Path)
-    args = parser.parse_args()
-    if args.action == "snapshot":
-        (args.out / "stack-after.json").write_text(json.dumps(snapshot(), indent=2))
-        return
-    assert args.artifact is not None
-    if args.action == "prepare":
-        wait_ready(args.artifact)
-        symbols = {}
-        for line in Path("/proc/kallsyms").read_text().splitlines():
-            words = line.split()
-            if words[2] in (
-                "mutex_lock",
-                "kd_mutex_lock_clobber_v1",
-                "run_nested_mutex_cs",
-                "kd_stack_change_observe",
-            ):
-                symbols[words[2]] = int(words[0], 16)
-        code = subprocess.check_output(
-            [
-                "objdump",
-                "-dr",
-                "--disassemble=run_nested_mutex_cs",
-                str(ROOT / "workload_modules/lock_scenarios/klock_module.ko"),
-            ],
-            text=True,
-            timeout=10,
-        )
-        (args.out / "stack-source.asm").write_text(code)
-        source = {
-            "mutex_lock": symbols["kd_mutex_lock_clobber_v1" if "kd_mutex_lock_clobber_v1-0x4" in code else "mutex_lock"],
-            "observer": symbols["kd_stack_change_observe"],
-            "returns": control_returns(code, symbols["run_nested_mutex_cs"]),
-        }
-        (args.out / "stack-source.json").write_text(json.dumps(source, indent=2))
-        (args.out / "stack-before.json").write_text(json.dumps(snapshot(), indent=2))
-        return
-    statuses = [
-        line.split() for line in (args.out / "role-status.tsv").read_text().splitlines()
-    ]
-    assert len(statuses) == 7
-    print(
-        json.dumps(
-            validate(
-                (args.out / "stack-change.log").read_text(),
-                json.loads((args.out / "stack-before.json").read_text()),
-                json.loads((args.out / "stack-after.json").read_text()),
-                json.loads((args.out / "stack-source.json").read_text()),
-                (args.artifact / "jit.S").read_text(),
-                {int(role): int(status) for role, status in statuses},
-            ),
-            indent=2,
-        )
-    )
-
-
-if __name__ == "__main__":
-    main()

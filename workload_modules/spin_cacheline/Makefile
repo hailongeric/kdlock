@@ -22,10 +22,11 @@ ccflags-y += -DSC_DIRECT_NATIVE
 endif
 else
 KDIR ?= /lib/modules/$(shell uname -r)/build
+SC_BACKEND ?= native
 
 .PHONY: all clean
 all:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) W=1 modules
+	$(MAKE) -C $(KDIR) M=$(CURDIR) W=1 SC_BACKEND=$(SC_BACKEND) modules
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(CURDIR) clean

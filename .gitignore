@@ -24,7 +24,6 @@ Module.symvers
 /tests/unit/basic/test_daemon_policy
 disassem/asm/
 daemon/0x*
-/bench/klock_test
 /bench/spin_cacheline/client
 /bench/spin_cacheline/.build/
 # Per-run assembly inspection copies; original evidence remains in --output.

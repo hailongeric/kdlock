@@ -16,7 +16,7 @@ from source_text import read_source
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import spin_acquired_protocol as protocol
-from test_spin_gate import ROOT, without_includes
+from source_text import ROOT, without_includes
 from test_spin_shadow import definition
 
 

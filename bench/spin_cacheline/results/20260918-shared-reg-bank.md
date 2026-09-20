@@ -4,7 +4,7 @@
 `pt_regs` 字段，删除 wrapper 入/出口重复搬运。物理 R11 固定作包基址，原
 block 计数移至独立栈槽。CPU 中的当前逻辑值仍须物化，队列、准入、owner/ACK
 和原生恢复协议不变。实现见 [ABI](../../../docs/JIT_REGISTER_ABI.md#3-pt_regs-输入输出约定)，
-功能验收见 [测试记录](../../../tests/README.md#shared-register-bank)。
+功能验收见 [测试记录](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#shared-register-bank)。
 
 ## 吞吐与实际 JIT
 
@@ -44,7 +44,7 @@ guest 使用各自冻结的 `wrapper.S`/`asm_head.h` 编译相同最小正文，
 旧入口和完整出口的搬运。新 block 计数需要访问内存，请求包也直接承载执行中
 的 spill，这些是潜在抵消成本，尚未独立计时。TCLock 的物理栈切换本来就没有
 这一层虚拟 GPR backing 复制；消除复制不会同时消除 kdlock 的分派、地址重写、
-逐请求管理和校验。既有 [TCLock 成本对照](../EXECUTION_PATHS.md#tclock-cost-comparison)
+逐请求管理和校验。既有 [TCLock 成本对照](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)
 仍适用，不能用本轮结果推算与 TCLock 的新差距。
 
 ## 环境、范围与证据

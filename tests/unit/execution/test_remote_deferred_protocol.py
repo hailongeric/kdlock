@@ -21,7 +21,7 @@ from remote_depth_protocol import (
     wait_deferred_link,
 )
 from test_remote_depth_protocol import fixture
-from test_spin_gate import without_includes
+from source_text import without_includes
 from test_spin_shadow import definition
 
 

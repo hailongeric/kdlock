@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from test_spin_gate import ROOT, without_includes
+from source_text import ROOT, without_includes
 from test_spin_shadow import definition
 
 

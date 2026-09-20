@@ -13,7 +13,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import run
+import bench_runtime as run
+import kernel_identity
 import summarize
 import profile_summary
 from provider.prepare import prepare, production_files, digest
@@ -93,7 +94,7 @@ class CachelineTests(unittest.TestCase):
         # Selecting an experimental bundle must still use the existing file
         # verifier; a CLI override must not turn a bad identity into a pass.
         parser = argparse.ArgumentParser()
-        run.kernel_identity.arguments(parser)
+        kernel_identity.arguments(parser)
         defaults = parser.parse_args([])
         self.assertEqual(defaults.kernel_source, Path('/root/linux-6.1.159-kdclobber2'))
         self.assertEqual(defaults.kernel_baseline,
@@ -104,7 +105,7 @@ class CachelineTests(unittest.TestCase):
             with (bundle / 'guest.config').open('a') as stream:
                 stream.write('\n# deliberately corrupt captured identity\n')
             with self.assertRaisesRegex(ValueError, 'SHA256 mismatch'):
-                run.kernel_identity.check(defaults.kernel_source, bundle)
+                kernel_identity.check(defaults.kernel_source, bundle)
 
     def test_profile_weights_bound_symbols_and_keep_unknown_ips(self):
         ranges = profile_summary.symbol_ranges(
@@ -189,17 +190,11 @@ class CachelineTests(unittest.TestCase):
             run.validate_measurement(m, spec, 1000)
 
     def test_plan_order_and_arguments(self):
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            self.assertEqual(run.main(["--dry-run"]), 0)
-        plan, end = json.JSONDecoder().raw_decode(output.getvalue())
-        self.assertEqual(output.getvalue()[end:].strip(), "35 configurations, 140 sessions")
+        # Offline legacy record layout remains readable by summarize/assembly.
+        # Current live planning is tested in tclock_compare/test_direct.py.
+        plan = run.make_plan([1, 2, 4, 8, 16], [1, 4, 8, 12, 16, 20, 24],
+                             10000, 2, list(range(24)))
         self.assertEqual(len(plan), 140)
-        self.assertEqual(len({s["name"] for s in plan}), 140)
-        self.assertEqual(list(dict.fromkeys(s["threads"] for s in plan)), [1, 4, 8, 12, 16, 20, 24])
-        self.assertEqual([s["arm"] for s in plan], ["native", "kdlock", "kdlock", "native"] * 35)
-        for s in plan:
-            self.assertEqual(s["cpus"], list(range(s["threads"])))
         run.annotate_topology(plan, dict(role_cpus=list(range(24)), role_nodes=[0] * 20 + [1] * 4))
         for s in plan:
             expected = ([0] * s["threads"] if s["threads"] <= 20 else [0] * 20 + [1] * 4)
@@ -341,6 +336,8 @@ class CachelineTests(unittest.TestCase):
             'kernel_module/exe.c',
             'kernel_module/execution/native.inc',
             'kernel_module/execution/remote.inc',
+            'kernel_module/execution/wrapper_entry.inc',
+            'kernel_module/spin/execute.inc',
             'kernel_module/kd_exec.c',
             'kernel_module/kd_mutex.c',
             'kernel_module/kd_spinlock.c',
@@ -386,7 +383,9 @@ typedef uint64_t u64;
 static int cpu, logs;
 struct kernel_param { int unused; };
 struct kernel_param_ops { int (*get)(char *, const struct kernel_param *); };
-#define module_param_named(name, var, type, mode) _Static_assert(mode == 0444, "read only")
+#define PERM_bench_quiet 0444
+#define PERM_bench_lock_addr 0644
+#define module_param_named(name, var, type, mode) _Static_assert(mode == PERM_##name, "parameter permission")
 #define MODULE_PARM_DESC(name, text)
 #define module_param_cb(name, ops, arg, mode) _Static_assert(mode == 0444, "read only")
 #define DECLARE_PER_CPU(type, name) extern type name[3]

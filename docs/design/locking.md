@@ -1,6 +1,6 @@
 # Spin and mutex ownership protocols
 
-旧统一 spin 分发和站点缓存已删除；下文相关伪代码仅说明基线历史路径。
+旧统一 spin 分发和站点缓存已删除；本页区分当前协议与固定版本验证。
 当前直接入口为 `kd_spin_lock_abi`，快速所有权和 ticket 生命周期仍保留。
 
 ## 2026-09-20：单锁字与本地哈希改造
@@ -217,19 +217,19 @@ They are independent native callers, not cancellable delegated requests.
 The workload observers never rewrite owner flags or wait lists; bounded
 signal/release tests do not cover every internal interleaving.
 
-The existing nested mode 4 workload now tests a bounded seven-role/two-CPU
+The removed hook-based mode 4 workload historically tested a bounded seven-role/two-CPU
 schedule: B's holder observes A's physical executor in B's real wait list on
 the same CPU before releasing B. That executor subsequently completes JIT;
 this is not original-waiter native continuation or a change to mutex ownership.
-The [execution flow](../testing/mutex_protocols.md#612-同-cpu-的嵌套-mutex-jit) distinguishes
+The [历史：execution flow](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#612-同-cpu-的嵌套-mutex-jit) distinguishes
 this scheduling check from PENDING recovery and independent-queue refusal.
 
-Mode 4 also has a separate shared-B session: A0's physical combiner retains
+That historical workload also had a separate shared-B session: A0's physical combiner retains
 A0/B across an ordinary CALL miss while A1's combiner and a non-target peer
 both wait on that exact Linux B. The waiter requests owner-side unlock/ACKs;
 A1 then completes its own JIT and the native peer acquires as its own owner.
 This exercises cross-frame exclusion, not a spin-style remote B combiner or
-owner transfer. The [shared-B flow](../testing/mutex_protocols.md#615-两个-a-combiner-共享原生-mutex-b)
+owner transfer. The [历史：shared-B flow](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#615-两个-a-combiner-共享原生-mutex-b)
 keeps publication, actual JIT, real wait-list identities and exact effects
 distinct from merely completing all clients.
 
@@ -273,7 +273,7 @@ Resource tests compile the production reservation, shadow lookup, hooks and
 entry/return consumer. They check no-node acquisition and copy-before-slot-reuse
 with the guest's complete `pt_regs`; physical locks, scheduler, task records and
 assembly are substitutes. Their scope and live-test separation are maintained
-in [the mutex resource guide](../testing/mutex_protocols.md#61-mutex-资源与恢复包).
+in [历史：the mutex resource guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#61-mutex-资源与恢复包).
 
 `kd_mutex_tasks.c` keeps RCU-readable task membership with a task reference and
 lock-protected acquisition refs. The existing mutex `is_kd` callback matches
@@ -283,12 +283,12 @@ allocation failure. No allocations are needed in the predicate. Unload requires
 all callers stopped and records/queues drained; `rcu_barrier()` only completes
 deferred task-record frees, not general hook hot-unload protection.
 
-The opt-in `test_22` connects these real task functions to the production
+The removed `test_22` launcher connected these real task functions to the production
 native request/ACK path, with an actual RCU reader spanning final removal.
 It covers both B-before-A and A-before-B unlock, shared acquisition refs and
 deferred callback execution. Its constructed continuation and outer batch
 callback do not exercise JIT or queue scheduling; see
-[the lifecycle guide](../testing/mutex_protocols.md#62-task-引用最终-ack-与-rcu).
+[历史：the lifecycle guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#62-task-引用最终-ack-与-rcu).
 
 #### Pinned Busy Polling
 
@@ -382,16 +382,16 @@ unhandled post-entry errors remain fail-stop, never entry replay.
 The original native waiter can share a CPU with its retained physical owner.
 Its new B acquisition uses the native route, not another JIT context; queued
 waits and owner/ACK waits must allow the peer task to run. The existing
-`native-4-4` gate now checks this with three A queue tasks on one CPU, real B
+`native-4-4` historical gate checked this with three A queue tasks on one CPU, real B
 contention and an injected PENDING exit. Only mutex workload barriers and
 observations change, not the production scheduling or ownership protocol.
 Flow, placement evidence and limits are in
-[usage 6.1](../testing/mutex_protocols.md#61-mutex-资源与恢复包). This successful continuation
+[历史：usage 6.1](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#61-mutex-资源与恢复包). This successful continuation
 is distinct from refusing another queue's unstarted JIT request below.
 
 Native registrations are matched by logical task, backend and retained lock,
 not by a single global "current waiter". The opt-in
-[dual-queue workload](../testing/native_protocols.md#66-独立队列的并行-native-frame) keeps two
+[历史：dual-queue workload](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/native_protocols.md#66-独立队列的并行-native-frame) keeps two
 real mutex native frames alive at once and checks both drain orders. Each has
 its own physical A/B owner, waiter record and stack-local ACKs. It uses separate
 published entries with the daemon stopped; an ordinary miss makes its entry
@@ -402,7 +402,7 @@ A scheduled mutex combiner retains ownership of its CPU-local execution
 context, not only its physical mutexes. A different combiner on that CPU must
 refuse an unstarted JIT request even when its entry is ready, then use ordinary
 queue handoff and native ownership. The
-[same-CPU workload](../testing/mutex_protocols.md#67-同-cpu-的-mutex-jit-拒绝) keeps the first
+[历史：same-CPU workload](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#67-同-cpu-的-mutex-jit-拒绝) keeps the first
 frame live until the second queue finishes natively. Its one body/frame and
 two ACKs are distinct from the two-frame overlap case; the refused entry
 stays NORMAL. Neither path overwrites or borrows the foreign task's frame.
@@ -425,7 +425,7 @@ Signals do not transfer physical ownership or cancel a retained frame. The
 ordinary native `mutex_lock(B)` suffix waits uninterruptibly, including with a
 fatal signal pending. It must finish B, the remaining effects and the final A
 owner ACK before Linux delivers the signal on return to userspace. The opt-in
-[original-waiter signal test](../testing/native_protocols.md#64-原-waiter-的信号与退出) checks
+[历史：original-waiter signal test](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/native_protocols.md#64-原-waiter-的信号与退出) checks
 this bounded path and direct ordinary CALL misses to native
 `mutex_lock_interruptible/killable(B)`. With B kept held, Linux returns
 `-EINTR` on the original waiter: B was not acquired, so its error suffix skips
@@ -444,9 +444,9 @@ lockdep ownership, or requires task/CPU-local lock side effects is outside this
 subset. It needs eligibility rejection or a separately evaluated service,
 not an assignment to native owner bits.
 
-Mode 4 uses actual independent B contention. Mode 11 is now a context-refusal
-negative test, not a positive nested-JIT oracle. Current main-mode results and
-the scope of the separately bounded fixtures are recorded in [VALIDATION](../VALIDATION.md).
+Historical mode numbers describe removed hook workloads, not current live
+entry points. Current direct/SELFTEST coverage is listed in
+[tests](../../tests/README.md); historical evidence remains in [VALIDATION](../VALIDATION.md).
 
 ### 5.4 Differences from Spinlock Path
 

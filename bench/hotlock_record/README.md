@@ -42,7 +42,7 @@ CPU 分层改造前的批量采样结果与完整 spinlock 稳态回归见
 
 较早的 64 次检查/共享计数版本只做过驱动兼容性冒烟，已由当前本地发现取代。
 那次 6 场记录随 `/tmp/kd-cpu-hotlock-20260919/evidence.tar.gz` 保留，索引见
-[历史增量](../../tests/README.md#其他冻结增量)；已删除状态的耗时不作为当前结果。
+[历史增量](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#其他冻结增量)；已删除状态的耗时不作为当前结果。
 
 当前 10240 次检查 / 本地发现版本的 36 场组件对照见
 [本地发现报告](results/20260919-local-discovery.md)。分别报告冷地址流、已晋升

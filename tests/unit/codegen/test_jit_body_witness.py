@@ -69,29 +69,6 @@ def run_image(assembly, entries, initialize=None, *, resume=None, context=(0xFEE
     return result
 
 
-def shell_check(log, lock=None):
-    script = 'source "$1"\ndmesg() { printf "%s\\n" "$KD_BODY_LOG"; }\n'
-    if lock is None:
-        script += "jit_entry_was_executed /tmp/0x1000/123/asm\n"
-    else:
-        script += 'jit_entry_was_executed_for_lock "$2" /tmp/0x1000/123/asm\n'
-    return subprocess.run(
-        [
-            "bash",
-            "-c",
-            script,
-            str(ROOT / "tests/live/test_09_jit_execution_modes.sh"),
-            str(ROOT / "tests/common.sh"),
-            lock or "",
-        ],
-        env=os.environ | {"KD_BODY_LOG": log},
-        capture_output=True,
-        text=True,
-        timeout=10,
-        check=False,
-    ).returncode
-
-
 class JitBodyWitnessTests(unittest.TestCase):
     def test_default_off_preserves_original_codegen(self):
         plain, _ = render_source("48c7c02a000000c3")
@@ -131,25 +108,6 @@ class JitBodyWitnessTests(unittest.TestCase):
         self.assertEqual(results[1][1][1], 1)
         missing, _ = render(raw)
         self.assertEqual(run_image(missing, [0x1000])[0][1], [1, 1])
-
-    def test_existing_precall_logs_do_not_pass(self):
-        old = "[0] kd_spinlock (execute_cs) lock(2000): ip 1000\n"
-        self.assertNotEqual(shell_check(old), 0)
-        self.assertNotEqual(shell_check(old, "2000"), 0)
-
-    def test_body_witness_requires_matching_entry_and_lock(self):
-        good = "[1.234] JIT body witness: entry=1000 lock=2000 body=1\n"
-        self.assertEqual(shell_check(good), 0)
-        self.assertEqual(shell_check(good, "2000"), 0)
-        self.assertNotEqual(shell_check(good, "2001"), 0)
-        for changed in (
-            "",
-            good.replace("entry=1000", "entry=1001"),
-            good.replace("body=1", "body=0"),
-            good.replace("body=1", "body=10"),
-        ):
-            with self.subTest(log=changed):
-                self.assertNotEqual(shell_check(changed), 0)
 
     def test_dispatcher_and_exit_tables_do_not_mark_the_body(self):
         assembly, _ = render("e8fb0f0000c3")

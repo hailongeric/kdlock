@@ -19,3 +19,11 @@ def read_source(path, active=()):
         lambda match: read_source(path.parent / match[1], (*active, path)),
         source, flags=re.MULTILINE,
     )
+
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def without_includes(source):
+    """Leave preprocessing branches intact for production-body fixtures."""
+    return re.sub(r'^#include [<"].*$', "", source, flags=re.MULTILINE)

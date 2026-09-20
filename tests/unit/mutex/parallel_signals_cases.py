@@ -39,7 +39,7 @@ class PeerSignalTests(unittest.TestCase):
     def control(self, phase, out, *, corrupt=""):
         # Proc, pidfd, source and signal APIs are all substitutes here. Live
         # tests must independently verify real wait lists and the same clients.
-        from source_retirement import source
+        from mutex_parallel_signals import source
 
         client = out.parent / "mutex-signal-client"
         original_text, original_bytes, original_resolve = (
@@ -271,7 +271,7 @@ class OriginalWaiterSignalTests(unittest.TestCase):
         # Only proc/device/pidfd/signal primitives are substituted. Exercise
         # the delivered controller, including both handle lifetimes and gate
         # release on pre-send identity failure or missing post-send exit.
-        from source_retirement import source
+        from mutex_parallel_signals import source
 
         for first, corrupt in [(0, ""), (1, "")] + [
             (0, name) for name in ("comm", "argv", "threads", "exe", "frames", "exited", "no-exit")

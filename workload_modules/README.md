@@ -1,12 +1,9 @@
-# 内核临界区负载
+# 当前内核负载
 
-这里放测试与 benchmark 的 Demo 内核模块及共享 ioctl/数据布局。
-客户端与运行器分别在 `bench/`、`tests/`，生产锁协议在 `kernel_module/`。
+[spin_cacheline](spin_cacheline/README.md)是当前显式 Linux/TCLock/KD API 的业务
+负载，生成 `spin_cacheline.ko` 和 `/dev/spin_cacheline`。支持固定展开 cacheline、
+RCUHT，以及 KD 专用的 nested/early 场景，运行器位于 bench/tclock_compare。
 
-| 子目录 | 用途 | 模块与设备 |
-| --- | --- | --- |
-| [lock_scenarios](lock_scenarios/README.md) | spin/mutex 嵌套、服务、原生续跑和协议场景 | `klock_module.ko`、`/dev/lock_dev` |
-| [spin_cacheline](spin_cacheline/README.md) | 同一 spinlock 的固定展开 cacheline 微基准 | `spin_cacheline.ko`、`/dev/spin_cacheline` |
-
-顶层 Makefile 委托给子目录，既有模块名和设备 ABI 保持兼容。
-构建、快照与排空遵循 [操作手册](../docs/AGENTS.md)，只在 recovery guest 运行。
+旧依赖透明 hook 的 lock_scenarios 模块及构建入口已删除。仍有效的寄存器探针
+移至 tests/unit/execution，原有协议历史通过记录可从 VALIDATION 和 Git 历史查看。
+顶层 Makefile 默认仅构建显式 Linux native 负载；三后端实验由运行器构建。

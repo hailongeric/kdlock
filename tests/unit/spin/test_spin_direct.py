@@ -1,7 +1,7 @@
 """Execute the public direct unlock's real routing with ownership substitutes.
 
 The existing queue/entry fixtures test the release internals. This checks the
-new public boundary cannot drop an S/L owner or double-release a native ACK.
+new public boundary cannot drop a KD-word owner or double-release a native ACK.
 """
 import subprocess
 import tempfile

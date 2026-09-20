@@ -5,11 +5,10 @@
 运行方法和最近验证见 [tests](../tests/README.md)，性能结果见
 [bench](../bench/README.md)。历史通过项不能拼接为当前版本的全量通过。
 
-2026-09-19 当前默认为 `6.1.159-kdclobber2`：普通 spin/mutex 分别使用
-ABI 1/2；热锁每 10240 次共享一次本 CPU 时钟，仅本地达标地址发布到全局。
-[本地发现验证](../tests/README.md#local-hotlock-validation)覆盖六项定向 live；
-[mutex clobber 验证](../tests/README.md#mutex-clobber)属于更早的独立冻结输入。
-未重跑的专门协议保留为测试库存，不据旧结果认定当前准入准备仍有效。
+2026-09-20 当前实现为显式 KD 单锁字、分类型 CPU 本地哈希，无全局晋升集合。
+最新结果见 [联合报告](../bench/tclock_compare/results/20260920-local-hash.md)。
+旧透明 hook live 套件及其工作负载已删除，历史参数只能与匹配 checkout 一同使用。
+下列固定版本记录保留原始成功、失败和证据身份，不构成当前测试库存。
 
 仍未解决的 pinned mode-4 soft lockup、并发 promotion RCU stall、动态地址
 筛查缺口、flags 和原地覆盖风险见 [TODO](TODO.md#current-checkpoint)。

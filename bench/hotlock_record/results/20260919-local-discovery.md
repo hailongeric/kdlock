@@ -39,4 +39,4 @@ CPU 对象由 1088 B 改为 1600 B。代码和语义见[设计](../../../docs/DE
 证据：guest `/root/kdlock-evidence/local-hotlock-20260919/component/`，包含两版
 源码、模块、反汇编、内核身份、36 场日志、`records.json` 与 `summary.json`。
 随宿主 `/tmp/kd-local-hotlock-20260919/evidence.tar.gz` 归档。
-相关实际 JIT 和恢复验证见[测试记录](../../../tests/README.md#local-hotlock-validation)。
+相关实际 JIT 和恢复验证见[测试记录](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#local-hotlock-validation)。

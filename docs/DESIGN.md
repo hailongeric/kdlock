@@ -2,7 +2,7 @@
 
 本轮执行：[单锁字、本地哈希与稳定角色](design/locking.md)。基线已提交为
 `7e2460c`；已清理停用 spin 分发/缓存并实现单锁字、本地哈希及角色；mutex 接入及生命周期检查保留。
-下方 L/S 和缓存描述属于历史基线；当前协议以链接的 locking 章节为准。
+当前仅显式 KD spin API 接入；全局 spin 分发删除，mutex hook 安装停用。
 
 This document describes current implementation contracts, not a chronological
 test log. Usage and execution flow: [JIT_EXECUTION](JIT_EXECUTION.md).
@@ -28,7 +28,8 @@ test every exceptional interleaving before current delivery.
 kdlock combines lock delegation with dynamic translation of existing kernel
 critical-section machine code. A combiner executes a waiter's supported code
 under real lock protection without rewriting that critical section's source.
-Existing patched lock hooks are required. The current tests use purpose-built
+The captured guest interfaces are required; ordinary spin callers explicitly
+use KD objects and the direct API. The current tests use purpose-built
 workloads, not a validated unmodified production subsystem.
 
 The design is inspired by TCLock-style delegation and BCD's binary execution
@@ -41,12 +42,12 @@ separately from correctness evidence.
 ## 2. System Overview
 
 ```text
-benchmark ioctl -> klock workload -> existing Linux lock hooks
+benchmark ioctl -> spin_cacheline -> explicit KD spin API
                                        |
                                        v
-             kd_lock / kd_hotlock -> spin or mutex scheduler
+             typed local hotness -> KD spin scheduler
                                        |
-                         native physical lock + execution frame
+                         single KD word + stable execution frame
                                        |
                                        v
                   exe.c <-> /dev/kd_dev <-> daemon
@@ -57,7 +58,7 @@ benchmark ioctl -> klock workload -> existing Linux lock hooks
                     +-------- jit.bin ------+
 ```
 
-Hooks discover entry RIP and register backend kind. The daemon reads kernel
+Direct preparation registers the continuation RIP and backend kind. The daemon reads kernel
 text, selects the possible JIT range, checks admission, emits/assembles code
 and publishes it. Executors use explicit waiter registers and frame state.
 Only the frame-backed spin/mutex entry remains; no user/futex frontend is active.
@@ -72,10 +73,10 @@ the call boundary. This path does not decode a compiler-generated prologue.
 Legacy hook offsets and the new ABI are defined in [the register ABI](JIT_REGISTER_ABI.md);
 [kernel baselines](../kernel_baseline/README.md) remain distinct.
 
-`target_process` matches an exact task comm. Spin also recognizes live local
-acquisition tickets; mutex recognizes active task records. These preserve
-unlock routing through rename and native continuation. Eligibility affects
-delegation, never which physical exclusion lock protects the data.
+`target_process` belongs to the retained mutex routing path; current direct
+spin entry does not filter by comm. Stable spin tickets/fast owners and mutex
+task records preserve unlock routing independently of heat and task renames.
+Global spin dispatch is removed; the mutex hook installer remains disabled.
 
 <a id="hotlock-monitoring"></a>
 
@@ -176,7 +177,7 @@ uses an atomic gate and never waits for the userspace daemon.
 An unavailable root entry returns before wrapper execution; spin/mutex queue
 handling then lets the unstarted waiter obtain native execution. This is not
 PENDING-lock continuation after progress. Resource classes, tests and remaining
-coverage gaps are listed in [the usage guide](JIT_EXECUTION.md#6-资源拒绝与测试边界).
+coverage gaps are listed in [历史：the usage guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/JIT_EXECUTION.md#6-资源拒绝与测试边界).
 
 ### 6.2 Entry Lifecycle
 
@@ -346,7 +347,7 @@ nonzero execution/resume counts and no rejection/failure/limit. Mode 5 keeps
 those normal completions and adds a final quota phase in the same session;
 its excess callee runs natively on the waiter, not through the hostcall adapter.
 The combined counter equations and required CALL/native/ACK witnesses are in
-[the mode 5 flow](JIT_EXECUTION.md#613-call-次数额度与原生后缀), not the old
+[历史：the mode 5 flow](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/JIT_EXECUTION.md#613-call-次数额度与原生后缀), not the old
 one-service-per-JIT equality for the whole case.
 
 The current manifest has three fixed-signature services. Only symbols resolved
@@ -377,17 +378,11 @@ execution. No new access-time check or flags contract is introduced here.
 
 ### 8.5 Workload Oracle
 
-Each physical lock protects its own state object with sequence, sum, branch
-mix, rotate/checksum, four indexed lanes and commit value. Native replay after
-worker drain compares every field and an independently protected completion
-count. Generated artifacts are checked for actual executable branch, rotate,
-multiply and indexed-access instructions, not source comments.
-
-This catches many wrong updates and continuations, but identical deterministic
-transitions cannot distinguish every duplicated/skipped request pair.
-Native-register probes separately check marked JIT samples, saved registers,
-CALL stack, waiter identity and exactly-once effects. Native fallback is not
-a positive JIT result. Current results belong in VALIDATION, not this design.
+The current cacheline payload checks every line's expected update count. RCUHT
+checks operation accounting, bucket membership, node uniqueness and list links
+after drain. Independent JIT body counts prove actual execution separately
+from business correctness. Synthetic protocol logs and private-stack register
+probes remain scoped oracles, not current live JIT witnesses.
 
 ## 9. Nested Ownership And Continuation
 
@@ -412,7 +407,9 @@ design, not restoring an old function.
 
 ## 11. Configuration
 
-`target_process` defaults to kd_test; `mutex_jit` defaults to 1.
+`hotlock_mode` defaults to adaptive; observe fixes admission.
+`target_process` defaults to kd_test in the retained mutex path; `mutex_jit`
+defaults to 1, but neither setting installs the disabled global hook.
 Batch limits are fixed at 1024. Spin NUMA is opt-in via KDLOCK_NUMA=1.
 Recovery-only fault/capacity/rename probes are test controls, not production
 recovery guarantees. Use scripts and their preconditions from
@@ -499,128 +496,21 @@ The implementation boundaries are:
 
 ## 13. Performance Comparator Contract
 
-The [instrumented driver](../bench/lock_scenarios/README.md#33-带观测的负载测量) provides a timing
-boundary, not three interchangeable lock implementations. Keep these comparison
-groups distinct before interpreting a comparison; all target x86_64:
+The current [direct runner](../bench/tclock_compare/README.md) builds the same
+payload source separately for Linux, TCLock and KD. Each arm exclusively owns
+its lock object's protocol. Linux uses raw native API, TCLock uses native stack
+delegation, and KD uses caller-clobber v1 with a single KD word and JIT admission.
+Caller spill, lock/unlock, body, post-work and loop costs remain in ns/op.
 
-| Candidate | Actual execution path | Valid comparison boundary |
-| --- | --- | --- |
-| Native with existing hooks | Same guest/module/workload, nonmatching `target_process`, original Linux locks | A possible same-kernel reference; still includes the installed selector hooks, not pristine unmodified Linux |
-| kdlock JIT | Matching task, published supported CS, `mutex_jit=1`, actual returned body and complete state | Instrumented delegation; measured invocations can also contain direct native acquisitions or checked native suffixes |
-| `mutex_jit=0` | `__kd_mutex_lock()` calls `kd_origin_mutex_lock()` before shadow scheduling | Explicit debug/native control with its own target/promotion overhead; **not native delegation** |
-| Upstream TCLock | Native stack-switch delegation with TCLock lock/task state | Not available as an unchanged mutex module on this guest; a different kernel or an explicitly assessed port is required |
-| Independent TCLock spin port | Upstream pending/queue, six-register/RSP switching and native critical-section continuation through the existing hook | Implemented in `tclock_backend/`; same workload and caller binaries as Linux/kdlock, validated for the single-lock global-counter workload |
-| TCLock LiTL userspace library | Interposes `pthread_mutex_*` through `LD_PRELOAD` | Does not replace the kernel locks reached through `/dev/lock_dev`; not a kernel comparator |
+observe fixes admission while recording; adaptive retains per-CPU warmup and
+cooling effects. Record actual JIT independently of valid throughput. TCLock
+has no current per-body delegation counter; data correctness and drain cannot
+supply a delegation share. The sampler component measures record calls only.
 
-The local read-only TCLock checkout is `~/TCLocks`, revision
-`bbfb9f00a12af51dff6ca291cb9829a82960c2ef`. The decisive source locations, relative
-to that checkout, are:
-
-- `src/kernel/rcuht/locks/komb_mutex.c`: `get_shadow_stack_ptr()`,
-  `get_komb_mutex_node()` and nested combiner paths directly access task fields.
-- `src/kernel/linux-5.14.16/include/linux/sched.h`: the `komb_*` task-state
-  block; `kernel/fork.c` allocates/initializes and frees its storage.
-- `src/kernel/linux-5.14.16/include/linux/mutex.h`: TCLock replaces the mutex
-  representation with tail/state/combiner fields. The nano-benchmark's separate
-  `src/kernel/rcuht/include/mutex/komb_mutex.h` likewise defines `komb_mutex`;
-  neither may be cast onto this guest's owner/wait_list-based Linux mutex.
-- `src/kernel/rcuht/rcuht.c`: explicit table/bucket lock adapters and kthread
-  state initialization. Its hash-table operations are not kdlock's CS workload.
-- `src/userspace/litl/README.md` and `src/liblock.in`: userspace interposition
-  contract; the latter path is relative to the LiTL directory.
-
-The [guest compile audit](VALIDATION.md#tclock-comparator-feasibility) builds a
-normal external control object but rejects the unchanged TCLock mutex object
-for nine missing task members. This is a concrete incompatibility, not a
-failed runtime test or proof that every possible module-only port is impossible.
-No TCLock module was linked/loaded; spin and LiTL were not compiled in this audit.
-
-An upstream-kernel comparison would change more than a condition and hook:
-task layout, task allocation/free and the physical lock representation/protocol
-are involved. It is outside the current no-guest-edit default. A module-owned
-task/stack table could be investigated separately, but its lifecycle, nested
-switching, cleanup and overhead need a new port contract and acceptance; it
-must be labelled an adaptation, not unmodified TCLock. Do not introduce a
-JIT-disabled production delegation mode merely to fill a results table.
-
-The opt-in [paired experiment](../bench/lock_scenarios/README.md#34-原生锁与-jit-配对实验) implements
-native-with-hooks/JIT comparison groups on ordinary mode 2/5, without changing
-the guest kernel. Ordinary spin now has the independent
-[native-delegation comparison](../bench/tclock_compare/README.md), using two
-caller ABIs and balanced six-arm trials. Mutex native delegation and broader
-context acceptance remain open in [TODO](TODO.md#comparator-feasibility-and-matched-experiments). Each pair needs
-identical workload text, parameters, state preparation, affinity and accounting
-boundaries, fresh/drained sessions, retained failures and repeated balanced
-order. Native must have no JIT; JIT must have new matching returned bodies in
-the measured phase. Different mode timings or old runs are not paired trials.
-Do not turn a SELFTEST role that waits for a JIT frame, queue or combiner event
-into a native reference: its progress conditions can require delegation.
-Use matched ordinary CS paths for measurement and retain those specialized
-roles as independent correctness gates.
-The implementation retains even, alternating repetitions and explicit thread/
-workload sweeps, preparation records, full-session rebuilds and failed pairs.
-Generated images and NORMAL registry identity are checked before/after the
-payload with translators stopped; this is an experimental constraint, not C3
-version isolation. Equal CPU masks and state do not imply equal cache/thermal
-conditions, exclusive CPUs or identical native/JIT execution proportions.
-Cost separation and amortization remain work, not inferred from these gates.
-
-Routine mutex queue/JIT traces use INFO, not ALERT; their text and availability
-in dmesg are preserved. At console level 4 without `ignore_loglevel`, these
-records no longer force serial output from native framework code that may
-still hold the physical mutex. This is not a sandbox hostcall-policy change.
-The [severity follow-up](VALIDATION.md#mutex-routine-log-severity) diagnoses the
-initial mode-5 anomaly with unchanged console controls and actual-JIT gates;
-it does not remove logging cost or provide a complete cost breakdown. Retain
-console settings alongside comparisons, since verbose consoles can emit INFO
-again. The paired controller now collects them at initial, phase and publication
-boundaries, rejects changes and requires identical settings across groups; these
-samples do not prove continuous control of external sysctl writers.
-
-Opt-in daemon accounting measures each translator child from pre-fork to reap,
-with wait4 CPU and largest-process RSS, separately from the prepared payload.
-The controller joins each record to the published entry and retains both raw
-attempts and summaries. Preparation latency includes polling and settling;
-translation can overlap promotion, so those intervals cannot be summed as
-disjoint costs. Neither child CPU/RSS nor the process/worker-envelope difference
-measures kernel queue, hostcall or pure-JIT cost. Detailed boundaries live in
-the [paired flow](../bench/lock_scenarios/README.md#34-原生锁与-jit-配对实验); P2 remains open.
-
-The separate, default-off `jit_timing` module parameter records inclusive C
-intervals for dispatch, actual wrapper calls, typed hostcall dispatch and lock
-control handling, plus spin/mutex physical-owner native waits, private-queue
-residence and native-handoff envelopes. Selection is read-only after load; drained unload emits ten
-aggregate rows. Invalid clocks/overflow invalidate measurements only, never
-execution or native-replay decisions. The paired controller's ordinary mode 2/5
-contract joins one body to 1/3/2/1 calls respectively, requires native-wait/handoff
-rows to be zero, matches the active backend's queue samples to drained slowpath
-counts and rejects missing or
-inconsistent timing rows. Statistics span the whole loaded session, including
-preparation; nested intervals can overlap and cumulative elapsed is not CPU or
-experiment wall time. Native wait starts after publication, so it may miss a
-waiter suffix prefix and includes unlock/ACK handling and scheduling. Only local
-timestamp/backend values are used after the final ACK, not waiter storage. Remote
-relay waits overlap; they cannot be added as disjoint costs.
-
-The wider `native_*_handoff` starts in the backend before validated borrowing,
-including before spin's remote-native publication can release an ancestor. It
-ends after successful owner-wait return and before frame cleanup. Thus it covers
-the early waiter work omitted by the inner wait, without adding fields or
-touching waiter/node storage after publication. Handoff contains wait; matching
-completed counts and nondecreasing outer elapsed totals are required. It is
-not pure waiter CPU time: borrowing, publication, scheduling, unlock/ACK and
-measurement overhead remain included. Remote parent/child envelopes overlap,
-and code after the last source unlock returns is outside this boundary.
-
-Each queue node has one additional 64-bit timestamp, initialized before tail
-publication. A queue owner consumes it after acquiring Linux L, before running
-followers or releasing its node. A combiner saves the dispatch-start endpoint,
-then accounts it only after a body actually ran and before waking/releasing the
-waiter. Thus body/native-suffix time is not charged to this queue interval, a
-pre-body refusal retains its start, and immediate node reuse cannot double count.
-This covers kdlock-published nodes, not every native/fastpath acquisition or
-pre-publication refusal; mutex's nested Linux B wait remains outside this queue
-metric. No frame, wrapper argument, instruction or flags contract changes.
-Complete acquisition, pure native execution and observation costs remain open. Commands and
-subtraction limits live in
-[boundary timing](../bench/lock_scenarios/README.md#可选的-jit-边界计时).
+Source/ELF/configuration and load settings define each experiment. Matrices
+must not mix old hook or ABI paths with direct results. The latest local-hash
+comparison found higher recorder cost and substantial adaptive regressions;
+see the [report](../bench/tclock_compare/results/20260920-local-hash.md), including
+cross-round VM variation. This is not proof of per-instruction costs or a
+benefit-based admission policy. Next work remains in
+[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md).

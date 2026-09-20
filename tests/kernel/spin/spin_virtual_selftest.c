@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /* SELFTEST only: join actual JIT progress to unpublished virtual-ticket cancel.
- * Mode 8 supplies real A/B owners and a Linux pending-bit contender. Only the
+ * A matching explicit KD workload must supply A/B owners and a KD contender. Only the
  * context/node views are injected. Kind 3 observes a genuinely full ticket
  * pool without changing it; no lock word, queue link or code is modified.
  */

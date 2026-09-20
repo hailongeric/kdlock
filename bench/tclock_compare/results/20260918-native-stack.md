@@ -105,7 +105,7 @@ TCLock 保留上游 `need_resched()`、队列末端与 batch 上限结束条件�
 证明谁的执行更快。采样 TC 代理比例为 65.58%/55.80%，KD 为
 99.85%/99.87%，与十万次正式矩阵不同，不能用采样比例替代正式成绩。
 
-完整的[实现差异、收益抵消和优化顺序](../../spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)
+完整的[实现差异、收益抵消和优化顺序](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)
 区分 caller 保存转移、共享诊断行、批次内逐请求校验及预取前置读取。
 应先独立对照诊断 slot 缓存/布局，再检查普通准入和元数据依赖，最后评估预取、
 批次及 wrapper；保留 JIT-disable、实时观察与生命周期门禁。

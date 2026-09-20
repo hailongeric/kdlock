@@ -2,7 +2,7 @@
 
 本轮执行：[单锁字、本地哈希与稳定角色](design/locking.md)。基线已提交为
 `7e2460c`；已清理停用 spin 分发/缓存并实现单锁字、本地哈希及角色；mutex 接入及生命周期检查保留。
-下方 L/S 和缓存描述属于历史基线；当前协议以链接的 locking 章节为准。
+当前协议以链接的 locking 章节为准，旧 hook 性能入口已删除。
 
 本清单保留性能实验顺序及剩余任务，2026-09-20 的单锁字/本地哈希进度以
 上述协议链接和本轮结果报告为准。历史证据不自动成为当前版本的验收。总体正确性事项和明确延期项目仍在
@@ -87,8 +87,7 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 ### P1.2 分离 caller spill、hook 与 record 的成本
 
 - [ ] 先做单线程 native 调用边界配对，核对反汇编中的活跃值 spill/reload、
-  SP/BP 和续点；同时用现有 [dispatch floor](../bench/spin_cacheline/README.md#单独测量-hook-调用成本)
-  区分调用入口与 provider 筛选成本。
+  SP/BP 和续点；使用当前显式 API 设计配对，旧 hook dispatch-floor 已删除。
 - [ ] 在相同 frozen build 对照 cold、local-positive、碰撞地址流和每批检查点。
   测本地重入门、preempt pin、哈希和满表六候选淘汰，区分均摊成本和周期峰值。
   保留重入丢样及锁地址校验，不以失去正确身份缓存为优化。
@@ -140,7 +139,7 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 
 ## 5. P3：嵌套、mutex 与更广负载
 
-- [ ] 先诊断[七角色双 CPU mutex 失败](../tests/README.md#mutex-pinned-mode4-failure)的
+- [ ] 先诊断[历史：七角色双 CPU mutex 失败](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-pinned-mode4-failure)的
   可运行性依赖；禁止抢占轮询是当前契约，不能悄悄改回旧睡眠等待来取得通过。
 - [ ] 在明确 CPU 放置后，分别测同/异队列嵌套、乱序释放、hostcall 和 native 后缀。
   先验证一次副作用、原 owner ACK 和排空，再分析 packet 分离与服务成本。

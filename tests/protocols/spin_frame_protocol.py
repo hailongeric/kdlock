@@ -713,7 +713,8 @@ def validate_capacity(log, placement, frames):
         "irq",
         "snapshot",
     }
-    assert row["snapshot"] == "5272"
+    # Current request/role layout, also checked by production C frame fixtures.
+    assert row["snapshot"] == "5400"
     if placement["depth"] < 8:
         assert all(value == "0" for key, value in row.items() if key != "snapshot")
     else:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Shared benchmark validation, placement, evidence and guest lifecycle helpers.
 
-These checks are used by ordinary, dispatch-floor and profiling sessions.
+These checks serve the current direct runner and offline evidence readers.
 No workload starts on import; failure/timeout never implies caller drain.
 """
 import argparse

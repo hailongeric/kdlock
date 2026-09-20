@@ -312,10 +312,9 @@ def collect_case(root, run, case):
         name: root / name
         for name in (
             "kernel_module/kdlock_km.ko",
-            "workload_modules/lock_scenarios/klock_module.ko",
-            "workload_modules/lock_scenarios/kd_depth_source.ko",
+            "workload_modules/spin_cacheline/spin_cacheline.ko",
             "daemon/daemon",
-            "bench/klock_test",
+            "bench/spin_cacheline/client",
         )
         if (root / name).exists() or (root / name).is_symlink()
     }

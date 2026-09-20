@@ -19,7 +19,7 @@ live 及 40 场性能对照全部通过并排空。** 本轮没有改内核或�
 | gate | 40B 步长；数组起点相对 cacheline 偏移 32 | **64B 步长、64B 对齐**；每项占一行，字段内部偏移保持不变 |
 
 源码为 [kd_spinlock.h](../../../include/kd_spinlock.h)、
-[kd_spin_gate.h](../../../include/kd_spin_gate.h)。通过成员对齐约束类型大小和
+[kd_spin_gate.h](https://github.com/hailongeric/kdlock/blob/7e2460c/include/kd_spin_gate.h)。通过成员对齐约束类型大小和
 数组步长，避免只对齐数组首地址。生产
 [lifecycle](../../../kernel_module/spin/lifecycle.inc)增加编译期大小、对齐及通知
 偏移断言，防止后续字段变更破坏隔离。等待汇编继续使用 `offsetof`。

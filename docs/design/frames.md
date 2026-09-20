@@ -85,7 +85,7 @@ The implemented protocol is:
 The native owner's extra user and remote packet dependency are branch-specific;
 ordinary wrapper entry/exit adds no request reference. A queue wake or node reuse
 is not permission to recycle execution storage. The record's users count, source
-lease, ticket/native references and Linux lock ownership serve different lifetimes.
+lease, ticket/native references and physical lock ownership serve different lifetimes.
 
 The ordinary frame state is a 72-byte header followed by the shared packet and
 preallocated cold storage. `complex_ready` gates the eight-lock ledger, remote/
@@ -254,22 +254,14 @@ independent limits. Capacity checks precede acquiring/publishing a new B.
 A valid pre-acquisition PENDING resource failure can hand the original lock
 CALL to the waiter. Already entered/acquired operations cannot use that path.
 
-Spin's ticket refusal is earlier than virtual-node cancellation: a full
-32-slot physical-CPU pool returns E2BIG without publishing a B ticket or
-retaining its temporary preemption pin. The real-capacity gate holds 31
-additional hook-acquired locks across the A combiner, then checks B's PENDING
-packet, native suffix and A ACK. Only promotion is controlled; this does not
-itself prove gate saturation. The same case now fills the real 1024-slot gate
-table during that suffix, then submits a separate prepared A2 JIT root. Its
-CPU has free tickets, but the new C gate cannot be allocated: ENOMEM must
-leave the virtual request unpublished and preserve the PENDING packet.
-The original waiter acquires Linux C while A2 remains owned by its combiner;
-only A2 needs a borrowed-owner unlock ACK. Existing A/B remain live throughout.
-An ordinary cold entry's unstarted fallback does not prove this progressed
-branch. Neither branch supplies access-time guards, generic fault recovery
-or lifetime/version guarantees. Flow and test substitutions remain in
-[usage 6.3](../testing/spin_protocols.md#63-spin-虚拟请求取消与续跑); current evidence is
-[progressed gate refusal](../VALIDATION.md#progressed-spin-gate-refusal).
+Spin's 32-slot physical-CPU ticket pool can return E2BIG before publishing B
+or retaining a temporary preemption pin. The KD gate map has been removed;
+there is no current gate-capacity ENOMEM branch and no Linux-lock fallback for
+KD objects. A supported PENDING failure preserves the control CALL target,
+stack and return IP for checked continuation; it does not replay the root.
+Historical gate-pressure evidence belongs to its old protocol and is not
+current acceptance. Current production fixtures are listed in
+[tests](../../tests/README.md).
 
 A virtual pre-entry refusal preserves the caller's full register packet and
 queue connection. Already-progressed work cannot be recast as fresh native
@@ -302,7 +294,7 @@ A no-lock ancestor may finish after the waiter's final ACK and normal task
 exit. Its completion/pop must not dereference the old logical task, queue slot
 or waiter stack; diagnostics use the PID cached while the waiter was blocked.
 The bounded live schedule is maintained in
-[usage 6.9](../testing/spin_protocols.md#69-无锁祖先与-waiter-退出). It observes TID detachment,
+[历史：usage 6.9](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/spin_protocols.md#69-无锁祖先与-waiter-退出). It observes TID detachment,
 not completed task-memory reclamation or arbitrary request cancellation.
 
 The same terminal rule applies to an owned remote B after its native ACK.
@@ -311,7 +303,7 @@ ACK and the original waiter exits; only then may that same B combiner execute
 the next independent root. This is a SELFTEST schedule, not a production
 all-owner/exit barrier. It holds a PID identity, not a task ref, and keeps the
 real source-frame lease through pop. Waiting before B publishes its ACK would
-block the very exit being observed. The [shared-B flow](../testing/spin_protocols.md#614-两个独立-root-共享-b-combiner)
+block the very exit being observed. The [历史：shared-B flow](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/spin_protocols.md#614-两个独立-root-共享-b-combiner)
 distinguishes the full software-frame comparison from live register/flags or
 completed task-memory reclamation evidence.
 
@@ -324,7 +316,7 @@ remain committed; there is no transaction rollback.
 
 The combiner retains its acquired physical locks and pauses its own batch;
 independent combiners can keep their separate native registrations active.
-The waiter borrows protection, not Linux ownership. Unlock requests return to
+The waiter borrows protection, not physical ownership. Unlock requests return to
 the physical owner and wait for ACK. The ACK resides on the waiter's native
 stack; the executor drops borrow references before release-publishing done.
 The spin waiter ends its origin pin only on the last ACK; a mutex waiter has
@@ -332,7 +324,7 @@ already restored migration/preemption state before entering its native suffix.
 Borrowing several remote frames does not add lexical lock-depth pins on the
 waiter: the existing root origin pin persists through the final ACK. This is
 not full preemption-count/context reconstruction; the concrete contract and
-mixed B/native-successor test are in [usage 6.14](../testing/spin_protocols.md#614-两个独立-root-共享-b-combiner).
+mixed B/native-successor test are in [历史：usage 6.14](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/spin_protocols.md#614-两个独立-root-共享-b-combiner).
 The owner must not reread a queue node after publishing its native wakeup, or
 a stack-local unlock request after publishing that request's ACK. The owner's
 live frame remains until its own completion/pop. A completion log is not the
@@ -344,7 +336,7 @@ registration, even in ERROR/COMPLETE state; refusal preserves the output packet,
 context storage and source lease. The owner must still finish the native wait
 protocol before popping. This final guard does not send an ACK, unlink routing,
 release physical locks, or make an arbitrary failed frame recoverable. The
-[retirement checks](../testing/spin_protocols.md#frame-回收门禁) separate direct bad-state
+[历史：retirement checks](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/spin_protocols.md#frame-回收门禁) separate direct bad-state
 unit inputs from real owner/ACK schedules; no live use-after-free is claimed.
 
 Acquisition phases are NONE/PENDING/ENTERED/ACQUIRED/COMPLETE. Validated PENDING
@@ -354,11 +346,11 @@ precheck can also hand off an unstarted CALL when the bounded window is too
 short, without inventing an allocation error. A changed post-control window
 instead uses the distinct STACK_CHANGED phase and exact already-consumed packet.
 For a local spin post-acquisition EIO, `finish_acquired_spin_call()` validates
-the unreleased top local lock record, current physical gate owner, original
+the unreleased top local lock record, current physical KD-word owner, original
 lock target/token in the waiter stack and exact post-CALL RIP/RSP. Only this
 checked boundary receives SPIN_NATIVE: B stays acquired and the waiter resumes
 after the CALL. Remote publication, missing records or a bad packet remain
-errors. See [flow and tests](../testing/spin_protocols.md#611-spin-获取后的受检续跑).
+errors. See [历史：flow and tests](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/spin_protocols.md#611-spin-获取后的受检续跑).
 Native registration independently checks these states, ordinary NONE and
 validated spin remote COMPLETE relay before borrowing/publishing/accounting.
 A still-held A does not make arbitrary later-phase failures recoverable; the
@@ -369,7 +361,7 @@ waiter; earlier combiner-owned locks still use notifications. After A release,
 continuation requires a consistent remaining ledger. Unhandled IJ/budget/fault
 and later-phase errors fail-stop, not entry retry.
 
-The existing [early-A dependency workload](../testing/spin_protocols.md#610-提前释放-a-的原生依赖)
+The existing [历史：early-A dependency workload](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/spin_protocols.md#610-提前释放-a-的原生依赖)
 checks a native C owner needing the released A while B remains borrowed, then
 seven owner ACKs after real ledger exhaustion. It is selected separately from
 ordinary held-B register continuation; neither contract subsumes the other.

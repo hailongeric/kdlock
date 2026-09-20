@@ -9,7 +9,7 @@ hold，解锁按原协议先释放 Linux L，再释放 S.locked，保留并发 p
 原生站点缓存默认保留，装载时可用 `spin_native_cache=0` 关闭。相同 L/RIP/gate
 键的竞争入口不再调用 `kd_get_exe()` 回填缓存；新键仍检查已发布 NORMAL/SPIN
 及 source.OPEN。缓存不授权 JIT，命中仍须实际获取 Linux L。
-实现见[执行路径](../EXECUTION_PATHS.md#cold)和[设计](../../../docs/design/locking.md#41-native-lock-and-private-queue)。
+实现见[执行路径](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/bench/spin_cacheline/EXECUTION_PATHS.md#cold)和[设计](../../../docs/design/locking.md#41-native-lock-and-private-queue)。
 
 ## 删除缓存的试验
 
@@ -135,7 +135,7 @@ wrapper 则已含上轮共享 backing；不能把旧侧称为纯 HEAD 构建。
 试验，`entry-ab/` 是最终默认配置，`entry-long/` 为长批次原生成本检查，
 `entry-cacheoff/` 验证最终装载关闭选项。每场保留数据/CPU/IRQ/preempt 校验、实际 JIT
 计数、发布前后状态、生成物、源码与二进制哈希、退休状态和最终排空。
-功能测试与失败修复记录单独见[测试记录](../../../tests/README.md#spin-entry-first-cas)。
+功能测试与失败修复记录单独见[测试记录](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#spin-entry-first-cas)。
 
 宿主归档 `/tmp/kd-spin-entry-20260918/evidence.tar.gz`，76,145,321 字节，与 guest
 归档 SHA256 一致：

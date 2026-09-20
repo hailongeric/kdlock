@@ -15,7 +15,7 @@ provider:
 	$(PYTHON) provider/prepare.py
 	$(MAKE) -C $(PROVIDER_DIR)/kernel_module KDIR=$(KDIR) W=1 KDLOCK_SELFTEST=0 KDLOCK_NUMA=0
 module:
-	$(MAKE) -C $(WORKLOAD_DIR) KDIR=$(KDIR)
+	$(MAKE) -C $(WORKLOAD_DIR) KDIR=$(KDIR) SC_BACKEND=native
 client: client.c $(WORKLOAD_DIR)/api.h
 	$(CC) $(CFLAGS) -pthread $< -o $@
 test: client

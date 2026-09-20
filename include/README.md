@@ -7,12 +7,12 @@ Demo ioctl 和数据布局见 [workload_modules/README.md](../workload_modules/R
 
 | 职责 | 文件 | 关键约束 |
 | --- | --- | --- |
-| hook 与嵌套 CALL | [kd_lock.h](kd_lock.h) | 原生、已选择和合并 spin 入口不同 |
-| spin 调度 | [kd_spinlock.h](kd_spinlock.h)、[qspinlock_i.h](qspinlock_i.h) | 调度节点/私有队列字与 Linux 原锁 L 分离 |
+| hook 与嵌套 CALL | [kd_lock.h](kd_lock.h) | mutex 路由和两类型嵌套控制 CALL |
+| spin 调度 | [kd_spinlock.h](kd_spinlock.h)、[qspinlock_i.h](qspinlock_i.h) | 显式 KD 单锁字及节点队列；禁止与 Linux 锁协议混用 |
 | mutex 调度 | [kd_mutex.h](kd_mutex.h) | 原 mutex owner 保留，原 waiter 可继续后缀 |
 | frame/控制事务 | [kd_exec.h](kd_exec.h)、[kd_call.h](kd_call.h) | physical parent、logical resume_target、锁记录、最后 ACK |
 | 注册/执行 | [exe.h](exe.h)、[exe_info.h](exe_info.h) | 注册槽、entry_abi 身份与 packet_state；NORMAL 不证明正文执行 |
-| 热锁 | [kd_hotlock.h](kd_hotlock.h) | per-CPU 频率与单锁候选；每 10240 次读时钟，仅达标地址共享发布，降温关闭新准入 |
+| 热锁 | [kd_hotlock.h](kd_hotlock.h) | 分类型 per-CPU 16 桶/6 候选，score-error 保守阈值；无全局晋升集合 |
 | 来源生命周期 | [kd_source.h](kd_source.h)、[kd_source_api.h](kd_source_api.h) | 内部 pin 接口与设备 ABI；retire 不可撤销 |
 | 设备/诊断 | [sys.h](sys.h)、[utils.h](utils.h) | 设备注册和既有日志，benchmark quiet 仅在专用 provider |
 | 批次调用边界 | [kd_jit_batch.h](kd_jit_batch.h) | 新旧 wrapper 的版本目录和编译器 clobber；clobber wrapper 保护物理 RBP；旧批次适配单独保护 RBP，偏移 0 普通入口保留 C ABI，args 仍为两个元素 |

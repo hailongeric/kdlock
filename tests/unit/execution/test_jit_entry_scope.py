@@ -16,7 +16,7 @@ from source_text import read_source
 
 from test_exe_registry import lookup_code, timing_code
 from test_exec_capacity import production
-from test_spin_gate import ROOT, without_includes
+from source_text import ROOT, without_includes
 from test_spin_shadow import definition
 
 

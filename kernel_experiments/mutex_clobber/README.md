@@ -66,4 +66,4 @@ with `grub-reboot`, then reboot. This is a one-shot boot; existing default and
 recovery entries remain. After boot run
 `python3 bench/spin_cacheline/kernel_identity.py` and rebuild target modules.
 Actual run evidence and remaining limits belong in
-[tests/README.md](../../tests/README.md#mutex-clobber), not this build recipe.
+[历史：tests/README.md](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-clobber), not this build recipe.

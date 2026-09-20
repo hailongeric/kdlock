@@ -37,6 +37,7 @@ struct task_struct {
 struct kd_exec_frame {
 	struct kd_exec_frame *resume_target;
 	struct pt_regs regs;
+	struct pt_regs *regs_ref;
 	struct task_struct *logical_task;
 	unsigned long entry_ip, outer_lock_addr, gsbase;
 	int logical_pid, remote_result;
@@ -48,10 +49,18 @@ struct kd_exec_frame {
 	} control_call;
 	bool executed, valid;
 };
+/* Stable request owns the packet; the reusable queue node only references it. */
+struct kd_spin_request {
+    struct kd_exec_frame frame;
+    bool jit_waiter, jit_retry, native_resume;
+};
+static struct pt_regs *kd_exec_frame_regs(const struct kd_exec_frame *frame)
+{
+    return frame->regs_ref ? frame->regs_ref : (struct pt_regs *)&frame->regs;
+}
 struct kd_spin_node {
-	struct pt_regs regs;
-	raw_spinlock_t *lock;
-	bool jit_waiter, jit_retry, completed, native_resume;
+    struct kd_spin_request *execution;
+	bool completed;
 };
 static struct {
 	struct kd_spin_node *local_queue_head, *local_queue_tail;
@@ -111,14 +120,15 @@ static void test_readmit(void)
 				.valid = true,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_node node = { .regs = parent.regs,
-						     .lock = &b,
-						     .jit_waiter = true };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .jit_waiter = true };
+			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
+			request.frame.regs_ref = &request.frame.regs;
 			memset(&kd_readmit, 0, sizeof(kd_readmit));
 			kd_readmit_refusals = count;
 			kd_readmit_lock = (unsigned long)&b;
 			child.outer_lock_addr = (unsigned long)&b;
+			request.frame.outer_lock_addr = child.outer_lock_addr;
 			child.entry_ip = 0x9000;
 			child.executed = false;
 			child.resume_target = &parent;
@@ -140,7 +150,7 @@ static void test_readmit(void)
 			if (fault == 1)
 				parent.regs.other[18] ^= 1;
 			if (fault == 2)
-				node.regs.other[17] ^= 1;
+				request.frame.regs.other[17] ^= 1;
 			if (fault == 3)
 				child.gsbase ^= 1;
 			assert(kd_spin_selftest_refuse(&child, &node, &ret) ==
@@ -150,7 +160,7 @@ static void test_readmit(void)
 			if (fault == 1)
 				parent.regs.other[18] ^= 1;
 			if (fault == 2)
-				node.regs.other[17] ^= 1;
+				request.frame.regs.other[17] ^= 1;
 			if (fault == 3)
 				child.gsbase ^= 1;
 			child.executed = count == 1;
@@ -212,11 +222,14 @@ static void test_readmit_follow(void)
 				.jit_lock_depth = depth,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_node node = { .jit_waiter = true };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .jit_waiter = true };
+			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
+			request.frame.regs_ref = &request.frame.regs;
 			parent.jit_lock_addr[depth - 1] = (unsigned long)&b;
 			child.resume_target = &parent;
 			child.outer_lock_addr = (unsigned long)&c;
+			request.frame.outer_lock_addr = child.outer_lock_addr;
 			child.executed = false;
 			child.regs.ip = 0x3000;
 			child.regs.sp = 0x4000;
@@ -297,15 +310,16 @@ int main(void)
 				.valid = true,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_node node = { .regs = parent.regs,
-						     .lock = &b,
-						     .jit_waiter = true };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .jit_waiter = true };
+			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
+			request.frame.regs_ref = &request.frame.regs;
 			memset(&kd_refusal, 0, sizeof(kd_refusal));
 			kd_refusal_claimed = 0;
 			kd_refusal_kind = kind;
 			kd_refusal_lock = (unsigned long)&b;
 			child.outer_lock_addr = (unsigned long)&b;
+			request.frame.outer_lock_addr = child.outer_lock_addr;
 			child.entry_ip = 0x9000;
 			child.executed = false;
 			child.resume_target = &parent;
@@ -316,7 +330,7 @@ int main(void)
 			if (rejected == 2)
 				kd_refusal_kind = 3;
 			if (rejected == 3)
-				node.jit_waiter = false;
+				request.jit_waiter = false;
 			if (rejected == 4)
 				kd_refusal_lock = (unsigned long)&a;
 			if (rejected == 5)
@@ -352,10 +366,10 @@ int main(void)
 			       kd_refusal.acquire_valid);
 			kd_spin_selftest_refusal_return(&parent, &node, 4);
 			assert(!kd_refusal.acquire_valid);
-			node.regs.other[17] ^= 1;
+			request.frame.regs.other[17] ^= 1;
 			kd_spin_selftest_refusal_return(&parent, &node, 2);
 			assert(!kd_refusal.acquire_valid);
-			node.regs.other[17] ^= 1;
+			request.frame.regs.other[17] ^= 1;
 			kd_refusal.acquired = 1;
 			parent.remote_result = KD_EXEC_REMOTE_IDLE;
 			kd_spin_selftest_refusal_end(&parent,

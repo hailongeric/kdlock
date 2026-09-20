@@ -88,7 +88,7 @@ kdlock 的选择不同：原生参与者只访问 Linux 锁 **L**，代理队列
 重新获取它。L/S 带来的部分成本用于原生互操作；若要改成 TCLock 的单锁字，
 必须统一该锁所有参与者的协议，或另行实现并验证互操作层，不能只删掉 L。
 所有权与生命周期规则统一见 [DESIGN 4.1](../docs/design/locking.md#41-native-lock-and-private-queue)，
-性能收益及抵消因素见[执行路径对照](../bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)。
+性能收益及抵消因素见[历史：执行路径对照](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)。
 本节是源码协议审查，没有新增混用测试，也不宣称不支持的混用方式已经验证。
 
 ## 文件与验证入口
@@ -123,4 +123,4 @@ Linux/TCLock 正式 50/50 场通过数据及排空检查，代理量未测；没
 的 180 场稳态、独立采样和 kdlock 并发冷晋升失败；旧采样占比不是当前热点占比。真实汇编单元验证六个寄存器、RSP 和 lock/unlock 续点，
 不能据此宣称任意内核栈展开或复杂临界区已通过。
 与 kdlock 的入口、L/S 协议、逐请求处理及收益抵消见
-[执行路径对照](../bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)。
+[历史：执行路径对照](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/bench/spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)。

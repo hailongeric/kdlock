@@ -3,7 +3,7 @@
 当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `kd_spinlock.c`，
 调用者使用 `include/kd_spin_direct.h` 的 clobber-v1 现场约定，并在计时前调用
 `kd_spin_prepare` 登记入口。公开 unlock 处理单锁字快速 owner、ticket 和 native ACK；
-内部 shadow/frame 解锁保留为 `kd_spin_unlock_protocol`。下文 hook 路由是暂停的原接入设计。
+内部 shadow/frame 解锁保留为 `kd_spin_unlock_protocol`。保留的 mutex hook 路由当前未安装。
 KD 锁字、稳定持锁记录、逻辑 frame 和来源 pin 各自承担不同职责。
 
 默认构建要求 `kdclobber2` 的 `KD_SPIN_CLOBBER_V1` 和 `KD_MUTEX_CLOBBER_V1` 接口；缺失时编译直接报错，

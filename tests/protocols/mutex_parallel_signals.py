@@ -12,6 +12,9 @@ import signal
 import subprocess
 import time
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "disassem"))
+import device_session as source
 from mutex_parallel_events import rows_in
 
 def verified_client(client, log_path, lane, flavor, pid):
@@ -58,7 +61,6 @@ def signal_native_peers(phase, out):
     No kernel task reference is added. Both real old frames must remain held
     across cancellation and the second wait-list observation.
     """
-    from source_retirement import source
 
     expected = {"state": 0, "modules": 1, "frames": 2, "writers": 0}
     handles = []
@@ -188,7 +190,6 @@ def signal_original_waiters(out, first):
     after ready is published. On any failure release the second bounded gate;
     never cancel a delegated request or unlock a physical owner from Python.
     """
-    from source_retirement import source
 
     params = Path("/sys/module/klock_module/parameters")
     handles = []

@@ -13,7 +13,7 @@ from pathlib import Path
 
 from source_text import read_source
 
-from test_spin_gate import ROOT
+from source_text import ROOT
 from test_spin_shadow import definition
 
 

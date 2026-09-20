@@ -13,21 +13,23 @@ owner or by the deferred immutable-JIT work. The earlier capability audit is in
 | --- | --- | --- |
 | JIT entry/source text | `(0, RIP)` key; root/read/ordinary-target pins retain up to 64 LIVE modules for the session; retirement invalidates every used entry before releasing dependencies | No concurrent code versions or in-session source replacement; init/unknown source is refused |
 | Translation session | Daemon/cache/children share a writer open description; real kcore reads acquire source pins before inspection | The trusted publisher must follow this path; pins do not prove byte immutability or arbitrary pointer/resource lifetime |
-| Hotlock / mutex shadow | Append-only address-keyed maps for the kdlock session | A reused address inherits sampling/metadata; no lock allocation/free notification or per-object retirement |
-| Spin gate | Stable address-keyed gate; `generation` distinguishes physical ownership intervals | Not a lock allocation epoch or source-code version; an idle entry can serve the same address again |
+| Hotlock | Typed CPU-local bounded hash candidates with eviction and window reset | Address reuse is not an allocation epoch; statistics cannot authorize release or retire an active request |
+| Mutex shadow | Address-keyed mutex scheduling records | No lock allocation/free notification or per-object retirement |
+| KD spin word/ticket | Caller-owned four-byte object; stable ticket retains task/CPU/generation | No gate map or second Linux lock; caller storage must outlive all physical owners and requests |
 | Active request | Tickets, task records, native registrations and owner ACKs; successful frame push retains a provider ref/source lease until actual pop | No containing lock-allocation pin or protection before entering the guest hook/after frame pop |
 | Hook provider | Plain guest function pointers into kdlock; device fops has `.owner=THIS_MODULE` | A `/dev/kd_dev` reference is not protection for independent lock-hook readers |
 
 See [registration](../../kernel_module/exe.c), [hook publication/removal](../../kernel_module/kd_main.c),
 [mutex shadow lookup](../../kernel_module/kd_lock.c) and
-[spin gate ownership](../../kernel_module/kd_spin_gate.c). An idle reused lock
-address does not by itself establish broken exclusion: both backends still
-acquire the newly initialized original lock. But the tables cannot tell old
+[spin ticket ownership](../../kernel_module/kd_spin_entry.c). An idle reused lock
+address does not by itself establish broken exclusion: KD acquires its own initialized word and mutex retains its original lock. But the tables cannot tell old
 and new object lifetimes apart, reset policy or prove safe reuse while any
 old request/physical owner still exists. A logical final A ACK can precede
 physical batch release; it is not permission to free a containing object
 still used by another request or owner.
 
+Global spin dispatch is removed and the mutex installer is disabled. The
+following reader limitation applies if the preserved kernel hooks are re-enabled.
 The preserved legacy hooks have four plain spin/mutex lock/unlock dispatch
 sites; the current kernel adds distinct versioned spin and mutex bridges.
 Each calls `is_kd_test()` or `is_kd()` before deciding whether the task is a
@@ -51,7 +53,7 @@ GOING, calls the module's `exit()`, then sends the GOING notifier. That notifier
 cannot veto an exit that has already destroyed source-owned resources.
 
 Blindly pinning every source module until kdlock exit is also insufficient:
-the current `klock_module.ko` already depends on `kdlock_km`, so pinning it in
+the direct KD `spin_cacheline.ko` depends on `kdlock_km`, so pinning it in
 the reverse direction prevents either module being normally unloaded first.
 A separate terminal retirement boundary now releases source pins before either
 exit; force-unload is not a solution. The benchmark's own fops
@@ -112,62 +114,11 @@ checks do not pin arbitrary dynamically freed objects or prove source bytes
 unchanged. Idle observations are not a generic hook-reader barrier. A frame's
 provider ref also cannot protect the earlier dispatch or code after its pop.
 
-The dual-queue lifecycle gate also fills the actual 64-block executable pool
-through real cold mutex CALL sites while both earlier native frames remain
-live. An independent three-client queue then hits pre-wrapper not-ready refusal
-and completes under each caller's own native ownership. Existing block identities
-and images survive; the old frames subsequently complete all owner ACKs. This
-does not compile the filler sites, exhaust all 511 registry slots, reclaim code
-or authorize replay after progress. The same gate then tests a surviving
-compiler-child writer and source replacement under terminal retirement. The
-writer can inspect pinned
-text while DRAINING but cannot publish, and it independently blocks retirement
-after frames finish. Once fully retired, the same provider/registry remains
-loaded while the test source is normally reloaded. ELF lock-CALL return sites,
-module bytes and runtime code/lock addresses must match; both native mutex wait
-lists must reach three callers. Six fresh records complete without JIT or owner
-ACKs from kdlock. This is a quiescent, retired-session reuse test, not concurrent
-source replacement or proof of arbitrary lock allocation lifetime. It does not
-exercise multiple live source modules. The separate learned-depth gate now
-executes a second module's translated seven-lock prefix and returns to its real
-local helper before the eighth-child capacity exit. Root and learned text each
-add one
-source pin. The helper's native loader reference is observed separately:
-1 before its CALL miss, 2 after pinning, 1 after retirement, 0 after the importing
-module unloads. Both sources normally unload with the old registry terminal.
-This is two-module coverage, not live saturation of the 64-module bound.
-
-The two-frame gate also tests task routing independently of target comm:
-both borrowed waiters rename in their native callees, then acquire/unlock
-independent C mutexes as their own physical owners while A/B remain borrowed.
-Both frames are live and source admission is still OPEN. The C unlock must
-not consume A's active-task reference or become a borrowed-owner ACK. The
-renamed identity remains through the later B/A ACKs and completion record.
-This uses existing routing and physical ownership, not owner handoff.
-
-Non-target callers then queue on both retained native B mutexes. Each actual
-wait list must contain its identified peer; pidfd SIGUSR1 cancels each native
-interruptible wait, returns EINTR to userspace and permits one explicit retry
-by that same caller. Both wait lists must be observed again before retirement.
-After the first frame's B release, its peer acquires/releases B as its own
-Linux owner while the other frame's B still rejects trylock. That frame cannot
-resume until this observation and the first original waiter's final ACK
-complete. No peer enters JIT, borrows a lock or adds a kdlock task reference.
-These are composed routing/native-peer checks, not arbitrary cancellation,
-fairness, object lifetime or additional hook-reader protection. Execution
-order, evidence and affected-only commands are maintained in
-[usage 6.6](../testing/native_protocols.md#66-独立队列的并行-native-frame).
-
-The same two drain orders now compose signals to the original borrowed waiters:
-SIGKILL for the first, SIGUSR1 for the survivor, after native-peer requeue and
-before source closing. Each waiter is one ioctl process. The first completes
-its native record and real B/A owner ACKs before fatal syscall exit. A bounded
-fixture gate keeps the second frame alive until the controller's retained
-pidfd observes that exit and source reports one frame. The second then completes
-under its unchanged physical owners and returns after one userspace signal.
-This adds no task reference or production lock policy; it is pending-signal
-completion, not permission to abandon a frame, call do_exit inside the suffix
-or claim arbitrary task/RCU/hook-reader lifetime safety.
+Earlier hook-based multi-frame/source/task live histories remain in
+[VALIDATION](../VALIDATION.md). Their workload and launch scripts have been
+removed because the current provider does not install those hooks. Stable
+request, task/RCU and final-ACK checks remain in production and directed
+fixtures; this does not assert fresh live coverage of those old schedules.
 
 Capability assessment under the no-guest-edit default:
 
