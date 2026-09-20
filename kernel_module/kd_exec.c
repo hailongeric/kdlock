@@ -8,6 +8,7 @@
  * execution/{native,remote,lock_ledger}.inc components own rendezvous and
  * lock-vector operations while sharing these private counters/state. */
 #include <linux/percpu.h>
+#include <linux/moduleparam.h>
 #include <linux/atomic.h>
 #include <linux/bug.h>
 #include <linux/kernel.h>
@@ -20,6 +21,11 @@
 #include "kd_source.h"
 #include "kd_lock.h"
 #include "kd_spinlock.h"
+
+#ifdef KDLOCK_SELFTEST
+bool kd_hotlock_role_trace;
+module_param_named(hotlock_role_trace, kd_hotlock_role_trace, bool, 0444);
+#endif
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_exec_context, kd_exec_context);
 static atomic64_t kd_exec_invariant_failures;
@@ -288,6 +294,14 @@ static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state)
 {
 	if (!frame)
 		return;
+ /* Publish the stable role before the state/wake publication. */
+ frame->role = state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR ?
+  KD_ROLE_DONE : state == KD_EXEC_FRAME_WAITING_LOCK ? KD_ROLE_WAITER : KD_ROLE_COMBINER;
+#ifdef KDLOCK_SELFTEST
+ if (kd_hotlock_role_trace)
+  pr_info("kd_hotlock role: address=%lx request=%px role=%u state=%d\n",
+          frame->outer_lock_addr, frame, frame->role, state);
+#endif
 	smp_store_release(&frame->state, state);
 }
 

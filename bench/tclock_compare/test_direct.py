@@ -7,11 +7,20 @@ import tempfile
 import unittest
 
 import run
-from session import hash_layout, tc_quiescent
+from session import hash_layout, tc_quiescent, check_jit_evidence
 from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_policy_no_jit_is_not_protocol_acceptance(self):
+        record = dict(arm='kdlock', threads=4, jit_bodies=0, hotlock_mode='observe')
+        with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+            check_jit_evidence(record)
+        check_jit_evidence(record := dict(record, hotlock_mode='adaptive'))
+        self.assertEqual(record['jit_acceptance'], 'NO_JIT')
+        check_jit_evidence(record := dict(record, jit_bodies=1))
+        self.assertEqual(record['jit_acceptance'], 'PASS')
+
     def test_hash_layout_rejects_scheduling_enabled_module(self):
         layout = dict(workload='rcuht', buckets=1024, entries=4096,
                       key_range=8192, resched=0)

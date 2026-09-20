@@ -37,6 +37,17 @@ def hash_layout(layout):
             ('rcuht', 1024, 4096, 8192, 0), 'hash payload configuration differs')
 
 
+def check_jit_evidence(record):
+    # A policy may select self-execution. Keep NO_JIT explicit and retain all
+    # publication/body counters; fixed-admission protocol positives still fail
+    # without a returned body. Valid throughput is not JIT acceptance.
+    required = (record['arm'] == 'kdlock' and record['threads'] > 1 and
+                record.get('hotlock_mode', 'observe') != 'adaptive')
+    record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
+    require(not required or record['jit_bodies'] > 0,
+            'contended kdlock arm had no actual JIT', 'NO_JIT')
+
+
 class BackendSession(Session):
     def run(self, args, log, **kwargs):
         # Every client command, including prepare and drain, checks the loaded
@@ -65,7 +76,8 @@ class BackendSession(Session):
         self.run(['insmod', GUARD_MODULE], 'load-allocator-guard.log')
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
         if self.record['arm'] == 'kdlock':
-            self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0'],
+            self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
+                      'hotlock_mode=' + self.record['hotlock_mode']],
                      'load-kdlock.log')
             self.loaded_kd = True
         elif self.record['arm'] == 'tclock':
@@ -105,6 +117,12 @@ class BackendSession(Session):
                      if len(s := line.split()) == 4 and s[3] == symbol]
             require(len(found) == len(sizes) == 1 and found[0], 'unknown CS symbol')
             self.record['entry_range'] = [found[0], found[0] + sizes[0]]
+            if self.record.get('scenario', 'plain') != 'plain':
+                entry_name = f'sc_entry_{self.record["cachelines"]}'
+                roots = [int(s[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
+                         if len(s := line.split()) == 4 and s[2:] == [entry_name, '[spin_cacheline]']]
+                require(len(roots) == 1, 'ambiguous direct root continuation')
+                self.record['root_entry'] = roots[0]
         self.record['prepare'] = json.loads(self.run(
             [HERE/'client', '--prepare', '--cachelines', self.record['cachelines']],
             'prepare.json'))
@@ -141,8 +159,7 @@ class BackendSession(Session):
     def measure(self):
         if self.record['arm'] != 'tclock':
             super().measure()
-            require(self.record['arm'] != 'kdlock' or self.record['threads'] == 1 or
-                    self.record['jit_bodies'] > 0, 'contended kdlock arm had no actual JIT', 'NO_JIT')
+            check_jit_evidence(self.record)
             self.record.update(delegated_bodies=self.record['jit_bodies'],
                                delegation_share=self.record['jit_share'],
                                delegation_status=self.record['jit_status'])

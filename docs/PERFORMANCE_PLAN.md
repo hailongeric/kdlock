@@ -1,11 +1,11 @@
 # 下一阶段性能优化任务
 
-本轮执行：[单锁字实现与本地哈希待办](design/locking.md)。基线已提交为
-`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字；mutex 接入及生命周期检查保留。
+本轮执行：[单锁字、本地哈希与稳定角色](design/locking.md)。基线已提交为
+`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字、本地哈希及角色；mutex 接入及生命周期检查保留。
 下方 L/S 和缓存描述属于历史基线；当前协议以链接的 locking 章节为准。
 
-本清单以 2026-09-19 的当前实现为起点，描述**尚未实施的任务**。本轮代码拆分
-保持协议及算法不变，不宣称提高性能。总体正确性事项和明确延期项目仍在
+本清单保留性能实验顺序及剩余任务，2026-09-20 的单锁字/本地哈希进度以
+上述协议链接和本轮结果报告为准。历史证据不自动成为当前版本的验收。总体正确性事项和明确延期项目仍在
 [TODO](TODO.md)，这里统一维护性能实验的顺序、修改范围和验收条件。
 源码位置查 [CODE_MAP](CODE_MAP.md)，具体执行步骤及 TCLock 对照查
 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
@@ -14,14 +14,14 @@
 
 当前普通 spin/mutex 已使用 caller-clobber：入口和正常完成只传 RIP/RSP/RBP，
 中途退出才物化 FULL 包。PT/Stack 共用寄存器区、批内 C 循环、预备预取提示、
-请求热字段集中、spin node 通知分行和 gate 64B 步长均已实现。这些不再列为
+请求热字段集中和 spin node 通知分行均已实现；旧 gate 已删除。这些不再列为
 待做的“消除重复保存”任务。legacy/FULL、独立 owner 记录及最终 ACK 仍有用途。
 
-热锁发现是 CPU 本地频率 → 本地单锁频率 → 目标进程，首次起点之后每 10240
-次共用一次 TSC；CPU 时间窗口为 400 亿 TSC，单锁窗口仍为不足 25 亿 TSC。
-CPU 本地对象约 1.6 KiB，64 个直接映射候选槽；只有本地达标才发布共享地址。
-冷入口、未达标候选及本地正向缓存不查共享集合。降温只关闭新准入，不能撤销
-已经发布的请求。此实现识别访问频率，**尚不判断竞争或代理是否划算**。
+当前已实现单锁字及分类型 CPU 本地哈希，协议与准入的唯一说明在
+[locking](design/locking.md)。原 gate/S、Linux L 二次获取、站点缓存和全局晋升集合
+均已删除。10240 次批量时钟、400 亿 TSC CPU 窗口和 25 亿 TSC 单锁窗口保留，
+16 桶/6 候选使用 score-error 准入。统计识别频率，尚不判断代理的净收益。
+本轮阶段结果见 [单锁字报告](../bench/tclock_compare/results/20260920-singleword.md)。
 
 | 已有证据 | 可以说明什么 | 不能据此说明什么 |
 | --- | --- | --- |
@@ -34,8 +34,8 @@ CPU 本地对象约 1.6 KiB，64 个直接映射候选槽；只有本地达标�
 
 | 阶段 | kdlock 保留的额外工作 | 优化约束 |
 | --- | --- | --- |
-| 获取入口 | 本地频率、task/source 筛选、站点缓存、翻译条目身份 | 不能跳过冷却、新旧 ABI 或 source 状态 |
-| 排队 | Linux 原锁 L、私有队列 S、gate/ticket 与请求引用 | 用于原生 peer 排斥；不能直接换成不兼容的单一 TCLock 队列 |
+| 获取入口 | 本地频率、source/上下文筛选、翻译条目身份 | 不能跳过冷却、新旧 ABI 或 source 状态 |
+| 排队 | 单 KD 字、稳定 ticket 与请求引用 | KD 对象只能使用 KD 协议；Linux peer 使用独立 Linux 对象 |
 | 每个正文 | wrapper 元数据、frame、虚拟 SP/BP/地址重写、生成代码分派 | TCLock 直接切 waiter 原生栈；两者并非等量机器指令 |
 | 完成与续跑 | 终态核对、复杂出口、远端/native owner ACK、最后引用释放 | 普通 COMPLETE 已有专门路径，不能把复杂出口也当精简完成 |
 | 观测 | 正文证据、精确 waiter 数和可选统计 | 统计可近似，影响排空/owner 的协议量不能随意近似 |
@@ -90,28 +90,27 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
   SP/BP 和续点；同时用现有 [dispatch floor](../bench/spin_cacheline/README.md#单独测量-hook-调用成本)
   区分调用入口与 provider 筛选成本。
 - [ ] 在相同 frozen build 对照 cold、local-positive、碰撞地址流和每批检查点。
-  测本地重入门、preempt pin、哈希和 64 槽扫描，区分均摊成本和周期峰值。
+  测本地重入门、preempt pin、哈希和满表六候选淘汰，区分均摊成本和周期峰值。
   保留重入丢样及锁地址校验，不以失去正确身份缓存为优化。
-- [ ] 重新量化 `spin_native_cache=0/1` 的端到端成本。此前关闭有回退，当前默认
-  仍为 1；有稳定新证据后再决定删减。缓存与 record 分开改变，避免归因混淆。
+- [x] 删除已停用站点缓存；该参数对照已不适用于当前直接 API。
 
 位置：[kd_hotlock.c](../kernel_module/kd_hotlock.c)、[kd_lock.c](../kernel_module/kd_lock.c)、
 [hotlock 组件基准](../bench/hotlock_record/README.md)。验收以完整操作为主，
-组件 ns/call 只解释差异；如果组件节约没有转为吞吐/延迟改善，记录为无端到端收益。
+组件 ns/call 只解释差异；组件下降不能替代端到端吞吐或 JIT 覆盖。
 
 ## 4. P2：减少逐请求同步和生成代码成本
 
 ### P2.1 真共享及多锁缓存行为
 
-- [ ] 独立测量 `waiter_count` 的增减 RMW、gate/ticket 引用和 source lease。
+- [ ] 独立测量 `waiter_count` 的增减 RMW、ticket 引用和 source lease。
   先列全消费者，区分诊断近似量与排空/生命周期精确量，再评估是否能按批持有、
   转移所有权或减少重复读取。已有批次 source lease 不重复列为新方案。
-- [ ] 用单锁和独立多锁两类负载分别检验 node/gate 的隔离效果；记录 footprint
+- [ ] 用单锁和独立多锁两类负载分别检验 node/锁字的隔离效果；记录 footprint
   和碰撞，不把每 CPU 缓存放大到导致更高 miss。需要可靠硬件事件时先验证 guest
   PMU 能力，缺失时不声称测到了 cache-to-cache 转移。
 
 位置：[diagnostics.inc](../kernel_module/spin/diagnostics.inc)、
-[kd_spin_gate.c](../kernel_module/kd_spin_gate.c)、[kd_spin_entry.c](../kernel_module/kd_spin_entry.c)、
+[kd_spin_entry.c](../kernel_module/kd_spin_entry.c)、
 [kd_source.c](../kernel_module/kd_source.c)。验收必须保留 native peer 排斥、精确
 排空、node 复用与 request 最后引用约束；删除原子本身不是成绩。
 
@@ -161,3 +160,5 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 出现数据错误、旧 owner 未 ACK、未排空或已执行前缀重放，立即停止性能判定并
 保留故障证据。覆盖变化或 CPU 准备不同使配对失效；收益在重复运行中不稳定，
 保留原默认并报告未证实，不继续堆叠补丁掩盖回退。
+
+本轮[联合测量](../bench/tclock_compare/results/20260920-local-hash.md)已完成单字、记录器及策略分阶段比较；adaptive 在本负载回退，收益选择和滞回仍未实现。

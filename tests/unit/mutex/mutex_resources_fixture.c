@@ -138,7 +138,7 @@ static bool kd_mutex_task_reroute(struct task_struct *task);
 static bool kd_source_is_open(void);
 static bool kd_mutex_task_get(struct task_struct *task);
 static void kd_mutex_task_put(struct task_struct *task);
-static int kd_hotlock_record(unsigned long addr);
+static int kd_hotlock_record_mutex(unsigned long addr);
 static void kd_exe_add_abi(int pid, unsigned long ip, enum kd_exe_lock_kind kind, enum kd_entry_abi abi);
 static bool kd_exec_native_unlock(unsigned long addr, bool mutex);
 static unsigned long kd_read_kernel_gsbase(void);
@@ -314,7 +314,7 @@ static void kd_mutex_task_put(struct task_struct *task)
 	refs--;
 	task_puts++;
 }
-static int kd_hotlock_record(unsigned long addr)
+static int kd_hotlock_record_mutex(unsigned long addr)
 {
 	CHECK(addr);
 	samples++;

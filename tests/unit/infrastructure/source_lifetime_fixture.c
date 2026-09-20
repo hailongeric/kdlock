@@ -91,7 +91,7 @@ static bool admin = true, interrupted, copy_failed;
 static bool percpu_symbol_available = true;
 static unsigned long percpu_reserved_chunk = 0x300000000UL;
 static bool mutex_idle = true, tasks_idle = true;
-static int spin_entries_busy, spin_gates_busy;
+static int spin_entries_busy;
 struct inode {
 	int unused;
 };
@@ -192,10 +192,6 @@ static bool kd_mutex_tasks_idle(void)
 static int kd_spin_entries_check_idle(void)
 {
 	return spin_entries_busy;
-}
-static int kd_spin_gates_check_idle(void)
-{
-	return spin_gates_busy;
 }
 static int nonseekable_open(struct inode *inode, struct file *file)
 {
@@ -385,16 +381,15 @@ static void draining(void)
 	CHECK(kd_source_frame_get() && !kd_source_pin_target(SOURCE));
 	CHECK(retire() == -EBUSY && status().frames == 1);
 	kd_source_frame_put();
-	for (int busy = 0; busy < 4; busy++) {
+	for (int busy = 0; busy < 3; busy++) {
 		mutex_idle = busy != 0;
 		tasks_idle = busy != 1;
 		spin_entries_busy = busy == 2;
-		spin_gates_busy = busy == 3;
 		CHECK(retire() == -EBUSY && status().modules == 1);
 		CHECK(table[0].status_code == KD_EXE_NORMAL);
 	}
 	mutex_idle = tasks_idle = true;
-	spin_entries_busy = spin_gates_busy = 0;
+	spin_entries_busy = 0;
 	CHECK(!retire() && !status().modules);
 }
 

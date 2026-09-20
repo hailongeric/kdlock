@@ -405,3 +405,18 @@ SHA256：`4450e4b0c26845187edc1faeca0305214934d971f533cb7c840281ab6c4d0f75`。
 | <a id="execution-entry-reuse"></a>2026-09-16：执行条目复用 | [详细证据](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/tests/README.md#execution-entry-reuse) |
 | <a id="spin-clobber-v1"></a>2026-09-18：普通 spin caller-clobber v1 | [详细证据](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/tests/README.md#spin-clobber-v1) |
 | <a id="tclock-context-loop"></a>2026-09-18：对照 TCLock 统一 combiner 现场 | [详细证据](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/tests/README.md#tclock-context-loop) |
+
+## 单锁字与本地哈希增量
+
+基础之外按本次改动选择 `spin/test_spin_direct.py`、`spin/test_spin_entry.py`、
+`spin/test_spin_outer_progress.py`、`spin/test_spin_shadow.py`、`spin/test_spin_batch.py`、
+`infrastructure/test_hotlock_sampling.py`、`mutex/test_mutex_resources.py`。
+`test_spin_gate.py` 仅保留历史证据解析检查；已删除 gate 的实现/容量测试不再描述当前协议。
+
+SELFTEST provider 的 `hotlock_lifetime_selftest=1 hotlock_mode=observe spin_entry_selftest=1`
+在 guest 检查真实持锁候选淘汰、mutex 等待迁移及两次 owner ACK；结束必须成功卸载。
+实际 JIT 仍由直接 cacheline 运行器正文证据验证；`--scenario nested/early --backends kdlock`
+为显式双锁嵌套及外锁提前释放负载，默认 plain 的三锁性能矩阵不含这些额外操作。
+旧统一 hook live 脚本保留作历史索引，不能在当前无全局 spin hook 的 provider 上冒充 JIT 通过。
+
+本轮实测及初次失败/修复证据见[联合报告](../bench/tclock_compare/results/20260920-local-hash.md)：真实持锁淘汰、mutex CPU 迁移、ACK，以及 nested/early 实际 JIT 分开验收。

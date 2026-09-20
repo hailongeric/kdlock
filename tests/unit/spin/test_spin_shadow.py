@@ -50,6 +50,7 @@ def main():
         ((ROOT / "include/exe_info.h").read_text(), "enum kd_entry_abi {"),
         ((ROOT / "include/exe_info.h").read_text(), "enum kd_packet_state {"),
         (exec_types, "enum kd_exec_lock_kind {"),
+        (exec_types, "enum kd_request_role {"),
         (exec_types, "enum kd_exec_remote_state {"),
         (read_source((ROOT / "include/kd_call.h")), "enum kd_call_phase {"),
     ):

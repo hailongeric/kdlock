@@ -59,7 +59,8 @@ def make_plan(args):
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
-                api_mode='direct', workload=workload,
+                api_mode='direct', workload=workload, hotlock_mode=getattr(args, 'hotlock_mode', 'observe'),
+                scenario=getattr(args, 'scenario', 'plain'),
                 iterations=args.iterations, cpus=list(range(t))))
     return result
 
@@ -80,7 +81,9 @@ def report(out):
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
-                   sessions=len(rows), valid=len(good))
+                   sessions=len(rows), valid=len(good),
+                   hotlock_mode=rows[0].get('hotlock_mode', 'unrecorded'),
+                   actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         for metric in ('throughput_ops_s', 'amortized_ns_op'):
             values = [r[metric] for r in good if r.get(metric) is not None]
             row['median_'+metric] = statistics.median(values) if values else None
@@ -107,7 +110,11 @@ def main():
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--dry-run', action='store_true')
     kernel_identity.arguments(p)
+    p.add_argument("--hotlock-mode", choices=("observe", "adaptive"), default="observe")
+    p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
     args = p.parse_args()
+    require(args.scenario == "plain" or (args.backends == ["kdlock"] and args.workload == "cacheline"),
+            "nested protocol regression requires KD cacheline workload")
     require(args.workload != 'rcuht' or args.cachelines is None,
             'RCUHT uses a fixed hash table, not --cachelines')
     plan = make_plan(args)
@@ -172,6 +179,7 @@ def main():
                 extra = [f'KBUILD_EXTRA_SYMBOLS={module.parent / "Module.symvers"}']
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
+                     f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
                      f'KDLOCK_INCLUDE={ROOT / "include"}', *extra],
                     out/f'build-{backend}.log',timeout=120)
             variants[backend] = folder/'spin_cacheline.ko'

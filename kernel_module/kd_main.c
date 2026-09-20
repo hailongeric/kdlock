@@ -94,6 +94,9 @@ static int __init kdlock_km_init(void)
 		goto err_spinlock;
 
 #ifdef KDLOCK_SELFTEST
+	ret = kd_hotlock_lifetime_check();
+	if (ret)
+		goto err_mutex;
 	ret = kd_spin_entry_selftest();
 	if (ret)
 		goto err_mutex;

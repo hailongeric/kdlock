@@ -43,6 +43,11 @@ void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
 	frame->parent = NULL;
 	frame->depth = 0;
 	frame->executed = false;
+	frame->role = KD_ROLE_WAITER;
+#ifdef KDLOCK_SELFTEST
+ if (kd_hotlock_role_trace)
+  pr_info("kd_hotlock role: address=%lx request=%px role=WAITER\n", frame->outer_lock_addr, frame);
+#endif
 	frame->mutex_backend = false;
 	frame->spin_simple = false;
 	frame->request_frame = true;
@@ -82,6 +87,12 @@ int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
 	ctx->owner = current;
 	ctx->top = frame;
 	ctx->depth++;
+	frame->role = KD_ROLE_COMBINER;
+#ifdef KDLOCK_SELFTEST
+ if (kd_hotlock_role_trace)
+  pr_info("kd_hotlock role: address=%lx request=%px role=COMBINER type=%s\n",
+          frame->outer_lock_addr, frame, frame->mutex_backend ? "mutex" : "spin");
+#endif
 	return 0;
 }
 
@@ -151,6 +162,11 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	frame->outer_unlock_seen = false;
 	frame->completion_seen = false;
 	frame->executed = false;
+	frame->role = KD_ROLE_WAITER;
+#ifdef KDLOCK_SELFTEST
+ if (kd_hotlock_role_trace)
+  pr_info("kd_hotlock role: address=%lx request=%px role=WAITER\n", frame->outer_lock_addr, frame);
+#endif
 	frame->mutex_backend = false;
 	frame->spin_simple = false;
 	frame->request_frame = false;
@@ -159,6 +175,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	frame->outer_unlock_hook = NULL;
 	frame->control_call.phase = KD_CALL_NONE;
 	frame->native_request = NULL;
+	frame->role = KD_ROLE_COMBINER;
 	frame->state = KD_EXEC_FRAME_RUNNING;
 	frame->remote_result = 0;
 	/* Even an unborrowed frame needs an empty routing head: terminal state
@@ -171,6 +188,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	if (!kd_exec_context_validate(ctx)) {
 		ctx->depth--;
 		ctx->top = frame->parent;
+		frame->role = KD_ROLE_DONE;
 		frame->state = KD_EXEC_FRAME_UNUSED;
 		if (first_frame)
 			ctx->owner = NULL;
@@ -240,6 +258,7 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 		*regs = *kd_exec_frame_regs(frame);
 	ctx->depth--;
 	ctx->top = frame->parent;
+	frame->role = KD_ROLE_DONE;
 	frame->state = KD_EXEC_FRAME_UNUSED;
 	if (!ctx->depth)
 		ctx->owner = NULL;
@@ -297,6 +316,7 @@ int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)
 	ctx->depth = 0;
 	ctx->top = NULL;
 	ctx->owner = NULL;
+	frame->role = KD_ROLE_DONE;
 	frame->state = KD_EXEC_FRAME_UNUSED;
 	return 0;
 }

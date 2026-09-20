@@ -27,6 +27,7 @@
 #include "kd_segment.h"
 #include "kd_spin_entry.h"
 #include "kd_spin_fast.h"
+#include "kd_hotlock.h"
 #include <linux/sched.h>
 #include <linux/sched/task_stack.h>
 #include <linux/topology.h>
@@ -333,6 +334,10 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	struct qspinlock *word;
 	u32 val, cnt;
 
+	/* Statistics affect fresh admission only. A cold/refused KD request
+	 * still takes the same word through its nondelegating path. */
+	if (!kd_hotlock_record_spin((unsigned long)lock))
+		goto native;
 	if (!in_task() || softirq_count() || current->migration_disabled ||
 	    kd_spin_entry_native_active())
 		goto native;

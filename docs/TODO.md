@@ -1,10 +1,10 @@
 # kdlock Open Tasks
 
-本轮执行：[单锁字实现与本地哈希待办](design/locking.md)。基线已提交为
-`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字；mutex 接入及生命周期检查保留。
-下方 L/S 和缓存描述属于历史基线；当前协议以链接的 locking 章节为准。
+本轮执行：[单锁字、本地哈希与稳定角色](design/locking.md)。基线已提交为
+`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字、本地哈希及角色；mutex 接入及生命周期检查保留。
+本轮已完成的验证、性能回退与未覆盖边界见[联合报告](../bench/tclock_compare/results/20260920-local-hash.md)。
 
-Current work list as of **2026-09-19**. Implementation contracts live in
+Current work list as of **2026-09-20**. Implementation contracts live in
 [DESIGN](DESIGN.md), state layout in [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md),
 and historical evidence in [VALIDATION](VALIDATION.md). Completed step-by-step
 logs have been removed from this task list; Git history retains their detail.
@@ -20,8 +20,8 @@ producer-prepared hints, diagnostic identity reuse and normal-root admission/
 retirement specialization are implemented. The independent TCLock backend
 switches waiter stacks to execute native code; it does not replace kdlock JIT.
 Spin nodes now separate links/hints from notifications in a 128-byte aligned
-stride; 64-byte gate slots isolate independent locks. Exact shared waiter
-accounting remains unchanged.
+stride; explicit KD objects use one 32-bit word and no gate mapping. Exact
+shared waiter accounting remains unchanged.
 See [current execution paths](../bench/spin_cacheline/EXECUTION_PATHS.md).
 
 [Earlier paired measurements](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
@@ -36,13 +36,13 @@ full-suite PASS. Known unresolved failures remain:
 - The older oversubscribed mode-5 run published code but missed actual JIT.
   Its polling strategy differs from today's; see [historical evidence](VALIDATION.md#mutex-oversubscription-assessment).
 
-Hotlock discovery now keeps CPU/lock counters and windows per CPU, reads TSC
-every 10240 observations and publishes only qualified addresses. Cooling closes
-fresh admission; published identities remain until provider teardown. Sparse
-monitoring is implemented. Benefit-based native/probe/delegate selection and
-shared-identity retirement remain unimplemented. The latest
-[component comparison](../bench/hotlock_record/results/20260919-local-discovery.md)
-does not establish current complete-operation throughput or JIT share.
+Hotlock discovery uses separate spin/mutex CPU-local tables with 16 buckets and
+six candidates. Batched clock checks and score/error lower bounds govern
+adaptive admission; observe keeps fixed admission. There is no global promoted
+set. Stable owner/ticket/frame records survive eviction and CPU migration.
+Benefit-based native/probe/delegate selection and shared-identity retirement
+remain unimplemented. Current measurements are linked from the
+[comparison runner](../bench/tclock_compare/README.md).
 
 ## Delivery Scope
 
@@ -106,7 +106,7 @@ different ownership requirements; retain their checks and exactly-once effects.
 
 ### C2. One Protocol Per Physical Lock
 
-kdlock retains Linux L for native-peer exclusion and private S for scheduling;
+Explicit KD spin objects use one KD word for exclusion and scheduling;
 mutex ownership remains with its actual acquirer. Native continuations keep
 owner mailboxes/ACKs and source/request references until the last use.
 Node reuse, waiter wake and frame retirement are separate boundaries.
@@ -192,7 +192,7 @@ Independent owner state and final-user lifetimes remain required.
 
 ### Hotlock Monitoring And Adaptive Admission
 
-Local frequency discovery and cooling are implemented. Benefit-based selection
+Per-CPU typed hash discovery, conservative score/error admission, cooling and stable roles are implemented. Benefit-based selection
 is not: [performance P1](PERFORMANCE_PLAN.md#3-p1避免不划算的代理并降低原生入口成本)
 proposes bounded native/probe/delegate admission for future roots only.
 Do not reuse the permanent safety latch or source retirement for demotion.

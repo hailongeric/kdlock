@@ -16,7 +16,7 @@ static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
 	if (!lock)
 		return -EINVAL;
 
-	promoted = kd_hotlock_is_promoted((unsigned long)lock);
+	promoted = kd_hotlock_record_spin((unsigned long)lock);
 	if (!active_frame)
 		active_frame = kd_exec_current_frame();
 	if (regs && kd_jit_begin_call(active_frame, regs))
@@ -108,7 +108,6 @@ fallback:
 				       NULL))
 		return -EINVAL;
 
-	kd_hotlock_record((unsigned long)lock);
 	if (active_frame)
 		active_frame->control_call.phase = KD_CALL_ENTERED;
 	origin_raw_spin_lock(lock);

@@ -108,6 +108,16 @@ class Session:
     def publication(self):
         """Check a stable NORMAL entry and its image; actual execution is separate."""
         r = registry()
+        if "root_entry" in self.record:
+            # Nested regressions can register continuation entries during the
+            # measured JIT. Validate the exact prepared root, never whichever
+            # registry row was most recently inserted.
+            begin, end = self.record["entry_range"]
+            require(all(e["pid"] == 0 and e["lock_kind"] == 1 and
+                        begin <= e["entry"] < end and e["status"] in (-1, 0)
+                        for e in r), "unexpected nested registration")
+            self.record["nested_entries"] = [e for e in r if e["entry"] != self.record["root_entry"]]
+            r = [e for e in r if e["entry"] == self.record["root_entry"]]
         require(len(r) == 1 and r[0]["status"] == 0 and r[0]["pid"] == 0 and
                 r[0]["lock_kind"] == 1 and r[0]["code"] != 0, "entry is not NORMAL")
         entry = r[0]

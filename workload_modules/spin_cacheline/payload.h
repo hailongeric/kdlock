@@ -17,6 +17,8 @@ static kd_spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 #endif
 
+#include "scenario.h"
+
 #ifdef SC_HASH_PAYLOAD
 #include "hash_payload.h"
 #else
@@ -34,8 +36,9 @@ static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 static __attribute__((noipa)) void sc_body_##n(void) \
 { \
 	SC_LOCK(n); \
+	SC_EXTRA_LOCK(n); \
 	SC_TOUCH_##n \
-	SC_UNLOCK(); \
+	SC_EXIT(); \
 }
 SC_BODY(1)
 SC_BODY(2)

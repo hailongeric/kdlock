@@ -29,7 +29,7 @@ static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
 	/* The address-less kernel selector only dispatches. Frequency checks
 	 * precede process selection, so all callers may supply observations but
 	 * cold CPUs/locks never inspect comm or allocate task/shadow records. */
-	if (!kd_hotlock_record((unsigned long)lock)) {
+	if (!kd_hotlock_record_mutex((unsigned long)lock)) {
 		kd_origin_mutex_lock(lock);
 		return;
 	}

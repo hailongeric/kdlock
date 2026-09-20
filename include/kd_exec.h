@@ -25,6 +25,17 @@ struct kd_remote_request;
 #define KD_EXEC_MAX_NESTING 8
 #define KD_EXEC_MAX_LOCK_DEPTH 8
 
+enum kd_request_role {
+ KD_ROLE_OWNER,
+ KD_ROLE_WAITER,
+ KD_ROLE_COMBINER,
+ KD_ROLE_DONE,
+};
+
+#ifdef KDLOCK_SELFTEST
+extern bool kd_hotlock_role_trace;
+#endif
+
 enum kd_exec_event {
 	KD_EXEC_EVENT_CONTINUE = 0,
 	KD_EXEC_EVENT_NESTED_LOCK,
@@ -91,7 +102,8 @@ struct kd_exec_frame {
 	unsigned long gsbase;
 	struct task_struct *logical_task;
 	struct kd_exec_frame *parent;
-	int state;
+	u16 state;
+	u8 role; /* Logical request phase; survives hot-table eviction and node reuse. */
 	unsigned int depth;
 	bool executed;
 	bool mutex_backend;

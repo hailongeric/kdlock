@@ -1,7 +1,7 @@
 # kdlock Design
 
-本轮执行：[单锁字实现与本地哈希待办](design/locking.md)。基线已提交为
-`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字；mutex 接入及生命周期检查保留。
+本轮执行：[单锁字、本地哈希与稳定角色](design/locking.md)。基线已提交为
+`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字、本地哈希及角色；mutex 接入及生命周期检查保留。
 下方 L/S 和缓存描述属于历史基线；当前协议以链接的 locking 章节为准。
 
 This document describes current implementation contracts, not a chronological
@@ -79,55 +79,25 @@ delegation, never which physical exclusion lock protects the data.
 
 <a id="hotlock-monitoring"></a>
 
-Fresh ordinary acquisitions follow **CPU-local frequency -> CPU-local lock
-frequency -> process selection -> entry registration/admission**. There is no
-shared warmup origin, counter, CHECKING or IGNORE state. Both selected and
-non-selected ordinary callers supply observations; only selected callers may
-register JIT. The address-less mutex selector dispatches into the address-aware
-hook. Unlock follows retained ownership, never fresh frequency or comm selection.
+Each CPU has separate spin and mutex hash tables: 16 buckets and six
+preallocated candidates linked by slot indices. Lookup hashes the full address
+and compares complete keys. Hits increment score; only a full-table miss scans
+six scores, unlinks the minimum candidate and inserts the new identity. Its
+error equals the replaced score, so `score-error >= 10000` is a conservative
+admission requirement and a new address cannot inherit false heat.
 
-After the first local origin read, each CPU reads TSC exactly once per **10240**
-observations, also checking all 64 resident lock candidates with that same sample.
-The CPU block must finish in less than 40 billion TSC ticks: scaling the window
-with the batch preserves the previous 256 / one-billion-TSC frequency threshold.
-This is a coarser detector, not the old detection latency. Timeout, equality or a
-backwards sample closes fresh admission; subsequent observations may reopen it.
-A previously hot CPU may admit 10239 more observations before its next check.
-Idle CPUs need no timer. Other CPUs cannot open this CPU's gate.
+Each table retains the 10240-observation clock batch, strict 40-billion-TSC CPU
+window and 2.5-billion-TSC candidate window. Window reset clears both score and
+error. No global promotion set/query remains. `record_spin`, `record_mutex`,
+`query_spin` and `query_mutex` are explicitly CPU-local. IRQ/NMI reentry drops
+only a sample; the CPU pin ends before a mutex can sleep. `adaptive` is the load
+default; `observe` records identical statistics with fixed admission for protocol
+comparisons. Neither policy supplies JIT safety permission.
 
-Once the CPU gate is open, a 64-slot direct-mapped cache stores each candidate's
-address, local window origin, saturating count (up to 10000) and positive hint.
-At a CPU clock boundary, a continuous hot CPU publishes candidates with at least
-10000 local observations inside a strict 2.5-billion-TSC window. The initial
-origin is the preceding CPU clock sample, conservatively earlier than the first
-hit; new addresses and collisions do not read TSC. Expiry/backwards time resets
-only that CPU's candidate window/count for later retry; it creates no shared
-negative. Cooling also resets unfinished windows. Counts are never aggregated
-across CPUs. Cache replacement discards approximate history and any old hint;
-it never transfers either to the new address. This can delay recognition.
-
-Only a locally qualified candidate accesses the global promoted-address set.
-The set has 131071 unsigned-long slots (about 1 MiB, down from 8 MiB). A nonzero
-word is the complete immutable identity; one CAS inserts it, and duplicate
-publishers converge on the same slot. There is no separate readiness field,
-shared increment, window origin or diagnostic timestamp. Full capacity means
-native admission and a later local retry, not an unregistered positive. A cached
-positive hit never reads the shared set, even at later CPU clock boundaries.
-Positive identities persist for the module lifetime, including across cooling.
-An evicted positive or a new CPU must establish local lock frequency again.
-
-The 1600-byte per-CPU object is dynamically preallocated for every possible CPU
-before hooks are installed. The allocation base pointer is immutable while hooks
-run; it is the only shared infrastructure pointer read on the record fast path.
-A preemption pin and CPU-local non-waiting cmpxchg serialize local IRQ/NMI reentry
-without IRQ masking or a global statistics lock; reentry drops its observation.
-Drained shutdown frees the set and CPU objects without flushing candidates.
-
-`kd_hotlock_is_promoted` remains a read-only global identity query for existing
-nested protocols and diagnostics. It cannot admit a fresh root. SELFTEST can
-publish an identity explicitly for those protocols, but does not bypass a fresh
-root's CPU/local frequency checks. Cooling does not revoke tickets, owners,
-native suffixes or owner ACK, retire code, or guarantee 0%/99% JIT coverage.
+Fast owners/tickets and stable request frames retain OWNER/WAITER/COMBINER/DONE
+independently of the statistics table. Eviction, reset and CPU migration cannot
+revoke ownership, modify an active request, or route unlock. See the
+[current protocol](design/locking.md) and [scoped tests](../tests/README.md).
 
 ### 3.1 Source, Lock And Hook Lifetimes
 

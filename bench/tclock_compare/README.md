@@ -1,7 +1,6 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
-当前源码暂时停用 kdlock/TCLock 的统一 hook 安装；spin 的 hotlock、进程名和
-统一分派不进入被测路径。三种后端分别构建同一份
+当前源码使用显式锁 API，KD 入口记录本地热度；进程名筛选和统一 hook 分派不进入被测路径。三种后端分别构建同一份
 `workload_modules/spin_cacheline`，只在编译时改变锁 API：
 
 | 后端 | 直接调用 |
@@ -10,7 +9,7 @@
 | TCLock | `komb_spin_lock/unlock`，调用者配对管理抢占 |
 | kdlock | `kd_spin_lock_clobber_v1/unlock_clobber_v1`，直接进入 kdlock 协议 |
 
-kdlock 保留私有调度字 S、原生锁 L、owner/ACK、上下文和 JIT 就绪检查。
+kdlock 使用显式 32 位 KD 锁字，保留 owner/ACK、上下文和 JIT 就绪检查。
 其 clobber-v1 调用现场由编译器保存；TCLock 和 Linux 使用各自普通 C API。
 三个模块正文与循环相同，但不是同一份二进制，也不把必需的现场成本扣除。
 每次完整操作保留原来的固定 cacheline 更新、解锁后四组乘加及循环成本。
@@ -19,9 +18,9 @@ kdlock 保留私有调度字 S、原生锁 L、owner/ACK、上下文和 JIT 就�
 ## 准备与运行
 
 后端先加载，直接依赖它的样例后加载。运行器在没有 worker 时绑定只读观测
-使用的锁地址，再调用 `SC_PREPARE` 显式登记选定正文的锁后 RIP 和 gate。
+使用的锁地址，再调用 `SC_PREPARE` 显式登记选定正文的锁后 RIP 和 KD 对象。
 kdlock 等唯一条目发布为 NORMAL、翻译进程退出并停止 daemon 后，再执行各组
-相同的单 CPU 48000 次预热。准备与预热均不计时，不再等待热锁晋升。
+相同的单 CPU 48000 次预热。准备与预热均不计时。默认 observe 固定准入；adaptive 各 CPU 在测量开始后自然积累热度。
 
 默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 三种后端 × 五轮 = 150 场**，
 每线程 100000 次，奇数轮逆序。仅保留这一组直接调用方式，不再使用 `--abis`。
@@ -151,3 +150,15 @@ kdlock 在动态链表回链写入处被 JIT 地址准入拒绝，没有有效�
 统一接入已经暂停，依赖透明 hook 的旧 live 用例不适用于当前实验构建。
 
 [单锁字阶段结果](results/20260920-singleword.md)：150/150 场正确排空，40 场竞争 KD 有实际 JIT；与历史双字比较的环境限制见报告。
+
+`--hotlock-mode observe`（运行器默认）固定 KD 准入并记录本地统计，
+`--hotlock-mode adaptive` 使用每 CPU `score-error` 阈值。两者必须分开结果目录；
+单 CPU 预热不会让其他 CPU 自动变热，冷 CPU 的测量前缀属于自适应效果的一部分。
+`--scenario nested` 和 `--scenario early` 只允许 KD cacheline，用于双锁协议回归；
+默认 `plain` 保持原三锁性能负载。
+
+adaptive 的 `NO_JIT` 会保留数据正确的性能样本，但 `jit_acceptance` 明确为
+`NO_JIT`，不算实际 JIT 通过；observe 的竞争正例仍要求非零正文证据。
+汇总额外报告 `actual_jit_sessions`，不能用性能有效样本数代替 JIT 验收数。
+
+[本地哈希与策略结果](results/20260920-local-hash.md)：observe 150/150、adaptive 50/50 正确排空；实际 JIT 分别为竞争场次的 40/40、36/40。自适应与记录器开销回退见报告。

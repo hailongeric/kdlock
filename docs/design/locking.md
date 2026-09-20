@@ -5,7 +5,7 @@
 
 ## 2026-09-20：单锁字与本地哈希改造
 
-基线 `7e2460c`，无行为变化清理 `f17bb3a`。**单锁字已实现，热锁哈希待实施。**
+基线 `7e2460c`，无行为变化清理 `f17bb3a`。**单锁字、本地哈希和稳定角色已实现。**
 显式 `kd_spinlock_t` 为 4 字节，直接承载 fast、pending、KD MCS tail 和
 combiner 仲裁；gate 映射、独立 S、Linux L 二次获取均已删除。
 普通 Linux 对象不进入 KD API。无 JIT、资源不足及上下文拒绝均使用 KD 字的
@@ -17,13 +17,19 @@ combiner 仲裁；gate 映射、独立 S、Linux L 二次获取均已删除。
 单独记录，node 复用、waiter 唤醒均不代表 frame 已退休。caller-clobber、等待栈、
 JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接入，不安装全局 spin hook。
 
-下一阶段：spin/mutex 各自每 CPU 16 桶、6 候选、槽索引链表。命中增加 score，
+当前 spin/mutex 各自每 CPU 16 桶、6 候选、槽索引链表。命中增加 score，
 仅满表淘汰扫描最小分数；先摘旧链再插新链，error 保存替换分数，准入要求
 `score-error >= 10000`。沿用 10240 次时钟批量、400 亿 TSC CPU 窗口及
 25 亿 TSC 单锁窗口。删除全局晋升集合，区分锁类型的本地记录/查询；
-`adaptive` 为自适应准入，`observe` 为固定准入并记录统计。重入只丢样，mutex
+`adaptive` 为默认自适应准入，`observe` 为固定准入并记录相同统计。重入只丢样，mutex
 不跨睡眠保持 CPU 固定。角色在稳定请求/hold/frame，淘汰或迁移不改所有权，
 解锁不查热表。mutex 只改变发现和准入。
+
+OWNER 保存在真实 fast owner/ticket 状态中；WAITER、COMBINER、DONE 保存于
+稳定 frame 的 role 字段，使用原 state 布局内的空间，寄存器/帧偏移不变。
+SELFTEST 的 `hotlock_role_trace=1` 按锁地址和稳定 request 输出角色；默认关闭。
+`hotlock_lifetime_selftest=1 hotlock_mode=observe` 检查真实持锁候选被淘汰及
+mutex 等待从 CPU 1 迁移到 CPU 2；不是实际 JIT 验收的替代。
 
 验证结果与矩阵维护在 benchmark/tests 索引，未验证边界不得写成通过。
 
@@ -32,97 +38,31 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 
 ### 4.1 Native Lock And Private Queue
 
-Linux qspinlock **L** remains the sole physical exclusion lock. kdlock uses a
-separate scheduler word/tail **S** and private nodes; native and kdlock queue
-encodings must never share L's tail. A scheduler handoff alone does not permit
-critical-section execution: the physical executor first acquires L.
+The historical section name is retained for links. Current spin callers use an
+explicit four-byte `kd_spinlock_t`: fast ownership, pending, the KD MCS tail and
+combiner arbitration share that word. The gate map, private S, Linux L second
+acquisition and site cache have been removed. Linux spin objects retain their
+own protocol; no global spin hook is installed and protocols must never mix on
+one object. Explicit caller storage must outlive all requests and frames.
 
-The fixed gate map is append-only for the provider session. Creation remains
-serialized by the map's irqsave lock and rechecks the probe chain after a miss.
-The creator initializes the slot before release-publishing `origin`; readers
-acquire-load that key before using S. Existing `get`/`find` hits take no map lock.
-A concurrent insertion may make a read miss transient, but cannot expose a
-partially initialized gate. Slots are neither removed nor reassigned until
-controlled drain and teardown. This does not pin the lock allocation or admit
-an execution frame; source retirement and physical-owner checks still apply.
+The fast root records its pinned owner without allocating a ticket. A contended
+root transfers its CPU pin to a stable ticket; nested/virtual requests retain
+their own tickets. Context/admission/resource refusal uses a nondelegating KD
+whole-word CAS, respecting pending and tail, then a single byte release. Its
+per-CPU in-flight count also participates in drain. It never falls back to a
+Linux spin operation on a KD object. `kd_spin_prepare` registers a caller-owned
+continuation before the workload; caller-clobber and JIT safety admission remain.
 
-Each gate is 64-byte aligned with a 64-byte array stride, so independent locks
-do not share a scheduling-word cache line. The 1024-slot table occupies 64 KiB.
-This separates different gates; communication within one gate remains shared.
-
-Native plain/trylock/IRQ-save/BH participants use Linux L. Their mutual
-exclusion does not imply that IRQ/BH operations can be delegated; known
-context-sensitive wrappers refuse translation.
-The old shared-tail protocol and its compatibility claims are obsolete.
-
-The independent TCLock backend instead owns its target lock word exclusively.
-Retaining the `spin_lock` API does not make its protocol interchangeable with
-unmodified Linux qspinlock: the same tail encoding resolves to different
-per-CPU node arrays, and a delegated unlock needs TCLock's continuation and
-completion handling. All accesses to such a target must use a compatible
-protocol; uncontended CAS success cannot establish contended interoperability.
-The backend's ordinary-spin hooks do not establish mixed native/IRQ/BH/trylock
-support for that target. See the [TCLock compatibility boundary](../../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界).
-
-kdlock preserves native interoperability by keeping those private queue tails
-out of L. Normal delegated batches retain L across multiple critical sections;
-they do not release/reacquire it for each waiter. Removing this layer requires
-a unified protocol for every participant of that lock, or a separately verified
-interoperability mechanism. Acquisition-order optimizations do not change that
-requirement.
-
-Spin acquisition retains an optional per-CPU L/RIP/gate lookup cache. The
-read-only module parameter `spin_native_cache` defaults to 1; disabling it
-selects the S-first path for every admitted root. After the CPU/lock frequency filters, a matching published site,
-OPEN source, root CPU context and idle entire S permit a Linux trylock on L.
-A successful cached try keeps a native-L owner record/pin through unlock, with
-nested hooks remaining native as before. This does not acquire S or admit JIT.
-The cache never replaces origin exclusion or source/frame lifetime checks.
-The parameter uses the kernel's `bint` parser and integer storage, accepting
-boolean inputs and reading back 0/1. This avoids a per-read UBSAN bool-load
-handler path without disabling instrumentation. Clobber dispatch also puts
-registration/scheduling in its cold helper, retaining continuation arguments
-across C calls only after a cache miss.
-
-On a cache miss, acquisition follows TCLock's ordering: attempt the scheduling
-word before reserving a contended request. After frequency filtering, selection and entry
-registration and context checks, pin the CPU, resolve the stable gate once, and
-CAS S from zero to LOCKED. An uncontended root acquires Linux L through the
-existing gate claim and retains its physical hold token in a per-CPU record.
-It needs no ticket, node, frame or register capture; owner/CPU/generation checks
-remain. A matching cache key also skips the old repeated NORMAL registry lookup
-during cache population. Only a new key requires that eligibility lookup; cached
-acquisition still checks OPEN and idle S on every attempt.
-
-A failed root CAS transfers the existing pin and known gate into
-`kd_spin_entry_begin_pinned`, then enters the existing pending/queue protocol.
-Failure leaves the pin with its caller for balanced native fallback. Nested and
-virtual requests retain ticket ownership; no remote owner/ACK rule changes.
-Unlike TCLock's exclusive use of the original word, kdlock must still acquire L
-because unmodified Linux participants do not use S. S ownership alone never
-permits a critical-section access. Discovery and entry registration remain;
-removing them would change which critical sections become translatable.
-
-Both owner records preserve unlock routing through rename/closing and block
-controlled retirement. An S/L root is ordinary ownership: nested hooks continue
-to discover/register entries and acquire independent tickets. It must not be
-classified as a native suffix. Unlock checks/releases the physical hold, releases
-only S's locked byte (preserving pending/tail), clears ownership and unpins.
-A cached L-only owner instead releases L and its pin without modifying S.
-The S/L release call and its live pointers stay in a separate non-inlined helper;
-otherwise the compiler adds callee-saved spills even to cached native unlocks.
-The cache may persist after unlock, but never carries ownership into the next
-acquisition. All source/frame and hook-reader hot-unload limits in 3.1 remain.
-
-The cache-off experiment preserves a usable comparison but is not the default:
-it substantially regressed the measured uncontended case. Structural preparation
-savings and the measured cache/entry tradeoff are recorded in the
-[entry benchmark](../../bench/spin_cacheline/results/20260918-spin-entry.md).
+Physical claim records that the caller already acquired the KD word. Release
+retires ticket ownership metadata, then the scheduler performs exactly one
+release store on the ownership byte, preserving pending/tail. Early release and
+reclaim keep the original ticket alive; reclaim first acquires the KD word again.
+Unlock uses a retained fast owner, native ACK or ticket, never hotness or comm.
 
 ### 4.2 Acquisition Tickets And Node Lifetime
 
 The physical hold and original waiter acquisition are different objects.
-`kd_spin_hold` records real owner task/CPU/generation.
+Fast holds record the actual owner; tickets retain task/CPU/generation.
 `kd_spin_ref` points into a stable origin-ticket pool with a generation.
 A virtual B request carries the original HOOK waiter's `spin_origin`, while
 its physical executor's acquisition ticket belongs to that executor.
@@ -131,19 +71,19 @@ The current runtime assumes voluntary kernel preemption. Ticket lifetime still
 retains the begin/end preemption pin, including native suffix execution and ACK
 waiting. A caller without that pin cannot own a ticket, so lookup returns before
 scanning the per-CPU pool. A pinned lookup adds no temporary pin/unpin pair.
-Reading a local ticket's gate also takes no guard: CPU/task/generation checks
+Reading a local ticket's word also takes no guard: CPU/task/generation checks
 remain, only its local task changes slot membership, and remote borrowers modify
 `native_refs` only. Mutations still serialize with those borrowers under guard.
 IRQ-off task callers are admitted; hardirq/softirq contexts remain native.
 Physical-owner checks remain independent of the kernel's preemption model.
 
-One stack-local `kd_spin_request` carries that physical ticket and S through
+One stack-local `kd_spin_request` carries that physical ticket and the KD word through
 pending/tail helpers, node admission, queue-head claims and combiner batches.
 The batch retains it across early outer release and reclaim; neither a recycled
 node nor a nested waiter's ancestor `spin_origin` substitutes for this request.
 Hook unlock passes its already-found ticket through release. Nested unlock
-resolves S once and reuses it for the OOO result; diagnostics and an OOO ancestor
-without a local ticket can still use the acquire-reading map.
+uses the direct word for its OOO result; an ancestor represented only by
+frame/shadow state still needs its retained physical owner to release.
 
 Only the original waiter can end its pin/preemption obligation. A combiner
 cannot remotely unpin it. Native borrow references defer completion until
@@ -164,8 +104,8 @@ contract explicit; it does not transfer physical ownership or prove arbitrary
 memory ordering, task lifetime or flags semantics through a userspace fixture.
 
 At initial spin batch entry, a NULL `next` does not by itself prove the node is
-last: the producer exchanges S's tail before release-linking the predecessor.
-With S/L still held and before any NUMA splicing, a different nonzero decoded
+last: the producer exchanges the KD tail before release-linking the predecessor.
+With the KD word still held and before any NUMA splicing, a different nonzero decoded
 tail proves a successor is in flight. Wait for that link, then acquire-read it.
 A real tail node still receives the ordinary native handoff; this check is not
 used on detached deferred lists. No body executes until the existing JIT
@@ -173,7 +113,7 @@ admission succeeds. The directed delayed-link mutation guards this boundary.
 
 ### 4.3 Combiner And Native Returns
 
-The combiner owns L and S while processing an eligible batch, validates entry
+The combiner owns the KD word while processing an eligible batch, validates entry
 readiness/context, reconstructs waiter registers and enters a frame.
 Unstarted work can receive native handoff. Partial JIT progress cannot be
 converted into entry replay.
@@ -513,9 +453,9 @@ the scope of the separately bounded fixtures are recorded in [VALIDATION](../VAL
 | Aspect | Spinlock | Mutex |
 |--------|----------|-------|
 | Queue structure | Per-CPU `kd_spin_node[4]` | Bitmap-reserved per-CPU `kd_mutex_node[4]` |
-| Exclusion | Original Linux qspinlock L, held by the physical executor | Original Linux mutex and its actual owner |
-| Scheduler state | Private S word/tail, never overlaid on L | `kd_mutex.locked/tail`, never sufficient for exclusion |
+| Exclusion | Single KD word, held by the physical executor | Original Linux mutex and its actual owner |
+| Scheduler state | Pending/tail in the same KD word | `kd_mutex.locked/tail`, never sufficient for exclusion |
 | Scheduling | Non-sleeping spin protocol | Delegation waiters PAUSE with preemption disabled; native executors may sleep |
 | Nested contention | Virtual spin waiter and combiner snapshot | Same combiner waits for native B |
-| OOO unlock | Owner-side A/S release, logical-parent rendezvous and ticket-preserving reclaim | Native A/S early release, same-owner B and A reacquisition after suffix |
+| OOO unlock | Owner-side KD A release, logical-parent rendezvous and ticket-preserving reclaim | Native A/S early release, same-owner B and A reacquisition after suffix |
 | JIT disabled | Per-lock spin readiness policy | All mutex calls use original native protocol |

@@ -323,7 +323,7 @@ provider include。具体 include 点可用
 | [test_mutex_outer_progress.py](../tests/unit/mutex/test_mutex_outer_progress.py) / [mutex_outer_progress_fixture.c](../tests/unit/mutex/mutex_outer_progress_fixture.c) | 生产 mutex combiner/outer-event、原 owner/后继进度；编译真实日志宏，仅替代 printk sink，检查 INFO/格式/保留次数和两个日志变异，不模拟串口或调度耗时。 |
 | [test_native_after_outer.py](../tests/unit/execution/test_native_after_outer.py) / [native_after_outer_fixture.c](../tests/unit/execution/native_after_outer_fixture.c) | 生产 native/control 边界和 mutex B 获取/解锁，原语为替代实现。 |
 | [test_native_registers.py](../tests/unit/execution/test_native_registers.py) / [native_register_fixture.c](../tests/unit/execution/native_register_fixture.c) | 实际用户态汇编 probe 与 GPR oracle。 |
-| [test_spin_gate.py](../tests/unit/spin/test_spin_gate.py) / [spin_gate_fixture.c](../tests/unit/spin/spin_gate_fixture.c) | 生产 gate/hold map 与过期代际；检出 PENDING ENOMEM、JIT/owner/副作用或双 frame 证据缺失。 |
+| [test_spin_gate.py](../tests/unit/spin/test_spin_gate.py) | 历史 gate 证据解析；当前单字协议没有 gate map。 |
 | [test_spin_entry.py](../tests/unit/spin/test_spin_entry.py) / [spin_entry_fixture.c](../tests/unit/spin/spin_entry_fixture.c) | 生产 origin ticket/ref 生命周期。 |
 | [test_clobber_abi.py](../tests/unit/codegen/test_clobber_abi.py) | 合并的 ABI 1/2 wrapper 入口，默认两者；真实 caller clobber、精简/完整出口和混合交接，检查 poisoned packet 及寄存器压力。 |
 | [test_tclock_context.py](../tests/unit/spin/test_tclock_context.py) | TCLock 六寄存器、RSP 与原生 lock/unlock 续点的真实汇编验证；不等于复杂内核场景覆盖。 |
@@ -356,3 +356,12 @@ provider include。具体 include 点可用
 [signals](../tests/protocols/mutex_parallel_signals.py) 核对客户端身份并处理信号，
 [pools](../tests/protocols/mutex_parallel_pools.py) 校验代码池及退休后重载。
 拆分保持各验证函数及失败条件，不改变 live 操作顺序。
+
+当前显式对象和协议回归：
+
+| 文件 | 职责 |
+| --- | --- |
+| [kd_spin_type.h](../include/kd_spin_type.h) | 四字节 KD 对象及初始化，与 Linux 对象分离 |
+| [spin_single_mock.h](../tests/unit/spin/spin_single_mock.h) | 单字/ticket 提取式回归的确定性 CPU 原语 |
+| [lifetime_selftest.c](../tests/kernel/hotlock/lifetime_selftest.c) | 真实持锁淘汰、mutex 等待迁移 CPU |
+| [scenario.h](../workload_modules/spin_cacheline/scenario.h) | 可选显式双锁 nested/early JIT 负载，默认性能正文不变 |

@@ -12,6 +12,9 @@ ccflags-y += -DSC_HASH_PAYLOAD
 endif
 ifeq ($(SC_BACKEND),kdlock)
 ccflags-y += -DSC_DIRECT_KDLOCK -I$(KDLOCK_INCLUDE)
+ifneq ($(SC_SCENARIO),)
+ccflags-y += -DSC_SCENARIO=$(SC_SCENARIO)
+endif
 else ifeq ($(SC_BACKEND),tclock)
 ccflags-y += -DSC_DIRECT_TCLOCK
 else ifeq ($(SC_BACKEND),native)

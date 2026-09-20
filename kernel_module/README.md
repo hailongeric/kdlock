@@ -1,11 +1,10 @@
 # 内核 provider 代码地图
 
-当前直接 API 实验将 `kd_main.c` 的统一 spin/mutex hook 安装和撤销暂时注释，
-`kd_lock.c` 的 spin 筛选路径也已停用。直接入口位于 `kd_spinlock.c`，
+当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `kd_spinlock.c`，
 调用者使用 `include/kd_spin_direct.h` 的 clobber-v1 现场约定，并在计时前调用
-`kd_spin_prepare` 登记入口。公开 unlock 处理快速 S/L owner、ticket 和 native ACK；
+`kd_spin_prepare` 登记入口。公开 unlock 处理单锁字快速 owner、ticket 和 native ACK；
 内部 shadow/frame 解锁保留为 `kd_spin_unlock_protocol`。下文 hook 路由是暂停的原接入设计。
-原生锁、私有队列、逻辑 frame 和来源 pin 各自承担不同职责。
+KD 锁字、稳定持锁记录、逻辑 frame 和来源 pin 各自承担不同职责。
 
 默认构建要求 `kdclobber2` 的 `KD_SPIN_CLOBBER_V1` 和 `KD_MUTEX_CLOBBER_V1` 接口；缺失时编译直接报错，
 不再自动降为旧内核 hook。普通 spin/mutex 使用各自 clobber 身份；同一内核上的旧 ABI 调用者
@@ -27,7 +26,7 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 | [kd_exec.c](kd_exec.c) | frame 栈、上下文验证和状态事件 |
 | [sys.c](sys.c) | `/dev/kd_dev` 的读取、上传、状态与 retire ioctl |
 | [kd_source.c](kd_source.c) | 来源状态和 module/frame/writer pins |
-| [kd_hotlock.c](kd_hotlock.c) | 本 CPU 频率及本地单锁候选达标后发布共享身份；入口注册由 `kd_lock.c` 调用执行注册表 |
+| [kd_hotlock.c](kd_hotlock.c) | 每 CPU 分类型哈希候选与保守分数准入；入口注册由 `kd_lock.c` 调用执行注册表 |
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 
@@ -39,15 +38,11 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
 节点为 128 字节，next 与通知字分行，request 继续独立存活。约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
-热锁识别依次检查本 CPU 频率、本 CPU 的单锁频率、进程身份。首次起点之后，
-每 10240 次 lock 访问读一次时间，CPU 与 64 槽单锁候选共用该读数；CPU 窗口
-按批量折算为 400 亿 TSC，单锁仍以不足 25 亿 TSC 内至少 10000 次为标准。
-计数、窗口和正向缓存都在动态 per-CPU 对象中，约 1.6 KiB/CPU。只有本地达标
-才将地址 CAS 发布到约 1 MiB 的共享集合，已缓存的热锁不再查共享表。
-本地过期重测，碰撞可丢样；没有全局预热、共享计数或全局 IGNORE。降温在下一
-检查点关闭新准入，不影响既有解锁和 owner ACK。完整边界见
-[热锁检测](../docs/DESIGN.md#hotlock-monitoring)；实际收益控制仍是
-[待办](../docs/TODO.md#hotlock-monitoring-and-adaptive-admission)。
+热锁使用每 CPU、每类型独立的 16 桶/6 候选哈希表，完整地址匹配，替换记录 error，
+默认 `hotlock_mode=adaptive` 按 `score-error >= 10000` 准入；`observe` 固定准入并记录。
+OWNER/ticket 及 request frame 的角色独立于热表；解锁不查询热度。SELFTEST 可选
+`hotlock_lifetime_selftest=1 hotlock_mode=observe` 验证持锁淘汰和真实 mutex 等待迁移，
+`hotlock_role_trace=1` 输出锁地址/request 关联的角色，正常性能运行关闭。
 
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
 共享 waiter 计数与身份/禁用状态分离到不同缓存行。request 按 64 字节对齐，

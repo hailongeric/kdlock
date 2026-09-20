@@ -40,6 +40,7 @@ struct kd_spin_ref {
 };
 #include "spin_request_type.h"
 struct kd_exec_frame {
+ unsigned char role;
 	struct pt_regs regs, *regs_ref;
 	unsigned long entry_ip, delegated_lock_addr, outer_lock_addr;
 	unsigned int entry_abi, packet_state;
