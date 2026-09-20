@@ -144,6 +144,12 @@ make -C tests/unit run-all
 不能计作通过。这里只列入口，各协议的增量选择继续见
 [测试选择](../docs/JIT_EXECUTION.md#7-分层与增量回归)。
 
+`spin/test_hash_relink.py` 提取实际哈希表正文和 guest 内核的 hlist 原语，使用
+ASAN/UBSAN 对照原毒化摘链与当前立即重插写法，核对操作分类、独立键集合及
+完整链表。`admission/test_clobber_entry.py` 同时覆盖零扩展/符号扩展后的逐位
+依赖：已定义低位可用，未捕获高位或符号位影响地址、存储和分支时仍拒绝。
+实际哈希表 JIT 和三方性能结果维护在 [锁对比](../bench/tclock_compare/README.md)。
+
 提取生产 C 函数的夹具通过 [source_text.py](unit/infrastructure/source_text.py) 读取源码。
 它按原声明顺序递归展开私有 `.inc`，保留普通头文件和条件编译文本，供夹具
 继续使用原有替代原语；不复制函数实现，也不放宽协议断言。冻结源码和

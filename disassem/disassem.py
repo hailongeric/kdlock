@@ -329,12 +329,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
     hostcall_targets = set(resolved_hostcalls)
     readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2} else set()
-    raw_spin_lock = control_symbols["_raw_spin_lock"]
-    raw_spin_unlock = control_symbols["_raw_spin_unlock"]
+    # The current provider exposes direct protocol entries. Resolve the same
+    # identities as its executor, including the clobber unlock completion PC.
+    raw_spin_lock = get_kernel_symbol("kd_spin_lock") or control_symbols["_raw_spin_lock"]
+    raw_spin_unlock = get_kernel_symbol("kd_spin_unlock") or control_symbols["_raw_spin_unlock"]
     mutex_lock = control_symbols["mutex_lock"]
     mutex_unlock = control_symbols["mutex_unlock"]
-    clobber_lock = get_kernel_symbol("kd_raw_spin_lock_clobber_v1")
-    clobber_unlock = get_kernel_symbol("kd_raw_spin_unlock_clobber_v1")
+    clobber_lock = (get_kernel_symbol("kd_spin_lock_clobber_v1") or
+                    get_kernel_symbol("kd_raw_spin_lock_clobber_v1"))
+    clobber_unlock = (get_kernel_symbol("kd_spin_unlock_clobber_v1") or
+                      get_kernel_symbol("kd_raw_spin_unlock_clobber_v1"))
     clobber_mutex_lock = get_kernel_symbol("kd_mutex_lock_clobber_v1")
     clobber_mutex_unlock = get_kernel_symbol("kd_mutex_unlock_clobber_v1")
     clobber_targets = {clobber_lock, clobber_unlock, clobber_mutex_lock, clobber_mutex_unlock} - {0, None}

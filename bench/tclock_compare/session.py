@@ -1,13 +1,16 @@
 """Reuse the cacheline data oracle with a real TCLock native-delegation arm.
 
-Each session owns a freshly loaded source and backend. No JIT classification is
-assigned to TCLock; its unlock/completion counters must agree after worker join.
+Each session owns a freshly loaded source and backend. TCLock has no added
+execution counters; validate payload and quiescence, and leave delegation
+amount unknown instead of reporting a fictitious zero or observed delegation.
 """
 import json
+import re
 from pathlib import Path
 import time
 
-from bench_runtime import ROOT, HERE, require
+from bench_runtime import (ROOT, HERE, PROVIDER, require, parameters, registry,
+                           children, status, Failure)
 from bench_session import Session
 
 TC_MODULE = ROOT / 'tclock_backend/tclock_backend_km.ko'
@@ -19,18 +22,37 @@ def tc_parameters():
             Path('/sys/module/tclock_backend_km/parameters').iterdir()}
 
 
+def tc_quiescent(params):
+    # Exact parameter identity also rejects accidentally loading the previous
+    # instrumented module. Protocol node/count state remains part of the oracle.
+    require(set(params) == {'target_lock', 'komb_batch_size', 'quiescent'},
+            'unexpected TCLock module parameters')
+    require(params['quiescent'] == 1, 'active TCLock stack/queue', 'UNDRAINED')
+
+
+def hash_layout(layout):
+    # Reject an old module that still inserts per-operation scheduling points.
+    require((layout['workload'], layout['buckets'], layout['entries'],
+             layout['key_range'], layout['resched']) ==
+            ('rcuht', 1024, 4096, 8192, 0), 'hash payload configuration differs')
+
+
 class BackendSession(Session):
+    def run(self, args, log, **kwargs):
+        # Every client command, including prepare and drain, checks the loaded
+        # payload identity. A hash module must never satisfy a cacheline run.
+        if args[0] == HERE/'client' and self.record.get('workload') == 'rcuht':
+            args = [*args, '--workload', 'rcuht']
+        return super().run(args, log, **kwargs)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.loaded_tc = False
         self.record['preparation_cpus'] = [self.record['cpus'][0]]
 
     def phase(self, label, iterations):
-        if label in ('warmup', 'promotion'):
-            # Steady-state comparison: finish discovery/publication before
-            # introducing contention, identically for all three backends.
-            # Keep the failed concurrent-promotion run as separate evidence;
-            # this preparation policy does not fix that kdlock cold-path bug.
+        if label == 'warmup':
+            # Common unmeasured warmup after explicit preparation/publication.
             spec = dict(self.record, threads=1, cpus=self.record['preparation_cpus'],
                         cpu_nodes=self.record['cpu_nodes'][:1])
             return super().phase(label, iterations, spec=spec)
@@ -42,24 +64,76 @@ class BackendSession(Session):
         # Normal page allocation/free refreshes it without kernel changes.
         self.run(['insmod', GUARD_MODULE], 'load-allocator-guard.log')
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
-        if self.record['arm'] != 'tclock':
-            return super().prepare()
+        if self.record['arm'] == 'kdlock':
+            self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0'],
+                     'load-kdlock.log')
+            self.loaded_kd = True
+        elif self.record['arm'] == 'tclock':
+            self.run(['insmod', TC_MODULE, 'komb_batch_size=1024'], 'load-tclock.log')
+            self.loaded_tc = True
+        # The module's direct references pin its backend. Source loading must
+        # follow backend loading; retirement releases the reverse source pin.
         self.run(['insmod', self.workload_module], 'load-source.log')
         self.loaded_source = True
         layout = json.loads(self.run([HERE/'client', '--layout'], 'layout.json'))
         self.record['layout'] = layout
+        if self.record.get('workload') == 'rcuht':
+            hash_layout(layout)
         require(self.counts('initial')['values'] == [0]*16, 'source was not reset')
-        self.run(['insmod', TC_MODULE, f'target_lock={layout["lock_addr"]}',
-                  'komb_batch_size=1024'], 'load-tclock.log')
-        self.loaded_tc = True
-        params = tc_parameters()
-        require(params['target_lock'] == layout['lock_addr'] and
-                params['komb_batch_size'] == 1024 and params['quiescent'] == 1,
-                'TCLock identity/initial state differs')
-        self.record['parameters'] = params
-        self.phase('warmup', 1)
-        # Match the continuous preparation used by the kdlock/native arms.
-        self.phase('promotion', 48000)
+        if self.loaded_tc:
+            Path('/sys/module/tclock_backend_km/parameters/target_lock').write_text(
+                str(layout['lock_addr']))
+            params = tc_parameters()
+            tc_quiescent(params)
+            require(params['target_lock'] == layout['lock_addr'] and
+                    params['komb_batch_size'] == 1024 and params['quiescent'] == 1,
+                    'TCLock identity/initial state differs')
+            self.record['parameters'] = params
+        if self.loaded_kd:
+            Path('/sys/module/kdlock_km/parameters/bench_lock_addr').write_text(
+                str(layout['lock_addr']))
+            params = parameters()
+            require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
+                    int(params['bench_lock_addr']) == layout['lock_addr'],
+                    'kdlock observation parameters differ')
+            self.record['parameters'] = params
+            symbol = f'sc_body_{self.record["cachelines"]}'
+            found = [int(s[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
+                     if len(s := line.split()) == 4 and s[2:] == [symbol, '[spin_cacheline]']]
+            nm = self.run(['nm', '-S', self.workload_module], 'symbols.txt')
+            sizes = [int(s[1], 16) for line in nm.splitlines()
+                     if len(s := line.split()) == 4 and s[3] == symbol]
+            require(len(found) == len(sizes) == 1 and found[0], 'unknown CS symbol')
+            self.record['entry_range'] = [found[0], found[0] + sizes[0]]
+        self.record['prepare'] = json.loads(self.run(
+            [HERE/'client', '--prepare', '--cachelines', self.record['cachelines']],
+            'prepare.json'))
+        if self.loaded_kd:
+            self.start_daemon()
+            deadline = time.monotonic() + 90
+            while True:
+                self.faults()
+                require(self.daemon.poll() is None, 'daemon exited during preparation')
+                log = (self.path/'daemon.log').read_text()
+                require(not re.search(r'\[KD_JIT\]\[ERROR\]|Traceback|command failed', log),
+                        'translator failed; see daemon.log')
+                metrics = [json.loads(line.split(' ', 1)[1]) for line in log.splitlines()
+                           if line.startswith('KD_TRANSLATION_METRICS ')]
+                require(all(m['result'] == 0 and m['status'] == 0 for m in metrics),
+                        'translation failed or refused')
+                r = registry()
+                require(len(r) == 1 and r[0]['status'] in (-1, 0),
+                        'explicit preparation did not register one valid entry')
+                if r[0]['status'] == 0 and metrics and not children(self.daemon.pid):
+                    self.record['translation'] = metrics
+                    self.publication()
+                    break
+                if time.monotonic() >= deadline:
+                    raise Failure('TIMEOUT', 'explicit publication timed out', unsafe=True)
+                time.sleep(0.1)
+            self.stop_daemon()
+            require(status()['writers'] == 0, 'translator writer still open', 'UNDRAINED')
+        self.phase('warmup', 48000)
         time.sleep(2)
         self.record['prepared_ns'] = time.monotonic_ns()
         self.save()
@@ -75,34 +149,33 @@ class BackendSession(Session):
             self.save()
             return
         before = tc_parameters()
-        require(before['quiescent'] == 1 and before['delegated'] == before['completed'],
-                'TCLock preparation did not drain', 'UNDRAINED')
+        tc_quiescent(before)
         self.record.update(execution_status='MEASURING', tclock_before=before)
         self.save()
         measurement = self.phase('measure', self.record['iterations'])
         self.record['measurement'] = measurement
         after = tc_parameters()
-        count = after['completed'] - before['completed']
-        require(after['quiescent'] == 1 and after['delegated'] == after['completed'],
-                'TCLock completion mismatch', 'UNDRAINED')
-        require(0 <= count <= measurement['completed'], 'invalid delegation count')
-        require(self.record['threads'] == 1 or count > 0,
-                'contended TCLock arm did not execute any delegated body', 'NO_DELEGATION')
-        self.record.update(tclock_after=after, delegated_bodies=count,
-                           delegation_share=count/measurement['completed'],
-                           delegation_status='TCLOCK' if count else 'NO_DELEGATION',
+        tc_quiescent(after)
+        self.record.update(tclock_after=after, delegated_bodies=None,
+                           delegation_share=None, delegation_status='UNMEASURED',
                            jit_bodies=0, jit_share=0, jit_status='NOT_APPLICABLE')
         self.save()
 
     def cleanup(self):
         if self.loaded_tc:
             self.faults()
-            require(self.counts('tclock-drain')['active'] == 0, 'active TCLock workers', 'UNDRAINED')
+            if self.loaded_source:
+                require(self.counts('tclock-drain')['active'] == 0, 'active TCLock workers', 'UNDRAINED')
             params = tc_parameters()
-            require(params['quiescent'] == 1 and params['delegated'] == params['completed'],
-                    'active TCLock stack/queue', 'UNDRAINED')
+            tc_quiescent(params)
             self.record['tclock_drained'] = params
-            # Restore the hook while its target source is still loaded.
+            # Clear the diagnostic pointer before its lock storage disappears.
+            Path('/sys/module/tclock_backend_km/parameters/target_lock').write_text('0')
+        super().cleanup()
+        if self.loaded_tc:
+            self.record['drained'] = False
+            self.save()
             self.run(['rmmod', 'tclock_backend_km'], 'unload-tclock.log')
             self.loaded_tc = False
-        super().cleanup()
+            self.faults()
+            self.record['drained'] = True

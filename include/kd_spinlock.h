@@ -84,6 +84,16 @@ void kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,
 void kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,
                       unsigned long ip, unsigned long bp, unsigned int abi);
 void kd_spin_unlock(struct qspinlock *lock);
+/* Explicit callers prepare their continuation before starting the workload.
+ * These clobber entries capture no registers themselves: use the caller shell
+ * in kd_spin_direct.h so the compiler spills every live non-frame GPR. */
+int kd_spin_prepare(struct qspinlock *lock, unsigned long ip, unsigned int abi);
+void kd_spin_lock_clobber_v1(struct qspinlock *lock, unsigned long sp,
+			   unsigned long ip, unsigned long bp);
+void kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
+			     unsigned long ip, unsigned long bp);
+/* Internal shadow/frame releases already know their protocol provenance. */
+void kd_spin_unlock_protocol(struct qspinlock *lock);
 /* The hook already found this acquisition ticket; reuse it through release. */
 void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref *ref);
 /*

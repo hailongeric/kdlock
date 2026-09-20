@@ -22,6 +22,18 @@ class ClobberEntryTests(unittest.TestCase):
         self.assertEqual(status,0)
         self.assertTrue(assembly)
 
+    def test_direct_unlock_is_the_critical_section_boundary(self):
+        direct = {'kd_spin_lock': 0x7000, 'kd_spin_unlock': 0x8000,
+                  'kd_spin_lock_clobber_v1': 0x5000,
+                  'kd_spin_unlock_clobber_v1': 0x6000}
+        # Set RDI and the clobber shell's RSI/RDX/RCX metadata; CALL direct
+        # unlock; forbidden FS load outside CS. Missing metadata must refuse.
+        # The direct endpoint must stop the lexical CS before that suffix.
+        _, _, status = render('48c7c7009000004889e648c7c2191000004889e9e8e74f000064488b042500000000c3',
+                              abi=1, kernel_symbols=SYMBOLS | direct,
+                              return_status=True, muted=True)
+        self.assertEqual(status, 0)
+
     def test_uncaptured_memory_value_and_address_refused(self):
         for code in ('48890424c3','488b00c3','4885c0740148c3'):
             with self.subTest(code=code):
@@ -31,6 +43,36 @@ class ClobberEntryTests(unittest.TestCase):
     def test_partial_low_write_does_not_require_high_bits(self):
         self.assertEqual(self.generate('b007880424c3')[2],0)
         self.assertEqual(self.generate('b00748890424c3')[2],2)
+
+    def test_extensions_preserve_defined_low_bits_without_defining_high_bits(self):
+        # EDX's high bits are absent at entry. Defining DL must suffice for a
+        # later byte store, even after extension through EDI or RAX. A wider
+        # store still observes uncaptured bits and must refuse admission.
+        for prefix, byte_store, wide_store in (
+            ('b20789d7', '40883c24', '893c24'),       # MOV EDI, EDX
+            ('b2070fb7fa', '40883c24', '893c24'),     # MOVZX EDI, DX
+            ('b207480fbfc2', '880424', '48890424'),   # MOVSX RAX, DX
+            ('b2074863c2', '880424', '48890424'),     # MOVSXD RAX, EDX
+        ):
+            with self.subTest(prefix=prefix):
+                self.assertEqual(self.generate(prefix + byte_store + 'c3')[2], 0)
+                self.assertEqual(self.generate(prefix + wide_store + 'c3')[2], 2)
+
+    def test_cmov_partial_source_can_control_low_byte_branch(self):
+        # Mirrors the hash-loop boolean: defined EDI, defined DL, a 32-bit
+        # conditional move from EDX, then TEST DIL. Uncaptured upper EDX bits
+        # must not taint DIL; testing all of EDI must still be rejected.
+        prefix = '31ff31c085c0b2070f45fa'
+        self.assertEqual(self.generate(prefix + '4084ff7501c3c3')[2], 0)
+        self.assertEqual(self.generate(prefix + '85ff7501c3c3')[2], 2)
+
+    def test_extension_high_bits_depend_only_on_the_source_sign_bit(self):
+        # Observe only extended high bits: zero extension always defines them,
+        # while sign extension must carry an uncaptured source sign bit. DH
+        # defines the sign of DX even when DL remains absent at entry.
+        self.assertEqual(self.generate('b2070fb7fac1ef10893c24c3')[2], 0)
+        self.assertEqual(self.generate('b207480fbfc248c1e81048890424c3')[2], 2)
+        self.assertEqual(self.generate('b607480fbfc248c1e81048890424c3')[2], 0)
 
     def test_overwrite_and_branch_merge(self):
         self.assertEqual(self.generate('31c048890424c3')[2],0)

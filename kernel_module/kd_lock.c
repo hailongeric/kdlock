@@ -159,6 +159,7 @@ noinline void kd_spin_fast_release_gate(struct kd_spin_fast_cpu *fast)
 /* Keep ticket objects and the general route's stack protector outside the
  * common native return. The saved kernel rsp still belongs to the original
  * guest hook and is passed unchanged through the cold acquisition helper. */
+#if 0 /* Direct-API experiment: unified selection/hotlock entry is disabled. */
 static noinline void kd_raw_spin_unlock_slow(raw_spinlock_t *lock)
 {
 	struct kd_spin_ref ref = { 0 };
@@ -280,6 +281,8 @@ void kd_spin_dispatch_clobber_unlock_v1(raw_spinlock_t *lock, unsigned long sp,
 {
 	kd_spin_dispatch_unlock(lock, sp, ip);
 }
+
+#endif
 
 #include "lock/mutex_calls.inc"
 

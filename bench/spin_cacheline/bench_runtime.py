@@ -190,10 +190,22 @@ def validate_measurement(m, spec, iterations):
             m["finished_ns"] == max(w["finished_ns"] for w in ws) and
             m["wall_ns"] == m["finished_ns"] - m["started_ns"] > 0,
             "incorrect client aggregation", "DATA_ERROR")
-    require(len(m["before"]) == len(m["after"]) == 16 and
-            all(after - before == (m["completed"] if i < n else 0)
-                for i, (before, after) in enumerate(zip(m["before"], m["after"]))),
-            "payload counter delta mismatch", "DATA_ERROR")
+    require(len(m["before"]) == len(m["after"]) == 16,
+            "invalid snapshot shape", "DATA_ERROR")
+    workload = spec.get('workload', 'cacheline')
+    require(m.get('workload', 'cacheline') == workload, 'workload differs', 'DATA_ERROR')
+    if workload == 'rcuht':
+        before, after = m['before'], m['after']
+        require(n == 0 and m.get('hash_integrity_ok') is True and
+                all(a >= b for a, b in zip(after, before)) and
+                after[0] - before[0] == m['completed'] and
+                before[0] == sum(before[1:4]) and after[0] == sum(after[1:4]) and
+                not any(before[4:] + after[4:]),
+                'hash outcome/integrity mismatch', 'DATA_ERROR')
+    else:
+        require(all(after - before == (m["completed"] if i < n else 0)
+                    for i, (before, after) in enumerate(zip(m["before"], m["after"]))),
+                "payload counter delta mismatch", "DATA_ERROR")
 
 
 def classify_bodies(before, after, completed):

@@ -34,26 +34,8 @@
 
 #define UINT64_MAX 0xffffffffffffffffL
 
-#ifdef KERNEL_SYNCSTRESS
-#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
-	({                                                                     \
-		typeof(ptr) __PTR = (ptr);                                     \
-		__unqual_scalar_typeof(*ptr) VAL;                              \
-		for (;;) {                                                     \
-			VAL = READ_ONCE(*__PTR);                               \
-			if (cond_expr)                                         \
-				break;                                         \
-			cpu_relax();                                           \
-			if (need_resched()) {                                  \
-				preempt_enable();                              \
-				schedule();                                    \
-				preempt_disable();                             \
-			}                                                      \
-		}                                                              \
-		(typeof(*ptr))VAL;                                             \
-	})
-#else
-#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
+/* Wait on the per-CPU shadow stack without an explicit scheduling point. */
+#define komb_cond_load_relaxed(ptr, cond_expr)                                 \
 	({                                                                     \
 		typeof(ptr) __PTR = (ptr);                                     \
 		__unqual_scalar_typeof(*ptr) VAL;                              \
@@ -65,24 +47,6 @@
 		}                                                              \
 		(typeof(*ptr))VAL;                                             \
 	})
-
-//if (need_resched()) {
-//	schedule_preempt_disabled();
-//}
-#endif
-
-#ifndef smp_cond_load_acquire_sched
-#define smp_cond_load_acquire_sched(ptr, cond_expr)                            \
-	({                                                                     \
-		__unqual_scalar_typeof(*ptr) _val;                             \
-		_val = smp_cond_load_relaxed_sched(ptr, cond_expr);            \
-		smp_acquire__after_ctrl_dep();                                 \
-		(typeof(*ptr))_val;                                            \
-	})
-#endif
-
-#define atomic_cond_read_acquire_sched(v, c)                                   \
-	smp_cond_load_acquire_sched(&(v)->counter, (c))
 
 struct shadow_stack {
 	/*
@@ -188,9 +152,7 @@ static inline bool check_irq_node(struct komb_node *node)
 
 __always_inline void clear_locked_set_completed(struct komb_node *lock)
 {
-	/* Count only completed borrowed stacks, before their release wake. */
-	this_cpu_inc(tc_completed);
-	smp_store_release(&lock->locked_completed, 1);
+	WRITE_ONCE(lock->locked_completed, 1);
 }
 
 __always_inline void clear_pending_set_locked(struct qspinlock *lock)
@@ -471,7 +433,6 @@ run_combiner(struct qspinlock *lock, struct komb_node *curr_node)
 	}
 #else
 	ptr->counter_val = 0;
-	this_cpu_inc(tc_batches);
 
 	print_debug("Combiner %d giving control to %d\n", smp_processor_id(),
 		    curr_node->cpuid);
@@ -560,7 +521,7 @@ __komb_spin_lock_longjmp(struct qspinlock *lock, int tail,
 
 		int count __maybe_unused = 0;
 
-		smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
+		komb_cond_load_relaxed(&curr_node->locked, !(VAL));
 
 		/*while (READ_ONCE(curr_node->locked)) {
 			cpu_relax();
@@ -644,7 +605,7 @@ __komb_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	/*
 	 * contended path; wait for next if not observed yet, release.
 	 */
-	smp_cond_load_relaxed_sched(&curr_node->next, (VAL));
+	komb_cond_load_relaxed(&curr_node->next, (VAL));
 	next_node = curr_node->next;
 #ifdef DEBUG_KOMB
 	BUG_ON(next_node == NULL);
@@ -741,7 +702,7 @@ release:
 }
 #pragma GCC pop_options
 
-__attribute__((noipa)) noinline notrace int
+__attribute__((noipa)) noinline notrace static int
 __komb_spin_lock_slowpath(struct qspinlock *lock)
 {
 	struct komb_node *curr_node;
@@ -825,7 +786,7 @@ void komb_spin_lock_init(struct qspinlock *lock)
 	atomic_set(&lock->val, 0);
 }
 
-__attribute__((noipa)) noinline notrace u64 *
+__attribute__((noipa)) noinline notrace static u64 *
 get_shadow_stack_ptr(void)
 {
 	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
@@ -833,10 +794,10 @@ get_shadow_stack_ptr(void)
 	return &(ptr->local_shadow_stack_ptr);
 }
 
-__attribute__((noipa)) noinline notrace u64 *
-get_komb_rsp_ptr(void)
+__attribute__((noipa)) noinline notrace static struct komb_node *
+get_komb_node(void)
 {
-	return &this_cpu_ptr(&komb_nodes[0])->rsp;
+	return this_cpu_ptr(&komb_nodes[0]);
 }
 
 /*
@@ -863,14 +824,106 @@ get_komb_rsp_ptr(void)
  * registers.
  */
 
-/* The six-register save/switch/restore lives in context.S so compiler
- * frame-pointer prologues cannot change the continuation layout. */
+/* Restore the upstream C inline-assembly entry verbatim (whitespace aside).
+ * Its hidden CALLs/RSP changes require inspecting the built function before
+ * loading: the continuation must have only the six explicit register saves.
+ */
+#pragma GCC push_options
+#pragma GCC optimize("O3")
+__attribute__((noipa)) noinline notrace void
+komb_spin_lock_slowpath(struct qspinlock *lock)
+{
+	register int ret_val;
+	/*
+	 * We must save the callee-saved registers now, since we will resume
+	 * execution at the return address currently at top of stack. If we
+	 * defer saving to when context switch happens later, the C function
+	 * may have saved callee-saved registers and will restore them before
+	 * returning.
+	 *
+	 * Due to unstructured control flow, do the saving now.
+	 *
+	 * NOTE: When we touch the stack inside this function, so a 16-byte
+	 * stack's alignment will change to 8-byte alignment when callq pushes
+	 * our return address, but Linux only assumes 8-byte stack alignment,
+	 * so it isn't a problem for us.
+	 */
+#ifdef KOMB_DEBUG
+#ifdef ENABLE_IRQS_CHECK
+	BUG_ON(irqs_disabled());
+#endif
+#endif
+	//local_irq_disable();
+	asm volatile("pushq %%rbp\n"
+		     "pushq %%rbx\n"
+		     "pushq %%r12\n"
+		     "pushq %%r13\n"
+		     "pushq %%r14\n"
+		     "pushq %%r15\n"
+		     :
+		     :
+		     : "memory");
+	asm volatile("callq %P0\n"
+		     "movq %%rsp, %c1(%%rax)\n"
+		     :
+		     : "i"(get_komb_node), "i"(offsetof(struct komb_node, rsp))
+		     : "memory");
+	asm volatile("callq %P0\n"
+		     "movq (%%rax), %%rsp\n"
+		     :
+		     : "i"(get_shadow_stack_ptr)
+		     : "memory");
+	//local_irq_enable();
+
+	ret_val = __komb_spin_lock_slowpath(lock);
+
+	//local_irq_disable();
+	if (ret_val) {
+		asm volatile("callq %P0\n"
+			     "movq (%%rax), %%rsp\n"
+			     "popq %%r15\n"
+			     "popq %%r14\n"
+			     "popq %%r13\n"
+			     "popq %%r12\n"
+			     "popq %%rbx\n"
+			     "popq %%rbp\n"
+			     "retq\n"
+			     :
+			     : "i"(get_shadow_stack_ptr)
+			     : "memory");
+	} else {
+		asm volatile("callq %P0\n"
+			     "movq %%rsp, (%%rax)\n"
+			     :
+			     : "i"(get_shadow_stack_ptr)
+			     : "memory");
+		asm volatile("callq %P0\n"
+			     "movq %c1(%%rax), %%rsp\n"
+			     :
+			     : "i"(get_komb_node),
+			       "i"(offsetof(struct komb_node, rsp))
+			     : "memory");
+		asm volatile("popq %%r15\n"
+			     "popq %%r14\n"
+			     "popq %%r13\n"
+			     "popq %%r12\n"
+			     "popq %%rbx\n"
+			     "popq %%rbp\n"
+			     "retq\n"
+			     :
+			     :
+			     : "memory");
+	}
+	//local_irq_enable();
+}
+#pragma GCC pop_options
 
 __attribute__((noipa)) noinline notrace void
 komb_spin_lock(struct qspinlock *lock)
 {
 	u32 val, cnt;
-	struct komb_node *curr_node = NULL;
+	/* With IRQ checks disabled, this local is only used by debug checks. */
+	struct komb_node *curr_node __maybe_unused = NULL;
 
 	/*
 	 * Fastpath
@@ -1015,7 +1068,7 @@ queue:
 			WRITE_ONCE(prev_node->next, curr_node);
 
 			print_debug("IRQ going to waiting for lock\n");
-			smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
+			komb_cond_load_relaxed(&curr_node->locked, !(VAL));
 		}
 
 		curr_node->rsp = prev_rsp;
@@ -1055,7 +1108,7 @@ queue:
 
 		print_debug("IRQ got the lock\n");
 
-		smp_cond_load_relaxed_sched(&curr_node->next, (VAL));
+		komb_cond_load_relaxed(&curr_node->next, (VAL));
 		next_node = curr_node->next;
 
 #ifdef DEBUG_KOMB
@@ -1229,17 +1282,17 @@ komb_spin_unlock(struct qspinlock *lock)
 
 	struct komb_node *curr_node = per_cpu_ptr(&komb_nodes[0], from_cpuid);
 
-	/* Payload has reached its delegated unlock; no translation-start proxy. */
-	this_cpu_inc(tc_delegated);
 
 #ifdef WWJUMP
 	struct komb_node *next_node = ptr->next_node_ptr;
 
 	uint64_t counter = ptr->counter_val;
 
+	/* Batch progress depends on queue eligibility and budget, not scheduler
+	 * requests. Keep the protocol's successor and batch-limit checks. */
 	if (next_node == NULL || next_node->next == NULL ||
 	    check_irq_node(next_node) || check_irq_node(next_node->next) ||
-	    counter >= komb_batch_size || need_resched()) {
+	    counter >= komb_batch_size) {
 		incoming_rsp_ptr = &(ptr->local_shadow_stack_ptr);
 		ptr->curr_cs_cpu = -1;
 		ptr->prev_cs_cpu = curr_node->cpuid;

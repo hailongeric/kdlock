@@ -51,6 +51,7 @@ struct kd_comm_key kd_spin_target;
 module_param(target_process, charp, S_IRUGO);
 MODULE_PARM_DESC(target_process, "task comm routed through kdlock hooks");
 
+#if 0 /* Direct-API experiment: do not install global lock selectors. */
 static int __is_kd_test(void)
 {
 	return kd_spin_task_selected() ? 2 : 0;
@@ -63,6 +64,7 @@ static int kd_mutex_dispatch_enabled(void)
 {
 	return 2;
 }
+#endif
 
 /* Error labels unwind only initialized services, in reverse dependency order.
  * Optional component selftests finish before any guest callback is published. */
@@ -110,6 +112,8 @@ static int __init kdlock_km_init(void)
 		goto err_mutex;
 #endif
 
+#if 0 /* Temporarily disable unified spin/mutex interception for direct calls.
+       * Keep this block together with its removal/error unwind below. */
 	/* Ordinary callers use clobber v1. The legacy callbacks remain necessary
 	 * for explicit nested APIs and modules compiled with the old caller ABI;
 	 * supporting those callers does not require an older kernel installer. */
@@ -123,14 +127,18 @@ static int __init kdlock_km_init(void)
 		__kd_mutex_lock_clobber_v1, __kd_mutex_unlock_clobber_v1);
 	if (ret)
 		goto err_spin_hooks;
+#endif
 
-	KD_PR_INFO("kd kernel module init: spin_abi=clobber-v1 mutex_abi=clobber-v1 target_process=%s\n",
-		   target_process);
+	KD_PR_INFO("kd kernel module init: direct spin API; unified hooks disabled\n");
 	return 0;
 
+#if 0 /* Paired with the disabled installers above. */
 err_spin_hooks:
 	kd_spin_static_remove();
+#endif
+#ifdef KDLOCK_SELFTEST
 err_mutex:
+#endif
 	kd_mutex_exit();
 err_spinlock:
 	kd_spinlock_exit();
@@ -152,8 +160,10 @@ err_source:
  * This RCU wait does not by itself protect the guest's unguarded hook readers. */
 static void __exit kdlock_km_exit(void)
 {
+#if 0 /* Direct-API experiment: this module installed no global hooks. */
 	kd_spin_static_remove();
 	kd_mutex_static_remove();
+#endif
 
 	synchronize_rcu();
 	kd_mutex_exit();

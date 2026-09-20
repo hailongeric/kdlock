@@ -11,7 +11,11 @@ struct sc_slot {
 
 static struct sc_slot sc_data[SC_SLOTS];
 static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
+#include "direct.h"
 
+#ifdef SC_HASH_PAYLOAD
+#include "hash_payload.h"
+#else
 #define SC_TOUCH(i) WRITE_ONCE(sc_data[i].value, READ_ONCE(sc_data[i].value) + 1)
 #define SC_TOUCH_1 SC_TOUCH(0);
 #define SC_TOUCH_2 SC_TOUCH_1 SC_TOUCH(1);
@@ -25,14 +29,45 @@ static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 #define SC_BODY(n) \
 static __attribute__((noipa)) void sc_body_##n(void) \
 { \
-	spin_lock(&sc_lock); \
+	SC_LOCK(n); \
 	SC_TOUCH_##n \
-	spin_unlock(&sc_lock); \
+	SC_UNLOCK(); \
 }
 SC_BODY(1)
 SC_BODY(2)
 SC_BODY(4)
 SC_BODY(8)
 SC_BODY(16)
+#endif
+
+/* Register the CALL continuation, never a C wrapper/prologue. Only the chosen
+ * body is published in this session, after module load and before timing. */
+static inline int sc_prepare(unsigned int lines)
+{
+#ifdef SC_DIRECT_KDLOCK
+	unsigned long entry;
+	switch (lines) {
+#ifdef SC_HASH_PAYLOAD
+	case 0: entry = (unsigned long)sc_entry_0; break;
+#else
+	case 1: entry = (unsigned long)sc_entry_1; break;
+	case 2: entry = (unsigned long)sc_entry_2; break;
+	case 4: entry = (unsigned long)sc_entry_4; break;
+	case 8: entry = (unsigned long)sc_entry_8; break;
+	case 16: entry = (unsigned long)sc_entry_16; break;
+#endif
+	default: return -EINVAL;
+	}
+	return kd_spin_prepare((struct qspinlock *)&sc_lock, entry,
+			       KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+#else
+#ifdef SC_HASH_PAYLOAD
+	return lines == 0 ? 0 : -EINVAL;
+#else
+	return lines == 1 || lines == 2 || lines == 4 || lines == 8 || lines == 16 ?
+		0 : -EINVAL;
+#endif
+#endif
+}
 
 #endif

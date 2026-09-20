@@ -1,8 +1,9 @@
 # TCLock 原生委托后端
 
-这个独立实验使用完整 TCLock spinlock 执行路径，经现有 `kdclobber2` 普通 spin
-hook 接入同一个 `spin_cacheline` 工作负载。锁字、队列、pending、shadow 栈、
-六个 callee-saved 寄存器保存、物理 RSP 切换及 WWJUMP 均来自上游 TCLocks。
+当前实验使用 TCLock spinlock 的 Linux 6.1 移植版，`spin_cacheline` 直接调用导出的
+`komb_spin_lock/unlock`，调用者配对管理抢占。统一 hook 安装/撤销已经暂时注释。锁字、队列、pending、shadow 栈、
+六个 callee-saved 寄存器保存、物理 RSP 切换及 WWJUMP 机制来自上游 TCLocks。
+编译分支、换栈汇编、计数和测试环境存在差异，不等同于上游 RCUHT 原样构建。
 不使用 kdlock 的 shadow lock、JIT、翻译注册表、寄存器包或 daemon。
 
 来源固定为 [TCLocks](https://github.com/rs3lab/TCLocks) 的提交
@@ -13,27 +14,40 @@ hook 接入同一个 `spin_cacheline` 工作负载。锁字、队列、pending�
 
 ## 移植边界
 
-- 采用上游内核版的纯轮询路径；不启用 rcuht 的 `KERNEL_SYNCSTRESS` 分支，
-  该分支会在 per-CPU shadow 栈上调用 schedule。普通入口由接口层管理 preemption。
+- 等待节点采用纯轮询，已删除旧 `KERNEL_SYNCSTRESS` 等待宏中的调度分支。
+  普通入口由接口层管理 preemption。
+- 2026-09-20 按用户选择对齐 RCUHT 的检查设置：不定义 `ENABLE_IRQS_CHECK`，
+  并以 `UBSAN_SANITIZE := n` 构建本模块。仅用于 IRQ 开启的 task 上下文单锁
+  样例，不提供 IRQ/嵌套锁入口保证。三种 direct workload 同样关闭 UBSAN；
+  运行内核和 Linux 原生锁内部仍保持原配置。
 - 保留 WWJUMP、NUMA 队列选择和六条 cacheline 预取。批次上限为上游内核默认
   1024，与当前 kdlock 一致；上游 rcuht 自定义的 262144 不用于本轮。
-- 将 C 内联切栈汇编移至 `context.S`，保持六寄存器顺序和原生 CALL 续点。
-  普通 C 调用可能破坏参数，故入口在 R12 保存锁地址。保留当前内核的 frame
-  pointer/缓解配置及 return thunk；自定义切栈不承诺完整栈展开。
-  本轮 `W=1` 构建成功但仍有 objtool 栈/帧指针告警，原始构建日志保留。
-- 增加分配失败回收和 Linux 6.1 类型适配；完成通知明确使用 release store。
-  两个只读 per-CPU 计数分别记录抵达代理 unlock 与离开借用栈后的完成发布，
-  排空后两者须相等。`quiescent` 核对锁字及所有 CPU 的队列/上下文状态。
+- 随后按用户要求删除 `need_resched()` 批次截断条件，并删除公共哈希表循环的
+  `cond_resched()` 调度点和开关。代理批次仍按后继可用性、IRQ 节点及额度结束。
+  这是实验策略变更，与上游原有批次退出条件存在差异。
+- 2026-09-20 后续按用户要求恢复上游 C 内联汇编：`komb.c` 内的慢路径与
+  `combiner.c` 内的 context switch 保持原六寄存器顺序、RSP 交接和 CALL 续点。
+  不再构建独立 `context.S`。加载前检查实际机器码没有破坏续点的额外栈序言，
+  隐式调用的两个 helper 只改写 RAX/flags，保留锁参数。
+  慢路径恢复上游手写 `retq`；context switch 的 C 返回仍由当前内核编译选项
+  生成 return thunk。未修改内核配置；objtool 的换栈及 naked-return 告警保留。
+- 增加分配失败回收和 Linux 6.1 类型适配；完成发布恢复上游 `WRITE_ONCE`。
+  删除额外的 `tc_delegated/tc_completed/tc_batches` 存储、更新及 sysfs 参数。
+  上游批次控制字段仍保留。`quiescent` 在计时外核对锁字及所有 CPU 的队列/
+  上下文状态；本轮只验证负载正确性与排空，不测量实际代理次数或比例。
 
-`provider.c` 只接管 `target_lock` 指定的普通 spinlock，其他锁调用原生实现。
-这是可恢复 benchmark 的独立后端，不是任意临界区的通用透明替换：本轮负载只
-访问全局计数器，没有 task/per-CPU 数据、嵌套锁、服务调用或中途调度。
-原版 TCLock 的完整慢路径保留在 `komb.c`，不据本轮单锁结果声称其他场景已验证。
+`provider.c` 只初始化/释放 TCLock 上下文和提供排空状态。`target_lock` 在依赖
+后端的样例加载后、worker 启动前绑定，只供诊断读取；不在 lock/unlock 路径筛选。
+这是可恢复 benchmark 的独立后端，不是任意临界区的通用透明替换：已测正文为
+全局 cacheline 更新及哈希表操作/调用者栈统计，没有 task/per-CPU 身份访问、
+嵌套锁、服务调用或临界区内调度。`komb.c` 保留上游主委托流程，但选择了不同于
+RCUHT 的编译分支；不据单锁结果声称其他场景已验证。源码、冻结 ELF 和配置的
+逐项核对见 [2026-09-20 上游一致性审查](../bench/tclock_compare/results/20260920-upstream-audit.md)。
 
 所有构建和运行遵循 [操作手册](../docs/AGENTS.md)，只在 recovery guest。
-模块互斥安装现有 spin hook，不改内核；必须保留 source workload，直到客户端
-全部退出、`quiescent=1`、delegated/completed 相等，再卸载后端，最后卸载 workload。
-该已知调用者边界不是通用 hook 热卸载保证。不得强制卸载。
+不安装 spin hook、不改内核；先加载后端，再加载直接依赖它的 workload。客户端
+全部退出、`quiescent=1` 后，清除 `target_lock`，先卸载
+workload 再卸载后端。不得强制卸载。
 
 ## 与 Linux 原生 spinlock 的协议兼容边界
 
@@ -58,15 +72,15 @@ Linux qspinlock 与 TCLock 两套后端。** 当前目标锁必须在整个会�
 无竞争 CAS 或个别 pending 交接可能表面正常，不能据此证明慢路径互操作。
 
 TCLock 还使用 combiner、IRQ 和乱序解锁状态。代理 unlock 必须配合
-[context.S](context.S) 保存续点、切栈，离开借用栈后才能 release 发布完成；
+[combiner.c](combiner.c) 保存续点、切栈，离开借用栈后才能发布完成；
 直接替换为原生 unlock 会绕过这套协议。所谓“其他 CPU 抢锁”只允许按协议
 竞争并在条件满足后获取，不表示可以强行夺走仍由执行者持有的锁。
 
 因此保留 API 的前提是同一目标锁的所有访问入口都统一到兼容协议。当前
-[provider.c](provider.c) 只接管目标普通 spin 入口；它没有给这把目标锁提供
+[provider.c](provider.c) 的旧 hook 路径已暂停，当前样例统一直接调用 TCLock；它没有给这把目标锁提供
 未修改原生调用者、绕过 hook 的调用、IRQ/BH/irqsave 或 trylock 的混用保证。
 三方 benchmark 在不同会话中切换后端，不是这些调用者同时竞争同一把锁的测试。
-切换原生栈也不会自动切换 Linux `current`、GS 或 per-CPU 身份；前述全局计数器
+切换原生栈也不会自动切换 Linux `current`、GS 或 per-CPU 身份；前述单锁
 负载的通过结果不扩大为任意临界区的透明替换保证。
 
 kdlock 的选择不同：原生参与者只访问 Linux 锁 **L**，代理队列使用私有字 **S**，
@@ -82,14 +96,25 @@ kdlock 的选择不同：原生参与者只访问 Linux 锁 **L**，代理队列
 | 文件 | 用途 |
 | --- | --- |
 | `komb.c` | 上游排队、combiner、WWJUMP、unlock 和 shadow 栈管理 |
-| `context.S` | 六寄存器保存/恢复和物理栈切换 |
-| `provider.c` / `compat.h` | 实验 hook、目标锁身份、preemption 与只读计数 |
+| `combiner.c` | 上游 C 内联汇编的六寄存器保存/恢复和物理栈切换 |
+| `provider.c` / `compat.h` | 直接 API 后端生命周期、计时外目标绑定与排空状态 |
 | `upstream/` / `UPSTREAM.json` / `port.patch` | 不变来源及可审核移植差异 |
 
 真实汇编的基础验证为
 [`tests/unit/spin/test_tclock_context.py`](../tests/unit/spin/test_tclock_context.py)。
 三方运行方法、实际执行结果和性能解释维护在
 [`bench/tclock_compare/`](../bench/tclock_compare/README.md)。
+当前 cacheline 成绩见 [9/20 三方重测](../bench/tclock_compare/results/20260920-cacheline-current.md)：
+150/150 场通过，TCLock 二十线程 1/16 cacheline 吞吐为 4.992/3.341 Mops/s；
+沿用 C 内联换栈、无显式调度点及无额外计数设置，代理量仍未测。
+哈希表成绩见 [9/20 哈希表 JIT 修复与三方重测](../bench/tclock_compare/results/20260920-kd-hash-jit.md)：
+三个后端统一调整摘链/计数顺序后，九场样例及正式 75/75 场通过正确性和排空
+检查；TCLock 四/二十线程吞吐为 2.516/5.129 Mops/s，代理量仍未测。
+此前 [删除调度检查和调度点](../bench/tclock_compare/results/20260920-no-resched.md)：
+六场 smoke、四线程各五轮全部通过正确性及排空检查；四线程为 Linux 的 0.898×。
+此前仍保留调度检查的 [C 内联汇编、无额外计数](../bench/tclock_compare/results/20260920-inline-no-counters.md)：
+Linux/TCLock 正式 50/50 场通过数据及排空检查，代理量未测；没有新的 kdlock 性能成绩。
+此前仍带执行计数的对照见 [IRQ/模块 UBSAN 对齐](../bench/tclock_compare/results/20260920-irq-ubsan.md)。
 最近完整三方基线见 [9/19 五档线程复测](../bench/tclock_compare/results/20260919-thread-scaling.md)。
 随后 kdlock 的 [node/gate 隔离修复](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
 只重测旧/新 kdlock，没有重测 TCLock/Linux；此前长单线程成本仍见

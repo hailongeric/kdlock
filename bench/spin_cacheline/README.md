@@ -17,8 +17,13 @@
 
 ## 冻结性能结果
 
-当前本地发现版本仅有[36 场采样组件对照](../hotlock_record/results/20260919-local-discovery.md)，
-尚未重测完整 spinlock 吞吐及 JIT 比例。以下完整操作数据属于此前冻结版本。
+当前直接 API 版本已完成[9/20 cacheline 三方重测](../tclock_compare/results/20260920-cacheline-current.md)：
+150/150 场通过，20 线程 kdlock 吞吐为 3.715/3.654 Mops/s（1/16 cacheline），
+分别为 Linux 的 0.905×/1.501×；40 场竞争 kdlock 均有实际 JIT。
+运行入口见 [tclock_compare](../tclock_compare/README.md)，统一 hook/hotlock 筛选暂停。
+以下发现策略和完整操作数据属于此前冻结版本。
+
+此前本地发现版本保留[36 场采样组件对照](../hotlock_record/results/20260919-local-discovery.md)。
 
 [热锁批量采样](../hotlock_record/results/20260919-batched.md)完成 90 场采样函数
 和 40 场完整操作对照：20 线程稳态 −0.41%/+1.14%，JIT 约 99.7%；主要收益

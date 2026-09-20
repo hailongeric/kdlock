@@ -1,6 +1,10 @@
 # 内核 provider 代码地图
 
-先读 `kd_main.c` 的 hook 安装，再读 `kd_lock.c` 的路由，随后进入对应后端。
+当前直接 API 实验将 `kd_main.c` 的统一 spin/mutex hook 安装和撤销暂时注释，
+`kd_lock.c` 的 spin 筛选路径也已停用。直接入口位于 `kd_spinlock.c`，
+调用者使用 `include/kd_spin_direct.h` 的 clobber-v1 现场约定，并在计时前调用
+`kd_spin_prepare` 登记入口。公开 unlock 处理快速 S/L owner、ticket 和 native ACK；
+内部 shadow/frame 解锁保留为 `kd_spin_unlock_protocol`。下文 hook 路由是暂停的原接入设计。
 原生锁、私有队列、逻辑 frame 和来源 pin 各自承担不同职责。
 
 默认构建要求 `kdclobber2` 的 `KD_SPIN_CLOBBER_V1` 和 `KD_MUTEX_CLOBBER_V1` 接口；缺失时编译直接报错，

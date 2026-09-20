@@ -205,7 +205,7 @@ static void kd_shadow_enter(unsigned int previous)
 static void kd_shadow_unlock(void)
 {
 	KD_SHADOW_CHECK(atomic_xchg(&kd_shadow_test.inside, 0) == 1);
-	kd_spin_unlock(kd_shadow_test.lock);
+	kd_spin_unlock_protocol(kd_shadow_test.lock);
 }
 
 static void kd_shadow_owner(void)
@@ -249,7 +249,7 @@ static void kd_shadow_owner(void)
 	KD_SHADOW_CHECK(READ_ONCE(successor->count) == 1);
 	KD_SHADOW_CHECK(!READ_ONCE(kd_shadow_test.successor_acquired));
 	if (!KD_SHADOW_CHECK(!kd_spin_trylock(kd_shadow_test.word)))
-		kd_spin_unlock(kd_shadow_test.lock);
+		kd_spin_unlock_protocol(kd_shadow_test.lock);
 	smp_store_release(&kd_shadow_test.observed, true);
 }
 

@@ -1,8 +1,9 @@
-"""Run the actual TCLock context assembly with synthetic native continuations.
+"""Run the production C inline assembly with synthetic native continuations.
 
 No kernel module is loaded. Check six callee-saved registers, RSP and both
 unexecuted acquisition and delegated unlock returns before the live experiment.
 """
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -63,18 +64,22 @@ bad_context:
 C = r'''
 #include <assert.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 typedef uintptr_t word;
-extern void komb_context_switch(word *,word *);
+extern void komb_context_switch(void *,void *);
 extern void komb_spin_lock_slowpath(void *);
 extern void checked_call(void *,void *,void *);
-static word main_sp, worker_sp, node_sp, shadow_sp;
+static word main_sp, worker_sp, shadow_sp;
+/* The production node declaration is inserted before this fixture. */
+static struct komb_node node;
+#define node_sp node.rsp
 static word worker_stack[4096] __attribute__((aligned(16)));
 static word shadow_stack[4096] __attribute__((aligned(16)));
 static int visits, mode, phase, effects;
-word *get_komb_rsp_ptr(void) { return &node_sp; }
-word *get_shadow_stack_ptr(void) { return &shadow_sp; }
+__attribute__((noipa)) struct komb_node *get_komb_node(void) { return &node; }
+__attribute__((noipa)) word *get_shadow_stack_ptr(void) { return &shadow_sp; }
 static void worker(void)
 {
     for (int i=0;i<128;i++) {
@@ -83,7 +88,7 @@ static void worker(void)
     }
     abort();
 }
-int __komb_spin_lock_slowpath(void *lock)
+__attribute__((noipa)) int __komb_spin_lock_slowpath(void *lock)
 {
     word address=(word)&address;
     assert(lock==(void *)0x1234);
@@ -124,7 +129,7 @@ int main(void)
         assert(shadow_sp==(word)(shadow_stack+4096));
     }
     assert(effects==128);
-    puts("PASS TCLock: 128 switches, 64 acquire returns, 64 unlock continuations; six GPRs/RSP intact");
+    puts("PASS TCLock C inline asm: 128 switches, 64 acquire returns, 64 unlock continuations; six GPRs/RSP intact");
 }
 '''
 
@@ -134,11 +139,39 @@ def main():
         raise RuntimeError('execute machine-code tests only in recovery guest')
     with tempfile.TemporaryDirectory(prefix='tc-context-') as temporary:
         p = Path(temporary)
-        (p/'test.c').write_text(C)
+        # Compile the actual production function bodies, not a second assembly
+        # implementation. Kernel-only surrounding code is replaced by stubs.
+        source = (ROOT/'tclock_backend/komb.c').read_text()
+        marker = '#pragma GCC push_options\n#pragma GCC optimize("O3")\n__attribute__((noipa)) noinline notrace void\nkomb_spin_lock_slowpath('
+        start = source.index(marker)
+        end = source.index('#pragma GCC pop_options', start) + len('#pragma GCC pop_options')
+        switch = (ROOT/'tclock_backend/combiner.c').read_text()
+        switch = switch[switch.index('#pragma GCC push_options'):]
+        header = (ROOT/'tclock_backend/include/spinlock/komb.h').read_text()
+        node = re.search(r'struct komb_node \{.*?\n\};', header, re.S).group(0)
+        prefix = ('#include <stdint.h>\n'
+                  'typedef uint8_t u8; typedef uint16_t u16;\n'
+                  '#define noinline __attribute__((noinline))\n'
+                  '#define notrace __attribute__((no_instrument_function))\n')
+        # The public test declaration uses the real opaque lock pointer type.
+        fixture = C.replace('komb_spin_lock_slowpath(void *)',
+                            'komb_spin_lock_slowpath(struct qspinlock *)')
+        (p/'test.c').write_text(prefix + node + '\n' + fixture)
+        declarations = ('#include <stddef.h>\n'
+                        'struct komb_node *get_komb_node(void);\n'
+                        'uint64_t *get_shadow_stack_ptr(void);\n'
+                        'int __komb_spin_lock_slowpath(void *);\n')
+        (p/'inline.c').write_text(prefix + node + '\n' + declarations + switch +
+                                 '\n' + source[start:end] + '\n')
         (p/'check.S').write_text(CHECK)
-        subprocess.run(['cc','-O2','-fno-omit-frame-pointer','-mno-red-zone',
-                        '-Wall','-Wextra','-Werror','-DTC_CONTEXT_TEST',
-                        str(ROOT/'tclock_backend/context.S'),str(p/'check.S'),
+        flags = ['-O2','-fno-omit-frame-pointer','-mno-red-zone','-fno-pie',
+                 '-Wall','-Wextra','-Werror','-Wno-unused-parameter']
+        # Only the production functions use the kernel's 8-byte stack ABI.
+        # The userspace harness must retain 16-byte alignment for libc calls.
+        subprocess.run(['cc', *flags, '-mpreferred-stack-boundary=3', '-c',
+                        str(p/'inline.c'), '-o', str(p/'inline.o')],check=True,timeout=30)
+        subprocess.run(['cc', *flags, '-no-pie', str(p/'inline.o'),
+                        str(p/'check.S'),
                         str(p/'test.c'),'-o',str(p/'test')],check=True,timeout=30)
         subprocess.run([p/'test'],check=True,timeout=10)
 

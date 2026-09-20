@@ -83,13 +83,15 @@ int kd_exe_init(void)
 	kd_jit_timing_reset();
 	/* Resolve unlock function addresses dynamically */
 	end_point_count = 0;
-	raw_spin_lock_addr = kallsyms_lookup_name("_raw_spin_lock");
-	raw_spin_unlock_addr = kallsyms_lookup_name("_raw_spin_unlock");
+	/* Direct APIs are linked into this provider; kallsyms need not expose a
+	 * module's symbols while its init function is still running. */
+	raw_spin_lock_addr = (unsigned long)kd_spin_lock;
+	raw_spin_unlock_addr = (unsigned long)kd_spin_unlock;
 	end_points[end_point_count] = raw_spin_unlock_addr;
 	if (raw_spin_unlock_addr)
 		end_point_count++;
-	clobber_spin_lock_addr = kallsyms_lookup_name("kd_raw_spin_lock_clobber_v1");
-	clobber_spin_unlock_addr = kallsyms_lookup_name("kd_raw_spin_unlock_clobber_v1");
+	clobber_spin_lock_addr = (unsigned long)kd_spin_lock_clobber_v1;
+	clobber_spin_unlock_addr = (unsigned long)kd_spin_unlock_clobber_v1;
 	if (clobber_spin_unlock_addr)
 		end_points[end_point_count++] = clobber_spin_unlock_addr;
 	mutex_lock_addr = kallsyms_lookup_name("mutex_lock");

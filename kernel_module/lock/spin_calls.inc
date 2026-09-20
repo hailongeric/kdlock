@@ -78,12 +78,12 @@ static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
 
 		ret = kd_spin_nested_shadow_push((struct qspinlock *)lock);
 		if (ret) {
-			kd_spin_unlock((struct qspinlock *)lock);
+			kd_spin_unlock_protocol((struct qspinlock *)lock);
 			return ret;
 		}
 		if (kd_exec_frame_lock_push(active_frame, (unsigned long)lock,
 					    kind, NULL)) {
-			kd_spin_unlock((struct qspinlock *)lock);
+			kd_spin_unlock_protocol((struct qspinlock *)lock);
 			kd_spin_nested_shadow_remove((struct qspinlock *)lock);
 			return -E2BIG;
 		}
@@ -226,7 +226,7 @@ int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
 	 * logical-parent request protocol above, never another CPU's ticket. */
 	if (frame->outer_unlock_hook && frame->outer_unlock_hook->released)
 		return 0;
-	kd_spin_unlock((struct qspinlock *)lock);
+	kd_spin_unlock_protocol((struct qspinlock *)lock);
 	return 0;
 }
 

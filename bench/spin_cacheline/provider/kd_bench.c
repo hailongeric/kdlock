@@ -9,7 +9,9 @@ module_param_named(bench_quiet, kd_bench_quiet, bool, 0444);
 MODULE_PARM_DESC(bench_quiet, "Suppress routine per-invocation diagnostics");
 
 unsigned long kd_bench_lock_addr;
-module_param_named(bench_lock_addr, kd_bench_lock_addr, ulong, 0444);
+/* Bind after the dependent workload module loads, before preparation/workers.
+ * The runner freezes it throughout measurement and retirement. */
+module_param_named(bench_lock_addr, kd_bench_lock_addr, ulong, 0644);
 MODULE_PARM_DESC(bench_lock_addr, "Count returned JIT bodies for this lock; 0 disables");
 
 DEFINE_PER_CPU(u64, kd_bench_bodies);

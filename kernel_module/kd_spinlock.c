@@ -329,7 +329,9 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	gate = kd_spin_gate_get((raw_spinlock_t *)lock);
 	if (!gate)
 		goto unpin_native;
-	kd_spin_fast_remember((raw_spinlock_t *)lock, rip, gate);
+	/* Unified cached-native admission is disabled in this direct experiment.
+	 * Keep fast S/L ownership itself: it belongs to the lock protocol. */
+	/* kd_spin_fast_remember((raw_spinlock_t *)lock, rip, gate); */
 	word = request.word = &gate->word;
 	if (preempt_count() == 1) {
 		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
@@ -385,6 +387,36 @@ void kd_spin_lock(struct qspinlock *lock, unsigned long sp, unsigned long ip)
 	kd_spin_lock_abi(lock, sp, ip, 0, KD_ENTRY_ABI_LEGACY);
 }
 EXPORT_SYMBOL_GPL(kd_spin_lock);
+
+/* Preparation is explicitly outside the operation loop and after the source
+ * module is LIVE, so its text can be pinned until retirement. */
+int kd_spin_prepare(struct qspinlock *lock, unsigned long ip, unsigned int abi)
+{
+	struct kd_exe_info *exe;
+
+	if (!lock || !ip || !kd_entry_abi_valid(KD_EXE_LOCK_SPIN, abi))
+		return -EINVAL;
+	if (!kd_source_is_open())
+		return -ESHUTDOWN;
+	if (!kd_spin_gate_get((raw_spinlock_t *)lock))
+		return -ENOMEM;
+	kd_exe_add_abi(0, ip, KD_EXE_LOCK_SPIN, abi);
+	exe = kd_get_exe(0, ip);
+	if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED ||
+	    exe->RIP != ip || exe->entry_abi != abi ||
+	    exe->lock_kind != KD_EXE_LOCK_SPIN || !exe->code_block)
+		return -EINVAL;
+	return READ_ONCE(exe->status_code) == KD_EXE_NATIVE_ONLY ? -EOPNOTSUPP : 0;
+}
+EXPORT_SYMBOL_GPL(kd_spin_prepare);
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_lock_clobber_v1(struct qspinlock *lock, unsigned long sp,
+			unsigned long ip, unsigned long bp)
+{
+	kd_spin_lock_abi(lock, sp, ip, bp, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+}
+EXPORT_SYMBOL_GPL(kd_spin_lock_clobber_v1);
 
 /*
  * No IPA is even more relevant here, because even if assembly is removed,
@@ -475,12 +507,40 @@ kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref *ref)
 }
 
 __attribute__((noipa)) noinline notrace void
-kd_spin_unlock(struct qspinlock *lock)
+kd_spin_unlock_protocol(struct qspinlock *lock)
 {
 	struct kd_spin_request request = kd_spin_unlock_lookup(lock);
 
 	kd_spin_unlock_request(lock, &request);
 }
+
+/* Explicit callers need the same acquisition-provenance release as the old
+ * hook, including the ticket-free S/L owner and unstarted native fallback.
+ * This is protocol routing, independent of comm, frequency or JIT policy. */
+__attribute__((noipa)) noinline notrace void
+kd_spin_unlock(struct qspinlock *lock)
+{
+	struct kd_spin_ref ref = { 0 };
+
+	if (kd_spin_fast_unlock((raw_spinlock_t *)lock))
+		return;
+	if (kd_exec_native_unlock((unsigned long)lock, false))
+		return;
+	if (kd_spin_entry_find((raw_spinlock_t *)lock, &ref)) {
+		kd_spin_unlock_ref(lock, &ref);
+		return;
+	}
+	__raw_spin_unlock((raw_spinlock_t *)lock);
+}
+EXPORT_SYMBOL_GPL(kd_spin_unlock);
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
+			  unsigned long ip, unsigned long bp)
+{
+	kd_spin_unlock(lock);
+}
+EXPORT_SYMBOL_GPL(kd_spin_unlock_clobber_v1);
 
 static __always_inline int kd_spin_trylock(struct qspinlock *word)
 {

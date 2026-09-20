@@ -386,7 +386,7 @@ int kd_spin_jit_abort_cleanup(struct kd_exec_frame *frame)
 	(void)frame;
 	return 0;
 }
-void kd_spin_unlock(struct qspinlock *lock)
+void kd_spin_unlock_protocol(struct qspinlock *lock)
 {
 	struct kd_spin_gate *gate = kd_spin_gate_find((raw_spinlock_t *)lock);
 	CHECK(gate && gate->word.locked == 3);

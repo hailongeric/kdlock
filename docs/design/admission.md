@@ -90,7 +90,14 @@ translation graph budget, not a runtime instruction limit, hard memory/time
 bound or executable-version publication protocol.
 
 New clobber boundaries retain SP/BP facts only; the compiler spills other live
-values. Entry predicates may prove an entire BP-relative spill lies inside the
+values. The separate minimal-entry check tracks uncaptured dependencies per bit.
+Zero extension preserves source-bit dependencies and defines the added high bits;
+sign extension propagates the source sign-bit dependency to those high bits.
+A 32-bit CMOV can therefore leave an already-defined low byte usable even when
+other source bits remain uncaptured. Observing the undefined bits in a store,
+address or branch still refuses admission; this adds no captured registers.
+
+Entry predicates may prove an entire BP-relative spill lies inside the
 256-byte SP-relative checkpoint. All prior checkpoint obligations are joined
 by intersection of coverage (union of predicates); opaque writes/callees still
 block new entry identities. Neither the checkpoint size nor address screening

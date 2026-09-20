@@ -57,6 +57,19 @@ def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets,
             return taint(expr.src1, state) | taint(expr.src2, state)
         if isinstance(expr, ExprOp):
             masks = [taint(arg, state) for arg in expr.args]
+            # The x86 lifter uses extensions for 32-bit GPR writes (including
+            # CMOV) and MOVZX/MOVSX. Extension preserves low-bit dependencies;
+            # it cannot taint an already-defined low byte merely because some
+            # other source bits were not captured by the minimal entry ABI.
+            if len(expr.args) == 1 and expr.size >= expr.args[0].size:
+                source_bits = expr.args[0].size
+                source_mask = (1 << source_bits) - 1
+                if expr.op == f"zeroExt_{expr.size}":
+                    return masks[0] & source_mask
+                if expr.op == f"signExt_{expr.size}":
+                    high = ((1 << expr.size) - 1) ^ source_mask
+                    return (masks[0] & source_mask) | (
+                        high if masks[0] & (1 << (source_bits - 1)) else 0)
             if expr.op in {"&", "|", "^"}:
                 result = 0
                 for mask in masks:

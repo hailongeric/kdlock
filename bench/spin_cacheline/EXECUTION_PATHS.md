@@ -2,6 +2,9 @@
 
 本文按 **2026-09-19 当前工作树** 的实现维护，默认要求 `kdclobber2` 的
 普通 spin caller-clobber v1 接口；旧调用者在同一内核上仍有兼容路径。
+TCLock 换栈部分已更新至 9/20 的 C 内联汇编和无新增执行计数设置；历史计数
+成绩仍按各自冻结版本解读。当前直接 API 实验的完整边界见
+[运行说明](../tclock_compare/README.md)。
 对照同一负载的 Linux 原生、完整 TCLock 原生栈委托、
 kdlock JIT 三种后端，重点解释获取、排队、批次交接及现场保存/恢复。
 伪代码合并低频错误分支，保留影响正常路径的状态访问和同步；函数名不表示
@@ -53,7 +56,7 @@ flowchart TD
 | hook 分派、频率筛选与快路径 | [kd_lock.c](../../kernel_module/kd_lock.c)、[kd_spin_fast.h](../../include/kd_spin_fast.h) | [provider.c](../../tclock_backend/provider.c) |
 | 获取、排队和等待 | [kd_spinlock.c](../../kernel_module/kd_spinlock.c)、[slowpath.inc](../../kernel_module/spin/slowpath.inc)、[wait.inc](../../kernel_module/spin/wait.inc) | [komb.c](../../tclock_backend/komb.c)：`komb_spin_lock` / `__komb_spin_lock_longjmp` |
 | 批次与后继 | [combiner.inc](../../kernel_module/spin/combiner.inc)、[execute.inc](../../kernel_module/spin/execute.inc)、[prefetch.inc](../../kernel_module/spin/prefetch.inc) | [komb.c](../../tclock_backend/komb.c)：`run_combiner` / `get_next_node` / `komb_spin_unlock` |
-| 保存与恢复 | [wrapper.S](../../include/wrapper.S)、[kd_jit_batch.h](../../include/kd_jit_batch.h)、`kd_spin_restore_request` | [context.S](../../tclock_backend/context.S) |
+| 保存与恢复 | [wrapper.S](../../include/wrapper.S)、[kd_jit_batch.h](../../include/kd_jit_batch.h)、`kd_spin_restore_request` | [combiner.c](../../tclock_backend/combiner.c) 及 `komb.c` 的 C 内联汇编 |
 
 阅读索引：[测量边界](#batch)、[调用入口与冷准备](#cold)、[无竞争路径](#native-fast)、
 [kdlock 队列](#queue)、[TCLock 队列与 WWJUMP](#tclock-path)、
@@ -342,21 +345,21 @@ owner/top/depth、batch lease、非 complex 及原有终态；不是旧的逐项
 combiner 服务完 follower 后，自己再执行一次原生正文，按 hold/ticket 释放
 L、S 并归还 pin。提前唤醒的下任 owner 仍须等 S/L，不能立即并行访问正文。
 正常启动批次需一个可代理 follower 加一个后继 owner；1024 是限制参数，
-不是实际批长保证。当前普通循环没有 TCLock 同样的 `need_resched()` 退出条件。
+不是实际批长保证。当前 kdlock 与 TCLock 均不按调度请求结束普通代理批次。
 
 <a id="tclock-path"></a>
 
 ### 4.4 TCLock：先保存原生续点，再在 shadow 栈排队
 
-`tc_lock` 对目标锁执行 `preempt_disable()`，然后调用 `komb_spin_lock(Q)`。
-非目标锁回退 Linux。CAS/pending 失败后的普通 task 分支如下：
-该分支要求本 CPU 没有占用中的 node、IRQ 开启且没有 migration-disable；
-其他上下文走源码中的特殊节点路径，不在本次单锁展开范围内。
+当前 `SC_LOCK` 执行 `preempt_disable()` 后直接调用 `komb_spin_lock(Q)`，Q 由
+TCLock 独占管理。`ENABLE_IRQS_CHECK` 已按 RCUHT 关闭，本轮只使用 IRQ 开启的
+普通 task 单锁入口，不再在锁内执行原 IRQ/migration 上下文筛选。
+CAS/pending 失败后的路径如下：
 
 ```text
-komb_spin_lock_slowpath（context.S，在原 waiter task 栈上）：
+komb_spin_lock_slowpath（komb.c 的 C 内联汇编，在原 waiter task 栈上）：
     push RBP, RBX, R12, R13, R14, R15
-    R12 暂存 lock，跨普通 C helper 调用保留
+    隐式 CALL get_komb_node / get_shadow_stack_ptr；加载前审核其保留 RDI
     node[0].rsp = 当前 RSP                     // 指向六寄存器保存区
     RSP = 本 CPU local_shadow_stack_ptr
     CALL __komb_spin_lock_slowpath(Q)          // C 慢路径和等待都在 shadow 栈
@@ -401,8 +404,8 @@ combiner CPU 现在在 W1 的 task 栈：
         若有上一已离栈 waiter：发布上一 waiter 完成
     返回 caller，执行 W1 的原生临界区
     进入 W1 的 komb_spin_unlock(Q)：
-        确认当前代理锁；tc_delegated++
-        if 后继/其后继不足、IRQ、counter 达上限或 need_resched()：
+        确认当前代理锁
+        if 后继/其后继不足、IRQ、counter 达上限：
             incoming_rsp = combiner.shadow_rsp
         else：
             incoming_rsp = W2.rsp；更新 curr/prev CPU 与 counter
@@ -435,12 +438,12 @@ TCLock 的 `get_next_node` 按 NUMA 选择/暂存后继；符合预取分支时�
 | 执行 W1 正文 | combiner 的 RSP 真正指向 W1 task 栈 | combiner 的 RSP 在自己 task 栈；JIT 以虚拟 SP 访问 W1 栈 |
 | W1 到 unlock | 原生 unlock 保存六寄存器和返回链到 W1 栈 | wrapper 核对精确 unlock 边界，写回 IP/SP/BP 和 COMPLETE |
 | 停止访问 W1 执行状态 | `komb_context_switch` 已切到 W2 或 combiner shadow 栈 | wrapper 已返回，frame 终态验证及物理解绑已完成 |
-| 发布 W1 完成 | 新栈上 `clear_locked_set_completed(W1)`，release store | 锁侧 C 循环 release store 完成标记 |
+| 发布 W1 完成 | 新栈上 `clear_locked_set_completed(W1)`，上游 `WRITE_ONCE` | 锁侧 C 循环 release store 完成标记 |
 | W1 CPU 恢复 | shadow C 返回后加载更新的 W1.rsp，恢复六寄存器，从 unlock 返回链继续 | 放弃旧 C 帧，结束 ticket，直接从共享 request 恢复三个字段和原 IRQ flags |
 | W2 执行 | 接 W2 的 lock 原生返回链 | 校验/bind W2 frame，调用 W2 wrapper |
 
-TCLock 的 `tc_completed` 在离栈完成发布时增加，排空后须与 `tc_delegated`
-相等。若在还用 W1 栈时就唤醒 W1，两个 CPU 会同时使用它；因此不能把完成
+TCLock 已删除额外的 `tc_completed/tc_delegated/tc_batches`，排空按协议状态
+核对。若在还用 W1 栈时就唤醒 W1，两个 CPU 会同时使用它；因此不能把完成
 发布随意前移到 unlock 刚入口。kdlock 虽不物理借栈，JIT 仍可能改写 W1 的
 逻辑栈，故也不能让原 waiter 沿已被覆盖的旧 C 返回链继续。
 
@@ -563,7 +566,7 @@ combiner，执行当前正文之前：
 
 ### 5.5 TCLock 六寄存器保存区与恢复链
 
-[context.S](../../tclock_backend/context.S) 中 `komb_context_switch(in, out)`
+[combiner.c](../../tclock_backend/combiner.c) 中 `komb_context_switch(in, out)`
 的核心动作是：
 
 ```text
@@ -583,11 +586,11 @@ RIP 通过 CALL/RET 链保留，不作为独立字段装入节点；caller-saved
 一个被代理的 waiter 有两个续点：lock 时的保存区让 combiner 进入其原生正文；
 unlock 时的新保存区让原 waiter 跳过正文继续返回。combiner 自己的续点在
 shadow 栈，只有批次结束或特定控制路径才回到那里。原 waiter 的
-`tc_unlock → preempt_enable()` 在它恢复自己的 unlock 返回链后执行，不能在
+`SC_UNLOCK` 中的 `preempt_enable()` 在它恢复自己的 unlock 返回链后执行，不能在
 代理 CPU 上提前归还另一个物理 waiter 的 pin。
 
 切换 RSP 不切换 CPU、Linux `current`、GS 或 per-CPU 身份。当前实验正文只
-访问全局计数器；不能据此将 TCLock 描述为任意 task/per-CPU 临界区的透明
+访问全局计数器或哈希表/调用者栈统计；不能据此将 TCLock 描述为任意 task/per-CPU 临界区的透明
 替换。其普通等待为纯轮询，但与 kdlock 的 IRQ-off 连续汇编等待不是同一机制。
 
 ### 5.6 kdlock 原 waiter 的最终恢复与中途续跑
@@ -642,12 +645,12 @@ reclaim、source/remote ACK 沿原协议处理；本单锁 benchmark 不测这�
 | 连续执行 | WWJUMP：当前 unlock 直接切到下一 lock 返回链 | 同一个 C 栈帧：retire、发布、下一 prepare/bind | kdlock 已去掉旧外层 callback/shell 往返，但逐请求管理仍在 |
 | 完成发布 | 离开借用栈后 release 通知 | wrapper 返回、终态检查和解绑后 release 通知 | 都必须先结束代理对当前执行状态的使用 |
 | 原线程恢复 | 六寄存器恢复到原生 unlock 返回链 | 结束 ticket，恢复最小三字段/IRQ，最后归还 request | kdlock 请求存活与 node 复用分开；复杂路径另有 owner/ACK |
-| 批次结束 | 后继/IRQ/上限/need_resched 等 | 后继/上限/准入结果/outer release 等 | 参数相同不意味着批长、代理比例或调度行为相同 |
-| 观察计数 | 直接 per-CPU batches/delegated/completed | per-CPU 事件和正文观察，加共享实时 waiter_count、禁用 latch | 身份复用和计数行分离已实现，实时共享原子更新尚在 |
+| 批次结束 | 后继/IRQ/上限等 | 后继/上限/准入结果/outer release 等 | 参数相同不意味着批长、代理比例或调度行为相同 |
+| 观察计数 | 已移除额外 per-CPU 执行计数，代理量未测 | per-CPU 事件和正文观察，加共享实时 waiter_count、禁用 latch | 两者观察成本不同，不能把未知代理量当作零 |
 
-TCLock 的 `need_resched()` 在此用于结束代理批次，不表示本移植会在 shadow
-等待循环中调用 `schedule()`。普通 kdlock 循环没有同一终止条件；吞吐差距
-包含批次策略，不能只用寄存器保存条数解释。
+TCLock 已按用户要求删除 `need_resched()` 批次退出条件和旧等待宏的调度分支；
+公共哈希表循环也删除了 `cond_resched()`。等待仍为纯轮询，批次上限仍为 1024。
+后继选择和其他批次结束条件仍有差异，吞吐差距不能只用寄存器保存条数解释。
 
 ### 6.2 哪些成本可以摊销，哪些仍逐请求发生
 

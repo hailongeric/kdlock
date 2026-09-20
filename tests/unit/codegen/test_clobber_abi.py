@@ -193,7 +193,7 @@ int main(void) {
 '''
 
 
-def exercise_abi(entry_abi):
+def exercise_abi(entry_abi, direct=False):
     with tempfile.TemporaryDirectory(prefix="kdlock-clobber-") as directory:
         path=Path(directory)
         (path/'asm').mkdir()
@@ -211,6 +211,14 @@ def exercise_abi(entry_abi):
         if entry_abi == 2:
             macro = macro.replace('struct mutex', 'raw_spinlock_t').replace('__kd_mutex_clobber_call_v1', '__kd_spin_clobber_call_v1').replace('kd_mutex_', 'kd_raw_spin_').replace('mutex_lock(', 'raw_spin_lock(').replace('mutex_unlock(', 'raw_spin_unlock(')
         (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t;\n'+macro+'\n#define raw_spin_unlock(lock) __kd_spin_clobber_call_v1(kd_raw_spin_unlock_clobber_v1, lock)\n')
+        if direct:
+            # Exercise the actual direct shell with the same destructive
+            # register/metadata oracle, rather than a copied assembly string.
+            header = (ROOT/'include/kd_spin_direct.h').read_text()
+            macro = header[header.index('#define KD_SPIN_DIRECT_CALL'):header.rindex('#endif')]
+            (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t;\n'+macro+
+                '\n#define raw_spin_lock(lock) KD_SPIN_DIRECT_CALL(kd_raw_spin_lock_clobber_v1, lock, "")\n'
+                '#define raw_spin_unlock(lock) KD_SPIN_DIRECT_CALL(kd_raw_spin_unlock_clobber_v1, lock, "")\n')
         (path/'jit.S').write_text(BODY)
         (path/'wrapper.S').write_text((ROOT/'include/wrapper.S').read_text()+'\n.globl main\n.section .note.GNU-stack,"",@progbits\n')
         fixture = FIXTURE
@@ -238,6 +246,9 @@ def main():
     for abi in ((1, 2) if args.entry_abi == "both" else (1 if args.entry_abi == "spin" else 2,)):
         exercise_abi(abi)
         print(f"caller-clobber ABI {abi}: PASS")
+        if abi == 1:
+            exercise_abi(abi, direct=True)
+            print("direct spin caller-clobber shell: PASS")
 
 
 if __name__ == "__main__":

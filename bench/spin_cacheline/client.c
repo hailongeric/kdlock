@@ -113,6 +113,11 @@ static bool layout_valid(const struct sc_layout *l)
 	    l->lock_addr % SC_LINE_BYTES || l->control_addr % SC_LINE_BYTES ||
 	    l->data_addr % SC_LINE_BYTES || l->lock_addr == l->control_addr)
 		return false;
+	if (l->workload == SC_WORKLOAD_HASH)
+		return l->buckets == SC_HASH_BUCKETS && l->entries == SC_HASH_ENTRIES &&
+		       l->key_range == SC_HASH_KEY_RANGE && l->resched <= 1;
+	if (l->workload != SC_WORKLOAD_CACHELINE)
+		return false;
 	for (int i = 0; i < SC_SLOTS; i++)
 		if (l->slot_addr[i] != l->data_addr + i * SC_LINE_BYTES ||
 		    l->slot_addr[i] == l->lock_addr || l->slot_addr[i] == l->control_addr)
@@ -136,6 +141,8 @@ int main(int argc, char **argv)
 		{ "cpus", required_argument, NULL, 'c' },
 		{ "layout", no_argument, NULL, 'l' },
 		{ "counts", no_argument, NULL, 's' },
+		{ "prepare", no_argument, NULL, 'p' },
+		{ "workload", required_argument, NULL, 'w' },
 		{ NULL, 0, NULL, 0 },
 	};
 	struct worker workers[CPU_SETSIZE] = { 0 };
@@ -146,7 +153,8 @@ int main(int argc, char **argv)
 	uint64_t iterations = 10000, lines = 0, completed = 0, cpu_ns = 0;
 	uint64_t started, finished = 0, elapsed;
 	unsigned int count = 0, created = 0;
-	bool layout_only = false, counts_only = false, valid = true;
+	bool layout_only = false, counts_only = false, prepare_only = false, valid = true;
+	bool hash = false;
 	char *cpu_text = NULL, *token, *save;
 	int fd, option, error = 0;
 
@@ -157,13 +165,23 @@ int main(int argc, char **argv)
 		case 'c': cpu_text = optarg; break;
 		case 'l': layout_only = true; break;
 		case 's': counts_only = true; break;
+		case 'p': prepare_only = true; break;
+		case 'w':
+			if (strcmp(optarg, "rcuht") && strcmp(optarg, "cacheline"))
+				return 2;
+			hash = !strcmp(optarg, "rcuht");
+			break;
 		default: return 2;
 		}
 	}
-	if (optind != argc || (layout_only && counts_only))
+	if (optind != argc || layout_only + counts_only + prepare_only > 1)
 		return 2;
-	if (!layout_only && !counts_only) {
-		if (!(lines == 1 || lines == 2 || lines == 4 || lines == 8 || lines == 16) ||
+	if (prepare_only && !(hash ? lines == 0 :
+		(lines == 1 || lines == 2 || lines == 4 || lines == 8 || lines == 16)))
+		return 2;
+	if (!layout_only && !counts_only && !prepare_only) {
+		if (!(hash ? lines == 0 :
+		      (lines == 1 || lines == 2 || lines == 4 || lines == 8 || lines == 16)) ||
 		    !iterations || iterations > SC_MAX_ITERATIONS || !cpu_text ||
 		    !*cpu_text || cpu_text[0] == ',' || cpu_text[strlen(cpu_text)-1] == ',' ||
 		    strstr(cpu_text, ",,")) {
@@ -191,6 +209,21 @@ int main(int argc, char **argv)
 		close(fd);
 		return 1;
 	}
+	if (layout.workload != (hash ? SC_WORKLOAD_HASH : SC_WORKLOAD_CACHELINE)) {
+		fprintf(stderr, "Loaded workload differs from --workload\n");
+		close(fd);
+		return 1;
+	}
+	if (prepare_only) {
+		__u32 prepare_lines = lines;
+		error = ioctl(fd, SC_PREPARE, &prepare_lines);
+		if (error)
+			perror("SC_PREPARE");
+		else
+			printf("{\"prepared\":true,\"cachelines\":%u}\n", prepare_lines);
+		close(fd);
+		return error ? 1 : 0;
+	}
 	if (layout_only) {
 		printf("{\"version\":%u,\"line_bytes\":%u,\"slots\":%u,"
 		       "\"lock_bytes\":%u,\"lock_addr\":%llu,\"control_addr\":%llu,"
@@ -198,7 +231,9 @@ int main(int argc, char **argv)
 		       layout.slots, layout.lock_bytes, layout.lock_addr,
 		       layout.control_addr, layout.data_addr);
 		values_json(layout.slot_addr);
-		puts("}");
+		printf(",\"workload\":\"%s\",\"buckets\":%u,\"entries\":%u,"
+		       "\"key_range\":%u,\"resched\":%u}\n", hash ? "rcuht" : "cacheline",
+		       layout.buckets, layout.entries, layout.key_range, layout.resched);
 		close(fd);
 		return 0;
 	}
@@ -254,9 +289,21 @@ int main(int argc, char **argv)
 		 created == count && completed == count * iterations;
 	valid &= before.active == 0 && after.active == 0 && finished > started;
 	bool data_ok = true;
-	for (int i = 0; i < SC_SLOTS; i++)
-		data_ok &= after.values[i] >= before.values[i] &&
-			after.values[i] - before.values[i] == (i < (int)lines ? completed : 0);
+	if (hash) {
+		/* A successful SC_COUNTS also validates the complete hash structure.
+		 * Every operation must publish exactly one of three outcomes. */
+		for (int i = 0; i < 4; i++)
+			data_ok &= after.values[i] >= before.values[i];
+		data_ok &= after.values[0] - before.values[0] == completed &&
+			before.values[0] == before.values[1] + before.values[2] + before.values[3] &&
+			after.values[0] == after.values[1] + after.values[2] + after.values[3];
+		for (int i = 4; i < SC_SLOTS; i++)
+			data_ok &= !before.values[i] && !after.values[i];
+	} else {
+		for (int i = 0; i < SC_SLOTS; i++)
+			data_ok &= after.values[i] >= before.values[i] &&
+				after.values[i] - before.values[i] == (i < (int)lines ? completed : 0);
+	}
 	valid &= data_ok;
 	elapsed = finished > started ? finished - started : 0;
 	printf("{\"schema\":1,\"cachelines\":%llu,\"threads\":%u,"
@@ -271,6 +318,8 @@ int main(int argc, char **argv)
 	values_json(before.values);
 	printf(",\"after\":");
 	values_json(after.values);
+	printf(",\"workload\":\"%s\",\"hash_integrity_ok\":%s",
+	       hash ? "rcuht" : "cacheline", hash && data_ok ? "true" : "false");
 	printf(",\"workers\":[");
 	for (unsigned int i = 0; i < created; i++) {
 		struct worker *w = &workers[i];

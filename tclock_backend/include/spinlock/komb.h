@@ -6,7 +6,12 @@
 #include "lib/combiner.h"
 #define qspinlock orig_qspinlock
 #else
-#define ENABLE_IRQS_CHECK 1
+/* Match the upstream RCUHT benchmark's IRQ-check setting independently of
+ * KERNEL_SYNCSTRESS and its separate lock-type definitions.
+ * This backend is used by task-context, single-lock benchmark callers with
+ * IRQs enabled; it is not an IRQ/nested-lock replacement for kernel spinlocks.
+ */
+/* #define ENABLE_IRQS_CHECK 1 */
 #include <asm/qspinlock.h>
 #endif
 

@@ -1,106 +1,151 @@
-# Linux / TCLock / kdlock 三方对照
+# Linux / TCLock / kdlock 直接 API 对照
 
-使用同一个 `workload_modules/spin_cacheline`，分别加载 Linux 原生路径、独立
-[TCLock 后端](../../tclock_backend/README.md)和现有 kdlock JIT provider。
-两种 caller ABI 各编译一次，三种后端复用同一份 workload 二进制；完整操作、
-锁外四组乘加、亲和性、准备等待与数据判定相同。三方均在一个 CPU 上预热和
-晋升；kdlock 等待唯一入口发布并停止 translator/daemon 后，才启动指定数量的
-测量线程。翻译条目已准备，但当前采样器要求每个 CPU 独立发现锁；单 CPU
-准备不保证所有测量 CPU 都已晋升。完整操作中必须报告实际 JIT 比例。
-此前并发冷晋升发生过停滞，失败与后续单 CPU 准备矩阵分开保留，未视为修复。
+当前源码暂时停用 kdlock/TCLock 的统一 hook 安装；spin 的 hotlock、进程名和
+统一分派不进入被测路径。三种后端分别构建同一份
+`workload_modules/spin_cacheline`，只在编译时改变锁 API：
 
-`run.py` 默认 1/16 cacheline × 1/4/20 线程 × 三种后端 × 两种 ABI × 五轮，
-每线程 100000 次，共 180 场；奇数轮逆序，汇总中位数。TCLock 也经同一内核
-hook，避免将绕过分派的 direct-call 结果冒充等价后端。原生 arm 不加载 provider。
+| 后端 | 直接调用 |
+| --- | --- |
+| Linux | `__raw_spin_lock/unlock`，绕过实验内核 hook |
+| TCLock | `komb_spin_lock/unlock`，调用者配对管理抢占 |
+| kdlock | `kd_spin_lock_clobber_v1/unlock_clobber_v1`，直接进入 kdlock 协议 |
 
-`--threads 1 4 8 16 20 --abis clobber` 可展开为五档线程的 150 场三方对照，
-保持 1/16 cacheline、每线程 100000 次及五轮交替顺序；默认矩阵仍为上述 180 场。
+kdlock 保留私有调度字 S、原生锁 L、owner/ACK、上下文和 JIT 就绪检查。
+其 clobber-v1 调用现场由编译器保存；TCLock 和 Linux 使用各自普通 C API。
+三个模块正文与循环相同，但不是同一份二进制，也不把必需的现场成本扣除。
+每次完整操作保留原来的固定 cacheline 更新、解锁后四组乘加及循环成本。
+吞吐和摊销 ns/op 都以完整操作计算，不是独立获取锁延迟。
 
-三种后端在独立会话中运行；TCLock 会话的目标锁由 TCLock 协议独占管理。
-保留 `spin_lock` 接口不表示与未修改 Linux qspinlock 的队列/解锁协议兼容，
-本对照不覆盖二者同时竞争同一目标锁。原因和访问入口限制见
-[协议兼容边界](../../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界)。
+## 准备与运行
 
-随后已完成 [kdlock node/gate 隔离修复与 40 场交替对照](../spin_cacheline/results/20260919-cacheline-isolation.md)：
-20 线程改善，4 线程回退。该轮仅重测旧/新 kdlock；以下三方成绩属于修复前基线。
+后端先加载，直接依赖它的样例后加载。运行器在没有 worker 时绑定只读观测
+使用的锁地址，再调用 `SC_PREPARE` 显式登记选定正文的锁后 RIP 和 gate。
+kdlock 等唯一条目发布为 NORMAL、翻译进程退出并停止 daemon 后，再执行各组
+相同的单 CPU 48000 次预热。准备与预热均不计时，不再等待热锁晋升。
 
-[2026-09-19 五档线程复测](results/20260919-thread-scaling.md)：1/4/8/16/20 线程、
-clobber ABI 的 150 场三方对照全部正确排空。20 线程、1/16 cacheline 下，kdlock
-中位吞吐为 2.990/2.894 Mops/s；16/20 线程实际 JIT 超过 99%，4 线程仍明显
-落后。结果包含批长、各轮波动及本次模块的伪共享布局检查；没有修改锁实现，
-也没有将布局候选直接归因为性能瓶颈。
-
-此前 [同日 90 场复测及 30 场长单线程对照](results/20260919-state-access.md)
-保留独立证据；长批次单线程成本未在五档线程矩阵中重测。
-
-此前 [2026-09-18 实测结果](results/20260918-native-stack.md)：180/180 场稳态测量正确
-并排空，竞争配置 TCLock 中位吞吐为 kdlock 的 1.06–2.05 倍；另有六场独立
-硬件采样和 20 场长批次单线程原生检查。结果页包含全部 ABI、代理比例、失败
-记录和开销分析，不能只取最快的 TCLock 样本。
-逐阶段实现差异及收益抵消统一见
-[执行路径对照](../spin_cacheline/EXECUTION_PATHS.md#tclock-cost-comparison)，
-其中区分已测热点、源码推断和未实施的优化候选。
-
-TCLock 原生委托不叫 JIT。`delegation_share` 对 TCLock 使用实际 unlock/完成
-计数差值，对 kdlock 使用 wrapper 返回后的正文数；两者均除以完整操作数。
-竞争 TCLock 会话必须实际委托；所有会话均检查数据、工作线程退出与排空。
-工作负载副本还在每个 SC_RUN 前后检查 IRQ/preempt 状态，不改测量循环。
-采样诊断与无采样吞吐结果分开保存，不能用采样期间吞吐作为性能成绩。
-
-`allocator_guard/` 是所有 arm 共用的计时外准备模块：仅分配/释放一页静态
-per-CPU 区域，不安装 hook，随后立即卸载。Linux 6.1.159 的 reserved chunk
-在小模块卸载后可能保留重叠的 scan/contig hint，使较大的 kdlock 模块在实际
-仍有连续空间时加载失败。整页释放触发内核正常的 hint refresh；不改内核或
-分配器内存，不掩盖 insmod 失败。其二进制及逐场加载/卸载日志同样冻结保存。
-
-## 运行
-
-只在 recovery guest `/root/host_fs/kdlock`，按[操作手册](../../docs/AGENTS.md)
-确认快照、内核身份与空闲状态，启用固定依赖 venv。输出须为新的外部目录。
+默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 三种后端 × 五轮 = 150 场**，
+每线程 100000 次，奇数轮逆序。仅保留这一组直接调用方式，不再使用 `--abis`。
+只在 recovery guest 中按[操作手册](../../docs/AGENTS.md)核对快照、依赖和空闲状态；
+现有 `kdclobber2` 内核不重建。输出必须是新的仓库外目录。
 
 ```sh
-make -C tests/unit run PY_TESTS=spin/test_tclock_context.py
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
-  --output /root/kdlock-evidence/tclock-native-new/compare
+  --output /root/kdlock-evidence/direct-new
 ```
 
-先用 `--backends tclock --cachelines 1 --threads 1 4 --repeats 1 --iterations 10000`
-验证移植，再运行默认矩阵。`STOP` 仅在已排空的会话边界生效，运行中不修改
-冻结源码/二进制。失败会保存证据并停止，不自动重试或强制卸载。
+首次先追加 `--cachelines 1 --threads 1 4 --repeats 1 --iterations 10000` 做六场验证。
+`--dry-run` 只打印矩阵。`STOP` 文件在已排空会话之间生效；失败或超时保留证据并停止。
 
-采样复用一个已完成对照的冻结输入，不能先修改代码、文档或重建二进制。
-例如对该次输出采集 clobber、20 线程、1 cacheline 的 TCLock 热点：
+构建通过后端 `Module.symvers` 解析导出符号，保存三个样例的反汇编与未定义符号，
+检查目标锁不再导入统一 spin hook。原生组不加载任何锁 provider。
+`allocator_guard/` 仍是三组共有、计时外的 per-CPU 分配器 hint 准备，详见历史记录。
+
+## 验收与结果
+
+`summary.csv/json` 仅报告各配置的吞吐中位数、摊销 ns/op、相对 Linux 的吞吐比和
+有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
+正确、完成且已排空的样本参与汇总。hotlock 不参与结果表。
+
+kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
+代理次数与比例记为 null、状态为 `UNMEASURED`，不把未知写成零或实际代理通过。
+每场检查数据、批次 IRQ/preempt 状态和排空；源文件、二进制、内核身份、生成物和
+日志均冻结保存。JIT 计时与逐次日志关闭，kdlock 的执行计数仍有成本。
+
+清理顺序：worker 全部退出 → 核对队列/frame/锁字 → 停止翻译进程 → kdlock
+retirement 成功 → 卸载样例 → 卸载后端。TCLock 在样例存储释放前清除诊断锁指针。
+不强制卸载，不在同一目标锁上混用 Linux 与 TCLock 协议。
+
+基础及相关检查：
+
+```sh
+make -C tests/unit run PY_TESTS='spin/test_spin_direct.py codegen/test_clobber_abi.py admission/test_clobber_entry.py spin/test_tclock_context.py execution/test_exe_registry.py spin/test_spin_outer_progress.py'
+python3 bench/tclock_compare/test_direct.py
+```
+
+## 本次结果
+
+当前[切回 cacheline 的三方重测](results/20260920-cacheline-current.md)：沿用现有锁实现，
+1/16 cacheline、五档线程各五轮共 150/150 场通过，40 场竞争 kdlock 均有实际 JIT。
+20 线程下 Linux/TCLock/kdlock 吞吐分别为 4.106/4.992/3.715 Mops/s（1 cacheline）
+和 2.434/3.341/3.654 Mops/s（16 cacheline）。没有修改执行源码或恢复额外计数。
+
+此前[哈希表 JIT 修复与三方重测](results/20260920-kd-hash-jit.md)：统一调整摘链/
+计数写入顺序，并修正最小入口对零扩展/符号扩展的按位依赖传播。
+九场样例及正式 75/75 场通过数据与排空检查，所有竞争 kdlock 场次均有实际
+JIT 执行。四线程 Linux/TCLock/kdlock 中位吞吐为 2.774/2.516/1.253 Mops/s，
+二十线程为 3.146/5.129/2.495 Mops/s；功能已恢复，kdlock 性能差距仍在。
+
+此前[删除调度检查与调度点后的实测](results/20260920-no-resched.md)：Linux/TCLock
+六场 smoke 及四线程各五轮全部通过正确性和排空检查；四线程中位吞吐分别为
+2.751 / 2.469 Mops/s，TCLock 为 Linux 的 0.898×，差距仍在。
+
+此前 2026-09-20 将 TCLock 换栈恢复为上游 C 内联汇编，删除新增的三个 per-CPU
+执行计数及其更新。加载前审核实际 ELF 的六寄存器/返回布局及计数符号缺失；
+测量仍检查哈希表和 IRQ/preempt 状态、全部操作完成及队列排空。当前没有运行期
+代理计数，以下历史批次长度/代理占比不能用作新设置下的观测。
+对应[C 内联汇编、无额外计数实测](results/20260920-inline-no-counters.md)：
+六场 smoke 及正式 50/50 场通过数据/排空检查，四线程为 Linux 的 0.887×，
+20 线程为 1.571×；本轮没有实际代理次数与批长数据。
+
+2026-09-20 后续调整按上游 RCUHT 关闭 TCLock 的 `ENABLE_IRQS_CHECK`，并关闭
+TCLock 后端及三种 direct workload 的 UBSAN 插桩。运行器检查实际 ELF 没有
+UBSAN handler 引用，保留后端反汇编；内核内部仍保持 UBSAN，其他协议参数和
+等待调度分支沿用原值。该设置只适用于当前 IRQ 开启、task 上下文的单锁负载。
+对应[检查设置对齐后的实测](results/20260920-irq-ubsan.md)：六场 smoke 及正式
+50/50 场全部正确排空；四线程为 Linux 的 0.842×，20 线程为 1.583×。跨轮
+绝对吞吐变化没有同期旧二进制控制组，不能全部归因于关闭检查。
+
+[2026-09-20 上游一致性审查](results/20260920-upstream-audit.md)：保存的上游文件
+与原版一致，实际被测代码为 Linux 6.1 移植版。RCUHT 编译分支、IRQ/等待调度、
+批次额度、UBSAN/返回指令及实验环境均有差异；本次为离线核对，没有新性能成绩。
+
+新增 `--workload rcuht` 使用上游 RCUHT 的单全局锁哈希表写逻辑：1024 桶、4096
+节点、8192 键范围，100% 写请求（含源键缺失和目标冲突）。模块内预分配节点，
+桶和节点各为 64 字节步长；每个 worker 使用固定 CPU 种子的 xorshift64* 随机键。
+为支持当前 JIT 准入，三个后端统一将节点搬移改为 `__hlist_del()` 后立即插入，
+省去中间毒化写入，并在节点修改之前更新搬移计数。业务结果相同，指令序列
+不同于上游；新旧负载的吞吐不可混为同一基线。
+当前按用户要求删除 TCLock 的 `need_resched()` 批次截断和公共哈希表循环的
+`cond_resched()` 调度点，三种后端均保留锁外四组乘加。原 `hash_resched` 模块
+参数已删除；layout ABI v2 的 `resched` 固定为 0，运行器拒绝调度点仍开启的旧模块。
+这项实验设置不同于上游原始调度策略，也不同于下方已归档的历史成绩。
+这些锁外工作均计入整批 wall 时间。沿用三种直接 API 和 1024 批次参数；
+这是哈希表临界区的三方对比，不宣称完整复现上游分配布局或论文的运行环境。
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
-  LC_ALL=C timeout --kill-after=10s 600s python3 bench/tclock_compare/profile_backends.py \
-  --comparison /root/kdlock-evidence/tclock-native-new/compare \
-  --output /root/kdlock-evidence/tclock-native-new/profile-c01-tclock \
-  --perf /root/kdlock-tools/perf-6.1.159/perf \
-  --arm tclock --abi clobber --threads 20 --cachelines 1 --iterations 1000000 \
-  --kernel-source /root/linux-6.1.159-kdclobber2 \
-  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919
+  LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
+  --workload rcuht --backends native tclock kdlock --output /root/kdlock-evidence/rcuht-new
 ```
 
-分别选择三种 `--arm` 与两种 `--cachelines`，每场使用新输出目录。该入口只采
-`cycles:k` 的平面 IP，检查零丢样，不开启 ftrace 或调用链。单线程成本另用
-`run.py --backends native --threads 1 --iterations 10000000`，其余默认参数及
-内核身份参数相同；长批次结果单独报告，不替换十万次矩阵样本。
+哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 三后端 × 五轮，共 75 场。
+先用 `--threads 1 4 --repeats 1 --iterations 10000` 做六场验证。每次 snapshot 在
+计时外验证节点地址、链表回链、无环、桶归属、键唯一性和 4096 节点总数；每个
+操作必须恰好计入搬移/冲突/未命中之一。`before/after` 的前四项为总操作、搬移、
+冲突、未命中，余项为零；`cachelines=0` 仅是内部 hash 正文编号。表与 counters
+经过同一预热后继续测量，随机流按 worker CPU 固定，但并发执行顺序不固定。
+结果携带 `workload=rcuht`，不能与 cacheline 模式混合汇总。设备 layout ABI 已升为
+v2，客户端和 workload 模块必须同时重建。
 
-## 证据范围
+[2026-09-19 哈希表实测](results/20260919-rcuht.md)：Linux/TCLock 50/50 场正确
+排空；TCLock 在四线程为 Linux 的 0.876×，20 线程为 1.571×。该历史版本的
+kdlock 在动态链表回链写入处被 JIT 地址准入拒绝，没有有效性能成绩。
 
-运行器保留源文件、上游身份、私有 kdlock provider 副本、两份 workload、后端
-二进制、内核 Build ID、逐场数据与正文计数。`records.json` 包含未执行/失败
-记录；`summary.json/csv` 只从数据正确且已排空的样本计算中位数。
-最近完整三方成绩见[五档线程结果](results/20260919-thread-scaling.md)，随后布局
-修复的旧/新两臂见[隔离对照](../spin_cacheline/results/20260919-cacheline-isolation.md)。两种 ABI 的
-历史矩阵与采样见[首次结果页](results/20260918-native-stack.md)；尚未验证
-任意 task/per-CPU 临界区、跨 NUMA 或嵌套 TCLock。
+[2026-09-19 直接 API 对比](results/20260919-direct-api.md)：150/150 场正确排空。
+20 线程时，1/16 cacheline 下 kdlock 吞吐分别为 Linux 的 66.9%/93.2%，
+为 TCLock 的 77.9%/126.3%；完整中位数、ns/op 和符号表见结果页。
 
-当前热锁采样按 CPU 独立发现，准备阶段已改为单 CPU 连续 48000 次；其余
-测量 CPU 仍可能在测量中建立自己的频率和锁历史。旧冻结版本的成绩保留为
-历史结果。本轮没有重新验证完整操作吞吐或 99% JIT，后续对照必须同时报告
-实际 JIT 比例，不能将减少代理覆盖误当作提速。
+[TCLock 四线程退化分析](results/20260919-tclock-four-threads.md)：正式记录的批大小、
+八场独立退出原因诊断，以及上游哈希表负载与调度点的差异。
+
+## 历史与当前边界
+
+以前经统一 hook 的成绩继续保留，不能和本轮直接 API 数据混成同一组：
+[五档线程](results/20260919-thread-scaling.md)、
+[状态访问](results/20260919-state-access.md)、
+[首次三方对照](results/20260918-native-stack.md)。
+旧 `profile_backends.py` 面向历史 hook 会话，本轮不使用它采样。
+统一接入已经暂停，依赖透明 hook 的旧 live 用例不适用于当前实验构建。
