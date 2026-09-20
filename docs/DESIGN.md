@@ -1,8 +1,8 @@
 # kdlock Design
 
-本轮执行：[单锁字与本地哈希设计（待实施）](design/locking.md)。基线已提交为
-`7e2460c`；先清理停用 spin 分发和缓存，保留正在使用的 gate/S、mutex 接入及生命周期检查。
-下方旧架构描述保留为当前实现，待替代路径通过后更新。
+本轮执行：[单锁字实现与本地哈希待办](design/locking.md)。基线已提交为
+`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字；mutex 接入及生命周期检查保留。
+下方 L/S 和缓存描述属于历史基线；当前协议以链接的 locking 章节为准。
 
 This document describes current implementation contracts, not a chronological
 test log. Usage and execution flow: [JIT_EXECUTION](JIT_EXECUTION.md).

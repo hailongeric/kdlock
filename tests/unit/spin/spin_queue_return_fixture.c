@@ -118,7 +118,7 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 
 static void preentry_queue_peer(void)
 {
-	struct kd_spin_gate *gate = kd_spin_gate_find(&origins[0]);
+	kd_spinlock_t *gate = &origins[0];
 
 	BUG_ON(queue_switches++ || mock_cpu != 0);
 	CHECK(queue_peer.next == &request && request.locked &&
@@ -126,7 +126,7 @@ static void preentry_queue_peer(void)
 	CHECK(queue_parent->remote_result == KD_EXEC_REMOTE_WAITING);
 	/* Publish a real trailing node before the rejected waiter takes the head. */
 	request.next = &successor;
-	gate->word.tail = 9;
+	gate->tail = 9;
 	mock_cpu = 1;
 	current = &tasks[1];
 	run_combiner(a_lock(), &request);
@@ -135,7 +135,7 @@ static void preentry_queue_peer(void)
 	CHECK(queue_parent->remote_result == KD_EXEC_REMOTE_WAITING);
 	CHECK(!request.locked && successor.locked && origins[0].held);
 	kd_spin_release_origin(a_lock());
-	gate->word.locked = 0;
+	gate->locked = 0;
 	mock_cpu = 0;
 	current = &tasks[0];
 }
@@ -150,7 +150,7 @@ static unsigned int preentry_queue_return(void)
 		unsigned long stack[2] = { 0x801, 0x802 };
 		unsigned long locks[] = { (unsigned long)&origins[1] };
 		enum kd_exec_lock_kind kinds[] = { KD_EXEC_LOCK_QUEUE_OWNER };
-		struct kd_spin_gate *gate;
+		kd_spinlock_t *gate;
 		int ret;
 
 		mode = reasons[reason];
@@ -168,7 +168,7 @@ static unsigned int preentry_queue_return(void)
 		b_ref = (struct kd_spin_ref){ 0 };
 		CHECK(kd_spin_entry_begin(&origins[1], KD_SPIN_ENTRY_HOOK,
 					  &b_ref) == 0);
-		kd_spin_entry_gate(&b_ref)->word.locked = 3;
+		kd_spin_entry_word(&b_ref)->locked = 3;
 		kd_spin_claim_origin((struct qspinlock *)&origins[1]);
 		queue_parent = real_frame_push(&regs, 0x900, locks[0], NULL,
 					       NULL, 1, 0x20000, &waiter);
@@ -187,9 +187,9 @@ static unsigned int preentry_queue_return(void)
 		executor_ref = (struct kd_spin_ref){ 0 };
 		CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK,
 					  &executor_ref) == 0);
-		gate = kd_spin_entry_gate(&executor_ref);
-		gate->word.locked = 3;
-		gate->word.tail = 3;
+		gate = kd_spin_entry_word(&executor_ref);
+		gate->locked = 3;
+		gate->tail = 3;
 		kd_spin_claim_origin(a_lock());
 		shadow_states[1].lock_addr[0] = (unsigned long)a_lock();
 		successor.locked = true;
@@ -222,11 +222,11 @@ static unsigned int preentry_queue_return(void)
 		      !request.completed && !fixture_request(&request)->native_resume &&
 		      (kd_exec_current_frame() != &fixture_request(&request)->frame));
 		CHECK(origins[0].held && origins[1].held &&
-		      gate->owner == current && mock_preempt == 2 &&
+		      kd_spin_entry_owner((raw_spinlock_t *)gate) == (unsigned long)current && mock_preempt == 2 &&
 		      !mock_preempts[1]);
 		kd_spin_release_origin(a_lock());
 		/* The trailing peer is outside this return test; drain its saved tail. */
-		gate->word.val.counter = 0;
+		gate->val.counter = 0;
 		kd_spin_release_origin((struct qspinlock *)&origins[1]);
 		CHECK(kd_exec_frame_abort(queue_parent) == 0);
 		CHECK(real_frame_pop(queue_parent, NULL) == 0);

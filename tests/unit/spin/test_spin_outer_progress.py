@@ -1,13 +1,13 @@
 """Guest-only production spin batch/frame/ticket test with a substituted JIT body.
 
-Native L and ticket operations are real extracted code around deterministic
+KD word and ticket operations are real extracted code around deterministic
 CPU/lock primitives. Capacity-refusal cases fill the real frame allocator through
 its API and compare full guest pt_regs and contexts across combiner return.
 This is not natural JIT nesting, concurrent kernel or return-assembly execution.
 The existing fixture also observes release publication before node reuse; its
 primitive substitute checks API/packet ordering, not a hardware memory litmus.
-Full-map ENOMEM joins the actual gate/ticket/nested producer and PENDING packet
-helper, independently of ticket saturation. The live case supplies actual JIT.
+The removed map-exhaustion cases remain in Git history. Ticket capacity,
+PENDING recovery and frame retirement still use production code.
 """
 
 import os
@@ -27,14 +27,7 @@ def main():
     ptrace = (kernel / "arch/x86/include/asm/ptrace.h").read_text()
     ptrace = ptrace.split("#else /* __i386__ */", 1)[1]
     types = definition(ptrace, "struct pt_regs {").rstrip() + ";\n"
-    types += (
-        definition(
-            read_source((ROOT / "include/qspinlock_i.h")), "struct orig_qspinlock {"
-        ).rstrip()
-        + ";\n"
-    )
     for name in (
-        "include/kd_spin_gate.h",
         "include/kd_spin_entry.h",
         "include/kd_call.h",
         "include/kd_exec.h",
@@ -58,7 +51,7 @@ def main():
     if "kd_spin_entry_reclaim(" not in types:
         types += "#define kd_spin_entry_reclaim kd_spin_entry_claim\n"
     code = read_source(ROOT / "kernel_module/spin/request.inc") + definition(spin, "static void kd_spin_prepare_regs(struct kd_spin_node *node)") + "\n"
-    for name in ("kernel_module/kd_spin_gate.c", "kernel_module/kd_spin_entry.c"):
+    for name in ("kernel_module/kd_spin_entry.c",):
         code += without_includes(read_source((ROOT / name))) + "\n"
     frame = read_source((ROOT / "kernel_module/kd_exec.c"))
     pool = "\n".join(
@@ -190,16 +183,6 @@ def main():
             "if (tail && decode_tail(tail) != node) {",
             "if (tail && decode_tail(tail) != node && false) {",
         ),
-        "gate-refusal-consumes-sequence": (
-            "code",
-            "if (!gate) {\n\t\tret = -ENOMEM;",
-            "if (!gate) {\n\t\tpool->sequence++;\n\t\tret = -ENOMEM;",
-        ),
-        "gate-refusal-leaks-pin": (
-            "code",
-            "if (ret)\n\t\tpreempt_enable();\n\treturn ret;",
-            "/* injected: failed admission leaks caller pin */\n\treturn ret;",
-        ),
         "completion-plain-write": (
             "code",
             "smp_store_release(&lock->locked_completed, 1);",
@@ -261,6 +244,7 @@ def main():
             ),
         ),
     }
+    code = code.replace("per_cpu_ptr(&kd_spin_fast_cpu, cpu)", "per_cpu_ptr(kd_spin_fast_cpu, cpu)")
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-outer-unit-") as directory:
         path = Path(directory)
         (path / "spin_outer_types.h").write_text(types)

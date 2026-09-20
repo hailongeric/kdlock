@@ -67,22 +67,22 @@ static bool kd_entry_wait(bool *flag, bool draining)
 
 static void kd_entry_drop(struct kd_spin_ref *ref)
 {
-	struct kd_spin_gate *gate;
+	kd_spinlock_t *gate;
 
 	if (!ref->entry)
 		return;
-	gate = kd_spin_entry_gate(ref);
+	gate = kd_spin_entry_word(ref);
 	KD_ENTRY_REQUIRE(gate);
 	KD_ENTRY_REQUIRE(kd_spin_entry_release_origin(ref) == 0);
-	KD_ENTRY_CHECK(READ_ONCE(gate->word.locked) == 1);
-	smp_store_release(&gate->word.val.counter, 0);
+	KD_ENTRY_CHECK(READ_ONCE(gate->locked) == 1);
+	smp_store_release(&gate->val.counter, 0);
 	KD_ENTRY_REQUIRE(kd_spin_entry_end(ref) == 0);
 }
 
 static void kd_entry_owner(void)
 {
 	struct kd_spin_ref a = { 0 }, b = { 0 };
-	struct kd_spin_gate *gate;
+	kd_spinlock_t *gate;
 	unsigned int registered = 0;
 	bool last = false;
 
@@ -90,12 +90,12 @@ static void kd_entry_owner(void)
 					     KD_SPIN_ENTRY_HOOK, &a) == 0);
 	KD_ENTRY_REQUIRE(kd_spin_entry_begin(&kd_entry_test.locks[1],
 					     KD_SPIN_ENTRY_VIRTUAL, &b) == 0);
-	gate = kd_spin_entry_gate(&a);
+	gate = kd_spin_entry_word(&a);
 	KD_ENTRY_REQUIRE(gate);
-	WRITE_ONCE(gate->word.locked, 1);
-	gate = kd_spin_entry_gate(&b);
+	WRITE_ONCE(gate->locked, 1);
+	gate = kd_spin_entry_word(&b);
 	KD_ENTRY_REQUIRE(gate);
-	WRITE_ONCE(gate->word.locked, 1);
+	WRITE_ONCE(gate->locked, 1);
 	KD_ENTRY_REQUIRE(kd_spin_entry_claim(&a) == 0);
 	KD_ENTRY_REQUIRE(kd_spin_entry_claim(&b) == 0);
 	KD_ENTRY_CHECK(preempt_count() == 2 && !irqs_disabled());
@@ -267,7 +267,6 @@ int kd_spin_entry_selftest(void)
 		       kd_entry_test.notifications == 2);
 	KD_ENTRY_CHECK(kd_entry_test.retained_pin && kd_entry_test.retained_b);
 	KD_ENTRY_CHECK(kd_spin_entries_check_idle() == 0);
-	KD_ENTRY_CHECK(kd_spin_gates_check_idle() == 0);
 	pr_info("kd_spin entry selftest: cpus=%d,%d capacity=%u notifications=%u retained_pin=%u retained_b=%u failures=%d JIT=0\n",
 		kd_entry_test_cpus[0], kd_entry_test_cpus[1],
 		KD_SPIN_ENTRY_SLOTS, kd_entry_test.notifications,

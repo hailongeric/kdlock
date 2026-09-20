@@ -30,7 +30,6 @@
 #include "kd_lock.h"
 #include "kd_mutex.h"
 #include "kd_spinlock.h"
-#include "kd_spin_gate.h"
 #include "kd_spin_entry.h"
 #include "sys.h"
 #include "utils.h"
@@ -95,9 +94,6 @@ static int __init kdlock_km_init(void)
 		goto err_spinlock;
 
 #ifdef KDLOCK_SELFTEST
-	ret = kd_spin_gate_selftest();
-	if (ret)
-		goto err_mutex;
 	ret = kd_spin_entry_selftest();
 	if (ret)
 		goto err_mutex;
@@ -153,7 +149,6 @@ static void __exit kdlock_km_exit(void)
 	kd_mutex_exit();
 	kd_mutex_tasks_exit();
 	WARN_ON_ONCE(kd_spin_entries_check_idle());
-	WARN_ON_ONCE(kd_spin_gates_check_idle());
 	kd_spinlock_exit();
 	kd_exec_context_exit();
 	kd_spin_entries_exit();

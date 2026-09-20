@@ -1,9 +1,8 @@
 #ifndef __QUEUED_SPINLOCK_INTERNAL_H__
 #define __QUEUED_SPINLOCK_INTERNAL_H__
 
-/* Local qspinlock-style layout/bit helpers for kdlock's private queue word.
- * Linux's original lock remains separate; these helpers do not replace its
- * ownership/exclusion protocol. Preserve the imported architecture definitions. */
+/* Local qspinlock-style layout/bit helpers for kdlock's sole queue/exclusion word.
+ * Independent Linux lock objects retain their own protocol. Preserve the imported architecture definitions. */
 #include <linux/smp.h>
 #include <linux/bug.h>
 #include <linux/percpu.h>
@@ -44,37 +43,8 @@
 #define atomic_cond_read_relaxed(v, c) smp_cond_load_relaxed(&(v)->counter, (c))
 #endif
 
-struct orig_qspinlock {
-	union {
-		atomic_t val;
+#include "kd_spin_type.h"
 
-		/*
-		 * By using the whole 2nd least significant byte for the
-		 * pending bit, we can allow better optimization of the lock
-		 * acquisition for the pending bit holder.
-		 */
-#ifdef __LITTLE_ENDIAN
-		struct {
-			u8 locked;
-			u8 pending;
-		};
-		struct {
-			u16 locked_pending;
-			u16 tail;
-		};
-#else
-		struct {
-			u16 tail;
-			u16 locked_pending;
-		};
-		struct {
-			u8 reserved[2];
-			u8 pending;
-			u8 locked;
-		};
-#endif
-	};
-};
 
 /*
  * Initializier

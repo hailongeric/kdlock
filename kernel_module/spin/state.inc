@@ -16,7 +16,7 @@ static __always_inline int kd_spin_trylock(struct qspinlock *word);
 
 /* Physical request state lives on the caller's stack, not a recyclable node
  * or the logical waiter's spin_origin (which can belong to an ancestor).
- * The entry pin keeps this request local; stable S is passed through the
+ * The entry pin keeps this request local; the KD word is passed through the
  * queue/batch, including early release and reclaim, without another map scan. */
 struct kd_spin_request {
 	struct kd_spin_ref ref;
@@ -25,24 +25,19 @@ struct kd_spin_request {
 
 static struct qspinlock *kd_spin_request_word(const struct kd_spin_ref *ref)
 {
-	struct kd_spin_gate *gate = kd_spin_entry_gate(ref);
-
-	BUG_ON(!gate);
-	return &gate->word;
+ kd_spinlock_t *word = kd_spin_entry_word(ref);
+ BUG_ON(!word);
+ return word;
 }
 
-/* L is the public identity; only these private words contain kdlock tails. */
+/* Explicit object identity is the sole scheduling/exclusion word. */
 static struct qspinlock *kd_spin_word(struct qspinlock *lock)
 {
-	struct kd_spin_gate *gate = kd_spin_gate_find((raw_spinlock_t *)lock);
-
-	BUG_ON(!gate);
-	return &gate->word;
+ return lock;
 }
 
-/* Normal unlocks recover S from their live ticket. An OOO ancestor can be
- * represented only by shadow/frame state on this CPU, so keep one read-only
- * map fallback for that case; it grants no right to release physical L. */
+/* Normal unlocks use their live ticket. An OOO ancestor can be represented
+ * by shadow/frame state only; its direct word grants no ownership by itself. */
 static struct kd_spin_request kd_spin_unlock_lookup(struct qspinlock *lock)
 {
 	struct kd_spin_request request = { 0 };
@@ -59,10 +54,7 @@ static void kd_spin_unlock_request(struct qspinlock *lock,
 
 static bool kd_spin_is_ooo(struct qspinlock *lock)
 {
-	struct kd_spin_gate *gate = kd_spin_gate_find((raw_spinlock_t *)lock);
-
-	/* Native ancestors have no scheduling word and cannot carry OOO markers. */
-	return gate && READ_ONCE(gate->word.locked) == 7;
+ return READ_ONCE(lock->locked) == 7;
 }
 
 static void kd_spin_claim_origin(const struct kd_spin_request *request)

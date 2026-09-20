@@ -32,14 +32,6 @@ bool kd_mutex_tasks_idle(void);
 #ifdef KDLOCK_SELFTEST
 int kd_mutex_task_selftest(void);
 #endif
-/* --- preemption helpers --------------------------------------------------- */
-
-static inline void kd_preempt_disable_raw_spin_lock(raw_spinlock_t *lock)
-{
-	spin_acquire(&lock->dep_map, 0, 0, _RET_IP_);
-	LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
-}
-
 /* --- mutex hooks ---------------------------------------------------------- */
 
 void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,

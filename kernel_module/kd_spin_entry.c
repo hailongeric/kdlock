@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Per-acquisition origin tickets, distinct from reusable scheduling nodes.
  * Generation checks prevent a stale ref from addressing a recycled ticket.
- * Hook and virtual nested requests retain their own task/CPU/native-L lifetime;
+ * Hook and virtual nested requests retain their own task/CPU/physical ownership lifetime;
  * native suffix borrowing ends only after the real owner's final ACK. */
 #include <linux/errno.h>
 #include <linux/limits.h>
@@ -27,8 +27,6 @@ struct kd_spin_entry {
 	raw_spinlock_t guard;
 	struct task_struct *task;
 	raw_spinlock_t *origin;
-	struct kd_spin_gate *gate;
-	struct kd_spin_hold hold;
 	unsigned long sequence;
 	unsigned int native_refs;
 	enum kd_spin_entry_kind kind;
@@ -157,18 +155,17 @@ bool kd_spin_entry_task_active(void)
 
 bool kd_spin_entry_native_active(void)
 {
-	/* A lightweight S/L root is ordinary physical ownership, not a native
+	/* A lightweight KD root is ordinary physical ownership, not a native
 	 * continuation. Its nested hooks still need discovery and their own
-	 * tickets; only a native suffix or cached native-L owner suppresses that admission. */
-	return kd_spin_fast_native_active() || kd_entry_lookup(NULL, true, NULL);
+	 * tickets; only a native suffix  suppresses that admission. */
+	return kd_entry_lookup(NULL, true, NULL);
 }
 
-/* Reserve under a caller-owned pin. A contended root supplies the gate it
- * already probed for its first CAS, avoiding a second map lookup and pin pair.
+/* Reserve under a caller-owned pin. A contended root has
+ * already tried the KD word; there is no map or separate exclusion lock.
  * Failure leaves the pin with the caller; successful end() consumes it. */
 static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 				enum kd_spin_entry_kind kind,
-				struct kd_spin_gate *gate,
 				struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry_pool *pool;
@@ -207,18 +204,10 @@ static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 		ret = -EOVERFLOW;
 		goto fail;
 	}
-	if (!gate)
-		gate = kd_spin_gate_get(origin);
-	if (!gate) {
-		ret = -ENOMEM;
-		goto fail;
-	}
 	/* Keep guard initialized for stale remote handles even after slot reuse. */
 	raw_spin_lock_irqsave(&entry->guard, flags);
 	entry->task = current;
 	entry->origin = origin;
-	entry->gate = gate;
-	entry->hold = (struct kd_spin_hold){ 0 };
 	entry->sequence = ++pool->sequence;
 	entry->native_refs = 0;
 	entry->kind = kind;
@@ -238,21 +227,19 @@ int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 	int ret;
 
 	preempt_disable();
-	ret = kd_spin_entry_reserve(origin, kind, NULL, ref);
+	ret = kd_spin_entry_reserve(origin, kind, ref);
 	if (ret)
 		preempt_enable();
 	return ret;
 }
 
-int kd_spin_entry_begin_pinned(raw_spinlock_t *origin, struct kd_spin_gate *gate,
+int kd_spin_entry_begin_pinned(raw_spinlock_t *origin,
 			       struct kd_spin_ref *ref)
 {
-	if (!gate || gate->origin != origin)
-		return -EINVAL;
-	return kd_spin_entry_reserve(origin, KD_SPIN_ENTRY_HOOK, gate, ref);
+	return kd_spin_entry_reserve(origin, KD_SPIN_ENTRY_HOOK, ref);
 }
 
-struct kd_spin_gate *kd_spin_entry_gate(const struct kd_spin_ref *ref)
+kd_spinlock_t *kd_spin_entry_word(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
 
@@ -264,11 +251,11 @@ struct kd_spin_gate *kd_spin_entry_gate(const struct kd_spin_ref *ref)
 	/* Reject a remote ref before reading task-owned metadata. On this CPU
 	 * the request pin excludes another task's slot reuse, and IRQ callers
 	 * cannot create/end tickets. Remote borrow operations touch native_refs
-	 * only, so reading this stable gate requires neither guard nor IRQ save. */
+	 * only, so reading this stable identity requires neither guard nor IRQ save. */
 	if (READ_ONCE(entry->cpu) != raw_smp_processor_id() ||
 	    entry->task != current || kd_entry_valid(ref))
 		return NULL;
-	return entry->gate;
+	return (kd_spinlock_t *)entry->origin;
 }
 
 static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
@@ -293,8 +280,9 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 	}
 	entry->state = KD_ENTRY_CLAIMING;
 	raw_spin_unlock_irqrestore(&entry->guard, flags);
-	/* Never wait on L under the ticket guard. */
-	ret = kd_spin_gate_claim(entry->gate, &entry->hold);
+	/* The caller acquired the sole word before claiming this ticket.
+	 * No second physical acquisition and no map/owner CAS is needed. */
+	ret = READ_ONCE(((kd_spinlock_t *)entry->origin)->locked) ? 0 : -EINVAL;
 	raw_spin_lock_irqsave(&entry->guard, flags);
 	entry->state = ret ? from : KD_ENTRY_OWNED;
 out:
@@ -339,7 +327,9 @@ int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 	}
 	entry->state = KD_ENTRY_RELEASING;
 	raw_spin_unlock_irqrestore(&entry->guard, flags);
-	ret = kd_spin_gate_release(&entry->hold);
+	/* Retire ownership metadata first. The scheduler performs exactly
+	 * one release store, preserving pending/tail, before publishing a wake. */
+	ret = 0;
 	raw_spin_lock_irqsave(&entry->guard, flags);
 	entry->state = ret ? KD_ENTRY_OWNED : KD_ENTRY_RELEASED;
 out:
@@ -365,7 +355,7 @@ int kd_spin_entry_end(struct kd_spin_ref *ref)
 	ret = kd_entry_local(ref);
 	if (ret)
 		goto out;
-	if (entry->native_refs || entry->hold.gate ||
+	if (entry->native_refs ||
 	    (entry->state != KD_ENTRY_WAITING &&
 	     entry->state != KD_ENTRY_RELEASED &&
 	     entry->state != KD_ENTRY_NATIVE)) {
@@ -381,7 +371,6 @@ int kd_spin_entry_end(struct kd_spin_ref *ref)
 	}
 	entry->task = NULL;
 	entry->origin = NULL;
-	entry->gate = NULL;
 	entry->cpu = -1;
 	WRITE_ONCE(entry->state, KD_ENTRY_FREE);
 	*ref = (struct kd_spin_ref){ 0 };
@@ -473,7 +462,7 @@ int kd_spin_entries_check_idle(void)
 	int cpu;
 	unsigned int i;
 
-	/* Native fast owners have no delegation ticket but still retain L and
+	/* Native fast owners have no delegation ticket but still retain the KD word and
 	 * the acquisition's CPU pin. Admission closing must not lose them. */
 	if (!kd_spin_fast_idle())
 		return -EBUSY;
@@ -488,12 +477,32 @@ int kd_spin_entries_check_idle(void)
 
 			if (READ_ONCE(entry->state) != KD_ENTRY_FREE ||
 			    READ_ONCE(entry->native_refs) ||
-			    READ_ONCE(entry->task) ||
-			    READ_ONCE(entry->hold.gate))
+			    READ_ONCE(entry->task))
 				return -EBUSY;
 		}
 	}
 	return 0;
+}
+
+/* Diagnostic snapshot only; ownership decisions use the caller's stable ref.
+ * Pool storage survives all observers until provider drain. */
+unsigned long kd_spin_entry_owner(raw_spinlock_t *origin)
+{
+ int cpu; unsigned int i;
+ if (!kd_spin_entries) return 0;
+ for_each_possible_cpu(cpu) {
+  struct kd_spin_fast_cpu *fast = per_cpu_ptr(&kd_spin_fast_cpu, cpu);
+  struct kd_spin_entry_pool *pool = per_cpu_ptr(kd_spin_entries, cpu);
+  if (READ_ONCE(fast->held) == (kd_spinlock_t *)origin)
+   return (unsigned long)READ_ONCE(fast->owner);
+  for (i = 0; i < KD_SPIN_ENTRY_SLOTS; i++) {
+   struct kd_spin_entry *entry = &pool->entries[i];
+   if (READ_ONCE(entry->origin) == origin &&
+       READ_ONCE(entry->state) == KD_ENTRY_OWNED)
+    return (unsigned long)READ_ONCE(entry->task);
+  }
+ }
+ return 0;
 }
 
 #ifdef KDLOCK_SELFTEST

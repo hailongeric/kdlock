@@ -27,6 +27,7 @@
 #include "exe.h"
 #include "kd_exec.h"
 #include "kd_hotlock.h"
+#include "kd_source.h"
 #include "kd_comm.h"
 
 /* Mutex task selection remains active independently of spin dispatch. */
@@ -139,20 +140,6 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
  * ========================================================================== */
 
 DEFINE_PER_CPU(struct kd_spin_fast_cpu, kd_spin_fast_cpu);
-/* Only an S/L owner needs the gate-release call and its two live pointers.
- * Keep them in this frame so cached native unlocks do not acquire additional
- * callee-saved register spills merely because this path exists. */
-noinline void kd_spin_fast_release_gate(struct kd_spin_fast_cpu *fast)
-{
-	struct kd_spin_gate *gate = fast->hold.gate;
-
-	BUG_ON(kd_spin_gate_release(&fast->hold));
-	/* Release L before S; preserve a concurrent pending/tail. */
-	smp_store_release(&gate->word.locked, 0);
-	WRITE_ONCE(fast->held, NULL);
-	preempt_enable();
-}
-
 
 #include "lock/mutex_calls.inc"
 
@@ -162,12 +149,12 @@ noinline void kd_spin_fast_release_gate(struct kd_spin_fast_cpu *fast)
 
 static void origin_raw_spin_lock(raw_spinlock_t *lock)
 {
-	__raw_spin_lock(lock);
+	kd_spin_lock_nondelegated((kd_spinlock_t *)lock);
 }
 
 static void origin_raw_spin_unlock(raw_spinlock_t *lock)
 {
-	__raw_spin_unlock(lock);
+	kd_spin_unlock_nondelegated((kd_spinlock_t *)lock);
 }
 
 #include "lock/spin_calls.inc"

@@ -14,7 +14,7 @@
 //   - Delegation via sandbox JIT; a per-CPU shadow stack isolates waiter polling
 
 /* Scheduling nodes carry packets, but kd_spin_entry owns origin tickets and
- * kd_spin_gate owns native L. Keep these lifetimes separate when reading the
+ * the KD word owns exclusion. Keep these lifetimes separate when reading the
  * nested queue paths: a remote executor may carry the same logical waiter.
  * Combiners use their task stack. Physical waiters switch to a shadow stack
  * before publication and return to their task stack after the release wake. */
@@ -305,6 +305,23 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
 	BUG();
 }
 
+/* Resource/context/admission refusal must never enter Linux qspinlock on a
+ * KD object. CAS over the entire word respects an existing pending/tail and
+ * cannot steal the queue head. These callers execute their own body only. */
+void kd_spin_lock_nondelegated(kd_spinlock_t *lock)
+{
+ preempt_disable();
+ this_cpu_inc(kd_spin_fast_cpu.nondelegated);
+ while (atomic_cmpxchg_acquire(&lock->val, 0, _Q_LOCKED_VAL_HL))
+  cpu_relax();
+}
+void kd_spin_unlock_nondelegated(kd_spinlock_t *lock)
+{
+ smp_store_release(&lock->locked, 0);
+ this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+ preempt_enable();
+}
+
 /* Hook entry for queued spin lock acquisition:
  * handles fast path when possible, otherwise routes to qspin queue protocol.
  */
@@ -313,7 +330,6 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	     unsigned long rip, unsigned long bp, unsigned int abi)
 {
 	struct kd_spin_request request = { 0 };
-	struct kd_spin_gate *gate;
 	struct qspinlock *word;
 	u32 val, cnt;
 
@@ -321,30 +337,24 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	    kd_spin_entry_native_active())
 		goto native;
 	/* Pin before consulting per-CPU execution state. Like TCLock, attempt
-	 * the scheduling word before building a contended request. Unlike
-	 * TCLock, S is private: Linux peers still require us to acquire L. */
+	 * sole word before building a contended request. Linux lock objects
+	 * are separate and never enter this API. */
 	preempt_disable();
 	if (kd_exec_current_frame() || kd_exec_context_busy())
 		goto unpin_native;
-	gate = kd_spin_gate_get((raw_spinlock_t *)lock);
-	if (!gate)
-		goto unpin_native;
-	word = request.word = &gate->word;
+	word = request.word = lock;
 	if (preempt_count() == 1) {
 		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
 		if (!val) {
-			if (unlikely(kd_spin_fast_claim(gate))) {
-				smp_store_release(&word->locked, 0);
-				goto unpin_native;
-			}
+			kd_spin_fast_claim(lock);
 			return;
 		}
-		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, gate,
+		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock,
 					       &request.ref))
 			goto unpin_native;
 	} else {
 		/* Nested/virtual ownership keeps the established ticket protocol. */
-		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, gate,
+		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock,
 					       &request.ref))
 			goto unpin_native;
 		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
@@ -377,7 +387,7 @@ acquired:
 unpin_native:
 	preempt_enable();
 native:
-	__raw_spin_lock((raw_spinlock_t *)lock);
+	kd_spin_lock_nondelegated(lock);
 }
 void kd_spin_lock(struct qspinlock *lock, unsigned long sp, unsigned long ip)
 {
@@ -395,8 +405,6 @@ int kd_spin_prepare(struct qspinlock *lock, unsigned long ip, unsigned int abi)
 		return -EINVAL;
 	if (!kd_source_is_open())
 		return -ESHUTDOWN;
-	if (!kd_spin_gate_get((raw_spinlock_t *)lock))
-		return -ENOMEM;
 	kd_exe_add_abi(0, ip, KD_EXE_LOCK_SPIN, abi);
 	exe = kd_get_exe(0, ip);
 	if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED ||
@@ -512,7 +520,7 @@ kd_spin_unlock_protocol(struct qspinlock *lock)
 }
 
 /* Explicit callers need the same acquisition-provenance release as the old
- * hook, including the ticket-free S/L owner and unstarted native fallback.
+ * hook, including the ticket-free KD owner and unstarted native fallback.
  * This is protocol routing, independent of comm, frequency or JIT policy. */
 __attribute__((noipa)) noinline notrace void
 kd_spin_unlock(struct qspinlock *lock)
@@ -527,7 +535,7 @@ kd_spin_unlock(struct qspinlock *lock)
 		kd_spin_unlock_ref(lock, &ref);
 		return;
 	}
-	__raw_spin_unlock((raw_spinlock_t *)lock);
+	kd_spin_unlock_nondelegated(lock);
 }
 EXPORT_SYMBOL_GPL(kd_spin_unlock);
 

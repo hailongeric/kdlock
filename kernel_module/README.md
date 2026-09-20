@@ -28,7 +28,6 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 | [sys.c](sys.c) | `/dev/kd_dev` 的读取、上传、状态与 retire ioctl |
 | [kd_source.c](kd_source.c) | 来源状态和 module/frame/writer pins |
 | [kd_hotlock.c](kd_hotlock.c) | 本 CPU 频率及本地单锁候选达标后发布共享身份；入口注册由 `kd_lock.c` 调用执行注册表 |
-| [kd_spin_gate.c](kd_spin_gate.c) | 私有 gate、真实 owner 与原锁引用；`origin` release/acquire 发布，已有条目无锁查找，创建仍串行化 |
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 

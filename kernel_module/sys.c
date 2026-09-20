@@ -22,7 +22,6 @@
 #include "kd_mutex.h"
 #include "kd_source.h"
 #include "kd_spin_entry.h"
-#include "kd_spin_gate.h"
 #include "sys.h"
 #include "utils.h"
 
@@ -118,8 +117,7 @@ static long kd_dev_ioctl(struct file *file, unsigned int command,
 		 * must stop new workloads; idle snapshots are not a hook-reader barrier. */
 		ret = kd_source_begin_retire();
 		if (!ret && (!kd_mutex_check_idle() || !kd_mutex_tasks_idle() ||
-			     kd_spin_entries_check_idle() ||
-			     kd_spin_gates_check_idle()))
+			     kd_spin_entries_check_idle()))
 			ret = -EBUSY;
 		if (!ret) {
 			kd_exe_retire_all();

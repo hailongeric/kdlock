@@ -175,7 +175,11 @@ static int __init sc_init(void)
 	BUILD_BUG_ON(sizeof(sc_lock) > SC_LINE_BYTES);
 	BUILD_BUG_ON(sizeof(sc_control) > SC_LINE_BYTES);
 	BUILD_BUG_ON(offsetof(spinlock_t, rlock) != 0);
+	#ifdef SC_DIRECT_KDLOCK
+	kd_spin_init(&sc_lock);
+	#else
 	spin_lock_init(&sc_lock);
+	#endif
 #ifdef SC_HASH_PAYLOAD
 	sc_hash_init();
 #endif

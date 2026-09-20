@@ -149,3 +149,5 @@ kdlock 在动态链表回链写入处被 JIT 地址准入拒绝，没有有效�
 [首次三方对照](results/20260918-native-stack.md)。
 旧 `profile_backends.py` 面向历史 hook 会话，本轮不使用它采样。
 统一接入已经暂停，依赖透明 hook 的旧 live 用例不适用于当前实验构建。
+
+[单锁字阶段结果](results/20260920-singleword.md)：150/150 场正确排空，40 场竞争 KD 有实际 JIT；与历史双字比较的环境限制见报告。

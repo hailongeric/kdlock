@@ -54,7 +54,6 @@
 | [execution/wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc) | 入口范围、ABI/镜像、body witness 与批次准入。 |
 | [execution/frame_lifecycle.inc](../kernel_module/execution/frame_lifecycle.inc) | frame 准备/绑定/push/pop 和普通完成/退休。 |
 | [spin/wait.inc](../kernel_module/spin/wait.inc) | 物理 waiter 连续汇编切入 shadow 栈再发布/轮询；未执行的队首恢复旧 RSP，完成或 native 唤醒放弃旧 C 帧并转入 task 栈的安全位置恢复。 |
-| [kd_spin_gate.c](../kernel_module/kd_spin_gate.c) | 原锁 L 与私有调度 S 分离，真实 owner/hold。 |
 | [kd_spin_entry.c](../kernel_module/kd_spin_entry.c) | origin ticket、代际、task/CPU 引用与借用生命周期。 |
 | [kd_mutex.c](../kernel_module/kd_mutex.c) | mutex 节点池、combiner、原生 owner、waiter 续跑；正常 queue/JIT 日志保留为 INFO。 |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | acquisition task 引用、rename 后路由及 RCU 回收。 |
@@ -72,7 +71,6 @@
 | [kd_hotlock.h](../include/kd_hotlock.h) | 本地采样准入与已晋升身份查询接口；计数/窗口不暴露为共享状态。 |
 | [kd_mutex.h](../include/kd_mutex.h) | 私有 mutex gate/node 布局和容量。 |
 | [kd_spinlock.h](../include/kd_spinlock.h) | spin node/队列与 JIT 上下文布局。 |
-| [kd_spin_gate.h](../include/kd_spin_gate.h) | 原锁 gate 与物理 hold 的代际约束。 |
 | [kd_spin_entry.h](../include/kd_spin_entry.h) | hook/virtual ticket 与 origin ref。 |
 | [kd_spin_fast.h](../include/kd_spin_fast.h) | 可关闭的原生站点缓存与独立 S/L hold；匹配缓存不重复查询，保留解锁/退休约束。 |
 | [kd_comm.h](../include/kd_comm.h) | 装载时准备的完整 task comm 掩码匹配，保留 NUL/超长名字语义。 |
@@ -279,7 +277,6 @@ provider include。具体 include 点可用
 | [spin_deferred_trace.c](../tests/kernel/spin/spin_deferred_trace.c) | 真实 deferred 队列选择/接链观察。 |
 | [exec_capacity_probe.c](../tests/kernel/execution/exec_capacity_probe.c) | 固定 frame 容量拒绝及包不变观察。 |
 | [exec_relay_exit_probe.c](../tests/kernel/execution/exec_relay_exit_probe.c) | 无锁 root finish 或已发 ACK 的远端 B pop 等待原 waiter TID 脱离；仅持有 PID 身份，不加 task ref、不伪造 ACK。 |
-| [spin_gate_selftest.c](../tests/kernel/spin/spin_gate_selftest.c) | hook 发布前的原生 L/私有 S 组件测试。 |
 | [spin_entry_selftest.c](../tests/kernel/spin/spin_entry_selftest.c) | task/CPU pins、tickets 与原生锁组件。 |
 | [spin_shadow_selftest.c](../tests/kernel/spin/spin_shadow_selftest.c) | full-shadow 队首路径。 |
 | [spin_virtual_selftest.c](../tests/kernel/spin/spin_virtual_selftest.c) | virtual 请求资源拒绝/取消检查。 |
@@ -304,7 +301,6 @@ provider include。具体 include 点可用
 | --- | --- |
 | [run.py](../tests/unit/run.py) | 单项 Python 入口，统一配置跨组夹具导入；无参数只列出库存。 |
 | [Makefile](../tests/unit/Makefile) | 默认 2 个基础 C 程序；PY_TESTS 按需增加，run-all 显式全量。 |
-| [spin_gate_mock.h](../tests/unit/spin/spin_gate_mock.h) | 提取式 C fixture 共用的 CPU/lock/atomic 替代原语。 |
 | [test_control_call.c](../tests/unit/basic/test_control_call.c) | 直接使用生产 kd_call 规则。 |
 | [test_daemon_policy.c](../tests/unit/basic/test_daemon_policy.c) | 编译生产 daemon，测试结果缓存、真实子进程 lease/reap 和 wire；计量默认关闭、wait4 中断重试与时钟/资源失败。 |
 | [test_clobber_entry.py](../tests/unit/admission/test_clobber_entry.py) | 新 ABI 未捕获寄存器、部分写、控制边界、入口栈槽与别名拒绝。 |

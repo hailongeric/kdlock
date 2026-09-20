@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-#ifndef SPIN_GATE_MOCK_H
-#define SPIN_GATE_MOCK_H
+#ifndef SPIN_SINGLE_MOCK_H
+#define SPIN_SINGLE_MOCK_H
 /* Minimal two-CPU/type/atomic substitutes shared by extracted C fixtures.
  * Their deterministic results are not Linux memory-ordering guarantees. */
 #include <assert.h>
@@ -21,9 +21,18 @@ typedef uint16_t u16;
 typedef struct {
 	int counter;
 } atomic_t;
-typedef struct {
-	bool held;
+/* Guard primitive and KD word both occupy four bytes in this CPU model. */
+typedef struct kd_spinlock {
+ union { atomic_t val; struct { u8 locked, pending; };
+         struct { u16 locked_pending, tail; }; u8 held; };
 } raw_spinlock_t;
+typedef struct kd_spinlock kd_spinlock_t;
+#define KD_SPIN_TYPE_H
+#define atomic_set(p, v) ((p)->counter = (v))
+#define KD_SPINLOCK_INITIALIZER { .val = { 0 } }
+static inline void kd_spin_init(kd_spinlock_t *p) { p->val.counter = 0; }
+struct kd_spin_fast_cpu { kd_spinlock_t *held; struct task_struct *owner; unsigned int nondelegated; };
+static struct kd_spin_fast_cpu kd_spin_fast_cpu[2];
 struct task_struct {
 	int pid;
 	int migration_disabled;
@@ -34,8 +43,8 @@ static struct task_struct tasks[2];
 static struct task_struct *current = &tasks[0];
 static int mock_cpu, mock_preempts[2];
 static bool mock_irq, mock_in_task = true;
-static unsigned int native_claims, native_releases, checks;
-static unsigned int map_locks, gate_hashes;
+static unsigned int checks;
+static unsigned int map_locks;
 
 #define mock_preempt mock_preempts[mock_cpu]
 #define CHECK(condition)           \
@@ -72,14 +81,6 @@ static unsigned int map_locks, gate_hashes;
 		before;                    \
 	})
 
-static unsigned long hash_long(unsigned long key, unsigned int bits)
-{
-	(void)key;
-	(void)bits;
-	gate_hashes++;
-	return 0; /* Force all map entries through the same probe chain. */
-}
-
 static void mock_map_lock(raw_spinlock_t *lock, unsigned long *flags)
 {
 	map_locks++;
@@ -101,17 +102,4 @@ static void mock_map_unlock(raw_spinlock_t *lock, unsigned long flags)
 #define raw_spin_lock_irqsave(lock, flags) mock_map_lock(lock, &(flags))
 #define raw_spin_unlock_irqrestore(lock, flags) mock_map_unlock(lock, flags)
 
-static void kd_preempt_disable_raw_spin_lock(raw_spinlock_t *lock)
-{
-	CHECK(!lock->held && mock_preempt > 0);
-	lock->held = true;
-	native_claims++;
-}
-
-static void do_raw_spin_unlock(raw_spinlock_t *lock)
-{
-	CHECK(lock->held && mock_preempt > 0);
-	lock->held = false;
-	native_releases++;
-}
 #endif

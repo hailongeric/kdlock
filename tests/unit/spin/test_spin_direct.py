@@ -39,7 +39,8 @@ static void kd_spin_unlock_ref(struct qspinlock *p, const struct kd_spin_ref *r)
     assert(p == &lock && r->token == ticket && ticket);
     releases++; preempt--;
 }
-static void __raw_spin_unlock(raw_spinlock_t *p) {
+typedef struct qspinlock kd_spinlock_t;
+static void kd_spin_unlock_nondelegated(kd_spinlock_t *p) {
     assert(p == &lock && !fast_owned && !ticket && !native_ack);
     releases++; preempt--;
 }
@@ -53,7 +54,7 @@ int main(void) {
         assert(releases == 1 && preempt == 0);
         assert(lookups == (mode >= 2));
     }
-    puts("PASS direct unlock: fast S/L, native ACK, queued ticket, native fallback");
+    puts("PASS direct unlock: fast S/L, native ACK, queued ticket, KD nondelegated fallback");
 }
 '''
 

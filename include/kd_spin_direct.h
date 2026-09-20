@@ -3,13 +3,13 @@
 #define KD_SPIN_DIRECT_H
 
 #include <asm/asm.h>
-#include <asm/qspinlock.h>
+#include "kd_spin_type.h"
 #include "exe_info.h"
 
-int kd_spin_prepare(struct qspinlock *lock, unsigned long ip, unsigned int abi);
-void kd_spin_lock_clobber_v1(struct qspinlock *, unsigned long, unsigned long,
+int kd_spin_prepare(kd_spinlock_t *lock, unsigned long ip, unsigned int abi);
+void kd_spin_lock_clobber_v1(kd_spinlock_t *, unsigned long, unsigned long,
 			   unsigned long);
-void kd_spin_unlock_clobber_v1(struct qspinlock *, unsigned long, unsigned long,
+void kd_spin_unlock_clobber_v1(kd_spinlock_t *, unsigned long, unsigned long,
 			     unsigned long);
 
 /* Same compiler-owned spill contract as clobber-v1, with a direct module CALL.
@@ -17,7 +17,7 @@ void kd_spin_unlock_clobber_v1(struct qspinlock *, unsigned long, unsigned long,
  * without executing the lock or adding a registration branch to every op.
  * Use each named label once, in a noipa function, to prevent cloning. */
 #define KD_SPIN_DIRECT_CALL(symbol, lock, continuation) do {                 \
-	struct qspinlock *kd_arg = (struct qspinlock *)(lock);                 \
+	kd_spinlock_t *kd_arg = (kd_spinlock_t *)(lock);                 \
 	unsigned long kd_sp, kd_ip, kd_bp;                                   \
 	asm volatile("movq %%rsp, %%rsi\n\t"                                 \
 		     "leaq 1f(%%rip), %%rdx\n\t"                           \

@@ -3,13 +3,13 @@
 
 /* Spin scheduling-node and JIT handoff layouts. Nodes are bounded per CPU and
  * reusable; origin refs and physical holds have separate generation checks.
- * The qspinlock alias below denotes private scheduling storage, not Linux L. */
+ * The internal qspinlock alias denotes the explicit KD object, never Linux L. */
 #include <asm/ptrace.h>
 #include <linux/atomic.h>
 #include "qspinlock_i.h"
 #include "kd_exec.h"
 
-#define qspinlock orig_qspinlock
+#define qspinlock kd_spinlock
 #define ENABLE_IRQS_CHECK 1
 
 #define MAX_NODES 4
@@ -87,11 +87,13 @@ void kd_spin_unlock(struct qspinlock *lock);
 /* Explicit callers prepare their continuation before starting the workload.
  * These clobber entries capture no registers themselves: use the caller shell
  * in kd_spin_direct.h so the compiler spills every live non-frame GPR. */
-int kd_spin_prepare(struct qspinlock *lock, unsigned long ip, unsigned int abi);
+int kd_spin_prepare(kd_spinlock_t *lock, unsigned long ip, unsigned int abi);
 void kd_spin_lock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 			   unsigned long ip, unsigned long bp);
 void kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 			     unsigned long ip, unsigned long bp);
+void kd_spin_lock_nondelegated(kd_spinlock_t *lock);
+void kd_spin_unlock_nondelegated(kd_spinlock_t *lock);
 /* Internal shadow/frame releases already know their protocol provenance. */
 void kd_spin_unlock_protocol(struct qspinlock *lock);
 /* The hook already found this acquisition ticket; reuse it through release. */

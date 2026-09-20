@@ -11,19 +11,13 @@ from test_spin_shadow import definition
 
 
 def main():
-    source = (
-        definition(
-            (ROOT / "include/qspinlock_i.h").read_text(), "struct orig_qspinlock {"
-        ).rstrip()
-        + ";\n"
-    )
+    source = ""
     for name in (
-        "include/kd_spin_gate.h",
-        "kernel_module/kd_spin_gate.c",
         "include/kd_spin_entry.h",
         "kernel_module/kd_spin_entry.c",
     ):
         source += without_includes((ROOT / name).read_text()) + "\n"
+    source = source.replace("per_cpu_ptr(&kd_spin_fast_cpu, cpu)", "per_cpu_ptr(kd_spin_fast_cpu, cpu)")
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-entry-unit-") as directory:
         path = Path(directory)
         (path / "entry_production.h").write_text(source)

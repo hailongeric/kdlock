@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Production spin batch/frame decisions around a substituted JIT body.
  * Preserve tickets and complete packets across outer release and pool refusal. */
-#include "spin_gate_mock.h"
+#include "spin_single_mock.h"
 #include <stddef.h>
 
 typedef uint32_t u32;
@@ -388,18 +388,17 @@ int kd_spin_jit_abort_cleanup(struct kd_exec_frame *frame)
 }
 void kd_spin_unlock_protocol(struct qspinlock *lock)
 {
-	struct kd_spin_gate *gate = kd_spin_gate_find((raw_spinlock_t *)lock);
-	CHECK(gate && gate->word.locked == 3);
+	kd_spinlock_t *gate = (kd_spinlock_t *)lock;
+	CHECK(gate && gate->locked == 3);
 	kd_spin_debug_ooo_unlock(lock, 2);
 	if (gate)
-		gate->word.locked = 7;
+		gate->locked = 7;
 }
 
 /* These scripted combiner requests enter through real tickets, never the
  * root native-fast hook. Keep its unrelated per-CPU ownership empty here;
  * test_spin_routing exercises the production fast path and retirement guard. */
 static bool kd_spin_fast_active(void) { return false; }
-static bool kd_spin_fast_native_active(void) { return false; }
 static bool kd_spin_fast_idle(void) { return true; }
 
 #undef request
@@ -478,8 +477,8 @@ static void wake_before(const void *address, size_t size, uintptr_t value)
 	CHECK(!memcmp(fixture_request(node)->frame.regs_ref, &wake_probe.regs, sizeof(*fixture_request(node)->frame.regs_ref)));
 	CHECK(scripts == wake_probe.completed && pops == scripts);
 	CHECK(origins[0].held &&
-	      kd_spin_entry_gate(&executor_ref)->owner == current);
-	CHECK(kd_spin_entry_gate(&executor_ref)->word.locked ==
+	      kd_spin_entry_owner((raw_spinlock_t *)kd_spin_entry_word(&executor_ref)) == (unsigned long)current);
+	CHECK(kd_spin_entry_word(&executor_ref)->locked ==
 	      (wake_probe.completed ? _Q_LOCKED_COMBINER_VAL : _Q_LOCKED_VAL_HL));
 }
 
@@ -575,22 +574,22 @@ static void cpu_relax(void)
 		preentry_queue_peer();
 		return;
 	}
-	struct kd_spin_gate *gate = kd_spin_entry_gate(&executor_ref);
+	kd_spinlock_t *gate = kd_spin_entry_word(&executor_ref);
 	CHECK(next_holds && gate && current == &tasks[0] && mock_preempt == 1);
 	waits++;
 	if (!stage) {
 		mock_cpu = 1;
 		current = &tasks[1];
 		CHECK(kd_spin_entry_release_origin(&next_ref) == 0);
-		gate->word.locked = 0;
+		gate->locked = 0;
 		CHECK(kd_spin_entry_end(&next_ref) == 0);
 		mock_cpu = 0;
 		current = &tasks[0];
-		gate->word.pending = 1;
+		gate->pending = 1;
 	} else if (stage == 1) {
-		gate->word.pending = 0;
+		gate->pending = 0;
 	} else {
-		gate->word.tail = 0;
+		gate->tail = 0;
 		next_holds = false;
 	}
 	stage++;
@@ -598,15 +597,15 @@ static void cpu_relax(void)
 
 static void successor_progress(void)
 {
-	struct kd_spin_gate *gate = kd_spin_entry_gate(&executor_ref);
+	kd_spinlock_t *gate = kd_spin_entry_word(&executor_ref);
 	struct kd_spin_node *published = &successor;
 #ifdef NUMA_AWARE
 	if (mode == 5)
 		published = &deferred;
 #endif
-	CHECK(!origins[0].held && !gate->word.locked && !published->locked);
+	CHECK(!origins[0].held && !gate->locked && !published->locked);
 	CHECK(origins[1].held && mock_preempt == 2);
-	if (origins[0].held || gate->word.locked || published->locked)
+	if (origins[0].held || gate->locked || published->locked)
 		return;
 #ifdef NUMA_AWARE
 	if (mode == 5) {
@@ -619,7 +618,7 @@ static void successor_progress(void)
 	current = &tasks[1];
 	CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK, &next_ref) ==
 	      0);
-	gate->word.locked = 1;
+	gate->locked = 1;
 	CHECK(kd_spin_entry_claim(&next_ref) == 0);
 	mock_cpu = 0;
 	current = &tasks[0];
@@ -740,7 +739,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				unsigned long saved[8] = { 0, 1, 2, 3,
 							   4, 5, 6, 0x800 };
 				unsigned int length = 0;
-				struct kd_spin_gate *gate;
+				kd_spinlock_t *gate;
 				struct pt_regs expected_regs;
 				struct kd_exec_frame parent_before;
 				struct kd_spin_jit_context context_before;
@@ -752,8 +751,8 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				CHECK(kd_spin_entry_begin(&origins[0],
 							  KD_SPIN_ENTRY_HOOK,
 							  &executor_ref) == 0);
-				gate = kd_spin_entry_gate(&executor_ref);
-				gate->word.locked = 3;
+				gate = kd_spin_entry_word(&executor_ref);
+				gate->locked = 3;
 				kd_spin_claim_origin(a_lock());
 				shadow_states[cpu].lock_addr[0] =
 					(unsigned long)&origins[0];
@@ -845,7 +844,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 						      sizeof(context_before)));
 				}
 				CHECK(origins[0].held &&
-				      gate->owner == current &&
+				      kd_spin_entry_owner((raw_spinlock_t *)gate) == (unsigned long)current &&
 				      mock_preempt == 1);
 				cursor = expected[0];
 				for (unsigned int i = 0; i < length; i++) {
@@ -860,7 +859,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				CHECK(!shadow_states[cpu].local_queue_head &&
 				      !shadow_states[cpu].local_queue_tail);
 #endif
-				gate->word.val.counter = 1;
+				gate->val.counter = 1;
 				kd_spin_release_origin(a_lock());
 				CHECK(!mock_preempt &&
 				      kd_spin_entries_check_idle() == 0);
@@ -916,7 +915,7 @@ static unsigned int repeated_admission(void)
 			scripts = pops = 0;
 			for (unsigned int attempt = 0; attempt <= refusals;
 			     attempt++) {
-				struct kd_spin_gate *gate;
+				kd_spinlock_t *gate;
 				bool ready = attempt == refusals;
 #ifdef NUMA_AWARE
 				struct kd_spin_node prefix = {
@@ -937,8 +936,8 @@ static unsigned int repeated_admission(void)
 				CHECK(kd_spin_entry_begin(&origins[0],
 							  KD_SPIN_ENTRY_HOOK,
 							  &executor_ref) == 0);
-				gate = kd_spin_entry_gate(&executor_ref);
-				gate->word.locked = 3;
+				gate = kd_spin_entry_word(&executor_ref);
+				gate->locked = 3;
 				kd_spin_claim_origin(a_lock());
 				shadow_states[mock_cpu].lock_addr[0] =
 					(unsigned long)&origins[0];
@@ -957,7 +956,7 @@ static unsigned int repeated_admission(void)
 				CHECK(request.next == &successor &&
 				      !successor.next && !successor.completed);
 				CHECK(origins[0].held &&
-				      gate->owner == current &&
+				      kd_spin_entry_owner((raw_spinlock_t *)gate) == (unsigned long)current &&
 				      mock_preempt == 1);
 #ifdef NUMA_AWARE
 				CHECK(!prefix.locked && !prefix.completed &&
@@ -971,7 +970,7 @@ static unsigned int repeated_admission(void)
 				CHECK(!request.locked &&
 				      successor.locked == !ready);
 #endif
-				gate->word.val.counter = 1;
+				gate->val.counter = 1;
 				kd_spin_release_origin(a_lock());
 				shadow_states[mock_cpu].lock_addr[0] = 0;
 				CHECK(!mock_preempt &&
@@ -994,7 +993,7 @@ static unsigned int preentry_packet(void)
 	for (unsigned int virtual = 0; virtual < 2; virtual++) {
 		for (mode = 11; mode <= 12; mode++) {
 			unsigned long saved[8] = { 0, 1, 2, 3, 4, 5, 6, 0x800 };
-			struct kd_spin_gate *gate;
+			kd_spinlock_t *gate;
 
 			reset_request();
 			memset(&successor, 0, sizeof(successor));
@@ -1003,8 +1002,8 @@ static unsigned int preentry_packet(void)
 			CHECK(kd_spin_entry_begin(&origins[0],
 						  KD_SPIN_ENTRY_HOOK,
 						  &executor_ref) == 0);
-			gate = kd_spin_entry_gate(&executor_ref);
-			gate->word.locked = 3;
+			gate = kd_spin_entry_word(&executor_ref);
+			gate->locked = 3;
 			kd_spin_claim_origin(a_lock());
 			shadow_states[0].lock_addr[0] =
 				(unsigned long)&origins[0];
@@ -1062,12 +1061,12 @@ static unsigned int preentry_packet(void)
 			CHECK(!request.locked && successor.locked &&
 			      request.next == &successor && !successor.next);
 			CHECK(origins[0].held && !origins[1].held &&
-			      gate->owner == current && mock_preempt == 1);
+			      kd_spin_entry_owner((raw_spinlock_t *)gate) == (unsigned long)current && mock_preempt == 1);
 			if (virtual)
 				CHECK(requester.remote_result ==
 					      KD_EXEC_REMOTE_WAITING &&
 				      !active.resume_target);
-			gate->word.val.counter = 1;
+			gate->val.counter = 1;
 			kd_spin_release_origin(a_lock());
 			CHECK(!mock_preempt &&
 			      kd_spin_entries_check_idle() == 0);
@@ -1089,7 +1088,7 @@ static unsigned int publication_boundaries(void)
 
 	memset(&reused, 0xa5, sizeof(reused));
 	for (unsigned int path = 0; path < 5; path++) {
-		struct kd_spin_gate *gate;
+		kd_spinlock_t *gate;
 
 		mode = path == 1 ? 4 : 10;
 		reset_request();
@@ -1098,8 +1097,8 @@ static unsigned int publication_boundaries(void)
 		executor_ref = (struct kd_spin_ref){ 0 };
 		CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK,
 					  &executor_ref) == 0);
-		gate = kd_spin_entry_gate(&executor_ref);
-		gate->word.locked = _Q_LOCKED_COMBINER_VAL;
+		gate = kd_spin_entry_word(&executor_ref);
+		gate->locked = _Q_LOCKED_COMBINER_VAL;
 		kd_spin_claim_origin(a_lock());
 		shadow_states[0].lock_addr[0] = (unsigned long)&origins[0];
 		shadow_states[0].curr_cs_cpu = shadow_states[0].prev_cs_cpu = -1;
@@ -1132,7 +1131,7 @@ static unsigned int publication_boundaries(void)
 		CHECK(!request.next && !fixture_request(&request)->frame.logical_task);
 		CHECK(!request.locked && request.completed == (path == 0));
 		CHECK(successor.locked == (path != 0));
-		gate->word.val.counter = _Q_LOCKED_VAL_HL;
+		gate->val.counter = _Q_LOCKED_VAL_HL;
 		kd_spin_release_origin(a_lock());
 		CHECK(!mock_preempt && kd_spin_entries_check_idle() == 0);
 	}
@@ -1144,99 +1143,11 @@ static unsigned int publication_boundaries(void)
  * Compare the complete producer state at ENOMEM; only the existing PENDING
  * helper may subsequently restore callee/SP. JIT execution and Linux waiting
  * are covered by the live gate-pressure case, not this deterministic fixture. */
-static unsigned int progressed_gate_refusal(void)
-{
-	static raw_spinlock_t fresh[KD_SPIN_GATE_SLOTS + 1];
-	static struct kd_spin_gate gates_before[KD_SPIN_GATE_SLOTS];
-	struct kd_spin_entry_pool tickets_before[2];
-	struct kd_spin_node nodes_before[MAX_NODES];
-	struct kd_spin_jit_context contexts_before[MAX_NODES];
-	struct shadow_stack shadows_before[2];
-	struct kd_spin_ref origin_ref = { 0 };
-	struct kd_exec_frame *frame;
-	struct kd_spin_gate *gate;
-	struct pt_regs regs, staged, original;
-	unsigned long stack[3] = { 0x90050, 0x100, 0x200 };
-	unsigned long locks[] = { (unsigned long)&origins[0] };
-	enum kd_exec_lock_kind kinds[] = { KD_EXEC_LOCK_QUEUE_OWNER };
-	unsigned int free_tickets = 0, populated = 0;
-	int ret;
-
-	for (unsigned int i = 0; i < KD_SPIN_GATE_SLOTS; i++)
-		(void)kd_spin_gate_get(&fresh[i]);
-	for (unsigned int i = 0; i < KD_SPIN_GATE_SLOTS; i++)
-		populated += kd_spin_gates[i].origin != NULL;
-	CHECK(populated == KD_SPIN_GATE_SLOTS);
-	CHECK(!kd_spin_gate_find(&fresh[KD_SPIN_GATE_SLOTS]));
-	mock_cpu = 1;
-	current = &tasks[1];
-	CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK, &origin_ref) == 0);
-	mock_cpu = 0;
-	current = &tasks[0];
-	executor_ref = (struct kd_spin_ref){ 0 };
-	CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK, &executor_ref) == 0);
-	gate = kd_spin_entry_gate(&executor_ref);
-	gate->word.locked = _Q_LOCKED_COMBINER_VAL;
-	kd_spin_claim_origin(a_lock());
-	memset(&regs, 0x57, sizeof(regs));
-	regs.di = (unsigned long)&fresh[KD_SPIN_GATE_SLOTS];
-	regs.ip = 0xf0000;
-	regs.sp = (unsigned long)stack;
-	original = regs;
-	frame = real_frame_push(&regs, 0x90000, locks[0], &request, NULL, 1,
-				0x20000, &tasks[1]);
-	CHECK(frame && source_frames == 1);
-	CHECK(kd_exec_frame_set_lock_entries(frame, locks, kinds, NULL, NULL, 1) == 0);
-	frame->spin_origin = origin_ref;
-	frame->executed = true;
-	CHECK(kd_call_begin(&frame->control_call, regs.ip, regs.sp, stack[0]) == 0);
-	regs.ip = stack[0];
-	regs.sp += sizeof(unsigned long);
-	staged = regs;
-	for (unsigned int i = 0; i < KD_SPIN_ENTRY_SLOTS; i++)
-		free_tickets += kd_spin_entries[0].entries[i].state == KD_ENTRY_FREE;
-	CHECK(free_tickets == KD_SPIN_ENTRY_SLOTS - 1);
-	memcpy(gates_before, kd_spin_gates, sizeof(gates_before));
-	memcpy(tickets_before, kd_spin_entries, sizeof(tickets_before));
-	memcpy(nodes_before, kd_spin_nodes, sizeof(nodes_before));
-	memcpy(contexts_before, queue_contexts, sizeof(contexts_before));
-	memcpy(shadows_before, shadow_states, sizeof(shadows_before));
-	memcpy(pool_before, kd_exec_context, sizeof(pool_before));
-	ret = kd_spin_nested_lock((struct qspinlock *)regs.di, &regs, frame);
-	CHECK(ret == -ENOMEM);
-	CHECK(!memcmp(&regs, &staged, sizeof(regs)));
-	CHECK(!memcmp(gates_before, kd_spin_gates, sizeof(gates_before)));
-	CHECK(!memcmp(tickets_before, kd_spin_entries, sizeof(tickets_before)));
-	CHECK(!memcmp(nodes_before, kd_spin_nodes, sizeof(nodes_before)));
-	CHECK(!memcmp(contexts_before, queue_contexts, sizeof(contexts_before)));
-	CHECK(!memcmp(shadows_before, shadow_states, sizeof(shadows_before)));
-	CHECK(!memcmp(pool_before, kd_exec_context, sizeof(pool_before)));
-	CHECK(mock_preempts[0] == 1 && mock_preempts[1] == 1 && !mock_irq);
-	CHECK(origins[0].held && gate->owner == current && source_frames == 1);
-	CHECK(kd_call_resume_pending(&frame->control_call, ret, &regs.ip, &regs.sp) == 1);
-	CHECK(!memcmp(&regs, &original, sizeof(regs)));
-	CHECK(stack[0] == 0x90050 && stack[1] == 0x100 && stack[2] == 0x200);
-	/* End only this fixture's retained locks through their original APIs.
-	 * This is not production post-JIT rollback or a substitute for owner ACK. */
-	CHECK(kd_exec_frame_lock_mark_released(frame, locks[0]) == 0);
-	frame->outer_unlock_seen = true;
-	CHECK(kd_exec_frame_complete(frame) == 0);
-	CHECK(real_frame_pop(frame, NULL) == 0 && source_frames == 0);
-	gate->word.val.counter = _Q_LOCKED_VAL_HL;
-	kd_spin_release_origin(a_lock());
-	mock_cpu = 1;
-	current = &tasks[1];
-	CHECK(kd_spin_entry_end(&origin_ref) == 0);
-	mock_cpu = 0;
-	current = &tasks[0];
-	CHECK(kd_spin_entries_check_idle() == 0 && !mock_preempts[0] && !mock_preempts[1]);
-	return 1;
-}
 
 static void tail_before_link(void)
 {
 	struct kd_spin_node node = { 0 }, next = { 0 };
-	struct orig_qspinlock word = { .val.counter = 3 };
+	struct kd_spinlock word = { .val.counter = 3 };
 
 	CHECK(!kd_spin_linked_successor(&word, &node));
 	word.val.counter = 0x10003;
@@ -1264,7 +1175,7 @@ int main(void)
 	unsigned int wake_cases = publication_boundaries();
 	queue_probe = true;
 	for (mode = 0; mode < 8; mode++) {
-		struct kd_spin_gate *gate;
+		kd_spinlock_t *gate;
 		bool early = mode != 0 && mode != 4 && mode != 6 && mode != 7;
 		reset_request();
 		memset(&successor, 0, sizeof(successor));
@@ -1274,9 +1185,9 @@ int main(void)
 		b_ref = (struct kd_spin_ref){ 0 };
 		CHECK(kd_spin_entry_begin(&origins[0], KD_SPIN_ENTRY_HOOK,
 					  &executor_ref) == 0);
-		gate = kd_spin_entry_gate(&executor_ref);
-		gate->word.locked = 3;
-		gate->word.tail = 4;
+		gate = kd_spin_entry_word(&executor_ref);
+		gate->locked = 3;
+		gate->tail = 4;
 		kd_spin_claim_origin(a_lock());
 		CHECK(!kd_spin_trylock(kd_spin_word(a_lock())));
 		shadow_states[0].lock_addr[0] = (unsigned long)&origins[0];
@@ -1326,7 +1237,7 @@ int main(void)
 		CHECK(fixture_request(&request)->queued_at_ns == (scripts ? 0 : 50));
 		CHECK(native_waits == (mode == 2 || mode == 3));
 		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
-		CHECK(origins[0].held && gate->owner == current &&
+		CHECK(origins[0].held && kd_spin_entry_owner((raw_spinlock_t *)gate) == (unsigned long)current &&
 		      !origins[1].held);
 		CHECK(mock_preempt == 1 && mock_preempts[1] == 0 &&
 		      !next_holds);
@@ -1341,7 +1252,7 @@ int main(void)
 		if (mode == 6)
 			CHECK(requester.remote_result == KD_EXEC_REMOTE_DONE &&
 			      !active.resume_target);
-		gate->word.val.counter = 1;
+		gate->val.counter = 1;
 		kd_spin_release_origin(a_lock());
 		CHECK(!mock_preempt && kd_spin_entries_check_idle() == 0);
 	}
@@ -1354,10 +1265,8 @@ int main(void)
 	unsigned int readmission_cases = repeated_admission();
 	unsigned int preentry_cases = preentry_packet();
 	unsigned int queue_cases = preentry_queue_return();
-	unsigned int gate_cases = progressed_gate_refusal();
-	CHECK(!kd_exec_invariant_failures && native_claims == native_releases);
+	CHECK(!kd_exec_invariant_failures);
 	CHECK(full_pool_calls == full_pool_batches && full_pool_calls > 0);
-	CHECK(kd_spin_gates_check_idle() == 0);
 	kd_spin_entries_exit();
 	printf("spin outer production progress: %u checks, %u failures, 8 progress + %u rejection + %u readmission + %u preentry scenarios NUMA=%u\n",
 	       checks, failures, rejection_cases, readmission_cases,
@@ -1375,7 +1284,5 @@ int main(void)
 	       queue_cases);
 	printf("spin wake publication: %u release/packet/reuse boundaries\n",
 	       wake_cases);
-	printf("spin progressed gate refusal: %u full-map ENOMEM packet/ticket/frame checks\n",
-	       gate_cases);
 	return failures ? 1 : 0;
 }

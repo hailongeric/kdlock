@@ -10,8 +10,12 @@ struct sc_slot {
 } __attribute__((aligned(SC_LINE_BYTES)));
 
 static struct sc_slot sc_data[SC_SLOTS];
-static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 #include "direct.h"
+#ifdef SC_DIRECT_KDLOCK
+static kd_spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
+#else
+static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
+#endif
 
 #ifdef SC_HASH_PAYLOAD
 #include "hash_payload.h"
@@ -58,7 +62,7 @@ static inline int sc_prepare(unsigned int lines)
 #endif
 	default: return -EINVAL;
 	}
-	return kd_spin_prepare((struct qspinlock *)&sc_lock, entry,
+	return kd_spin_prepare(&sc_lock, entry,
 			       KD_ENTRY_ABI_SPIN_CLOBBER_V1);
 #else
 #ifdef SC_HASH_PAYLOAD

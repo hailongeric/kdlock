@@ -150,20 +150,14 @@ EXPORT_SYMBOL_GPL(kd_spin_debug_waiter_count);
 /* Test observers must not interpret the Linux lock word as our private queue. */
 unsigned int kd_spin_debug_word(raw_spinlock_t *lock)
 {
-	struct kd_spin_gate *gate = kd_spin_gate_find(lock);
-
-	return gate ? atomic_read(&gate->word.val) : 0;
+ return lock ? atomic_read(&((kd_spinlock_t *)lock)->val) : 0;
 }
 EXPORT_SYMBOL_GPL(kd_spin_debug_word);
 
 /* Only a physically held proxy gate has an owner; native Linux users do not. */
 unsigned long kd_spin_debug_owner(raw_spinlock_t *lock)
 {
-	struct kd_spin_gate *gate = kd_spin_gate_find(lock);
-
-	return gate && READ_ONCE(gate->held) ?
-		       (unsigned long)READ_ONCE(gate->owner) :
-		       0;
+ return kd_spin_entry_owner(lock);
 }
 EXPORT_SYMBOL_GPL(kd_spin_debug_owner);
 

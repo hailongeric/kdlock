@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Extracted origin-ticket lifetime code over deterministic gate primitives.
  * Allocation refusal, stale generations and borrow release are not live load. */
-#include "spin_gate_mock.h"
+#include "spin_single_mock.h"
 #define smp_store_release(p, v) __atomic_store_n((p), (v), __ATOMIC_RELEASE)
 #define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 
@@ -20,12 +20,11 @@ static unsigned int lookup_pins, pool_reads;
 /* This fixture owns tickets only. The routing fixture separately exercises
  * the production native fast owner and its integration with these queries. */
 static bool kd_spin_fast_active(void) { return false; }
-static bool kd_spin_fast_native_active(void) { return false; }
 static bool kd_spin_fast_idle(void) { return true; }
 
 #include "entry_production.h"
 
-static raw_spinlock_t locks[KD_SPIN_GATE_SLOTS + 1];
+static raw_spinlock_t locks[KD_SPIN_ENTRY_SLOTS + 1];
 
 static void select_cpu(unsigned int cpu)
 {
@@ -39,25 +38,23 @@ static void select_cpu(unsigned int cpu)
 static void pinned_admission(void)
 {
 	struct kd_spin_ref ref = { 0 }, duplicate = { 0 };
-	struct kd_spin_gate *gate = kd_spin_gate_get(&locks[0]);
-	unsigned int hashes = gate_hashes, pins = lookup_pins;
+	kd_spinlock_t *gate = &locks[0];
+	unsigned int pins = lookup_pins;
 
-	CHECK(kd_spin_entry_begin_pinned(&locks[0], gate, &ref) == -EPERM);
+	CHECK(kd_spin_entry_begin_pinned(&locks[0], &ref) == -EPERM);
 	preempt_disable();
-	CHECK(kd_spin_entry_begin_pinned(&locks[1], gate, &ref) == -EINVAL);
-	CHECK(mock_preempt == 1 && !ref.entry);
-	CHECK(kd_spin_entry_begin_pinned(&locks[0], gate, &ref) == 0);
-	CHECK(kd_spin_entry_begin_pinned(&locks[0], gate, &duplicate) == -EDEADLK);
+	CHECK(kd_spin_entry_begin_pinned(&locks[0], &ref) == 0);
+	CHECK(kd_spin_entry_begin_pinned(&locks[0], &duplicate) == -EDEADLK);
 	CHECK(mock_preempt == 1 && !duplicate.entry);
-	CHECK(gate_hashes == hashes && lookup_pins == pins + 1);
-	CHECK(kd_spin_entry_gate(&ref) == gate);
+	CHECK(lookup_pins == pins + 1);
+	CHECK(kd_spin_entry_word(&ref) == gate);
 	CHECK(kd_spin_entry_end(&ref) == 0 && !mock_preempt);
 }
 
 static void lifecycle(void)
 {
 	struct kd_spin_ref ref = { 0 }, other = { 0 }, stale, found = { 0 };
-	struct kd_spin_gate *gate;
+	kd_spinlock_t *gate;
 	bool last = false;
 
 	CHECK(kd_spin_entries_check_idle() == 0);
@@ -83,7 +80,7 @@ static void lifecycle(void)
 	CHECK(kd_spin_entries_check_idle() == -EBUSY);
 	/* Guard's own pin must not make an unpinned caller look valid. */
 	mock_preempt = 0;
-	CHECK(kd_spin_entry_gate(&ref) == NULL);
+	CHECK(kd_spin_entry_word(&ref) == NULL);
 	CHECK(kd_spin_entry_claim(&ref) == -EPERM);
 	CHECK(kd_spin_entry_release_origin(&ref) == -EPERM);
 	CHECK(kd_spin_entry_mark_native(&ref) == -EPERM);
@@ -101,22 +98,22 @@ static void lifecycle(void)
 	CHECK(kd_spin_entry_end(&ref) == -EPERM);
 	mock_preempt = 0;
 	select_cpu(0);
-	gate = kd_spin_entry_gate(&ref);
+	gate = kd_spin_entry_word(&ref);
 	CHECK(gate && kd_spin_entry_claim(&ref) == -EINVAL);
-	gate->word.locked = 1;
+	gate->locked = 1;
 	CHECK(kd_spin_entry_claim(&ref) == 0);
-	CHECK(kd_spin_entry_claim(&ref) == 0 && native_claims == 1);
+	CHECK(kd_spin_entry_claim(&ref) == 0);
 	CHECK(kd_spin_entry_end(&ref) == -EBUSY && locks[0].held);
 	CHECK(kd_spin_entry_borrow_get(&ref) == -EINVAL);
 	CHECK(kd_spin_entry_release_origin(&ref) == 0);
-	CHECK(!locks[0].held && gate->word.locked == 1 && mock_preempt == 1);
+	CHECK(locks[0].held && gate->locked == 1 && mock_preempt == 1);
 	CHECK(kd_spin_entry_release_origin(&ref) == -EBUSY);
-	gate->word.val.counter = 0;
+	gate->val.counter = 0;
 	stale = ref;
 	CHECK(kd_spin_entry_end(&ref) == 0 && !ref.entry && mock_preempt == 0);
 	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_VIRTUAL, &ref) == 0);
 	CHECK(ref.entry == stale.entry && ref.sequence != stale.sequence);
-	CHECK(kd_spin_entry_gate(&stale) == NULL);
+	CHECK(kd_spin_entry_word(&stale) == NULL);
 	CHECK(kd_spin_entry_end(&stale) == -ESTALE);
 	CHECK(kd_spin_entry_borrow_get(&stale) == -ESTALE);
 	CHECK(kd_spin_entry_borrow_put(&stale, &last) == -ESTALE);
@@ -130,7 +127,7 @@ static void lifecycle(void)
 static void read_only_queries(void)
 {
 	struct kd_spin_ref ref = { 0 }, found = { 0 };
-	struct kd_spin_gate *gate;
+	kd_spinlock_t *gate;
 	unsigned int pins = lookup_pins, reads = pool_reads, guards = map_locks;
 	unsigned long flags;
 
@@ -139,28 +136,28 @@ static void read_only_queries(void)
 	CHECK(!kd_spin_entry_find(&locks[0], &found));
 	CHECK(lookup_pins == pins && pool_reads == reads && map_locks == guards);
 	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) == 0);
-	gate = kd_spin_gate_find(&locks[0]);
+	gate = &locks[0];
 	pins = lookup_pins;
 	guards = map_locks;
 	CHECK(kd_spin_entry_task_active() && !kd_spin_entry_native_active());
 	CHECK(kd_spin_entry_find(&locks[0], &found));
 	CHECK(found.entry == ref.entry && found.sequence == ref.sequence);
-	CHECK(kd_spin_entry_gate(&ref) == gate);
+	CHECK(kd_spin_entry_word(&ref) == gate);
 	CHECK(lookup_pins == pins && map_locks == guards && mock_preempt == 1);
 	raw_spin_lock_irqsave(&ref.entry->guard, flags);
-	CHECK(kd_spin_entry_gate(&ref) == gate);
+	CHECK(kd_spin_entry_word(&ref) == gate);
 	raw_spin_unlock_irqrestore(&ref.entry->guard, flags);
 	/* CPU/task/generation checks still protect the guard-free read. */
 	current = &tasks[1];
-	CHECK(kd_spin_entry_gate(&ref) == NULL);
+	CHECK(kd_spin_entry_word(&ref) == NULL);
 	current = &tasks[0];
 	select_cpu(1);
 	preempt_disable();
-	CHECK(kd_spin_entry_gate(&ref) == NULL);
+	CHECK(kd_spin_entry_word(&ref) == NULL);
 	preempt_enable();
 	select_cpu(0);
 	mock_in_task = false;
-	CHECK(kd_spin_entry_gate(&ref) == NULL);
+	CHECK(kd_spin_entry_word(&ref) == NULL);
 	CHECK(!kd_spin_entry_find(&locks[0], &found));
 	mock_in_task = true;
 	CHECK(kd_spin_entry_end(&ref) == 0 && mock_preempt == 0);
@@ -169,14 +166,14 @@ static void read_only_queries(void)
 static void remote_native(void)
 {
 	struct kd_spin_ref waiter = { 0 }, a = { 0 }, b = { 0 };
-	struct kd_spin_gate *ag, *bg;
+	kd_spinlock_t *ag, *bg;
 	bool last = true;
 
 	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &a) == 0);
 	CHECK(kd_spin_entry_begin(&locks[1], KD_SPIN_ENTRY_VIRTUAL, &b) == 0);
-	ag = kd_spin_entry_gate(&a);
-	bg = kd_spin_entry_gate(&b);
-	ag->word.locked = bg->word.locked = 1;
+	ag = kd_spin_entry_word(&a);
+	bg = kd_spin_entry_word(&b);
+	ag->locked = bg->locked = 1;
 	CHECK(kd_spin_entry_claim(&a) == 0 && kd_spin_entry_claim(&b) == 0);
 	CHECK(mock_preempt == 2 && locks[0].held && locks[1].held);
 	select_cpu(1);
@@ -195,7 +192,7 @@ static void remote_native(void)
 	CHECK(kd_spin_entry_end(&waiter) == -EBUSY && mock_preempt == 1);
 	select_cpu(0);
 	CHECK(kd_spin_entry_release_origin(&a) == 0);
-	ag->word.val.counter = 0;
+	ag->val.counter = 0;
 	CHECK(kd_spin_entry_end(&a) == 0 && mock_preempt == 1);
 	CHECK(kd_spin_entry_borrow_put(&waiter, &last) == 0 && !last);
 	select_cpu(1);
@@ -204,7 +201,7 @@ static void remote_native(void)
 	CHECK(kd_spin_entry_end(&waiter) == -EBUSY);
 	select_cpu(0);
 	CHECK(kd_spin_entry_release_origin(&b) == 0);
-	bg->word.val.counter = 0;
+	bg->val.counter = 0;
 	CHECK(kd_spin_entry_end(&b) == 0 && mock_preempt == 0);
 	CHECK(kd_spin_entry_borrow_put(&waiter, &last) == 0 && last);
 	CHECK(mock_preempt == 0 && mock_preempts[1] == 1);
@@ -215,59 +212,29 @@ static void remote_native(void)
 	select_cpu(0);
 }
 
+/* Early release retains the ticket generation; reclaim follows a new CAS. */
 static void reclaim(void)
 {
-	struct kd_spin_ref ref = { 0 }, stale;
-	struct kd_spin_gate *gate;
-	unsigned int claims = native_claims, releases = native_releases;
-	unsigned long generation;
-
-	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) == 0);
-	gate = kd_spin_entry_gate(&ref);
-	gate->word.locked = 1;
-	CHECK(kd_spin_entry_reclaim(&ref) == -EBUSY);
-	CHECK(kd_spin_entry_claim(&ref) == 0);
-	CHECK(kd_spin_entry_reclaim(&ref) == -EBUSY);
-	generation = gate->generation;
-	CHECK(kd_spin_entry_release_origin(&ref) == 0);
-	CHECK(kd_spin_entry_claim(&ref) == -EBUSY);
-	CHECK(mock_preempt == 1 && !ref.entry->hold.gate);
-	mock_preempt = 0;
-	CHECK(kd_spin_entry_reclaim(&ref) == -EPERM);
-	mock_preempt = 1;
-	current = &tasks[1];
-	CHECK(kd_spin_entry_reclaim(&ref) == -EPERM);
-	current = &tasks[0];
-	select_cpu(1);
-	mock_preempt = 1;
-	current = &tasks[0];
-	CHECK(kd_spin_entry_reclaim(&ref) == -EPERM);
-	mock_preempt = 0;
-	select_cpu(0);
-	gate->word.locked = 0;
-	CHECK(kd_spin_entry_reclaim(&ref) == -EINVAL);
-	CHECK(ref.entry->state == KD_ENTRY_RELEASED);
-	gate->word.locked = 1;
-	gate->owner = &tasks[1];
-	CHECK(kd_spin_entry_reclaim(&ref) == -EBUSY);
-	CHECK(ref.entry->state == KD_ENTRY_RELEASED);
-	gate->owner = NULL;
-	ref.entry->native_refs = 1;
-	CHECK(kd_spin_entry_reclaim(&ref) == -EBUSY);
-	ref.entry->native_refs = 0;
-	CHECK(kd_spin_entry_reclaim(&ref) == 0);
-	CHECK(mock_preempt == 1 && gate->held && locks[0].held);
-	CHECK(gate->generation == generation + 1);
-	CHECK(ref.entry->hold.owner == current);
-	CHECK(kd_spin_entry_release_origin(&ref) == 0);
-	gate->word.val.counter = 0;
-	stale = ref;
-	CHECK(kd_spin_entry_end(&ref) == 0 && mock_preempt == 0);
-	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) == 0);
-	CHECK(ref.entry == stale.entry && ref.sequence != stale.sequence);
-	CHECK(kd_spin_entry_reclaim(&stale) == -ESTALE);
-	CHECK(kd_spin_entry_end(&ref) == 0 && mock_preempt == 0);
-	CHECK(native_claims == claims + 2 && native_releases == releases + 2);
+ struct kd_spin_ref ref = { 0 }, stale;
+ CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) == 0);
+ locks[0].locked = 1;
+ CHECK(kd_spin_entry_claim(&ref) == 0);
+ CHECK(kd_spin_entry_release_origin(&ref) == 0);
+ CHECK(kd_spin_entry_release_origin(&ref) == -EBUSY);
+ locks[0].locked = 0;
+ CHECK(kd_spin_entry_reclaim(&ref) == -EINVAL);
+ locks[0].locked = 1;
+ CHECK(kd_spin_entry_reclaim(&ref) == 0);
+ CHECK(kd_spin_entry_owner(&locks[0]) == (unsigned long)current);
+ CHECK(kd_spin_entry_end(&ref) == -EBUSY);
+ CHECK(kd_spin_entry_release_origin(&ref) == 0);
+ locks[0].locked = 0;
+ stale = ref;
+ CHECK(kd_spin_entry_end(&ref) == 0);
+ CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &ref) == 0);
+ CHECK(ref.sequence != stale.sequence);
+ CHECK(kd_spin_entry_reclaim(&stale) == -ESTALE);
+ CHECK(kd_spin_entry_end(&ref) == 0);
 }
 
 static void capacity(void)
@@ -303,13 +270,7 @@ static void capacity(void)
 	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &extra) ==
 	      -EOVERFLOW);
 	CHECK(mock_preempt == 0 && !extra.entry);
-	select_cpu(1);
-	for (unsigned int i = 0; i < KD_SPIN_GATE_SLOTS; i++)
-		CHECK(kd_spin_gate_get(&locks[i]));
-	CHECK(kd_spin_entry_begin(&locks[KD_SPIN_GATE_SLOTS],
-				  KD_SPIN_ENTRY_HOOK, &extra) == -ENOMEM);
-	CHECK(mock_preempt == 0 && !extra.entry);
-	select_cpu(0);
+
 }
 
 int main(void)
@@ -331,13 +292,11 @@ int main(void)
 	remote_native();
 	reclaim();
 	capacity();
-	CHECK(kd_spin_entries_check_idle() == 0 &&
-	      kd_spin_gates_check_idle() == 0);
-	CHECK(native_claims == 5 && native_releases == 5);
+	CHECK(kd_spin_entries_check_idle() == 0);
 	CHECK(mock_preempts[0] == 0 && mock_preempts[1] == 0 && !mock_irq);
 	kd_spin_entries_exit();
 	CHECK(!kd_spin_entries && kd_spin_entries_check_idle() == 0);
-	printf("[PASS] test_spin_entry (%u checks, production tickets/gates)\n",
+	printf("[PASS] test_spin_entry (%u checks, production single-word tickets)\n",
 	       checks);
 	return 0;
 }

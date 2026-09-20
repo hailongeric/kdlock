@@ -441,8 +441,6 @@ static int kd_shadow_round(unsigned int round)
 	memset(&kd_shadow_test, 0, sizeof(kd_shadow_test));
 	raw_spin_lock_init(&kd_shadow_test.origin);
 	kd_shadow_test.lock = (void *)&kd_shadow_test.origin;
-	if (!kd_spin_gate_get(&kd_shadow_test.origin))
-		return -ENOMEM;
 	kd_shadow_test.word = kd_spin_word(kd_shadow_test.lock);
 	init_completion(&kd_shadow_test.start);
 	for (i = 0; i < ARRAY_SIZE(kd_shadow_test.held); i++)

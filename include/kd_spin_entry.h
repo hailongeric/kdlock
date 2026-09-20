@@ -2,7 +2,8 @@
 #ifndef KD_SPIN_ENTRY_H
 #define KD_SPIN_ENTRY_H
 
-#include "kd_spin_gate.h"
+#include <linux/spinlock.h>
+#include "kd_spin_type.h"
 
 #define KD_SPIN_ENTRY_SLOTS 32
 
@@ -25,25 +26,26 @@ struct kd_spin_ref {
 int kd_spin_entries_init(void);
 void kd_spin_entries_exit(void);
 int kd_spin_entries_check_idle(void);
+unsigned long kd_spin_entry_owner(raw_spinlock_t *origin);
 int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
 			struct kd_spin_ref *ref);
-/* Contended root: reuse a known gate and transfer exactly one existing pin
+/* Contended root: transfer exactly one existing pin
  * to the ticket on success. On failure caller still owns/balances its pin. */
-int kd_spin_entry_begin_pinned(raw_spinlock_t *origin, struct kd_spin_gate *gate,
+int kd_spin_entry_begin_pinned(raw_spinlock_t *origin,
 			       struct kd_spin_ref *ref);
 bool kd_spin_entry_find(raw_spinlock_t *origin, struct kd_spin_ref *ref);
 bool kd_spin_entry_task_active(void);
 bool kd_spin_entry_native_active(void);
-struct kd_spin_gate *kd_spin_entry_gate(const struct kd_spin_ref *ref);
+kd_spinlock_t *kd_spin_entry_word(const struct kd_spin_ref *ref);
 
-/* The caller owns the private word. Claim is idempotent for this live ticket;
- * release_origin releases only L. The scheduler must publish its word release
+/* The caller owns the KD word. Claim is idempotent for this live ticket;
+ * release_origin retires only ownership metadata. The scheduler publishes one release
  * before ending an owned request. Neither operation consumes the entry pin.
  */
 int kd_spin_entry_claim(const struct kd_spin_ref *ref);
 int kd_spin_entry_release_origin(const struct kd_spin_ref *ref);
-/* An early-release batch keeps its ticket/pin alive. After reclaiming private
- * S, only that original task/CPU may reacquire L with the released ticket. */
+/* An early-release batch keeps its ticket/pin alive. After acquiring the KD
+ * word again, only the original task/CPU may reclaim the released ticket. */
 int kd_spin_entry_reclaim(const struct kd_spin_ref *ref);
 
 /* Begin adds one preemption pin on success. Only its task/CPU may end it.
