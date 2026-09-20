@@ -191,7 +191,6 @@ kdlock 协议，也不会自动关闭 JIT。两种模式的 guest 工作目录�
 | `test_hotlock_sampling.py` | 替代 CPU/TSC 的实际生产采样：批量门槛、独立窗口、表/缓存碰撞、并发发布、重入、时间倒退、终态及容量；九种错误变异 | 检查近似计数的边界和可靠发布，不要求逐次精确计数；不替代实际 JIT 或 IRQ/NMI 验证 |
 | `test_spin_gate.py` | 生产 gate/hold map、代际/原锁 owner；另测冷入口和已执行 JIT 的 gate-pressure 日志 | 后者要求独立 ENOMEM/CALL 包、双 frame、一次副作用与 ACK；与 entry/routing 共用实现但直接验证表和 owner 边界，保留 |
 | `test_spin_entry.py` | 生产 ticket、origin 引用、task/CPU pins 的生命周期 | 与 gate 不同资源层，保留 |
-| `test_spin_routing.py` | 生产 selector/hook 和获取分支，替代队列等待 | 入口分流不同于 ticket 分配或 combiner 执行，保留 |
 | `test_spin_shadow.py` | 生产队首、combiner、native/virtual node producer、取消与嵌套返回 | 已覆盖被删除的节点计数模型；保留此生产测试 |
 | `test_spin_wait.py` | guest 用户态执行生产 `spin/wait.inc` 汇编，另一线程覆盖旧 C 栈后检查完成/native 恢复，以及普通队首返回 | 专门检查发布后无栈等待和非局部恢复；不模拟内核 IRQ，不替代实际 JIT |
 | `test_spin_outer_progress.py` | 生产 batch/frame/ticket、提前 outer-release、frame 池拒绝、真实 gate 满表 ENOMEM 的完整包不变，以及 release 前的包和唤醒后槽复用 | gate 失败由真实 nested producer 产生、PENDING helper 恢复 callee/SP；与 shadow 队首部分交叉，但保留 frame/原锁和发布边界；不证明实际 JIT 或硬件内存序 |

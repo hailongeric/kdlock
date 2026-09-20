@@ -76,7 +76,6 @@
 | [kd_spin_entry.h](../include/kd_spin_entry.h) | hook/virtual ticket 与 origin ref。 |
 | [kd_spin_fast.h](../include/kd_spin_fast.h) | 可关闭的原生站点缓存与独立 S/L hold；匹配缓存不重复查询，保留解锁/退休约束。 |
 | [kd_comm.h](../include/kd_comm.h) | 装载时准备的完整 task comm 掩码匹配，保留 NUL/超长名字语义。 |
-| [kd_spin_select.h](../include/kd_spin_select.h) | spin 的共同目标/保留 owner 选择规则，供旧 selector 与合并入口的慢路径使用。 |
 | [qspinlock_i.h](../include/qspinlock_i.h) | 私有调度字的 qspinlock 风格位布局/辅助宏。 |
 | [kd_segment.h](../include/kd_segment.h) | 在 origin CPU 记录 kernel GS base。 |
 | [kd_source.h](../include/kd_source.h) | source 生命周期内部接口。 |
@@ -330,7 +329,6 @@ provider include。具体 include 点可用
 | [test_native_registers.py](../tests/unit/execution/test_native_registers.py) / [native_register_fixture.c](../tests/unit/execution/native_register_fixture.c) | 实际用户态汇编 probe 与 GPR oracle。 |
 | [test_spin_gate.py](../tests/unit/spin/test_spin_gate.py) / [spin_gate_fixture.c](../tests/unit/spin/spin_gate_fixture.c) | 生产 gate/hold map 与过期代际；检出 PENDING ENOMEM、JIT/owner/副作用或双 frame 证据缺失。 |
 | [test_spin_entry.py](../tests/unit/spin/test_spin_entry.py) / [spin_entry_fixture.c](../tests/unit/spin/spin_entry_fixture.c) | 生产 origin ticket/ref 生命周期。 |
-| [test_spin_routing.py](../tests/unit/spin/test_spin_routing.py) / [spin_routing_fixture.c](../tests/unit/spin/spin_routing_fixture.c) | 生产 hook/selector 路由。 |
 | [test_clobber_abi.py](../tests/unit/codegen/test_clobber_abi.py) | 合并的 ABI 1/2 wrapper 入口，默认两者；真实 caller clobber、精简/完整出口和混合交接，检查 poisoned packet 及寄存器压力。 |
 | [test_tclock_context.py](../tests/unit/spin/test_tclock_context.py) | TCLock 六寄存器、RSP 与原生 lock/unlock 续点的真实汇编验证；不等于复杂内核场景覆盖。 |
 | [test_spin_wwjump.py](../tests/unit/spin/test_spin_wwjump.py) / [legacy_batch.S](../tests/unit/spin/legacy_batch.S) | 当前旧入口 clobber 适配与历史外壳兼容对照；后者仅为测试夹具。 |

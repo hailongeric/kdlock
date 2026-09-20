@@ -25,7 +25,6 @@
 #include "exe.h"
 #include "kd_exec.h"
 #include "kd_comm.h"
-#include "kd_spin_select.h"
 #include "kd_source.h"
 #include "kd_hotlock.h"
 #include "kd_lock.h"
@@ -52,11 +51,6 @@ module_param(target_process, charp, S_IRUGO);
 MODULE_PARM_DESC(target_process, "task comm routed through kdlock hooks");
 
 #if 0 /* Direct-API experiment: do not install global lock selectors. */
-static int __is_kd_test(void)
-{
-	return kd_spin_task_selected() ? 2 : 0;
-}
-
 /* This kernel selector has no lock argument. Dispatch without reading comm;
  * the lock hook performs CPU -> address -> task admission, and the unlock
  * hook independently preserves every retained owner's route. */
@@ -117,25 +111,16 @@ static int __init kdlock_km_init(void)
 	/* Ordinary callers use clobber v1. The legacy callbacks remain necessary
 	 * for explicit nested APIs and modules compiled with the old caller ABI;
 	 * supporting those callers does not require an older kernel installer. */
-	ret = kd_spin_static_install_clobber_v1(__is_kd_test,
-		kd_spin_dispatch_lock, kd_spin_dispatch_unlock,
-		kd_spin_dispatch_clobber_lock_v1, kd_spin_dispatch_clobber_unlock_v1);
-	if (ret)
-		goto err_mutex;
 	ret = kd_mutex_static_install_clobber_v1(kd_mutex_dispatch_enabled,
 		__kd_mutex_lock, __kd_mutex_unlock,
 		__kd_mutex_lock_clobber_v1, __kd_mutex_unlock_clobber_v1);
 	if (ret)
-		goto err_spin_hooks;
+		goto err_mutex;
 #endif
 
 	KD_PR_INFO("kd kernel module init: direct spin API; unified hooks disabled\n");
 	return 0;
 
-#if 0 /* Paired with the disabled installers above. */
-err_spin_hooks:
-	kd_spin_static_remove();
-#endif
 #ifdef KDLOCK_SELFTEST
 err_mutex:
 #endif
@@ -161,7 +146,6 @@ err_source:
 static void __exit kdlock_km_exit(void)
 {
 #if 0 /* Direct-API experiment: this module installed no global hooks. */
-	kd_spin_static_remove();
 	kd_mutex_static_remove();
 #endif
 

@@ -1,5 +1,8 @@
 # spin_cacheline：kdlock、TCLock 与 Linux 的执行路径
 
+旧统一 spin 分发和站点缓存已删除；下文相关伪代码仅说明基线历史路径。
+当前直接入口为 `kd_spin_lock_abi`，快速所有权和 ticket 生命周期仍保留。
+
 本文按 **2026-09-19 当前工作树** 的实现维护，默认要求 `kdclobber2` 的
 普通 spin caller-clobber v1 接口；旧调用者在同一内核上仍有兼容路径。
 TCLock 换栈部分已更新至 9/20 的 C 内联汇编和无新增执行计数设置；历史计数

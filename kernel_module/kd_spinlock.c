@@ -329,9 +329,6 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	gate = kd_spin_gate_get((raw_spinlock_t *)lock);
 	if (!gate)
 		goto unpin_native;
-	/* Unified cached-native admission is disabled in this direct experiment.
-	 * Keep fast S/L ownership itself: it belongs to the lock protocol. */
-	/* kd_spin_fast_remember((raw_spinlock_t *)lock, rip, gate); */
 	word = request.word = &gate->word;
 	if (preempt_count() == 1) {
 		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);

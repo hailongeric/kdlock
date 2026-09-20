@@ -72,7 +72,7 @@ Build ID、本地频率准备、counter 及测试库存。
 
 在 recovery guest `6.1.159-kdclobber2` 核验 source/config/build/live 身份后，
 两个基础 C 程序及下列五个相关入口全部通过：
-`test_hotlock_sampling.py`、`test_spin_routing.py`、`test_mutex_resources.py`、
+`test_hotlock_sampling.py`、`test_mutex_resources.py`、
 `test_spin_batch.py`、`test_exe_registry.py`，合计 **7 passed / 0 failed**。
 provider `W=1` 构建及 daemon `-O2 -Wall -Wextra -Werror` 强制重建通过；
 provider 保留既有换栈/恢复的 objtool 告警。377 个冻结输入核验一致，最终 guest 空闲。

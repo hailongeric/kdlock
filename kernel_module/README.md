@@ -32,12 +32,8 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 
-普通 spin 的 `spin_native_cache` 装载参数默认开启；设为 `0` 可关闭原生站点
-缓存做对照，会话中不可切换。使用内核 `bint` 解析，sysfs 读回 `0/1`。
-缓存 miss 后 root 先尝试私有 S，竞争后才分配 ticket；
-成功的 S/L root 保留独立 physical hold。缓存键不变时不重复查询翻译表回填。
-具体锁与生命周期约束见 [DESIGN 4.1](../docs/design/locking.md#41-native-lock-and-private-queue)，
-实测取舍见 [入口对照](../bench/spin_cacheline/results/20260918-spin-entry.md)。
+旧统一 spin 分发及 `spin_native_cache` 已删除；显式直接 API 保留现有
+快速所有权、ticket、frame 和 ACK 路径。mutex 的目标进程选择仍保留。
 
 `spin_prefetch=0/1/2` 是只读装载参数，分别关闭后继请求预取、保留 combiner
 查询地址的旧策略、使用发布前准备的地址提示（默认）。它不关闭其他既有队列

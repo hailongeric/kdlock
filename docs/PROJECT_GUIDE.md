@@ -1,5 +1,9 @@
 # 代码阅读与手动运行指南
 
+本轮执行：[单锁字与本地哈希设计（待实施）](design/locking.md)。基线已提交为
+`7e2460c`；先清理停用 spin 分发和缓存，保留正在使用的 gate/S、mutex 接入及生命周期检查。
+下方旧架构描述保留为当前实现，待替代路径通过后更新。
+
 本文面向第一次逐文件阅读、手动操作当前 checkout 的读者。协议细节仍以
 [DESIGN](DESIGN.md)、[寄存器 ABI](JIT_REGISTER_ABI.md) 为准；每个复杂测试的
 执行流和判定条件见 [JIT_EXECUTION](JIT_EXECUTION.md)，历史证据只维护在

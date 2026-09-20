@@ -1,5 +1,38 @@
 # Spin and mutex ownership protocols
 
+旧统一 spin 分发和站点缓存已删除；下文相关伪代码仅说明基线历史路径。
+当前直接入口为 `kd_spin_lock_abi`，快速所有权和 ticket 生命周期仍保留。
+
+## 2026-09-20：已批准的单锁字与本地哈希改造（待实施）
+
+比较基线为 `7e2460c`。当前代码仍使用 gate/S + Linux L 和全局晋升集合；
+下面是待实施设计，不表示正确性或性能已经通过。
+
+显式 `kd_spinlock_t` 的 32 位字同时承载快速获取、pending、KD MCS 队列和
+combiner 仲裁。替代路径接入时一起删除 gate 映射、独立 S、原生 L 二次获取；
+无法代理的 KD 对象仍执行 KD 不代理协议。仅迁移模块和显式调用者，不安装
+全局 spin 替换。Linux 对象和 mutex 保留各自协议。
+
+caller-clobber ABI、JIT 准入、等待栈、稳定 request/frame、owner/ACK 保留。
+嵌套、提前释放、乱序解锁及重新获取都要求每次物理释放只写一次锁字；
+node 复用不代表 frame 已退休，部分执行继续原有受检恢复约束。
+
+spin 和 mutex 各自每 CPU 一张表：16 桶、6 个预分配候选、槽索引链表，哈希后
+比较完整地址；只有满表淘汰时扫描六个分数。命中增加 score，替换最小项时
+先摘链后插入，error 记录被替换分数，准入要求 `score-error >= 10000`。
+删除全局晋升及查询，类型明确的本地记录/查询保留原批量时钟（10240 次）、
+CPU 窗口（400 亿 TSC）和锁窗口（25 亿 TSC）。`adaptive` 控制新请求，
+`observe` 固定准入用于协议对比；统计重入失败只丢样，mutex 不跨睡眠固定 CPU。
+OWNER、WAITER、COMBINER、DONE 属于稳定请求/持锁记录/frame，输出关联角色；
+表淘汰、窗口重置、CPU 迁移不改变所有权，解锁不查热表。
+
+提交顺序：基线 → 文档/无行为变化清理 → 单锁字 → 本地哈希/角色。
+每阶段在 guest 构建及运行基础和直接相关检查；联合检查淘汰中的活动请求及
+mutex 等待迁移。JIT 正例必须取得实际正文证据；性能使用已有 1/16 cacheline、
+1/4/8/16/20 线程三锁矩阵和同一负载，分开报告协议、记录成本、自适应效果。
+不恢复已删除的调度检查，不把历史结果写成本次重跑。
+
+
 Current implementation contract; start with the [design overview](../DESIGN.md).
 Validation belongs to its frozen inputs in [tests](../../tests/README.md).
 

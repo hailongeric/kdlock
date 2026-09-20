@@ -4,8 +4,7 @@
  * This file implements the hook callbacks that the patched kernel calls on
  * ordinary spinlock and mutex operations before target-process selection:
  *
- *   Ordinary spin: kd_spin_dispatch_clobber_*_v1 → kd_spin_lock_abi()
- *   Legacy caller: kd_spin_dispatch_{lock,unlock} → full-state spin path
+ *   Spin callers use the explicit kd_spin_lock_abi() API.
  *
  *   Mutex:        __kd_mutex_lock  → _kd_mutex_lock()   (kd_mutex.c)
  *                 __kd_mutex_unlock → _kd_mutex_unlock()
@@ -28,10 +27,13 @@
 #include "exe.h"
 #include "kd_exec.h"
 #include "kd_hotlock.h"
+#include "kd_comm.h"
+
+/* Mutex task selection remains active independently of spin dispatch. */
+extern struct kd_comm_key kd_spin_target;
 #include "kd_lock.h"
 #include "kd_mutex.h"
 #include "kd_spin_fast.h"
-#include "kd_spin_select.h"
 #include "kd_spinlock.h"
 #include "utils.h"
 
@@ -137,11 +139,6 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
  * ========================================================================== */
 
 DEFINE_PER_CPU(struct kd_spin_fast_cpu, kd_spin_fast_cpu);
-int kd_spin_native_cache __read_mostly = 1;
-module_param_named(spin_native_cache, kd_spin_native_cache, bint, 0400);
-MODULE_PARM_DESC(spin_native_cache,
-	"Cache published native spin sites (default on; disable for entry-cost comparisons)");
-
 /* Only an S/L owner needs the gate-release call and its two live pointers.
  * Keep them in this frame so cached native unlocks do not acquire additional
  * callee-saved register spills merely because this path exists. */
@@ -156,133 +153,6 @@ noinline void kd_spin_fast_release_gate(struct kd_spin_fast_cpu *fast)
 	preempt_enable();
 }
 
-/* Keep ticket objects and the general route's stack protector outside the
- * common native return. The saved kernel rsp still belongs to the original
- * guest hook and is passed unchanged through the cold acquisition helper. */
-#if 0 /* Direct-API experiment: unified selection/hotlock entry is disabled. */
-static noinline void kd_raw_spin_unlock_slow(raw_spinlock_t *lock)
-{
-	struct kd_spin_ref ref = { 0 };
-
-	if (kd_exec_native_unlock((unsigned long)lock, false))
-		return;
-	/* Acquisition provenance wins over today's promotion state or comm. */
-	if (kd_spin_entry_find(lock, &ref)) {
-		kd_spin_unlock_ref((struct qspinlock *)lock, &ref);
-		return;
-	}
-	origin_raw_spin_unlock(lock);
-}
-
-static noinline void kd_raw_spin_lock_slow(raw_spinlock_t *lock,
-					 unsigned long ret_rsp,
-					 unsigned long ret_addr)
-{
-	if (kd_spin_entry_native_active()) {
-		origin_raw_spin_lock(lock);
-		return;
-	}
-
-	kd_exe_add(0, ret_addr, KD_EXE_LOCK_SPIN);
-	kd_spin_lock((struct qspinlock *)lock, ret_rsp, ret_addr);
-}
-
-static noinline void kd_spin_dispatch_lock_slow(raw_spinlock_t *lock,
-		unsigned long ret_rsp, unsigned long ret_addr,
-		enum kd_spin_fast_result result)
-{
-	if (result == KD_SPIN_FAST_MISS_PINNED)
-		preempt_enable();
-	if (kd_spin_task_selected())
-		kd_raw_spin_lock_slow(lock, ret_rsp, ret_addr);
-	else
-		origin_raw_spin_lock(lock);
-}
-
-static noinline void kd_spin_dispatch_unlock_slow(raw_spinlock_t *lock)
-{
-	/* Unlock routing follows acquisition provenance, never current frequency
-	 * or comm. Cold/unselected acquisitions have no ticket and release L. */
-	kd_raw_spin_unlock_slow(lock);
-}
-
-/* The cache proves a pinned, published site, not permission to execute JIT.
- * A hit performs only the original Linux acquisition and can also serve a
- * non-target caller of that same site. S, admission, CPU context and native L
- * still gate the try. Misses select the original target/retained-owner route;
- * all callers contribute frequency observations, but only selected misses
- * may register/delegate. */
-void kd_spin_dispatch_lock(raw_spinlock_t *lock, unsigned long ret_rsp,
-			   unsigned long ret_addr)
-{
-	enum kd_spin_fast_result result;
-
-	/* First sample CPU traffic, then this address, before consulting comm or
-	 * task records. A cold CPU must not search the shared hotlock table. */
-	if (!kd_hotlock_record((unsigned long)lock)) {
-		origin_raw_spin_lock(lock);
-		return;
-	}
-	result = kd_spin_fast_acquire(lock, ret_addr);
-
-	if (likely(result == KD_SPIN_FAST_OWNED))
-		return;
-	kd_spin_dispatch_lock_slow(lock, ret_rsp, ret_addr, result);
-}
-
-void kd_spin_dispatch_unlock(raw_spinlock_t *lock, unsigned long ret_rsp,
-			     unsigned long ret_addr)
-{
-	(void)ret_rsp;
-	(void)ret_addr;
-	/* Acquisition provenance is sufficient for this native unlock, including
-	 * a renamed task or closed admission; do not repeat target selection. */
-	if (likely(kd_spin_fast_unlock(lock)))
-		return;
-	kd_spin_dispatch_unlock_slow(lock);
-}
-
-/* Preserve the four continuation arguments only on a cache miss. Keeping
- * registration and scheduling calls here avoids saving them across C calls
- * in every successful native acquisition, just as in the legacy dispatcher. */
-static noinline void kd_spin_dispatch_clobber_lock_slow(raw_spinlock_t *lock,
-        unsigned long sp, unsigned long ip, unsigned long bp,
-        enum kd_spin_fast_result result)
-{
-	if (result == KD_SPIN_FAST_MISS_PINNED)
-		preempt_enable();
-	if (!kd_spin_task_selected() || kd_spin_entry_native_active()) {
-		origin_raw_spin_lock(lock);
-		return;
-	}
-	kd_exe_add_abi(0, ip, KD_EXE_LOCK_SPIN, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
-	kd_spin_lock_abi((struct qspinlock *)lock, sp, ip, bp,
-	                 KD_ENTRY_ABI_SPIN_CLOBBER_V1);
-}
-
-void kd_spin_dispatch_clobber_lock_v1(raw_spinlock_t *lock, unsigned long sp,
-                                    unsigned long ip, unsigned long bp)
-{
-	enum kd_spin_fast_result result;
-
-	if (!kd_hotlock_record((unsigned long)lock)) {
-		origin_raw_spin_lock(lock);
-		return;
-	}
-	result = kd_spin_fast_acquire(lock, ip);
-
-	if (likely(result == KD_SPIN_FAST_OWNED))
-		return;
-	kd_spin_dispatch_clobber_lock_slow(lock, sp, ip, bp, result);
-}
-
-void kd_spin_dispatch_clobber_unlock_v1(raw_spinlock_t *lock, unsigned long sp,
-                                      unsigned long ip, unsigned long bp)
-{
-	kd_spin_dispatch_unlock(lock, sp, ip);
-}
-
-#endif
 
 #include "lock/mutex_calls.inc"
 
