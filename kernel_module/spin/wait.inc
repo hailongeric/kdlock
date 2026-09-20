@@ -28,8 +28,8 @@ kd_spin_publish_wait(struct kd_spin_node *node, struct kd_spin_node *previous,
 		/* These loads acquire the release wakeup on x86. A head wake did
 		 * not execute our body, so its C frames are still intact. */
 		"2: movq %c[execution](%[node]), %%rdi\n"
-		"cmpb $0, %c[native](%%rdi)\n"
-		"jne 3f\n"
+		"cmpl $%c[native_ready], %c[result](%%rdi)\n"
+		"je 3f\n"
 		"cmpb $0, %c[completed](%[node])\n"
 		"je 4f\n"
 		/* Discard every old hook/queue frame. Only start C again below both
@@ -50,10 +50,11 @@ kd_spin_publish_wait(struct kd_spin_node *node, struct kd_spin_node *previous,
 		  [next] "i"(offsetof(struct kd_spin_node, next)),
 		  [locked] "i"(offsetof(struct kd_spin_node, locked)),
 		  [execution] "i"(offsetof(struct kd_spin_node, execution)),
-		  [native] "i"(offsetof(struct kd_spin_exec_request, native_resume)),
+		  [result] "i"(offsetof(struct kd_spin_continuation, result)),
+		  [native_ready] "i"(KD_SPIN_RES_NATIVE_READY),
 		  [completed] "i"(offsetof(struct kd_spin_node, completed)),
 		  [rsp] "i"(offsetof(struct kd_spin_node, rsp)),
-		  [regs] "i"(offsetof(struct kd_spin_exec_request, frame.regs_ref)),
+		  [regs] "i"(offsetof(struct kd_spin_continuation, frame.regs_ref)),
 		  [sp] "i"(offsetof(struct pt_regs, sp)),
 		  [resume] "i"(kd_spin_resume_completed)
 		: "rax", "rdi", "cc", "memory");

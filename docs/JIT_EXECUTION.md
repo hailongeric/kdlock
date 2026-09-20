@@ -17,18 +17,26 @@
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
    直接 benchmark 在单 CPU 预热前完成准备，测量时停止 daemon。
 2. clobber v1 调用保存 pre-CALL RSP、post-CALL RIP 和 caller RBP，编译器保存
-   活跃 caller-clobbered 值。`kd_spin_lock_abi` 记录本地热度并检查上下文和入口。
+   活跃 caller-clobbered 值。`kd_spin_lock_abi` 首先关闭抢占，再记录本地热度并
+   检查上下文和入口；统计复用已有 pin，准入拒绝转原生也不先恢复再关闭抢占。
 3. 快速路径获取 KD 字并保留 pinned fast owner。竞争路径使用同一个字的
-   pending/tail 排队，稳定 ticket 记录 task/CPU/generation。无法代理时以 KD
-   全字 CAS 自执行，尊重 pending/tail，不回退到 Linux 锁操作。
-4. waiter 使用预分配节点和稳定 request/frame；节点链接可复用不代表 frame 可退休。
+   pending/tail 排队，稳定 ticket 记录 task/CPU/generation。发布前拒绝代理走 KD
+   fast/pending/MCS 自执行，节点不带 request/frame；发布后的拒绝或续跑仍须
+   完成既有 request 生命周期。只有真正节点耗尽才轮询锁字，不回退到 Linux
+   锁操作。对象大小、分配位置及与 TCLock 的数据流对照见
+   [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+4. 每 CPU 预分配 20 KiB：低端 12 KiB 为最多 12 条 continuation，高端 8 KiB
+   为 waiter 等待栈；记录按栈顶占用，退休后只收缩连续已退休的栈顶。
+   节点直接指向 continuation/frame，节点复用不会销毁现场。
    等待栈、PAUSE 轮询和 caller-clobber ABI 保留。combiner 绑定逻辑 waiter，
    通过 wrapper 和生成代码执行正文，原 waiter/combiner 共用寄存器包。
 5. 嵌套控制 CALL 维护锁记录和独立所有权。提前释放、乱序解锁、远端借用 ACK
    与重新获取不能重复释放 KD 字；ticket 元数据退休与唯一 release store 分开。
 6. 正常 COMPLETE 回交 IP/SP/BP；中途 FULL 物化完整逻辑 GPR。已执行的正文
-   不重跑，只有已支持的 CALL/PENDING 边界可受检续跑。原生 owner 最终 ACK
-   后才可解除相应依赖，frame 的最后使用者结束后释放来源 pin。
+   不重跑，只有已支持的 CALL/PENDING 边界可受检续跑。普通完成必须先 pop 子 frame 再发布完成。
+   NATIVE_READY 与最终退休分开：所有 native 执行者（含无锁 relay）先借用根
+   ticket，清理/pop 后解除借用；最终解锁等待借用清空，才回收现场及解除抢占。
+   无剩余锁的续跑在恢复前等退休；恢复汇编读完全部现场后才回收根记录。
 
 具体布局与指令约定见 [ABI](JIT_REGISTER_ABI.md)，队列/所有权见
 [locking](design/locking.md)，frame 和受检续跑见 [frames](design/frames.md)。
@@ -41,7 +49,8 @@ spin/mutex 每 CPU 独立 16 桶、6 候选，用完整地址与槽索引链表�
 满表 miss 才扫描六个分数，先摘旧链再替换；`score-error` 是保守有效计数。
 默认 adaptive 按 CPU 速率和候选 lower-bound 阈值准入，observe 固定准入并记录。
 查询仅反映本 CPU 实际热度；observe 的固定准入由 record 返回。
-临时统计 pin 在返回前解除，mutex 不跨睡眠持有统计 pin；重入只丢弃统计样本。
+统计复用调用者已有的抢占保护；仅尚未关闭抢占的独立调用临时 pin 并在返回前
+解除。mutex 不跨睡眠持有统计 pin；重入只丢弃统计样本。
 
 OWNER 保存在稳定 fast owner/ticket 状态中，WAITER/COMBINER/DONE 位于 frame。
 角色和所有权不依赖候选是否仍在表中。SELFTEST 可输出按锁地址关联的角色，

@@ -35,7 +35,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	uint32_t prev_cs_cpu;
 	bool prev_locked_val;
 	uint64_t prev_rsp;
-	struct kd_spin_exec_request *prev_execution;
+	struct kd_spin_continuation *prev_execution;
 #ifdef NUMA_AWARE
 	struct kd_spin_node *prev_local_queue_head;
 	struct kd_spin_node *prev_local_queue_tail;
@@ -61,7 +61,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		kd_spin_selftest_link(curr_node, prev_node, previous_task,
 				      previous_cpu);
 #endif
-		if (!curr_node->execution->jit_waiter) {
+		if (curr_node->execution->kind != KD_SPIN_CONT_VIRTUAL) {
 			kd_spin_publish_wait(curr_node, prev_node,
 				this_cpu_ptr(&kd_spin_cpu)->wait_stack_top);
 			/* Only an unexecuted queue-head handoff returns here. */
@@ -81,7 +81,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 			cpu_relax();
 		}
 		smp_rmb();
-		if (READ_ONCE(curr_node->execution->native_resume)) {
+		if ((READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_NATIVE_READY)) {
 			this_cpu_ptr(&kd_spin_cpu)->node_count--;
 			kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
 			kd_spin_diag_waiter_exit(curr_node->execution->diag);
@@ -100,7 +100,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 			this_cpu_ptr(&kd_spin_cpu)->node_count--;
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);
 
-			if (!curr_node->execution->jit_waiter && j >= 0) {
+			if (curr_node->execution->kind != KD_SPIN_CONT_VIRTUAL && j >= 0) {
 				parent_lock =
 					(struct qspinlock *)(unsigned long)
 						ptr->lock_addr[j];
@@ -261,7 +261,7 @@ queue_head:
 
 	kd_spin_diag_waiter_exit(curr_node->execution->diag);
 	kd_spin_set_resume_node(curr_node);
-	return READ_ONCE(curr_node->execution->jit_retry) ? 4 : 2;
+	return (READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_RETRY) ? 4 : 2;
 release:
 	kd_spin_claim_origin(request);
 	kd_exe_queue_timing_end(false, &curr_node->execution->queued_at_ns,
@@ -273,7 +273,7 @@ release:
 	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
 	kd_spin_diag_waiter_exit(curr_node->execution->diag);
 	kd_spin_set_resume_node(curr_node);
-	return READ_ONCE(curr_node->execution->jit_retry) ? 4 : 0;
+	return (READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_RETRY) ? 4 : 0;
 }
 #pragma GCC pop_options
 
@@ -288,7 +288,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 {
 	struct qspinlock *word = request->word;
 	struct kd_spin_node *base, *curr_node;
-	struct kd_spin_exec_request *execution;
+	struct kd_spin_continuation *execution;
 	int tail, idx, ret;
 
 	base = this_cpu_ptr(&kd_spin_nodes[0]);
@@ -303,10 +303,10 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 			cpu_relax();
 		return 0;
 	}
-	execution = kd_spin_request_reserve();
+	execution = kd_spin_continuation_reserve();
 	if (unlikely(!execution)) {
 		this_cpu_ptr(&kd_spin_cpu)->node_count--;
-		/* Request exhaustion does not exhaust the independent MCS nodes. */
+		/* Continuation exhaustion does not exhaust independent MCS nodes. */
 		kd_spin_acquire_nondelegated(word);
 		return 0;
 	}
@@ -331,10 +331,8 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->execution->frame.logical_task = current;
 	curr_node->execution->frame.gsbase = kd_read_kernel_gsbase();
 
-	curr_node->execution->jit_waiter = false;
-	curr_node->execution->jit_retry = false;
-	curr_node->execution->native_resume = false;
-	curr_node->execution->pinned_context = (preempt_count() & PREEMPT_MASK) != 1;
+	curr_node->execution->kind = KD_SPIN_CONT_ROOT;
+	curr_node->execution->result = KD_SPIN_RES_QUEUED;
 	curr_node->execution->native_regs_decoded = false;
 	curr_node->execution->jit_context.requester = NULL;
 	if (input->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1) {
@@ -354,10 +352,10 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	kd_spin_prepare_prefetch(curr_node, &execution->frame.regs);
 
 	ret = __kd_spin_lock_longjmp(lock, tail, curr_node, request);
-	/* Delegated waiters leave through the restore assembly, which drops this
-	 * user after its final packet load. An intact head return needs no packet. */
+	/* Delegated waiters reclaim in restore assembly after the final packet
+	 * load. An intact head return can release its continuation here. */
 	if (ret == 0 || ret == 2)
-		kd_spin_request_put(execution);
+		kd_spin_continuation_release(execution);
 	return ret;
 }
 

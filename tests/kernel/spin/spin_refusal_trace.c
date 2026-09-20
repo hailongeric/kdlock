@@ -32,7 +32,7 @@ static noinline bool kd_spin_selftest_refuse(struct kd_exec_frame *frame,
 
 	if (kd_readmit_refusals)
 		return kd_spin_selftest_readmit_attempt(frame, node, ret);
-	if (!kd_refusal_kind || kd_refusal_kind > 2 || !node->execution->jit_waiter ||
+	if (!kd_refusal_kind || kd_refusal_kind > 2 || node->execution->kind != KD_SPIN_CONT_VIRTUAL ||
 	    frame->outer_lock_addr != READ_ONCE(kd_refusal_lock) || !parent ||
 	    frame->executed || !parent->executed ||
 	    atomic_cmpxchg(&kd_refusal_claimed, 0, 1))
@@ -100,7 +100,7 @@ kd_spin_selftest_refusal_return(const struct kd_exec_frame *parent,
 		(ret == 0 || ret == 2) &&
 		parent->remote_result == KD_EXEC_REMOTE_WAITING &&
 		parent->control_call.phase == KD_CALL_ENTERED &&
-		!node->execution->jit_retry && !node->completed && !node->execution->native_resume &&
+		node->execution->result != KD_SPIN_RES_RETRY && !node->completed && node->execution->result != KD_SPIN_RES_NATIVE_READY &&
 		kd_spin_debug_owner((void *)kd_refusal.lock) ==
 			(unsigned long)current &&
 		raw_spin_is_locked((raw_spinlock_t *)kd_refusal.lock) &&

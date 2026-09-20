@@ -22,6 +22,8 @@ static unsigned int lookup_pins, pool_reads;
 static bool kd_spin_fast_active(void) { return false; }
 static bool kd_spin_fast_idle(void) { return true; }
 
+static void (*wait_peer)(void);
+#define cpu_relax() do { if (wait_peer) wait_peer(); } while (0)
 #include "entry_production.h"
 
 static raw_spinlock_t locks[KD_SPIN_ENTRY_SLOTS + 1];
@@ -35,6 +37,40 @@ static void select_cpu(unsigned int cpu)
 
 /* A contended root transfers its existing pin only on successful admission.
  * Wrong-gate/duplicate/refusal paths must neither repin nor consume it. */
+static struct kd_spin_ref retiring;
+static unsigned int retirement_polls;
+static void retire_peer(void)
+{
+	bool last;
+
+	CHECK(mock_preempt == 1 && retiring.entry->native_refs);
+	if (++retirement_polls < 3)
+		return;
+	select_cpu(1);
+	CHECK(!kd_spin_entry_borrow_put(&retiring, &last) && last);
+	select_cpu(0);
+	wait_peer = NULL;
+}
+
+/* A final physical ACK cannot consume the root pin while a no-lock relay
+ * still borrows the ticket. Exercise the actual guarded wait/end functions. */
+static void retirement_barrier(void)
+{
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &retiring));
+	CHECK(!kd_spin_entry_borrow_get(&retiring));
+	CHECK(!kd_spin_entry_mark_native(&retiring));
+	CHECK(kd_spin_entry_end(&retiring) == -EBUSY && mock_preempt == 1);
+	retirement_polls = 0;
+	wait_peer = retire_peer;
+	CHECK(!kd_spin_entry_borrow_wait(&retiring) && retirement_polls == 3);
+	CHECK(mock_preempt == 1 && !kd_spin_entry_end(&retiring) && !mock_preempt);
+	/* All remote executors may retire before the native-ready load. */
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &retiring));
+	CHECK(!kd_spin_entry_mark_native(&retiring));
+	CHECK(!kd_spin_entry_borrow_wait(&retiring));
+	CHECK(!kd_spin_entry_end(&retiring) && !mock_preempt);
+}
+
 static void pinned_admission(void)
 {
 	struct kd_spin_ref ref = { 0 }, duplicate = { 0 };
@@ -178,8 +214,7 @@ static void remote_native(void)
 	CHECK(mock_preempt == 2 && locks[0].held && locks[1].held);
 	select_cpu(1);
 	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &waiter) == 0);
-	CHECK(mock_preempt == 1 &&
-	      kd_spin_entry_mark_native(&waiter) == -EINVAL);
+	CHECK(mock_preempt == 1);
 	select_cpu(0);
 	CHECK(kd_spin_entry_borrow_get(&waiter) == 0);
 	CHECK(kd_spin_entry_borrow_get(&waiter) == 0);
@@ -286,6 +321,7 @@ int main(void)
 	mock_alloc_fail = false;
 	CHECK(kd_spin_entries_init() == 0);
 	CHECK(kd_spin_entries_init() == -EBUSY);
+	retirement_barrier();
 	pinned_admission();
 	lifecycle();
 	read_only_queries();

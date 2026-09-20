@@ -16,8 +16,8 @@ static struct {
 	struct kd_exec_frame frame;
 	struct pt_regs regs;
 	struct kd_spin_node nodes[MAX_NODES];
-	struct kd_spin_exec_request requests[KD_SPIN_REQUEST_SLOTS];
-	struct kd_spin_exec_request *request_base;
+	struct kd_spin_continuation_stack requests;
+	struct kd_spin_continuation_stack *request_base;
 	struct kd_combiner_state shadow;
 	struct qspinlock *lock;
 	unsigned long return_ip;
@@ -40,7 +40,7 @@ static struct {
 static bool kd_spin_selftest_virtual_begin(
 	struct qspinlock *lock, const struct kd_spin_ref *request,
 	const struct pt_regs *regs, const struct kd_exec_frame *parent,
-	struct kd_spin_exec_request **requests, int initial_preempt)
+	struct kd_spin_continuation_stack **requests, int initial_preempt)
 {
 	struct kd_spin_node *base = this_cpu_ptr(&kd_spin_nodes[0]);
 	struct kd_spin_ref found = { 0 };
@@ -93,7 +93,7 @@ static bool kd_spin_selftest_virtual_begin(
 	kd_virtual_test.return_ip =
 		READ_ONCE(*(unsigned long *)parent->control_call.stack);
 	kd_virtual_test.request_base = *requests;
-	memcpy(kd_virtual_test.requests, *requests,
+	memcpy(&kd_virtual_test.requests, *requests,
 	       sizeof(kd_virtual_test.requests));
 	memcpy(kd_virtual_test.nodes, base, sizeof(kd_virtual_test.nodes));
 	kd_spin_capture_combiner_state(&kd_virtual_test.shadow,
@@ -132,10 +132,10 @@ static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 	pin = preempt_count() == kd_virtual_test.initial_preempt;
 	nodes = !memcmp(base, kd_virtual_test.nodes,
 			sizeof(kd_virtual_test.nodes));
-	contexts = *this_cpu_ptr(&kd_spin_requests) ==
+	contexts = *this_cpu_ptr(&kd_spin_continuations) ==
 			   kd_virtual_test.request_base &&
 		   !memcmp(kd_virtual_test.request_base,
-			   kd_virtual_test.requests,
+			   &kd_virtual_test.requests,
 			   sizeof(kd_virtual_test.requests));
 	packet = !memcmp(regs, &kd_virtual_test.regs, sizeof(*regs)) &&
 		 READ_ONCE(*(unsigned long *)parent->control_call.stack) ==

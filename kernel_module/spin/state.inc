@@ -186,7 +186,6 @@ static struct kd_spin_diag_cpu __percpu *kd_spin_diag_cpu;
 #define atomic_cond_read_acquire_sched(v, c) \
 	smp_cond_load_acquire_sched(&(v)->counter, (c))
 
-#define KD_SPIN_WAIT_STACK_SIZE 8192
 
 struct kd_spin_cpu_state {
 	/*
@@ -251,16 +250,15 @@ struct kd_spin_native_input {
 
 static DEFINE_PER_CPU(struct kd_spin_node *, kd_spin_resume_nodes);
 
-/* Queue slots can be recycled while native owners finish. Requests therefore
- * have their own bounded, boot-allocated pool; no allocation occurs in a CS. */
-#define KD_SPIN_REQUEST_SLOTS (KD_EXEC_MAX_NESTING + MAX_NODES)
-static DEFINE_PER_CPU(struct kd_spin_exec_request *, kd_spin_requests);
+static DEFINE_PER_CPU(struct kd_spin_continuation_stack *, kd_spin_continuations);
+/* A native root remains pinned to its CPU until all executor borrows retire. */
+static DEFINE_PER_CPU(struct kd_spin_continuation *, kd_spin_native_root);
 
 #ifdef KDLOCK_SELFTEST
 static bool kd_spin_selftest_virtual_begin(
 	struct qspinlock *lock, const struct kd_spin_ref *request,
 	const struct pt_regs *regs, const struct kd_exec_frame *parent,
-	struct kd_spin_exec_request **requests, int initial_preempt);
+	struct kd_spin_continuation_stack **requests, int initial_preempt);
 static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 					 const struct pt_regs *regs,
 					 const struct kd_exec_frame *parent,

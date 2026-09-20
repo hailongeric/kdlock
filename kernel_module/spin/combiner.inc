@@ -133,12 +133,12 @@ static void kd_spin_reclaim_outer(struct kd_spin_request *request)
 static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 					 struct kd_spin_node *node)
 {
-	struct kd_spin_exec_request *execution = node->execution;
+	struct kd_spin_continuation *execution = node->execution;
 	struct kd_exec_frame *frame = &execution->frame;
 	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
 	struct kd_exe_info *exe;
 
-	if (execution->jit_waiter || execution->pinned_context ||
+	if (execution->kind == KD_SPIN_CONT_VIRTUAL ||
 	    !execution->native_regs_decoded || kd_exec_current_frame() ||
 	    kd_spin_lock_stack_depth(ptr) != 1 || kd_spin_jit_is_disabled(batch->diag))
 		return false;

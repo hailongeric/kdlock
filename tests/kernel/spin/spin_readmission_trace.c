@@ -76,7 +76,7 @@ kd_spin_selftest_readmit_attempt(struct kd_exec_frame *frame,
 	unsigned int index;
 
 	if (!kd_readmit_refusals || kd_readmit_refusals > 2 ||
-	    !node->execution->jit_waiter || !parent || frame->executed ||
+	    node->execution->kind != KD_SPIN_CONT_VIRTUAL || !parent || frame->executed ||
 	    !parent->executed)
 		return false;
 	if (frame->outer_lock_addr != READ_ONCE(kd_readmit_lock)) {
@@ -125,7 +125,7 @@ kd_spin_selftest_readmit_attempt(struct kd_exec_frame *frame,
 		frame->logical_pid == kd_readmit.pid &&
 		parent->remote_result == KD_EXEC_REMOTE_WAITING &&
 		parent->control_call.phase == KD_CALL_ENTERED &&
-		!node->completed && !node->execution->jit_retry && !node->execution->native_resume &&
+		!node->completed && node->execution->result != KD_SPIN_RES_RETRY && node->execution->result != KD_SPIN_RES_NATIVE_READY &&
 		!memcmp(kd_exec_frame_regs(parent), &kd_readmit.parent_regs,
 			sizeof(parent->regs)) &&
 		!memcmp(node->execution->frame.regs_ref, &kd_readmit.node_regs,
@@ -184,7 +184,7 @@ kd_spin_selftest_readmit_return(const struct kd_exec_frame *parent,
 		parent->control_call.phase == KD_CALL_ENTERED &&
 		parent->executed && parent->gsbase == kd_readmit.gs &&
 		(unsigned long)parent->logical_task == kd_readmit.task &&
-		!node->execution->jit_retry && !node->execution->native_resume &&
+		node->execution->result != KD_SPIN_RES_RETRY && node->execution->result != KD_SPIN_RES_NATIVE_READY &&
 		ret == (local ? 2 : 3) && node->completed == !local &&
 		parent->remote_result ==
 			(local ? KD_EXEC_REMOTE_WAITING : KD_EXEC_REMOTE_DONE);

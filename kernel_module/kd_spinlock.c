@@ -146,11 +146,35 @@ jump_to_saved_regs_in_cs(struct pt_regs *regs)
 }
 #pragma GCC pop_options
 
-/* Restore directly from the stable request. The final decrement follows every
- * packet load; only two return-stack words remain after it. IRQs are restored
- * after that decrement, so node/pool reuse cannot race a late register read. */
+/* No packet read may follow this sequence. IRQs are still masked, so only
+ * this CPU changes top. Remote publishers touch retired, never top. */
+#define KD_SPIN_RETIRE_ASM \
+	"pushq %%rax\n" \
+	"pushq %%rcx\n" \
+	"movq %c[storage](%%rdi), %%rax\n" \
+	"movb $1, %c[retired](%%rdi)\n" \
+	"movl %c[top](%%rax), %%ecx\n" \
+	"5: testl %%ecx, %%ecx\n" \
+	"jz 6f\n" \
+	"movl %%ecx, %%edi\n" \
+	"imulq $%c[stride], %%rdi\n" \
+	"cmpb $0, %c[last_retired](%%rax,%%rdi)\n" \
+	"je 6f\n" \
+	"decl %%ecx\n" \
+	"jmp 5b\n" \
+	"6: movl %%ecx, %c[top](%%rax)\n" \
+	"popq %%rcx\n" \
+	"popq %%rax\n"
+#define KD_SPIN_RETIRE_OPERANDS \
+	[storage] "i"(offsetof(struct kd_spin_continuation, storage)), \
+	[retired] "i"(offsetof(struct kd_spin_continuation, retired)), \
+	[top] "i"(offsetof(struct kd_spin_continuation_stack, top)), \
+	[stride] "i"(sizeof(struct kd_spin_continuation)), \
+	[last_retired] "i"((long)offsetof(struct kd_spin_continuation_stack, records) + \
+		offsetof(struct kd_spin_continuation, retired) - sizeof(struct kd_spin_continuation))
+
 static __attribute__((noipa, noreturn)) noinline notrace void
-kd_spin_restore_request(struct kd_spin_exec_request *execution,
+kd_spin_restore_request(struct kd_spin_continuation *execution,
 						unsigned long flags, unsigned int mode)
 {
 	if (execution->frame.entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
@@ -162,21 +186,15 @@ kd_spin_restore_request(struct kd_spin_exec_request *execution,
 			"pushq %c[ip](%%rdi)\n"
 			"pushq %%rsi\n"
 			"movq %c[bp](%%rdi), %%rbp\n"
-			/* No request access after the last user's release. */
-			"cmpb $0, %c[simple](%%rdi)\n"
-			"je 1f\n"
-			"movl $0, %c[users](%%rdi)\n"
-			"jmp 2f\n"
-			"1: lock decl %c[users](%%rdi)\n"
-			"2: popfq\n"
+			KD_SPIN_RETIRE_ASM
+			"popfq\n"
 			"retq\n"
 			:
 			: "D"(execution), "S"(flags),
-			  [sp] "i"(offsetof(struct kd_spin_exec_request, frame.regs.sp)),
-			  [ip] "i"(offsetof(struct kd_spin_exec_request, frame.regs.ip)),
-			  [bp] "i"(offsetof(struct kd_spin_exec_request, frame.regs.bp)),
-			  [users] "i"(offsetof(struct kd_spin_exec_request, users)),
-			  [simple] "i"(offsetof(struct kd_spin_exec_request, frame.spin_simple))
+			  [sp] "i"(offsetof(struct kd_spin_continuation, frame.regs.sp)),
+			  [ip] "i"(offsetof(struct kd_spin_continuation, frame.regs.ip)),
+			  [bp] "i"(offsetof(struct kd_spin_continuation, frame.regs.bp)),
+			  KD_SPIN_RETIRE_OPERANDS
 			: "memory", "cc");
 		__builtin_unreachable();
 	}
@@ -186,6 +204,7 @@ kd_spin_restore_request(struct kd_spin_exec_request *execution,
 		"jz 1f\n"
 		"pushq %c[ip](%%rdi)\n"
 		"1: pushq %%rsi\n"
+		"pushq %%rdx\n"
 		"pushq %c[packet]+0x70(%%rdi)\n"
 		"movq %c[packet]+0x00(%%rdi), %%r15\n"
 		"movq %c[packet]+0x08(%%rdi), %%r14\n"
@@ -201,24 +220,21 @@ kd_spin_restore_request(struct kd_spin_exec_request *execution,
 		"movq %c[packet]+0x58(%%rdi), %%rcx\n"
 		"movq %c[packet]+0x60(%%rdi), %%rdx\n"
 		"movq %c[packet]+0x68(%%rdi), %%rsi\n"
-		/* A pristine completed root never published child/native users. Its
-		 * sole waiter retires with a release store; shared lifetimes keep RMW. */
-		"cmpb $0, %c[simple](%%rdi)\n"
-		"je 2f\n"
-		"movl $0, %c[users](%%rdi)\n"
-		"jmp 3f\n"
-		"2: lock decl %c[users](%%rdi)\n"
+		/* Native execution retains this root until the final unlock barrier. */
+		"cmpl $2, 8(%%rsp)\n"
+		"je 3f\n"
+		KD_SPIN_RETIRE_ASM
 		"3:\n"
 		"popq %%rdi\n"
+		"addq $8, %%rsp\n"
 		"popfq\n"
 		"retq\n"
 		:
 		: "D"(execution), "S"(flags), "d"(mode),
-		  [packet] "i"(offsetof(struct kd_spin_exec_request, frame.regs)),
-		  [sp] "i"(offsetof(struct kd_spin_exec_request, frame.regs.sp)),
-		  [ip] "i"(offsetof(struct kd_spin_exec_request, frame.regs.ip)),
-		  [users] "i"(offsetof(struct kd_spin_exec_request, users)),
-		  [simple] "i"(offsetof(struct kd_spin_exec_request, frame.spin_simple))
+		  [packet] "i"(offsetof(struct kd_spin_continuation, frame.regs)),
+		  [sp] "i"(offsetof(struct kd_spin_continuation, frame.regs.sp)),
+		  [ip] "i"(offsetof(struct kd_spin_continuation, frame.regs.ip)),
+		  KD_SPIN_RETIRE_OPERANDS
 		: "memory", "cc");
 	__builtin_unreachable();
 }
@@ -226,19 +242,27 @@ kd_spin_restore_request(struct kd_spin_exec_request *execution,
 __attribute__((noipa)) noinline notrace static void
 kd_spin_resume_waiter(struct kd_spin_node *node, unsigned int mode)
 {
-	struct kd_spin_exec_request *execution = node->execution;
+	struct kd_spin_continuation *execution = node->execution;
 	unsigned long irq_flags = node->execution->irq_flags;
 	struct kd_spin_ref ref = node->execution->frame.spin_origin;
 
-	if (node->execution->jit_retry)
+	if (node->execution->result == KD_SPIN_RES_RETRY)
 		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
 				   node, node->cpuid, node->execution->frame.regs_ref->ip);
-	if (mode == 2)
+	if (mode == 2) {
 		BUG_ON(kd_spin_entry_mark_native(&ref));
+		*this_cpu_ptr(&kd_spin_native_root) = execution;
+		if (!kd_exec_native_pending(current)) {
+			BUG_ON(kd_spin_entry_borrow_wait(&ref));
+			*this_cpu_ptr(&kd_spin_native_root) = NULL;
+			mode = 3; /* In-CS IP, but all executors already retired. */
+			BUG_ON(kd_spin_entry_end(&ref));
+		}
+	}
 	else if (!mode)
 		BUG_ON(kd_spin_entry_end(&ref));
-	/* No node/per-CPU access after end(). The request user remains valid even
-	 * if the task resumes on another CPU; assembly releases it after reading. */
+	/* IRQs remain masked through the final assembly: end cannot reschedule
+	 * here. No node is read again; the record is released after all loads. */
 	kd_spin_restore_request(execution, irq_flags, mode);
 	__builtin_unreachable();
 }
@@ -248,7 +272,7 @@ kd_spin_resume_waiter(struct kd_spin_node *node, unsigned int mode)
 static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_spin_resume_completed(struct kd_spin_node *node)
 {
-	unsigned int mode = READ_ONCE(node->execution->native_resume) ? 2 : 0;
+	unsigned int mode = (READ_ONCE(node->execution->result) == KD_SPIN_RES_NATIVE_READY) ? 2 : 0;
 
 	this_cpu_ptr(&kd_spin_cpu)->node_count--;
 	if (mode)
@@ -313,9 +337,8 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
 
 /* Admission refusal retains the KD queue protocol. Only genuine node
  * exhaustion polls the full word; ordinary contention uses local MCS waits. */
-void kd_spin_lock_nondelegated(kd_spinlock_t *lock)
+static void kd_spin_lock_nondelegated_pinned(kd_spinlock_t *lock)
 {
-	preempt_disable();
 	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
 	kd_spin_acquire_nondelegated(lock);
 	/* A sole task-context hold can use the existing fast ownership record.
@@ -326,6 +349,25 @@ void kd_spin_lock_nondelegated(kd_spinlock_t *lock)
 		this_cpu_dec(kd_spin_fast_cpu.nondelegated);
 	}
 }
+void kd_spin_lock_nondelegated(kd_spinlock_t *lock)
+{
+	preempt_disable();
+	kd_spin_lock_nondelegated_pinned(lock);
+}
+/* A physical ACK releases a lock; this barrier releases the root's pin only
+ * after every registered native executor has finished all frame accesses. */
+void kd_spin_native_retire(struct kd_spin_ref *ref)
+{
+	struct kd_spin_continuation *root = *this_cpu_ptr(&kd_spin_native_root);
+
+	BUG_ON(!root || root->frame.spin_origin.entry != ref->entry ||
+	       root->frame.spin_origin.sequence != ref->sequence);
+	BUG_ON(kd_spin_entry_borrow_wait(ref));
+	*this_cpu_ptr(&kd_spin_native_root) = NULL;
+	kd_spin_continuation_release(root);
+	BUG_ON(kd_spin_entry_end(ref));
+}
+
 void kd_spin_unlock_nondelegated(kd_spinlock_t *lock)
 {
 	/* Native bridge callers use this paired API directly, bypassing the
@@ -348,6 +390,10 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	struct qspinlock *word;
 	u32 val, cnt;
 
+	/* One acquisition pin spans admission, queueing and the entire CS.
+	 * Refusal transfers that same pin to self-execution; a successful ticket
+	 * or fast owner consumes it only at unlock/delegated completion. */
+	preempt_disable();
 	/* Statistics affect fresh admission only. A cold/refused KD request
 	 * still takes the same word through its nondelegating path. */
 	if (!kd_spin_delegate || !kd_hotlock_record_spin((unsigned long)lock))
@@ -355,12 +401,11 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	if (!in_task() || softirq_count() || current->migration_disabled ||
 		kd_spin_entry_native_active())
 		goto native;
-	/* Pin before consulting per-CPU execution state. Like TCLock, attempt
+	/* Already pinned before admission. Like TCLock, attempt
 	 * sole word before building a contended request. Linux lock objects
 	 * are separate and never enter this API. */
-	preempt_disable();
 	if (kd_exec_current_frame() || kd_exec_context_busy())
-		goto unpin_native;
+		goto native;
 	word = request.word = lock;
 	if (preempt_count() == 1)
 	{
@@ -372,14 +417,14 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 		}
 		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock,
 									   &request.ref))
-			goto unpin_native;
+			goto native;
 	}
 	else
 	{
 		/* Nested/virtual ownership keeps the established ticket protocol. */
 		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock,
 									   &request.ref))
-			goto unpin_native;
+			goto native;
 		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
 		if (!val)
 			goto acquired;
@@ -408,7 +453,8 @@ queue:
 	/* Before publication, an absent/refused translation needs only an MCS
 	 * node. Keep registration for later admission, but allocate no logical
 	 * packet/frame and never lend this caller's stack to a combiner. */
-	if (!kd_exe_entry_is_ready(kd_get_exe(0, rip), 0, rip)) {
+	if (preempt_count() != 1 ||
+	    !kd_exe_entry_is_ready(kd_get_exe(0, rip), 0, rip)) {
 		kd_exe_add_abi(0, rip, KD_EXE_LOCK_SPIN, abi);
 		kd_spin_acquire_nondelegated(word);
 		goto acquired;
@@ -417,10 +463,8 @@ queue:
 acquired:
 	kd_spin_claim_origin(&request);
 	return;
-unpin_native:
-	preempt_enable();
 native:
-	kd_spin_lock_nondelegated(lock);
+	kd_spin_lock_nondelegated_pinned(lock);
 }
 void kd_spin_lock(struct qspinlock *lock, unsigned long sp, unsigned long ip)
 {

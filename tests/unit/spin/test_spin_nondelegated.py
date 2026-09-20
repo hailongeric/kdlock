@@ -26,7 +26,8 @@ def main():
         fast = (ROOT/'include/kd_spin_fast.h').read_text()
         fast = re.sub(r'^#include .*$', '', fast, flags=re.M)
         source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
-        api = fast + '\n' + definition(source, 'void kd_spin_lock_nondelegated(kd_spinlock_t *lock)')
+        api = fast + '\n' + definition(source, 'static void kd_spin_lock_nondelegated_pinned(kd_spinlock_t *lock)')
+        api += definition(source, 'void kd_spin_lock_nondelegated(kd_spinlock_t *lock)')
         api += definition(source, 'void kd_spin_unlock_nondelegated(kd_spinlock_t *lock)')
         (Path(directory)/'spin_nondelegated_api.h').write_text(api)
         subprocess.run(['cc', '-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',

@@ -22,10 +22,11 @@ typedef uint16_t u16;
 #define notrace
 #include "restore_production.h"
 
-static struct kd_spin_exec_request execution;
+static struct kd_spin_continuation_stack storage;
+#define execution storage.records[0]
 static _Alignas(16) unsigned char stack[16384];
 static jmp_buf caller;
-static unsigned int extra_user, restores;
+static unsigned int extra_user, restores, initial_top;
 static bool minimal;
 static unsigned long expected_sp;
 unsigned long observed_sp;
@@ -33,7 +34,8 @@ unsigned long observed[15];
 
 static __attribute__((used, noipa, noreturn)) void restored(void)
 {
-	assert(execution.users == (int)extra_user);
+	assert(execution.retired == !extra_user);
+	assert(storage.top == (extra_user ? initial_top : 0));
 	assert(observed_sp == expected_sp);
 	for (unsigned int i = 0; i < 15; i++)
 		if (!minimal || i == 4)
@@ -69,19 +71,22 @@ asm(".text\n.type capture,@function\ncapture:\n"
 int main(void)
 {
 	volatile unsigned int iteration;
-	_Static_assert(offsetof(struct kd_spin_exec_request, frame.regs) == 96,
+	_Static_assert(offsetof(struct kd_spin_continuation, frame.regs) == 104,
 		       "restore packet follows request metadata and the admission header");
-	for (iteration = 0; iteration < 160; iteration++) {
+	for (iteration = 0; iteration < 192; iteration++) {
 		unsigned long flags, *packet = (void *)&execution.frame.regs;
-		volatile unsigned int mode = iteration < 96 ? iteration % 3 : iteration % 2;
+		volatile unsigned int mode = iteration < 128 ? iteration % 4 : iteration % 2;
 
-		minimal = iteration >= 96;
+		minimal = iteration >= 128;
 
 		memset(&execution, 0, sizeof(execution));
 		for (unsigned int i = 0; i < 15; i++)
 			packet[i] = 0x12340000UL + i;
 		extra_user = mode == 2;
-		execution.users = 1 + extra_user;
+		execution.storage = &storage;
+		initial_top = iteration & 1 ? 3 : 1;
+		storage.top = initial_top;
+		storage.records[1].retired = storage.records[2].retired = true;
 		execution.frame.spin_simple = !mode && iteration % 2;
 		execution.frame.regs.ip = (unsigned long)capture;
 		execution.frame.regs.sp = (unsigned long)(stack + sizeof(stack) -
@@ -98,7 +103,7 @@ int main(void)
 		if (!setjmp(caller))
 			kd_spin_restore_request(&execution, flags, mode);
 	}
-	assert(restores == 160);
-	puts("production shared-request restore: completed=32 retry=32 native=32 minimal_complete=32 minimal_retry=32 PASS");
+	assert(restores == 192);
+	puts("production continuation restore: completed=32 retry=32 native=32 native_retired=32 minimal_complete=32 minimal_retry=32 PASS");
 	return 0;
 }

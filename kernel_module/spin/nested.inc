@@ -19,7 +19,6 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	unsigned int i, depth;
 	struct kd_exec_frame *frame;
 	struct kd_spin_jit_context *context;
-	struct kd_spin_exec_request *owner;
 
 	if (!node || !lock || !regs || !parent ||
 	    !kd_exec_frame_validate(parent) ||
@@ -38,15 +37,7 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	frame->entry_abi = parent->entry_abi;
 	frame->packet_state = KD_PACKET_FULL;
 	frame->spin_origin = parent->spin_origin;
-	/* Production roots reside in request storage. Legacy component probes
-	 * keep their parent frame synchronously alive instead. */
-	if (parent->request_frame) {
-		owner = container_of(regs, struct kd_spin_exec_request, frame.regs);
-		atomic_inc(&owner->users);
-		node->execution->packet_owner = owner;
-	}
-	node->execution->jit_waiter = true;
-	node->execution->pinned_context = false;
+	node->execution->kind = KD_SPIN_CONT_VIRTUAL;
 	context = &node->execution->jit_context;
 	context->requester = parent;
 	context->lock_depth = depth + 1;
@@ -110,8 +101,8 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	struct kd_spin_request request = { 0 };
 	struct qspinlock *word;
 	struct kd_spin_node *base, *node;
-	struct kd_spin_exec_request *requests;
-	struct kd_spin_exec_request *execution;
+	struct kd_spin_continuation_stack *requests;
+	struct kd_spin_continuation *execution;
 	u32 tail;
 	unsigned long irq_flags;
 	int idx, ret;
@@ -131,7 +122,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	/* NULL requests select only the read-only pre-allocation observer. The
 	 * context/node injection probes still start after a ticket is reserved.
 	 */
-	requests = *this_cpu_ptr(&kd_spin_requests);
+	requests = *this_cpu_ptr(&kd_spin_continuations);
 	refusal_probe = kd_spin_selftest_virtual_begin(
 		lock, NULL, regs, parent, &requests, initial_preempt);
 #endif
@@ -151,7 +142,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	}
 
 	base = this_cpu_ptr(&kd_spin_nodes[0]);
-	requests = *this_cpu_ptr(&kd_spin_requests);
+	requests = *this_cpu_ptr(&kd_spin_continuations);
 #ifdef KDLOCK_SELFTEST
 	/* Exercise real post-ticket cancellation before any node is published. */
 	refusal_probe = kd_spin_selftest_virtual_begin(
@@ -170,11 +161,15 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		goto cancel;
 	}
 	kd_spin_selftest_node_event(KD_NODE_VIRTUAL_RESERVE);
-	execution = kd_spin_request_reserve();
+	execution = kd_spin_continuation_reserve();
 	if (!execution) {
 		this_cpu_ptr(&kd_spin_cpu)->node_count--;
-		ret = -ENOMEM;
-		goto cancel;
+		/* No publication or body occurred for this nested acquisition. Keep
+		 * its ticket and use the independent native MCS nodes. */
+		kd_spin_acquire_nondelegated(word);
+		kd_spin_claim_origin(&request);
+		parent->control_call.phase = KD_CALL_ACQUIRED;
+		return KD_SPIN_NESTED_ACQUIRED_QUEUE;
 	}
 	node = base + idx;
 	node->execution = execution;
@@ -191,13 +186,12 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	node->execution->frame.gsbase = 0;
 	node->execution->irq_flags = 0; /* Virtual nodes never restore the physical waiter. */
 
-	node->execution->jit_retry = false;
-	node->execution->native_resume = false;
+	node->execution->result = KD_SPIN_RES_QUEUED;
 	node->execution->native_regs_decoded = false;
 	ret = kd_spin_prepare_jit_node(node, lock, regs,
 				       parent);
 	if (ret) {
-		kd_spin_request_put(execution);
+		kd_spin_continuation_release(execution);
 		this_cpu_ptr(&kd_spin_cpu)->node_count--;
 		kd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);
 		goto cancel;
@@ -217,9 +211,6 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_refusal_return(parent, node, ret);
 #endif
-	/* The parent already owns the packet. A native child retains its extra
-	 * user until ACK/pop, independently of this queue user's lifetime. */
-	kd_spin_request_put(execution);
 	if (ret == 5) {
 		BUG_ON(smp_load_acquire(&parent->remote_result) !=
 		       KD_EXEC_REMOTE_NATIVE);
@@ -229,11 +220,13 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		return KD_SPIN_NESTED_NATIVE;
 	}
 	if (ret == 0) {
+		kd_spin_continuation_release(execution);
 		parent->remote_result = KD_EXEC_REMOTE_IDLE;
 		parent->control_call.phase = KD_CALL_ACQUIRED;
 		return KD_SPIN_NESTED_ACQUIRED;
 	}
 	if (ret == 2) {
+		kd_spin_continuation_release(execution);
 		parent->remote_result = KD_EXEC_REMOTE_IDLE;
 		parent->control_call.phase = KD_CALL_ACQUIRED;
 		return KD_SPIN_NESTED_ACQUIRED_QUEUE;
@@ -241,6 +234,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	if (ret != 1 && ret != 3)
 		return -EIO;
 	ret = kd_spin_finish_remote_node(node, regs, parent);
+	kd_spin_continuation_release(execution);
 	parent->control_call.phase = KD_CALL_COMPLETE;
 	BUG_ON(kd_spin_entry_end(&request.ref));
 	return ret;

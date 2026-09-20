@@ -69,7 +69,7 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 		return -EINVAL;
 	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
 		remaining += !frame->jit_lock_released[i];
-	if (!mutex && remaining) {
+	if (!mutex) {
 		ret = kd_spin_entry_borrow_get(&frame->spin_origin);
 		if (ret)
 			return ret;
@@ -92,6 +92,24 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	kd_exec_selftest_relay_arm(frame, remaining);
 #endif
 	return 0;
+}
+
+/* Routing describes physical locks; the ticket separately retains executors.
+ * No new route can appear after the root publishes NATIVE_READY. */
+bool kd_exec_native_pending(struct task_struct *task)
+{
+	struct kd_exec_frame *frame;
+	unsigned long flags;
+	bool pending = false;
+
+	raw_spin_lock_irqsave(&kd_native_lock, flags);
+	list_for_each_entry(frame, &kd_native_frames, native_link)
+		if (!frame->mutex_backend && frame->logical_task == task) {
+			pending = true;
+			break;
+		}
+	raw_spin_unlock_irqrestore(&kd_native_lock, flags);
+	return pending;
 }
 
 /* Called on the original waiter's stack. A matching retained owner must finish
@@ -139,8 +157,10 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 			cond_resched();
 	}
 	BUG_ON(request.result);
-	if (request.spin_last)
-		BUG_ON(kd_spin_entry_end(&request.spin_origin));
+	if (!mutex && !kd_exec_native_pending(current)) {
+		request.spin_last = true;
+		kd_spin_native_retire(&request.spin_origin);
+	}
 	/* The executor's completion log may follow its release-store. Observe
 	 * acknowledgment on the waiter, using only its still-live stack data. */
 	pr_info("kd_native ack: task=%d lock=%lx mutex=%u last_spin=%u\n",
@@ -155,12 +175,12 @@ static int kd_exec_native_finish(struct kd_exec_frame *frame)
 #ifdef KDLOCK_SELFTEST
 	kd_exec_selftest_relay_finish(frame);
 #endif
-	ret = kd_exec_remote_complete(frame);
+	ret = frame->mutex_backend ? kd_exec_remote_complete(frame) : 0;
 
 	if (ret)
 		return ret;
 	atomic64_inc(&kd_native_completed);
-	/* A no-lock relay can outlive the waiter's final ACK and task lifetime. */
+	/* Capture identity was established before NATIVE_READY; retirement follows. */
 	pr_info("kd_native complete: task=%d outer=%lx mutex=%u\n",
 		frame->logical_pid, frame->outer_lock_addr,
 		frame->mutex_backend);
@@ -212,12 +232,8 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 			}
 			if (local_complete && frame->mutex_backend)
 				kd_mutex_task_put(frame->logical_task);
-			if (local_complete && !frame->mutex_backend) {
+			if (!frame->mutex_backend)
 				request->spin_origin = frame->spin_origin;
-				BUG_ON(kd_spin_entry_borrow_put(
-					&frame->spin_origin,
-					&request->spin_last));
-			}
 			if (complete && ret >= 0)
 				ret = kd_exec_native_finish(frame);
 			request->result = ret < 0 ? ret : 0;

@@ -204,10 +204,10 @@ static void test_retained_slot(void)
 
 static void test_root_retirement(void)
 {
-	struct kd_spin_exec_request request = { 0 };
+	struct kd_spin_continuation request = { 0 };
 	struct kd_exec_frame *f = &request.frame;
-	CHECK(sizeof(request) == 768 && _Alignof(struct kd_spin_exec_request) == 64);
-	CHECK(offsetof(struct kd_spin_exec_request, frame.packet_state) < 128);
+	CHECK(sizeof(request) == 768 && _Alignof(struct kd_spin_continuation) == 64);
+	CHECK(offsetof(struct kd_spin_continuation, frame.packet_state) < 128);
 	for (int abi = 0; abi < 2; abi++) {
 		*f = (struct kd_exec_frame){ .spin_simple = true, .executed = true,
 			.batch_lease = true, .request_frame = true, .state = KD_EXEC_FRAME_RUNNING,
@@ -241,12 +241,12 @@ static void test_prefetch(void)
 {
 	char stack[THREAD_SIZE];
 	struct task_struct task = { .stack = stack };
-	struct kd_spin_exec_request request = { 0 }, before;
+	struct kd_spin_continuation request = { 0 }, before;
 	struct pt_regs root = { .sp = (unsigned long)(stack + 128) }, saved = root;
 	struct kd_spin_node node = { .execution = &request, .locked = 1 };
 	request.frame.regs_ref = &root;
 	request.frame.logical_task = &task;
-	request.jit_waiter = true;
+	request.kind = KD_SPIN_CONT_VIRTUAL;
 	before = request;
 	kd_spin_prefetch_request(&node);
 	for (unsigned int i = 0; i < 3; i++)
@@ -278,7 +278,7 @@ static void test_prefetch(void)
 	/* A physical packet uses its own regs, with identical bounded hints. */
 	node.execution = &request;
 	request.frame.regs_ref = &request.frame.regs;
-	request.jit_waiter = false;
+	request.kind = KD_SPIN_CONT_ROOT;
 	request.frame.regs_ref->sp = saved.sp;
 	kd_spin_prefetch_request(&node);
 	CHECK(hints[0] == request.frame.regs_ref && hint_count == with_stack);
@@ -290,7 +290,7 @@ static void test_prepared_prefetch(void)
 {
 	char stack[THREAD_SIZE];
 	struct task_struct task = { .stack = stack };
-	struct kd_spin_exec_request request = { 0 };
+	struct kd_spin_continuation request = { 0 };
 	struct pt_regs borrowed = { 0 };
 	struct kd_spin_node node = { .execution = &request, .locked = 1 };
 	const void *lookup[16];
@@ -312,7 +312,7 @@ static void test_prepared_prefetch(void)
 					memcpy(lookup, hints, sizeof(lookup));
 					kd_spin_prefetch_mode = 2;
 					kd_spin_prepare_prefetch(&node, regs);
-					struct kd_spin_exec_request before = request;
+					struct kd_spin_continuation before = request;
 					struct pt_regs saved = *regs;
 					hint_count = 0;
 					kd_spin_prefetch_request(&node);
@@ -345,7 +345,7 @@ static void test_prepared_prefetch(void)
 	void *area = mmap(NULL, bytes + page, PROT_READ | PROT_WRITE,
 			  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	CHECK(area != MAP_FAILED);
-	struct kd_spin_exec_request *protected = area;
+	struct kd_spin_continuation *protected = area;
 	struct pt_regs *packet = (void *)((char *)area + bytes);
 	protected->frame.logical_task = &task;
 	protected->frame.packet_state = KD_PACKET_FULL;

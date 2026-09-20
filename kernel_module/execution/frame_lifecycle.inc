@@ -261,6 +261,9 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	if (!frame->batch_lease)
 		kd_source_frame_put();
 #ifdef KDLOCK_SELFTEST
+	kd_exec_selftest_relay_retired(frame);
+#endif
+#ifdef KDLOCK_SELFTEST
 	if (!kd_exec_context_validate(ctx))
 		return kd_exec_invariant_failure();
 #endif

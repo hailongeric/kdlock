@@ -29,7 +29,7 @@ static bool list_empty(const struct list_head *head)
 #undef kd_exec_frame_bind
 #undef kd_exec_frame_pop
 
-static struct kd_spin_exec_request *fixture_request(struct kd_spin_node *node)
+static struct kd_spin_continuation *fixture_request(struct kd_spin_node *node)
 {
 	if (!node->execution)
 		node->execution = calloc(1, sizeof(*node->execution));
@@ -43,12 +43,12 @@ static struct kd_spin_node kd_spin_nodes[MAX_NODES], successor, deferred;
 #define request kd_spin_nodes[0]
 static struct kd_spin_cpu_state shadow_states[2];
 #define kd_spin_cpu shadow_states[0]
-static struct kd_spin_exec_request test_execution;
+static struct kd_spin_continuation test_execution, reused_execution;
 static struct kd_exec_frame *active_frame = &test_execution.frame;
 #define active (*active_frame)
 static struct kd_exec_frame requester;
-static struct kd_spin_exec_request request_pool[12];
-static struct kd_spin_exec_request *kd_spin_requests = request_pool;
+static struct kd_spin_continuation_stack request_storage;
+static struct kd_spin_continuation_stack *kd_spin_continuations = &request_storage;
 static void reset_request(void)
 {
 	memset(&request, 0, sizeof(request));
@@ -56,7 +56,7 @@ static void reset_request(void)
 	memset(&test_execution, 0, sizeof(test_execution));
 	request.execution = &test_execution;
 	fixture_request(&request)->frame.regs_ref = &active.regs;
-	test_execution.users.counter = 1;
+	test_execution.storage = &request_storage;
 }
 static struct kd_exec_context kd_exec_context[2], pool_before[2];
 static struct task_struct pressure_tasks[KD_EXEC_MAX_NESTING];
@@ -145,7 +145,7 @@ static void wake_after(const void *address);
 	} while (0)
 #define smp_load_acquire(p) (*(p))
 #define smp_mb() ((void)0)
-#define KD_SPIN_REQUEST_SLOTS 12
+#define KD_SPIN_CONT_SLOTS 12
 #define atomic_read_acquire(p) ((p)->counter)
 #define atomic_set(p, v) ((p)->counter = (v))
 #define atomic_inc(p) (++(p)->counter)
@@ -189,7 +189,7 @@ static void kd_exe_queue_timing_end(bool mutex, uint64_t *queued_at, u64 end)
 		return;
 	CHECK(!mutex && queued_at == &fixture_request(&request)->queued_at_ns && end == 100);
 	CHECK(*queued_at == 50 && active.executed && scripts == 1);
-	CHECK(request.locked && !fixture_request(&request)->native_resume && !pops && !native_waits);
+	CHECK(request.locked && !(fixture_request(&request)->result == KD_SPIN_RES_NATIVE_READY) && !pops && !native_waits);
 	*queued_at = 0;
 	queue_finishes++;
 }
@@ -198,7 +198,7 @@ static void kd_exe_queue_timing_end(bool mutex, uint64_t *queued_at, u64 end)
  * consume only local scalars after the native wait has allowed node reuse. */
 static u64 kd_exe_native_timing_start(void)
 {
-	CHECK(request.locked && !fixture_request(&request)->native_resume && !native_waits && !pops);
+	CHECK(request.locked && !(fixture_request(&request)->result == KD_SPIN_RES_NATIVE_READY) && !native_waits && !pops);
 	handoff_starts++;
 	return 150;
 }
@@ -264,7 +264,7 @@ static bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, int pid,
 				 unsigned long ip)
 {
 	(void)pid;
-	CHECK(ip == (fixture_request(&request)->jit_waiter ? 0x900UL : 0x800UL));
+	CHECK(ip == ((fixture_request(&request)->kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL));
 	return exe == &ready_entry && mode != 4;
 }
 /* Hint address selection is exercised with real layouts by spin_batch_fixture.
@@ -301,8 +301,8 @@ static void kd_spin_prefetch_request(struct kd_spin_node *node)
 static struct kd_exe_info *kd_get_exe(int pid, unsigned long ip)
 {
 	(void)pid;
-	CHECK(ip == (fixture_request(&request)->jit_waiter ? 0x900UL : 0x800UL));
-	return mode != 4 ? &ready_entry : NULL;
+	CHECK(ip == ((fixture_request(&request)->kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL));
+	return mode != 4 && mode != 7 ? &ready_entry : NULL;
 }
 static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
 {
@@ -366,7 +366,16 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
 	       (!frame->executed && frame->state == KD_EXEC_FRAME_ERROR)));
 	if (regs && regs != kd_exec_frame_regs(frame))
 		*regs = *kd_exec_frame_regs(frame);
+	frame->state = KD_EXEC_FRAME_UNUSED;
+	frame->role = KD_ROLE_DONE;
 	pops++;
+	return 0;
+}
+static int fixture_borrow_put(const struct kd_spin_ref *ref, bool *last)
+{
+	(void)ref;
+	CHECK(pops && active.state == KD_EXEC_FRAME_UNUSED);
+	*last = true;
 	return 0;
 }
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
@@ -478,7 +487,7 @@ static void wake_before(const void *address, size_t size, uintptr_t value)
 	CHECK(!wake_probe.count++);
 	CHECK(size == (wake_probe.completed ? sizeof(u16) : sizeof(u8)));
 	CHECK(value == (wake_probe.completed ? 1 : 0));
-	CHECK(node->locked && !node->completed && !fixture_request(node)->native_resume);
+	CHECK(node->locked && !node->completed && !(fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY));
 	CHECK((kd_exec_current_frame() != &fixture_request(&request)->frame) && fixture_request(node)->frame.logical_task == &waiter);
 	CHECK(!memcmp(fixture_request(node)->frame.regs_ref, &wake_probe.regs, sizeof(*fixture_request(node)->frame.regs_ref)));
 	CHECK(scripts == wake_probe.completed && pops == scripts);
@@ -539,7 +548,7 @@ static void checked_run_combiner(struct qspinlock *lock,
 		CHECK(!memcmp(pool_before, kd_exec_context,
 			      sizeof(pool_before)));
 		CHECK(kd_exec_context_validate(kd_exec_current_context()));
-		CHECK(!node->completed && !fixture_request(node)->native_resume &&
+		CHECK(!node->completed && !(fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY) &&
 		      (kd_exec_current_frame() != &fixture_request(&request)->frame));
 		/* Retire only the unexecuted, API-created test frames after queue return. */
 		while (kd_exec_current_frame()) {
@@ -660,7 +669,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 {
 	CHECK(exe == &ready_entry);
 	CHECK(regs == kd_exec_frame_regs(&active) &&
-	      ip == (fixture_request(&request)->jit_waiter ? 0x900UL : 0x800UL) &&
+	      ip == ((fixture_request(&request)->kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL) &&
 	      lock == (unsigned long)&origins[0]);
 	scripts++;
 	if (mode == 11 || mode == 12) {
@@ -711,8 +720,14 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 
 int kd_exec_native_wait(struct kd_exec_frame *frame)
 {
-	CHECK(frame == &active && fixture_request(&request)->native_resume && !request.locked);
+	CHECK(frame == &active && (fixture_request(&request)->result == KD_SPIN_RES_NATIVE_READY) && !request.locked);
 	native_waits++;
+	/* NATIVE_READY permits immediate node reuse while the old executor is
+	 * still active. Its cleanup must use the cached continuation, not node. */
+	reused_execution = *request.execution;
+	request.execution = &reused_execution;
+	request.next = (void *)0xdeadbeef;
+	request.cpuid = 99;
 	if (mode == 2)
 		early_a(true);
 	release_b();
@@ -770,7 +785,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				fixture_request(&request)->frame.gsbase = 0x20000;
 				fixture_request(&request)->frame.logical_task = &waiter;
 				request.cpuid = cpu ^ 1;
-				fixture_request(&request)->pinned_context = mode == 7;
+				/* Pinned callers are rejected before publication; mode 7 tests readiness. */
 				request.locked = successor.locked = 1;
 				request.next = count ? &nodes[prefix] :
 						       &successor;
@@ -788,7 +803,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 							KD_EXEC_REMOTE_WAITING,
 					};
 					prepare_virtual_ledger();
-					fixture_request(&request)->jit_waiter = true;
+					fixture_request(&request)->kind = KD_SPIN_CONT_VIRTUAL;
 					fixture_request(&request)->jit_context = request_context;
 					parent_before = requester;
 					context_before = request_context;
@@ -830,9 +845,9 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				run_combiner(a_lock(), &request);
 
 				CHECK(!scripts && !pops && !request.completed);
-				CHECK(!fixture_request(&request)->native_resume &&
+				CHECK(!(fixture_request(&request)->result == KD_SPIN_RES_NATIVE_READY) &&
 				      (kd_exec_current_frame() != &fixture_request(&request)->frame) &&
-				      !fixture_request(&request)->jit_retry &&
+				      !(fixture_request(&request)->result == KD_SPIN_RES_RETRY) &&
 				      fixture_request(&request)->frame.gsbase == 0x20000 &&
 				      fixture_request(&request)->frame.logical_task == &waiter);
 				CHECK(!memcmp(fixture_request(&request)->frame.regs_ref, &expected_regs,
@@ -925,7 +940,7 @@ static unsigned int repeated_admission(void)
 				struct kd_spin_node prefix = {
 					.locked = 1,
 					.cpuid = (attempt & 1) ^ 1,
-					.execution = &(struct kd_spin_exec_request){ .frame.logical_task = &tasks[(attempt & 1) ^ 1] },
+					.execution = &(struct kd_spin_continuation){ .frame.logical_task = &tasks[(attempt & 1) ^ 1] },
 					.next = &request,
 				};
 #endif
@@ -1043,7 +1058,7 @@ static unsigned int preentry_packet(void)
 					.remote_result = KD_EXEC_REMOTE_WAITING,
 				};
 				prepare_virtual_ledger();
-				fixture_request(&request)->jit_waiter = true;
+				fixture_request(&request)->kind = KD_SPIN_CONT_VIRTUAL;
 				fixture_request(&request)->jit_context = request_context;
 			}
 			scripts = pops = jit_disables = 0;
@@ -1051,14 +1066,14 @@ static unsigned int preentry_packet(void)
 			CHECK(scripts == 1 && pops == 1);
 			CHECK(jit_disables == (mode == 11));
 			CHECK(!active.executed && !active.completion_seen &&
-			      active.state == KD_EXEC_FRAME_ERROR);
+			      active.state == KD_EXEC_FRAME_UNUSED);
 			CHECK(!memcmp(fixture_request(&request)->frame.regs_ref, &readmission_regs,
 				      sizeof(*fixture_request(&request)->frame.regs_ref)));
 			CHECK(!memcmp(kd_exec_frame_regs(&active), &readmission_regs,
 				      sizeof(active.regs)));
 			CHECK((kd_exec_current_frame() != &fixture_request(&request)->frame) && !request.completed &&
-			      !fixture_request(&request)->native_resume &&
-			      fixture_request(&request)->jit_retry == !virtual);
+			      !(fixture_request(&request)->result == KD_SPIN_RES_NATIVE_READY) &&
+			      (fixture_request(&request)->result == KD_SPIN_RES_RETRY) == !virtual);
 			CHECK(fixture_request(&request)->native_regs_decoded == !virtual);
 			CHECK(!request.locked && successor.locked &&
 			      request.next == &successor && !successor.next);
@@ -1201,7 +1216,7 @@ int main(void)
 		fixture_request(&request)->frame.regs_ref->di = (unsigned long)&origins[0];
 		fixture_request(&request)->frame.logical_task = &waiter;
 		fixture_request(&request)->frame.gsbase = 0x20000;
-		fixture_request(&request)->pinned_context = mode == 7;
+		/* Pinned callers are rejected before publication; mode 7 tests readiness. */
 		if (mode == 6) {
 			requester = (struct kd_exec_frame){
 				.entry_ip = 0x900,
@@ -1212,7 +1227,7 @@ int main(void)
 				.remote_result = KD_EXEC_REMOTE_WAITING,
 			};
 			prepare_virtual_ledger();
-			fixture_request(&request)->jit_waiter = true;
+			fixture_request(&request)->kind = KD_SPIN_CONT_VIRTUAL;
 			fixture_request(&request)->jit_context = request_context;
 			fixture_request(&request)->frame.regs_ref->ip = 0x801;
 		}

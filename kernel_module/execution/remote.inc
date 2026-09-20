@@ -118,3 +118,26 @@ void kd_exec_remote_cancel(struct kd_exec_frame *frame)
 	 * A retry, local acquisition or native handoff still owns its disposition. */
 	frame->resume_target = NULL;
 }
+
+/* DONE grants the parent permission to resume and retire. Detach and pop the
+ * child first; after publication neither child nor its shared packet is read. */
+int kd_exec_spin_retire(struct kd_exec_frame *frame, bool *retired)
+{
+	struct kd_exec_frame *parent = frame->complex_ready ? frame->resume_target : NULL;
+	int ret;
+
+	if (parent && (!kd_exec_frame_can_complete(frame) ||
+	    !kd_exec_frame_remote_pending(parent) ||
+	    READ_ONCE(parent->remote_request)))
+		return -EINVAL;
+	if (frame->complex_ready)
+		frame->resume_target = NULL;
+	ret = kd_exec_frame_pop(frame, NULL);
+	if (ret)
+		return ret;
+	if (retired)
+		smp_store_release(retired, true);
+	if (parent)
+		smp_store_release(&parent->remote_result, KD_EXEC_REMOTE_DONE);
+	return 0;
+}

@@ -42,6 +42,26 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 检查目标锁不再导入统一 spin hook。原生组不加载任何锁 provider。
 `allocator_guard/` 仍是三组共有、计时外的 per-CPU 分配器 hint 准备，详见历史记录。
 
+## 功能检查
+
+`--functional` 使用同一正文、业务数据、IRQ/preempt 与排空检查，但仅输出
+`functional.json`，不生成吞吐/延迟汇总或后端比较。要求显式选择 KD 和单次重复；
+原始运行日志仍保留诊断时间戳。每个场景使用新输出目录：
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
+  LC_ALL=C timeout --kill-after=10s 180 python3 bench/tclock_compare/run.py \
+  --functional --backends kdlock --cachelines 1 --threads 4 --repeats 1 \
+  --iterations 100000 --scenario plain \
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
+  --output /root/kdlock-evidence/continuation-plain-new
+```
+
+按改动选择 `nested`、`early`；`--spin-delegate off` 单独验证原生对照，要求零
+JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆盖边界见
+[tests](../../tests/README.md#continuation-validation)。
+
 ## 验收与结果
 
 `summary.csv/json` 仅报告各配置的吞吐中位数、摊销 ns/op、相对 Linux 的吞吐比和

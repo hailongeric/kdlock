@@ -39,12 +39,12 @@ static struct task_struct *current = &task;
 struct qspinlock {
 	int value;
 } lock, child_lock;
-struct kd_spin_exec_request {
+struct kd_spin_continuation {
  struct { struct task_struct *logical_task; unsigned long outer_lock_addr; } frame;
 };
 struct kd_spin_node {
 	struct kd_spin_node *next;
-	struct kd_spin_exec_request *execution;
+	struct kd_spin_continuation *execution;
 	int socket_id, cpuid;
 	unsigned long rsp;
 };
@@ -91,13 +91,13 @@ static void reset_trace(void)
 
 static void live_trace(void)
 {
-	struct kd_spin_node s = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &stask, .outer_lock_addr = (unsigned long)&lock } },
+	struct kd_spin_node s = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &stask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 3 };
-	struct kd_spin_node r = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &rtask, .outer_lock_addr = (unsigned long)&lock } },
+	struct kd_spin_node r = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &rtask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 20,
 				  .socket_id = 1,
 				  .next = &s };
-	struct kd_spin_node w = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &request_task, .outer_lock_addr = (unsigned long)&lock } },
+	struct kd_spin_node w = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &request_task, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 0,
 				  .next = &r };
 
@@ -177,13 +177,13 @@ static void selection(void)
 
 static void buffered_trace(void)
 {
-	struct kd_spin_node s = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &stask, .outer_lock_addr = (unsigned long)&lock } },
+	struct kd_spin_node s = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &stask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 3 };
-	struct kd_spin_node r = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &rtask, .outer_lock_addr = (unsigned long)&lock } },
+	struct kd_spin_node r = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &rtask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 20,
 				  .socket_id = 1,
 				  .next = &s };
-	struct kd_spin_node w = { .execution = &(struct kd_spin_exec_request){ .frame = { .logical_task = &request_task, .outer_lock_addr = (unsigned long)&lock } },
+	struct kd_spin_node w = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &request_task, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 0,
 				  .next = &r };
 	struct kd_deferred_trace_event *e = kd_deferred_events;

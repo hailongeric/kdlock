@@ -56,10 +56,11 @@ int kd_spin_entry_end(struct kd_spin_ref *ref);
 
 /* Executors register every native frame before waking the original waiter.
  * Put never unpins a remote CPU. The waiter marks native and consumes its pin
- * only after receiving the last frame's completion acknowledgment.
+ * only after physical ACKs and all frame borrows have retired.
  */
 int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref);
 int kd_spin_entry_mark_native(const struct kd_spin_ref *ref);
+int kd_spin_entry_borrow_wait(const struct kd_spin_ref *ref);
 int kd_spin_entry_borrow_put(const struct kd_spin_ref *ref, bool *last);
 
 #ifdef KDLOCK_SELFTEST

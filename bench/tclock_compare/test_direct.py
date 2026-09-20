@@ -12,6 +12,25 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_functional_report_has_no_performance_scores(self):
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            (out/'plan.json').write_text(json.dumps([
+                dict(name='plain', scenario='plain', functional=True),
+                dict(name='missing', scenario='early', functional=True)]))
+            (out/'plain').mkdir()
+            (out/'plain/session.json').write_text(json.dumps(dict(
+                execution_status='PASS', drained=True, jit_bodies=9,
+                jit_acceptance='PASS', measurement=dict(completed=10, wall_ns=100))))
+            run.report(out)
+            rows = json.loads((out/'functional.json').read_text())
+            self.assertEqual(rows[0]['completed'], 10)
+            self.assertEqual(rows[1]['status'], 'NOT_RUN')
+            self.assertFalse(rows[1]['drained'])
+            self.assertFalse((out/'summary.csv').exists())
+            self.assertFalse((out/'summary.json').exists())
+            self.assertFalse(any('throughput' in key or 'ns_op' in key for row in rows for key in row))
+
     def test_disabled_control_rejects_any_jit(self):
         record = dict(arm='kdlock', threads=4, jit_bodies=0,
                       hotlock_mode='observe', spin_delegate='off')

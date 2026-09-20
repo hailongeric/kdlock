@@ -253,6 +253,8 @@ int kd_exec_remote_unlock(struct kd_exec_frame *frame, unsigned long lock_addr);
 void kd_exec_remote_poll(struct kd_exec_frame *frame);
 int kd_exec_remote_native(struct kd_exec_frame *frame);
 int kd_exec_remote_complete(struct kd_exec_frame *frame);
+int kd_exec_spin_retire(struct kd_exec_frame *frame, bool *retired);
+bool kd_exec_native_pending(struct task_struct *task);
 /* Detach an unexecuted child without cancelling the queued parent request. */
 void kd_exec_remote_cancel(struct kd_exec_frame *frame);
 

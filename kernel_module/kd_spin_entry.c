@@ -424,7 +424,7 @@ int kd_spin_entry_mark_native(const struct kd_spin_ref *ref)
 	if (ret)
 		goto out;
 	if (entry->state != KD_ENTRY_WAITING ||
-	    entry->kind != KD_SPIN_ENTRY_HOOK || !entry->native_refs)
+	    entry->kind != KD_SPIN_ENTRY_HOOK)
 		ret = -EINVAL;
 	else
 		entry->state = KD_ENTRY_NATIVE;
@@ -454,6 +454,30 @@ int kd_spin_entry_borrow_put(const struct kd_spin_ref *ref, bool *last)
 out:
 	raw_spin_unlock_irqrestore(&entry->guard, flags);
 	return ret;
+}
+
+/* Final native return is distinct from a physical unlock ACK. Every executor,
+ * including an empty relay, drops its borrow only after unbinding its frame. */
+int kd_spin_entry_borrow_wait(const struct kd_spin_ref *ref)
+{
+	struct kd_spin_entry *entry;
+	unsigned long flags;
+	unsigned int users;
+	int ret;
+
+	if (!kd_entry_ref_present(ref) || !kd_entry_pinned())
+		return -EINVAL;
+	entry = ref->entry;
+	do {
+		raw_spin_lock_irqsave(&entry->guard, flags);
+		ret = kd_entry_local(ref);
+		users = entry->native_refs;
+		raw_spin_unlock_irqrestore(&entry->guard, flags);
+		if (ret)
+			return ret;
+		cpu_relax();
+	} while (users);
+	return 0;
 }
 
 /* Controlled teardown only; neither pool memory nor native frames may be live. */

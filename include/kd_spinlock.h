@@ -21,29 +21,38 @@ struct kd_spin_jit_context {
 	unsigned int lock_depth;
 };
 
-/* Stable request storage, independent of the recyclable scheduling node.
- * Ordinary completion has one waiter user. Native handoff adds an owner user;
- * remote requests also retain the root packet until their own final release. */
+/* Continuations survive C return and scheduling-node reuse. Only the owner
+ * CPU changes top; a remote native executor may publish retired after pop. */
+#define KD_SPIN_CONT_SLOTS 12
+#define KD_SPIN_CONT_BYTES (12 * 1024)
+#define KD_SPIN_WAIT_STACK_SIZE (8 * 1024)
+#define KD_SPIN_STORAGE_BYTES (KD_SPIN_CONT_BYTES + KD_SPIN_WAIT_STACK_SIZE)
+enum kd_spin_cont_kind {
+	KD_SPIN_CONT_ROOT,
+	KD_SPIN_CONT_VIRTUAL,
+};
+enum kd_spin_resume_result {
+	KD_SPIN_RES_QUEUED,
+	KD_SPIN_RES_RETRY,
+	KD_SPIN_RES_NATIVE_READY,
+};
 struct kd_spin_diag_slot;
-
-struct kd_spin_exec_request {
-	/* The common producer/combiner/restore metadata precedes the frame.
-	 * Align pool slots so another request's release cannot invalidate this
-	 * header. Keep one authoritative value for each state discriminator. */
+struct kd_spin_continuation_stack;
+struct kd_spin_continuation {
 	struct kd_spin_diag_slot *diag __attribute__((aligned(64)));
-	atomic_t users;
-	bool jit_waiter;
-	bool jit_retry;
-	bool native_resume;
-	bool pinned_context;
+	struct kd_spin_continuation_stack *storage;
+	enum kd_spin_cont_kind kind;
+	enum kd_spin_resume_result result;
+	bool retired;
 	bool native_regs_decoded;
 	struct kd_exec_frame frame;
-	/* These fields survive node reuse but are not ordinary JIT admission
-	 * inputs. The frame/packet is still retained until the last user exits. */
-	struct kd_spin_exec_request *packet_owner;
 	struct kd_spin_jit_context jit_context;
 	unsigned long irq_flags;
 	u64 queued_at_ns;
+};
+struct kd_spin_continuation_stack {
+	unsigned int top;
+	struct kd_spin_continuation records[KD_SPIN_CONT_SLOTS];
 };
 
 struct kd_spin_node {
@@ -57,7 +66,7 @@ struct kd_spin_node {
 	u8 prefetch_full;
 	u8 prefetch_complex;
 	/* NULL for a non-combinable MCS waiter; no logical execution state. */
-	struct kd_spin_exec_request *execution;
+	struct kd_spin_continuation *execution;
 	struct pt_regs *prefetch_regs;
 	unsigned long prefetch_sp;
 	/* A successor writes next while this CPU polls locked. Isolate those
@@ -88,6 +97,7 @@ void kd_spin_lock(struct qspinlock *lock, unsigned long rsp_value,
 void kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,
                       unsigned long ip, unsigned long bp, unsigned int abi);
 void kd_spin_unlock(struct qspinlock *lock);
+void kd_spin_native_retire(struct kd_spin_ref *ref);
 /* Explicit callers prepare their continuation before starting the workload.
  * These clobber entries capture no registers themselves: use the caller shell
  * in kd_spin_direct.h so the compiler spills every live non-frame GPR. */

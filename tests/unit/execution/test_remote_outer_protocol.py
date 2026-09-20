@@ -647,11 +647,10 @@ def multi_fixture(reverse=False, quota=False):
             lines.extend((
                 "kd_native complete: task=100 outer=b mutex=0",
                 "kd_native ack: task=100 lock=b mutex=0 last_spin=0",
+                "kd_spin retirement: task=100 child=1 retired=1 valid=1",
                 "kd_native complete: task=100 outer=a mutex=0",
                 "kd_native ack: task=100 lock=a mutex=0 last_spin=1",
                 "kd_multi done: " + roles[0],
-                "kd_child_exit release: task=100 cpu=12 owner=a0c outer=b "
-                "entry=200 ip=500 sp=600 detached=1 packet=1 context=1 valid=1",
             ))
     lines.extend("kd_multi done: " + row for row in roles[int(quota):])
     for lane in (0, 1):
@@ -772,9 +771,8 @@ class MultiRootOracleTests(unittest.TestCase):
             ("preempt=1", "preempt=2"),
             ("last_spin=0", "last_spin=1"),
             ("alive=1", "alive=0"),
-            ("detached=1", "detached=0"),
-            ("packet=1", "packet=0"),
-            ("context=1", "context=0"),
+            ("retired=1", "retired=0"),
+            ("child=1", "child=0"),
             ("owner=a0c", "owner=a0b"),
         ):
             self.assertIn(old, text)
@@ -784,8 +782,8 @@ class MultiRootOracleTests(unittest.TestCase):
         lines = text.splitlines()
         for earlier, later in (
             ("kd_child_exit arm:", "kd_native begin: task=100 outer=a"),
-            ("kd_multi done: role=0 ", "kd_child_exit release:"),
-            ("kd_child_exit release:", "kd_remote start: task=105 "),
+            ("kd_multi done: role=0 ", "kd_spin retirement:"),
+            ("kd_spin retirement:", "kd_remote start: task=105 "),
         ):
             swapped = lines.copy()
             left = next(i for i, line in enumerate(lines) if line.startswith(earlier))

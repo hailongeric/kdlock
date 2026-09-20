@@ -67,24 +67,24 @@ struct kd_spin_jit_context {
 	struct kd_exec_frame *requester;
 	unsigned int lock_depth;
 };
-struct kd_spin_exec_request {
+struct kd_spin_continuation {
 	struct kd_spin_diag_slot *diag;
 	struct kd_exec_frame frame;
-	struct kd_spin_exec_request *packet_owner;
-	atomic_t users;
+	struct kd_spin_continuation_stack *storage;
+	bool retired;
 	/* Request-owned return/routing state survives recycling of the node. */
 	unsigned long irq_flags;
-	bool jit_waiter;
-	bool jit_retry;
-	bool native_resume;
-	bool pinned_context;
+	enum kd_spin_cont_kind kind;
+	enum kd_spin_resume_result result;
 	bool native_regs_decoded;
 	struct kd_spin_jit_context jit_context;
 	u64 queued_at_ns;
 };
-#define KD_SPIN_REQUEST_SLOTS 12
-static struct kd_spin_exec_request request_pool[KD_SPIN_REQUEST_SLOTS];
-static struct kd_spin_exec_request *kd_spin_requests = request_pool;
+#define KD_SPIN_CONT_SLOTS 12
+struct kd_spin_continuation_stack { unsigned int top; struct kd_spin_continuation records[KD_SPIN_CONT_SLOTS]; };
+static struct kd_spin_continuation_stack request_storage;
+#define request_pool request_storage.records
+static struct kd_spin_continuation_stack *kd_spin_continuations = &request_storage;
 #define atomic_read_acquire(p) (*(p))
 #define atomic_set(p,v) (*(p) = (v))
 #define atomic_inc(p) (++*(p))
@@ -120,11 +120,11 @@ struct kd_spin_node {
 		struct { u8 completed; u8 locked; };
 		struct { u16 locked_completed; };
 	};
-	struct kd_spin_exec_request *execution;
+	struct kd_spin_continuation *execution;
 };
 
 
-static struct kd_spin_exec_request *fixture_request(struct kd_spin_node *node)
+static struct kd_spin_continuation *fixture_request(struct kd_spin_node *node)
 {
 	if (!node->execution)
 		node->execution = calloc(1, sizeof(*node->execution));
@@ -271,7 +271,7 @@ static void cpu_relax(void)
 		return;
 	CHECK(kd_spin_cpu.node_count == producer_count + 1);
 	produced_node->locked = false;
-	fixture_request(produced_node)->native_resume = peer_result == 5;
+	fixture_request(produced_node)->result = peer_result == 5 ? KD_SPIN_RES_NATIVE_READY : KD_SPIN_RES_QUEUED;
 	produced_node->completed = peer_result != 5;
 	if (producer_virtual)
 		fixture_request(produced_node)->jit_context.requester->remote_result =
@@ -331,7 +331,7 @@ static int xchg_tail(struct qspinlock *lock, int tail)
 		CHECK(kd_spin_cpu.node_count == producer_count + 1);
 		CHECK(produced_node->locked && !produced_node->completed);
 		CHECK(!produced_node->next && tail == ((producer_count + 1) << 16));
-		CHECK(fixture_request(produced_node)->jit_waiter == producer_virtual);
+		CHECK((fixture_request(produced_node)->kind == KD_SPIN_CONT_VIRTUAL) == producer_virtual);
 		CHECK(produced_node->cpuid == 0 && fixture_request(produced_node)->frame.gsbase);
 		CHECK(fixture_request(produced_node)->frame.logical_task ==
 		      (producer_virtual ? &logical_task : current));
@@ -553,7 +553,7 @@ static void kd_spin_debug_combiner(struct kd_spin_diag_slot *lock, unsigned int 
  * Model only that transfer here; test_spin_wait executes the real assembly
  * against destructively overwritten C frames. */
 static jmp_buf *native_return;
-static void kd_spin_request_put(struct kd_spin_exec_request *request);
+static void kd_spin_continuation_release(struct kd_spin_continuation *request);
 static void kd_spin_publish_wait(struct kd_spin_node *node,
 				 struct kd_spin_node *previous, void *wait_stack_top)
 {
@@ -561,16 +561,16 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 	previous->next = node;
 	while (node->locked)
 		cpu_relax();
-	if (node->completed || fixture_request(node)->native_resume) {
+	if (node->completed || (fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY)) {
 		kd_spin_cpu.node_count--;
-		kd_spin_selftest_node_event(fixture_request(node)->native_resume ?
+		kd_spin_selftest_node_event((fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY) ?
 			KD_NODE_NATIVE_RETURN : KD_NODE_REMOTE_RETURN);
 		kd_spin_diag_waiter_exit(fixture_request(node)->diag);
 		kd_spin_set_resume_node(node);
 		CHECK(native_return != NULL);
 		if (node->execution)
-			kd_spin_request_put(node->execution);
-		longjmp(*native_return, fixture_request(node)->native_resume ? 5 : 3);
+			kd_spin_continuation_release(node->execution);
+		longjmp(*native_return, (fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY) ? 5 : 3);
 	}
 }
 /* Node-allocation failure fixture substitutes only native physical acquire;
@@ -675,7 +675,7 @@ static void run_case(int depth, int count, bool queued, bool retry)
 	(void)fixture_request(&next);
 	node->next = &next;
 	node->rsp = 0x12345678;
-	fixture_request(node)->jit_retry = retry;
+	fixture_request(node)->result = retry ? KD_SPIN_RES_RETRY : KD_SPIN_RES_QUEUED;
 	kd_spin_cpu.curr_cs_cpu = 19;
 #ifdef NUMA_AWARE
 	kd_spin_cpu.local_queue_head = &next;
@@ -971,7 +971,7 @@ static void run_native_boundaries(void)
 {
 	for (int position = 0; position < 5; position++) {
 		struct kd_spin_node nodes[6] = { 0 };
-		struct kd_spin_exec_request executions[6] = { 0 };
+		struct kd_spin_continuation executions[6] = { 0 };
 		struct qspinlock lock = { .locked = 1 };
 		struct kd_spin_request request = { .word = &scheduling_word };
 		int completed = position > 1 ? position - 1 : 0;

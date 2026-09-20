@@ -49,6 +49,8 @@ def main():
     for header, marker in (
         ((ROOT / "include/exe_info.h").read_text(), "enum kd_entry_abi {"),
         ((ROOT / "include/exe_info.h").read_text(), "enum kd_packet_state {"),
+        (spin_types, "enum kd_spin_cont_kind {"),
+        (spin_types, "enum kd_spin_resume_result {"),
         (exec_types, "enum kd_exec_lock_kind {"),
         (exec_types, "enum kd_request_role {"),
         (exec_types, "enum kd_exec_remote_state {"),
@@ -160,8 +162,8 @@ def main():
                 ),
                 (
                     "native-resume-count-leak",
-                    "if (READ_ONCE(curr_node->execution->native_resume)) {\n\t\t\tthis_cpu_ptr(&kd_spin_cpu)->node_count--;",
-                    "if (READ_ONCE(curr_node->execution->native_resume)) {",
+                    "if ((READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_NATIVE_READY)) {\n\t\t\tthis_cpu_ptr(&kd_spin_cpu)->node_count--;",
+                    "if ((READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_NATIVE_READY)) {",
                 ),
                 (
                     "completed-count-leak",

@@ -93,7 +93,7 @@ diff --git a/kernel_module/execution/native.inc b/kernel_module/execution/native
  		frame->entry_ip, kd_exec_frame_regs(frame)->ip, kd_exec_frame_regs(frame)->sp,
  		frame->jit_lock_depth - frame->outer_lock_index, mutex,
 @@ -143,7 +143,7 @@
- 		BUG_ON(kd_spin_entry_end(&request.spin_origin));
+ 	}
  	/* The executor's completion log may follow its release-store. Observe
  	 * acknowledgment on the waiter, using only its still-live stack data. */
 -	pr_info("kd_native ack: task=%d lock=%lx mutex=%u last_spin=%u\n",
@@ -104,7 +104,7 @@ diff --git a/kernel_module/execution/native.inc b/kernel_module/execution/native
 @@ -161,7 +161,7 @@
  		return ret;
  	atomic64_inc(&kd_native_completed);
- 	/* A no-lock relay can outlive the waiter's final ACK and task lifetime. */
+ 	/* Capture identity was established before NATIVE_READY; retirement follows. */
 -	pr_info("kd_native complete: task=%d outer=%lx mutex=%u\n",
 +	KD_PR_ROUTINE("kd_native complete: task=%d outer=%lx mutex=%u\n",
  		frame->logical_pid, frame->outer_lock_addr,
@@ -178,11 +178,11 @@ diff --git a/kernel_module/kd_spinlock.c b/kernel_module/kd_spinlock.c
 @@ -227,7 +227,7 @@
  	struct kd_spin_ref ref = node->execution->frame.spin_origin;
  
- 	if (node->execution->jit_retry)
+ 	if (node->execution->result == KD_SPIN_RES_RETRY)
 -		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
 +		KD_PR_ROUTINE("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
  				   node, node->cpuid, node->execution->frame.regs_ref->ip);
- 	if (mode == 2)
+ 	if (mode == 2) {
  		BUG_ON(kd_spin_entry_mark_native(&ref));
 diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
 --- a/kernel_module/mutex/combiner.inc
@@ -248,9 +248,9 @@ diff --git a/kernel_module/spin/execute.inc b/kernel_module/spin/execute.inc
  			frame->entry_ip, kd_exec_frame_regs(frame)->ip, frame->outer_lock_addr,
  			frame->resume_target->outer_lock_addr,
 @@ -247,7 +247,7 @@
- 	curr_node->execution->jit_retry = !curr_node->execution->jit_waiter &&
- 			       ret_flag != KD_EXE_RUN_TO_UNLOCK;
- 	if (curr_node->execution->jit_retry)
+ 	curr_node->execution->result = curr_node->execution->kind == KD_SPIN_CONT_ROOT &&
+ 		ret_flag != KD_EXE_RUN_TO_UNLOCK ? KD_SPIN_RES_RETRY : KD_SPIN_RES_QUEUED;
+ 	if (curr_node->execution->result == KD_SPIN_RES_RETRY)
 -		KD_PR_INFO(
 +		KD_PR_ROUTINE(
  			"spin JIT retry regs: node=%px cpu=%d ip=%lx failed_ip=%lx\n",

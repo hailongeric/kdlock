@@ -89,6 +89,7 @@ def main():
         "bool kd_exec_frame_locks_released(const struct kd_exec_frame *frame)",
         "int kd_exec_remote_native(struct kd_exec_frame *frame)",
         "int kd_exec_remote_complete(struct kd_exec_frame *frame)",
+        "int kd_exec_spin_retire(struct kd_exec_frame *frame, bool *retired)",
         "void kd_exec_remote_cancel(struct kd_exec_frame *frame)",
         "bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame)",
         "int kd_exec_frame_record_event(struct kd_exec_frame *frame,",
@@ -157,7 +158,9 @@ def main():
         part = definition(spin, marker)
         if name == "execute_cs":
             # Model the omitted enqueue producer, using its production decoder.
-            part = part.replace("\tstruct qspinlock *word = batch->request->word;", '\tstruct pt_regs *packet = curr_node->execution->frame.regs_ref;\n\tif (!curr_node->execution->jit_waiter && !curr_node->execution->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame,\n\t\tcurr_node->execution->jit_waiter ? curr_node->execution->jit_context.requester->entry_ip : packet->ip,\n\t\t(unsigned long)lock, curr_node->execution->frame.gsbase,\n\t\tcurr_node->execution->frame.logical_task);\n\tcurr_node->execution->frame.regs_ref = packet;\n\tstruct qspinlock *word = batch->request->word;', 1)
+            part = part.replace("\tstruct qspinlock *word = batch->request->word;", '\tstruct pt_regs *packet = curr_node->execution->frame.regs_ref;\n\tif (!(curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL) && !curr_node->execution->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame,\n\t(curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL) ? curr_node->execution->jit_context.requester->entry_ip : packet->ip,\n\t\t(unsigned long)lock, curr_node->execution->frame.gsbase,\n\t\tcurr_node->execution->frame.logical_task);\n\tcurr_node->execution->frame.regs_ref = packet;\n\tstruct qspinlock *word = batch->request->word;', 1)
+        if name == "execute_cs":
+            part = part.replace("kd_spin_entry_borrow_put(", "fixture_borrow_put(")
         code += prefix + part + "\n"
     code += definition(
         read_source((ROOT / "kernel_module/kd_lock.c")),
@@ -225,14 +228,14 @@ def main():
             refusal,
             refusal.replace(
                 "{\n",
-                "{\n\t\tif (curr_node->execution->jit_waiter)\n"
+                "{\n\t\tif ((curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL))\n"
                 "\t\t\tjit_context->requester->remote_result = KD_EXEC_REMOTE_IDLE;\n",
             ),
         ),
         "virtual-native-trampoline": (
             "code",
-            "curr_node->execution->jit_retry = !curr_node->execution->jit_waiter &&",
-            "curr_node->execution->jit_retry =",
+            "curr_node->execution->result = curr_node->execution->kind == KD_SPIN_CONT_ROOT &&",
+            "curr_node->execution->result =",
         ),
         "child-cancel-ends-parent-wait": (
             "code",

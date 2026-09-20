@@ -12,6 +12,10 @@
 #define WRITE_ONCE(x, y) ((x) = (y))
 #define pr_info(...) ((void)printf(__VA_ARGS__))
 #define ATOMIC_INIT(x) (x)
+#define KD_SPIN_CONT_ROOT 0
+#define KD_SPIN_CONT_VIRTUAL 1
+#define KD_SPIN_RES_RETRY 1
+#define KD_SPIN_RES_NATIVE_READY 2
 #define KD_EXE_NO_RUN 2
 #define KD_EXE_RUN_ERROR 3
 #define KD_EXE_RUN_TO_UNLOCK 4
@@ -52,7 +56,7 @@ struct kd_exec_frame {
 /* Stable request owns the packet; the reusable queue node only references it. */
 struct kd_spin_request {
     struct kd_exec_frame frame;
-    bool jit_waiter, jit_retry, native_resume;
+    int kind, result;
 };
 static struct pt_regs *kd_exec_frame_regs(const struct kd_exec_frame *frame)
 {
@@ -120,7 +124,7 @@ static void test_readmit(void)
 				.valid = true,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .jit_waiter = true };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .kind = KD_SPIN_CONT_VIRTUAL };
 			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
 			request.frame.regs_ref = &request.frame.regs;
@@ -222,7 +226,7 @@ static void test_readmit_follow(void)
 				.jit_lock_depth = depth,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .jit_waiter = true };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .kind = KD_SPIN_CONT_VIRTUAL };
 			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
 			request.frame.regs_ref = &request.frame.regs;
@@ -310,7 +314,7 @@ int main(void)
 				.valid = true,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .jit_waiter = true };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .kind = KD_SPIN_CONT_VIRTUAL };
 			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
 			request.frame.regs_ref = &request.frame.regs;
@@ -330,7 +334,7 @@ int main(void)
 			if (rejected == 2)
 				kd_refusal_kind = 3;
 			if (rejected == 3)
-				request.jit_waiter = false;
+				request.kind = KD_SPIN_CONT_ROOT;
 			if (rejected == 4)
 				kd_refusal_lock = (unsigned long)&a;
 			if (rejected == 5)

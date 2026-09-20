@@ -29,6 +29,12 @@ def production():
     )
     for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
+    spin_types = (ROOT / "include/kd_spinlock.h").read_text()
+    types += "#define KD_SPIN_CONT_SLOTS 12\n"
+    for marker in ("enum kd_spin_cont_kind {", "enum kd_spin_resume_result {",
+                   "struct kd_spin_jit_context {", "struct kd_spin_continuation {",
+                   "struct kd_spin_continuation_stack {"):
+        types += definition(spin_types, marker).rstrip() + ";\n"
     source = read_source((ROOT / "kernel_module/kd_exec.c"))
     code = "\n".join(
         definition(source, signature)
@@ -160,13 +166,13 @@ def main():
             "kd_exec_selftest_relay_pop(frame);",
             "(void)kd_exec_selftest_relay_pop; (void)frame; /* skipped observer */",
         ),
-        "exit-observer-assumes-detached": (
-            "detached = !pid_task(kd_relay_exit.pid, PIDTYPE_PID);",
-            "detached = true;",
+        "retirement-observer-assumes-alive": (
+            "kd_relay_exit.valid &= alive &&",
+            "kd_relay_exit.valid &= (alive || true) &&",
         ),
-        "exit-observer-loses-packet-check": (
-            "packet &= !memcmp(frame, &kd_relay_exit.expected, sizeof(*frame)) &&\n\t\t  !memcmp(kd_exec_frame_regs(frame), &kd_relay_exit.expected_regs,\n\t\t\t  sizeof(kd_relay_exit.expected_regs));",
-            "packet &= true;",
+        "retirement-observer-loses-packet-check": (
+            "!memcmp(kd_exec_frame_regs(frame), &kd_relay_exit.expected_regs,\n\t\t\tsizeof(frame->regs)) &&",
+            "true &&",
         ),
         "exit-observer-loses-context-check": (
             "preempt_count() == kd_relay_exit.preempt",

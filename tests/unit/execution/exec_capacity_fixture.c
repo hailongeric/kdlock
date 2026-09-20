@@ -29,6 +29,7 @@ static bool list_empty(const struct list_head *head)
 typedef uint8_t u8;
 typedef uint16_t u16;
 static bool kd_hotlock_role_trace;
+typedef uint64_t u64;
 #include "frame_types.h"
 
 static struct kd_exec_context kd_exec_context[2];
@@ -41,14 +42,10 @@ static bool fixture_irq;
 static unsigned long kd_exec_invariant_failures;
 static char report[1024];
 typedef unsigned int atomic_t;
-struct kd_spin_exec_request {
-	struct kd_exec_frame frame;
-	struct kd_spin_exec_request *packet_owner;
-	atomic_t users;
-};
-#define KD_SPIN_REQUEST_SLOTS (KD_EXEC_MAX_NESTING + 4)
-static struct kd_spin_exec_request request_pool[KD_SPIN_REQUEST_SLOTS];
-static struct kd_spin_exec_request *kd_spin_requests = request_pool;
+static struct kd_spin_continuation_stack request_storage;
+static struct kd_spin_continuation_stack *kd_spin_continuations = &request_storage;
+#define request_pool request_storage.records
+#define BUG_ON(x) do { if (x) { fprintf(stderr, "invalid continuation release\n"); __builtin_trap(); } } while (0)
 #define atomic_read_acquire(p) (*(p))
 #define atomic_set(p,v) (*(p) = (v))
 #define atomic_dec(p) (--*(p))
@@ -109,7 +106,6 @@ static void put_pid(const void *pid)
 		exit_pid.refs--;
 }
 
-static void cpu_relax(void);
 
 static unsigned int atomic_cmpxchg(atomic_t *value, unsigned int old,
 				   unsigned int replacement)
@@ -193,23 +189,7 @@ counted_frame_push(const struct pt_regs *regs, unsigned long entry,
 		CHECK(source_frames == leases);                           \
 	} while (0)
 
-static void cpu_relax(void)
-{
-	/* This callback runs inside the actual observer, before pop can clear the
-	 * frame or drop its source lease. It is not a scheduler or ACK model. */
-	jiffies++;
-	exit_polls++;
-	CHECK(kd_exec_current_frame() == exit_frame && source_frames == 1);
-	CHECK(kd_exec_frame_locks_released(exit_frame));
-	if (exit_behavior != 2)
-		exit_pid.task = NULL;
-	if (exit_behavior == 3)
-		kd_exec_frame_regs(exit_frame)->ax ^= 1;
-	if (exit_behavior == 4)
-		fixture_preempt++;
-	if (exit_behavior == 6)
-		fixture_irq = !fixture_irq;
-}
+
 
 static unsigned long release_order[KD_EXEC_MAX_LOCK_DEPTH];
 static unsigned long shadow_order[KD_EXEC_MAX_LOCK_DEPTH];
@@ -748,7 +728,7 @@ static void waiter_exit_observer(bool after_ack, unsigned int behavior)
 	struct list_head routing;
 	struct pt_regs expected, output, shared;
 	unsigned long locks[2] = { 0x6000, 0x2000 };
-	bool successful = behavior < 2;
+	bool successful = behavior == 0 || behavior == 2;
 	bool incoming_irq = fixture_irq;
 
 	if (!frame)
@@ -802,6 +782,9 @@ static void waiter_exit_observer(bool after_ack, unsigned int behavior)
 		exit_pid.task = NULL;
 	if (behavior == 5)
 		kd_exec_frame_regs(frame)->ax ^= 1;
+	if (behavior == 3) fixture_preempt++;
+	if (behavior == 4) kd_relay_exit.cpu ^= 1;
+	if (behavior == 6) fixture_irq = !fixture_irq;
 	/* Cached identity is all the terminal observer may use, even before the
 	 * substituted RCU task link is detached. Never infer a live task from it. */
 	frame->logical_task->pid = -99;
@@ -812,15 +795,10 @@ static void waiter_exit_observer(bool after_ack, unsigned int behavior)
 	CHECK(kd_exec_frame_pop(frame, &output) == 0);
 	CHECK(!kd_relay_exit.frame && !kd_relay_exit.pid && !exit_pid.refs);
 	CHECK(!source_frames && !kd_exec_current_frame());
-	CHECK(strstr(report, after_ack ? "kd_child_exit release:" :
-				       "kd_relay_exit release:"));
+	CHECK(strstr(report, "kd_spin retirement:") && strstr(report, "retired=1"));
 	CHECK(strstr(report, "task=100 "));
 	CHECK(strstr(report, successful ? "valid=1" : "valid=0"));
-	CHECK((exit_polls == 0) == (behavior == 1 || behavior == 5));
-	if (behavior == 2)
-		CHECK(jiffies == 5 * HZ);
-	if (behavior == 3)
-		expected.ax ^= 1;
+	CHECK(!exit_polls && !jiffies);
 	CHECK(!memcmp(&expected, &output, sizeof(output)));
 	fixture_preempt = 1;
 	kd_relay_exit_lock = 0;
@@ -922,27 +900,31 @@ static void borrowed_packets(void)
  * the root packet alive after the root execution frame is already unbound. */
 static void shared_requests(void)
 {
-	struct kd_spin_exec_request *live[KD_SPIN_REQUEST_SLOTS], *root, *child;
+	struct kd_spin_continuation *live[KD_SPIN_CONT_SLOTS], *root, *child;
 	struct pt_regs expected = registers(73);
 	struct kd_exec_context before;
 
 	cpu = 0;
 	current = &owners[0];
 	CHECK(!source_frames && !kd_exec_current_context()->depth);
-	for (unsigned int i = 0; i < KD_SPIN_REQUEST_SLOTS; i++) {
-		live[i] = kd_spin_request_reserve();
-		CHECK(live[i] && live[i]->users == 1);
+	for (unsigned int i = 0; i < KD_SPIN_CONT_SLOTS; i++) {
+		live[i] = kd_spin_continuation_reserve();
+		CHECK(live[i] == &request_pool[i] && !live[i]->retired);
 		live[i]->frame.regs = expected;
 	}
-	CHECK(!kd_spin_request_reserve());
-	for (unsigned int i = 0; i < KD_SPIN_REQUEST_SLOTS; i++) {
+	CHECK(!kd_spin_continuation_reserve());
+	/* A hole is not reusable beneath an active top; capacity cannot move or
+	 * overwrite the live continuation above it. */
+	kd_spin_continuation_release(live[0]);
+	CHECK(request_storage.top == KD_SPIN_CONT_SLOTS && !kd_spin_continuation_reserve());
+	for (unsigned int i = 1; i < KD_SPIN_CONT_SLOTS; i++) {
 		CHECK(!memcmp(&live[i]->frame.regs, &expected, sizeof(expected)));
-		kd_spin_request_put(live[i]);
+		kd_spin_continuation_release(live[i]);
 	}
-	root = kd_spin_request_reserve();
+	CHECK(!request_storage.top);
+	root = kd_spin_continuation_reserve();
 	root->frame.regs = expected;
 	kd_exec_frame_prepare(&root->frame, 0x1000, 0, 0x3000, &waiters[0]);
-	CHECK(!memcmp(&root->frame.regs, &expected, sizeof(expected)));
 	before = *kd_exec_current_context();
 	source_open = false;
 	CHECK(kd_exec_frame_bind(&root->frame, 0, true) == -EBUSY);
@@ -950,43 +932,27 @@ static void shared_requests(void)
 	source_open = true;
 	CHECK(kd_source_frame_get());
 	CHECK(!kd_exec_frame_bind(&root->frame, 0, true));
-	CHECK(kd_exec_current_frame() == &root->frame && source_frames == 1);
-	child = kd_spin_request_reserve();
-	root->users++; /* Child packet dependency precedes publication. */
-	child->packet_owner = root;
+	child = kd_spin_continuation_reserve();
 	kd_exec_frame_prepare(&child->frame, 0x1000, 0, 0x3000, &waiters[0]);
 	child->frame.regs_ref = &root->frame.regs;
 	CHECK(!kd_exec_frame_bind(&child->frame, 0, true));
-	CHECK(child->frame.parent == &root->frame && source_frames == 1);
 	kd_exec_frame_regs(&child->frame)->ax ^= 0x55;
 	expected.ax ^= 0x55;
 	CHECK(!memcmp(&root->frame.regs, &expected, sizeof(expected)));
 	CHECK(!kd_exec_frame_abort(&child->frame));
 	CHECK(!kd_exec_frame_pop(&child->frame, NULL));
-	CHECK(kd_exec_current_frame() == &root->frame);
+	CHECK(!kd_exec_frame_validate(&child->frame));
+	/* Remote native retirement marks a slot but never changes owner top. */
+	smp_store_release(&child->retired, true);
+	CHECK(request_storage.top == 2);
+	CHECK(kd_spin_continuation_reserve() == child);
+	kd_spin_continuation_release(child);
 	CHECK(!kd_exec_frame_abort(&root->frame));
-	CHECK(!kd_exec_frame_pop(&root->frame, NULL) && source_frames == 1);
-	kd_spin_request_put(root);
-	CHECK(root->users == 1); /* Child still owns the packet. */
-	CHECK(kd_spin_request_reserve() != root);
-	kd_spin_request_put(child);
-	CHECK(!root->users && !child->users);
+	CHECK(!kd_exec_frame_pop(&root->frame, NULL));
+	CHECK(!kd_exec_frame_validate(&root->frame));
+	kd_spin_continuation_release(root);
+	CHECK(!request_storage.top);
 	kd_source_frame_put();
-	/* Return the one temporary reservation from the exclusion check. */
-	for (unsigned int i = 0; i < KD_SPIN_REQUEST_SLOTS; i++)
-		if (request_pool[i].users)
-			kd_spin_request_put(&request_pool[i]);
-	for (unsigned int owner_first = 0; owner_first < 2; owner_first++) {
-		root = kd_spin_request_reserve();
-		root->users++; /* native owner reference */
-		kd_spin_request_put(root);
-		CHECK(root->users == 1);
-		child = kd_spin_request_reserve();
-		CHECK(child && child != root);
-		kd_spin_request_put(root);
-		CHECK(!root->users);
-		kd_spin_request_put(child);
-	}
 	CHECK(!source_frames && !kd_exec_current_frame());
 }
 

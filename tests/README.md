@@ -150,3 +150,78 @@ KD 原生拒绝/冷锁路径改为共用 pending/MCS 节点，不申请 executio
 [本轮报告](../bench/tclock_compare/results/20260920-native-mcs.md)。
 `spin_delegate=0` 为明确的零 JIT 对照，默认开启代理时的 observe 竞争正例仍须
 有真实 JIT。基础与相关单测、正常及 SELFTEST + NUMA 构建通过；未运行全套。
+
+<a id="continuation-validation"></a>
+## 2026-09-20 continuation 交接验证
+
+保留本轮开始时的热度/抢占配对和文档修改。先在旧池上改变退休顺序，再改为每 CPU
+20 KiB 单次预分配：12 KiB continuation 区与 8 KiB 等待栈。普通完成先 pop 再通知；
+NATIVE_READY 与物理解锁 ACK、最终退休分开。每个 native 执行者（含无锁 relay）
+在唤醒原线程前登记根 ticket 借用，pop 后才解除，最后解锁等待全部退休。
+
+guest `6.1.159-kdclobber2`，recovery/ext4、40 CPU、voluntary、nokaslr；未修改或
+构建 guest 内核、TCLock 参考实现或 mutex 互斥协议。normal 和 SELFTEST+NUMA
+均通过 `W=1` 构建；现有手写换栈的 objtool 警告仍存在。
+
+两个基础程序与以下 14 个相关驱动全部通过（`make -C tests/unit run PY_TESTS=...`）：
+`spin/{test_spin_entry,test_spin_wait,test_spin_preempt,test_spin_nondelegated,
+test_spin_shadow,test_spin_batch,test_spin_outer_progress,test_spin_node_protocol}.py`、
+`execution/{test_exec_capacity,test_remote_outer,test_remote_depth_protocol,
+test_remote_outer_protocol,test_remote_deferred_protocol}.py`、
+`infrastructure/test_hotlock_sampling.py`。另外，shadow 的 9 个变异、退休探针重跑及
+功能运行器 9 项检查通过。未执行完整单元套件。
+
+生产 fixture 覆盖 12 条容量、活记录下方空洞不可复用、远端仅标退休/本 CPU 收缩
+栈顶、共享根包、节点先复用、延迟 ACK、2–8 层 native 正序/逆序释放与无锁 relay。
+192 次真实 x86 恢复涵盖完整/最小包、重试、native、已退休的无锁 native 及栈顶收缩。
+原生 MCS fixture 完成 400000 次恰好一次操作；14 条入口路由保留单次抢占 pin。
+旧 waiter-exit 探针改为 pop 前 task 仍存活、packet/context 不变、pop 后验证拒绝；
+日志 oracle 同步要求退休早于最终 ACK 返回，保留缺失、重复、损坏及顺序变异。
+这些 fixture/oracle 不是实际内核远端 native 并发的证据。
+
+最终 guest ELF：node 128 字节、64 字节对齐，通知偏移 64/65；continuation
+768 字节、64 字节对齐，frame 偏移 32、寄存器包偏移 104；存储栈 9280 字节，
+records 偏移 64，位于 12 KiB 区内。恢复反汇编核对 SP/IP/BP 偏移
+256/232/136、retired 偏移 24、storage 偏移 8、回收步长 768；现场读取先于退休写入。
+
+实际 JIT 采用直接 API 的 `--functional` 入口，仅 KD、c1/t4、单次重复，每线程
+100000 次。最终结果记录在 `plain-final/`、`nested-final/`、`early-final/`，
+原生对照记录在 `native-control/`；各场核对正文、业务数据、IRQ/preempt、错误日志及
+排空。原始证据以各目录 `functional.json` 为准：
+
+| 场景 | 完成操作 | 实际 JIT 正文 | 业务/上下文/排空 |
+| --- | --- | --- | --- |
+| plain | 400000 | 240426 | PASS |
+| nested | 400000 | 389816 | PASS |
+| early | 400000 | 99947 | PASS |
+| 原生对照（代理关闭） | 400000 | 0，DISABLED_CONTROL | PASS |
+
+provider 已卸载，最终无 workload/daemon/provider 在途；各场 source retirement
+检查 frames/modules/writers 为零，没有本轮 kernel BUG/Oops/WARNING。
+未启用 mutex JIT。
+
+证据目录：guest `/root/kdlock-evidence/continuation-20260920/`。
+`stage1-build.log`、`stage1-retirement-final3.log` 保留旧池阶段；
+`final-unit.log`、`probe-final.log`、`shadow-mutations.log`、
+`build-{normal,selftest}-final.log`、`*-layout.txt`、`restore-assembly.txt` 为最终检查。
+首次 fixture 类型/状态迁移失败也保留；没有把编译失败计为变异检出。
+各实际 JIT 场次冻结源码、ELF、内核身份、哈希与 dmesg。
+归档基于 Git `e25c55151fa7f98b07c516cb613c6198c1c12910` 的工作树；
+`staged-diffs/00-user-preserved.patch` 保留原有修改，`01-retirement.patch` 为旧池
+退休顺序阶段，`02-continuation.patch` 为存储迁移及相关测试/文档阶段。
+`staged-diffs/final-files-sha256.json` 记录验证时文件哈希，`final-idle.json`
+确认源码哈希一致、四场功能检查通过及模块/翻译者排空。
+
+完整证据归档为 guest `/root/kdlock-evidence/continuation-20260920.tar.gz`，SHA256：
+
+```text
+cc8c2f4d8c8404b66cc8fc0a8579bf2e37a93a08db33ee28ab1277b626759a49
+```
+
+本次提交汇总上述实现及原有抢占配对修改；归档之后仅补正文档术语、证据索引和
+提交说明，未改动已验证的实现与测试。提交前只读复核归档哈希与排空记录，
+没有重新运行上述构建或功能检查，归档内文档保持验证时版本。
+
+未运行性能测量或矩阵；只确认减少独立预分配、空闲引用计数扫描和
+`users`/`packet_owner` 更新，不宣称吞吐提升。未重跑 mutex JIT、真实内核多 CPU
+远端 native/无锁 relay 强制时序、极端容量/取消组合；这些边界不能记为 live PASS。

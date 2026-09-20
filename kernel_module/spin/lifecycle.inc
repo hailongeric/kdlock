@@ -15,12 +15,9 @@ static void kd_spinlock_free_percpu(void)
 		struct kd_spin_cpu_state *stack =
 			per_cpu_ptr(&kd_spin_cpu, cpu);
 
-		vfree(*per_cpu_ptr(&kd_spin_requests, cpu));
-		*per_cpu_ptr(&kd_spin_requests, cpu) = NULL;
-		if (stack->wait_stack_top) {
-			vfree((char *)stack->wait_stack_top - KD_SPIN_WAIT_STACK_SIZE);
-			stack->wait_stack_top = NULL;
-		}
+		vfree(*per_cpu_ptr(&kd_spin_continuations, cpu));
+		*per_cpu_ptr(&kd_spin_continuations, cpu) = NULL;
+		stack->wait_stack_top = NULL;
 	}
 	free_percpu(kd_spin_diag_cpu);
 	kd_spin_diag_cpu = NULL;
@@ -48,8 +45,10 @@ int kd_spinlock_init(void)
 	BUILD_BUG_ON(sizeof(kd_spinlock_t) != sizeof(u32));
 	BUILD_BUG_ON(offsetof(struct kd_spin_diag_slot, waiter_count) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_spin_exec_request, frame.packet_state) >= 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(sizeof(struct kd_spin_exec_request) % L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, frame.packet_state) >= 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) % L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) > 768);
+	BUILD_BUG_ON(sizeof(struct kd_spin_continuation_stack) > KD_SPIN_CONT_BYTES);
 	if (kd_spin_prefetch_mode > 2)
 		return -EINVAL;
 
@@ -77,15 +76,12 @@ int kd_spinlock_init(void)
 		       sizeof(struct kd_spin_diag_cpu));
 
 		/* Allocate once, outside the lock path, as in TCLock komb_init(). */
-		wait_stack = vzalloc(KD_SPIN_WAIT_STACK_SIZE);
+		wait_stack = vzalloc(KD_SPIN_STORAGE_BYTES);
 		if (!wait_stack)
 			goto err_free;
-		ptr->wait_stack_top = (char *)wait_stack + KD_SPIN_WAIT_STACK_SIZE;
-
-		*per_cpu_ptr(&kd_spin_requests, i) = vzalloc(array_size(
-			KD_SPIN_REQUEST_SLOTS, sizeof(struct kd_spin_exec_request)));
-		if (!*per_cpu_ptr(&kd_spin_requests, i))
-			goto err_free;
+		*per_cpu_ptr(&kd_spin_continuations, i) = wait_stack;
+		ptr->wait_stack_top = (char *)wait_stack + KD_SPIN_STORAGE_BYTES;
+		*per_cpu_ptr(&kd_spin_native_root, i) = NULL;
 
 		for (j = 0; j < 8; j++)
 			ptr->lock_addr[j] = 0;
@@ -131,11 +127,12 @@ void kd_spinlock_exit(void)
 	u64 batch_entries = 0, ww_jumps = 0;
 
 	for_each_possible_cpu(cpu) {
-		struct kd_spin_exec_request *pool =
-			*per_cpu_ptr(&kd_spin_requests, cpu);
+		struct kd_spin_continuation_stack *stack =
+			*per_cpu_ptr(&kd_spin_continuations, cpu);
 
-		for (i = 0; i < KD_SPIN_REQUEST_SLOTS; i++)
-			BUG_ON(atomic_read(&pool[i].users));
+		for (i = 0; i < stack->top; i++)
+			BUG_ON(!smp_load_acquire(&stack->records[i].retired));
+		BUG_ON(*per_cpu_ptr(&kd_spin_native_root, cpu));
 		batch_entries += per_cpu_ptr(kd_spin_diag_cpu, cpu)->batch_entries;
 		ww_jumps += per_cpu_ptr(kd_spin_diag_cpu, cpu)->ww_jumps;
 		overflow += per_cpu_ptr(kd_spin_diag_cpu, cpu)->overflow;

@@ -60,6 +60,8 @@ def main():
         "void kd_exec_remote_poll(struct kd_exec_frame *frame)",
         "int kd_exec_remote_native(struct kd_exec_frame *frame)",
         "int kd_exec_remote_complete(struct kd_exec_frame *frame)",
+        "int kd_exec_spin_retire(struct kd_exec_frame *frame, bool *retired)",
+        "bool kd_exec_native_pending(struct task_struct *task)",
         "void kd_exec_remote_cancel(struct kd_exec_frame *frame)",
         "bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)",
         "int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)",
@@ -90,8 +92,14 @@ def main():
     finish = definition(
         spin, "static int kd_spin_finish_remote_node(struct kd_spin_node *node,"
     )
+    retire = definition(frame, "int kd_exec_spin_retire(struct kd_exec_frame *frame, bool *retired)")
     done_store = "smp_store_release(&parent->remote_result, KD_EXEC_REMOTE_DONE);"
     mutations = {
+        "spin-done-before-pop": (
+            retire,
+            retire.replace("\tret = kd_exec_frame_pop(frame, NULL);",
+                           "\tif (parent) " + done_store + "\n\tret = kd_exec_frame_pop(frame, NULL);"),
+        ),
         "remote-poll-clobbers-r12": (
             "WRITE_ONCE(frame->remote_request, NULL);",
             "frame->regs.r12 ^= 1;\n\tWRITE_ONCE(frame->remote_request, NULL);",
@@ -111,12 +119,12 @@ def main():
             ),
         ),
         "write-after-done": (
-            done_store,
-            done_store + "\n\tparent->remote_result = KD_EXEC_REMOTE_DONE;",
+            complete,
+            complete.replace(done_store, done_store + "\n\tparent->remote_result = KD_EXEC_REMOTE_DONE;"),
         ),
         "advance-loses-r15": (
-            "node->regs->ip = return_ip;\n\treturn 0;",
-            "node->regs->ip = return_ip;\n\tregs->r15 = 0;\n\treturn 0;",
+            "node->execution->frame.regs_ref->ip = return_ip;\n\treturn 0;",
+            "node->execution->frame.regs_ref->ip = return_ip;\n\tregs->r15 = 0;\n\treturn 0;",
         ),
         "terminal-packet-loses-rax": (
             finish,
@@ -162,7 +170,7 @@ def main():
             binary = path / name
             command = shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=gnu11",
-                "-O2",
+                "-O2", "-pthread",
                 "-Wall",
                 "-Wextra",
                 "-Werror",

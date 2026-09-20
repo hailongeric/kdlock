@@ -20,6 +20,7 @@ def main():
         for name in ("include/kd_hotlock.h", "kernel_module/kd_hotlock.c")
     )
     mutations = {
+        "redundant-preemption-pair": ("pin = !preempt_count();", "pin = true;", 1),
         "quota-ignores-error": ("slot->score - slot->error >=", "slot->score >=", 1),
         "replacement-inherits-history": ("slot->score = slot->error = error;", "slot->score = error; slot->error = 0;", 1),
         "cpu-deadline-equality": ("now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW", "now - t->rate_begin <= KD_HOTLOCK_CPU_WINDOW", 1),

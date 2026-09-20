@@ -67,6 +67,23 @@ def make_plan(args):
 
 
 def report(out):
+    plan = json.loads((out/'plan.json').read_text())
+    if plan and plan[0].get('functional'):
+        # Functional acceptance retains raw evidence but publishes no timing
+        # or cross-backend score. It uses the same body/context/drain oracle.
+        rows = []
+        for spec in plan:
+            path = out/spec['name']/'session.json'
+            row = json.loads(path.read_text()) if path.exists() else {}
+            rows.append(dict(name=spec['name'], scenario=spec['scenario'],
+                status=row.get('execution_status', 'NOT_RUN'),
+                drained=row.get('drained', False),
+                completed=row.get('measurement', {}).get('completed', 0),
+                jit_bodies=row.get('jit_bodies', 0),
+                jit_acceptance=row.get('jit_acceptance', 'NOT_RUN')))
+        write_json(out/'functional.json', rows)
+        return
+
     records, groups = [], {}
     for spec in json.loads((out/'plan.json').read_text()):
         p = out/spec['name']/'session.json'
@@ -111,6 +128,8 @@ def main():
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--dry-run', action='store_true')
+    p.add_argument('--functional', action='store_true',
+                   help='KD functional acceptance only; no throughput report')
     kernel_identity.arguments(p)
     p.add_argument("--hotlock-mode", choices=("observe", "adaptive"), default="observe")
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
@@ -121,7 +140,13 @@ def main():
             "nested protocol regression requires KD cacheline workload")
     require(args.workload != 'rcuht' or args.cachelines is None,
             'RCUHT uses a fixed hash table, not --cachelines')
+    if args.functional:
+        require(args.backends == ['kdlock'] and args.repeats == 1,
+                'functional mode requires --backends kdlock --repeats 1')
     plan = make_plan(args)
+    if args.functional:
+        for spec in plan:
+            spec['functional'] = True
     if args.dry_run:
         print(json.dumps(plan, indent=2)); return 0
     require(ROOT == Path('/root/host_fs/kdlock') and os.geteuid() == 0 and
@@ -211,8 +236,12 @@ def main():
             session = BackendSession(out,spec,workload_module=variants[spec['arm']])
             session.execute()
             m = session.record['measurement']
-            print(f'  {m["completed"]*1e3/m["wall_ns"]:.3f} Mops/s; '
-                  f'{m["wall_ns"]/m["completed"]:.2f} ns/op; drained=True',flush=True)
+            if args.functional:
+                print(f'  completed={m["completed"]}; '
+                      f'jit_bodies={session.record.get("jit_bodies", 0)}; drained=True', flush=True)
+            else:
+                print(f'  {m["completed"]*1e3/m["wall_ns"]:.3f} Mops/s; '
+                      f'{m["wall_ns"]/m["completed"]:.2f} ns/op; drained=True',flush=True)
         idle(); report(out); return 0
     except (Failure,OSError,ValueError) as error:
         write_json(out/'failure.json',dict(error=str(error),status=getattr(error,'status','FAILED')))

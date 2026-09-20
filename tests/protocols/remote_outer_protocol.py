@@ -192,10 +192,11 @@ def validate_multi_roots(
         assert completed[0][0] < remote[1][0]
         assert acks[1][0] < next(at for at, row in done if row["role"] == "0")
         arm_at, arm = one("kd_child_exit arm")
-        exit_at, exited = one("kd_child_exit release")
+        exit_at, exited = one("kd_spin retirement")
         assert begins[0][0] < arm_at < begins[1][0]
-        assert next(at for at, row in done if row["role"] == "0") < exit_at < remote[1][0]
-        for row in (arm, exited):
+        assert exit_at < acks[1][0] < next(at for at, row in done if row["role"] == "0")
+        assert completed[0][0] < exit_at < remote[1][0]
+        for row in (arm,):
             assert row["task"] == queued["first"] and row["valid"] == "1"
             assert row["owner"] == remote[0][1]["owner_task"]
             assert row["cpu"] == remote[0][1]["cpu"]
@@ -203,7 +204,7 @@ def validate_multi_roots(
             for key in ("entry", "ip", "sp"):
                 assert int(row[key], 16) == int(limit[key], 16)
         assert arm["remaining"] == arm["alive"] == "1"
-        assert exited["detached"] == exited["packet"] == exited["context"] == "1"
+        assert exited == dict(task=queued["first"], child="1", retired="1", valid="1")
         assert not rows("kd_relay_exit arm") and not rows("kd_relay_exit release")
         _, hostcalls = one("kd_hostcall stats")
         assert hostcalls == {
@@ -215,7 +216,7 @@ def validate_multi_roots(
         assert native == {"started": "0", "completed": "0", "unlocks": "0"}
         assert not rows("kd_native begin") and not rows("kd_native ack")
         assert not rows("kd_multi quota") and not rows("reason=CALL_LIMIT_NATIVE", " ")
-        assert not rows("kd_child_exit arm") and not rows("kd_child_exit release")
+        assert not rows("kd_child_exit arm") and not rows("kd_spin retirement")
     return {
         "roots": 2,
         "roles": 14,

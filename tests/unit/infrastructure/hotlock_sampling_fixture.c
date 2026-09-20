@@ -20,7 +20,7 @@ typedef unsigned long long u64;
 #define module_param(...)
 #define MODULE_PARM_DESC(...)
 #define TEST_CPUS 3
-static unsigned int cpu_id, pins, clocks;
+static unsigned int cpu_id, pins, clocks, disables, enables;
 static unsigned long now = 1;
 static size_t stride;
 static bool fail_alloc;
@@ -34,8 +34,9 @@ static void (*reentry)(void);
 #define WRITE_ONCE(v,n) ((v)=(n))
 #define cmpxchg(p,o,n) ({ __typeof__(*(p)) old=*(p); if(old==(o)) *(p)=(n); old; })
 #define this_cpu_cmpxchg(v,o,n) cmpxchg(this_cpu_ptr(&(v)),o,n)
-#define preempt_disable() (++pins)
-#define preempt_enable() do { assert(pins); --pins; } while(0)
+#define preempt_count() pins
+#define preempt_disable() do { ++pins; ++disables; } while(0)
+#define preempt_enable() do { assert(pins); --pins; ++enables; } while(0)
 #define barrier() __asm__ __volatile__("" ::: "memory")
 static unsigned long hash_long(unsigned long key,unsigned int bits)
 { return (key*0x61c8864680b583ebUL)>>(64-bits); }
@@ -79,6 +80,21 @@ static void irq_reentry(void)
 int main(void)
 {
  unsigned long keys[7]; unsigned int n=0;
+ reset();
+ /* Admission under a real lock pin must not add even a balanced pair.
+  * Include busy rejection, query and invalid-address early return. */
+ pins=1;
+ unsigned int before_disable=disables, before_enable=enables;
+ kd_hotlock_record_spin(0x1000);
+ kd_hotlock_query_spin(0x1000);
+ table(0)->busy=1;
+ kd_hotlock_record_spin(0x1000);
+ table(0)->busy=0;
+ kd_hotlock_record_spin(0);
+ assert(pins==1 && disables==before_disable && enables==before_enable);
+ pins=0;
+ kd_hotlock_record_mutex(0x2000);
+ assert(!pins && disables==before_disable+1 && enables==before_enable+1);
  reset();
  /* Same-bucket collisions, duplicate identities, head/middle/tail unlink. */
  for(unsigned long k=1;n<7;k++) if(kd_hotlock_bucket(k)==0) keys[n++]=k;

@@ -5,7 +5,8 @@
 #define KD_HOTLOCK_LOCAL_HASH_V2 1
 int kd_hotlock_init(void);
 void kd_hotlock_exit(void);
-/* CPU pin is confined to this call. No returned value conveys ownership.
+/* Reuse an existing CPU pin; otherwise pin only for this call (including
+ * sleepable mutex callers). No returned value conveys ownership.
  * record returns policy admission; query reports actual local heat only. */
 bool kd_hotlock_record_spin(unsigned long address);
 bool kd_hotlock_record_mutex(unsigned long address);

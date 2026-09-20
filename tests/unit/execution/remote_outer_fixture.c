@@ -2,6 +2,12 @@
 /* Production protocol with deterministic CPU switches, not a memory-model test.
  * Full pt_regs comparisons include software flags only, not hardware restore. */
 #include <errno.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+#include <pthread.h>
+#include <sched.h>
+#include <unistd.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -55,23 +61,24 @@ struct mutex {
 	int unused;
 };
 #include "remote_types.h"
-struct kd_spin_node {
-	struct pt_regs *regs;
-};
+struct kd_spin_continuation { struct { struct pt_regs *regs_ref; } frame; };
+struct kd_spin_node { struct kd_spin_continuation *execution; };
 
 _Static_assert(sizeof(struct pt_regs) == 168, "guest x86-64 pt_regs size");
 _Static_assert(offsetof(struct pt_regs, ip) == 0x80, "guest RIP offset");
 _Static_assert(offsetof(struct pt_regs, sp) == 0x98, "guest RSP offset");
 
 enum { CPUS = KD_EXEC_MAX_LOCK_DEPTH, WAITER_CPU = CPUS };
-static unsigned int cpu, checks, failures, wrong_owner, released;
+static _Thread_local unsigned int cpu;
+static unsigned int checks, failures, wrong_owner, released;
+static bool threaded_native;
 static unsigned int borrows, borrow_puts, ends, refs, polls, stages;
 static unsigned long kd_exec_invariant_failures;
 static unsigned long kd_native_started, kd_native_completed, kd_native_unlocks;
-static int kd_native_lock;
+static pthread_mutex_t kd_native_lock = PTHREAD_MUTEX_INITIALIZER;
 static struct list_head kd_native_frames;
 static struct task_struct logical = { 10 }, executors[CPUS];
-static struct task_struct *current;
+static _Thread_local struct task_struct *current;
 static struct kd_exec_frame frames[CPUS];
 static struct pt_regs packets[CPUS];
 static struct kd_exec_outer_unlock hooks[CPUS];
@@ -93,9 +100,9 @@ static void publish_after(const void *address);
 #endif
 #define CHECK(c)                                                             \
 	do {                                                                 \
-		checks++;                                                    \
+		__atomic_add_fetch(&checks, 1, __ATOMIC_RELAXED);                                                    \
 		if (!(c)) {                                                  \
-			failures++;                                          \
+			__atomic_add_fetch(&failures, 1, __ATOMIC_RELAXED);                                          \
 			fprintf(stderr, "FAIL line=%d: %s\n", __LINE__, #c); \
 			STOP_MUTATION();                                     \
 		}                                                            \
@@ -107,19 +114,19 @@ static void publish_after(const void *address);
 			exit(2);                                            \
 		}                                                           \
 	} while (0)
-#define READ_ONCE(x) (x)
-#define WRITE_ONCE(x, v) ((x) = (v))
-#define smp_load_acquire(p) (*(p))
+#define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
+#define WRITE_ONCE(x, v) __atomic_store_n(&(x), (v), __ATOMIC_RELAXED)
+#define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 #define smp_store_release(p, v)                                   \
 	do {                                                     \
 		__auto_type publish_ptr = (p);                    \
 		__typeof__(*publish_ptr) publish_value = (v);      \
 		publish_before(publish_ptr,                       \
 			       (unsigned long)publish_value);    \
-		*publish_ptr = publish_value;                     \
+		__atomic_store_n(publish_ptr, publish_value, __ATOMIC_RELEASE);                     \
 		publish_after(publish_ptr);                       \
 	} while (0)
-#define atomic64_inc(p) (++*(p))
+#define atomic64_inc(p) __atomic_add_fetch((p), 1, __ATOMIC_RELAXED)
 #define WARN_ON_ONCE(c) ((void)(c))
 #define cmpxchg(p, old, value)                  \
 	({                                      \
@@ -137,12 +144,12 @@ static void publish_after(const void *address);
 #define KD_PR_INFO(...) pr_info(__VA_ARGS__)
 #define raw_spin_lock_irqsave(lock, flags) \
 	do {                               \
-		(void)(lock);              \
+		pthread_mutex_lock(lock); \
 		(flags) = 0;               \
 	} while (0)
 #define raw_spin_unlock_irqrestore(lock, flags) \
 	do {                                    \
-		(void)(lock);                   \
+		pthread_mutex_unlock(lock); \
 		(void)(flags);                  \
 	} while (0)
 #define KD_EXE_KNOWN_OUTER_UNLOCK 3
@@ -216,24 +223,35 @@ static int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
 static int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref)
 {
 	(void)ref;
-	borrows++;
-	refs++;
+	__atomic_add_fetch(&borrows, 1, __ATOMIC_RELAXED);
+	__atomic_add_fetch(&refs, 1, __ATOMIC_RELAXED);
 	return 0;
 }
 static int kd_spin_entry_borrow_put(const struct kd_spin_ref *ref, bool *last)
 {
 	(void)ref;
 	CHECK(refs > 0);
-	borrow_puts++;
-	refs--;
-	*last = refs == 0;
+	__atomic_add_fetch(&borrow_puts, 1, __ATOMIC_RELAXED);
+	*last = __atomic_sub_fetch(&refs, 1, __ATOMIC_RELEASE) == 0;
 	return 0;
 }
-static int kd_spin_entry_end(const struct kd_spin_ref *ref)
+void kd_spin_native_retire(struct kd_spin_ref *ref)
 {
 	(void)ref;
-	CHECK(cpu == WAITER_CPU && refs == 0);
+	CHECK(threaded_native && cpu == WAITER_CPU);
+	while (__atomic_load_n(&refs, __ATOMIC_ACQUIRE))
+		sched_yield();
+	for (unsigned int i = 0; i < live_frames; i++)
+		CHECK(!kd_exec_frame_validate(&frames[i]));
 	ends++;
+}
+int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
+{
+	CHECK(!regs && frame == &frames[cpu] && frame->completion_seen);
+	CHECK(!frame->resume_target && !frame->native_request &&
+	      !kd_exec_frame_remote_pending(frame) && list_empty(&frame->native_link));
+	frame->state = KD_EXEC_FRAME_UNUSED;
+	frame->role = KD_ROLE_DONE;
 	return 0;
 }
 struct kd_exec_frame *kd_exec_current_frame(void)
@@ -252,7 +270,7 @@ static void origin_raw_spin_unlock(raw_spinlock_t *lock)
 	}
 	CHECK(lock->held);
 	lock->held = false;
-	released++;
+	__atomic_add_fetch(&released, 1, __ATOMIC_RELAXED);
 }
 static int kd_spin_nested_shadow_remove(struct qspinlock *lock)
 {
@@ -297,6 +315,12 @@ static void check_packets(void)
  * store, not just the final detached state after the publishing call returns. */
 static void publish_before(const void *address, unsigned long value)
 {
+	if (threaded_native) {
+		for (unsigned int i = 0; i + 1 < live_frames; i++)
+			if (address == &frames[i].remote_result && value == KD_EXEC_REMOTE_DONE)
+				CHECK(frames[i + 1].state == KD_EXEC_FRAME_UNUSED);
+		return;
+	}
 	for (unsigned int i = 0; i + 1 < live_frames; i++) {
 		if (address != &frames[i].remote_result ||
 		    value != KD_EXEC_REMOTE_DONE)
@@ -310,6 +334,7 @@ static void publish_before(const void *address, unsigned long value)
 
 static void publish_after(const void *address)
 {
+	if (threaded_native) return;
 	if (!reuse_parent || address != &frames[0].remote_result)
 		return;
 	CHECK(frames[0].remote_result == KD_EXEC_REMOTE_DONE);
@@ -322,6 +347,7 @@ static void publish_after(const void *address)
 /* Nested polling models C -> B -> A while all requests remain on live stacks. */
 static void cpu_relax(void)
 {
+	if (threaded_native) { sched_yield(); return; }
 	unsigned int saved = cpu;
 	BUG_ON(++polls > 100);
 	for (unsigned int i = 0; i < live_frames; i++) {
@@ -443,29 +469,29 @@ static void check_final_call(void)
 
 	setup(2);
 	regs = frames[1].regs;
-	node.regs = &regs;
+	node.execution = &(struct kd_spin_continuation){ .frame.regs_ref = &regs };
 	expected = regs;
 	/* Refusal must leave both packets untouched, including non-control state. */
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) == -EINVAL);
 	CHECK(!memcmp(&regs, &expected, sizeof(regs)));
-	CHECK(!memcmp(node.regs, &packets[1], sizeof(*node.regs)));
+	CHECK(!memcmp(node.execution->frame.regs_ref, &packets[1], sizeof(*node.execution->frame.regs_ref)));
 	CHECK(kd_exec_frame_record_event(&frames[1], KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
 	CHECK(kd_exec_remote_complete(&frames[1]) == 0);
 	select_cpu(0);
-	expected = *node.regs;
+	expected = *node.execution->frame.regs_ref;
 	expected.ip = stack[0];
 	expected.sp += sizeof(unsigned long);
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) ==
 	      KD_SPIN_NESTED_DELEGATED);
 	CHECK(regs.ip == stack[0] && regs.sp == (unsigned long)(stack + 1));
 	CHECK(!memcmp(&regs, &expected, sizeof(regs)));
-	CHECK(!memcmp(node.regs, &expected, sizeof(*node.regs)));
+	CHECK(!memcmp(node.execution->frame.regs_ref, &expected, sizeof(*node.execution->frame.regs_ref)));
 	check_packets();
 	CHECK(!frames[0].outer_unlock_seen);
 	setup(2);
 	regs = frames[1].regs;
-	node.regs = &regs;
+	node.execution = &(struct kd_spin_continuation){ .frame.regs_ref = &regs };
 	CHECK(kd_spin_jit_nested_unlock_ctx(&locks[0], &frames[1]) == 0);
 	CHECK(kd_exec_frame_record_event(&frames[1], KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
@@ -473,9 +499,9 @@ static void check_final_call(void)
 	select_cpu(0);
 	CHECK(kd_spin_finish_remote_node(&node, &regs, &frames[0]) ==
 	      KD_SPIN_NESTED_PARENT_OOO);
-	CHECK(regs.ip == node.regs->ip && regs.sp == (unsigned long)stack);
+	CHECK(regs.ip == node.execution->frame.regs_ref->ip && regs.sp == (unsigned long)stack);
 	CHECK(!memcmp(&regs, &packets[1], sizeof(regs)));
-	CHECK(!memcmp(node.regs, &packets[1], sizeof(*node.regs)));
+	CHECK(!memcmp(node.execution->frame.regs_ref, &packets[1], sizeof(*node.execution->frame.regs_ref)));
 	CHECK(stack[0] == 0x300 && stack[1] == 0x400);
 	check_packets();
 }
@@ -542,57 +568,6 @@ static void check_refusals(void)
 	check_packets();
 }
 
-/* A's executor waits after its last local ACK. W can return only after B's ACK. */
-static void finish_native_b(void)
-{
-	if (stages++ == 0) {
-		CHECK(cpu == 0 && refs == 1 && !locks[0].held && locks[1].held);
-		CHECK(list_empty(&frames[0].native_link));
-		CHECK(!kd_exec_frame_can_complete(&frames[0]));
-		select_cpu(WAITER_CPU);
-		CHECK(kd_exec_native_unlock((unsigned long)&locks[1], false));
-		CHECK(ends == 1 && refs == 0 && borrow_puts == borrows);
-		logical.pid =
-			-999; /* Delayed relay log must use the saved PID. */
-		return;
-	}
-	CHECK(stages == 2 && cpu == WAITER_CPU);
-	select_cpu(1);
-	CHECK(kd_exec_native_wait(&frames[1]) == 0);
-	CHECK(!frames[1].resume_target &&
-	      frames[0].remote_result == KD_EXEC_REMOTE_DONE);
-}
-
-static void check_native_chain(bool early_outer)
-{
-	struct kd_native_request a = { .lock_addr = (unsigned long)&locks[0] };
-	setup(2);
-	if (early_outer)
-		CHECK(kd_spin_jit_nested_unlock_ctx(&locks[0], &frames[1]) ==
-		      0);
-	CHECK(kd_exec_native_begin(&frames[1], false) == 0);
-	CHECK(kd_exec_remote_native(&frames[1]) == 0);
-	frames[0].control_call.phase = KD_CALL_COMPLETE;
-	select_cpu(0);
-	CHECK(kd_exec_native_begin(&frames[0], false) == 0);
-	CHECK(refs == (early_outer ? 1U : 2U));
-	CHECK(kd_native_started == 2 && kd_native_completed == 0);
-	if (!early_outer)
-		frames[0].native_request = &a;
-	else
-		CHECK(list_empty(&frames[0].native_link));
-	native_step = finish_native_b;
-	CHECK(kd_exec_native_wait(&frames[0]) == 0);
-	CHECK(kd_native_completed == 2 &&
-	      kd_native_unlocks == (early_outer ? 1UL : 2UL));
-	CHECK(frames[0].logical_pid == 10 && list_empty(&kd_native_frames));
-	CHECK(kd_exec_frame_can_complete(&frames[0]) &&
-	      kd_exec_frame_can_complete(&frames[1]));
-	CHECK(!wrong_owner && released == 1 && ends == 1);
-	if (!early_outer)
-		CHECK(a.done && !a.spin_last && !a.result);
-}
-
 static void check_relay_refusals(void)
 {
 	struct kd_exec_frame bad;
@@ -622,100 +597,85 @@ static void check_relay_refusals(void)
 	      list_empty(&kd_native_frames));
 }
 
-static void finish_three_native(void)
+/* Execute real native routing and retirement concurrently. Final unlock must
+ * wait for every frame, even an ancestor with zero remaining physical locks. */
+static void *native_owner(void *argument)
 {
-	unsigned int stage = stages++;
+	unsigned int index = (uintptr_t)argument;
+	struct kd_spin_ref origin = frames[index].spin_origin;
+	raw_spinlock_t *owned = &locks[index];
+	bool last, retired = false;
 
-	if (stage == 0) {
-		CHECK(cpu == 0 && refs == 1 &&
-		      !kd_exec_frame_can_complete(&frames[0]));
-		select_cpu(1);
-		CHECK(kd_exec_native_wait(&frames[1]) == 0);
-		CHECK(frames[0].remote_result == KD_EXEC_REMOTE_DONE);
-	} else if (stage == 1) {
-		CHECK(cpu == 1 && list_empty(&frames[1].native_link));
-		select_cpu(WAITER_CPU);
-		CHECK(kd_exec_native_unlock((unsigned long)&locks[2], false));
-		CHECK(ends == 1 && refs == 0);
-		logical.pid = -999;
-	} else {
-		CHECK(stage == 2 && cpu == WAITER_CPU);
-		select_cpu(2);
-		CHECK(kd_exec_native_wait(&frames[2]) == 0);
-		CHECK(frames[1].remote_result == KD_EXEC_REMOTE_DONE);
-	}
+	select_cpu(index);
+	CHECK(kd_exec_native_wait(&frames[index]) == 0);
+	/* Widen the physical ACK -> pop interval without altering any protocol
+	 * state. The waiter must keep its ticket and packet throughout. */
+	usleep(1000);
+	CHECK(!ends);
+	CHECK(kd_exec_frame_complete(&frames[index]) == 0);
+	CHECK(kd_exec_spin_retire(&frames[index], &retired) == 0 && retired);
+	/* The enclosing physical batch eventually releases its retained word. */
+	if (owned->held) origin_raw_spin_unlock(owned);
+	CHECK(kd_spin_entry_borrow_put(&origin, &last) == 0);
+	return NULL;
 }
 
-static void check_three_native(void)
+static void check_native_chain(unsigned int count, bool early, bool reverse)
 {
-	setup(3);
-	/* Unlock the nearer ancestor first as well as testing A-before-B above. */
-	CHECK(kd_spin_jit_nested_unlock_ctx(&locks[1], &frames[2]) == 0);
-	CHECK(kd_spin_jit_nested_unlock_ctx(&locks[0], &frames[2]) == 0);
-	for (unsigned int i = 3; i > 0; i--) {
-		select_cpu(i - 1);
-		if (i < 3)
-			frames[i - 1].control_call.phase = KD_CALL_COMPLETE;
-		CHECK(kd_exec_native_begin(&frames[i - 1], false) == 0);
-		CHECK(kd_exec_remote_native(&frames[i - 1]) == 0);
-	}
-	CHECK(borrows == 1 && kd_native_started == 3);
-	native_step = finish_three_native;
-	CHECK(kd_exec_native_wait(&frames[0]) == 0);
-	CHECK(kd_native_completed == 3 && kd_native_unlocks == 1);
-	CHECK(borrow_puts == 1 && ends == 1 && list_empty(&kd_native_frames));
-	for (unsigned int i = 0; i < 3; i++) {
-		CHECK(!frames[i].resume_target &&
-		      kd_exec_frame_can_complete(&frames[i]));
-		CHECK(frames[i].logical_pid == 10);
-	}
-	CHECK(!wrong_owner && released == 2);
-}
+	pthread_t owners[CPUS];
 
-static void finish_deep_native(void)
-{
-	unsigned int saved = cpu, last = live_frames - 1;
-
-	if (cpu < last - 1) {
-		CHECK(refs == 1 && list_empty(&frames[cpu].native_link));
-		select_cpu(cpu + 1);
-		CHECK(kd_exec_native_wait(&frames[cpu]) == 0);
-		CHECK(frames[saved].remote_result == KD_EXEC_REMOTE_DONE);
-	} else if (cpu == last - 1) {
-		select_cpu(WAITER_CPU);
-		CHECK(kd_exec_native_unlock((unsigned long)&locks[last],
-					    false));
-		CHECK(ends == 1 && refs == 0);
-		logical.pid = -999;
-	} else {
-		CHECK(cpu == WAITER_CPU);
-		select_cpu(last);
-		CHECK(kd_exec_native_wait(&frames[last]) == 0);
-	}
-}
-
-static void check_deep_native(unsigned int count)
-{
 	setup(count);
-	for (unsigned int i = count - 1; i > 0; i--)
-		CHECK(kd_spin_jit_nested_unlock_ctx(&locks[i - 1],
-						    &frames[count - 1]) == 0);
+	kd_jit_timing = false;
+	if (early)
+		for (unsigned int i = count - 1; i > 0; i--)
+			CHECK(kd_spin_jit_nested_unlock_ctx(&locks[i - 1], &frames[count - 1]) == 0);
 	for (unsigned int i = count; i > 0; i--) {
 		select_cpu(i - 1);
+		frames[i - 1].complex_ready = true;
+		frames[i - 1].regs_ref = &frames[0].regs;
 		if (i < count)
 			frames[i - 1].control_call.phase = KD_CALL_COMPLETE;
 		CHECK(kd_exec_native_begin(&frames[i - 1], false) == 0);
 		CHECK(kd_exec_remote_native(&frames[i - 1]) == 0);
 	}
-	CHECK(borrows == 1 && kd_native_started == count);
-	native_step = finish_deep_native;
-	CHECK(kd_exec_native_wait(&frames[0]) == 0);
-	CHECK(kd_native_completed == count && kd_native_unlocks == 1);
-	CHECK(borrow_puts == 1 && ends == 1 && list_empty(&kd_native_frames));
-	CHECK(!wrong_owner && released == count - 1);
+	CHECK(refs == count && borrows == count);
+	threaded_native = true;
 	for (unsigned int i = 0; i < count; i++)
-		CHECK(!frames[i].resume_target && frames[i].logical_pid == 10 &&
-		      kd_exec_frame_can_complete(&frames[i]));
+		CHECK(!pthread_create(&owners[i], NULL, native_owner, (void *)(uintptr_t)i));
+	select_cpu(WAITER_CPU);
+	for (unsigned int i = early ? count - 1 : 0; i < count; i++)
+		CHECK(kd_exec_native_unlock((unsigned long)&locks[reverse ? count - 1 - i : i], false));
+	CHECK(ends == 1 && !refs && borrow_puts == count);
+	for (unsigned int i = 0; i < count; i++)
+		CHECK(!pthread_join(owners[i], NULL));
+	threaded_native = false;
+	CHECK(kd_native_started == count && kd_native_completed == count);
+	CHECK(kd_native_unlocks == (early ? 1U : count) && released == count);
+	CHECK(list_empty(&kd_native_frames) && !wrong_owner);
+	check_packets();
+}
+
+static void check_empty_native(void)
+{
+	pthread_t owner;
+
+	setup(1);
+	kd_jit_timing = false;
+	frames[0].complex_ready = true;
+	CHECK(!kd_exec_frame_record_event(&frames[0], KD_EXEC_EVENT_OUTER_UNLOCK, NULL));
+	frames[0].remote_result = KD_EXEC_REMOTE_NATIVE;
+	frames[0].control_call.phase = KD_CALL_COMPLETE;
+	CHECK(!kd_exec_native_begin(&frames[0], false) && refs == 1);
+	CHECK(!kd_exec_native_pending(&logical));
+	frames[0].remote_result = KD_EXEC_REMOTE_DONE;
+	threaded_native = true;
+	CHECK(!pthread_create(&owner, NULL, native_owner, NULL));
+	select_cpu(WAITER_CPU);
+	/* Same pre-restore barrier used when NATIVE_READY has no lock routes. */
+	kd_spin_native_retire(&frames[0].spin_origin);
+	CHECK(!pthread_join(owner, NULL));
+	threaded_native = false;
+	CHECK(ends == 1 && !refs && borrow_puts == 1 && !kd_native_unlocks);
 }
 
 /* Nested waits enclose one another. N deterministic calls consume 2*N clock
@@ -771,18 +731,14 @@ int main(void)
 	check_refusals();
 	check_relay_refusals();
 	check_done_reuse();
+	for (unsigned int count = 2; count <= CPUS; count++) {
+		check_native_chain(count, false, false);
+		check_native_chain(count, false, true);
+		check_native_chain(count, true, false);
+	}
+	check_empty_native();
 	for (unsigned int enabled = 0; enabled < 2; enabled++) {
 		kd_jit_timing = enabled;
-		check_native_chain(false);
-		check_native_timing(2, false);
-		check_native_chain(true);
-		check_native_timing(2, false);
-		check_three_native();
-		check_native_timing(3, false);
-		for (unsigned int i = 4; i <= CPUS; i++) {
-			check_deep_native(i);
-			check_native_timing(i, false);
-		}
 		for (unsigned int mutex = 0; mutex < 2; mutex++) {
 			check_wait_returns(mutex, false);
 			check_wait_returns(mutex, true);

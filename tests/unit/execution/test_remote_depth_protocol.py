@@ -322,9 +322,9 @@ def fixture(
     )
     if stage != 1:
         for i in range(n):
-            if waiter_exit and i == 0:
-                continue
             event("kd_native complete", task=10, outer=locks[i], mutex=0)
+        if waiter_exit:
+            event("kd_spin retirement", task=10, child=0, retired=1, valid=1)
         event("kd_native ack", task=10, lock=locks[n - 1], mutex=0, last_spin=1)
         if renamed:
             event(
@@ -351,16 +351,6 @@ def fixture(
         valid=1,
         armed=1,
     )
-    if waiter_exit:
-        event(
-            "kd_relay_exit release",
-            **exit_identity,
-            detached=1,
-            packet=1,
-            context=1,
-            valid=1,
-        )
-        event("kd_native complete", task=10, outer=locks[0], mutex=0)
     for i in range(n):
         event(
             "kd_deep state",
@@ -481,7 +471,7 @@ def fixture(
 
 
 class DepthOracleTests(unittest.TestCase):
-    def test_root_relay_outlives_the_actual_waiter_tid(self):
+    def test_root_relay_retires_before_final_waiter_return(self):
         # Extend the existing late remote case, preserving its six RPCs and
         # last-lock ACK. Invalid identities/packets/order must not pass just
         # because the native frame counters balance.
@@ -498,9 +488,9 @@ class DepthOracleTests(unittest.TestCase):
         self.assertEqual(
             (result["native_frames"], result["acks"], result["rpc"]), (4, 1, 6)
         )
-        self.assertEqual(result["waiter_exit"]["detached"], "1")
+        self.assertEqual(result["waiter_exit"]["retired"], "1")
         for line in text.splitlines():
-            if not line.startswith("kd_relay_exit "):
+            if not line.startswith(("kd_relay_exit ", "kd_spin retirement:")):
                 continue
             malformed = [text.replace(line, ""), text.replace(line, line + "\n" + line)]
             for match in re.finditer(r"(\w+)=([\w-]+)", line):
@@ -515,8 +505,8 @@ class DepthOracleTests(unittest.TestCase):
                     validate(damaged, p, 3, **options)
         for tag, before in (
             ("kd_relay_exit arm:", "kd_deep native probe:"),
-            ("kd_relay_exit release:", "kd_native ack:"),
-            ("kd_native complete: task=10 outer=1000", "kd_relay_exit release:"),
+            ("kd_spin retirement:", "kd_native complete: task=10 outer=1000"),
+            ("kd_native ack:", "kd_spin retirement:"),
         ):
             lines = text.splitlines()
             line = next(item for item in lines if item.startswith(tag))

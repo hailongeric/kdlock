@@ -42,7 +42,8 @@ static void producer_setup(int count, bool virtual, enum producer_path path)
 	contended = path == PRODUCER_COMBINER || path == PRODUCER_SHADOW_FULL;
 	parent_ooo = path == PRODUCER_PARENT_OOO;
 	peer_result = path == PRODUCER_NATIVE ? 5 : 3;
-	kd_spin_requests = request_pool;
+	memset(&request_storage, 0, sizeof(request_storage));
+	kd_spin_continuations = &request_storage;
 	begin_error = ticket_count = poll_calls = relax_calls = try_calls = 0;
 	entries = exits = combined = handoffs = origin_claims = 0;
 	producer_preempt = 1;
@@ -149,7 +150,7 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 		CHECK(produced_node->rsp ==
 		      (virtual ? regs_before.sp : 0x12345678));
 		CHECK(fixture_request(produced_node)->frame.gsbase == (virtual ? 0x34000 : 0x12000));
-		CHECK(!fixture_request(produced_node)->pinned_context &&
+		CHECK((fixture_request(produced_node)->kind == KD_SPIN_CONT_VIRTUAL) == virtual &&
 		      fixture_request(produced_node)->native_regs_decoded == !virtual);
 		if (remote)
 			CHECK(peer.next == produced_node &&
@@ -267,7 +268,7 @@ static void producer_cancel_case(int count, unsigned int failure)
 		expected = -E2BIG;
 		break;
 	case 2:
-		kd_spin_requests = NULL;
+		kd_spin_continuations = NULL;
 		expected = -ENOMEM;
 		break;
 	case 3:

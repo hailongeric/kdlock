@@ -128,8 +128,8 @@ static void preentry_queue_peer(void)
 	mock_cpu = 1;
 	current = &tasks[1];
 	run_combiner(a_lock(), &request);
-	CHECK(!request.completed && !fixture_request(&request)->native_resume &&
-	      !fixture_request(&request)->jit_retry);
+	CHECK(!request.completed && !(fixture_request(&request)->result == KD_SPIN_RES_NATIVE_READY) &&
+	      !(fixture_request(&request)->result == KD_SPIN_RES_RETRY));
 	CHECK(queue_parent->remote_result == KD_EXEC_REMOTE_WAITING);
 	CHECK(!request.locked && successor.locked && origins[0].held);
 	kd_spin_release_origin(a_lock());
@@ -215,7 +215,7 @@ static unsigned int preentry_queue_return(void)
 		      !queue_polls && queue_switches == 1 &&
 		      queue_enters == 1 && queue_exits == 1);
 		CHECK(queue_resume == &request && !kd_spin_cpu.node_count &&
-		      !request.completed && !fixture_request(&request)->native_resume &&
+		      !request.completed && !(fixture_request(&request)->result == KD_SPIN_RES_NATIVE_READY) &&
 		      (kd_exec_current_frame() != &fixture_request(&request)->frame));
 		CHECK(origins[0].held && origins[1].held &&
 		      kd_spin_entry_owner((raw_spinlock_t *)gate) == (unsigned long)current && mock_preempt == 2 &&
