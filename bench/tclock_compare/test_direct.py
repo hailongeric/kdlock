@@ -12,6 +12,14 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_disabled_control_rejects_any_jit(self):
+        record = dict(arm='kdlock', threads=4, jit_bodies=0,
+                      hotlock_mode='observe', spin_delegate='off')
+        check_jit_evidence(record)
+        self.assertEqual(record['jit_acceptance'], 'DISABLED_CONTROL')
+        with self.assertRaisesRegex(run.Failure, 'disabled control executed JIT'):
+            check_jit_evidence(dict(record, jit_bodies=1))
+
     def test_policy_no_jit_is_not_protocol_acceptance(self):
         record = dict(arm='kdlock', threads=4, jit_bodies=0, hotlock_mode='observe')
         with self.assertRaisesRegex(run.Failure, 'no actual JIT'):

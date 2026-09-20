@@ -573,6 +573,12 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 		longjmp(*native_return, fixture_request(node)->native_resume ? 5 : 3);
 	}
 }
+/* Node-allocation failure fixture substitutes only native physical acquire;
+ * the concurrent native MCS protocol has its own production-code test. */
+static void kd_spin_acquire_nondelegated(struct qspinlock *word)
+{
+	while (!kd_spin_trylock(word)) cpu_relax();
+}
 #include "spin_shadow_production.h"
 
 static int test_longjmp(struct qspinlock *lock, int tail, struct kd_spin_node *node)
@@ -725,10 +731,17 @@ static int rejected_request(int level)
 }
 
 static void run_level(int level);
+static bool native_boundary_case;
+static int boundary_executions;
 
 static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
 		      struct kd_spin_batch *batch)
 {
+	if (native_boundary_case) {
+		CHECK(node->execution && !check_irq_node(node));
+		boundary_executions++;
+		return 0;
+	}
 	struct nested_level *level = &levels[current_level];
 	const int stride = follower_count + 1;
 	int index = node - level->queue;
@@ -952,6 +965,43 @@ static void run_nested_case(int depth, int followers, int parent, int leaf,
 	producer_case = false;
 }
 
+/* Interleave requestless native nodes with combinable requests. Exercise
+ * the real batch loop, including a boundary reached after the first body. */
+static void run_native_boundaries(void)
+{
+	for (int position = 0; position < 5; position++) {
+		struct kd_spin_node nodes[6] = { 0 };
+		struct kd_spin_exec_request executions[6] = { 0 };
+		struct qspinlock lock = { .locked = 1 };
+		struct kd_spin_request request = { .word = &scheduling_word };
+		int completed = position > 1 ? position - 1 : 0;
+
+		memset(&kd_spin_cpu, 0, sizeof(kd_spin_cpu));
+		initial_depth = 0;
+		kd_spin_cpu.lock_addr[0] = (unsigned long)&lock;
+		active_lock = &lock;
+		scheduling_word.locked = _Q_LOCKED_COMBINER_VAL;
+		for (int i = 0; i < 6; i++) {
+			nodes[i].next = i == 5 ? NULL : &nodes[i+1];
+			nodes[i].locked = true;
+			nodes[i].execution = &executions[i];
+		}
+		nodes[position].socket_id = IRQ_NUMA_NODE;
+		nodes[position].execution = NULL;
+		mock_tail_node = &nodes[5];
+		native_boundary_case = true;
+		boundary_executions = 0;
+		production_run_combiner(&lock, &nodes[0], &request);
+		native_boundary_case = false;
+		CHECK(boundary_executions == completed);
+		CHECK(!nodes[completed].locked && !nodes[completed].completed);
+		CHECK(!nodes[position].completed && !nodes[position].execution);
+		for (int i = 0; i < 6; i++)
+			CHECK(nodes[i].completed == (i < completed));
+	}
+	puts("spin mixed MCS: 5 native boundaries, including requestless middle nodes");
+}
+
 #include "spin_node_pool_fixture.c"
 
 int main(void)
@@ -1001,6 +1051,7 @@ int main(void)
 	       checks - previous_checks, failures - previous_failures);
 	run_producer_cases(true);
 	run_mailbox_cases();
+	run_native_boundaries();
 	kd_node_trace = true;
 	run_producer_cases(true);
 	run_observer_checks();

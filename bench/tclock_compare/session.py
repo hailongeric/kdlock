@@ -41,6 +41,10 @@ def check_jit_evidence(record):
     # A policy may select self-execution. Keep NO_JIT explicit and retain all
     # publication/body counters; fixed-admission protocol positives still fail
     # without a returned body. Valid throughput is not JIT acceptance.
+    if record['arm'] == 'kdlock' and record.get('spin_delegate', 'on') == 'off':
+        require(record.get('jit_bodies', 0) == 0, 'disabled control executed JIT')
+        record['jit_acceptance'] = 'DISABLED_CONTROL'
+        return
     required = (record['arm'] == 'kdlock' and record['threads'] > 1 and
                 record.get('hotlock_mode', 'observe') != 'adaptive')
     record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
@@ -77,7 +81,8 @@ class BackendSession(Session):
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
-                      'hotlock_mode=' + self.record['hotlock_mode']],
+                      'hotlock_mode=' + self.record['hotlock_mode'],
+                      'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
                      'load-kdlock.log')
             self.loaded_kd = True
         elif self.record['arm'] == 'tclock':
@@ -106,7 +111,8 @@ class BackendSession(Session):
                 str(layout['lock_addr']))
             params = parameters()
             require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
-                    int(params['bench_lock_addr']) == layout['lock_addr'],
+                    int(params['bench_lock_addr']) == layout['lock_addr'] and
+                    params['spin_delegate'] == ('N' if self.record.get('spin_delegate') == 'off' else 'Y'),
                     'kdlock observation parameters differ')
             self.record['parameters'] = params
             symbol = f'sc_body_{self.record["cachelines"]}'

@@ -56,6 +56,7 @@ struct kd_spin_node {
 	 * Keep these addresses with the queue links in the first cache line. */
 	u8 prefetch_full;
 	u8 prefetch_complex;
+	/* NULL for a non-combinable MCS waiter; no logical execution state. */
 	struct kd_spin_exec_request *execution;
 	struct pt_regs *prefetch_regs;
 	unsigned long prefetch_sp;

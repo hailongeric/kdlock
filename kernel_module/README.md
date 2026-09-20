@@ -30,6 +30,10 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 
+不代理的 KD 请求同样使用 fast/pending/MCS 队列：复用每 CPU 四个节点，在本地
+通知字段等待，不分配 request/frame，不切换栈。不可代理节点终止当前 combiner
+批次，再由原调用者执行。`spin_delegate=0` 为显式不代理对照，默认仍为 1。
+
 旧统一 spin 分发及 `spin_native_cache` 已删除；显式直接 API 保留现有
 快速所有权、ticket、frame 和 ACK 路径。mutex 的目标进程选择仍保留。
 
@@ -72,6 +76,7 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `kd_spinlock.c` | [spin/shadow.inc](spin/shadow.inc) | Nested lock-vector push/pop, saved combiner state and invariant checks. |
 | `kd_spinlock.c` | [spin/diagnostics.inc](spin/diagnostics.inc) | Per-lock diagnostic counters, waiter observations and JIT-disable latch. |
 | `kd_spinlock.c` | [spin/queue.inc](spin/queue.inc) | Tail encoding, node publication and optional NUMA successor selection. |
+| `kd_spinlock.c` | [spin/nondelegated.inc](spin/nondelegated.inc) | 共用锁字和节点的原生 pending/MCS 获取，不申请 JIT 执行状态。 |
 | `kd_spinlock.c` | [spin/request.inc](spin/request.inc) | Preallocated shared request reservation and final-user release, including remote root-packet references. |
 | `kd_spinlock.c` | [spin/prefetch.inc](spin/prefetch.inc) | Producer-prepared queue hints and off/consumer/prepared successor-prefetch policies. |
 | `kd_spinlock.c` | [spin/combiner.inc](spin/combiner.inc) | 批内查找、outer release、统一 clobber 批次及队列交接。 |

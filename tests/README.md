@@ -16,6 +16,7 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 
 | 修改范围 | 相关驱动（位于 tests/unit） |
 | --- | --- |
+| 原生 pending/MCS 与 owner 配对 | `spin/test_spin_nondelegated.py`、`spin/test_spin_shadow.py` |
 | 单锁字入口和 ticket | `spin/test_spin_direct.py`、`spin/test_spin_entry.py` |
 | 嵌套、提前释放、队列、frame 退休 | `spin/test_spin_outer_progress.py`、`spin/test_spin_shadow.py`、`spin/test_spin_batch.py` |
 | 本地热锁哈希和窗口 | `infrastructure/test_hotlock_sampling.py` |
@@ -140,3 +141,12 @@ remote/native live 组合；后两者本轮仅有相关 fixture/oracle 覆盖，
 `56a766d7220247d898c328e3397ca4528ef987de4c6503fe7dbd41dc9b0347a4`。
 归档使用 guest 已有冻结材料；补充的宿主机完整 diff 留在 `/tmp/kd-struct-final.patch`，
 未上传到 guest。最终空闲检查通过。
+
+
+## 2026-09-20 不代理 MCS 验证
+
+KD 原生拒绝/冷锁路径改为共用 pending/MCS 节点，不申请 execution request/frame。
+原生 owner、混合队列、嵌套及提前释放检查和性能边界统一见
+[本轮报告](../bench/tclock_compare/results/20260920-native-mcs.md)。
+`spin_delegate=0` 为明确的零 JIT 对照，默认开启代理时的 observe 竞争正例仍须
+有真实 JIT。基础与相关单测、正常及 SELFTEST + NUMA 构建通过；未运行全套。

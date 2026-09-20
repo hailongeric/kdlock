@@ -426,7 +426,13 @@ static struct kd_spin_node *link_decode_tail(int tail)
 	})
 
 #define decode_tail link_decode_tail
+static void kd_spin_acquire_nondelegated(struct qspinlock *word);
 #include "spin_outer_production.h"
+/* Script only the physical reacquire boundary in this owner/ACK fixture. */
+static void kd_spin_acquire_nondelegated(struct qspinlock *word)
+{
+	while (!kd_spin_trylock(word)) cpu_relax();
+}
 #undef decode_tail
 #define request kd_spin_nodes[0]
 

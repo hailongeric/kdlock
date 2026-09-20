@@ -9,7 +9,7 @@
 显式 `kd_spinlock_t` 为 4 字节，直接承载 fast、pending、KD MCS tail 和
 combiner 仲裁；gate 映射、独立 S、Linux L 二次获取均已删除。
 普通 Linux 对象不进入 KD API。无 JIT、资源不足及上下文拒绝均使用 KD 字的
-不代理 CAS 路径，保留 preempt 配对及在途计数；无 ticket 解锁也是 KD 释放。
+不代理 fast/pending/MCS 路径，保留 preempt 配对及在途计数；无 ticket 解锁也是 KD 释放。
 
 稳定 ticket 记录 task/CPU/generation 和 ACK 借用状态。claim 只确认已拥有 KD
 字，release_origin 只退休所有权元数据，调度器随后执行唯一的 release store，
@@ -47,10 +47,19 @@ one object. Explicit caller storage must outlive all requests and frames.
 
 The fast root records its pinned owner without allocating a ticket. A contended
 root transfers its CPU pin to a stable ticket; nested/virtual requests retain
-their own tickets. Context/admission/resource refusal uses a nondelegating KD
-whole-word CAS, respecting pending and tail, then a single byte release. Its
-per-CPU in-flight count also participates in drain. It never falls back to a
-Linux spin operation on a KD object. `kd_spin_prepare` registers a caller-owned
+their own tickets. Context/admission/resource refusal uses the same KD fast-CAS, pending and MCS
+protocol. A contended nondelegating caller reserves one of the four CPU nodes,
+waits on its own notification, then becomes the only queue-head waiter on the
+word. It allocates no execution request/frame, captures no register packet and
+stays on its own C stack. Its per-CPU in-flight count also participates in drain.
+Only actual node exhaustion uses read-before-CAS whole-word polling.
+A sole task-context nondelegating hold also uses the existing fast-owner record
+after acquisition, avoiding native-ACK/ticket scans at unlock. Nested and IRQ
+holds retain the separate in-flight count. It never falls back to a
+Linux spin operation on a KD object. Request-pool exhaustion and outer-lock
+reclaim reuse this non-combinable queue path while retaining the existing ticket.
+A missing/refused translation is checked before queue packet preparation;
+registration remains available for later admission. `kd_spin_prepare` registers a caller-owned
 continuation before the workload; caller-clobber and JIT safety admission remain.
 
 Physical claim records that the caller already acquired the KD word. Release
@@ -58,6 +67,19 @@ retires ticket ownership metadata, then the scheduler performs exactly one
 release store on the ownership byte, preserving pending/tail. Early release and
 reclaim keep the original ticket alive; reclaim first acquires the KD word again.
 Unlock uses a retained fast owner, native ACK or ticket, never hotness or comm.
+
+`spin_delegate=0` is an explicit fixed self-execution control (default is 1).
+It bypasses JIT/hotlock admission for fresh calls; unlock still uses ownership
+provenance. Benchmark results label it `DISABLED_CONTROL` and require zero JIT
+bodies, separately from observe/adaptive JIT runs.
+
+Like TCLock's non-combinable queue nodes, a native KD node uses the existing
+`IRQ_NUMA_NODE` marker and has `execution == NULL`. The marker also applies to
+ordinary task callers. Initial and intra-batch selection must stop at these
+boundaries, including NUMA scans; no prefetch, observer or outer-release log
+may dereference their absent frame. Queue-head handoff is not completion and
+does not execute the successor's body. Acquisition retires the scheduling node;
+physical ownership lasts until the caller's later unlock.
 
 ### 4.2 Acquisition Tickets And Node Lifetime
 

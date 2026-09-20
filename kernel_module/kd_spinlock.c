@@ -47,6 +47,8 @@
 
 #include "spin/queue.inc"
 
+#include "spin/nondelegated.inc"
+
 #include "spin/request.inc"
 
 #include "spin/prefetch.inc"
@@ -309,18 +311,27 @@ kd_spin_lock_slowpath(struct qspinlock *lock, unsigned long rsp_value,
 	BUG();
 }
 
-/* Resource/context/admission refusal must never enter Linux qspinlock on a
- * KD object. CAS over the entire word respects an existing pending/tail and
- * cannot steal the queue head. These callers execute their own body only. */
+/* Admission refusal retains the KD queue protocol. Only genuine node
+ * exhaustion polls the full word; ordinary contention uses local MCS waits. */
 void kd_spin_lock_nondelegated(kd_spinlock_t *lock)
 {
 	preempt_disable();
 	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
-	while (atomic_cmpxchg_acquire(&lock->val, 0, _Q_LOCKED_VAL_HL))
-		cpu_relax();
+	kd_spin_acquire_nondelegated(lock);
+	/* A sole task-context hold can use the existing fast ownership record.
+	 * Publish it before dropping the acquisition drain count. Nested/IRQ
+	 * callers keep their independent count and cannot overwrite that owner. */
+	if (in_task() && preempt_count() == 1) {
+		kd_spin_fast_claim(lock);
+		this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+	}
 }
 void kd_spin_unlock_nondelegated(kd_spinlock_t *lock)
 {
+	/* Native bridge callers use this paired API directly, bypassing the
+	 * public unlock router. They can also own the sole fast record. */
+	if (kd_spin_fast_unlock((raw_spinlock_t *)lock))
+		return;
 	smp_store_release(&lock->locked, 0);
 	this_cpu_dec(kd_spin_fast_cpu.nondelegated);
 	preempt_enable();
@@ -339,7 +350,7 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 
 	/* Statistics affect fresh admission only. A cold/refused KD request
 	 * still takes the same word through its nondelegating path. */
-	if (!kd_hotlock_record_spin((unsigned long)lock))
+	if (!kd_spin_delegate || !kd_hotlock_record_spin((unsigned long)lock))
 		goto native;
 	if (!in_task() || softirq_count() || current->migration_disabled ||
 		kd_spin_entry_native_active())
@@ -394,6 +405,14 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	clear_pending_set_locked(word);
 	goto acquired;
 queue:
+	/* Before publication, an absent/refused translation needs only an MCS
+	 * node. Keep registration for later admission, but allocate no logical
+	 * packet/frame and never lend this caller's stack to a combiner. */
+	if (!kd_exe_entry_is_ready(kd_get_exe(0, rip), 0, rip)) {
+		kd_exe_add_abi(0, rip, KD_EXE_LOCK_SPIN, abi);
+		kd_spin_acquire_nondelegated(word);
+		goto acquired;
+	}
 	kd_spin_lock_slowpath(lock, rsp_value, &request, rip, bp, abi);
 acquired:
 	kd_spin_claim_origin(&request);

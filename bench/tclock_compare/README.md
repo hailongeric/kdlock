@@ -66,6 +66,10 @@ python3 bench/tclock_compare/test_direct.py
 
 ## 本次结果
 
+最新[不代理 MCS 小范围对照](results/20260920-native-mcs.md)：同一 c1 负载，
+8 线程较旧 CAS 提高约 64%，4 线程仍回退约 18%；不代表完整矩阵或 JIT 成绩。
+
+
 当前[切回 cacheline 的三方重测](results/20260920-cacheline-current.md)：沿用现有锁实现，
 1/16 cacheline、五档线程各五轮共 150/150 场通过，40 场竞争 kdlock 均有实际 JIT。
 20 线程下 Linux/TCLock/kdlock 吞吐分别为 4.106/4.992/3.715 Mops/s（1 cacheline）
@@ -162,3 +166,8 @@ adaptive 的 `NO_JIT` 会保留数据正确的性能样本，但 `jit_acceptance
 汇总额外报告 `actual_jit_sessions`，不能用性能有效样本数代替 JIT 验收数。
 
 [本地哈希与策略结果](results/20260920-local-hash.md)：observe 150/150、adaptive 50/50 正确排空；实际 JIT 分别为竞争场次的 40/40、36/40。自适应与记录器开销回退见报告。
+
+
+`--spin-delegate off` 显式选择 KD 不代理对照，使用相同直接 API/负载和准备步骤，
+provider 装载 `spin_delegate=0`。结果必须为零 JIT 正文并标记 `DISABLED_CONTROL`；
+不作为 JIT 正例。默认 `on` 的 observe 竞争验收仍要求实际 JIT。

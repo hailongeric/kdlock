@@ -226,6 +226,11 @@ CPU/NUMA identity, scheduler RSP and cache-line-separated notifications; the
 unused encoded-tail copy was removed. The default CPU state is 80 bytes (96
 with NUMA), while nodes retain their 128-byte stride and notification offsets.
 
+Nondelegating physical callers use these same preallocated MCS nodes, with
+`execution == NULL` and a non-combinable marker. They need no stable JIT record
+or frame; node reservation ends at queue-head acquisition/handoff, while the
+physical hold continues until unlock. See [the shared native queue](locking.md#41-native-lock-and-private-queue).
+
 The 88-byte `kd_combiner_state` preserves the lock ledger/depth, current logical
 CPU and NUMA queue pointers. Former constant `prev_cs_cpu`, wrapper-RSP scratch
 and IRQ mirror fields were removed from both CPU state and checkpoints. Actual

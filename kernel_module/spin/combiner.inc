@@ -75,7 +75,8 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
 	unsigned int i, remaining = 0;
 	int ret;
 
-	if (frame->mutex_backend || !next || !next->execution->frame.logical_task ||
+	if (frame->mutex_backend || !next ||
+	    (!check_irq_node(next) && !next->execution->frame.logical_task) ||
 	    frame->jit_lock_kind[frame->outer_lock_index] !=
 		    KD_EXEC_LOCK_QUEUE_OWNER ||
 	    READ_ONCE(word->locked) != _Q_LOCKED_COMBINER_VAL)
@@ -101,7 +102,8 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
 	pr_info("kd_spin outer release: task=%d owner=%d owner_task=%lx cpu=%u outer=%lx next_task=%d next_cpu=%d remaining=%u remote=%u\n",
 		frame->logical_task->pid, current->pid, (unsigned long)current,
 		raw_smp_processor_id(), frame->outer_lock_addr,
-		next->execution->frame.logical_task->pid, next->cpuid, remaining,
+		next->execution ? next->execution->frame.logical_task->pid : 0,
+		next->cpuid, remaining,
 		kd_exec_frame_remote_pending(frame));
 	ret = kd_spin_entry_release_origin(&batch->request->ref);
 	if (ret)
@@ -118,10 +120,9 @@ static int kd_spin_release_outer(struct kd_exec_frame *frame,
  */
 static void kd_spin_reclaim_outer(struct kd_spin_request *request)
 {
-	/* Like node-capacity fallback, wait for all of S, including pending/tail.
-	 * Reentering the stack-switch slowpath would overwrite our live C stack. */
-	while (!kd_spin_trylock(request->word))
-		cpu_relax();
+	/* Rejoin as a non-combinable MCS waiter on the existing C stack.
+	 * The original ticket remains live; do not allocate another frame. */
+	kd_spin_acquire_nondelegated(request->word);
 	BUG_ON(kd_spin_entry_reclaim(&request->ref));
 }
 
@@ -279,6 +280,7 @@ static void kd_spin_batch_run(void *opaque)
 		}
 
 		if (next_node == NULL || next_node->next == NULL ||
+		    check_irq_node(next_node) || check_irq_node(next_node->next) ||
 		    batch->counter >= kd_combiner_batch_size) {
 			batch->next = next_node;
 			return;

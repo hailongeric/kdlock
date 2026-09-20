@@ -222,7 +222,7 @@ static noinline void kd_spin_selftest_splice(struct qspinlock *lock,
 		event->head_cpu = head->cpuid;
 		event->tail = (unsigned long)tail;
 		event->next = (unsigned long)next;
-		event->next_task = next->execution->frame.logical_task->pid;
+		event->next_task = (next->execution ? next->execution->frame.logical_task->pid : 0);
 		event->next_cpu = next->cpuid;
 		event->outer = outer;
 		event->linked = READ_ONCE(tail->next) == next;
@@ -233,7 +233,7 @@ static noinline void kd_spin_selftest_splice(struct qspinlock *lock,
 		(unsigned long)lock, current->pid, raw_smp_processor_id(),
 		outer, (unsigned long)head, head->execution->frame.logical_task->pid,
 		head->cpuid, (unsigned long)tail, (unsigned long)next,
-		next->execution->frame.logical_task->pid, next->cpuid,
+		(next->execution ? next->execution->frame.logical_task->pid : 0), next->cpuid,
 		READ_ONCE(tail->next) == next);
 }
 

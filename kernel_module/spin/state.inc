@@ -12,6 +12,13 @@
 
 static const unsigned int kd_combiner_batch_size = 1024;
 
+/* Fixed self-execution control for protocol comparisons. This changes only
+ * fresh admission; unlock always follows the acquisition's ownership record. */
+static bool kd_spin_delegate = true;
+module_param_named(spin_delegate, kd_spin_delegate, bool, 0400);
+MODULE_PARM_DESC(spin_delegate, "Allow JIT delegation; false keeps KD self-execution");
+
+
 static __always_inline int kd_spin_trylock(struct qspinlock *word);
 
 /* Physical request state lives on the caller's stack, not a recyclable node

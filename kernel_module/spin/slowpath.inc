@@ -50,7 +50,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		prev_node = decode_tail(old_tail);
 #ifdef KDLOCK_SELFTEST
 		/* Publication can let the predecessor finish and recycle its node. */
-		int previous_task = prev_node->execution->frame.logical_task->pid;
+		int previous_task = prev_node->execution ?
+			prev_node->execution->frame.logical_task->pid : 0;
 		int previous_cpu = prev_node->cpuid;
 #endif
 
@@ -305,8 +306,8 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	execution = kd_spin_request_reserve();
 	if (unlikely(!execution)) {
 		this_cpu_ptr(&kd_spin_cpu)->node_count--;
-		while (!kd_spin_trylock(word))
-			cpu_relax();
+		/* Request exhaustion does not exhaust the independent MCS nodes. */
+		kd_spin_acquire_nondelegated(word);
 		return 0;
 	}
 	kd_spin_selftest_node_event(KD_NODE_NATIVE_RESERVE);

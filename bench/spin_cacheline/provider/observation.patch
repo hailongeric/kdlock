@@ -225,7 +225,7 @@ diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
 +	KD_PR_ROUTINE("kd_spin outer release: task=%d owner=%d owner_task=%lx cpu=%u outer=%lx next_task=%d next_cpu=%d remaining=%u remote=%u\n",
  		frame->logical_task->pid, current->pid, (unsigned long)current,
  		raw_smp_processor_id(), frame->outer_lock_addr,
- 		next->execution->frame.logical_task->pid, next->cpuid, remaining,
+ 		next->execution ? next->execution->frame.logical_task->pid : 0,
 @@ -261,7 +261,7 @@
  			return;
  		}

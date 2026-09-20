@@ -61,6 +61,7 @@ def make_plan(args):
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, hotlock_mode=getattr(args, 'hotlock_mode', 'observe'),
                 scenario=getattr(args, 'scenario', 'plain'),
+                spin_delegate=getattr(args, 'spin_delegate', 'on'),
                 iterations=args.iterations, cpus=list(range(t))))
     return result
 
@@ -83,6 +84,7 @@ def report(out):
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
                    hotlock_mode=rows[0].get('hotlock_mode', 'unrecorded'),
+                   spin_delegate=rows[0].get('spin_delegate', 'on'),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         for metric in ('throughput_ops_s', 'amortized_ns_op'):
             values = [r[metric] for r in good if r.get(metric) is not None]
@@ -112,6 +114,8 @@ def main():
     kernel_identity.arguments(p)
     p.add_argument("--hotlock-mode", choices=("observe", "adaptive"), default="observe")
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
+    p.add_argument("--spin-delegate", choices=("on", "off"), default="on",
+                   help="off: explicit KD self-execution control, no JIT acceptance")
     args = p.parse_args()
     require(args.scenario == "plain" or (args.backends == ["kdlock"] and args.workload == "cacheline"),
             "nested protocol regression requires KD cacheline workload")

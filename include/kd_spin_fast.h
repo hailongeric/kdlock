@@ -6,8 +6,9 @@
 #include <linux/sched.h>
 #include "kd_spin_type.h"
 
-/* A successful root CAS needs no frame/ticket. Only the pinned owner writes
- * this record. Unqueued nondelegating callers retain a separate drain count. */
+/* A sole task-context hold needs no frame/ticket. Only the pinned owner
+ * writes this record. Native roots transfer their acquisition drain count
+ * here; nested/IRQ nondelegating holds retain that count through unlock. */
 struct kd_spin_fast_cpu {
  kd_spinlock_t *held;
  struct task_struct *owner;

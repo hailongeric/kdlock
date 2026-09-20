@@ -22,6 +22,10 @@ switches waiter stacks to execute native code; it does not replace kdlock JIT.
 Spin nodes now separate links/hints from notifications in a 128-byte aligned
 stride; explicit KD objects use one 32-bit word and no gate mapping. Exact
 shared waiter accounting remains unchanged.
+Nondelegating callers now share the pending/MCS queue without an execution
+request/frame; ordinary physical roots reuse the fast-owner unlock record.
+The fixed `spin_delegate=0` control reports self-execution separately from JIT.
+See [the scoped comparison](../bench/tclock_compare/results/20260920-native-mcs.md).
 See [current execution paths](../bench/spin_cacheline/EXECUTION_PATHS.md).
 
 [Earlier paired measurements](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
