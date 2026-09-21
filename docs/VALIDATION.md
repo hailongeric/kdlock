@@ -5,14 +5,17 @@
 运行方法和最近验证见 [tests](../tests/README.md)，性能结果见
 [bench](../bench/README.md)。历史通过项不能拼接为当前版本的全量通过。
 
-2026-09-20 当前实现为显式 KD 单锁字、分类型 CPU 本地哈希，无全局晋升集合。
-最新结果见 [联合报告](../bench/tclock_compare/results/20260920-local-hash.md)。
+2026-09-20 冻结实现为 `644f231`：显式 KD 单锁字、本地哈希、原生 MCS 和
+continuation 退休交接。MCS 准入/时间域实验已撤回，当前功能见
+[tests](../tests/README.md#mcs-recovery-validation)，同期调查及恢复结果见
+[回退报告](../bench/tclock_compare/results/20260921-mcs-recovery.md)，
+历史完整性能基线见 [三方报告](../bench/tclock_compare/results/20260920-continuation.md)。
 旧透明 hook live 套件及其工作负载已删除，历史参数只能与匹配 checkout 一同使用。
 下列固定版本记录保留原始成功、失败和证据身份，不构成当前测试库存。
 
 仍未解决的 pinned mode-4 soft lockup、并发 promotion RCU stall、动态地址
 筛查缺口、flags 和原地覆盖风险见 [TODO](TODO.md#current-checkpoint)。
-本次压缩文档没有修复这些问题，也没有重跑历史矩阵。
+本次文档同步没有修复这些历史问题，也没有重跑旧 hook 矩阵。
 
 所有下列链接固定到整理前提交，包含原结果、失败、源码身份、证据路径及
 当时的命令。也可以离线读取：

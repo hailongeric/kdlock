@@ -14,12 +14,12 @@ Pre-entry context/resource refusal leaves valid queue/native ownership intact;
 it does not grant permission to replay an executed frame.
 
 The per-CPU context's `top`/`parent` links and `depth` describe the physical
-execution chain. Spin frames live in producer-owned request storage; mutex
+execution chain. Spin frames live in producer-owned continuation storage; mutex
 frames retain the fixed per-CPU array. Bind changes the physical parent, depth
 and batch association without copying the request frame. Pop is the common
 unbind/retirement check: physical LIFO ownership, terminal state, remote
 requests and native routing/ACKs must be clear. It does not reclaim a spin
-request or copy its packet. Whole-context scans remain SELFTEST diagnostics.
+continuation or copy its packet. Whole-context scans remain SELFTEST diagnostics.
 `jit_lock_depth` bounds the live lock prefix; inactive arrays are not cleared.
 
 A physical spin root with one lock starts with `spin_simple`. Its first wrapper
@@ -51,6 +51,8 @@ allocation nor moved. Only the allocating CPU changes top. A remote native child
 may release-publish its retired marker after pop; its producer collapses it on
 its next reservation/release. No request `users` or `packet_owner` remains.
 The stack header plus records occupies 9280 bytes within the reserved 12 KiB.
+Exact object sizes, allocation sites and cross-CPU data flow are maintained in
+[execution paths](../../bench/spin_cacheline/EXECUTION_PATHS.md).
 Exhaustion before publication uses native KD MCS with the existing ticket.
 Pinned physical context is rejected before a delegation node is published.
 
@@ -133,7 +135,7 @@ and the normal root result is COMPLETE with an independently checked outer
 unlock continuation. The wrapper imports no thread GPR bundle and protects only
 physical RBP; the lock-side C step calls it through an inline asm clobber
 boundary. Every intermediate exit materializes FULL before existing C handling.
-The ordinary request/reference/owner protocol above is unchanged; only valid
+The continuation-retirement/ticket/owner protocol above still applies; only valid
 packet fields and the compiler call contract differ. Detailed states and mixed
 ABI rules live in [the register ABI](../JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1).
 
@@ -212,8 +214,9 @@ A queued virtual waiter caches its requester and acquire-loads that owner's
 remote mailbox each iteration. An empty mailbox skips `kd_exec_remote_poll()`;
 a nonempty mailbox still enters the existing validation/unlock/ACK handler.
 This keeps ancestor unlocks progressing while the child executes. It cannot be
-replaced with a completion-only PAUSE loop like the physical waiter. Remaining
-work is tracked in [shared request storage](../TODO.md#shared-request-storage).
+replaced with a completion-only PAUSE loop like the physical waiter. Storage
+retirement is implemented as described above; remaining measured-cost work is
+tracked in [shared request storage](../TODO.md#shared-request-storage).
 
 The physical CPU scheduler is `kd_spin_cpu_state`: its lock ledger, current
 logical CPU, node reservation depth and polling-stack pointer belong to the CPU.

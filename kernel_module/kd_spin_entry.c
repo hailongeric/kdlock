@@ -279,11 +279,11 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 		goto out;
 	}
 	entry->state = KD_ENTRY_CLAIMING;
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
 	/* The caller acquired the sole word before claiming this ticket.
-	 * No second physical acquisition and no map/owner CAS is needed. */
+	 * This is only a nonblocking ownership check, not a physical acquisition.
+	 * Keep one guard interval through commit: dropping/reacquiring it adds
+	 * IRQ and atomic work without allowing any useful peer transition. */
 	ret = READ_ONCE(((kd_spinlock_t *)entry->origin)->locked) ? 0 : -EINVAL;
-	raw_spin_lock_irqsave(&entry->guard, flags);
 	entry->state = ret ? from : KD_ENTRY_OWNED;
 out:
 	raw_spin_unlock_irqrestore(&entry->guard, flags);
@@ -326,12 +326,12 @@ int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 		goto out;
 	}
 	entry->state = KD_ENTRY_RELEASING;
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
 	/* Retire ownership metadata first. The scheduler performs exactly
-	 * one release store, preserving pending/tail, before publishing a wake. */
+	 * one release store, preserving pending/tail, before publishing a wake.
+	 * There is no physical unlock or peer wait inside this transition, so
+	 * validate and commit under the same guard, retaining generation checks. */
 	ret = 0;
-	raw_spin_lock_irqsave(&entry->guard, flags);
-	entry->state = ret ? KD_ENTRY_OWNED : KD_ENTRY_RELEASED;
+	entry->state = KD_ENTRY_RELEASED;
 out:
 	raw_spin_unlock_irqrestore(&entry->guard, flags);
 	return ret;

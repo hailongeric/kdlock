@@ -1,10 +1,18 @@
 # kdlock Open Tasks
 
-本轮执行：[单锁字、本地哈希与稳定角色](design/locking.md)。基线已提交为
-`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字、本地哈希及角色；mutex 接入及生命周期检查保留。
-本轮已完成的验证、性能回退与未覆盖边界见[联合报告](../bench/tclock_compare/results/20260920-local-hash.md)。
+当前基于 `644f231`，并包含 2026-09-21 的 ticket 路径优化：顶层 pending
+复用 fast owner，合并 claim/release guard，slowpath 返回不重复 claim。
+单锁字、本地哈希、原生 MCS 和 continuation 退休交接均保留；MCS 后置准入
+实验已回退，当前恢复入口策略判断和批量时钟。
+锁协议见 [locking](design/locking.md)，现场存储见 [frames](design/frames.md)，
+对象大小、创建位置及 TCLock/KD 数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+竞争回退已通过恢复旧路径处理，具体指令级根因仍未确定；后续事项见
+[性能计划 P0.0](PERFORMANCE_PLAN.md#2-p0建立当前版本的可信基线)。
+最新定向功能覆盖见 [回退验证](../tests/README.md#mcs-recovery-validation)，
+continuation 的更广历史覆盖见 [原验证](../tests/README.md#continuation-validation)，
+完整三方基线与限制见 [性能报告](../bench/tclock_compare/results/20260920-continuation.md)。
 
-Current work list as of **2026-09-20**. Implementation contracts live in
+Current work list as of **2026-09-21**. Implementation contracts live in
 [DESIGN](DESIGN.md), state layout in [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md),
 and historical evidence in [VALIDATION](VALIDATION.md). Completed step-by-step
 logs have been removed from this task list; Git history retains their detail.
@@ -14,7 +22,10 @@ logs have been removed from this task list; Git history retains their detail.
 The default provider requires `kdclobber2`'s caller-clobber v1 interface; older
 kernel installers have been removed. Ordinary spin/mutex requests capture
 and restore RIP/RSP/RBP; intermediate exits materialize FULL logical GPRs.
-Waiter and combiner share one preallocated request/frame/register packet.
+Spin waiter and combiner share a producer-owned continuation/frame/register packet.
+Each possible CPU reserves 20 KiB: twelve records in the low 12 KiB and an 8 KiB
+waiter stack above. Frame pop precedes completion; native ticket borrows, including
+zero-lock relays, retire before root reclamation and the final origin unpin.
 Both caller ABIs use one resident C batch loop. Shared PT/Stack backing,
 producer-prepared hints, diagnostic identity reuse and normal-root admission/
 retirement specialization are implemented. The independent TCLock backend
@@ -93,7 +104,8 @@ refusals and kernel protocol probes remain separate categories.
 The [historical audit](VALIDATION.md#main-plan-acceptance-audit) belongs to its
 frozen source. Later scoped passes cannot be joined into a whole-project PASS;
 old scheduling-dependent cases do not validate pinned polling. Current test
-selection is in [历史：JIT_EXECUTION](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/JIT_EXECUTION.md#7-分层与增量回归).
+selection is in [tests](../tests/README.md); scoped native/relay fixtures do not
+establish forced live remote-native schedules.
 
 ## P0: Correctness Contracts
 
@@ -113,15 +125,17 @@ different ownership requirements; retain their checks and exactly-once effects.
 
 Explicit KD spin objects use one KD word for exclusion and scheduling;
 mutex ownership remains with its actual acquirer. Native continuations keep
-owner mailboxes/ACKs and source/request references until the last use.
-Node reuse, waiter wake and frame retirement are separate boundaries.
+owner mailboxes/ACKs and source leases until the last use. Spin uses root-ticket
+borrows through executor pop; physical ACK, NATIVE_READY, frame retirement and
+continuation reclamation are separate boundaries, as is node reuse.
 
 - [ ] Optional generalization: generic hook-reader/drain and nonlocal-exit
   lifetime requires kernel integration; source pins do not supply it. Lock
   allocation/free identity needs subsystem integration. See [the assessment](design/lifetimes.md#31-source-lock-and-hook-lifetimes).
 - [ ] Optional coverage: wider native-peer, cancellation and oversubscription
   schedules. Preserve live waiter accounting, release publication, origin/
-  ticket identity and no-access-after-final-ACK rules in current changes.
+  ticket identity, no message access after its ACK, and no frame/packet access
+  after final handoff. A spin physical ACK does not itself retire the frame.
 
 TCLock target locks use their own queue/unlock protocol. They cannot mix with
 unmodified Linux qspinlock solely because both expose spin_lock; see
@@ -193,7 +207,9 @@ These links preserve existing topic entry points without duplicating checklists.
 Clobber, shared PT/Stack storage, prepared hints and normal completion are
 implemented. Next measure true-sharing RMWs and per-body generated/wrapper cost:
 [performance P2](PERFORMANCE_PLAN.md#4-p2减少逐请求同步和生成代码成本).
-Independent owner state and final-user lifetimes remain required.
+Continuation stack allocation and root-ticket native retirement are implemented;
+request `users`/`packet_owner` have been removed. Independent owner state, source
+leases, final restore reads and post-pop retirement remain required.
 
 The 2026-09-20 structural cleanup embeds producer JIT context in stable requests,
 moves node reservation depth into CPU state, removes unused checkpoint/API
@@ -202,7 +218,8 @@ See [current layout](design/frames.md#911-reuse-before-copy-contract) and
 [scoped validation](../tests/README.md#2026-09-20-结构体整理验证).
 Register-reference representation, lock-ledger counters and role-transition
 consolidation remain unimplemented follow-ups; preserve independent owners and
-last-user retirement when evaluating them.
+executor retirement when evaluating them. The subsequent continuation migration
+and its limits are recorded in [scoped validation](../tests/README.md#continuation-validation).
 
 ### Hotlock Monitoring And Adaptive Admission
 
@@ -213,7 +230,8 @@ Do not reuse the permanent safety latch or source retirement for demotion.
 
 ### Instrumented Measurement Foundation
 
-First obtain a matched current-version baseline and distinguish preparation,
+The `644f231` observe-mode three-backend baseline is complete; cold/adaptive
+preparation and individual cost attribution remain separate work. Distinguish
 complete-operation throughput, actual JIT share and observation cost:
 [performance P0](PERFORMANCE_PLAN.md#2-p0建立当前版本的可信基线).
 Historical flat-IP samples and overlapping inclusive timers are not causal

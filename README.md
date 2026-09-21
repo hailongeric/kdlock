@@ -38,9 +38,12 @@ freshness or arbitrary concurrent-mutation guarantee.
 KD spin exclusion resides in the explicit 32-bit KD word. Mutex delegation
 retains the original Linux mutex and its physical owner. Queue/frame metadata
 never substitutes for ownership. During native continuation the combiner retains its acquired locks
-and services waiter unlock notifications. Mutex owner handoff is not added.
+and services waiter unlock notifications. Spin physical ACKs are followed by
+executor retirement; the original waiter retains its root continuation and pin
+until all ticket borrowers, including zero-lock relays, have retired. Mutex
+owner handoff is not added.
 Final logical ACK can precede physical A release when its combiner still owns
-the batch. Dropping the last acquisition reference removes task membership
+the batch. For mutex, dropping the last acquisition reference removes task membership
 before ACK; reclamation waits for RCU readers.
 
 ## Current Status

@@ -1,5 +1,7 @@
 # 内核 provider 代码地图
 
+spin 已按性能回退结果恢复入口热度/上下文判断及批量时钟；`nondelegated.inc` 提供完整原生 fast/pending/MCS，虚拟排队继续服务父 ACK。顶层 pending 免 ticket、合并 ticket guard 和 continuation 退休协议保留。详见 [当前锁协议](../docs/design/locking.md)。
+
 当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `kd_spinlock.c`，
 调用者使用 `include/kd_spin_direct.h` 的 clobber-v1 现场约定，并在计时前调用
 `kd_spin_prepare` 登记入口。公开 unlock 处理单锁字快速 owner、ticket 和 native ACK；
@@ -40,7 +42,7 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 `spin_prefetch=0/1/2` 是只读装载参数，分别关闭后继请求预取、保留 combiner
 查询地址的旧策略、使用发布前准备的地址提示（默认）。它不关闭其他既有队列
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
-节点为 128 字节，next 与通知字分行，request 继续独立存活。约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
+节点为 128 字节，next 与通知字分行，continuation 继续独立存活。约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
 热锁使用每 CPU、每类型独立的 16 桶/6 候选哈希表，完整地址匹配，替换记录 error，
 默认 `hotlock_mode=adaptive` 按 `score-error >= 10000` 准入；`observe` 固定准入并记录。
@@ -48,10 +50,23 @@ OWNER/ticket 及 request frame 的角色独立于热表；解锁不查询热度�
 `hotlock_lifetime_selftest=1 hotlock_mode=observe` 验证持锁淘汰和真实 mutex 等待迁移，
 `hotlock_role_trace=1` 输出锁地址/request 关联的角色，正常性能运行关闭。
 
+顶层 fast/pending 自执行共用 fast owner，只有进入 MCS 分支才 reserve ticket；
+嵌套调用仍先 reserve。队首正常返回已 claim/reclaim，入口不再重复确认；
+claim/reclaim 与 release 各用一次 guard 完成校验和状态提交。物理释放、
+代际及 native 借用退休约束见 [locking](../docs/design/locking.md#41-native-lock-and-private-queue)。
+
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
-共享 waiter 计数与身份/禁用状态分离到不同缓存行。request 按 64 字节对齐，
+共享 waiter 计数与身份/禁用状态分离到不同缓存行。continuation 按 64 字节对齐，
 普通准入元数据位于前两条缓存行。普通批次只在最终准入处检查 readiness，
 正常完成合并终态验证和解绑；复杂处理仍使用原协议。
+
+spin 初始化按 possible CPU 一次 `vzalloc(20 KiB)`，低端 12 KiB 放最多 12 条
+768 字节 continuation，高端 8 KiB 为物理 waiter 等待栈。节点直接指向记录；
+只有所属 CPU 分配/收缩 top，远端执行者 pop 后仅发布退休。父子共享根寄存器包，
+不维护 request users/packet_owner。普通完成先 pop 再通知；native 包括无锁 relay
+在唤醒前借用根 ticket，清理/pop 后解除，原线程最后解锁等待所有执行者退休。
+最终恢复汇编读完现场后才回收根记录。完整对象表与数据流见
+[EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
 
 ## 私有实现组件
 
@@ -64,11 +79,12 @@ OWNER/ticket 及 request frame 的角色独立于热表；解锁不查询热度�
 新 ABI 的普通 root 正常路径只捕获/回写/恢复 RIP/RSP/RBP，中途出口在进入 C
 前物化完整逻辑 GPR；旧 ABI 与 FULL 续跑保留完整恢复规则。
 `spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后先切到
-每 CPU 预分配的 8KB shadow 等待栈，再发布普通 waiter 并轮询。
+每 CPU 20 KiB 区域高端的 8 KiB shadow 等待栈，再发布普通 waiter 并轮询。
 spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核栈；
 `kd_spin_cpu_state` 保存 CPU 锁账本、节点预留深度和等待栈指针；
-嵌套 JIT 的 requester/depth 内嵌于稳定 request。旧 wrapper RSP 暂存已删除。`execution/native.inc` 的原生续跑
-保留 physical owner，最终 unlock 仍由该 owner 服务并 ACK。
+嵌套 JIT 的 requester/depth 内嵌于稳定 continuation。旧 wrapper RSP 暂存已删除。
+`execution/native.inc` 保留 physical owner，最终 unlock 由该 owner 服务并 ACK，
+原线程还须等待所有 native 执行者清理/pop 后解除借用。
 
 | 所属入口 | 组件 | 职责 |
 | --- | --- | --- |
@@ -77,7 +93,7 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `kd_spinlock.c` | [spin/diagnostics.inc](spin/diagnostics.inc) | Per-lock diagnostic counters, waiter observations and JIT-disable latch. |
 | `kd_spinlock.c` | [spin/queue.inc](spin/queue.inc) | Tail encoding, node publication and optional NUMA successor selection. |
 | `kd_spinlock.c` | [spin/nondelegated.inc](spin/nondelegated.inc) | 共用锁字和节点的原生 pending/MCS 获取，不申请 JIT 执行状态。 |
-| `kd_spinlock.c` | [spin/request.inc](spin/request.inc) | Preallocated shared request reservation and final-user release, including remote root-packet references. |
+| `kd_spinlock.c` | [spin/request.inc](spin/request.inc) | CPU-local continuation top reservation and contiguous retired-top collapse; remote retirement never changes the owning CPU top. |
 | `kd_spinlock.c` | [spin/prefetch.inc](spin/prefetch.inc) | Producer-prepared queue hints and off/consumer/prepared successor-prefetch policies. |
 | `kd_spinlock.c` | [spin/combiner.inc](spin/combiner.inc) | 批内查找、outer release、统一 clobber 批次及队列交接。 |
 | `kd_spinlock.c` | [spin/execute.inc](spin/execute.inc) | 复杂出口的 frame 绑定、dispatcher 调用、native/remote 处理；在 combiner 的原声明位置包含。 |
@@ -92,8 +108,8 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `exe.c` | [execution/control_calls.inc](execution/control_calls.inc) | Known spin/mutex CALL handling, continuation advancement and stack checks. |
 | `exe.c` | [execution/registry_publish.inc](execution/registry_publish.inc) | 已发布、同身份/后端且 source OPEN 的重复注册只读返回；新注册、冲突和退休保留串行化。注册不等于 JIT 就绪或正文执行。 |
 | `kd_exec.c` | [execution/frame_lifecycle.inc](execution/frame_lifecycle.inc) | frame prepare/bind/push/pop、普通完成及退休，保留有效范围和最后使用者约束。 |
-| `kd_exec.c` | [execution/remote.inc](execution/remote.inc) | Remote frame requests and release/acquire ACKs between physical executors. |
-| `kd_exec.c` | [execution/native.inc](execution/native.inc) | Original-waiter native continuation and owner-serviced final unlock ACKs. |
+| `kd_exec.c` | [execution/remote.inc](execution/remote.inc) | Remote owner messages and ACKs; spin completion detaches and pops before publishing parent DONE. |
+| `kd_exec.c` | [execution/native.inc](execution/native.inc) | NATIVE_READY routing, physical-owner ACKs and final spin root-ticket retirement wait. |
 | `kd_exec.c` | [execution/lock_ledger.inc](execution/lock_ledger.inc) | Frame lock-vector mutations and completion predicates; this never acquires L. |
 | `kd_mutex.c` | [mutex/queue.inc](mutex/queue.inc) | Per-CPU slot reservation, native mutex acquisition and private tail helpers. |
 | `kd_mutex.c` | [mutex/combiner.inc](mutex/combiner.inc) | Delegated mutex bodies, detached outer batches and successor publication. |

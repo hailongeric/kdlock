@@ -18,6 +18,9 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 | --- | --- |
 | 原生 pending/MCS 与 owner 配对 | `spin/test_spin_nondelegated.py`、`spin/test_spin_shadow.py` |
 | 单锁字入口和 ticket | `spin/test_spin_direct.py`、`spin/test_spin_entry.py` |
+| 入口抢占配对 | `spin/test_spin_preempt.py`、`infrastructure/test_hotlock_sampling.py` |
+| continuation 容量、回收与最终恢复 | `execution/test_exec_capacity.py`、`spin/test_spin_wait.py` |
+| native 借用退休、共享根包与延迟 ACK | `execution/test_remote_outer.py`、`execution/test_remote_depth_protocol.py`、`execution/test_remote_outer_protocol.py` |
 | 嵌套、提前释放、队列、frame 退休 | `spin/test_spin_outer_progress.py`、`spin/test_spin_shadow.py`、`spin/test_spin_batch.py` |
 | 本地热锁哈希和窗口 | `infrastructure/test_hotlock_sampling.py` |
 | mutex 资源和续跑 | `mutex/test_mutex_resources.py`、`mutex/test_mutex_outer_progress.py` |
@@ -103,8 +106,9 @@ mutex 原锁地址，mutex 编码 tail 改为 `u32`。寄存器引用、锁账�
 | `kd_spin_exec_request` / `kd_spin_node` | 768 / 128，均未改变 |
 | `kd_mutex` / mutex shadow 条目 | 40 / 48 → 32 / 32 |
 
-spin 通知偏移仍为 64/65，request 池仍为每 CPU 9216 字节；取消独立 JIT context
-池。mutex 1024 项静态映射减少 16 KiB。上述是结构布局结果，不代表吞吐收益。
+此结构体整理阶段的 spin 通知偏移为 64/65，旧 request 池为每 CPU 9216 字节；取消独立 JIT context
+池。mutex 1024 项静态映射减少 16 KiB。上述为该阶段布局，不代表吞吐收益；
+后续 continuation 栈取代旧池，当前尺寸与退休规则见[新验证记录](#continuation-validation)。
 
 全部构建和运行均在 kdclobber2 recovery guest。本次分批执行两个基础程序及
 10 个相关驱动：`spin/{test_spin_wait,test_spin_outer_progress,test_spin_shadow,
@@ -150,6 +154,147 @@ KD 原生拒绝/冷锁路径改为共用 pending/MCS 节点，不申请 executio
 [本轮报告](../bench/tclock_compare/results/20260920-native-mcs.md)。
 `spin_delegate=0` 为明确的零 JIT 对照，默认开启代理时的 observe 竞争正例仍须
 有真实 JIT。基础与相关单测、正常及 SELFTEST + NUMA 构建通过；未运行全套。
+
+<a id="mcs-recovery-validation"></a>
+
+## 2026-09-21 性能回退后的恢复验证
+
+当前恢复包含 ticket 优化的旧版 A；MCS 后置准入和 admit 时钟实验已经撤回。
+七个生产文件精确恢复，`kd_spin_entry.c` 的 guard 合并及 continuation 退休协议保留。
+对应测试恢复旧版接口，未删除节点复用、frame 退休、根包共享或 ACK 检测。
+源码、阶段差异、同期性能与未覆盖边界见
+[回退报告](../bench/tclock_compare/results/20260921-mcs-recovery.md)。
+
+guest `6.1.159-kdclobber2` 内两个基础程序及以下七个定向驱动，**9 项全部通过**：
+
+```sh
+make -C tests/unit run PY_TESTS='infrastructure/test_hotlock_sampling.py spin/test_spin_preempt.py spin/test_spin_nondelegated.py spin/test_spin_entry.py spin/test_spin_shadow.py spin/test_spin_outer_progress.py spin/test_spin_wait.py'
+```
+
+覆盖 19 条入口抢占/owner 路径（含 pending-only、tail 竞争和 foreign pending）、
+原生 MCS 400000 次互斥/恰好一次操作、混合节点边界、ticket guard/代际、
+continuation 容量与栈顶回收、生产者/节点先复用、共享包、提前释放/重获取、
+延迟 ACK 和退休顺序。真实汇编 waiter/最终恢复检查继续通过；普通完成、retry、
+native 保留/退休及 MINIMAL complete/retry 各 32 次。fixture 的 CPU、peer/JIT
+替身限制仍保留，不等同于完整内核并发验证。
+首个命令误列不存在的 `test_spin_queue_return.py`，运行器明确失败；改用
+实际等待路径驱动后重跑整组通过，首轮失败日志保留。
+
+最终 `--functional`：c1/t4、每线程 100000 次，各场 **400000 次**，全部业务、
+CPU 亲和性、IRQ/preempt、内核错误和排空检查通过；功能入口不生成性能比较。
+
+| 场景 | 实际 JIT 正文 | 验收 |
+| --- | ---: | --- |
+| observe / plain | 189142 | PASS |
+| observe / nested | 385281 | PASS |
+| observe / early | 99941 | PASS |
+| off / plain | 0 | DISABLED_CONTROL |
+| adaptive / plain | 162702 | PASS，自然积累热度 |
+
+证据在 guest `/root/kdlock-evidence/mcs-recovery-20260921/` 的
+`unit-rollback-final.log`、`functional-{plain,nested,early,off,adaptive}/`。
+本次没有全量回归、mutex live、跨 NUMA 或强制远端 native/无锁 relay 时序。
+性能与 ELF 审计及归档身份统一维护在上述回退报告。
+
+<a id="admission-clock-validation"></a>
+
+以下为已撤回实验的冻结验证；当前版本见 [回退验证](#mcs-recovery-validation)。
+
+## 2026-09-21 热度时间域移至准入
+
+生产 spin 的 note 只累计配额/候选分数，不读取 TSC、不初始化或重置时间窗口。
+MCS admit 才读取时间、更新速率和冷却候选；observe 也更新时间域。
+CPU 配额在 10240 饱和，第一次准入开始计时；未满配额也检查过期和时钟回退。
+关闭代理仅计数；query 保持只读快照。mutex/组件合并 record 的批量时钟保持原样。
+
+Guest `6.1.159-kdclobber2` 的基础两个 C 程序加
+`infrastructure/test_hotlock_sampling.py`、`spin/test_spin_preempt.py`，4 项通过。
+验证 note 超过配额仍无 TSC、首次准入不能将未计时样本当频率、准入不增加样本、
+低于配额仍清除过期热值、时钟回退、observe、重入和抢占配对。新增“note 读时钟”
+及“未满配额跳过过期检查”变异均被检测，原有哈希/窗口/配对变异继续通过。
+生产 `W=1` 构建通过，保留既有换栈 objtool 告警。
+
+实际 `--functional`：c1/t4，每线程 100000 次，三场各完成 400000 次并排空。
+
+| 场景 | JIT 正文 | 验收 |
+| --- | ---: | --- |
+| adaptive / plain | 158471 | 自然变热，真实 JIT |
+| observe / nested | 377697 | 嵌套真实 JIT |
+| spin_delegate=off / plain | 0 | DISABLED_CONTROL |
+
+业务、CPU 亲和性、IRQ/preempt、内核错误与排空检查通过。证据在 guest
+`/root/kdlock-evidence/admission-clock-20260921/` 的 `unit.log`、`build.log` 和
+`functional-{adaptive,nested,off}/`。本轮只调整统计时间域，没有修改锁、frame 或
+ACK 协议；没有性能 benchmark、全量回归、early/native 强制时序或 mutex live。
+上一轮性能报告对应时钟调整前的冻结源码，不能当作当前性能测量。
+归档 `admission-clock-20260921.tar.gz` 已取回宿主 `bench/.tmp/admission_clock_20260921/`，
+SHA256：`540f67016dcb14a6548d05f051eb9334191aff8d7abab0ec94890cd1ca237232`。
+
+<a id="mcs-admission-validation"></a>
+
+以下为已撤回实验的冻结验证；当前版本见 [回退验证](#mcs-recovery-validation)。
+
+## 2026-09-21 MCS 边界代理准入验证
+
+普通及 JIT 虚拟入口先记录一次热度并尝试 fast/pending，失败后才判断代理。
+`spin_delegate=0` 保留统计。根准入拒绝不占 ticket，虚拟请求保留独立 ticket；
+虚拟 pending/native MCS 等待仍服务父 frame mailbox。
+
+在 `6.1.159-kdclobber2` recovery guest 运行两个基础 C 程序及
+`infrastructure/test_hotlock_sampling.py`、
+`spin/{test_spin_preempt,test_spin_nondelegated,test_spin_entry,test_spin_direct,
+test_spin_shadow,test_spin_outer_progress}.py`，9 项最终全部通过。
+入口 fixture 的 38 条路径检查每次记录一次、fast/pending 不准入、不查 JIT/context、
+拒绝不重复 CAS，以及一次 pin 和独立 native owner。采样 fixture 验证 admit 不推进
+窗口/计数，observe busy 仍允许，原有阈值/重入变异检测保留。
+原生 MCS pthread fixture 完成 400000 次互斥且恰好一次操作，并用回调释放阻塞锁
+验证虚拟 pending 和原生 MCS 队首等待确实服务 mailbox。
+虚拟 producer 新增 8 个 fast/MCS × off/cold/not-ready/continuation 满的案例，
+检查 root 翻译身份、独立 ticket、未发布 frame 和寄存器未改变。
+节点/混合队列、容量、根包共享、借用退休、节点先复用和提前释放/重获取的原有
+生产 fixture 与变异检查继续通过；硬件/peer 模拟边界保持显式。
+
+第一次组合回归有两个 fixture 失败：函数抽取签名未跟随共享 helper，以及翻译
+身份断言仍假设查询只在 combiner 内。修正后重跑通过。新增虚拟案例另修正了
+不模拟 pin 的 fixture 预期；旧生命周期断言未删除。日志保留首次失败与最后通过。
+
+实际 `--functional` 为 c1/t4，每线程 100000 次，每场完成 400000 次并排空：
+plain / nested / early 的真实 JIT 正文分别为 **216338 / 376065 / 99522**；
+关闭代理控制为 **0**，标记 `DISABLED_CONTROL`。业务、CPU 亲和性、IRQ/preempt、
+内核错误及排空检查通过。默认 provider 保留 `mutex_jit=1`，本轮负载只有 spin。
+生产 `W=1` 构建通过，保留既有换栈 objtool 告警。
+
+证据在 guest `/root/kdlock-evidence/mcs-admission-20260921/`：
+`unit.log`、`unit-fix.log`、`unit-virtual-final.log`、`unit-inline.log`、
+`build-inline.log` 和 `final-functional-{plain,nested,early,native}/`。首版
+`functional-*` 是内联调整前的独立结果；最终版重跑采样、入口及四场 live。性能与冻结文件见
+[MCS 准入报告](../bench/tclock_compare/results/20260921-mcs-admission.md)。
+本轮没有全量回归、mutex live、跨 NUMA、adaptive live 性能，或强制远端 native
+并发时序；ACK/容量 fixture 不等于所有这些实际内核时序的覆盖。
+
+<a id="four-thread-ticket-validation"></a>
+## 2026-09-21 四线程 ticket 路径优化验证
+
+顶层 pending 复用 fast owner，MCS 队首正常返回不重复 claim；claim/reclaim 与
+release 各合并为一次 guard，保留 CPU/task/generation、状态与借用检查。
+节点/continuation 容量回退在返回前完成 claim，原入口抢占 pin 仍只配对一次。
+执行协议见 [locking](../docs/design/locking.md#41-native-lock-and-private-queue)，
+性能与证据见 [四线程报告](../bench/tclock_compare/results/20260921-four-thread-ticket.md)。
+
+在 recovery guest 运行基础两个 C 程序及
+`spin/{test_spin_preempt,test_spin_entry,test_spin_direct,test_spin_nondelegated,
+test_spin_shadow,test_spin_outer_progress}.py`，8 项全部通过。入口 fixture 覆盖
+19 条分支，明确检查顶层 pending 不 reserve ticket、嵌套/排队保留 ticket、
+竞争发布时只清除自己设置的 pending 位。已有生产 fixture 继续检查代际拒绝、
+借用退休、原生 MCS 互斥/恰好一次、NUMA 开关及提前释放/重新获取；变异检测通过。
+
+实际 `--functional`：c1/t4，每线程 100000 次，各场完成 400000 次并排空。
+plain/nested/early 的真实 JIT 正文数分别为 197977 / 387267 / 99945；
+`spin_delegate=off` 为零 JIT 原生对照。业务、IRQ/preempt、内核错误及排空检查通过。
+provider 使用默认 `mutex_jit=1`，负载只有 spin；未重跑 mutex JIT、远端 native
+强制并发时序、跨 NUMA live 或全量回归，不把组件 fixture 记作这些路径的 live 验证。
+本轮未修改 guest 内核或 TCLock。证据：guest
+`/root/kdlock-evidence/four-thread-20260921/unit.log` 与 `functional-{plain,nested,early,native}/`。
 
 <a id="continuation-validation"></a>
 ## 2026-09-20 continuation 交接验证
@@ -198,7 +343,7 @@ records 偏移 64，位于 12 KiB 区内。恢复反汇编核对 SP/IP/BP 偏移
 
 provider 已卸载，最终无 workload/daemon/provider 在途；各场 source retirement
 检查 frames/modules/writers 为零，没有本轮 kernel BUG/Oops/WARNING。
-未启用 mutex JIT。
+未运行 mutex JIT 负载。
 
 证据目录：guest `/root/kdlock-evidence/continuation-20260920/`。
 `stage1-build.log`、`stage1-retirement-final3.log` 保留旧池阶段；
@@ -222,6 +367,9 @@ cc8c2f4d8c8404b66cc8fc0a8579bf2e37a93a08db33ee28ab1277b626759a49
 提交说明，未改动已验证的实现与测试。提交前只读复核归档哈希与排空记录，
 没有重新运行上述构建或功能检查，归档内文档保持验证时版本。
 
-未运行性能测量或矩阵；只确认减少独立预分配、空闲引用计数扫描和
-`users`/`packet_owner` 更新，不宣称吞吐提升。未重跑 mutex JIT、真实内核多 CPU
+上述功能交付阶段未运行性能测量，只确认减少独立预分配、空闲引用计数扫描和
+`users`/`packet_owner` 更新。提交 `644f231` 后另行完成
+[150 场三方性能矩阵](../bench/tclock_compare/results/20260920-continuation.md)，
+不将后续性能运行混入本节功能归档，也不从历史差异推导单项改造收益。
+未重跑 mutex JIT、真实内核多 CPU
 远端 native/无锁 relay 强制时序、极端容量/取消组合；这些边界不能记为 live PASS。

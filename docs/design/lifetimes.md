@@ -16,7 +16,7 @@ owner or by the deferred immutable-JIT work. The earlier capability audit is in
 | Hotlock | Typed CPU-local bounded hash candidates with eviction and window reset | Address reuse is not an allocation epoch; statistics cannot authorize release or retire an active request |
 | Mutex shadow | Address-keyed mutex scheduling records | No lock allocation/free notification or per-object retirement |
 | KD spin word/ticket | Caller-owned four-byte object; stable ticket retains task/CPU/generation | No gate map or second Linux lock; caller storage must outlive all physical owners and requests |
-| Active request | Tickets, task records, native registrations and owner ACKs; successful frame push retains a provider ref/source lease until actual pop | No containing lock-allocation pin or protection before entering the guest hook/after frame pop |
+| Active request | Spin continuations survive node reuse; normal completion follows pop, native root tickets wait for every executor borrow to retire. Mutex keeps task records and owner ACKs. Source/provider leases span actual pop, once per spin batch or per legacy/mutex push | No containing lock-allocation pin or protection before entering the guest hook/after frame pop |
 | Hook provider | Plain guest function pointers into kdlock; device fops has `.owner=THIS_MODULE` | A `/dev/kd_dev` reference is not protection for independent lock-hook readers |
 
 See [registration](../../kernel_module/exe.c), [hook publication/removal](../../kernel_module/kd_main.c),
@@ -83,8 +83,8 @@ two-word wrapper ABI are unchanged; source controls are separate ioctls.
    a counted lease first or fails admission. Module-reference failure rolls the
    reservation back. Frame get/put take no source raw spinlock; snapshots read
    the atomic count. Closure remains terminal even when retirement returns busy.
-   Frame leases cover native/remote continuation through actual pop, including failed-push
-   rollback. Ordinary CALL miss pins the target before native transfer/learning;
+   Spin batches retain one lease through every native/remote child pop and batch
+   completion; legacy/mutex pushes retain per-frame leases, including failed-push rollback. Ordinary CALL miss pins the target before native transfer/learning;
    failed target residency after progress is non-continuable, never entry replay.
 3. Retirement serializes against uploads, closes fresh selection/registration,
    and refuses while writers/frames or known queue/task/origin state remain.

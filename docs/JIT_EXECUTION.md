@@ -17,12 +17,13 @@
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
    直接 benchmark 在单 CPU 预热前完成准备，测量时停止 daemon。
 2. clobber v1 调用保存 pre-CALL RSP、post-CALL RIP 和 caller RBP，编译器保存
-   活跃 caller-clobbered 值。`kd_spin_lock_abi` 首先关闭抢占，再记录本地热度并
-   检查上下文和入口；统计复用已有 pin，准入拒绝转原生也不先恢复再关闭抢占。
+   活跃 caller-clobbered 值。`kd_spin_lock_abi` 首先关闭抢占，代理开启时合并记录/
+   判断热度并筛选上下文，再尝试 fast/pending；统计和原生回退复用已有 pin。
+   关闭代理时公共入口跳过统计，直接走完整原生获取。
 3. 快速路径获取 KD 字并保留 pinned fast owner。竞争路径使用同一个字的
-   pending/tail 排队，稳定 ticket 记录 task/CPU/generation。发布前拒绝代理走 KD
-   fast/pending/MCS 自执行，节点不带 request/frame；发布后的拒绝或续跑仍须
-   完成既有 request 生命周期。只有真正节点耗尽才轮询锁字，不回退到 Linux
+   pending/tail 排队，普通根仅在 queue 分支占 ticket，再检查翻译就绪。拒绝走
+   完整 KD 原生 fast/pending/MCS，已有 ticket 保留，节点不带 continuation/frame；发布后的拒绝或续跑仍须
+   完成既有 continuation 生命周期。只有真正节点耗尽才轮询锁字，不回退到 Linux
    锁操作。对象大小、分配位置及与 TCLock 的数据流对照见
    [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
 4. 每 CPU 预分配 20 KiB：低端 12 KiB 为最多 12 条 continuation，高端 8 KiB
@@ -48,7 +49,12 @@ mutex 保留自己的原 mutex、调度 gate、task 记录与 native owner/ACK �
 spin/mutex 每 CPU 独立 16 桶、6 候选，用完整地址与槽索引链表查找。
 满表 miss 才扫描六个分数，先摘旧链再替换；`score-error` 是保守有效计数。
 默认 adaptive 按 CPU 速率和候选 lower-bound 阈值准入，observe 固定准入并记录。
-查询仅反映本 CPU 实际热度；observe 的固定准入由 record 返回。
+spin/mutex 的 `record_*` 合并统计和判断，首次初始化时间，之后每 10240 样本
+刷新 CPU/候选窗口。过期仅在批量刷新点检查，空闲后可能短暂沿用缓存热值；
+`query_*` 不更新时间或计数。普通 spin 关闭代理时跳过记录。
+虚拟嵌套先按热值分流；热路径占独立 ticket 后 CAS/排队，冷路径走原生 bridge。
+已发布的虚拟等待继续服务父 frame 的远端 ACK。MCS 后置准入和逐次时间检查
+已因竞争性能回退撤回，见 [调查](../bench/tclock_compare/results/20260921-mcs-recovery.md)。
 统计复用调用者已有的抢占保护；仅尚未关闭抢占的独立调用临时 pin 并在返回前
 解除。mutex 不跨睡眠持有统计 pin；重入只丢弃统计样本。
 

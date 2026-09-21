@@ -415,9 +415,6 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 			kd_spin_fast_claim(lock);
 			return;
 		}
-		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock,
-									   &request.ref))
-			goto native;
 	}
 	else
 	{
@@ -450,6 +447,13 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 	clear_pending_set_locked(word);
 	goto acquired;
 queue:
+	/* A sole pending owner never publishes a continuation or lends its
+	 * ownership to a remote executor. Defer its ticket until MCS admission;
+	 * fast/pending success can use the same CPU-local physical owner record.
+	 * Nested callers reserved above and retain their independent ticket. */
+	if (!request.ref.entry &&
+	    kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, &request.ref))
+		goto native;
 	/* Before publication, an absent/refused translation needs only an MCS
 	 * node. Keep registration for later admission, but allocate no logical
 	 * packet/frame and never lend this caller's stack to a combiner. */
@@ -460,8 +464,15 @@ queue:
 		goto acquired;
 	}
 	kd_spin_lock_slowpath(lock, rsp_value, &request, rip, bp, abi);
+	/* Every intact slowpath return has already claimed (or reclaimed) the
+	 * ticket, including capacity fallback. Remote completion never returns
+	 * here. Do not take its guard a second time merely to confirm OWNED. */
+	return;
 acquired:
-	kd_spin_claim_origin(&request);
+	if (request.ref.entry)
+		kd_spin_claim_origin(&request);
+	else
+		kd_spin_fast_claim(lock);
 	return;
 native:
 	kd_spin_lock_nondelegated_pinned(lock);

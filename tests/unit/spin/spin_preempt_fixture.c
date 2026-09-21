@@ -11,11 +11,12 @@ typedef struct qspinlock kd_spinlock_t;
 typedef struct qspinlock raw_spinlock_t;
 struct task_struct { bool migration_disabled; } task;
 #define current (&task)
-struct kd_spin_ref { int live; };
+struct kd_spin_ref { int entry; };
 struct kd_spin_request { struct kd_spin_ref ref; struct qspinlock *word; };
 enum { FAST, COLD, OFF, IRQ, SOFTIRQ, MIGRATE, BUSY, FRAME, NATIVE_ACTIVE,
-       TICKET_FULL, PENDING, QUEUED, NOT_READY, NESTED, CASES };
-static int scenario, pins, initial, disables, enables, samples, ticket;
+       TICKET_FULL, PENDING, PENDING_ONLY, PENDING_RACE, PENDING_FOREIGN,
+       QUEUED, NOT_READY, NESTED, NESTED_PENDING, NESTED_QUEUED, CASES };
+static int scenario, pins, initial, disables, enables, samples, ticket, reservations, claims, clears;
 static bool kd_spin_delegate;
 static void pinned(void) { assert(pins == initial + 1 && disables == 1 && !enables); }
 #define preempt_disable() do { ++pins; ++disables; } while (0)
@@ -52,10 +53,17 @@ static bool kd_spin_entry_native_active(void) { pinned(); return scenario == NAT
 static bool kd_exec_current_frame(void) { pinned(); return scenario == FRAME; }
 static bool kd_exec_context_busy(void) { pinned(); return scenario == BUSY; }
 static int kd_spin_entry_begin_pinned(raw_spinlock_t *lock, struct kd_spin_ref *ref)
-{ (void)lock; pinned(); if(scenario==TICKET_FULL) return -1; ref->live=ticket=1; return 0; }
+{ (void)lock; pinned(); reservations++; if(scenario==TICKET_FULL) return -1; ref->entry=ticket=1; return 0; }
 static u32 kd_spin_fetch_set_pending_acquire(struct qspinlock *lock)
-{ pinned(); return lock->val; }
-static void clear_pending(struct qspinlock *lock) { pinned(); lock->val &= ~256U; }
+{
+ pinned();
+ /* Tail can appear after the initial CAS. A foreign pending bit must survive;
+  * clear only the pending bit introduced by this acquisition. */
+ if(scenario==PENDING_RACE) lock->val=65537;
+ if(scenario==PENDING_FOREIGN) lock->val=65793;
+ u32 old=lock->val; lock->val |= 256U; return old;
+}
+static void clear_pending(struct qspinlock *lock) { pinned(); clears++; lock->val &= ~256U; }
 static void clear_pending_set_locked(struct qspinlock *lock) { pinned(); lock->val=1; }
 static void *kd_get_exe(int pid,unsigned long ip) { (void)pid; (void)ip; pinned(); return NULL; }
 static bool kd_exe_entry_is_ready(void *exe,int pid,unsigned long ip)
@@ -66,31 +74,40 @@ static void kd_exe_add_abi(int pid,unsigned long ip,int kind,unsigned int abi)
 static void kd_spin_acquire_nondelegated(kd_spinlock_t *lock) { pinned(); lock->val=1; }
 static void kd_spin_lock_slowpath(struct qspinlock *lock,unsigned long sp,
  struct kd_spin_request *r,unsigned long ip,unsigned long bp,unsigned int abi)
-{ (void)sp; (void)r; (void)ip; (void)bp; (void)abi; pinned(); lock->val=1; }
-static void kd_spin_claim_origin(struct kd_spin_request *r) { pinned(); assert(r->ref.live); }
+{ (void)sp; (void)ip; (void)bp; (void)abi; pinned();
+  assert(r->ref.entry); claims++; lock->val=1; }
+static void kd_spin_claim_origin(struct kd_spin_request *r) { pinned(); claims++; assert(r->ref.entry); }
 static bool kd_exec_native_unlock(unsigned long addr,bool mutex)
 { (void)addr; (void)mutex; pinned(); return false; }
 static bool kd_spin_entry_find(raw_spinlock_t *lock,struct kd_spin_ref *r)
-{ (void)lock; pinned(); r->live=ticket; return ticket; }
+{ (void)lock; pinned(); r->entry=ticket; return ticket; }
 static void kd_spin_unlock_ref(struct qspinlock *lock,const struct kd_spin_ref *r)
-{ pinned(); assert(r->live && ticket); lock->val=0; ticket=0; preempt_enable(); }
+{ pinned(); assert(r->entry && ticket); lock->val=0; ticket=0; preempt_enable(); }
 #include "spin_preempt_api.h"
 int main(void)
 {
  for(scenario=0;scenario<CASES;scenario++) {
   kd_spinlock_t lock={0};
   memset(&kd_spin_fast_cpu,0,sizeof(kd_spin_fast_cpu));
-  initial=pins=scenario==NESTED ? 2 : 0;
-  disables=enables=samples=ticket=0;
+  initial=pins=scenario>=NESTED ? 2 : 0;
+  disables=enables=samples=ticket=reservations=claims=clears=0;
   kd_spin_delegate=scenario!=OFF;
   task.migration_disabled=scenario==MIGRATE;
-  if(scenario==TICKET_FULL || scenario==PENDING) lock.val=1;
-  if(scenario==QUEUED || scenario==NOT_READY) lock.val=65537;
+  if(scenario==PENDING || scenario==PENDING_RACE ||
+     scenario==PENDING_FOREIGN || scenario==NESTED_PENDING) lock.val=1;
+  if(scenario==PENDING_ONLY) lock.val=256;
+  if(scenario==TICKET_FULL || scenario==QUEUED || scenario==NOT_READY ||
+     scenario==NESTED_QUEUED) lock.val=65537;
   kd_spin_lock_abi(&lock,0,0,0,1);
   pinned(); assert(lock.locked==1 && samples==(scenario!=OFF));
+  bool needs_ticket=scenario==QUEUED || scenario==NOT_READY ||
+      scenario==PENDING_RACE || scenario==PENDING_FOREIGN || scenario>=NESTED;
+  assert(reservations == (needs_ticket || scenario==TICKET_FULL));
+  assert(ticket == needs_ticket && claims == needs_ticket);
+  assert(clears == (scenario==PENDING_RACE));
   kd_spin_unlock(&lock);
   assert(pins==initial && disables==1 && enables==1 && !lock.locked && !ticket);
   assert(kd_spin_fast_idle());
  }
- puts("PASS preemption: entry pinned before admission, 14 routes retain one pin through CS/unlock");
+ puts("PASS preemption: entry pinned before admission, 19 routes retain one pin; sole pending skips tickets; queued/nested preserve tickets");
 }

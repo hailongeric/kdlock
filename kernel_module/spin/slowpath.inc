@@ -301,6 +301,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 		kd_spin_selftest_node_event(KD_NODE_NATIVE_FULL);
 		while (!kd_spin_trylock(word))
 			cpu_relax();
+		kd_spin_claim_origin(request);
 		return 0;
 	}
 	execution = kd_spin_continuation_reserve();
@@ -308,6 +309,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 		this_cpu_ptr(&kd_spin_cpu)->node_count--;
 		/* Continuation exhaustion does not exhaust independent MCS nodes. */
 		kd_spin_acquire_nondelegated(word);
+		kd_spin_claim_origin(request);
 		return 0;
 	}
 	kd_spin_selftest_node_event(KD_NODE_NATIVE_RESERVE);

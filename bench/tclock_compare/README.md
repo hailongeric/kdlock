@@ -15,6 +15,9 @@ kdlock 使用显式 32 位 KD 锁字，保留 owner/ACK、上下文和 JIT 就�
 每次完整操作保留原来的固定 cacheline 更新、解锁后四组乘加及循环成本。
 吞吐和摊销 ns/op 都以完整操作计算，不是独立获取锁延迟。
 
+当前已恢复入口准入和批量时钟，保留 ticket 路径优化。同期复现、独立采样、
+两个候选与回退验收见 [竞争回退报告](results/20260921-mcs-recovery.md)。
+
 ## 准备与运行
 
 后端先加载，直接依赖它的样例后加载。运行器在没有 worker 时绑定只读观测
@@ -86,11 +89,30 @@ python3 bench/tclock_compare/test_direct.py
 
 ## 本次结果
 
-最新[不代理 MCS 小范围对照](results/20260920-native-mcs.md)：同一 c1 负载，
+最新 [竞争回退调查](results/20260921-mcs-recovery.md)复现高竞争下降，两个
+候选均未恢复到旧版的 95%，因此恢复包含 ticket 优化的旧版获取/统计路径。
+最终性能、功能及原始证据以该报告为准。
+
+此前 [MCS 准入调整](results/20260921-mcs-admission.md)及
+[准入时间域验证](../../tests/README.md#admission-clock-validation)属于已撤回实验，
+不能作为当前行为说明。
+
+此前 [四线程 ticket 优化](results/20260921-four-thread-ticket.md)：同期前后各
+60/60 场通过，c1/c16 四线程 KD 从 1.825/1.534 提高到 1.996/1.748 Mops/s，
+提升 9.4%/14.0%，仍为同期 TCLock 的 68.1%/78.4%。20 线程约持平。
+保留 JIT、抢占/IRQ 及排空验收，plain/nested/early 和原生对照功能通过。
+
+此前 [continuation 交接后的三方实测](results/20260920-continuation.md)：提交
+`644f231`，150/150 场正确排空，40/40 场竞争 KD 有实际 JIT。20 线程下，
+1 cacheline 的 Linux/TCLock/KD 为 4.107/4.985/4.979 Mops/s；16 cacheline
+为 2.495/3.325/4.763 Mops/s。单线程和四线程仍有差距；没有同期旧版 KD 对照，
+不将历史成绩差异归因于单项改造。
+
+此前[不代理 MCS 小范围对照](results/20260920-native-mcs.md)：同一 c1 负载，
 8 线程较旧 CAS 提高约 64%，4 线程仍回退约 18%；不代表完整矩阵或 JIT 成绩。
 
 
-当前[切回 cacheline 的三方重测](results/20260920-cacheline-current.md)：沿用现有锁实现，
+此前[切回 cacheline 的三方重测](results/20260920-cacheline-current.md)：沿用当时锁实现，
 1/16 cacheline、五档线程各五轮共 150/150 场通过，40 场竞争 kdlock 均有实际 JIT。
 20 线程下 Linux/TCLock/kdlock 吞吐分别为 4.106/4.992/3.715 Mops/s（1 cacheline）
 和 2.434/3.341/3.654 Mops/s（16 cacheline）。没有修改执行源码或恢复额外计数。
@@ -190,4 +212,5 @@ adaptive 的 `NO_JIT` 会保留数据正确的性能样本，但 `jit_acceptance
 
 `--spin-delegate off` 显式选择 KD 不代理对照，使用相同直接 API/负载和准备步骤，
 provider 装载 `spin_delegate=0`。结果必须为零 JIT 正文并标记 `DISABLED_CONTROL`；
-不作为 JIT 正例。默认 `on` 的 observe 竞争验收仍要求实际 JIT。
+不作为 JIT 正例。当前回退版 off 在公共入口跳过热度记录，不能与已撤回实验
+中“off 仍采样”的数值直接比较。默认 `on` 的 observe 竞争验收仍要求实际 JIT。

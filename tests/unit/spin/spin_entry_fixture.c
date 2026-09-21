@@ -92,6 +92,7 @@ static void lifecycle(void)
 	struct kd_spin_ref ref = { 0 }, other = { 0 }, stale, found = { 0 };
 	kd_spinlock_t *gate;
 	bool last = false;
+	unsigned int guards;
 
 	CHECK(kd_spin_entries_check_idle() == 0);
 	CHECK(!kd_spin_entry_task_active() && !kd_spin_entry_native_active());
@@ -137,11 +138,15 @@ static void lifecycle(void)
 	gate = kd_spin_entry_word(&ref);
 	CHECK(gate && kd_spin_entry_claim(&ref) == -EINVAL);
 	gate->locked = 1;
+	guards = map_locks;
 	CHECK(kd_spin_entry_claim(&ref) == 0);
+	CHECK(map_locks == guards + 1 && !mock_irq);
 	CHECK(kd_spin_entry_claim(&ref) == 0);
 	CHECK(kd_spin_entry_end(&ref) == -EBUSY && locks[0].held);
 	CHECK(kd_spin_entry_borrow_get(&ref) == -EINVAL);
+	guards = map_locks;
 	CHECK(kd_spin_entry_release_origin(&ref) == 0);
+	CHECK(map_locks == guards + 1 && !mock_irq);
 	CHECK(locks[0].held && gate->locked == 1 && mock_preempt == 1);
 	CHECK(kd_spin_entry_release_origin(&ref) == -EBUSY);
 	gate->val.counter = 0;

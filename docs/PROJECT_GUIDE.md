@@ -10,19 +10,28 @@ mutex 协议和嵌套控制调用保留，但 `kd_main.c` 未安装全局 mutex 
 
 spin/mutex 分别有每 CPU 16 桶、6 候选的热锁表。默认 `hotlock_mode=adaptive`，
 要求本地 `score-error >= 10000`；`observe` 固定准入并记录相同统计。
-10240 次时钟批量、400 亿 TSC CPU 窗口、25 亿 TSC 候选窗口保持不变。
-热度只决定新请求准入，owner/ticket/frame 独立存活，解锁不查热表。
+CPU/候选窗口为 400 亿/25 亿 TSC，合并 `record_*` 首次初始化时间，之后每
+10240 样本刷新窗口；`query_*` 只读缓存。普通 spin 在入口做热度/上下文判断，
+关闭代理时跳过记录；普通根 fast/pending 免 ticket，队列分支才占用并检查翻译。
+owner/ticket/frame 独立存活，解锁不查热表。
 
-已有单锁字、本地哈希、嵌套/提前释放实际 JIT 和持锁淘汰/迁移结果见
-[当前报告](../bench/tclock_compare/results/20260920-local-hash.md)。adaptive 和记录器
-在该负载上出现回退；实现完成不代表性能目标达成。更广远端续跑/JIT、原有
-访问时 guard 等边界见 [TODO](TODO.md)，历史成绩不能作为当前验收。
+当前沿用 `644f231` 的每 CPU 20 KiB continuation/等待栈区；普通完成先 pop
+再通知，native 的最终解锁等待根 ticket 借用全部退休。对象大小、分配位置及
+TCLock/KD 数据流集中在 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+最新定向功能结果见 [tests](../tests/README.md#mcs-recovery-validation)，
+性能调查及恢复结果见 [回退报告](../bench/tclock_compare/results/20260921-mcs-recovery.md)，
+此前完整矩阵见 [三方报告](../bench/tclock_compare/results/20260920-continuation.md)。此前 adaptive
+和记录器回退保留在 [历史报告](../bench/tclock_compare/results/20260920-local-hash.md)；
+新 observe 成绩不验证 adaptive 收益。更广远端 native/无锁 relay 的强制 live 时序
+及访问时 guard 等边界见 [TODO](TODO.md)，历史成绩不能作为当前验收。
 
 ## 2. 阅读顺序
 
 - [DESIGN](DESIGN.md)：模块边界与实现契约；[锁协议](design/locking.md)定义所有权。
 - [JIT_EXECUTION](JIT_EXECUTION.md)：准备、等待、执行、续跑和退出。
 - [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md)：寄存器包、wrapper 和控制 CALL。
+- [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)：TCLock/KD 分阶段流程、
+  对象尺寸、创建位置和跨 CPU 数据流。
 - [CODE_MAP](CODE_MAP.md)：文件入口；[tests](../tests/README.md)和
   [bench](../bench/README.md)维护验证和测量命令。
 - [AGENTS](AGENTS.md)：环境与操作边界；[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)

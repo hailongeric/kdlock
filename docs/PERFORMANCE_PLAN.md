@@ -1,11 +1,21 @@
 # 下一阶段性能优化任务
 
-本轮执行：[单锁字、本地哈希与稳定角色](design/locking.md)。基线已提交为
-`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字、本地哈希及角色；mutex 接入及生命周期检查保留。
+当前基于 `644f231`，并包含 2026-09-21 的 ticket 路径优化：顶层 pending
+复用 fast owner，合并 claim/release guard，slowpath 返回不重复 claim。
+单锁字、本地哈希、原生 MCS 和 continuation 退休交接均保留。MCS 后置准入及
+时间域迁移实验已撤回，当前恢复入口判断和批量时钟；关闭代理的公共入口跳过记录。
+锁协议见 [locking](design/locking.md)，现场存储见 [frames](design/frames.md)，
+对象大小、创建位置及 TCLock/KD 数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
 当前协议以链接的 locking 章节为准，旧 hook 性能入口已删除。
 
-本清单保留性能实验顺序及剩余任务，2026-09-20 的单锁字/本地哈希进度以
-上述协议链接和本轮结果报告为准。历史证据不自动成为当前版本的验收。总体正确性事项和明确延期项目仍在
+此前 [四线程 ticket 前后对照](../bench/tclock_compare/results/20260921-four-thread-ticket.md)
+记录该阶段定向优化，c1/c16 四线程提升 9.4%/14.0%，仍低于 TCLock。
+[MCS 准入实验](../bench/tclock_compare/results/20260921-mcs-admission.md)曾改善单线程，
+但竞争性能回退。[后续调查](../bench/tclock_compare/results/20260921-mcs-recovery.md)
+同期复现回退，两个候选未恢复到旧版 95%，因此按用户授权恢复旧版路径。
+四线程相对 TCLock 的差距与具体指令级根因仍未解决。
+本清单保留性能实验顺序及剩余任务，2026-09-20 的完整三方基线以
+[continuation 三方报告](../bench/tclock_compare/results/20260920-continuation.md)为准。历史证据不自动成为当前版本的验收。总体正确性事项和明确延期项目仍在
 [TODO](TODO.md)，这里统一维护性能实验的顺序、修改范围和验收条件。
 源码位置查 [CODE_MAP](CODE_MAP.md)，具体执行步骤及 TCLock 对照查
 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
@@ -15,13 +25,19 @@
 当前普通 spin/mutex 已使用 caller-clobber：入口和正常完成只传 RIP/RSP/RBP，
 中途退出才物化 FULL 包。PT/Stack 共用寄存器区、批内 C 循环、预备预取提示、
 请求热字段集中和 spin node 通知分行均已实现；旧 gate 已删除。这些不再列为
-待做的“消除重复保存”任务。legacy/FULL、独立 owner 记录及最终 ACK 仍有用途。
+待做的“消除重复保存”任务。continuation 栈、根包共享及 native ticket 退休也已实现，
+不再扫描 request 空闲引用或维护 users/packet_owner。legacy/FULL、独立 owner、
+source lease、物理 ACK 和 executor pop 后的借用释放仍有用途。
 
 当前已实现单锁字及分类型 CPU 本地哈希，协议与准入的唯一说明在
 [locking](design/locking.md)。原 gate/S、Linux L 二次获取、站点缓存和全局晋升集合
-均已删除。10240 次批量时钟、400 亿 TSC CPU 窗口和 25 亿 TSC 单锁窗口保留，
+均已删除。400 亿 TSC CPU 窗口和 25 亿 TSC 单锁窗口保留，spin/mutex
+合并 record 首次初始化时间、之后每 10240 样本刷新；query 不刷新窗口。
 16 桶/6 候选使用 score-error 准入。统计识别频率，尚不判断代理的净收益。
-本轮阶段结果见 [单锁字报告](../bench/tclock_compare/results/20260920-singleword.md)。
+单锁字阶段结果保留在 [历史报告](../bench/tclock_compare/results/20260920-singleword.md)；
+此前 `644f231` 三方矩阵 150/150 通过，40/40 竞争 KD 有实际 JIT，仍存在低竞争差距。
+该 continuation 矩阵没有同期旧版 KD 对照，不将历史差异单独归因于存储改造；
+2026-09-21 ticket 优化另有同期修改前后对照。
 
 | 已有证据 | 可以说明什么 | 不能据此说明什么 |
 | --- | --- | --- |
@@ -34,13 +50,19 @@
 
 | 阶段 | kdlock 保留的额外工作 | 优化约束 |
 | --- | --- | --- |
-| 获取入口 | 本地频率、source/上下文筛选、翻译条目身份 | 不能跳过冷却、新旧 ABI 或 source 状态 |
-| 排队 | 单 KD 字、稳定 ticket 与请求引用 | KD 对象只能使用 KD 协议；Linux peer 使用独立 Linux 对象 |
+| 获取入口 | 代理开启时入口频率记录/上下文筛选；queue 分支检查翻译身份 | 不能跳过冷却、新旧 ABI 或 source 状态 |
+| 排队 | 单 KD 字、稳定 ticket 与 continuation 槽 | KD 对象只能使用 KD 协议；Linux peer 使用独立 Linux 对象 |
 | 每个正文 | wrapper 元数据、frame、虚拟 SP/BP/地址重写、生成代码分派 | TCLock 直接切 waiter 原生栈；两者并非等量机器指令 |
-| 完成与续跑 | 终态核对、复杂出口、远端/native owner ACK、最后引用释放 | 普通 COMPLETE 已有专门路径，不能把复杂出口也当精简完成 |
+| 完成与续跑 | 终态核对、复杂出口、owner ACK、执行者 pop/借用退休及最终恢复后回收 | 普通 COMPLETE 已有专门路径，不能把复杂出口也当精简完成 |
 | 观测 | 正文证据、精确 waiter 数和可选统计 | 统计可近似，影响排空/owner 的协议量不能随意近似 |
 
 ## 2. P0：建立当前版本的可信基线
+
+- [x] **P0.0 处理 MCS 准入调整的竞争回退。** 已冻结 A/B/C、完成独立周期采样，
+  比较读锁字避失败 CAS 与 observe 去重复查询两个候选；两者均未恢复，按用户授权
+  回退到包含 ticket 优化的 A。性能及功能证据见 [调查报告](../bench/tclock_compare/results/20260921-mcs-recovery.md)。
+  未关闭 JIT、删除统计或退休检查；未证明某一指令或缓存转移是唯一根因。
+  若重启 MCS 后置准入实验，必须重新做同期对照，不能直接恢复已失败版本。
 
 - [ ] **P0.1 诊断已知并发冷准备故障。** 保留 c16/t4/clobber 准备阶段的
   [RCU stall 记录](../bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界)，
@@ -51,15 +73,17 @@
   不能使其他 CPU 自动满足本地频率。先明确每条测量臂的准备过程；若增加每 CPU
   真实空临界区准备，应放在计时外，单列成本，核对目标正文没有被提前执行。
   不通过写 hot 表、伪造计数或放宽正文证据取得高 JIT 比例。
-- [ ] **P0.3 重跑同环境三方基线。** 在同一 kdclobber2、缓解配置、帧指针、
+- [x] **P0.3 当前 observe 三方基线。** `644f231` 的 150 场已完成，见
+  [结果与证据](../bench/tclock_compare/results/20260920-continuation.md)。同一 kdclobber2、缓解配置、帧指针、
   编译选项、caller ABI、CPU 放置和负载下，对比 Linux / TCLock / kdlock，
   覆盖 1/4/8/16/20 线程 × 1/16 cacheline，每配置交替五次；普通 clobber 为主。
   legacy/native caller 的 spill 成本另设小型配对，不混入三方比值。
-  使用[三方运行器](../bench/tclock_compare/README.md)，先核对计划及准备适配，
-  不把本文矩阵当作本轮已经执行。
+  使用[三方运行器](../bench/tclock_compare/README.md)冻结计划及准备配置；
+  后续 legacy/native caller 成本拆分未执行，不纳入本次完成项。
 
 交付：冻结源码/二进制/内核身份、逐会话数据、完整操作 Mops/s 和 ns/op、实际
-JIT 比例、批长、离散程度、准备时间及失败记录。按相同统计口径比较中位数和
+JIT 比例、离散程度、准备时间及失败记录；批长仅在确有观测时报告，
+当前 TCLock 无执行计数，不能推算代理量或批长。按相同统计口径比较中位数和
 每次配对值；NO_JIT 仍记录成本，但不算代理通过。实际 JIT、完整数据、owner
 ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 
@@ -70,6 +94,10 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 这解决原生排队机制，收益驱动的代理选择仍未实现。小范围前后比较见
 [不代理 MCS](../bench/tclock_compare/results/20260920-native-mcs.md)。
 
+
+2026-09-21 已完成顶层 pending 免 ticket、合并 claim/release guard 及去除队首
+返回后的重复 claim；普通队首自执行 ticket guard 从 7 次降到 4 次。
+实测四线程每批仍约 2 个正文，JIT 占比下降而吞吐上升；收益准入策略仍未实现。
 
 ### P1.1 基于收益的新请求准入
 
@@ -117,7 +145,7 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 位置：[diagnostics.inc](../kernel_module/spin/diagnostics.inc)、
 [kd_spin_entry.c](../kernel_module/kd_spin_entry.c)、
 [kd_source.c](../kernel_module/kd_source.c)。验收必须保留 native peer 排斥、精确
-排空、node 复用与 request 最后引用约束；删除原子本身不是成绩。
+排空、node 复用、frame 退休与 continuation 最后读取约束；删除原子本身不是成绩。
 
 ### P2.2 wrapper、JIT 分派与地址重写
 
@@ -157,7 +185,8 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 
 ## 6. 实施顺序与停止条件
 
-建议下一轮先完成 P0 的准备口径和当前基线，再做 P1.2 成本拆分及 P1.1 的
+当前 observe 基线已完成；下一轮先厘清 P0 尚未完成的冷启动/自适应准备口径，
+再做 P1.2 成本拆分及 P1.1 的
 有界准入实验；随后按实际热点选择 P2 的一个任务，最后扩展 P3。
 每个实验只改变一个可解释因素，记录假设、开关、冻结输入、配对数据和结论。
 先运行基础及直接相关验证，需要 live 时只选受影响协议，不默认跑全量。

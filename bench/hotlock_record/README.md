@@ -2,7 +2,10 @@
 
 直接编译并调用未修改的旧/新 `kd_hotlock_record`，分别测发现阶段、冷地址流
 与已晋升命中。该组件不安装 hook，不执行 JIT，不获取业务 spinlock。
-它回答采样函数的成本，不能替代完整锁操作吞吐。
+它回答合并记录/准入接口的成本，不能替代完整锁操作吞吐。生产 spin 在
+[性能回退处理](../tclock_compare/results/20260921-mcs-recovery.md)后恢复合并
+`record_spin` 和批量时钟；此前 note/admit 拆分实验已撤回。组件历史结果仍须
+按各自冻结源码解释，不能作为当前完整锁的性能成绩。
 
 内核组件位于 [record_bench.c](../../tests/kernel/hotlock_record/record_bench.c)，
 运行器为 [run.py](run.py)。每 CPU 绑定一个 kthread，只在整段循环两端计时。

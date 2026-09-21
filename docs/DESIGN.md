@@ -1,7 +1,12 @@
 # kdlock Design
 
-本轮执行：[单锁字、本地哈希与稳定角色](design/locking.md)。基线已提交为
-`7e2460c`；已清理停用 spin 分发/缓存并实现单锁字、本地哈希及角色；mutex 接入及生命周期检查保留。
+spin 已恢复入口合并记录/热度判断及批量时钟；普通根 fast/pending 免 ticket，嵌套物理身份、JIT 虚拟 ticket 和 continuation 退休协议保留。详见 [锁协议](design/locking.md#41-native-lock-and-private-queue)。
+
+当前基于 `644f231`，并包含 2026-09-21 的 ticket 路径优化：顶层 pending
+复用 fast owner，合并 claim/release guard，slowpath 返回不重复 claim。
+单锁字、本地哈希、原生 MCS 和 continuation 退休交接均保留。
+锁协议见 [locking](design/locking.md)，现场存储见 [frames](design/frames.md)，
+对象大小、创建位置及 TCLock/KD 数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
 当前仅显式 KD spin API 接入；全局 spin 分发删除，mutex hook 安装停用。
 
 This document describes current implementation contracts, not a chronological
@@ -60,7 +65,10 @@ benchmark ioctl -> spin_cacheline -> explicit KD spin API
 
 Direct preparation registers the continuation RIP and backend kind. The daemon reads kernel
 text, selects the possible JIT range, checks admission, emits/assembles code
-and publishes it. Executors use explicit waiter registers and frame state.
+and publishes it. Spin nodes point to producer-owned continuations; executors
+bind the same frame and logical packet. Normal completion follows frame pop;
+native execution readiness precedes final ticket-borrow retirement. The waiter
+reclaims storage only after every executor and final restore read has finished.
 Only the frame-backed spin/mutex entry remains; no user/futex frontend is active.
 
 ## 3. Kernel Hook Layer
@@ -87,13 +95,17 @@ six scores, unlinks the minimum candidate and inserts the new identity. Its
 error equals the replaced score, so `score-error >= 10000` is a conservative
 admission requirement and a new address cannot inherit false heat.
 
-Each table retains the 10240-observation clock batch, strict 40-billion-TSC CPU
-window and 2.5-billion-TSC candidate window. Window reset clears both score and
-error. No global promotion set/query remains. `record_spin`, `record_mutex`,
-`query_spin` and `query_mutex` are explicitly CPU-local. IRQ/NMI reentry drops
-only a sample; the CPU pin ends before a mutex can sleep. `adaptive` is the load
-default; `observe` records identical statistics with fixed admission for protocol
-comparisons. Neither policy supplies JIT safety permission.
+Both tables use 40-billion-TSC CPU and 2.5-billion-TSC candidate windows.
+`record_spin` and `record_mutex` combine sampling and admission; the first sample
+initializes time and subsequent clock updates occur every 10240 samples. Expiry
+resets both score and error at those updates, not at every contention decision.
+Cached heat may therefore persist after idle until the next clock update.
+`query_spin` and `query_mutex` return CPU-local snapshots without ticking time.
+IRQ/NMI reentry drops only a sample; the statistics pin ends before a mutex can
+sleep. `adaptive` is the load default; `observe` records the same statistics with
+fixed admission. The public spin entry skips sampling when delegation is disabled.
+Neither policy supplies JIT safety permission. The MCS note/admit experiment was
+reverted after measured contention regression; see the [investigation](../bench/tclock_compare/results/20260921-mcs-recovery.md).
 
 Fast owners/tickets and stable request frames retain OWNER/WAITER/COMBINER/DONE
 independently of the statistics table. Eviction, reset and CPU migration cannot

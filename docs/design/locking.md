@@ -19,17 +19,25 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 
 当前 spin/mutex 各自每 CPU 16 桶、6 候选、槽索引链表。命中增加 score，
 仅满表淘汰扫描最小分数；先摘旧链再插新链，error 保存替换分数，准入要求
-`score-error >= 10000`。沿用 10240 次时钟批量、400 亿 TSC CPU 窗口及
-25 亿 TSC 单锁窗口。删除全局晋升集合，区分锁类型的本地记录/查询；
-`adaptive` 为默认自适应准入，`observe` 为固定准入并记录相同统计。重入只丢样，mutex
-不跨睡眠保持 CPU 固定。角色在稳定请求/hold/frame，淘汰或迁移不改所有权，
-解锁不查热表。mutex 只改变发现和准入。
+`score-error >= 10000`。CPU/单锁窗口仍为 400 亿/25 亿 TSC ticks。
+spin/mutex 的 `record_*` 合并采样与热度判断：首次初始化时钟，之后每 10240
+个样本刷新速率与候选窗口，届时清除过期 score/error。空闲后至下一刷新点可能
+沿用缓存热值；`query_*` 不推进时间。MCS note/admit 实验已按用户授权回退，
+见 [调查与结果](../../bench/tclock_compare/results/20260921-mcs-recovery.md)。
+`adaptive` 默认按热度准入，`observe` 固定准入并记录相同统计；公共入口关闭
+代理时跳过统计。重入只丢样，mutex 不跨睡眠保持统计 pin。角色在稳定请求/
+hold/frame，淘汰或迁移不改所有权，解锁不查热表。mutex 互斥协议不变。
 
 OWNER 保存在真实 fast owner/ticket 状态中；WAITER、COMBINER、DONE 保存于
 稳定 frame 的 role 字段，使用原 state 布局内的空间，寄存器/帧偏移不变。
 SELFTEST 的 `hotlock_role_trace=1` 按锁地址和稳定 request 输出角色；默认关闭。
 `hotlock_lifetime_selftest=1 hotlock_mode=observe` 检查真实持锁候选被淘汰及
 mutex 等待从 CPU 1 迁移到 CPU 2；不是实际 JIT 验收的替代。
+
+当前 `644f231` 已将独立 request 引用池替换为 continuation 栈，普通完成先 pop
+再通知；native 先发布 NATIVE_READY，最终解锁等待包括无锁 relay 在内的根 ticket
+借用全部退休。每次实际获取只持有一次入口抢占 pin，热度记录与原生回退复用它。
+布局、分配位置和两后端数据流集中在 [执行路径](../../bench/spin_cacheline/EXECUTION_PATHS.md)。
 
 验证结果与矩阵维护在 benchmark/tests 索引，未验证边界不得写成通过。
 
@@ -45,33 +53,51 @@ acquisition and site cache have been removed. Linux spin objects retain their
 own protocol; no global spin hook is installed and protocols must never mix on
 one object. Explicit caller storage must outlive all requests and frames.
 
-The fast root records its pinned owner without allocating a ticket. A contended
-root transfers its CPU pin to a stable ticket; nested/virtual requests retain
-their own tickets. Context/admission/resource refusal uses the same KD fast-CAS, pending and MCS
-protocol. A contended nondelegating caller reserves one of the four CPU nodes,
-waits on its own notification, then becomes the only queue-head waiter on the
-word. It allocates no execution request/frame, captures no register packet and
-stays on its own C stack. Its per-CPU in-flight count also participates in drain.
-Only actual node exhaustion uses read-before-CAS whole-word polling.
-A sole task-context nondelegating hold also uses the existing fast-owner record
-after acquisition, avoiding native-ACK/ticket scans at unlock. Nested and IRQ
-holds retain the separate in-flight count. It never falls back to a
-Linux spin operation on a KD object. Request-pool exhaustion and outer-lock
-reclaim reuse this non-combinable queue path while retaining the existing ticket.
-A missing/refused translation is checked before queue packet preparation;
-registration remains available for later admission. `kd_spin_prepare` registers a caller-owned
-continuation before the workload; caller-clobber and JIT safety admission remain.
+Every public spin acquisition pins once. When delegation is enabled, the entry
+records heat and checks policy/context before attempting delegated fast/pending.
+A sole root uses a fast owner on either success and reserves its ticket only at
+the queue branch. Physical nested eligible callers reserve a ticket before CAS;
+refused nested/IRQ callers retain an independent native in-flight count.
+Neither route overwrites an outer fast owner.
+
+At the queue branch, root ticket reservation precedes translation readiness.
+A missing translation is registered for later attempts. Refusal before publication
+uses the complete native fast/pending/MCS helper, retaining any existing ticket;
+this can retry fast/pending but does not record a second heat sample. Native nodes
+have no continuation/frame/packet. Only genuine four-node exhaustion polls the
+whole word. A native queue head acquires the word, hands queue-head eligibility
+to its successor and releases its node; it holds the physical lock until unlock.
+
+A virtual JIT CALL records and decides heat before selecting its route. The hot
+route may register its lexical continuation, then reserves an independent virtual
+ticket before CAS and virtual queueing. It has no shared pending helper or new
+MCS admission check. Cold calls use the native bridge and NATIVE ledger entries.
+Published virtual waiters service the parent remote mailbox. Continuation
+exhaustion before publication uses native acquisition with the existing ticket;
+checked node/context failures retain their existing continuation rules.
+
+Explicit native bridges and outer-lock reacquisition use the complete native
+helper without reconsidering policy. Reacquisition keeps the original ticket.
+`kd_spin_prepare` registers a caller-owned continuation before the workload.
+The deferred-admission experiment was rolled back; it is not the current protocol.
 
 Physical claim records that the caller already acquired the KD word. Release
 retires ticket ownership metadata, then the scheduler performs exactly one
 release store on the ownership byte, preserving pending/tail. Early release and
 reclaim keep the original ticket alive; reclaim first acquires the KD word again.
+Claim/reclaim and release each validate and commit within one guard interval:
+there is no blocking acquisition or physical release inside either transition.
+CPU/task/generation, legal-state and borrow checks remain. Every intact spin
+slowpath return, including node/continuation capacity fallback, has already
+claimed or reclaimed its ticket; the public entry does not repeat that claim.
 Unlock uses a retained fast owner, native ACK or ticket, never hotness or comm.
 
 `spin_delegate=0` is an explicit fixed self-execution control (default is 1).
-It bypasses JIT/hotlock admission for fresh calls; unlock still uses ownership
-provenance. Benchmark results label it `DISABLED_CONTROL` and require zero JIT
-bodies, separately from observe/adaptive JIT runs.
+It bypasses admission and heat recording at the public entry. Combined record
+APIs return policy decisions; queries return cached heat even under observe.
+Unlock always uses ownership provenance. Off results are labeled
+`DISABLED_CONTROL` and require zero JIT bodies; they do not measure the same
+statistics workload as observe/adaptive or the reverted note/admit experiment.
 
 Like TCLock's non-combinable queue nodes, a native KD node uses the existing
 `IRQ_NUMA_NODE` marker and has `execution == NULL`. The marker also applies to
@@ -109,7 +135,8 @@ frame/shadow state still needs its retained physical owner to release.
 
 Only the original waiter can end its pin/preemption obligation. A combiner
 cannot remotely unpin it. Native borrow references defer completion until
-the last owner ACK. These metadata do not add wrapper arguments.
+all native executors have cleaned up and popped, including zero-lock relays.
+A physical ACK alone does not end the borrow. These metadata do not add wrapper arguments.
 
 Each CPU has four exact node reservations. Reserved-but-not-yet-acquired
 nodes count as occupied; completion cannot release a different slot or use
@@ -118,7 +145,7 @@ request and borrowed reference. Published/woken nodes may immediately be
 reused; snapshot needed data before wake and never read them afterward.
 
 Spin completion release-publishes the combined `completed=1/locked=0` word
-after final register state is ready in the shared packet. Lone/IRQ-native and batch-successor
+after final register state is ready and the frame has popped. Lone/IRQ-native and batch-successor
 handoffs also use release stores; their acquire-side waiters may immediately
 consume or reuse the node. Queue splicing must finish before publication, and
 the publisher uses its saved successor afterward. This makes the publication
@@ -141,9 +168,10 @@ Unstarted work can receive native handoff. Partial JIT progress cannot be
 converted into entry replay.
 
 Spin no longer allocates a private C stack. Before queue publication, the root
-saves its incoming IRQ flags in preparation locals and then in the reserved node,
+saves its incoming IRQ flags in preparation locals and then in the continuation,
 with local IRQs masked. One assembly region links the physical waiter and
-polls its release-published wake without calls, pushes or compiler spills.
+polls its release-published wake without C calls or compiler spills; only the old
+C RSP is pushed on the polling stack before publication.
 An unexecuted queue-head wake returns through intact C frames. Completion or
 native suffix handoff instead abandons every old hook/queue frame and starts
 the restoration helper below both saved physical RSP and final virtual RSP,
@@ -163,19 +191,20 @@ general exception safety.
 | --- | --- |
 | Queue-head/combiner acquisition (`0/2`) | Body has not run on behalf of this caller; restore IRQs and return through intact C frames. |
 | Remote completion or native suffix | `spin/wait.inc` selects an aligned safe RSP and calls `kd_spin_resume_completed(node)` directly; old C frames never return. |
-| Pre-body retry after acquisition (`4`) | Restore the node's IRQ flags from the still-intact preparation local, then enter `kd_spin_resume_waiter(node, 1)` on the safe stack. |
+| Pre-body retry after acquisition (`4`) | Restore IRQ flags from the still-intact preparation local, then enter `kd_spin_resume_waiter(node, 1)` on the safe stack. |
 
 Virtual waiters keep their independent executor C stack and the existing
 `1/3/5` parent-notification returns. These are no longer physical waiter
 completion returns.
 
-The restoration helper retains the shared request pointer, ticket and incoming IRQ flags,
+The restoration helper retains the continuation pointer, ticket and incoming IRQ flags,
 ends the completed ticket or marks the native continuation, and restores IRQs
 only on the valid task stack after its final per-CPU/node access. It then
 jumps to the saved continuation. Incoming IRQ-off state stays off; an IRQ-on
 caller regains its original state. Ordinary queue-head/combiner returns also
 restore their incoming IRQ flags. A native suffix retains the origin pin
-until the final native ACK; its wake is not full completion. This is IRQ state
+until all native executors retire after the final physical ACK; its wake is not
+full completion. Final restore reads precede continuation reclamation. This is IRQ state
 preservation, not a new general RFLAGS ABI.
 
 The combiner eventually executes its own original critical section.
@@ -197,14 +226,18 @@ stack remain live until child completion; virtual waiters still service remote
 owner/ACK requests. Their queue interval saves, masks and restores local IRQs.
 
 Spin combiners use the task kernel stack. Each possible CPU has a preallocated
-8 KiB shadow stack for physical waiter polling, following TCLock's separation
+20 KiB region: low 12 KiB for at most twelve 768-byte continuations and high
+8 KiB for physical waiter polling, following TCLock's separation
 of the suspended task stack from the waiting CPU's live RSP. One assembly region
 switches stacks before publication and saves only the old C RSP. An unexecuted
 head handoff restores it; completed/native wakes abandon the old C chain and
 start restoration below both the saved physical and final logical RSP. The CPU
 leaves the shadow stack before releasing its pin or restoring IRQs. Virtual
 waiters keep their executor C stack for nested owner/ACK service. Allocation
-failure rolls back initialization; drained shutdown frees the stacks. The lock
+failure rolls back initialization; drained shutdown frees the shared regions.
+Only the owning CPU changes the continuation top, collapsing contiguous retired
+records without scanning holes or moving live records. Frame pop and storage
+reclamation are separate boundaries; see [storage and data flow](../../bench/spin_cacheline/EXECUTION_PATHS.md). The lock
 ledger and wrapper RSP scratch are separate metadata. Frame and held-lock
 depths are bounded at eight.
 Frame count, logical depth, held-lock count and node reservations are distinct
@@ -315,7 +348,7 @@ callback do not exercise JIT or queue scheduling; see
 #### Pinned Busy Polling
 
 Both spinlock and mutex delegation support explicit GS memory operations by
-default. Spinlock waiters keep preemption disabled from entry-ticket reservation
+default. Spinlock waiters keep preemption disabled from physical entry (before statistics)
 through their queued wait. Physical waiters switch to the per-CPU shadow stack,
 publish and PAUSE-poll in `spin/wait.inc`, with local IRQs masked; virtual waiters
 retain C polling and remote owner/ACK service on their executor stack. Neither
