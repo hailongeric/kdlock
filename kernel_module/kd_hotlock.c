@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* CPU-local Space-Saving candidates. Statistics grant admission only; stable
- * tickets and frames own requests independently of eviction and migration. */
+/* CPU-local exact-key lock counters. Statistics grant admission only; stable
+ * tickets and frames own requests independently of heat and migration. */
 #include <asm/tsc.h>
 #include <linux/errno.h>
 #include <linux/hash.h>
@@ -9,25 +9,29 @@
 #include <linux/preempt.h>
 #include "kd_hotlock.h"
 
-#define KD_HOTLOCK_CHECK_INTERVAL 10240U
+#define KD_HOTLOCK_CHECK_INTERVAL 1024U
 #define KD_HOTLOCK_CPU_WINDOW 40000000000UL
 #define KD_HOTLOCK_INITIAL_WINDOW 2500000000UL
-#define KD_HOTLOCK_SAMPLE_TARGET 10000U
-#define KD_HOTLOCK_BUCKETS 16
-#define KD_HOTLOCK_CANDIDATES 6
+#define KD_HOTLOCK_SAMPLE_TARGET 1024U
+#define KD_HOTLOCK_HASH_BITS 8
+#define KD_HOTLOCK_BUCKETS (1U << KD_HOTLOCK_HASH_BITS)
+#define KD_HOTLOCK_ENTRIES 256
 
-struct kd_hotlock_candidate
+/* Fixed storage is reserved at init, never allocated while acquiring a lock.
+ * Entries are exact identities, not ranked candidates: no score, replacement
+ * or inherited counts. A full table declines unknown identities. */
+struct kd_hotlock_entry
 {
   unsigned long address, begin;
-  u64 score, error;
-  u8 next;
+  u16 count, next;
+  u8 hot;
 };
 struct kd_hotlock_table
 {
   unsigned int busy, rate_samples, rate_hot;
   unsigned long rate_begin;
-  u8 buckets[KD_HOTLOCK_BUCKETS], used;
-  struct kd_hotlock_candidate slots[KD_HOTLOCK_CANDIDATES];
+  u16 buckets[KD_HOTLOCK_BUCKETS], used;
+  struct kd_hotlock_entry entries[KD_HOTLOCK_ENTRIES];
 };
 struct kd_hotlock_cpu
 {
@@ -42,86 +46,69 @@ MODULE_PARM_DESC(hotlock_mode, "adaptive: local frequency admission; observe: fi
 static bool kd_hotlock_observe;
 static bool hotlock_stats;
 module_param(hotlock_stats, bool, 0444);
-MODULE_PARM_DESC(hotlock_stats, "Print final CPU-local candidate scores after provider drain");
+MODULE_PARM_DESC(hotlock_stats, "Print final CPU-local exact lock counters after provider drain");
 
 static unsigned int kd_hotlock_bucket(unsigned long address)
 {
-  return hash_long(address, 4);
+  return hash_long(address, KD_HOTLOCK_HASH_BITS);
 }
-static struct kd_hotlock_candidate *kd_hotlock_find(struct kd_hotlock_table *t,
+static struct kd_hotlock_entry *kd_hotlock_find(struct kd_hotlock_table *t,
                                                     unsigned long address)
 {
-  u8 link = t->buckets[kd_hotlock_bucket(address)];
+  u16 link = t->buckets[kd_hotlock_bucket(address)];
   while (link)
   {
-    struct kd_hotlock_candidate *slot = &t->slots[link - 1];
+    struct kd_hotlock_entry *slot = &t->entries[link - 1];
     if (slot->address == address)
       return slot;
     link = slot->next;
   }
   return NULL;
 }
-static struct kd_hotlock_candidate *kd_hotlock_insert(struct kd_hotlock_table *t,
+static struct kd_hotlock_entry *kd_hotlock_insert(struct kd_hotlock_table *t,
                                                       unsigned long address)
 {
-  unsigned int i, victim = 0, bucket = kd_hotlock_bucket(address);
-  u64 error = 0;
-  struct kd_hotlock_candidate *slot;
-  if (t->used < KD_HOTLOCK_CANDIDATES)
-  {
-    victim = t->used++;
-  }
-  else
-  {
-    u8 *link;
-    /* Only a full miss scans scores. Remove the old address before reusing its
-     * slot, including when both keys hash to the same bucket. */
-    for (i = 1; i < KD_HOTLOCK_CANDIDATES; i++)
-      if (t->slots[i].score < t->slots[victim].score)
-        victim = i;
-    slot = &t->slots[victim];
-    error = slot->score;
-    link = &t->buckets[kd_hotlock_bucket(slot->address)];
-    while (*link != victim + 1)
-      link = &t->slots[*link - 1].next;
-    *link = slot->next;
-  }
-  slot = &t->slots[victim];
+  unsigned int bucket = kd_hotlock_bucket(address);
+  struct kd_hotlock_entry *slot;
+  /* Exact lookup precedes insertion. Never evict a recorded lock or borrow
+   * another address's count/heat on hash collision or capacity exhaustion. */
+  if (t->used == KD_HOTLOCK_ENTRIES)
+    return NULL;
+  slot = &t->entries[t->used++];
   slot->address = address;
   slot->begin = t->rate_begin;
-  slot->score = slot->error = error;
+  slot->count = 0;
+  slot->hot = false;
   slot->next = t->buckets[bucket];
-  t->buckets[bucket] = victim + 1;
+  t->buckets[bucket] = t->used;
   return slot;
 }
-/* All candidates share the CPU's batched clock. Reset both score and error;
- * retain bucket membership and never touch request or ownership storage. */
-static bool kd_hotlock_clock(struct kd_hotlock_table *t)
+/* Initialization supplies the first time origin. Ordinary records only count;
+ * one TSC per CPU batch updates its cached rate. A continuously hot CPU must
+ * not restart the independent lock batches. Cooling/reheating resets them,
+ * retaining bucket membership and leaving ownership storage untouched. */
+static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_now)
 {
   unsigned long now;
   unsigned int i;
   bool continuous;
-  if (!t->rate_begin)
-  {
-    t->rate_begin = rdtsc_ordered() ?: 1;
-    t->rate_samples = 1;
-    return false;
-  }
   if (++t->rate_samples < KD_HOTLOCK_CHECK_INTERVAL)
     return t->rate_hot;
   now = rdtsc_ordered();
+  *sampled_now = now;
   continuous = t->rate_hot;
   t->rate_hot = now >= t->rate_begin && now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
   continuous &= t->rate_hot;
-  t->rate_begin = now ?: 1;
+  t->rate_begin = now;
   t->rate_samples = 0;
-  for (i = 0; i < t->used; i++)
+  if (!continuous)
   {
-    struct kd_hotlock_candidate *slot = &t->slots[i];
-    if (!continuous || now < slot->begin || now - slot->begin >= KD_HOTLOCK_INITIAL_WINDOW)
+    for (i = 0; i < t->used; i++)
     {
-      slot->begin = now ?: 1;
-      slot->score = slot->error = 0;
+      struct kd_hotlock_entry *slot = &t->entries[i];
+      slot->begin = now;
+      slot->count = 0;
+      slot->hot = false;
     }
   }
   return t->rate_hot;
@@ -129,11 +116,12 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t)
 static bool kd_hotlock_access(unsigned long address, unsigned int kind, bool record)
 {
   struct kd_hotlock_table *t;
-  struct kd_hotlock_candidate *slot;
+  struct kd_hotlock_entry *slot;
+  unsigned long now = 0;
   bool admitted = record && kd_hotlock_observe;
   bool pin;
-  if (!address || !READ_ONCE(kd_hotlock_cpu))
-    return false;
+  /* Callers supply a valid lock identity between successful module init and
+   * final drain. Do not repeat address/table readiness tests per acquisition. */
   /* Spin admission already owns its acquisition pin. Reuse it, including
    * on IRQ reentry; standalone observers and sleepable mutex callers pin
    * only this statistics access, never the later sleep/ACK interval. */
@@ -143,7 +131,7 @@ static bool kd_hotlock_access(unsigned long address, unsigned int kind, bool rec
   t = &this_cpu_ptr(kd_hotlock_cpu)->tables[kind];
   if (this_cpu_cmpxchg(kd_hotlock_cpu->tables[kind].busy, 0, 1))
     goto unpin;
-  if (record && !kd_hotlock_clock(t))
+  if (record && !kd_hotlock_clock(t, &now))
     goto out;
   if (!t->rate_hot)
     goto out;
@@ -152,10 +140,22 @@ static bool kd_hotlock_access(unsigned long address, unsigned int kind, bool rec
     slot = kd_hotlock_insert(t, address);
   if (slot)
   {
-    /* Saturation preserves a conservative lower bound without wrapping. */
-    if (record && slot->score != U64_MAX)
-      slot->score++;
-    admitted |= slot->score - slot->error >= KD_HOTLOCK_SAMPLE_TARGET;
+    if (record)
+    {
+      /* Strictly greater than 1024: the 1025th hit closes this batch. */
+      if (++slot->count > KD_HOTLOCK_SAMPLE_TARGET)
+      {
+        /* A zero CPU batch count means this call already sampled TSC. This
+         * also handles a genuine zero timestamp without a sentinel reread. */
+        if (t->rate_samples)
+          now = rdtsc_ordered();
+        slot->hot = now >= slot->begin &&
+                    now - slot->begin < KD_HOTLOCK_INITIAL_WINDOW;
+        slot->begin = now;
+        slot->count = 0;
+      }
+    }
+    admitted |= slot->hot;
   }
 out:
   barrier();
@@ -173,6 +173,7 @@ bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(ad
 int kd_hotlock_init(void)
 {
   int cpu;
+  unsigned long now;
   if (!strcmp(hotlock_mode, "observe"))
     kd_hotlock_observe = true;
   else if (!strcmp(hotlock_mode, "adaptive"))
@@ -182,7 +183,15 @@ int kd_hotlock_init(void)
   kd_hotlock_cpu = alloc_percpu(struct kd_hotlock_cpu);
   if (!kd_hotlock_cpu)
     return -ENOMEM;
-  for_each_possible_cpu(cpu) memset(per_cpu_ptr(kd_hotlock_cpu, cpu), 0, sizeof(struct kd_hotlock_cpu));
+  /* Establish both typed CPU clocks before any caller can enter. The first
+   * batch includes startup/idle time, so it may conservatively remain cold. */
+  now = rdtsc_ordered();
+  for_each_possible_cpu(cpu)
+  {
+    struct kd_hotlock_cpu *local = per_cpu_ptr(kd_hotlock_cpu, cpu);
+    memset(local, 0, sizeof(*local));
+    local->tables[0].rate_begin = local->tables[1].rate_begin = now;
+  }
   return 0;
 }
 void kd_hotlock_exit(void)
@@ -196,10 +205,10 @@ void kd_hotlock_exit(void)
       struct kd_hotlock_table *t = &per_cpu_ptr(kd_hotlock_cpu, cpu)->tables[kind];
       for (i = 0; i < t->used; i++)
       {
-        struct kd_hotlock_candidate *s = &t->slots[i];
-        pr_info("kd_hotlock final: cpu=%d type=%s address=%lx score=%llu error=%llu lower=%llu hot=%u role=DONE\n",
-                cpu, kind ? "mutex" : "spin", s->address, s->score, s->error,
-                s->score - s->error, t->rate_hot);
+        struct kd_hotlock_entry *s = &t->entries[i];
+        pr_info("kd_hotlock final: cpu=%d type=%s address=%lx count=%u cpu_hot=%u lock_hot=%u role=DONE\n",
+                cpu, kind ? "mutex" : "spin", s->address, s->count,
+                t->rate_hot, s->hot);
       }
     }
   free_percpu(kd_hotlock_cpu);

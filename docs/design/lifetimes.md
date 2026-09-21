@@ -13,7 +13,7 @@ owner or by the deferred immutable-JIT work. The earlier capability audit is in
 | --- | --- | --- |
 | JIT entry/source text | `(0, RIP)` key; root/read/ordinary-target pins retain up to 64 LIVE modules for the session; retirement invalidates every used entry before releasing dependencies | No concurrent code versions or in-session source replacement; init/unknown source is refused |
 | Translation session | Daemon/cache/children share a writer open description; real kcore reads acquire source pins before inspection | The trusted publisher must follow this path; pins do not prove byte immutability or arbitrary pointer/resource lifetime |
-| Hotlock | Typed CPU-local bounded hash candidates with eviction and window reset | Address reuse is not an allocation epoch; statistics cannot authorize release or retire an active request |
+| Hotlock | Typed CPU-local exact-key counters; no eviction, bounded capacity and window reset | Address reuse is not an allocation epoch; statistics cannot authorize release or retire an active request |
 | Mutex shadow | Address-keyed mutex scheduling records | No lock allocation/free notification or per-object retirement |
 | KD spin word/ticket | Caller-owned four-byte object; stable ticket retains task/CPU/generation | No gate map or second Linux lock; caller storage must outlive all physical owners and requests |
 | Active request | Spin continuations survive node reuse; normal completion follows pop, native root tickets wait for every executor borrow to retire. Mutex keeps task records and owner ACKs. Source/provider leases span actual pop, once per spin batch or per legacy/mutex push | No containing lock-allocation pin or protection before entering the guest hook/after frame pop |

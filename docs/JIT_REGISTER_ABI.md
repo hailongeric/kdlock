@@ -170,7 +170,7 @@ RBP spill 与 RSP 检查窗口的覆盖关系可由入口谓词证明；每个�
 这里比较实现，不把 Linux qspinlock benchmark 当成 TCLock 性能对照。
 独立 [tclock_backend](../tclock_backend/README.md) 已保留该来源的完整普通 spin
 执行路径，通过同一内核 hook 物理切换 waiter 栈；同负载的
-[当前三方实测](../bench/tclock_compare/results/20260919-state-access.md)另行报告。
+[当前三方实测](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260919-state-access.md)另行报告。
 该后端的现场恢复没有经过 kdlock wrapper，不能拿它替代 JIT 中途完整物化。
 
 TCLock 的 `komb_spin_lock_slowpath()` 先把六个 callee-saved 寄存器压到
@@ -848,7 +848,7 @@ ACK 的 waiter 日志在退休等待结束后输出，不能将日志顺序等�
 pop 后 `kd_exec_frame_validate()` 拒绝访问；最终 native 返回前必须完成退休。
 旧的“waiter TID 先退出、frame 后 pop”时序仅是历史记录，不能作为新协议验收。
 这仍是软件包与协议观测，不是实时 GPR/flags 恢复测试。覆盖边界见
-[continuation 验证](../tests/README.md#continuation-validation)。
+[continuation 验证](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#continuation-validation)。
 这些引用及独立 source ioctl 不增加 wrapper 参数，也不改变保存的寄存器包；
 退休顺序和 hook reader 边界见 [DESIGN 3.1](design/lifetimes.md#31-source-lock-and-hook-lifetimes)。
 

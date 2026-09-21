@@ -245,7 +245,7 @@ Its scheduling object's tail is an encoded `u32`, not a pointer. The immutable
 second address column. These changes leave physical-owner checks, waiter
 accounting and owner ACKs intact. Register-reference representation, ledger
 counters and role transitions remain separate possible work; none is folded
-into hotlock candidates or recyclable nodes.
+into hotlock statistics entries or recyclable nodes.
 
 ### 9.1.2 TCLock Spin Reference And State Boundaries
 
@@ -270,7 +270,7 @@ The canonical path/state table and source scope are in the
 [register ABI comparison](../JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比).
 The independent [TCLock backend](../../tclock_backend/README.md) now runs the native
 stack-delegation path through the same spin hook. Its scoped runtime acceptance
-and three-way results are in the [benchmark report](../../bench/tclock_compare/results/20260918-native-stack.md);
+and three-way results are in the [benchmark report](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md);
 they do not validate arbitrary task/per-CPU or nested native critical sections.
 
 ### 9.2 A/B Execution

@@ -42,7 +42,7 @@
 全局 cacheline 更新及哈希表操作/调用者栈统计，没有 task/per-CPU 身份访问、
 嵌套锁、服务调用或临界区内调度。`komb.c` 保留上游主委托流程，但选择了不同于
 RCUHT 的编译分支；不据单锁结果声称其他场景已验证。源码、冻结 ELF 和配置的
-逐项核对见 [2026-09-20 上游一致性审查](../bench/tclock_compare/results/20260920-upstream-audit.md)。
+逐项核对见 [2026-09-20 上游一致性审查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-upstream-audit.md)。
 
 所有构建和运行遵循 [操作手册](../docs/AGENTS.md)，只在 recovery guest。
 不安装 spin hook、不改内核；先加载后端，再加载直接依赖它的 workload。客户端
@@ -104,28 +104,28 @@ kdlock 的选择不同：原生参与者只访问 Linux 锁 **L**，代理队列
 [`tests/unit/spin/test_tclock_context.py`](../tests/unit/spin/test_tclock_context.py)。
 三方运行方法、实际执行结果和性能解释维护在
 [`bench/tclock_compare/`](../bench/tclock_compare/README.md)。
-最新同期对照见 [竞争回退调查](../bench/tclock_compare/results/20260921-mcs-recovery.md)，
+最新同期对照见 [竞争回退调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)，
 TCLock 后端实现保持不变；实际代理量仍未测。
-此前完整 cacheline 成绩见 [continuation 三方实测](../bench/tclock_compare/results/20260920-continuation.md)：
+此前完整 cacheline 成绩见 [continuation 三方实测](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-continuation.md)：
 150/150 场通过，TCLock 二十线程 1/16 cacheline 为 4.985/3.325 Mops/s；
 当前后端实现未变，代理量仍未测。对象尺寸、分配点、真实栈交接与 KD 的数据流
 对照统一见 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
-此前 [9/20 三方重测](../bench/tclock_compare/results/20260920-cacheline-current.md)：
+此前 [9/20 三方重测](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-cacheline-current.md)：
 150/150 场通过，TCLock 二十线程 1/16 cacheline 吞吐为 4.992/3.341 Mops/s；
 沿用 C 内联换栈、无显式调度点及无额外计数设置，代理量仍未测。
-哈希表成绩见 [9/20 哈希表 JIT 修复与三方重测](../bench/tclock_compare/results/20260920-kd-hash-jit.md)：
+哈希表成绩见 [9/20 哈希表 JIT 修复与三方重测](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-kd-hash-jit.md)：
 三个后端统一调整摘链/计数顺序后，九场样例及正式 75/75 场通过正确性和排空
 检查；TCLock 四/二十线程吞吐为 2.516/5.129 Mops/s，代理量仍未测。
-此前 [删除调度检查和调度点](../bench/tclock_compare/results/20260920-no-resched.md)：
+此前 [删除调度检查和调度点](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-no-resched.md)：
 六场 smoke、四线程各五轮全部通过正确性及排空检查；四线程为 Linux 的 0.898×。
-此前仍保留调度检查的 [C 内联汇编、无额外计数](../bench/tclock_compare/results/20260920-inline-no-counters.md)：
+此前仍保留调度检查的 [C 内联汇编、无额外计数](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-inline-no-counters.md)：
 Linux/TCLock 正式 50/50 场通过数据及排空检查，代理量未测；没有新的 kdlock 性能成绩。
-此前仍带执行计数的对照见 [IRQ/模块 UBSAN 对齐](../bench/tclock_compare/results/20260920-irq-ubsan.md)。
-历史完整三方基线见 [9/19 五档线程复测](../bench/tclock_compare/results/20260919-thread-scaling.md)。
-随后 kdlock 的 [node/gate 隔离修复](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
+此前仍带执行计数的对照见 [IRQ/模块 UBSAN 对齐](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-irq-ubsan.md)。
+历史完整三方基线见 [9/19 五档线程复测](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260919-thread-scaling.md)。
+随后 kdlock 的 [node/gate 隔离修复](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/spin_cacheline/results/20260919-cacheline-isolation.md)
 只重测旧/新 kdlock，没有重测 TCLock/Linux；此前长单线程成本仍见
-[同日独立对照](../bench/tclock_compare/results/20260919-state-access.md#单线程长批次)。
-[首次三方实测](../bench/tclock_compare/results/20260918-native-stack.md)保留两种 ABI
+[同日独立对照](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260919-state-access.md#单线程长批次)。
+[首次三方实测](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md)保留两种 ABI
 的 180 场稳态、独立采样和 kdlock 并发冷晋升失败；旧采样占比不是当前热点占比。真实汇编单元验证六个寄存器、RSP 和 lock/unlock 续点，
 不能据此宣称任意内核栈展开或复杂临界区已通过。
 当前 KD 使用单锁字，旧 L/S 对照仅对应历史版本；当前入口、逐请求处理及

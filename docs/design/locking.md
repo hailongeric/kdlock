@@ -17,21 +17,23 @@ combiner 仲裁；gate 映射、独立 S、Linux L 二次获取均已删除。
 单独记录，node 复用、waiter 唤醒均不代表 frame 已退休。caller-clobber、等待栈、
 JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接入，不安装全局 spin hook。
 
-当前 spin/mutex 各自每 CPU 16 桶、6 候选、槽索引链表。命中增加 score，
-仅满表淘汰扫描最小分数；先摘旧链再插新链，error 保存替换分数，准入要求
-`score-error >= 10000`。CPU/单锁窗口仍为 400 亿/25 亿 TSC ticks。
-spin/mutex 的 `record_*` 合并采样与热度判断：首次初始化时钟，之后每 10240
-个样本刷新速率与候选窗口，届时清除过期 score/error。空闲后至下一刷新点可能
-沿用缓存热值；`query_*` 不推进时间。MCS note/admit 实验已按用户授权回退，
-见 [调查与结果](../../bench/tclock_compare/results/20260921-mcs-recovery.md)。
-`adaptive` 默认按热度准入，`observe` 固定准入并记录相同统计；公共入口关闭
-代理时跳过统计。重入只丢样，mutex 不跨睡眠保持统计 pin。角色在稳定请求/
-hold/frame，淘汰或迁移不改所有权，解锁不查热表。mutex 互斥协议不变。
+当前 spin/mutex 各自每 CPU 256 桶、256 条预分配记录，以槽索引处理冲突并匹配
+完整锁地址。命中只增加该锁 count，没有候选排名、score/error 或淘汰。
+满表保留已有记录，未收录锁在 adaptive 下走原生；地址映射保持至卸载。
+模块初始化建立 CPU 时间起点，CPU/type 每 1024 次检查 400 亿 TSC 窗口；
+CPU 热才查锁表。单锁 count **大于 1024** 时检查 25 亿 TSC 窗口、刷新 hot，
+更新时间戳并清零计数，即第 1025 次触发。等于时间边界或倒退均冷。
+同次到期复用 TSC；CPU 持续热不重置单锁批次，冷却/重新变热时重置计数和热值、
+保留映射。query 不计数/采时/插入，空闲后可能暂时沿用缓存热值。
+`adaptive` 默认要求 CPU/单锁热值同时成立；`observe` 固定准入，包括表满 miss。
+公共入口关闭代理时跳过统计，重入只丢样，mutex 不跨睡眠保持统计 pin。
+有效锁字和表生命周期由调用者保证；owner/ticket/frame 独立存活，解锁不查热表。
+mutex 互斥协议和已回退的 MCS note/admit 实验不变。
 
 OWNER 保存在真实 fast owner/ticket 状态中；WAITER、COMBINER、DONE 保存于
 稳定 frame 的 role 字段，使用原 state 布局内的空间，寄存器/帧偏移不变。
 SELFTEST 的 `hotlock_role_trace=1` 按锁地址和稳定 request 输出角色；默认关闭。
-`hotlock_lifetime_selftest=1 hotlock_mode=observe` 检查真实持锁候选被淘汰及
+`hotlock_lifetime_selftest=1 hotlock_mode=observe` 检查真实持锁记录在表满时不被覆盖及
 mutex 等待从 CPU 1 迁移到 CPU 2；不是实际 JIT 验收的替代。
 
 当前 `644f231` 已将独立 request 引用池替换为 continuation 栈，普通完成先 pop

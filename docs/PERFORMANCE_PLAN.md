@@ -8,14 +8,14 @@
 对象大小、创建位置及 TCLock/KD 数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
 当前协议以链接的 locking 章节为准，旧 hook 性能入口已删除。
 
-此前 [四线程 ticket 前后对照](../bench/tclock_compare/results/20260921-four-thread-ticket.md)
+此前 [四线程 ticket 前后对照](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-four-thread-ticket.md)
 记录该阶段定向优化，c1/c16 四线程提升 9.4%/14.0%，仍低于 TCLock。
-[MCS 准入实验](../bench/tclock_compare/results/20260921-mcs-admission.md)曾改善单线程，
-但竞争性能回退。[后续调查](../bench/tclock_compare/results/20260921-mcs-recovery.md)
+[MCS 准入实验](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-admission.md)曾改善单线程，
+但竞争性能回退。[后续调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)
 同期复现回退，两个候选未恢复到旧版 95%，因此按用户授权恢复旧版路径。
 四线程相对 TCLock 的差距与具体指令级根因仍未解决。
 本清单保留性能实验顺序及剩余任务，2026-09-20 的完整三方基线以
-[continuation 三方报告](../bench/tclock_compare/results/20260920-continuation.md)为准。历史证据不自动成为当前版本的验收。总体正确性事项和明确延期项目仍在
+[continuation 三方报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-continuation.md)为准。历史证据不自动成为当前版本的验收。总体正确性事项和明确延期项目仍在
 [TODO](TODO.md)，这里统一维护性能实验的顺序、修改范围和验收条件。
 源码位置查 [CODE_MAP](CODE_MAP.md)，具体执行步骤及 TCLock 对照查
 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
@@ -31,19 +31,27 @@ source lease、物理 ACK 和 executor pop 后的借用释放仍有用途。
 
 当前已实现单锁字及分类型 CPU 本地哈希，协议与准入的唯一说明在
 [locking](design/locking.md)。原 gate/S、Linux L 二次获取、站点缓存和全局晋升集合
-均已删除。400 亿 TSC CPU 窗口和 25 亿 TSC 单锁窗口保留，spin/mutex
-合并 record 首次初始化时间、之后每 10240 样本刷新；query 不刷新窗口。
-16 桶/6 候选使用 score-error 准入。统计识别频率，尚不判断代理的净收益。
-单锁字阶段结果保留在 [历史报告](../bench/tclock_compare/results/20260920-singleword.md)；
+均已删除。当前热表直接按完整锁地址哈希计数，每 CPU/type 256 桶、256 记录。
+CPU 每 1024 次检查 400 亿 TSC 窗口；热 CPU 才查表，单锁 count 大于 1024
+（1025 次）检查 25 亿 TSC 窗口。删除候选分数和淘汰，满表不覆盖。
+query 不采时。预分配空间从每 CPU 576 增至 13376 字节，锁路径不分配。
+统计识别频率，尚不判断代理净收益；本轮不以操作减少推断性能已提高。
+单锁字阶段结果保留在 [历史报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-singleword.md)；
 此前 `644f231` 三方矩阵 150/150 通过，40/40 竞争 KD 有实际 JIT，仍存在低竞争差距。
 该 continuation 矩阵没有同期旧版 KD 对照，不将历史差异单独归因于存储改造；
 2026-09-21 ticket 优化另有同期修改前后对照。
 
+最新 [直接哈希对照](../bench/tclock_compare/results/20260921-hotlock-direct.md) 120/120 场通过，
+adaptive 四线程/二十线程近似持平；删除候选没有表现为整体提速。
+此前 [两级候选采样对照](../bench/tclock_compare/results/20260921-hotlock-twolevel.md) 中，adaptive
+二十线程受益于更早变热，但单线程回退、四线程无明确收益；observe 高竞争近似持平。
+更低阈值没有解决低竞争代理净收益问题。
+
 | 已有证据 | 可以说明什么 | 不能据此说明什么 |
 | --- | --- | --- |
-| [本地发现组件对照](../bench/hotlock_record/results/20260919-local-discovery.md) | 冷地址及正向命中的 record 组件成本下降；每 CPU 独立发现也增加总准备工作 | 当前完整 lock/body/unlock 的收益、稳态 JIT ≥99% |
-| [1/4/8/16/20 线程三方数据](../bench/tclock_compare/results/20260919-thread-scaling.md) | 当时版本的扩展趋势；4 线程短批次和高线程长批次的差别 | 后续布局及本地发现版本的当前成绩 |
-| [缓存行隔离配对](../bench/spin_cacheline/results/20260919-cacheline-isolation.md) | 当时 kdlock 的 20 线程改善及 4 线程回退 | node 与 gate 各自的贡献，或独立多锁的 gate 干扰 |
+| [本地发现组件对照](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/hotlock_record/results/20260919-local-discovery.md) | 冷地址及正向命中的 record 组件成本下降；每 CPU 独立发现也增加总准备工作 | 当前完整 lock/body/unlock 的收益、稳态 JIT ≥99% |
+| [1/4/8/16/20 线程三方数据](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260919-thread-scaling.md) | 当时版本的扩展趋势；4 线程短批次和高线程长批次的差别 | 后续布局及本地发现版本的当前成绩 |
+| [缓存行隔离配对](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/spin_cacheline/results/20260919-cacheline-isolation.md) | 当时 kdlock 的 20 线程改善及 4 线程回退 | node 与 gate 各自的贡献，或独立多锁的 gate 干扰 |
 | 历史 IP 采样及源码依赖链 | 指出需要测量的候选热点 | 精确的缓存转移数、单独 wrapper 成本或因果归因 |
 
 ### 与 TCLock 的剩余差异
@@ -60,12 +68,12 @@ source lease、物理 ACK 和 executor pop 后的借用释放仍有用途。
 
 - [x] **P0.0 处理 MCS 准入调整的竞争回退。** 已冻结 A/B/C、完成独立周期采样，
   比较读锁字避失败 CAS 与 observe 去重复查询两个候选；两者均未恢复，按用户授权
-  回退到包含 ticket 优化的 A。性能及功能证据见 [调查报告](../bench/tclock_compare/results/20260921-mcs-recovery.md)。
+  回退到包含 ticket 优化的 A。性能及功能证据见 [调查报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
   未关闭 JIT、删除统计或退休检查；未证明某一指令或缓存转移是唯一根因。
   若重启 MCS 后置准入实验，必须重新做同期对照，不能直接恢复已失败版本。
 
 - [ ] **P0.1 诊断已知并发冷准备故障。** 保留 c16/t4/clobber 准备阶段的
-  [RCU stall 记录](../bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界)，
+  [RCU stall 记录](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界)，
   先以受控、可恢复的定向用例定位是否发生在发现、发布或队列依赖阶段。
   当前本地发现版本是否仍复现需要实测；没有复现不等于已证明旧根因修复。
   单 CPU 48000 次准备是已有稳态测量策略，不是修复。
@@ -74,7 +82,7 @@ source lease、物理 ACK 和 executor pop 后的借用释放仍有用途。
   真实空临界区准备，应放在计时外，单列成本，核对目标正文没有被提前执行。
   不通过写 hot 表、伪造计数或放宽正文证据取得高 JIT 比例。
 - [x] **P0.3 当前 observe 三方基线。** `644f231` 的 150 场已完成，见
-  [结果与证据](../bench/tclock_compare/results/20260920-continuation.md)。同一 kdclobber2、缓解配置、帧指针、
+  [结果与证据](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-continuation.md)。同一 kdclobber2、缓解配置、帧指针、
   编译选项、caller ABI、CPU 放置和负载下，对比 Linux / TCLock / kdlock，
   覆盖 1/4/8/16/20 线程 × 1/16 cacheline，每配置交替五次；普通 clobber 为主。
   legacy/native caller 的 spill 成本另设小型配对，不混入三方比值。
@@ -92,7 +100,7 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 已完成不代理请求的共用 MCS 队列及普通 fast-owner 解锁：冷锁/拒绝不再默认
 循环 CAS，无需 JIT request/frame；实际节点耗尽仍保留先读后 CAS。
 这解决原生排队机制，收益驱动的代理选择仍未实现。小范围前后比较见
-[不代理 MCS](../bench/tclock_compare/results/20260920-native-mcs.md)。
+[不代理 MCS](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-native-mcs.md)。
 
 
 2026-09-21 已完成顶层 pending 免 ticket、合并 claim/release guard 及去除队首
@@ -123,8 +131,8 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 - [ ] 先做单线程 native 调用边界配对，核对反汇编中的活跃值 spill/reload、
   SP/BP 和续点；使用当前显式 API 设计配对，旧 hook dispatch-floor 已删除。
 - [ ] 在相同 frozen build 对照 cold、local-positive、碰撞地址流和每批检查点。
-  测本地重入门、preempt pin、哈希和满表六候选淘汰，区分均摊成本和周期峰值。
-  保留重入丢样及锁地址校验，不以失去正确身份缓存为优化。
+  测本地重入门、preempt pin、精确地址哈希冲突和满表 miss，区分均摊成本和周期峰值。
+  保留重入丢样及完整锁地址匹配，不以失去正确身份缓存为优化。
 - [x] 删除已停用站点缓存；该参数对照已不适用于当前直接 API。
 
 位置：[kd_hotlock.c](../kernel_module/kd_hotlock.c)、[kd_lock.c](../kernel_module/kd_lock.c)、
@@ -195,4 +203,4 @@ ACK 和排空任何一项失败，该会话不得进入性能通过集合。
 保留故障证据。覆盖变化或 CPU 准备不同使配对失效；收益在重复运行中不稳定，
 保留原默认并报告未证实，不继续堆叠补丁掩盖回退。
 
-本轮[联合测量](../bench/tclock_compare/results/20260920-local-hash.md)已完成单字、记录器及策略分阶段比较；adaptive 在本负载回退，收益选择和滞回仍未实现。
+本轮[联合测量](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-local-hash.md)已完成单字、记录器及策略分阶段比较；adaptive 在本负载回退，收益选择和滞回仍未实现。

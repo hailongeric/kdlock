@@ -86,6 +86,9 @@
 当前 provider 要求 spin 与 mutex 两组 clobber v1 接口，不再自动支持旧内核；旧树仅用于恢复和
 对应历史源码的重现。普通 mutex 的接入在独立 `kdclobber2` 中构建和验证，`kdclobber1` 及其捕获基线保留。
 新 build 实际位于 `/mnt/kdlock-builds/` 辅助盘，`/root/linux-6.1.159-kdclobber2` 为链接。
+2026-09-21 按用户要求清理四套旧树的可重建编译中间文件，源码、启动文件和
+捕获基线保留；当前 build 与全部测试证据未清理，范围和核验见
+[存储清理记录](PROJECT_GUIDE.md#36-2026-09-21-存储清理记录)。
 normal 模式用 9p 共享源码，不需要同步；recovery 模式同一路径是 guest ext4，
 不会自动同步。比较单文件 SHA256，只 scp 变化文件，必要时先建对应子目录。
 禁止移动、递归覆盖或清空 `/root/host_fs`；避免两侧同时编辑。

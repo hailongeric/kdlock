@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Real provider calls with a held KD object during local eviction, and an
+/* Real provider calls with a held KD object while the local hash table fills, and an
  * original mutex sleeper forced to another CPU after admission returned.
  * This is an ownership/migration test, not an actual JIT body witness. */
 #include <linux/completion.h>
@@ -48,7 +48,7 @@ int kd_hotlock_lifetime_check(void)
  unsigned long address = (unsigned long)&lock;
  unsigned int i;
  int ret = 0;
- bool evicted;
+ bool retained;
  if (!hotlock_lifetime_selftest) return 0;
  if (!cpu_online(1) || !cpu_online(2)) return -ENODEV;
  /* Observe is required so one fresh acquisition uses the actual fast owner. */
@@ -57,13 +57,16 @@ int kd_hotlock_lifetime_check(void)
  for (i = 0; i < 3 * KD_HOTLOCK_CHECK_INTERVAL; i++) kd_hotlock_record_spin(address);
  t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
  if (!kd_hotlock_find(t, address)) ret = -EUCLEAN;
- /* Real hit counts make six other keys overtake the original; no direct
-  * score writes and no fabricated owner/ticket/frame. */
- for (i = 0; i < 7 * 40000; i++) kd_hotlock_record_spin(address + 64 * (1 + i / 40000));
- evicted = !kd_hotlock_find(t, address);
- if (!evicted || kd_spin_debug_owner((void *)&lock) != (unsigned long)current || !lock.locked)
+ /* Fill with distinct identities and try one more. A full exact table must
+  * preserve the held lock's entry, its owner and the physical lock word. */
+ for (i = 0; i < KD_HOTLOCK_ENTRIES; i++) kd_hotlock_record_spin(address + 64 * (1 + i));
+ retained = kd_hotlock_find(t, address) != NULL;
+ if (!retained || t->used != KD_HOTLOCK_ENTRIES ||
+     kd_hotlock_find(t, address + 64 * KD_HOTLOCK_ENTRIES) ||
+     kd_spin_debug_owner((void *)&lock) != (unsigned long)current || !lock.locked)
   ret = -EUCLEAN;
- pr_info("kd_hotlock role: type=spin address=%lx role=OWNER evicted=%u owner=%d\n", address, evicted, current->pid);
+ pr_info("kd_hotlock role: type=spin address=%lx role=OWNER retained=%u full=%u owner=%d\n",
+         address, retained, t->used == KD_HOTLOCK_ENTRIES, current->pid);
  kd_spin_unlock(&lock);
  if (atomic_read(&lock.val)) ret = -EUCLEAN;
  pr_info("kd_hotlock role: type=spin address=%lx role=DONE word=%x\n", address, atomic_read(&lock.val));

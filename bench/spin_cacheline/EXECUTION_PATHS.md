@@ -3,6 +3,7 @@
 本文以 `644f231`（continuation 存储与退休交接）及 2026-09-21 的 ticket 路径优化与性能回退处理
 为准，描述当前直接 API 的 **spin** 执行路径。对象表以 2026-09-20 的
 性能 ELF 为基础；2026-09-21 重新构建、运行并复核 node/continuation/ticket 布局。
+热表已更新为无候选的精确地址计数，其 24/6688/13376 字节布局以本轮 guest ELF 为准。
 TCLock 指仓库中的外部模块适配版 `tclock_backend/`；KD 指显式 `kd_spinlock_t`
 API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施及独立热表，其互斥
 协议见 [locking](../../docs/design/locking.md)，不能套用这里的 spin 流程。
@@ -28,7 +29,7 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 以下尺寸取自已完成性能矩阵的 normal 观察 provider 和 TCLock backend 的 DWARF，
 2026-09-20 通过 guest `pahole -C <类型> <ELF>` 只读复核。
 后续 ticket 优化没有修改结构；关键对象另由新 ELF 复核，见
-[优化报告](../tclock_compare/results/20260921-four-thread-ticket.md)。
+[优化报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-four-thread-ticket.md)。
 ELF 位于 guest `/root/kdlock-evidence/continuation-perf-20260920/matrix/binaries/`。
 NUMA/SELFTEST 的源码布局增量另列，不能拿带探针的总内存当作 normal 成本。
 
@@ -139,7 +140,7 @@ waiter CPU                         combiner CPU
 | 三个 per-CPU 指针 | 8 × 3 = 24 / CPU | `spin/state.inc` 静态 `kd_spin_resume_nodes`、`kd_spin_continuations`、`kd_spin_native_root`；分别记录本地恢复节点、存储栈基址、等待最终 native 退休的根记录 |
 | `kd_spin_fast_cpu` | 24 / CPU | 静态 per-CPU；单一 task 持锁的 held/owner，以及原生嵌套/IRQ 排空计数 nondelegated |
 | `kd_spin_entry` / pool | 48 × 32 + 16 = 1552 / CPU | `kd_spin_entries_init()` 一次 `alloc_percpu`；ticket 记录 task/CPU/代际/物理所有权及 native 引用，物理释放、native 借用全部退休及 end 后归还槽。尺寸依赖当前内核 raw lock 布局 |
-| 热表 candidate/table/cpu | 40 / 288 / 576 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 16 桶、6 候选，共 576；不是 owner 存储 |
+| 热表 entry/table/cpu | 24 / 6688 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录；无候选淘汰，不是 owner 存储 |
 | `kd_spin_diag_slot` | 128 × 32 = 4096，全局 | 静态数组；锁地址、禁用标志和 waiter 数，槽身份在模块会话内稳定；它是诊断表，不是已删除的全局热锁晋升集合 |
 | `kd_spin_diag_cpu` | 2592 / CPU | spin 初始化时 `alloc_percpu`；事件/批次计数，排空汇总后释放；SELFTEST 额外探针存储不计入 normal 表 |
 
@@ -271,19 +272,65 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 
 这次按性能验收结果恢复入口准入；此前“只在 MCS 判断代理、在 admit 更新时间域”
 的实验已撤回。差异、同期数据和限制见
-[回退报告](../tclock_compare/results/20260921-mcs-recovery.md)。
+[回退报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
 
 ticket 的 claim/reclaim 与 release 各在一次 guard 临界区中完成身份校验和状态提交；
 二者内部都不执行阻塞获取或物理释放。实际释放仍由调度方单次 release store 完成，
 native 借用、代际及最终退休检查保留。
 
-spin/mutex 的 `record_*` 使用同一批量时钟：首次记录初始化时间，然后每
-10240 个样本刷新 CPU 速率及候选窗口；窗口分别为 40000000000 / 2500000000
-TSC ticks，adaptive 使用 `score-error >= 10000`。窗口检查只发生在批量刷新点，
-空闲后可能暂时保留旧热值，不能宣称每次竞争准入都重新检查过期。
-observe 记录相同统计而固定允许；`query_*` 只返回缓存快照，不更新时间或计数。
+spin/mutex 的 `record_*` 使用直接哈希计数，调用位置仍在入口。模块初始化时
+`alloc_percpu` 为每 CPU 预分配 13376 字节、64 字节对齐的对象，包含两个
+6688 字节类型表。每表 256 桶、256 条 24 字节记录，桶和冲突链使用 `u16` 槽索引；
+`0` 为空，`1..256` 对应记录。每条记录只保存完整锁地址、时间戳、计数、hot 标记
+和 next；删除候选排名、score/error、最小分数扫描和替换。初始化一次采时建立
+所有 CPU/type 的时间起点，锁路径不分配；调用者保证地址有效及初始化/排空生命周期。
 
-热表仅给准入建议；解锁不查询它。窗口重置、候选淘汰、CPU 迁移不能改变已有
+每次进入统计区先增加 CPU/type 计数，累计 1024 次才读 TSC；间隔严格小于
+40000000000 ticks 且时间未倒退则 CPU 热。CPU 冷时不查表。CPU 热时直接按锁字
+地址 hash，冲突链逐项比较完整地址；命中对应记录就 `++count`。未找到时使用
+预分配的下一空槽创建独立记录，其时间起点借用最近 CPU 时间。表满不淘汰、不覆盖，
+未收录的新锁在 adaptive 下保持原生；已有记录继续计数，直到模块卸载保留地址身份。
+
+单锁严格按 `count > 1024` 检查，即第 1025 次才采时：间隔严格小于
+2500000000 ticks 且时间未倒退则标记 hotlock，否则清除 hot；检查后更新该锁
+时间戳并清零 count。CPU 和单锁同次到期复用一次 TSC，零时间戳也有效。
+CPU 持续热不重置单锁批次；CPU 检查为冷或由冷变热时清除所有已记录锁的
+计数/hot 并更新起点，但保留哈希映射。query 不计数、不采时、不插入。
+
+单热锁且首批时间满足条件时，第 1024 次开始记录锁，第 2048 次首次可成为
+hotlock。后续 CPU 的 1024 次和锁的 1025 次批次独立推进，不保证总是合并采时。
+初始化至首批的空闲计入 CPU 窗口；各自过期只在检查点确认，期间返回缓存热值。
+
+```mermaid
+flowchart TD
+  A[record：复用 pin；取得本地 busy] --> B[CPU/type 计数加一]
+  B --> C{CPU 累计 1024 次？}
+  C -- 是 --> D[读 TSC；确认 CPU 热值；更新起点并清零 CPU 计数]
+  D --> E{CPU 持续热？}
+  E -- 否 --> F[清零已记录锁的 count/hot；更新起点；保留映射]
+  E -- 是 --> G{缓存 CPU 热？}
+  F --> G
+  C -- 否 --> G
+  G -- 否 --> R[adaptive 拒绝；observe 固定允许]
+  G -- 是 --> H{hash 冲突链匹配完整锁地址}
+  H -- 命中 --> I[该锁 count 加一]
+  H -- 缺失 --> J{还有预分配空槽？}
+  J -- 否 --> R
+  J -- 是 --> K[建立该锁记录；count/hot 清零；借用 CPU 时间]
+  K --> I
+  I --> L{count 大于 1024？}
+  L -- 是 --> M[复用本次 TSC 或采时；按单锁窗口刷新 hot；更新时间戳并清零 count]
+  L -- 否 --> N[adaptive 返回该锁 hot；observe 固定允许]
+  M --> N
+  R --> Z[释放 busy；仅解除本次临时 pin]
+  N --> Z
+```
+
+busy 重入不改统计，adaptive 返回冷、observe 的 record 仍固定允许。
+保留抢占配对；热值和表容量均不替代上下文/JIT 安全准入。最终排空日志输出
+`count/cpu_hot/lock_hot`，不再输出候选分数。
+
+热表仅给准入建议；解锁不查询它。窗口重置、表满或 CPU 迁移不能改变已有
 owner、frame 或 ACK 归属。统计与锁协议是独立数据流。
 
 每次实际嵌套 lock 获取仍有自己的一次 pin，与对应 unlock 配对。普通自执行在
@@ -483,23 +530,23 @@ KD 的翻译准备、寄存器包、frame/source lease、native 路由及 ticket
 
 ## 7. 验证与结果解释
 
-[回退调查](../tclock_compare/results/20260921-mcs-recovery.md)记录 A/B/C 同期复现、
+[回退调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)记录 A/B/C 同期复现、
 独立 IP 采样、两个失败候选，以及最终恢复版的功能和性能验收。MCS 准入及
-时间域迁移已经撤回；原 [MCS 报告](../tclock_compare/results/20260921-mcs-admission.md)
-和 [时间域测试](../../tests/README.md#admission-clock-validation)仅描述历史实验。
+时间域迁移已经撤回；原 [MCS 报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-admission.md)
+和 [时间域测试](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#admission-clock-validation)仅描述历史实验。
 
 2026-09-21 的 ticket 优化、同条件性能对照与关键对象复核见
-[四线程报告](../tclock_compare/results/20260921-four-thread-ticket.md)。
+[四线程报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-four-thread-ticket.md)。
 此前 continuation 的功能检查、恢复汇编偏移
-与未覆盖边界见 [验证记录](../../tests/README.md#continuation-validation)；此前
-三方 150 场性能矩阵见 [性能报告](../tclock_compare/results/20260920-continuation.md)。
+与未覆盖边界见 [验证记录](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#continuation-validation)；此前
+三方 150 场性能矩阵见 [性能报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-continuation.md)。
 该矩阵未运行同期旧版 KD，不能把全部差异单独归因于本次存储改造。
 
 真实 JIT 须有 wrapper 返回后的正文证据；NORMAL、原生完成、排空均不能单独
 代替。TCLock 对照验证业务数据与排空，没有实际委托计数，不能把剩余调用数
 当作委托比例。未测的 IRQ/任意嵌套、远端 native 强制时序等边界按各报告保留。
 
-历史阶段见 [原生 MCS 报告](../tclock_compare/results/20260920-native-mcs.md)、
-[本地热表报告](../tclock_compare/results/20260920-local-hash.md)。运行入口见
+历史阶段见 [原生 MCS 报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-native-mcs.md)、
+[本地热表报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-local-hash.md)。运行入口见
 [benchmark README](README.md)；准入/续跑边界见
 [JIT 执行流](../../docs/JIT_EXECUTION.md)、[frame 协议](../../docs/design/frames.md)。

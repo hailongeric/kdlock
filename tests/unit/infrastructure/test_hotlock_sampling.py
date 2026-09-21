@@ -1,7 +1,7 @@
 """Compile actual hot-lock sampling with a deterministic TSC in the guest.
 
-The clock/allocation/CPU-local primitives are substitutes. Pthreads and compiler
-atomics exercise concurrent producers/readers, not concurrent kernel hooks.
+The clock/allocation/CPU-local primitives are substitutes, including deterministic
+IRQ reentry; this does not exercise concurrent kernel hooks.
 The live JIT suite independently requires natural lock promotion.
 """
 
@@ -21,10 +21,16 @@ def main():
     )
     mutations = {
         "redundant-preemption-pair": ("pin = !preempt_count();", "pin = true;", 1),
-        "quota-ignores-error": ("slot->score - slot->error >=", "slot->score >=", 1),
-        "replacement-inherits-history": ("slot->score = slot->error = error;", "slot->score = error; slot->error = 0;", 1),
+        "early-lock-threshold": ("++slot->count > KD_HOTLOCK_SAMPLE_TARGET", "++slot->count >= KD_HOTLOCK_SAMPLE_TARGET", 1),
+        "ignore-lock-time": ("now - slot->begin < KD_HOTLOCK_INITIAL_WINDOW", "true", 1),
         "cpu-deadline-equality": ("now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW", "now - t->rate_begin <= KD_HOTLOCK_CPU_WINDOW", 1),
-        "window-deadline-equality": ("now - slot->begin >= KD_HOTLOCK_INITIAL_WINDOW", "now - slot->begin > KD_HOTLOCK_INITIAL_WINDOW", 1),
+        "window-deadline-equality": ("now - slot->begin < KD_HOTLOCK_INITIAL_WINDOW", "now - slot->begin <= KD_HOTLOCK_INITIAL_WINDOW", 1),
+        "tick-every-record": ("  if (++t->rate_samples <", "  rdtsc_ordered();\n  if (++t->rate_samples <", 1),
+        "query-ticks": ("if (record && !kd_hotlock_clock(t, &now))", "if (!kd_hotlock_clock(t, &now))", 1),
+        "double-clock": ("if (t->rate_samples)", "if (true)", 1),
+        "restart-lock-on-cpu-tick": ("if (!continuous)", "if (!continuous || t->rate_hot)", 1),
+        "collision-alias": ("slot->address == address", "kd_hotlock_bucket(slot->address) == kd_hotlock_bucket(address)", 1),
+        "capacity-overwrites-entry": ("if (t->used == KD_HOTLOCK_ENTRIES)\n    return NULL;", "if (t->used == KD_HOTLOCK_ENTRIES)\n    return &t->entries[0];", 1),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-hotlock-sampling-") as directory:
         path = Path(directory)

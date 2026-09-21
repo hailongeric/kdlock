@@ -88,27 +88,34 @@ Global spin dispatch is removed; the mutex hook installer remains disabled.
 
 <a id="hotlock-monitoring"></a>
 
-Each CPU has separate spin and mutex hash tables: 16 buckets and six
-preallocated candidates linked by slot indices. Lookup hashes the full address
-and compares complete keys. Hits increment score; only a full-table miss scans
-six scores, unlinks the minimum candidate and inserts the new identity. Its
-error equals the replaced score, so `score-error >= 10000` is a conservative
-admission requirement and a new address cannot inherit false heat.
+Each CPU has separate spin and mutex exact-key hash tables: 256 buckets and
+256 preallocated entries per type, linked by 16-bit slot indices. Full addresses
+are compared on collisions. Hits increment only that lock's counter; misses
+insert into an unused slot. There is no candidate ranking, score/error estimate,
+eviction or transfer of another address's history. A full table leaves unknown
+locks cold under adaptive admission, retaining existing identities until unload.
 
-Both tables use 40-billion-TSC CPU and 2.5-billion-TSC candidate windows.
-`record_spin` and `record_mutex` combine sampling and admission; the first sample
-initializes time and subsequent clock updates occur every 10240 samples. Expiry
-resets both score and error at those updates, not at every contention decision.
-Cached heat may therefore persist after idle until the next clock update.
-`query_spin` and `query_mutex` return CPU-local snapshots without ticking time.
-IRQ/NMI reentry drops only a sample; the statistics pin ends before a mutex can
-sleep. `adaptive` is the load default; `observe` records the same statistics with
-fixed admission. The public spin entry skips sampling when delegation is disabled.
-Neither policy supplies JIT safety permission. The MCS note/admit experiment was
-reverted after measured contention regression; see the [investigation](../bench/tclock_compare/results/20260921-mcs-recovery.md).
+Initialization reserves 13376 bytes per CPU (two 6688-byte tables, 24-byte entries)
+and seeds CPU clocks. Valid addresses and initialized lifetime are caller
+preconditions. CPU/type checks its 40-billion-TSC window every 1024 records;
+only a hot CPU accesses the lock table. A lock checks its 2.5-billion-TSC window
+when its count is **greater than 1024**, at hit 1025. The check refreshes its hot
+flag and timestamp and resets the count. Strictly smaller elapsed time and
+nondecreasing TSC are required; coincident CPU/lock checks share one TSC read.
+Continuous CPU heat preserves independent lock batches. Cold/reheating CPU checks
+reset per-lock counts/heat/timestamps while retaining all hash mappings.
+Queries only read cached heat, which can remain stale until the next batch check.
+The first CPU batch includes startup idle; a single lock can first become hot at
+record 2048. See [flow and storage](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取).
+
+IRQ/NMI reentry drops only a sample; the statistics pin ends before mutex sleep.
+`adaptive` is the load default; `observe` records statistics but fixes admission,
+even for unknown identities at capacity. Public spin skips sampling when delegation
+is disabled. Neither policy supplies JIT safety permission. The MCS note/admit
+experiment remains reverted; only the sampler changes here.
 
 Fast owners/tickets and stable request frames retain OWNER/WAITER/COMBINER/DONE
-independently of the statistics table. Eviction, reset and CPU migration cannot
+independently of the statistics table. Capacity, reset and CPU migration cannot
 revoke ownership, modify an active request, or route unlock. See the
 [current protocol](design/locking.md) and [scoped tests](../tests/README.md).
 
@@ -522,7 +529,7 @@ supply a delegation share. The sampler component measures record calls only.
 Source/ELF/configuration and load settings define each experiment. Matrices
 must not mix old hook or ABI paths with direct results. The latest local-hash
 comparison found higher recorder cost and substantial adaptive regressions;
-see the [report](../bench/tclock_compare/results/20260920-local-hash.md), including
+see the [report](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-local-hash.md), including
 cross-round VM variation. This is not proof of per-instruction costs or a
 benefit-based admission policy. Next work remains in
 [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md).

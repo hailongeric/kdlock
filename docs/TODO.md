@@ -8,9 +8,9 @@
 对象大小、创建位置及 TCLock/KD 数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
 竞争回退已通过恢复旧路径处理，具体指令级根因仍未确定；后续事项见
 [性能计划 P0.0](PERFORMANCE_PLAN.md#2-p0建立当前版本的可信基线)。
-最新定向功能覆盖见 [回退验证](../tests/README.md#mcs-recovery-validation)，
-continuation 的更广历史覆盖见 [原验证](../tests/README.md#continuation-validation)，
-完整三方基线与限制见 [性能报告](../bench/tclock_compare/results/20260920-continuation.md)。
+最新定向功能覆盖见 [回退验证](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#mcs-recovery-validation)，
+continuation 的更广历史覆盖见 [原验证](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#continuation-validation)，
+完整三方基线与限制见 [性能报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-continuation.md)。
 
 Current work list as of **2026-09-21**. Implementation contracts live in
 [DESIGN](DESIGN.md), state layout in [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md),
@@ -36,25 +36,26 @@ shared waiter accounting remains unchanged.
 Nondelegating callers now share the pending/MCS queue without an execution
 request/frame; ordinary physical roots reuse the fast-owner unlock record.
 The fixed `spin_delegate=0` control reports self-execution separately from JIT.
-See [the scoped comparison](../bench/tclock_compare/results/20260920-native-mcs.md).
+See [the scoped comparison](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-native-mcs.md).
 See [current execution paths](../bench/spin_cacheline/EXECUTION_PATHS.md).
 
-[Earlier paired measurements](../bench/spin_cacheline/results/20260919-cacheline-isolation.md)
+[Earlier paired measurements](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/spin_cacheline/results/20260919-cacheline-isolation.md)
 belong to their frozen source and do not imply a general speedup or a current
 full-suite PASS. Known unresolved failures remain:
 
 - Concurrent cold promotion stalled with an RCU warning in c16/t4/clobber
   preparation. Single-CPU preparation avoids this phase in steady-state
-  measurements; it does not fix it. See [the failure record](../bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界).
+  measurements; it does not fix it. See [the failure record](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界).
 - Seven-role/two-CPU mutex mode 4 hit a soft lockup with pinned busy polling.
   Other mutex passes do not replace this case; see [历史：the failure](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-pinned-mode4-failure).
 - The older oversubscribed mode-5 run published code but missed actual JIT.
   Its polling strategy differs from today's; see [historical evidence](VALIDATION.md#mutex-oversubscription-assessment).
 
-Hotlock discovery uses separate spin/mutex CPU-local tables with 16 buckets and
-six candidates. Batched clock checks and score/error lower bounds govern
-adaptive admission; observe keeps fixed admission. There is no global promoted
-set. Stable owner/ticket/frame records survive eviction and CPU migration.
+Hotlock discovery uses separate spin/mutex CPU-local exact-key hash tables,
+256 buckets/entries per type, with no ranked candidates or eviction. CPU checks
+occur every 1024 records; each lock checks after its count exceeds 1024 (hit 1025).
+At capacity adaptive leaves unknown identities native; observe fixes admission.
+Owner/ticket/frame records are independent of table capacity and CPU migration.
 Benefit-based native/probe/delegate selection and shared-identity retirement
 remain unimplemented. Current measurements are linked from the
 [comparison runner](../bench/tclock_compare/README.md).
@@ -215,15 +216,15 @@ The 2026-09-20 structural cleanup embeds producer JIT context in stable requests
 moves node reservation depth into CPU state, removes unused checkpoint/API
 fields and duplicate batch/map state, and types the mutex encoded tail as `u32`.
 See [current layout](design/frames.md#911-reuse-before-copy-contract) and
-[scoped validation](../tests/README.md#2026-09-20-结构体整理验证).
+[scoped validation](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#2026-09-20-结构体整理验证).
 Register-reference representation, lock-ledger counters and role-transition
 consolidation remain unimplemented follow-ups; preserve independent owners and
 executor retirement when evaluating them. The subsequent continuation migration
-and its limits are recorded in [scoped validation](../tests/README.md#continuation-validation).
+and its limits are recorded in [scoped validation](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#continuation-validation).
 
 ### Hotlock Monitoring And Adaptive Admission
 
-Per-CPU typed hash discovery, conservative score/error admission, cooling and stable roles are implemented. Benefit-based selection
+Preallocated exact-key hash counters, CPU/lock timed admission, cooling and stable roles are implemented. Benefit-based selection
 is not: [performance P1](PERFORMANCE_PLAN.md#3-p1避免不划算的代理并降低原生入口成本)
 proposes bounded native/probe/delegate admission for future roots only.
 Do not reuse the permanent safety latch or source retirement for demotion.

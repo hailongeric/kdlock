@@ -5,9 +5,14 @@
 #define KD_HOTLOCK_LOCAL_HASH_V2 1
 int kd_hotlock_init(void);
 void kd_hotlock_exit(void);
-/* Reuse an existing CPU pin; otherwise pin only for this call (including
- * sleepable mutex callers). No returned value conveys ownership.
- * record returns policy admission; query reports actual local heat only. */
+/* A valid lock identity and successful initialization are caller preconditions;
+ * all callers must drain before exit. Reuse an existing CPU pin; otherwise pin
+ * only this call (including sleepable mutex callers). CPU rate is checked every
+ * 1024 records; each exact lock counter is checked when it exceeds 1024.
+ * Tables are preallocated (256 entries per CPU/type), with no ranked eviction.
+ * Unknown locks at capacity remain cold; queries neither count nor tick.
+ * record returns policy admission (fixed true in observe); query reports only
+ * cached local CPU/lock heat. No returned value conveys ownership. */
 bool kd_hotlock_record_spin(unsigned long address);
 bool kd_hotlock_record_mutex(unsigned long address);
 bool kd_hotlock_query_spin(unsigned long address);

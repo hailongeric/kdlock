@@ -46,20 +46,21 @@ mutex 保留自己的原 mutex、调度 gate、task 记录与 native owner/ACK �
 
 ### 2.1 热度与角色
 
-spin/mutex 每 CPU 独立 16 桶、6 候选，用完整地址与槽索引链表查找。
-满表 miss 才扫描六个分数，先摘旧链再替换；`score-error` 是保守有效计数。
-默认 adaptive 按 CPU 速率和候选 lower-bound 阈值准入，observe 固定准入并记录。
-spin/mutex 的 `record_*` 合并统计和判断，首次初始化时间，之后每 10240 样本
-刷新 CPU/候选窗口。过期仅在批量刷新点检查，空闲后可能短暂沿用缓存热值；
-`query_*` 不更新时间或计数。普通 spin 关闭代理时跳过记录。
+spin/mutex 每 CPU 独立 256 桶、256 条预分配记录，哈希冲突用完整地址和槽索引
+链表区分。没有候选/分数/淘汰，命中只给该锁 count 加一；满表不覆盖已有记录。
+初始化建立 CPU 时间；CPU/type 每 1024 次检查 400 亿 TSC 窗口，热 CPU 才查表。
+单锁 count 大于 1024（第 1025 次）才检查 25 亿 TSC 窗口并更新 hot/时间、清零计数。
+同次到期共享采时，CPU 持续热保留单锁批次，冷却/重新变热清零计数/热值但保留映射。
+adaptive 要求 CPU/锁缓存热值同时成立，未收录且表满的锁走原生；observe 固定准入。
+query 不计数/采时/插入；有效地址及表生命周期由调用者保证，关闭代理时不记录。
 虚拟嵌套先按热值分流；热路径占独立 ticket 后 CAS/排队，冷路径走原生 bridge。
 已发布的虚拟等待继续服务父 frame 的远端 ACK。MCS 后置准入和逐次时间检查
-已因竞争性能回退撤回，见 [调查](../bench/tclock_compare/results/20260921-mcs-recovery.md)。
+已因竞争性能回退撤回，见 [调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
 统计复用调用者已有的抢占保护；仅尚未关闭抢占的独立调用临时 pin 并在返回前
 解除。mutex 不跨睡眠持有统计 pin；重入只丢弃统计样本。
 
 OWNER 保存在稳定 fast owner/ticket 状态中，WAITER/COMBINER/DONE 位于 frame。
-角色和所有权不依赖候选是否仍在表中。SELFTEST 可输出按锁地址关联的角色，
+角色和所有权不依赖热表是否有空槽或锁的热值。SELFTEST 可输出按锁地址关联的角色，
 普通构建不逐请求打印。最终统计仅在 provider 排空后输出，不能倒推全程状态。
 
 ## 3. 验证选择与判定
@@ -72,7 +73,7 @@ OWNER 保存在稳定 fast owner/ticket 状态中，WAITER/COMBINER/DONE 位于 
 与退休。`nested` 检查 A→B→释放 B→释放 A；`early` 检查持 B 提前释放 A。
 这两项本地双锁证据不能推广为所有远端 native/JIT 组合已验证。
 
-SELFTEST 的持锁淘汰、mutex CPU 迁移和 entry ACK 是独立 JIT=0 证据。
+SELFTEST 的满表持锁记录保留、mutex CPU 迁移和 entry ACK 是独立 JIT=0 证据。
 模块加载/卸载检查也不执行 JIT。性能有效、实际 JIT、原生/拒绝及失败记录分开报告，
 没有正文的竞争 observe 场次不得算通过。环境、快照和卸载约束见
 [AGENTS](AGENTS.md)。

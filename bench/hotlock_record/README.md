@@ -3,16 +3,22 @@
 直接编译并调用未修改的旧/新 `kd_hotlock_record`，分别测发现阶段、冷地址流
 与已晋升命中。该组件不安装 hook，不执行 JIT，不获取业务 spinlock。
 它回答合并记录/准入接口的成本，不能替代完整锁操作吞吐。生产 spin 在
-[性能回退处理](../tclock_compare/results/20260921-mcs-recovery.md)后恢复合并
+[性能回退处理](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)后恢复合并
 `record_spin` 和批量时钟；此前 note/admit 拆分实验已撤回。组件历史结果仍须
 按各自冻结源码解释，不能作为当前完整锁的性能成绩。
+
+当前改为按锁地址直接哈希计数，CPU/type 每 1024 次检查、单锁计数大于 1024
+（第 1025 次）才检查窗口，无候选排名或淘汰。布局和流程见
+[执行路径](../spin_cacheline/EXECUTION_PATHS.md)。此前
+[两级候选版报告](../tclock_compare/results/20260921-hotlock-twolevel.md)仅是历史结果；
+本次未重跑组件；完整锁操作另有 [直接哈希同期对照](../tclock_compare/results/20260921-hotlock-direct.md)。
 
 内核组件位于 [record_bench.c](../../tests/kernel/hotlock_record/record_bench.c)，
 运行器为 [run.py](run.py)。每 CPU 绑定一个 kthread，只在整段循环两端计时。
 发现阶段持续调用到观察晋升；终态准备在计时外完成，每线程测 100000 次。
 所有状态由真实时钟和原始采样器自然建立，不通过改字段或增大窗口制造结果。
 默认每组旧→新、新→旧交替五轮，线程为 1/4/20，合计 90 场；
-最近一次本地发现验证显式选择 1/4 线程、三轮，共 36 场。
+历史本地发现验证选择 1/4 线程、三轮，共 36 场。
 
 `worker_ns_call` 是各线程经过时间之和除以实际调用总数，包含竞争等待、调度、
 测试循环和停止条件检查；不是硬件指令成本或纯 CPU 时间。
@@ -40,19 +46,9 @@ python3 bench/hotlock_record/run.py \
 个冷地址，两版都执行相同调用序列并检查它们均未晋升；不再比较已删除的
 永久 IGNORE 状态。历史 phase 1 结果不能与当前冷地址流直接比较。
 
-CPU 分层改造前的批量采样结果与完整 spinlock 稳态回归见
-[2026-09-19 批量采样对照](results/20260919-batched.md)。
-
-较早的 64 次检查/共享计数版本只做过驱动兼容性冒烟，已由当前本地发现取代。
-那次 6 场记录随 `/tmp/kd-cpu-hotlock-20260919/evidence.tar.gz` 保留，索引见
-[历史增量](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#其他冻结增量)；已删除状态的耗时不作为当前结果。
-
-当前 10240 次检查 / 本地发现版本的 36 场组件对照见
-[本地发现报告](results/20260919-local-discovery.md)。分别报告冷地址流、已晋升
-命中和发现延迟，不用组件降幅替代完整锁吞吐或代理覆盖率。
+旧版批量采样、本地发现与 V2 哈希的成绩统一见 [历史索引](../spin_cacheline/results/HISTORY.md)。
+组件耗时不替代完整操作吞吐；当前无候选版没有重跑此组件矩阵。
 
 V2 使用 `record_spin`/`query_spin`，驱动只为冻结 V1 对照保留名称适配。
-候选正负检查在各 worker 的所属 CPU、计时结束后进行；主线程不得用本地查询
+锁热值的正负检查在各 worker 的所属 CPU、计时结束后进行；主线程不得用本地查询
 冒充全局晋升检查。V2 的 spin/mutex 表彼此独立，组件只测 spin 记录函数。
-
-[V2 本地哈希对照](results/20260920-local-hash.md)：36/36 场通过；三阶段耗时均增加，完整操作与策略效果另见联合报告。

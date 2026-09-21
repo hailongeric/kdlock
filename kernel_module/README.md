@@ -28,7 +28,7 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 | [kd_exec.c](kd_exec.c) | frame 栈、上下文验证和状态事件 |
 | [sys.c](sys.c) | `/dev/kd_dev` 的读取、上传、状态与 retire ioctl |
 | [kd_source.c](kd_source.c) | 来源状态和 module/frame/writer pins |
-| [kd_hotlock.c](kd_hotlock.c) | 每 CPU 分类型哈希候选与保守分数准入；入口注册由 `kd_lock.c` 调用执行注册表 |
+| [kd_hotlock.c](kd_hotlock.c) | 每 CPU 分类型精确地址哈希计数与定时热值准入；入口注册由 `kd_lock.c` 调用执行注册表 |
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 
@@ -44,11 +44,16 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
 节点为 128 字节，next 与通知字分行，continuation 继续独立存活。约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
-热锁使用每 CPU、每类型独立的 16 桶/6 候选哈希表，完整地址匹配，替换记录 error，
-默认 `hotlock_mode=adaptive` 按 `score-error >= 10000` 准入；`observe` 固定准入并记录。
-OWNER/ticket 及 request frame 的角色独立于热表；解锁不查询热度。SELFTEST 可选
-`hotlock_lifetime_selftest=1 hotlock_mode=observe` 验证持锁淘汰和真实 mutex 等待迁移，
-`hotlock_role_trace=1` 输出锁地址/request 关联的角色，正常性能运行关闭。
+热锁使用每 CPU/type 256 桶、256 条精确地址记录，冲突按完整地址匹配，
+直接增加该锁 count，无候选分数或淘汰。初始化 `alloc_percpu` 每 CPU 13376 字节，
+entry/table/cpu 为 24/6688/13376 字节，CPU 对齐 64；锁路径不分配。
+CPU 每 1024 次检查 400 亿 TSC 窗口，CPU 热才查表；单锁 count 大于 1024
+（第 1025 次）时检查 25 亿 TSC 窗口、刷新 hot、更新时间并清零计数。
+CPU 冷却/重新变热重置计数/热值但保留映射，同次到期共享 TSC。query 只读缓存。
+默认 adaptive 在表满时令未记录的新锁走原生；observe 固定准入。
+OWNER/ticket/frame 不依赖热表，解锁不查表；有效地址与初始化/排空由调用者保证。
+SELFTEST 的 `hotlock_lifetime_selftest=1 hotlock_mode=observe` 验证表满不覆盖
+真实持锁记录及 mutex 等待迁移；`hotlock_role_trace=1` 输出角色，正常运行关闭。
 
 顶层 fast/pending 自执行共用 fast owner，只有进入 MCS 分支才 reserve ticket；
 嵌套调用仍先 reserve。队首正常返回已 claim/reclaim，入口不再重复确认；

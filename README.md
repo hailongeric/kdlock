@@ -52,8 +52,9 @@ This is an experimental kernel JIT delegation prototype. It implements
 contended spin/mutex delegation, nested requests, allowlisted services,
 supported forward native continuation, native-owner exclusion and ACKs.
 The default provider requires the `kdclobber2` caller-clobber v1 kernel interface.
-Fresh admission uses typed CPU-local hash tables and conservative score/error
-thresholds; observe mode fixes admission while recording the same samples.
+Fresh admission uses preallocated CPU-local exact-key hash counters and independent
+CPU/lock timed batches, without candidate ranking or eviction. Observe mode fixes
+admission while recording the same samples.
 There is no global promoted set. Global spin dispatch is removed and the mutex
 hook installer remains disabled; loading the module does not intercept ordinary
 Linux locks.
