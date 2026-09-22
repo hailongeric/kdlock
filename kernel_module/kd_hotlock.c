@@ -10,8 +10,8 @@
 #include "kd_hotlock.h"
 
 #define KD_HOTLOCK_CHECK_INTERVAL 1024U
-#define KD_HOTLOCK_SPIN_MCS_INTERVAL 1U
-#define KD_HOTLOCK_CPU_WINDOW 40000000000UL
+#define KD_HOTLOCK_SPIN_MCS_INTERVAL 4U
+#define KD_HOTLOCK_CPU_WINDOW 4000000000UL
 #define KD_HOTLOCK_INITIAL_WINDOW 2500000000UL
 #define KD_HOTLOCK_SAMPLE_TARGET 32U
 #define KD_HOTLOCK_HASH_BITS 8
@@ -84,7 +84,8 @@ static struct kd_hotlock_entry *kd_hotlock_insert(struct kd_hotlock_table *t,
   return slot;
 }
 /* Initialization supplies the first time origin. Ordinary records only count;
- * one TSC per CPU batch updates its cached rate. A continuously hot CPU must
+ * one TSC per CPU batch measures the whole batch since the previous check
+ * (four spin MCS publications or 1024 mutex entries). A continuously hot CPU must
  * not restart the independent lock batches. Cooling/reheating resets them,
  * retaining bucket membership and leaving ownership storage untouched. */
 static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_now,

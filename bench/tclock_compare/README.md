@@ -1,8 +1,13 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
-最新[CPU MCS1 / hotlock32 与移除 busy 合并验证](results/20260922-spin-mcs1-lock32.md)：
+最新[MCS4 / 40亿CPU窗口完整单轮结果](results/20260922-spin-mcs4-full-benchmark.md)：
+30/30场通过并排空，8/8竞争KD有实际JIT。20线程KD c1/c16为5.009/4.768 Mops/s，
+为TCLock的1.018×/1.462×；c1单线程较上一轮下降10.16%，单轮差异尚未归因。
+
+此前[CPU MCS1 / hotlock32 与移除 busy 合并验证](results/20260922-spin-mcs1-lock32.md)：
 三方单轮18/18场通过，20线程KD c1/c16为5.011/4.802 Mops/s，较上一轮提高27.3%/23.7%，
 本轮恢复到下降前基线水平。基础/定向单元3/3、adaptive功能2/2通过；两组改动的贡献未拆分。
+上述性能来自 CPU MCS1 / 400 亿窗口的冻结版本，保留为历史比较。
 
 此前[CPU32 MCS 计数验证](results/20260922-spin-mcs32.md)：1/4/20线程三方单轮18/18场通过；
 单线程 KD c1/c16 为6.574/6.890 Mops/s，20线程为3.937/3.883 Mops/s，
@@ -12,8 +17,8 @@
 30/30 场通过，计时区间 2940 万次操作全部排空。单线程 KD c1/c16 为
 6.369/5.779 Mops/s；20 线程为 4.974/4.760 Mops/s。每配置只测一轮。
 
-当前 spin CPU 每次实际 MCS 入队检查热度，fast/pending 不计数；spin/mutex 单锁
-阈值为32，第33次调用采时。mutex CPU 保持1024次入口检查，时间窗口和入口准入不变。
+当前 spin CPU 每4次实际 MCS 入队检查热度，fast/pending 不计数；spin/mutex 单锁
+阈值为32，第33次调用采时。mutex CPU 保持1024次入口检查，两类CPU窗口均为40亿TSC ticks。
 热表已删除 busy/barrier，只在 task context 统计并保留 CPU pin；非 task 样本丢弃。
 此前 CPU 阈值为 1024 的 MCS 入队频率实验已因退化撤回，
 [该次回退验证](results/20260922-spin-mcs-rollback.md)通过，当时未重跑性能矩阵；
@@ -45,7 +50,7 @@ kdlock 使用显式 32 位 KD 锁字，保留 owner/ACK、上下文和 JIT 就�
 每次完整操作保留原来的固定 cacheline 更新、解锁后四组乘加及循环成本。
 吞吐和摊销 ns/op 都以完整操作计算，不是独立获取锁延迟。
 
-当前保留入口准入和 ticket 路径优化；热度使用无候选的精确地址哈希计数，spin CPU 每次MCS入队、单锁入口计数大于32时定时确认，mutex CPU仍统计1024次调用。同期复现、独立采样、
+当前保留入口准入和 ticket 路径优化；热度使用无候选的精确地址哈希计数，spin CPU 每4次MCS入队、单锁入口计数大于32时定时确认，mutex CPU仍统计1024次调用。同期复现、独立采样、
 两个候选与回退验收见 [竞争回退报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
 
 ## 准备与运行
@@ -136,11 +141,10 @@ cacheline 30 场、RCUHT 15 场、KD 功能模式 10 场均只有第 0 轮。
 
 ## 本次结果
 
-最新测量见[2026-09-22 单轮基线](results/20260922-single-round-baseline.md)：
-提交 `1928434`，30/30 场、2940 万次操作完成并排空，8/8 竞争 KD 有实际 JIT，
-2 场单线程 KD 为原生自执行。20 线程 c1/c16 的 KD 为 4.974/4.760 Mops/s，
-是 TCLock 的 0.989×/1.453×；单线程为 0.465×/0.527×，四线程为 0.651×/0.774×。
-每配置只测一轮；报告包含三方吞吐、摊销时间、比值及完整环境与排空证据。
+最新测量见[MCS4 / 40亿CPU窗口完整单轮报告](results/20260922-spin-mcs4-full-benchmark.md)：
+基于`383249f`的当前工作区，30/30场、2940万次操作完成并排空，8/8竞争KD有实际JIT，
+2场单线程KD为原生自执行。20线程c1/c16的KD为5.009/4.768 Mops/s。
+每配置一轮；报告保留三方吞吐、摊销时间、比值、冻结输入及完整环境和排空证据。
 
 此前五轮中位数及功能实验保留原统计口径，从[历史索引](../spin_cacheline/results/HISTORY.md)
 读取，不能作为本轮单次测量的成绩。
@@ -187,7 +191,7 @@ v2，客户端和 workload 模块必须同时重建。
 ## 准入模式与结果解释
 
 `--hotlock-mode observe`（运行器默认）固定 KD 准入并记录本地统计，
-`--hotlock-mode adaptive` 使用 spin CPU 每次实际MCS入队、单锁入口 count 大于32（33次）的
+`--hotlock-mode adaptive` 使用 spin CPU 每4次实际MCS入队、单锁入口 count 大于32（33次）的
 独立时间窗口确认；每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
 满表不覆盖已有身份，未收录锁或冷锁保持原生。
 两者必须分开结果目录；

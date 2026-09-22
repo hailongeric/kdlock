@@ -1,19 +1,10 @@
 # Benchmarks
 
-MCS 入队频率实验已因退化撤回，恢复 `bf16b10` 的调用计数。
-[本次回退验证](tclock_compare/results/20260922-spin-mcs-rollback.md)通过，未重跑性能矩阵；
-[实验成绩](tclock_compare/results/20260922-spin-mcs-frequency.md)保留为历史。
-
-最新[恢复版完整三方结果](tclock_compare/results/20260922-restored-full-benchmark.md)：60/60场通过，5880万次操作全部排空；
-20线程KD c1/c16为4.969/4.788 Mops/s。每组两轮取最大值，Linux c16单线程波动详见报告。
-
-512槽直接映射已按用户要求撤回，代码恢复 `bf16b10`。此前[回退验证](tclock_compare/results/20260922-directhash-v2-rollback.md)通过：
-20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空。下方完整矩阵为此前记录。
-
-最新已测实现与成绩见[热表回归处理](tclock_compare/results/20260922-performance-recovery.md)：
-恢复每 CPU/type 256 桶、256 记录及本地 busy，保留普通 spin IRQ 语义和 wrapper 栈修复。
-三方 observe 矩阵 60/60 场、5880 万次操作通过并排空，16/16 场竞争 KD 有实际 JIT。
-20 线程 c1/c16 的 KD 为 5.197/4.809 Mops/s；单线程及四线程仍低于 TCLock。
+最新[MCS4 / 40亿CPU窗口完整三方单轮结果](tclock_compare/results/20260922-spin-mcs4-full-benchmark.md)：
+30/30场、2940万次计时操作完成并排空，8/8竞争KD有实际JIT。
+20线程KD c1/c16为5.009/4.768 Mops/s，为TCLock的1.018×/1.462×。
+本轮高竞争吞吐与上一轮接近，c1单线程下降10.16%；完整数据与限制见报告。
+此前MCS1、MCS32及回退版本的成绩保留在[三方对照入口](tclock_compare/README.md)。
 
 当前性能测试对象固定为 **Linux 原生、TCLock、当前 kdlock**，使用
 `tclock_compare/run.py --backends native tclock kdlock`。不再将旧版 kdlock

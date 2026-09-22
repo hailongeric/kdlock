@@ -98,8 +98,10 @@ locks cold under adaptive admission, retaining existing identities until unload.
 Initialization reserves 13376 bytes per CPU (two 6680-byte tables plus alignment,
 24-byte entries)
 and seeds CPU clocks. Valid addresses and initialized lifetime are caller
-preconditions. Spin CPU heat checks its 40-billion-TSC window at every actual
-MCS tail publication; mutex CPU heat still checks every 1024 entry records.
+preconditions. Both CPU clocks use a 4-billion-TSC window. Spin checks every four
+actual MCS tail publications; mutex still checks every 1024 entry records.
+Elapsed time covers the whole batch since the previous check, or initialization
+for the first batch; intermediate events retain cached CPU heat without a TSC read.
 The shared spin tail exchange counts native, delegated and virtual producers;
 fast/pending success, pre-publication cancellation and exhausted-node polling
 do not count. Entry admission stays in place and consumes cached CPU heat;

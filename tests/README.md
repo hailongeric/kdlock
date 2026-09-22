@@ -1,9 +1,34 @@
 # 当前测试入口
 
-最新[CPU MCS1 / hotlock32 与移除 busy 合并验证](../bench/tclock_compare/results/20260922-spin-mcs1-lock32.md)：
+当前 spin CPU 每 4 次实际 MCS 入队检查，spin/mutex CPU 共用 40 亿 TSC 窗口；
+mutex CPU 保持 1024 次入口检查，单锁保持第 33 次检查、25 亿窗口。
+
+最新[完整三方bench](../bench/tclock_compare/results/20260922-spin-mcs4-full-benchmark.md)
+30/30场通过，2940万次操作全部排空，8场竞争KD均有实际JIT；该轮未追加单元或adaptive功能。
+
+此前阈值修改基于 `383249f`，在 guest 独立副本 `/tmp/kdlock-mcs4-jv7hhnwu/src` 验证：
+基础及热度/MCS 定向单元 **5/5**、热度错误变体 **18/18** 检测、normal provider
+`W=1` 构建通过。覆盖第 3/4、7/8 次 MCS、整批耗时、40 亿边界、冷却/重新变热、
+mutex 1024 次检查和不变的单锁 33 次规则。内核身份核验为 `6.1.159-kdclobber2`。
+构建有恢复汇编 objtool 及 Perl locale 警告。该次未加载模块或运行 live/性能测试，
+主线程 guest 副本未改写；其单元/构建与上述后续bench属于不同验证批次。
+
+验证命令：
+
+```sh
+make -C tests/unit run PY_TESTS='infrastructure/test_hotlock_sampling.py spin/test_spin_nondelegated.py spin/test_spin_shadow.py'
+make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1 -j2
+```
+
+[验证日志归档](../bench/.tmp/spin-mcs4-window4e9-jv7hhnwu/evidence.tar.gz)、
+[冻结源码](../bench/.tmp/spin-mcs4-window4e9-jv7hhnwu/source.tar.gz)及
+[输入/产物哈希](../bench/.tmp/spin-mcs4-window4e9-jv7hhnwu/audit.json)保存在本地忽略目录；
+guest 原始日志位于上述独立副本同级的 `evidence/`。
+
+此前[CPU MCS1 / hotlock32 与移除 busy 合并验证](../bench/tclock_compare/results/20260922-spin-mcs1-lock32.md)：
 基础及定向单元3/3、16个错误变体检测、normal构建、三方单轮18/18和adaptive功能2/2通过。
 adaptive四线程实际JIT正文248513次，全部排空；非task丢样由定向fixture验证。
-当前保留CPU pin，删除统计busy/barrier；spin CPU每次MCS检查，spin/mutex单锁第33次检查。
+该版保留CPU pin，删除统计busy/barrier；spin CPU每次MCS检查，spin/mutex单锁第33次检查。
 本轮未构建SELFTEST、未运行生命周期探针、真实中断压力或nested/early live，详见报告。
 
 此前 [CPU32 MCS 计数验证](../bench/tclock_compare/results/20260922-spin-mcs32.md)：

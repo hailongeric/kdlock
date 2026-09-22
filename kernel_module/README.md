@@ -54,8 +54,9 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 entry/table/cpu 为 24/6680/13376 字节，CPU 对齐 64；锁路径不分配。
 统计已删除 busy 和对应编译器屏障，非 task 上下文直接丢样且 query 返回冷；
 task 调用保留 CPU pin，避免重入破坏哈希索引链，observe record 仍固定允许。
-spin CPU 每次实际 MCS 入队检查 400 亿 TSC 窗口，fast/pending 不计数；
-mutex CPU 保持每 1024 次入口调用检查。入口读缓存 CPU 热值，CPU 热才查表；spin/mutex 单锁 count 大于 32
+spin CPU 每 4 次实际 MCS 入队检查一次，fast/pending 不计数；mutex CPU 保持
+每 1024 次入口调用检查。两者的整批耗时窗口均为 40 亿 TSC ticks。
+入口读缓存 CPU 热值，CPU 热才查表；spin/mutex 单锁 count 大于 32
 （第 33 次）时检查 25 亿 TSC 窗口、刷新 hot、更新时间并清零计数。
 CPU 冷却/重新变热重置计数/热值但保留映射，mutex 同次到期共享 TSC；
 spin CPU/单锁在各自事件中采时。query 只读缓存，CPU 新热值由后续入口使用。
