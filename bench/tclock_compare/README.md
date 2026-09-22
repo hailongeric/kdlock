@@ -1,16 +1,20 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
+最新[完整三方单轮基线](results/20260922-single-round-baseline.md)测量提交 `1928434`：
+30/30 场通过，计时区间 2940 万次操作全部排空。单线程 KD c1/c16 为
+6.369/5.779 Mops/s；20 线程为 4.974/4.760 Mops/s。每配置只测一轮。
+
 MCS 入队频率实验已因退化撤回，恢复 `bf16b10` 的调用计数。
-[本次回退验证](results/20260922-spin-mcs-rollback.md)通过，未重跑性能矩阵；
+[该次回退验证](results/20260922-spin-mcs-rollback.md)通过，当时未重跑性能矩阵；
 [实验成绩](results/20260922-spin-mcs-frequency.md)保留为历史。
 
-最新[恢复版完整三方结果](results/20260922-restored-full-benchmark.md)：60/60场通过，5880万次操作全部排空；
+此前[恢复版完整三方结果](results/20260922-restored-full-benchmark.md)：60/60场通过，5880万次操作全部排空；
 20线程KD c1/c16为4.969/4.788 Mops/s。每组两轮取最大值，Linux c16单线程波动详见报告。
 
 512槽直接映射已按用户要求撤回，代码恢复 `bf16b10`。此前[回退验证](results/20260922-directhash-v2-rollback.md)通过：
-20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空。下方完整矩阵为此前记录。
+20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空，按当时口径保留。
 
-当前实现与最新三方成绩见[热表回归处理](results/20260922-performance-recovery.md)：
+当前实现的恢复过程见[热表回归处理](results/20260922-performance-recovery.md)：
 每 CPU/type 256 桶、256 记录，精确地址碰撞链、满表不替换、本地 busy 及已有 pin 复用。
 无 busy、共享表和直接映射版本已回退；普通 spin IRQ 语义及 wrapper 栈修复保留。
 历史实验统一从[历史索引](../spin_cacheline/results/HISTORY.md)读取。
@@ -121,14 +125,14 @@ cacheline 30 场、RCUHT 15 场、KD 功能模式 10 场均只有第 0 轮。
 
 ## 本次结果
 
-最新已测版本见[2026-09-22 回归处理](results/20260922-performance-recovery.md)：
-两轮最大值口径，60/60 场、5880 万次操作完成并排空，16/16 竞争 KD 有实际 JIT。
-20 线程 c1/c16 的 KD 为 5.197/4.809 Mops/s，是 TCLock 的 1.037×/1.471×；
-四线程为 TCLock 的 0.621×/0.728×，低竞争差距尚未解决。
-报告区分宿主 vCPU 放置问题、热表局部回退、独立 PMU 诊断及未测边界。
+最新测量见[2026-09-22 单轮基线](results/20260922-single-round-baseline.md)：
+提交 `1928434`，30/30 场、2940 万次操作完成并排空，8/8 竞争 KD 有实际 JIT，
+2 场单线程 KD 为原生自执行。20 线程 c1/c16 的 KD 为 4.974/4.760 Mops/s，
+是 TCLock 的 0.989×/1.453×；单线程为 0.465×/0.527×，四线程为 0.651×/0.774×。
+每配置只测一轮；报告包含三方吞吐、摊销时间、比值及完整环境与排空证据。
 
 此前五轮中位数及功能实验保留原统计口径，从[历史索引](../spin_cacheline/results/HISTORY.md)
-读取，不能作为当前源码的新成绩。文档和旧工具清理未重跑性能矩阵。
+读取，不能作为本轮单次测量的成绩。
 
 ## 当前 TCLock 设置
 
