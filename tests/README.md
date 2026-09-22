@@ -1,5 +1,13 @@
 # 当前测试入口
 
+最新 [MCS 频率统计回退](../bench/tclock_compare/results/20260922-spin-mcs-rollback.md)
+恢复 `bf16b10` 的调用计数。基础及相关单元 6/6、运行器 11/11、normal/SELFTEST
+构建和生命周期探针通过；adaptive/plain 的 1/4 线程共完成 50 万次操作并排空，
+单线程 JIT=0、四线程实际 JIT=244030。本次未重跑性能矩阵。
+
+512槽直接映射已按用户要求撤回，代码恢复 `bf16b10`。此前[回退验证](../bench/tclock_compare/results/20260922-directhash-v2-rollback.md)通过：
+20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空。下方完整矩阵为此前记录。
+
 当前热表已按性能退化处理恢复为每 CPU/type 256 桶/256 记录和本地 busy；
 共享表/直接映射及删除 busy 的报告保留为历史实验。见[回归处理](../bench/tclock_compare/results/20260922-performance-recovery.md)。
 

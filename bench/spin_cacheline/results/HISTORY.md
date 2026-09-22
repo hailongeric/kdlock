@@ -176,3 +176,22 @@ TCLock 换栈、IRQ/preempt 修复前的失败和修改前后配置均留在冻�
 
 2026-09-21 清理只移除旧内核可重建中间文件，所有 guest 原始测试/性能证据及
 宿主归档均保留；没有因文档合并删除失败日志或更改证据哈希。
+
+## 512槽直接映射再次回退
+
+[功能实验](../../tclock_compare/results/20260922-directhash-v2.md)及
+[三方性能](../../tclock_compare/results/20260922-directhash-v2-performance.md)保留为历史。
+20线程c1/c16的KD为3.916/3.831 Mops/s，低于修改前5.197/4.809的记录；
+按用户要求恢复 `bf16b10` 的每CPU/type 256桶、256条精确地址记录、碰撞链和满表保留。
+普通spin IRQ语义、wrapper修复、ticket及continuation协议不变。
+
+恢复后的功能及20线程性能见[回退验证](../../tclock_compare/results/20260922-directhash-v2-rollback.md)。
+
+后续[恢复版完整三方矩阵](../../tclock_compare/results/20260922-restored-full-benchmark.md)60/60场通过，采用两轮最大值。
+
+## spin MCS 频率统计回退
+
+[MCS 入队频率实验](../../tclock_compare/results/20260922-spin-mcs-frequency.md)功能通过，
+observe 下 20 线程 c1/c16 相对冻结恢复版下降 18.7%/17.3%。随后按用户要求撤回，
+恢复 `bf16b10` 的入口调用计数、CPU1024/锁1025 检查及同次 TSC 复用。
+[本次回退验证](../../tclock_compare/results/20260922-spin-mcs-rollback.md)通过；未重跑性能矩阵，实验原始样本和归档保留。

@@ -1,5 +1,15 @@
 # Benchmarks
 
+MCS 入队频率实验已因退化撤回，恢复 `bf16b10` 的调用计数。
+[本次回退验证](tclock_compare/results/20260922-spin-mcs-rollback.md)通过，未重跑性能矩阵；
+[实验成绩](tclock_compare/results/20260922-spin-mcs-frequency.md)保留为历史。
+
+最新[恢复版完整三方结果](tclock_compare/results/20260922-restored-full-benchmark.md)：60/60场通过，5880万次操作全部排空；
+20线程KD c1/c16为4.969/4.788 Mops/s。每组两轮取最大值，Linux c16单线程波动详见报告。
+
+512槽直接映射已按用户要求撤回，代码恢复 `bf16b10`。此前[回退验证](tclock_compare/results/20260922-directhash-v2-rollback.md)通过：
+20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空。下方完整矩阵为此前记录。
+
 最新已测实现与成绩见[热表回归处理](tclock_compare/results/20260922-performance-recovery.md)：
 恢复每 CPU/type 256 桶、256 记录及本地 busy，保留普通 spin IRQ 语义和 wrapper 栈修复。
 三方 observe 矩阵 60/60 场、5880 万次操作通过并排空，16/16 场竞争 KD 有实际 JIT。
