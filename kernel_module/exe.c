@@ -78,12 +78,14 @@ static void kd_code_block_gate_unlock(void)
 	atomic_set_release(&kd_code_block_gate, 0);
 }
 
-static unsigned long end_points[4];
+static unsigned long end_points[5];
 static int end_point_count;
 static unsigned long raw_spin_lock_addr;
 static unsigned long raw_spin_unlock_addr;
 static unsigned long clobber_spin_lock_addr;
 static unsigned long clobber_spin_unlock_addr;
+static unsigned long pinned_spin_lock_addr;
+static unsigned long cold_spin_unlock_addr;
 static unsigned long mutex_lock_addr;
 static unsigned long mutex_unlock_addr;
 static unsigned long clobber_mutex_lock_addr;

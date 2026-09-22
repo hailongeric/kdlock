@@ -81,6 +81,20 @@ the call boundary. This path does not decode a compiler-generated prologue.
 Legacy hook offsets and the new ABI are defined in [the register ABI](JIT_REGISTER_ABI.md);
 [kernel baselines](../kernel_baseline/README.md) remain distinct.
 
+The paired spin shell `KD_SPIN_DIRECT_LOCK/UNLOCK` uses ordinary C caller
+clobbers. Its per-acquisition unsigned cookie pairs release with acquisition.
+With the read-only load option `spin_cold_fastpath=1`, a cold CPU increments the
+existing native drain count and attempts one CAS after acquiring one preemption
+pin. A failed value enters native pending/MCS directly. Cold unlock releases
+only the low byte, decrements that count and unpins, without owner/heat lookup.
+The hot branch alone pushes RBX/R12–R15. Its continuation precedes the POPs,
+letting minimal-ABI JIT read these values from the waiter stack; it defines the
+hot cookie after that point. Hot unlock saves the current live values for the
+final physical restore. The pinned hot entry shares the existing core and pin;
+lock width, packet layout and wrapper inputs are unchanged. Recompile callers
+to use this shell; the original broad-clobber API remains available. Initial
+workload adoption covers the outer lock only.
+
 `target_process` belongs to the retained mutex routing path; current direct
 spin entry does not filter by comm. Stable spin tickets/fast owners and mutex
 task records preserve unlock routing independently of heat and task renames.
@@ -122,8 +136,12 @@ CPU; native MCS publications can, and later entries accumulate the
 See [flow and storage](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取).
 
 IRQ/NMI reentry drops only a sample; the statistics pin ends before mutex sleep.
-`adaptive` is the load default; `observe` records statistics but fixes admission,
-even for unknown identities at capacity. Public spin skips sampling when delegation
+`adaptive` is the load default. With the paired cold gate enabled, `observe`
+fixes admission only after CPU heat; adaptive additionally tests lock heat.
+The preserved shell or disabled gate retains the original fixed observe admission,
+even for unknown identities at capacity. A CPU that once warmed retains its
+cached heat until a later MCS batch updates it; a quiet single-thread phase
+does not itself expire heat or read the clock. Public spin skips sampling when delegation
 is disabled. Neither policy supplies JIT safety permission. Admission remains
 at entry; MCS publication only updates CPU heat for subsequent entries.
 
@@ -439,7 +457,9 @@ design, not restoring an old function.
 
 ## 11. Configuration
 
-`hotlock_mode` defaults to adaptive; observe fixes admission.
+`hotlock_mode` defaults to adaptive. `spin_cold_fastpath` is a read-only load
+option, initially off pending performance acceptance; its paired observe
+semantics and caller recompilation requirement are described in section 3.
 `target_process` defaults to kd_test in the retained mutex path; `mutex_jit`
 defaults to 1, but neither setting installs the disabled global hook.
 Batch limits are fixed at 1024. Spin NUMA is opt-in via KDLOCK_NUMA=1.
@@ -534,8 +554,9 @@ its lock object's protocol. Linux uses raw native API, TCLock uses native stack
 delegation, and KD uses caller-clobber v1 with a single KD word and JIT admission.
 Caller spill, lock/unlock, body, post-work and loop costs remain in ns/op.
 
-observe fixes admission while recording; adaptive retains per-CPU warmup and
-cooling effects. Record actual JIT independently of valid throughput. TCLock
+The paired cold gate applies CPU warmup to both policies; observe then fixes
+lock admission and adaptive retains the lock threshold. Preserve caller shell
+and option identity as separate comparison groups. Record actual JIT independently of valid throughput. TCLock
 has no current per-body delegation counter; data correctness and drain cannot
 supply a delegation share. The sampler component measures record calls only.
 

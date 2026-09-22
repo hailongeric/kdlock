@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare Linux native, the TCLock port and kdlock through direct lock APIs.
 
-Freeze one workload per backend; measure both KD admission modes once by default.
+Freeze each backend/caller build; keep KD policy and cold-path controls separate.
 Explicit extra rounds alternate arm order. Preparation is excluded; acceptance checks remain.
 Build/run exclusively in the recovery guest, retaining failures without retry.
 """
@@ -55,20 +55,26 @@ def make_plan(args):
     modes = getattr(args, 'hotlock_mode', DEFAULT_HOTLOCK_MODES)
     if isinstance(modes, str):
         modes = [modes]
+    cold_modes = getattr(args, 'spin_cold_fastpath', ['off'])
+    if isinstance(cold_modes, str):
+        cold_modes = [cold_modes]
     # Admission belongs to KD only. Share each Linux/TCLock baseline between
     # modes, but give every KD policy its own freshly loaded session and name.
-    variants = [(backend, mode) for backend in args.backends
-                for mode in (dict.fromkeys(modes) if backend == 'kdlock' else ['not_applicable'])]
+    variants = [(backend, mode, cold) for backend in args.backends
+                for mode in (dict.fromkeys(modes) if backend == 'kdlock' else ['not_applicable'])
+                for cold in (dict.fromkeys(cold_modes) if backend == 'kdlock' else ['not_applicable'])]
     for n, t, repeat in itertools.product(sizes, args.threads, range(args.repeats)):
         arms = list(variants)
         if repeat % 2:
             arms.reverse()
-        for backend, mode in arms:
+        for backend, mode, cold in arms:
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
-            suffix = f'-{mode}' if backend == 'kdlock' else ''
+            suffix = f'-cold-{cold}-{mode}' if backend == 'kdlock' else ''
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, hotlock_mode=mode,
+                caller_shell=('paired' if cold == 'on' else 'clobber') if backend == 'kdlock' else 'c',
+                spin_cold_fastpath=cold, pmu=getattr(args, 'pmu', False),
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
                 iterations=args.iterations, cpus=list(range(t))))
@@ -86,6 +92,8 @@ def report(out):
             row = json.loads(path.read_text()) if path.exists() else {}
             rows.append(dict(name=spec['name'], scenario=spec['scenario'],
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
+                spin_cold_fastpath=spec.get('spin_cold_fastpath', 'unrecorded'),
+                caller_shell=spec.get('caller_shell', 'unrecorded'),
                 status=row.get('execution_status', 'NOT_RUN'),
                 drained=row.get('drained', False),
                 completed=row.get('measurement', {}).get('completed', 0),
@@ -105,15 +113,17 @@ def report(out):
         # Never select a winner across observe/adaptive: they exercise different
         # admission policies even when their payload and backend binary match.
         mode = r.get('hotlock_mode', 'unrecorded')
-        groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode), []).append(r)
+        groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode,
+                           r.get('spin_cold_fastpath', 'unrecorded'),
+                           r.get('caller_shell', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode), rows in groups.items():
+    for (n, t, arm, mode, cold, shell), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
-                   hotlock_mode=mode,
+                   hotlock_mode=mode, spin_cold_fastpath=cold, caller_shell=shell,
                    spin_delegate=rows[0].get('spin_delegate', 'on'),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -145,6 +155,10 @@ def main():
                    help='measurement rounds per configuration (default: 1)')
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
+    p.add_argument('--spin-cold-fastpath', choices=('on', 'off'), nargs='+', default=['off'],
+                   help='on: paired C shell and cold gate; off: preserved clobber shell (default)')
+    p.add_argument('--pmu', action='store_true',
+                   help='separate long-batch diagnostic: perf stat around measured client only')
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--functional', action='store_true',
                    help='KD functional acceptance only; no throughput report')
@@ -217,8 +231,10 @@ def main():
                                   out/'tclock-backend.txt')
             write_json(out/'tclock-context-audit.json', audit_context(disassembly))
         variants = {}
-        for backend in args.backends:
-            folder = out/'variants'/backend; folder.mkdir(parents=True)
+        build_variants = dict.fromkeys((s['arm'], s['spin_cold_fastpath']) for s in plan)
+        for backend, cold in build_variants:
+            build_name = f'{backend}-cold-{cold}' if backend == 'kdlock' else backend
+            folder = out/'variants'/build_name; folder.mkdir(parents=True)
             for src in WORKLOAD.iterdir():
                 if src.suffix in ('.c','.h','.inc') or src.name == 'Makefile':
                     shutil.copyfile(src, folder/src.name)
@@ -228,17 +244,22 @@ def main():
                 extra = [f'KBUILD_EXTRA_SYMBOLS={module.parent / "Module.symvers"}']
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
+                     f'SC_COLD_FASTPATH={int(cold == "on")}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
                      f'KDLOCK_INCLUDE={ROOT / "include"}', *extra],
-                    out/f'build-{backend}.log',timeout=120)
-            variants[backend] = folder/'spin_cacheline.ko'
-            command(['objdump','-dr',variants[backend]],out/f'caller-{backend}.txt')
-            imported = command(['nm', '-u', variants[backend]], out/f'imports-{backend}.txt')
+                    out/f'build-{build_name}.log',timeout=120)
+            variants[backend, cold] = binary = folder/'spin_cacheline.ko'
+            command(['objdump','-dr',binary],out/f'caller-{build_name}.txt')
+            imported = command(['nm', '-u', binary], out/f'imports-{build_name}.txt')
             require('__ubsan_' not in imported, 'direct workload still imports UBSAN handlers')
             require('kd_raw_spin_' not in imported and 'kd_spin_dispatch_' not in imported,
                     'workload still imports a unified spin hook')
             expected = {'kdlock': ('kd_spin_lock_clobber_v1', 'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
+            if backend == 'kdlock' and cold == 'on':
+                expected = ('kd_spin_direct_enter', 'kd_spin_lock_pinned_clobber_v1',
+                            'kd_spin_direct_native_unlock', 'kd_spin_unlock_clobber_v1',
+                            'kd_spin_prepare')
             require(all(symbol in imported.split() for symbol in expected), 'missing direct API import')
         (out/'binaries').mkdir()
         for binary in binaries:
@@ -253,7 +274,7 @@ def main():
             require(not (out/'STOP').exists(),'STOP requested at drained boundary','STOPPED')
             require(source_state()==frozen and all(digest(Path(p))==h for p,h in hashes.items()),'frozen inputs changed')
             idle(); print(f'[{index+1}/{len(plan)}] {spec["name"]}',flush=True)
-            session = BackendSession(out,spec,workload_module=variants[spec['arm']])
+            session = BackendSession(out,spec,workload_module=variants[spec['arm'], spec['spin_cold_fastpath']])
             session.execute()
             m = session.record['measurement']
             if args.functional:

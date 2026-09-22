@@ -12,6 +12,7 @@ typedef struct { u32 counter; } atomic_t;
 struct qspinlock {
  union { atomic_t val; struct { uint8_t locked, pending; uint16_t tail; }; uint16_t locked_pending; };
 };
+#define noinline __attribute__((noinline))
 #define MAX_NODES 4
 #define CPUS 8
 #define IRQ_NUMA_NODE 255

@@ -4,6 +4,9 @@
  * register restoration, real kernel locks or generated instructions. */
 #include <errno.h>
 #include <stdbool.h>
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +50,7 @@ static struct list_head kd_native_frames;
 static int kd_native_lock, borrowed, published, unlocked, nested_jit;
 static int failures, checks;
 static unsigned long raw_spin_lock_addr = 0x100, raw_spin_unlock_addr = 0x200;
+static unsigned long pinned_spin_lock_addr = 0x120, cold_spin_unlock_addr = 0x220;
 static unsigned long clobber_spin_lock_addr = 0x110, clobber_spin_unlock_addr = 0x210;
 static unsigned long clobber_mutex_lock_addr = 0x310, clobber_mutex_unlock_addr = 0x410;
 static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;

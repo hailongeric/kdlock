@@ -464,13 +464,12 @@ native:
 }
 /* One acquisition pin spans admission, queueing and the entire CS. Refusal
  * transfers that pin to native execution; unlock/completion consumes it. */
-__attribute__((noipa)) noinline notrace void
-kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
+static __always_inline void
+kd_spin_lock_abi_pinned(struct qspinlock *lock, unsigned long rsp_value,
                  unsigned long rip, unsigned long bp, unsigned int abi)
 {
 	u32 val = 0;
 
-	preempt_disable();
 	if (!kd_spin_delegate || !kd_hotlock_record_spin_pinned((unsigned long)lock))
 		goto native;
 	if (!in_task() || softirq_count() || current->migration_disabled ||
@@ -490,6 +489,53 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,
 native:
 	kd_spin_lock_nondelegated_pinned(lock);
 }
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,
+		 unsigned long ip, unsigned long bp, unsigned int abi)
+{
+	preempt_disable();
+	kd_spin_lock_abi_pinned(lock, sp, ip, bp, abi);
+}
+
+/* Returns zero with native ownership, or one with just the acquisition pin.
+ * No mode change can reroute this acquisition: the caller saves this decision
+ * through unlock. Count native holds until release instead of transferring
+ * them to fast-owner records, so the paired unlock needs no owner lookup. */
+__attribute__((noipa)) noinline notrace unsigned int
+kd_spin_direct_enter(kd_spinlock_t *lock)
+{
+	u32 val;
+
+	preempt_disable();
+	if (!kd_spin_cold_fastpath ||
+	    (kd_spin_delegate && kd_hotlock_spin_cpu_hot_pinned()))
+		return 1;
+	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
+	val = atomic_cmpxchg_acquire(&lock->val, 0, _Q_LOCKED_VAL_HL);
+	if (val)
+		kd_spin_acquire_nondelegated_contended(lock, val);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(kd_spin_direct_enter);
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_direct_native_unlock(kd_spinlock_t *lock)
+{
+	/* The native cookie is the provenance; preserve a concurrently added tail. */
+	smp_store_release(&lock->locked, 0);
+	this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+	preempt_enable();
+}
+EXPORT_SYMBOL_GPL(kd_spin_direct_native_unlock);
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *lock, unsigned long sp,
+			     unsigned long ip, unsigned long bp)
+{
+	kd_spin_lock_abi_pinned(lock, sp, ip, bp, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+}
+EXPORT_SYMBOL_GPL(kd_spin_lock_pinned_clobber_v1);
 
 void kd_spin_lock(struct qspinlock *lock, unsigned long sp, unsigned long ip)
 {

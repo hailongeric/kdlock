@@ -58,6 +58,12 @@ class BackendSession(Session):
         # payload identity. A hash module must never satisfy a cacheline run.
         if args[0] == HERE/'client' and self.record.get('workload') == 'rcuht':
             args = [*args, '--workload', 'rcuht']
+        if args[0] == HERE/'client' and log == 'measure.json' and self.record.get('pmu'):
+            # Count the measured client and its pinned workers, excluding module
+            # load, translation and warmup. PMU output stays separate from data.
+            args = ['perf', 'stat', '-x', ';', '-o', self.path/'pmu.csv',
+                    '-e', 'cycles,instructions,task-clock,context-switches,cpu-migrations',
+                    '--', *args]
         return super().run(args, log, **kwargs)
 
     def __init__(self, *args, **kwargs):
@@ -82,7 +88,8 @@ class BackendSession(Session):
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
                       'hotlock_mode=' + self.record['hotlock_mode'],
-                      'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
+                      'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1'),
+                      'spin_cold_fastpath=' + ('1' if self.record.get('spin_cold_fastpath') == 'on' else '0')],
                      'load-kdlock.log')
             self.loaded_kd = True
         elif self.record['arm'] == 'tclock':
@@ -113,6 +120,7 @@ class BackendSession(Session):
             require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
                     int(params['bench_lock_addr']) == layout['lock_addr'] and
                     params['hotlock_mode'] == self.record['hotlock_mode'] and
+                    params['spin_cold_fastpath'] == ('Y' if self.record.get('spin_cold_fastpath') == 'on' else 'N') and
                     params['spin_delegate'] == ('N' if self.record.get('spin_delegate') == 'off' else 'Y'),
                     'kdlock observation parameters differ')
             self.record['parameters'] = params

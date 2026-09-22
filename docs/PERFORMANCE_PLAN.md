@@ -1,5 +1,11 @@
 # 下一阶段性能优化任务
 
+配对冷CPU快路径第一阶段已实现并[完成单轮同期验证](../bench/tclock_compare/results/20260922-spin-cold-stage1.md)。
+单线程改善，20线程退化12.64%–14.43%，因此新接口/选项保持显式启用。
+下一步按已批准方案精简公共调用并独立测量；竞争退化超过5%的配置仍是待解决项，
+不能仅凭单线程收益默认开启，不追加重复轮次掩盖退化。
+
+
 当前继承 continuation、ticket 和无竞争入口优化：顶层 pending 复用 fast owner，
 合并 claim/release guard，slowpath 返回不重复 claim；request/ref 准备延后到慢路径。
 单锁字、本地哈希、原生 MCS 和 continuation 退休交接均保留。MCS 后置准入及

@@ -201,6 +201,30 @@ class DirectTests(unittest.TestCase):
             self.assertEqual(rows['native', 'not_applicable']['sessions'], 2)
             self.assertEqual(rows['tclock', 'not_applicable']['sessions'], 2)
 
+    def test_cold_option_builds_and_reports_distinct_callers(self):
+        plan = run.make_plan(Namespace(cachelines=[1], threads=[1], repeats=1,
+            iterations=100, backends=['native', 'tclock', 'kdlock'],
+            spin_cold_fastpath=['on', 'off']))
+        self.assertEqual(len(plan), 6)
+        self.assertEqual(len({s['name'] for s in plan}), 6)
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plan)
+            for spec in plan:
+                folder = out/spec['name']; folder.mkdir()
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True,
+                    measurement=dict(completed=100, wall_ns=100000,
+                                     data_ok=True, complete=True)))
+                if spec['arm'] == 'kdlock':
+                    self.assertEqual(spec['caller_abi'], 'clobber')
+                    self.assertEqual(spec['caller_shell'],
+                                     'paired' if spec['spin_cold_fastpath']=='on' else 'clobber')
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 6)
+            self.assertTrue(all(r['sessions'] == r['valid'] == 1 for r in rows))
+
 
 if __name__ == '__main__':
     unittest.main()

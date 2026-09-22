@@ -12,6 +12,8 @@ ccflags-y += -DSC_HASH_PAYLOAD
 endif
 ifeq ($(SC_BACKEND),kdlock)
 ccflags-y += -DSC_DIRECT_KDLOCK -I$(KDLOCK_INCLUDE)
+SC_COLD_FASTPATH ?= 0
+ccflags-y += -DSC_COLD_FASTPATH=$(SC_COLD_FASTPATH)
 ifneq ($(SC_SCENARIO),)
 ccflags-y += -DSC_SCENARIO=$(SC_SCENARIO)
 endif

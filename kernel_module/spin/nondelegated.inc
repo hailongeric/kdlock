@@ -4,15 +4,15 @@
  * and hand queue-head status onward before returning to their own body.
  * There is no request/frame, register capture, source lease or stack switch.
  * The caller keeps preemption disabled through its later physical unlock. */
-static void kd_spin_acquire_nondelegated(struct qspinlock *word)
+/* Receive the failed initial CAS. In particular, the paired cold entry must
+ * not retry the same CAS or prepare queue state on its successful path. */
+static noinline void kd_spin_acquire_nondelegated_contended(struct qspinlock *word,
+							 u32 val)
 {
 	struct kd_spin_node *node, *previous, *next;
-	u32 val, tail, old_tail, loops;
+	u32 tail, old_tail, loops;
 	int idx;
 
-	val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
-	if (!val)
-		return;
 	if (val == _Q_PENDING_VAL_HL) {
 		loops = _Q_PENDING_LOOPS_HL;
 		val = atomic_cond_read_relaxed(&word->val,
@@ -77,4 +77,12 @@ static void kd_spin_acquire_nondelegated(struct qspinlock *word)
 out:
 	barrier();
 	this_cpu_dec(kd_spin_cpu.node_count);
+}
+
+static void kd_spin_acquire_nondelegated(struct qspinlock *word)
+{
+	u32 val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
+
+	if (val)
+		kd_spin_acquire_nondelegated_contended(word, val);
 }

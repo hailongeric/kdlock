@@ -1,5 +1,8 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
+[配对冷路径第一阶段](results/20260922-spin-cold-stage1.md)：36/36场通过并排空；单线程提升，
+20线程退化12.64%–14.43%，超过验收门槛，新路径暂不默认启用。
+
 最新[adaptive快速三方结果](results/20260922-adaptive-quick.md)：18/18场、1500万次计时操作完成并排空，
 4/4竞争KD有实际JIT；1线程KD c1/c16为8.445/6.940 Mops/s，20线程为5.048/4.818 Mops/s。
 运行器默认已同时运行KD observe和adaptive，分别汇总；本轮性能只测adaptive。
@@ -48,8 +51,22 @@
 | TCLock | `komb_spin_lock/unlock`，调用者配对管理抢占 |
 | kdlock | `kd_spin_lock_clobber_v1/unlock_clobber_v1`，直接进入 kdlock 协议 |
 
+新增 `--spin-cold-fastpath on off` 对同一当前源码构建两种 KD 调用壳：`on` 使用
+`KD_SPIN_DIRECT_LOCK/UNLOCK` 配对 C 壳并加载 `spin_cold_fastpath=1`；`off` 使用
+保留的全 clobber 壳并关闭开关。暂默认 `off`，待单线程和竞争验收后决定默认值。
+两组使用相同 clobber-v1 JIT 入口 ABI，不是历史 KD 二进制。记录分别带有
+`caller_shell=paired/clobber`、`caller_abi=clobber` 和 `spin_cold_fastpath`。
+Linux/TCLock 每配置仍只跑一次；汇总同时按热度模式、调用壳和开关分组，不跨组取最大值。
+
+冷捷径开启后 observe/adaptive 都跳过冷 CPU 的热表/context/owner 路由；observe
+在 CPU 热后固定准入，adaptive 再判断单锁热度。CPU 曾变热后仍依赖后续 MCS
+采样降温，安静的单线程阶段不会主动过期；不增加每次 TSC 读取。
+`--pmu` 在单独长批次中仅对 measure 客户端及其 worker 运行 perf stat，输出
+`pmu.csv` 的 instructions/cycles/task-clock/context-switches/cpu-migrations；
+不计准备和预热，且不能直接等同于仅 lock/unlock 指令数。
+
 kdlock 使用显式 32 位 KD 锁字，保留 owner/ACK、上下文和 JIT 就绪检查。
-其 clobber-v1 调用现场由编译器保存；TCLock 和 Linux 使用各自普通 C API。
+保留壳的 clobber-v1 调用现场由编译器保存，新配对壳只在热分支保存五个 callee-saved 寄存器；TCLock 和 Linux 使用各自普通 C API。
 三个模块正文与循环相同，但不是同一份二进制，也不把必需的现场成本扣除。
 每次完整操作保留原来的固定 cacheline 更新、解锁后四组乘加及循环成本。
 吞吐和摊销 ns/op 都以完整操作计算，不是独立获取锁延迟。
@@ -124,7 +141,7 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 上述字段保持兼容，一轮时获选会话就是该唯一有效样本；仅显式增加轮次时才从
 有效样本取最大值。相对 Linux 的比值使用各后端获选值除以 Linux 获选值，
 KD/TCLock 同理；保留有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
-正确、完成且已排空的样本参与汇总。KD 按 `hotlock_mode` 分开汇总，不跨模式取最大值；
+正确、完成且已排空的样本参与汇总。KD 按 `hotlock_mode`、`spin_cold_fastpath`、`caller_shell` 分开汇总，不跨模式取最大值；
 热表计数保留在原始日志，不参与性能评分。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，

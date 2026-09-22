@@ -1,5 +1,10 @@
 # 当前测试入口
 
+配对冷路径第一阶段的基础/定向10项和运行器13项最终通过；真实cacheline 36/36场完成，
+16/16竞争KD有实际JIT，均排空。新增 `spin/test_spin_cold.py` 覆盖普通C配对壳与生产冷路由；
+证据、首次fixture编译修复和阶段限制见[第一阶段报告](../bench/tclock_compare/results/20260922-spin-cold-stage1.md)。
+
+
 当前 spin CPU 每 4 次实际 MCS 入队检查，spin/mutex CPU 共用 40 亿 TSC 窗口；
 mutex CPU 保持 1024 次入口检查，单锁保持第 33 次检查、25 亿窗口。
 

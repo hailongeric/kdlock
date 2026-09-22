@@ -194,6 +194,8 @@ static unsigned long kallsyms_lookup_name(const char *name)
 static void kd_spin_lock(void) { CHECK(!"unexpected lock call"); }
 static void kd_spin_unlock(void) { CHECK(!"unexpected unlock call"); }
 static void kd_spin_lock_clobber_v1(void) { CHECK(!"unexpected lock call"); }
+static void kd_spin_lock_pinned_clobber_v1(void) { CHECK(!"unexpected lock call"); }
+static void kd_spin_direct_native_unlock(void) { CHECK(!"unexpected unlock call"); }
 static void kd_spin_unlock_clobber_v1(void) { CHECK(!"unexpected unlock call"); }
 
 static unsigned long ktime_get(void)

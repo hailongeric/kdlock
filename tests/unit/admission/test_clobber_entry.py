@@ -40,6 +40,36 @@ class ClobberEntryTests(unittest.TestCase):
                 _,_,status=self.generate(code)
                 self.assertEqual(status,2)
 
+    def test_paired_stack_restore_and_control_abis(self):
+        # The paired continuation reloads callee saves from the entry stack;
+        # its cookie must be defined here, not inherited from uncaptured EAX.
+        symbols = SYMBOLS | {'kd_spin_lock_pinned_clobber_v1': 0x5000,
+                             'kd_spin_direct_native_unlock': 0x6000}
+        restore = bytes.fromhex('415f415e415d415c5b')
+        for target, clobber in ((0x4000, True), (0x5000, True), (0x6000, False)):
+            code = restore + bytes.fromhex('b80100000053415441554156415748c7c700900000')
+            if clobber:
+                # RSI/RDX/RCX are shell metadata, even for the new pinned symbol.
+                ip = 0x1000 + len(code) + 3 + 7 + 3 + 5
+                code += bytes.fromhex('4889e648c7c2') + ip.to_bytes(4, 'little')
+                code += bytes.fromhex('4889e9')
+            call_ip = 0x1000 + len(code)
+            code += b'\xe8' + (target-call_ip-5).to_bytes(4, 'little', signed=True)
+            # A lock needs its matching unlock boundary. No unsafe suffix can
+            # enter the generated CS after either ordinary-C or clobber unlock.
+            if target == 0x5000:
+                code += bytes.fromhex('48c7c700900000')
+                call_ip = 0x1000 + len(code)
+                code += b'\xe8' + (0x6000-call_ip-5).to_bytes(4, 'little', signed=True)
+                # Nested depth remains one: finish the outer hold too.
+                code += bytes.fromhex('48c7c700900000')
+                call_ip = 0x1000 + len(code)
+                code += b'\xe8' + (0x6000-call_ip-5).to_bytes(4, 'little', signed=True)
+            code += bytes.fromhex('64488b042500000000c3')
+            with self.subTest(target=hex(target)):
+                self.assertEqual(render(code.hex(), abi=1, kernel_symbols=symbols,
+                                        return_status=True, muted=True)[2], 0)
+
     def test_partial_low_write_does_not_require_high_bits(self):
         self.assertEqual(self.generate('b007880424c3')[2],0)
         self.assertEqual(self.generate('b00748890424c3')[2],2)

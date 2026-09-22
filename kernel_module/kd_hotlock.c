@@ -39,6 +39,7 @@ struct kd_hotlock_cpu
   struct kd_hotlock_table tables[2];
 } ____cacheline_aligned;
 static struct kd_hotlock_cpu __percpu *kd_hotlock_cpu;
+DEFINE_PER_CPU(unsigned int *, kd_hotlock_spin_gate);
 /* Immutable after load: observe fixes admission even for dropped samples. */
 static char *hotlock_mode = "adaptive";
 module_param(hotlock_mode, charp, 0444);
@@ -219,6 +220,7 @@ int kd_hotlock_init(void)
     struct kd_hotlock_cpu *local = per_cpu_ptr(kd_hotlock_cpu, cpu);
     memset(local, 0, sizeof(*local));
     local->tables[0].rate_begin = local->tables[1].rate_begin = now;
+    per_cpu(kd_hotlock_spin_gate, cpu) = &local->tables[0].rate_hot;
   }
   return 0;
 }

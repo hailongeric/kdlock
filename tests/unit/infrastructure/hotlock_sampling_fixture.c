@@ -43,6 +43,11 @@ static unsigned long rdtsc_ordered(void)
  if(f) f();
  return now;
 }
+#define DECLARE_PER_CPU(type, name) extern type name[TEST_CPUS]
+#define DEFINE_PER_CPU(type, name) type name[TEST_CPUS]
+#define per_cpu(name, c) (name[c])
+#define this_cpu_read(name) (name[cpu_id])
+#define READ_ONCE(x) (x)
 #include "hotlock_production.h"
 static struct kd_hotlock_table *table(unsigned int kind)
 { return &this_cpu_ptr(kd_hotlock_cpu)->tables[kind]; }
@@ -102,6 +107,7 @@ static void init_and_pins(void)
   for(unsigned int k=0;k<2;k++) {
    struct kd_hotlock_table *t=&per_cpu_ptr(kd_hotlock_cpu,c)->tables[k];
    assert(t->rate_begin==now && !t->rate_samples && !t->rate_hot && !t->used);
+   if (!k) assert(per_cpu(kd_hotlock_spin_gate,c)==&t->rate_hot);
   }
  pins=1;
  unsigned int before_disable=disables, before_enable=enables;

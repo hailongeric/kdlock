@@ -21,11 +21,22 @@
 1. 调用者拥有 `kd_spinlock_t` 对象，并用 `kd_spin_prepare` 登记锁后续点及 ABI。
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
    直接 benchmark 在单 CPU 预热前完成准备，测量时停止 daemon。
-2. clobber v1 调用保存 pre-CALL RSP、post-CALL RIP 和 caller RBP，编译器保存
+2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` / `KD_SPIN_DIRECT_UNLOCK(lock, cookie)`
+   是普通 C 调用约定的配对壳，每次获取有独立的局部 `unsigned int cookie`。
+   加载时只读选项 `spin_cold_fastpath=1` 使 observe/adaptive 都先读现有 CPU `rate_hot`。
+   冷态只 pin 一次、增加 nondelegated 在途计数并 CAS；失败值直接进入原生 pending/MCS，
+   不重复初始 CAS。配对冷解锁只 release 锁字低字节、减少计数、解除 pin，保留 pending/tail。
+   热度在等待或持锁期间变化不改本次 cookie；冷 MCS 仍采样，为后续获取升温。
+   热分支内部 push/pop `rbx、r12–r15`，continuation 位于 CALL 后、POP 前；JIT 从等待者
+   栈恢复值，随后显式定义热 cookie。热解锁保存临界区结束时的活跃值，供物理完成恢复。
+   新 pinned clobber 入口复用前一步的 pin；32 位锁、寄存器包和 wrapper 输入不变。
+   当前 workload 只将外层锁接入新壳，内层及 native/FULL 续跑协议保留。
+   选项暂默认关闭；运行器关闭对照编译保留壳，详见 benchmark 的调用端身份记录。
+3. 保留的 clobber v1 调用保存 pre-CALL RSP、post-CALL RIP 和 caller RBP，编译器保存
    活跃 caller-clobbered 值。`kd_spin_lock_abi` 首先关闭抢占，代理开启时合并记录/
    判断热度并筛选上下文，再尝试 fast/pending；统计和原生回退复用已有 pin。
    关闭代理时公共入口跳过统计，直接走完整原生获取。
-3. 快速路径获取 KD 字并保留 pinned fast owner，不准备栈上 request。根 CAS
+4. 热入口快速路径获取 KD 字并保留 pinned fast owner，不准备栈上 request。根 CAS
    失败后进入独立 `kd_spin_lock_contended()`，才创建 24 B request；物理嵌套也
    在该 helper 保留先借 ticket 再 CAS 的顺序。竞争路径使用同一个字的
    pending/tail 排队，普通根仅在 queue 分支占 ticket，再检查翻译就绪。拒绝走
@@ -33,14 +44,14 @@
    完成既有 continuation 生命周期。只有真正节点耗尽才轮询锁字，不回退到 Linux
    锁操作。对象大小、分配位置及与 TCLock 的数据流对照见
    [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
-4. 每 CPU 预分配 20 KiB：低端 12 KiB 为最多 12 条 continuation，高端 8 KiB
+5. 每 CPU 预分配 20 KiB：低端 12 KiB 为最多 12 条 continuation，高端 8 KiB
    为 waiter 等待栈；记录按栈顶占用，退休后只收缩连续已退休的栈顶。
    节点直接指向 continuation/frame，节点复用不会销毁现场。
    等待栈、PAUSE 轮询和 caller-clobber ABI 保留。combiner 绑定逻辑 waiter，
    通过 wrapper 和生成代码执行正文，原 waiter/combiner 共用寄存器包。
-5. 嵌套控制 CALL 维护锁记录和独立所有权。提前释放、乱序解锁、远端借用 ACK
+6. 嵌套控制 CALL 维护锁记录和独立所有权。提前释放、乱序解锁、远端借用 ACK
    与重新获取不能重复释放 KD 字；ticket 元数据退休与唯一 release store 分开。
-6. 正常 COMPLETE 回交 IP/SP/BP；中途 FULL 物化完整逻辑 GPR。已执行的正文
+7. 正常 COMPLETE 回交 IP/SP/BP；中途 FULL 物化完整逻辑 GPR。已执行的正文
    不重跑，只有已支持的 CALL/PENDING 边界可受检续跑。普通完成必须先 pop 子 frame 再发布完成。
    NATIVE_READY 与最终退休分开：所有 native 执行者（含无锁 relay）先借用根
    ticket，清理/pop 后解除借用；最终解锁等待借用清空，才回收现场及解除抢占。
@@ -63,7 +74,9 @@ spin/mutex 单锁 count 大于 32（第 33 次）才检查 25 亿 TSC 窗口并�
 单锁仍统计入口调用。mutex 同次到期共享采时，spin CPU/锁分别采时。
 CPU 持续热保留单锁批次，冷却/重新变热清零计数/热值但保留映射。
 MCS 更新只影响后续入口；没有入队时 CPU 缓存热值保留，不新增逐次时间检查。
-adaptive 要求 CPU/锁缓存热值同时成立，未收录且表满的锁走原生；observe 固定准入。
+adaptive 要求 CPU/锁缓存热值同时成立，未收录且表满的锁走原生。新配对壳开启冷捷径后，
+observe 是 CPU 热后固定准入；保留壳或关闭开关仍按原 observe 固定准入。CPU 曾变热后即使
+转为单线程，也要等后续 MCS 采样才能降温；本轮没有增加每次读时钟或独立的过期标志。
 query 不计数/采时/插入；有效地址及表生命周期由调用者保证，关闭代理时不记录。
 虚拟嵌套先按热值分流；热路径占独立 ticket 后 CAS/排队，冷路径走原生 bridge。
 已发布的虚拟等待继续服务父 frame 的远端 ACK。此前的 MCS 后置准入实验

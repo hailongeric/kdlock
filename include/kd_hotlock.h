@@ -2,6 +2,14 @@
 #ifndef KD_HOTLOCK_H
 #define KD_HOTLOCK_H
 #include <linux/types.h>
+#include <linux/percpu.h>
+/* A view of the existing CPU gate, not a second heat flag. Initialized before
+ * callers enter and valid until their final drain. The reader owns a CPU pin. */
+DECLARE_PER_CPU(unsigned int *, kd_hotlock_spin_gate);
+static __always_inline bool kd_hotlock_spin_cpu_hot_pinned(void)
+{
+	return READ_ONCE(*this_cpu_read(kd_hotlock_spin_gate)) != 0;
+}
 int kd_hotlock_init(void);
 void kd_hotlock_exit(void);
 /* A valid lock identity and successful initialization are caller preconditions;
