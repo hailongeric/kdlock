@@ -55,21 +55,22 @@ mutex 保留自己的原 mutex、调度 gate、task 记录与 native owner/ACK �
 
 spin/mutex 每 CPU 独立 256 桶、256 条预分配记录，哈希冲突用完整地址和槽索引
 链表区分。没有候选/分数/淘汰，命中只给该锁 count 加一；满表不覆盖已有记录。
-初始化建立 CPU 时间；spin CPU 每 32 次实际 MCS 入队检查 400 亿 TSC 窗口，
+初始化建立 CPU 时间；spin CPU 每次实际 MCS 入队检查 400 亿 TSC 窗口，
 mutex CPU 保持每 1024 次入口调用检查。入口仍按缓存 CPU 热值决定是否查锁表。
 MCS 计数在共用队尾交换处完成，覆盖原生、代理和虚拟嵌套；fast/pending 不计数。
-单锁 count 大于 1024（第 1025 次）才检查 25 亿 TSC 窗口并更新 hot/时间、清零计数。
+spin/mutex 单锁 count 大于 32（第 33 次）才检查 25 亿 TSC 窗口并更新 hot/时间、清零计数。
 单锁仍统计入口调用。mutex 同次到期共享采时，spin CPU/锁分别采时。
 CPU 持续热保留单锁批次，冷却/重新变热清零计数/热值但保留映射。
 MCS 更新只影响后续入口；没有入队时 CPU 缓存热值保留，不新增逐次时间检查。
 adaptive 要求 CPU/锁缓存热值同时成立，未收录且表满的锁走原生；observe 固定准入。
 query 不计数/采时/插入；有效地址及表生命周期由调用者保证，关闭代理时不记录。
 虚拟嵌套先按热值分流；热路径占独立 ticket 后 CAS/排队，冷路径走原生 bridge。
-已发布的虚拟等待继续服务父 frame 的远端 ACK。MCS 后置准入和逐次时间检查
-已因竞争性能回退撤回，见 [调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
+已发布的虚拟等待继续服务父 frame 的远端 ACK。此前的 MCS 后置准入实验
+已因竞争性能回退撤回；当前入口准入保留，仅在每次 MCS 事件检查 CPU 热度，见 [调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
 统计复用调用者已有的抢占保护；仅尚未关闭抢占的独立调用临时 pin 并在返回前
-解除。spin 主入口的已 pin 接口转入已验证的共享采样器，检查现有 pin 并取得本地 busy；
-busy 重入只丢当前样本，observe 的 record 仍固定允许。mutex 不跨睡眠持有统计 pin。
+解除。热表已删除本地 busy 及其编译器屏障，只在 task context 访问；中断上下文
+跳过统计、query 返回冷，observe 的 record 仍固定允许。允许丢样，但不允许重入
+破坏哈希索引链。spin 复用已有 pin，mutex 不跨睡眠持有统计 pin。
 
 OWNER 保存在稳定 fast owner/ticket 状态中，WAITER/COMBINER/DONE 位于 frame。
 角色和所有权不依赖热表是否保留该地址或锁的热值。SELFTEST 可输出按锁地址关联的角色，

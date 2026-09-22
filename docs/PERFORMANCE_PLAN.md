@@ -32,9 +32,9 @@ source lease、物理 ACK 和 executor pop 后的借用释放仍有用途。
 当前已实现单锁字及分类型 CPU 本地哈希，协议与准入的唯一说明在
 [locking](design/locking.md)。原 gate/S、Linux L 二次获取、站点缓存和全局晋升集合
 均已删除。当前热表直接按完整锁地址哈希计数，每 CPU/type 256 桶、256 记录。
-spin CPU 每 32 次实际 MCS 入队检查 400 亿 TSC 窗口，mutex CPU 保持每 1024 次
-入口检查；fast/pending 不增加 spin CPU 计数。热 CPU 才查表，单锁 count 大于 1024
-（1025 次）检查 25 亿 TSC 窗口。删除候选分数和淘汰，满表不覆盖。
+spin CPU 每次实际 MCS 入队检查 400 亿 TSC 窗口，mutex CPU 保持每 1024 次
+入口检查；fast/pending 不增加 spin CPU 计数。热 CPU 才查表，spin/mutex 单锁 count 大于 32
+（33 次）检查 25 亿 TSC 窗口。删除候选分数和淘汰，满表不覆盖。
 query 不采时。当前预分配空间每 CPU 13376 字节，锁路径不分配。
 统计识别频率，尚不判断代理净收益；本轮不以操作减少推断性能已提高。
 
@@ -44,6 +44,10 @@ query 不采时。当前预分配空间每 CPU 13376 字节，锁路径不分配
 后续按用户指定改为spin CPU每32次实际MCS入队检查，入口及单锁规则保留。
 [本轮单轮三方检查](../bench/tclock_compare/results/20260922-spin-mcs32.md)显示20线程
 c1/c16相对最近基线下降20.8%/18.4%；本次未进一步调整协议或自动回退。
+随后按用户确认合并CPU MCS阈值1、单锁阈值32及删除统计busy/barrier，非task样本丢弃。
+[合并单轮结果](../bench/tclock_compare/results/20260922-spin-mcs1-lock32.md)的20线程c1/c16
+为5.011/4.802 Mops/s，较MCS32版本提高27.3%/23.7%，本轮恢复到下降前水平；
+两组改动的贡献未拆分，单轮结果不证明稳定收益。
 单锁字阶段结果保留在 [历史报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-singleword.md)；
 此前 `644f231` 三方矩阵 150/150 通过，40/40 竞争 KD 有实际 JIT，仍存在低竞争差距。
 该 continuation 矩阵没有同期旧版 KD 对照，不将历史差异单独归因于存储改造；

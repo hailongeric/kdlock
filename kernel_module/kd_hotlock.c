@@ -10,10 +10,10 @@
 #include "kd_hotlock.h"
 
 #define KD_HOTLOCK_CHECK_INTERVAL 1024U
-#define KD_HOTLOCK_SPIN_MCS_INTERVAL 32U
+#define KD_HOTLOCK_SPIN_MCS_INTERVAL 1U
 #define KD_HOTLOCK_CPU_WINDOW 40000000000UL
 #define KD_HOTLOCK_INITIAL_WINDOW 2500000000UL
-#define KD_HOTLOCK_SAMPLE_TARGET 1024U
+#define KD_HOTLOCK_SAMPLE_TARGET 32U
 #define KD_HOTLOCK_HASH_BITS 8
 #define KD_HOTLOCK_BUCKETS (1U << KD_HOTLOCK_HASH_BITS)
 #define KD_HOTLOCK_ENTRIES 256
@@ -29,7 +29,7 @@ struct kd_hotlock_entry
 };
 struct kd_hotlock_table
 {
-  unsigned int busy, rate_samples, rate_hot;
+  unsigned int rate_samples, rate_hot;
   unsigned long rate_begin;
   u16 buckets[KD_HOTLOCK_BUCKETS], used;
   struct kd_hotlock_entry entries[KD_HOTLOCK_ENTRIES];
@@ -39,8 +39,7 @@ struct kd_hotlock_cpu
   struct kd_hotlock_table tables[2];
 } ____cacheline_aligned;
 static struct kd_hotlock_cpu __percpu *kd_hotlock_cpu;
-/* Immutable after load: observe records the same samples but fixes admission.
- * Reentry still drops only the sample; it must not change fixed admission. */
+/* Immutable after load: observe fixes admission even for dropped samples. */
 static char *hotlock_mode = "adaptive";
 module_param(hotlock_mode, charp, 0444);
 MODULE_PARM_DESC(hotlock_mode, "adaptive: local frequency admission; observe: fixed admission with statistics");
@@ -116,7 +115,7 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
   return t->rate_hot;
 }
 /* Specialize record/query and spin/mutex at the four fixed call sites; keep
- * the sampling, local reentry guard and pin semantics shared below. */
+ * the best-effort sampling and pin semantics shared below. */
 static __always_inline bool kd_hotlock_access(unsigned long address, unsigned int kind, bool record)
 {
   struct kd_hotlock_table *t;
@@ -126,15 +125,18 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   bool pin;
   /* Callers supply a valid lock identity between successful module init and
    * final drain. Do not repeat address/table readiness tests per acquisition. */
-  /* Spin admission already owns its acquisition pin. Reuse it, including
-   * on IRQ reentry; standalone observers and sleepable mutex callers pin
-   * only this statistics access, never the later sleep/ACK interval. */
+  /* Drop non-task samples: counters may be approximate, but an interrupt
+   * must not reenter hash-chain insertion. Pinned task callers need neither
+   * a busy RMW nor a barrier to serialize access to this CPU's table. */
+  if (!in_task())
+    return admitted;
+  /* Spin admission already owns its acquisition pin. Standalone observers
+   * and sleepable mutex callers pin only this statistics access, never the
+   * later sleep/ACK interval. */
   pin = !preempt_count();
   if (pin)
     preempt_disable();
   t = &this_cpu_ptr(kd_hotlock_cpu)->tables[kind];
-  if (this_cpu_cmpxchg(kd_hotlock_cpu->tables[kind].busy, 0, 1))
-    goto unpin;
   /* Spin CPU heat advances only at MCS publication. Entry records retain the
    * cached CPU gate and original per-lock sampling; mutex keeps both clocks. */
   if (record && kind == 1 &&
@@ -149,7 +151,7 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   {
     if (record)
     {
-      /* Strictly greater than 1024: the 1025th hit closes this batch. */
+      /* Strictly greater than 32: the 33rd hit closes this batch. */
       if (++slot->count > KD_HOTLOCK_SAMPLE_TARGET)
       {
         /* Only a mutex entry can share its CPU timestamp with this lock.
@@ -165,9 +167,6 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
     admitted |= slot->hot;
   }
 out:
-  barrier();
-  WRITE_ONCE(t->busy, 0);
-unpin:
   if (pin)
     preempt_enable();
   return admitted;
@@ -179,17 +178,16 @@ bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(ad
 
 /* All spin producers reach this only when publishing an MCS tail. Native cold
  * acquisitions also count, so adaptive admission can warm without delegation.
- * Keep the existing pin and local reentry guard; never touch a lock counter. */
+ * Reuse the pin and drop non-task samples, just like entry statistics. */
 void kd_hotlock_record_spin_mcs_pinned(void)
 {
-  struct kd_hotlock_table *t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
+  struct kd_hotlock_table *t;
   unsigned long now;
 
-  if (this_cpu_cmpxchg(kd_hotlock_cpu->tables[0].busy, 0, 1))
+  if (!in_task())
     return;
+  t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
   kd_hotlock_clock(t, &now, KD_HOTLOCK_SPIN_MCS_INTERVAL);
-  barrier();
-  WRITE_ONCE(t->busy, 0);
 }
 
 /* Acquisition-pinned callers reuse the verified sampler. Its preempt_count

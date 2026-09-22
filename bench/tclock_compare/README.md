@@ -1,6 +1,10 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
-最新[CPU32 MCS 计数验证](results/20260922-spin-mcs32.md)：1/4/20线程三方单轮18/18场通过；
+最新[CPU MCS1 / hotlock32 与移除 busy 合并验证](results/20260922-spin-mcs1-lock32.md)：
+三方单轮18/18场通过，20线程KD c1/c16为5.011/4.802 Mops/s，较上一轮提高27.3%/23.7%，
+本轮恢复到下降前基线水平。基础/定向单元3/3、adaptive功能2/2通过；两组改动的贡献未拆分。
+
+此前[CPU32 MCS 计数验证](results/20260922-spin-mcs32.md)：1/4/20线程三方单轮18/18场通过；
 单线程 KD c1/c16 为6.574/6.890 Mops/s，20线程为3.937/3.883 Mops/s，
 相对下方基线20线程下降20.8%/18.4%。本次按用户指定保留计数规则，收益与退化分别记录。
 
@@ -8,8 +12,9 @@
 30/30 场通过，计时区间 2940 万次操作全部排空。单线程 KD c1/c16 为
 6.369/5.779 Mops/s；20 线程为 4.974/4.760 Mops/s。每配置只测一轮。
 
-当前 spin CPU 热度改为实际 MCS 入队计数，每 32 次检查；fast/pending 不计数。
-入口准入位置、单锁第 1025 次采样、时间窗口和 mutex 计数规则保持原值。
+当前 spin CPU 每次实际 MCS 入队检查热度，fast/pending 不计数；spin/mutex 单锁
+阈值为32，第33次调用采时。mutex CPU 保持1024次入口检查，时间窗口和入口准入不变。
+热表已删除 busy/barrier，只在 task context 统计并保留 CPU pin；非 task 样本丢弃。
 此前 CPU 阈值为 1024 的 MCS 入队频率实验已因退化撤回，
 [该次回退验证](results/20260922-spin-mcs-rollback.md)通过，当时未重跑性能矩阵；
 [实验成绩](results/20260922-spin-mcs-frequency.md)保留为历史。
@@ -21,8 +26,8 @@
 20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空，按当时口径保留。
 
 当前实现的恢复过程见[热表回归处理](results/20260922-performance-recovery.md)：
-每 CPU/type 256 桶、256 记录，精确地址碰撞链、满表不替换、本地 busy 及已有 pin 复用。
-无 busy、共享表和直接映射版本已回退；普通 spin IRQ 语义及 wrapper 栈修复保留。
+当时采用每 CPU/type 256 桶、256 记录，精确地址碰撞链、满表不替换、本地 busy 及已有 pin 复用。
+当时的无 busy、共享表和直接映射版本已回退；当前重新采用 task-only 统计，普通 spin IRQ 语义及 wrapper 栈修复保留。
 历史实验统一从[历史索引](../spin_cacheline/results/HISTORY.md)读取。
 
 当前源码使用显式锁 API，KD 入口记录本地热度；进程名筛选和统一 hook 分派不进入被测路径。三种后端分别构建同一份
@@ -40,7 +45,7 @@ kdlock 使用显式 32 位 KD 锁字，保留 owner/ACK、上下文和 JIT 就�
 每次完整操作保留原来的固定 cacheline 更新、解锁后四组乘加及循环成本。
 吞吐和摊销 ns/op 都以完整操作计算，不是独立获取锁延迟。
 
-当前保留入口准入和 ticket 路径优化；热度使用无候选的精确地址哈希计数，spin CPU 每32次MCS入队、单锁入口计数大于1024时定时确认，mutex CPU仍统计1024次调用。同期复现、独立采样、
+当前保留入口准入和 ticket 路径优化；热度使用无候选的精确地址哈希计数，spin CPU 每次MCS入队、单锁入口计数大于32时定时确认，mutex CPU仍统计1024次调用。同期复现、独立采样、
 两个候选与回退验收见 [竞争回退报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
 
 ## 准备与运行
@@ -182,7 +187,7 @@ v2，客户端和 workload 模块必须同时重建。
 ## 准入模式与结果解释
 
 `--hotlock-mode observe`（运行器默认）固定 KD 准入并记录本地统计，
-`--hotlock-mode adaptive` 使用 spin CPU 每32次实际MCS入队、单锁入口 count 大于1024（1025次）的
+`--hotlock-mode adaptive` 使用 spin CPU 每次实际MCS入队、单锁入口 count 大于32（33次）的
 独立时间窗口确认；每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
 满表不覆盖已有身份，未收录锁或冷锁保持原生。
 两者必须分开结果目录；

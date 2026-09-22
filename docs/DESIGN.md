@@ -95,24 +95,28 @@ insert into an unused slot. There is no candidate ranking, score/error estimate,
 eviction or transfer of another address's history. A full table leaves unknown
 locks cold under adaptive admission, retaining existing identities until unload.
 
-Initialization reserves 13376 bytes per CPU (two 6688-byte tables, 24-byte entries)
+Initialization reserves 13376 bytes per CPU (two 6680-byte tables plus alignment,
+24-byte entries)
 and seeds CPU clocks. Valid addresses and initialized lifetime are caller
-preconditions. Spin CPU heat checks its 40-billion-TSC window every 32 actual
-MCS tail publications; mutex CPU heat still checks every 1024 entry records.
+preconditions. Spin CPU heat checks its 40-billion-TSC window at every actual
+MCS tail publication; mutex CPU heat still checks every 1024 entry records.
 The shared spin tail exchange counts native, delegated and virtual producers;
 fast/pending success, pre-publication cancellation and exhausted-node polling
 do not count. Entry admission stays in place and consumes cached CPU heat;
 only a hot CPU accesses the lock table. A lock checks its 2.5-billion-TSC window
-when its count is **greater than 1024**, at hit 1025. The check refreshes its hot
+when its count is **greater than 32**, at hit 33. The check refreshes its hot
 flag and timestamp and resets the count. Strictly smaller elapsed time and
 nondecreasing TSC are required. Mutex coincident CPU/lock checks share one TSC
 read; spin lock sampling reads its own timestamp because MCS is a separate event.
 Continuous CPU heat preserves independent lock batches. Cold/reheating CPU checks
 reset per-lock counts/heat/timestamps while retaining all hash mappings.
 Queries only read cached heat, which can remain stale until the next batch check.
+Sampling is best-effort: non-task calls skip the table and queries return cold;
+observe records still admit. Task callers reuse or acquire a CPU pin, so hash
+insertion needs no busy flag or statistics barrier and cannot be reentered by IRQ.
 The first CPU batch includes startup idle. Spin entries alone cannot warm a cold
-CPU; native MCS publications can, and later entries accumulate the unchanged
-1025-hit lock batch. Mutex can first warm a single lock at record 2048.
+CPU; native MCS publications can, and later entries accumulate the
+33-hit lock batch. Mutex can first warm a single lock at record 1056.
 See [flow and storage](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取).
 
 IRQ/NMI reentry drops only a sample; the statistics pin ends before mutex sleep.

@@ -5,8 +5,9 @@
 性能 ELF 为基础；2026-09-21 重新构建、运行并复核 node/continuation/ticket 布局。
 2026-09-22 普通 spin 已改为保持 IRQ/BH 状态，continuation 缩至 704 B；
 新布局与实际 JIT 验证见[普通 spin 语义报告](../tclock_compare/results/20260922-plain-spin.md)。
-热表已按性能验收回退到每 CPU/type 256 桶/256 记录，恢复本地 busy 和复用 pin 的共享入口；
-原因、范围及新性能见[回归处理](../tclock_compare/results/20260922-performance-recovery.md)。
+热表保留每 CPU/type 256 桶/256 记录和复用 pin 的共享入口；当前模糊统计已删除
+本地 busy 及对应屏障，非 task 上下文跳过统计。此前回退的原因、范围及性能见
+[回归处理](../tclock_compare/results/20260922-performance-recovery.md)，不代表本次删除 busy 后的测量。
 TCLock 指仓库中的外部模块适配版 `tclock_backend/`；KD 指显式 `kd_spinlock_t`
 API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施及分类型热表，其互斥
 协议见 [locking](../../docs/design/locking.md)，不能套用这里的 spin 流程。
@@ -143,7 +144,7 @@ waiter CPU                         combiner CPU
 | 三个 per-CPU 指针 | 8 × 3 = 24 / CPU | `spin/state.inc` 静态 `kd_spin_resume_nodes`、`kd_spin_continuations`、`kd_spin_native_root`；分别记录本地恢复节点、存储栈基址、等待最终 native 退休的根记录 |
 | `kd_spin_fast_cpu` | 24 / CPU | 静态 per-CPU；单一 task 持锁的 held/owner，以及原生嵌套/IRQ 排空计数 nondelegated |
 | `kd_spin_entry` / pool | 48 × 32 + 16 = 1552 / CPU | `kd_spin_entries_init()` 一次 `alloc_percpu`；ticket 记录 task/CPU/代际/物理所有权及 native 引用，物理释放、native 借用全部退休及 end 后归还槽。尺寸依赖当前内核 raw lock 布局 |
-| 热表 entry/table/cpu | 24 / 6688 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录；无候选淘汰，不是 owner 存储 |
+| 热表 entry/table/cpu | 24 / 6680 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录；无候选淘汰，不是 owner 存储 |
 | `kd_spin_diag_slot` | 128 × 32 = 4096，全局 | 静态数组；锁地址、禁用标志和 waiter 数，槽身份在模块会话内稳定；它是诊断表，不是已删除的全局热锁晋升集合 |
 | `kd_spin_diag_cpu` | 2592 / CPU | spin 初始化时 `alloc_percpu`；事件/批次计数，排空汇总后释放；SELFTEST 额外探针存储不计入 normal 表 |
 
@@ -291,12 +292,12 @@ native 借用、代际及最终退休检查保留。
 
 spin/mutex 的 `record_*` 使用直接哈希计数，调用位置仍在入口。模块初始化时
 `alloc_percpu` 为每 CPU 预分配 13376 字节、64 字节对齐的对象，包含两个
-6688 字节类型表。每表 256 桶、256 条 24 字节记录，桶和冲突链使用 `u16` 槽索引；
+6680 字节类型表并包含 CPU 对齐填充。每表 256 桶、256 条 24 字节记录，桶和冲突链使用 `u16` 槽索引；
 `0` 为空，`1..256` 对应记录。每条记录只保存完整锁地址、时间戳、计数、hot 标记
 和 next；删除候选排名、score/error、最小分数扫描和替换。初始化一次采时建立
 所有 CPU/type 的时间起点，锁路径不分配；调用者保证地址有效及初始化/排空生命周期。
 
-spin CPU 仅在共用 `xchg_tail()` 交换队尾前计数，累计 32 次实际 MCS 入队才读 TSC；
+spin CPU 仅在共用 `xchg_tail()` 交换队尾前计数，每次实际 MCS 入队都读 TSC；
 mutex CPU 仍在入口累计 1024 次。间隔严格小于 40000000000 ticks 且时间未倒退则 CPU 热。
 spin 的 fast/pending、发布前取消及节点耗尽轮询不计数；原生、代理和虚拟入队均在
 实际发布点计一次，事件归属发布所在物理 CPU。CPU 冷时入口不查表。CPU 热时直接按锁字
@@ -304,28 +305,28 @@ spin 的 fast/pending、发布前取消及节点耗尽轮询不计数；原生�
 预分配的下一空槽创建独立记录，其时间起点借用最近 CPU 时间。表满不淘汰、不覆盖，
 未收录的新锁在 adaptive 下保持原生；已有记录继续计数，直到模块卸载保留地址身份。
 
-单锁严格按 `count > 1024` 检查，即第 1025 次才采时：间隔严格小于
+单锁严格按 `count > 32` 检查，即第 33 次才采时：间隔严格小于
 2500000000 ticks 且时间未倒退则标记 hotlock，否则清除 hot；检查后更新该锁
 时间戳并清零 count。mutex 的 CPU 和单锁同次到期复用一次 TSC，零时间戳也有效；
 spin 单锁始终独立采时，不能复用此前 MCS 事件的时间戳。
 CPU 持续热不重置单锁批次；CPU 检查为冷或由冷变热时清除所有已记录锁的
 计数/hot 并更新起点，但保留哈希映射。query 不计数、不采时、不插入。
 
-spin 首批 32 次 MCS 入队确认 CPU 热后，后续入口开始记录单锁；第 1025 次锁调用
+spin 在 MCS 入队事件确认 CPU 热后，后续入口开始记录单锁；第 33 次锁调用
 检查该锁热度。事件不重新准入当前请求，无 MCS 时缓存 CPU 热值保持到下一批检查。
-mutex 单热锁且首批时间满足条件时，仍在第 1024 次开始记录锁，第 2048 次首次可热。
+mutex 单热锁且首批时间满足条件时，仍在第 1024 次开始记录锁，第 1056 次首次可热。
 初始化至首批的空闲计入 CPU 窗口；各自过期只在检查点确认，期间返回缓存热值。
 
 ```mermaid
 flowchart TD
-  A[spin record：复用 pin；取得本地 busy] --> G{缓存 CPU 热？}
-  S[spin MCS：使用已有 pin；取得本地 busy] --> B[CPU 计数加一]
-  T[mutex record：取得本地 busy] --> B
-  B --> C{spin 满32次 / mutex 满1024次？}
+  A[spin record：task context；复用 pin] --> G{缓存 CPU 热？}
+  S[spin MCS：task context；使用已有 pin] --> B[CPU 计数加一]
+  T[mutex record：task context；复用或临时 pin] --> B
+  B --> C{spin 每次 / mutex 满1024次？}
   C -- 是 --> D[采时刷新 CPU 热值；冷却或重新变热则重置锁批次]
   D --> E{当前是 MCS 事件？}
   C -- 否 --> E
-  E -- 是 --> Z[释放 busy；仅解除本次临时 pin]
+  E -- 是 --> Z[仅解除本次临时 pin]
   E -- 否 --> G
   G -- 否 --> R[adaptive 拒绝；observe 固定允许]
   G -- 是 --> H{hash 冲突链匹配完整锁地址}
@@ -334,7 +335,7 @@ flowchart TD
   J -- 否 --> R
   J -- 是 --> K[建立该锁记录；count/hot 清零；借用 CPU 时间]
   K --> I
-  I --> L{count 大于 1024？}
+  I --> L{count 大于 32？}
   L -- 是 --> M[采时；仅 mutex 可复用本次 CPU 时间；刷新锁热值并清零 count]
   L -- 否 --> N[adaptive 返回该锁 hot；observe 固定允许]
   M --> N
@@ -342,8 +343,9 @@ flowchart TD
   N --> Z
 ```
 
-busy 重入不改统计，adaptive 返回冷、observe 的 record 仍固定允许。
-保留抢占配对；热值和表容量均不替代上下文/JIT 安全准入。最终排空日志输出
+热表不再使用 busy 或对应编译器屏障。非 task 上下文不访问统计表，adaptive/query
+返回冷、observe 的 record 仍固定允许；允许丢样，避免重入破坏哈希索引链。
+task 调用保留抢占配对；热值和表容量均不替代上下文/JIT 安全准入。最终排空日志输出
 `count/cpu_hot/lock_hot`，不再输出候选分数。
 
 热表仅给准入建议；解锁不查询它。窗口重置、表满或 CPU 迁移不能改变已有
@@ -528,11 +530,11 @@ stack canary；有地址逃逸对象的慢路径仍有 canary。
 
 热度实现恢复为分类型采样器，并在四个固定 spin/mutex、record/query 入口
 编译时展开类型/操作分支。已 pin 的 spin 接口转入同一实现，读取现有
-preempt_count 并复用 acquisition pin，不额外 disable/enable。原有本地 busy
-和256条精确地址记录保留。spin CPU 仅在共用 `xchg_tail()` 交换队尾前计数，
-每32次实际MCS入队检查原400亿TSC窗口；单锁仍在入口累计1025次后检查。
+preempt_count 并复用 acquisition pin，不额外 disable/enable。256条精确地址记录保留，
+本地 busy 和对应屏障已移除，非 task 样本丢弃。spin CPU 仅在共用 `xchg_tail()` 交换队尾前计数，
+每次实际MCS入队检查原400亿TSC窗口；spin/mutex 单锁在入口累计33次后检查。
 fast/pending、入队前取消及节点耗尽轮询不计数，原生/代理/虚拟入队均计一次。
-CPU变热只影响后续入口；CPU/单锁分别采时，mutex仍为入口1024/1025及同次采时复用。
+CPU变热只影响后续入口；CPU/单锁分别采时，mutex为入口1024/33及同次采时复用。
 
 ### 5.6 完成通知、ACK 和回收的次序
 
@@ -610,5 +612,7 @@ pin，不重复增减。不能因 Linux 内部协议已被 pin 就删除 KD 显�
 [单线程 profiling](../tclock_compare/results/20260921-single-thread-profile.md)核对了
 实际 ELF 和独立 PMU 计数/采样。该优化前版本 c1 的 Linux/TCLock/KD 约为 50/56/344 条指令/op。
 9 月 21 日 fast 路径精简后 KD 约 289 条；两组均是历史冻结版本的诊断，
-不能作为后续源码的指令数实测。删除 busy/pin 检查的实验已回退，当前恢复共享采样器。
-长批次诊断不替代短批次三方吞吐；最新两轮最大值成绩见[回归报告](../tclock_compare/results/20260922-performance-recovery.md)。
+不能作为后续源码的指令数实测。此前同时删除 busy/pin 的实验已回退；当前保留
+共享采样器的 pin，仅删除 busy 及对应屏障，并跳过非 task 样本。
+长批次诊断不替代短批次三方吞吐；最新单轮成绩见
+[CPU MCS1 / hotlock32 合并报告](../tclock_compare/results/20260922-spin-mcs1-lock32.md)。

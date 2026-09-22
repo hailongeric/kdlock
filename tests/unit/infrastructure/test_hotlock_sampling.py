@@ -1,7 +1,7 @@
 """Compile actual hot-lock sampling with a deterministic TSC in the guest.
 
 The clock/allocation/CPU-local primitives are substitutes, including deterministic
-IRQ reentry; this does not exercise concurrent kernel hooks.
+IRQ reentry and dropped non-task samples; this does not exercise kernel hooks.
 The live JIT suite independently requires natural lock promotion.
 """
 
@@ -20,6 +20,8 @@ def main():
         for name in ("include/kd_hotlock.h", "kernel_module/kd_hotlock.c")
     )
     mutations = {
+        "interrupt-table-access": ("if (!in_task())\n    return admitted;", "if (false)\n    return admitted;", 1),
+        "interrupt-mcs-sample": ("if (!in_task())\n    return;", "if (false)\n    return;", 1),
         "redundant-preemption-pair": ("pin = !preempt_count();", "pin = true;", 1),
         "early-lock-threshold": ("++slot->count > KD_HOTLOCK_SAMPLE_TARGET", "++slot->count >= KD_HOTLOCK_SAMPLE_TARGET", 1),
         "ignore-lock-time": ("now - slot->begin < KD_HOTLOCK_INITIAL_WINDOW", "true", 1),
@@ -30,7 +32,7 @@ def main():
         "query-ticks": ("record && kind == 1 &&", "kind == 1 &&", 1),
         "spin-reuses-mcs-time": ("if (kind == 0 || t->rate_samples)", "if (t->rate_samples)", 1),
         "mutex-double-clock": ("if (kind == 0 || t->rate_samples)", "if (true)", 1),
-        "late-spin-cpu-threshold": ("#define KD_HOTLOCK_SPIN_MCS_INTERVAL 32U", "#define KD_HOTLOCK_SPIN_MCS_INTERVAL 1024U", 1),
+        "late-spin-cpu-threshold": ("#define KD_HOTLOCK_SPIN_MCS_INTERVAL 1U", "#define KD_HOTLOCK_SPIN_MCS_INTERVAL 32U", 1),
         "restart-lock-on-cpu-tick": ("if (!continuous)", "if (!continuous || t->rate_hot)", 1),
         "collision-alias": ("slot->address == address", "kd_hotlock_bucket(slot->address) == kd_hotlock_bucket(address)", 1),
         "capacity-overwrites-entry": ("if (t->used == KD_HOTLOCK_ENTRIES)\n    return NULL;", "if (t->used == KD_HOTLOCK_ENTRIES)\n    return &t->entries[0];", 1),

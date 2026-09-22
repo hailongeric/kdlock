@@ -1,6 +1,12 @@
 # 当前测试入口
 
-最新 [CPU32 MCS 计数验证](../bench/tclock_compare/results/20260922-spin-mcs32.md)：
+最新[CPU MCS1 / hotlock32 与移除 busy 合并验证](../bench/tclock_compare/results/20260922-spin-mcs1-lock32.md)：
+基础及定向单元3/3、16个错误变体检测、normal构建、三方单轮18/18和adaptive功能2/2通过。
+adaptive四线程实际JIT正文248513次，全部排空；非task丢样由定向fixture验证。
+当前保留CPU pin，删除统计busy/barrier；spin CPU每次MCS检查，spin/mutex单锁第33次检查。
+本轮未构建SELFTEST、未运行生命周期探针、真实中断压力或nested/early live，详见报告。
+
+此前 [CPU32 MCS 计数验证](../bench/tclock_compare/results/20260922-spin-mcs32.md)：
 基础及相关单元6/6、14个热度错误变体检测、normal/SELFTEST构建通过。
 三方单轮18/18场与adaptive/plain两场均完成排空；adaptive四线程实际JIT为235995次。
 本次SELFTEST只构建，未运行生命周期探针或nested/early live；详细边界见报告。
@@ -13,8 +19,8 @@
 512槽直接映射已按用户要求撤回，代码恢复 `bf16b10`。此前[回退验证](../bench/tclock_compare/results/20260922-directhash-v2-rollback.md)通过：
 20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空。下方完整矩阵为此前记录。
 
-当前热表已按性能退化处理恢复为每 CPU/type 256 桶/256 记录和本地 busy；
-共享表/直接映射及删除 busy 的报告保留为历史实验。见[回归处理](../bench/tclock_compare/results/20260922-performance-recovery.md)。
+此前热表曾按性能退化处理恢复为每 CPU/type 256 桶/256 记录和本地 busy；
+共享表/直接映射及当时删除 busy 的报告保留为历史实验。见[回归处理](../bench/tclock_compare/results/20260922-performance-recovery.md)。
 
 前序[普通 spin IRQ 语义与验证](../bench/tclock_compare/results/20260922-plain-spin.md)：
 普通路径不保存/屏蔽/恢复 IRQ/BH，保留抢占配对；12项单元、4项实际 JIT
