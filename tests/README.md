@@ -1,11 +1,12 @@
 # 当前测试入口
 
-公共调用精简第二阶段基础/定向8组及运行器13项最终通过；cacheline性能36/36场、
-nested/early、RCUHT及关闭delegation定向7/7场均完成并排空。
-`codegen/test_spin_paired_jit.py`执行实际wrapper，覆盖paired栈恢复、COMPLETE、入口拒绝和FULL续跑；
-25项clobber准入包含混合内层壳必须恢复被破坏的寄存器。
-证据及失败修复见[第二阶段报告](../bench/tclock_compare/results/20260922-spin-cold-stage2.md)；
-本阶段仍用局部cookie，用户最新指定per-CPU后的版本另行验证。
+共享CPU热度cookie版基础/定向5组、运行器13项通过；36场性能、8场功能及12场PMU
+均完成并排空。新增共享热度下两锁冷热不同、热度变化及提前解锁检查；生产冷态状态5
+与普通状态1混合MCS竞争400000次，pin和在途计数归零。
+`codegen/test_spin_paired_jit.py`执行实际wrapper，覆盖栈恢复、COMPLETE、入口拒绝和FULL续跑。
+新壳/gate关闭、nested/early、RCUHT及delegation关闭均有直接验收；
+证据与控制脚本首次缺输入的修复见[当前报告](../bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md)。
+[第二阶段](../bench/tclock_compare/results/20260922-spin-cold-stage2.md)的8组及25项准入是历史验证。
 
 
 当前 spin CPU 每 4 次实际 MCS 入队检查，spin/mutex CPU 共用 40 亿 TSC 窗口；

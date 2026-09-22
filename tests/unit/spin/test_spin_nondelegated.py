@@ -19,6 +19,11 @@ def main():
         queue = (ROOT/'kernel_module/spin/queue.inc').read_text()
         (Path(directory)/'spin_mcs_tail.h').write_text(definition(
             queue, 'static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)'))
+        source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
+        paired = 'unsigned int ' + definition(source,
+            'kd_spin_direct_enter(kd_spinlock_t *lock, unsigned int * __percpu *cpu_hot)')
+        paired += 'void ' + definition(source, 'kd_spin_direct_native_unlock(kd_spinlock_t *lock)')
+        (Path(directory)/'spin_direct_native.h').write_text(paired)
         subprocess.run(['cc', '-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
                         '-pthread', '-I', str(ROOT), '-I', directory,
                         str(ROOT/'tests/unit/spin/spin_nondelegated_fixture.c'),

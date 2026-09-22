@@ -220,10 +220,13 @@ class DirectTests(unittest.TestCase):
                     self.assertEqual(spec['caller_abi'], 'clobber')
                     self.assertEqual(spec['caller_shell'],
                                      'paired' if spec['spin_cold_fastpath']=='on' else 'clobber')
+                    self.assertEqual(spec['cookie_storage'],
+                                     'percpu_rate_hot' if spec['spin_cold_fastpath']=='on' else 'not_applicable')
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
             self.assertEqual(len(rows), 6)
             self.assertTrue(all(r['sessions'] == r['valid'] == 1 for r in rows))
+            self.assertEqual({r['cookie_storage'] for r in rows}, {'percpu_rate_hot', 'not_applicable'})
 
 
 if __name__ == '__main__':

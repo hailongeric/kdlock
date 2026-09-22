@@ -104,7 +104,8 @@ void kd_spin_lock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 			   unsigned long ip, unsigned long bp);
 void kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 			     unsigned long ip, unsigned long bp);
-unsigned int kd_spin_direct_enter(kd_spinlock_t *lock);
+unsigned int kd_spin_direct_enter(kd_spinlock_t *lock,
+				 unsigned int * __percpu *cpu_hot);
 void kd_spin_direct_native_unlock(kd_spinlock_t *lock);
 void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *lock, unsigned long sp,
 				 unsigned long ip, unsigned long bp);

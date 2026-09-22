@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def main():
     source = (ROOT / 'kernel_module/kd_spinlock.c').read_text()
-    code = 'unsigned int ' + definition(source, 'kd_spin_direct_enter(kd_spinlock_t *lock)')
+    code = 'unsigned int ' + definition(source, 'kd_spin_direct_enter(kd_spinlock_t *lock, unsigned int * __percpu *cpu_hot)')
     code += 'void ' + definition(source, 'kd_spin_direct_native_unlock(kd_spinlock_t *lock)')
     code += definition((ROOT / 'include/kd_spin_fast.h').read_text(),
                        'static inline bool kd_spin_fast_idle(void)')

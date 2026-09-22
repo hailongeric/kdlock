@@ -8,10 +8,10 @@
 #include <linux/objtool.h>
 #include "kd_spin_direct.h"
 #if SC_COLD_FASTPATH
-#define SC_LOCK(n) unsigned int sc_cookie; \
-	KD_SPIN_DIRECT_LOCK(&sc_lock, sc_cookie, \
+/* All call sites and lock objects share the provider's one cookie per CPU. */
+#define SC_LOCK(n) KD_SPIN_DIRECT_LOCK(&sc_lock, kd_spin_direct_cookie, \
 	".globl sc_entry_" #n "\nsc_entry_" #n ":\n\t" ANNOTATE_NOENDBR)
-#define SC_UNLOCK() KD_SPIN_DIRECT_UNLOCK(&sc_lock, sc_cookie)
+#define SC_UNLOCK() KD_SPIN_DIRECT_UNLOCK(&sc_lock, kd_spin_direct_cookie)
 #else
 #define SC_LOCK(n) KD_SPIN_DIRECT_CALL(kd_spin_lock_clobber_v1, &sc_lock, \
 	".globl sc_entry_" #n "\nsc_entry_" #n ":\n\t" ANNOTATE_NOENDBR)

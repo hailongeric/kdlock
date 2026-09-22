@@ -74,6 +74,7 @@ def make_plan(args):
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, hotlock_mode=mode,
                 caller_shell=('paired' if cold == 'on' else 'clobber') if backend == 'kdlock' else 'c',
+                cookie_storage='percpu_rate_hot' if backend == 'kdlock' and cold == 'on' else 'not_applicable',
                 spin_cold_fastpath=cold, pmu=getattr(args, 'pmu', False),
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
@@ -94,6 +95,7 @@ def report(out):
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
                 spin_cold_fastpath=spec.get('spin_cold_fastpath', 'unrecorded'),
                 caller_shell=spec.get('caller_shell', 'unrecorded'),
+                cookie_storage=spec.get('cookie_storage', 'unrecorded'),
                 status=row.get('execution_status', 'NOT_RUN'),
                 drained=row.get('drained', False),
                 completed=row.get('measurement', {}).get('completed', 0),
@@ -115,15 +117,17 @@ def report(out):
         mode = r.get('hotlock_mode', 'unrecorded')
         groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode,
                            r.get('spin_cold_fastpath', 'unrecorded'),
-                           r.get('caller_shell', 'unrecorded')), []).append(r)
+                           r.get('caller_shell', 'unrecorded'),
+                           r.get('cookie_storage', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, cold, shell), rows in groups.items():
+    for (n, t, arm, mode, cold, shell, cookie), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
                    hotlock_mode=mode, spin_cold_fastpath=cold, caller_shell=shell,
+                   cookie_storage=cookie,
                    spin_delegate=rows[0].get('spin_delegate', 'on'),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and

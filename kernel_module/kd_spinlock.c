@@ -499,22 +499,28 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,
 }
 
 /* Returns zero with native ownership, or one with just the acquisition pin.
- * No mode change can reroute this acquisition: the caller saves this decision
- * through unlock. Count native holds until release instead of transferring
+ * cpu_hot is the one shared per-CPU view of rate_hot, never acquisition state.
+ * Native ownership is encoded in the lock byte, independently of later heat
+ * changes or nested locks. Count native holds until release instead of transferring
  * them to fast-owner records, so the paired unlock needs no owner lookup. */
 __attribute__((noipa)) noinline notrace unsigned int
-kd_spin_direct_enter(kd_spinlock_t *lock)
+kd_spin_direct_enter(kd_spinlock_t *lock, unsigned int * __percpu *cpu_hot)
 {
 	u32 val;
 
 	preempt_disable();
 	if (!kd_spin_cold_fastpath ||
-	    (kd_spin_delegate && kd_hotlock_spin_cpu_hot_pinned()))
+	    (kd_spin_delegate && READ_ONCE(*this_cpu_read(*cpu_hot))))
 		return 1;
 	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
-	val = atomic_cmpxchg_acquire(&lock->val, 0, _Q_LOCKED_VAL_HL);
-	if (val)
+	val = atomic_cmpxchg_acquire(&lock->val, 0, KD_SPIN_DIRECT_NATIVE_HELD);
+	if (val) {
 		kd_spin_acquire_nondelegated_contended(lock, val);
+		/* The shared pending/MCS core acquires with its ordinary byte.
+		 * We now own it: publish paired native provenance without touching
+		 * pending or a successor's tail. No second acquisition CAS. */
+		WRITE_ONCE(lock->locked, KD_SPIN_DIRECT_NATIVE_HELD);
+	}
 	return 0;
 }
 EXPORT_SYMBOL_GPL(kd_spin_direct_enter);
@@ -522,7 +528,7 @@ EXPORT_SYMBOL_GPL(kd_spin_direct_enter);
 __attribute__((noipa)) noinline notrace void
 kd_spin_direct_native_unlock(kd_spinlock_t *lock)
 {
-	/* The native cookie is the provenance; preserve a concurrently added tail. */
+	/* The lock byte proves native ownership; preserve a concurrently added tail. */
 	smp_store_release(&lock->locked, 0);
 	this_cpu_dec(kd_spin_fast_cpu.nondelegated);
 	preempt_enable();

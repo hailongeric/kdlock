@@ -14,6 +14,10 @@ typedef struct kd_spinlock {
   struct { u16 locked_pending, tail; };
  };
 } kd_spinlock_t;
+/* Paired native ownership, distinct from normal (1), combiner (3), OOO (7)
+ * and IRQ (15). Only the low byte changes; pending/tail keep their protocol.
+ * CPU heat may change while waiting/holding, so heat is never unlock proof. */
+#define KD_SPIN_DIRECT_NATIVE_HELD 5U
 #define KD_SPINLOCK_INITIALIZER { .val = ATOMIC_INIT(0) }
 #define DEFINE_KD_SPINLOCK(name) kd_spinlock_t name = KD_SPINLOCK_INITIALIZER
 static inline void kd_spin_init(kd_spinlock_t *lock)

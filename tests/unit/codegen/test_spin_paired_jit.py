@@ -79,8 +79,9 @@ def main():
                'kd_spin_unlock_clobber_v1': 0x4000,
                'kd_spin_direct_native_unlock': 0x6000, 'kd_spin_lock': 0x5000}
     for native in (False, True):
-        # Same POP order and cookie assignment as the real paired continuation.
-        code = bytes.fromhex('415f415e415d415c5bb801000000')
+        # Same POP order as the paired continuation. The CPU-hot cookie is
+        # read only by the C selector; no cookie is assigned in JIT code.
+        code = bytes.fromhex('415f415e415d415c5b')
         code += bytes.fromhex('48ffc349ffc449ffc549ffc649ffc7')
         if native:
             # A matched ordinary-C control pair has resumable FULL boundaries.

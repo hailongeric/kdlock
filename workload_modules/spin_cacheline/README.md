@@ -5,6 +5,11 @@
 `direct.h` 按 `SC_BACKEND=native|tclock|kdlock` 选择 API；KD 使用独立四字节
 `kd_spinlock_t`，不与普通 Linux 锁混用。
 
+`SC_COLD_FASTPATH=1`编译配对C调用壳，默认仍为0（保留clobber壳）。所有body及锁
+统一传`kd_spin_direct_cookie`：一个CPU一份，直接引用该CPU已有的`rate_hot`。
+cookie仅代表CPU热度，不记录路径或嵌套深度；冷解锁由锁字低字节状态5决定。
+本轮只接入外层，内层仍走原接口。
+
 `scenario.h` 的默认 plain 不增加锁，nested/early 只对 KD cacheline 启用。
 `SC_PREPARE` 显式登记对应锁后 RIP，`api.h` 定义客户端和模块共同使用的 ioctl。
 

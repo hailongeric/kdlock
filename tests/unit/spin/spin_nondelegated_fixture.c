@@ -12,6 +12,9 @@ typedef struct { u32 counter; } atomic_t;
 struct qspinlock {
  union { atomic_t val; struct { uint8_t locked, pending; uint16_t tail; }; uint16_t locked_pending; };
 };
+typedef struct qspinlock kd_spinlock_t;
+#define __percpu
+#define KD_SPIN_DIRECT_NATIVE_HELD 5U
 #define noinline __attribute__((noinline))
 #define MAX_NODES 4
 #define CPUS 8
@@ -35,16 +38,24 @@ static struct kd_spin_node pool[CPUS][MAX_NODES];
 static struct { int node_count; } states[CPUS];
 static _Thread_local int cpu;
 static _Thread_local unsigned long queued, swaps, cas_calls, local_reads;
+static _Thread_local unsigned int pins, rate_hot;
+static _Thread_local struct { unsigned int nondelegated; } kd_spin_fast_cpu;
+static bool kd_spin_cold_fastpath = true;
+#define preempt_disable() (++pins)
+#define preempt_enable() (--pins)
 #define kd_spin_nodes (pool[cpu])
 #define kd_spin_cpu (states[cpu])
 #define this_cpu_ptr(p) (p)
 #define this_cpu_inc_return(x) (++(x))
 #define this_cpu_dec(x) (--(x))
+#define this_cpu_inc(x) (++(x))
+#define this_cpu_read(x) (x)
 #define smp_processor_id() cpu
 #define barrier() __asm__ __volatile__("" ::: "memory")
 #define cpu_relax() __asm__ __volatile__("pause" ::: "memory")
 #define unlikely(x) (x)
 #define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
+#define WRITE_ONCE(x,v) __atomic_store_n(&(x), v, __ATOMIC_RELAXED)
 #define smp_wmb() __atomic_thread_fence(__ATOMIC_RELEASE)
 #define smp_store_release(p, v) __atomic_store_n(p, v, __ATOMIC_RELEASE)
 #define LOAD_UNTIL(p, condition, order) ({ \
@@ -69,7 +80,7 @@ static struct kd_spin_node *decode_tail(u32 tail) { return &pool[(tail >> 18) - 
 #define _Q_TAIL_OFFSET_HL 16
 static bool kd_spin_delegate = true;
 static _Thread_local unsigned long mcs_samples;
-static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; }
+static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; rate_hot=1; }
 #define xchg(p,v) (queued++, swaps++, __atomic_exchange_n(p,v,__ATOMIC_ACQ_REL))
 #include "spin_mcs_tail.h"
 static u32 kd_spin_fetch_set_pending_acquire(struct qspinlock *p)
@@ -78,6 +89,7 @@ static void clear_pending(struct qspinlock *p) { __atomic_fetch_and(&p->val.coun
 static void clear_pending_set_locked(struct qspinlock *p) { __atomic_store_n(&p->locked_pending, 1, __ATOMIC_RELAXED); }
 static void set_locked(struct qspinlock *p) { __atomic_store_n(&p->locked, 1, __ATOMIC_RELAXED); }
 #include "kernel_module/spin/nondelegated.inc"
+#include "spin_direct_native.h"
 
 static struct qspinlock lock;
 static pthread_barrier_t start;
@@ -86,14 +98,25 @@ static unsigned int inside;
 static void *worker(void *arg)
 {
  cpu = (long)arg;
+ unsigned int *cpu_hot=&rate_hot;
  pthread_barrier_wait(&start);
  for (int i=0;i<50000;i++) {
-  kd_spin_acquire_nondelegated(&lock);
+  /* Mix ordinary owners with the exact paired native selector/byte state.
+   * Queuing warms this CPU after selection; it must still finish natively. */
+  if(cpu&1) kd_spin_acquire_nondelegated(&lock);
+  else {
+   rate_hot=0;
+   assert(!kd_spin_direct_enter(&lock,&cpu_hot));
+   assert(lock.locked==KD_SPIN_DIRECT_NATIVE_HELD && pins==1);
+   rate_hot=1;
+  }
   assert(!__atomic_fetch_add(&inside, 1, __ATOMIC_RELAXED));
   value++;
   assert(__atomic_fetch_sub(&inside, 1, __ATOMIC_RELAXED)==1);
-  smp_store_release(&lock.locked, 0);
+  if(cpu&1) smp_store_release(&lock.locked, 0);
+  else kd_spin_direct_native_unlock(&lock);
   assert(states[cpu].node_count==0);
+  assert(!pins && !kd_spin_fast_cpu.nondelegated);
  }
  /* One initial CAS, and at most one queue-tail claim CAS per operation.
   * Failed contender retries must be loads/local waits, not global RMWs. */
@@ -119,5 +142,5 @@ int main(void)
  kd_spin_acquire_nondelegated(&lock);
  assert(states[0].node_count==1 && pool[0][0].rsp==0x1234);
  smp_store_release(&lock.locked,0); states[0].node_count=0;
- printf("PASS native MCS: %lu exact operations, %lu queued, %lu local waits, no request/frame or CAS retry storm\n",value,queue_total,read_total);
+ printf("PASS mixed native MCS (ordinary/paired byte 5): %lu exact operations, %lu queued, %lu local waits, balanced pins/counts, no CAS retry storm\n",value,queue_total,read_total);
 }

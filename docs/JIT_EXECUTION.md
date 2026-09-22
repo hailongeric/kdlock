@@ -22,13 +22,14 @@
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
    直接 benchmark 在单 CPU 预热前完成准备，测量时停止 daemon。
 2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` / `KD_SPIN_DIRECT_UNLOCK(lock, cookie)`
-   是普通 C 调用约定的配对壳，每次获取有独立的局部 `unsigned int cookie`。
+   是普通 C 调用约定的配对壳，cookie统一传`kd_spin_direct_cookie`，直接引用已有
+   per-CPU `rate_hot`，一个CPU一份、所有锁共享。它只表示当前CPU热度，不记录路径或深度。
    加载时只读选项 `spin_cold_fastpath=1` 使 observe/adaptive 都先读现有 CPU `rate_hot`。
    冷态只 pin 一次、增加 nondelegated 在途计数并 CAS；失败值直接进入原生 pending/MCS，
-   不重复初始 CAS。配对冷解锁只 release 锁字低字节、减少计数、解除 pin，保留 pending/tail。
-   热度在等待或持锁期间变化不改本次 cookie；冷 MCS 仍采样，为后续获取升温。
+   不重复初始 CAS。冷获取将低字节设为5；解锁检查此持有状态后只release低字节、减少计数、
+   解除pin，保留pending/tail。热度仍按原MCS采样即时更新，只影响后续获取；解锁不读取cookie。
    热分支内部 push/pop `rbx、r12–r15`，continuation 位于 CALL 后、POP 前；JIT 从等待者
-   栈恢复值，随后显式定义热 cookie。热解锁保存临界区结束时的活跃值，供物理完成恢复。
+   栈恢复值，无需写cookie或使用未捕获的返回寄存器。热解锁保存当前活跃值，供物理完成恢复。
    新 pinned clobber 入口复用前一步的 pin；32 位锁、寄存器包和 wrapper 输入不变。
    当前 workload 只将外层锁接入新接口；nested/early 在旧内层调用周围增加五个寄存器
    的栈保存/重载，以便外层配对解锁仍有有效值。内层入口、clobber ABI及native/FULL续跑协议保留。

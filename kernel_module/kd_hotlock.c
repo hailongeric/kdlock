@@ -3,6 +3,7 @@
  * tickets and frames own requests independently of heat and migration. */
 #include <asm/tsc.h>
 #include <linux/errno.h>
+#include <linux/export.h>
 #include <linux/hash.h>
 #include <linux/moduleparam.h>
 #include <linux/percpu.h>
@@ -40,6 +41,7 @@ struct kd_hotlock_cpu
 } ____cacheline_aligned;
 static struct kd_hotlock_cpu __percpu *kd_hotlock_cpu;
 DEFINE_PER_CPU(unsigned int *, kd_hotlock_spin_gate);
+EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_gate);
 /* Immutable after load: observe fixes admission even for dropped samples. */
 static char *hotlock_mode = "adaptive";
 module_param(hotlock_mode, charp, 0444);

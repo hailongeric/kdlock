@@ -1,9 +1,10 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
-[公共调用精简第二阶段](results/20260922-spin-cold-stage2.md)：36/36性能、7/7定向功能完成并排空；
-单线程改善，竞争仍有超过5%的下降，默认保留旧壳和关闭选项。
-此阶段及[第一阶段](results/20260922-spin-cold-stage1.md)使用局部cookie，
-不代表用户随后要求的per-CPU cookie版本。
+[共享CPU热度cookie版本](results/20260922-spin-cpu-hot-cookie.md)：36/36性能、8/8功能及12/12
+长批次PMU通过并排空。cookie只表示当前CPU热度，一个CPU一份、所有锁共享。
+单线程提升10.45%–47.51%，竞争仍有超过5%的下降，默认保留旧壳和关闭选项。
+[第二阶段](results/20260922-spin-cold-stage2.md)及[第一阶段](results/20260922-spin-cold-stage1.md)
+的局部cookie成绩仅作历史，不与当前版混合汇总。
 
 最新[adaptive快速三方结果](results/20260922-adaptive-quick.md)：18/18场、1500万次计时操作完成并排空，
 4/4竞争KD有实际JIT；1线程KD c1/c16为8.445/6.940 Mops/s，20线程为5.048/4.818 Mops/s。
@@ -57,7 +58,9 @@
 `KD_SPIN_DIRECT_LOCK/UNLOCK` 配对 C 壳并加载 `spin_cold_fastpath=1`；`off` 使用
 保留的全 clobber 壳并关闭开关。暂默认 `off`，待单线程和竞争验收后决定默认值。
 两组使用相同 clobber-v1 JIT 入口 ABI，不是历史 KD 二进制。记录分别带有
-`caller_shell=paired/clobber`、`caller_abi=clobber` 和 `spin_cold_fastpath`。
+`caller_shell=paired/clobber`、`caller_abi=clobber`、`spin_cold_fastpath`和
+`cookie_storage=percpu_rate_hot/not_applicable`。cookie只表示CPU热度，一个CPU一份、所有锁共享。
+历史未记录cookie存储的样本保留`unrecorded`，不合并汇总。
 Linux/TCLock 每配置仍只跑一次；汇总同时按热度模式、调用壳和开关分组，不跨组取最大值。
 
 冷捷径开启后 observe/adaptive 都跳过冷 CPU 的热表/context/owner 路由；observe
@@ -143,7 +146,8 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 上述字段保持兼容，一轮时获选会话就是该唯一有效样本；仅显式增加轮次时才从
 有效样本取最大值。相对 Linux 的比值使用各后端获选值除以 Linux 获选值，
 KD/TCLock 同理；保留有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
-正确、完成且已排空的样本参与汇总。KD 按 `hotlock_mode`、`spin_cold_fastpath`、`caller_shell` 分开汇总，不跨模式取最大值；
+正确、完成且已排空的样本参与汇总。KD按`hotlock_mode`、`spin_cold_fastpath`、`caller_shell`、
+`cookie_storage`分开汇总，不跨模式或cookie存储方式取最大值；
 热表计数保留在原始日志，不参与性能评分。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
@@ -168,10 +172,13 @@ cacheline40场、RCUHT20场，KD功能模式20场由单元检查，默认均只�
 
 ## 本次结果
 
-最新测量见[adaptive快速三方报告](results/20260922-adaptive-quick.md)：基于`4081b09`的工作区，
+最新测量见[共享CPU热度cookie报告](results/20260922-spin-cpu-hot-cookie.md)，包含单轮36场
+三方同期结果、竞争默认门槛和独立长批次PMU；机器码、功能及源码身份也保存在该报告。
+
+此前[adaptive快速三方报告](results/20260922-adaptive-quick.md)：基于`4081b09`的工作区，
 c1/c16 × 1/4/20线程 × 三后端 × 一轮，18/18场、1500万次操作完成并排空。
 4/4竞争KD有实际JIT，两场单线程为NO_JIT；20线程KD为5.048/4.818 Mops/s。
-本轮未重测observe，完整双模式性能矩阵尚未运行。
+该历史批次未重测observe，不代表当前已完成的双模式矩阵。
 
 此前五轮中位数及功能实验保留原统计口径，从[历史索引](../spin_cacheline/results/HISTORY.md)
 读取，不能作为本轮单次测量的成绩。

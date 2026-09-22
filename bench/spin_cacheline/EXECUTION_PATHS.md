@@ -254,9 +254,10 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
    既有注册表/代码池；daemon 经 `/dev/kd_dev` 取得代码与元数据，翻译、组装、
    上传并发布。NORMAL 只表示可尝试执行，不能当作正文执行证据。
 2. 新配对壳 `KD_SPIN_DIRECT_LOCK/UNLOCK` 使用普通C调用约定。开关开启时，冷CPU
-   增加nondelegated并做一次CAS，失败值直接进入pending/MCS；cookie保持到解锁，
+   增加nondelegated并做一次CAS，失败值直接进入pending/MCS；冷态持有用低字节5标识，
    冷解锁仅release低字节、减计数、unpin。热分支才在asm内保存/恢复五个callee-saved，
-   continuation位于CALL后POP前，随后明确设置热cookie。request/frame仍只在慢路径准备。
+   continuation位于CALL后POP前，不依赖返回寄存器。cookie只引用现有per-CPU rate_hot，
+   一个CPU一份、所有锁共享；解锁根据锁字状态，不读取CPU热度。request/frame仍只在慢路径准备。
    observe变为CPU热后固定准入，adaptive继续判断单锁；曾热CPU仍需后续MCS样本才能降温。
    保留壳 `KD_SPIN_DIRECT_CALL` 传 lock、pre-CALL SP、post-CALL IP、BP 给 clobber v1
    入口，编译器按调用壳的 clobber 声明保存活跃值。
