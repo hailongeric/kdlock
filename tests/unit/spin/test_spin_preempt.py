@@ -21,6 +21,8 @@ def main():
                  'void kd_spin_lock_nondelegated(kd_spinlock_t *lock)',
                  'void kd_spin_unlock_nondelegated(kd_spinlock_t *lock)'):
         code += definition(source, name)
+    code += 'void ' + definition(source, 'kd_spin_lock_contended(struct qspinlock *lock, unsigned long rsp_value,')
+    code += 'void ' + definition(source, 'kd_spin_unlock_slow(struct qspinlock *lock)')
     code += 'void ' + definition(source, 'kd_spin_lock_abi(struct qspinlock *lock, unsigned long rsp_value,')
     code += 'void ' + definition(source, 'kd_spin_unlock(struct qspinlock *lock)')
     with tempfile.TemporaryDirectory(prefix='kd-preempt-') as directory:

@@ -82,7 +82,6 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		}
 		smp_rmb();
 		if ((READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_NATIVE_READY)) {
-			this_cpu_ptr(&kd_spin_cpu)->node_count--;
 			kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
 			kd_spin_diag_waiter_exit(curr_node->execution->diag);
 			kd_spin_set_resume_node(curr_node);
@@ -97,7 +96,6 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 				if (ptr->lock_addr[j] != 0)
 					break;
 
-			this_cpu_ptr(&kd_spin_cpu)->node_count--;
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);
 
 			if (curr_node->execution->kind != KD_SPIN_CONT_VIRTUAL && j >= 0) {
@@ -201,8 +199,6 @@ queue_head:
 	 * curr_node at the head of the queue.
 	 * Release the node and run_combiner.
 	 */
-	this_cpu_ptr(&kd_spin_cpu)->node_count--;
-	kd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);
 	prev_locked_val = word->locked;
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(prev_locked_val >= _Q_LOCKED_COMBINER_VAL);
@@ -211,6 +207,9 @@ queue_head:
 	prev_rsp = curr_node->rsp;
 	prev_execution = curr_node->execution;
 	curr_node->rsp = 0;
+	barrier();
+	this_cpu_dec(kd_spin_cpu.node_count);
+	kd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);
 
 #ifdef NUMA_AWARE
 	prev_local_queue_head = ptr->local_queue_head;
@@ -227,6 +226,10 @@ queue_head:
 	kd_spin_diag_validate_lock_stack(ptr);
 
 	run_combiner(lock, next_node, request);
+	/* Nested users returned; reserve this slot before touching it again. */
+	this_cpu_inc(kd_spin_cpu.node_count);
+	barrier();
+	kd_spin_selftest_node_event(KD_NODE_COMBINER_RESERVE);
 
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(this_cpu_ptr(&kd_spin_cpu)->lock_addr[j] !=
@@ -266,10 +269,7 @@ release:
 	kd_spin_claim_origin(request);
 	kd_exe_queue_timing_end(false, &curr_node->execution->queued_at_ns,
 				kd_exe_queue_timing_start());
-	/*
-	 * release the node
-	 */
-	this_cpu_ptr(&kd_spin_cpu)->node_count--;
+	/* Producer retains the node through its final return-state reads. */
 	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
 	kd_spin_diag_waiter_exit(curr_node->execution->diag);
 	kd_spin_set_resume_node(curr_node);
@@ -295,9 +295,10 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	kd_spin_diag_record(
 		lock, KD_SPIN_DIAG_SLOWPATH,
 		kd_spin_lock_stack_depth(this_cpu_ptr(&kd_spin_cpu)));
-	idx = this_cpu_ptr(&kd_spin_cpu)->node_count++;
+	idx = this_cpu_inc_return(kd_spin_cpu.node_count) - 1;
+	barrier();
 	if (unlikely(idx >= MAX_NODES)) {
-		this_cpu_ptr(&kd_spin_cpu)->node_count--;
+		this_cpu_dec(kd_spin_cpu.node_count);
 		kd_spin_selftest_node_event(KD_NODE_NATIVE_FULL);
 		while (!kd_spin_trylock(word))
 			cpu_relax();
@@ -306,7 +307,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	}
 	execution = kd_spin_continuation_reserve();
 	if (unlikely(!execution)) {
-		this_cpu_ptr(&kd_spin_cpu)->node_count--;
+		this_cpu_dec(kd_spin_cpu.node_count);
 		/* Continuation exhaustion does not exhaust independent MCS nodes. */
 		kd_spin_acquire_nondelegated(word);
 		kd_spin_claim_origin(request);
@@ -328,7 +329,6 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->cpuid = smp_processor_id();
 	curr_node->rsp = READ_ONCE(input->rsp);
 	curr_node->execution->frame.regs_ref->sp = READ_ONCE(input->regs_sp);
-	curr_node->execution->irq_flags = READ_ONCE(input->irq_flags);
 
 	curr_node->execution->frame.logical_task = current;
 	curr_node->execution->frame.gsbase = kd_read_kernel_gsbase();
@@ -356,8 +356,12 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	ret = __kd_spin_lock_longjmp(lock, tail, curr_node, request);
 	/* Delegated waiters reclaim in restore assembly after the final packet
 	 * load. An intact head return can release its continuation here. */
-	if (ret == 0 || ret == 2)
+	if (ret == 0 || ret == 2) {
 		kd_spin_continuation_release(execution);
+		barrier();
+		this_cpu_dec(kd_spin_cpu.node_count);
+		kd_spin_selftest_node_event(KD_NODE_RELEASE);
+	}
 	return ret;
 }
 

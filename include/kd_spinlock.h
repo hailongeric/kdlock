@@ -10,7 +10,6 @@
 #include "kd_exec.h"
 
 #define qspinlock kd_spinlock
-#define ENABLE_IRQS_CHECK 1
 
 #define MAX_NODES 4
 
@@ -47,7 +46,6 @@ struct kd_spin_continuation {
 	bool native_regs_decoded;
 	struct kd_exec_frame frame;
 	struct kd_spin_jit_context jit_context;
-	unsigned long irq_flags;
 	u64 queued_at_ns;
 };
 struct kd_spin_continuation_stack {

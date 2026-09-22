@@ -81,7 +81,7 @@ static unsigned int map_locks;
 		before;                    \
 	})
 
-static void mock_map_lock(raw_spinlock_t *lock, unsigned long *flags)
+static inline void mock_map_lock(raw_spinlock_t *lock, unsigned long *flags)
 {
 	map_locks++;
 	CHECK(!lock->held);
@@ -91,7 +91,7 @@ static void mock_map_lock(raw_spinlock_t *lock, unsigned long *flags)
 	mock_preempt++;
 }
 
-static void mock_map_unlock(raw_spinlock_t *lock, unsigned long flags)
+static inline void mock_map_unlock(raw_spinlock_t *lock, unsigned long flags)
 {
 	CHECK(lock->held && mock_irq);
 	lock->held = false;
@@ -101,5 +101,22 @@ static void mock_map_unlock(raw_spinlock_t *lock, unsigned long flags)
 
 #define raw_spin_lock_irqsave(lock, flags) mock_map_lock(lock, &(flags))
 #define raw_spin_unlock_irqrestore(lock, flags) mock_map_unlock(lock, flags)
+
+/* Task-only guards must preserve incoming IRQ state without masking it. */
+static inline void plain_guard_lock(raw_spinlock_t *lock)
+{
+	map_locks++;
+	CHECK(!lock->held);
+	lock->held = true;
+	mock_preempt++;
+}
+static inline void plain_guard_unlock(raw_spinlock_t *lock)
+{
+	CHECK(lock->held);
+	lock->held = false;
+	mock_preempt--;
+}
+#define raw_spin_lock(lock) plain_guard_lock(lock)
+#define raw_spin_unlock(lock) plain_guard_unlock(lock)
 
 #endif

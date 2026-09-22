@@ -206,7 +206,7 @@ static void test_root_retirement(void)
 {
 	struct kd_spin_continuation request = { 0 };
 	struct kd_exec_frame *f = &request.frame;
-	CHECK(sizeof(request) == 768 && _Alignof(struct kd_spin_continuation) == 64);
+	CHECK(sizeof(request) == 704 && _Alignof(struct kd_spin_continuation) == 64);
 	CHECK(offsetof(struct kd_spin_continuation, frame.packet_state) < 128);
 	for (int abi = 0; abi < 2; abi++) {
 		*f = (struct kd_exec_frame){ .spin_simple = true, .executed = true,

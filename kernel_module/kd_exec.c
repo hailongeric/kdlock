@@ -189,6 +189,15 @@ bool kd_exec_context_busy(void)
 	return ctx->depth && ctx->owner != current;
 }
 
+/* Fresh spin admission needs both checks. Read the CPU context once while
+ * the caller holds its acquisition pin; retain the exact frame/busy predicate. */
+bool kd_exec_context_occupied(void)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+
+	return ctx->depth && (ctx->owner != current || ctx->top);
+}
+
 /* The producer owns the unqueued request. Inactive arrays and register bytes
  * are deliberately untouched; their live depths and packet producer own them. */
 /* Materialize branch-local discriminators once. Never clear inactive arrays or

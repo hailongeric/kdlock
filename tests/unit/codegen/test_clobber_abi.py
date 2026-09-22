@@ -4,6 +4,7 @@ Poison every absent entry register, exercise explicit completion/refusal/full
 exits, and force caller spills with real all-GPR destruction between live values.
 """
 import os
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -193,7 +194,7 @@ int main(void) {
 '''
 
 
-def exercise_abi(entry_abi, direct=False):
+def exercise_abi(entry_abi, direct=False, poison_stack=False, premature_pop=False):
     with tempfile.TemporaryDirectory(prefix="kdlock-clobber-") as directory:
         path=Path(directory)
         (path/'asm').mkdir()
@@ -210,17 +211,28 @@ def exercise_abi(entry_abi, direct=False):
         macro=added[added.index(marker):added.index('#else',added.index(marker))] if entry_abi == 1 else added[added.index(marker):added.index('#endif',added.index(marker))]
         if entry_abi == 2:
             macro = macro.replace('struct mutex', 'raw_spinlock_t').replace('__kd_mutex_clobber_call_v1', '__kd_spin_clobber_call_v1').replace('kd_mutex_', 'kd_raw_spin_').replace('mutex_lock(', 'raw_spin_lock(').replace('mutex_unlock(', 'raw_spin_unlock(')
-        (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t;\n'+macro+'\n#define raw_spin_unlock(lock) __kd_spin_clobber_call_v1(kd_raw_spin_unlock_clobber_v1, lock)\n')
+        (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t, kd_spinlock_t;\n'+macro+'\n#define raw_spin_unlock(lock) __kd_spin_clobber_call_v1(kd_raw_spin_unlock_clobber_v1, lock)\n')
         if direct:
             # Exercise the actual direct shell with the same destructive
             # register/metadata oracle, rather than a copied assembly string.
             header = (ROOT/'include/kd_spin_direct.h').read_text()
             macro = header[header.index('#define KD_SPIN_DIRECT_CALL'):header.rindex('#endif')]
-            (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t;\n'+macro+
+            (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t, kd_spinlock_t;\n'+macro+
                 '\n#define raw_spin_lock(lock) KD_SPIN_DIRECT_CALL(kd_raw_spin_lock_clobber_v1, lock, "")\n'
                 '#define raw_spin_unlock(lock) KD_SPIN_DIRECT_CALL(kd_raw_spin_unlock_clobber_v1, lock, "")\n')
         (path/'jit.S').write_text(BODY)
-        (path/'wrapper.S').write_text((ROOT/'include/wrapper.S').read_text()+'\n.globl main\n.section .note.GNU-stack,"",@progbits\n')
+        wrapper = (ROOT/'include/wrapper.S').read_text()
+        if premature_pop:
+            # Reintroduce the live failure: release the frame before metadata.
+            wrapper = wrapper.replace('\tcmp Stack_CLOBBER, 0',
+                '\tlea rsp, [rbp - 5*8]\n\tcmp Stack_CLOBBER, 0')
+        if poison_stack:
+            # Model IRQ pushes below the current RSP at every stack-unwind
+            # step. No registers/flags change; live stack slots must survive.
+            poison = ''.join(f'\tmov QWORD PTR[rsp - {i*8}], 0x246\n' for i in range(1, 25))
+            wrapper = re.sub(r'(?m)^(\s*(?:(?:lea|mov|add)\s+rsp\b|pop\w*\s)[^\n]*\n)',
+                             lambda m: m.group(0) + poison, wrapper)
+        (path/'wrapper.S').write_text(wrapper+'\n.globl main\n.section .note.GNU-stack,"",@progbits\n')
         fixture = FIXTURE
         if entry_abi == 2:
             fixture = fixture.replace('.entry_abi=abi,', '.entry_abi=abi?2:0,').replace('.entry_abi=1,', '.entry_abi=2,').replace('main_wrapper+45)==1', 'main_wrapper+45)==2')
@@ -236,7 +248,14 @@ def exercise_abi(entry_abi, direct=False):
         subprocess.run(cc+['-c','-Dmain=legacy_wrapper','-I'+str(path),'-I'+str(ROOT/'include'),str(path/'wrapper.S'),'-o',str(path/'legacy.o')],check=True,timeout=30)
         subprocess.run(cc+['-c','-I'+str(path),'-I'+str(ROOT/'include'),str(ROOT/'tests/unit/spin/legacy_batch.S'),'-o',str(path/'runner.o')],check=True,timeout=30)
         subprocess.run(cc+['-O2','-fno-omit-frame-pointer','-mno-red-zone','-Wall','-Wextra','-Werror','-I'+str(path),'-I'+str(ROOT/'include'),str(path/'fixture.c'),str(path/'stubs.S'),str(path/'wrapper.o'),str(path/'legacy.o'),str(path/'runner.o'),'-o',str(path/'fixture')],check=True,timeout=30)
-        subprocess.run([str(path/'fixture')],check=True,timeout=30)
+        result = subprocess.run([str(path/'fixture')], check=False, timeout=30,
+                                stdout=subprocess.PIPE if premature_pop else None,
+                                stderr=subprocess.PIPE if premature_pop else None)
+        if premature_pop:
+            if result.returncode == 0:
+                raise AssertionError('premature frame release escaped IRQ-stack oracle')
+        else:
+            result.check_returncode()
 
 def main():
     import argparse
@@ -244,11 +263,13 @@ def main():
     parser.add_argument("--entry-abi", choices=("spin", "mutex", "both"), default="both")
     args = parser.parse_args()
     for abi in ((1, 2) if args.entry_abi == "both" else (1 if args.entry_abi == "spin" else 2,)):
-        exercise_abi(abi)
+        exercise_abi(abi, poison_stack=True)
         print(f"caller-clobber ABI {abi}: PASS")
         if abi == 1:
-            exercise_abi(abi, direct=True)
-            print("direct spin caller-clobber shell: PASS")
+            exercise_abi(abi, direct=True, poison_stack=True)
+            print("direct spin caller-clobber shell with IRQ-stack overwrite: PASS")
+            exercise_abi(abi, direct=True, poison_stack=True, premature_pop=True)
+            print("premature wrapper frame release detected: PASS")
 
 
 if __name__ == "__main__":

@@ -34,7 +34,6 @@ Linux L 二次获取、旧站点缓存及全局晋升集合已删除。
 | [workload_modules/spin_cacheline](../workload_modules/spin_cacheline/README.md) | 当前直接 cacheline/RCUHT、KD nested/early |
 | [bench/tclock_compare](../bench/tclock_compare/README.md) | 三后端当前 live 运行器 |
 | [bench/spin_cacheline](../bench/spin_cacheline/README.md) | 共用客户端、观察层、发布/排空、离线汇总 |
-| [bench/hotlock_record](../bench/hotlock_record/README.md) | 采样器独立组件对照 |
 | [tests/unit](../tests/unit/) | 基础程序与按用途分组的生产代码、ABI、oracle 回归 |
 | [source_text.py](../tests/unit/infrastructure/source_text.py) | 跨组生产源码提取，不依赖 gate 测试 |
 | [native_register_probe.h](../tests/unit/execution/native_register_probe.h) | 有效寄存器探针，从删除的 hook workload 移入 fixture 目录 |
@@ -44,7 +43,7 @@ Linux L 二次获取、旧站点缓存及全局晋升集合已删除。
 | [tests/protocols](../tests/protocols/) | 当前工具复用的解析器及有效协议日志 oracle；历史合成记录不作 live 证明 |
 
 旧 lock_scenarios、透明 hook live 套件、gate 容量 oracle、双 ABI/live profile/dispatch-floor
-入口及相应操作文档已删除。当前命令与选择只维护在 [tests](../tests/README.md)和
+入口、旧/新采样器组件运行器及其专用内核驱动已删除。当前命令与选择只维护在 [tests](../tests/README.md)和
 [bench](../bench/README.md)，不恢复已删除入口来运行历史成绩。
 
 ## 文档与身份

@@ -84,7 +84,9 @@ static void pinned_admission(void)
 	CHECK(mock_preempt == 1 && !duplicate.entry);
 	CHECK(lookup_pins == pins + 1);
 	CHECK(kd_spin_entry_word(&ref) == gate);
-	CHECK(kd_spin_entry_end(&ref) == 0 && !mock_preempt);
+	CHECK(kd_spin_entry_end_pinned(&ref) == 0 && !ref.entry && mock_preempt == 1);
+	preempt_enable();
+	CHECK(!mock_preempt);
 }
 
 static void lifecycle(void)

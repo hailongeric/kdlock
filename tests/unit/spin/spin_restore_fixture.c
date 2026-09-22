@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Run the production final restore in guest userspace. Observe every restored
- * GPR and the final request decrement; IRQ masking remains a live-kernel test. */
+ * GPR, retirement and final unpin; the live kernel checks IRQ state. */
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -20,7 +20,6 @@ typedef uint16_t u16;
 #define noinline __attribute__((noinline))
 #define BUG_ON(x) assert(!(x))
 #define notrace
-#include "restore_production.h"
 
 static struct kd_spin_continuation_stack storage;
 #define execution storage.records[0]
@@ -32,8 +31,23 @@ static unsigned long expected_sp;
 unsigned long observed_sp;
 unsigned long observed[15];
 
+static unsigned int unpins;
+static bool expected_unpin;
+static void final_unpin(void)
+{
+	assert(execution.retired && !storage.top);
+	unpins++;
+	/* A schedule may immediately reuse per-CPU packets after this point. */
+	memset(&execution.frame.regs, 0xa5, sizeof(execution.frame.regs));
+}
+#define preempt_enable() final_unpin()
+#undef execution
+#include "restore_production.h"
+#define execution storage.records[0]
+
 static __attribute__((used, noipa, noreturn)) void restored(void)
 {
+	assert(unpins == expected_unpin);
 	assert(execution.retired == !extra_user);
 	assert(storage.top == (extra_user ? initial_top : 0));
 	assert(observed_sp == expected_sp);
@@ -74,10 +88,12 @@ int main(void)
 	_Static_assert(offsetof(struct kd_spin_continuation, frame.regs) == 104,
 		       "restore packet follows request metadata and the admission header");
 	for (iteration = 0; iteration < 192; iteration++) {
-		unsigned long flags, *packet = (void *)&execution.frame.regs;
+		unsigned long *packet = (void *)&execution.frame.regs;
 		volatile unsigned int mode = iteration < 128 ? iteration % 4 : iteration % 2;
 
 		minimal = iteration >= 128;
+		unpins = 0;
+		expected_unpin = mode == 0 || mode == 3;
 
 		memset(&execution, 0, sizeof(execution));
 		for (unsigned int i = 0; i < 15; i++)
@@ -99,9 +115,8 @@ int main(void)
 			execution.frame.packet_state = mode ? KD_PACKET_MINIMAL : KD_PACKET_COMPLETE;
 		}
 		expected_sp = execution.frame.regs.sp + (!minimal && !mode ? 8 : 0);
-		asm volatile("pushfq; popq %0" : "=r"(flags));
 		if (!setjmp(caller))
-			kd_spin_restore_request(&execution, flags, mode);
+			kd_spin_restore_request(&execution, mode);
 	}
 	assert(restores == 192);
 	puts("production continuation restore: completed=32 retry=32 native=32 native_retired=32 minimal_complete=32 minimal_retry=32 PASS");

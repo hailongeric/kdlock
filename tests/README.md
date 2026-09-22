@@ -1,20 +1,50 @@
 # 当前测试入口
 
+当前热表已按性能退化处理恢复为每 CPU/type 256 桶/256 记录和本地 busy；
+共享表/直接映射及删除 busy 的报告保留为历史实验。见[回归处理](../bench/tclock_compare/results/20260922-performance-recovery.md)。
+
+前序[普通 spin IRQ 语义与验证](../bench/tclock_compare/results/20260922-plain-spin.md)：
+普通路径不保存/屏蔽/恢复 IRQ/BH，保留抢占配对；12项单元、4项实际 JIT
+功能检查和生命周期探针通过。含 wrapper 中断栈覆盖回归，未测性能。
+
+最近热表回退的基础及定向单元 6/6、adaptive 实际 JIT、SELFTEST 生命周期探针
+和 60 场三方结果见上述回归报告；nested/early 等历史覆盖见普通 spin 报告。
+已撤回实验统一见[历史索引](../bench/spin_cacheline/results/HISTORY.md)，
+不将历史功能检查当作当前版本重跑。
+
 构建和运行只在 recovery guest，先读 [操作手册](../docs/AGENTS.md)。当前版本是
 显式 KD 单锁字 API；全局 spin 分发已删除、mutex hook 安装停用。旧 hook live
 套件、gate 容量测试及其专用 workload 已删除，不能以普通 Linux 锁完成冒充 JIT。
+
+## 2026-09-22 文档与旧工具清理验证
+
+删除已退出测试流程的旧/新采样器运行器、专用内核驱动及 `KD_HOTLOCK_LOCAL_HASH_V2`
+适配标记；历史报告集中到 benchmark 历史索引。生产热表测试和生命周期探针继续保留，
+空闲检查仍拒绝旧模块残留，避免误把删除运行器当作已排空。
+
+本次仅在 guest 运行基础及直接相关检查：基础 2 项、hotlock sampling、regression
+共 4/4 驱动通过（含 11 个采样错误变体及 30 个运行器测试）；三方直接运行器 11/11 通过。
+普通模块在同一路径分别构建删除标记前/后版本，W=1 构建成功，`.text` 逐字节一致，
+SHA256 为 `e83dafee1e47f103614e9ab2d9236cbb4fd4aabd33793dc65aa50fc216aa9466`。
+构建仍有已有的手写恢复汇编 objtool 及 locale 警告，未宣称无警告构建。
+没有加载模块、执行 live JIT 或重跑 benchmark；最新性能仍以热表回归报告为准。
+宿主静态检查确认 42 份 Markdown 无断链，`git diff --check` 通过。
+
+原始命令、退出码、输入哈希、删除文件备份、构建日志及两个 ELF 位于 guest
+`/root/kdlock-evidence/doc-cleanup-20260922/`，本地归档位于
+`bench/.tmp/doc_cleanup_20260922/`（忽略目录，不纳入 Git）。
 
 <a id="hotlock-direct-validation"></a>
 
 ## 2026-09-21 去除候选，按锁字直接哈希计数
 
-当前每 CPU/type 256 桶、256 条预分配精确地址记录，无 score/error、候选排名或淘汰。
+该冻结版本每 CPU/type 256 桶、256 条预分配精确地址记录，无 score/error、候选排名或淘汰。
 CPU 每 1024 次检查；单锁 count **大于 1024（第 1025 次）** 才采时检查原有窗口，
 刷新 hot、更新时间戳并清零计数。满表不覆盖已有记录，adaptive 未收录锁走原生。
 CPU 冷热变化重置统计但保留映射，地址身份保持到模块卸载。
 布局和流程见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取)。
 
-本轮 guest 单元 4/4 通过，11 个错误变体全部被拒绝，覆盖 CPU 1024/锁 1025
+该历史批次 guest 单元 4/4 通过，11 个错误变体全部被拒绝，覆盖 CPU 1024/锁 1025
 边界、256 个同桶地址的独立计数、满表拒绝插入且不覆盖、窗口/倒退/零时间、
 query、CPU/type 隔离和重入/抢占配对。普通与 SELFTEST 的 W=1 构建通过，
 ELF entry/table/cpu 为 24/6688/13376 字节，CPU 对齐 64。
@@ -99,7 +129,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 timeout 240 tests/run_all.sh \
 adaptive NO_JIT 只可作为明确标记的性能样本。
 
 SELFTEST provider 可用 `hotlock_lifetime_selftest=1 hotlock_mode=observe spin_entry_selftest=1`
-检查满表不覆盖真实持锁记录、mutex 等待 CPU 迁移及 owner ACK；这不执行 JIT。
+检查热表碰撞及满容量时既有身份和真实 owner 仍保留、mutex 等待 CPU 迁移及 owner ACK；这不执行 JIT。
 构建方式及控制参数见 [provider](../kernel_module/README.md)。保持 normal 与
 SELFTEST 构建分开，不替换加载中的模块，完成后必须排空和正常卸载。
 

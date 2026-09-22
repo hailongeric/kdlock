@@ -73,7 +73,6 @@ struct kd_spin_continuation {
 	struct kd_spin_continuation_stack *storage;
 	bool retired;
 	/* Request-owned return/routing state survives recycling of the node. */
-	unsigned long irq_flags;
 	enum kd_spin_cont_kind kind;
 	enum kd_spin_resume_result result;
 	bool native_regs_decoded;
@@ -181,6 +180,10 @@ struct kd_spin_batch;
 #define smp_load_acquire(p) (*(p))
 #define WRITE_ONCE(x, v) ((x) = (v))
 #define this_cpu_ptr(p) (p)
+#define this_cpu_inc_return(v) (++(v))
+#define this_cpu_inc(v) (++(v))
+#define this_cpu_dec(v) (--(v))
+#define barrier() __asm__ volatile("" ::: "memory")
 #define per_cpu_ptr(p, cpu) ((void)(cpu), (p))
 #define unlikely(x) (x)
 #define print_debug(...) ((void)0)
@@ -562,7 +565,6 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 	while (node->locked)
 		cpu_relax();
 	if (node->completed || (fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY)) {
-		kd_spin_cpu.node_count--;
 		kd_spin_selftest_node_event((fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY) ?
 			KD_NODE_NATIVE_RETURN : KD_NODE_REMOTE_RETURN);
 		kd_spin_diag_waiter_exit(fixture_request(node)->diag);
@@ -570,7 +572,10 @@ static void kd_spin_publish_wait(struct kd_spin_node *node,
 		CHECK(native_return != NULL);
 		if (node->execution)
 			kd_spin_continuation_release(node->execution);
-		longjmp(*native_return, (fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY) ? 5 : 3);
+		int result = (fixture_request(node)->result == KD_SPIN_RES_NATIVE_READY) ? 5 : 3;
+		this_cpu_dec(kd_spin_cpu.node_count);
+		kd_spin_selftest_node_event(KD_NODE_RELEASE);
+		longjmp(*native_return, result);
 	}
 }
 /* Node-allocation failure fixture substitutes only native physical acquire;
@@ -591,8 +596,13 @@ static int test_longjmp(struct qspinlock *lock, int tail, struct kd_spin_node *n
 	int ret = setjmp(continuation);
 
 	native_return = &continuation;
-	if (!ret)
+	if (!ret) {
 		ret = __kd_spin_lock_longjmp(lock, tail, node, &request);
+		/* Emulate the producer final access/release after an intact return. */
+		CHECK(kd_spin_cpu.node_count > 0);
+		this_cpu_dec(kd_spin_cpu.node_count);
+		kd_spin_selftest_node_event(KD_NODE_RELEASE);
+	}
 	native_return = saved;
 	return ret;
 }

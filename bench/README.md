@@ -1,14 +1,16 @@
 # Benchmarks
 
-[当前无候选哈希计数的同期对照](tclock_compare/results/20260921-hotlock-direct.md)：
-120/120 场通过，1 亿次操作全部排空。默认 adaptive 四线程/二十线程近似持平；
-单线程 c1 +4.86%、c16 −2.10%，未显示整体提升。此前
-[两级候选版对照](tclock_compare/results/20260921-hotlock-twolevel.md)保留原版本限定。
+最新已测实现与成绩见[热表回归处理](tclock_compare/results/20260922-performance-recovery.md)：
+恢复每 CPU/type 256 桶、256 记录及本地 busy，保留普通 spin IRQ 语义和 wrapper 栈修复。
+三方 observe 矩阵 60/60 场、5880 万次操作通过并排空，16/16 场竞争 KD 有实际 JIT。
+20 线程 c1/c16 的 KD 为 5.197/4.809 Mops/s；单线程及四线程仍低于 TCLock。
 
-[修改前提交完整三方重测](tclock_compare/results/20260921-current-benchmark.md)：
-`175d73b`，150/150 场通过，保留全部样本及实际 JIT/排空检查。
-
-此前 [竞争回退调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md) 包含同期复现、采样、两个候选及回退验收；当前恢复入口准入和批量时钟，保留 ticket 优化。
+当前性能测试对象固定为 **Linux 原生、TCLock、当前 kdlock**，使用
+`tclock_compare/run.py --backends native tclock kdlock`。不再将旧版 kdlock
+作为测试对象；以下新旧版对照只保留为历史证据，后续结果报告三方吞吐及
+当前 KD/Linux、KD/TCLock 比值。2026-09-22 起每配置默认两轮，三方各取有效样本中的最大吞吐；
+ns/op 使用该获选会话的值，三方比值也按各自最大值计算。正确性/排空检查保留，
+全部原始样本留存；此前五轮中位数报告保留历史口径。
 
 所有构建与测量只在 recovery guest，环境及排空遵循 [AGENTS](../docs/AGENTS.md)。
 当前入口按直接 API 使用独立 Linux、TCLock、KD 对象；旧透明 hook 和双 ABI
@@ -17,7 +19,6 @@
 | 入口 | 用途 |
 | --- | --- |
 | [tclock_compare](tclock_compare/README.md) | 当前三后端直接调用、cacheline/RCUHT、observe/adaptive 和本地嵌套检查 |
-| [hotlock_record](hotlock_record/README.md) | 旧/新采样器的独立组件对照 |
 | [spin_cacheline](spin_cacheline/README.md) | 当前运行器共用的客户端、provider 观察层、生命周期和离线汇总/汇编读取 |
 
 [历史索引](spin_cacheline/results/HISTORY.md)汇总旧阶段报告、回退及冻结证据入口，

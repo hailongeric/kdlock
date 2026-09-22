@@ -408,10 +408,10 @@ static void run_observer_checks(void)
 	CHECK(kd_node_observations.peak == 1 &&
 	      !kd_node_observations.first_event);
 	kd_spin_cpu.node_count = 0;
-	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
+	kd_spin_selftest_node_event(KD_NODE_RELEASE);
 	CHECK(!kd_node_observations.first_event);
-	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
-	CHECK(kd_node_observations.first_event == KD_NODE_HEAD_RETURN + 1);
+	kd_spin_selftest_node_event(KD_NODE_RELEASE);
+	CHECK(kd_node_observations.first_event == KD_NODE_RELEASE + 1);
 	CHECK(kd_node_observations.first_count == 0 &&
 	      kd_node_observations.first_expected == -1);
 	before = kd_node_observations;

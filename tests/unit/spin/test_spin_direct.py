@@ -61,7 +61,7 @@ int main(void) {
 
 def main():
     source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
-    code = PRELUDE + definition(source, 'kd_spin_unlock(struct qspinlock *lock)').replace(
+    code = PRELUDE + 'void ' + definition(source, 'kd_spin_unlock_slow(struct qspinlock *lock)') + definition(source, 'kd_spin_unlock(struct qspinlock *lock)').replace(
         'kd_spin_unlock(', 'void kd_spin_unlock(', 1) + MAIN
     with tempfile.TemporaryDirectory(prefix='kd-direct-unlock-') as temporary:
         path = Path(temporary)

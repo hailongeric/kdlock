@@ -170,15 +170,14 @@ static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 {
 	struct kd_spin_entry_pool *pool;
 	struct kd_spin_entry *entry = NULL;
-	unsigned long flags;
 	unsigned long occupied, available;
 	unsigned int index;
 	int ret = -E2BIG;
 
 	if (!kd_spin_entries)
 		return -ENODEV;
-	/* IRQ-off task callers are valid. Queue publication masks IRQs itself;
-	 * ticket guards preserve whichever IRQ state the caller brought in. */
+	/* Ticket allocation and native borrow callbacks are task-context only.
+	 * Plain guards preserve the caller IRQ state without save/restore. */
 	if (!origin || !ref || ref->entry || !in_task() ||
 	    (kind != KD_SPIN_ENTRY_HOOK && kind != KD_SPIN_ENTRY_VIRTUAL))
 		return -EINVAL;
@@ -205,7 +204,7 @@ static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 		goto fail;
 	}
 	/* Keep guard initialized for stale remote handles even after slot reuse. */
-	raw_spin_lock_irqsave(&entry->guard, flags);
+	raw_spin_lock(&entry->guard);
 	entry->task = current;
 	entry->origin = origin;
 	entry->sequence = ++pool->sequence;
@@ -215,7 +214,7 @@ static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 	WRITE_ONCE(entry->state, KD_ENTRY_WAITING);
 	pool->occupied |= 1UL << index;
 	*ref = (struct kd_spin_ref){ entry, entry->sequence };
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
+	raw_spin_unlock(&entry->guard);
 	return 0;
 fail:
 	return ret;
@@ -262,7 +261,6 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 				    enum kd_spin_entry_state from)
 {
 	struct kd_spin_entry *entry;
-	unsigned long flags;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
@@ -270,7 +268,7 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	raw_spin_lock_irqsave(&entry->guard, flags);
+	raw_spin_lock(&entry->guard);
 	ret = kd_entry_local(ref);
 	if (ret || (entry->state == KD_ENTRY_OWNED && from == KD_ENTRY_WAITING))
 		goto out;
@@ -286,7 +284,7 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 	ret = READ_ONCE(((kd_spinlock_t *)entry->origin)->locked) ? 0 : -EINVAL;
 	entry->state = ret ? from : KD_ENTRY_OWNED;
 out:
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
+	raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
@@ -309,7 +307,6 @@ int kd_spin_entry_reclaim(const struct kd_spin_ref *ref)
 int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
-	unsigned long flags;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
@@ -317,7 +314,7 @@ int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	raw_spin_lock_irqsave(&entry->guard, flags);
+	raw_spin_lock(&entry->guard);
 	ret = kd_entry_local(ref);
 	if (ret)
 		goto out;
@@ -333,17 +330,16 @@ int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 	ret = 0;
 	entry->state = KD_ENTRY_RELEASED;
 out:
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
+	raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
 /* Finalize the lifecycle. The caller must be on the pinned local CPU and no
  * other protocol participants can still reference this ref.
  */
-int kd_spin_entry_end(struct kd_spin_ref *ref)
+int kd_spin_entry_end_pinned(struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
-	unsigned long flags;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
@@ -351,7 +347,7 @@ int kd_spin_entry_end(struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	raw_spin_lock_irqsave(&entry->guard, flags);
+	raw_spin_lock(&entry->guard);
 	ret = kd_entry_local(ref);
 	if (ret)
 		goto out;
@@ -374,25 +370,34 @@ int kd_spin_entry_end(struct kd_spin_ref *ref)
 	entry->cpu = -1;
 	WRITE_ONCE(entry->state, KD_ENTRY_FREE);
 	*ref = (struct kd_spin_ref){ 0 };
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
-	/* Last access to ref/entry: scheduling may reuse this CPU's pool. */
-	preempt_enable();
+	raw_spin_unlock(&entry->guard);
+	/* The caller retains its pin until its remaining per-CPU reads finish. */
 	return 0;
 out:
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
+	raw_spin_unlock(&entry->guard);
+	return ret;
+}
+
+/* Ordinary C exits consume the pin here. Nonlocal packet restoration uses
+ * end_pinned(), retires its record after the last load, then unpins. */
+int kd_spin_entry_end(struct kd_spin_ref *ref)
+{
+	int ret = kd_spin_entry_end_pinned(ref);
+
+	if (!ret)
+		preempt_enable();
 	return ret;
 }
 
 int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
-	unsigned long flags;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
 		return -EINVAL;
 	entry = ref->entry;
-	raw_spin_lock_irqsave(&entry->guard, flags);
+	raw_spin_lock(&entry->guard);
 	ret = kd_entry_valid(ref);
 	if (ret)
 		goto out;
@@ -404,14 +409,13 @@ int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref)
 	else
 		entry->native_refs++;
 out:
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
+	raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
 int kd_spin_entry_mark_native(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
-	unsigned long flags;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
@@ -419,7 +423,7 @@ int kd_spin_entry_mark_native(const struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	raw_spin_lock_irqsave(&entry->guard, flags);
+	raw_spin_lock(&entry->guard);
 	ret = kd_entry_local(ref);
 	if (ret)
 		goto out;
@@ -429,20 +433,19 @@ int kd_spin_entry_mark_native(const struct kd_spin_ref *ref)
 	else
 		entry->state = KD_ENTRY_NATIVE;
 out:
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
+	raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
 int kd_spin_entry_borrow_put(const struct kd_spin_ref *ref, bool *last)
 {
 	struct kd_spin_entry *entry;
-	unsigned long flags;
 	int ret;
 
 	if (!kd_entry_ref_present(ref) || !last)
 		return -EINVAL;
 	entry = ref->entry;
-	raw_spin_lock_irqsave(&entry->guard, flags);
+	raw_spin_lock(&entry->guard);
 	ret = kd_entry_valid(ref);
 	if (ret)
 		goto out;
@@ -452,7 +455,7 @@ int kd_spin_entry_borrow_put(const struct kd_spin_ref *ref, bool *last)
 	else
 		*last = --entry->native_refs == 0;
 out:
-	raw_spin_unlock_irqrestore(&entry->guard, flags);
+	raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
@@ -461,7 +464,6 @@ out:
 int kd_spin_entry_borrow_wait(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
-	unsigned long flags;
 	unsigned int users;
 	int ret;
 
@@ -469,10 +471,10 @@ int kd_spin_entry_borrow_wait(const struct kd_spin_ref *ref)
 		return -EINVAL;
 	entry = ref->entry;
 	do {
-		raw_spin_lock_irqsave(&entry->guard, flags);
+		raw_spin_lock(&entry->guard);
 		ret = kd_entry_local(ref);
 		users = entry->native_refs;
-		raw_spin_unlock_irqrestore(&entry->guard, flags);
+		raw_spin_unlock(&entry->guard);
 		if (ret)
 			return ret;
 		cpu_relax();

@@ -1,6 +1,10 @@
 """Direct comparison matrix and result exclusion; no modules are loaded."""
 from argparse import Namespace
 import copy
+import contextlib
+import io
+import sys
+from unittest.mock import patch
 import json
 from pathlib import Path
 import tempfile
@@ -71,9 +75,9 @@ class DirectTests(unittest.TestCase):
 
     def test_hash_matrix_and_outcome_oracle(self):
         plan = run.make_plan(Namespace(workload='rcuht', cachelines=None,
-            threads=[1, 4, 8, 16, 20], repeats=5, iterations=100000,
+            threads=[1, 4, 8, 16, 20], repeats=2, iterations=100000,
             backends=['native', 'tclock', 'kdlock']))
-        self.assertEqual(len(plan), 75)
+        self.assertEqual(len(plan), 30)
         self.assertTrue(all(s['workload'] == 'rcuht' and s['cachelines'] == 0 for s in plan))
         spec = dict(workload='rcuht', cachelines=0, threads=1, cpus=[0])
         measurement = dict(schema=1, complete=True, data_ok=True, workload='rcuht',
@@ -94,10 +98,31 @@ class DirectTests(unittest.TestCase):
             with self.assertRaises(run.Failure):
                 run.runtime.validate_measurement(broken, spec, 10)
 
+    def test_cli_defaults_to_two_rounds(self):
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['run.py', '--output', '/tmp/unused', '--dry-run']), contextlib.redirect_stdout(output):
+            self.assertEqual(run.main(), 0)
+        plan = json.loads(output.getvalue())
+        self.assertEqual(len(plan), 60)
+        self.assertEqual({s['repeat'] for s in plan}, {0, 1})
+
+    def test_empty_summary_has_no_winner(self):
+        plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=2,
+            iterations=100, backends=['native', 'tclock', 'kdlock']))
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plan)
+            run.report(out)
+            for row in json.loads((out/'summary.json').read_text()):
+                self.assertEqual(row['valid'], 0)
+                for key in ('best_session', 'best_throughput_ops_s',
+                            'best_amortized_ns_op', 'throughput_over_linux'):
+                    self.assertIsNone(row[key])
+
     def test_matrix_and_alternating_order(self):
         plan = run.make_plan(Namespace(cachelines=[1, 16], threads=[1, 4, 8, 16, 20],
-            repeats=5, iterations=100000, backends=['native', 'tclock', 'kdlock']))
-        self.assertEqual(len(plan), 150)
+            repeats=2, iterations=100000, backends=['native', 'tclock', 'kdlock']))
+        self.assertEqual(len(plan), 60)
         self.assertEqual([s['arm'] for s in plan[:6]],
                          ['native', 'tclock', 'kdlock', 'kdlock', 'tclock', 'native'])
         self.assertTrue(all(s['api_mode'] == 'direct' for s in plan))
@@ -110,19 +135,25 @@ class DirectTests(unittest.TestCase):
             run.write_json(out/'plan.json', plan)
             for spec in plan:
                 folder = out/spec['name']; folder.mkdir()
-                # Valid rates are 1, 2 and 4 Mops/s. Reject tempting fast rows.
+                # Vary rates between rounds; reject the fastest corrupt/undrained rows.
                 bad = spec['repeat'] == 2 and spec['arm'] != 'native'
-                rate = {'native': 1, 'tclock': 2, 'kdlock': 4}[spec['arm']]
-                record = dict(spec, execution_status='OK', drained=not bad,
+                rate = {'native': 1, 'tclock': 2, 'kdlock': 4}[spec['arm']] * (spec['repeat'] + 1)
+                record = dict(spec, execution_status='OK', drained=not (bad and spec['arm'] == 'kdlock'),
                     measurement=dict(completed=400, wall_ns=1 if bad else 400000/rate,
-                                     data_ok=True, complete=True))
+                                     data_ok=not (bad and spec['arm'] == 'tclock'), complete=True))
                 run.write_json(folder/'session.json', record)
             run.report(out)
             rows = {r['arm']: r for r in json.loads((out/'summary.json').read_text())}
-            for arm, ratio in [('native', 1), ('tclock', 2), ('kdlock', 4)]:
-                self.assertEqual(rows[arm]['throughput_over_linux'], ratio)
+            for arm, rate, repeat in [('native', 3, 2), ('tclock', 4, 1), ('kdlock', 8, 1)]:
+                self.assertEqual(rows[arm]['throughput_over_linux'], rate / 3)
                 self.assertEqual(rows[arm]['valid'], 3 if arm == 'native' else 2)
-                self.assertNotIn('median_delegation_share', rows[arm])
+                self.assertEqual(rows[arm]['best_throughput_ops_s'], rate * 1e6)
+                self.assertAlmostEqual(rows[arm]['best_amortized_ns_op'], 1000 / rate)
+                winner = next(s['name'] for s in plan if s['arm'] == arm and s['repeat'] == repeat)
+                self.assertEqual(rows[arm]['best_session'], winner)
+                self.assertEqual(rows[arm]['comparison_policy'], 'best_valid_throughput')
+                self.assertFalse(any(k.startswith('median_') for k in rows[arm]))
+            self.assertEqual(len(json.loads((out/'records.json').read_text())), 9)
 
 
 if __name__ == '__main__':

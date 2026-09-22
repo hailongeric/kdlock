@@ -2,8 +2,8 @@
 /* Physical waiters lend their original stack to the remote JIT. Switch to
  * the per-CPU 8 KiB shadow stack BEFORE publishing the node. Keep switching,
  * publication and polling in one assembly region so compiler spills cannot
- * touch the lent stack. IRQs are already masked and the ticket pins this CPU;
- * no scheduling or calls occur on the polling stack. Virtual waiters instead
+ * touch the lent stack. The ticket pins this CPU; IRQ state stays unchanged.
+ * No scheduling or C calls occur in the polling loop. Virtual waiters instead
  * keep their executor's independent C stack and service the owner/ACK protocol.
  */
 static __attribute__((noipa, used, noreturn)) noinline notrace void

@@ -20,6 +20,8 @@ enum kd_node_event {
 	KD_NODE_COMBINER_ENTER,
 	KD_NODE_HEAD_RETURN,
 	KD_NODE_REMOTE_POLL,
+	KD_NODE_COMBINER_RESERVE,
+	KD_NODE_RELEASE,
 	KD_NODE_EVENT_COUNT,
 };
 
@@ -65,10 +67,10 @@ kd_spin_selftest_node_event(enum kd_node_event event)
 	record = this_cpu_ptr(kd_node_records);
 	count = READ_ONCE(this_cpu_ptr(&kd_spin_cpu)->node_count);
 	expected = record->live;
-	if (event <= KD_NODE_VIRTUAL_RESERVE)
+	if (event <= KD_NODE_VIRTUAL_RESERVE || event == KD_NODE_COMBINER_RESERVE)
 		expected++;
-	else if (event >= KD_NODE_PREPARE_CANCEL &&
-		 event <= KD_NODE_HEAD_RETURN)
+	else if (event == KD_NODE_PREPARE_CANCEL ||
+		 event == KD_NODE_COMBINER_ENTER || event == KD_NODE_RELEASE)
 		expected--;
 	valid = count == expected && count >= 0 && count <= MAX_NODES &&
 		in_task() && (preempt_count() & PREEMPT_MASK);
@@ -107,7 +109,7 @@ static void kd_spin_selftest_nodes_report(void)
 			per_cpu_ptr(kd_node_records, cpu);
 
 		cpus++;
-		pr_info("kd_node trace: cpu=%d native=%lu virtual=%lu native_full=%lu virtual_full=%lu context_missing=%lu prepare_cancel=%lu native_return=%lu remote_return=%lu combiner=%lu head=%lu poll=%lu live=%d actual=%d peak=%d peak_task=%d peak_preempt=%u peak_irq=%u first_event=%d first_count=%d first_expected=%d first_task=%d first_preempt=%u first_irq=%u\n",
+		pr_info("kd_node trace: cpu=%d native=%lu virtual=%lu native_full=%lu virtual_full=%lu context_missing=%lu prepare_cancel=%lu native_return=%lu remote_return=%lu combiner=%lu head=%lu poll=%lu reacquire=%lu release=%lu live=%d actual=%d peak=%d peak_task=%d peak_preempt=%u peak_irq=%u first_event=%d first_count=%d first_expected=%d first_task=%d first_preempt=%u first_irq=%u\n",
 			cpu, r->events[KD_NODE_NATIVE_RESERVE],
 			r->events[KD_NODE_VIRTUAL_RESERVE],
 			r->events[KD_NODE_NATIVE_FULL],
@@ -118,7 +120,9 @@ static void kd_spin_selftest_nodes_report(void)
 			r->events[KD_NODE_REMOTE_RETURN],
 			r->events[KD_NODE_COMBINER_ENTER],
 			r->events[KD_NODE_HEAD_RETURN],
-			r->events[KD_NODE_REMOTE_POLL], r->live,
+			r->events[KD_NODE_REMOTE_POLL],
+			r->events[KD_NODE_COMBINER_RESERVE],
+			r->events[KD_NODE_RELEASE], r->live,
 			READ_ONCE(per_cpu_ptr(&kd_spin_cpu, cpu)->node_count),
 			r->peak, r->peak_task, r->peak_preempt, r->peak_irq,
 			r->first_event, r->first_count, r->first_expected,

@@ -71,6 +71,10 @@
     这是后续实现约束，当前剩余复制及改造边界见
     [共享请求设计](design/frames.md#911-reuse-before-copy-contract)。
 
+2026-09-22 用户明确：当前 KD spin API 采用普通 `raw_spin_lock` 语义，
+不默认保存、关闭或恢复 IRQ/BH；保留获取所需抢占保护与最终退休顺序。
+irqsave/bh 属于另行选择的调用语义，不能默认加在普通锁路径上。
+
 ## 环境边界
 
 | 操作 | 位置 |
@@ -213,6 +217,13 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 
 ## 报告要求
 
+2026-09-21 用户明确：后续性能测试对象固定为 Linux 原生、TCLock 和当前 kdlock，
+不再运行旧版 kdlock 对照。2026-09-22 用户进一步指定：后续性能每配置默认两轮，
+三方各取有效样本中的最大吞吐，ns/op 使用同一获选会话；比值按各自最大值计算。
+保留全部原始样本、有效性/排空检查与获选会话身份，历史五轮中位数不重写。
+使用三方直接 API 入口；旧 O/N 脚本与采样器组件对照入口已删除，
+只从固定 Git 版本或冻结归档追溯历史。已有报告不改写为新成绩，具体参数与统计口径见 [bench](../bench/README.md)。
+
 说明实际改动、构建/测试命令和结果、是否加载模块及启用 mutex_jit、
 内核错误和排空状态、未执行/失败项目、Git 版本。
 本轮或历史证据必须标明来源和时间，不混用不同源码版本的通过结果。
@@ -224,3 +235,9 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 多个 native frame 的证据必须证明存活区间真实重叠，按 task/lock 核对 owner 与 ACK；
 不能只看 started=completed。真实耗尽与注入失败分开，信号/退出不能遗弃未完成
 frame。旧测试操作细节仅见匹配 Git 历史，不是当前 live 的运行指令。
+
+2026-09-22 用户授权性能回退：本轮为定位约20%竞争退化允许隔离热表候选，
+正式成绩仍是 Linux/TCLock/当前KD、两轮取最大值。热表已局部恢复到最佳已测
+分类型256槽实现（本地busy、复用已有pin）；普通spin的IRQ语义和正确性修复保留。
+宿主QEMU vCPU已按编号一对一固定到CPU0..39，前20个对应宿主NUMA0；重启后
+必须重新核对映射，不能只凭guest绑核声称物理同节点。证据见[回归报告](../bench/tclock_compare/results/20260922-performance-recovery.md)。

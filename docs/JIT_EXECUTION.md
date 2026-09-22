@@ -1,5 +1,10 @@
 # 当前 JIT 执行流
 
+当前 KD spin API 按普通 `raw_spin_lock` 语义：获取/解锁配对抢占，保持 IRQ/BH 状态，
+代理慢路径和嵌套队列不再保存 IRQ flags 或整段关 IRQ。最终完成先退休 ticket 元数据，
+读完并回收 continuation 后才解除原入口 pin；普通重试和有锁 native 续跑保留 pin。
+本次未新增 irqsave/bh API；需要这些语义的调用者在外层处理。
+
 本页描述显式 KD spin API 及保留的执行引擎。全局 spin 分发已删除，mutex hook
 安装仍停用；普通 Linux 锁调用不会因加载模块自动代理。运行步骤见
 [PROJECT_GUIDE](PROJECT_GUIDE.md)，验证入口见 [tests](../tests/README.md)。
@@ -20,7 +25,9 @@
    活跃 caller-clobbered 值。`kd_spin_lock_abi` 首先关闭抢占，代理开启时合并记录/
    判断热度并筛选上下文，再尝试 fast/pending；统计和原生回退复用已有 pin。
    关闭代理时公共入口跳过统计，直接走完整原生获取。
-3. 快速路径获取 KD 字并保留 pinned fast owner。竞争路径使用同一个字的
+3. 快速路径获取 KD 字并保留 pinned fast owner，不准备栈上 request。根 CAS
+   失败后进入独立 `kd_spin_lock_contended()`，才创建 24 B request；物理嵌套也
+   在该 helper 保留先借 ticket 再 CAS 的顺序。竞争路径使用同一个字的
    pending/tail 排队，普通根仅在 queue 分支占 ticket，再检查翻译就绪。拒绝走
    完整 KD 原生 fast/pending/MCS，已有 ticket 保留，节点不带 continuation/frame；发布后的拒绝或续跑仍须
    完成既有 continuation 生命周期。只有真正节点耗尽才轮询锁字，不回退到 Linux
@@ -57,10 +64,11 @@ query 不计数/采时/插入；有效地址及表生命周期由调用者保证
 已发布的虚拟等待继续服务父 frame 的远端 ACK。MCS 后置准入和逐次时间检查
 已因竞争性能回退撤回，见 [调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
 统计复用调用者已有的抢占保护；仅尚未关闭抢占的独立调用临时 pin 并在返回前
-解除。mutex 不跨睡眠持有统计 pin；重入只丢弃统计样本。
+解除。spin 主入口的已 pin 接口转入已验证的共享采样器，检查现有 pin 并取得本地 busy；
+busy 重入只丢当前样本，observe 的 record 仍固定允许。mutex 不跨睡眠持有统计 pin。
 
 OWNER 保存在稳定 fast owner/ticket 状态中，WAITER/COMBINER/DONE 位于 frame。
-角色和所有权不依赖热表是否有空槽或锁的热值。SELFTEST 可输出按锁地址关联的角色，
+角色和所有权不依赖热表是否保留该地址或锁的热值。SELFTEST 可输出按锁地址关联的角色，
 普通构建不逐请求打印。最终统计仅在 provider 排空后输出，不能倒推全程状态。
 
 ## 3. 验证选择与判定
@@ -73,7 +81,7 @@ OWNER 保存在稳定 fast owner/ticket 状态中，WAITER/COMBINER/DONE 位于 
 与退休。`nested` 检查 A→B→释放 B→释放 A；`early` 检查持 B 提前释放 A。
 这两项本地双锁证据不能推广为所有远端 native/JIT 组合已验证。
 
-SELFTEST 的满表持锁记录保留、mutex CPU 迁移和 entry ACK 是独立 JIT=0 证据。
+SELFTEST 的热表满容量后真实 owner 保留、mutex CPU 迁移和 entry ACK 是独立 JIT=0 证据。
 模块加载/卸载检查也不执行 JIT。性能有效、实际 JIT、原生/拒绝及失败记录分开报告，
 没有正文的竞争 observe 场次不得算通过。环境、快照和卸载约束见
 [AGENTS](AGENTS.md)。

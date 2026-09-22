@@ -113,7 +113,9 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
   }
   return t->rate_hot;
 }
-static bool kd_hotlock_access(unsigned long address, unsigned int kind, bool record)
+/* Specialize record/query and spin/mutex at the four fixed call sites; keep
+ * the sampling, local reentry guard and pin semantics shared below. */
+static __always_inline bool kd_hotlock_access(unsigned long address, unsigned int kind, bool record)
 {
   struct kd_hotlock_table *t;
   struct kd_hotlock_entry *slot;
@@ -169,6 +171,13 @@ bool kd_hotlock_record_spin(unsigned long address) { return kd_hotlock_access(ad
 bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(address, 1, true); }
 bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false); }
 bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false); }
+
+/* Acquisition-pinned callers reuse the verified sampler. Its preempt_count
+ * check does not add another pin; keep this API stable across the rollback. */
+bool kd_hotlock_record_spin_pinned(unsigned long address)
+{
+  return kd_hotlock_record_spin(address);
+}
 
 int kd_hotlock_init(void)
 {

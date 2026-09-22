@@ -1,5 +1,10 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
+当前实现与最新三方成绩见[热表回归处理](results/20260922-performance-recovery.md)：
+每 CPU/type 256 桶、256 记录，精确地址碰撞链、满表不替换、本地 busy 及已有 pin 复用。
+无 busy、共享表和直接映射版本已回退；普通 spin IRQ 语义及 wrapper 栈修复保留。
+历史实验统一从[历史索引](../spin_cacheline/results/HISTORY.md)读取。
+
 当前源码使用显式锁 API，KD 入口记录本地热度；进程名筛选和统一 hook 分派不进入被测路径。三种后端分别构建同一份
 `workload_modules/spin_cacheline`，只在编译时改变锁 API：
 
@@ -20,12 +25,16 @@ kdlock 使用显式 32 位 KD 锁字，保留 owner/ACK、上下文和 JIT 就�
 
 ## 准备与运行
 
+性能测试对象固定为 Linux 原生、TCLock 和当前 kdlock，运行器默认即为
+`--backends native tclock kdlock`。不再构建或运行旧版 kdlock 对照；归档中的
+O/N `compare.py` 仅用于追溯历史结果。功能检查仍按需要单独选择 KD。
+
 后端先加载，直接依赖它的样例后加载。运行器在没有 worker 时绑定只读观测
 使用的锁地址，再调用 `SC_PREPARE` 显式登记选定正文的锁后 RIP 和 KD 对象。
 kdlock 等唯一条目发布为 NORMAL、翻译进程退出并停止 daemon 后，再执行各组
 相同的单 CPU 48000 次预热。准备与预热均不计时。默认 observe 固定准入；adaptive 各 CPU 在测量开始后自然积累热度。
 
-默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 三种后端 × 五轮 = 150 场**，
+默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 三种后端 × 两轮 = 60 场**，
 每线程 100000 次，奇数轮逆序。仅保留这一组直接调用方式，不再使用 `--abis`。
 只在 recovery guest 中按[操作手册](../../docs/AGENTS.md)核对快照、依赖和空闲状态；
 现有 `kdclobber2` 内核不重建。输出必须是新的仓库外目录。
@@ -67,8 +76,11 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 
 ## 验收与结果
 
-`summary.csv/json` 仅报告各配置的吞吐中位数、摊销 ns/op、相对 Linux 的吞吐比和
-有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
+2026-09-22 起默认每组两轮，三种后端各取有效样本中的最大吞吐。
+`summary.csv/json` 用 `best_throughput_ops_s`、`best_amortized_ns_op` 报告同一
+获选会话的吞吐与摊销时间，`best_session` 指向原始会话，
+`comparison_policy=best_valid_throughput` 标明口径；不再输出 `median_*` 字段。
+相对 Linux 的比值使用各后端最大值除以 Linux 最大值，KD/TCLock 同理；保留有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
 正确、完成且已排空的样本参与汇总。hotlock 不参与结果表。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
@@ -89,21 +101,14 @@ python3 bench/tclock_compare/test_direct.py
 
 ## 本次结果
 
-本轮 [无候选直接哈希同期对照](results/20260921-hotlock-direct.md)：120/120 场通过并排空，
-adaptive 四线程/二十线程近似持平，单线程 c1 +4.86%、c16 −2.10%；没有整体提升。
-前序功能结果见 [tests](../../tests/README.md#hotlock-direct-validation)。
+最新已测版本见[2026-09-22 回归处理](results/20260922-performance-recovery.md)：
+两轮最大值口径，60/60 场、5880 万次操作完成并排空，16/16 竞争 KD 有实际 JIT。
+20 线程 c1/c16 的 KD 为 5.197/4.809 Mops/s，是 TCLock 的 1.037×/1.471×；
+四线程为 TCLock 的 0.621×/0.728×，低竞争差距尚未解决。
+报告区分宿主 vCPU 放置问题、热表局部回退、独立 PMU 诊断及未测边界。
 
-此前 [两级候选采样](results/20260921-hotlock-twolevel.md)记录上一版修改、功能检查及
-observe/adaptive 新旧交错对照：120/120 场通过并排空。adaptive 二十线程 c1/c16
-提高 10.09%/18.32%，单线程回退约 4%、四线程无明确收益；observe 高竞争近似持平。
-CPU 热才记录锁，单锁独立定时确认；对象大小未增加。
-
-修改前 [提交完整重测](results/20260921-current-benchmark.md)：`175d73b`，150/150 场通过，
-40/40 场竞争 KD 有实际 JIT，全部排空。20 线程 c1/c16 的 KD 为 5.003/4.775 Mops/s，
-为 TCLock 的 1.002×/1.442×；四线程仍为 TCLock 的 0.659×/0.766×。
-
-历史阶段与回退原因集中在 [历史索引](../spin_cacheline/results/HISTORY.md)。
-MCS 准入/时间域实验已撤回，当前保留入口准入和 ticket 优化。
+此前五轮中位数及功能实验保留原统计口径，从[历史索引](../spin_cacheline/results/HISTORY.md)
+读取，不能作为当前源码的新成绩。文档和旧工具清理未重跑性能矩阵。
 
 ## 当前 TCLock 设置
 
@@ -135,7 +140,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --workload rcuht --backends native tclock kdlock --output /root/kdlock-evidence/rcuht-new
 ```
 
-哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 三后端 × 五轮，共 75 场。
+哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 三后端 × 两轮，共 30 场。
 先用 `--threads 1 4 --repeats 1 --iterations 10000` 做六场验证。每次 snapshot 在
 计时外验证节点地址、链表回链、无环、桶归属、键唯一性和 4096 节点总数；每个
 操作必须恰好计入搬移/冲突/未命中之一。`before/after` 的前四项为总操作、搬移、
@@ -147,8 +152,9 @@ v2，客户端和 workload 模块必须同时重建。
 ## 准入模式与结果解释
 
 `--hotlock-mode observe`（运行器默认）固定 KD 准入并记录本地统计，
-`--hotlock-mode adaptive` 使用 CPU/type 1024 次、单锁 count 大于 1024（1025 次）的
-独立时间窗口确认；每 CPU/type 256 精确地址记录，满表不替换，未知锁保持原生。
+`--hotlock-mode adaptive` 使用 CPU 1024 次、单锁 count 大于 1024（1025 次）的
+独立时间窗口确认；每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
+满表不覆盖已有身份，未收录锁或冷锁保持原生。
 两者必须分开结果目录；
 单 CPU 预热不会让其他 CPU 自动变热，冷 CPU 的测量前缀属于自适应效果的一部分。
 `--scenario nested` 和 `--scenario early` 只允许 KD cacheline，用于双锁协议回归；

@@ -20,7 +20,8 @@ owner/ticket/frame 独立存活，解锁不查热表。
 当前沿用 `644f231` 的每 CPU 20 KiB continuation/等待栈区；普通完成先 pop
 再通知，native 的最终解锁等待根 ticket 借用全部退休。对象大小、分配位置及
 TCLock/KD 数据流集中在 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
-最新直接哈希计数的验证见 [tests](../tests/README.md#hotlock-direct-validation)，
+当前热表已按[性能回归处理](../bench/tclock_compare/results/20260922-performance-recovery.md)
+恢复到此前最佳已测实现。早期直接哈希计数验证见 [tests](../tests/README.md#hotlock-direct-validation)，
 同期性能见 [直接哈希对照](../bench/tclock_compare/results/20260921-hotlock-direct.md)：
 adaptive 四线程/二十线程近似持平，没有整体提升。
 此前两级候选版对照见 [历史采样报告](../bench/tclock_compare/results/20260921-hotlock-twolevel.md)，

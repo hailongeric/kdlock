@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #ifndef KD_SPIN_DIRECT_H
 #define KD_SPIN_DIRECT_H
+/* Plain raw_spin_lock semantics: acquisition pins preemption, but does not
+ * save/disable IRQs or BH. Callers needing that protection supply it outside. */
 
 #include <asm/asm.h>
 #include "kd_spin_type.h"

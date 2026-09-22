@@ -51,10 +51,10 @@ shared packet -> final CPU loads -> retire continuation -> original waiter resum
 | 后端 C 栈 | spin 使用执行者自己的 task 内核栈；mutex 使用其独立 waiter 栈 | 运行 queue/combiner C 代码；不等于 JIT 的虚拟调用栈 |
 | spin shadow 等待栈 | 每 CPU 20 KiB 区域的高端 8 KiB，`kd_spin_cpu_state.wait_stack_top` | 物理 waiter 发布前切入，保存一个旧 C RSP 并 PAUSE 轮询；不承载 JIT 或 frame |
 
-spin 的普通物理 waiter 在发布前保存并关闭本 CPU 的 IRQ，同一段汇编先切到
+spin 的普通物理 waiter 保持本 CPU 的 IRQ 状态，同一段汇编先切到
 shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队首交接恢复旧 RSP；
 代理完成后直接在 task 栈的安全位置重建恢复帧，不逐层返回旧 slowpath。
-离开等待栈后才释放 pin、恢复原 IRQ 状态并转到续点。锁地址账本和 wrapper
+离开等待栈且读完/退休 continuation 后才释放 pin 并转到续点，IRQ 状态不变。锁地址账本和 wrapper
 暂存不属于这份等待栈。虚拟 waiter 的 owner/ACK 轮询仍使用执行者独立的 C 栈。
 
 `struct pt_regs` 的有效字段由 `packet_state` 决定。嵌套锁或 hostcall
@@ -84,7 +84,7 @@ provider 构建要求 `KD_SPIN_CLOBBER_V1`；旧内核安装分支已删除，�
 | FULL | 中间退出在进入 C 之前保存当前完整逻辑 GPR。沿已有 hostcall、nested、native 或续跑处理，不重放前缀 |
 
 正常新路径为 `MINIMAL → COMPLETE → waiter`。`kd_spin_restore_request()`
-在全部现场读取完成后标记 continuation 退休并收缩本 CPU 栈顶，再恢复原 IRQ flags；
+在全部现场读取完成后标记 continuation 退休并收缩本 CPU 栈顶，完成后通过保留 GPR 的 helper 解除原入口 pin；IRQ 状态不变；
 只恢复三个续点字段，调用者后续
 指令重新装载活跃值。FULL 继续使用原完整恢复。两种状态不能混入通用 dispatcher。
 
@@ -206,7 +206,7 @@ kdlock caller-clobber v1:
   waiter: 编译器保存活跃值 -> 记录 RIP/RSP/RBP -> shadow 栈 -> 发布
   combiner: 同一个 C 帧 -> 准入/绑定 -> 精简 wrapper -> JIT CS
     -> 三字段 COMPLETE -> 完成/解绑/发布 -> 同循环下一请求
-  waiter: 清理 ticket -> 恢复 RIP/RSP/RBP 和原 IRQ flags -> caller 续点
+  waiter: 退休 ticket 元数据 -> 恢复 RIP/RSP/RBP -> 退休 continuation -> unpin -> caller 续点
   中途出口: 完整逻辑 GPR 物化一次 -> 既有 hostcall/nested/native 协议
 ```
 
@@ -227,8 +227,8 @@ kdlock 的物理 RSP 必须留在 combiner 栈：wrapper 的控制槽、地址
 可能仍被后缀使用。只有明确的 caller-clobber 最终边界允许丢弃这些值。
 
 锁侧准入/绑定、KD 单锁字对同协议 peer 的排斥、source 生命周期、嵌套 owner/ACK 和
-提前解锁仍需保留。二者均没有完整条件码上下文恢复：kdlock 最终 `popfq`
-恢复入队前 IRQ flags，不是 JIT 退出点的条件码。详细限制见第 3 节。
+提前解锁仍需保留。二者均没有完整条件码上下文恢复：kdlock 普通 spin 最终不执行 `popfq`，
+IRQ 状态保持不变，也不恢复 JIT 退出点的条件码。详细限制见第 3 节。
 本次验证与未重跑范围见 [历史：测试记录](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#tclock-context-loop)。
 
 核对入口：[等待栈切换](../kernel_module/spin/wait.inc)、
@@ -321,6 +321,11 @@ entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志
 0x80 rip      0x88 cs       0x90 eflags   0x98 rsp
 0xa0 ss
 ```
+
+普通 spin 保持 IRQ 开启时，wrapper 的私有元数据必须一直位于已分配栈区内。
+FULL 出口先写回 GPR，并读完 witness、exit kind、RIP、clobber/batch 描述，
+最后才抬高物理 RSP。不能先释放栈再读负偏移槽，否则中断现场可能覆盖它们；
+固定栈大小和已有偏移不变。
 
 当前 wrapper 的字段语义如下：
 
@@ -450,7 +455,7 @@ child frame 并追加 B。combiner 绑定后保留深度、锁类型、重复锁
 检查，输入即 child 自身四列时跳过复制，再设置有效深度和 outer index。
 child 继承父 frame 的 waiter GS base 和 logical task。B 锁的远端 combiner 更新
 同一逻辑包；父级暂停期间使用独立 CALL/锁事实，不把包内变化的值当作旧快照。
-`jit_context` 只保留 requester 和预备深度，内嵌于 768 字节 continuation，
+`jit_context` 只保留 requester 和预备深度，内嵌于 704 字节 continuation，
 与节点槽位的复用独立。虚拟 waiter 缓存 requester，每轮 acquire 检查其远端邮箱；
 空邮箱跳过处理函数，有通知则执行原有 owner 检查、解锁和 ACK，不能只等 completed。
 父 combiner 的 C 栈仍保留暂停的控制流和局部快照，在 B 返回前必须保持有效，不能将
@@ -789,11 +794,11 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 执行者解除借用，再由原 waiter 结束自己的 pin，combiner 不能远端解除固定。mutex 则在进入 native 后缀前已
 恢复迁移/抢占状态，不把 spin 的 pin 生命周期套用到 mutex。
 
-当前 frame/context/continuation 为 648/5208/768 字节，spin node 为 128 字节、
+当前 frame/context/continuation 为 648/5208/704 字节，spin node 为 128 字节、
 64 字节对齐。continuation 按 64 字节对齐，frame 起于偏移 32，寄存器包起于 104；
 等待和恢复汇编从 `offsetof` 取得偏移，两种 wrapper 的 `pt_regs` 内部布局与输入 ABI 不变。
 每 possible CPU 一次预分配 20 KiB，低端 12 KiB 存放 12 条 continuation，
-高端 8 KiB 为物理 waiter 等待栈。栈头和记录合计 9280 字节；只由本 CPU 按 top
+高端 8 KiB 为物理 waiter 等待栈。栈头和记录合计 8512 字节；只由本 CPU 按 top
 分配/收缩，远端执行者仅能在 pop 后发布 retired，不扫描空闲引用或搬移活动记录。
 node 首行保留链接、execution 与预取地址，通知字段位于第二行偏移 64/65；
 数组步长为 128 字节。节点复用不回收 continuation，预取提示不参与恢复。
@@ -806,13 +811,13 @@ node 首行保留链接、execution 与预取地址，通知字段位于第二�
 
 ## 11. 返回原 waiter
 
-spin 队列普通获取返回 0/2 时直接沿原 C 调用链返回并恢复原 IRQ 状态，包括
+spin 队列普通获取返回 0/2 时直接沿原 C 调用链返回并保持原 IRQ 状态，包括
 未分配节点的容量回退。物理 waiter 在连续汇编中先切到 shadow 栈，再发布和轮询；完成或
 native 唤醒直接放弃旧调用链，在对齐后的 `min(node->rsp, node->execution->frame.regs_ref->sp)` 下方
-建立恢复帧，只保留 continuation 指针、ticket 和原 IRQ flags。普通完成路径结束
-ticket；native 标记状态并将根记录留在 `kd_spin_native_root`，保留 pin 到所有
+建立恢复帧，只保留 continuation 指针和 ticket。普通完成用 `kd_spin_entry_end_pinned()`
+退休 ticket 元数据，保留入口 pin 直到最后一次现场读取；native 标记状态并将根记录留在 `kd_spin_native_root`，保留 pin 到所有
 执行者退休。`kd_spin_restore_request()` 直接读取共享包；普通完成/重试在全部
-读取之后标记记录 retired 并收缩本 CPU top，再恢复原 IRQ flags 并跳转，不做软件包快照。
+读取之后标记记录 retired 并收缩本 CPU top，完成时由保留 GPR 的 `kd_spin_restore_unpin()` 解除 pin 后跳转；重试继续持有 pin，不做软件包快照。
 native 有剩余锁时恢复不回收记录，最终解锁经 ACK 和 borrow 等待后回收；无剩余锁
 则先等待全部退休，以 mode=3 恢复受检 IP，最后一次现场读取后回收记录。
 未执行正文的 retry 返回 4 仍保留已持有的 ticket；虚拟 waiter 保留 1/3/5 返回
@@ -842,8 +847,8 @@ spin 的批次 lease 覆盖所有请求的 native/remote 后缀与实际 pop；m
 pop 就返回 `-EBUSY`，不复制输出寄存器、不清除存储、不释放会话引用。正常退出
 native 正常退出仍由 owner 完成请求并发布物理 ACK 后调用 pop；spin 最后一个
 ACK 的 waiter 日志在退休等待结束后输出，不能将日志顺序等同于物理 ACK 发布顺序。
-这不增加寄存器字段或 native 出口。spin 恢复的是入队前的 IRQ flags，
-不是从 JIT 虚拟执行重建 live condition codes；既有 flags 语义限制仍在。
+这不增加寄存器字段或 native 出口。普通 spin 不保存或恢复 IRQ flags，
+也不从 JIT 虚拟执行重建 live condition codes；既有 flags 语义限制仍在。
 当前 SELFTEST 改为验证 pop 前逻辑 task 仍存活、寄存器包/上下文未损坏，
 pop 后 `kd_exec_frame_validate()` 拒绝访问；最终 native 返回前必须完成退休。
 旧的“waiter TID 先退出、frame 后 pop”时序仅是历史记录，不能作为新协议验收。

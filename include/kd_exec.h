@@ -175,6 +175,7 @@ void kd_exec_context_exit(void);
 
 struct kd_exec_frame *kd_exec_current_frame(void);
 bool kd_exec_context_busy(void);
+bool kd_exec_context_occupied(void);
 
 /* Prepare once on the producer; bind only changes physical execution state.
  * batch_lease requires an enclosing source lease through the final unbind. */

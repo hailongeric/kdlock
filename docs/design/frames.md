@@ -39,7 +39,7 @@ from this spin path. Mutex and the legacy frame-push API retain their own packet
 handling. This is not a replacement of every state snapshot in the repository.
 
 Each CPU preallocates one 20 KiB region. The low 12 KiB contains a
-64-byte-aligned continuation stack (12 records, each 768 bytes); the high 8 KiB
+64-byte-aligned continuation stack (12 records, each 704 bytes); the high 8 KiB
 is the physical waiter polling stack. These regions never overlap. The four
 128-byte scheduling nodes still point directly to stable execution records.
 Combiner C and JIT physical stacks remain on the executor's task stack; virtual
@@ -50,7 +50,7 @@ only the contiguous retired top; holes below a live top are neither scanned for
 allocation nor moved. Only the allocating CPU changes top. A remote native child
 may release-publish its retired marker after pop; its producer collapses it on
 its next reservation/release. No request `users` or `packet_owner` remains.
-The stack header plus records occupies 9280 bytes within the reserved 12 KiB.
+The stack header plus records occupies 8512 bytes within the reserved 12 KiB.
 Exact object sizes, allocation sites and cross-CPU data flow are maintained in
 [execution paths](../../bench/spin_cacheline/EXECUTION_PATHS.md).
 Exhaustion before publication uses native KD MCS with the existing ticket.
@@ -70,7 +70,7 @@ The protocol is:
    final completion publication; queue work and logs use independent data.
 4. The physical waiter restores RIP/SP/BP or the full GPR packet. After every
    packet load, the final assembly marks the record retired and collapses the
-   CPU's stack top, then restores IRQ flags and returns. An unstarted head
+   CPU's stack top, then consumes the retained completion pin through a GPR-preserving helper and returns. An unstarted head
    return releases its record on the intact C stack.
 5. NATIVE_READY grants permission to execute the checked native suffix, not
    permission to free the record or end the root pin. Every executor, including
@@ -234,8 +234,8 @@ physical hold continues until unlock. See [the shared native queue](locking.md#4
 
 The 88-byte `kd_combiner_state` preserves the lock ledger/depth, current logical
 CPU and NUMA queue pointers. Former constant `prev_cs_cpu`, wrapper-RSP scratch
-and IRQ mirror fields were removed from both CPU state and checkpoints. Actual
-IRQ restoration still uses the request's `irq_flags`. `kd_spin_batch` uses
+and IRQ mirror fields were removed from both CPU state and checkpoints. Plain
+spin now also removes the continuation's `irq_flags` and leaves IRQ state unchanged. `kd_spin_batch` uses
 `outer.released` directly for outer-lock reclaim, without a second boolean.
 The legacy frame-push APIs no longer accept unused waiter/outgoing-RSP arguments.
 
@@ -264,8 +264,8 @@ copy. Necessary CPU register loads/spills and independently live executor
 checkpoints remain. Reserving R11 for the packet moves the branch budget to a
 private stack slot; less boundary copying does not guarantee lower total cost.
 Caller-clobber v1 initializes only RIP/RSP/RBP for a normal request; legacy
-entries retain their saved-register contract. Restoring the physical waiter's
-saved IRQ flags does not restore JIT live condition codes.
+entries retain their saved-register contract. Plain spin does not load IRQ flags;
+this does not add restoration of JIT live condition codes.
 The canonical path/state table and source scope are in the
 [register ABI comparison](../JIT_REGISTER_ABI.md#11-与-tclock-spinlock-的执行路径和状态保存对比).
 The independent [TCLock backend](../../tclock_backend/README.md) now runs the native

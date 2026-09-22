@@ -44,12 +44,14 @@ def main():
         macros = source[source.index("#define KD_SPIN_RETIRE_ASM"):
                         source.index("static __attribute__((noipa, noreturn))")]
         (path / "restore_production.h").write_text(
-            macros + "static __attribute__((noipa, noreturn)) noinline notrace void\n" + code)
+            "static __attribute__((noipa, used, no_caller_saved_registers)) noinline notrace void\n"
+            + definition(source, "kd_spin_restore_unpin(void)")
+            + macros + "static __attribute__((noipa, noreturn)) noinline notrace void\n" + code)
         binary = path / "spin-restore"
         subprocess.run(
             shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
-                "-mno-red-zone", "-fno-stack-protector", "-I", str(path),
+                "-mno-red-zone", "-mgeneral-regs-only", "-fno-stack-protector", "-I", str(path),
                 str(ROOT / "tests/unit/spin/spin_restore_fixture.c"),
                 "-o", str(binary),
             ], check=True, timeout=30,

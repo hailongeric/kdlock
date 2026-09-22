@@ -3,9 +3,12 @@
 本文以 `644f231`（continuation 存储与退休交接）及 2026-09-21 的 ticket 路径优化与性能回退处理
 为准，描述当前直接 API 的 **spin** 执行路径。对象表以 2026-09-20 的
 性能 ELF 为基础；2026-09-21 重新构建、运行并复核 node/continuation/ticket 布局。
-热表已更新为无候选的精确地址计数，其 24/6688/13376 字节布局以本轮 guest ELF 为准。
+2026-09-22 普通 spin 已改为保持 IRQ/BH 状态，continuation 缩至 704 B；
+新布局与实际 JIT 验证见[普通 spin 语义报告](../tclock_compare/results/20260922-plain-spin.md)。
+热表已按性能验收回退到每 CPU/type 256 桶/256 记录，恢复本地 busy 和复用 pin 的共享入口；
+原因、范围及新性能见[回归处理](../tclock_compare/results/20260922-performance-recovery.md)。
 TCLock 指仓库中的外部模块适配版 `tclock_backend/`；KD 指显式 `kd_spinlock_t`
-API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施及独立热表，其互斥
+API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施及分类型热表，其互斥
 协议见 [locking](../../docs/design/locking.md)，不能套用这里的 spin 流程。
 
 三臂使用同一负载源码、分别编译为不同 ELF。完整操作包括获取、正文、释放、
@@ -131,8 +134,8 @@ waiter CPU                         combiner CPU
 | `kd_spin_node` | 128 × 4 = 512 / CPU | `spin/state.inc` 静态 per-CPU 数组；每节点按 64 对齐，`completed/locked` 偏移 64/65；原生与代理共用四槽 |
 | `kd_spin_cpu_state` | normal 80 / CPU；NUMA 增加 16 | 静态 per-CPU；`lock_addr[8]`、当前代理 CPU、`node_count`、等待栈顶；NUMA 再有暂存链表头尾 |
 | continuation/等待栈共享预留区 | 20480 / CPU | `kd_spinlock_init()` 每 CPU 一次 `vzalloc`；低端 12 KiB 放 continuation，高端 8 KiB 为物理等待栈，两区不重叠 |
-| `kd_spin_continuation_stack` | 9280 / CPU，包含 768 × 12 条记录 | 位于低端预留区；只按 top 分配，退休标记后收缩连续已退休栈顶；记录按 64 字节对齐，活动记录不搬移 |
-| `kd_spin_continuation` | 768 × 12，已包含在存储栈中 | `spin/request.inc` 按 top 借用槽；包含 frame、恢复结果、IRQ flags、调用者上下文；不是 C 自动局部对象 |
+| `kd_spin_continuation_stack` | 8512 / CPU，包含 704 × 12 条记录 | 位于低端预留区；只按 top 分配，退休标记后收缩连续已退休栈顶；记录按 64 字节对齐，活动记录不搬移 |
+| `kd_spin_continuation` | 704 × 12，已包含在存储栈中 | `spin/request.inc` 按 top 借用槽；包含 frame、恢复结果、调用者上下文；不是 C 自动局部对象 |
 | `kd_exec_frame` | 648，已包含在 continuation 中 | 生产者准备，combiner 原地 bind/pop，不为同一 spin 请求另分配第二个 frame |
 | `pt_regs` | 168，已包含在 frame 中 | 根请求拥有寄存器包；虚拟子请求 `regs_ref` 可指向根包，不按层复制整包 |
 | `kd_spin_jit_context` | 16，已包含在 continuation 中 | 虚拟请求的 `requester` 与锁深度；跟随 continuation 存活，不绑定可复用 node 槽 |
@@ -158,8 +161,8 @@ waiter CPU                         combiner CPU
 | 对象 | 大小 | 创建位置与数据流 |
 | --- | --- | --- |
 | `kd_spin_ref` | 16 | ticket 指针 + sequence；内嵌于请求/frame/ACK，用于代际检查，不另分配 |
-| `kd_spin_request` | 24 | `kd_spin_lock_abi()` 等调用栈局部；ref + KD word 指针，传给队列/batch，早释放后仍用原 ticket 重新获取 |
-| `kd_spin_native_input` | 48 | `kd_spin_lock_slowpath()` 栈局部；物理 RSP、逻辑 SP/IP/BP、ABI、IRQ flags，发布前写入 continuation |
+| `kd_spin_request` | 24 | `kd_spin_lock_contended()` 等慢路径调用栈局部；顶层 fast 成功不创建；ref + KD word 指针，传给队列/batch，早释放后仍用原 ticket 重新获取 |
+| `kd_spin_native_input` | 40 | `kd_spin_lock_slowpath()` 栈局部；物理 RSP、逻辑 SP/IP/BP、ABI，发布前写入 continuation |
 | `kd_spin_batch` | normal 184；NUMA 或 SELFTEST 单开 192，两者开 200 | `run_combiner()` 栈局部，含外层释放 hook、后继、request、翻译及进度；覆盖整批和同步 ACK 等待 |
 | `kd_jit_batch_call` | 96，已包含在 batch 中 | wrapper 描述，含寄存器指针、两元素 args、代码/入口/完成信息，不是另一份寄存器包 |
 | `kd_combiner_state` | 88，已包含在 frame 中 | 首次进入复杂路径时保存 combiner 锁账本与队列检查点；简单路径避免完整检查点保存 |
@@ -175,7 +178,7 @@ caller-clobber 调用壳由编译器保存活跃值，保存量取决于调用�
 [寄存器 ABI](../../docs/JIT_REGISTER_ABI.md)。翻译分配见
 [registry_lifecycle.inc](../../kernel_module/execution/registry_lifecycle.inc)。
 
-24 字节的 `kd_spin_request` 是调用栈上的 ticket/锁字描述，768 字节的
+24 字节的 `kd_spin_request` 是调用栈上的 ticket/锁字描述，704 字节的
 `kd_spin_continuation` 才是节点指向的长期现场；它们不是同一个对象。
 前者随所属 C 调用结束，后者必须显式退休，不能随着函数返回或 node 复用消失。
 
@@ -197,9 +200,9 @@ lease 是已有来源状态上的引用，不为每个 frame 分配一个独立�
 ```text
 每 CPU 一次 vzalloc(20480)，base 按页对齐
 base +     0 ┌ top：4 字节 + 对齐填充 60 字节
-base +    64 ├ records[0]：768 字节、64 字节对齐
+base +    64 ├ records[0]：704 字节、64 字节对齐
              │ ... records[1..11]，连续 12 条，共 9216 字节
-base +  9280 ├ 低端区域余量：3008 字节，不作为额外记录使用
+base +  8512 ├ 低端区域余量：3776 字节，不作为额外记录使用
 base + 12288 ├ 高端 waiter 等待栈：8192 字节，向低地址增长
 base + 20480 └ wait_stack_top：初始栈顶
 ```
@@ -212,8 +215,8 @@ base + 20480 └ wait_stack_top：初始栈顶
 | `frame` | 32 / 648 | 前 72 字节为热字段，随后 168 字节 `regs`，其余 408 字节为复杂路径存储 |
 | `frame.regs` | 104 / 168 | 根包的实际存储；虚拟子 frame 的 `regs_ref` 指向根包，而非自己的这片空间 |
 | `jit_context` | 680 / 16 | 虚拟请求的父执行者及锁深度 |
-| `irq_flags`、`queued_at_ns` | 696 / 8、704 / 8 | 物理 waiter 的 IRQ 恢复信息、可选计时信息 |
-| 末尾填充 | 712 / 56 | 保证下一条记录仍按 64 字节对齐 |
+| `queued_at_ns` | 696 / 8 | 可选队列计时；普通 spin 不保存 IRQ flags |
+| 记录末端 | 704 | 无额外末尾填充；下一条记录仍按 64 字节对齐 |
 
 记录使用 `records[top++]`；退休先置标记，再由所属 CPU 收缩连续已退休栈顶。
 例如 0/1/2 在用、1 先退休时，下一次仍从 3 分配，不复用 1；2 退休后才可一并
@@ -251,7 +254,7 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 2. `KD_SPIN_DIRECT_CALL` 传 lock、pre-CALL SP、post-CALL IP、BP 给 clobber v1
    入口，编译器按调用壳的 clobber 声明保存活跃值。
 3. `kd_spin_lock_abi()` 首先执行一次 `preempt_disable()`。代理开关开启时调用
-   `kd_hotlock_record_spin()` 合并采样与热度判断，再检查 task/softirq、迁移和
+   `kd_hotlock_record_spin_pinned()` 合并采样与热度判断，再检查 task/softirq、迁移和
    执行 context。关闭代理、冷锁或上下文拒绝均转入完整原生 fast/pending/MCS，
    复用入口 pin；关闭代理的公共入口跳过统计。统计独立调用仅在未 pin 时临时 pin。
 4. 准入后的普通根入口先 CAS，再尝试 pending；成功使用 per-CPU fast owner，
@@ -274,7 +277,15 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 的实验已撤回。差异、同期数据和限制见
 [回退报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
 
-ticket 的 claim/reclaim 与 release 各在一次 guard 临界区中完成身份校验和状态提交；
+当前 API 遵循普通 `raw_spin_lock`：只配对抢占，不保存/关闭/恢复 IRQ，也不关闭 BH。
+需要 IRQ/BH 保护的调用者在外层选择相应语义；本次未新增 KD irqsave/bh API。
+
+原生和代理节点均以单指令 per-CPU 计数操作占用/归还。combiner 先保存节点信息
+再借出槽位，批次返回时重新占用后才能写回；生产者最后读取恢复信息后才归还节点。
+完成路径用 `kd_spin_entry_end_pinned()` 退休 ticket 元数据，读完/退休 continuation
+后才由 `kd_spin_restore_unpin()` 解除抢占；重试及有锁 native 续跑保留获取 pin。
+
+ticket 的 claim/reclaim 与 release 各在一次普通 raw spin guard 临界区中完成身份校验和状态提交；
 二者内部都不执行阻塞获取或物理释放。实际释放仍由调度方单次 release store 完成，
 native 借用、代际及最终退休检查保留。
 
@@ -361,7 +372,7 @@ owner、frame 或 ACK 归属。统计与锁协议是独立数据流。
 
 ### 5.3 可代理请求发布与执行
 
-1. `kd_spin_lock_slowpath()` 保存 IRQ flags、屏蔽 IRQ、准备 input，reserve
+1. `kd_spin_lock_slowpath()` 保持 IRQ/BH 状态，准备 input，reserve
    node/continuation。根请求令 `regs_ref=&frame.regs`；clobber v1 只初始化 IP/SP/BP
    的 MINIMAL 包，复杂出口才物化 FULL GPR 包。
 2. 初始化逻辑 task、GS、ABI、ticket 等。物理 waiter 有前驱时，**先切到 8 KiB
@@ -375,12 +386,13 @@ owner、frame 或 ACK 归属。统计与锁协议是独立数据流。
    不复制 waiter frame 给 combiner。wrapper 入参 `args[0/1]` 分别传逻辑 GS 和
    task，返回时承载出口结果；寄存器包提供逻辑 IP/SP。与 TCLock 不同，KD
    wrapper 的物理 RSP 保持在执行者栈上，生成代码通过逻辑 SP 访问 waiter 栈。
+   FULL 出口读完全部私有元数据后才释放物理栈区，避免 IRQ 覆盖仍在使用的槽位。
 5. wrapper 执行生成代码，业务内存直接读写 workload 原始共享地址。普通完成
    回写 post-unlock IP/SP/BP；中间出口保存 FULL 包与续点，按锁账本/控制 CALL
    状态决定嵌套、完成或受检原生续跑。
 6. 正常完成先退休相应 frame，再通知 waiter。物理 waiter 丢弃可能被覆盖的旧
    hook/queue C 帧，从稳定 continuation 恢复；最后一次寄存器读取后才标记退休并收缩栈顶，
-   恢复 IRQ flags 并跳到续点。未执行正文的队首交接才可返回旧 C 调用链。
+   完成请求通过保留 GPR 的 helper 解除原入口 pin，再跳到续点；不加载 RFLAGS。未执行正文的队首交接才可返回旧 C 调用链。
 
 ```text
 物理 waiter CPU                    combiner CPU
@@ -467,13 +479,13 @@ fast owner 解锁也不会自动变成 combiner。虚拟 waiter 保留执行者 
 ```mermaid
 flowchart LR
     A["CPU A：根 waiter"] --> NA["A 的 node：128 B"]
-    NA --> RA["A 的 continuation：768 B"]
+    NA --> RA["A 的 continuation：704 B"]
     RA --> P["内嵌根寄存器包：168 B"]
     B["CPU B：外层 combiner"] --> CB["B 栈上 batch：184 B"]
     CB -->|call.regs| P
     B -->|本地 context.top 绑定| RA
     B --> NB["B 的虚拟 node：128 B"]
-    NB --> RB["B 的子 continuation：768 B"]
+    NB --> RB["B 的子 continuation：704 B"]
     RB -->|regs_ref 共享| P
     RB -->|requester / resume_target| RA
     C["CPU C：子 combiner"] -->|本地 context.top 绑定| RB
@@ -491,11 +503,34 @@ flowchart LR
 执行者、物理栈和锁 owner 仍按各自协议管理。源 lease 保活来源模块/代码；ticket
 保留获取代际与借用；二者不代替 continuation 的退休规则。
 
+### 5.5.1 无竞争入口的局部对象准备
+
+`kd_spin_lock_abi()` 先持有一次 acquisition pin，执行原有热度与上下文准入。
+`kd_exec_context_occupied()` 一次读取本地 context，等价于原来的
+`current_frame() || context_busy()`：`depth && (owner != current || top)`。
+检查既有 native ticket 的路由仍在。顶层 CAS 成功只发布 fast owner，正文原生执行。
+CAS 失败才将读到的锁字和 SP/IP/BP/ABI 传给 `kd_spin_lock_contended()`，不重新
+尝试一次 CAS；后者在当前执行者 C 栈创建 24 B request，再走 pending/MCS。
+物理嵌套入口直接进入该 helper，保留先借 ticket 再尝试 CAS 的顺序。
+
+`kd_spin_unlock()` 先核对 fast owner；失败才调用 `kd_spin_unlock_slow()`，
+在其 C 栈创建 16 B ref，依次处理 native ACK、ticket 和 nondelegated 解锁。
+新 helper 不分配堆内存，不改变 ticket、node、continuation 的个数与存活期。
+guest ELF 已确认两个公共快速入口不再初始化上述局部对象，也不再携带对应的
+stack canary；有地址逃逸对象的慢路径仍有 canary。
+[本轮 ELF 与测量证据](../tclock_compare/results/20260921-fast-path-optimization.md)保留了代码尺寸和开销变化。调用者寄存器保存、owner
+身份核对、IRQ/preempt 恢复及编译缓解配置继续保留。
+
+热度实现恢复为分类型采样器，并在四个固定 spin/mutex、record/query 入口
+编译时展开类型/操作分支。已 pin 的 spin 接口转入同一实现，读取现有
+preempt_count 并复用 acquisition pin，不额外 disable/enable。原有本地 busy
+和256条精确地址记录恢复，CPU/锁1024/1025阈值不变，见5.1。
+
 ### 5.6 完成通知、ACK 和回收的次序
 
 | 路径 | 发布前完成的工作 | 接收方可以做什么 | 最终回收位置 |
 | --- | --- | --- | --- |
-| 普通根代理完成 | wrapper 写回结果 → 完成子工作 → frame complete/pop → 通知节点完成 | waiter 恢复最终现场；执行者不得再读该 frame/包 | 原 CPU 恢复汇编读完全部字段后标记记录退休并收缩 top，再恢复 flags/跳转 |
+| 普通根代理完成 | wrapper 写回结果 → 完成子工作 → frame complete/pop → 通知节点完成 | waiter 恢复最终现场；执行者不得再读该 frame/包 | 原 CPU 恢复汇编读完全部字段后标记记录退休并收缩 top，再解除原入口抢占保护并跳转 |
 | 普通虚拟子请求完成 | 清理远端关系 → 子 frame pop → 父 `remote_result=DONE` → 节点完成 | 父执行者处理返回点并继续 JIT；根包不复制 | 生产者执行完 `kd_spin_finish_remote_node()` 的最后读取后 release 子记录 |
 | native 有剩余锁 | 各执行者登记根 ticket borrow 和必要的物理锁路由 → NATIVE_READY → 唤醒原线程 | 原线程按受检 IP 继续；节点可复用，根记录由 `kd_spin_native_root` 保留 | 最后解锁经物理 ACK 后等待所有 borrow 归零，由原 CPU `kd_spin_native_retire()` 回收根并 end ticket/pin |
 | native 无剩余锁 | 无锁 relay 仍登记 borrow；执行者清理/pop 后解除 | 原线程等待全部退休后才恢复受检 IP | 最终恢复汇编完成全部读取后回收根；不等待一个不存在的解锁 |
@@ -550,3 +585,21 @@ KD 的翻译准备、寄存器包、frame/source lease、native 路由及 ticket
 [本地热表报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-local-hash.md)。运行入口见
 [benchmark README](README.md)；准入/续跑边界见
 [JIT 执行流](../../docs/JIT_EXECUTION.md)、[frame 协议](../../docs/design/frames.md)。
+
+## 8. 单线程无竞争路径与抢占责任
+
+普通 Linux `__raw_spin_lock()` 内部关闭抢占；本测试 TCLock 在 workload 宏内
+关闭抢占，KD 则直接 CALL `kd_spin_lock_abi()` 并在该函数中关闭抢占，均在
+对应解锁时恢复。KD 不经过 Linux 的 `spin_lock()` 包装，热度记录器复用已有
+pin，不重复增减。不能因 Linux 内部协议已被 pin 就删除 KD 显式 API 的 pin。
+
+单线程 observe 路径为：clobber 调用现场 → 一次入口 pin → 直接热度记录核心
+→ task/migration/native 状态查询 → context_occupied → CAS → fast owner
+→ 正文 → fast owner 解锁/清理 → 结束 pin。没有 MCS、ticket 分配、continuation
+或实际 JIT，也不创建慢路径 request/ref；编译器寄存器保存仍在。
+
+[单线程 profiling](../tclock_compare/results/20260921-single-thread-profile.md)核对了
+实际 ELF 和独立 PMU 计数/采样。该优化前版本 c1 的 Linux/TCLock/KD 约为 50/56/344 条指令/op。
+9 月 21 日 fast 路径精简后 KD 约 289 条；两组均是历史冻结版本的诊断，
+不能作为后续源码的指令数实测。删除 busy/pin 检查的实验已回退，当前恢复共享采样器。
+长批次诊断不替代短批次三方吞吐；最新两轮最大值成绩见[回归报告](../tclock_compare/results/20260922-performance-recovery.md)。

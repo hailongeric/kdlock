@@ -33,7 +33,7 @@ mutex 互斥协议和已回退的 MCS note/admit 实验不变。
 OWNER 保存在真实 fast owner/ticket 状态中；WAITER、COMBINER、DONE 保存于
 稳定 frame 的 role 字段，使用原 state 布局内的空间，寄存器/帧偏移不变。
 SELFTEST 的 `hotlock_role_trace=1` 按锁地址和稳定 request 输出角色；默认关闭。
-`hotlock_lifetime_selftest=1 hotlock_mode=observe` 检查真实持锁记录在表满时不被覆盖及
+`hotlock_lifetime_selftest=1 hotlock_mode=observe` 检查热表碰撞及满容量时既有身份和真实 owner 仍保留及
 mutex 等待从 CPU 1 迁移到 CPU 2；不是实际 JIT 验收的替代。
 
 当前 `644f231` 已将独立 request 引用池替换为 continuation 栈，普通完成先 pop
@@ -61,6 +61,12 @@ A sole root uses a fast owner on either success and reserves its ticket only at
 the queue branch. Physical nested eligible callers reserve a ticket before CAS;
 refused nested/IRQ callers retain an independent native in-flight count.
 Neither route overwrites an outer fast owner.
+
+The root CAS remains in the public entry; its failed word is passed to a
+non-inlined contended helper, which owns the 24-byte stack request. No extra CAS
+is introduced. Fast unlock checks ownership before a separate helper prepares
+its 16-byte ticket reference. Fresh spin admission combines the two execution
+context queries without changing their predicate or the acquisition pin.
 
 At the queue branch, root ticket reservation precedes translation readiness.
 A missing translation is registered for later attempts. Refusal before publication
@@ -169,45 +175,39 @@ readiness/context, reconstructs waiter registers and enters a frame.
 Unstarted work can receive native handoff. Partial JIT progress cannot be
 converted into entry replay.
 
-Spin no longer allocates a private C stack. Before queue publication, the root
-saves its incoming IRQ flags in preparation locals and then in the continuation,
-with local IRQs masked. One assembly region links the physical waiter and
-polls its release-published wake without C calls or compiler spills; only the old
-C RSP is pushed on the polling stack before publication.
-An unexecuted queue-head wake returns through intact C frames. Completion or
-native suffix handoff instead abandons every old hook/queue frame and starts
-the restoration helper below both saved physical RSP and final virtual RSP,
-aligned for the C ABI. This protects virtual CALL frames even when they have
-overwritten the old queue return addresses.
+Spin uses ordinary `raw_spin_lock` semantics: pin preemption without saving,
+disabling or restoring IRQs/BH. Ticket guards are task-only plain raw spinlocks;
+shared mutex/native infrastructure retains its separate synchronization contract.
+Physical waiters switch to the 8 KiB polling stack before publication, so IRQ
+entry cannot write the task stack lent to JIT. Virtual waiters keep an independent
+executor stack. Hardirq/softirq callers are still routed to native MCS, and
+translation of IRQ/BH-changing code retains the existing exclusions.
 
-IRQ-off task context is a valid entry state, not a reason to refuse delegation.
-The queue interval uses `local_irq_save()` / `local_irq_restore()` for both
-incoming states; it never unconditionally enables IRQs. This interval covers
-publication, waiting and any combiner work, not just each delegated body.
-The original preemption pin remains necessary for per-CPU ticket/node lifetime.
-Hardirq/softirq admission and translation of IRQ/BH-changing code retain their
-existing exclusions. Masking ordinary local IRQs does not mask NMI or establish
-general exception safety.
+Both node producers use single-instruction per-CPU reservation. A combiner saves
+its node state before releasing the slot and reserves it again before restoring
+that state. A returning producer retains its node through its last state read;
+interrupts can reuse the slot only after that release. Continuation storage is
+CPU-pinned and task-only, independent of interrupt-native node reuse.
 
 | Physical slowpath exit | Stack and continuation |
 | --- | --- |
-| Queue-head/combiner acquisition (`0/2`) | Body has not run on behalf of this caller; restore IRQs and return through intact C frames. |
+| Queue-head/combiner acquisition (`0/2`) | Body has not run on behalf of this caller; return through intact C frames with IRQ state unchanged. |
 | Remote completion or native suffix | `spin/wait.inc` selects an aligned safe RSP and calls `kd_spin_resume_completed(node)` directly; old C frames never return. |
-| Pre-body retry after acquisition (`4`) | Restore IRQ flags from the still-intact preparation local, then enter `kd_spin_resume_waiter(node, 1)` on the safe stack. |
+| Pre-body retry after acquisition (`4`) | Retain the acquired ticket/pin and enter `kd_spin_resume_waiter(node, 1)` on the safe stack. |
 
 Virtual waiters keep their independent executor C stack and the existing
 `1/3/5` parent-notification returns. These are no longer physical waiter
 completion returns.
 
-The restoration helper retains the continuation pointer, ticket and incoming IRQ flags,
-ends the completed ticket or marks the native continuation, and restores IRQs
-only on the valid task stack after its final per-CPU/node access. It then
-jumps to the saved continuation. Incoming IRQ-off state stays off; an IRQ-on
-caller regains its original state. Ordinary queue-head/combiner returns also
-restore their incoming IRQ flags. A native suffix retains the origin pin
-until all native executors retire after the final physical ACK; its wake is not
-full completion. Final restore reads precede continuation reclamation. This is IRQ state
-preservation, not a new general RFLAGS ABI.
+The restoration helper retains the continuation and ticket. `end_pinned()`
+retires ticket metadata without consuming the acquisition pin. Final assembly
+loads all registers, retires the continuation and collapses its CPU storage top;
+only then does the GPR-preserving `kd_spin_restore_unpin()` enable preemption on
+the restored task stack. No packet access follows that scheduling boundary.
+Retry retains the acquired pin. Native suffixes retain it until all executors
+retire after the final physical ACK; zero-lock suffixes retire before restoring.
+IRQ state is unchanged and the restore performs no `popfq`. This introduces no
+new JIT condition-code restoration ABI.
 
 The combiner eventually executes its own original critical section.
 If logical A was released early, it must reacquire A first; see 9.4.
@@ -228,7 +228,7 @@ stack remain live until child completion; virtual waiters still service remote
 owner/ACK requests. Their queue interval saves, masks and restores local IRQs.
 
 Spin combiners use the task kernel stack. Each possible CPU has a preallocated
-20 KiB region: low 12 KiB for at most twelve 768-byte continuations and high
+20 KiB region: low 12 KiB for at most twelve 704-byte continuations and high
 8 KiB for physical waiter polling, following TCLock's separation
 of the suspended task stack from the waiting CPU's live RSP. One assembly region
 switches stacks before publication and saves only the old C RSP. An unexecuted
@@ -352,7 +352,7 @@ callback do not exercise JIT or queue scheduling; see
 Both spinlock and mutex delegation support explicit GS memory operations by
 default. Spinlock waiters keep preemption disabled from physical entry (before statistics)
 through their queued wait. Physical waiters switch to the per-CPU shadow stack,
-publish and PAUSE-poll in `spin/wait.inc`, with local IRQs masked; virtual waiters
+publish and PAUSE-poll in `spin/wait.inc`, with IRQ state unchanged; virtual waiters
 retain C polling and remote owner/ACK service on their executor stack. Neither
 wait sleeps or schedules. The mutex waiter uses the same origin-task constraint;
 GS support is not a mutex-only option.

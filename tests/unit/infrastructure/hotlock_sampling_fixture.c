@@ -93,7 +93,7 @@ static void init_and_pins(void)
   }
  pins=1;
  unsigned int before_disable=disables, before_enable=enables;
- kd_hotlock_record_spin(0x1000);
+ kd_hotlock_record_spin_pinned(0x1000); kd_hotlock_record_spin(0x1000);
  kd_hotlock_query_spin(0x1000);
  table(0)->busy=1;
  struct kd_hotlock_table before=*table(0);

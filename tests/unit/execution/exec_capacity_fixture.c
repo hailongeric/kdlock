@@ -285,7 +285,7 @@ static struct kd_exec_frame *push(unsigned int index)
 	CHECK(frame->logical_pid == 100 + (int)index &&
 	      !frame->request_frame && !frame->regs_ref);
 	CHECK(!frame->batch_lease && !frame->delegated_lock_addr);
-	CHECK(kd_exec_current_frame() == frame && !kd_exec_context_busy());
+	CHECK(kd_exec_current_frame() == frame && !kd_exec_context_busy() && kd_exec_context_occupied());
 	CHECK(kd_exec_current_context()->owner == current);
 	CHECK(kd_exec_context_validate(kd_exec_current_context()));
 	/* Fields not interpreted by admission still must survive a full refusal. */
@@ -366,7 +366,7 @@ static void exercise(unsigned int depth)
 	unsigned int i;
 
 	kd_exec_context_reset(ctx);
-	CHECK(!kd_exec_current_frame() && !kd_exec_context_busy());
+	CHECK(!kd_exec_current_frame() && !kd_exec_context_busy() && !kd_exec_context_occupied());
 	for (i = 0; i < depth; i++) {
 		if (!push(i))
 			return;
@@ -385,7 +385,7 @@ static void exercise(unsigned int depth)
 	}
 	if (depth) {
 		current = &owners[1];
-		CHECK(kd_exec_context_busy() && !kd_exec_current_frame());
+		CHECK(kd_exec_context_busy() && !kd_exec_current_frame() && kd_exec_context_occupied());
 		refused(&regs, 1, current, 1);
 		refused_pop(&ctx->frames[depth - 1], -EINVAL);
 		current = &owners[0];
@@ -1052,8 +1052,8 @@ int main(void)
 				return 1;
 		}
 	}
-	/* The spin queue now holds IRQs masked across native/remote execution.
-	 * Exercise the same actual ACK/exit predicates in that captured state. */
+	/* Plain spin leaves IRQ state unchanged. Also retain coverage for a
+	 * caller that entered with IRQs already disabled. */
 	fixture_irq = true;
 	for (cycle = 0; cycle < 2; cycle++) {
 		waiter_exit_observer(cycle, 0);

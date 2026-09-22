@@ -1,14 +1,34 @@
-# Benchmark 历史索引（2026-09-15 至 09-21）
+# Benchmark 历史索引（2026-09-15 至 09-22）
 
 这些阶段报告的实现已经被后续版本替代。重复的操作命令与实现说明从当前目录
 删除，保留本页的结果、证据身份及固定 Git 版本入口。当前路径见
 [执行路径](../EXECUTION_PATHS.md)，最新三方基线及热度计数对照见 [当前结果](../../tclock_compare/README.md#本次结果)。
 
 下列结果均为历史记录，**本次文档整理没有重跑实验**。旧扫描通常使用
-“kdlock 最佳吞吐 / Linux 中位吞吐”，每臂两次；当前三方对照用五轮中位数。
+“kdlock 最佳吞吐 / Linux 中位吞吐”，每臂两次；9 月 21 日三方对照用五轮中位数，9 月 22 日起默认两轮最大值。
 不同统计口径、caller ABI、源码冻结和准备方式的成绩不能拼接成同环境比较。
 原始 `/tmp` 归档在仓库之外，新 checkout 不自带这些文件；哈希是原报告记录，
 本次未重新认证全部旧归档。Git 版本保存完整表格、失败记录和运行命令。
+
+## 2026-09-21 至 09-22 的实现与回退
+
+| 冻结阶段 | 结果和当前状态 |
+| --- | --- |
+| [单线程 profiling](../../tclock_compare/results/20260921-single-thread-profile.md) | 优化前 PMU；不代表当前指令数 |
+| [三方基线](../../tclock_compare/results/20260921-threeway-current.md) | 五轮中位数，150 场 |
+| [无竞争入口优化](../../tclock_compare/results/20260921-fast-path-optimization.md) | request/ref 延后、context 合并，当前保留 |
+| [删除 busy/pin 检查](../../tclock_compare/results/20260922-hotlock-core.md) | 功能通过，后续发现竞争退化，已回退 |
+| [共享类型表](../../tclock_compare/results/20260922-hotlock-shared-table.md) | 已回退 |
+| [直接映射](../../tclock_compare/results/20260922-hotlock-direct-mapped.md) | 已回退 |
+| [直接映射性能](../../tclock_compare/results/20260922-direct-mapped-performance.md) | 历史五轮中位数，不能作为当前成绩 |
+| [普通 spin IRQ 语义](../../tclock_compare/results/20260922-plain-spin.md) | 当前保留；含 wrapper 中断栈覆盖修复和实际 JIT 验证 |
+| [热表回归处理](../../tclock_compare/results/20260922-performance-recovery.md) | 当前基线：60 场，两轮最大值；采样器局部回退，锁协议保留 |
+
+已停用的 `bench/hotlock_record/run.py`、专用内核组件和 V1/V2 适配标记已删除。
+旧组件报告保留在下方固定 Git 链接；如需解释历史归档，只读取匹配版本，
+当前测试对象仍是 Linux 原生、TCLock 和当前 KD。生产热表回归及生命周期探针保留。
+
+## 更早阶段
 
 所有旧报告可从提交 `2b16d6fa20801c1dd7a9c25c3bac5b8d0d046c24` 查看，例如在仓库根目录执行：
 

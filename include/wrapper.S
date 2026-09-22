@@ -204,10 +204,6 @@ full_exit:
 	mov	PT_REG, Stack_PT_REG
 	mov	ARG_REG, Stack_ARG_REG
 
-	lea rsp, [rbp - 19*8]
-	pop	MEM_ARG2		/* args[1] <- Stack_JIT_WITNESS */
-	pop	MEM_ARG			/* args[0] <- Stack_IJ */
-	pop	PT_RIP
 	/* SP/BP above and all virtual GPR spills already use the packet. */
 
 	mov	PT_RBX, rbx
@@ -220,7 +216,15 @@ full_exit:
 	mov	PT_RSI, rsi
 	mov	PT_RDI, rdi
 
-	lea	rsp, [rbp - 5*8]	/* Skip private slots and argument pointers. */
+	/* Keep all private slots allocated until their final read. With IRQs
+	 * enabled, advancing RSP first exposes metadata to interrupt frames.
+	 * GPRs are already exported, so RAX can copy the three result words. */
+	mov rax, Stack_JIT_WITNESS
+	mov MEM_ARG2, rax
+	mov rax, Stack_IJ
+	mov MEM_ARG, rax
+	mov rax, Stack_RIP
+	mov PT_RIP, rax
 	cmp Stack_CLOBBER, 0
 	je legacy_return
 	mov rax, Stack_CLOBBER
@@ -230,6 +234,7 @@ full_exit:
 legacy_return:
 	cmp Stack_BATCH, 0
 	jne batch_return
+	lea rsp, [rbp - 5*8]
 	pop	r15
 	pop	r14
 	pop	r13
@@ -246,5 +251,5 @@ clobber_return:
 	ret
 
 batch_return:
-	add rsp, 6*8
+	lea rsp, [rbp + 8]
 	ret

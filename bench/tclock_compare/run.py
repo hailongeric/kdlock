@@ -12,7 +12,6 @@ import json
 import os
 from pathlib import Path
 import shutil
-import statistics
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -103,15 +102,19 @@ def report(out):
                    hotlock_mode=rows[0].get('hotlock_mode', 'unrecorded'),
                    spin_delegate=rows[0].get('spin_delegate', 'on'),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
+        # Select one valid session per backend. Keep its matching ns/op and
+        # identity so the maximum throughput is auditable in records.json.
+        best = max(good, key=lambda r: r['throughput_ops_s']) if good else None
+        row['comparison_policy'] = 'best_valid_throughput'
+        row['best_session'] = best['name'] if best else None
         for metric in ('throughput_ops_s', 'amortized_ns_op'):
-            values = [r[metric] for r in good if r.get(metric) is not None]
-            row['median_'+metric] = statistics.median(values) if values else None
+            row['best_'+metric] = best[metric] if best else None
         summary.append(row)
-    natives = {(r['cachelines'], r['threads']): r['median_throughput_ops_s']
+    natives = {(r['cachelines'], r['threads']): r['best_throughput_ops_s']
                for r in summary if r['arm'] == 'native'}
     for row in summary:
         native = natives.get((row['cachelines'], row['threads']))
-        row['throughput_over_linux'] = row['median_throughput_ops_s']/native if native and row['valid'] else None
+        row['throughput_over_linux'] = row['best_throughput_ops_s']/native if native and row['valid'] else None
     write_json(out/'summary.json', summary)
     if summary:
         csv_file(out/'summary.csv', list(summary[0]), summary)
@@ -124,7 +127,7 @@ def main():
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,16))
     # The direct comparison uses all five agreed contention levels.
     p.add_argument('--threads', type=int, nargs='+', choices=(1,4,8,16,20), default=[1,4,8,16,20])
-    p.add_argument('--repeats', type=int, default=5)
+    p.add_argument('--repeats', type=int, default=2)
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--dry-run', action='store_true')

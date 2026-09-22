@@ -47,11 +47,11 @@ static void pinned(void) { assert(pins == initial + 1 && disables == 1 && !enabl
 #define atomic_cond_read_acquire(p,c) atomic_cond_read_relaxed(p,c)
 static u32 atomic_cmpxchg_acquire(u32 *p,u32 old,u32 val)
 { pinned(); u32 found=*p; if(found==old) *p=val; return found; }
-static bool kd_hotlock_record_spin(unsigned long addr)
+static bool kd_hotlock_record_spin_pinned(unsigned long addr)
 { assert(addr); pinned(); samples++; return scenario != COLD; }
 static bool kd_spin_entry_native_active(void) { pinned(); return scenario == NATIVE_ACTIVE; }
-static bool kd_exec_current_frame(void) { pinned(); return scenario == FRAME; }
-static bool kd_exec_context_busy(void) { pinned(); return scenario == BUSY; }
+static bool kd_exec_context_occupied(void)
+{ pinned(); return scenario == FRAME || scenario == BUSY; }
 static int kd_spin_entry_begin_pinned(raw_spinlock_t *lock, struct kd_spin_ref *ref)
 { (void)lock; pinned(); reservations++; if(scenario==TICKET_FULL) return -1; ref->entry=ticket=1; return 0; }
 static u32 kd_spin_fetch_set_pending_acquire(struct qspinlock *lock)

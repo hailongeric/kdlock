@@ -53,6 +53,9 @@ int kd_spin_entry_reclaim(const struct kd_spin_ref *ref);
  * Copy all needed per-CPU registers/metadata before end: it may reschedule.
  */
 int kd_spin_entry_end(struct kd_spin_ref *ref);
+/* Retire ticket metadata while retaining the caller pin for final restoration.
+ * On success the caller must unpin after its final per-CPU/packet access. */
+int kd_spin_entry_end_pinned(struct kd_spin_ref *ref);
 
 /* Executors register every native frame before waking the original waiter.
  * Put never unpins a remote CPU. The waiter marks native and consumes its pin

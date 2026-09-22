@@ -104,7 +104,6 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	struct kd_spin_continuation_stack *requests;
 	struct kd_spin_continuation *execution;
 	u32 tail;
-	unsigned long irq_flags;
 	int idx, ret;
 #ifdef KDLOCK_SELFTEST
 	int initial_preempt = preempt_count();
@@ -153,9 +152,10 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		ret = -ENOMEM;
 		goto cancel;
 	}
-	idx = this_cpu_ptr(&kd_spin_cpu)->node_count++;
+	idx = this_cpu_inc_return(kd_spin_cpu.node_count) - 1;
+	barrier();
 	if (unlikely(idx < 0 || idx >= MAX_NODES)) {
-		this_cpu_ptr(&kd_spin_cpu)->node_count--;
+		this_cpu_dec(kd_spin_cpu.node_count);
 		kd_spin_selftest_node_event(KD_NODE_VIRTUAL_FULL);
 		ret = -E2BIG;
 		goto cancel;
@@ -163,7 +163,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	kd_spin_selftest_node_event(KD_NODE_VIRTUAL_RESERVE);
 	execution = kd_spin_continuation_reserve();
 	if (!execution) {
-		this_cpu_ptr(&kd_spin_cpu)->node_count--;
+		this_cpu_dec(kd_spin_cpu.node_count);
 		/* No publication or body occurred for this nested acquisition. Keep
 		 * its ticket and use the independent native MCS nodes. */
 		kd_spin_acquire_nondelegated(word);
@@ -184,7 +184,6 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 
 	node->execution->frame.logical_task = NULL;
 	node->execution->frame.gsbase = 0;
-	node->execution->irq_flags = 0; /* Virtual nodes never restore the physical waiter. */
 
 	node->execution->result = KD_SPIN_RES_QUEUED;
 	node->execution->native_regs_decoded = false;
@@ -192,7 +191,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 				       parent);
 	if (ret) {
 		kd_spin_continuation_release(execution);
-		this_cpu_ptr(&kd_spin_cpu)->node_count--;
+		this_cpu_dec(kd_spin_cpu.node_count);
 		kd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);
 		goto cancel;
 	}
@@ -203,15 +202,15 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	parent->control_call.phase = KD_CALL_ENTERED;
 	parent->delegated_lock_addr = (unsigned long)lock;
 	smp_store_release(&parent->remote_result, KD_EXEC_REMOTE_WAITING);
-	/* The executor's C stack is independent of the logical waiter stack.
-	 * Keep this entire queue/combiner interval IRQ-off, then restore it. */
-	local_irq_save(irq_flags);
+	/* Independent executor stack; plain spin leaves IRQ state unchanged. */
 	ret = __kd_spin_lock_longjmp(lock, tail, node, &request);
-	local_irq_restore(irq_flags);
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_refusal_return(parent, node, ret);
 #endif
 	if (ret == 5) {
+		barrier();
+		this_cpu_dec(kd_spin_cpu.node_count);
+		kd_spin_selftest_node_event(KD_NODE_RELEASE);
 		BUG_ON(smp_load_acquire(&parent->remote_result) !=
 		       KD_EXEC_REMOTE_NATIVE);
 		parent->control_call.phase = KD_CALL_COMPLETE;
@@ -220,20 +219,33 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		return KD_SPIN_NESTED_NATIVE;
 	}
 	if (ret == 0) {
+		barrier();
+		this_cpu_dec(kd_spin_cpu.node_count);
+		kd_spin_selftest_node_event(KD_NODE_RELEASE);
 		kd_spin_continuation_release(execution);
 		parent->remote_result = KD_EXEC_REMOTE_IDLE;
 		parent->control_call.phase = KD_CALL_ACQUIRED;
 		return KD_SPIN_NESTED_ACQUIRED;
 	}
 	if (ret == 2) {
+		barrier();
+		this_cpu_dec(kd_spin_cpu.node_count);
+		kd_spin_selftest_node_event(KD_NODE_RELEASE);
 		kd_spin_continuation_release(execution);
 		parent->remote_result = KD_EXEC_REMOTE_IDLE;
 		parent->control_call.phase = KD_CALL_ACQUIRED;
 		return KD_SPIN_NESTED_ACQUIRED_QUEUE;
 	}
-	if (ret != 1 && ret != 3)
+	if (ret != 1 && ret != 3) {
+		barrier();
+		this_cpu_dec(kd_spin_cpu.node_count);
+		kd_spin_selftest_node_event(KD_NODE_RELEASE);
 		return -EIO;
+	}
 	ret = kd_spin_finish_remote_node(node, regs, parent);
+	barrier();
+	this_cpu_dec(kd_spin_cpu.node_count);
+	kd_spin_selftest_node_event(KD_NODE_RELEASE);
 	kd_spin_continuation_release(execution);
 	parent->control_call.phase = KD_CALL_COMPLETE;
 	BUG_ON(kd_spin_entry_end(&request.ref));

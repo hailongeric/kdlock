@@ -1,5 +1,10 @@
 # 内核 provider 代码地图
 
+当前 KD spin API 按普通 `raw_spin_lock` 语义：获取/解锁配对抢占，保持 IRQ/BH 状态，
+代理慢路径和嵌套队列不再保存 IRQ flags 或整段关 IRQ。最终完成先退休 ticket 元数据，
+读完并回收 continuation 后才解除原入口 pin；普通重试和有锁 native 续跑保留 pin。
+本次未新增 irqsave/bh API；需要这些语义的调用者在外层处理。
+
 spin 已按性能回退结果恢复入口热度/上下文判断及批量时钟；`nondelegated.inc` 提供完整原生 fast/pending/MCS，虚拟排队继续服务父 ACK。顶层 pending 免 ticket、合并 ticket guard 和 continuation 退休协议保留。详见 [当前锁协议](../docs/design/locking.md)。
 
 当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `kd_spinlock.c`，
@@ -66,7 +71,7 @@ claim/reclaim 与 release 各用一次 guard 完成校验和状态提交。物�
 正常完成合并终态验证和解绑；复杂处理仍使用原协议。
 
 spin 初始化按 possible CPU 一次 `vzalloc(20 KiB)`，低端 12 KiB 放最多 12 条
-768 字节 continuation，高端 8 KiB 为物理 waiter 等待栈。节点直接指向记录；
+704 字节 continuation，高端 8 KiB 为物理 waiter 等待栈。节点直接指向记录；
 只有所属 CPU 分配/收缩 top，远端执行者 pop 后仅发布退休。父子共享根寄存器包，
 不维护 request users/packet_owner。普通完成先 pop 再通知；native 包括无锁 relay
 在唤醒前借用根 ticket，清理/pop 后解除，原线程最后解锁等待所有执行者退休。
@@ -83,7 +88,7 @@ spin 初始化按 possible CPU 一次 `vzalloc(20 KiB)`，低端 12 KiB 放最�
 [兼容测试夹具](../tests/unit/spin/legacy_batch.S)，不参与生产构建。
 新 ABI 的普通 root 正常路径只捕获/回写/恢复 RIP/RSP/RBP，中途出口在进入 C
 前物化完整逻辑 GPR；旧 ABI 与 FULL 续跑保留完整恢复规则。
-`spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 在关 IRQ 后先切到
+`spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 保持 IRQ 状态，先切到
 每 CPU 20 KiB 区域高端的 8 KiB shadow 等待栈，再发布普通 waiter 并轮询。
 spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核栈；
 `kd_spin_cpu_state` 保存 CPU 锁账本、节点预留深度和等待栈指针；

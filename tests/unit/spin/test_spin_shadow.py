@@ -147,38 +147,38 @@ def main():
             mutations = (
                 (
                     "native-full-count-leak",
-                    "if (unlikely(idx >= MAX_NODES)) {\n\t\tthis_cpu_ptr(&kd_spin_cpu)->node_count--;",
+                    "if (unlikely(idx >= MAX_NODES)) {\n\t\tthis_cpu_dec(kd_spin_cpu.node_count);",
                     "if (unlikely(idx >= MAX_NODES)) {",
                 ),
                 (
                     "virtual-full-count-leak",
-                    "if (unlikely(idx < 0 || idx >= MAX_NODES)) {\n\t\tthis_cpu_ptr(&kd_spin_cpu)->node_count--;",
+                    "if (unlikely(idx < 0 || idx >= MAX_NODES)) {\n\t\tthis_cpu_dec(kd_spin_cpu.node_count);",
                     "if (unlikely(idx < 0 || idx >= MAX_NODES)) {",
                 ),
                 (
                     "prepare-cancel-count-leak",
-                    "this_cpu_ptr(&kd_spin_cpu)->node_count--;\n\t\tkd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);",
+                    "this_cpu_dec(kd_spin_cpu.node_count);\n\t\tkd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);",
                     "kd_spin_selftest_node_event(KD_NODE_PREPARE_CANCEL);",
                 ),
                 (
                     "native-resume-count-leak",
-                    "if ((READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_NATIVE_READY)) {\n\t\t\tthis_cpu_ptr(&kd_spin_cpu)->node_count--;",
-                    "if ((READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_NATIVE_READY)) {",
+                    "if (ret == 5) {\n\t\tbarrier();\n\t\tthis_cpu_dec(kd_spin_cpu.node_count);",
+                    "if (ret == 5) {\n\t\tbarrier();",
                 ),
                 (
                     "completed-count-leak",
-                    "this_cpu_ptr(&kd_spin_cpu)->node_count--;\n\t\t\tkd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);",
-                    "kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);",
+                    "ret = kd_spin_finish_remote_node(node, regs, parent);\n\tbarrier();\n\tthis_cpu_dec(kd_spin_cpu.node_count);",
+                    "ret = kd_spin_finish_remote_node(node, regs, parent);\n\tbarrier();",
                 ),
                 (
                     "head-count-double-release",
-                    "this_cpu_ptr(&kd_spin_cpu)->node_count--;\n\tkd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);",
-                    "this_cpu_ptr(&kd_spin_cpu)->node_count -= 2;\n\tkd_spin_selftest_node_event(KD_NODE_COMBINER_ENTER);",
+                    "curr_node->rsp = 0;\n\tbarrier();\n\tthis_cpu_dec(kd_spin_cpu.node_count);",
+                    "curr_node->rsp = 0;\n\tbarrier();\n\tthis_cpu_dec(kd_spin_cpu.node_count);\n\tthis_cpu_dec(kd_spin_cpu.node_count);",
                 ),
                 (
                     "common-exit-count-leak",
-                    "this_cpu_ptr(&kd_spin_cpu)->node_count--;\n\tkd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);",
-                    "kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);",
+                    "kd_spin_continuation_release(execution);\n\t\tbarrier();\n\t\tthis_cpu_dec(kd_spin_cpu.node_count);",
+                    "kd_spin_continuation_release(execution);\n\t\tbarrier();",
                 ),
                 (
                     "lost-logical-origin",

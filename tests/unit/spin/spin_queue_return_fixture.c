@@ -93,8 +93,10 @@ static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr
 
 /* These scenarios exclusively queue virtual waiters on their executor's
  * stable C stack. Physical stack abandonment is tested by test_spin_wait. */
-#define local_irq_save(flags) ((flags) = 0)
-#define local_irq_restore(flags) ((void)(flags))
+#define this_cpu_inc_return(v) (++(v))
+#define this_cpu_inc(v) (++(v))
+#define this_cpu_dec(v) (--(v))
+#define barrier() __asm__ volatile("" ::: "memory")
 static void kd_spin_publish_wait(struct kd_spin_node *node,
 				 struct kd_spin_node *previous, void *wait_stack_top)
 {
