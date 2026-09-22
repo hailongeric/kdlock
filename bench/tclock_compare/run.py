@@ -207,6 +207,14 @@ def main():
         builds = [('client',['make','-C',HERE,'client']),
                   ('allocator-guard',['make','-C',GUARD_MODULE.parent])]
         binaries = [HERE/'client', GUARD_MODULE]
+        if args.pmu:
+            perf = shutil.which('perf')
+            require(perf is not None, 'PMU diagnostic requires perf in PATH')
+            perf = Path(perf).resolve()
+            write_json(out/'pmu-tool.json', dict(path=str(perf), sha256=digest(perf),
+                version=command([perf, 'version'], out/'perf-version.txt').strip(),
+                scope='measure client and inherited workers; setup/warmup excluded'))
+            binaries.append(perf)
         if 'kdlock' in args.backends:
             builds += [('provider',['make','-C',HERE,'provider']),
                        ('daemon',['make','-C',ROOT/'daemon','CFLAGS=-O2 -Wall -Wextra -Werror'])]

@@ -567,7 +567,10 @@ __attribute__((noipa)) noinline notrace void
 kd_spin_lock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 						unsigned long ip, unsigned long bp)
 {
-	kd_spin_lock_abi(lock, sp, ip, bp, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+	/* Ordinary clobber callers acquire their own pin; paired hot callers
+	 * enter the same inlined core through the already-pinned entry above. */
+	preempt_disable();
+	kd_spin_lock_abi_pinned(lock, sp, ip, bp, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
 }
 EXPORT_SYMBOL_GPL(kd_spin_lock_clobber_v1);
 
@@ -690,13 +693,20 @@ kd_spin_unlock_slow(struct qspinlock *lock)
 	}
 	kd_spin_unlock_nondelegated(lock);
 }
-/* Avoid preparing a ticket reference until physical fast ownership misses. */
-__attribute__((noipa)) noinline notrace void
-kd_spin_unlock(struct qspinlock *lock)
+/* Avoid preparing a ticket reference until physical fast ownership misses.
+ * Inline only this small router; request/continuation work remains slow. */
+static __always_inline void
+kd_spin_unlock_core(struct qspinlock *lock)
 {
 	if (kd_spin_fast_unlock((raw_spinlock_t *)lock))
 		return;
 	kd_spin_unlock_slow(lock);
+}
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_unlock(struct qspinlock *lock)
+{
+	kd_spin_unlock_core(lock);
 }
 EXPORT_SYMBOL_GPL(kd_spin_unlock);
 
@@ -704,7 +714,7 @@ __attribute__((noipa)) noinline notrace void
 kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 						  unsigned long ip, unsigned long bp)
 {
-	kd_spin_unlock(lock);
+	kd_spin_unlock_core(lock);
 }
 EXPORT_SYMBOL_GPL(kd_spin_unlock_clobber_v1);
 

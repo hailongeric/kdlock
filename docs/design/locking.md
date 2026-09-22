@@ -63,6 +63,18 @@ acquisition and site cache have been removed. Linux spin objects retain their
 own protocol; no global spin hook is installed and protocols must never mix on
 one object. Explicit caller storage must outlive all requests and frames.
 
+The paired ordinary-C spin shell optionally uses `spin_cold_fastpath=1`.
+Its selector pins once and, on a cold CPU, keeps the existing `nondelegated`
+in-flight count through the entire native acquisition and hold. It attempts one
+CAS and passes a failure directly to native pending/MCS. This root does not
+transfer to a fast-owner record. Its local acquisition cookie routes unlock to
+a low-byte release, count decrement and unpin, preserving pending/tail. CPU heat
+changes affect only subsequent acquisitions, while cold MCS publication still
+samples heat. The drain scan includes this count. Hot acquisitions use the
+shared pinned core and existing fast-owner/ticket routing; observe fixes lock
+admission only after CPU heat when this gate is enabled. The retained API and
+explicitly disabled gate keep their original policy.
+
 Every public spin acquisition pins once. When delegation is enabled, the entry
 records heat and checks policy/context before attempting delegated fast/pending.
 A sole root uses a fast owner on either success and reserves its ticket only at
@@ -106,7 +118,8 @@ there is no blocking acquisition or physical release inside either transition.
 CPU/task/generation, legal-state and borrow checks remain. Every intact spin
 slowpath return, including node/continuation capacity fallback, has already
 claimed or reclaimed its ticket; the public entry does not repeat that claim.
-Unlock uses a retained fast owner, native ACK or ticket, never hotness or comm.
+Hot/retained-API unlock uses a fast owner, native ACK or ticket; paired cold
+unlock uses its acquisition cookie. Neither route consults hotness or comm.
 
 `spin_delegate=0` is an explicit fixed self-execution control (default is 1).
 It bypasses admission and heat recording at the public entry. Combined record

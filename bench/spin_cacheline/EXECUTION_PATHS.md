@@ -142,8 +142,9 @@ waiter CPU                         combiner CPU
 | `kd_spin_jit_context` | 16，已包含在 continuation 中 | 虚拟请求的 `requester` 与锁深度；跟随 continuation 存活，不绑定可复用 node 槽 |
 | `kd_exec_context` | 5208 / CPU | `kd_exec.c` 静态 per-CPU，含 8 × 648 的旧 frame 数组及 top/owner/depth。spin 的 continuation 内嵌 frame 绑定到 top；数组仍服务 mutex/其他 push 路径，不是每个 spin 请求新增一份 |
 | 三个 per-CPU 指针 | 8 × 3 = 24 / CPU | `spin/state.inc` 静态 `kd_spin_resume_nodes`、`kd_spin_continuations`、`kd_spin_native_root`；分别记录本地恢复节点、存储栈基址、等待最终 native 退休的根记录 |
-| `kd_spin_fast_cpu` | 24 / CPU | 静态 per-CPU；单一 task 持锁的 held/owner，以及原生嵌套/IRQ 排空计数 nondelegated |
+| `kd_spin_fast_cpu` | 24 / CPU | 静态 per-CPU；单一 task 持锁的 held/owner，以及原生嵌套/IRQ及配对冷根持有者的排空计数 nondelegated |
 | `kd_spin_entry` / pool | 48 × 32 + 16 = 1552 / CPU | `kd_spin_entries_init()` 一次 `alloc_percpu`；ticket 记录 task/CPU/代际/物理所有权及 native 引用，物理释放、native 借用全部退休及 end 后归还槽。尺寸依赖当前内核 raw lock 布局 |
+| CPU热度指针 | 8 / CPU | 静态per-CPU指向现有spin表rate_hot；不是重复热标志 |
 | 热表 entry/table/cpu | 24 / 6680 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录；无候选淘汰，不是 owner 存储 |
 | `kd_spin_diag_slot` | 128 × 32 = 4096，全局 | 静态数组；锁地址、禁用标志和 waiter 数，槽身份在模块会话内稳定；它是诊断表，不是已删除的全局热锁晋升集合 |
 | `kd_spin_diag_cpu` | 2592 / CPU | spin 初始化时 `alloc_percpu`；事件/批次计数，排空汇总后释放；SELFTEST 额外探针存储不计入 normal 表 |
@@ -252,7 +253,12 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 1. 计时前 `kd_spin_prepare(lock, post_call_ip, ABI)` 登记入口。provider 使用
    既有注册表/代码池；daemon 经 `/dev/kd_dev` 取得代码与元数据，翻译、组装、
    上传并发布。NORMAL 只表示可尝试执行，不能当作正文执行证据。
-2. `KD_SPIN_DIRECT_CALL` 传 lock、pre-CALL SP、post-CALL IP、BP 给 clobber v1
+2. 新配对壳 `KD_SPIN_DIRECT_LOCK/UNLOCK` 使用普通C调用约定。开关开启时，冷CPU
+   增加nondelegated并做一次CAS，失败值直接进入pending/MCS；cookie保持到解锁，
+   冷解锁仅release低字节、减计数、unpin。热分支才在asm内保存/恢复五个callee-saved，
+   continuation位于CALL后POP前，随后明确设置热cookie。request/frame仍只在慢路径准备。
+   observe变为CPU热后固定准入，adaptive继续判断单锁；曾热CPU仍需后续MCS样本才能降温。
+   保留壳 `KD_SPIN_DIRECT_CALL` 传 lock、pre-CALL SP、post-CALL IP、BP 给 clobber v1
    入口，编译器按调用壳的 clobber 声明保存活跃值。
 3. `kd_spin_lock_abi()` 首先执行一次 `preempt_disable()`。代理开关开启时调用
    `kd_hotlock_record_spin_pinned()` 按缓存 CPU 热值记录单锁调用并判断准入，再检查 task/softirq、迁移和
@@ -261,7 +267,8 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 4. 准入后的普通根入口先 CAS，再尝试 pending；成功使用 per-CPU fast owner，
    不占 ticket/node/continuation。物理嵌套入口保留独立 ticket，先 reserve 再尝试
    fast/pending，不能覆盖外层 fast owner。被准入拒绝的嵌套/IRQ 使用独立
-   `nondelegated` 排空计数，只有普通单层 task 的原生获取才转换为 fast owner。
+   `nondelegated` 排空计数；保留接口的普通单层task原生获取转换为fast owner，
+   新配对冷根保留计数，不做这次owner转换。
 5. 普通根 fast/pending 失败进入 queue 后才 reserve ticket，并检查翻译就绪。
    ticket 不足转完整原生获取；已有 ticket 但翻译未就绪时登记入口，并保留 ticket
    走完整原生获取。此回退可能再次尝试 fast/pending，不再记录第二个热度样本。
@@ -329,7 +336,7 @@ flowchart TD
   C -- 否 --> E
   E -- 是 --> Z[仅解除本次临时 pin]
   E -- 否 --> G
-  G -- 否 --> R[adaptive 拒绝；observe 固定允许]
+  G -- 否 --> R[adaptive拒绝；observe由配对入口冷态判断控制]
   G -- 是 --> H{hash 冲突链匹配完整锁地址}
   H -- 命中 --> I[该锁 count 加一]
   H -- 缺失 --> J{还有预分配空槽？}
@@ -368,7 +375,7 @@ owner、frame 或 ACK 归属。统计与锁协议是独立数据流。
 2. 交换 tail、向前驱发布 next，在自己的 locked 轮询；队首才等共享锁字。
 3. 队首取得物理锁后，把队首资格交给后继并归还 node_count。后继仍等物理锁
    释放；**唤醒后继不等于释放自己的临界区锁**。
-4. 原线程执行正文；普通根请求转入 fast owner，嵌套/IRQ 保留独立排空计数。
+4. 原线程执行正文；保留接口普通根请求转入fast owner，嵌套/IRQ及新配对冷根保留独立排空计数。
    已有 ticket 的回退保留 ticket。unlock release 清除 locked、保留 pending/
    tail，并结束对应 owner/ticket/pin。
 

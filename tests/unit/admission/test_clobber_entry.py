@@ -70,6 +70,34 @@ class ClobberEntryTests(unittest.TestCase):
                 self.assertEqual(render(code.hex(), abi=1, kernel_symbols=symbols,
                                         return_status=True, muted=True)[2], 0)
 
+    def test_paired_outer_requires_reload_after_inner_clobber(self):
+        # The mixed nested workload must preserve values that its paired outer
+        # unlock will save. Do not admit arbitrary pushes of uncaptured GPRs
+        # merely because C has no other use of them before its epilogue.
+        save = bytes.fromhex('534154415541564157')
+        restore = bytes.fromhex('415f415e415d415c5b')
+        for preserved in (False, True):
+            code = restore
+
+            def call(target, lock):
+                nonlocal code
+                code += bytes.fromhex('48c7c7') + lock.to_bytes(4, 'little')
+                ip = 0x1000 + len(code) + 3 + 7 + 3 + 5
+                code += bytes.fromhex('4889e648c7c2') + ip.to_bytes(4, 'little')
+                code += bytes.fromhex('4889e9')
+                code += b'\xe8' + (target-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
+
+            for target in (0x3000, 0x4000):
+                if preserved:
+                    code += save
+                call(target, 0x9100)
+                if preserved:
+                    code += restore
+            code += save
+            call(0x4000, 0x9000)
+            code += restore + b'\xc3'
+            self.assertEqual(self.generate(code.hex())[2], 0 if preserved else 2)
+
     def test_partial_low_write_does_not_require_high_bits(self):
         self.assertEqual(self.generate('b007880424c3')[2],0)
         self.assertEqual(self.generate('b00748890424c3')[2],2)

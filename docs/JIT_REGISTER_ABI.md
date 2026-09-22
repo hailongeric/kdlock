@@ -66,6 +66,21 @@ shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队�
 接入，使用同一寄存器约定；provider 不安装全局 spin hook。下述内核桥说明 ABI
 来源，不表示加载 provider 会代理普通 Linux 锁。
 
+显式配对壳 `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` / `KD_SPIN_DIRECT_UNLOCK(lock, cookie)`
+使用普通 C caller-saved 约束，每次获取独立保存 `unsigned int cookie`，不能与保留壳混配。
+`spin_cold_fastpath=1` 时，selector 获取一个 pin 后按 CPU 热度决定本次路径。
+冷态不会计算 SP/IP/BP，也不强制保存五个 callee-saved 寄存器；编译器仍可保存普通 C 活跃值。
+热态在 asm 内依次 push RBX/R12/R13/R14/R15，然后向 pinned clobber-v1 入口传递同一四参数。
+continuation 位于 CALL 后、五个 POP 前，因此 MINIMAL 输入仍只有 IP/SP/BP，其他入口值来自栈。
+热 cookie 在 POP 后显式赋值，不能使用未捕获的 CALL 返回值；热解锁重新保存当前活跃值。
+COMPLETE 指向解锁 CALL 后的 POP，FULL 仍恢复完整包，拒绝沿本次原生获取完成。
+调用端需重编译，wrapper 参数、包布局、32 位锁字均未改变；当前 workload 仅迁移外层；nested/early 的旧内层入口另用栈保存/重载五个值，
+防止外层新壳把内层 clobber 后的未捕获值再次压栈。内层 ABI 和续跑协议不变。
+
+共享核心内联到普通 clobber/pinned 入口和两种热解锁包装；前者自行 pin，后者复用 selector
+的 pin，不重复查询 pin 状态。JIT 分发表只包含实际生成的指令续点；已裁剪的原生后缀
+由物理完成恢复，不生成悬空的解锁后标签，也不扩大可执行范围。
+
 默认 `kdclobber2` 内核的 `raw_spin_lock/unlock`（包括其 `spin_lock/unlock` 调用者）
 用内联 asm 调用 `kd_raw_spin_{lock,unlock}_clobber_v1`。RDI 为锁，RSI 为
 CALL 前 RSP，RDX 为同一 asm 内的 CALL 后标签，RCX 为调用者 RBP。

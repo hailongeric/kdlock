@@ -116,9 +116,10 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
   }
   return t->rate_hot;
 }
-/* Specialize record/query and spin/mutex at the four fixed call sites; keep
+/* Specialize record/query and spin/mutex at the fixed call sites; keep
  * the best-effort sampling and pin semantics shared below. */
-static __always_inline bool kd_hotlock_access(unsigned long address, unsigned int kind, bool record)
+static __always_inline bool kd_hotlock_access(unsigned long address, unsigned int kind,
+                                             bool record, bool pinned)
 {
   struct kd_hotlock_table *t;
   struct kd_hotlock_entry *slot;
@@ -135,7 +136,7 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   /* Spin admission already owns its acquisition pin. Standalone observers
    * and sleepable mutex callers pin only this statistics access, never the
    * later sleep/ACK interval. */
-  pin = !preempt_count();
+  pin = !pinned && !preempt_count();
   if (pin)
     preempt_disable();
   t = &this_cpu_ptr(kd_hotlock_cpu)->tables[kind];
@@ -173,10 +174,10 @@ out:
     preempt_enable();
   return admitted;
 }
-bool kd_hotlock_record_spin(unsigned long address) { return kd_hotlock_access(address, 0, true); }
-bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(address, 1, true); }
-bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false); }
-bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false); }
+bool kd_hotlock_record_spin(unsigned long address) { return kd_hotlock_access(address, 0, true, false); }
+bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(address, 1, true, false); }
+bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false, false); }
+bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false, false); }
 
 /* All spin producers reach this only when publishing an MCS tail. Native cold
  * acquisitions also count, so adaptive admission can warm without delegation.
@@ -192,11 +193,11 @@ void kd_hotlock_record_spin_mcs_pinned(void)
   kd_hotlock_clock(t, &now, KD_HOTLOCK_SPIN_MCS_INTERVAL);
 }
 
-/* Acquisition-pinned callers reuse the verified sampler. Its preempt_count
- * check does not add another pin; keep this API stable across the rollback. */
+/* Specialize the shared sampler for the acquisition pin. No extra public
+ * wrapper CALL or preempt_count query is needed; non-task filtering remains. */
 bool kd_hotlock_record_spin_pinned(unsigned long address)
 {
-  return kd_hotlock_record_spin(address);
+  return kd_hotlock_access(address, 0, true, true);
 }
 
 int kd_hotlock_init(void)

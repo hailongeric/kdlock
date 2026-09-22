@@ -565,6 +565,13 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
     )
+    # The outer unlock's return PC may be in the native suffix trimmed by
+    # critical_section_blocks. COMPLETE returns there physically; it is not
+    # a resumable JIT label. Dispatch only to instructions still being emitted,
+    # including interior CALL continuations, without widening admission scope.
+    continuation_targets.intersection_update(
+        line.offset for block in block_dict.values() for line in block.lines
+    )
     continuation_labels = continuation_targets - set(block_dict)
     emitted_continuation_labels = set()
 

@@ -1,8 +1,11 @@
 # 当前测试入口
 
-配对冷路径第一阶段的基础/定向10项和运行器13项最终通过；真实cacheline 36/36场完成，
-16/16竞争KD有实际JIT，均排空。新增 `spin/test_spin_cold.py` 覆盖普通C配对壳与生产冷路由；
-证据、首次fixture编译修复和阶段限制见[第一阶段报告](../bench/tclock_compare/results/20260922-spin-cold-stage1.md)。
+公共调用精简第二阶段基础/定向8组及运行器13项最终通过；cacheline性能36/36场、
+nested/early、RCUHT及关闭delegation定向7/7场均完成并排空。
+`codegen/test_spin_paired_jit.py`执行实际wrapper，覆盖paired栈恢复、COMPLETE、入口拒绝和FULL续跑；
+25项clobber准入包含混合内层壳必须恢复被破坏的寄存器。
+证据及失败修复见[第二阶段报告](../bench/tclock_compare/results/20260922-spin-cold-stage2.md)；
+本阶段仍用局部cookie，用户最新指定per-CPU后的版本另行验证。
 
 
 当前 spin CPU 每 4 次实际 MCS 入队检查，spin/mutex CPU 共用 40 亿 TSC 窗口；

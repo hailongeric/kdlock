@@ -1,7 +1,9 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
-[配对冷路径第一阶段](results/20260922-spin-cold-stage1.md)：36/36场通过并排空；单线程提升，
-20线程退化12.64%–14.43%，超过验收门槛，新路径暂不默认启用。
+[公共调用精简第二阶段](results/20260922-spin-cold-stage2.md)：36/36性能、7/7定向功能完成并排空；
+单线程改善，竞争仍有超过5%的下降，默认保留旧壳和关闭选项。
+此阶段及[第一阶段](results/20260922-spin-cold-stage1.md)使用局部cookie，
+不代表用户随后要求的per-CPU cookie版本。
 
 最新[adaptive快速三方结果](results/20260922-adaptive-quick.md)：18/18场、1500万次计时操作完成并排空，
 4/4竞争KD有实际JIT；1线程KD c1/c16为8.445/6.940 Mops/s，20线程为5.048/4.818 Mops/s。

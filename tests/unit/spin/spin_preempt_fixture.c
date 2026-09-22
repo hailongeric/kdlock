@@ -69,6 +69,7 @@ static void *kd_get_exe(int pid,unsigned long ip) { (void)pid; (void)ip; pinned(
 static bool kd_exe_entry_is_ready(void *exe,int pid,unsigned long ip)
 { (void)exe; (void)pid; (void)ip; pinned(); return scenario != NOT_READY; }
 #define KD_EXE_LOCK_SPIN 1
+#define KD_ENTRY_ABI_SPIN_CLOBBER_V1 1
 static void kd_exe_add_abi(int pid,unsigned long ip,int kind,unsigned int abi)
 { (void)pid; (void)ip; (void)kind; (void)abi; pinned(); }
 static void kd_spin_acquire_nondelegated(kd_spinlock_t *lock) { pinned(); lock->val=1; }
@@ -86,6 +87,7 @@ static void kd_spin_unlock_ref(struct qspinlock *lock,const struct kd_spin_ref *
 #include "spin_preempt_api.h"
 int main(void)
 {
+ for(int entry=0;entry<3;entry++)
  for(scenario=0;scenario<CASES;scenario++) {
   kd_spinlock_t lock={0};
   memset(&kd_spin_fast_cpu,0,sizeof(kd_spin_fast_cpu));
@@ -98,16 +100,22 @@ int main(void)
   if(scenario==PENDING_ONLY) lock.val=256;
   if(scenario==TICKET_FULL || scenario==QUEUED || scenario==NOT_READY ||
      scenario==NESTED_QUEUED) lock.val=65537;
-  kd_spin_lock_abi(&lock,0,0,0,1);
+  if(entry==0) kd_spin_lock_abi(&lock,0,0,0,1);
+  else if(entry==1) kd_spin_lock_clobber_v1(&lock,0,0,0);
+  else {
+   preempt_disable(); /* The paired selector already owns this one pin. */
+   kd_spin_lock_pinned_clobber_v1(&lock,0,0,0);
+  }
   pinned(); assert(lock.locked==1 && samples==(scenario!=OFF));
   bool needs_ticket=scenario==QUEUED || scenario==NOT_READY ||
       scenario==PENDING_RACE || scenario==PENDING_FOREIGN || scenario>=NESTED;
   assert(reservations == (needs_ticket || scenario==TICKET_FULL));
   assert(ticket == needs_ticket && claims == needs_ticket);
   assert(clears == (scenario==PENDING_RACE));
-  kd_spin_unlock(&lock);
+  if(entry==0) kd_spin_unlock(&lock);
+  else kd_spin_unlock_clobber_v1(&lock,0,0,0);
   assert(pins==initial && disables==1 && enables==1 && !lock.locked && !ticket);
   assert(kd_spin_fast_idle());
  }
- puts("PASS preemption: entry pinned before admission, 19 routes retain one pin; sole pending skips tickets; queued/nested preserve tickets");
+ puts("PASS preemption: entry pinned before admission, 3 entries x 19 routes retain one pin; sole pending skips tickets; queued/nested preserve tickets");
 }

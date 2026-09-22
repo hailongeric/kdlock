@@ -30,7 +30,8 @@
    热分支内部 push/pop `rbx、r12–r15`，continuation 位于 CALL 后、POP 前；JIT 从等待者
    栈恢复值，随后显式定义热 cookie。热解锁保存临界区结束时的活跃值，供物理完成恢复。
    新 pinned clobber 入口复用前一步的 pin；32 位锁、寄存器包和 wrapper 输入不变。
-   当前 workload 只将外层锁接入新壳，内层及 native/FULL 续跑协议保留。
+   当前 workload 只将外层锁接入新接口；nested/early 在旧内层调用周围增加五个寄存器
+   的栈保存/重载，以便外层配对解锁仍有有效值。内层入口、clobber ABI及native/FULL续跑协议保留。
    选项暂默认关闭；运行器关闭对照编译保留壳，详见 benchmark 的调用端身份记录。
 3. 保留的 clobber v1 调用保存 pre-CALL RSP、post-CALL RIP 和 caller RBP，编译器保存
    活跃 caller-clobbered 值。`kd_spin_lock_abi` 首先关闭抢占，代理开启时合并记录/

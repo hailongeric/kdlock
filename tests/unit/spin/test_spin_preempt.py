@@ -25,13 +25,17 @@ def main():
     code += 'void ' + definition(source, 'kd_spin_unlock_slow(struct qspinlock *lock)')
     code += 'static inline void ' + definition(source, 'kd_spin_lock_abi_pinned(struct qspinlock *lock, unsigned long rsp_value,')
     code += 'void ' + definition(source, 'kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,')
+    code += 'void ' + definition(source, 'kd_spin_lock_clobber_v1(struct qspinlock *lock, unsigned long sp,')
+    code += 'void ' + definition(source, 'kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *lock, unsigned long sp,')
+    code += 'static inline void ' + definition(source, 'kd_spin_unlock_core(struct qspinlock *lock)')
     code += 'void ' + definition(source, 'kd_spin_unlock(struct qspinlock *lock)')
+    code += 'void ' + definition(source, 'kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,')
     with tempfile.TemporaryDirectory(prefix='kd-preempt-') as directory:
         path = Path(directory)
         (path / 'spin_preempt_api.h').write_text(code)
         binary = path / 'test'
         subprocess.run(['cc', '-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
-                        '-I', directory, str(ROOT / 'tests/unit/spin/spin_preempt_fixture.c'),
+                        '-Wno-unused-parameter', '-I', directory, str(ROOT / 'tests/unit/spin/spin_preempt_fixture.c'),
                         '-o', str(binary)], check=True, timeout=30)
         subprocess.run([binary], check=True, timeout=10)
 

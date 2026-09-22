@@ -22,7 +22,7 @@ def main():
     mutations = {
         "interrupt-table-access": ("if (!in_task())\n    return admitted;", "if (false)\n    return admitted;", 1),
         "interrupt-mcs-sample": ("if (!in_task())\n    return;", "if (false)\n    return;", 1),
-        "redundant-preemption-pair": ("pin = !preempt_count();", "pin = true;", 1),
+        "redundant-preemption-pair": ("pin = !pinned && !preempt_count();", "pin = !pinned || pinned;", 1),
         "early-lock-threshold": ("++slot->count > KD_HOTLOCK_SAMPLE_TARGET", "++slot->count >= KD_HOTLOCK_SAMPLE_TARGET", 1),
         "ignore-lock-time": ("now - slot->begin < KD_HOTLOCK_INITIAL_WINDOW", "true", 1),
         "cpu-deadline-equality": ("now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW", "now - t->rate_begin <= KD_HOTLOCK_CPU_WINDOW", 1),
