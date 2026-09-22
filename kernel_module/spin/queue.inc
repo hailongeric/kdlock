@@ -57,13 +57,34 @@ static __always_inline void clear_pending_set_locked(struct qspinlock *word)
 
 static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)
 {
-	/* Shared by native, delegated and virtual producers. Count once at actual
-	 * publication, excluding fast/pending, cancelled requests and node-exhaustion
-	 * polling. Refused/cold entries still reach this point and warm their CPU. */
-	if (kd_spin_delegate)
+	/* Cold pressure admission samples at queue-head ownership instead. All
+	 * other producers retain the original publication clock; no fast/pending,
+	 * cancelled request or node-exhaustion polling enters either sampler. */
+	if (kd_spin_delegate && !kd_hotlock_spin_cold_queue_min_pinned())
 		kd_hotlock_record_spin_mcs_pinned();
 	return ((u32)xchg(&word->tail, tail >> _Q_TAIL_OFFSET_HL))
 	       << _Q_TAIL_OFFSET_HL;
+}
+
+/* The caller has acquired the lock and has not handed its queue head onward.
+ * Linked successors cannot retire yet. Acquire each published link, stop on
+ * the first gap, and never wait for enough pressure just to collect a sample.
+ * queue_min was captured before publication, so a hot->cold transition there
+ * cannot make this operation count twice. Heat belongs to this CPU, not node
+ * ownership: a qualifying native operation still returns to its native body. */
+static __always_inline void
+kd_spin_sample_cold_queue(struct kd_spin_node *node, unsigned int queue_min)
+{
+	unsigned int depth;
+
+	if (!queue_min || !in_task() || kd_hotlock_spin_cpu_hot_pinned())
+		return;
+	for (depth = 1; depth < queue_min; depth++) {
+		node = smp_load_acquire(&node->next);
+		if (!node)
+			return;
+	}
+	kd_hotlock_record_spin_mcs_pinned();
 }
 
 /**

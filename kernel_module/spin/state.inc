@@ -14,13 +14,15 @@ static const unsigned int kd_combiner_batch_size = 1024;
 
 /* Fixed self-execution control for protocol comparisons. This changes only
  * fresh admission; unlock always follows the acquisition's ownership record. */
-static bool kd_spin_delegate = true;
+bool kd_spin_delegate __read_mostly = true;
+EXPORT_SYMBOL_GPL(kd_spin_delegate);
 module_param_named(spin_delegate, kd_spin_delegate, bool, 0400);
 MODULE_PARM_DESC(spin_delegate, "Allow JIT delegation; false keeps KD self-execution");
 
 /* Opt-in until the paired caller has passed the competition comparison.
  * Only the new paired API uses this CPU gate; old callers retain their ABI. */
-static bool kd_spin_cold_fastpath;
+bool kd_spin_cold_fastpath __read_mostly;
+EXPORT_SYMBOL_GPL(kd_spin_cold_fastpath);
 module_param_named(spin_cold_fastpath, kd_spin_cold_fastpath, bool, 0444);
 MODULE_PARM_DESC(spin_cold_fastpath, "Paired API: self-execute on cold CPUs in both admission modes");
 

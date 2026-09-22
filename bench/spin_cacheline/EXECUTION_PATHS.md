@@ -253,10 +253,10 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 1. 计时前 `kd_spin_prepare(lock, post_call_ip, ABI)` 登记入口。provider 使用
    既有注册表/代码池；daemon 经 `/dev/kd_dev` 取得代码与元数据，翻译、组装、
    上传并发布。NORMAL 只表示可尝试执行，不能当作正文执行证据。
-2. 新配对壳 `KD_SPIN_DIRECT_LOCK/UNLOCK` 使用普通C调用约定。开关开启时，冷CPU
+2. 新配对壳 `KD_SPIN_DIRECT_LOCK/UNLOCK` 使用 broad-clobber 调用约定，pin 后在 asm 内读取CPU热度。开关开启时，冷CPU
    增加nondelegated并做一次CAS，失败值直接进入pending/MCS；冷态持有用低字节5标识，
-   冷解锁仅release低字节、减计数、unpin。热分支才在asm内保存/恢复五个callee-saved，
-   continuation位于CALL后POP前，不依赖返回寄存器。cookie只引用现有per-CPU rate_hot，
+   冷解锁仅release低字节、减计数、unpin。热分支直接使用原clobber协议，
+   continuation位于CALL后；没有手工push/pop，编译器可以在判断前保存活跃值。cookie只引用现有per-CPU rate_hot，
    一个CPU一份、所有锁共享；解锁根据锁字状态，不读取CPU热度。request/frame仍只在慢路径准备。
    observe变为CPU热后固定准入，adaptive继续判断单锁；曾热CPU仍需后续MCS样本才能降温。
    保留壳 `KD_SPIN_DIRECT_CALL` 传 lock、pre-CALL SP、post-CALL IP、BP 给 clobber v1
@@ -305,11 +305,14 @@ spin/mutex 的 `record_*` 使用直接哈希计数，调用位置仍在入口。
 和 next；删除候选排名、score/error、最小分数扫描和替换。初始化一次采时建立
 所有 CPU/type 的时间起点，锁路径不分配；调用者保证地址有效及初始化/排空生命周期。
 
-spin CPU 仅在共用 `xchg_tail()` 交换队尾前计数，每 4 次实际 MCS 入队读一次 TSC；
+spin CPU 默认在共用 `xchg_tail()` 交换队尾前计数，每 4 次合格 MCS 事件读一次 TSC；
 前 3 次只计数并保留缓存热值。mutex CPU 仍在入口累计 1024 次。
+冷捷径开启且`spin_hot_min_queue=N>0`时，冷CPU的事件改为取得队头所有权、交接前
+看到含自己至少N个已链接节点；最多读N−1个next，缺链不等待。热CPU继续发布采样。
+参数0..16、默认4；0恢复旧规则。这是排队压力门槛，不是线程计数，也不新增第二个hot标志。
 两者从上次检查到本批结束的间隔严格小于 4000000000 ticks 且时间未倒退则 CPU 热。
 spin 的 fast/pending、发布前取消及节点耗尽轮询不计数；原生、代理和虚拟入队均在
-实际发布点计一次，事件归属发布所在物理 CPU。CPU 冷时入口不查表。CPU 热时直接按锁字
+按上述发布或队头规则择一计数，事件归属当前物理 CPU。CPU 冷时入口不查表。CPU 热时直接按锁字
 地址 hash，冲突链逐项比较完整地址；命中对应记录就 `++count`。未找到时使用
 预分配的下一空槽创建独立记录，其时间起点借用最近 CPU 时间。表满不淘汰、不覆盖，
 未收录的新锁在 adaptive 下保持原生；已有记录继续计数，直到模块卸载保留地址身份。
@@ -321,7 +324,7 @@ spin 单锁始终独立采时，不能复用此前 MCS 事件的时间戳。
 CPU 持续热不重置单锁批次；CPU 检查为冷或由冷变热时清除所有已记录锁的
 计数/hot 并更新起点，但保留哈希映射。query 不计数、不采时、不插入。
 
-spin 在第 4 次 MCS 入队检查确认 CPU 热后，后续入口开始记录单锁；第 33 次锁调用
+spin 在第 4 次合格 MCS 事件检查确认 CPU 热后，后续入口开始记录单锁；第 33 次锁调用
 检查该锁热度。事件不重新准入当前请求，无 MCS 时缓存 CPU 热值保持到下一批检查。
 mutex 单热锁且首批时间满足条件时，仍在第 1024 次开始记录锁，第 1056 次首次可热。
 初始化至首批的空闲计入 CPU 窗口；各自过期只在检查点确认，期间返回缓存热值。
@@ -540,9 +543,9 @@ stack canary；有地址逃逸对象的慢路径仍有 canary。
 热度实现恢复为分类型采样器，并在四个固定 spin/mutex、record/query 入口
 编译时展开类型/操作分支。已 pin 的 spin 接口转入同一实现，读取现有
 preempt_count 并复用 acquisition pin，不额外 disable/enable。256条精确地址记录保留，
-本地 busy 和对应屏障已移除，非 task 样本丢弃。spin CPU 仅在共用 `xchg_tail()` 交换队尾前计数，
-每4次实际MCS入队检查40亿TSC窗口；spin/mutex 单锁在入口累计33次后检查。
-fast/pending、入队前取消及节点耗尽轮询不计数，原生/代理/虚拟入队均计一次。
+本地 busy 和对应屏障已移除，非 task 样本丢弃。spin CPU 按本节前述发布/冷态队头规则采样，
+每4次合格MCS事件检查40亿TSC窗口；spin/mutex 单锁在入口累计33次后检查。
+fast/pending、入队前取消及节点耗尽轮询不计数，同一获取最多计一次。
 CPU变热只影响后续入口；CPU/单锁分别采时，mutex为入口1024/33及同次采时复用。
 
 ### 5.6 完成通知、ACK 和回收的次序

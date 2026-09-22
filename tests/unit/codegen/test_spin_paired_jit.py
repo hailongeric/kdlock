@@ -1,8 +1,9 @@
-"""Execute generated paired continuations through the actual minimal wrapper.
+"""Execute compiler-clobber cold-gate continuations through the real wrapper.
 
-Use an entry stack carrying the five saves, poison uncaptured GPRs, and check
-COMPLETE/refusal plus FULL at a native call and a bounded continuation. Only
-the native callee/dispatcher is substituted; admission and generated code run.
+The body has one ordinary stack value and an unlock-path byte, without a
+manual five-register save area. Poison uncaptured GPRs and check COMPLETE,
+entry refusal and FULL at native calls. Only the native callee/dispatcher is
+substituted; admission and generated code run.
 """
 from io import StringIO
 import subprocess
@@ -26,7 +27,9 @@ int main(void) {
   struct pt_regs regs;
   memset(&regs,0xde,sizeof(regs));
   unsigned long stack[64]={0};
-  for(unsigned int i=0;i<5;i++) stack[16+i]=0x115-i;
+  stack[16]=0x115;
+  stack[17]=1; /* A hot-owned lock takes the clobber unlock branch. */
+  for(unsigned int i=18;i<24;i++) stack[i]=0x123400+i;
   regs.w[4]=(unsigned long)&stack[refuse?16:48];
   regs.w[16]=0x1000;
   regs.w[19]=(unsigned long)&stack[16];
@@ -41,12 +44,11 @@ int main(void) {
   if(refuse) {
    assert(call.args[0]==6 && !call.args[1] && state==1);
    assert(!memcmp(&before,&regs,sizeof(regs)));
+   assert(stack[16]==0x115 && stack[17]==1);
    continue;
   }
 #if NATIVE_CALL
   assert(call.args[0]==1 && call.args[1] && state==0 && regs.w[16]==0x5000);
-  assert(regs.w[0]==0x116 && regs.w[1]==0x115 && regs.w[2]==0x114);
-  assert(regs.w[3]==0x113 && regs.w[5]==0x112);
   /* The substituted native callee returns with the ordinary C callee saves
    * intact. Resume only its exact saved return PC/stack, in the same packet. */
   for(unsigned int step=0;step<2;step++) {
@@ -66,9 +68,10 @@ int main(void) {
   assert(regs.w[16]==FINAL_IP && regs.w[19]==before.w[19]);
 #endif
   assert(regs.w[4]==before.w[4]);
-  for(unsigned int i=0;i<5;i++) assert(stack[16+i]==0x116-i);
+  assert(stack[16]==0x116 && stack[17]==1);
+  for(unsigned int i=18;i<24;i++) assert(stack[i]==0x123400+i);
  }
- puts("PASS paired JIT: stack reloads, updated unlock saves, minimal COMPLETE/refusal, native FULL continuation");
+ puts("PASS cold-gate clobber JIT: no manual register saves, hot unlock branch, minimal COMPLETE/refusal, native FULL continuation");
 }
 '''
 
@@ -77,26 +80,40 @@ def main():
     symbols = {'kd_spin_lock_pinned_clobber_v1': 0x3000,
                'kd_spin_lock_clobber_v1': 0x3100,
                'kd_spin_unlock_clobber_v1': 0x4000,
-               'kd_spin_direct_native_unlock': 0x6000, 'kd_spin_lock': 0x5000}
+               'kd_spin_direct_native_unlock': 0x6000,
+               'kd_spin_lock': 0x5000}
     for native in (False, True):
-        # Same POP order as the paired continuation. The CPU-hot cookie is
-        # read only by the C selector; no cookie is assigned in JIT code.
-        code = bytes.fromhex('415f415e415d415c5b')
-        code += bytes.fromhex('48ffc349ffc449ffc549ffc649ffc7')
+        # A compiler-spilled body value, not five incoming register saves.
+        # CPU heat is consumed before the continuation and is never a JIT input.
+        code = bytes.fromhex('48ff0424')  # incq (%rsp)
         if native:
-            # A matched ordinary-C control pair has resumable FULL boundaries.
+            # Existing ordinary-C inner control calls retain resumable FULL
+            # boundaries. The new native cold entry precedes the outer JIT
+            # continuation and is deliberately not admitted as an inner lock.
             for target in (0x5000, 0x6000):
                 code += bytes.fromhex('48c7c700910000')
                 code += b'\xe8' + (target-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
-        code += bytes.fromhex('53415441554156415748c7c7009000004889e648c7c2')
+        # The lock-byte input lives in a guarded stack slot in this fixture;
+        # production callers read their actual lock object. Both control ABIs
+        # must remain distinct even though hot ownership selects only one.
+        code += bytes.fromhex('807c2408050f84')  # cmpb $5,8(%rsp); je cold
+        cold_branch = len(code)
+        code += bytes(4)
+        code += bytes.fromhex('48c7c7009000004889e648c7c2')
         final_ip = 0x1000+len(code)+4+3+5
         code += final_ip.to_bytes(4, 'little') + bytes.fromhex('4889e9')
         code += b'\xe8' + (0x4000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
-        code += bytes.fromhex('415f415e415d415c5bc3')
+        code += b'\xc3'
+        cold_offset = len(code)
+        code = (code[:cold_branch] + (cold_offset-cold_branch-4).to_bytes(4, 'little', signed=True)
+                + code[cold_branch+4:])
+        code += bytes.fromhex('48c7c700900000')
+        code += b'\xe8' + (0x6000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
+        code += b'\xc3'
         assembly, log, status = render(code.hex(), kernel_symbols=symbols, abi=1,
                                        body_witness=True, return_status=True)
         assert status == 0, log
-        # Exercise the production stack-input predicate's refusal before POPs.
+        # Exercise the production stack-input predicate before any body write.
         # Do not confuse a dispatch miss (FULL) with a pristine entry refusal.
         guards = EntryGuards()
         assert guards.stack_value((ExprId('kd_entry_RSP', 64), 0))

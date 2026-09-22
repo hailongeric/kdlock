@@ -1,12 +1,16 @@
 # 下一阶段性能优化任务
 
-配对冷CPU快路径和公共调用精简已分步提交。按用户最终要求，cookie仅引用已有per-CPU
-`rate_hot`，一个CPU一份、所有锁共享；解锁根据冷态锁字状态5，cookie不保存路径/深度。
-[最终同期与PMU验证](../bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md)：36场性能、
-8场功能、12场PMU通过并排空；c1/c16单线程改善，c1四线程observe下降7.04%，
-20线程下降14.87%–18.64%。这些竞争退化仍待解决，因此新接口/选项继续显式启用。
-单线程PMU显示指令与周期明显减少，但尚未对竞争退化作因果拆分。
-不追加重复轮次掩盖退化；前两阶段局部cookie成绩只作历史。
+按用户最新要求，冷CPU入口内联读取per-CPU `rate_hot`，热入口沿用clobber-v1，
+删除手工五寄存器适配，允许编译器在判断前保存活跃值。cookie仍一个CPU一份，
+所有锁共享，不记录路径/深度；冷获取保留完整pending/MCS和锁字状态5。
+新增`spin_hot_min_queue=4`控制冷队头的升温采样，0恢复原规则。
+[本轮验证](../bench/tclock_compare/results/20260922-spin-cold-clobber-queue.md)：
+60配置各测一次，首段9通过/1少线程JIT判定失败、修正运行器后续50通过；生产源码及ELF不变。
+7场功能、4场长批次PMU通过。3线程吞吐提高48%–61%；20线程observe仍下降5.67%–5.83%，
+c1单线程adaptive短批次下降9.05%，所以新壳与开关继续默认关闭。
+JIT手工适配36条指令已移除，热正文仍比保留壳多9条解锁分流相关指令；
+没有将剩余多核退化全部归因于这些指令。未追加短批次重复测量。
+[之前配对C壳成绩](../bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md)仅作历史。
 
 
 当前继承 continuation、ticket 和无竞争入口优化：顶层 pending 复用 fast owner，
@@ -41,7 +45,9 @@ source lease、物理 ACK 和 executor pop 后的借用释放仍有用途。
 当前已实现单锁字及分类型 CPU 本地哈希，协议与准入的唯一说明在
 [locking](design/locking.md)。原 gate/S、Linux L 二次获取、站点缓存和全局晋升集合
 均已删除。当前热表直接按完整锁地址哈希计数，每 CPU/type 256 桶、256 记录。
-spin CPU 每 4 次实际 MCS 入队检查一次，mutex CPU 保持每 1024 次入口检查，
+spin CPU 每4次合格MCS事件检查一次：默认关闭冷捷径时仍在入队处采样；
+冷捷径开启且队列门槛非0时，冷CPU只在满足门槛的队头获取处采样，热CPU仍在入队处采样。
+mutex CPU 保持每 1024 次入口检查，
 两者共用 40 亿 TSC 窗口；fast/pending 不增加 spin CPU 计数。热 CPU 才查表，spin/mutex 单锁 count 大于 32
 （33 次）检查 25 亿 TSC 窗口。删除候选分数和淘汰，满表不覆盖。
 query 不采时。当前预分配空间每 CPU 13376 字节，锁路径不分配。

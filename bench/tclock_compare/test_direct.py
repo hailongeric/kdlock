@@ -52,6 +52,77 @@ class DirectTests(unittest.TestCase):
         check_jit_evidence(record := dict(record, jit_bodies=1))
         self.assertEqual(record['jit_acceptance'], 'PASS')
 
+    def test_small_cold_queue_policy_requires_native_execution(self):
+        for threads in (1, 2, 3):
+            for mode in ('observe', 'adaptive'):
+                record = dict(arm='kdlock', threads=threads, jit_bodies=0,
+                    hotlock_mode=mode, caller_shell='cold_clobber',
+                    spin_cold_fastpath='on', spin_hot_min_queue=4, scenario='plain')
+                check_jit_evidence(record)
+                self.assertEqual(record['jit_acceptance'], 'NO_JIT_COLD')
+                with self.assertRaisesRegex(run.Failure, 'unexpectedly executed JIT'):
+                    check_jit_evidence(dict(record, jit_bodies=1))
+
+    def test_cold_queue_policy_does_not_relax_protocol_positives(self):
+        record = dict(arm='kdlock', threads=4, jit_bodies=0,
+            hotlock_mode='observe', caller_shell='cold_clobber',
+            spin_cold_fastpath='on', spin_hot_min_queue=4, scenario='plain')
+        # Original MCS mode, high contention and nested
+        # protocol cases must retain actual-body evidence for observe.
+        for change in (dict(spin_hot_min_queue=0), dict(threads=20),
+                       dict(spin_cold_fastpath='off'), dict(caller_shell='paired'),
+                       dict(scenario='nested'), dict(scenario='early')):
+            with self.subTest(change=change):
+                with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+                    check_jit_evidence(dict(record, **change))
+        check_jit_evidence(record := dict(record, spin_delegate='off'))
+        self.assertEqual(record['jit_acceptance'], 'DISABLED_CONTROL')
+
+    def test_small_plain_native_completion_is_not_jit_acceptance(self):
+        for threads in (2, 3):
+            for mode in ('observe', 'adaptive'):
+                for cold, shell in (('off', 'clobber'), ('on', 'cold_clobber')):
+                    with self.subTest(threads=threads, mode=mode, cold=cold):
+                        record = dict(arm='kdlock', threads=threads, jit_bodies=0,
+                            hotlock_mode=mode, caller_shell=shell, scenario='plain',
+                            spin_cold_fastpath=cold, spin_hot_min_queue=0)
+                        check_jit_evidence(record)
+                        self.assertEqual(record['jit_acceptance'], 'NO_JIT_LOW_CONTENTION')
+                        check_jit_evidence(record := dict(record, jit_bodies=1))
+                        self.assertEqual(record['jit_acceptance'], 'PASS')
+
+    def test_small_nested_protocol_cases_still_require_jit(self):
+        for threads in (2, 3):
+            for mode in ('observe', 'adaptive'):
+                for scenario in ('nested', 'early'):
+                    with self.subTest(threads=threads, mode=mode, scenario=scenario):
+                        record = dict(arm='kdlock', threads=threads, jit_bodies=0,
+                            hotlock_mode=mode, caller_shell='cold_clobber',
+                            scenario=scenario, spin_cold_fastpath='on', spin_hot_min_queue=4)
+                        with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+                            check_jit_evidence(record)
+                        check_jit_evidence(record := dict(record, jit_bodies=1))
+                        self.assertEqual(record['jit_acceptance'], 'PASS')
+
+    def test_four_workers_do_not_guarantee_queue_pressure(self):
+        record = dict(arm='kdlock', threads=4, jit_bodies=0,
+            hotlock_mode='observe', caller_shell='cold_clobber',
+            spin_cold_fastpath='on', spin_hot_min_queue=4, scenario='plain')
+        check_jit_evidence(record)
+        self.assertEqual(record['jit_acceptance'], 'NO_JIT_POLICY')
+        check_jit_evidence(record := dict(record, jit_bodies=1))
+        self.assertEqual(record['jit_acceptance'], 'PASS')
+
+    def test_high_contention_requires_jit_in_both_policies(self):
+        for mode in ('observe', 'adaptive'):
+            record = dict(arm='kdlock', threads=20, jit_bodies=0,
+                hotlock_mode=mode, caller_shell='cold_clobber',
+                spin_cold_fastpath='on', spin_hot_min_queue=4, scenario='plain')
+            with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+                check_jit_evidence(record)
+            check_jit_evidence(record := dict(record, jit_bodies=1))
+            self.assertEqual(record['jit_acceptance'], 'PASS')
+
     def test_hash_layout_rejects_scheduling_enabled_module(self):
         layout = dict(workload='rcuht', buckets=1024, entries=4096,
                       key_range=8192, resched=0)
@@ -117,6 +188,23 @@ class DirectTests(unittest.TestCase):
                 expected_modes = {extra[-1]} if '--hotlock-mode' in extra else {'observe', 'adaptive'}
                 self.assertEqual({s['hotlock_mode'] for s in plan if s['arm'] == 'kdlock'},
                                  expected_modes)
+
+    def test_cli_small_thread_cold_matrix(self):
+        output = io.StringIO()
+        argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
+                '--threads', '1', '2', '3', '4', '20',
+                '--spin-cold-fastpath', 'on', 'off', '--spin-hot-min-queue', '4']
+        with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
+            self.assertEqual(run.main(), 0)
+        plan = json.loads(output.getvalue())
+        self.assertEqual(len(plan), 60)
+        self.assertEqual(len({s['name'] for s in plan}), 60)
+        self.assertEqual({s['threads'] for s in plan}, {1, 2, 3, 4, 20})
+        self.assertEqual({s['repeat'] for s in plan}, {0})
+        for spec in plan:
+            queue = (4 if spec['spin_cold_fastpath'] == 'on' else 0)
+            self.assertEqual(spec['spin_hot_min_queue'],
+                             queue if spec['arm'] == 'kdlock' else 'not_applicable')
 
     def test_empty_summary_has_no_winner(self):
         plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=2,
@@ -219,7 +307,7 @@ class DirectTests(unittest.TestCase):
                 if spec['arm'] == 'kdlock':
                     self.assertEqual(spec['caller_abi'], 'clobber')
                     self.assertEqual(spec['caller_shell'],
-                                     'paired' if spec['spin_cold_fastpath']=='on' else 'clobber')
+                                     'cold_clobber' if spec['spin_cold_fastpath']=='on' else 'clobber')
                     self.assertEqual(spec['cookie_storage'],
                                      'percpu_rate_hot' if spec['spin_cold_fastpath']=='on' else 'not_applicable')
             run.report(out)
@@ -227,6 +315,27 @@ class DirectTests(unittest.TestCase):
             self.assertEqual(len(rows), 6)
             self.assertTrue(all(r['sessions'] == r['valid'] == 1 for r in rows))
             self.assertEqual({r['cookie_storage'] for r in rows}, {'percpu_rate_hot', 'not_applicable'})
+
+    def test_summary_keeps_cold_queue_thresholds_separate(self):
+        plans = [run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
+            iterations=100, backends=['kdlock'], hotlock_mode=['observe'],
+            spin_cold_fastpath=['on'], spin_hot_min_queue=queue))[0]
+            for queue in (0, 4)]
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for spec in plans:
+                folder = out/spec['name']; folder.mkdir()
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True,
+                    jit_bodies=int(spec['spin_hot_min_queue'] == 0),
+                    measurement=dict(completed=200, wall_ns=100000,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 2)
+            self.assertEqual({r['spin_hot_min_queue'] for r in rows}, {0, 4})
+            self.assertEqual(sum(r['actual_jit_sessions'] for r in rows), 1)
 
 
 if __name__ == '__main__':

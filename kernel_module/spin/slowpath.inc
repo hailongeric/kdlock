@@ -27,6 +27,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	register struct kd_spin_node *prev_node = NULL, *next_node = NULL;
 	struct qspinlock *parent_lock;
 	int old_tail, val, j;
+	unsigned int cold_queue_min;
 
 	/*
 	 * These values remain live while a nested waiter or combiner runs. Keep
@@ -43,6 +44,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 
 	/* Publish the clock with the node, before any combiner can service it. */
 	curr_node->execution->queued_at_ns = kd_exe_queue_timing_start();
+	cold_queue_min = kd_spin_delegate ? kd_hotlock_spin_cold_queue_min_pinned() : 0;
 	old_tail = xchg_tail(word, tail);
 	curr_node->execution->diag = kd_spin_diag_waiter_enter(lock);
 
@@ -158,8 +160,10 @@ queue_head:
 	 */
 
 	if (((val & _Q_TAIL_MASK_HL) == tail) &&
-	    atomic_try_cmpxchg_relaxed(&word->val, &val, _Q_LOCKED_VAL_HL))
+	    atomic_try_cmpxchg_relaxed(&word->val, &val, _Q_LOCKED_VAL_HL)) {
+		kd_spin_sample_cold_queue(curr_node, cold_queue_min);
 		goto release; /* No contention */
+	}
 
 	/* Either somebody is queued behind us or _Q_PENDING_VAL_HL is set */
 	check_and_set_combiner(word);
@@ -174,6 +178,7 @@ queue_head:
 	 */
 	smp_cond_load_relaxed_sched(&curr_node->next, (VAL));
 	next_node = curr_node->next;
+	kd_spin_sample_cold_queue(curr_node, cold_queue_min);
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(next_node == NULL);
 #endif

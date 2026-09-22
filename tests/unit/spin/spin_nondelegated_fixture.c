@@ -40,7 +40,6 @@ static _Thread_local int cpu;
 static _Thread_local unsigned long queued, swaps, cas_calls, local_reads;
 static _Thread_local unsigned int pins, rate_hot;
 static _Thread_local struct { unsigned int nondelegated; } kd_spin_fast_cpu;
-static bool kd_spin_cold_fastpath = true;
 #define preempt_disable() (++pins)
 #define preempt_enable() (--pins)
 #define kd_spin_nodes (pool[cpu])
@@ -81,6 +80,11 @@ static struct kd_spin_node *decode_tail(u32 tail) { return &pool[(tail >> 18) - 
 static bool kd_spin_delegate = true;
 static _Thread_local unsigned long mcs_samples;
 static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; rate_hot=1; }
+/* The deterministic hotlock fixture covers sampled queue pressure. Keep the
+ * legacy publication sampler here to isolate real pending/MCS ownership. */
+static unsigned int kd_hotlock_spin_cold_queue_min_pinned(void) { return 0; }
+static void kd_spin_sample_cold_queue(struct kd_spin_node *node, unsigned int minimum)
+{ (void)node; assert(!minimum); }
 #define xchg(p,v) (queued++, swaps++, __atomic_exchange_n(p,v,__ATOMIC_ACQ_REL))
 #include "spin_mcs_tail.h"
 static u32 kd_spin_fetch_set_pending_acquire(struct qspinlock *p)
@@ -98,15 +102,15 @@ static unsigned int inside;
 static void *worker(void *arg)
 {
  cpu = (long)arg;
- unsigned int *cpu_hot=&rate_hot;
  pthread_barrier_wait(&start);
  for (int i=0;i<50000;i++) {
-  /* Mix ordinary owners with the exact paired native selector/byte state.
+  /* Mix ordinary owners with the exact pinned cold entry/byte state.
    * Queuing warms this CPU after selection; it must still finish natively. */
   if(cpu&1) kd_spin_acquire_nondelegated(&lock);
   else {
    rate_hot=0;
-   assert(!kd_spin_direct_enter(&lock,&cpu_hot));
+   preempt_disable();
+   kd_spin_direct_native_lock(&lock);
    assert(lock.locked==KD_SPIN_DIRECT_NATIVE_HELD && pins==1);
    rate_hot=1;
   }

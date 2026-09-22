@@ -103,7 +103,7 @@ int main(void)
   if(entry==0) kd_spin_lock_abi(&lock,0,0,0,1);
   else if(entry==1) kd_spin_lock_clobber_v1(&lock,0,0,0);
   else {
-   preempt_disable(); /* The paired selector already owns this one pin. */
+   preempt_disable(); /* The inline gate already owns this one pin. */
    kd_spin_lock_pinned_clobber_v1(&lock,0,0,0);
   }
   pinned(); assert(lock.locked==1 && samples==(scenario!=OFF));

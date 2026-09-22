@@ -6,6 +6,7 @@
 
 #include <asm/asm.h>
 #include <linux/percpu.h>
+#include <linux/preempt.h>
 #include "kd_spin_type.h"
 #include "kd_hotlock.h"
 #include "exe_info.h"
@@ -15,8 +16,7 @@ void kd_spin_lock_clobber_v1(kd_spinlock_t *, unsigned long, unsigned long,
 			   unsigned long);
 void kd_spin_unlock_clobber_v1(kd_spinlock_t *, unsigned long, unsigned long,
 			     unsigned long);
-unsigned int kd_spin_direct_enter(kd_spinlock_t *lock,
-				 unsigned int * __percpu *cpu_hot);
+void kd_spin_direct_native_lock(kd_spinlock_t *lock);
 void kd_spin_direct_native_unlock(kd_spinlock_t *lock);
 void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 				 unsigned long, unsigned long);
@@ -42,57 +42,38 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 		       "r12", "r13", "r14", "r15", "cc", "memory");        \
 } while (0)
 
-/* The paired shell preserves C callee-saved registers itself, only on its
- * hot branch. An if around the broad-clobber macro above still makes GCC save
- * all five in the function prologue, including on cold acquisitions.
- *
- * The JIT starts at the POPs: the saved values are ordinary waiter-stack
- * inputs to the unchanged minimal ABI. Its final unlock writes a fresh save
- * area before COMPLETE, and the physical waiter executes the matching POPs.
- * cookie names kd_spin_direct_cookie, the single shared CPU heat view. The
- * C selector reads it after pinning. The continuation does not carry/store a
- * cookie or depend on an uncaptured return register. Unlock reads ownership
- * from the lock byte; neither a heat change nor another lock can reroute it.
- * The named continuation is unique in a noipa caller, as for the old shell. */
-#define KD_SPIN_DIRECT_SAVE \
-	"pushq %%rbx\n\tpushq %%r12\n\tpushq %%r13\n\t" \
-	"pushq %%r14\n\tpushq %%r15\n\t"
-#define KD_SPIN_DIRECT_RESTORE \
-	"popq %%r15\n\tpopq %%r14\n\tpopq %%r13\n\t" \
-	"popq %%r12\n\tpopq %%rbx\n\t"
-
+/* Pin before the inline per-CPU read. The two entries share only the final
+ * continuation: cold owns the native word; hot uses the original minimal
+ * clobber ABI. Neither branch exports a path cookie or captures extra GPRs.
+ * The compiler owns all live-register spills, even if it places them before
+ * the branch. Do not insert PUSH/POP adapters into the translated body.
+ * cookie is the provider's one per-CPU pointer to the existing rate_hot. */
 #define KD_SPIN_DIRECT_LOCK(lock, cookie, continuation) do { \
 	kd_spinlock_t *kd_arg = (kd_spinlock_t *)(lock); \
-	if (kd_spin_direct_enter(kd_arg, &(cookie))) { \
-		unsigned long kd_sp, kd_ip, kd_bp; \
-		asm volatile(KD_SPIN_DIRECT_SAVE \
-			"movq %%rsp, %%rsi\n\tleaq 1f(%%rip), %%rdx\n\t" \
-			"movq %%rbp, %%rcx\n\t" \
-			"call kd_spin_lock_pinned_clobber_v1\n\t1:\n\t" continuation \
-			KD_SPIN_DIRECT_RESTORE \
-			: "+D" (kd_arg), "=S" (kd_sp), \
-			  "=d" (kd_ip), "=c" (kd_bp), ASM_CALL_CONSTRAINT \
-			: : "rax", "r8", "r9", "r10", "r11", "cc", "memory"); \
-	} \
+	unsigned int * __percpu *kd_gate = &(cookie); \
+	unsigned long kd_ip, kd_bp; \
+	preempt_disable(); \
+	asm volatile("cmpb $0, kd_spin_cold_fastpath(%%rip)\n\tje 2f\n\t" \
+		"cmpb $0, kd_spin_delegate(%%rip)\n\tje 1f\n\t" \
+		"movq %%gs:(%%rsi), %%rax\n\tcmpl $0, (%%rax)\n\tjne 2f\n\t" \
+		"1: call kd_spin_direct_native_lock\n\tjmp 3f\n\t" \
+		"2: movq %%rsp, %%rsi\n\tleaq 3f(%%rip), %%rdx\n\t" \
+		"movq %%rbp, %%rcx\n\t" \
+		"call kd_spin_lock_pinned_clobber_v1\n\t3:\n\t" continuation \
+		: "+D" (kd_arg), "+S" (kd_gate), "=d" (kd_ip), \
+		  "=c" (kd_bp), ASM_CALL_CONSTRAINT \
+		: : "rax", "rbx", "r8", "r9", "r10", "r11", \
+		    "r12", "r13", "r14", "r15", "cc", "memory"); \
 } while (0)
 
 #define KD_SPIN_DIRECT_UNLOCK(lock, cookie) do { \
-	kd_spinlock_t *kd_arg = (kd_spinlock_t *)(lock); \
+	kd_spinlock_t *kd_unlock_word = (kd_spinlock_t *)(lock); \
 	/* Same shared cookie argument; unlock deliberately does not read heat. */ \
 	(void)sizeof(cookie); \
-	if (READ_ONCE(kd_arg->locked) != KD_SPIN_DIRECT_NATIVE_HELD) { \
-		unsigned long kd_sp, kd_ip, kd_bp; \
-		asm volatile(KD_SPIN_DIRECT_SAVE \
-			"movq %%rsp, %%rsi\n\tleaq 1f(%%rip), %%rdx\n\t" \
-			"movq %%rbp, %%rcx\n\t" \
-			"call kd_spin_unlock_clobber_v1\n\t1:\n\t" \
-			KD_SPIN_DIRECT_RESTORE \
-			: "+D" (kd_arg), "=S" (kd_sp), "=d" (kd_ip), \
-			  "=c" (kd_bp), ASM_CALL_CONSTRAINT \
-			: : "rax", "r8", "r9", "r10", "r11", "cc", "memory"); \
-	} else { \
-		kd_spin_direct_native_unlock(kd_arg); \
-	} \
+	if (READ_ONCE(kd_unlock_word->locked) != KD_SPIN_DIRECT_NATIVE_HELD) \
+		KD_SPIN_DIRECT_CALL(kd_spin_unlock_clobber_v1, kd_unlock_word, ""); \
+	else \
+		kd_spin_direct_native_unlock(kd_unlock_word); \
 } while (0)
 
 #endif

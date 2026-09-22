@@ -42,6 +42,12 @@ struct kd_hotlock_cpu
 static struct kd_hotlock_cpu __percpu *kd_hotlock_cpu;
 DEFINE_PER_CPU(unsigned int *, kd_hotlock_spin_gate);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_gate);
+/* Only cold-fastpath admission uses this pressure threshold. Zero restores
+ * publication-only sampling; bounded lookahead never walks an entire queue. */
+unsigned int kd_spin_hot_min_queue __read_mostly = 4;
+module_param_named(spin_hot_min_queue, kd_spin_hot_min_queue, uint, 0444);
+MODULE_PARM_DESC(spin_hot_min_queue,
+                "Cold CPU promotion: minimum linked MCS nodes including head (0=legacy, 1..16)");
 /* Immutable after load: observe fixes admission even for dropped samples. */
 static char *hotlock_mode = "adaptive";
 module_param(hotlock_mode, charp, 0444);
@@ -88,7 +94,7 @@ static struct kd_hotlock_entry *kd_hotlock_insert(struct kd_hotlock_table *t,
 }
 /* Initialization supplies the first time origin. Ordinary records only count;
  * one TSC per CPU batch measures the whole batch since the previous check
- * (four spin MCS publications or 1024 mutex entries). A continuously hot CPU must
+ * (four eligible spin MCS events or 1024 mutex entries). A continuously hot CPU must
  * not restart the independent lock batches. Cooling/reheating resets them,
  * retaining bucket membership and leaving ownership storage untouched. */
 static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_now,
@@ -142,7 +148,7 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   if (pin)
     preempt_disable();
   t = &this_cpu_ptr(kd_hotlock_cpu)->tables[kind];
-  /* Spin CPU heat advances only at MCS publication. Entry records retain the
+  /* Spin CPU heat advances only at eligible MCS events. Entry records retain the
    * cached CPU gate and original per-lock sampling; mutex keeps both clocks. */
   if (record && kind == 1 &&
       !kd_hotlock_clock(t, &now, KD_HOTLOCK_CHECK_INTERVAL))
@@ -181,8 +187,9 @@ bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(a
 bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false, false); }
 bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false, false); }
 
-/* All spin producers reach this only when publishing an MCS tail. Native cold
- * acquisitions also count, so adaptive admission can warm without delegation.
+/* Queue producers select one eligible event: ordinary/hot publication, or a
+ * cold queue head whose linked pressure meets the configured minimum. Native
+ * acquisition therefore warms naturally without delegation or another flag.
  * Reuse the pin and drop non-task samples, just like entry statistics. */
 void kd_hotlock_record_spin_mcs_pinned(void)
 {
@@ -206,6 +213,8 @@ int kd_hotlock_init(void)
 {
   int cpu;
   unsigned long now;
+  if (kd_spin_hot_min_queue > 16)
+    return -EINVAL;
   if (!strcmp(hotlock_mode, "observe"))
     kd_hotlock_observe = true;
   else if (!strcmp(hotlock_mode, "adaptive"))

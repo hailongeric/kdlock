@@ -327,6 +327,11 @@ static void kd_spin_claim_origin(const struct kd_spin_request *request)
 static unsigned int mcs_samples, tail_exchanges;
 static bool kd_spin_delegate = true;
 static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; }
+/* Pressure thresholds have a separate deterministic sampler fixture. This
+ * protocol fixture retains one sample per scripted queue publication. */
+static unsigned int kd_hotlock_spin_cold_queue_min_pinned(void) { return 0; }
+static void kd_spin_sample_cold_queue(struct kd_spin_node *node, unsigned int minimum)
+{ (void)node; CHECK(!minimum); }
 static int mock_xchg_tail(struct qspinlock *lock, int tail)
 {
 	CHECK(lock == &scheduling_word);

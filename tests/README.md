@@ -1,18 +1,22 @@
 # 当前测试入口
 
-共享CPU热度cookie版基础/定向5组、运行器13项通过；36场性能、8场功能及12场PMU
-均完成并排空。新增共享热度下两锁冷热不同、热度变化及提前解锁检查；生产冷态状态5
-与普通状态1混合MCS竞争400000次，pin和在途计数归零。
-`codegen/test_spin_paired_jit.py`执行实际wrapper，覆盖栈恢复、COMPLETE、入口拒绝和FULL续跑。
-新壳/gate关闭、nested/early、RCUHT及delegation关闭均有直接验收；
-证据与控制脚本首次缺输入的修复见[当前报告](../bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md)。
+当前内联热度/clobber壳与冷队列门槛已完成基础2组及直接相关4组验证，热度错误变体25项、
+运行器21项通过。初次用户态ABI fixture使用8字节栈对齐导致SIGSEGV，改为libc所需的16字节
+后原断言通过，未为此改生产代码。覆盖真实GS读取、双CPU共享热度、跨锁活跃寄存器、
+等待/持锁期间变热、冷态与普通状态混合MCS 400000次及pin/在途归零。
+`codegen/test_spin_paired_jit.py`执行实际wrapper，覆盖无手工push/pop的COMPLETE、入口拒绝、FULL/native续跑。
+60性能配置各测一次：原批次9通过、1原NO_JIT失败保留，修正少线程判定后续50通过；
+不能记作统一60/60通过。7场功能（gate/delegation控制、门槛0、nested/early、RCUHT）
+及4场单线程PMU通过并排空。命令、失败与证据见[当前报告](../bench/tclock_compare/results/20260922-spin-cold-clobber-queue.md)。
+[之前共享CPU cookie配对C壳验证](../bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md)仅作历史。
 [第二阶段](../bench/tclock_compare/results/20260922-spin-cold-stage2.md)的8组及25项准入是历史验证。
 
 
-当前 spin CPU 每 4 次实际 MCS 入队检查，spin/mutex CPU 共用 40 亿 TSC 窗口；
+当前 spin CPU 每4次合格MCS事件检查：冷捷径/队列门槛开启时，冷CPU统计合格队头获取，
+其他情况保持入队采样；spin/mutex CPU 共用40亿TSC窗口；
 mutex CPU 保持 1024 次入口检查，单锁保持第 33 次检查、25 亿窗口。
 
-最新[完整三方bench](../bench/tclock_compare/results/20260922-spin-mcs4-full-benchmark.md)
+此前[完整三方bench](../bench/tclock_compare/results/20260922-spin-mcs4-full-benchmark.md)
 30/30场通过，2940万次操作全部排空，8场竞争KD均有实际JIT；该轮未追加单元或adaptive功能。
 
 此前阈值修改基于 `383249f`，在 guest 独立副本 `/tmp/kdlock-mcs4-jv7hhnwu/src` 验证：

@@ -58,6 +58,8 @@ def make_plan(args):
     cold_modes = getattr(args, 'spin_cold_fastpath', ['off'])
     if isinstance(cold_modes, str):
         cold_modes = [cold_modes]
+    hot_min_queue = getattr(args, 'spin_hot_min_queue', 4)
+    require(0 <= hot_min_queue <= 16, 'invalid spin hot minimum queue')
     # Admission belongs to KD only. Share each Linux/TCLock baseline between
     # modes, but give every KD policy its own freshly loaded session and name.
     variants = [(backend, mode, cold) for backend in args.backends
@@ -69,12 +71,17 @@ def make_plan(args):
             arms.reverse()
         for backend, mode, cold in arms:
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
-            suffix = f'-cold-{cold}-{mode}' if backend == 'kdlock' else ''
+            # The preserved shell cannot apply the cold queue policy. Record
+            # and load its effective zero instead of labelling it with N.
+            queue = hot_min_queue if cold == 'on' else 0
+            suffix = f'-cold-{cold}-q{queue}-{mode}' if backend == 'kdlock' else ''
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, hotlock_mode=mode,
-                caller_shell=('paired' if cold == 'on' else 'clobber') if backend == 'kdlock' else 'c',
+                caller_shell=('cold_clobber' if cold == 'on' else 'clobber') if backend == 'kdlock' else 'c',
                 cookie_storage='percpu_rate_hot' if backend == 'kdlock' and cold == 'on' else 'not_applicable',
+                spin_hot_min_queue=queue if backend == 'kdlock' else 'not_applicable',
+                spin_hot_min_queue_requested=hot_min_queue if backend == 'kdlock' else 'not_applicable',
                 spin_cold_fastpath=cold, pmu=getattr(args, 'pmu', False),
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
@@ -94,6 +101,7 @@ def report(out):
             rows.append(dict(name=spec['name'], scenario=spec['scenario'],
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
                 spin_cold_fastpath=spec.get('spin_cold_fastpath', 'unrecorded'),
+                spin_hot_min_queue=spec.get('spin_hot_min_queue', 'unrecorded'),
                 caller_shell=spec.get('caller_shell', 'unrecorded'),
                 cookie_storage=spec.get('cookie_storage', 'unrecorded'),
                 status=row.get('execution_status', 'NOT_RUN'),
@@ -118,16 +126,18 @@ def report(out):
         groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode,
                            r.get('spin_cold_fastpath', 'unrecorded'),
                            r.get('caller_shell', 'unrecorded'),
-                           r.get('cookie_storage', 'unrecorded')), []).append(r)
+                           r.get('cookie_storage', 'unrecorded'),
+                           r.get('spin_hot_min_queue', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, cold, shell, cookie), rows in groups.items():
+    for (n, t, arm, mode, cold, shell, cookie, queue), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
                    hotlock_mode=mode, spin_cold_fastpath=cold, caller_shell=shell,
                    cookie_storage=cookie,
+                   spin_hot_min_queue=queue,
                    spin_delegate=rows[0].get('spin_delegate', 'on'),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -153,14 +163,15 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,16))
-    # The direct comparison uses all five agreed contention levels.
-    p.add_argument('--threads', type=int, nargs='+', choices=(1,4,8,16,20), default=[1,4,8,16,20])
+    p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,8,16,20), default=[1,4,8,16,20])
     p.add_argument('--repeats', type=int, default=1,
                    help='measurement rounds per configuration (default: 1)')
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--spin-cold-fastpath', choices=('on', 'off'), nargs='+', default=['off'],
-                   help='on: paired C shell and cold gate; off: preserved clobber shell (default)')
+                   help='on: inline CPU gate with clobber shell; off: preserved clobber shell (default)')
+    p.add_argument('--spin-hot-min-queue', type=int, choices=range(17), default=4,
+                   help='cold CPU queue size required to sample heat (default: 4; 0: original MCS rule); effective only with cold gate on')
     p.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')
     p.add_argument('--dry-run', action='store_true')
@@ -269,7 +280,7 @@ def main():
             expected = {'kdlock': ('kd_spin_lock_clobber_v1', 'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
             if backend == 'kdlock' and cold == 'on':
-                expected = ('kd_spin_direct_enter', 'kd_spin_lock_pinned_clobber_v1',
+                expected = ('kd_spin_direct_native_lock', 'kd_spin_lock_pinned_clobber_v1',
                             'kd_spin_direct_native_unlock', 'kd_spin_unlock_clobber_v1',
                             'kd_spin_prepare')
             require(all(symbol in imported.split() for symbol in expected), 'missing direct API import')

@@ -19,6 +19,11 @@ def main():
         without_includes((ROOT / name).read_text())
         for name in ("include/kd_hotlock.h", "kernel_module/kd_hotlock.c")
     )
+    queue = (ROOT / "kernel_module/spin/queue.inc").read_text()
+    source += "\n" + queue[
+        queue.index("static __always_inline u32 xchg_tail"):
+        queue.index("/**\n * clear_pending")
+    ]
     mutations = {
         "interrupt-table-access": ("if (!in_task())\n    return admitted;", "if (false)\n    return admitted;", 1),
         "interrupt-mcs-sample": ("if (!in_task())\n    return;", "if (false)\n    return;", 1),
@@ -38,6 +43,13 @@ def main():
         "restart-lock-on-cpu-tick": ("if (!continuous)", "if (!continuous || t->rate_hot)", 1),
         "collision-alias": ("slot->address == address", "kd_hotlock_bucket(slot->address) == kd_hotlock_bucket(address)", 1),
         "capacity-overwrites-entry": ("if (t->used == KD_HOTLOCK_ENTRIES)\n    return NULL;", "if (t->used == KD_HOTLOCK_ENTRIES)\n    return &t->entries[0];", 1),
+        "ignore-pressure-opt-in": ("!kd_spin_cold_fastpath || !kd_spin_hot_min_queue ||", "!kd_spin_hot_min_queue ||", 1),
+        "count-cold-publication": ("kd_spin_delegate && !kd_hotlock_spin_cold_queue_min_pinned()", "kd_spin_delegate", 1),
+        "short-queue-promotes": ("depth < queue_min;", "depth + 1 < queue_min;", 1),
+        "extra-queue-link-read": ("depth < queue_min;", "depth <= queue_min;", 1),
+        "resample-hot-queue-head": ("!queue_min || !in_task() || kd_hotlock_spin_cpu_hot_pinned()", "!queue_min || !in_task()", 1),
+        "queue-ignores-interrupt": ("!queue_min || !in_task() || kd_hotlock_spin_cpu_hot_pinned()", "!queue_min || kd_hotlock_spin_cpu_hot_pinned()", 1),
+        "unbounded-pressure-parameter": ("kd_spin_hot_min_queue > 16", "kd_spin_hot_min_queue > 17", 1),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-hotlock-sampling-") as directory:
         path = Path(directory)

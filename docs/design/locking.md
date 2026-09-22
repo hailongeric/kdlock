@@ -20,11 +20,13 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 当前 spin/mutex 各自每 CPU 256 桶、256 条预分配记录，以槽索引处理冲突并匹配
 完整锁地址。命中只增加该锁 count，没有候选排名、score/error 或淘汰。
 满表保留已有记录，未收录锁在 adaptive 下走原生；地址映射保持至卸载。
-模块初始化建立 CPU 时间起点；spin CPU 仅在实际 MCS 入队时计数，每 4 次检查
+模块初始化建立 CPU 时间起点；spin CPU 每 4 次合格 MCS 事件检查
 一次，mutex CPU 保持每 1024 次入口检查，两者共用 40 亿 TSC 窗口。
 时间差取上次检查到本批结束的整批耗时，首批从初始化计时。spin 共用 `xchg_tail()`
-在交换队尾前记录，原生、代理、虚拟嵌套均覆盖；fast/pending、入队前取消及
-节点耗尽轮询不计数，回退由最终发布点计一次。CPU 热才在入口查锁表。
+默认在交换队尾前记录，原生、代理、虚拟嵌套均覆盖；fast/pending、入队前取消及
+节点耗尽轮询不计数。开启冷捷径且只读参数`spin_hot_min_queue=N>0`时，冷CPU只在取得队头
+所有权、交接前看到含自己至少N个已链接节点时计数；热CPU保持发布采样，不重复计数。
+最多读N−1条链接，缺链不等待；参数0..16、默认4，0恢复原规则。CPU 热才在入口查锁表。
 单锁仍统计入口调用，count **大于 32** 时检查 25 亿 TSC 窗口、刷新 hot，
 更新时间戳并清零计数，即第 33 次触发。等于时间边界或倒退均冷。
 mutex 同次到期复用 TSC；spin 的 CPU/单锁事件分开采时。
@@ -63,19 +65,22 @@ acquisition and site cache have been removed. Linux spin objects retain their
 own protocol; no global spin hook is installed and protocols must never mix on
 one object. Explicit caller storage must outlive all requests and frames.
 
-The paired ordinary-C spin shell optionally uses `spin_cold_fastpath=1`.
-Its selector pins once and, on a cold CPU, keeps the existing `nondelegated`
+The cold-gated broad-clobber spin shell optionally uses `spin_cold_fastpath=1`.
+It pins once and reads the per-CPU gate inline in assembly. A cold CPU keeps the existing `nondelegated`
 in-flight count through the entire native acquisition and hold. It attempts one
 CAS and passes a failure directly to native pending/MCS. This root does not
 transfer to a fast-owner record. Native ownership uses locked-byte value 5;
 unlock tests that byte before a release, count decrement and unpin, preserving
 pending/tail. The cookie is only the existing per-CPU rate_hot view: one per CPU
 shared by all locks, with no acquisition path or nesting count. CPU heat
-changes affect only subsequent acquisitions, while cold MCS publication still
-samples heat. The drain scan includes this count. Hot acquisitions use the
+changes affect only subsequent acquisitions, while native MCS still samples heat
+under the configured queue-pressure policy. The drain scan includes this count. Hot acquisitions use the
 shared pinned core and existing fast-owner/ticket routing; observe fixes lock
 admission only after CPU heat when this gate is enabled. The retained API and
 explicitly disabled gate keep their original policy.
+The compiler owns live-register saves, including any placed before the CPU
+branch. There are no manual five-register PUSH/POP adapters in the hot body;
+the continuation and minimal register packet retain the original clobber ABI.
 
 Every public spin acquisition pins once. When delegation is enabled, the entry
 records heat and checks policy/context before attempting delegated fast/pending.

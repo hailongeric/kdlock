@@ -498,20 +498,16 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,
 	kd_spin_lock_abi_pinned(lock, sp, ip, bp, abi);
 }
 
-/* Returns zero with native ownership, or one with just the acquisition pin.
- * cpu_hot is the one shared per-CPU view of rate_hot, never acquisition state.
- * Native ownership is encoded in the lock byte, independently of later heat
- * changes or nested locks. Count native holds until release instead of transferring
- * them to fast-owner records, so the paired unlock needs no owner lookup. */
-__attribute__((noipa)) noinline notrace unsigned int
-kd_spin_direct_enter(kd_spinlock_t *lock, unsigned int * __percpu *cpu_hot)
+/* The inline caller already pinned and chose self-execution. A failed CAS
+ * enters the complete native pending/MCS algorithm, including CPU sampling;
+ * later heat changes never turn this acquisition into delegated work.
+ * The lock byte carries ownership, while the sole per-CPU cookie remains
+ * just rate_hot. Keep native holders counted through their paired release. */
+__attribute__((noipa)) noinline notrace void
+kd_spin_direct_native_lock(kd_spinlock_t *lock)
 {
 	u32 val;
 
-	preempt_disable();
-	if (!kd_spin_cold_fastpath ||
-	    (kd_spin_delegate && READ_ONCE(*this_cpu_read(*cpu_hot))))
-		return 1;
 	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
 	val = atomic_cmpxchg_acquire(&lock->val, 0, KD_SPIN_DIRECT_NATIVE_HELD);
 	if (val) {
@@ -521,9 +517,8 @@ kd_spin_direct_enter(kd_spinlock_t *lock, unsigned int * __percpu *cpu_hot)
 		 * pending or a successor's tail. No second acquisition CAS. */
 		WRITE_ONCE(lock->locked, KD_SPIN_DIRECT_NATIVE_HELD);
 	}
-	return 0;
 }
-EXPORT_SYMBOL_GPL(kd_spin_direct_enter);
+EXPORT_SYMBOL_GPL(kd_spin_direct_native_lock);
 
 __attribute__((noipa)) noinline notrace void
 kd_spin_direct_native_unlock(kd_spinlock_t *lock)
