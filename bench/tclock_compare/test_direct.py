@@ -77,7 +77,7 @@ class DirectTests(unittest.TestCase):
         plan = run.make_plan(Namespace(workload='rcuht', cachelines=None,
             threads=[1, 4, 8, 16, 20], repeats=2, iterations=100000,
             backends=['native', 'tclock', 'kdlock']))
-        self.assertEqual(len(plan), 30)
+        self.assertEqual(len(plan), 40)
         self.assertTrue(all(s['workload'] == 'rcuht' and s['cachelines'] == 0 for s in plan))
         spec = dict(workload='rcuht', cachelines=0, threads=1, cpus=[0])
         measurement = dict(schema=1, complete=True, data_ok=True, workload='rcuht',
@@ -101,8 +101,10 @@ class DirectTests(unittest.TestCase):
     def test_cli_defaults_to_one_round(self):
         # Exercise the CLI default for both payloads and functional admission;
         # a second measurement must be an explicit choice, not an implicit run.
-        for extra, sessions in (([], 30), (['--workload', 'rcuht'], 15),
-                                (['--functional', '--backends', 'kdlock'], 10)):
+        for extra, sessions in (([], 40), (['--workload', 'rcuht'], 20),
+                                (['--functional', '--backends', 'kdlock'], 20),
+                                (['--hotlock-mode', 'adaptive'], 30),
+                                (['--hotlock-mode', 'observe'], 30)):
             with self.subTest(args=extra):
                 output = io.StringIO()
                 argv = ['run.py', '--output', '/tmp/unused', '--dry-run', *extra]
@@ -112,6 +114,9 @@ class DirectTests(unittest.TestCase):
                 self.assertEqual(len(plan), sessions)
                 self.assertEqual(len({s['name'] for s in plan}), sessions)
                 self.assertEqual({s['repeat'] for s in plan}, {0})
+                expected_modes = {extra[-1]} if '--hotlock-mode' in extra else {'observe', 'adaptive'}
+                self.assertEqual({s['hotlock_mode'] for s in plan if s['arm'] == 'kdlock'},
+                                 expected_modes)
 
     def test_empty_summary_has_no_winner(self):
         plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=2,
@@ -129,14 +134,17 @@ class DirectTests(unittest.TestCase):
     def test_matrix_and_alternating_order(self):
         plan = run.make_plan(Namespace(cachelines=[1, 16], threads=[1, 4, 8, 16, 20],
             repeats=2, iterations=100000, backends=['native', 'tclock', 'kdlock']))
-        self.assertEqual(len(plan), 60)
-        self.assertEqual([s['arm'] for s in plan[:6]],
-                         ['native', 'tclock', 'kdlock', 'kdlock', 'tclock', 'native'])
+        self.assertEqual(len(plan), 80)
+        self.assertEqual([(s['arm'], s['hotlock_mode']) for s in plan[:8]],
+                         [('native', 'not_applicable'), ('tclock', 'not_applicable'),
+                          ('kdlock', 'observe'), ('kdlock', 'adaptive'),
+                          ('kdlock', 'adaptive'), ('kdlock', 'observe'),
+                          ('tclock', 'not_applicable'), ('native', 'not_applicable')])
         self.assertTrue(all(s['api_mode'] == 'direct' for s in plan))
 
     def test_summary_excludes_bad_and_undrained_samples(self):
         plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=3,
-            iterations=100, backends=['native', 'tclock', 'kdlock']))
+            iterations=100, backends=['native', 'tclock', 'kdlock'], hotlock_mode=['observe']))
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
             run.write_json(out/'plan.json', plan)
@@ -161,6 +169,37 @@ class DirectTests(unittest.TestCase):
                 self.assertEqual(rows[arm]['comparison_policy'], 'best_valid_throughput')
                 self.assertFalse(any(k.startswith('median_') for k in rows[arm]))
             self.assertEqual(len(json.loads((out/'records.json').read_text())), 9)
+
+    def test_summary_keeps_admission_modes_separate(self):
+        # A faster adaptive run must not replace observe or duplicate baselines.
+        # An undrained adaptive repeat must not win either policy's result.
+        plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=2,
+            iterations=100, backends=['native', 'tclock', 'kdlock']))
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plan)
+            for spec in plan:
+                folder = out/spec['name']; folder.mkdir()
+                mode = spec['hotlock_mode']
+                rate = {'not_applicable': 1, 'observe': 2, 'adaptive': 4}[mode]
+                bad = mode == 'adaptive' and spec['repeat'] == 1
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=not bad,
+                    measurement=dict(completed=400, wall_ns=1 if bad else 400000/rate,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = {(r['arm'], r['hotlock_mode']): r
+                    for r in json.loads((out/'summary.json').read_text())}
+            self.assertEqual(len(rows), 4)
+            for mode, rate, count in [('observe', 2, 2), ('adaptive', 4, 1)]:
+                row = rows['kdlock', mode]
+                self.assertEqual(row['sessions'], 2)
+                self.assertEqual(row['valid'], count)
+                self.assertEqual(row['best_throughput_ops_s'], rate * 1e6)
+                self.assertEqual(row['throughput_over_linux'], rate)
+                self.assertTrue(row['best_session'].endswith('-' + mode))
+            self.assertEqual(rows['native', 'not_applicable']['sessions'], 2)
+            self.assertEqual(rows['tclock', 'not_applicable']['sessions'], 2)
 
 
 if __name__ == '__main__':

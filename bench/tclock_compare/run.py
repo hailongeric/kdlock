@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Compare Linux native, the TCLock port and kdlock through direct lock APIs.
 
-Freeze one workload per backend; measure once by default. Explicit extra
-rounds alternate arm order. Preparation is excluded; acceptance checks remain.
+Freeze one workload per backend; measure both KD admission modes once by default.
+Explicit extra rounds alternate arm order. Preparation is excluded; acceptance checks remain.
 Build/run exclusively in the recovery guest, retaining failures without retry.
 """
 import argparse
@@ -22,6 +22,8 @@ from bench_runtime import HERE, WORKLOAD, PROVIDER, require, command, digest, Fa
 from summarize import write_json, csv_file, valid
 from session import BackendSession, TC_MODULE, GUARD_MODULE
 from context_audit import audit as audit_context
+
+DEFAULT_HOTLOCK_MODES = ('observe', 'adaptive')
 
 
 def idle():
@@ -50,15 +52,23 @@ def make_plan(args):
     result = []
     workload = getattr(args, 'workload', 'cacheline')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1, 16])
+    modes = getattr(args, 'hotlock_mode', DEFAULT_HOTLOCK_MODES)
+    if isinstance(modes, str):
+        modes = [modes]
+    # Admission belongs to KD only. Share each Linux/TCLock baseline between
+    # modes, but give every KD policy its own freshly loaded session and name.
+    variants = [(backend, mode) for backend in args.backends
+                for mode in (dict.fromkeys(modes) if backend == 'kdlock' else ['not_applicable'])]
     for n, t, repeat in itertools.product(sizes, args.threads, range(args.repeats)):
-        arms = list(args.backends)
+        arms = list(variants)
         if repeat % 2:
             arms.reverse()
-        for backend in arms:
+        for backend, mode in arms:
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
-            result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}',
+            suffix = f'-{mode}' if backend == 'kdlock' else ''
+            result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
-                api_mode='direct', workload=workload, hotlock_mode=getattr(args, 'hotlock_mode', 'observe'),
+                api_mode='direct', workload=workload, hotlock_mode=mode,
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
                 iterations=args.iterations, cpus=list(range(t))))
@@ -75,6 +85,7 @@ def report(out):
             path = out/spec['name']/'session.json'
             row = json.loads(path.read_text()) if path.exists() else {}
             rows.append(dict(name=spec['name'], scenario=spec['scenario'],
+                hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
                 status=row.get('execution_status', 'NOT_RUN'),
                 drained=row.get('drained', False),
                 completed=row.get('measurement', {}).get('completed', 0),
@@ -91,15 +102,18 @@ def report(out):
         r['throughput_ops_s'] = m['completed']*1e9/m['wall_ns'] if valid(r) else None
         r['amortized_ns_op'] = m['wall_ns']/m['completed'] if valid(r) else None
         records.append(r)
-        groups.setdefault((r['cachelines'], r['threads'], r['arm']), []).append(r)
+        # Never select a winner across observe/adaptive: they exercise different
+        # admission policies even when their payload and backend binary match.
+        mode = r.get('hotlock_mode', 'unrecorded')
+        groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm), rows in groups.items():
+    for (n, t, arm, mode), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
-                   hotlock_mode=rows[0].get('hotlock_mode', 'unrecorded'),
+                   hotlock_mode=mode,
                    spin_delegate=rows[0].get('spin_delegate', 'on'),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -135,7 +149,9 @@ def main():
     p.add_argument('--functional', action='store_true',
                    help='KD functional acceptance only; no throughput report')
     kernel_identity.arguments(p)
-    p.add_argument("--hotlock-mode", choices=("observe", "adaptive"), default="observe")
+    p.add_argument("--hotlock-mode", choices=DEFAULT_HOTLOCK_MODES, nargs='+',
+                   default=list(DEFAULT_HOTLOCK_MODES),
+                   help='KD admission modes (default: observe adaptive); baselines run once')
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
     p.add_argument("--spin-delegate", choices=("on", "off"), default="on",
                    help="off: explicit KD self-execution control, no JIT acceptance")

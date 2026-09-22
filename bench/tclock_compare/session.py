@@ -112,6 +112,7 @@ class BackendSession(Session):
             params = parameters()
             require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
                     int(params['bench_lock_addr']) == layout['lock_addr'] and
+                    params['hotlock_mode'] == self.record['hotlock_mode'] and
                     params['spin_delegate'] == ('N' if self.record.get('spin_delegate') == 'off' else 'Y'),
                     'kdlock observation parameters differ')
             self.record['parameters'] = params

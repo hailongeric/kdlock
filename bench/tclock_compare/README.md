@@ -1,6 +1,10 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
-最新[MCS4 / 40亿CPU窗口完整单轮结果](results/20260922-spin-mcs4-full-benchmark.md)：
+最新[adaptive快速三方结果](results/20260922-adaptive-quick.md)：18/18场、1500万次计时操作完成并排空，
+4/4竞争KD有实际JIT；1线程KD c1/c16为8.445/6.940 Mops/s，20线程为5.048/4.818 Mops/s。
+运行器默认已同时运行KD observe和adaptive，分别汇总；本轮性能只测adaptive。
+
+此前[MCS4 / 40亿CPU窗口完整单轮结果](results/20260922-spin-mcs4-full-benchmark.md)：
 30/30场通过并排空，8/8竞争KD有实际JIT。20线程KD c1/c16为5.009/4.768 Mops/s，
 为TCLock的1.018×/1.462×；c1单线程较上一轮下降10.16%，单轮差异尚未归因。
 
@@ -62,9 +66,11 @@ O/N `compare.py` 仅用于追溯历史结果。功能检查仍按需要单独选
 后端先加载，直接依赖它的样例后加载。运行器在没有 worker 时绑定只读观测
 使用的锁地址，再调用 `SC_PREPARE` 显式登记选定正文的锁后 RIP 和 KD 对象。
 kdlock 等唯一条目发布为 NORMAL、翻译进程退出并停止 daemon 后，再执行各组
-相同的单 CPU 48000 次预热。准备与预热均不计时。默认 observe 固定准入；adaptive 各 CPU 在测量开始后自然积累热度。
+相同的单 CPU 48000 次预热。准备与预热均不计时。默认分别运行 observe 固定准入和
+adaptive 自适应准入；每个 KD 会话重新加载 provider，热度不跨模式继承。
 
-默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 三种后端 × 一轮 = 30 场**，
+默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 四项 × 一轮 = 40 场**，
+四项为 Linux、TCLock、KD observe、KD adaptive；Linux/TCLock 每配置各测一次，供两种 KD 模式比较。
 `--repeats` 默认为 1，每线程仍为 100000 次；仅在用户明确要求重复测量时增加轮次。
 仅保留这一组直接调用方式，不再使用 `--abis`。
 只在 recovery guest 中按[操作手册](../../docs/AGENTS.md)核对快照、依赖和空闲状态；
@@ -82,6 +88,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 排空检查；独立单元、SELFTEST、`--functional` 或六场小矩阵不作为固定前置步骤。
 需要定向排查时再追加 `--cachelines 1 --threads 1 4 --iterations 10000` 缩小范围。
 `--dry-run` 只打印矩阵。`STOP` 文件在已排空会话之间生效；失败或超时保留证据并停止。
+`--hotlock-mode observe adaptive` 显式选择默认双模式；也可只选 `adaptive` 或 `observe`。
+快速三方 adaptive 矩阵可追加 `--hotlock-mode adaptive --threads 1 4 20`，共18场，仍每线程100000次、每配置一轮。
 
 构建通过后端 `Module.symvers` 解析导出符号，保存三个样例的反汇编与未定义符号，
 检查目标锁不再导入统一 spin hook。原生组不加载任何锁 provider。
@@ -116,7 +124,8 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 上述字段保持兼容，一轮时获选会话就是该唯一有效样本；仅显式增加轮次时才从
 有效样本取最大值。相对 Linux 的比值使用各后端获选值除以 Linux 获选值，
 KD/TCLock 同理；保留有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
-正确、完成且已排空的样本参与汇总。hotlock 不参与结果表。
+正确、完成且已排空的样本参与汇总。KD 按 `hotlock_mode` 分开汇总，不跨模式取最大值；
+热表计数保留在原始日志，不参与性能评分。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
 代理次数与比例记为 null、状态为 `UNMEASURED`，不把未知写成零或实际代理通过。
@@ -134,17 +143,16 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py codegen/test_clobber_a
 python3 bench/tclock_compare/test_direct.py
 ```
 
-2026-09-22 单轮默认值调整已在 guest 通过运行器单元 11/11；CLI dry-run 核对
-cacheline 30 场、RCUHT 15 场、KD 功能模式 10 场均只有第 0 轮。
-本次未加载模块或测量性能；原始命令、退出码及源码哈希位于 guest
-`/root/kdlock-evidence/bench-single-round-20260922/`。
+2026-09-22 双模式默认值及独立汇总已在guest通过运行器单元12/12；CLI dry-run核对
+cacheline40场、RCUHT20场，KD功能模式20场由单元检查，默认均只有第0轮。
+本轮另完成adaptive快速18场性能测量，原始命令、退出码、哈希及范围见[报告](results/20260922-adaptive-quick.md)。
 
 ## 本次结果
 
-最新测量见[MCS4 / 40亿CPU窗口完整单轮报告](results/20260922-spin-mcs4-full-benchmark.md)：
-基于`383249f`的当前工作区，30/30场、2940万次操作完成并排空，8/8竞争KD有实际JIT，
-2场单线程KD为原生自执行。20线程c1/c16的KD为5.009/4.768 Mops/s。
-每配置一轮；报告保留三方吞吐、摊销时间、比值、冻结输入及完整环境和排空证据。
+最新测量见[adaptive快速三方报告](results/20260922-adaptive-quick.md)：基于`4081b09`的工作区，
+c1/c16 × 1/4/20线程 × 三后端 × 一轮，18/18场、1500万次操作完成并排空。
+4/4竞争KD有实际JIT，两场单线程为NO_JIT；20线程KD为5.048/4.818 Mops/s。
+本轮未重测observe，完整双模式性能矩阵尚未运行。
 
 此前五轮中位数及功能实验保留原统计口径，从[历史索引](../spin_cacheline/results/HISTORY.md)
 读取，不能作为本轮单次测量的成绩。
@@ -179,7 +187,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --workload rcuht --backends native tclock kdlock --output /root/kdlock-evidence/rcuht-new
 ```
 
-哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 三后端 × 一轮，共 15 场。
+哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 四项 × 一轮，共 20 场。
 可直接测性能；需要定向排查时用 `--threads 1 4 --iterations 10000` 缩小范围。每次 snapshot 在
 计时外验证节点地址、链表回链、无环、桶归属、键唯一性和 4096 节点总数；每个
 操作必须恰好计入搬移/冲突/未命中之一。`before/after` 的前四项为总操作、搬移、
@@ -190,11 +198,13 @@ v2，客户端和 workload 模块必须同时重建。
 
 ## 准入模式与结果解释
 
-`--hotlock-mode observe`（运行器默认）固定 KD 准入并记录本地统计，
+运行器默认同时运行 `--hotlock-mode observe adaptive`。
+`observe` 固定 KD 准入并记录本地统计，
 `--hotlock-mode adaptive` 使用 spin CPU 每4次实际MCS入队、单锁入口 count 大于32（33次）的
 独立时间窗口确认；每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
 满表不覆盖已有身份，未收录锁或冷锁保持原生。
-两者必须分开结果目录；
+两者使用同一输出根目录下带 `-kdlock-observe` / `-kdlock-adaptive` 后缀的独立会话目录，
+汇总保留模式列；Linux/TCLock 标为 `not_applicable`。
 单 CPU 预热不会让其他 CPU 自动变热，冷 CPU 的测量前缀属于自适应效果的一部分。
 `--scenario nested` 和 `--scenario early` 只允许 KD cacheline，用于双锁协议回归；
 默认 `plain` 保持原三锁性能负载。
