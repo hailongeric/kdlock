@@ -52,9 +52,11 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 热锁使用每 CPU/type 256 桶、256 条精确地址记录，冲突按完整地址匹配，
 直接增加该锁 count，无候选分数或淘汰。初始化 `alloc_percpu` 每 CPU 13376 字节，
 entry/table/cpu 为 24/6688/13376 字节，CPU 对齐 64；锁路径不分配。
-CPU 每 1024 次检查 400 亿 TSC 窗口，CPU 热才查表；单锁 count 大于 1024
+spin CPU 每 32 次实际 MCS 入队检查 400 亿 TSC 窗口，fast/pending 不计数；
+mutex CPU 保持每 1024 次入口调用检查。入口读缓存 CPU 热值，CPU 热才查表；单锁 count 大于 1024
 （第 1025 次）时检查 25 亿 TSC 窗口、刷新 hot、更新时间并清零计数。
-CPU 冷却/重新变热重置计数/热值但保留映射，同次到期共享 TSC。query 只读缓存。
+CPU 冷却/重新变热重置计数/热值但保留映射，mutex 同次到期共享 TSC；
+spin CPU/单锁在各自事件中采时。query 只读缓存，CPU 新热值由后续入口使用。
 默认 adaptive 在表满时令未记录的新锁走原生；observe 固定准入。
 OWNER/ticket/frame 不依赖热表，解锁不查表；有效地址与初始化/排空由调用者保证。
 SELFTEST 的 `hotlock_lifetime_selftest=1 hotlock_mode=observe` 验证表满不覆盖

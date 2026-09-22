@@ -63,11 +63,14 @@ static u32 atomic_cmpxchg_acquire(atomic_t *p, u32 expected, u32 value)
  (cas_calls++, __atomic_compare_exchange_n(&(p)->counter, expected, value, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))
 static u32 encode_tail(int c, int idx) { return ((c + 1) << 18) | (idx << 16); }
 static struct kd_spin_node *decode_tail(u32 tail) { return &pool[(tail >> 18) - 1][(tail >> 16) & 3]; }
-static u32 xchg_tail(struct qspinlock *p, u32 tail)
-{
- queued++; swaps++;
- return (u32)__atomic_exchange_n(&p->tail, tail >> 16, __ATOMIC_ACQ_REL) << 16;
-}
+/* Run the production publication boundary; only its atomic primitive and
+ * sampler are substituted. Every queued operation must record exactly once. */
+#define _Q_TAIL_OFFSET_HL 16
+static bool kd_spin_delegate = true;
+static _Thread_local unsigned long mcs_samples;
+static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; }
+#define xchg(p,v) (queued++, swaps++, __atomic_exchange_n(p,v,__ATOMIC_ACQ_REL))
+#include "spin_mcs_tail.h"
 static u32 kd_spin_fetch_set_pending_acquire(struct qspinlock *p)
 { return __atomic_fetch_or(&p->val.counter, 256, __ATOMIC_ACQUIRE); }
 static void clear_pending(struct qspinlock *p) { __atomic_fetch_and(&p->val.counter, ~256U, __ATOMIC_RELAXED); }
@@ -93,7 +96,7 @@ static void *worker(void *arg)
  }
  /* One initial CAS, and at most one queue-tail claim CAS per operation.
   * Failed contender retries must be loads/local waits, not global RMWs. */
- assert(cas_calls>=50000 && cas_calls<=100000 && swaps==queued);
+ assert(cas_calls>=50000 && cas_calls<=100000 && swaps==queued && mcs_samples==queued);
  __atomic_fetch_add(&queue_total, queued, __ATOMIC_RELAXED);
  __atomic_fetch_add(&read_total, local_reads, __ATOMIC_RELAXED);
  return NULL;
@@ -101,6 +104,11 @@ static void *worker(void *arg)
 int main(void)
 {
  pthread_t threads[CPUS];
+ /* Delegation-off preserves the protocol but disables CPU statistics. */
+ struct qspinlock disabled={0};
+ kd_spin_delegate=false;
+ assert(!xchg_tail(&disabled,1U<<16) && disabled.tail==1 && !mcs_samples);
+ kd_spin_delegate=true; queued=swaps=0;
  pthread_barrier_init(&start, NULL, CPUS);
  for (long i=0;i<CPUS;i++) assert(!pthread_create(&threads[i], NULL, worker, (void *)i));
  for (int i=0;i<CPUS;i++) assert(!pthread_join(threads[i], NULL));

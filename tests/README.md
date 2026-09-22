@@ -1,6 +1,11 @@
 # 当前测试入口
 
-最新 [MCS 频率统计回退](../bench/tclock_compare/results/20260922-spin-mcs-rollback.md)
+最新 [CPU32 MCS 计数验证](../bench/tclock_compare/results/20260922-spin-mcs32.md)：
+基础及相关单元6/6、14个热度错误变体检测、normal/SELFTEST构建通过。
+三方单轮18/18场与adaptive/plain两场均完成排空；adaptive四线程实际JIT为235995次。
+本次SELFTEST只构建，未运行生命周期探针或nested/early live；详细边界见报告。
+
+此前 [MCS 频率统计回退](../bench/tclock_compare/results/20260922-spin-mcs-rollback.md)
 恢复 `bf16b10` 的调用计数。基础及相关单元 6/6、运行器 11/11、normal/SELFTEST
 构建和生命周期探针通过；adaptive/plain 的 1/4 线程共完成 50 万次操作并排空，
 单线程 JIT=0、四线程实际 JIT=244030。本次未重跑性能矩阵。

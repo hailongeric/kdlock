@@ -57,6 +57,11 @@ static __always_inline void clear_pending_set_locked(struct qspinlock *word)
 
 static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)
 {
+	/* Shared by native, delegated and virtual producers. Count once at actual
+	 * publication, excluding fast/pending, cancelled requests and node-exhaustion
+	 * polling. Refused/cold entries still reach this point and warm their CPU. */
+	if (kd_spin_delegate)
+		kd_hotlock_record_spin_mcs_pinned();
 	return ((u32)xchg(&word->tail, tail >> _Q_TAIL_OFFSET_HL))
 	       << _Q_TAIL_OFFSET_HL;
 }

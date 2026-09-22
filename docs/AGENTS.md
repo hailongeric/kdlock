@@ -274,5 +274,5 @@ frame。旧测试操作细节仅见匹配 Git 历史，不是当前 live 的运�
 必须重新核对映射，不能只凭guest绑核声称物理同节点。证据见[回归报告](../bench/tclock_compare/results/20260922-performance-recovery.md)。
 
 2026-09-22 后续512槽直接映射实验因性能下降再次按用户要求撤回；
-当前代码恢复 `bf16b10` 的256桶/256记录实现。实验结果仅保留为历史，
+该次代码恢复 `bf16b10` 的256桶/256记录实现。实验结果仅保留为历史，
 见[记录](../bench/tclock_compare/results/20260922-directhash-v2-performance.md)。

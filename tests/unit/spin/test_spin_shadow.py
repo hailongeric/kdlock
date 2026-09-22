@@ -115,6 +115,8 @@ def main():
         run_environment = dict(os.environ)
         run_environment.pop("KD_NODE_MUTATION", None)
         (path / "spin_shadow_types.h").write_text(types)
+        (path / "spin_mcs_tail.h").write_text(definition(
+            source, "static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)"))
         (path / "spin_request_type.h").write_text(
             definition(source, "struct kd_spin_request {").rstrip() + ";\n"
         )

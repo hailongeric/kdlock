@@ -16,8 +16,11 @@ ROOT = Path(__file__).resolve().parents[3]
 def main():
     with tempfile.TemporaryDirectory(prefix='kd-nondelegated-') as directory:
         binary = Path(directory) / 'test'
+        queue = (ROOT/'kernel_module/spin/queue.inc').read_text()
+        (Path(directory)/'spin_mcs_tail.h').write_text(definition(
+            queue, 'static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)'))
         subprocess.run(['cc', '-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
-                        '-pthread', '-I', str(ROOT),
+                        '-pthread', '-I', str(ROOT), '-I', directory,
                         str(ROOT/'tests/unit/spin/spin_nondelegated_fixture.c'),
                         '-o', str(binary)], check=True, timeout=30)
         subprocess.run([str(binary)], check=True, timeout=40)

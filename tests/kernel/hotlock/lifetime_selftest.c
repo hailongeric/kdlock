@@ -54,7 +54,11 @@ int kd_hotlock_lifetime_check(void)
  /* Observe is required so one fresh acquisition uses the actual fast owner. */
  if (!kd_hotlock_observe) return -EINVAL;
  kd_spin_lock_abi(&lock, 0, 0, 0, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
- for (i = 0; i < 3 * KD_HOTLOCK_CHECK_INTERVAL; i++) kd_hotlock_record_spin(address);
+ /* This ownership probe has no peers. Explicitly simulate the CPU events;
+  * real adaptive warmup is checked separately with contended workloads. */
+ for (i = 0; i < 2 * KD_HOTLOCK_SPIN_MCS_INTERVAL; i++)
+  kd_hotlock_record_spin_mcs_pinned();
+ for (i = 0; i <= KD_HOTLOCK_SAMPLE_TARGET; i++) kd_hotlock_record_spin(address);
  t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
  if (!kd_hotlock_find(t, address)) ret = -EUCLEAN;
  /* Fill with distinct identities and try one more. A full exact table must
@@ -65,7 +69,7 @@ int kd_hotlock_lifetime_check(void)
      kd_hotlock_find(t, address + 64 * KD_HOTLOCK_ENTRIES) ||
      kd_spin_debug_owner((void *)&lock) != (unsigned long)current || !lock.locked)
   ret = -EUCLEAN;
- pr_info("kd_hotlock role: type=spin address=%lx role=OWNER retained=%u full=%u owner=%d\n",
+ pr_info("kd_hotlock role: type=spin address=%lx role=OWNER retained=%u full=%u owner=%d preparation=simulated_mcs\n",
          address, retained, t->used == KD_HOTLOCK_ENTRIES, current->pid);
  kd_spin_unlock(&lock);
  if (atomic_read(&lock.val)) ret = -EUCLEAN;

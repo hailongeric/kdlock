@@ -324,7 +324,10 @@ static void kd_spin_claim_origin(const struct kd_spin_request *request)
 		*(p) = (value);                                        \
 	} while (0)
 
-static int xchg_tail(struct qspinlock *lock, int tail)
+static unsigned int mcs_samples, tail_exchanges;
+static bool kd_spin_delegate = true;
+static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; }
+static int mock_xchg_tail(struct qspinlock *lock, int tail)
 {
 	CHECK(lock == &scheduling_word);
 	int old = lock->val;
@@ -358,6 +361,18 @@ static int xchg_tail(struct qspinlock *lock, int tail)
 		     16;
 	return old;
 }
+
+/* Keep production event placement around the scripted atomic tail exchange. */
+static u16 mock_tail_exchange(u16 *address, u16 value)
+{
+	tail_exchanges++;
+	CHECK(mcs_samples == tail_exchanges);
+	return (u32)mock_xchg_tail(container_of(address, struct qspinlock, tail),
+				 (u32)value << 16) >> 16;
+}
+#define _Q_TAIL_OFFSET_HL 16
+#define xchg(p,v) mock_tail_exchange(p,v)
+#include "spin_mcs_tail.h"
 
 static bool atomic_try_cmpxchg_relaxed(int *value, int *old, int replacement)
 {
@@ -1067,5 +1082,6 @@ int main(void)
 	run_observer_checks();
 	kd_spin_selftest_nodes_report();
 	run_observer_allocation_checks();
+	CHECK(mcs_samples == tail_exchanges && tail_exchanges > 0);
 	return failures ? 1 : 0;
 }

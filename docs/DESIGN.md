@@ -97,22 +97,29 @@ locks cold under adaptive admission, retaining existing identities until unload.
 
 Initialization reserves 13376 bytes per CPU (two 6688-byte tables, 24-byte entries)
 and seeds CPU clocks. Valid addresses and initialized lifetime are caller
-preconditions. CPU/type checks its 40-billion-TSC window every 1024 records;
+preconditions. Spin CPU heat checks its 40-billion-TSC window every 32 actual
+MCS tail publications; mutex CPU heat still checks every 1024 entry records.
+The shared spin tail exchange counts native, delegated and virtual producers;
+fast/pending success, pre-publication cancellation and exhausted-node polling
+do not count. Entry admission stays in place and consumes cached CPU heat;
 only a hot CPU accesses the lock table. A lock checks its 2.5-billion-TSC window
 when its count is **greater than 1024**, at hit 1025. The check refreshes its hot
 flag and timestamp and resets the count. Strictly smaller elapsed time and
-nondecreasing TSC are required; coincident CPU/lock checks share one TSC read.
+nondecreasing TSC are required. Mutex coincident CPU/lock checks share one TSC
+read; spin lock sampling reads its own timestamp because MCS is a separate event.
 Continuous CPU heat preserves independent lock batches. Cold/reheating CPU checks
 reset per-lock counts/heat/timestamps while retaining all hash mappings.
 Queries only read cached heat, which can remain stale until the next batch check.
-The first CPU batch includes startup idle; a single lock can first become hot at
-record 2048. See [flow and storage](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取).
+The first CPU batch includes startup idle. Spin entries alone cannot warm a cold
+CPU; native MCS publications can, and later entries accumulate the unchanged
+1025-hit lock batch. Mutex can first warm a single lock at record 2048.
+See [flow and storage](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取).
 
 IRQ/NMI reentry drops only a sample; the statistics pin ends before mutex sleep.
 `adaptive` is the load default; `observe` records statistics but fixes admission,
 even for unknown identities at capacity. Public spin skips sampling when delegation
-is disabled. Neither policy supplies JIT safety permission. The MCS note/admit
-experiment remains reverted; only the sampler changes here.
+is disabled. Neither policy supplies JIT safety permission. Admission remains
+at entry; MCS publication only updates CPU heat for subsequent entries.
 
 Fast owners/tickets and stable request frames retain OWNER/WAITER/COMBINER/DONE
 independently of the statistics table. Capacity, reset and CPU migration cannot
