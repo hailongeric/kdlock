@@ -89,6 +89,10 @@ CHECK
 
 ### 3.4 构建和选择检查
 
+代码修改后可直接运行[三方性能命令](../bench/tclock_compare/README.md#准备与运行)，
+默认每配置一轮；运行器负责构建及业务、IRQ/preempt、JIT 和排空检查。
+以下独立构建与单元入口按需使用，不要求先跑完再测性能：
+
 ```sh
 make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1
 make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'

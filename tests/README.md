@@ -91,6 +91,10 @@ JIT 和 120 场性能对照的冻结结果见 [两级采样报告](../bench/tclo
 
 ## 单元检查
 
+代码修改后可直接运行[单轮性能测试](../bench/tclock_compare/README.md#准备与运行)，
+使用其内置业务、IRQ/preempt、JIT 和排空检查。独立单元、SELFTEST、`--functional`
+及小矩阵按需选择，不作为性能测试的固定前置步骤。
+
 ```sh
 make -C tests/unit run
 make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.py infrastructure/test_hotlock_sampling.py'

@@ -98,13 +98,20 @@ class DirectTests(unittest.TestCase):
             with self.assertRaises(run.Failure):
                 run.runtime.validate_measurement(broken, spec, 10)
 
-    def test_cli_defaults_to_two_rounds(self):
-        output = io.StringIO()
-        with patch.object(sys, 'argv', ['run.py', '--output', '/tmp/unused', '--dry-run']), contextlib.redirect_stdout(output):
-            self.assertEqual(run.main(), 0)
-        plan = json.loads(output.getvalue())
-        self.assertEqual(len(plan), 60)
-        self.assertEqual({s['repeat'] for s in plan}, {0, 1})
+    def test_cli_defaults_to_one_round(self):
+        # Exercise the CLI default for both payloads and functional admission;
+        # a second measurement must be an explicit choice, not an implicit run.
+        for extra, sessions in (([], 30), (['--workload', 'rcuht'], 15),
+                                (['--functional', '--backends', 'kdlock'], 10)):
+            with self.subTest(args=extra):
+                output = io.StringIO()
+                argv = ['run.py', '--output', '/tmp/unused', '--dry-run', *extra]
+                with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
+                    self.assertEqual(run.main(), 0)
+                plan = json.loads(output.getvalue())
+                self.assertEqual(len(plan), sessions)
+                self.assertEqual(len({s['name'] for s in plan}), sessions)
+                self.assertEqual({s['repeat'] for s in plan}, {0})
 
     def test_empty_summary_has_no_winner(self):
         plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=2,

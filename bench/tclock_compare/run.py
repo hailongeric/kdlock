@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Compare Linux native, the TCLock port and kdlock through direct lock APIs.
 
-Freeze one workload per backend; alternate all arms in each
-repeat. Preparation is excluded, correctness and actual delegation are required.
+Freeze one workload per backend; measure once by default. Explicit extra
+rounds alternate arm order. Preparation is excluded; acceptance checks remain.
 Build/run exclusively in the recovery guest, retaining failures without retry.
 """
 import argparse
@@ -127,7 +127,8 @@ def main():
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,16))
     # The direct comparison uses all five agreed contention levels.
     p.add_argument('--threads', type=int, nargs='+', choices=(1,4,8,16,20), default=[1,4,8,16,20])
-    p.add_argument('--repeats', type=int, default=2)
+    p.add_argument('--repeats', type=int, default=1,
+                   help='measurement rounds per configuration (default: 1)')
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--dry-run', action='store_true')

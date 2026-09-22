@@ -44,8 +44,9 @@ O/N `compare.py` 仅用于追溯历史结果。功能检查仍按需要单独选
 kdlock 等唯一条目发布为 NORMAL、翻译进程退出并停止 daemon 后，再执行各组
 相同的单 CPU 48000 次预热。准备与预热均不计时。默认 observe 固定准入；adaptive 各 CPU 在测量开始后自然积累热度。
 
-默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 三种后端 × 两轮 = 60 场**，
-每线程 100000 次，奇数轮逆序。仅保留这一组直接调用方式，不再使用 `--abis`。
+默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 三种后端 × 一轮 = 30 场**，
+`--repeats` 默认为 1，每线程仍为 100000 次；仅在用户明确要求重复测量时增加轮次。
+仅保留这一组直接调用方式，不再使用 `--abis`。
 只在 recovery guest 中按[操作手册](../../docs/AGENTS.md)核对快照、依赖和空闲状态；
 现有 `kdclobber2` 内核不重建。输出必须是新的仓库外目录。
 
@@ -57,7 +58,9 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --output /root/kdlock-evidence/direct-new
 ```
 
-首次先追加 `--cachelines 1 --threads 1 4 --repeats 1 --iterations 10000` 做六场验证。
+代码修改后可直接执行上述性能命令，运行器同时完成业务、IRQ/preempt、JIT 和
+排空检查；独立单元、SELFTEST、`--functional` 或六场小矩阵不作为固定前置步骤。
+需要定向排查时再追加 `--cachelines 1 --threads 1 4 --iterations 10000` 缩小范围。
 `--dry-run` 只打印矩阵。`STOP` 文件在已排空会话之间生效；失败或超时保留证据并停止。
 
 构建通过后端 `Module.symvers` 解析导出符号，保存三个样例的反汇编与未定义符号，
@@ -86,11 +89,13 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 
 ## 验收与结果
 
-2026-09-22 起默认每组两轮，三种后端各取有效样本中的最大吞吐。
+2026-09-22 用户最新要求为每配置一轮，三种后端分别报告唯一有效样本的吞吐。
 `summary.csv/json` 用 `best_throughput_ops_s`、`best_amortized_ns_op` 报告同一
 获选会话的吞吐与摊销时间，`best_session` 指向原始会话，
 `comparison_policy=best_valid_throughput` 标明口径；不再输出 `median_*` 字段。
-相对 Linux 的比值使用各后端最大值除以 Linux 最大值，KD/TCLock 同理；保留有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
+上述字段保持兼容，一轮时获选会话就是该唯一有效样本；仅显式增加轮次时才从
+有效样本取最大值。相对 Linux 的比值使用各后端获选值除以 Linux 获选值，
+KD/TCLock 同理；保留有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
 正确、完成且已排空的样本参与汇总。hotlock 不参与结果表。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
@@ -108,6 +113,11 @@ retirement 成功 → 卸载样例 → 卸载后端。TCLock 在样例存储释�
 make -C tests/unit run PY_TESTS='spin/test_spin_direct.py codegen/test_clobber_abi.py admission/test_clobber_entry.py spin/test_tclock_context.py execution/test_exe_registry.py spin/test_spin_outer_progress.py'
 python3 bench/tclock_compare/test_direct.py
 ```
+
+2026-09-22 单轮默认值调整已在 guest 通过运行器单元 11/11；CLI dry-run 核对
+cacheline 30 场、RCUHT 15 场、KD 功能模式 10 场均只有第 0 轮。
+本次未加载模块或测量性能；原始命令、退出码及源码哈希位于 guest
+`/root/kdlock-evidence/bench-single-round-20260922/`。
 
 ## 本次结果
 
@@ -150,8 +160,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --workload rcuht --backends native tclock kdlock --output /root/kdlock-evidence/rcuht-new
 ```
 
-哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 三后端 × 两轮，共 30 场。
-先用 `--threads 1 4 --repeats 1 --iterations 10000` 做六场验证。每次 snapshot 在
+哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 三后端 × 一轮，共 15 场。
+可直接测性能；需要定向排查时用 `--threads 1 4 --iterations 10000` 缩小范围。每次 snapshot 在
 计时外验证节点地址、链表回链、无环、桶归属、键唯一性和 4096 节点总数；每个
 操作必须恰好计入搬移/冲突/未命中之一。`before/after` 的前四项为总操作、搬移、
 冲突、未命中，余项为零；`cachelines=0` 仅是内部 hash 正文编号。表与 counters
