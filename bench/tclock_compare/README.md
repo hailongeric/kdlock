@@ -1,9 +1,14 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
+最新[CPU窗口400亿/MCS阈值1重测](results/20260922-spin-mcs1-window4e10.md)：
+60/60配置各测一次、3600万次操作通过并排空，基础/采样3组及25个错误变体检查通过。
+队列门槛仍为4；新壳三线程较同期保留壳提高47.62%–69.92%，二十线程仍下降2.90%–8.43%，
+c1两线程observe下降14.85%。参数按用户要求保留，冷捷径及新壳继续默认关闭。
+
 当前冷入口调用壳改为 `cold_clobber`：宏内联读取 per-CPU 热度，热分支沿用
 clobber-v1，不再手工保存/恢复五个寄存器；冷分支仍包含完整 pending/MCS 获取。
 新增 `--spin-hot-min-queue` 调节低竞争 CPU 的升温门槛。
-[本轮结果](results/20260922-spin-cold-clobber-queue.md)：60配置各测一次，首段9通过/1少线程JIT判定失败，
+[此前调用壳验证](results/20260922-spin-cold-clobber-queue.md)：60配置各测一次，首段9通过/1少线程JIT判定失败，
 修正运行器后续50通过；生产源码/ELF相同，失败未改判或重测。3线程提高48%–61%，
 20线程observe仍下降5.67%–5.83%，c1单线程adaptive短批次下降9.05%，继续默认关闭。
 7场功能、4场长批次PMU通过。下方旧`paired`壳成绩仅作历史。
@@ -35,9 +40,9 @@ clobber-v1，不再手工保存/恢复五个寄存器；冷分支仍包含完整
 30/30 场通过，计时区间 2940 万次操作全部排空。单线程 KD c1/c16 为
 6.369/5.779 Mops/s；20 线程为 4.974/4.760 Mops/s。每配置只测一轮。
 
-默认关闭冷捷径时，spin CPU 每4次实际MCS入队检查热度；开启队列门槛时冷CPU改计合格队头获取。
+默认关闭冷捷径时，spin CPU 每次实际MCS入队检查热度；开启队列门槛时冷CPU改计合格队头获取。
 fast/pending 不计数；spin/mutex 单锁
-阈值为32，第33次调用采时。mutex CPU 保持1024次入口检查，两类CPU窗口均为40亿TSC ticks。
+阈值为32，第33次调用采时。mutex CPU 保持1024次入口检查，两类CPU窗口均为400亿TSC ticks。
 热表已删除 busy/barrier，只在 task context 统计并保留 CPU pin；非 task 样本丢弃。
 此前 CPU 阈值为 1024 的 MCS 入队频率实验已因退化撤回，
 [该次回退验证](results/20260922-spin-mcs-rollback.md)通过，当时未重跑性能矩阵；
@@ -93,7 +98,7 @@ kdlock 使用显式 32 位 KD 锁字，保留 owner/ACK、上下文和 JIT 就�
 每次完整操作保留原来的固定 cacheline 更新、解锁后四组乘加及循环成本。
 吞吐和摊销 ns/op 都以完整操作计算，不是独立获取锁延迟。
 
-当前保留入口准入和ticket路径优化；热度使用无候选的精确地址哈希计数，spin CPU每4次合格MCS事件、单锁入口计数大于32时定时确认，mutex CPU仍统计1024次调用。同期复现、独立采样、
+当前保留入口准入和ticket路径优化；热度使用无候选的精确地址哈希计数，spin CPU每次合格MCS事件、单锁入口计数大于32时定时确认，mutex CPU仍统计1024次调用。同期复现、独立采样、
 两个候选与回退验收见 [竞争回退报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
 
 ## 准备与运行
@@ -192,7 +197,8 @@ cacheline40场、RCUHT20场，KD功能模式20场由单元检查，默认均只�
 
 ## 本次结果
 
-最新测量见[内联clobber与队列门槛报告](results/20260922-spin-cold-clobber-queue.md)。
+最新测量见[CPU窗口400亿/MCS阈值1报告](results/20260922-spin-mcs1-window4e10.md)。
+此前调用壳修改见[内联clobber与队列门槛报告](results/20260922-spin-cold-clobber-queue.md)。
 此前[共享CPU热度cookie报告](results/20260922-spin-cpu-hot-cookie.md)包含单轮36场
 三方同期结果、竞争默认门槛和独立长批次PMU；机器码、功能及源码身份也保存在该报告。
 
@@ -247,7 +253,7 @@ v2，客户端和 workload 模块必须同时重建。
 
 运行器默认同时运行 `--hotlock-mode observe adaptive`。
 `observe` 固定 KD 准入并记录本地统计；冷捷径开启时须先满足CPU热度门槛。
-`--hotlock-mode adaptive` 使用 spin CPU 每4次实际MCS入队、单锁入口 count 大于32（33次）的
+`--hotlock-mode adaptive` 使用spin CPU每次合格MCS事件、单锁入口 count 大于32（33次）的
 独立时间窗口确认；每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
 满表不覆盖已有身份，未收录锁或冷锁保持原生。
 两者使用同一输出根目录下带 `-cold-{on|off}-q{N}-{observe|adaptive}` 的独立会话目录，

@@ -27,10 +27,10 @@ void kd_hotlock_exit(void);
 /* A valid lock identity and successful initialization are caller preconditions;
  * all callers must drain before exit. Reuse an existing CPU pin; otherwise pin
  * only this call (including sleepable mutex callers). Spin CPU rate is checked
- * every four eligible MCS events; cold-fastpath CPUs with a nonzero queue
+ * at every eligible MCS event; cold-fastpath CPUs with a nonzero queue
  * minimum count qualifying queue-head acquisitions, while hot CPUs and the
  * original policy count publications. Mutex still uses 1024 entry records.
- * Both CPU clocks require a batch shorter than 4000000000 TSC ticks.
+ * Both CPU clocks require a batch shorter than 40000000000 TSC ticks.
  * Each exact lock counter counts entries and checks when it exceeds 32.
  * Tables are preallocated (256 entries per CPU/type), with no ranked eviction.
  * Unknown locks at capacity remain cold; queries neither count nor tick.

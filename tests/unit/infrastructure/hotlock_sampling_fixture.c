@@ -75,7 +75,7 @@ static void mcs(unsigned int n)
  pins--;
 }
 static void warm_spin(unsigned long addr)
-{ mcs(4); hits(addr,33); }
+{ mcs(1); hits(addr,33); }
 static void reset(void)
 {
  if(kd_hotlock_cpu) kd_hotlock_exit();
@@ -141,18 +141,18 @@ static void init_and_pins(void)
  kd_hotlock_record_mutex(0x2000);
  assert(!pins && disables==before_disable+1 && enables==before_enable+1);
 }
-/* Spin entries never advance the CPU clock. Every fourth MCS hit checks CPU heat;
+/* Spin entries never advance the CPU clock. Every eligible MCS hit checks CPU heat;
  * the lock counter needs 33 subsequent entries to become hot. */
 static void boundaries(void)
 {
  reset();
- assert(KD_HOTLOCK_SPIN_MCS_INTERVAL==4 && KD_HOTLOCK_CHECK_INTERVAL==1024 && KD_HOTLOCK_SAMPLE_TARGET==32);
+ assert(KD_HOTLOCK_SPIN_MCS_INTERVAL==1 && KD_HOTLOCK_CHECK_INTERVAL==1024 && KD_HOTLOCK_SAMPLE_TARGET==32);
+ assert(KD_HOTLOCK_CPU_WINDOW==40000000000UL);
  hits(0x1000,5000);
  assert(clocks==1 && !table(0)->used && !table(0)->rate_hot && !table(0)->rate_samples);
  unsigned long origin=table(0)->rate_begin;
  now+=100;
- mcs(3);
- assert(clocks==1 && table(0)->rate_samples==3 && !table(0)->rate_hot);
+ assert(clocks==1 && !table(0)->rate_samples && !table(0)->rate_hot);
  assert(table(0)->rate_begin==origin && !table(0)->used);
  mcs(1);
  assert(clocks==2 && table(0)->rate_hot && !table(0)->rate_samples && !table(0)->used);
@@ -172,8 +172,7 @@ static void boundaries(void)
  hits(0x1000,32);
  origin=table(0)->rate_begin;
  now+=100;
- mcs(3);
- assert(clocks==3 && table(0)->rate_samples==3 && table(0)->rate_begin==origin);
+ assert(clocks==3 && !table(0)->rate_samples && table(0)->rate_begin==origin);
  assert(s->count==32 && s->hot && s->begin==origin);
  mcs(1);
  assert(clocks==4 && !table(0)->rate_samples && s->count==32 && s->hot);
@@ -198,41 +197,39 @@ static void windows(void)
  now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
  hits(0x1000,2000); /* no MCS event: cached CPU heat remains unchanged */
  assert(table(0)->rate_hot);
- mcs(3); assert(table(0)->rate_hot);
  mcs(1);
  assert(!table(0)->rate_hot && !s->hot && !s->count);
  assert(!kd_hotlock_query_spin(0x1000));
  hits(0x1000,2000); assert(!table(0)->rate_hot && !s->count);
- mcs(4);
+ mcs(1);
  assert(table(0)->rate_hot && !s->hot && !s->count && s->begin==now);
  hits(0x1000,33); assert(s->hot);
  reset(); now+=KD_HOTLOCK_CPU_WINDOW;
- mcs(4); assert(!table(0)->rate_hot && !table(0)->used);
- mcs(4); assert(table(0)->rate_hot && !table(0)->used);
+ mcs(1); assert(!table(0)->rate_hot && !table(0)->used);
+ mcs(1); assert(table(0)->rate_hot && !table(0)->used);
 }
-/* Measure the entire four-event batch, including startup idle. Per-event
- * gaps below the window cannot hide a batch that reaches the exact deadline. */
+/* A single eligible event includes startup idle. After that, every event
+ * measures its own interval; the exact deadline stays cold. */
 static void cpu_batch_window(void)
 {
  reset();
  unsigned long origin=now;
- now=origin+3999999999UL;
- mcs(4);
+ now=origin+39999999999UL;
+ mcs(1);
  assert(table(0)->rate_hot && table(0)->rate_begin==now && clocks==2);
  reset();origin=now;
- for(unsigned int i=1;i<=3;i++) {
-  now=origin+i*1000000000UL;
-  mcs(1);
-  assert(clocks==1 && table(0)->rate_samples==i);
-  assert(!table(0)->rate_hot && table(0)->rate_begin==origin);
- }
- now=origin+4000000000UL;
+ now=origin+40000000000UL;
  mcs(1);
  assert(clocks==2 && !table(0)->rate_hot && !table(0)->rate_samples);
  assert(table(0)->rate_begin==now && !table(0)->used);
  now++;
- mcs(3);assert(clocks==2 && !table(0)->rate_hot);
  mcs(1);assert(clocks==3 && table(0)->rate_hot && !table(0)->rate_samples);
+ for(unsigned int i=0;i<3;i++) {
+  now+=39999999999UL;
+  mcs(1);
+  assert(clocks==4+i && table(0)->rate_hot && !table(0)->rate_samples);
+  assert(table(0)->rate_begin==now);
+ }
 }
 static void backwards_and_zero(void)
 {
@@ -242,11 +239,11 @@ static void backwards_and_zero(void)
  unsigned int before=clocks; now=50;
  assert(!kd_hotlock_record_spin(0x1000));
  assert(clocks==before+1 && table(0)->rate_hot && !s->hot && s->begin==50);
- mcs(4);
+ mcs(1);
  assert(!table(0)->rate_hot && !s->count && !s->hot);
- reset(); now=0; mcs(4);
+ reset(); now=0; mcs(1);
  assert(!table(0)->rate_hot && !table(0)->used && clocks==2);
- mcs(4);
+ mcs(1);
  assert(table(0)->rate_hot && table(0)->rate_begin==0 && clocks==3);
  hits(0x1000,32); before=clocks;
  assert(kd_hotlock_record_spin(0x1000));
@@ -283,7 +280,7 @@ static void hash_and_capacity(void)
  assert(table(0)->used==KD_HOTLOCK_ENTRIES);check_chains(table(0));
  /* Stable membership survives CPU cooling; heat and counts do not. */
  now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
- mcs(4);
+ mcs(1);
  assert(!table(0)->rate_hot && table(0)->used==KD_HOTLOCK_ENTRIES);
  for(unsigned int i=0;i<KD_HOTLOCK_ENTRIES;i++) {
   struct kd_hotlock_entry *s=kd_hotlock_find(table(0),keys[i]);
@@ -315,12 +312,12 @@ static void mutex_sampling(void)
  for(unsigned int i=0;i<100;i++) assert(kd_hotlock_query_mutex(0x1000));
  assert(!memcmp(&before,table(1),sizeof(before)) && clocks==before_clocks+1);
  assert(!table(0)->rate_samples && !table(0)->rate_hot && !table(0)->used);
- /* Mutex keeps 1024 entry samples but shares the shorter CPU time window. */
- now=table(1)->rate_begin+3999999999UL;
+ /* Mutex keeps 1024 entry samples and shares the 40-billion CPU window. */
+ now=table(1)->rate_begin+39999999999UL;
  for(unsigned int i=0;i<1024;i++) kd_hotlock_record_mutex(0x1000);
  assert(table(1)->rate_hot && !table(1)->rate_samples && table(1)->rate_begin==now);
  unsigned long origin=table(1)->rate_begin;
- now=origin+4000000000UL;
+ now=origin+40000000000UL;
  for(unsigned int i=0;i<1023;i++) kd_hotlock_record_mutex(0x1000);
  assert(table(1)->rate_hot && table(1)->rate_samples==1023 && table(1)->rate_begin==origin);
  assert(!kd_hotlock_record_mutex(0x1000));
@@ -333,7 +330,7 @@ static void isolation_and_reentry(void)
  cpu_id=1;assert(!kd_hotlock_query_spin(0x1000));
  assert(!kd_hotlock_record_mutex(0x1000) && !pins);
  cpu_id=0;assert(kd_hotlock_query_spin(0x1000));
- hits(0x1000,32);reentry=irq_reentry;mcs(4);assert(!reentry);
+ hits(0x1000,32);reentry=irq_reentry;mcs(1);assert(!reentry);
  assert(kd_hotlock_find(table(0),0x1000)->count==32);
  reentry=irq_reentry;hits(0x1000,1);assert(!reentry);
  /* Both types use the same strict lock threshold but independent tables. */
@@ -347,7 +344,7 @@ static void isolation_and_reentry(void)
  assert(kd_hotlock_record_mutex(0x1000) && !pins);
  assert(!kd_hotlock_query_mutex(0x1000));
  hits(0x1000,5000); assert(!table(0)->rate_hot && !table(0)->used);
- mcs(4);
+ mcs(1);
  for(unsigned int i=0;i<KD_HOTLOCK_ENTRIES;i++) assert(kd_hotlock_record_spin(0x10000+i));
  assert(kd_hotlock_record_spin(0x20000)); /* fixed policy, even at capacity */
  assert(!kd_hotlock_query_spin(0x20000));
@@ -371,10 +368,10 @@ static void queue_pressure(void)
  for(unsigned int i=0;i<16;i++) nodes[i].next=&nodes[i+1];
  /* The gate is opt-in even though the loaded threshold defaults to four. */
  reset(); assert(kd_spin_hot_min_queue==4);
- for(unsigned int i=0;i<4;i++) queue_event(&nodes[16]);
+ queue_event(&nodes[16]);
  assert(table(0)->rate_hot && clocks==2 && !queue_link_reads);
  reset(); kd_spin_cold_fastpath=true; kd_spin_hot_min_queue=0;
- for(unsigned int i=0;i<4;i++) queue_event(&nodes[16]);
+ queue_event(&nodes[16]);
  assert(table(0)->rate_hot && clocks==2 && !queue_link_reads);
 
  /* One through three observed nodes cannot warm a four-node policy. The
@@ -388,43 +385,40 @@ static void queue_pressure(void)
  }
  /* Exactly four linked nodes qualify; lookahead never reads a fifth link. */
  unsigned int before=queue_link_reads;
- for(unsigned int i=0;i<3;i++) queue_event(&nodes[13]);
- assert(!table(0)->rate_hot && table(0)->rate_samples==3 && clocks==1);
- assert(queue_link_reads-before==9);
  queue_event(&nodes[13]);
  assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==2);
- assert(queue_link_reads-before==12);
+ assert(queue_link_reads-before==3);
  before=queue_link_reads;
- for(unsigned int i=0;i<4;i++) queue_event(&nodes[16]);
+ queue_event(&nodes[16]);
  assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==3);
  assert(queue_link_reads==before); /* hot CPU keeps publication sampling */
 
  /* A hot publication may cool at its deadline. Its same operation must not
   * count again at queue head, even when all sixteen successors are visible. */
  now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
- for(unsigned int i=0;i<4;i++) queue_event(nodes);
+ queue_event(nodes);
  assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==4);
  assert(queue_link_reads==before);
  queue_event(nodes);
- assert(!table(0)->rate_hot && table(0)->rate_samples==1 && clocks==4);
+ assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==5);
  assert(queue_link_reads==before+3);
  /* No lookahead after another admission has already warmed this CPU. */
  table(0)->rate_hot=1; before=queue_link_reads;
  pins++;
  kd_spin_sample_cold_queue(nodes,4);
  pins--;
- assert(queue_link_reads==before && table(0)->rate_samples==1 && clocks==4);
+ assert(queue_link_reads==before && !table(0)->rate_samples && clocks==5);
 
  /* One-node and maximum-sixteen policies have exact boundaries. */
  reset(); kd_spin_cold_fastpath=true; kd_spin_hot_min_queue=1;
- for(unsigned int i=0;i<4;i++) queue_event(&nodes[16]);
+ queue_event(&nodes[16]);
  assert(table(0)->rate_hot && clocks==2 && !queue_link_reads);
  reset(); kd_spin_cold_fastpath=true; kd_spin_hot_min_queue=16;
  for(unsigned int i=0;i<4;i++) queue_event(&nodes[2]);
  assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1);
  before=queue_link_reads;
- for(unsigned int i=0;i<4;i++) queue_event(&nodes[1]);
- assert(table(0)->rate_hot && clocks==2 && queue_link_reads-before==60);
+ queue_event(&nodes[1]);
+ assert(table(0)->rate_hot && clocks==2 && queue_link_reads-before==15);
 
  /* Non-task callers and disabled delegation cannot promote or inspect a
   * pressure chain, and no other CPU inherits this CPU's heat. */
@@ -435,7 +429,7 @@ static void queue_pressure(void)
  for(unsigned int i=0;i<4;i++) queue_event(nodes);
  assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1 && !queue_link_reads);
  kd_spin_delegate=true;
- for(unsigned int i=0;i<4;i++) queue_event(nodes);
+ queue_event(nodes);
  assert(table(0)->rate_hot && clocks==2);
  cpu_id=1;
  pins++;
@@ -456,6 +450,6 @@ int main(void)
  assert(!kd_hotlock_init());kd_hotlock_exit();
  fail_alloc=true;hotlock_mode="adaptive";assert(kd_hotlock_init()==-ENOMEM);
  assert(!kd_hotlock_cpu);
- puts("PASS exact hash: spin-MCS4/CPU-window4e9/queue-pressure0..16/mutex-CPU1024/lock33/collision/256-capacity/no-eviction/independent/query/window/zero/drop-interrupt/observe");
+ puts("PASS exact hash: spin-MCS1/CPU-window4e10/queue-pressure0..16/mutex-CPU1024/lock33/collision/256-capacity/no-eviction/independent/query/window/zero/drop-interrupt/observe");
  return 0;
 }

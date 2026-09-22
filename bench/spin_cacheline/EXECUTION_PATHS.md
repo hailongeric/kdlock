@@ -305,12 +305,12 @@ spin/mutex 的 `record_*` 使用直接哈希计数，调用位置仍在入口。
 和 next；删除候选排名、score/error、最小分数扫描和替换。初始化一次采时建立
 所有 CPU/type 的时间起点，锁路径不分配；调用者保证地址有效及初始化/排空生命周期。
 
-spin CPU 默认在共用 `xchg_tail()` 交换队尾前计数，每 4 次合格 MCS 事件读一次 TSC；
-前 3 次只计数并保留缓存热值。mutex CPU 仍在入口累计 1024 次。
+spin CPU 默认在共用 `xchg_tail()` 交换队尾前计数，每次合格MCS事件读一次TSC；
+无合格事件时保留缓存热值。mutex CPU 仍在入口累计1024次。
 冷捷径开启且`spin_hot_min_queue=N>0`时，冷CPU的事件改为取得队头所有权、交接前
 看到含自己至少N个已链接节点；最多读N−1个next，缺链不等待。热CPU继续发布采样。
 参数0..16、默认4；0恢复旧规则。这是排队压力门槛，不是线程计数，也不新增第二个hot标志。
-两者从上次检查到本批结束的间隔严格小于 4000000000 ticks 且时间未倒退则 CPU 热。
+两者从上次检查到本批结束的间隔严格小于 40000000000 ticks 且时间未倒退则 CPU 热。
 spin 的 fast/pending、发布前取消及节点耗尽轮询不计数；原生、代理和虚拟入队均在
 按上述发布或队头规则择一计数，事件归属当前物理 CPU。CPU 冷时入口不查表。CPU 热时直接按锁字
 地址 hash，冲突链逐项比较完整地址；命中对应记录就 `++count`。未找到时使用
@@ -324,7 +324,7 @@ spin 单锁始终独立采时，不能复用此前 MCS 事件的时间戳。
 CPU 持续热不重置单锁批次；CPU 检查为冷或由冷变热时清除所有已记录锁的
 计数/hot 并更新起点，但保留哈希映射。query 不计数、不采时、不插入。
 
-spin 在第 4 次合格 MCS 事件检查确认 CPU 热后，后续入口开始记录单锁；第 33 次锁调用
+spin 在首次合格MCS事件检查确认CPU热后，后续入口开始记录单锁；第 33 次锁调用
 检查该锁热度。事件不重新准入当前请求，无 MCS 时缓存 CPU 热值保持到下一批检查。
 mutex 单热锁且首批时间满足条件时，仍在第 1024 次开始记录锁，第 1056 次首次可热。
 初始化至首批的空闲计入 CPU 窗口；各自过期只在检查点确认，期间返回缓存热值。
@@ -334,8 +334,8 @@ flowchart TD
   A[spin record：task context；复用 pin] --> G{缓存 CPU 热？}
   S[spin MCS：task context；使用已有 pin] --> B[CPU 计数加一]
   T[mutex record：task context；复用或临时 pin] --> B
-  B --> C{spin 满4次 / mutex 满1024次？}
-  C -- 是 --> D[采时检查整批耗时小于40亿；冷却或重新变热则重置锁批次]
+  B --> C{spin 满1次 / mutex 满1024次？}
+  C -- 是 --> D[采时检查整批耗时小于400亿；冷却或重新变热则重置锁批次]
   D --> E{当前是 MCS 事件？}
   C -- 否 --> E
   E -- 是 --> Z[仅解除本次临时 pin]
@@ -544,7 +544,7 @@ stack canary；有地址逃逸对象的慢路径仍有 canary。
 编译时展开类型/操作分支。已 pin 的 spin 接口转入同一实现，读取现有
 preempt_count 并复用 acquisition pin，不额外 disable/enable。256条精确地址记录保留，
 本地 busy 和对应屏障已移除，非 task 样本丢弃。spin CPU 按本节前述发布/冷态队头规则采样，
-每4次合格MCS事件检查40亿TSC窗口；spin/mutex 单锁在入口累计33次后检查。
+每次合格MCS事件检查400亿TSC窗口；spin/mutex 单锁在入口累计33次后检查。
 fast/pending、入队前取消及节点耗尽轮询不计数，同一获取最多计一次。
 CPU变热只影响后续入口；CPU/单锁分别采时，mutex为入口1024/33及同次采时复用。
 
@@ -627,4 +627,4 @@ pin，不重复增减。不能因 Linux 内部协议已被 pin 就删除 KD 显�
 不能作为后续源码的指令数实测。此前同时删除 busy/pin 的实验已回退；当前保留
 共享采样器的 pin，仅删除 busy 及对应屏障，并跳过非 task 样本。
 长批次诊断不替代短批次三方吞吐；最新单轮成绩见
-[CPU MCS4 / 40亿窗口完整报告](../tclock_compare/results/20260922-spin-mcs4-full-benchmark.md)。
+[CPU MCS1 / 400亿窗口重测](../tclock_compare/results/20260922-spin-mcs1-window4e10.md)。
