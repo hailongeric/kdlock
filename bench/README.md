@@ -3,6 +3,10 @@
 当前性能入口是[三后端直接API对照](tclock_compare/README.md)：Linux原生、TCLock和当前KD。
 KD默认按CPU热值分流获取、统一generic clobber解锁，CPU热度只按实际MCS发布计数。
 
+最新[adaptive 阈值诊断](tclock_compare/results/20260923-adaptive-threshold-sweep.md)
+比较单锁计数32/128/1024及恢复32，各配置三轮。两个候选均未满足3/4线程改善且
+8/20线程不降的保留条件，默认仍为32；这组KD参数诊断不替代下面的三后端矩阵。
+
 最新[完整三轮矩阵](tclock_compare/results/20260923-spin-default-heat-full3.md)完成168/168场、
 12960万次操作并排空，包含现有batch元数据和continuation布局优化。
 20线程KD observe中位数c1/c16为5.324/5.051 Mops/s；两模式20线程spread均低于0.8%。
@@ -28,4 +32,4 @@ cacheline默认120场，完整1/2/3/4/8/16/20线程为168场；RCUHT默认60场�
 所有构建和测量在recovery guest执行，环境及排空遵循[AGENTS](../docs/AGENTS.md)。
 代码修改后可直接运行性能测试，运行器内置业务、IRQ/preempt、JIT和排空检查；
 独立单元、SELFTEST及功能矩阵按改动选择，不作为固定前置步骤。
-本次仅整理文档，未重新运行测试或修改原始证据。后续工作见[性能计划](../docs/PERFORMANCE_PLAN.md)。
+各报告分别记录实测与未测范围；后续工作见[性能计划](../docs/PERFORMANCE_PLAN.md)。

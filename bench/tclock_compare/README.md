@@ -130,6 +130,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [adaptive 阈值诊断](results/20260923-adaptive-threshold-sweep.md) | KD单锁计数32/128/1024及恢复32，c1/c16、3/4/8/20线程各三轮；两候选不满足保留条件，默认仍为32；不是新增三后端排名 |
 | [默认热度分流完整三轮](results/20260923-spin-default-heat-full3.md) | 最新168场：1/2/3/4/8/16/20线程，56配置各3轮；39b0e7c加冻结工作树修改，包含现有布局优化 |
 | [单线程与20线程调查](results/20260923-spin-single-hot-balance.md) | metadata精简、continuation错位、48场矩阵和长批次布局对照；保留失败候选及代码对齐的因果限制 |
 | [昨日恢复基线](results/20260922-performance-recovery.md) | 旧采样规则下20线程5.197/4.809 Mops/s，两轮最大值；该快版没有匹配PMU |
