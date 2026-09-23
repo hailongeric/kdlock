@@ -115,3 +115,85 @@ guest证据：`/root/kdlock-evidence/spin-heat-only-full-20260923/`。
 [最终状态](../../.tmp/spin-heat-only-full-20260923/final-state.json)、
 [完整归档](../../.tmp/spin-heat-only-full-20260923.tar.gz)。归档SHA256：
 `6205210aa8ee5299a26d8e0075cea9665c81caf10212612e7728168411f40bf4`。
+
+## 20线程退化的执行流分析
+
+以下为本轮冻结源码、caller/provider ELF、发布后JIT及原始计数的离线分析，
+没有新增性能样本或修改实现。off/on均指本次当前源码的两种配置。
+
+| cacheline / 模式 | off → on ns/op | 增加ns/op | JIT比例 off → on | JIT正文/combiner off → on |
+| --- | ---: | ---: | ---: | ---: |
+| 1 / observe | 248.388 → 255.690 | 7.302 | 99.86280% → 99.83465% | 864.99 → 737.60 |
+| 1 / adaptive | 248.887 → 264.030 | 15.143 | 99.76270% → 99.81835% | 686.60 → 871.02 |
+| 16 / observe | 254.598 → 271.684 | 17.087 | 99.65210% → 99.22060% | 676.07 → 757.12 |
+| 16 / adaptive | 253.533 → 267.594 | 14.061 | 99.80550% → 99.69245% | 861.13 → 966.48 |
+
+这里ns/op是总墙钟/总操作数，不是单个线程的等待延迟。20线程已几乎全部代理，
+冷分支跳过完整准入的收益不再适用于绝大部分操作，而新分流逻辑仍有热路径成本。
+
+| 阶段 | off保留壳 | on热度分流壳 |
+| --- | --- | --- |
+| 原调用者序言 | GCC保存rbp/r15/r14/r13/r12/rbx | 相同六项保存，另分配8字节栈槽 |
+| 获取入口 | 准备SP/IP/BP，直接CALL | 调用端pin，读取gate指针及热值，test/branch，保存lock指针，再准备相同参数并CALL |
+| provider | 入口pin后进入公共core | 复用调用端pin，进入同一core |
+| 热态准入 | 热表记录、上下文检查、CAS、pending/MCS | 相同；没有第二次pin或额外获取CAS |
+| MCS发布前 | 两处冷队列策略判断均在开关0处短路 | 两处均继续读min_queue和CPU热值，再返回0 |
+| combiner代理正文 | payload → clobber解锁出口 | budget检查 → payload → locked字节判定 → 第二基本块 → 同一clobber解锁出口 |
+| 解锁参数 | lock地址为立即数 | 从原调用者栈槽读取lock地址 |
+| 完成 | 公共wrapper完成、frame退休、唤醒/恢复 | 相同协议；原调用者多回收8字节栈槽 |
+
+### 已确认的额外工作
+
+1. **代理正文每次多9条指令，位于串行combiner路径。**
+   `KD_SPIN_DIRECT_UNLOCK`的`locked != 5`使翻译后的正文从一个基本块变成两个。
+   新增锁字寻址/读取/比较/分支4条；分支块触发翻译器插入
+   `MOVABS R14`、`INC Stack_BUDGET`、`TEST`、`JNZ`共4条；后继块额外写一次
+   `Stack_JIT_WITNESS`。热态不进入native解锁分支，但仍执行这些检查。
+   JIT中解锁是返回公共wrapper的完成出口，不是每个代理正文都物理释放一次锁。
+2. **解锁多一次原调用者栈读取。** on使用`[R12-0x30]`恢复lock参数，off使用立即数。
+   两者各是一条指令，未包含在上述9条增量里，但on增加内存依赖。
+   新增锁字读取和该栈读取可能产生缓存/一致性等待；本轮没有测量其miss或周期。
+3. **每次热态代理MCS入队多14条策略指令。**
+   `slowpath.inc`先保存`cold_queue_min`，`queue.inc:xchg_tail()`再次计算它。
+   provider ELF的`__kd_spin_lock_longjmp`在`0xdf97..0xdfaf`和`0xdfe3..0xdff9`
+   各多执行7条：读min_queue、test/branch、读per-CPU指针、读热值、test/branch。
+   合计6次load、4次test、4次条件分支；编译器没有消除重复计算。
+   随后两组均做同一个MCS热度采样和一次tail xchg。热态捕获值为0，队头压力扫描
+   被跳过，不能将退化解释为每次热获取都扫描4个MCS节点。
+4. **原调用者仍有分流和栈槽成本。** 热入口额外两次依赖load、test/branch；
+   连同栈槽分配/回收及lock指针store，代理调用者路径净增7条指令。
+   pin只是从provider移到caller。实际两组GCC保存的六个寄存器一致，本fixture中
+   没有出现减少这些序言保存的收益；这是编译结果，不是要求手工push/pop。
+
+按正常热解锁、预算未耗尽路径静态遍历`jit.S`，从分派入口到`JMP exit`：
+
+| payload | off → on指令数 | off → on条件分支 | 完整jit.bin字节数 off → on |
+| --- | ---: | ---: | ---: |
+| 1 cacheline | 23 → 32 | 1 → 3 | 942 → 1095 |
+| 16 cacheline | 98 → 107 | 1 → 3 | 1512 → 1665 |
+
+计数不含公共wrapper/provider；从正文label开始则分别为19→28和94→103。
+observe/adaptive一致。多出的其余分派比较和native解锁块增加静态体积，正常热入口
+跳过它们；不能把整张图的指令数都计为每次执行。上述各阶段增量也不能直接换算周期。
+
+### 可以排除和仍未量化的部分
+
+全部20个CPU最终已热，没有not-ready/fallback/overflow/invariant错误。
+三组on的平均批次更长；c1 adaptive的JIT比例还略高而吞吐仍下降5.74%，
+因此没有“普遍不能升温/代理”或“普遍缩短批次”的证据。
+c16 observe少了8630次JIT正文，可能另有自执行或尾段成本；非JIT不能全部当作冷路径。
+worker CPU总时间/(20×墙钟)为98.63%–99.71%，没有明显的大段guest worker停调度，
+但这些guest计时不能排除宿主调度或频率变化。
+
+预热只有单CPU48000次，on/q4不会因此升温；计时开始仍包含20线程冷转热过程。
+没有逐时热度或冷入口次数，不能分离这段启动成本。每配置仅一次，`pmu=false`、
+`jit_timing=N`，所以证据确认了额外执行工作，却不能将7.30–17.09ns/op逐项分摊。
+优先隔离验证JIT解锁分支，再去重MCS发布前策略计算；保留冷路径、升降温采样和退休协议，
+分别测量才能确定各项贡献，不应仅凭指令条数认定某一项解释了全部退化。
+
+复核入口：[on caller](../../.tmp/spin-heat-only-full-20260923/performance/caller-kdlock-cold-on.txt)、
+[off caller](../../.tmp/spin-heat-only-full-20260923/performance/caller-kdlock-cold-off.txt)、
+[on c1 JIT](../../.tmp/spin-heat-only-full-20260923/performance/c01-t20-r00-direct-kdlock-cold-on-q4-observe/workspace/daemon/0xffffffffc0a7255c/207167/asm/jit.S)、
+[off c1 JIT](../../.tmp/spin-heat-only-full-20260923/performance/c01-t20-r00-direct-kdlock-cold-off-q0-observe/workspace/daemon/0xffffffffc0a7202f/207218/asm/jit.S)。
+provider使用同一归档的`performance/binaries/kdlock_km.ko`；热度计数和批次取各20线程
+会话的`session.json`、`measure.json`与`kernel.log`，不是历史PMU结果。
