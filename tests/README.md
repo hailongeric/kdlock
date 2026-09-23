@@ -10,6 +10,7 @@
 
 | 批次 | 已完成 | 范围与入口 |
 | --- | --- | --- |
+| adaptive 窗口/MCS间隔诊断 | 实际196场：195场有效，1场20线程零JIT拒绝；该候选余20场未执行，全部已执行场排空；基础及参数边界检查通过 | [完整报告](../bench/tclock_compare/results/20260923-adaptive-windows.md)。6个独立候选、1个组合及前后默认基线，完整配置各三轮；所有候选均未保留，不能记为216/216通过 |
 | adaptive 单锁计数阈值诊断 | 32/128/1024/恢复32共96/96场、84000000次操作通过并排空；基础和阈值定向检查通过 | [完整结果](../bench/tclock_compare/results/20260923-adaptive-threshold-sweep.md)。c1/c16、3/4/8/20线程各三轮，两个候选未满足性能保留条件，生产阈值仍为32；未重跑其他后端或全量功能 |
 | 默认 heat caller 完整三轮 | 56 配置 × 3 轮，168/168 场、129600000 次操作通过并排空；84 场 KD 中 60 场实际 JIT | `39b0e7c` 加冻结工作树；包含 MCS 发布采样、通用解锁、batch 元数据精简和 continuation 错位布局。[完整报告](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)；该批未重跑单元、nested/early、RCUHT 或 PMU |
 | 单线程/20线程优化 | 定向单元 3/3 组、3 项错误变体检出；1/20线程三轮性能 48/48；nested/early 双模式功能 4/4；长批次布局对照 24/24 | [调查与证据](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。短批次单线程中位数曾比同期基线低约 5%–6%；长对照未复现一致下降，不据此声称统计等价 |

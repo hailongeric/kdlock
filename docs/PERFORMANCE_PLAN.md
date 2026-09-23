@@ -83,6 +83,9 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
   两候选均未同时改善低线程并守住8/20线程，已恢复32。
   [三轮诊断](../bench/tclock_compare/results/20260923-adaptive-threshold-sweep.md)
   表明减少单锁采时仍未消除3/4线程短代理批次；收益准入继续按P1.1评估。
+- [x] 扩展到单锁窗口、CPU窗口和MCS间隔及成比例组合的
+  [三轮诊断](../bench/tclock_compare/results/20260923-adaptive-windows.md)。减少MCS采时改善部分8线程成绩，
+  过紧窗口损害20线程，低线程未一致改善；保留原默认。窗口/间隔相互影响，不能仅按采时次数推定收益。
 - [ ] 在同一冻结构建中分离caller spill/reload、SP/IP/BP传递、已有pin复用及热表成本。
   普通API自己的抢占保护不可删除，已撤回的clock强制内联不作为优化成果。
 - [ ] 比较cold、local-positive、碰撞地址流和窗口重置，区分均摊成本与峰值。
