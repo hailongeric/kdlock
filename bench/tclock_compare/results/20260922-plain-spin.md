@@ -1,5 +1,7 @@
 # 2026-09-22：普通 spin 保持 IRQ/BH 状态
 
+> 保留普通spin IRQ/BH与wrapper修复的验证证据及首次失败。本报告属于当时冻结版本，不代表当前版本已重跑全部边界；最新测量见[完整三轮矩阵](20260923-spin-default-heat-full3.md)。
+
 当前 KD spin 按普通 `raw_spin_lock` 语义获取与释放：保留抢占配对，
 不默认保存、关闭或恢复 IRQ/BH。本次未新增 irqsave/bh API，未修改 TCLock
 或 guest 内核，保留此前未提交的热表和两轮取最大值改动。

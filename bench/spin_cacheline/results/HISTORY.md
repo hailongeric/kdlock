@@ -1,32 +1,23 @@
-# Benchmark 历史索引（2026-09-15 至 09-22）
+# Benchmark 早期历史索引（2026-09-15 至 09-21）
 
 这些阶段报告的实现已经被后续版本替代。重复的操作命令与实现说明从当前目录
 删除，保留本页的结果、证据身份及固定 Git 版本入口。当前路径见
 [执行路径](../EXECUTION_PATHS.md)，最新三方基线及热度计数对照见 [当前结果](../../tclock_compare/README.md#本次结果)。
 
 下列结果均为历史记录，**本次文档整理没有重跑实验**。旧扫描通常使用
-“kdlock 最佳吞吐 / Linux 中位吞吐”，每臂两次；9 月 21 日三方对照用五轮中位数，9 月 22 日起默认两轮最大值。
+“kdlock 最佳吞吐 / Linux 中位吞吐”，每臂两次；9月21日三方对照用五轮中位数，9月22日不同阶段采用单轮或两轮最大值。
+当前默认三轮的口径见[运行指南](../../tclock_compare/README.md)。
 不同统计口径、caller ABI、源码冻结和准备方式的成绩不能拼接成同环境比较。
 原始 `/tmp` 归档在仓库之外，新 checkout 不自带这些文件；哈希是原报告记录，
 本次未重新认证全部旧归档。Git 版本保存完整表格、失败记录和运行命令。
 
-## 2026-09-21 至 09-22 的实现与回退
+## 近期实验与当前结果
 
-| 冻结阶段 | 结果和当前状态 |
-| --- | --- |
-| [单线程 profiling](../../tclock_compare/results/20260921-single-thread-profile.md) | 优化前 PMU；不代表当前指令数 |
-| [三方基线](../../tclock_compare/results/20260921-threeway-current.md) | 五轮中位数，150 场 |
-| [无竞争入口优化](../../tclock_compare/results/20260921-fast-path-optimization.md) | request/ref 延后、context 合并，当前保留 |
-| [删除 busy/pin 检查](../../tclock_compare/results/20260922-hotlock-core.md) | 功能通过，后续发现竞争退化，已回退 |
-| [共享类型表](../../tclock_compare/results/20260922-hotlock-shared-table.md) | 已回退 |
-| [直接映射](../../tclock_compare/results/20260922-hotlock-direct-mapped.md) | 已回退 |
-| [直接映射性能](../../tclock_compare/results/20260922-direct-mapped-performance.md) | 历史五轮中位数，不能作为当前成绩 |
-| [普通 spin IRQ 语义](../../tclock_compare/results/20260922-plain-spin.md) | 当前保留；含 wrapper 中断栈覆盖修复和实际 JIT 验证 |
-| [热表回归处理](../../tclock_compare/results/20260922-performance-recovery.md) | 当前基线：60 场，两轮最大值；采样器局部回退，锁协议保留 |
-
-已停用的 `bench/hotlock_record/run.py`、专用内核组件和 V1/V2 适配标记已删除。
-旧组件报告保留在下方固定 Git 链接；如需解释历史归档，只读取匹配版本，
-当前测试对象仍是 Linux 原生、TCLock 和当前 KD。生产热表回归及生命周期探针保留。
+9月21日至23日的中间报告已合并到[近期历史索引](../../tclock_compare/results/HISTORY.md)，
+包括热表实验、回退、MCS采样、冷调用壳及三轮运行器变更。每项保留固定Git原文、
+测量输入身份和证据哈希；已删除旧命令不作为当前运行入口。
+当前完整矩阵见[168场三轮结果](../../tclock_compare/results/20260923-spin-default-heat-full3.md)，
+布局优化及限制见[性能调查](../../tclock_compare/results/20260923-spin-single-hot-balance.md)。
 
 ## 更早阶段
 
@@ -131,8 +122,8 @@ SHA256：`d753b9c1c4bd0fd79420438d5c44e8486597073578c49b9b234d950e40c01144`。
 以下 29 份旧报告从当前目录删除；完整正文、命令、首次失败、结果表及原始证据
 路径保存在整理前 Git 版本。此处链接固定到 `175d73bcc2faaa5ee9f9ab28a20491680d834043`；
 本地也可用 `git show <提交>:<路径>` 读取，无需联网或重新运行实验。
-当前三份报告（提交 `175d73b` 全矩阵、两级候选版、无候选直接哈希版）继续保留在
-[tclock_compare/results](../../tclock_compare/results/20260921-hotlock-direct.md)。
+后续的完整矩阵、两级候选和直接哈希报告现归入
+[近期历史索引](../../tclock_compare/results/HISTORY.md)，这些阶段不再标为当前实现。
 
 | 历史报告 | 冻结版本 |
 | --- | --- |
@@ -171,27 +162,8 @@ SHA256：`d753b9c1c4bd0fd79420438d5c44e8486597073578c49b9b234d950e40c01144`。
 旧 RCUHT 的 KD 准入失败后来修复，但不能把早期原生完成记成实际 JIT；
 TCLock 换栈、IRQ/preempt 修复前的失败和修改前后配置均留在冻结报告。
 历史 hook、双锁字、带额外计数及不同调度/插桩配置的成绩不能拼接比较。
-当前默认 adaptive 的直接哈希改造没有显示整体性能提升；单锁矩阵未验证
+当时的adaptive直接哈希改造没有显示整体性能提升；单锁矩阵未验证
 多锁精确地址容量的收益。最新局限以当前结果报告和 [测试入口](../../../tests/README.md)为准。
 
 2026-09-21 清理只移除旧内核可重建中间文件，所有 guest 原始测试/性能证据及
 宿主归档均保留；没有因文档合并删除失败日志或更改证据哈希。
-
-## 512槽直接映射再次回退
-
-[功能实验](../../tclock_compare/results/20260922-directhash-v2.md)及
-[三方性能](../../tclock_compare/results/20260922-directhash-v2-performance.md)保留为历史。
-20线程c1/c16的KD为3.916/3.831 Mops/s，低于修改前5.197/4.809的记录；
-按用户要求恢复 `bf16b10` 的每CPU/type 256桶、256条精确地址记录、碰撞链和满表保留。
-普通spin IRQ语义、wrapper修复、ticket及continuation协议不变。
-
-恢复后的功能及20线程性能见[回退验证](../../tclock_compare/results/20260922-directhash-v2-rollback.md)。
-
-后续[恢复版完整三方矩阵](../../tclock_compare/results/20260922-restored-full-benchmark.md)60/60场通过，采用两轮最大值。
-
-## spin MCS 频率统计回退
-
-[MCS 入队频率实验](../../tclock_compare/results/20260922-spin-mcs-frequency.md)功能通过，
-observe 下 20 线程 c1/c16 相对冻结恢复版下降 18.7%/17.3%。随后按用户要求撤回，
-恢复 `bf16b10` 的入口调用计数、CPU1024/锁1025 检查及同次 TSC 复用。
-[本次回退验证](../../tclock_compare/results/20260922-spin-mcs-rollback.md)通过；未重跑性能矩阵，实验原始样本和归档保留。

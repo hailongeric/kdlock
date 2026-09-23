@@ -1,13 +1,10 @@
 # kdlock Design
 
-spin 已恢复入口合并记录/热度判断及批量时钟；普通根 fast/pending 免 ticket，嵌套物理身份、JIT 虚拟 ticket 和 continuation 退休协议保留。详见 [锁协议](design/locking.md#41-native-lock-and-private-queue)。
-
-当前基于 `644f231`，并包含 2026-09-21 的 ticket 路径优化：顶层 pending
-复用 fast owner，合并 claim/release guard，slowpath 返回不重复 claim。
-单锁字、本地哈希、原生 MCS 和 continuation 退休交接均保留。
+当前显式 KD spin API 使用单锁字、按 CPU 热值分流的 C `if` 获取和统一 clobber
+解锁。冷路径包含完整 CAS/pending/MCS，实际 MCS 发布更新 CPU 热度；热路径复用
+fast owner、ticket 和 continuation 退休协议。全局 spin 分发已删除，mutex hook 安装停用。
 锁协议见 [locking](design/locking.md)，现场存储见 [frames](design/frames.md)，
 对象大小、创建位置及 TCLock/KD 数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
-当前仅显式 KD spin API 接入；全局 spin 分发删除，mutex hook 安装停用。
 
 This document describes current implementation contracts, not a chronological
 test log. Usage and execution flow: [JIT_EXECUTION](JIT_EXECUTION.md).
@@ -85,21 +82,20 @@ The paired spin shell `KD_SPIN_DIRECT_LOCK/UNLOCK` takes one preemption pin
 before a C `if` selects its entry. The shared `kd_spin_direct_cookie` only views
 the existing per-CPU `rate_hot`; it records neither acquisition path nor nesting.
 A cold CPU selects an ordinary C call into the complete native CAS/pending/MCS
-path. The macro reads only CPU heat; it does not test `spin_cold_fastpath` or
-`spin_delegate`. It keeps the existing native drain count through acquisition
+path. The macro reads only CPU heat. It keeps the existing native drain count through acquisition
 and holding; a failed CAS value enters pending/MCS directly, including CPU heat
-sampling. Native ownership uses locked-byte value 5. Unlock tests that byte,
-releases only the low byte, decrements the count and unpins, preserving pending
-and tail without a heat lookup.
+sampling. Native ownership uses locked-byte value 5. Both acquisition paths
+use the same broad-clobber unlock call with lock/SP/IP/BP metadata. The provider
+first tests byte 5, releases only the low byte, decrements the count and unpins,
+preserving pending and tail. Other states enter the existing generic unlock core.
 The hot branch uses the original broad-clobber call to the pinned entry, where
 the provider still enforces `spin_delegate` before admitting delegation.
 Its named continuation is immediately after that CALL. The compiler owns all
 live-register saves and may place them before the `if` or inside the branch;
-the shell supplies no manual PUSH/POP adapter. Hot unlock retains the original
-broad-clobber call. The pinned entry shares the existing core and pin; lock
+the shell supplies no manual PUSH/POP adapter. The pinned entry shares the existing core and pin; lock
 width, packet layout and wrapper inputs are unchanged. Recompile paired callers
-to use this shell; the original API remains available. The workload selects
-the shell at compile time for its outer lock only; nested/early inner calls use
+to use this shell; the original API remains available. The workload always uses
+the heat-routed shell for its outer lock in both observe and adaptive; nested/early inner calls use
 the original `KD_SPIN_DIRECT_CALL` without extra register adapters.
 
 `target_process` belongs to the retained mutex routing path; current direct
@@ -123,14 +119,11 @@ preconditions. Both CPU clocks use a 40-billion-TSC window. Spin checks every
 eligible MCS event; mutex still checks every 1024 entry records.
 Elapsed time covers the whole batch since the previous check, or initialization
 for the first batch; intermediate events retain cached CPU heat without a TSC read.
-The shared spin tail exchange normally counts native, delegated and virtual
-producers. With `spin_cold_fastpath=1` and `spin_hot_min_queue=N>0`, a cold CPU
-instead counts queue-head acquisitions that observe at least N linked nodes,
-including itself, before handoff. It reads at most N−1 links without waiting
-for a missing link. This read-only load parameter ranges from 0 to 16, defaults
-to 4, and uses the original publication policy at 0. Hot CPUs continue sampling
-publications; one acquisition never counts both events. Fast/pending success,
-pre-publication cancellation and exhausted-node polling do not count.
+The shared spin tail exchange counts each native, delegated or virtual MCS
+publication once, on cold and hot CPUs alike. CPU heat does not depend on queue
+depth; there is no successor scan or queue-head resampling. Fast/pending success,
+pre-publication cancellation and exhausted-node polling do not count. Two or
+three competing threads can become hot through frequent actual publications.
 Entry admission stays in place and consumes cached CPU heat;
 only a hot CPU accesses the lock table. A lock checks its 2.5-billion-TSC window
 when its count is **greater than 32**, at hit 33. The check refreshes its hot
@@ -470,10 +463,9 @@ design, not restoring an old function.
 
 ## 11. Configuration
 
-`hotlock_mode` defaults to adaptive. `spin_cold_fastpath` is a read-only load
-option, initially off, that enables cold-CPU queue-pressure sampling using
-`spin_hot_min_queue`. It does not select the caller shell or disable its CPU-heat
-branch; caller selection requires recompilation as described in section 3.
+`hotlock_mode` defaults to adaptive. Spin CPU heat counts actual MCS publications;
+the paired heat-routed caller is the workload default. Callers must be rebuilt
+when their inline ABI changes, as described in section 3.
 `target_process` defaults to kd_test in the retained mutex path; `mutex_jit`
 defaults to 1, but neither setting installs the disabled global hook.
 Batch limits are fixed at 1024. Spin NUMA is opt-in via KDLOCK_NUMA=1.
@@ -484,8 +476,9 @@ rollback tests.
 
 ## 12. Supported Scope And Limits
 
-The concise support matrix is in `README.md`, current execution evidence is in
-`docs/VALIDATION.md`, and actionable gaps are tracked only in `docs/TODO.md`.
+The concise support matrix is in [README](../README.md), current evidence is in
+[tests](../tests/README.md) and [bench](../bench/README.md), and historical records
+are indexed in [VALIDATION](VALIDATION.md). Actionable gaps are tracked in [TODO](TODO.md).
 The implementation boundaries are:
 
 1. **x86-64 only** — inline assembly, stack frame layout, and register

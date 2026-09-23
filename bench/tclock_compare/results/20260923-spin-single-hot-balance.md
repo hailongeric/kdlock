@@ -30,7 +30,7 @@ observe，共18场，不能据此宣称该候选的单线程、adaptive或其他
 采用旧CPU1024/单锁1025采样。后来的MCS1/400亿窗口/lock32版本，单轮20线程也达到
 5.011/4.802；所以不能仅因当前采样频率高，就断定它解释了全部退化。
 分别见[历史恢复报告](20260922-performance-recovery.md)和
-[MCS1/lock32报告](20260922-spin-mcs1-lock32.md)。
+[MCS1/lock32报告](HISTORY.md#20260922-spin-mcs1-lock32)。
 
 以下为历史20线程最大值及同期控制，全部为 Mops/s；样本轮次不同，归一化仍只是
 跨批次线索，不是随机交错的单因素实验。
@@ -46,8 +46,8 @@ observe，共18场，不能据此宣称该候选的单线程、adaptive或其他
 | 本轮基线 | 3 | 1 | 4.223 | 5.099 | 4.020 | 0.788× |
 | 本轮基线 | 3 | 16 | 2.451 | 3.374 | 4.104 | 1.216× |
 
-共同off路径在[共享cookie](20260922-spin-cpu-hot-cookie.md)到
-[clobber/队列门槛](20260922-spin-cold-clobber-queue.md)阶段已下降。
+共同off路径在[共享cookie](HISTORY.md#20260922-spin-cpu-hot-cookie)到
+[clobber/队列门槛](HISTORY.md#20260922-spin-cold-clobber-queue)阶段已下降。
 同期TCLock基本稳定，KD/TCLock约下降19.3%/18.5%；这是定位区间，不能把其间所有
 改动归为单一原因，也不能将此前on路径的损失和共同off路径的损失混为一项。
 

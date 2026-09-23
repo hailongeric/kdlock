@@ -1,148 +1,37 @@
-# Linux / TCLock / kdlock 直接 API 对照
+# Linux / TCLock / kdlock 直接 API benchmark
 
-[单线程与20线程性能调查](results/20260923-spin-single-hot-balance.md)：保留batch元数据一次初始化，
-再将continuation在原12 KiB区域内按CPU错位；完整1/20线程双模式三轮48/48及nested/early4/4通过。
-20线程observe中位数c1/c16为5.299/5.146 Mops/s，较本轮新基线提高32.53%/30.38%，
-adaptive同样恢复到历史水平。单线程短批次最大值约为旧恢复版1.9倍，但中位数较新基线低5%–6%；
-独立24场长对照未复现一致下降，四组中位差为+1.75%、−0.10%、−0.39%、−0.33%，不混入短测取优。
-时钟内联候选已撤回；地址布局与代码对齐都发生变化，不能将收益唯一归因于L1冲突。
-
-统一 generic unlock 的[三轮验证](results/20260923-spin-generic-unlock.md)：
-基础及相关6组、冻结运行器22项、nested/early共4场通过；108/108性能场次、
-9000万次操作完成并排空。c1 JIT正文由28条降为19条，冷解锁同样传递SP/IP/BP并声明宽clobber。
-该批次冻结了移除on/off选项之前的运行器；两种调用壳均已使用新解锁入口，不能据此隔离解锁收益。
-当前默认调用壳选项的后续变更与上述性能输入分开记录。
-
-当前 `KD_SPIN_DIRECT_LOCK` 只在pin后判断CPU热值，已删除调用端的
-`kd_spin_cold_fastpath` / `kd_spin_delegate` 两次开关判断。编译时选用该壳即启用热度分流；
-模块的前者开关只控制冷队列采样策略，后者仍由provider核心执行代理准入控制。
-最新[三轮完整矩阵](results/20260923-spin-three-round.md)：默认轮次已提高为3，
-运行器22项回归通过；84组各3份有效样本，252/252场、19440万次计时操作通过并排空。
-新增min/median/max/spread；低线程仍有较大波动，c1单线程adaptive/on为12.868–34.599 Mops/s。
-20线程12个同轮on/off比较均下降，中位数口径下降5.22%–7.15%；正式最大值口径下降5.36%–10.01%。
-96场四线程及以上KD均实际JIT，运行器默认壳仍为off。
-
-此前[仅CPU热值分流完整单轮重测](results/20260923-spin-heat-only-full.md)：
-六组单元及25项错误变体通过，84/84性能场次、6480万次操作全部通过并排空。
-32场四线程及以上KD均有实际JIT；热度分流壳相对保留壳，单线程提高38.92%–55.72%，
-三线程提高37.98%–53.74%，两线程observe下降、adaptive提高；二十线程仍下降2.86%–6.29%。
-当时每配置一次，不能单独归因于两个开关判断的删除。
-
-此前[C if 完整单轮矩阵](results/20260923-spin-c-if-full.md)：
-1/16 cacheline × 1/2/3/4/8/16/20线程，三方及KD两模式两壳共84/84场通过，
-6480万次操作全部排空；32场四线程及以上KD全部实际JIT。冷捷径on相对off，
-单线程提高14.36%–46.67%、三线程提高41.27%–58.38%；c1两线程下降43.38%–45.59%，
-二十线程下降4.16%–6.56%。单轮差异不等于C if单独收益，冷捷径继续默认关闭。
-
-此前[C if 冷热分支验证](results/20260923-spin-c-if.md)：恢复编译器可见的 `if`，
-仅热分支声明宽 clobber，不手写 push/pop。门槛4下1/2/3线程保持完整原生锁路径，
-20线程有1994763次实际JIT；c1三方单轮12/12场、780万次操作通过并排空。
-六组基础/相关单元通过。当前GCC仍在函数序言保存五个callee-saved寄存器；
-本轮未测旧KD或关闭壳，不据此宣称前后性能提升，冷捷径继续默认关闭。
-
-此前[CPU窗口400亿/MCS阈值1重测](results/20260922-spin-mcs1-window4e10.md)：
-60/60配置各测一次、3600万次操作通过并排空，基础/采样3组及25个错误变体检查通过。
-队列门槛仍为4；新壳三线程较同期保留壳提高47.62%–69.92%，二十线程仍下降2.90%–8.43%，
-c1两线程observe下降14.85%。参数按用户要求保留，冷捷径及新壳继续默认关闭。
-
-当前冷入口调用壳为 `cold_clobber`：宏在pin后通过C `if`读取per-CPU热度，热分支沿用
-clobber-v1，不再手工保存/恢复五个寄存器；冷分支仍包含完整 pending/MCS 获取。
-通过 `--spin-hot-min-queue` 调节低竞争 CPU 的升温门槛。
-[此前调用壳验证](results/20260922-spin-cold-clobber-queue.md)：60配置各测一次，首段9通过/1少线程JIT判定失败，
-修正运行器后续50通过；生产源码/ELF相同，失败未改判或重测。3线程提高48%–61%，
-20线程observe仍下降5.67%–5.83%，c1单线程adaptive短批次下降9.05%，继续默认关闭。
-7场功能、4场长批次PMU通过。下方旧`paired`壳成绩仅作历史。
-
-此前[共享CPU热度cookie版本](results/20260922-spin-cpu-hot-cookie.md)：36/36性能、8/8功能及12/12
-长批次PMU通过并排空。cookie只表示当前CPU热度，一个CPU一份、所有锁共享。
-单线程提升10.45%–47.51%，竞争仍有超过5%的下降，默认保留旧壳和关闭选项。
-[第二阶段](results/20260922-spin-cold-stage2.md)及[第一阶段](results/20260922-spin-cold-stage1.md)
-的局部cookie成绩仅作历史，不与当前版混合汇总。
-
-此前[adaptive快速三方结果](results/20260922-adaptive-quick.md)：18/18场、1500万次计时操作完成并排空，
-4/4竞争KD有实际JIT；1线程KD c1/c16为8.445/6.940 Mops/s，20线程为5.048/4.818 Mops/s。
-运行器默认已同时运行KD observe和adaptive，分别汇总；本轮性能只测adaptive。
-
-此前[MCS4 / 40亿CPU窗口完整单轮结果](results/20260922-spin-mcs4-full-benchmark.md)：
-30/30场通过并排空，8/8竞争KD有实际JIT。20线程KD c1/c16为5.009/4.768 Mops/s，
-为TCLock的1.018×/1.462×；c1单线程较上一轮下降10.16%，单轮差异尚未归因。
-
-此前[CPU MCS1 / hotlock32 与移除 busy 合并验证](results/20260922-spin-mcs1-lock32.md)：
-三方单轮18/18场通过，20线程KD c1/c16为5.011/4.802 Mops/s，较上一轮提高27.3%/23.7%，
-本轮恢复到下降前基线水平。基础/定向单元3/3、adaptive功能2/2通过；两组改动的贡献未拆分。
-上述性能来自 CPU MCS1 / 400 亿窗口的冻结版本，保留为历史比较。
-
-此前[CPU32 MCS 计数验证](results/20260922-spin-mcs32.md)：1/4/20线程三方单轮18/18场通过；
-单线程 KD c1/c16 为6.574/6.890 Mops/s，20线程为3.937/3.883 Mops/s，
-相对下方基线20线程下降20.8%/18.4%。本次按用户指定保留计数规则，收益与退化分别记录。
-
-此前[完整三方单轮基线](results/20260922-single-round-baseline.md)测量提交 `1928434`：
-30/30 场通过，计时区间 2940 万次操作全部排空。单线程 KD c1/c16 为
-6.369/5.779 Mops/s；20 线程为 4.974/4.760 Mops/s。每配置只测一轮。
-
-模块 `spin_cold_fastpath=0` 时，spin CPU 每次实际MCS入队检查热度；启用队列门槛时冷CPU改计合格队头获取。
-fast/pending 不计数；spin/mutex 单锁
-阈值为32，第33次调用采时。mutex CPU 保持1024次入口检查，两类CPU窗口均为400亿TSC ticks。
-热表已删除 busy/barrier，只在 task context 统计并保留 CPU pin；非 task 样本丢弃。
-此前 CPU 阈值为 1024 的 MCS 入队频率实验已因退化撤回，
-[该次回退验证](results/20260922-spin-mcs-rollback.md)通过，当时未重跑性能矩阵；
-[实验成绩](results/20260922-spin-mcs-frequency.md)保留为历史。
-
-此前[恢复版完整三方结果](results/20260922-restored-full-benchmark.md)：60/60场通过，5880万次操作全部排空；
-20线程KD c1/c16为4.969/4.788 Mops/s。每组两轮取最大值，Linux c16单线程波动详见报告。
-
-512槽直接映射已按用户要求撤回，代码恢复 `bf16b10`。此前[回退验证](results/20260922-directhash-v2-rollback.md)通过：
-20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空，按当时口径保留。
-
-当前实现的恢复过程见[热表回归处理](results/20260922-performance-recovery.md)：
-当时采用每 CPU/type 256 桶、256 记录，精确地址碰撞链、满表不替换、本地 busy 及已有 pin 复用。
-当时的无 busy、共享表和直接映射版本已回退；当前重新采用 task-only 统计，普通 spin IRQ 语义及 wrapper 栈修复保留。
-历史实验统一从[历史索引](../spin_cacheline/results/HISTORY.md)读取。
-
-当前源码使用显式锁 API，KD 入口记录本地热度；进程名筛选和统一 hook 分派不进入被测路径。三种后端分别构建同一份
-`workload_modules/spin_cacheline`，只在编译时改变锁 API：
+当前入口使用同一份 `workload_modules/spin_cacheline` 正文，分别构建Linux原生、TCLock、
+当前KD三个后端；KD observe/adaptive共用一份调用二进制，分会话运行和汇总。
+最新结果与历史参照见[本次结果](#本次结果)，构建及运行环境遵循[操作手册](../../docs/AGENTS.md)。
 
 | 后端 | 直接调用 |
 | --- | --- |
-| Linux | `__raw_spin_lock/unlock`，绕过实验内核 hook |
+| Linux | `__raw_spin_lock/unlock`，绕过实验内核hook |
 | TCLock | `komb_spin_lock/unlock`，调用者配对管理抢占 |
-| kdlock，保留壳 | `kd_spin_lock_clobber_v1/unlock_clobber_v1`，直接进入 kdlock 协议 |
-| kdlock，热度分流壳 | `KD_SPIN_DIRECT_LOCK/UNLOCK`，冷CPU完整原生获取，热CPU进入pinned clobber核心 |
+| kdlock | `KD_SPIN_DIRECT_LOCK/UNLOCK`，CPU热值分流获取，统一generic clobber解锁 |
 
-`--spin-cold-fastpath on off` 对同一当前源码构建两种 KD 调用壳：`on` 使用
-`KD_SPIN_DIRECT_LOCK/UNLOCK` 热度分流壳，并加载 `spin_cold_fastpath=1` 启用冷队列压力采样；
-`off` 编译保留的全 clobber 壳并加载采样开关0。运行器暂默认 `off`。
-单独将模块参数改为0不会关闭已编译配对壳的CPU热度分支；宏始终只读取热值。
-两组使用相同 clobber-v1 JIT 入口 ABI，不是历史 KD 二进制。记录分别带有
-`caller_shell=cold_clobber/clobber`、`caller_abi=clobber`、`spin_cold_fastpath`和
-`cookie_storage=percpu_rate_hot/not_applicable`。cookie只表示CPU热度，一个CPU一份、所有锁共享。
-历史未记录cookie存储的样本保留`unrecorded`，不合并汇总。
-Linux/TCLock 每配置每轮各跑一次，供各 KD 模式及调用壳比较；汇总同时按热度模式、
-调用壳、开关和队列门槛分组，不跨组取最大值。
+KD宏取得一次preempt pin后用C `if`读取per-CPU热值。冷CPU调用
+`kd_spin_direct_native_lock`，包括失败后的完整pending/MCS等待；热CPU调用
+`kd_spin_lock_pinned_clobber_v1`。解锁一律通过broad-clobber调用
+`kd_spin_unlock_clobber_v1`，由provider识别低字节5的原生所有权或执行热协议。
+寄存器仅在约束/clobber中声明，保存位置由编译器决定，可出现在if之前；宏不手写push/pop。
 
-选用热度分流壳后，observe/adaptive 都跳过冷 CPU 的热表/context/owner 路由；observe
-在 CPU 热后固定准入，adaptive 再判断单锁热度。CPU 曾变热后仍依赖后续 MCS
-采样降温，安静的单线程阶段不会主动过期；持续高频MCS的2/3线程也可能保持已热状态，
-不增加每次TSC读取。
-`--spin-hot-min-queue N` 为加载时只读选项，范围0–16、默认4；本运行器仅在on组装载N并启用压力采样。
-0保留原MCS采样规则；N>0时，冷CPU须在队头观察到至少N个节点才累计升温样本，
-热CPU仍按原规则采样。冷获取包含CAS失败后的pending/MCS等待，不因CPU保持冷态而省略排队。
-记录中的 `spin_hot_min_queue` 是实际装载的门槛：off固定装载0、Linux/TCLock为
-`not_applicable`；KD另记 `spin_hot_min_queue_requested` 保留CLI输入。历史缺失字段
-记为 `unrecorded`，不同门槛不合并汇总。
-`--pmu` 在单独长批次中仅对 measure 客户端及其 worker 运行 perf stat，输出
-`pmu.csv` 的 instructions/cycles/task-clock/context-switches/cpu-migrations；
-不计准备和预热，且不能直接等同于仅 lock/unlock 指令数。
+CPU热度只在每次合格MCS发布时采样一次，fast/pending不计数；冷/热CPU规则相同。
+2/3线程实际入队也可升温，但不保证存在可代理后继。CPU窗口为400亿TSC ticks；
+单锁入口第33次检查独立窗口，mutex CPU仍每1024次入口检查。每CPU/type保留256桶、
+256条精确地址记录，碰撞链完整匹配、满表保留已有身份；非task上下文跳过统计。
+`spin_delegate=0`跳过代理及热度采样。当前没有队列深度策略、on/off调用壳选项或两个旧开关判断。
 
-kdlock 使用显式 32 位 KD 锁字，保留 owner/ACK、上下文和 JIT 就绪检查。
-新壳和保留壳均通过clobber列表向编译器声明寄存器破坏，允许编译器在函数入口保存；
-新壳不再手写五个callee-saved寄存器的push/pop。TCLock和Linux使用各自普通C API。
-三个模块正文与循环相同，但不是同一份二进制，也不把必需的现场成本扣除。
-每次完整操作保留原来的固定 cacheline 更新、解锁后四组乘加及循环成本。
-吞吐和摊销 ns/op 都以完整操作计算，不是独立获取锁延迟。
+observe在CPU热后固定准入，adaptive再判断单锁热度；上下文、owner、ticket和JIT就绪约束均保留。
+CPU曾变热后依赖后续MCS事件降温，安静的单线程阶段不会主动过期。热度cookie只表示一个CPU
+共享的缓存热值，不存获取路径或嵌套深度。记录使用`caller_shell=cold_clobber`、
+`caller_abi=clobber`、`cookie_storage=percpu_rate_hot`、`cpu_heat_policy=mcs_entry`；
+旧样本缺失字段或使用不同策略时分别汇总。
 
-当前保留入口准入和ticket路径优化；热度使用无候选的精确地址哈希计数，spin CPU每次合格MCS事件、单锁入口计数大于32时定时确认，mutex CPU仍统计1024次调用。同期复现、独立采样、
-两个候选与回退验收见 [竞争回退报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
+三种后端保留相同cacheline更新、解锁后四组乘加及循环成本；吞吐和ns/op以完整操作计算，
+不是独立获取锁延迟。三种模块不是同一二进制，必需的现场成本不扣除。
+`--pmu`只在独立长批次对measure客户端和worker执行perf stat，输出instructions、cycles、
+task-clock、context-switches、cpu-migrations；累计计数包含所有worker等待，不等同于lock/unlock正文成本。
 
 ## 准备与运行
 
@@ -177,9 +66,9 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 `--dry-run` 只打印矩阵。`STOP` 文件在已排空会话之间生效；失败或超时保留证据并停止。
 `--hotlock-mode observe adaptive` 显式选择默认双模式；也可只选 `adaptive` 或 `observe`。
 快速三方 adaptive 矩阵可追加 `--hotlock-mode adaptive --threads 1 4 20`，共54场，仍每线程100000次、每配置三轮。
-完整低线程与高竞争比较使用 `--threads 1 2 3 4 8 16 20 --spin-cold-fastpath on off
---spin-hot-min-queue 4 --hotlock-mode observe adaptive`：1/16 cacheline共252场，
-每配置三轮、每线程100000次；同源码的on/off壳分别记录，Linux/TCLock每轮只跑一次。
+完整低线程与高竞争比较使用 `--threads 1 2 3 4 8 16 20
+--hotlock-mode observe adaptive`：1/16 cacheline共168场，
+每配置三轮、每线程100000次；KD统一按CPU热度分流，Linux/TCLock每轮只跑一次。
 
 构建通过后端 `Module.symvers` 解析导出符号，保存三个样例的反汇编与未定义符号，
 检查目标锁不再导入统一 spin hook。原生组不加载任何锁 provider。
@@ -203,7 +92,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 
 按改动选择 `nested`、`early`；`--spin-delegate off` 单独验证原生对照，要求零
 JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆盖边界见
-[tests](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#continuation-validation)。
+[测试入口](../../tests/README.md)。
 
 ## 验收与结果
 
@@ -217,8 +106,8 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 中位数用于描述波动，不改变上述后端比值口径。相对 Linux 的比值使用各后端获选值
 除以 Linux 获选值，KD/TCLock 同理；保留有效样本数，报告须说明不足三轮的情况。
 `records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
-正确、完成且已排空的样本参与汇总。KD按`hotlock_mode`、`spin_cold_fastpath`、`caller_shell`、
-`cookie_storage`、`spin_hot_min_queue`分开汇总，不跨模式、cookie存储或队列门槛取最大值；
+正确、完成且已排空的样本参与汇总。KD按`hotlock_mode`、`caller_shell`、
+`cookie_storage`、`cpu_heat_policy`分开汇总，不跨模式、cookie存储或采样策略取最大值；
 热表计数保留在原始日志，不参与性能评分。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
@@ -237,27 +126,20 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py codegen/test_clobber_a
 python3 bench/tclock_compare/test_direct.py
 ```
 
-历史验证：2026-09-22 双模式默认值及独立汇总已在guest通过运行器单元12/12；CLI dry-run核对
-cacheline40场、RCUHT20场，KD功能模式20场由单元检查，默认均只有第0轮。
-当时另完成adaptive快速18场性能测量，原始命令、退出码、哈希及范围见[报告](results/20260922-adaptive-quick.md)。
-
 ## 本次结果
 
-最新已完成测量见[统一解锁三轮验证](results/20260923-spin-generic-unlock.md)。
-此前完整线程矩阵见[三轮完整矩阵](results/20260923-spin-three-round.md)。
-此前[仅CPU热值分流完整单轮报告](results/20260923-spin-heat-only-full.md)保留原始单样本及执行流分析。
-此前测量见[CPU窗口400亿/MCS阈值1报告](results/20260922-spin-mcs1-window4e10.md)。
-此前调用壳修改见[内联clobber与队列门槛报告](results/20260922-spin-cold-clobber-queue.md)。
-此前[共享CPU热度cookie报告](results/20260922-spin-cpu-hot-cookie.md)包含单轮36场
-三方同期结果、竞争默认门槛和独立长批次PMU；机器码、功能及源码身份也保存在该报告。
+| 报告 | 范围与用途 |
+| --- | --- |
+| [默认热度分流完整三轮](results/20260923-spin-default-heat-full3.md) | 最新168场：1/2/3/4/8/16/20线程，56配置各3轮；39b0e7c加冻结工作树修改，包含现有布局优化 |
+| [单线程与20线程调查](results/20260923-spin-single-hot-balance.md) | metadata精简、continuation错位、48场矩阵和长批次布局对照；保留失败候选及代码对齐的因果限制 |
+| [昨日恢复基线](results/20260922-performance-recovery.md) | 旧采样规则下20线程5.197/4.809 Mops/s，两轮最大值；该快版没有匹配PMU |
+| [统一解锁ABI验证](results/20260923-spin-generic-unlock.md) | broad-clobber、JIT COMPLETE/FULL及nested/early验证；其108场属于布局优化前冻结版本 |
+| [普通spin IRQ/wrapper验证](results/20260922-plain-spin.md) | IRQ/BH状态、抢占配对及wrapper修复，含首次失败记录 |
 
-此前[adaptive快速三方报告](results/20260922-adaptive-quick.md)：基于`4081b09`的工作区，
-c1/c16 × 1/4/20线程 × 三后端 × 一轮，18/18场、1500万次操作完成并排空。
-4/4竞争KD有实际JIT，两场单线程为NO_JIT；20线程KD为5.048/4.818 Mops/s。
-该历史批次未重测observe，不代表当前已完成的双模式矩阵。
-
-此前五轮中位数及功能实验保留原统计口径，从[历史索引](../spin_cacheline/results/HISTORY.md)
-读取，不能作为本轮单次测量的成绩。
+最新矩阵20线程KD observe中位数c1/c16为5.324/5.051 Mops/s，两模式spread均低于0.8%。
+3/4线程仍慢于Linux/TCLock；低线程波动未消除，c1单线程TCLock最大40.899与中位14.854相差很大。
+本次完整矩阵未采PMU；不能将此前不同冻结输入的PMU数值移作本版测量。
+其余过时阶段报告已合并到[性能实验历史索引](results/HISTORY.md)，保留固定Git原文、输入身份及归档哈希。
 
 ## 当前 TCLock 设置
 
@@ -301,11 +183,11 @@ v2，客户端和 workload 模块必须同时重建。
 ## 准入模式与结果解释
 
 运行器默认同时运行 `--hotlock-mode observe adaptive`。
-`observe` 固定 KD 准入并记录本地统计；冷捷径开启时须先满足CPU热度门槛。
+`observe` 在CPU热后固定 KD 准入并记录本地统计；冷CPU同样进入完整原生获取。
 `--hotlock-mode adaptive` 使用spin CPU每次合格MCS事件、单锁入口 count 大于32（33次）的
 独立时间窗口确认；每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
 满表不覆盖已有身份，未收录锁或冷锁保持原生。
-两者使用同一输出根目录下带 `-cold-{on|off}-q{N}-{observe|adaptive}` 的独立会话目录，
+两者使用同一输出根目录下带 `-kdlock-{observe|adaptive}` 的独立会话目录，
 汇总保留模式列；Linux/TCLock 标为 `not_applicable`。
 单 CPU 预热不会让其他 CPU 自动变热，冷 CPU 的测量前缀属于自适应效果的一部分。
 `--scenario nested` 和 `--scenario early` 只允许 KD cacheline，用于双锁协议回归；
@@ -313,20 +195,13 @@ v2，客户端和 workload 模块必须同时重建。
 
 adaptive 的 `NO_JIT` 会保留数据正确的性能样本，但 `jit_acceptance` 明确为
 `NO_JIT`，不算实际 JIT 通过；observe 的竞争正例仍要求非零正文证据。
-严格冷态预期是：新provider会话、`caller_shell=cold_clobber`、冷捷径on、
-plain场景且 `0 < threads < spin_hot_min_queue`。这类会话必须零实际JIT，标记
-`NO_JIT_COLD`，仅证明预期原生策略，不算JIT通过。20线程observe/adaptive均要求实际JIT；
-同一plain策略在N>0、threads>=N且threads!=20时，线程数不保证队头瞬间已链接N个节点；
-零JIT记为 `NO_JIT_POLICY`，有实际正文才记为PASS，不将策略原生完成算作JIT通过。
-plain的2/3线程可通过fast/pending或原生MCS队头完成；即使进入MCS，线程数也不足以保证存在可代理后继。
-不属于上述冷态/门槛策略的少线程会话（包括off和q0），零JIT单独标记
-`NO_JIT_LOW_CONTENTION`，有实际正文才记为PASS；该分类不证明CPU已热或MCS已经发生。
-20线程以及竞争的nested/early场景在observe/adaptive中均仍要求实际JIT，
-不能套用少线程plain豁免。off和q0的4线程以上observe也仍保持实际JIT要求。
+两种模式均按 MCS 入队采样，少线程也可自然升温。plain 的2/3线程可以经 fast/pending
+或原生 MCS 队头完成；入队不保证存在可代理后继。零JIT标记 `NO_JIT_LOW_CONTENTION`，
+有实际正文才记PASS，不再使用队列深度相关的 `NO_JIT_COLD` / `NO_JIT_POLICY`。
+20线程及竞争 nested/early 在两种模式均要求实际JIT；4线程以上observe也要求实际正文。
 汇总额外报告 `actual_jit_sessions`，不能用性能有效样本数代替 JIT 验收数。
-
 
 `--spin-delegate off` 显式选择 KD 不代理对照，使用相同直接 API/负载和准备步骤，
 provider 装载 `spin_delegate=0`。结果必须为零 JIT 正文并标记 `DISABLED_CONTROL`；
-不作为 JIT 正例。当前回退版 off 在公共入口跳过热度记录，不能与已撤回实验
-中“off 仍采样”的数值直接比较。除上述冷态、队列压力及少线程plain分类外，默认 `on` 的observe竞争验收仍要求实际JIT。
+不作为 JIT 正例。当前 off 在公共入口跳过热度记录，不能与已撤回实验
+中“off 仍采样”的数值直接比较。除上述少线程plain分类外，默认 `on` 的observe竞争验收仍要求实际JIT。

@@ -3,9 +3,8 @@
 旧统一 spin 分发和站点缓存已删除；本页区分当前协议与固定版本验证。
 当前直接入口为 `kd_spin_lock_abi`，快速所有权和 ticket 生命周期仍保留。
 
-## 2026-09-20：单锁字与本地哈希改造
+## 单锁字与本地哈希
 
-基线 `7e2460c`，无行为变化清理 `f17bb3a`。**单锁字、本地哈希和稳定角色已实现。**
 显式 `kd_spinlock_t` 为 4 字节，直接承载 fast、pending、KD MCS tail 和
 combiner 仲裁；gate 映射、独立 S、Linux L 二次获取均已删除。
 普通 Linux 对象不进入 KD API。无 JIT、资源不足及上下文拒绝均使用 KD 字的
@@ -24,9 +23,8 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 一次，mutex CPU 保持每 1024 次入口检查，两者共用 400 亿 TSC 窗口。
 时间差取上次检查到本批结束的整批耗时，首批从初始化计时。spin 共用 `xchg_tail()`
 默认在交换队尾前记录，原生、代理、虚拟嵌套均覆盖；fast/pending、入队前取消及
-节点耗尽轮询不计数。`spin_cold_fastpath=1`且只读参数`spin_hot_min_queue=N>0`时，冷CPU只在取得队头
-所有权、交接前看到含自己至少N个已链接节点时计数；热CPU保持发布采样，不重复计数。
-最多读N−1条链接，缺链不等待；参数0..16、默认4，0恢复原规则。CPU 热才在入口查锁表。
+节点耗尽轮询不计数。CPU 热度仅按实际 MCS 发布计数，冷/热、原生/代理/虚拟入队规则一致；
+没有队列深度门槛、后继链扫描或队头补采样。2/3线程频繁入队也能升温。CPU 热才在入口查锁表。
 单锁仍统计入口调用，count **大于 32** 时检查 25 亿 TSC 窗口、刷新 hot，
 更新时间戳并清零计数，即第 33 次触发。等于时间边界或倒退均冷。
 mutex 同次到期复用 TSC；spin 的 CPU/单锁事件分开采时。
@@ -47,7 +45,7 @@ SELFTEST 的 `hotlock_role_trace=1` 按锁地址和稳定 request 输出角色�
 `hotlock_lifetime_selftest=1 hotlock_mode=observe` 检查热表碰撞及满容量时既有身份和真实 owner 仍保留及
 mutex 等待从 CPU 1 迁移到 CPU 2；不是实际 JIT 验收的替代。
 
-当前 `644f231` 已将独立 request 引用池替换为 continuation 栈，普通完成先 pop
+continuation 栈保留稳定 request，普通完成先 pop
 再通知；native 先发布 NATIVE_READY，最终解锁等待包括无锁 relay 在内的根 ticket
 借用全部退休。每次实际获取只持有一次入口抢占 pin，热度记录与原生回退复用它。
 布局、分配位置和两后端数据流集中在 [执行路径](../../bench/spin_cacheline/EXECUTION_PATHS.md)。
@@ -69,7 +67,7 @@ one object. Explicit caller storage must outlive all requests and frames.
 The paired broad-clobber spin shell is selected at caller compile time.
 It pins once, then uses a C `if` with `this_cpu_read` / `READ_ONCE` to select an
 ordinary C cold call or the original broad-clobber hot call based only on CPU
-heat. It does not read `spin_cold_fastpath` or `spin_delegate`. The cold call
+heat. The cold call
 keeps the existing `nondelegated` in-flight count through the entire native acquisition
 and hold. It attempts one CAS and passes a failure directly to the complete
 native pending/MCS path. This root does not
@@ -81,12 +79,11 @@ existing unlock core. JIT sees one completion endpoint without a caller-side
 cold/hot unlock branch. The cookie is only the existing per-CPU rate_hot view: one per CPU
 shared by all locks, with no acquisition path or nesting count. CPU heat
 changes affect only subsequent acquisitions, while native MCS still samples heat
-under the configured queue-pressure policy. The drain scan includes this count. Hot acquisitions use the
+once at each actual publication, without consulting queue depth. The drain scan includes this count. Hot acquisitions use the
 shared pinned core and existing fast-owner/ticket routing; the provider still
 checks `spin_delegate` there. Observe fixes lock admission only after CPU heat
 in the paired shell. The retained API keeps its original policy.
-The `spin_cold_fastpath` module option only enables cold-CPU queue-pressure
-sampling; it does not select or disable the caller's heat branch.
+Both APIs use the same MCS-publication CPU sampling.
 Only the hot acquisition branch declares acquisition clobbers; unlock always
 declares the broad clobbers. The compiler owns live-register
 saves and may place them before the C branch or inside it. There are no manual

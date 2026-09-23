@@ -71,7 +71,7 @@ shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队�
 cookie统一传`kd_spin_direct_cookie`，它是已有per-CPU `rate_hot`的视图。
 一个CPU一份，所有锁共享；不另存路径、嵌套深度或调用点cookie。
 宏仅按本CPU热值分流：冷时直接调用原生入口，热时调用 pinned clobber-v1 入口。
-宏不读取 `spin_cold_fastpath` 或 `spin_delegate`；热入口仍由 provider 检查代理开关。
+热入口由 provider 检查代理开关。
 CPU 热值在 pin 后通过 `this_cpu_read` / `READ_ONCE` 读取，不在JIT正文中改写。
 冷调用包含完整 CAS/pending/MCS 获取及既有 MCS 热度采样，不计算 SP/IP/BP。
 热分支通过原 `KD_SPIN_DIRECT_CALL` 声明寄存器 clobber，传递同一四参数；宏不手写 push/pop。
@@ -85,7 +85,8 @@ ticket、context 或 fast owner；其他状态进入原解锁核心。JIT 仅看
 仍按同一 SP/IP/BP 元数据验证 COMPLETE，不生成调用端冷/热解锁分支。
 旧 `kd_spin_direct_native_unlock` helper/export 保留兼容，新配对壳不再调用它。
 COMPLETE 指向解锁 CALL 后续点，FULL 仍恢复完整包，拒绝沿本次原生获取完成。
-调用端在编译时选择壳，需配对使用并重编译；`spin_cold_fastpath` 只控制冷CPU的队列压力采样。
+workload 使用配对壳，调用者须配对使用并重编译。
+observe/adaptive 共用同一调用端，均按实际 MCS 发布采样 CPU 热度。
 wrapper 参数、包布局、32 位锁字均未改变。
 当前 workload 仅外层选择新壳；nested/early 内层使用原 `KD_SPIN_DIRECT_CALL`，没有额外寄存器保存适配。
 
@@ -825,7 +826,9 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 64 字节对齐。continuation 按 64 字节对齐，frame 起于偏移 32，寄存器包起于 104；
 等待和恢复汇编从 `offsetof` 取得偏移，两种 wrapper 的 `pt_regs` 内部布局与输入 ABI 不变。
 每 possible CPU 一次预分配 20 KiB，低端 12 KiB 存放 12 条 continuation，
-高端 8 KiB 为物理 waiter 等待栈。栈头和记录合计 8512 字节；只由本 CPU 按 top
+高端 8 KiB 为物理 waiter 等待栈。栈头和记录合计 8512 字节，初始化时在低端区域
+按 CPU 选择 64 字节对齐的起点，容量和记录内偏移不变；释放使用原始分配基址。
+只由本 CPU 按 top
 分配/收缩，远端执行者仅能在 pop 后发布 retired，不扫描空闲引用或搬移活动记录。
 node 首行保留链接、execution 与预取地址，通知字段位于第二行偏移 64/65；
 数组步长为 128 字节。节点复用不回收 continuation，预取提示不参与恢复。

@@ -1,215 +1,32 @@
 # 当前测试入口
 
-2026-09-23 continuation存储错位布局的定向单元3/3组通过，3项错误变体检出。
-新fixture提取生产结构、分配/释放与reserve/collapse实现，覆盖121个CPU、每CPU全部12条记录、
-122个分配失败点、64字节对齐、偏移不越过低12 KiB区域、完整8 KiB等待栈、原始基址释放及局部初始化回滚。
-初次缺少fixture的u32类型定义而编译失败，补充类型后通过；未修改生产约束或弱化断言。
-日志为 `continuation-skew-unit-fixed.log`，初次失败保留为 `continuation-skew-unit.log`。
-20线程observe三轮筛选18/18、完整1/20线程双模式性能48/48及nested/early双模式4/4通过；
-单线程短批次中位数比本轮新基线低约5%–6%；后续24/24场长批次组件对照通过，
-四组中位差为+1.75%、−0.10%、−0.39%、−0.33%，未复现一致下降；不混入短矩阵取优。
-阶段结果与证据见[单线程/20线程调查](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。
+构建、单元、模块和性能测试只在 recovery guest 执行，先读
+[操作手册](../docs/AGENTS.md)。当前使用显式 KD 单锁字 API；普通 Linux 锁完成
+不能作为 KD JIT 证据。按修改范围选择下面的单元、功能或性能入口。
 
-```sh
-make -C tests/unit run PY_TESTS='spin/test_spin_storage.py'
-```
+## 最近验证与证据
 
-2026-09-23 [统一 generic unlock 验证](../bench/tclock_compare/results/20260923-spin-generic-unlock.md)：
-基础2组及cold/非代理MCS/preempt/paired JIT共6/6组通过，冻结运行器22/22项通过。
-冷/热解锁均验证宽clobber及精确SP/IP/BP，保留pending/tail、抢占和原生在途计数；
-nested/early各2场真实JIT通过并排空，共160万次操作。
-1/16 cacheline × 1/4/20线程 × 六项 × 三轮，共108/108性能场次、9000万次操作通过；
-48场竞争KD全部实际JIT，共53566167次正文，24场单线程KD为NO_JIT。
-147项离线审计、冻结哈希及最终空闲检查通过。该批次使用移除on/off选项前的冻结运行器，
-未重跑全量单元、RCUHT、PMU、SELFTEST或真实IRQ/NMI压力；完整证据见报告。
+结果按冻结源码分别记录，不能将不同阶段的通过项合并为一次当前版本全量验收。
 
-此前[三轮完整性能矩阵](../bench/tclock_compare/results/20260923-spin-three-round.md)：
-运行器默认3轮与汇总回归22/22通过；252/252场、19440万次计时操作通过并排空。
-84组各3份有效样本，独立审计339项检查通过；108场KD共111025047次实际JIT正文，
-包括全部96场四线程及以上竞争。249份冻结源码和9项二进制匹配，最终guest空闲。
-本轮只改benchmark轮次/汇总，未追加全量单元、nested/early、RCUHT、PMU或SELFTEST。
+| 批次 | 已完成 | 范围与入口 |
+| --- | --- | --- |
+| 默认 heat caller 完整三轮 | 56 配置 × 3 轮，168/168 场、129600000 次操作通过并排空；84 场 KD 中 60 场实际 JIT | `39b0e7c` 加冻结工作树；包含 MCS 发布采样、通用解锁、batch 元数据精简和 continuation 错位布局。[完整报告](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)；该批未重跑单元、nested/early、RCUHT 或 PMU |
+| 单线程/20线程优化 | 定向单元 3/3 组、3 项错误变体检出；1/20线程三轮性能 48/48；nested/early 双模式功能 4/4；长批次布局对照 24/24 | [调查与证据](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。短批次单线程中位数曾比同期基线低约 5%–6%；长对照未复现一致下降，不据此声称统计等价 |
+| 通用 clobber 解锁 | 基础及相关单元 6/6 组；冻结运行器 22/22 项；性能 108/108；nested/early 双模式 4/4 | [ABI 验证](../bench/tclock_compare/results/20260923-spin-generic-unlock.md)。使用删除旧 on/off 选项前的版本，冷/热均验证 SP/IP/BP 和宽 clobber |
+| MCS 发布处更新 CPU 热度 | 基础及相关单元 5 组、21 项错误变体；运行器 22 项；1/2/3/20线程功能 8 场通过 | [冻结证据](../bench/.tmp/spin-mcs-entry-20260923.tar.gz)；2/3线程的实际入队与采样计数严格相等。该批未重跑性能矩阵 |
+| 默认 heat caller 运行器清理 | 运行器 23/23、基础单元 2/2；KD workload 构建与导入检查通过 | [验证摘要](../bench/.tmp/spin-default-heat-20260923/verified.json)、[归档](../bench/.tmp/spin-default-heat-20260923.tar.gz)。该批未加载模块或运行 live；后续完整矩阵见首行 |
 
-此前[仅CPU热值分流完整单轮重测](../bench/tclock_compare/results/20260923-spin-heat-only-full.md)：
-基础2组及cold/非代理MCS/paired JIT/热度采样4组通过，25项错误变体检出。
-84/84性能场次、6480万次操作全部通过并排空；36场KD共37012941次实际JIT正文，
-包括全部32场四线程及以上竞争。12场冷态小线程零JIT，批次IRQ/preempt恢复及业务检查通过。
-257份冻结源码、9项二进制、发布图像及结果独立核对通过；caller仍没有两项策略变量引用。
-本轮没有重跑全量单元、nested/early、RCUHT、PMU、SELFTEST或真实中断压力。
+原始归档位于本地忽略目录 `bench/.tmp/` 和 guest `/root/kdlock-evidence/`，
+不随 Git checkout 分发。MCS-entry 归档 SHA256 为
+`79f25848399ba67099b820bab68d918153a98fd8ac458208aca7d37e2a7bd271`；
+default-heat 清理归档为
+`961cd0b2b183f12705d0047bedf1966376fe2a58e7334d489544d81b31895b9f`。
+构建警告、首次失败、源码身份和未测项保留在相应报告或归档内。
 
-此前2026-09-23定向验证：`KD_SPIN_DIRECT_LOCK` 删除两次模块开关判断，仅在pin后读取CPU热值。
-基础2组及 `spin/test_spin_cold.py`、`codegen/test_spin_paired_jit.py` 共4组通过；
-ABI fixture不再提供两个开关符号，继续验证双CPU、冷热路径、活跃寄存器、续点及嵌套/提前解锁。
-真实caller的导入表和反汇编均不含 `kd_spin_cold_fastpath` / `kd_spin_delegate` 引用。
-同源码c1、adaptive、cold on/q4的1/20线程functional两场通过，共210万次操作并排空，
-单线程 `NO_JIT_COLD`，20线程实际JIT正文1988261次。内核身份核验、冻结哈希及最终空闲检查通过。
-本轮加载provider（`mutex_jit=1`，仅spin负载），没有重跑性能矩阵或全量单元。
-
-```sh
-make -C tests/unit run PY_TESTS='spin/test_spin_cold.py codegen/test_spin_paired_jit.py'
-```
-
-functional使用现有直接运行器，参数为 `--functional --backends kdlock --cachelines 1
---threads 1 20 --hotlock-mode adaptive --spin-cold-fastpath on --spin-hot-min-queue 4
---repeats 1 --iterations 100000`；完整argv和内核基线见归档environment.json。
-guest证据：`/root/kdlock-evidence/spin-heat-only-20260923/`；
-宿主[归档](../bench/.tmp/spin-heat-only-20260923.tar.gz) SHA256：
-`557d85c9c129561f54d619c5e85989072dcd7b30f0fb37a6b417b97542bd2f51`。
-
-此前[C if 完整性能矩阵](../bench/tclock_compare/results/20260923-spin-c-if-full.md)：
-84/84场、6480万次操作通过并排空；批次IRQ/preempt恢复、业务数据及worker检查通过。
-56场KD中36场实际JIT，共36975809次正文，包含全部32场四线程及以上竞争；
-12场冷态小线程保持零JIT。256份冻结源码、9项二进制及发布图像独立核对通过。
-本轮没有重跑单元套件、nested/early、RCUHT或真实中断压力。
-
-此前[C if 冷热分支验证](../bench/tclock_compare/results/20260923-spin-c-if.md)：
-基础2组及cold/非代理MCS/paired JIT/热度采样4组通过，25项错误变体检出。
-原生MCS fixture覆盖1/2/3/8线程、门槛4及传统门槛0，合计110万次操作；
-门槛边界覆盖1..16。1/2/3线程保持冷态，2/3线程仍真实入队，8线程能更新CPU热值。
-c1三方单轮12/12场、780万次操作通过并排空；20线程KD有1994763次实际JIT。
-未追加nested/early、RCUHT、真实中断压力或全量矩阵；以下相关结果均为此前验证。
-
-此前CPU窗口400亿/MCS阈值1的[重测](../bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md)：
-基础2组及热度采样1组通过，25项错误变体检出；覆盖每个合格事件、400亿严格边界、
-冷热转换及不变的队列门槛4。60性能会话、3600万次操作全部通过并排空，20场KD有实际JIT。
-本轮未追加nested/early、RCUHT或PMU，下面的对应结果为此前验证。
-
-此前内联热度/clobber壳与冷队列门槛已完成基础2组及直接相关4组验证，热度错误变体25项、
-运行器21项通过。初次用户态ABI fixture使用8字节栈对齐导致SIGSEGV，改为libc所需的16字节
-后原断言通过，未为此改生产代码。覆盖真实GS读取、双CPU共享热度、跨锁活跃寄存器、
-等待/持锁期间变热、冷态与普通状态混合MCS 400000次及pin/在途归零。
-`codegen/test_spin_paired_jit.py`执行实际wrapper，覆盖无手工push/pop的COMPLETE、入口拒绝、FULL/native续跑。
-60性能配置各测一次：原批次9通过、1原NO_JIT失败保留，修正少线程判定后续50通过；
-不能记作统一60/60通过。7场功能（gate/delegation控制、门槛0、nested/early、RCUHT）
-及4场单线程PMU通过并排空。命令、失败与证据见[调用壳报告](../bench/tclock_compare/results/20260922-spin-cold-clobber-queue.md)。
-[之前共享CPU cookie配对C壳验证](../bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md)仅作历史。
-[第二阶段](../bench/tclock_compare/results/20260922-spin-cold-stage2.md)的8组及25项准入是历史验证。
-
-
-当前 spin CPU 每次合格MCS事件检查：冷捷径/队列门槛开启时，冷CPU统计合格队头获取，
-其他情况保持入队采样；spin/mutex CPU 共用400亿TSC窗口；
-mutex CPU 保持 1024 次入口检查，单锁保持第 33 次检查、25 亿窗口。
-
-此前[完整三方bench](../bench/tclock_compare/results/20260922-spin-mcs4-full-benchmark.md)
-30/30场通过，2940万次操作全部排空，8场竞争KD均有实际JIT；该轮未追加单元或adaptive功能。
-
-此前阈值修改基于 `383249f`，在 guest 独立副本 `/tmp/kdlock-mcs4-jv7hhnwu/src` 验证：
-基础及热度/MCS 定向单元 **5/5**、热度错误变体 **18/18** 检测、normal provider
-`W=1` 构建通过。覆盖第 3/4、7/8 次 MCS、整批耗时、40 亿边界、冷却/重新变热、
-mutex 1024 次检查和不变的单锁 33 次规则。内核身份核验为 `6.1.159-kdclobber2`。
-构建有恢复汇编 objtool 及 Perl locale 警告。该次未加载模块或运行 live/性能测试，
-主线程 guest 副本未改写；其单元/构建与上述后续bench属于不同验证批次。
-
-验证命令：
-
-```sh
-make -C tests/unit run PY_TESTS='infrastructure/test_hotlock_sampling.py spin/test_spin_nondelegated.py spin/test_spin_shadow.py'
-make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1 -j2
-```
-
-[验证日志归档](../bench/.tmp/spin-mcs4-window4e9-jv7hhnwu/evidence.tar.gz)、
-[冻结源码](../bench/.tmp/spin-mcs4-window4e9-jv7hhnwu/source.tar.gz)及
-[输入/产物哈希](../bench/.tmp/spin-mcs4-window4e9-jv7hhnwu/audit.json)保存在本地忽略目录；
-guest 原始日志位于上述独立副本同级的 `evidence/`。
-
-此前[CPU MCS1 / hotlock32 与移除 busy 合并验证](../bench/tclock_compare/results/20260922-spin-mcs1-lock32.md)：
-基础及定向单元3/3、16个错误变体检测、normal构建、三方单轮18/18和adaptive功能2/2通过。
-adaptive四线程实际JIT正文248513次，全部排空；非task丢样由定向fixture验证。
-该版保留CPU pin，删除统计busy/barrier；spin CPU每次MCS检查，spin/mutex单锁第33次检查。
-本轮未构建SELFTEST、未运行生命周期探针、真实中断压力或nested/early live，详见报告。
-
-此前 [CPU32 MCS 计数验证](../bench/tclock_compare/results/20260922-spin-mcs32.md)：
-基础及相关单元6/6、14个热度错误变体检测、normal/SELFTEST构建通过。
-三方单轮18/18场与adaptive/plain两场均完成排空；adaptive四线程实际JIT为235995次。
-本次SELFTEST只构建，未运行生命周期探针或nested/early live；详细边界见报告。
-
-此前 [MCS 频率统计回退](../bench/tclock_compare/results/20260922-spin-mcs-rollback.md)
-恢复 `bf16b10` 的调用计数。基础及相关单元 6/6、运行器 11/11、normal/SELFTEST
-构建和生命周期探针通过；adaptive/plain 的 1/4 线程共完成 50 万次操作并排空，
-单线程 JIT=0、四线程实际 JIT=244030。本次未重跑性能矩阵。
-
-512槽直接映射已按用户要求撤回，代码恢复 `bf16b10`。此前[回退验证](../bench/tclock_compare/results/20260922-directhash-v2-rollback.md)通过：
-20线程KD的c1/c16为5.002/4.771 Mops/s，12场定向三方检查全部排空。下方完整矩阵为此前记录。
-
-此前热表曾按性能退化处理恢复为每 CPU/type 256 桶/256 记录和本地 busy；
-共享表/直接映射及当时删除 busy 的报告保留为历史实验。见[回归处理](../bench/tclock_compare/results/20260922-performance-recovery.md)。
-
-前序[普通 spin IRQ 语义与验证](../bench/tclock_compare/results/20260922-plain-spin.md)：
-普通路径不保存/屏蔽/恢复 IRQ/BH，保留抢占配对；12项单元、4项实际 JIT
-功能检查和生命周期探针通过。含 wrapper 中断栈覆盖回归，未测性能。
-
-最近热表回退的基础及定向单元 6/6、adaptive 实际 JIT、SELFTEST 生命周期探针
-和 60 场三方结果见上述回归报告；nested/early 等历史覆盖见普通 spin 报告。
-已撤回实验统一见[历史索引](../bench/spin_cacheline/results/HISTORY.md)，
-不将历史功能检查当作当前版本重跑。
-
-构建和运行只在 recovery guest，先读 [操作手册](../docs/AGENTS.md)。当前版本是
-显式 KD 单锁字 API；全局 spin 分发已删除、mutex hook 安装停用。旧 hook live
-套件、gate 容量测试及其专用 workload 已删除，不能以普通 Linux 锁完成冒充 JIT。
-
-## 2026-09-22 文档与旧工具清理验证
-
-删除已退出测试流程的旧/新采样器运行器、专用内核驱动及 `KD_HOTLOCK_LOCAL_HASH_V2`
-适配标记；历史报告集中到 benchmark 历史索引。生产热表测试和生命周期探针继续保留，
-空闲检查仍拒绝旧模块残留，避免误把删除运行器当作已排空。
-
-本次仅在 guest 运行基础及直接相关检查：基础 2 项、hotlock sampling、regression
-共 4/4 驱动通过（含 11 个采样错误变体及 30 个运行器测试）；三方直接运行器 11/11 通过。
-普通模块在同一路径分别构建删除标记前/后版本，W=1 构建成功，`.text` 逐字节一致，
-SHA256 为 `e83dafee1e47f103614e9ab2d9236cbb4fd4aabd33793dc65aa50fc216aa9466`。
-构建仍有已有的手写恢复汇编 objtool 及 locale 警告，未宣称无警告构建。
-没有加载模块、执行 live JIT 或重跑 benchmark；最新性能仍以热表回归报告为准。
-宿主静态检查确认 42 份 Markdown 无断链，`git diff --check` 通过。
-
-原始命令、退出码、输入哈希、删除文件备份、构建日志及两个 ELF 位于 guest
-`/root/kdlock-evidence/doc-cleanup-20260922/`，本地归档位于
-`bench/.tmp/doc_cleanup_20260922/`（忽略目录，不纳入 Git）。
-
-<a id="hotlock-direct-validation"></a>
-
-## 2026-09-21 去除候选，按锁字直接哈希计数
-
-该冻结版本每 CPU/type 256 桶、256 条预分配精确地址记录，无 score/error、候选排名或淘汰。
-CPU 每 1024 次检查；单锁 count **大于 1024（第 1025 次）** 才采时检查原有窗口，
-刷新 hot、更新时间戳并清零计数。满表不覆盖已有记录，adaptive 未收录锁走原生。
-CPU 冷热变化重置统计但保留映射，地址身份保持到模块卸载。
-布局和流程见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取)。
-
-该历史批次 guest 单元 4/4 通过，11 个错误变体全部被拒绝，覆盖 CPU 1024/锁 1025
-边界、256 个同桶地址的独立计数、满表拒绝插入且不覆盖、窗口/倒退/零时间、
-query、CPU/type 隔离和重入/抢占配对。普通与 SELFTEST 的 W=1 构建通过，
-ELF entry/table/cpu 为 24/6688/13376 字节，CPU 对齐 64。
-
-真实 SELFTEST 探针验证 `retained=1 full=1`、解锁后 `word=0`，mutex 等待从
-CPU 1 迁移到 CPU 2，`balanced=1 ret=0`，正常卸载且无内核错误。此探针
-`mutex_jit=0`，不冒充 mutex JIT。首次脚本误要求 dmesg 全量前缀不变，因环形
-日志换页失败；保存前后日志，按唯一的最后一条前置记录核对本次输出后通过，
-没有修改/放宽协议检查。
-
-adaptive/plain/c1/t4 实际功能检查完成 400000 次操作，其中 JIT 正文 210103 次；
-业务、IRQ/preempt 和排空均通过，无内核错误。此功能会话使用默认 `mutex_jit=1`，
-实际执行的是 spin JIT，不据此声称 mutex JIT 已验证。
-
-本轮原始证据在 guest `/root/kdlock-evidence/hotlock-direct-20260921/`；
-[归档](../bench/.tmp/hotlock_direct_20260921/hotlock-direct-20260921.tar.gz)
-SHA256：`45589ecb9e19718db0e9cea74afab1e43b48e460366f70021f43841ce85e1e25`。
-包含本轮开始时工作树、`this-turn.patch`、最终源码哈希、两种 ELF/布局、单元、
-探针前后日志、functional 及 `audit.json`；宿主代码与已测输入一致。
-
-本轮未覆盖真实 mutex JIT、嵌套/远端 native 续跑或更大多锁 live 负载，
-预分配容量固定且不回收地址记录；没有解决锁地址复用的对象代际问题。
-功能修改时未测性能；随后 [直接哈希同期对照](../bench/tclock_compare/results/20260921-hotlock-direct.md)
-完成 120/120 场、1 亿次操作并全部排空，80/80 竞争会话有实际 JIT。本次只重测
-性能会话内的功能 oracle，没有重复运行上述单元/满表探针；上一版两级候选性能
-不能算作当前无候选版本成绩。
-历史候选版只保留冻结报告入口。
-
-<a id="hotlock-twolevel-validation"></a>
-
-## 2026-09-21 两级热度采样（历史候选版）
-
-该候选版已被当前精确哈希计数替代。单元 4/4、10 个错误变体、实际 adaptive
-JIT 和 120 场性能对照的冻结结果见 [两级采样报告](../bench/tclock_compare/results/20260921-hotlock-twolevel.md)。
-不将其 1024 次单锁阈值、候选替换或对象大小解释为当前行为。
+当前采样语义与 ABI 分别见 [锁协议](../docs/design/locking.md)和
+[寄存器约定](../docs/JIT_REGISTER_ABI.md)，本页不复制策略参数历史。
+旧调用壳、队列门槛和热表候选的结果统一见
+[历史索引](../bench/tclock_compare/results/HISTORY.md)。
 
 ## 单元检查
 
@@ -231,13 +48,14 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 | 原生 pending/MCS 与 owner 配对 | `spin/test_spin_nondelegated.py`、`spin/test_spin_shadow.py` |
 | 单锁字入口和 ticket | `spin/test_spin_direct.py`、`spin/test_spin_entry.py` |
 | 入口抢占配对 | `spin/test_spin_preempt.py`、`infrastructure/test_hotlock_sampling.py` |
-| continuation 容量、回收与最终恢复 | `execution/test_exec_capacity.py`、`spin/test_spin_wait.py` |
+| continuation 分配、容量、回收与最终恢复 | `spin/test_spin_storage.py`、`execution/test_exec_capacity.py`、`spin/test_spin_wait.py` |
 | native 借用退休、共享根包与延迟 ACK | `execution/test_remote_outer.py`、`execution/test_remote_depth_protocol.py`、`execution/test_remote_outer_protocol.py` |
 | 嵌套、提前释放、队列、frame 退休 | `spin/test_spin_outer_progress.py`、`spin/test_spin_shadow.py`、`spin/test_spin_batch.py` |
 | 本地热锁哈希和窗口 | `infrastructure/test_hotlock_sampling.py` |
 | mutex 资源和续跑 | `mutex/test_mutex_resources.py`、`mutex/test_mutex_outer_progress.py` |
 | source/注册生命周期 | `infrastructure/test_source_lifetime.py`、`execution/test_exe_registry.py` |
-| ABI、寄存器和生成器 | `admission/test_clobber_entry.py`、`codegen/test_clobber_abi.py`、`execution/test_native_registers.py` |
+| 冷热调用壳与通用解锁 ABI | `spin/test_spin_cold.py`、`codegen/test_spin_paired_jit.py` |
+| ABI、寄存器和生成器 | `admission/test_clobber_entry.py`、`codegen/test_clobber_abi.py`、`execution/test_native_registers.py`、`execution/test_jit_entry_scope.py` |
 | 范围选择与离线证据 | `infrastructure/test_regression.py` |
 
 共享源码读取/头文件过滤位于 `unit/infrastructure/source_text.py`，不再依赖旧 gate
@@ -260,8 +78,9 @@ KDLOCK_RECOVERY_CONFIRMED=1 timeout 240 tests/run_all.sh \
 
 实际 JIT 与业务互斥使用 [直接运行器](../bench/tclock_compare/README.md)。
 `--scenario plain` 为普通单锁；`--scenario nested` 为 A/B 嵌套；`--scenario early`
-为外锁提前释放，仅 KD cacheline 允许后两项。observe 竞争正例要求真实 JIT；
-adaptive NO_JIT 只可作为明确标记的性能样本。
+为外锁提前释放，仅 KD cacheline 允许后两项。固定准入功能正例要求真实 JIT；
+性能中的原生完成须保留 NO_JIT 标记。少线程可经 MCS 升温，但不保证出现可代理后继；
+不能只凭线程数判断是否执行 JIT。具体有效性规则见运行器文档。
 
 SELFTEST provider 可用 `hotlock_lifetime_selftest=1 hotlock_mode=observe spin_entry_selftest=1`
 检查热表碰撞及满容量时既有身份和真实 owner 仍保留、mutex 等待 CPU 迁移及 owner ACK；这不执行 JIT。
@@ -270,7 +89,7 @@ SELFTEST 构建分开，不替换加载中的模块，完成后必须排空和�
 
 ## 历史验证与尚未覆盖边界
 
-当前改动的实测范围以本页最新结果为准。continuation 容量、最终恢复汇编、
+各批实测范围以本页链接报告的冻结源码和原始结果为准。continuation 容量、最终恢复汇编、
 节点先复用、共享根包及延迟 ACK 的历史 fixture 通过，不等于当前真实内核多 CPU
 远端 native/无锁 relay 强制时序已覆盖。mutex JIT、极端容量/取消组合及访问时
 动态 guard 的剩余限制见 [TODO](../docs/TODO.md)。
@@ -285,4 +104,4 @@ SELFTEST 构建分开，不替换加载中的模块，完成后必须排空和�
 
 [性能阶段索引](../bench/spin_cacheline/results/HISTORY.md)保留原始报告入口；
 更早测试见 [VALIDATION](../docs/VALIDATION.md)。旧 hook/gate 脚本只适用于匹配的
-历史 checkout；本次文档整理没有重跑上述实验，也没有删除测试或原始证据。
+历史 checkout；历史操作命令不作为当前运行指令。

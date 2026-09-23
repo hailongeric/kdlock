@@ -1,64 +1,46 @@
 # kdlock Open Tasks
 
-当前基于 `644f231`，并包含 2026-09-21 的 ticket 路径优化：顶层 pending
-复用 fast owner，合并 claim/release guard，slowpath 返回不重复 claim。
-单锁字、本地哈希、原生 MCS 和 continuation 退休交接均保留；MCS 后置准入
-实验已回退，当前恢复入口策略判断和批量时钟。
-锁协议见 [locking](design/locking.md)，现场存储见 [frames](design/frames.md)，
-对象大小、创建位置及 TCLock/KD 数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
-竞争回退已通过恢复旧路径处理，具体指令级根因仍未确定；后续事项见
-[性能计划 P0.0](PERFORMANCE_PLAN.md#2-p0建立当前版本的可信基线)。
-最新定向功能覆盖见 [回退验证](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#mcs-recovery-validation)，
-continuation 的更广历史覆盖见 [原验证](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#continuation-validation)，
-完整三方基线与限制见 [性能报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-continuation.md)。
-
-Current work list as of **2026-09-21**. Implementation contracts live in
-[DESIGN](DESIGN.md), state layout in [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md),
-and historical evidence in [VALIDATION](VALIDATION.md). Completed step-by-step
-logs have been removed from this task list; Git history retains their detail.
+Current work list as of **2026-09-23**. The implementation includes `39b0e7c`
+(continuation placement), `1eaaf99` (single-pass batch metadata) and the current
+default heat gate/MCS-entry policy committed in `ccefa62`. Contracts live in
+[DESIGN](DESIGN.md), [execution flow](JIT_EXECUTION.md) and
+[register ABI](JIT_REGISTER_ABI.md); measurements and the ordered performance
+backlog live in [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md). Historical evidence
+remains separate in [VALIDATION](VALIDATION.md).
 
 ## Current Checkpoint
 
-The default provider requires `kdclobber2`'s caller-clobber v1 interface; older
-kernel installers have been removed. Ordinary spin/mutex requests capture
-and restore RIP/RSP/RBP; intermediate exits materialize FULL logical GPRs.
-Spin waiter and combiner share a producer-owned continuation/frame/register packet.
-Each possible CPU reserves 20 KiB: twelve records in the low 12 KiB and an 8 KiB
-waiter stack above. Frame pop precedes completion; native ticket borrows, including
-zero-lock relays, retire before root reclamation and the final origin unpin.
-Both caller ABIs use one resident C batch loop. Shared PT/Stack backing,
-producer-prepared hints, diagnostic identity reuse and normal-root admission/
-retirement specialization are implemented. The independent TCLock backend
-switches waiter stacks to execute native code; it does not replace kdlock JIT.
-Spin nodes now separate links/hints from notifications in a 128-byte aligned
-stride; explicit KD objects use one 32-bit word and no gate mapping. Exact
-shared waiter accounting remains unchanged.
-Nondelegating callers now share the pending/MCS queue without an execution
-request/frame; ordinary physical roots reuse the fast-owner unlock record.
-The fixed `spin_delegate=0` control reports self-execution separately from JIT.
-See [the scoped comparison](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-native-mcs.md).
-See [current execution paths](../bench/spin_cacheline/EXECUTION_PATHS.md).
+The provider requires kdclobber2 caller-clobber v1. Ordinary spin/mutex requests
+capture and restore RIP/RSP/RBP; intermediate exits materialize FULL GPRs.
+Spin waiter and combiner share a producer-owned continuation/frame/packet.
+Each CPU reserves 20 KiB: twelve records at a bounded CPU-dependent offset in
+the low 12 KiB, with an unchanged 8 KiB waiter stack above. Frame pop precedes
+completion; native ticket borrows retire before root reclamation and origin unpin.
+Single-pass simple batch metadata, one resident C batch loop, shared PT/Stack
+backing, hints and normal-root completion are implemented. Explicit KD objects
+use one 32-bit word; nondelegating requests use the full pending/MCS queue.
+`spin_delegate=0` remains a native control, distinct from actual JIT evidence.
 
-[Earlier paired measurements](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/spin_cacheline/results/20260919-cacheline-isolation.md)
-belong to their frozen source and do not imply a general speedup or a current
-full-suite PASS. Known unresolved failures remain:
+CPU heat gates both observe/adaptive callers. Spin samples every actual MCS
+publication without queue-depth filtering; mutex samples every 1024 entries.
+Both use the 40-billion-tick CPU window and a per-lock check on hit 33 within
+2.5 billion ticks. Separate CPU/type exact-key tables have 256 buckets/entries,
+no ranked candidates, eviction or busy field. Unknown identities at capacity
+stay native in adaptive; owner/ticket/frame lifetime is independent of heat.
+Benefit-based native/probe/delegate admission remains unimplemented.
+
+The [current full matrix](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)
+and [optimization investigation](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)
+cover their frozen sources only. Known unresolved failures remain:
 
 - Concurrent cold promotion stalled with an RCU warning in c16/t4/clobber
-  preparation. Single-CPU preparation avoids this phase in steady-state
-  measurements; it does not fix it. See [the failure record](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界).
+  preparation. Single-CPU preparation avoids that phase, not its cause. See
+  [the failure record](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md#失败记录与边界).
 - Seven-role/two-CPU mutex mode 4 hit a soft lockup with pinned busy polling.
-  Other mutex passes do not replace this case; see [历史：the failure](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-pinned-mode4-failure).
-- The older oversubscribed mode-5 run published code but missed actual JIT.
-  Its polling strategy differs from today's; see [historical evidence](VALIDATION.md#mutex-oversubscription-assessment).
-
-Hotlock discovery uses separate spin/mutex CPU-local exact-key hash tables,
-256 buckets/entries per type, with no ranked candidates or eviction. CPU checks
-occur every 1024 records; each lock checks after its count exceeds 1024 (hit 1025).
-At capacity adaptive leaves unknown identities native; observe fixes admission.
-Owner/ticket/frame records are independent of table capacity and CPU migration.
-Benefit-based native/probe/delegate selection and shared-identity retirement
-remain unimplemented. Current measurements are linked from the
-[comparison runner](../bench/tclock_compare/README.md).
+  Other passes do not replace this case; see
+  [the recorded failure](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-pinned-mode4-failure).
+- Older oversubscribed mode 5 published code but missed actual JIT. Its polling
+  strategy differs from today's; see [the evidence](VALIDATION.md#mutex-oversubscription-assessment).
 
 ## Delivery Scope
 
@@ -198,53 +180,33 @@ dependency must not silently restore the obsolete polling contract.
 
 ## P2: Performance And Broader Scope
 
-The authoritative, ordered performance backlog is now
-[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md). It separates implemented changes from
-experiments and defines evidence, file boundaries and acceptance criteria.
-These links preserve existing topic entry points without duplicating checklists.
+The authoritative backlog is [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md). It keeps
+implemented work separate from experiments and defines comparison and stopping
+criteria; this page does not duplicate its checklists.
 
 ### Shared Request Storage
 
-Clobber, shared PT/Stack storage, prepared hints and normal completion are
-implemented. Next measure true-sharing RMWs and per-body generated/wrapper cost:
-[performance P2](PERFORMANCE_PLAN.md#4-p2减少逐请求同步和生成代码成本).
-Continuation stack allocation and root-ticket native retirement are implemented;
-request `users`/`packet_owner` have been removed. Independent owner state, source
-leases, final restore reads and post-pop retirement remain required.
-
-The 2026-09-20 structural cleanup embeds producer JIT context in stable requests,
-moves node reservation depth into CPU state, removes unused checkpoint/API
-fields and duplicate batch/map state, and types the mutex encoded tail as `u32`.
-See [current layout](design/frames.md#911-reuse-before-copy-contract) and
-[scoped validation](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#2026-09-20-结构体整理验证).
-Register-reference representation, lock-ledger counters and role-transition
-consolidation remain unimplemented follow-ups; preserve independent owners and
-executor retirement when evaluating them. The subsequent continuation migration
-and its limits are recorded in [scoped validation](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#continuation-validation).
+Clobber, shared PT/Stack, hints, normal completion, continuation placement and
+single-pass simple batch metadata are implemented. Independent owner state,
+source leases, final restore reads and post-pop retirement remain required.
+Future representation or sharing changes must preserve them; current layout is
+in [frames](design/frames.md#911-reuse-before-copy-contract).
 
 ### Hotlock Monitoring And Adaptive Admission
 
-Preallocated exact-key hash counters, CPU/lock timed admission, cooling and stable roles are implemented. Benefit-based selection
-is not: [performance P1](PERFORMANCE_PLAN.md#3-p1避免不划算的代理并降低原生入口成本)
-proposes bounded native/probe/delegate admission for future roots only.
-Do not reuse the permanent safety latch or source retirement for demotion.
+Exact-key counters, CPU/lock windows, cooling and stable roles are implemented.
+Benefit-based selection is not. Demotion may affect future roots only, never
+reuse the permanent safety latch or source retirement.
 
 ### Instrumented Measurement Foundation
 
-The `644f231` observe-mode three-backend baseline is complete; cold/adaptive
-preparation and individual cost attribution remain separate work. Distinguish
-complete-operation throughput, actual JIT share and observation cost:
-[performance P0](PERFORMANCE_PLAN.md#2-p0建立当前版本的可信基线).
-Historical flat-IP samples and overlapping inclusive timers are not causal
-cache-transfer measurements or additive pure CPU costs.
+Current comparisons use three rounds and retain min/median/max plus the selected
+best session. Cold preparation, short/long measurement behavior and individual
+cost attribution remain open. Flat-IP samples and overlapping timers are not
+causal cache-transfer measurements or additive CPU costs.
 
 ### Comparator Feasibility And Matched Experiments
 
-The Linux/TCLock/kdlock spin comparison exists. Wider contention, NUMA, nested
-and mutex work follows the current baseline and correctness gates:
-[performance P3](PERFORMANCE_PLAN.md#5-p3嵌套mutex-与更广负载).
-The known cold-promotion and pinned-mutex failures remain unresolved evidence;
-steady-state workarounds do not fix them.
-
-Earlier phases are indexed in [benchmark history](../bench/spin_cacheline/results/HISTORY.md).
-Current scoped results do not make old source versions current acceptance.
+Linux/TCLock/KD ordinary-spin comparisons exist. Wider NUMA, multi-lock, nested
+and mutex measurements remain scoped work; the unresolved failures above and
+explicit deferrals are not removed by throughput improvements.

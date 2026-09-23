@@ -2,49 +2,30 @@
 
 ## 1. 当前进展
 
-当前模块通过显式 `kd_spinlock_t` 与 caller-clobber v1 API 接入 spin 调用者。
-32 位 KD 字直接承载获取、pending、KD MCS tail 和 combiner 仲裁；gate/S、
-Linux L 二次获取及旧 spin 统一分发均已删除。Linux、TCLock、KD 对象不能混用协议。
-mutex 协议和嵌套控制调用保留，但 `kd_main.c` 未安装全局 mutex hook。
-加载 provider 不会让普通 Linux spin/mutex 自动进入代理。
+当前实现包含 `39b0e7c` 的continuation错位布局、`1eaaf99` 的简单batch元数据单次
+初始化及 `6064c6e` 的通用clobber解锁；默认热度分流和MCS-entry规则保存在 `ccefa62`。
+模块通过显式 `kd_spinlock_t` 与caller-clobber v1 API接入spin，32位KD字承载
+获取、pending、MCS tail及combiner仲裁。Linux、TCLock、KD对象不能混用协议。
+mutex实现与嵌套控制保留，全局mutex hook仍未安装；加载provider不自动代理普通Linux锁。
 
-配对入口 `KD_SPIN_DIRECT_LOCK` 在关闭抢占后用 C `if` 只判断 CPU 热值；
-`db42cf4` 已删除调用端的 `kd_spin_cold_fastpath`、`kd_spin_delegate` 判断。
-冷分支普通 C 调用完整 CAS/pending/MCS，保留 CPU 热度更新；热分支使用 clobber-v1。
-获取壳的宽 clobber 只在热分支声明，没有手工 push/pop；编译器决定寄存器保存位置，
-允许部分保存出现在 `if` 前。`KD_SPIN_DIRECT_UNLOCK` 无条件通过 broad-clobber
-调用 `kd_spin_unlock_clobber_v1`，冷/热获取均传 lock/SP/IP/BP，JIT 正文不再判断解锁路径。
-provider 根据锁字低字节 5 执行 release、nondelegated 减计数与 unpin；其他状态
-进入原解锁核心，不读取 CPU 热值。
+获取宏pin后只按CPU热值执行C `if`：冷分支为完整原生CAS/pending/MCS，热分支
+为pinned clobber入口。宽clobber只属于获取热分支，寄存器保存由编译器安排；
+解锁无条件走通用clobber入口，冷/热均传lock/SP/IP/BP，provider依据低字节5或
+普通状态完成对应释放，不读取CPU热值。没有on/off编译壳选择或手工push/pop。
 
-spin/mutex 分别有每 CPU 256 桶、256 条精确锁地址记录；模块初始化预分配并采时。
-spin 代理开启时，spin CPU 每次合格 MCS 事件检查 400 亿 TSC 窗口；
-mutex CPU 保持每 1024 次入口检查同一窗口。
-provider 的 `spin_cold_fastpath=1` 且队列门槛大于 0 时，冷 CPU 计合格队头获取，其余情况计入队；
-该参数默认 0，仅控制采样规则，不控制配对壳的冷/热分支。`spin_delegate` 仍在
-provider 内控制代理和采样，调用端不再读取这两个策略开关。
-fast/pending 不增加 spin CPU 计数。CPU 热才查表；命中直接增加该锁 count，
-大于 32（第 33 次）时检查 25 亿 TSC 窗口、刷新 hot、更新时间戳并清零计数。
-没有候选排名或淘汰；满表不覆盖，未收录的新锁在默认 adaptive 下走原生。
-observe 固定准入并记录统计。CPU 持续热不重置单锁批次，query 只读缓存。
-普通 spin 在入口做热度/上下文判断，
-关闭代理时跳过记录；普通根 fast/pending 免 ticket，队列分支才占用并检查翻译。
-owner/ticket/frame 独立存活，解锁不查热表。
+spin CPU每次实际MCS发布检查400亿TSC窗口，不检查队列深度；2/3线程真实入队也可升温。
+mutex CPU每1024次入口检查；两类单锁均第33次检查25亿窗口。热表为每CPU/type
+256桶、256条完整地址记录，无候选、淘汰或busy字段；满表不覆盖。owner/ticket/frame
+独立存活。完整规则及准入边界见 [执行流](JIT_EXECUTION.md)。
 
-当前沿用 `644f231` 的每 CPU 20 KiB continuation/等待栈区；普通完成先 pop
-再通知，native 的最终解锁等待根 ticket 借用全部退休。对象大小、分配位置及
-TCLock/KD 数据流集中在 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
-当前热表已按[性能回归处理](../bench/tclock_compare/results/20260922-performance-recovery.md)
-恢复到此前最佳已测实现。早期直接哈希计数验证见 [tests](../tests/README.md#hotlock-direct-validation)，
-同期性能见 [直接哈希对照](../bench/tclock_compare/results/20260921-hotlock-direct.md)：
-adaptive 四线程/二十线程近似持平，没有整体提升。
-此前两级候选版对照见 [历史采样报告](../bench/tclock_compare/results/20260921-hotlock-twolevel.md)，
-不作为当前无候选实现的性能结果。
-此前性能调查及恢复结果见 [回退报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)，
-此前完整矩阵见 [三方报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-continuation.md)。此前 adaptive
-和记录器回退保留在 [历史报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-local-hash.md)；
-新 observe 成绩不验证 adaptive 收益。更广远端 native/无锁 relay 的强制 live 时序
-及访问时 guard 等边界见 [TODO](TODO.md)，历史成绩不能作为当前验收。
+每CPU仍预分配20 KiB：continuation在低12 KiB内按CPU错位，高8 KiB等待栈不变。
+普通完成先pop再通知，native最终解锁等待根ticket借用退休。布局及TCLock差异见
+[EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+
+最新组合版本覆盖见[完整三轮矩阵](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)，
+优化隔离、失败候选及短/长批次限制见[性能调查](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。
+历史结果不能拼接成当前全量验收。并发冷准备、pinned mutex以及访问时guard等
+已知边界见 [TODO](TODO.md)；后续性能任务只维护在 [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)。
 
 ## 2. 阅读顺序
 
@@ -104,7 +85,7 @@ CHECK
 ### 3.4 构建和选择检查
 
 代码修改后可直接运行[三方性能命令](../bench/tclock_compare/README.md#准备与运行)，
-默认每配置一轮；运行器负责构建及业务、IRQ/preempt、JIT 和排空检查。
+默认每配置三轮，报告min/median/max及波动；运行器负责构建、业务、IRQ/preempt、JIT和排空检查。
 以下独立构建与单元入口按需使用，不要求先跑完再测性能：
 
 ```sh
@@ -127,23 +108,14 @@ provider/device 生命周期用 `tests/run_all.sh --case module`；实际 JIT �
 
 运行器保留源码/ELF 哈希、内核身份、正文计数、负载结果及排空状态。
 NORMAL 只代表发布，实际 JIT 需要 wrapper 返回后的正文计数。
-observe 竞争正例缺正文即失败；adaptive 的 NO_JIT 性能样本不算 JIT PASS。
+运行器要求实际JIT的配置缺正文即失败；允许的 NO_JIT 性能样本不算 JIT PASS。
 旧 hook live 脚本及其操作专题已删除；历史证据见 [VALIDATION](VALIDATION.md)。
 
 ### 3.6 2026-09-21 存储清理记录
 
-guest 根盘原占用 98%，可用 2.17 GiB；清理后占用 55%，可用 45.18 GiB。
-只删除四套旧树 `linux-6.1.159`、`-kdstatic1`、`-kdstatic2`、`-kdclobber1` 内
-94280 个 `.o`、`.a` 和 `.tmp_vmlinux.btf` 文件，按文件分配块合计约 43.03 GiB。
-排除 `tools/`、`scripts/`、符号链接和全部基线清单文件，没有运行 `make clean`。
-旧源码、配置、vmlinux、启动镜像、已安装模块及恢复基线保留；旧树后续重建需要
-重新生成这些中间文件。当前 `kdclobber2` 辅助盘构建树未清理。
-
-清理前后 782 个受保护文件 SHA256 一致，当前 kernel identity 和 venv 的
-`pip check` 通过，workload/daemon/provider 保持空闲。所有测试和 benchmark
-原始证据（包括失败记录）均保留；没有重新运行功能或性能矩阵。
-这只释放 guest 文件系统空间，没有压缩宿主虚拟磁盘镜像或删除恢复快照。
-
-逐文件清单、清理脚本、磁盘统计、保护文件哈希和核验输出在 guest
-`/root/kdlock-evidence/maintenance-20260921/`，并取回宿主
-[维护归档](../bench/.tmp/maintenance_20260921/maintenance-20260921.tar.gz)。
+历史维护只清理 `linux-6.1.159`、`-kdstatic1`、`-kdstatic2`、`-kdclobber1` 的可重建
+编译中间文件，释放约43.03 GiB；旧源码、配置、vmlinux、启动镜像、已安装模块及
+恢复基线保留。当前kdclobber2构建树、测试证据和恢复快照未清理，旧树重建须重新
+生成中间文件。782个受保护文件清理前后SHA256一致；这不代表重新运行功能或性能。
+逐文件清单、脚本与核验见[维护归档](../bench/.tmp/maintenance_20260921/maintenance-20260921.tar.gz)，
+guest目录为 `/root/kdlock-evidence/maintenance-20260921/`。

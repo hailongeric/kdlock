@@ -1,15 +1,11 @@
 # TCLock 与 KDLock 当前执行路径、对象和数据流
 
-本文以 `644f231`（continuation 存储与退休交接）及 2026-09-21 的 ticket 路径优化与性能回退处理
-为准，描述当前直接 API 的 **spin** 执行路径。对象表以 2026-09-20 的
-性能 ELF 为基础；2026-09-21 重新构建、运行并复核 node/continuation/ticket 布局。
-2026-09-22 普通 spin 已改为保持 IRQ/BH 状态，continuation 缩至 704 B；
-新布局与实际 JIT 验证见[普通 spin 语义报告](../tclock_compare/results/20260922-plain-spin.md)。
-2026-09-23 的配对调用壳改为 C `if`，并在 `db42cf4` 删除调用端策略开关判断；
-下述入口流程按该版本说明，对象尺寸与历史性能证据仍采用各自注明的冻结版本。
-热表保留每 CPU/type 256 桶/256 记录和复用 pin 的共享入口；当前模糊统计已删除
-本地 busy 及对应屏障，非 task 上下文跳过统计。此前回退的原因、范围及性能见
-[回归处理](../tclock_compare/results/20260922-performance-recovery.md)，不代表本次删除 busy 后的测量。
+本文描述当前直接 API 的 **spin** 执行路径：CPU 热值 C `if` 获取、统一 clobber
+解锁、实际 MCS 发布采样，以及 `39b0e7c` 的 continuation 错位布局。
+对象尺寸沿用各阶段 ELF 复核，并按当前源码布局更新；历史尺寸与成绩仅属于对应冻结输入。
+普通 spin 保持 IRQ/BH 状态，continuation 为 704 B；语义验证见
+[普通 spin 报告](../tclock_compare/results/20260922-plain-spin.md)。
+热表为每 CPU/type 256 桶/256 记录，task 统计复用或取得 CPU pin，非 task 上下文跳过统计。
 TCLock 指仓库中的外部模块适配版 `tclock_backend/`；KD 指显式 `kd_spinlock_t`
 API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施及分类型热表，其互斥
 协议见 [locking](../../docs/design/locking.md)，不能套用这里的 spin 流程。
@@ -33,8 +29,8 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 | KD 策略 | `spin_delegate=0` 关闭公共入口代理并跳过其热度记录，默认 `1`。`hotlock_mode=adaptive` 默认按热度准入；`observe` 固定热度准入，仍受上下文/JIT 就绪/安全检查约束 |
 
 选择 `KD_SPIN_DIRECT_LOCK/UNLOCK` 配对壳后，调用端只按 CPU 热值分流；
-`spin_delegate` 在 provider 内控制代理/采样，`spin_cold_fastpath` 在 provider 内
-控制冷 CPU 队列压力采样。两个参数都不参与配对宏的 C `if` 判断。
+`spin_delegate` 在 provider 内控制代理/采样。CPU 热度仅统计实际 MCS 发布，
+已删除队列深度策略及其参数；配对宏的 C `if` 仍只判断 CPU 热值。
 
 以下尺寸取自已完成性能矩阵的 normal 观察 provider 和 TCLock backend 的 DWARF，
 2026-09-20 通过 guest `pahole -C <类型> <ELF>` 只读复核。
@@ -141,7 +137,7 @@ waiter CPU                         combiner CPU
 | `kd_spin_node` | 128 × 4 = 512 / CPU | `spin/state.inc` 静态 per-CPU 数组；每节点按 64 对齐，`completed/locked` 偏移 64/65；原生与代理共用四槽 |
 | `kd_spin_cpu_state` | normal 80 / CPU；NUMA 增加 16 | 静态 per-CPU；`lock_addr[8]`、当前代理 CPU、`node_count`、等待栈顶；NUMA 再有暂存链表头尾 |
 | continuation/等待栈共享预留区 | 20480 / CPU | `kd_spinlock_init()` 每 CPU 一次 `vzalloc`；低端 12 KiB 放 continuation，高端 8 KiB 为物理等待栈，两区不重叠 |
-| `kd_spin_continuation_stack` | 8512 / CPU，包含 704 × 12 条记录 | 位于低端预留区；只按 top 分配，退休标记后收缩连续已退休栈顶；记录按 64 字节对齐，活动记录不搬移 |
+| `kd_spin_continuation_stack` | 8512 / CPU，包含 704 × 12 条记录 | 初始化时按 CPU 在低端预留区选择 64 字节对齐起点；只按 top 分配，退休后收缩连续已退休栈顶；活动记录不搬移 |
 | `kd_spin_continuation` | 704 × 12，已包含在存储栈中 | `spin/request.inc` 按 top 借用槽；包含 frame、恢复结果、调用者上下文；不是 C 自动局部对象 |
 | `kd_exec_frame` | 648，已包含在 continuation 中 | 生产者准备，combiner 原地 bind/pop，不为同一 spin 请求另分配第二个 frame |
 | `pt_regs` | 168，已包含在 frame 中 | 根请求拥有寄存器包；虚拟子请求 `regs_ref` 可指向根包，不按层复制整包 |
@@ -207,13 +203,19 @@ lease 是已有来源状态上的引用，不为每个 frame 分配一个独立�
 
 ```text
 每 CPU 一次 vzalloc(20480)，base 按页对齐
-base +     0 ┌ top：4 字节 + 对齐填充 60 字节
-base +    64 ├ records[0]：704 字节、64 字节对齐
-             │ ... records[1..11]，连续 12 条，共 9216 字节
-base +  8512 ├ 低端区域余量：3776 字节，不作为额外记录使用
-base + 12288 ├ 高端 waiter 等待栈：8192 字节，向低地址增长
-base + 20480 └ wait_stack_top：初始栈顶
+base              ┌ 起点前余量：skew 字节
+base + skew       ├ top：4 字节 + 对齐填充 60 字节
+base + skew + 64  ├ records[0..11]：704 × 12 = 8448 字节
+base + skew +8512 ├ 起点后余量：3776 - skew 字节
+base + 12288      ├ 高端 waiter 等待栈：8192 字节，向低地址增长
+base + 20480      └ wait_stack_top：初始栈顶
 ```
+
+当前 `skew = ((cpu * 13) % 60) * 64`，只在初始化计算。60 个合法起点由低端
+12 KiB 容量和实际结构大小推导；所有记录仍在低端区域内。退出或局部初始化失败
+时通过 `wait_stack_top - 20480` 释放原始基址，不能释放错位后的内部指针。
+该布局保持分配和记录数量，不新增请求期偏移计算或分配；详细约束见
+[frame 存储](../../docs/design/frames.md#91-frames-and-lock-ledger)。
 
 | continuation 内部成员 | 偏移 / 大小 | 用途 |
 | --- | --- | --- |
@@ -259,8 +261,8 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 1. 计时前 `kd_spin_prepare(lock, post_call_ip, ABI)` 登记入口。provider 使用
    既有注册表/代码池；daemon 经 `/dev/kd_dev` 取得代码与元数据，翻译、组装、
    上传并发布。NORMAL 只表示可尝试执行，不能当作正文执行证据。
-2. 配对获取壳 `KD_SPIN_DIRECT_LOCK` 在 pin 后用 C `if` 读取 CPU 热值，
-   不读取 `kd_spin_cold_fastpath` 或 `kd_spin_delegate`。冷分支普通 C 调用
+2. 配对获取壳 `KD_SPIN_DIRECT_LOCK` 在 pin 后用 C `if` 读取 CPU 热值。
+   冷分支普通 C 调用
    `kd_spin_direct_native_lock()`，增加 nondelegated 并做一次 CAS；失败值直接进入
    完整 pending/MCS，保留 provider 的 CPU 升温/降温采样。冷态持有用低字节 5
    标识。热获取分支使用 clobber-v1 协议，
@@ -315,7 +317,7 @@ ticket 的 claim/reclaim 与 release 各在一次普通 raw spin guard 临界区
 二者内部都不执行阻塞获取或物理释放。实际释放仍由调度方单次 release store 完成，
 native 借用、代际及最终退休检查保留。
 
-spin/mutex 的 `record_*` 使用直接哈希计数，调用位置仍在入口。模块初始化时
+spin/mutex 的单锁记录与准入使用入口处的直接哈希计数。模块初始化时
 `alloc_percpu` 为每 CPU 预分配 13376 字节、64 字节对齐的对象，包含两个
 6680 字节类型表并包含 CPU 对齐填充。每表 256 桶、256 条 24 字节记录，桶和冲突链使用 `u16` 槽索引；
 `0` 为空，`1..256` 对应记录。每条记录只保存完整锁地址、时间戳、计数、hot 标记
@@ -324,14 +326,11 @@ spin/mutex 的 `record_*` 使用直接哈希计数，调用位置仍在入口。
 
 spin CPU 默认在共用 `xchg_tail()` 交换队尾前计数，每次合格MCS事件读一次TSC；
 无合格事件时保留缓存热值。mutex CPU 仍在入口累计1024次。
-provider 的 `spin_cold_fastpath=1` 且 `spin_hot_min_queue=N>0` 时，冷 CPU 的事件改为取得队头所有权、交接前
-看到含自己至少N个已链接节点；最多读N−1个next，缺链不等待。热CPU继续发布采样。
-参数 0..16、默认 4；0 恢复发布采样规则。`spin_cold_fastpath` 默认 0，
-仅选择采样规则，不控制配对壳是否走冷分支；`spin_delegate=0` 跳过这些采样。
-这是排队压力门槛，不是线程计数，也不新增第二个 hot 标志。
+冷/热 CPU 均在实际队尾发布处计数一次，不检查队列深度、不在队头补采样。
+2/3线程频繁入队也可升温；`spin_delegate=0` 跳过采样。
 两者从上次检查到本批结束的间隔严格小于 40000000000 ticks 且时间未倒退则 CPU 热。
-spin 的 fast/pending、发布前取消及节点耗尽轮询不计数；原生、代理和虚拟入队均在
-按上述发布或队头规则择一计数，事件归属当前物理 CPU。CPU 冷时入口不查表。CPU 热时直接按锁字
+spin 的 fast/pending、发布前取消及节点耗尽轮询不计数；原生、代理和虚拟入队
+均在同一发布入口计数，事件归属当前物理 CPU。CPU 冷时入口不查表。CPU 热时直接按锁字
 地址 hash，冲突链逐项比较完整地址；命中对应记录就 `++count`。未找到时使用
 预分配的下一空槽创建独立记录，其时间起点借用最近 CPU 时间。表满不淘汰、不覆盖，
 未收录的新锁在 adaptive 下保持原生；已有记录继续计数，直到模块卸载保留地址身份。
@@ -556,13 +555,13 @@ CAS 失败才将读到的锁字和 SP/IP/BP/ABI 传给 `kd_spin_lock_contended()
 新 helper 不分配堆内存，不改变 ticket、node、continuation 的个数与存活期。
 guest ELF 已确认两个公共快速入口不再初始化上述局部对象，也不再携带对应的
 stack canary；有地址逃逸对象的慢路径仍有 canary。
-[本轮 ELF 与测量证据](../tclock_compare/results/20260921-fast-path-optimization.md)保留了代码尺寸和开销变化。调用者寄存器保存、owner
+[历史 ELF 与测量证据](../tclock_compare/results/HISTORY.md#20260921-fast-path-optimization)保留了代码尺寸和开销变化。调用者寄存器保存、owner
 身份核对、IRQ/preempt 恢复及编译缓解配置继续保留。
 
 热度实现恢复为分类型采样器，并在四个固定 spin/mutex、record/query 入口
 编译时展开类型/操作分支。已 pin 的 spin 接口转入同一实现，读取现有
 preempt_count 并复用 acquisition pin，不额外 disable/enable。256条精确地址记录保留，
-本地 busy 和对应屏障已移除，非 task 样本丢弃。spin CPU 按本节前述发布/冷态队头规则采样，
+非 task 样本丢弃。spin CPU 按本节前述实际 MCS 发布规则采样，
 每次合格MCS事件检查400亿TSC窗口；spin/mutex 单锁在入口累计33次后检查。
 fast/pending、入队前取消及节点耗尽轮询不计数，同一获取最多计一次。
 CPU变热只影响后续入口；CPU/单锁分别采时，mutex为入口1024/33及同次采时复用。
@@ -606,25 +605,16 @@ KD 的翻译准备、寄存器包、frame/source lease、native 路由及 ticket
 
 ## 7. 验证与结果解释
 
-[回退调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)记录 A/B/C 同期复现、
-独立 IP 采样、两个失败候选，以及最终恢复版的功能和性能验收。MCS 准入及
-时间域迁移已经撤回；原 [MCS 报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-admission.md)
-和 [时间域测试](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#admission-clock-validation)仅描述历史实验。
-
-2026-09-21 的 ticket 优化、同条件性能对照与关键对象复核见
-[四线程报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-four-thread-ticket.md)。
-此前 continuation 的功能检查、恢复汇编偏移
-与未覆盖边界见 [验证记录](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/tests/README.md#continuation-validation)；此前
-三方 150 场性能矩阵见 [性能报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-continuation.md)。
-该矩阵未运行同期旧版 KD，不能把全部差异单独归因于本次存储改造。
+当前完整三轮性能矩阵见 [默认热度分流报告](../tclock_compare/results/20260923-spin-default-heat-full3.md)，
+元数据精简、continuation 布局及长批次对照见 [优化调查](../tclock_compare/results/20260923-spin-single-hot-balance.md)。
+单元和功能验证按冻结版本列在 [测试入口](../../tests/README.md)；
+已撤回候选及旧统计口径集中在 [历史索引](../tclock_compare/results/HISTORY.md)。
 
 真实 JIT 须有 wrapper 返回后的正文证据；NORMAL、原生完成、排空均不能单独
 代替。TCLock 对照验证业务数据与排空，没有实际委托计数，不能把剩余调用数
 当作委托比例。未测的 IRQ/任意嵌套、远端 native 强制时序等边界按各报告保留。
 
-历史阶段见 [原生 MCS 报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-native-mcs.md)、
-[本地热表报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260920-local-hash.md)。运行入口见
-[benchmark README](README.md)；准入/续跑边界见
+运行入口见 [benchmark README](README.md)；准入/续跑边界见
 [JIT 执行流](../../docs/JIT_EXECUTION.md)、[frame 协议](../../docs/design/frames.md)。
 
 ## 8. 单线程无竞争路径与抢占责任
@@ -647,11 +637,6 @@ pin，不重复增减。不能因 Linux 内部协议已被 pin 就删除 KD 显�
 或实际 JIT，也不创建慢路径 request/ref；编译器寄存器保存仍在。
 新加载的冷CPU只有无竞争调用时始终不变热，因此不进入单锁哈希查找/计数。
 
-[单线程 profiling](../tclock_compare/results/20260921-single-thread-profile.md)核对了
-实际 ELF 和独立 PMU 计数/采样。该优化前版本 c1 的 Linux/TCLock/KD 约为 50/56/344 条指令/op。
-9 月 21 日 fast 路径精简后 KD 约 289 条；两组均是历史冻结版本的诊断，
-不能作为后续源码的指令数实测。此前同时删除 busy/pin 的实验已回退；当前保留
-共享采样器的 pin，仅删除 busy 及对应屏障，并跳过非 task 样本。
-长批次诊断不替代短批次三方吞吐；历史单轮成绩见
-[CPU MCS1 / 400亿窗口重测](../tclock_compare/results/20260922-spin-mcs1-window4e10.md)，
-当前测试与结果索引见 [三方 README](../tclock_compare/README.md)。
+长批次诊断不替代短批次三方吞吐。旧版本指令计数与单轮成绩见
+[历史索引](../tclock_compare/results/HISTORY.md)，当前测试与结果见
+[三方 README](../tclock_compare/README.md)。

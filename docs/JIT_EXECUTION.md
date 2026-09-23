@@ -3,7 +3,7 @@
 当前 KD spin API 按普通 `raw_spin_lock` 语义：获取/解锁配对抢占，保持 IRQ/BH 状态，
 代理慢路径和嵌套队列不再保存 IRQ flags 或整段关 IRQ。最终完成先退休 ticket 元数据，
 读完并回收 continuation 后才解除原入口 pin；普通重试和有锁 native 续跑保留 pin。
-本次未新增 irqsave/bh API；需要这些语义的调用者在外层处理。
+需要irqsave/bh语义的调用者须在外层显式处理。
 
 本页描述显式 KD spin API 及保留的执行引擎。全局 spin 分发已删除，mutex hook
 安装仍停用；普通 Linux 锁调用不会因加载模块自动代理。运行步骤见
@@ -21,20 +21,16 @@
 1. 调用者拥有 `kd_spinlock_t` 对象，并用 `kd_spin_prepare` 登记锁后续点及 ABI。
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
    直接 benchmark 在单 CPU 预热前完成准备，测量时停止 daemon。
-2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` / `KD_SPIN_DIRECT_UNLOCK(lock, cookie)`
-   通过 C `if` 选择普通 C 冷调用或原有 broad-clobber 热调用，cookie统一传`kd_spin_direct_cookie`，直接引用已有
-   per-CPU `rate_hot`，一个CPU一份、所有锁共享。它只表示当前CPU热度，不记录路径或深度。
-   宏先 pin 一次，再通过 `this_cpu_read` / `READ_ONCE` 读取 per-CPU 热值，observe/adaptive 都仅按该热值分流。
-   CPU冷时进入冷分支；宏不读取 `spin_cold_fastpath` 或 `spin_delegate`。
-   冷入口增加 nondelegated 在途计数并 CAS，失败值直接进入完整原生 pending/MCS 及既有 CPU 热度采样，
-   不重复初始 CAS。冷获取将低字节设为5；解锁检查此持有状态后只release低字节、减少计数、
-   解除pin，保留pending/tail。MCS 热度更新只影响后续获取；解锁不读取cookie。
-   热分支通过 `KD_SPIN_DIRECT_CALL` 调用 pinned clobber 入口，命名 continuation 仅位于此 CALL 后，没有手工 push/pop。
-   broad-clobber 声明仅属于热分支；活跃值由编译器决定如何保存，允许部分保存指令位于 `if` 之前，部分位于热分支内。
-   pinned 入口复用前一步的 pin，并由 provider 检查 `spin_delegate`；32 位锁、寄存器包和 wrapper 输入不变。
-   当前 workload 只将外层锁接入新接口；nested/early 内层也恢复原 clobber 宏，不再套寄存器适配。
-   调用壳在编译时选择；`spin_cold_fastpath` 加载选项默认关闭，仅控制冷CPU的队列压力采样。
-   运行器关闭对照编译保留壳，详见 benchmark 的调用端身份记录。
+2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` 先pin，再用C `if`读取已有
+   每CPU `rate_hot`，observe/adaptive共用同一默认调用壳。cookie引用
+   `kd_spin_direct_cookie`，只表示当前CPU热度，不记录路径或深度。
+   冷分支普通C调用完整原生CAS/pending/MCS：增加nondelegated在途计数，CAS失败值
+   直接进入慢路径，不重复初始CAS；仍在实际MCS发布处更新CPU热度，获取低字节为5。
+   热分支用 `KD_SPIN_DIRECT_CALL` 调用pinned clobber入口，命名continuation仅在
+   该CALL之后。宽clobber只声明在获取热分支，保存由编译器安排，可能部分位于if前；
+   不手写push/pop。provider复用已有pin并检查 `spin_delegate`，宏不读取策略开关。
+   当前workload外层使用配对接口，nested/early内层使用普通clobber宏。
+   不再提供on/off编译壳或队列深度采样选择；解锁流程见下方独立说明。
 3. 保留的 clobber v1 调用保存 pre-CALL RSP、post-CALL RIP 和 caller RBP，编译器保存
    活跃 caller-clobbered 值。`kd_spin_lock_abi` 首先关闭抢占，代理开启时合并记录/
    判断热度并筛选上下文，再尝试 fast/pending；统计和原生回退复用已有 pin。
@@ -47,8 +43,10 @@
    完成既有 continuation 生命周期。只有真正节点耗尽才轮询锁字，不回退到 Linux
    锁操作。对象大小、分配位置及与 TCLock 的数据流对照见
    [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
-5. 每 CPU 预分配 20 KiB：低端 12 KiB 为最多 12 条 continuation，高端 8 KiB
-   为 waiter 等待栈；记录按栈顶占用，退休后只收缩连续已退休的栈顶。
+5. 每CPU预分配20 KiB：低12 KiB容纳最多12条continuation，高8 KiB为waiter等待栈。
+   continuation栈按CPU在低区内选择64字节对齐偏移，保持全部记录及等待栈不重叠；
+   锁路径不计算偏移或新增分配，释放从等待栈顶找回原始基址。布局见 [frames](design/frames.md#911-reuse-before-copy-contract)。
+   记录按栈顶占用，退休后只收缩连续已退休的栈顶。
    节点直接指向 continuation/frame，节点复用不会销毁现场。
    等待栈、PAUSE 轮询和 caller-clobber ABI 保留。combiner 绑定逻辑 waiter，
    通过 wrapper 和生成代码执行正文，原 waiter/combiner 共用寄存器包。
@@ -67,8 +65,8 @@
 
 具体布局与指令约定见 [ABI](JIT_REGISTER_ABI.md)，队列/所有权见
 [locking](design/locking.md)，frame 和受检续跑见 [frames](design/frames.md)。
-mutex 保留自己的原 mutex、调度 gate、task 记录与 native owner/ACK 协议，
-本次只迁移本地热度发现和准入，没有改写其互斥算法。
+mutex保留原mutex、调度gate、task记录与native owner/ACK协议，
+不使用spin的锁字或continuation排队协议。
 
 ### 2.1 热度与角色
 
@@ -77,24 +75,19 @@ spin/mutex 每 CPU 独立 256 桶、256 条预分配记录，哈希冲突用完�
 初始化建立 CPU 时间；spin CPU 每次合格 MCS 事件检查一次，mutex CPU 保持
 每 1024 次入口调用检查；两者都要求整批耗时严格小于 400 亿 TSC ticks。
 批间沿用缓存热值，首批从初始化计时。入口仍按缓存 CPU 热值决定是否查锁表。
-默认队尾发布采样覆盖原生、代理和虚拟嵌套；fast/pending 不计数。
-`spin_cold_fastpath=1` 且 `spin_hot_min_queue=N>0` 时，冷 CPU 改为取得队头所有权后、交接之前，
-观察含自己至少 N 个已链接 MCS 节点才累计一次；最多读 N−1 条链接，缺链不等待。
-参数加载后只读，范围0..16、默认4；0恢复原发布采样。热 CPU 继续发布采样，同一获取不重复计数。
-这表示队列压力，不等于线程数；CPU初始冷且没有其他负载先暖CPU时，普通每线程一个在途请求的
-1/2/3线程不能满足N=4的升温条件。
+队尾发布采样覆盖冷/热 CPU 的原生、代理和虚拟嵌套节点；fast/pending 不计数。
+每次实际入队只采样一次，不遍历后继链、不在队头补采样。已删除队列门槛参数与策略开关。
+2/3线程只要频繁实际入队，也能更新 CPU 热值；不再按线程数保证冷态。
 spin/mutex 单锁 count 大于 32（第 33 次）才检查 25 亿 TSC 窗口并更新 hot/时间、清零计数。
 单锁仍统计入口调用。mutex 同次到期共享采时，spin CPU/锁分别采时。
 CPU 持续热保留单锁批次，冷却/重新变热清零计数/热值但保留映射。
 MCS 更新只影响后续入口；没有入队时 CPU 缓存热值保留，不新增逐次时间检查。
-adaptive 要求 CPU/锁缓存热值同时成立，未收录且表满的锁走原生。配对壳的
-observe 是 CPU 热后固定准入；保留壳仍按原 observe 固定准入。CPU 曾变热后即使
-转为单线程，也要等后续MCS采样才能降温；没有后续MCS时可一直缓存hot，2/3线程持续
-高频MCS也可能维持hot。本轮没有增加每次读时钟或独立的过期标志。
+adaptive要求CPU/锁缓存热值同时成立，未收录且表满的锁走原生；observe在CPU热后
+固定准入。CPU曾变热后即使转为单线程，也要等后续MCS采样才能降温；没有后续MCS
+时可能一直缓存hot，2/3线程高频MCS也可能维持hot。当前没有每次入口读时钟或独立过期标志。
 query 不计数/采时/插入；有效地址及表生命周期由调用者保证，关闭代理时不记录。
 虚拟嵌套先按热值分流；热路径占独立 ticket 后 CAS/排队，冷路径走原生 bridge。
-已发布的虚拟等待继续服务父 frame 的远端 ACK。此前的 MCS 后置准入实验
-已因竞争性能回退撤回；当前入口准入保留，仅在合格MCS事件后检查CPU热度，见 [调查](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-mcs-recovery.md)。
+已发布的虚拟等待继续服务父frame的远端ACK。热度变化只影响后续获取，不能取消已发布请求。
 统计复用调用者已有的抢占保护；仅尚未关闭抢占的独立调用临时 pin 并在返回前
 解除。热表已删除本地 busy 及其编译器屏障，只在 task context 访问；中断上下文
 跳过统计、query 返回冷，observe 的 record 仍固定允许。允许丢样，但不允许重入
@@ -103,6 +96,14 @@ query 不计数/采时/插入；有效地址及表生命周期由调用者保证
 OWNER 保存在稳定 fast owner/ticket 状态中，WAITER/COMBINER/DONE 位于 frame。
 角色和所有权不依赖热表是否保留该地址或锁的热值。SELFTEST 可输出按锁地址关联的角色，
 普通构建不逐请求打印。最终统计仅在 provider 排空后输出，不能倒推全程状态。
+
+### 2.2 统一解锁
+
+`KD_SPIN_DIRECT_UNLOCK` 无条件通过broad-clobber调用 `kd_spin_unlock_clobber_v1`，
+冷/热获取均传lock及SP/IP/BP，由编译器处理活跃寄存器；调用端和JIT正文没有冷热解锁分支。
+provider发现低字节5时只release该字节、减少nondelegated计数并解除pin，保留pending/tail；
+其他状态进入原解锁核心，保留owner、ticket、native借用及最终退休检查。
+解锁不读cookie或CPU热值。旧冷专用导出只用于兼容，当前配对宏不再调用它。
 
 ## 3. 验证选择与判定
 

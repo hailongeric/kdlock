@@ -11,13 +11,14 @@
 | [kernel_module/kd_spinlock.c](../kernel_module/kd_spinlock.c) | 显式单锁字入口、入口热度/上下文筛选、延迟根 ticket、caller ABI、等待/调度 |
 | [kernel_module/kd_spin_entry.c](../kernel_module/kd_spin_entry.c) | 稳定 task/CPU/generation ticket、owner/ACK、native 借用退休等待与排空 |
 | [spin/nondelegated.inc](../kernel_module/spin/nondelegated.inc)、[spin/nested.inc](../kernel_module/spin/nested.inc) | 完整原生 fast/pending/MCS；虚拟 ticket、共享根包、远端等待与父 ACK |
-| [spin/request.inc](../kernel_module/spin/request.inc)、[spin/lifecycle.inc](../kernel_module/spin/lifecycle.inc) | 每 CPU 20 KiB 区域初始化、continuation 栈顶分配及连续退休回收 |
+| [spin/request.inc](../kernel_module/spin/request.inc)、[spin/lifecycle.inc](../kernel_module/spin/lifecycle.inc) | 每CPU20 KiB初始化、低区内错位与原始基址释放；continuation栈顶分配及连续退休回收 |
 | [spin/wait.inc](../kernel_module/spin/wait.inc)、[execution/remote.inc](../kernel_module/execution/remote.inc) | 物理等待发布、远端消息、frame pop 后完成通知 |
-| [kernel_module/kd_hotlock.c](../kernel_module/kd_hotlock.c) | spin/mutex 分类型每 CPU 哈希；合并 record、批量时钟和保守阈值 |
+| [kernel_module/kd_hotlock.c](../kernel_module/kd_hotlock.c) | 分类型每CPU精确地址哈希；spin每MCS采样、mutex入口批次与独立单锁窗口 |
 | [kernel_module/kd_lock.c](../kernel_module/kd_lock.c) | 保留的 mutex 路由和嵌套控制 CALL |
 | [kernel_module/kd_mutex.c](../kernel_module/kd_mutex.c)、[kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | 原 mutex/调度及 task 生命周期 |
 | [kernel_module/kd_exec.c](../kernel_module/kd_exec.c) | 稳定 frame、角色、remote/native/锁记录 |
-| [kernel_module/exe.c](../kernel_module/exe.c) | 执行注册表、JIT 高层与控制服务 |
+| [kernel_module/exe.c](../kernel_module/exe.c) | 执行注册表、JIT高层与控制服务 |
+| [execution/wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc) | batch准备、ABI选择及简单spin调用元数据单次初始化 |
 | [kernel_module/kd_source.c](../kernel_module/kd_source.c)、[sys.c](../kernel_module/sys.c) | 来源 pin、设备、能力、发布和退休 |
 | [include](../include/README.md) | 显式锁类型、直接 ABI、队列/frame、设备与 wrapper 共享接口 |
 | [daemon](../daemon/README.md)、[disassem](../disassem/) | 登记请求、内核读取、分析/翻译、上传及生成代码 |
@@ -34,17 +35,17 @@ Linux L 二次获取、旧站点缓存及全局晋升集合已删除。
 | [workload_modules/spin_cacheline](../workload_modules/spin_cacheline/README.md) | 当前直接 cacheline/RCUHT、KD nested/early |
 | [bench/tclock_compare](../bench/tclock_compare/README.md) | 三后端当前 live 运行器 |
 | [bench/spin_cacheline](../bench/spin_cacheline/README.md) | 共用客户端、观察层、发布/排空、离线汇总 |
-| [tests/unit](../tests/unit/) | 基础程序与按用途分组的生产代码、ABI、oracle 回归 |
+| [tests/unit](../tests/unit/) | 基础程序与按用途分组的生产代码、ABI、oracle回归 |
+| [test_spin_storage.py](../tests/unit/spin/test_spin_storage.py) | 生产存储布局、全部槽位、原始基址释放及初始化失败回滚 |
 | [source_text.py](../tests/unit/infrastructure/source_text.py) | 跨组生产源码提取，不依赖 gate 测试 |
-| [native_register_probe.h](../tests/unit/execution/native_register_probe.h) | 有效寄存器探针，从删除的 hook workload 移入 fixture 目录 |
+| [native_register_probe.h](../tests/unit/execution/native_register_probe.h) | 原生续跑寄存器探针，供执行fixture使用 |
 | [tests/kernel](../tests/kernel/) | 生产 provider 专用 SELFTEST/观察器，正常构建不启用 |
 | [tests/regression.py](../tests/regression.py) | 当前 module case 的显式选择和证据/停止边界 |
 | [tests/verify_evidence.py](../tests/verify_evidence.py) | 现有证据的离线字节/记录一致性检查 |
 | [tests/protocols](../tests/protocols/) | 当前工具复用的解析器及有效协议日志 oracle；历史合成记录不作 live 证明 |
 
-旧 lock_scenarios、透明 hook live 套件、gate 容量 oracle、双 ABI/live profile/dispatch-floor
-入口、旧/新采样器组件运行器及其专用内核驱动已删除。当前命令与选择只维护在 [tests](../tests/README.md)和
-[bench](../bench/README.md)，不恢复已删除入口来运行历史成绩。
+当前命令与选择只维护在 [tests](../tests/README.md)和 [bench](../bench/README.md)。
+旧透明hook及已删除组件工具只能通过匹配历史checkout重现，不作为当前入口。
 
 ## 文档与身份
 

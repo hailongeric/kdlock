@@ -271,12 +271,7 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 不能只看 started=completed。真实耗尽与注入失败分开，信号/退出不能遗弃未完成
 frame。旧测试操作细节仅见匹配 Git 历史，不是当前 live 的运行指令。
 
-2026-09-22 用户授权性能回退：本轮为定位约20%竞争退化允许隔离热表候选，
-当时成绩采用 Linux/TCLock/当前KD、两轮取最大值。热表已局部恢复到最佳已测
-分类型256槽实现（本地busy、复用已有pin）；普通spin的IRQ语义和正确性修复保留。
 宿主QEMU vCPU已按编号一对一固定到CPU0..39，前20个对应宿主NUMA0；重启后
 必须重新核对映射，不能只凭guest绑核声称物理同节点。证据见[回归报告](../bench/tclock_compare/results/20260922-performance-recovery.md)。
-
-2026-09-22 后续512槽直接映射实验因性能下降再次按用户要求撤回；
-该次代码恢复 `bf16b10` 的256桶/256记录实现。实验结果仅保留为历史，
-见[记录](../bench/tclock_compare/results/20260922-directhash-v2-performance.md)。
+历史性能回退及采样器候选统一见[历史索引](../bench/tclock_compare/results/HISTORY.md)，
+当前实现与测试入口分别以[锁协议](design/locking.md)和[bench](../bench/README.md)为准。
