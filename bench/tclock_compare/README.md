@@ -3,9 +3,13 @@
 当前 `KD_SPIN_DIRECT_LOCK` 只在pin后判断CPU热值，已删除调用端的
 `kd_spin_cold_fastpath` / `kd_spin_delegate` 两次开关判断。编译时选用该壳即启用热度分流；
 模块的前者开关只控制冷队列采样策略，后者仍由provider核心执行代理准入控制。
-下列完整性能矩阵测于删除这两次判断之前，不能作为当前改动的性能结论。
+最新[仅CPU热值分流完整重测](results/20260923-spin-heat-only-full.md)：
+六组单元及25项错误变体通过，84/84性能场次、6480万次操作全部通过并排空。
+32场四线程及以上KD均有实际JIT；热度分流壳相对保留壳，单线程提高38.92%–55.72%，
+三线程提高37.98%–53.74%，两线程observe下降、adaptive提高；二十线程仍下降2.86%–6.29%。
+本轮每配置一次，不能单独归因于两个开关判断的删除，运行器默认仍为off。
 
-最近[C if 完整单轮矩阵](results/20260923-spin-c-if-full.md)：
+此前[C if 完整单轮矩阵](results/20260923-spin-c-if-full.md)：
 1/16 cacheline × 1/2/3/4/8/16/20线程，三方及KD两模式两壳共84/84场通过，
 6480万次操作全部排空；32场四线程及以上KD全部实际JIT。冷捷径on相对off，
 单线程提高14.36%–46.67%、三线程提高41.27%–58.38%；c1两线程下降43.38%–45.59%，
@@ -57,7 +61,7 @@ clobber-v1，不再手工保存/恢复五个寄存器；冷分支仍包含完整
 30/30 场通过，计时区间 2940 万次操作全部排空。单线程 KD c1/c16 为
 6.369/5.779 Mops/s；20 线程为 4.974/4.760 Mops/s。每配置只测一轮。
 
-默认关闭冷捷径时，spin CPU 每次实际MCS入队检查热度；开启队列门槛时冷CPU改计合格队头获取。
+模块 `spin_cold_fastpath=0` 时，spin CPU 每次实际MCS入队检查热度；启用队列门槛时冷CPU改计合格队头获取。
 fast/pending 不计数；spin/mutex 单锁
 阈值为32，第33次调用采时。mutex CPU 保持1024次入口检查，两类CPU窗口均为400亿TSC ticks。
 热表已删除 busy/barrier，只在 task context 统计并保留 CPU pin；非 task 样本丢弃。
@@ -83,22 +87,24 @@ fast/pending 不计数；spin/mutex 单锁
 | --- | --- |
 | Linux | `__raw_spin_lock/unlock`，绕过实验内核 hook |
 | TCLock | `komb_spin_lock/unlock`，调用者配对管理抢占 |
-| kdlock | `kd_spin_lock_clobber_v1/unlock_clobber_v1`，直接进入 kdlock 协议 |
+| kdlock，保留壳 | `kd_spin_lock_clobber_v1/unlock_clobber_v1`，直接进入 kdlock 协议 |
+| kdlock，热度分流壳 | `KD_SPIN_DIRECT_LOCK/UNLOCK`，冷CPU完整原生获取，热CPU进入pinned clobber核心 |
 
 `--spin-cold-fastpath on off` 对同一当前源码构建两种 KD 调用壳：`on` 使用
-`KD_SPIN_DIRECT_LOCK/UNLOCK` 内联 CPU gate 壳并加载 `spin_cold_fastpath=1`；`off` 使用
-保留的全 clobber 壳并关闭开关。暂默认 `off`，待单线程和竞争验收后决定默认值。
+`KD_SPIN_DIRECT_LOCK/UNLOCK` 热度分流壳，并加载 `spin_cold_fastpath=1` 启用冷队列压力采样；
+`off` 编译保留的全 clobber 壳并加载采样开关0。运行器暂默认 `off`。
+单独将模块参数改为0不会关闭已编译配对壳的CPU热度分支；宏始终只读取热值。
 两组使用相同 clobber-v1 JIT 入口 ABI，不是历史 KD 二进制。记录分别带有
 `caller_shell=cold_clobber/clobber`、`caller_abi=clobber`、`spin_cold_fastpath`和
 `cookie_storage=percpu_rate_hot/not_applicable`。cookie只表示CPU热度，一个CPU一份、所有锁共享。
 历史未记录cookie存储的样本保留`unrecorded`，不合并汇总。
 Linux/TCLock 每配置仍只跑一次；汇总同时按热度模式、调用壳、开关和队列门槛分组，不跨组取最大值。
 
-冷捷径开启后 observe/adaptive 都跳过冷 CPU 的热表/context/owner 路由；observe
+选用热度分流壳后，observe/adaptive 都跳过冷 CPU 的热表/context/owner 路由；observe
 在 CPU 热后固定准入，adaptive 再判断单锁热度。CPU 曾变热后仍依赖后续 MCS
 采样降温，安静的单线程阶段不会主动过期；持续高频MCS的2/3线程也可能保持已热状态，
 不增加每次TSC读取。
-`--spin-hot-min-queue N` 为加载时只读选项，范围0–16、默认4，仅冷捷径开启时生效。
+`--spin-hot-min-queue N` 为加载时只读选项，范围0–16、默认4；本运行器仅在on组装载N并启用压力采样。
 0保留原MCS采样规则；N>0时，冷CPU须在队头观察到至少N个节点才累计升温样本，
 热CPU仍按原规则采样。冷获取包含CAS失败后的pending/MCS等待，不因CPU保持冷态而省略排队。
 记录中的 `spin_hot_min_queue` 是实际装载的门槛：off固定装载0、Linux/TCLock为

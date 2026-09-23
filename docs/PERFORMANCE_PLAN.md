@@ -1,9 +1,18 @@
 # 下一阶段性能优化任务
 
-最新按用户要求将CPU窗口改为400亿TSC ticks、spin MCS检查阈值恢复为1，队列门槛仍为4。
-[本轮60场单次重测](../bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md)全部通过并排空；
-新壳20线程仍较同期保留壳下降2.90%–8.43%，未消除竞争差距，冷捷径继续默认关闭。
-基础/采样3组和25个错误变体通过；本轮没有追加PMU或重复轮次。
+当前 `db42cf4` 的 `KD_SPIN_DIRECT_LOCK` 在 pin 后只用 C `if` 判断 CPU 热值，
+调用端已删除 `kd_spin_cold_fastpath`、`kd_spin_delegate` 判断。冷分支普通 C 调用
+完整 CAS/pending/MCS；热分支保留 clobber-v1 及 CALL 后 continuation。宽 clobber
+仅声明在热分支，保存哪些寄存器、是否放在 `if` 前均由编译器决定，不手工 push/pop，
+也不据此保证冷分支没有保存。cookie 仍只引用已有每 CPU `rate_hot`。
+provider 的 `spin_cold_fastpath` 默认 0，仅控制冷队列压力采样；`spin_delegate`
+控制代理和采样。编译时选择配对壳即启用热度分流，不受这两个参数控制。
+当前运行入口和结果索引见 [三方 README](../bench/tclock_compare/README.md)。
+
+此前按用户要求将 CPU 窗口改为 400 亿 TSC ticks、spin MCS 检查阈值恢复为 1，队列门槛仍为 4。
+[当时60场单次重测](../bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md)全部通过并排空；
+新壳20线程仍较同期保留壳下降2.90%–8.43%，未消除竞争差距，当时冷捷径继续默认关闭。
+基础/采样3组和25个错误变体通过；当时没有追加PMU或重复轮次。
 
 此前按用户要求，冷CPU入口内联读取per-CPU `rate_hot`，热入口沿用clobber-v1，
 删除手工五寄存器适配，允许编译器在判断前保存活跃值。cookie仍一个CPU一份，
@@ -12,7 +21,7 @@
 [此前调用壳验证](../bench/tclock_compare/results/20260922-spin-cold-clobber-queue.md)：
 60配置各测一次，首段9通过/1少线程JIT判定失败、修正运行器后续50通过；生产源码及ELF不变。
 7场功能、4场长批次PMU通过。3线程吞吐提高48%–61%；20线程observe仍下降5.67%–5.83%，
-c1单线程adaptive短批次下降9.05%，所以新壳与开关继续默认关闭。
+c1单线程adaptive短批次下降9.05%，所以当时新壳与开关继续默认关闭。
 JIT手工适配36条指令已移除，热正文仍比保留壳多9条解锁分流相关指令；
 没有将剩余多核退化全部归因于这些指令。未追加短批次重复测量。
 [之前配对C壳成绩](../bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md)仅作历史。
@@ -50,8 +59,9 @@ source lease、物理 ACK 和 executor pop 后的借用释放仍有用途。
 当前已实现单锁字及分类型 CPU 本地哈希，协议与准入的唯一说明在
 [locking](design/locking.md)。原 gate/S、Linux L 二次获取、站点缓存和全局晋升集合
 均已删除。当前热表直接按完整锁地址哈希计数，每 CPU/type 256 桶、256 记录。
-spin CPU 每次合格MCS事件检查一次：默认关闭冷捷径时仍在入队处采样；
-冷捷径开启且队列门槛非0时，冷CPU只在满足门槛的队头获取处采样，热CPU仍在入队处采样。
+代理开启时，spin CPU 每次合格 MCS 事件检查一次：`spin_cold_fastpath=0` 默认在入队处采样；
+该参数为 1 且队列门槛非 0 时，冷 CPU 只在满足门槛的队头获取处采样，热 CPU 仍在入队处采样。
+这是 provider 采样策略，与配对调用端的 C `if` 分流独立。
 mutex CPU 保持每 1024 次入口检查，
 两者共用 400 亿 TSC 窗口；fast/pending 不增加 spin CPU 计数。热 CPU 才查表，spin/mutex 单锁 count 大于 32
 （33 次）检查 25 亿 TSC 窗口。删除候选分数和淘汰，满表不覆盖。

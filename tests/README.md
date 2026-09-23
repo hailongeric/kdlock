@@ -1,6 +1,13 @@
 # 当前测试入口
 
-2026-09-23：`KD_SPIN_DIRECT_LOCK` 删除两次模块开关判断，仅在pin后读取CPU热值。
+最新[仅CPU热值分流完整重测](../bench/tclock_compare/results/20260923-spin-heat-only-full.md)：
+基础2组及cold/非代理MCS/paired JIT/热度采样4组通过，25项错误变体检出。
+84/84性能场次、6480万次操作全部通过并排空；36场KD共37012941次实际JIT正文，
+包括全部32场四线程及以上竞争。12场冷态小线程零JIT，批次IRQ/preempt恢复及业务检查通过。
+257份冻结源码、9项二进制、发布图像及结果独立核对通过；caller仍没有两项策略变量引用。
+本轮没有重跑全量单元、nested/early、RCUHT、PMU、SELFTEST或真实中断压力。
+
+此前2026-09-23定向验证：`KD_SPIN_DIRECT_LOCK` 删除两次模块开关判断，仅在pin后读取CPU热值。
 基础2组及 `spin/test_spin_cold.py`、`codegen/test_spin_paired_jit.py` 共4组通过；
 ABI fixture不再提供两个开关符号，继续验证双CPU、冷热路径、活跃寄存器、续点及嵌套/提前解锁。
 真实caller的导入表和反汇编均不含 `kd_spin_cold_fastpath` / `kd_spin_delegate` 引用。

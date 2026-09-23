@@ -5,6 +5,8 @@
 性能 ELF 为基础；2026-09-21 重新构建、运行并复核 node/continuation/ticket 布局。
 2026-09-22 普通 spin 已改为保持 IRQ/BH 状态，continuation 缩至 704 B；
 新布局与实际 JIT 验证见[普通 spin 语义报告](../tclock_compare/results/20260922-plain-spin.md)。
+2026-09-23 的配对调用壳改为 C `if`，并在 `db42cf4` 删除调用端策略开关判断；
+下述入口流程按该版本说明，对象尺寸与历史性能证据仍采用各自注明的冻结版本。
 热表保留每 CPU/type 256 桶/256 记录和复用 pin 的共享入口；当前模糊统计已删除
 本地 busy 及对应屏障，非 task 上下文跳过统计。此前回退的原因、范围及性能见
 [回归处理](../tclock_compare/results/20260922-performance-recovery.md)，不代表本次删除 busy 后的测量。
@@ -29,6 +31,10 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 | TCLock backend | `NUMA_AWARE=1`、`WWJUMP=1`；`ENABLE_IRQS_CHECK` 关闭。当前对照限 task context、IRQ 开启的单锁调用者，不作为通用 IRQ/嵌套锁替代 |
 | KD normal | `KDLOCK_SELFTEST`、`KDLOCK_NUMA` 默认关闭；NUMA 队列选择及探针是显式构建选项 |
 | KD 策略 | `spin_delegate=0` 关闭公共入口代理并跳过其热度记录，默认 `1`。`hotlock_mode=adaptive` 默认按热度准入；`observe` 固定热度准入，仍受上下文/JIT 就绪/安全检查约束 |
+
+选择 `KD_SPIN_DIRECT_LOCK/UNLOCK` 配对壳后，调用端只按 CPU 热值分流；
+`spin_delegate` 在 provider 内控制代理/采样，`spin_cold_fastpath` 在 provider 内
+控制冷 CPU 队列压力采样。两个参数都不参与配对宏的 C `if` 判断。
 
 以下尺寸取自已完成性能矩阵的 normal 观察 provider 和 TCLock backend 的 DWARF，
 2026-09-20 通过 guest `pahole -C <类型> <ELF>` 只读复核。
@@ -253,15 +259,22 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 1. 计时前 `kd_spin_prepare(lock, post_call_ip, ABI)` 登记入口。provider 使用
    既有注册表/代码池；daemon 经 `/dev/kd_dev` 取得代码与元数据，翻译、组装、
    上传并发布。NORMAL 只表示可尝试执行，不能当作正文执行证据。
-2. 新配对壳 `KD_SPIN_DIRECT_LOCK/UNLOCK` 使用 broad-clobber 调用约定，pin 后在 asm 内读取CPU热度。开关开启时，冷CPU
-   增加nondelegated并做一次CAS，失败值直接进入pending/MCS；冷态持有用低字节5标识，
-   冷解锁仅release低字节、减计数、unpin。热分支直接使用原clobber协议，
-   continuation位于CALL后；没有手工push/pop，编译器可以在判断前保存活跃值。cookie只引用现有per-CPU rate_hot，
-   一个CPU一份、所有锁共享；解锁根据锁字状态，不读取CPU热度。request/frame仍只在慢路径准备。
-   observe变为CPU热后固定准入，adaptive继续判断单锁；曾热CPU仍需后续MCS样本才能降温。
+2. 配对壳 `KD_SPIN_DIRECT_LOCK/UNLOCK` 在 pin 后用 C `if` 读取 CPU 热值，
+   不读取 `kd_spin_cold_fastpath` 或 `kd_spin_delegate`。冷分支普通 C 调用
+   `kd_spin_direct_native_lock()`，增加 nondelegated 并做一次 CAS；失败值直接进入
+   完整 pending/MCS，保留 provider 的 CPU 升温/降温采样。冷态持有用低字节 5
+   标识，冷解锁仅 release 低字节、减计数、unpin。热分支使用 clobber-v1 协议，
+   continuation 位于 CALL 后；宽 clobber 仅声明在该分支的 asm，未手工 push/pop。
+   编译器决定保存哪些活跃值及保存位置，可以将部分保存放在 `if` 之前，不能保证
+   冷分支完全没有寄存器保存。cookie 只引用现有 per-CPU rate_hot，一个 CPU 一份、
+   所有锁共享；解锁根据锁字状态，不读取 CPU 热度。request/frame 仍只在慢路径准备。
+   配对壳的 observe 在 CPU 热后固定热度准入，adaptive 继续判断单锁；
+   provider 仍检查代理开关和安全条件，曾热 CPU 仍需后续 MCS 样本才能降温。
    保留壳 `KD_SPIN_DIRECT_CALL` 传 lock、pre-CALL SP、post-CALL IP、BP 给 clobber v1
    入口，编译器按调用壳的 clobber 声明保存活跃值。
-3. `kd_spin_lock_abi()` 首先执行一次 `preempt_disable()`。代理开关开启时调用
+3. 保留壳的 `kd_spin_lock_abi()` 首先执行一次 `preempt_disable()`；配对热壳的
+   `kd_spin_lock_pinned_clobber_v1()` 复用调用端的 pin，两者进入同一 pinned core。
+   代理开关开启时调用
    `kd_hotlock_record_spin_pinned()` 按缓存 CPU 热值记录单锁调用并判断准入，再检查 task/softirq、迁移和
    执行 context。关闭代理、冷锁或上下文拒绝均转入完整原生 fast/pending/MCS，
    复用入口 pin；关闭代理的公共入口跳过统计。统计独立调用仅在未 pin 时临时 pin。
@@ -307,9 +320,11 @@ spin/mutex 的 `record_*` 使用直接哈希计数，调用位置仍在入口。
 
 spin CPU 默认在共用 `xchg_tail()` 交换队尾前计数，每次合格MCS事件读一次TSC；
 无合格事件时保留缓存热值。mutex CPU 仍在入口累计1024次。
-冷捷径开启且`spin_hot_min_queue=N>0`时，冷CPU的事件改为取得队头所有权、交接前
+provider 的 `spin_cold_fastpath=1` 且 `spin_hot_min_queue=N>0` 时，冷 CPU 的事件改为取得队头所有权、交接前
 看到含自己至少N个已链接节点；最多读N−1个next，缺链不等待。热CPU继续发布采样。
-参数0..16、默认4；0恢复旧规则。这是排队压力门槛，不是线程计数，也不新增第二个hot标志。
+参数 0..16、默认 4；0 恢复发布采样规则。`spin_cold_fastpath` 默认 0，
+仅选择采样规则，不控制配对壳是否走冷分支；`spin_delegate=0` 跳过这些采样。
+这是排队压力门槛，不是线程计数，也不新增第二个 hot 标志。
 两者从上次检查到本批结束的间隔严格小于 40000000000 ticks 且时间未倒退则 CPU 热。
 spin 的 fast/pending、发布前取消及节点耗尽轮询不计数；原生、代理和虚拟入队均在
 按上述发布或队头规则择一计数，事件归属当前物理 CPU。CPU 冷时入口不查表。CPU 热时直接按锁字
@@ -611,11 +626,17 @@ KD 的翻译准备、寄存器包、frame/source lease、native 路由及 ticket
 ## 8. 单线程无竞争路径与抢占责任
 
 普通 Linux `__raw_spin_lock()` 内部关闭抢占；本测试 TCLock 在 workload 宏内
-关闭抢占，KD 则直接 CALL `kd_spin_lock_abi()` 并在该函数中关闭抢占，均在
-对应解锁时恢复。KD 不经过 Linux 的 `spin_lock()` 包装，热度记录器复用已有
+关闭抢占。KD 保留壳在 `kd_spin_lock_abi()` 内关闭抢占；配对壳在 C `if` 前
+关闭抢占，冷/热 provider 入口复用该 pin，均在对应解锁时恢复。
+KD 不经过 Linux 的 `spin_lock()` 包装，热度记录器复用已有
 pin，不重复增减。不能因 Linux 内部协议已被 pin 就删除 KD 显式 API 的 pin。
 
-单线程 observe 路径为：clobber 调用现场 → 一次入口 pin → 直接热度记录核心
+配对壳在新加载的冷 CPU 上，单线程路径为：调用端 pin → C `if` 读取 CPU 热值
+→ 普通 C 冷获取 → nondelegated 增加 → CAS → 正文 → 锁字低字节 release
+→ nondelegated 减少 → unpin。没有 MCS，CPU 热值保持冷；observe/adaptive
+均不进入热度记录核心或实际 JIT。寄存器保存由编译器决定，不承诺全部省略。
+
+保留壳的单线程 observe 路径为：clobber 调用现场 → 一次入口 pin → 直接热度记录核心
 （读缓存CPU热值，不增加CPU计数）→ task/migration/native 状态查询 → context_occupied → CAS → fast owner
 → 正文 → fast owner 解锁/清理 → 结束 pin。没有 MCS、ticket 分配、continuation
 或实际 JIT，也不创建慢路径 request/ref；编译器寄存器保存仍在。
@@ -626,5 +647,6 @@ pin，不重复增减。不能因 Linux 内部协议已被 pin 就删除 KD 显�
 9 月 21 日 fast 路径精简后 KD 约 289 条；两组均是历史冻结版本的诊断，
 不能作为后续源码的指令数实测。此前同时删除 busy/pin 的实验已回退；当前保留
 共享采样器的 pin，仅删除 busy 及对应屏障，并跳过非 task 样本。
-长批次诊断不替代短批次三方吞吐；最新单轮成绩见
-[CPU MCS1 / 400亿窗口重测](../tclock_compare/results/20260922-spin-mcs1-window4e10.md)。
+长批次诊断不替代短批次三方吞吐；历史单轮成绩见
+[CPU MCS1 / 400亿窗口重测](../tclock_compare/results/20260922-spin-mcs1-window4e10.md)，
+当前测试与结果索引见 [三方 README](../tclock_compare/README.md)。

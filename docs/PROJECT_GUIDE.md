@@ -8,9 +8,18 @@ Linux L 二次获取及旧 spin 统一分发均已删除。Linux、TCLock、KD �
 mutex 协议和嵌套控制调用保留，但 `kd_main.c` 未安装全局 mutex hook。
 加载 provider 不会让普通 Linux spin/mutex 自动进入代理。
 
+配对入口 `KD_SPIN_DIRECT_LOCK` 在关闭抢占后用 C `if` 只判断 CPU 热值；
+`db42cf4` 已删除调用端的 `kd_spin_cold_fastpath`、`kd_spin_delegate` 判断。
+冷分支普通 C 调用完整 CAS/pending/MCS，保留 CPU 热度更新；热分支使用 clobber-v1。
+宽 clobber 只在热分支声明，没有手工 push/pop；编译器决定寄存器保存位置，
+允许部分保存出现在 `if` 前。配对解锁依据锁字状态，不读取 CPU 热值。
+
 spin/mutex 分别有每 CPU 256 桶、256 条精确锁地址记录；模块初始化预分配并采时。
-spin CPU 每次合格 MCS 事件、mutex CPU 每 1024 次入口检查 400 亿 TSC 窗口，
-冷捷径开启且队列门槛大于0时冷CPU计合格队头获取，其余情况计入队；
+spin 代理开启时，spin CPU 每次合格 MCS 事件检查 400 亿 TSC 窗口；
+mutex CPU 保持每 1024 次入口检查同一窗口。
+provider 的 `spin_cold_fastpath=1` 且队列门槛大于 0 时，冷 CPU 计合格队头获取，其余情况计入队；
+该参数默认 0，仅控制采样规则，不控制配对壳的冷/热分支。`spin_delegate` 仍在
+provider 内控制代理和采样，调用端不再读取这两个策略开关。
 fast/pending 不增加 spin CPU 计数。CPU 热才查表；命中直接增加该锁 count，
 大于 32（第 33 次）时检查 25 亿 TSC 窗口、刷新 hot、更新时间戳并清零计数。
 没有候选排名或淘汰；满表不覆盖，未收录的新锁在默认 adaptive 下走原生。
