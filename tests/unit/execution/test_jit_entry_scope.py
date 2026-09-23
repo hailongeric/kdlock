@@ -94,6 +94,18 @@ def main():
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
     mutations = {
+        "batch-clobber-uses-legacy-entry": (
+            "call->code = (char *)code + (clobber ? KD_JIT_CLOBBER_OFFSET :",
+            "call->code = (char *)code + (clobber ? KD_JIT_BATCH_OFFSET :",
+        ),
+        "batch-clobber-uses-legacy-unlock": (
+            "call->unlock = clobber ? clobber_spin_unlock_addr : raw_spin_unlock_addr;",
+            "call->unlock = raw_spin_unlock_addr;",
+        ),
+        "batch-completion-abi-inverted": (
+            "call->complete = clobber;",
+            "call->complete = !clobber;",
+        ),
         "dispatch-rehashes-entry": (
             "if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip))",
             "if (!kd_exe_is_ready(0, entry_ip))",

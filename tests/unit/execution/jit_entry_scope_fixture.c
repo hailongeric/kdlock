@@ -11,6 +11,8 @@
 
 typedef long long s64;
 typedef unsigned long long u64;
+typedef unsigned short u16;
+typedef unsigned char u8;
 typedef long long atomic64_t;
 typedef int atomic_t;
 #define S64_MAX LLONG_MAX
@@ -302,20 +304,22 @@ static void reset(void)
 	failed_service_calls = 0;
 	kd_hostcall_exits = kd_hostcall_executed = kd_hostcall_resumed = 0;
 	kd_hostcall_limit = kd_hostcall_rejected = kd_hostcall_failed = 0;
-	active = (struct kd_exec_frame){
-		.complex_ready = true,
-		.entry_ip = 0x1000,
-		.outer_lock_addr = 0x8000,
-		.gsbase = 0xFEED,
-		.logical_task = &waiter,
-		.jit_lock_addr = { 0x8000 },
-		.jit_lock_kind = { KD_EXEC_LOCK_QUEUE_OWNER },
-		.jit_lock_depth = 1,
-		.held_lock_depth = 1,
-		.outer_lock_depth = 1,
-		.outer_lock_index = 0,
-		.state = KD_EXEC_FRAME_RUNNING,
-	};
+	/* Whole-object checks below include padding around narrow frame fields.
+	 * Zero it deterministically and preserve it in snapshots with memcpy;
+	 * C structure assignment is allowed to leave padding unspecified. */
+	memset(&active, 0, sizeof(active));
+	active.complex_ready = true;
+	active.entry_ip = 0x1000;
+	active.outer_lock_addr = 0x8000;
+	active.gsbase = 0xFEED;
+	active.logical_task = &waiter;
+	active.jit_lock_addr[0] = 0x8000;
+	active.jit_lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
+	active.jit_lock_depth = 1;
+	active.held_lock_depth = 1;
+	active.outer_lock_depth = 1;
+	active.outer_lock_index = 0;
+	active.state = KD_EXEC_FRAME_RUNNING;
 	active.regs.ip = active.entry_ip;
 	active.regs.sp = (unsigned long)&stack[9];
 	active.regs.di = active.outer_lock_addr;
@@ -328,10 +332,11 @@ static void reset(void)
 	for (int i = 0; i < KD_MAX_EXE; i++)
 		entry_table[i].status_code = KD_EXE_UNUSED;
 	entry = kd_get_exe(0, active.entry_ip);
-	*entry = (struct kd_exe_info){ .RIP = active.entry_ip,
-				       .lock_kind = KD_EXE_LOCK_SPIN,
-				       .code_block = translated,
-				       .status_code = KD_EXE_NORMAL };
+	memset(entry, 0, sizeof(*entry));
+	entry->RIP = active.entry_ip;
+	entry->lock_kind = KD_EXE_LOCK_SPIN;
+	entry->code_block = translated;
+	entry->status_code = KD_EXE_NORMAL;
 	source_open = true;
 	registry_lookups = readiness_acquires = 0;
 	calls = known_calls = errors = warnings =
@@ -400,7 +405,7 @@ static void check_local_continuation(void)
 static void remote(void)
 {
 	reset();
-	parent = active;
+	memcpy(&parent, &active, sizeof(parent));
 	active.regs.ip = 0x1005;
 	active.outer_lock_addr = active.regs.di = 0x8100;
 	active.outer_lock_index = 1;
@@ -477,7 +482,7 @@ static void check_remote_scope(void)
 			active.state = KD_EXEC_FRAME_ERROR;
 			break;
 		}
-		before = parent;
+		memcpy(&before, &parent, sizeof(before));
 		CHECK(run() == KD_EXE_NO_RUN);
 		CHECK(!calls && !active.executed && errors == 1);
 		CHECK(memcmp(&parent, &before, sizeof(parent)) == 0);
@@ -529,7 +534,7 @@ static void check_registry_refusal(void)
 				}
 				break;
 			}
-			before = active;
+			memcpy(&before, &active, sizeof(before));
 			memcpy(stack_before, stack, sizeof(stack));
 			memcpy(table_before, entry_table, sizeof(entry_table));
 			CHECK(run() == KD_EXE_NO_RUN);
@@ -573,7 +578,7 @@ static void check_cached_entry(void)
 			case 7: entry->lock_kind = backend ? KD_EXE_LOCK_SPIN : KD_EXE_LOCK_MUTEX; break;
 			case 8: cached = NULL; break;
 			}
-			before = active;
+			memcpy(&before, &active, sizeof(before));
 			acquires = readiness_acquires;
 			CHECK(kd_exe_on_call_hl_entry(cached, &active.regs,
 				active.entry_ip, active.outer_lock_addr) ==
@@ -789,7 +794,7 @@ static void check_shared_budget(void)
 				remote();
 			else
 				service_packet();
-			saved_parent = parent;
+			memcpy(&saved_parent, &parent, sizeof(saved_parent));
 			for (unsigned int i = 0; i < accepted; i++)
 				steps[i] = (struct step){ i < known ? KD_EXE_CALL_MISS :
 					KD_EXE_HOSTCALL, i < known ? 0x2000 : kd_hostcalls[0].addr,
@@ -907,8 +912,8 @@ static void check_quota_packets(void)
 					active.jit_lock_released[0] = true;
 					break;
 				}
-				before = active;
-				registered = *entry;
+				memcpy(&before, &active, sizeof(before));
+				memcpy(&registered, entry, sizeof(registered));
 				memcpy(saved_stack, stack, sizeof(stack));
 				ret = kd_jit_call_limit_native(&active, &active.regs, service);
 				if (!bad || (!service && (bad == 20 || bad == 21))) {
@@ -916,6 +921,7 @@ static void check_quota_packets(void)
 					before.control_call.phase = KD_CALL_NONE;
 					before.continuation_ip = before.regs.ip;
 					before.continuation_sp = before.regs.sp;
+					before.role = KD_ROLE_COMBINER;
 					before.state = KD_EXEC_FRAME_RESUME;
 				} else {
 					CHECK(ret < 0 && !warnings);
@@ -949,9 +955,10 @@ static void check_quota_packets(void)
 			active.jit_lock_released[0] = true;
 			active.mutex_backend = scope == 2;
 		}
-		expected = active;
+		memcpy(&expected, &active, sizeof(expected));
 		expected.continuation_ip = active.regs.ip;
 		expected.continuation_sp = active.regs.sp;
+		expected.role = KD_ROLE_COMBINER;
 		expected.state = KD_EXEC_FRAME_RESUME;
 		CHECK(kd_jit_call_limit_native(&active, &active.regs, false) == 0);
 		CHECK(!memcmp(&expected, &active, sizeof(active)));
@@ -1039,8 +1046,8 @@ static void check_timing_boundaries(void)
 				CHECK(!kd_jit_times[phase].invalid);
 			}
 			if (!enabled) {
-				expected = active;
-				registered = *entry;
+				memcpy(&expected, &active, sizeof(expected));
+				memcpy(&registered, entry, sizeof(registered));
 				memcpy(saved_stack, stack, sizeof(stack));
 			} else {
 				CHECK(!memcmp(&active, &expected, sizeof(active)));
@@ -1056,7 +1063,7 @@ static void check_timing_boundaries(void)
 		struct kd_jit_timing_stat *stat = &kd_jit_times[KD_JIT_TIME_WRAPPER];
 
 		reset();
-		before = active;
+		memcpy(&before, &active, sizeof(before));
 		kd_jit_timing = timing_clock_active = true;
 		if (bad == 1)
 			stat->samples = S64_MAX;
@@ -1085,7 +1092,7 @@ static void check_queue_timings(void)
 			struct kd_exec_frame before;
 
 			reset();
-			before = active;
+			memcpy(&before, &active, sizeof(before));
 			kd_jit_timing = enabled;
 			timing_clock_active = true;
 			timing_clock = 100;
@@ -1125,7 +1132,7 @@ static void check_native_handoff_timings(void)
 					    KD_JIT_TIME_NATIVE_SPIN_WAIT;
 
 			reset();
-			before = active;
+			memcpy(&before, &active, sizeof(before));
 			kd_jit_timing = enabled;
 			timing_clock_active = true;
 			handoff = kd_exe_native_timing_start();
@@ -1237,6 +1244,71 @@ static void check_batch_admission(void)
 	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
 }
 
+/* The wrapper consumes every metadata word, even when no optional clock is
+ * active. Poison reused call storage and validate both entry ABIs so the
+ * single-pass batch setup cannot retain a legacy offset/endpoint or stale
+ * completion/timing permission. Preparation must not mutate the frame. */
+static void check_batch_metadata(void)
+{
+	unsigned char code[64] = { 0 };
+	struct kd_jit_batch_call call, untouched;
+	struct kd_exec_frame before;
+
+	for (unsigned int abi = 0; abi < 2; abi++) {
+		for (unsigned int timed = 0; timed < 2; timed++) {
+			reset();
+			active.spin_simple = active.request_frame = true;
+			active.complex_ready = false;
+			active.entry_abi = entry->entry_abi = abi;
+			active.packet_state = abi ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
+			entry->code_block = code;
+			memcpy(code + 9, "KDWB001", 7);
+			memcpy(code + 25, "KDWC001", 7);
+			memcpy(code + 41, "KDAB", 4);
+			code[KD_JIT_ABI_OFFSET] = abi;
+			kd_jit_timing = timed;
+			timing_clock_active = true;
+			timing_clock = 100;
+			memset(&call, 0xa5, sizeof(call));
+			memcpy(&before, &active, sizeof(before));
+			CHECK(kd_exe_spin_batch_prepare(entry, &active, &call));
+			CHECK(call.regs == &active.regs &&
+			      call.args[0] == active.gsbase &&
+			      call.args[1] == (unsigned long)active.logical_task);
+			CHECK(call.code == code + (abi ? KD_JIT_CLOBBER_OFFSET :
+						       KD_JIT_BATCH_OFFSET));
+			CHECK(call.lock == active.outer_lock_addr &&
+			      call.unlock == (abi ? clobber_spin_unlock_addr :
+						    raw_spin_unlock_addr));
+			CHECK(call.entry_sp == active.regs.sp && call.entry_abi == abi &&
+			      call.packet_state == &active.packet_state);
+			CHECK(call.complete == abi &&
+			      call.complete == kd_jit_minimal_complete_allowed(&active));
+			CHECK(call.dispatch_start == (timed ? 1000 : 0) &&
+			      call.wrapper_start == (timed ? 1010 : 0) &&
+			      timing_reads == timed * 2);
+			CHECK(!memcmp(&active, &before, sizeof(active)));
+
+			/* The shortcut to COMPLETE permission is valid only after the
+			 * original pristine-root guards. Reject each lost prerequisite
+			 * without publishing even partial metadata to the caller. */
+			for (unsigned int bad = 0; bad < 4; bad++) {
+				memcpy(&active, &before, sizeof(active));
+				if (bad == 0) active.spin_simple = false;
+				if (bad == 1) active.parent = &parent;
+				if (bad == 2) active.depth = 1;
+				if (bad == 3) active.mutex_backend = true;
+				memset(&call, 0xa5, sizeof(call));
+				memcpy(&untouched, &call, sizeof(untouched));
+				CHECK(!kd_jit_minimal_complete_allowed(&active));
+				CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+				CHECK(!memcmp(&call, &untouched, sizeof(call)));
+				CHECK(timing_reads == timed * 2);
+			}
+		}
+	}
+}
+
 /* Entry identity and materialization state are independent of publication.
  * None of these mismatches may invoke the wrapper or read the absent GPRs. */
 static void check_clobber_identity(void)
@@ -1322,6 +1394,7 @@ static void check_pending_batch_exit(void)
 int main(void)
 {
 	check_batch_admission();
+	check_batch_metadata();
 	check_clobber_identity();
 	check_pending_batch_exit();
 	check_simple_spin();

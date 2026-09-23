@@ -1,5 +1,11 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
+[单线程与20线程性能调查](results/20260923-spin-single-hot-balance.md)：新基线48场、
+时钟内联候选48场均按每配置3轮测量，内联无一致收益，已撤回。
+简单 spin batch 元数据只初始化一次后，20线程 observe 筛选18/18场及nested/early双模式4/4场通过；
+c1/c16中位数较新基线提高2.37%/2.11%，最大值提高2.02%/0.24%。
+这是小幅阶段性改善，尚未恢复历史约5.2/4.8 Mops/s；该候选未重测单线程及adaptive性能。
+
 统一 generic unlock 的[三轮验证](results/20260923-spin-generic-unlock.md)：
 基础及相关6组、冻结运行器22项、nested/early共4场通过；108/108性能场次、
 9000万次操作完成并排空。c1 JIT正文由28条降为19条，冷解锁同样传递SP/IP/BP并声明宽clobber。

@@ -52,6 +52,11 @@
    节点直接指向 continuation/frame，节点复用不会销毁现场。
    等待栈、PAUSE 轮询和 caller-clobber ABI 保留。combiner 绑定逻辑 waiter，
    通过 wrapper 和生成代码执行正文，原 waiter/combiner 共用寄存器包。
+   简单 spin 根请求的 batch 准备在原有发布、镜像、ABI、packet 及 pristine-root 检查通过后，
+   按 legacy/clobber ABI 一次写入最终调用元数据，不再先填 legacy 值再由通用 helper 覆盖。
+   clobber 选择对应正文偏移、解锁入口及 COMPLETE 许可；许可只在已有检查证明
+   spin_simple、无 parent、depth=0、非 mutex 时成立。legacy 仍不授予最小完成许可；
+   mutex/复杂路径继续使用通用 helper，计时、发布及 frame/ACK 退休顺序不变。
 6. 嵌套控制 CALL 维护锁记录和独立所有权。提前释放、乱序解锁、远端借用 ACK
    与重新获取不能重复释放 KD 字；ticket 元数据退休与唯一 release store 分开。
 7. 正常 COMPLETE 回交 IP/SP/BP；中途 FULL 物化完整逻辑 GPR。已执行的正文

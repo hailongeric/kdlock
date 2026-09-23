@@ -164,6 +164,7 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 {
 	void *code;
 	struct pt_regs *regs = kd_exec_frame_regs(frame);
+	bool clobber;
 
 	if (!frame->spin_simple || frame->parent || frame->depth ||
 	    !frame->request_frame || frame->mutex_backend || frame->complex_ready ||
@@ -180,18 +181,22 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	code = READ_ONCE(exe->code_block);
 	if (!code || memcmp((char *)code + 9, "KDWB001", 7))
 		return false;
+	/* These admission checks already prove the simple spin root predicates
+	 * required by kd_jit_minimal_complete_allowed. Select its final metadata
+	 * once: do not fill the legacy call and then rewrite it via the general
+	 * clobber helper, which still handles mutex and complex dispatch below. */
+	clobber = frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1;
 	call->regs = regs;
 	call->args[0] = frame->gsbase;
 	call->args[1] = (unsigned long)frame->logical_task;
-	call->code = (char *)code + KD_JIT_BATCH_OFFSET;
+	call->code = (char *)code + (clobber ? KD_JIT_CLOBBER_OFFSET :
+					   KD_JIT_BATCH_OFFSET);
 	call->lock = frame->outer_lock_addr;
-	call->unlock = raw_spin_unlock_addr;
+	call->unlock = clobber ? clobber_spin_unlock_addr : raw_spin_unlock_addr;
 	call->entry_sp = regs->sp;
 	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
-	call->complete = false;
-	if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
-		kd_jit_prepare_clobber(call, frame, code);
+	call->complete = clobber;
 	call->dispatch_start = kd_jit_timing_start();
 	call->wrapper_start = kd_jit_timing_start();
 	return true;
