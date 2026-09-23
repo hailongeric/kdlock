@@ -22,14 +22,15 @@
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
    直接 benchmark 在单 CPU 预热前完成准备，测量时停止 daemon。
 2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` / `KD_SPIN_DIRECT_UNLOCK(lock, cookie)`
-   使用原有 broad-clobber 调用约定，cookie统一传`kd_spin_direct_cookie`，直接引用已有
+   通过 C `if` 选择普通 C 冷调用或原有 broad-clobber 热调用，cookie统一传`kd_spin_direct_cookie`，直接引用已有
    per-CPU `rate_hot`，一个CPU一份、所有锁共享。它只表示当前CPU热度，不记录路径或深度。
    加载时只读选项 `spin_cold_fastpath=1` 使 observe/adaptive 都先读现有 CPU `rate_hot`。
-   宏先 pin 一次，在 asm 内直接读取 per-CPU 热值；冷入口增加 nondelegated 在途计数并 CAS，失败值直接进入原生 pending/MCS，
+   宏先 pin 一次，再通过 `this_cpu_read` / `READ_ONCE` 读取 per-CPU 热值；开启冷捷径且代理关闭或CPU冷时进入冷分支。
+   冷入口增加 nondelegated 在途计数并 CAS，失败值直接进入完整原生 pending/MCS 及既有 CPU 热度采样，
    不重复初始 CAS。冷获取将低字节设为5；解锁检查此持有状态后只release低字节、减少计数、
    解除pin，保留pending/tail。MCS 热度更新只影响后续获取；解锁不读取cookie。
-   热分支直接调用 pinned clobber 入口，continuation 位于 CALL 后，没有手工 push/pop。
-   活跃值由编译器按 clobber 声明保存，允许保存指令位于冷热判断之前。
+   热分支通过 `KD_SPIN_DIRECT_CALL` 调用 pinned clobber 入口，命名 continuation 仅位于此 CALL 后，没有手工 push/pop。
+   broad-clobber 声明仅属于热分支；活跃值由编译器决定如何保存，允许部分保存指令位于 `if` 之前，部分位于热分支内。
    pinned 入口复用前一步的 pin；32 位锁、寄存器包和 wrapper 输入不变。
    当前 workload 只将外层锁接入新接口；nested/early 内层也恢复原 clobber 宏，不再套寄存器适配。
    选项暂默认关闭；运行器关闭对照编译保留壳，详见 benchmark 的调用端身份记录。

@@ -24,6 +24,14 @@ static unsigned int cpu_id, heat[2];
 unsigned int *cpu_gates[2] = {&heat[0], &heat[1]};
 extern unsigned int *kd_hotlock_spin_gate;
 asm(".globl kd_hotlock_spin_gate\n.set kd_hotlock_spin_gate,cpu_gates\n");
+/* Substitute only the kernel per-CPU primitive, retaining the real C gate
+ * and GS addressing. A userspace global alone would miss CPU selection. */
+#define this_cpu_read(slot) ({ \
+ __typeof__(slot) value; \
+ assert(pins); \
+ asm volatile("movq %%gs:%1, %0" : "=r"(value) : "m"(slot)); \
+ value; \
+})
 #include "paired.h"
 static unsigned int hot, cold_locks, cold_unlocks;
 unsigned long hot_calls;

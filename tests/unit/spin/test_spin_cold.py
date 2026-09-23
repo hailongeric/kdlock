@@ -3,8 +3,8 @@
 Hardware contention is substituted; live MCS/JIT acceptance is checked by the
 direct benchmark. The ABI fixture executes the real header with destructive
 hot callees, so an incorrect compiler clobber contract corrupts live values.
-Its GS base models two CPU-local pointer slots without rewriting the real
-header's GS load or moving admission into a substitute C selector.
+Its GS base models two CPU-local pointer slots through the kernel per-CPU
+primitive substitute; the real header owns the C admission branch.
 """
 import re
 import subprocess

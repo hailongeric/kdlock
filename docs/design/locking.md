@@ -66,9 +66,12 @@ own protocol; no global spin hook is installed and protocols must never mix on
 one object. Explicit caller storage must outlive all requests and frames.
 
 The cold-gated broad-clobber spin shell optionally uses `spin_cold_fastpath=1`.
-It pins once and reads the per-CPU gate inline in assembly. A cold CPU keeps the existing `nondelegated`
-in-flight count through the entire native acquisition and hold. It attempts one
-CAS and passes a failure directly to native pending/MCS. This root does not
+It pins once, then uses a C `if` with `this_cpu_read` / `READ_ONCE` to select an
+ordinary C cold call or the original broad-clobber hot call. With the gate
+enabled, disabled delegation or a cold CPU selects the cold call. It keeps the
+existing `nondelegated` in-flight count through the entire native acquisition
+and hold. It attempts one CAS and passes a failure directly to the complete
+native pending/MCS path. This root does not
 transfer to a fast-owner record. Native ownership uses locked-byte value 5;
 unlock tests that byte before a release, count decrement and unpin, preserving
 pending/tail. The cookie is only the existing per-CPU rate_hot view: one per CPU
@@ -78,9 +81,10 @@ under the configured queue-pressure policy. The drain scan includes this count. 
 shared pinned core and existing fast-owner/ticket routing; observe fixes lock
 admission only after CPU heat when this gate is enabled. The retained API and
 explicitly disabled gate keep their original policy.
-The compiler owns live-register saves, including any placed before the CPU
-branch. There are no manual five-register PUSH/POP adapters in the hot body;
-the continuation and minimal register packet retain the original clobber ABI.
+Only the hot branch declares the broad clobbers. The compiler owns live-register
+saves and may place them before the C branch or inside it. There are no manual
+five-register PUSH/POP adapters in the hot body; the named continuation follows
+the hot CALL and the minimal register packet retains the original clobber ABI.
 
 Every public spin acquisition pins once. When delegation is enabled, the entry
 records heat and checks policy/context before attempting delegated fast/pending.

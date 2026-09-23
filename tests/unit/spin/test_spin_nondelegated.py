@@ -17,8 +17,13 @@ def main():
     with tempfile.TemporaryDirectory(prefix='kd-nondelegated-') as directory:
         binary = Path(directory) / 'test'
         queue = (ROOT/'kernel_module/spin/queue.inc').read_text()
-        (Path(directory)/'spin_mcs_tail.h').write_text(definition(
-            queue, 'static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)'))
+        hotlock = (ROOT/'include/kd_hotlock.h').read_text()
+        pressure = definition(hotlock,
+            'static __always_inline unsigned int kd_hotlock_spin_cold_queue_min_pinned(void)')
+        pressure += queue[
+            queue.index('static __always_inline u32 xchg_tail'):
+            queue.index('/**\n * clear_pending')]
+        (Path(directory)/'spin_mcs_tail.h').write_text(pressure)
         source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
         paired = 'void ' + definition(source,
             'kd_spin_direct_native_lock(kd_spinlock_t *lock)')
@@ -28,7 +33,12 @@ def main():
                         '-pthread', '-I', str(ROOT), '-I', directory,
                         str(ROOT/'tests/unit/spin/spin_nondelegated_fixture.c'),
                         '-o', str(binary)], check=True, timeout=30)
-        subprocess.run([str(binary)], check=True, timeout=40)
+        # Small cold cohorts must still execute the complete native protocol;
+        # they cannot form the four linked nodes needed for CPU promotion.
+        # Keep a crowded case and the legacy publication policy as controls.
+        for threads, minimum in ((1, 4), (2, 4), (3, 4), (8, 4), (8, 0)):
+            subprocess.run([str(binary), str(threads), str(minimum)],
+                           check=True, timeout=40)
         # Exercise both public-routing and direct native-bridge ownership,
         # using the real fast-record helpers and paired native API bodies.
         fast = (ROOT/'include/kd_spin_fast.h').read_text()

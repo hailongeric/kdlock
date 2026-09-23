@@ -81,19 +81,25 @@ the call boundary. This path does not decode a compiler-generated prologue.
 Legacy hook offsets and the new ABI are defined in [the register ABI](JIT_REGISTER_ABI.md);
 [kernel baselines](../kernel_baseline/README.md) remain distinct.
 
-The paired spin shell `KD_SPIN_DIRECT_LOCK/UNLOCK` uses ordinary C caller
-clobbers. Its per-acquisition unsigned cookie pairs release with acquisition.
-With the read-only load option `spin_cold_fastpath=1`, a cold CPU increments the
-existing native drain count and attempts one CAS after acquiring one preemption
-pin. A failed value enters native pending/MCS directly. Cold unlock releases
-only the low byte, decrements that count and unpins, without owner/heat lookup.
-The hot branch alone pushes RBX/R12–R15. Its continuation precedes the POPs,
-letting minimal-ABI JIT read these values from the waiter stack; it defines the
-hot cookie after that point. Hot unlock saves the current live values for the
-final physical restore. The pinned hot entry shares the existing core and pin;
-lock width, packet layout and wrapper inputs are unchanged. Recompile callers
-to use this shell; the original broad-clobber API remains available. Initial
-workload adoption covers the outer lock only.
+The paired spin shell `KD_SPIN_DIRECT_LOCK/UNLOCK` takes one preemption pin
+before a C `if` selects its entry. The shared `kd_spin_direct_cookie` only views
+the existing per-CPU `rate_hot`; it records neither acquisition path nor nesting.
+With the read-only load option `spin_cold_fastpath=1`, disabled delegation or a
+cold CPU selects an ordinary C call into the complete native CAS/pending/MCS
+path. It keeps the existing native drain count through acquisition and holding;
+a failed CAS value enters pending/MCS directly, including the existing CPU heat
+sampling. Native ownership uses locked-byte value 5. Unlock tests that byte,
+releases only the low byte, decrements the count and unpins, preserving pending
+and tail without a heat lookup.
+The other branch uses the original broad-clobber call to the pinned entry.
+Its named continuation is immediately after that CALL. The compiler owns all
+live-register saves and may place them before the `if` or inside the branch;
+the shell supplies no manual PUSH/POP adapter. Hot unlock retains the original
+broad-clobber call. The pinned entry shares the existing core and pin; lock
+width, packet layout and wrapper inputs are unchanged. Recompile paired callers
+to use this shell; the original API remains available. The workload selects
+the shell for its outer lock only; nested/early inner calls use the original
+`KD_SPIN_DIRECT_CALL` without extra register adapters.
 
 `target_process` belongs to the retained mutex routing path; current direct
 spin entry does not filter by comm. Stable spin tickets/fast owners and mutex
@@ -112,13 +118,19 @@ locks cold under adaptive admission, retaining existing identities until unload.
 Initialization reserves 13376 bytes per CPU (two 6680-byte tables plus alignment,
 24-byte entries)
 and seeds CPU clocks. Valid addresses and initialized lifetime are caller
-preconditions. Both CPU clocks use a 4-billion-TSC window. Spin checks every four
-actual MCS tail publications; mutex still checks every 1024 entry records.
+preconditions. Both CPU clocks use a 40-billion-TSC window. Spin checks every
+eligible MCS event; mutex still checks every 1024 entry records.
 Elapsed time covers the whole batch since the previous check, or initialization
 for the first batch; intermediate events retain cached CPU heat without a TSC read.
-The shared spin tail exchange counts native, delegated and virtual producers;
-fast/pending success, pre-publication cancellation and exhausted-node polling
-do not count. Entry admission stays in place and consumes cached CPU heat;
+The shared spin tail exchange normally counts native, delegated and virtual
+producers. With the cold gate enabled and `spin_hot_min_queue=N>0`, a cold CPU
+instead counts queue-head acquisitions that observe at least N linked nodes,
+including itself, before handoff. It reads at most N−1 links without waiting
+for a missing link. This read-only load parameter ranges from 0 to 16, defaults
+to 4, and uses the original publication policy at 0. Hot CPUs continue sampling
+publications; one acquisition never counts both events. Fast/pending success,
+pre-publication cancellation and exhausted-node polling do not count.
+Entry admission stays in place and consumes cached CPU heat;
 only a hot CPU accesses the lock table. A lock checks its 2.5-billion-TSC window
 when its count is **greater than 32**, at hit 33. The check refreshes its hot
 flag and timestamp and resets the count. Strictly smaller elapsed time and
@@ -131,7 +143,7 @@ Sampling is best-effort: non-task calls skip the table and queries return cold;
 observe records still admit. Task callers reuse or acquire a CPU pin, so hash
 insertion needs no busy flag or statistics barrier and cannot be reentered by IRQ.
 The first CPU batch includes startup idle. Spin entries alone cannot warm a cold
-CPU; native MCS publications can, and later entries accumulate the
+CPU; eligible native MCS events can, and later entries accumulate the
 33-hit lock batch. Mutex can first warm a single lock at record 1056.
 See [flow and storage](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取).
 
@@ -143,7 +155,7 @@ even for unknown identities at capacity. A CPU that once warmed retains its
 cached heat until a later MCS batch updates it; a quiet single-thread phase
 does not itself expire heat or read the clock. Public spin skips sampling when delegation
 is disabled. Neither policy supplies JIT safety permission. Admission remains
-at entry; MCS publication only updates CPU heat for subsequent entries.
+at entry; an eligible MCS event only updates CPU heat for subsequent entries.
 
 Fast owners/tickets and stable request frames retain OWNER/WAITER/COMBINER/DONE
 independently of the statistics table. Capacity, reset and CPU migration cannot

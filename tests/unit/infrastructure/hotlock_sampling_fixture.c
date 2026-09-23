@@ -409,16 +409,20 @@ static void queue_pressure(void)
  pins--;
  assert(queue_link_reads==before && !table(0)->rate_samples && clocks==5);
 
- /* One-node and maximum-sixteen policies have exact boundaries. */
- reset(); kd_spin_cold_fastpath=true; kd_spin_hot_min_queue=1;
- queue_event(&nodes[16]);
- assert(table(0)->rate_hot && clocks==2 && !queue_link_reads);
- reset(); kd_spin_cold_fastpath=true; kd_spin_hot_min_queue=16;
- for(unsigned int i=0;i<4;i++) queue_event(&nodes[2]);
- assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1);
- before=queue_link_reads;
- queue_event(&nodes[1]);
- assert(table(0)->rate_hot && clocks==2 && queue_link_reads-before==15);
+ /* Every configurable boundary, especially two and three, must count the
+  * head itself and stop exactly at the requested depth. A short chain must
+  * stay cold across repeated entries rather than accumulating thread count. */
+ for(unsigned int minimum=1;minimum<=16;minimum++) {
+  reset(); kd_spin_cold_fastpath=true; kd_spin_hot_min_queue=minimum;
+  if(minimum>1) {
+   for(unsigned int i=0;i<4;i++) queue_event(&nodes[18-minimum]);
+   assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1);
+   assert(queue_link_reads==4*(minimum-1));
+  }
+  before=queue_link_reads;
+  queue_event(&nodes[17-minimum]);
+  assert(table(0)->rate_hot && clocks==2 && queue_link_reads-before==minimum-1);
+ }
 
  /* Non-task callers and disabled delegation cannot promote or inspect a
   * pressure chain, and no other CPU inherits this CPU's heat. */

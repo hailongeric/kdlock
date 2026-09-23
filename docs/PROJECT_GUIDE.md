@@ -9,7 +9,8 @@ mutex 协议和嵌套控制调用保留，但 `kd_main.c` 未安装全局 mutex 
 加载 provider 不会让普通 Linux spin/mutex 自动进入代理。
 
 spin/mutex 分别有每 CPU 256 桶、256 条精确锁地址记录；模块初始化预分配并采时。
-spin CPU 每 4 次实际 MCS 入队、mutex CPU 每 1024 次入口检查 40 亿 TSC 窗口，
+spin CPU 每次合格 MCS 事件、mutex CPU 每 1024 次入口检查 400 亿 TSC 窗口，
+冷捷径开启且队列门槛大于0时冷CPU计合格队头获取，其余情况计入队；
 fast/pending 不增加 spin CPU 计数。CPU 热才查表；命中直接增加该锁 count，
 大于 32（第 33 次）时检查 25 亿 TSC 窗口、刷新 hot、更新时间戳并清零计数。
 没有候选排名或淘汰；满表不覆盖，未收录的新锁在默认 adaptive 下走原生。

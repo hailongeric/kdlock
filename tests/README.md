@@ -1,6 +1,13 @@
 # 当前测试入口
 
-当前CPU窗口400亿/MCS阈值1的[重测](../bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md)：
+当前[C if 冷热分支验证](../bench/tclock_compare/results/20260923-spin-c-if.md)：
+基础2组及cold/非代理MCS/paired JIT/热度采样4组通过，25项错误变体检出。
+原生MCS fixture覆盖1/2/3/8线程、门槛4及传统门槛0，合计110万次操作；
+门槛边界覆盖1..16。1/2/3线程保持冷态，2/3线程仍真实入队，8线程能更新CPU热值。
+c1三方单轮12/12场、780万次操作通过并排空；20线程KD有1994763次实际JIT。
+未追加nested/early、RCUHT、真实中断压力或全量矩阵；以下相关结果均为此前验证。
+
+此前CPU窗口400亿/MCS阈值1的[重测](../bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md)：
 基础2组及热度采样1组通过，25项错误变体检出；覆盖每个合格事件、400亿严格边界、
 冷热转换及不变的队列门槛4。60性能会话、3600万次操作全部通过并排空，20场KD有实际JIT。
 本轮未追加nested/early、RCUHT或PMU，下面的对应结果为此前验证。
