@@ -1,6 +1,12 @@
 # 当前测试入口
 
-当前[C if 冷热分支验证](../bench/tclock_compare/results/20260923-spin-c-if.md)：
+最新[C if 完整性能矩阵](../bench/tclock_compare/results/20260923-spin-c-if-full.md)：
+84/84场、6480万次操作通过并排空；批次IRQ/preempt恢复、业务数据及worker检查通过。
+56场KD中36场实际JIT，共36975809次正文，包含全部32场四线程及以上竞争；
+12场冷态小线程保持零JIT。256份冻结源码、9项二进制及发布图像独立核对通过。
+本轮没有重跑单元套件、nested/early、RCUHT或真实中断压力。
+
+此前[C if 冷热分支验证](../bench/tclock_compare/results/20260923-spin-c-if.md)：
 基础2组及cold/非代理MCS/paired JIT/热度采样4组通过，25项错误变体检出。
 原生MCS fixture覆盖1/2/3/8线程、门槛4及传统门槛0，合计110万次操作；
 门槛边界覆盖1..16。1/2/3线程保持冷态，2/3线程仍真实入队，8线程能更新CPU热值。
