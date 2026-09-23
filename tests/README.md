@@ -1,5 +1,19 @@
 # 当前测试入口
 
+2026-09-23 continuation存储错位布局的定向单元3/3组通过，3项错误变体检出。
+新fixture提取生产结构、分配/释放与reserve/collapse实现，覆盖121个CPU、每CPU全部12条记录、
+122个分配失败点、64字节对齐、偏移不越过低12 KiB区域、完整8 KiB等待栈、原始基址释放及局部初始化回滚。
+初次缺少fixture的u32类型定义而编译失败，补充类型后通过；未修改生产约束或弱化断言。
+日志为 `continuation-skew-unit-fixed.log`，初次失败保留为 `continuation-skew-unit.log`。
+20线程observe三轮筛选18/18、完整1/20线程双模式性能48/48及nested/early双模式4/4通过；
+单线程短批次中位数比本轮新基线低约5%–6%；后续24/24场长批次组件对照通过，
+四组中位差为+1.75%、−0.10%、−0.39%、−0.33%，未复现一致下降；不混入短矩阵取优。
+阶段结果与证据见[单线程/20线程调查](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。
+
+```sh
+make -C tests/unit run PY_TESTS='spin/test_spin_storage.py'
+```
+
 2026-09-23 [统一 generic unlock 验证](../bench/tclock_compare/results/20260923-spin-generic-unlock.md)：
 基础2组及cold/非代理MCS/preempt/paired JIT共6/6组通过，冻结运行器22/22项通过。
 冷/热解锁均验证宽clobber及精确SP/IP/BP，保留pending/tail、抢占和原生在途计数；

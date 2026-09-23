@@ -45,6 +45,20 @@ is the physical waiter polling stack. These regions never overlap. The four
 Combiner C and JIT physical stacks remain on the executor's task stack; virtual
 SP continues to address the logical waiter stack.
 
+The continuation stack starts at a bounded, CPU-dependent offset inside that
+low 12 KiB region. With the current 8512-byte layout, initialization selects
+`((cpu * 13) % 60) * 64` bytes, preserving cache-line alignment and distributing
+root packets across different page offsets. The number of choices is derived
+from the remaining space, not a larger allocation. The highest offset is 3776
+bytes, so all 12 records still end before the polling stack. This changes only
+the initialized continuation pointer: requests add no offset calculation,
+packet copy, or allocation. The polling stack retains its original base and
+top; teardown and partial-initialization rollback recover the allocation base
+from `wait_stack_top - KD_SPIN_STORAGE_BYTES`, never free the interior
+continuation pointer. Reservation, completion publication and retirement keep
+the protocol below. Performance evidence and its cache-causality limits are in
+the [current investigation](../../bench/tclock_compare/results/20260923-spin-single-hot-balance.md).
+
 Reservation takes the next stack record. Release marks it retired and collapses
 only the contiguous retired top; holes below a live top are neither scanned for
 allocation nor moved. Only the allocating CPU changes top. A remote native child

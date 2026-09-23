@@ -7,6 +7,20 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
+/* Page-aligned allocations otherwise put every CPU's root packet in the
+ * same L1 sets. Use only the unused continuation-area tail to spread roots;
+ * the allocation length and the upper 8 KiB polling stack stay unchanged.
+ * The current 8512-byte stack admits 60 cache-line colors. A stride of 13
+ * visits all of them over consecutive CPU identifiers before repeating. */
+static size_t kd_spin_continuation_offset(unsigned int cpu)
+{
+	const size_t colors = 1 +
+		(KD_SPIN_CONT_BYTES - sizeof(struct kd_spin_continuation_stack)) /
+		L1_CACHE_BYTES;
+
+	return ((unsigned long)cpu * 13 % colors) * L1_CACHE_BYTES;
+}
+
 static void kd_spinlock_free_percpu(void)
 {
 	int cpu;
@@ -15,7 +29,10 @@ static void kd_spinlock_free_percpu(void)
 		struct kd_spin_cpu_state *stack =
 			per_cpu_ptr(&kd_spin_cpu, cpu);
 
-		vfree(*per_cpu_ptr(&kd_spin_continuations, cpu));
+		/* The continuation pointer may be interior. The unchanged polling
+		 * stack top retains the allocation base, also during partial init. */
+		if (stack->wait_stack_top)
+			vfree((char *)stack->wait_stack_top - KD_SPIN_STORAGE_BYTES);
 		*per_cpu_ptr(&kd_spin_continuations, cpu) = NULL;
 		stack->wait_stack_top = NULL;
 	}
@@ -49,6 +66,9 @@ int kd_spinlock_init(void)
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) % L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) > 768);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation_stack) > KD_SPIN_CONT_BYTES);
+	BUILD_BUG_ON(__alignof__(struct kd_spin_continuation_stack) > L1_CACHE_BYTES);
+	BUILD_BUG_ON(KD_SPIN_CONT_BYTES % L1_CACHE_BYTES);
+	BUILD_BUG_ON(KD_SPIN_WAIT_STACK_SIZE % L1_CACHE_BYTES);
 	if (kd_spin_prefetch_mode > 2)
 		return -EINVAL;
 
@@ -79,7 +99,8 @@ int kd_spinlock_init(void)
 		wait_stack = vzalloc(KD_SPIN_STORAGE_BYTES);
 		if (!wait_stack)
 			goto err_free;
-		*per_cpu_ptr(&kd_spin_continuations, i) = wait_stack;
+		*per_cpu_ptr(&kd_spin_continuations, i) =
+			(void *)((char *)wait_stack + kd_spin_continuation_offset(i));
 		ptr->wait_stack_top = (char *)wait_stack + KD_SPIN_STORAGE_BYTES;
 		*per_cpu_ptr(&kd_spin_native_root, i) = NULL;
 
