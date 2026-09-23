@@ -5,12 +5,15 @@
 `direct.h` 按 `SC_BACKEND=native|tclock|kdlock` 选择 API；KD 使用独立四字节
 `kd_spinlock_t`，不与普通 Linux 锁混用。
 
-`SC_COLD_FASTPATH=1`编译内联CPU分流的clobber调用壳，默认仍为0（保留clobber壳）。
+KD 使用 `KD_SPIN_DIRECT_LOCK/UNLOCK` 热度分流壳。
+observe/adaptive 均根据当前 CPU 热度选择入口：
+冷 CPU 调用 `kd_spin_direct_native_lock`，热 CPU 调用 `kd_spin_lock_pinned_clobber_v1`。
 不手工push/pop，允许编译器在分支前保存活跃寄存器。所有body及锁
 统一传`kd_spin_direct_cookie`：一个CPU一份，直接引用该CPU已有的`rate_hot`。
-cookie仅代表CPU热度，不记录路径或嵌套深度；冷解锁由锁字低字节状态5决定。
-本轮只接入外层，内层仍走原接口。冷获取仍是完整CAS/pending/MCS；
-provider的`spin_hot_min_queue`可调冷态升温所需队列压力，0恢复旧MCS规则，默认4。
+cookie仅代表CPU热度，不记录路径或嵌套深度。解锁统一调用 broad-clobber 入口并传递
+lock/SP/IP/BP；provider 检查低字节状态 5，先做短原生释放，否则进入通用解锁核心。
+仅外层使用配对壳，内层仍走原接口。冷获取仍是完整CAS/pending/MCS；
+两种准入模式均在实际 MCS 发布处采样 CPU 热度，不检查队列深度；2/3线程也可因入队升温。
 
 `scenario.h` 的默认 plain 不增加锁，nested/early 只对 KD cacheline 启用。
 `SC_PREPARE` 显式登记对应锁后 RIP，`api.h` 定义客户端和模块共同使用的 ioctl。

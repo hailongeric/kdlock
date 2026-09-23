@@ -45,26 +45,8 @@ def check_jit_evidence(record):
         require(record.get('jit_bodies', 0) == 0, 'disabled control executed JIT')
         record['jit_acceptance'] = 'DISABLED_CONTROL'
         return
-    # Every session loads a fresh provider and only warms one CPU. A plain
-    # worker group smaller than the queue threshold cannot heat a cold CPU.
-    # This is a native-policy expectation, never a successful JIT positive.
-    pressure_policy = (record['arm'] == 'kdlock' and
-                       record.get('caller_shell') == 'cold_clobber' and
-                       record.get('spin_cold_fastpath') == 'on' and
-                       record.get('scenario', 'plain') == 'plain' and
-                       record.get('spin_hot_min_queue', 0) > 0)
-    if pressure_policy and 0 < record['threads'] < record['spin_hot_min_queue']:
-        require(record.get('jit_bodies', 0) == 0,
-                'cold queue policy unexpectedly executed JIT')
-        record['jit_acceptance'] = 'NO_JIT_COLD'
-        return
-    if (pressure_policy and record['threads'] >= record['spin_hot_min_queue'] and
-            record['threads'] != 20):
-        # Worker count does not guarantee linked queue depth at acquisition.
-        # Keep that policy outcome explicit; the 20-worker positive stays strict.
-        record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0
-                                    else 'NO_JIT_POLICY')
-        return
+    # Both admission modes sample actual MCS entries. Small cohorts can become
+    # hot; do not infer native-only execution from their thread count.
     if (record['arm'] == 'kdlock' and record['threads'] in (2, 3) and
             record.get('scenario', 'plain') == 'plain'):
         # Fast/pending acquisitions and native MCS queue heads can complete
@@ -118,9 +100,7 @@ class BackendSession(Session):
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
                       'hotlock_mode=' + self.record['hotlock_mode'],
-                      'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1'),
-                      'spin_cold_fastpath=' + ('1' if self.record.get('spin_cold_fastpath') == 'on' else '0'),
-                      'spin_hot_min_queue=' + str(self.record['spin_hot_min_queue'])],
+                      'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
                      'load-kdlock.log')
             self.loaded_kd = True
         elif self.record['arm'] == 'tclock':
@@ -151,8 +131,7 @@ class BackendSession(Session):
             require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
                     int(params['bench_lock_addr']) == layout['lock_addr'] and
                     params['hotlock_mode'] == self.record['hotlock_mode'] and
-                    params['spin_cold_fastpath'] == ('Y' if self.record.get('spin_cold_fastpath') == 'on' else 'N') and
-                    int(params['spin_hot_min_queue']) == self.record['spin_hot_min_queue'] and
+                    'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
                     params['spin_delegate'] == ('N' if self.record.get('spin_delegate') == 'off' else 'Y'),
                     'kdlock observation parameters differ')
             self.record['parameters'] = params

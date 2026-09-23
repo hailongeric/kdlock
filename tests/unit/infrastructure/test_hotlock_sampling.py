@@ -43,13 +43,9 @@ def main():
         "restart-lock-on-cpu-tick": ("if (!continuous)", "if (!continuous || t->rate_hot)", 1),
         "collision-alias": ("slot->address == address", "kd_hotlock_bucket(slot->address) == kd_hotlock_bucket(address)", 1),
         "capacity-overwrites-entry": ("if (t->used == KD_HOTLOCK_ENTRIES)\n    return NULL;", "if (t->used == KD_HOTLOCK_ENTRIES)\n    return &t->entries[0];", 1),
-        "ignore-pressure-opt-in": ("!kd_spin_cold_fastpath || !kd_spin_hot_min_queue ||", "!kd_spin_hot_min_queue ||", 1),
-        "count-cold-publication": ("kd_spin_delegate && !kd_hotlock_spin_cold_queue_min_pinned()", "kd_spin_delegate", 1),
-        "short-queue-promotes": ("depth < queue_min;", "depth + 1 < queue_min;", 1),
-        "extra-queue-link-read": ("depth < queue_min;", "depth <= queue_min;", 1),
-        "resample-hot-queue-head": ("!queue_min || !in_task() || kd_hotlock_spin_cpu_hot_pinned()", "!queue_min || !in_task()", 1),
-        "queue-ignores-interrupt": ("!queue_min || !in_task() || kd_hotlock_spin_cpu_hot_pinned()", "!queue_min || kd_hotlock_spin_cpu_hot_pinned()", 1),
-        "unbounded-pressure-parameter": ("kd_spin_hot_min_queue > 16", "kd_spin_hot_min_queue > 17", 1),
+        "disabled-delegation-samples": ("if (kd_spin_delegate)", "if (true)", 1),
+        "skip-cold-publication": ("if (kd_spin_delegate)", "if (kd_spin_delegate && kd_hotlock_spin_cpu_hot_pinned())", 1),
+        "double-publication-sample": ("if (kd_spin_delegate)\n\t\tkd_hotlock_record_spin_mcs_pinned();", "if (kd_spin_delegate) { kd_hotlock_record_spin_mcs_pinned(); kd_hotlock_record_spin_mcs_pinned(); }", 1),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-hotlock-sampling-") as directory:
         path = Path(directory)

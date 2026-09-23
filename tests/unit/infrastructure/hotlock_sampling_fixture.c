@@ -29,14 +29,10 @@ static unsigned int cpu_id, pins, clocks, disables, enables;
 static unsigned long now = 1;
 static size_t stride;
 static bool fail_alloc, interrupt_context;
-bool kd_spin_cold_fastpath;
 static bool kd_spin_delegate = true;
-static unsigned int queue_link_reads;
-struct kd_spin_node { struct kd_spin_node *next; };
 struct qspinlock { u16 tail; };
 #define _Q_TAIL_OFFSET_HL 16
 #define xchg(address, value) ({ __typeof__(*(address)) previous=*(address); *(address)=(value); previous; })
-#define smp_load_acquire(address) ({ ++queue_link_reads; *(address); })
 static void (*reentry)(void);
 #define alloc_percpu(type) (stride=sizeof(type), fail_alloc ? NULL : calloc(TEST_CPUS, sizeof(type)))
 #define free_percpu(p) free(p)
@@ -81,8 +77,7 @@ static void reset(void)
  if(kd_hotlock_cpu) kd_hotlock_exit();
  cpu_id=pins=clocks=0; now=1; hotlock_mode="adaptive";
  interrupt_context=false;
- kd_spin_cold_fastpath=false; kd_spin_delegate=true;
- kd_spin_hot_min_queue=4; queue_link_reads=0;
+ kd_spin_delegate=true;
  assert(!kd_hotlock_init());
 }
 static void check_chains(struct kd_hotlock_table *t)
@@ -349,111 +344,56 @@ static void isolation_and_reentry(void)
  assert(kd_hotlock_record_spin(0x20000)); /* fixed policy, even at capacity */
  assert(!kd_hotlock_query_spin(0x20000));
 }
-/* Model one MCS publisher becoming queue head while retaining its pin. The
- * production bounded walk is real; links/ownership and the TSC are fixtures. */
-static void queue_event(struct kd_spin_node *head)
+/* Exercise the actual tail-publication hook without supplying any queue node
+ * or successor links. Heat must depend only on publication times on this CPU. */
+static void queue_event(void)
 {
  struct qspinlock word={0};
  unsigned int before_disable=disables, before_enable=enables;
  pins++;
- unsigned int minimum=kd_spin_delegate ? kd_hotlock_spin_cold_queue_min_pinned() : 0;
  assert(!xchg_tail(&word,1U<<16) && word.tail==1);
- kd_spin_sample_cold_queue(head,minimum);
  assert(pins==1 && disables==before_disable && enables==before_enable);
  pins--;
 }
-static void queue_pressure(void)
+static void mcs_publications(void)
 {
- struct kd_spin_node nodes[17]={0};
- for(unsigned int i=0;i<16;i++) nodes[i].next=&nodes[i+1];
- /* The gate is opt-in even though the loaded threshold defaults to four. */
- reset(); assert(kd_spin_hot_min_queue==4);
- queue_event(&nodes[16]);
- assert(table(0)->rate_hot && clocks==2 && !queue_link_reads);
- reset(); kd_spin_cold_fastpath=true; kd_spin_hot_min_queue=0;
- queue_event(&nodes[16]);
- assert(table(0)->rate_hot && clocks==2 && !queue_link_reads);
-
- /* One through three observed nodes cannot warm a four-node policy. The
-  * two- and three-node chains can repeat forever without clock reads. */
- reset(); kd_spin_cold_fastpath=true;
- for(unsigned int length=1;length<=3;length++) {
-  unsigned int before=queue_link_reads;
-  for(unsigned int i=0;i<64;i++) queue_event(&nodes[17-length]);
-  assert(queue_link_reads-before==64*length);
-  assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1);
- }
- /* Exactly four linked nodes qualify; lookahead never reads a fifth link. */
- unsigned int before=queue_link_reads;
- queue_event(&nodes[13]);
+ reset();
+ /* Even a publisher without a linked successor contributes one sample. */
+ queue_event();
  assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==2);
- assert(queue_link_reads-before==3);
- before=queue_link_reads;
- queue_event(&nodes[16]);
- assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==3);
- assert(queue_link_reads==before); /* hot CPU keeps publication sampling */
-
- /* A hot publication may cool at its deadline. Its same operation must not
-  * count again at queue head, even when all sixteen successors are visible. */
+ for(unsigned int i=0;i<64;i++) queue_event();
+ assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==66);
+ /* A publication can cool the CPU; there is no later queue-head sample to
+  * reheat it during the same acquisition. The next publication may reheat. */
  now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
- queue_event(nodes);
- assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==4);
- assert(queue_link_reads==before);
- queue_event(nodes);
- assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==5);
- assert(queue_link_reads==before+3);
- /* No lookahead after another admission has already warmed this CPU. */
- table(0)->rate_hot=1; before=queue_link_reads;
- pins++;
- kd_spin_sample_cold_queue(nodes,4);
- pins--;
- assert(queue_link_reads==before && !table(0)->rate_samples && clocks==5);
+ queue_event();
+ assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==67);
+ queue_event();
+ assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==68);
 
- /* Every configurable boundary, especially two and three, must count the
-  * head itself and stop exactly at the requested depth. A short chain must
-  * stay cold across repeated entries rather than accumulating thread count. */
- for(unsigned int minimum=1;minimum<=16;minimum++) {
-  reset(); kd_spin_cold_fastpath=true; kd_spin_hot_min_queue=minimum;
-  if(minimum>1) {
-   for(unsigned int i=0;i<4;i++) queue_event(&nodes[18-minimum]);
-   assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1);
-   assert(queue_link_reads==4*(minimum-1));
-  }
-  before=queue_link_reads;
-  queue_event(&nodes[17-minimum]);
-  assert(table(0)->rate_hot && clocks==2 && queue_link_reads-before==minimum-1);
- }
-
- /* Non-task callers and disabled delegation cannot promote or inspect a
-  * pressure chain, and no other CPU inherits this CPU's heat. */
- reset(); kd_spin_cold_fastpath=true; interrupt_context=true;
- for(unsigned int i=0;i<4;i++) queue_event(nodes);
- assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1 && !queue_link_reads);
+ reset(); interrupt_context=true;
+ for(unsigned int i=0;i<4;i++) queue_event();
+ assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1);
  interrupt_context=false; kd_spin_delegate=false;
- for(unsigned int i=0;i<4;i++) queue_event(nodes);
- assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1 && !queue_link_reads);
+ for(unsigned int i=0;i<4;i++) queue_event();
+ assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1);
  kd_spin_delegate=true;
- queue_event(nodes);
+ queue_event();
  assert(table(0)->rate_hot && clocks==2);
  cpu_id=1;
- pins++;
- assert(!kd_hotlock_spin_cpu_hot_pinned() && kd_hotlock_spin_cold_queue_min_pinned()==4);
- pins--;
- assert(!table(0)->rate_samples);
+ assert(!kd_hotlock_spin_cpu_hot_pinned() && !table(0)->rate_samples);
+ queue_event();
+ assert(table(0)->rate_hot && clocks==3);
  cpu_id=0;
 }
 int main(void)
 {
- assert(kd_spin_hot_min_queue==4);
  init_and_pins();boundaries();windows();cpu_batch_window();backwards_and_zero();
- hash_and_capacity();mutex_sampling();isolation_and_reentry();queue_pressure();
+ hash_and_capacity();mutex_sampling();isolation_and_reentry();mcs_publications();
  kd_hotlock_exit();hotlock_mode="invalid";assert(kd_hotlock_init()==-EINVAL);
- hotlock_mode="adaptive";kd_spin_hot_min_queue=17;assert(kd_hotlock_init()==-EINVAL);
- assert(!kd_hotlock_cpu);kd_spin_hot_min_queue=16;
- assert(!kd_hotlock_init());kd_hotlock_exit();kd_spin_hot_min_queue=0;
- assert(!kd_hotlock_init());kd_hotlock_exit();
- fail_alloc=true;hotlock_mode="adaptive";assert(kd_hotlock_init()==-ENOMEM);
+ hotlock_mode="adaptive";assert(!kd_hotlock_init());kd_hotlock_exit();
+ fail_alloc=true;assert(kd_hotlock_init()==-ENOMEM);
  assert(!kd_hotlock_cpu);
- puts("PASS exact hash: spin-MCS1/CPU-window4e10/queue-pressure0..16/mutex-CPU1024/lock33/collision/256-capacity/no-eviction/independent/query/window/zero/drop-interrupt/observe");
+ puts("PASS exact hash: spin-MCS-entry1/CPU-window4e10/mutex-CPU1024/lock33/collision/256-capacity/no-eviction/independent/query/window/zero/drop-interrupt/observe");
  return 0;
 }

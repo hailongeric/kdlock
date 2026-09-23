@@ -74,16 +74,13 @@ static u32 atomic_cmpxchg_acquire(atomic_t *p, u32 expected, u32 value)
  (cas_calls++, __atomic_compare_exchange_n(&(p)->counter, expected, value, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED))
 static u32 encode_tail(int c, int idx) { return ((c + 1) << 18) | (idx << 16); }
 static struct kd_spin_node *decode_tail(u32 tail) { return &pool[(tail >> 18) - 1][(tail >> 16) & 3]; }
-/* Run the production publication boundary and bounded pressure walk; only
- * atomic primitives and the CPU clock are substituted. Legacy sampling must
- * count exactly once; cold pressure sampling must honor the queue minimum. */
+/* Run the production publication boundary; only atomic primitives and the
+ * CPU clock are substituted. Each MCS publication must count exactly once. */
 #define _Q_TAIL_OFFSET_HL 16
 static bool kd_spin_delegate = true;
-static bool kd_spin_cold_fastpath = true;
-static unsigned int kd_spin_hot_min_queue, thread_count;
+static unsigned int thread_count;
 static _Thread_local unsigned long mcs_samples;
 static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; rate_hot=1; }
-static bool kd_hotlock_spin_cpu_hot_pinned(void) { return rate_hot != 0; }
 #define in_task() true
 #define smp_load_acquire(p) __atomic_load_n(p, __ATOMIC_ACQUIRE)
 #define xchg(p,v) (queued++, swaps++, __atomic_exchange_n(p,v,__ATOMIC_ACQ_REL))
@@ -106,7 +103,7 @@ static void *worker(void *arg)
  pthread_barrier_wait(&start);
  for (int i=0;i<50000;i++) {
   /* Mix ordinary owners with the exact pinned cold entry/byte state.
-   * A qualifying queue can warm this CPU after selection; the operation
+   * An MCS publication can warm this CPU after selection; the operation
    * must still finish natively with its original pin and ownership. */
   preempt_disable();
   if(cpu&1) kd_spin_acquire_nondelegated(&lock);
@@ -127,9 +124,8 @@ static void *worker(void *arg)
  }
  /* One initial CAS, and at most one queue-tail claim CAS per operation.
   * Failed contender retries must be loads/local waits, not global RMWs. */
- assert(cas_calls>=50000 && cas_calls<=100000 && swaps==queued && mcs_samples<=queued);
- if(!kd_spin_hot_min_queue) assert(mcs_samples==queued);
- if(kd_spin_hot_min_queue>thread_count) assert(!mcs_samples && !rate_hot);
+ assert(cas_calls>=50000 && cas_calls<=100000 && swaps==queued && mcs_samples==queued);
+ assert(rate_hot == (queued != 0));
  __atomic_fetch_add(&queue_total, queued, __ATOMIC_RELAXED);
  __atomic_fetch_add(&read_total, local_reads, __ATOMIC_RELAXED);
  __atomic_fetch_add(&sample_total, mcs_samples, __ATOMIC_RELAXED);
@@ -138,10 +134,9 @@ static void *worker(void *arg)
 int main(int argc, char **argv)
 {
  pthread_t threads[CPUS];
- assert(argc==3);
+ assert(argc==2);
  thread_count=strtoul(argv[1],NULL,10);
- kd_spin_hot_min_queue=strtoul(argv[2],NULL,10);
- assert(thread_count && thread_count<=CPUS && kd_spin_hot_min_queue<=16);
+ assert(thread_count && thread_count<=CPUS);
  /* Delegation-off preserves the protocol but disables CPU statistics. */
  struct qspinlock disabled={0};
  kd_spin_delegate=false;
@@ -153,12 +148,12 @@ int main(int argc, char **argv)
  assert(value==thread_count*50000UL && !lock.val.counter);
  if(thread_count==1) assert(!queue_total && !read_total && !sample_total);
  if(thread_count==CPUS) assert(queue_total && read_total);
- if(kd_spin_hot_min_queue>thread_count) assert(!sample_total);
+ assert(sample_total==queue_total);
  pthread_barrier_destroy(&start);
  /* A pre-existing reserved slot must survive a later nondelegating waiter. */
  cpu=0; states[0].node_count=1; pool[0][0].rsp=0x1234;
  kd_spin_acquire_nondelegated(&lock);
  assert(states[0].node_count==1 && pool[0][0].rsp==0x1234);
  smp_store_release(&lock.locked,0); states[0].node_count=0;
- printf("PASS mixed native MCS (ordinary/paired byte 5): %u threads, queue minimum %u, %lu exact operations, %lu queued, %lu local waits, %lu CPU samples, balanced pins/counts, no CAS retry storm\n",thread_count,kd_spin_hot_min_queue,value,queue_total,read_total,sample_total);
+ printf("PASS mixed native MCS (ordinary/paired byte 5): %u threads, MCS-entry sampling, %lu exact operations, %lu queued, %lu local waits, %lu CPU samples, balanced pins/counts, no CAS retry storm\n",thread_count,value,queue_total,read_total,sample_total);
 }

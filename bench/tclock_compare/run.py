@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare Linux native, the TCLock port and kdlock through direct lock APIs.
 
-Freeze each backend/caller build; keep KD policy and cold-path controls separate.
+Freeze each backend build; KD always routes by CPU heat in both admission modes.
 Three rounds alternate arm order. Preparation is excluded; acceptance checks remain.
 Build/run exclusively in the recovery guest, retaining failures without retry.
 """
@@ -56,34 +56,26 @@ def make_plan(args):
     modes = getattr(args, 'hotlock_mode', DEFAULT_HOTLOCK_MODES)
     if isinstance(modes, str):
         modes = [modes]
-    cold_modes = getattr(args, 'spin_cold_fastpath', ['off'])
-    if isinstance(cold_modes, str):
-        cold_modes = [cold_modes]
-    hot_min_queue = getattr(args, 'spin_hot_min_queue', 4)
-    require(0 <= hot_min_queue <= 16, 'invalid spin hot minimum queue')
     # Admission belongs to KD only. Share each Linux/TCLock baseline between
     # modes, but give every KD policy its own freshly loaded session and name.
-    variants = [(backend, mode, cold) for backend in args.backends
-                for mode in (dict.fromkeys(modes) if backend == 'kdlock' else ['not_applicable'])
-                for cold in (dict.fromkeys(cold_modes) if backend == 'kdlock' else ['not_applicable'])]
+    variants = [(backend, mode) for backend in args.backends
+                for mode in (dict.fromkeys(modes) if backend == 'kdlock' else ['not_applicable'])]
     for n, t, repeat in itertools.product(sizes, args.threads, range(args.repeats)):
         arms = list(variants)
         if repeat % 2:
             arms.reverse()
-        for backend, mode, cold in arms:
+        for backend, mode in arms:
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
-            # The preserved shell cannot apply the cold queue policy. Record
-            # and load its effective zero instead of labelling it with N.
-            queue = hot_min_queue if cold == 'on' else 0
-            suffix = f'-cold-{cold}-q{queue}-{mode}' if backend == 'kdlock' else ''
+            # Both admission modes use one caller binary with CPU-heat routing
+            # and MCS-entry sampling. There is no shell-selection option.
+            suffix = f'-{mode}' if backend == 'kdlock' else ''
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, hotlock_mode=mode,
-                caller_shell=('cold_clobber' if cold == 'on' else 'clobber') if backend == 'kdlock' else 'c',
-                cookie_storage='percpu_rate_hot' if backend == 'kdlock' and cold == 'on' else 'not_applicable',
-                spin_hot_min_queue=queue if backend == 'kdlock' else 'not_applicable',
-                spin_hot_min_queue_requested=hot_min_queue if backend == 'kdlock' else 'not_applicable',
-                spin_cold_fastpath=cold, pmu=getattr(args, 'pmu', False),
+                caller_shell='cold_clobber' if backend == 'kdlock' else 'c',
+                cookie_storage='percpu_rate_hot' if backend == 'kdlock' else 'not_applicable',
+                cpu_heat_policy='mcs_entry' if backend == 'kdlock' else 'not_applicable',
+                pmu=getattr(args, 'pmu', False),
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
                 iterations=args.iterations, cpus=list(range(t))))
@@ -101,8 +93,7 @@ def report(out):
             row = json.loads(path.read_text()) if path.exists() else {}
             rows.append(dict(name=spec['name'], scenario=spec['scenario'],
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
-                spin_cold_fastpath=spec.get('spin_cold_fastpath', 'unrecorded'),
-                spin_hot_min_queue=spec.get('spin_hot_min_queue', 'unrecorded'),
+                cpu_heat_policy=spec.get('cpu_heat_policy', 'unrecorded'),
                 caller_shell=spec.get('caller_shell', 'unrecorded'),
                 cookie_storage=spec.get('cookie_storage', 'unrecorded'),
                 status=row.get('execution_status', 'NOT_RUN'),
@@ -125,20 +116,19 @@ def report(out):
         # admission policies even when their payload and backend binary match.
         mode = r.get('hotlock_mode', 'unrecorded')
         groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode,
-                           r.get('spin_cold_fastpath', 'unrecorded'),
                            r.get('caller_shell', 'unrecorded'),
                            r.get('cookie_storage', 'unrecorded'),
-                           r.get('spin_hot_min_queue', 'unrecorded')), []).append(r)
+                           r.get('cpu_heat_policy', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, cold, shell, cookie, queue), rows in groups.items():
+    for (n, t, arm, mode, shell, cookie, heat_policy), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
-                   hotlock_mode=mode, spin_cold_fastpath=cold, caller_shell=shell,
+                   hotlock_mode=mode, caller_shell=shell,
                    cookie_storage=cookie,
-                   spin_hot_min_queue=queue,
+                   cpu_heat_policy=heat_policy,
                    spin_delegate=rows[0].get('spin_delegate', 'on'),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -178,10 +168,6 @@ def main():
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
-    p.add_argument('--spin-cold-fastpath', choices=('on', 'off'), nargs='+', default=['off'],
-                   help='on: inline CPU gate with clobber shell; off: preserved clobber shell (default)')
-    p.add_argument('--spin-hot-min-queue', type=int, choices=range(17), default=4,
-                   help='cold CPU queue size required to sample heat (default: 4; 0: original MCS rule); effective only with cold gate on')
     p.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')
     p.add_argument('--dry-run', action='store_true')
@@ -264,9 +250,9 @@ def main():
                                   out/'tclock-backend.txt')
             write_json(out/'tclock-context-audit.json', audit_context(disassembly))
         variants = {}
-        build_variants = dict.fromkeys((s['arm'], s['spin_cold_fastpath']) for s in plan)
-        for backend, cold in build_variants:
-            build_name = f'{backend}-cold-{cold}' if backend == 'kdlock' else backend
+        # Observe/adaptive share the same heat-routed caller, built once.
+        for backend in dict.fromkeys(s['arm'] for s in plan):
+            build_name = backend
             folder = out/'variants'/build_name; folder.mkdir(parents=True)
             for src in WORKLOAD.iterdir():
                 if src.suffix in ('.c','.h','.inc') or src.name == 'Makefile':
@@ -277,21 +263,19 @@ def main():
                 extra = [f'KBUILD_EXTRA_SYMBOLS={module.parent / "Module.symvers"}']
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
-                     f'SC_COLD_FASTPATH={int(cold == "on")}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
                      f'KDLOCK_INCLUDE={ROOT / "include"}', *extra],
                     out/f'build-{build_name}.log',timeout=120)
-            variants[backend, cold] = binary = folder/'spin_cacheline.ko'
+            variants[backend] = binary = folder/'spin_cacheline.ko'
             command(['objdump','-dr',binary],out/f'caller-{build_name}.txt')
             imported = command(['nm', '-u', binary], out/f'imports-{build_name}.txt')
             require('__ubsan_' not in imported, 'direct workload still imports UBSAN handlers')
             require('kd_raw_spin_' not in imported and 'kd_spin_dispatch_' not in imported,
                     'workload still imports a unified spin hook')
-            expected = {'kdlock': ('kd_spin_lock_clobber_v1', 'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
+            expected = {'kdlock': ('kd_spin_direct_native_lock', 'kd_spin_lock_pinned_clobber_v1',
+                                   'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
-            if backend == 'kdlock' and cold == 'on':
-                expected = ('kd_spin_direct_native_lock', 'kd_spin_lock_pinned_clobber_v1',
-                            'kd_spin_unlock_clobber_v1', 'kd_spin_prepare')
+            if backend == 'kdlock':
                 require('kd_spin_direct_native_unlock' not in imported.split(),
                         'paired caller still bypasses the generic clobber unlock')
             require(all(symbol in imported.split() for symbol in expected), 'missing direct API import')
@@ -308,7 +292,7 @@ def main():
             require(not (out/'STOP').exists(),'STOP requested at drained boundary','STOPPED')
             require(source_state()==frozen and all(digest(Path(p))==h for p,h in hashes.items()),'frozen inputs changed')
             idle(); print(f'[{index+1}/{len(plan)}] {spec["name"]}',flush=True)
-            session = BackendSession(out,spec,workload_module=variants[spec['arm'], spec['spin_cold_fastpath']])
+            session = BackendSession(out,spec,workload_module=variants[spec['arm']])
             session.execute()
             m = session.record['measurement']
             if args.functional:

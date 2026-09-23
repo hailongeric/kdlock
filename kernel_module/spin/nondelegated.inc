@@ -11,7 +11,6 @@ static noinline void kd_spin_acquire_nondelegated_contended(struct qspinlock *wo
 {
 	struct kd_spin_node *node, *previous, *next;
 	u32 tail, old_tail, loops;
-	unsigned int cold_queue_min;
 	int idx;
 
 	if (val == _Q_PENDING_VAL_HL) {
@@ -56,7 +55,6 @@ static noinline void kd_spin_acquire_nondelegated_contended(struct qspinlock *wo
 	/* rsp stays untouched: a suspended combiner can reuse this scheduler
 	 * slot. socket_id is the immutable boundary until queue-head handoff. */
 	smp_wmb();
-	cold_queue_min = kd_spin_delegate ? kd_hotlock_spin_cold_queue_min_pinned() : 0;
 	old_tail = xchg_tail(word, tail);
 	if (old_tail & _Q_TAIL_MASK_HL) {
 		previous = decode_tail(old_tail);
@@ -70,15 +68,11 @@ static noinline void kd_spin_acquire_nondelegated_contended(struct qspinlock *wo
 				       !(VAL & _Q_LOCKED_PENDING_MASK));
 	if ((val & _Q_TAIL_MASK_HL) == tail &&
 	    atomic_try_cmpxchg_relaxed(&word->val, &val, _Q_LOCKED_VAL_HL)) {
-		/* A one-node threshold may sample this head; larger ones fail
-		 * immediately because its tail has already been removed. */
-		kd_spin_sample_cold_queue(node, cold_queue_min);
 		goto out;
 	}
 	set_locked(word);
 	smp_cond_load_relaxed_sched(&node->next, VAL);
 	next = READ_ONCE(node->next);
-	kd_spin_sample_cold_queue(node, cold_queue_min);
 	smp_store_release(&next->locked, false);
 	/* No node accesses after handoff: the successor may recycle its slot. */
 out:
