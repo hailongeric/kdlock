@@ -1,6 +1,12 @@
 # 当前测试入口
 
-最新[仅CPU热值分流完整重测](../bench/tclock_compare/results/20260923-spin-heat-only-full.md)：
+最新[三轮完整性能矩阵](../bench/tclock_compare/results/20260923-spin-three-round.md)：
+运行器默认3轮与汇总回归22/22通过；252/252场、19440万次计时操作通过并排空。
+84组各3份有效样本，独立审计339项检查通过；108场KD共111025047次实际JIT正文，
+包括全部96场四线程及以上竞争。249份冻结源码和9项二进制匹配，最终guest空闲。
+本轮只改benchmark轮次/汇总，未追加全量单元、nested/early、RCUHT、PMU或SELFTEST。
+
+此前[仅CPU热值分流完整单轮重测](../bench/tclock_compare/results/20260923-spin-heat-only-full.md)：
 基础2组及cold/非代理MCS/paired JIT/热度采样4组通过，25项错误变体检出。
 84/84性能场次、6480万次操作全部通过并排空；36场KD共37012941次实际JIT正文，
 包括全部32场四线程及以上竞争。12场冷态小线程零JIT，批次IRQ/preempt恢复及业务检查通过。

@@ -3,11 +3,17 @@
 当前 `KD_SPIN_DIRECT_LOCK` 只在pin后判断CPU热值，已删除调用端的
 `kd_spin_cold_fastpath` / `kd_spin_delegate` 两次开关判断。编译时选用该壳即启用热度分流；
 模块的前者开关只控制冷队列采样策略，后者仍由provider核心执行代理准入控制。
-最新[仅CPU热值分流完整重测](results/20260923-spin-heat-only-full.md)：
+最新[三轮完整矩阵](results/20260923-spin-three-round.md)：默认轮次已提高为3，
+运行器22项回归通过；84组各3份有效样本，252/252场、19440万次计时操作通过并排空。
+新增min/median/max/spread；低线程仍有较大波动，c1单线程adaptive/on为12.868–34.599 Mops/s。
+20线程12个同轮on/off比较均下降，中位数口径下降5.22%–7.15%；正式最大值口径下降5.36%–10.01%。
+96场四线程及以上KD均实际JIT，运行器默认壳仍为off。
+
+此前[仅CPU热值分流完整单轮重测](results/20260923-spin-heat-only-full.md)：
 六组单元及25项错误变体通过，84/84性能场次、6480万次操作全部通过并排空。
 32场四线程及以上KD均有实际JIT；热度分流壳相对保留壳，单线程提高38.92%–55.72%，
 三线程提高37.98%–53.74%，两线程observe下降、adaptive提高；二十线程仍下降2.86%–6.29%。
-本轮每配置一次，不能单独归因于两个开关判断的删除，运行器默认仍为off。
+当时每配置一次，不能单独归因于两个开关判断的删除。
 
 此前[C if 完整单轮矩阵](results/20260923-spin-c-if-full.md)：
 1/16 cacheline × 1/2/3/4/8/16/20线程，三方及KD两模式两壳共84/84场通过，
@@ -224,7 +230,8 @@ cacheline40场、RCUHT20场，KD功能模式20场由单元检查，默认均只�
 
 ## 本次结果
 
-最新已完成测量见[仅CPU热值分流完整单轮报告](results/20260923-spin-heat-only-full.md)。
+最新已完成测量见[三轮完整矩阵](results/20260923-spin-three-round.md)。
+此前[仅CPU热值分流完整单轮报告](results/20260923-spin-heat-only-full.md)保留原始单样本及执行流分析。
 此前测量见[CPU窗口400亿/MCS阈值1报告](results/20260922-spin-mcs1-window4e10.md)。
 此前调用壳修改见[内联clobber与队列门槛报告](results/20260922-spin-cold-clobber-queue.md)。
 此前[共享CPU热度cookie报告](results/20260922-spin-cpu-hot-cookie.md)包含单轮36场

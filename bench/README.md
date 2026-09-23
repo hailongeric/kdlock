@@ -1,5 +1,10 @@
 # Benchmarks
 
+最新[三轮完整矩阵](tclock_compare/results/20260923-spin-three-round.md)：
+84种配置各测3轮，252/252场、19440万次计时操作通过并排空；运行器22项回归通过。
+报告保留每轮样本及min/median/max/spread，最大有效吞吐仍用于正式比值。
+低线程波动仍明显，20线程on相对off的中位数下降5.22%–7.15%。
+
 此前[adaptive快速三方结果](tclock_compare/results/20260922-adaptive-quick.md)：
 18/18场、1500万次计时操作完成并排空，4/4竞争KD有实际JIT。
 1线程KD c1/c16为8.445/6.940 Mops/s，20线程为5.048/4.818 Mops/s。
