@@ -98,7 +98,8 @@ fast/pending 不计数；spin/mutex 单锁
 `caller_shell=cold_clobber/clobber`、`caller_abi=clobber`、`spin_cold_fastpath`和
 `cookie_storage=percpu_rate_hot/not_applicable`。cookie只表示CPU热度，一个CPU一份、所有锁共享。
 历史未记录cookie存储的样本保留`unrecorded`，不合并汇总。
-Linux/TCLock 每配置仍只跑一次；汇总同时按热度模式、调用壳、开关和队列门槛分组，不跨组取最大值。
+Linux/TCLock 每配置每轮各跑一次，供各 KD 模式及调用壳比较；汇总同时按热度模式、
+调用壳、开关和队列门槛分组，不跨组取最大值。
 
 选用热度分流壳后，observe/adaptive 都跳过冷 CPU 的热表/context/owner 路由；observe
 在 CPU 热后固定准入，adaptive 再判断单锁热度。CPU 曾变热后仍依赖后续 MCS
@@ -136,9 +137,9 @@ kdlock 等唯一条目发布为 NORMAL、翻译进程退出并停止 daemon 后�
 相同的单 CPU 48000 次预热。准备与预热均不计时。默认分别运行 observe 固定准入和
 adaptive 自适应准入；每个 KD 会话重新加载 provider，热度不跨模式继承。
 
-默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 四项 × 一轮 = 40 场**，
-四项为 Linux、TCLock、KD observe、KD adaptive；Linux/TCLock 每配置各测一次，供两种 KD 模式比较。
-`--repeats` 默认为 1，每线程仍为 100000 次；仅在用户明确要求重复测量时增加轮次。
+默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 四项 × 三轮 = 120 场**，
+四项为 Linux、TCLock、KD observe、KD adaptive；Linux/TCLock 每配置每轮各测一次，供两种 KD 模式比较。
+2026-09-23 用户因性能波动将 `--repeats` 默认值提高为 3，每线程仍为 100000 次。
 仅保留这一组直接调用方式，不再使用 `--abis`。
 只在 recovery guest 中按[操作手册](../../docs/AGENTS.md)核对快照、依赖和空闲状态；
 现有 `kdclobber2` 内核不重建。输出必须是新的仓库外目录。
@@ -156,10 +157,10 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 需要定向排查时再追加 `--cachelines 1 --threads 1 4 --iterations 10000` 缩小范围。
 `--dry-run` 只打印矩阵。`STOP` 文件在已排空会话之间生效；失败或超时保留证据并停止。
 `--hotlock-mode observe adaptive` 显式选择默认双模式；也可只选 `adaptive` 或 `observe`。
-快速三方 adaptive 矩阵可追加 `--hotlock-mode adaptive --threads 1 4 20`，共18场，仍每线程100000次、每配置一轮。
-本轮低线程门槛比较使用 `--threads 1 2 3 4 20 --spin-cold-fastpath on off
---spin-hot-min-queue 4 --hotlock-mode observe adaptive`：1/16 cacheline共60场，
-每配置一轮、每线程100000次；同源码的on/off壳分别记录，Linux/TCLock不重复。
+快速三方 adaptive 矩阵可追加 `--hotlock-mode adaptive --threads 1 4 20`，共54场，仍每线程100000次、每配置三轮。
+完整低线程与高竞争比较使用 `--threads 1 2 3 4 8 16 20 --spin-cold-fastpath on off
+--spin-hot-min-queue 4 --hotlock-mode observe adaptive`：1/16 cacheline共252场，
+每配置三轮、每线程100000次；同源码的on/off壳分别记录，Linux/TCLock每轮只跑一次。
 
 构建通过后端 `Module.symvers` 解析导出符号，保存三个样例的反汇编与未定义符号，
 检查目标锁不再导入统一 spin hook。原生组不加载任何锁 provider。
@@ -187,13 +188,16 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 
 ## 验收与结果
 
-2026-09-22 用户最新要求为每配置一轮，三种后端分别报告唯一有效样本的吞吐。
+2026-09-23 用户最新要求为每配置三轮，用于观察当前性能波动。
 `summary.csv/json` 用 `best_throughput_ops_s`、`best_amortized_ns_op` 报告同一
 获选会话的吞吐与摊销时间，`best_session` 指向原始会话，
-`comparison_policy=best_valid_throughput` 标明口径；不再输出 `median_*` 字段。
-上述字段保持兼容，一轮时获选会话就是该唯一有效样本；仅显式增加轮次时才从
-有效样本取最大值。相对 Linux 的比值使用各后端获选值除以 Linux 获选值，
-KD/TCLock 同理；保留有效样本数。`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
+`comparison_policy=best_valid_throughput` 标明口径，继续从有效样本选取最大吞吐。
+另以 `min_throughput_ops_s`、`median_throughput_ops_s`、`max_throughput_ops_s`
+报告有效吞吐的最小值、中位数、最大值；`throughput_spread_pct` 为
+`(最大值 - 最小值) / 中位数 × 100%`，便于直接查看三轮离散程度。
+中位数用于描述波动，不改变上述后端比值口径。相对 Linux 的比值使用各后端获选值
+除以 Linux 获选值，KD/TCLock 同理；保留有效样本数，报告须说明不足三轮的情况。
+`records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
 正确、完成且已排空的样本参与汇总。KD按`hotlock_mode`、`spin_cold_fastpath`、`caller_shell`、
 `cookie_storage`、`spin_hot_min_queue`分开汇总，不跨模式、cookie存储或队列门槛取最大值；
 热表计数保留在原始日志，不参与性能评分。
@@ -214,13 +218,14 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py codegen/test_clobber_a
 python3 bench/tclock_compare/test_direct.py
 ```
 
-2026-09-22 双模式默认值及独立汇总已在guest通过运行器单元12/12；CLI dry-run核对
+历史验证：2026-09-22 双模式默认值及独立汇总已在guest通过运行器单元12/12；CLI dry-run核对
 cacheline40场、RCUHT20场，KD功能模式20场由单元检查，默认均只有第0轮。
-本轮另完成adaptive快速18场性能测量，原始命令、退出码、哈希及范围见[报告](results/20260922-adaptive-quick.md)。
+当时另完成adaptive快速18场性能测量，原始命令、退出码、哈希及范围见[报告](results/20260922-adaptive-quick.md)。
 
 ## 本次结果
 
-最新测量见[CPU窗口400亿/MCS阈值1报告](results/20260922-spin-mcs1-window4e10.md)。
+最新已完成测量见[仅CPU热值分流完整单轮报告](results/20260923-spin-heat-only-full.md)。
+此前测量见[CPU窗口400亿/MCS阈值1报告](results/20260922-spin-mcs1-window4e10.md)。
 此前调用壳修改见[内联clobber与队列门槛报告](results/20260922-spin-cold-clobber-queue.md)。
 此前[共享CPU热度cookie报告](results/20260922-spin-cpu-hot-cookie.md)包含单轮36场
 三方同期结果、竞争默认门槛和独立长批次PMU；机器码、功能及源码身份也保存在该报告。
@@ -263,7 +268,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --workload rcuht --backends native tclock kdlock --output /root/kdlock-evidence/rcuht-new
 ```
 
-哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 四项 × 一轮，共 20 场。
+哈希表模式不接受 `--cachelines`，默认 1/4/8/16/20 线程 × 四项 × 三轮，共 60 场。
 可直接测性能；需要定向排查时用 `--threads 1 4 --iterations 10000` 缩小范围。每次 snapshot 在
 计时外验证节点地址、链表回链、无环、桶归属、键唯一性和 4096 节点总数；每个
 操作必须恰好计入搬移/冲突/未命中之一。`before/after` 的前四项为总操作、搬移、

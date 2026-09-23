@@ -2,7 +2,7 @@
 """Compare Linux native, the TCLock port and kdlock through direct lock APIs.
 
 Freeze each backend/caller build; keep KD policy and cold-path controls separate.
-Explicit extra rounds alternate arm order. Preparation is excluded; acceptance checks remain.
+Three rounds alternate arm order. Preparation is excluded; acceptance checks remain.
 Build/run exclusively in the recovery guest, retaining failures without retry.
 """
 import argparse
@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import statistics
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -147,6 +148,15 @@ def report(out):
         row['best_session'] = best['name'] if best else None
         for metric in ('throughput_ops_s', 'amortized_ns_op'):
             row['best_'+metric] = best[metric] if best else None
+        # Keep variation visible without mixing the winning throughput and
+        # latency pair. Failed or undrained sessions never enter the range.
+        rates = [r['throughput_ops_s'] for r in good]
+        row['min_throughput_ops_s'] = min(rates) if rates else None
+        row['median_throughput_ops_s'] = statistics.median(rates) if rates else None
+        row['max_throughput_ops_s'] = max(rates) if rates else None
+        row['throughput_spread_pct'] = (
+            100 * (max(rates) - min(rates)) / row['median_throughput_ops_s']
+            if len(rates) > 1 else None)
         summary.append(row)
     natives = {(r['cachelines'], r['threads']): r['best_throughput_ops_s']
                for r in summary if r['arm'] == 'native'}
@@ -164,8 +174,8 @@ def main():
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,16))
     p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,8,16,20), default=[1,4,8,16,20])
-    p.add_argument('--repeats', type=int, default=1,
-                   help='measurement rounds per configuration (default: 1)')
+    p.add_argument('--repeats', type=int, default=3,
+                   help='measurement rounds per configuration (default: 3; functional mode requires 1)')
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--spin-cold-fastpath', choices=('on', 'off'), nargs='+', default=['off'],
@@ -176,7 +186,7 @@ def main():
                    help='separate long-batch diagnostic: perf stat around measured client only')
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--functional', action='store_true',
-                   help='KD functional acceptance only; no throughput report')
+                   help='KD functional acceptance only; requires --backends kdlock --repeats 1; no throughput report')
     kernel_identity.arguments(p)
     p.add_argument("--hotlock-mode", choices=DEFAULT_HOTLOCK_MODES, nargs='+',
                    default=list(DEFAULT_HOTLOCK_MODES),

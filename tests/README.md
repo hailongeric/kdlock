@@ -184,9 +184,10 @@ JIT 和 120 场性能对照的冻结结果见 [两级采样报告](../bench/tclo
 
 ## 单元检查
 
-代码修改后可直接运行[单轮性能测试](../bench/tclock_compare/README.md#准备与运行)，
+代码修改后可直接运行[默认三轮性能测试](../bench/tclock_compare/README.md#准备与运行)，
 使用其内置业务、IRQ/preempt、JIT 和排空检查。独立单元、SELFTEST、`--functional`
-及小矩阵按需选择，不作为性能测试的固定前置步骤。
+及小矩阵按需选择，不作为性能测试的固定前置步骤。2026-09-23 用户提高性能测试
+轮次用于观察波动；功能模式仍显式使用 `--repeats 1`，已有单轮证据保留原口径。
 
 ```sh
 make -C tests/unit run

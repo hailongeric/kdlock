@@ -1,21 +1,24 @@
 # Benchmarks
 
-最新[adaptive快速三方结果](tclock_compare/results/20260922-adaptive-quick.md)：
+此前[adaptive快速三方结果](tclock_compare/results/20260922-adaptive-quick.md)：
 18/18场、1500万次计时操作完成并排空，4/4竞争KD有实际JIT。
 1线程KD c1/c16为8.445/6.940 Mops/s，20线程为5.048/4.818 Mops/s。
-本轮只测adaptive、每配置一轮；默认双模式矩阵与汇总通过运行器检查。
+当时只测adaptive、每配置一轮；默认双模式矩阵与汇总通过运行器检查。
 此前observe完整矩阵及历史版本成绩保留在[三方对照入口](tclock_compare/README.md)。
 
 当前性能测试对象固定为 **Linux 原生、TCLock、当前 kdlock**，使用
 `tclock_compare/run.py --backends native tclock kdlock`。不再将旧版 kdlock
 作为测试对象；以下新旧版对照只保留为历史证据，后续结果报告三方吞吐及
-当前 KD/Linux、KD/TCLock 比值。2026-09-22 用户最新要求：每配置只测一轮，
-三方使用各自这一次有效会话的吞吐和 ns/op 计算比值，不自动追加轮次。
+当前 KD/Linux、KD/TCLock 比值。2026-09-23 用户因性能波动将默认轮次提高为
+每配置三轮；三方继续使用有效最大吞吐及该会话的 ns/op 计算比值，同时展示
+各配置三轮吞吐的最小值、中位数、最大值与波动范围，保留原始样本。
 当前运行器默认同时测 KD observe 和 adaptive，分别保存、汇总；Linux/TCLock 每配置
-各测一次。cacheline 默认40场、RCUHT默认20场；`--hotlock-mode adaptive` 可只跑自适应模式。
+每轮各测一次，供各 KD 模式及调用壳比较。cacheline 默认120场、RCUHT默认60场；
+`--hotlock-mode adaptive` 可只跑自适应模式。完整1/2/3/4/8/16/20线程、双模式、
+on/off调用壳矩阵共252场。功能模式仍显式使用 `--repeats 1`。
 代码修改后可直接运行性能测试，使用运行器内置的正确性/JIT/排空检查；独立
 单元、SELFTEST 或功能小矩阵按需选择，不作为固定前置步骤。
-原始样本留存；此前两轮最大值及五轮中位数报告保留历史口径。
+不足三轮有效样本须单独说明；此前单轮、两轮最大值及五轮中位数报告保留历史口径。
 
 所有构建与测量只在 recovery guest，环境及排空遵循 [AGENTS](../docs/AGENTS.md)。
 当前入口按直接 API 使用独立 Linux、TCLock、KD 对象；旧透明 hook 和双 ABI

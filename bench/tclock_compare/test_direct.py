@@ -169,13 +169,15 @@ class DirectTests(unittest.TestCase):
             with self.assertRaises(run.Failure):
                 run.runtime.validate_measurement(broken, spec, 10)
 
-    def test_cli_defaults_to_one_round(self):
-        # Exercise the CLI default for both payloads and functional admission;
-        # a second measurement must be an explicit choice, not an implicit run.
-        for extra, sessions in (([], 40), (['--workload', 'rcuht'], 20),
-                                (['--functional', '--backends', 'kdlock'], 20),
-                                (['--hotlock-mode', 'adaptive'], 30),
-                                (['--hotlock-mode', 'observe'], 30)):
+    def test_cli_defaults_to_three_rounds(self):
+        # Performance defaults to repeated measurements for both payloads;
+        # explicit one-round performance and functional runs remain available.
+        for extra, sessions, repeats in (
+                ([], 120, 3), (['--workload', 'rcuht'], 60, 3),
+                (['--hotlock-mode', 'adaptive'], 90, 3),
+                (['--hotlock-mode', 'observe'], 90, 3),
+                (['--repeats', '1'], 40, 1),
+                (['--functional', '--backends', 'kdlock', '--repeats', '1'], 20, 1)):
             with self.subTest(args=extra):
                 output = io.StringIO()
                 argv = ['run.py', '--output', '/tmp/unused', '--dry-run', *extra]
@@ -184,10 +186,17 @@ class DirectTests(unittest.TestCase):
                 plan = json.loads(output.getvalue())
                 self.assertEqual(len(plan), sessions)
                 self.assertEqual(len({s['name'] for s in plan}), sessions)
-                self.assertEqual({s['repeat'] for s in plan}, {0})
+                self.assertEqual({s['repeat'] for s in plan}, set(range(repeats)))
                 expected_modes = {extra[-1]} if '--hotlock-mode' in extra else {'observe', 'adaptive'}
                 self.assertEqual({s['hotlock_mode'] for s in plan if s['arm'] == 'kdlock'},
                                  expected_modes)
+
+    def test_functional_mode_requires_explicit_single_round(self):
+        argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
+                '--functional', '--backends', 'kdlock']
+        with patch.object(sys, 'argv', argv):
+            with self.assertRaisesRegex(run.Failure, 'functional mode requires'):
+                run.main()
 
     def test_cli_small_thread_cold_matrix(self):
         output = io.StringIO()
@@ -197,10 +206,10 @@ class DirectTests(unittest.TestCase):
         with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
             self.assertEqual(run.main(), 0)
         plan = json.loads(output.getvalue())
-        self.assertEqual(len(plan), 60)
-        self.assertEqual(len({s['name'] for s in plan}), 60)
+        self.assertEqual(len(plan), 180)
+        self.assertEqual(len({s['name'] for s in plan}), 180)
         self.assertEqual({s['threads'] for s in plan}, {1, 2, 3, 4, 20})
-        self.assertEqual({s['repeat'] for s in plan}, {0})
+        self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
             queue = (4 if spec['spin_cold_fastpath'] == 'on' else 0)
             self.assertEqual(spec['spin_hot_min_queue'],
@@ -216,18 +225,22 @@ class DirectTests(unittest.TestCase):
             for row in json.loads((out/'summary.json').read_text()):
                 self.assertEqual(row['valid'], 0)
                 for key in ('best_session', 'best_throughput_ops_s',
-                            'best_amortized_ns_op', 'throughput_over_linux'):
+                            'best_amortized_ns_op', 'throughput_over_linux',
+                            'min_throughput_ops_s', 'median_throughput_ops_s',
+                            'max_throughput_ops_s', 'throughput_spread_pct'):
                     self.assertIsNone(row[key])
 
     def test_matrix_and_alternating_order(self):
         plan = run.make_plan(Namespace(cachelines=[1, 16], threads=[1, 4, 8, 16, 20],
-            repeats=2, iterations=100000, backends=['native', 'tclock', 'kdlock']))
-        self.assertEqual(len(plan), 80)
-        self.assertEqual([(s['arm'], s['hotlock_mode']) for s in plan[:8]],
+            repeats=3, iterations=100000, backends=['native', 'tclock', 'kdlock']))
+        self.assertEqual(len(plan), 120)
+        self.assertEqual([(s['arm'], s['hotlock_mode']) for s in plan[:12]],
                          [('native', 'not_applicable'), ('tclock', 'not_applicable'),
                           ('kdlock', 'observe'), ('kdlock', 'adaptive'),
                           ('kdlock', 'adaptive'), ('kdlock', 'observe'),
-                          ('tclock', 'not_applicable'), ('native', 'not_applicable')])
+                          ('tclock', 'not_applicable'), ('native', 'not_applicable'),
+                          ('native', 'not_applicable'), ('tclock', 'not_applicable'),
+                          ('kdlock', 'observe'), ('kdlock', 'adaptive')])
         self.assertTrue(all(s['api_mode'] == 'direct' for s in plan))
 
     def test_summary_excludes_bad_and_undrained_samples(self):
@@ -255,7 +268,14 @@ class DirectTests(unittest.TestCase):
                 winner = next(s['name'] for s in plan if s['arm'] == arm and s['repeat'] == repeat)
                 self.assertEqual(rows[arm]['best_session'], winner)
                 self.assertEqual(rows[arm]['comparison_policy'], 'best_valid_throughput')
-                self.assertFalse(any(k.startswith('median_') for k in rows[arm]))
+                minimum, median = {'native': (1, 2), 'tclock': (2, 3),
+                                   'kdlock': (4, 6)}[arm]
+                self.assertEqual(rows[arm]['sessions'], 3)
+                self.assertEqual(rows[arm]['min_throughput_ops_s'], minimum * 1e6)
+                self.assertEqual(rows[arm]['median_throughput_ops_s'], median * 1e6)
+                self.assertEqual(rows[arm]['max_throughput_ops_s'], rate * 1e6)
+                self.assertAlmostEqual(rows[arm]['throughput_spread_pct'],
+                                       (rate - minimum) / median * 100)
             self.assertEqual(len(json.loads((out/'records.json').read_text())), 9)
 
     def test_summary_keeps_admission_modes_separate(self):
@@ -314,6 +334,10 @@ class DirectTests(unittest.TestCase):
             rows = json.loads((out/'summary.json').read_text())
             self.assertEqual(len(rows), 6)
             self.assertTrue(all(r['sessions'] == r['valid'] == 1 for r in rows))
+            self.assertTrue(all(r['min_throughput_ops_s'] == r['median_throughput_ops_s'] ==
+                                r['max_throughput_ops_s'] == r['best_throughput_ops_s']
+                                for r in rows))
+            self.assertTrue(all(r['throughput_spread_pct'] is None for r in rows))
             self.assertEqual({r['cookie_storage'] for r in rows}, {'percpu_rate_hot', 'not_applicable'})
 
     def test_summary_keeps_cold_queue_thresholds_separate(self):
