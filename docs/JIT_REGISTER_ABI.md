@@ -70,7 +70,8 @@ shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队�
 先取得一个 pin，再用 C `if` 选择普通 C 冷调用或 broad-clobber 热调用。
 cookie统一传`kd_spin_direct_cookie`，它是已有per-CPU `rate_hot`的视图。
 一个CPU一份，所有锁共享；不另存路径、嵌套深度或调用点cookie。
-`spin_cold_fastpath=1` 且代理关闭或本CPU冷时，直接调用原生入口；否则调用 pinned clobber-v1 入口。
+宏仅按本CPU热值分流：冷时直接调用原生入口，热时调用 pinned clobber-v1 入口。
+宏不读取 `spin_cold_fastpath` 或 `spin_delegate`；热入口仍由 provider 检查代理开关。
 CPU 热值在 pin 后通过 `this_cpu_read` / `READ_ONCE` 读取，不在JIT正文中改写。
 冷调用包含完整 CAS/pending/MCS 获取及既有 MCS 热度采样，不计算 SP/IP/BP。
 热分支通过原 `KD_SPIN_DIRECT_CALL` 声明寄存器 clobber，传递同一四参数；宏不手写 push/pop。
@@ -79,7 +80,8 @@ CPU 热值在 pin 后通过 `this_cpu_read` / `READ_ONCE` 读取，不在JIT正�
 continuation不依赖未捕获的CALL返回值。冷获取使用低字节状态5，冷解锁据此直接释放，
 不查询热度、ticket、context或fast owner；热解锁使用原 broad-clobber 调用。
 COMPLETE 指向解锁 CALL 后续点，FULL 仍恢复完整包，拒绝沿本次原生获取完成。
-调用端需配对使用并重编译，wrapper 参数、包布局、32 位锁字均未改变。
+调用端在编译时选择壳，需配对使用并重编译；`spin_cold_fastpath` 只控制冷CPU的队列压力采样。
+wrapper 参数、包布局、32 位锁字均未改变。
 当前 workload 仅外层选择新壳；nested/early 内层使用原 `KD_SPIN_DIRECT_CALL`，没有额外寄存器保存适配。
 
 共享获取核心内联到普通 clobber/pinned 入口；前者自行 pin，后者复用 C 分支前取得

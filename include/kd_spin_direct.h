@@ -20,7 +20,6 @@ void kd_spin_direct_native_lock(kd_spinlock_t *lock);
 void kd_spin_direct_native_unlock(kd_spinlock_t *lock);
 void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 				 unsigned long, unsigned long);
-extern bool kd_spin_delegate;
 /* One shared CPU-hot cookie: a view of the existing rate_hot, not a second
  * flag, an acquisition path, or a nesting counter. Never assign to it here. */
 #define kd_spin_direct_cookie kd_hotlock_spin_gate
@@ -43,8 +42,10 @@ extern bool kd_spin_delegate;
 		       "r12", "r13", "r14", "r15", "cc", "memory");        \
 } while (0)
 
-/* Pin before the inline per-CPU read. Keep the gate in C so only the hot
- * branch has the broad clobber contract; cold uses an ordinary C call into
+/* Selecting this shell opts into CPU-heat routing; provider policy switches
+ * are handled by the shared core/sampler. Pin before the per-CPU read.
+ * Keep the gate in C so only the hot branch has the broad clobber contract;
+ * cold uses an ordinary C call into
  * the complete native CAS/pending/MCS path. Neither branch exports a path
  * cookie or captures extra GPRs. The named continuation belongs to hot only.
  * The compiler owns all live-register spills, even if it places them before
@@ -53,8 +54,7 @@ extern bool kd_spin_delegate;
 #define KD_SPIN_DIRECT_LOCK(lock, cookie, continuation) do { \
 	kd_spinlock_t *kd_lock_word = (kd_spinlock_t *)(lock); \
 	preempt_disable(); \
-	if (kd_spin_cold_fastpath && \
-	    (!kd_spin_delegate || !READ_ONCE(*this_cpu_read(cookie)))) \
+	if (!READ_ONCE(*this_cpu_read(cookie))) \
 		kd_spin_direct_native_lock(kd_lock_word); \
 	else \
 		KD_SPIN_DIRECT_CALL(kd_spin_lock_pinned_clobber_v1, \

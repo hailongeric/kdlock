@@ -84,22 +84,23 @@ Legacy hook offsets and the new ABI are defined in [the register ABI](JIT_REGIST
 The paired spin shell `KD_SPIN_DIRECT_LOCK/UNLOCK` takes one preemption pin
 before a C `if` selects its entry. The shared `kd_spin_direct_cookie` only views
 the existing per-CPU `rate_hot`; it records neither acquisition path nor nesting.
-With the read-only load option `spin_cold_fastpath=1`, disabled delegation or a
-cold CPU selects an ordinary C call into the complete native CAS/pending/MCS
-path. It keeps the existing native drain count through acquisition and holding;
-a failed CAS value enters pending/MCS directly, including the existing CPU heat
+A cold CPU selects an ordinary C call into the complete native CAS/pending/MCS
+path. The macro reads only CPU heat; it does not test `spin_cold_fastpath` or
+`spin_delegate`. It keeps the existing native drain count through acquisition
+and holding; a failed CAS value enters pending/MCS directly, including CPU heat
 sampling. Native ownership uses locked-byte value 5. Unlock tests that byte,
 releases only the low byte, decrements the count and unpins, preserving pending
 and tail without a heat lookup.
-The other branch uses the original broad-clobber call to the pinned entry.
+The hot branch uses the original broad-clobber call to the pinned entry, where
+the provider still enforces `spin_delegate` before admitting delegation.
 Its named continuation is immediately after that CALL. The compiler owns all
 live-register saves and may place them before the `if` or inside the branch;
 the shell supplies no manual PUSH/POP adapter. Hot unlock retains the original
 broad-clobber call. The pinned entry shares the existing core and pin; lock
 width, packet layout and wrapper inputs are unchanged. Recompile paired callers
 to use this shell; the original API remains available. The workload selects
-the shell for its outer lock only; nested/early inner calls use the original
-`KD_SPIN_DIRECT_CALL` without extra register adapters.
+the shell at compile time for its outer lock only; nested/early inner calls use
+the original `KD_SPIN_DIRECT_CALL` without extra register adapters.
 
 `target_process` belongs to the retained mutex routing path; current direct
 spin entry does not filter by comm. Stable spin tickets/fast owners and mutex
@@ -123,7 +124,7 @@ eligible MCS event; mutex still checks every 1024 entry records.
 Elapsed time covers the whole batch since the previous check, or initialization
 for the first batch; intermediate events retain cached CPU heat without a TSC read.
 The shared spin tail exchange normally counts native, delegated and virtual
-producers. With the cold gate enabled and `spin_hot_min_queue=N>0`, a cold CPU
+producers. With `spin_cold_fastpath=1` and `spin_hot_min_queue=N>0`, a cold CPU
 instead counts queue-head acquisitions that observe at least N linked nodes,
 including itself, before handoff. It reads at most N−1 links without waiting
 for a missing link. This read-only load parameter ranges from 0 to 16, defaults
@@ -148,9 +149,9 @@ CPU; eligible native MCS events can, and later entries accumulate the
 See [flow and storage](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取).
 
 IRQ/NMI reentry drops only a sample; the statistics pin ends before mutex sleep.
-`adaptive` is the load default. With the paired cold gate enabled, `observe`
-fixes admission only after CPU heat; adaptive additionally tests lock heat.
-The preserved shell or disabled gate retains the original fixed observe admission,
+`adaptive` is the load default. The paired shell makes `observe` fix admission
+only after CPU heat; adaptive additionally tests lock heat.
+The preserved shell retains the original fixed observe admission,
 even for unknown identities at capacity. A CPU that once warmed retains its
 cached heat until a later MCS batch updates it; a quiet single-thread phase
 does not itself expire heat or read the clock. Public spin skips sampling when delegation
@@ -470,8 +471,9 @@ design, not restoring an old function.
 ## 11. Configuration
 
 `hotlock_mode` defaults to adaptive. `spin_cold_fastpath` is a read-only load
-option, initially off pending performance acceptance; its paired observe
-semantics and caller recompilation requirement are described in section 3.
+option, initially off, that enables cold-CPU queue-pressure sampling using
+`spin_hot_min_queue`. It does not select the caller shell or disable its CPU-heat
+branch; caller selection requires recompilation as described in section 3.
 `target_process` defaults to kd_test in the retained mutex path; `mutex_jit`
 defaults to 1, but neither setting installs the disabled global hook.
 Batch limits are fixed at 1024. Spin NUMA is opt-in via KDLOCK_NUMA=1.

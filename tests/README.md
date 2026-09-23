@@ -1,6 +1,25 @@
 # 当前测试入口
 
-最新[C if 完整性能矩阵](../bench/tclock_compare/results/20260923-spin-c-if-full.md)：
+2026-09-23：`KD_SPIN_DIRECT_LOCK` 删除两次模块开关判断，仅在pin后读取CPU热值。
+基础2组及 `spin/test_spin_cold.py`、`codegen/test_spin_paired_jit.py` 共4组通过；
+ABI fixture不再提供两个开关符号，继续验证双CPU、冷热路径、活跃寄存器、续点及嵌套/提前解锁。
+真实caller的导入表和反汇编均不含 `kd_spin_cold_fastpath` / `kd_spin_delegate` 引用。
+同源码c1、adaptive、cold on/q4的1/20线程functional两场通过，共210万次操作并排空，
+单线程 `NO_JIT_COLD`，20线程实际JIT正文1988261次。内核身份核验、冻结哈希及最终空闲检查通过。
+本轮加载provider（`mutex_jit=1`，仅spin负载），没有重跑性能矩阵或全量单元。
+
+```sh
+make -C tests/unit run PY_TESTS='spin/test_spin_cold.py codegen/test_spin_paired_jit.py'
+```
+
+functional使用现有直接运行器，参数为 `--functional --backends kdlock --cachelines 1
+--threads 1 20 --hotlock-mode adaptive --spin-cold-fastpath on --spin-hot-min-queue 4
+--repeats 1 --iterations 100000`；完整argv和内核基线见归档environment.json。
+guest证据：`/root/kdlock-evidence/spin-heat-only-20260923/`；
+宿主[归档](../bench/.tmp/spin-heat-only-20260923.tar.gz) SHA256：
+`557d85c9c129561f54d619c5e85989072dcd7b30f0fb37a6b417b97542bd2f51`。
+
+此前[C if 完整性能矩阵](../bench/tclock_compare/results/20260923-spin-c-if-full.md)：
 84/84场、6480万次操作通过并排空；批次IRQ/preempt恢复、业务数据及worker检查通过。
 56场KD中36场实际JIT，共36975809次正文，包含全部32场四线程及以上竞争；
 12场冷态小线程保持零JIT。256份冻结源码、9项二进制及发布图像独立核对通过。

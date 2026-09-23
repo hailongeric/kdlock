@@ -1,6 +1,11 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
-最新[C if 完整单轮矩阵](results/20260923-spin-c-if-full.md)：
+当前 `KD_SPIN_DIRECT_LOCK` 只在pin后判断CPU热值，已删除调用端的
+`kd_spin_cold_fastpath` / `kd_spin_delegate` 两次开关判断。编译时选用该壳即启用热度分流；
+模块的前者开关只控制冷队列采样策略，后者仍由provider核心执行代理准入控制。
+下列完整性能矩阵测于删除这两次判断之前，不能作为当前改动的性能结论。
+
+最近[C if 完整单轮矩阵](results/20260923-spin-c-if-full.md)：
 1/16 cacheline × 1/2/3/4/8/16/20线程，三方及KD两模式两壳共84/84场通过，
 6480万次操作全部排空；32场四线程及以上KD全部实际JIT。冷捷径on相对off，
 单线程提高14.36%–46.67%、三线程提高41.27%–58.38%；c1两线程下降43.38%–45.59%，

@@ -19,12 +19,12 @@ EXPORT_SYMBOL_GPL(kd_spin_delegate);
 module_param_named(spin_delegate, kd_spin_delegate, bool, 0400);
 MODULE_PARM_DESC(spin_delegate, "Allow JIT delegation; false keeps KD self-execution");
 
-/* Opt-in until the paired caller has passed the competition comparison.
- * Only the new paired API uses this CPU gate; old callers retain their ABI. */
+/* Opt-in queue-pressure sampling for cold CPUs. The paired caller selects
+ * its native/clobber branch from CPU heat independently of this option. */
 bool kd_spin_cold_fastpath __read_mostly;
 EXPORT_SYMBOL_GPL(kd_spin_cold_fastpath);
 module_param_named(spin_cold_fastpath, kd_spin_cold_fastpath, bool, 0444);
-MODULE_PARM_DESC(spin_cold_fastpath, "Paired API: self-execute on cold CPUs in both admission modes");
+MODULE_PARM_DESC(spin_cold_fastpath, "Use spin_hot_min_queue pressure sampling on cold CPUs");
 
 
 static __always_inline int kd_spin_trylock(struct qspinlock *word);

@@ -24,16 +24,17 @@
 2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` / `KD_SPIN_DIRECT_UNLOCK(lock, cookie)`
    通过 C `if` 选择普通 C 冷调用或原有 broad-clobber 热调用，cookie统一传`kd_spin_direct_cookie`，直接引用已有
    per-CPU `rate_hot`，一个CPU一份、所有锁共享。它只表示当前CPU热度，不记录路径或深度。
-   加载时只读选项 `spin_cold_fastpath=1` 使 observe/adaptive 都先读现有 CPU `rate_hot`。
-   宏先 pin 一次，再通过 `this_cpu_read` / `READ_ONCE` 读取 per-CPU 热值；开启冷捷径且代理关闭或CPU冷时进入冷分支。
+   宏先 pin 一次，再通过 `this_cpu_read` / `READ_ONCE` 读取 per-CPU 热值，observe/adaptive 都仅按该热值分流。
+   CPU冷时进入冷分支；宏不读取 `spin_cold_fastpath` 或 `spin_delegate`。
    冷入口增加 nondelegated 在途计数并 CAS，失败值直接进入完整原生 pending/MCS 及既有 CPU 热度采样，
    不重复初始 CAS。冷获取将低字节设为5；解锁检查此持有状态后只release低字节、减少计数、
    解除pin，保留pending/tail。MCS 热度更新只影响后续获取；解锁不读取cookie。
    热分支通过 `KD_SPIN_DIRECT_CALL` 调用 pinned clobber 入口，命名 continuation 仅位于此 CALL 后，没有手工 push/pop。
    broad-clobber 声明仅属于热分支；活跃值由编译器决定如何保存，允许部分保存指令位于 `if` 之前，部分位于热分支内。
-   pinned 入口复用前一步的 pin；32 位锁、寄存器包和 wrapper 输入不变。
+   pinned 入口复用前一步的 pin，并由 provider 检查 `spin_delegate`；32 位锁、寄存器包和 wrapper 输入不变。
    当前 workload 只将外层锁接入新接口；nested/early 内层也恢复原 clobber 宏，不再套寄存器适配。
-   选项暂默认关闭；运行器关闭对照编译保留壳，详见 benchmark 的调用端身份记录。
+   调用壳在编译时选择；`spin_cold_fastpath` 加载选项默认关闭，仅控制冷CPU的队列压力采样。
+   运行器关闭对照编译保留壳，详见 benchmark 的调用端身份记录。
 3. 保留的 clobber v1 调用保存 pre-CALL RSP、post-CALL RIP 和 caller RBP，编译器保存
    活跃 caller-clobbered 值。`kd_spin_lock_abi` 首先关闭抢占，代理开启时合并记录/
    判断热度并筛选上下文，再尝试 fast/pending；统计和原生回退复用已有 pin。
@@ -72,7 +73,7 @@ spin/mutex 每 CPU 独立 256 桶、256 条预分配记录，哈希冲突用完�
 每 1024 次入口调用检查；两者都要求整批耗时严格小于 400 亿 TSC ticks。
 批间沿用缓存热值，首批从初始化计时。入口仍按缓存 CPU 热值决定是否查锁表。
 默认队尾发布采样覆盖原生、代理和虚拟嵌套；fast/pending 不计数。
-开启冷捷径且 `spin_hot_min_queue=N>0` 时，冷 CPU 改为取得队头所有权后、交接之前，
+`spin_cold_fastpath=1` 且 `spin_hot_min_queue=N>0` 时，冷 CPU 改为取得队头所有权后、交接之前，
 观察含自己至少 N 个已链接 MCS 节点才累计一次；最多读 N−1 条链接，缺链不等待。
 参数加载后只读，范围0..16、默认4；0恢复原发布采样。热 CPU 继续发布采样，同一获取不重复计数。
 这表示队列压力，不等于线程数；CPU初始冷且没有其他负载先暖CPU时，普通每线程一个在途请求的
@@ -81,8 +82,8 @@ spin/mutex 单锁 count 大于 32（第 33 次）才检查 25 亿 TSC 窗口并�
 单锁仍统计入口调用。mutex 同次到期共享采时，spin CPU/锁分别采时。
 CPU 持续热保留单锁批次，冷却/重新变热清零计数/热值但保留映射。
 MCS 更新只影响后续入口；没有入队时 CPU 缓存热值保留，不新增逐次时间检查。
-adaptive 要求 CPU/锁缓存热值同时成立，未收录且表满的锁走原生。新配对壳开启冷捷径后，
-observe 是 CPU 热后固定准入；保留壳或关闭开关仍按原 observe 固定准入。CPU 曾变热后即使
+adaptive 要求 CPU/锁缓存热值同时成立，未收录且表满的锁走原生。配对壳的
+observe 是 CPU 热后固定准入；保留壳仍按原 observe 固定准入。CPU 曾变热后即使
 转为单线程，也要等后续MCS采样才能降温；没有后续MCS时可一直缓存hot，2/3线程持续
 高频MCS也可能维持hot。本轮没有增加每次读时钟或独立的过期标志。
 query 不计数/采时/插入；有效地址及表生命周期由调用者保证，关闭代理时不记录。

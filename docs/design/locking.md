@@ -24,7 +24,7 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 一次，mutex CPU 保持每 1024 次入口检查，两者共用 400 亿 TSC 窗口。
 时间差取上次检查到本批结束的整批耗时，首批从初始化计时。spin 共用 `xchg_tail()`
 默认在交换队尾前记录，原生、代理、虚拟嵌套均覆盖；fast/pending、入队前取消及
-节点耗尽轮询不计数。开启冷捷径且只读参数`spin_hot_min_queue=N>0`时，冷CPU只在取得队头
+节点耗尽轮询不计数。`spin_cold_fastpath=1`且只读参数`spin_hot_min_queue=N>0`时，冷CPU只在取得队头
 所有权、交接前看到含自己至少N个已链接节点时计数；热CPU保持发布采样，不重复计数。
 最多读N−1条链接，缺链不等待；参数0..16、默认4，0恢复原规则。CPU 热才在入口查锁表。
 单锁仍统计入口调用，count **大于 32** 时检查 25 亿 TSC 窗口、刷新 hot，
@@ -32,7 +32,8 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 mutex 同次到期复用 TSC；spin 的 CPU/单锁事件分开采时。
 CPU 持续热不重置单锁批次，冷却/重新变热时重置计数和热值、
 保留映射。query 不计数/采时/插入，空闲后可能暂时沿用缓存热值。
-`adaptive` 默认要求 CPU/单锁热值同时成立；`observe` 固定准入，包括表满 miss。
+`adaptive` 默认要求 CPU/单锁热值同时成立；provider 的 `observe` 固定准入，包括表满 miss。
+配对调用壳在进入 provider 前仍要求CPU热，见4.1节。
 公共入口关闭代理时跳过统计。热表不再使用 busy 或统计屏障；非 task 上下文
 直接丢样且 query 返回冷，避免重入破坏哈希索引链，observe record 仍固定允许。
 task 统计复用或临时取得 CPU pin，mutex 不跨睡眠保持统计 pin。
@@ -65,11 +66,11 @@ acquisition and site cache have been removed. Linux spin objects retain their
 own protocol; no global spin hook is installed and protocols must never mix on
 one object. Explicit caller storage must outlive all requests and frames.
 
-The cold-gated broad-clobber spin shell optionally uses `spin_cold_fastpath=1`.
+The paired broad-clobber spin shell is selected at caller compile time.
 It pins once, then uses a C `if` with `this_cpu_read` / `READ_ONCE` to select an
-ordinary C cold call or the original broad-clobber hot call. With the gate
-enabled, disabled delegation or a cold CPU selects the cold call. It keeps the
-existing `nondelegated` in-flight count through the entire native acquisition
+ordinary C cold call or the original broad-clobber hot call based only on CPU
+heat. It does not read `spin_cold_fastpath` or `spin_delegate`. The cold call
+keeps the existing `nondelegated` in-flight count through the entire native acquisition
 and hold. It attempts one CAS and passes a failure directly to the complete
 native pending/MCS path. This root does not
 transfer to a fast-owner record. Native ownership uses locked-byte value 5;
@@ -78,9 +79,11 @@ pending/tail. The cookie is only the existing per-CPU rate_hot view: one per CPU
 shared by all locks, with no acquisition path or nesting count. CPU heat
 changes affect only subsequent acquisitions, while native MCS still samples heat
 under the configured queue-pressure policy. The drain scan includes this count. Hot acquisitions use the
-shared pinned core and existing fast-owner/ticket routing; observe fixes lock
-admission only after CPU heat when this gate is enabled. The retained API and
-explicitly disabled gate keep their original policy.
+shared pinned core and existing fast-owner/ticket routing; the provider still
+checks `spin_delegate` there. Observe fixes lock admission only after CPU heat
+in the paired shell. The retained API keeps its original policy.
+The `spin_cold_fastpath` module option only enables cold-CPU queue-pressure
+sampling; it does not select or disable the caller's heat branch.
 Only the hot branch declares the broad clobbers. The compiler owns live-register
 saves and may place them before the C branch or inside it. There are no manual
 five-register PUSH/POP adapters in the hot body; the named continuation follows
