@@ -1,7 +1,7 @@
-"""Execute compiler-clobber cold-gate continuations through the real wrapper.
+"""Execute generic clobber-unlock continuations through the real wrapper.
 
-The body has one ordinary stack value and an unlock-path byte, without a
-manual five-register save area. Poison uncaptured GPRs and check COMPLETE,
+The body has one ordinary stack value and a stack canary, without an unlock
+branch or manual five-register save area. Poison uncaptured GPRs and check COMPLETE,
 entry refusal and FULL at native calls. Only the native callee/dispatcher is
 substituted; admission and generated code run.
 """
@@ -28,7 +28,7 @@ int main(void) {
   memset(&regs,0xde,sizeof(regs));
   unsigned long stack[64]={0};
   stack[16]=0x115;
-  stack[17]=1; /* A hot-owned lock takes the clobber unlock branch. */
+  stack[17]=0x55aa; /* No caller lock-byte input or path cookie is needed. */
   for(unsigned int i=18;i<24;i++) stack[i]=0x123400+i;
   regs.w[4]=(unsigned long)&stack[refuse?16:48];
   regs.w[16]=0x1000;
@@ -44,7 +44,7 @@ int main(void) {
   if(refuse) {
    assert(call.args[0]==6 && !call.args[1] && state==1);
    assert(!memcmp(&before,&regs,sizeof(regs)));
-   assert(stack[16]==0x115 && stack[17]==1);
+   assert(stack[16]==0x115 && stack[17]==0x55aa);
    continue;
   }
 #if NATIVE_CALL
@@ -63,15 +63,16 @@ int main(void) {
   assert(call.args[0]==1 && call.args[1] && state==0);
   assert(regs.w[16]==0x4000 && regs.w[19]==before.w[19]-8);
   assert(regs.w[13]==before.w[19] && regs.w[12]==FINAL_IP);
+  assert(regs.w[14]==0x9000 && regs.w[11]==before.w[4]);
 #else
   assert(call.args[0]==7 && call.args[1] && state==2);
   assert(regs.w[16]==FINAL_IP && regs.w[19]==before.w[19]);
 #endif
   assert(regs.w[4]==before.w[4]);
-  assert(stack[16]==0x116 && stack[17]==1);
+  assert(stack[16]==0x116 && stack[17]==0x55aa);
   for(unsigned int i=18;i<24;i++) assert(stack[i]==0x123400+i);
  }
- puts("PASS cold-gate clobber JIT: no manual register saves, hot unlock branch, minimal COMPLETE/refusal, native FULL continuation");
+ puts("PASS generic clobber JIT unlock: no caller branch/register-save area, exact metadata, COMPLETE/refusal and native FULL continuation");
 }
 '''
 
@@ -87,32 +88,28 @@ def main():
         # CPU heat is consumed before the continuation and is never a JIT input.
         code = bytes.fromhex('48ff0424')  # incq (%rsp)
         if native:
-            # Existing ordinary-C inner control calls retain resumable FULL
-            # boundaries. The new native cold entry precedes the outer JIT
-            # continuation and is deliberately not admitted as an inner lock.
+            # Legacy ordinary-C inner control calls retain resumable FULL
+            # boundaries. The outer paired release below always uses the
+            # generic clobber endpoint and still provides exact SP/IP/BP.
             for target in (0x5000, 0x6000):
                 code += bytes.fromhex('48c7c700910000')
                 code += b'\xe8' + (target-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
-        # The lock-byte input lives in a guarded stack slot in this fixture;
-        # production callers read their actual lock object. Both control ABIs
-        # must remain distinct even though hot ownership selects only one.
-        code += bytes.fromhex('807c2408050f84')  # cmpb $5,8(%rsp); je cold
-        cold_branch = len(code)
-        code += bytes(4)
+        # The production macro ABI is executed by test_spin_cold; here its
+        # straight generic-call continuation runs through the real translator
+        # and wrapper. Provider ownership selection is outside this body.
         code += bytes.fromhex('48c7c7009000004889e648c7c2')
         final_ip = 0x1000+len(code)+4+3+5
         code += final_ip.to_bytes(4, 'little') + bytes.fromhex('4889e9')
         code += b'\xe8' + (0x4000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
         code += b'\xc3'
-        cold_offset = len(code)
-        code = (code[:cold_branch] + (cold_offset-cold_branch-4).to_bytes(4, 'little', signed=True)
-                + code[cold_branch+4:])
-        code += bytes.fromhex('48c7c700900000')
-        code += b'\xe8' + (0x6000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
-        code += b'\xc3'
         assembly, log, status = render(code.hex(), kernel_symbols=symbols, abi=1,
                                        body_witness=True, return_status=True)
         assert status == 0, log
+        if not native:
+            # Removing the caller unlock condition must leave one body block:
+            # no second witness write or branch-budget probe is needed.
+            assert assembly.count(b'MOV             Stack_JIT_WITNESS, 1\n') == 1
+            assert b'INC             Stack_BUDGET\n' not in assembly
         # Exercise the production stack-input predicate before any body write.
         # Do not confuse a dispatch miss (FULL) with a pristine entry refusal.
         guards = EntryGuards()

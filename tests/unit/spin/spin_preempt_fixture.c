@@ -39,6 +39,7 @@ static void pinned(void) { assert(pins == initial + 1 && disables == 1 && !enabl
 #undef __always_inline
 #define __always_inline inline __attribute__((always_inline))
 #define _Q_LOCKED_VAL_HL 1U
+#define KD_SPIN_DIRECT_NATIVE_HELD 5U
 #define _Q_LOCKED_MASK_HL 255U
 #define _Q_PENDING_VAL_HL 256U
 #define _Q_PENDING_MASK_HL 256U

@@ -291,8 +291,9 @@ def main():
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
             if backend == 'kdlock' and cold == 'on':
                 expected = ('kd_spin_direct_native_lock', 'kd_spin_lock_pinned_clobber_v1',
-                            'kd_spin_direct_native_unlock', 'kd_spin_unlock_clobber_v1',
-                            'kd_spin_prepare')
+                            'kd_spin_unlock_clobber_v1', 'kd_spin_prepare')
+                require('kd_spin_direct_native_unlock' not in imported.split(),
+                        'paired caller still bypasses the generic clobber unlock')
             require(all(symbol in imported.split() for symbol in expected), 'missing direct API import')
         (out/'binaries').mkdir()
         for binary in binaries:

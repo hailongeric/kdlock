@@ -11,8 +11,11 @@ mutex 协议和嵌套控制调用保留，但 `kd_main.c` 未安装全局 mutex 
 配对入口 `KD_SPIN_DIRECT_LOCK` 在关闭抢占后用 C `if` 只判断 CPU 热值；
 `db42cf4` 已删除调用端的 `kd_spin_cold_fastpath`、`kd_spin_delegate` 判断。
 冷分支普通 C 调用完整 CAS/pending/MCS，保留 CPU 热度更新；热分支使用 clobber-v1。
-宽 clobber 只在热分支声明，没有手工 push/pop；编译器决定寄存器保存位置，
-允许部分保存出现在 `if` 前。配对解锁依据锁字状态，不读取 CPU 热值。
+获取壳的宽 clobber 只在热分支声明，没有手工 push/pop；编译器决定寄存器保存位置，
+允许部分保存出现在 `if` 前。`KD_SPIN_DIRECT_UNLOCK` 无条件通过 broad-clobber
+调用 `kd_spin_unlock_clobber_v1`，冷/热获取均传 lock/SP/IP/BP，JIT 正文不再判断解锁路径。
+provider 根据锁字低字节 5 执行 release、nondelegated 减计数与 unpin；其他状态
+进入原解锁核心，不读取 CPU 热值。
 
 spin/mutex 分别有每 CPU 256 桶、256 条精确锁地址记录；模块初始化预分配并采时。
 spin 代理开启时，spin CPU 每次合格 MCS 事件检查 400 亿 TSC 窗口；

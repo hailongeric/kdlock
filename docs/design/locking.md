@@ -73,9 +73,12 @@ heat. It does not read `spin_cold_fastpath` or `spin_delegate`. The cold call
 keeps the existing `nondelegated` in-flight count through the entire native acquisition
 and hold. It attempts one CAS and passes a failure directly to the complete
 native pending/MCS path. This root does not
-transfer to a fast-owner record. Native ownership uses locked-byte value 5;
-unlock tests that byte before a release, count decrement and unpin, preserving
-pending/tail. The cookie is only the existing per-CPU rate_hot view: one per CPU
+transfer to a fast-owner record. Native ownership uses locked-byte value 5.
+Paired unlock always calls `kd_spin_unlock_clobber_v1` with the broad clobber
+contract and lock/SP/IP/BP metadata. The provider tests byte 5 before a release,
+count decrement and unpin, preserving pending/tail; other states enter the
+existing unlock core. JIT sees one completion endpoint without a caller-side
+cold/hot unlock branch. The cookie is only the existing per-CPU rate_hot view: one per CPU
 shared by all locks, with no acquisition path or nesting count. CPU heat
 changes affect only subsequent acquisitions, while native MCS still samples heat
 under the configured queue-pressure policy. The drain scan includes this count. Hot acquisitions use the
@@ -84,7 +87,8 @@ checks `spin_delegate` there. Observe fixes lock admission only after CPU heat
 in the paired shell. The retained API keeps its original policy.
 The `spin_cold_fastpath` module option only enables cold-CPU queue-pressure
 sampling; it does not select or disable the caller's heat branch.
-Only the hot branch declares the broad clobbers. The compiler owns live-register
+Only the hot acquisition branch declares acquisition clobbers; unlock always
+declares the broad clobbers. The compiler owns live-register
 saves and may place them before the C branch or inside it. There are no manual
 five-register PUSH/POP adapters in the hot body; the named continuation follows
 the hot CALL and the minimal register packet retains the original clobber ABI.
@@ -132,8 +136,9 @@ there is no blocking acquisition or physical release inside either transition.
 CPU/task/generation, legal-state and borrow checks remain. Every intact spin
 slowpath return, including node/continuation capacity fallback, has already
 claimed or reclaimed its ticket; the public entry does not repeat that claim.
-Hot/retained-API unlock uses a fast owner, native ACK or ticket; paired cold
-unlock uses locked-byte value 5. Neither route consults hotness or comm.
+The clobber unlock provider first handles paired cold ownership with locked-byte
+value 5; otherwise it uses the existing fast-owner, native-ACK or ticket route.
+Neither route consults hotness or comm.
 
 `spin_delegate=0` is an explicit fixed self-execution control (default is 1).
 It bypasses admission and heat recording at the public entry. Combined record

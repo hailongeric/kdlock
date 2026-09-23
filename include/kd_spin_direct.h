@@ -63,12 +63,10 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 
 #define KD_SPIN_DIRECT_UNLOCK(lock, cookie) do { \
 	kd_spinlock_t *kd_unlock_word = (kd_spinlock_t *)(lock); \
-	/* Same shared cookie argument; unlock deliberately does not read heat. */ \
+	/* Both ownership kinds use the same clobber/metadata contract. The \
+	 * provider handles byte-5 release; JIT sees one completion endpoint. */ \
 	(void)sizeof(cookie); \
-	if (READ_ONCE(kd_unlock_word->locked) != KD_SPIN_DIRECT_NATIVE_HELD) \
-		KD_SPIN_DIRECT_CALL(kd_spin_unlock_clobber_v1, kd_unlock_word, ""); \
-	else \
-		kd_spin_direct_native_unlock(kd_unlock_word); \
+	KD_SPIN_DIRECT_CALL(kd_spin_unlock_clobber_v1, kd_unlock_word, ""); \
 } while (0)
 
 #endif

@@ -715,6 +715,17 @@ __attribute__((noipa)) noinline notrace void
 kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 						  unsigned long ip, unsigned long bp)
 {
+	/* Byte 5 carries paired native ownership without a fast record/ticket.
+	 * Release only that byte, then drop its count and acquisition pin. Keep
+	 * this short route inline; the ordinary generic router handles all other
+	 * owners. Callers still provide SP/IP/BP: the JIT completion endpoint
+	 * validates those words even though physical release does not use them. */
+	if (READ_ONCE(lock->locked) == KD_SPIN_DIRECT_NATIVE_HELD) {
+		smp_store_release(&lock->locked, 0);
+		this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+		preempt_enable();
+		return;
+	}
 	kd_spin_unlock_core(lock);
 }
 EXPORT_SYMBOL_GPL(kd_spin_unlock_clobber_v1);

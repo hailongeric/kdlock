@@ -259,15 +259,19 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 1. 计时前 `kd_spin_prepare(lock, post_call_ip, ABI)` 登记入口。provider 使用
    既有注册表/代码池；daemon 经 `/dev/kd_dev` 取得代码与元数据，翻译、组装、
    上传并发布。NORMAL 只表示可尝试执行，不能当作正文执行证据。
-2. 配对壳 `KD_SPIN_DIRECT_LOCK/UNLOCK` 在 pin 后用 C `if` 读取 CPU 热值，
+2. 配对获取壳 `KD_SPIN_DIRECT_LOCK` 在 pin 后用 C `if` 读取 CPU 热值，
    不读取 `kd_spin_cold_fastpath` 或 `kd_spin_delegate`。冷分支普通 C 调用
    `kd_spin_direct_native_lock()`，增加 nondelegated 并做一次 CAS；失败值直接进入
    完整 pending/MCS，保留 provider 的 CPU 升温/降温采样。冷态持有用低字节 5
-   标识，冷解锁仅 release 低字节、减计数、unpin。热分支使用 clobber-v1 协议，
+   标识。热获取分支使用 clobber-v1 协议，
    continuation 位于 CALL 后；宽 clobber 仅声明在该分支的 asm，未手工 push/pop。
    编译器决定保存哪些活跃值及保存位置，可以将部分保存放在 `if` 之前，不能保证
    冷分支完全没有寄存器保存。cookie 只引用现有 per-CPU rate_hot，一个 CPU 一份、
-   所有锁共享；解锁根据锁字状态，不读取 CPU 热度。request/frame 仍只在慢路径准备。
+   所有锁共享。`KD_SPIN_DIRECT_UNLOCK` 无条件使用 broad-clobber 调用
+   `kd_spin_unlock_clobber_v1()`，冷/热获取均传 lock/SP/IP/BP，调用端不读锁字或 CPU 热度。
+   provider 先检查低字节 5：命中时 release 低字节、减 nondelegated、unpin 后返回，
+   否则进入原有 fast owner/native ACK/ticket 解锁核心。JIT 正文只有一个解锁完成入口，
+   不再包含调用端冷/热解锁分支；request/frame 仍只在慢路径准备。
    配对壳的 observe 在 CPU 热后固定热度准入，adaptive 继续判断单锁；
    provider 仍检查代理开关和安全条件，曾热 CPU 仍需后续 MCS 样本才能降温。
    保留壳 `KD_SPIN_DIRECT_CALL` 传 lock、pre-CALL SP、post-CALL IP、BP 给 clobber v1
@@ -632,8 +636,9 @@ KD 不经过 Linux 的 `spin_lock()` 包装，热度记录器复用已有
 pin，不重复增减。不能因 Linux 内部协议已被 pin 就删除 KD 显式 API 的 pin。
 
 配对壳在新加载的冷 CPU 上，单线程路径为：调用端 pin → C `if` 读取 CPU 热值
-→ 普通 C 冷获取 → nondelegated 增加 → CAS → 正文 → 锁字低字节 release
-→ nondelegated 减少 → unpin。没有 MCS，CPU 热值保持冷；observe/adaptive
+→ 普通 C 冷获取 → nondelegated 增加 → CAS → 正文 → broad-clobber 解锁调用
+（传 lock/SP/IP/BP）→ provider 检查低字节 5 → release 低字节 → nondelegated 减少
+→ unpin。没有 MCS，CPU 热值保持冷；observe/adaptive
 均不进入热度记录核心或实际 JIT。寄存器保存由编译器决定，不承诺全部省略。
 
 保留壳的单线程 observe 路径为：clobber 调用现场 → 一次入口 pin → 直接热度记录核心

@@ -1,5 +1,5 @@
-/* Execute the exact inline GS gate and broad-clobber macros. Hot callees
- * destroy every declared GPR; compiler-owned spills must preserve C values.
+/* Execute the exact inline GS gate and broad-clobber macros. The hot lock
+ * and every unlock destroy declared GPRs; compiler spills must preserve C values.
  * No fixture save/restore shell repairs the production call convention. */
 #define _GNU_SOURCE
 #include <assert.h>
@@ -33,25 +33,30 @@ asm(".globl kd_hotlock_spin_gate\n.set kd_hotlock_spin_gate,cpu_gates\n");
  value; \
 })
 #include "paired.h"
-static unsigned int hot, cold_locks, cold_unlocks;
-unsigned long hot_calls;
+static unsigned int hot, cold_locks;
+unsigned long hot_calls, generic_unlocks, native_releases;
 __attribute__((noinline,noipa)) void kd_spin_direct_native_lock(kd_spinlock_t *lock)
 { assert(pins && !lock->val); cold_locks++; lock->locked=KD_SPIN_DIRECT_NATIVE_HELD; }
 __attribute__((noinline,noipa)) void kd_spin_direct_native_unlock(kd_spinlock_t *lock)
-{ assert(pins && lock->locked==KD_SPIN_DIRECT_NATIVE_HELD); pins--; lock->locked=0; cold_unlocks++; }
+{ (void)lock; assert(!"caller bypassed the generic clobber unlock"); }
 /* Metadata describes the unchanged pre-CALL stack and exact continuation.
  * No hidden pushed register area exists at RSI in this ABI. */
 asm(".text\n"
     ".globl kd_spin_lock_pinned_clobber_v1\n"
     "kd_spin_lock_pinned_clobber_v1:\n"
-    "movl $1, (%rdi)\n jmp .Ldamage\n"
+    "movl $1, (%rdi)\n incq hot_calls(%rip)\n jmp .Ldamage\n"
     ".globl kd_spin_unlock_clobber_v1\n"
     "kd_spin_unlock_clobber_v1:\n"
-    "movl $0, (%rdi)\n decl pins(%rip)\n"
+    "cmpl $0, pins(%rip)\n je .Lbad\n"
+    "cmpb $5, (%rdi)\n jne .Lhot_release\n"
+    "incq native_releases(%rip)\n jmp .Lrelease\n"
+    ".Lhot_release:\n cmpb $1, (%rdi)\n jne .Lbad\n"
+    "incq hot_calls(%rip)\n"
+    ".Lrelease:\n movb $0, (%rdi)\n decl pins(%rip)\n"
+    "incq generic_unlocks(%rip)\n"
     ".Ldamage:\n"
     "leaq 8(%rsp), %rax\n cmpq %rax, %rsi\n jne .Lbad\n"
     "cmpq (%rsp), %rdx\n jne .Lbad\n cmpq %rbp, %rcx\n jne .Lbad\n"
-    "incq hot_calls(%rip)\n"
     "movq $17,%rbx\n movq $18,%r12\n movq $19,%r13\n"
     "movq $20,%r14\n movq $21,%r15\n"
     "movq $22,%rax\n movq $23,%rdi\n movq $24,%rsi\n"
@@ -128,7 +133,8 @@ int main(void)
    }
  }
  assert(!syscall(SYS_arch_prctl,ARCH_SET_GS,old_gs));
- assert(cold_locks==expected_cold && cold_unlocks==expected_cold && hot_calls==expected_hot);
+ assert(cold_locks==expected_cold && native_releases==expected_cold && hot_calls==expected_hot);
+ assert(generic_unlocks==expected_cold+expected_hot/2);
  puts("PASS inline cold gate: actual GS read, two CPUs, heat-only routing without provider policy symbols");
- puts("PASS compiler-owned clobber ABI: live C values/stack, exact SP/IP/BP, heat changes and nested/early unlock");
+ puts("PASS generic cold/hot clobber unlock: live C values/stack, exact SP/IP/BP, provenance, heat changes and nested/early unlock");
 }

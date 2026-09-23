@@ -66,8 +66,8 @@ shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队�
 接入，使用同一寄存器约定；provider 不安装全局 spin hook。下述内核桥说明 ABI
 来源，不表示加载 provider 会代理普通 Linux 锁。
 
-显式配对壳 `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` / `KD_SPIN_DIRECT_UNLOCK(lock, cookie)`
-先取得一个 pin，再用 C `if` 选择普通 C 冷调用或 broad-clobber 热调用。
+显式配对壳的 `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)`
+先取得一个 pin，再用 C `if` 选择普通 C 冷获取或 broad-clobber 热获取。
 cookie统一传`kd_spin_direct_cookie`，它是已有per-CPU `rate_hot`的视图。
 一个CPU一份，所有锁共享；不另存路径、嵌套深度或调用点cookie。
 宏仅按本CPU热值分流：冷时直接调用原生入口，热时调用 pinned clobber-v1 入口。
@@ -77,8 +77,13 @@ CPU 热值在 pin 后通过 `this_cpu_read` / `READ_ONCE` 读取，不在JIT正�
 热分支通过原 `KD_SPIN_DIRECT_CALL` 声明寄存器 clobber，传递同一四参数；宏不手写 push/pop。
 编译器决定活跃值的保存位置，允许部分保存出现在 `if` 之前，部分留在热分支内。
 命名 continuation 仅位于热分支 CALL 后，MINIMAL 输入仍只有 IP/SP/BP；后续按编译器生成的指令恢复活跃值并汇合正文。
-continuation不依赖未捕获的CALL返回值。冷获取使用低字节状态5，冷解锁据此直接释放，
-不查询热度、ticket、context或fast owner；热解锁使用原 broad-clobber 调用。
+continuation不依赖未捕获的CALL返回值。`KD_SPIN_DIRECT_UNLOCK(lock, cookie)`
+无条件使用 `KD_SPIN_DIRECT_CALL(kd_spin_unlock_clobber_v1, ...)`，冷/热获取均传
+lock/SP/IP/BP 并声明完整 clobber；调用端不读锁字或 CPU 热值。provider 先检查
+低字节状态5，命中时直接 release、减少 nondelegated、unpin 后返回，不查询
+ticket、context 或 fast owner；其他状态进入原解锁核心。JIT 仅看到一个完成入口，
+仍按同一 SP/IP/BP 元数据验证 COMPLETE，不生成调用端冷/热解锁分支。
+旧 `kd_spin_direct_native_unlock` helper/export 保留兼容，新配对壳不再调用它。
 COMPLETE 指向解锁 CALL 后续点，FULL 仍恢复完整包，拒绝沿本次原生获取完成。
 调用端在编译时选择壳，需配对使用并重编译；`spin_cold_fastpath` 只控制冷CPU的队列压力采样。
 wrapper 参数、包布局、32 位锁字均未改变。

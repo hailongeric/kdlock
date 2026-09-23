@@ -1,5 +1,11 @@
 # Linux / TCLock / kdlock 直接 API 对照
 
+统一 generic unlock 的[三轮验证](results/20260923-spin-generic-unlock.md)：
+基础及相关6组、冻结运行器22项、nested/early共4场通过；108/108性能场次、
+9000万次操作完成并排空。c1 JIT正文由28条降为19条，冷解锁同样传递SP/IP/BP并声明宽clobber。
+该批次冻结了移除on/off选项之前的运行器；两种调用壳均已使用新解锁入口，不能据此隔离解锁收益。
+当前默认调用壳选项的后续变更与上述性能输入分开记录。
+
 当前 `KD_SPIN_DIRECT_LOCK` 只在pin后判断CPU热值，已删除调用端的
 `kd_spin_cold_fastpath` / `kd_spin_delegate` 两次开关判断。编译时选用该壳即启用热度分流；
 模块的前者开关只控制冷队列采样策略，后者仍由provider核心执行代理准入控制。
@@ -230,7 +236,8 @@ cacheline40场、RCUHT20场，KD功能模式20场由单元检查，默认均只�
 
 ## 本次结果
 
-最新已完成测量见[三轮完整矩阵](results/20260923-spin-three-round.md)。
+最新已完成测量见[统一解锁三轮验证](results/20260923-spin-generic-unlock.md)。
+此前完整线程矩阵见[三轮完整矩阵](results/20260923-spin-three-round.md)。
 此前[仅CPU热值分流完整单轮报告](results/20260923-spin-heat-only-full.md)保留原始单样本及执行流分析。
 此前测量见[CPU窗口400亿/MCS阈值1报告](results/20260922-spin-mcs1-window4e10.md)。
 此前调用壳修改见[内联clobber与队列门槛报告](results/20260922-spin-cold-clobber-queue.md)。

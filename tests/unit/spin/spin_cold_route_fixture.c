@@ -6,10 +6,10 @@
 #include <stdint.h>
 #include <stdio.h>
 typedef uint32_t u32;
-typedef struct { union { u32 val; unsigned char locked; }; } kd_spinlock_t;
+typedef struct qspinlock { union { u32 val; unsigned char locked; }; } kd_spinlock_t;
 static struct { void *held; unsigned int nondelegated; } kd_spin_fast_cpu;
 static bool warm_waiter;
-static unsigned int pins, disables, enables, reads, attempts, waits;
+static unsigned int pins, disables, enables, reads, attempts, waits, hot_releases;
 static unsigned int rate_hot;
 #define __percpu
 #define KD_SPIN_DIRECT_NATIVE_HELD 5U
@@ -33,6 +33,15 @@ static void kd_spin_acquire_nondelegated_contended(kd_spinlock_t *lock, u32 fail
  if(warm_waiter) rate_hot=true;
  lock->locked=1;
 }
+/* The ordinary hot release core is the only substituted provider endpoint;
+ * the generic router and its native byte/count/pin release are extracted. */
+static void kd_spin_unlock_core(kd_spinlock_t *lock)
+{
+ assert(pins == 1 && lock->locked == 1 && !kd_spin_fast_cpu.nondelegated);
+ hot_releases++;
+ smp_store_release(&lock->locked, 0);
+ preempt_enable();
+}
 #include "cold_route.h"
 int main(void)
 {
@@ -53,9 +62,9 @@ int main(void)
   if(state&4) rate_hot=!rate_hot; /* Unlock never queries a changed gate. */
   lock.val |= 0x45670100U;
   u32 queued=lock.val & ~255U;
-  kd_spin_direct_native_unlock(&lock);
+  kd_spin_unlock_clobber_v1(&lock, 0x1111, 0x2222, 0x3333);
   assert(!reads && lock.val == queued && kd_spin_fast_idle());
-  assert(!pins && disables == 1 && enables == 1);
+  assert(!pins && disables == 1 && enables == 1 && !hot_releases);
  }
  /* Two independent cold holds count through ordinary/early release. The
   * gate may change after either choice; the native entry never rereads it. */
@@ -72,11 +81,23 @@ int main(void)
     for(unsigned int step=0;step<2;step++) {
      unsigned int i=early?step:1-step;
      rate_hot=!i;
-     kd_spin_direct_native_unlock(&lock[i]);
+     kd_spin_unlock_clobber_v1(&lock[i], 0x1111, 0x2222, 0x3333);
      assert(!reads && rate_hot==!i && kd_spin_fast_cpu.nondelegated==1-step);
     }
     assert(!pins && enables==2 && disables==2 && kd_spin_fast_idle());
    }
- puts("PASS pinned cold entry: one CAS/pin, contention/heat changes, paired drain, pending/tail retained");
+ /* Byte1 must reach the normal core regardless of the current CPU gate;
+  * the byte5 cases above must never reach it or underflow native accounting. */
+ for(unsigned int heat=0;heat<2;heat++) {
+  kd_spinlock_t lock={.val=0x45670101U};
+  pins=disables=enables=reads=0;
+  rate_hot=heat;
+  preempt_disable();
+  kd_spin_unlock_clobber_v1(&lock, 0x4444, 0x5555, 0x6666);
+  assert(lock.val==0x45670100U && !pins && !reads && disables==1 && enables==1);
+  assert(!kd_spin_fast_cpu.nondelegated && rate_hot==heat && hot_releases==heat+1);
+ }
+ puts("PASS generic provider unlock: native byte/count/pin release, hot core routing, pending/tail retained");
+ puts("PASS pinned cold entry: one CAS/pin, contention/heat changes and paired drain");
  puts("PASS independent native ownership: nested/early release, no CPU-heat reads or writes");
 }

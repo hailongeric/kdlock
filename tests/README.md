@@ -1,6 +1,15 @@
 # 当前测试入口
 
-最新[三轮完整性能矩阵](../bench/tclock_compare/results/20260923-spin-three-round.md)：
+2026-09-23 [统一 generic unlock 验证](../bench/tclock_compare/results/20260923-spin-generic-unlock.md)：
+基础2组及cold/非代理MCS/preempt/paired JIT共6/6组通过，冻结运行器22/22项通过。
+冷/热解锁均验证宽clobber及精确SP/IP/BP，保留pending/tail、抢占和原生在途计数；
+nested/early各2场真实JIT通过并排空，共160万次操作。
+1/16 cacheline × 1/4/20线程 × 六项 × 三轮，共108/108性能场次、9000万次操作通过；
+48场竞争KD全部实际JIT，共53566167次正文，24场单线程KD为NO_JIT。
+147项离线审计、冻结哈希及最终空闲检查通过。该批次使用移除on/off选项前的冻结运行器，
+未重跑全量单元、RCUHT、PMU、SELFTEST或真实IRQ/NMI压力；完整证据见报告。
+
+此前[三轮完整性能矩阵](../bench/tclock_compare/results/20260923-spin-three-round.md)：
 运行器默认3轮与汇总回归22/22通过；252/252场、19440万次计时操作通过并排空。
 84组各3份有效样本，独立审计339项检查通过；108场KD共111025047次实际JIT正文，
 包括全部96场四线程及以上竞争。249份冻结源码和9项二进制匹配，最终guest空闲。
