@@ -71,7 +71,7 @@ static void mcs(unsigned int n)
  pins--;
 }
 static void warm_spin(unsigned long addr)
-{ mcs(1); hits(addr,33); }
+{ mcs(8); hits(addr,33); }
 static void reset(void)
 {
  if(kd_hotlock_cpu) kd_hotlock_exit();
@@ -136,12 +136,13 @@ static void init_and_pins(void)
  kd_hotlock_record_mutex(0x2000);
  assert(!pins && disables==before_disable+1 && enables==before_enable+1);
 }
-/* Spin entries never advance the CPU clock. Every eligible MCS hit checks CPU heat;
- * the lock counter needs 33 subsequent entries to become hot. */
+/* Spin entries never advance the CPU clock. Each eight-publication batch checks
+ * CPU heat; the lock counter needs 33 subsequent entries to become hot. */
 static void boundaries(void)
 {
  reset();
- assert(KD_HOTLOCK_SPIN_MCS_INTERVAL==1 && KD_HOTLOCK_CHECK_INTERVAL==1024 && KD_HOTLOCK_SAMPLE_TARGET==32);
+ assert(KD_HOTLOCK_SPIN_MCS_INTERVAL==8 && KD_HOTLOCK_CHECK_INTERVAL==1024 && KD_HOTLOCK_SAMPLE_TARGET==32);
+ assert(KD_HOTLOCK_SPIN_CPU_WINDOW==4000000UL);
  assert(KD_HOTLOCK_CPU_WINDOW==40000000000UL);
  hits(0x1000,5000);
  assert(clocks==1 && !table(0)->used && !table(0)->rate_hot && !table(0)->rate_samples);
@@ -149,6 +150,11 @@ static void boundaries(void)
  now+=100;
  assert(clocks==1 && !table(0)->rate_samples && !table(0)->rate_hot);
  assert(table(0)->rate_begin==origin && !table(0)->used);
+ for(unsigned int i=1;i<8;i++) {
+  mcs(1);
+  assert(clocks==1 && table(0)->rate_samples==i && !table(0)->rate_hot);
+  assert(table(0)->rate_begin==origin && !table(0)->used);
+ }
  mcs(1);
  assert(clocks==2 && table(0)->rate_hot && !table(0)->rate_samples && !table(0)->used);
  assert(table(0)->rate_begin==now);
@@ -169,7 +175,7 @@ static void boundaries(void)
  now+=100;
  assert(clocks==3 && !table(0)->rate_samples && table(0)->rate_begin==origin);
  assert(s->count==32 && s->hot && s->begin==origin);
- mcs(1);
+ mcs(8);
  assert(clocks==4 && !table(0)->rate_samples && s->count==32 && s->hot);
  assert(table(0)->rate_begin==now && s->begin==origin);
  assert(kd_hotlock_record_spin(0x1000));
@@ -189,39 +195,45 @@ static void windows(void)
  assert(!kd_hotlock_record_spin(0x1000)); /* equality is cold */
  assert(!s->hot && !s->count && s->begin==now && table(0)->rate_hot);
  hits(0x1000,33); assert(s->hot);
- now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
+ /* The CPU window is shorter than the lock window. Use a fresh origin so
+  * this independent deadline check does not turn time backwards. */
+ reset(); warm_spin(0x1000); s=kd_hotlock_find(table(0),0x1000);
+ now=table(0)->rate_begin+KD_HOTLOCK_SPIN_CPU_WINDOW;
  hits(0x1000,2000); /* no MCS event: cached CPU heat remains unchanged */
  assert(table(0)->rate_hot);
- mcs(1);
+ mcs(8);
  assert(!table(0)->rate_hot && !s->hot && !s->count);
  assert(!kd_hotlock_query_spin(0x1000));
  hits(0x1000,2000); assert(!table(0)->rate_hot && !s->count);
- mcs(1);
+ mcs(8);
  assert(table(0)->rate_hot && !s->hot && !s->count && s->begin==now);
  hits(0x1000,33); assert(s->hot);
- reset(); now+=KD_HOTLOCK_CPU_WINDOW;
- mcs(1); assert(!table(0)->rate_hot && !table(0)->used);
- mcs(1); assert(table(0)->rate_hot && !table(0)->used);
+ reset(); now+=KD_HOTLOCK_SPIN_CPU_WINDOW;
+ mcs(8); assert(!table(0)->rate_hot && !table(0)->used);
+ mcs(8); assert(table(0)->rate_hot && !table(0)->used);
 }
-/* A single eligible event includes startup idle. After that, every event
- * measures its own interval; the exact deadline stays cold. */
+/* The first eight-event batch includes startup idle. Each later batch measures
+ * from the previous sample; the exact four-million-tick deadline stays cold. */
 static void cpu_batch_window(void)
 {
  reset();
  unsigned long origin=now;
- now=origin+39999999999UL;
- mcs(1);
+ now=origin+3999999UL;
+ mcs(8);
  assert(table(0)->rate_hot && table(0)->rate_begin==now && clocks==2);
  reset();origin=now;
- now=origin+40000000000UL;
+ now=origin+4000000UL;
+ mcs(7);
+ assert(clocks==1 && !table(0)->rate_hot && table(0)->rate_samples==7);
+ assert(table(0)->rate_begin==origin);
  mcs(1);
  assert(clocks==2 && !table(0)->rate_hot && !table(0)->rate_samples);
  assert(table(0)->rate_begin==now && !table(0)->used);
  now++;
- mcs(1);assert(clocks==3 && table(0)->rate_hot && !table(0)->rate_samples);
+ mcs(8);assert(clocks==3 && table(0)->rate_hot && !table(0)->rate_samples);
  for(unsigned int i=0;i<3;i++) {
-  now+=39999999999UL;
-  mcs(1);
+  now+=3999999UL;
+  mcs(8);
   assert(clocks==4+i && table(0)->rate_hot && !table(0)->rate_samples);
   assert(table(0)->rate_begin==now);
  }
@@ -234,11 +246,11 @@ static void backwards_and_zero(void)
  unsigned int before=clocks; now=50;
  assert(!kd_hotlock_record_spin(0x1000));
  assert(clocks==before+1 && table(0)->rate_hot && !s->hot && s->begin==50);
- mcs(1);
+ mcs(8);
  assert(!table(0)->rate_hot && !s->count && !s->hot);
- reset(); now=0; mcs(1);
+ reset(); now=0; mcs(8);
  assert(!table(0)->rate_hot && !table(0)->used && clocks==2);
- mcs(1);
+ mcs(8);
  assert(table(0)->rate_hot && table(0)->rate_begin==0 && clocks==3);
  hits(0x1000,32); before=clocks;
  assert(kd_hotlock_record_spin(0x1000));
@@ -274,8 +286,8 @@ static void hash_and_capacity(void)
  hits(keys[0],33);assert(kd_hotlock_query_spin(keys[0]));
  assert(table(0)->used==KD_HOTLOCK_ENTRIES);check_chains(table(0));
  /* Stable membership survives CPU cooling; heat and counts do not. */
- now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
- mcs(1);
+ now=table(0)->rate_begin+KD_HOTLOCK_SPIN_CPU_WINDOW;
+ mcs(8);
  assert(!table(0)->rate_hot && table(0)->used==KD_HOTLOCK_ENTRIES);
  for(unsigned int i=0;i<KD_HOTLOCK_ENTRIES;i++) {
   struct kd_hotlock_entry *s=kd_hotlock_find(table(0),keys[i]);
@@ -307,7 +319,7 @@ static void mutex_sampling(void)
  for(unsigned int i=0;i<100;i++) assert(kd_hotlock_query_mutex(0x1000));
  assert(!memcmp(&before,table(1),sizeof(before)) && clocks==before_clocks+1);
  assert(!table(0)->rate_samples && !table(0)->rate_hot && !table(0)->used);
- /* Mutex keeps 1024 entry samples and shares the 40-billion CPU window. */
+ /* Mutex keeps 1024 entry samples and its original 40-billion CPU window. */
  now=table(1)->rate_begin+39999999999UL;
  for(unsigned int i=0;i<1024;i++) kd_hotlock_record_mutex(0x1000);
  assert(table(1)->rate_hot && !table(1)->rate_samples && table(1)->rate_begin==now);
@@ -325,7 +337,7 @@ static void isolation_and_reentry(void)
  cpu_id=1;assert(!kd_hotlock_query_spin(0x1000));
  assert(!kd_hotlock_record_mutex(0x1000) && !pins);
  cpu_id=0;assert(kd_hotlock_query_spin(0x1000));
- hits(0x1000,32);reentry=irq_reentry;mcs(1);assert(!reentry);
+ hits(0x1000,32);reentry=irq_reentry;mcs(8);assert(!reentry);
  assert(kd_hotlock_find(table(0),0x1000)->count==32);
  reentry=irq_reentry;hits(0x1000,1);assert(!reentry);
  /* Both types use the same strict lock threshold but independent tables. */
@@ -339,7 +351,7 @@ static void isolation_and_reentry(void)
  assert(kd_hotlock_record_mutex(0x1000) && !pins);
  assert(!kd_hotlock_query_mutex(0x1000));
  hits(0x1000,5000); assert(!table(0)->rate_hot && !table(0)->used);
- mcs(1);
+ mcs(8);
  for(unsigned int i=0;i<KD_HOTLOCK_ENTRIES;i++) assert(kd_hotlock_record_spin(0x10000+i));
  assert(kd_hotlock_record_spin(0x20000)); /* fixed policy, even at capacity */
  assert(!kd_hotlock_query_spin(0x20000));
@@ -358,18 +370,31 @@ static void queue_event(void)
 static void mcs_publications(void)
 {
  reset();
- /* Even a publisher without a linked successor contributes one sample. */
+ /* Every publisher contributes once, including one without a successor.
+  * The first seven events only count; event eight reads the clock. */
+ for(unsigned int i=1;i<8;i++) {
+  queue_event();
+  assert(!table(0)->rate_hot && table(0)->rate_samples==i && clocks==1);
+ }
  queue_event();
  assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==2);
  for(unsigned int i=0;i<64;i++) queue_event();
- assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==66);
- /* A publication can cool the CPU; there is no later queue-head sample to
-  * reheat it during the same acquisition. The next publication may reheat. */
- now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
+ assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==10);
+ /* CPU heat is cached between batches. Only the eighth publication can cool
+  * it, and reheating requires another whole batch, not a queue-head sample. */
+ now=table(0)->rate_begin+KD_HOTLOCK_SPIN_CPU_WINDOW;
+ for(unsigned int i=1;i<8;i++) {
+  queue_event();
+  assert(table(0)->rate_hot && table(0)->rate_samples==i && clocks==10);
+ }
  queue_event();
- assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==67);
+ assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==11);
+ for(unsigned int i=1;i<8;i++) {
+  queue_event();
+  assert(!table(0)->rate_hot && table(0)->rate_samples==i && clocks==11);
+ }
  queue_event();
- assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==68);
+ assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==12);
 
  reset(); interrupt_context=true;
  for(unsigned int i=0;i<4;i++) queue_event();
@@ -378,12 +403,12 @@ static void mcs_publications(void)
  for(unsigned int i=0;i<4;i++) queue_event();
  assert(!table(0)->rate_hot && !table(0)->rate_samples && clocks==1);
  kd_spin_delegate=true;
- queue_event();
- assert(table(0)->rate_hot && clocks==2);
+ for(unsigned int i=0;i<8;i++) queue_event();
+ assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==2);
  cpu_id=1;
  assert(!kd_hotlock_spin_cpu_hot_pinned() && !table(0)->rate_samples);
- queue_event();
- assert(table(0)->rate_hot && clocks==3);
+ for(unsigned int i=0;i<8;i++) queue_event();
+ assert(table(0)->rate_hot && !table(0)->rate_samples && clocks==3);
  cpu_id=0;
 }
 int main(void)
@@ -394,6 +419,6 @@ int main(void)
  hotlock_mode="adaptive";assert(!kd_hotlock_init());kd_hotlock_exit();
  fail_alloc=true;assert(kd_hotlock_init()==-ENOMEM);
  assert(!kd_hotlock_cpu);
- puts("PASS exact hash: spin-MCS-entry1/CPU-window4e10/mutex-CPU1024/lock33/collision/256-capacity/no-eviction/independent/query/window/zero/drop-interrupt/observe");
+ puts("PASS exact hash: spin-MCS-entry8/CPU-window4e6/mutex-CPU1024-window4e10/lock33/collision/256-capacity/no-eviction/independent/query/window/zero/drop-interrupt/observe");
  return 0;
 }

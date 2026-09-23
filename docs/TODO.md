@@ -2,7 +2,8 @@
 
 Current work list as of **2026-09-23**. The implementation includes `39b0e7c`
 (continuation placement), `1eaaf99` (single-pass batch metadata) and the current
-default heat gate/MCS-entry policy committed in `ccefa62`. Contracts live in
+heat gate/MCS-entry mechanism committed in `ccefa62`, with the newly requested
+spin sampling interval/window described below. Contracts live in
 [DESIGN](DESIGN.md), [execution flow](JIT_EXECUTION.md) and
 [register ABI](JIT_REGISTER_ABI.md); measurements and the ordered performance
 backlog live in [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md). Historical evidence
@@ -21,15 +22,21 @@ backing, hints and normal-root completion are implemented. Explicit KD objects
 use one 32-bit word; nondelegating requests use the full pending/MCS queue.
 `spin_delegate=0` remains a native control, distinct from actual JIT evidence.
 
-CPU heat gates both observe/adaptive callers. Spin samples every actual MCS
-publication without queue-depth filtering; mutex samples every 1024 entries.
-Both use the 40-billion-tick CPU window and a per-lock check on hit 33 within
-2.5 billion ticks. Separate CPU/type exact-key tables have 256 buckets/entries,
+CPU heat gates both observe/adaptive callers. Spin counts each actual MCS
+publication without queue-depth filtering and samples the clock every eight
+publications, requiring a batch delta strictly below 4 million TSC ticks.
+Mutex keeps its 1024-entry batch and 40-billion-tick CPU window. Both retain
+the per-lock check on hit 33 with a strict 2.5-billion-tick window.
+Separate CPU/type exact-key tables have 256 buckets/entries,
 no ranked candidates, eviction or busy field. Unknown identities at capacity
 stay native in adaptive; owner/ticket/frame lifetime is independent of heat.
 Benefit-based native/probe/delegate admission remains unimplemented.
 
-The [current full matrix](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)
+The [current MCS8/4-million matrix](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)
+passed 168/168 sessions; 8/20-thread adaptive medians exceeded the preceding historical defaults,
+but 3/4-thread and consistent single-thread gains remain unresolved.
+
+The [earlier MCS1/40-billion full matrix](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)
 and [optimization investigation](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)
 cover their frozen sources only. Known unresolved failures remain:
 

@@ -3,7 +3,8 @@
 ## 1. 当前进展
 
 当前实现包含 `39b0e7c` 的continuation错位布局、`1eaaf99` 的简单batch元数据单次
-初始化及 `6064c6e` 的通用clobber解锁；默认热度分流和MCS-entry规则保存在 `ccefa62`。
+初始化及 `6064c6e` 的通用clobber解锁；CPU热值C `if` 分流和MCS-entry机制来自 `ccefa62`，
+采样批次及窗口使用下述当前参数。
 模块通过显式 `kd_spinlock_t` 与caller-clobber v1 API接入spin，32位KD字承载
 获取、pending、MCS tail及combiner仲裁。Linux、TCLock、KD对象不能混用协议。
 mutex实现与嵌套控制保留，全局mutex hook仍未安装；加载provider不自动代理普通Linux锁。
@@ -13,8 +14,9 @@ mutex实现与嵌套控制保留，全局mutex hook仍未安装；加载provider
 解锁无条件走通用clobber入口，冷/热均传lock/SP/IP/BP，provider依据低字节5或
 普通状态完成对应释放，不读取CPU热值。没有on/off编译壳选择或手工push/pop。
 
-spin CPU每次实际MCS发布检查400亿TSC窗口，不检查队列深度；2/3线程真实入队也可升温。
-mutex CPU每1024次入口检查；两类单锁均第33次检查25亿窗口。热表为每CPU/type
+spin CPU每次实际MCS发布计数，每8次读取一次时钟，整批耗时严格小于400万TSC ticks才判热，
+不检查队列深度；2/3线程真实入队也可升温。mutex CPU仍每1024次入口检查400亿窗口；
+两类单锁均第33次检查25亿窗口。热表为每CPU/type
 256桶、256条完整地址记录，无候选、淘汰或busy字段；满表不覆盖。owner/ticket/frame
 独立存活。完整规则及准入边界见 [执行流](JIT_EXECUTION.md)。
 
@@ -22,7 +24,9 @@ mutex CPU每1024次入口检查；两类单锁均第33次检查25亿窗口。热
 普通完成先pop再通知，native最终解锁等待根ticket借用退休。布局及TCLock差异见
 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
 
-最新组合版本覆盖见[完整三轮矩阵](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)，
+当前MCS8/CPU400万组合已完成[168场三轮矩阵](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)，
+8/20线程adaptive本批未观察到历史对照退化，3/4线程仍慢、单线程未一致改善。此前MCS1/CPU400亿版本覆盖见
+[完整三轮矩阵](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)，
 优化隔离、失败候选及短/长批次限制见[性能调查](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。
 历史结果不能拼接成当前全量验收。并发冷准备、pinned mutex以及访问时guard等
 已知边界见 [TODO](TODO.md)；后续性能任务只维护在 [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)。

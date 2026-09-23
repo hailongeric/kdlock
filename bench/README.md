@@ -1,15 +1,22 @@
 # Benchmarks
 
 当前性能入口是[三后端直接API对照](tclock_compare/README.md)：Linux原生、TCLock和当前KD。
-KD默认按CPU热值分流获取、统一generic clobber解锁，CPU热度只按实际MCS发布计数。
+KD默认按CPU热值分流获取、统一generic clobber解锁；spin CPU每8次实际MCS发布检查400万TSC ticks窗口。
+单锁33次/25亿窗口、mutex CPU1024次/400亿窗口不变。
 
-最新[adaptive 窗口与采样间隔诊断](tclock_compare/results/20260923-adaptive-windows.md)
+最新[MCS8/CPU400万完整三轮](tclock_compare/results/20260923-mcs8-cpu4m.md)完成168/168场、
+12960万次操作并排空；基础/定向单元3组和23项错误变体通过。adaptive在c1/c16的
+8线程中位数为4.072/3.978，20线程为5.450/5.179 Mops/s；相比上一批默认历史中位数
+分别提升7.89%/5.84%和2.98%/2.04%。3/4线程仍落后，单线程未一致改善；完整波动见报告。
+
+此前[adaptive 窗口与采样间隔诊断](tclock_compare/results/20260923-adaptive-windows.md)
 覆盖单锁窗口、CPU窗口、MCS间隔的6个独立候选及1个组合，各完整配置三轮。
-间隔调整改善了部分8线程成绩，过紧窗口损害20线程；未找到同时改善3/4线程并守住8/20线程的替代值，默认参数保留。
+间隔调整改善了部分8线程成绩，过紧窗口损害20线程；该轮结束时恢复当时默认。
+用户随后指定当前MCS8/CPU400万组合，不能用此前两个单参数候选推定组合收益。
 此前[单锁计数32/128/1024诊断](tclock_compare/results/20260923-adaptive-threshold-sweep.md)也未保留候选。
 这些KD参数诊断不替代下面的三后端矩阵。
 
-最新[完整三轮矩阵](tclock_compare/results/20260923-spin-default-heat-full3.md)完成168/168场、
+此前MCS1/CPU400亿的[完整三轮矩阵](tclock_compare/results/20260923-spin-default-heat-full3.md)完成168/168场、
 12960万次操作并排空，包含现有batch元数据和continuation布局优化。
 20线程KD observe中位数c1/c16为5.324/5.051 Mops/s；两模式20线程spread均低于0.8%。
 3/4线程仍慢于Linux/TCLock，低线程异常快样本和全部三轮结果均保留。

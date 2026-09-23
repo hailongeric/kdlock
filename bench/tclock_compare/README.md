@@ -16,9 +16,9 @@ KD宏取得一次preempt pin后用C `if`读取per-CPU热值。冷CPU调用
 `kd_spin_unlock_clobber_v1`，由provider识别低字节5的原生所有权或执行热协议。
 寄存器仅在约束/clobber中声明，保存位置由编译器决定，可出现在if之前；宏不手写push/pop。
 
-CPU热度只在每次合格MCS发布时采样一次，fast/pending不计数；冷/热CPU规则相同。
-2/3线程实际入队也可升温，但不保证存在可代理后继。CPU窗口为400亿TSC ticks；
-单锁入口第33次检查独立窗口，mutex CPU仍每1024次入口检查。每CPU/type保留256桶、
+spin CPU每次合格MCS发布计数，每8次读取一次时钟；整批耗时严格小于400万TSC ticks才判热。
+fast/pending不计数，冷/热CPU规则相同。2/3线程实际入队也可升温，但不保证存在可代理后继。
+两类单锁入口第33次检查25亿窗口；mutex CPU仍每1024次入口检查400亿窗口。每CPU/type保留256桶、
 256条精确地址记录，碰撞链完整匹配、满表保留已有身份；非task上下文跳过统计。
 `spin_delegate=0`跳过代理及热度采样。当前没有队列深度策略、on/off调用壳选项或两个旧开关判断。
 
@@ -26,6 +26,8 @@ observe在CPU热后固定准入，adaptive再判断单锁热度；上下文、ow
 CPU曾变热后依赖后续MCS事件降温，安静的单线程阶段不会主动过期。热度cookie只表示一个CPU
 共享的缓存热值，不存获取路径或嵌套深度。记录使用`caller_shell=cold_clobber`、
 `caller_abi=clobber`、`cookie_storage=percpu_rate_hot`、`cpu_heat_policy=mcs_entry`；
+`mcs_entry`标识实际MCS发布这一事件来源，不编码采样间隔或窗口数值；具体参数由冻结的
+`kd_hotlock.c`及其源码哈希确定。同为`mcs_entry`的不同参数版本也不能合并取优；
 旧样本缺失字段或使用不同策略时分别汇总。
 
 三种后端保留相同cacheline更新、解锁后四组乘加及循环成本；吞吐和ns/op以完整操作计算，
@@ -130,17 +132,20 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
-| [adaptive 窗口与采样间隔](results/20260923-adaptive-windows.md) | 单锁/CPU窗口、MCS间隔6个独立候选及1个组合；195场有效、1场20线程零JIT拒绝并停止该候选，保留20个未执行项；默认参数已恢复 |
+| [MCS8/CPU400万组合](results/20260923-mcs8-cpu4m.md) | 最新168/168场、56配置各3轮；8/20线程adaptive中位数高于上一批默认历史值，3/4线程仍落后；保留所有快慢样本及参数组合 |
+| [adaptive 窗口与采样间隔](results/20260923-adaptive-windows.md) | 单锁/CPU窗口、MCS间隔6个独立候选及1个组合；195场有效、1场20线程零JIT拒绝并停止该候选，保留20个未执行项；该轮恢复当时的MCS1/CPU400亿默认，不含后续指定的MCS8/CPU400万组合 |
 | [adaptive 阈值诊断](results/20260923-adaptive-threshold-sweep.md) | KD单锁计数32/128/1024及恢复32，c1/c16、3/4/8/20线程各三轮；两候选不满足保留条件，默认仍为32；不是新增三后端排名 |
-| [默认热度分流完整三轮](results/20260923-spin-default-heat-full3.md) | 最新168场：1/2/3/4/8/16/20线程，56配置各3轮；39b0e7c加冻结工作树修改，包含现有布局优化 |
+| [默认热度分流完整三轮](results/20260923-spin-default-heat-full3.md) | 此前MCS1/CPU400亿的168场：1/2/3/4/8/16/20线程，56配置各3轮；39b0e7c加冻结工作树修改，包含布局优化 |
 | [单线程与20线程调查](results/20260923-spin-single-hot-balance.md) | metadata精简、continuation错位、48场矩阵和长批次布局对照；保留失败候选及代码对齐的因果限制 |
 | [昨日恢复基线](results/20260922-performance-recovery.md) | 旧采样规则下20线程5.197/4.809 Mops/s，两轮最大值；该快版没有匹配PMU |
 | [统一解锁ABI验证](results/20260923-spin-generic-unlock.md) | broad-clobber、JIT COMPLETE/FULL及nested/early验证；其108场属于布局优化前冻结版本 |
 | [普通spin IRQ/wrapper验证](results/20260922-plain-spin.md) | IRQ/BH状态、抢占配对及wrapper修复，含首次失败记录 |
 
-最新矩阵20线程KD observe中位数c1/c16为5.324/5.051 Mops/s，两模式spread均低于0.8%。
+当前MCS8/CPU400万组合已完成上述最新矩阵：20线程adaptive中位数c1/c16为5.450/5.179 Mops/s，
+spread为0.87%/0.48%。8线程也未观察到历史对照退化；3/4线程和单线程收益未解决。
+此前MCS1/CPU400亿完整矩阵20线程KD observe中位数c1/c16为5.324/5.051 Mops/s，两模式spread均低于0.8%。
 3/4线程仍慢于Linux/TCLock；低线程波动未消除，c1单线程TCLock最大40.899与中位14.854相差很大。
-本次完整矩阵未采PMU；不能将此前不同冻结输入的PMU数值移作本版测量。
+该历史完整矩阵未采PMU；不能将不同冻结输入的吞吐或PMU数值移作当前组合测量。
 其余过时阶段报告已合并到[性能实验历史索引](results/HISTORY.md)，保留固定Git原文、输入身份及归档哈希。
 
 ## 当前 TCLock 设置
@@ -186,8 +191,9 @@ v2，客户端和 workload 模块必须同时重建。
 
 运行器默认同时运行 `--hotlock-mode observe adaptive`。
 `observe` 在CPU热后固定 KD 准入并记录本地统计；冷CPU同样进入完整原生获取。
-`--hotlock-mode adaptive` 使用spin CPU每次合格MCS事件、单锁入口 count 大于32（33次）的
-独立时间窗口确认；每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
+`--hotlock-mode adaptive` 使用spin CPU每8次合格MCS发布检查400万TSC ticks窗口、
+单锁入口 count 大于32（33次）检查25亿窗口的独立确认；两种时间差都要求严格小于窗口。
+每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
 满表不覆盖已有身份，未收录锁或冷锁保持原生。
 两者使用同一输出根目录下带 `-kdlock-{observe|adaptive}` 的独立会话目录，
 汇总保留模式列；Linux/TCLock 标为 `not_applicable`。

@@ -8,13 +8,15 @@
 ## 1. 当前状态与证据边界
 
 当前实现包含 `39b0e7c` 的continuation错位布局、`1eaaf99` 的简单batch元数据
-单次初始化，以及 `ccefa62` 保存的默认CPU热值C `if` 获取和MCS发布采样。
+单次初始化，以及 `ccefa62` 保存的CPU热值C `if` 获取和MCS发布计数机制；
+spin采样间隔及窗口使用下述用户新指定的组合。
 解锁使用通用clobber入口。冷路径保留完整
 CAS/pending/MCS；获取的宽clobber只属于热分支，解锁始终传递lock/SP/IP/BP。
 寄存器保存由编译器决定，不手写push/pop，也不保证所有保存都在热分支内。
 
-spin CPU每次实际MCS发布检查400亿TSC窗口，无队列深度门槛；fast/pending不计数。
-mutex CPU每1024次入口检查，单锁第33次检查25亿窗口。精确地址哈希无候选、淘汰或
+spin CPU每次实际MCS发布计数，每8次采时并要求整批耗时严格小于400万TSC ticks；
+无队列深度门槛，fast/pending不计数。mutex CPU仍每1024次入口检查400亿窗口，
+两类单锁均第33次检查25亿窗口。精确地址哈希无候选、淘汰或
 busy字段，满表保留已有身份；owner/ticket/frame不依赖热表。规则以
 [执行流](JIT_EXECUTION.md#21-热度与角色)为准。
 
@@ -23,9 +25,10 @@ busy字段，满表保留已有身份；owner/ticket/frame不依赖热表。规�
 continuation在低12 KiB内错位，高8 KiB等待栈不变；完整布局见
 [frames](design/frames.md#911-reuse-before-copy-contract)。这些不再作为待实现任务。
 
-| 当前证据 | 结论与边界 |
+| 现有证据 | 结论与边界 |
 | --- | --- |
-| [默认热度分流完整三轮](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md) | 168场覆盖1/2/3/4/8/16/20线程、c1/c16和observe/adaptive；低线程仍有明显波动及相对TCLock差距 |
+| [MCS8/CPU400万组合](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md) | 当前168/168场、三轮；8/20线程adaptive高于上一批默认历史值，3/4线程仍慢，单线程未一致改善 |
+| [默认热度分流完整三轮](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md) | 此前MCS1/CPU400亿版本的168场，覆盖1/2/3/4/8/16/20线程、c1/c16和observe/adaptive；不能替代当前MCS8/CPU400万组合的验收 |
 | [元数据与存储布局调查](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md) | 20线程恢复到历史水平；单线程短测较新基线下降约5%–6%，独立长对照未复现一致降幅；代码地址也变化，未隔离缓存根因 |
 | [历史恢复](../bench/tclock_compare/results/20260922-performance-recovery.md) | 属于当时采样器；其中PMU来自恢复前慢版，不能冒充历史快版或当前PMU |
 
@@ -47,7 +50,10 @@ soft lockup及其他真实限制保留在 [TODO](TODO.md#current-checkpoint)。
 同场ns/op，同时报告min/median/max/spread、KD/Linux、KD/TCLock及所有原始样本。
 旧版成绩只作历史参照；当前配置或组件的诊断对照不能混为新增旧KD正式测量臂。
 
-- [x] 完成当前默认壳的完整三轮线程矩阵，以及元数据/布局优化的定向功能和独立长对照。
+- [x] 完成此前默认壳MCS1/CPU400亿的完整三轮线程矩阵，以及元数据/布局优化的定向功能和独立长对照。
+- [x] 按用户指定的MCS8/CPU400万组合完成[正式三方矩阵](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)：
+  c1/c16、1/2/3/4/8/16/20线程各三轮，168/168通过并排空；保留组合。8/20线程本批未见历史对照退化，
+  3/4线程和单线程目标未完成，不能将矩阵通过解释为收益准入已实现。
 - [ ] 诊断已知并发冷准备故障。单CPU48000次预热是稳态测量方法，不是修复；
   没有在当前版本复现也不能宣布旧根因消失。故障位置见 [TODO](TODO.md#current-checkpoint)。
 - [ ] 分开衡量冷启动、本地热度准备及稳态。其他CPU不会因单CPU准备自动变热；
@@ -85,11 +91,13 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
   表明减少单锁采时仍未消除3/4线程短代理批次；收益准入继续按P1.1评估。
 - [x] 扩展到单锁窗口、CPU窗口和MCS间隔及成比例组合的
   [三轮诊断](../bench/tclock_compare/results/20260923-adaptive-windows.md)。减少MCS采时改善部分8线程成绩，
-  过紧窗口损害20线程，低线程未一致改善；保留原默认。窗口/间隔相互影响，不能仅按采时次数推定收益。
+  过紧窗口损害20线程，低线程未一致改善；该轮结束时恢复原默认。
+  用户随后指定MCS8/CPU400万的新组合，效果以匹配源码的正式矩阵为准。
+  窗口/间隔相互影响，不能仅按采时次数推定收益。
 - [ ] 在同一冻结构建中分离caller spill/reload、SP/IP/BP传递、已有pin复用及热表成本。
   普通API自己的抢占保护不可删除，已撤回的clock强制内联不作为优化成果。
 - [ ] 比较cold、local-positive、碰撞地址流和窗口重置，区分均摊成本与峰值。
-  所有候选保持MCS1/400亿窗口/lock32语义，除非任务明确调整策略。
+  所有成本隔离候选保持当前MCS8/400万CPU窗口/lock32语义，除非任务明确调整策略。
 - [ ] 单线程短/长批次分别报告，不能将长度变化产生的绝对吞吐跳升归为布局收益。
 
 以完整操作吞吐为验收；组件ns/call或指令数下降只能解释候选，不能替代实际JIT覆盖。

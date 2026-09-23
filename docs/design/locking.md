@@ -19,8 +19,9 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 当前 spin/mutex 各自每 CPU 256 桶、256 条预分配记录，以槽索引处理冲突并匹配
 完整锁地址。命中只增加该锁 count，没有候选排名、score/error 或淘汰。
 满表保留已有记录，未收录锁在 adaptive 下走原生；地址映射保持至卸载。
-模块初始化建立 CPU 时间起点；spin CPU 每次合格MCS事件检查
-一次，mutex CPU 保持每 1024 次入口检查，两者共用 400 亿 TSC 窗口。
+模块初始化建立 CPU 时间起点；spin CPU 每累计 8 次合格 MCS 发布采时检查，
+整批耗时严格小于 400 万 TSC ticks 才判热。mutex CPU 保持每 1024 次入口检查，
+整批耗时严格小于 400 亿 TSC ticks 才判热；spin 调参不改变 mutex 窗口。
 时间差取上次检查到本批结束的整批耗时，首批从初始化计时。spin 共用 `xchg_tail()`
 默认在交换队尾前记录，原生、代理、虚拟嵌套均覆盖；fast/pending、入队前取消及
 节点耗尽轮询不计数。CPU 热度仅按实际 MCS 发布计数，冷/热、原生/代理/虚拟入队规则一致；
@@ -78,8 +79,10 @@ count decrement and unpin, preserving pending/tail; other states enter the
 existing unlock core. JIT sees one completion endpoint without a caller-side
 cold/hot unlock branch. The cookie is only the existing per-CPU rate_hot view: one per CPU
 shared by all locks, with no acquisition path or nesting count. CPU heat
-changes affect only subsequent acquisitions, while native MCS still samples heat
-once at each actual publication, without consulting queue depth. The drain scan includes this count. Hot acquisitions use the
+changes affect only subsequent acquisitions. Native MCS counts each actual
+publication once, without consulting queue depth; every eight publications it
+samples the clock and requires the batch delta to be strictly below 4,000,000
+TSC ticks. The drain scan includes the native in-flight count. Hot acquisitions use the
 shared pinned core and existing fast-owner/ticket routing; the provider still
 checks `spin_delegate` there. Observe fixes lock admission only after CPU heat
 in the paired shell. The retained API keeps its original policy.

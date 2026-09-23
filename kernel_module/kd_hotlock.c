@@ -11,9 +11,11 @@
 #include "kd_hotlock.h"
 
 #define KD_HOTLOCK_CHECK_INTERVAL 1024U
-/* Inspect each actual spin MCS publication, without a queue-depth filter.
- * The CPU time window remains shared with the mutex CPU sampler. */
-#define KD_HOTLOCK_SPIN_MCS_INTERVAL 1U
+/* Count actual spin MCS publications without a queue-depth filter. Batch the
+ * clock read over eight publications; use a spin-specific window so admission
+ * tuning cannot change the independent mutex CPU clock. */
+#define KD_HOTLOCK_SPIN_MCS_INTERVAL 8U
+#define KD_HOTLOCK_SPIN_CPU_WINDOW 4000000UL
 #define KD_HOTLOCK_CPU_WINDOW 40000000000UL
 #define KD_HOTLOCK_INITIAL_WINDOW 2500000000UL
 #define KD_HOTLOCK_SAMPLE_TARGET 32U
@@ -90,11 +92,11 @@ static struct kd_hotlock_entry *kd_hotlock_insert(struct kd_hotlock_table *t,
 }
 /* Initialization supplies the first time origin. Ordinary records only count;
  * one TSC per CPU batch measures the whole batch since the previous check
- * (one eligible spin MCS event or 1024 mutex entries). A continuously hot CPU must
+ * (eight eligible spin MCS events or 1024 mutex entries). A continuously hot CPU must
  * not restart the independent lock batches. Cooling/reheating resets them,
  * retaining bucket membership and leaving ownership storage untouched. */
 static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_now,
-                             unsigned int interval)
+                             unsigned int interval, unsigned long window)
 {
   unsigned long now;
   unsigned int i;
@@ -104,7 +106,7 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
   now = rdtsc_ordered();
   *sampled_now = now;
   continuous = t->rate_hot;
-  t->rate_hot = now >= t->rate_begin && now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
+  t->rate_hot = now >= t->rate_begin && now - t->rate_begin < window;
   continuous &= t->rate_hot;
   t->rate_begin = now;
   t->rate_samples = 0;
@@ -147,7 +149,7 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   /* Spin CPU heat advances only at eligible MCS events. Entry records retain the
    * cached CPU gate and original per-lock sampling; mutex keeps both clocks. */
   if (record && kind == 1 &&
-      !kd_hotlock_clock(t, &now, KD_HOTLOCK_CHECK_INTERVAL))
+      !kd_hotlock_clock(t, &now, KD_HOTLOCK_CHECK_INTERVAL, KD_HOTLOCK_CPU_WINDOW))
     goto out;
   if (!t->rate_hot)
     goto out;
@@ -183,7 +185,7 @@ bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(a
 bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false, false); }
 bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false, false); }
 
-/* All queue producers sample once at publication, regardless of queue depth.
+/* All queue producers count once at publication, regardless of queue depth.
  * Native acquisition warms naturally without delegation or another flag.
  * Reuse the pin and drop non-task samples, just like entry statistics. */
 void kd_hotlock_record_spin_mcs_pinned(void)
@@ -194,7 +196,8 @@ void kd_hotlock_record_spin_mcs_pinned(void)
   if (!in_task())
     return;
   t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
-  kd_hotlock_clock(t, &now, KD_HOTLOCK_SPIN_MCS_INTERVAL);
+  kd_hotlock_clock(t, &now, KD_HOTLOCK_SPIN_MCS_INTERVAL,
+                   KD_HOTLOCK_SPIN_CPU_WINDOW);
 }
 
 /* Specialize the shared sampler for the acquisition pin. No extra public

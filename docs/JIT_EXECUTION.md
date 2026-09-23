@@ -25,7 +25,7 @@
    每CPU `rate_hot`，observe/adaptive共用同一默认调用壳。cookie引用
    `kd_spin_direct_cookie`，只表示当前CPU热度，不记录路径或深度。
    冷分支普通C调用完整原生CAS/pending/MCS：增加nondelegated在途计数，CAS失败值
-   直接进入慢路径，不重复初始CAS；仍在实际MCS发布处更新CPU热度，获取低字节为5。
+   直接进入慢路径，不重复初始CAS；仍在实际MCS发布处累计CPU热度样本，获取低字节为5。
    热分支用 `KD_SPIN_DIRECT_CALL` 调用pinned clobber入口，命名continuation仅在
    该CALL之后。宽clobber只声明在获取热分支，保存由编译器安排，可能部分位于if前；
    不手写push/pop。provider复用已有pin并检查 `spin_delegate`，宏不读取策略开关。
@@ -72,11 +72,13 @@ mutex保留原mutex、调度gate、task记录与native owner/ACK协议，
 
 spin/mutex 每 CPU 独立 256 桶、256 条预分配记录，哈希冲突用完整地址和槽索引
 链表区分。没有候选/分数/淘汰，命中只给该锁 count 加一；满表不覆盖已有记录。
-初始化建立 CPU 时间；spin CPU 每次合格 MCS 事件检查一次，mutex CPU 保持
-每 1024 次入口调用检查；两者都要求整批耗时严格小于 400 亿 TSC ticks。
+初始化建立 CPU 时间；spin CPU 每累计 8 次合格 MCS 发布读取一次时钟，
+整批耗时严格小于 400 万 TSC ticks 才判热。mutex CPU 保持每 1024 次入口调用检查，
+整批耗时严格小于 400 亿 TSC ticks 才判热；两种 CPU 窗口独立。
 批间沿用缓存热值，首批从初始化计时。入口仍按缓存 CPU 热值决定是否查锁表。
 队尾发布采样覆盖冷/热 CPU 的原生、代理和虚拟嵌套节点；fast/pending 不计数。
-每次实际入队只采样一次，不遍历后继链、不在队头补采样。已删除队列门槛参数与策略开关。
+每次实际入队只计数一次，每 8 次发布才采时，不遍历后继链、不在队头补采样。
+已删除队列门槛参数与策略开关。
 2/3线程只要频繁实际入队，也能更新 CPU 热值；不再按线程数保证冷态。
 spin/mutex 单锁 count 大于 32（第 33 次）才检查 25 亿 TSC 窗口并更新 hot/时间、清零计数。
 单锁仍统计入口调用。mutex 同次到期共享采时，spin CPU/锁分别采时。
