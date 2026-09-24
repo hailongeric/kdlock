@@ -61,7 +61,15 @@ class Session:
         # contention. Validate against that phase's explicit worker geometry.
         spec = self.record if spec is None else spec
         args = [HERE / "client", "--cachelines", self.record["cachelines"],
-                "--iterations", iterations, "--cpus", ",".join(map(str, spec["cpus"]))]
+                "--cpus", ",".join(map(str, spec["cpus"]))]
+        # Only the measured phase uses the continuous timed workload. Warmup
+        # keeps its exact per-worker count and the same CPU cohort.
+        if label == 'measure' and spec.get('duration_ms', 0):
+            for name in ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
+                         'sample_ms', 'collector_cpu'):
+                args += ['--' + name.replace('_', '-'), spec[name]]
+        else:
+            args += ['--iterations', iterations]
         try:
             raw = self.run(args, f"{label}.json", timeout=120)
         except Failure as error:
@@ -70,7 +78,13 @@ class Session:
             raise
         self.faults()
         m = json.loads(raw)
-        validate_measurement(m, spec, iterations)
+        phase_spec = (dict(spec, duration_ms=0, measurement_mode='fixed_iterations')
+                      if label != 'measure' and spec.get('duration_ms', 0) else spec)
+        peak = validate_measurement(m, phase_spec, iterations)
+        if peak is not None:
+            # The raw client file remains unchanged; derived scores live with
+            # the validated session and can be recomputed from its samples.
+            m['peak'] = peak
         require(self.counts(label)["active"] == 0, "workers did not drain", "UNDRAINED")
         return m
 

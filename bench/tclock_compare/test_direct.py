@@ -17,6 +17,66 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_timed_session_uses_fixed_warmup_and_continuous_measurement(self):
+        session = BackendSession.__new__(BackendSession)
+        spec, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['native'], duration_ms=2000))
+        session.record = spec
+        session.counts = Mock(return_value=dict(active=0))
+        session.faults = Mock()
+        session.run = Mock(return_value='{}')
+        peak = dict(throughput_ops_s=1e6)
+        with patch('bench_session.validate_measurement', side_effect=[None, peak]) as validate:
+            session.phase('warmup', 48000)
+            warmup = session.run.call_args.args[0]
+            self.assertIn('--iterations', warmup)
+            self.assertNotIn('--duration-ms', warmup)
+            self.assertEqual(validate.call_args.args[1]['duration_ms'], 0)
+            result = session.phase('measure', 100)
+            measure = session.run.call_args.args[0]
+            self.assertNotIn('--iterations', measure)
+            self.assertIn('--duration-ms', measure)
+            self.assertEqual(validate.call_args.args[1]['duration_ms'], 2000)
+            self.assertEqual(result['peak'], peak)
+
+    def test_timed_plan_and_peak_summary_keep_whole_run_visible(self):
+        args = Namespace(cachelines=[1], threads=[3], repeats=2, iterations=100,
+            backends=['native', 'tclock', 'kdlock'], hotlock_mode=['adaptive'],
+            duration_ms=2000)
+        plan = run.make_plan(args)
+        self.assertTrue(all(s['peak_window_ms'] == s['peak_settle_ms'] == 300 and
+                            s['sample_ms'] == 10 and s['collector_cpu'] == 30 and
+                            s['measurement_mode'] == 'timed_peak' for s in plan))
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plan)
+            for spec in plan:
+                folder = out/spec['name']; folder.mkdir()
+                # Winning peak and winning whole-run mean belong to different
+                # rounds. Selection must keep the peak's matching whole rate.
+                rate = (2 - spec['repeat']) * 1e6
+                whole = (1 + spec['repeat']) * 0.5e6
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True,
+                    measurement=dict(completed=whole * 2, wall_ns=2e9,
+                        data_ok=True, complete=True,
+                        peak=dict(throughput_ops_s=rate, amortized_ns_op=1e9/rate))))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            for row in rows:
+                self.assertEqual(row['comparison_policy'], 'best_valid_warmed_peak')
+                self.assertEqual(row['best_throughput_ops_s'], 2e6)
+                self.assertEqual(row['best_whole_throughput_ops_s'], 0.5e6)
+                self.assertEqual(row['best_amortized_ns_op'], 500)
+                self.assertEqual(row['throughput_over_linux'], 1)
+                self.assertEqual(row['min_throughput_ops_s'], 1e6)
+        args.collector_cpu = 1
+        with self.assertRaisesRegex(run.Failure, 'collector CPU'):
+            run.make_plan(args)
+        args.collector_cpu, args.duration_ms = 30, 600
+        with self.assertRaisesRegex(run.Failure, 'timing intervals'):
+            run.make_plan(args)
+
     def test_warmup_uses_all_workers_without_changing_preparation(self):
         cpus, nodes = [2, 7, 11], [0, 1, 0]
         warmup = dict(schema=1, complete=True, data_ok=True, workload='cacheline',

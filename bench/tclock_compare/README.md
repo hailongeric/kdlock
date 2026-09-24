@@ -73,6 +73,16 @@ worker，复用相同的数量及CPU绑定配置；预热worker退出并完成�
 后续benchmark使用并保留该固定频率政策，不自动恢复动态1–3GHz；运行前后记录并核对设置，
 重启后若设置丢失则重新应用。此设置未配置为系统开机持久化。
 历史动态/固定频率成绩保持各自原标注，不混合统计。
+用户随后指定稳态峰值口径：连续测量2秒，取其中最高300ms窗口，同时保留整段吞吐。
+使用`--duration-ms 2000 --peak-window-ms 300`启用；原固定迭代模式仍保留，不能与新口径混合取优。
+三方都先完成上述全worker预热，测量前300ms作为额外稳定时间，不进入峰值候选。
+每个worker在完整正文及解锁后工作完成后，每256次发布一次独立进度并检查共同截止时间；
+CPU30上的collector每10ms读取进度，原始快照及其读前/读后时间戳全部保留。
+只有全部worker已经进入且尚未退出的窗口参与选择；时长取实际端点间隔（至少300ms），
+不插值，也不使用固定300ms除数掩盖采样延迟。窗口计数误差上界为256×线程数，
+快照读取时间跨度另行报告。采样有均摊成本，三方采用相同规则；不能把口径变化记作锁优化收益。
+整段吞吐使用精确完成数及全部worker返回时间，包含截止检查/排空尾部；JIT比例也只针对整段，
+不声称知道峰值窗口内的JIT比例。CPU30为额外观测CPU，不计入工作线程；runner的准备CPU集合不变。
 仅保留这一组直接调用方式，不再使用 `--abis`。
 只在 recovery guest 中按[操作手册](../../docs/AGENTS.md)核对快照、依赖和空闲状态；
 现有 `kdclobber2` 内核不重建。输出必须是新的仓库外目录。
@@ -134,6 +144,10 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 `summary.csv/json` 用 `best_throughput_ops_s`、`best_amortized_ns_op` 报告同一
 获选会话的吞吐与摊销时间，`best_session` 指向原始会话，
 `comparison_policy=best_valid_throughput` 标明口径，继续从有效样本选取最大吞吐。
+计时模式改用`comparison_policy=best_valid_warmed_peak`，上述主字段为获选300ms峰值；
+同一获选会话的整段值另存`best_whole_throughput_ops_s`和`best_whole_amortized_ns_op`，
+`best_peak`保留原始快照索引、实际跨度、逐worker差值和误差界。
+本次连续计时基线及后续优化见[300ms稳态峰值调查](results/20260924-warmed-peak.md)。
 另以 `min_throughput_ops_s`、`median_throughput_ops_s`、`max_throughput_ops_s`
 报告有效吞吐的最小值、中位数、最大值；`throughput_spread_pct` 为
 `(最大值 - 最小值) / 中位数 × 100%`，便于直接查看三轮离散程度。

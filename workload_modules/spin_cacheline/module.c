@@ -3,6 +3,7 @@
 #include <linux/build_bug.h>
 #include <linux/atomic.h>
 #include <linux/fs.h>
+#include <linux/ktime.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
 #include <linux/sched.h>
@@ -16,6 +17,15 @@
  * active==0 check is insufficient: another worker could enter while counts
  * are being copied. This atomic gate is outside the measured spinlock. */
 static atomic_t sc_control __aligned(SC_LINE_BYTES) = ATOMIC_INIT(0);
+
+/* Keep collector traffic separate for each physical worker. No shared
+ * increment or clock read is added to each individual lock operation. */
+struct sc_progress_slot {
+	u64 completed;
+	unsigned int claimed;
+} __aligned(128);
+static struct sc_progress_slot sc_progress_slots[SC_TIMED_MAX_WORKERS];
+static struct sc_timed_config sc_timed;
 
 static bool sc_run_enter(void)
 {
@@ -36,6 +46,121 @@ static bool sc_snapshot_begin(void)
 static void sc_snapshot_end(void)
 {
 	atomic_set_release(&sc_control, 0);
+}
+
+static long sc_timed_configure(void __user *user)
+{
+	struct sc_timed_config config;
+	u64 now;
+	unsigned int i;
+
+	if (copy_from_user(&config, user, sizeof(config)))
+		return -EFAULT;
+	now = ktime_get_ns();
+	if (config.reserved || !config.workers || config.workers > SC_TIMED_MAX_WORKERS ||
+	    !config.started_ns || config.deadline_ns <= config.started_ns ||
+	    config.deadline_ns - config.started_ns > SC_TIMED_MAX_DURATION_NS ||
+	    config.started_ns > now || config.deadline_ns <= now)
+		return -EINVAL;
+	if (!sc_snapshot_begin())
+		return -EBUSY;
+	WRITE_ONCE(sc_timed.started_ns, 0);
+	for (i = 0; i < SC_TIMED_MAX_WORKERS; i++) {
+		WRITE_ONCE(sc_progress_slots[i].completed, 0);
+		WRITE_ONCE(sc_progress_slots[i].claimed, 0);
+	}
+	WRITE_ONCE(sc_timed.deadline_ns, config.deadline_ns);
+	WRITE_ONCE(sc_timed.workers, config.workers);
+	WRITE_ONCE(sc_timed.started_ns, config.started_ns);
+	sc_snapshot_end();
+	return 0;
+}
+
+static long sc_read_progress(void __user *user)
+{
+	struct sc_progress progress = { 0 };
+	unsigned int i;
+
+	progress.started_ns = READ_ONCE(sc_timed.started_ns);
+	progress.deadline_ns = READ_ONCE(sc_timed.deadline_ns);
+	progress.workers = READ_ONCE(sc_timed.workers);
+	if (!progress.started_ns || !progress.workers ||
+	    progress.workers > SC_TIMED_MAX_WORKERS)
+		return -EINVAL;
+	progress.read_started_ns = ktime_get_ns();
+	for (i = 0; i < progress.workers; i++)
+		progress.completed[i] = READ_ONCE(sc_progress_slots[i].completed);
+	progress.read_finished_ns = ktime_get_ns();
+	if (progress.started_ns != READ_ONCE(sc_timed.started_ns))
+		return -EAGAIN;
+	return copy_to_user(user, &progress, sizeof(progress)) ? -EFAULT : 0;
+}
+
+static long sc_run_timed(void __user *user)
+{
+#ifdef SC_HASH_PAYLOAD
+	/* The duration experiment is deliberately limited to the cacheline arms. */
+	(void)user;
+	return -EOPNOTSUPP;
+#else
+	struct sc_timed_run run;
+	struct sc_progress_slot *slot;
+	void (*body)(void);
+	u64 post_state = 1;
+	unsigned int before_preempt, i;
+	bool before_irqs;
+	long error = 0;
+
+	if (copy_from_user(&run, user, sizeof(run)))
+		return -EFAULT;
+	switch (run.cachelines) {
+	case 1: body = sc_body_1; break;
+	case 2: body = sc_body_2; break;
+	case 4: body = sc_body_4; break;
+	case 8: body = sc_body_8; break;
+	case 16: body = sc_body_16; break;
+	default: return -EINVAL;
+	}
+	if (!sc_run_enter())
+		return -EBUSY;
+	if (!run.started_ns || run.started_ns != sc_timed.started_ns ||
+	    run.deadline_ns != sc_timed.deadline_ns || run.worker >= sc_timed.workers) {
+		error = -EINVAL;
+		goto out;
+	}
+	slot = &sc_progress_slots[run.worker];
+	if (cmpxchg(&slot->claimed, 0, 1)) {
+		error = -EBUSY;
+		goto out;
+	}
+	before_preempt = preempt_count();
+	before_irqs = irqs_disabled();
+	run.completed = 0;
+	run.active_started_ns = ktime_get_ns();
+	if (run.active_started_ns >= run.deadline_ns) {
+		error = -ETIMEDOUT;
+		goto out;
+	}
+	do {
+		for (i = 0; i < SC_TIMED_BATCH; i++) {
+			body();
+			post_state = sc_post_work(post_state);
+		}
+		run.completed += SC_TIMED_BATCH;
+		/* Publish only completed bodies plus post-work. Each slot can lag
+		 * its worker by at most one batch; raw timestamps expose read skew. */
+		WRITE_ONCE(slot->completed, run.completed);
+		run.finished_ns = ktime_get_ns();
+	} while (run.finished_ns < run.deadline_ns);
+	if (WARN_ON_ONCE(before_preempt != preempt_count() ||
+			 before_irqs != irqs_disabled()))
+		error = -EUCLEAN;
+out:
+	sc_run_exit();
+	if (error)
+		return error;
+	return copy_to_user(user, &run, sizeof(run)) ? -EFAULT : 0;
+#endif
 }
 
 static long sc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
@@ -64,6 +189,12 @@ static long sc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
 	(void)file;
 	switch (cmd) {
+	case SC_TIMED_CONFIG:
+		return sc_timed_configure(user);
+	case SC_RUN_TIMED:
+		return sc_run_timed(user);
+	case SC_PROGRESS:
+		return sc_read_progress(user);
 	case SC_PREPARE:
 		if (copy_from_user(&prepare_lines, user, sizeof(prepare_lines)))
 			return -EFAULT;
@@ -174,6 +305,7 @@ static int __init sc_init(void)
 	BUILD_BUG_ON(__alignof__(struct sc_slot) != SC_LINE_BYTES);
 	BUILD_BUG_ON(sizeof(sc_lock) > SC_LINE_BYTES);
 	BUILD_BUG_ON(sizeof(sc_control) > SC_LINE_BYTES);
+	BUILD_BUG_ON(sizeof(struct sc_progress_slot) != 128);
 	BUILD_BUG_ON(offsetof(spinlock_t, rlock) != 0);
 	#ifdef SC_DIRECT_KDLOCK
 	kd_spin_init(&sc_lock);

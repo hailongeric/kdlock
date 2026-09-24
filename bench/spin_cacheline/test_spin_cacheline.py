@@ -169,8 +169,13 @@ class CachelineTests(unittest.TestCase):
     def test_atomic_admission_excludes_snapshots(self):
         module = (WORKLOAD / "module.c").read_text()
         start = module.index("static atomic_t sc_control")
-        end = module.index("static long sc_ioctl", start)
-        (self.out / "control.inc").write_text(module[start:end])
+        declaration_end = module.index(";", start) + 1
+        helpers_start = module.index("static bool sc_run_enter", declaration_end)
+        helpers_end = module.index("static long sc_timed_configure", helpers_start)
+        # Compile the real admission/snapshot helpers and their state, without
+        # pulling the separate timed-telemetry ABI into this atomic fixture.
+        (self.out / "control.inc").write_text(
+            module[start:declaration_end] + "\n\n" + module[helpers_start:helpers_end])
         binary = self.out / "control-fixture"
         subprocess.run(["cc", "-O2", "-std=gnu11", "-Wall", "-Wextra", "-Werror",
                         "-pthread", "-I", str(self.out), str(HERE / "control_fixture.c"),

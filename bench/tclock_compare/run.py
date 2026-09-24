@@ -26,6 +26,39 @@ from context_audit import audit as audit_context
 
 DEFAULT_HOTLOCK_MODES = ('observe', 'adaptive')
 DEFAULT_SPIN_CONTENTION_PCT = 100
+TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
+                 'sample_ms', 'collector_cpu')
+
+
+def timing_settings(args):
+    settings = {name: getattr(args, name, default) for name, default in
+                zip(TIMING_FIELDS, (0, 300, 300, 10, 30))}
+    duration = settings['duration_ms']
+    require(0 <= duration <= 10000, 'duration must be 0..10000 ms')
+    if duration:
+        require(0 < settings['sample_ms'] <= settings['peak_window_ms'] and
+                settings['peak_settle_ms'] >= 0 and
+                settings['peak_settle_ms'] + settings['peak_window_ms'] < duration,
+                'invalid peak timing intervals')
+        require(settings['collector_cpu'] >= 0 and all(
+                settings['collector_cpu'] not in range(t) for t in args.threads),
+                'collector CPU must be outside every worker cohort')
+        require(getattr(args, 'scenario', 'plain') == 'plain' and
+                getattr(args, 'workload', 'cacheline') == 'cacheline' and
+                not getattr(args, 'functional', False),
+                'timed peaks require the plain cacheline performance workload')
+    return settings
+
+
+def collector_topology(cpu):
+    # Preparation keeps the runner's original NUMA placement. Only the live
+    # progress collector deliberately expands affinity to its reserved CPU.
+    previous = os.sched_getaffinity(0)
+    try:
+        os.sched_setaffinity(0, {cpu})
+        return runtime.capture_topology([cpu])
+    finally:
+        os.sched_setaffinity(0, previous)
 
 
 def idle():
@@ -54,6 +87,7 @@ def make_plan(args):
     contention_pct = getattr(args, 'spin_contention_pct', DEFAULT_SPIN_CONTENTION_PCT)
     require(0 <= contention_pct <= 100, 'invalid spin contention percentage')
     result = []
+    timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1, 16])
     modes = getattr(args, 'hotlock_mode', DEFAULT_HOTLOCK_MODES)
@@ -84,6 +118,8 @@ def make_plan(args):
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
                 warmup_policy='all_workers', warmup_iterations_per_worker=48000,
                 warmup_pause_seconds=0,
+                measurement_mode='timed_peak' if timing['duration_ms'] else 'fixed_iterations',
+                **timing,
                 iterations=args.iterations, cpus=list(range(t))))
     return result
 
@@ -116,8 +152,19 @@ def report(out):
         p = out/spec['name']/'session.json'
         r = json.loads(p.read_text()) if p.exists() else dict(spec, execution_status='NOT_RUN', drained=False)
         m = r.get('measurement', {})
-        r['throughput_ops_s'] = m['completed']*1e9/m['wall_ns'] if valid(r) else None
-        r['amortized_ns_op'] = m['wall_ns']/m['completed'] if valid(r) else None
+        good = valid(r)
+        timed = bool(r.get('duration_ms', 0))
+        r['whole_throughput_ops_s'] = m['completed']*1e9/m['wall_ns'] if good else None
+        r['whole_amortized_ns_op'] = m['wall_ns']/m['completed'] if good else None
+        peak = m.get('peak', {})
+        # A timed score requires a validated full-cohort window. The full run
+        # remains visible; neither its JIT share nor its mean describes peak.
+        require(not good or not timed or peak.get('throughput_ops_s', 0) > 0,
+                'valid timed session has no peak window')
+        r['throughput_ops_s'] = (peak['throughput_ops_s'] if timed else
+                                 r['whole_throughput_ops_s']) if good else None
+        r['amortized_ns_op'] = (peak['amortized_ns_op'] if timed else
+                                r['whole_amortized_ns_op']) if good else None
         records.append(r)
         # Mode and contention threshold are frozen policy inputs, including
         # threshold zero's diagnostic bypass. Never pool tuning candidates.
@@ -126,10 +173,12 @@ def report(out):
                            r.get('caller_shell', 'unrecorded'),
                            r.get('cookie_storage', 'unrecorded'),
                            r.get('cpu_heat_policy', 'unrecorded'),
-                           r.get('spin_contention_pct', 'unrecorded')), []).append(r)
+                           r.get('spin_contention_pct', 'unrecorded'),
+                           tuple(r.get(key) for key in TIMING_FIELDS),
+                           r.get('spin_delegate', 'on')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct), rows in groups.items():
+    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, timing, delegate), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
@@ -138,15 +187,19 @@ def report(out):
                    cookie_storage=cookie,
                    cpu_heat_policy=heat_policy,
                    spin_contention_pct=contention_pct,
-                   spin_delegate=rows[0].get('spin_delegate', 'on'),
+                   spin_delegate=delegate,
+                   **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
         # identity so the maximum throughput is auditable in records.json.
         best = max(good, key=lambda r: r['throughput_ops_s']) if good else None
-        row['comparison_policy'] = 'best_valid_throughput'
+        row['comparison_policy'] = ('best_valid_warmed_peak' if rows[0].get('duration_ms', 0)
+                                    else 'best_valid_throughput')
         row['best_session'] = best['name'] if best else None
-        for metric in ('throughput_ops_s', 'amortized_ns_op'):
+        for metric in ('throughput_ops_s', 'amortized_ns_op',
+                       'whole_throughput_ops_s', 'whole_amortized_ns_op'):
             row['best_'+metric] = best[metric] if best else None
+        row['best_peak'] = best.get('measurement', {}).get('peak') if best else None
         # Keep variation visible without mixing the winning throughput and
         # latency pair. Failed or undrained sessions never enter the range.
         rates = [r['throughput_ops_s'] for r in good]
@@ -157,10 +210,12 @@ def report(out):
             100 * (max(rates) - min(rates)) / row['median_throughput_ops_s']
             if len(rates) > 1 else None)
         summary.append(row)
-    natives = {(r['cachelines'], r['threads']): r['best_throughput_ops_s']
+    natives = {(r['cachelines'], r['threads'], tuple(r[k] for k in TIMING_FIELDS)):
+               r['best_throughput_ops_s']
                for r in summary if r['arm'] == 'native'}
     for row in summary:
-        native = natives.get((row['cachelines'], row['threads']))
+        native = natives.get((row['cachelines'], row['threads'],
+                              tuple(row[k] for k in TIMING_FIELDS)))
         row['throughput_over_linux'] = row['best_throughput_ops_s']/native if native and row['valid'] else None
     write_json(out/'summary.json', summary)
     if summary:
@@ -176,6 +231,14 @@ def main():
     p.add_argument('--repeats', type=int, default=3,
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')
     p.add_argument('--iterations', type=int, default=100000)
+    p.add_argument('--duration-ms', type=int, default=0,
+                   help='continuous measured duration; 0 keeps fixed iterations')
+    p.add_argument('--peak-window-ms', type=int, default=300)
+    p.add_argument('--peak-settle-ms', type=int, default=300,
+                   help='exclude initial measured settling from peak selection')
+    p.add_argument('--sample-ms', type=int, default=10)
+    p.add_argument('--collector-cpu', type=int, default=30,
+                   help='dedicated progress collector CPU, outside the worker set')
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')
@@ -222,10 +285,13 @@ def main():
         packages = {p:importlib.metadata.version(p) for p in ('miasm','future','pyparsing','pyelftools')}
         require(packages == dict(miasm='0.1.5',future='1.0.0',pyparsing='2.4.7',pyelftools='0.27'), 'dependencies differ')
         topology = runtime.capture_topology(list(range(max(args.threads))))
+        collector = (collector_topology(args.collector_cpu)
+                     if args.duration_ms else None)
         for spec in plan:
             spec['cpu_nodes'] = topology['role_nodes'][:spec['threads']]
         write_json(out/'plan.json', plan)
-        write_json(out/'environment.json', dict(kernel_identity=identity,topology=topology,packages=packages,
+        write_json(out/'environment.json', dict(kernel_identity=identity,topology=topology,
+            collector_topology=collector,packages=packages,
             argv=sys.argv,python=sys.executable,snapshot_tag=os.environ.get('KDLOCK_SNAPSHOT_TAG'),
             runner_affinity=sorted(os.sched_getaffinity(0)),
             cmdline=Path('/proc/cmdline').read_text(),preemption=Path('/sys/kernel/debug/sched/preempt').read_text(),
@@ -314,7 +380,10 @@ def main():
                 print(f'  completed={m["completed"]}; '
                       f'jit_bodies={session.record.get("jit_bodies", 0)}; drained=True', flush=True)
             else:
-                print(f'  {m["completed"]*1e3/m["wall_ns"]:.3f} Mops/s; '
+                peak = m.get('peak')
+                prefix = (f'  peak {peak["throughput_ops_s"]/1e6:.3f} Mops/s; whole '
+                          if peak else '  ')
+                print(f'{prefix}{m["completed"]*1e3/m["wall_ns"]:.3f} Mops/s; '
                       f'{m["wall_ns"]/m["completed"]:.2f} ns/op; drained=True',flush=True)
         idle(); report(out); return 0
     except (Failure,OSError,ValueError) as error:

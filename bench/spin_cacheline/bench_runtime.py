@@ -175,6 +175,8 @@ def children(pid):
 
 def validate_measurement(m, spec, iterations):
     """Recompute client aggregation and check every active/inactive data line."""
+    if spec.get('duration_ms', 0):
+        return validate_timed_measurement(m, spec)
     require(m["schema"] == 1 and m["complete"] is True and m["data_ok"] is True,
             "client reported an incomplete/incorrect workload", "DATA_ERROR")
     n, t = spec["cachelines"], spec["threads"]
@@ -206,6 +208,39 @@ def validate_measurement(m, spec, iterations):
         require(all(after - before == (m["completed"] if i < n else 0)
                     for i, (before, after) in enumerate(zip(m["before"], m["after"]))),
                 "payload counter delta mismatch", "DATA_ERROR")
+
+
+def validate_timed_measurement(m, spec):
+    """Keep final data exact while deriving peak only from sampled progress."""
+    from peak import analyze_peak
+
+    require(m['schema'] == 2 and m['measurement_mode'] == 'duration' and
+            m['complete'] is True and m['data_ok'] is True,
+            'client reported an incomplete/incorrect timed workload', 'DATA_ERROR')
+    require(spec.get('workload', 'cacheline') == m['workload'] == 'cacheline' and
+            spec.get('scenario', 'plain') == 'plain' and
+            (m['cachelines'], m['threads'], m['iterations']) ==
+            (spec['cachelines'], spec['threads'], 0),
+            'timed client workload differs', 'DATA_ERROR')
+    ws = m['workers']
+    require(len(ws) == spec['threads'] and [w['cpu'] for w in ws] == spec['cpus'] and
+            all(w['observed_cpu'] == w['cpu'] and w['error'] == 0 and
+                type(w['completed']) is int and w['completed'] > 0 and
+                w['cpu_ns'] > 0 for w in ws),
+            'timed worker affinity/completion differs', 'DATA_ERROR')
+    require(m['completed'] == sum(w['completed'] for w in ws) and
+            m['worker_cpu_ns'] == sum(w['cpu_ns'] for w in ws) and
+            m['finished_ns'] == max(w['finished_ns'] for w in ws) and
+            m['wall_ns'] == m['finished_ns'] - m['started_ns'] > 0,
+            'incorrect timed client aggregation', 'DATA_ERROR')
+    require(len(m['before']) == len(m['after']) == 16 and
+            all(after - before == (m['completed'] if index < spec['cachelines'] else 0)
+                for index, (before, after) in enumerate(zip(m['before'], m['after']))),
+            'timed payload counter delta mismatch', 'DATA_ERROR')
+    try:
+        return analyze_peak(m, spec)
+    except (ValueError, KeyError, TypeError) as error:
+        raise Failure('DATA_ERROR', str(error)) from error
 
 
 def classify_bodies(before, after, completed):
