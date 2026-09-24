@@ -153,7 +153,8 @@ static void test_stats(void)
 	struct kd_spin_diag_slot *slot = kd_spin_diag_find(addr);
 	unsigned int index = slot - kd_spin_diag_slots;
 	struct kd_spin_diag_counts sum;
-	CHECK(kd_spin_diag_waiter_enter(&lock) == slot);
+	kd_spin_diag_waiter_enter(slot);
+	CHECK(atomic_read(&slot->waiter_count) == 1);
 	for (cpu = 0; cpu < 3; cpu++) {
 		for (unsigned int e = 0; e < KD_SPIN_DIAG_EVENT_COUNT; e++)
 			for (unsigned int n = 0; n <= cpu; n++)
@@ -196,9 +197,16 @@ static void test_retained_slot(void)
 	      (uintptr_t)&slot->waiter_count / (2 * L1_CACHE_BYTES));
 	for (unsigned long a = 0x800000; a < 0x800000 + 64 * 64; a += 64)
 		kd_spin_diag_find(a);
-	CHECK(!kd_spin_diag_waiter_enter((void *)0xdead000));
+	CHECK(!kd_spin_diag_find(0xdead000));
+	kd_spin_diag_waiter_enter(NULL);
 	kd_spin_diag_waiter_exit(NULL);
 	CHECK(kd_spin_diag_find(0x400000) == slot);
+	/* Reuse still accounts exactly when the identity table is full. */
+	u64 overflow = cpu_stats[cpu].overflow;
+	kd_spin_diag_waiter_enter(slot);
+	CHECK(atomic_read(&slot->waiter_count) == 1);
+	kd_spin_diag_waiter_exit(slot);
+	CHECK(!atomic_read(&slot->waiter_count) && cpu_stats[cpu].overflow == overflow);
 	CHECK(!kd_spin_jit_is_disabled(slot));
 	slot->jit_disabled.counter = 1;
 	CHECK(kd_spin_jit_is_disabled(slot));

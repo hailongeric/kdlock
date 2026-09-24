@@ -44,7 +44,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	/* Publish the clock with the node, before any combiner can service it. */
 	curr_node->execution->queued_at_ns = kd_exe_queue_timing_start();
 	old_tail = xchg_tail(word, tail);
-	curr_node->execution->diag = kd_spin_diag_waiter_enter(lock);
+	kd_spin_diag_waiter_enter(curr_node->execution->diag);
 
 	if (old_tail & _Q_TAIL_MASK_HL) {
 		prev_node = decode_tail(old_tail);
@@ -226,7 +226,9 @@ queue_head:
 	ptr->lock_addr[j] = (uint64_t)(unsigned long)lock;
 	kd_spin_diag_validate_lock_stack(ptr);
 
-	run_combiner(lock, next_node, request);
+	/* The owner continuation survives node reuse; carry its immutable slot
+	 * without looking through a recyclable node or a follower's packet. */
+	run_combiner(lock, next_node, request, prev_execution->diag);
 	/* Nested users returned; reserve this slot before touching it again. */
 	this_cpu_inc(kd_spin_cpu.node_count);
 	barrier();
@@ -290,11 +292,13 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	struct qspinlock *word = request->word;
 	struct kd_spin_node *base, *curr_node;
 	struct kd_spin_continuation *execution;
+	struct kd_spin_diag_slot *diag;
 	int tail, idx, ret;
 
 	base = this_cpu_ptr(&kd_spin_nodes[0]);
-	kd_spin_diag_record(
-		lock, KD_SPIN_DIAG_SLOWPATH,
+	diag = kd_spin_diag_find((unsigned long)lock);
+	kd_spin_diag_record_slot(
+		diag, KD_SPIN_DIAG_SLOWPATH,
 		kd_spin_lock_stack_depth(this_cpu_ptr(&kd_spin_cpu)));
 	idx = this_cpu_inc_return(kd_spin_cpu.node_count) - 1;
 	barrier();
@@ -317,6 +321,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	kd_spin_selftest_node_event(KD_NODE_NATIVE_RESERVE);
 	curr_node = base + idx;
 	curr_node->execution = execution;
+	execution->diag = diag;
 	curr_node->execution->frame.regs_ref = &execution->frame.regs;
 	tail = encode_tail(smp_processor_id(), idx);
 

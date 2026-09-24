@@ -54,7 +54,7 @@ def main():
         (spin, "static void kd_spin_diag_record_slot(struct kd_spin_diag_slot *slot,", ""),
         (spin, "static void kd_spin_diag_record_addr(unsigned long addr,", ""),
         (spin, "static void kd_spin_diag_sum(unsigned int index, struct kd_spin_diag_counts *sum)", ""),
-        (spin, "static struct kd_spin_diag_slot *kd_spin_diag_waiter_enter(struct qspinlock *lock)", ""),
+        (spin, "static void kd_spin_diag_waiter_enter(struct kd_spin_diag_slot *slot)", ""),
         (spin, "static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)", ""),
         (spin, "static bool kd_spin_jit_is_disabled(const struct kd_spin_diag_slot *slot)", ""),
     ):

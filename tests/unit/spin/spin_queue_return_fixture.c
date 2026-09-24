@@ -50,11 +50,10 @@ static struct kd_spin_node *decode_tail(int tail)
 	return &queue_peer;
 }
 
-static struct kd_spin_diag_slot *kd_spin_diag_waiter_enter(struct qspinlock *lock)
+static void kd_spin_diag_waiter_enter(struct kd_spin_diag_slot *slot)
 {
-	CHECK(lock == a_lock());
+	CHECK((void *)slot == a_lock());
 	queue_enters++;
-	return (void *)lock;
 }
 
 static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)

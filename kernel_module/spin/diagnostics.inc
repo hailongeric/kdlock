@@ -117,13 +117,12 @@ static void kd_spin_jit_disable(struct qspinlock *lock)
 					    this_cpu_ptr(&kd_spin_cpu)));
 }
 
-static struct kd_spin_diag_slot *kd_spin_diag_waiter_enter(struct qspinlock *lock)
+/* Identity was resolved by the producer; retain exact shared waiter counts
+ * at the same publication/exit points, including a NULL exhausted-table slot. */
+static void kd_spin_diag_waiter_enter(struct kd_spin_diag_slot *slot)
 {
-	struct kd_spin_diag_slot *slot = kd_spin_diag_find((unsigned long)lock);
-
 	if (slot)
 		atomic_inc(&slot->waiter_count);
-	return slot;
 }
 
 static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)

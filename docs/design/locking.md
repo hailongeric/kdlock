@@ -542,3 +542,12 @@ entry points. Current direct/SELFTEST coverage is listed in
 | Nested contention | Virtual spin waiter and combiner snapshot | Same combiner waits for native B |
 | OOO unlock | Owner-side KD A release, logical-parent rendezvous and ticket-preserving reclaim | Native A/S early release, same-owner B and A reacquisition after suffix |
 | JIT disabled | Per-lock spin readiness policy | All mutex calls use original native protocol |
+
+### Spin diagnostic identity lifetime
+
+The producer resolves its diagnostic slot once at the SLOWPATH observation and
+retains it in the existing continuation. Waiter increments remain after tail
+publication and before predecessor linking; exits retain their exact decrement.
+The combiner receives the owner's retained slot rather than looking through a
+recyclable queue node. Slots are append-only until drained provider shutdown;
+this reuse removes identity lookups without changing waiter or retirement counts.

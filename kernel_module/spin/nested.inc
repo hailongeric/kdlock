@@ -199,8 +199,9 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 		goto cancel;
 	}
 
-	kd_spin_diag_record(
-		lock, KD_SPIN_DIAG_SLOWPATH,
+	execution->diag = kd_spin_diag_find((unsigned long)lock);
+	kd_spin_diag_record_slot(
+		execution->diag, KD_SPIN_DIAG_SLOWPATH,
 		kd_spin_lock_stack_depth(this_cpu_ptr(&kd_spin_cpu)));
 	parent->control_call.phase = KD_CALL_ENTERED;
 	parent->delegated_lock_addr = (unsigned long)lock;

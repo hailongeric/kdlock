@@ -238,6 +238,11 @@ static void kd_spin_diag_record(struct qspinlock *lock, int event,
 	(void)event;
 	(void)depth;
 }
+static void kd_spin_diag_record_slot(struct kd_spin_diag_slot *slot, int event,
+				     unsigned int depth)
+{
+	kd_spin_diag_record((void *)slot, event, depth);
+}
 static void kd_spin_debug_jit_not_ready(struct kd_spin_diag_slot *lock,
 					unsigned int depth)
 {
@@ -550,7 +555,7 @@ static void checked_run_combiner(struct qspinlock *lock,
 	link_tail = node;
 	while (link_tail->next)
 		link_tail = link_tail->next;
-	run_combiner(lock, node, &physical);
+	run_combiner(lock, node, &physical, (void *)lock);
 	link_tail = saved_link_tail;
 	if (full) {
 		CHECK(full_pool_calls == calls + 1);
@@ -575,9 +580,11 @@ static void checked_run_combiner(struct qspinlock *lock,
 #define run_combiner checked_run_combiner
 
 static void checked_queue_combiner(struct qspinlock *lock,
-		struct kd_spin_node *node, struct kd_spin_request *physical)
+		struct kd_spin_node *node, struct kd_spin_request *physical,
+		struct kd_spin_diag_slot *diag)
 {
 	struct kd_spin_request local = test_request(lock);
+	CHECK((void *)diag == lock);
 	CHECK(local.word == physical->word &&
 	      local.ref.entry == physical->ref.entry &&
 	      local.ref.sequence == physical->ref.sequence);

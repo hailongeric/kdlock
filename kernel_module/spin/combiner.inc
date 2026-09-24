@@ -301,7 +301,7 @@ static void kd_spin_batch_run(void *opaque)
  */
 __attribute__((noipa)) noinline notrace static void
 run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
-	     struct kd_spin_request *request)
+	     struct kd_spin_request *request, struct kd_spin_diag_slot *diag)
 {
 #ifdef DEBUG_KD_SPIN
 	BUG_ON(curr_node == NULL);
@@ -326,7 +326,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	}
 
 	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
-	batch.diag = kd_spin_diag_find((unsigned long)lock);
+	batch.diag = diag;
 	kd_spin_debug_combiner(batch.diag, kd_spin_lock_stack_depth(ptr));
 
 	batch.lock = lock;

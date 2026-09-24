@@ -46,6 +46,7 @@ static void producer_setup(int count, bool virtual, enum producer_path path)
 	kd_spin_continuations = &request_storage;
 	begin_error = ticket_count = poll_calls = relax_calls = try_calls = 0;
 	entries = exits = combined = handoffs = origin_claims = 0;
+	diag_lookups = 0;
 	producer_preempt = 1;
 	kd_spin_cpu.node_count = count;
 	memset(&kd_node_observations, 0, sizeof(kd_node_observations));
@@ -113,6 +114,10 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 	result = virtual ? kd_spin_nested_lock(active_lock, &producer_regs,
 					       &producer_frame) :
 			   __kd_spin_lock_slowpath(active_lock);
+	/* One identity lookup per accepted virtual producer or native slowpath;
+	 * queue waiter admission and combiner entry must reuse that identity. */
+	CHECK(diag_lookups == (unsigned int)(!virtual ||
+	      (path != PRODUCER_FAST && count < MAX_NODES)));
 	if (count == MAX_NODES && path != PRODUCER_FAST) {
 		expected = virtual ? -E2BIG : 0;
 		CHECK(!produced_node && !entries && !exits && !combined);
@@ -300,7 +305,7 @@ static void producer_cancel_case(int count, unsigned int failure)
 				  failure == 6 ? NULL : &producer_regs,
 				  failure == 7 ? NULL : &producer_frame) ==
 	      expected);
-	CHECK(!produced_node && !entries && !exits && !combined);
+	CHECK(!produced_node && !entries && !exits && !combined && !diag_lookups);
 	CHECK(!ticket_count && !poll_calls && !relax_calls);
 	CHECK(producer_frame.control_call.phase == KD_CALL_PENDING);
 	CHECK(!memcmp(&producer_regs, &regs_before, sizeof(regs_before)));

@@ -148,6 +148,7 @@ static struct kd_spin_cpu_state kd_spin_cpu;
 static struct kd_spin_node kd_spin_nodes[MAX_NODES];
 static struct kd_spin_node *resume_node;
 static int entries, exits, combined, checks, failures, handoffs;
+static unsigned int diag_lookups;
 static int initial_count, initial_depth;
 static bool contended;
 static struct qspinlock *active_lock;
@@ -440,10 +441,10 @@ static unsigned long kd_read_kernel_gsbase(void)
 {
 	return 0x12000;
 }
-static void kd_spin_diag_record(struct qspinlock *lock, int event,
-				unsigned int depth)
+static void kd_spin_diag_record_slot(struct kd_spin_diag_slot *slot, int event,
+				     unsigned int depth)
 {
-	CHECK(lock == active_lock && event == KD_SPIN_DIAG_SLOWPATH);
+	CHECK((void *)slot == active_lock && event == KD_SPIN_DIAG_SLOWPATH);
 	CHECK(depth == (unsigned int)initial_depth);
 }
 static bool kd_spin_entry_find(raw_spinlock_t *lock, struct kd_spin_ref *ref)
@@ -496,11 +497,10 @@ static int atomic_cmpxchg_acquire(int *value, int old, int replacement)
 	return seen;
 }
 
-static struct kd_spin_diag_slot *kd_spin_diag_waiter_enter(struct qspinlock *lock)
+static void kd_spin_diag_waiter_enter(struct kd_spin_diag_slot *slot)
 {
-	CHECK(lock == active_lock);
+	CHECK((void *)slot == active_lock);
 	entries++;
-	return (void *)lock;
 }
 
 static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)
@@ -522,7 +522,7 @@ static void clear_locked_set_completed(struct kd_spin_node *node)
 
 static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr);
 static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
-			 struct kd_spin_request *request);
+			 struct kd_spin_request *request, struct kd_spin_diag_slot *diag);
 static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
 		      struct kd_spin_batch *batch);
 /* Address/bounds semantics use real layouts in spin_batch_fixture. */
@@ -568,7 +568,7 @@ static void kd_spin_reclaim_outer(struct kd_spin_request *request)
 	abort();
 }
 static struct kd_spin_diag_slot *kd_spin_diag_find(unsigned long lock)
-{ return (void *)lock; }
+{ diag_lookups++; return (void *)lock; }
 static void kd_spin_debug_combiner(struct kd_spin_diag_slot *lock, unsigned int depth)
 {
 	CHECK((void *)lock == active_lock);
@@ -614,7 +614,8 @@ static void kd_spin_acquire_nondelegated(struct qspinlock *word)
 static int test_longjmp(struct qspinlock *lock, int tail, struct kd_spin_node *node)
 {
 	struct kd_spin_request request = { .word = &scheduling_word };
-	(void)fixture_request(node);
+	/* This direct queue-entry fixture models the omitted producer lookup. */
+	fixture_request(node)->diag = kd_spin_diag_find((unsigned long)lock);
 	CHECK(kd_spin_entry_find(lock, &request.ref));
 	jmp_buf continuation;
 	jmp_buf *saved = native_return;
@@ -662,7 +663,7 @@ static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr
 }
 
 static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
-			 struct kd_spin_request *request)
+			 struct kd_spin_request *request, struct kd_spin_diag_slot *diag)
 {
 	combined++;
 	CHECK(lock->val == 1 && origin_claims >= 1);
@@ -679,7 +680,8 @@ static void run_combiner(struct qspinlock *lock, struct kd_spin_node *next,
 	mock_tail_node = next;
 	while (mock_tail_node->next)
 		mock_tail_node = mock_tail_node->next;
-	production_run_combiner(lock, next, request);
+	CHECK((void *)diag == active_lock);
+	production_run_combiner(lock, next, request, diag);
 	mock_tail_node = saved_tail_node;
 #ifdef NUMA_AWARE
 	CHECK(!kd_spin_cpu.local_queue_head);
@@ -1026,7 +1028,7 @@ static void run_native_boundaries(void)
 		mock_tail_node = &nodes[5];
 		native_boundary_case = true;
 		boundary_executions = 0;
-		production_run_combiner(&lock, &nodes[0], &request);
+		production_run_combiner(&lock, &nodes[0], &request, (void *)&lock);
 		native_boundary_case = false;
 		CHECK(boundary_executions == completed);
 		CHECK(!nodes[completed].locked && !nodes[completed].completed);
