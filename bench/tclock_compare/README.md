@@ -156,6 +156,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [全部worker预热后的单轮三方比较](results/20260924-all-worker-warmup.md) | b8bd0e2，c1/c16、1/2/3/4/8/16/20线程，四项共56场；每worker预热48000次、无额外2秒等待，同场吞吐/ns与后端比值；不与旧预热样本合并 |
 | [节点数组128字节对齐](results/20260924-node-array-alignment.md) | 相同简单政策下42场；16/20线程恢复约8%–9%，仍未满足原基线保护；每CPU只增加64字节填充，冻结.text字节相同 |
 | [本轮低竞争比例准入](results/20260924-contention-ratio.md) | 保留实现完整168场及nested/early两场完成，3/4改善但c16/8等保护未满足；采用当时单CPU预热，全部失败阶段保留原始数据 |
 | [诊断槽128字节隔离](results/20260924-diagnostic-pairs.md) | 独立提交439cd82的匹配pilot和采样证据；局部改善不代表完整比例策略通过 |
