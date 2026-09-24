@@ -10,6 +10,7 @@
 
 | 批次 | 已完成 | 范围与入口 |
 | --- | --- | --- |
+| 节点notification区域128字节隔离（已拒绝） | 基础2组及storage/batch/wait/shadow共6组通过，5项storage错误变体检出；W=1 SELFTEST=1/0共22条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26291925次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)。节点256字节未改善8线程且损害16/20；六项布局/fixture文件恢复d253d23/f71dc2e的128字节节点、64/65通知偏移，批次上限1024；未运行完整三方168场或nested/early |
 | spin批次上限256（已拒绝，恢复1024） | 基础及直接相关fixture共4组通过；仓库runner检出early/late两项cap变体及9项既有变体；生产W=1保留11条既有objtool警告；12场、16800000操作正确排空，全部实际JIT/16498308次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)。两次直接脚本调用的导入失败原样保留，修正调用入口后通过；8/20线程各三轮，c16/8无明显收益且20线程中位降低约2.4%–2.5%，五项代码/fixture文件恢复f71dc2e；未测其他线程或完整矩阵 |
 | 本地busy保护与已pin入口专化（实验检查点） | 基础2组、采样fixture/10项错误变体、抢占路径fixture通过，共4组；运行器26/26；两次W=1构建共22条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26331389次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)、[冻结benchmark机器码证据](../bench/.tmp/ratio-20260924/local-access-frozen-codegen.md)。保持全入口计数及原比例政策，局部访问去CMPXCHG，已pin入口去通用抢占分支；c16/8等保护仍失败，未运行完整三方168场、nested/early或全量功能 |
 | 冷原生快速成功不计数（已拒绝） | 基础2组、采样fixture/10项错误变体、冷路由套件和1/2/3/8线程混合原生用例通过；运行器27/27；生产W=1保留11条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26372390次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)。策略mcs_entry_ratio512_cold_failed；省略冷原生首次CAS成功计数，其他入口不变；无一致收益，冻结归档后恢复f320d9f。原基线性能保护仍失败，未运行完整三方168场、nested/early或全量功能 |
