@@ -10,6 +10,8 @@
 
 | 批次 | 已完成 | 范围与入口 |
 | --- | --- | --- |
+| 保留简化实现完整168场及最终两场功能 | 168/168场、129600000操作正确排空；84场KD中60场实际JIT/54149204次正文。另nested/early各400000操作，实际JIT391688/99380次，observe均正确排空 | [完整报告与14组adaptive表](../bench/tclock_compare/results/20260924-contention-ratio.md)、[四模式全部样本](../bench/.tmp/ratio-20260924/selected-final-results.md)。3/4中位提高5.06%–36.60%，c16/8仍低7.42%，性能保护未通过；两场功能不计入性能总数，66项生产源码与所选阶段一致，未运行全量功能 |
+| 现代实现32次/原单锁窗口/pct0（仅诊断） | 正常benchmark构建及内置检查通过；c16/8三场、2400000操作正确排空，全部实际JIT/2339904次正文；未运行独立单元或SELFTEST，单锁fixture未修改/运行 | [本轮报告及三轮数据](../bench/tclock_compare/results/20260924-contention-ratio.md)。对当前512次pct0中位提高3.38%，仍比原基线低6.90%；三个临时输入恢复7800cd1，不能记为新生产政策或完整性能通过 |
 | 节点槽按CPU排列（已拒绝） | 5组通过；W=1 SELFTEST=1/0共22条既有objtool警告；12场、16800000操作正确排空，全部实际JIT/16472076次正文 | [本轮报告与全部四组三轮](../bench/tclock_compare/results/20260924-contention-ratio.md)。c16/20中位对local提高2.15%，但c16/8仍低0.57%、对原基线低8.73%；12项输入恢复913fe2e。nested/early计划仍UNRUN，未测其他线程或三方168场 |
 | 后继头部预取（已拒绝） | 基础2组及batch fixture共3组通过；生产W=1保留11条既有objtool警告；12场、16800000操作正确排空，全部实际JIT/16487415次正文 | [本轮报告与全部四组三轮](../bench/tclock_compare/results/20260924-contention-ratio.md)。20线程小幅改善，但8线程保护未解决；三个输入恢复91efe4a，未测其他线程、三方168场或nested/early |
 | c16/8匹配profile与当前pct0控制 | 原基线/local各3场、各24000000操作正确排空，实际JIT23673764/23275406次；199Hz采样工具/数据/地址校验通过、零丢失；另3场pct0控制2400000操作/2328528次JIT正确排空 | [匹配分析](../bench/.tmp/ratio-20260924/profile-matched-c16-t8-observed.md)。等待样本增加不确定回退原因；当前代码门槛0没有恢复原基线。1M诊断与100k控制分开，不作为完整性能保护通过 |
