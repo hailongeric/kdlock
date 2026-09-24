@@ -52,26 +52,42 @@ def main():
             "ptr->wait_stack_top = (char *)wait_stack + KD_SPIN_STORAGE_BYTES;",
             "ptr->wait_stack_top = (char *)wait_stack + KD_SPIN_CONT_BYTES;",
         ),
+        # Reverting to one-line separation must fail the production guard,
+        # before a module can reintroduce base-dependent adjacent-pair sharing.
+        "diag-single-line-pair": (
+            "atomic_t waiter_count __aligned(2 * L1_CACHE_BYTES);",
+            "atomic_t waiter_count __aligned(L1_CACHE_BYTES);",
+        ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-storage-") as directory:
         path = Path(directory)
-        (path / "spin_storage_types.h").write_text(types)
         for name, mutation in [("production", None), *mutations.items()]:
             body = code
+            layout = types
             if mutation:
                 before, after = mutation
-                assert body.count(before) == 1
+                assert body.count(before) + layout.count(before) == 1
                 body = body.replace(before, after, 1)
+                layout = layout.replace(before, after, 1)
+            (path / "spin_storage_types.h").write_text(layout)
             (path / "spin_storage_production.h").write_text(body)
             binary = path / name
-            subprocess.run(
+            compiled = subprocess.run(
                 shlex.split(os.environ.get("CC", "cc")) + [
                     "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
                     "-I", str(path),
                     str(ROOT / "tests/unit/spin/spin_storage_fixture.c"),
                     "-o", str(binary),
-                ], check=True, timeout=30,
+                ], capture_output=True, text=True, check=False, timeout=30,
             )
+            if name == "diag-single-line-pair":
+                assert compiled.returncode != 0 and "static assertion failed" in compiled.stderr, (
+                    name, compiled.returncode, compiled.stdout, compiled.stderr,
+                )
+                assert "offsetof(struct kd_spin_diag_slot, waiter_count) != 2 * L1_CACHE_BYTES" in compiled.stderr
+                print(f"spin storage mutation detected: {name}")
+                continue
+            assert compiled.returncode == 0, (name, compiled.stdout, compiled.stderr)
             result = subprocess.run(
                 [str(binary)], capture_output=True, text=True,
                 check=False, timeout=15,

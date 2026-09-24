@@ -137,9 +137,10 @@ enum kd_spin_diag_event {
 struct kd_spin_diag_slot {
 	atomic_long_t addr;
 	atomic_t jit_disabled;
-	/* Waiters write this on two CPUs per delegated request. Keep those
-	 * transfers off the identity/disable line read by the combiner. */
-	atomic_t waiter_count ____cacheline_aligned_in_smp;
+	/* Waiters write this on two CPUs per delegated request. Separate whole
+	 * adjacent-line pairs to keep these transfers from interfering with the
+	 * identity/disable reads, regardless of the module's base alignment. */
+	atomic_t waiter_count __aligned(2 * L1_CACHE_BYTES);
 };
 
 /* Slots keep their identity for the module session. Only live observations

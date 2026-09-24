@@ -12,6 +12,7 @@
 	fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #x); exit(1); \
 } } while (0)
 #define L1_CACHE_BYTES 64
+#define __aligned(n) __attribute__((aligned(n)))
 #define ____cacheline_aligned_in_smp __attribute__((aligned(64)))
 typedef uint64_t u64;
 typedef uint32_t u32;
@@ -123,6 +124,26 @@ static void check_geometry(void)
 	bool colors[KD_SPIN_CONT_BYTES / L1_CACHE_BYTES] = { false };
 	size_t color_count = 1 + (KD_SPIN_CONT_BYTES -
 		sizeof(struct kd_spin_continuation_stack)) / L1_CACHE_BYTES;
+	const size_t pair = 2 * L1_CACHE_BYTES;
+
+	/* Check actual array addresses as well as the type's offset and stride:
+	 * no waiter counter may share a pair with either adjacent slot's reads. */
+	CHECK(_Alignof(struct kd_spin_diag_slot) == pair);
+	CHECK(offsetof(struct kd_spin_diag_slot, waiter_count) == pair);
+	CHECK(sizeof(struct kd_spin_diag_slot) == 2 * pair);
+	for (unsigned int i = 0; i < KD_SPIN_DIAG_SLOTS; i++) {
+		struct kd_spin_diag_slot *slot = &kd_spin_diag_slots[i];
+		uintptr_t identity = (uintptr_t)&slot->addr;
+		uintptr_t disable = (uintptr_t)&slot->jit_disabled;
+		uintptr_t waiter = (uintptr_t)&slot->waiter_count;
+
+		CHECK(identity % pair == 0);
+		CHECK(disable / pair == identity / pair);
+		CHECK(waiter / pair == identity / pair + 1);
+		if (i + 1 < KD_SPIN_DIAG_SLOTS)
+			CHECK((uintptr_t)&kd_spin_diag_slots[i + 1].addr / pair ==
+			      waiter / pair + 1);
+	}
 
 	CHECK(color_count > 1 && color_count * 2 < CPUS);
 	for (selected_cpu = 0; selected_cpu < CPUS; selected_cpu++) {
@@ -184,6 +205,6 @@ int main(void)
 	CHECK(kd_spinlock_init() == -ENOMEM);
 	CHECK(!allocation_calls);
 	reset();
-	puts("PASS spin storage: real layouts, colors, all records, unchanged wait stack, original-base free and 122 allocation failure points");
+	puts("PASS spin storage: real layouts, diagnostic pair separation, colors, all records, unchanged wait stack, original-base free and 122 allocation failure points");
 	return 0;
 }

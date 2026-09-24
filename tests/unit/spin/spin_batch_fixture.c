@@ -10,6 +10,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <errno.h>
+#define L1_CACHE_BYTES 64
+#define __aligned(n) __attribute__((aligned(n)))
 #define ____cacheline_aligned_in_smp __attribute__((aligned(64)))
 typedef uint64_t u64;
 typedef uint8_t u8;
@@ -32,7 +34,6 @@ struct task_struct { void *stack; };
 #define unlikely(x) (x)
 #define WARN_ON_ONCE(x) ((void)(x))
 #define IRQ_NUMA_NODE 255
-#define L1_CACHE_BYTES 64
 #define THREAD_SIZE 16384
 #define task_stack_page(task) ((task)->stack)
 #define CHECK(x) assert(x)
@@ -188,8 +189,11 @@ static void test_retained_slot(void)
 {
 	struct kd_spin_diag_slot *slot = kd_spin_diag_find(0x400000);
 	CHECK(slot);
-	CHECK(offsetof(struct kd_spin_diag_slot, waiter_count) == 64);
-	CHECK(sizeof(*slot) == 128);
+	CHECK(_Alignof(struct kd_spin_diag_slot) == 2 * L1_CACHE_BYTES);
+	CHECK(offsetof(struct kd_spin_diag_slot, waiter_count) == 2 * L1_CACHE_BYTES);
+	CHECK(sizeof(*slot) == 4 * L1_CACHE_BYTES);
+	CHECK((uintptr_t)&slot->addr / (2 * L1_CACHE_BYTES) !=
+	      (uintptr_t)&slot->waiter_count / (2 * L1_CACHE_BYTES));
 	for (unsigned long a = 0x800000; a < 0x800000 + 64 * 64; a += 64)
 		kd_spin_diag_find(a);
 	CHECK(!kd_spin_diag_waiter_enter((void *)0xdead000));

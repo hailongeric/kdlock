@@ -60,8 +60,10 @@ int kd_spinlock_init(void)
 	BUILD_BUG_ON(offsetof(struct kd_spin_node, completed) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_spin_node, locked) != L1_CACHE_BYTES + 1);
 	BUILD_BUG_ON(sizeof(kd_spinlock_t) != sizeof(u32));
-	BUILD_BUG_ON(offsetof(struct kd_spin_diag_slot, waiter_count) != L1_CACHE_BYTES);
-	BUILD_BUG_ON(sizeof(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
+	/* Preserve pair separation within each diagnostic slot and across slots. */
+	BUILD_BUG_ON(__alignof__(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_spin_diag_slot, waiter_count) != 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_spin_diag_slot) != 4 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, frame.packet_state) >= 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) % L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) > 768);
