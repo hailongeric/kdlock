@@ -81,15 +81,6 @@ class BackendSession(Session):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.loaded_tc = False
-        self.record['preparation_cpus'] = [self.record['cpus'][0]]
-
-    def phase(self, label, iterations):
-        if label == 'warmup':
-            # Common unmeasured warmup after explicit preparation/publication.
-            spec = dict(self.record, threads=1, cpus=self.record['preparation_cpus'],
-                        cpu_nodes=self.record['cpu_nodes'][:1])
-            return super().phase(label, iterations, spec=spec)
-        return super().phase(label, iterations)
 
     def prepare(self):
         # Equal, unmeasured preparation in every arm. Linux 6.1's reserved
@@ -179,8 +170,10 @@ class BackendSession(Session):
                 time.sleep(0.1)
             self.stop_daemon()
             require(status()['writers'] == 0, 'translator writer still open', 'UNDRAINED')
-        self.phase('warmup', 48000)
-        time.sleep(2)
+        # Warm every measured CPU with the same worker cohort geometry. The
+        # client joins and validates all workers before measurement snapshots
+        # its counters; an added idle delay would age the warmed lock state.
+        self.phase('warmup', self.record['warmup_iterations_per_worker'])
         self.record['prepared_ns'] = time.monotonic_ns()
         self.save()
 

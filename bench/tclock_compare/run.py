@@ -82,6 +82,8 @@ def make_plan(args):
                 pmu=getattr(args, 'pmu', False),
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
+                warmup_policy='all_workers', warmup_iterations_per_worker=48000,
+                warmup_pause_seconds=0,
                 iterations=args.iterations, cpus=list(range(t))))
     return result
 

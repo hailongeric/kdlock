@@ -4,18 +4,112 @@ import copy
 import contextlib
 import io
 import sys
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import json
 from pathlib import Path
 import tempfile
 import unittest
 
 import run
-from session import hash_layout, tc_quiescent, check_jit_evidence
+from session import BackendSession, hash_layout, tc_quiescent, check_jit_evidence
+from bench_session import Session
 from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_warmup_uses_all_workers_without_changing_preparation(self):
+        cpus, nodes = [2, 7, 11], [0, 1, 0]
+        warmup = dict(schema=1, complete=True, data_ok=True, workload='cacheline',
+            cachelines=1, threads=3, iterations=48000, completed=144000,
+            worker_cpu_ns=60, started_ns=100, finished_ns=300, wall_ns=200,
+            before=[0]*16, after=[144000]+[0]*15,
+            workers=[dict(cpu=cpu, observed_cpu=cpu, error=0, completed=48000,
+                          cpu_ns=20, finished_ns=300) for cpu in cpus])
+
+        def initialize(session, out, spec):
+            # Substitute only module/device setup; retain BackendSession init.
+            session.record = copy.deepcopy(spec)
+            session.path = Path(out)/spec['name']
+            session.workload_module = Path('/unused/spin_cacheline.ko')
+            session.loaded_kd = session.loaded_source = False
+
+        for arm in ('native', 'tclock', 'kdlock'):
+            with self.subTest(arm=arm), patch.object(Session, '__init__', initialize):
+                spec, = run.make_plan(Namespace(cachelines=[1], threads=[3],
+                    repeats=1, iterations=17, backends=[arm],
+                    hotlock_mode=['observe'], pmu=True))
+                spec.update(cpus=cpus, cpu_nodes=nodes)
+                self.assertEqual((spec['warmup_policy'],
+                                  spec['warmup_iterations_per_worker'],
+                                  spec['warmup_pause_seconds']),
+                                 ('all_workers', 48000, 0))
+                session = BackendSession('/unused', spec)
+                commands = []
+
+                def command(args, log, **kwargs):
+                    commands.append((args, log))
+                    return json.dumps({'layout.json': {'lock_addr': 4096},
+                                       'prepare.json': {}, 'warmup.json': warmup}.get(log, {}))
+
+                session.counts = Mock(return_value=dict(active=0, values=[0]*16))
+                session.faults = session.save = Mock()
+                with patch.object(Session, 'run', side_effect=command), \
+                        patch('session.time.sleep') as pause, \
+                        patch('bench_session.validate_measurement',
+                              wraps=run.runtime.validate_measurement) as validate:
+                    if arm == 'native':
+                        # Exercise the production 48,000-per-worker call and
+                        # require separate preparation before worker warmup.
+                        session.prepare()
+                        labels = [label for _, label in commands]
+                        self.assertLess(labels.index('prepare.json'), labels.index('warmup.json'))
+                        preparation, = [args for args, label in commands if label == 'prepare.json']
+                        self.assertEqual(preparation, [run.HERE/'client', '--prepare', '--cachelines', 1])
+                        pause.assert_not_called()
+                    else:
+                        session.phase('warmup', 48000)
+                args, = [args for args, label in commands if label == 'warmup.json']
+                self.assertEqual(args[0], run.HERE/'client')  # No measured PMU wrapper.
+                self.assertEqual(args[args.index('--cpus')+1], '2,7,11')
+                self.assertEqual(args[args.index('--iterations')+1], 48000)
+                actual, geometry, iterations = validate.call_args.args
+                self.assertEqual((actual, iterations), (warmup, 48000))
+                self.assertEqual((geometry['threads'], geometry['cpus'], geometry['cpu_nodes']),
+                                 (3, cpus, nodes))
+                self.assertNotIn('preparation_cpus', session.record)
+                self.assertNotIn('measurement', session.record)
+                self.assertNotIn('jit_before', session.record)
+
+    def test_jit_measurement_starts_after_unmeasured_warmup(self):
+        session = BackendSession.__new__(BackendSession)
+        session.record = dict(arm='kdlock', threads=3, iterations=17,
+                              hotlock_mode='observe', scenario='plain')
+        session.loaded_kd = True
+        session.save = Mock()
+        events, counts = [], iter((700, 705))  # 700 bodies already returned in warmup.
+
+        def counter():
+            events.append('counter')
+            return str(next(counts))
+
+        def publication():
+            events.append('publication')
+            return {'source': {'writers': 0}}
+
+        def phase(label, iterations):
+            self.assertEqual((label, iterations), ('measure', 17))
+            self.assertEqual(session.record['jit_before'], 700)
+            events.append(label)
+            return dict(completed=51)
+
+        session.publication, session.phase = publication, phase
+        with patch.object(Path, 'read_text', side_effect=counter):
+            session.measure()
+        self.assertEqual(events, ['publication', 'counter', 'measure', 'counter', 'publication'])
+        self.assertEqual(session.record['jit_bodies'], 5)
+        self.assertEqual(session.record['jit_share'], 5/51)
+        self.assertEqual(session.record['measurement']['completed'], 51)
+
     def test_functional_report_has_no_performance_scores(self):
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)

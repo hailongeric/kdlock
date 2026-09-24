@@ -33,8 +33,10 @@ MCS32采样的`mcs_entry_ratio512_confirm2`、检查点`mcs_entry_ratio512_batch
 当前诊断槽把身份/禁用字段与waiter计数分至不同128字节区域，新增4KiB共享存储，
 布局见[provider说明](../../kernel_module/README.md)，该局部修复的独立证据见[诊断槽报告](results/20260924-diagnostic-pairs.md)。
 历史检查点`b83f551`的42场未通过性能保护；后续两个补充后继等待实验同样未满足目标，已完整撤回。
-简化候选`simple512-fixed`的42场正确排空但性能保护失败，保留为EXPERIMENTAL检查点，尚无当前完整三方168场；
-不把旧候选的检查或局部结果视为当前验收。
+简化候选`simple512-fixed`的42场正确排空但性能保护失败，保留为EXPERIMENTAL检查点。
+随后保留实现的`selected-final-fixed`完整168场及nested/early两场功能已完成；3/4线程改善，
+c16/8等保护仍未满足，见[完整报告](results/20260924-contention-ratio.md)。这些历史结果使用当时的单CPU预热，
+不改写为下述全worker预热结果，也不把旧候选的检查或局部结果视为当前验收。
 
 三种后端保留相同cacheline更新、解锁后四组乘加及循环成本；吞吐和ns/op以完整操作计算，
 不是独立获取锁延迟。三种模块不是同一二进制，必需的现场成本不扣除。
@@ -49,13 +51,20 @@ O/N `compare.py` 仅用于追溯历史结果。功能检查仍按需要单独选
 
 后端先加载，直接依赖它的样例后加载。运行器在没有 worker 时绑定只读观测
 使用的锁地址，再调用 `SC_PREPARE` 显式登记选定正文的锁后 RIP 和 KD 对象。
-kdlock 等唯一条目发布为 NORMAL、翻译进程退出并停止 daemon 后，再执行各组
-相同的单 CPU 48000 次预热。准备与预热均不计时。默认分别运行 observe 固定准入和
-adaptive 自适应准入；每个 KD 会话重新加载 provider，热度不跨模式继承。
+kdlock 等唯一条目发布为 NORMAL、翻译进程退出并停止 daemon 后，再使用与正式测量
+相同的worker数量和CPU集合预热，每个worker执行48000次；所有后端采用相同规则。
+登记准备命令仍单线程执行，继承runner允许的CPU集合。预热与测量通过独立客户端调用分别创建
+worker，复用相同的数量及CPU绑定配置；预热worker退出并完成正常检查后接着发起测量，
+不再插入额外2秒等待，以免预热建立的热度在间隔中失效。记录保存
+`warmup_policy=all_workers`、`warmup_iterations_per_worker=48000`、`warmup_pause_seconds=0`。
+准备与预热均不计入正式测量。默认分别运行 observe 固定准入和adaptive 自适应准入；
+每个 KD 会话重新加载 provider，热度不跨模式继承。
 
 默认矩阵是 **1/16 cacheline × 1/4/8/16/20 线程 × 四项 × 三轮 = 120 场**，
 四项为 Linux、TCLock、KD observe、KD adaptive；Linux/TCLock 每配置每轮各测一次，供两种 KD 模式比较。
 2026-09-23 用户因性能波动将 `--repeats` 默认值提高为 3，每线程仍为 100000 次。
+2026-09-24 本次用户明确要求重新测一次，并要求全部worker预热；此次显式传入`--repeats 1`，
+不修改三轮默认值。c1/c16、1/2/3/4/8/16/20线程及四项共56场；单次样本不能描述跨轮波动。
 仅保留这一组直接调用方式，不再使用 `--abis`。
 只在 recovery guest 中按[操作手册](../../docs/AGENTS.md)核对快照、依赖和空闲状态；
 现有 `kdclobber2` 内核不重建。输出必须是新的仓库外目录。
@@ -113,7 +122,7 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 
 ## 验收与结果
 
-2026-09-23 用户最新要求为每配置三轮，用于观察当前性能波动。
+默认每配置三轮，用于观察性能波动；本次明确的一轮复测使用`--repeats 1`。
 `summary.csv/json` 用 `best_throughput_ops_s`、`best_amortized_ns_op` 报告同一
 获选会话的吞吐与摊销时间，`best_session` 指向原始会话，
 `comparison_policy=best_valid_throughput` 标明口径，继续从有效样本选取最大吞吐。
@@ -148,7 +157,7 @@ python3 bench/tclock_compare/test_direct.py
 | 报告 | 范围与用途 |
 | --- | --- |
 | [节点数组128字节对齐](results/20260924-node-array-alignment.md) | 相同简单政策下42场；16/20线程恢复约8%–9%，仍未满足原基线保护；每CPU只增加64字节填充，冻结.text字节相同 |
-| [本轮低竞争比例准入](results/20260924-contention-ratio.md) | 当前简化候选42场正确排空但保护失败；b83f551检查点及全部失败阶段保留原始数据 |
+| [本轮低竞争比例准入](results/20260924-contention-ratio.md) | 保留实现完整168场及nested/early两场完成，3/4改善但c16/8等保护未满足；采用当时单CPU预热，全部失败阶段保留原始数据 |
 | [诊断槽128字节隔离](results/20260924-diagnostic-pairs.md) | 独立提交439cd82的匹配pilot和采样证据；局部改善不代表完整比例策略通过 |
 | [MCS8/CPU400万组合](results/20260923-mcs8-cpu4m.md) | 历史168/168场、56配置各3轮；该参数组合不是当前比例准入配置；保留所有快慢样本及参数组合 |
 | [adaptive 窗口与采样间隔](results/20260923-adaptive-windows.md) | 单锁/CPU窗口、MCS间隔6个独立候选及1个组合；195场有效、1场20线程零JIT拒绝并停止该候选，保留20个未执行项；该轮恢复当时的MCS1/CPU400亿默认，不含后续指定的MCS8/CPU400万组合 |
@@ -213,7 +222,8 @@ v2，客户端和 workload 模块必须同时重建。
 使用[执行流规则](../../docs/JIT_EXECUTION.md#21-热度与角色)，`--spin-contention-pct 0`用于单独关闭比例的诊断。
 两者使用同一输出根目录下带 `-kdlock-{observe|adaptive}` 的独立会话目录，
 汇总保留模式列；Linux/TCLock 标为 `not_applicable`。
-单 CPU 预热不会让其他 CPU 自动变热，冷 CPU 的测量前缀属于自适应效果的一部分。
+当前全部测量worker都参与预热，但预热不强制修改CPU或单锁热度，是否准入仍由上述策略决定。
+历史单CPU预热留下的冷CPU测量前缀属于当时结果，不能与当前全worker预热样本合并。
 `--scenario nested` 和 `--scenario early` 只允许 KD cacheline，用于双锁协议回归；
 默认 `plain` 保持原三锁性能负载。
 
