@@ -27,7 +27,7 @@ def main():
     # A small set of policy mutations checks that these tests reject a wrong
     # result. IRQ ownership and lossless profiling are intentionally not tested.
     mutations = {
-        "entry-busy-guard": ("if (this_cpu_cmpxchg(kd_hotlock_cpu->tables[kind].busy, 0, 1))", "if (false)", 1),
+        "table-busy-guard": ("if (READ_ONCE(t->busy))", "if (false)", 1),
         "late-spin-threshold": ("++slot->count >= target", "++slot->count > target", 1),
         "mutex-uses-spin-target": ("kind ? KD_HOTLOCK_SAMPLE_TARGET + 1U :", "kind ? KD_HOTLOCK_SPIN_SAMPLE_TARGET :", 1),
         "ignore-lock-time": ("now - slot->begin < window", "((void)window, true)", 1),

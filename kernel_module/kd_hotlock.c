@@ -66,6 +66,17 @@ static bool hotlock_stats;
 module_param(hotlock_stats, bool, 0444);
 MODULE_PARM_DESC(hotlock_stats, "Print final CPU-local exact lock counters after provider drain");
 
+/* Callers are CPU-pinned and never sleep while busy. IRQs finish before the
+ * interrupted caller resumes; barriers keep table work inside this guard. */
+static __always_inline bool kd_hotlock_try_enter(struct kd_hotlock_table *t)
+{
+  if (READ_ONCE(t->busy))
+    return false;
+  WRITE_ONCE(t->busy, 1);
+  barrier();
+  return true;
+}
+
 static unsigned int kd_hotlock_bucket(unsigned long address)
 {
   return hash_long(address, KD_HOTLOCK_HASH_BITS);
@@ -156,9 +167,10 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
   }
   return t->rate_hot;
 }
-/* Specialize record/query and spin/mutex at the four fixed call sites; keep
- * the sampling, local reentry guard and pin semantics shared below. */
-static __always_inline bool kd_hotlock_access(unsigned long address, unsigned int kind, bool record)
+/* Specialize record/query, lock kind and the caller's pin contract at fixed
+ * call sites. Sampling and the structural table guard remain shared. */
+static __always_inline bool kd_hotlock_access(unsigned long address, unsigned int kind,
+                                             bool record, bool already_pinned)
 {
   struct kd_hotlock_table *t;
   struct kd_hotlock_entry *slot;
@@ -167,14 +179,14 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   bool pin;
   /* Callers supply a valid lock identity between successful module init and
    * final drain. Do not repeat address/table readiness tests per acquisition. */
-  /* Spin admission already owns its acquisition pin. Reuse it, including
-   * on IRQ reentry; standalone observers and sleepable mutex callers pin
-   * only this statistics access, never the later sleep/ACK interval. */
-  pin = !preempt_count();
+  /* Root spin admission already owns a pin and needs no runtime pin check.
+   * Generic observers and mutex callers retain their existing pin handling,
+   * which covers only this access, never the later sleep/ACK interval. */
+  pin = !already_pinned && !preempt_count();
   if (pin)
     preempt_disable();
   t = &this_cpu_ptr(kd_hotlock_cpu)->tables[kind];
-  if (this_cpu_cmpxchg(kd_hotlock_cpu->tables[kind].busy, 0, 1))
+  if (!kd_hotlock_try_enter(t))
     goto unpin;
   /* Spin CPU heat advances only at MCS publication. Entry records retain the
    * cached CPU gate and original per-lock sampling; mutex keeps both clocks. */
@@ -219,10 +231,11 @@ unpin:
     preempt_enable();
   return admitted;
 }
-bool kd_hotlock_record_spin(unsigned long address) { return kd_hotlock_access(address, 0, true); }
-bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(address, 1, true); }
-bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false); }
-bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false); }
+bool kd_hotlock_record_spin(unsigned long address) { return kd_hotlock_access(address, 0, true, false); }
+bool kd_hotlock_record_spin_pinned(unsigned long address) { return kd_hotlock_access(address, 0, true, true); }
+bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(address, 1, true, false); }
+bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false, false); }
+bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false, false); }
 
 /* Compare cold native and delegated publications on the same CPU. The table
  * guard protects lock-counter resets; a skipped comparison leaves both raw
@@ -231,7 +244,7 @@ void kd_hotlock_sample_spin_mcs_pinned(void)
 {
   struct kd_hotlock_table *t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
 
-  if (this_cpu_cmpxchg(kd_hotlock_cpu->tables[0].busy, 0, 1))
+  if (!kd_hotlock_try_enter(t))
     return;
   /* Mutex can reuse its timestamp for a coincident lock check; spin cannot. */
   kd_hotlock_clock(t, NULL, KD_HOTLOCK_SPIN_MCS_INTERVAL, true);

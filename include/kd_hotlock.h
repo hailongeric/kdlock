@@ -36,11 +36,9 @@ void kd_hotlock_exit(void);
  * counter deltas. The table guard protects insertion and heat resets. Queries
  * neither count nor tick, and no admission result conveys lock ownership. */
 bool kd_hotlock_record_spin(unsigned long address);
-/* Caller already owns the acquisition pin; shared sampler reuses it. */
-static __always_inline bool kd_hotlock_record_spin_pinned(unsigned long address)
-{
-  return kd_hotlock_record_spin(address);
-}
+/* The caller must own an acquisition pin. This specialized entry omits the
+ * generic preemption check while sharing all table and admission behavior. */
+bool kd_hotlock_record_spin_pinned(unsigned long address);
 /* One MCS publication on its physical CPU with preemption pinned. Queue-head
  * acquisition never samples again. No lock sample: new CPU heat applies only
  * to later entries, including when this acquisition finishes natively. */

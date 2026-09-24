@@ -27,7 +27,7 @@ typedef unsigned long long u64;
 #define MODULE_PARM_DESC(...)
 #define EXPORT_PER_CPU_SYMBOL_GPL(...)
 #define TEST_CPUS 3
-static unsigned int cpu_id, pins, clocks, disables, enables, guards;
+static unsigned int cpu_id, pins, clocks, disables, enables, guards, pin_checks;
 static unsigned long now = 1;
 static size_t stride;
 static bool fail_alloc;
@@ -40,14 +40,10 @@ struct qspinlock { u16 tail; };
 #define per_cpu_ptr(p,c) ((__typeof__(p))((char *)(p)+stride*(c)))
 #define this_cpu_ptr(p) per_cpu_ptr(p,cpu_id)
 #define for_each_possible_cpu(c) for ((c)=0;(c)<TEST_CPUS;(c)++)
-#define preempt_count() pins
+#define preempt_count() (++pin_checks, pins)
 #define preempt_disable() do { ++pins; ++disables; } while(0)
 #define preempt_enable() do { assert(pins); --pins; ++enables; } while(0)
 #define barrier() asm volatile("" ::: "memory")
-static unsigned int local_cmpxchg(unsigned int *p, unsigned int old, unsigned int value)
-{ unsigned int found=*p; guards++; if(found==old) *p=value; return found; }
-/* The expression names an offset in the dynamically allocated CPU area. */
-#define this_cpu_cmpxchg(name, old, value) local_cmpxchg((unsigned int *)((char *)&(name)+stride*cpu_id),old,value)
 static unsigned long hash_long(unsigned long key,unsigned int bits)
 { return (key*0x61c8864680b583ebUL)>>(64-bits); }
 static unsigned long rdtsc_ordered(void)
@@ -62,7 +58,8 @@ static unsigned long rdtsc_ordered(void)
 #define this_cpu_read(name) (name[cpu_id])
 #define this_cpu_inc(name) (++name[cpu_id])
 #define READ_ONCE(x) (x)
-#define WRITE_ONCE(x, value) ((x)=(value))
+/* Production writes busy=1 only when entering the table guard. */
+#define WRITE_ONCE(x, value) do { if ((value)==1) guards++; (x)=(value); } while(0)
 #include "hotlock_production.h"
 static struct kd_hotlock_table *table(unsigned int kind)
 { return &this_cpu_ptr(kd_hotlock_cpu)->tables[kind]; }
@@ -82,7 +79,7 @@ static void mcs(unsigned int n)
 static void reset_policy(unsigned int percentage, const char *mode)
 {
  if(kd_hotlock_cpu) kd_hotlock_exit();
- cpu_id=pins=clocks=guards=0; now=1; hotlock_mode=(char *)mode;
+ cpu_id=pins=clocks=guards=pin_checks=0; now=1; hotlock_mode=(char *)mode;
  spin_contention_pct=percentage; kd_spin_delegate=true;
  assert(!kd_hotlock_init());
 }
@@ -127,7 +124,11 @@ static void init_and_pins(void)
  pins=1;
  unsigned int before_disable=disables, before_enable=enables;
  kd_hotlock_spin_entry_pinned();
- kd_hotlock_record_spin_pinned(0x1000); kd_hotlock_record_spin(0x1000);
+ unsigned int before_checks=pin_checks;
+ kd_hotlock_record_spin_pinned(0x1000);
+ assert(pin_checks==before_checks); /* The caller already supplied the pin. */
+ kd_hotlock_record_spin(0x1000);
+ assert(pin_checks==before_checks+1); /* Generic callers keep their check. */
  kd_hotlock_record_spin_mcs_pinned(); kd_hotlock_query_spin(0x1000);
  assert(pins==1 && disables==before_disable && enables==before_enable);
  assert(this_cpu_read(kd_hotlock_spin_entries)==1 && !table(0)->busy);

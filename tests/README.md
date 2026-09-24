@@ -10,6 +10,8 @@
 
 | 批次 | 已完成 | 范围与入口 |
 | --- | --- | --- |
+| 本地busy保护与已pin入口专化（实验检查点） | 基础2组、采样fixture/10项错误变体、抢占路径fixture通过，共4组；运行器26/26；两次W=1构建共22条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26331389次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)、[机器码证据](../bench/.tmp/ratio-20260924/local-access-codegen.md)。保持全入口计数及原比例政策，局部访问去CMPXCHG，已pin入口去通用抢占分支；c16/8等保护仍失败，未运行完整三方168场、nested/early或全量功能 |
+| 冷原生快速成功不计数（已拒绝） | 基础2组、采样fixture/10项错误变体、冷路由套件和1/2/3/8线程混合原生用例通过；运行器27/27；生产W=1保留11条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26372390次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)。策略mcs_entry_ratio512_cold_failed；省略冷原生首次CAS成功计数，其他入口不变；无一致收益，冻结归档后恢复f320d9f。原基线性能保护仍失败，未运行完整三方168场、nested/early或全量功能 |
 | spin节点数组128字节对齐 | 基础2组及存储fixture、5项存储错误变体检出；W=1的SELFTEST=1/0构建完成，共22条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26333961次正文 | [独立报告](../bench/tclock_compare/results/20260924-node-array-alignment.md)。数组对齐提升至128，节点大小128及通知偏移64/65不变；16/20线程相对simple512恢复约8%–9%，原基线保护仍失败，未运行三方168场或全量功能 |
 | 简化512次采样/比例（EXPERIMENTAL检查点） | 基础2组、采样fixture/10项错误变体、运行器26项及W=1构建通过，保留11条既有objtool警告 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)、[原始日志](../bench/.tmp/ratio-20260924/checks-simple512.log)。近似IRQ采样、两个快照、spin达到512次；simple512-fixed42场、32400000操作正确排空，30场实际JIT/26327355次正文；性能保护失败，未运行该版本三方168场 |
 | 比例准入/缩短spin单锁批次（历史b83f551检查点） | 基础单元2组、采样fixture及72项错误变体检出；W=1的SELFTEST=1/0构建完成，共22条既有objtool警告；42/42场、32400000操作正确排空，30场实际JIT、26363560次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)。覆盖获取/MCS原始计数、128次采样、512次比例窗口、初始两低确认、冷却/保留与spin513/12.5亿、mutex1025/25亿边界；首次测试变体编译失败及修订日志均保留。c1/c16、1/2/3/4/8/16/20线程各三轮仅KD adaptive；性能保护失败，未运行该检查点三方168场或全量功能 |
