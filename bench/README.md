@@ -7,7 +7,9 @@ adaptive默认比较100% MCS/获取比例，移除两低确认、原生冷却和
 spin单锁达到512次时检查12.5亿TSC窗口；mutex保持第1025次/25亿，CPU窗口仍为400亿。
 动态热表布局和busy保护保持，小型pinned封装内联。
 诊断槽采用128字节区域隔离，新增4KiB共享存储，局部修复已独立提交。
-简化候选的42场`simple512-fixed`正确排空，但性能保护失败，作为EXPERIMENTAL检查点保留；`b83f551`及两个补充后继实验均保留为失败历史，
+简化检查点`36512ed`的42场`simple512-fixed`正确排空但性能保护失败；随后独立的
+[节点数组128字节对齐](tclock_compare/results/20260924-node-array-alignment.md)在16/20线程恢复约8%–9%，
+但c16/8及部分低线程仍低于原基线。`b83f551`及两个补充后继实验均保留为失败历史，
 队列等待改动已撤回。当前不能宣称1/2/8/16/20线程性能保护完成；
 进度和失败证据见[本轮报告](tclock_compare/results/20260924-contention-ratio.md)。
 完整策略见[执行流](../docs/JIT_EXECUTION.md#21-热度与角色)，运行参数见[直接API入口](tclock_compare/README.md)。

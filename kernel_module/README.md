@@ -47,7 +47,10 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 `spin_prefetch=0/1/2` 是只读装载参数，分别关闭后继请求预取、保留 combiner
 查询地址的旧策略、使用发布前准备的地址提示（默认）。它不关闭其他既有队列
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
-节点为 128 字节，next 与通知字分行，continuation 继续独立存活。约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
+节点为 128 字节，next 与通知字分行，continuation 继续独立存活。
+四节点per-CPU数组显式按128字节对齐，节点类型大小及通知偏移64/65保持；生产断言与存储fixture约束数组对齐。
+匹配ELF每CPU只增加64字节填充，独立性能及地址推断边界见[节点数组报告](../bench/tclock_compare/results/20260924-node-array-alignment.md)。
+约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
 热锁使用每CPU/type256桶、256条精确地址记录，无候选分数或淘汰，锁路径不分配。
 当前按用户要求简化spin比例判断：复用MCS计数，采样与比较同为512次边界；静态per-CPU状态

@@ -229,9 +229,11 @@ DEFINE_PER_CPU_ALIGNED(uint64_t, ooo_unlocks);
 
 /*
  * Used by all threads to add itself to the queue on the slowpath.
+ * Keep each two-line node in its own aligned pair, apart from CPU-local
+ * pointers that can change while another CPU reads the queue links.
  */
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_spin_node,
-				     kd_spin_nodes[MAX_NODES]);
+				     kd_spin_nodes[MAX_NODES]) __aligned(2 * L1_CACHE_BYTES);
 
 #ifdef KDLOCK_SELFTEST
 #include "../../tests/kernel/spin/spin_node_trace.c"

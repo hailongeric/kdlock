@@ -147,6 +147,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [节点数组128字节对齐](results/20260924-node-array-alignment.md) | 相同简单政策下42场；16/20线程恢复约8%–9%，仍未满足原基线保护；每CPU只增加64字节填充，冻结.text字节相同 |
 | [本轮低竞争比例准入](results/20260924-contention-ratio.md) | 当前简化候选42场正确排空但保护失败；b83f551检查点及全部失败阶段保留原始数据 |
 | [诊断槽128字节隔离](results/20260924-diagnostic-pairs.md) | 独立提交439cd82的匹配pilot和采样证据；局部改善不代表完整比例策略通过 |
 | [MCS8/CPU400万组合](results/20260923-mcs8-cpu4m.md) | 历史168/168场、56配置各3轮；该参数组合不是当前比例准入配置；保留所有快慢样本及参数组合 |

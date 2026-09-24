@@ -1,6 +1,6 @@
 # 2026-09-24：低竞争比例准入调查（EXPERIMENTAL检查点，性能验收未完成）
 
-目标是改善3/4线程短代理批次，同时保持1/2/8/16/20线程性能。**目标尚未完成；当前simple512-fixed的42场KD adaptive正确排空，但性能保护失败，保留为EXPERIMENTAL简化检查点。** 实验检查点`b83f551`及后续两个队列等待候选均未满足性能保护，已保存全部证据；目录名`final`不代表通过。
+目标是改善3/4线程短代理批次，同时保持1/2/8/16/20线程性能。**目标尚未完成。** 简化政策已保存为EXPERIMENTAL检查点`36512ed`；随后独立的节点数组128字节对齐在16/20线程相对simple512恢复约8%–9%，但c16/8中位仍低于原基线9.42%，c16/1低2.68%。两阶段各42场正确排空，均不能记为完整性能保护通过。旧检查点`b83f551`、所有失败候选及原始快慢样本继续保留；目录名`final`不代表通过。
 
 ## 当前简化检查点（性能保护失败）
 
@@ -10,7 +10,7 @@
 
 [checks-simple512.log](../../.tmp/ratio-20260924/checks-simple512.log)记录基础2组、采样fixture/10项错误变体、运行器26项及W=1构建通过，保留11条既有objtool警告。该pilot为c1/c16、1/2/3/4/8/16/20线程、每配置三轮/每worker100000次，只含KD adaptive42场；不是三方168场。此次guest文档仍为前检查点，运行源码/测试已逐文件核对；后续最终矩阵才冻结同步后的当前文档。不能将旧候选的结果当作简化实现的验收。
 
-## 当前simple512-fixed的42场结果
+## 36512ed简化检查点的42场结果
 
 42/42场、32400000操作数据正确且排空；30场实际JIT、累计26327355次正文，1/2线程12场为NO_JIT。16/20线程中位吞吐约低于原基线8%–9%，c16/8低10.42%；此处保留简单政策而不是宣称性能通过。吞吐单位Mops/s，三轮按r0/r1/r2排列，ns/op取最大吞吐同一会话。离线[完整比较](../../.tmp/ratio-20260924/simple512-comparison.txt)由analyze.py生成；[机器可读结果](../../.tmp/ratio-20260924/simple512-comparison.json)、[summary](../../.tmp/ratio-20260924/simple512-fixed/summary.json)、[records](../../.tmp/ratio-20260924/simple512-fixed/records.json)保留全部精度和身份。
 
@@ -31,7 +31,7 @@
 | 16 / 16 | 4.284 / 4.277 / 4.273 | 4.273 / 4.277 / 4.284 | 0.24 | 233.44 | -8.24 |
 | 16 / 20 | 4.335 / 4.368 / 4.349 | 4.335 / 4.349 / 4.368 | 0.75 | 228.96 | -8.76 |
 
-下一项独立布局诊断来自ELF相对偏移：节点数组由旧0x1580移到0x1540。若沿用已有捕获的基址，节点区域可能与本地root指针落入相邻128字节区域；**当前实际per-CPU基址尚未捕获**，不能把这一条件推断写成实际放置或回退因果。拟单独测试节点数组显式128字节对齐，保持简化政策不变；本检查点不包含该未测布局修改。
+后续`node-pair128-fixed`显式对齐四节点数组到128字节，保持简单政策及节点类型/通知偏移不变；ELF节点/CPU状态相对偏移恢复到0x1580/0x1780，静态.text的80971字节相同，每CPU静态节增加64字节填充。42场全部正确排空，30场实际JIT、26333961次正文。完整14组全部样本、与simple512及原基线的比较、检查/审计和ELF哈希见[独立节点数组报告](20260924-node-array-alignment.md)。当前实际per-CPU基址未捕获，静态节一致也不表示装载后代码相同；不把相对布局推断写成硬件因果。
 
 ## b83f551检查点（历史性能失败）
 
@@ -79,6 +79,7 @@ spin使用GS INC累计物理获取尝试、GS XADD累计实际MCS发布，每128
 | [replenish8-fixed](../../.tmp/ratio-20260924/replenish8-fixed/records.json) | 24 | simple-JIT补充后继最多8次pause；4线程明显回退，未保留 |
 | [productive16-fixed](../../.tmp/ratio-20260924/productive16-fixed/records.json) | 24 | 仅已有16次成功进展再等待的候选；c16/8中位4.095、最大4.103仍低于原基线4.241/4.361Mops/s，保护未满足 |
 | [simple512-fixed](../../.tmp/ratio-20260924/simple512-fixed/records.json) | 42 | 当前简化检查点正确排空，30场实际JIT/26327355次正文；高线程保护失败，全目录一致性审计通过 |
+| [node-pair128-fixed](../../.tmp/ratio-20260924/node-pair128-fixed/records.json) | 42 | 独立节点数组128字节对齐，16/20线程恢复约8%–9%；仍未满足原基线全部保护 |
 
 `startup2-fixed`相对`before-fixed`最大吞吐仍有c16/8低4.60%、c1/20低0.56%、c16/20低1.44%；同代码比例0时c16/8仍低9.58%。`phase-fixed`的c1/3、c1/4低于startup，c16/8中位约3.913对4.116Mops/s，20线程变化小且方向不一。详细三轮分别见[startup summary](../../.tmp/ratio-20260924/startup2-fixed/summary.json)、[比例0 summary](../../.tmp/ratio-20260924/startup2-pct0-fixed/summary.json)、[phase summary](../../.tmp/ratio-20260924/phase-fixed/summary.json)；这些都不属于当前缩短spin批次的测量。
 
@@ -111,9 +112,9 @@ spin使用GS INC累计物理获取尝试、GS XADD累计实际MCS发布，每128
 
 未执行材料包括late-allocation提案、`capture_allocations.py`、未对齐`phase-v1`以及未同比缩短时间的`spin512-unscaled-source`；未通过该wrapper读取`/proc/kcore`。phase的GS重定位疑虑是误报：旧计数器同样使用PC32，无需修正asm操作数，见[机器码核对](../../.tmp/ratio-20260924/phase-codegen-observed.md)。相关源码、测试、构建和撤回快照均保留，未运行提案不计入场数。
 
-截至simple512-fixed，九份去重审计覆盖34个关闭阶段、999场、1136400000计时操作；831场KD中711场有实际JIT，累计890932442次正文。源码8747项、二进制178项、生成JIT镜像2493项哈希及业务/摘要/排空记录一致；这些是跨阶段累计检查数，包含性能失败和诊断，不是999场性能验收通过。明细及审计SHA见[证据清单](../../.tmp/ratio-20260924/retention-evidence-inventory.json)。
+截至node-pair128-fixed，十份去重审计覆盖35个关闭阶段、1041场、1168800000计时操作；873场KD中741场有实际JIT，累计917266403次正文。源码9005项、二进制183项、生成JIT镜像2619项哈希及业务/摘要/排空记录一致；这些跨阶段累计包含失败和诊断，不代表性能接受。明细及审计SHA见[证据清单](../../.tmp/ratio-20260924/retention-evidence-inventory.json)。
 
-通用审计：[前16阶段](../../.tmp/ratio-20260924/archive-audit-completed-phases.json)、[六组诊断](../../.tmp/ratio-20260924/archive-audit-diagnostic-phases.json)、[诊断槽后四阶段](../../.tmp/ratio-20260924/archive-audit-pair128-phases.json)、[retention](../../.tmp/ratio-20260924/archive-audit-retention-phase.json)、[startup两阶段](../../.tmp/ratio-20260924/archive-audit-startup2-phases.json)、[phase](../../.tmp/ratio-20260924/archive-audit-phase-fixed.json)、[spin512](../../.tmp/ratio-20260924/archive-audit-spin512-fixed.json)、[两个后继等待阶段](../../.tmp/ratio-20260924/archive-audit-replenishment.json)、[simple512](../../.tmp/ratio-20260924/archive-audit-simple512.json)。额外PMU/profile工具与采样数据由各自分析另行核对。审计不执行归档代码，只验证内部一致性，不重新证明过去记录的真实性。
+通用审计：[前16阶段](../../.tmp/ratio-20260924/archive-audit-completed-phases.json)、[六组诊断](../../.tmp/ratio-20260924/archive-audit-diagnostic-phases.json)、[诊断槽后四阶段](../../.tmp/ratio-20260924/archive-audit-pair128-phases.json)、[retention](../../.tmp/ratio-20260924/archive-audit-retention-phase.json)、[startup两阶段](../../.tmp/ratio-20260924/archive-audit-startup2-phases.json)、[phase](../../.tmp/ratio-20260924/archive-audit-phase-fixed.json)、[spin512](../../.tmp/ratio-20260924/archive-audit-spin512-fixed.json)、[两个后继等待阶段](../../.tmp/ratio-20260924/archive-audit-replenishment.json)、[simple512](../../.tmp/ratio-20260924/archive-audit-simple512.json)、[节点数组对齐](../../.tmp/ratio-20260924/archive-audit-node-pair128.json)。额外PMU/profile工具与采样数据由各自分析另行核对。审计不执行归档代码，只验证内部一致性，不重新证明过去记录的真实性。
 
 `spin512-fixed`覆盖c1/c16、1/2/3/4/8/16/20线程、每配置三轮及每worker100000次，仅KD adaptive共42场、32400000操作。所有业务及排空检查通过，1/2线程的12场没有实际JIT，其余30场有正文证据；这不是三方168场通过。该检查点未通过性能保护，未将其他候选更快样本拼入该阶段。宿主限频恢复、最终输入快照、完整证据包路径与SHA仍待实际完成；[归档清单](../../.tmp/ratio-20260924/final-archive-checklist.md)目前只是未执行草案。
 

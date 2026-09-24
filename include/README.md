@@ -15,7 +15,7 @@ Demo ioctl 和数据布局见 [workload_modules/README.md](../workload_modules/R
 | 职责 | 文件 | 关键约束 |
 | --- | --- | --- |
 | hook 与嵌套 CALL | [kd_lock.h](kd_lock.h) | mutex 路由和两类型嵌套控制 CALL |
-| spin 调度 | [kd_spinlock.h](kd_spinlock.h)、[qspinlock_i.h](qspinlock_i.h) | 显式 KD 单锁字、128 字节节点及 704 字节 continuation；禁止与 Linux 锁协议混用 |
+| spin 调度 | [kd_spinlock.h](kd_spinlock.h)、[qspinlock_i.h](qspinlock_i.h) | 显式KD单锁字、128字节节点及704字节continuation；per-CPU节点数组显式128字节对齐，类型与通知偏移不变；禁止与Linux锁协议混用 |
 | mutex 调度 | [kd_mutex.h](kd_mutex.h) | 原 mutex owner 保留，原 waiter 可继续后缀 |
 | frame/控制事务 | [kd_exec.h](kd_exec.h)、[kd_call.h](kd_call.h) | physical parent、logical resume_target、锁记录；spin pop 后通知，native ACK 与退休分离 |
 | 注册/执行 | [exe.h](exe.h)、[exe_info.h](exe_info.h) | 注册槽、entry_abi 身份与 packet_state；NORMAL 不证明正文执行 |

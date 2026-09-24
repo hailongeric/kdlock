@@ -33,7 +33,11 @@ def main():
                    "struct kd_spin_cpu_state {"):
         types += definition(state, marker).rstrip() + ";\n"
     lifecycle = (ROOT / "kernel_module/spin/lifecycle.inc").read_text()
-    code = "".join(definition(lifecycle, marker) for marker in (
+    # Compile the actual object declaration: type alignment alone cannot
+    # detect loss of the array-only boundary separating preceding CPU state.
+    node_start = state.index("static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_spin_node,")
+    code = state[node_start:state.index(";", node_start) + 1] + "\n"
+    code += "".join(definition(lifecycle, marker) for marker in (
         "static size_t kd_spin_continuation_offset(unsigned int cpu)",
         "static void kd_spinlock_free_percpu(void)",
         "int kd_spinlock_init(void)",
@@ -58,6 +62,10 @@ def main():
             "atomic_t waiter_count __aligned(2 * L1_CACHE_BYTES);",
             "atomic_t waiter_count __aligned(L1_CACHE_BYTES);",
         ),
+        "node-array-single-line": (
+            "kd_spin_nodes[MAX_NODES]) __aligned(2 * L1_CACHE_BYTES);",
+            "kd_spin_nodes[MAX_NODES]) __aligned(L1_CACHE_BYTES);",
+        ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-storage-") as directory:
         path = Path(directory)
@@ -80,11 +88,14 @@ def main():
                     "-o", str(binary),
                 ], capture_output=True, text=True, check=False, timeout=30,
             )
-            if name == "diag-single-line-pair":
+            if name in ("diag-single-line-pair", "node-array-single-line"):
                 assert compiled.returncode != 0 and "static assertion failed" in compiled.stderr, (
                     name, compiled.returncode, compiled.stdout, compiled.stderr,
                 )
-                assert "offsetof(struct kd_spin_diag_slot, waiter_count) != 2 * L1_CACHE_BYTES" in compiled.stderr
+                guard = ("offsetof(struct kd_spin_diag_slot, waiter_count) != 2 * L1_CACHE_BYTES"
+                         if name == "diag-single-line-pair" else
+                         "__alignof__(kd_spin_nodes) < 2 * L1_CACHE_BYTES")
+                assert guard in compiled.stderr
                 print(f"spin storage mutation detected: {name}")
                 continue
             assert compiled.returncode == 0, (name, compiled.stdout, compiled.stderr)

@@ -37,9 +37,12 @@ typedef struct qspinlock kd_spinlock_t;
 #define for_each_possible_cpu(i) for ((i) = 0; (i) < CPUS; (i)++)
 #define per_cpu_ptr(p, i) (&(*(p))[i])
 #define this_cpu_ptr(p) per_cpu_ptr(p, selected_cpu)
+/* Keep the production object's attributes while substituting CPU storage.
+ * The declaration itself is extracted with the allocator below. */
+#define DEFINE_PER_CPU_SHARED_ALIGNED(type, name) \
+	type name[CPUS] ____cacheline_aligned_in_smp
 
 static struct kd_spin_cpu_state kd_spin_cpu[CPUS];
-static struct kd_spin_node kd_spin_nodes[MAX_NODES][CPUS];
 static struct kd_spin_continuation_stack *kd_spin_continuations[CPUS];
 static struct kd_spin_continuation *kd_spin_native_root[CPUS];
 static struct kd_spin_node *kd_spin_resume_nodes[CPUS];
@@ -125,6 +128,14 @@ static void check_geometry(void)
 	size_t color_count = 1 + (KD_SPIN_CONT_BYTES -
 		sizeof(struct kd_spin_continuation_stack)) / L1_CACHE_BYTES;
 	const size_t pair = 2 * L1_CACHE_BYTES;
+
+	/* Align the array without changing node layout or each node's stride. */
+	CHECK(__alignof__(kd_spin_nodes) >= pair);
+	CHECK((uintptr_t)kd_spin_nodes % pair == 0);
+	CHECK(_Alignof(struct kd_spin_node) == L1_CACHE_BYTES);
+	CHECK(sizeof(struct kd_spin_node) == pair);
+	CHECK(offsetof(struct kd_spin_node, completed) == L1_CACHE_BYTES);
+	CHECK(offsetof(struct kd_spin_node, locked) == L1_CACHE_BYTES + 1);
 
 	/* Check actual array addresses as well as the type's offset and stride:
 	 * no waiter counter may share a pair with either adjacent slot's reads. */
