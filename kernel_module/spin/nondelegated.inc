@@ -4,6 +4,40 @@
  * and hand queue-head status onward before returning to their own body.
  * There is no request/frame, register capture, source lease or stack switch.
  * The caller keeps preemption disabled through its later physical unlock. */
+/* Only a native queue head, before physical acquisition, checks this prefix.
+ * Capture the held word and its tail together: five linked successors at or
+ * before that tail, this head and the outside holder show a queue backlog.
+ * The head blocks successor reuse; stop at the captured tail so a holder that
+ * releases and requeues during this walk cannot be counted twice. Missing
+ * links decline immediately. Native/IRQ nodes count without inspecting frames.
+ * This advisory veto runs only at the existing approximate MCS boundary. */
+static __always_inline void
+kd_spin_qualify_native_queue(struct qspinlock *word, struct kd_spin_node *node)
+{
+	struct kd_spin_node *captured_tail;
+	unsigned int successors;
+	u32 captured;
+
+	if ((this_cpu_read(kd_hotlock_spin_mcs) &
+	     (KD_HOTLOCK_SPIN_MCS_INTERVAL - 1U)) ||
+	    !kd_spin_delegate || !kd_hotlock_spin_cpu_hot_pinned())
+		return;
+	captured = atomic_read_acquire(&word->val);
+	if (!(captured & _Q_LOCKED_MASK_HL) || !(captured & _Q_TAIL_MASK_HL))
+		goto cold;
+	captured_tail = decode_tail(captured & _Q_TAIL_MASK_HL);
+	for (successors = 0; successors < 5; successors++) {
+		if (node == captured_tail)
+			goto cold;
+		node = smp_load_acquire(&node->next);
+		if (!node)
+			goto cold;
+	}
+	return;
+cold:
+	kd_hotlock_cool_spin_pinned();
+}
+
 /* Receive the failed initial CAS. In particular, the paired cold entry must
  * not retry the same CAS or prepare queue state on its successful path. */
 static noinline void kd_spin_acquire_nondelegated_contended(struct qspinlock *word,
@@ -62,6 +96,8 @@ static noinline void kd_spin_acquire_nondelegated_contended(struct qspinlock *wo
 		smp_cond_load_acquire_sched(&node->locked, !VAL);
 	}
 
+	/* Handoff is complete and our successors cannot advance until we own S. */
+	kd_spin_qualify_native_queue(word, node);
 	/* Only the queue head polls the shared word. Acquiring it does not
 	 * execute another waiter's body; a successor is only made queue head. */
 	val = atomic_cond_read_acquire(&word->val,

@@ -21,6 +21,12 @@ static __always_inline bool kd_hotlock_spin_cpu_hot_pinned(void)
 {
   return READ_ONCE(*this_cpu_read(kd_hotlock_spin_gate)) != 0;
 }
+/* A pinned native queue head may veto future CPU admission. Existing MCS
+ * sampling retries; no owner, counter, snapshot or timestamp changes here. */
+static __always_inline void kd_hotlock_cool_spin_pinned(void)
+{
+  WRITE_ONCE(*this_cpu_read(kd_hotlock_spin_gate), 0);
+}
 int kd_hotlock_init(void);
 void kd_hotlock_exit(void);
 /* A valid identity and initialized provider are caller preconditions. Spin
@@ -39,8 +45,9 @@ bool kd_hotlock_record_spin(unsigned long address);
 /* The caller must own an acquisition pin. This specialized entry omits the
  * generic preemption check while sharing all table and admission behavior. */
 bool kd_hotlock_record_spin_pinned(unsigned long address);
-/* One MCS publication on its physical CPU with preemption pinned. Queue-head
- * acquisition never samples again. No lock sample: new CPU heat applies only
+/* One MCS publication on its physical CPU with preemption pinned. The raw
+ * count/clock does not repeat at queue head; a native head can veto admission.
+ * No lock sample: new CPU heat applies only
  * to later entries, including when this acquisition finishes natively. */
 void kd_hotlock_sample_spin_mcs_pinned(void);
 static __always_inline void kd_hotlock_record_spin_mcs_pinned(void)

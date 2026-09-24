@@ -21,6 +21,10 @@ def main():
             queue.index('static __always_inline u32 xchg_tail'):
             queue.index('/**\n * clear_pending')]
         (Path(directory)/'spin_mcs_tail.h').write_text(publication)
+        policy = (ROOT/'include/kd_hotlock.h').read_text()
+        interval = next(line for line in policy.splitlines()
+                        if line.startswith('#define KD_HOTLOCK_SPIN_MCS_INTERVAL '))
+        (Path(directory)/'spin_mcs_policy.h').write_text(interval + '\n')
         source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
         direct = (ROOT/'include/kd_spin_direct.h').read_text()
         paired = 'void ' + definition(source,

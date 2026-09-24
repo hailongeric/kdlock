@@ -61,7 +61,9 @@ static _Thread_local struct { unsigned int nondelegated; } kd_spin_fast_cpu;
  __auto_type pointer = (p); __typeof__(*pointer) VAL; \
  do { VAL = __atomic_load_n(pointer, order); if (condition) break; cpu_relax(); } while (1); VAL; })
 #define atomic_cond_read_relaxed(p, c) LOAD_UNTIL(&(p)->counter, c, __ATOMIC_RELAXED)
-#define atomic_cond_read_acquire(p, c) LOAD_UNTIL(&(p)->counter, c, __ATOMIC_ACQUIRE)
+static void fixture_before_word_wait(atomic_t *p);
+#define atomic_cond_read_acquire(p, c) ({ fixture_before_word_wait(p); \
+ LOAD_UNTIL(&(p)->counter, c, __ATOMIC_ACQUIRE); })
 #define smp_cond_load_relaxed_sched(p, c) LOAD_UNTIL(p, c, __ATOMIC_RELAXED)
 #define smp_cond_load_acquire_sched(p, c) ({ local_reads++; LOAD_UNTIL(p, c, __ATOMIC_ACQUIRE); })
 static u32 atomic_cmpxchg_acquire(atomic_t *p, u32 expected, u32 value)
@@ -79,14 +81,49 @@ static struct kd_spin_node *decode_tail(u32 tail) { return &pool[(tail >> 18) - 
 #define _Q_TAIL_OFFSET_HL 16
 static bool kd_spin_delegate = true;
 static unsigned int thread_count;
+#include "spin_mcs_policy.h"
 static _Thread_local unsigned long mcs_samples;
+#define kd_hotlock_spin_mcs mcs_samples
+static _Thread_local unsigned int linked_reads, snapshot_reads, veto_calls;
+static _Thread_local struct qspinlock *scripted_word;
+static _Thread_local unsigned int scripted_followers;
+static _Thread_local void (*link_hook)(void);
 static _Thread_local unsigned long physical_entries;
-static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; rate_hot=1; }
+static void kd_hotlock_record_spin_mcs_pinned(void)
+{ if (!(++mcs_samples & (KD_HOTLOCK_SPIN_MCS_INTERVAL-1U))) rate_hot=1; }
+static bool kd_hotlock_spin_cpu_hot_pinned(void) { return rate_hot != 0; }
+/* The infrastructure fixture executes this header helper's real body. */
+static void kd_hotlock_cool_spin_pinned(void)
+{ assert(pins); veto_calls++; rate_hot=0; }
 static void kd_hotlock_spin_entry_pinned(void)
 { assert(pins); physical_entries++; }
 #define in_task() true
-#define smp_load_acquire(p) __atomic_load_n(p, __ATOMIC_ACQUIRE)
-#define xchg(p,v) (queued++, swaps++, __atomic_exchange_n(p,v,__ATOMIC_ACQ_REL))
+#define smp_load_acquire(p) ({ __auto_type value=__atomic_load_n(p, __ATOMIC_ACQUIRE); \
+ linked_reads++; if(link_hook) { link_hook(); } value; })
+static u32 fixture_snapshot(atomic_t *p)
+{ snapshot_reads++; return __atomic_load_n(&p->counter,__ATOMIC_ACQUIRE); }
+#define atomic_read_acquire(p) fixture_snapshot(p)
+/* The scripted old holder releases only when the real acquisition reaches its
+ * physical-word poll, after qualification. Pthread cohorts use normal loads. */
+static void fixture_before_word_wait(atomic_t *p)
+{
+ if(scripted_word && p==&scripted_word->val) {
+  assert(snapshot_reads==1);
+  smp_store_release(&scripted_word->locked,0);
+  scripted_word=NULL;
+ }
+}
+static uint16_t fixture_xchg(uint16_t *p, uint16_t value)
+{
+ queued++; swaps++;
+ uint16_t old=__atomic_exchange_n(p,value,__ATOMIC_ACQ_REL);
+ if(scripted_word && scripted_followers) {
+  smp_store_release(&pool[cpu][states[cpu].node_count-1].next,&pool[1][0]);
+  __atomic_store_n(p,encode_tail(scripted_followers,0)>>16,__ATOMIC_RELEASE);
+ }
+ return old;
+}
+#define xchg(p,v) fixture_xchg(p,v)
 #include "spin_mcs_tail.h"
 static u32 kd_spin_fetch_set_pending_acquire(struct qspinlock *p)
 { return __atomic_fetch_or(&p->val.counter, 256, __ATOMIC_ACQUIRE); }
@@ -136,11 +173,94 @@ static void *worker(void *arg)
   * Failed contender retries must be loads/local waits, not global RMWs. */
  assert(cas_calls>=50000 && cas_calls<=100000 && swaps==queued && mcs_samples==queued);
  assert(physical_entries==50000 && mcs_samples<=physical_entries);
- assert(rate_hot == (queued != 0));
+ /* A native-head veto may cool the gate; accounting and ownership stay exact. */
+ assert(!rate_hot || mcs_samples>=KD_HOTLOCK_SPIN_MCS_INTERVAL);
  __atomic_fetch_add(&queue_total, queued, __ATOMIC_RELAXED);
  __atomic_fetch_add(&read_total, local_reads, __ATOMIC_RELAXED);
  __atomic_fetch_add(&sample_total, mcs_samples, __ATOMIC_RELAXED);
  return NULL;
+}
+static void link_chain(unsigned int followers)
+{
+ for(unsigned int i=0;i<CPUS;i++) {
+  pool[i][0].next=i<followers ? &pool[i+1][0] : NULL;
+  pool[i][0].locked=true;
+  pool[i][0].socket_id=IRQ_NUMA_NODE;
+ }
+}
+static void prepare_qualification(void)
+{
+ mcs_samples=KD_HOTLOCK_SPIN_MCS_INTERVAL; rate_hot=1;
+ linked_reads=snapshot_reads=veto_calls=0;
+}
+static struct qspinlock *changing_word;
+static unsigned int previous_tail;
+static bool append_old_holder;
+static void release_during_walk(void)
+{
+ link_hook=NULL;
+ smp_store_release(&changing_word->locked,0);
+ if(append_old_holder) {
+  __atomic_store_n(&changing_word->tail,encode_tail(previous_tail+1,0)>>16,__ATOMIC_RELEASE);
+  smp_store_release(&pool[previous_tail][0].next,&pool[previous_tail+1][0]);
+ }
+}
+/* Snapshot-tail limits exclude a holder which requeues after the observation;
+ * a holder releasing without requeue must not invalidate a sufficient prefix. */
+static void queue_qualification(void)
+{
+ struct qspinlock word={0}; cpu=0; pins=1;
+ for(unsigned int n=0;n<=7;n++) {
+  link_chain(n); prepare_qualification();
+  word.val.counter=encode_tail(n,0)|_Q_LOCKED_VAL_HL;
+  kd_spin_qualify_native_queue(&word,&pool[0][0]);
+  assert(rate_hot==(n>=5) && veto_calls==(n<5));
+  assert(snapshot_reads==1 && linked_reads==(n<5 ? n : 5));
+ }
+ /* A lock-free or pending-only snapshot, or a missing tail, proves nothing. */
+ for(unsigned int state=0;state<3;state++) {
+  link_chain(5); prepare_qualification();
+  word.val.counter=state==2 ? _Q_LOCKED_VAL_HL : encode_tail(5,0)|(state ? _Q_PENDING_VAL_HL : 0);
+  kd_spin_qualify_native_queue(&word,&pool[0][0]);
+  assert(!rate_hot && veto_calls==1 && snapshot_reads==1 && !linked_reads);
+ }
+ link_chain(5); pool[2][0].next=NULL; prepare_qualification();
+ word.val.counter=encode_tail(5,0)|_Q_LOCKED_VAL_HL;
+ kd_spin_qualify_native_queue(&word,&pool[0][0]);
+ assert(!rate_hot && veto_calls==1 && linked_reads==3); /* Unpublished gap. */
+ for(unsigned int sufficient=0;sufficient<2;sufficient++) {
+  previous_tail=sufficient ? 5 : 4;
+  link_chain(previous_tail); prepare_qualification();
+  word.val.counter=encode_tail(previous_tail,0)|_Q_LOCKED_VAL_HL;
+  changing_word=&word; append_old_holder=!sufficient; link_hook=release_during_walk;
+  kd_spin_qualify_native_queue(&word,&pool[0][0]);
+  assert(!link_hook && !word.locked && snapshot_reads==1);
+  assert(rate_hot==sufficient && veto_calls==!sufficient && linked_reads==previous_tail);
+ }
+ for(unsigned int skip=0;skip<3;skip++) {
+  prepare_qualification(); kd_spin_delegate=skip!=0; rate_hot=skip!=2;
+  mcs_samples+=skip==1;
+  kd_spin_qualify_native_queue(&word,&pool[0][0]);
+  assert(rate_hot==(skip!=2) && !linked_reads && !snapshot_reads && !veto_calls);
+ }
+ kd_spin_delegate=true;
+ /* Exercise both actual native ownership exits. The stale failed value sends
+  * us to MCS, but the word really remains held until qualification completes. */
+ for(unsigned int n=0;n<=6;n+=n ? 1 : 4) {
+  link_chain(n); prepare_qualification();
+  word.val.counter=_Q_LOCKED_VAL_HL;
+  scripted_word=&word; scripted_followers=n;
+  mcs_samples=KD_HOTLOCK_SPIN_MCS_INTERVAL-1; rate_hot=0; states[0].node_count=0;
+  kd_spin_acquire_nondelegated_contended(&word,_Q_TAIL_MASK_HL);
+  assert(!scripted_word && word.locked==1 && !states[0].node_count && pins==1);
+  assert(mcs_samples==KD_HOTLOCK_SPIN_MCS_INTERVAL && snapshot_reads==1);
+  assert(rate_hot==(n>=5) && veto_calls==(n<5));
+  assert(linked_reads==(n<5 ? n : 5));
+  if(n) assert(!pool[1][0].locked);
+  for(unsigned int i=2;i<=n;i++) assert(pool[i][0].locked);
+ }
+ scripted_followers=0; changing_word=NULL; pins=0; rate_hot=0; mcs_samples=0;
+ linked_reads=snapshot_reads=veto_calls=0; queued=swaps=cas_calls=local_reads=0;
 }
 int main(int argc, char **argv)
 {
@@ -148,6 +268,7 @@ int main(int argc, char **argv)
  assert(argc==2);
  thread_count=strtoul(argv[1],NULL,10);
  assert(thread_count && thread_count<=CPUS);
+ queue_qualification();
  /* Delegation-off preserves the protocol but disables CPU statistics. */
  struct qspinlock disabled={0};
  kd_spin_delegate=false;

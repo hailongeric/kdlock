@@ -72,7 +72,7 @@ compares the MCS/entry ratio before sampling the clock, using the policy above. 
 shared pinned core and existing fast-owner/ticket routing; the provider still
 checks `spin_delegate` there. Both APIs use adaptive CPU/lock admission and the
 same MCS-publication CPU sampling. Percentage zero bypasses only the ratio;
-CPU/lock heat and execution safety checks remain.
+the native-head prefix check, CPU/lock heat and execution safety checks remain.
 Only the hot acquisition branch declares acquisition clobbers; unlock always
 declares the broad clobbers. The compiler owns live-register
 saves and may place them before the C branch or inside it. There are no manual
@@ -97,8 +97,16 @@ A missing translation is registered for later attempts. Refusal before publicati
 uses the complete native fast/pending/MCS helper, retaining any existing ticket;
 this can retry fast/pending but does not record a second heat sample. Native nodes
 have no continuation/frame/packet. Only genuine four-node exhaustion polls the
-whole word. A native queue head acquires the word, hands queue-head eligibility
-to its successor and releases its node; it holds the physical lock until unlock.
+whole word. After predecessor handoff and before physical-word polling, a native
+head may veto future CPU admission at the existing approximate 512-publication boundary.
+It captures the held word and tail once, then requires five acquire-linked
+successors within that captured prefix, without waiting or changing counters
+or timestamps. The head blocks successor reuse; stopping at the captured tail
+excludes an old holder which releases and requeues during the walk. A missing
+link conservatively declines. This is not a universal thread-count test; see
+[the admission policy](../JIT_EXECUTION.md#21-热度与角色).
+The native head still acquires the word, hands queue-head eligibility to its
+successor and releases its node; it holds the physical lock until unlock.
 
 A virtual JIT CALL records and decides heat before selecting its route. The hot
 route may register its lexical continuation, then reserves an independent virtual
@@ -109,7 +117,8 @@ exhaustion before publication uses native acquisition with the existing ticket;
 checked node/context failures retain their existing continuation rules.
 
 Explicit native bridges and outer-lock reacquisition use the complete native
-helper without reconsidering policy. Reacquisition keeps the original ticket.
+helper without changing this acquisition's native route. Its queue-head veto
+can affect only future admission. Reacquisition keeps the original ticket.
 `kd_spin_prepare` registers a caller-owned continuation before the workload.
 The deferred-admission experiment was rolled back; it is not the current protocol.
 

@@ -59,7 +59,8 @@ static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)
 {
 	/* Count each actual MCS publication once, for both cold native and hot
 	 * delegated producers. Fast/pending success and node-exhaustion polling
-	 * never reach this boundary; queue depth does not affect CPU heat. */
+	 * never reach this boundary. Raw accounting is independent of queue depth;
+	 * a native queue head can later veto admission without recounting. */
 	if (kd_spin_delegate)
 		kd_hotlock_record_spin_mcs_pinned();
 	return ((u32)xchg(&word->tail, tail >> _Q_TAIL_OFFSET_HL))

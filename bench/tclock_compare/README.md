@@ -22,17 +22,22 @@ fast/pending成功也进入获取分母。首次采样建立比例起点，之�
 计数及IRQ采样节奏允许近似，busy跳过的事件进入下次差值；移除连续低确认、8窗口冷却和热度保留。
 spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口保持400亿。
 动态热表布局和原所有权协议保持，小型pinned封装内联；策略不按线程数直接分流。
+当前head5策略在同一近似512边界的原生队头额外检查：一次捕获held锁字及tail，最多沿捕获tail以内
+读取五个已发布后继；前缀不足或发布有缺口时只关闭CPU热值，不等待、不新增计数或时钟。
+委托队头不执行此检查；捕获tail避免将检查期间释放并重新排队的旧持有者重复计入。
 完整规则以[执行流中的热度与角色](../../docs/JIT_EXECUTION.md#21-热度与角色)为准。
 
 adaptive要求CPU频率、比例和单锁热度；已发布请求不受后续热度变化取消。
 原observe模式及`--hotlock-mode`/provider `hotlock_mode`参数已移除，历史结果保留原模式身份。
 热度cookie只存CPU共享的缓存热值，不存获取路径或嵌套深度。记录使用`caller_shell=cold_clobber`、
-`caller_abi=clobber`、`cookie_storage=percpu_rate_hot`、`cpu_heat_policy=mcs_entry_ratio512_simple`，
+`caller_abi=clobber`、`cookie_storage=percpu_rate_hot`、`cpu_heat_policy=mcs_entry_ratio512_head5`，
 并单列`spin_contention_pct`。策略标识不替代冻结源码/哈希，同一标识的不同实现版本也不能合并取优；
 历史`mcs_entry`、32次比例窗口的`mcs_entry_ratio`、旧512窗口候选`mcs_entry_ratio512`、
-MCS32采样的`mcs_entry_ratio512_confirm2`、检查点`mcs_entry_ratio512_batch128`及缺失字段的样本分别保留。
-当前诊断槽把身份/禁用字段与waiter计数分至不同128字节区域，新增4KiB共享存储，
-布局见[provider说明](../../kernel_module/README.md)，该局部修复的独立证据见[诊断槽报告](results/20260924-diagnostic-pairs.md)。
+MCS32采样的`mcs_entry_ratio512_confirm2`、检查点`mcs_entry_ratio512_batch128`、
+不含本次队头否决的`mcs_entry_ratio512_simple`及缺失字段的样本分别保留。
+当前诊断槽保留原128字节区域隔离布局，旧共享waiter字段不再逐请求写入；waiter事件改记per-CPU总数，
+live观察近似、独立排空后的余额精确。布局见[provider说明](../../kernel_module/README.md)，
+原区域隔离的历史证据见[诊断槽报告](results/20260924-diagnostic-pairs.md)。
 历史检查点`b83f551`的42场未通过性能保护；后续两个补充后继等待实验同样未满足目标，已完整撤回。
 简化候选`simple512-fixed`的42场正确排空但性能保护失败，保留为EXPERIMENTAL检查点。
 随后保留实现的`selected-final-fixed`完整168场及nested/early两场功能已完成；3/4线程改善，
@@ -96,7 +101,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 ```
 
 `--spin-contention-pct`范围为0–100，默认100；0仅绕过比例门槛，
-CPU频率和单锁热度规则仍生效。该值作为只读provider装载参数传入并核对。
+原生队头前缀检查、CPU频率和单锁热度规则仍生效。该值作为只读provider装载参数传入并核对。
 
 需要固定准备/分配阶段的NUMA放置时，可在上述`timeout`后、`python3`前加入
 `taskset -c 0-19`；使用前核对这些CPU都属于预期的NUMA0。runner及其准备进程继承这一CPU集合，
@@ -125,7 +130,7 @@ worker仍按线程配置绑定选定的CPU0至CPU(`threads-1`)。运行器在`en
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   LC_ALL=C timeout --kill-after=10s 180 python3 bench/tclock_compare/run.py \
-  --functional --backends kdlock --cachelines 1 --threads 4 --repeats 1 \
+  --functional --backends kdlock --cachelines 1 --threads 20 --repeats 1 \
   --iterations 100000 --scenario nested --spin-contention-pct 0 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
@@ -136,7 +141,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆盖边界见
 [测试入口](../../tests/README.md)。
 协议JIT正例可使用`--spin-contention-pct 0`：nested中的无竞争内层获取也进入比例分母，
-默认100%可能合法选择原生。门槛0仍要求CPU频率、单锁热度及安全准入，不能保证正文执行；
+默认100%可能合法选择原生。示例使用20个worker为队列前缀留下余量，不把worker数量当作准入保证。
+门槛0仅关闭比例过滤，原生队头检查、CPU频率、单锁热度及安全准入仍启用，不能保证正文执行；
 所有多线程功能正例均要求非零实际JIT，并保留上下文、业务和排空检查；NO_JIT仍是功能失败。
 移除observe后的功能通过只以新冻结记录为准，不能沿用历史双模式通过数。
 

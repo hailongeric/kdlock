@@ -356,11 +356,33 @@ static void contention_ratio(void)
  for(unsigned int i=0;i<KD_HOTLOCK_CHECK_INTERVAL;i++) kd_hotlock_record_mutex(0x2000);
  assert(table(1)->rate_hot && !table(0)->rate_hot && !ratio()->mcs_begin);
 }
+/* A native-head veto changes CPU admission only. Publication sampling still
+ * controls retry, and reheating requires a fresh per-lock sample epoch. */
+static void native_queue_cooling(void)
+{
+ reset_policy(100); native_batch(512,512); hits(0x1000,512);
+ assert(kd_hotlock_query_spin(0x1000));
+ struct kd_hotlock_table before=*table(0);
+ struct kd_hotlock_spin_ratio snapshots=*ratio();
+ unsigned long entries=this_cpu_read(kd_hotlock_spin_entries), publications=this_cpu_read(kd_hotlock_spin_mcs);
+ unsigned int before_clocks=clocks, before_pins=pin_checks, before_guards=guards;
+ pins=1; kd_hotlock_cool_spin_pinned(); assert(pins==1); pins=0;
+ before.rate_hot=0;
+ assert(!memcmp(&before,table(0),sizeof(before)));
+ assert(!memcmp(&snapshots,ratio(),sizeof(snapshots)));
+ assert(entries==this_cpu_read(kd_hotlock_spin_entries) && publications==this_cpu_read(kd_hotlock_spin_mcs));
+ assert(clocks==before_clocks && pin_checks==before_pins && guards==before_guards);
+ assert(!kd_hotlock_query_spin(0x1000));
+ native_batch(511,511); assert(!table(0)->rate_hot);
+ native_batch(1,1); assert(table(0)->rate_hot && !kd_hotlock_query_spin(0x1000));
+ hits(0x1000,511); assert(!kd_hotlock_query_spin(0x1000));
+ assert(kd_hotlock_record_spin(0x1000));
+}
 int main(void)
 {
  assert(spin_contention_pct==100);
  init_and_pins(); boundaries(); windows(); hash_and_capacity(); mutex_sampling();
- isolation_and_guard(); mcs_publications(); contention_ratio();
+ isolation_and_guard(); mcs_publications(); contention_ratio(); native_queue_cooling();
  kd_hotlock_exit(); spin_contention_pct=101; assert(kd_hotlock_init()==-EINVAL);
  spin_contention_pct=75; assert(!kd_hotlock_init()); kd_hotlock_exit();
  fail_alloc=true; assert(kd_hotlock_init()==-ENOMEM); assert(!kd_hotlock_cpu);
