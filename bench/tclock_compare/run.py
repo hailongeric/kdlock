@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare Linux native, the TCLock port and kdlock through direct lock APIs.
 
-Freeze each backend build; KD always routes by CPU heat in both admission modes.
+Freeze each backend build; KD always uses adaptive CPU and lock admission.
 Three rounds alternate arm order. Preparation is excluded; acceptance checks remain.
 Build/run exclusively in the recovery guest, retaining failures without retry.
 """
@@ -24,7 +24,6 @@ from summarize import write_json, csv_file, valid
 from session import BackendSession, TC_MODULE, GUARD_MODULE
 from context_audit import audit as audit_context
 
-DEFAULT_HOTLOCK_MODES = ('observe', 'adaptive')
 DEFAULT_SPIN_CONTENTION_PCT = 100
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
@@ -90,21 +89,16 @@ def make_plan(args):
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1, 16])
-    modes = getattr(args, 'hotlock_mode', DEFAULT_HOTLOCK_MODES)
-    if isinstance(modes, str):
-        modes = [modes]
-    # Admission belongs to KD only. Share each Linux/TCLock baseline between
-    # modes, but give every KD policy its own freshly loaded session and name.
-    variants = [(backend, mode) for backend in args.backends
-                for mode in (dict.fromkeys(modes) if backend == 'kdlock' else ['not_applicable'])]
+    # Admission is adaptive only. Retain the fixed metadata label so reports
+    # keep current results separate from historically frozen admission modes.
+    variants = [(backend, 'adaptive' if backend == 'kdlock' else 'not_applicable')
+                for backend in args.backends]
     for n, t, repeat in itertools.product(sizes, args.threads, range(args.repeats)):
         arms = list(variants)
         if repeat % 2:
             arms.reverse()
         for backend, mode in arms:
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
-            # Both admission modes share MCS/entry statistics. Adaptive also
-            # gates admission by the configured ratio; observe bypasses it.
             suffix = f'-{mode}' if backend == 'kdlock' else ''
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
@@ -246,17 +240,13 @@ def main():
     p.add_argument('--functional', action='store_true',
                    help='KD functional acceptance only; requires --backends kdlock --repeats 1; no throughput report')
     kernel_identity.arguments(p)
-    p.add_argument("--hotlock-mode", choices=DEFAULT_HOTLOCK_MODES, nargs='+',
-                   default=list(DEFAULT_HOTLOCK_MODES),
-                   help='KD admission modes (default: observe adaptive); baselines run once')
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
     p.add_argument("--spin-delegate", choices=("on", "off"), default="on",
                    help="off: explicit KD self-execution control, no JIT acceptance")
     p.add_argument('--spin-contention-pct', type=int, choices=range(101),
                    metavar='0..100', default=DEFAULT_SPIN_CONTENTION_PCT,
                    help='adaptive minimum MCS/entry percentage over 512 MCS publications '
-                        f'(default: {DEFAULT_SPIN_CONTENTION_PCT}; 0 bypasses ratio; '
-                        'observe always bypasses)')
+                        f'(default: {DEFAULT_SPIN_CONTENTION_PCT}; 0 bypasses only ratio)')
     args = p.parse_args()
     require(args.scenario == "plain" or (args.backends == ["kdlock"] and args.workload == "cacheline"),
             "nested protocol regression requires KD cacheline workload")

@@ -96,11 +96,13 @@ KDLOCK_RECOVERY_CONFIRMED=1 timeout 240 tests/run_all.sh \
 
 实际 JIT 与业务互斥使用 [直接运行器](../bench/tclock_compare/README.md)。
 `--scenario plain` 为普通单锁；`--scenario nested` 为 A/B 嵌套；`--scenario early`
-为外锁提前释放，仅 KD cacheline 允许后两项。固定准入功能正例要求真实 JIT；
+为外锁提前释放，仅 KD cacheline 允许后两项。当前只保留adaptive，功能正例可显式使用
+`--spin-contention-pct 0`关闭比例过滤，但CPU/单锁热度仍生效，实际JIT检查不放宽；
+未重跑的功能场景不记为通过。
 性能中的原生完成须保留 NO_JIT 标记。少线程可经 MCS 升温，但不保证出现可代理后继；
 不能只凭线程数判断是否执行 JIT。具体有效性规则见运行器文档。
 
-SELFTEST provider 可用 `hotlock_lifetime_selftest=1 hotlock_mode=observe spin_entry_selftest=1`
+SELFTEST provider 可用 `hotlock_lifetime_selftest=1 spin_entry_selftest=1`
 检查热表碰撞及满容量时既有身份和真实 owner 仍保留、mutex 等待 CPU 迁移及 owner ACK；这不执行 JIT。
 构建方式及控制参数见 [provider](../kernel_module/README.md)。保持 normal 与
 SELFTEST 构建分开，不替换加载中的模块，完成后必须排空和正常卸载。

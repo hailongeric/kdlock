@@ -95,7 +95,7 @@ live-register saves and may place them before the `if` or inside the branch;
 the shell supplies no manual PUSH/POP adapter. The pinned entry shares the existing core and pin; lock
 width, packet layout and wrapper inputs are unchanged. Recompile paired callers
 to use this shell; the original API remains available. The workload always uses
-the heat-routed shell for its outer lock in both observe and adaptive; nested/early inner calls use
+the heat-routed shell with adaptive admission for its outer lock; nested/early inner calls use
 the original `KD_SPIN_DIRECT_CALL` without extra register adapters.
 
 `target_process` belongs to the retained mutex routing path; current direct
@@ -112,44 +112,30 @@ insert into an unused slot. There is no candidate ranking, score/error estimate,
 eviction or transfer of another address's history. A full table leaves unknown
 locks cold under adaptive admission, retaining existing identities until unload.
 
-Initialization reserves 13376 bytes per CPU (two 6680-byte tables plus alignment,
-24-byte entries)
-and seeds CPU clocks. Valid addresses and initialized lifetime are caller
-preconditions. Both CPU clocks use a 40-billion-TSC window. Spin checks every
-eligible MCS event; mutex still checks every 1024 entry records.
-Elapsed time covers the whole batch since the previous check, or initialization
-for the first batch; intermediate events retain cached CPU heat without a TSC read.
-The shared spin tail exchange counts each native, delegated or virtual MCS
-publication once, on cold and hot CPUs alike. CPU heat does not depend on queue
-depth; there is no successor scan or queue-head resampling. Fast/pending success,
-pre-publication cancellation and exhausted-node polling do not count. Two or
-three competing threads can become hot through frequent actual publications.
-Entry admission stays in place and consumes cached CPU heat;
-only a hot CPU accesses the lock table. A lock checks its 2.5-billion-TSC window
-when its count is **greater than 32**, at hit 33. The check refreshes its hot
-flag and timestamp and resets the count. Strictly smaller elapsed time and
-nondecreasing TSC are required. Mutex coincident CPU/lock checks share one TSC
-read; spin lock sampling reads its own timestamp because MCS is a separate event.
-Continuous CPU heat preserves independent lock batches. Cold/reheating CPU checks
-reset per-lock counts/heat/timestamps while retaining all hash mappings.
-Queries only read cached heat, which can remain stale until the next batch check.
-Sampling is best-effort: non-task calls skip the table and queries return cold;
-observe records still admit. Task callers reuse or acquire a CPU pin, so hash
-insertion needs no busy flag or statistics barrier and cannot be reentered by IRQ.
-The first CPU batch includes startup idle. Spin entries alone cannot warm a cold
-CPU; eligible native MCS events can, and later entries accumulate the
-33-hit lock batch. Mutex can first warm a single lock at record 1056.
-See [flow and storage](../bench/spin_cacheline/EXECUTION_PATHS.md#51-准备热度与快速获取).
+Initialization reserves the exact-key tables and seeds CPU clocks; lock paths
+allocate no table storage. Spin additionally keeps two previous totals in a
+16-byte per-CPU sidecar. At the same approximate 512-MCS boundary it compares
+publication/acquisition deltas, then samples the CPU clock. Fast/pending
+success contributes only to the acquisition denominator. The first sample
+primes the snapshots; later low ratios close admission directly. There is no
+cooldown, confirmation streak or heat retention across ratio rejection.
 
-IRQ/NMI reentry drops only a sample; the statistics pin ends before mutex sleep.
-`adaptive` is the load default. The paired shell makes `observe` fix admission
-only after CPU heat; adaptive additionally tests lock heat.
-The preserved shell retains the original fixed observe admission,
-even for unknown identities at capacity. A CPU that once warmed retains its
-cached heat until a later MCS batch updates it; a quiet single-thread phase
-does not itself expire heat or read the clock. Public spin skips sampling when delegation
-is disabled. Neither policy supplies JIT safety permission. Admission remains
-at entry; an eligible MCS event only updates CPU heat for subsequent entries.
+Only adaptive admission remains. `hotlock_mode` and the observe mode are removed.
+`spin_contention_pct` defaults to 100; zero bypasses only the ratio, retaining
+CPU frequency, per-lock heat and execution safety checks. CPU heat gates table
+access. Spin lock heat checks at 512 records/1.25 billion TSC ticks; mutex keeps
+1025 records/2.5 billion, with CPU windows strictly below 40 billion ticks.
+Cold/reheating CPU checks clear lock heat/counts while retaining identities.
+Queries read cached heat without counting or sampling. Approximate sampling
+uses an existing preemption pin and CPU-local busy guard; reentry may drop a
+sample but never bypasses ownership or drain accounting. Full timing rules and
+limits live in [the execution flow](JIT_EXECUTION.md#21-热度与角色).
+
+A CPU that once warmed retains cached heat until a later MCS batch updates it;
+a quiet single-thread phase does not itself expire heat or read the clock.
+Public spin skips heat sampling when delegation is disabled. Admission remains
+at entry; an MCS event updates only subsequent entries. Native completion and
+published JIT code do not by themselves demonstrate actual delegation.
 
 Fast owners/tickets and stable request frames retain OWNER/WAITER/COMBINER/DONE
 independently of the statistics table. Capacity, reset and CPU migration cannot
@@ -463,7 +449,8 @@ design, not restoring an old function.
 
 ## 11. Configuration
 
-`hotlock_mode` defaults to adaptive. Spin CPU heat counts actual MCS publications;
+Admission is adaptive only; `hotlock_mode` is no longer a module parameter.
+Spin CPU heat counts actual MCS publications;
 the paired heat-routed caller is the workload default. Callers must be rebuilt
 when their inline ABI changes, as described in section 3.
 `target_process` defaults to kd_test in the retained mutex path; `mutex_jit`
@@ -561,8 +548,8 @@ its lock object's protocol. Linux uses raw native API, TCLock uses native stack
 delegation, and KD uses caller-clobber v1 with a single KD word and JIT admission.
 Caller spill, lock/unlock, body, post-work and loop costs remain in ns/op.
 
-The paired cold gate applies CPU warmup to both policies; observe then fixes
-lock admission and adaptive retains the lock threshold. Preserve caller shell
+The paired cold gate applies CPU warmup before adaptive lock admission.
+Percentage zero bypasses only the ratio. Preserve caller shell
 and option identity as separate comparison groups. Record actual JIT independently of valid throughput. TCLock
 has no current per-body delegation counter; data correctness and drain cannot
 supply a delegation share. The sampler component measures record calls only.

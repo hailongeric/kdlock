@@ -16,6 +16,7 @@ mutex实现与嵌套控制保留，全局mutex hook仍未安装；加载provider
 普通状态完成对应释放，不读取CPU热值。没有on/off编译壳选择或手工push/pop。
 
 spin复用原MCS计数，每512次边界比较获取/MCS差值再采一次CPU时钟，默认100%比例门槛。
+当前只保留adaptive，移除`hotlock_mode`装载参数和CLI；门槛0只绕过比例，不绕过CPU/单锁热度。
 比例状态仅为16字节的两个快照；允许IRQ边界偏移，不维护精确批次、两低确认、冷却或近期热度保留。
 spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口仍为400亿。
 动态热表和owner/ticket/frame生命周期保持，小型pinned封装内联；两个后继等待实验已归档撤回。

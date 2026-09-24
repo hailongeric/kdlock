@@ -20,12 +20,12 @@
 
 1. 调用者拥有 `kd_spinlock_t` 对象，并用 `kd_spin_prepare` 登记锁后续点及 ABI。
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
-   直接 benchmark 在单 CPU 预热前完成准备，测量时停止 daemon。
+   直接 benchmark 在全部测量 worker 预热前完成准备，测量时停止 daemon。
 2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` 先pin，再用C `if`读取已有
-   每CPU `rate_hot`，observe/adaptive共用同一默认调用壳。cookie引用
+   每CPU `rate_hot`，当前只保留自适应准入。cookie引用
    `kd_spin_direct_cookie`，只表示当前CPU热度，不记录路径或深度。
-   冷分支普通C调用完整原生CAS/pending/MCS：增加nondelegated在途计数，CAS失败值
-   直接进入慢路径，不重复初始CAS；仍在实际MCS发布处累计CPU热度样本，获取低字节为5。
+   冷分支内联首次CAS和既有计数，CAS失败值交给普通C helper完成pending/MCS，
+   不重复初始CAS；nondelegated在途计数覆盖获取和持锁，实际MCS发布继续累计CPU热度样本，获取低字节为5。
    热分支用 `KD_SPIN_DIRECT_CALL` 调用pinned clobber入口，命名continuation仅在
    该CALL之后。宽clobber只声明在获取热分支，保存由编译器安排，可能部分位于if前；
    不手写push/pop。provider复用已有pin并检查 `spin_delegate`，宏不读取策略开关。
@@ -90,7 +90,7 @@ MCS路径先增加计数，再读取它并检查低9位；通常每512次发布�
 IRQ可使边界延后或重复，不用XADD返回值或额外状态修正。采样器读取两个原始总数的无符号差值，
 MCS差值为0时直接沿用缓存热值；否则先判断
 `mcs_delta * 100 >= entry_delta * spin_contention_pct`，再读取一次TSC检查CPU频率。
-装载参数`spin_contention_pct`只读，默认100、范围0–100；0与observe均绕过比例比较。
+装载参数`spin_contention_pct`只读，默认100、范围0–100；0仅绕过比例比较。
 首次MCS快照为0时只建立比例起点，允许CPU频率门槛先工作，不把先前无竞争预热计入首个比例判断。
 这是近似的跨锁CPU统计；计数回绕到零也可能重新建立起点，不承诺IRQ下精确窗口。
 
@@ -107,12 +107,13 @@ CPU热才查锁表。spin单锁计数达到512（`>=512`）时检查严格小于
 没有比例冷却期、连续低窗口确认或近期热度保留。hot是缓存值，不是逐入口过期保证；
 如果转为fast/pending-only且没有后续MCS，CPU热值可能一直缓存。
 
-adaptive要求CPU和单锁缓存热值同时成立。observe的record固定准入，但配对调用壳仍先检查CPU频率；
-冷CPU走原生，不能理解为所有observe入口立即代理。query不计数、采时或插入。
+当前仅保留adaptive，要求CPU和单锁缓存热值同时成立；`hotlock_mode`装载参数及CLI已移除。
+`spin_contention_pct=0`不绕过CPU频率、单锁热度或上下文/JIT安全检查，也不保证产生实际JIT。
+冷CPU走原生。query不计数、采时或插入。
 `spin_delegate=0`仍累计获取次数，但关闭热表记录及MCS采样。
 统计复用已有preempt pin；尚未pin的独立调用仅在本次访问期间pin，mutex不跨睡眠持有它。
 本地busy guard仍保护插入和热表重置，使用普通CPU本地读写及编译器屏障。
-访问已pin且不睡眠，IRQ会在被中断者恢复前完成，不需要原子的读改写；重入记录可丢弃，observe的record仍返回允许。
+访问已pin且不睡眠，IRQ会在被中断者恢复前完成，不需要原子的读改写；重入记录可丢弃并返回冷。
 有效地址和表生命周期由调用者保证；近似统计只影响未来准入，不承担所有权或排空计数。
 
 虚拟嵌套按热值分流：热路径取得独立ticket后CAS/排队，冷路径走原生bridge。
@@ -144,5 +145,6 @@ provider发现低字节5时只release该字节、减少nondelegated计数并解�
 
 SELFTEST 的热表满容量后真实 owner 保留、mutex CPU 迁移和 entry ACK 是独立 JIT=0 证据。
 模块加载/卸载检查也不执行 JIT。性能有效、实际 JIT、原生/拒绝及失败记录分开报告，
-没有正文的竞争 observe 场次不得算通过。环境、快照和卸载约束见
+没有正文的JIT正例不得算通过；功能检查可用比例门槛0，但仍须取得实际正文及上下文/排空证据。
+移除observe后的功能结果以新的冻结运行记录为准，历史通过不替代重跑。环境、快照和卸载约束见
 [AGENTS](AGENTS.md)。

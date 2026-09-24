@@ -57,12 +57,6 @@ DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
 static unsigned int spin_contention_pct = 100;
 module_param(spin_contention_pct, uint, 0444);
 MODULE_PARM_DESC(spin_contention_pct, "Minimum MCS publications per 100 spin entries; 0 disables ratio admission");
-/* Immutable after load: observe records the same samples but fixes admission.
- * Reentry still drops only the sample; it must not change fixed admission. */
-static char *hotlock_mode = "adaptive";
-module_param(hotlock_mode, charp, 0444);
-MODULE_PARM_DESC(hotlock_mode, "adaptive: local frequency admission; observe: fixed admission with statistics");
-static bool kd_hotlock_observe;
 static bool hotlock_stats;
 module_param(hotlock_stats, bool, 0444);
 MODULE_PARM_DESC(hotlock_stats, "Print final CPU-local exact lock counters after provider drain");
@@ -139,7 +133,7 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
     entry_delta = entries - r->entry_begin;
     /* Prime the first snapshots without charging pre-contention warmup.
      * Unsigned subtraction tolerates wrap; a zero snapshot may re-prime. */
-    if (r->mcs_begin && !kd_hotlock_observe && spin_contention_pct)
+    if (r->mcs_begin && spin_contention_pct)
       ratio_hot = mcs_delta * 100UL >= entry_delta * spin_contention_pct;
   }
   now = rdtsc_ordered();
@@ -176,12 +170,12 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   struct kd_hotlock_table *t;
   struct kd_hotlock_entry *slot;
   unsigned long now = 0;
-  bool admitted = record && kd_hotlock_observe;
+  bool admitted = false;
   bool pin;
   /* Callers supply a valid lock identity between successful module init and
    * final drain. Do not repeat address/table readiness tests per acquisition. */
   /* Root spin admission already owns a pin and needs no runtime pin check.
-   * Generic observers and mutex callers retain their existing pin handling,
+   * Generic spin and mutex callers retain their existing pin handling,
    * which covers only this access, never the later sleep/ACK interval. */
   pin = !already_pinned && !preempt_count();
   if (pin)
@@ -222,7 +216,7 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
         slot->count = 0;
       }
     }
-    admitted |= slot->hot;
+    admitted = slot->hot;
   }
 out:
   barrier();
@@ -258,12 +252,6 @@ int kd_hotlock_init(void)
   int cpu;
   unsigned long now;
   if (spin_contention_pct > 100)
-    return -EINVAL;
-  if (!strcmp(hotlock_mode, "observe"))
-    kd_hotlock_observe = true;
-  else if (!strcmp(hotlock_mode, "adaptive"))
-    kd_hotlock_observe = false;
-  else
     return -EINVAL;
   kd_hotlock_cpu = alloc_percpu(struct kd_hotlock_cpu);
   if (!kd_hotlock_cpu)

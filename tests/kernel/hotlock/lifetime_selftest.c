@@ -51,8 +51,7 @@ int kd_hotlock_lifetime_check(void)
  bool retained;
  if (!hotlock_lifetime_selftest) return 0;
  if (!cpu_online(1) || !cpu_online(2)) return -ENODEV;
- /* Observe is required so one fresh acquisition uses the actual fast owner. */
- if (!kd_hotlock_observe) return -EINVAL;
+ /* A cold root falls back to the same physical fast-owner record. */
  kd_spin_lock_abi(&lock, 0, 0, 0, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
  /* This ownership probe has no peers. Explicitly simulate the CPU events;
   * real adaptive warmup is checked separately with contended workloads. */

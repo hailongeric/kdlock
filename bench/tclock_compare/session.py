@@ -39,16 +39,17 @@ def hash_layout(layout):
 
 def check_jit_evidence(record):
     # A policy may select self-execution. Keep NO_JIT explicit and retain all
-    # publication/body counters; fixed-admission protocol positives still fail
+    # publication/body counters; contended protocol positives still fail
     # without a returned body. Valid throughput is not JIT acceptance.
     if record['arm'] == 'kdlock' and record.get('spin_delegate', 'on') == 'off':
         require(record.get('jit_bodies', 0) == 0, 'disabled control executed JIT')
         record['jit_acceptance'] = 'DISABLED_CONTROL'
         return
-    # Both admission modes sample actual MCS entries. Small cohorts can become
+    # Adaptive admission samples actual MCS entries. Small cohorts can become
     # hot; do not infer native-only execution from their thread count.
     if (record['arm'] == 'kdlock' and record['threads'] in (2, 3) and
-            record.get('scenario', 'plain') == 'plain'):
+            record.get('scenario', 'plain') == 'plain' and
+            not record.get('functional', False)):
         # Fast/pending acquisitions and native MCS queue heads can complete
         # without a serviceable follower. Preserve small-group performance data
         # while keeping zero returned bodies distinct from a JIT positive.
@@ -56,8 +57,7 @@ def check_jit_evidence(record):
                                     else 'NO_JIT_LOW_CONTENTION')
         return
     required = (record['arm'] == 'kdlock' and record['threads'] > 1 and
-                (record.get('hotlock_mode', 'observe') != 'adaptive' or
-                 record['threads'] == 20 or
+                (record.get('functional', False) or record['threads'] == 20 or
                  record.get('scenario', 'plain') in ('nested', 'early')))
     record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
     require(not required or record['jit_bodies'] > 0,
@@ -90,7 +90,6 @@ class BackendSession(Session):
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
-                      'hotlock_mode=' + self.record['hotlock_mode'],
                       'spin_contention_pct=' + str(self.record['spin_contention_pct']),
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
                      'load-kdlock.log')
@@ -122,7 +121,7 @@ class BackendSession(Session):
             params = parameters()
             require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
                     int(params['bench_lock_addr']) == layout['lock_addr'] and
-                    params['hotlock_mode'] == self.record['hotlock_mode'] and
+                    'hotlock_mode' not in params and
                     int(params['spin_contention_pct']) == self.record['spin_contention_pct'] and
                     'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
                     params['spin_delegate'] == ('N' if self.record.get('spin_delegate') == 'off' else 'Y'),

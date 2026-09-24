@@ -37,19 +37,20 @@ spin单锁达到512次时检查12.5亿TSC窗口；mutex保持第1025次/25亿，
 单线程长批次对照及因果限制；[昨日恢复报告](tclock_compare/results/20260922-performance-recovery.md)
 保留20线程5.197/4.809的历史参照与PMU版本澄清。
 
-运行器默认每配置3轮、每线程100000次。Linux/TCLock每配置每轮各跑一次，KD observe/adaptive分别保存；
+运行器默认每配置3轮、每线程100000次。Linux、TCLock、KD adaptive每配置每轮各跑一次；
+当前已移除observe模式和选择参数，历史双模式结果保留原身份。
 正式比值使用有效最大吞吐及同场ns/op，同时展示min/median/max/spread，不删除快慢样本。
 `--spin-contention-pct`默认100，0仅关闭比例；汇总同时区分
 `cpu_heat_policy=mcs_entry_ratio512_simple`和门槛值；旧`mcs_entry_ratio512_batch128`、
 `mcs_entry_ratio512_confirm2`、`mcs_entry_ratio512`等候选单独保留，不能合并取优。
 可按直接API入口说明用`taskset -c 0-19`固定准备阶段的CPU集合；worker仍按配置绑核，
 所有选定worker CPU必须包含在允许集合中。`environment.json`保存`runner_affinity`。
-cacheline默认120场，完整1/2/3/4/8/16/20线程为168场；RCUHT默认60场。
+cacheline默认90场，完整1/2/3/4/8/16/20线程为126场；RCUHT默认45场。
 功能模式显式使用`--repeats 1`，只记录正确性/JIT/排空，不输出性能比较。
 
 | 入口 | 用途 |
 | --- | --- |
-| [tclock_compare](tclock_compare/README.md) | 当前运行方法、cacheline/RCUHT、observe/adaptive、结果口径和功能检查 |
+| [tclock_compare](tclock_compare/README.md) | 当前运行方法、cacheline/RCUHT、自适应准入、结果口径和功能检查 |
 | [spin_cacheline](spin_cacheline/README.md) | 共用客户端、provider观察层、生命周期及离线汇总 |
 | [近期历史索引](tclock_compare/results/HISTORY.md) | 已移除的中间实验、固定Git原文、失败证据和归档哈希 |
 | [早期历史索引](spin_cacheline/results/HISTORY.md) | 9月15日至21日的旧版本报告 |

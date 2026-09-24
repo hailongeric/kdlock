@@ -76,15 +76,15 @@ static void mcs(unsigned int n)
  assert(pins==1 && disables==before_disable && enables==before_enable);
  pins--;
 }
-static void reset_policy(unsigned int percentage, const char *mode)
+static void reset_policy(unsigned int percentage)
 {
  if(kd_hotlock_cpu) kd_hotlock_exit();
- cpu_id=pins=clocks=guards=pin_checks=0; now=1; hotlock_mode=(char *)mode;
+ cpu_id=pins=clocks=guards=pin_checks=0; now=1;
  spin_contention_pct=percentage; kd_spin_delegate=true;
  assert(!kd_hotlock_init());
 }
 /* Time/hash tests explicitly disable the additional contention policy. */
-static void reset(void) { reset_policy(0,"adaptive"); }
+static void reset(void) { reset_policy(0); }
 static void warm_spin(unsigned long addr)
 { mcs(KD_HOTLOCK_SPIN_MCS_INTERVAL); hits(addr,KD_HOTLOCK_SPIN_SAMPLE_TARGET); }
 static void check_chains(struct kd_hotlock_table *t)
@@ -318,7 +318,7 @@ static void mcs_publications(void)
 }
 static void contention_ratio(void)
 {
- reset_policy(80,"adaptive");
+ reset_policy(80);
  native_batch(639,511);
  assert(!table(0)->rate_hot && clocks==1 && !ratio()->entry_begin && !ratio()->mcs_begin);
  now+=100; native_batch(1,1); /* First interval primes the snapshots. */
@@ -340,19 +340,19 @@ static void contention_ratio(void)
  hits(0x1000,511); assert(!kd_hotlock_query_spin(0x1000));
  assert(kd_hotlock_record_spin(0x1000));
  /* Pre-contention warmup primes once; the next low window closes admission. */
- reset_policy(100,"adaptive"); native_batch(48000+512,512);
+ reset_policy(100); native_batch(48000+512,512);
  assert(table(0)->rate_hot);
  native_batch(513,512); assert(!table(0)->rate_hot);
- reset_policy(0,"adaptive"); native_batch(3200,512); native_batch(3200,512);
+ /* Percentage zero bypasses only the ratio, not CPU or lock frequency. */
+ reset_policy(0); assert(!kd_hotlock_record_spin(0x1000));
+ native_batch(3200,512); native_batch(3200,512);
  assert(table(0)->rate_hot && ratio()->entry_begin==6400 && ratio()->mcs_begin==1024);
- reset_policy(80,"observe");
- assert(kd_hotlock_record_spin(0x1000) && !kd_hotlock_query_spin(0x1000));
- native_batch(3200,512); native_batch(3200,512); assert(table(0)->rate_hot);
- assert(kd_hotlock_record_spin(0x1000));
+ assert(!kd_hotlock_record_spin(0x1000));
+ hits(0x1000,511); assert(kd_hotlock_query_spin(0x1000));
  now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
  native_batch(512,512); assert(!table(0)->rate_hot);
- assert(kd_hotlock_record_spin(0x1000)); /* Observe fixes record admission only. */
- reset_policy(100,"adaptive"); native_batch(3000,0);
+ assert(!kd_hotlock_record_spin(0x1000));
+ reset_policy(100); native_batch(3000,0);
  for(unsigned int i=0;i<KD_HOTLOCK_CHECK_INTERVAL;i++) kd_hotlock_record_mutex(0x2000);
  assert(table(1)->rate_hot && !table(0)->rate_hot && !ratio()->mcs_begin);
 }
@@ -361,11 +361,10 @@ int main(void)
  assert(spin_contention_pct==100);
  init_and_pins(); boundaries(); windows(); hash_and_capacity(); mutex_sampling();
  isolation_and_guard(); mcs_publications(); contention_ratio();
- kd_hotlock_exit(); hotlock_mode="invalid"; assert(kd_hotlock_init()==-EINVAL);
- hotlock_mode="adaptive"; spin_contention_pct=101; assert(kd_hotlock_init()==-EINVAL);
+ kd_hotlock_exit(); spin_contention_pct=101; assert(kd_hotlock_init()==-EINVAL);
  spin_contention_pct=75; assert(!kd_hotlock_init()); kd_hotlock_exit();
  fail_alloc=true; assert(kd_hotlock_init()==-ENOMEM); assert(!kd_hotlock_cpu);
  puts("PASS hotlock: shared MCS512/ratio/CPU clock, spin512 and mutex1025 windows, exact keys/capacity, pins, read-only queries");
- puts("PASS contention admission: native denominator, high/low equality, cold recovery, CPU isolation, observe/zero bypass, structural table guard");
+ puts("PASS contention admission: native denominator, high/low equality, cold recovery, CPU isolation, zero ratio bypass, structural table guard");
  return 0;
 }

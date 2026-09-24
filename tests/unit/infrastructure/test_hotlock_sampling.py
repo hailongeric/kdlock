@@ -1,4 +1,4 @@
-"""Compile actual hot-lock sampling with a deterministic TSC in the guest.
+"""Compile adaptive-only hot-lock sampling with a deterministic TSC in the guest.
 
 Clock/allocation/CPU-local primitives are substitutes. The fixture checks ordinary
 sampling cadence, admission and table safety, not exact IRQ statistics or kernel

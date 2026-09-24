@@ -26,9 +26,9 @@ void kd_hotlock_exit(void);
 /* A valid identity and initialized provider are caller preconditions. Spin
  * compares CPU-local MCS/entry deltas every 512 publications, then reads one
  * timestamp for CPU frequency. The first interval primes the ratio snapshots.
- * Adaptive requires the configured percentage and a strict 40000000000-tick
- * CPU window; observe and percentage zero bypass the ratio. Observe record
- * returns true, while paired direct entries still follow the frequency gate.
+ * Admission requires the configured percentage and a strict 40000000000-tick
+ * CPU window. Percentage zero bypasses only the ratio; CPU and lock frequency
+ * gates still apply.
  * Spin lock heat checks every 512 records against 1250000000 ticks. Mutex keeps
  * 1025 records and 2500000000 ticks. Combined CPU cooling/reheating resets lock
  * heat. Exact tables hold 256 identities per CPU/type without eviction.

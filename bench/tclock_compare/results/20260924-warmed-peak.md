@@ -133,3 +133,46 @@ nested adaptive业务正确、排空，但0次JIT，按要求标记NO_JIT失败�
 
 本批未单独重跑nested/early live；直接相关生产代码fixture覆盖对应队列/嵌套出口，
 上节nested/early证据只属于冷内联版。mutex_jit=1为加载参数，本批没有mutex工作负载。
+
+## 原生队头六后继资格候选（撤回）
+
+原生queue-head在现有MCS512边界取得所有权后，最多读六个已链接后继，少于六个时清除本CPU热值；
+计数/时钟/快照不变，已代理的队头不做这个判断。基础2组、采样及原生MCS共4组通过，
+runner首次只因历史策略组数量从7变8而失败，修正预期后30项通过，原失败日志保留。
+独立30/30场业务及排空通过，12场实际JIT、100378125次计时正文，所有源码/二进制/原始采样审计通过。
+3至6线程大幅改善，但7线程三轮峰值为4.231/2.346/2.607Mops/s，整段3.259/2.341/2.335，
+低于保存版本且不稳定；因此完整撤回，不以最好一场掩盖回退。8/16/20没有类似崩溃。
+
+| 线程 | 三轮峰值min/median/max（Mops/s） |
+| ---: | --- |
+| 1 | 41.595/41.597/41.603 |
+| 2 | 2.686/2.831/2.938 |
+| 3 | 3.756/3.808/3.898 |
+| 4 | 4.030/4.072/4.261 |
+| 5 | 4.232/4.279/4.297 |
+| 6 | 4.178/4.326/4.388 |
+| 7 | 2.346/2.607/4.231 |
+| 8 | 4.802/4.804/4.835 |
+| 16 | 5.132/5.140/5.148 |
+| 20 | 5.154/5.156/5.156 |
+
+证据`bench/.tmp/peak-20260924/native-queue/`，guest `peak-native-queue-20260925`，内层归档SHA256 `92369a087fb1b4e5a664169b35ba441134e8d0aa02096ee1caaa1e1a12af8bb6`。候选策略标识为`mcs_entry_ratio512_native6`；源码恢复到`189ba3a`，不保留后继扫描或其veto helper。
+
+## 仅保留adaptive
+
+按用户要求移除provider的hotlock_mode参数、模式字符串、observe全局标志及固定准入分支；
+运行器也移除模式选项/装载参数。adaptive为唯一策略，记录中的固定adaptive标签只用于
+区分历史结果。spin_contention_pct=0只绕过比例，CPU及单锁热度、身份、安全检查继续执行。
+热表结构guard及owner/ACK、waiter、退休精确计数未近似化。
+
+基础2组加采样fixture及10项错误变体通过；SELFTEST=1/0 W=1 provider构建通过，
+保留既有objtool/locale警告。运行器32项通过；所有显式多线程functional场须有实际JIT，
+原生性能结果仍单独标记NO_JIT，disabled control仍要求零JIT。
+4线程、每worker100000次的nested/early（比例0）分别返回395570/99927次JIT正文，
+各400000次业务操作正确，源退休及排空通过；归档源码/二进制/JIT和数据审计通过。
+这些是功能结果，不计入正式吞吐；本提交不单独宣称移除模式的性能收益。
+
+- `adaptive-only/nested/`：guest `adaptive-only-nested-20260925`，归档SHA256 `f42d1bdfc38b8ee7d7cb48e1039d1bf5f8335fb1243f075db636ada44a4df21e`。
+- `adaptive-only/early/`：guest `adaptive-only-early-20260925`，归档SHA256 `67c8d8ae036b2603c85501deab4fcf2232f5ce44e21a74a03c725aec86aa2daa`。
+
+证据根仍为`bench/.tmp/peak-20260924/`；功能输入冻结时文档尚待更新，代码哈希完整保留。后续加强plain functional正文断言的32项检查单列，未将其称为新增live重跑。

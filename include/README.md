@@ -6,6 +6,7 @@ IRQ可使边界延后或重复，不为统计维护精确批次；busy guard仍�
 spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿。
 旧两低确认、冷却及热度保留已移除；当前简化候选42场正确排空但性能保护失败，作为EXPERIMENTAL检查点保留。
 完整语义与统计边界统一见[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
+热度接口仅返回自适应判断；原observe模式已移除，比例门槛0仍保留CPU/单锁热度要求。
 
 这里放跨编译单元、内核与翻译器共享的接口，以及必须内联的热路径。
 后端私有实现见 [kernel_module/README.md](../kernel_module/README.md)，

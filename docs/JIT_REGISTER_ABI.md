@@ -86,7 +86,7 @@ ticket、context 或 fast owner；其他状态进入原解锁核心。JIT 仅看
 旧 `kd_spin_direct_native_unlock` helper/export 保留兼容，新配对壳不再调用它。
 COMPLETE 指向解锁 CALL 后续点，FULL 仍恢复完整包，拒绝沿本次原生获取完成。
 workload 使用配对壳，调用者须配对使用并重编译。
-observe/adaptive 共用同一调用端，均按实际 MCS 发布采样 CPU 热度。
+当前仅保留自适应准入，按实际 MCS 发布采样 CPU 热度；移除 observe 不改变调用端 ABI。
 wrapper 参数、包布局、32 位锁字均未改变。
 当前 workload 仅外层选择新壳；nested/early 内层使用原 `KD_SPIN_DIRECT_CALL`，没有额外寄存器保存适配。
 

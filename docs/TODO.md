@@ -25,31 +25,35 @@ backing, hints and normal-root completion are implemented. Explicit KD objects
 use one 32-bit word; nondelegating requests use the full pending/MCS queue.
 `spin_delegate=0` remains a native control, distinct from actual JIT evidence.
 
-CPU heat gates both observe/adaptive callers. Spin reuses its MCS counter and
+Only adaptive admission remains; the observe mode and its selector are removed.
+CPU heat gates callers. Spin reuses its MCS counter and
 compares publication/acquisition deltas at the same 512-publication boundary
 as its CPU clock sample. A 16-byte per-CPU sidecar holds the previous totals.
 Counters and IRQ cadence are approximate; skipped comparisons contribute to
 later deltas. There is no separate accepted stream, two-low confirmation,
 cooldown, independent frequency state or retained heat across ratio rejection.
 The first sample primes snapshots; subsequent samples directly compare the
-configured percentage (default 100). Observe and percentage 0 bypass the ratio.
+configured percentage (default 100). Percentage 0 bypasses only the ratio;
+CPU/lock heat and all execution safety checks remain.
 Spin lock heat checks at 512 records/1.25 billion TSC ticks; mutex retains
 1025 records/2.5 billion. The strict CPU window remains 40 billion ticks.
 The exact-key table layout and busy guard remain, and small pinned wrappers
 are inline. Sampling does not own requests or relax owner/ACK/drain rules.
 The independent 128-byte diagnostic-pair fix 439cd82 remains in place.
-The simplified candidate passed two base groups, sampler fixture/10 mutations,
-26 runner checks and W=1 build with 11 existing objtool warnings. Its 42-session simple512-fixed pilot completed correctly and drained but failed
-performance protection; the full 168-session matrix has not run;
-prior queue-replenishment experiments were archived and removed.
+The historical simple512 candidate passed its focused checks; its 42-session
+pilot completed correctly and drained but failed performance protection.
+The subsequent retained-source 168-session matrix also left regressions unresolved;
+see the [frozen report](../bench/tclock_compare/results/20260924-contention-ratio.md).
+Those results predate the current adaptive-only change. Queue-replenishment
+experiments were archived and removed.
 Exact controls and limits live in [the execution flow](JIT_EXECUTION.md#21-热度与角色).
 
 The [prior MCS8/4-million matrix](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)
 passed 168/168 sessions; 8/20-thread adaptive medians exceeded the preceding historical defaults,
 but that batch did not resolve 3/4-thread or consistent single-thread gains.
-The current candidate passed its targeted unit/mutation checks and W=1 build.
-It still needs matching full-matrix evidence and
-confirmation that 1/2/8/16/20-thread performance is preserved.
+Current validation and steady-state measurements belong to their
+[matching frozen inputs](../bench/tclock_compare/results/20260924-warmed-peak.md).
+The original protection goal for 1/2/8/16/20 threads remains unproven.
 
 The [earlier MCS1/40-billion full matrix](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)
 and [optimization investigation](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)

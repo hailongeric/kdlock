@@ -23,13 +23,13 @@ spin在同一512次MCS边界比较每CPU获取/MCS差值，再读取一次TSC；
 CPU窗口400亿TSC ticks。spin单锁每512次检查12.5亿窗口；mutex保持第1025次/25亿。
 获取和MCS计数允许近似；已有busy guard保护热表修改，统计复用获取pin。
 这些只决定后续准入，不承担owner、ACK或排空职责。降温/重新变热时重置单锁热度，
-不取消已发布请求。完整参数、observe与query语义统一见
+不取消已发布请求。当前仅保留adaptive；完整参数与query语义统一见
 [热度与角色](../JIT_EXECUTION.md#21-热度与角色)，不在本页复制实验参数。
 
 OWNER 保存在真实 fast owner/ticket 状态中；WAITER、COMBINER、DONE 保存于
 稳定 frame 的 role 字段，使用原 state 布局内的空间，寄存器/帧偏移不变。
 SELFTEST 的 `hotlock_role_trace=1` 按锁地址和稳定 request 输出角色；默认关闭。
-`hotlock_lifetime_selftest=1 hotlock_mode=observe` 检查热表碰撞及满容量时既有身份和真实 owner 仍保留及
+`hotlock_lifetime_selftest=1` 检查热表碰撞及满容量时既有身份和真实 owner 仍保留及
 mutex 等待从 CPU 1 迁移到 CPU 2；不是实际 JIT 验收的替代。
 
 continuation 栈保留稳定 request，普通完成先 pop
@@ -70,9 +70,9 @@ changes affect only subsequent acquisitions. Native MCS counts each actual
 publication once, without consulting queue depth; every 512 publications it
 compares the MCS/entry ratio before sampling the clock, using the policy above. The drain scan includes the native in-flight count. Hot acquisitions use the
 shared pinned core and existing fast-owner/ticket routing; the provider still
-checks `spin_delegate` there. Observe fixes lock admission only after CPU heat
-in the paired shell. The retained API keeps its original policy.
-Both APIs use the same MCS-publication CPU sampling.
+checks `spin_delegate` there. Both APIs use adaptive CPU/lock admission and the
+same MCS-publication CPU sampling. Percentage zero bypasses only the ratio;
+CPU/lock heat and execution safety checks remain.
 Only the hot acquisition branch declares acquisition clobbers; unlock always
 declares the broad clobbers. The compiler owns live-register
 saves and may place them before the C branch or inside it. There are no manual
@@ -128,10 +128,10 @@ Neither route consults hotness or comm.
 
 `spin_delegate=0` is an explicit fixed self-execution control (default is 1).
 It bypasses admission and heat recording at the public entry. Combined record
-APIs return policy decisions; queries return cached heat even under observe.
+APIs return adaptive policy decisions; queries return cached heat.
 Unlock always uses ownership provenance. Off results are labeled
 `DISABLED_CONTROL` and require zero JIT bodies; they do not measure the same
-statistics workload as observe/adaptive or the reverted note/admit experiment.
+statistics workload as enabled delegation or the reverted note/admit experiment.
 
 Like TCLock's non-combinable queue nodes, a native KD node uses the existing
 `IRQ_NUMA_NODE` marker and has `execution == NULL`. The marker also applies to

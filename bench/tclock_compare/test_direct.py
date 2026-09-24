@@ -41,7 +41,7 @@ class DirectTests(unittest.TestCase):
 
     def test_timed_plan_and_peak_summary_keep_whole_run_visible(self):
         args = Namespace(cachelines=[1], threads=[3], repeats=2, iterations=100,
-            backends=['native', 'tclock', 'kdlock'], hotlock_mode=['adaptive'],
+            backends=['native', 'tclock', 'kdlock'],
             duration_ms=2000)
         plan = run.make_plan(args)
         self.assertTrue(all(s['peak_window_ms'] == s['peak_settle_ms'] == 300 and
@@ -97,7 +97,7 @@ class DirectTests(unittest.TestCase):
             with self.subTest(arm=arm), patch.object(Session, '__init__', initialize):
                 spec, = run.make_plan(Namespace(cachelines=[1], threads=[3],
                     repeats=1, iterations=17, backends=[arm],
-                    hotlock_mode=['observe'], pmu=True))
+                    pmu=True))
                 spec.update(cpus=cpus, cpu_nodes=nodes)
                 self.assertEqual((spec['warmup_policy'],
                                   spec['warmup_iterations_per_worker'],
@@ -143,7 +143,7 @@ class DirectTests(unittest.TestCase):
     def test_jit_measurement_starts_after_unmeasured_warmup(self):
         session = BackendSession.__new__(BackendSession)
         session.record = dict(arm='kdlock', threads=3, iterations=17,
-                              hotlock_mode='observe', scenario='plain')
+                              hotlock_mode='adaptive', scenario='plain')
         session.loaded_kd = True
         session.save = Mock()
         events, counts = [], iter((700, 705))  # 700 bodies already returned in warmup.
@@ -193,27 +193,24 @@ class DirectTests(unittest.TestCase):
 
     def test_disabled_control_rejects_any_jit(self):
         record = dict(arm='kdlock', threads=4, jit_bodies=0,
-                      hotlock_mode='observe', spin_delegate='off')
+                      hotlock_mode='adaptive', spin_delegate='off')
         check_jit_evidence(record)
         self.assertEqual(record['jit_acceptance'], 'DISABLED_CONTROL')
         with self.assertRaisesRegex(run.Failure, 'disabled control executed JIT'):
             check_jit_evidence(dict(record, jit_bodies=1))
 
     def test_policy_no_jit_is_not_protocol_acceptance(self):
-        record = dict(arm='kdlock', threads=4, jit_bodies=0, hotlock_mode='observe')
-        with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
-            check_jit_evidence(record)
-        check_jit_evidence(record := dict(record, hotlock_mode='adaptive'))
+        record = dict(arm='kdlock', threads=4, jit_bodies=0, hotlock_mode='adaptive')
+        check_jit_evidence(record)
         self.assertEqual(record['jit_acceptance'], 'NO_JIT')
         check_jit_evidence(record := dict(record, jit_bodies=1))
         self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_single_thread_native_completion_is_not_jit_acceptance(self):
-        for mode in ('observe', 'adaptive'):
-            record = dict(arm='kdlock', threads=1, jit_bodies=0,
-                hotlock_mode=mode, caller_shell='cold_clobber', scenario='plain')
-            check_jit_evidence(record)
-            self.assertEqual(record['jit_acceptance'], 'NO_JIT')
+        record = dict(arm='kdlock', threads=1, jit_bodies=0,
+            hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
+        check_jit_evidence(record)
+        self.assertEqual(record['jit_acceptance'], 'NO_JIT')
 
     def test_queue_depth_option_is_removed(self):
         argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
@@ -237,46 +234,56 @@ class DirectTests(unittest.TestCase):
 
     def test_small_plain_native_completion_is_not_jit_acceptance(self):
         for threads in (2, 3):
-            for mode in ('observe', 'adaptive'):
-                with self.subTest(threads=threads, mode=mode):
+            with self.subTest(threads=threads):
+                record = dict(arm='kdlock', threads=threads, jit_bodies=0,
+                    hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
+                check_jit_evidence(record)
+                self.assertEqual(record['jit_acceptance'], 'NO_JIT_LOW_CONTENTION')
+                check_jit_evidence(record := dict(record, jit_bodies=1))
+                self.assertEqual(record['jit_acceptance'], 'PASS')
+
+    def test_nested_protocol_cases_still_require_jit(self):
+        for threads in (2, 3, 4, 8, 20):
+            for scenario in ('nested', 'early'):
+                with self.subTest(threads=threads, scenario=scenario):
                     record = dict(arm='kdlock', threads=threads, jit_bodies=0,
-                        hotlock_mode=mode, caller_shell='cold_clobber', scenario='plain')
-                    check_jit_evidence(record)
-                    self.assertEqual(record['jit_acceptance'], 'NO_JIT_LOW_CONTENTION')
+                        hotlock_mode='adaptive', caller_shell='cold_clobber',
+                        spin_contention_pct=0, scenario=scenario)
+                    with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+                        check_jit_evidence(record)
                     check_jit_evidence(record := dict(record, jit_bodies=1))
                     self.assertEqual(record['jit_acceptance'], 'PASS')
 
-    def test_small_nested_protocol_cases_still_require_jit(self):
-        for threads in (2, 3):
-            for mode in ('observe', 'adaptive'):
-                for scenario in ('nested', 'early'):
-                    with self.subTest(threads=threads, mode=mode, scenario=scenario):
-                        record = dict(arm='kdlock', threads=threads, jit_bodies=0,
-                            hotlock_mode=mode, caller_shell='cold_clobber',
-                            scenario=scenario)
-                        with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
-                            check_jit_evidence(record)
-                        check_jit_evidence(record := dict(record, jit_bodies=1))
-                        self.assertEqual(record['jit_acceptance'], 'PASS')
+    def test_admission_mode_option_is_removed(self):
+        # Old commands must not silently select a different admission contract.
+        for choice in ('observe', 'adaptive'):
+            argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
+                    '--hotlock-mode', choice]
+            with self.subTest(choice=choice), patch.object(sys, 'argv', argv), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as result:
+                    run.main()
+            self.assertEqual(result.exception.code, 2)
 
-    def test_heat_routing_does_not_relax_observe_jit_acceptance(self):
-        record = dict(arm='kdlock', threads=4, jit_bodies=0,
-            hotlock_mode='observe', caller_shell='cold_clobber',
-            scenario='plain')
+    def test_high_contention_requires_jit(self):
+        record = dict(arm='kdlock', threads=20, jit_bodies=0,
+            hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
         with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
             check_jit_evidence(record)
         check_jit_evidence(record := dict(record, jit_bodies=1))
         self.assertEqual(record['jit_acceptance'], 'PASS')
 
-    def test_high_contention_requires_jit_in_both_policies(self):
-        for mode in ('observe', 'adaptive'):
-            record = dict(arm='kdlock', threads=20, jit_bodies=0,
-                hotlock_mode=mode, caller_shell='cold_clobber',
-                scenario='plain')
-            with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
-                check_jit_evidence(record)
-            check_jit_evidence(record := dict(record, jit_bodies=1))
-            self.assertEqual(record['jit_acceptance'], 'PASS')
+    def test_contended_functional_plain_requires_jit(self):
+        # Adaptive native completion is a valid performance result, but it
+        # cannot satisfy an explicitly requested functional JIT positive.
+        for threads in (2, 3, 4, 8, 16, 20):
+            record = dict(arm='kdlock', threads=threads, jit_bodies=0,
+                          functional=True, scenario='plain')
+            with self.subTest(threads=threads):
+                with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+                    check_jit_evidence(record)
+                check_jit_evidence(record := dict(record, jit_bodies=1))
+                self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_hash_layout_rejects_scheduling_enabled_module(self):
         layout = dict(workload='rcuht', buckets=1024, entries=4096,
@@ -303,7 +310,7 @@ class DirectTests(unittest.TestCase):
         plan = run.make_plan(Namespace(workload='rcuht', cachelines=None,
             threads=[1, 4, 8, 16, 20], repeats=2, iterations=100000,
             backends=['native', 'tclock', 'kdlock']))
-        self.assertEqual(len(plan), 40)
+        self.assertEqual(len(plan), 30)
         self.assertTrue(all(s['workload'] == 'rcuht' and s['cachelines'] == 0 for s in plan))
         spec = dict(workload='rcuht', cachelines=0, threads=1, cpus=[0])
         measurement = dict(schema=1, complete=True, data_ok=True, workload='rcuht',
@@ -328,11 +335,9 @@ class DirectTests(unittest.TestCase):
         # Performance defaults to repeated measurements for both payloads;
         # explicit one-round performance and functional runs remain available.
         for extra, sessions, repeats in (
-                ([], 120, 3), (['--workload', 'rcuht'], 60, 3),
-                (['--hotlock-mode', 'adaptive'], 90, 3),
-                (['--hotlock-mode', 'observe'], 90, 3),
-                (['--repeats', '1'], 40, 1),
-                (['--functional', '--backends', 'kdlock', '--repeats', '1'], 20, 1)):
+                ([], 90, 3), (['--workload', 'rcuht'], 45, 3),
+                (['--repeats', '1'], 30, 1),
+                (['--functional', '--backends', 'kdlock', '--repeats', '1'], 10, 1)):
             with self.subTest(args=extra):
                 output = io.StringIO()
                 argv = ['run.py', '--output', '/tmp/unused', '--dry-run', *extra]
@@ -342,9 +347,8 @@ class DirectTests(unittest.TestCase):
                 self.assertEqual(len(plan), sessions)
                 self.assertEqual(len({s['name'] for s in plan}), sessions)
                 self.assertEqual({s['repeat'] for s in plan}, set(range(repeats)))
-                expected_modes = {extra[-1]} if '--hotlock-mode' in extra else {'observe', 'adaptive'}
                 self.assertEqual({s['hotlock_mode'] for s in plan if s['arm'] == 'kdlock'},
-                                 expected_modes)
+                                 {'adaptive'})
 
     def test_functional_mode_requires_explicit_single_round(self):
         argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
@@ -360,8 +364,8 @@ class DirectTests(unittest.TestCase):
         with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
             self.assertEqual(run.main(), 0)
         plan = json.loads(output.getvalue())
-        self.assertEqual(len(plan), 240)
-        self.assertEqual(len({s['name'] for s in plan}), 240)
+        self.assertEqual(len(plan), 180)
+        self.assertEqual(len({s['name'] for s in plan}), 180)
         self.assertEqual({s['threads'] for s in plan}, {1, 2, 3, 4, 5, 6, 7, 8, 16, 20})
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
@@ -373,7 +377,7 @@ class DirectTests(unittest.TestCase):
             self.assertNotIn('spin_cold_fastpath', spec)
 
     def test_contention_cli_preserves_explicit_threshold_and_zero_bypass(self):
-        # A diagnostic zero must survive parsing and both admission modes;
+        # A diagnostic zero must survive parsing;
         # non-KD baselines have no contention-policy setting.
         for threshold in (0, 1, 37, 100):
             with self.subTest(threshold=threshold):
@@ -384,7 +388,7 @@ class DirectTests(unittest.TestCase):
                 with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
                     self.assertEqual(run.main(), 0)
                 plan = json.loads(output.getvalue())
-                self.assertEqual(len(plan), 4)
+                self.assertEqual(len(plan), 3)
                 for spec in plan:
                     self.assertEqual(spec['spin_contention_pct'],
                                      threshold if spec['arm'] == 'kdlock' else None)
@@ -422,19 +426,18 @@ class DirectTests(unittest.TestCase):
     def test_matrix_and_alternating_order(self):
         plan = run.make_plan(Namespace(cachelines=[1, 16], threads=[1, 4, 8, 16, 20],
             repeats=3, iterations=100000, backends=['native', 'tclock', 'kdlock']))
-        self.assertEqual(len(plan), 120)
-        self.assertEqual([(s['arm'], s['hotlock_mode']) for s in plan[:12]],
+        self.assertEqual(len(plan), 90)
+        self.assertEqual([(s['arm'], s['hotlock_mode']) for s in plan[:9]],
                          [('native', 'not_applicable'), ('tclock', 'not_applicable'),
-                          ('kdlock', 'observe'), ('kdlock', 'adaptive'),
-                          ('kdlock', 'adaptive'), ('kdlock', 'observe'),
+                          ('kdlock', 'adaptive'), ('kdlock', 'adaptive'),
                           ('tclock', 'not_applicable'), ('native', 'not_applicable'),
                           ('native', 'not_applicable'), ('tclock', 'not_applicable'),
-                          ('kdlock', 'observe'), ('kdlock', 'adaptive')])
+                          ('kdlock', 'adaptive')])
         self.assertTrue(all(s['api_mode'] == 'direct' for s in plan))
 
     def test_summary_excludes_bad_and_undrained_samples(self):
         plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=3,
-            iterations=100, backends=['native', 'tclock', 'kdlock'], hotlock_mode=['observe']))
+            iterations=100, backends=['native', 'tclock', 'kdlock']))
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
             run.write_json(out/'plan.json', plan)
@@ -467,11 +470,13 @@ class DirectTests(unittest.TestCase):
                                        (rate - minimum) / median * 100)
             self.assertEqual(len(json.loads((out/'records.json').read_text())), 9)
 
-    def test_summary_keeps_admission_modes_separate(self):
-        # A faster adaptive run must not replace observe or duplicate baselines.
-        # An undrained adaptive repeat must not win either policy's result.
+    def test_summary_preserves_historical_admission_identity(self):
+        # Reporting old frozen records must not merge their admission modes.
+        # The live planner below creates adaptive sessions only.
         plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=2,
             iterations=100, backends=['native', 'tclock', 'kdlock']))
+        plan += [dict(spec, name=spec['name'].replace('-adaptive', '-observe'),
+                      hotlock_mode='observe') for spec in plan if spec['arm'] == 'kdlock']
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
             run.write_json(out/'plan.json', plan)
@@ -498,11 +503,11 @@ class DirectTests(unittest.TestCase):
             self.assertEqual(rows['native', 'not_applicable']['sessions'], 2)
             self.assertEqual(rows['tclock', 'not_applicable']['sessions'], 2)
 
-    def test_default_heat_caller_keeps_admission_modes_separate(self):
+    def test_default_heat_caller_uses_one_adaptive_session(self):
         plan = run.make_plan(Namespace(cachelines=[1], threads=[1], repeats=1,
             iterations=100, backends=['native', 'tclock', 'kdlock']))
-        self.assertEqual(len(plan), 4)
-        self.assertEqual(len({s['name'] for s in plan}), 4)
+        self.assertEqual(len(plan), 3)
+        self.assertEqual(len({s['name'] for s in plan}), 3)
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
             run.write_json(out/'plan.json', plan)
@@ -519,9 +524,9 @@ class DirectTests(unittest.TestCase):
                     self.assertNotIn('spin_cold_fastpath', spec)
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(rows), 4)
+            self.assertEqual(len(rows), 3)
             self.assertEqual({r['hotlock_mode'] for r in rows if r['arm'] == 'kdlock'},
-                             {'observe', 'adaptive'})
+                             {'adaptive'})
             self.assertTrue(all('spin_cold_fastpath' not in r for r in rows))
             self.assertTrue(all(r['sessions'] == r['valid'] == 1 for r in rows))
             self.assertTrue(all(r['min_throughput_ops_s'] == r['median_throughput_ops_s'] ==
@@ -532,7 +537,7 @@ class DirectTests(unittest.TestCase):
 
     def test_summary_keeps_heat_policies_separate(self):
         base = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
-            iterations=100, backends=['kdlock'], hotlock_mode=['observe']))[0]
+            iterations=100, backends=['kdlock']))[0]
         # Keep the current single-cadence policy separate from older 128/32
         # sampling policies, even when their other configuration fields match.
         # The unique simple-policy identity must also stay apart from the
@@ -560,7 +565,7 @@ class DirectTests(unittest.TestCase):
 
     def test_summary_keeps_contention_thresholds_separate(self):
         # The fastest tuned threshold must never become another threshold's
-        # winner. Keep observe's bypass statistics separately identified too.
+        # winner. Threshold remains part of the adaptive result identity.
         plans = []
         rates = {0: 1, 37: 2, 100: 4}
         for threshold in rates:
@@ -580,9 +585,9 @@ class DirectTests(unittest.TestCase):
                                      data_ok=True, complete=True)))
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(rows), 6)
+            self.assertEqual(len(rows), 3)
             self.assertEqual({(row['hotlock_mode'], row['spin_contention_pct']) for row in rows},
-                             {(mode, pct) for mode in ('observe', 'adaptive') for pct in rates})
+                             {('adaptive', pct) for pct in rates})
             for row in rows:
                 threshold = row['spin_contention_pct']
                 self.assertEqual(row['sessions'], 2)
@@ -590,6 +595,25 @@ class DirectTests(unittest.TestCase):
                 self.assertEqual(row['best_throughput_ops_s'], rates[threshold] * 2e6)
                 self.assertEqual(row['best_amortized_ns_op'], 500 / rates[threshold])
                 self.assertTrue(row['best_session'].endswith(f'-pct{threshold}'))
+
+    def test_provider_load_has_no_admission_mode_parameter(self):
+        session = BackendSession.__new__(BackendSession)
+        session.record = dict(arm='kdlock', hotlock_mode='adaptive',
+                              spin_contention_pct=37, spin_delegate='on')
+        commands = []
+
+        def command(args, log):
+            commands.append((args, log))
+            if log == 'load-kdlock.log':
+                raise RuntimeError('stop after provider command')
+
+        session.run = command
+        with self.assertRaisesRegex(RuntimeError, 'stop after provider command'):
+            session.prepare()
+        args, = [args for args, log in commands if log == 'load-kdlock.log']
+        self.assertFalse(any(str(arg).startswith('hotlock_mode=') for arg in args))
+        self.assertIn('spin_contention_pct=37', args)
+        self.assertIn('spin_delegate=1', args)
 
 
 if __name__ == '__main__':

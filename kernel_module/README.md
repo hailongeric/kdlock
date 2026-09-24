@@ -55,14 +55,15 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 热锁使用每CPU/type256桶、256条精确地址记录，无候选分数或淘汰，锁路径不分配。
 当前按用户要求简化spin比例判断：复用MCS计数，采样与比较同为512次边界；静态per-CPU状态
 只有16字节的获取/MCS快照。近似IRQ采样不维护精确批次，busy跳过后由下次差值覆盖。
-默认100%比例门槛；首次建立快照，后续直接比较，observe/0绕过比例。
+默认100%比例门槛；首次建立快照，后续直接比较，0仅绕过比例。
+当前仅保留adaptive，移除`hotlock_mode`参数；CPU频率、单锁热度和安全检查仍须满足。
 移除两低确认、冷却、独立频率状态、已接受采样流和近期热度保留，小型pinned封装内联。
 spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口保持400亿。
 动态表布局、busy guard、owner/ticket/frame与排空协议保持；解锁不查热表。
 简化候选通过基础2组、采样fixture/10项错误变体、运行器26项及W=1构建（11条既有objtool警告），
 42场simple512-fixed正确排空，30场实际JIT，但性能保护失败，保留为EXPERIMENTAL检查点。两个后继等待实验已归档并恢复b83f551的队列代码。
 完整规则及卸载统计见[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
-SELFTEST的`hotlock_lifetime_selftest=1 hotlock_mode=observe`验证表满不覆盖真实持锁记录及mutex等待迁移；
+SELFTEST的`hotlock_lifetime_selftest=1`验证表满不覆盖真实持锁记录及mutex等待迁移；
 `hotlock_role_trace=1`输出角色，正常运行关闭。
 
 顶层 fast/pending 自执行共用 fast owner，只有进入 MCS 分支才 reserve ticket；
@@ -78,6 +79,24 @@ waiter计数位于偏移128。数组共8KiB，比原布局增加4KiB共享空间
 continuation 按 64 字节对齐，
 普通准入元数据位于前两条缓存行。普通批次只在最终准入处检查 readiness，
 正常完成合并终态验证和解绑；复杂处理仍使用原协议。
+
+简单c1委托请求的静态访问范围如下，依据`peak-inline-cold-20260924`冻结provider的DWARF、
+源码及生成正文核对；64字节对齐的continuation内偏移保持不变。这是访问范围下界，
+不是PMU缓存缺失次数，也不证明每次访问跨核取数。
+
+| 对象 | 正常正文/完成路径涉及的64字节行 | 数据交接 |
+| --- | --- | --- |
+| 704字节continuation | 前5行：头部0–127、BP136、RIP232、SP256 | producer初始化；combiner读取并更新frame状态和IP/SP/BP，waiter恢复时读取；冷锁账本不在此简单路径使用 |
+| 128字节node | header偏移0、通知偏移64两行 | producer发布指针/提示，combiner读取；completed/locked同一通知行由consumer完成并唤醒waiter |
+| 逻辑调用栈 | SP及SP−8，共1–2行，取决于SP对齐 | 读取保存的锁指针、写入并检查合成返回地址 |
+| c1业务数据 | 1行 | combiner读改写；同一批次可连续持有该行，无需每个正文换CPU |
+
+上述核心合计至少9–10条不同数据行；不含后继lookahead、注册表/镜像头、诊断槽、
+combiner本地上下文/物理栈及producer单独写入的continuation尾行。诊断身份与精确waiter原子计数
+另处两行，后者不能随近似热度统计放宽。模式2预取后继continuation的第0/1/2/4行及SP/SP−8；
+RIP所在第3行没有显式提示，但不能据此推定缓存缺失。只读配置和JIT镜像可在预热后共享缓存，
+不等同于有写者的通知、寄存器包或共享原子计数。`spin_prefetch=0/1/2`可用于同一镜像的受控诊断，
+当前运行器未暴露该选择；新增结果仍须独立冻结参数并保留实际JIT和排空检查。
 
 spin 初始化按 possible CPU 一次 `vzalloc(20 KiB)`，低端 12 KiB 放最多 12 条
 704 字节 continuation，高端 8 KiB 为物理 waiter 等待栈。节点直接指向记录；
