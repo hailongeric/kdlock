@@ -164,6 +164,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [固定2.5GHz的十种线程数比较](results/20260924-fixed-expanded.md) | 77dd417，固定2.5GHz并保持设置，全部worker预热，c1/c16及1/2/3/4/5/6/7/8/16/20线程四项共80场；完整吞吐/ns与原始证据 |
 | [增加5/6/7线程的动态频率比较](results/20260924-dynamic-expanded.md) | e6a4dda，默认动态1–3GHz、全部worker预热，c1/c16及1/2/3/4/5/6/7/8/16/20线程四项共80场；逐会话吞吐/ns及比较比值 |
 | [默认动态频率单轮比较](results/20260924-dynamic-frequency.md) | 335e14b，保持默认动态1–3GHz、全部worker预热，c1/c16及1/2/3/4/8/16/20线程四项共56场；原样保留单线程快慢样本，不与固定频率结果合并 |
 | [单线程频率对照](results/20260924-single-thread-frequency.md) | 相同b8bd0e2源码，c1/t1三后端、1.0/2.5GHz各三轮共18场；复现KD约12.4→31.7Mops/s，不能记为锁优化收益 |
