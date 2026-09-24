@@ -2,6 +2,8 @@
 
 按用户要求，每配置重新测一次，共56/56场、43200000次计时操作，业务、IRQ/preempt、实际JIT规则及排空检查通过。c16的8/16/20线程，KD adaptive吞吐分别为TCLock的1.331/1.438/1.452倍；c1同配置分别为0.897/0.979/0.994倍。3/4线程在两个正文长度下仍低于Linux Native和TCLock。**这是新预热方法下的单轮结果，不能证明原优化目标中的全部线程无回退。**
 
+针对昨日单线程约13M、此次约30M的疑问，后续[相同源码频率对照](20260924-single-thread-frequency.md)在1.0/2.5GHz限制下复现KD adaptive中位12.423/31.674Mops/s，Linux和TCLock也同步变化；不能将该跨日差异记为比例优化收益。该18场诊断独立于本报告56场。
+
 ## 方法与范围
 
 输入提交`b8bd0e2`，阶段`compare-warm-all-20260924`；c1/c16 × 1/2/3/4/8/16/20线程 × Linux Native/TCLock/KD observe/KD adaptive，各一轮、每worker100000次。`--repeats 1`是本次明确选择，运行器默认三轮保持。各配置依次运行Linux、TCLock、observe、adaptive；没有随机化或重复采样。

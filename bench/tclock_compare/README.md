@@ -156,6 +156,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [单线程频率对照](results/20260924-single-thread-frequency.md) | 相同b8bd0e2源码，c1/t1三后端、1.0/2.5GHz各三轮共18场；复现KD约12.4→31.7Mops/s，不能记为锁优化收益 |
 | [全部worker预热后的单轮三方比较](results/20260924-all-worker-warmup.md) | b8bd0e2，c1/c16、1/2/3/4/8/16/20线程，四项共56场；每worker预热48000次、无额外2秒等待，同场吞吐/ns与后端比值；不与旧预热样本合并 |
 | [节点数组128字节对齐](results/20260924-node-array-alignment.md) | 相同简单政策下42场；16/20线程恢复约8%–9%，仍未满足原基线保护；每CPU只增加64字节填充，冻结.text字节相同 |
 | [本轮低竞争比例准入](results/20260924-contention-ratio.md) | 保留实现完整168场及nested/early两场完成，3/4改善但c16/8等保护未满足；采用当时单CPU预热，全部失败阶段保留原始数据 |
