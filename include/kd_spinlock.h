@@ -147,6 +147,8 @@ void kd_spin_selftest_shadow_end(struct pt_regs *regs,
 void kd_spin_debug_nested_lock(raw_spinlock_t *lock, bool native_fallback);
 void kd_spin_debug_nested_unlock(raw_spinlock_t *lock);
 void kd_spin_debug_nested_remote(raw_spinlock_t *lock);
+/* CPU-local event totals are exact only after independent drain. A live scan
+ * may be stale or negative; it is an observation, never an ownership oracle. */
 int kd_spin_debug_waiter_count(raw_spinlock_t *lock);
 unsigned int kd_spin_debug_word(raw_spinlock_t *lock);
 unsigned long kd_spin_debug_owner(raw_spinlock_t *lock);

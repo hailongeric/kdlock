@@ -15,7 +15,9 @@
 spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口保持400亿。
 动态热表布局、busy guard、CPU热值分流、通用clobber解锁和owner/ticket/frame协议保持。
 默认100%比例门槛，0绕过比例；本轮按用户要求移除observe，当前只有adaptive；完整规则见[执行流](JIT_EXECUTION.md#21-热度与角色)。
-诊断槽128字节区域隔离、额外4KiB共享存储仍是独立提交439cd82。
+诊断槽128字节区域隔离、额外4KiB共享存储仍是独立提交439cd82；当前保留该布局，
+逐请求waiter共享原子写改为两个per-CPU单调事件总数，每CPU增加512字节动态诊断存储。
+live聚合允许暂时负值；独立排空后的最终余额仍精确，但即时原子下溢信号不再保留。
 
 单锁字、原生MCS、根fast/pending免ticket、caller-clobber、共享寄存器包、批内C循环、
 正常完成专用路径、node通知分行及source lease均已实现。每CPU仍分配20 KiB；
@@ -50,12 +52,18 @@ observe nested/early和配对冷路径通过；adaptive nested因约50%的比例
 pending-only等待512候选在2线程大幅改善，但4线程约下降11%–12%，已撤回为1；不合并到本次内联改动。
 诊断身份复用独立30场通过，8线程峰值约+1.69%，16/20线程基本保持；4线程仍波动且本批中位数较低。
 一次短批即冷却候选使热群崩溃，已撤回；证据并入同一峰值报告。原生queue-head六后继候选3至6线程提高，但7线程两轮明显回退，已撤回并归档。
-后续复用现有采样时钟评估更平稳的竞争估计，不逐请求读时钟或增加远端链访问。
 仅adaptive清理已完成基础/采样3组、runner32项及SELFTEST两种构建；比例0的nested/early
 实际返回395570/99927次正文并排空。当前没有移除模式的单独性能归因。
 禁用计时跳过两次helper的30场通过，合并adaptive-only后16/20线程约5.30Mops/s；
-不能把两项之间的全部收益归因于计时调用。下一项评估已有512采样区间的冷准入下界，
-随后独立测试spin waiter诊断使用per-CPU事件总数，owner/ACK和真正排空计数保持。
+不能把两项之间的全部收益归因于计时调用。冷CPU每512次MCS至少200万TSC的下界候选
+完成30场，3/4线程提高但5/6目标未解决、2线程峰值下降8.57%，已撤回；没有保留首批强制冷或新时间下界。
+per-CPU waiter候选独立30场正确排空，保留该诊断修改；相对timing-off，3–8/16/20线程
+峰值及中位数提高，但1线程中位数下降1.80%，2线程峰值下降4.75%，不能称为全面无回退。
+完整范围、哈希、审计及单线程机器码核对见[峰值调查](../bench/tclock_compare/results/20260924-warmed-peak.md#per-cpu-waiter观察保留)。
+下一项独立测试原生队头取得物理所有权前的captured-tail五后继资格：同一锁字快照确认
+持有者与队尾，最多读五个已链接后继，不越过捕获队尾，不等待或重读时钟；这是候选，尚无性能结论。
+该候选直接采用相同口径的Linux/TCLock/KD三轮90场，重点保留7线程稳定性及1/2线程分布；
+最终选定版本另做对应功能验证，不重复先跑30场再跑90场。
 性能测量不能解释为全量功能通过。并发冷准备RCU stall、pinned mutex mode-4
 soft lockup及其他真实限制保留在 [TODO](TODO.md#current-checkpoint)。
 
@@ -66,7 +74,7 @@ soft lockup及其他真实限制保留在 [TODO](TODO.md#current-checkpoint)。
 | 获取与排队 | CPU/锁频率、MCS/获取比例、上下文与翻译身份检查；稳定ticket及continuation | 准入、ABI/source有效性、KD自身排队协议 |
 | 正文 | wrapper元数据、frame、虚拟SP/BP和地址重写、生成代码分派 | TCLock切换原生waiter栈，两者不是等量机器指令 |
 | 完成与续跑 | 终态、复杂出口、owner ACK、pop/借用退休和最终恢复 | FULL、native后缀及远端请求不能当成最小COMPLETE |
-| 观测 | 正文证据、精确waiter数和可选统计 | 不得近似排空/owner协议量或删除JIT witness |
+| 观测 | 正文证据、近似live waiter聚合、排空后精确余额和可选统计 | 不得近似排空/owner协议量或删除JIT witness |
 
 ## 2. P0：建立当前版本的可信基线
 
@@ -140,8 +148,10 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 - [x] continuation在已有低12 KiB区域内错位；原始基址释放、全部槽位和局部初始化回滚已验证。
 - [ ] 若继续定位缓存原因，独立控制代码地址与数据放置；先核对guest PMU能力，
   没有硬件事件时只报告地址几何模型，不宣称测到cache-to-cache或L1 miss因果。
-- [ ] 逐项核对waiter_count、ticket引用及source lease消费者，再评估按批持有、
-  所有权转移和重复读取。诊断近似量与精确排空/生命周期量分开。
+- [x] 核对spin waiter_count消费者，保留发布/退出钩子，以per-CPU事件总数替换逐请求共享写；
+  基础及batch/storage四组、独立30场通过，性能分布与即时下溢信号限制已记录。
+- [ ] 继续核对ticket引用及source lease消费者，再评估按批持有、所有权转移和重复读取。
+  owner/ACK及真正排空计数保持精确；spin诊断修改不推广到mutex计数。
 - [ ] 用单锁与独立多锁分别检验布局、footprint和碰撞，不把每CPU缓存盲目放大。
 
 位置：[diagnostics.inc](../kernel_module/spin/diagnostics.inc)、

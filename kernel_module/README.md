@@ -73,9 +73,13 @@ claim/reclaim 与 release 各用一次 guard 完成校验和状态提交。物�
 
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
 32个共享诊断槽按128字节对齐、256字节步长排列，身份/禁用状态位于首个128字节区域，
-waiter计数位于偏移128。数组共8KiB，比原布局增加4KiB共享空间，避免这些读写字段随
-模块基址变化落入同一128字节区域；计数及禁用标志的原子语义不变。该局部修复独立提交439cd82，
-匹配pilot和采样见[诊断槽报告](../bench/tclock_compare/results/20260924-diagnostic-pairs.md)，不代表完整比例优化通过性能保护。
+偏移128的旧waiter字段现保留为布局占位，不再逐请求写入。数组仍为8KiB，禁用标志的
+原子语义不变；原区域隔离提交439cd82及其历史采样见[诊断槽报告](../bench/tclock_compare/results/20260924-diagnostic-pairs.md)。
+waiter发布/退出位置保持，以既有动态per-CPU诊断区的两个单调总数记录；每槽80→96字节，
+每CPU增加512字节。live有符号聚合是近似观察，允许过期或暂时负值；独立排空后的最终
+余额仍精确，非零记为invariant failure。即时原子下溢信号不再保留；owner/ACK、退休、
+真正排空及mutex计数不变。完整契约见[诊断身份生命周期](../docs/design/locking.md#spin-diagnostic-identity-lifetime)，
+独立30场结果及1/2线程限制见[峰值调查](../bench/tclock_compare/results/20260924-warmed-peak.md#per-cpu-waiter观察保留)。
 continuation 按 64 字节对齐，
 普通准入元数据位于前两条缓存行。普通批次只在最终准入处检查 readiness，
 正常完成合并终态验证和解绑；复杂处理仍使用原协议。
@@ -92,8 +96,9 @@ continuation 按 64 字节对齐，
 | c1业务数据 | 1行 | combiner读改写；同一批次可连续持有该行，无需每个正文换CPU |
 
 上述核心合计至少9–10条不同数据行；不含后继lookahead、注册表/镜像头、诊断槽、
-combiner本地上下文/物理栈及producer单独写入的continuation尾行。诊断身份与精确waiter原子计数
-另处两行，后者不能随近似热度统计放宽。模式2预取后继continuation的第0/1/2/4行及SP/SP−8；
+combiner本地上下文/物理栈及producer单独写入的continuation尾行。历史冻结版的诊断身份与
+共享waiter原子计数另处两行；当前waiter事件改为CPU本地写入，上述核心对象布局不变。
+模式2预取后继continuation的第0/1/2/4行及SP/SP−8；
 RIP所在第3行没有显式提示，但不能据此推定缓存缺失。只读配置和JIT镜像可在预热后共享缓存，
 不等同于有写者的通知、寄存器包或共享原子计数。`spin_prefetch=0/1/2`可用于同一镜像的受控诊断，
 当前运行器未暴露该选择；新增结果仍须独立冻结参数并保留实际JIT和排空检查。

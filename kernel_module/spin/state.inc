@@ -137,18 +137,18 @@ enum kd_spin_diag_event {
 struct kd_spin_diag_slot {
 	atomic_long_t addr;
 	atomic_t jit_disabled;
-	/* Waiters write this on two CPUs per delegated request. Separate whole
-	 * adjacent-line pairs to keep these transfers from interfering with the
-	 * identity/disable reads, regardless of the module's base alignment. */
+	/* Reserved, no longer written per request. Keep the established slot
+	 * geometry while measuring CPU-local waiter observations separately. */
 	atomic_t waiter_count __aligned(2 * L1_CACHE_BYTES);
 };
 
-/* Slots keep their identity for the module session. Only live observations
- * and the disable latch are shared; drained reporting folds these CPU-local
- * counters, avoiding a shared atomic RMW for every delegated body. */
+/* Slots keep their identity for the module session. Only the disable latch
+ * is mutable shared state; reporting folds these CPU-local counters. The two
+ * waiter totals preserve final balance without a shared per-request RMW. */
 struct kd_spin_diag_counts {
 	u64 event[KD_SPIN_DIAG_EVENT_COUNT];
 	int max_depth;
+	u64 waiter_enter, waiter_exit;
 };
 
 struct kd_spin_diag_cpu {

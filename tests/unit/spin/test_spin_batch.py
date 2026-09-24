@@ -56,9 +56,15 @@ def main():
         (spin, "static void kd_spin_diag_sum(unsigned int index, struct kd_spin_diag_counts *sum)", ""),
         (spin, "static void kd_spin_diag_waiter_enter(struct kd_spin_diag_slot *slot)", ""),
         (spin, "static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)", ""),
+        (spin, "static s64 kd_spin_diag_waiter_balance(unsigned int index)", ""),
+        (spin, "static u64 kd_spin_diag_waiter_mismatches(void)", ""),
+        (spin, "int kd_spin_debug_waiter_count(raw_spinlock_t *lock)", ""),
         (spin, "static bool kd_spin_jit_is_disabled(const struct kd_spin_diag_slot *slot)", ""),
     ):
         body += prefix + definition(source, marker) + "\n"
+    # Preserve the final diagnostic oracle after independent lifecycle drain.
+    assert "invariant_failures += kd_spin_diag_waiter_mismatches();" in spin
+    assert "(long long)(sum.waiter_enter - sum.waiter_exit)" in spin
     frame = read_source(ROOT / "kernel_module/kd_exec.c")
     for marker in (
         "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",

@@ -546,8 +546,27 @@ entry points. Current direct/SELFTEST coverage is listed in
 ### Spin diagnostic identity lifetime
 
 The producer resolves its diagnostic slot once at the SLOWPATH observation and
-retains it in the existing continuation. Waiter increments remain after tail
-publication and before predecessor linking; exits retain their exact decrement.
+retains it in the existing continuation. Waiter enter events remain after tail
+publication and before predecessor linking; every existing exit records a
+matching event. Both increment monotonic totals in the existing per-CPU
+diagnostic storage, including when entry and exit run on different CPUs.
 The combiner receives the owner's retained slot rather than looking through a
 recyclable queue node. Slots are append-only until drained provider shutdown;
-this reuse removes identity lookups without changing waiter or retirement counts.
+NULL slots still omit diagnostics without changing request handling.
+
+The exported waiter observation sums all possible CPUs and returns the signed
+enter-minus-exit balance. Live reads span different instants, so they can be
+stale or negative; they neither clamp the result nor signal live underflow.
+After entry references, physical owners and frames independently drain, the
+aggregate is exact: either sign of nonzero final balance reports an invariant
+failure, and final `waiters=0` remains a required diagnostic. This deliberately
+loses the former immediate atomic-underflow signal, including a transient bad
+hook order later balanced by another event. It does not replace ownership,
+ACK, retirement, source-lifetime or actual-JIT evidence. Mutex waiter/drain
+counters retain their existing exact semantics.
+
+The shared slot keeps its 128-byte alignment and 256-byte stride; its old
+waiter field is reserved and receives no request-path writes. Two local totals
+grow each dynamic counts record from 80 to 96 bytes, adding 512 bytes per CPU
+without changing nodes, continuations or static per-CPU placement. Validation
+and performance limits are recorded in the [peak investigation](../../bench/tclock_compare/results/20260924-warmed-peak.md#per-cpu-waiter观察保留).

@@ -14,16 +14,21 @@
 #define __aligned(n) __attribute__((aligned(n)))
 #define ____cacheline_aligned_in_smp __attribute__((aligned(64)))
 typedef uint64_t u64;
+typedef int64_t s64;
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef struct { int counter; } atomic_t;
 typedef struct { long counter; } atomic_long_t;
 struct list_head { struct list_head *next, *prev; };
 struct qspinlock { int unused; };
+typedef struct qspinlock raw_spinlock_t;
 struct task_struct { void *stack; };
 #include "spin_batch_types.h"
 
-#define READ_ONCE(x) (x)
+/* Inject a completed request between two live-observation reads. */
+static void (*read_hook)(const void *);
+#define READ_ONCE(x) ({ __auto_type p = &(x); __auto_type value = *p; \
+	if (read_hook) { read_hook(p); } value; })
 #define smp_load_acquire(p) (*(p))
 #define atomic_read(p) ((p)->counter)
 #define atomic_read_acquire(p) atomic_read(p)
@@ -154,24 +159,32 @@ static void test_stats(void)
 	unsigned int index = slot - kd_spin_diag_slots;
 	struct kd_spin_diag_counts sum;
 	kd_spin_diag_waiter_enter(slot);
-	CHECK(atomic_read(&slot->waiter_count) == 1);
+	CHECK(kd_spin_diag_waiter_balance(slot - kd_spin_diag_slots) == 1);
+	CHECK(!atomic_read(&slot->waiter_count)); /* Reserved shared field stays idle. */
+	CHECK(offsetof(struct kd_spin_diag_counts, max_depth) == 72 &&
+	      offsetof(struct kd_spin_diag_counts, waiter_enter) == 80 &&
+	      offsetof(struct kd_spin_diag_counts, waiter_exit) == 88 &&
+	      sizeof(struct kd_spin_diag_counts) == 96);
 	for (cpu = 0; cpu < 3; cpu++) {
 		for (unsigned int e = 0; e < KD_SPIN_DIAG_EVENT_COUNT; e++)
 			for (unsigned int n = 0; n <= cpu; n++)
 				kd_spin_diag_record_addr(addr, e, cpu + 1);
 		CHECK(cpu_stats[cpu].slot[index].event[0] == cpu + 1);
-		CHECK(atomic_read(&slot->waiter_count) == 1);
+		CHECK(kd_spin_diag_waiter_balance(slot - kd_spin_diag_slots) == 1);
 	}
 	cpu = 0;
 	interrupt_max = true;
 	kd_spin_diag_record_addr(addr, KD_SPIN_DIAG_SLOWPATH, 4);
+	cpu = 2; /* Exit on another CPU; a local negative difference is valid. */
 	kd_spin_diag_waiter_exit(slot);
-	CHECK(!atomic_read(&slot->waiter_count));
+	CHECK(!kd_spin_diag_waiter_balance(slot - kd_spin_diag_slots));
 	slot->jit_disabled.counter = 1;
 	cpu = 1;
 	CHECK(kd_spin_jit_is_disabled(slot));
 	kd_spin_diag_sum(index, &sum);
-	CHECK(sum.max_depth == 8);
+	CHECK(sum.max_depth == 8 && sum.waiter_enter == 1 && sum.waiter_exit == 1);
+	CHECK(!cpu_stats[2].slot[index].waiter_enter &&
+	      cpu_stats[2].slot[index].waiter_exit == 1);
 	for (unsigned int e = 0; e < KD_SPIN_DIAG_EVENT_COUNT; e++)
 		CHECK(sum.event[e] == (e == KD_SPIN_DIAG_SLOWPATH ? 7 : 6));
 	CHECK(cpu_stats[2].slot[index].max_depth == 3);
@@ -182,6 +195,42 @@ static void test_stats(void)
 	CHECK(sum.max_depth == 8 && sum.event[0] == 7);
 	kd_spin_diag_invariant_failure();
 	CHECK(cpu_stats[1].invariant_failures == 1 && !cpu_stats[0].invariant_failures);
+}
+
+static struct kd_spin_diag_slot *scan_slot;
+static void complete_during_scan(const void *address)
+{
+	unsigned int index = scan_slot - kd_spin_diag_slots;
+
+	if (address != &cpu_stats[0].slot[index].waiter_enter)
+		return;
+	read_hook = NULL;
+	cpu = 0; kd_spin_diag_waiter_enter(scan_slot);
+	cpu = 2; kd_spin_diag_waiter_exit(scan_slot);
+}
+
+static void test_waiter_observations(void)
+{
+	struct qspinlock lock;
+	scan_slot = kd_spin_diag_find((unsigned long)&lock);
+	CHECK(scan_slot && kd_spin_debug_waiter_count(NULL) == -EINVAL);
+	CHECK(!kd_spin_debug_waiter_count(&lock));
+	u64 failures = cpu_stats[2].invariant_failures;
+	read_hook = complete_during_scan;
+	CHECK(kd_spin_debug_waiter_count(&lock) == -1);
+	CHECK(!read_hook && !kd_spin_debug_waiter_count(&lock));
+	CHECK(cpu_stats[2].invariant_failures == failures);
+	CHECK(!kd_spin_diag_waiter_mismatches());
+	/* Only quiescent mismatches are failures; never silently clamp them. */
+	kd_spin_diag_waiter_enter(scan_slot);
+	CHECK(kd_spin_debug_waiter_count(&lock) == 1);
+	CHECK(kd_spin_diag_waiter_mismatches() == 1);
+	kd_spin_diag_waiter_exit(scan_slot);
+	kd_spin_diag_waiter_exit(scan_slot);
+	CHECK(kd_spin_debug_waiter_count(&lock) == -1);
+	CHECK(kd_spin_diag_waiter_mismatches() == 1);
+	kd_spin_diag_waiter_enter(scan_slot);
+	CHECK(!kd_spin_debug_waiter_count(&lock) && !kd_spin_diag_waiter_mismatches());
 }
 
 /* Retained identities must keep observing mutable latches/counts, including
@@ -198,15 +247,16 @@ static void test_retained_slot(void)
 	for (unsigned long a = 0x800000; a < 0x800000 + 64 * 64; a += 64)
 		kd_spin_diag_find(a);
 	CHECK(!kd_spin_diag_find(0xdead000));
+	CHECK(kd_spin_debug_waiter_count((void *)0xdead000) == -ENOSPC);
 	kd_spin_diag_waiter_enter(NULL);
 	kd_spin_diag_waiter_exit(NULL);
 	CHECK(kd_spin_diag_find(0x400000) == slot);
 	/* Reuse still accounts exactly when the identity table is full. */
 	u64 overflow = cpu_stats[cpu].overflow;
 	kd_spin_diag_waiter_enter(slot);
-	CHECK(atomic_read(&slot->waiter_count) == 1);
+	CHECK(kd_spin_diag_waiter_balance(slot - kd_spin_diag_slots) == 1);
 	kd_spin_diag_waiter_exit(slot);
-	CHECK(!atomic_read(&slot->waiter_count) && cpu_stats[cpu].overflow == overflow);
+	CHECK(!kd_spin_diag_waiter_balance(slot - kd_spin_diag_slots) && cpu_stats[cpu].overflow == overflow);
 	CHECK(!kd_spin_jit_is_disabled(slot));
 	slot->jit_disabled.counter = 1;
 	CHECK(kd_spin_jit_is_disabled(slot));
@@ -385,6 +435,7 @@ int main(void)
 {
 	test_cache();
 	test_stats();
+	test_waiter_observations();
 	test_retained_slot();
 	test_root_retirement();
 	test_prefetch();

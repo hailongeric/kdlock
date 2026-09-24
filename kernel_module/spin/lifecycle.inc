@@ -172,6 +172,9 @@ void kd_spinlock_exit(void)
 	kd_spin_selftest_deferred_report();
 #endif
 #endif
+	/* The caller already drained requests; this is an exact final oracle,
+	 * not a live admission or module-lifetime decision. */
+	invariant_failures += kd_spin_diag_waiter_mismatches();
 	KD_PR_INFO("kd_spin batch: entries=%llu ww_jumps=%llu\n",
 		   (unsigned long long)batch_entries, (unsigned long long)ww_jumps);
 	KD_PR_INFO("kd_spin diag overflow=%lld\n",
@@ -193,7 +196,7 @@ void kd_spinlock_exit(void)
 			"nested_lock=%lld "
 			"nested_unlock=%lld nested_remote=%lld "
 			"native_fallback=%lld ooo_unlock=%lld "
-			"jit_disabled=%d waiters=%d\n",
+			"jit_disabled=%d waiters=%lld\n",
 			addr, sum.max_depth,
 			(long long)sum.event[KD_SPIN_DIAG_SLOWPATH],
 			(long long)sum.event[KD_SPIN_DIAG_COMBINER],
@@ -205,7 +208,7 @@ void kd_spinlock_exit(void)
 			(long long)sum.event[KD_SPIN_DIAG_NATIVE_FALLBACK],
 			(long long)sum.event[KD_SPIN_DIAG_OOO_UNLOCK],
 			atomic_read(&slot->jit_disabled),
-			atomic_read(&slot->waiter_count));
+			(long long)(sum.waiter_enter - sum.waiter_exit));
 	}
 
 	kd_spinlock_free_percpu();

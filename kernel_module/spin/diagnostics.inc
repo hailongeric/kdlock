@@ -88,6 +88,8 @@ static void kd_spin_diag_sum(unsigned int index, struct kd_spin_diag_counts *sum
 
 		for (event = 0; event < KD_SPIN_DIAG_EVENT_COUNT; event++)
 			sum->event[event] += counts->event[event];
+		sum->waiter_enter += counts->waiter_enter;
+		sum->waiter_exit += counts->waiter_exit;
 		if (counts->max_depth > sum->max_depth)
 			sum->max_depth = counts->max_depth;
 	}
@@ -117,22 +119,53 @@ static void kd_spin_jit_disable(struct qspinlock *lock)
 					    this_cpu_ptr(&kd_spin_cpu)));
 }
 
-/* Identity was resolved by the producer; retain exact shared waiter counts
- * at the same publication/exit points, including a NULL exhausted-table slot. */
+/* Keep the existing publication/return hooks and immutable request identity.
+ * Local x86 increments do not lose an IRQ update. A completion may be counted
+ * on another CPU: only the aggregate, never a CPU's difference, is a balance. */
 static void kd_spin_diag_waiter_enter(struct kd_spin_diag_slot *slot)
 {
 	if (slot)
-		atomic_inc(&slot->waiter_count);
+		this_cpu_inc(kd_spin_diag_cpu->slot[slot - kd_spin_diag_slots].waiter_enter);
 }
 
 static void kd_spin_diag_waiter_exit(struct kd_spin_diag_slot *slot)
 {
-	if (!slot)
-		return;
-	if (unlikely(atomic_dec_return(&slot->waiter_count) < 0)) {
-		atomic_set(&slot->waiter_count, 0);
-		kd_spin_diag_invariant_failure();
+	if (slot)
+		this_cpu_inc(kd_spin_diag_cpu->slot[slot - kd_spin_diag_slots].waiter_exit);
+}
+
+/* Approximate during activity: the per-CPU reads do not form one instant.
+ * A negative live result is possible without an unmatched exit. Do not clamp
+ * it or report an invariant failure. The old immediate atomic-underflow
+ * signal is replaced by the independent-drain check below. */
+static s64 kd_spin_diag_waiter_balance(unsigned int index)
+{
+	u64 entered = 0, exited = 0;
+	int cpu;
+
+	for_each_possible_cpu(cpu) {
+		const struct kd_spin_diag_counts *counts =
+			&per_cpu_ptr(kd_spin_diag_cpu, cpu)->slot[index];
+
+		entered += READ_ONCE(counts->waiter_enter);
+		exited += READ_ONCE(counts->waiter_exit);
 	}
+	return (s64)(entered - exited);
+}
+
+/* Shutdown only, after entry refs, owners and frames independently drain.
+ * Both positive and negative final balances remain evidence of a bad hook
+ * pairing. This observer must never be used to decide that drain completed. */
+static u64 kd_spin_diag_waiter_mismatches(void)
+{
+	u64 mismatches = 0;
+	unsigned int i;
+
+	for (i = 0; i < KD_SPIN_DIAG_SLOTS; i++)
+		if (atomic_long_read(&kd_spin_diag_slots[i].addr) &&
+		    kd_spin_diag_waiter_balance(i))
+			mismatches++;
+	return mismatches;
 }
 
 int kd_spin_debug_waiter_count(raw_spinlock_t *lock)
@@ -142,7 +175,7 @@ int kd_spin_debug_waiter_count(raw_spinlock_t *lock)
 	if (!lock)
 		return -EINVAL;
 	slot = kd_spin_diag_find((unsigned long)lock);
-	return slot ? atomic_read(&slot->waiter_count) : -ENOSPC;
+	return slot ? (int)kd_spin_diag_waiter_balance(slot - kd_spin_diag_slots) : -ENOSPC;
 }
 EXPORT_SYMBOL_GPL(kd_spin_debug_waiter_count);
 
