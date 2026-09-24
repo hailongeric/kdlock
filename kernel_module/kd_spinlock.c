@@ -364,6 +364,7 @@ static void kd_spin_lock_nondelegated_pinned(kd_spinlock_t *lock)
 void kd_spin_lock_nondelegated(kd_spinlock_t *lock)
 {
 	preempt_disable();
+	kd_hotlock_spin_entry_pinned();
 	kd_spin_lock_nondelegated_pinned(lock);
 }
 /* A physical ACK releases a lock; this barrier releases the root's pin only
@@ -470,6 +471,7 @@ kd_spin_lock_abi_pinned(struct qspinlock *lock, unsigned long rsp_value,
 {
 	u32 val = 0;
 
+	kd_hotlock_spin_entry_pinned();
 	if (!kd_spin_delegate || !kd_hotlock_record_spin_pinned((unsigned long)lock))
 		goto native;
 	if (!in_task() || softirq_count() || current->migration_disabled ||
@@ -510,6 +512,9 @@ kd_spin_direct_native_lock(kd_spinlock_t *lock)
 
 	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
 	val = atomic_cmpxchg_acquire(&lock->val, 0, KD_SPIN_DIRECT_NATIVE_HELD);
+	/* Count both CAS outcomes before a possible MCS publication, without
+	 * putting this statistics store ahead of the acquisition's locked RMW. */
+	kd_hotlock_spin_entry_pinned();
 	if (val) {
 		kd_spin_acquire_nondelegated_contended(lock, val);
 		/* The shared pending/MCS core acquires with its ordinary byte.

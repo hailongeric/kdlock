@@ -16,19 +16,26 @@ KD宏取得一次preempt pin后用C `if`读取per-CPU热值。冷CPU调用
 `kd_spin_unlock_clobber_v1`，由provider识别低字节5的原生所有权或执行热协议。
 寄存器仅在约束/clobber中声明，保存位置由编译器决定，可出现在if之前；宏不手写push/pop。
 
-spin CPU每次合格MCS发布计数，每8次读取一次时钟；整批耗时严格小于400万TSC ticks才判热。
-fast/pending不计数，冷/热CPU规则相同。2/3线程实际入队也可升温，但不保证存在可代理后继。
-两类单锁入口第33次检查25亿窗口；mutex CPU仍每1024次入口检查400亿窗口。每CPU/type保留256桶、
-256条精确地址记录，碰撞链完整匹配、满表保留已有身份；非task上下文跳过统计。
-`spin_delegate=0`跳过代理及热度采样。当前没有队列深度策略、on/off调用壳选项或两个旧开关判断。
+spin每次实际MCS发布以内联per-CPU指令累计原始计数，每128次才进入受busy guard保护的采样器。
+adaptive按512次纳入策略的MCS发布与同期物理获取尝试数的比例判断竞争，默认门槛100%；
+fast/pending成功也计入分母。初始乐观状态同样采用连续两个低窗口确认及8个后续窗口冷却，
+observe记录相同统计并绕过比例及冷却门槛。策略不按线程数直接分流。
+比例单独关闭保留近期单锁状态，重开检查过期或时间倒退。spin采时批次由本轮起点的32改为128，
+当前候选的spin单锁为第513次/12.5亿TSC窗口；mutex单锁保持第1025次/25亿，CPU窗口保持400亿。
+获取/发布使用GS INC/XADD，比例状态位于独立48字节静态per-CPU对象；字节相位候选已撤回，动态热表布局保持。
+完整计数边界、冷却/重新准入和owner约束以[执行流中的热度与角色](../../docs/JIT_EXECUTION.md#21-热度与角色)为准。
 
-observe在CPU热后固定准入，adaptive再判断单锁热度；上下文、owner、ticket和JIT就绪约束均保留。
-CPU曾变热后依赖后续MCS事件降温，安静的单线程阶段不会主动过期。热度cookie只表示一个CPU
-共享的缓存热值，不存获取路径或嵌套深度。记录使用`caller_shell=cold_clobber`、
-`caller_abi=clobber`、`cookie_storage=percpu_rate_hot`、`cpu_heat_policy=mcs_entry`；
-`mcs_entry`标识实际MCS发布这一事件来源，不编码采样间隔或窗口数值；具体参数由冻结的
-`kd_hotlock.c`及其源码哈希确定。同为`mcs_entry`的不同参数版本也不能合并取优；
-旧样本缺失字段或使用不同策略时分别汇总。
+observe在CPU频率热后固定准入，adaptive还要求比例和单锁热度；已发布请求不受后续热度变化取消。
+热度cookie只存CPU共享的缓存热值，不存获取路径或嵌套深度。记录使用`caller_shell=cold_clobber`、
+`caller_abi=clobber`、`cookie_storage=percpu_rate_hot`、`cpu_heat_policy=mcs_entry_ratio512_batch128`，
+并单列`spin_contention_pct`。策略标识不替代冻结源码/哈希，同一标识的不同实现版本也不能合并取优；
+历史`mcs_entry`、32次比例窗口的`mcs_entry_ratio`、旧512窗口候选`mcs_entry_ratio512`、
+MCS32采样的`mcs_entry_ratio512_confirm2`及缺失字段的样本分别保留。
+当前诊断槽把身份/禁用字段与waiter计数分至不同128字节区域，新增4KiB共享存储，
+布局见[provider说明](../../kernel_module/README.md)，该局部修复的独立证据见[诊断槽报告](results/20260924-diagnostic-pairs.md)。
+当前spin第513次/12.5亿候选已通过基础两组、72项采样变体及SELFTEST=1/0两种provider构建；
+42场KD adaptive全部正确排空，但高线程性能保护仍失败，尚未运行该候选的完整三方168场；
+不把已拒绝候选或诊断槽局部结果视为当前完整验收。
 
 三种后端保留相同cacheline更新、解锁后四组乘加及循环成本；吞吐和ns/op以完整操作计算，
 不是独立获取锁延迟。三种模块不是同一二进制，必需的现场成本不扣除。
@@ -61,6 +68,15 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
   --output /root/kdlock-evidence/direct-new
 ```
+
+`--spin-contention-pct`范围为0–100，默认100；0仅绕过adaptive的比例及其冷却门槛，
+CPU频率和单锁热度规则仍生效。该值作为只读provider装载参数传入并核对；observe始终绕过比例门槛。
+
+需要固定准备/分配阶段的NUMA放置时，可在上述`timeout`后、`python3`前加入
+`taskset -c 0-19`；使用前核对这些CPU都属于预期的NUMA0。runner及其准备进程继承这一CPU集合，
+worker仍按线程配置绑定选定的CPU0至CPU(`threads-1`)。运行器在`environment.json`记录
+`runner_affinity`，并在加载模块前检查所有worker CPU均被允许；只绑定CPU0不能运行多CPU矩阵。
+该放置设置须随结果保留，不据此推定性能收益。
 
 代码修改后可直接执行上述性能命令，运行器同时完成业务、IRQ/preempt、JIT 和
 排空检查；独立单元、SELFTEST、`--functional` 或六场小矩阵不作为固定前置步骤。
@@ -109,7 +125,7 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 除以 Linux 获选值，KD/TCLock 同理；保留有效样本数，报告须说明不足三轮的情况。
 `records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
 正确、完成且已排空的样本参与汇总。KD按`hotlock_mode`、`caller_shell`、
-`cookie_storage`、`cpu_heat_policy`分开汇总，不跨模式、cookie存储或采样策略取最大值；
+`cookie_storage`、`cpu_heat_policy`、`spin_contention_pct`分开汇总，不跨模式、cookie存储、采样策略或比例门槛取最大值；
 热表计数保留在原始日志，不参与性能评分。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
@@ -132,17 +148,19 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
-| [MCS8/CPU400万组合](results/20260923-mcs8-cpu4m.md) | 最新168/168场、56配置各3轮；8/20线程adaptive中位数高于上一批默认历史值，3/4线程仍落后；保留所有快慢样本及参数组合 |
+| [本轮低竞争比例准入](results/20260924-contention-ratio.md) | 当前spin第513次/12.5亿候选42场正确排空但保护失败；全部失败阶段与原始数据索引 |
+| [诊断槽128字节隔离](results/20260924-diagnostic-pairs.md) | 独立提交439cd82的匹配pilot和采样证据；局部改善不代表完整比例策略通过 |
+| [MCS8/CPU400万组合](results/20260923-mcs8-cpu4m.md) | 历史168/168场、56配置各3轮；该参数组合不是当前比例准入配置；保留所有快慢样本及参数组合 |
 | [adaptive 窗口与采样间隔](results/20260923-adaptive-windows.md) | 单锁/CPU窗口、MCS间隔6个独立候选及1个组合；195场有效、1场20线程零JIT拒绝并停止该候选，保留20个未执行项；该轮恢复当时的MCS1/CPU400亿默认，不含后续指定的MCS8/CPU400万组合 |
-| [adaptive 阈值诊断](results/20260923-adaptive-threshold-sweep.md) | KD单锁计数32/128/1024及恢复32，c1/c16、3/4/8/20线程各三轮；两候选不满足保留条件，默认仍为32；不是新增三后端排名 |
+| [adaptive 阈值诊断](results/20260923-adaptive-threshold-sweep.md) | 历史KD单锁计数32/128/1024及恢复32，c1/c16、3/4/8/20线程各三轮；两候选不满足当时保留条件；不是新增三后端排名 |
 | [默认热度分流完整三轮](results/20260923-spin-default-heat-full3.md) | 此前MCS1/CPU400亿的168场：1/2/3/4/8/16/20线程，56配置各3轮；39b0e7c加冻结工作树修改，包含布局优化 |
 | [单线程与20线程调查](results/20260923-spin-single-hot-balance.md) | metadata精简、continuation错位、48场矩阵和长批次布局对照；保留失败候选及代码对齐的因果限制 |
 | [昨日恢复基线](results/20260922-performance-recovery.md) | 旧采样规则下20线程5.197/4.809 Mops/s，两轮最大值；该快版没有匹配PMU |
 | [统一解锁ABI验证](results/20260923-spin-generic-unlock.md) | broad-clobber、JIT COMPLETE/FULL及nested/early验证；其108场属于布局优化前冻结版本 |
 | [普通spin IRQ/wrapper验证](results/20260922-plain-spin.md) | IRQ/BH状态、抢占配对及wrapper修复，含首次失败记录 |
 
-当前MCS8/CPU400万组合已完成上述最新矩阵：20线程adaptive中位数c1/c16为5.450/5.179 Mops/s，
-spread为0.87%/0.48%。8线程也未观察到历史对照退化；3/4线程和单线程收益未解决。
+历史MCS8/CPU400万组合的20线程adaptive中位数c1/c16为5.450/5.179 Mops/s，
+spread为0.87%/0.48%。该批8线程未观察到历史对照退化，3/4线程和单线程收益未解决；这些不是当前比例策略的成绩。
 此前MCS1/CPU400亿完整矩阵20线程KD observe中位数c1/c16为5.324/5.051 Mops/s，两模式spread均低于0.8%。
 3/4线程仍慢于Linux/TCLock；低线程波动未消除，c1单线程TCLock最大40.899与中位14.854相差很大。
 该历史完整矩阵未采PMU；不能将不同冻结输入的吞吐或PMU数值移作当前组合测量。
@@ -190,11 +208,10 @@ v2，客户端和 workload 模块必须同时重建。
 ## 准入模式与结果解释
 
 运行器默认同时运行 `--hotlock-mode observe adaptive`。
-`observe` 在CPU热后固定 KD 准入并记录本地统计；冷CPU同样进入完整原生获取。
-`--hotlock-mode adaptive` 使用spin CPU每8次合格MCS发布检查400万TSC ticks窗口、
-单锁入口 count 大于32（33次）检查25亿窗口的独立确认；两种时间差都要求严格小于窗口。
-每 CPU/type 256 桶、256 条精确地址记录，冲突链匹配，
-满表不覆盖已有身份，未收录锁或冷锁保持原生。
+`observe` 在CPU频率热后固定 KD 准入并记录本地统计，绕过比例及冷却门槛；冷CPU进入完整原生获取。
+`adaptive` 同时要求CPU频率、512次策略发布窗口的比例准入和单锁热度。默认100%比例门槛、初始乐观预热、
+首个低窗口立即拒绝、后续连续两个低窗口确认关闭及8个后续窗口冷却
+使用[执行流规则](../../docs/JIT_EXECUTION.md#21-热度与角色)，`--spin-contention-pct 0`用于单独关闭比例的诊断。
 两者使用同一输出根目录下带 `-kdlock-{observe|adaptive}` 的独立会话目录，
 汇总保留模式列；Linux/TCLock 标为 `not_applicable`。
 单 CPU 预热不会让其他 CPU 自动变热，冷 CPU 的测量前缀属于自适应效果的一部分。
@@ -203,7 +220,7 @@ v2，客户端和 workload 模块必须同时重建。
 
 adaptive 的 `NO_JIT` 会保留数据正确的性能样本，但 `jit_acceptance` 明确为
 `NO_JIT`，不算实际 JIT 通过；observe 的竞争正例仍要求非零正文证据。
-两种模式均按 MCS 入队采样，少线程也可自然升温。plain 的2/3线程可以经 fast/pending
+两种模式均按 MCS 入队采样；adaptive可能因比例门槛继续原生执行。plain 的2/3线程可以经 fast/pending
 或原生 MCS 队头完成；入队不保证存在可代理后继。零JIT标记 `NO_JIT_LOW_CONTENTION`，
 有实际正文才记PASS，不再使用队列深度相关的 `NO_JIT_COLD` / `NO_JIT_POLICY`。
 20线程及竞争 nested/early 在两种模式均要求实际JIT；4线程以上observe也要求实际正文。
@@ -211,5 +228,5 @@ adaptive 的 `NO_JIT` 会保留数据正确的性能样本，但 `jit_acceptance
 
 `--spin-delegate off` 显式选择 KD 不代理对照，使用相同直接 API/负载和准备步骤，
 provider 装载 `spin_delegate=0`。结果必须为零 JIT 正文并标记 `DISABLED_CONTROL`；
-不作为 JIT 正例。当前 off 在公共入口跳过热度记录，不能与已撤回实验
+不作为 JIT 正例。当前off仍累计获取次数，但跳过热表记录及MCS采样，不能与已撤回实验
 中“off 仍采样”的数值直接比较。除上述少线程plain分类外，默认 `on` 的observe竞争验收仍要求实际JIT。

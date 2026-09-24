@@ -1,9 +1,11 @@
 # kdlock Open Tasks
 
-Current work list as of **2026-09-23**. The implementation includes `39b0e7c`
+Current work list as of **2026-09-24**. The implementation includes `39b0e7c`
 (continuation placement), `1eaaf99` (single-pass batch metadata) and the current
-heat gate/MCS-entry mechanism committed in `ccefa62`, with the newly requested
-spin sampling interval/window described below. Contracts live in
+heat gate/MCS-entry mechanism committed in `ccefa62`. The working tree adds
+contention-ratio admission and a bounded native cooldown. This is an
+**EXPERIMENTAL checkpoint**; the current scaled-spin pilot failed performance
+protection. Contracts live in
 [DESIGN](DESIGN.md), [execution flow](JIT_EXECUTION.md) and
 [register ABI](JIT_REGISTER_ABI.md); measurements and the ordered performance
 backlog live in [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md). Historical evidence
@@ -23,18 +25,41 @@ use one 32-bit word; nondelegating requests use the full pending/MCS queue.
 `spin_delegate=0` remains a native control, distinct from actual JIT evidence.
 
 CPU heat gates both observe/adaptive callers. Spin counts each actual MCS
-publication without queue-depth filtering and samples the clock every eight
-publications, requiring a batch delta strictly below 4 million TSC ticks.
-Mutex keeps its 1024-entry batch and 40-billion-tick CPU window. Both retain
-the per-lock check on hit 33 with a strict 2.5-billion-tick window.
+publication with an inline per-CPU instruction, without queue-depth filtering.
+Only each 128-publication boundary calls the guarded sampler; the inherited
+32-publication batch belongs to earlier diagnostics. The strict CPU window
+remains 40 billion TSC ticks.
+Mutex keeps its 1024-entry batch and 40-billion-tick CPU window. The current
+spin candidate checks each lock on hit 513 against a strict 1.25-billion-tick
+window; mutex retains hit 1025 and 2.5 billion ticks. Scaling both spin limits
+shortens warmup while approximately preserving the frequency threshold.
 Separate CPU/type exact-key tables have 256 buckets/entries,
-no ranked candidates, eviction or busy field. Unknown identities at capacity
+no ranked candidates or eviction, and a local busy guard against reentry. Unknown identities at capacity
 stay native in adaptive; owner/ticket/frame lifetime is independent of heat.
-Benefit-based native/probe/delegate admission remains unimplemented.
+Adaptive spin requires a default 100% MCS/physical-acquisition ratio over 512
+policy-counted publications. Two consecutive low windows close admission,
+including initial optimism, followed by eight native windows. Ratio-only
+rejection preserves recent lock epochs and rechecks their age on reopening;
+observe bypasses the ratio/cooldown gate. Separate 48-byte static per-CPU ratio
+state preserves the dynamic exact-table layout. GS INC/XADD counting is restored;
+the byte-phase candidate was rejected.
+The 32 shared diagnostic slots now separate identity/disable fields and waiter
+counts into distinct 128-byte regions, adding 4 KiB of shared storage. This
+independent fix is committed as 439cd82, with [matched evidence](../bench/tclock_compare/results/20260924-diagnostic-pairs.md).
+The scaled spin candidate passed two base groups, 72 sampler mutations and
+both SELFTEST=1/0 provider builds. Its 42-session KD adaptive matrix completed
+correctly and drained, but still failed performance protection. Its full
+168-session three-backend matrix has not run. Exact controls and
+sampling limits live in [the execution flow](JIT_EXECUTION.md#21-热度与角色).
+This contention heuristic is implemented; a general model comparing complete
+delegated and native costs remains unimplemented.
 
-The [current MCS8/4-million matrix](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)
+The [prior MCS8/4-million matrix](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)
 passed 168/168 sessions; 8/20-thread adaptive medians exceeded the preceding historical defaults,
-but 3/4-thread and consistent single-thread gains remain unresolved.
+but that batch did not resolve 3/4-thread or consistent single-thread gains.
+The current candidate passed its targeted unit/mutation checks and W=1 build.
+It still needs matching full-matrix evidence and
+confirmation that 1/2/8/16/20-thread performance is preserved.
 
 The [earlier MCS1/40-billion full matrix](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)
 and [optimization investigation](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)
@@ -202,8 +227,11 @@ in [frames](design/frames.md#911-reuse-before-copy-contract).
 ### Hotlock Monitoring And Adaptive Admission
 
 Exact-key counters, CPU/lock windows, cooling and stable roles are implemented.
-Benefit-based selection is not. Demotion may affect future roots only, never
-reuse the permanent safety latch or source retirement.
+The MCS/acquisition-ratio heuristic, optimistic startup, two-low-window
+confirmation and native cooldown are implemented;
+general net-cost selection is not. Performance criteria remain subject to
+matching measurements. Demotion affects future acquisitions only and never
+reuses the permanent safety latch or source retirement.
 
 ### Instrumented Measurement Foundation
 

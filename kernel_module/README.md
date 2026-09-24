@@ -33,7 +33,7 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 | [kd_exec.c](kd_exec.c) | frame 栈、上下文验证和状态事件 |
 | [sys.c](sys.c) | `/dev/kd_dev` 的读取、上传、状态与 retire ioctl |
 | [kd_source.c](kd_source.c) | 来源状态和 module/frame/writer pins |
-| [kd_hotlock.c](kd_hotlock.c) | 每 CPU 分类型精确地址哈希计数与定时热值准入；入口注册由 `kd_lock.c` 调用执行注册表 |
+| [kd_hotlock.c](kd_hotlock.c) | 每 CPU 分类型精确地址计数、批量频率检查与 spin MCS/获取次数比例准入；入口注册由 `kd_lock.c` 调用执行注册表 |
 | [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 
@@ -49,18 +49,18 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
 节点为 128 字节，next 与通知字分行，continuation 继续独立存活。约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
-热锁使用每 CPU/type 256 桶、256 条精确地址记录，冲突按完整地址匹配，
-直接增加该锁 count，无候选分数或淘汰。初始化 `alloc_percpu` 每 CPU 13376 字节，
-entry/table/cpu 为 24/6680/13376 字节，CPU 对齐 64；锁路径不分配。
-统计已删除 busy 和对应编译器屏障，非 task 上下文直接丢样且 query 返回冷；
-task 调用保留 CPU pin，避免重入破坏哈希索引链，observe record 仍固定允许。
-spin CPU 每 4 次实际 MCS 入队检查一次，fast/pending 不计数；mutex CPU 保持
-每 1024 次入口调用检查。两者的整批耗时窗口均为 40 亿 TSC ticks。
-入口读缓存 CPU 热值，CPU 热才查表；spin/mutex 单锁 count 大于 32
-（第 33 次）时检查 25 亿 TSC 窗口、刷新 hot、更新时间并清零计数。
-CPU 冷却/重新变热重置计数/热值但保留映射，mutex 同次到期共享 TSC；
-spin CPU/单锁在各自事件中采时。query 只读缓存，CPU 新热值由后续入口使用。
-默认 adaptive 在表满时令未记录的新锁走原生；observe 固定准入。
+热锁使用每 CPU/type 256 桶、256 条精确地址记录，无候选分数或淘汰；
+初始化一次预留两类型表，锁路径不分配；比例状态使用独立48字节静态 per-CPU 对象，
+保持动态表的原有字段偏移、大小和步长。获取计数使用GS INC，原始 MCS 发布使用GS XADD，
+每128次才进入受本地 busy guard 保护的频率/比例采样器，冷态原生发布也继续推进。
+adaptive 另检查512次策略发布的MCS/物理获取比例，默认100%；包括初始乐观状态在内，
+均须连续两个低窗口才关闭，随后8窗口保持原生。比例关闭保留近期单锁状态，重开时复用CPU采样时间检查年龄。
+当前spin单锁候选为第513次/12.5亿TSC窗口，mutex保持第1025次/25亿；字节相位候选已拒绝并恢复前版本。
+当前候选已通过基础两组、72项采样变体和SELFTEST=1/0两种provider构建，42场KD adaptive正确排空但性能保护失败。
+`spin_contention_pct=0` 关闭比例及冷却门槛；
+observe 绕过这些门槛并保持 record 固定准入。
+精确窗口、配对调用壳的 CPU 门槛、冷却延迟及卸载统计口径统一见
+[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
 OWNER/ticket/frame 不依赖热表，解锁不查表；有效地址与初始化/排空由调用者保证。
 SELFTEST 的 `hotlock_lifetime_selftest=1 hotlock_mode=observe` 验证表满不覆盖
 真实持锁记录及 mutex 等待迁移；`hotlock_role_trace=1` 输出角色，正常运行关闭。
@@ -71,7 +71,11 @@ claim/reclaim 与 release 各用一次 guard 完成校验和状态提交。物�
 代际及 native 借用退休约束见 [locking](../docs/design/locking.md#41-native-lock-and-private-queue)。
 
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
-共享 waiter 计数与身份/禁用状态分离到不同缓存行。continuation 按 64 字节对齐，
+32个共享诊断槽按128字节对齐、256字节步长排列，身份/禁用状态位于首个128字节区域，
+waiter计数位于偏移128。数组共8KiB，比原布局增加4KiB共享空间，避免这些读写字段随
+模块基址变化落入同一128字节区域；计数及禁用标志的原子语义不变。该局部修复独立提交439cd82，
+匹配pilot和采样见[诊断槽报告](../bench/tclock_compare/results/20260924-diagnostic-pairs.md)，不代表完整比例优化通过性能保护。
+continuation 按 64 字节对齐，
 普通准入元数据位于前两条缓存行。普通批次只在最终准入处检查 readiness，
 正常完成合并终态验证和解绑；复杂处理仍使用原协议。
 

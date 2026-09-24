@@ -10,10 +10,11 @@
 
 | 批次 | 已完成 | 范围与入口 |
 | --- | --- | --- |
+| 比例准入/缩短spin单锁批次（EXPERIMENTAL检查点） | 基础单元2组、采样fixture及72项错误变体检出；W=1的SELFTEST=1/0构建完成，共22条既有objtool警告；42/42场、32400000操作正确排空，30场实际JIT、26363560次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)。覆盖获取/MCS原始计数、128次采样、512次比例窗口、初始两低确认、冷却/保留与spin513/12.5亿、mutex1025/25亿边界；首次测试变体编译失败及修订日志均保留。c1/c16、1/2/3/4/8/16/20线程各三轮仅KD adaptive；性能保护失败，未运行当前版本三方168场或全量功能 |
 | spin诊断槽128字节区域隔离 | 定向单元5组、64项采样/4项存储错误变体检出；W=1构建完成并保留11条既有objtool警告；24/24场、21000000操作正确并排空，全部有实际JIT | [独立报告](../bench/tclock_compare/results/20260924-diagnostic-pairs.md)。ratio100/batch128、c1/c16、3/4/8/20线程各三轮；相对匹配慢候选改善，但原基线的高线程性能保护仍未完成，未重跑全量功能 |
-| MCS8/CPU400万组合 | 168/168场、129600000次操作通过并排空；基础/采样单元3组、23项错误变体检出；84场KD中60场实际JIT | [本次报告](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)。用户指定组合已保留，spin与mutex CPU窗口分开；三方1/2/3/4/8/16/20线程各三轮，未重跑全量功能 |
+| MCS8/CPU400万组合 | 168/168场、129600000次操作通过并排空；基础/采样单元3组、23项错误变体检出；84场KD中60场实际JIT | [历史报告](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)。该轮保留用户指定组合，spin与mutex CPU窗口分开；三方1/2/3/4/8/16/20线程各三轮，未重跑全量功能 |
 | adaptive 窗口/MCS间隔诊断 | 实际196场：195场有效，1场20线程零JIT拒绝；该候选余20场未执行，全部已执行场排空；基础及参数边界检查通过 | [完整报告](../bench/tclock_compare/results/20260923-adaptive-windows.md)。6个独立候选、1个组合及前后默认基线，完整配置各三轮；所有候选均未保留，不能记为216/216通过 |
-| adaptive 单锁计数阈值诊断 | 32/128/1024/恢复32共96/96场、84000000次操作通过并排空；基础和阈值定向检查通过 | [完整结果](../bench/tclock_compare/results/20260923-adaptive-threshold-sweep.md)。c1/c16、3/4/8/20线程各三轮，两个候选未满足性能保留条件，生产阈值仍为32；未重跑其他后端或全量功能 |
+| adaptive 单锁计数阈值诊断 | 32/128/1024/恢复32共96/96场、84000000次操作通过并排空；基础和阈值定向检查通过 | [完整结果](../bench/tclock_compare/results/20260923-adaptive-threshold-sweep.md)。c1/c16、3/4/8/20线程各三轮，两个候选未满足性能保留条件，该历史轮次恢复阈值32；未重跑其他后端或全量功能 |
 | 默认 heat caller 完整三轮 | 56 配置 × 3 轮，168/168 场、129600000 次操作通过并排空；84 场 KD 中 60 场实际 JIT | `39b0e7c` 加冻结工作树；包含 MCS 发布采样、通用解锁、batch 元数据精简和 continuation 错位布局。[完整报告](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)；该批未重跑单元、nested/early、RCUHT 或 PMU |
 | 单线程/20线程优化 | 定向单元 3/3 组、3 项错误变体检出；1/20线程三轮性能 48/48；nested/early 双模式功能 4/4；长批次布局对照 24/24 | [调查与证据](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。短批次单线程中位数曾比同期基线低约 5%–6%；长对照未复现一致下降，不据此声称统计等价 |
 | 通用 clobber 解锁 | 基础及相关单元 6/6 组；冻结运行器 22/22 项；性能 108/108；nested/early 双模式 4/4 | [ABI 验证](../bench/tclock_compare/results/20260923-spin-generic-unlock.md)。使用删除旧 on/off 选项前的版本，冷/热均验证 SP/IP/BP 和宽 clobber |
@@ -27,7 +28,7 @@ default-heat 清理归档为
 `961cd0b2b183f12705d0047bedf1966376fe2a58e7334d489544d81b31895b9f`。
 构建警告、首次失败、源码身份和未测项保留在相应报告或归档内。
 
-当前采样语义与 ABI 分别见 [锁协议](../docs/design/locking.md)和
+当前采样语义与 ABI 分别见 [热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)和
 [寄存器约定](../docs/JIT_REGISTER_ABI.md)，本页不复制策略参数历史。
 旧调用壳、队列门槛和热表候选的结果统一见
 [历史索引](../bench/tclock_compare/results/HISTORY.md)。
@@ -55,7 +56,7 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 | continuation 分配、容量、回收与最终恢复 | `spin/test_spin_storage.py`、`execution/test_exec_capacity.py`、`spin/test_spin_wait.py` |
 | native 借用退休、共享根包与延迟 ACK | `execution/test_remote_outer.py`、`execution/test_remote_depth_protocol.py`、`execution/test_remote_outer_protocol.py` |
 | 嵌套、提前释放、队列、frame 退休 | `spin/test_spin_outer_progress.py`、`spin/test_spin_shadow.py`、`spin/test_spin_batch.py` |
-| 本地热锁哈希和窗口 | `infrastructure/test_hotlock_sampling.py` |
+| 本地热表、获取/MCS计数、频率/比例窗口及准入恢复 | `infrastructure/test_hotlock_sampling.py` |
 | mutex 资源和续跑 | `mutex/test_mutex_resources.py`、`mutex/test_mutex_outer_progress.py` |
 | source/注册生命周期 | `infrastructure/test_source_lifetime.py`、`execution/test_exe_registry.py` |
 | 冷热调用壳与通用解锁 ABI | `spin/test_spin_cold.py`、`codegen/test_spin_paired_jit.py` |

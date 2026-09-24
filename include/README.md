@@ -1,6 +1,13 @@
 # 接口与共享布局
 
-`kd_hotlock.h` 按完整锁地址直接哈希计数：CPU/type 每 1024 次检查 CPU 窗口，热 CPU 才查表；单锁 count 大于 1024（第 1025 次）检查窗口并更新 hot/时间、清零计数。同次到期共享 TSC，query 只读缓存。每 CPU/type 预分配 256 记录，无候选/淘汰；满表未知锁在 adaptive 下走原生。调用者保证有效地址及表生命周期。
+`kd_hotlock.h` 提供分类型 per-CPU 精确地址计数、spin 获取次数和缓存 CPU 准入值。
+spin 获取用GS INC，原始 MCS 发布用GS XADD累计，仅在128次边界调用受 busy guard 保护的采样器；
+频率及512次策略发布的比例状态在批次边界更新。mutex 按入口批次检查频率；热 CPU 才查锁表。
+原始获取/发布计数不因热表重入丢失，策略批次可保守丢弃；统计复用 CPU pin，调用者保证有效地址及表生命周期。
+比例状态为48字节静态per-CPU对象；初始状态也使用两低窗口确认，比例关闭保留近期单锁状态并在重开时检查年龄。
+当前spin单锁候选为第513次/12.5亿TSC，mutex保持第1025次/25亿；性能验收尚未完成。
+字节相位实验已撤回。采样间隔、窗口、策略参数和统计口径统一见
+[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
 
 这里放跨编译单元、内核与翻译器共享的接口，以及必须内联的热路径。
 后端私有实现见 [kernel_module/README.md](../kernel_module/README.md)，
@@ -14,7 +21,7 @@ Demo ioctl 和数据布局见 [workload_modules/README.md](../workload_modules/R
 | mutex 调度 | [kd_mutex.h](kd_mutex.h) | 原 mutex owner 保留，原 waiter 可继续后缀 |
 | frame/控制事务 | [kd_exec.h](kd_exec.h)、[kd_call.h](kd_call.h) | physical parent、logical resume_target、锁记录；spin pop 后通知，native ACK 与退休分离 |
 | 注册/执行 | [exe.h](exe.h)、[exe_info.h](exe_info.h) | 注册槽、entry_abi 身份与 packet_state；NORMAL 不证明正文执行 |
-| 热锁 | [kd_hotlock.h](kd_hotlock.h) | 分类型 per-CPU 256 桶/256 精确地址记录，CPU 1024 / 单锁 1025 次确认，无候选淘汰 |
+| 热锁 | [kd_hotlock.h](kd_hotlock.h) | 分类型 per-CPU 256 桶/256 精确地址记录，spin 竞争比例准入，无候选淘汰；热度不持有锁 |
 | 来源生命周期 | [kd_source.h](kd_source.h)、[kd_source_api.h](kd_source_api.h) | 内部 pin 接口与设备 ABI；retire 不可撤销 |
 | 设备/诊断 | [sys.h](sys.h)、[utils.h](utils.h) | 设备注册和既有日志，benchmark quiet 仅在专用 provider |
 | 批次调用边界 | [kd_jit_batch.h](kd_jit_batch.h) | 新旧 wrapper 的版本目录和编译器 clobber；clobber wrapper 保护物理 RBP；旧批次适配单独保护 RBP，偏移 0 普通入口保留 C ABI，args 仍为两个元素 |

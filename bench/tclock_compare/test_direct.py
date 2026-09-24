@@ -20,7 +20,8 @@ class DirectTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)
             (out/'plan.json').write_text(json.dumps([
-                dict(name='plain', scenario='plain', functional=True),
+                dict(name='plain', scenario='plain', functional=True,
+                     spin_contention_pct=37),
                 dict(name='missing', scenario='early', functional=True)]))
             (out/'plain').mkdir()
             (out/'plain/session.json').write_text(json.dumps(dict(
@@ -29,6 +30,7 @@ class DirectTests(unittest.TestCase):
             run.report(out)
             rows = json.loads((out/'functional.json').read_text())
             self.assertEqual(rows[0]['completed'], 10)
+            self.assertEqual(rows[0]['spin_contention_pct'], 37)
             self.assertEqual(rows[1]['status'], 'NOT_RUN')
             self.assertFalse(rows[1]['drained'])
             self.assertFalse((out/'summary.csv').exists())
@@ -210,9 +212,43 @@ class DirectTests(unittest.TestCase):
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
             self.assertEqual(spec['cpu_heat_policy'],
-                             'mcs_entry' if spec['arm'] == 'kdlock' else 'not_applicable')
+                             'mcs_entry_ratio512_batch128' if spec['arm'] == 'kdlock' else 'not_applicable')
+            self.assertEqual(spec['spin_contention_pct'],
+                             run.DEFAULT_SPIN_CONTENTION_PCT if spec['arm'] == 'kdlock' else None)
             self.assertNotIn('spin_hot_min_queue', spec)
             self.assertNotIn('spin_cold_fastpath', spec)
+
+    def test_contention_cli_preserves_explicit_threshold_and_zero_bypass(self):
+        # A diagnostic zero must survive parsing and both admission modes;
+        # non-KD baselines have no contention-policy setting.
+        for threshold in (0, 1, 37, 100):
+            with self.subTest(threshold=threshold):
+                output = io.StringIO()
+                argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
+                        '--cachelines', '1', '--threads', '4', '--repeats', '1',
+                        '--spin-contention-pct', str(threshold)]
+                with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
+                    self.assertEqual(run.main(), 0)
+                plan = json.loads(output.getvalue())
+                self.assertEqual(len(plan), 4)
+                for spec in plan:
+                    self.assertEqual(spec['spin_contention_pct'],
+                                     threshold if spec['arm'] == 'kdlock' else None)
+
+    def test_contention_threshold_rejects_out_of_range_and_non_integer(self):
+        for threshold in ('-1', '101', '75.5'):
+            with self.subTest(threshold=threshold):
+                argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
+                        '--spin-contention-pct', threshold]
+                with patch.object(sys, 'argv', argv), contextlib.redirect_stderr(io.StringIO()):
+                    with self.assertRaises(SystemExit) as result:
+                        run.main()
+                self.assertEqual(result.exception.code, 2)
+        for threshold in (-1, 101):
+            with self.subTest(plan_threshold=threshold):
+                with self.assertRaisesRegex(run.Failure, 'invalid spin contention percentage'):
+                    run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+                        iterations=100, backends=['kdlock'], spin_contention_pct=threshold))
 
     def test_empty_summary_has_no_winner(self):
         plan = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=2,
@@ -343,9 +379,11 @@ class DirectTests(unittest.TestCase):
     def test_summary_keeps_heat_policies_separate(self):
         base = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
             iterations=100, backends=['kdlock'], hotlock_mode=['observe']))[0]
-        # Historical evidence must not silently merge with MCS-entry samples.
+        # Frequency-only and 32-event ratio evidence must not merge with the
+        # 512-event ratio, even if the other policy fields happen to match.
         plans = [dict(base, name=base['name']+'-'+policy, cpu_heat_policy=policy)
-                 for policy in ('mcs_entry', 'historical_queue_depth')]
+                 for policy in ('mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
+                                'mcs_entry', 'historical_queue_depth')]
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
             run.write_json(out/'plan.json', plans)
@@ -353,15 +391,49 @@ class DirectTests(unittest.TestCase):
                 folder = out/spec['name']; folder.mkdir()
                 run.write_json(folder/'session.json', dict(spec,
                     execution_status='OK', drained=True,
-                    jit_bodies=int(spec['cpu_heat_policy'] == 'mcs_entry'),
+                    jit_bodies=int(spec['cpu_heat_policy'] == 'mcs_entry_ratio512_batch128'),
                     measurement=dict(completed=200, wall_ns=100000,
                                      data_ok=True, complete=True)))
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(rows), 2)
+            self.assertEqual(len(rows), 6)
             self.assertEqual({r['cpu_heat_policy'] for r in rows},
-                             {'mcs_entry', 'historical_queue_depth'})
+                             {'mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
+                              'mcs_entry', 'historical_queue_depth'})
             self.assertEqual(sum(r['actual_jit_sessions'] for r in rows), 1)
+
+    def test_summary_keeps_contention_thresholds_separate(self):
+        # The fastest tuned threshold must never become another threshold's
+        # winner. Keep observe's bypass statistics separately identified too.
+        plans = []
+        rates = {0: 1, 37: 2, 100: 4}
+        for threshold in rates:
+            candidate = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=2,
+                iterations=100, backends=['kdlock'], spin_contention_pct=threshold))
+            plans.extend(dict(spec, name=spec['name'] + f'-pct{threshold}')
+                         for spec in candidate)
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for spec in plans:
+                folder = out/spec['name']; folder.mkdir()
+                rate = rates[spec['spin_contention_pct']] * (spec['repeat'] + 1)
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True, jit_bodies=1,
+                    measurement=dict(completed=400, wall_ns=400000/rate,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 6)
+            self.assertEqual({(row['hotlock_mode'], row['spin_contention_pct']) for row in rows},
+                             {(mode, pct) for mode in ('observe', 'adaptive') for pct in rates})
+            for row in rows:
+                threshold = row['spin_contention_pct']
+                self.assertEqual(row['sessions'], 2)
+                self.assertEqual(row['valid'], 2)
+                self.assertEqual(row['best_throughput_ops_s'], rates[threshold] * 2e6)
+                self.assertEqual(row['best_amortized_ns_op'], 500 / rates[threshold])
+                self.assertTrue(row['best_session'].endswith(f'-pct{threshold}'))
 
 
 if __name__ == '__main__':

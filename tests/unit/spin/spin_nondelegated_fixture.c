@@ -80,7 +80,10 @@ static struct kd_spin_node *decode_tail(u32 tail) { return &pool[(tail >> 18) - 
 static bool kd_spin_delegate = true;
 static unsigned int thread_count;
 static _Thread_local unsigned long mcs_samples;
+static _Thread_local unsigned long physical_entries;
 static void kd_hotlock_record_spin_mcs_pinned(void) { mcs_samples++; rate_hot=1; }
+static void kd_hotlock_spin_entry_pinned(void)
+{ assert(pins); physical_entries++; }
 #define in_task() true
 #define smp_load_acquire(p) __atomic_load_n(p, __ATOMIC_ACQUIRE)
 #define xchg(p,v) (queued++, swaps++, __atomic_exchange_n(p,v,__ATOMIC_ACQ_REL))
@@ -106,7 +109,12 @@ static void *worker(void *arg)
    * An MCS publication can warm this CPU after selection; the operation
    * must still finish natively with its original pin and ownership. */
   preempt_disable();
-  if(cpu&1) kd_spin_acquire_nondelegated(&lock);
+  if(cpu&1) {
+   /* This cohort invokes the core directly; model its omitted public entry.
+    * The paired cohort below must obtain its count from production code. */
+   kd_hotlock_spin_entry_pinned();
+   kd_spin_acquire_nondelegated(&lock);
+  }
   else {
    kd_spin_direct_native_lock(&lock);
    assert(lock.locked==KD_SPIN_DIRECT_NATIVE_HELD && pins==1);
@@ -121,10 +129,12 @@ static void *worker(void *arg)
   else kd_spin_direct_native_unlock(&lock);
   assert(states[cpu].node_count==0);
   assert(!pins && !kd_spin_fast_cpu.nondelegated);
+  assert(physical_entries==(unsigned long)i+1);
  }
  /* One initial CAS, and at most one queue-tail claim CAS per operation.
   * Failed contender retries must be loads/local waits, not global RMWs. */
  assert(cas_calls>=50000 && cas_calls<=100000 && swaps==queued && mcs_samples==queued);
+ assert(physical_entries==50000 && mcs_samples<=physical_entries);
  assert(rate_hot == (queued != 0));
  __atomic_fetch_add(&queue_total, queued, __ATOMIC_RELAXED);
  __atomic_fetch_add(&read_total, local_reads, __ATOMIC_RELAXED);

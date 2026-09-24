@@ -122,6 +122,7 @@ static void kd_spin_reclaim_outer(struct kd_spin_request *request)
 {
 	/* Rejoin as a non-combinable MCS waiter on the existing C stack.
 	 * The original ticket remains live; do not allocate another frame. */
+	kd_hotlock_spin_entry_pinned();
 	kd_spin_acquire_nondelegated(request->word);
 	BUG_ON(kd_spin_entry_reclaim(&request->ref));
 }

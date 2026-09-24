@@ -133,6 +133,9 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 #endif
 	if (ret)
 		return ret;
+	/* Nested physical acquisitions publish through the same MCS sampler.
+	 * Include their entries too, on the pinned executor's physical CPU. */
+	kd_hotlock_spin_entry_pinned();
 	word = request.word = kd_spin_request_word(&request.ref);
 	if (atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL) == 0) {
 		kd_spin_claim_origin(&request);

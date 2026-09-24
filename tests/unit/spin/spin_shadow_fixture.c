@@ -160,6 +160,7 @@ static bool mailbox_case;
 static int mailbox_token;
 static int peer_result, poll_calls, relax_calls, try_calls, ticket_count;
 static int begin_error, producer_preempt = 1, producer_count, producer_peak;
+static unsigned long physical_entries, expected_physical_entries;
 static struct kd_spin_node peer, follower;
 static struct kd_spin_node *produced_node;
 static struct kd_spin_node *producer_successor;
@@ -241,6 +242,14 @@ static void node_record_free(void *ptr)
 			failures++;                                     \
 		}                                                       \
 	} while (0)
+
+/* Successful virtual ticket reservation reaches one physical acquisition;
+ * the existing producer pin covers its statistic even on native fallback. */
+static void kd_hotlock_spin_entry_pinned(void)
+{
+	CHECK(producer_preempt > 0);
+	physical_entries++;
+}
 
 /* A scripted peer only publishes completion; it cannot invoke a producer. */
 static void kd_exec_remote_poll(void *frame)
@@ -450,6 +459,7 @@ static int kd_spin_entry_begin(raw_spinlock_t *lock, int kind,
 	CHECK(!ref->entry && ticket_count >= 0);
 	if (begin_error)
 		return begin_error;
+	expected_physical_entries++;
 	ticket_count++;
 	*ref = (struct kd_spin_ref){ lock, 1 };
 	return 0;
@@ -1083,5 +1093,6 @@ int main(void)
 	kd_spin_selftest_nodes_report();
 	run_observer_allocation_checks();
 	CHECK(mcs_samples == tail_exchanges && tail_exchanges > 0);
+	CHECK(physical_entries == expected_physical_entries && physical_entries > 0);
 	return failures ? 1 : 0;
 }

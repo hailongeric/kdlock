@@ -100,6 +100,7 @@ class BackendSession(Session):
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
                       'hotlock_mode=' + self.record['hotlock_mode'],
+                      'spin_contention_pct=' + str(self.record['spin_contention_pct']),
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
                      'load-kdlock.log')
             self.loaded_kd = True
@@ -131,6 +132,7 @@ class BackendSession(Session):
             require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
                     int(params['bench_lock_addr']) == layout['lock_addr'] and
                     params['hotlock_mode'] == self.record['hotlock_mode'] and
+                    int(params['spin_contention_pct']) == self.record['spin_contention_pct'] and
                     'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
                     params['spin_delegate'] == ('N' if self.record.get('spin_delegate') == 'off' else 'Y'),
                     'kdlock observation parameters differ')

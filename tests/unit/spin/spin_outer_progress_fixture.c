@@ -131,6 +131,15 @@ static void wake_after(const void *address);
 		}                                                      \
 	} while (0)
 #define BUG() BUG_ON(true)
+
+/* Reacquires and nested physical entries use their executor CPU's existing
+ * pin. Only the statistic is substituted; ownership/ACK code remains real. */
+static unsigned long physical_entries[2];
+static void kd_hotlock_spin_entry_pinned(void)
+{
+	CHECK(mock_preempt > 0);
+	physical_entries[mock_cpu]++;
+}
 #define WARN_ON_ONCE(c) ((void)(c))
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define unlikely(x) (x)
@@ -1246,7 +1255,9 @@ int main(void)
 		scripts = pops = native_waits = early_releases = waits = stage =
 			0;
 		next_holds = false;
+		unsigned long entries_before = physical_entries[0] + physical_entries[1];
 		run_combiner(a_lock(), &request);
+		CHECK(physical_entries[0] + physical_entries[1] == entries_before + early);
 		CHECK(scripts == (mode != 4 && mode != 7) && pops == scripts);
 		CHECK(queue_finishes == scripts);
 		CHECK(fixture_request(&request)->queued_at_ns == (scripts ? 0 : 50));

@@ -25,6 +25,7 @@ from session import BackendSession, TC_MODULE, GUARD_MODULE
 from context_audit import audit as audit_context
 
 DEFAULT_HOTLOCK_MODES = ('observe', 'adaptive')
+DEFAULT_SPIN_CONTENTION_PCT = 100
 
 
 def idle():
@@ -50,6 +51,8 @@ def source_state():
 def make_plan(args):
     require(args.repeats > 0 and 0 < args.iterations <= 100000000,
             'invalid repeats/iterations')
+    contention_pct = getattr(args, 'spin_contention_pct', DEFAULT_SPIN_CONTENTION_PCT)
+    require(0 <= contention_pct <= 100, 'invalid spin contention percentage')
     result = []
     workload = getattr(args, 'workload', 'cacheline')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1, 16])
@@ -66,15 +69,16 @@ def make_plan(args):
             arms.reverse()
         for backend, mode in arms:
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
-            # Both admission modes use one caller binary with CPU-heat routing
-            # and MCS-entry sampling. There is no shell-selection option.
+            # Both admission modes share MCS/entry statistics. Adaptive also
+            # gates admission by the configured ratio; observe bypasses it.
             suffix = f'-{mode}' if backend == 'kdlock' else ''
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, hotlock_mode=mode,
                 caller_shell='cold_clobber' if backend == 'kdlock' else 'c',
                 cookie_storage='percpu_rate_hot' if backend == 'kdlock' else 'not_applicable',
-                cpu_heat_policy='mcs_entry' if backend == 'kdlock' else 'not_applicable',
+                cpu_heat_policy='mcs_entry_ratio512_batch128' if backend == 'kdlock' else 'not_applicable',
+                spin_contention_pct=contention_pct if backend == 'kdlock' else None,
                 pmu=getattr(args, 'pmu', False),
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
@@ -94,6 +98,7 @@ def report(out):
             rows.append(dict(name=spec['name'], scenario=spec['scenario'],
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
                 cpu_heat_policy=spec.get('cpu_heat_policy', 'unrecorded'),
+                spin_contention_pct=spec.get('spin_contention_pct', 'unrecorded'),
                 caller_shell=spec.get('caller_shell', 'unrecorded'),
                 cookie_storage=spec.get('cookie_storage', 'unrecorded'),
                 status=row.get('execution_status', 'NOT_RUN'),
@@ -112,16 +117,17 @@ def report(out):
         r['throughput_ops_s'] = m['completed']*1e9/m['wall_ns'] if valid(r) else None
         r['amortized_ns_op'] = m['wall_ns']/m['completed'] if valid(r) else None
         records.append(r)
-        # Never select a winner across observe/adaptive: they exercise different
-        # admission policies even when their payload and backend binary match.
+        # Mode and contention threshold are frozen policy inputs, including
+        # threshold zero's diagnostic bypass. Never pool tuning candidates.
         mode = r.get('hotlock_mode', 'unrecorded')
         groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode,
                            r.get('caller_shell', 'unrecorded'),
                            r.get('cookie_storage', 'unrecorded'),
-                           r.get('cpu_heat_policy', 'unrecorded')), []).append(r)
+                           r.get('cpu_heat_policy', 'unrecorded'),
+                           r.get('spin_contention_pct', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, shell, cookie, heat_policy), rows in groups.items():
+    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
@@ -129,6 +135,7 @@ def report(out):
                    hotlock_mode=mode, caller_shell=shell,
                    cookie_storage=cookie,
                    cpu_heat_policy=heat_policy,
+                   spin_contention_pct=contention_pct,
                    spin_delegate=rows[0].get('spin_delegate', 'on'),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -180,6 +187,11 @@ def main():
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
     p.add_argument("--spin-delegate", choices=("on", "off"), default="on",
                    help="off: explicit KD self-execution control, no JIT acceptance")
+    p.add_argument('--spin-contention-pct', type=int, choices=range(101),
+                   metavar='0..100', default=DEFAULT_SPIN_CONTENTION_PCT,
+                   help='adaptive minimum MCS/entry percentage over 512 MCS publications '
+                        f'(default: {DEFAULT_SPIN_CONTENTION_PCT}; 0 bypasses ratio; '
+                        'observe always bypasses)')
     args = p.parse_args()
     require(args.scenario == "plain" or (args.backends == ["kdlock"] and args.workload == "cacheline"),
             "nested protocol regression requires KD cacheline workload")
@@ -213,6 +225,7 @@ def main():
         write_json(out/'plan.json', plan)
         write_json(out/'environment.json', dict(kernel_identity=identity,topology=topology,packages=packages,
             argv=sys.argv,python=sys.executable,snapshot_tag=os.environ.get('KDLOCK_SNAPSHOT_TAG'),
+            runner_affinity=sorted(os.sched_getaffinity(0)),
             cmdline=Path('/proc/cmdline').read_text(),preemption=Path('/sys/kernel/debug/sched/preempt').read_text(),
             watchdog=Path('/proc/sys/kernel/watchdog').read_text(),uname=list(os.uname())))
         builds = [('client',['make','-C',HERE,'client']),

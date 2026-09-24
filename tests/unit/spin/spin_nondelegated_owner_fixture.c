@@ -9,6 +9,7 @@ struct task_struct { int id; } task;
 typedef struct { unsigned char locked; } kd_spinlock_t;
 typedef kd_spinlock_t raw_spinlock_t;
 static unsigned int pins;
+static unsigned int physical_entries;
 static bool task_context = true;
 #undef __always_inline
 #define __always_inline inline __attribute__((always_inline))
@@ -29,27 +30,35 @@ static bool task_context = true;
 #define per_cpu(x,cpu) (x)
 static void kd_spin_acquire_nondelegated(kd_spinlock_t *lock)
 { assert(pins && !lock->locked); lock->locked=1; }
+/* Model only the CPU-local statistic; the extracted API owns its pin. */
+static void kd_hotlock_spin_entry_pinned(void)
+{ assert(pins); physical_entries++; }
 #include "spin_nondelegated_api.h"
 int main(void)
 {
  kd_spinlock_t a={0}, b={0};
  kd_spin_lock_nondelegated(&a);
  assert(pins==1 && kd_spin_fast_cpu.held==&a && !kd_spin_fast_cpu.nondelegated);
+ assert(physical_entries==1);
  kd_spin_lock_nondelegated(&b);
  assert(pins==2 && kd_spin_fast_cpu.held==&a && kd_spin_fast_cpu.nondelegated==1);
+ assert(physical_entries==2);
  kd_spin_unlock_nondelegated(&b);
  assert(pins==1 && a.locked && !b.locked && !kd_spin_fast_cpu.nondelegated);
  kd_spin_unlock_nondelegated(&a); /* direct bridge, no public unlock router */
  assert(!pins && !a.locked && kd_spin_fast_idle());
+ assert(physical_entries==2);
  task_context=false;
  kd_spin_lock_nondelegated(&a);
  assert(pins==1 && !kd_spin_fast_cpu.held && kd_spin_fast_cpu.nondelegated==1);
  kd_spin_unlock_nondelegated(&a);
  assert(!pins && kd_spin_fast_idle());
+ assert(physical_entries==3);
  task_context=true; pins=2;
  kd_spin_lock_nondelegated(&a);
  assert(pins==3 && !kd_spin_fast_cpu.held && kd_spin_fast_cpu.nondelegated==1);
  kd_spin_unlock_nondelegated(&a);
  assert(pins==2 && kd_spin_fast_idle());
+ assert(physical_entries==4);
  puts("PASS nondelegated owner: root, nested, IRQ/pinned and direct bridge release balanced");
 }

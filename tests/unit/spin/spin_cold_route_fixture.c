@@ -11,6 +11,7 @@ static struct { void *held; unsigned int nondelegated; } kd_spin_fast_cpu;
 static bool warm_waiter;
 static unsigned int pins, disables, enables, reads, attempts, waits, hot_releases;
 static unsigned int rate_hot;
+static unsigned long lock_entries;
 #define __percpu
 #define KD_SPIN_DIRECT_NATIVE_HELD 5U
 #define preempt_disable() (++pins, ++disables)
@@ -24,11 +25,16 @@ static unsigned int rate_hot;
 #define per_cpu(x,c) (x)
 #define for_each_possible_cpu(c) for ((c)=0;(c)<1;(c)++)
 #define _Q_LOCKED_VAL_HL 1U
+/* The real provider counts both CAS outcomes before the pending/MCS path.
+ * Its CPU primitive is tested with production hotlock code elsewhere. */
+static void kd_hotlock_spin_entry_pinned(void)
+{ assert(pins); lock_entries++; }
 static u32 atomic_cmpxchg_acquire(u32 *p, u32 old, u32 value)
 { assert(pins); attempts++; u32 found=*p; if(found==old) *p=value; return found; }
 static void kd_spin_acquire_nondelegated_contended(kd_spinlock_t *lock, u32 failed)
 {
  assert(pins == 1 && attempts == 1 && kd_spin_fast_cpu.nondelegated == 1);
+ assert(lock_entries == attempts);
  assert(failed == lock->val && failed); waits++;
  if(warm_waiter) rate_hot=true;
  lock->locked=1;
@@ -52,11 +58,13 @@ int main(void)
   warm_waiter=state&2;
   rate_hot=0;
   pins=disables=enables=reads=attempts=waits=0;
+  lock_entries=0;
   assert(kd_spin_fast_idle());
   preempt_disable(); /* The public macro owns the only acquisition pin. */
   kd_spin_direct_native_lock(&lock);
   assert(disables == 1 && pins == 1 && !enables && !reads);
   assert(attempts == 1 && waits == !!(state&1) && lock.locked == KD_SPIN_DIRECT_NATIVE_HELD);
+  assert(lock_entries == 1); /* A contended fallback is still one entry. */
   assert(rate_hot == (!!(state&1) && warm_waiter));
   assert(!kd_spin_fast_idle());
   if(state&4) rate_hot=!rate_hot; /* Unlock never queries a changed gate. */
@@ -65,12 +73,14 @@ int main(void)
   kd_spin_unlock_clobber_v1(&lock, 0x1111, 0x2222, 0x3333);
   assert(!reads && lock.val == queued && kd_spin_fast_idle());
   assert(!pins && disables == 1 && enables == 1 && !hot_releases);
+  assert(lock_entries == 1); /* Unlock is not a new acquisition. */
  }
  /* Two independent cold holds count through ordinary/early release. The
   * gate may change after either choice; the native entry never rereads it. */
  for(unsigned int early=0;early<2;early++) {
     kd_spinlock_t lock[2]={{.val=0},{.val=0}};
     pins=disables=enables=reads=attempts=waits=0;
+    lock_entries=0;
     for(unsigned int i=0;i<2;i++) {
      rate_hot=i;
      preempt_disable();
@@ -78,6 +88,7 @@ int main(void)
      assert(rate_hot==i && lock[i].locked==KD_SPIN_DIRECT_NATIVE_HELD);
     }
     assert(pins==2 && attempts==2 && !reads && kd_spin_fast_cpu.nondelegated==2);
+    assert(lock_entries==2);
     for(unsigned int step=0;step<2;step++) {
      unsigned int i=early?step:1-step;
      rate_hot=!i;
@@ -85,6 +96,7 @@ int main(void)
      assert(!reads && rate_hot==!i && kd_spin_fast_cpu.nondelegated==1-step);
     }
     assert(!pins && enables==2 && disables==2 && kd_spin_fast_idle());
+    assert(lock_entries==2);
    }
  /* Byte1 must reach the normal core regardless of the current CPU gate;
   * the byte5 cases above must never reach it or underflow native accounting. */

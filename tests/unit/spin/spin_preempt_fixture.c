@@ -17,6 +17,7 @@ enum { FAST, COLD, OFF, IRQ, SOFTIRQ, MIGRATE, BUSY, FRAME, NATIVE_ACTIVE,
        TICKET_FULL, PENDING, PENDING_ONLY, PENDING_RACE, PENDING_FOREIGN,
        QUEUED, NOT_READY, NESTED, NESTED_PENDING, NESTED_QUEUED, CASES };
 static int scenario, pins, initial, disables, enables, samples, ticket, reservations, claims, clears;
+static unsigned int physical_entries;
 static bool kd_spin_delegate;
 static void pinned(void) { assert(pins == initial + 1 && disables == 1 && !enables); }
 #define preempt_disable() do { ++pins; ++disables; } while (0)
@@ -50,6 +51,9 @@ static u32 atomic_cmpxchg_acquire(u32 *p,u32 old,u32 val)
 { pinned(); u32 found=*p; if(found==old) *p=val; return found; }
 static bool kd_hotlock_record_spin_pinned(unsigned long addr)
 { assert(addr); pinned(); samples++; return scenario != COLD; }
+/* Every entry, including policy refusal, records once under the same pin. */
+static void kd_hotlock_spin_entry_pinned(void)
+{ pinned(); physical_entries++; }
 static bool kd_spin_entry_native_active(void) { pinned(); return scenario == NATIVE_ACTIVE; }
 static bool kd_exec_context_occupied(void)
 { pinned(); return scenario == FRAME || scenario == BUSY; }
@@ -94,6 +98,7 @@ int main(void)
   memset(&kd_spin_fast_cpu,0,sizeof(kd_spin_fast_cpu));
   initial=pins=scenario>=NESTED ? 2 : 0;
   disables=enables=samples=ticket=reservations=claims=clears=0;
+  physical_entries=0;
   kd_spin_delegate=scenario!=OFF;
   task.migration_disabled=scenario==MIGRATE;
   if(scenario==PENDING || scenario==PENDING_RACE ||
@@ -108,6 +113,7 @@ int main(void)
    kd_spin_lock_pinned_clobber_v1(&lock,0,0,0);
   }
   pinned(); assert(lock.locked==1 && samples==(scenario!=OFF));
+  assert(physical_entries==1);
   bool needs_ticket=scenario==QUEUED || scenario==NOT_READY ||
       scenario==PENDING_RACE || scenario==PENDING_FOREIGN || scenario>=NESTED;
   assert(reservations == (needs_ticket || scenario==TICKET_FULL));
@@ -116,6 +122,7 @@ int main(void)
   if(entry==0) kd_spin_unlock(&lock);
   else kd_spin_unlock_clobber_v1(&lock,0,0,0);
   assert(pins==initial && disables==1 && enables==1 && !lock.locked && !ticket);
+  assert(physical_entries==1); /* Native fallback and unlock never recount. */
   assert(kd_spin_fast_idle());
  }
  puts("PASS preemption: entry pinned before admission, 3 entries x 19 routes retain one pin; sole pending skips tickets; queued/nested preserve tickets");
