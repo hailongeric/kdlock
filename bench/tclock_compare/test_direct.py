@@ -296,13 +296,13 @@ class DirectTests(unittest.TestCase):
     def test_cli_small_thread_heat_matrix(self):
         output = io.StringIO()
         argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
-                '--threads', '1', '2', '3', '4', '20']
+                '--threads', '1', '2', '3', '4', '5', '6', '7', '8', '16', '20']
         with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
             self.assertEqual(run.main(), 0)
         plan = json.loads(output.getvalue())
-        self.assertEqual(len(plan), 120)
-        self.assertEqual(len({s['name'] for s in plan}), 120)
-        self.assertEqual({s['threads'] for s in plan}, {1, 2, 3, 4, 20})
+        self.assertEqual(len(plan), 240)
+        self.assertEqual(len({s['name'] for s in plan}), 240)
+        self.assertEqual({s['threads'] for s in plan}, {1, 2, 3, 4, 5, 6, 7, 8, 16, 20})
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
             self.assertEqual(spec['cpu_heat_policy'],
