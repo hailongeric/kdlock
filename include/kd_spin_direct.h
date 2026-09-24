@@ -9,6 +9,7 @@
 #include <linux/preempt.h>
 #include "kd_spin_type.h"
 #include "kd_hotlock.h"
+#include "kd_spin_fast.h"
 #include "exe_info.h"
 
 int kd_spin_prepare(kd_spinlock_t *lock, unsigned long ip, unsigned int abi);
@@ -17,6 +18,21 @@ void kd_spin_lock_clobber_v1(kd_spinlock_t *, unsigned long, unsigned long,
 void kd_spin_unlock_clobber_v1(kd_spinlock_t *, unsigned long, unsigned long,
 			     unsigned long);
 void kd_spin_direct_native_lock(kd_spinlock_t *lock);
+void kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed);
+/* The caller already pinned and selected self-execution. Keep the common CAS
+ * here; a failed attempt retains that pin and enters the complete native queue.
+ * The drain count stays live through the generic byte-5 unlock. */
+static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *lock)
+{
+	u32 val;
+
+	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
+	val = atomic_cmpxchg_acquire(&lock->val, 0, KD_SPIN_DIRECT_NATIVE_HELD);
+	/* Both outcomes count once before any possible MCS publication. */
+	kd_hotlock_spin_entry_pinned();
+	if (val)
+		kd_spin_direct_native_contended(lock, val);
+}
 void kd_spin_direct_native_unlock(kd_spinlock_t *lock);
 void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 				 unsigned long, unsigned long);
@@ -45,8 +61,8 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 /* Selecting this shell opts into CPU-heat routing; provider policy switches
  * are handled by the shared core/sampler. Pin before the per-CPU read.
  * Keep the gate in C so only the hot branch has the broad clobber contract;
- * cold uses an ordinary C call into
- * the complete native CAS/pending/MCS path. Neither branch exports a path
+ * cold inlines its first CAS and calls the native pending/MCS finisher only
+ * on contention. Neither branch exports a path
  * cookie or captures extra GPRs. The named continuation belongs to hot only.
  * The compiler owns all live-register spills, even if it places them before
  * the branch. Do not insert PUSH/POP adapters into the translated body.
@@ -55,7 +71,7 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 	kd_spinlock_t *kd_lock_word = (kd_spinlock_t *)(lock); \
 	preempt_disable(); \
 	if (!READ_ONCE(*this_cpu_read(cookie))) \
-		kd_spin_direct_native_lock(kd_lock_word); \
+		kd_spin_direct_native_lock_inline(kd_lock_word); \
 	else \
 		KD_SPIN_DIRECT_CALL(kd_spin_lock_pinned_clobber_v1, \
 				    kd_lock_word, continuation); \

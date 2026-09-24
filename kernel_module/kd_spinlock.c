@@ -27,6 +27,7 @@
 #include "kd_segment.h"
 #include "kd_spin_entry.h"
 #include "kd_spin_fast.h"
+#include "kd_spin_direct.h"
 #include "kd_hotlock.h"
 #include <linux/sched.h>
 #include <linux/sched/task_stack.h>
@@ -500,28 +501,23 @@ kd_spin_lock_abi(struct qspinlock *lock, unsigned long sp,
 	kd_spin_lock_abi_pinned(lock, sp, ip, bp, abi);
 }
 
-/* The inline caller already pinned and chose self-execution. A failed CAS
- * enters the complete native pending/MCS algorithm, including CPU sampling;
- * later heat changes never turn this acquisition into delegated work.
- * The lock byte carries ownership, while the sole per-CPU cookie remains
- * just rate_hot. Keep native holders counted through their paired release. */
+/* The pinned caller already counted the acquisition and observed a failed
+ * CAS. Later heat changes never turn this native queue wait into delegation. */
+__attribute__((noipa)) noinline notrace void
+kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed)
+{
+	kd_spin_acquire_nondelegated_contended(lock, failed);
+	/* The core acquired with its ordinary byte. Publish native provenance
+	 * without changing pending/tail or issuing another acquisition CAS. */
+	WRITE_ONCE(lock->locked, KD_SPIN_DIRECT_NATIVE_HELD);
+}
+EXPORT_SYMBOL_GPL(kd_spin_direct_native_contended);
+
+/* Retain the out-of-line API for existing pinned callers. */
 __attribute__((noipa)) noinline notrace void
 kd_spin_direct_native_lock(kd_spinlock_t *lock)
 {
-	u32 val;
-
-	this_cpu_inc(kd_spin_fast_cpu.nondelegated);
-	val = atomic_cmpxchg_acquire(&lock->val, 0, KD_SPIN_DIRECT_NATIVE_HELD);
-	/* Count both CAS outcomes before a possible MCS publication, without
-	 * putting this statistics store ahead of the acquisition's locked RMW. */
-	kd_hotlock_spin_entry_pinned();
-	if (val) {
-		kd_spin_acquire_nondelegated_contended(lock, val);
-		/* The shared pending/MCS core acquires with its ordinary byte.
-		 * We now own it: publish paired native provenance without touching
-		 * pending or a successor's tail. No second acquisition CAS. */
-		WRITE_ONCE(lock->locked, KD_SPIN_DIRECT_NATIVE_HELD);
-	}
+	kd_spin_direct_native_lock_inline(lock);
 }
 EXPORT_SYMBOL_GPL(kd_spin_direct_native_lock);
 

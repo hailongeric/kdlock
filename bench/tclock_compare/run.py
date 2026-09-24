@@ -353,10 +353,13 @@ def main():
             require('__ubsan_' not in imported, 'direct workload still imports UBSAN handlers')
             require('kd_raw_spin_' not in imported and 'kd_spin_dispatch_' not in imported,
                     'workload still imports a unified spin hook')
-            expected = {'kdlock': ('kd_spin_direct_native_lock', 'kd_spin_lock_pinned_clobber_v1',
+            expected = {'kdlock': ('kd_spin_direct_native_contended', 'kd_spin_fast_cpu',
+                                   'kd_hotlock_spin_entries', 'kd_spin_lock_pinned_clobber_v1',
                                    'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
             if backend == 'kdlock':
+                require('kd_spin_direct_native_lock' not in imported.split(),
+                        'cold caller still imports the out-of-line CAS entry')
                 require('kd_spin_direct_native_unlock' not in imported.split(),
                         'paired caller still bypasses the generic clobber unlock')
             require(all(symbol in imported.split() for symbol in expected), 'missing direct API import')

@@ -19,26 +19,12 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 当前 spin/mutex 各自每 CPU 256 桶、256 条预分配记录，以槽索引处理冲突并匹配
 完整锁地址。命中只增加该锁 count，没有候选排名、score/error 或淘汰。
 满表保留已有记录，未收录锁在 adaptive 下走原生；地址映射保持至卸载。
-模块初始化建立 CPU 时间起点；spin CPU 每累计 8 次合格 MCS 发布采时检查，
-整批耗时严格小于 400 万 TSC ticks 才判热。mutex CPU 保持每 1024 次入口检查，
-整批耗时严格小于 400 亿 TSC ticks 才判热；spin 调参不改变 mutex 窗口。
-时间差取上次检查到本批结束的整批耗时，首批从初始化计时。spin 共用 `xchg_tail()`
-默认在交换队尾前记录，原生、代理、虚拟嵌套均覆盖；fast/pending、入队前取消及
-节点耗尽轮询不计数。CPU 热度仅按实际 MCS 发布计数，冷/热、原生/代理/虚拟入队规则一致；
-没有队列深度门槛、后继链扫描或队头补采样。2/3线程频繁入队也能升温。CPU 热才在入口查锁表。
-单锁仍统计入口调用，count **大于 32** 时检查 25 亿 TSC 窗口、刷新 hot，
-更新时间戳并清零计数，即第 33 次触发。等于时间边界或倒退均冷。
-mutex 同次到期复用 TSC；spin 的 CPU/单锁事件分开采时。
-CPU 持续热不重置单锁批次，冷却/重新变热时重置计数和热值、
-保留映射。query 不计数/采时/插入，空闲后可能暂时沿用缓存热值。
-`adaptive` 默认要求 CPU/单锁热值同时成立；provider 的 `observe` 固定准入，包括表满 miss。
-配对调用壳在进入 provider 前仍要求CPU热，见4.1节。
-公共入口关闭代理时跳过统计。热表不再使用 busy 或统计屏障；非 task 上下文
-直接丢样且 query 返回冷，避免重入破坏哈希索引链，observe record 仍固定允许。
-task 统计复用或临时取得 CPU pin，mutex 不跨睡眠保持统计 pin。
-有效锁字和表生命周期由调用者保证；owner/ticket/frame 独立存活，解锁不查热表。
-CPU 入队事件不重新决定当前请求准入，新热值由后续入口使用；没有 MCS 时缓存
-CPU 热值保持到下一批入队检查。mutex 互斥协议及入口准入位置不变。
+spin在同一512次MCS边界比较每CPU获取/MCS差值，再读取一次TSC；默认比例门槛100%，
+CPU窗口400亿TSC ticks。spin单锁每512次检查12.5亿窗口；mutex保持第1025次/25亿。
+获取和MCS计数允许近似；已有busy guard保护热表修改，统计复用获取pin。
+这些只决定后续准入，不承担owner、ACK或排空职责。降温/重新变热时重置单锁热度，
+不取消已发布请求。完整参数、observe与query语义统一见
+[热度与角色](../JIT_EXECUTION.md#21-热度与角色)，不在本页复制实验参数。
 
 OWNER 保存在真实 fast owner/ticket 状态中；WAITER、COMBINER、DONE 保存于
 稳定 frame 的 role 字段，使用原 state 布局内的空间，寄存器/帧偏移不变。
@@ -67,11 +53,12 @@ one object. Explicit caller storage must outlive all requests and frames.
 
 The paired broad-clobber spin shell is selected at caller compile time.
 It pins once, then uses a C `if` with `this_cpu_read` / `READ_ONCE` to select an
-ordinary C cold call or the original broad-clobber hot call based only on CPU
-heat. The cold call
+inlined cold acquisition or the original broad-clobber hot call based only on CPU
+heat. Cold acquisition
 keeps the existing `nondelegated` in-flight count through the entire native acquisition
-and hold. It attempts one CAS and passes a failure directly to the complete
-native pending/MCS path. This root does not
+and hold. It inlines one CAS and the existing per-CPU entry count, calling
+`kd_spin_direct_native_contended` only on failure to finish the complete native
+pending/MCS path. The old outlined API shares this helper for existing callers. This root does not
 transfer to a fast-owner record. Native ownership uses locked-byte value 5.
 Paired unlock always calls `kd_spin_unlock_clobber_v1` with the broad clobber
 contract and lock/SP/IP/BP metadata. The provider tests byte 5 before a release,
@@ -80,9 +67,8 @@ existing unlock core. JIT sees one completion endpoint without a caller-side
 cold/hot unlock branch. The cookie is only the existing per-CPU rate_hot view: one per CPU
 shared by all locks, with no acquisition path or nesting count. CPU heat
 changes affect only subsequent acquisitions. Native MCS counts each actual
-publication once, without consulting queue depth; every eight publications it
-samples the clock and requires the batch delta to be strictly below 4,000,000
-TSC ticks. The drain scan includes the native in-flight count. Hot acquisitions use the
+publication once, without consulting queue depth; every 512 publications it
+compares the MCS/entry ratio before sampling the clock, using the policy above. The drain scan includes the native in-flight count. Hot acquisitions use the
 shared pinned core and existing fast-owner/ticket routing; the provider still
 checks `spin_delegate` there. Observe fixes lock admission only after CPU heat
 in the paired shell. The retained API keeps its original policy.

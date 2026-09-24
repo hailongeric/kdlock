@@ -50,6 +50,7 @@ static DEFINE_PER_CPU(struct kd_hotlock_spin_ratio, kd_hotlock_spin_ratio);
 DEFINE_PER_CPU(unsigned int *, kd_hotlock_spin_gate);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_gate);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
+EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_entries);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
 /* Count physical acquisition attempts on their executor CPU, including nested
  * acquisitions and outer reacquires. Root fallbacks retain their first count. */

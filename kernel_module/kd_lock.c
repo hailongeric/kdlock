@@ -139,6 +139,7 @@ static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
  * ========================================================================== */
 
 DEFINE_PER_CPU(struct kd_spin_fast_cpu, kd_spin_fast_cpu);
+EXPORT_PER_CPU_SYMBOL_GPL(kd_spin_fast_cpu);
 
 #include "lock/mutex_calls.inc"
 

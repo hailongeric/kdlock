@@ -116,7 +116,8 @@ static void *worker(void *arg)
    kd_spin_acquire_nondelegated(&lock);
   }
   else {
-   kd_spin_direct_native_lock(&lock);
+   if(i&1) kd_spin_direct_native_lock_inline(&lock);
+   else kd_spin_direct_native_lock(&lock);
    assert(lock.locked==KD_SPIN_DIRECT_NATIVE_HELD && pins==1);
   }
   assert(!__atomic_fetch_add(&inside, 1, __ATOMIC_RELAXED));

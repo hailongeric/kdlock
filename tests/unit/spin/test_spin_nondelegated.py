@@ -22,7 +22,12 @@ def main():
             queue.index('/**\n * clear_pending')]
         (Path(directory)/'spin_mcs_tail.h').write_text(publication)
         source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
+        direct = (ROOT/'include/kd_spin_direct.h').read_text()
         paired = 'void ' + definition(source,
+            'kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed)')
+        paired += definition(direct,
+            'static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *lock)')
+        paired += 'void ' + definition(source,
             'kd_spin_direct_native_lock(kd_spinlock_t *lock)')
         paired += 'void ' + definition(source, 'kd_spin_direct_native_unlock(kd_spinlock_t *lock)')
         (Path(directory)/'spin_direct_native.h').write_text(paired)

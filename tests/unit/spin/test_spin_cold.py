@@ -19,14 +19,18 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def main():
     source = (ROOT / 'kernel_module/kd_spinlock.c').read_text()
-    code = 'void ' + definition(source, 'kd_spin_direct_native_lock(kd_spinlock_t *lock)')
+    direct = (ROOT / 'include/kd_spin_direct.h').read_text()
+    code = 'void ' + definition(source,
+        'kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed)')
+    code += definition(direct,
+        'static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *lock)')
+    code += 'void ' + definition(source, 'kd_spin_direct_native_lock(kd_spinlock_t *lock)')
     code += 'void ' + definition(source, 'kd_spin_direct_native_unlock(kd_spinlock_t *lock)')
     code += 'void ' + definition(source,
         'kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,')
     code += definition((ROOT / 'include/kd_spin_fast.h').read_text(),
                        'static inline bool kd_spin_fast_idle(void)')
-    header = re.sub(r'^#include .*$', '',
-                    (ROOT / 'include/kd_spin_direct.h').read_text(), flags=re.M)
+    header = re.sub(r'^#include .*$', '', direct, flags=re.M)
     with tempfile.TemporaryDirectory(prefix='kd-cold-') as directory:
         path = Path(directory)
         (path / 'cold_route.h').write_text(code)

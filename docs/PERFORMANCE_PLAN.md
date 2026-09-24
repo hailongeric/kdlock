@@ -44,6 +44,10 @@ nested/early两场已完成，3/4线程改善但c16/8等保护未满足；该批
 再分别检查pending-only等待上限和冷获取调用成本，不把测量变化算作优化。
 [新口径基线](../bench/tclock_compare/results/20260924-warmed-peak.md)已完成c1全部10个线程点的三轮90场，
 全部有效；低线程差距仍存在，16/20线程的新长测约为TCLock的86%。
+冷获取首次CAS及已有计数内联的独立30场已完成：单线程32.729→41.599Mops/s，
+约为新Linux基线93.4%；16/20线程差异不到0.4%，接近窗口计数误差界。普通JIT、
+observe nested/early和配对冷路径通过；adaptive nested因约50%的比例未执行JIT，保留NO_JIT失败记录。
+pending-only等待512候选在2线程大幅改善，但4线程约下降11%–12%，已撤回为1；不合并到本次内联改动。
 性能测量不能解释为全量功能通过。并发冷准备RCU stall、pinned mutex mode-4
 soft lockup及其他真实限制保留在 [TODO](TODO.md#current-checkpoint)。
 

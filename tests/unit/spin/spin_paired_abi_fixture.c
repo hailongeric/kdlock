@@ -9,7 +9,8 @@
 #include <unistd.h>
 #include <asm/prctl.h>
 #include <sys/syscall.h>
-typedef union { unsigned int val; unsigned char locked; } kd_spinlock_t;
+typedef uint32_t u32;
+typedef union { u32 val; unsigned char locked; } kd_spinlock_t;
 #define KD_SPIN_DIRECT_NATIVE_HELD 5U
 #define READ_ONCE(x) (x)
 #define __percpu
@@ -17,7 +18,7 @@ register unsigned long current_stack_pointer asm("rsp");
 #define ASM_CALL_CONSTRAINT "+r" (current_stack_pointer)
 static volatile unsigned int pins;
 #define preempt_disable() (++pins)
-/* No provider policy symbols: the public shell needs only CPU heat. */
+/* Policy remains in the provider; this shell reads heat and counts its hold. */
 static unsigned int cpu_id, heat[2];
 /* The production symbol names one per-CPU pointer slot. A GS offset of 0/8
  * selects two contiguous slots here, both pointing at their own rate_hot. */
@@ -32,11 +33,27 @@ asm(".globl kd_hotlock_spin_gate\n.set kd_hotlock_spin_gate,cpu_gates\n");
  asm volatile("movq %%gs:%1, %0" : "=r"(value) : "m"(slot)); \
  value; \
 })
+/* These primitive substitutes let the real inline CAS/count sequence run.
+ * The native count is shared only because this fixture's CPUs run serially. */
+static struct { unsigned int nondelegated; } kd_spin_fast_cpu;
+static unsigned int hot, cold_locks, entry_calls;
+#define this_cpu_inc(x) (++(x))
+static u32 atomic_cmpxchg_acquire(u32 *word, u32 old, u32 new)
+{
+ u32 found=*word;
+ assert(pins && kd_spin_fast_cpu.nondelegated);
+ cold_locks++;
+ if(found==old) *word=new;
+ return found;
+}
+static void kd_hotlock_spin_entry_pinned(void)
+{ assert(pins); entry_calls++; }
 #include "paired.h"
-static unsigned int hot, cold_locks;
 unsigned long hot_calls, generic_unlocks, native_releases;
 __attribute__((noinline,noipa)) void kd_spin_direct_native_lock(kd_spinlock_t *lock)
-{ assert(pins && !lock->val); cold_locks++; lock->locked=KD_SPIN_DIRECT_NATIVE_HELD; }
+{ (void)lock; assert(!"caller bypassed inline cold acquisition"); }
+__attribute__((noinline,noipa)) void kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed)
+{ (void)lock; (void)failed; assert(!"unexpected contention in ABI fixture"); }
 __attribute__((noinline,noipa)) void kd_spin_direct_native_unlock(kd_spinlock_t *lock)
 { (void)lock; assert(!"caller bypassed the generic clobber unlock"); }
 /* Metadata describes the unchanged pre-CALL stack and exact continuation.
@@ -49,7 +66,7 @@ asm(".text\n"
     "kd_spin_unlock_clobber_v1:\n"
     "cmpl $0, pins(%rip)\n je .Lbad\n"
     "cmpb $5, (%rdi)\n jne .Lhot_release\n"
-    "incq native_releases(%rip)\n jmp .Lrelease\n"
+    "decl kd_spin_fast_cpu(%rip)\n incq native_releases(%rip)\n jmp .Lrelease\n"
     ".Lhot_release:\n cmpb $1, (%rdi)\n jne .Lbad\n"
     "incq hot_calls(%rip)\n"
     ".Lrelease:\n movb $0, (%rdi)\n decl pins(%rip)\n"
@@ -85,7 +102,8 @@ __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed)
  asm volatile("" : "+r"(a),"+r"(b),"+r"(c),"+r"(d),"+r"(e) : : "memory");
  KD_SPIN_DIRECT_UNLOCK(&lock,kd_spin_direct_cookie);
  asm volatile("" : "+r"(a),"+r"(b),"+r"(c),"+r"(d),"+r"(e) : : "memory");
- assert(!lock.val && !pins && heat[cpu_id^1]==other_cookie && heat[cpu_id]!=hot);
+ assert(!lock.val && !pins && !kd_spin_fast_cpu.nondelegated);
+ assert(heat[cpu_id^1]==other_cookie && heat[cpu_id]!=hot);
  return a+b+c+d+e;
 }
 
@@ -111,7 +129,7 @@ static void nested_cookies(unsigned int outer_hot, unsigned int inner_hot,
   assert(pins==1);
   KD_SPIN_DIRECT_UNLOCK(&outer,kd_spin_direct_cookie);
  }
- assert(!pins && !outer.val && !inner.val);
+ assert(!pins && !outer.val && !inner.val && !kd_spin_fast_cpu.nondelegated);
  assert(heat[cpu_id]!=inner_hot && heat[cpu_id^1]==other_cookie);
 }
 
@@ -133,8 +151,9 @@ int main(void)
    }
  }
  assert(!syscall(SYS_arch_prctl,ARCH_SET_GS,old_gs));
- assert(cold_locks==expected_cold && native_releases==expected_cold && hot_calls==expected_hot);
+ assert(cold_locks==expected_cold && entry_calls==expected_cold);
+ assert(native_releases==expected_cold && hot_calls==expected_hot);
  assert(generic_unlocks==expected_cold+expected_hot/2);
- puts("PASS inline cold gate: actual GS read, two CPUs, heat-only routing without provider policy symbols");
+ puts("PASS inline cold acquisition: actual GS gate, two CPUs, one CAS/count and paired native drain");
  puts("PASS generic cold/hot clobber unlock: live C values/stack, exact SP/IP/BP, provenance, heat changes and nested/early unlock");
 }

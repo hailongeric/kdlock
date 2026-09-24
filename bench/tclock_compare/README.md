@@ -10,8 +10,8 @@
 | TCLock | `komb_spin_lock/unlock`，调用者配对管理抢占 |
 | kdlock | `KD_SPIN_DIRECT_LOCK/UNLOCK`，CPU热值分流获取，统一generic clobber解锁 |
 
-KD宏取得一次preempt pin后用C `if`读取per-CPU热值。冷CPU调用
-`kd_spin_direct_native_lock`，包括失败后的完整pending/MCS等待；热CPU调用
+KD宏取得一次preempt pin后用C `if`读取per-CPU热值。冷CPU内联首次CAS和已有per-CPU计数，
+仅失败时调用`kd_spin_direct_native_contended`完成pending/MCS等待；热CPU调用
 `kd_spin_lock_pinned_clobber_v1`。解锁一律通过broad-clobber调用
 `kd_spin_unlock_clobber_v1`，由provider识别低字节5的原生所有权或执行热协议。
 寄存器仅在约束/clobber中声明，保存位置由编译器决定，可出现在if之前；宏不手写push/pop。
@@ -128,7 +128,7 @@ worker仍按线程配置绑定选定的CPU0至CPU(`threads-1`)。运行器在`en
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   LC_ALL=C timeout --kill-after=10s 180 python3 bench/tclock_compare/run.py \
   --functional --backends kdlock --cachelines 1 --threads 4 --repeats 1 \
-  --iterations 100000 --scenario plain \
+  --iterations 100000 --scenario plain --hotlock-mode observe \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
   --output /root/kdlock-evidence/continuation-plain-new
@@ -137,6 +137,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 按改动选择 `nested`、`early`；`--spin-delegate off` 单独验证原生对照，要求零
 JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆盖边界见
 [测试入口](../../tests/README.md)。
+协议JIT正例使用observe：nested中的无竞争内层获取也进入CPU比例分母，adaptive100%可能
+合法选择原生；此时运行器仍报告NO_JIT失败，不把正确业务完成冒充JIT正例。
 
 ## 验收与结果
 

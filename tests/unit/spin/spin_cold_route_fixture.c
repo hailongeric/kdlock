@@ -53,6 +53,7 @@ int main(void)
 {
  /* A pending bit/tail can exist at acquisition, appear after CAS, or remain
   * at release; the paired release owns only the low locked byte. */
+ for(unsigned int route=0;route<2;route++)
  for(unsigned int state=0;state<8;state++) {
   kd_spinlock_t lock={.val=(state&1) ? 0x12340101U : 0};
   warm_waiter=state&2;
@@ -61,7 +62,8 @@ int main(void)
   lock_entries=0;
   assert(kd_spin_fast_idle());
   preempt_disable(); /* The public macro owns the only acquisition pin. */
-  kd_spin_direct_native_lock(&lock);
+  if(route) kd_spin_direct_native_lock_inline(&lock);
+  else kd_spin_direct_native_lock(&lock);
   assert(disables == 1 && pins == 1 && !enables && !reads);
   assert(attempts == 1 && waits == !!(state&1) && lock.locked == KD_SPIN_DIRECT_NATIVE_HELD);
   assert(lock_entries == 1); /* A contended fallback is still one entry. */
@@ -110,6 +112,6 @@ int main(void)
   assert(!kd_spin_fast_cpu.nondelegated && rate_hot==heat && hot_releases==heat+1);
  }
  puts("PASS generic provider unlock: native byte/count/pin release, hot core routing, pending/tail retained");
- puts("PASS pinned cold entry: one CAS/pin, contention/heat changes and paired drain");
+ puts("PASS inline and outlined cold entries: one CAS/count/pin, contention/heat changes and paired drain");
  puts("PASS independent native ownership: nested/early release, no CPU-heat reads or writes");
 }
