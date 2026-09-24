@@ -8,7 +8,7 @@
 
 统一128次采样/比较候选已完成42场并拒绝：相对local-access，c1/c16的4线程中位分别低10.76%/10.36%，c16/8仍未满足原基线保护。六项输入已恢复24896bd的512次政策。随后512次补集计数候选同样完成42场并拒绝，21项输入已恢复ecc515f；结果分别列示。
 
-随后补齐c16/8匹配profile和当前代码pct0控制，仍不能确认回退原因；关闭门槛没有恢复原基线。后继头部预取12场已拒绝并恢复3项输入到91efe4a，运行实现仍以f71dc2e为参照；节点槽排列候选尚无本报告可用结果。
+随后补齐c16/8匹配profile和当前代码pct0控制，仍不能确认回退原因；关闭门槛没有恢复原基线。后继头部预取12场已拒绝并恢复3项输入到91efe4a，随后节点槽排列12场同样拒绝并恢复12项输入到913fe2e。运行实现仍以f71dc2e为参照，完整性能保护仍未完成。
 
 ## 本地busy保护与已pin入口专化（f71dc2e实验检查点）
 
@@ -61,6 +61,21 @@
 | 16/20 | 4.777421 / 4.746448 / 4.752041 | 4.746448 / 4.752041 / 4.777421 | 0.65 | 209.32 | +1.75 / +1.52 |
 
 [定向检查](../../.tmp/ratio-20260924/checks-follower-prefetch.log)基础两组及batch fixture共3组通过，生产W=1构建保留11条既有objtool警告。[闭合审计](../../.tmp/ratio-20260924/archive-audit-follower-prefetch.json)核对259项源码、5项二进制、36项JIT镜像及业务/摘要/排空一致；冻结provider SHA-256为`4bc6a2f9e1cfc8acdd69ab94236cc4cdde0efea56405348b1db7a8e9cf0cfd09`。未测该候选其他线程数、完整三方168场或nested/early，不能记为整体性能通过。
+
+## 节点槽按CPU排列（已拒绝）
+
+`node-permutation-fixed`将合法逻辑深度映射到已有物理槽`(depth+cpu)&3`，尾编码使用该物理槽，保持四槽容量、128字节节点和通知偏移不变。c1/c16×8/20线程×三轮共12场、16800000操作正确排空，均有实际JIT、16472076次正文。c16/20中位相对local-access提高2.15%，但c16/8仍低0.57%，比原before-fixed低8.73%；c1/8保留4.547276Mops/s的快样本及13.84% spread，不能只取该轮解释收益。因此拒绝，12项生产/测试/文档输入已[恢复913fe2e](../../.tmp/ratio-20260924/sync-node-permutation-restored.json)。
+
+以下吞吐单位Mops/s，r0/r1/r2原顺序不变，最大值与ns/op来自同场；[对local完整比较](../../.tmp/ratio-20260924/node-permutation-local-comparison.json)、[对原基线比较](../../.tmp/ratio-20260924/node-permutation-original-comparison.json)及[records](../../.tmp/ratio-20260924/node-permutation-fixed/records.json)保留全部精度。
+
+| c/t | r0 / r1 / r2 | min / median / max | spread % | 最佳ns/op | 对local中位 / 最大 % | 对before中位 / 最大 % |
+| --- | --- | --- | ---: | ---: | --- | --- |
+| 1/8 | 4.043329 / 4.547276 / 3.987602 | 3.987602 / 4.043329 / 4.547276 | 13.84 | 219.91 | +1.49 / +7.61 | +9.28 / +22.06 |
+| 1/20 | 4.993451 / 4.994405 / 4.995482 | 4.993451 / 4.994405 / 4.995482 | 0.04 | 200.18 | +0.39 / +0.23 | -1.02 / -1.26 |
+| 16/8 | 3.863647 / 3.883333 / 3.870259 | 3.863647 / 3.870259 / 3.883333 | 0.51 | 257.51 | -0.57 / -0.69 | -8.73 / -10.95 |
+| 16/20 | 4.701629 / 4.784002 / 4.770762 | 4.701629 / 4.770762 / 4.784002 | 1.73 | 209.03 | +2.15 / +1.66 | +0.23 / -0.06 |
+
+[定向检查](../../.tmp/ratio-20260924/checks-node-permutation.log)通过5组，SELFTEST=1/0的W=1构建保留22条既有objtool警告。[闭合审计](../../.tmp/ratio-20260924/archive-audit-node-permutation.json)核对259项源码、5项二进制和36项JIT镜像及业务/摘要/排空一致；冻结二进制清单中的provider SHA-256为`97b9c09af704529ec70825975b59197ba612aded33907049a9a79421770a467c`。该候选[nested/early计划](../../.tmp/ratio-20260924/functional-node-permutation-plan.json)仍为**UNRUN**，未执行，不计入场数；也未测其他线程数或完整三方168场。静态布局和正确排空不等于性能原因或完整验收。
 
 ## MCS与非MCS补集计数（已拒绝，恢复入口计数）
 
@@ -235,6 +250,7 @@ spin使用GS INC累计物理获取尝试、GS XADD累计实际MCS发布，每128
 | [profile-original-c16-t8](../../.tmp/ratio-20260924/profile-matched-c16-t8-comparison.json) | 3 | 原脏基线修复版的c16/8匹配诊断，工具/数据/范围校验通过；不将采样热点解释为原因 |
 | [local-access-pct0-c16-t8](../../.tmp/ratio-20260924/local-access-pct0-c16-t8/records.json) | 3 | 当前代码门槛0控制，正确排空，未恢复c16/8原基线性能 |
 | [follower-prefetch-fixed](../../.tmp/ratio-20260924/follower-prefetch-fixed/records.json) | 12 | 后继头部读预取正确排空，8线程保护未解决，拒绝并恢复3项输入到91efe4a |
+| [node-permutation-fixed](../../.tmp/ratio-20260924/node-permutation-fixed/records.json) | 12 | 节点槽按CPU排列正确排空，c16/8保护未解决；拒绝并恢复12项输入到913fe2e，nested/early计划未运行 |
 
 `startup2-fixed`相对`before-fixed`最大吞吐仍有c16/8低4.60%、c1/20低0.56%、c16/20低1.44%；同代码比例0时c16/8仍低9.58%。`phase-fixed`的c1/3、c1/4低于startup，c16/8中位约3.913对4.116Mops/s，20线程变化小且方向不一。详细三轮分别见[startup summary](../../.tmp/ratio-20260924/startup2-fixed/summary.json)、[比例0 summary](../../.tmp/ratio-20260924/startup2-pct0-fixed/summary.json)、[phase summary](../../.tmp/ratio-20260924/phase-fixed/summary.json)；这些都不属于当前缩短spin批次的测量。
 
@@ -269,9 +285,9 @@ spin使用GS INC累计物理获取尝试、GS XADD累计实际MCS发布，每128
 
 未执行材料包括late-allocation提案、`capture_allocations.py`、未对齐`phase-v1`以及未同比缩短时间的`spin512-unscaled-source`；未通过该wrapper读取`/proc/kcore`。phase的GS重定位疑虑是误报：旧计数器同样使用PC32，无需修正asm操作数，见[机器码核对](../../.tmp/ratio-20260924/phase-codegen-observed.md)。相关源码、测试、构建和撤回快照均保留，未运行提案不计入场数。
 
-截至follower-prefetch-fixed，二十份去重审计覆盖45个关闭阶段、1284场、1414800000计时操作；1116场KD中924场有实际JIT，累计1131621426次正文。源码11597项、二进制233项、生成JIT镜像3348项哈希及业务/摘要/排空记录一致；这些跨阶段累计包含失败和诊断，不代表性能接受，不包含后续未关闭候选。明细及审计SHA见[证据清单](../../.tmp/ratio-20260924/retention-evidence-inventory.json)。
+截至node-permutation-fixed，二十一份去重审计覆盖46个关闭阶段、1296场、1431600000计时操作；1128场KD中936场有实际JIT，累计1148093502次正文。源码11856项、二进制238项、生成JIT镜像3384项哈希及业务/摘要/排空记录一致；这些跨阶段累计包含失败和诊断，不代表性能接受，不包含后续未关闭候选。明细及审计SHA见[证据清单](../../.tmp/ratio-20260924/retention-evidence-inventory.json)。
 
-通用审计：[前16阶段](../../.tmp/ratio-20260924/archive-audit-completed-phases.json)、[六组诊断](../../.tmp/ratio-20260924/archive-audit-diagnostic-phases.json)、[诊断槽后四阶段](../../.tmp/ratio-20260924/archive-audit-pair128-phases.json)、[retention](../../.tmp/ratio-20260924/archive-audit-retention-phase.json)、[startup两阶段](../../.tmp/ratio-20260924/archive-audit-startup2-phases.json)、[phase](../../.tmp/ratio-20260924/archive-audit-phase-fixed.json)、[spin512](../../.tmp/ratio-20260924/archive-audit-spin512-fixed.json)、[两个后继等待阶段](../../.tmp/ratio-20260924/archive-audit-replenishment.json)、[simple512](../../.tmp/ratio-20260924/archive-audit-simple512.json)、[节点数组对齐](../../.tmp/ratio-20260924/archive-audit-node-pair128.json)、[冷路径计数候选](../../.tmp/ratio-20260924/archive-audit-cold-failed.json)、[本地访问候选](../../.tmp/ratio-20260924/archive-audit-local-access.json)、[批次上限256](../../.tmp/ratio-20260924/archive-audit-cap256.json)、[节点区域隔离](../../.tmp/ratio-20260924/archive-audit-node-region128.json)、[c16/8独立profile](../../.tmp/ratio-20260924/archive-audit-profile-local-c16-t8.json)、[统一128次候选](../../.tmp/ratio-20260924/archive-audit-unified128.json)、[补集计数候选](../../.tmp/ratio-20260924/archive-audit-complementary.json)、[原基线匹配profile](../../.tmp/ratio-20260924/archive-audit-profile-original-c16-t8.json)、[当前门槛0控制](../../.tmp/ratio-20260924/archive-audit-local-access-pct0.json)、[后继预取](../../.tmp/ratio-20260924/archive-audit-follower-prefetch.json)。额外PMU/profile工具与采样数据由各自分析另行核对。审计不执行归档代码，只验证内部一致性，不重新证明过去记录的真实性。
+通用审计：[前16阶段](../../.tmp/ratio-20260924/archive-audit-completed-phases.json)、[六组诊断](../../.tmp/ratio-20260924/archive-audit-diagnostic-phases.json)、[诊断槽后四阶段](../../.tmp/ratio-20260924/archive-audit-pair128-phases.json)、[retention](../../.tmp/ratio-20260924/archive-audit-retention-phase.json)、[startup两阶段](../../.tmp/ratio-20260924/archive-audit-startup2-phases.json)、[phase](../../.tmp/ratio-20260924/archive-audit-phase-fixed.json)、[spin512](../../.tmp/ratio-20260924/archive-audit-spin512-fixed.json)、[两个后继等待阶段](../../.tmp/ratio-20260924/archive-audit-replenishment.json)、[simple512](../../.tmp/ratio-20260924/archive-audit-simple512.json)、[节点数组对齐](../../.tmp/ratio-20260924/archive-audit-node-pair128.json)、[冷路径计数候选](../../.tmp/ratio-20260924/archive-audit-cold-failed.json)、[本地访问候选](../../.tmp/ratio-20260924/archive-audit-local-access.json)、[批次上限256](../../.tmp/ratio-20260924/archive-audit-cap256.json)、[节点区域隔离](../../.tmp/ratio-20260924/archive-audit-node-region128.json)、[c16/8独立profile](../../.tmp/ratio-20260924/archive-audit-profile-local-c16-t8.json)、[统一128次候选](../../.tmp/ratio-20260924/archive-audit-unified128.json)、[补集计数候选](../../.tmp/ratio-20260924/archive-audit-complementary.json)、[原基线匹配profile](../../.tmp/ratio-20260924/archive-audit-profile-original-c16-t8.json)、[当前门槛0控制](../../.tmp/ratio-20260924/archive-audit-local-access-pct0.json)、[后继预取](../../.tmp/ratio-20260924/archive-audit-follower-prefetch.json)、[节点槽排列](../../.tmp/ratio-20260924/archive-audit-node-permutation.json)。额外PMU/profile工具与采样数据由各自分析另行核对。审计不执行归档代码，只验证内部一致性，不重新证明过去记录的真实性。
 
 `spin512-fixed`覆盖c1/c16、1/2/3/4/8/16/20线程、每配置三轮及每worker100000次，仅KD adaptive共42场、32400000操作。所有业务及排空检查通过，1/2线程的12场没有实际JIT，其余30场有正文证据；这不是三方168场通过。该检查点未通过性能保护，未将其他候选更快样本拼入该阶段。宿主限频恢复、最终输入快照、完整证据包路径与SHA仍待实际完成；[归档清单](../../.tmp/ratio-20260924/final-archive-checklist.md)目前只是未执行草案。
 
