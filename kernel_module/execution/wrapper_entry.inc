@@ -197,8 +197,16 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
 	call->complete = clobber;
-	call->dispatch_start = kd_jit_timing_start();
-	call->wrapper_start = kd_jit_timing_start();
+	/* The load-time timing switch is immutable during a session. Avoid
+	 * two out-of-line disabled helpers for every ordinary delegated body,
+	 * but retain distinct, ordered endpoints when timing is enabled. */
+	if (unlikely(kd_jit_timing)) {
+		call->dispatch_start = kd_jit_timing_start();
+		call->wrapper_start = kd_jit_timing_start();
+	} else {
+		call->dispatch_start = 0;
+		call->wrapper_start = 0;
+	}
 	return true;
 }
 

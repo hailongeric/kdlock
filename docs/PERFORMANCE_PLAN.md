@@ -53,7 +53,9 @@ pending-only等待512候选在2线程大幅改善，但4线程约下降11%–12%
 后续复用现有采样时钟评估更平稳的竞争估计，不逐请求读时钟或增加远端链访问。
 仅adaptive清理已完成基础/采样3组、runner32项及SELFTEST两种构建；比例0的nested/early
 实际返回395570/99927次正文并排空。当前没有移除模式的单独性能归因。
-下一项比较禁用计时的重复调用，随后评估已有512采样区间的冷准入下界。
+禁用计时跳过两次helper的30场通过，合并adaptive-only后16/20线程约5.30Mops/s；
+不能把两项之间的全部收益归因于计时调用。下一项评估已有512采样区间的冷准入下界，
+随后独立测试spin waiter诊断使用per-CPU事件总数，owner/ACK和真正排空计数保持。
 性能测量不能解释为全量功能通过。并发冷准备RCU stall、pinned mutex mode-4
 soft lockup及其他真实限制保留在 [TODO](TODO.md#current-checkpoint)。
 
