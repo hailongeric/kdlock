@@ -10,6 +10,8 @@
 
 | 批次 | 已完成 | 范围与入口 |
 | --- | --- | --- |
+| 后继头部预取（已拒绝） | 基础2组及batch fixture共3组通过；生产W=1保留11条既有objtool警告；12场、16800000操作正确排空，全部实际JIT/16487415次正文 | [本轮报告与全部四组三轮](../bench/tclock_compare/results/20260924-contention-ratio.md)。20线程小幅改善，但8线程保护未解决；三个输入恢复91efe4a，未测其他线程、三方168场或nested/early |
+| c16/8匹配profile与当前pct0控制 | 原基线/local各3场、各24000000操作正确排空，实际JIT23673764/23275406次；199Hz采样工具/数据/地址校验通过、零丢失；另3场pct0控制2400000操作/2328528次JIT正确排空 | [匹配分析](../bench/.tmp/ratio-20260924/profile-matched-c16-t8-observed.md)。等待样本增加不确定回退原因；当前代码门槛0没有恢复原基线。1M诊断与100k控制分开，不作为完整性能保护通过 |
 | MCS/非MCS补集计数（已拒绝，恢复入口计数） | 8组及10项采样错误变体、运行器26项通过；W=1 SELFTEST=1/0保留22条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26379938次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)、[全部14组三轮](../bench/.tmp/ratio-20260924/complementary-results.md)。c16/8、c16/2中位比原基线低8.30%/10.74%，4线程收益也弱于local-access；21项输入恢复ecc515f，未运行完整三方168场或nested/early |
 | 统一128次采样/比较（已拒绝，恢复512次） | 3组单元及10项采样错误变体、运行器26项通过；生产W=1保留11条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26715960次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)、[全部14组三轮](../bench/.tmp/ratio-20260924/unified128-results.md)。4线程中位比local-access低约10%，c16/8原基线保护仍失败；六项输入恢复24896bd，未运行完整三方168场或nested/early |
 | 节点notification区域128字节隔离（已拒绝） | 基础2组及storage/batch/wait/shadow共6组通过，5项storage错误变体检出；W=1 SELFTEST=1/0共22条既有objtool警告；42场、32400000操作正确排空，30场实际JIT/26291925次正文 | [本轮报告](../bench/tclock_compare/results/20260924-contention-ratio.md)。节点256字节未改善8线程且损害16/20；六项布局/fixture文件恢复d253d23/f71dc2e的128字节节点、64/65通知偏移，批次上限1024；未运行完整三方168场或nested/early |
