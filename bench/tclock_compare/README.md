@@ -16,26 +16,25 @@ KD宏取得一次preempt pin后用C `if`读取per-CPU热值。冷CPU调用
 `kd_spin_unlock_clobber_v1`，由provider识别低字节5的原生所有权或执行热协议。
 寄存器仅在约束/clobber中声明，保存位置由编译器决定，可出现在if之前；宏不手写push/pop。
 
-spin每次实际MCS发布以内联per-CPU指令累计原始计数，每128次才进入受busy guard保护的采样器。
-adaptive按512次纳入策略的MCS发布与同期物理获取尝试数的比例判断竞争，默认门槛100%；
-fast/pending成功也计入分母。初始乐观状态同样采用连续两个低窗口确认及8个后续窗口冷却，
-observe记录相同统计并绕过比例及冷却门槛。策略不按线程数直接分流。
-比例单独关闭保留近期单锁状态，重开检查过期或时间倒退。spin采时批次由本轮起点的32改为128，
-当前候选的spin单锁为第513次/12.5亿TSC窗口；mutex单锁保持第1025次/25亿，CPU窗口保持400亿。
-获取/发布使用GS INC/XADD，比例状态位于独立48字节静态per-CPU对象；字节相位候选已撤回，动态热表布局保持。
-完整计数边界、冷却/重新准入和owner约束以[执行流中的热度与角色](../../docs/JIT_EXECUTION.md#21-热度与角色)为准。
+按用户要求，spin采样与比例比较统一到512次MCS边界，复用原始MCS计数，静态per-CPU状态仅保存
+获取/MCS的两个快照共16字节。每次边界先比较差值比例，再采一次CPU时钟；默认门槛100%，
+fast/pending成功也进入获取分母。首次采样建立比例起点，之后低比例直接关闭；observe和门槛0绕过比例。
+计数及IRQ采样节奏允许近似，busy跳过的事件进入下次差值；移除连续低确认、8窗口冷却和热度保留。
+spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口保持400亿。
+动态热表布局和原所有权协议保持，小型pinned封装内联；策略不按线程数直接分流。
+完整规则以[执行流中的热度与角色](../../docs/JIT_EXECUTION.md#21-热度与角色)为准。
 
 observe在CPU频率热后固定准入，adaptive还要求比例和单锁热度；已发布请求不受后续热度变化取消。
 热度cookie只存CPU共享的缓存热值，不存获取路径或嵌套深度。记录使用`caller_shell=cold_clobber`、
-`caller_abi=clobber`、`cookie_storage=percpu_rate_hot`、`cpu_heat_policy=mcs_entry_ratio512_batch128`，
+`caller_abi=clobber`、`cookie_storage=percpu_rate_hot`、`cpu_heat_policy=mcs_entry_ratio512_simple`，
 并单列`spin_contention_pct`。策略标识不替代冻结源码/哈希，同一标识的不同实现版本也不能合并取优；
 历史`mcs_entry`、32次比例窗口的`mcs_entry_ratio`、旧512窗口候选`mcs_entry_ratio512`、
-MCS32采样的`mcs_entry_ratio512_confirm2`及缺失字段的样本分别保留。
+MCS32采样的`mcs_entry_ratio512_confirm2`、检查点`mcs_entry_ratio512_batch128`及缺失字段的样本分别保留。
 当前诊断槽把身份/禁用字段与waiter计数分至不同128字节区域，新增4KiB共享存储，
 布局见[provider说明](../../kernel_module/README.md)，该局部修复的独立证据见[诊断槽报告](results/20260924-diagnostic-pairs.md)。
-当前spin第513次/12.5亿候选已通过基础两组、72项采样变体及SELFTEST=1/0两种provider构建；
-42场KD adaptive全部正确排空，但高线程性能保护仍失败，尚未运行该候选的完整三方168场；
-不把已拒绝候选或诊断槽局部结果视为当前完整验收。
+历史检查点`b83f551`的42场未通过性能保护；后续两个补充后继等待实验同样未满足目标，已完整撤回。
+简化候选`simple512-fixed`的42场正确排空但性能保护失败，保留为EXPERIMENTAL检查点，尚无当前完整三方168场；
+不把旧候选的检查或局部结果视为当前验收。
 
 三种后端保留相同cacheline更新、解锁后四组乘加及循环成本；吞吐和ns/op以完整操作计算，
 不是独立获取锁延迟。三种模块不是同一二进制，必需的现场成本不扣除。
@@ -69,7 +68,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --output /root/kdlock-evidence/direct-new
 ```
 
-`--spin-contention-pct`范围为0–100，默认100；0仅绕过adaptive的比例及其冷却门槛，
+`--spin-contention-pct`范围为0–100，默认100；0仅绕过adaptive的比例门槛，
 CPU频率和单锁热度规则仍生效。该值作为只读provider装载参数传入并核对；observe始终绕过比例门槛。
 
 需要固定准备/分配阶段的NUMA放置时，可在上述`timeout`后、`python3`前加入
@@ -148,7 +147,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
-| [本轮低竞争比例准入](results/20260924-contention-ratio.md) | 当前spin第513次/12.5亿候选42场正确排空但保护失败；全部失败阶段与原始数据索引 |
+| [本轮低竞争比例准入](results/20260924-contention-ratio.md) | 当前简化候选42场正确排空但保护失败；b83f551检查点及全部失败阶段保留原始数据 |
 | [诊断槽128字节隔离](results/20260924-diagnostic-pairs.md) | 独立提交439cd82的匹配pilot和采样证据；局部改善不代表完整比例策略通过 |
 | [MCS8/CPU400万组合](results/20260923-mcs8-cpu4m.md) | 历史168/168场、56配置各3轮；该参数组合不是当前比例准入配置；保留所有快慢样本及参数组合 |
 | [adaptive 窗口与采样间隔](results/20260923-adaptive-windows.md) | 单锁/CPU窗口、MCS间隔6个独立候选及1个组合；195场有效、1场20线程零JIT拒绝并停止该候选，保留20个未执行项；该轮恢复当时的MCS1/CPU400亿默认，不含后续指定的MCS8/CPU400万组合 |
@@ -208,9 +207,8 @@ v2，客户端和 workload 模块必须同时重建。
 ## 准入模式与结果解释
 
 运行器默认同时运行 `--hotlock-mode observe adaptive`。
-`observe` 在CPU频率热后固定 KD 准入并记录本地统计，绕过比例及冷却门槛；冷CPU进入完整原生获取。
-`adaptive` 同时要求CPU频率、512次策略发布窗口的比例准入和单锁热度。默认100%比例门槛、初始乐观预热、
-首个低窗口立即拒绝、后续连续两个低窗口确认关闭及8个后续窗口冷却
+`observe` 在CPU频率热后固定 KD 准入并记录本地统计，绕过比例门槛；冷CPU进入完整原生获取。
+`adaptive` 同时要求CPU频率、512次MCS边界比较的比例准入和单锁热度。默认100%比例门槛、首次快照建立和后续直接判断
 使用[执行流规则](../../docs/JIT_EXECUTION.md#21-热度与角色)，`--spin-contention-pct 0`用于单独关闭比例的诊断。
 两者使用同一输出根目录下带 `-kdlock-{observe|adaptive}` 的独立会话目录，
 汇总保留模式列；Linux/TCLock 标为 `not_applicable`。

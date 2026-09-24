@@ -77,7 +77,7 @@ def make_plan(args):
                 api_mode='direct', workload=workload, hotlock_mode=mode,
                 caller_shell='cold_clobber' if backend == 'kdlock' else 'c',
                 cookie_storage='percpu_rate_hot' if backend == 'kdlock' else 'not_applicable',
-                cpu_heat_policy='mcs_entry_ratio512_batch128' if backend == 'kdlock' else 'not_applicable',
+                cpu_heat_policy='mcs_entry_ratio512_simple' if backend == 'kdlock' else 'not_applicable',
                 spin_contention_pct=contention_pct if backend == 'kdlock' else None,
                 pmu=getattr(args, 'pmu', False),
                 scenario=getattr(args, 'scenario', 'plain'),

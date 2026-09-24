@@ -11,14 +11,11 @@
 #include "kd_hotlock.h"
 
 #define KD_HOTLOCK_CHECK_INTERVAL 1024U
-#define KD_HOTLOCK_SPIN_RATIO_INTERVAL 512U
-#define KD_HOTLOCK_SPIN_COOL_WINDOWS 2U
-#define KD_HOTLOCK_SPIN_RETRY_WINDOWS 8U
 #define KD_HOTLOCK_CPU_WINDOW 40000000000UL
 #define KD_HOTLOCK_INITIAL_WINDOW 2500000000UL
 #define KD_HOTLOCK_SPIN_INITIAL_WINDOW 1250000000UL
 #define KD_HOTLOCK_SAMPLE_TARGET 1024U
-#define KD_HOTLOCK_SPIN_SAMPLE_TARGET 512U
+#define KD_HOTLOCK_SPIN_SAMPLE_TARGET KD_HOTLOCK_SPIN_MCS_INTERVAL
 #define KD_HOTLOCK_HASH_BITS 8
 #define KD_HOTLOCK_BUCKETS (1U << KD_HOTLOCK_HASH_BITS)
 #define KD_HOTLOCK_ENTRIES 256
@@ -39,14 +36,10 @@ struct kd_hotlock_table
   u16 buckets[KD_HOTLOCK_BUCKETS], used;
   struct kd_hotlock_entry entries[KD_HOTLOCK_ENTRIES];
 };
-/* Spin policy is separate so both exact-key tables retain their original
- * offsets, stride and allocation size. Only a guarded publication batch
- * touches this state; ordinary lock lookup retains the original table path. */
+/* Previous CPU-local totals for the shared spin sampling interval. */
 struct kd_hotlock_spin_ratio
 {
-  unsigned long entry_begin, mcs_total, entry_limit;
-  unsigned int ratio_samples, ratio_hot, ratio_cooldown, ratio_cools, ratio_low_windows;
-  bool ratio_enforced, freq_hot;
+  unsigned long entry_begin, mcs_begin;
 };
 struct kd_hotlock_cpu
 {
@@ -108,98 +101,54 @@ static struct kd_hotlock_entry *kd_hotlock_insert(struct kd_hotlock_table *t,
   t->buckets[bucket] = t->used;
   return slot;
 }
-/* Initialization supplies the first time origin. Ordinary records only count;
- * one TSC per CPU batch updates its cached rate. A continuously hot CPU must
- * not restart the independent lock batches. Frequency cooling/reheating resets
- * them; ratio-only suppression pauses them and rechecks their age on reopening.
- * Bucket membership and ownership storage remain independent of either gate. */
+/* Spin compares its entry/publication deltas before reading the clock, once
+ * per shared interval. Heat is advisory; missed/repeated IRQ boundaries need
+ * no exact ownership accounting. A later comparison includes skipped events. */
 static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_now,
                              unsigned int interval, bool spin)
 {
-  unsigned long now;
+  struct kd_hotlock_spin_ratio *r = NULL;
+  unsigned long now, entries = 0, mcs = 0;
   unsigned int i;
-  bool was_hot, continuous, reopen = false;
-  /* Spin arrives only after a complete inline publication batch. Mutex
-   * retains its entry-by-entry clock and coincident lock timestamp reuse. */
+  bool was_hot, ratio_hot = true;
+
   if (!spin && ++t->rate_samples < interval)
     return t->rate_hot;
+  if (spin)
+  {
+    unsigned long mcs_delta, entry_delta;
+
+    r = raw_cpu_ptr(&kd_hotlock_spin_ratio);
+    entries = this_cpu_read(kd_hotlock_spin_entries);
+    mcs = this_cpu_read(kd_hotlock_spin_mcs);
+    mcs_delta = mcs - r->mcs_begin;
+    if (!mcs_delta)
+      return t->rate_hot;
+    entry_delta = entries - r->entry_begin;
+    /* Prime the first snapshots without charging pre-contention warmup.
+     * Unsigned subtraction tolerates wrap; a zero snapshot may re-prime. */
+    if (r->mcs_begin && !kd_hotlock_observe && spin_contention_pct)
+      ratio_hot = mcs_delta * 100UL >= entry_delta * spin_contention_pct;
+  }
   now = rdtsc_ordered();
   if (sampled_now)
     *sampled_now = now;
   was_hot = t->rate_hot;
-  t->rate_hot = now >= t->rate_begin && now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
-  continuous = was_hot && t->rate_hot;
+  t->rate_hot = ratio_hot && now >= t->rate_begin &&
+                now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
   if (spin)
   {
-    struct kd_hotlock_spin_ratio *r = raw_cpu_ptr(&kd_hotlock_spin_ratio);
-
-    /* Keep the frequency history separate from the combined admission gate.
-     * A native ratio interval must not discard still-recent lock warmup. */
-    continuous = r->freq_hot && t->rate_hot;
-    r->freq_hot = t->rate_hot;
-    /* Compare counts only at a complete ratio window, without another clock or
-     * division on each lock entry. Native MCS publications keep this sampler
-     * alive after rejection; pending-only waits do not count as delegation
-     * opportunities. Unsigned subtraction tolerates entry-counter wrap.
-     * Observe retains the existing frequency gate and fixed lock admission.
-     * Gate changes affect future entries, never an existing ticket/frame. */
-    r->mcs_total += interval;
-    r->ratio_samples += interval;
-    if (r->ratio_samples >= KD_HOTLOCK_SPIN_RATIO_INTERVAL)
-    {
-      unsigned long entries = this_cpu_read(kd_hotlock_spin_entries);
-      unsigned long delta = entries - r->entry_begin;
-      bool high;
-
-      /* Initialization resolves the immutable percentage once per CPU.
-       * Ratio-disabled mode uses the largest unsigned limit. */
-      high = delta <= r->entry_limit;
-      /* A single low window can be one uncontended acquisition amid sustained
-       * contention. Confirm consecutive low windows before withdrawing an
-       * established admission; a high window cancels that confirmation.
-       * Native queueing can itself raise the ratio, so a confirmed withdrawal
-       * keeps a bounded native interval before probing again. Its countdown
-       * advances for both high and low windows. Use the same confirmation
-       * during initial optimism so one startup window cannot discard warmup. */
-      if (r->ratio_cooldown)
-      {
-        r->ratio_cooldown--;
-        r->ratio_hot = high && !r->ratio_cooldown;
-        r->ratio_low_windows = 0;
-      }
-      else if (high)
-      {
-        r->ratio_hot = high;
-        r->ratio_low_windows = 0;
-      }
-      else if (r->ratio_hot &&
-               ++r->ratio_low_windows >= KD_HOTLOCK_SPIN_COOL_WINDOWS)
-      {
-        r->ratio_cooldown = KD_HOTLOCK_SPIN_RETRY_WINDOWS;
-        r->ratio_cools++;
-        r->ratio_hot = false;
-        r->ratio_low_windows = 0;
-      }
-      r->entry_begin = entries;
-      r->ratio_samples = 0;
-    }
-    if (r->ratio_enforced)
-      t->rate_hot &= r->ratio_hot;
-    reopen = r->ratio_enforced && !was_hot && t->rate_hot;
+    r->entry_begin = entries;
+    r->mcs_begin = mcs;
   }
   t->rate_begin = now;
   t->rate_samples = 0;
-  if (!continuous || reopen)
+  if (!was_hot || !t->rate_hot)
   {
     for (i = 0; i < t->used; i++)
     {
       struct kd_hotlock_entry *slot = &t->entries[i];
-      /* On ratio-only reopening retain valid epochs, including their time
-       * origin. Expired/backward epochs restart; frequency transitions still
-       * reset every lock. Reuse the CPU timestamp without an entry-side clock. */
-      if (continuous && now >= slot->begin &&
-          now - slot->begin < KD_HOTLOCK_SPIN_INITIAL_WINDOW)
-        continue;
+
       slot->begin = now;
       slot->count = 0;
       slot->hot = false;
@@ -241,11 +190,10 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   {
     if (record)
     {
-      /* The four wrappers supply a constant kind: specialize the spin batch
-       * to 513 hits while preserving the mutex batch at 1025 hits. */
-      const unsigned int target = kind ? KD_HOTLOCK_SAMPLE_TARGET :
+      /* Spin checks at the shared 512-entry interval; mutex keeps 1025. */
+      const unsigned int target = kind ? KD_HOTLOCK_SAMPLE_TARGET + 1U :
                                         KD_HOTLOCK_SPIN_SAMPLE_TARGET;
-      if (++slot->count > target)
+      if (++slot->count >= target)
       {
         /* Halve the spin batch's time bound as well as its sample target to
          * shorten warmup while preserving approximately the same frequency. */
@@ -276,29 +224,19 @@ bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(a
 bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false); }
 bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false); }
 
-/* One complete publication batch, including cold native acquisitions. An IRQ
- * that finds the table busy drops this batch's policy numerator; its entries
- * still count, conservatively reducing the ratio. Raw MCS totals remain exact.
- * Keep the existing pin and local reentry guard; never touch a lock counter. */
+/* Compare cold native and delegated publications on the same CPU. The table
+ * guard protects lock-counter resets; a skipped comparison leaves both raw
+ * snapshots for the next interval. No separate accepted-sample count is needed. */
 void kd_hotlock_sample_spin_mcs_pinned(void)
 {
   struct kd_hotlock_table *t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
 
   if (this_cpu_cmpxchg(kd_hotlock_cpu->tables[0].busy, 0, 1))
     return;
-  /* Spin never consumes this timestamp. Avoid an address-taken stack local
-   * (and its per-publication stack-canary work) just to discard the output.
-   * Mutex still requests the timestamp for coincident CPU/lock boundaries. */
+  /* Mutex can reuse its timestamp for a coincident lock check; spin cannot. */
   kd_hotlock_clock(t, NULL, KD_HOTLOCK_SPIN_MCS_INTERVAL, true);
   barrier();
   WRITE_ONCE(t->busy, 0);
-}
-
-/* Acquisition-pinned callers reuse the verified sampler. Its preempt_count
- * check does not add another pin; keep this API stable across the rollback. */
-bool kd_hotlock_record_spin_pinned(unsigned long address)
-{
-  return kd_hotlock_record_spin(address);
 }
 
 int kd_hotlock_init(void)
@@ -326,14 +264,6 @@ int kd_hotlock_init(void)
     memset(local, 0, sizeof(*local));
     memset(r, 0, sizeof(*r));
     local->tables[0].rate_begin = local->tables[1].rate_begin = now;
-    /* Let the ordinary 128-MCS frequency gate begin per-lock warmup while
-     * collecting the first 512-MCS ratio. A high first ratio preserves that
-     * progress; two consecutive low windows pause it with the normal native
-     * cooldown. rate_hot stays cold until the first frequency check. */
-    r->ratio_hot = true;
-    r->entry_limit = spin_contention_pct ?
-      KD_HOTLOCK_SPIN_RATIO_INTERVAL * 100U / spin_contention_pct : ~0UL;
-    r->ratio_enforced = !kd_hotlock_observe && spin_contention_pct;
     per_cpu(kd_hotlock_spin_gate, cpu) = &local->tables[0].rate_hot;
     per_cpu(kd_hotlock_spin_entries, cpu) = 0;
     per_cpu(kd_hotlock_spin_mcs, cpu) = 0;
@@ -351,12 +281,10 @@ void kd_hotlock_exit(void)
       struct kd_hotlock_table *t = &per_cpu_ptr(kd_hotlock_cpu, cpu)->tables[kind];
       if (!kind && per_cpu(kd_hotlock_spin_entries, cpu))
       {
-        struct kd_hotlock_spin_ratio *r = &per_cpu(kd_hotlock_spin_ratio, cpu);
-
-        pr_info("kd_hotlock ratio: cpu=%d entries=%lu mcs=%lu cpu_hot=%u threshold=%u window=%u cooldowns=%u sampled_mcs=%lu role=DONE\n",
+        pr_info("kd_hotlock ratio: cpu=%d entries=%lu mcs=%lu cpu_hot=%u threshold=%u window=%u role=DONE\n",
                 cpu, per_cpu(kd_hotlock_spin_entries, cpu),
                 per_cpu(kd_hotlock_spin_mcs, cpu), t->rate_hot, spin_contention_pct,
-                KD_HOTLOCK_SPIN_RATIO_INTERVAL, r->ratio_cools, r->mcs_total);
+                KD_HOTLOCK_SPIN_MCS_INTERVAL);
       }
       for (i = 0; i < t->used; i++)
       {

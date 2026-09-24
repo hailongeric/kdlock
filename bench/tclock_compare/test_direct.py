@@ -212,7 +212,7 @@ class DirectTests(unittest.TestCase):
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
             self.assertEqual(spec['cpu_heat_policy'],
-                             'mcs_entry_ratio512_batch128' if spec['arm'] == 'kdlock' else 'not_applicable')
+                             'mcs_entry_ratio512_simple' if spec['arm'] == 'kdlock' else 'not_applicable')
             self.assertEqual(spec['spin_contention_pct'],
                              run.DEFAULT_SPIN_CONTENTION_PCT if spec['arm'] == 'kdlock' else None)
             self.assertNotIn('spin_hot_min_queue', spec)
@@ -379,10 +379,12 @@ class DirectTests(unittest.TestCase):
     def test_summary_keeps_heat_policies_separate(self):
         base = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
             iterations=100, backends=['kdlock'], hotlock_mode=['observe']))[0]
-        # Frequency-only and 32-event ratio evidence must not merge with the
-        # 512-event ratio, even if the other policy fields happen to match.
+        # Keep the current single-cadence policy separate from older 128/32
+        # sampling policies, even when their other configuration fields match.
+        # The unique simple-policy identity must also stay apart from the
+        # historical 512-event ratio; phase/source provenance is still required.
         plans = [dict(base, name=base['name']+'-'+policy, cpu_heat_policy=policy)
-                 for policy in ('mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
+                 for policy in ('mcs_entry_ratio512_simple', 'mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
                                 'mcs_entry', 'historical_queue_depth')]
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
@@ -391,14 +393,14 @@ class DirectTests(unittest.TestCase):
                 folder = out/spec['name']; folder.mkdir()
                 run.write_json(folder/'session.json', dict(spec,
                     execution_status='OK', drained=True,
-                    jit_bodies=int(spec['cpu_heat_policy'] == 'mcs_entry_ratio512_batch128'),
+                    jit_bodies=int(spec['cpu_heat_policy'] == 'mcs_entry_ratio512_simple'),
                     measurement=dict(completed=200, wall_ns=100000,
                                      data_ok=True, complete=True)))
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(rows), 6)
+            self.assertEqual(len(rows), 7)
             self.assertEqual({r['cpu_heat_policy'] for r in rows},
-                             {'mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
+                             {'mcs_entry_ratio512_simple', 'mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
                               'mcs_entry', 'historical_queue_depth'})
             self.assertEqual(sum(r['actual_jit_sessions'] for r in rows), 1)
 

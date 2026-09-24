@@ -49,21 +49,18 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
 节点为 128 字节，next 与通知字分行，continuation 继续独立存活。约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
-热锁使用每 CPU/type 256 桶、256 条精确地址记录，无候选分数或淘汰；
-初始化一次预留两类型表，锁路径不分配；比例状态使用独立48字节静态 per-CPU 对象，
-保持动态表的原有字段偏移、大小和步长。获取计数使用GS INC，原始 MCS 发布使用GS XADD，
-每128次才进入受本地 busy guard 保护的频率/比例采样器，冷态原生发布也继续推进。
-adaptive 另检查512次策略发布的MCS/物理获取比例，默认100%；包括初始乐观状态在内，
-均须连续两个低窗口才关闭，随后8窗口保持原生。比例关闭保留近期单锁状态，重开时复用CPU采样时间检查年龄。
-当前spin单锁候选为第513次/12.5亿TSC窗口，mutex保持第1025次/25亿；字节相位候选已拒绝并恢复前版本。
-当前候选已通过基础两组、72项采样变体和SELFTEST=1/0两种provider构建，42场KD adaptive正确排空但性能保护失败。
-`spin_contention_pct=0` 关闭比例及冷却门槛；
-observe 绕过这些门槛并保持 record 固定准入。
-精确窗口、配对调用壳的 CPU 门槛、冷却延迟及卸载统计口径统一见
-[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
-OWNER/ticket/frame 不依赖热表，解锁不查表；有效地址与初始化/排空由调用者保证。
-SELFTEST 的 `hotlock_lifetime_selftest=1 hotlock_mode=observe` 验证表满不覆盖
-真实持锁记录及 mutex 等待迁移；`hotlock_role_trace=1` 输出角色，正常运行关闭。
+热锁使用每CPU/type256桶、256条精确地址记录，无候选分数或淘汰，锁路径不分配。
+当前按用户要求简化spin比例判断：复用MCS计数，采样与比较同为512次边界；静态per-CPU状态
+只有16字节的获取/MCS快照。近似IRQ采样不维护精确批次，busy跳过后由下次差值覆盖。
+默认100%比例门槛；首次建立快照，后续直接比较，observe/0绕过比例。
+移除两低确认、冷却、独立频率状态、已接受采样流和近期热度保留，小型pinned封装内联。
+spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口保持400亿。
+动态表布局、busy guard、owner/ticket/frame与排空协议保持；解锁不查热表。
+简化候选通过基础2组、采样fixture/10项错误变体、运行器26项及W=1构建（11条既有objtool警告），
+42场simple512-fixed正确排空，30场实际JIT，但性能保护失败，保留为EXPERIMENTAL检查点。两个后继等待实验已归档并恢复b83f551的队列代码。
+完整规则及卸载统计见[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
+SELFTEST的`hotlock_lifetime_selftest=1 hotlock_mode=observe`验证表满不覆盖真实持锁记录及mutex等待迁移；
+`hotlock_role_trace=1`输出角色，正常运行关闭。
 
 顶层 fast/pending 自执行共用 fast owner，只有进入 MCS 分支才 reserve ticket；
 嵌套调用仍先 reserve。队首正常返回已 claim/reclaim，入口不再重复确认；

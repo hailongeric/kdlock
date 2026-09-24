@@ -4,8 +4,8 @@
 
 当前实现包含 `39b0e7c` 的continuation错位布局、`1eaaf99` 的简单batch元数据单次
 初始化及 `6064c6e` 的通用clobber解锁；CPU热值C `if` 分流和MCS-entry机制来自 `ccefa62`，
-当前工作树增加低竞争比例准入和有界原生冷却，作为**EXPERIMENTAL检查点**保留；
-当前缩短spin批次的pilot未通过性能保护，采样规则见下方执行流链接。
+旧比例准入实现已保存为**EXPERIMENTAL检查点b83f551**，其pilot未通过性能保护；
+当前按用户要求简化为同节奏的近似计数与比例比较，作为新的EXPERIMENTAL检查点保留；pilot仍未通过性能保护。
 模块通过显式 `kd_spinlock_t` 与caller-clobber v1 API接入spin，32位KD字承载
 获取、pending、MCS tail及combiner仲裁。Linux、TCLock、KD对象不能混用协议。
 mutex实现与嵌套控制保留，全局mutex hook仍未安装；加载provider不自动代理普通Linux锁。
@@ -15,16 +15,11 @@ mutex实现与嵌套控制保留，全局mutex hook仍未安装；加载provider
 解锁无条件走通用clobber入口，冷/热均传lock/SP/IP/BP，provider依据低字节5或
 普通状态完成对应释放，不读取CPU热值。没有on/off编译壳选择或手工push/pop。
 
-spin每次MCS发布以内联per-CPU指令计数，每128次才进入busy保护的采样器；本轮起点的32次批次已改为128。
-CPU的400亿TSC窗口及mutex的1024次入口批次保持；当前spin单锁候选为第513次/12.5亿窗口，
-mutex单锁保持第1025次/25亿。adaptive默认以512次策略发布窗口检查100% MCS/获取比例，
-包括初始乐观状态在内均须连续两个低窗口才关闭，随后8窗口保持原生。
-比例关闭保留近期锁状态，重开检查年龄；比例状态为独立48字节静态per-CPU对象，GS INC/XADD计数已恢复。
-字节相位候选已拒绝，动态精确热表布局和owner/ticket/frame生命周期保持。
-共享诊断槽新增4KiB，按128字节区域分隔身份/禁用读字段与waiter计数，布局见
-[provider说明](../kernel_module/README.md)；该局部修复已独立提交439cd82，匹配证据见[报告](../bench/tclock_compare/results/20260924-diagnostic-pairs.md)。
-完整规则、observe/关闭比例对照及采样限制以
-[执行流](JIT_EXECUTION.md#21-热度与角色)为准。该策略是竞争启发式，不是完整收益模型。
+spin复用原MCS计数，每512次边界比较获取/MCS差值再采一次CPU时钟，默认100%比例门槛。
+比例状态仅为16字节的两个快照；允许IRQ边界偏移，不维护精确批次、两低确认、冷却或近期热度保留。
+spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口仍为400亿。
+动态热表和owner/ticket/frame生命周期保持，小型pinned封装内联；两个后继等待实验已归档撤回。
+共享诊断槽的128字节区域隔离为独立提交439cd82，完整规则以[执行流](JIT_EXECUTION.md#21-热度与角色)为准。
 
 每CPU仍预分配20 KiB：continuation在低12 KiB内按CPU错位，高8 KiB等待栈不变。
 普通完成先pop再通知，native最终解锁等待根ticket借用退休。布局及TCLock差异见
@@ -32,10 +27,9 @@ mutex单锁保持第1025次/25亿。adaptive默认以512次策略发布窗口检
 
 此前MCS8/CPU400万组合完成了[168场三轮矩阵](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)，
 该历史批次8/20线程adaptive未观察到历史对照退化，3/4线程仍慢、单线程未一致改善。
-当前缩短spin批次的候选已通过基础两组、72项采样变体及SELFTEST=1/0两种provider构建，
-42场KD adaptive全部正确排空，但性能保护仍失败，未运行该候选的完整三方168场；各候选的通过项与失败项见
-[本轮调查](../bench/tclock_compare/results/20260924-contention-ratio.md)。
-完整矩阵和1/2/8/16/20线程性能保持要求仍待匹配证据确认。
+当前简化候选通过基础2组、采样fixture及10项错误变体、运行器26项和W=1构建，保留11条既有objtool警告。
+`simple512-fixed`的42场KD adaptive正确排空，30场实际JIT，但性能保护失败；完整三方168场未运行。
+[本轮调查](../bench/tclock_compare/results/20260924-contention-ratio.md)保留b83f551及后续失败实验。
 更早的MCS1/CPU400亿版本覆盖见
 [完整三轮矩阵](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)，
 优化隔离、失败候选及短/长批次限制见[性能调查](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。

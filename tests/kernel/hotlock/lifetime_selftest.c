@@ -58,7 +58,7 @@ int kd_hotlock_lifetime_check(void)
   * real adaptive warmup is checked separately with contended workloads. */
  for (i = 0; i < 2 * KD_HOTLOCK_SPIN_MCS_INTERVAL; i++)
   kd_hotlock_record_spin_mcs_pinned();
- for (i = 0; i <= KD_HOTLOCK_SPIN_SAMPLE_TARGET; i++) kd_hotlock_record_spin(address);
+ for (i = 0; i < KD_HOTLOCK_SPIN_SAMPLE_TARGET; i++) kd_hotlock_record_spin(address);
  t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
  if (!kd_hotlock_find(t, address)) ret = -EUCLEAN;
  /* Fill with distinct identities and try one more. A full exact table must

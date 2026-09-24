@@ -3,9 +3,10 @@
 Current work list as of **2026-09-24**. The implementation includes `39b0e7c`
 (continuation placement), `1eaaf99` (single-pass batch metadata) and the current
 heat gate/MCS-entry mechanism committed in `ccefa62`. The working tree adds
-contention-ratio admission and a bounded native cooldown. This is an
-**EXPERIMENTAL checkpoint**; the current scaled-spin pilot failed performance
-protection. Contracts live in
+a simplified contention-ratio candidate requested by the user. The prior
+**EXPERIMENTAL checkpoint b83f551** failed performance protection; the new
+simplified candidate also failed performance protection and is retained as a new
+EXPERIMENTAL checkpoint. Contracts live in
 [DESIGN](DESIGN.md), [execution flow](JIT_EXECUTION.md) and
 [register ABI](JIT_REGISTER_ABI.md); measurements and the ordered performance
 backlog live in [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md). Historical evidence
@@ -24,35 +25,24 @@ backing, hints and normal-root completion are implemented. Explicit KD objects
 use one 32-bit word; nondelegating requests use the full pending/MCS queue.
 `spin_delegate=0` remains a native control, distinct from actual JIT evidence.
 
-CPU heat gates both observe/adaptive callers. Spin counts each actual MCS
-publication with an inline per-CPU instruction, without queue-depth filtering.
-Only each 128-publication boundary calls the guarded sampler; the inherited
-32-publication batch belongs to earlier diagnostics. The strict CPU window
-remains 40 billion TSC ticks.
-Mutex keeps its 1024-entry batch and 40-billion-tick CPU window. The current
-spin candidate checks each lock on hit 513 against a strict 1.25-billion-tick
-window; mutex retains hit 1025 and 2.5 billion ticks. Scaling both spin limits
-shortens warmup while approximately preserving the frequency threshold.
-Separate CPU/type exact-key tables have 256 buckets/entries,
-no ranked candidates or eviction, and a local busy guard against reentry. Unknown identities at capacity
-stay native in adaptive; owner/ticket/frame lifetime is independent of heat.
-Adaptive spin requires a default 100% MCS/physical-acquisition ratio over 512
-policy-counted publications. Two consecutive low windows close admission,
-including initial optimism, followed by eight native windows. Ratio-only
-rejection preserves recent lock epochs and rechecks their age on reopening;
-observe bypasses the ratio/cooldown gate. Separate 48-byte static per-CPU ratio
-state preserves the dynamic exact-table layout. GS INC/XADD counting is restored;
-the byte-phase candidate was rejected.
-The 32 shared diagnostic slots now separate identity/disable fields and waiter
-counts into distinct 128-byte regions, adding 4 KiB of shared storage. This
-independent fix is committed as 439cd82, with [matched evidence](../bench/tclock_compare/results/20260924-diagnostic-pairs.md).
-The scaled spin candidate passed two base groups, 72 sampler mutations and
-both SELFTEST=1/0 provider builds. Its 42-session KD adaptive matrix completed
-correctly and drained, but still failed performance protection. Its full
-168-session three-backend matrix has not run. Exact controls and
-sampling limits live in [the execution flow](JIT_EXECUTION.md#21-热度与角色).
-This contention heuristic is implemented; a general model comparing complete
-delegated and native costs remains unimplemented.
+CPU heat gates both observe/adaptive callers. Spin reuses its MCS counter and
+compares publication/acquisition deltas at the same 512-publication boundary
+as its CPU clock sample. A 16-byte per-CPU sidecar holds the previous totals.
+Counters and IRQ cadence are approximate; skipped comparisons contribute to
+later deltas. There is no separate accepted stream, two-low confirmation,
+cooldown, independent frequency state or retained heat across ratio rejection.
+The first sample primes snapshots; subsequent samples directly compare the
+configured percentage (default 100). Observe and percentage 0 bypass the ratio.
+Spin lock heat checks at 512 records/1.25 billion TSC ticks; mutex retains
+1025 records/2.5 billion. The strict CPU window remains 40 billion ticks.
+The exact-key table layout and busy guard remain, and small pinned wrappers
+are inline. Sampling does not own requests or relax owner/ACK/drain rules.
+The independent 128-byte diagnostic-pair fix 439cd82 remains in place.
+The simplified candidate passed two base groups, sampler fixture/10 mutations,
+26 runner checks and W=1 build with 11 existing objtool warnings. Its 42-session simple512-fixed pilot completed correctly and drained but failed
+performance protection; the full 168-session matrix has not run;
+prior queue-replenishment experiments were archived and removed.
+Exact controls and limits live in [the execution flow](JIT_EXECUTION.md#21-热度与角色).
 
 The [prior MCS8/4-million matrix](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)
 passed 168/168 sessions; 8/20-thread adaptive medians exceeded the preceding historical defaults,
@@ -226,12 +216,12 @@ in [frames](design/frames.md#911-reuse-before-copy-contract).
 
 ### Hotlock Monitoring And Adaptive Admission
 
-Exact-key counters, CPU/lock windows, cooling and stable roles are implemented.
-The MCS/acquisition-ratio heuristic, optimistic startup, two-low-window
-confirmation and native cooldown are implemented;
-general net-cost selection is not. Performance criteria remain subject to
-matching measurements. Demotion affects future acquisitions only and never
-reuses the permanent safety latch or source retirement.
+Exact-key tables and CPU/lock windows remain. The current candidate compares
+approximate MCS/acquisition deltas at one shared 512-publication cadence;
+user-requested simplification removes the prior confirmation/cooldown/retention
+state machine. General net-cost selection remains unimplemented. Matching
+performance evidence is pending. Admission changes affect future acquisitions,
+never the permanent safety latch or existing source/request retirement.
 
 ### Instrumented Measurement Foundation
 

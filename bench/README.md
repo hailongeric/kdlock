@@ -1,13 +1,14 @@
 # Benchmarks
 
 当前性能入口是[三后端直接API对照](tclock_compare/README.md)：Linux原生、TCLock和当前KD。
-KD按CPU热值分流获取、统一generic clobber解锁。spin每次MCS发布以内联per-CPU计数累计，
-每128次才进入受busy guard保护的采样器；adaptive以512次策略发布窗口检查MCS/获取尝试比例，默认100%。
-初始乐观状态也须连续两个低窗口才关闭，随后8窗口保持原生；比例关闭保留近期单锁状态，重开时检查年龄。
-当前候选将spin单锁改为第513次/12.5亿TSC窗口；mutex保持第1025次/25亿，CPU窗口仍为400亿。
-GS INC/XADD计数及48字节静态per-CPU比例状态已恢复，字节相位候选被拒绝；动态热表布局和busy保护保持。
+KD按CPU热值分流获取、统一generic clobber解锁。按用户要求，当前工作候选把采样与比例判断统一到
+512次MCS边界，复用原MCS计数，只保存16字节的两个前次计数；接受近似统计，不修正IRQ交错。
+adaptive默认比较100% MCS/获取比例，移除两低确认、原生冷却和近期热度保留。
+spin单锁达到512次时检查12.5亿TSC窗口；mutex保持第1025次/25亿，CPU窗口仍为400亿。
+动态热表布局和busy保护保持，小型pinned封装内联。
 诊断槽采用128字节区域隔离，新增4KiB共享存储，局部修复已独立提交。
-当前缩短spin批次的候选通过相关检查，42场KD adaptive全部正确排空，但高线程性能保护仍失败；
+简化候选的42场`simple512-fixed`正确排空，但性能保护失败，作为EXPERIMENTAL检查点保留；`b83f551`及两个补充后继实验均保留为失败历史，
+队列等待改动已撤回。当前不能宣称1/2/8/16/20线程性能保护完成；
 进度和失败证据见[本轮报告](tclock_compare/results/20260924-contention-ratio.md)。
 完整策略见[执行流](../docs/JIT_EXECUTION.md#21-热度与角色)，运行参数见[直接API入口](tclock_compare/README.md)。
 
@@ -36,9 +37,9 @@ GS INC/XADD计数及48字节静态per-CPU比例状态已恢复，字节相位候
 
 运行器默认每配置3轮、每线程100000次。Linux/TCLock每配置每轮各跑一次，KD observe/adaptive分别保存；
 正式比值使用有效最大吞吐及同场ns/op，同时展示min/median/max/spread，不删除快慢样本。
-`--spin-contention-pct`默认100，0仅关闭比例及其冷却门槛；汇总同时区分
-`cpu_heat_policy=mcs_entry_ratio512_batch128`和门槛值；旧MCS32的
-`mcs_entry_ratio512_confirm2`及更早候选单独保留，不能合并取优。
+`--spin-contention-pct`默认100，0仅关闭比例；汇总同时区分
+`cpu_heat_policy=mcs_entry_ratio512_simple`和门槛值；旧`mcs_entry_ratio512_batch128`、
+`mcs_entry_ratio512_confirm2`、`mcs_entry_ratio512`等候选单独保留，不能合并取优。
 可按直接API入口说明用`taskset -c 0-19`固定准备阶段的CPU集合；worker仍按配置绑核，
 所有选定worker CPU必须包含在允许集合中。`environment.json`保存`runner_affinity`。
 cacheline默认120场，完整1/2/3/4/8/16/20线程为168场；RCUHT默认60场。
