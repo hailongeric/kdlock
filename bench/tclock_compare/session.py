@@ -57,7 +57,7 @@ def check_jit_evidence(record):
                                     else 'NO_JIT_LOW_CONTENTION')
         return
     required = (record['arm'] == 'kdlock' and record['threads'] > 1 and
-                (record.get('functional', False) or record['threads'] == 20 or
+                (record.get('functional', False) or record['threads'] >= 20 or
                  record.get('scenario', 'plain') in ('nested', 'early')))
     record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
     require(not required or record['jit_bodies'] > 0,

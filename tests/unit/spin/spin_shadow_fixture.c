@@ -169,7 +169,7 @@ static struct kd_spin_native_input kd_spin_native_inputs;
 static struct task_struct task = { .pid = 101 };
 static struct task_struct logical_task = { .pid = 202 };
 #define current (&task)
-static const unsigned int kd_combiner_batch_size = 1024;
+static const unsigned int kd_combiner_batch_size = KDLOCK_SPIN_BATCH;
 
 struct kd_exec_outer_unlock {
 	int (*release)(void *frame, struct kd_exec_outer_unlock *hook);
@@ -1039,6 +1039,81 @@ static void run_native_boundaries(void)
 	puts("spin mixed MCS: 5 native boundaries, including requestless middle nodes");
 }
 
+/* A long queue must return exactly at the configured body cap. With NUMA
+ * enabled, every deferred remote node must remain once in the handoff chain.
+ * These deterministic links test the work bound, not scheduler fairness. */
+static void run_bounded_batches(void)
+{
+	for (int remote = 0; remote < 2; remote++) {
+		unsigned int count = 2 * kd_combiner_batch_size + 4;
+		struct kd_spin_node *nodes = calloc(count, sizeof(*nodes));
+		struct kd_spin_continuation *executions = calloc(count, sizeof(*executions));
+		bool *seen = calloc(count, sizeof(*seen));
+		struct qspinlock lock = { .locked = 1 };
+		struct kd_spin_request request = { .word = &scheduling_word };
+		struct kd_spin_node *head = NULL;
+		unsigned int remaining = 0;
+
+		CHECK(nodes && executions && seen);
+		memset(&kd_spin_cpu, 0, sizeof(kd_spin_cpu));
+		kd_spin_cpu.lock_addr[0] = (unsigned long)&lock;
+		active_lock = &lock;
+		scheduling_word.locked = _Q_LOCKED_COMBINER_VAL;
+		for (unsigned int i = 0; i < count; i++) {
+			nodes[i].next = i + 1 < count ? &nodes[i + 1] : NULL;
+			nodes[i].locked = true;
+			nodes[i].execution = &executions[i];
+			nodes[i].socket_id = remote && i ? 1 : 0;
+		}
+		mock_tail_node = &nodes[count - 1];
+		native_boundary_case = true;
+		boundary_executions = 0;
+		production_run_combiner(&lock, nodes, &request, (void *)&lock);
+		native_boundary_case = false;
+		CHECK(boundary_executions == kd_combiner_batch_size);
+		for (unsigned int i = 0; i < count; i++)
+			if (!nodes[i].locked && !nodes[i].completed) {
+				CHECK(!head);
+				head = &nodes[i];
+			}
+		CHECK(head);
+#ifdef NUMA_AWARE
+		if (remote)
+			CHECK(head == &nodes[1]);
+#endif
+		while (head && remaining < count) {
+			unsigned int index = head - nodes;
+			CHECK(index < count && !seen[index] && !head->completed);
+			if (index >= count || seen[index])
+				break;
+			seen[index] = true;
+			remaining++;
+			head = head->next;
+		}
+		CHECK(!head && remaining == count - kd_combiner_batch_size);
+		for (unsigned int i = 0; i < count; i++)
+			CHECK(seen[i] == !nodes[i].completed);
+		free(seen); free(executions); free(nodes);
+	}
+#ifdef NUMA_AWARE
+	/* Exhaustion returns promptly without looking for a later local node. */
+	struct kd_spin_node nodes[7] = { 0 };
+	u16 budget = 2;
+	memset(&kd_spin_cpu, 0, sizeof(kd_spin_cpu));
+	for (int i = 0; i < 7; i++) {
+		nodes[i].next = i < 6 ? &nodes[i + 1] : NULL;
+		nodes[i].socket_id = 1;
+	}
+	CHECK(get_next_node(nodes, &budget) == &nodes[3]);
+	CHECK(!budget);
+	CHECK(kd_spin_cpu.local_queue_head == &nodes[1]);
+	CHECK(kd_spin_cpu.local_queue_tail == &nodes[2]);
+	CHECK(get_next_node(&nodes[3], &budget) == &nodes[4]);
+	CHECK(kd_spin_cpu.local_queue_tail == &nodes[2]);
+#endif
+	puts("spin bounded batch: body cap, finite NUMA scan and complete handoff chain");
+}
+
 #include "spin_node_pool_fixture.c"
 
 int main(void)
@@ -1089,6 +1164,7 @@ int main(void)
 	run_producer_cases(true);
 	run_mailbox_cases();
 	run_native_boundaries();
+	run_bounded_batches();
 	kd_node_trace = true;
 	run_producer_cases(true);
 	run_observer_checks();

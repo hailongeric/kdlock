@@ -5,6 +5,10 @@ tclock_backend_km-objs := provider.o komb.o combiner.o
 # Keep the running kernel, frame pointers and return mitigations unchanged.
 UBSAN_SANITIZE := n
 ccflags-y += -I$(src)/include -DKD_SPIN_LEGACY_CALLER
+TCLOCK_NUMA ?= 0
+ifeq ($(TCLOCK_NUMA),1)
+ccflags-y += -DNUMA_AWARE
+endif
 KDIR ?= /lib/modules/$(shell uname -r)/build
 .PHONY: all clean
 all:

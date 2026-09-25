@@ -20,6 +20,8 @@ struct kd_spin_batch {
 	struct kd_jit_batch_call call;
 	bool pending;
 	bool fast_previous;
+	/* Reuse the two-byte gap before counter; keep the batch footprint. */
+	u16 numa_scan_left;
 	int counter;
 	u64 queue_end;
 #ifdef KDLOCK_SELFTEST
@@ -219,7 +221,7 @@ static void kd_spin_batch_run(void *opaque)
 #endif
 			batch->counter++;
 
-			next_node = get_next_node(curr_node);
+			next_node = get_next_node(curr_node, &batch->numa_scan_left);
 			batch->next = next_node;
 			batch->outer.released = false;
 			kd_spin_prefetch_request(next_node);
@@ -311,6 +313,7 @@ run_combiner(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	struct kd_spin_batch batch = {
 		.outer.release = kd_spin_release_outer,
 		.request = request,
+		.numa_scan_left = kd_combiner_batch_size,
 	};
 
 	if (next_node == NULL || check_irq_node(curr_node) ||

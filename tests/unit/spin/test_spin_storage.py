@@ -69,7 +69,7 @@ def main():
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-storage-") as directory:
         path = Path(directory)
-        for name, mutation in [("production", None), *mutations.items()]:
+        for name, mutation in [("production", None), ("production-numa", None), *mutations.items()]:
             body = code
             layout = types
             if mutation:
@@ -83,6 +83,7 @@ def main():
             compiled = subprocess.run(
                 shlex.split(os.environ.get("CC", "cc")) + [
                     "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
+                    *(["-DNUMA_AWARE"] if name == "production-numa" else []),
                     "-I", str(path),
                     str(ROOT / "tests/unit/spin/spin_storage_fixture.c"),
                     "-o", str(binary),

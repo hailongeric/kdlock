@@ -34,8 +34,13 @@ static const struct kernel_param_ops target_ops = {
 module_param_cb(target_lock, &target_ops, &target_lock, 0644);
 MODULE_PARM_DESC(target_lock, "Exclusive benchmark lock address from SC_LAYOUT");
 
-/* Upstream in-kernel default; also matches kdlock's batch limit. */
+/* Upstream in-kernel default; KD has its own measured bounded batch limit. */
 long komb_batch_size = 1024;
+#ifdef NUMA_AWARE
+MODULE_INFO(spin_numa, "1");
+#else
+MODULE_INFO(spin_numa, "0");
+#endif
 module_param(komb_batch_size, long, 0444);
 
 static int idle_get(char *buffer, const struct kernel_param *param)

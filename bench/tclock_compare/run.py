@@ -85,6 +85,10 @@ def make_plan(args):
             'invalid repeats/iterations')
     contention_pct = getattr(args, 'spin_contention_pct', DEFAULT_SPIN_CONTENTION_PCT)
     require(0 <= contention_pct <= 100, 'invalid spin contention percentage')
+    batch = getattr(args, 'kd_batch_size', 128)
+    require(1 <= batch <= 1024, 'KD batch must be 1..1024')
+    numa = getattr(args, 'numa', 'on')
+    require(numa in ('on', 'off'), 'invalid NUMA policy')
     result = []
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
@@ -107,6 +111,8 @@ def make_plan(args):
                 cookie_storage='percpu_rate_hot' if backend == 'kdlock' else 'not_applicable',
                 cpu_heat_policy='mcs_entry_ratio512_head5' if backend == 'kdlock' else 'not_applicable',
                 spin_contention_pct=contention_pct if backend == 'kdlock' else None,
+                numa_policy=numa if backend != 'native' else 'not_applicable',
+                delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
                 pmu=getattr(args, 'pmu', False),
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
@@ -169,10 +175,12 @@ def report(out):
                            r.get('cpu_heat_policy', 'unrecorded'),
                            r.get('spin_contention_pct', 'unrecorded'),
                            tuple(r.get(key) for key in TIMING_FIELDS),
-                           r.get('spin_delegate', 'on')), []).append(r)
+                           r.get('spin_delegate', 'on'),
+                           r.get('numa_policy', 'unrecorded'),
+                           r.get('delegation_batch_limit', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, timing, delegate), rows in groups.items():
+    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, timing, delegate, numa, batch), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
@@ -182,6 +190,7 @@ def report(out):
                    cpu_heat_policy=heat_policy,
                    spin_contention_pct=contention_pct,
                    spin_delegate=delegate,
+                   numa_policy=numa, delegation_batch_limit=batch,
                    **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -221,7 +230,11 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
-    p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,5,6,7,8,16,20), default=[1,4,8,16,20])
+    p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,5,6,7,8,12,16,20,24,28,32), default=[1,4,8,16,20])
+    p.add_argument('--numa', choices=('on', 'off'), default='on',
+                   help='build NUMA queue selection for KD and TCLock')
+    p.add_argument('--kd-batch-size', type=int, default=128,
+                   help='maximum KD delegated bodies and NUMA scan budget per batch (1..1024)')
     p.add_argument('--repeats', type=int, default=3,
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')
     p.add_argument('--iterations', type=int, default=100000)
@@ -298,16 +311,30 @@ def main():
                 scope='measure client and inherited workers; setup/warmup excluded'))
             binaries.append(perf)
         if 'kdlock' in args.backends:
-            builds += [('provider',['make','-C',HERE,'provider']),
+            builds += [('provider',['make','-C',HERE,'provider',
+                         f'KDLOCK_NUMA={int(args.numa == "on")}',
+                         f'KDLOCK_SPIN_BATCH={args.kd_batch_size}']),
                        ('daemon',['make','-C',ROOT/'daemon','CFLAGS=-O2 -Wall -Wextra -Werror'])]
             binaries += [PROVIDER,ROOT/'daemon/daemon']
         if 'tclock' in args.backends:
             # Keep backend and workload build logs distinct: the latter uses
             # build-tclock.log below and must not overwrite backend evidence.
-            builds += [('tclock-backend',['make','-C',ROOT/'tclock_backend'])]
+            builds += [('tclock-backend',['make','-C',ROOT/'tclock_backend',
+                               f'TCLOCK_NUMA={int(args.numa == "on")}'])]
             binaries += [TC_MODULE]
         for name, build in builds:
             command([*build,f'KDIR={args.kernel_source}'],out/f'build-{name}.log',timeout=180)
+        # Verify the compiled configuration, including rebuilds after a flag change.
+        for backend, binary in (('kdlock', PROVIDER), ('tclock', TC_MODULE)):
+            if backend not in args.backends:
+                continue
+            numa_value = command(['modinfo', '-F', 'spin_numa', binary],
+                                 out/f'{backend}-numa.txt').strip()
+            require(numa_value == str(int(args.numa == 'on')), 'NUMA build identity differs')
+            if backend == 'kdlock':
+                batch_value = command(['modinfo', '-F', 'spin_batch', binary],
+                                      out/'kdlock-batch.txt').strip()
+                require(batch_value == str(args.kd_batch_size), 'KD batch build identity differs')
         if 'tclock' in args.backends:
             # Check the actual ELF: changing a Kbuild variable must not leave a
             # stale instrumented backend in a run labelled as unsanitized.
@@ -321,7 +348,7 @@ def main():
                                   out/'tclock-backend.txt')
             write_json(out/'tclock-context-audit.json', audit_context(disassembly))
         variants = {}
-        # Observe/adaptive share the same heat-routed caller, built once.
+        # Each backend has one caller variant per frozen build.
         for backend in dict.fromkeys(s['arm'] for s in plan):
             build_name = backend
             folder = out/'variants'/build_name; folder.mkdir(parents=True)

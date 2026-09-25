@@ -168,7 +168,7 @@ __always_inline static void add_to_local_queue(struct kd_spin_node *node)
 #endif
 
 __always_inline static struct kd_spin_node *
-get_next_node(struct kd_spin_node *my_node)
+get_next_node(struct kd_spin_node *my_node, u16 *scan_left)
 {
 #ifdef NUMA_AWARE
 	struct kd_spin_node *curr_node, *next_node;
@@ -183,6 +183,12 @@ get_next_node(struct kd_spin_node *my_node)
 			 check_irq_node(next_node->next))
 			goto next_node_null;
 
+		/* Stop following remote links when this batch's budget is spent.
+		 * Deferred nodes are spliced ahead of the final handoff, so locality
+		 * cannot leave them behind the next ordinary queue head. */
+		if (!*scan_left)
+			return next_node;
+		--*scan_left;
 		if (next_node->socket_id == numa_node_id()) {
 			return next_node;
 		}
@@ -198,6 +204,7 @@ get_next_node(struct kd_spin_node *my_node)
 next_node_null:
 	return next_node;
 #else
+	(void)scan_left;
 	return my_node->next;
 #endif
 }

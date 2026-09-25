@@ -10,7 +10,21 @@
 #define IRQ_NUMA_NODE 255
 #define KD_SPIN_DIAG_SLOTS 32
 
-static const unsigned int kd_combiner_batch_size = 1024;
+/* Bound delegated bodies per physical hold; NUMA scan work has a separate
+ * batch-local budget. This is a work bound, not a scheduler latency guarantee. */
+#ifndef KDLOCK_SPIN_BATCH
+#define KDLOCK_SPIN_BATCH 128
+#endif
+#if KDLOCK_SPIN_BATCH < 1 || KDLOCK_SPIN_BATCH > 1024
+#error "KDLOCK_SPIN_BATCH must be 1..1024"
+#endif
+static const unsigned int kd_combiner_batch_size = KDLOCK_SPIN_BATCH;
+MODULE_INFO(spin_batch, __stringify(KDLOCK_SPIN_BATCH));
+#ifdef NUMA_AWARE
+MODULE_INFO(spin_numa, "1");
+#else
+MODULE_INFO(spin_numa, "0");
+#endif
 
 /* Fixed self-execution control for protocol comparisons. This changes only
  * fresh admission; unlock always follows the acquisition's ownership record. */

@@ -98,8 +98,14 @@ int kd_spinlock_init(void)
 		memset(per_cpu_ptr(kd_spin_diag_cpu, i), 0,
 		       sizeof(struct kd_spin_diag_cpu));
 
-		/* Allocate once, outside the lock path, as in TCLock komb_init(). */
+		/* The continuation and polling stack belong to CPU i, not to the
+		 * module loader. Prefer its node at startup; allocation may fall
+		 * back under memory pressure. No allocation enters the lock path. */
+#ifdef NUMA_AWARE
+		wait_stack = vzalloc_node(KD_SPIN_STORAGE_BYTES, cpu_to_node(i));
+#else
 		wait_stack = vzalloc(KD_SPIN_STORAGE_BYTES);
+#endif
 		if (!wait_stack)
 			goto err_free;
 		*per_cpu_ptr(&kd_spin_continuations, i) =

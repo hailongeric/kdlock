@@ -59,6 +59,8 @@ def main():
         types += "\n" + definition(header, marker).rstrip() + ";\n"
     results = read_source((ROOT / "include/exe.h")).splitlines()
     types += (ROOT / "include/kd_jit_batch.h").read_text()
+    types += next(line + "\n" for line in source.splitlines()
+                  if line.startswith("#define KDLOCK_SPIN_BATCH "))
     body = ""
     for name in ("KD_EXE_NO_RUN", "KD_EXE_RUN_ERROR", "KD_EXE_NATIVE_DONE"):
         matching = [line for line in results if line.startswith(f"#define {name} ")]
@@ -83,7 +85,7 @@ def main():
         + "#endif\n"
     )
     body += "static struct kd_spin_node *\n" + definition(
-        source, "get_next_node(struct kd_spin_node *my_node)"
+        source, "get_next_node(struct kd_spin_node *my_node, u16 *scan_left)"
     )
     body += definition(source, "static struct kd_spin_node *kd_spin_linked_successor(struct qspinlock *word,")
     body += definition(source, "struct kd_spin_batch {").rstrip() + ";\n"

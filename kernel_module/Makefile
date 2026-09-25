@@ -1,5 +1,5 @@
 # Guest-only external-module build against the captured running kernel.
-# This compiles kdlock, not the guest kernel; SELFTEST/NUMA are explicit opt-ins.
+# This compiles kdlock, not the guest kernel; SELFTEST is an explicit opt-in.
 # Private .inc components remain within their owning C translation unit;
 # Kbuild tracks include dependencies. Do not add them as separate objects.
 obj-m += kdlock_km.o
@@ -11,7 +11,10 @@ ifeq ($(KDLOCK_SELFTEST),1)
 ccflags-y += -DKDLOCK_SELFTEST
 endif
 
-# Opt-in existing NUMA queue selection; ordinary builds keep the prior protocol.
+# Bounded NUMA batching; explicit overrides support matched measurements.
+KDLOCK_NUMA ?= 1
+KDLOCK_SPIN_BATCH ?= 128
+ccflags-y += -DKDLOCK_SPIN_BATCH=$(KDLOCK_SPIN_BATCH)
 ifeq ($(KDLOCK_NUMA),1)
 ccflags-y += -DNUMA_AWARE
 endif

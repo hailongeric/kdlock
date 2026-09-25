@@ -4,6 +4,8 @@ CC ?= cc
 PYTHON ?= python3
 CFLAGS ?= -O2 -g
 CFLAGS += -Wall -Wextra -Werror -std=gnu11
+KDLOCK_NUMA ?= 1
+KDLOCK_SPIN_BATCH ?= 128
 PROVIDER_DIR := $(CURDIR)/.build/provider
 WORKLOAD_DIR := $(abspath $(CURDIR)/../../workload_modules/spin_cacheline)
 
@@ -13,7 +15,7 @@ all: provider module client
 # Each explicit provider build starts fresh; ordinary project objects stay intact.
 provider:
 	$(PYTHON) provider/prepare.py
-	$(MAKE) -C $(PROVIDER_DIR)/kernel_module KDIR=$(KDIR) W=1 KDLOCK_SELFTEST=0 KDLOCK_NUMA=0
+	$(MAKE) -C $(PROVIDER_DIR)/kernel_module KDIR=$(KDIR) W=1 KDLOCK_SELFTEST=0 KDLOCK_NUMA=$(KDLOCK_NUMA) KDLOCK_SPIN_BATCH=$(KDLOCK_SPIN_BATCH)
 module:
 	$(MAKE) -C $(WORKLOAD_DIR) KDIR=$(KDIR) SC_BACKEND=native
 client: client.c $(WORKLOAD_DIR)/api.h

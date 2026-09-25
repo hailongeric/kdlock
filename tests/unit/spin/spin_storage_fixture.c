@@ -89,6 +89,15 @@ static void *vzalloc(size_t bytes)
 	return base;
 }
 
+#ifdef NUMA_AWARE
+#define cpu_to_node(cpu) ((cpu) / 20)
+static void *vzalloc_node(size_t bytes, int node)
+{
+	CHECK(node == cpu_to_node(allocation_calls));
+	return vzalloc(bytes);
+}
+#endif
+
 static void vfree(void *p)
 {
 	if (!p)

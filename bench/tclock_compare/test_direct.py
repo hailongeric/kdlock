@@ -17,6 +17,24 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_numa_expanded_matrix(self):
+        plan = run.make_plan(Namespace(cachelines=[1],
+            threads=[1,2,3,4,5,6,7,8,12,16,20,24,28,32], repeats=3,
+            iterations=100000, backends=['native','tclock','kdlock'],
+            duration_ms=2000, collector_cpu=38, numa='on', kd_batch_size=128))
+        self.assertEqual(len(plan), 126)
+        for spec in plan:
+            self.assertNotIn(38, spec['cpus'])
+            if spec['arm'] == 'kdlock':
+                self.assertEqual(spec['numa_policy'], 'on')
+                self.assertEqual(spec['delegation_batch_limit'], 128)
+            elif spec['arm'] == 'tclock':
+                self.assertEqual(spec['delegation_batch_limit'], 1024)
+        with self.assertRaises(run.Failure):
+            run.make_plan(Namespace(cachelines=[1], threads=[32], repeats=1,
+                iterations=100000, backends=['kdlock'], duration_ms=2000,
+                collector_cpu=30))
+
     def test_timed_session_uses_fixed_warmup_and_continuous_measurement(self):
         session = BackendSession.__new__(BackendSession)
         spec, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
@@ -266,12 +284,13 @@ class DirectTests(unittest.TestCase):
             self.assertEqual(result.exception.code, 2)
 
     def test_high_contention_requires_jit(self):
-        record = dict(arm='kdlock', threads=20, jit_bodies=0,
-            hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
-        with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
-            check_jit_evidence(record)
-        check_jit_evidence(record := dict(record, jit_bodies=1))
-        self.assertEqual(record['jit_acceptance'], 'PASS')
+        for threads in (20, 24, 28, 32):
+            record = dict(arm='kdlock', threads=threads, jit_bodies=0,
+                hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
+            with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+                check_jit_evidence(record)
+            check_jit_evidence(record := dict(record, jit_bodies=1))
+            self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_contended_functional_plain_requires_jit(self):
         # Adaptive native completion is a valid performance result, but it
