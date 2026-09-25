@@ -63,8 +63,7 @@ int kd_spinlock_init(void)
 	BUILD_BUG_ON(sizeof(kd_spinlock_t) != sizeof(u32));
 	/* Preserve pair separation within each diagnostic slot and across slots. */
 	BUILD_BUG_ON(__alignof__(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_spin_diag_slot, waiter_count) != 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(sizeof(struct kd_spin_diag_slot) != 4 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, frame.packet_state) >= 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) % L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) > 768);
@@ -77,7 +76,6 @@ int kd_spinlock_init(void)
 
 	for (i = 0; i < KD_SPIN_DIAG_SLOTS; i++) {
 		atomic_long_set(&kd_spin_diag_slots[i].addr, 0);
-		atomic_set(&kd_spin_diag_slots[i].waiter_count, 0);
 		atomic_set(&kd_spin_diag_slots[i].jit_disabled, 0);
 	}
 

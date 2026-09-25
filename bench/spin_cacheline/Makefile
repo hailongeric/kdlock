@@ -5,7 +5,7 @@ PYTHON ?= python3
 CFLAGS ?= -O2 -g
 CFLAGS += -Wall -Wextra -Werror -std=gnu11
 KDLOCK_NUMA ?= 1
-KDLOCK_SPIN_BATCH ?= 128
+KDLOCK_SPIN_BATCH ?= 256
 PROVIDER_DIR := $(CURDIR)/.build/provider
 WORKLOAD_DIR := $(abspath $(CURDIR)/../../workload_modules/spin_cacheline)
 

@@ -148,7 +148,7 @@ waiter CPU                         combiner CPU
 | `kd_spin_entry` / pool | 48 × 32 + 16 = 1552 / CPU | `kd_spin_entries_init()` 一次 `alloc_percpu`；ticket 记录 task/CPU/代际/物理所有权及 native 引用，物理释放、native 借用全部退休及 end 后归还槽。尺寸依赖当前内核 raw lock 布局 |
 | CPU热度指针 | 8 / CPU | 静态per-CPU指向现有spin表rate_hot；不是重复热标志 |
 | 热表 entry/table/cpu | 24 / 6680 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录；无候选淘汰，不是 owner 存储 |
-| `kd_spin_diag_slot` | 256 × 32 = 8192，全局 | 静态数组，按128字节对齐；锁地址、禁用标志及不再逐请求更新的waiter占位字段，槽身份在模块会话内稳定；不是热锁晋升集合 |
+| `kd_spin_diag_slot` | 128 × 32 = 4096，全局 | 静态数组，按128字节对齐；锁地址及禁用标志，旧共享waiter占位字段已删除，槽身份在模块会话内稳定；不是热锁晋升集合 |
 | `kd_spin_diag_cpu` | 3104 / CPU | spin 初始化时 `alloc_percpu`；事件/批次及waiter进入/退出总数，live余额近似，独立排空后精确汇总并释放；SELFTEST 额外探针存储不计入 normal 表 |
 
 这些是对象请求长度，不是模块总 RSS。例如 20 KiB 预留区由 vmalloc 按页支撑，
@@ -474,7 +474,7 @@ flowchart LR
     A["CPU A：根 waiter"] --> NA["A 的 node：128 B"]
     NA --> RA["A 的 continuation：704 B"]
     RA --> P["内嵌根寄存器包：168 B"]
-    B["CPU B：外层 combiner"] --> CB["B 栈上 batch：184 B"]
+    B["CPU B：外层 combiner"] --> CB["B 栈上 batch：176 B（NUMA构建184 B）"]
     CB -->|call.regs| P
     B -->|本地 context.top 绑定| RA
     B --> NB["B 的虚拟 node：128 B"]
@@ -514,14 +514,10 @@ stack canary；有地址逃逸对象的慢路径仍有 canary。
 [历史 ELF 与测量证据](../tclock_compare/results/HISTORY.md#20260921-fast-path-optimization)保留了代码尺寸和开销变化。调用者寄存器保存、owner
 身份核对、IRQ/preempt 恢复及编译缓解配置继续保留。
 
-热度实现恢复为分类型采样器，并在四个固定 spin/mutex、record/query 入口
-编译时展开类型/操作分支。已 pin 的 spin 接口转入同一实现，读取现有
-preempt_count 并复用 acquisition pin，不额外 disable/enable。256条精确地址记录保留，
-非 task 样本丢弃。spin CPU 按本节前述实际 MCS 发布规则采样，
-每8次合格MCS发布检查400万TSC窗口；spin/mutex 单锁在入口累计33次后检查25亿窗口。
-fast/pending、入队前取消及节点耗尽轮询不计数，同一获取最多计一次。
-CPU变热只影响后续入口；CPU/单锁分别采时，mutex为入口1024/33及同次采时复用，
-其CPU窗口仍为400亿TSC ticks。
+热度计数和时钟规则统一见[热度与角色](../../docs/JIT_EXECUTION.md#21-热度与角色)。
+NUMA默认启用，KD每batch最多代理256个正文并有独立扫描预算；直接本地后继不先读取next-next。
+延期远端节点优先接回交接链。continuation/等待栈初始化时请求所属CPU节点内存，允许回退。
+这些限制约束工作量，不保证任意调度下的等待时间。
 
 ### 5.6 完成通知、ACK 和回收的次序
 

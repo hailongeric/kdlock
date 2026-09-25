@@ -14,7 +14,6 @@ struct kd_spin_batch {
 	struct kd_exe_info *exe;
 	/* Slots are append-only until drained module shutdown. */
 	struct kd_spin_diag_slot *diag;
-	unsigned long entry_ip;
 	struct qspinlock *lock;
 	struct kd_spin_node *cursor;
 	struct kd_jit_batch_call call;
@@ -33,7 +32,8 @@ struct kd_spin_batch {
 };
 
 /* The batch's source lease keeps registry slots alive until the last unbind.
- * Cache identity, never publication/readiness or the mutable code pointer.
+ * Reuse the retained entry's immutable RIP instead of a duplicate batch key;
+ * never cache publication/readiness or the mutable code pointer.
  * Spin is the fixed backend of this batch; a foreign registration still goes
  * through the ordinary dispatcher rejection, without becoming a cache hit. */
 static struct kd_exe_info *
@@ -41,14 +41,13 @@ kd_spin_batch_lookup(struct kd_spin_batch *batch, unsigned long entry_ip)
 {
 	struct kd_exe_info *exe = batch->exe;
 
-	if (exe && batch->entry_ip == entry_ip &&
+	if (exe && READ_ONCE(exe->RIP) == entry_ip &&
 	    READ_ONCE(exe->lock_kind) == KD_EXE_LOCK_SPIN)
 		return exe;
 
 	exe = kd_get_exe(0, entry_ip);
 	if (exe && READ_ONCE(exe->lock_kind) == KD_EXE_LOCK_SPIN) {
 		batch->exe = exe;
-		batch->entry_ip = entry_ip;
 	}
 	return exe;
 }

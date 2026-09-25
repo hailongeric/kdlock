@@ -40,14 +40,14 @@ worker，复用相同的数量及CPU绑定配置；预热worker退出并完成�
 `warmup_policy=all_workers`、`warmup_iterations_per_worker=48000`、`warmup_pause_seconds=0`。
 准备与预热均不计入正式测量。每个KD会话重新加载provider，热度不跨会话继承。
 
-CLI支持`--cachelines 1 8 16`和`--threads 1 2 3 4 5 6 7 8 16 20`。
+CLI支持`--cachelines 1 8 16`和`--threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32`。
 无参数矩阵仍为1/16 cacheline × 1/4/8/16/20线程 × 三后端 × 三轮，共90场；
 默认`--duration-ms 0`按每worker 100000次固定迭代测量。
-下面的当前峰值命令显式选择1/8 cacheline及七个线程点，共126场。
+下面的当前峰值命令显式选择1 cacheline及十四个线程点，共126场。
 
 性能比较使用固定2.5GHz。
 
-宿主worker CPU0..19已设置并核对min=max=2500000kHz；保留`intel_pstate`、
+宿主worker CPU0..31及collector CPU38已设置并核对min=max=2500000kHz；保留`intel_pstate`、
 `powersave`与`balance_performance`，通过相同上下限限制频率。
 后续benchmark使用并保留该固定频率政策，不自动恢复动态1–3GHz；运行前后记录并核对设置，
 重启后若设置丢失则重新应用。此设置未配置为系统开机持久化。
@@ -56,32 +56,37 @@ CLI支持`--cachelines 1 8 16`和`--threads 1 2 3 4 5 6 7 8 16 20`。
 使用`--duration-ms 2000 --peak-window-ms 300`启用；原固定迭代模式仍保留，不能与新口径混合取优。
 三方都先完成上述全worker预热，测量前300ms作为额外稳定时间，不进入峰值候选。
 每个worker在完整正文及解锁后工作完成后，每256次发布一次独立进度并检查共同截止时间；
-CPU30上的collector每10ms读取进度，原始快照及其读前/读后时间戳全部保留。
+CPU38上的collector每10ms读取进度，原始快照及其读前/读后时间戳全部保留。
 只有全部worker已经进入且尚未退出的窗口参与选择；时长取实际端点间隔（至少300ms），
 不插值，也不使用固定300ms除数掩盖采样延迟。窗口计数误差上界为256×线程数，
 快照读取时间跨度另行报告。采样有均摊成本，三方采用相同规则；不能把口径变化记作锁优化收益。
 整段吞吐使用精确完成数及全部worker返回时间，包含截止检查/排空尾部；JIT比例也只针对整段，
-不声称知道峰值窗口内的JIT比例。CPU30为额外观测CPU，不计入工作线程；runner的准备CPU集合不变。
+不声称知道峰值窗口内的JIT比例。CPU38为额外观测CPU，不计入工作线程；runner的准备CPU集合不变。
 只在 recovery guest 中按[操作手册](../../docs/AGENTS.md)核对快照、依赖和空闲状态；
 现有 `kdclobber2` 内核不重建。输出必须是新的仓库外目录。
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
-  LC_ALL=C timeout --kill-after=10s 2400s taskset -c 0-19 \
+  LC_ALL=C timeout --kill-after=10s 2400s taskset -c 0-31 \
   python3 bench/tclock_compare/run.py \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
-  --cachelines 1 8 --threads 1 2 3 4 8 16 20 --repeats 3 \
-  --duration-ms 2000 --peak-window-ms 300 \
+  --cachelines 1 --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 --repeats 3 \
+  --duration-ms 2000 --peak-window-ms 300 --collector-cpu 38 \
   --output /root/kdlock-evidence/direct-new
 ```
+
+`--numa on/off`选择KD和TCLock的NUMA构建，默认on；`--kd-batch-size`默认为256，范围1–1024。
+TCLock保留1024上限。运行器用`modinfo`验证实际ELF，NUMA/批上限纳入结果身份，不混合候选。
+`--spin-prefetch 0/1/2`选择现有KD无预取/consumer查找/producer提示，默认2，加载后核对并独立分组。
+collector CLI无参数默认仍为30，32-worker运行必须如上显式指定38；与任一worker重合时拒绝。
 
 `--spin-contention-pct`范围为0–100，默认100；0仅绕过比例门槛，
 原生队头前缀检查、CPU频率和单锁热度规则仍生效。该值作为只读provider装载参数传入并核对。
 
-上述`taskset -c 0-19`固定准备阶段CPU集合，worker绑定CPU0至CPU(`threads-1`)。
+上述`taskset -c 0-31`固定准备阶段CPU集合（跨两个节点），worker绑定CPU0至CPU(`threads-1`)。
 先核对这些CPU属于预期NUMA节点及host映射；`environment.json`保存`runner_affinity`，
-加载前检查全部worker CPU均被允许。collector使用独立CPU30，不计入worker线程数。
+加载前检查全部worker CPU均被允许。collector使用独立CPU38，不计入worker线程数。
 
 代码修改后可直接测性能，运行器同时完成业务、IRQ/preempt、JIT和排空检查。
 独立单元、SELFTEST及`--functional`按改动选择；需要定向检查时缩小线程/正文范围。
@@ -157,6 +162,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [c1 NUMA与有界批次](results/20260926-numa.md) | 当前NUMA优化、原版基线、候选比较及验证边界 |
 | [1/8 cacheline复测](results/20260925-c1-c8-warmed-peak.md) | 当前锁实现，七个线程点、三后端三轮126场；300ms峰值、整段吞吐和全部分布 |
 | [c1优化与十种线程数比较](results/20260924-warmed-peak.md) | 90场匹配矩阵、nested/early实际JIT；保留改动、撤回候选和归档哈希 |
 | [历史索引](results/HISTORY.md) | 旧策略、动态频率和固定迭代报告的固定Git原文；不代表当前成绩 |
@@ -185,7 +191,7 @@ TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开�
 `cond_resched()` 调度点，三种后端均保留锁外四组乘加。原 `hash_resched` 模块
 参数已删除；layout ABI v2 的 `resched` 固定为 0，运行器拒绝调度点仍开启的旧模块。
 这项实验设置不同于上游原始调度策略，也不同于历史索引中的成绩。
-这些锁外工作均计入整批 wall 时间。沿用三种直接 API 和 1024 批次参数；
+这些锁外工作均计入整批 wall 时间。沿用三种直接API，KD256/TCLock1024批次参数；
 这是哈希表临界区的三方对比，不宣称完整复现上游分配布局或论文的运行环境。
 
 ```sh

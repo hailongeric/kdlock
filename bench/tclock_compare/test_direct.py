@@ -617,7 +617,7 @@ class DirectTests(unittest.TestCase):
     def test_provider_load_has_no_admission_mode_parameter(self):
         session = BackendSession.__new__(BackendSession)
         session.record = dict(arm='kdlock', hotlock_mode='adaptive',
-                              spin_contention_pct=37, spin_delegate='on')
+                              spin_contention_pct=37, spin_delegate='on', spin_prefetch=0)
         commands = []
 
         def command(args, log):
@@ -632,6 +632,7 @@ class DirectTests(unittest.TestCase):
         self.assertFalse(any(str(arg).startswith('hotlock_mode=') for arg in args))
         self.assertIn('spin_contention_pct=37', args)
         self.assertIn('spin_delegate=1', args)
+        self.assertIn('spin_prefetch=0', args)
 
 
 if __name__ == '__main__':

@@ -10,12 +10,13 @@
 2026-09-26进行中的c1 NUMA优化：线程扩展到1–8/12/16/20/24/28/32，
 worker顺序放置CPU0–31，20线程以内位于node0，24/28/32跨node0/1；collector改为CPU38。
 保持固定2.5GHz、全worker预热和2秒内300ms峰值，三方各三轮。
-候选以128次代理上限及独立的每batch NUMA扫描预算限制工作量，远端延期链在批次结束后优先交接；
+已选择256次代理上限及独立的每batch NUMA扫描预算限制工作量，远端延期链在批次结束后优先交接；
 该上限不是调度延迟/无饥饿证明。先保存当前1024/NUMA-off基线，再定向验证候选和比较。
 TCLock保留上游1024上限，NUMA-on/off必须随构建身份明确标注，不混合取优。
 最终结果尚未完成，不能将本段写作已达Linux/TCLock目标。
 
-当前锁实现为797e847，运行器在fd0befb开放已有8-cacheline正文。
+当前开发基于ade7d82的有界NUMA实现，选择256上限、局部后继快速选择及冗余状态精简；
+完整本轮比较见[NUMA调查](../bench/tclock_compare/results/20260926-numa.md)，下表c1/c8是797e847历史实现证据。
 spin使用显式单锁字API、共享continuation/frame、原生pending/MCS路径和统一clobber解锁。
 冷获取首次CAS内联，简单batch单次初始化元数据，关闭计时时跳过重复helper。
 只保留adaptive：per-CPU获取/MCS差值每512次发布比较，原生队头在同一近似边界检查

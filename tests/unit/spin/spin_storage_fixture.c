@@ -146,23 +146,20 @@ static void check_geometry(void)
 	CHECK(offsetof(struct kd_spin_node, completed) == L1_CACHE_BYTES);
 	CHECK(offsetof(struct kd_spin_node, locked) == L1_CACHE_BYTES + 1);
 
-	/* Check actual array addresses as well as the type's offset and stride:
-	 * no waiter counter may share a pair with either adjacent slot's reads. */
+	/* Shared slots have no per-request writer. Keep each identity/latch in
+	 * its own aligned pair; waiter totals reside in CPU-local storage. */
 	CHECK(_Alignof(struct kd_spin_diag_slot) == pair);
-	CHECK(offsetof(struct kd_spin_diag_slot, waiter_count) == pair);
-	CHECK(sizeof(struct kd_spin_diag_slot) == 2 * pair);
+	CHECK(sizeof(struct kd_spin_diag_slot) == pair);
 	for (unsigned int i = 0; i < KD_SPIN_DIAG_SLOTS; i++) {
 		struct kd_spin_diag_slot *slot = &kd_spin_diag_slots[i];
 		uintptr_t identity = (uintptr_t)&slot->addr;
 		uintptr_t disable = (uintptr_t)&slot->jit_disabled;
-		uintptr_t waiter = (uintptr_t)&slot->waiter_count;
 
 		CHECK(identity % pair == 0);
 		CHECK(disable / pair == identity / pair);
-		CHECK(waiter / pair == identity / pair + 1);
 		if (i + 1 < KD_SPIN_DIAG_SLOTS)
 			CHECK((uintptr_t)&kd_spin_diag_slots[i + 1].addr / pair ==
-			      waiter / pair + 1);
+			      identity / pair + 1);
 	}
 
 	CHECK(color_count > 1 && color_count * 2 < CPUS);

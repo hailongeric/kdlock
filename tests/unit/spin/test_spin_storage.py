@@ -59,8 +59,8 @@ def main():
         # Reverting to one-line separation must fail the production guard,
         # before a module can reintroduce base-dependent adjacent-pair sharing.
         "diag-single-line-pair": (
-            "atomic_t waiter_count __aligned(2 * L1_CACHE_BYTES);",
-            "atomic_t waiter_count __aligned(L1_CACHE_BYTES);",
+            "atomic_long_t addr __aligned(2 * L1_CACHE_BYTES);",
+            "atomic_long_t addr __aligned(L1_CACHE_BYTES);",
         ),
         "node-array-single-line": (
             "kd_spin_nodes[MAX_NODES]) __aligned(2 * L1_CACHE_BYTES);",
@@ -93,7 +93,7 @@ def main():
                 assert compiled.returncode != 0 and "static assertion failed" in compiled.stderr, (
                     name, compiled.returncode, compiled.stdout, compiled.stderr,
                 )
-                guard = ("offsetof(struct kd_spin_diag_slot, waiter_count) != 2 * L1_CACHE_BYTES"
+                guard = ("__alignof__(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES"
                          if name == "diag-single-line-pair" else
                          "__alignof__(kd_spin_nodes) < 2 * L1_CACHE_BYTES")
                 assert guard in compiled.stderr

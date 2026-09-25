@@ -85,10 +85,12 @@ def make_plan(args):
             'invalid repeats/iterations')
     contention_pct = getattr(args, 'spin_contention_pct', DEFAULT_SPIN_CONTENTION_PCT)
     require(0 <= contention_pct <= 100, 'invalid spin contention percentage')
-    batch = getattr(args, 'kd_batch_size', 128)
+    batch = getattr(args, 'kd_batch_size', 256)
     require(1 <= batch <= 1024, 'KD batch must be 1..1024')
     numa = getattr(args, 'numa', 'on')
     require(numa in ('on', 'off'), 'invalid NUMA policy')
+    prefetch = getattr(args, 'spin_prefetch', 2)
+    require(prefetch in (0, 1, 2), 'invalid spin prefetch mode')
     result = []
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
@@ -111,6 +113,7 @@ def make_plan(args):
                 cookie_storage='percpu_rate_hot' if backend == 'kdlock' else 'not_applicable',
                 cpu_heat_policy='mcs_entry_ratio512_head5' if backend == 'kdlock' else 'not_applicable',
                 spin_contention_pct=contention_pct if backend == 'kdlock' else None,
+                spin_prefetch=prefetch if backend == 'kdlock' else None,
                 numa_policy=numa if backend != 'native' else 'not_applicable',
                 delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
                 pmu=getattr(args, 'pmu', False),
@@ -177,10 +180,11 @@ def report(out):
                            tuple(r.get(key) for key in TIMING_FIELDS),
                            r.get('spin_delegate', 'on'),
                            r.get('numa_policy', 'unrecorded'),
-                           r.get('delegation_batch_limit', 'unrecorded')), []).append(r)
+                           r.get('delegation_batch_limit', 'unrecorded'),
+                           r.get('spin_prefetch', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, timing, delegate, numa, batch), rows in groups.items():
+    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, timing, delegate, numa, batch, prefetch), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
@@ -190,7 +194,7 @@ def report(out):
                    cpu_heat_policy=heat_policy,
                    spin_contention_pct=contention_pct,
                    spin_delegate=delegate,
-                   numa_policy=numa, delegation_batch_limit=batch,
+                   numa_policy=numa, delegation_batch_limit=batch, spin_prefetch=prefetch,
                    **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -231,9 +235,11 @@ def main():
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
     p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,5,6,7,8,12,16,20,24,28,32), default=[1,4,8,16,20])
+    p.add_argument('--spin-prefetch', type=int, choices=(0,1,2), default=2,
+                   help='existing KD prefetch mode: off, consumer lookup, producer hints')
     p.add_argument('--numa', choices=('on', 'off'), default='on',
                    help='build NUMA queue selection for KD and TCLock')
-    p.add_argument('--kd-batch-size', type=int, default=128,
+    p.add_argument('--kd-batch-size', type=int, default=256,
                    help='maximum KD delegated bodies and NUMA scan budget per batch (1..1024)')
     p.add_argument('--repeats', type=int, default=3,
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')

@@ -86,7 +86,7 @@ clobber_body:
 	push rdi
 	push rsi
 	sub rsp, 14*8
-	mov Stack_BATCH, 0
+	/* Clobber exits never read the legacy-only Stack_BATCH slot. */
 	mov Stack_CLOBBER, rdx
 	mov PT_REG, rdi
 	mov REG_BANK, rdi

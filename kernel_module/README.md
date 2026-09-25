@@ -72,9 +72,8 @@ claim/reclaim 与 release 各用一次 guard 完成校验和状态提交。物�
 代际及 native 借用退休约束见 [locking](../docs/design/locking.md#41-native-lock-and-private-queue)。
 
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
-32个共享诊断槽按128字节对齐、256字节步长排列，身份/禁用状态位于首个128字节区域，
-偏移128的旧waiter字段现保留为布局占位，不再逐请求写入。数组仍为8KiB，禁用标志的
-原子语义不变；原区域隔离提交439cd82及其历史采样见[诊断槽报告](../bench/tclock_compare/results/HISTORY.md#20260924-diagnostic-pairs)。
+32个共享诊断槽按128字节对齐、128字节步长排列，只保留身份及禁用状态。
+旧共享waiter字段及其初始化已删除，数组从8KiB缩为4KiB；禁用标志原子语义不变。
 waiter发布/退出位置保持，以既有动态per-CPU诊断区的两个单调总数记录；每槽80→96字节，
 每CPU增加512字节。live有符号聚合是近似观察，允许过期或暂时负值；独立排空后的最终
 余额仍精确，非零记为invariant failure。即时原子下溢信号不再保留；owner/ACK、退休、
@@ -172,3 +171,13 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 自测观察仍在 `tests/kernel/`，benchmark 观察仍在 `bench/spin_cacheline/provider/`，
 不会混入普通 provider。源码冻结和 provider 副本必须包含 `.inc`。
 构建与实际验证只在 recovery guest 执行，入口见 [tests/README.md](../tests/README.md)。
+
+## NUMA与代理上限
+
+默认`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=256`；构建时可显式关闭NUMA或选择1–1024上限。
+每batch独立预算限制NUMA扫描，延期远端链在最终交接前拼回；不跨native节点、拒绝回滚或嵌套边界。
+直接后继在本节点时直接返回，避免提前读取后继的后继。扫描预算使用原batch填充。
+NUMA构建通过`vzalloc_node(..., cpu_to_node(cpu))`为continuation/等待栈请求CPU本地内存，允许分配回退。
+批次只缓存注册条目指针，复用该条目RIP而不重复保存key；就绪/代码发布仍逐请求核验。
+普通clobber COMPLETE保留最小IP/SP/BP及witness，去掉只供legacy出口使用的Stack_BATCH初始化；
+FULL/native退出和最终现场恢复顺序不变。测量及限制见[NUMA调查](../bench/tclock_compare/results/20260926-numa.md)。

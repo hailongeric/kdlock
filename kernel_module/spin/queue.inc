@@ -176,6 +176,12 @@ get_next_node(struct kd_spin_node *my_node, u16 *scan_left)
 	curr_node = my_node;
 	next_node = curr_node->next;
 
+	/* The immediate local successor needs no NUMA scan. Defer the usual
+	 * next-next boundary check until after this body, avoiding an early
+	 * remote-node read on the common single-socket batch path. */
+	if (next_node && next_node->socket_id == numa_node_id())
+		return next_node;
+
 	while (true) {
 		if (next_node == NULL || next_node->next == NULL)
 			goto next_node_null;

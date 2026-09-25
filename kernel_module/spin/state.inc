@@ -13,7 +13,7 @@
 /* Bound delegated bodies per physical hold; NUMA scan work has a separate
  * batch-local budget. This is a work bound, not a scheduler latency guarantee. */
 #ifndef KDLOCK_SPIN_BATCH
-#define KDLOCK_SPIN_BATCH 128
+#define KDLOCK_SPIN_BATCH 256
 #endif
 #if KDLOCK_SPIN_BATCH < 1 || KDLOCK_SPIN_BATCH > 1024
 #error "KDLOCK_SPIN_BATCH must be 1..1024"
@@ -149,11 +149,10 @@ enum kd_spin_diag_event {
 };
 
 struct kd_spin_diag_slot {
-	atomic_long_t addr;
+	/* Waiter totals live per CPU. Only identity and the disable latch remain
+	 * shared; keep adjacent identities on separate 128-byte boundaries. */
+	atomic_long_t addr __aligned(2 * L1_CACHE_BYTES);
 	atomic_t jit_disabled;
-	/* Reserved, no longer written per request. Keep the established slot
-	 * geometry while measuring CPU-local waiter observations separately. */
-	atomic_t waiter_count __aligned(2 * L1_CACHE_BYTES);
 };
 
 /* Slots keep their identity for the module session. Only the disable latch

@@ -139,15 +139,15 @@ static void test_cache(void)
 	CHECK(!kd_spin_batch_find_ready(&batch, 0x800));
 	entries[0].RIP--;
 	CHECK(kd_spin_batch_find_ready(&batch, 0x800) == &entries[0]);
-	CHECK(lookups == 1 && batch.exe->code_block == &entries[1]);
+	CHECK(lookups == 2 && batch.exe->code_block == &entries[1]);
 	CHECK(kd_spin_batch_find_ready(&batch, 0x900) == &entries[1]);
-	CHECK(lookups == 2);
-	CHECK(kd_spin_batch_find_ready(&next_batch, 0x900) == &entries[1]);
 	CHECK(lookups == 3);
+	CHECK(kd_spin_batch_find_ready(&next_batch, 0x900) == &entries[1]);
+	CHECK(lookups == 4);
 	/* Foreign backends are never hits; unchanged dispatcher rejects them. */
 	entries[1].lock_kind = KD_EXE_LOCK_MUTEX;
 	CHECK(kd_spin_batch_find_ready(&batch, 0x900) == &entries[1]);
-	CHECK(lookups == 4);
+	CHECK(lookups == 5);
 	CHECK(!kd_spin_batch_find_ready(&batch, 0xa00));
 }
 
@@ -160,7 +160,6 @@ static void test_stats(void)
 	struct kd_spin_diag_counts sum;
 	kd_spin_diag_waiter_enter(slot);
 	CHECK(kd_spin_diag_waiter_balance(slot - kd_spin_diag_slots) == 1);
-	CHECK(!atomic_read(&slot->waiter_count)); /* Reserved shared field stays idle. */
 	CHECK(offsetof(struct kd_spin_diag_counts, max_depth) == 72 &&
 	      offsetof(struct kd_spin_diag_counts, waiter_enter) == 80 &&
 	      offsetof(struct kd_spin_diag_counts, waiter_exit) == 88 &&
@@ -240,10 +239,8 @@ static void test_retained_slot(void)
 	struct kd_spin_diag_slot *slot = kd_spin_diag_find(0x400000);
 	CHECK(slot);
 	CHECK(_Alignof(struct kd_spin_diag_slot) == 2 * L1_CACHE_BYTES);
-	CHECK(offsetof(struct kd_spin_diag_slot, waiter_count) == 2 * L1_CACHE_BYTES);
-	CHECK(sizeof(*slot) == 4 * L1_CACHE_BYTES);
-	CHECK((uintptr_t)&slot->addr / (2 * L1_CACHE_BYTES) !=
-	      (uintptr_t)&slot->waiter_count / (2 * L1_CACHE_BYTES));
+	CHECK(sizeof(struct kd_spin_diag_slot) == 2 * L1_CACHE_BYTES);
+	CHECK((uintptr_t)slot % (2 * L1_CACHE_BYTES) == 0);
 	for (unsigned long a = 0x800000; a < 0x800000 + 64 * 64; a += 64)
 		kd_spin_diag_find(a);
 	CHECK(!kd_spin_diag_find(0xdead000));
