@@ -578,8 +578,9 @@ hook order later balanced by another event. It does not replace ownership,
 ACK, retirement, source-lifetime or actual-JIT evidence. Mutex waiter/drain
 counters retain their existing exact semantics.
 
-The shared slot keeps its 128-byte alignment and 256-byte stride; its old
-waiter field is reserved and receives no request-path writes. Two local totals
+The shared slot keeps its 128-byte alignment; removing the unused waiter field
+reduces its stride from 256 to 128 bytes and the 32-slot table from 8 to 4 KiB.
+Two local totals
 grow each dynamic counts record from 80 to 96 bytes, adding 512 bytes per CPU
 without changing nodes, continuations or static per-CPU placement. Validation
 and performance limits are recorded in the [peak investigation](../../bench/tclock_compare/results/20260924-warmed-peak.md#per-cpu-waiter观察保留).

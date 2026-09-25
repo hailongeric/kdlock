@@ -162,8 +162,8 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
-| [c1 NUMA与有界批次](results/20260926-numa.md) | 当前NUMA优化、原版基线、候选比较及验证边界 |
-| [1/8 cacheline复测](results/20260925-c1-c8-warmed-peak.md) | 当前锁实现，七个线程点、三后端三轮126场；300ms峰值、整段吞吐和全部分布 |
+| [c1 NUMA与有界批次](results/20260926-numa.md) | NUMA/256上限完整126场、32线程功能验证、冗余状态精简及撤回的更早预取候选 |
+| [1/8 cacheline复测](results/20260925-c1-c8-warmed-peak.md) | 前版锁实现，七个线程点、三后端三轮126场；300ms峰值、整段吞吐和全部分布 |
 | [c1优化与十种线程数比较](results/20260924-warmed-peak.md) | 90场匹配矩阵、nested/early实际JIT；保留改动、撤回候选和归档哈希 |
 | [历史索引](results/HISTORY.md) | 旧策略、动态频率和固定迭代报告的固定Git原文；不代表当前成绩 |
 

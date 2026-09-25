@@ -125,7 +125,7 @@ def main():
             "#ifdef NUMA_AWARE\n",
         ),
         (
-            "get_next_node(struct kd_spin_node *my_node)",
+            "get_next_node(struct kd_spin_node *my_node, u16 *scan_left)",
             "static struct kd_spin_node *\n",
         ),
         ("static __always_inline int kd_spin_trylock(struct qspinlock *word)", ""),

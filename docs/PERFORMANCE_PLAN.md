@@ -7,16 +7,17 @@
 
 ## 1. 当前状态与证据边界
 
-2026-09-26进行中的c1 NUMA优化：线程扩展到1–8/12/16/20/24/28/32，
+2026-09-26已完成本轮c1 NUMA实现与比较：线程扩展到1–8/12/16/20/24/28/32，
 worker顺序放置CPU0–31，20线程以内位于node0，24/28/32跨node0/1；collector改为CPU38。
 保持固定2.5GHz、全worker预热和2秒内300ms峰值，三方各三轮。
 已选择256次代理上限及独立的每batch NUMA扫描预算限制工作量，远端延期链在批次结束后优先交接；
 该上限不是调度延迟/无饥饿证明。先保存当前1024/NUMA-off基线，再定向验证候选和比较。
 TCLock保留上游1024上限，NUMA-on/off必须随构建身份明确标注，不混合取优。
-最终结果尚未完成，不能将本段写作已达Linux/TCLock目标。
+完整126场、32线程nested/early均通过；32线程比NUMA-off基线提高50.6%，但仍低于Linux/TCLock。
+1线程为Linux的93.4%；2–20线程超过Linux，部分点较初始KD基线下降，未达全线程无回退目标。
 
-当前开发基于ade7d82的有界NUMA实现，选择256上限、局部后继快速选择及冗余状态精简；
-完整本轮比较见[NUMA调查](../bench/tclock_compare/results/20260926-numa.md)，下表c1/c8是797e847历史实现证据。
+当前生产代码为9eb65b6的有界NUMA实现，选择256上限、局部后继快速选择及冗余状态精简；
+本轮完整比较见[NUMA调查](../bench/tclock_compare/results/20260926-numa.md)，下表c1/c8是797e847历史实现证据。
 spin使用显式单锁字API、共享continuation/frame、原生pending/MCS路径和统一clobber解锁。
 冷获取首次CAS内联，简单batch单次初始化元数据，关闭计时时跳过重复helper。
 只保留adaptive：per-CPU获取/MCS差值每512次发布比较，原生队头在同一近似边界检查
@@ -130,9 +131,10 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 
 ### P2.3 预取
 
-- [ ] 使用已有 `spin_prefetch=0/1/2` 比较无预取、consumer查找和producer提示，
-  固定布局、caller ABI及JIT覆盖，分别看低/高竞争。
-- [ ] 收益明确后才扩展距离/范围，同时核对无效预取、污染及新增producer工作。
+- [x] 同一可执行代码比较0与2；关闭预取明显下降，保留producer提示2。
+- [x] 测试首请求+两请求完整预取，以及更远队列头分级预取；前者高竞争下降，
+  后者跨NUMA略升但16/20下降约2%，均撤回并归档。当前仍在正文前预取下一请求。
+- [ ] 后续如调整距离/范围，按实际cache-miss/生成代码测量定位；本轮未采集硬件miss。
   提示不能代替权威frame或生命周期引用。
 
 位置：[prefetch.inc](../kernel_module/spin/prefetch.inc)。验收看完整吞吐和footprint。

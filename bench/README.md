@@ -6,7 +6,9 @@ KD使用per-CPU近似竞争统计和原生队头的有界前缀检查；完整�
 
 ## 当前结果与口径
 
-- [1/8 cacheline复测](tclock_compare/results/20260925-c1-c8-warmed-peak.md)：
+- [c1 NUMA与有界批次](tclock_compare/results/20260926-numa.md)：
+  1–8/12/16/20/24/28/32线程、三后端各三轮126场；含预取候选、冗余状态清理和性能缺口。
+- [前版1/8 cacheline复测](tclock_compare/results/20260925-c1-c8-warmed-peak.md)：
   1/2/3/4/8/16/20线程、三后端各三轮，126场有效并排空。
 - [优化与c1完整线程矩阵](tclock_compare/results/20260924-warmed-peak.md)：
   包含1–8/16/20线程90场、匹配功能验证、保留改动和撤回候选。

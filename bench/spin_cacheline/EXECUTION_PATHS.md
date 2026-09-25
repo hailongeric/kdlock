@@ -25,7 +25,7 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 | 构建 | 当前启用项与边界 |
 | --- | --- |
 | TCLock backend | `NUMA_AWARE=1`、`WWJUMP=1`；`ENABLE_IRQS_CHECK` 关闭。当前对照限 task context、IRQ 开启的单锁调用者，不作为通用 IRQ/嵌套锁替代 |
-| KD normal | `KDLOCK_SELFTEST`、`KDLOCK_NUMA` 默认关闭；NUMA 队列选择及探针是显式构建选项 |
+| KD normal | `KDLOCK_SELFTEST` 默认关闭，`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=256`；可显式关闭NUMA或启用探针 |
 | KD 策略 | `spin_delegate=0` 关闭公共入口代理并跳过其热度记录，默认 `1`。只保留adaptive热度准入；`spin_contention_pct=0`仅绕过比例，仍受CPU/单锁热度和上下文/JIT安全检查约束 |
 
 选择 `KD_SPIN_DIRECT_LOCK/UNLOCK` 配对壳后，调用端只按 CPU 热值分流；
@@ -136,7 +136,7 @@ waiter CPU                         combiner CPU
 | --- | --- | --- |
 | `kd_spin_node` | 128 × 4 = 512 / CPU | `spin/state.inc` 静态 per-CPU 数组；每节点按 64 对齐、CPU数组按128对齐，`completed/locked` 偏移 64/65；原生与代理共用四槽 |
 | `kd_spin_cpu_state` | normal 80 / CPU；NUMA 增加 16 | 静态 per-CPU；`lock_addr[8]`、当前代理 CPU、`node_count`、等待栈顶；NUMA 再有暂存链表头尾 |
-| continuation/等待栈共享预留区 | 20480 / CPU | `kd_spinlock_init()` 每 CPU 一次 `vzalloc`；低端 12 KiB 放 continuation，高端 8 KiB 为物理等待栈，两区不重叠 |
+| continuation/等待栈共享预留区 | 20480 / CPU | `kd_spinlock_init()` 每 CPU 一次分配；NUMA构建用 `vzalloc_node(..., cpu_to_node(cpu))` 请求所属节点（允许回退），其他构建用 `vzalloc`；低端 12 KiB 放 continuation，高端 8 KiB 为物理等待栈，两区不重叠 |
 | `kd_spin_continuation_stack` | 8512 / CPU，包含 704 × 12 条记录 | 初始化时按 CPU 在低端预留区选择 64 字节对齐起点；只按 top 分配，退休后收缩连续已退休栈顶；活动记录不搬移 |
 | `kd_spin_continuation` | 704 × 12，已包含在存储栈中 | `spin/request.inc` 按 top 借用槽；包含 frame、恢复结果、调用者上下文；不是 C 自动局部对象 |
 | `kd_exec_frame` | 648，已包含在 continuation 中 | 生产者准备，combiner 原地 bind/pop，不为同一 spin 请求另分配第二个 frame |

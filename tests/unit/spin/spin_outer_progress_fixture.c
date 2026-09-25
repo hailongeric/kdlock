@@ -271,7 +271,7 @@ static void kd_spin_diag_invariant_failure(void)
 	CHECK(false);
 }
 /* Opaque lookup token: the production backend must pass this exact slot. */
-static struct kd_exe_info { int lock_kind; } ready_entry = {
+static struct kd_exe_info { int lock_kind; unsigned long RIP; } ready_entry = {
 	.lock_kind = KD_EXE_LOCK_SPIN,
 };
 static bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, int pid,
@@ -316,6 +316,7 @@ static struct kd_exe_info *kd_get_exe(int pid, unsigned long ip)
 {
 	(void)pid;
 	CHECK(ip == ((fixture_request(&request)->kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL));
+	ready_entry.RIP = ip;
 	return mode != 4 && mode != 7 ? &ready_entry : NULL;
 }
 static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
