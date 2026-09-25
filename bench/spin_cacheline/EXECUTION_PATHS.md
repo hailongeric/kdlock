@@ -4,7 +4,7 @@
 解锁、实际 MCS 发布采样，以及 `39b0e7c` 的 continuation 错位布局。
 对象尺寸沿用各阶段 ELF 复核，并按当前源码布局更新；历史尺寸与成绩仅属于对应冻结输入。
 普通 spin 保持 IRQ/BH 状态，continuation 为 704 B；语义验证见
-[普通 spin 报告](../tclock_compare/results/20260922-plain-spin.md)。
+[普通 spin 报告](../tclock_compare/results/HISTORY.md#20260922-plain-spin)。
 热表为每 CPU/type 256 桶/256 记录，task 统计复用或取得 CPU pin，非 task 上下文跳过统计。
 TCLock 指仓库中的外部模块适配版 `tclock_backend/`；KD 指显式 `kd_spinlock_t`
 API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施及分类型热表，其互斥
@@ -134,7 +134,7 @@ waiter CPU                         combiner CPU
 
 | 对象 | 大小/数量 | 分配点、用途和回收 |
 | --- | --- | --- |
-| `kd_spin_node` | 128 × 4 = 512 / CPU | `spin/state.inc` 静态 per-CPU 数组；每节点按 64 对齐，`completed/locked` 偏移 64/65；原生与代理共用四槽 |
+| `kd_spin_node` | 128 × 4 = 512 / CPU | `spin/state.inc` 静态 per-CPU 数组；每节点按 64 对齐、CPU数组按128对齐，`completed/locked` 偏移 64/65；原生与代理共用四槽 |
 | `kd_spin_cpu_state` | normal 80 / CPU；NUMA 增加 16 | 静态 per-CPU；`lock_addr[8]`、当前代理 CPU、`node_count`、等待栈顶；NUMA 再有暂存链表头尾 |
 | continuation/等待栈共享预留区 | 20480 / CPU | `kd_spinlock_init()` 每 CPU 一次 `vzalloc`；低端 12 KiB 放 continuation，高端 8 KiB 为物理等待栈，两区不重叠 |
 | `kd_spin_continuation_stack` | 8512 / CPU，包含 704 × 12 条记录 | 初始化时按 CPU 在低端预留区选择 64 字节对齐起点；只按 top 分配，退休后收缩连续已退休栈顶；活动记录不搬移 |
@@ -148,8 +148,8 @@ waiter CPU                         combiner CPU
 | `kd_spin_entry` / pool | 48 × 32 + 16 = 1552 / CPU | `kd_spin_entries_init()` 一次 `alloc_percpu`；ticket 记录 task/CPU/代际/物理所有权及 native 引用，物理释放、native 借用全部退休及 end 后归还槽。尺寸依赖当前内核 raw lock 布局 |
 | CPU热度指针 | 8 / CPU | 静态per-CPU指向现有spin表rate_hot；不是重复热标志 |
 | 热表 entry/table/cpu | 24 / 6680 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录；无候选淘汰，不是 owner 存储 |
-| `kd_spin_diag_slot` | 128 × 32 = 4096，全局 | 静态数组；锁地址、禁用标志和 waiter 数，槽身份在模块会话内稳定；它是诊断表，不是已删除的全局热锁晋升集合 |
-| `kd_spin_diag_cpu` | 2592 / CPU | spin 初始化时 `alloc_percpu`；事件/批次计数，排空汇总后释放；SELFTEST 额外探针存储不计入 normal 表 |
+| `kd_spin_diag_slot` | 256 × 32 = 8192，全局 | 静态数组，按128字节对齐；锁地址、禁用标志及不再逐请求更新的waiter占位字段，槽身份在模块会话内稳定；不是热锁晋升集合 |
+| `kd_spin_diag_cpu` | 3104 / CPU | spin 初始化时 `alloc_percpu`；事件/批次及waiter进入/退出总数，live余额近似，独立排空后精确汇总并释放；SELFTEST 额外探针存储不计入 normal 表 |
 
 这些是对象请求长度，不是模块总 RSS。例如 20 KiB 预留区由 vmalloc 按页支撑，
 实际占用还有页取整和管理开销；静态 per-CPU 符号间也可能有填充。
@@ -562,8 +562,8 @@ KD 的翻译准备、寄存器包、frame/source lease、native 路由及 ticket
 
 ## 7. 验证与结果解释
 
-当前完整三轮性能矩阵见 [默认热度分流报告](../tclock_compare/results/20260923-spin-default-heat-full3.md)，
-元数据精简、continuation 布局及长批次对照见 [优化调查](../tclock_compare/results/20260923-spin-single-hot-balance.md)。
+当前完整三轮性能矩阵见 [1/8 cacheline峰值复测](../tclock_compare/results/20260925-c1-c8-warmed-peak.md)，
+历史元数据精简、continuation 布局及长批次对照见 [布局调查](../tclock_compare/results/HISTORY.md#20260923-spin-single-hot-balance)。
 单元和功能验证按冻结版本列在 [测试入口](../../tests/README.md)；
 已撤回候选及旧统计口径集中在 [历史索引](../tclock_compare/results/HISTORY.md)。
 

@@ -2,40 +2,22 @@
 
 ## 1. 当前进展
 
-当前实现包含 `39b0e7c` 的continuation错位布局、`1eaaf99` 的简单batch元数据单次
-初始化及 `6064c6e` 的通用clobber解锁；CPU热值C `if` 分流和MCS-entry机制来自 `ccefa62`，
-旧比例准入实现已保存为**EXPERIMENTAL检查点b83f551**，其pilot未通过性能保护；
-当前按用户要求简化为同节奏的近似计数与比例比较，作为新的EXPERIMENTAL检查点保留；pilot仍未通过性能保护。
-模块通过显式 `kd_spinlock_t` 与caller-clobber v1 API接入spin，32位KD字承载
-获取、pending、MCS tail及combiner仲裁。Linux、TCLock、KD对象不能混用协议。
-mutex实现与嵌套控制保留，全局mutex hook仍未安装；加载provider不自动代理普通Linux锁。
+spin通过显式`kd_spinlock_t`和caller-clobber v1 API接入，32位KD字承载获取、pending、
+MCS tail及combiner仲裁；Linux、TCLock、KD对象不能混用协议。mutex协议保留，
+全局hook未安装，加载provider不自动代理普通Linux锁。
 
-获取宏pin后只按CPU热值执行C `if`：冷分支为完整原生CAS/pending/MCS，热分支
-为pinned clobber入口。宽clobber只属于获取热分支，寄存器保存由编译器安排；
-解锁无条件走通用clobber入口，冷/热均传lock/SP/IP/BP，provider依据低字节5或
-普通状态完成对应释放，不读取CPU热值。没有on/off编译壳选择或手工push/pop。
+当前只保留adaptive：复用per-CPU MCS/获取计数，在512次发布边界比较比例并采时，
+原生队头在同一近似边界检查捕获队尾以内的五个后继。冷获取内联首次CAS，
+热获取走pinned clobber入口；解锁统一走generic clobber协议。
+热度只影响未来准入，owner/ACK/frame退休保持独立；完整规则见
+[执行流](JIT_EXECUTION.md#21-热度与角色)。spin waiter诊断改为per-CPU事件总数，
+live观察近似，独立排空后检查最终余额，见[锁协议](design/locking.md#spin-diagnostic-identity-lifetime)。
 
-spin复用原MCS计数，每512次边界比较获取/MCS差值再采一次CPU时钟，默认100%比例门槛。
-当前只保留adaptive，移除`hotlock_mode`装载参数和CLI；门槛0只绕过比例，不绕过CPU/单锁热度。
-比例状态仅为16字节的两个快照；允许IRQ边界偏移，不维护精确批次、两低确认、冷却或近期热度保留。
-spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口仍为400亿。
-动态热表和owner/ticket/frame生命周期保持，小型pinned封装内联；两个后继等待实验已归档撤回。
-共享诊断槽的128字节区域隔离为独立提交439cd82，完整规则以[执行流](JIT_EXECUTION.md#21-热度与角色)为准。
-
-每CPU仍预分配20 KiB：continuation在低12 KiB内按CPU错位，高8 KiB等待栈不变。
-普通完成先pop再通知，native最终解锁等待根ticket借用退休。布局及TCLock差异见
-[EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
-
-此前MCS8/CPU400万组合完成了[168场三轮矩阵](../bench/tclock_compare/results/20260923-mcs8-cpu4m.md)，
-该历史批次8/20线程adaptive未观察到历史对照退化，3/4线程仍慢、单线程未一致改善。
-当前简化候选通过基础2组、采样fixture及10项错误变体、运行器26项和W=1构建，保留11条既有objtool警告。
-`simple512-fixed`的42场KD adaptive正确排空，30场实际JIT，但性能保护失败；完整三方168场未运行。
-[本轮调查](../bench/tclock_compare/results/20260924-contention-ratio.md)保留b83f551及后续失败实验。
-更早的MCS1/CPU400亿版本覆盖见
-[完整三轮矩阵](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)，
-优化隔离、失败候选及短/长批次限制见[性能调查](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。
-历史结果不能拼接成当前全量验收。并发冷准备、pinned mutex以及访问时guard等
-已知边界见 [TODO](TODO.md)；后续性能任务只维护在 [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)。
+当前锁实现的[c1三方矩阵及nested/early](../bench/tclock_compare/results/20260924-warmed-peak.md)
+和[1/8 cacheline复测](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md)已完成。
+成绩、样本分布及源码身份只在匹配报告中维护，不拼接为全量功能验收。
+并发冷准备、pinned mutex和访问时guard等边界见[TODO](TODO.md)，
+后续性能任务只维护在[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)。
 
 ## 2. 阅读顺序
 

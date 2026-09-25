@@ -1,7 +1,7 @@
 # Spin cacheline 共用组件
 
 当前采用精确地址哈希热度统计，保留入口准入、顶层 pending 免 ticket 和 continuation 退休协议。
-准入只保留adaptive；`spin_contention_pct=0`仅关闭竞争比例过滤，CPU/单锁热度仍生效。
+准入只保留adaptive；`spin_contention_pct=0`仅关闭竞争比例过滤，原生队头资格及CPU/单锁热度仍生效。
 
 当前 live 入口为 [tclock_compare/run.py](../tclock_compare/run.py)，说明见
 [直接 API 对照](../tclock_compare/README.md)。本目录不再提供旧 hook 扫描、
@@ -9,7 +9,8 @@
 
 | 文件 | 当前用途 |
 | --- | --- |
-| `client.c` | 绑核、统一起跑、一次 ioctl 内批量操作与状态校验 |
+| `client.c` | 全worker预热、绑核、统一起跑、固定/连续计时及状态校验 |
+| `peak.py`、`test_peak.py` | 全worker活跃窗口选择、进度校验及对应检查 |
 | `bench_runtime.py` | 计数、CPU 放置、来源/设备、排空与冻结输入 |
 | `bench_session.py` | 直接运行器复用的准备、发布、测量和排空基础类 |
 | `provider/prepare.py` | 独立源码副本及只读观察 patch，不修改普通 provider |

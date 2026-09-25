@@ -181,7 +181,7 @@ plain/nested/early，按修改选择，不自动跑性能矩阵。旧 hook 套�
 
 发布 NORMAL 不等于实际执行。JIT 正例必须取得 wrapper 返回后的正文证据，
 核对入口/锁身份、业务数据、IRQ/preempt、队列、ACK 和退休。拒绝、JIT=0 原生
-对照和真实 JIT 分开报告；observe 的竞争正例不得以不代理完成代替。
+对照和真实 JIT 分开报告；竞争功能正例不得以不代理完成代替。
 保留命令、环境、退出码、源码/ELF 哈希、内核身份和 dmesg。失败且排空也归档；
 未排空时明确证据不完整，不读取仍在变化的目录。历史归档仅做离线一致性校验，
 不执行其中代码，也不因日志自洽而宣称本次重跑或来源真实。
@@ -272,6 +272,6 @@ root-owned socket 可能需要 `sudo nc -U /tmp/qemu-monitor.sock`。
 frame。旧测试操作细节仅见匹配 Git 历史，不是当前 live 的运行指令。
 
 宿主QEMU vCPU已按编号一对一固定到CPU0..39，前20个对应宿主NUMA0；重启后
-必须重新核对映射，不能只凭guest绑核声称物理同节点。证据见[回归报告](../bench/tclock_compare/results/20260922-performance-recovery.md)。
+必须重新核对映射，不能只凭guest绑核声称物理同节点。证据见[回归报告](../bench/tclock_compare/results/HISTORY.md#20260922-performance-recovery)。
 历史性能回退及采样器候选统一见[历史索引](../bench/tclock_compare/results/HISTORY.md)，
 当前实现与测试入口分别以[锁协议](design/locking.md)和[bench](../bench/README.md)为准。

@@ -57,7 +57,7 @@ top; teardown and partial-initialization rollback recover the allocation base
 from `wait_stack_top - KD_SPIN_STORAGE_BYTES`, never free the interior
 continuation pointer. Reservation, completion publication and retirement keep
 the protocol below. Performance evidence and its cache-causality limits are in
-the [current investigation](../../bench/tclock_compare/results/20260923-spin-single-hot-balance.md).
+the [historical layout investigation](../../bench/tclock_compare/results/HISTORY.md#20260923-spin-single-hot-balance).
 
 Reservation takes the next stack record. Release marks it retired and collapses
 only the contiguous retired top; holes below a live top are neither scanned for

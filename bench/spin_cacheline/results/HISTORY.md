@@ -16,8 +16,8 @@
 9月21日至23日的中间报告已合并到[近期历史索引](../../tclock_compare/results/HISTORY.md)，
 包括热表实验、回退、MCS采样、冷调用壳及三轮运行器变更。每项保留固定Git原文、
 测量输入身份和证据哈希；已删除旧命令不作为当前运行入口。
-当前完整矩阵见[168场三轮结果](../../tclock_compare/results/20260923-spin-default-heat-full3.md)，
-布局优化及限制见[性能调查](../../tclock_compare/results/20260923-spin-single-hot-balance.md)。
+当前完整矩阵见[1/8 cacheline三方峰值复测](../../tclock_compare/results/20260925-c1-c8-warmed-peak.md)，
+旧布局优化及限制见[历史性能调查](../../tclock_compare/results/HISTORY.md#20260923-spin-single-hot-balance)。
 
 ## 更早阶段
 

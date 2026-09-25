@@ -4,10 +4,11 @@
 命令与近期验证见 [tests](../tests/README.md)和 [bench](../bench/README.md)。
 历史通过项不能拼接为当前全量通过，旧透明hook命令只能用于匹配checkout。
 
-最新组合版本的覆盖见[默认热度分流完整三轮](../bench/tclock_compare/results/20260923-spin-default-heat-full3.md)，
-`1eaaf99`/`39b0e7c`的修改、失败候选及比较边界见
-[性能调查](../bench/tclock_compare/results/20260923-spin-single-hot-balance.md)。
-其他性能阶段统一从[历史索引](../bench/spin_cacheline/results/HISTORY.md)进入。
+当前组合的覆盖见[近期测试](../tests/README.md#最近验证与证据)及
+[最新性能](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md)。
+旧参数和已撤回候选统一从[近期历史](../bench/tclock_compare/results/HISTORY.md)进入，
+更早阶段见[早期历史](../bench/spin_cacheline/results/HISTORY.md)。
+
 仍未解决的pinned mutex、并发冷准备以及动态地址/flags/原地覆盖限制见
 [TODO](TODO.md#current-checkpoint)。文档整理不修复这些问题，也不构成测试重跑。
 

@@ -49,7 +49,7 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 返回处的栈预取。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
 节点为 128 字节，next 与通知字分行，continuation 继续独立存活。
 四节点per-CPU数组显式按128字节对齐，节点类型大小及通知偏移64/65保持；生产断言与存储fixture约束数组对齐。
-匹配ELF每CPU只增加64字节填充，独立性能及地址推断边界见[节点数组报告](../bench/tclock_compare/results/20260924-node-array-alignment.md)。
+匹配ELF每CPU只增加64字节填充，独立性能及地址推断边界见[节点数组报告](../bench/tclock_compare/results/HISTORY.md#20260924-node-array-alignment)。
 约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
 热锁使用每CPU/type256桶、256条精确地址记录，无候选分数或淘汰，锁路径不分配。
@@ -74,7 +74,7 @@ claim/reclaim 与 release 各用一次 guard 完成校验和状态提交。物�
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
 32个共享诊断槽按128字节对齐、256字节步长排列，身份/禁用状态位于首个128字节区域，
 偏移128的旧waiter字段现保留为布局占位，不再逐请求写入。数组仍为8KiB，禁用标志的
-原子语义不变；原区域隔离提交439cd82及其历史采样见[诊断槽报告](../bench/tclock_compare/results/20260924-diagnostic-pairs.md)。
+原子语义不变；原区域隔离提交439cd82及其历史采样见[诊断槽报告](../bench/tclock_compare/results/HISTORY.md#20260924-diagnostic-pairs)。
 waiter发布/退出位置保持，以既有动态per-CPU诊断区的两个单调总数记录；每槽80→96字节，
 每CPU增加512字节。live有符号聚合是近似观察，允许过期或暂时负值；独立排空后的最终
 余额仍精确，非零记为invariant failure。即时原子下溢信号不再保留；owner/ACK、退休、

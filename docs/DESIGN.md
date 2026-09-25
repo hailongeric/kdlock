@@ -122,7 +122,7 @@ cooldown, confirmation streak or heat retention across ratio rejection.
 
 Only adaptive admission remains. `hotlock_mode` and the observe mode are removed.
 `spin_contention_pct` defaults to 100; zero bypasses only the ratio, retaining
-CPU frequency, per-lock heat and execution safety checks. CPU heat gates table
+the native-head prefix check, CPU frequency, per-lock heat and execution safety checks. CPU heat gates table
 access. Spin lock heat checks at 512 records/1.25 billion TSC ticks; mutex keeps
 1025 records/2.5 billion, with CPU windows strictly below 40 billion ticks.
 Cold/reheating CPU checks clear lock heat/counts while retaining identities.
@@ -131,7 +131,8 @@ uses an existing preemption pin and CPU-local busy guard; reentry may drop a
 sample but never bypasses ownership or drain accounting. Full timing rules and
 limits live in [the execution flow](JIT_EXECUTION.md#21-热度与角色).
 
-A CPU that once warmed retains cached heat until a later MCS batch updates it;
+CPU heat is cached until a later MCS batch updates it or a sampled native
+queue head clears it;
 a quiet single-thread phase does not itself expire heat or read the clock.
 Public spin skips heat sampling when delegation is disabled. Admission remains
 at entry; an MCS event updates only subsequent entries. Native completion and

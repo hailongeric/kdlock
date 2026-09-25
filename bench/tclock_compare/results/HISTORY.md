@@ -1,10 +1,46 @@
-# 性能实验历史索引（2026-09-21 至 09-23）
+# 性能实验历史索引（2026-09-21 至 09-25）
 
-当前完整结果见[168场三轮矩阵](20260923-spin-default-heat-full3.md)；布局优化、长单线程对照和因果边界见[性能调查](20260923-spin-single-hot-balance.md)。昨日[恢复基线](20260922-performance-recovery.md)、[普通spin IRQ/wrapper验证](20260922-plain-spin.md)和[统一解锁ABI验证](20260923-spin-generic-unlock.md)单独保留。更早阶段见[9月15日至21日索引](../../spin_cacheline/results/HISTORY.md)。
+当前完整结果见[1/8 cacheline复测](20260925-c1-c8-warmed-peak.md)；当前优化过程、失败候选、
+匹配c1矩阵和nested/early功能见[峰值调查](20260924-warmed-peak.md)。本页只追溯旧版本。
 
-本页合并30份过时阶段报告，其中9份在整理前已删除。仅整理文档，没有重跑实验或删除原始证据。固定Git原文保留完整表格、旧命令、失败尝试和未覆盖边界；下列“原文”提交是文档保存点，测量输入身份单独列出，二者不能混用。已有工作树修改以各归档patch/source manifest为准。
+原始证据位于本地忽略目录或guest证据目录，新checkout不自带。
+本次只整理文档，没有重跑历史实验、删除原始归档或把旧失败改成通过。
 
-所有原文链接固定到整理前 `39b0e7c3c74d606d31695f9eb9b3f5ef6a7a6e43`，本地可用 `git show <提交>:<原路径>` 读取。原始证据位于忽略目录，新checkout不自带；SHA256沿用原报告记录，本次未重新认证全部历史归档。不同采样策略、ABI、预热及统计口径不得跨批次取优。
+## 2026-09-22至24日：已被当前报告取代的16份报告
+
+以下原文固定在`fd0befb05d815076a6093e615756a4c4678c0aaf`。它是文档保存点，测量输入身份仍以原文的
+源码/ELF清单为准；不能把保存点当作所有阶段的被测源码版本。
+16份工作树报告已移除，完整数据、失败记录、归档路径及哈希仍可从固定Git原文读取：
+
+```sh
+git show fd0befb05d815076a6093e615756a4c4678c0aaf:bench/tclock_compare/results/20260924-contention-ratio.md
+```
+
+| 冻结原文 | 保留原因与边界 |
+| --- | --- |
+| <a id="20260922-performance-recovery"></a>[2026-09-22：热表性能回归定位与局部回退](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260922-performance-recovery.md) | 历史性能恢复、CPU放置及PMU版本边界。 |
+| <a id="20260922-plain-spin"></a>[2026-09-22：普通 spin 保持 IRQ/BH 状态](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260922-plain-spin.md) | 普通spin IRQ/preempt契约和旧调用壳验收。 |
+| <a id="20260923-adaptive-threshold-sweep"></a>[2026-09-23：adaptive 单锁计数阈值三轮诊断](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260923-adaptive-threshold-sweep.md) | 32/128/1024计数阈值诊断；未保留候选。 |
+| <a id="20260923-adaptive-windows"></a>[2026-09-23：adaptive 时间窗口、MCS 采样间隔与组合诊断](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260923-adaptive-windows.md) | 窗口及MCS间隔诊断；保留零JIT失败与未执行项。 |
+| <a id="20260923-mcs8-cpu4m"></a>[2026-09-23：MCS 8 / spin CPU 400万窗口，完整三轮 benchmark](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260923-mcs8-cpu4m.md) | 旧MCS8/CPU400万组合168场；非当前采样政策。 |
+| <a id="20260923-spin-default-heat-full3"></a>[2026-09-23：默认 CPU 热度分流，完整三轮 benchmark](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260923-spin-default-heat-full3.md) | 旧MCS1双模式168场；非当前adaptive-only结果。 |
+| <a id="20260923-spin-generic-unlock"></a>[2026-09-23 统一 spin 解锁入口验证（三轮）](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260923-spin-generic-unlock.md) | 通用clobber解锁ABI及旧双模式验证。 |
+| <a id="20260923-spin-single-hot-balance"></a>[2026-09-23：单线程与20线程性能调查及 continuation 布局优化](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260923-spin-single-hot-balance.md) | 布局/metadata调查、失败候选与单线程波动边界。 |
+| <a id="20260924-all-worker-warmup"></a>[2026-09-24：全部worker预热后的单轮三方比较](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260924-all-worker-warmup.md) | 全worker预热初始单轮；旧双模式及固定迭代口径。 |
+| <a id="20260924-contention-ratio"></a>[2026-09-24：低竞争比例准入调查（EXPERIMENTAL检查点，性能验收未完成）](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260924-contention-ratio.md) | 早期比例准入、失败保护、恢复点及完整168场。 |
+| <a id="20260924-diagnostic-pairs"></a>[2026-09-24：spin 诊断槽的128字节区域隔离](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260924-diagnostic-pairs.md) | 共享诊断槽隔离pilot；后来改为per-CPU waiter事件。 |
+| <a id="20260924-dynamic-expanded"></a>[2026-09-24：增加5/6/7线程的动态频率单轮比较](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260924-dynamic-expanded.md) | 动态频率扩展线程单轮；不与固定2.5GHz混合。 |
+| <a id="20260924-dynamic-frequency"></a>[2026-09-24：默认动态频率下的单轮三方比较](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260924-dynamic-frequency.md) | 动态频率单轮与快慢样本；非当前设置。 |
+| <a id="20260924-fixed-expanded"></a>[2026-09-24：固定2.5GHz的十种线程数单轮比较](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260924-fixed-expanded.md) | 固定2.5GHz扩展单轮；旧策略和固定迭代口径。 |
+| <a id="20260924-node-array-alignment"></a>[2026-09-24：spin节点数组128字节对齐](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260924-node-array-alignment.md) | 节点数组128对齐实验；旧比例策略保护未完成。 |
+| <a id="20260924-single-thread-frequency"></a>[2026-09-24：单线程频率对照](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/bench/tclock_compare/results/20260924-single-thread-frequency.md) | 1.0/2.5GHz单线程对照；频率收益不算锁优化。 |
+
+旧的近期fixture/验证流水表也可从[清理前tests说明](https://github.com/hailongeric/kdlock/blob/fd0befb05d815076a6093e615756a4c4678c0aaf/tests/README.md#最近验证与证据)追溯；
+当前入口只保留匹配最新实现的验证摘要。不同模式、频率、预热及统计口径不得跨批取优。
+
+## 更早的整理记录
+
+此前整理合并30份旧报告，下列原文继续固定于各自保存点；没有在本次重新认证它们的归档。
 
 <a id="20260921-current-benchmark"></a>
 ## 2026-09-21：当前版本完整三方 benchmark
