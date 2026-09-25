@@ -220,7 +220,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
-    p.add_argument('--cachelines', type=int, nargs='+', choices=(1,16))
+    p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
     p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,5,6,7,8,16,20), default=[1,4,8,16,20])
     p.add_argument('--repeats', type=int, default=3,
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')

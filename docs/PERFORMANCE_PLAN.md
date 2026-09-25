@@ -72,6 +72,10 @@ per-CPU waiter候选独立30场正确排空，保留该诊断修改；相对timi
 JIT正文，context检查、独立排空及双场归档审计通过；比例0未绕过captured-tail资格。
 最终宿主CPU0–19仍为min=max=2.5GHz并保留设置，策略快照随报告保存。
 本轮没有mutex负载，默认`mutex_jit=1`加载不代表mutex验证。
+随后按用户要求完成[1/8 cacheline复测](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md)：
+相同797e847锁实现，仅放开CLI的8-cacheline选择；七个线程点、三后端三轮126场全部有效并排空。
+c8的8/16/20线程KD峰值为5.024/5.169/5.171Mops/s，超过当批TCLock约10%–13%；
+保留三轮分布及低线程波动，不把本次复测涨跌记为实现优化。
 性能测量不能解释为全量功能通过。并发冷准备RCU stall、pinned mutex mode-4
 soft lockup及其他真实限制保留在 [TODO](TODO.md#current-checkpoint)。
 
