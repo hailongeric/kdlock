@@ -720,8 +720,10 @@ kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 	 * Release only that byte, then drop its count and acquisition pin. Keep
 	 * this short route inline; the ordinary generic router handles all other
 	 * owners. Callers still provide SP/IP/BP: the JIT completion endpoint
-	 * validates those words even though physical release does not use them. */
-	if (READ_ONCE(lock->locked) == KD_SPIN_DIRECT_NATIVE_HELD) {
+	 * validates those words even though physical release does not use them.
+	 * Prefer fall-through for native holds; delegated COMPLETE exits bypass
+	 * this physical call, leaving this route common at low contention. */
+	if (likely(READ_ONCE(lock->locked) == KD_SPIN_DIRECT_NATIVE_HELD)) {
 		smp_store_release(&lock->locked, 0);
 		this_cpu_dec(kd_spin_fast_cpu.nondelegated);
 		preempt_enable();

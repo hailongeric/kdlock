@@ -21,6 +21,9 @@
 1. 调用者拥有 `kd_spinlock_t` 对象，并用 `kd_spin_prepare` 登记锁后续点及 ABI。
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
    直接 benchmark 在全部测量 worker 预热前完成准备，测量时停止 daemon。
+   普通64位RIP加常量地址在翻译时按原指令下一IP求值：LEA直接生成等宽MOV，
+   能由符号扩展disp32表达的内存地址使用无base寻址，其他地址保留scratch路径。
+   GS等段地址不参加此折叠；不增加运行时guard，也不改变原指令的内存/LOCK语义。
 2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` 先pin，再用C `if`直接读取
    静态per-CPU unsigned-int热值，不再经过指针访问动态锁表；热值只有一份。
    当前只保留自适应准入。cookie引用

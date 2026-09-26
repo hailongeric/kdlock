@@ -118,9 +118,44 @@ def extract_reg(arg, regs):
         regs.add(arg)
 
 
+def rip_relative_address(arg, offset):
+    """Resolve only ordinary 64-bit RIP+constant operands at translation time.
+
+    offset is the original instruction's next IP, not the uploaded code's IP.
+    Segment bases and nonconstant addresses retain the existing lowering.
+    """
+    if not isinstance(arg, ExprMem) or is_mem_segm_expr(arg):
+        return None
+    pointer = expr_ptr(arg)
+    if pointer.size != 64:
+        return None
+    terms = (expr_args(pointer)
+             if isinstance(pointer, ExprOp) and expr_op(pointer) == "+"
+             else (pointer,))
+    rip_count, displacement = 0, 0
+    for term in terms:
+        if isinstance(term, ExprId) and str(term) == "RIP":
+            rip_count += 1
+        elif isinstance(term, ExprInt):
+            displacement += expr_int_value(term)
+        else:
+            return None
+    return ((offset + displacement) & ((1 << 64) - 1)) if rip_count == 1 else None
+
+
 def process_normal(name, args, offset, reg_map):
     if name.upper() == "NOP":
         return make_inst("NOP", [])
+
+    # LEA needs no runtime address calculation when its source is RIP-relative.
+    # Keep ordinary register mapping for virtual R11--R15 and partial writes.
+    if name.upper() == "LEA" and len(args) == 2 and isinstance(args[0], ExprId):
+        address = rip_relative_address(args[1], offset)
+        if address is not None:
+            return process_normal("MOVABS" if args[0].size == 64 else "MOV",
+                                  [args[0], ExprInt(address & ((1 << args[0].size) - 1),
+                                                    args[0].size)],
+                                  offset, reg_map)
 
     purified_args = []
     conflict_regs = set()
@@ -128,6 +163,13 @@ def process_normal(name, args, offset, reg_map):
     pre_inst = ""
     post_inst = ""
     for arg in args:
+        address = rip_relative_address(arg, offset)
+        # A no-base SIB address sign-extends disp32 in 64-bit address mode.
+        # Other targets still use the original scratch-register expansion;
+        # never truncate an arbitrary kernel/direct-map address to 32 bits.
+        if address is not None and (address < (1 << 31) or
+                                    address >= (1 << 64) - (1 << 31)):
+            arg = ExprMem(ExprInt(address, 64), arg.size)
         arg = arg_purify(arg, offset, is_current_task_operand(arg))
         purified_args.append(arg)
         extract_reg(arg, regs)

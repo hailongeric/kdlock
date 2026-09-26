@@ -145,6 +145,11 @@ static void check_geometry(void)
 	CHECK(sizeof(struct kd_spin_node) == pair);
 	CHECK(offsetof(struct kd_spin_node, completed) == L1_CACHE_BYTES);
 	CHECK(offsetof(struct kd_spin_node, locked) == L1_CACHE_BYTES + 1);
+	/* Compact metadata must not change the assembly poll width or the
+	 * record stride/color cycle while merging the minimal packet IP/SP line. */
+	CHECK(sizeof(((struct kd_spin_continuation *)0)->result) == sizeof(u32));
+	CHECK(sizeof(struct kd_spin_continuation) == 704);
+	CHECK(sizeof(struct kd_spin_continuation_stack) == 8512);
 
 	/* Shared slots have no per-request writer. Keep each identity/latch in
 	 * its own aligned pair; waiter totals reside in CPU-local storage. */
@@ -189,6 +194,8 @@ static void check_geometry(void)
 			CHECK(record == &stack->records[j]);
 			CHECK(record->storage == stack && !record->retired);
 			CHECK((unsigned char *)(record + 1) <= wait_begin);
+			CHECK((uintptr_t)&record->frame.regs.ip / L1_CACHE_BYTES ==
+			      (uintptr_t)&record->frame.regs.sp / L1_CACHE_BYTES);
 		}
 		CHECK(!kd_spin_continuation_reserve());
 		/* Releasing below a live top retains the hole until the top retires. */

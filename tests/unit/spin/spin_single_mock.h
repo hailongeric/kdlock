@@ -118,5 +118,9 @@ static inline void plain_guard_unlock(raw_spinlock_t *lock)
 }
 #define raw_spin_lock(lock) plain_guard_lock(lock)
 #define raw_spin_unlock(lock) plain_guard_unlock(lock)
+/* Private ticket guards bypass the patched public clobber shell, but keep
+ * the same native exclusion, IRQ preservation and temporary preemption pin. */
+#define __raw_spin_lock(lock) plain_guard_lock(lock)
+#define __raw_spin_unlock(lock) plain_guard_unlock(lock)
 
 #endif

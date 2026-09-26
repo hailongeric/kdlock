@@ -36,6 +36,7 @@ static void pinned(void) { assert(pins == initial + 1 && disables == 1 && !enabl
 #define for_each_possible_cpu(cpu) for ((cpu)=0;(cpu)<1;(cpu)++)
 #define per_cpu(x,cpu) (x)
 #define BUG_ON(x) assert(!(x))
+#define likely(x) (x)
 #define unlikely(x) (x)
 #undef __always_inline
 #define __always_inline inline __attribute__((always_inline))

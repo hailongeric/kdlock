@@ -8,8 +8,10 @@
 ## 1. 当前状态与证据边界
 
 当前采用有界512正文及独立512扫描预算、六后继准入、minimal IP预取、直接per-CPU热值。
-本次维护删除单锁字迁移后遗留的恒等包装和未使用宏，精简失败返回赋值，并显式内联ticket叶子校验；
-采样策略、预取距离、owner/ACK及批次边界保持不变。
+本轮在此基础上压缩continuation前缀以合并IP/SP缓存行、使用原生内联ticket guard、
+折叠JIT的RIP常量地址，并定向调整低竞争解锁布局；见[全链路报告](../bench/tclock_compare/results/20260927-flow.md)。
+采样策略、预取距离、owner/ACK及批次边界保持不变。此前维护删除单锁字迁移后遗留的
+恒等包装和未使用宏，精简失败返回赋值，并显式内联ticket叶子校验；
 [维护验证](../bench/tclock_compare/results/20260926-cleanup.md)包括基础/相关5组、两种构建、81场定向比较和36线程nested/early；
 最高KD峰值较前次共有点变化-0.11%至+0.94%，不作为新性能收益或全线程无回退证明。
 
@@ -47,6 +49,31 @@ live 聚合近似，独立排空后余额精确；owner/ACK 及真正生命周�
 | 正文 | wrapper元数据、frame、虚拟SP/BP和地址重写、生成代码分派 | TCLock切换原生waiter栈，两者不是等量机器指令 |
 | 完成与续跑 | 终态、复杂出口、owner ACK、pop/借用退休和最终恢复 | FULL、native后缀及远端请求不能当成最小COMPLETE |
 | 观测 | 正文证据、近似live waiter聚合、排空后精确余额和可选统计 | 不得近似排空/owner协议量或删除JIT witness |
+
+### 2026-09-27：全链路访存与指令审查
+
+NUMA-on继续作为provider和比较运行器默认值。优化优先级按实际写入、所有权迁移、
+依赖加载及生成指令判断，不把所有全局读取都当成远端DRAM访问。
+
+| 阶段 | 当前成本与本轮处理 | 仍可优化的方向 |
+| --- | --- | --- |
+| 入口/热度 | CPU本地获取/MCS计数，512次边界采时；冷CAS内联，无每次全局热计数 | 多锁碰撞或阶段变化需要独立负载；不新增每次时钟 |
+| 原生pending/MCS | 真实锁字CAS/tail交换和后继release；这是排他/排队成本 | 不能通过删除锁原子或抢占配对降低成绩 |
+| ticket | 私有guard改用`__raw_spin_*`，保留同步，省掉实验内核公共宏的宽clobber壳 | native借用等待可先只读轮询，再加guard确认；目前每次轮询仍取guard |
+| 请求发布 | continuation内result保留32位，内部kind压为字节并重排；frame从32移到24，MINIMAL IP/SP共行 | 记录仍704字节；这是五行变四行的几何，不是已测cache miss次数 |
+| NUMA选择 | 有界512正文/独立512扫描；连续延期链只改必要接点，远端前缀最后优先交接 | 先测批终止原因；继续放大上限可能损害少数节点进度 |
+| 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；不先追远端task/frame找地址 | 新布局允许评估MINIMAL IP/SP重复hint；FULL/借用包需保留覆盖，远距离预取旧回退仍有效 |
+| batch准入/lease | registry身份只读复用，发布状态逐请求读取，精确source lease按batch摊销 | 不复制共享包，不把生命周期计数改成近似统计 |
+| JIT正文 | 翻译时折叠RIP常量LEA及可表达的绝对disp32访存，省scratch指令 | callee出口SP重复写；未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
+| wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 去掉虚拟CALL栈写需保持真实续点及FULL契约，不是直接删保存指令 |
+| 退休/通知 | 先pop/退休，再release唤醒；队列头和轮询行分离 | 原owner ACK、最后一次packet读取和节点复用顺序保持不变 |
+| 嵌套/原生后缀 | 未启用的注入控制仍做共享cmpxchg；通用dispatcher尾部有MFENCE | 可先读开关再CAS；MFENCE需完成所有发布调用点审计，普通c1 batch不经过它 |
+
+普通c1生成代码没有KD新增的MFENCE/LFENCE/SFENCE。x86的`barrier()`、普通
+`smp_rmb/wmb()`及这里的acquire/release通常只是编译顺序或MOV；删除它们不等于省掉硬件栅栏。
+真正的locked操作包括锁字仲裁、ticket guard以及batch lease。`run_combiner`的显式
+`smp_mb()`位于拒绝交接分支，不是每个代理正文的成本。本轮保留所有发布/ACK顺序，
+不新增访问时安全检查，不把统计近似原则套用到存储存活协议。
 
 ## 2. P0：建立当前版本的可信基线
 
@@ -104,6 +131,7 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 ### P2.1 共享数据与布局
 
 - [x] continuation在已有低12 KiB区域内错位；原始基址释放、全部槽位和局部初始化回滚已验证。
+- [x] 压缩内部kind而保留32位result；MINIMAL IP/SP合并到同一行，记录步长与分配容量不变。
 - [ ] 若继续定位缓存原因，独立控制代码地址与数据放置；先核对guest PMU能力，
   没有硬件事件时只报告地址几何模型，不宣称测到cache-to-cache或L1 miss因果。
 - [x] 核对spin waiter_count消费者，保留发布/退出钩子，以per-CPU事件总数替换逐请求共享写；
@@ -119,7 +147,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 ### P2.2 wrapper、JIT分派与地址重写
 
 - [x] 简单spin batch按ABI一次写最终元数据；通用helper仍处理mutex/复杂路径。
-- [ ] 按实际原生/JIT汇编比较指令、scratch spill、虚拟栈及地址重写；仅在身份、
+- [x] 按实际生成代码折叠普通RIP常量地址，c1块减少3条指令/22字节；不增加运行时guard。
+- [ ] 继续核对scratch spill、虚拟栈及终端CALL的重复SP写；仅在身份、
   准入与有效期可证明一致时复用状态。FULL、hostcall与远端处理保留独立出口。
 - [ ] 下次先检验相邻batch_entries/ww_jumps能否复用短期本地诊断指针，保持两次精确per-CPU更新；以ELF无新增spill及实测为准。
 - [ ] 测量观察层成本，默认 `jit_timing=0`，采样与正式吞吐分开；inclusive timer

@@ -825,7 +825,8 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 恢复迁移/抢占状态，不把 spin 的 pin 生命周期套用到 mutex。
 
 当前 frame/context/continuation 为 648/5208/704 字节，spin node 为 128 字节、
-64 字节对齐。continuation 按 64 字节对齐，frame 起于偏移 32，寄存器包起于 104；
+64 字节对齐。continuation 按 64 字节对齐，frame 起于偏移 24，寄存器包起于 96；
+内部kind使用单字节，汇编轮询的result仍为32位，IP/SP在记录偏移224/248共用一行。
 等待和恢复汇编从 `offsetof` 取得偏移，两种 wrapper 的 `pt_regs` 内部布局与输入 ABI 不变。
 每 possible CPU 一次预分配 20 KiB，低端 12 KiB 存放 12 条 continuation，
 高端 8 KiB 为物理 waiter 等待栈。栈头和记录合计 8512 字节，初始化时在低端区域

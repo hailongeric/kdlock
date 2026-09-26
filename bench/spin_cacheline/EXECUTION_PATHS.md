@@ -220,13 +220,18 @@ base + 20480      └ wait_stack_top：初始栈顶
 | continuation 内部成员 | 偏移 / 大小 | 用途 |
 | --- | --- | --- |
 | `diag`、`storage` | 0 / 8、8 / 8 | 指向诊断槽及所属 CPU 存储栈 |
-| `kind`、`result` | 16 / 4、20 / 4 | 根/虚拟请求类型及恢复结果 |
-| `retired`、`native_regs_decoded` | 24 / 1、25 / 1 | 回收标记、入口包准备标记 |
-| `frame` | 32 / 648 | 前 72 字节为热字段，随后 168 字节 `regs`，其余 408 字节为复杂路径存储 |
-| `frame.regs` | 104 / 168 | 根包的实际存储；虚拟子 frame 的 `regs_ref` 指向根包，而非自己的这片空间 |
-| `jit_context` | 680 / 16 | 虚拟请求的父执行者及锁深度 |
-| `queued_at_ns` | 696 / 8 | 可选队列计时；普通 spin 不保存 IRQ flags |
-| 记录末端 | 704 | 无额外末尾填充；下一条记录仍按 64 字节对齐 |
+| `result`、`kind` | 16 / 4、20 / 1 | 汇编轮询的32位恢复结果；仅内部ROOT/VIRTUAL类型使用单字节 |
+| `retired`、`native_regs_decoded` | 21 / 1、22 / 1 | 回收标记、入口包准备标记 |
+| `frame` | 24 / 648 | 前 72 字节为热字段，随后 168 字节 `regs`，其余 408 字节为复杂路径存储 |
+| `frame.regs` | 96 / 168 | 根包的实际存储；虚拟子 frame 的 `regs_ref` 指向根包，而非自己的这片空间 |
+| `jit_context` | 672 / 16 | 虚拟请求的父执行者及锁深度 |
+| `queued_at_ns` | 688 / 8 | 可选队列计时；普通 spin 不保存 IRQ flags |
+| 记录末端 | 704 | 末尾8字节填充；下一条记录仍按64字节对齐 |
+
+普通MINIMAL包的BP/IP/SP相对记录起点为128/224/248；IP/SP共用同一缓存行。
+连同前两行请求/header及BP行，简单路径涉及四条continuation行，原布局为五条。
+这是地址几何，不代表实际每请求发生四次cache miss或跨节点传输；node、ticket、
+waiter栈及payload另计。producer提示仍在执行前一个正文时预取下一请求，保留FULL和借用包处理。
 
 记录使用 `records[top++]`；退休先置标记，再由所属 CPU 收缩连续已退休栈顶。
 例如 0/1/2 在用、1 先退休时，下一次仍从 3 分配，不复用 1；2 退休后才可一并

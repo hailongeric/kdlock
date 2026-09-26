@@ -40,14 +40,14 @@ worker，复用相同的数量及CPU绑定配置；预热worker退出并完成�
 `warmup_policy=all_workers`、`warmup_iterations_per_worker=48000`、`warmup_pause_seconds=0`。
 准备与预热均不计入正式测量。每个KD会话重新加载provider，热度不跨会话继承。
 
-CLI支持`--cachelines 1 8 16`和`--threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32`。
+CLI支持`--cachelines 1 8 16`和`--threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36`。
 无参数矩阵仍为1/16 cacheline × 1/4/8/16/20线程 × 三后端 × 三轮，共90场；
 默认`--duration-ms 0`按每worker 100000次固定迭代测量。
-下面的当前峰值命令显式选择1 cacheline及十四个线程点，共126场。
+下面的当前峰值命令显式选择1 cacheline及十五个线程点，共135场。
 
 性能比较使用固定2.5GHz。
 
-宿主worker CPU0..31及collector CPU38已设置并核对min=max=2500000kHz；保留`intel_pstate`、
+宿主worker CPU0..35及collector CPU38已设置并核对min=max=2500000kHz；保留`intel_pstate`、
 `powersave`与`balance_performance`，通过相同上下限限制频率。
 后续benchmark使用并保留该固定频率政策，不自动恢复动态1–3GHz；运行前后记录并核对设置，
 重启后若设置丢失则重新应用。此设置未配置为系统开机持久化。
@@ -164,6 +164,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [全链路访存与JIT优化](results/20260927-flow.md) | continuation缓存行、私有guard、RIP地址折叠与解锁布局；分阶段诊断及最终验证 |
 | [spin清理与定向验证](results/20260926-cleanup.md) | 9线程点三方81场、36线程nested/early、生成代码审查；非完整矩阵或新吞吐收益声明 |
 | [最新c1复测至36线程](results/20260926-c1-through36.md) | aef982b、十五线程点三方135场；三轮峰值、整段、节点进度及Linux跨node波动，锁实现未变 |
 | [c1跨node有界批次优化](results/20260926-cross-node.md) | 08497ab、512上限，完整126场及32线程功能；三轮分布、峰值/整段、节点进度与候选回退 |

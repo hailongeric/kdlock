@@ -139,6 +139,9 @@ release store on the ownership byte, preserving pending/tail. Early release and
 reclaim keep the original ticket alive; reclaim first acquires the KD word again.
 Claim/reclaim and release each validate and commit within one guard interval:
 there is no blocking acquisition or physical release inside either transition.
+Private ticket guards use Linux's `__raw_spin_lock/__raw_spin_unlock` helpers:
+they retain exclusion, lockdep and preemption pairing without the experimental
+kernel's public caller-clobber wrapper. These guards never delegate a workload.
 CPU/task/generation, legal-state and borrow checks remain. Every intact spin
 slowpath return, including node/continuation capacity fallback, has already
 claimed or reclaimed its ticket; the public entry does not repeat that claim.

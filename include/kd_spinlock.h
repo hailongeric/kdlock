@@ -40,8 +40,12 @@ struct kd_spin_continuation_stack;
 struct kd_spin_continuation {
 	struct kd_spin_diag_slot *diag __attribute__((aligned(64)));
 	struct kd_spin_continuation_stack *storage;
-	enum kd_spin_cont_kind kind;
+	/* Keep the assembly-polled result 32-bit. The internal ROOT/VIRTUAL
+	 * tag needs one byte: this ordering puts frame at +24 and the minimal
+	 * packet's IP/SP in one cache line, without shrinking the ABI identity
+	 * or changing pt_regs. No extra request storage or copying is needed. */
 	enum kd_spin_resume_result result;
+	u8 kind;
 	bool retired;
 	bool native_regs_decoded;
 	struct kd_exec_frame frame;

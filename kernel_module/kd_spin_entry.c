@@ -24,6 +24,11 @@ enum kd_spin_entry_state {
 };
 
 struct kd_spin_entry {
+	/* Private metadata uses Linux's native inline guard API below. The
+	 * public raw_spin_* macros on kdclobber2 carry the broad delegation
+	 * clobber ABI, which would spill registers around every ticket update.
+	 * __raw_spin_* retains lockdep, exclusion and balanced preemption; this
+	 * guard never owns a workload continuation or enters delegation. */
 	raw_spinlock_t guard;
 	struct task_struct *task;
 	raw_spinlock_t *origin;
@@ -206,7 +211,7 @@ static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 		goto fail;
 	}
 	/* Keep guard initialized for stale remote handles even after slot reuse. */
-	raw_spin_lock(&entry->guard);
+	__raw_spin_lock(&entry->guard);
 	entry->task = current;
 	entry->origin = origin;
 	entry->sequence = ++pool->sequence;
@@ -216,7 +221,7 @@ static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 	WRITE_ONCE(entry->state, KD_ENTRY_WAITING);
 	pool->occupied |= 1UL << index;
 	*ref = (struct kd_spin_ref){ entry, entry->sequence };
-	raw_spin_unlock(&entry->guard);
+	__raw_spin_unlock(&entry->guard);
 	return 0;
 fail:
 	return ret;
@@ -270,7 +275,7 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	raw_spin_lock(&entry->guard);
+	__raw_spin_lock(&entry->guard);
 	ret = kd_entry_local(ref);
 	if (ret || (entry->state == KD_ENTRY_OWNED && from == KD_ENTRY_WAITING))
 		goto out;
@@ -286,7 +291,7 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 	ret = READ_ONCE(((kd_spinlock_t *)entry->origin)->locked) ? 0 : -EINVAL;
 	entry->state = ret ? from : KD_ENTRY_OWNED;
 out:
-	raw_spin_unlock(&entry->guard);
+	__raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
@@ -316,7 +321,7 @@ int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	raw_spin_lock(&entry->guard);
+	__raw_spin_lock(&entry->guard);
 	ret = kd_entry_local(ref);
 	if (ret)
 		goto out;
@@ -332,7 +337,7 @@ int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 	ret = 0;
 	entry->state = KD_ENTRY_RELEASED;
 out:
-	raw_spin_unlock(&entry->guard);
+	__raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
@@ -349,7 +354,7 @@ int kd_spin_entry_end_pinned(struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	raw_spin_lock(&entry->guard);
+	__raw_spin_lock(&entry->guard);
 	ret = kd_entry_local(ref);
 	if (ret)
 		goto out;
@@ -372,11 +377,11 @@ int kd_spin_entry_end_pinned(struct kd_spin_ref *ref)
 	entry->cpu = -1;
 	WRITE_ONCE(entry->state, KD_ENTRY_FREE);
 	*ref = (struct kd_spin_ref){ 0 };
-	raw_spin_unlock(&entry->guard);
+	__raw_spin_unlock(&entry->guard);
 	/* The caller retains its pin until its remaining per-CPU reads finish. */
 	return 0;
 out:
-	raw_spin_unlock(&entry->guard);
+	__raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
@@ -399,7 +404,7 @@ int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref)
 	if (!kd_entry_ref_present(ref))
 		return -EINVAL;
 	entry = ref->entry;
-	raw_spin_lock(&entry->guard);
+	__raw_spin_lock(&entry->guard);
 	ret = kd_entry_valid(ref);
 	if (ret)
 		goto out;
@@ -411,7 +416,7 @@ int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref)
 	else
 		entry->native_refs++;
 out:
-	raw_spin_unlock(&entry->guard);
+	__raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
@@ -425,7 +430,7 @@ int kd_spin_entry_mark_native(const struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	raw_spin_lock(&entry->guard);
+	__raw_spin_lock(&entry->guard);
 	ret = kd_entry_local(ref);
 	if (ret)
 		goto out;
@@ -435,7 +440,7 @@ int kd_spin_entry_mark_native(const struct kd_spin_ref *ref)
 	else
 		entry->state = KD_ENTRY_NATIVE;
 out:
-	raw_spin_unlock(&entry->guard);
+	__raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
@@ -447,7 +452,7 @@ int kd_spin_entry_borrow_put(const struct kd_spin_ref *ref, bool *last)
 	if (!kd_entry_ref_present(ref) || !last)
 		return -EINVAL;
 	entry = ref->entry;
-	raw_spin_lock(&entry->guard);
+	__raw_spin_lock(&entry->guard);
 	ret = kd_entry_valid(ref);
 	if (ret)
 		goto out;
@@ -457,7 +462,7 @@ int kd_spin_entry_borrow_put(const struct kd_spin_ref *ref, bool *last)
 	else
 		*last = --entry->native_refs == 0;
 out:
-	raw_spin_unlock(&entry->guard);
+	__raw_spin_unlock(&entry->guard);
 	return ret;
 }
 
@@ -473,10 +478,10 @@ int kd_spin_entry_borrow_wait(const struct kd_spin_ref *ref)
 		return -EINVAL;
 	entry = ref->entry;
 	do {
-		raw_spin_lock(&entry->guard);
+		__raw_spin_lock(&entry->guard);
 		ret = kd_entry_local(ref);
 		users = entry->native_refs;
-		raw_spin_unlock(&entry->guard);
+		__raw_spin_unlock(&entry->guard);
 		if (ret)
 			return ret;
 		cpu_relax();

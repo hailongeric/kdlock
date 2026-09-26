@@ -85,7 +85,7 @@ asm(".text\n.type capture,@function\ncapture:\n"
 int main(void)
 {
 	volatile unsigned int iteration;
-	_Static_assert(offsetof(struct kd_spin_continuation, frame.regs) == 104,
+	_Static_assert(offsetof(struct kd_spin_continuation, frame.regs) == 96,
 		       "restore packet follows request metadata and the admission header");
 	for (iteration = 0; iteration < 192; iteration++) {
 		unsigned long *packet = (void *)&execution.frame.regs;
