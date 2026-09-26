@@ -163,7 +163,11 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 	kd_exec_frame_prepare_complex(frame);
 	batch->frame_event = kd_spin_selftest_frame_begin(frame);
 #endif
-	batch->queue_end = kd_exe_queue_timing_start();
+	/* Preparation already sets wrapper_start to zero when timing is off.
+	 * Reuse that immutable policy result instead of calling another disabled
+	 * helper per body. Keep the enabled queue endpoint after frame binding. */
+	if (unlikely(batch->call.wrapper_start))
+		batch->queue_end = kd_exe_queue_timing_start();
 	frame->executed = true;
 	batch->pending = true;
 	this_cpu_inc(kd_spin_diag_cpu->batch_entries);
@@ -200,8 +204,10 @@ static void kd_spin_batch_run(void *opaque)
 #else
 				BUG_ON(kd_exec_frame_retire_single_spin(frame));
 #endif
-				kd_exe_queue_timing_end(false,
-					&curr_node->execution->queued_at_ns, batch->queue_end);
+				if (unlikely(batch->queue_end))
+					kd_exe_queue_timing_end(false,
+						&curr_node->execution->queued_at_ns,
+						batch->queue_end);
 				kd_spin_debug_jit_success(batch->diag, 1);
 				batch->pending = false;
 				batch->fast_previous = true;

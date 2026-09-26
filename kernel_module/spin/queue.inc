@@ -171,10 +171,9 @@ __always_inline static struct kd_spin_node *
 get_next_node(struct kd_spin_node *my_node, u16 *scan_left)
 {
 #ifdef NUMA_AWARE
-	struct kd_spin_node *curr_node, *next_node;
-
-	curr_node = my_node;
-	next_node = curr_node->next;
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
+	struct kd_spin_node *next_node = my_node->next;
+	bool deferred = false;
 
 	/* The immediate local successor needs no NUMA scan. Defer the usual
 	 * next-next boundary check until after this body, avoiding an early
@@ -199,12 +198,21 @@ get_next_node(struct kd_spin_node *my_node, u16 *scan_left)
 			return next_node;
 		}
 
-		add_to_local_queue(next_node);
+		/* One scan defers a contiguous run. Its existing next links already
+		 * join every node after the first; rewriting them would needlessly
+		 * take ownership of remote queue-header cache lines. Only the first
+		 * append joins the prior deferred prefix. Keep the CPU-local tail
+		 * current for rejection rollback and per-node observers. */
+		if (!deferred) {
+			add_to_local_queue(next_node);
+			deferred = true;
+		} else {
+			ptr->local_queue_tail = next_node;
+		}
 #ifdef KDLOCK_SELFTEST
 		kd_spin_selftest_defer(my_node, next_node);
 #endif
-		curr_node = next_node;
-		next_node = curr_node->next;
+		next_node = next_node->next;
 	}
 
 next_node_null:

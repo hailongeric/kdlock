@@ -280,7 +280,9 @@ depths are bounded at eight.
 Frame count, logical depth, held-lock count and node reservations are distinct
 resources. Sampled stack margins are not an arbitrary IRQ/NMI safety proof.
 NUMA-local batching is enabled by default, with a 256-body batch cap and a
-separate bounded scan budget. Deferred remote nodes precede the final handoff;
+separate bounded scan budget. A scan appends a contiguous remote run once,
+reusing its existing links while advancing only the CPU-local tail.
+Deferred remote nodes precede the final handoff;
 native boundaries and nested save/restore remain. These bound batch work, not
 scheduler latency. CPU storage prefers its owning NUMA node at initialization.
 This is not a different physical lock protocol.
