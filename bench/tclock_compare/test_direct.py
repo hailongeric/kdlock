@@ -540,6 +540,7 @@ class DirectTests(unittest.TestCase):
                     self.assertEqual(spec['caller_abi'], 'clobber')
                     self.assertEqual(spec['caller_shell'], 'cold_clobber')
                     self.assertEqual(spec['cookie_storage'], 'percpu_direct_gate')
+                    self.assertEqual(spec['delegation_batch_limit'], 512)
                     self.assertNotIn('spin_cold_fastpath', spec)
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())

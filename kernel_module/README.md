@@ -174,8 +174,10 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 
 ## NUMA与代理上限
 
-默认`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=256`；构建时可显式关闭NUMA或选择1–1024上限。
-每batch独立预算限制NUMA扫描，延期远端链在最终交接前拼回；不跨native节点、拒绝回滚或嵌套边界。
+默认`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=512`；构建时可显式关闭NUMA或选择1–1024上限。
+每batch最多代理512个正文，独立NUMA扫描预算同样初始化为512，两者分别消耗；
+限制工作量，不保证任意调度下的等待时间。延期远端链在最终交接前拼回，
+不跨native节点、拒绝回滚或嵌套边界。
 直接后继在本节点时直接返回，避免提前读取后继的后继。扫描预算使用原batch填充。
 连续远端节点只在首个节点接入延期链，其余复用已有next，只更新CPU-local tail；
 不为相同链接反复取得远端cacheline的写权限。

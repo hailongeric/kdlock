@@ -85,7 +85,7 @@ def make_plan(args):
             'invalid repeats/iterations')
     contention_pct = getattr(args, 'spin_contention_pct', DEFAULT_SPIN_CONTENTION_PCT)
     require(0 <= contention_pct <= 100, 'invalid spin contention percentage')
-    batch = getattr(args, 'kd_batch_size', 256)
+    batch = getattr(args, 'kd_batch_size', 512)
     require(1 <= batch <= 1024, 'KD batch must be 1..1024')
     numa = getattr(args, 'numa', 'on')
     require(numa in ('on', 'off'), 'invalid NUMA policy')
@@ -239,7 +239,7 @@ def main():
                    help='existing KD prefetch mode: off, consumer lookup, producer hints')
     p.add_argument('--numa', choices=('on', 'off'), default='on',
                    help='build NUMA queue selection for KD and TCLock')
-    p.add_argument('--kd-batch-size', type=int, default=256,
+    p.add_argument('--kd-batch-size', type=int, default=512,
                    help='maximum KD delegated bodies and NUMA scan budget per batch (1..1024)')
     p.add_argument('--repeats', type=int, default=3,
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')

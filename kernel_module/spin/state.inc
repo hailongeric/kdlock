@@ -13,7 +13,7 @@
 /* Bound delegated bodies per physical hold; NUMA scan work has a separate
  * batch-local budget. This is a work bound, not a scheduler latency guarantee. */
 #ifndef KDLOCK_SPIN_BATCH
-#define KDLOCK_SPIN_BATCH 256
+#define KDLOCK_SPIN_BATCH 512
 #endif
 #if KDLOCK_SPIN_BATCH < 1 || KDLOCK_SPIN_BATCH > 1024
 #error "KDLOCK_SPIN_BATCH must be 1..1024"

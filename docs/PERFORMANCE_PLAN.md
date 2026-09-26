@@ -7,6 +7,12 @@
 
 ## 1. 当前状态与证据边界
 
+本轮聚焦20+线程跨node：384/512各12场KD pilot通过，选择有界512作为新默认，
+基础/shadow三组及runner34项通过；逐worker进度与吞吐同时保留。24线程少数node占比下降，
+28线程峰值追上历史TCLock但整段仍低，不能据此宣布目标全部达成。
+下一步单独验证NUMA扫描中已发布后继链接的局部复用，再做同期三方比较。
+进展见[跨node报告](../bench/tclock_compare/results/20260926-cross-node.md)；下述`77eb9a2`仍是上一完整矩阵。
+
 当前生产检查点`77eb9a2`：在既有NUMA连续远端链复用、计时旁路、精确tag和六后继准入上，
 补齐minimal IP预取，简单完成省去重复depth观察，CPU热值改为单份静态per-CPU直接读取。
 原生解锁likely因收益不稳定撤回。完整126场及32线程nested/early各160万操作通过；

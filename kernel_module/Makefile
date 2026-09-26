@@ -13,7 +13,7 @@ endif
 
 # Bounded NUMA batching; explicit overrides support matched measurements.
 KDLOCK_NUMA ?= 1
-KDLOCK_SPIN_BATCH ?= 256
+KDLOCK_SPIN_BATCH ?= 512
 ccflags-y += -DKDLOCK_SPIN_BATCH=$(KDLOCK_SPIN_BATCH)
 ifeq ($(KDLOCK_NUMA),1)
 ccflags-y += -DNUMA_AWARE

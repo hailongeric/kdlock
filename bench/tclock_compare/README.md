@@ -76,8 +76,9 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --output /root/kdlock-evidence/direct-new
 ```
 
-`--numa on/off`选择KD和TCLock的NUMA构建，默认on；`--kd-batch-size`默认为256，范围1–1024。
-TCLock保留1024上限。运行器用`modinfo`验证实际ELF，NUMA/批上限纳入结果身份，不混合候选。
+`--numa on/off`选择KD和TCLock的NUMA构建，默认on；`--kd-batch-size`默认为512，范围1–1024。
+KD每batch最多代理512个正文，独立NUMA扫描预算同样初始化为512；两者分别消耗。
+TCLock保留上游配置值1024。运行器用`modinfo`验证实际ELF，NUMA/批上限纳入结果身份，不混合候选。
 `--spin-prefetch 0/1/2`选择现有KD无预取/consumer查找/producer提示，默认2，加载后核对并独立分组。
 collector CLI无参数默认仍为30，32-worker运行必须如上显式指定38；与任一worker重合时拒绝。
 
@@ -176,7 +177,8 @@ python3 bench/tclock_compare/test_direct.py
 ## 当前 TCLock 设置
 
 采用 Linux 6.1 移植版和上游 C 内联换栈，保留 NUMA_AWARE、WWJUMP 与 1024
-批次额度，未添加运行期代理次数计数。关闭 `ENABLE_IRQS_CHECK`、TCLock 后端
+批次配置值；其WWJUMP计数从0开始、跳转时递增，普通路径最多可执行1025个正文，
+不同于KD的精确正文上限。未添加运行期代理次数计数。关闭 `ENABLE_IRQS_CHECK`、TCLock 后端
 及三种 direct workload 的 UBSAN 插桩；内核内部 UBSAN 保持原配置。
 运行器检查实际 ELF、返回布局及无 UBSAN handler 引用，保留 IRQ/preempt 退出检查。
 TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开启的 task 上下文
@@ -194,7 +196,8 @@ TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开�
 `cond_resched()` 调度点，三种后端均保留锁外四组乘加。原 `hash_resched` 模块
 参数已删除；layout ABI v2 的 `resched` 固定为 0，运行器拒绝调度点仍开启的旧模块。
 这项实验设置不同于上游原始调度策略，也不同于历史索引中的成绩。
-这些锁外工作均计入整批 wall 时间。沿用三种直接API，KD256/TCLock1024批次参数；
+这些锁外工作均计入整批 wall 时间。沿用三种直接API，新运行默认采用KD512/TCLock1024批次配置；
+本轮未重测RCUHT，新默认不能作为该负载已有的性能结论，历史成绩保留各自原始参数。
 这是哈希表临界区的三方对比，不宣称完整复现上游分配布局或论文的运行环境。
 
 ```sh

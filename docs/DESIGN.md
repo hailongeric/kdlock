@@ -459,7 +459,9 @@ the paired heat-routed caller is the workload default. Callers must be rebuilt
 when their inline ABI changes, as described in section 3.
 `target_process` defaults to kd_test in the retained mutex path; `mutex_jit`
 defaults to 1, but neither setting installs the disabled global hook.
-Batch limits are fixed at 1024. Spin NUMA is opt-in via KDLOCK_NUMA=1.
+Spin defaults to `KDLOCK_NUMA=1` and `KDLOCK_SPIN_BATCH=512`; the build-time
+body cap accepts 1–1024. Each batch starts a separate NUMA scan budget at the
+same value. Mutex keeps its fixed 1024-body limit.
 Recovery-only fault/capacity/rename probes are test controls, not production
 recovery guarantees. Use scripts and their preconditions from
 [JIT_EXECUTION](JIT_EXECUTION.md), never synthetic post-entry faults as safe
@@ -481,8 +483,8 @@ The implementation boundaries are:
 4. **miasm dependency** — the translator requires miasm 0.1.5 and
    `/proc/kcore` access from userspace.
 5. **No rwsem support** — only spinlock and mutex are implemented.
-6. **NUMA-aware combining off by default** — `KDLOCK_NUMA=1` opts into the
-   existing spin `NUMA_AWARE` branch. Test 21 covers bounded, directly observed
+6. **NUMA-aware spin combining is enabled by default** — `KDLOCK_NUMA=0`
+   disables the spin `NUMA_AWARE` branch. Historical tests cover bounded, directly observed
    deferred-follower histories; results depend on source version and fixture. This is not validation of
    arbitrary list lengths, fairness or NUMA-enabled deep physical stacks. Mutex
    delegation has no NUMA-local queue implementation.
@@ -511,8 +513,10 @@ The implementation boundaries are:
     as a security isolation boundary. Access-time checking and its pre-instruction
     native exit, including local condition-code preservation, remain explicitly
     deferred and unimplemented; static screening can miss runtime pointer changes.
-13. **Batch limits are fixed** — spin and mutex combiners process at most 1024
-    waiters per round; these constants are not module parameters.
+13. **Batch work is bounded** — spin processes at most 512 delegated bodies
+    per batch by default, with an independent scan budget initialized to 512.
+    Its body cap is a build-time setting; mutex remains fixed at 1024 bodies.
+    These are not runtime module parameters or scheduler-latency guarantees.
 14. **Flags can be clobbered inside JIT** — entry predicates, dispatcher comparisons and inserted
     branch-block `INC`/`TEST` are not transparent to live flags. No liveness
     verifier enforces the restriction, even without a wrapper exit.
