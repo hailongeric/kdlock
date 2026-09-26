@@ -9,8 +9,9 @@ KD 使用 `KD_SPIN_DIRECT_LOCK/UNLOCK` 热度分流壳。
 当前仅保留adaptive，根据当前CPU热度选择入口：冷CPU内联首次CAS，失败后调用
 `kd_spin_direct_native_contended`；热CPU调用 `kd_spin_lock_pinned_clobber_v1`。
 不手工push/pop，允许编译器在分支前保存活跃寄存器。所有body及锁
-统一传`kd_spin_direct_cookie`：一个CPU一份，直接引用该CPU已有的`rate_hot`。
-cookie仅代表CPU热度，不记录路径或嵌套深度。解锁统一调用 broad-clobber 入口并传递
+统一传`kd_spin_direct_cookie`：它是唯一的静态per-CPU unsigned-int热值，所有锁共享，
+通过`this_cpu_read`直接读取，不再经指针访问动态表。cookie不记录路径或嵌套深度；
+导出符号由指针改为标量，provider及直接调用者须一起重编译。解锁统一调用 broad-clobber 入口并传递
 lock/SP/IP/BP；provider 检查低字节状态 5，先做短原生释放，否则进入通用解锁核心。
 仅外层使用配对壳，内层仍走原接口。冷获取仍是完整CAS/pending/MCS；
 实际MCS发布处采样CPU热度，不检查队列深度；2/3线程也可因入队升温。

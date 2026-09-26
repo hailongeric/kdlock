@@ -36,8 +36,8 @@ static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *loc
 void kd_spin_direct_native_unlock(kd_spinlock_t *lock);
 void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 				 unsigned long, unsigned long);
-/* One shared CPU-hot cookie: a view of the existing rate_hot, not a second
- * flag, an acquisition path, or a nesting counter. Never assign to it here. */
+/* One shared CPU-hot cookie: the sampler's sole spin gate, not an acquisition
+ * path or a nesting counter. Never assign to it here. */
 #define kd_spin_direct_cookie kd_hotlock_spin_gate
 
 /* Same compiler-owned spill contract as clobber-v1, with a direct module CALL.
@@ -66,11 +66,11 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
  * cookie or captures extra GPRs. The named continuation belongs to hot only.
  * The compiler owns all live-register spills, even if it places them before
  * the branch. Do not insert PUSH/POP adapters into the translated body.
- * cookie is the provider's one per-CPU pointer to the existing rate_hot. */
+ * cookie is the provider's directly addressed per-CPU gate. */
 #define KD_SPIN_DIRECT_LOCK(lock, cookie, continuation) do { \
 	kd_spinlock_t *kd_lock_word = (kd_spinlock_t *)(lock); \
 	preempt_disable(); \
-	if (!READ_ONCE(*this_cpu_read(cookie))) \
+	if (!this_cpu_read(cookie)) \
 		kd_spin_direct_native_lock_inline(kd_lock_word); \
 	else \
 		KD_SPIN_DIRECT_CALL(kd_spin_lock_pinned_clobber_v1, \

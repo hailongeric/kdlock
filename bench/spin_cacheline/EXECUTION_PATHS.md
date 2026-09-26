@@ -146,8 +146,8 @@ waiter CPU                         combiner CPU
 | 三个 per-CPU 指针 | 8 × 3 = 24 / CPU | `spin/state.inc` 静态 `kd_spin_resume_nodes`、`kd_spin_continuations`、`kd_spin_native_root`；分别记录本地恢复节点、存储栈基址、等待最终 native 退休的根记录 |
 | `kd_spin_fast_cpu` | 24 / CPU | 静态 per-CPU；单一 task 持锁的 held/owner，以及原生嵌套/IRQ及配对冷根持有者的排空计数 nondelegated |
 | `kd_spin_entry` / pool | 48 × 32 + 16 = 1552 / CPU | `kd_spin_entries_init()` 一次 `alloc_percpu`；ticket 记录 task/CPU/代际/物理所有权及 native 引用，物理释放、native 借用全部退休及 end 后归还槽。尺寸依赖当前内核 raw lock 布局 |
-| CPU热度指针 | 8 / CPU | 静态per-CPU指向现有spin表rate_hot；不是重复热标志 |
-| 热表 entry/table/cpu | 24 / 6680 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录；无候选淘汰，不是 owner 存储 |
+| spin CPU热值 | 4 / CPU | 唯一静态per-CPU unsigned-int标量；直接读取，无动态表指针或热度副本 |
+| 热表 entry/table/cpu | 24 / 6680 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录，另含唯一mutex CPU热值及对齐填充；无候选淘汰，不是 owner 存储 |
 | `kd_spin_diag_slot` | 128 × 32 = 4096，全局 | 静态数组，按128字节对齐；锁地址及禁用标志，旧共享waiter占位字段已删除，槽身份在模块会话内稳定；不是热锁晋升集合 |
 | `kd_spin_diag_cpu` | 3104 / CPU | spin 初始化时 `alloc_percpu`；事件/批次及waiter进入/退出总数，live余额近似，独立排空后精确汇总并释放；SELFTEST 额外探针存储不计入 normal 表 |
 
@@ -267,8 +267,9 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
    标识。热获取分支使用 clobber-v1 协议，
    continuation 位于 CALL 后；宽 clobber 仅声明在该分支的 asm，未手工 push/pop。
    编译器决定保存哪些活跃值及保存位置，可以将部分保存放在 `if` 之前，不能保证
-   冷分支完全没有寄存器保存。cookie 只引用现有 per-CPU rate_hot，一个 CPU 一份、
-   所有锁共享。`KD_SPIN_DIRECT_UNLOCK` 无条件使用 broad-clobber 调用
+   冷分支完全没有寄存器保存。cookie 是唯一静态per-CPU unsigned-int热值，一个 CPU 一份、
+   所有锁共享，由`this_cpu_read`直接读取。导出符号由指针改为标量，provider及直接调用者
+   须一起重编译。`KD_SPIN_DIRECT_UNLOCK` 无条件使用 broad-clobber 调用
    `kd_spin_unlock_clobber_v1()`，冷/热获取均传 lock/SP/IP/BP，调用端不读锁字或 CPU 热度。
    provider 先检查低字节 5：命中时 release 低字节、减 nondelegated、unpin 后返回，
    否则进入原有 fast owner/native ACK/ticket 解锁核心。JIT 正文只有一个解锁完成入口，
@@ -318,13 +319,15 @@ native 借用、代际及最终退休检查保留。
 
 spin/mutex 的单锁记录与准入使用入口处的直接哈希计数。模块初始化时
 `alloc_percpu` 为每 CPU 预分配 13376 字节、64 字节对齐的对象，包含两个
-6680 字节类型表并包含 CPU 对齐填充。每表 256 桶、256 条 24 字节记录，桶和冲突链使用 `u16` 槽索引；
+6680 字节类型表、4字节mutex CPU热值及对齐填充；表内不再存CPU热值。
+每表 256 桶、256 条 24 字节记录，桶和冲突链使用 `u16` 槽索引；
 `0` 为空，`1..256` 对应记录。每条记录只保存完整锁地址、时间戳、计数、hot 标记
 和 next；删除候选排名、score/error、最小分数扫描和替换。初始化一次采时建立
 所有 CPU/type 的时间起点，锁路径不分配；调用者保证地址有效及初始化/排空生命周期。
 
 spin复用原始MCS计数，在同一512次边界比较MCS/获取次数的差值比例，再采一次TSC；
-静态per-CPU状态仅保存两个快照共16字节。fast/pending成功计入获取分母；实际MCS发布
+静态per-CPU状态以16字节保存两个快照，另以4字节保存唯一spin CPU热值。
+fast/pending成功计入获取分母；实际MCS发布
 才计入分子。计数及IRQ边界允许近似，busy重入不推进快照，后续差值包含被跳过的事件。
 首次采样建立比例起点，默认100%，门槛0仅关闭比例过滤。CPU窗口严格小于400亿TSC ticks。
 

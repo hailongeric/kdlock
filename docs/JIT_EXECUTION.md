@@ -21,8 +21,9 @@
 1. 调用者拥有 `kd_spinlock_t` 对象，并用 `kd_spin_prepare` 登记锁后续点及 ABI。
    daemon 经设备取得登记条目，读取内核正文、翻译、组装、上传并发布 NORMAL。
    直接 benchmark 在全部测量 worker 预热前完成准备，测量时停止 daemon。
-2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` 先pin，再用C `if`读取已有
-   每CPU `rate_hot`，当前只保留自适应准入。cookie引用
+2. `KD_SPIN_DIRECT_LOCK(lock, cookie, continuation)` 先pin，再用C `if`直接读取
+   静态per-CPU unsigned-int热值，不再经过指针访问动态锁表；热值只有一份。
+   当前只保留自适应准入。cookie引用
    `kd_spin_direct_cookie`，只表示当前CPU热度，不记录路径或深度。
    冷分支内联首次CAS和既有计数，CAS失败值交给普通C helper完成pending/MCS，
    不重复初始CAS；nondelegated在途计数覆盖获取和持锁，实际MCS发布继续累计CPU热度样本，获取低字节为5。
@@ -79,8 +80,9 @@ mutex保留原mutex、调度gate、task记录与native owner/ACK协议，
 原生队头另作下述捕获队尾前缀检查，所有权与准入统计分离。
 
 spin/mutex每CPU独立256桶、256条预分配记录，以完整地址和槽索引链表区分冲突，
-不打分或淘汰；满表时未知锁保持原生。动态精确锁表保持原有字段偏移、大小和步长。
-spin额外的静态per-CPU状态只有16字节，保存上次获取计数及MCS计数两个快照；
+不打分或淘汰；满表时未知锁保持原生。spin热值移到静态per-CPU标量，mutex热值
+保留在动态per-CPU对象；两张表不再各自含rate_hot。每表6680字节，每CPU分配仍为13376字节。
+获取/MCS计数之外，spin以16字节保存上次获取及MCS两个快照，以4字节保存唯一热值；
 不再维护独立的已接受采样计数。这里的“精确”指锁身份，不表示热度统计无误差。
 
 物理获取尝试在其执行CPU上计数，包含公共入口、配对冷原生入口、嵌套原生bridge、

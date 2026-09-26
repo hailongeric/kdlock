@@ -4,7 +4,7 @@ Hardware contention is substituted; live MCS/JIT acceptance is checked by the
 direct benchmark. The ABI fixture executes the real header with destructive
 hot acquisition and generic unlock callees, so an incorrect compiler clobber
 contract corrupts live values on both cold and hot releases.
-Its GS base models two CPU-local pointer slots through the kernel per-CPU
+Its GS base models two CPU-local scalar gates through the kernel per-CPU
 primitive substitute; the real header owns the C admission branch.
 """
 import re

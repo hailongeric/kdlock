@@ -19,18 +19,20 @@ register unsigned long current_stack_pointer asm("rsp");
 static volatile unsigned int pins;
 #define preempt_disable() (++pins)
 /* Policy remains in the provider; this shell reads heat and counts its hold. */
-static unsigned int cpu_id, heat[2];
-/* The production symbol names one per-CPU pointer slot. A GS offset of 0/8
- * selects two contiguous slots here, both pointing at their own rate_hot. */
-unsigned int *cpu_gates[2] = {&heat[0], &heat[1]};
-extern unsigned int *kd_hotlock_spin_gate;
-asm(".globl kd_hotlock_spin_gate\n.set kd_hotlock_spin_gate,cpu_gates\n");
+static unsigned int cpu_id;
+unsigned int heat[2];
+/* The production symbol names the scalar itself. GS offsets 0/4 select
+ * distinct CPU gates without any pointer load or second heat flag. */
+extern unsigned int kd_hotlock_spin_gate;
+asm(".globl kd_hotlock_spin_gate\n.set kd_hotlock_spin_gate,heat\n");
 /* Substitute only the kernel per-CPU primitive, retaining the real C gate
- * and GS addressing. A userspace global alone would miss CPU selection. */
+ * and GS addressing. A userspace global alone would miss CPU selection.
+ * The assembler alias and GS offset hide heat[cpu_id] from C alias analysis;
+ * the memory clobber orders the fixture's gate stores before this read. */
 #define this_cpu_read(slot) ({ \
  __typeof__(slot) value; \
  assert(pins); \
- asm volatile("movq %%gs:%1, %0" : "=r"(value) : "m"(slot)); \
+ asm volatile("movl %%gs:%1, %0" : "=r"(value) : "m"(slot) : "memory"); \
  value; \
 })
 /* These primitive substitutes let the real inline CAS/count sequence run.
@@ -138,7 +140,7 @@ int main(void)
  unsigned long old_gs, expected_cold=0, expected_hot=0;
  assert(!syscall(SYS_arch_prctl,ARCH_GET_GS,&old_gs));
  for(cpu_id=0;cpu_id<2;cpu_id++) {
-  assert(!syscall(SYS_arch_prctl,ARCH_SET_GS,cpu_id*sizeof(cpu_gates[0])));
+  assert(!syscall(SYS_arch_prctl,ARCH_SET_GS,cpu_id*sizeof(heat[0])));
   for(hot=0;hot<2;hot++) {
    for(unsigned long i=0;i<1000;i++) assert(stress(i)==10*i+36);
    if(!hot) expected_cold+=1000;

@@ -539,7 +539,7 @@ class DirectTests(unittest.TestCase):
                 if spec['arm'] == 'kdlock':
                     self.assertEqual(spec['caller_abi'], 'clobber')
                     self.assertEqual(spec['caller_shell'], 'cold_clobber')
-                    self.assertEqual(spec['cookie_storage'], 'percpu_rate_hot')
+                    self.assertEqual(spec['cookie_storage'], 'percpu_direct_gate')
                     self.assertNotIn('spin_cold_fastpath', spec)
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
@@ -552,7 +552,33 @@ class DirectTests(unittest.TestCase):
                                 r['max_throughput_ops_s'] == r['best_throughput_ops_s']
                                 for r in rows))
             self.assertTrue(all(r['throughput_spread_pct'] is None for r in rows))
-            self.assertEqual({r['cookie_storage'] for r in rows}, {'percpu_rate_hot', 'not_applicable'})
+            self.assertEqual({r['cookie_storage'] for r in rows}, {'percpu_direct_gate', 'not_applicable'})
+
+    def test_summary_keeps_gate_storage_separate(self):
+        # An old indirect-gate archive must not supply the winner for the new
+        # direct scalar even when admission and workload settings match.
+        base = run.make_plan(Namespace(cachelines=[1], threads=[1], repeats=1,
+            iterations=100, backends=['kdlock']))[0]
+        plans = [dict(base, name=base['name']+'-'+storage, cookie_storage=storage)
+                 for storage in ('percpu_rate_hot', 'percpu_direct_gate')]
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for index, spec in enumerate(plans):
+                folder = out/spec['name']; folder.mkdir()
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True,
+                    measurement=dict(completed=100, wall_ns=100000*(index+1),
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = {r['cookie_storage']: r
+                    for r in json.loads((out/'summary.json').read_text())}
+            self.assertEqual(set(rows), {'percpu_rate_hot', 'percpu_direct_gate'})
+            for index, spec in enumerate(plans):
+                row = rows[spec['cookie_storage']]
+                self.assertEqual(row['valid'], 1)
+                self.assertEqual(row['best_session'], spec['name'])
+                self.assertEqual(row['best_throughput_ops_s'], 1e6/(index+1))
 
     def test_summary_keeps_heat_policies_separate(self):
         base = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,

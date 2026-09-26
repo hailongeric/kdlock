@@ -52,7 +52,7 @@ own protocol; no global spin hook is installed and protocols must never mix on
 one object. Explicit caller storage must outlive all requests and frames.
 
 The paired broad-clobber spin shell is selected at caller compile time.
-It pins once, then uses a C `if` with `this_cpu_read` / `READ_ONCE` to select an
+It pins once, then uses a C `if` with `this_cpu_read` to select an
 inlined cold acquisition or the original broad-clobber hot call based only on CPU
 heat. Cold acquisition
 keeps the existing `nondelegated` in-flight count through the entire native acquisition
@@ -64,8 +64,12 @@ Paired unlock always calls `kd_spin_unlock_clobber_v1` with the broad clobber
 contract and lock/SP/IP/BP metadata. The provider tests byte 5 before a release,
 count decrement and unpin, preserving pending/tail; other states enter the
 existing unlock core. JIT sees one completion endpoint without a caller-side
-cold/hot unlock branch. The cookie is only the existing per-CPU rate_hot view: one per CPU
-shared by all locks, with no acquisition path or nesting count. CPU heat
+cold/hot unlock branch. The cookie is the sampler's sole static per-CPU
+unsigned-integer gate, shared by all spin locks. One direct GS read replaces
+the old per-CPU pointer followed by a dynamic-table load; no second heat flag,
+acquisition path or nesting count is introduced. Mutex heat remains in its
+own per-CPU allocation. Provider and direct callers must be rebuilt together
+when changing this exported symbol's type. CPU heat
 changes affect only subsequent acquisitions. Native MCS counts each actual
 publication once, without consulting queue depth; every 512 publications it
 compares the MCS/entry ratio before sampling the clock, using the policy above. The drain scan includes the native in-flight count. Hot acquisitions use the

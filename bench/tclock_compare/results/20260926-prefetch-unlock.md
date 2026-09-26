@@ -54,7 +54,8 @@ worker CPU0–31，collector38；每worker预热48000次，测量2秒，排除�
 
 run_combiner已在同一pinned CPU、同一slot记录depth≥1；simple root完成不可能提高最大深度。
 新inline helper保留每次JIT_SUCCESS，省去重复的depth最大值检查及第二条诊断cacheline访问；
-复杂路径继续原helper，不改witness、owner、ACK或frame退休。基础及batch/shadow/outer共5组通过。
+复杂路径继续原helper，不改witness、owner、ACK或frame退休。ELF核对该稳态计数块24→12条指令，
+run_combiner缩小162字节；复杂执行/完成/退休函数及workload正文未变。基础及batch/shadow/outer共5组通过。
 首轮batch fixture因宏展开导致类型名编译失败，改为__typeof__后基础/batch三组重跑通过；原失败日志保留。
 21场实际JIT，共238437330次正文；业务、上下文、排空及归档审计通过。
 
@@ -71,3 +72,28 @@ run_combiner已在同一pinned CPU、同一slot记录depth≥1；simple root完�
 12–32线程峰值提高约1.2%–2.5%；8线程三轮范围较宽，后续完整矩阵继续验证。
 归档`numa3-diag-20260926`，SHA256：`b63e0c74ae9793b5267842f604d7c594c7b5ba500aea62510582d588f3f57c4b`。
 CLI首次误用逗号分隔线程列表，解析阶段退出、未加载模块；修正后完整运行，原日志保留。
+
+## 单份静态per-CPU热值（保留）
+
+导出unsigned-int标量替代per-CPU指针，获取直接读取热值；动态表移除rate_hot，mutex保留自己的本地热值。
+不增加第二份状态，获取/MCS计数、512边界、时间采样和六后继准入均不变。两张表各缩小8字节，
+mutex标量占用已有尾部padding，每CPU动态分配仍13376字节；provider与所有直接caller一起重建。
+runner以percpu_direct_gate区分该存储，不与旧percpu_rate_hot归档合并取优。
+基础及hotlock/cold/preempt/nondelegated共6组通过，runner34项通过；24场业务/上下文/排空与归档审计通过，
+其中9场实际JIT，共101279299次正文。1/2/3/4/7线程保持原生完成。
+
+| 线程 | 峰值min | median | max | 最佳会话整段 |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 40.865 | 42.283 | 42.291 | 42.154 |
+| 2 | 2.542 | 2.576 | 2.714 | 2.699 |
+| 3 | 3.657 | 3.852 | 3.854 | 3.844 |
+| 4 | 3.717 | 4.243 | 4.296 | 4.288 |
+| 7 | 4.128 | 4.313 | 4.387 | 4.365 |
+| 8 | 5.133 | 5.140 | 5.257 | 5.241 |
+| 20 | 6.270 | 6.281 | 6.293 | 6.265 |
+| 32 | 5.661 | 5.663 | 5.677 | 5.592 |
+
+单线程中位数较上轮完整矩阵约提高1.7%，但一轮40.865 Mops/s低于该历史范围，不能据此保证每轮提升。
+20/32线程峰值较diag候选分别约−0.06%/−0.19%；8线程仍有波动。选择较少依赖读且单份状态的实现，
+最终完整矩阵单独报告全部样本，不混合pilot取最高值。
+归档`numa3-gate-20260926`，SHA256：`3b1c85f02e1b5f37edc895b8be88e7478671beb2ced3c8006caf3e86a418a3e7`。

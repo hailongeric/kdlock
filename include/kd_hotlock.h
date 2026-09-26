@@ -3,9 +3,9 @@
 #define KD_HOTLOCK_H
 #include <linux/types.h>
 #include <linux/percpu.h>
-/* A view of the existing CPU gate, not a second heat flag. Initialized before
- * callers enter and valid until their final drain. The reader owns a CPU pin. */
-DECLARE_PER_CPU(unsigned int *, kd_hotlock_spin_gate);
+/* The sole spin CPU gate, read directly without a dynamic-table pointer.
+ * Initialized before callers enter; the reader owns a CPU pin. */
+DECLARE_PER_CPU(unsigned int, kd_hotlock_spin_gate);
 DECLARE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
 DECLARE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
 /* A power-of-two batch keeps the publication boundary check division-free. */
@@ -19,13 +19,13 @@ static __always_inline void kd_hotlock_spin_entry_pinned(void)
 }
 static __always_inline bool kd_hotlock_spin_cpu_hot_pinned(void)
 {
-  return READ_ONCE(*this_cpu_read(kd_hotlock_spin_gate)) != 0;
+  return this_cpu_read(kd_hotlock_spin_gate) != 0;
 }
 /* A pinned native queue head may veto future CPU admission. Existing MCS
  * sampling retries; no owner, counter, snapshot or timestamp changes here. */
 static __always_inline void kd_hotlock_cool_spin_pinned(void)
 {
-  WRITE_ONCE(*this_cpu_read(kd_hotlock_spin_gate), 0);
+  this_cpu_write(kd_hotlock_spin_gate, 0);
 }
 int kd_hotlock_init(void);
 void kd_hotlock_exit(void);

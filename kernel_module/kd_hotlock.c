@@ -31,7 +31,7 @@ struct kd_hotlock_entry
 };
 struct kd_hotlock_table
 {
-  unsigned int busy, rate_samples, rate_hot;
+  unsigned int busy, rate_samples;
   unsigned long rate_begin;
   u16 buckets[KD_HOTLOCK_BUCKETS], used;
   struct kd_hotlock_entry entries[KD_HOTLOCK_ENTRIES];
@@ -44,10 +44,13 @@ struct kd_hotlock_spin_ratio
 struct kd_hotlock_cpu
 {
   struct kd_hotlock_table tables[2];
+  /* Spin heat lives in its directly addressed static per-CPU gate. Keep
+   * only mutex heat here; neither table holds a second copy of either gate. */
+  unsigned int mutex_rate_hot;
 } ____cacheline_aligned;
 static struct kd_hotlock_cpu __percpu *kd_hotlock_cpu;
 static DEFINE_PER_CPU(struct kd_hotlock_spin_ratio, kd_hotlock_spin_ratio);
-DEFINE_PER_CPU(unsigned int *, kd_hotlock_spin_gate);
+DEFINE_PER_CPU(unsigned int, kd_hotlock_spin_gate);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_gate);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_entries);
@@ -110,7 +113,8 @@ static struct kd_hotlock_entry *kd_hotlock_insert(struct kd_hotlock_table *t,
 /* Spin compares its entry/publication deltas before reading the clock, once
  * per shared interval. Heat is advisory; missed/repeated IRQ boundaries need
  * no exact ownership accounting. A later comparison includes skipped events. */
-static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_now,
+static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned int *rate_hot,
+                             unsigned long *sampled_now,
                              unsigned int interval, bool spin)
 {
   struct kd_hotlock_spin_ratio *r = NULL;
@@ -119,7 +123,7 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
   bool was_hot, ratio_hot = true;
 
   if (!spin && ++t->rate_samples < interval)
-    return t->rate_hot;
+    return *rate_hot;
   if (spin)
   {
     unsigned long mcs_delta, entry_delta;
@@ -129,7 +133,7 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
     mcs = this_cpu_read(kd_hotlock_spin_mcs);
     mcs_delta = mcs - r->mcs_begin;
     if (!mcs_delta)
-      return t->rate_hot;
+      return *rate_hot;
     entry_delta = entries - r->entry_begin;
     /* Prime the first snapshots without charging pre-contention warmup.
      * Unsigned subtraction tolerates wrap; a zero snapshot may re-prime. */
@@ -139,9 +143,9 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
   now = rdtsc_ordered();
   if (sampled_now)
     *sampled_now = now;
-  was_hot = t->rate_hot;
-  t->rate_hot = ratio_hot && now >= t->rate_begin &&
-                now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
+  was_hot = *rate_hot;
+  *rate_hot = ratio_hot && now >= t->rate_begin &&
+              now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
   if (spin)
   {
     r->entry_begin = entries;
@@ -149,7 +153,7 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
   }
   t->rate_begin = now;
   t->rate_samples = 0;
-  if (!was_hot || !t->rate_hot)
+  if (!was_hot || !*rate_hot)
   {
     for (i = 0; i < t->used; i++)
     {
@@ -160,15 +164,17 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned long *sampled_
       slot->hot = false;
     }
   }
-  return t->rate_hot;
+  return *rate_hot;
 }
 /* Specialize record/query, lock kind and the caller's pin contract at fixed
  * call sites. Sampling and the structural table guard remain shared. */
 static __always_inline bool kd_hotlock_access(unsigned long address, unsigned int kind,
                                              bool record, bool already_pinned)
 {
+  struct kd_hotlock_cpu *local;
   struct kd_hotlock_table *t;
   struct kd_hotlock_entry *slot;
+  unsigned int *rate_hot;
   unsigned long now = 0;
   bool admitted = false;
   bool pin;
@@ -180,15 +186,17 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   pin = !already_pinned && !preempt_count();
   if (pin)
     preempt_disable();
-  t = &this_cpu_ptr(kd_hotlock_cpu)->tables[kind];
+  local = this_cpu_ptr(kd_hotlock_cpu);
+  t = &local->tables[kind];
+  rate_hot = kind ? &local->mutex_rate_hot : raw_cpu_ptr(&kd_hotlock_spin_gate);
   if (!kd_hotlock_try_enter(t))
     goto unpin;
   /* Spin CPU heat advances only at MCS publication. Entry records retain the
    * cached CPU gate and original per-lock sampling; mutex keeps both clocks. */
   if (record && kind == 1 &&
-      !kd_hotlock_clock(t, &now, KD_HOTLOCK_CHECK_INTERVAL, false))
+      !kd_hotlock_clock(t, rate_hot, &now, KD_HOTLOCK_CHECK_INTERVAL, false))
     goto out;
-  if (!t->rate_hot)
+  if (!*rate_hot)
     goto out;
   slot = kd_hotlock_find(t, address);
   if (!slot && record)
@@ -242,7 +250,8 @@ void kd_hotlock_sample_spin_mcs_pinned(void)
   if (!kd_hotlock_try_enter(t))
     return;
   /* Mutex can reuse its timestamp for a coincident lock check; spin cannot. */
-  kd_hotlock_clock(t, NULL, KD_HOTLOCK_SPIN_MCS_INTERVAL, true);
+  kd_hotlock_clock(t, raw_cpu_ptr(&kd_hotlock_spin_gate), NULL,
+                   KD_HOTLOCK_SPIN_MCS_INTERVAL, true);
   barrier();
   WRITE_ONCE(t->busy, 0);
 }
@@ -266,7 +275,7 @@ int kd_hotlock_init(void)
     memset(local, 0, sizeof(*local));
     memset(r, 0, sizeof(*r));
     local->tables[0].rate_begin = local->tables[1].rate_begin = now;
-    per_cpu(kd_hotlock_spin_gate, cpu) = &local->tables[0].rate_hot;
+    per_cpu(kd_hotlock_spin_gate, cpu) = 0;
     per_cpu(kd_hotlock_spin_entries, cpu) = 0;
     per_cpu(kd_hotlock_spin_mcs, cpu) = 0;
   }
@@ -280,12 +289,15 @@ void kd_hotlock_exit(void)
   if (hotlock_stats && kd_hotlock_cpu)
     for_each_possible_cpu(cpu) for (kind = 0; kind < 2; kind++)
     {
-      struct kd_hotlock_table *t = &per_cpu_ptr(kd_hotlock_cpu, cpu)->tables[kind];
+      struct kd_hotlock_cpu *local = per_cpu_ptr(kd_hotlock_cpu, cpu);
+      struct kd_hotlock_table *t = &local->tables[kind];
+      unsigned int rate_hot = kind ? local->mutex_rate_hot :
+                                    per_cpu(kd_hotlock_spin_gate, cpu);
       if (!kind && per_cpu(kd_hotlock_spin_entries, cpu))
       {
         pr_info("kd_hotlock ratio: cpu=%d entries=%lu mcs=%lu cpu_hot=%u threshold=%u window=%u role=DONE\n",
                 cpu, per_cpu(kd_hotlock_spin_entries, cpu),
-                per_cpu(kd_hotlock_spin_mcs, cpu), t->rate_hot, spin_contention_pct,
+                per_cpu(kd_hotlock_spin_mcs, cpu), rate_hot, spin_contention_pct,
                 KD_HOTLOCK_SPIN_MCS_INTERVAL);
       }
       for (i = 0; i < t->used; i++)
@@ -293,7 +305,7 @@ void kd_hotlock_exit(void)
         struct kd_hotlock_entry *s = &t->entries[i];
         pr_info("kd_hotlock final: cpu=%d type=%s address=%lx count=%u cpu_hot=%u lock_hot=%u role=DONE\n",
                 cpu, kind ? "mutex" : "spin", s->address, s->count,
-                t->rate_hot, s->hot);
+                rate_hot, s->hot);
       }
     }
   free_percpu(kd_hotlock_cpu);

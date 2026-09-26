@@ -79,10 +79,12 @@ Legacy hook offsets and the new ABI are defined in [the register ABI](JIT_REGIST
 [kernel baselines](../kernel_baseline/README.md) remain distinct.
 
 The paired spin shell `KD_SPIN_DIRECT_LOCK/UNLOCK` takes one preemption pin
-before a C `if` selects its entry. The shared `kd_spin_direct_cookie` only views
-the existing per-CPU `rate_hot`; it records neither acquisition path nor nesting.
-A cold CPU selects an ordinary C call into the complete native CAS/pending/MCS
-path. The macro reads only CPU heat. It keeps the existing native drain count through acquisition
+before a C `if` selects its entry. The shared `kd_spin_direct_cookie` is the
+sampler's sole static per-CPU unsigned-integer heat value. One direct
+`this_cpu_read` replaces the pointer lookup into the dynamic table; no heat copy,
+acquisition path or nesting count is introduced. A cold CPU inlines the first
+CAS and existing counters, then calls a C helper for pending/MCS if needed.
+The macro reads only CPU heat. It keeps the existing native drain count through acquisition
 and holding; a failed CAS value enters pending/MCS directly, including CPU heat
 sampling. Native ownership uses locked-byte value 5. Both acquisition paths
 use the same broad-clobber unlock call with lock/SP/IP/BP metadata. The provider
@@ -93,8 +95,9 @@ the provider still enforces `spin_delegate` before admitting delegation.
 Its named continuation is immediately after that CALL. The compiler owns all
 live-register saves and may place them before the `if` or inside the branch;
 the shell supplies no manual PUSH/POP adapter. The pinned entry shares the existing core and pin; lock
-width, packet layout and wrapper inputs are unchanged. Recompile paired callers
-to use this shell; the original API remains available. The workload always uses
+width, packet layout and wrapper inputs are unchanged. The exported heat symbol
+changed from a pointer to a scalar, so rebuild the provider and direct callers
+together; the original API remains available. The workload always uses
 the heat-routed shell with adaptive admission for its outer lock; nested/early inner calls use
 the original `KD_SPIN_DIRECT_CALL` without extra register adapters.
 

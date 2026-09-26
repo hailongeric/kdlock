@@ -140,6 +140,7 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 `records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
 正确、完成且已排空的样本参与汇总。KD保留固定`hotlock_mode=adaptive`元数据，按该字段、`caller_shell`、
 `cookie_storage`、`cpu_heat_policy`、`spin_contention_pct`分开汇总，不跨模式、cookie存储、采样策略或比例门槛取最大值；
+当前直接标量使用`cookie_storage=percpu_direct_gate`，历史间接读取为`percpu_rate_hot`。
 热表计数保留在原始日志，不参与性能评分。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，

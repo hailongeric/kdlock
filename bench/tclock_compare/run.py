@@ -110,7 +110,7 @@ def make_plan(args):
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, hotlock_mode=mode,
                 caller_shell='cold_clobber' if backend == 'kdlock' else 'c',
-                cookie_storage='percpu_rate_hot' if backend == 'kdlock' else 'not_applicable',
+                cookie_storage='percpu_direct_gate' if backend == 'kdlock' else 'not_applicable',
                 cpu_heat_policy='mcs_entry_ratio512_head6' if backend == 'kdlock' else 'not_applicable',
                 spin_contention_pct=contention_pct if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
