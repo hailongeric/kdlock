@@ -7,18 +7,18 @@
 
 ## 1. 当前状态与证据边界
 
-当前选定代码在 `025d708` 上增加完成路径局部计时旁路：在获取前检查捕获队尾以内的六个后继，
-保留 `9cb51e5` 的连续远端链接复用和关闭计时 helper 旁路，以及 `11bfd75` 的
-精确七字节 tag 读取。completion/image 强制内联及生成 CALL 出口冗余 SP 写入删除
-候选均已撤回。完成路径旁路的9场pilot及基础/entry-scope三组通过，20/32线程峰值约提高1%，
-32线程整段吞吐并非每轮改善。当前实现及各阶段证据见
-[后续 NUMA 报告](../bench/tclock_compare/results/20260926-numa-followup.md)。
+当前生产检查点为`d439df8`：NUMA连续远端链接复用、关闭计时的局部状态旁路、
+精确七字节tag读取，以及获取前止于捕获队尾的六后继准入。completion/image强制内联和
+生成CALL出口SP写入删除候选均撤回。完整126场及32线程nested/early各160万操作通过，
+基础及受影响queue/native/entry-scope检查、runner33项、归档审计通过；各阶段范围见
+[后续NUMA报告](../bench/tclock_compare/results/20260926-numa-followup.md)。
 
-六后继策略的 21 场 pilot 已通过，七线程峰值恢复到 4.331 Mops/s，高竞争受测点保留收益；
-八线程峰值比 head5 完整矩阵低 0.5%，仍需核对最终分布。基础及 native 队列三组、runner 33 项通过。
-**当前选定实现的最终 126 场三方矩阵仍待完成**，不能将 pilot 或前一版本的完整矩阵
-当成当前版本的全线程结果。此前 `11bfd75` 的 126 场及 32 线程 nested/early 通过，
-但七线程峰值只有 3.238 Mops/s；归档计数显示平均代理批长降到约 5–6 个正文。
+1线程为Linux的93.0%；12/16/20线程分别为TCLock的
+105.6%/102.3%/102.3%；
+24/28/32线程仍有差距。单线程、部分高线程和全线程无回退目标尚未全部满足。
+2/3/4线程峰值比首轮KD低约3%；Linux跨NUMA有明显跨阶段波动，当前比值不能推广为稳定优势。
+原head5候选七线程批长降到约5–6、峰值3.238；最终六后继版本的七线程峰值为
+4.438 Mops/s，未用短批冷却或新增状态机。
 
 当前 c1 比较覆盖 1–8/12/16/20/24/28/32 线程，worker 顺序放置 CPU 0–31：
 20 线程以内位于 node 0，24/28/32 跨 node 0/1；collector 使用 CPU 38。
@@ -36,7 +36,7 @@ live 聚合近似，独立排空后余额精确；owner/ACK 及真正生命周�
 
 | 证据阶段 | 结论与边界 |
 | --- | --- |
-| [当前六后继 pilot](../bench/tclock_compare/results/20260926-numa-followup.md) | `025d708`，21 场 KD 定向比较；最终全线程三方矩阵待完成 |
+| [当前六后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md) | `d439df8`，126场三方比较、32线程nested/early及归档审计通过；pilot与撤回候选分列 |
 | [后续 NUMA、五后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md#head5诊断三方比较126场) | `11bfd75`，126 场及 32 线程 nested/early 通过；七线程短批退化，不是当前六后继成绩 |
 | [首轮 NUMA 完整矩阵](../bench/tclock_compare/results/20260926-numa.md) | `9eb65b6` 的历史 126 场与 nested/early；32 线程较 NUMA-off 基线提高 50.6%，但仍低于 Linux/TCLock；部分单节点点下降 |
 | [历史 c1 三方 90 场与功能验证](../bench/tclock_compare/results/20260924-warmed-peak.md#captured-tail五后继三方90场完成) | 五后继策略，1–8/16/20 线程各三轮；匹配代码的 nested/early 各 200 万操作、实际 JIT 及排空通过 |
