@@ -255,6 +255,10 @@ static void kd_spin_debug_jit_success(struct kd_spin_diag_slot *lock,
 	(void)lock;
 	(void)depth;
 }
+static void kd_spin_debug_jit_success_simple(struct kd_spin_diag_slot *lock)
+{
+	(void)lock;
+}
 static void kd_spin_debug_combiner(struct kd_spin_diag_slot *lock, unsigned int depth)
 {
 	(void)lock;

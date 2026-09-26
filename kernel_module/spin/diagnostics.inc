@@ -217,6 +217,19 @@ static void kd_spin_debug_jit_success(struct kd_spin_diag_slot *slot,
 	kd_spin_diag_record_slot(slot, KD_SPIN_DIAG_JIT_SUCCESS, depth);
 }
 
+/* run_combiner recorded depth >= 1 for this slot on the same pinned CPU
+ * before any body. Simple roots stay at depth 1; the maximum cannot decrease. */
+static __always_inline void
+kd_spin_debug_jit_success_simple(struct kd_spin_diag_slot *slot)
+{
+	unsigned int index;
+
+	if (!slot)
+		return;
+	index = slot - kd_spin_diag_slots;
+	this_cpu_inc(kd_spin_diag_cpu->slot[index].event[KD_SPIN_DIAG_JIT_SUCCESS]);
+}
+
 static void kd_spin_debug_jit_not_ready(struct kd_spin_diag_slot *slot,
 					unsigned int depth)
 {

@@ -196,6 +196,44 @@ static void test_stats(void)
 	CHECK(cpu_stats[1].invariant_failures == 1 && !cpu_stats[0].invariant_failures);
 }
 
+static void test_simple_success(void)
+{
+	static struct qspinlock lock;
+	struct kd_spin_diag_slot *slot = kd_spin_diag_find((unsigned long)&lock);
+	unsigned int index = slot - kd_spin_diag_slots;
+	unsigned int saved_cpu = cpu;
+	struct kd_spin_diag_counts expected, sum;
+	__typeof__(cpu_stats[0]) saved;
+
+	CHECK(slot);
+	for (cpu = 0; cpu < 3; cpu++) {
+		/* Each pinned combiner establishes the maximum before simple bodies. */
+		kd_spin_debug_combiner(slot, 1);
+		memcpy(&expected, &cpu_stats[cpu].slot[index], sizeof(expected));
+		CHECK(expected.max_depth == 1);
+		for (unsigned int n = 0; n < 3; n++)
+			kd_spin_debug_jit_success_simple(slot);
+		expected.event[KD_SPIN_DIAG_JIT_SUCCESS] += 3;
+		CHECK(!memcmp(&expected, &cpu_stats[cpu].slot[index], sizeof(expected)));
+
+		/* Complex success still raises depth; later simple bodies preserve it. */
+		kd_spin_debug_jit_success(slot, cpu + 4);
+		CHECK(cpu_stats[cpu].slot[index].max_depth == (int)cpu + 4);
+		memcpy(&expected, &cpu_stats[cpu].slot[index], sizeof(expected));
+		kd_spin_debug_jit_success_simple(slot);
+		expected.event[KD_SPIN_DIAG_JIT_SUCCESS]++;
+		CHECK(!memcmp(&expected, &cpu_stats[cpu].slot[index], sizeof(expected)));
+
+		memcpy(&saved, &cpu_stats[cpu], sizeof(saved));
+		kd_spin_debug_jit_success_simple(NULL);
+		CHECK(!memcmp(&saved, &cpu_stats[cpu], sizeof(saved)));
+	}
+	kd_spin_diag_sum(index, &sum);
+	CHECK(sum.event[KD_SPIN_DIAG_COMBINER] == 3 &&
+	      sum.event[KD_SPIN_DIAG_JIT_SUCCESS] == 15 && sum.max_depth == 6);
+	cpu = saved_cpu;
+}
+
 static struct kd_spin_diag_slot *scan_slot;
 static void complete_during_scan(const void *address)
 {
@@ -440,6 +478,7 @@ int main(void)
 {
 	test_cache();
 	test_stats();
+	test_simple_success();
 	test_waiter_observations();
 	test_retained_slot();
 	test_root_retirement();

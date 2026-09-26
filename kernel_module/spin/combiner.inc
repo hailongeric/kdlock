@@ -208,7 +208,7 @@ static void kd_spin_batch_run(void *opaque)
 					kd_exe_queue_timing_end(false,
 						&curr_node->execution->queued_at_ns,
 						batch->queue_end);
-				kd_spin_debug_jit_success(batch->diag, 1);
+				kd_spin_debug_jit_success_simple(batch->diag);
 				batch->pending = false;
 				batch->fast_previous = true;
 				exe_flag = 0;

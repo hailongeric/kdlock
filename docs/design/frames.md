@@ -202,7 +202,11 @@ CPU-local, allocated once at module initialization with `alloc_percpu()` to
 stay outside the fixed module per-CPU reservation. x86 `this_cpu` RMWs avoid
 shared LOCK-prefixed updates; the local maximum uses cmpxchg so an interrupted
 shallower recorder cannot overwrite a
-deeper IRQ observation. Drained shutdown sums all possible CPUs, including
+deeper IRQ observation. Simple root completion increments only JIT_SUCCESS:
+the same pinned combiner already recorded depth 1 for that slot, so checking
+the monotonic maximum again would read a second diagnostic cache line without
+changing it. Generic/complex success retains its depth update.
+Drained shutdown sums all possible CPUs, including
 offline CPUs. The separate `kd_spin batch` report records alternate entries and
 consecutive WWJUMPs; these counts are also per-CPU until shutdown. Slot identity, the live waiter
 count and JIT-disable latch remain shared. Reporting is not a live snapshot.

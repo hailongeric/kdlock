@@ -543,8 +543,8 @@ static int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)
 
 static void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 { (void)frame; abort(); }
-static void kd_spin_debug_jit_success(struct kd_spin_diag_slot *lock, unsigned int depth)
-{ (void)lock; (void)depth; abort(); }
+static void kd_spin_debug_jit_success_simple(struct kd_spin_diag_slot *lock)
+{ (void)lock; abort(); }
 
 /* Real hint preparation/bounds and protected-page checks live in the
  * batch fixture; this queue fixture retains only its publication interface. */
