@@ -7,6 +7,11 @@
 
 ## 1. 当前状态与证据边界
 
+最新复测输入`aef982b`仅扩展runner至36线程，生产仍为`08497ab`；15线程点三方135场及runner34项通过。
+36线程KD相对TCLock峰值/整段为+2.30%/+1.09%；28线程仍为-0.68%/-1.92%，24线程峰值领先而整段略低。
+Linux在28/32/36出现更高峰值，本轮KD低于这些Linux最高值；快慢分布全部保留，不能沿用旧轮次结论。
+见[最新135场复测](../bench/tclock_compare/results/20260926-c1-through36.md)。下述优化收益及功能结果属于前次126场，不是本次重跑。
+
 当前生产检查点`08497ab`：默认有界正文上限及独立NUMA扫描预算由256提高到512。
 在既有六后继准入、minimal IP预取、简单完成精简和直接per-CPU热值上，不增加采集或逐请求状态。
 384/512 pilot之后，选定512完成十四线程点三方126场、32线程nested/early各160万操作；
@@ -21,8 +26,8 @@
 上一完整生产`77eb9a2`及其126场保留为[历史参照](../bench/tclock_compare/results/20260926-prefetch-unlock.md)，
 不与当前样本混合取优。三轮范围不是统计等价证明。
 
-当前 c1 比较覆盖 1–8/12/16/20/24/28/32 线程，worker 顺序放置 CPU 0–31：
-20 线程以内位于 node 0，24/28/32 跨 node 0/1；collector 使用 CPU 38。
+当前 c1 比较覆盖 1–8/12/16/20/24/28/32/36 线程，worker 顺序放置 CPU 0–35：
+20 线程以内位于 node 0，24/28/32/36 跨 node 0/1；collector 使用 CPU 38。
 保持固定 2.5 GHz、全部 worker 各预热 48000 次、正式 2 秒内最高 300 ms 窗口，
 三方各三轮并保留整段吞吐。KD 使用 NUMA-on、512 次代理上限和独立的每 batch 512 次NUMA
 扫描预算，延期远端链在批次结束后优先交接；上限约束工作量，不是调度延迟或无饥饿证明。
@@ -37,6 +42,7 @@ live 聚合近似，独立排空后余额精确；owner/ACK 及真正生命周�
 
 | 证据阶段 | 结论与边界 |
 | --- | --- |
+| [最新c1复测至36线程](../bench/tclock_compare/results/20260926-c1-through36.md) | `aef982b`，135场、runner34项与归档审计通过；锁实现未变，保留跨node Linux快慢样本 |
 | [当前跨node有界512](../bench/tclock_compare/results/20260926-cross-node.md) | `08497ab`，126场、32线程nested/early、基础/shadow三组及runner34项通过；28线程整段仍落后TCLock，少数节点进度另列 |
 | [前版预取/诊断/直接CPU热值](../bench/tclock_compare/results/20260926-prefetch-unlock.md) | `77eb9a2`，126场三方比较、32线程nested/early及归档审计通过；各候选和回退分列 |
 | [前版六后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md) | `d439df8`，126场三方比较、32线程nested/early及归档审计通过；pilot与撤回候选分列 |
