@@ -8,18 +8,20 @@
 ## 1. 当前状态与证据边界
 
 当前采用有界512正文及独立512扫描预算、六后继准入、minimal IP预取、直接per-CPU热值。
-本轮在此基础上压缩continuation前缀以合并IP/SP缓存行、使用原生内联ticket guard、
+本轮在此基础上压缩continuation前缀以合并IP/SP缓存行、用带代际的原子状态替代ticket guard、
 折叠JIT的RIP常量地址，并定向调整低竞争解锁布局；见[全链路报告](../bench/tclock_compare/results/20260927-flow.md)。
 采样策略、预取距离、owner/ACK及批次边界保持不变。此前维护删除单锁字迁移后遗留的
 恒等包装和未使用宏，精简失败返回赋值，并显式内联ticket叶子校验；
 [维护验证](../bench/tclock_compare/results/20260926-cleanup.md)包括基础/相关5组、两种构建、81场定向比较和36线程nested/early；
 最高KD峰值较前次共有点变化-0.11%至+0.94%，不作为新性能收益或全线程无回退证明。
 
-最近完整性能矩阵为`aef982b`：15线程点三方135场，结果见
-[完整c1复测](../bench/tclock_compare/results/20260926-c1-through36.md)。该轮36线程KD相对TCLock
-峰值/整段为+2.30%/+1.09%；28线程仍为-0.68%/-1.92%，24线程峰值领先而整段略低。
-1线程比Linux低约5%；7/8线程低于TCLock。Linux在28/32/36出现更高峰值，快慢样本均保留。
-上述结果属于维护前冻结构建；新构建的定向检查不得替代完整矩阵或证明全线程无回退。
+最近完整性能矩阵为本轮原子ticket版本：15线程点三方135场，结果见
+[全链路报告第二阶段](../bench/tclock_compare/results/20260927-flow.md#第二阶段去掉ticket-guard)。
+KD在8/12/16/20/24/28/32/36线程峰值均高于TCLock，幅度约2.2%–10.6%；
+7线程仍低约2.3%，1线程仍比Linux低约5.1%，2线程约低0.4%。
+对第一阶段guard版本，共有点1/4/8/16/20/28/32/36峰值上升，2/3线程分别低3.31%/1.33%；
+两阶段不是同场配对，不能宣布全线程无回退。Linux在本轮28线程仍出现高峰；
+以前32/36线程的有效高峰不因本轮未出现而作废，所有快慢样本保留。
 512选型、撤回候选及早期功能证据统一见[跨node报告](../bench/tclock_compare/results/20260926-cross-node.md)。
 
 当前 c1 比较覆盖 1–8/12/16/20/24/28/32/36 线程，worker 顺序放置 CPU 0–35：
@@ -59,7 +61,7 @@ NUMA-on继续作为provider和比较运行器默认值。优化优先级按实�
 | --- | --- | --- |
 | 入口/热度 | CPU本地获取/MCS计数，512次边界采时；冷CAS内联，无每次全局热计数 | 多锁碰撞或阶段变化需要独立负载；不新增每次时钟 |
 | 原生pending/MCS | 真实锁字CAS/tail交换和后继release；这是排他/排队成本 | 不能通过删除锁原子或抢占配对降低成绩 |
-| ticket | 私有guard改用`__raw_spin_*`，保留同步，省掉实验内核公共宏的宽clobber壳 | native借用等待可先只读轮询，再加guard确认；目前每次轮询仍取guard |
+| ticket | 删除私有guard，代际/状态/kind/借用数共用一个64位CAS字；分配release发布，等待acquire读 | 后续可测独占OWNED/RELEASED转换的store化；当前保留完整CAS，避免混合优化 |
 | 请求发布 | continuation内result保留32位，内部kind压为字节并重排；frame从32移到24，MINIMAL IP/SP共行 | 记录仍704字节；这是五行变四行的几何，不是已测cache miss次数 |
 | NUMA选择 | 有界512正文/独立512扫描；连续延期链只改必要接点，远端前缀最后优先交接 | 先测批终止原因；继续放大上限可能损害少数节点进度 |
 | 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；不先追远端task/frame找地址 | 新布局允许评估MINIMAL IP/SP重复hint；FULL/借用包需保留覆盖，远距离预取旧回退仍有效 |
@@ -67,11 +69,11 @@ NUMA-on继续作为provider和比较运行器默认值。优化优先级按实�
 | JIT正文 | 翻译时折叠RIP常量LEA及可表达的绝对disp32访存，省scratch指令 | callee出口SP重复写；未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
 | wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 去掉虚拟CALL栈写需保持真实续点及FULL契约，不是直接删保存指令 |
 | 退休/通知 | 先pop/退休，再release唤醒；队列头和轮询行分离 | 原owner ACK、最后一次packet读取和节点复用顺序保持不变 |
-| 嵌套/原生后缀 | 未启用的注入控制仍做共享cmpxchg；通用dispatcher尾部有MFENCE | 可先读开关再CAS；MFENCE需完成所有发布调用点审计，普通c1 batch不经过它 |
+| 嵌套/原生后缀 | 未启用的注入控制仍做共享cmpxchg；通用dispatcher尾部有MFENCE；native路由表仍有共享锁 | 可复用本地native-root避开无关全局查询，先读注入开关再CAS；MFENCE需审计所有发布点，普通c1 batch不经过它 |
 
 普通c1生成代码没有KD新增的MFENCE/LFENCE/SFENCE。x86的`barrier()`、普通
 `smp_rmb/wmb()`及这里的acquire/release通常只是编译顺序或MOV；删除它们不等于省掉硬件栅栏。
-真正的locked操作包括锁字仲裁、ticket guard以及batch lease。`run_combiner`的显式
+真正的locked操作包括锁字仲裁、ticket状态CAS以及batch lease。`run_combiner`的显式
 `smp_mb()`位于拒绝交接分支，不是每个代理正文的成本。本轮保留所有发布/ACK顺序，
 不新增访问时安全检查，不把统计近似原则套用到存储存活协议。
 
@@ -132,6 +134,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 
 - [x] continuation在已有低12 KiB区域内错位；原始基址释放、全部槽位和局部初始化回滚已验证。
 - [x] 压缩内部kind而保留32位result；MINIMAL IP/SP合并到同一行，记录步长与分配容量不变。
+- [x] 删除ticket私有raw spinlock与临时抢占pin，remote借用只操作一个带代际的原子字；
+  最后put发布frame退休，原waiter只读等待，保留原有request pin和真实ACK契约。
 - [ ] 若继续定位缓存原因，独立控制代码地址与数据放置；先核对guest PMU能力，
   没有硬件事件时只报告地址几何模型，不宣称测到cache-to-cache或L1 miss因果。
 - [x] 核对spin waiter_count消费者，保留发布/退出钩子，以per-CPU事件总数替换逐请求共享写；
@@ -139,6 +143,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 - [ ] 继续核对ticket引用及source lease消费者，再评估按批持有、所有权转移和重复读取。
   owner/ACK及真正排空计数保持精确；spin诊断修改不推广到mutex计数。
 - [ ] 用单锁与独立多锁分别检验布局、footprint和碰撞，不把每CPU缓存盲目放大。
+- [ ] 按native/mixed负载测source-ready与native-list锁、source gate与冷写锁的同缓存行影响；
+  plain c1没有native列表更新，不能将这些潜在false sharing当作其已测瓶颈。
 
 位置：[diagnostics.inc](../kernel_module/spin/diagnostics.inc)、
 [kd_spin_entry.c](../kernel_module/kd_spin_entry.c)、[kd_source.c](../kernel_module/kd_source.c)。
@@ -176,6 +182,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
   先保持一次副作用、原owner ACK和排空，再分析服务成本。
 - [ ] 继续定位28线程20+8节点分布的短批与整段差距；先区分批上限、无后继及entry拒绝，
   不新增每请求时钟；修改上限或NUMA选择时同时检查少数节点进度。
+- [ ] 诊断24线程20+4放置的服务偏斜：本轮KD峰值获选场node1整段份额仅1.27%；
+  512正文/扫描上限及正进度不等于公平或最大等待时间保证，吞吐之外需保留worker分布。
 - [ ] 按实际需求扩展多锁、正文长度、NUMA和公平性；单锁spin的TCLock结果不能
   推广为mutex或任意嵌套性能。
 

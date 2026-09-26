@@ -21,6 +21,9 @@ typedef uint16_t u16;
 typedef struct {
 	int counter;
 } atomic_t;
+typedef struct {
+	unsigned long counter;
+} atomic64_t;
 /* Guard primitive and KD word both occupy four bytes in this CPU model. */
 typedef struct kd_spinlock {
  union { atomic_t val; struct { u8 locked, pending; };
@@ -29,6 +32,11 @@ typedef struct kd_spinlock {
 typedef struct kd_spinlock kd_spinlock_t;
 #define KD_SPIN_TYPE_H
 #define atomic_set(p, v) ((p)->counter = (v))
+#define atomic64_read(p) __atomic_load_n(&(p)->counter, __ATOMIC_RELAXED)
+#define atomic64_read_acquire(p) __atomic_load_n(&(p)->counter, __ATOMIC_ACQUIRE)
+#define atomic64_set(p, v) __atomic_store_n(&(p)->counter, (v), __ATOMIC_RELAXED)
+#define atomic64_set_release(p, v) __atomic_store_n(&(p)->counter, (v), __ATOMIC_RELEASE)
+#define atomic64_cmpxchg(p, old, v) cmpxchg(&(p)->counter, old, v)
 #define KD_SPINLOCK_INITIALIZER { .val = { 0 } }
 static inline void kd_spin_init(kd_spinlock_t *p) { p->val.counter = 0; }
 struct kd_spin_fast_cpu { kd_spinlock_t *held; struct task_struct *owner; unsigned int nondelegated; };
@@ -118,9 +126,5 @@ static inline void plain_guard_unlock(raw_spinlock_t *lock)
 }
 #define raw_spin_lock(lock) plain_guard_lock(lock)
 #define raw_spin_unlock(lock) plain_guard_unlock(lock)
-/* Private ticket guards bypass the patched public clobber shell, but keep
- * the same native exclusion, IRQ preservation and temporary preemption pin. */
-#define __raw_spin_lock(lock) plain_guard_lock(lock)
-#define __raw_spin_unlock(lock) plain_guard_unlock(lock)
 
 #endif

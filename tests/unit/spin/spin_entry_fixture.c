@@ -22,9 +22,35 @@ static unsigned int lookup_pins, pool_reads;
 static bool kd_spin_fast_active(void) { return false; }
 static bool kd_spin_fast_idle(void) { return true; }
 
+/* Force a peer transition after a production snapshot but before its CAS.
+ * This exercises retry/ABA decisions, not a hardware memory-order litmus. */
+static void (*cas_peer)(void);
+static unsigned long ticket_cmpxchg(atomic64_t *control, unsigned long old,
+				   unsigned long value)
+{
+	if (cas_peer) {
+		void (*peer)(void) = cas_peer;
+
+		cas_peer = NULL;
+		peer();
+	}
+	return cmpxchg(&control->counter, old, value);
+}
+#undef atomic64_cmpxchg
+#define atomic64_cmpxchg(p, old, v) ticket_cmpxchg(p, old, v)
+
 static void (*wait_peer)(void);
 #define cpu_relax() do { if (wait_peer) wait_peer(); } while (0)
 #include "entry_production.h"
+
+_Static_assert(sizeof(((struct kd_spin_entry *)0)->control) == 8,
+	       "ticket transitions must use one 64-bit atomic");
+_Static_assert(KD_ENTRY_NATIVE <= KD_ENTRY_STATE_MASK,
+	       "all ticket phases must fit below the kind bit");
+_Static_assert(KD_ENTRY_SEQUENCE_MAX == ((1UL << 48) - 1),
+	       "ticket generations must not silently shrink or wrap");
+_Static_assert((KD_ENTRY_REF_MASK & (KD_ENTRY_STATE_MASK | KD_ENTRY_VIRTUAL_BIT)) == 0,
+	       "ticket borrows must not overlap phase or kind");
 
 static raw_spinlock_t locks[KD_SPIN_ENTRY_SLOTS + 1];
 
@@ -43,7 +69,8 @@ static void retire_peer(void)
 {
 	bool last;
 
-	CHECK(mock_preempt == 1 && retiring.entry->native_refs);
+	CHECK(mock_preempt == 1 &&
+	      kd_entry_refs(atomic64_read(&retiring.entry->control)));
 	if (++retirement_polls < 3)
 		return;
 	select_cpu(1);
@@ -53,7 +80,7 @@ static void retire_peer(void)
 }
 
 /* A final physical ACK cannot consume the root pin while a no-lock relay
- * still borrows the ticket. Exercise the actual guarded wait/end functions. */
+ * still borrows the ticket. Exercise the actual atomic wait/end functions. */
 static void retirement_barrier(void)
 {
 	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &retiring));
@@ -117,7 +144,7 @@ static void lifecycle(void)
 	      -EDEADLK);
 	CHECK(mock_preempt == 1 && !other.entry);
 	CHECK(kd_spin_entries_check_idle() == -EBUSY);
-	/* Guard's own pin must not make an unpinned caller look valid. */
+	/* Every local mutation must reject an unpinned caller before work. */
 	mock_preempt = 0;
 	CHECK(kd_spin_entry_word(&ref) == NULL);
 	CHECK(kd_spin_entry_claim(&ref) == -EPERM);
@@ -142,13 +169,13 @@ static void lifecycle(void)
 	gate->locked = 1;
 	guards = map_locks;
 	CHECK(kd_spin_entry_claim(&ref) == 0);
-	CHECK(map_locks == guards + 1 && !mock_irq);
+	CHECK(map_locks == guards && !mock_irq);
 	CHECK(kd_spin_entry_claim(&ref) == 0);
 	CHECK(kd_spin_entry_end(&ref) == -EBUSY && locks[0].held);
 	CHECK(kd_spin_entry_borrow_get(&ref) == -EINVAL);
 	guards = map_locks;
 	CHECK(kd_spin_entry_release_origin(&ref) == 0);
-	CHECK(map_locks == guards + 1 && !mock_irq);
+	CHECK(map_locks == guards && !mock_irq);
 	CHECK(locks[0].held && gate->locked == 1 && mock_preempt == 1);
 	CHECK(kd_spin_entry_release_origin(&ref) == -EBUSY);
 	gate->val.counter = 0;
@@ -166,13 +193,12 @@ static void lifecycle(void)
 }
 
 /* Live tickets keep their own pin, while root callers cannot own a ticket.
- * Exercise those two cases, including read-only access while guard is held. */
+ * Exercise those two cases, including read-only access with another owner pin. */
 static void read_only_queries(void)
 {
 	struct kd_spin_ref ref = { 0 }, found = { 0 };
 	kd_spinlock_t *gate;
 	unsigned int pins = lookup_pins, reads = pool_reads, guards = map_locks;
-	unsigned long flags;
 
 	CHECK(mock_preempt == 0);
 	CHECK(!kd_spin_entry_task_active() && !kd_spin_entry_native_active());
@@ -187,10 +213,10 @@ static void read_only_queries(void)
 	CHECK(found.entry == ref.entry && found.sequence == ref.sequence);
 	CHECK(kd_spin_entry_word(&ref) == gate);
 	CHECK(lookup_pins == pins && map_locks == guards && mock_preempt == 1);
-	raw_spin_lock_irqsave(&ref.entry->guard, flags);
+	preempt_disable();
 	CHECK(kd_spin_entry_word(&ref) == gate);
-	raw_spin_unlock_irqrestore(&ref.entry->guard, flags);
-	/* CPU/task/generation checks still protect the guard-free read. */
+	preempt_enable();
+	/* CPU/task/generation checks still protect the read-only query. */
 	current = &tasks[1];
 	CHECK(kd_spin_entry_word(&ref) == NULL);
 	current = &tasks[0];
@@ -279,6 +305,109 @@ static void reclaim(void)
  CHECK(kd_spin_entry_end(&ref) == 0);
 }
 
+/* A peer can have validated the old WAITING tag when the owner frees and
+ * reuses the same address. Only the full generation+state+count CAS may commit. */
+static struct kd_spin_ref interleaved;
+static bool replacement_borrow;
+
+static void recycle_during_cas(void)
+{
+	unsigned int caller = mock_cpu;
+	bool last;
+
+	select_cpu(0);
+	if (replacement_borrow)
+		CHECK(!kd_spin_entry_borrow_put(&interleaved, &last) && last);
+	CHECK(!kd_spin_entry_end(&interleaved));
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &interleaved));
+	if (replacement_borrow)
+		CHECK(!kd_spin_entry_borrow_get(&interleaved));
+	select_cpu(caller);
+}
+
+static void mark_native_during_cas(void)
+{
+	unsigned int caller = mock_cpu;
+
+	select_cpu(0);
+	CHECK(!kd_spin_entry_mark_native(&interleaved));
+	select_cpu(caller);
+}
+
+static void borrow_during_cas(void)
+{
+	unsigned int caller = mock_cpu;
+
+	select_cpu(1);
+	CHECK(!kd_spin_entry_borrow_get(&interleaved));
+	select_cpu(caller);
+}
+
+static void atomic_interleavings(void)
+{
+	struct kd_spin_ref stale;
+	bool last = false;
+
+	/* A delayed get must not borrow a new occupant of the same slot. */
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &interleaved));
+	stale = interleaved;
+	select_cpu(1);
+	cas_peer = recycle_during_cas;
+	CHECK(kd_spin_entry_borrow_get(&stale) == -ESTALE);
+	CHECK(interleaved.entry == stale.entry &&
+	      interleaved.sequence != stale.sequence);
+	CHECK(!kd_entry_refs(atomic64_read(&interleaved.entry->control)));
+	select_cpu(0);
+	CHECK(!kd_spin_entry_end(&interleaved));
+
+	/* The same ABA must not let a duplicated stale put retire a new borrow. */
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &interleaved));
+	CHECK(!kd_spin_entry_borrow_get(&interleaved));
+	stale = interleaved;
+	replacement_borrow = true;
+	select_cpu(1);
+	cas_peer = recycle_during_cas;
+	CHECK(kd_spin_entry_borrow_put(&stale, &last) == -ESTALE);
+	CHECK(kd_entry_refs(atomic64_read(&interleaved.entry->control)) == 1);
+	CHECK(!kd_spin_entry_borrow_put(&interleaved, &last) && last);
+	select_cpu(0);
+	CHECK(!kd_spin_entry_end(&interleaved));
+	replacement_borrow = false;
+
+	/* Native publication closes get admission even after its initial read. */
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &interleaved));
+	select_cpu(1);
+	cas_peer = mark_native_during_cas;
+	CHECK(kd_spin_entry_borrow_get(&interleaved) == -EINVAL);
+	CHECK(!kd_entry_refs(atomic64_read(&interleaved.entry->control)));
+	select_cpu(0);
+	CHECK(!kd_spin_entry_end(&interleaved));
+
+	/* A borrow winning against mark-native survives the retry and blocks end. */
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &interleaved));
+	cas_peer = borrow_during_cas;
+	CHECK(!kd_spin_entry_mark_native(&interleaved));
+	CHECK(kd_entry_refs(atomic64_read(&interleaved.entry->control)) == 1);
+	CHECK(kd_spin_entry_end(&interleaved) == -EBUSY);
+	select_cpu(1);
+	CHECK(!kd_spin_entry_borrow_put(&interleaved, &last) && last);
+	select_cpu(0);
+	CHECK(!kd_spin_entry_end(&interleaved));
+
+	/* The same admission race prevents local claim and slot retirement. */
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &interleaved));
+	locks[0].locked = 1;
+	cas_peer = borrow_during_cas;
+	CHECK(kd_spin_entry_claim(&interleaved) == -EBUSY);
+	CHECK(!kd_spin_entry_borrow_put(&interleaved, &last) && last);
+	locks[0].locked = 0;
+	cas_peer = borrow_during_cas;
+	CHECK(kd_spin_entry_end(&interleaved) == -EBUSY);
+	CHECK(!kd_spin_entry_borrow_put(&interleaved, &last) && last);
+	CHECK(!kd_spin_entry_end(&interleaved));
+	CHECK(!cas_peer && !mock_preempts[0] && !mock_preempts[1]);
+}
+
 static void capacity(void)
 {
 	struct kd_spin_ref refs[KD_SPIN_ENTRY_SLOTS] = { 0 }, extra = { 0 },
@@ -300,19 +429,33 @@ static void capacity(void)
 	CHECK(refs[0].sequence != stale.sequence &&
 	      refs[0].entry == stale.entry);
 	CHECK(kd_spin_entry_end(&stale) == -ESTALE);
-	refs[0].entry->native_refs = UINT_MAX;
+	atomic64_set(&refs[0].entry->control,
+		     atomic64_read(&refs[0].entry->control) | KD_ENTRY_REF_MASK);
 	CHECK(kd_spin_entry_borrow_get(&refs[0]) == -EOVERFLOW);
-	refs[0].entry->native_refs = 0;
+	atomic64_set(&refs[0].entry->control,
+		     atomic64_read(&refs[0].entry->control) & ~KD_ENTRY_REF_MASK);
 	CHECK(kd_spin_entry_borrow_get(&refs[0]) == 0);
 	CHECK(kd_spin_entry_borrow_put(&refs[0], &last) == 0 && last);
 	for (unsigned int i = 0; i < KD_SPIN_ENTRY_SLOTS; i++)
 		CHECK(kd_spin_entry_end(&refs[i]) == 0);
 	CHECK(mock_preempt == 0);
+	/* The last representable generation succeeds; subsequent allocation
+	 * fails without reusing a generation, including an out-of-range pool. */
+	kd_spin_entries[0].sequence = KD_ENTRY_SEQUENCE_MAX - 1;
+	CHECK(!kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &extra));
+	CHECK(extra.sequence == KD_ENTRY_SEQUENCE_MAX);
+	stale = extra;
+	stale.sequence |= 1UL << 48;
+	CHECK(kd_spin_entry_borrow_get(&stale) == -ESTALE);
+	CHECK(kd_spin_entry_end(&stale) == -ESTALE);
+	CHECK(!kd_spin_entry_end(&extra));
+	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &extra) ==
+	      -EOVERFLOW);
+	CHECK(mock_preempt == 0 && !extra.entry);
 	kd_spin_entries[0].sequence = ULONG_MAX;
 	CHECK(kd_spin_entry_begin(&locks[0], KD_SPIN_ENTRY_HOOK, &extra) ==
 	      -EOVERFLOW);
 	CHECK(mock_preempt == 0 && !extra.entry);
-
 }
 
 int main(void)
@@ -334,8 +477,9 @@ int main(void)
 	read_only_queries();
 	remote_native();
 	reclaim();
+	atomic_interleavings();
 	capacity();
-	CHECK(kd_spin_entries_check_idle() == 0);
+	CHECK(kd_spin_entries_check_idle() == 0 && map_locks == 0);
 	CHECK(mock_preempts[0] == 0 && mock_preempts[1] == 0 && !mock_irq);
 	kd_spin_entries_exit();
 	CHECK(!kd_spin_entries && kd_spin_entries_check_idle() == 0);

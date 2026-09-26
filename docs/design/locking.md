@@ -97,8 +97,8 @@ its 16-byte ticket reference. Fresh spin admission combines the two execution
 context queries without changing their predicate or the acquisition pin.
 
 Ticket presence, generation, locality and pin predicates are small inline
-helpers. Their callers still own reference validation and the required guard;
-inlining does not weaken those checks. Keep the contended acquisition and
+helpers, alongside the packed-state decoders and CAS helper. Reference validation
+and publication ordering remain at their use sites. Keep the contended acquisition and
 assembly/context-switch boundaries separate: forcing large helpers inline can
 increase caller spills and instruction footprint. The explicit lock pointer is
 the scheduling word itself; no identity-only conversion helper is needed.
@@ -137,12 +137,10 @@ Physical claim records that the caller already acquired the KD word. Release
 retires ticket ownership metadata, then the scheduler performs exactly one
 release store on the ownership byte, preserving pending/tail. Early release and
 reclaim keep the original ticket alive; reclaim first acquires the KD word again.
-Claim/reclaim and release each validate and commit within one guard interval:
-there is no blocking acquisition or physical release inside either transition.
-Private ticket guards use Linux's `__raw_spin_lock/__raw_spin_unlock` helpers:
-they retain exclusion, lockdep and preemption pairing without the experimental
-kernel's public caller-clobber wrapper. These guards never delegate a workload.
-CPU/task/generation, legal-state and borrow checks remain. Every intact spin
+Claim/reclaim and release validate the local identity and commit the packed ticket
+state with CAS; neither transition acquires a metadata spinlock or releases the
+physical lock. The complete ticket protocol is defined below.
+Every intact spin
 slowpath return, including node/continuation capacity fallback, has already
 claimed or reclaimed its ticket; the public entry does not repeat that claim.
 The clobber unlock provider first handles paired cold ownership with locked-byte
@@ -176,11 +174,49 @@ The current runtime assumes voluntary kernel preemption. Ticket lifetime still
 retains the begin/end preemption pin, including native suffix execution and ACK
 waiting. A caller without that pin cannot own a ticket, so lookup returns before
 scanning the per-CPU pool. A pinned lookup adds no temporary pin/unpin pair.
-Reading a local ticket's word also takes no guard: CPU/task/generation checks
-remain, only its local task changes slot membership, and remote borrowers modify
-`native_refs` only. Mutations still serialize with those borrowers under guard.
 IRQ-off task callers are admitted; hardirq/softirq contexts remain native.
 Physical-owner checks remain independent of the kernel's preemption model.
+
+Each CPU has 32 stable ticket slots and an owner-local occupied bitmap. Only the
+pinned allocating task reserves or ends a slot; allocation and duplicate/lookup
+scans use that bitmap. The task, origin word and CPU identity stay separate from
+one `atomic64_t control`:
+
+| Bits | Field | Meaning |
+| --- | --- | --- |
+| 63–16 | Generation | Nonzero acquisition identity, monotonically allocated by the local pool |
+| 15–4 | Native borrows | Exact number of executor frames still borrowing this ticket |
+| 3 | Virtual kind | Immutable for a live ticket; virtual tickets cannot admit native borrows |
+| 2–0 | Phase | FREE, WAITING, OWNED, RELEASED or NATIVE |
+
+Each entry stores generation, phase, kind and borrow count only in `control`,
+with no private ticket guard. Remote get/put operations access only that word. They validate the
+full `ref.sequence` and compare the complete word on every CAS attempt, so a
+delayed operation cannot change a reused slot. Local operations check the original
+CPU/task and acquisition pin before their first transition; the pin prevents slot
+reuse across retries. Reading the local lock word and walking occupied slots
+need no extra pin or atomic write.
+
+| Operation | Transition and ordering |
+| --- | --- |
+| Reserve | Initialize owner metadata and local membership, then release-store a fresh generation in WAITING with zero borrows. No peer can mutate the preceding FREE generation. |
+| Claim/reclaim | Confirm the caller already owns the physical KD word; CAS WAITING/RELEASED with zero borrows to OWNED. Claim is idempotent for an already OWNED live ticket. |
+| Release origin | CAS OWNED to RELEASED, preserving the generation. The scheduler performs the separate physical release. |
+| Borrow get | CAS-increment only a WAITING hook ticket, before publishing native readiness. A competing claim or end cannot commit over the increment. |
+| Mark native | CAS WAITING to NATIVE, preserving all admitted borrows. Further gets fail; existing puts remain valid. |
+| Borrow put/wait | After cleanup and frame pop, an ordered CAS decrements WAITING/NATIVE borrows. The owner polls with acquire loads and `cpu_relax()`; observing zero also observes the preceding retirements. Polling performs no locked RMW. |
+| End | CAS a zero-borrow WAITING/RELEASED/NATIVE ticket to FREE while retaining its generation, then clear owner metadata and local membership. `end_pinned()` retains the request pin; `end()` consumes it. |
+
+The public ticket API and 16-byte `kd_spin_ref` remain unchanged. Limits are
+explicit: at most 4095 simultaneous borrows per ticket and a nonwrapping 48-bit
+generation space (`2^48−1` acquisitions per CPU pool during a module lifetime).
+Exceeding either limit returns
+`-EOVERFLOW`; generations never wrap, and an out-of-range caller sequence cannot
+alias a live generation. These are protocol counts, independent of approximate
+hotness/diagnostic sampling and the hot table's separate busy guard.
+The natural x86_64 ticket layout is 32 bytes, with no added cache-line padding.
+Implementation and measured validation are tracked in the
+[2026-09-27 flow report](../../bench/tclock_compare/results/20260927-flow.md).
 
 One stack-local `kd_spin_request` carries that physical ticket and the KD word through
 pending/tail helpers, node admission, queue-head claims and combiner batches.
@@ -225,7 +261,7 @@ Unstarted work can receive native handoff. Partial JIT progress cannot be
 converted into entry replay.
 
 Spin uses ordinary `raw_spin_lock` semantics: pin preemption without saving,
-disabling or restoring IRQs/BH. Ticket guards are task-only plain raw spinlocks;
+disabling or restoring IRQs/BH. Ticket metadata reuses the acquisition pin;
 shared mutex/native infrastructure retains its separate synchronization contract.
 Physical waiters switch to the 8 KiB polling stack before publication, so IRQ
 entry cannot write the task stack lent to JIT. Virtual waiters keep an independent

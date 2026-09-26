@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Per-acquisition origin tickets, distinct from reusable scheduling nodes.
- * Generation checks prevent a stale ref from addressing a recycled ticket.
- * Hook and virtual nested requests retain their own task/CPU/physical ownership lifetime;
- * native suffix borrowing ends only after the real owner's final ACK. */
+ * Generation, phase and native borrows share one atomic word: an old remote
+ * CAS cannot mutate a recycled slot. Only the pinned owner allocates/ends.
+ * Native suffix borrowing ends after the real owner's final ACK/frame pop. */
+#include <linux/atomic.h>
 #include <linux/errno.h>
 #include <linux/limits.h>
 #include <linux/percpu.h>
@@ -16,26 +17,33 @@
 enum kd_spin_entry_state {
 	KD_ENTRY_FREE,
 	KD_ENTRY_WAITING,
-	KD_ENTRY_CLAIMING,
 	KD_ENTRY_OWNED,
-	KD_ENTRY_RELEASING,
 	KD_ENTRY_RELEASED,
 	KD_ENTRY_NATIVE,
 };
 
+/* x86_64: 48-bit generation, 12-bit borrow count, immutable kind and phase.
+ * The finite limits fail admission instead of wrapping into a live handle.
+ * Keeping kind here lets remote borrowers inspect only this atomic word. */
+#define KD_ENTRY_STATE_MASK 7UL
+#define KD_ENTRY_VIRTUAL_BIT (1UL << 3)
+#define KD_ENTRY_REF_SHIFT 4
+#define KD_ENTRY_REF_ONE (1UL << KD_ENTRY_REF_SHIFT)
+#define KD_ENTRY_REF_MAX ((1UL << 12) - 1)
+#define KD_ENTRY_REF_MASK (KD_ENTRY_REF_MAX << KD_ENTRY_REF_SHIFT)
+#define KD_ENTRY_SEQUENCE_SHIFT 16
+#define KD_ENTRY_SEQUENCE_MAX (ULONG_MAX >> KD_ENTRY_SEQUENCE_SHIFT)
+#define KD_ENTRY_LOW_MASK ((1UL << KD_ENTRY_SEQUENCE_SHIFT) - 1)
+
+_Static_assert(KD_ENTRY_NATIVE <= KD_ENTRY_STATE_MASK,
+	       "ticket phase must fit below the immutable kind bit");
+_Static_assert((KD_ENTRY_STATE_MASK | KD_ENTRY_VIRTUAL_BIT | KD_ENTRY_REF_MASK) ==
+	       KD_ENTRY_LOW_MASK, "ticket fields must fill the low 16 bits");
+
 struct kd_spin_entry {
-	/* Private metadata uses Linux's native inline guard API below. The
-	 * public raw_spin_* macros on kdclobber2 carry the broad delegation
-	 * clobber ABI, which would spill registers around every ticket update.
-	 * __raw_spin_* retains lockdep, exclusion and balanced preemption; this
-	 * guard never owns a workload continuation or enters delegation. */
-	raw_spinlock_t guard;
+	atomic64_t control;
 	struct task_struct *task;
 	raw_spinlock_t *origin;
-	unsigned long sequence;
-	unsigned int native_refs;
-	enum kd_spin_entry_kind kind;
-	enum kd_spin_entry_state state;
 	int cpu;
 };
 
@@ -48,30 +56,19 @@ struct kd_spin_entry_pool {
 
 static struct kd_spin_entry_pool __percpu *kd_spin_entries;
 
-/* Allocate and initialize the per-CPU origin ticket pool.
- * No memory allocation is allowed while holding a lock admission stack.
- */
 int kd_spin_entries_init(void)
 {
 	int cpu;
-	unsigned int i;
 
 	if (kd_spin_entries)
 		return -EBUSY;
-	/* Large static per-CPU objects consume the module reserved chunk. Allocate
-	 * the fixed pool once at init instead, never in a lock acquisition path.
-	 */
+	/* Allocate the fixed pool at init, never on the lock admission stack. */
 	kd_spin_entries = alloc_percpu(struct kd_spin_entry_pool);
 	if (!kd_spin_entries)
 		return -ENOMEM;
-	for_each_possible_cpu(cpu) {
-		struct kd_spin_entry_pool *pool =
-			per_cpu_ptr(kd_spin_entries, cpu);
-
-		memset(pool, 0, sizeof(*pool));
-		for (i = 0; i < KD_SPIN_ENTRY_SLOTS; i++)
-			raw_spin_lock_init(&pool->entries[i].guard);
-	}
+	for_each_possible_cpu(cpu)
+		memset(per_cpu_ptr(kd_spin_entries, cpu), 0,
+		       sizeof(struct kd_spin_entry_pool));
 	return 0;
 }
 
@@ -82,31 +79,60 @@ void kd_spin_entries_exit(void)
 	kd_spin_entries = NULL;
 }
 
-/* These leaf checks run under the caller's ticket/guard contract. Keep
- * validation at its use site without duplicating the lifecycle operations. */
-static __always_inline int kd_entry_valid(const struct kd_spin_ref *ref)
+static __always_inline enum kd_spin_entry_state kd_entry_state(unsigned long control)
 {
-	return ref->entry->state != KD_ENTRY_FREE &&
-			       ref->entry->sequence == ref->sequence ?
-		       0 :
-		       -ESTALE;
+	return control & KD_ENTRY_STATE_MASK;
 }
 
-static __always_inline int kd_entry_local(const struct kd_spin_ref *ref)
+static __always_inline unsigned int kd_entry_refs(unsigned long control)
 {
-	int ret = kd_entry_valid(ref);
+	return (control & KD_ENTRY_REF_MASK) >> KD_ENTRY_REF_SHIFT;
+}
+
+static __always_inline unsigned long
+kd_entry_with_state(unsigned long control, enum kd_spin_entry_state state)
+{
+	return (control & ~KD_ENTRY_STATE_MASK) | state;
+}
+
+static __always_inline int kd_entry_valid(const struct kd_spin_ref *ref,
+					 unsigned long control)
+{
+	/* Compare the complete caller generation: masking an invalid high bit
+	 * would alias it onto a valid 48-bit generation. */
+	return kd_entry_state(control) != KD_ENTRY_FREE &&
+	       (control >> KD_ENTRY_SEQUENCE_SHIFT) == ref->sequence ? 0 : -ESTALE;
+}
+
+static __always_inline int kd_entry_local(const struct kd_spin_ref *ref,
+					 unsigned long control)
+{
+	int ret = kd_entry_valid(ref, control);
 
 	if (ret)
 		return ret;
-	if (ref->entry->task != current ||
-	    ref->entry->cpu != raw_smp_processor_id())
+	if (READ_ONCE(ref->entry->cpu) != raw_smp_processor_id() ||
+	    READ_ONCE(ref->entry->task) != current)
 		return -EPERM;
+	/* After local validation, the caller's pin prevents slot reuse across
+	 * CAS retries. Only remote borrow counts can change its current tag. */
 	return 0;
 }
 
-/* Check before taking guard: its own preemption pin cannot stand in for the
- * request pin which end() consumes after dropping guard.
- */
+/* A successful CAS includes the generation even on a count-only update.
+ * A failed CAS supplies the next snapshot without another shared load. */
+static __always_inline bool kd_entry_update(struct kd_spin_entry *entry,
+					   unsigned long *control,
+					   unsigned long next)
+{
+	unsigned long before = atomic64_cmpxchg(&entry->control, *control, next);
+
+	if (before == *control)
+		return true;
+	*control = before;
+	return false;
+}
+
 static __always_inline bool kd_entry_pinned(void)
 {
 	return in_task() && (preempt_count() & PREEMPT_MASK);
@@ -117,18 +143,13 @@ static __always_inline bool kd_entry_ref_present(const struct kd_spin_ref *ref)
 	return ref && ref->entry && ref->sequence;
 }
 
-/* Every live ticket retains its begin() preemption pin until end(). An
- * unpinned caller therefore has no ticket to find. Reuse that existing pin:
- * this read-only walk cannot schedule and needs no temporary pin/unpin pair.
- * Only the local task changes membership/state; remote executors change only
- * native_refs under guard, never recycle a slot or migrate its task.
- */
+/* The existing request pin protects membership and identity. Remote peers
+ * update only the packed count, never recycle a slot or migrate its owner. */
 static bool kd_entry_lookup(raw_spinlock_t *origin, bool native,
 			    struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry_pool *pool;
 	unsigned long occupied;
-	bool found = false;
 
 	if (!kd_entry_pinned() || !kd_spin_entries)
 		return false;
@@ -136,18 +157,20 @@ static bool kd_entry_lookup(raw_spinlock_t *origin, bool native,
 	for (occupied = pool->occupied; occupied; occupied &= occupied - 1) {
 		struct kd_spin_entry *entry =
 			&pool->entries[__builtin_ctzl(occupied)];
+		unsigned long control = atomic64_read(&entry->control);
 
-		if (READ_ONCE(entry->state) == KD_ENTRY_FREE ||
+		if (kd_entry_state(control) == KD_ENTRY_FREE ||
 		    entry->task != current ||
 		    (origin && entry->origin != origin) ||
-		    (native && entry->state != KD_ENTRY_NATIVE))
+		    (native && kd_entry_state(control) != KD_ENTRY_NATIVE))
 			continue;
 		if (ref)
-			*ref = (struct kd_spin_ref){ entry, entry->sequence };
-		found = true;
-		break;
+			*ref = (struct kd_spin_ref){
+				entry, control >> KD_ENTRY_SEQUENCE_SHIFT
+			};
+		return true;
 	}
-	return found;
+	return false;
 }
 
 bool kd_spin_entry_find(raw_spinlock_t *origin, struct kd_spin_ref *ref)
@@ -162,69 +185,53 @@ bool kd_spin_entry_task_active(void)
 
 bool kd_spin_entry_native_active(void)
 {
-	/* A lightweight KD root is ordinary physical ownership, not a native
-	 * continuation. Its nested hooks still need discovery and their own
-	 * tickets; only a native suffix  suppresses that admission. */
+	/* A lightweight KD root owns the physical lock but is not a native
+	 * continuation. Its nested hooks still need their own tickets. */
 	return kd_entry_lookup(NULL, true, NULL);
 }
 
-/* Reserve under a caller-owned pin. A contended root has
- * already tried the KD word; there is no map or separate exclusion lock.
- * Failure leaves the pin with the caller; successful end() consumes it. */
+/* Reserve under a caller-owned pin. No peer may mutate a FREE generation;
+ * the next tag is published only after its owner-local metadata is ready. */
 static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 				enum kd_spin_entry_kind kind,
 				struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry_pool *pool;
-	struct kd_spin_entry *entry = NULL;
-	unsigned long occupied, available;
+	struct kd_spin_entry *entry;
+	unsigned long occupied, available, control;
 	unsigned int index;
-	int ret = -E2BIG;
 
 	if (!kd_spin_entries)
 		return -ENODEV;
-	/* Ticket allocation and native borrow callbacks are task-context only.
-	 * Plain guards preserve the caller IRQ state without save/restore. */
 	if (!origin || !ref || ref->entry || !in_task() ||
 	    (kind != KD_SPIN_ENTRY_HOOK && kind != KD_SPIN_ENTRY_VIRTUAL))
 		return -EINVAL;
 	if (!kd_entry_pinned())
 		return -EPERM;
 	pool = this_cpu_ptr(kd_spin_entries);
-	/* Walk only live tickets for recursive acquisition detection. The usual
-	 * empty pool does no slot reads; allocation finds a free bit directly. */
 	for (occupied = pool->occupied; occupied; occupied &= occupied - 1) {
 		struct kd_spin_entry *candidate = &pool->entries[__builtin_ctzl(occupied)];
 
-		if (candidate->task == current && candidate->origin == origin) {
-			ret = -EDEADLK;
-			goto fail;
-		}
+		if (candidate->task == current && candidate->origin == origin)
+			return -EDEADLK;
 	}
 	available = ~pool->occupied & ((1UL << KD_SPIN_ENTRY_SLOTS) - 1);
 	if (!available)
-		goto fail;
+		return -E2BIG;
+	if (pool->sequence >= KD_ENTRY_SEQUENCE_MAX)
+		return -EOVERFLOW;
 	index = __builtin_ctzl(available);
 	entry = &pool->entries[index];
-	if (pool->sequence == ULONG_MAX) {
-		ret = -EOVERFLOW;
-		goto fail;
-	}
-	/* Keep guard initialized for stale remote handles even after slot reuse. */
-	__raw_spin_lock(&entry->guard);
 	entry->task = current;
 	entry->origin = origin;
-	entry->sequence = ++pool->sequence;
-	entry->native_refs = 0;
-	entry->kind = kind;
 	entry->cpu = raw_smp_processor_id();
-	WRITE_ONCE(entry->state, KD_ENTRY_WAITING);
+	control = (++pool->sequence << KD_ENTRY_SEQUENCE_SHIFT) | KD_ENTRY_WAITING;
+	if (kind == KD_SPIN_ENTRY_VIRTUAL)
+		control |= KD_ENTRY_VIRTUAL_BIT;
 	pool->occupied |= 1UL << index;
-	*ref = (struct kd_spin_ref){ entry, entry->sequence };
-	__raw_spin_unlock(&entry->guard);
+	atomic64_set_release(&entry->control, control);
+	*ref = (struct kd_spin_ref){ entry, pool->sequence };
 	return 0;
-fail:
-	return ret;
 }
 
 int kd_spin_entry_begin(raw_spinlock_t *origin, enum kd_spin_entry_kind kind,
@@ -249,17 +256,13 @@ kd_spinlock_t *kd_spin_entry_word(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
 
-	if (!kd_entry_ref_present(ref))
-		return NULL;
-	if (!kd_entry_pinned())
+	if (!kd_entry_ref_present(ref) || !kd_entry_pinned())
 		return NULL;
 	entry = ref->entry;
-	/* Reject a remote ref before reading task-owned metadata. On this CPU
-	 * the request pin excludes another task's slot reuse, and IRQ callers
-	 * cannot create/end tickets. Remote borrow operations touch native_refs
-	 * only, so reading this stable identity requires neither guard nor IRQ save. */
+	/* A local request pin excludes identity reuse; remote native borrowers
+	 * do not change these fields. Reject other CPUs before following origin. */
 	if (READ_ONCE(entry->cpu) != raw_smp_processor_id() ||
-	    entry->task != current || kd_entry_valid(ref))
+	    entry->task != current || kd_entry_valid(ref, atomic64_read(&entry->control)))
 		return NULL;
 	return (kd_spinlock_t *)entry->origin;
 }
@@ -268,6 +271,7 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 				    enum kd_spin_entry_state from)
 {
 	struct kd_spin_entry *entry;
+	unsigned long control;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
@@ -275,24 +279,23 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	__raw_spin_lock(&entry->guard);
-	ret = kd_entry_local(ref);
-	if (ret || (entry->state == KD_ENTRY_OWNED && from == KD_ENTRY_WAITING))
-		goto out;
-	if (entry->state != from || entry->native_refs) {
-		ret = -EBUSY;
-		goto out;
+	control = atomic64_read_acquire(&entry->control);
+	ret = kd_entry_local(ref, control);
+	if (ret)
+		return ret;
+	for (;;) {
+		if (kd_entry_state(control) == KD_ENTRY_OWNED && from == KD_ENTRY_WAITING)
+			return 0;
+		if (kd_entry_state(control) != from || kd_entry_refs(control))
+			return -EBUSY;
+		/* Physical acquisition precedes this metadata transition. The CAS
+		 * excludes a racing native borrow without a separate guard word. */
+		if (!READ_ONCE(((kd_spinlock_t *)entry->origin)->locked))
+			return -EINVAL;
+		if (kd_entry_update(entry, &control,
+				    kd_entry_with_state(control, KD_ENTRY_OWNED)))
+			return 0;
 	}
-	entry->state = KD_ENTRY_CLAIMING;
-	/* The caller acquired the sole word before claiming this ticket.
-	 * This is only a nonblocking ownership check, not a physical acquisition.
-	 * Keep one guard interval through commit: dropping/reacquiring it adds
-	 * IRQ and atomic work without allowing any useful peer transition. */
-	ret = READ_ONCE(((kd_spinlock_t *)entry->origin)->locked) ? 0 : -EINVAL;
-	entry->state = ret ? from : KD_ENTRY_OWNED;
-out:
-	__raw_spin_unlock(&entry->guard);
-	return ret;
 }
 
 int kd_spin_entry_claim(const struct kd_spin_ref *ref)
@@ -300,20 +303,15 @@ int kd_spin_entry_claim(const struct kd_spin_ref *ref)
 	return kd_spin_entry_claim_from(ref, KD_ENTRY_WAITING);
 }
 
-/* Reclaim a released native/origin reference; used when original owner handed
- * back delegated ownership and now needs to continue local execution.
- */
 int kd_spin_entry_reclaim(const struct kd_spin_ref *ref)
 {
 	return kd_spin_entry_claim_from(ref, KD_ENTRY_RELEASED);
 }
 
-/* Release the physical origin lock ownership but keep the slot alive for potential
- * follow-up state transitions and diagnostics.
- */
 int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
+	unsigned long control;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
@@ -321,32 +319,26 @@ int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	__raw_spin_lock(&entry->guard);
-	ret = kd_entry_local(ref);
+	control = atomic64_read_acquire(&entry->control);
+	ret = kd_entry_local(ref, control);
 	if (ret)
-		goto out;
-	if (entry->state != KD_ENTRY_OWNED) {
-		ret = -EBUSY;
-		goto out;
+		return ret;
+	for (;;) {
+		if (kd_entry_state(control) != KD_ENTRY_OWNED)
+			return -EBUSY;
+		/* Metadata retirement is separate from the scheduler's physical
+		 * release store and wake publication. Keep the request pin. */
+		if (kd_entry_update(entry, &control,
+				    kd_entry_with_state(control, KD_ENTRY_RELEASED)))
+			return 0;
 	}
-	entry->state = KD_ENTRY_RELEASING;
-	/* Retire ownership metadata first. The scheduler performs exactly
-	 * one release store, preserving pending/tail, before publishing a wake.
-	 * There is no physical unlock or peer wait inside this transition, so
-	 * validate and commit under the same guard, retaining generation checks. */
-	ret = 0;
-	entry->state = KD_ENTRY_RELEASED;
-out:
-	__raw_spin_unlock(&entry->guard);
-	return ret;
 }
 
-/* Finalize the lifecycle. The caller must be on the pinned local CPU and no
- * other protocol participants can still reference this ref.
- */
 int kd_spin_entry_end_pinned(struct kd_spin_ref *ref)
 {
+	struct kd_spin_entry_pool *pool;
 	struct kd_spin_entry *entry;
+	unsigned long control;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
@@ -354,35 +346,30 @@ int kd_spin_entry_end_pinned(struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	__raw_spin_lock(&entry->guard);
-	ret = kd_entry_local(ref);
+	control = atomic64_read_acquire(&entry->control);
+	ret = kd_entry_local(ref, control);
 	if (ret)
-		goto out;
-	if (entry->native_refs ||
-	    (entry->state != KD_ENTRY_WAITING &&
-	     entry->state != KD_ENTRY_RELEASED &&
-	     entry->state != KD_ENTRY_NATIVE)) {
-		ret = -EBUSY;
-		goto out;
-	}
-	/* Only the pinned allocating task changes membership. Keep guard for
-	 * generation/native-ref retirement; it is protocol state, not statistics. */
-	{
-		struct kd_spin_entry_pool *pool = this_cpu_ptr(kd_spin_entries);
+		return ret;
+	for (;;) {
+		enum kd_spin_entry_state state = kd_entry_state(control);
 
-		pool->occupied &= ~(1UL << (entry - pool->entries));
+		if (kd_entry_refs(control) ||
+		    (state != KD_ENTRY_WAITING && state != KD_ENTRY_RELEASED &&
+		     state != KD_ENTRY_NATIVE))
+			return -EBUSY;
+		/* FREE retains the generation, rejecting any delayed old CAS.
+		 * Only this pinned owner can reserve the slot after this point. */
+		if (kd_entry_update(entry, &control, control & ~KD_ENTRY_LOW_MASK))
+			break;
 	}
+	pool = this_cpu_ptr(kd_spin_entries);
+	pool->occupied &= ~(1UL << (entry - pool->entries));
 	entry->task = NULL;
 	entry->origin = NULL;
 	entry->cpu = -1;
-	WRITE_ONCE(entry->state, KD_ENTRY_FREE);
 	*ref = (struct kd_spin_ref){ 0 };
-	__raw_spin_unlock(&entry->guard);
 	/* The caller retains its pin until its remaining per-CPU reads finish. */
 	return 0;
-out:
-	__raw_spin_unlock(&entry->guard);
-	return ret;
 }
 
 /* Ordinary C exits consume the pin here. Nonlocal packet restoration uses
@@ -399,30 +386,31 @@ int kd_spin_entry_end(struct kd_spin_ref *ref)
 int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
+	unsigned long control;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
 		return -EINVAL;
 	entry = ref->entry;
-	__raw_spin_lock(&entry->guard);
-	ret = kd_entry_valid(ref);
-	if (ret)
-		goto out;
-	if (entry->kind != KD_SPIN_ENTRY_HOOK ||
-	    entry->state != KD_ENTRY_WAITING)
-		ret = -EINVAL;
-	else if (entry->native_refs == UINT_MAX)
-		ret = -EOVERFLOW;
-	else
-		entry->native_refs++;
-out:
-	__raw_spin_unlock(&entry->guard);
-	return ret;
+	control = atomic64_read_acquire(&entry->control);
+	for (;;) {
+		ret = kd_entry_valid(ref, control);
+		if (ret)
+			return ret;
+		if ((control & KD_ENTRY_VIRTUAL_BIT) ||
+		    kd_entry_state(control) != KD_ENTRY_WAITING)
+			return -EINVAL;
+		if (kd_entry_refs(control) == KD_ENTRY_REF_MAX)
+			return -EOVERFLOW;
+		if (kd_entry_update(entry, &control, control + KD_ENTRY_REF_ONE))
+			return 0;
+	}
 }
 
 int kd_spin_entry_mark_native(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
+	unsigned long control;
 	int ret;
 
 	if (!kd_entry_ref_present(ref))
@@ -430,62 +418,68 @@ int kd_spin_entry_mark_native(const struct kd_spin_ref *ref)
 	if (!kd_entry_pinned())
 		return -EPERM;
 	entry = ref->entry;
-	__raw_spin_lock(&entry->guard);
-	ret = kd_entry_local(ref);
+	control = atomic64_read_acquire(&entry->control);
+	ret = kd_entry_local(ref, control);
 	if (ret)
-		goto out;
-	if (entry->state != KD_ENTRY_WAITING ||
-	    entry->kind != KD_SPIN_ENTRY_HOOK)
-		ret = -EINVAL;
-	else
-		entry->state = KD_ENTRY_NATIVE;
-out:
-	__raw_spin_unlock(&entry->guard);
-	return ret;
+		return ret;
+	for (;;) {
+		if (kd_entry_state(control) != KD_ENTRY_WAITING ||
+		    (control & KD_ENTRY_VIRTUAL_BIT))
+			return -EINVAL;
+		/* Preserve borrows admitted before the native wake. New gets
+		 * fail once this phase is published; existing puts can continue. */
+		if (kd_entry_update(entry, &control,
+				    kd_entry_with_state(control, KD_ENTRY_NATIVE)))
+			return 0;
+	}
 }
 
 int kd_spin_entry_borrow_put(const struct kd_spin_ref *ref, bool *last)
 {
 	struct kd_spin_entry *entry;
+	unsigned long control;
 	int ret;
 
 	if (!kd_entry_ref_present(ref) || !last)
 		return -EINVAL;
 	entry = ref->entry;
-	__raw_spin_lock(&entry->guard);
-	ret = kd_entry_valid(ref);
-	if (ret)
-		goto out;
-	if (!entry->native_refs || (entry->state != KD_ENTRY_WAITING &&
-				    entry->state != KD_ENTRY_NATIVE))
-		ret = -EINVAL;
-	else
-		*last = --entry->native_refs == 0;
-out:
-	__raw_spin_unlock(&entry->guard);
-	return ret;
+	control = atomic64_read_acquire(&entry->control);
+	for (;;) {
+		ret = kd_entry_valid(ref, control);
+		if (ret)
+			return ret;
+		if (!kd_entry_refs(control) ||
+		    (kd_entry_state(control) != KD_ENTRY_WAITING &&
+		     kd_entry_state(control) != KD_ENTRY_NATIVE))
+			return -EINVAL;
+		/* The ordered CAS publishes frame retirement before the waiter
+		 * observes zero. Do not touch the entry after dropping the last ref. */
+		if (kd_entry_update(entry, &control, control - KD_ENTRY_REF_ONE)) {
+			*last = kd_entry_refs(control) == 1;
+			return 0;
+		}
+	}
 }
 
-/* Final native return is distinct from a physical unlock ACK. Every executor,
- * including an empty relay, drops its borrow only after unbinding its frame. */
+/* Native ACK is distinct from frame retirement. The owner retains its pin,
+ * so only borrows can change while it polls; no locked RMW is needed here. */
 int kd_spin_entry_borrow_wait(const struct kd_spin_ref *ref)
 {
 	struct kd_spin_entry *entry;
-	unsigned int users;
+	unsigned long control;
 	int ret;
 
 	if (!kd_entry_ref_present(ref) || !kd_entry_pinned())
 		return -EINVAL;
 	entry = ref->entry;
-	do {
-		__raw_spin_lock(&entry->guard);
-		ret = kd_entry_local(ref);
-		users = entry->native_refs;
-		__raw_spin_unlock(&entry->guard);
-		if (ret)
-			return ret;
+	control = atomic64_read_acquire(&entry->control);
+	ret = kd_entry_local(ref, control);
+	if (ret)
+		return ret;
+	while (kd_entry_refs(control)) {
 		cpu_relax();
-	} while (users);
+		control = atomic64_read_acquire(&entry->control);
+	}
 	return 0;
 }
 
@@ -495,8 +489,6 @@ int kd_spin_entries_check_idle(void)
 	int cpu;
 	unsigned int i;
 
-	/* Native fast owners have no delegation ticket but still retain the KD word and
-	 * the acquisition's CPU pin. Admission closing must not lose them. */
 	if (!kd_spin_fast_idle())
 		return -EBUSY;
 	if (!kd_spin_entries)
@@ -507,10 +499,10 @@ int kd_spin_entries_check_idle(void)
 
 		for (i = 0; i < KD_SPIN_ENTRY_SLOTS; i++) {
 			struct kd_spin_entry *entry = &pool->entries[i];
+			unsigned long control = atomic64_read(&entry->control);
 
-			if (READ_ONCE(entry->state) != KD_ENTRY_FREE ||
-			    READ_ONCE(entry->native_refs) ||
-			    READ_ONCE(entry->task))
+			if (kd_entry_state(control) != KD_ENTRY_FREE ||
+			    kd_entry_refs(control) || READ_ONCE(entry->task))
 				return -EBUSY;
 		}
 	}
@@ -521,21 +513,26 @@ int kd_spin_entries_check_idle(void)
  * Pool storage survives all observers until provider drain. */
 unsigned long kd_spin_entry_owner(raw_spinlock_t *origin)
 {
- int cpu; unsigned int i;
- if (!kd_spin_entries) return 0;
- for_each_possible_cpu(cpu) {
-  struct kd_spin_fast_cpu *fast = per_cpu_ptr(&kd_spin_fast_cpu, cpu);
-  struct kd_spin_entry_pool *pool = per_cpu_ptr(kd_spin_entries, cpu);
-  if (READ_ONCE(fast->held) == (kd_spinlock_t *)origin)
-   return (unsigned long)READ_ONCE(fast->owner);
-  for (i = 0; i < KD_SPIN_ENTRY_SLOTS; i++) {
-   struct kd_spin_entry *entry = &pool->entries[i];
-   if (READ_ONCE(entry->origin) == origin &&
-       READ_ONCE(entry->state) == KD_ENTRY_OWNED)
-    return (unsigned long)READ_ONCE(entry->task);
-  }
- }
- return 0;
+	int cpu;
+	unsigned int i;
+
+	if (!kd_spin_entries)
+		return 0;
+	for_each_possible_cpu(cpu) {
+		struct kd_spin_fast_cpu *fast = per_cpu_ptr(&kd_spin_fast_cpu, cpu);
+		struct kd_spin_entry_pool *pool = per_cpu_ptr(kd_spin_entries, cpu);
+
+		if (READ_ONCE(fast->held) == (kd_spinlock_t *)origin)
+			return (unsigned long)READ_ONCE(fast->owner);
+		for (i = 0; i < KD_SPIN_ENTRY_SLOTS; i++) {
+			struct kd_spin_entry *entry = &pool->entries[i];
+
+			if (READ_ONCE(entry->origin) == origin &&
+			    kd_entry_state(atomic64_read(&entry->control)) == KD_ENTRY_OWNED)
+				return (unsigned long)READ_ONCE(entry->task);
+		}
+	}
+	return 0;
 }
 
 #ifdef KDLOCK_SELFTEST

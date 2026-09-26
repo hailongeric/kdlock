@@ -1,7 +1,7 @@
 # TCLock 与 KDLock 当前执行路径、对象和数据流
 
 本文描述当前直接 API 的 **spin** 执行路径：CPU 热值 C `if` 获取、统一 clobber
-解锁、实际 MCS 发布采样，以及 `39b0e7c` 的 continuation 错位布局。
+解锁、实际 MCS 发布采样、continuation 错位/紧凑前缀布局及单原子字 ticket。
 对象尺寸沿用各阶段 ELF 复核，并按当前源码布局更新；历史尺寸与成绩仅属于对应冻结输入。
 普通 spin 保持 IRQ/BH 状态，continuation 为 704 B；语义验证见
 [普通 spin 报告](../tclock_compare/results/HISTORY.md#20260922-plain-spin)。
@@ -32,10 +32,10 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 `spin_delegate` 在 provider 内控制代理/采样。CPU 热度仅统计实际 MCS 发布，
 已删除队列深度策略及其参数；配对宏的 C `if` 仍只判断 CPU 热值。
 
-以下尺寸取自已完成性能矩阵的 normal 观察 provider 和 TCLock backend 的 DWARF，
+对象尺寸的初始核对来自已完成性能矩阵的 normal 观察 provider 和 TCLock backend 的 DWARF，
 2026-09-20 通过 guest `pahole -C <类型> <ELF>` 只读复核。
-后续 ticket 优化没有修改结构；关键对象另由新 ELF 复核，见
-[优化报告](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260921-four-thread-ticket.md)。
+下表按当前源码更新后续布局变化；2026-09-27把ticket私有guard及分散状态合为原子控制字，
+ticket从48缩为32字节，匹配构建和验证见[全链路报告](../tclock_compare/results/20260927-flow.md)。
 ELF 位于 guest `/root/kdlock-evidence/continuation-perf-20260920/matrix/binaries/`。
 NUMA/SELFTEST 的源码布局增量另列，不能拿带探针的总内存当作 normal 成本。
 
@@ -145,7 +145,7 @@ waiter CPU                         combiner CPU
 | `kd_exec_context` | 5208 / CPU | `kd_exec.c` 静态 per-CPU，含 8 × 648 的旧 frame 数组及 top/owner/depth。spin 的 continuation 内嵌 frame 绑定到 top；数组仍服务 mutex/其他 push 路径，不是每个 spin 请求新增一份 |
 | 三个 per-CPU 指针 | 8 × 3 = 24 / CPU | `spin/state.inc` 静态 `kd_spin_resume_nodes`、`kd_spin_continuations`、`kd_spin_native_root`；分别记录本地恢复节点、存储栈基址、等待最终 native 退休的根记录 |
 | `kd_spin_fast_cpu` | 24 / CPU | 静态 per-CPU；单一 task 持锁的 held/owner，以及原生嵌套/IRQ及配对冷根持有者的排空计数 nondelegated |
-| `kd_spin_entry` / pool | 48 × 32 + 16 = 1552 / CPU | `kd_spin_entries_init()` 一次 `alloc_percpu`；ticket 记录 task/CPU/代际/物理所有权及 native 引用，物理释放、native 借用全部退休及 end 后归还槽。尺寸依赖当前内核 raw lock 布局 |
+| `kd_spin_entry` / pool | 32 × 32 + 16 = 1040 / CPU | `kd_spin_entries_init()` 一次 `alloc_percpu`；task/CPU/origin身份加64位代际/阶段/kind/native借用控制字，无私有guard；物理释放、native借用全部退休及end后归还槽，保持自然对齐 |
 | spin CPU热值 | 4 / CPU | 唯一静态per-CPU unsigned-int标量；直接读取，无动态表指针或热度副本 |
 | 热表 entry/table/cpu | 24 / 6680 / 13376 | `kd_hotlock_init()` 一次 `alloc_percpu`；每 CPU spin、mutex 各 256 桶、256 精确地址记录，另含唯一mutex CPU热值及对齐填充；无候选淘汰，不是 owner 存储 |
 | `kd_spin_diag_slot` | 128 × 32 = 4096，全局 | 静态数组，按128字节对齐；锁地址及禁用标志，旧共享waiter占位字段已删除，槽身份在模块会话内稳定；不是热锁晋升集合 |
@@ -298,7 +298,7 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
    ticket 不足转完整原生获取；已有 ticket 但翻译未就绪时登记入口，并保留 ticket
    走完整原生获取。此回退可能再次尝试 fast/pending，不再记录第二个热度样本。
    准备好翻译后才进入代理 slowpath，按需占 node/continuation。
-6. slowpath 的正常返回已经 claim/reclaim，公共入口不再重复取 guard。
+6. slowpath 的正常返回已经 claim/reclaim，公共入口不再重复提交 ticket 状态。
    continuation 容量不足保留 ticket 走原生 MCS；节点/context 失败沿用受检出口。
 7. JIT 嵌套 CALL 先用 `record_spin` 得到 promoted，再校验 CALL/锁账本和 shadow
    容量。热路径可登记嵌套续点，并进入 `kd_spin_nested_lock()`：独立虚拟 ticket
@@ -318,9 +318,11 @@ MCS。原生 MCS 节点仍为 `execution=NULL`，不申请 continuation。
 完成路径用 `kd_spin_entry_end_pinned()` 退休 ticket 元数据，读完/退休 continuation
 后才由 `kd_spin_restore_unpin()` 解除抢占；重试及有锁 native 续跑保留获取 pin。
 
-ticket 的 claim/reclaim 与 release 各在一次普通 raw spin guard 临界区中完成身份校验和状态提交；
-二者内部都不执行阻塞获取或物理释放。实际释放仍由调度方单次 release store 完成，
-native 借用、代际及最终退休检查保留。
+ticket reserve 由原CPU的pinned task初始化身份后release发布控制字；所有竞争状态变更
+以完整64位CAS提交，远端get/put只访问该字，最终借用等待使用acquire读与PAUSE。
+claim/reclaim与release内部都不获取私有spinlock或执行物理释放；实际释放仍由调度方
+单次release store完成。字段、有限上限及完整退休顺序统一见
+[ticket协议](../../docs/design/locking.md#42-acquisition-tickets-and-node-lifetime)。
 
 spin/mutex 的单锁记录与准入使用入口处的直接哈希计数。模块初始化时
 `alloc_percpu` 为每 CPU 预分配 13376 字节、64 字节对齐的对象，包含两个

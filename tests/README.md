@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [全链路优化与无锁ticket](../bench/tclock_compare/results/20260927-flow.md) | 第一阶段90场及相关测试单列；最终原子ticket版基础/entry/outer_progress/remote_outer共5组、两种构建、CPU0/20真实ticket selftest、完整135场及36线程nested原生续跑/early各360万操作通过，未跑全量 |
 | [spin清理与内联验证](../bench/tclock_compare/results/20260926-cleanup.md) | 基础/entry/shadow/outer共5组，普通及SELFTEST构建、81场性能、36线程nested/early各180万操作及归档审计通过；未跑全量 |
 | [最新c1复测至36线程](../bench/tclock_compare/results/20260926-c1-through36.md) | aef982b完整135场通过；runner34项、源码/ELF/峰值及排空审计通过，本次未重跑nested/early或全量 |
 | [c1跨node有界批次优化](../bench/tclock_compare/results/20260926-cross-node.md) | 08497ab完整126场、32线程nested/early各160万操作；基础/shadow三组、runner34项、源码/ELF/峰值审计通过，未跑全量 |
@@ -47,7 +48,7 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 | 单锁字入口和 ticket | `spin/test_spin_direct.py`、`spin/test_spin_entry.py` |
 | 入口抢占配对 | `spin/test_spin_preempt.py`、`infrastructure/test_hotlock_sampling.py` |
 | continuation 分配、容量、回收与最终恢复 | `spin/test_spin_storage.py`、`execution/test_exec_capacity.py`、`spin/test_spin_wait.py` |
-| native 借用退休、共享根包与延迟 ACK | `execution/test_remote_outer.py`、`execution/test_remote_depth_protocol.py`、`execution/test_remote_outer_protocol.py` |
+| native 借用退休、共享根包与延迟 ACK | `spin/test_spin_entry.py`检查实际ticket CAS；`execution/test_remote_outer.py`、`execution/test_remote_depth_protocol.py`、`execution/test_remote_outer_protocol.py`检查路由/ACK |
 | 嵌套、提前释放、队列、frame 退休 | `spin/test_spin_outer_progress.py`、`spin/test_spin_shadow.py`、`spin/test_spin_batch.py` |
 | 本地热表、获取/MCS计数、频率/比例窗口及准入恢复 | `infrastructure/test_hotlock_sampling.py` |
 | mutex 资源和续跑 | `mutex/test_mutex_resources.py`、`mutex/test_mutex_outer_progress.py` |

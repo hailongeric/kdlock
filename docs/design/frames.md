@@ -212,10 +212,14 @@ consecutive WWJUMPs; these counts are also per-CPU until shutdown. Slot identity
 count and JIT-disable latch remain shared. Reporting is not a live snapshot.
 
 Ticket pools maintain a task-owned live bitmap: allocation finds a free bit,
-and duplicate/lookup scans visit only occupied slots. Generation/native-reference
-state mutations retain `entry.guard`; remote readers can race retirement, so
-this guard is not interchangeable with a diagnostic counter. Source/provider
-references remain once per batch; native ticket borrows retain their guarded updates.
+and duplicate/lookup scans visit only occupied slots. Generation, phase, kind and
+native borrow count share one atomic64 control word; remote get/put use a full-word
+CAS without accessing owner metadata. The pinned owner publishes new slots,
+ends them only with zero borrows and waits with acquire reads, not a metadata
+spinlock. Borrow counts remain exact and protect frame lifetime after physical
+ACK. The transitions and finite generation/borrow limits are defined in
+[the ticket protocol](locking.md#42-acquisition-tickets-and-node-lifetime).
+Source/provider references remain once per batch.
 
 Independent owner ledgers/checkpoints also remain. The virtual producer copies
 the parent's live lock-ledger prefix directly into the child's stable request

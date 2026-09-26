@@ -5,7 +5,7 @@
 读完并回收 continuation 后才解除原入口 pin；普通重试和有锁 native 续跑保留 pin。
 本次未新增 irqsave/bh API；需要这些语义的调用者在外层处理。
 
-spin 入口检查热度/上下文并按批采样时钟；`nondelegated.inc` 提供完整原生 fast/pending/MCS，虚拟排队继续服务父 ACK。顶层 pending 免 ticket、合并 ticket guard 和 continuation 退休协议保留。详见 [当前锁协议](../docs/design/locking.md)。
+spin 入口检查热度/上下文并按批采样时钟；`nondelegated.inc` 提供完整原生 fast/pending/MCS，虚拟排队继续服务父 ACK。顶层 pending 免 ticket；ticket 使用单个原子控制字，continuation 保留独立退休协议。详见 [当前锁协议](../docs/design/locking.md)。
 
 当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `kd_spinlock.c`，
 调用者使用 `include/kd_spin_direct.h` 的 clobber-v1 现场约定，并在计时前调用
@@ -46,7 +46,7 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 
 `spin_prefetch=0/1/2` 是只读装载参数，分别关闭后继请求预取、保留 combiner
 查询地址的旧策略、使用发布前准备的地址提示（默认）。它不关闭其他既有队列
-返回处的栈预取。minimal包明确预取BP/IP/SP，覆盖准入读取及COMPLETE写回所用的三条寄存器行。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
+返回处的栈预取。minimal包明确预取BP/IP/SP，覆盖准入读取及COMPLETE写回；当前紧凑前缀让IP/SP共用一行。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
 节点为 128 字节，next 与通知字分行，continuation 继续独立存活。
 四节点per-CPU数组显式按128字节对齐，节点类型大小及通知偏移64/65保持；生产断言与存储fixture约束数组对齐。
 匹配ELF每CPU只增加64字节填充，独立性能及地址推断边界见[节点数组报告](../bench/tclock_compare/results/HISTORY.md#20260924-node-array-alignment)。
@@ -66,8 +66,11 @@ SELFTEST的`hotlock_lifetime_selftest=1`验证表满不覆盖真实持锁记录�
 
 顶层 fast/pending 自执行共用 fast owner，只有进入 MCS 分支才 reserve ticket；
 嵌套调用仍先 reserve。队首正常返回已 claim/reclaim，入口不再重复确认；
-claim/reclaim 与 release 各用一次 guard 完成校验和状态提交。物理释放、
-代际及 native 借用退休约束见 [locking](../docs/design/locking.md#41-native-lock-and-private-queue)。
+ticket 的占用位图和身份元数据仅由原 CPU 的 pinned task 修改，代际/阶段/kind/native借用数
+合为一个64位原子控制字。远端 get/put 只对该字做完整代际 CAS，最终等待只读轮询；
+不再获取私有 ticket spinlock。API、物理释放和原入口 pin 语义保持；明确的有限资源上限
+及退休顺序见 [ticket协议](../docs/design/locking.md#42-acquisition-tickets-and-node-lifetime)，
+本轮证据见 [全链路报告](../bench/tclock_compare/results/20260927-flow.md)。
 
 普通请求的诊断引用由入队保存、退出复用，批次也只解析一次诊断 slot；
 32个共享诊断槽按128字节对齐、128字节步长排列，只保留身份及禁用状态。
@@ -81,26 +84,13 @@ continuation 按 64 字节对齐，
 普通准入元数据位于前两条缓存行。普通批次只在最终准入处检查 readiness，
 正常完成合并终态验证和解绑；复杂处理仍使用原协议。
 
-简单c1委托请求的静态访问范围如下，依据`peak-inline-cold-20260924`冻结provider的DWARF、
-源码及生成正文核对；64字节对齐的continuation内偏移保持不变。这是访问范围下界，
-不是PMU缓存缺失次数，也不证明每次访问跨核取数。
+当前对象偏移、简单c1访问范围与预取覆盖集中维护在
+[执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。紧凑continuation前缀把MINIMAL
+所需的五行合为四行，记录步长仍为704字节；这是地址几何，不是PMU缓存缺失次数。
+只读配置和JIT镜像可在预热后共享缓存，不能直接当成远端DRAM访问。
+`spin_prefetch=0/1/2`可用于同一镜像的受控诊断，结果须独立冻结参数并保留实际JIT和排空检查。
 
-| 对象 | 正常正文/完成路径涉及的64字节行 | 数据交接 |
-| --- | --- | --- |
-| 704字节continuation | 前5行：头部0–127、BP136、RIP232、SP256 | producer初始化；combiner读取并更新frame状态和IP/SP/BP，waiter恢复时读取；冷锁账本不在此简单路径使用 |
-| 128字节node | header偏移0、通知偏移64两行 | producer发布指针/提示，combiner读取；completed/locked同一通知行由consumer完成并唤醒waiter |
-| 逻辑调用栈 | SP及SP−8，共1–2行，取决于SP对齐 | 读取保存的锁指针、写入并检查合成返回地址 |
-| c1业务数据 | 1行 | combiner读改写；同一批次可连续持有该行，无需每个正文换CPU |
-
-上述核心合计至少9–10条不同数据行；不含后继lookahead、注册表/镜像头、诊断槽、
-combiner本地上下文/物理栈及producer单独写入的continuation尾行。历史冻结版的诊断身份与
-共享waiter原子计数另处两行；当前waiter事件改为CPU本地写入，上述核心对象布局不变。
-模式2预取后继continuation的第0/1/2/4行及SP/SP−8；
-RIP所在第3行没有显式提示，但不能据此推定缓存缺失。只读配置和JIT镜像可在预热后共享缓存，
-不等同于有写者的通知、寄存器包或共享原子计数。`spin_prefetch=0/1/2`可用于同一镜像的受控诊断，
-当前运行器未暴露该选择；新增结果仍须独立冻结参数并保留实际JIT和排空检查。
-
-spin 初始化按 possible CPU 一次 `vzalloc(20 KiB)`，低端 12 KiB 放最多 12 条
+spin 初始化按 possible CPU 一次预分配20 KiB，NUMA-on时请求该CPU节点的内存；低端 12 KiB 放最多 12 条
 704 字节 continuation，高端 8 KiB 为物理 waiter 等待栈。节点直接指向记录；
 只有所属 CPU 分配/收缩 top，远端执行者 pop 后仅发布退休。父子共享根寄存器包，
 不维护 request users/packet_owner。普通完成先 pop 再通知；native 包括无锁 relay
