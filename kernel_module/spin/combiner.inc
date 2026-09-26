@@ -264,8 +264,7 @@ static void kd_spin_batch_run(void *opaque)
 #endif
 		if (exe_flag == KD_EXE_NO_RUN) {
 			print_debug("can't assembly\n");
-			next_node = curr_node;
-			batch->next = next_node;
+			batch->next = curr_node;
 			return;
 		}
 		if (exe_flag == KD_EXE_RUN_ERROR) {
@@ -273,8 +272,7 @@ static void kd_spin_batch_run(void *opaque)
 			/* No JIT body ran. Keep the packet queued and uncompleted until
 			 * it acquires the lock. Native packets may need ret4; virtual
 			 * packets use the ordinary acquired return to their parent. */
-			next_node = curr_node;
-			batch->next = next_node;
+			batch->next = curr_node;
 			return;
 		}
 

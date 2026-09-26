@@ -60,7 +60,7 @@ static bool kd_spin_selftest_full_shadow_owned(void)
 		    !kd_exec_frame_validate(frame) ||
 		    !raw_spin_is_locked(lock) ||
 		    kd_spin_debug_owner(lock) != (unsigned long)current ||
-		    READ_ONCE(kd_spin_word((void *)lock)->locked) !=
+		    READ_ONCE(((struct qspinlock *)lock)->locked) !=
 			    _Q_LOCKED_COMBINER_VAL)
 			return false;
 		frame = frame->parent;

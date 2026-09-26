@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [spin清理与内联验证](../bench/tclock_compare/results/20260926-cleanup.md) | 基础/entry/shadow/outer共5组，普通及SELFTEST构建、81场性能、36线程nested/early各180万操作及归档审计通过；未跑全量 |
 | [最新c1复测至36线程](../bench/tclock_compare/results/20260926-c1-through36.md) | aef982b完整135场通过；runner34项、源码/ELF/峰值及排空审计通过，本次未重跑nested/early或全量 |
 | [c1跨node有界批次优化](../bench/tclock_compare/results/20260926-cross-node.md) | 08497ab完整126场、32线程nested/early各160万操作；基础/shadow三组、runner34项、源码/ELF/峰值审计通过，未跑全量 |
 | [前版c1预取/诊断/CPU热值优化](../bench/tclock_compare/results/20260926-prefetch-unlock.md) | 77eb9a2完整126场、32线程nested/early各160万操作；相关生产fixture、runner34项、源码/ELF/峰值离线审计通过，未跑全量 |

@@ -7,24 +7,18 @@
 
 ## 1. 当前状态与证据边界
 
-最新复测输入`aef982b`仅扩展runner至36线程，生产仍为`08497ab`；15线程点三方135场及runner34项通过。
-36线程KD相对TCLock峰值/整段为+2.30%/+1.09%；28线程仍为-0.68%/-1.92%，24线程峰值领先而整段略低。
-Linux在28/32/36出现更高峰值，本轮KD低于这些Linux最高值；快慢分布全部保留，不能沿用旧轮次结论。
-见[最新135场复测](../bench/tclock_compare/results/20260926-c1-through36.md)。下述优化收益及功能结果属于前次126场，不是本次重跑。
+当前采用有界512正文及独立512扫描预算、六后继准入、minimal IP预取、直接per-CPU热值。
+本次维护删除单锁字迁移后遗留的恒等包装和未使用宏，精简失败返回赋值，并显式内联ticket叶子校验；
+采样策略、预取距离、owner/ACK及批次边界保持不变。
+[维护验证](../bench/tclock_compare/results/20260926-cleanup.md)包括基础/相关5组、两种构建、81场定向比较和36线程nested/early；
+最高KD峰值较前次共有点变化-0.11%至+0.94%，不作为新性能收益或全线程无回退证明。
 
-当前生产检查点`08497ab`：默认有界正文上限及独立NUMA扫描预算由256提高到512。
-在既有六后继准入、minimal IP预取、简单完成精简和直接per-CPU热值上，不增加采集或逐请求状态。
-384/512 pilot之后，选定512完成十四线程点三方126场、32线程nested/early各160万操作；
-基础/shadow三组、runner34项及源码/ELF/峰值归档审计通过。链接局部复用21场未见明确收益，已撤回。
-完整分布、逐worker进度和候选边界见[跨node报告](../bench/tclock_compare/results/20260926-cross-node.md)。
-
-20/24/28/32线程峰值较上一完整KD矩阵提高2.9%/11.4%/10.4%/8.2%；
-对同期TCLock分别为+8.2%/+1.6%/-0.5%/+5.2%，整段为+7.9%/+0.2%/-1.5%/+4.0%。
-28线程仍未达标，24线程整段优势很小；24/28线程少数node进度份额下降，有限批上限不证明无饥饿。
-1/2线程仍比Linux低5.0%/0.9%，7/8线程低于TCLock约5.8%/0.7%；
-2/4/5/6线程较上一完整KD矩阵下降1.7%/0.4%/1.4%/0.3%，不宣称全线程无回退。
-上一完整生产`77eb9a2`及其126场保留为[历史参照](../bench/tclock_compare/results/20260926-prefetch-unlock.md)，
-不与当前样本混合取优。三轮范围不是统计等价证明。
+最近完整性能矩阵为`aef982b`：15线程点三方135场，结果见
+[完整c1复测](../bench/tclock_compare/results/20260926-c1-through36.md)。该轮36线程KD相对TCLock
+峰值/整段为+2.30%/+1.09%；28线程仍为-0.68%/-1.92%，24线程峰值领先而整段略低。
+1线程比Linux低约5%；7/8线程低于TCLock。Linux在28/32/36出现更高峰值，快慢样本均保留。
+上述结果属于维护前冻结构建；新构建的定向检查不得替代完整矩阵或证明全线程无回退。
+512选型、撤回候选及早期功能证据统一见[跨node报告](../bench/tclock_compare/results/20260926-cross-node.md)。
 
 当前 c1 比较覆盖 1–8/12/16/20/24/28/32/36 线程，worker 顺序放置 CPU 0–35：
 20 线程以内位于 node 0，24/28/32/36 跨 node 0/1；collector 使用 CPU 38。
@@ -40,28 +34,10 @@ spin 使用显式单锁字 API、共享 continuation/frame、原生 pending/MCS 
 [执行流](JIT_EXECUTION.md#21-热度与角色)。spin waiter 诊断使用 per-CPU 事件总数，
 live 聚合近似，独立排空后余额精确；owner/ACK 及真正生命周期计数保持不变。
 
-| 证据阶段 | 结论与边界 |
-| --- | --- |
-| [最新c1复测至36线程](../bench/tclock_compare/results/20260926-c1-through36.md) | `aef982b`，135场、runner34项与归档审计通过；锁实现未变，保留跨node Linux快慢样本 |
-| [当前跨node有界512](../bench/tclock_compare/results/20260926-cross-node.md) | `08497ab`，126场、32线程nested/early、基础/shadow三组及runner34项通过；28线程整段仍落后TCLock，少数节点进度另列 |
-| [前版预取/诊断/直接CPU热值](../bench/tclock_compare/results/20260926-prefetch-unlock.md) | `77eb9a2`，126场三方比较、32线程nested/early及归档审计通过；各候选和回退分列 |
-| [前版六后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md) | `d439df8`，126场三方比较、32线程nested/early及归档审计通过；pilot与撤回候选分列 |
-| [后续 NUMA、五后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md#head5诊断三方比较126场) | `11bfd75`，126 场及 32 线程 nested/early 通过；七线程短批退化，不是当前六后继成绩 |
-| [首轮 NUMA 完整矩阵](../bench/tclock_compare/results/20260926-numa.md) | `9eb65b6` 的历史 126 场与 nested/early；32 线程较 NUMA-off 基线提高 50.6%，但仍低于 Linux/TCLock；部分单节点点下降 |
-| [历史 c1 三方 90 场与功能验证](../bench/tclock_compare/results/20260924-warmed-peak.md#captured-tail五后继三方90场完成) | 五后继策略，1–8/16/20 线程各三轮；匹配代码的 nested/early 各 200 万操作、实际 JIT 及排空通过 |
-| [历史 c1/c8 三方 126 场](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md) | `797e847`，七个线程点各三轮；c1 单线程为 Linux 的 93.2%，16/20 线程约为 TCLock 的 89%；c8 在 8/16/20 线程超过 TCLock 约 10%–13% |
-
-峰值、整段吞吐及全部三轮分布以对应报告为准；中间版本的下降与撤回证据继续保留。
-不能把最好值当成每轮保证，或把不同阶段拼接为普遍无回退证明。
-目标仍是 c1 少线程尽量不低于 Linux，多线程尽量达到或超过 TCLock。
-上述结果不验证 mutex 性能或全部协议组合；并发冷准备 RCU stall、pinned mutex mode-4
-soft lockup 等已知限制仍见 [TODO](TODO.md#current-checkpoint)。
-
-旧阈值、等待、布局候选及其失败证据统一见
-[历史索引](../bench/tclock_compare/results/HISTORY.md)。pending512、短批冷却、旧“获取后六后继”
-native6 及冷周期下界的撤回原因见
-[峰值调查](../bench/tclock_compare/results/20260924-warmed-peak.md)；旧 native6 与当前
-“获取前、止于捕获队尾”的六后继检查不同，不重复列为当前待办。
+全部历史测量及失败候选从[benchmark结果索引](../bench/tclock_compare/README.md#本次结果)进入，
+本页不重复版本成绩表。不能混合不同阶段取优，最好值不是每轮保证，三轮范围不是统计等价证明。
+目标仍是c1少线程尽量不低于Linux，多线程尽量达到或超过TCLock。
+并发冷准备RCU stall、pinned mutex mode-4及延期的协议范围见[TODO](TODO.md#current-checkpoint)。
 
 ### 与 TCLock 的剩余差异
 

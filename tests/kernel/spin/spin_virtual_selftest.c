@@ -74,10 +74,10 @@ static bool kd_spin_selftest_virtual_begin(
 				   found.sequence == request->sequence);
 	}
 	KD_VIRTUAL_REQUIRE(raw_spin_is_locked((raw_spinlock_t *)lock) &&
-			   READ_ONCE(kd_spin_word(lock)->locked) == 1);
+			   READ_ONCE(lock->locked) == 1);
 	KD_VIRTUAL_REQUIRE(
 		raw_spin_is_locked((raw_spinlock_t *)parent->outer_lock_addr) &&
-		READ_ONCE(kd_spin_word((void *)parent->outer_lock_addr)
+		READ_ONCE(((struct qspinlock *)parent->outer_lock_addr)
 				  ->locked) == _Q_LOCKED_COMBINER_VAL);
 	KD_VIRTUAL_REQUIRE(regs->ip == parent->control_call.return_ip &&
 			   regs->sp ==
@@ -87,7 +87,7 @@ static bool kd_spin_selftest_virtual_begin(
 	kd_virtual_test.cpu = smp_processor_id();
 	kd_virtual_test.initial_preempt = initial_preempt;
 	kd_virtual_test.lock = lock;
-	kd_virtual_test.word = atomic_read(&kd_spin_word(lock)->val);
+	kd_virtual_test.word = atomic_read(&lock->val);
 	kd_virtual_test.regs = *regs;
 	kd_virtual_test.frame = *parent;
 	kd_virtual_test.return_ip =
@@ -145,10 +145,10 @@ static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 			&kd_virtual_test.shadow,
 			this_cpu_ptr(&kd_spin_cpu));
 	owner = raw_spin_is_locked((raw_spinlock_t *)kd_virtual_test.lock) &&
-		atomic_read(&kd_spin_word(kd_virtual_test.lock)->val) ==
+		atomic_read(&kd_virtual_test.lock->val) ==
 			kd_virtual_test.word &&
 		raw_spin_is_locked((raw_spinlock_t *)parent->outer_lock_addr) &&
-		READ_ONCE(kd_spin_word((void *)parent->outer_lock_addr)
+		READ_ONCE(((struct qspinlock *)parent->outer_lock_addr)
 				  ->locked) == _Q_LOCKED_COMBINER_VAL;
 	KD_VIRTUAL_REQUIRE(retired && pin && nodes && contexts && packet &&
 			   frame && owner);

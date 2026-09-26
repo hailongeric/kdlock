@@ -5,7 +5,8 @@
 历史通过项不能拼接为当前全量通过，旧透明hook命令只能用于匹配checkout。
 
 当前组合的覆盖见[近期测试](../tests/README.md#最近验证与证据)及
-[最新性能](../bench/tclock_compare/results/20260926-c1-through36.md)。
+[维护定向验证](../bench/tclock_compare/results/20260926-cleanup.md)；最近完整性能矩阵见
+[36线程复测](../bench/tclock_compare/results/20260926-c1-through36.md)。
 旧参数和已撤回候选统一从[近期历史](../bench/tclock_compare/results/HISTORY.md)进入，
 更早阶段见[早期历史](../bench/spin_cacheline/results/HISTORY.md)。
 

@@ -96,6 +96,13 @@ is introduced. Fast unlock checks ownership before a separate helper prepares
 its 16-byte ticket reference. Fresh spin admission combines the two execution
 context queries without changing their predicate or the acquisition pin.
 
+Ticket presence, generation, locality and pin predicates are small inline
+helpers. Their callers still own reference validation and the required guard;
+inlining does not weaken those checks. Keep the contended acquisition and
+assembly/context-switch boundaries separate: forcing large helpers inline can
+increase caller spills and instruction footprint. The explicit lock pointer is
+the scheduling word itself; no identity-only conversion helper is needed.
+
 At the queue branch, root ticket reservation precedes translation readiness.
 A missing translation is registered for later attempts. Refusal before publication
 uses the complete native fast/pending/MCS helper, retaining any existing ticket;

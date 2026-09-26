@@ -164,6 +164,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [spin清理与定向验证](results/20260926-cleanup.md) | 9线程点三方81场、36线程nested/early、生成代码审查；非完整矩阵或新吞吐收益声明 |
 | [最新c1复测至36线程](results/20260926-c1-through36.md) | aef982b、十五线程点三方135场；三轮峰值、整段、节点进度及Linux跨node波动，锁实现未变 |
 | [c1跨node有界批次优化](results/20260926-cross-node.md) | 08497ab、512上限，完整126场及32线程功能；三轮分布、峰值/整段、节点进度与候选回退 |
 | [前版c1预取/诊断/CPU热值优化](results/20260926-prefetch-unlock.md) | 77eb9a2、十四线程点三方126场及匹配32线程功能；全部分布、峰值/整段与候选回退 |

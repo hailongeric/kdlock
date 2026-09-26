@@ -69,7 +69,7 @@ static void kd_spin_set_resume_node(struct kd_spin_node *node)
 
 static bool kd_spin_is_ooo(struct qspinlock *lock)
 {
-	return kd_spin_word(lock)->locked == _Q_UNLOCKED_OOO_VAL;
+	return lock->locked == _Q_UNLOCKED_OOO_VAL;
 }
 
 static void check_and_set_combiner(struct qspinlock *word)

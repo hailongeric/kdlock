@@ -120,7 +120,7 @@ static __always_inline void check_and_set_combiner(struct qspinlock *word)
 
 /**
  * kd_spin_fetch_set_pending_acquire - fetch lock value and set pending
- * @word : Private scheduling word S
+ * @word: The single KD exclusion/scheduling word
  * Return: The previous lock value
  *
  * *,*,* -> *,1,*
@@ -131,8 +131,8 @@ kd_spin_fetch_set_pending_acquire(struct qspinlock *word)
 	return atomic_fetch_or_acquire(_Q_PENDING_VAL_HL, &word->val);
 }
 
-/* Called only at initial batch entry, while this executor owns S/L and before
- * any NUMA splicing. A producer publishes tail before linking prev->next.
+/* Called only at initial batch entry, before any NUMA splicing and while
+ * this executor owns the KD word. A producer publishes tail before prev->next.
  * A different nonzero tail therefore proves a successor exists: wait for its
  * release publication instead of mistaking that window for the final waiter.
  * No wait is allowed for an actual tail node, or a detached deferred list. */
@@ -222,8 +222,6 @@ next_node_null:
 	return my_node->next;
 #endif
 }
-
-#define get_rsp_from_regs(name, regs, i) ((unsigned long *)regs)[i]
 
 /* Decode the physical hook packet on its originating CPU before publication.
  * After publication the waiter lends its C stack and only polls locked; JIT

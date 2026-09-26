@@ -5,7 +5,7 @@
 读完并回收 continuation 后才解除原入口 pin；普通重试和有锁 native 续跑保留 pin。
 本次未新增 irqsave/bh API；需要这些语义的调用者在外层处理。
 
-spin 已按性能回退结果恢复入口热度/上下文判断及批量时钟；`nondelegated.inc` 提供完整原生 fast/pending/MCS，虚拟排队继续服务父 ACK。顶层 pending 免 ticket、合并 ticket guard 和 continuation 退休协议保留。详见 [当前锁协议](../docs/design/locking.md)。
+spin 入口检查热度/上下文并按批采样时钟；`nondelegated.inc` 提供完整原生 fast/pending/MCS，虚拟排队继续服务父 ACK。顶层 pending 免 ticket、合并 ticket guard 和 continuation 退休协议保留。详见 [当前锁协议](../docs/design/locking.md)。
 
 当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `kd_spinlock.c`，
 调用者使用 `include/kd_spin_direct.h` 的 clobber-v1 现场约定，并在计时前调用
@@ -60,8 +60,6 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 移除两低确认、冷却、独立频率状态、已接受采样流和近期热度保留，小型pinned封装内联。
 spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口保持400亿。
 动态表布局、busy guard、owner/ticket/frame与排空协议保持；解锁不查热表。
-简化候选通过基础2组、采样fixture/10项错误变体、运行器26项及W=1构建（11条既有objtool警告），
-42场simple512-fixed正确排空，30场实际JIT，但性能保护失败，保留为EXPERIMENTAL检查点。两个后继等待实验已归档并恢复b83f551的队列代码。
 完整规则及卸载统计见[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
 SELFTEST的`hotlock_lifetime_selftest=1`验证表满不覆盖真实持锁记录及mutex等待迁移；
 `hotlock_role_trace=1`输出角色，正常运行关闭。

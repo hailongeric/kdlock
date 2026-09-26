@@ -154,7 +154,7 @@ void kd_spin_selftest_shadow_end(struct pt_regs *regs,
 	KD_SHADOW_CHECK(smp_processor_id() == kd_shadow_pressure.cpu);
 	KD_SHADOW_CHECK(this_cpu_ptr(&kd_spin_cpu)->node_count == 0);
 	KD_SHADOW_CHECK(atomic_read(&kd_shadow_pressure.lock->val) == 0);
-	KD_SHADOW_CHECK(READ_ONCE(kd_spin_word((void *)frame->outer_lock_addr)
+	KD_SHADOW_CHECK(READ_ONCE(((struct qspinlock *)frame->outer_lock_addr)
 					  ->locked) == _Q_LOCKED_COMBINER_VAL);
 	KD_SHADOW_CHECK(
 		raw_spin_is_locked((raw_spinlock_t *)frame->outer_lock_addr));
@@ -441,7 +441,7 @@ static int kd_shadow_round(unsigned int round)
 	memset(&kd_shadow_test, 0, sizeof(kd_shadow_test));
 	raw_spin_lock_init(&kd_shadow_test.origin);
 	kd_shadow_test.lock = (void *)&kd_shadow_test.origin;
-	kd_shadow_test.word = kd_spin_word(kd_shadow_test.lock);
+	kd_shadow_test.word = kd_shadow_test.lock;
 	init_completion(&kd_shadow_test.start);
 	for (i = 0; i < ARRAY_SIZE(kd_shadow_test.held); i++)
 		raw_spin_lock_init(&kd_shadow_test.held[i]);

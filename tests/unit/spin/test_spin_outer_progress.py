@@ -101,7 +101,6 @@ def main():
         code += definition(frame, marker) + "\n"
     for marker, prefix in (
         ("static struct qspinlock *kd_spin_request_word(const struct kd_spin_ref *ref)", ""),
-        ("static struct qspinlock *kd_spin_word(struct qspinlock *lock)", ""),
         ("static void kd_spin_claim_origin(const struct kd_spin_request *request)", ""),
         ("static void kd_spin_release_origin(struct kd_spin_request *request)", ""),
         (

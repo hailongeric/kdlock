@@ -47,15 +47,10 @@ struct kd_spin_request {
 
 static struct qspinlock *kd_spin_request_word(const struct kd_spin_ref *ref)
 {
- kd_spinlock_t *word = kd_spin_entry_word(ref);
- BUG_ON(!word);
- return word;
-}
+	kd_spinlock_t *word = kd_spin_entry_word(ref);
 
-/* Explicit object identity is the sole scheduling/exclusion word. */
-static struct qspinlock *kd_spin_word(struct qspinlock *lock)
-{
- return lock;
+	BUG_ON(!word);
+	return word;
 }
 
 /* Normal unlocks use their live ticket. An OOO ancestor can be represented
@@ -67,7 +62,7 @@ static struct kd_spin_request kd_spin_unlock_lookup(struct qspinlock *lock)
 	if (kd_spin_entry_find((raw_spinlock_t *)lock, &request.ref))
 		request.word = kd_spin_request_word(&request.ref);
 	else
-		request.word = kd_spin_word(lock);
+		request.word = lock;
 	return request;
 }
 
@@ -96,7 +91,8 @@ static void kd_spin_release_origin(struct kd_spin_request *request)
 {
 	BUG_ON(kd_spin_entry_release_origin(&request->ref));
 	smp_store_release(&request->word->locked, 0);
-	/* No per-CPU accesses after this may schedule. */
+	/* end() drops the ticket pin and may schedule; do not access CPU-local
+	 * state after it returns. */
 	BUG_ON(kd_spin_entry_end(&request->ref));
 }
 
@@ -198,10 +194,6 @@ static struct kd_spin_diag_cpu __percpu *kd_spin_diag_cpu;
 	})
 #endif
 
-#define atomic_cond_read_acquire_sched(v, c) \
-	smp_cond_load_acquire_sched(&(v)->counter, (c))
-
-
 struct kd_spin_cpu_state {
 	/*
 	 * Locks acquired by the current CPU. Tracking them separately from the
@@ -218,7 +210,8 @@ struct kd_spin_cpu_state {
 	/* CPU-owned reservation depth; not part of any published queue node. */
 	int node_count;
 	/* TCLock-style physical waiter stack, separate from the logical frame.
-	 * IRQs stay masked and the ticket pins the sole polling user to this CPU.
+	 * The ticket pins the sole polling user to this CPU; polling preserves
+	 * the caller's IRQ state.
 	 * Virtual waiters retain their executor stack for nested owner/ACK work. */
 	void *wait_stack_top;
 #ifdef NUMA_AWARE

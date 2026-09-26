@@ -77,7 +77,9 @@ void kd_spin_entries_exit(void)
 	kd_spin_entries = NULL;
 }
 
-static int kd_entry_valid(const struct kd_spin_ref *ref)
+/* These leaf checks run under the caller's ticket/guard contract. Keep
+ * validation at its use site without duplicating the lifecycle operations. */
+static __always_inline int kd_entry_valid(const struct kd_spin_ref *ref)
 {
 	return ref->entry->state != KD_ENTRY_FREE &&
 			       ref->entry->sequence == ref->sequence ?
@@ -85,7 +87,7 @@ static int kd_entry_valid(const struct kd_spin_ref *ref)
 		       -ESTALE;
 }
 
-static int kd_entry_local(const struct kd_spin_ref *ref)
+static __always_inline int kd_entry_local(const struct kd_spin_ref *ref)
 {
 	int ret = kd_entry_valid(ref);
 
@@ -100,12 +102,12 @@ static int kd_entry_local(const struct kd_spin_ref *ref)
 /* Check before taking guard: its own preemption pin cannot stand in for the
  * request pin which end() consumes after dropping guard.
  */
-static bool kd_entry_pinned(void)
+static __always_inline bool kd_entry_pinned(void)
 {
 	return in_task() && (preempt_count() & PREEMPT_MASK);
 }
 
-static bool kd_entry_ref_present(const struct kd_spin_ref *ref)
+static __always_inline bool kd_entry_ref_present(const struct kd_spin_ref *ref)
 {
 	return ref && ref->entry && ref->sequence;
 }

@@ -171,7 +171,6 @@ static void kd_hotlock_spin_entry_pinned(void)
 #define _Q_UNLOCKED_OOO_VAL 7
 #define IRQ_NUMA_NODE 255
 #define KD_SPIN_DIAG_NATIVE_FALLBACK 0
-#define get_rsp_from_regs(name, regs, i) ((unsigned long *)(regs))[i]
 #define KD_EXE_LOCK_SPIN 1
 #define numa_node_id() mock_cpu
 #define smp_processor_id() mock_cpu
@@ -723,7 +722,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 	regs = &active.regs;
 	CHECK(kd_spin_entry_begin(&origins[1], KD_SPIN_ENTRY_VIRTUAL, &b_ref) ==
 	      0);
-	kd_spin_word((struct qspinlock *)&origins[1])->locked = 1;
+	((struct qspinlock *)&origins[1])->locked = 1;
 	kd_spin_claim_origin((struct qspinlock *)&origins[1]);
 	active.jit_lock_depth = active.held_lock_depth = 2;
 	active.jit_lock_addr[1] = (unsigned long)&origins[1];
@@ -1227,7 +1226,7 @@ int main(void)
 		gate->locked = 3;
 		gate->tail = 4;
 		kd_spin_claim_origin(a_lock());
-		CHECK(!kd_spin_trylock(kd_spin_word(a_lock())));
+		CHECK(!kd_spin_trylock(a_lock()));
 		shadow_states[0].lock_addr[0] = (unsigned long)&origins[0];
 		shadow_states[0].curr_cs_cpu = -1;
 		fixture_request(&request)->frame.regs_ref->sp = (unsigned long)saved;
