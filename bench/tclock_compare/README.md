@@ -67,11 +67,11 @@ CPU38上的collector每10ms读取进度，原始快照及其读前/读后时间�
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
-  LC_ALL=C timeout --kill-after=10s 2400s taskset -c 0-31 \
+  LC_ALL=C timeout --kill-after=10s 2600s taskset -c 0-35 \
   python3 bench/tclock_compare/run.py \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
-  --cachelines 1 --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 --repeats 3 \
+  --cachelines 1 --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 --repeats 3 \
   --duration-ms 2000 --peak-window-ms 300 --collector-cpu 38 \
   --output /root/kdlock-evidence/direct-new
 ```
@@ -80,12 +80,12 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 KD每batch最多代理512个正文，独立NUMA扫描预算同样初始化为512；两者分别消耗。
 TCLock保留上游配置值1024。运行器用`modinfo`验证实际ELF，NUMA/批上限纳入结果身份，不混合候选。
 `--spin-prefetch 0/1/2`选择现有KD无预取/consumer查找/producer提示，默认2，加载后核对并独立分组。
-collector CLI无参数默认仍为30，32-worker运行必须如上显式指定38；与任一worker重合时拒绝。
+collector CLI无参数默认仍为30，32/36-worker运行必须如上显式指定38；与任一worker重合时拒绝。
 
 `--spin-contention-pct`范围为0–100，默认100；0仅绕过比例门槛，
 原生队头前缀检查、CPU频率和单锁热度规则仍生效。该值作为只读provider装载参数传入并核对。
 
-上述`taskset -c 0-31`固定准备阶段CPU集合（跨两个节点），worker绑定CPU0至CPU(`threads-1`)。
+上述`taskset -c 0-35`固定准备阶段CPU集合（跨两个节点），worker绑定CPU0至CPU(`threads-1`)。
 先核对这些CPU属于预期NUMA节点及host映射；`environment.json`保存`runner_affinity`，
 加载前检查全部worker CPU均被允许。collector使用独立CPU38，不计入worker线程数。
 

@@ -19,10 +19,10 @@ from context_audit import audit as audit_context
 class DirectTests(unittest.TestCase):
     def test_numa_expanded_matrix(self):
         plan = run.make_plan(Namespace(cachelines=[1],
-            threads=[1,2,3,4,5,6,7,8,12,16,20,24,28,32], repeats=3,
+            threads=[1,2,3,4,5,6,7,8,12,16,20,24,28,32,36], repeats=3,
             iterations=100000, backends=['native','tclock','kdlock'],
             duration_ms=2000, collector_cpu=38, numa='on', kd_batch_size=128))
-        self.assertEqual(len(plan), 126)
+        self.assertEqual(len(plan), 135)
         for spec in plan:
             self.assertNotIn(38, spec['cpus'])
             if spec['arm'] == 'kdlock':
@@ -31,7 +31,7 @@ class DirectTests(unittest.TestCase):
             elif spec['arm'] == 'tclock':
                 self.assertEqual(spec['delegation_batch_limit'], 1024)
         with self.assertRaises(run.Failure):
-            run.make_plan(Namespace(cachelines=[1], threads=[32], repeats=1,
+            run.make_plan(Namespace(cachelines=[1], threads=[36], repeats=1,
                 iterations=100000, backends=['kdlock'], duration_ms=2000,
                 collector_cpu=30))
 
@@ -284,7 +284,7 @@ class DirectTests(unittest.TestCase):
             self.assertEqual(result.exception.code, 2)
 
     def test_high_contention_requires_jit(self):
-        for threads in (20, 24, 28, 32):
+        for threads in (20, 24, 28, 32, 36):
             record = dict(arm='kdlock', threads=threads, jit_bodies=0,
                 hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
             with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
@@ -376,16 +376,20 @@ class DirectTests(unittest.TestCase):
             with self.assertRaisesRegex(run.Failure, 'functional mode requires'):
                 run.main()
 
-    def test_cli_small_thread_heat_matrix(self):
+    def test_cli_small_and_numa_thread_matrix(self):
+        # Exercise parsing as well as placement: 36 workers leave CPU38 free.
         output = io.StringIO()
         argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
-                '--threads', '1', '2', '3', '4', '5', '6', '7', '8', '16', '20']
+                '--cachelines', '1', '--duration-ms', '2000', '--collector-cpu', '38',
+                '--threads', '1', '2', '3', '4', '5', '6', '7', '8',
+                '12', '16', '20', '24', '28', '32', '36']
         with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
             self.assertEqual(run.main(), 0)
         plan = json.loads(output.getvalue())
-        self.assertEqual(len(plan), 180)
-        self.assertEqual(len({s['name'] for s in plan}), 180)
-        self.assertEqual({s['threads'] for s in plan}, {1, 2, 3, 4, 5, 6, 7, 8, 16, 20})
+        self.assertEqual(len(plan), 135)
+        self.assertEqual(len({s['name'] for s in plan}), 135)
+        self.assertEqual({s['threads'] for s in plan},
+                         {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32, 36})
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
             self.assertEqual(spec['cpu_heat_policy'],

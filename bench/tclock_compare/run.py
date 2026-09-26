@@ -234,7 +234,7 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
-    p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,5,6,7,8,12,16,20,24,28,32), default=[1,4,8,16,20])
+    p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,5,6,7,8,12,16,20,24,28,32,36), default=[1,4,8,16,20])
     p.add_argument('--spin-prefetch', type=int, choices=(0,1,2), default=2,
                    help='existing KD prefetch mode: off, consumer lookup, producer hints')
     p.add_argument('--numa', choices=('on', 'off'), default='on',
