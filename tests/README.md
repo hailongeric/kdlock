@@ -10,7 +10,8 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
-| [最新c1 NUMA-on优化](../bench/tclock_compare/results/20260926-numa-followup.md) | d439df8完整126场、32线程nested/early各160万操作通过；相关queue/native/entry-scope、runner33项、源码/ELF/峰值离线审计通过；各阶段范围单列 |
+| [最新c1预取/诊断/CPU热值优化](../bench/tclock_compare/results/20260926-prefetch-unlock.md) | 77eb9a2完整126场、32线程nested/early各160万操作；相关生产fixture、runner34项、源码/ELF/峰值离线审计通过，未跑全量 |
+| [前版c1 NUMA-on优化](../bench/tclock_compare/results/20260926-numa-followup.md) | d439df8完整126场、32线程nested/early各160万操作通过；相关queue/native/entry-scope、runner33项、源码/ELF/峰值离线审计通过；各阶段范围单列 |
 | [首轮c1 NUMA/有界批次](../bench/tclock_compare/results/20260926-numa.md) | 完整126场、32线程nested/early各160万操作通过；相关queue/batch/storage/clobber及runner检查通过，预取候选和fixture失败/修正保留在报告中 |
 | [前版1/8 cacheline复测](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md) | 126场业务/context/排空通过；42场KD中18场实际JIT。基础2组、runner32项及CLI矩阵核对通过；没有新增复杂功能或mutex测试 |
 | [捕获队尾准入](../bench/tclock_compare/results/20260924-warmed-peak.md#captured-tail五后继三方90场完成) | 基础及采样/原生MCS共4组、runner32项、SELFTEST两种构建和90场性能通过；20线程nested/early各200万操作，实际JIT1997259/640480次，独立排空及归档审计通过 |

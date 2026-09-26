@@ -6,7 +6,9 @@ KD使用per-CPU近似竞争统计和原生队头的有界前缀检查；完整�
 
 ## 当前结果与口径
 
-- [最新c1 NUMA-on优化](tclock_compare/results/20260926-numa-followup.md)：
+- [最新c1预取/诊断/CPU热值优化](tclock_compare/results/20260926-prefetch-unlock.md)：
+  77eb9a2、十四线程点三方126场及32线程功能；保留三轮分布、性能缺口和候选回退。
+- [前版c1 NUMA-on优化](tclock_compare/results/20260926-numa-followup.md)：
   d439df8、十四线程点三后端各三轮126场；六后继准入、链接/计时精简与匹配32线程功能验证。
 - [首轮c1 NUMA与有界批次](tclock_compare/results/20260926-numa.md)：
   1–8/12/16/20/24/28/32线程、三后端各三轮126场；含预取候选、冗余状态清理和性能缺口。

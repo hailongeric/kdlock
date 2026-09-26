@@ -7,22 +7,17 @@
 
 ## 1. 当前状态与证据边界
 
-继续优化已补齐minimal包的IP预取，24场pilot及基础/batch三组通过，16–32线程小幅改善、12线程约降1%。
-原生解锁布局候选已撤回（单线程收益不稳定）；简单完成已省去重复深度观察，21场pilot通过，12–32线程较IP候选峰值提高约1.2%–2.5%；直接per-CPU单份热值24场pilot通过，保留更少依赖读；待匹配32线程功能及最终126场。
-本轮进展见[预取与原生路径报告](../bench/tclock_compare/results/20260926-prefetch-unlock.md)。
+当前生产检查点`77eb9a2`：在既有NUMA连续远端链复用、计时旁路、精确tag和六后继准入上，
+补齐minimal IP预取，简单完成省去重复depth观察，CPU热值改为单份静态per-CPU直接读取。
+原生解锁likely因收益不稳定撤回。完整126场及32线程nested/early各160万操作通过；
+基础及受影响batch/shadow/outer、hotlock/cold/preempt/nondelegated分阶段通过，runner34项、归档审计通过。
+各阶段结果与失败修正见[本轮报告](../bench/tclock_compare/results/20260926-prefetch-unlock.md)。
 
-当前生产检查点为`d439df8`：NUMA连续远端链接复用、关闭计时的局部状态旁路、
-精确七字节tag读取，以及获取前止于捕获队尾的六后继准入。completion/image强制内联和
-生成CALL出口SP写入删除候选均撤回。完整126场及32线程nested/early各160万操作通过，
-基础及受影响queue/native/entry-scope检查、runner33项、归档审计通过；各阶段范围见
-[后续NUMA报告](../bench/tclock_compare/results/20260926-numa-followup.md)。
-
-1线程为Linux的93.0%；12/16/20线程分别为TCLock的
-105.6%/102.3%/102.3%；
+1线程为Linux的95.0%；12/16/20线程分别为TCLock的
+107.7%/105.3%/105.0%；
 24/28/32线程仍有差距。单线程、部分高线程和全线程无回退目标尚未全部满足。
-2/3/4线程峰值比首轮KD低约3%；Linux跨NUMA有明显跨阶段波动，当前比值不能推广为稳定优势。
-原head5候选七线程批长降到约5–6、峰值3.238；最终六后继版本的七线程峰值为
-4.438 Mops/s，未用短批冷却或新增状态机。
+2/4/5/6/7/8线程较上一轮峰值有不同幅度下降；单次最大值和三轮范围不构成统计等价证明。
+保留全部worker进度与跨NUMA的Linux波动，不把历史样本与当前样本混合取优。
 
 当前 c1 比较覆盖 1–8/12/16/20/24/28/32 线程，worker 顺序放置 CPU 0–31：
 20 线程以内位于 node 0，24/28/32 跨 node 0/1；collector 使用 CPU 38。
@@ -40,7 +35,8 @@ live 聚合近似，独立排空后余额精确；owner/ACK 及真正生命周�
 
 | 证据阶段 | 结论与边界 |
 | --- | --- |
-| [当前六后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md) | `d439df8`，126场三方比较、32线程nested/early及归档审计通过；pilot与撤回候选分列 |
+| [本轮预取/诊断/直接CPU热值](../bench/tclock_compare/results/20260926-prefetch-unlock.md) | `77eb9a2`，126场三方比较、32线程nested/early及归档审计通过；各候选和回退分列 |
+| [前版六后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md) | `d439df8`，126场三方比较、32线程nested/early及归档审计通过；pilot与撤回候选分列 |
 | [后续 NUMA、五后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md#head5诊断三方比较126场) | `11bfd75`，126 场及 32 线程 nested/early 通过；七线程短批退化，不是当前六后继成绩 |
 | [首轮 NUMA 完整矩阵](../bench/tclock_compare/results/20260926-numa.md) | `9eb65b6` 的历史 126 场与 nested/early；32 线程较 NUMA-off 基线提高 50.6%，但仍低于 Linux/TCLock；部分单节点点下降 |
 | [历史 c1 三方 90 场与功能验证](../bench/tclock_compare/results/20260924-warmed-peak.md#captured-tail五后继三方90场完成) | 五后继策略，1–8/16/20 线程各三轮；匹配代码的 nested/early 各 200 万操作、实际 JIT 及排空通过 |
@@ -140,6 +136,7 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 - [x] 简单spin batch按ABI一次写最终元数据；通用helper仍处理mutex/复杂路径。
 - [ ] 按实际原生/JIT汇编比较指令、scratch spill、虚拟栈及地址重写；仅在身份、
   准入与有效期可证明一致时复用状态。FULL、hostcall与远端处理保留独立出口。
+- [ ] 下次先检验相邻batch_entries/ww_jumps能否复用短期本地诊断指针，保持两次精确per-CPU更新；以ELF无新增spill及实测为准。
 - [ ] 测量观察层成本，默认 `jit_timing=0`，采样与正式吞吐分开；inclusive timer
   可能重叠，不能相加为纯CPU成本。生成指令变化要验证真实生成代码及对应边界。
 
