@@ -7,6 +7,9 @@
 
 ## 1. 当前状态与证据边界
 
+继续优化已补齐minimal包的IP预取，24场pilot及基础/batch三组通过，16–32线程小幅改善、12线程约降1%。
+独立的原生解锁布局候选待测；本轮进展见[预取与原生路径报告](../bench/tclock_compare/results/20260926-prefetch-unlock.md)。
+
 当前生产检查点为`d439df8`：NUMA连续远端链接复用、关闭计时的局部状态旁路、
 精确七字节tag读取，以及获取前止于捕获队尾的六后继准入。completion/image强制内联和
 生成CALL出口SP写入删除候选均撤回。完整126场及32线程nested/early各160万操作通过，

@@ -52,6 +52,7 @@ static void kd_spin_prefetch_lookup(struct kd_spin_node *node)
 			prefetchw((char *)regs + offset);
 	} else {
 		prefetchw(&regs->bp);
+		prefetchw(&regs->ip);
 		prefetchw(&regs->sp);
 	}
 	/* The request prefix and admission header occupy two cache lines. */
@@ -100,7 +101,10 @@ static void kd_spin_prefetch_request(struct kd_spin_node *node)
 		for (offset = 0; offset < sizeof(*regs); offset += L1_CACHE_BYTES)
 			prefetchw((char *)regs + offset);
 	} else {
+		/* Inline IP occupies its own line: admission reads it, and
+		 * COMPLETE writes it along with BP/SP. Keep the same lead time. */
 		prefetchw(&regs->bp);
+		prefetchw(&regs->ip);
 		prefetchw(&regs->sp);
 	}
 	if (node->prefetch_complex) {

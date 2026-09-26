@@ -376,14 +376,19 @@ static void test_prepared_prefetch(void)
 					hint_count = 0;
 					kd_spin_prefetch_request(&node);
 					CHECK(hint_count == expected);
+					unsigned int ip_hints = 0;
 					/* Frame warming moves first; the address multiset stays equal. */
 					for (unsigned int h = 0; h < expected; h++) {
 						unsigned int a = 0, b = 0;
+						ip_hints += hints[h] == &regs->ip;
 						for (unsigned int k = 0; k < expected; k++) {
 							a += hints[k] == lookup[h]; b += lookup[k] == lookup[h];
 						}
 						CHECK(a == b);
 					}
+					/* Equal hint sets must not hide IP omitted by both modes. */
+					if (!full)
+						CHECK(ip_hints == 1);
 					CHECK(!memcmp(&before, &request, sizeof(request)));
 					CHECK(!memcmp(&saved, regs, sizeof(saved)));
 					CHECK(node.locked && !node.completed);
@@ -406,16 +411,19 @@ static void test_prepared_prefetch(void)
 	CHECK(area != MAP_FAILED);
 	struct kd_spin_continuation *protected = area;
 	struct pt_regs *packet = (void *)((char *)area + bytes);
-	protected->frame.logical_task = &task;
-	protected->frame.packet_state = KD_PACKET_FULL;
-	protected->frame.complex_ready = true;
-	packet->sp = (unsigned long)stack + 128;
 	node.execution = protected;
-	kd_spin_prepare_prefetch(&node, packet);
-	CHECK(mprotect(area, bytes + page, PROT_NONE) == 0);
-	hint_count = 0;
-	kd_spin_prefetch_request(&node);
-	CHECK(hint_count == 10 && hints[hint_count - 2] == stack + 128);
+	for (unsigned int full = 0; full < 2; full++) {
+		CHECK(mprotect(area, bytes + page, PROT_READ | PROT_WRITE) == 0);
+		protected->frame.logical_task = &task;
+		protected->frame.packet_state = full ? KD_PACKET_FULL : KD_PACKET_MINIMAL;
+		protected->frame.complex_ready = true;
+		packet->sp = (unsigned long)stack + 128;
+		kd_spin_prepare_prefetch(&node, packet);
+		CHECK(mprotect(area, bytes + page, PROT_NONE) == 0);
+		hint_count = 0;
+		kd_spin_prefetch_request(&node);
+		CHECK(hint_count == 10 && hints[hint_count - 2] == stack + 128);
+	}
 	/* Disabled mode must not follow even a deliberately unusable node. */
 	kd_spin_prefetch_mode = 0; hint_count = 0;
 	kd_spin_prefetch_request((void *)1);
