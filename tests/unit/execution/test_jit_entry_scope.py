@@ -60,6 +60,7 @@ def main():
             "static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)",
             "static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,",
             "bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,",
+            "bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)",
             "static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,",
             "int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,",
             "int kd_exe_spin_batch_resume(struct kd_exe_info *exe,",

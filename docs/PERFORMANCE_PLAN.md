@@ -7,44 +7,52 @@
 
 ## 1. 当前状态与证据边界
 
-本轮NUMA-on后续优化保留连续远端链接复用、关闭计时helper旁路和精确七字节tag读取。
-11bfd75的126场完整矩阵与32线程nested/early通过，但七线程短批退化至3.238 Mops/s。
-已选择捕获前缀六后继，21场pilot把七线程恢复至4.331并保留8–32线程收益；
-基础及native队列三组、runner33项通过。下一步验证完成路径局部计时状态与最终三方矩阵。
-新增证据统一见[后续NUMA报告](../bench/tclock_compare/results/20260926-numa-followup.md)。
+当前选定代码在 `025d708` 上增加完成路径局部计时旁路：在获取前检查捕获队尾以内的六个后继，
+保留 `9cb51e5` 的连续远端链接复用和关闭计时 helper 旁路，以及 `11bfd75` 的
+精确七字节 tag 读取。completion/image 强制内联及生成 CALL 出口冗余 SP 写入删除
+候选均已撤回。完成路径旁路的9场pilot及基础/entry-scope三组通过，20/32线程峰值约提高1%，
+32线程整段吞吐并非每轮改善。当前实现及各阶段证据见
+[后续 NUMA 报告](../bench/tclock_compare/results/20260926-numa-followup.md)。
 
-2026-09-26已完成本轮c1 NUMA实现与比较：线程扩展到1–8/12/16/20/24/28/32，
-worker顺序放置CPU0–31，20线程以内位于node0，24/28/32跨node0/1；collector改为CPU38。
-保持固定2.5GHz、全worker预热和2秒内300ms峰值，三方各三轮。
-已选择256次代理上限及独立的每batch NUMA扫描预算限制工作量，远端延期链在批次结束后优先交接；
-该上限不是调度延迟/无饥饿证明。先保存当前1024/NUMA-off基线，再定向验证候选和比较。
-TCLock保留上游1024上限，NUMA-on/off必须随构建身份明确标注，不混合取优。
-完整126场、32线程nested/early均通过；32线程比NUMA-off基线提高50.6%，但仍低于Linux/TCLock。
-1线程为Linux的93.4%；2–20线程超过Linux，部分点较初始KD基线下降，未达全线程无回退目标。
+六后继策略的 21 场 pilot 已通过，七线程峰值恢复到 4.331 Mops/s，高竞争受测点保留收益；
+八线程峰值比 head5 完整矩阵低 0.5%，仍需核对最终分布。基础及 native 队列三组、runner 33 项通过。
+**当前选定实现的最终 126 场三方矩阵仍待完成**，不能将 pilot 或前一版本的完整矩阵
+当成当前版本的全线程结果。此前 `11bfd75` 的 126 场及 32 线程 nested/early 通过，
+但七线程峰值只有 3.238 Mops/s；归档计数显示平均代理批长降到约 5–6 个正文。
 
-首轮生产代码为9eb65b6的有界NUMA实现，选择256上限、局部后继快速选择及冗余状态精简；
-本轮完整比较见[NUMA调查](../bench/tclock_compare/results/20260926-numa.md)，下表c1/c8是797e847历史实现证据。
-spin使用显式单锁字API、共享continuation/frame、原生pending/MCS路径和统一clobber解锁。
-冷获取首次CAS内联，简单batch单次初始化元数据，关闭计时时跳过重复helper。
-只保留adaptive：per-CPU获取/MCS差值每512次发布比较，原生队头在同一近似边界检查
-捕获队尾以内的六个后继；不等待凑批，不新增逐请求时钟。完整参数与限制见
-[执行流](JIT_EXECUTION.md#21-热度与角色)。spin waiter诊断使用per-CPU事件总数，
-live聚合近似，独立排空后余额精确；owner/ACK及真正生命周期计数保持不变。
+当前 c1 比较覆盖 1–8/12/16/20/24/28/32 线程，worker 顺序放置 CPU 0–31：
+20 线程以内位于 node 0，24/28/32 跨 node 0/1；collector 使用 CPU 38。
+保持固定 2.5 GHz、全部 worker 各预热 48000 次、正式 2 秒内最高 300 ms 窗口，
+三方各三轮并保留整段吞吐。KD 使用 NUMA-on、256 次代理上限和独立的每 batch NUMA
+扫描预算，延期远端链在批次结束后优先交接；上限约束工作量，不是调度延迟或无饥饿证明。
+TCLock 启用其原有 NUMA 路径，保留上游 1024 上限；不同构建、策略或上限的样本不混合取优。
 
-| 当前证据 | 结论与边界 |
+spin 使用显式单锁字 API、共享 continuation/frame、原生 pending/MCS 路径和统一 clobber 解锁。
+冷获取首次 CAS 内联，简单 batch 单次初始化元数据。只保留 adaptive：per-CPU 获取/MCS
+差值每 512 次发布比较，原生队头在同一近似边界检查捕获队尾以内的六个后继；
+不等待凑批，不新增逐请求时钟。完整参数与限制见
+[执行流](JIT_EXECUTION.md#21-热度与角色)。spin waiter 诊断使用 per-CPU 事件总数，
+live 聚合近似，独立排空后余额精确；owner/ACK 及真正生命周期计数保持不变。
+
+| 证据阶段 | 结论与边界 |
 | --- | --- |
-| [c1三方90场与功能验证](../bench/tclock_compare/results/20260924-warmed-peak.md#captured-tail五后继三方90场完成) | 1–8/16/20线程各三轮，全部业务正确并排空；选定代码的nested/early各200万操作、实际JIT及排空通过 |
-| [c1/c8三方126场](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md) | 同一锁实现，七个线程点各三轮；c1单线程为Linux的93.2%，16/20线程约为TCLock的89%；c8在8/16/20线程超过TCLock约10%–13% |
+| [当前六后继 pilot](../bench/tclock_compare/results/20260926-numa-followup.md) | `025d708`，21 场 KD 定向比较；最终全线程三方矩阵待完成 |
+| [后续 NUMA、五后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md#head5诊断三方比较126场) | `11bfd75`，126 场及 32 线程 nested/early 通过；七线程短批退化，不是当前六后继成绩 |
+| [首轮 NUMA 完整矩阵](../bench/tclock_compare/results/20260926-numa.md) | `9eb65b6` 的历史 126 场与 nested/early；32 线程较 NUMA-off 基线提高 50.6%，但仍低于 Linux/TCLock；部分单节点点下降 |
+| [历史 c1 三方 90 场与功能验证](../bench/tclock_compare/results/20260924-warmed-peak.md#captured-tail五后继三方90场完成) | 五后继策略，1–8/16/20 线程各三轮；匹配代码的 nested/early 各 200 万操作、实际 JIT 及排空通过 |
+| [历史 c1/c8 三方 126 场](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md) | `797e847`，七个线程点各三轮；c1 单线程为 Linux 的 93.2%，16/20 线程约为 TCLock 的 89%；c8 在 8/16/20 线程超过 TCLock 约 10%–13% |
 
-峰值、整段吞吐及全部三轮分布以对应报告为准；部分中间版本比较仍有下降，
+峰值、整段吞吐及全部三轮分布以对应报告为准；中间版本的下降与撤回证据继续保留。
 不能把最好值当成每轮保证，或把不同阶段拼接为普遍无回退证明。
-目标仍是c1少于4线程接近Linux、多于4线程超过Linux、高线程接近TCLock。
-上述结果不验证mutex性能或全部协议组合；并发冷准备RCU stall、pinned mutex mode-4
-soft lockup等已知限制仍见[TODO](TODO.md#current-checkpoint)。
+目标仍是 c1 少线程尽量不低于 Linux，多线程尽量达到或超过 TCLock。
+上述结果不验证 mutex 性能或全部协议组合；并发冷准备 RCU stall、pinned mutex mode-4
+soft lockup 等已知限制仍见 [TODO](TODO.md#current-checkpoint)。
 
-旧阈值、等待、布局候选及其失败证据统一见[历史索引](../bench/tclock_compare/results/HISTORY.md)；
-最新优化中的pending512、短批冷却、native6及冷周期下界撤回原因保留在
-[峰值调查](../bench/tclock_compare/results/20260924-warmed-peak.md)，不重复列为当前待办。
+旧阈值、等待、布局候选及其失败证据统一见
+[历史索引](../bench/tclock_compare/results/HISTORY.md)。pending512、短批冷却、旧“获取后六后继”
+native6 及冷周期下界的撤回原因见
+[峰值调查](../bench/tclock_compare/results/20260924-warmed-peak.md)；旧 native6 与当前
+“获取前、止于捕获队尾”的六后继检查不同，不重复列为当前待办。
 
 ### 与 TCLock 的剩余差异
 

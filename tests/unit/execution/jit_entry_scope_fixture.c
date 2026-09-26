@@ -1331,6 +1331,75 @@ static void check_batch_metadata(void)
 	}
 }
 
+/* Completion receives freshly prepared metadata in both ABIs. Disabled
+ * timing must read no clock; enabled endpoints retain wrapper-before-dispatch
+ * order. A non-final exit leaves both endpoints for the generic dispatcher. */
+static void check_batch_completion_timings(void)
+{
+	unsigned char code[64] = { 0 };
+	struct kd_jit_batch_call call, rejected, before_call;
+	struct kd_exec_frame before;
+	struct pt_regs bad_regs;
+	unsigned int bad_packet = KD_PACKET_MINIMAL;
+
+	for (unsigned int abi = 0; abi < 2; abi++) {
+		for (unsigned int timed = 0; timed < 2; timed++) {
+			reset();
+			active.spin_simple = active.request_frame = true;
+			active.complex_ready = false;
+			active.entry_abi = entry->entry_abi = abi;
+			active.packet_state = abi ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
+			entry->code_block = code;
+			memcpy(code + 9, "KDWB001", 7);
+			memcpy(code + 25, "KDWC001", 7);
+			memcpy(code + 41, "KDAB", 4);
+			code[KD_JIT_ABI_OFFSET] = abi;
+			kd_jit_timing = timed;
+			timing_clock_active = true;
+			timing_clock = 100;
+			memset(&call, 0xa5, sizeof(call));
+			CHECK(kd_exe_spin_batch_prepare(entry, &active, &call));
+			call.args[0] = abi ? KD_EXE_CLOBBER_COMPLETE : KD_EXE_CALL_MISS;
+			call.args[1] = 1;
+			if (abi)
+				active.packet_state = KD_PACKET_COMPLETE;
+			else
+				active.regs.ip = call.unlock;
+			memcpy(&before, &active, sizeof(before));
+			memcpy(&before_call, &call, sizeof(before_call));
+			for (unsigned int bad = 0; bad < 3; bad++) {
+				rejected = call;
+				bad_regs = active.regs;
+				if (bad == 0)
+					rejected.args[0] = KD_EXE_HOSTCALL;
+				else if (abi) {
+					if (bad == 1) rejected.packet_state = &bad_packet;
+					if (bad == 2) rejected.complete = false;
+				} else {
+					rejected.regs = &bad_regs;
+					if (bad == 1) bad_regs.ip++;
+					if (bad == 2) bad_regs.di++;
+				}
+				CHECK(!kd_exe_spin_batch_completed(&rejected));
+				CHECK(timing_reads == timed * 2);
+			}
+			CHECK(kd_exe_spin_batch_completed(&call));
+			CHECK(timing_reads == timed * 4);
+			for (unsigned int phase = 0; phase < KD_JIT_TIME_COUNT; phase++) {
+				unsigned int count = timed &&
+					(phase == KD_JIT_TIME_WRAPPER || phase == KD_JIT_TIME_DISPATCH);
+				unsigned int ns = count * (phase == KD_JIT_TIME_WRAPPER ? 10 : 30);
+
+				CHECK(kd_jit_times[phase].samples == count);
+				CHECK(kd_jit_times[phase].ns == ns);
+				CHECK(!kd_jit_times[phase].invalid);
+			}
+			CHECK(!memcmp(&active, &before, sizeof(active)));
+			CHECK(!memcmp(&call, &before_call, sizeof(call)));
+		}
+	}
+}
+
 /* Entry identity and materialization state are independent of publication.
  * None of these mismatches may invoke the wrapper or read the absent GPRs. */
 static void check_clobber_identity(void)
@@ -1417,6 +1486,7 @@ int main(void)
 {
 	check_batch_admission();
 	check_batch_metadata();
+	check_batch_completion_timings();
 	check_clobber_identity();
 	check_pending_batch_exit();
 	check_simple_spin();

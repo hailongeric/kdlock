@@ -221,8 +221,12 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
 	    (call->args[0] != KD_EXE_CALL_MISS ||
 	     call->regs->ip != call->unlock || call->regs->di != call->lock))
 		return false;
-	kd_jit_timing_end(KD_JIT_TIME_WRAPPER, call->wrapper_start);
-	kd_jit_timing_end(KD_JIT_TIME_DISPATCH, call->dispatch_start);
+	/* Only prepared batch calls reach here. Their local endpoint is zero
+	 * exactly when the immutable timing policy is off; avoid reloading it. */
+	if (unlikely(call->wrapper_start)) {
+		kd_jit_timing_end(KD_JIT_TIME_WRAPPER, call->wrapper_start);
+		kd_jit_timing_end(KD_JIT_TIME_DISPATCH, call->dispatch_start);
+	}
 	if (call->args[1] == 1)
 		kd_exe_note_body(kd_exec_current_frame()->entry_ip,
 				 call->lock, call->args[1]);
