@@ -7,30 +7,26 @@
 
 ## 1. 当前状态与证据边界
 
-本轮聚焦20+线程跨node：384/512各12场KD pilot通过，选择有界512作为新默认，
-基础/shadow三组及runner34项通过；逐worker进度与吞吐同时保留。24线程少数node占比下降，
-28线程峰值追上历史TCLock但整段仍低，不能据此宣布目标全部达成。
-下一步单独验证NUMA扫描中已发布后继链接的局部复用，再做同期三方比较。
-进展见[跨node报告](../bench/tclock_compare/results/20260926-cross-node.md)；下述`77eb9a2`仍是上一完整矩阵。
+当前生产检查点`08497ab`：默认有界正文上限及独立NUMA扫描预算由256提高到512。
+在既有六后继准入、minimal IP预取、简单完成精简和直接per-CPU热值上，不增加采集或逐请求状态。
+384/512 pilot之后，选定512完成十四线程点三方126场、32线程nested/early各160万操作；
+基础/shadow三组、runner34项及源码/ELF/峰值归档审计通过。链接局部复用21场未见明确收益，已撤回。
+完整分布、逐worker进度和候选边界见[跨node报告](../bench/tclock_compare/results/20260926-cross-node.md)。
 
-当前生产检查点`77eb9a2`：在既有NUMA连续远端链复用、计时旁路、精确tag和六后继准入上，
-补齐minimal IP预取，简单完成省去重复depth观察，CPU热值改为单份静态per-CPU直接读取。
-原生解锁likely因收益不稳定撤回。完整126场及32线程nested/early各160万操作通过；
-基础及受影响batch/shadow/outer、hotlock/cold/preempt/nondelegated分阶段通过，runner34项、归档审计通过。
-各阶段结果与失败修正见[本轮报告](../bench/tclock_compare/results/20260926-prefetch-unlock.md)。
-
-1线程为Linux的95.0%；12/16/20线程分别为TCLock的
-107.7%/105.3%/105.0%；
-24/28/32线程仍有差距。单线程、部分高线程和全线程无回退目标尚未全部满足。
-2/4/5/6/7/8线程较上一轮峰值有不同幅度下降；单次最大值和三轮范围不构成统计等价证明。
-保留全部worker进度与跨NUMA的Linux波动，不把历史样本与当前样本混合取优。
+20/24/28/32线程峰值较上一完整KD矩阵提高2.9%/11.4%/10.4%/8.2%；
+对同期TCLock分别为+8.2%/+1.6%/-0.5%/+5.2%，整段为+7.9%/+0.2%/-1.5%/+4.0%。
+28线程仍未达标，24线程整段优势很小；24/28线程少数node进度份额下降，有限批上限不证明无饥饿。
+1/2线程仍比Linux低5.0%/0.9%，7/8线程低于TCLock约5.8%/0.7%；
+2/4/5/6线程较上一完整KD矩阵下降1.7%/0.4%/1.4%/0.3%，不宣称全线程无回退。
+上一完整生产`77eb9a2`及其126场保留为[历史参照](../bench/tclock_compare/results/20260926-prefetch-unlock.md)，
+不与当前样本混合取优。三轮范围不是统计等价证明。
 
 当前 c1 比较覆盖 1–8/12/16/20/24/28/32 线程，worker 顺序放置 CPU 0–31：
 20 线程以内位于 node 0，24/28/32 跨 node 0/1；collector 使用 CPU 38。
 保持固定 2.5 GHz、全部 worker 各预热 48000 次、正式 2 秒内最高 300 ms 窗口，
-三方各三轮并保留整段吞吐。KD 使用 NUMA-on、256 次代理上限和独立的每 batch NUMA
+三方各三轮并保留整段吞吐。KD 使用 NUMA-on、512 次代理上限和独立的每 batch 512 次NUMA
 扫描预算，延期远端链在批次结束后优先交接；上限约束工作量，不是调度延迟或无饥饿证明。
-TCLock 启用其原有 NUMA 路径，保留上游 1024 上限；不同构建、策略或上限的样本不混合取优。
+TCLock 启用其原有 NUMA 路径，保留上游 1024 配置（普通WWJUMP可执行1025正文）；不同构建、策略或上限的样本不混合取优。
 
 spin 使用显式单锁字 API、共享 continuation/frame、原生 pending/MCS 路径和统一 clobber 解锁。
 冷获取首次 CAS 内联，简单 batch 单次初始化元数据。只保留 adaptive：per-CPU 获取/MCS
@@ -41,7 +37,8 @@ live 聚合近似，独立排空后余额精确；owner/ACK 及真正生命周�
 
 | 证据阶段 | 结论与边界 |
 | --- | --- |
-| [本轮预取/诊断/直接CPU热值](../bench/tclock_compare/results/20260926-prefetch-unlock.md) | `77eb9a2`，126场三方比较、32线程nested/early及归档审计通过；各候选和回退分列 |
+| [当前跨node有界512](../bench/tclock_compare/results/20260926-cross-node.md) | `08497ab`，126场、32线程nested/early、基础/shadow三组及runner34项通过；28线程整段仍落后TCLock，少数节点进度另列 |
+| [前版预取/诊断/直接CPU热值](../bench/tclock_compare/results/20260926-prefetch-unlock.md) | `77eb9a2`，126场三方比较、32线程nested/early及归档审计通过；各候选和回退分列 |
 | [前版六后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md) | `d439df8`，126场三方比较、32线程nested/early及归档审计通过；pilot与撤回候选分列 |
 | [后续 NUMA、五后继完整矩阵](../bench/tclock_compare/results/20260926-numa-followup.md#head5诊断三方比较126场) | `11bfd75`，126 场及 32 线程 nested/early 通过；七线程短批退化，不是当前六后继成绩 |
 | [首轮 NUMA 完整矩阵](../bench/tclock_compare/results/20260926-numa.md) | `9eb65b6` 的历史 126 场与 nested/early；32 线程较 NUMA-off 基线提高 50.6%，但仍低于 Linux/TCLock；部分单节点点下降 |
@@ -166,6 +163,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
   PAUSE轮询是当前契约，不能悄悄恢复旧睡眠等待来取得通过。
 - [ ] 明确CPU放置后，再比较同/异队列嵌套、乱序释放、hostcall与native后缀；
   先保持一次副作用、原owner ACK和排空，再分析服务成本。
+- [ ] 继续定位28线程20+8节点分布的短批与整段差距；先区分批上限、无后继及entry拒绝，
+  不新增每请求时钟；修改上限或NUMA选择时同时检查少数节点进度。
 - [ ] 按实际需求扩展多锁、正文长度、NUMA和公平性；单锁spin的TCLock结果不能
   推广为mutex或任意嵌套性能。
 

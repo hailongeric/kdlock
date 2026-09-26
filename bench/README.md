@@ -6,7 +6,9 @@ KD使用per-CPU近似竞争统计和原生队头的有界前缀检查；完整�
 
 ## 当前结果与口径
 
-- [最新c1预取/诊断/CPU热值优化](tclock_compare/results/20260926-prefetch-unlock.md)：
+- [最新c1跨node有界批次优化](tclock_compare/results/20260926-cross-node.md)：
+  08497ab、512上限，十四线程点三方126场及32线程功能；跨node峰值提高8–11%，28线程仍略低于TCLock，保留节点进度代价。
+- [前版c1预取/诊断/CPU热值优化](tclock_compare/results/20260926-prefetch-unlock.md)：
   77eb9a2、十四线程点三方126场及32线程功能；保留三轮分布、性能缺口和候选回退。
 - [前版c1 NUMA-on优化](tclock_compare/results/20260926-numa-followup.md)：
   d439df8、十四线程点三后端各三轮126场；六后继准入、链接/计时精简与匹配32线程功能验证。
