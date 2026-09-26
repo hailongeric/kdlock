@@ -5,8 +5,10 @@
  * There is no request/frame, register capture, source lease or stack switch.
  * The caller keeps preemption disabled through its later physical unlock. */
 /* Only a native queue head, before physical acquisition, checks this prefix.
- * Capture the held word and its tail together: five linked successors at or
- * before that tail, this head and the outside holder show a queue backlog.
+ * Capture the held word and its tail together: require six linked successors
+ * at or before that tail, in addition to this head and the outside holder.
+ * The extra backlog avoids marginal delegation when fast bodies outpace
+ * waiter refill and leave short batches.
  * The head blocks successor reuse; stop at the captured tail so a holder that
  * releases and requeues during this walk cannot be counted twice. Missing
  * links decline immediately. Native/IRQ nodes count without inspecting frames.
@@ -26,7 +28,7 @@ kd_spin_qualify_native_queue(struct qspinlock *word, struct kd_spin_node *node)
 	if (!(captured & _Q_LOCKED_MASK_HL) || !(captured & _Q_TAIL_MASK_HL))
 		goto cold;
 	captured_tail = decode_tail(captured & _Q_TAIL_MASK_HL);
-	for (successors = 0; successors < 5; successors++) {
+	for (successors = 0; successors < 6; successors++) {
 		if (node == captured_tail)
 			goto cold;
 		node = smp_load_acquire(&node->next);

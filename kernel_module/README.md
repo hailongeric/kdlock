@@ -177,7 +177,11 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 默认`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=256`；构建时可显式关闭NUMA或选择1–1024上限。
 每batch独立预算限制NUMA扫描，延期远端链在最终交接前拼回；不跨native节点、拒绝回滚或嵌套边界。
 直接后继在本节点时直接返回，避免提前读取后继的后继。扫描预算使用原batch填充。
+连续远端节点只在首个节点接入延期链，其余复用已有next，只更新CPU-local tail；
+不为相同链接反复取得远端cacheline的写权限。
 NUMA构建通过`vzalloc_node(..., cpu_to_node(cpu))`为continuation/等待栈请求CPU本地内存，允许分配回退。
 批次只缓存注册条目指针，复用该条目RIP而不重复保存key；就绪/代码发布仍逐请求核验。
+七字节batch镜像tag以两个重叠的unaligned32加载精确核对，不读取第八字节；
+关闭计时时复用已有零timestamp跳过queue timing调用，不新增热路径状态。
 普通clobber COMPLETE保留最小IP/SP/BP及witness，去掉只供legacy出口使用的Stack_BATCH初始化；
-FULL/native退出和最终现场恢复顺序不变。测量及限制见[NUMA调查](../bench/tclock_compare/results/20260926-numa.md)。
+FULL/native退出和最终现场恢复顺序不变。测量及限制见[后续NUMA比较](../bench/tclock_compare/results/20260926-numa-followup.md)。

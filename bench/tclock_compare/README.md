@@ -15,7 +15,7 @@ KD冷获取内联首次CAS，竞争时使用原生pending/MCS队列；热获取�
 自适应策略及寄存器契约分别见[执行流](../../docs/JIT_EXECUTION.md#21-热度与角色)和
 [锁协议](../../docs/design/locking.md)。
 
-当前只支持adaptive，策略标识为`mcs_entry_ratio512_head5`，默认`spin_contention_pct=100`。
+当前只支持adaptive，策略标识为`mcs_entry_ratio512_head6`，默认`spin_contention_pct=100`。
 门槛0只绕过比例，原生队头前缀、CPU/单锁热度和执行安全检查仍有效。
 旧模式、策略和测量口径仅通过[历史索引](results/HISTORY.md)追溯，不合并取优。
 诊断per-CPU计数、最终余额及布局见[provider说明](../../kernel_module/README.md)。

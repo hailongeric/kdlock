@@ -52,6 +52,8 @@
    通过 wrapper 和生成代码执行正文，原 waiter/combiner 共用寄存器包。
    简单 spin 根请求的 batch 准备在原有发布、镜像、ABI、packet 及 pristine-root 检查通过后，
    按 legacy/clobber ABI 一次写入最终调用元数据，不再先填 legacy 值再由通用 helper 覆盖。
+   batch镜像的七字节tag使用两个重叠unaligned32加载逐请求核对，不缓存发布状态或多读第八字节。
+   计时关闭时复用已有零timestamp跳过queue timing helper，开启时仍保留原端点顺序。
    clobber 选择对应正文偏移、解锁入口及 COMPLETE 许可；许可只在已有检查证明
    spin_simple、无 parent、depth=0、非 mutex 时成立。legacy 仍不授予最小完成许可；
    mutex/复杂路径继续使用通用 helper，计时、发布及 frame/ACK 退休顺序不变。
@@ -100,11 +102,11 @@ busy重入跳过本次比较且不推进快照，后续差值自然包含被跳�
 频率与比例使用同一采样节奏；普通获取只增加计数，不额外读时钟。
 mutex不使用比例，继续每1024次入口记录检查同一CPU时间窗口。
 
-`mcs_entry_ratio512_head5`另在原生MCS队头接棒后、轮询或获取物理锁字前进行近似准入否决。
+`mcs_entry_ratio512_head6`另在原生MCS队头接棒后、轮询或获取物理锁字前进行近似准入否决。
 先检查已有MCS计数的低9位；仅在512边界、delegation启用且CPU已热时继续。
-一次读取完整锁字，要求locked字节及tail均非零；随后最多以acquire读取五条已发布的后继链接，
+一次读取完整锁字，要求locked字节及tail均非零；随后最多以acquire读取六条已发布的后继链接，
 只统计这次捕获的tail以内（含tail）的队列前缀，到达捕获tail后不再读取其next。
-没有五个已链接后继、缺少tail、locked为零（包括只有pending）或遇到尚未发布的链接均保守关闭CPU热值，
+没有六个已链接后继、缺少tail、locked为零（包括只有pending）或遇到尚未发布的链接均保守关闭CPU热值，
 不等待补链，也不修改计数、快照、时间、单锁记录或已发布请求。后续MCS采样仍按原规则重试准入。
 
 当前原生队头阻止后继前进和复用，前任在交接前完成NUMA拼接；捕获tail界定的前缀在检查期间保持存活。

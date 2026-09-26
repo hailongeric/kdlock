@@ -7,7 +7,7 @@ MCS tail及combiner仲裁；Linux、TCLock、KD对象不能混用协议。mutex�
 全局hook未安装，加载provider不自动代理普通Linux锁。
 
 当前只保留adaptive：复用per-CPU MCS/获取计数，在512次发布边界比较比例并采时，
-原生队头在同一近似边界检查捕获队尾以内的五个后继。冷获取内联首次CAS，
+原生队头在同一近似边界检查捕获队尾以内的六个后继。冷获取内联首次CAS，
 热获取走pinned clobber入口；解锁统一走generic clobber协议。
 热度只影响未来准入，owner/ACK/frame退休保持独立；完整规则见
 [执行流](JIT_EXECUTION.md#21-热度与角色)。spin waiter诊断改为per-CPU事件总数，

@@ -111,7 +111,7 @@ def make_plan(args):
                 api_mode='direct', workload=workload, hotlock_mode=mode,
                 caller_shell='cold_clobber' if backend == 'kdlock' else 'c',
                 cookie_storage='percpu_rate_hot' if backend == 'kdlock' else 'not_applicable',
-                cpu_heat_policy='mcs_entry_ratio512_head5' if backend == 'kdlock' else 'not_applicable',
+                cpu_heat_policy='mcs_entry_ratio512_head6' if backend == 'kdlock' else 'not_applicable',
                 spin_contention_pct=contention_pct if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
                 numa_policy=numa if backend != 'native' else 'not_applicable',

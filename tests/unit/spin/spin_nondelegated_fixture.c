@@ -214,22 +214,22 @@ static void queue_qualification(void)
   link_chain(n); prepare_qualification();
   word.val.counter=encode_tail(n,0)|_Q_LOCKED_VAL_HL;
   kd_spin_qualify_native_queue(&word,&pool[0][0]);
-  assert(rate_hot==(n>=5) && veto_calls==(n<5));
-  assert(snapshot_reads==1 && linked_reads==(n<5 ? n : 5));
+  assert(rate_hot==(n>=6) && veto_calls==(n<6));
+  assert(snapshot_reads==1 && linked_reads==(n<6 ? n : 6));
  }
  /* A lock-free or pending-only snapshot, or a missing tail, proves nothing. */
  for(unsigned int state=0;state<3;state++) {
-  link_chain(5); prepare_qualification();
-  word.val.counter=state==2 ? _Q_LOCKED_VAL_HL : encode_tail(5,0)|(state ? _Q_PENDING_VAL_HL : 0);
+  link_chain(6); prepare_qualification();
+  word.val.counter=state==2 ? _Q_LOCKED_VAL_HL : encode_tail(6,0)|(state ? _Q_PENDING_VAL_HL : 0);
   kd_spin_qualify_native_queue(&word,&pool[0][0]);
   assert(!rate_hot && veto_calls==1 && snapshot_reads==1 && !linked_reads);
  }
- link_chain(5); pool[2][0].next=NULL; prepare_qualification();
- word.val.counter=encode_tail(5,0)|_Q_LOCKED_VAL_HL;
+ link_chain(6); pool[2][0].next=NULL; prepare_qualification();
+ word.val.counter=encode_tail(6,0)|_Q_LOCKED_VAL_HL;
  kd_spin_qualify_native_queue(&word,&pool[0][0]);
  assert(!rate_hot && veto_calls==1 && linked_reads==3); /* Unpublished gap. */
  for(unsigned int sufficient=0;sufficient<2;sufficient++) {
-  previous_tail=sufficient ? 5 : 4;
+  previous_tail=sufficient ? 6 : 5;
   link_chain(previous_tail); prepare_qualification();
   word.val.counter=encode_tail(previous_tail,0)|_Q_LOCKED_VAL_HL;
   changing_word=&word; append_old_holder=!sufficient; link_hook=release_during_walk;
@@ -246,7 +246,7 @@ static void queue_qualification(void)
  kd_spin_delegate=true;
  /* Exercise both actual native ownership exits. The stale failed value sends
   * us to MCS, but the word really remains held until qualification completes. */
- for(unsigned int n=0;n<=6;n+=n ? 1 : 4) {
+ for(unsigned int n=0;n<=7;n+=n ? 1 : 5) {
   link_chain(n); prepare_qualification();
   word.val.counter=_Q_LOCKED_VAL_HL;
   scripted_word=&word; scripted_followers=n;
@@ -254,8 +254,8 @@ static void queue_qualification(void)
   kd_spin_acquire_nondelegated_contended(&word,_Q_TAIL_MASK_HL);
   assert(!scripted_word && word.locked==1 && !states[0].node_count && pins==1);
   assert(mcs_samples==KD_HOTLOCK_SPIN_MCS_INTERVAL && snapshot_reads==1);
-  assert(rate_hot==(n>=5) && veto_calls==(n<5));
-  assert(linked_reads==(n<5 ? n : 5));
+  assert(rate_hot==(n>=6) && veto_calls==(n<6));
+  assert(linked_reads==(n<6 ? n : 6));
   if(n) assert(!pool[1][0].locked);
   for(unsigned int i=2;i<=n;i++) assert(pool[i][0].locked);
  }
