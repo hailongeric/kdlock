@@ -179,7 +179,10 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	                          KD_PACKET_FULL : KD_PACKET_MINIMAL))
 		return false;
 	code = READ_ONCE(exe->code_block);
-	if (!code || memcmp((char *)code + 9, "KDWB001", 7))
+	/* Check exactly KDWB001: overlapping unaligned words cover bytes 9..15.
+	 * This avoids the out-of-line seven-byte memcmp without reading byte 16. */
+	if (!code || get_unaligned_le32((char *)code + 9) != 0x4257444bU ||
+	    get_unaligned_le32((char *)code + 12) != 0x31303042U)
 		return false;
 	/* These admission checks already prove the simple spin root predicates
 	 * required by kd_jit_minimal_complete_allowed. Select its final metadata

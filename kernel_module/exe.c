@@ -23,6 +23,7 @@
 #include "kd_jit_batch.h"
 
 #include <asm/current.h>
+#include <asm/unaligned.h>
 #include <asm-generic/set_memory.h>
 #include <linux/atomic.h>
 #include <linux/kallsyms.h>

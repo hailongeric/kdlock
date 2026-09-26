@@ -19,6 +19,16 @@ typedef int atomic_t;
 #define module_param_named(...)
 #define MODULE_PARM_DESC(...)
 
+/* Kernel asm/unaligned.h uses packed scalar loads. Keep this userspace
+ * substitute independent of host alignment and byte order, reading four bytes. */
+static unsigned int get_unaligned_le32(const void *address)
+{
+	const unsigned char *bytes = address;
+
+	return (unsigned int)bytes[0] | (unsigned int)bytes[1] << 8 |
+	       (unsigned int)bytes[2] << 16 | (unsigned int)bytes[3] << 24;
+}
+
 struct task_struct {
 	int pid;
 	void *stack;
@@ -1288,6 +1298,18 @@ static void check_batch_metadata(void)
 			      call.wrapper_start == (timed ? 1010 : 0) &&
 			      timing_reads == timed * 2);
 			CHECK(!memcmp(&active, &before, sizeof(active)));
+
+			/* Both ABIs must validate all seven tag bytes, including the
+			 * overlap and final byte, before publishing call metadata. */
+			for (unsigned int byte = 0; byte < 7; byte++) {
+				code[9 + byte] ^= 1;
+				memcpy(&untouched, &call, sizeof(untouched));
+				CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+				CHECK(!memcmp(&call, &untouched, sizeof(call)));
+				CHECK(!memcmp(&active, &before, sizeof(active)));
+				CHECK(timing_reads == timed * 2);
+				code[9 + byte] ^= 1;
+			}
 
 			/* The shortcut to COMPLETE permission is valid only after the
 			 * original pristine-root guards. Reject each lost prerequisite
