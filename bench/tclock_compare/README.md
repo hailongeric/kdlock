@@ -162,11 +162,9 @@ python3 bench/tclock_compare/test_direct.py
 
 ## 本次结果
 
-全链路后续的小改动与定向范围见[重复操作精简](results/20260927-followup.md)；
-未重跑的三方完整矩阵仍以其冻结版本为准。
-
 | 报告 | 范围与用途 |
 | --- | --- |
+| [全链路复查与重复操作精简](results/20260927-followup.md) | callee SP、prefetch、队列检查、诊断读取及dispatcher fence精简；定向18场与最终135场，完整分布/worker进度及静态指令证据，无整体吞吐提升声明 |
 | [全链路访存与JIT优化](results/20260927-flow.md) | continuation缓存行、RIP地址折叠、解锁布局及无锁ticket元数据；分阶段诊断、15线程点三方135场及native借用验证 |
 | [spin清理与定向验证](results/20260926-cleanup.md) | 9线程点三方81场、36线程nested/early、生成代码审查；非完整矩阵或新吞吐收益声明 |
 | [最新c1复测至36线程](results/20260926-c1-through36.md) | aef982b、十五线程点三方135场；三轮峰值、整段、节点进度及Linux跨node波动，锁实现未变 |

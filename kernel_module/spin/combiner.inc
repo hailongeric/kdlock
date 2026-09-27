@@ -138,6 +138,7 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 	struct kd_spin_continuation *execution = node->execution;
 	struct kd_exec_frame *frame = &execution->frame;
 	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
+	struct kd_spin_diag_cpu __percpu *diag;
 	struct kd_exe_info *exe;
 
 	if (execution->kind == KD_SPIN_CONT_VIRTUAL ||
@@ -170,9 +171,11 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 		batch->queue_end = kd_exe_queue_timing_start();
 	frame->executed = true;
 	batch->pending = true;
-	this_cpu_inc(kd_spin_diag_cpu->batch_entries);
+	/* Keep both GS-relative increments on the same immutable per-CPU base. */
+	diag = kd_spin_diag_cpu;
+	this_cpu_inc(diag->batch_entries);
 	if (batch->fast_previous)
-		this_cpu_inc(kd_spin_diag_cpu->ww_jumps);
+		this_cpu_inc(diag->ww_jumps);
 	return true;
 }
 

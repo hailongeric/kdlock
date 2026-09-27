@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdatomic.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -22,6 +23,7 @@
 #define smp_store_release(p, v) __atomic_store_n(p, v, __ATOMIC_RELEASE)
 #define smp_load_acquire(p) __atomic_load_n(p, __ATOMIC_ACQUIRE)
 
+typedef uint16_t u16;
 typedef atomic_int atomic_t;
 #define ATOMIC_INIT(v) ATOMIC_VAR_INIT(v)
 #define atomic_read(p) atomic_load(p)
@@ -91,6 +93,7 @@ static void reset_trace(void)
 
 static void live_trace(void)
 {
+	u16 scan_left = 512;
 	struct kd_spin_node s = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &stask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 3 };
 	struct kd_spin_node r = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &rtask, .outer_lock_addr = (unsigned long)&lock } },
@@ -103,7 +106,7 @@ static void live_trace(void)
 
 	reset_trace();
 	kd_deferred_trace_lock = (unsigned long)&lock;
-	CHECK(get_next_node(&w) == &s);
+	CHECK(get_next_node(&w, &scan_left) == &s && scan_left == 511);
 	CHECK(kd_spin_cpu.local_queue_head == &r &&
 	      kd_spin_cpu.local_queue_tail == &r);
 	CHECK(events == 1 && strstr(message, "kd_defer append:"));
@@ -123,17 +126,22 @@ static void live_trace(void)
 	      strstr(message, "previous_cpu=7"));
 	kd_spin_cpu = (struct kd_spin_cpu_state){};
 	r.next = NULL;
-	CHECK(get_next_node(&w) == &r && !kd_spin_cpu.local_queue_head &&
-	      events == 4);
+	CHECK(get_next_node(&w, &scan_left) == &r &&
+	      !kd_spin_cpu.local_queue_head && events == 4);
 	r.next = &s;
 	r.socket_id = 0;
-	CHECK(get_next_node(&w) == &r && events == 4);
+	CHECK(get_next_node(&w, &scan_left) == &r && events == 4);
 	r.socket_id = 1;
 	s.socket_id = IRQ_NUMA_NODE;
-	CHECK(get_next_node(&w) == &r && events == 4);
+	CHECK(get_next_node(&w, &scan_left) == &r && events == 4);
 	s.socket_id = 0;
+	/* Saved SP does not classify nodes; only the published socket tag
+	 * stops delegation, including an immediate non-combinable successor. */
 	r.rsp = 0xdeadbeef;
-	CHECK(get_next_node(&w) == &r && events == 4);
+	CHECK(!check_irq_node(&r));
+	r.socket_id = IRQ_NUMA_NODE;
+	CHECK(get_next_node(&w, &scan_left) == &r && events == 4 &&
+	      scan_left == 511);
 	kd_spin_selftest_restore(&lock, &w, &r, 2);
 	CHECK(events == 5 && strstr(message, "kd_defer restore:"));
 	CHECK(strstr(message, "head=0 tail=0") && strstr(message, "result=2"));
@@ -177,6 +185,7 @@ static void selection(void)
 
 static void buffered_trace(void)
 {
+	u16 scan_left = 512;
 	struct kd_spin_node s = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &stask, .outer_lock_addr = (unsigned long)&lock } },
 				  .cpuid = 3 };
 	struct kd_spin_node r = { .execution = &(struct kd_spin_continuation){ .frame = { .logical_task = &rtask, .outer_lock_addr = (unsigned long)&lock } },
@@ -193,7 +202,7 @@ static void buffered_trace(void)
 	kd_deferred_trace_locks[0] = (unsigned long)&lock;
 	kd_deferred_trace_lock_count = 1;
 	kd_spin_cpu.lock_addr[1] = (unsigned long)&lock;
-	CHECK(get_next_node(&w) == &s);
+	CHECK(get_next_node(&w, &scan_left) == &s && scan_left == 511);
 	kd_spin_selftest_queue_context(&child_lock, true);
 	kd_spin_selftest_queue_context(&child_lock, false);
 	kd_spin_selftest_splice(&lock, &s, true);

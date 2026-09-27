@@ -61,7 +61,7 @@ struct kd_spin_node {
 	struct kd_spin_node *next;
 	int socket_id;
 	int cpuid;
-	/* Scheduler stack sentinel, not the logical register packet. */
+	/* Saved scheduling SP for queue bookkeeping and stack prefetch. */
 	uint64_t rsp;
 	/* Immutable while queued; hints only, never restoration/admission state.
 	 * Keep these addresses with the queue links in the first cache line. */

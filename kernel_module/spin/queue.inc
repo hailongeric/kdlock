@@ -36,7 +36,8 @@ static __always_inline void kd_spin_set_resume_node(struct kd_spin_node *node)
 
 static inline bool check_irq_node(struct kd_spin_node *node)
 {
-	return (node->socket_id == IRQ_NUMA_NODE || node->rsp == 0xdeadbeef);
+	/* Native/IRQ producers publish this immutable non-combinable marker. */
+	return node->socket_id == IRQ_NUMA_NODE;
 }
 
 static __always_inline void

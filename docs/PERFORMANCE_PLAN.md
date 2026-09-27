@@ -8,20 +8,20 @@
 ## 1. 当前状态与证据边界
 
 当前采用有界512正文及独立512扫描预算、六后继准入、minimal IP预取、直接per-CPU热值。
-本轮在此基础上压缩continuation前缀以合并IP/SP缓存行、用带代际的原子状态替代ticket guard、
+此前在此基础上压缩continuation前缀以合并IP/SP缓存行、用带代际的原子状态替代ticket guard、
 折叠JIT的RIP常量地址，并定向调整低竞争解锁布局；见[全链路报告](../bench/tclock_compare/results/20260927-flow.md)。
 采样策略、预取距离、owner/ACK及批次边界保持不变。此前维护删除单锁字迁移后遗留的
 恒等包装和未使用宏，精简失败返回赋值，并显式内联ticket叶子校验；
 [维护验证](../bench/tclock_compare/results/20260926-cleanup.md)包括基础/相关5组、两种构建、81场定向比较和36线程nested/early；
 最高KD峰值较前次共有点变化-0.11%至+0.94%，不作为新性能收益或全线程无回退证明。
 
-最近完整性能矩阵为本轮原子ticket版本：15线程点三方135场，结果见
-[全链路报告第二阶段](../bench/tclock_compare/results/20260927-flow.md#第二阶段去掉ticket-guard)。
-KD在8/12/16/20/24/28/32/36线程峰值均高于TCLock，幅度约2.2%–10.6%；
-7线程仍低约2.3%，1线程仍比Linux低约5.1%，2线程约低0.4%。
-对第一阶段guard版本，共有点1/4/8/16/20/28/32/36峰值上升，2/3线程分别低3.31%/1.33%；
-两阶段不是同场配对，不能宣布全线程无回退。Linux在本轮28线程仍出现高峰；
-以前32/36线程的有效高峰不因本轮未出现而作废，所有快慢样本保留。
+最近完整性能矩阵为[重复操作精简版本](../bench/tclock_compare/results/20260927-followup.md)：
+15线程点三方135场，KD在8/12/16/20/24/28/32/36线程峰值均高于TCLock，幅度1.24%–10.04%；
+7线程仍低3.83%，1线程仍比Linux低5.18%，2线程本轮高4.97%。
+对起点原子ticket版，8–36线程最好值变化−0.58%至+0.16%，本轮没有整体吞吐提升结论；
+12/16/32/36三轮范围不重叠，不能宣布全线程无回退或都归为波动。
+Linux在28/36出现高峰，36的两个高轮整段也超过12 Mops/s；计数/窗口一致但原因未定。
+所有快慢样本保留，原子ticket选型与旧guard参照见[前一完整矩阵](../bench/tclock_compare/results/20260927-flow.md)。
 512选型、撤回候选及早期功能证据统一见[跨node报告](../bench/tclock_compare/results/20260926-cross-node.md)。
 
 当前 c1 比较覆盖 1–8/12/16/20/24/28/32/36 线程，worker 顺序放置 CPU 0–35：
@@ -64,18 +64,29 @@ NUMA-on继续作为provider和比较运行器默认值。优化优先级按实�
 | ticket | 删除私有guard，代际/状态/kind/借用数共用一个64位CAS字；分配release发布，等待acquire读 | 后续可测独占OWNED/RELEASED转换的store化；当前保留完整CAS，避免混合优化 |
 | 请求发布 | continuation内result保留32位，内部kind压为字节并重排；frame从32移到24，MINIMAL IP/SP共行 | 记录仍704字节；这是五行变四行的几何，不是已测cache miss次数 |
 | NUMA选择 | 有界512正文/独立512扫描；连续延期链只改必要接点，远端前缀最后优先交接 | 先测批终止原因；继续放大上限可能损害少数节点进度 |
-| 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；不先追远端task/frame找地址 | 新布局允许评估MINIMAL IP/SP重复hint；FULL/借用包需保留覆盖，远距离预取旧回退仍有效 |
+| 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；MINIMAL IP/SP共行只发一次hint | FULL/借用包的尾部partial line可单独评估；远距离预取旧回退仍有效 |
 | batch准入/lease | registry身份只读复用，发布状态逐请求读取，精确source lease按batch摊销 | 不复制共享包，不把生命周期计数改成近似统计 |
 | JIT正文 | 翻译时折叠RIP常量地址；callee跳板去掉重复SP存储，由公共出口统一发布 | 未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
 | wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 去掉虚拟CALL栈写需保持真实续点及FULL契约，不是直接删保存指令 |
 | 退休/通知 | 先pop/退休，再release唤醒；队列头和轮询行分离 | 原owner ACK、最后一次packet读取和节点复用顺序保持不变 |
-| 嵌套/原生后缀 | 未启用的注入控制仍做共享cmpxchg；通用dispatcher尾部有MFENCE；native路由表仍有共享锁 | 可复用本地native-root避开无关全局查询，先读注入开关再CAS；MFENCE需审计所有发布点，普通c1 batch不经过它 |
+| 嵌套/原生后缀 | 通用dispatcher删除冗余MFENCE，完成/native/ACK/status各自发布；native路由表仍有共享锁 | 可复用本地native-root避开无关全局查询，先读注入开关再CAS；普通c1 batch不经过通用dispatcher |
 
 普通c1生成代码没有KD新增的MFENCE/LFENCE/SFENCE。x86的`barrier()`、普通
 `smp_rmb/wmb()`及这里的acquire/release通常只是编译顺序或MOV；删除它们不等于省掉硬件栅栏。
 真正的locked操作包括锁字仲裁、ticket状态CAS以及batch lease。`run_combiner`的显式
 `smp_mb()`位于拒绝交接分支，不是每个代理正文的成本。本轮保留所有发布/ACK顺序，
 不新增访问时安全检查，不把统计近似原则套用到存储存活协议。
+
+后续复查确认队列的`rsp == 0xdeadbeef`已无生产写入，非代理节点统一使用socket标记；
+删除该额外读取/比较，保留真实rsp字段及TCLock自身协议。batch两次per-CPU统计共享短期
+本地base指针，避免重复读取全局指针；仍使用GS相对更新，不增加`this_cpu_ptr()`地址计算。
+这些静态减少不等同于测到更少远端cache miss，验证与成绩见[后续报告](../bench/tclock_compare/results/20260927-followup.md)。
+
+反汇编确认consumer prefetch、batch准备、寄存器访问和小型队列判断已经内联，
+不再机械添加属性。producer `kd_spin_prepare_prefetch()`仍有独立调用和保存现场，
+可单独测试强制内联；必须同时检查调用者spill/代码大小，不改显式栈切换边界。
+FULL按`regs+0/64/128`预取可能漏掉未对齐包的尾行；inline包主要是SS，通用借用位置还可能含SP。
+这是缓存覆盖方向而非正确性错误，是否补hint取决于相关负载，不能盲目加宽所有请求。
 
 ## 2. P0：建立当前版本的可信基线
 
@@ -125,6 +136,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
   所有成本隔离候选保持[当前采样与比例策略](JIT_EXECUTION.md#21-热度与角色)，
   除非任务明确调整策略。
 - [ ] 单线程短/长批次分别报告，不能将长度变化产生的绝对吞吐跳升归为布局收益。
+- [ ] 单独评估clobber unlock入口/快路径对齐：本轮代码精简让不变的release MOV
+  移到text偏移模64为63处。先核对实际位置再测，不把静态跨行直接认定为已测瓶颈。
 
 以完整操作吞吐为验收；组件ns/call或指令数下降只能解释候选，不能替代实际JIT覆盖。
 
@@ -157,7 +170,7 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 - [x] 删除callee出口重复SP存储；[定向复测](../bench/tclock_compare/results/20260927-followup.md)18场及36线程nested原生续跑通过，吞吐未见明确提升。
 - [ ] 继续核对scratch spill和虚拟CALL栈操作；仅在身份、
   准入与有效期可证明一致时复用状态。FULL、hostcall与远端处理保留独立出口。
-- [ ] 下次先检验相邻batch_entries/ww_jumps能否复用短期本地诊断指针，保持两次精确per-CPU更新；以ELF无新增spill及实测为准。
+- [x] 相邻batch_entries/ww_jumps复用短期本地诊断指针，保留两次GS相对per-CPU更新；匹配ELF与成绩见后续报告。
 - [ ] 测量观察层成本，默认 `jit_timing=0`，采样与正式吞吐分开；inclusive timer
   可能重叠，不能相加为纯CPU成本。生成指令变化要验证真实生成代码及对应边界。
 
@@ -170,6 +183,7 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 - [x] 同一可执行代码比较0与2；关闭预取明显下降，保留producer提示2。
 - [x] 测试首请求+两请求完整预取，以及更远队列头分级预取；前者高竞争下降，
   后者跨NUMA略升但16/20下降约2%，均撤回并归档。当前仍在正文前预取下一请求。
+- [x] 默认producer MINIMAL只预取BP/IP，利用已断言的IP/SP共行；FULL和consumer模式保持原范围。
 - [ ] 后续如调整距离/范围，按实际cache-miss/生成代码测量定位；本轮未采集硬件miss。
   提示不能代替权威frame或生命周期引用。
 
@@ -183,7 +197,7 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
   先保持一次副作用、原owner ACK和排空，再分析服务成本。
 - [ ] 继续定位28线程20+8节点分布的短批与整段差距；先区分批上限、无后继及entry拒绝，
   不新增每请求时钟；修改上限或NUMA选择时同时检查少数节点进度。
-- [ ] 诊断24线程20+4放置的服务偏斜：本轮KD峰值获选场node1整段份额仅1.27%；
+- [ ] 诊断24线程20+4放置的服务偏斜：本轮KD三轮node1整段份额仅1.10%–1.25%；
   512正文/扫描上限及正进度不等于公平或最大等待时间保证，吞吐之外需保留worker分布。
 - [ ] 按实际需求扩展多锁、正文长度、NUMA和公平性；单锁spin的TCLock结果不能
   推广为mutex或任意嵌套性能。

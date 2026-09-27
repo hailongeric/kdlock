@@ -179,7 +179,11 @@ The read-only module parameter `spin_prefetch` selects successor warming:
 hints. Other existing queue-return stack hints are unchanged in every mode.
 Mode 2 prepares the packet pointer, bounded logical-stack SP and full/complex
 flags before queue publication. A physical producer passes its inline packet;
-a virtual producer passes the retained parent packet. The current 128-byte node keeps links,
+a virtual producer passes the retained parent packet and always marks it FULL.
+Thus mode 2 MINIMAL packets are inline: the aligned continuation and its asserted
+layout put IP/SP in one cacheline, warmed once through IP alongside the BP hint.
+No consumer-side alignment test or packet read is needed. FULL and mode 1 keep
+their separate hint ranges. The current 128-byte node keeps links,
 execution and hints in its first line; completed/locked occupy offsets 64/65
 on a separate polling line. Type alignment and stride isolate all four slots,
 including nested nodes. The consumer can issue

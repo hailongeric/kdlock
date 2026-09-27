@@ -547,7 +547,7 @@ class DeferredTests(unittest.TestCase):
             "__always_inline static void add_to_local_queue(struct kd_spin_node *node)",
         )
         code += "static struct kd_spin_node *\n" + definition(
-            source, "get_next_node(struct kd_spin_node *my_node)"
+            source, "get_next_node(struct kd_spin_node *my_node, u16 *scan_left)"
         )
         with tempfile.TemporaryDirectory(prefix="kd-deferred-unit-") as directory:
             path = Path(directory)

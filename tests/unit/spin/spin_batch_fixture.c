@@ -381,8 +381,18 @@ static void test_prefetch(void)
 	CHECK(hints[0] == request.frame.regs_ref && hint_count == with_stack);
 }
 
-/* Prepared hints must match the old bounded targets for both inline and
- * borrowed packets, and overwrite stale node hints before each publication. */
+static bool hint_has_line(const void *const *list, unsigned int count,
+			  const void *target)
+{
+	for (unsigned int i = 0; i < count; i++)
+		if ((uintptr_t)list[i] / L1_CACHE_BYTES ==
+		    (uintptr_t)target / L1_CACHE_BYTES)
+			return true;
+	return false;
+}
+
+/* Prepared hints preserve warmed lines and overwrite stale node hints before
+ * each publication. Production MINIMAL is inline; borrowed packets are FULL. */
 static void test_prepared_prefetch(void)
 {
 	char stack[THREAD_SIZE];
@@ -396,7 +406,10 @@ static void test_prepared_prefetch(void)
 	for (unsigned int alias = 0; alias < 2; alias++) {
 		struct pt_regs *regs = alias ? &borrowed : &request.frame.regs;
 		request.frame.regs_ref = regs;
+		request.kind = alias ? KD_SPIN_CONT_VIRTUAL : KD_SPIN_CONT_ROOT;
 		for (unsigned int full = 0; full < 2; full++) {
+			if (alias && !full)
+				continue;
 			request.frame.packet_state = full ? KD_PACKET_FULL : KD_PACKET_MINIMAL;
 			for (unsigned int complex = 0; complex < 2; complex++) {
 				request.frame.complex_ready = complex;
@@ -413,20 +426,34 @@ static void test_prepared_prefetch(void)
 					struct pt_regs saved = *regs;
 					hint_count = 0;
 					kd_spin_prefetch_request(&node);
-					CHECK(hint_count == expected);
-					unsigned int ip_hints = 0;
-					/* Frame warming moves first; the address multiset stays equal. */
-					for (unsigned int h = 0; h < expected; h++) {
-						unsigned int a = 0, b = 0;
-						ip_hints += hints[h] == &regs->ip;
-						for (unsigned int k = 0; k < expected; k++) {
-							a += hints[k] == lookup[h]; b += lookup[k] == lookup[h];
+					if (full) {
+						CHECK(hint_count == expected);
+						/* FULL targets stay identical, including borrowed packets. */
+						for (unsigned int h = 0; h < expected; h++) {
+							unsigned int a = 0, b = 0;
+							for (unsigned int k = 0; k < expected; k++) {
+								a += hints[k] == lookup[h];
+								b += lookup[k] == lookup[h];
+							}
+							CHECK(a == b);
 						}
-						CHECK(a == b);
+					} else {
+						unsigned int bp_hints = 0, ip_hints = 0;
+
+						CHECK(hint_count + 1 == expected);
+						CHECK((uintptr_t)&regs->ip / L1_CACHE_BYTES ==
+						      (uintptr_t)&regs->sp / L1_CACHE_BYTES);
+						/* Fewer addresses must still warm exactly the same lines. */
+						for (unsigned int h = 0; h < expected; h++)
+							CHECK(hint_has_line(hints, hint_count, lookup[h]));
+						for (unsigned int h = 0; h < hint_count; h++) {
+							CHECK(hint_has_line(lookup, expected, hints[h]));
+							bp_hints += hints[h] == &regs->bp;
+							ip_hints += hints[h] == &regs->ip;
+						}
+						CHECK(bp_hints == 1 && ip_hints == 1);
+						CHECK(hint_has_line(hints, hint_count, &regs->sp));
 					}
-					/* Equal hint sets must not hide IP omitted by both modes. */
-					if (!full)
-						CHECK(ip_hints == 1);
 					CHECK(!memcmp(&before, &request, sizeof(request)));
 					CHECK(!memcmp(&saved, regs, sizeof(saved)));
 					CHECK(node.locked && !node.completed);
@@ -448,10 +475,15 @@ static void test_prepared_prefetch(void)
 			  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	CHECK(area != MAP_FAILED);
 	struct kd_spin_continuation *protected = area;
-	struct pt_regs *packet = (void *)((char *)area + bytes);
+	struct pt_regs *external_packet = (void *)((char *)area + bytes);
 	node.execution = protected;
 	for (unsigned int full = 0; full < 2; full++) {
+		/* Protect inline MINIMAL and a separately borrowed FULL packet. */
+		struct pt_regs *packet = full ? external_packet : &protected->frame.regs;
+
 		CHECK(mprotect(area, bytes + page, PROT_READ | PROT_WRITE) == 0);
+		protected->kind = full ? KD_SPIN_CONT_VIRTUAL : KD_SPIN_CONT_ROOT;
+		protected->frame.regs_ref = packet;
 		protected->frame.logical_task = &task;
 		protected->frame.packet_state = full ? KD_PACKET_FULL : KD_PACKET_MINIMAL;
 		protected->frame.complex_ready = true;
@@ -460,7 +492,14 @@ static void test_prepared_prefetch(void)
 		CHECK(mprotect(area, bytes + page, PROT_NONE) == 0);
 		hint_count = 0;
 		kd_spin_prefetch_request(&node);
-		CHECK(hint_count == 10 && hints[hint_count - 2] == stack + 128);
+		CHECK(hint_count == (full ? 10 : 9));
+		CHECK(hints[hint_count - 2] == stack + 128);
+		CHECK(hints[hint_count - 1] == stack + 120);
+		if (!full) {
+			CHECK(hint_has_line(hints, hint_count, &packet->bp));
+			CHECK(hint_has_line(hints, hint_count, &packet->ip));
+			CHECK(hint_has_line(hints, hint_count, &packet->sp));
+		}
 	}
 	/* Disabled mode must not follow even a deliberately unusable node. */
 	kd_spin_prefetch_mode = 0; hint_count = 0;

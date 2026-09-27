@@ -647,7 +647,7 @@ PENDING 的 `control_call.target/stack/return_ip`，不是入口寄存器快照�
 
 ## 8. Sandbox 退出 ABI
 
-公共 epilogue 约定：
+FULL及旧ABI精简出口的公共epilogue约定（clobber COMPLETE按上文使用post-CALL续点）：
 
 ```text
 pt_regs.ip = physical R14
@@ -657,7 +657,7 @@ args[0]    = Stack_IJ
 args[1]    = Stack_JIT_WITNESS   (0/1，只供观测)
 ```
 
-其余受支持 GPR 也写回 `pt_regs`。退出桩的具体协议如下：
+FULL还将其余受支持GPR写回`pt_regs`。退出桩的具体协议如下：
 
 | 原因 | R14 / `regs->ip` | `args[0]` | virtual CALL frame |
 | --- | --- | --- | --- |

@@ -460,7 +460,8 @@ returned_wrapper:
 		break;
 	}
 
-	mb();
+	/* Completion/native/ACK releases and registry status CAS publish their
+	 * own state; returning this local result needs no additional full fence. */
 	kd_jit_timing_end(KD_JIT_TIME_DISPATCH, dispatch_start);
 	return ret_flag;
 }

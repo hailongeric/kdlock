@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [全链路复查与重复操作精简](../bench/tclock_compare/results/20260927-followup.md) | JIT阶段基础/相关5组、18场和36线程native续跑；最终基础/相关11组、三方135场、36线程native/early各360万操作及NORMAL构建通过；没有全量或mutex live重跑 |
 | [全链路优化与无锁ticket](../bench/tclock_compare/results/20260927-flow.md) | 第一阶段90场及相关测试单列；最终原子ticket版基础/entry/outer_progress/remote_outer共5组、两种构建、CPU0/20真实ticket selftest、完整135场及36线程nested原生续跑/early各360万操作通过，未跑全量 |
 | [spin清理与内联验证](../bench/tclock_compare/results/20260926-cleanup.md) | 基础/entry/shadow/outer共5组，普通及SELFTEST构建、81场性能、36线程nested/early各180万操作及归档审计通过；未跑全量 |
 | [最新c1复测至36线程](../bench/tclock_compare/results/20260926-c1-through36.md) | aef982b完整135场通过；runner34项、源码/ELF/峰值及排空审计通过，本次未重跑nested/early或全量 |

@@ -10,7 +10,9 @@ MODULE_PARM_DESC(spin_prefetch,
 
 /* Called with initialized, exclusively owned request state. Physical callers
  * pass their inline packet directly; virtual children pass the retained parent
- * packet. No register copy and no extra task/request reference is introduced. */
+ * packet and always publish FULL. Thus MINIMAL hints use the aligned inline
+ * packet, whose IP/SP cache-line sharing is a build-time invariant.
+ * No register copy and no extra task/request reference is introduced. */
 static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
 				     struct pt_regs *regs)
 {
@@ -101,11 +103,10 @@ static void kd_spin_prefetch_request(struct kd_spin_node *node)
 		for (offset = 0; offset < sizeof(*regs); offset += L1_CACHE_BYTES)
 			prefetchw((char *)regs + offset);
 	} else {
-		/* Inline IP occupies its own line: admission reads it, and
-		 * COMPLETE writes it along with BP/SP. Keep the same lead time. */
+		/* MINIMAL is inline: IP also warms SP on the same cache line.
+		 * Keep both packet lines ahead of admission and COMPLETE writes. */
 		prefetchw(&regs->bp);
 		prefetchw(&regs->ip);
-		prefetchw(&regs->sp);
 	}
 	if (node->prefetch_complex) {
 		prefetchw(&frame->jit_lock_addr[0]);
