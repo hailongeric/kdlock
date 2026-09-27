@@ -355,6 +355,99 @@ peak 份额 5.52%–12.35%；没有无饥饿或最大等待时间证明。
 证据 `numa-20260928-mutex-numa-{screen,recheck,validation}`，host
 `mutex-numa-rejected.tar.gz` SHA256 `d34199c9929ef5d5f069bf3c7364f988bfb45b9c9a87072d0cb097ee6ba19818`。
 
+## Task cache 在专用 batch 上复验：仍回退
+
+在已保留的 locality/batch 版本重新应用 1024 稳定 task cache，继续使用 per-CPU 观察计数。
+基础与碰撞/容量/并发发布 fixture 共 3 组通过；真实 pinned task、原生 mutex owner 和最终 ACK
+探针通过，两种释放次序共 4 ACK、2 retained task 引用在卸载时释放。该探针 JIT=0；
+普通 benchmark 的返回正文 JIT 证据单独统计。
+
+27 场筛选与 18 场复核均业务正确、每 worker 有进度、实际 JIT 且排空，但仍未通过性能门槛：
+
+| threads | 筛选 KD min/median/max Mops/s | 复核 KD min/median/max | 已接受 batch 中位数 |
+| --- | --- | --- | --- |
+| 1 | 17.260 / 17.265 / 17.377 | 未重复 | 14.790 |
+| 16 | 2.150 / 2.165 / 2.173 | 2.136 / 2.168 / 2.221 | 4.797 |
+| 36 | 1.205 / 1.209 / 1.231 | 1.201 / 1.345 / 1.508 | 2.931 |
+
+16 中位数两次下降 54.87% / 54.80%，36 下降 58.75% / 54.12%。筛选的整段 JIT 份额
+16 为 94.07%–95.85%、36 为 93.02%–95.46%；不能把更高 JIT 份额当成吞吐提升。
+候选在 `perf/mutex-task-cache-batch-candidate-20260928` 隔离保留，尚不合入已接受版本。
+36 复核每 worker 最少 54272 操作、node 1 整段份额 41.52%–44.07%。
+随后在此候选上单独复验 lock-free shadow，以区分剩余全局表锁开销；不得据组合实验
+改写此处独立候选的失败结果。
+
+证据 `numa-20260928-mutex-tasks2-{screen,recheck,validation,ack}`；host
+`mutex-tasks2-candidate.tar.gz` SHA256
+`1eb10c9f29df9a027c93fe7be603151e82d2785fe3b69b75896a18b3ca796074`。
+
+## Task cache + lock-free shadow：只保留为组合候选
+
+在上述 task-cache/batch 候选单独换入此前的 lock-free shadow；初始化、精确地址 hash、
+immutable CAS publication、1024 容量/native fallback 和 cacheline stride 均不变。
+基础及生产 resource fixture 3 组通过（10820 条检查和 21 个变异）；27 场三方筛选均正确并排空。
+
+| threads | KD min/median/max Mops/s | 对 task-cache 筛选中位数变化 | 对已接受 batch 中位数变化 |
+| --- | --- | --- | --- |
+| 1 | 17.055 / 17.147 / 17.166 | -0.68% | +15.94% |
+| 16 | 2.338 / 2.374 / 2.381 | +9.66% | -50.51% |
+| 36 | 1.383 / 1.431 / 1.443 | +18.37% | -51.18% |
+
+16/36 整段返回正文 JIT 份额为 82.93%–90.94% / 96.57%–98.02%。shadow 在这个成本结构下
+改善候选，但组合仍不满足已接受基线的性能门槛，不据此合入主分支或声称目标达成。
+下一项仅测试 migration-pinned 生命周期余额的精确 per-CPU 存放；owner/task/ACK/队列发布不变。
+证据 `numa-20260928-mutex-shadow2-{screen,validation}`，host
+`mutex-shadow2-candidate.tar.gz` SHA256
+`dbf6e2919c91607239003da324d15dca3537b772203bbfef8c32e3b56659218f`。
+
+## 精确 pinned 生命周期余额：组合候选改善，仍未达到已接受版本
+
+静态路径核对确认 reserve/release 和 waiter enter/exit 均在同一 migration-pinned origin CPU，
+且每次修改余额时关闭抢占。把 active/reserved 的全局 atomic 改为独立 per-CPU 精确余额；
+排空逐 CPU 检查两项余额及 slot bitmap，不以总和或观测值决定生命周期。跨 CPU 的 per-lock
+waiter count、owner、task ref、source lease、ACK 与队列发布顺序不变。
+`max_waiters_per_cpu` 明确仅表示单 CPU 峰值。
+
+基础、resource、source lifetime、两 CPU balance 共 5 组最终通过；新检查覆盖睡眠 reservation、
+独立 CPU 进度、slot 仍存活、正负余额不能抵消、underflow，并检测 5 个变异。
+首次 fixture 的宏缩进导致编译失败，加括号后相关 3 组复跑通过；失败日志保留。
+27 场业务、JIT、worker 进度与排空全部通过：
+
+| threads | KD min/median/max Mops/s | 对上项 shadow/task 中位数变化 |
+| --- | --- | --- |
+| 1 | 17.137 / 17.144 / 17.147 | -0.02% |
+| 16 | 2.709 / 2.733 / 2.744 | +15.13% |
+| 36 | 1.601 / 1.605 / 1.618 | +12.15% |
+
+组合仍低于已接受 batch 的 16/36 中位数 4.797 / 2.931，继续隔离。
+该改动验证的是精确计数存放，不是用近似 profile 替代生命周期，也没有测得远端访问延迟。
+证据 `numa-20260928-mutex-balances-{screen,validation,validation-fixed}`，host
+`mutex-balances-candidate.tar.gz` SHA256
+`66f70ba4a185187d6005656a9313c9a295ea1975e1ed433dc7aca25961b43400`。
+
+## 高 JIT 组合上的 NUMA grouping 复验：不合入
+
+在 task cache + shadow + 精确 per-CPU 余额上重用已测 NUMA 实现，独立改变 grouping。
+基础与 NUMA on/off、outer-progress 共 4 组通过；27 场筛选与 18 场保护点复核均正确并排空。
+36 线程筛选中位数相对上项 FIFO 候选提高约 59.57%，JIT 份额约 98.5%；
+但整体候选相对已接受 batch 仍在保护点重复下降：
+
+| threads | 筛选 KD min/median/max Mops/s | 复核 KD min/median/max | 对已接受 batch 中位数变化（筛选 / 复核） |
+| --- | --- | --- | --- |
+| 1 | 17.141 / 17.142 / 17.153 | 未重复 | +15.90% / — |
+| 16 | 2.678 / 2.679 / 2.716 | 2.665 / 2.690 / 2.708 | -44.14% / -43.91% |
+| 36 | 2.555 / 2.561 / 2.578 | 2.546 / 2.590 / 4.985 | -12.63% / -11.64% |
+
+36 复核的 4.985 峰值有效且保留，为同期 TCLock 最高值的 107.60%；对应整段仅 2.858，
+该组 spread 94.17%，不能用这一个峰值取消保护点中位数回退。36 每 worker 至少 106496 操作，
+node1 整段份额 49.57%–57.37%、峰窗 49.69%–78.28%，并非最大等待时间或公平性证明。
+完整组合及各中间提交在 `perf/mutex-task-cache-batch-candidate-20260928` 保留；
+已接受主分支继续使用 native-first + locality + 专用 batch、原 RCU task registry、原 shadow table
+及 mutex FIFO。按该版本做完整 cacheline，再做 mutex/hash；不把不同版本取优混为最终成绩。
+证据 `numa-20260928-mutex-numa2-{screen,recheck,validation}`；host
+`mutex-numa2-candidate.tar.gz` SHA256
+`100a4c01cdc687b7c362935b7de8d7931acb1b89aaf75f83a653f734e3c77a77`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：
