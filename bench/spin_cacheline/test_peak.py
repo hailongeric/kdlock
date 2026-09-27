@@ -47,6 +47,26 @@ class PeakTests(unittest.TestCase):
         self.assertEqual(peak['active_finished_ns'], 1100 * MS)
         self.assertEqual(peak['progress_count_error_bound'], 512)
 
+    def test_hash_timing_preserves_outcome_and_structure_checks(self):
+        spec, measurement = fixture()
+        spec.update(workload='rcuht', cachelines=0)
+        measurement.update(workload='rcuht', cachelines=0, hash_integrity_ok=True,
+            before=[3, 1, 1, 1] + [0]*12,
+            after=[8195, 2049, 2049, 4097] + [0]*12)
+        peak = runtime.validate_measurement(measurement, spec, 0)
+        self.assertEqual(peak['completed'], 2304)
+        for change in (
+            lambda m: m['after'].__setitem__(1, m['after'][1] - 1),
+            lambda m: m['after'].__setitem__(0, m['after'][0] + 1),
+            lambda m: m['after'].__setitem__(4, 1),
+            lambda m: m.update(hash_integrity_ok=False),
+            lambda m: m.update(workload='cacheline'),
+        ):
+            broken = copy.deepcopy(measurement)
+            change(broken)
+            with self.assertRaises(runtime.Failure):
+                runtime.validate_measurement(broken, spec, 0)
+
     def test_actual_brackets_and_delayed_samples_without_interpolation(self):
         spec, measurement = fixture()
         measurement['samples'] = [dict(started_ns=begin * MS, finished_ns=end * MS,

@@ -8,10 +8,15 @@
 ## 1. 当前状态与证据边界
 
 按用户2026-09-27的阶段安排，spin本轮以[135场收尾复测](../bench/tclock_compare/results/20260927-spin-checkpoint.md)
-作为转入mutex前的基线，未再修改实现。KD在8–36线程全部已测点峰值高于TCLock，
+作为转入mutex前的c1基线，未再修改锁实现。KD在8–36线程全部已测点峰值高于TCLock，
 相对前次相同实现变化在约±0.31%内；1/2线程仍低于Linux，2/7线程低于TCLock。
 Linux28/32/36线程高值再次出现且计数/窗口审计通过，24线程KD的少数node进度占比仍约1%。
 下列spin优化项保留为后续候选，不因本次阶段收尾而标记完成；下一阶段工作转向mutex。
+
+随后按用户要求新增hash连续计时并完成[三方135场hash比较](../bench/tclock_compare/results/20260927-hash-peak.md)。
+固定2.5GHz、NUMA-on及相同预热/窗口设置下，KD在3–5线程领先两方，6–36线程各已测点低于TCLock；
+8–36线程实际JIT占比99.5%–99.8%，不能将差距归为没有代理。锁实现与c1 checkpoint相同，
+不同正文的成绩不能作为同负载实现回退；本次未进行新的性能归因或mutex测试。
 
 当前采用有界512正文及独立512扫描预算、六后继准入、minimal IP预取、直接per-CPU热值。
 此前在此基础上压缩continuation前缀以合并IP/SP缓存行、用带代际的原子状态替代ticket guard、

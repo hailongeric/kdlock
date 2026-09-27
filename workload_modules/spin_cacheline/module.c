@@ -98,14 +98,14 @@ static long sc_read_progress(void __user *user)
 
 static long sc_run_timed(void __user *user)
 {
-#ifdef SC_HASH_PAYLOAD
-	/* The duration experiment is deliberately limited to the cacheline arms. */
-	(void)user;
-	return -EOPNOTSUPP;
-#else
 	struct sc_timed_run run;
 	struct sc_progress_slot *slot;
+#ifdef SC_HASH_PAYLOAD
+	struct sc_hash_stats hash_stats = { 0 };
+	u64 random_state;
+#else
 	void (*body)(void);
+#endif
 	u64 post_state = 1;
 	unsigned int before_preempt, i;
 	bool before_irqs;
@@ -113,6 +113,12 @@ static long sc_run_timed(void __user *user)
 
 	if (copy_from_user(&run, user, sizeof(run)))
 		return -EFAULT;
+#ifdef SC_HASH_PAYLOAD
+	if (run.cachelines != 0)
+		return -EINVAL;
+	/* Match fixed-iteration workers: random keys remain outside the lock. */
+	random_state = (raw_smp_processor_id() + 1ULL) * 0x9e3779b97f4a7c15ULL;
+#else
 	switch (run.cachelines) {
 	case 1: body = sc_body_1; break;
 	case 2: body = sc_body_2; break;
@@ -121,6 +127,7 @@ static long sc_run_timed(void __user *user)
 	case 16: body = sc_body_16; break;
 	default: return -EINVAL;
 	}
+#endif
 	if (!sc_run_enter())
 		return -EBUSY;
 	if (!run.started_ns || run.started_ns != sc_timed.started_ns ||
@@ -143,7 +150,14 @@ static long sc_run_timed(void __user *user)
 	}
 	do {
 		for (i = 0; i < SC_TIMED_BATCH; i++) {
+#ifdef SC_HASH_PAYLOAD
+			u32 src = sc_hash_random(&random_state) % SC_HASH_KEY_RANGE;
+			u32 dst = sc_hash_random(&random_state) % SC_HASH_KEY_RANGE;
+
+			sc_body_0(src, dst, &hash_stats);
+#else
 			body();
+#endif
 			post_state = sc_post_work(post_state);
 		}
 		run.completed += SC_TIMED_BATCH;
@@ -152,6 +166,13 @@ static long sc_run_timed(void __user *user)
 		WRITE_ONCE(slot->completed, run.completed);
 		run.finished_ns = ktime_get_ns();
 	} while (run.finished_ns < run.deadline_ns);
+#ifdef SC_HASH_PAYLOAD
+	/* Publish exact outcomes once at completion, not at each progress sample.
+	 * The quiescent snapshot validates their sum and the full hash structure. */
+	atomic64_add(hash_stats.moves, &sc_hash_moves);
+	atomic64_add(hash_stats.dests, &sc_hash_dests);
+	atomic64_add(hash_stats.misses, &sc_hash_misses);
+#endif
 	if (WARN_ON_ONCE(before_preempt != preempt_count() ||
 			 before_irqs != irqs_disabled()))
 		error = -EUCLEAN;
@@ -160,7 +181,6 @@ out:
 	if (error)
 		return error;
 	return copy_to_user(user, &run, sizeof(run)) ? -EFAULT : 0;
-#endif
 }
 
 static long sc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)

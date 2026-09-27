@@ -192,6 +192,12 @@ def validate_measurement(m, spec, iterations):
             m["finished_ns"] == max(w["finished_ns"] for w in ws) and
             m["wall_ns"] == m["finished_ns"] - m["started_ns"] > 0,
             "incorrect client aggregation", "DATA_ERROR")
+    validate_payload(m, spec)
+
+
+def validate_payload(m, spec):
+    """Both measurement modes require the same exact business-data oracle."""
+    n = spec["cachelines"]
     require(len(m["before"]) == len(m["after"]) == 16,
             "invalid snapshot shape", "DATA_ERROR")
     workload = spec.get('workload', 'cacheline')
@@ -217,7 +223,8 @@ def validate_timed_measurement(m, spec):
     require(m['schema'] == 2 and m['measurement_mode'] == 'duration' and
             m['complete'] is True and m['data_ok'] is True,
             'client reported an incomplete/incorrect timed workload', 'DATA_ERROR')
-    require(spec.get('workload', 'cacheline') == m['workload'] == 'cacheline' and
+    require(spec.get('workload', 'cacheline') == m['workload'] and
+            m['workload'] in ('cacheline', 'rcuht') and
             spec.get('scenario', 'plain') == 'plain' and
             (m['cachelines'], m['threads'], m['iterations']) ==
             (spec['cachelines'], spec['threads'], 0),
@@ -233,10 +240,7 @@ def validate_timed_measurement(m, spec):
             m['finished_ns'] == max(w['finished_ns'] for w in ws) and
             m['wall_ns'] == m['finished_ns'] - m['started_ns'] > 0,
             'incorrect timed client aggregation', 'DATA_ERROR')
-    require(len(m['before']) == len(m['after']) == 16 and
-            all(after - before == (m['completed'] if index < spec['cachelines'] else 0)
-                for index, (before, after) in enumerate(zip(m['before'], m['after']))),
-            'timed payload counter delta mismatch', 'DATA_ERROR')
+    validate_payload(m, spec)
     try:
         return analyze_peak(m, spec)
     except (ValueError, KeyError, TypeError) as error:

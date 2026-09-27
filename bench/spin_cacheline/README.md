@@ -25,3 +25,7 @@
 [执行路径](EXECUTION_PATHS.md)统一记录当前 TCLock/KD 流程、对象大小、分配位置、
 跨 CPU 数据流及回收边界。[历史索引](results/HISTORY.md)保留阶段成绩与失败记录，
 旧运行命令只能在匹配历史 checkout 中使用。
+
+客户端和峰值选择共用于cacheline及`--workload rcuht`。固定/计时测量复用同一payload校验：
+hash要求搬移、冲突、未命中总和等于完整操作数，并验证结构完整性；每256次发布的worker进度只用于选窗口。
+最近hash计时支持及135场验证见[结果报告](../tclock_compare/results/20260927-hash-peak.md)。

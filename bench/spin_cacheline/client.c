@@ -235,7 +235,7 @@ int main(int argc, char **argv)
 	    duration_ms > SC_TIMED_MAX_DURATION_NS / 1000000 ||
 	    !window_ms || window_ms > duration_ms || settle_ms >= duration_ms - window_ms ||
 	    !sample_ms || sample_ms > window_ms || collector_cpu >= CPU_SETSIZE ||
-	    iterations_set || hash || layout_only || counts_only || prepare_only))
+	    iterations_set || layout_only || counts_only || prepare_only))
 		return 2;
 	if (prepare_only && !(hash ? lines == 0 :
 		(lines == 1 || lines == 2 || lines == 4 || lines == 8 || lines == 16)))

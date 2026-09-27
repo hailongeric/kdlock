@@ -44,9 +44,9 @@ def timing_settings(args):
                 settings['collector_cpu'] not in range(t) for t in args.threads),
                 'collector CPU must be outside every worker cohort')
         require(getattr(args, 'scenario', 'plain') == 'plain' and
-                getattr(args, 'workload', 'cacheline') == 'cacheline' and
+                getattr(args, 'workload', 'cacheline') in ('cacheline', 'rcuht') and
                 not getattr(args, 'functional', False),
-                'timed peaks require the plain cacheline performance workload')
+                'timed peaks require a plain performance workload')
     return settings
 
 

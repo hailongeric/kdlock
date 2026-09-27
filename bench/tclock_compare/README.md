@@ -171,6 +171,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [hash_payload计时比较](results/20260927-hash-peak.md) | 新增hash连续计时；15线程点三方三轮135场通过，KD在3–5线程领先两方、6–36线程低于TCLock；锁实现未变 |
 | [spin阶段收尾复测](results/20260927-spin-checkpoint.md) | 当前实现135场三方c1矩阵；8–36线程KD峰值均高于TCLock，Linux跨node高值再次出现；保留全部分布、JIT及NUMA进度，作为转入mutex前的基线 |
 | [热度阈值替代队列检查实验](results/20260927-heat-thresholds.md) | 五候选111场KD定向比较；纯热度、短批反馈和时钟下限均存在回退，全部撤回，默认仍保留六后继准入 |
 | [MCS1024窗口调优](results/20260927-ratio-window.md) | 144场定向比较及最终15线程点三方135场；8–36线程峰值高于TCLock，3线程较前次下降；完整分布、历史参照和实际JIT分别保留 |
@@ -212,13 +213,21 @@ TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开�
 参数已删除；layout ABI v2 的 `resched` 固定为 0，运行器拒绝调度点仍开启的旧模块。
 这项实验设置不同于上游原始调度策略，也不同于历史索引中的成绩。
 这些锁外工作均计入整批 wall 时间。沿用三种直接API，新运行默认采用KD512/TCLock1024批次配置；
-本轮未重测RCUHT，新默认不能作为该负载已有的性能结论，历史成绩保留各自原始参数。
+最新[135场hash比较](results/20260927-hash-peak.md)使用连续2秒、300ms峰值；历史固定迭代成绩保留各自原始参数。
 这是哈希表临界区的三方对比，不宣称完整复现上游分配布局或论文的运行环境。
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
   --workload rcuht --backends native tclock kdlock --output /root/kdlock-evidence/rcuht-new
+```
+
+连续计时与cacheline共用全worker预热、进度采集及完整cohort窗口选择。复现本次矩阵时，
+在上述命令加入以下参数（完整内核身份和环境命令见结果报告）：
+
+```sh
+--threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 --repeats 3 \
+--duration-ms 2000 --peak-window-ms 300 --collector-cpu 38
 ```
 
 哈希表模式不接受 `--cachelines`，默认1/4/8/16/20线程 × 三后端 × 三轮，共45场。

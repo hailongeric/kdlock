@@ -330,6 +330,16 @@ class DirectTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unexpected stack/register layout'):
             audit_context(bad)
 
+    def test_hash_timed_matrix(self):
+        plan = run.make_plan(Namespace(workload='rcuht', cachelines=None,
+            threads=[1,2,3,4,5,6,7,8,12,16,20,24,28,32,36], repeats=3,
+            iterations=100000, backends=['native', 'tclock', 'kdlock'],
+            duration_ms=2000, collector_cpu=38))
+        self.assertEqual(len(plan), 135)
+        self.assertTrue(all(s['workload'] == 'rcuht' and s['cachelines'] == 0 and
+                            s['measurement_mode'] == 'timed_peak' and
+                            s['warmup_iterations_per_worker'] == 48000 for s in plan))
+
     def test_hash_matrix_and_outcome_oracle(self):
         plan = run.make_plan(Namespace(workload='rcuht', cachelines=None,
             threads=[1, 4, 8, 16, 20], repeats=2, iterations=100000,
