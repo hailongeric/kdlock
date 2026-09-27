@@ -499,6 +499,18 @@ deferred callback execution. Its constructed continuation and outer batch
 callback do not exercise JIT or queue scheduling; see
 [历史：the lifecycle guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#62-task-引用最终-ack-与-rcu).
 
+#### Experimental Mutex NUMA Grouping
+
+This candidate groups queued ABI2 MINIMAL requests by the CPU encoded in each
+immutable tail. Each stack-local batch owns its deferred remote prefix and an
+independent 1024-step scan budget; the body limit remains 1024. Legacy/FULL
+packets stop reordering. Unstarted rejection restores the prior deferred tail,
+then splices that prefix ahead of the refused request. Normal, native and early
+outer handoff all publish the deferred prefix first. No node is inspected after
+that publication. Bounded work and observed progress do not guarantee fairness.
+This implementation passed protocol tests but failed the protected throughput
+screen and is retained only on the experimental branch; see the staged report.
+
 #### Pinned Busy Polling
 
 Both spinlock and mutex delegation support explicit GS memory operations by
