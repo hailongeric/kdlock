@@ -14,6 +14,7 @@ import solve_bug
 import special_inst
 from assist import make_inst
 from miasm.arch.x86.arch import mn_x86
+from miasm.expression.expression import ExprLoc
 from translation_scope import find_resumable_call_continuations
 
 
@@ -50,6 +51,7 @@ def write_entry_dispatch(
 def emit_jit_assembly(
     entry, block_dict, db_dict, jump_table, missing_callees,
     resolved_hostcalls, keep_call_stack, *, entry_guards=None, body_witness=False,
+    terminal_clobber_unlocks=(),
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -63,6 +65,7 @@ def emit_jit_assembly(
     )
     continuation_labels = continuation_targets - set(block_dict)
     emitted_continuation_labels = set()
+    emitted_offsets = {line.offset for block in block_dict.values() for line in block.lines}
 
     f = StringIO()
     if entry_guards is not None:
@@ -124,7 +127,16 @@ def emit_jit_assembly(
                 line_cnt = line_cnt + 1
                 block_end = line_cnt == len_block
 
-            f.write(special_inst.translate(line, offset, db, reg_map, block_end))
+            # Only a known terminal control CALL can skip constructing its
+            # virtual return slot. Resumed FULL entries and failed metadata
+            # checks still materialize that exact CALL once before FULL exit.
+            target = (db.get_location_offset(line.args[0].loc_key)
+                      if line.name == 'CALL' and isinstance(line.args[0], ExprLoc)
+                      else None)
+            if target in terminal_clobber_unlocks and offset not in emitted_offsets:
+                f.write(special_inst.terminal_clobber_unlock(target, offset, reg_map))
+            else:
+                f.write(special_inst.translate(line, offset, db, reg_map, block_end))
             temp_i += 1
             if temp_j > 0:
                 temp_j -= 1

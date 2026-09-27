@@ -110,13 +110,20 @@ provider 构建要求 `KD_SPIN_CLOBBER_V1`；旧内核安装分支已删除，�
 | `packet_state` | 有效状态及消费者 |
 | --- | --- |
 | MINIMAL | 仅 RIP/RSP/RBP；GS/task、锁和生命周期在 frame 中。发布前不解码旧序言、不初始化整包；入口拒绝后沿原生获取流程返回 lock 后续点 |
-| COMPLETE | wrapper 验证普通 root 的 outer unlock 目标、锁、RSI=虚拟 SP+8、RDX=返回槽、RCX=逻辑 BP，写入 unlock 后续 RIP/RSP/RBP，返回独立分类 7 |
+| COMPLETE | 验证普通 root 的 outer unlock 目标、锁及 SP/IP/BP，写入 unlock 后续 RIP/RSP/RBP，返回独立分类 7 |
 | FULL | 中间退出在进入 C 之前保存当前完整逻辑 GPR。沿已有 hostcall、nested、native 或续跑处理，不重放前缀 |
 
 callee/hostcall跳板只设置退出原因和目标，不提前把虚拟R13写回packet SP。
 公共wrapper出口统一发布：COMPLETE使用已验证的post-CALL RSI，旧reduced和FULL使用R13。
-出口分类在此之前只读取活跃寄存器及元数据，不依赖packet SP；虚拟CALL的返回槽写入仍保留。
+出口分类在此之前只读取活跃寄存器及元数据，不依赖packet SP。
 因此每个跳板少一次重复存储，而普通CALL miss、hostcall及FULL原生续跑仍得到真实CALL栈。
+
+已知终态 clobber unlock 在生成阶段融合 CALL 与完成检查：在原 CALL 前验证
+RSI=R13、RDX=静态 CALL 后地址、RCX=R12，以及同一 COMPLETE 资格和锁/端点。
+成功不写虚拟返回槽，直接进入共同完成出口；任一失败只构造一次原 CALL 后进入 FULL。
+普通路径仍在 CALL 后验证 RSI=R13+8、RDX=返回槽，两种证明等价。
+非终态/未知端点及 legacy 镜像保留原 CALL。验证及筛选见
+[分阶段报告](../bench/tclock_compare/results/20260928-numa-mutex.md)。
 
 正常新路径为 `MINIMAL → COMPLETE → waiter`。`kd_spin_restore_request()`
 在全部现场读取完成后标记 continuation 退休并收缩本 CPU 栈顶，完成后通过保留 GPR 的 helper 解除原入口 pin；IRQ 状态不变；

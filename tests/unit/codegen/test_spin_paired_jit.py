@@ -27,6 +27,7 @@ int main(void) {
   struct pt_regs regs;
   memset(&regs,0xde,sizeof(regs));
   unsigned long stack[64]={0};
+  stack[14]=0xabcd; stack[15]=0xcafe;
   stack[16]=0x115;
   stack[17]=0x55aa; /* No caller lock-byte input or path cookie is needed. */
   for(unsigned int i=18;i<24;i++) stack[i]=0x123400+i;
@@ -37,8 +38,9 @@ int main(void) {
   unsigned int state=1;
   struct kd_jit_batch_call call={
    .regs=&regs, .args={0,0}, .code=(char *)main_wrapper+32,
-   .lock=0x9000, .unlock=0x4000, .entry_abi=1,
-   .packet_state=&state, .complete=1,
+   .lock=FAILURE==2?0x9008:0x9000,
+   .unlock=FAILURE==3?0x4008:0x4000, .entry_abi=ENTRY_ABI,
+   .packet_state=&state, .complete=FAILURE!=1,
   };
   kd_jit_clobber_call_v1(&call);
   if(refuse) {
@@ -64,9 +66,18 @@ int main(void) {
   assert(regs.w[16]==0x4000 && regs.w[19]==before.w[19]-8);
   assert(regs.w[13]==before.w[19] && regs.w[12]==FINAL_IP);
   assert(regs.w[14]==0x9000 && regs.w[11]==before.w[4]);
+#elif FAILURE
+  assert(call.args[0]==1 && call.args[1] && state==0);
+  assert(regs.w[16]==0x4000 && regs.w[19]==before.w[19]-8);
+  assert(stack[15]==FINAL_IP && stack[14]==0xabcd);
+  assert(regs.w[13]==before.w[19]+(FAILURE==4?8:0));
+  assert(regs.w[12]==FINAL_IP+(FAILURE==6?8:0));
+  assert(regs.w[11]==before.w[4]+(FAILURE==5?8:0));
 #else
   assert(call.args[0]==7 && call.args[1] && state==2);
   assert(regs.w[16]==FINAL_IP && regs.w[19]==before.w[19]);
+  /* Successful fusion never constructs a virtual return slot. */
+  assert(stack[15]==0xcafe && stack[14]==0xabcd);
 #endif
   assert(regs.w[4]==before.w[4]);
   assert(stack[16]==0x116 && stack[17]==0x55aa);
@@ -82,8 +93,13 @@ def main():
                'kd_spin_lock_clobber_v1': 0x3100,
                'kd_spin_unlock_clobber_v1': 0x4000,
                'kd_spin_direct_native_unlock': 0x6000,
-               'kd_spin_lock': 0x5000}
-    for native in (False, True):
+               'kd_spin_lock': 0x5000,
+               'kd_mutex_lock_clobber_v1': 0x3200,
+               'kd_mutex_unlock_clobber_v1': 0x4000}
+    # Each failed prerequisite must reconstruct exactly one CALL, including
+    # immutable endpoint mismatch, disabled completion, and all three words.
+    cases = [(False, failure, abi) for abi in (1, 2) for failure in range(7)]
+    for native, failure, abi in [*cases, (True, 0, 1)]:
         # A compiler-spilled body value, not five incoming register saves.
         # CPU heat is consumed before the continuation and is never a JIT input.
         code = bytes.fromhex('48ff0424')  # incq (%rsp)
@@ -98,11 +114,18 @@ def main():
         # straight generic-call continuation runs through the real translator
         # and wrapper. Provider ownership selection is outside this body.
         code += bytes.fromhex('48c7c7009000004889e648c7c2')
-        final_ip = 0x1000+len(code)+4+3+5
+        corrupt = {4: '4883c608', 5: '4883c108', 6: '4883c208'}.get(failure, '')
+        final_ip = 0x1000+len(code)+4+3+len(bytes.fromhex(corrupt))+5
         code += final_ip.to_bytes(4, 'little') + bytes.fromhex('4889e9')
+        code += bytes.fromhex(corrupt)
         code += b'\xe8' + (0x4000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
         code += b'\xc3'
-        assembly, log, status = render(code.hex(), kernel_symbols=symbols, abi=1,
+        # The fixture endpoints are separate per backend; overlapping symbols
+        # would make the admission backend intentionally ambiguous.
+        selected = {k:v for k,v in symbols.items() if
+                    (k.startswith('kd_mutex') if abi == 2 else k.startswith('kd_spin'))}
+        assembly, log, status = render(code.hex(), kernel_symbols=selected, abi=abi,
+                                       lock_kind='mutex' if abi == 2 else 'spin',
                                        body_witness=True, return_status=True)
         assert status == 0, log
         if not native:
@@ -126,11 +149,12 @@ def main():
             (path/'wrapper.S').write_text((ROOT/'include/wrapper.S').read_text()+
                                          '\n.globl main\n.section .note.GNU-stack,"",@progbits\n')
             (path/'fixture.c').write_text(FIXTURE)
-            subprocess.run(['cc', '-c', '-DKD_GENERATED_ENTRY_ABI=1', '-Dmain=main_wrapper',
+            subprocess.run(['cc', '-c', f'-DKD_GENERATED_ENTRY_ABI={abi}', '-Dmain=main_wrapper',
                             '-I'+str(path), '-I'+str(path/'asm'), '-I'+str(ROOT/'include'),
                             str(path/'wrapper.S'), '-o', str(path/'wrapper.o')], check=True, timeout=30)
             subprocess.run(['cc', '-O2', '-fno-omit-frame-pointer', '-mno-red-zone',
                             '-Wall', '-Wextra', '-Werror', f'-DNATIVE_CALL={int(native)}',
+                            f'-DFAILURE={failure}', f'-DENTRY_ABI={abi}',
                             f'-DFINAL_IP={final_ip}', '-I'+str(path), '-I'+str(ROOT/'include'),
                             str(path/'fixture.c'), str(path/'wrapper.o'), '-o', str(path/'test')],
                            check=True, timeout=30)

@@ -362,6 +362,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
         entry_guards=entry_guards, body_witness=body_witness,
+        terminal_clobber_unlocks=({clobber_unlock} if abi == 1 else
+                                 {clobber_mutex_unlock} if abi == 2 else set()),
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 

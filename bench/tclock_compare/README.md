@@ -187,6 +187,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [NUMA 与 mutex 分阶段优化](results/20260928-numa-mutex.md) | 显式同/跨节点放置、独立有效 PMU 计数、终态 clobber CALL 融合；逐阶段记录验证与剩余差距 |
 | [36线程hash采样与批次调优](results/20260927-hash36-profile.md) | 默认上限1024，hash36峰值较前检查点提高6.98%；flat-IP采样、配置消融、无收益JIT候选撤回，少线程及NUMA进度限制单列 |
 | [有界refill与hash复验](results/20260927-spin-refill.md) | 批尾空链接最多PAUSE/重读8次，已有远端队列直接交接；最终hash63场+c1定向27场，恢复c1八线程短批回退，保留512上限 |
 | [hash跨层内联与解锁优化](results/20260927-hash-runtime.md) | 默认kernel/512完整135场；相同默认配置16/36线程峰值较前版提高12.47%/6.26%，仍低于TCLock；显式配置与c1回归单列 |

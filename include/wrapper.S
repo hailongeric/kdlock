@@ -149,6 +149,9 @@ exit:
 	jne clobber_bad_metadata
 	cmp RDX, QWORD PTR[R13]
 	jne clobber_bad_metadata
+clobber_complete:
+	/* A fused terminal CALL reaches here only after the same identity and
+	 * SP/IP/BP proof, with the pre-CALL stack untouched. */
 	mov PT_REG, Stack_PT_REG
 	mov PT_RIP, rdx
 	mov PT_RSP, rsi

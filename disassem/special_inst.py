@@ -29,6 +29,40 @@ special_instruction = [
 ]
 
 
+def terminal_clobber_unlock(target, continuation, reg_map):
+    """Check the original CALL's metadata without touching the waiter stack.
+
+    R13 is still the pre-CALL SP. Compare the static return PC instead of
+    writing it and immediately reading it back. Only translator scratch
+    registers change before the fallback, so every logical GPR remains exact.
+    """
+    fallback = f'kd_terminal_full_{continuation:x}'
+    code = release_conflict(reg_map)
+    code += make_inst('MOV', ['R15', 'Stack_CLOBBER'])
+    code += make_inst('TEST', ['R15', 'R15'])
+    code += make_inst('JZ', [fallback])
+    code += make_inst('CMP', ['QWORD PTR[R15 + 88]', '0'])
+    code += make_inst('JE', [fallback])
+    code += make_inst('MOVABS', ['R14', hex(target)])
+    for left, right in [('R14', 'QWORD PTR[R15 + 40]'),
+                        ('RDI', 'QWORD PTR[R15 + 32]'), ('RSI', 'R13'),
+                        ('RCX', 'R12')]:
+        code += make_inst('CMP', [left, right])
+        code += make_inst('JNE', [fallback])
+    code += make_inst('MOVABS', ['R14', hex(continuation)])
+    code += make_inst('CMP', ['RDX', 'R14'])
+    code += make_inst('JNE', [fallback])
+    code += make_inst('JMP', ['clobber_complete'])
+    code += fallback + ':\n'
+    code += make_inst('MOVABS', ['R15', hex(continuation)])
+    code += make_inst('LEA', ['R13', '[R13 - 8]'])
+    code += make_inst('MOV', ['QWORD PTR[R13]', 'R15'])
+    code += make_inst('MOVABS', ['R14', hex(target)])
+    code += make_inst('MOV', ['Stack_IJ', '1'])
+    code += make_inst('JMP', ['full_exit'])
+    return code
+
+
 def process_jump(name, line, arg, offset, db, reg_map):
     ret_str = ""
     if isinstance(arg, ExprLoc):
