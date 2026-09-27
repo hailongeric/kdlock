@@ -249,6 +249,33 @@ host `mutex-nativefirst.tar.gz`，SHA256
 完整候选 `mutex-shadow-rejected.patch` SHA256
 `dcef196446632275064c1b503fae4d91b303e19a78414c2f73a3673e4f33f181`。
 
+## 稳定 1024 task records：独立性能未通过，隔离保留
+
+候选用 1024 个 cacheline 隔离、精确 key 原子发布的记录替换逐次分配和全局 registry 锁。
+每次 acquisition 仍有精确原子引用，refs=0 的缓存 key 不参与路由，task 引用保留至卸载；
+满表走 native。基础及新 concurrency/capacity 共 3 组通过，包含 8 线程同时发布同一 key、
+同桶 1024 真实 task 替身、满表、复用、输家引用、零引用拒绝及卸载释放的错误变异检查。
+真实 kernel SELFTEST 用 CPU0/1/2 的 owner/waiter/reader 验证两种解锁顺序、4 个最终 ACK，
+两个 task 引用只在卸载释放；这是明确 JIT=0 的协议探针，不能替代实际 JIT 性能证据。
+
+27 场及 18 场复核均通过业务、JIT 和排空，但竞争性能下降：
+
+| threads | 筛选 KD min/median/max | 复核 KD min/median/max | native-first 中位数 |
+| --- | --- | --- | --- |
+| 1 | 17.261 / 17.262 / 17.264 | 未重复 | 14.795 |
+| 16 | 1.431 / 1.436 / 1.478 | 1.469 / 1.489 / 1.500 | 3.858 |
+| 36 | 0.879 / 0.900 / 0.922 | 0.891 / 0.893 / 0.975 | 1.574 |
+
+筛选 16/36 线程 JIT 份额分别升至 92.03%–94.94% / 92.50%–96.91%。
+记录缓存使大量请求进入尚未优化的 delegated runtime；份额变化是真实观测，非完整 PMU 成本归因。
+按 3% 规则，不将该独立候选合入已接受基线。实现在实验分支
+`perf/mutex-task-cache-candidate-20260928` 保留，先完成局部观测与 batch 路径，再重新检验组合；
+当前稳定分支仍为 native-first。不得把单线程收益或 lifecycle 通过写成竞争性能通过。
+
+证据 `numa-20260928-mutex-tasks-{screen,recheck,validation,ack}`，host
+`mutex-tasks-candidate.tar.gz` SHA256
+`d4d5132fc1b55b331f53439b507f4b1d5cb07dd2b552a4fe1d0fbcc206af19d2`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：
