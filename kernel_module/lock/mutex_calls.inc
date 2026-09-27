@@ -22,14 +22,27 @@ static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
 		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
 	struct kd_mutex *kd_mtx;
+	bool admitted;
 	/* The legacy kernel hook already saved the caller on its native stack.
 	 * execute_cs reads that authoritative frame. The clobber bridge supplies
 	 * IP/SP/BP explicitly; neither ABI needs a second hook snapshot. */
 
-	/* The address-less kernel selector only dispatches. Frequency checks
-	 * precede process selection, so all callers may supply observations but
-	 * cold CPUs/locks never inspect comm or allocate task/shadow records. */
-	if (!kd_hotlock_record_mutex((unsigned long)lock)) {
+	/* Native ownership is authoritative even after a shadow has been created.
+	 * A free original mutex needs no admission, task record or translation.
+	 * The short pin ties the approximate entry/contention counts to one CPU;
+	 * release it before any native slowpath is allowed to sleep. */
+	might_sleep();
+	preempt_disable();
+	kd_hotlock_mutex_entry_pinned();
+	if (kd_mutex_trylock_fast(lock)) {
+		preempt_enable();
+		return;
+	}
+	admitted = kd_hotlock_record_mutex((unsigned long)lock);
+	preempt_enable();
+	/* Only failed acquisitions supply contention observations. Frequency
+	 * checks still precede process selection and any task/shadow work. */
+	if (!admitted) {
 		kd_origin_mutex_lock(lock);
 		return;
 	}

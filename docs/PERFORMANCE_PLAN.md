@@ -11,7 +11,8 @@
 完成显式放置、独立单事件 PMU、终态 CALL/COMPLETE 融合、静态 GS/task 导入省略及预算提前检查。
 完整 spin/hash 135 场通过；KD 只在 1、3–6 线程达到同期 TCLock 峰值的 90%，高线程仍有差距。
 24 线程少数 node 仅约 2% 进度；有限 batch/scan 不代表公平保证。
-下一阶段是独立三方 mutex cacheline 基线，之后分别验证 native-first、shadow/task cache、
+独立三方 mutex cacheline 基线已完成全部 135 场，真实 KD JIT、TCLock 委托和 parking 均有证据。
+当前分别验证 native-first、shadow/task cache、
 本地栈/观测、专用执行 helper 和有界 NUMA grouping，确认正确性与可重复改进后再转 mutex/hash。
 本阶段保留 pinned KD waiters 和最多 1024 个 task 记录至卸载；不做 oversubscription 重设计、
 内核修改或 wrapper 输入 ABI 扩展，不重试已撤回的寄存器驻留/广泛预取候选。
@@ -253,8 +254,11 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 
 ## 5. P3：嵌套、mutex与更广负载
 
-- [ ] 先诊断已知七角色双CPU mutex的可运行性依赖。published waiter禁止抢占并
-  PAUSE轮询是当前契约，不能悄悄恢复旧睡眠等待来取得通过。
+- [ ] 本阶段完成 mutex 的 native-first、无锁 shadow、1024 稳定 task records、
+  node 本地栈/观测、专用 batch helper 和有界 NUMA grouping；各项独立筛选提交。
+  cacheline 正确且有可重复改进后再做 mutex/hash 完整三方比较。
+- 已知七角色双CPU mutex的 oversubscription 可运行性问题不在本阶段范围内。
+  published waiter 禁止抢占并 PAUSE 轮询仍是当前契约。
 - [ ] 明确CPU放置后，再比较同/异队列嵌套、乱序释放、hostcall与native后缀；
   先保持一次副作用、原owner ACK和排空，再分析服务成本。
 - [ ] 继续定位28线程20+8节点分布的短批与整段差距；先区分批上限、无后继及entry拒绝，

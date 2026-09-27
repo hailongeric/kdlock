@@ -147,7 +147,7 @@ def make_plan(args):
                 api_mode='direct', workload=workload, lock_kind=lock_kind, hotlock_mode=mode,
                 caller_shell=('mutex_clobber' if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
                 cookie_storage='percpu_direct_gate' if backend == 'kdlock' and lock_kind == 'spin' else 'not_applicable',
-                cpu_heat_policy=('mutex_rate1024' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
+                cpu_heat_policy=('mutex_contention1024_ratio256' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
                 kd_provider_ubsan=provider_ubsan if backend == 'kdlock' else 'not_applicable',

@@ -425,8 +425,15 @@ distinct from merely completing all clients.
 
 ### 5.2 Entry, Completion, And Task Routing
 
-1. Cold locks, `mutex_jit=0`, shadow/task-record allocation failure, and nested
-   acquisitions by an already-active task go directly to the original mutex.
+1. Try the original mutex's owner CAS first. Success bypasses admission,
+   shadow/task records and translation. The attempt and failed-CAS counts are
+   separate approximate per-CPU mutex counters: every 1024 contentions compare
+   `(entries >> 10) < 256`, reset both counts and update the CPU clock. The initial
+   limit 2 rejected every CPU in the cacheline screen; the measured native owner
+   bursts required a wider mutex window. Spin MCS
+   counters are independent. The short counting pin ends before native blocking.
+   Cold locks, `mutex_jit=0`, shadow/task-record allocation failure, and nested
+   acquisitions by an already-active task use the original native slow route.
 2. A promoted, eligible request registers its task before entering the scheduler.
    Winning the gate calls `kd_mutex_claim_origin()`, which acquires the original
    mutex and records `physical_owner=current`, before entering any CS.

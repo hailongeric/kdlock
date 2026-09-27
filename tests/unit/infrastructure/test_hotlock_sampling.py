@@ -27,6 +27,10 @@ def main():
     # A small set of policy mutations checks that these tests reject a wrong
     # result. IRQ ownership and lossless profiling are intentionally not tested.
     mutations = {
+        "missing-mutex-entry": ("this_cpu_inc(kd_hotlock_mutex_entries);", "(void)0;", 1),
+        "missing-mutex-contention": ("this_cpu_inc(kd_hotlock_mutex_contentions);", "(void)0;", 1),
+        "mutex-ratio-equality": ("<\n                KD_HOTLOCK_MUTEX_RATIO_LIMIT;", "<=\n                KD_HOTLOCK_MUTEX_RATIO_LIMIT;", 1),
+        "missing-mutex-reset": ("this_cpu_write(kd_hotlock_mutex_entries, 0);", "(void)0;", 1),
         "table-busy-guard": ("if (READ_ONCE(t->busy))", "if (false)", 1),
         "late-spin-threshold": ("++slot->count >= target", "++slot->count > target", 1),
         "mutex-uses-spin-target": ("kind ? KD_HOTLOCK_SAMPLE_TARGET + 1U :", "kind ? KD_HOTLOCK_SPIN_SAMPLE_TARGET :", 1),

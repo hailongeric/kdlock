@@ -54,6 +54,7 @@ MODULE_PARM_DESC(jit_fail_pending_lock,
 
 static void origin_raw_spin_lock(raw_spinlock_t *lock);
 static void origin_raw_spin_unlock(raw_spinlock_t *lock);
+static __always_inline bool kd_mutex_trylock_fast(struct mutex *lock);
 
 /* --- mutex → kd_mutex shadow table ---------------------------------------- */
 

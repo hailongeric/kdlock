@@ -94,6 +94,10 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
+        "native-success-still-samples": (
+            "if (kd_mutex_trylock_fast(lock)) {",
+            "if (false && kd_mutex_trylock_fast(lock)) {",
+        ),
         "local-predecessor-still-publishes": (
             "if (unlikely(kd_mutex_has_local_predecessor(lock)))",
             "if (unlikely(false && kd_mutex_has_local_predecessor(lock)))",

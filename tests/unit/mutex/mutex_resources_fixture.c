@@ -43,6 +43,10 @@ static bool cpu_hot = true, trace_admission, sampled_first;
 static unsigned int comm_queries;
 static bool schedule_wanted, recycle_on_enable, direct_packet;
 static bool source_open, native_owner_wait;
+/* Most resource cases substitute a failed first CAS followed by a racing
+ * release. The native-first case below substitutes a successful acquisition. */
+static bool fast_available;
+static unsigned int entry_attempts;
 static struct kd_mutex *waiting_gate, *release_gate;
 static struct kd_mutex_node *recycle_node, *poll_node;
 static unsigned int polls;
@@ -149,6 +153,21 @@ static void jump_to_saved_regs_in_cs(struct pt_regs *regs);
 static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 					       int cpu);
 static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *node);
+static void might_sleep(void) { CHECK(!preempt); }
+static void kd_hotlock_mutex_entry_pinned(void)
+{
+	CHECK(preempt == 1);
+	entry_attempts++;
+}
+static bool kd_mutex_trylock_fast(struct mutex *lock)
+{
+	CHECK(preempt == 1 && entry_attempts);
+	if (!fast_available || lock->owner)
+		return false;
+	lock->owner = current;
+	acquires++;
+	return true;
+}
 #include "mutex_resource_code.h"
 
 /* Equal table-sized strides force collisions using actual mutex addresses;
@@ -430,6 +449,8 @@ static void reset(void)
 	strcpy(peer.comm, "peer");
 	source_open = true;
 	native_owner_wait = false;
+	fast_available = false;
+	entry_attempts = 0;
 	native_waits = 0;
 	errors = preempt = migration = table_irq = 0;
 	gets = task_puts = refs = adds = acquires = releases = schedules = 0;
@@ -951,6 +972,16 @@ static void check_minimal_entry(void)
 
 int main(void)
 {
+	/* Even a hot lock with task/shadow work otherwise eligible must bypass all
+	 * of it when the original owner CAS succeeds. Unlock still uses Linux. */
+	reset();
+	fast_available = true;
+	__kd_mutex_lock_clobber_v1(&origins[0].mutex, 0x7000, 0x8000, 0);
+	CHECK(origins[0].mutex.owner == current && entry_attempts == 1);
+	CHECK(!samples && !gets && !adds && !refs && !comm_queries);
+	CHECK(!preempt && !migration && !shadow_count());
+	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
+	CHECK(!origins[0].mutex.owner && acquires == 1 && releases == 1);
 	check_minimal_entry();
 	check_poll_result();
 	check_tails();

@@ -52,6 +52,10 @@ EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_gate);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_entries);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
+DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_entries);
+DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_contentions);
+static DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_last_entries);
+static DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_checks);
 /* Compare shifted entry count at the MCS boundary, then reset both counts.
  * Zero bypasses only the ratio; the compare adds no division or multiplication. */
 static unsigned int spin_entry_ratio_limit = 2;
@@ -118,8 +122,19 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned int *rate_hot,
   unsigned int i;
   bool was_hot, ratio_hot = true;
 
-  if (!spin && ++t->rate_samples < interval)
-    return *rate_hot;
+  if (!spin)
+  {
+    t->rate_samples = this_cpu_read(kd_hotlock_mutex_contentions);
+    if (t->rate_samples < interval)
+      return *rate_hot;
+    this_cpu_write(kd_hotlock_mutex_last_entries,
+                   this_cpu_read(kd_hotlock_mutex_entries));
+    this_cpu_inc(kd_hotlock_mutex_checks);
+    ratio_hot = (this_cpu_read(kd_hotlock_mutex_entries) >> 10) <
+                KD_HOTLOCK_MUTEX_RATIO_LIMIT;
+    this_cpu_write(kd_hotlock_mutex_entries, 0);
+    this_cpu_write(kd_hotlock_mutex_contentions, 0);
+  }
   if (spin)
   {
     ratio_hot = !spin_entry_ratio_limit ||
@@ -172,6 +187,9 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   local = this_cpu_ptr(kd_hotlock_cpu);
   t = &local->tables[kind];
   rate_hot = kind ? &local->mutex_rate_hot : raw_cpu_ptr(&kd_hotlock_spin_gate);
+  /* Count even a guarded skip; a later contention retries the boundary. */
+  if (record && kind == 1)
+    this_cpu_inc(kd_hotlock_mutex_contentions);
   if (!kd_hotlock_try_enter(t))
     goto unpin;
   /* Spin CPU heat advances only at MCS publication. Entry records retain the
@@ -260,6 +278,10 @@ int kd_hotlock_init(void)
     per_cpu(kd_hotlock_spin_gate, cpu) = 0;
     per_cpu(kd_hotlock_spin_entries, cpu) = 0;
     per_cpu(kd_hotlock_spin_mcs, cpu) = 0;
+    per_cpu(kd_hotlock_mutex_entries, cpu) = 0;
+    per_cpu(kd_hotlock_mutex_contentions, cpu) = 0;
+    per_cpu(kd_hotlock_mutex_last_entries, cpu) = 0;
+    per_cpu(kd_hotlock_mutex_checks, cpu) = 0;
   }
   return 0;
 }
@@ -275,6 +297,13 @@ void kd_hotlock_exit(void)
       struct kd_hotlock_table *t = &local->tables[kind];
       unsigned int rate_hot = kind ? local->mutex_rate_hot :
                                     per_cpu(kd_hotlock_spin_gate, cpu);
+      if (kind && per_cpu(kd_hotlock_mutex_entries, cpu))
+        pr_info("kd_hotlock mutex ratio: cpu=%d entries=%lu contentions=%lu last_entries=%lu checks=%lu cpu_hot=%u window=%u scope=unfinished_batch role=DONE\n",
+                cpu, per_cpu(kd_hotlock_mutex_entries, cpu),
+                per_cpu(kd_hotlock_mutex_contentions, cpu),
+                per_cpu(kd_hotlock_mutex_last_entries, cpu),
+                per_cpu(kd_hotlock_mutex_checks, cpu), rate_hot,
+                KD_HOTLOCK_CHECK_INTERVAL);
       if (!kind && per_cpu(kd_hotlock_spin_entries, cpu))
       {
         /* These are the unfinished batch's residuals, not lifetime totals. */
