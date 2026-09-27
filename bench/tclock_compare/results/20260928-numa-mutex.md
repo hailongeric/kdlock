@@ -222,6 +222,33 @@ busy 重试、跨类型计数隔离及成功 CAS 跳过后续工作的反例检�
 host `mutex-nativefirst.tar.gz`，SHA256
 `f1e3cd978b16086be82a35359106e83fac09888eaae2e01f07461a17afaed682`。
 
+
+## 无锁 shadow 独立候选：回退
+
+候选预初始化 1024 个独占 cacheline 的 gate，使用全地址 hash、精确不可变 key 和原子发布，
+满表继续 native；没有改变真实 owner 或队列出版顺序。生产 resource 检查通过，包括同桶满表、
+同/异 key 竞争发布、existing owner 保留及满表 native fallback。初次错误变异触发 fixture 的
+空指针解引用，调整检查顺序后基础及 resource 共 3 组通过，保留首次失败。
+
+27 场筛选及 18 场复核全部业务/JIT/排空通过，但性能不满足保护标准：
+
+| threads | 筛选 KD min/median/max | 复核 KD min/median/max | native-first 中位数 |
+| --- | --- | --- | --- |
+| 1 | 14.633 / 14.636 / 14.637 | 未重复 | 14.795 |
+| 16 | 3.320 / 3.681 / 3.833 | 3.103 / 3.213 / 3.276 | 3.858 |
+| 36 | 1.817 / 1.877 / 2.147 | 1.769 / 1.967 / 1.983 | 1.574 |
+
+16 线程中位数两次分别下降 4.59% / 16.72%，超过 3%，故恢复 `e75910b` 的 shadow 实现。
+36 线程收益不能覆盖受保护点的重复损失。复核 16 线程实际 JIT 为 12.80%–15.17%，
+高于 native-first 的 8.29%–8.62%；观测到执行路径份额变化，尚未确定完整成本归因。
+后续 task/frame 成本发生改变后可以重新独立检验，不把本次候选叠入已接受实现。
+
+证据 `numa-20260928-mutex-shadow-{screen,recheck,validation}`，host
+`mutex-shadow-rejected.tar.gz` SHA256
+`c619d26a50775c3dc901e148a36069e6f700f904ec72f76bd3ab46ed945717a9`；
+完整候选 `mutex-shadow-rejected.patch` SHA256
+`dcef196446632275064c1b503fae4d91b303e19a78414c2f73a3673e4f33f181`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：
