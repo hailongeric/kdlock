@@ -513,6 +513,44 @@ RCU reader、2 次延迟释放全部通过，source retirement 与卸载前空 r
 正文 JIT 来自上述 benchmark。证据 `numa-20260928-mutex-final-ack`，host
 `mutex-final-ack.tar.gz` SHA256 `b7d4c5e4f77227a8659c017c0f687f858706cf21f632f5f57f8fb6460689c1ba`。
 
+## Mutex/hash 首次筛选与 ratio512 候选回退
+
+采用已接受 ratio256 版本，hash 首次筛选在第 4 场停止：16 线程 KD 第一轮峰值 4.112 Mops/s、
+JIT 1.51%，第二轮业务正确且排空，但测量 JIT 为 0。第二轮只生成 477 次 shadow owner 获取，
+slowpath/combiner 均为 0；末态只有一个 CPU 的该锁为 hot。最后完整 CPU 窗口 entries
+221990–303284，部分超过 ratio256 的 262144 截止值。翻译已成功发布，未把发布当执行。
+该 4 场部分结果单独保留；NO_JIT 样本不能进入竞争 JIT 正例。
+证据 `numa-20260928-mutex-hash-screen`；`mutex-hash-initial-failed.tar.gz` SHA256
+`b5a2e1d6ebd0becca52c6b43ee307bc98261ae1afa1e3fb39081ccfde66c9575`。
+
+据该窗口测试固定 ratio512，保持频率与精确单锁热度门槛。基础与边界/跨类型隔离测试 3 组通过，
+但 cacheline 27 场筛选及 36 场复核发现保护点重复回退，因此没有推进该候选的 hash 验收：
+
+| threads | 筛选 KD min/median/max Mops/s | 复核 KD min/median/max | 对 ratio256 全点中位数变化（筛选 / 复核） |
+| --- | --- | --- | --- |
+| 1 | 14.783 / 14.813 / 14.819 | 未重复 | +0.18% / — |
+| 2 | 未测 | 4.865 / 4.908 / 4.981 | — / -5.22%（单次观察） |
+| 3 | 未测 | 4.890 / 5.087 / 5.124 | — / +4.46% |
+| 4 | 未测 | 4.639 / 4.822 / 4.868 | — / -2.37% |
+| 16 | 4.688 / 4.767 / 4.879 | 未重复 | +1.65% / — |
+| 36 | 2.721 / 2.890 / 3.049 | 2.656 / 2.929 / 3.321 | -5.97% / -4.72% |
+
+36 的重复损失已足以拒绝；2 的首次损失未再单独重跑，不将其称为重复确认。
+候选在 `perf/mutex-hash-admission-20260928` 保留，已接受版本继续 ratio256。
+证据 `numa-20260928-mutex-ratio512-{cacheline-screen,cacheline-recheck,validation}`；
+`mutex-ratio512-rejected.tar.gz` SHA256 `2130892b527df201c381c827579289db9b24ed7642aaa3d4f985a71a6977eea6`。
+
+## 收集已排空 NO_JIT 失败：验收条件不变
+
+新增显式 `--keep-going-no-jit`，仅跨过业务正确、完整、已排空且无 cleanup error 的 NO_JIT。
+判定器和 valid() 未放宽，失败记录与计时原文保留，汇总不评分这些样本，最终进程仍返回 1。
+unsafe、未排空、数据错误或其他状态继续立即停止；功能模式禁止此选项。
+44 项 runner 测试通过，涵盖状态不改写、错误/不完整清理不可跨越和高吞吐失败样本不可取优。
+验证归档 `nojit-collection-validation.tar.gz` SHA256
+`6394669e4d741ee887ccd25e7598ba920ce0188d9440fa27fa45a14d21330205`。
+实际 18 场 hash 筛选已完整收集，仅 16 线程第 2 轮 NO_JIT，其余通过；最终 exit=1、失败样本未评分。
+36 线程三轮均有返回正文 JIT；上述原失败及本次失败均单独保留，没有替换成后续正例。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：

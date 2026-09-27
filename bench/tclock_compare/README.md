@@ -24,6 +24,11 @@ mutex 的 `lock_kind` 纳入汇总身份；TCLock 保留委托次数证据，KD 
 先验证 cacheline 基线和各独立优化，再使用同一入口的 `--workload rcuht`。
 原 spin/hash 入口及成绩不作为 mutex 成绩。
 
+默认任一失败停止。仅在收集完整性能证据时可显式加 `--keep-going-no-jit`：
+它只跨过业务正确、已经排空且无 cleanup error 的 `NO_JIT`；保持该失败状态、
+排除其吞吐评分，最终返回非零并列出失败场次。其他失败仍立即停止，功能模式拒绝此选项。
+它不强制代理、不更改预热/门槛，也不把原生回退当成竞争 JIT 验收通过。
+
 当前只支持adaptive，策略标识为`mcs_reset1024_shift10_lock512_head6`，默认`spin_entry_ratio_limit=2`。
 每1024次MCS发布比较`(entries >> 10) < 2`，随后清零本CPU的入口和MCS计数；
 默认接受该窗口内至多2047次入口，约为MCS比例超过一半，不再使用旧100%门槛或前次计数快照。

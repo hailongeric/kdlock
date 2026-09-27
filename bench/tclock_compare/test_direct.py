@@ -17,6 +17,56 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_collect_no_jit_preserves_failure_and_requires_verified_drain(self):
+        record = dict(execution_status='NO_JIT', jit_acceptance='NO_JIT',
+                      jit_bodies=0, drained=True,
+                      measurement=dict(complete=True, data_ok=True))
+        before = copy.deepcopy(record)
+        session = Mock(record=record)
+        session.execute.side_effect = run.Failure('NO_JIT', 'missing body')
+        with self.assertRaises(run.Failure):
+            run.execute_session(session)
+        self.assertFalse(run.execute_session(session, True))
+        self.assertEqual(record, before)
+        # No unsafe, incomplete or contradictory session may be hidden by
+        # the optional evidence-collection mode. The original verdict stays.
+        variants = [dict(record, drained=False), dict(record, cleanup_error='busy'),
+                    dict(record, execution_status='OK'), dict(record, jit_bodies=1),
+                    dict(record, jit_acceptance='PASS'),
+                    dict(record, measurement=dict(complete=False, data_ok=True)),
+                    dict(record, measurement=dict(complete=True, data_ok=False))]
+        for bad in variants:
+            with self.subTest(record=bad), self.assertRaises(run.Failure):
+                run.execute_session(Mock(record=bad, execute=Mock(
+                    side_effect=run.Failure('NO_JIT', 'missing body'))), True)
+        for status, unsafe in [('NO_JIT', True), ('UNDRAINED', False),
+                               ('PREPARATION_FAILED', False)]:
+            with self.subTest(status=status, unsafe=unsafe), self.assertRaises(run.Failure):
+                run.execute_session(Mock(record=record, execute=Mock(
+                    side_effect=run.Failure(status, 'failure', unsafe=unsafe))), True)
+        good = Mock(record=dict(execution_status='OK', drained=True))
+        self.assertTrue(run.execute_session(good, True))
+
+    def test_collect_no_jit_does_not_change_score_exclusion(self):
+        plans = run.make_plan(Namespace(cachelines=[1], threads=[16], repeats=3,
+            iterations=100, backends=['kdlock'], cpus=list(range(16))))
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for i, spec in enumerate(plans):
+                folder = out/spec['name']; folder.mkdir()
+                run.write_json(folder/'session.json', dict(spec, drained=True,
+                    execution_status='OK' if i == 0 else 'NO_JIT',
+                    jit_bodies=1 if i == 0 else 0,
+                    measurement=dict(completed=100, wall_ns=100000 if i == 0 else 100,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            summary = json.loads((out/'summary.json').read_text())[0]
+            self.assertEqual(summary['valid'], 1)
+            self.assertEqual(summary['best_session'], plans[0]['name'])
+            records = json.loads((out/'records.json').read_text())
+            self.assertTrue(all(r['throughput_ops_s'] is None for r in records[1:]))
+
     def test_mutex_entrypoint_and_delegation_identity(self):
         argv = ['run_mutex.py', '--output', '/tmp/unused', '--dry-run',
                 '--threads', '16', '36', '--cachelines', '1']

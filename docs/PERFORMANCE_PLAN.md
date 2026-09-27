@@ -16,7 +16,8 @@ native-first、本地栈/观测和专用 batch helper 已独立筛选保留。sh
 独立候选及其高 JIT 组合均有保护点重复回退，分支保留并排除；精确 per-CPU 余额实验虽改善
 组合，但未单独合入。已接受版本继续使用 RCU task registry、原 shadow table 与 mutex FIFO；
 spin NUMA grouping 不变。最终 cacheline 135 场与原 registry 的实际 owner/RCU ACK 检查通过；
-仅 6/7/8/12/16/20 线程达到同期 TCLock 峰值的 90%，跨节点仍有差距。继续 mutex/hash 验证。
+仅 6/7/8/12/16/20 线程达到同期 TCLock 峰值的 90%，跨节点仍有差距。mutex/hash 筛选出现已排空但无 JIT 的样本；ratio512 候选因重复 cacheline 回退已拒绝。
+继续按 ratio256 收集完整 hash 矩阵，保留 NO_JIT 失败且不纳入竞争 JIT 正例。
 本阶段保留 pinned KD waiters；实验 task cache 最多保留 1024 个 task 记录至卸载。
 不做 oversubscription 重设计、内核修改或 wrapper 输入 ABI 扩展，不重试已撤回的寄存器
 驻留/广泛预取候选。

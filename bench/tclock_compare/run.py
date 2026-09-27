@@ -274,6 +274,29 @@ def report(out):
         csv_file(out/'summary.csv', list(summary[0]), summary)
 
 
+def execute_session(session, keep_going_no_jit=False):
+    """Collect a drained missing-body failure without changing its verdict.
+
+    A native-only adaptive sample can be useful diagnostic evidence, but it
+    must never become a contended JIT positive or an accepted timing score.
+    All other failures and any uncertain cleanup still stop the matrix.
+    """
+    try:
+        session.execute()
+    except Failure as error:
+        record = session.record
+        measurement = record.get('measurement', {})
+        if (keep_going_no_jit and error.status == 'NO_JIT' and not error.unsafe
+                and record.get('execution_status') == 'NO_JIT'
+                and record.get('jit_acceptance') == 'NO_JIT'
+                and record.get('jit_bodies') == 0 and record.get('drained')
+                and not record.get('cleanup_error')
+                and measurement.get('complete') and measurement.get('data_ok')):
+            return False
+        raise
+    return True
+
+
 def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
@@ -293,6 +316,9 @@ def main(lock_kind='spin'):
                         'or disable compiler instrumentation to match the TCLock backend')
     p.add_argument('--repeats', type=int, default=3,
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')
+    p.add_argument('--keep-going-no-jit', action='store_true',
+                   help='collect remaining performance samples after a drained NO_JIT; '
+                        'failed samples remain excluded and the final exit stays nonzero')
     p.add_argument('--iterations', type=int, default=100000)
     p.add_argument('--duration-ms', type=int, default=0,
                    help='continuous measured duration; 0 keeps fixed iterations')
@@ -331,6 +357,8 @@ def main(lock_kind='spin'):
     if args.functional:
         require(args.backends == ['kdlock'] and args.repeats == 1,
                 'functional mode requires --backends kdlock --repeats 1')
+        require(not args.keep_going_no_jit,
+                'keep-going-no-jit is for performance evidence collection only')
     plan = make_plan(args)
     if args.functional:
         for spec in plan:
@@ -464,12 +492,16 @@ def main(lock_kind='spin'):
             target = out/'source'/relative; target.parent.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(ROOT/relative,target)
         hashes = {str(p):digest(p) for p in binaries}; write_json(out/'binary-sha256.json',hashes)
+        rejected_no_jit = []
         for index,spec in enumerate(plan):
             require(not (out/'STOP').exists(),'STOP requested at drained boundary','STOPPED')
             require(source_state()==frozen and all(digest(Path(p))==h for p,h in hashes.items()),'frozen inputs changed')
             idle(); print(f'[{index+1}/{len(plan)}] {spec["name"]}',flush=True)
             session = BackendSession(out,spec,workload_module=variants[spec['arm']])
-            session.execute()
+            if not execute_session(session, args.keep_going_no_jit):
+                rejected_no_jit.append(spec['name'])
+                print('  REJECTED: no returned JIT body; drained=True; continuing', flush=True)
+                continue
             m = session.record['measurement']
             if args.functional:
                 print(f'  completed={m["completed"]}; '
@@ -480,7 +512,14 @@ def main(lock_kind='spin'):
                           if peak else '  ')
                 print(f'{prefix}{m["completed"]*1e3/m["wall_ns"]:.3f} Mops/s; '
                       f'{m["wall_ns"]/m["completed"]:.2f} ns/op; drained=True',flush=True)
-        idle(); report(out); return 0
+        idle(); report(out)
+        if rejected_no_jit:
+            write_json(out/'failure.json', dict(status='NO_JIT',
+                error='drained samples lacked returned JIT bodies', sessions=rejected_no_jit))
+            print(f'FAILED: {len(rejected_no_jit)} NO_JIT samples; full matrix retained',
+                  file=sys.stderr)
+            return 1
+        return 0
     except (Failure,OSError,ValueError) as error:
         write_json(out/'failure.json',dict(error=str(error),status=getattr(error,'status','FAILED')))
         report(out); print(f'STOP: {error}',file=sys.stderr); return 1
