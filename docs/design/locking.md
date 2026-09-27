@@ -360,8 +360,8 @@ ledger and wrapper RSP scratch are separate metadata. Frame and held-lock
 depths are bounded at eight.
 Frame count, logical depth, held-lock count and node reservations are distinct
 resources. Sampled stack margins are not an arbitrary IRQ/NMI safety proof.
-NUMA-local batching is enabled by default, with an exact 512-body batch cap
-and a separate scan budget initialized to 512 for each batch. Both use the
+NUMA-local batching is enabled by default, with an exact 1024-body batch cap
+and a separate scan budget initialized to 1024 for each batch. Both use the
 build-time `KDLOCK_SPIN_BATCH` value (1–1024) but are consumed independently.
 A scan appends a contiguous remote run once,
 reusing its existing links while advancing only the CPU-local tail.

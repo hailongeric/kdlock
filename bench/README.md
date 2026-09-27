@@ -6,6 +6,9 @@ KD使用per-CPU近似竞争统计和原生队头的有界前缀检查；完整�
 
 ## 当前结果与口径
 
+- [36线程hash采样与批次调优](tclock_compare/results/20260927-hash36-profile.md)：
+  cycles采样、NUMA/插桩消融及撤回的寄存器候选；默认批上限1024，36线程提高约7%，仍低于TCLock。
+  定向hash/c1、少线程下降及24线程节点进度代价单列。
 - [有界refill与hash复验](tclock_compare/results/20260927-spin-refill.md)：
   在跨层内联基础上处理短批反复handoff，c1八线程回升到6.063 Mops/s，
   远端队列优先修复24线程hash的中位数回退；定向测量与复杂退出范围见报告。

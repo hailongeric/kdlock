@@ -25,7 +25,7 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 | 构建 | 当前启用项与边界 |
 | --- | --- |
 | TCLock backend | `NUMA_AWARE=1`、`WWJUMP=1`；`ENABLE_IRQS_CHECK` 关闭。当前对照限 task context、IRQ 开启的单锁调用者，不作为通用 IRQ/嵌套锁替代 |
-| KD normal | `KDLOCK_SELFTEST` 默认关闭，`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=512`；可显式关闭NUMA或启用探针 |
+| KD normal | `KDLOCK_SELFTEST` 默认关闭，`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=1024`；可显式关闭NUMA或启用探针 |
 | KD benchmark 插桩 | `--kd-provider-ubsan kernel`为默认，继承内核配置；`off`仅关闭私有provider副本的UBSAN，政策及实际ELF引用独立记录，普通provider和内核不变 |
 | KD 策略 | `spin_delegate=0` 关闭公共入口代理并跳过其热度记录，默认 `1`。只保留adaptive热度准入；`spin_entry_ratio_limit=0`仅绕过比例，仍受CPU/单锁热度和上下文/JIT安全检查约束 |
 
@@ -535,7 +535,7 @@ stack canary；有地址逃逸对象的慢路径仍有 canary。
 身份核对、IRQ/preempt 恢复及编译缓解配置继续保留。
 
 热度计数和时钟规则统一见[热度与角色](../../docs/JIT_EXECUTION.md#21-热度与角色)。
-NUMA默认启用，KD每batch最多代理512个正文，独立扫描预算同样初始化为512；
+NUMA默认启用，KD每batch最多代理1024个正文，独立扫描预算同样初始化为1024；
 两者使用构建时的`KDLOCK_SPIN_BATCH`值（1–1024）并分别消耗。直接本地后继不先读取next-next。
 延期远端节点优先接回交接链。continuation/等待栈初始化时请求所属CPU节点内存，允许回退。
 这些限制约束工作量，不保证任意调度下的等待时间。

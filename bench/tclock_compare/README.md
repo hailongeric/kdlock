@@ -79,8 +79,10 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   --output /root/kdlock-evidence/direct-new
 ```
 
-`--numa on/off`选择KD和TCLock的NUMA构建，默认on；`--kd-batch-size`默认为512，范围1–1024。
-KD每batch最多代理512个正文，独立NUMA扫描预算同样初始化为512；两者分别消耗。
+`--numa`默认on；KD支持on/off。TCLock当前上游头文件固定启用NUMA，因此off诊断须用
+`--backends kdlock --numa off`；包含TCLock的off请求会被编译身份核验拒绝。
+`--kd-batch-size`默认为1024，范围1–1024。
+KD每batch最多代理1024个正文，独立NUMA扫描预算同样初始化为1024；两者分别消耗。
 TCLock保留上游配置值1024。运行器用`modinfo`验证实际ELF，NUMA/批上限纳入结果身份，不混合候选。
 `--spin-prefetch 0/1/2`选择现有KD无预取/consumer查找/producer提示，默认2，加载后核对并独立分组。
 collector CLI无参数默认仍为30，32/36-worker运行必须如上显式指定38；与任一worker重合时拒绝。
@@ -180,6 +182,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [36线程hash采样与批次调优](results/20260927-hash36-profile.md) | 默认上限1024，hash36峰值较前检查点提高6.98%；flat-IP采样、配置消融、无收益JIT候选撤回，少线程及NUMA进度限制单列 |
 | [有界refill与hash复验](results/20260927-spin-refill.md) | 批尾空链接最多PAUSE/重读8次，已有远端队列直接交接；最终hash63场+c1定向27场，恢复c1八线程短批回退，保留512上限 |
 | [hash跨层内联与解锁优化](results/20260927-hash-runtime.md) | 默认kernel/512完整135场；相同默认配置16/36线程峰值较前版提高12.47%/6.26%，仍低于TCLock；显式配置与c1回归单列 |
 | [hash_payload优化](results/20260927-hash-optimization.md) | JIT/预取/helper精简，分离UBSAN与批上限；显式off/1024完整135场，8/16/36线程约为TCLock的71%/72%/71%，默认配置与功能回归见报告 |
@@ -226,8 +229,8 @@ TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开�
 `cond_resched()` 调度点，三种后端均保留锁外四组乘加。原 `hash_resched` 模块
 参数已删除；layout ABI v2 的 `resched` 固定为 0，运行器拒绝调度点仍开启的旧模块。
 这项实验设置不同于上游原始调度策略，也不同于历史索引中的成绩。
-这些锁外工作均计入整批 wall 时间。沿用三种直接API，新运行默认采用KD512/TCLock1024批次配置；
-最新[hash优化比较](results/20260927-spin-refill.md)使用连续2秒、300ms峰值；历史固定迭代成绩保留各自原始参数。
+这些锁外工作均计入整批 wall 时间。沿用三种直接API，新运行默认采用KD1024/TCLock1024批次配置；
+最新[hash优化比较](results/20260927-hash36-profile.md)使用连续2秒、300ms峰值；历史固定迭代成绩保留各自原始参数。
 这是哈希表临界区的三方对比，不宣称完整复现上游分配布局或论文的运行环境。
 
 ```sh

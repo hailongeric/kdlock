@@ -131,5 +131,8 @@ Linux/TCLock 正式 50/50 场通过数据及排空检查，代理量未测；没
 当前 KD 使用单锁字，旧 L/S 对照仅对应历史版本；当前入口、逐请求处理及
 存储差异见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
 
-`TCLOCK_NUMA=1`启用上游已有NUMA队列选择；默认独立构建为0，三方运行器默认显式启用。
+三方运行器默认显式传入`TCLOCK_NUMA=1`。虽然Makefile变量默认值为0，当前
+`include/lib/combiner.h`仍直接定义`NUMA_AWARE 1`，因此传0不能关闭NUMA。
+运行器会通过ELF的`spin_numa`拒绝不匹配的off配置；KD-only消融可使用
+`--backends kdlock --numa off`，不能把此TCLock构建标成NUMA-off。
 模块`spin_numa`构建元数据用于核对实际ELF，不增加执行计数。

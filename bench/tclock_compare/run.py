@@ -106,7 +106,7 @@ def make_plan(args):
             'invalid repeats/iterations')
     ratio_limit = getattr(args, 'spin_entry_ratio_limit', DEFAULT_SPIN_ENTRY_RATIO_LIMIT)
     require(ratio_limit in SPIN_ENTRY_RATIO_LIMITS, 'invalid spin entry ratio limit')
-    batch = getattr(args, 'kd_batch_size', 512)
+    batch = getattr(args, 'kd_batch_size', 1024)
     require(1 <= batch <= 1024, 'KD batch must be 1..1024')
     numa = getattr(args, 'numa', 'on')
     require(numa in ('on', 'off'), 'invalid NUMA policy')
@@ -269,7 +269,7 @@ def main():
                    help='existing KD prefetch mode: off, consumer lookup, producer hints')
     p.add_argument('--numa', choices=('on', 'off'), default='on',
                    help='build NUMA queue selection for KD and TCLock')
-    p.add_argument('--kd-batch-size', type=int, default=512,
+    p.add_argument('--kd-batch-size', type=int, default=1024,
                    help='maximum KD delegated bodies and NUMA scan budget per batch (1..1024)')
     p.add_argument('--kd-provider-ubsan', choices=('kernel', 'off'), default='kernel',
                    help='private benchmark provider only: inherit kernel UBSAN policy (default), '

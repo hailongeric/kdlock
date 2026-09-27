@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [36线程hash采样与批次调优](../bench/tclock_compare/results/20260927-hash36-profile.md) | 基础及batch/shadow共4组、runner39+15及NORMAL构建通过；最终默认hash63场+c1定向27场，诊断/撤回候选单列；未跑全量、SELFTEST模块或mutex live |
 | [有界refill](../bench/tclock_compare/results/20260927-spin-refill.md) | 基础及batch/outer-progress/shadow共5组，含NUMA远端优先和重试/正文边界；最终90场timed、36线程nested/early、NORMAL/SELFTEST/NORMAL构建及runner39+15通过，首次fixture失败与候选结果单列 |
 | [hash跨层内联与解锁优化](../bench/tclock_compare/results/20260927-hash-runtime.md) | 基础及frame/batch/entry/cold/preempt相关检查、runner与源码/ELF审计；默认135场及其他分阶段结果见报告，保留失败构建和主动停止的中间候选；未跑全量或mutex live |
 | [hash JIT/预取优化](../bench/tclock_compare/results/20260927-hash-optimization.md) | 基础及直接相关codegen/frame/batch检查、runner39项、NORMAL构建和hash分阶段/完整矩阵；首次fixture失败及修正保留，默认配置和nested/early验收范围见报告；未跑全量或mutex live |
