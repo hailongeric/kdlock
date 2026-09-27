@@ -14,9 +14,10 @@ MCS tail及combiner仲裁；Linux、TCLock、KD对象不能混用协议。mutex�
 [执行流](JIT_EXECUTION.md#21-热度与角色)。spin waiter诊断改为per-CPU事件总数，
 live观察近似，独立排空后检查最终余额，见[锁协议](design/locking.md#spin-diagnostic-identity-lifetime)。
 
-当前锁实现的[c1三方矩阵及nested/early](../bench/tclock_compare/results/20260924-warmed-peak.md)
-和[1/8 cacheline复测](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md)已完成。
-成绩、样本分布及源码身份只在匹配报告中维护，不拼接为全量功能验收。
+当前普通spin的[135场c1三方收尾复测](../bench/tclock_compare/results/20260927-spin-checkpoint.md)已完成，
+作为转入mutex阶段前的基线。此前[nested/early](../bench/tclock_compare/results/20260924-warmed-peak.md)
+和[1/8 cacheline复测](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md)保留为各自版本的历史证据。
+成绩、样本分布及源码身份只在匹配报告中维护，不拼接为当前版本的全量功能验收。
 并发冷准备、pinned mutex和访问时guard等边界见[TODO](TODO.md)，
 后续性能任务只维护在[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)。
 

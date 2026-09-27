@@ -7,6 +7,12 @@
 
 ## 1. 当前状态与证据边界
 
+按用户2026-09-27的阶段安排，spin本轮以[135场收尾复测](../bench/tclock_compare/results/20260927-spin-checkpoint.md)
+作为转入mutex前的基线，未再修改实现。KD在8–36线程全部已测点峰值高于TCLock，
+相对前次相同实现变化在约±0.31%内；1/2线程仍低于Linux，2/7线程低于TCLock。
+Linux28/32/36线程高值再次出现且计数/窗口审计通过，24线程KD的少数node进度占比仍约1%。
+下列spin优化项保留为后续候选，不因本次阶段收尾而标记完成；下一阶段工作转向mutex。
+
 当前采用有界512正文及独立512扫描预算、六后继准入、minimal IP预取、直接per-CPU热值。
 此前在此基础上压缩continuation前缀以合并IP/SP缓存行、用带代际的原子状态替代ticket guard、
 折叠JIT的RIP常量地址，并定向调整低竞争解锁布局；见[全链路报告](../bench/tclock_compare/results/20260927-flow.md)。

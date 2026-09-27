@@ -1,6 +1,6 @@
 # kdlock Open Tasks
 
-Current work list as of **2026-09-25**. Contracts live in
+Current work list as of **2026-09-27**. Contracts live in
 [DESIGN](DESIGN.md), [execution flow](JIT_EXECUTION.md) and
 [register ABI](JIT_REGISTER_ABI.md). Current measurements and the performance
 backlog live in [PERFORMANCE_PLAN](PERFORMANCE_PLAN.md); historical evidence
@@ -20,17 +20,19 @@ use one 32-bit word; nondelegating requests use the full pending/MCS queue.
 `spin_delegate=0` remains a native control, distinct from actual JIT evidence.
 
 Admission is adaptive only. It uses approximate per-CPU acquisition/MCS totals
-at a shared 512-publication sampling/comparison boundary. Native queue heads
-can decline future admission when the captured queue prefix lacks five linked
+at a shared 1024-publication sampling/comparison boundary. Native queue heads
+can decline future admission when the captured queue prefix lacks six linked
 successors. The cold successful CAS is inline. Spin waiter diagnostics use
 per-CPU event totals: live aggregation is approximate, final balance is checked
 after independent ownership/frame drain. Exact controls and limits live in
 [the execution flow](JIT_EXECUTION.md#21-热度与角色) and
 [diagnostic lifetime](design/locking.md#spin-diagnostic-identity-lifetime).
 
-The current implementation has a completed [c1 matched matrix and nested/early
-JIT checks](../bench/tclock_compare/results/20260924-warmed-peak.md), followed by
-the [1/8-cacheline comparison](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md).
+The current ordinary-spin implementation has a completed [135-session c1
+checkpoint](../bench/tclock_compare/results/20260927-spin-checkpoint.md), saved
+before the user's next mutex phase. The earlier [nested/early JIT checks](../bench/tclock_compare/results/20260924-warmed-peak.md)
+and [1/8-cacheline comparison](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md)
+remain evidence for their recorded versions, not new runs of the current version.
 These scoped results do not establish universal non-regression or a whole-project
 PASS. Known unresolved failures remain:
 
@@ -68,8 +70,9 @@ trees, releases and baselines. See [operations](AGENTS.md) and [manual](PROJECT_
 
 1. Diagnose known supported-path failures, preserving exact effects, real
    owners, source/request lifetime and final ACKs.
-2. Improve measured ordinary-spin costs, including native admission and short
-   batches. Report throughput, actual JIT share and observation cost separately.
+2. Use the saved spin checkpoint for the next mutex phase. Retain outstanding
+   spin performance/fairness work in PERFORMANCE_PLAN; report throughput,
+   actual JIT share and observation cost separately.
 3. Add useful bounded services and improve reproducibility as separate work.
    Optional generalization is not a prerequisite for these increments.
 
