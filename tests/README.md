@@ -55,6 +55,7 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 | source/注册生命周期 | `infrastructure/test_source_lifetime.py`、`execution/test_exe_registry.py` |
 | 冷热调用壳与通用解锁 ABI | `spin/test_spin_cold.py`、`codegen/test_spin_paired_jit.py` |
 | ABI、寄存器和生成器 | `admission/test_clobber_entry.py`、`codegen/test_clobber_abi.py`、`execution/test_native_registers.py`、`execution/test_jit_entry_scope.py` |
+| CALL/hostcall的SP、源返回字和公共完成出口 | `codegen/test_jit_body_witness.py`、`codegen/test_spin_paired_jit.py`、`codegen/test_clobber_abi.py`；本轮范围见[重复操作精简](../bench/tclock_compare/results/20260927-followup.md) |
 | 范围选择与离线证据 | `infrastructure/test_regression.py` |
 
 共享源码读取/头文件过滤位于 `unit/infrastructure/source_text.py`，不再依赖旧 gate

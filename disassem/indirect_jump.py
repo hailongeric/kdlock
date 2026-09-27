@@ -119,8 +119,8 @@ def make_callee_table(callee_list, hostcalls=None):
         ret_str += "loc_" + hex(offset)[2:] + ":\n"
         ret_str += make_inst("MOVABS", ["R14", hex(offset)])
         ret_str += make_inst("MOV", ["Stack_IJ", "0x5" if service else "0x1"])
+        # The common exit publishes SP for COMPLETE, reduced and FULL packets.
         # A miss resumes the original callee, with its return address intact.
-        ret_str += make_inst("MOV", ["Stack_RSP", "R13"])
         ret_str += make_inst("JMP", ["exit"])
         ret_str += "\n"
     return ret_str

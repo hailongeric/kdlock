@@ -162,6 +162,9 @@ python3 bench/tclock_compare/test_direct.py
 
 ## 本次结果
 
+全链路后续的小改动与定向范围见[重复操作精简](results/20260927-followup.md)；
+未重跑的三方完整矩阵仍以其冻结版本为准。
+
 | 报告 | 范围与用途 |
 | --- | --- |
 | [全链路访存与JIT优化](results/20260927-flow.md) | continuation缓存行、RIP地址折叠、解锁布局及无锁ticket元数据；分阶段诊断、15线程点三方135场及native借用验证 |

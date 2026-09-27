@@ -100,14 +100,29 @@ class JitBodyWitnessTests(unittest.TestCase):
 
     def test_original_call_and_hostcall_continuation(self):
         raw = "e8fb0f000048c7c02a000000c3"
-        assembly, _ = render(raw, kernel_symbols={"ktime_get": 0x2000})
-        results = run_image(assembly, [0x1000, 0x1005])
-        self.assertEqual(results[0][1], [5, 1])
-        self.assertEqual(results[0][0][16], 0x2000)
-        self.assertEqual(results[1][0][10], 42)
-        self.assertEqual(results[1][1][1], 1)
-        missing, _ = render(raw)
-        self.assertEqual(run_image(missing, [0x1000])[0][1], [1, 1])
+        for symbols, reason in (({"ktime_get": 0x2000}, 5), ({}, 1)):
+            with self.subTest(exit_reason=reason):
+                assembly, _ = render(raw, kernel_symbols=symbols)
+                packets = []
+
+                def capture_stack(regs, stack):
+                    packets.append((regs[19], stack))
+
+                # Only admitted hostcalls retain a JIT continuation; an
+                # ordinary missing callee continues on the original waiter.
+                entries = [0x1000, 0x1005] if reason == 5 else [0x1000]
+                results = run_image(assembly, entries, initialize=capture_stack)
+                self.assertEqual(results[0][1], [reason, 1])
+                self.assertEqual(results[0][0][16], 0x2000)
+                # Both callee exits export the pushed virtual SP and preserve
+                # the source CALL's return word for native/hostcall resumption.
+                self.assertEqual(results[0][0][19], packets[0][0] - 8)
+                self.assertEqual(packets[0][1][7], 0x1005)
+                self.assertEqual(packets[0][1][8], 0x4444)
+                if reason == 5:
+                    self.assertEqual(results[1][0][10], 42)
+                    self.assertEqual(results[1][0][19], packets[1][0] + 8)
+                    self.assertEqual(results[1][1][1], 1)
 
     def test_dispatcher_and_exit_tables_do_not_mark_the_body(self):
         assembly, _ = render("e8fb0f0000c3")

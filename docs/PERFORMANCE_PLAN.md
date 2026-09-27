@@ -66,7 +66,7 @@ NUMA-on继续作为provider和比较运行器默认值。优化优先级按实�
 | NUMA选择 | 有界512正文/独立512扫描；连续延期链只改必要接点，远端前缀最后优先交接 | 先测批终止原因；继续放大上限可能损害少数节点进度 |
 | 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；不先追远端task/frame找地址 | 新布局允许评估MINIMAL IP/SP重复hint；FULL/借用包需保留覆盖，远距离预取旧回退仍有效 |
 | batch准入/lease | registry身份只读复用，发布状态逐请求读取，精确source lease按batch摊销 | 不复制共享包，不把生命周期计数改成近似统计 |
-| JIT正文 | 翻译时折叠RIP常量LEA及可表达的绝对disp32访存，省scratch指令 | callee出口SP重复写；未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
+| JIT正文 | 翻译时折叠RIP常量地址；callee跳板去掉重复SP存储，由公共出口统一发布 | 未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
 | wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 去掉虚拟CALL栈写需保持真实续点及FULL契约，不是直接删保存指令 |
 | 退休/通知 | 先pop/退休，再release唤醒；队列头和轮询行分离 | 原owner ACK、最后一次packet读取和节点复用顺序保持不变 |
 | 嵌套/原生后缀 | 未启用的注入控制仍做共享cmpxchg；通用dispatcher尾部有MFENCE；native路由表仍有共享锁 | 可复用本地native-root避开无关全局查询，先读注入开关再CAS；MFENCE需审计所有发布点，普通c1 batch不经过它 |
@@ -154,7 +154,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 
 - [x] 简单spin batch按ABI一次写最终元数据；通用helper仍处理mutex/复杂路径。
 - [x] 按实际生成代码折叠普通RIP常量地址，c1块减少3条指令/22字节；不增加运行时guard。
-- [ ] 继续核对scratch spill、虚拟栈及终端CALL的重复SP写；仅在身份、
+- [x] 删除callee出口重复SP存储；[定向复测](../bench/tclock_compare/results/20260927-followup.md)18场及36线程nested原生续跑通过，吞吐未见明确提升。
+- [ ] 继续核对scratch spill和虚拟CALL栈操作；仅在身份、
   准入与有效期可证明一致时复用状态。FULL、hostcall与远端处理保留独立出口。
 - [ ] 下次先检验相邻batch_entries/ww_jumps能否复用短期本地诊断指针，保持两次精确per-CPU更新；以ELF无新增spill及实测为准。
 - [ ] 测量观察层成本，默认 `jit_timing=0`，采样与正式吞吐分开；inclusive timer
