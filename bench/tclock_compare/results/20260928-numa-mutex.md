@@ -381,6 +381,25 @@ peak 份额 5.52%–12.35%；没有无饥饿或最大等待时间证明。
 `mutex-tasks2-candidate.tar.gz` SHA256
 `1eb10c9f29df9a027c93fe7be603151e82d2785fe3b69b75896a18b3ca796074`。
 
+## Task cache + lock-free shadow：只保留为组合候选
+
+在上述 task-cache/batch 候选单独换入此前的 lock-free shadow；初始化、精确地址 hash、
+immutable CAS publication、1024 容量/native fallback 和 cacheline stride 均不变。
+基础及生产 resource fixture 3 组通过（10820 条检查和 21 个变异）；27 场三方筛选均正确并排空。
+
+| threads | KD min/median/max Mops/s | 对 task-cache 筛选中位数变化 | 对已接受 batch 中位数变化 |
+| --- | --- | --- | --- |
+| 1 | 17.055 / 17.147 / 17.166 | -0.68% | +15.94% |
+| 16 | 2.338 / 2.374 / 2.381 | +9.66% | -50.51% |
+| 36 | 1.383 / 1.431 / 1.443 | +18.37% | -51.18% |
+
+16/36 整段返回正文 JIT 份额为 82.93%–90.94% / 96.57%–98.02%。shadow 在这个成本结构下
+改善候选，但组合仍不满足已接受基线的性能门槛，不据此合入主分支或声称目标达成。
+下一项仅测试 migration-pinned 生命周期余额的精确 per-CPU 存放；owner/task/ACK/队列发布不变。
+证据 `numa-20260928-mutex-shadow2-{screen,validation}`，host
+`mutex-shadow2-candidate.tar.gz` SHA256
+`dbf6e2919c91607239003da324d15dca3537b772203bbfef8c32e3b56659218f`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：

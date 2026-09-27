@@ -484,6 +484,11 @@ with the guest's complete `pt_regs`; physical locks, scheduler, task records and
 assembly are substitutes. Their scope and live-test separation are maintained
 in [历史：the mutex resource guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#61-mutex-资源与恢复包).
 
+The shadow map initializes all 1024 cacheline-separated gates before module
+publication. Exact addresses use bounded open addressing; immutable CAS keys
+publish an already initialized gate. A full table falls back to native execution,
+and unlock lookup never allocates or replaces an entry.
+
 `kd_mutex_tasks.c` has 1024 cacheline-separated records, addressed by an exact
 task-pointer hash and immutable atomic key publication. A successful first
 publication retains a task reference until provider teardown; later gets only

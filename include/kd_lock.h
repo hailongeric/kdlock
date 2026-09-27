@@ -27,6 +27,7 @@ bool kd_mutex_task_active(struct task_struct *task);
 bool kd_mutex_task_reroute(struct task_struct *task);
 bool kd_mutex_task_get(struct task_struct *task);
 void kd_mutex_task_put(struct task_struct *task);
+void kd_mutex_shadows_init(void);
 void kd_mutex_tasks_exit(void);
 bool kd_mutex_tasks_idle(void);
 #ifdef KDLOCK_SELFTEST

@@ -65,7 +65,7 @@ def production():
         code += f"__attribute__((noipa)) {result}\n" + definition(mutex, marker)
     code += "#undef kd_mutex_shadows\n"
     code += hook[
-        hook.index("#define KD_MUTEX_SHADOW_TABLE_SIZE ") : hook.index(
+        hook.index("#define KD_MUTEX_SHADOW_BITS ") : hook.index(
             "/* --- externs from patched kernel"
         )
     ]
@@ -94,6 +94,10 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
+        "shadow-key-not-published": (
+            "seen = cmpxchg(&gate->origin_mutex_addr, 0UL, key);",
+            "seen = 0;",
+        ),
         "native-success-still-samples": (
             "if (kd_mutex_trylock_fast(lock)) {",
             "if (false && kd_mutex_trylock_fast(lock)) {",

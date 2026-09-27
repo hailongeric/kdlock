@@ -65,6 +65,7 @@ static int __init kdlock_km_init(void)
 {
 	int ret;
 
+	kd_mutex_shadows_init();
 	kd_comm_init(&kd_spin_target, target_process);
 	ret = kd_source_init();
 	if (ret)

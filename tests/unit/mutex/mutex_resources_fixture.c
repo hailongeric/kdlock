@@ -75,6 +75,10 @@ static jmp_buf resume_target;
 			BUG(); \
 	} while (0)
 #define TASK_COMM_LEN 16
+#define L1_CACHE_BYTES 64
+#define ____cacheline_aligned __attribute__((aligned(64)))
+static unsigned long hash_long(unsigned long key, unsigned int bits)
+{ return (key*0x61c8864680b583ebUL)>>(64-bits); }
 #define BUILD_BUG_ON(c) _Static_assert(!(c), "kernel build contract")
 #define likely(c) (c)
 #define unlikely(c) (c)
@@ -123,11 +127,24 @@ static jmp_buf resume_target;
 	} while (0)
 #define cmpxchg(p, old, value)                \
 	({                                    \
+		before_cmpxchg((void *)(p));   \
 		__typeof__(*(p)) seen = *(p); \
 		if (seen == (old))            \
 			*(p) = (value);       \
 		seen;                         \
 	})
+
+static unsigned long *race_key;
+static unsigned long race_value;
+static void before_cmpxchg(void *address)
+{
+	/* Deterministically interleave another publisher between the acquire
+	 * lookup and the key CAS. Real atomic ordering remains a kernel primitive. */
+	if (address == race_key) {
+		*race_key = race_value;
+		race_key = NULL;
+	}
+}
 
 static void preempt_enable(void);
 static void preempt_disable(void);
@@ -435,7 +452,7 @@ static void jump_to_saved_regs_in_cs(struct pt_regs *regs)
 static void reset(void)
 {
 	memset(origins, 0, sizeof(origins));
-	memset(kd_mutex_shadows, 0, sizeof(kd_mutex_shadows));
+	kd_mutex_shadows_init();
 	memset(kd_mutex_nodes, 0, sizeof(kd_mutex_nodes));
 	memset(&cpu_shadows, 0, sizeof(cpu_shadows));
 	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++) {
@@ -604,19 +621,27 @@ static void check_shadow_table(void)
 {
 	struct kd_mutex_shadow_entry before[KD_MUTEX_SHADOW_TABLE_SIZE];
 	struct kd_mutex *entries[KD_MUTEX_SHADOW_TABLE_SIZE];
+	struct mutex *keys[KD_MUTEX_SHADOW_TABLE_SIZE];
+	unsigned long cursor = (unsigned long)&origins[0].mutex;
+	unsigned int bucket = hash_long(cursor, KD_MUTEX_SHADOW_BITS);
 	struct mutex *missing = &origins[KD_MUTEX_SHADOW_TABLE_SIZE].mutex;
 
 	reset();
 	CHECK(!find_kd_mutex_shadow(&origins[0].mutex) && !shadow_count());
 	for (int i = 0; i < KD_MUTEX_SHADOW_TABLE_SIZE; i++) {
-		entries[i] = get_kd_mutex_shadow(&origins[i].mutex);
+		/* Only identity lookup touches these collision keys; no fake address
+		 * is dereferenced as a Linux mutex. The first key is the real peer. */
+		while (hash_long(cursor, KD_MUTEX_SHADOW_BITS) != bucket)
+			cursor += 64;
+		keys[i] = (struct mutex *)cursor;
+		cursor += 64;
+		entries[i] = get_kd_mutex_shadow(keys[i]);
 		CHECK(entries[i] && entries[i]->origin_mutex_addr ==
-					    (unsigned long)&origins[i].mutex);
+					    (unsigned long)keys[i]);
 		CHECK(!entries[i]->tail && !entries[i]->state.counter &&
 		      !entries[i]->waiter_count.counter &&
 		      !entries[i]->physical_owner);
-		CHECK((unsigned long)&origins[i] % KD_MUTEX_SHADOW_TABLE_SIZE ==
-		      (unsigned long)&origins[0] % KD_MUTEX_SHADOW_TABLE_SIZE);
+		CHECK(hash_long((unsigned long)keys[i], KD_MUTEX_SHADOW_BITS) == bucket);
 		CHECK(shadow_count() == (unsigned int)i + 1);
 	}
 	/* Keep a pre-existing native owner intact when a different address cannot
@@ -626,8 +651,8 @@ static void check_shadow_table(void)
 	origins[0].mutex.owner = &peer;
 	memcpy(before, kd_mutex_shadows, sizeof(before));
 	for (int i = 0; i < KD_MUTEX_SHADOW_TABLE_SIZE; i++) {
-		CHECK(get_kd_mutex_shadow(&origins[i].mutex) == entries[i]);
-		CHECK(find_kd_mutex_shadow(&origins[i].mutex) == entries[i]);
+		CHECK(get_kd_mutex_shadow(keys[i]) == entries[i]);
+		CHECK(find_kd_mutex_shadow(keys[i]) == entries[i]);
 	}
 	CHECK(!find_kd_mutex_shadow(missing));
 	__kd_mutex_lock(missing, (unsigned long)&native_stack[16], 0x8000);
@@ -637,7 +662,34 @@ static void check_shadow_table(void)
 	CHECK(!missing->owner && releases == 1 && !task_puts);
 	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes.counter);
 	CHECK(memcmp(before, kd_mutex_shadows, sizeof(before)) == 0);
-	CHECK(!table_irq && !kd_mutex_shadow_lock);
+	CHECK(!table_irq);
+}
+
+static void check_shadow_publication_race(void)
+{
+	for (unsigned int other = 0; other < 2; other++) {
+		reset();
+		struct mutex *key = &origins[0].mutex;
+		unsigned int pos = hash_long((unsigned long)key, KD_MUTEX_SHADOW_BITS);
+		struct kd_mutex *winner = &kd_mutex_shadows[pos].kd_mtx;
+		unsigned long competitor = (unsigned long)key;
+		if (other) {
+			do { competitor += 64; }
+			while (hash_long(competitor, KD_MUTEX_SHADOW_BITS) != pos);
+		}
+		/* A racing winner owns live scheduling state by the time our CAS
+		 * loses. Neither exact-key reuse nor probing may initialize it again. */
+		winner->locked = 1;
+		winner->physical_owner = &peer;
+		race_key = &winner->origin_mutex_addr;
+		race_value = competitor;
+		struct kd_mutex *got = get_kd_mutex_shadow(key);
+		CHECK(!race_key && got && got->origin_mutex_addr == (unsigned long)key);
+		CHECK((got == winner) == !other);
+		CHECK(winner->origin_mutex_addr == competitor && winner->locked == 1);
+		CHECK(winner->physical_owner == &peer && find_kd_mutex_shadow(key) == got);
+		CHECK(find_kd_mutex_shadow((struct mutex *)competitor) == winner);
+	}
 }
 
 static void check_hook_fallbacks(void)
@@ -983,11 +1035,13 @@ int main(void)
 	CHECK(!preempt && !migration && !shadow_count());
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
 	CHECK(!origins[0].mutex.owner && acquires == 1 && releases == 1);
+	/* Validate publication before fixtures dereference a published identity. */
+	check_shadow_table();
+	check_shadow_publication_race();
 	check_minimal_entry();
 	check_poll_result();
 	check_tails();
 	check_nodes();
-	check_shadow_table();
 	check_hook_fallbacks();
 	check_local_predecessor();
 	check_frequency_order();

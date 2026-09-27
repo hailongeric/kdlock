@@ -18,6 +18,7 @@
 #include <linux/atomic.h>
 #include <linux/errno.h>
 #include <linux/kernel.h>
+#include <linux/hash.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/mutex.h>
@@ -58,15 +59,26 @@ static __always_inline bool kd_mutex_trylock_fast(struct mutex *lock);
 
 /* --- mutex → kd_mutex shadow table ---------------------------------------- */
 
-#define KD_MUTEX_SHADOW_TABLE_SIZE 1024
+#define KD_MUTEX_SHADOW_BITS 10
+#define KD_MUTEX_SHADOW_TABLE_SIZE (1 << KD_MUTEX_SHADOW_BITS)
 
 /* The initialized original address is also the immutable map key. */
 struct kd_mutex_shadow_entry {
 	struct kd_mutex kd_mtx;
-};
+} ____cacheline_aligned;
 
 static struct kd_mutex_shadow_entry kd_mutex_shadows[KD_MUTEX_SHADOW_TABLE_SIZE];
-static DEFINE_RAW_SPINLOCK(kd_mutex_shadow_lock);
+/* Initialize before any direct caller or component selftest can publish a key.
+ * Keys never move or disappear; a published exact address pins this gate slot
+ * until provider teardown. Full capacity keeps using the native mutex. */
+void kd_mutex_shadows_init(void)
+{
+	unsigned int i;
+
+	BUILD_BUG_ON(sizeof(struct kd_mutex_shadow_entry) != L1_CACHE_BYTES);
+	for (i = 0; i < KD_MUTEX_SHADOW_TABLE_SIZE; i++)
+		kd_mutex_init(&kd_mutex_shadows[i].kd_mtx);
+}
 
 /* --- externs from patched kernel ------------------------------------------ */
 
@@ -77,57 +89,41 @@ extern void __mutex_unlock_slowpath(struct mutex *lock, unsigned long ip);
 
 static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)
 {
-	unsigned long flags;
-	unsigned long mutex_addr = (unsigned long)lock;
-	int start = mutex_addr % KD_MUTEX_SHADOW_TABLE_SIZE;
-	int pos = start;
+	unsigned long key = (unsigned long)lock;
+	unsigned int pos = hash_long(key, KD_MUTEX_SHADOW_BITS), probes;
 
-	raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
-	do {
-		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {
-			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
-						   flags);
-			return &kd_mutex_shadows[pos].kd_mtx;
-		}
-		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == 0) {
-			kd_mutex_init(&kd_mutex_shadows[pos].kd_mtx);
-			kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr =
-				mutex_addr;
-			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
-						   flags);
-			return &kd_mutex_shadows[pos].kd_mtx;
-		}
-		pos = (pos + 1) % KD_MUTEX_SHADOW_TABLE_SIZE;
-	} while (pos != start);
+	for (probes = 0; probes < KD_MUTEX_SHADOW_TABLE_SIZE; probes++) {
+		struct kd_mutex *gate = &kd_mutex_shadows[pos].kd_mtx;
+		unsigned long seen = smp_load_acquire(&gate->origin_mutex_addr);
 
-	raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
+		if (!seen)
+			/* All gate fields were initialized before module publication.
+			 * cmpxchg orders a winning key and observes a racing winner;
+			 * never reinitialize storage another caller may already own. */
+			seen = cmpxchg(&gate->origin_mutex_addr, 0UL, key);
+		if (!seen || seen == key)
+			return gate;
+		pos = (pos + 1) & (KD_MUTEX_SHADOW_TABLE_SIZE - 1);
+	}
 	KD_PR_ERR("kd mutex shadow table is full\n");
 	return NULL;
 }
 
 static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
 {
-	unsigned long flags;
-	unsigned long mutex_addr = (unsigned long)lock;
-	int start = mutex_addr % KD_MUTEX_SHADOW_TABLE_SIZE;
-	int pos = start;
+	unsigned long key = (unsigned long)lock;
+	unsigned int pos = hash_long(key, KD_MUTEX_SHADOW_BITS), probes;
 
-	raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
-	do {
-		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {
-			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
-						   flags);
-			return &kd_mutex_shadows[pos].kd_mtx;
-		}
-		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == 0) {
-			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
-						   flags);
+	for (probes = 0; probes < KD_MUTEX_SHADOW_TABLE_SIZE; probes++) {
+		struct kd_mutex *gate = &kd_mutex_shadows[pos].kd_mtx;
+		unsigned long seen = smp_load_acquire(&gate->origin_mutex_addr);
+
+		if (seen == key)
+			return gate;
+		if (!seen)
 			return NULL;
-		}
-		pos = (pos + 1) % KD_MUTEX_SHADOW_TABLE_SIZE;
-	} while (pos != start);
-
-	raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
+		pos = (pos + 1) & (KD_MUTEX_SHADOW_TABLE_SIZE - 1);
+	}
 	return NULL;
 }
 
