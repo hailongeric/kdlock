@@ -48,31 +48,32 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != L1_CACHE_BYTES + 1);
 
-	atomic64_set(&kd_mutex_slowpath_count, 0);
-	atomic64_set(&kd_mutex_combiner_count, 0);
-	atomic64_set(&kd_mutex_handoff_count, 0);
-	atomic64_set(&kd_mutex_jit_success_count, 0);
-	atomic64_set(&kd_mutex_jit_not_ready_count, 0);
-	atomic64_set(&kd_mutex_jit_failure_count, 0);
-	atomic64_set(&kd_mutex_jit_resume_count, 0);
-	atomic64_set(&kd_mutex_frame_failure_count, 0);
-	atomic64_set(&kd_mutex_node_overflow_count, 0);
-	atomic64_set(&kd_mutex_multi_slot_count, 0);
-	atomic64_set(&kd_mutex_context_busy_count, 0);
-	atomic64_set(&kd_mutex_nested_lock_count, 0);
-	atomic64_set(&kd_mutex_nested_fast_count, 0);
-	atomic64_set(&kd_mutex_nested_queued_count, 0);
-	atomic64_set(&kd_mutex_nested_jit_count, 0);
-	atomic64_set(&kd_mutex_origin_acquires, 0);
-	atomic64_set(&kd_mutex_origin_releases, 0);
-	atomic64_set(&kd_mutex_nested_unlock_count, 0);
-	atomic64_set(&kd_mutex_nested_abort_release_count, 0);
 	atomic_set(&kd_mutex_active_waiters, 0);
-	atomic_set(&kd_mutex_max_waiters, 0);
 	atomic_set(&kd_mutex_reserved_nodes, 0);
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
+
+		per_cpu(kd_mutex_slowpath_count, i) = 0;
+		per_cpu(kd_mutex_combiner_count, i) = 0;
+		per_cpu(kd_mutex_handoff_count, i) = 0;
+		per_cpu(kd_mutex_jit_success_count, i) = 0;
+		per_cpu(kd_mutex_jit_not_ready_count, i) = 0;
+		per_cpu(kd_mutex_jit_failure_count, i) = 0;
+		per_cpu(kd_mutex_jit_resume_count, i) = 0;
+		per_cpu(kd_mutex_frame_failure_count, i) = 0;
+		per_cpu(kd_mutex_node_overflow_count, i) = 0;
+		per_cpu(kd_mutex_multi_slot_count, i) = 0;
+		per_cpu(kd_mutex_context_busy_count, i) = 0;
+		per_cpu(kd_mutex_nested_lock_count, i) = 0;
+		per_cpu(kd_mutex_nested_fast_count, i) = 0;
+		per_cpu(kd_mutex_nested_queued_count, i) = 0;
+		per_cpu(kd_mutex_nested_jit_count, i) = 0;
+		per_cpu(kd_mutex_origin_acquires, i) = 0;
+		per_cpu(kd_mutex_origin_releases, i) = 0;
+		per_cpu(kd_mutex_nested_unlock_count, i) = 0;
+		per_cpu(kd_mutex_nested_abort_release_count, i) = 0;
+		per_cpu(kd_mutex_max_waiters, i) = 0;
 
 		memset(per_cpu_ptr(&kd_mutex_nodes[0], i), 0,
 		       sizeof(struct kd_mutex_node) * KD_MUTEX_MAX_NODES);
@@ -82,7 +83,7 @@ int kd_mutex_init_percpu(void)
 		for (j = 0; j < KD_MUTEX_MAX_NODES; j++) {
 			struct kd_mutex_node *node =
 				per_cpu_ptr(&kd_mutex_nodes[j], i);
-			void *node_stack = vzalloc(KD_MUTEX_SHADOW_STACK_SIZE);
+			void *node_stack = vzalloc_node(KD_MUTEX_SHADOW_STACK_SIZE, cpu_to_node(i));
 
 			node->slot = j;
 			node->shadow_stack_base = node_stack;
@@ -113,7 +114,10 @@ bool kd_mutex_check_idle(void)
 
 void kd_mutex_exit(void)
 {
-	int i;
+	int i, max_waiters = 0;
+
+	for_each_possible_cpu(i)
+		max_waiters = max(max_waiters, per_cpu(kd_mutex_max_waiters, i));
 
 	KD_PR_INFO(
 		"kd_mutex stats: slowpath=%lld combiner=%lld handoff=%lld "
@@ -124,28 +128,28 @@ void kd_mutex_exit(void)
 		"nested_unlock=%lld nested_abort_release=%lld "
 		"active_waiters=%d max_waiters=%d "
 		"reserved_nodes=%d origin_acquires=%lld origin_releases=%lld\n",
-		(long long)atomic64_read(&kd_mutex_slowpath_count),
-		(long long)atomic64_read(&kd_mutex_combiner_count),
-		(long long)atomic64_read(&kd_mutex_handoff_count),
-		(long long)atomic64_read(&kd_mutex_jit_success_count),
-		(long long)atomic64_read(&kd_mutex_jit_not_ready_count),
-		(long long)atomic64_read(&kd_mutex_jit_failure_count),
-		(long long)atomic64_read(&kd_mutex_jit_resume_count),
-		(long long)atomic64_read(&kd_mutex_frame_failure_count),
-		(long long)atomic64_read(&kd_mutex_node_overflow_count),
-		(long long)atomic64_read(&kd_mutex_multi_slot_count),
-		(long long)atomic64_read(&kd_mutex_context_busy_count),
-		(long long)atomic64_read(&kd_mutex_nested_lock_count),
-		(long long)atomic64_read(&kd_mutex_nested_fast_count),
-		(long long)atomic64_read(&kd_mutex_nested_queued_count),
-		(long long)atomic64_read(&kd_mutex_nested_jit_count),
-		(long long)atomic64_read(&kd_mutex_nested_unlock_count),
-		(long long)atomic64_read(&kd_mutex_nested_abort_release_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_slowpath_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_combiner_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_handoff_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_jit_success_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_jit_not_ready_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_jit_failure_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_jit_resume_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_frame_failure_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_node_overflow_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_multi_slot_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_context_busy_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_lock_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_fast_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_queued_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_jit_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_unlock_count),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_abort_release_count),
 		atomic_read(&kd_mutex_active_waiters),
-		atomic_read(&kd_mutex_max_waiters),
+		max_waiters,
 		atomic_read(&kd_mutex_reserved_nodes),
-		(long long)atomic64_read(&kd_mutex_origin_acquires),
-		(long long)atomic64_read(&kd_mutex_origin_releases));
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_origin_acquires),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_origin_releases));
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);

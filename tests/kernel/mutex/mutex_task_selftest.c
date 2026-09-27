@@ -104,7 +104,7 @@ static void kd_task_owner(void)
 	enum kd_exec_lock_kind kinds[] = { KD_EXEC_LOCK_QUEUE_OWNER,
 					   KD_EXEC_LOCK_NATIVE };
 	void *nodes[] = { NULL, &kd_task_test.locks[1] };
-	s64 failures = atomic64_read(&kd_mutex_task_failures);
+	s64 failures = KD_MUTEX_STAT_READ(kd_mutex_task_failures);
 
 	kd_task_wait(&kd_task_test.waiter_ready, false);
 	kd_origin_mutex_lock(&kd_task_test.locks[0]);
@@ -115,7 +115,7 @@ static void kd_task_owner(void)
 	KD_TASK_REQUIRE(!kd_mutex_task_get(waiter));
 	KD_TASK_CHECK(!kd_mutex_task_active(waiter) &&
 		      !atomic_read(&kd_mutex_task_count));
-	KD_TASK_CHECK(atomic64_read(&kd_mutex_task_failures) == failures + 1);
+	KD_TASK_CHECK(KD_MUTEX_STAT_READ(kd_mutex_task_failures) == failures + 1);
 	KD_TASK_REQUIRE(kd_mutex_task_get(waiter));
 	KD_TASK_REQUIRE(kd_mutex_task_get(waiter));
 	KD_TASK_CHECK(kd_task_refs(waiter) == 2 &&

@@ -61,6 +61,7 @@ def main():
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
     for marker in (
+        "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
     ):

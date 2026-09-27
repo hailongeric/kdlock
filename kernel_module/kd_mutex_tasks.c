@@ -11,6 +11,7 @@
 #include <linux/spinlock.h>
 
 #include "kd_lock.h"
+#include "kd_mutex_stats.h"
 
 /* Keep task routing alive through queue waits, the owner's CS, and borrowed
  * native CSs, independently of CPU frequency or target-process selection.
@@ -25,8 +26,8 @@ struct kd_mutex_task {
 static DEFINE_HASHTABLE(kd_mutex_tasks, 8);
 static DEFINE_RAW_SPINLOCK(kd_mutex_tasks_lock);
 static atomic_t kd_mutex_task_count = ATOMIC_INIT(0);
-static atomic64_t kd_mutex_task_failures = ATOMIC64_INIT(0);
-static atomic64_t kd_mutex_task_reroutes = ATOMIC64_INIT(0);
+KD_MUTEX_STAT(kd_mutex_task_failures);
+KD_MUTEX_STAT(kd_mutex_task_reroutes);
 static int kd_mutex_task_fail_once;
 module_param_named(mutex_task_fail_once, kd_mutex_task_fail_once, int, 0644);
 
@@ -57,7 +58,7 @@ bool kd_mutex_task_reroute(struct task_struct *task)
 {
 	if (!kd_mutex_task_active(task))
 		return false;
-	atomic64_inc(&kd_mutex_task_reroutes);
+	this_cpu_inc(kd_mutex_task_reroutes);
 	return true;
 }
 
@@ -69,7 +70,7 @@ bool kd_mutex_task_get(struct task_struct *task)
 	new = cmpxchg(&kd_mutex_task_fail_once, 1, 0) == 1 ?
 		      NULL : kmalloc(sizeof(*new), GFP_ATOMIC);
 	if (!new) {
-		atomic64_inc(&kd_mutex_task_failures);
+		this_cpu_inc(kd_mutex_task_failures);
 		return false;
 	}
 	raw_spin_lock_irqsave(&kd_mutex_tasks_lock, flags);
@@ -136,8 +137,8 @@ void kd_mutex_tasks_exit(void)
 	rcu_barrier();
 	pr_info("kd_mutex tasks: active_tasks=%d task_alloc_failure=%lld task_reroutes=%lld\n",
 		atomic_read(&kd_mutex_task_count),
-		(long long)atomic64_read(&kd_mutex_task_failures),
-		(long long)atomic64_read(&kd_mutex_task_reroutes));
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_task_failures),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_task_reroutes));
 }
 
 #ifdef KDLOCK_SELFTEST

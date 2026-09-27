@@ -76,6 +76,7 @@ static unsigned int raw_smp_processor_id(void)
 	} while (0)
 #define BUG() BUG_ON(true)
 #define READ_ONCE(x) (x)
+#define prefetch(p) ((void)(p))
 #define WRITE_ONCE(x, v) ((x) = (v))
 #define unlikely(x) (x)
 #define smp_load_acquire(p) (*(p))
@@ -85,6 +86,7 @@ static unsigned int raw_smp_processor_id(void)
 			wakes++;                                  \
 		*(p) = (v);                                       \
 	} while (0)
+#define this_cpu_inc(x) (++(x))
 #define atomic64_inc(p) (++*(p))
 #define WARN_ON_ONCE(c) ((void)(c))
 #define pr_info(fmt, ...)                                              \

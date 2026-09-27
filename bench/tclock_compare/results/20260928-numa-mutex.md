@@ -276,6 +276,29 @@ host `mutex-nativefirst.tar.gz`，SHA256
 `mutex-tasks-candidate.tar.gz` SHA256
 `d4d5132fc1b55b331f53439b507f4b1d5cb07dd2b552a4fe1d0fbcc206af19d2`。
 
+## 本地栈、CPU 本地观测与后继预取：保留
+
+四个 waiter 栈分别以其 CPU 的 NUMA node 为首选分配；纯观测计数改为 per-CPU，
+排空后求和。真实 owner、task refs、active/reserved/waiter_count 及 ACK 状态仍精确维护。
+只预取已入队且仍存活的后继头部、SP/BP packet 和两个相邻 caller-stack cacheline，
+不在发布 wake 后访问后继。没有改变锁或队列发布顺序。
+
+基础与 resource/outer-progress/shadow-switch 共 5 组通过。首次 stack-switch fixture 缺少
+`u32` typedef，修正后复跑通过；首次 provider overlay 因旧 counter 上下文不匹配而在加载前失败，
+只更新两个上下文行后重跑。上述失败均保留。27/27 场业务、实际 JIT、worker 进度、日志与排空通过：
+
+| threads | KD min/median/max Mops/s | native-first 中位数 | KD/TCLock 峰值 |
+| --- | --- | --- | --- |
+| 1 | 14.926 / 14.928 / 14.956 | 14.795 | 41.37% |
+| 16 | 3.847 / 3.918 / 4.084 | 3.858 | 84.81% |
+| 36 | 2.033 / 2.141 / 2.324 | 1.574 | 48.89% |
+
+受保护点中位数均未回退。该候选整体筛选通过；这不是三个子改动各自的收益归因，
+也没有据此声称 remote-memory latency 已测得或 90% 目标已完成。
+证据 `numa-20260928-mutex-locality-{screen,screen-fixed,validation}`，host
+`mutex-locality.tar.gz` SHA256
+`217b160f5e8e011c997ef54ef9987a08e729c45b8d797286af054dcc1ad35b1d`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：

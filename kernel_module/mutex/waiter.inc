@@ -87,7 +87,7 @@ release:
 __attribute__((noipa)) noinline notrace static int
 kd_mutex_lock_slowpath(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
-	atomic64_inc(&kd_mutex_slowpath_count);
+	this_cpu_inc(kd_mutex_slowpath_count);
 	return __kd_mutex_lock_slowpath(lock, curr_node->tail, curr_node);
 }
 
@@ -98,14 +98,14 @@ int kd_mutex_nested_lock(struct mutex *lock)
 	if (kd_origin_mutex_owned(lock, current))
 		return -EDEADLK;
 
-	atomic64_inc(&kd_mutex_nested_lock_count);
+	this_cpu_inc(kd_mutex_nested_lock_count);
 	/* A owns this CPU's frame stack across scheduling. The active-task
 	 * registry routes unrelated reentrant acquisitions to native Linux. */
 	preempt_enable();
 	if (mutex_trylock(lock)) {
-		atomic64_inc(&kd_mutex_nested_fast_count);
+		this_cpu_inc(kd_mutex_nested_fast_count);
 	} else {
-		atomic64_inc(&kd_mutex_nested_queued_count);
+		this_cpu_inc(kd_mutex_nested_queued_count);
 		atomic_inc(&kd_mutex_nested_waiters);
 		kd_origin_mutex_lock(lock);
 		atomic_dec(&kd_mutex_nested_waiters);
@@ -118,7 +118,7 @@ int kd_mutex_nested_lock(struct mutex *lock)
 int kd_mutex_nested_unlock(struct mutex *lock)
 {
 	kd_origin_mutex_unlock(lock, _RET_IP_);
-	atomic64_inc(&kd_mutex_nested_unlock_count);
+	this_cpu_inc(kd_mutex_nested_unlock_count);
 	return 0;
 }
 
@@ -126,7 +126,7 @@ int kd_mutex_nested_unlock(struct mutex *lock)
  * continuation. This proves the sandbox resumed after the native acquisition. */
 void kd_mutex_note_nested_jit(void)
 {
-	atomic64_inc(&kd_mutex_nested_jit_count);
+	this_cpu_inc(kd_mutex_nested_jit_count);
 }
 
 int kd_mutex_waiter_count(struct kd_mutex *lock)
@@ -136,5 +136,5 @@ int kd_mutex_waiter_count(struct kd_mutex *lock)
 
 void kd_mutex_note_nested_abort_release(void)
 {
-	atomic64_inc(&kd_mutex_nested_abort_release_count);
+	this_cpu_inc(kd_mutex_nested_abort_release_count);
 }

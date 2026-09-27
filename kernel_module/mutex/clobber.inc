@@ -19,7 +19,7 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 	WRITE_ONCE(this_cpu_ptr(&kd_mutex_shadows)->resume_node, NULL);
 	kd_mutex_release_node(node);
 	if (!native)
-		atomic64_inc(&kd_mutex_jit_resume_count);
+		this_cpu_inc(kd_mutex_jit_resume_count);
 	preempt_enable();
 	migrate_enable();
 	if (native)

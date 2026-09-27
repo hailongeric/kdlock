@@ -51,11 +51,11 @@ static __always_inline void set_locked(struct kd_mutex *lock)
 
 static void kd_mutex_update_max_waiters(int active)
 {
-	int old = atomic_read(&kd_mutex_max_waiters);
+	int old = this_cpu_read(kd_mutex_max_waiters);
 
 	while (active > old) {
 		int previous =
-			atomic_cmpxchg(&kd_mutex_max_waiters, old, active);
+			this_cpu_cmpxchg(kd_mutex_max_waiters, old, active);
 
 		if (previous == old)
 			break;
@@ -75,13 +75,13 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock)
 {
 	if (unlikely(atomic_dec_return(&lock->waiter_count) < 0)) {
 		atomic_set(&lock->waiter_count, 0);
-		atomic64_inc(&kd_mutex_frame_failure_count);
+		this_cpu_inc(kd_mutex_frame_failure_count);
 		KD_PR_ERR("kd_mutex lock waiter count underflow lock=%px\n",
 			  lock);
 	}
 	if (unlikely(atomic_dec_return(&kd_mutex_active_waiters) < 0)) {
 		atomic_set(&kd_mutex_active_waiters, 0);
-		atomic64_inc(&kd_mutex_frame_failure_count);
+		this_cpu_inc(kd_mutex_frame_failure_count);
 		KD_PR_ERR("kd_mutex active waiter count underflow\n");
 	}
 }
@@ -102,7 +102,7 @@ static void kd_mutex_claim_origin(struct kd_mutex *lock)
 	BUG_ON(READ_ONCE(lock->physical_owner));
 	kd_origin_mutex_lock((struct mutex *)lock->origin_mutex_addr);
 	WRITE_ONCE(lock->physical_owner, current);
-	atomic64_inc(&kd_mutex_origin_acquires);
+	this_cpu_inc(kd_mutex_origin_acquires);
 }
 
 static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
@@ -159,7 +159,7 @@ static struct kd_mutex_node *kd_mutex_reserve_node(void)
 			continue;
 		WRITE_ONCE(shadow->node_slots, slots | BIT(idx));
 		if (slots)
-			atomic64_inc(&kd_mutex_multi_slot_count);
+			this_cpu_inc(kd_mutex_multi_slot_count);
 		atomic_inc(&kd_mutex_reserved_nodes);
 		return node;
 	}
@@ -189,7 +189,7 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 	return;
 
 invalid:
-	atomic64_inc(&kd_mutex_frame_failure_count);
+	this_cpu_inc(kd_mutex_frame_failure_count);
 	KD_PR_ERR("kd_mutex invalid waiter slot release node=%px slots=%lx\n",
 		  node, slots);
 }

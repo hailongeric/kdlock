@@ -12,6 +12,26 @@ struct kd_mutex_batch {
 	struct kd_mutex_node *next;
 };
 
+/* The successor is still queued and cannot reuse its node or caller stack
+ * before this batch publishes a wake. Fetch its read-mostly header, the saved
+ * SP/BP packet lines, and the two stack lines around the virtual return slot.
+ * Do this before the current body; never chase a successor after handoff. */
+static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
+{
+	unsigned long sp;
+
+	if (!next)
+		return;
+	prefetch(next);
+	prefetch(&next->regs.sp);
+	prefetch(&next->regs.bp);
+	sp = READ_ONCE(next->regs.sp);
+	if (sp) {
+		prefetch((void *)sp);
+		prefetch((void *)(sp - 64));
+	}
+}
+
 /* Detach A's queue while this executor still owns B. The saved successor is
  * never touched again after publication; it may complete and reuse its slot. */
 static int kd_mutex_release_outer(struct kd_exec_frame *frame,
@@ -96,7 +116,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	if (!curr_node->regs.ip ||
 	    (curr_node->saved_ret_addr &&
 	     curr_node->regs.ip != curr_node->saved_ret_addr)) {
-		atomic64_inc(&kd_mutex_frame_failure_count);
+		this_cpu_inc(kd_mutex_frame_failure_count);
 		return KD_EXE_RUN_ERROR;
 	}
 
@@ -105,7 +125,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	exe = kd_exe_find_ready(0, curr_node->regs.ip);
 	if (!exe) {
-		atomic64_inc(&kd_mutex_jit_not_ready_count);
+		this_cpu_inc(kd_mutex_jit_not_ready_count);
 		/* A missing/cold image is an unstarted request, not a progressed
 		 * frame failure. Keep its identity distinct from context refusal. */
 		KD_PR_DEBUG("mutex JIT not ready: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
@@ -121,7 +141,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		 * current waiter must use queue handoff without touching it.
 		 * Identify the unexecuted request so a busy refusal cannot be
 		 * mistaken for missing translation or a progressed JIT failure. */
-		atomic64_inc(&kd_mutex_context_busy_count);
+		this_cpu_inc(kd_mutex_context_busy_count);
 		KD_PR_DEBUG(
 			"mutex JIT context busy: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
 			current->pid, curr_node->task_struct_ptr->pid,
@@ -141,7 +161,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr, 1,
 			curr_node->gsbase, curr_node->task_struct_ptr);
 	if (!frame) {
-		atomic64_inc(&kd_mutex_frame_failure_count);
+		this_cpu_inc(kd_mutex_frame_failure_count);
 		return KD_EXE_RUN_ERROR;
 	}
 
@@ -154,14 +174,14 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	frame_ret = kd_exec_frame_set_lock_entries(
 		frame, lock_addr, lock_kind, lock_node, NULL, 1);
 	if (frame_ret) {
-		atomic64_inc(&kd_mutex_frame_failure_count);
+		this_cpu_inc(kd_mutex_frame_failure_count);
 		KD_PR_ERR("mutex JIT frame lock entry invalid: %d\n",
 			  frame_ret);
 		frame_ret = kd_exec_frame_abort(frame);
 		if (!frame_ret)
 			frame_ret = kd_exec_frame_pop(frame, NULL);
 		if (unlikely(frame_ret)) {
-			atomic64_inc(&kd_mutex_frame_failure_count);
+			this_cpu_inc(kd_mutex_frame_failure_count);
 			KD_PR_ERR(
 				"mutex JIT invalid-frame cleanup failed: %d\n",
 				frame_ret);
@@ -214,7 +234,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		if (!frame_ret)
 			frame_ret = kd_exec_frame_complete(frame);
 		if (unlikely(frame_ret)) {
-			atomic64_inc(&kd_mutex_frame_failure_count);
+			this_cpu_inc(kd_mutex_frame_failure_count);
 			KD_PR_ERR(
 				"mutex JIT committed frame transition failed: %d\n",
 				frame_ret);
@@ -227,14 +247,14 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	if (ret_flag != KD_EXE_RUN_TO_UNLOCK) {
 		frame_ret = kd_mutex_jit_abort_cleanup(frame);
 		if (unlikely(frame_ret)) {
-			atomic64_inc(&kd_mutex_frame_failure_count);
+			this_cpu_inc(kd_mutex_frame_failure_count);
 			KD_PR_ERR("mutex JIT nested abort cleanup failed: %d\n",
 				  frame_ret);
 			BUG();
 		}
 		if (kd_exec_frame_state(frame) != KD_EXEC_FRAME_COMPLETE &&
 		    kd_exec_frame_abort(frame))
-			atomic64_inc(&kd_mutex_frame_failure_count);
+			this_cpu_inc(kd_mutex_frame_failure_count);
 		if (!clobber)
 			*regs = retry_regs;
 	}
@@ -242,7 +262,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	curr_node->packet_state = frame->packet_state;
 	frame_ret = kd_exec_frame_pop(frame, &curr_node->regs);
 	if (frame_ret) {
-		atomic64_inc(&kd_mutex_frame_failure_count);
+		this_cpu_inc(kd_mutex_frame_failure_count);
 		KD_PR_ERR("mutex JIT frame pop failed: %d\n", frame_ret);
 		if (ret_flag == KD_EXE_RUN_TO_UNLOCK)
 			BUG();
@@ -254,7 +274,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		return 0;
 	}
 
-	atomic64_inc(&kd_mutex_jit_failure_count);
+	this_cpu_inc(kd_mutex_jit_failure_count);
 	KD_PR_DEBUG("mutex JIT delegation failed: %d\n", ret_flag);
 	return ret_flag;
 }
@@ -274,11 +294,11 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	};
 	int counter = 0;
 
-	atomic64_inc(&kd_mutex_combiner_count);
+	this_cpu_inc(kd_mutex_combiner_count);
 
 	if (!curr_node || !curr_node->next) {
 		/* Only one waiter — pass lock directly, no delegation needed */
-		atomic64_inc(&kd_mutex_handoff_count);
+		this_cpu_inc(kd_mutex_handoff_count);
 		set_locked(lock);
 		if (curr_node)
 			smp_store_release(&curr_node->locked, 0);
@@ -290,6 +310,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		next_node = curr_node->next;
 		batch.next = next_node;
 		batch.outer.released = false;
+		kd_mutex_prefetch_successor(next_node);
 
 		int exe_flag = execute_cs(lock, curr_node, &batch);
 
@@ -301,13 +322,13 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			 * Hand the lock to this waiter so it can execute
 			 * its own CS as the new combiner.
 			 */
-			atomic64_inc(&kd_mutex_handoff_count);
+			this_cpu_inc(kd_mutex_handoff_count);
 			next_node = curr_node;
 			break;
 		}
 
 		if (exe_flag != KD_EXE_NATIVE_DONE) {
-			atomic64_inc(&kd_mutex_jit_success_count);
+			this_cpu_inc(kd_mutex_jit_success_count);
 			clear_locked_set_completed(curr_node);
 		}
 

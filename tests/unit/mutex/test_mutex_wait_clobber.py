@@ -20,6 +20,7 @@ FIXTURE = r'''
 #include <string.h>
 #include <stdio.h>
 typedef uint8_t u8;
+typedef uint32_t u32;
 typedef struct { int counter; } atomic_t;
 #define noinline __attribute__((noinline))
 #define notrace
@@ -28,6 +29,7 @@ typedef struct { int counter; } atomic_t;
 #define WRITE_ONCE(x,v) ((x)=(v))
 #define BUG_ON(x) assert(!(x))
 #define this_cpu_ptr(x) (x)
+#define this_cpu_inc(x) (++(x))
 #define atomic64_inc(x) (++*(x))
 #define UNWIND_HINT(a,b,c,d) ""
 #define ASM_CALL_CONSTRAINT "+r"(current_stack_pointer)

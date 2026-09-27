@@ -85,6 +85,7 @@ static jmp_buf resume_target;
 #define atomic_set(p, v) ((p)->counter = (v))
 #define atomic_inc(p) (++(p)->counter)
 #define atomic_dec(p) (--(p)->counter)
+#define this_cpu_inc(x) (++(x))
 #define atomic64_inc(p) (++*(p))
 #define BIT(n) (1UL << (n))
 #define DEFINE_PER_CPU_SHARED_ALIGNED(type, name) type name

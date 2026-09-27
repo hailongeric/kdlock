@@ -29,6 +29,7 @@
 #include <linux/objtool.h>
 
 #include "kd_mutex.h"
+#include "kd_mutex_stats.h"
 #include "kd_lock.h"
 #include "kd_exec.h"
 #include "kd_segment.h"
@@ -62,28 +63,28 @@
 
 static const unsigned int kd_mutex_batch_size = 1024;
 
-/* Always-on protocol counters used for validation and post-mortem diagnosis. */
-static atomic64_t kd_mutex_slowpath_count;
-static atomic64_t kd_mutex_combiner_count;
-static atomic64_t kd_mutex_handoff_count;
-static atomic64_t kd_mutex_jit_success_count;
-static atomic64_t kd_mutex_jit_not_ready_count;
-static atomic64_t kd_mutex_jit_failure_count;
-static atomic64_t kd_mutex_jit_resume_count;
-static atomic64_t kd_mutex_frame_failure_count;
-static atomic64_t kd_mutex_node_overflow_count;
-static atomic64_t kd_mutex_multi_slot_count;
-static atomic64_t kd_mutex_context_busy_count;
-static atomic64_t kd_mutex_nested_lock_count;
-static atomic64_t kd_mutex_nested_fast_count;
-static atomic64_t kd_mutex_nested_queued_count;
-static atomic64_t kd_mutex_nested_jit_count;
-static atomic64_t kd_mutex_origin_acquires;
-static atomic64_t kd_mutex_origin_releases;
-static atomic64_t kd_mutex_nested_unlock_count;
-static atomic64_t kd_mutex_nested_abort_release_count;
+/* Pure observations are CPU-local. Exact lifecycle gauges below remain atomic. */
+KD_MUTEX_STAT(kd_mutex_slowpath_count);
+KD_MUTEX_STAT(kd_mutex_combiner_count);
+KD_MUTEX_STAT(kd_mutex_handoff_count);
+KD_MUTEX_STAT(kd_mutex_jit_success_count);
+KD_MUTEX_STAT(kd_mutex_jit_not_ready_count);
+KD_MUTEX_STAT(kd_mutex_jit_failure_count);
+KD_MUTEX_STAT(kd_mutex_jit_resume_count);
+KD_MUTEX_STAT(kd_mutex_frame_failure_count);
+KD_MUTEX_STAT(kd_mutex_node_overflow_count);
+KD_MUTEX_STAT(kd_mutex_multi_slot_count);
+KD_MUTEX_STAT(kd_mutex_context_busy_count);
+KD_MUTEX_STAT(kd_mutex_nested_lock_count);
+KD_MUTEX_STAT(kd_mutex_nested_fast_count);
+KD_MUTEX_STAT(kd_mutex_nested_queued_count);
+KD_MUTEX_STAT(kd_mutex_nested_jit_count);
+KD_MUTEX_STAT(kd_mutex_origin_acquires);
+KD_MUTEX_STAT(kd_mutex_origin_releases);
+KD_MUTEX_STAT(kd_mutex_nested_unlock_count);
+KD_MUTEX_STAT(kd_mutex_nested_abort_release_count);
 static atomic_t kd_mutex_active_waiters;
-static atomic_t kd_mutex_max_waiters;
+static DEFINE_PER_CPU(int, kd_mutex_max_waiters);
 static atomic_t kd_mutex_reserved_nodes;
 static atomic_t kd_mutex_nested_waiters = ATOMIC_INIT(0);
 
@@ -210,7 +211,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		if (unlikely(!curr_node)) {
 			/* No queue node was published. Wait on the native stack for the
 			 * scheduling gate, then acquire the original mutex as its owner. */
-			atomic64_inc(&kd_mutex_node_overflow_count);
+			this_cpu_inc(kd_mutex_node_overflow_count);
 			/* Identify the unstarted request and the stable reservation mask.
 			 * A missing stack can also refuse a node, so only a full mask
 			 * establishes actual per-CPU slot exhaustion. */
@@ -255,7 +256,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 				READ_ONCE(shadow->resume_node);
 
 			if (unlikely(!resume_node)) {
-				atomic64_inc(&kd_mutex_frame_failure_count);
+				this_cpu_inc(kd_mutex_frame_failure_count);
 				KD_PR_ERR(
 					"mutex JIT completion missing resume node\n");
 				BUG();
@@ -266,7 +267,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 			resume_ready = true;
 			native_resume = ret_val == 5;
 			if (!native_resume)
-				atomic64_inc(&kd_mutex_jit_resume_count);
+				this_cpu_inc(kd_mutex_jit_resume_count);
 		} else {
 			kd_mutex_release_node(curr_node);
 		}
@@ -310,7 +311,7 @@ _kd_mutex_unlock_checked(struct kd_mutex *lock)
 		WRITE_ONCE(lock->physical_owner, NULL);
 		kd_origin_mutex_unlock((struct mutex *)lock->origin_mutex_addr,
 				       _RET_IP_);
-		atomic64_inc(&kd_mutex_origin_releases);
+		this_cpu_inc(kd_mutex_origin_releases);
 		smp_store_release(&lock->locked, 0);
 		return 0;
 	}

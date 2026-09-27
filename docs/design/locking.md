@@ -459,7 +459,13 @@ distinct from merely completing all clients.
 5. `_kd_mutex_unlock_checked()` releases the original mutex before opening the
    scheduling gate. Native participants can acquire it between scheduler owners.
 
-Each CPU has four independently reserved 8 KiB waiter stacks. An exhausted task
+Each CPU has four independently reserved 8 KiB waiter stacks, allocated with its
+CPU NUMA node as the preferred node. The combiner prefetches a known-live queued
+successor’s header, register packet and two nearby caller-stack lines before the
+current body; it never follows that successor after publishing a wake. Pure
+observations use per-CPU counters, summed after drain. Exact waiter/slot/task
+references and physical ownership remain independent of these observations.
+An exhausted task
 never publishes a queue node; it waits on its native stack for the gate and
 then acquires the original mutex. Migration stays disabled during queued waits,
 but preemption is temporarily enabled where scheduling or native locking is

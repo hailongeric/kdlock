@@ -199,7 +199,7 @@ diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
 @@ -126,7 +126,7 @@
  		 * Identify the unexecuted request so a busy refusal cannot be
  		 * mistaken for missing translation or a progressed JIT failure. */
- 		atomic64_inc(&kd_mutex_context_busy_count);
+ 		this_cpu_inc(kd_mutex_context_busy_count);
 -		KD_PR_DEBUG(
 +		KD_PR_DEBUG_ALWAYS(
  			"mutex JIT context busy: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
@@ -208,7 +208,7 @@ diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
 @@ -261,7 +261,7 @@
  	}
  
- 	atomic64_inc(&kd_mutex_jit_failure_count);
+ 	this_cpu_inc(kd_mutex_jit_failure_count);
 -	KD_PR_DEBUG("mutex JIT delegation failed: %d\n", ret_flag);
 +	KD_PR_DEBUG_ALWAYS("mutex JIT delegation failed: %d\n", ret_flag);
  	return ret_flag;
