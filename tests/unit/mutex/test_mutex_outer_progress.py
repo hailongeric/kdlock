@@ -60,7 +60,10 @@ def main():
     end = mutex.index("#endif", start) + len("#endif")
     code = "#define DSM_DEBUG 1\n" + mutex[start:end] + "\n" + code
     if "struct kd_mutex_batch {" in mutex:
-        code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
+        # Batch-owned NUMA state and selection/splice helpers must match the
+        # real producer, including when this legacy fixture builds NUMA off.
+        code += mutex[mutex.index("struct kd_mutex_batch {"):
+                      mutex.index("static struct kd_exe_info *\nkd_mutex_batch_find_ready")]
     code += "static struct kd_exe_info *\n" + definition(mutex, "kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)") + "\n"
     for marker in (
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",

@@ -516,6 +516,18 @@ shared acquisition refs, a reader spanning both ACKs, inactivity before final
 ACK and retention until unload. Its constructed continuation and outer batch
 callback are explicitly JIT=0; ordinary benchmark JIT evidence remains separate.
 
+#### Experimental Mutex NUMA Grouping
+
+This candidate groups queued ABI2 MINIMAL requests by the CPU encoded in each
+immutable tail. Each stack-local batch owns its deferred remote prefix and an
+independent 1024-step scan budget; the body limit remains 1024. Legacy/FULL
+packets stop reordering. Unstarted rejection restores the prior deferred tail,
+then splices that prefix ahead of the refused request. Normal, native and early
+outer handoff all publish the deferred prefix first. No node is inspected after
+that publication. Bounded work and observed progress do not guarantee fairness.
+This implementation passed protocol tests but failed the protected throughput
+screen and is retained only on the experimental branch; see the staged report.
+
 #### Pinned Busy Polling
 
 Both spinlock and mutex delegation support explicit GS memory operations by

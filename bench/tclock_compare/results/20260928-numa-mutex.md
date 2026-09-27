@@ -425,6 +425,29 @@ waiter count、owner、task ref、source lease、ACK 与队列发布顺序不变
 `mutex-balances-candidate.tar.gz` SHA256
 `66f70ba4a185187d6005656a9313c9a295ea1975e1ed433dc7aca25961b43400`。
 
+## 高 JIT 组合上的 NUMA grouping 复验：不合入
+
+在 task cache + shadow + 精确 per-CPU 余额上重用已测 NUMA 实现，独立改变 grouping。
+基础与 NUMA on/off、outer-progress 共 4 组通过；27 场筛选与 18 场保护点复核均正确并排空。
+36 线程筛选中位数相对上项 FIFO 候选提高约 59.57%，JIT 份额约 98.5%；
+但整体候选相对已接受 batch 仍在保护点重复下降：
+
+| threads | 筛选 KD min/median/max Mops/s | 复核 KD min/median/max | 对已接受 batch 中位数变化（筛选 / 复核） |
+| --- | --- | --- | --- |
+| 1 | 17.141 / 17.142 / 17.153 | 未重复 | +15.90% / — |
+| 16 | 2.678 / 2.679 / 2.716 | 2.665 / 2.690 / 2.708 | -44.14% / -43.91% |
+| 36 | 2.555 / 2.561 / 2.578 | 2.546 / 2.590 / 4.985 | -12.63% / -11.64% |
+
+36 复核的 4.985 峰值有效且保留，为同期 TCLock 最高值的 107.60%；对应整段仅 2.858，
+该组 spread 94.17%，不能用这一个峰值取消保护点中位数回退。36 每 worker 至少 106496 操作，
+node1 整段份额 49.57%–57.37%、峰窗 49.69%–78.28%，并非最大等待时间或公平性证明。
+完整组合及各中间提交在 `perf/mutex-task-cache-batch-candidate-20260928` 保留；
+已接受主分支继续使用 native-first + locality + 专用 batch、原 RCU task registry、原 shadow table
+及 mutex FIFO。按该版本做完整 cacheline，再做 mutex/hash；不把不同版本取优混为最终成绩。
+证据 `numa-20260928-mutex-numa2-{screen,recheck,validation}`；host
+`mutex-numa2-candidate.tar.gz` SHA256
+`100a4c01cdc687b7c362935b7de8d7931acb1b89aaf75f83a653f734e3c77a77`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：
