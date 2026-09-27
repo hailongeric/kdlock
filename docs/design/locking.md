@@ -484,6 +484,14 @@ with the guest's complete `pt_regs`; physical locks, scheduler, task records and
 assembly are substitutes. Their scope and live-test separation are maintained
 in [历史：the mutex resource guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#61-mutex-资源与恢复包).
 
+Reservation and queue-wait balances use exact per-CPU integers because both
+updates occur on the same migration-pinned origin CPU with preemption disabled.
+Controlled drain checks each CPU's two balances and slot bitmap independently;
+opposite balances cannot cancel. These are separate from approximate observation
+counters. Tail exchange, link/completion publication, per-lock waiter counts,
+physical owner, source leases and task/ACK references keep their existing ordering.
+The diagnostic maximum now reports `max_waiters_per_cpu`, not a global peak.
+
 The shadow map initializes all 1024 cacheline-separated gates before module
 publication. Exact addresses use bounded open addressing; immutable CAS keys
 publish an already initialized gate. A full table falls back to native execution,

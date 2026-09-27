@@ -37,7 +37,7 @@ static unsigned int native_waits;
 static unsigned long kd_mutex_multi_slot_count, kd_mutex_frame_failure_count;
 static unsigned long kd_mutex_node_overflow_count, kd_mutex_jit_resume_count;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
-static atomic_t kd_mutex_reserved_nodes;
+static int kd_mutex_reserved_nodes;
 static bool promoted, enabled, task_failure, active_override, borrowed;
 static bool cpu_hot = true, trace_admission, sampled_first;
 static unsigned int comm_queries;
@@ -90,6 +90,7 @@ static unsigned long hash_long(unsigned long key, unsigned int bits)
 #define atomic_inc(p) (++(p)->counter)
 #define atomic_dec(p) (--(p)->counter)
 #define this_cpu_inc(x) (++(x))
+#define this_cpu_dec_return(x) (--(x))
 #define atomic64_inc(p) (++*(p))
 #define BIT(n) (1UL << (n))
 #define DEFINE_PER_CPU_SHARED_ALIGNED(type, name) type name
@@ -435,7 +436,7 @@ static void capture_resume(struct pt_regs *regs, int result)
 {
 	CHECK(!preempt && !migration && !table_irq);
 	CHECK(!cpu_shadows.node_slots && !cpu_shadows.resume_node);
-	CHECK(!kd_mutex_reserved_nodes.counter && !recycle_on_enable);
+	CHECK(!kd_mutex_reserved_nodes && !recycle_on_enable);
 	CHECK(memcmp(regs, &expected_regs, sizeof(*regs)) == 0);
 	captured_regs = *regs;
 	longjmp(resume_target, result);
@@ -476,7 +477,7 @@ static void reset(void)
 	kd_mutex_multi_slot_count = kd_mutex_frame_failure_count = 0;
 	kd_mutex_node_overflow_count = kd_mutex_jit_resume_count = 0;
 	kd_mutex_origin_acquires = kd_mutex_origin_releases = 0;
-	kd_mutex_reserved_nodes.counter = 0;
+	kd_mutex_reserved_nodes = 0;
 	promoted = enabled = cpu_hot = true;
 	trace_admission = sampled_first = false;
 	comm_queries = 0;
@@ -539,7 +540,7 @@ static void check_nodes(void)
 			reset();
 			preempt = migration = 1;
 			cpu_shadows.node_slots = occupied;
-			kd_mutex_reserved_nodes.counter =
+			kd_mutex_reserved_nodes =
 				__builtin_popcount(occupied);
 			for (int i = 0; i < KD_MUTEX_MAX_NODES; i++) {
 				kd_mutex_nodes[i].shadow_stack_base =
@@ -566,7 +567,7 @@ static void check_nodes(void)
 			      (occupied | (chosen < 0 ? 0 : BIT(chosen))));
 			CHECK(kd_mutex_multi_slot_count ==
 			      (unsigned long)(occupied && chosen >= 0));
-			CHECK(kd_mutex_reserved_nodes.counter ==
+			CHECK(kd_mutex_reserved_nodes ==
 			      __builtin_popcount(occupied) + (chosen >= 0));
 			if (node) {
 				kd_mutex_release_node(node);
@@ -577,7 +578,7 @@ static void check_nodes(void)
 				CHECK(memcmp(before, kd_mutex_nodes,
 					     sizeof(before)) == 0);
 				CHECK(cpu_shadows.node_slots == occupied);
-				CHECK(kd_mutex_reserved_nodes.counter ==
+				CHECK(kd_mutex_reserved_nodes ==
 				      __builtin_popcount(occupied));
 			}
 			CHECK(!errors && !kd_mutex_frame_failure_count);
@@ -597,7 +598,7 @@ static void check_nodes(void)
 	CHECK(kd_mutex_reserve_node() == node && cpu_shadows.node_slots == 7);
 	for (int i = 0; i < 3; i++)
 		kd_mutex_release_node(&kd_mutex_nodes[i]);
-	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes.counter);
+	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes);
 	memcpy(before, kd_mutex_nodes, sizeof(before));
 	kd_mutex_release_node(node);
 	kd_mutex_release_node(NULL);
@@ -606,7 +607,7 @@ static void check_nodes(void)
 	bad.slot = KD_MUTEX_MAX_NODES;
 	kd_mutex_release_node(&bad);
 	CHECK(errors == 4 && kd_mutex_frame_failure_count == 4);
-	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes.counter);
+	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes);
 	CHECK(memcmp(before, kd_mutex_nodes, sizeof(before)) == 0);
 }
 
@@ -660,7 +661,7 @@ static void check_shadow_table(void)
 	CHECK(missing->owner == current && acquires == 1);
 	__kd_mutex_unlock(missing, 0, 0x9000);
 	CHECK(!missing->owner && releases == 1 && !task_puts);
-	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes.counter);
+	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes);
 	CHECK(memcmp(before, kd_mutex_shadows, sizeof(before)) == 0);
 	CHECK(!table_irq);
 }
@@ -715,7 +716,7 @@ static void check_hook_fallbacks(void)
 			      (unsigned int)(existing || reason == 3));
 			CHECK(samples == 1);
 			CHECK(!slow_calls && !cpu_shadows.node_slots &&
-			      !kd_mutex_reserved_nodes.counter);
+			      !kd_mutex_reserved_nodes);
 			__kd_mutex_unlock(lock, 0, 0x9000);
 			CHECK(!lock->owner && releases == 1 && !task_puts);
 			CHECK(shadow_count() ==
@@ -922,7 +923,7 @@ static void check_slowpath_packets(void)
 		}
 		CHECK(slow_calls == 1 && !cpu_shadows.node_slots &&
 		      !cpu_shadows.resume_node);
-		CHECK(!kd_mutex_reserved_nodes.counter && !preempt &&
+		CHECK(!kd_mutex_reserved_nodes && !preempt &&
 		      !migration);
 		CHECK(!kd_mutex_frame_failure_count && !errors);
 		CHECK(gets == 1 && adds == (unsigned int)!direct_packet);

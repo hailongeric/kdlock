@@ -65,7 +65,9 @@ static void kd_mutex_update_max_waiters(int active)
 
 static void kd_mutex_waiter_enter(struct kd_mutex *lock)
 {
-	int active = atomic_inc_return(&kd_mutex_active_waiters);
+	/* This is an origin-CPU balance, not a queue publication primitive.
+	 * The tail exchange/link and result release/acquire keep their ordering. */
+	int active = this_cpu_inc_return(kd_mutex_active_waiters);
 
 	atomic_inc(&lock->waiter_count);
 	kd_mutex_update_max_waiters(active);
@@ -79,8 +81,8 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock)
 		KD_PR_ERR("kd_mutex lock waiter count underflow lock=%px\n",
 			  lock);
 	}
-	if (unlikely(atomic_dec_return(&kd_mutex_active_waiters) < 0)) {
-		atomic_set(&kd_mutex_active_waiters, 0);
+	if (unlikely(this_cpu_dec_return(kd_mutex_active_waiters) < 0)) {
+		this_cpu_write(kd_mutex_active_waiters, 0);
 		this_cpu_inc(kd_mutex_frame_failure_count);
 		KD_PR_ERR("kd_mutex active waiter count underflow\n");
 	}
@@ -160,7 +162,7 @@ static struct kd_mutex_node *kd_mutex_reserve_node(void)
 		WRITE_ONCE(shadow->node_slots, slots | BIT(idx));
 		if (slots)
 			this_cpu_inc(kd_mutex_multi_slot_count);
-		atomic_inc(&kd_mutex_reserved_nodes);
+		this_cpu_inc(kd_mutex_reserved_nodes);
 		return node;
 	}
 
@@ -185,7 +187,8 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 	node->task_struct_ptr = NULL;
 	node->gsbase = 0;
 	WRITE_ONCE(shadow->node_slots, slots & ~bit);
-	atomic_dec(&kd_mutex_reserved_nodes);
+	if (unlikely(this_cpu_dec_return(kd_mutex_reserved_nodes) < 0))
+		goto invalid;
 	return;
 
 invalid:

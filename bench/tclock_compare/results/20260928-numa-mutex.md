@@ -400,6 +400,31 @@ immutable CAS publication、1024 容量/native fallback 和 cacheline stride 均
 `mutex-shadow2-candidate.tar.gz` SHA256
 `dbf6e2919c91607239003da324d15dca3537b772203bbfef8c32e3b56659218f`。
 
+## 精确 pinned 生命周期余额：组合候选改善，仍未达到已接受版本
+
+静态路径核对确认 reserve/release 和 waiter enter/exit 均在同一 migration-pinned origin CPU，
+且每次修改余额时关闭抢占。把 active/reserved 的全局 atomic 改为独立 per-CPU 精确余额；
+排空逐 CPU 检查两项余额及 slot bitmap，不以总和或观测值决定生命周期。跨 CPU 的 per-lock
+waiter count、owner、task ref、source lease、ACK 与队列发布顺序不变。
+`max_waiters_per_cpu` 明确仅表示单 CPU 峰值。
+
+基础、resource、source lifetime、两 CPU balance 共 5 组最终通过；新检查覆盖睡眠 reservation、
+独立 CPU 进度、slot 仍存活、正负余额不能抵消、underflow，并检测 5 个变异。
+首次 fixture 的宏缩进导致编译失败，加括号后相关 3 组复跑通过；失败日志保留。
+27 场业务、JIT、worker 进度与排空全部通过：
+
+| threads | KD min/median/max Mops/s | 对上项 shadow/task 中位数变化 |
+| --- | --- | --- |
+| 1 | 17.137 / 17.144 / 17.147 | -0.02% |
+| 16 | 2.709 / 2.733 / 2.744 | +15.13% |
+| 36 | 1.601 / 1.605 / 1.618 | +12.15% |
+
+组合仍低于已接受 batch 的 16/36 中位数 4.797 / 2.931，继续隔离。
+该改动验证的是精确计数存放，不是用近似 profile 替代生命周期，也没有测得远端访问延迟。
+证据 `numa-20260928-mutex-balances-{screen,validation,validation-fixed}`，host
+`mutex-balances-candidate.tar.gz` SHA256
+`66f70ba4a185187d6005656a9313c9a295ea1975e1ed433dc7aca25961b43400`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：
