@@ -26,6 +26,7 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 | --- | --- |
 | TCLock backend | `NUMA_AWARE=1`、`WWJUMP=1`；`ENABLE_IRQS_CHECK` 关闭。当前对照限 task context、IRQ 开启的单锁调用者，不作为通用 IRQ/嵌套锁替代 |
 | KD normal | `KDLOCK_SELFTEST` 默认关闭，`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=512`；可显式关闭NUMA或启用探针 |
+| KD benchmark 插桩 | `--kd-provider-ubsan kernel`为默认，继承内核配置；`off`仅关闭私有provider副本的UBSAN，政策及实际ELF引用独立记录，普通provider和内核不变 |
 | KD 策略 | `spin_delegate=0` 关闭公共入口代理并跳过其热度记录，默认 `1`。只保留adaptive热度准入；`spin_entry_ratio_limit=0`仅绕过比例，仍受CPU/单锁热度和上下文/JIT安全检查约束 |
 
 选择 `KD_SPIN_DIRECT_LOCK/UNLOCK` 配对壳后，调用端只按 CPU 热值分流；
@@ -232,6 +233,14 @@ base + 20480      └ wait_stack_top：初始栈顶
 连同前两行请求/header及BP行，简单路径涉及四条continuation行，原布局为五条。
 这是地址几何，不代表实际每请求发生四次cache miss或跨节点传输；node、ticket、
 waiter栈及payload另计。producer提示仍在执行前一个正文时预取下一请求，保留FULL和借用包处理。
+
+mode 2的producer在发布前保存逻辑SP及`u8 prefetch_stack_lines`，后者放入node首行原有填充，
+node仍为128字节，通知仍在64/65偏移。有效SP必须允许`SP-8`且位于逻辑任务栈内；
+向上提示数为`min(4, (stack_end - 1 - SP) / 64 + 1)`。
+combiner只读node，预取`SP-8`以及有效的`SP`、`SP+64`、`SP+128`、`SP+192`，
+不为求边界再次追读后继task/frame/packet，也不改变逻辑SP。向上提示覆盖caller spill和邻近栈局部量；
+具体作用取决于调用者栈布局，提示次数不等于实际cache miss次数。mode 1保留原有SP与SP-8两地址，
+FULL/借用寄存器包的预取范围不变；这些地址只在同一排队存活区间使用。
 
 记录使用 `records[top++]`；退休先置标记，再由所属 CPU 收缩连续已退休栈顶。
 例如 0/1/2 在用、1 先退休时，下一次仍从 3 分配，不复用 1；2 退休后才可一并

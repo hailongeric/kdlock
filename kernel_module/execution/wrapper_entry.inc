@@ -107,7 +107,7 @@ static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_ad
 /* This is a root-only admission, not a bypass around translated entry guards.
  * Source OPEN, slot key/backend/status/code and the versioned alternate entry
  * are checked for every candidate. Code storage remains pinned by the batch. */
-static bool kd_jit_image_matches(const struct kd_exe_info *exe,
+static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
                                  const struct kd_exec_frame *frame)
 {
 	const unsigned char *code = READ_ONCE(exe->code_block);
@@ -213,7 +213,8 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	return true;
 }
 
-bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
+bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
+				 const struct kd_exec_frame *frame)
 {
 	if (call->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ?
 	    (call->args[0] != KD_EXE_CLOBBER_COMPLETE ||
@@ -227,9 +228,9 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
 		kd_jit_timing_end(KD_JIT_TIME_WRAPPER, call->wrapper_start);
 		kd_jit_timing_end(KD_JIT_TIME_DISPATCH, call->dispatch_start);
 	}
+	/* The batch retains this exact bound frame until retirement below. */
 	if (call->args[1] == 1)
-		kd_exe_note_body(kd_exec_current_frame()->entry_ip,
-				 call->lock, call->args[1]);
+		kd_exe_note_body(frame->entry_ip, call->lock, call->args[1]);
 	return true;
 }
 

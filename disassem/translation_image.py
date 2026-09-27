@@ -17,23 +17,34 @@ from miasm.arch.x86.arch import mn_x86
 from translation_scope import find_resumable_call_continuations
 
 
-def write_entry_dispatch(f, entry, block_dict, continuation_targets=None):
+def write_entry_dispatch(
+    f, entry, block_dict, continuation_targets=None, *, body_witness=False,
+):
     dispatch_targets = set(block_dict)
     dispatch_targets.update(continuation_targets or set())
+    ordered_targets = [entry] + sorted(dispatch_targets - {entry})
 
     # R11 addresses shared pt_regs spill slots; the budget is independent state.
-    f.write("MOV     Stack_BUDGET, 0\n")
+    # Count down to the same 2**24 branch-block visits. DEC supplies the test
+    # flags itself, avoiding a second access to the wrapper's budget slot.
+    f.write("MOV     Stack_BUDGET, 0x1000000\n")
     f.write("MOV     R14, PT_RIP\n")
-    f.write(f"CMP     R14, 0x{entry:x}\n")
-    f.write(f"JZ      loc_{entry:x}\n")
-    for offset in sorted(dispatch_targets):
-        if offset == entry:
-            continue
+    for offset in ordered_targets:
         f.write(f"CMP     R14, 0x{offset:x}\n")
-        f.write(f"JZ      loc_{offset:x}\n")
+        target = f"kd_body_entry_{offset:x}" if body_witness else f"loc_{offset:x}"
+        f.write(f"JZ      {target}\n")
     f.write("MOV     Stack_IJ, 0x2\n")
     f.write("MOV     R15, R14\n")
     f.write("JMP     exit\n")
+    if body_witness:
+        # Only validated dispatch targets pass through these stubs. Internal
+        # branches use loc_* directly: one witness store per wrapper entry,
+        # including resumed CALL continuations, without stores on loop edges.
+        # Entry guards and dispatch misses still return with a zero witness.
+        for offset in ordered_targets:
+            f.write(f"kd_body_entry_{offset:x}:\n")
+            f.write(make_inst("MOV", ["Stack_JIT_WITNESS", "1"]))
+            f.write(f"JMP     loc_{offset:x}\n")
 
 
 def emit_jit_assembly(
@@ -56,9 +67,10 @@ def emit_jit_assembly(
     f = StringIO()
     if entry_guards is not None:
         entry_guards.emit(f, entry)
-    write_entry_dispatch(f, entry, block_dict, continuation_targets)
-    budget_blocks = 0
-    first_budget_rip = None
+    write_entry_dispatch(
+        f, entry, block_dict, continuation_targets, body_witness=body_witness,
+    )
+    budget_rips = []
 
     for offset, block in sorted(block_dict.items()):
         db = db_dict[block]
@@ -66,23 +78,15 @@ def emit_jit_assembly(
         label = db.pretty_str(block.loc_key)
 
         f.write(label + ":\n")
-        if body_witness:
-            # MOV observes body entry without changing guest GPRs or live flags.
-            f.write(make_inst("MOV", ["Stack_JIT_WITNESS", "1"]))
-
         reg_map = conflict.block_init()
 
         len_block = len(block.lines)
         line_cnt = 0
 
         if assist.check_is_branch(block.lines) and label[0] == "l":
-            budget_blocks += 1
-            if first_budget_rip is None:
-                first_budget_rip = offset
-            f.write(make_inst("MOVABS", ["R14", hex(offset)]))
-            f.write("INC             Stack_BUDGET\n")
-            f.write("TEST            Stack_BUDGET, 0x1000000\n")
-            f.write("JNZ             inst_limit\n")
+            budget_rips.append(offset)
+            f.write("DEC             Stack_BUDGET\n")
+            f.write(f"JZ              kd_budget_limit_{offset:x}\n")
 
         temp_i = 0
         temp_j = 0
@@ -96,8 +100,6 @@ def emit_jit_assembly(
                 and offset not in emitted_continuation_labels
             ):
                 f.write(f"loc_{offset:x}:\n")
-                if body_witness:
-                    f.write(make_inst("MOV", ["Stack_JIT_WITNESS", "1"]))
                 emitted_continuation_labels.add(offset)
             if str(line) == "LEA        R13, QWORD PTR [R12 + R14]":
                 diagnostics.warn(
@@ -129,6 +131,13 @@ def emit_jit_assembly(
         f.write("\n\n")
     f.write(indirect_jump.make_jump_table(jump_table))
     f.write(indirect_jump.make_callee_table(missing_callees, resolved_hostcalls))
+    # The source RIP is needed only if the budget expires. Keep its material-
+    # ization off the frequently executed branch-block path; the exit resumes
+    # at the same untouched source block as the previous INC/TEST sequence.
+    for offset in budget_rips:
+        f.write(f"kd_budget_limit_{offset:x}:\n")
+        f.write(make_inst("MOVABS", ["R14", hex(offset)]))
+        f.write("JMP             inst_limit\n")
 
     # A successful static/guarded analysis is not a runtime address or memory
     # freshness check. Report the contract once per generated image, without
@@ -147,9 +156,9 @@ def emit_jit_assembly(
         "FLAGS_UNPRESERVED",
         "emit_unchanged",
         "entry dispatch and branch budget may clobber live flags; liveness is unchecked",
-        budget_blocks=budget_blocks,
+        budget_blocks=len(budget_rips),
         first_budget_rip=(
-            f"0x{first_budget_rip:x}" if first_budget_rip is not None else "n/a"
+            f"0x{budget_rips[0]:x}" if budget_rips else "n/a"
         ),
     )
     return f.getvalue()

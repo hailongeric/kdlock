@@ -11,14 +11,22 @@
 作为转入mutex前的c1基线，未再修改锁实现。KD在8–36线程全部已测点峰值高于TCLock，
 相对前次相同实现变化在约±0.31%内；1/2线程仍低于Linux，2/7线程低于TCLock。
 Linux28/32/36线程高值再次出现且计数/窗口审计通过，24线程KD的少数node进度占比仍约1%。
-下列spin优化项保留为后续候选，不因本次阶段收尾而标记完成；下一阶段工作转向mutex。
+该矩阵保留为hash优化前的c1历史参照；用户随后要求继续优化hash正文，多线程目标仍未完成。
 
 随后按用户要求新增hash连续计时并完成[三方135场hash比较](../bench/tclock_compare/results/20260927-hash-peak.md)。
 固定2.5GHz、NUMA-on及相同预热/窗口设置下，KD在3–5线程领先两方，6–36线程各已测点低于TCLock；
 8–36线程实际JIT占比99.5%–99.8%，不能将差距归为没有代理。锁实现与c1 checkpoint相同，
-不同正文的成绩不能作为同负载实现回退；本次未进行新的性能归因或mutex测试。
+不同正文的成绩不能作为同负载实现回退。随后完成[hash优化分阶段测量](../bench/tclock_compare/results/20260927-hash-optimization.md)：
+省去循环内witness写入、只读虚拟寄存器写回及常态预算RIP物化，扩大后继栈预取，并内联普通batch helper。
+JIT精简单独没有一致吞吐收益；预取收益较小。显式UBSAN-off/批上限1024配置的完整135场中，
+KD在8/16/36线程为3.416/3.390/1.869 Mops/s，约为同期TCLock的71%/72%/71%。
+这包括构建插桩与批长变化，不能全部计作代码优化；生产默认仍为kernel插桩/512，2线程下降亦保留。
+默认kernel/512的hash定向复测在16线程提升约3.16%，36线程约0.11%；不能把显式配置的收益归为默认实现收益。
+一cacheline六个回归点峰值较历史下降约0.49%–5.66%，尚未实现不回退目标。
+36线程nested/early默认比例2完成业务但测量阶段没有JIT；显式比例4的功能复测有实际JIT并排空。
+完整分布、候选撤回、首次失败和证据以该报告为准，没有mutex live测试。
 
-当前采用有界512正文及独立512扫描预算、六后继准入、minimal IP预取、直接per-CPU热值。
+当前默认采用有界512正文及独立512扫描预算、六后继准入、producer预取及直接per-CPU热值。
 此前在此基础上压缩continuation前缀以合并IP/SP缓存行、用带代际的原子状态替代ticket guard、
 折叠JIT的RIP常量地址，并定向调整低竞争解锁布局；见[全链路报告](../bench/tclock_compare/results/20260927-flow.md)。
 采样策略、预取距离、owner/ACK及批次边界保持不变。此前维护删除单锁字迁移后遗留的
@@ -82,9 +90,9 @@ NUMA-on继续作为provider和比较运行器默认值。优化优先级按实�
 | ticket | 删除私有guard，代际/状态/kind/借用数共用一个64位CAS字；分配release发布，等待acquire读 | 后续可测独占OWNED/RELEASED转换的store化；当前保留完整CAS，避免混合优化 |
 | 请求发布 | continuation内result保留32位，内部kind压为字节并重排；frame从32移到24，MINIMAL IP/SP共行 | 记录仍704字节；这是五行变四行的几何，不是已测cache miss次数 |
 | NUMA选择 | 有界512正文/独立512扫描；连续延期链只改必要接点，远端前缀最后优先交接 | 先测批终止原因；继续放大上限可能损害少数节点进度 |
-| 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；MINIMAL IP/SP共行只发一次hint | FULL/借用包的尾部partial line可单独评估；远距离预取旧回退仍有效 |
+| 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；MINIMAL IP/SP共行只发一次hint，栈提示扩到SP-8及最多四个向上地址 | FULL/借用包的尾部partial line可单独评估；远距离预取旧回退仍有效 |
 | batch准入/lease | registry身份只读复用，发布状态逐请求读取，精确source lease按batch摊销 | 不复制共享包，不把生命周期计数改成近似统计 |
-| JIT正文 | 翻译时折叠RIP常量地址；callee跳板去掉重复SP存储，由公共出口统一发布 | 未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
+| JIT正文 | RIP常量折叠；callee复用公共SP发布；入口witness只写一次、预算DEC/JZ、块内只读GPR不写回 | 未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
 | wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 去掉虚拟CALL栈写需保持真实续点及FULL契约，不是直接删保存指令 |
 | 退休/通知 | 先pop/退休，再release唤醒；队列头和轮询行分离 | 原owner ACK、最后一次packet读取和节点复用顺序保持不变 |
 | 嵌套/原生后缀 | 通用dispatcher删除冗余MFENCE，完成/native/ACK/status各自发布；native路由表仍有共享锁 | 可复用本地native-root避开无关全局查询，先读注入开关再CAS；普通c1 batch不经过通用dispatcher |
@@ -132,6 +140,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 当前在MCS达到1024时以`(spin_entries >> 10) < 2`判断比例，并清零两计数；
 原生队头在物理获取前增加有界captured-tail资格，已代理队头不做该检查。
 不按线程数分流，也不测量完整委托收益。旧确认/冷却/保留状态机已按用户要求移除。
+本轮nested/early在默认比例2下只在预热出现JIT、测量阶段退为原生；内层无竞争获取会稀释per-CPU比例。
+显式比例4的定向功能验证通过，但不是默认策略问题的修复，也不用于普通hash性能取优。
 当前c1矩阵已覆盖右移/清零策略，旧百分比矩阵只作历史参照；通用net-cost模型仍未实现。
 多锁、不同正文及阶段变化不能由历史矩阵推断。
 

@@ -41,6 +41,9 @@ static void (*read_hook)(const void *);
 #define IRQ_NUMA_NODE 255
 #define THREAD_SIZE 16384
 #define task_stack_page(task) ((task)->stack)
+#define min_t(type, a, b) ({ type left = (a), right = (b); \
+	left < right ? left : right; })
+#define DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
 #define CHECK(x) assert(x)
 
 static unsigned int cpu;
@@ -395,7 +398,7 @@ static bool hint_has_line(const void *const *list, unsigned int count,
  * each publication. Production MINIMAL is inline; borrowed packets are FULL. */
 static void test_prepared_prefetch(void)
 {
-	char stack[THREAD_SIZE];
+	char stack[THREAD_SIZE] __aligned(L1_CACHE_BYTES);
 	struct task_struct task = { .stack = stack };
 	struct kd_spin_continuation request = { 0 };
 	struct pt_regs borrowed = { 0 };
@@ -413,7 +416,11 @@ static void test_prepared_prefetch(void)
 			request.frame.packet_state = full ? KD_PACKET_FULL : KD_PACKET_MINIMAL;
 			for (unsigned int complex = 0; complex < 2; complex++) {
 				request.frame.complex_ready = complex;
-				unsigned long offsets[] = { 0, 7, 8, 64, 128, THREAD_SIZE - 1, THREAD_SIZE };
+				unsigned long offsets[] = { 0, 7, 8, 16, 32, 48, 64, 128,
+					THREAD_SIZE - 193, THREAD_SIZE - 192,
+					THREAD_SIZE - 129, THREAD_SIZE - 128,
+					THREAD_SIZE - 65, THREAD_SIZE - 64,
+					THREAD_SIZE - 1, THREAD_SIZE };
 				for (unsigned int j = 0; j < sizeof(offsets)/sizeof(offsets[0]); j++) {
 					regs->sp = (unsigned long)stack + offsets[j];
 					kd_spin_prefetch_mode = 1; hint_count = 0;
@@ -426,12 +433,17 @@ static void test_prepared_prefetch(void)
 					struct pt_regs saved = *regs;
 					hint_count = 0;
 					kd_spin_prefetch_request(&node);
+					unsigned int old_stack = node.prefetch_sp ? 2 : 0;
+					unsigned int new_stack = node.prefetch_sp ?
+						1 + node.prefetch_stack_lines : 0;
+					unsigned int old_packet = expected - old_stack;
+					unsigned int new_packet = hint_count - new_stack;
 					if (full) {
-						CHECK(hint_count == expected);
-						/* FULL targets stay identical, including borrowed packets. */
-						for (unsigned int h = 0; h < expected; h++) {
+						CHECK(new_packet == old_packet);
+						/* FULL packet targets stay identical, including borrowed packets. */
+						for (unsigned int h = 0; h < old_packet; h++) {
 							unsigned int a = 0, b = 0;
-							for (unsigned int k = 0; k < expected; k++) {
+							for (unsigned int k = 0; k < old_packet; k++) {
 								a += hints[k] == lookup[h];
 								b += lookup[k] == lookup[h];
 							}
@@ -440,19 +452,41 @@ static void test_prepared_prefetch(void)
 					} else {
 						unsigned int bp_hints = 0, ip_hints = 0;
 
-						CHECK(hint_count + 1 == expected);
+						CHECK(new_packet + 1 == old_packet);
 						CHECK((uintptr_t)&regs->ip / L1_CACHE_BYTES ==
 						      (uintptr_t)&regs->sp / L1_CACHE_BYTES);
-						/* Fewer addresses must still warm exactly the same lines. */
-						for (unsigned int h = 0; h < expected; h++)
-							CHECK(hint_has_line(hints, hint_count, lookup[h]));
-						for (unsigned int h = 0; h < hint_count; h++) {
-							CHECK(hint_has_line(lookup, expected, hints[h]));
+						/* Fewer packet addresses still warm the same packet lines. */
+						for (unsigned int h = 0; h < old_packet; h++)
+							CHECK(hint_has_line(hints, new_packet, lookup[h]));
+						for (unsigned int h = 0; h < new_packet; h++) {
+							CHECK(hint_has_line(lookup, old_packet, hints[h]));
 							bp_hints += hints[h] == &regs->bp;
 							ip_hints += hints[h] == &regs->ip;
 						}
 						CHECK(bp_hints == 1 && ip_hints == 1);
 						CHECK(hint_has_line(hints, hint_count, &regs->sp));
+					}
+					/* Hint every valid upward address, without touching a guard page.
+					 * Caller statistics at SP+144..167 must be covered for each
+					 * tested SP alignment when that range is inside the stack. */
+					CHECK(node.prefetch_stack_lines <= 4);
+					if (node.prefetch_sp) {
+						CHECK(hints[new_packet] == (void *)(regs->sp - 8));
+						unsigned int lines = 0;
+						for (unsigned int line = 0; line < 4; line++) {
+							unsigned long address = regs->sp + line * L1_CACHE_BYTES;
+							if (address >= (unsigned long)stack + THREAD_SIZE)
+								break;
+							CHECK(hints[new_packet + 1 + lines] == (void *)address);
+							lines++;
+						}
+						CHECK(node.prefetch_stack_lines == lines);
+						if (offsets[j] + 167 < THREAD_SIZE) {
+							CHECK(hint_has_line(hints, hint_count, (void *)(regs->sp + 144)));
+							CHECK(hint_has_line(hints, hint_count, (void *)(regs->sp + 167)));
+						}
+					} else {
+						CHECK(!node.prefetch_stack_lines);
 					}
 					CHECK(!memcmp(&before, &request, sizeof(request)));
 					CHECK(!memcmp(&saved, regs, sizeof(saved)));
@@ -463,9 +497,9 @@ static void test_prepared_prefetch(void)
 	}
 	request.frame.logical_task = NULL;
 	kd_spin_prepare_prefetch(&node, &borrowed);
-	CHECK(!node.prefetch_sp);
+	CHECK(!node.prefetch_sp && !node.prefetch_stack_lines);
 	kd_spin_prepare_prefetch(&node, NULL);
-	CHECK(!node.prefetch_regs && !node.prefetch_sp);
+	CHECK(!node.prefetch_regs && !node.prefetch_sp && !node.prefetch_stack_lines);
 
 	/* Guard pages prove the consumer reads neither frame nor logical packet.
 	 * prefetchw records addresses without touching memory in this fixture. */
@@ -492,9 +526,10 @@ static void test_prepared_prefetch(void)
 		CHECK(mprotect(area, bytes + page, PROT_NONE) == 0);
 		hint_count = 0;
 		kd_spin_prefetch_request(&node);
-		CHECK(hint_count == (full ? 10 : 9));
-		CHECK(hints[hint_count - 2] == stack + 128);
-		CHECK(hints[hint_count - 1] == stack + 120);
+		CHECK(hint_count == (full ? 13 : 12));
+		CHECK(hints[hint_count - 5] == stack + 120);
+		for (unsigned int line = 0; line < 4; line++)
+			CHECK(hints[hint_count - 4 + line] == stack + 128 + line * L1_CACHE_BYTES);
 		if (!full) {
 			CHECK(hint_has_line(hints, hint_count, &packet->bp));
 			CHECK(hint_has_line(hints, hint_count, &packet->ip));

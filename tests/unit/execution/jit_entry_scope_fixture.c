@@ -48,7 +48,7 @@ static struct task_struct *current = &executor;
 static struct kd_exec_frame active, parent;
 static struct kd_exe_info entry_table[KD_MAX_EXE], *entry;
 static int calls, known_calls, known_result, errors, warnings, checks, failures;
-static unsigned int registry_lookups, readiness_acquires;
+static unsigned int registry_lookups, readiness_acquires, current_frame_reads;
 static bool source_open = true;
 static struct pt_regs last_wrapper_output;
 static unsigned long clobber_mutex_lock_addr = 0x4110;
@@ -244,6 +244,7 @@ static void translated(struct pt_regs *regs, unsigned long *args)
 
 struct kd_exec_frame *kd_exec_current_frame(void)
 {
+	current_frame_reads++;
 	return &active;
 }
 /* Retain Kbuild's comparison policy for the unmodified lookup functions. A
@@ -1367,6 +1368,9 @@ static void check_batch_completion_timings(void)
 				active.regs.ip = call.unlock;
 			memcpy(&before, &active, sizeof(before));
 			memcpy(&before_call, &call, sizeof(before_call));
+			/* Completion reuses the batch's retained frame. It must not
+			 * re-fetch physical context just to report this body's witness. */
+			current_frame_reads = 0;
 			for (unsigned int bad = 0; bad < 3; bad++) {
 				rejected = call;
 				bad_regs = active.regs;
@@ -1380,10 +1384,11 @@ static void check_batch_completion_timings(void)
 					if (bad == 1) bad_regs.ip++;
 					if (bad == 2) bad_regs.di++;
 				}
-				CHECK(!kd_exe_spin_batch_completed(&rejected));
+				CHECK(!kd_exe_spin_batch_completed(&rejected, &active));
 				CHECK(timing_reads == timed * 2);
 			}
-			CHECK(kd_exe_spin_batch_completed(&call));
+			CHECK(kd_exe_spin_batch_completed(&call, &active));
+			CHECK(current_frame_reads == 0);
 			CHECK(timing_reads == timed * 4);
 			for (unsigned int phase = 0; phase < KD_JIT_TIME_COUNT; phase++) {
 				unsigned int count = timed &&

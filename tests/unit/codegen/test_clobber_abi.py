@@ -216,7 +216,11 @@ def exercise_abi(entry_abi, direct=False, poison_stack=False, premature_pop=Fals
             # Exercise the actual direct shell with the same destructive
             # register/metadata oracle, rather than a copied assembly string.
             header = (ROOT/'include/kd_spin_direct.h').read_text()
-            macro = header[header.index('#define KD_SPIN_DIRECT_CALL'):header.rindex('#endif')]
+            # This fixture exercises the plain direct ABI only. IRQ/BH helpers
+            # have separate kernel context and are outside the extracted macro.
+            start = header.index('#define KD_SPIN_DIRECT_CALL')
+            end = header.index('} while (0)', start) + len('} while (0)')
+            macro = header[start:end]
             (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t, kd_spinlock_t;\n'+macro+
                 '\n#define raw_spin_lock(lock) KD_SPIN_DIRECT_CALL(kd_raw_spin_lock_clobber_v1, lock, "")\n'
                 '#define raw_spin_unlock(lock) KD_SPIN_DIRECT_CALL(kd_raw_spin_unlock_clobber_v1, lock, "")\n')

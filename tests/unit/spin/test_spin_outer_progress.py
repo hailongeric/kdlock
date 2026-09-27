@@ -94,6 +94,7 @@ def main():
         "bool kd_exec_frame_can_complete(const struct kd_exec_frame *frame)",
         "int kd_exec_frame_record_event(struct kd_exec_frame *frame,",
         "int kd_exec_frame_complete(struct kd_exec_frame *frame)",
+        "static __always_inline int kd_exec_complete_single_spin(struct kd_exec_frame *frame)",
         "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
         "int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)",
         "int kd_exec_frame_abort(struct kd_exec_frame *frame)",

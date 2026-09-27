@@ -73,7 +73,13 @@ class JitBodyWitnessTests(unittest.TestCase):
     def test_default_off_preserves_original_codegen(self):
         plain, _ = render_source("48c7c02a000000c3")
         observed, _ = render("48c7c02a000000c3")
-        self.assertEqual(observed.replace(MARKER, b""), plain)
+        # Witnesses belong to valid entry stubs; source blocks stay identical
+        # whether observation is enabled or disabled.
+        without_stubs = re.sub(
+            rb"kd_body_entry_([0-9a-f]+):\n" + re.escape(MARKER)
+            + rb"JMP     loc_\1\n", b"", observed,
+        ).replace(b"JZ      kd_body_entry_", b"JZ      loc_")
+        self.assertEqual(without_stubs, plain)
         results = run_image(plain, [0x1000])
         self.assertEqual(results[0][0][10], 42)
         self.assertEqual(results[0][1][1], 0)
@@ -124,14 +130,36 @@ class JitBodyWitnessTests(unittest.TestCase):
                     self.assertEqual(results[1][0][19], packets[1][0] + 8)
                     self.assertEqual(results[1][1][1], 1)
 
-    def test_dispatcher_and_exit_tables_do_not_mark_the_body(self):
+    def test_only_valid_dispatch_stubs_mark_the_body(self):
         assembly, _ = render("e8fb0f0000c3")
         body = assembly.split(b"loc_1000:\n", 1)
         self.assertEqual(len(body), 2)
-        self.assertNotIn(MARKER, body[0])
+        self.assertNotIn(MARKER, body[1])
+        self.assertIn(
+            b"kd_body_entry_1000:\n" + MARKER + b"JMP     loc_1000\n", body[0],
+        )
         stub = assembly.split(b"loc_2000:\n", 1)[1]
         self.assertNotIn(MARKER, stub)
-        self.assertTrue(re.search(rb"loc_1000:\n" + re.escape(MARKER), assembly))
+
+    def test_loop_edges_bypass_witness_and_keep_exact_budget_exit(self):
+        # mov eax,3; sub eax,1; jne 0x1005; ret. Set a small remaining
+        # budget only in the fixture so the real wrapper exercises expiry.
+        assembly, log, status = render("b80300000083e80175fbc3", return_status=True)
+        self.assertEqual(status, 0, log)
+        loop = assembly.split(b"loc_1005:\n", 1)[1]
+        self.assertNotIn(MARKER, loop)
+        self.assertIn(b"DEC             Stack_BUDGET\n", loop)
+        self.assertNotIn(b"TEST            Stack_BUDGET", assembly)
+        for limit, value, reason in ((1, 3, 4), (2, 2, 4), (4, 0, 0x100b)):
+            with self.subTest(limit=limit):
+                bounded = assembly.replace(
+                    b"MOV     Stack_BUDGET, 0x1000000\n",
+                    f"MOV     Stack_BUDGET, {limit}\n".encode(),
+                )
+                regs, args = run_image(bounded, [0x1000])[0]
+                self.assertEqual(regs[10], value)
+                self.assertEqual(args, [reason, 1])
+                self.assertEqual(regs[16], 0x1005 if reason == 4 else 0x4444)
 
 
 if __name__ == "__main__":

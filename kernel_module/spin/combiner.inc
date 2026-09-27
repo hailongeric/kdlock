@@ -194,10 +194,10 @@ static void kd_spin_batch_run(void *opaque)
 	for (;;) {
 		curr_node = batch->cursor;
 		if (batch->pending) {
-			next_node = batch->next;
-			if (kd_exe_spin_batch_completed(&batch->call)) {
-				struct kd_exec_frame *frame = &curr_node->execution->frame;
+			struct kd_exec_frame *frame = &curr_node->execution->frame;
 
+			next_node = batch->next;
+			if (kd_exe_spin_batch_completed(&batch->call, frame)) {
 #ifdef KDLOCK_SELFTEST
 				/* Observers require the completed ledger before its pop. */
 				BUG_ON(kd_exec_frame_complete_single_spin(frame));
@@ -218,8 +218,8 @@ static void kd_spin_batch_run(void *opaque)
 			} else {
 				/* Promote before the generic dispatcher consumes this exit.
 				 * Install the lock hook before a service can release L. */
-				kd_spin_jit_prepare_complex(&curr_node->execution->frame);
-				curr_node->execution->frame.outer_unlock_hook = &batch->outer;
+				kd_spin_jit_prepare_complex(frame);
+				frame->outer_unlock_hook = &batch->outer;
 				batch->fast_previous = false;
 				exe_flag = execute_cs(lock, curr_node, batch);
 			}

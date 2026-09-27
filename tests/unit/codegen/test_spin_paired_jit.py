@@ -109,7 +109,7 @@ def main():
             # Removing the caller unlock condition must leave one body block:
             # no second witness write or branch-budget probe is needed.
             assert assembly.count(b'MOV             Stack_JIT_WITNESS, 1\n') == 1
-            assert b'INC             Stack_BUDGET\n' not in assembly
+            assert b'DEC             Stack_BUDGET\n' not in assembly
         # Exercise the production stack-input predicate before any body write.
         # Do not confuse a dispatch miss (FULL) with a pristine entry refusal.
         guards = EntryGuards()

@@ -532,8 +532,9 @@ static int execute_cs(struct qspinlock *lock, struct kd_spin_node *node,
 static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 					 struct kd_spin_node *node)
 { (void)batch; (void)node; return false; }
-static bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call)
-{ (void)call; abort(); }
+static bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
+				      const struct kd_exec_frame *frame)
+{ (void)call; (void)frame; abort(); }
 static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 { (void)call; abort(); }
 static void kd_jit_legacy_batch_call(struct kd_jit_batch_call *call)

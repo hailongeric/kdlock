@@ -111,10 +111,10 @@ class SharedRegisterBankTests(unittest.TestCase):
     def test_budget_exit_keeps_bank_and_logical_r11(self):
         assembly, log, status = render("4883f800750190c3", return_status=True)
         self.assertEqual(status, 0, log)
-        self.assertIn(b"INC             Stack_BUDGET", assembly)
+        self.assertIn(b"DEC             Stack_BUDGET", assembly)
         # Exercise the exact overflow edge without spending 2**24 iterations.
-        assembly = assembly.replace(b"MOV     Stack_BUDGET, 0\n",
-                                    b"MOV     Stack_BUDGET, 0xffffff\n")
+        assembly = assembly.replace(b"MOV     Stack_BUDGET, 0x1000000\n",
+                                    b"MOV     Stack_BUDGET, 1\n")
 
         def initialize(regs, _):
             regs[6] = 0xabcdef0123456789

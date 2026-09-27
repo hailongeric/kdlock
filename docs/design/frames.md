@@ -161,7 +161,7 @@ scope, image ABI and bind-time OPEN checks remain.
 The cache dies with the batch and is neither a code-pointer cache nor an
 immutable-code version mechanism. Before executing the current request, the
 combiner prefetches its queued successor's actual register packet and frame hot
-fields, plus the virtual SP/push slot only inside the logical waiter's task
+fields, plus the virtual SP/push slot and caller stack lines inside the logical waiter's task
 stack. This precedes any completion or outer-release publication; it grants no
 ownership and never follows successors after early outer release.
 
@@ -177,13 +177,20 @@ retained identity may still resolve by lock address.
 The read-only module parameter `spin_prefetch` selects successor warming:
 0 disables it, 1 retains the consumer-side lookup, and 2 (default) uses producer
 hints. Other existing queue-return stack hints are unchanged in every mode.
-Mode 2 prepares the packet pointer, bounded logical-stack SP and full/complex
-flags before queue publication. A physical producer passes its inline packet;
+Mode 2 prepares the packet pointer, bounded logical-stack SP, upward hint count
+and full/complex flags before queue publication. A physical producer passes its inline packet;
 a virtual producer passes the retained parent packet and always marks it FULL.
 Thus mode 2 MINIMAL packets are inline: the aligned continuation and its asserted
 layout put IP/SP in one cacheline, warmed once through IP alongside the BP hint.
-No consumer-side alignment test or packet read is needed. FULL and mode 1 keep
-their separate hint ranges. The current 128-byte node keeps links,
+No consumer-side alignment test or packet read is needed. FULL/borrowed packet
+hints keep their existing range. For a valid logical SP, mode 2 hints `SP-8`
+and up to four upward addresses: `SP`, `SP+64`, `SP+128`, `SP+192`. The producer
+clamps the count to addresses below the retained task's stack end; the consumer
+does not rediscover that bound through task/frame/packet loads. The
+`u8 prefetch_stack_lines` occupies existing node padding, adding no allocation
+or cache line. This warms caller spills and nearby stack locals; it is not a
+claim that every caller fits within that footprint. Mode 1 retains its original
+SP and SP-8 stack hints. The current 128-byte node keeps links,
 execution and hints in its first line; completed/locked occupy offsets 64/65
 on a separate polling line. Type alignment and stride isolate all four slots,
 including nested nodes. The consumer can issue
@@ -197,7 +204,7 @@ must be overwritten for each new queued request, and no old hint may be followed
 after wake/outer release. A missing/out-of-stack SP suppresses only stack hints.
 Modes 0/1 skip producer hint preparation; values outside 0..2 fail module init.
 Current layout-aware warming covers both request header lines; packet and
-logical-stack hints still use the same bounds. Notification semantics and wrapper
+logical-stack hints remain within their retained objects. Notification semantics and wrapper
 ABI do not change. Compare modes within one image to isolate the hint policy; compare
 the retained old image separately to include node layout and option overhead.
 

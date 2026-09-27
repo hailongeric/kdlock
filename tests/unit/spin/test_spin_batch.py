@@ -70,6 +70,7 @@ def main():
     assert "(long long)(sum.waiter_enter - sum.waiter_exit)" in spin
     frame = read_source(ROOT / "kernel_module/kd_exec.c")
     for marker in (
+        "static __always_inline int kd_exec_complete_single_spin(struct kd_exec_frame *frame)",
         "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
         "int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)",
     ):

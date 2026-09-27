@@ -17,6 +17,72 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_provider_ubsan_option_and_private_build(self):
+        for policy in ('kernel', 'off'):
+            argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
+                    '--threads', '8', '--cachelines', '1', '--repeats', '1']
+            if policy == 'off':
+                argv += ['--kd-provider-ubsan', 'off']
+            with self.subTest(policy=policy), patch.object(sys, 'argv', argv), \
+                    contextlib.redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(run.main(), 0)
+            plan = json.loads(output.getvalue())
+            for spec in plan:
+                self.assertEqual(spec['kd_provider_ubsan'],
+                                 policy if spec['arm'] == 'kdlock' else 'not_applicable')
+            build = run.provider_build(Namespace(numa='on', kd_batch_size=512,
+                                                kd_provider_ubsan=policy))
+            self.assertEqual(build[:4], ['make', '-C', run.HERE, 'provider'])
+            self.assertEqual('UBSAN_SANITIZE=n' in build, policy == 'off')
+            # Exercise real session serialization without opening the kernel log.
+            spec, = [spec for spec in plan if spec['arm'] == 'kdlock']
+            with tempfile.TemporaryDirectory() as temporary, \
+                    patch('bench_session.os.open', return_value=17), \
+                    patch('bench_session.os.lseek'):
+                session = BackendSession(Path(temporary), spec)
+                record = json.loads((session.path/'session.json').read_text())
+                self.assertEqual(record['kd_provider_ubsan'], policy)
+
+    def test_provider_ubsan_off_rejects_instrumented_elf(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            imported = ' U __ubsan_handle_load_invalid_value\n U printk\n'
+            with patch.object(run, 'command', return_value=imported) as command:
+                run.audit_provider_ubsan(out, 'kernel')
+                with self.assertRaisesRegex(run.Failure, 'still imports UBSAN'):
+                    run.audit_provider_ubsan(out, 'off')
+                command.assert_called_with(['nm', '-u', run.PROVIDER],
+                                           out/'imports-kdlock-provider.txt')
+            with patch.object(run, 'command', return_value=' U printk\n'):
+                run.audit_provider_ubsan(out, 'off')
+            self.assertEqual(json.loads((out/'kdlock-provider-ubsan.json').read_text()),
+                             dict(policy='off', imports=[]))
+
+    def test_summary_keeps_provider_ubsan_policies_separate(self):
+        spec, = run.make_plan(Namespace(cachelines=[1], threads=[8], repeats=1,
+            iterations=100, backends=['kdlock']))
+        plan = []
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            for index, policy in enumerate(('kernel', 'off', 'unrecorded'), 1):
+                candidate = dict(spec, name=f'provider-{policy}', kd_provider_ubsan=policy)
+                if policy == 'unrecorded':
+                    del candidate['kd_provider_ubsan']
+                plan.append(candidate)
+                folder = out/candidate['name']; folder.mkdir()
+                run.write_json(folder/'session.json', dict(candidate,
+                    execution_status='OK', drained=True,
+                    measurement=dict(completed=index * 1000, wall_ns=1000000,
+                                     data_ok=True, complete=True)))
+            run.write_json(out/'plan.json', plan)
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 3)
+            self.assertEqual({r['kd_provider_ubsan']: r['best_throughput_ops_s']
+                              for r in rows},
+                             dict(kernel=1e6, off=2e6, unrecorded=3e6))
+            self.assertTrue(all(r['sessions'] == r['valid'] == 1 for r in rows))
+
     def test_numa_expanded_matrix(self):
         plan = run.make_plan(Namespace(cachelines=[1],
             threads=[1,2,3,4,5,6,7,8,12,16,20,24,28,32,36], repeats=3,

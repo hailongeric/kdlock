@@ -85,6 +85,15 @@ TCLock保留上游配置值1024。运行器用`modinfo`验证实际ELF，NUMA/�
 `--spin-prefetch 0/1/2`选择现有KD无预取/consumer查找/producer提示，默认2，加载后核对并独立分组。
 collector CLI无参数默认仍为30，32/36-worker运行必须如上显式指定38；与任一worker重合时拒绝。
 
+`--kd-provider-ubsan kernel/off`仅控制本次benchmark的私有KD provider副本，默认`kernel`，
+继承现有内核构建配置。显式`off`向该副本的递归make传入`UBSAN_SANITIZE=n`，用于与当前
+关闭UBSAN的TCLock backend比较；不改普通provider的Makefile、内核配置或显式协议检查。
+每次provider构建重新创建副本，运行器将`nm -u`保存为`imports-kdlock-provider.txt`，
+另存`kdlock-provider-ubsan.json`记录所选政策及实际handler引用；`off`仍有引用时立即拒绝运行。
+`plan.json`、各`session.json`、`environment.json`及汇总均保存`kd_provider_ubsan`；
+`kernel`、`off`和没有记录该字段的历史样本分组独立，不混合取优。
+比较此选项时保留相同源码与其他参数；编译插桩变化单独报告，不记作锁协议优化收益。
+
 `--spin-entry-ratio-limit`接受0或uint32范围内不小于2的2次幂，默认2。
 非零值是`entries >> 10`的严格上界；值越大，允许的入口/MCS比例越大。
 0仅绕过比例门槛，原生队头前缀检查、CPU频率和单锁热度规则仍生效。
@@ -171,6 +180,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [hash_payload优化](results/20260927-hash-optimization.md) | JIT/预取/helper精简，分离UBSAN与批上限；显式off/1024完整135场，8/16/36线程约为TCLock的71%/72%/71%，默认配置与功能回归见报告 |
 | [hash_payload计时比较](results/20260927-hash-peak.md) | 新增hash连续计时；15线程点三方三轮135场通过，KD在3–5线程领先两方、6–36线程低于TCLock；锁实现未变 |
 | [spin阶段收尾复测](results/20260927-spin-checkpoint.md) | 当前实现135场三方c1矩阵；8–36线程KD峰值均高于TCLock，Linux跨node高值再次出现；保留全部分布、JIT及NUMA进度，作为转入mutex前的基线 |
 | [热度阈值替代队列检查实验](results/20260927-heat-thresholds.md) | 五候选111场KD定向比较；纯热度、短批反馈和时钟下限均存在回退，全部撤回，默认仍保留六后继准入 |
@@ -195,8 +205,10 @@ python3 bench/tclock_compare/test_direct.py
 采用 Linux 6.1 移植版和上游 C 内联换栈，保留 NUMA_AWARE、WWJUMP 与 1024
 批次配置值；其WWJUMP计数从0开始、跳转时递增，普通路径最多可执行1025个正文，
 不同于KD的精确正文上限。未添加运行期代理次数计数。关闭 `ENABLE_IRQS_CHECK`、TCLock 后端
-及三种 direct workload 的 UBSAN 插桩；内核内部 UBSAN 保持原配置。
-运行器检查实际 ELF、返回布局及无 UBSAN handler 引用，保留 IRQ/preempt 退出检查。
+及三种 direct workload 的 UBSAN 插桩；内核内部 UBSAN 保持原配置，KD provider默认继承该配置，
+只在显式`--kd-provider-ubsan off`的私有benchmark构建中关闭。
+运行器检查TCLock/workload实际 ELF、返回布局及无 UBSAN handler 引用；KD按所选政策核对并记录，
+保留 IRQ/preempt 退出检查。
 TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开启的 task 上下文
 负载，不等同于完整上游配置或论文环境，旧批长/代理比例不能作为当前观测。
 
@@ -213,7 +225,7 @@ TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开�
 参数已删除；layout ABI v2 的 `resched` 固定为 0，运行器拒绝调度点仍开启的旧模块。
 这项实验设置不同于上游原始调度策略，也不同于历史索引中的成绩。
 这些锁外工作均计入整批 wall 时间。沿用三种直接API，新运行默认采用KD512/TCLock1024批次配置；
-最新[135场hash比较](results/20260927-hash-peak.md)使用连续2秒、300ms峰值；历史固定迭代成绩保留各自原始参数。
+最新[hash优化比较](results/20260927-hash-optimization.md)使用连续2秒、300ms峰值；历史固定迭代成绩保留各自原始参数。
 这是哈希表临界区的三方对比，不宣称完整复现上游分配布局或论文的运行环境。
 
 ```sh

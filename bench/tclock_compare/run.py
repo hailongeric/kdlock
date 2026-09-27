@@ -61,6 +61,26 @@ def collector_topology(cpu):
         os.sched_setaffinity(0, previous)
 
 
+def provider_build(args):
+    # This target recreates the benchmark's private provider copy. Command-line
+    # Kbuild variables propagate through recursive make; ordinary builds keep
+    # the kernel's sanitizer policy and all explicit protocol checks.
+    build = ['make', '-C', HERE, 'provider',
+             f'KDLOCK_NUMA={int(args.numa == "on")}',
+             f'KDLOCK_SPIN_BATCH={args.kd_batch_size}']
+    if getattr(args, 'kd_provider_ubsan', 'kernel') == 'off':
+        build.append('UBSAN_SANITIZE=n')
+    return build
+
+
+def audit_provider_ubsan(out, policy):
+    imported = command(['nm', '-u', PROVIDER], out/'imports-kdlock-provider.txt')
+    handlers = sorted(symbol for symbol in imported.split() if symbol.startswith('__ubsan_'))
+    write_json(out/'kdlock-provider-ubsan.json', dict(policy=policy, imports=handlers))
+    require(policy != 'off' or not handlers,
+            'KD provider still imports UBSAN handlers with --kd-provider-ubsan off')
+
+
 def idle():
     runtime.idle()
     require(not Path('/sys/module/tclock_backend_km').exists(), 'existing TCLock module')
@@ -92,6 +112,8 @@ def make_plan(args):
     require(numa in ('on', 'off'), 'invalid NUMA policy')
     prefetch = getattr(args, 'spin_prefetch', 2)
     require(prefetch in (0, 1, 2), 'invalid spin prefetch mode')
+    provider_ubsan = getattr(args, 'kd_provider_ubsan', 'kernel')
+    require(provider_ubsan in ('kernel', 'off'), 'invalid KD provider UBSAN policy')
     result = []
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
@@ -115,6 +137,7 @@ def make_plan(args):
                 cpu_heat_policy='mcs_reset1024_shift10_lock512_head6' if backend == 'kdlock' else 'not_applicable',
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
+                kd_provider_ubsan=provider_ubsan if backend == 'kdlock' else 'not_applicable',
                 numa_policy=numa if backend != 'native' else 'not_applicable',
                 delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
                 pmu=getattr(args, 'pmu', False),
@@ -144,6 +167,7 @@ def report(out):
                 spin_entry_ratio_limit=spec.get('spin_entry_ratio_limit', 'unrecorded'),
                 caller_shell=spec.get('caller_shell', 'unrecorded'),
                 cookie_storage=spec.get('cookie_storage', 'unrecorded'),
+                kd_provider_ubsan=spec.get('kd_provider_ubsan', 'unrecorded'),
                 status=row.get('execution_status', 'NOT_RUN'),
                 drained=row.get('drained', False),
                 completed=row.get('measurement', {}).get('completed', 0),
@@ -184,10 +208,11 @@ def report(out):
                            r.get('spin_delegate', 'on'),
                            r.get('numa_policy', 'unrecorded'),
                            r.get('delegation_batch_limit', 'unrecorded'),
-                           r.get('spin_prefetch', 'unrecorded')), []).append(r)
+                           r.get('spin_prefetch', 'unrecorded'),
+                           r.get('kd_provider_ubsan', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch), rows in groups.items():
+    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
@@ -199,6 +224,7 @@ def report(out):
                    spin_entry_ratio_limit=ratio_limit,
                    spin_delegate=delegate,
                    numa_policy=numa, delegation_batch_limit=batch, spin_prefetch=prefetch,
+                   kd_provider_ubsan=provider_ubsan,
                    **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -245,6 +271,9 @@ def main():
                    help='build NUMA queue selection for KD and TCLock')
     p.add_argument('--kd-batch-size', type=int, default=512,
                    help='maximum KD delegated bodies and NUMA scan budget per batch (1..1024)')
+    p.add_argument('--kd-provider-ubsan', choices=('kernel', 'off'), default='kernel',
+                   help='private benchmark provider only: inherit kernel UBSAN policy (default), '
+                        'or disable compiler instrumentation to match the TCLock backend')
     p.add_argument('--repeats', type=int, default=3,
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')
     p.add_argument('--iterations', type=int, default=100000)
@@ -307,6 +336,7 @@ def main():
         write_json(out/'environment.json', dict(kernel_identity=identity,topology=topology,
             collector_topology=collector,packages=packages,
             argv=sys.argv,python=sys.executable,snapshot_tag=os.environ.get('KDLOCK_SNAPSHOT_TAG'),
+            kd_provider_ubsan=args.kd_provider_ubsan if 'kdlock' in args.backends else 'not_applicable',
             runner_affinity=sorted(os.sched_getaffinity(0)),
             cmdline=Path('/proc/cmdline').read_text(),preemption=Path('/sys/kernel/debug/sched/preempt').read_text(),
             watchdog=Path('/proc/sys/kernel/watchdog').read_text(),uname=list(os.uname())))
@@ -322,9 +352,7 @@ def main():
                 scope='measure client and inherited workers; setup/warmup excluded'))
             binaries.append(perf)
         if 'kdlock' in args.backends:
-            builds += [('provider',['make','-C',HERE,'provider',
-                         f'KDLOCK_NUMA={int(args.numa == "on")}',
-                         f'KDLOCK_SPIN_BATCH={args.kd_batch_size}']),
+            builds += [('provider',provider_build(args)),
                        ('daemon',['make','-C',ROOT/'daemon','CFLAGS=-O2 -Wall -Wextra -Werror'])]
             binaries += [PROVIDER,ROOT/'daemon/daemon']
         if 'tclock' in args.backends:
@@ -346,6 +374,7 @@ def main():
                 batch_value = command(['modinfo', '-F', 'spin_batch', binary],
                                       out/'kdlock-batch.txt').strip()
                 require(batch_value == str(args.kd_batch_size), 'KD batch build identity differs')
+                audit_provider_ubsan(out, args.kd_provider_ubsan)
         if 'tclock' in args.backends:
             # Check the actual ELF: changing a Kbuild variable must not leave a
             # stale instrumented backend in a run labelled as unsanitized.

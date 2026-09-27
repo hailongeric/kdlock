@@ -306,10 +306,13 @@ wrapper 保存宿主 RBX、RBP、R12-R15，因此对调用它的 C 代码遵守 
 budget，但 epilogue 不会把它复制到 `Stack_JIT_WITNESS`。此布尔标记不是指令
 数量、完整路径覆盖率或代码 generation 身份。
 
-翻译诊断开关 `KD_JIT_BODY_WITNESS` 默认是 `0`。设为 `1` 时，生成的基本块
-和可恢复续点在标签后用 `MOV Stack_JIT_WITNESS, 1` 写入标记，不改变 GPR
-或 flags；dispatcher、callee/IJ 退出表不写入它。每次 wrapper 调用先清零，
-避免上次执行的 1 被误用。公共测试启动 daemon 时强制开启，并要求匹配
+翻译诊断开关 `KD_JIT_BODY_WITNESS` 默认是 `0`。设为 `1` 时，dispatcher
+匹配有效正文或可恢复续点后，经 `kd_body_entry_<rip>` 桩执行一次
+`MOV Stack_JIT_WITNESS, 1`，再跳到对应 `loc_<rip>`。该 MOV 不改变 GPR
+或 flags；正文内部跳转直接使用 `loc_<rip>`，循环不重复写标记。
+入口 guard 拒绝、dispatcher 未匹配及 callee/IJ 退出表均不写入它。
+每次 wrapper 调用先清零，续跑重新匹配入口后重新标记，避免复用上次的 1。
+公共测试启动 daemon 时强制开启，并要求匹配
 entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志不再足够。
 执行器每次高层调用只记录第一个正标记，不承诺每次内部续跑都有单独日志。
 此值不独立授权失败恢复、锁交接或重放；未开启观测的代码即使执行也返回 0。
@@ -389,10 +392,12 @@ spill，直接执行的其他 GPR 仍须在完整出口写回。共享 backing �
 配套当前 `wrapper.S` 和 `asm_head.h` 重建，不能把旧的 R11 计数代码拼入新 wrapper。
 
 EFLAGS 不是跨 wrapper 边界的持久状态。相邻 translated 指令会自然使用 CPU
-flags，但入口条件的地址比较、dispatcher 的 `CMP` 以及 branch-block budget 的 `INC`/`TEST` 都会
+flags，但入口条件的地址比较、dispatcher 的 `CMP` 以及 branch-block budget 的 `DEC` 都会
 改写 flags，epilogue 也不把 flags 写回 `pt_regs.flags`。所以当前正确性要求原始
 代码没有跨这些插桩点存活的 flags；continuation 只能放在函数调用边界等不要求
 旧 flags 保持的位置，不能在任意依赖旧 flags 的指令之间退出和恢复。
+倒计数替代原 `INC`/`TEST` 后保留相同额度与检查位置，但两者产生的 flags 不相同；
+此精简没有修复上述 flags 活跃性限制。
 
 这只是当前实现的使用限制，翻译器尚未检查 flags 活跃性，也没有自动拒绝违反该限制的
 临界区。风险不仅存在于退出/续跑边界：原始代码跨基本块使用 CF/ZF 等状态时，也可能被
@@ -518,18 +523,18 @@ frame 记录 `KD_EXEC_LOCK_NATIVE`，然后才弹出 lock CALL 的返回地址�
 | --- | --- | --- |
 | `-0x30` | `Stack_PT_REG` | 原 `struct pt_regs *` |
 | `-0x38` | `Stack_ARG_REG` | 原 `args *` |
-| `-0x40` | `Stack_BUDGET` | 本次调用的 block 额度计数，复用空出的槽 |
+| `-0x40` | `Stack_BUDGET` | 本次调用剩余的 branch-block 额度，初值 `2^24` |
 | `-0x48` 至 `-0x70` | 保留空间 | 不初始化、不用作 GPR 副本，保持控制槽偏移 |
 | `-0x78` | `Stack_RGS` | 入口 `args[0]`，waiter kernel GS base |
 | `-0x80` | `Stack_TASK` / `Stack_RCT` | 入口 `args[1]`，logical waiter task |
 | `-0x88` | `Stack_RIP` | 退出 RIP 临时槽 |
 | `-0x90` | `Stack_IJ` | 退出原因或 IJ 源地址 |
-| `-0x98` | `Stack_JIT_WITNESS` | 复用旧计数槽；prologue 写 0，观测用生成块写 1 |
+| `-0x98` | `Stack_JIT_WITNESS` | prologue 写 0；有效正文 dispatch 的观测桩写 1 |
 | `-0xa0` | `Stack_BATCH` | 旧批次描述指针 |
 | `-0xa8` | `Stack_CLOBBER` | 新 ABI 描述指针 |
 
 两个输入指针入栈后，一次 `sub rsp, 14*8` 分配保留空间与控制槽；prologue
-显式清零 `Stack_JIT_WITNESS`，dispatcher 清零 `Stack_BUDGET`。
+显式清零 `Stack_JIT_WITNESS`，dispatcher 将 `Stack_BUDGET` 初始化为 `0x1000000`。
 正常退出桩必须先定义 R14 和 `Stack_IJ`，再跳到公共
 `exit`。
 
@@ -571,9 +576,16 @@ physical R15 -> free
 ```
 
 当原指令访问 guest R11-R15 或 RIP 时，translator 从物理 R12-R15 中选择可用
-寄存器；被驱逐的 guest 值先写入对应 `Stack_R*`。若临时借用 R12/R13，指令后
-`recover_stable()` 会恢复虚拟 RBP/RSP。block 结束时 `release_conflict()` 把仍在
-映射池中的 guest R11-R15 写回 spill 槽。
+寄存器。`RegisterMap.dirty` 在翻译期间记录本 block 中可能被修改的逻辑
+R11-R15，不增加运行时字段或检查。刚从共享包载入的值为 clean；驱逐、恢复
+稳定映射或 block 结束时，仅省去已证明未修改的 GPR 写回，dirty 值仍写入
+对应 `Stack_R*`。每个 block 重新建立映射，不保留跨 block 的寄存器缓存。
+
+`CMP`/`TEST` 不产生写入；`MOV`/扩展 MOV/`LEA` 只标记寄存器目的操作数，
+内存目的的地址寄存器不因寻址而变脏。部分寄存器写入也标记完整逻辑 GPR；
+其他指令保守标记其涉及的特殊 GPR，不以省写回为由假定未知指令只读。
+SP/BP 保持原有稳定映射协议：若临时借用物理 R12/R13，指令后
+`recover_stable()` 恢复虚拟 RBP/RSP。必要的保存及控制出口写回不变。
 
 所以不能假定“guest R14 永远在 physical R14”或“guest R15 永远在 physical
 R15”。只有 dispatcher 和退出协议对 physical R14/R15 的含义是固定的；生成
@@ -581,14 +593,17 @@ R15”。只有 dispatcher 和退出协议对 physical R14/R15 的含义是固�
 
 ### 6.2 RIP 和计数器
 
-- dispatcher 先执行 `Stack_BUDGET = 0`，再把 `pt_regs.ip` 读入 R14，并跳到匹配的
-  `loc_<rip>` 标签。hostcall/known-call continuation 也通过同一张入口表恢复。
+- dispatcher 先执行 `Stack_BUDGET = 0x1000000`，再把 `pt_regs.ip` 读入 R14，
+  并跳到匹配的正文入口；开启 witness 时经过第 2 节的观测桩，再到 `loc_<rip>`。
+  hostcall/known-call continuation 也通过同一张入口表恢复。
 - translated block 需要 RIP-relative 值时，translator 以当前原始指令地址生成
   immediate，而不是让 guest 直接读 wrapper 的真实 RIP。
-- 分支 block 入口递增 `Stack_BUDGET`，并测试 bit 24；命中后以
-  `KD_EXE_INST_LIMIT` 退出。该槽在每次 wrapper 进入时重新清零，因此这是单次
-  sandbox 运行的 branch-block budget，不是整个临界区的精确 retired-instruction
-  数。
+- 分支 block 入口使用 `DEC Stack_BUDGET; JZ kd_budget_limit_<rip>`。
+  检查位置与原来的递增/bit-24 测试相同，第 `2^24` 次到达检查点时，在执行
+  该 block 原指令前退出。正常路径不再单独读取额度作 TEST，也不预先加载错误 RIP；
+  仅耗尽时由冷桩将该 block 原始 RIP 装入 R14，再以 `KD_EXE_INST_LIMIT` 退出。
+  每次 wrapper 进入重新设置额度，因此这是单次 sandbox 运行的 branch-block
+  budget，不是整个临界区的精确 retired-instruction 数，也不是时间上限。
 
 
 ### 6.3 GS 和 logical `current`
@@ -666,7 +681,7 @@ FULL还将其余受支持GPR写回`pt_regs`。退出桩的具体协议如下：
 | lock/unlock control call | callee target | `1` | 保留 |
 | allowlisted hostcall | service target | `5` (`KD_EXE_HOSTCALL`) | 保留 |
 | IJ miss | jump target | IJ 源 RIP，而不是常量 `2` | 不变 |
-| block budget 超限 | 最近记录的 block RIP | `4` (`KD_EXE_INST_LIMIT`) | 不变 |
+| block budget 超限 | 耗尽额度的 block RIP，由冷出口桩写入 | `4` (`KD_EXE_INST_LIMIT`) | 不变 |
 | dispatcher 无匹配 continuation | 请求的 RIP | `2` | 不变；高层路径最终失败 |
 | 运行期不支持的指令退出 | 保存的指令 RIP | `3` (`KD_EXE_ERROR_INST`) | 不变；终止失败 |
 | 入口不重叠条件不满足 | 原入口 RIP | `6` (`KD_EXE_ENTRY_REFUSED`) | 未执行 body；原 GPR/RSP/内存不变，witness 为 0 |

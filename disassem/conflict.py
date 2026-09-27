@@ -22,6 +22,7 @@ special_regs = [
     "T2",
 ]
 stable_regs = ["T1", "T2", "SP", "BP"]
+virtual_gprs = {"11", "12", "13", "14", "15"}
 
 orig_stable_map = {"SP": "13", "BP": "12"}
 # T2 for jump target
@@ -30,8 +31,43 @@ orig_stable_map = {"SP": "13", "BP": "12"}
 sz2sfx = {64: "", 32: "d", 16: "w", 8: "b"}
 
 
+class RegisterMap(dict):
+    """Block-local mappings; only modified virtual GPRs need packet stores.
+
+    SP/BP still use the existing stable-register protocol. This state exists
+    only in the translator: every block starts afresh from the shared packet.
+    """
+
+    def __init__(self):
+        super().__init__({"15": "", "14": "", "13": "SP", "12": "BP"})
+        self.dirty = set()
+
+
 def block_init():
-    return {"15": "", "14": "", "13": "SP", "12": "BP"}
+    return RegisterMap()
+
+
+def mark_writes(reg_map, name, args, conflict_regs):
+    """Recognize simple operand roles; unknown instructions remain conservative.
+
+    A memory destination does not modify its address registers. Partial GPR
+    writes are dirty too, since their full logical value must reach the packet.
+    """
+    if name.upper() in {"CMP", "TEST"}:
+        return
+    writes = conflict_regs
+    if name.upper() in {"MOV", "MOVABS", "MOVZX", "MOVSX", "MOVSXD", "LEA"}:
+        writes = set()
+        if args and isinstance(args[0], ExprId):
+            extract_conflict_regs(args[0], writes)
+    reg_map.dirty.update(writes & virtual_gprs)
+
+
+def spill_register(reg_map, physical):
+    logical = reg_map[physical]
+    if logical in virtual_gprs and logical not in reg_map.dirty:
+        return ""
+    return make_inst("MOV", ["Stack_R" + logical, "R" + physical])
 
 
 def release_IP(reg_map):
@@ -51,7 +87,7 @@ def release_conflict(reg_map, block_end=True):
         if v == "" or v in stable_regs:
             continue
         if v != "FS" and v != "GS" and v != "CT":
-            res += make_inst("MOV", ["Stack_R" + v, "R" + k])
+            res += spill_register(reg_map, k)
     return res
 
 
@@ -97,16 +133,17 @@ def conflict_resolve(reg_map, conflict_regs, offset=0):
             p = idle_regs.pop(0)
         elif len(possible_victims) > 0:
             p = possible_victims.pop(0)
-            resolve_inst += make_inst("MOV", ["Stack_R" + reg_map[p], "R" + p])
+            resolve_inst += spill_register(reg_map, p)
         else:  # No way but borrow stable regs
             p = possible_stable_victims.pop(0)
-            resolve_inst += make_inst("MOV", ["Stack_R" + reg_map[p], "R" + p])
+            resolve_inst += spill_register(reg_map, p)
 
         if v == "IP":
             resolve_inst += make_inst("MOVABS", ["R" + p, hex(offset)])
         # Stable virtual registers already hold their current value.
         elif v not in stable_regs:
             resolve_inst += make_inst("MOV", ["R" + p, "Stack_R" + v])
+        reg_map.dirty.discard(v)
         reg_map[p] = v
     return resolve_inst
 
@@ -119,7 +156,7 @@ def recover_stable(reg_map, conflict_regs):
             continue
         if v not in inv_map:
             p = orig_stable_map[v]
-            ret_str += make_inst("MOV", ["Stack_R" + reg_map[p], "R" + p])
+            ret_str += spill_register(reg_map, p)
             ret_str += make_inst("MOV", ["R" + p, "Stack_R" + v])
             reg_map[p] = v
     return ret_str

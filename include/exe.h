@@ -60,7 +60,9 @@ struct kd_jit_batch_call;
 bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 			       struct kd_exec_frame *frame,
 			       struct kd_jit_batch_call *call);
-bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call);
+/* Caller retains the prepared/bound frame through completion and retirement. */
+bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
+				 const struct kd_exec_frame *frame);
 int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
 			     const struct kd_jit_batch_call *call);
 

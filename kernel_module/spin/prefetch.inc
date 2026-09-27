@@ -24,6 +24,7 @@ static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
 		return;
 	node->prefetch_regs = regs;
 	node->prefetch_sp = 0;
+	node->prefetch_stack_lines = 0;
 	node->prefetch_full = frame->packet_state == KD_PACKET_FULL;
 	node->prefetch_complex = frame->complex_ready;
 	task = frame->logical_task;
@@ -31,10 +32,16 @@ static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
 		return;
 	sp = regs->sp;
 	base = (unsigned long)task_stack_page(task);
-	/* Both hinted words must lie in the retained logical task's stack.
-	 * Cache only this checked address, never a second executable SP. */
-	if (sp >= base + sizeof(unsigned long) && sp - base < THREAD_SIZE)
+	/* Retain the translated CALL slot below SP and warm the caller's locals
+	 * above it. Four upward lines also cover the hash caller's statistics;
+	 * count only hint addresses within this retained task's stack. Prepare
+	 * the bound here so the combiner needs no task/stack lookup per waiter.
+	 * This checked address remains a hint, never a second executable SP. */
+	if (sp >= base + sizeof(unsigned long) && sp - base < THREAD_SIZE) {
 		node->prefetch_sp = sp;
+		node->prefetch_stack_lines = min_t(unsigned long, 4,
+			DIV_ROUND_UP(base + THREAD_SIZE - sp, L1_CACHE_BYTES));
+	}
 }
 
 /* The original consumer lookup is retained for same-image comparisons.
@@ -115,7 +122,8 @@ static void kd_spin_prefetch_request(struct kd_spin_node *node)
 	}
 	sp = node->prefetch_sp;
 	if (sp) {
-		prefetchw((void *)sp);
 		prefetchw((void *)(sp - sizeof(unsigned long)));
+		for (offset = 0; offset < node->prefetch_stack_lines; offset++)
+			prefetchw((void *)(sp + offset * L1_CACHE_BYTES));
 	}
 }

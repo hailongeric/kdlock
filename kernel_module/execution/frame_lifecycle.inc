@@ -275,7 +275,7 @@ int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
  * Any service/nesting/native exit clears spin_simple before doing work, so
  * there are no child locks or remote publications to visit here. Physical L
  * remains owned by the batch until it publishes completion/handoff. */
-int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
+static __always_inline int kd_exec_complete_single_spin(struct kd_exec_frame *frame)
 {
 	if (!frame || !frame->spin_simple || !frame->executed ||
 	    frame->mutex_backend || frame->parent || frame->depth ||
@@ -296,6 +296,11 @@ int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
 	return 0;
 }
 
+int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
+{
+	return kd_exec_complete_single_spin(frame);
+}
+
 /* A normal batch root has no parent, remote/native publication or private
  * source lease to retire. Validate its physical owner and final packet using
  * the same terminal check as the generic path, then unbind in one operation.
@@ -308,7 +313,8 @@ int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)
 	if (!frame || frame->complex_ready || !frame->batch_lease ||
 	    ctx->depth != 1 || ctx->owner != current || ctx->top != frame)
 		return -EINVAL;
-	ret = kd_exec_frame_complete_single_spin(frame);
+	/* Share all terminal checks without a second out-of-line call per body. */
+	ret = kd_exec_complete_single_spin(frame);
 	if (ret)
 		return ret;
 	ctx->depth = 0;

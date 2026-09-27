@@ -55,6 +55,7 @@ def production():
             "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
             "kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,",
             "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)",
+            "static __always_inline int kd_exec_complete_single_spin(struct kd_exec_frame *frame)",
             "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
             "int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,",
             "int kd_exec_frame_set_lock_stack(struct kd_exec_frame *frame,",

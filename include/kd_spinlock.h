@@ -67,6 +67,8 @@ struct kd_spin_node {
 	 * Keep these addresses with the queue links in the first cache line. */
 	u8 prefetch_full;
 	u8 prefetch_complex;
+	/* Valid upward stack hints, prepared by the owning CPU. Fits node padding. */
+	u8 prefetch_stack_lines;
 	/* NULL for a non-combinable MCS waiter; no logical execution state. */
 	struct kd_spin_continuation *execution;
 	struct pt_regs *prefetch_regs;

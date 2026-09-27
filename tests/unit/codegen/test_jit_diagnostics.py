@@ -5,6 +5,7 @@ import contextlib
 import hashlib
 import io
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -202,8 +203,9 @@ class JitDiagnosticsTests(unittest.TestCase):
         self.assertIn("budget_blocks=1", log)
         self.assertIn('first_budget_rip="0x1000"', log)
         self.assertIn('action="emit_mov_add"', log)
-        self.assertIn(b"INC             Stack_BUDGET\n", assembly)
-        self.assertIn(b"TEST            Stack_BUDGET, 0x1000000\n", assembly)
+        self.assertIn(b"DEC             Stack_BUDGET\n", assembly)
+        self.assertIn(b"JZ              kd_budget_limit_1000\n", assembly)
+        self.assertNotIn(b"TEST            Stack_BUDGET", assembly)
         self.assertEqual(assembly, render("4f8d2c344839d8750190c3", muted=True)[0])
 
     def test_pre_log_miasm_015_assembly_baselines(self):
@@ -215,8 +217,43 @@ class JitDiagnosticsTests(unittest.TestCase):
         for raw, expected in fixtures.items():
             with self.subTest(raw=raw):
                 assembly, _ = render(raw)
-                # Keep the historical oracle for all other emitted bytes;
-                # relocating the budget is tested above and by execution.
+                # Normalize the intentional budget-only change back to the
+                # original spelling; all unrelated emitted bytes keep their
+                # historical oracle. Runtime countdown checks live separately.
+                assembly = assembly.replace(
+                    b"MOV     Stack_BUDGET, 0x1000000\n",
+                    b"MOV     Stack_BUDGET, 0\n",
+                )
+                assembly = re.sub(
+                    rb"DEC             Stack_BUDGET\n"
+                    rb"JZ              kd_budget_limit_([0-9a-f]+)\n",
+                    lambda match: b"MOVABS          R14, 0x" + match[1]
+                    + b"\nINC             Stack_BUDGET\n"
+                    b"TEST            Stack_BUDGET, 0x1000000\n"
+                    b"JNZ             inst_limit\n",
+                    assembly,
+                )
+                assembly = re.sub(
+                    rb"kd_budget_limit_([0-9a-f]+):\n"
+                    rb"MOVABS          R14, 0x\1\nJMP             inst_limit\n",
+                    b"", assembly,
+                )
+                if raw == "4f8d2c344839d8750190c3":
+                    # LEA's legacy MOV/ADD rewrite reads logical R14, then
+                    # reuses physical R14 for logical R12. Dirty tracking now
+                    # omits exactly this unchanged R14 spill. Restore only
+                    # that known obsolete store for the historical byte hash.
+                    clean_eviction = (
+                        b"MOV             R15, R14\n"
+                        b"MOV             R14, Stack_R12\n"
+                    )
+                    self.assertEqual(assembly.count(clean_eviction), 1)
+                    assembly = assembly.replace(
+                        clean_eviction,
+                        b"MOV             R15, R14\n"
+                        b"MOV             Stack_R14, R14\n"
+                        b"MOV             R14, Stack_R12\n",
+                    )
                 assembly = assembly.replace(b"Stack_BUDGET", b"R11")
                 self.assertEqual(hashlib.sha256(assembly).hexdigest(), expected)
 

@@ -7,6 +7,7 @@ from conflict import (
     apply_map,
     conflict_resolve,
     extract_conflict_regs,
+    mark_writes,
     recover_stable,
     release_IP,
 )
@@ -178,6 +179,7 @@ def process_normal(name, args, offset, reg_map):
 
     if len(conflict_regs) > 0:
         pre_inst = conflict_resolve(reg_map, conflict_regs, offset)
+        mark_writes(reg_map, name, purified_args, conflict_regs)
         purified_args = apply_map(purified_args, reg_map)
         release_IP(reg_map)
         post_inst = recover_stable(reg_map, conflict_regs)

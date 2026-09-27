@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [hash JIT/预取优化](../bench/tclock_compare/results/20260927-hash-optimization.md) | 基础及直接相关codegen/frame/batch检查、runner39项、NORMAL构建和hash分阶段/完整矩阵；首次fixture失败及修正保留，默认配置和nested/early验收范围见报告；未跑全量或mutex live |
 | [hash连续计时与三方比较](../bench/tclock_compare/results/20260927-hash-peak.md) | 基础2组、runner36项、peak8项及135场timed hash通过；独立业务/结构/峰值/JIT/排空审计通过，未跑全量或mutex负载 |
 | [MCS1024窗口调优](../bench/tclock_compare/results/20260927-ratio-window.md) | 五阶段144场定向比较及最终15线程点三方135场通过；NORMAL构建、基础及相关4组和runner35项通过；保留单锁512目标，未跑全量/nested/early/mutex live |
 | [MCS右移/清零比例窗口](#spin-ratio-reset-validation) | NORMAL/观测provider构建、基础及采样/原生MCS共4组、runner35项通过；默认门槛下8/36线程plain实际JIT及排空通过，未重跑性能 |
