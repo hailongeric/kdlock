@@ -1112,6 +1112,16 @@ static void run_bounded_batches(void)
 	CHECK(kd_spin_cpu.local_queue_tail == &nodes[2]);
 	CHECK(get_next_node(&nodes[3], &budget) == &nodes[4]);
 	CHECK(kd_spin_cpu.local_queue_tail == &nodes[2]);
+	/* Exhaustion must not dereference the candidate's successor at all.
+	 * The poison link faults if a boundary check reads that header first. */
+	nodes[4].next = (struct kd_spin_node *)1;
+	CHECK(get_next_node(&nodes[3], &budget) == &nodes[4]);
+	nodes[4].socket_id = IRQ_NUMA_NODE;
+	CHECK(get_next_node(&nodes[3], &budget) == &nodes[4]);
+	nodes[3].next = NULL;
+	CHECK(get_next_node(&nodes[3], &budget) == NULL);
+	CHECK(!budget && kd_spin_cpu.local_queue_head == &nodes[1]);
+	CHECK(kd_spin_cpu.local_queue_tail == &nodes[2]);
 #endif
 	puts("spin bounded batch: body cap, finite NUMA scan and complete handoff chain");
 }

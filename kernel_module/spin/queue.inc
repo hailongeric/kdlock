@@ -183,17 +183,17 @@ get_next_node(struct kd_spin_node *my_node, u16 *scan_left)
 		return next_node;
 
 	while (true) {
+		/* A spent scan budget needs no dependent successor reads. Return
+		 * the same handoff candidate without touching its successor header;
+		 * the deferred prefix still has priority at final handoff. */
+		if (!*scan_left)
+			return next_node;
 		if (next_node == NULL || next_node->next == NULL)
 			goto next_node_null;
 		else if (check_irq_node(next_node) ||
 			 check_irq_node(next_node->next))
 			goto next_node_null;
 
-		/* Stop following remote links when this batch's budget is spent.
-		 * Deferred nodes are spliced ahead of the final handoff, so locality
-		 * cannot leave them behind the next ordinary queue head. */
-		if (!*scan_left)
-			return next_node;
 		--*scan_left;
 		if (next_node->socket_id == numa_node_id()) {
 			return next_node;
