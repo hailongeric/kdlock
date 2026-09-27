@@ -101,7 +101,12 @@ collector CLI无参数默认仍为30，32/36-worker运行必须如上显式指�
 0仅绕过比例门槛，原生队头前缀检查、CPU频率和单锁热度规则仍生效。
 该值作为只读provider装载参数传入并核对；旧`--spin-contention-pct`已删除，历史命令使用匹配checkout。
 
-上述`taskset -c 0-35`固定准备阶段CPU集合（跨两个节点），worker绑定CPU0至CPU(`threads-1`)。
+上述`taskset -c 0-35`固定准备阶段CPU集合（跨两个节点），默认worker绑定CPU0至CPU(`threads-1`)。
+`--cpus`指定有序CPU列表，各线程点取对应长度的前缀；不足、重复、离线或不在runner亲和集合内的CPU会被拒绝。
+16线程同节点使用`--cpus 0-15`，8+8使用`--cpus 0-7,20-27`；
+20线程同节点使用`--cpus 0-19`，10+10使用`--cpus 0-9,20-29`。
+这些节点名称须由实际拓扑核验；36线程保留`--cpus 0-35`。
+collector不得与实际worker重合，汇总及Linux分母按CPU列表分别分组，不能把同/跨节点样本合并取优。
 先核对这些CPU属于预期NUMA节点及host映射；`environment.json`保存`runner_affinity`，
 加载前检查全部worker CPU均被允许。collector使用独立CPU38，不计入worker线程数。
 

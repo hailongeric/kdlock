@@ -17,6 +17,43 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_explicit_placement_and_collector(self):
+        args = Namespace(cachelines=[1], threads=[8, 16], repeats=1,
+                         iterations=100, backends=['native', 'kdlock'],
+                         cpus=run.runtime.cpu_list('0-7,20-27'),
+                         duration_ms=2000, collector_cpu=38)
+        plans = run.make_plan(args)
+        self.assertTrue(all(s['cpus'] == args.cpus[:s['threads']] for s in plans))
+        args.collector_cpu = 20
+        with self.assertRaisesRegex(run.Failure, 'collector CPU'):
+            run.make_plan(args)
+        args.collector_cpu, args.cpus = 38, [0, 1]
+        with self.assertRaisesRegex(run.Failure, 'placement'):
+            run.make_plan(args)
+
+    def test_summary_keeps_placement_separate(self):
+        # Different node geometries must never supply each other's winner or
+        # Linux denominator, even when thread counts and policies match.
+        plans = []
+        for suffix, cpus in (('local', [0, 1]), ('split', [0, 20])):
+            cohort = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
+                iterations=100, backends=['native', 'kdlock'], cpus=cpus))
+            plans.extend(dict(s, name=s['name']+'-'+suffix) for s in cohort)
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for i, spec in enumerate(plans):
+                folder = out/spec['name']; folder.mkdir()
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True,
+                    measurement=dict(completed=100, wall_ns=(i+1)*100000,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 4)
+            kd = [r for r in rows if r['arm'] == 'kdlock']
+            self.assertEqual([r['throughput_over_linux'] for r in kd], [0.5, 0.75])
+
     def test_provider_ubsan_option_and_private_build(self):
         for policy in ('kernel', 'off'):
             argv = ['run.py', '--output', '/tmp/unused', '--dry-run',

@@ -30,6 +30,16 @@ TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
 
 
+def worker_cpus(args):
+    """Use an ordered, explicit CPU list; each cohort takes its prefix."""
+    cpus = getattr(args, 'cpus', None)
+    cpus = list(range(max(args.threads))) if cpus is None else cpus
+    require(len(cpus) >= max(args.threads) and len(set(cpus)) == len(cpus)
+            and all(type(cpu) is int and cpu >= 0 for cpu in cpus),
+            'worker placement needs enough distinct nonnegative CPUs')
+    return cpus[:max(args.threads)]
+
+
 def timing_settings(args):
     settings = {name: getattr(args, name, default) for name, default in
                 zip(TIMING_FIELDS, (0, 300, 300, 10, 30))}
@@ -40,8 +50,8 @@ def timing_settings(args):
                 settings['peak_settle_ms'] >= 0 and
                 settings['peak_settle_ms'] + settings['peak_window_ms'] < duration,
                 'invalid peak timing intervals')
-        require(settings['collector_cpu'] >= 0 and all(
-                settings['collector_cpu'] not in range(t) for t in args.threads),
+        require(settings['collector_cpu'] >= 0 and
+                settings['collector_cpu'] not in worker_cpus(args),
                 'collector CPU must be outside every worker cohort')
         require(getattr(args, 'scenario', 'plain') == 'plain' and
                 getattr(args, 'workload', 'cacheline') in ('cacheline', 'rcuht') and
@@ -115,6 +125,7 @@ def make_plan(args):
     provider_ubsan = getattr(args, 'kd_provider_ubsan', 'kernel')
     require(provider_ubsan in ('kernel', 'off'), 'invalid KD provider UBSAN policy')
     result = []
+    cpus = worker_cpus(args)
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1, 16])
@@ -147,7 +158,7 @@ def make_plan(args):
                 warmup_pause_seconds=0,
                 measurement_mode='timed_peak' if timing['duration_ms'] else 'fixed_iterations',
                 **timing,
-                iterations=args.iterations, cpus=list(range(t))))
+                iterations=args.iterations, cpus=cpus[:t]))
     return result
 
 
@@ -209,10 +220,11 @@ def report(out):
                            r.get('numa_policy', 'unrecorded'),
                            r.get('delegation_batch_limit', 'unrecorded'),
                            r.get('spin_prefetch', 'unrecorded'),
-                           r.get('kd_provider_ubsan', 'unrecorded')), []).append(r)
+                           r.get('kd_provider_ubsan', 'unrecorded'),
+                           tuple(r.get('cpus', range(r['threads'])))), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan), rows in groups.items():
+    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, cpus), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
@@ -225,6 +237,7 @@ def report(out):
                    spin_delegate=delegate,
                    numa_policy=numa, delegation_batch_limit=batch, spin_prefetch=prefetch,
                    kd_provider_ubsan=provider_ubsan,
+                   cpus=list(cpus), cpu_nodes=rows[0].get('cpu_nodes'),
                    **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
         # Select one valid session per backend. Keep its matching ns/op and
@@ -247,12 +260,12 @@ def report(out):
             100 * (max(rates) - min(rates)) / row['median_throughput_ops_s']
             if len(rates) > 1 else None)
         summary.append(row)
-    natives = {(r['cachelines'], r['threads'], tuple(r[k] for k in TIMING_FIELDS)):
+    natives = {(r['cachelines'], r['threads'], tuple(r[k] for k in TIMING_FIELDS), tuple(r['cpus'])):
                r['best_throughput_ops_s']
                for r in summary if r['arm'] == 'native'}
     for row in summary:
         native = natives.get((row['cachelines'], row['threads'],
-                              tuple(row[k] for k in TIMING_FIELDS)))
+                              tuple(row[k] for k in TIMING_FIELDS), tuple(row['cpus'])))
         row['throughput_over_linux'] = row['best_throughput_ops_s']/native if native and row['valid'] else None
     write_json(out/'summary.json', summary)
     if summary:
@@ -265,6 +278,8 @@ def main():
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
     p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,5,6,7,8,12,16,20,24,28,32,36), default=[1,4,8,16,20])
+    p.add_argument('--cpus', type=runtime.cpu_list,
+                   help='ordered worker CPUs, e.g. 0-7,20-27; each cohort uses its prefix')
     p.add_argument('--spin-prefetch', type=int, choices=(0,1,2), default=2,
                    help='existing KD prefetch mode: off, consumer lookup, producer hints')
     p.add_argument('--numa', choices=('on', 'off'), default='on',
@@ -327,11 +342,10 @@ def main():
                 '(voluntary)' in Path('/sys/kernel/debug/sched/preempt').read_text(), 'runtime differs')
         packages = {p:importlib.metadata.version(p) for p in ('miasm','future','pyparsing','pyelftools')}
         require(packages == dict(miasm='0.1.5',future='1.0.0',pyparsing='2.4.7',pyelftools='0.27'), 'dependencies differ')
-        topology = runtime.capture_topology(list(range(max(args.threads))))
+        topology = runtime.capture_topology(worker_cpus(args))
         collector = (collector_topology(args.collector_cpu)
                      if args.duration_ms else None)
-        for spec in plan:
-            spec['cpu_nodes'] = topology['role_nodes'][:spec['threads']]
+        runtime.annotate_topology(plan, topology)
         write_json(out/'plan.json', plan)
         write_json(out/'environment.json', dict(kernel_identity=identity,topology=topology,
             collector_topology=collector,packages=packages,
