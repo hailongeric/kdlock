@@ -74,6 +74,8 @@ static void *work(void *opaque)
 	w->observed_cpu = sched_getcpu();
 	if (!w->error && w->observed_cpu != w->cpu)
 		w->error = EINVAL;
+	if (!w->error && ioctl(w->fd, SC_WORKER_REGISTER))
+		w->error = errno;
 	if (w->error)
 		atomic_store_explicit(&g->abort, true, memory_order_relaxed);
 	/* Publish setup/error before ready. The main thread releases go only
@@ -183,6 +185,7 @@ int main(int argc, char **argv)
 		{ "counts", no_argument, NULL, 's' },
 		{ "prepare", no_argument, NULL, 'p' },
 		{ "workload", required_argument, NULL, 'w' },
+		{ "lock-kind", required_argument, NULL, 'k' },
 		{ "duration-ms", required_argument, NULL, 'd' },
 		{ "peak-window-ms", required_argument, NULL, 'W' },
 		{ "peak-settle-ms", required_argument, NULL, 'S' },
@@ -205,11 +208,17 @@ int main(int argc, char **argv)
 	unsigned int count = 0, created = 0;
 	bool layout_only = false, counts_only = false, prepare_only = false, valid = true;
 	bool hash = false, timed_options = false, iterations_set = false;
+	unsigned int lock_kind = 1;
 	char *cpu_text = NULL, *token, *save;
 	int fd, option, error = 0, collector_observed_cpu = -1, collector_error = 0;
 
 	while ((option = getopt_long(argc, argv, "", options, NULL)) != -1) {
 		switch (option) {
+		case 'k':
+			if (strcmp(optarg, "mutex") && strcmp(optarg, "spin"))
+				return 2;
+			lock_kind = !strcmp(optarg, "mutex") ? 2 : 1;
+			break;
 		case 'n': lines = number(optarg); break;
 		case 'i': iterations = number(optarg); iterations_set = true; break;
 		case 'c': cpu_text = optarg; break;
@@ -275,12 +284,13 @@ int main(int argc, char **argv)
 			return 1;
 		}
 	}
-	fd = open(SC_DEVICE, O_RDWR | O_CLOEXEC);
+	fd = open(lock_kind == 2 ? "/dev/mutex_cacheline" : SC_DEVICE, O_RDWR | O_CLOEXEC);
 	if (fd < 0) {
 		perror(SC_DEVICE);
 		return 1;
 	}
-	if (ioctl(fd, SC_LAYOUT, &layout) || !layout_valid(&layout)) {
+	if (ioctl(fd, SC_LAYOUT, &layout) || !layout_valid(&layout) ||
+	    layout.lock_kind != lock_kind) {
 		fprintf(stderr, "Invalid/unavailable payload layout\n");
 		close(fd);
 		return 1;
@@ -307,6 +317,7 @@ int main(int argc, char **argv)
 		       layout.slots, layout.lock_bytes, layout.lock_addr,
 		       layout.control_addr, layout.data_addr);
 		values_json(layout.slot_addr);
+		printf(",\"lock_kind\":%u", layout.lock_kind);
 		printf(",\"workload\":\"%s\",\"buckets\":%u,\"entries\":%u,"
 		       "\"key_range\":%u,\"resched\":%u}\n", hash ? "rcuht" : "cacheline",
 		       layout.buckets, layout.entries, layout.key_range, layout.resched);
@@ -401,6 +412,20 @@ int main(int argc, char **argv)
 				workers[i].timed_run.finished_ns <= workers[i].finished_ns;
 		else
 			valid &= workers[i].run.completed == iterations;
+	}
+	/* A completed ioctl is insufficient: keep TCLock task contexts through
+	 * all pthread exits, including partial-create and worker-error cleanup. */
+	uint64_t drain_deadline = now(CLOCK_MONOTONIC) + 5000000000ULL;
+	do {
+		error = ioctl(fd, SC_WORKERS_DRAIN);
+		if (!error || errno != EBUSY)
+			break;
+		usleep(1000);
+	} while (now(CLOCK_MONOTONIC) < drain_deadline);
+	if (error) {
+		perror("SC_WORKERS_DRAIN (registrations retained)");
+		close(fd);
+		return 1;
 	}
 	if (ioctl(fd, SC_COUNTS, &after)) {
 		perror("final SC_COUNTS (drain unconfirmed)");

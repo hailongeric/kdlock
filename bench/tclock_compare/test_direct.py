@@ -17,6 +17,27 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_mutex_entrypoint_and_delegation_identity(self):
+        argv = ['run_mutex.py', '--output', '/tmp/unused', '--dry-run',
+                '--threads', '16', '36', '--cachelines', '1']
+        with patch.object(sys, 'argv', argv), \
+                contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(run.main('mutex'), 0)
+        plan = json.loads(output.getvalue())
+        self.assertEqual(len(plan), 18)
+        self.assertTrue(all(s['lock_kind'] == 'mutex' for s in plan))
+        params = dict(target_lock=4096, komb_batch_size=1024, quiescent=1,
+                      delegated=8192, batches=8, parks=4)
+        tc_quiescent(params, 'mutex')
+        for bad in (dict(params, quiescent=0),
+                    {k: v for k, v in params.items() if k != 'delegated'}):
+            with self.assertRaises(run.Failure):
+                tc_quiescent(bad, 'mutex')
+        # Successful data with zero JIT does not establish a contended positive.
+        with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+            check_jit_evidence(dict(arm='kdlock', lock_kind='mutex', threads=16,
+                                    jit_bodies=0, scenario='plain'))
+
     def test_explicit_placement_and_collector(self):
         args = Namespace(cachelines=[1], threads=[8, 16], repeats=1,
                          iterations=100, backends=['native', 'kdlock'],

@@ -42,6 +42,7 @@
 #include "utils.h"
 #include "kd_lock.h"
 #include "kd_mutex.h"
+#include "kd_mutex_direct.h"
 #include "kd_spinlock.h"
 #include "kd_hostcall.h"
 
@@ -79,7 +80,7 @@ static void kd_code_block_gate_unlock(void)
 	atomic_set_release(&kd_code_block_gate, 0);
 }
 
-static unsigned long end_points[5];
+static unsigned long end_points[6];
 static int end_point_count;
 static unsigned long raw_spin_lock_addr;
 static unsigned long raw_spin_unlock_addr;
@@ -91,6 +92,8 @@ static unsigned long mutex_lock_addr;
 static unsigned long mutex_unlock_addr;
 static unsigned long clobber_mutex_lock_addr;
 static unsigned long clobber_mutex_unlock_addr;
+static unsigned long direct_mutex_lock_addr;
+static unsigned long direct_mutex_unlock_addr;
 
 #include "execution/hostcalls.inc"
 

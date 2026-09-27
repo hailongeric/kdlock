@@ -149,6 +149,22 @@ class ClobberEntryTests(unittest.TestCase):
                                     kernel_symbols=mutex_symbols, return_status=True,
                                     muted=True)[2], 0 if code.startswith('488b45') else 2)
 
+    def test_direct_mutex_unlock_bounds_abi2_and_bridge_remains_known(self):
+        # Both identities bound admission, while COMPLETE targets the explicit
+        # module endpoint. A bridge alias still leaves through generic FULL.
+        symbols = {"kd_mutex_lock_clobber_v1": 0x5000,
+                   "kd_mutex_unlock_clobber_v1": 0x6000,
+                   "kd_mutex_direct_lock_clobber_v1": 0x7000,
+                   "kd_mutex_direct_unlock_clobber_v1": 0x8000}
+        for target in (0x6000, 0x8000):
+            code = bytes.fromhex('48c7c7009000004889e648c7c2191000004889e9')
+            code += b'\xe8' + (target - 0x1019).to_bytes(4, 'little', signed=True)
+            code += bytes.fromhex('64488b042500000000c3')
+            asm, _, status = render(code.hex(), abi=2, lock_kind='mutex',
+                                    kernel_symbols=symbols, return_status=True, muted=True)
+            self.assertEqual(status, 0)
+            self.assertEqual(b'clobber_complete' in asm, target == 0x8000)
+
     def test_mutex_clobber_cannot_use_spin_word_memory_summary(self):
         tracker = FlowConstants(EntryGuards())
         tracker.update(decode('48bc0030000000000000'))

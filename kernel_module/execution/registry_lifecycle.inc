@@ -109,6 +109,9 @@ int kd_exe_init(void)
 	clobber_mutex_unlock_addr = kallsyms_lookup_name("kd_mutex_unlock_clobber_v1");
 	if (clobber_mutex_unlock_addr)
 		end_points[end_point_count++] = clobber_mutex_unlock_addr;
+	direct_mutex_lock_addr = (unsigned long)kd_mutex_direct_lock_clobber_v1;
+	direct_mutex_unlock_addr = (unsigned long)kd_mutex_direct_unlock_clobber_v1;
+	end_points[end_point_count++] = direct_mutex_unlock_addr;
 	for (i = 0; i < end_point_count; i++)
 		KD_PR_INFO("end_point[%d] = %lx", i, end_points[i]);
 	if (mutex_lock_addr)

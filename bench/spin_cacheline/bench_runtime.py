@@ -116,6 +116,7 @@ def source_state():
     # Freeze both the unmodified production inputs and the exact prepared
     # provider sources. Do not accidentally hash editor files or Kbuild output.
     for directory in ("bench/spin_cacheline", "workload_modules/spin_cacheline",
+                      "workload_modules/mutex_cacheline",
                       "include", "kernel_module", "daemon",
                       "disassem", "kernel_baseline", "kernel_experiments/spin_static",
                       "kernel_experiments/spin_clobber",
@@ -135,7 +136,7 @@ def source_state():
 
 def idle():
     """Reject known workload/module leftovers; this is not a global hook drain."""
-    for name in ("kdlock_km", "spin_cacheline", "klock_module", "kd_depth_source",
+    for name in ("kdlock_km", "spin_cacheline", "mutex_cacheline", "klock_module", "kd_depth_source",
                  "kd_dispatch_floor"):
         require(not Path(f"/sys/module/{name}").exists(), f"existing module: {name}")
     for task in Path("/proc").glob("[0-9]*/task/[0-9]*/comm"):

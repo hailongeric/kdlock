@@ -124,7 +124,7 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
 		       clobber_spin_lock_addr && clobber_spin_unlock_addr;
 	if (frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
 		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
-		       clobber_mutex_lock_addr && clobber_mutex_unlock_addr;
+		       direct_mutex_lock_addr && direct_mutex_unlock_addr;
 	return frame->entry_abi == KD_ENTRY_ABI_LEGACY &&
 	       (!directory || code[KD_JIT_ABI_OFFSET] == KD_ENTRY_ABI_LEGACY);
 }
@@ -153,7 +153,7 @@ static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
 	call->args[1] = (unsigned long)frame->logical_task;
 	call->code = (char *)code + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
-	call->unlock = frame->mutex_backend ? clobber_mutex_unlock_addr :
+	call->unlock = frame->mutex_backend ? direct_mutex_unlock_addr :
 					     clobber_spin_unlock_addr;
 	call->entry_sp = call->regs->sp;
 	call->entry_abi = frame->entry_abi;

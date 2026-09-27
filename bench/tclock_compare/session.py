@@ -1,8 +1,8 @@
 """Reuse the cacheline data oracle with a real TCLock native-delegation arm.
 
-Each session owns a freshly loaded source and backend. TCLock has no added
-execution counters; validate payload and quiescence, and leave delegation
-amount unknown instead of reporting a fictitious zero or observed delegation.
+Each session owns a freshly loaded source and backend. TCLock spin keeps its
+uninstrumented protocol. The separate mutex port counts returned batches to
+prove that its native stack delegation executes; neither uses the KD runtime.
 """
 import json
 import re
@@ -14,18 +14,22 @@ from bench_runtime import (ROOT, HERE, PROVIDER, require, parameters, registry,
 from bench_session import Session
 
 TC_MODULE = ROOT / 'tclock_backend/tclock_backend_km.ko'
+TC_MUTEX_MODULE = ROOT / 'tclock_backend/tclock_mutex_backend_km.ko'
 GUARD_MODULE = ROOT / 'bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'
 
 
-def tc_parameters():
+def tc_parameters(lock_kind='spin'):
     return {p.name: int(p.read_text()) for p in
-            Path('/sys/module/tclock_backend_km/parameters').iterdir()}
+            Path('/sys/module/' + ('tclock_mutex_backend_km' if lock_kind == 'mutex' else 'tclock_backend_km') + '/parameters').iterdir()}
 
 
-def tc_quiescent(params):
+def tc_quiescent(params, lock_kind='spin'):
     # Exact parameter identity also rejects accidentally loading the previous
     # instrumented module. Protocol node/count state remains part of the oracle.
-    require(set(params) == {'target_lock', 'komb_batch_size', 'quiescent'},
+    expected = {'target_lock', 'komb_batch_size', 'quiescent'}
+    if lock_kind == 'mutex':
+        expected |= {'delegated', 'batches', 'parks'}
+    require(set(params) == expected,
             'unexpected TCLock module parameters')
     require(params['quiescent'] == 1, 'active TCLock stack/queue', 'UNDRAINED')
 
@@ -58,6 +62,7 @@ def check_jit_evidence(record):
         return
     required = (record['arm'] == 'kdlock' and record['threads'] > 1 and
                 (record.get('functional', False) or record['threads'] >= 20 or
+                 (record.get('lock_kind') == 'mutex' and record['threads'] >= 4) or
                  record.get('scenario', 'plain') in ('nested', 'early')))
     record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
     require(not required or record['jit_bodies'] > 0,
@@ -68,6 +73,8 @@ class BackendSession(Session):
     def run(self, args, log, **kwargs):
         # Every client command, including prepare and drain, checks the loaded
         # payload identity. A hash module must never satisfy a cacheline run.
+        if args[0] == HERE/'client' and self.lock_kind == 'mutex':
+            args = [*args, '--lock-kind', 'mutex']
         if args[0] == HERE/'client' and self.record.get('workload') == 'rcuht':
             args = [*args, '--workload', 'rcuht']
         if args[0] == HERE/'client' and log == 'measure.json' and self.record.get('pmu'):
@@ -81,6 +88,9 @@ class BackendSession(Session):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.loaded_tc = False
+        self.lock_kind = self.record.get('lock_kind', 'spin')
+        self.tc_module = TC_MUTEX_MODULE if self.lock_kind == 'mutex' else TC_MODULE
+        self.tc_params = Path('/sys/module') / self.tc_module.stem / 'parameters'
 
     def prepare(self):
         # Equal, unmeasured preparation in every arm. Linux 6.1's reserved
@@ -90,13 +100,15 @@ class BackendSession(Session):
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
+                      'target_process=sc_worker',
                       'spin_entry_ratio_limit=' + str(self.record['spin_entry_ratio_limit']),
                       'spin_prefetch=' + str(self.record['spin_prefetch']),
+                      'mutex_jit=1',
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
                      'load-kdlock.log')
             self.loaded_kd = True
         elif self.record['arm'] == 'tclock':
-            self.run(['insmod', TC_MODULE, 'komb_batch_size=1024'], 'load-tclock.log')
+            self.run(['insmod', self.tc_module, 'komb_batch_size=1024'], 'load-tclock.log')
             self.loaded_tc = True
         # The module's direct references pin its backend. Source loading must
         # follow backend loading; retirement releases the reverse source pin.
@@ -108,10 +120,10 @@ class BackendSession(Session):
             hash_layout(layout)
         require(self.counts('initial')['values'] == [0]*16, 'source was not reset')
         if self.loaded_tc:
-            Path('/sys/module/tclock_backend_km/parameters/target_lock').write_text(
+            (self.tc_params/'target_lock').write_text(
                 str(layout['lock_addr']))
-            params = tc_parameters()
-            tc_quiescent(params)
+            params = tc_parameters(self.lock_kind)
+            tc_quiescent(params, self.lock_kind)
             require(params['target_lock'] == layout['lock_addr'] and
                     params['komb_batch_size'] == 1024 and params['quiescent'] == 1,
                     'TCLock identity/initial state differs')
@@ -128,19 +140,23 @@ class BackendSession(Session):
                     'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
                     params['spin_delegate'] == ('N' if self.record.get('spin_delegate') == 'off' else 'Y'),
                     'kdlock observation parameters differ')
+            require(self.lock_kind != 'mutex' or int(params['mutex_jit']) == 1,
+                    'mutex JIT disabled')
             self.record['parameters'] = params
-            symbol = f'sc_body_{self.record["cachelines"]}'
+            prefix = 'mc' if self.lock_kind == 'mutex' else 'sc'
+            source_tag = f'[{self.workload_module.stem}]'
+            symbol = f'{prefix}_body_{self.record["cachelines"]}'
             found = [int(s[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
-                     if len(s := line.split()) == 4 and s[2:] == [symbol, '[spin_cacheline]']]
+                     if len(s := line.split()) == 4 and s[2:] == [symbol, source_tag]]
             nm = self.run(['nm', '-S', self.workload_module], 'symbols.txt')
             sizes = [int(s[1], 16) for line in nm.splitlines()
                      if len(s := line.split()) == 4 and s[3] == symbol]
             require(len(found) == len(sizes) == 1 and found[0], 'unknown CS symbol')
             self.record['entry_range'] = [found[0], found[0] + sizes[0]]
             if self.record.get('scenario', 'plain') != 'plain':
-                entry_name = f'sc_entry_{self.record["cachelines"]}'
+                entry_name = f'{prefix}_entry_{self.record["cachelines"]}'
                 roots = [int(s[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
-                         if len(s := line.split()) == 4 and s[2:] == [entry_name, '[spin_cacheline]']]
+                         if len(s := line.split()) == 4 and s[2:] == [entry_name, source_tag]]
                 require(len(roots) == 1, 'ambiguous direct root continuation')
                 self.record['root_entry'] = roots[0]
         self.record['prepare'] = json.loads(self.run(
@@ -187,17 +203,25 @@ class BackendSession(Session):
                                delegation_status=self.record['jit_status'])
             self.save()
             return
-        before = tc_parameters()
-        tc_quiescent(before)
+        before = tc_parameters(self.lock_kind)
+        tc_quiescent(before, self.lock_kind)
         self.record.update(execution_status='MEASURING', tclock_before=before)
         self.save()
         measurement = self.phase('measure', self.record['iterations'])
         self.record['measurement'] = measurement
-        after = tc_parameters()
-        tc_quiescent(after)
+        after = tc_parameters(self.lock_kind)
+        tc_quiescent(after, self.lock_kind)
         self.record.update(tclock_after=after, delegated_bodies=None,
                            delegation_share=None, delegation_status='UNMEASURED',
                            jit_bodies=0, jit_share=0, jit_status='NOT_APPLICABLE')
+        if self.lock_kind == 'mutex':
+            delegated = after['delegated'] - before['delegated']
+            require(0 <= delegated <= measurement['completed'], 'invalid TCLock delegation count')
+            require(self.record['threads'] < 4 or delegated > 0,
+                    'contended TCLock mutex never delegated', 'NO_DELEGATION')
+            self.record.update(delegated_bodies=delegated,
+                delegation_share=delegated / measurement['completed'],
+                delegation_status='PASS' if delegated else 'NO_DELEGATION_UNCONTENDED')
         self.save()
 
     def cleanup(self):
@@ -205,16 +229,16 @@ class BackendSession(Session):
             self.faults()
             if self.loaded_source:
                 require(self.counts('tclock-drain')['active'] == 0, 'active TCLock workers', 'UNDRAINED')
-            params = tc_parameters()
-            tc_quiescent(params)
+            params = tc_parameters(self.lock_kind)
+            tc_quiescent(params, self.lock_kind)
             self.record['tclock_drained'] = params
             # Clear the diagnostic pointer before its lock storage disappears.
-            Path('/sys/module/tclock_backend_km/parameters/target_lock').write_text('0')
+            (self.tc_params/'target_lock').write_text('0')
         super().cleanup()
         if self.loaded_tc:
             self.record['drained'] = False
             self.save()
-            self.run(['rmmod', 'tclock_backend_km'], 'unload-tclock.log')
+            self.run(['rmmod', self.tc_module.stem], 'unload-tclock.log')
             self.loaded_tc = False
             self.faults()
             self.record['drained'] = True

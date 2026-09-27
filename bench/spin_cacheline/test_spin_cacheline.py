@@ -72,7 +72,7 @@ class CachelineTests(unittest.TestCase):
                     self.assertEqual(json.loads(result.stderr), dict(
                         layout=1, counts=2, run=threads,
                         submitted_iterations=threads * iterations,
-                        monotonic=threads + 1, thread_cputime=2 * threads))
+                        monotonic=threads + 2, thread_cputime=2 * threads))
 
     def test_post_work_survives_unused_result_without_memory_or_calls(self):
         binary = self.out / "post-work-fixture"
@@ -167,7 +167,7 @@ class CachelineTests(unittest.TestCase):
                 self.assertEqual(m["before"], m["after"])
 
     def test_atomic_admission_excludes_snapshots(self):
-        module = (WORKLOAD / "module.c").read_text()
+        module = (WORKLOAD / "runner.inc").read_text()
         start = module.index("static atomic_t sc_control")
         declaration_end = module.index(";", start) + 1
         helpers_start = module.index("static bool sc_run_enter", declaration_end)

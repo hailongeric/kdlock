@@ -53,6 +53,7 @@ static unsigned long raw_spin_lock_addr = 0x100, raw_spin_unlock_addr = 0x200;
 static unsigned long pinned_spin_lock_addr = 0x120, cold_spin_unlock_addr = 0x220;
 static unsigned long clobber_spin_lock_addr = 0x110, clobber_spin_unlock_addr = 0x210;
 static unsigned long clobber_mutex_lock_addr = 0x310, clobber_mutex_unlock_addr = 0x410;
+static unsigned long direct_mutex_lock_addr = 0x320, direct_mutex_unlock_addr = 0x420;
 static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;
 static struct mutex a, b;
 static struct task_struct native_peer = { .pid = 13 }, *nested_owner;
@@ -210,7 +211,9 @@ static int kd_mutex_nested_lock(struct mutex *lock)
 {
 	CHECK(track_nested_owner && lock == &b && current == &executor);
 	CHECK(active->control_call.phase == KD_CALL_ENTERED);
-	CHECK(active->regs.ip == mutex_lock_addr &&
+	CHECK((active->regs.ip == mutex_lock_addr ||
+	       active->regs.ip == clobber_mutex_lock_addr ||
+	       active->regs.ip == direct_mutex_lock_addr) &&
 	      active->regs.sp == (unsigned long)&waiter_stack[32]);
 	CHECK(!kd_exec_frame_lock_contains(active, (unsigned long)lock));
 	if (nested_owner) {
@@ -817,6 +820,11 @@ static void check_acquired_spin_native(void)
  * native peer wait. It resumes after lock(B), never after a remote unlock(B). */
 static void check_mutex_call_pair(void)
 {
+	/* Original Linux, captured kernel bridge and explicit module endpoints
+	 * must preserve the same ownership/continuation contract through FULL. */
+	const unsigned long locks[] = { mutex_lock_addr, clobber_mutex_lock_addr, direct_mutex_lock_addr };
+	const unsigned long unlocks[] = { mutex_unlock_addr, clobber_mutex_unlock_addr, direct_mutex_unlock_addr };
+	for (unsigned int endpoint = 0; endpoint < 3; endpoint++)
 	for (unsigned int contended = 0; contended < 2; contended++) {
 		struct kd_exec_frame f = frame(true);
 		struct pt_regs expected;
@@ -828,7 +836,7 @@ static void check_mutex_call_pair(void)
 		memset(waiter_stack, 0, sizeof(waiter_stack));
 		*word = 0x900;
 		memset(&f.regs, 0x5A, sizeof(f.regs));
-		f.regs.ip = mutex_lock_addr;
+		f.regs.ip = locks[endpoint];
 		f.regs.sp = (unsigned long)word;
 		f.regs.di = (unsigned long)&b;
 		expected = f.regs;
@@ -848,7 +856,7 @@ static void check_mutex_call_pair(void)
 		      f.logical_task == &waiter && !f.outer_unlock_seen);
 
 		*word = 0x901;
-		f.regs.ip = mutex_unlock_addr;
+		f.regs.ip = unlocks[endpoint];
 		f.regs.sp = (unsigned long)word;
 		expected = f.regs;
 		expected.ip = *word;
@@ -859,7 +867,7 @@ static void check_mutex_call_pair(void)
 		CHECK(f.jit_lock_addr[0] == f.outer_lock_addr && !f.jit_lock_released[0]);
 		CHECK(f.control_call.phase == KD_CALL_COMPLETE);
 
-		f.regs.ip = mutex_unlock_addr;
+		f.regs.ip = unlocks[endpoint];
 		f.regs.sp = (unsigned long)word;
 		f.regs.di = f.outer_lock_addr;
 		expected = f.regs;

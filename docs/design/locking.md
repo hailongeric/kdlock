@@ -372,6 +372,15 @@ This is not a different physical lock protocol.
 
 ## 5. Mutex Delegation Protocol
 
+Explicit callers use `KD_MUTEX_DIRECT_LOCK/UNLOCK` and prepare the named
+post-lock continuation with `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`.
+The exported module entry points use ABI2's existing lock/SP/IP/BP shell; no
+global interception or extra wrapper input is required. Translation, admission
+and runtime control tables recognize both direct endpoints and the captured
+kernel bridge aliases. Pristine COMPLETE metadata names the direct unlock;
+bridge aliases continue through checked generic FULL handling. All forms keep
+the original Linux mutex owner and final ACK protocol below.
+
 ### 5.1 Physical Lock And Scheduling Gate
 
 `kd_mutex_shadows[]` maps original mutex addresses to 1024 bounded scheduler

@@ -122,21 +122,22 @@ class Session:
     def publication(self):
         """Check a stable NORMAL entry and its image; actual execution is separate."""
         r = registry()
+        lock_kind = 2 if self.record.get("lock_kind") == "mutex" else 1
         if "root_entry" in self.record:
             # Nested regressions can register continuation entries during the
             # measured JIT. Validate the exact prepared root, never whichever
             # registry row was most recently inserted.
             begin, end = self.record["entry_range"]
-            require(all(e["pid"] == 0 and e["lock_kind"] == 1 and
+            require(all(e["pid"] == 0 and e["lock_kind"] == lock_kind and
                         begin <= e["entry"] < end and e["status"] in (-1, 0)
                         for e in r), "unexpected nested registration")
             self.record["nested_entries"] = [e for e in r if e["entry"] != self.record["root_entry"]]
             r = [e for e in r if e["entry"] == self.record["root_entry"]]
         require(len(r) == 1 and r[0]["status"] == 0 and r[0]["pid"] == 0 and
-                r[0]["lock_kind"] == 1 and r[0]["code"] != 0, "entry is not NORMAL")
+                r[0]["lock_kind"] == lock_kind and r[0]["code"] != 0, "entry is not NORMAL")
         entry = r[0]
         if "caller_abi" in self.record:
-            require(entry["entry_abi"] == (self.record["caller_abi"] == "clobber"),
+            require(entry["entry_abi"] == (lock_kind if self.record["caller_abi"] == "clobber" else 0),
                     "published entry has the wrong caller ABI")
         begin, end = self.record["entry_range"]
         require(begin <= entry["entry"] < end, "published entry belongs to another CS")
@@ -204,7 +205,7 @@ class Session:
             require(self.record["retired"] == dict(state=2, modules=0, frames=0, writers=0),
                     "retirement incomplete", "UNDRAINED")
         if self.loaded_source:
-            self.run(["rmmod", "spin_cacheline"], "unload-source.log")
+            self.run(["rmmod", self.workload_module.stem], "unload-source.log")
             self.loaded_source = False
         if self.loaded_kd:
             self.run(["rmmod", "kdlock_km"], "unload-kdlock.log")

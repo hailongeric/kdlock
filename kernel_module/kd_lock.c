@@ -34,6 +34,7 @@
 extern struct kd_comm_key kd_spin_target;
 #include "kd_lock.h"
 #include "kd_mutex.h"
+#include "kd_mutex_direct.h"
 #include "kd_spin_fast.h"
 #include "kd_spinlock.h"
 #include "utils.h"

@@ -103,6 +103,10 @@ RDI 使用读写约束，元数据寄存器为输出，其余 GPR、`cc`、`memo
 `ASM_CALL_CONSTRAINT` 保留，RSP/RBP 必须满足调用边界。跨边界活跃值由
 调用者编译器保存。函数级 callee-saved 序言仍可能存在，不承诺消除所有 push/pop。
 IRQ/BH/irqsave/trylock 和显式 nested 入口保持原契约；普通 mutex 使用独立 ABI=2。
+显式 mutex 调用使用 `KD_MUTEX_DIRECT_LOCK/UNLOCK` 和模块导出的
+`kd_mutex_direct_{lock,unlock}_clobber_v1`，由 `kd_mutex_prepare()` 登记确切续点。
+COMPLETE 元数据选择直接 unlock；现有内核 bridge 别名仍被识别并通过通用 FULL 处理。
+锁/SP/IP/BP 及两字 wrapper 输入保持原 ABI2，global interception 仍关闭。
 provider 构建要求 `KD_SPIN_CLOBBER_V1`；旧内核安装分支已删除，缺失接口时报错。
 这不删除同一内核上的旧调用者支持：`KD_SPIN_LEGACY_CALLER` 对照、显式 nested
 入口和 FULL 续跑仍有实际消费者，不能把它们当成废代码。

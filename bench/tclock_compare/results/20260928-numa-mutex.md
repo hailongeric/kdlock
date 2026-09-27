@@ -1,6 +1,6 @@
 # 2026-09-28 NUMA 与 mutex 分阶段优化
 
-本报告仅把已完成的阶段记为通过；mutex 三方基线及后续优化仍待验证。
+本报告仅把已完成的阶段记为通过；已建立 mutex 三方初始基线，独立优化仍待验证。
 目标是各配置 KD 暖峰值至少达到同期 TCLock 的 90%，并保护低线程性能。
 
 ## 环境与口径
@@ -133,6 +133,41 @@ Linux16 为 2.906 / 2.929 / 2.951，36 为 1.624 / 1.635 / 1.881；完整值与 
 
 完整原始证据 `numa-20260928-spin-full`，host `spin-full.tar.gz`，SHA256
 `407e35a6021294124133cab12a5f7c1d645392aef128f39497bc81b5fa410500`。
+
+## 真正三方 mutex cacheline 初始基线
+
+独立 `mutex_cacheline`/`run_mutex.py` 生成 `mc_body_N`，复用正文及计时工具，操作内部无
+运行时类型分支。Linux 直接调用原始 mutex 函数；KD 使用显式 ABI2 clobber 符号和 prepare，
+没有启用 global interception；TCLock 使用固定提交的实际普通 mutex 实现。
+TCLock 的 task 扩展字段改为预分配、固定 CPU worker 登记的 context，保留 parking/wakeup、
+NUMA/WWJUMP 和六寄存器换栈；原源码及逐文件 SHA256、移植 diff 随仓库保存。
+上下文引用只在整组 pthread_join、task 退出及队列/栈排空后释放。
+
+基础及直接相关共 8 组通过。首次两个旧 fixture 的端点假设导致失败（一个未使用变量编译错误，
+一个固定旧端点断言），修正后单独重跑两组及基础通过，保留初次失败日志。
+包含真实 wrapper ABI2 的 COMPLETE/FULL、直接/bridge 准入、三种 mutex 端点的嵌套 owner/CALL
+保留、registry 退休，以及 TCLock 原 C 内联汇编的 128 次换栈与 parking CAS 竞争检查。
+42 项运行器测试、15 项共享 client/计时测试通过。加载前实际 TCLock ELF 的换栈/隐式 helper
+寄存器审核通过；保留上游换栈造成的 objtool 警告，没有修改内核缓解或 frame-pointer 配置。
+
+首次 27/27 场通过：
+
+| threads | Linux | TCLock mutex | KD mutex |
+| --- | --- | --- | --- |
+| 1 | 27.980 / 27.982 / 27.988 | 35.110 / 35.116 / 35.131 | 2.143 / 2.149 / 2.152 |
+| 16 | 6.716 / 7.190 / 7.227 | 4.544 / 4.568 / 4.704 | 0.788 / 0.790 / 0.804 |
+| 36 | 5.224 / 5.359 / 5.646 | 4.440 / 4.477 / 4.631 | 0.524 / 0.538 / 0.598 |
+
+KD 竞争正例有返回正文证据：16 线程 JIT 6.37%–6.78%，36 线程 29.56%–32.51%。
+TCLock 测量期真实委托比例 97.79%–98.76%；整个会话的 parking 计数 4–159，证明保留路径实际执行。
+这些比例是全测量段，parking 是含预热的累计，均不是最高窗口专属。
+KD 基线仍有每次 task 分配/全局注册锁、shadow 全局锁和通用 frame 路径；NUMA 编译 on，
+但该 mutex 队列尚为 FIFO，不能把 spin 的 grouping 当作 mutex 已实现。
+90% 目标尚未达到。本轮先完成 cacheline 正确性和基线，再逐项优化，不提前用 hash 成绩代替。
+
+证据 `numa-20260928-mutex-baseline-{screen,validation}`；host `mutex-baseline-screen.tar.gz`，
+SHA256 `03a41bf49f20c627609f879a3ee3d077601ea99e1468f4be5b35b58471b0eae3`；
+client/runner 日志另存 `bench/.tmp/numa-20260928/mutex-bench-tests.log`。
 
 ## 证据
 

@@ -106,13 +106,15 @@ int fixture_ioctl(int fd, unsigned long cmd, ...)
 	const char *fault = getenv("SC_FIXTURE_FAULT");
 	if (fd != 100)
 		return -1;
+	if (cmd == SC_WORKER_REGISTER || cmd == SC_WORKERS_DRAIN)
+		return 0;
 	va_start(args, cmd);
 	packet = va_arg(args, void *);
 	va_end(args);
 	if (cmd == SC_LAYOUT) {
 		struct sc_layout *l = packet;
 		layout_calls++;
-		*l = (struct sc_layout){ .version = SC_VERSION, .line_bytes = 64, .slots = 16,
+		*l = (struct sc_layout){ .version = SC_VERSION, .line_bytes = 64, .slots = 16, .lock_kind = 1,
 			.lock_bytes = sizeof(sc_lock), .lock_addr = (uintptr_t)&sc_lock,
 			.control_addr = (uintptr_t)control, .data_addr = (uintptr_t)sc_data };
 		for (int i = 0; i < 16; i++)

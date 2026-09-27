@@ -21,7 +21,7 @@ import kernel_identity
 import bench_runtime as runtime
 from bench_runtime import HERE, WORKLOAD, PROVIDER, require, command, digest, Failure
 from summarize import write_json, csv_file, valid
-from session import BackendSession, TC_MODULE, GUARD_MODULE
+from session import BackendSession, TC_MODULE, TC_MUTEX_MODULE, GUARD_MODULE
 from context_audit import audit as audit_context
 
 DEFAULT_SPIN_ENTRY_RATIO_LIMIT = 2
@@ -94,6 +94,7 @@ def audit_provider_ubsan(out, policy):
 def idle():
     runtime.idle()
     require(not Path('/sys/module/tclock_backend_km').exists(), 'existing TCLock module')
+    require(not Path('/sys/module/tclock_mutex_backend_km').exists(), 'existing TCLock mutex module')
     require(not Path('/sys/module/tc_allocator_guard').exists(), 'existing allocator guard')
 
 
@@ -128,6 +129,7 @@ def make_plan(args):
     cpus = worker_cpus(args)
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
+    lock_kind = getattr(args, 'lock_kind', 'spin')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1, 16])
     # Admission is adaptive only. Retain the fixed metadata label so reports
     # keep current results separate from historically frozen admission modes.
@@ -142,10 +144,10 @@ def make_plan(args):
             suffix = f'-{mode}' if backend == 'kdlock' else ''
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
-                api_mode='direct', workload=workload, hotlock_mode=mode,
-                caller_shell='cold_clobber' if backend == 'kdlock' else 'c',
-                cookie_storage='percpu_direct_gate' if backend == 'kdlock' else 'not_applicable',
-                cpu_heat_policy='mcs_reset1024_shift10_lock512_head6' if backend == 'kdlock' else 'not_applicable',
+                api_mode='direct', workload=workload, lock_kind=lock_kind, hotlock_mode=mode,
+                caller_shell=('mutex_clobber' if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
+                cookie_storage='percpu_direct_gate' if backend == 'kdlock' and lock_kind == 'spin' else 'not_applicable',
+                cpu_heat_policy=('mutex_rate1024' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
                 kd_provider_ubsan=provider_ubsan if backend == 'kdlock' else 'not_applicable',
@@ -209,7 +211,7 @@ def report(out):
         # Keep old percentage and current shifted-entry limits as separate
         # identities, including zero's bypass. Never pool tuning candidates.
         mode = r.get('hotlock_mode', 'unrecorded')
-        groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode,
+        groups.setdefault((r.get('lock_kind', 'spin'), r['cachelines'], r['threads'], r['arm'], mode,
                            r.get('caller_shell', 'unrecorded'),
                            r.get('cookie_storage', 'unrecorded'),
                            r.get('cpu_heat_policy', 'unrecorded'),
@@ -224,9 +226,9 @@ def report(out):
                            tuple(r.get('cpus', range(r['threads'])))), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, cpus), rows in groups.items():
+    for (lock_kind, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, cpus), rows in groups.items():
         good = [r for r in rows if valid(r)]
-        row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
+        row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm, lock_kind=lock_kind,
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
                    hotlock_mode=mode, caller_shell=shell,
@@ -260,11 +262,11 @@ def report(out):
             100 * (max(rates) - min(rates)) / row['median_throughput_ops_s']
             if len(rates) > 1 else None)
         summary.append(row)
-    natives = {(r['cachelines'], r['threads'], tuple(r[k] for k in TIMING_FIELDS), tuple(r['cpus'])):
+    natives = {(r['lock_kind'], r['cachelines'], r['threads'], tuple(r[k] for k in TIMING_FIELDS), tuple(r['cpus'])):
                r['best_throughput_ops_s']
                for r in summary if r['arm'] == 'native'}
     for row in summary:
-        native = natives.get((row['cachelines'], row['threads'],
+        native = natives.get((row['lock_kind'], row['cachelines'], row['threads'],
                               tuple(row[k] for k in TIMING_FIELDS), tuple(row['cpus'])))
         row['throughput_over_linux'] = row['best_throughput_ops_s']/native if native and row['valid'] else None
     write_json(out/'summary.json', summary)
@@ -272,7 +274,7 @@ def report(out):
         csv_file(out/'summary.csv', list(summary[0]), summary)
 
 
-def main():
+def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
@@ -316,6 +318,12 @@ def main():
                         f'unsigned power of two >=2 (default: {DEFAULT_SPIN_ENTRY_RATIO_LIMIT}; '
                         '0 bypasses only ratio)')
     args = p.parse_args()
+    args.lock_kind = lock_kind
+    require(lock_kind in ('spin', 'mutex'), 'unknown lock kind')
+    require(lock_kind != 'mutex' or args.scenario == 'plain',
+            'mutex benchmark supports ordinary operations only')
+    workload_dir = ROOT/'workload_modules/mutex_cacheline' if lock_kind == 'mutex' else WORKLOAD
+    tc_module = TC_MUTEX_MODULE if lock_kind == 'mutex' else TC_MODULE
     require(args.scenario == "plain" or (args.backends == ["kdlock"] and args.workload == "cacheline"),
             "nested protocol regression requires KD cacheline workload")
     require(args.workload != 'rcuht' or args.cachelines is None,
@@ -373,15 +381,17 @@ def main():
             # Keep backend and workload build logs distinct: the latter uses
             # build-tclock.log below and must not overwrite backend evidence.
             builds += [('tclock-backend',['make','-C',ROOT/'tclock_backend',
-                               f'TCLOCK_NUMA={int(args.numa == "on")}'])]
-            binaries += [TC_MODULE]
+                               f'TCLOCK_NUMA={int(args.numa == "on")}',
+                               f'TCLOCK_MUTEX={int(lock_kind == "mutex")}'])]
+            binaries += [tc_module]
         for name, build in builds:
             command([*build,f'KDIR={args.kernel_source}'],out/f'build-{name}.log',timeout=180)
         # Verify the compiled configuration, including rebuilds after a flag change.
-        for backend, binary in (('kdlock', PROVIDER), ('tclock', TC_MODULE)):
+        for backend, binary in (('kdlock', PROVIDER), ('tclock', tc_module)):
             if backend not in args.backends:
                 continue
-            numa_value = command(['modinfo', '-F', 'spin_numa', binary],
+            numa_field = 'mutex_numa' if backend == 'tclock' and lock_kind == 'mutex' else 'spin_numa'
+            numa_value = command(['modinfo', '-F', numa_field, binary],
                                  out/f'{backend}-numa.txt').strip()
             require(numa_value == str(int(args.numa == 'on')), 'NUMA build identity differs')
             if backend == 'kdlock':
@@ -392,33 +402,35 @@ def main():
         if 'tclock' in args.backends:
             # Check the actual ELF: changing a Kbuild variable must not leave a
             # stale instrumented backend in a run labelled as unsanitized.
-            imported = command(['nm', '-u', TC_MODULE], out/'imports-tclock-backend.txt')
+            imported = command(['nm', '-u', tc_module], out/'imports-tclock-backend.txt')
             require('__ubsan_' not in imported, 'TCLock backend still imports UBSAN handlers')
-            symbols = command(['nm', '-a', TC_MODULE], out/'symbols-tclock-backend.txt')
+            symbols = command(['nm', '-a', tc_module], out/'symbols-tclock-backend.txt')
             require(not any(name in symbols for name in
                             ('tc_delegated', 'tc_completed', 'tc_batches')),
                     'TCLock still contains added execution counters')
-            disassembly = command(['objdump', '-dr', '--no-show-raw-insn', TC_MODULE],
+            disassembly = command(['objdump', '-dr', '--no-show-raw-insn', tc_module],
                                   out/'tclock-backend.txt')
-            write_json(out/'tclock-context-audit.json', audit_context(disassembly))
+            write_json(out/'tclock-context-audit.json', audit_context(disassembly, lock_kind))
         variants = {}
         # Each backend has one caller variant per frozen build.
         for backend in dict.fromkeys(s['arm'] for s in plan):
             build_name = backend
             folder = out/'variants'/build_name; folder.mkdir(parents=True)
-            for src in WORKLOAD.iterdir():
+            for src in workload_dir.iterdir():
                 if src.suffix in ('.c','.h','.inc') or src.name == 'Makefile':
                     shutil.copyfile(src, folder/src.name)
             extra = []
             if backend != 'native':
-                module = PROVIDER if backend == 'kdlock' else TC_MODULE
+                module = PROVIDER if backend == 'kdlock' else tc_module
                 extra = [f'KBUILD_EXTRA_SYMBOLS={module.parent / "Module.symvers"}']
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
-                     f'KDLOCK_INCLUDE={ROOT / "include"}', *extra],
+                     f'KDLOCK_INCLUDE={ROOT / "include"}',
+                     f'SC_SHARED={WORKLOAD}',
+                     f'TCLOCK_INCLUDE={ROOT / "tclock_backend/include"}', *extra],
                     out/f'build-{build_name}.log',timeout=120)
-            variants[backend] = binary = folder/'spin_cacheline.ko'
+            variants[backend] = binary = folder/f'{lock_kind}_cacheline.ko'
             command(['objdump','-dr',binary],out/f'caller-{build_name}.txt')
             imported = command(['nm', '-u', binary], out/f'imports-{build_name}.txt')
             require('__ubsan_' not in imported, 'direct workload still imports UBSAN handlers')
@@ -428,7 +440,16 @@ def main():
                                    'kd_hotlock_spin_entries', 'kd_spin_lock_pinned_clobber_v1',
                                    'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
-            if backend == 'kdlock':
+            if lock_kind == 'mutex':
+                expected = {'kdlock': ('kd_mutex_direct_lock_clobber_v1',
+                                       'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_prepare'),
+                            'tclock': ('komb_mutex_lock', 'komb_mutex_unlock',
+                                       'tc_mutex_worker_register', 'tc_mutex_workers_drain'),
+                            'native': ('mutex_lock', 'mutex_unlock')}[backend]
+                require('kd_mutex_lock_clobber_v1' not in imported.split() and
+                        'kd_mutex_unlock_clobber_v1' not in imported.split(),
+                        'workload still imports experimental kernel mutex bridge')
+            if backend == 'kdlock' and lock_kind == 'spin':
                 require('kd_spin_direct_native_lock' not in imported.split(),
                         'cold caller still imports the out-of-line CAS entry')
                 require('kd_spin_direct_native_unlock' not in imported.split(),

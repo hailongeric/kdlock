@@ -111,6 +111,42 @@ void __kd_mutex_unlock_clobber_v1(struct mutex *lock, unsigned long sp,
 	__kd_mutex_unlock(lock, sp, ip);
 }
 
+/* Explicit module callers work with global interception disabled. Keep the
+ * captured kernel bridge aliases above for existing generic FULL exits. */
+__attribute__((noipa)) noinline notrace void
+kd_mutex_direct_lock_clobber_v1(struct mutex *lock, unsigned long sp,
+			      unsigned long ip, unsigned long bp)
+{
+	kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+}
+EXPORT_SYMBOL_GPL(kd_mutex_direct_lock_clobber_v1);
+
+__attribute__((noipa)) noinline notrace void
+kd_mutex_direct_unlock_clobber_v1(struct mutex *lock, unsigned long sp,
+				unsigned long ip, unsigned long bp)
+{
+	__kd_mutex_unlock(lock, sp, ip);
+}
+EXPORT_SYMBOL_GPL(kd_mutex_direct_unlock_clobber_v1);
+
+int kd_mutex_prepare(struct mutex *lock, unsigned long ip, unsigned int abi)
+{
+	struct kd_exe_info *exe;
+
+	if (!lock || !ip || abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+		return -EINVAL;
+	if (!kd_source_is_open())
+		return -ESHUTDOWN;
+	kd_exe_add_abi(0, ip, KD_EXE_LOCK_MUTEX, abi);
+	exe = kd_get_exe(0, ip);
+	if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED ||
+	    exe->RIP != ip || exe->entry_abi != abi ||
+	    exe->lock_kind != KD_EXE_LOCK_MUTEX || !exe->code_block)
+		return -EINVAL;
+	return READ_ONCE(exe->status_code) == KD_EXE_NATIVE_ONLY ? -EOPNOTSUPP : 0;
+}
+EXPORT_SYMBOL_GPL(kd_mutex_prepare);
+
 static int kd_jit_begin_call(struct kd_exec_frame *frame, struct pt_regs *regs)
 {
 	if (!frame || !regs || !regs->sp || !kd_exec_frame_validate(frame))

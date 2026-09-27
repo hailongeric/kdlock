@@ -10,12 +10,15 @@ struct sc_slot {
 } __attribute__((aligned(SC_LINE_BYTES)));
 
 static struct sc_slot sc_data[SC_SLOTS];
+#ifndef SC_MUTEX_WORKLOAD
 #include "direct.h"
 #ifdef SC_DIRECT_KDLOCK
 static kd_spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 #else
 static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 #endif
+
+#endif /* SC_MUTEX_WORKLOAD supplies its own lock shell. */
 
 #include "scenario.h"
 
@@ -65,8 +68,11 @@ static inline int sc_prepare(unsigned int lines)
 #endif
 	default: return -EINVAL;
 	}
-	return kd_spin_prepare(&sc_lock, entry,
-			       KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+#ifdef SC_MUTEX_WORKLOAD
+	return kd_mutex_prepare(&sc_lock, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+#else
+	return kd_spin_prepare(&sc_lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+#endif
 #else
 #ifdef SC_HASH_PAYLOAD
 	return lines == 0 ? 0 : -EINVAL;

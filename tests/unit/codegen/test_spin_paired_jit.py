@@ -95,7 +95,9 @@ def main():
                'kd_spin_direct_native_unlock': 0x6000,
                'kd_spin_lock': 0x5000,
                'kd_mutex_lock_clobber_v1': 0x3200,
-               'kd_mutex_unlock_clobber_v1': 0x4000}
+               'kd_mutex_unlock_clobber_v1': 0x4200,
+               'kd_mutex_direct_lock_clobber_v1': 0x3300,
+               'kd_mutex_direct_unlock_clobber_v1': 0x4000}
     # Each failed prerequisite must reconstruct exactly one CALL, including
     # immutable endpoint mismatch, disabled completion, and all three words.
     cases = [(False, failure, abi) for abi in (1, 2) for failure in range(7)]

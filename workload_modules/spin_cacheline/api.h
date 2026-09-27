@@ -5,7 +5,7 @@
 #include <linux/ioctl.h>
 #include <linux/types.h>
 
-#define SC_VERSION 2
+#define SC_VERSION 3
 #define SC_WORKLOAD_CACHELINE 0
 #define SC_WORKLOAD_HASH 1
 #define SC_HASH_BUCKETS 1024
@@ -26,7 +26,7 @@ struct sc_layout {
 	__u64 lock_addr, control_addr, data_addr;
 	__u64 slot_addr[SC_SLOTS];
 	/* resched is now always zero; preserve the v2 layout and old run metadata. */
-	__u32 workload, buckets, entries, key_range, resched, reserved;
+	__u32 workload, buckets, entries, key_range, resched, lock_kind;
 };
 
 struct sc_run {
@@ -67,5 +67,8 @@ struct sc_progress {
 #define SC_RUN_TIMED _IOWR(0xB7, 5, struct sc_timed_run)
 /* Live telemetry only: this never reads the target lock or payload counters. */
 #define SC_PROGRESS _IOR(0xB7, 6, struct sc_progress)
+/* Registration is before readiness; drain is after joining every worker. */
+#define SC_WORKER_REGISTER _IO(0xB7, 7)
+#define SC_WORKERS_DRAIN _IO(0xB7, 8)
 
 #endif

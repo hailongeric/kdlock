@@ -7,12 +7,31 @@
 不使用 kdlock 的 shadow lock、JIT、翻译注册表、寄存器包或 daemon。
 
 来源固定为 [TCLocks](https://github.com/rs3lab/TCLocks) 的提交
-`bbfb9f00a12af51dff6ca291cb9829a82960c2ef`。`upstream/` 保留四个未修改文件，
+`bbfb9f00a12af51dff6ca291cb9829a82960c2ef`。`upstream/` 保留六个未修改文件，
 `UPSTREAM.json` 记录哈希；`port.patch` 记录移植差异。保留原 GPL-2.0 及作者声明。
-四个文件均来自该提交的 `src/kernel/rcuht/` 子树；差异文件用于审查，不是直接
+六个文件均来自该提交的 `src/kernel/rcuht/` 子树；差异文件用于审查，不是直接
 应用到另一内核的安装补丁。
 
-## 移植边界
+## 普通 mutex 独立端口
+
+`TCLOCK_MUTEX=1` 构建 `tclock_mutex_backend_km.ko`；`komb_mutex.c` 来自同一上游提交，
+保持普通 mutex 的 parking/wakeup、NUMA 暂存链、WWJUMP 和真实 waiter 栈切换。
+它是独立 mutex 算法，不使用上述 spin API。未移植上游无实现的 interruptible/killable/IO
+入口及 rwsem writer 入口，也不向通用内核调用者开放。
+
+上游 task_struct 扩展字段由 `mutex_compat.h` 中预分配的每 CPU context 代替。
+客户端在固定单 CPU 亲和及命名完成后、发布 ready 前注册；一个 CPU 只接受一个 worker。
+`get_shadow_stack_ptr/get_komb_mutex_node` 保持隐式 CALL 的 RAX/flags 限制，实际 ELF 在加载前检查。
+上下文和 task 引用保持到整个 cohort pthread_join 完成且队列/锁/栈状态排空；退出尾部仍存活的
+线程返回 EBUSY，客户端在计时外有限重试，不强制释放。NUMA 本地栈在模块初始化时分配。
+
+普通操作仍由上游内部管理抢占。`parks` 统计真实 parking 路径；每个返回的 combiner batch
+只累计一次 `batches/delegated`，用于证明三方 mutex 比较确实执行 TCLock 委托。
+计数在排空后作前后差，不等于峰值窗口专属委托占比；spin 后端继续没有这些新增计数。
+KD 使用其已选的 pinned-waiter 策略，TCLock mutex 支持 parking，二者等待政策不同。
+原 Linux arm 调用原始 `mutex_lock/unlock`，绕过实验 caller-clobber 宏。
+
+## Spin 移植边界
 
 - 等待节点采用纯轮询，已删除旧 `KERNEL_SYNCSTRESS` 等待宏中的调度分支。
   普通入口由接口层管理 preemption。
@@ -21,7 +40,7 @@
   样例，不提供 IRQ/嵌套锁入口保证。三种 direct workload 同样关闭 UBSAN；
   运行内核和 Linux 原生锁内部仍保持原配置。
 - 保留 WWJUMP、NUMA 队列选择和六条 cacheline 预取。批次上限为上游内核默认
-  1024，KD当前为256；上游 rcuht 自定义的 262144 不用于本轮。
+  1024，KD当前为1024；上游 rcuht 自定义的 262144 不用于本轮。
 - 随后按用户要求删除 `need_resched()` 批次截断条件，并删除公共哈希表循环的
   `cond_resched()` 调度点和开关。代理批次仍按后继可用性、IRQ 节点及额度结束。
   这是实验策略变更，与上游原有批次退出条件存在差异。

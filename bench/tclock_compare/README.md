@@ -15,6 +15,15 @@ KD冷获取内联首次CAS，竞争时使用原生pending/MCS队列；热获取�
 自适应策略及寄存器契约分别见[执行流](../../docs/JIT_EXECUTION.md#21-热度与角色)和
 [锁协议](../../docs/design/locking.md)。
 
+普通 mutex 使用独立入口 `run_mutex.py` 和 `workload_modules/mutex_cacheline`，
+编译出 `mc_body_N`，复用 payload、计时与结果校验；单次操作中没有 `is_mutex` 分支。
+Linux 调用原始 `mutex_lock/unlock`，KD 调用 `KD_MUTEX_DIRECT_LOCK/UNLOCK`（ABI2），
+TCLock 调用实际上游 `komb_mutex_lock/unlock`。KD global interception 继续关闭。
+TCLock worker 注册和整组排空见[端口边界](../../tclock_backend/README.md#普通-mutex-独立端口)。
+mutex 的 `lock_kind` 纳入汇总身份；TCLock 保留委托次数证据，KD 继续要求返回正文 JIT witness。
+先验证 cacheline 基线和各独立优化，再使用同一入口的 `--workload rcuht`。
+原 spin/hash 入口及成绩不作为 mutex 成绩。
+
 当前只支持adaptive，策略标识为`mcs_reset1024_shift10_lock512_head6`，默认`spin_entry_ratio_limit=2`。
 每1024次MCS发布比较`(entries >> 10) < 2`，随后清零本CPU的入口和MCS计数；
 默认接受该窗口内至多2047次入口，约为MCS比例超过一半，不再使用旧100%门槛或前次计数快照。
