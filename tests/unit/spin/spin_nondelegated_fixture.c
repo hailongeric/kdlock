@@ -82,7 +82,9 @@ static struct kd_spin_node *decode_tail(u32 tail) { return &pool[(tail >> 18) - 
 static bool kd_spin_delegate = true;
 static unsigned int thread_count;
 #include "spin_mcs_policy.h"
-static _Thread_local unsigned long mcs_samples;
+/* The production counter resets per batch; this fixture also keeps an
+ * independent lifetime total to verify every physical tail publication. */
+static _Thread_local unsigned long mcs_samples, mcs_entries;
 #define kd_hotlock_spin_mcs mcs_samples
 static _Thread_local unsigned int linked_reads, snapshot_reads, veto_calls;
 static _Thread_local struct qspinlock *scripted_word;
@@ -90,7 +92,13 @@ static _Thread_local unsigned int scripted_followers;
 static _Thread_local void (*link_hook)(void);
 static _Thread_local unsigned long physical_entries;
 static void kd_hotlock_record_spin_mcs_pinned(void)
-{ if (!(++mcs_samples & (KD_HOTLOCK_SPIN_MCS_INTERVAL-1U))) rate_hot=1; }
+{
+ mcs_entries++;
+ if (++mcs_samples >= KD_HOTLOCK_SPIN_MCS_INTERVAL) {
+  mcs_samples=0;
+  rate_hot=1;
+ }
+}
 static bool kd_hotlock_spin_cpu_hot_pinned(void) { return rate_hot != 0; }
 /* The infrastructure fixture executes this header helper's real body. */
 static void kd_hotlock_cool_spin_pinned(void)
@@ -171,13 +179,14 @@ static void *worker(void *arg)
  }
  /* One initial CAS, and at most one queue-tail claim CAS per operation.
   * Failed contender retries must be loads/local waits, not global RMWs. */
- assert(cas_calls>=50000 && cas_calls<=100000 && swaps==queued && mcs_samples==queued);
- assert(physical_entries==50000 && mcs_samples<=physical_entries);
+ assert(cas_calls>=50000 && cas_calls<=100000 && swaps==queued && mcs_entries==queued);
+ assert(mcs_samples==mcs_entries%KD_HOTLOCK_SPIN_MCS_INTERVAL);
+ assert(physical_entries==50000 && mcs_entries<=physical_entries);
  /* A native-head veto may cool the gate; accounting and ownership stay exact. */
- assert(!rate_hot || mcs_samples>=KD_HOTLOCK_SPIN_MCS_INTERVAL);
+ assert(!rate_hot || mcs_entries>=KD_HOTLOCK_SPIN_MCS_INTERVAL);
  __atomic_fetch_add(&queue_total, queued, __ATOMIC_RELAXED);
  __atomic_fetch_add(&read_total, local_reads, __ATOMIC_RELAXED);
- __atomic_fetch_add(&sample_total, mcs_samples, __ATOMIC_RELAXED);
+ __atomic_fetch_add(&sample_total, mcs_entries, __ATOMIC_RELAXED);
  return NULL;
 }
 static void link_chain(unsigned int followers)
@@ -190,7 +199,7 @@ static void link_chain(unsigned int followers)
 }
 static void prepare_qualification(void)
 {
- mcs_samples=KD_HOTLOCK_SPIN_MCS_INTERVAL; rate_hot=1;
+ mcs_samples=0; rate_hot=1;
  linked_reads=snapshot_reads=veto_calls=0;
 }
 static struct qspinlock *changing_word;
@@ -253,13 +262,13 @@ static void queue_qualification(void)
   mcs_samples=KD_HOTLOCK_SPIN_MCS_INTERVAL-1; rate_hot=0; states[0].node_count=0;
   kd_spin_acquire_nondelegated_contended(&word,_Q_TAIL_MASK_HL);
   assert(!scripted_word && word.locked==1 && !states[0].node_count && pins==1);
-  assert(mcs_samples==KD_HOTLOCK_SPIN_MCS_INTERVAL && snapshot_reads==1);
+  assert(!mcs_samples && snapshot_reads==1);
   assert(rate_hot==(n>=6) && veto_calls==(n<6));
   assert(linked_reads==(n<6 ? n : 6));
   if(n) assert(!pool[1][0].locked);
   for(unsigned int i=2;i<=n;i++) assert(pool[i][0].locked);
  }
- scripted_followers=0; changing_word=NULL; pins=0; rate_hot=0; mcs_samples=0;
+ scripted_followers=0; changing_word=NULL; pins=0; rate_hot=0; mcs_samples=mcs_entries=0;
  linked_reads=snapshot_reads=veto_calls=0; queued=swaps=cas_calls=local_reads=0;
 }
 int main(int argc, char **argv)
@@ -272,7 +281,7 @@ int main(int argc, char **argv)
  /* Delegation-off preserves the protocol but disables CPU statistics. */
  struct qspinlock disabled={0};
  kd_spin_delegate=false;
- assert(!xchg_tail(&disabled,1U<<16) && disabled.tail==1 && !mcs_samples);
+ assert(!xchg_tail(&disabled,1U<<16) && disabled.tail==1 && !mcs_samples && !mcs_entries);
  kd_spin_delegate=true; queued=swaps=0;
  pthread_barrier_init(&start, NULL, thread_count);
  for (unsigned long i=0;i<thread_count;i++) assert(!pthread_create(&threads[i], NULL, worker, (void *)i));

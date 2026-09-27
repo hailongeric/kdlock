@@ -36,11 +36,6 @@ struct kd_hotlock_table
   u16 buckets[KD_HOTLOCK_BUCKETS], used;
   struct kd_hotlock_entry entries[KD_HOTLOCK_ENTRIES];
 };
-/* Previous CPU-local totals for the shared spin sampling interval. */
-struct kd_hotlock_spin_ratio
-{
-  unsigned long entry_begin, mcs_begin;
-};
 struct kd_hotlock_cpu
 {
   struct kd_hotlock_table tables[2];
@@ -49,17 +44,18 @@ struct kd_hotlock_cpu
   unsigned int mutex_rate_hot;
 } ____cacheline_aligned;
 static struct kd_hotlock_cpu __percpu *kd_hotlock_cpu;
-static DEFINE_PER_CPU(struct kd_hotlock_spin_ratio, kd_hotlock_spin_ratio);
 DEFINE_PER_CPU(unsigned int, kd_hotlock_spin_gate);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_gate);
+/* Count physical attempts on their executor CPU, including nested acquisitions
+ * and outer reacquires. Root fallbacks retain their first count. */
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_entries);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
-/* Count physical acquisition attempts on their executor CPU, including nested
- * acquisitions and outer reacquires. Root fallbacks retain their first count. */
-static unsigned int spin_contention_pct = 100;
-module_param(spin_contention_pct, uint, 0444);
-MODULE_PARM_DESC(spin_contention_pct, "Minimum MCS publications per 100 spin entries; 0 disables ratio admission");
+/* At 512 MCS publications, accept fewer than this many 512-entry blocks.
+ * A limit of 2 admits 512..1023 entries; zero bypasses only the ratio. */
+static unsigned int spin_entry_ratio_limit = 2;
+module_param(spin_entry_ratio_limit, uint, 0444);
+MODULE_PARM_DESC(spin_entry_ratio_limit, "Exclusive (spin entries >> 9) limit per 512 MCS publications; 0 or a power of two >= 2");
 static bool hotlock_stats;
 module_param(hotlock_stats, bool, 0444);
 MODULE_PARM_DESC(hotlock_stats, "Print final CPU-local exact lock counters after provider drain");
@@ -110,15 +106,14 @@ static struct kd_hotlock_entry *kd_hotlock_insert(struct kd_hotlock_table *t,
   t->buckets[bucket] = t->used;
   return slot;
 }
-/* Spin compares its entry/publication deltas before reading the clock, once
- * per shared interval. Heat is advisory; missed/repeated IRQ boundaries need
- * no exact ownership accounting. A later comparison includes skipped events. */
+/* Spin compares its current entry count before reading the clock, once per
+ * MCS batch. Reset the existing counters instead of retaining old snapshots.
+ * This is approximate admission state, not ownership or lossless accounting. */
 static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned int *rate_hot,
                              unsigned long *sampled_now,
                              unsigned int interval, bool spin)
 {
-  struct kd_hotlock_spin_ratio *r = NULL;
-  unsigned long now, entries = 0, mcs = 0;
+  unsigned long now;
   unsigned int i;
   bool was_hot, ratio_hot = true;
 
@@ -126,19 +121,11 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned int *rate_hot,
     return *rate_hot;
   if (spin)
   {
-    unsigned long mcs_delta, entry_delta;
-
-    r = raw_cpu_ptr(&kd_hotlock_spin_ratio);
-    entries = this_cpu_read(kd_hotlock_spin_entries);
-    mcs = this_cpu_read(kd_hotlock_spin_mcs);
-    mcs_delta = mcs - r->mcs_begin;
-    if (!mcs_delta)
-      return *rate_hot;
-    entry_delta = entries - r->entry_begin;
-    /* Prime the first snapshots without charging pre-contention warmup.
-     * Unsigned subtraction tolerates wrap; a zero snapshot may re-prime. */
-    if (r->mcs_begin && spin_contention_pct)
-      ratio_hot = mcs_delta * 100UL >= entry_delta * spin_contention_pct;
+    ratio_hot = !spin_entry_ratio_limit ||
+                (this_cpu_read(kd_hotlock_spin_entries) >> KD_HOTLOCK_SPIN_MCS_SHIFT) <
+                spin_entry_ratio_limit;
+    this_cpu_write(kd_hotlock_spin_entries, 0);
+    this_cpu_write(kd_hotlock_spin_mcs, 0);
   }
   now = rdtsc_ordered();
   if (sampled_now)
@@ -146,11 +133,6 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned int *rate_hot,
   was_hot = *rate_hot;
   *rate_hot = ratio_hot && now >= t->rate_begin &&
               now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
-  if (spin)
-  {
-    r->entry_begin = entries;
-    r->mcs_begin = mcs;
-  }
   t->rate_begin = now;
   t->rate_samples = 0;
   if (!was_hot || !*rate_hot)
@@ -240,9 +222,9 @@ bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(a
 bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false, false); }
 bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false, false); }
 
-/* Compare cold native and delegated publications on the same CPU. The table
- * guard protects lock-counter resets; a skipped comparison leaves both raw
- * snapshots for the next interval. No separate accepted-sample count is needed. */
+/* Compare cold native and delegated publications on the same CPU. The guard
+ * protects table/heat resets, not profiling accuracy. A busy skip keeps both
+ * counts; the next publication retries the >=512 threshold without a new flag. */
 void kd_hotlock_sample_spin_mcs_pinned(void)
 {
   struct kd_hotlock_table *t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
@@ -260,7 +242,8 @@ int kd_hotlock_init(void)
 {
   int cpu;
   unsigned long now;
-  if (spin_contention_pct > 100)
+  if (spin_entry_ratio_limit == 1 ||
+      (spin_entry_ratio_limit & (spin_entry_ratio_limit - 1)))
     return -EINVAL;
   kd_hotlock_cpu = alloc_percpu(struct kd_hotlock_cpu);
   if (!kd_hotlock_cpu)
@@ -271,9 +254,7 @@ int kd_hotlock_init(void)
   for_each_possible_cpu(cpu)
   {
     struct kd_hotlock_cpu *local = per_cpu_ptr(kd_hotlock_cpu, cpu);
-    struct kd_hotlock_spin_ratio *r = &per_cpu(kd_hotlock_spin_ratio, cpu);
     memset(local, 0, sizeof(*local));
-    memset(r, 0, sizeof(*r));
     local->tables[0].rate_begin = local->tables[1].rate_begin = now;
     per_cpu(kd_hotlock_spin_gate, cpu) = 0;
     per_cpu(kd_hotlock_spin_entries, cpu) = 0;
@@ -295,9 +276,10 @@ void kd_hotlock_exit(void)
                                     per_cpu(kd_hotlock_spin_gate, cpu);
       if (!kind && per_cpu(kd_hotlock_spin_entries, cpu))
       {
-        pr_info("kd_hotlock ratio: cpu=%d entries=%lu mcs=%lu cpu_hot=%u threshold=%u window=%u role=DONE\n",
+        /* These are the unfinished batch's residuals, not lifetime totals. */
+        pr_info("kd_hotlock ratio: cpu=%d entries=%lu mcs=%lu cpu_hot=%u entry_ratio_limit=%u window=%u scope=unfinished_batch role=DONE\n",
                 cpu, per_cpu(kd_hotlock_spin_entries, cpu),
-                per_cpu(kd_hotlock_spin_mcs, cpu), rate_hot, spin_contention_pct,
+                per_cpu(kd_hotlock_spin_mcs, cpu), rate_hot, spin_entry_ratio_limit,
                 KD_HOTLOCK_SPIN_MCS_INTERVAL);
       }
       for (i = 0; i < t->used; i++)

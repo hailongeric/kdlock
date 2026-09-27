@@ -19,7 +19,7 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 当前 spin/mutex 各自每 CPU 256 桶、256 条预分配记录，以槽索引处理冲突并匹配
 完整锁地址。命中只增加该锁 count，没有候选排名、score/error 或淘汰。
 满表保留已有记录，未收录锁在 adaptive 下走原生；地址映射保持至卸载。
-spin在同一512次MCS边界比较每CPU获取/MCS差值，再读取一次TSC；默认比例门槛100%，
+spin在MCS达到512时以`(spin_entries >> 9) < 2`比较本批获取数，清零两计数，再读取一次TSC；
 CPU窗口400亿TSC ticks。spin单锁每512次检查12.5亿窗口；mutex保持第1025次/25亿。
 获取和MCS计数允许近似；已有busy guard保护热表修改，统计复用获取pin。
 这些只决定后续准入，不承担owner、ACK或排空职责。降温/重新变热时重置单锁热度，
@@ -75,7 +75,7 @@ publication once, without consulting queue depth; every 512 publications it
 compares the MCS/entry ratio before sampling the clock, using the policy above. The drain scan includes the native in-flight count. Hot acquisitions use the
 shared pinned core and existing fast-owner/ticket routing; the provider still
 checks `spin_delegate` there. Both APIs use adaptive CPU/lock admission and the
-same MCS-publication CPU sampling. Percentage zero bypasses only the ratio;
+same MCS-publication CPU sampling. `spin_entry_ratio_limit=0` bypasses only the ratio;
 the native-head prefix check, CPU/lock heat and execution safety checks remain.
 Only the hot acquisition branch declares acquisition clobbers; unlock always
 declares the broad clobbers. The compiler owns live-register

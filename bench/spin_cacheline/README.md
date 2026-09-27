@@ -1,7 +1,8 @@
 # Spin cacheline 共用组件
 
 当前采用精确地址哈希热度统计，保留入口准入、顶层 pending 免 ticket 和 continuation 退休协议。
-准入只保留adaptive；`spin_contention_pct=0`仅关闭竞争比例过滤，原生队头资格及CPU/单锁热度仍生效。
+准入只保留adaptive；每512次MCS发布用`(entries >> 9) < spin_entry_ratio_limit`比较并清零两个计数。
+默认上界2；`spin_entry_ratio_limit=0`仅关闭竞争比例过滤，原生队头资格及CPU/单锁热度仍生效。
 
 当前 live 入口为 [tclock_compare/run.py](../tclock_compare/run.py)，说明见
 [直接 API 对照](../tclock_compare/README.md)。本目录不再提供旧 hook 扫描、

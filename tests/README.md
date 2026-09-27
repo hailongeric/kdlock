@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [MCS右移/清零比例窗口](#spin-ratio-reset-validation) | NORMAL/观测provider构建、基础及采样/原生MCS共4组、runner35项通过；默认门槛下8/36线程plain实际JIT及排空通过，未重跑性能 |
 | [KD实现文件拆分](#2026-09-27-kd实现文件拆分) | NORMAL provider构建、基础及相关11组、observer路径适配单项通过；C展开/ Python AST核对及ELF对比，未加载模块或重跑性能 |
 | [显式IRQ/BH spin接口](kernel/spin/irq_api/README.md#2026-09-27-验证) | 基础及相关7组最终通过，NORMAL provider/consumer构建、跨两node四CPU混合变体40,000次及排空通过；JIT=0，初次fixture/日志收集失败保留，未测性能或全量 |
 | [全链路复查与重复操作精简](../bench/tclock_compare/results/20260927-followup.md) | JIT阶段基础/相关5组、18场和36线程native续跑；最终基础/相关11组、三方135场、36线程native/early各360万操作及NORMAL构建通过；没有全量或mutex live重跑 |
@@ -29,6 +30,41 @@
 性能候选和旧fixture验收表统一从[历史索引](../bench/tclock_compare/results/HISTORY.md)追溯。
 当前采样及ABI分别见[执行流](../docs/JIT_EXECUTION.md#21-热度与角色)和
 [寄存器约定](../docs/JIT_REGISTER_ABI.md)。
+
+<a id="spin-ratio-reset-validation"></a>
+### 2026-09-27 MCS右移/清零比例窗口
+
+在`8e3d52e`基础上复用现有per-CPU获取/MCS计数；MCS达到512时比较
+`(spin_entries >> 9) < 2`，随后清零两计数并采一次CPU时钟。
+删除快照、差值和首次比例豁免；新参数及完整规则见
+[执行流](../docs/JIT_EXECUTION.md#21-热度与角色)。
+
+guest `6.1.159-kdclobber2`核对捕获基线和空闲状态后，NORMAL provider构建通过，
+保留原有objtool换栈/返回告警。执行
+`make -C tests/unit run PY_TESTS='infrastructure/test_hotlock_sampling.py spin/test_spin_nondelegated.py'`，
+基础两组及两个相关驱动共4组通过。覆盖511/512触发、1023通过/1024拒绝、首批拒绝与恢复、
+比较后两计数清零、busy跳过后重试、CPU隔离及原有mutex窗口；13项错误策略变异均被检测。
+原生pending/MCS在1/2/3/8线程下分别完成50,000/100,000/150,000/400,000次，pin及所有权检查通过。
+`python3 bench/tclock_compare/test_direct.py`的35项通过，包含新参数与历史百分比记录分组。
+
+monitor确认`pre_static_boot_20260915`快照后，直接运行器执行
+`--functional --backends kdlock --cachelines 1 --threads 8 36 --repeats 1 --iterations 100000`，
+保持默认`spin_entry_ratio_limit=2`、NUMA-on、KD批上限512和prefetch=2；没有用比例绕过来获得JIT。
+8线程完成800,000次、实际JIT正文797,542次；36线程跨guest两node完成3,600,000次、
+实际JIT正文3,590,196次。两场业务、IRQ/preempt、retirement及排空通过。
+运行器加载独立观测provider并使用daemon；`mutex_jit=1`为已记录的provider默认值，
+本次负载仅执行spin，没有mutex live、nested/early、全量测试或三方性能矩阵。
+
+NORMAL ELF离线检查确认删除16字节per-CPU快照对象；由于对齐填充，整个per-CPU section大小未变。
+比例计算替换为右移/比较及两次GS清零写入；原生直接获取、直接解锁和clobber解锁的指令/relocation未变。
+这不是性能无回退证明；此前百分比策略的历史成绩不能当作本次复测。
+
+命令、日志、冻结源码、NORMAL与观测模块和排空证据在本地忽略目录
+`bench/.tmp/ratio-shift-20260927/`；guest保留
+`/root/kdlock-evidence/ratio-shift-20260927/`与`/root/kdlock-evidence/ratio-shift-live-20260927/`。
+NORMAL模块SHA256：`5e704915875726728b103495785607816a5c49c10761aeba1b4899b023a17807`。
+构建/unit归档SHA256：`881501666ec1292a162f7276e5dec7f47efbb0f8f8ded580aef2d0985d4e7d10`；
+live归档SHA256：`06c0f27d07aaa165293f810b2c7c10822d7936785f94215466a4e52c2546a242`。
 
 ### 2026-09-27 KD实现文件拆分
 
@@ -115,7 +151,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 timeout 240 tests/run_all.sh \
 实际 JIT 与业务互斥使用 [直接运行器](../bench/tclock_compare/README.md)。
 `--scenario plain` 为普通单锁；`--scenario nested` 为 A/B 嵌套；`--scenario early`
 为外锁提前释放，仅 KD cacheline 允许后两项。当前只保留adaptive，功能正例可显式使用
-`--spin-contention-pct 0`关闭比例过滤，但原生队头资格及CPU/单锁热度仍生效，实际JIT检查不放宽；
+`--spin-entry-ratio-limit 0`关闭比例过滤，但原生队头资格及CPU/单锁热度仍生效，实际JIT检查不放宽；
 未重跑的功能场景不记为通过。
 性能中的原生完成须保留 NO_JIT 标记。少线程可经 MCS 升温，但不保证出现可代理后继；
 不能只凭线程数判断是否执行 JIT。具体有效性规则见运行器文档。

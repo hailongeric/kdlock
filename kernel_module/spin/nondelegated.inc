@@ -12,7 +12,8 @@
  * The head blocks successor reuse; stop at the captured tail so a holder that
  * releases and requeues during this walk cannot be counted twice. Missing
  * links decline immediately. Native/IRQ nodes count without inspecting frames.
- * This advisory veto runs only at the existing approximate MCS boundary. */
+ * This advisory veto runs at the approximate MCS boundary: the sampler's
+ * reset to zero satisfies the existing low-bit check without another flag. */
 static __always_inline void
 kd_spin_qualify_native_queue(struct qspinlock *word, struct kd_spin_node *node)
 {

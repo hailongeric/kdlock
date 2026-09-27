@@ -23,9 +23,11 @@ def main():
             queue.index('/**\n * clear_pending')]
         (Path(directory)/'spin_mcs_tail.h').write_text(publication)
         policy = (ROOT/'include/kd_hotlock.h').read_text()
-        interval = next(line for line in policy.splitlines()
-                        if line.startswith('#define KD_HOTLOCK_SPIN_MCS_INTERVAL '))
-        (Path(directory)/'spin_mcs_policy.h').write_text(interval + '\n')
+        sampling = [next(line for line in policy.splitlines()
+                         if line.startswith(f'#define {name} '))
+                    for name in ('KD_HOTLOCK_SPIN_MCS_SHIFT',
+                                 'KD_HOTLOCK_SPIN_MCS_INTERVAL')]
+        (Path(directory)/'spin_mcs_policy.h').write_text('\n'.join(sampling) + '\n')
         source = read_source(ROOT/'kernel_module/kd_spinlock.c')
         direct = (ROOT/'include/kd_spin_direct.h').read_text()
         paired = 'void ' + definition(source,

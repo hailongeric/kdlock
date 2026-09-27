@@ -116,15 +116,16 @@ eviction or transfer of another address's history. A full table leaves unknown
 locks cold under adaptive admission, retaining existing identities until unload.
 
 Initialization reserves the exact-key tables and seeds CPU clocks; lock paths
-allocate no table storage. Spin additionally keeps two previous totals in a
-16-byte per-CPU sidecar. At the same approximate 512-MCS boundary it compares
-publication/acquisition deltas, then samples the CPU clock. Fast/pending
-success contributes only to the acquisition denominator. The first sample
-primes the snapshots; later low ratios close admission directly. There is no
+allocate no table storage. Spin reuses two resettable per-CPU counters, with no
+previous totals or delta state. At 512 MCS publications it checks
+`(spin_entries >> 9) < spin_entry_ratio_limit`, clears both counts, then samples
+the CPU clock. Fast/pending success contributes only to the entry count.
+The first window includes startup entries; low ratios close admission directly. There is no
 cooldown, confirmation streak or heat retention across ratio rejection.
 
 Only adaptive admission remains. `hotlock_mode` and the observe mode are removed.
-`spin_contention_pct` defaults to 100; zero bypasses only the ratio, retaining
+`spin_entry_ratio_limit` defaults to 2 (at most 1023 entries per 512 MCS);
+zero bypasses only the ratio, retaining
 the native-head prefix check, CPU frequency, per-lock heat and execution safety checks. CPU heat gates table
 access. Spin lock heat checks at 512 records/1.25 billion TSC ticks; mutex keeps
 1025 records/2.5 billion, with CPU windows strictly below 40 billion ticks.
@@ -557,7 +558,7 @@ delegation, and KD uses caller-clobber v1 with a single KD word and JIT admissio
 Caller spill, lock/unlock, body, post-work and loop costs remain in ns/op.
 
 The paired cold gate applies CPU warmup before adaptive lock admission.
-Percentage zero bypasses only the ratio. Preserve caller shell
+`spin_entry_ratio_limit=0` bypasses only the ratio. Preserve caller shell
 and option identity as separate comparison groups. Record actual JIT independently of valid throughput. TCLock
 has no current per-body delegation counter; data correctness and drain cannot
 supply a delegation share. The sampler component measures record calls only.

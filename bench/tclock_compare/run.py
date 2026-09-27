@@ -24,7 +24,8 @@ from summarize import write_json, csv_file, valid
 from session import BackendSession, TC_MODULE, GUARD_MODULE
 from context_audit import audit as audit_context
 
-DEFAULT_SPIN_CONTENTION_PCT = 100
+DEFAULT_SPIN_ENTRY_RATIO_LIMIT = 2
+SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
 
@@ -83,8 +84,8 @@ def source_state():
 def make_plan(args):
     require(args.repeats > 0 and 0 < args.iterations <= 100000000,
             'invalid repeats/iterations')
-    contention_pct = getattr(args, 'spin_contention_pct', DEFAULT_SPIN_CONTENTION_PCT)
-    require(0 <= contention_pct <= 100, 'invalid spin contention percentage')
+    ratio_limit = getattr(args, 'spin_entry_ratio_limit', DEFAULT_SPIN_ENTRY_RATIO_LIMIT)
+    require(ratio_limit in SPIN_ENTRY_RATIO_LIMITS, 'invalid spin entry ratio limit')
     batch = getattr(args, 'kd_batch_size', 512)
     require(1 <= batch <= 1024, 'KD batch must be 1..1024')
     numa = getattr(args, 'numa', 'on')
@@ -111,8 +112,8 @@ def make_plan(args):
                 api_mode='direct', workload=workload, hotlock_mode=mode,
                 caller_shell='cold_clobber' if backend == 'kdlock' else 'c',
                 cookie_storage='percpu_direct_gate' if backend == 'kdlock' else 'not_applicable',
-                cpu_heat_policy='mcs_entry_ratio512_head6' if backend == 'kdlock' else 'not_applicable',
-                spin_contention_pct=contention_pct if backend == 'kdlock' else None,
+                cpu_heat_policy='mcs_reset_shift9_head6' if backend == 'kdlock' else 'not_applicable',
+                spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
                 numa_policy=numa if backend != 'native' else 'not_applicable',
                 delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
@@ -140,6 +141,7 @@ def report(out):
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
                 cpu_heat_policy=spec.get('cpu_heat_policy', 'unrecorded'),
                 spin_contention_pct=spec.get('spin_contention_pct', 'unrecorded'),
+                spin_entry_ratio_limit=spec.get('spin_entry_ratio_limit', 'unrecorded'),
                 caller_shell=spec.get('caller_shell', 'unrecorded'),
                 cookie_storage=spec.get('cookie_storage', 'unrecorded'),
                 status=row.get('execution_status', 'NOT_RUN'),
@@ -169,14 +171,15 @@ def report(out):
         r['amortized_ns_op'] = (peak['amortized_ns_op'] if timed else
                                 r['whole_amortized_ns_op']) if good else None
         records.append(r)
-        # Mode and contention threshold are frozen policy inputs, including
-        # threshold zero's diagnostic bypass. Never pool tuning candidates.
+        # Keep old percentage and current shifted-entry limits as separate
+        # identities, including zero's bypass. Never pool tuning candidates.
         mode = r.get('hotlock_mode', 'unrecorded')
         groups.setdefault((r['cachelines'], r['threads'], r['arm'], mode,
                            r.get('caller_shell', 'unrecorded'),
                            r.get('cookie_storage', 'unrecorded'),
                            r.get('cpu_heat_policy', 'unrecorded'),
                            r.get('spin_contention_pct', 'unrecorded'),
+                           r.get('spin_entry_ratio_limit', 'unrecorded'),
                            tuple(r.get(key) for key in TIMING_FIELDS),
                            r.get('spin_delegate', 'on'),
                            r.get('numa_policy', 'unrecorded'),
@@ -184,7 +187,7 @@ def report(out):
                            r.get('spin_prefetch', 'unrecorded')), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, timing, delegate, numa, batch, prefetch), rows in groups.items():
+    for (n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm,
                    workload=rows[0].get('workload', 'cacheline'),
@@ -193,6 +196,7 @@ def report(out):
                    cookie_storage=cookie,
                    cpu_heat_policy=heat_policy,
                    spin_contention_pct=contention_pct,
+                   spin_entry_ratio_limit=ratio_limit,
                    spin_delegate=delegate,
                    numa_policy=numa, delegation_batch_limit=batch, spin_prefetch=prefetch,
                    **dict(zip(TIMING_FIELDS, timing)),
@@ -262,10 +266,11 @@ def main():
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
     p.add_argument("--spin-delegate", choices=("on", "off"), default="on",
                    help="off: explicit KD self-execution control, no JIT acceptance")
-    p.add_argument('--spin-contention-pct', type=int, choices=range(101),
-                   metavar='0..100', default=DEFAULT_SPIN_CONTENTION_PCT,
-                   help='adaptive minimum MCS/entry percentage over 512 MCS publications '
-                        f'(default: {DEFAULT_SPIN_CONTENTION_PCT}; 0 bypasses only ratio)')
+    p.add_argument('--spin-entry-ratio-limit', type=int, choices=SPIN_ENTRY_RATIO_LIMITS,
+                   metavar='0|2|4|...|2147483648', default=DEFAULT_SPIN_ENTRY_RATIO_LIMIT,
+                   help='adaptive (entries >> 9) upper bound per resettable 512-MCS window; '
+                        f'unsigned power of two >=2 (default: {DEFAULT_SPIN_ENTRY_RATIO_LIMIT}; '
+                        '0 bypasses only ratio)')
     args = p.parse_args()
     require(args.scenario == "plain" or (args.backends == ["kdlock"] and args.workload == "cacheline"),
             "nested protocol regression requires KD cacheline workload")

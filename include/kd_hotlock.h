@@ -6,10 +6,12 @@
 /* The sole spin CPU gate, read directly without a dynamic-table pointer.
  * Initialized before callers enter; the reader owns a CPU pin. */
 DECLARE_PER_CPU(unsigned int, kd_hotlock_spin_gate);
+/* Approximate current-batch counts; a completed comparison clears both. */
 DECLARE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
 DECLARE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
-/* A power-of-two batch keeps the publication boundary check division-free. */
-#define KD_HOTLOCK_SPIN_MCS_INTERVAL 512U
+/* Reuse this power-of-two batch for the counter threshold and ratio shift. */
+#define KD_HOTLOCK_SPIN_MCS_SHIFT 9U
+#define KD_HOTLOCK_SPIN_MCS_INTERVAL (1U << KD_HOTLOCK_SPIN_MCS_SHIFT)
 /* Count once per physical acquisition, including the cold native route.
  * The direct native route counts after its first CAS, before contended work.
  * The acquisition pin keeps these approximate counts CPU-local. */
@@ -22,7 +24,7 @@ static __always_inline bool kd_hotlock_spin_cpu_hot_pinned(void)
   return this_cpu_read(kd_hotlock_spin_gate) != 0;
 }
 /* A pinned native queue head may veto future CPU admission. Existing MCS
- * sampling retries; no owner, counter, snapshot or timestamp changes here. */
+ * sampling retries; no owner, counter or timestamp changes here. */
 static __always_inline void kd_hotlock_cool_spin_pinned(void)
 {
   this_cpu_write(kd_hotlock_spin_gate, 0);
@@ -30,17 +32,17 @@ static __always_inline void kd_hotlock_cool_spin_pinned(void)
 int kd_hotlock_init(void);
 void kd_hotlock_exit(void);
 /* A valid identity and initialized provider are caller preconditions. Spin
- * compares CPU-local MCS/entry deltas every 512 publications, then reads one
- * timestamp for CPU frequency. The first interval primes the ratio snapshots.
- * Admission requires the configured percentage and a strict 40000000000-tick
- * CPU window. Percentage zero bypasses only the ratio; CPU and lock frequency
- * gates still apply.
+ * compares the CPU-local entry count after 512 MCS publications, then reads one
+ * timestamp for CPU frequency. With the default limit 2, (entries >> 9) < 2
+ * admits at most 1023 entries per batch. Both counters restart at comparison;
+ * the first batch includes startup entries. Limit zero bypasses only the ratio,
+ * retaining the strict 40000000000-tick CPU window and per-lock heat gates.
  * Spin lock heat checks every 512 records against 1250000000 ticks. Mutex keeps
  * 1025 records and 2500000000 ticks. Combined CPU cooling/reheating resets lock
  * heat. Exact tables hold 256 identities per CPU/type without eviction.
- * Counters and IRQ sampling are approximate; delayed comparisons use raw
- * counter deltas. The table guard protects insertion and heat resets. Queries
- * neither count nor tick, and no admission result conveys lock ownership. */
+ * Counters and IRQ sampling are approximate; a busy table delays comparison
+ * without clearing the counters. The guard protects insertion and heat resets.
+ * Queries neither count nor tick; admission never conveys lock ownership. */
 bool kd_hotlock_record_spin(unsigned long address);
 /* The caller must own an acquisition pin. This specialized entry omits the
  * generic preemption check while sharing all table and admission behavior. */
@@ -54,8 +56,7 @@ static __always_inline void kd_hotlock_record_spin_mcs_pinned(void)
 {
   /* Approximate cadence is sufficient for admission; IRQs may shift a check. */
   this_cpu_inc(kd_hotlock_spin_mcs);
-  if (!(this_cpu_read(kd_hotlock_spin_mcs) &
-        (KD_HOTLOCK_SPIN_MCS_INTERVAL - 1U)))
+  if (this_cpu_read(kd_hotlock_spin_mcs) >= KD_HOTLOCK_SPIN_MCS_INTERVAL)
     kd_hotlock_sample_spin_mcs_pinned();
 }
 bool kd_hotlock_record_mutex(unsigned long address);

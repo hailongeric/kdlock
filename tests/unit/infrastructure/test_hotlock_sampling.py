@@ -32,11 +32,14 @@ def main():
         "mutex-uses-spin-target": ("kind ? KD_HOTLOCK_SAMPLE_TARGET + 1U :", "kind ? KD_HOTLOCK_SPIN_SAMPLE_TARGET :", 1),
         "ignore-lock-time": ("now - slot->begin < window", "((void)window, true)", 1),
         "missing-mcs-count": ("this_cpu_inc(kd_hotlock_spin_mcs);", "(void)0;", 1),
-        "early-mcs-comparison": ("KD_HOTLOCK_SPIN_MCS_INTERVAL - 1U", "KD_HOTLOCK_SPIN_MCS_INTERVAL / 2U - 1U", 1),
+        "early-mcs-comparison": ("this_cpu_read(kd_hotlock_spin_mcs) >= KD_HOTLOCK_SPIN_MCS_INTERVAL", "this_cpu_read(kd_hotlock_spin_mcs) >= KD_HOTLOCK_SPIN_MCS_INTERVAL / 2U", 1),
+        "missed-busy-retry": ("this_cpu_read(kd_hotlock_spin_mcs) >= KD_HOTLOCK_SPIN_MCS_INTERVAL", "this_cpu_read(kd_hotlock_spin_mcs) == KD_HOTLOCK_SPIN_MCS_INTERVAL", 1),
         "missing-entry-count": ("this_cpu_inc(kd_hotlock_spin_entries);", "(void)0;", 1),
-        "stale-ratio-origin": ("r->entry_begin = entries;", "(void)entries;", 1),
-        "threshold-equality-rejected": ("mcs_delta * 100UL >= entry_delta * spin_contention_pct", "mcs_delta * 100UL > entry_delta * spin_contention_pct", 1),
-        "ignore-contention-ratio": ("mcs_delta * 100UL >= entry_delta * spin_contention_pct", "((void)entry_delta, true)", 1),
+        "missing-entry-reset": ("this_cpu_write(kd_hotlock_spin_entries, 0);", "(void)0;", 1),
+        "missing-mcs-reset": ("this_cpu_write(kd_hotlock_spin_mcs, 0);", "(void)0;", 1),
+        "wrong-ratio-shift": ("this_cpu_read(kd_hotlock_spin_entries) >> KD_HOTLOCK_SPIN_MCS_SHIFT", "this_cpu_read(kd_hotlock_spin_entries) >> (KD_HOTLOCK_SPIN_MCS_SHIFT + 1U)", 1),
+        "threshold-equality-admitted": ("<\n                spin_entry_ratio_limit;", "<=\n                spin_entry_ratio_limit;", 1),
+        "ignore-contention-ratio": ("!spin_entry_ratio_limit ||", "true ||", 1),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-hotlock-sampling-") as directory:
         path = Path(directory)

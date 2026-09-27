@@ -15,7 +15,9 @@ KD冷获取内联首次CAS，竞争时使用原生pending/MCS队列；热获取�
 自适应策略及寄存器契约分别见[执行流](../../docs/JIT_EXECUTION.md#21-热度与角色)和
 [锁协议](../../docs/design/locking.md)。
 
-当前只支持adaptive，策略标识为`mcs_entry_ratio512_head6`，默认`spin_contention_pct=100`。
+当前只支持adaptive，策略标识为`mcs_reset_shift9_head6`，默认`spin_entry_ratio_limit=2`。
+每512次MCS发布比较`(entries >> 9) < 2`，随后清零本CPU的入口和MCS计数；
+默认接受该窗口内至多1023次入口，约为MCS比例超过一半，不再使用旧100%门槛或前次计数快照。
 门槛0只绕过比例，原生队头前缀、CPU/单锁热度和执行安全检查仍有效。
 旧模式、策略和测量口径仅通过[历史索引](results/HISTORY.md)追溯，不合并取优。
 诊断per-CPU计数、最终余额及布局见[provider说明](../../kernel_module/README.md)。
@@ -82,8 +84,10 @@ TCLock保留上游配置值1024。运行器用`modinfo`验证实际ELF，NUMA/�
 `--spin-prefetch 0/1/2`选择现有KD无预取/consumer查找/producer提示，默认2，加载后核对并独立分组。
 collector CLI无参数默认仍为30，32/36-worker运行必须如上显式指定38；与任一worker重合时拒绝。
 
-`--spin-contention-pct`范围为0–100，默认100；0仅绕过比例门槛，
-原生队头前缀检查、CPU频率和单锁热度规则仍生效。该值作为只读provider装载参数传入并核对。
+`--spin-entry-ratio-limit`接受0或uint32范围内不小于2的2次幂，默认2。
+非零值是`entries >> 9`的严格上界；值越大，允许的入口/MCS比例越大。
+0仅绕过比例门槛，原生队头前缀检查、CPU频率和单锁热度规则仍生效。
+该值作为只读provider装载参数传入并核对；旧`--spin-contention-pct`已删除，历史命令使用匹配checkout。
 
 上述`taskset -c 0-35`固定准备阶段CPU集合（跨两个节点），worker绑定CPU0至CPU(`threads-1`)。
 先核对这些CPU属于预期NUMA节点及host映射；`environment.json`保存`runner_affinity`，
@@ -108,7 +112,7 @@ collector CLI无参数默认仍为30，32/36-worker运行必须如上显式指�
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
   LC_ALL=C timeout --kill-after=10s 180 python3 bench/tclock_compare/run.py \
   --functional --backends kdlock --cachelines 1 --threads 20 --repeats 1 \
-  --iterations 100000 --scenario nested --spin-contention-pct 0 \
+  --iterations 100000 --scenario nested --spin-entry-ratio-limit 0 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
   --output /root/kdlock-evidence/continuation-nested-new
@@ -117,8 +121,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 按改动选择`plain`、`nested`或`early`；`--spin-delegate off`单独验证原生对照，要求零
 JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆盖边界见
 [测试入口](../../tests/README.md)。
-协议JIT正例可使用`--spin-contention-pct 0`：nested中的无竞争内层获取也进入比例分母，
-默认100%可能合法选择原生。示例使用20个worker为队列前缀留下余量，不把worker数量当作准入保证。
+协议JIT正例可使用`--spin-entry-ratio-limit 0`：nested中的无竞争内层获取也进入入口计数，
+默认比例门槛可能合法选择原生。示例使用20个worker为队列前缀留下余量，不把worker数量当作准入保证。
 门槛0仅关闭比例过滤，原生队头检查、CPU频率、单锁热度及安全准入仍启用，不能保证正文执行；
 所有多线程功能正例均要求非零实际JIT，并保留上下文、业务和排空检查；NO_JIT仍是功能失败。
 移除observe后的功能通过只以新冻结记录为准，不能沿用历史双模式通过数。
@@ -140,9 +144,11 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 除以 Linux 获选值，KD/TCLock 同理；保留有效样本数，报告须说明不足三轮的情况。
 `records.json` 保留全部计划项、原始测量及失败/未执行状态；只有数据
 正确、完成且已排空的样本参与汇总。KD保留固定`hotlock_mode=adaptive`元数据，按该字段、`caller_shell`、
-`cookie_storage`、`cpu_heat_policy`、`spin_contention_pct`分开汇总，不跨模式、cookie存储、采样策略或比例门槛取最大值；
+`cookie_storage`、`cpu_heat_policy`、`spin_entry_ratio_limit`分开汇总；旧记录的`spin_contention_pct`
+仍是独立分组字段，不将百分比解释成新上界，也不跨模式、cookie存储、采样策略或比例门槛取最大值；
 当前直接标量使用`cookie_storage=percpu_direct_gate`，历史间接读取为`percpu_rate_hot`。
-热表计数保留在原始日志，不参与性能评分。
+热表计数保留在原始日志，不参与性能评分；卸载时的入口/MCS计数是当前未完成采样窗口的余量，
+不是整场累计总数。
 
 kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
 代理次数与比例记为 null、状态为 `UNMEASURED`，不把未知写成零或实际代理通过。
@@ -222,8 +228,9 @@ v2，客户端和 workload 模块必须同时重建。
 
 ## 自适应准入与结果解释
 
-当前只保留`adaptive`，同时要求CPU频率、512次MCS边界比较的比例准入、原生队头资格和单锁热度。默认100%比例门槛、首次快照建立和后续直接判断
-使用[执行流规则](../../docs/JIT_EXECUTION.md#21-热度与角色)，`--spin-contention-pct 0`用于单独关闭比例的诊断。
+当前只保留`adaptive`，同时要求CPU频率、512次MCS窗口比较的比例准入、原生队头资格和单锁热度。
+默认整数比较为`(entries >> 9) < 2`，比较后清零两个计数；没有首次快照或首次比例豁免。
+使用[执行流规则](../../docs/JIT_EXECUTION.md#21-热度与角色)，`--spin-entry-ratio-limit 0`用于单独关闭比例的诊断。
 KD会话目录保留`-kdlock-adaptive`后缀和固定adaptive元数据；Linux/TCLock标为`not_applicable`。
 历史observe会话继续单独保存，不能与当前结果合并。
 当前全部测量worker都参与预热，但预热不强制修改CPU或单锁热度，是否准入仍由上述策略决定。

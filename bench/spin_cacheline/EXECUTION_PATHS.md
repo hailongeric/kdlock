@@ -26,7 +26,7 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 | --- | --- |
 | TCLock backend | `NUMA_AWARE=1`、`WWJUMP=1`；`ENABLE_IRQS_CHECK` 关闭。当前对照限 task context、IRQ 开启的单锁调用者，不作为通用 IRQ/嵌套锁替代 |
 | KD normal | `KDLOCK_SELFTEST` 默认关闭，`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=512`；可显式关闭NUMA或启用探针 |
-| KD 策略 | `spin_delegate=0` 关闭公共入口代理并跳过其热度记录，默认 `1`。只保留adaptive热度准入；`spin_contention_pct=0`仅绕过比例，仍受CPU/单锁热度和上下文/JIT安全检查约束 |
+| KD 策略 | `spin_delegate=0` 关闭公共入口代理并跳过其热度记录，默认 `1`。只保留adaptive热度准入；`spin_entry_ratio_limit=0`仅绕过比例，仍受CPU/单锁热度和上下文/JIT安全检查约束 |
 
 选择 `KD_SPIN_DIRECT_LOCK/UNLOCK` 配对壳后，调用端只按 CPU 热值分流；
 `spin_delegate` 在 provider 内控制代理/采样。CPU 热度仅统计实际 MCS 发布，
@@ -332,11 +332,11 @@ spin/mutex 的单锁记录与准入使用入口处的直接哈希计数。模块
 和 next；删除候选排名、score/error、最小分数扫描和替换。初始化一次采时建立
 所有 CPU/type 的时间起点，锁路径不分配；调用者保证地址有效及初始化/排空生命周期。
 
-spin复用原始MCS计数，在同一512次边界比较MCS/获取次数的差值比例，再采一次TSC；
-静态per-CPU状态以16字节保存两个快照，另以4字节保存唯一spin CPU热值。
-fast/pending成功计入获取分母；实际MCS发布
-才计入分子。计数及IRQ边界允许近似，busy重入不推进快照，后续差值包含被跳过的事件。
-首次采样建立比例起点，默认100%，门槛0仅关闭比例过滤。CPU窗口严格小于400亿TSC ticks。
+spin复用per-CPU获取/MCS计数；MCS达到512时，以`(spin_entries >> 9) < 2`判断本批比例，
+清零两计数再采一次TSC。不再保存16字节历史快照，4字节唯一spin CPU热值保持。
+fast/pending成功只计获取；实际MCS发布才增加MCS计数。统计及IRQ边界允许近似；
+busy跳过不清计数，下一次MCS发布重试。首批包含先前获取，没有首次免比较逻辑。
+`spin_entry_ratio_limit`默认2，0仅关闭比例过滤；CPU窗口严格小于400亿TSC ticks。
 
 只有CPU热才查完整锁地址；spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿。
 降温、仍冷或重新变热均清除单锁计数/热值并保留地址映射，满表不淘汰既有身份。

@@ -15,7 +15,7 @@ KD 使用 `KD_SPIN_DIRECT_LOCK/UNLOCK` 热度分流壳。
 lock/SP/IP/BP；provider 检查低字节状态 5，先做短原生释放，否则进入通用解锁核心。
 仅外层使用配对壳，内层仍走原接口。冷获取仍是完整CAS/pending/MCS；
 实际MCS发布处采样CPU热度，不检查队列深度；2/3线程也可因入队升温。
-`spin_contention_pct=0`只关闭比例过滤，不强制CPU/单锁变热，也不改变正文或调用ABI。
+`spin_entry_ratio_limit=0`只关闭比例过滤，不强制CPU/单锁变热，也不改变正文或调用ABI。
 
 `scenario.h` 的默认 plain 不增加锁，nested/early 只对 KD cacheline 启用。
 `SC_PREPARE` 显式登记对应锁后 RIP，`api.h` 定义客户端和模块共同使用的 ioctl。
