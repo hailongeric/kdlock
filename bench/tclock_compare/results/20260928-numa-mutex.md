@@ -355,6 +355,32 @@ peak 份额 5.52%–12.35%；没有无饥饿或最大等待时间证明。
 证据 `numa-20260928-mutex-numa-{screen,recheck,validation}`，host
 `mutex-numa-rejected.tar.gz` SHA256 `d34199c9929ef5d5f069bf3c7364f988bfb45b9c9a87072d0cb097ee6ba19818`。
 
+## Task cache 在专用 batch 上复验：仍回退
+
+在已保留的 locality/batch 版本重新应用 1024 稳定 task cache，继续使用 per-CPU 观察计数。
+基础与碰撞/容量/并发发布 fixture 共 3 组通过；真实 pinned task、原生 mutex owner 和最终 ACK
+探针通过，两种释放次序共 4 ACK、2 retained task 引用在卸载时释放。该探针 JIT=0；
+普通 benchmark 的返回正文 JIT 证据单独统计。
+
+27 场筛选与 18 场复核均业务正确、每 worker 有进度、实际 JIT 且排空，但仍未通过性能门槛：
+
+| threads | 筛选 KD min/median/max Mops/s | 复核 KD min/median/max | 已接受 batch 中位数 |
+| --- | --- | --- | --- |
+| 1 | 17.260 / 17.265 / 17.377 | 未重复 | 14.790 |
+| 16 | 2.150 / 2.165 / 2.173 | 2.136 / 2.168 / 2.221 | 4.797 |
+| 36 | 1.205 / 1.209 / 1.231 | 1.201 / 1.345 / 1.508 | 2.931 |
+
+16 中位数两次下降 54.87% / 54.80%，36 下降 58.75% / 54.12%。筛选的整段 JIT 份额
+16 为 94.07%–95.85%、36 为 93.02%–95.46%；不能把更高 JIT 份额当成吞吐提升。
+候选在 `perf/mutex-task-cache-batch-candidate-20260928` 隔离保留，尚不合入已接受版本。
+36 复核每 worker 最少 54272 操作、node 1 整段份额 41.52%–44.07%。
+随后在此候选上单独复验 lock-free shadow，以区分剩余全局表锁开销；不得据组合实验
+改写此处独立候选的失败结果。
+
+证据 `numa-20260928-mutex-tasks2-{screen,recheck,validation,ack}`；host
+`mutex-tasks2-candidate.tar.gz` SHA256
+`1eb10c9f29df9a027c93fe7be603151e82d2785fe3b69b75896a18b3ca796074`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：

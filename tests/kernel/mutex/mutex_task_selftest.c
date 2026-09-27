@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Exercise production task membership, native requests and RCU reclamation
+/* Exercise production task membership, native requests and retained task identity
  * before hooks are published. Only the continuation packet and outer batch
  * callback are fixtures: this test never executes JIT or switches stacks. */
 #include <linux/completion.h>
 #include <linux/cpu.h>
 #include <linux/jiffies.h>
 #include <linux/kthread.h>
+#include <linux/rcupdate.h>
 
 #include "kd_exec.h"
 #include "kd_segment.h"
@@ -24,7 +25,7 @@ static struct {
 	struct completion done[3];
 	atomic_t failures;
 	unsigned long gsbase;
-	unsigned int frees_before;
+	unsigned int retained_before;
 	unsigned int acks;
 	bool outer_first;
 	bool abort;
@@ -65,20 +66,9 @@ static void kd_task_wait(bool *flag, bool rcu_reader)
 
 static unsigned int kd_task_refs(struct task_struct *task)
 {
-	struct kd_mutex_task *entry;
-	unsigned long flags;
-	unsigned int refs = 0;
+	struct kd_mutex_task *entry = kd_mutex_task_find(task);
 
-	raw_spin_lock_irqsave(&kd_mutex_tasks_lock, flags);
-	hash_for_each_possible(kd_mutex_tasks, entry, link,
-			       (unsigned long)task) {
-		if (entry->task == task) {
-			refs = entry->refs;
-			break;
-		}
-	}
-	raw_spin_unlock_irqrestore(&kd_mutex_tasks_lock, flags);
-	return refs;
+	return entry ? atomic_read(&entry->refs) : 0;
 }
 
 static int kd_task_release_outer(struct kd_exec_frame *frame,
@@ -109,17 +99,17 @@ static void kd_task_owner(void)
 	kd_task_wait(&kd_task_test.waiter_ready, false);
 	kd_origin_mutex_lock(&kd_task_test.locks[0]);
 	kd_origin_mutex_lock(&kd_task_test.locks[1]);
-	/* Allocation refusal must not publish routing or acquire a task record.
+	/* Injected resource refusal must not publish routing or acquire a task record.
 	 * Two successful gets share one entry; the non-final put keeps it alive. */
 	WRITE_ONCE(kd_mutex_task_fail_once, 1);
 	KD_TASK_REQUIRE(!kd_mutex_task_get(waiter));
 	KD_TASK_CHECK(!kd_mutex_task_active(waiter) &&
-		      !atomic_read(&kd_mutex_task_count));
+		      !kd_mutex_tasks_active_count());
 	KD_TASK_CHECK(KD_MUTEX_STAT_READ(kd_mutex_task_failures) == failures + 1);
 	KD_TASK_REQUIRE(kd_mutex_task_get(waiter));
 	KD_TASK_REQUIRE(kd_mutex_task_get(waiter));
 	KD_TASK_CHECK(kd_task_refs(waiter) == 2 &&
-		      atomic_read(&kd_mutex_task_count) == 1);
+		      kd_mutex_tasks_active_count() == 1);
 	kd_mutex_task_put(waiter);
 	KD_TASK_CHECK(kd_task_refs(waiter) == 1);
 	smp_store_release(&kd_task_test.published, true);
@@ -187,18 +177,18 @@ static void kd_task_waiter(void)
 	KD_TASK_CHECK(kd_origin_mutex_owned(&kd_task_test.locks[last], owner));
 	KD_TASK_CHECK(kd_mutex_task_reroute(current) &&
 		      kd_task_refs(current) == 1);
-	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
-		      kd_task_test.frees_before);
+	KD_TASK_CHECK(kd_mutex_tasks_retained_count() ==
+		      kd_task_test.retained_before + 1);
 	KD_TASK_REQUIRE(kd_exec_native_unlock(
 		(unsigned long)&kd_task_test.locks[last], true));
 	kd_task_test.acks++;
-	/* The release-published ACK must follow record removal, but the old RCU
-	 * reader still pins its memory. A duplicate request must no longer route. */
+	/* The release-published ACK must follow the final acquisition put. The
+	 * immutable cache key survives, but a duplicate request must not route. */
 	KD_TASK_CHECK(!kd_mutex_task_reroute(current) &&
 		      !kd_task_refs(current));
-	KD_TASK_CHECK(!atomic_read(&kd_mutex_task_count));
-	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
-		      kd_task_test.frees_before);
+	KD_TASK_CHECK(!kd_mutex_tasks_active_count());
+	KD_TASK_CHECK(kd_mutex_tasks_retained_count() ==
+		      kd_task_test.retained_before + 1);
 	KD_TASK_CHECK(!kd_exec_native_unlock(
 		(unsigned long)&kd_task_test.locks[last], true));
 	KD_TASK_CHECK(!mutex_is_locked(&kd_task_test.locks[1]));
@@ -212,25 +202,19 @@ static void kd_task_waiter(void)
 static void kd_task_reader(void)
 {
 	struct task_struct *waiter = kd_task_test.workers[1];
-	struct kd_mutex_task *entry, *saved = NULL;
+	struct kd_mutex_task *saved;
 
 	kd_task_wait(&kd_task_test.published, false);
 	rcu_read_lock();
-	hash_for_each_possible_rcu(kd_mutex_tasks, entry, link,
-				   (unsigned long)waiter) {
-		if (entry->task == waiter) {
-			saved = entry;
-			break;
-		}
-	}
-	KD_TASK_REQUIRE(saved && READ_ONCE(saved->refs) == 1);
+	saved = kd_mutex_task_find(waiter);
+	KD_TASK_REQUIRE(saved && atomic_read(&saved->refs) == 1);
 	smp_store_release(&kd_task_test.reader_ready, true);
 	/* A real read-side critical section spans both owner ACKs. Do not sleep
 	 * here, including on voluntary/non-preemptible RCU configurations. */
 	kd_task_wait(&kd_task_test.waiter_done, true);
-	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
-		      kd_task_test.frees_before);
-	KD_TASK_CHECK(saved->task == waiter && READ_ONCE(saved->refs) == 0);
+	KD_TASK_CHECK(kd_mutex_tasks_retained_count() ==
+		      kd_task_test.retained_before + 1);
+	KD_TASK_CHECK(saved->task == waiter && atomic_read(&saved->refs) == 0);
 	KD_TASK_CHECK(!kd_mutex_task_active(waiter));
 	rcu_read_unlock();
 }
@@ -260,7 +244,7 @@ static int kd_task_round(bool outer_first)
 	memset(&kd_task_test, 0, sizeof(kd_task_test));
 	atomic_set(&kd_task_test.failures, 0);
 	kd_task_test.outer_first = outer_first;
-	kd_task_test.frees_before = atomic_read(&kd_mutex_task_test_frees);
+	kd_task_test.retained_before = kd_mutex_tasks_retained_count();
 	for (i = 0; i < ARRAY_SIZE(kd_task_test.locks); i++)
 		mutex_init(&kd_task_test.locks[i]);
 	init_completion(&kd_task_test.start);
@@ -292,19 +276,18 @@ static int kd_task_round(bool outer_first)
 		kthread_stop(worker);
 		put_task_struct(worker);
 	}
-	/* Drain the production callback before observing its count, reusing the
-	 * fixture, or returning an init error that can unload this module's text. */
-	rcu_barrier();
+	/* All workers and readers have exited; inactive records retain their task
+	 * references until controlled provider teardown, not an RCU callback. */
 	if (ret)
 		return ret;
-	KD_TASK_CHECK(kd_task_test.acks == 2 && hash_empty(kd_mutex_tasks));
-	KD_TASK_CHECK(!atomic_read(&kd_mutex_task_count));
-	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
-		      kd_task_test.frees_before + 1);
-	pr_info("kd_mutex task selftest round: order=%s acks=%u deferred_frees=%u failures=%d JIT=0\n",
+	KD_TASK_CHECK(kd_task_test.acks == 2 && kd_mutex_tasks_idle());
+	KD_TASK_CHECK(!kd_mutex_tasks_active_count());
+	KD_TASK_CHECK(kd_mutex_tasks_retained_count() ==
+		      kd_task_test.retained_before + 1);
+	pr_info("kd_mutex task selftest round: order=%s acks=%u retained_records=%u failures=%d JIT=0\n",
 		outer_first ? "A-B" : "B-A", kd_task_test.acks,
-		atomic_read(&kd_mutex_task_test_frees) -
-			kd_task_test.frees_before,
+		kd_mutex_tasks_retained_count() -
+			kd_task_test.retained_before,
 		atomic_read(&kd_task_test.failures));
 	return atomic_read(&kd_task_test.failures) ? -EINVAL : 0;
 }
@@ -338,7 +321,7 @@ int kd_mutex_task_selftest(void)
 	if (!ret)
 		ret = kd_task_round(true);
 	if (!ret)
-		pr_info("kd_mutex task selftest: cpus=%d,%d,%d orders=2 acks=4 deferred_frees=2 failures=0 JIT=0\n",
+		pr_info("kd_mutex task selftest: cpus=%d,%d,%d orders=2 acks=4 retained_records=2 failures=0 JIT=0\n",
 			kd_task_test_cpus[0], kd_task_test_cpus[1],
 			kd_task_test_cpus[2]);
 out:

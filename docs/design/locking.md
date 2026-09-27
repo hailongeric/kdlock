@@ -432,7 +432,7 @@ distinct from merely completing all clients.
    limit 2 rejected every CPU in the cacheline screen; the measured native owner
    bursts required a wider mutex window. Spin MCS
    counters are independent. The short counting pin ends before native blocking.
-   Cold locks, `mutex_jit=0`, shadow/task-record allocation failure, and nested
+   Cold locks, `mutex_jit=0`, exhausted shadow/task-record capacity, and nested
    acquisitions by an already-active task use the original native slow route.
 2. A promoted, eligible request registers its task before entering the scheduler.
    Winning the gate calls `kd_mutex_claim_origin()`, which acquires the original
@@ -484,20 +484,24 @@ with the guest's complete `pt_regs`; physical locks, scheduler, task records and
 assembly are substitutes. Their scope and live-test separation are maintained
 in [历史：the mutex resource guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#61-mutex-资源与恢复包).
 
-`kd_mutex_tasks.c` keeps RCU-readable task membership with a task reference and
-lock-protected acquisition refs. The existing mutex `is_kd` callback matches
-target comm or membership. This preserves unlock routing after a rename; it
-does not replace the original lock. `mutex_task_fail_once=1` tests pre-entry
-allocation failure. No allocations are needed in the predicate. Unload requires
-all callers stopped and records/queues drained; `rcu_barrier()` only completes
-deferred task-record frees, not general hook hot-unload protection.
+`kd_mutex_tasks.c` has 1024 cacheline-separated records, addressed by an exact
+task-pointer hash and immutable atomic key publication. A successful first
+publication retains a task reference until provider teardown; later gets only
+increment that record's exact atomic acquisition count. There is no acquisition
+allocation or global registry lock. Full capacity and `mutex_task_fail_once=1`
+decline the unstarted request to native execution. A cached key with zero refs
+is inactive and never authorizes unlock routing; heat and comm changes cannot
+discard a positive reference. Controlled unload requires stopped callers,
+zero acquisition refs, empty queues and retired source/frame leases before
+releasing the retained task references. This is bounded retention, not generic
+hot-unload protection or support for unbounded task churn.
 
-The removed `test_22` launcher connected these real task functions to the production
-native request/ACK path, with an actual RCU reader spanning final removal.
-It covers both B-before-A and A-before-B unlock, shared acquisition refs and
-deferred callback execution. Its constructed continuation and outer batch
-callback do not exercise JIT or queue scheduling; see
-[历史：the lifecycle guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#62-task-引用最终-ack-与-rcu).
+The directed [task/ACK probe](../../tests/kernel/mutex/run_task_selftest.py)
+connects these functions to the production native request path with real pinned
+tasks and original mutex owners. It covers B-before-A and A-before-B unlock,
+shared acquisition refs, a reader spanning both ACKs, inactivity before final
+ACK and retention until unload. Its constructed continuation and outer batch
+callback are explicitly JIT=0; ordinary benchmark JIT evidence remains separate.
 
 #### Pinned Busy Polling
 
@@ -579,8 +583,8 @@ interval. No native `owner` handoff or new kernel protocol is introduced.
 
 The waiter's acquisition reference survives until the combiner releases this
 frame's last retained logical lock, removes its native registration, and drops
-that reference before acknowledging. The final reference removes task membership;
-RCU readers can retain the unlinked entry until its deferred free callback.
+that reference before acknowledging. The final put makes its stable record
+inactive; the cache retains the exact task identity until provider unload.
 This logical ACK need not release physical A in a still-owned batch.
 New native acquisitions by the waiter are ordinary original mutex acquisitions.
 The combiner must not inspect a published waiter

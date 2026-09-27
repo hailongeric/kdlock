@@ -39,7 +39,8 @@ though kdlock does not install that trap callback. Clearing the six lock-hook
 pointers and calling `synchronize_rcu()` does not provide these readers with a
 matching acquisition/lifetime protocol. Stopping benchmark callers and draining
 requests is necessary for current recovery experiments, not proof of generic
-hot unload. `rcu_barrier()` for task records solves a different lifetime.
+hot unload. The bounded task cache's retained references protect task identities,
+which is a different lifetime from guest hook readers.
 
 The current guest exports `try_module_get/put` and module notifier registration.
 `__module_address/__module_text_address` are not exported in its Module.symvers;
@@ -117,7 +118,7 @@ provider ref also cannot protect the earlier dispatch or code after its pop.
 Earlier hook-based multi-frame/source/task live histories remain in
 [VALIDATION](../VALIDATION.md). Their workload and launch scripts have been
 removed because the current provider does not install those hooks. Stable
-request, task/RCU and final-ACK checks remain in production and directed
+request, retained task references and final-ACK checks remain in production and directed
 fixtures; this does not assert fresh live coverage of those old schedules.
 
 Capability assessment under the no-guest-edit default:
