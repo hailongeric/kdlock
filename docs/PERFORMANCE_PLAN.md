@@ -12,8 +12,9 @@
 完整 spin/hash 135 场通过；KD 只在 1、3–6 线程达到同期 TCLock 峰值的 90%，高线程仍有差距。
 24 线程少数 node 仅约 2% 进度；有限 batch/scan 不代表公平保证。
 独立三方 mutex cacheline 基线已完成全部 135 场，真实 KD JIT、TCLock 委托和 parking 均有证据。
-当前分别验证 native-first、shadow/task cache、
-本地栈/观测、专用执行 helper 和有界 NUMA grouping，确认正确性与可重复改进后再转 mutex/hash。
+native-first、本地栈/观测和专用 batch helper 已独立筛选保留；shadow/task cache 与
+mutex NUMA grouping 的独立候选出现重复回退，均隔离保留。先在新执行成本下复验 cache，
+再做完整 cacheline 与 hash 比较；稳定 mutex 当前仍为 FIFO，spin NUMA grouping 不变。
 本阶段保留 pinned KD waiters 和最多 1024 个 task 记录至卸载；不做 oversubscription 重设计、
 内核修改或 wrapper 输入 ABI 扩展，不重试已撤回的寄存器驻留/广泛预取候选。
 

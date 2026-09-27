@@ -325,6 +325,36 @@ fixture 写成实际复杂 mutex JIT，也没有把本轮简单正文结果推�
 证据 `numa-20260928-mutex-batch-{screen,validation}`，host `mutex-batch.tar.gz` SHA256
 `58c3bb053b996b773ab6f8b93574dbcab4eaf6fd9a2d0cb47dc517302bc038d4`。
 
+## Mutex 有界 NUMA grouping：独立候选回退
+
+实现独立 1024 扫描预算与 1024 正文上限，使用 tail 的原 CPU 身份判断 node；
+每个 batch 保留 remote prefix，在普通/native/early handoff 前优先 splice，
+未开始正文的拒绝只回退本轮扫描。Legacy/FULL packet 是不可跨越的边界，
+预算耗尽先于 dependent successor read。没有扩大 node stride 或更改 owner/ACK。
+
+基础、生产 batch loop 与既有 outer-progress 共 4 组最终通过；新 fixture 在 NUMA on/off
+检查 rejection rollback、native/early release、远端优先、1024 正文/扫描边界及 source drain。
+保护页覆盖耗尽预算下 `next->next` 的禁止访问。初次函数抽取签名与第二次 fixture
+头文件/计数命名编译失败均保留，修正后通过。
+
+27 场筛选及 24/36 线程 18 场复核均有真实 JIT、正确数据及排空，但 36 中位数重复下降：
+
+| threads | 筛选 KD min/median/max Mops/s | 复核 KD min/median/max | batch 中位数 |
+| --- | --- | --- | --- |
+| 1 | 14.779 / 14.784 / 14.788 | 未重复 | 14.790 |
+| 16 | 4.805 / 4.818 / 4.853 | 未重复 | 4.797 |
+| 24 | 未测 | 3.125 / 3.261 / 3.861 | 未单独筛选 |
+| 36 | 2.645 / 2.760 / 2.889 | 2.399 / 2.524 / 2.702 | 2.931 |
+
+36 两次中位数下降 5.84% / 13.89%，按 3% 规则不合入已接受版本；实现在
+`perf/mutex-numa-candidate-20260928` 保留，稳定 mutex 继续 FIFO。编译 NUMA-on 不代表
+FIFO mutex 已有 grouping；spin 保持已验证的 NUMA grouping。后续高 JIT 份额的 task cache
+若改变成本结构，可另行复验该候选，不能把失败独立结果合并成性能通过。
+24 线程每个 worker 均有进度，最少 133632 操作，少数 node 整段份额 8.13%–10.41%，
+peak 份额 5.52%–12.35%；没有无饥饿或最大等待时间证明。
+证据 `numa-20260928-mutex-numa-{screen,recheck,validation}`，host
+`mutex-numa-rejected.tar.gz` SHA256 `d34199c9929ef5d5f069bf3c7364f988bfb45b9c9a87072d0cb097ee6ba19818`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：
