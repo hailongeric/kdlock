@@ -492,12 +492,14 @@ allocation failure. No allocations are needed in the predicate. Unload requires
 all callers stopped and records/queues drained; `rcu_barrier()` only completes
 deferred task-record frees, not general hook hot-unload protection.
 
-The removed `test_22` launcher connected these real task functions to the production
-native request/ACK path, with an actual RCU reader spanning final removal.
-It covers both B-before-A and A-before-B unlock, shared acquisition refs and
-deferred callback execution. Its constructed continuation and outer batch
-callback do not exercise JIT or queue scheduling; see
-[历史：the lifecycle guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#62-task-引用最终-ack-与-rcu).
+The directed [task/ACK probe](../../tests/kernel/mutex/run_task_selftest.py)
+connects the real registry to the production native request/ACK path, with an
+actual RCU reader spanning final removal. Three pinned kernel tasks exercise
+both B-before-A and A-before-B unlock, shared acquisition refs and two deferred
+frees after their readers exit. Its constructed continuation and outer batch
+callback are explicitly JIT=0; ordinary benchmark returned-body evidence is
+separate. Controlled source retirement and empty registry are checked before
+provider unload.
 
 #### Pinned Busy Polling
 
