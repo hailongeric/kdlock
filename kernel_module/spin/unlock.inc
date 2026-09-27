@@ -1,0 +1,171 @@
+// SPDX-License-Identifier: GPL-2.0
+/* Unlock routing by acquisition provenance: physical owner, ticket and
+ * native ACK. Release remains independent of the current heat/admission policy. */
+
+/*
+ * No IPA is even more relevant here, because even if assembly is removed,
+ * compiler shouldn't assume which caller-saved registers are in use inside
+ * the function. When we jump from the spin loop to the return address after
+ * the unlock function, we have caller-saved registers that are completely
+ * inconsistent, because we only restored the callee-saved registers.
+ */
+__attribute__((noipa)) noinline notrace static void
+kd_spin_unlock_request(struct qspinlock *lock, struct kd_spin_request *request)
+{
+	struct qspinlock *word = request->word;
+	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
+	int j, max_idx, my_idx;
+
+	uint64_t temp_lock_addr;
+
+	j = 0;
+	max_idx = -1;
+	my_idx = -1;
+
+	if (word->locked == _Q_LOCKED_VAL_HL ||
+		word->locked == _Q_LOCKED_IRQ_VAL)
+	{
+		kd_spin_release_origin(request);
+		return;
+	}
+
+	for (j = 0; j < 8; j++)
+	{
+		temp_lock_addr = ptr->lock_addr[j];
+		if (temp_lock_addr != 0)
+			max_idx = j;
+		if (temp_lock_addr == (uint64_t)(unsigned long)lock)
+			my_idx = j;
+		if (temp_lock_addr == 0)
+			break;
+	}
+	kd_spin_diag_validate_lock_stack(ptr);
+	kd_spin_diag_validate_outer_unlock(ptr, lock, word, my_idx, max_idx);
+
+	if (my_idx == -1)
+	{
+		if (word->locked == _Q_LOCKED_COMBINER_VAL)
+		{
+#ifdef KD_SPIN_STATS
+			this_cpu_inc(ooo_unlocks);
+#endif
+			kd_spin_debug_ooo_unlock(lock,
+									 kd_spin_lock_stack_depth(ptr));
+			word->locked = _Q_UNLOCKED_OOO_VAL;
+			print_debug("OOO unlock\n");
+		}
+		else
+			BUG_ON(true);
+		return;
+	}
+
+#ifdef DEBUG_KD_SPIN
+	if (word->locked != _Q_LOCKED_COMBINER_VAL)
+		BUG_ON(true);
+
+	BUG_ON(ptr->curr_cs_cpu == -1);
+
+	if (max_idx < 0)
+	{
+		BUG_ON(true);
+	}
+
+#endif
+	if (my_idx < max_idx)
+	{
+#ifdef KD_SPIN_STATS
+		this_cpu_inc(ooo_unlocks);
+#endif
+
+		kd_spin_debug_ooo_unlock(lock, kd_spin_lock_stack_depth(ptr));
+		word->locked = _Q_UNLOCKED_OOO_VAL;
+		return;
+	}
+
+	/* Plain spin leaves each physical caller's IRQ state unchanged. */
+}
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref *ref)
+{
+	struct kd_spin_request request = {
+		.ref = *ref,
+		.word = kd_spin_request_word(ref),
+	};
+
+	kd_spin_unlock_request(lock, &request);
+}
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_unlock_protocol(struct qspinlock *lock)
+{
+	struct kd_spin_request request = kd_spin_unlock_lookup(lock);
+
+	kd_spin_unlock_request(lock, &request);
+}
+
+/* Explicit callers need the same acquisition-provenance release as the old
+ * hook, including the ticket-free KD owner and unstarted native fallback.
+ * This is protocol routing, independent of comm, frequency or JIT policy. */
+noinline notrace static void
+kd_spin_unlock_slow(struct qspinlock *lock)
+{
+	struct kd_spin_ref ref = {0};
+
+	if (kd_exec_native_unlock((unsigned long)lock, false))
+		return;
+	if (kd_spin_entry_find((raw_spinlock_t *)lock, &ref))
+	{
+		kd_spin_unlock_ref(lock, &ref);
+		return;
+	}
+	kd_spin_unlock_nondelegated(lock);
+}
+/* Avoid preparing a ticket reference until physical fast ownership misses.
+ * Inline only this small router; request/continuation work remains slow. */
+static __always_inline void
+kd_spin_unlock_core(struct qspinlock *lock)
+{
+	if (kd_spin_fast_unlock((raw_spinlock_t *)lock))
+		return;
+	kd_spin_unlock_slow(lock);
+}
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_unlock(struct qspinlock *lock)
+{
+	kd_spin_unlock_core(lock);
+}
+EXPORT_SYMBOL_GPL(kd_spin_unlock);
+
+__attribute__((noipa)) noinline notrace void
+kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
+						  unsigned long ip, unsigned long bp)
+{
+	/* Byte 5 carries paired native ownership without a fast record/ticket.
+	 * Release only that byte, then drop its count and acquisition pin. Keep
+	 * this short route inline; the ordinary generic router handles all other
+	 * owners. Callers still provide SP/IP/BP: the JIT completion endpoint
+	 * validates those words even though physical release does not use them.
+	 * Prefer fall-through for native holds; delegated COMPLETE exits bypass
+	 * this physical call, leaving this route common at low contention. */
+	if (likely(READ_ONCE(lock->locked) == KD_SPIN_DIRECT_NATIVE_HELD)) {
+		smp_store_release(&lock->locked, 0);
+		this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+		preempt_enable();
+		return;
+	}
+	kd_spin_unlock_core(lock);
+}
+EXPORT_SYMBOL_GPL(kd_spin_unlock_clobber_v1);
+
+static __always_inline int kd_spin_trylock(struct qspinlock *word)
+{
+	u32 val;
+
+	val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
+	if (val == 0)
+		return true;
+
+	return false;
+}

@@ -3,11 +3,12 @@
 当前 KD spin API 按普通 `raw_spin_lock` 语义：获取/解锁配对抢占，保持 IRQ/BH 状态，
 代理慢路径和嵌套队列不再保存 IRQ flags 或整段关 IRQ。最终完成先退休 ticket 元数据，
 读完并回收 continuation 后才解除原入口 pin；普通重试和有锁 native 续跑保留 pin。
-本次未新增 irqsave/bh API；需要这些语义的调用者在外层处理。
+需要irqsave/irq/bh语义时使用[显式变体](../include/README.md#显式-irqbh-spin-接口)，
+它们共用KD原生pending/MCS路径，在原CPU执行，不参与远端代理。
 
 spin 入口检查热度/上下文并按批采样时钟；`nondelegated.inc` 提供完整原生 fast/pending/MCS，虚拟排队继续服务父 ACK。顶层 pending 免 ticket；ticket 使用单个原子控制字，continuation 保留独立退休协议。详见 [当前锁协议](../docs/design/locking.md)。
 
-当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `kd_spinlock.c`，
+当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `spin/direct.inc`，由`kd_spinlock.c`组合编译，
 调用者使用 `include/kd_spin_direct.h` 的 clobber-v1 现场约定，并在计时前调用
 `kd_spin_prepare` 登记入口。公开 unlock 处理单锁字快速 owner、ticket 和 native ACK；
 内部 shadow/frame 解锁保留为 `kd_spin_unlock_protocol`。保留的 mutex hook 路由当前未安装。
@@ -27,14 +28,14 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 | --- | --- |
 | [kd_main.c](kd_main.c) | 模块初始化、hook 安装/撤销、目标选择 |
 | [kd_lock.c](kd_lock.c) | hook 路由、原生快路径、mutex shadow 查询 |
-| [kd_spinlock.c](kd_spinlock.c) | spin 公共 lock/unlock、保存现场与返回汇编 |
+| [kd_spinlock.c](kd_spinlock.c) | 按协议顺序组合 spin 私有实现；公共调用、恢复和解锁分别在下表的独立组件中 |
 | [kd_mutex.c](kd_mutex.c) | mutex 公共入口、栈切换与 owner 返回 |
 | [exe.c](exe.c) | wrapper 返回包的高层执行循环 |
 | [kd_exec.c](kd_exec.c) | frame 栈、上下文验证和状态事件 |
 | [sys.c](sys.c) | `/dev/kd_dev` 的读取、上传、状态与 retire ioctl |
 | [kd_source.c](kd_source.c) | 来源状态和 module/frame/writer pins |
 | [kd_hotlock.c](kd_hotlock.c) | 每 CPU 分类型精确地址计数、批量频率检查与 spin MCS/获取次数比例准入；入口注册由 `kd_lock.c` 调用执行注册表 |
-| [kd_spin_entry.c](kd_spin_entry.c) | 路由准入、ticket/origin 与 native 状态 |
+| [kd_spin_entry.c](kd_spin_entry.c) | 按 ticket 生命周期组合状态/校验、origin、native 借用和诊断组件 |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | mutex 在途任务/持锁记录，名称变化后的 owner 路由 |
 
 不代理的 KD 请求同样使用 fast/pending/MCS 队列：复用每 CPU 四个节点，在本地
@@ -128,10 +129,18 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `kd_spinlock.c` | [spin/prefetch.inc](spin/prefetch.inc) | Producer-prepared queue hints and off/consumer/prepared successor-prefetch policies. |
 | `kd_spinlock.c` | [spin/combiner.inc](spin/combiner.inc) | 批内查找、outer release、统一 clobber 批次及队列交接。 |
 | `kd_spinlock.c` | [spin/execute.inc](spin/execute.inc) | 复杂出口的 frame 绑定、dispatcher 调用、native/remote 处理；在 combiner 的原声明位置包含。 |
-| `kd_spinlock.c` | [spin/wait.inc](spin/wait.inc) | IRQ-off physical shadow-stack switch before publication/polling; head RSP restoration or direct completed/native packet restoration. |
+| `kd_spinlock.c` | [spin/wait.inc](spin/wait.inc) | 保持IRQ状态的物理shadow栈切换、发布/轮询；队首RSP恢复或completed/native包恢复。 |
 | `kd_spinlock.c` | [spin/slowpath.inc](spin/slowpath.inc) | Queue-head waiting, nested combiner restoration and native node admission. |
 | `kd_spinlock.c` | [spin/lifecycle.inc](spin/lifecycle.inc) | Per-CPU allocation, partial-init rollback and drained shutdown reporting. |
 | `kd_spinlock.c` | [spin/nested.inc](spin/nested.inc) | Virtual nested waiters, remote completion and out-of-order unlock results. |
+| `kd_spinlock.c` | [spin/restore.inc](spin/restore.inc) | 寄存器包恢复、continuation退休及waiter返回；保持汇编栈切换与pin释放顺序。 |
+| `kd_spinlock.c` | [spin/entry.inc](spin/entry.inc) | pinned获取、热度/上下文准入、原生回退与ticket所有权。 |
+| `kd_spinlock.c` | [spin/direct.inc](spin/direct.inc) | 公开lock ABI调用壳、原生byte-5入口及循环外的source准备。 |
+| `kd_spinlock.c` | [spin/unlock.inc](spin/unlock.inc) | 按获取来源路由解锁、物理释放和native ACK；不依赖当前热度。 |
+| `kd_spin_entry.c` | [spin/ticket_state.inc](spin/ticket_state.inc) | 私有per-CPU池、代际/阶段/借用计数字及共用校验/CAS。 |
+| `kd_spin_entry.c` | [spin/ticket_origin.inc](spin/ticket_origin.inc) | 原CPU查找、预留、物理所有权转换及最终释放。 |
+| `kd_spin_entry.c` | [spin/ticket_borrow.inc](spin/ticket_borrow.inc) | 远端native借用、唤醒阶段转换与原调用者排空等待。 |
+| `kd_spin_entry.c` | [spin/ticket_diagnostics.inc](spin/ticket_diagnostics.inc) | 只读的排空检查和owner诊断；不授予所有权。 |
 | `exe.c` | [execution/hostcalls.inc](execution/hostcalls.inc) | Allowlisted native services and bounded mutex CALL stack observations. |
 | `exe.c` | [execution/timing.inc](execution/timing.inc) | Optional inclusive boundary timing; disabled runs take no clock samples. |
 | `exe.c` | [execution/registry_lifecycle.inc](execution/registry_lifecycle.inc) | 有界代码池与条目查找；execute_cs 传递就绪条目，dispatcher 不再查表，但重新核对发布状态和 source 准入。 |

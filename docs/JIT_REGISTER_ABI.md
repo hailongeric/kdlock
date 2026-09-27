@@ -269,7 +269,7 @@ IRQ 状态保持不变，也不恢复 JIT 退出点的条件码。详细限制�
 核对入口：[等待栈切换](../kernel_module/spin/wait.inc)、
 [统一批次](../kernel_module/spin/combiner.inc)、
 [编译器调用边界](../include/kd_jit_batch.h)、[wrapper](../include/wrapper.S)、
-[最终恢复](../kernel_module/kd_spinlock.c)。
+[最终恢复](../kernel_module/spin/restore.inc)。
 
 ## 2. JIT 函数调用 ABI
 

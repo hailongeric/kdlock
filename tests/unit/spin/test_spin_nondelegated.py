@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
 from test_spin_shadow import definition
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -25,7 +26,7 @@ def main():
         interval = next(line for line in policy.splitlines()
                         if line.startswith('#define KD_HOTLOCK_SPIN_MCS_INTERVAL '))
         (Path(directory)/'spin_mcs_policy.h').write_text(interval + '\n')
-        source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
+        source = read_source(ROOT/'kernel_module/kd_spinlock.c')
         direct = (ROOT/'include/kd_spin_direct.h').read_text()
         paired = 'void ' + definition(source,
             'kd_spin_direct_native_contended(kd_spinlock_t *lock, u32 failed)')
@@ -47,7 +48,7 @@ def main():
         # using the real fast-record helpers and paired native API bodies.
         fast = (ROOT/'include/kd_spin_fast.h').read_text()
         fast = re.sub(r'^#include .*$', '', fast, flags=re.M)
-        source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
+        source = read_source(ROOT/'kernel_module/kd_spinlock.c')
         api = fast + '\n' + definition(source, 'static void kd_spin_lock_nondelegated_pinned(kd_spinlock_t *lock)')
         api += definition(source, 'void kd_spin_lock_nondelegated(kd_spinlock_t *lock)')
         api += definition(source, 'void kd_spin_unlock_nondelegated(kd_spinlock_t *lock)')

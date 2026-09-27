@@ -172,10 +172,10 @@ diff --git a/kernel_module/kd_mutex.c b/kernel_module/kd_mutex.c
  				"mutex node fallback: task=%d entry=%lx lock=%lx cpu=%u slots=%lx\n",
  				current->pid, ret_addr, lock->origin_mutex_addr,
  				smp_processor_id(),
-diff --git a/kernel_module/kd_spinlock.c b/kernel_module/kd_spinlock.c
---- a/kernel_module/kd_spinlock.c
-+++ b/kernel_module/kd_spinlock.c
-@@ -227,7 +227,7 @@
+diff --git a/kernel_module/spin/restore.inc b/kernel_module/spin/restore.inc
+--- a/kernel_module/spin/restore.inc
++++ b/kernel_module/spin/restore.inc
+@@ -205,7 +205,7 @@
  	struct kd_spin_ref ref = node->execution->frame.spin_origin;
  
  	if (node->execution->result == KD_SPIN_RES_RETRY)

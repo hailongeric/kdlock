@@ -345,7 +345,7 @@ class CachelineTests(unittest.TestCase):
             'kernel_module/spin/execute.inc',
             'kernel_module/kd_exec.c',
             'kernel_module/kd_mutex.c',
-            'kernel_module/kd_spinlock.c',
+            'kernel_module/spin/restore.inc',
             'kernel_module/mutex/combiner.inc',
             'kernel_module/spin/combiner.inc',
         })

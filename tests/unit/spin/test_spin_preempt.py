@@ -8,13 +8,14 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
 from test_spin_shadow import definition
 
 ROOT = Path(__file__).resolve().parents[3]
 
 
 def main():
-    source = (ROOT / 'kernel_module/kd_spinlock.c').read_text()
+    source = read_source(ROOT / 'kernel_module/kd_spinlock.c')
     fast = re.sub(r'^#include .*$', '', (ROOT / 'include/kd_spin_fast.h').read_text(), flags=re.M)
     code = fast
     for name in ('static void kd_spin_lock_nondelegated_pinned(kd_spinlock_t *lock)',

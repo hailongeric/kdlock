@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [KD实现文件拆分](#2026-09-27-kd实现文件拆分) | NORMAL provider构建、基础及相关11组、observer路径适配单项通过；C展开/ Python AST核对及ELF对比，未加载模块或重跑性能 |
 | [显式IRQ/BH spin接口](kernel/spin/irq_api/README.md#2026-09-27-验证) | 基础及相关7组最终通过，NORMAL provider/consumer构建、跨两node四CPU混合变体40,000次及排空通过；JIT=0，初次fixture/日志收集失败保留，未测性能或全量 |
 | [全链路复查与重复操作精简](../bench/tclock_compare/results/20260927-followup.md) | JIT阶段基础/相关5组、18场和36线程native续跑；最终基础/相关11组、三方135场、36线程native/early各360万操作及NORMAL构建通过；没有全量或mutex live重跑 |
 | [全链路优化与无锁ticket](../bench/tclock_compare/results/20260927-flow.md) | 第一阶段90场及相关测试单列；最终原子ticket版基础/entry/outer_progress/remote_outer共5组、两种构建、CPU0/20真实ticket selftest、完整135场及36线程nested原生续跑/early各360万操作通过，未跑全量 |
@@ -28,6 +29,35 @@
 性能候选和旧fixture验收表统一从[历史索引](../bench/tclock_compare/results/HISTORY.md)追溯。
 当前采样及ABI分别见[执行流](../docs/JIT_EXECUTION.md#21-热度与角色)和
 [寄存器约定](../docs/JIT_REGISTER_ABI.md)。
+
+### 2026-09-27 KD实现文件拆分
+
+从`61a24ea`整理KD kernel和JIT实现，文件职责与阅读顺序见[代码地图](../docs/CODE_MAP.md)。
+测试、benchmark和TCLock没有拆分；五个生产源码读取驱动改用已有`read_source`展开
+私有`.inc`，observer补丁及其路径断言跟随被移动的KD代码。
+
+guest `6.1.159-kdclobber2`核对捕获基线后，NORMAL provider构建通过，保留原有
+objtool换栈/返回告警。基础两组及`spin/test_spin_cold.py`、`test_spin_direct.py`、
+`test_spin_entry.py`、`test_spin_nondelegated.py`、`test_spin_preempt.py`共七组通过；
+ticket检查380项，原生pending/MCS在1/2/3/8线程下分别完成50,000/100,000/150,000/400,000次。
+translator四组`admission/test_context_policy.py`、`test_context_guards.py`、
+`codegen/test_jit_diagnostics.py`、`test_jit_body_witness.py`共160项通过。
+observer只运行`CachelineTests.test_provider_isolation_and_incompatible_source`，通过。
+
+两个kernel编译入口递归展开后，非注释token与旧版一致；九个迁移、六个保留的Python
+定义以及16条抽出的汇编生成语句保持AST一致。前后NORMAL模块的5个可执行section
+共91,922字节、320个函数的地址/大小/指令及4,208个代码relocation的实际目标均相同。
+差异限于新文件名、诊断行号、相同字符串的地址偏移及build身份，不据此宣称本次实测吞吐。
+完整命令/输出、源码核对及ELF证据在
+本地忽略目录`bench/.tmp/organize-20260927/`，guest冻结源码和前后NORMAL模块在
+`/root/kdlock-evidence/organize-20260927/`。本次没有加载模块、运行daemon、修改内核、
+启用mutex JIT或执行性能矩阵；没有把历史live/性能结果当作本次重跑。
+
+最终清理新`.inc`末尾多余空行后再次构建，整ELF相同的预期未成立；逐section检查
+确认仅非装载`.BTF`元数据改变，所有其他section相同，前述代码/relocation核对仍适用。
+两次模块及检查记录均保留，没有因这一格式调整重复unit或live。
+NORMAL最终模块SHA256：`f1a8232df997816fcc1f4809a084c261c0decbdc5e54f45d71b499e7f236272b`。
+最终guest归档SHA256：`f7507566cfc171e36642d158f5663f564ba81c637dbb59fd93c85ee220e42e59`。
 
 ## 单元检查
 

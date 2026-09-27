@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
 from test_spin_shadow import definition
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -60,7 +61,7 @@ int main(void) {
 
 
 def main():
-    source = (ROOT/'kernel_module/kd_spinlock.c').read_text()
+    source = read_source(ROOT/'kernel_module/kd_spinlock.c')
     code = PRELUDE + 'void ' + definition(source, 'kd_spin_unlock_slow(struct qspinlock *lock)') + 'static inline void ' + definition(source, 'kd_spin_unlock_core(struct qspinlock *lock)') + definition(source, 'kd_spin_unlock(struct qspinlock *lock)').replace(
         'kd_spin_unlock(', 'void kd_spin_unlock(', 1) + MAIN
     with tempfile.TemporaryDirectory(prefix='kd-direct-unlock-') as temporary:
