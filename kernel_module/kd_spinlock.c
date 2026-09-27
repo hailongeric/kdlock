@@ -31,6 +31,7 @@
 #include "kd_hotlock.h"
 #include <linux/sched.h>
 #include <linux/sched/task_stack.h>
+#include <linux/static_call_types.h>
 #include <linux/topology.h>
 #include <linux/vmalloc.h>
 #include <linux/kernel.h>

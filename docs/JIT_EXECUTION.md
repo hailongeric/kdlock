@@ -57,7 +57,9 @@
    通过 wrapper 和生成代码执行正文，原 waiter/combiner 共用寄存器包。
    简单 spin 根请求的 batch 准备在原有发布、镜像、ABI、packet 及 pristine-root 检查通过后，
    按 legacy/clobber ABI 一次写入最终调用元数据，不再先填 legacy 值再由通用 helper 覆盖。
-   batch镜像的七字节tag使用两个重叠unaligned32加载逐请求核对，不缓存发布状态或多读第八字节。
+   batch/clobber镜像的七字节tag分别使用两个重叠unaligned32加载逐请求核对，ABI目录用一个32位加载；
+   不缓存发布状态或多读第八字节。`kd_spin_runtime.c`合并编译spin、dispatcher和frame层，
+   readiness、batch准备/完成及bind/retire内联到combiner循环，外部调用入口继续保留。
    计时关闭时复用已有零timestamp跳过queue timing helper，开启时仍保留原端点顺序。
    完成先验证出口，再以`wrapper_start`旁路关闭计时的全局检查；开启时按wrapper、dispatch顺序记录。
    拒绝出口留给通用分发，完成分类及JIT正文witness不变。

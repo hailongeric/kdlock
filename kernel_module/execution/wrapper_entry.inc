@@ -111,8 +111,11 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
                                  const struct kd_exec_frame *frame)
 {
 	const unsigned char *code = READ_ONCE(exe->code_block);
-	bool directory = code && !memcmp(code + 25, "KDWC001", 7) &&
-	                 !memcmp(code + 41, "KDAB", 4);
+	/* Exact directory bytes, without the out-of-line seven-byte memcmp on
+	 * every request. The overlapping words do not read beyond the signature. */
+	bool directory = code && get_unaligned_le32(code + 25) == 0x4357444bU &&
+	                 get_unaligned_le32(code + 28) == 0x31303043U &&
+	                 get_unaligned_le32(code + 41) == 0x4241444bU;
 
 	if (READ_ONCE(exe->entry_abi) != frame->entry_abi)
 		return false;
@@ -158,6 +161,9 @@ static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
 	call->complete = kd_jit_minimal_complete_allowed(frame);
 }
 
+/* GNU inline retains the external definition for other execution clients;
+ * the shared spin compilation unit folds this into its resident batch loop. */
+__always_inline __gnu_inline
 bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 			       struct kd_exec_frame *frame,
 			       struct kd_jit_batch_call *call)
@@ -213,6 +219,7 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	return true;
 }
 
+__always_inline __gnu_inline
 bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 				 const struct kd_exec_frame *frame)
 {

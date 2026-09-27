@@ -24,8 +24,18 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 256 字节、64 字节对齐；next 与 completed/locked 分行，避免缩减字段后
 引入相邻 node 共行。生产构建对大小、对齐和通知偏移做静态检查。
 
-| 编译入口 | 保留职责 |
+`kd_spin_runtime.c`按`kd_exec.c → exe.c → kd_spinlock.c`顺序组合成一个编译单元，
+让普通batch的readiness、准备、绑定、完成及退休检查内联到同一个combiner循环。
+源文件仍按下表职责阅读，不再分别链接三个对象；GNU inline保留其他调用者需要的外部入口。
+发布检查、frame/owner/ACK、wrapper clobber及节点唤醒顺序保持不变。
+普通clobber unlock的native字节路径保持leaf：局部允许尾调用，其他owner转交
+`kd_spin_unlock`；最后一个preempt pin需要调度时，使用`static_call_mod(preempt_schedule)`
+尾转到内核导出的trampoline，随dynamic preemption配置更新，保留return thunk。
+模块不引用内核未导出的static-call key。释放锁字、native计数和preempt decrement/test顺序不变。
+
+| 源码入口 | 保留职责 |
 | --- | --- |
+| [kd_spin_runtime.c](kd_spin_runtime.c) | spin与共享执行层的实际编译入口，避免逐请求跨对象调用 |
 | [kd_main.c](kd_main.c) | 模块初始化、hook 安装/撤销、目标选择 |
 | [kd_lock.c](kd_lock.c) | hook 路由、原生快路径、mutex shadow 查询 |
 | [kd_spinlock.c](kd_spinlock.c) | 按协议顺序组合 spin 私有实现；公共调用、恢复和解锁分别在下表的独立组件中 |
@@ -105,7 +115,7 @@ spin 初始化按 possible CPU 一次预分配20 KiB，NUMA-on时请求该CPU节
 
 ## 私有实现组件
 
-下表按所属编译单元和原声明顺序列出组件；文件头说明用途和依赖。
+下表按所属源码入口和原声明顺序列出组件；文件头说明用途和依赖。
 `spin/execute.inc` 内的 `execute_cs` 处理复杂委托出口，
 `spin/combiner.inc` 的 `run_combiner` 组织批次；
 `kd_spin_batch_run` 在同一个 C 帧中处理新、旧及混合 ABI，编译器保护跨 wrapper

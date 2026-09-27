@@ -424,7 +424,7 @@ struct kernel_param_ops { int (*get)(char *, const struct kernel_param *); };
         # The unified combiner returns directly after recording its successor.
         # Keep the real void-return blocks and reject accidental fallthrough.
         source += "static void fallback_step(int exe_flag) { void *lock = NULL; "
-        source += "void *next_node = NULL, *curr_node = (void *)1; __typeof__(fallback_state) *batch = &fallback_state;\n"
+        source += "void *curr_node = (void *)1; __typeof__(fallback_state) *batch = &fallback_state;\n"
         source += spin[start:end]
         source += "\nassert(0); }\nstatic void fallback(int code) { fallback_state.next = NULL; fallback_step(code); assert(fallback_state.next == (void *)1); }\n"
         source += r'''

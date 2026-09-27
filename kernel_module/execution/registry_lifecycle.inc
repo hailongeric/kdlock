@@ -49,6 +49,9 @@ bool kd_exe_publish_status(struct kd_exe_info *exe, int status)
 	}
 }
 
+/* Fold this publication check into each spin dispatch; keep the external
+ * entry for other callers. The acquire and source-close check are unchanged. */
+__always_inline __gnu_inline
 bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, unsigned int pid,
 			   unsigned long ip)
 {

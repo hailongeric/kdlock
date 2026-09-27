@@ -26,6 +26,16 @@ KD在8/16/36线程为3.416/3.390/1.869 Mops/s，约为同期TCLock的71%/72%/71%
 36线程nested/early默认比例2完成业务但测量阶段没有JIT；显式比例4的功能复测有实际JIT并排空。
 完整分布、候选撤回、首次失败和证据以该报告为准，没有mutex live测试。
 
+随后完成[跨层内联与解锁尾调用优化](../bench/tclock_compare/results/20260927-hash-runtime.md)：
+将spin、dispatcher与frame层组合编译，移除combiner内五个逐请求外部helper调用和目录memcmp，
+并让native clobber unlock通过内核module static-call尾调用调度。默认kernel/512完整135场通过；
+相对上一版相同默认配置，16/36线程峰值提高12.47%/6.26%，中位数提高12.47%/5.98%。
+1/2线程达到同期Linux峰值的94.8%/98.6%；hash多线程仍低于TCLock，目标尚未完成。
+显式off/1024与c1回归另列，不能混入默认成绩。c1的16/20/36线程提高约30%–34%，
+但8线程下降18.85%，平均batch仅9–13正文；后续需解决更快combiner的短批handoff开销。
+source/owner/ACK及准入顺序保持；
+吞吐与静态指令证据不等于PMU/cache miss归因。
+
 当前默认采用有界512正文及独立512扫描预算、六后继准入、producer预取及直接per-CPU热值。
 此前在此基础上压缩continuation前缀以合并IP/SP缓存行、用带代际的原子状态替代ticket guard、
 折叠JIT的RIP常量地址，并定向调整低竞争解锁布局；见[全链路报告](../bench/tclock_compare/results/20260927-flow.md)。
@@ -91,7 +101,7 @@ NUMA-on继续作为provider和比较运行器默认值。优化优先级按实�
 | 请求发布 | continuation内result保留32位，内部kind压为字节并重排；frame从32移到24，MINIMAL IP/SP共行 | 记录仍704字节；这是五行变四行的几何，不是已测cache miss次数 |
 | NUMA选择 | 有界512正文/独立512扫描；连续延期链只改必要接点，远端前缀最后优先交接 | 先测批终止原因；继续放大上限可能损害少数节点进度 |
 | 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；MINIMAL IP/SP共行只发一次hint，栈提示扩到SP-8及最多四个向上地址 | FULL/借用包的尾部partial line可单独评估；远距离预取旧回退仍有效 |
-| batch准入/lease | registry身份只读复用，发布状态逐请求读取，精确source lease按batch摊销 | 不复制共享包，不把生命周期计数改成近似统计 |
+| batch准入/lease | registry身份只读复用，发布状态逐请求读取，精确source lease按batch摊销；组合编译内联readiness、prepare/complete、bind/retire，目录改为精确整数比较 | 不复制共享包，不把生命周期计数改成近似统计 |
 | JIT正文 | RIP常量折叠；callee复用公共SP发布；入口witness只写一次、预算DEC/JZ、块内只读GPR不写回 | 未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
 | wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 去掉虚拟CALL栈写需保持真实续点及FULL契约，不是直接删保存指令 |
 | 退休/通知 | 先pop/退休，再release唤醒；队列头和轮询行分离 | 原owner ACK、最后一次packet读取和节点复用顺序保持不变 |

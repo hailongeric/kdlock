@@ -1,7 +1,7 @@
 # Guest-only external-module build against the captured running kernel.
 # This compiles kdlock, not the guest kernel; SELFTEST is an explicit opt-in.
-# Private .inc components remain within their owning C translation unit;
-# Kbuild tracks include dependencies. Do not add them as separate objects.
+# kd_spin_runtime.c combines the spin and shared execution implementations;
+# Kbuild tracks their C/.inc dependencies. Do not link them a second time.
 obj-m += kdlock_km.o
 
 ccflags-y += -I$(src)/../include
@@ -24,15 +24,13 @@ kdlock_km-objs := \
 	kd_lock.o \
 	kd_hotlock.o \
 	sys.o \
-	exe.o \
-	kd_exec.o \
+	kd_spin_runtime.o \
 	kd_source.o \
-	kd_spinlock.o \
 	kd_spin_entry.o \
 	kd_mutex.o \
 	kd_mutex_tasks.o
 
-OBJECT_FILES_NON_STANDARD_kd_spinlock.o := y
+OBJECT_FILES_NON_STANDARD_kd_spin_runtime.o := y
 
 KDIR ?= /lib/modules/$(shell uname -r)/build
 

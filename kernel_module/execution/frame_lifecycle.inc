@@ -58,6 +58,9 @@ void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
 	frame->state = KD_EXEC_FRAME_RUNNING;
 }
 
+/* Keep an external entry for mutex/other callers while specializing the spin
+ * root's constant depth and batch lease inside the shared compilation unit. */
+__always_inline __gnu_inline
 int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
 		       bool batch_lease)
 {
@@ -305,6 +308,7 @@ int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)
  * source lease to retire. Validate its physical owner and final packet using
  * the same terminal check as the generic path, then unbind in one operation.
  * The queue layer still owns completion publication and successor selection. */
+__always_inline __gnu_inline
 int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();

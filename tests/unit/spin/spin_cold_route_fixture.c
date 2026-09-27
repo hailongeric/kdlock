@@ -12,6 +12,18 @@ static bool warm_waiter;
 static unsigned int pins, disables, enables, reads, attempts, waits, hot_releases;
 static unsigned int rate_hot;
 static unsigned long lock_entries;
+static bool resched_requested;
+static unsigned int schedules;
+static unsigned char *last_released;
+#define CONFIG_PREEMPTION 1
+#define barrier() __asm__ volatile("" ::: "memory")
+#define preempt_count_dec_and_test() (--pins, ++enables, !pins && resched_requested)
+#ifdef KD_TEST_STATIC_CALL
+#define CONFIG_PREEMPT_DYNAMIC 1
+#define static_call_mod(name) schedule_checked
+#else
+#define preempt_schedule() schedule_checked()
+#endif
 #define __percpu
 #define KD_SPIN_DIRECT_NATIVE_HELD 5U
 #define preempt_disable() (++pins, ++disables)
@@ -19,13 +31,22 @@ static unsigned long lock_entries;
 #define this_cpu_inc(x) (++(x))
 #define this_cpu_dec(x) (--(x))
 #define this_cpu_read(x) (++reads, (x))
-#define smp_store_release(p,v) (*(p)=(v))
+#define smp_store_release(p,v) (last_released=(p), *(p)=(v))
 #define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 #define READ_ONCE(x) (x)
 #define WRITE_ONCE(x,v) ((x)=(v))
 #define per_cpu(x,c) (x)
 #define for_each_possible_cpu(c) for ((c)=0;(c)<1;(c)++)
 #define _Q_LOCKED_VAL_HL 1U
+/* The scheduler may run only after the real release and final native pin.
+ * Exercise both sides of the production preempt_enable decrement/test. */
+static void schedule_checked(void)
+{
+ assert(resched_requested && !pins && last_released && !*last_released);
+ assert(!kd_spin_fast_cpu.nondelegated);
+ schedules++;
+}
 /* The real provider counts both CAS outcomes before the pending/MCS path.
  * Its CPU primitive is tested with production hotlock code elsewhere. */
 static void kd_hotlock_spin_entry_pinned(void)
@@ -60,6 +81,7 @@ int main(void)
   warm_waiter=state&2;
   rate_hot=0;
   pins=disables=enables=reads=attempts=waits=0;
+  resched_requested=!!(state&2); schedules=0; last_released=NULL;
   lock_entries=0;
   assert(kd_spin_fast_idle());
   preempt_disable(); /* The public macro owns the only acquisition pin. */
@@ -76,6 +98,7 @@ int main(void)
   kd_spin_unlock_clobber_v1(&lock, 0x1111, 0x2222, 0x3333);
   assert(!reads && lock.val == queued && kd_spin_fast_idle());
   assert(!pins && disables == 1 && enables == 1 && !hot_releases);
+  assert(schedules == resched_requested);
   assert(lock_entries == 1); /* Unlock is not a new acquisition. */
  }
  /* Two independent cold holds count through ordinary/early release. The
@@ -83,6 +106,7 @@ int main(void)
  for(unsigned int early=0;early<2;early++) {
     kd_spinlock_t lock[2]={{.val=0},{.val=0}};
     pins=disables=enables=reads=attempts=waits=0;
+    resched_requested=true; schedules=0; last_released=NULL;
     lock_entries=0;
     for(unsigned int i=0;i<2;i++) {
      rate_hot=i;
@@ -97,6 +121,7 @@ int main(void)
      rate_hot=!i;
      kd_spin_unlock_clobber_v1(&lock[i], 0x1111, 0x2222, 0x3333);
      assert(!reads && rate_hot==!i && kd_spin_fast_cpu.nondelegated==1-step);
+     assert(schedules == step);
     }
     assert(!pins && enables==2 && disables==2 && kd_spin_fast_idle());
     assert(lock_entries==2);
@@ -106,6 +131,7 @@ int main(void)
  for(unsigned int heat=0;heat<2;heat++) {
   kd_spinlock_t lock={.val=0x45670101U};
   pins=disables=enables=reads=0;
+  resched_requested=false; schedules=0; last_released=NULL;
   rate_hot=heat;
   preempt_disable();
   kd_spin_unlock_clobber_v1(&lock, 0x4444, 0x5555, 0x6666);

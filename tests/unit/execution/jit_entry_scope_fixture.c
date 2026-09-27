@@ -1311,6 +1311,25 @@ static void check_batch_metadata(void)
 				CHECK(timing_reads == timed * 2);
 				code[9 + byte] ^= 1;
 			}
+			/* Integer directory comparisons must reject every changed byte
+			 * just like memcmp, including each overlap/end byte. Legacy
+			 * images intentionally permit an absent clobber directory. */
+			if (abi) {
+				for (unsigned int byte = 0; byte < 11; byte++) {
+					unsigned int at = byte < 7 ? 25 + byte : 41 + byte - 7;
+
+					code[at] ^= 1;
+					memcpy(&untouched, &call, sizeof(untouched));
+					CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+					CHECK(!memcmp(&call, &untouched, sizeof(call)));
+					CHECK(!memcmp(&active, &before, sizeof(active)));
+					CHECK(timing_reads == timed * 2);
+					code[at] ^= 1;
+				}
+				code[32] = code[40] = 0xa5;
+				CHECK(kd_jit_image_matches(entry, &active));
+				code[32] = code[40] = 0;
+			}
 
 			/* The shortcut to COMPLETE permission is valid only after the
 			 * original pristine-root guards. Reject each lost prerequisite

@@ -6,9 +6,11 @@ KD使用per-CPU近似竞争统计和原生队头的有界前缀检查；完整�
 
 ## 当前结果与口径
 
+- [hash跨层内联与解锁优化](tclock_compare/results/20260927-hash-runtime.md)：
+  默认kernel/512完整135场；分开记录off/1024诊断、c1回归、撤回候选与源码/ELF证据。
 - [spin清理与定向验证](tclock_compare/results/20260926-cleanup.md)：
   删除遗留包装/宏、显式内联叶子校验；81场定向比较、36线程nested/early及相关检查通过，不作为新吞吐提升结论。
-- [最新c1复测至36线程](tclock_compare/results/20260926-c1-through36.md)：
+- [历史c1复测至36线程](tclock_compare/results/20260926-c1-through36.md)：
   aef982b、十五线程点三方135场；固定2.5GHz、512上限，保留Linux跨node快慢分布及峰值/整段差异。
 - [c1跨node有界批次优化](tclock_compare/results/20260926-cross-node.md)：
   08497ab、512上限，十四线程点三方126场及32线程功能；跨node峰值提高8–11%，28线程仍略低于TCLock，保留节点进度代价。

@@ -122,6 +122,14 @@ no outer assembly register group save or per-waiter callback return/reentry.
 This follows TCLock's retained combiner continuation while keeping the JIT's
 physical scratch frame separate from the logical waiter stack. Admission,
 completion/unbind/publication and successor selection remain in the lock loop.
+The provider compiles `kd_exec.c`, `exe.c` and `kd_spinlock.c` together through
+`kd_spin_runtime.c`. Readiness, batch preparation/completion and frame
+bind/retire use GNU always-inline definitions: the combiner sees their bodies,
+while other clients retain external entry points. This changes the compiler's
+optimization scope, not the publication, physical-owner or packet contract.
+Both seven-byte wrapper directory signatures use exact overlapping 32-bit
+loads; admission no longer calls `memcmp` for the clobber directory.
+
 Normal production batch roots combine terminal validation and physical unbind
 in `kd_exec_frame_retire_single_spin`: exact physical owner/top/depth, batch
 lease, non-complex state and the existing final-packet checks are mandatory.

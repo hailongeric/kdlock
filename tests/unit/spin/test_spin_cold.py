@@ -27,6 +27,7 @@ def main():
         'static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *lock)')
     code += 'void ' + definition(source, 'kd_spin_direct_native_lock(kd_spinlock_t *lock)')
     code += 'void ' + definition(source, 'kd_spin_direct_native_unlock(kd_spinlock_t *lock)')
+    code += 'void ' + definition(source, 'kd_spin_unlock(struct qspinlock *lock)')
     code += 'void ' + definition(source,
         'kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,')
     code += definition((ROOT / 'include/kd_spin_fast.h').read_text(),
@@ -48,6 +49,14 @@ def main():
                             '-I', directory, str(ROOT / 'tests/unit/spin' / (fixture + '.c')),
                             '-o', str(binary)], check=True, timeout=30)
             subprocess.run([binary], check=True, timeout=10)
+            if fixture == 'spin_cold_route_fixture':
+                # Exercise both compile-time and dynamic-preemption C targets;
+                # the real module build checks static-call tail-site metadata.
+                subprocess.run(['cc', '-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
+                                '-Wno-unused-parameter', '-DKD_TEST_STATIC_CALL',
+                                '-I', directory, str(ROOT / 'tests/unit/spin' / (fixture + '.c')),
+                                '-o', str(binary)], check=True, timeout=30)
+                subprocess.run([binary], check=True, timeout=10)
 
 
 if __name__ == '__main__':

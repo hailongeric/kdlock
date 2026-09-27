@@ -138,7 +138,13 @@ kd_spin_unlock(struct qspinlock *lock)
 }
 EXPORT_SYMBOL_GPL(kd_spin_unlock);
 
-__attribute__((noipa)) noinline notrace void
+/* This ABI shell does not retain state after either helper. Permit sibling
+ * calls locally so the common native release needs no C frame: rescheduling
+ * and the generic ownership router return directly to the original caller.
+ * Keep the kernel's preempt decrement/test and return-thunk machinery.
+ * Fix the small native entry's alignment independently of adjacent helpers. */
+__attribute__((noipa, aligned(64), optimize("optimize-sibling-calls")))
+noinline notrace void
 kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 						  unsigned long ip, unsigned long bp)
 {
@@ -152,10 +158,26 @@ kd_spin_unlock_clobber_v1(struct qspinlock *lock, unsigned long sp,
 	if (likely(READ_ONCE(lock->locked) == KD_SPIN_DIRECT_NATIVE_HELD)) {
 		smp_store_release(&lock->locked, 0);
 		this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+		/* Same decrement/test as preempt_enable. This clobber ABI permits
+		 * an ordinary C call: expose it to the compiler instead of hiding
+		 * it in __preempt_schedule's register-preserving inline assembly.
+		 * Use the exported module trampoline: its target follows dynamic
+		 * preemption, while its private static-call key is not exported. */
+#ifdef CONFIG_PREEMPTION
+		barrier();
+		if (unlikely(preempt_count_dec_and_test())) {
+#ifdef CONFIG_PREEMPT_DYNAMIC
+			static_call_mod(preempt_schedule)();
+#else
+			preempt_schedule();
+#endif
+		}
+#else
 		preempt_enable();
+#endif
 		return;
 	}
-	kd_spin_unlock_core(lock);
+	kd_spin_unlock(lock);
 }
 EXPORT_SYMBOL_GPL(kd_spin_unlock_clobber_v1);
 

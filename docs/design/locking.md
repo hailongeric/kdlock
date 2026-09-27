@@ -64,7 +64,13 @@ Paired unlock always calls `kd_spin_unlock_clobber_v1` with the broad clobber
 contract and lock/SP/IP/BP metadata. The provider tests byte 5 before a release,
 count decrement and unpin, preserving pending/tail; other states enter the
 existing unlock core. JIT sees one completion endpoint without a caller-side
-cold/hot unlock branch. The cookie is the sampler's sole static per-CPU
+cold/hot unlock branch. The clobber provider permits sibling calls locally:
+the native release needs no C frame, other owners tail-call `kd_spin_unlock`,
+and a final pin requesting rescheduling tail-calls the exported kernel
+trampoline through `static_call_mod(preempt_schedule)` on dynamic-preemption
+builds. The release/count/decrement-test order and kernel return thunk remain;
+the module does not access the scheduler's private static-call key.
+The cookie is the sampler's sole static per-CPU
 unsigned-integer gate, shared by all spin locks. One direct GS read replaces
 the old per-CPU pointer followed by a dynamic-table load; no second heat flag,
 acquisition path or nesting count is introduced. Mutex heat remains in its
