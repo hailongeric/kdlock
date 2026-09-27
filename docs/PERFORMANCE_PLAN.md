@@ -7,6 +7,15 @@
 
 ## 1. 当前状态与证据边界
 
+2026-09-28 按[NUMA/mutex 分阶段计划](../bench/tclock_compare/results/20260928-numa-mutex.md)
+完成显式放置、独立单事件 PMU、终态 CALL/COMPLETE 融合、静态 GS/task 导入省略及预算提前检查。
+完整 spin/hash 135 场通过；KD 只在 1、3–6 线程达到同期 TCLock 峰值的 90%，高线程仍有差距。
+24 线程少数 node 仅约 2% 进度；有限 batch/scan 不代表公平保证。
+下一阶段是独立三方 mutex cacheline 基线，之后分别验证 native-first、shadow/task cache、
+本地栈/观测、专用执行 helper 和有界 NUMA grouping，确认正确性与可重复改进后再转 mutex/hash。
+本阶段保留 pinned KD waiters 和最多 1024 个 task 记录至卸载；不做 oversubscription 重设计、
+内核修改或 wrapper 输入 ABI 扩展，不重试已撤回的寄存器驻留/广泛预取候选。
+
 按用户2026-09-27的阶段安排，spin本轮以[135场收尾复测](../bench/tclock_compare/results/20260927-spin-checkpoint.md)
 作为转入mutex前的c1基线，未再修改锁实现。KD在8–36线程全部已测点峰值高于TCLock，
 相对前次相同实现变化在约±0.31%内；1/2线程仍低于Linux，2/7线程低于TCLock。
@@ -116,8 +125,8 @@ NUMA-on继续作为provider和比较运行器默认值。优化优先级按实�
 | NUMA选择 | 有界1024正文/独立1024扫描；连续延期链只改必要接点，远端前缀最后优先交接 | 先测批终止原因；继续放大上限可能损害少数节点进度 |
 | 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；MINIMAL IP/SP共行只发一次hint，栈提示扩到SP-8及最多四个向上地址 | FULL/借用包的尾部partial line可单独评估；远距离预取旧回退仍有效 |
 | batch准入/lease | registry身份只读复用，发布状态逐请求读取，精确source lease按batch摊销；组合编译内联readiness、prepare/complete、bind/retire，目录改为精确整数比较 | 不复制共享包，不把生命周期计数改成近似统计 |
-| JIT正文 | RIP常量折叠；callee复用公共SP发布；入口witness只写一次、预算DEC/JZ、块内只读GPR不写回 | 未使用GS/task槽的静态省略；terminal CALL融合需独立验证 |
-| wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 去掉虚拟CALL栈写需保持真实续点及FULL契约，不是直接删保存指令 |
+| JIT正文 | RIP常量折叠；callee复用公共SP发布；入口witness只写一次、预算DEC/JZ、块内只读GPR不写回 | 已验证静态省略与终态 CALL/COMPLETE 融合；未知需求保留导入，失败完整物化 CALL 一次 |
+| wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 已知终态先检查等价 SP/IP/BP/锁/端点；其他路径保留 FULL 与真实续点 |
 | 退休/通知 | 先pop/退休，再release唤醒；队列头和轮询行分离 | 原owner ACK、最后一次packet读取和节点复用顺序保持不变 |
 | 嵌套/原生后缀 | 通用dispatcher删除冗余MFENCE，完成/native/ACK/status各自发布；native路由表仍有共享锁 | 可复用本地native-root避开无关全局查询，先读注入开关再CAS；普通c1 batch不经过通用dispatcher |
 
