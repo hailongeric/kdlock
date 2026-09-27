@@ -272,6 +272,18 @@ A real tail node still receives the ordinary native handoff; this check is not
 used on detached deferred lists. No body executes until the existing JIT
 admission succeeds. The directed delayed-link mutation guards this boundary.
 
+Inside an active batch, a missing link after the saved successor receives at
+most eight `cpu_relax()`/`READ_ONCE` retries. Short bodies can otherwise catch
+returning producers and repeatedly pay the physical handoff cost. Existing
+links take no pause; a native successor or the body cap ends the batch
+immediately. With NUMA enabled, an existing deferred remote group also ends
+an empty-link batch immediately, so waiting for local replenishment cannot
+delay that group's handoff. This check reads the existing per-CPU queue head
+only at the empty-link boundary. The saved successor has not been woken and
+remains queue-owned.
+This grace needs no proof that a producer is coming: expiry hands off normally.
+It does not change the six-successor admission rule or the NUMA scan budget.
+
 ### 4.3 Combiner And Native Returns
 
 The combiner owns the KD word while processing an eligible batch, validates entry

@@ -149,6 +149,11 @@ def main():
                 if line.startswith("static ") and name + "(" in line
             )
             code += definition(spin, marker) + "\n"
+    # Refill expires without a new peer here; do not invoke the separate
+    # native reacquisition scheduler for this bounded PAUSE hint.
+    code += "#define cpu_relax() ((void)0)\nstatic __always_inline bool\n"
+    code += definition(spin, "kd_spin_batch_can_continue(struct kd_spin_node *next, unsigned int count)")
+    code += "#undef cpu_relax\n"
     code += definition(spin, "static void kd_spin_batch_run(void *opaque)")
     for name, prefix in (
         ("execute_cs", "static int\n"),

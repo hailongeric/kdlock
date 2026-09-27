@@ -121,6 +121,11 @@ spin 初始化按 possible CPU 一次预分配20 KiB，NUMA-on时请求该CPU节
 `kd_spin_batch_run` 在同一个 C 帧中处理新、旧及混合 ABI，编译器保护跨 wrapper
 活跃值。调用边界见 [kd_jit_batch.h](../include/kd_jit_batch.h)；旧汇编外壳仅留在
 [兼容测试夹具](../tests/unit/spin/legacy_batch.S)，不参与生产构建。
+`kd_spin_batch_can_continue`在已有批次的后继链接暂空时最多PAUSE/重读8次，
+给已完成waiter回队的短窗口；已链接、native边界或达到正文上限时不等待。
+NUMA-on且已有暂存的远端节点时，空链接直接交接，不再等待本地waiter回队；
+只在该边界读取已有per-CPU队头，不新增共享计数。
+不新增时钟或共享状态，保留原有NUMA扫描及队列唤醒顺序。
 新 ABI 的普通 root 正常路径只捕获/回写/恢复 RIP/RSP/RBP，中途出口在进入 C
 前物化完整逻辑 GPR；旧 ABI 与 FULL 续跑保留完整恢复规则。
 `spin/slowpath.inc` 管理队首等待与恢复，`spin/wait.inc` 保持 IRQ 状态，先切到

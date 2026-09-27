@@ -89,6 +89,12 @@ def main():
     )
     body += definition(source, "static struct kd_spin_node *kd_spin_linked_successor(struct qspinlock *word,")
     body += definition(source, "struct kd_spin_batch {").rstrip() + ";\n"
+    # No peer arrives during the bounded refill grace in these queue cases.
+    # Keep their existing cpu_relax peer script for the actual wait/ACK paths;
+    # test_spin_batch injects publication at every refill retry boundary.
+    body += "#define cpu_relax() ((void)0)\nstatic __always_inline bool\n"
+    body += definition(source, "kd_spin_batch_can_continue(struct kd_spin_node *next, unsigned int count)")
+    body += "#undef cpu_relax\n"
     body += definition(source, "static void kd_spin_batch_run(void *opaque)")
     # The wrapper observes recursive entry/return; it does not replace the
     # production scan, cancellation, splice or queue-head save/restore bodies.

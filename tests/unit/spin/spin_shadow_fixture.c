@@ -182,6 +182,7 @@ struct kd_spin_batch;
 #define smp_load_acquire(p) (*(p))
 #define WRITE_ONCE(x, v) ((x) = (v))
 #define this_cpu_ptr(p) (p)
+#define this_cpu_read(x) (x)
 #define this_cpu_inc_return(v) (++(v))
 #define this_cpu_inc(v) (++(v))
 #define this_cpu_dec(v) (--(v))

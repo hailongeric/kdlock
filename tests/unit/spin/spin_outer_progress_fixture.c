@@ -362,6 +362,10 @@ static void kd_source_frame_put(void)
 #undef kd_exec_frame_pop
 #undef this_cpu_ptr
 #define this_cpu_ptr(p) (&(p)[mock_cpu])
+/* Spin fields name CPU zero; select the same CPU-state stride as the pointer
+ * accessor when the production helper performs a direct per-CPU read. */
+#define this_cpu_read(x) (*(__typeof__(&(x)))((char *)&(x) + \
+	mock_cpu * sizeof(shadow_states[0])))
 
 int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int depth, bool lease)
 {

@@ -6,6 +6,9 @@ KD使用per-CPU近似竞争统计和原生队头的有界前缀检查；完整�
 
 ## 当前结果与口径
 
+- [有界refill与hash复验](tclock_compare/results/20260927-spin-refill.md)：
+  在跨层内联基础上处理短批反复handoff，c1八线程回升到6.063 Mops/s，
+  远端队列优先修复24线程hash的中位数回退；定向测量与复杂退出范围见报告。
 - [hash跨层内联与解锁优化](tclock_compare/results/20260927-hash-runtime.md)：
   默认kernel/512完整135场；分开记录off/1024诊断、c1回归、撤回候选与源码/ELF证据。
 - [spin清理与定向验证](tclock_compare/results/20260926-cleanup.md)：

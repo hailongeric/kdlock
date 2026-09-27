@@ -110,7 +110,64 @@ static struct pt_regs *kd_exec_frame_regs(struct kd_exec_frame *f)
 { return f->regs_ref ? f->regs_ref : &f->regs; }
 static void kd_exec_frame_set_state(struct kd_exec_frame *f, int state)
 { f->state = state; }
+static const unsigned int kd_combiner_batch_size = 512;
+#ifdef NUMA_AWARE
+static struct { struct kd_spin_node *local_queue_head; } kd_spin_cpu;
+#endif
+static unsigned int refill_pauses, refill_after;
+static struct kd_spin_node *refill_node, *refill_following;
+static void cpu_relax(void)
+{
+	if (++refill_pauses == refill_after)
+		refill_node->next = refill_following;
+}
 #include "spin_batch_production.h"
+
+/* Publish at every retry boundary, or never. A bounded grace cannot retain
+ * the lock indefinitely, cross the body cap, or delegate a native node. */
+static void test_batch_refill(void)
+{
+	struct kd_spin_node node = { 0 }, following = { 0 };
+
+	refill_node = &node;
+	refill_following = &following;
+	for (unsigned int at = 0; at <= 9; at++) {
+		for (unsigned int native = 0; native < 2; native++) {
+			node.next = NULL;
+			following.socket_id = native ? IRQ_NUMA_NODE : 0;
+			refill_after = at;
+			refill_pauses = 0;
+			CHECK(kd_spin_batch_can_continue(&node, 511) ==
+			      (at >= 1 && at <= 8 && !native));
+			CHECK(refill_pauses == (at >= 1 && at <= 8 ? at : 8));
+		}
+	}
+	refill_pauses = 0;
+	node.next = &following;
+	following.socket_id = 0;
+	CHECK(kd_spin_batch_can_continue(&node, 1));
+	CHECK(!refill_pauses);
+	CHECK(!kd_spin_batch_can_continue(NULL, 1));
+	CHECK(!kd_spin_batch_can_continue(&node, 512));
+	node.socket_id = IRQ_NUMA_NODE;
+	node.next = (void *)1; /* Native boundary must not follow this pointer. */
+	CHECK(!kd_spin_batch_can_continue(&node, 1));
+	CHECK(!refill_pauses);
+#ifdef NUMA_AWARE
+	/* Deferred remote requests win over waiting for local replenishment.
+	 * Already linked work still follows the existing bounded NUMA batch. */
+	node.socket_id = 0;
+	node.next = NULL;
+	kd_spin_cpu.local_queue_head = &following;
+	refill_after = 1;
+	CHECK(!kd_spin_batch_can_continue(&node, 1));
+	CHECK(!refill_pauses);
+	node.next = &following;
+	CHECK(kd_spin_batch_can_continue(&node, 1));
+	CHECK(!refill_pauses);
+	kd_spin_cpu.local_queue_head = NULL;
+#endif
+}
 
 static void test_cache(void)
 {
@@ -550,6 +607,7 @@ static void test_prepared_prefetch(void)
 
 int main(void)
 {
+	test_batch_refill();
 	test_cache();
 	test_stats();
 	test_simple_success();

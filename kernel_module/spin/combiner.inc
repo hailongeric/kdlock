@@ -179,6 +179,35 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 	return true;
 }
 
+/* A short body can catch the returning producers after waking its waiter.
+ * Give an empty successor link a bounded chance to refill before paying for
+ * a new physical combiner. Never wait past the body limit or on a native
+ * successor. This node is still queued and cannot be reused before handoff;
+ * no tail ownership assumption or unbounded publication wait is needed. */
+static __always_inline bool
+kd_spin_batch_can_continue(struct kd_spin_node *next, unsigned int count)
+{
+	struct kd_spin_node *following;
+	unsigned int retries;
+
+	if (!next || check_irq_node(next) || count >= kd_combiner_batch_size)
+		return false;
+	following = READ_ONCE(next->next);
+	if (unlikely(!following)) {
+#ifdef NUMA_AWARE
+		/* A deferred remote group already has useful work. Hand it the
+		 * queue instead of extending a small local group's residence. */
+		if (this_cpu_read(kd_spin_cpu.local_queue_head))
+			return false;
+#endif
+		for (retries = 0; retries < 8 && !following; retries++) {
+			cpu_relax();
+			following = READ_ONCE(next->next);
+		}
+	}
+	return following && !check_irq_node(following);
+}
+
 /* Like TCLock's WWJUMP, keep one combiner continuation for the entire batch.
  * Finish and unbind before publishing completion, then admit the successor.
  * Both wrapper ABIs clobber compiler-owned registers inside this same C frame;
@@ -288,9 +317,7 @@ static void kd_spin_batch_run(void *opaque)
 			return;
 		}
 
-		if (next_node == NULL || next_node->next == NULL ||
-		    check_irq_node(next_node) || check_irq_node(next_node->next) ||
-		    batch->counter >= kd_combiner_batch_size) {
+		if (!kd_spin_batch_can_continue(next_node, batch->counter)) {
 			batch->next = next_node;
 			return;
 		}

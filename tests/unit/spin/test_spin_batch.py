@@ -46,6 +46,7 @@ def main():
         (spin, "kd_spin_batch_lookup(struct kd_spin_batch *batch, unsigned long entry_ip)", "static struct kd_exe_info *\n"),
         (spin, "kd_spin_batch_find_ready(struct kd_spin_batch *batch, unsigned long entry_ip)", "static struct kd_exe_info *\n"),
         (spin, "static inline bool check_irq_node(struct kd_spin_node *node)", ""),
+        (spin, "kd_spin_batch_can_continue(struct kd_spin_node *next, unsigned int count)", "static __always_inline bool\n"),
         (spin, "static void kd_spin_prepare_prefetch(struct kd_spin_node *node,", ""),
         (spin, "static void kd_spin_prefetch_lookup(struct kd_spin_node *node)", ""),
         (spin, "static void kd_spin_prefetch_request(struct kd_spin_node *node)", ""),
@@ -79,13 +80,14 @@ def main():
         path = Path(directory)
         (path / "spin_batch_types.h").write_text(types)
         (path / "spin_batch_production.h").write_text(body)
-        binary = path / "batch"
-        subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
-            "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
-            "-Wno-sign-compare", "-I", str(path),
-            str(ROOT / "tests/unit/spin/spin_batch_fixture.c"), "-o", str(binary),
-        ], check=True, timeout=30)
-        subprocess.run([str(binary)], check=True, timeout=10)
+        for numa, flags in enumerate(([], ["-DNUMA_AWARE"])):
+            binary = path / f"batch-{numa}"
+            subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
+                "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
+                "-Wno-sign-compare", "-I", str(path), *flags,
+                str(ROOT / "tests/unit/spin/spin_batch_fixture.c"), "-o", str(binary),
+            ], check=True, timeout=30)
+            subprocess.run([str(binary)], check=True, timeout=10)
 
 
 if __name__ == "__main__":

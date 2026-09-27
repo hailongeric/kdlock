@@ -180,6 +180,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [有界refill与hash复验](results/20260927-spin-refill.md) | 批尾空链接最多PAUSE/重读8次，已有远端队列直接交接；最终hash63场+c1定向27场，恢复c1八线程短批回退，保留512上限 |
 | [hash跨层内联与解锁优化](results/20260927-hash-runtime.md) | 默认kernel/512完整135场；相同默认配置16/36线程峰值较前版提高12.47%/6.26%，仍低于TCLock；显式配置与c1回归单列 |
 | [hash_payload优化](results/20260927-hash-optimization.md) | JIT/预取/helper精简，分离UBSAN与批上限；显式off/1024完整135场，8/16/36线程约为TCLock的71%/72%/71%，默认配置与功能回归见报告 |
 | [hash_payload计时比较](results/20260927-hash-peak.md) | 新增hash连续计时；15线程点三方三轮135场通过，KD在3–5线程领先两方、6–36线程低于TCLock；锁实现未变 |
@@ -226,7 +227,7 @@ TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开�
 参数已删除；layout ABI v2 的 `resched` 固定为 0，运行器拒绝调度点仍开启的旧模块。
 这项实验设置不同于上游原始调度策略，也不同于历史索引中的成绩。
 这些锁外工作均计入整批 wall 时间。沿用三种直接API，新运行默认采用KD512/TCLock1024批次配置；
-最新[hash优化比较](results/20260927-hash-runtime.md)使用连续2秒、300ms峰值；历史固定迭代成绩保留各自原始参数。
+最新[hash优化比较](results/20260927-spin-refill.md)使用连续2秒、300ms峰值；历史固定迭代成绩保留各自原始参数。
 这是哈希表临界区的三方对比，不宣称完整复现上游分配布局或论文的运行环境。
 
 ```sh
