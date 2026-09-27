@@ -147,6 +147,18 @@ The clobber unlock provider first handles paired cold ownership with locked-byte
 value 5; otherwise it uses the existing fast-owner, native-ACK or ticket route.
 Neither route consults hotness or comm.
 
+The public header also supplies `kd_spin_lock_irqsave/unlock_irqrestore`,
+`kd_spin_lock_irq/unlock_irq`, and `kd_spin_lock_bh/unlock_bh` pairs on the same
+KD object. They select native byte-5 ownership directly: IRQ/BH exclusion is
+CPU-local and the delegated frame does not transfer it to another executor.
+IRQ acquisition saves/disables interrupts before its single preemption pin.
+Unlock releases the byte and native count while pinned, restores/enables IRQs,
+then unpins. BH uses the kernel's paired `SOFTIRQ_LOCK_OFFSET` operations, which
+combine the BH disable and acquisition pin; it adds no second preemption pair.
+Each irqsave flags value belongs to its caller, including nested acquisitions.
+There is no new lock field, global state or change to plain adaptive entry.
+See [API examples](../../include/README.md#显式-irqbh-spin-接口).
+
 `spin_delegate=0` is an explicit fixed self-execution control (default is 1).
 It bypasses admission and heat recording at the public entry. Combined record
 APIs return adaptive policy decisions; queries return cached heat.

@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [显式IRQ/BH spin接口](kernel/spin/irq_api/README.md#2026-09-27-验证) | 基础及相关7组最终通过，NORMAL provider/consumer构建、跨两node四CPU混合变体40,000次及排空通过；JIT=0，初次fixture/日志收集失败保留，未测性能或全量 |
 | [全链路复查与重复操作精简](../bench/tclock_compare/results/20260927-followup.md) | JIT阶段基础/相关5组、18场和36线程native续跑；最终基础/相关11组、三方135场、36线程native/early各360万操作及NORMAL构建通过；没有全量或mutex live重跑 |
 | [全链路优化与无锁ticket](../bench/tclock_compare/results/20260927-flow.md) | 第一阶段90场及相关测试单列；最终原子ticket版基础/entry/outer_progress/remote_outer共5组、两种构建、CPU0/20真实ticket selftest、完整135场及36线程nested原生续跑/early各360万操作通过，未跑全量 |
 | [spin清理与内联验证](../bench/tclock_compare/results/20260926-cleanup.md) | 基础/entry/shadow/outer共5组，普通及SELFTEST构建、81场性能、36线程nested/early各180万操作及归档审计通过；未跑全量 |
@@ -48,6 +49,7 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 | 原生 pending/MCS 与 owner 配对 | `spin/test_spin_nondelegated.py`、`spin/test_spin_shadow.py` |
 | 单锁字入口和 ticket | `spin/test_spin_direct.py`、`spin/test_spin_entry.py` |
 | 入口抢占配对 | `spin/test_spin_preempt.py`、`infrastructure/test_hotlock_sampling.py` |
+| 显式irqsave/irq/bh接口、flags类型及上下文拒绝 | `spin/test_spin_irq.py`、`spin/test_spin_cold.py`、`admission/test_context_policy.py`；真实内核检查见[IRQ/BH消费者](kernel/spin/irq_api/README.md) |
 | continuation 分配、容量、回收与最终恢复 | `spin/test_spin_storage.py`、`execution/test_exec_capacity.py`、`spin/test_spin_wait.py` |
 | native 借用退休、共享根包与延迟 ACK | `spin/test_spin_entry.py`检查实际ticket CAS；`execution/test_remote_outer.py`、`execution/test_remote_depth_protocol.py`、`execution/test_remote_outer_protocol.py`检查路由/ACK |
 | 嵌套、提前释放、队列、frame 退休 | `spin/test_spin_outer_progress.py`、`spin/test_spin_shadow.py`、`spin/test_spin_batch.py` |
@@ -64,6 +66,9 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 合成日志通过不表示当前 live 覆盖。生产代码 fixture 同样不证明真实内核并发。
 
 ## Live 检查
+
+IRQ/BH 变体使用[专用消费者模块](kernel/spin/irq_api/README.md)，检查本CPU上下文
+和同锁混合原生竞争，JIT=0；它不是下面的基础生命周期 case 或实际 JIT 验收。
 
 `tests/run_all.sh` 无参数只列出现存范围；`--case module --dry-run` 只预览。
 当前唯一基础 case 为 provider/device 生命周期，不加载旧 `klock_module`，JIT=0：

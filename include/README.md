@@ -4,7 +4,7 @@
 复用已有MCS计数，每512次边界先比较差值比例再采时；独立状态仅保存两个快照共16字节。
 IRQ可使边界延后或重复，不为统计维护精确批次；busy guard仍保护热表，小型pinned封装内联。
 spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿。
-旧两低确认、冷却及热度保留已移除；当前简化候选42场正确排空但性能保护失败，作为EXPERIMENTAL检查点保留。
+旧两低确认、冷却及热度保留已移除；当前策略与验证状态见[性能计划](../docs/PERFORMANCE_PLAN.md)。
 完整语义与统计边界统一见[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
 热度接口仅返回自适应判断；原observe模式已移除，比例门槛0仍保留CPU/单锁热度要求。
 
@@ -36,3 +36,34 @@ continuation 存储回收和 source pin 释放是不同边界。
 
 显式 KD 对象见 [kd_spin_type.h](kd_spin_type.h)，直接调用 ABI 见
 [kd_spin_direct.h](kd_spin_direct.h)；稳定 ticket 见 [kd_spin_entry.h](kd_spin_entry.h)。
+
+## 显式 IRQ/BH spin 接口
+
+包含`kd_spin_direct.h`，操作`kd_spinlock_t`；不能传入Linux的`spinlock_t/raw_spinlock_t`。
+接口与对应Linux raw-spin变体的调用方式、IRQ/BH及抢占配对一致：
+
+```c
+DEFINE_KD_SPINLOCK(lock);
+unsigned long flags;
+
+kd_spin_lock_irqsave(&lock, flags);
+/* IRQ关闭；flags保留此次获取前的状态。 */
+kd_spin_unlock_irqrestore(&lock, flags);
+
+kd_spin_lock_irq(&lock);
+/* IRQ关闭；irq形式要求调用者原来允许中断。 */
+kd_spin_unlock_irq(&lock); /* 无条件开启IRQ。 */
+
+kd_spin_lock_bh(&lock);
+/* 禁止本CPU软中断及抢占，保持硬IRQ原有状态。 */
+kd_spin_unlock_bh(&lock);
+```
+
+嵌套获取不同锁时，每次irqsave使用独立的`unsigned long flags`；irqrestore恢复该次状态。
+BH配对保留已有BH禁用层数，按目标内核普通task/softirq调用约束使用，不能用BH替代hard-IRQ保护。
+所有变体先释放KD锁字/在途计数，再恢复IRQ/BH并允许抢占；解锁必须与获取形式配对。
+
+这些变体固定在原CPU执行，共用现有KD锁字、pending/MCS队列和原生byte-5所有权，
+无需`kd_spin_prepare`、continuation、cookie或daemon。IRQ/BH状态不传给远端combiner，
+不可将它们当成已支持的JIT嵌套控制调用；翻译准入拒绝相应上下文符号。
+普通`KD_SPIN_DIRECT_LOCK/UNLOCK`的自适应路径及默认IRQ/BH语义保持不变。

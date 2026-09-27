@@ -50,6 +50,12 @@ CONTEXT_SYMBOLS = (
     "_raw_*_bh",
     "__raw_*_irq*",
     "__raw_*_bh",
+    # Explicit KD variants are native-only context boundaries, not ordinary
+    # lock endpoints or learnable native CALL-miss continuations.
+    "kd_spin_*_irq*",
+    "__kd_spin_*_irq*",
+    "kd_spin_*_bh",
+    "__kd_spin_*_bh",
     "irq_enter*",
     "irq_exit*",
     "nmi_enter*",

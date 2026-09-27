@@ -1,12 +1,15 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #ifndef KD_SPIN_DIRECT_H
 #define KD_SPIN_DIRECT_H
-/* Plain raw_spin_lock semantics: acquisition pins preemption, but does not
- * save/disable IRQs or BH. Callers needing that protection supply it outside. */
+/* Plain calls pin preemption without changing IRQ/BH state. The explicit
+ * IRQ/BH variants below keep their protected body on the calling CPU. */
 
 #include <asm/asm.h>
+#include <linux/bottom_half.h>
+#include <linux/irqflags.h>
 #include <linux/percpu.h>
 #include <linux/preempt.h>
+#include <linux/typecheck.h>
 #include "kd_spin_type.h"
 #include "kd_hotlock.h"
 #include "kd_spin_fast.h"
@@ -32,6 +35,14 @@ static __always_inline void kd_spin_direct_native_lock_inline(kd_spinlock_t *loc
 	kd_hotlock_spin_entry_pinned();
 	if (val)
 		kd_spin_direct_native_contended(lock, val);
+}
+/* Native-only callers own byte 5 and retain their acquisition pin. Separate
+ * physical release from unpinning so IRQ/BH restoration can precede scheduling.
+ * Preserve pending/tail: another CPU may already have published a successor. */
+static __always_inline void kd_spin_direct_native_release_inline(kd_spinlock_t *lock)
+{
+	smp_store_release(&lock->locked, 0);
+	this_cpu_dec(kd_spin_fast_cpu.nondelegated);
 }
 void kd_spin_direct_native_unlock(kd_spinlock_t *lock);
 void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
@@ -84,5 +95,64 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 	(void)sizeof(cookie); \
 	KD_SPIN_DIRECT_CALL(kd_spin_unlock_clobber_v1, kd_unlock_word, ""); \
 } while (0)
+
+/* IRQ/BH ownership cannot be delegated: a remote executor does not inherit
+ * the caller's interrupt state or CPU-local exclusion. Use the same KD word
+ * and non-combinable MCS nodes, without a heat check, frame or JIT entry.
+ * These pairs intentionally mirror raw_spin_* ordering in the target kernel. */
+static __always_inline unsigned long __kd_spin_lock_irqsave(kd_spinlock_t *lock)
+{
+	unsigned long flags;
+
+	local_irq_save(flags);
+	preempt_disable();
+	kd_spin_direct_native_lock_inline(lock);
+	return flags;
+}
+
+#define kd_spin_lock_irqsave(lock, flags) do { \
+	typecheck(unsigned long, flags); \
+	(flags) = __kd_spin_lock_irqsave(lock); \
+} while (0)
+
+static __always_inline void
+__kd_spin_unlock_irqrestore(kd_spinlock_t *lock, unsigned long flags)
+{
+	kd_spin_direct_native_release_inline(lock);
+	local_irq_restore(flags);
+	preempt_enable();
+}
+
+#define kd_spin_unlock_irqrestore(lock, flags) do { \
+	typecheck(unsigned long, flags); \
+	__kd_spin_unlock_irqrestore((lock), (flags)); \
+} while (0)
+
+static __always_inline void kd_spin_lock_irq(kd_spinlock_t *lock)
+{
+	local_irq_disable();
+	preempt_disable();
+	kd_spin_direct_native_lock_inline(lock);
+}
+
+static __always_inline void kd_spin_unlock_irq(kd_spinlock_t *lock)
+{
+	kd_spin_direct_native_release_inline(lock);
+	local_irq_enable();
+	preempt_enable();
+}
+
+static __always_inline void kd_spin_lock_bh(kd_spinlock_t *lock)
+{
+	/* SOFTIRQ_LOCK_OFFSET contains both the BH disable and acquisition pin. */
+	__local_bh_disable_ip(_RET_IP_, SOFTIRQ_LOCK_OFFSET);
+	kd_spin_direct_native_lock_inline(lock);
+}
+
+static __always_inline void kd_spin_unlock_bh(kd_spinlock_t *lock)
+{
+	kd_spin_direct_native_release_inline(lock);
+	__local_bh_enable_ip(_RET_IP_, SOFTIRQ_LOCK_OFFSET);
+}
 
 #endif

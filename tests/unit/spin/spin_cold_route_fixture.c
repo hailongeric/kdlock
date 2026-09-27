@@ -20,6 +20,7 @@ static unsigned long lock_entries;
 #define this_cpu_dec(x) (--(x))
 #define this_cpu_read(x) (++reads, (x))
 #define smp_store_release(p,v) (*(p)=(v))
+#define likely(x) __builtin_expect(!!(x), 1)
 #define READ_ONCE(x) (x)
 #define WRITE_ONCE(x,v) ((x)=(v))
 #define per_cpu(x,c) (x)

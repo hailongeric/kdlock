@@ -475,6 +475,16 @@ with (
             "_raw_write_lock_bh",
             "__raw_spin_lock_irqsave",
             "__raw_write_unlock_bh",
+            "kd_spin_lock_irqsave",
+            "kd_spin_unlock_irqrestore",
+            "__kd_spin_lock_irqsave",
+            "__kd_spin_unlock_irqrestore",
+            "kd_spin_lock_irq",
+            "kd_spin_unlock_irq",
+            "kd_spin_lock_bh",
+            "kd_spin_unlock_bh",
+            "__kd_spin_lock_bh",
+            "__kd_spin_unlock_bh",
         )
         for name in names:
             for suffix in ("", ".isra.0", ".constprop.2"):
@@ -488,7 +498,12 @@ with (
 
 
     def test_irq_bh_calls_tail_calls_and_address_taking_refuse_before_codegen(self):
-        for name in ("_raw_spin_lock_irqsave", "_raw_spin_unlock_bh"):
+        for name in (
+            "_raw_spin_lock_irqsave", "_raw_spin_unlock_bh",
+            "__kd_spin_lock_irqsave", "__kd_spin_unlock_irqrestore",
+            "kd_spin_lock_irq", "kd_spin_unlock_irq",
+            "kd_spin_lock_bh", "kd_spin_unlock_bh",
+        ):
             contents = f"9000 T schedule\n3000 T {name}\n"
             with patch("builtins.open", mock_open(read_data=contents)):
                 symbols = context_policy.load_context_symbols()
@@ -652,6 +667,12 @@ with (
         for name in (
             "mutex_lock",
             "_raw_spin_unlock",
+            "kd_spin_lock",
+            "kd_spin_unlock",
+            "kd_spin_lock_clobber_v1",
+            "kd_spin_unlock_clobber_v1",
+            "kd_spin_lock_pinned_clobber_v1",
+            "kd_spin_direct_native_unlock",
             "ktime_get",
             "kd_resume_native_probe",
         ):

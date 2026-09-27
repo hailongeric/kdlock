@@ -3,7 +3,8 @@
 当前 KD spin API 按普通 `raw_spin_lock` 语义：获取/解锁配对抢占，保持 IRQ/BH 状态，
 代理慢路径和嵌套队列不再保存 IRQ flags 或整段关 IRQ。最终完成先退休 ticket 元数据，
 读完并回收 continuation 后才解除原入口 pin；普通重试和有锁 native 续跑保留 pin。
-需要irqsave/bh语义的调用者须在外层显式处理。
+需要irqsave/irq/bh语义的调用者使用[显式变体接口](../include/README.md#显式-irqbh-spin-接口)，
+这些保护本CPU上下文的获取固定走原生KD pending/MCS，不参与远端代理。
 
 本页描述显式 KD spin API 及保留的执行引擎。全局 spin 分发已删除，mutex hook
 安装仍停用；普通 Linux 锁调用不会因加载模块自动代理。运行步骤见

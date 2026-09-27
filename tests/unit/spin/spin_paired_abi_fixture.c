@@ -18,6 +18,20 @@ register unsigned long current_stack_pointer asm("rsp");
 #define ASM_CALL_CONSTRAINT "+r" (current_stack_pointer)
 static volatile unsigned int pins;
 #define preempt_disable() (++pins)
+#define preempt_enable() (--pins)
+/* This fixture executes only the plain clobber ABI. IRQ/BH behavior has its
+ * own fixture; fail if one of those APIs accidentally enters this workload. */
+#define _RET_IP_ 0UL
+#define SOFTIRQ_LOCK_OFFSET 0x201U
+#define typecheck(type, value) ((void)sizeof(type), (void)sizeof(value))
+#define local_irq_save(flags) do { (flags) = 0; assert(!"IRQ API in plain ABI fixture"); } while (0)
+#define local_irq_restore(flags) do { (void)(flags); assert(!"IRQ API in plain ABI fixture"); } while (0)
+#define local_irq_disable() assert(!"IRQ API in plain ABI fixture")
+#define local_irq_enable() assert(!"IRQ API in plain ABI fixture")
+#define __local_bh_disable_ip(ip, count) assert(!"BH API in plain ABI fixture")
+#define __local_bh_enable_ip(ip, count) assert(!"BH API in plain ABI fixture")
+#define smp_store_release(p, value) (*(p) = (value))
+#define this_cpu_dec(value) (--(value))
 /* Policy remains in the provider; this shell reads heat and counts its hold. */
 static unsigned int cpu_id;
 unsigned int heat[2];
