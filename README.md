@@ -43,8 +43,8 @@ executor retirement; the original waiter retains its root continuation and pin
 until all ticket borrowers, including zero-lock relays, have retired. Mutex
 owner handoff is not added.
 Final logical ACK can precede physical A release when its combiner still owns
-the batch. For mutex, dropping the last acquisition reference removes task membership
-before ACK; reclamation waits for RCU readers.
+the batch. For mutex, dropping the last acquisition reference makes its record
+inactive before ACK. The bounded cache retains task references until unload.
 
 ## Current Status
 

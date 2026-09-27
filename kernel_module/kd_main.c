@@ -122,6 +122,7 @@ static int __init kdlock_km_init(void)
 
 #ifdef KDLOCK_SELFTEST
 err_mutex:
+	kd_mutex_tasks_exit();
 #endif
 	kd_mutex_exit();
 err_spinlock:
