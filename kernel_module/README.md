@@ -55,14 +55,15 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 约束见 [DESIGN](../docs/design/frames.md#911-reuse-before-copy-contract)。
 
 热锁使用每CPU/type256桶、256条精确地址记录，无候选分数或淘汰，锁路径不分配。
-spin比例判断复用per-CPU获取/MCS计数：MCS达到512时比较`(spin_entries >> 9) < 2`，
+spin比例判断复用per-CPU获取/MCS计数：MCS达到1024时比较`(spin_entries >> 10) < 2`，
 清零两计数后再采时；删除16字节历史快照、差值、百分比乘法和首次免比较逻辑。
 只读参数`spin_entry_ratio_limit`默认2，支持0或不小于2的二次幂；0仅绕过比例。
 首批包含先前无竞争获取，可能保持冷，下批自然恢复。busy跳过不清计数，下一次MCS重试。
 统计允许IRQ误差；卸载打印未完成批次的剩余计数，不再表示累计获取/MCS总数。
 当前仅保留adaptive，移除`hotlock_mode`参数；CPU频率、单锁热度和安全检查仍须满足。
 移除两低确认、冷却、独立频率状态、已接受采样流和近期热度保留，小型pinned封装内联。
-spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿，CPU窗口保持400亿。
+spin单锁仍独立在512次检查12.5亿TSC窗口，不随CPU的1024次MCS采样改变；
+mutex保持第1025次/25亿，CPU窗口保持400亿。
 动态表布局、busy guard、owner/ticket/frame与排空协议保持；解锁不查热表。
 完整规则及卸载统计见[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
 SELFTEST的`hotlock_lifetime_selftest=1`验证表满不覆盖真实持锁记录及mutex等待迁移；

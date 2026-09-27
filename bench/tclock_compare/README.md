@@ -15,9 +15,10 @@ KD冷获取内联首次CAS，竞争时使用原生pending/MCS队列；热获取�
 自适应策略及寄存器契约分别见[执行流](../../docs/JIT_EXECUTION.md#21-热度与角色)和
 [锁协议](../../docs/design/locking.md)。
 
-当前只支持adaptive，策略标识为`mcs_reset_shift9_head6`，默认`spin_entry_ratio_limit=2`。
-每512次MCS发布比较`(entries >> 9) < 2`，随后清零本CPU的入口和MCS计数；
-默认接受该窗口内至多1023次入口，约为MCS比例超过一半，不再使用旧100%门槛或前次计数快照。
+当前只支持adaptive，策略标识为`mcs_reset1024_shift10_lock512_head6`，默认`spin_entry_ratio_limit=2`。
+每1024次MCS发布比较`(entries >> 10) < 2`，随后清零本CPU的入口和MCS计数；
+默认接受该窗口内至多2047次入口，约为MCS比例超过一半，不再使用旧100%门槛或前次计数快照。
+单锁热度仍独立每512次记录检查；CPU采样间隔与入口右移位数是分别配置的编译期常量。
 门槛0只绕过比例，原生队头前缀、CPU/单锁热度和执行安全检查仍有效。
 旧模式、策略和测量口径仅通过[历史索引](results/HISTORY.md)追溯，不合并取优。
 诊断per-CPU计数、最终余额及布局见[provider说明](../../kernel_module/README.md)。
@@ -85,7 +86,7 @@ TCLock保留上游配置值1024。运行器用`modinfo`验证实际ELF，NUMA/�
 collector CLI无参数默认仍为30，32/36-worker运行必须如上显式指定38；与任一worker重合时拒绝。
 
 `--spin-entry-ratio-limit`接受0或uint32范围内不小于2的2次幂，默认2。
-非零值是`entries >> 9`的严格上界；值越大，允许的入口/MCS比例越大。
+非零值是`entries >> 10`的严格上界；值越大，允许的入口/MCS比例越大。
 0仅绕过比例门槛，原生队头前缀检查、CPU频率和单锁热度规则仍生效。
 该值作为只读provider装载参数传入并核对；旧`--spin-contention-pct`已删除，历史命令使用匹配checkout。
 
@@ -170,6 +171,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [MCS1024窗口调优](results/20260927-ratio-window.md) | reset512基线、比例/间隔候选和同构建cutoff对照；144场定向比较及相关检查，完整矩阵待完成 |
 | [全链路复查与重复操作精简](results/20260927-followup.md) | callee SP、prefetch、队列检查、诊断读取及dispatcher fence精简；定向18场与最终135场，完整分布/worker进度及静态指令证据，无整体吞吐提升声明 |
 | [全链路访存与JIT优化](results/20260927-flow.md) | continuation缓存行、RIP地址折叠、解锁布局及无锁ticket元数据；分阶段诊断、15线程点三方135场及native借用验证 |
 | [spin清理与定向验证](results/20260926-cleanup.md) | 9线程点三方81场、36线程nested/early、生成代码审查；非完整矩阵或新吞吐收益声明 |
@@ -228,8 +230,8 @@ v2，客户端和 workload 模块必须同时重建。
 
 ## 自适应准入与结果解释
 
-当前只保留`adaptive`，同时要求CPU频率、512次MCS窗口比较的比例准入、原生队头资格和单锁热度。
-默认整数比较为`(entries >> 9) < 2`，比较后清零两个计数；没有首次快照或首次比例豁免。
+当前只保留`adaptive`，同时要求CPU频率、1024次MCS窗口比较的比例准入、原生队头资格和单锁热度。
+默认整数比较为`(entries >> 10) < 2`，比较后清零两个计数；没有首次快照或首次比例豁免。
 使用[执行流规则](../../docs/JIT_EXECUTION.md#21-热度与角色)，`--spin-entry-ratio-limit 0`用于单独关闭比例的诊断。
 KD会话目录保留`-kdlock-adaptive`后缀和固定adaptive元数据；Linux/TCLock标为`not_applicable`。
 历史observe会话继续单独保存，不能与当前结果合并。

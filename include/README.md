@@ -1,10 +1,11 @@
 # 接口与共享布局
 
 `kd_hotlock.h`提供分类型per-CPU精确地址记录、spin获取/MCS近似计数及缓存CPU准入。
-复用已有获取/MCS计数，MCS达到512时先以右移比较比例，清零两计数后采时；不再保存历史快照。
-默认`spin_entry_ratio_limit=2`，即`(spin_entries >> 9) < 2`，在512次MCS时接受最多1023次获取。
+复用已有获取/MCS计数，MCS达到1024时先以右移比较比例，清零两计数后采时；不再保存历史快照。
+默认`spin_entry_ratio_limit=2`，即`(spin_entries >> 10) < 2`，在1024次MCS时接受最多2047次获取。
 IRQ统计允许近似；busy跳过时保留计数，下一次MCS重试，guard仍保护热表，小型pinned封装内联。
-spin单锁达到512次检查12.5亿TSC窗口，mutex保持第1025次/25亿。
+CPU采样间隔和比例右移位数是独立编译期常量；spin单锁仍独立在512次检查12.5亿TSC窗口，
+不随MCS间隔改变，mutex保持第1025次/25亿。
 旧两低确认、冷却及热度保留已移除；当前策略与验证状态见[性能计划](../docs/PERFORMANCE_PLAN.md)。
 完整语义与统计边界统一见[热度与角色](../docs/JIT_EXECUTION.md#21-热度与角色)。
 热度接口仅返回自适应判断；原observe模式已移除，比例门槛0仍保留CPU/单锁热度要求。

@@ -112,7 +112,7 @@ def make_plan(args):
                 api_mode='direct', workload=workload, hotlock_mode=mode,
                 caller_shell='cold_clobber' if backend == 'kdlock' else 'c',
                 cookie_storage='percpu_direct_gate' if backend == 'kdlock' else 'not_applicable',
-                cpu_heat_policy='mcs_reset_shift9_head6' if backend == 'kdlock' else 'not_applicable',
+                cpu_heat_policy='mcs_reset1024_shift10_lock512_head6' if backend == 'kdlock' else 'not_applicable',
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
                 numa_policy=numa if backend != 'native' else 'not_applicable',
@@ -268,7 +268,7 @@ def main():
                    help="off: explicit KD self-execution control, no JIT acceptance")
     p.add_argument('--spin-entry-ratio-limit', type=int, choices=SPIN_ENTRY_RATIO_LIMITS,
                    metavar='0|2|4|...|2147483648', default=DEFAULT_SPIN_ENTRY_RATIO_LIMIT,
-                   help='adaptive (entries >> 9) upper bound per resettable 512-MCS window; '
+                   help='adaptive (entries >> 10) upper bound per resettable 1024-MCS window; '
                         f'unsigned power of two >=2 (default: {DEFAULT_SPIN_ENTRY_RATIO_LIMIT}; '
                         '0 bypasses only ratio)')
     args = p.parse_args()

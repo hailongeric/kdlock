@@ -117,17 +117,18 @@ locks cold under adaptive admission, retaining existing identities until unload.
 
 Initialization reserves the exact-key tables and seeds CPU clocks; lock paths
 allocate no table storage. Spin reuses two resettable per-CPU counters, with no
-previous totals or delta state. At 512 MCS publications it checks
-`(spin_entries >> 9) < spin_entry_ratio_limit`, clears both counts, then samples
+previous totals or delta state. At 1024 MCS publications it checks
+`(spin_entries >> 10) < spin_entry_ratio_limit`, clears both counts, then samples
 the CPU clock. Fast/pending success contributes only to the entry count.
 The first window includes startup entries; low ratios close admission directly. There is no
 cooldown, confirmation streak or heat retention across ratio rejection.
 
 Only adaptive admission remains. `hotlock_mode` and the observe mode are removed.
-`spin_entry_ratio_limit` defaults to 2 (at most 1023 entries per 512 MCS);
+`spin_entry_ratio_limit` defaults to 2 (at most 2047 entries per 1024 MCS);
 zero bypasses only the ratio, retaining
 the native-head prefix check, CPU frequency, per-lock heat and execution safety checks. CPU heat gates table
-access. Spin lock heat checks at 512 records/1.25 billion TSC ticks; mutex keeps
+access. The MCS interval and entry shift are separate compile-time constants.
+Spin lock heat independently checks at 512 records/1.25 billion TSC ticks; mutex keeps
 1025 records/2.5 billion, with CPU windows strictly below 40 billion ticks.
 Cold/reheating CPU checks clear lock heat/counts while retaining identities.
 Queries read cached heat without counting or sampling. Approximate sampling

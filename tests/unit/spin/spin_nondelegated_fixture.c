@@ -246,11 +246,12 @@ static void queue_qualification(void)
   assert(!link_hook && !word.locked && snapshot_reads==1);
   assert(rate_hot==sufficient && veto_calls==!sufficient && linked_reads==previous_tail);
  }
- for(unsigned int skip=0;skip<3;skip++) {
-  prepare_qualification(); kd_spin_delegate=skip!=0; rate_hot=skip!=2;
-  mcs_samples+=skip==1;
+ /* Neither the first nor halfway publication is a sampling boundary. */
+ for(unsigned int skip=0;skip<4;skip++) {
+  prepare_qualification(); kd_spin_delegate=skip!=0; rate_hot=skip!=3;
+  mcs_samples=skip==1 ? 1 : skip==2 ? KD_HOTLOCK_SPIN_MCS_INTERVAL/2 : 0;
   kd_spin_qualify_native_queue(&word,&pool[0][0]);
-  assert(rate_hot==(skip!=2) && !linked_reads && !snapshot_reads && !veto_calls);
+  assert(rate_hot==(skip!=3) && !linked_reads && !snapshot_reads && !veto_calls);
  }
  kd_spin_delegate=true;
  /* Exercise both actual native ownership exits. The stale failed value sends

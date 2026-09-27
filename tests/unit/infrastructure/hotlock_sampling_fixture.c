@@ -145,7 +145,8 @@ static void init_and_pins(void)
 static void boundaries(void)
 {
  reset();
- assert(KD_HOTLOCK_SPIN_MCS_SHIFT==9 && KD_HOTLOCK_SPIN_MCS_INTERVAL==512);
+ /* The selected cutoff scales with the CPU batch; lock heat stays at 512. */
+ assert((1U<<KD_HOTLOCK_SPIN_RATIO_SHIFT)==KD_HOTLOCK_SPIN_MCS_INTERVAL);
  assert(KD_HOTLOCK_CHECK_INTERVAL==1024);
  assert(KD_HOTLOCK_SAMPLE_TARGET==1024 && KD_HOTLOCK_SPIN_SAMPLE_TARGET==512);
  assert(KD_HOTLOCK_CPU_WINDOW==40000000000UL && KD_HOTLOCK_INITIAL_WINDOW==2500000000UL);
@@ -328,61 +329,63 @@ static void mcs_publications(void)
  queue_event(); assert(this_cpu_read(kd_hotlock_spin_gate) && clocks==2);
  assert(!this_cpu_read(kd_hotlock_spin_mcs));
  cpu_id=1; assert(!kd_hotlock_spin_cpu_hot_pinned());
- native_batch(512,512); assert(this_cpu_read(kd_hotlock_spin_gate) && clocks==3);
+ native_batch(KD_HOTLOCK_SPIN_MCS_INTERVAL,KD_HOTLOCK_SPIN_MCS_INTERVAL);
+ assert(this_cpu_read(kd_hotlock_spin_gate) && clocks==3);
  cpu_id=0; assert(kd_hotlock_spin_cpu_hot_pinned());
 }
 static void contention_ratio(void)
 {
+ const unsigned int interval=KD_HOTLOCK_SPIN_MCS_INTERVAL;
  reset_policy(2);
- native_batch(1022,511);
+ native_batch(2*interval-2,interval-1);
  assert(!this_cpu_read(kd_hotlock_spin_gate) && clocks==1);
- assert(this_cpu_read(kd_hotlock_spin_entries)==1022 && this_cpu_read(kd_hotlock_spin_mcs)==511);
+ assert(this_cpu_read(kd_hotlock_spin_entries)==2*interval-2 && this_cpu_read(kd_hotlock_spin_mcs)==interval-1);
  check_spin_clock=true; now+=100; native_batch(1,1);
  check_spin_clock=false;
  assert(this_cpu_read(kd_hotlock_spin_gate) && clocks==2 && table(0)->rate_begin==now);
  assert(!this_cpu_read(kd_hotlock_spin_entries) && !this_cpu_read(kd_hotlock_spin_mcs));
  hits(0x1000,512); assert(kd_hotlock_query_spin(0x1000));
  struct kd_hotlock_entry *slot=kd_hotlock_find(table(0),0x1000);
- native_batch(1023,512); /* (1023 >> 9) < 2 is admitted. */
+ native_batch(2*interval-1,interval); /* Just below the strict entry bound. */
  assert(kd_hotlock_query_spin(0x1000));
  unsigned int before_clocks=clocks;
- native_batch(512,0); native_batch(511,511);
+ native_batch(interval,0); native_batch(interval-1,interval-1);
  assert(kd_hotlock_query_spin(0x1000) && clocks==before_clocks);
- check_spin_clock=true; now+=100; native_batch(1,1); /* 1024 rejects equality. */
+ check_spin_clock=true; now+=100; native_batch(1,1); /* Twice the interval rejects equality. */
  check_spin_clock=false;
  assert(!this_cpu_read(kd_hotlock_spin_gate) && !slot->hot && !slot->count && slot->begin==now);
  assert(!kd_hotlock_query_spin(0x1000));
  assert(!this_cpu_read(kd_hotlock_spin_entries) && !this_cpu_read(kd_hotlock_spin_mcs));
  /* Cold native publications recover without a separate retry policy. */
- native_batch(512,512); assert(this_cpu_read(kd_hotlock_spin_gate));
+ native_batch(interval,interval); assert(this_cpu_read(kd_hotlock_spin_gate));
  assert(!slot->hot && !slot->count && !kd_hotlock_query_spin(0x1000));
  hits(0x1000,511); assert(!kd_hotlock_query_spin(0x1000));
  assert(kd_hotlock_record_spin(0x1000));
  /* Startup fast entries count immediately; there is no first-window priming. */
- reset_policy(2); native_batch(48000+512,512);
+ reset_policy(2); native_batch(48000+interval,interval);
  assert(!this_cpu_read(kd_hotlock_spin_gate) && clocks==2);
  assert(!this_cpu_read(kd_hotlock_spin_entries) && !this_cpu_read(kd_hotlock_spin_mcs));
- native_batch(512,512); assert(this_cpu_read(kd_hotlock_spin_gate) && clocks==3);
- reset_policy(4); native_batch(2047,512); assert(this_cpu_read(kd_hotlock_spin_gate));
- native_batch(2048,512); assert(!this_cpu_read(kd_hotlock_spin_gate));
- native_batch(512,512); assert(this_cpu_read(kd_hotlock_spin_gate));
+ native_batch(interval,interval); assert(this_cpu_read(kd_hotlock_spin_gate) && clocks==3);
+ reset_policy(4); native_batch(4*interval-1,interval); assert(this_cpu_read(kd_hotlock_spin_gate));
+ native_batch(4*interval,interval); assert(!this_cpu_read(kd_hotlock_spin_gate));
+ native_batch(interval,interval); assert(this_cpu_read(kd_hotlock_spin_gate));
  /* Zero bypasses only the ratio, not CPU or lock frequency. */
  reset_policy(0); assert(!kd_hotlock_record_spin(0x1000));
- native_batch(3200,512); native_batch(3200,512);
+ native_batch(8*interval,interval); native_batch(8*interval,interval);
  assert(this_cpu_read(kd_hotlock_spin_gate));
  assert(!this_cpu_read(kd_hotlock_spin_entries) && !this_cpu_read(kd_hotlock_spin_mcs));
  assert(!kd_hotlock_record_spin(0x1000));
  hits(0x1000,511); assert(kd_hotlock_query_spin(0x1000));
  now=table(0)->rate_begin+KD_HOTLOCK_CPU_WINDOW;
- native_batch(512,512); assert(!this_cpu_read(kd_hotlock_spin_gate));
+ native_batch(interval,interval); assert(!this_cpu_read(kd_hotlock_spin_gate));
  assert(!kd_hotlock_record_spin(0x1000));
  /* A comparison clears only its CPU's window. */
- reset_policy(2); native_batch(1024,511);
- cpu_id=1; native_batch(1023,512);
+ reset_policy(2); native_batch(2*interval,interval-1);
+ cpu_id=1; native_batch(2*interval-1,interval);
  assert(this_cpu_read(kd_hotlock_spin_gate) && clocks==2);
  assert(!this_cpu_read(kd_hotlock_spin_entries) && !this_cpu_read(kd_hotlock_spin_mcs));
  cpu_id=0;
- assert(this_cpu_read(kd_hotlock_spin_entries)==1024 && this_cpu_read(kd_hotlock_spin_mcs)==511);
+ assert(this_cpu_read(kd_hotlock_spin_entries)==2*interval && this_cpu_read(kd_hotlock_spin_mcs)==interval-1);
  native_batch(1,1); assert(!this_cpu_read(kd_hotlock_spin_gate) && clocks==3);
  assert(per_cpu(kd_hotlock_spin_gate,1) && !per_cpu(kd_hotlock_spin_entries,1) && !per_cpu(kd_hotlock_spin_mcs,1));
  reset_policy(2); native_batch(3000,0);
@@ -391,20 +394,21 @@ static void contention_ratio(void)
  assert(this_cpu_read(kd_hotlock_spin_entries)==3000 && !this_cpu_read(kd_hotlock_spin_mcs));
 }
 /* A busy exact table defers the whole sample. The next publication retries,
- * even beyond 512; the approximate denominator still includes skipped entries. */
+ * even beyond the interval; the approximate denominator still includes skipped entries. */
 static void busy_sampling_retry(void)
 {
- reset_policy(2); native_batch(512,512); hits(0x1000,512);
+ const unsigned int interval=KD_HOTLOCK_SPIN_MCS_INTERVAL;
+ reset_policy(2); native_batch(interval,interval); hits(0x1000,512);
  assert(kd_hotlock_query_spin(0x1000));
- native_batch(1023,511);
+ native_batch(2*interval-1,interval-1);
  table(0)->busy=1;
  struct kd_hotlock_table before=*table(0);
  unsigned int before_clocks=clocks, before_guards=guards;
  now+=100;
  native_batch(1,1);
- assert(this_cpu_read(kd_hotlock_spin_entries)==1024 && this_cpu_read(kd_hotlock_spin_mcs)==512);
+ assert(this_cpu_read(kd_hotlock_spin_entries)==2*interval && this_cpu_read(kd_hotlock_spin_mcs)==interval);
  native_batch(1,1);
- assert(this_cpu_read(kd_hotlock_spin_entries)==1025 && this_cpu_read(kd_hotlock_spin_mcs)==513);
+ assert(this_cpu_read(kd_hotlock_spin_entries)==2*interval+1 && this_cpu_read(kd_hotlock_spin_mcs)==interval+1);
  assert(this_cpu_read(kd_hotlock_spin_gate) && clocks==before_clocks && guards==before_guards);
  assert(!memcmp(&before,table(0),sizeof(before)));
  table(0)->busy=0;
@@ -412,13 +416,14 @@ static void busy_sampling_retry(void)
  assert(!this_cpu_read(kd_hotlock_spin_gate) && clocks==before_clocks+1 && guards==before_guards+1);
  assert(!this_cpu_read(kd_hotlock_spin_entries) && !this_cpu_read(kd_hotlock_spin_mcs));
  assert(table(0)->rate_begin==now && !kd_hotlock_query_spin(0x1000));
- native_batch(512,512); assert(this_cpu_read(kd_hotlock_spin_gate));
+ native_batch(interval,interval); assert(this_cpu_read(kd_hotlock_spin_gate));
 }
 /* A native-head veto changes CPU admission only. Publication sampling still
  * controls retry, and reheating requires a fresh per-lock sample epoch. */
 static void native_queue_cooling(void)
 {
- reset_policy(2); native_batch(512,512); hits(0x1000,512);
+ const unsigned int interval=KD_HOTLOCK_SPIN_MCS_INTERVAL;
+ reset_policy(2); native_batch(interval,interval); hits(0x1000,512);
  assert(kd_hotlock_query_spin(0x1000));
  struct kd_hotlock_table before=*table(0);
  unsigned long entries=this_cpu_read(kd_hotlock_spin_entries), publications=this_cpu_read(kd_hotlock_spin_mcs);
@@ -429,7 +434,7 @@ static void native_queue_cooling(void)
  assert(entries==this_cpu_read(kd_hotlock_spin_entries) && publications==this_cpu_read(kd_hotlock_spin_mcs));
  assert(clocks==before_clocks && pin_checks==before_pins && guards==before_guards);
  assert(!kd_hotlock_query_spin(0x1000));
- native_batch(511,511); assert(!this_cpu_read(kd_hotlock_spin_gate));
+ native_batch(interval-1,interval-1); assert(!this_cpu_read(kd_hotlock_spin_gate));
  native_batch(1,1); assert(this_cpu_read(kd_hotlock_spin_gate) && !kd_hotlock_query_spin(0x1000));
  hits(0x1000,511); assert(!kd_hotlock_query_spin(0x1000));
  assert(kd_hotlock_record_spin(0x1000));
@@ -449,7 +454,7 @@ int main(void)
   spin_entry_ratio_limit=valid[i]; assert(!kd_hotlock_init()); kd_hotlock_exit();
  }
  fail_alloc=true; assert(kd_hotlock_init()==-ENOMEM); assert(!kd_hotlock_cpu);
- puts("PASS hotlock: shared MCS512/ratio/CPU clock, spin512 and mutex1025 windows, exact keys/capacity, pins, read-only queries");
+ printf("PASS hotlock: shared MCS%u/ratio/CPU clock, independent spin512 and mutex1025 windows, exact keys/capacity, pins, read-only queries\n",KD_HOTLOCK_SPIN_MCS_INTERVAL);
  puts("PASS contention admission: native denominator, shifted ratio boundaries, first-window rejection, cold recovery, CPU isolation, zero ratio bypass, busy retry");
  return 0;
 }

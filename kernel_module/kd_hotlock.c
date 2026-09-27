@@ -15,7 +15,8 @@
 #define KD_HOTLOCK_INITIAL_WINDOW 2500000000UL
 #define KD_HOTLOCK_SPIN_INITIAL_WINDOW 1250000000UL
 #define KD_HOTLOCK_SAMPLE_TARGET 1024U
-#define KD_HOTLOCK_SPIN_SAMPLE_TARGET KD_HOTLOCK_SPIN_MCS_INTERVAL
+/* CPU profiling cadence must not change per-lock promotion frequency. */
+#define KD_HOTLOCK_SPIN_SAMPLE_TARGET 512U
 #define KD_HOTLOCK_HASH_BITS 8
 #define KD_HOTLOCK_BUCKETS (1U << KD_HOTLOCK_HASH_BITS)
 #define KD_HOTLOCK_ENTRIES 256
@@ -51,11 +52,11 @@ EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_gate);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_entries);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
-/* At 512 MCS publications, accept fewer than this many 512-entry blocks.
- * A limit of 2 admits 512..1023 entries; zero bypasses only the ratio. */
+/* Compare shifted entry count at the MCS boundary, then reset both counts.
+ * Zero bypasses only the ratio; the compare adds no division or multiplication. */
 static unsigned int spin_entry_ratio_limit = 2;
 module_param(spin_entry_ratio_limit, uint, 0444);
-MODULE_PARM_DESC(spin_entry_ratio_limit, "Exclusive (spin entries >> 9) limit per 512 MCS publications; 0 or a power of two >= 2");
+MODULE_PARM_DESC(spin_entry_ratio_limit, "Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2");
 static bool hotlock_stats;
 module_param(hotlock_stats, bool, 0444);
 MODULE_PARM_DESC(hotlock_stats, "Print final CPU-local exact lock counters after provider drain");
@@ -122,7 +123,7 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned int *rate_hot,
   if (spin)
   {
     ratio_hot = !spin_entry_ratio_limit ||
-                (this_cpu_read(kd_hotlock_spin_entries) >> KD_HOTLOCK_SPIN_MCS_SHIFT) <
+                (this_cpu_read(kd_hotlock_spin_entries) >> KD_HOTLOCK_SPIN_RATIO_SHIFT) <
                 spin_entry_ratio_limit;
     this_cpu_write(kd_hotlock_spin_entries, 0);
     this_cpu_write(kd_hotlock_spin_mcs, 0);
@@ -224,7 +225,7 @@ bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(ad
 
 /* Compare cold native and delegated publications on the same CPU. The guard
  * protects table/heat resets, not profiling accuracy. A busy skip keeps both
- * counts; the next publication retries the >=512 threshold without a new flag. */
+ * counts; the next publication retries the batch threshold without a new flag. */
 void kd_hotlock_sample_spin_mcs_pinned(void)
 {
   struct kd_hotlock_table *t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];

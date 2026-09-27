@@ -6,7 +6,8 @@ spin通过显式`kd_spinlock_t`和caller-clobber v1 API接入，32位KD字承载
 MCS tail及combiner仲裁；Linux、TCLock、KD对象不能混用协议。mutex协议保留，
 全局hook未安装，加载provider不自动代理普通Linux锁。
 
-当前只保留adaptive：复用per-CPU MCS/获取计数，MCS达到512时用右移判断比例并清零，再采时，
+当前只保留adaptive：复用per-CPU MCS/获取计数，MCS达到1024时用右移判断比例并清零，再采时。
+默认比较`(spin_entries >> 10) < 2`，单锁热度仍独立每512次检查。
 原生队头在同一近似边界检查捕获队尾以内的六个后继。冷获取内联首次CAS，
 热获取走pinned clobber入口；解锁统一走generic clobber协议。
 热度只影响未来准入，owner/ACK/frame退休保持独立；完整规则见

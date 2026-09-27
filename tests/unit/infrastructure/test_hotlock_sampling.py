@@ -37,7 +37,7 @@ def main():
         "missing-entry-count": ("this_cpu_inc(kd_hotlock_spin_entries);", "(void)0;", 1),
         "missing-entry-reset": ("this_cpu_write(kd_hotlock_spin_entries, 0);", "(void)0;", 1),
         "missing-mcs-reset": ("this_cpu_write(kd_hotlock_spin_mcs, 0);", "(void)0;", 1),
-        "wrong-ratio-shift": ("this_cpu_read(kd_hotlock_spin_entries) >> KD_HOTLOCK_SPIN_MCS_SHIFT", "this_cpu_read(kd_hotlock_spin_entries) >> (KD_HOTLOCK_SPIN_MCS_SHIFT + 1U)", 1),
+        "wrong-ratio-shift": ("this_cpu_read(kd_hotlock_spin_entries) >> KD_HOTLOCK_SPIN_RATIO_SHIFT", "this_cpu_read(kd_hotlock_spin_entries) >> (KD_HOTLOCK_SPIN_RATIO_SHIFT + 1U)", 1),
         "threshold-equality-admitted": ("<\n                spin_entry_ratio_limit;", "<=\n                spin_entry_ratio_limit;", 1),
         "ignore-contention-ratio": ("!spin_entry_ratio_limit ||", "true ||", 1),
     }

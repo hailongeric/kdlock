@@ -25,7 +25,7 @@ def main():
         policy = (ROOT/'include/kd_hotlock.h').read_text()
         sampling = [next(line for line in policy.splitlines()
                          if line.startswith(f'#define {name} '))
-                    for name in ('KD_HOTLOCK_SPIN_MCS_SHIFT',
+                    for name in ('KD_HOTLOCK_SPIN_RATIO_SHIFT',
                                  'KD_HOTLOCK_SPIN_MCS_INTERVAL')]
         (Path(directory)/'spin_mcs_policy.h').write_text('\n'.join(sampling) + '\n')
         source = read_source(ROOT/'kernel_module/kd_spinlock.c')

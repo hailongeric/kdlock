@@ -15,7 +15,7 @@
 | [spin/nondelegated.inc](../kernel_module/spin/nondelegated.inc)、[spin/nested.inc](../kernel_module/spin/nested.inc) | 完整原生 fast/pending/MCS；虚拟 ticket、共享根包、远端等待与父 ACK |
 | [spin/request.inc](../kernel_module/spin/request.inc)、[spin/lifecycle.inc](../kernel_module/spin/lifecycle.inc) | 每CPU20 KiB初始化、低区内错位与原始基址释放；continuation栈顶分配及连续退休回收 |
 | [spin/wait.inc](../kernel_module/spin/wait.inc)、[execution/remote.inc](../kernel_module/execution/remote.inc) | 物理等待发布、远端消息、frame pop 后完成通知 |
-| [kernel_module/kd_hotlock.c](../kernel_module/kd_hotlock.c) | 分类型每CPU精确地址哈希；spin以MCS512触发右移比例判断/两计数清零并采时，mutex入口批次与独立单锁窗口 |
+| [kernel_module/kd_hotlock.c](../kernel_module/kd_hotlock.c) | 分类型每CPU精确地址哈希；spin以MCS1024触发右移比例判断/两计数清零并采时，单锁独立512次窗口；mutex入口与单锁批次 |
 | [kernel_module/kd_lock.c](../kernel_module/kd_lock.c) | 保留的 mutex 路由和嵌套控制 CALL |
 | [kernel_module/kd_mutex.c](../kernel_module/kd_mutex.c)、[kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | 原 mutex/调度及 task 生命周期 |
 | [kernel_module/kd_exec.c](../kernel_module/kd_exec.c) | 稳定 frame、角色、remote/native/锁记录 |

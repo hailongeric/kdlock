@@ -9,9 +9,10 @@ DECLARE_PER_CPU(unsigned int, kd_hotlock_spin_gate);
 /* Approximate current-batch counts; a completed comparison clears both. */
 DECLARE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
 DECLARE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
-/* Reuse this power-of-two batch for the counter threshold and ratio shift. */
-#define KD_HOTLOCK_SPIN_MCS_SHIFT 9U
-#define KD_HOTLOCK_SPIN_MCS_INTERVAL (1U << KD_HOTLOCK_SPIN_MCS_SHIFT)
+/* CPU sampling cadence and entry-ratio precision are independent constants.
+ * Keep the MCS interval a power of two for the native-head boundary mask. */
+#define KD_HOTLOCK_SPIN_MCS_INTERVAL 1024U
+#define KD_HOTLOCK_SPIN_RATIO_SHIFT 10U
 /* Count once per physical acquisition, including the cold native route.
  * The direct native route counts after its first CAS, before contended work.
  * The acquisition pin keeps these approximate counts CPU-local. */
@@ -32,9 +33,9 @@ static __always_inline void kd_hotlock_cool_spin_pinned(void)
 int kd_hotlock_init(void);
 void kd_hotlock_exit(void);
 /* A valid identity and initialized provider are caller preconditions. Spin
- * compares the CPU-local entry count after 512 MCS publications, then reads one
- * timestamp for CPU frequency. With the default limit 2, (entries >> 9) < 2
- * admits at most 1023 entries per batch. Both counters restart at comparison;
+ * compares the CPU-local entry count after 1024 MCS publications, then reads one
+ * timestamp for CPU frequency. With the default limit 2, (entries >> 10) < 2
+ * admits at most 2047 entries per batch. Both counters restart at comparison;
  * the first batch includes startup entries. Limit zero bypasses only the ratio,
  * retaining the strict 40000000000-tick CPU window and per-lock heat gates.
  * Spin lock heat checks every 512 records against 1250000000 ticks. Mutex keeps

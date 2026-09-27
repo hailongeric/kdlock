@@ -398,7 +398,7 @@ class DirectTests(unittest.TestCase):
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
             self.assertEqual(spec['cpu_heat_policy'],
-                             'mcs_reset_shift9_head6' if spec['arm'] == 'kdlock' else 'not_applicable')
+                             'mcs_reset1024_shift10_lock512_head6' if spec['arm'] == 'kdlock' else 'not_applicable')
             self.assertEqual(spec['spin_entry_ratio_limit'],
                              run.DEFAULT_SPIN_ENTRY_RATIO_LIMIT if spec['arm'] == 'kdlock' else None)
             self.assertNotIn('spin_contention_pct', spec)
@@ -603,10 +603,10 @@ class DirectTests(unittest.TestCase):
     def test_summary_keeps_heat_policies_separate(self):
         base = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
             iterations=100, backends=['kdlock']))[0]
-        # Resettable shifted-entry ratios remain separate from percentage
-        # samplers and older native-head policies at the same 512 cadence.
+        # Keep each resettable cadence separate from percentage samplers and
+        # older native-head policies, even when their ratio cutoffs match.
         plans = [dict(base, name=base['name']+'-'+policy, cpu_heat_policy=policy)
-                 for policy in ('mcs_reset_shift9_head6', 'mcs_entry_ratio512_head6', 'mcs_entry_ratio512_head5', 'mcs_entry_ratio512_simple', 'mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
+                 for policy in ('mcs_reset1024_shift10_lock512_head6', 'mcs_reset_shift9_head6', 'mcs_entry_ratio512_head6', 'mcs_entry_ratio512_head5', 'mcs_entry_ratio512_simple', 'mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
                                 'mcs_entry', 'historical_queue_depth')]
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
@@ -615,14 +615,14 @@ class DirectTests(unittest.TestCase):
                 folder = out/spec['name']; folder.mkdir()
                 run.write_json(folder/'session.json', dict(spec,
                     execution_status='OK', drained=True,
-                    jit_bodies=int(spec['cpu_heat_policy'] == 'mcs_reset_shift9_head6'),
+                    jit_bodies=int(spec['cpu_heat_policy'] == 'mcs_reset1024_shift10_lock512_head6'),
                     measurement=dict(completed=200, wall_ns=100000,
                                      data_ok=True, complete=True)))
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(rows), 10)
+            self.assertEqual(len(rows), 11)
             self.assertEqual({r['cpu_heat_policy'] for r in rows},
-                             {'mcs_reset_shift9_head6', 'mcs_entry_ratio512_head6', 'mcs_entry_ratio512_head5', 'mcs_entry_ratio512_simple', 'mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
+                             {'mcs_reset1024_shift10_lock512_head6', 'mcs_reset_shift9_head6', 'mcs_entry_ratio512_head6', 'mcs_entry_ratio512_head5', 'mcs_entry_ratio512_simple', 'mcs_entry_ratio512_batch128', 'mcs_entry_ratio512_confirm2', 'mcs_entry_ratio512', 'mcs_entry_ratio',
                               'mcs_entry', 'historical_queue_depth'})
             self.assertEqual(sum(r['actual_jit_sessions'] for r in rows), 1)
 

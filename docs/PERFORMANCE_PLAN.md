@@ -15,8 +15,9 @@
 [维护验证](../bench/tclock_compare/results/20260926-cleanup.md)包括基础/相关5组、两种构建、81场定向比较和36线程nested/early；
 最高KD峰值较前次共有点变化-0.11%至+0.94%，不作为新性能收益或全线程无回退证明。
 
-当前比例统计已改为MCS512触发的右移/清零窗口（默认`spin_entry_ratio_limit=2`）；
-本次实现验证见[测试记录](../tests/README.md#spin-ratio-reset-validation)，尚未重跑该策略的性能矩阵。
+当前比例统计使用MCS1024触发的右移/清零窗口（默认`spin_entry_ratio_limit=2`），单锁热度仍独立采样512次。
+已完成五组共144场定向比较及相关验证，选择与限制见
+[窗口调优](../bench/tclock_compare/results/20260927-ratio-window.md)；完整15线程点复测尚待完成。
 最近完整性能矩阵为[重复操作精简版本](../bench/tclock_compare/results/20260927-followup.md)：
 15线程点三方135场，KD在8/12/16/20/24/28/32/36线程峰值均高于TCLock，幅度1.24%–10.04%；
 7线程仍低3.83%，1线程仍比Linux低5.18%，2线程本轮高4.97%。
@@ -35,7 +36,7 @@ TCLock 启用其原有 NUMA 路径，保留上游 1024 配置（普通WWJUMP可�
 
 spin 使用显式单锁字 API、共享 continuation/frame、原生 pending/MCS 路径和统一 clobber 解锁。
 冷获取首次 CAS 内联，简单 batch 单次初始化元数据。只保留 adaptive：per-CPU 获取/MCS
-计数在MCS达到512时直接右移比较并清零，原生队头在同一近似边界检查捕获队尾以内的六个后继；
+计数在MCS达到1024时直接右移比较并清零，原生队头在同一近似边界检查捕获队尾以内的六个后继；
 不等待凑批，不新增逐请求时钟。完整参数与限制见
 [执行流](JIT_EXECUTION.md#21-热度与角色)。spin waiter 诊断使用 per-CPU 事件总数，
 live 聚合近似，独立排空后余额精确；owner/ACK 及真正生命周期计数保持不变。
@@ -113,7 +114,7 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 
 ### P1.1 基于收益的新请求准入
 
-当前在MCS达到512时以`(spin_entries >> 9) < 2`判断比例，并清零两计数；
+当前在MCS达到1024时以`(spin_entries >> 10) < 2`判断比例，并清零两计数；
 原生队头在物理获取前增加有界captured-tail资格，已代理队头不做该检查。
 不按线程数分流，也不测量完整委托收益。旧确认/冷却/保留状态机已按用户要求移除。
 此前c1矩阵对应旧百分比策略，不替代当前右移策略的性能测量；通用net-cost模型仍未实现。

@@ -19,8 +19,8 @@ JIT 准入及部分执行受检恢复约束不变。模块及显式调用者接�
 当前 spin/mutex 各自每 CPU 256 桶、256 条预分配记录，以槽索引处理冲突并匹配
 完整锁地址。命中只增加该锁 count，没有候选排名、score/error 或淘汰。
 满表保留已有记录，未收录锁在 adaptive 下走原生；地址映射保持至卸载。
-spin在MCS达到512时以`(spin_entries >> 9) < 2`比较本批获取数，清零两计数，再读取一次TSC；
-CPU窗口400亿TSC ticks。spin单锁每512次检查12.5亿窗口；mutex保持第1025次/25亿。
+spin在MCS达到1024时以`(spin_entries >> 10) < 2`比较本批获取数，清零两计数，再读取一次TSC；
+CPU窗口400亿TSC ticks。spin单锁独立每512次检查12.5亿窗口，不随MCS间隔变化；mutex保持第1025次/25亿。
 获取和MCS计数允许近似；已有busy guard保护热表修改，统计复用获取pin。
 这些只决定后续准入，不承担owner、ACK或排空职责。降温/重新变热时重置单锁热度，
 不取消已发布请求。当前仅保留adaptive；完整参数与query语义统一见
@@ -71,7 +71,7 @@ acquisition path or nesting count is introduced. Mutex heat remains in its
 own per-CPU allocation. Provider and direct callers must be rebuilt together
 when changing this exported symbol's type. CPU heat
 changes affect only subsequent acquisitions. Native MCS counts each actual
-publication once, without consulting queue depth; every 512 publications it
+publication once, without consulting queue depth; every 1024 publications it
 compares the MCS/entry ratio before sampling the clock, using the policy above. The drain scan includes the native in-flight count. Hot acquisitions use the
 shared pinned core and existing fast-owner/ticket routing; the provider still
 checks `spin_delegate` there. Both APIs use adaptive CPU/lock admission and the
@@ -109,7 +109,8 @@ uses the complete native fast/pending/MCS helper, retaining any existing ticket;
 this can retry fast/pending but does not record a second heat sample. Native nodes
 have no continuation/frame/packet. Only genuine four-node exhaustion polls the
 whole word. After predecessor handoff and before physical-word polling, a native
-head may veto future CPU admission at the existing approximate 512-publication boundary.
+head may veto future CPU admission at the existing approximate 1024-publication boundary.
+It checks the MCS counter's low ten bits; the sampler's reset to zero marks this boundary.
 It captures the held word and tail once, then requires six acquire-linked
 successors within that captured prefix, without waiting or changing counters
 or timestamps. The head blocks successor reuse; stopping at the captured tail
