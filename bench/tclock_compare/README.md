@@ -171,7 +171,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
-| [MCS1024窗口调优](results/20260927-ratio-window.md) | reset512基线、比例/间隔候选和同构建cutoff对照；144场定向比较及相关检查，完整矩阵待完成 |
+| [MCS1024窗口调优](results/20260927-ratio-window.md) | 144场定向比较及最终15线程点三方135场；8–36线程峰值高于TCLock，3线程较前次下降；完整分布、历史参照和实际JIT分别保留 |
 | [全链路复查与重复操作精简](results/20260927-followup.md) | callee SP、prefetch、队列检查、诊断读取及dispatcher fence精简；定向18场与最终135场，完整分布/worker进度及静态指令证据，无整体吞吐提升声明 |
 | [全链路访存与JIT优化](results/20260927-flow.md) | continuation缓存行、RIP地址折叠、解锁布局及无锁ticket元数据；分阶段诊断、15线程点三方135场及native借用验证 |
 | [spin清理与定向验证](results/20260926-cleanup.md) | 9线程点三方81场、36线程nested/early、生成代码审查；非完整矩阵或新吞吐收益声明 |

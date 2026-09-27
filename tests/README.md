@@ -10,7 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
-| [MCS1024窗口调优](../bench/tclock_compare/results/20260927-ratio-window.md) | 五阶段144场定向比较、NORMAL构建、基础及相关4组和runner35项通过；保留单锁512目标，完整15线程点复测待完成 |
+| [MCS1024窗口调优](../bench/tclock_compare/results/20260927-ratio-window.md) | 五阶段144场定向比较及最终15线程点三方135场通过；NORMAL构建、基础及相关4组和runner35项通过；保留单锁512目标，未跑全量/nested/early/mutex live |
 | [MCS右移/清零比例窗口](#spin-ratio-reset-validation) | NORMAL/观测provider构建、基础及采样/原生MCS共4组、runner35项通过；默认门槛下8/36线程plain实际JIT及排空通过，未重跑性能 |
 | [KD实现文件拆分](#2026-09-27-kd实现文件拆分) | NORMAL provider构建、基础及相关11组、observer路径适配单项通过；C展开/ Python AST核对及ELF对比，未加载模块或重跑性能 |
 | [显式IRQ/BH spin接口](kernel/spin/irq_api/README.md#2026-09-27-验证) | 基础及相关7组最终通过，NORMAL provider/consumer构建、跨两node四CPU混合变体40,000次及排空通过；JIT=0，初次fixture/日志收集失败保留，未测性能或全量 |
