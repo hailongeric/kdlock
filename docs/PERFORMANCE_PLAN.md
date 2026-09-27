@@ -16,8 +16,12 @@ native-first、本地栈/观测和专用 batch helper 已独立筛选保留。sh
 独立候选及其高 JIT 组合均有保护点重复回退，分支保留并排除；精确 per-CPU 余额实验虽改善
 组合，但未单独合入。已接受版本继续使用 RCU task registry、原 shadow table 与 mutex FIFO；
 spin NUMA grouping 不变。最终 cacheline 135 场与原 registry 的实际 owner/RCU ACK 检查通过；
-仅 6/7/8/12/16/20 线程达到同期 TCLock 峰值的 90%，跨节点仍有差距。mutex/hash 筛选出现已排空但无 JIT 的样本；ratio512 候选因重复 cacheline 回退已拒绝。
-继续按 ratio256 收集完整 hash 矩阵，保留 NO_JIT 失败且不纳入竞争 JIT 正例。
+仅 6/7/8/12/16/20 线程达到同期 TCLock 峰值的 90%，跨节点仍有差距。
+mutex/hash 的 ratio256 全点 135 场已收集：129 场通过，6 场 NO_JIT 保留为失败；
+7/8/12/16 线程没有完整三轮 JIT 验收，只有 6/20/24/28/32/36 同时满足三轮与 90% 目标。
+ratio512 候选因重复 cacheline 回退已拒绝。24 线程 mutex/hash 的 KD 少数 node 整段份额仅
+1.86%–2.32%。最终共享代码 spin/hash 1/16/36 三方 27 场回归通过，中位数变化均不足 1%；
+16/36 峰值仍仅为 TCLock 的 80.72%/74.95%，不能宣称本轮已达到全部性能目标。
 本阶段保留 pinned KD waiters；实验 task cache 最多保留 1024 个 task 记录至卸载。
 不做 oversubscription 重设计、内核修改或 wrapper 输入 ABI 扩展，不重试已撤回的寄存器
 驻留/广泛预取候选。
@@ -170,7 +174,8 @@ FULL按`regs+0/64/128`预取可能漏掉未对齐包的尾行；inline包主要�
 冻结源码/ELF/内核身份、CPU放置、命令、逐会话结果及失败记录。发布NORMAL不等于
 执行；运行器要求实际JIT的配置缺正文、业务错误、owner ACK或排空失败均不能算性能通过。
 允许原生完成的少线程配置须保留NO_JIT标记，不作为JIT正例。
-TCLock未观测代理计数，不能推算其批长。原始快慢样本不因异常而删除。
+spin 的 TCLock 未观测代理计数，不能推算其批长；mutex 已记录委托及 parking。
+原始快慢样本不因异常而删除；显式继续收集已排空 NO_JIT 不改变失败状态或评分资格。
 
 ## 3. P1：避免不划算的代理并降低原生入口成本
 
@@ -221,8 +226,10 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
   没有硬件事件时只报告地址几何模型，不宣称测到cache-to-cache或L1 miss因果。
 - [x] 核对spin waiter_count消费者，保留发布/退出钩子，以per-CPU事件总数替换逐请求共享写；
   基础及batch/storage四组、独立30场通过，性能分布与即时下溢信号限制已记录。
-- [ ] 继续核对ticket引用及source lease消费者，再评估按批持有、所有权转移和重复读取。
-  owner/ACK及真正排空计数保持精确；spin诊断修改不推广到mutex计数。
+- [x] 简单 mutex batch 按批持有一个 source lease，保留逐请求 readiness、物理 owner ledger
+  与最终 ACK；复杂 FULL 继续通用恢复。纯观测移至 per-CPU，已接受版本的生命周期余额仍精确且共享。
+- [ ] 继续核对复杂出口的 ticket/source lease 消费者及重复读取；独立 per-CPU 精确余额实验只在
+  未合入候选保留，不能以近似统计替代 owner/ACK 或真正排空。
 - [ ] 用单锁与独立多锁分别检验布局、footprint和碰撞，不把每CPU缓存盲目放大。
 - [ ] 按native/mixed负载测source-ready与native-list锁、source gate与冷写锁的同缓存行影响；
   plain c1没有native列表更新，不能将这些潜在false sharing当作其已测瓶颈。
@@ -233,7 +240,8 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 
 ### P2.2 wrapper、JIT分派与地址重写
 
-- [x] 简单spin batch按ABI一次写最终元数据；通用helper仍处理mutex/复杂路径。
+- [x] 简单 spin batch 按 ABI 一次写最终元数据；普通 ABI2 MINIMAL mutex batch 使用专用
+  prepare/complete/retire，其他 mutex 和复杂 FULL 保留通用 helper。
 - [x] 按实际生成代码折叠普通RIP常量地址，c1块减少3条指令/22字节；不增加运行时guard。
 - [x] 删除callee出口重复SP存储；[定向复测](../bench/tclock_compare/results/20260927-followup.md)18场及36线程nested原生续跑通过，吞吐未见明确提升。
 - [ ] 继续核对scratch spill和虚拟CALL栈操作；仅在身份、
@@ -252,23 +260,27 @@ TCLock未观测代理计数，不能推算其批长。原始快慢样本不因�
 - [x] 测试首请求+两请求完整预取，以及更远队列头分级预取；前者高竞争下降，
   后者跨NUMA略升但16/20下降约2%，均撤回并归档。当前仍在正文前预取下一请求。
 - [x] 默认producer MINIMAL只预取BP/IP，利用已断言的IP/SP共行；FULL和consumer模式保持原范围。
-- [ ] 后续如调整距离/范围，按实际cache-miss/生成代码测量定位；本轮未采集硬件miss。
+- [ ] 后续如调整距离/范围，按实际 cache-miss/生成代码测量定位；本轮已采集独立通用
+  cache/L1 事件，但未测得具体 load 或远端延迟，不能用总数证明某次预取的因果收益。
   提示不能代替权威frame或生命周期引用。
 
 位置：[prefetch.inc](../kernel_module/spin/prefetch.inc)。验收看完整吞吐和footprint。
 
 ## 5. P3：嵌套、mutex与更广负载
 
-- [ ] 本阶段完成 mutex 的 native-first、无锁 shadow、1024 稳定 task records、
-  node 本地栈/观测、专用 batch helper 和有界 NUMA grouping；各项独立筛选提交。
-  cacheline 正确且有可重复改进后再做 mutex/hash 完整三方比较。
+- [x] 完成 mutex 六类优化的实现与筛选：接受 native-first、node 本地栈/观测、专用 batch helper；
+  无锁 shadow、1024 稳定 task records 和有界 NUMA grouping 因保护点重复回退保留于实验分支。
+  cacheline 最终 135 场通过后完成 mutex/hash 135 场取样，后者 6 场 NO_JIT 未通过验收。
+- [ ] 定位 mutex/hash 的竞争 JIT 覆盖缺口及仍未达到 90% 的配置；不重复合入已拒绝的 ratio512
+  或高 JIT 组合，不以原生回退成绩替代要求实际 JIT 的正例。
 - 已知七角色双CPU mutex的 oversubscription 可运行性问题不在本阶段范围内。
   published waiter 禁止抢占并 PAUSE 轮询仍是当前契约。
 - [ ] 明确CPU放置后，再比较同/异队列嵌套、乱序释放、hostcall与native后缀；
   先保持一次副作用、原owner ACK和排空，再分析服务成本。
 - [ ] 继续定位28线程20+8节点分布的短批与整段差距；先区分批上限、无后继及entry拒绝，
   不新增每请求时钟；修改上限或NUMA选择时同时检查少数节点进度。
-- [ ] 诊断24线程20+4放置的服务偏斜：最新hash的KD三轮node1整段份额仅1.99%–2.02%；
+- [ ] 诊断 24 线程 20+4 放置的服务偏斜：本轮 spin/hash 的 KD node1 整段份额约 2%，
+  mutex/hash 为 1.86%–2.32%；
   1024正文/扫描上限及正进度不等于公平或最大等待时间保证，吞吐之外需保留worker分布。
 - [ ] 按实际需求扩展多锁、正文长度、NUMA和公平性；单锁spin的TCLock结果不能
   推广为mutex或任意嵌套性能。
