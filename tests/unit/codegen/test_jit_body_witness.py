@@ -27,7 +27,8 @@ def run_image(assembly, entries, initialize=None, *, resume=None, context=(0xFEE
         (directory / "asm/jit.S").write_bytes(assembly)
         os.chdir(directory)
         try:
-            translator.build_jit_binary()
+            translator.build_jit_binary(context_inputs=
+                translator.wrapper_context_inputs(assembly.decode()))
             binary = (directory / "asm/jit.bin").read_bytes()
         finally:
             os.chdir(previous)

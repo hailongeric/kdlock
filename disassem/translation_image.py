@@ -5,6 +5,7 @@ that exact scope; admission and artifact publication stay in disassem.py.
 """
 
 from io import StringIO
+import re
 
 import assist
 import conflict
@@ -16,6 +17,24 @@ from assist import make_inst
 from miasm.arch.x86.arch import mn_x86
 from miasm.expression.expression import ExprLoc
 from translation_scope import find_resumable_call_continuations
+
+
+def wrapper_context_inputs(assembly):
+    """Find inputs used by final lowered code, including emitted entry guards.
+
+    This is an import optimization, not admission. A caller with no known final
+    image, an external include or an unknown macro keeps both ABI inputs.
+    Source comments cannot make an unused input live. Stack slots never move.
+    """
+    if not isinstance(assembly, str):
+        return True, True
+    code = re.sub(r'/\*.*?\*/', '', assembly, flags=re.S)
+    if ('/*' in code or '*/' in code or
+            re.search(r'(?m)^\s*(?:#|\.include\b|\.macro\b)', code) or
+            re.search(r'\b(?:ARG_REG|MEM_ARG2?)\b', code)):
+        return True, True
+    return (bool(re.search(r'\b(?:Stack_RGS|PT_GS)\b', code)),
+            bool(re.search(r'\b(?:Stack_TASK|Stack_RCT|PT_TASK)\b', code)))
 
 
 def write_entry_dispatch(

@@ -5,6 +5,14 @@
 #ifndef KD_GENERATED_ENTRY_ABI
 #define KD_GENERATED_ENTRY_ABI 0
 #endif
+/* Unknown/standalone images retain the two imports. Translation may omit an
+ * unused import, while the directory, frame slots and two-word ABI stay fixed. */
+#ifndef KD_GENERATED_GS_INPUT
+#define KD_GENERATED_GS_INPUT 1
+#endif
+#ifndef KD_GENERATED_TASK_INPUT
+#define KD_GENERATED_TASK_INPUT 1
+#endif
 
 	.intel_syntax noprefix
 
@@ -54,10 +62,14 @@ load_packet:
 	mov ARG_REG, rsi
 	/* Spilled virtual GPRs already live in regs; only CPU-resident values
 	 * need importing. R11 holds their backing pointer, never logical R11. */
+#if KD_GENERATED_GS_INPUT
 	mov rax, PT_GS
 	mov Stack_RGS, rax
+#endif
+#if KD_GENERATED_TASK_INPUT
 	mov rax, PT_TASK
 	mov Stack_TASK, rax
+#endif
 	mov Stack_JIT_WITNESS, 0
 	mov rbx, PT_RBX
 	mov r10, PT_R10
@@ -93,10 +105,14 @@ clobber_body:
 	mov ARG_REG, rsi
 	mov R12, PT_RBP
 	mov R13, PT_RSP
+#if KD_GENERATED_GS_INPUT
 	mov rax, PT_GS
 	mov Stack_RGS, rax
+#endif
+#if KD_GENERATED_TASK_INPUT
 	mov rax, PT_TASK
 	mov Stack_TASK, rax
+#endif
 	mov Stack_JIT_WITNESS, 0
 	/* The fixed directory is usable only by a matching generated image. */
 #if KD_GENERATED_ENTRY_ABI != 1 && KD_GENERATED_ENTRY_ABI != 2

@@ -18,7 +18,7 @@ import indirect_jump
 import memread
 import normal
 import solve_bug
-from translation_image import emit_jit_assembly, write_entry_dispatch
+from translation_image import emit_jit_assembly, write_entry_dispatch, wrapper_context_inputs
 from translation_scope import (
     decode_regions, find_resumable_call_continuations, find_segment_policy_error,
 )
@@ -60,16 +60,20 @@ def run_build_step(command, **kwargs):
         raise
 
 
-def build_jit_binary(abi=0):
+def build_jit_binary(abi=0, *, context_inputs=None):
     diagnostics.set_instruction(None, "<assemble/objcopy/objdump>")
     include_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "include"
     )
+    # Standalone/older callers have no proven requirements and keep both.
+    gs, task = (True, True) if context_inputs is None else context_inputs
     run_build_step(
         [
             "gcc",
             f"-I{include_dir}",
             f"-DKD_GENERATED_ENTRY_ABI={abi}",
+            f"-DKD_GENERATED_GS_INPUT={int(gs)}",
+            f"-DKD_GENERATED_TASK_INPUT={int(task)}",
             "-I./asm/",
             "-c",
             "-fPIC",
@@ -369,7 +373,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
 
     solve_bug.solve_cond_jmp_lock_cmpxchg("./asm/jit.S")
 
-    build_jit_binary(abi)
+    build_jit_binary(abi, context_inputs=wrapper_context_inputs(
+        Path('./asm/jit.S').read_text(encoding='utf-8')))
     return 0
 
 

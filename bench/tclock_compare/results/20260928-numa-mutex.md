@@ -71,6 +71,19 @@ FULL/native 续点、IRQ 栈覆盖、正文 witness 与分支预算。
 KD 中位数较本次基线提高 0.96% / 0.87%，保留；峰值只达到同期 TCLock 的 80.02% / 75.36%，
 尚未达到 90%。Linux36 的高峰也保留，不能用宽范围声称稳定性能。完整低线程回归待后续阶段。
 
+## 候选二：省略未使用的 GS/task 导入
+
+只扫描最终已降低的生成代码（含入口 guard），忽略源指令注释。
+仅 GS 或仅逻辑 task 的镜像分别保留对应输入；未知宏/include、未闭合注释及没有需求信息的
+独立构建保留两者。regular 与 clobber 入口使用相同策略，不挪动栈槽或输入 ABI。
+6 组基础/相关测试通过，含实际 GS 读/写/RMW、逻辑 task 和真实汇编目录核对。
+六个 live hash 镜像均确认没有两处未使用的导入，镜像 2172 字节。
+
+18/18 场筛选通过：KD16 为 3.762 / 3.764 / 3.783，KD36 为 1.999 / 1.999 / 2.000。
+较融合阶段中位数提高 0.27% / 0.51%；收益很小，不能由三轮范围宣称统计等价。
+同期 TCLock16 为 4.686 / 4.705 / 4.715，36 为 2.645 / 2.648 / 2.651，90% 目标仍未达到。
+Linux16 为 2.906 / 2.929 / 2.951，36 为 1.624 / 1.635 / 1.881；完整值与 spread 保留。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：
@@ -79,7 +92,10 @@ guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制�
 - `numa-20260928-pmu-{cycles,instructions,cache-misses,L1-dcache-load-misses}`：24 场诊断及 driver 身份。
 - `numa-20260928-fusion-screen`：18 场筛选。
 - `numa-20260928-fusion-validation/unit.log`：5 组基础/相关测试。
+- `numa-20260928-inputs-screen`、`numa-20260928-inputs-validation`：18 场及 6 组测试。
 
 host 归档位于 `bench/.tmp/numa-20260928/spin-initial.tar.gz`，SHA256：
 `8eccf12241b6f46fccc9d48db16a680cc4d4d00d2d57a862e4666720f9a2043d`。
 这些原始大文件不随 Git checkout 分发。
+输入优化的独立归档为 `spin-inputs.tar.gz`，SHA256：
+`00c4b4fc12458330bd1444ded9401ca7951f6d4fc7edc20f43e2207231d966a7`。

@@ -114,6 +114,8 @@ provider 构建要求 `KD_SPIN_CLOBBER_V1`；旧内核安装分支已删除，�
 | FULL | 中间退出在进入 C 之前保存当前完整逻辑 GPR。沿已有 hostcall、nested、native 或续跑处理，不重放前缀 |
 
 callee/hostcall跳板只设置退出原因和目标，不提前把虚拟R13写回packet SP。
+翻译器根据最终生成代码省略没有消费者的 GS/task wrapper 导入；仍保留原栈槽和双字输入。
+使用这些槽的镜像保留对应导入，需求未知的独立构建及未知宏/include 保留两者。
 公共wrapper出口统一发布：COMPLETE使用已验证的post-CALL RSI，旧reduced和FULL使用R13。
 出口分类在此之前只读取活跃寄存器及元数据，不依赖packet SP。
 因此每个跳板少一次重复存储，而普通CALL miss、hostcall及FULL原生续跑仍得到真实CALL栈。
