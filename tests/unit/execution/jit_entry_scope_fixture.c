@@ -1506,8 +1506,90 @@ static void check_pending_batch_exit(void)
 	}
 }
 
+/* Real ABI2 batch admission and the actual pending dispatcher. Machine-code
+ * completion and poisoned CALL fallbacks are exercised by test_clobber_abi. */
+static void check_mutex_batch(void)
+{
+ unsigned char code[64]={0};
+ struct kd_jit_batch_call call, before;
+ struct pt_regs borrowed;
+ struct kd_exec_frame saved;
+ memcpy(code+25,"KDWC001",7); memcpy(code+41,"KDAB",4);
+ code[45]=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+ for (int timing=0;timing<2;timing++) {
+  reset(); borrowed=active.regs;
+  active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
+  active.borrowed_regs=&borrowed;
+  active.entry_abi=entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+  active.packet_state=KD_PACKET_MINIMAL;
+  entry->lock_kind=KD_EXE_LOCK_MUTEX; entry->code_block=code;
+  kd_jit_timing=timing; timing_clock_active=timing; timing_clock=1;
+  CHECK(kd_exe_mutex_batch_prepare(entry,&active,&call));
+  CHECK(call.regs==&borrowed && call.entry_abi==2 && call.complete &&
+        call.unlock==direct_mutex_unlock_addr && call.lock==active.outer_lock_addr &&
+        call.code==code+32 && call.args[0]==active.gsbase &&
+        call.args[1]==(unsigned long)&waiter && call.packet_state==&active.packet_state);
+  CHECK(timing_reads==(timing?2U:0U));
+  saved=active;
+  for (int bad=0;bad<13;bad++) {
+   switch(bad) {
+   case 0: source_open=false;break;
+   case 1: entry->status_code=KD_EXE_NATIVE_ONLY;break;
+   case 2: entry->lock_kind=KD_EXE_LOCK_SPIN;break;
+   case 3: code[45]=KD_ENTRY_ABI_SPIN_CLOBBER_V1;break;
+   case 4: active.entry_abi=KD_ENTRY_ABI_LEGACY;break;
+   case 5: active.packet_state=KD_PACKET_FULL;break;
+   case 6: active.mutex_backend=false;break;
+   case 7: active.batch_lease=false;break;
+   case 8: active.regs_borrowed=false;break;
+   case 9: active.executed=true;break;
+   case 10: active.jit_lock_depth=2;break;
+   case 11: active.jit_lock_released[0]=true;break;
+   case 12: active.control_call.phase=KD_CALL_ENTERED;break;
+   }
+   before=call;
+   CHECK(!kd_exe_mutex_batch_prepare(entry,&active,&call));
+   CHECK(!memcmp(&call,&before,sizeof(call)));
+   active=saved; source_open=true; entry->status_code=KD_EXE_NORMAL;
+   entry->lock_kind=KD_EXE_LOCK_MUTEX; code[45]=2;
+  }
+  call.args[0]=KD_EXE_CALL_MISS;
+  CHECK(!kd_exe_mutex_batch_completed(&call,&active));
+  call.args[0]=KD_EXE_CLOBBER_COMPLETE;
+  CHECK(!kd_exe_mutex_batch_completed(&call,&active));
+  active.packet_state=KD_PACKET_COMPLETE; call.args[1]=1;
+  CHECK(kd_exe_mutex_batch_completed(&call,&active));
+  CHECK(calls==0 && timing_reads==(timing?4U:0U));
+ }
+ for (int refuse=0;refuse<2;refuse++) {
+  reset(); borrowed=active.regs;
+  active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
+  active.borrowed_regs=&borrowed;
+  active.entry_abi=entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+  active.packet_state=KD_PACKET_MINIMAL;
+  entry->lock_kind=KD_EXE_LOCK_MUTEX;entry->code_block=code;
+  CHECK(kd_exe_mutex_batch_prepare(entry,&active,&call));
+  active.executed=true;
+  steps[0]=refuse ? (struct step){KD_EXE_ENTRY_REFUSED,0,0,0} :
+                   (struct step){KD_EXE_CALL_MISS,0x9870,1,-8};
+  translated(call.regs,call.args); /* One already-returned body. */
+  if (!refuse) active.packet_state=KD_PACKET_FULL;
+  known_result=0;
+  CHECK(kd_exe_mutex_batch_resume(entry,&call)==(refuse?KD_EXE_NO_RUN:KD_EXE_RUN_NATIVE));
+  CHECK(calls==1 && active.executed==!refuse && !complex_preparations);
+  CHECK(active.mutex_backend && active.batch_lease);
+  CHECK(active.regs_borrowed==(bool)refuse);
+  if (!refuse) {
+   CHECK(kd_exec_frame_regs(&active)==&active.regs && active.regs.ip==0x9870);
+   memset(&borrowed,0xaf,sizeof(borrowed));
+   CHECK(active.regs.ip==0x9870 && source_calls==1);
+  }
+ }
+}
+
 int main(void)
 {
+	check_mutex_batch();
 	check_batch_admission();
 	check_batch_metadata();
 	check_batch_completion_timings();

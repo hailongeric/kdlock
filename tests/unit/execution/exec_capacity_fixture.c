@@ -28,6 +28,7 @@ static bool list_empty(const struct list_head *head)
 #include <stdint.h>
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef uint32_t u32;
 static bool kd_hotlock_role_trace;
 typedef uint64_t u64;
 #include "frame_types.h"
@@ -57,6 +58,8 @@ typedef struct qspinlock raw_spinlock_t;
 struct mutex {
 	bool locked;
 };
+static bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
+{ return lock->locked && task == current; }
 #define ATOMIC_INIT(value) (value)
 #define atomic_read(p) (*(p))
 #define raw_smp_processor_id() cpu
@@ -992,6 +995,89 @@ static void lazy_single(void)
 	}
 }
 
+/* Exercise real batch push/retirement around an enclosing source lease. The
+ * fake mutex checks owner identity; actual blocking/ACK has separate fixtures. */
+static void mutex_batch_frames(void)
+{
+ struct mutex origin = { .locked = true };
+ struct kd_mutex lock = { .origin_mutex_addr = (unsigned long)&origin };
+ struct kd_exec_outer_unlock hook = {0};
+ struct pt_regs packet = registers(97), expected;
+ struct kd_exec_frame *frame, saved, refused;
+ struct kd_exec_context before;
+
+ cpu=0; current=&owners[0]; lock.physical_owner=current;
+ CHECK(!source_frames && !kd_exec_current_frame());
+ CHECK(kd_source_frame_get());
+ for (int round=0;round<2;round++) {
+  frame=kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook);
+  CHECK(frame && source_frames==1 && frame->batch_lease && frame->regs_borrowed);
+  if (!frame) return;
+  CHECK(frame->mutex_backend && frame->entry_abi==KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+        frame->packet_state==KD_PACKET_MINIMAL && kd_exec_frame_validate(frame));
+  CHECK(frame->jit_lock_node[0]==&lock && frame->jit_lock_addr[0]==(unsigned long)&origin);
+  CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
+  frame->executed=true; frame->packet_state=KD_PACKET_COMPLETE;
+  saved=*frame;
+  /* Every refusal must preserve the live frame and source reference. */
+  for (int bad=0;bad<26;bad++) {
+   switch(bad) {
+   case 0: frame->mutex_backend=false;break;
+   case 1: frame->batch_lease=false;break;
+   case 2: frame->complex_ready=false;break;
+   case 3: frame->spin_simple=true;break;
+   case 4: frame->request_frame=true;break;
+   case 5: frame->regs_borrowed=false;break;
+   case 6: frame->packet_state=KD_PACKET_FULL;break;
+   case 7: frame->entry_abi=KD_ENTRY_ABI_SPIN_CLOBBER_V1;break;
+   case 8: frame->executed=false;break;
+   case 9: frame->completion_seen=true;break;
+   case 10: frame->outer_unlock_seen=true;break;
+   case 11: frame->jit_lock_depth=2;break;
+   case 12: frame->outer_lock_index=1;break;
+   case 13: frame->jit_lock_released[0]=true;break;
+   case 14: frame->outer_lock_addr++;break;
+   case 15: frame->jit_lock_addr[0]++;break;
+   case 16: frame->jit_lock_kind[0]=KD_EXEC_LOCK_NATIVE;break;
+   case 17: frame->jit_lock_node[0]=NULL;break;
+   case 18: frame->control_call.phase=KD_CALL_ENTERED;break;
+   case 19: frame->native_request=(void *)1;break;
+   case 20: frame->remote_request=(void *)1;break;
+   case 21: frame->resume_target=frame;break;
+   case 22: frame->outer_unlock_hook=NULL;break;
+   case 23: hook.released=true;break;
+   case 24: lock.physical_owner=&owners[1];break;
+   case 25: origin.locked=false;break;
+   }
+   refused=*frame;
+   CHECK(kd_exec_frame_retire_mutex_batch(frame,&lock)==-EINVAL);
+   CHECK(!memcmp(frame,&refused,sizeof(refused)) && source_frames==1);
+   *frame=saved;hook.released=false;lock.physical_owner=current;origin.locked=true;
+  }
+  /* Closure stops new roots, but cannot strand an admitted body's lease. */
+  source_open=false;
+  CHECK(!kd_exec_frame_retire_mutex_batch(frame,&lock));
+  CHECK(!kd_exec_current_frame() && source_frames==1 && origin.locked);
+  before=*kd_exec_current_context();
+  CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
+  CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
+  source_open=true;
+ }
+ /* A FULL exit owns its copy through generic retirement; the waiter packet
+  * may be reused only after detachment. A pending owner ACK still forbids pop. */
+ frame=kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook);
+ frame->executed=true; frame->packet_state=KD_PACKET_FULL;
+ expected=packet; kd_exec_frame_own_regs(frame); memset(&packet,0xa5,sizeof(packet));
+ CHECK(!frame->regs_borrowed && !memcmp(&expected,kd_exec_frame_regs(frame),sizeof(expected)));
+ CHECK(!kd_exec_frame_record_event(frame,KD_EXEC_EVENT_OUTER_UNLOCK,NULL));
+ CHECK(!kd_exec_frame_complete(frame));
+ frame->native_request=(void *)1;
+ CHECK(kd_exec_frame_pop(frame,NULL)==-EBUSY && source_frames==1);
+ frame->native_request=NULL;
+ CHECK(!kd_exec_frame_pop(frame,NULL) && source_frames==1);
+ kd_source_frame_put(); CHECK(!source_frames && !kd_exec_current_frame());
+}
+
 int main(void)
 {
 	unsigned int depth, cycle, last_released;
@@ -999,6 +1085,9 @@ int main(void)
 
 	CHECK(sizeof(struct pt_regs) == 168 &&
 	      offsetof(struct kd_exec_frame, regs) == 72);
+	mutex_batch_frames();
+	if (failures)
+		return 1;
 	lazy_single();
 	shared_requests();
 	if (failures)

@@ -299,6 +299,32 @@ host `mutex-nativefirst.tar.gz`，SHA256
 `mutex-locality.tar.gz` SHA256
 `217b160f5e8e011c997ef54ef9987a08e729c45b8d797286af054dcc1ad35b1d`。
 
+## 专用 mutex batch helper 与单 source lease：保留
+
+普通 ABI2 root 使用专用 preparation/completion/retirement，并复用 batch 的精确 RIP slot；
+每请求仍检查 OPEN、publication、backend 和 ABI。实际 QUEUE_OWNER ledger 在正文前建立，
+FULL 退出仍 detach packet 并由 generic dispatcher 消费已返回结果一次，不重放正文。
+一个 batch lease 覆盖所有同步 native 后缀、owner ACK 和 frame pop，legacy 保留原有私有 lease。
+
+基础及 frame-capacity/JIT-entry/mutex-outer/native-peer/source-lifetime 共 7 组最终通过。
+新增检查覆盖 closure 拒绝新 root 而允许已开始正文退休、26 种错误 COMPLETE 状态、
+真实 pending dispatcher 的 FULL/native/refusal、借出 packet 后复制与尚欠 ACK 时拒绝 pop。
+首次 stale-owner 变异在报告断言后触发 fixture 空指针，补足 fixture 错误退出后基础及 capacity
+3 组复跑通过。普通 kernel build 和 27 场三方测量通过；objtool/locale 警告类别与 locality 基线相同。
+
+| threads | KD min/median/max Mops/s | locality 中位数 | KD/TCLock 峰值 |
+| --- | --- | --- | --- |
+| 1 | 14.788 / 14.790 / 14.877 | 14.928 | 41.15% |
+| 16 | 4.682 / 4.797 / 4.832 | 3.918 | 105.16% |
+| 36 | 2.793 / 2.931 / 3.110 | 2.141 | 69.72% |
+
+1 线程中位数下降约 0.92%，未超过 3%；16/36 改善。16/36 整段实际 JIT 份额为
+5.90%–6.94% / 6.31%–7.66%，不是 peak 窗口专属份额。16 达到同期 TCLock 峰值的 90%，
+36 仍未达标。全部业务、worker 进度、JIT 及排空检查通过；未将 mocked blocking/owner
+fixture 写成实际复杂 mutex JIT，也没有把本轮简单正文结果推广到任意嵌套。
+证据 `numa-20260928-mutex-batch-{screen,validation}`，host `mutex-batch.tar.gz` SHA256
+`58c3bb053b996b773ab6f8b93574dbcab4eaf6fd9a2d0cb47dc517302bc038d4`。
+
 ## 证据
 
 guest 根目录 `/root/kdlock-evidence/`，各目录均冻结源码、二进制、命令、内核身份及会话日志：

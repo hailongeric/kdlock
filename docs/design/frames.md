@@ -281,6 +281,13 @@ spin now also removes the continuation's `irq_flags` and leaves IRQ state unchan
 The legacy frame-push APIs no longer accept unused waiter/outgoing-RSP arguments.
 
 Mutex keeps a separate `kd_mutex_cpu_state` and its own ownership protocol.
+Ordinary ABI2 mutex roots borrow a single enclosing batch source lease and the
+waiter's packet, while retaining an explicit physical-owner ledger. Their first
+COMPLETE return uses checked mutex retirement before queue publication. FULL
+returns retain backend identity, detach the packet, and enter the existing
+native/ACK path once. The batch lease ends after every frame/ACK has retired;
+source closure still rejects new roots within the batch.
+
 Its scheduling object's tail is an encoded `u32`, not a pointer. The immutable
 `origin_mutex_addr` also supplies the protected shadow-map key, removing a
 second address column. These changes leave physical-owner checks, waiter

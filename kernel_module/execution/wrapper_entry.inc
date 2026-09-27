@@ -241,6 +241,55 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 	return true;
 }
 
+/* Mutex batches retain a full ownership ledger and a borrowed register packet.
+ * Only pristine ABI2 roots use the short wrapper path. Every candidate still
+ * checks OPEN, publication, backend and image ABI; a cached slot is no lease. */
+bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
+	struct kd_exec_frame *frame, struct kd_jit_batch_call *call)
+{
+	struct pt_regs *regs = kd_exec_frame_regs(frame);
+
+	if (!frame->mutex_backend || !frame->batch_lease ||
+	    !frame->complex_ready || !frame->regs_borrowed || frame->spin_simple ||
+	    frame->parent || frame->depth || frame->request_frame ||
+	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    frame->packet_state != KD_PACKET_MINIMAL || frame->executed ||
+	    frame->state != KD_EXEC_FRAME_RUNNING || !frame->outer_lock_addr ||
+	    !frame->gsbase || !frame->logical_task || !regs->sp ||
+	    regs->ip != frame->entry_ip ||
+	    frame->control_call.phase != KD_CALL_NONE ||
+	    !kd_jit_minimal_complete_allowed(frame) ||
+	    !kd_exe_entry_is_ready(exe, 0, frame->entry_ip) ||
+	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_MUTEX ||
+	    !kd_jit_image_matches(exe, frame))
+		return false;
+	kd_jit_prepare_clobber(call, frame, READ_ONCE(exe->code_block));
+	if (unlikely(kd_jit_timing)) {
+		call->dispatch_start = kd_jit_timing_start();
+		call->wrapper_start = kd_jit_timing_start();
+	} else {
+		call->dispatch_start = 0;
+		call->wrapper_start = 0;
+	}
+	return true;
+}
+
+bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
+	const struct kd_exec_frame *frame)
+{
+	if (call->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    call->args[0] != KD_EXE_CLOBBER_COMPLETE || !call->complete ||
+	    *call->packet_state != KD_PACKET_COMPLETE)
+		return false;
+	if (unlikely(call->wrapper_start)) {
+		kd_jit_timing_end(KD_JIT_TIME_WRAPPER, call->wrapper_start);
+		kd_jit_timing_end(KD_JIT_TIME_DISPATCH, call->dispatch_start);
+	}
+	if (call->args[1] == 1)
+		kd_exe_note_body(frame->entry_ip, call->lock, call->args[1]);
+	return true;
+}
+
 /* One logical invocation may cross several control/hostcall wrapper returns.
  * Keep exit classification here: backends must not infer replay permission
  * from an error number or from the optional generated-body witness. */

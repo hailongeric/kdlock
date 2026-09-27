@@ -10,7 +10,22 @@
 struct kd_mutex_batch {
 	struct kd_exec_outer_unlock outer;
 	struct kd_mutex_node *next;
+	/* Immutable slot identity; readiness/code are rechecked per request. */
+	struct kd_exe_info *exe;
 };
+
+static struct kd_exe_info *
+kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)
+{
+	struct kd_exe_info *exe = batch->exe;
+
+	if (!exe || READ_ONCE(exe->RIP) != ip ||
+	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_MUTEX) {
+		exe = kd_get_exe(0, ip);
+		batch->exe = exe;
+	}
+	return kd_exe_entry_is_ready(exe, 0, ip) ? exe : NULL;
+}
 
 /* The successor is still queued and cannot reuse its node or caller stack
  * before this batch publishes a wake. Fetch its read-mostly header, the saved
@@ -86,6 +101,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
 	struct kd_exec_frame *frame;
 	struct kd_exe_info *exe;
+	struct kd_jit_batch_call call;
 	struct pt_regs retry_regs, *regs;
 	bool clobber = curr_node->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	unsigned long lock_addr[1];
@@ -123,7 +139,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	mutex_debug("JIT exec waiter cpu %d ip %lx sp %lx\n", (curr_node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1,
 		    curr_node->regs.ip, curr_node->regs.sp);
 
-	exe = kd_exe_find_ready(0, curr_node->regs.ip);
+	exe = kd_mutex_batch_find_ready(batch, curr_node->regs.ip);
 	if (!exe) {
 		this_cpu_inc(kd_mutex_jit_not_ready_count);
 		/* A missing/cold image is an unstarted request, not a progressed
@@ -152,6 +168,14 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 
 	if (!clobber)
 		retry_regs = curr_node->regs;
+	/* The enclosing batch retains source residency through the last ACK/pop.
+	 * Legacy/nested roots keep their private frame lease and generic setup. */
+	frame = clobber && curr_node->packet_state == KD_PACKET_MINIMAL ?
+		kd_exec_frame_push_mutex_batch(&curr_node->regs, curr_node->regs.ip,
+			curr_node->gsbase, curr_node->task_struct_ptr, lock,
+			&batch->outer) : NULL;
+	if (frame)
+		goto prepared;
 	if (clobber)
 		frame = kd_exec_frame_push_borrowed(
 			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr, 1,
@@ -193,10 +217,25 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	}
 
 	frame->outer_unlock_hook = &batch->outer;
+prepared:
 	queue_end = kd_exe_queue_timing_start();
 	regs = kd_exec_frame_regs(frame);
-	ret_flag = kd_exe_on_call_hl_entry(exe, regs, frame->entry_ip,
-					   frame->outer_lock_addr);
+	if (frame->batch_lease && kd_exe_mutex_batch_prepare(exe, frame, &call)) {
+		frame->executed = true;
+		kd_jit_clobber_call_v1(&call);
+		if (kd_exe_mutex_batch_completed(&call, frame)) {
+			kd_exe_queue_timing_end(true, &curr_node->queued_at_ns, queue_end);
+			BUG_ON(kd_exec_frame_retire_mutex_batch(frame, lock));
+			curr_node->packet_state = KD_PACKET_COMPLETE;
+			return 0;
+		}
+		/* FULL, or a checked pre-entry refusal: the pending return is
+		 * consumed once by the existing dispatcher, never re-entered. */
+		ret_flag = kd_exe_mutex_batch_resume(exe, &call);
+	} else {
+		ret_flag = kd_exe_on_call_hl_entry(exe, regs, frame->entry_ip,
+						 frame->outer_lock_addr);
+	}
 	regs = kd_exec_frame_regs(frame);
 	/* Refused dispatches remain queued. Account a real body's pre-dispatch
 	 * endpoint before the waiter can resume and recycle its slot. */
@@ -296,7 +335,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 	this_cpu_inc(kd_mutex_combiner_count);
 
-	if (!curr_node || !curr_node->next) {
+	if (!curr_node || !curr_node->next || !kd_source_frame_get()) {
 		/* Only one waiter — pass lock directly, no delegation needed */
 		this_cpu_inc(kd_mutex_handoff_count);
 		set_locked(lock);
@@ -337,6 +376,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			 * now finished; reacquire A for our own original request.
 			 * Do not inspect or wake the old successor a second time. */
 			kd_mutex_wait_and_lock(lock);
+			kd_source_frame_put();
 			return;
 		}
 
@@ -354,5 +394,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	set_locked(lock);
 	if (next_node)
 		smp_store_release(&next_node->locked, 0);
+	/* Includes synchronous native continuation and final physical owner ACK. */
+	kd_source_frame_put();
 }
 #pragma GCC pop_options

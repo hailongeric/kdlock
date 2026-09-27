@@ -19,6 +19,7 @@
 #include "kd_spin_entry.h"
 
 struct task_struct;
+struct kd_mutex;
 struct kd_native_request;
 struct kd_remote_request;
 
@@ -176,6 +177,16 @@ void kd_exec_context_exit(void);
 struct kd_exec_frame *kd_exec_current_frame(void);
 bool kd_exec_context_busy(void);
 bool kd_exec_context_occupied(void);
+
+/* The mutex combiner owns one enclosing source lease. A root still carries
+ * its exact physical-owner ledger for FULL/native recovery; refusal publishes
+ * no frame. Retirement is only for the first, terminal ABI2 wrapper return. */
+struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
+	struct pt_regs *regs, unsigned long entry_ip, unsigned long gsbase,
+	struct task_struct *task, struct kd_mutex *lock,
+	struct kd_exec_outer_unlock *hook);
+int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
+				    struct kd_mutex *lock);
 
 /* Prepare once on the producer; bind only changes physical execution state.
  * batch_lease requires an enclosing source lease through the final unbind. */

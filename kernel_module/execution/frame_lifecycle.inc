@@ -105,7 +105,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 		   const struct pt_regs *regs, unsigned long entry_ip,
 		   unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task,
-		   struct pt_regs *borrowed_regs)
+		   struct pt_regs *borrowed_regs, bool batch_lease)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
@@ -121,7 +121,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	    (ctx->depth && ctx->owner != current))
 		return NULL;
 	/* Atomic admission and closure order retirement against every new frame. */
-	if (!kd_source_frame_get())
+	if (batch_lease ? !kd_source_is_open() : !kd_source_frame_get())
 		return NULL;
 
 	first_frame = ctx->depth == 0;
@@ -171,7 +171,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	frame->spin_simple = false;
 	frame->request_frame = false;
 	frame->complex_ready = true;
-	frame->batch_lease = false;
+	frame->batch_lease = batch_lease;
 	frame->outer_unlock_hook = NULL;
 	frame->control_call.phase = KD_CALL_NONE;
 	frame->native_request = NULL;
@@ -192,7 +192,8 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 		frame->state = KD_EXEC_FRAME_UNUSED;
 		if (first_frame)
 			ctx->owner = NULL;
-		kd_source_frame_put();
+		if (!batch_lease)
+			kd_source_frame_put();
 		return NULL;
 	}
 #endif
@@ -206,7 +207,7 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 		   unsigned long gsbase, struct task_struct *logical_task)
 {
 	return kd_exec_frame_push_internal(regs, entry_ip, outer_lock_addr,
-		held_lock_depth, gsbase, logical_task, NULL);
+		held_lock_depth, gsbase, logical_task, NULL, false);
 }
 
 struct kd_exec_frame *
@@ -215,7 +216,86 @@ kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,
 		       unsigned long gsbase, struct task_struct *logical_task)
 {
 	return kd_exec_frame_push_internal(regs, entry_ip, outer_lock_addr,
-		held_lock_depth, gsbase, logical_task, regs);
+		held_lock_depth, gsbase, logical_task, regs, false);
+}
+
+/* Eligible mutex roots borrow the waiter's packet and the combiner's source
+ * lease. Initialize the real one-lock ledger immediately: a FULL exit may
+ * block or detach the queue before it returns, so spin's implicit ledger is
+ * not a substitute. The original mutex owner remains this physical task. */
+struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
+	struct pt_regs *regs, unsigned long entry_ip, unsigned long gsbase,
+	struct task_struct *task, struct kd_mutex *lock,
+	struct kd_exec_outer_unlock *hook)
+{
+	struct kd_exec_frame *frame;
+
+	if (!lock || !lock->origin_mutex_addr || !hook ||
+	    kd_exec_current_context()->depth)
+		return NULL;
+	frame = kd_exec_frame_push_internal(regs, entry_ip,
+		lock->origin_mutex_addr, 1, gsbase, task, regs, true);
+	if (!frame)
+		return NULL;
+	frame->mutex_backend = true;
+	frame->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	frame->packet_state = KD_PACKET_MINIMAL;
+	frame->jit_lock_addr[0] = lock->origin_mutex_addr;
+	frame->jit_lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
+	frame->jit_lock_node[0] = lock;
+	frame->jit_lock_released[0] = false;
+	frame->jit_lock_depth = 1;
+	frame->outer_lock_index = 0;
+	frame->outer_unlock_hook = hook;
+	return frame;
+}
+
+/* COMPLETE proves the first wrapper reached this root's exact unlock. Keep
+ * all owner/routing/ledger checks, then retire without revalidating that same
+ * one-entry ledger through three generic transitions. No waiter is woken here;
+ * the queue publishes its packet only after this frame is inaccessible. */
+int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
+				    struct kd_mutex *lock)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+
+	if (!frame || !lock || !frame->mutex_backend || !frame->batch_lease ||
+	    !frame->complex_ready || frame->spin_simple || frame->request_frame ||
+	    !frame->regs_borrowed || frame->parent || frame->depth ||
+	    ctx->depth != 1 || ctx->owner != current || ctx->top != frame ||
+	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    frame->packet_state != KD_PACKET_COMPLETE || !frame->executed ||
+	    frame->state != KD_EXEC_FRAME_RUNNING || frame->completion_seen ||
+	    frame->outer_unlock_seen || frame->held_lock_depth != 1 ||
+	    frame->outer_lock_depth != 1 || frame->jit_lock_depth != 1 ||
+	    frame->outer_lock_index != 0 || frame->jit_lock_released[0] ||
+	    frame->outer_lock_addr != lock->origin_mutex_addr ||
+	    frame->jit_lock_addr[0] != lock->origin_mutex_addr ||
+	    frame->jit_lock_kind[0] != KD_EXEC_LOCK_QUEUE_OWNER ||
+	    frame->jit_lock_node[0] != lock ||
+	    frame->control_call.phase != KD_CALL_NONE ||
+	    kd_exec_frame_remote_pending(frame) || frame->resume_target ||
+	    frame->remote_request || frame->native_request ||
+	    !list_empty(&frame->native_link) ||
+	    !frame->outer_unlock_hook || frame->outer_unlock_hook->released ||
+	    READ_ONCE(lock->physical_owner) != current ||
+	    !kd_origin_mutex_owned((struct mutex *)lock->origin_mutex_addr, current))
+		return -EINVAL;
+	frame->jit_lock_released[0] = true;
+	frame->outer_unlock_seen = true;
+	frame->completion_seen = true;
+#ifdef KDLOCK_SELFTEST
+	/* Observers see the ordinary terminal ledger and retirement boundary. */
+	kd_exec_frame_set_state(frame, KD_EXEC_FRAME_COMPLETE);
+	return kd_exec_frame_pop(frame, NULL);
+#else
+	ctx->depth = 0;
+	ctx->top = NULL;
+	ctx->owner = NULL;
+	frame->role = KD_ROLE_DONE;
+	frame->state = KD_EXEC_FRAME_UNUSED;
+	return 0;
+#endif
 }
 
 /* Retire only after remote dependencies and native routing/requests are gone.

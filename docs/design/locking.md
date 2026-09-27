@@ -448,6 +448,12 @@ distinct from merely completing all clients.
    callers still decode the kernel hook frame, without a duplicate hook snapshot.
    A FULL intermediate exit detaches into frame-owned storage before C handling:
    the native waiter may recycle its node while its owner still waits for ACK.
+   Ordinary ABI2 roots now use mutex-specific batch preparation and terminal
+   retirement. One enclosing source lease spans the whole batch, including
+   synchronous native completion and the last owner ACK. Every new root still
+   checks source OPEN and the image publication/ABI. Its explicit QUEUE_OWNER
+   ledger remains available before executing any body. A returned FULL exit
+   enters the generic dispatcher once; it never invokes the first body again.
 4. Successful JIT execution reaches the final required unlock and completes its
    frame: normally A, or the last nested B after an earlier logical A unlock.
    The waiter retains the valid published fields, releases its exact bitmap slot,

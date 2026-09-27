@@ -66,6 +66,14 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
 			     const struct kd_jit_batch_call *call);
 
+/* ABI2 mutex roots retain their owner ledger even on the simple path. */
+bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
+	struct kd_exec_frame *frame, struct kd_jit_batch_call *call);
+bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
+	const struct kd_exec_frame *frame);
+int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,
+	const struct kd_jit_batch_call *call);
+
 /* Resume a waiter after its critical section has already run in the sandbox. */
 void jump_to_saved_regs(struct pt_regs *regs);
 void jump_to_saved_regs_in_cs(struct pt_regs *regs);

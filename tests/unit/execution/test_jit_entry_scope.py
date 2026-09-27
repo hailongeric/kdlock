@@ -64,6 +64,9 @@ def main():
             "static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,",
             "int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,",
             "int kd_exe_spin_batch_resume(struct kd_exe_info *exe,",
+            "bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,",
+            "bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,",
+            "int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,",
         ),
     }.items():
         source = read_source((ROOT / path))

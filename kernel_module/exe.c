@@ -486,3 +486,17 @@ int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
 	return kd_exe_dispatch(exe, call->regs, frame->entry_ip,
 			       frame->outer_lock_addr, call);
 }
+
+int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,
+	const struct kd_jit_batch_call *call)
+{
+	struct kd_exec_frame *frame = kd_exec_current_frame();
+
+	if (!frame || !frame->mutex_backend || !frame->batch_lease ||
+	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+		return KD_EXE_RUN_ERROR;
+	/* The ledger already exists. Consume the returned exit once; dispatch
+	 * detaches a FULL packet before any service or native owner-ACK wait. */
+	return kd_exe_dispatch(exe, call->regs, frame->entry_ip,
+			       frame->outer_lock_addr, call);
+}

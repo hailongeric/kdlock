@@ -191,6 +191,10 @@ def main():
         "void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,",
         "int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,",
     ))
+    extra += definition(read_source(ROOT / "include/kd_mutex.h"), "struct kd_mutex {").rstrip() + ";\n"
+    for marker in ("struct kd_exec_frame *kd_exec_frame_push_mutex_batch(",
+                   "int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,"):
+        extra += definition(source, marker) + "\n"
     extra += "\n#undef this_cpu_ptr\n#define this_cpu_ptr(p) (p)\n"
     extra += read_source(ROOT / "kernel_module/spin/request.inc")
     extra += "\n#undef this_cpu_ptr\n#define this_cpu_ptr(p) (&(*(p))[cpu])\n"

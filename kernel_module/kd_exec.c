@@ -21,6 +21,7 @@
 #include "kd_source.h"
 #include "kd_lock.h"
 #include "kd_spinlock.h"
+#include "kd_mutex.h"
 
 #ifdef KDLOCK_SELFTEST
 bool kd_hotlock_role_trace;

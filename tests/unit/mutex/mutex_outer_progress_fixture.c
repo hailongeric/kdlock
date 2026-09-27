@@ -215,12 +215,36 @@ bool kd_mutex_jit_is_enabled(void)
 }
 /* Opaque lookup token: the production backend must pass this exact slot. */
 static struct kd_exe_info ready_entry;
-static struct kd_exe_info *kd_exe_find_ready(int pid, unsigned long ip)
+static struct kd_exe_info *kd_get_exe(int pid, unsigned long ip)
 {
 	(void)pid;
 	(void)ip;
 	return mode != 4 ? &ready_entry : NULL;
 }
+static bool kd_exe_entry_is_ready(struct kd_exe_info *exe, int pid, unsigned long ip)
+{
+    (void)pid; (void)ip; return exe != NULL;
+}
+/* This fixture deliberately exercises the existing legacy/complex route. */
+static unsigned int source_leases;
+static bool kd_source_frame_get(void) { source_leases++; return true; }
+static void kd_source_frame_put(void) { CHECK(source_leases == 1); source_leases--; }
+struct kd_exec_frame *kd_exec_frame_push_mutex_batch(struct pt_regs *r, unsigned long ip,
+ unsigned long gs, struct task_struct *task, struct kd_mutex *lock,
+ struct kd_exec_outer_unlock *hook)
+{ (void)r; (void)ip; (void)gs; (void)task; (void)lock; (void)hook; abort(); }
+static bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
+ struct kd_exec_frame *frame, struct kd_jit_batch_call *call)
+{ (void)exe; (void)frame; (void)call; abort(); }
+static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
+{ (void)call; abort(); }
+static bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
+ const struct kd_exec_frame *frame)
+{ (void)call; (void)frame; abort(); }
+int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame, struct kd_mutex *lock)
+{ (void)frame; (void)lock; abort(); }
+static int kd_exe_mutex_batch_resume(struct kd_exe_info *exe, const struct kd_jit_batch_call *call)
+{ (void)exe; (void)call; abort(); }
 static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)
 {
 	(void)pid;

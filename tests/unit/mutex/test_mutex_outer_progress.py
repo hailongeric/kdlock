@@ -26,6 +26,7 @@ def main():
     )
     for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
+    types += without_includes(read_source(ROOT / "include/kd_jit_batch.h")) + "\n"
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     types += (kernel / "include/linux/kern_levels.h").read_text() + "\n"
     types += "\n".join(
@@ -60,6 +61,7 @@ def main():
     code = "#define DSM_DEBUG 1\n" + mutex[start:end] + "\n" + code
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
+    code += "static struct kd_exe_info *\n" + definition(mutex, "kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)") + "\n"
     for marker in (
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
