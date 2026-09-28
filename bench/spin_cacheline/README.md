@@ -22,8 +22,8 @@
 
 `make -C bench/spin_cacheline test` 只在 guest 执行，不加载模块；默认 module
 构建显式选择 Linux native。三后端所需模块及符号依赖由直接运行器分别构建。
-直接运行器的`--kd-provider-ubsan off`只向重新创建的私有provider构建传入
-`UBSAN_SANITIZE=n`；默认`kernel`继承内核配置，普通provider构建不变。
+直接运行器默认使用`--kd-provider-ubsan off`，向重新创建的私有provider构建传入
+`UBSAN_SANITIZE=n`；显式`kernel`继承内核配置，普通provider构建保持原设置。
 所选政策、ELF核验及分组口径见[直接API说明](../tclock_compare/README.md#准备与运行)。
 [执行路径](EXECUTION_PATHS.md)统一记录当前 TCLock/KD 流程、对象大小、分配位置、
 跨 CPU 数据流及回收边界。[历史索引](results/HISTORY.md)保留阶段成绩与失败记录，

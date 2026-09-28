@@ -7,6 +7,13 @@
 
 ## 1. 当前状态与证据边界
 
+2026-09-28 用户指定三方运行器的KD私有provider默认关闭UBSAN；spin/mutex共用
+`--kd-provider-ubsan off`默认值，显式`kernel`仍可继承内核配置。普通provider构建及内核
+保持原设置。此前成绩保留实际插桩政策，不因默认值变化重标历史样本或混合取优。
+本次默认值修改已通过guest两个基础程序、44项运行器检查及不传UBSAN选项的36线程hash功能复验：
+360万次操作中3595136次返回正文JIT，实际provider无UBSAN handler引用，业务/排空通过。
+这是默认构建与功能验证；此前显式off的性能成绩仍为历史证据。归档见运行器说明。
+
 2026-09-28 按用户要求完成[36线程 spin 专项复测与归因](../bench/tclock_compare/results/20260928-spin36-analysis.md)：
 45 场性能与 30 场独立诊断全部通过。hash KD/TCLock 峰值为 1.985/2.648 Mops/s（74.96%），
 单 cacheline 为 8.665/5.952（145.59%）；低吞吐依赖正文，不能泛化为所有 spin 工作负载。
@@ -14,7 +21,7 @@ hash 实际 JIT 约 99.9%。新采样定位生成正文和 request/frame 检查�
 跨 node 放置使两方中位数分别下降 47.24%/43.08%，单 node 仍有差距。KD provider UBSAN-off
 只提高约 3.81% 中位数，未关闭差距。独立事件显示更多 instructions/L1 misses，却没有更高的
 通用 cache-miss 总数；不以普通 cycles 样本宣称测得远端 load latency 或单条指令的确定耗时。
-本次只新增证据与分析，生产锁实现和默认构建策略不变。
+该次复测只新增证据与分析；上述UBSAN默认值调整发生在复测之后。
 
 2026-09-28 按[NUMA/mutex 分阶段计划](../bench/tclock_compare/results/20260928-numa-mutex.md)
 完成显式放置、独立单事件 PMU、终态 CALL/COMPLETE 融合、静态 GS/task 导入省略及预算提前检查。

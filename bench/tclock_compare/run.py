@@ -25,6 +25,7 @@ from session import BackendSession, TC_MODULE, TC_MUTEX_MODULE, GUARD_MODULE
 from context_audit import audit as audit_context
 
 DEFAULT_SPIN_ENTRY_RATIO_LIMIT = 2
+DEFAULT_KD_PROVIDER_UBSAN = 'off'
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
@@ -78,7 +79,7 @@ def provider_build(args):
     build = ['make', '-C', HERE, 'provider',
              f'KDLOCK_NUMA={int(args.numa == "on")}',
              f'KDLOCK_SPIN_BATCH={args.kd_batch_size}']
-    if getattr(args, 'kd_provider_ubsan', 'kernel') == 'off':
+    if getattr(args, 'kd_provider_ubsan', DEFAULT_KD_PROVIDER_UBSAN) == 'off':
         build.append('UBSAN_SANITIZE=n')
     return build
 
@@ -123,7 +124,7 @@ def make_plan(args):
     require(numa in ('on', 'off'), 'invalid NUMA policy')
     prefetch = getattr(args, 'spin_prefetch', 2)
     require(prefetch in (0, 1, 2), 'invalid spin prefetch mode')
-    provider_ubsan = getattr(args, 'kd_provider_ubsan', 'kernel')
+    provider_ubsan = getattr(args, 'kd_provider_ubsan', DEFAULT_KD_PROVIDER_UBSAN)
     require(provider_ubsan in ('kernel', 'off'), 'invalid KD provider UBSAN policy')
     result = []
     cpus = worker_cpus(args)
@@ -311,9 +312,10 @@ def main(lock_kind='spin'):
                    help='build NUMA queue selection for KD and TCLock')
     p.add_argument('--kd-batch-size', type=int, default=1024,
                    help='maximum KD delegated bodies and NUMA scan budget per batch (1..1024)')
-    p.add_argument('--kd-provider-ubsan', choices=('kernel', 'off'), default='kernel',
-                   help='private benchmark provider only: inherit kernel UBSAN policy (default), '
-                        'or disable compiler instrumentation to match the TCLock backend')
+    p.add_argument('--kd-provider-ubsan', choices=('kernel', 'off'),
+                   default=DEFAULT_KD_PROVIDER_UBSAN,
+                   help='private benchmark provider only: disable UBSAN instrumentation '
+                        '(default: off), or use kernel to inherit the kernel policy')
     p.add_argument('--repeats', type=int, default=3,
                    help='measurement rounds per configuration (default: 3; functional mode requires 1)')
     p.add_argument('--keep-going-no-jit', action='store_true',

@@ -126,22 +126,32 @@ class DirectTests(unittest.TestCase):
             self.assertEqual([r['throughput_over_linux'] for r in kd], [0.5, 0.75])
 
     def test_provider_ubsan_option_and_private_build(self):
-        for policy in ('kernel', 'off'):
+        # Both entrypoints default to off; explicit policies and direct helper
+        # callers must agree with the policy saved in every new session.
+        for lock_kind, option in ((kind, policy) for kind in ('spin', 'mutex')
+                                  for policy in (None, 'kernel', 'off')):
+            policy = option or 'off'
             argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
                     '--threads', '8', '--cachelines', '1', '--repeats', '1']
-            if policy == 'off':
-                argv += ['--kd-provider-ubsan', 'off']
-            with self.subTest(policy=policy), patch.object(sys, 'argv', argv), \
+            if option is not None:
+                argv += ['--kd-provider-ubsan', option]
+            with self.subTest(lock_kind=lock_kind, option=option), \
+                    patch.object(sys, 'argv', argv), \
                     contextlib.redirect_stdout(io.StringIO()) as output:
-                self.assertEqual(run.main(), 0)
+                self.assertEqual(run.main(lock_kind), 0)
             plan = json.loads(output.getvalue())
             for spec in plan:
                 self.assertEqual(spec['kd_provider_ubsan'],
                                  policy if spec['arm'] == 'kdlock' else 'not_applicable')
-            build = run.provider_build(Namespace(numa='on', kd_batch_size=512,
-                                                kd_provider_ubsan=policy))
+            args = Namespace(numa='on', kd_batch_size=1024, cachelines=[1],
+                             threads=[8], repeats=1, iterations=100,
+                             backends=['kdlock'], lock_kind=lock_kind)
+            if option is not None:
+                args.kd_provider_ubsan = option
+            build = run.provider_build(args)
             self.assertEqual(build[:4], ['make', '-C', run.HERE, 'provider'])
             self.assertEqual('UBSAN_SANITIZE=n' in build, policy == 'off')
+            self.assertEqual(run.make_plan(args)[0]['kd_provider_ubsan'], policy)
             # Exercise real session serialization without opening the kernel log.
             spec, = [spec for spec in plan if spec['arm'] == 'kdlock']
             with tempfile.TemporaryDirectory() as temporary, \

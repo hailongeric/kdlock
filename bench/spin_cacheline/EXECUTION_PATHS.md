@@ -26,7 +26,7 @@ API，不是整个内核锁的替换。mutex 只涉及下述共享执行设施�
 | --- | --- |
 | TCLock backend | `NUMA_AWARE=1`、`WWJUMP=1`；`ENABLE_IRQS_CHECK` 关闭。当前对照限 task context、IRQ 开启的单锁调用者，不作为通用 IRQ/嵌套锁替代 |
 | KD normal | `KDLOCK_SELFTEST` 默认关闭，`KDLOCK_NUMA=1`、`KDLOCK_SPIN_BATCH=1024`；可显式关闭NUMA或启用探针 |
-| KD benchmark 插桩 | `--kd-provider-ubsan kernel`为默认，继承内核配置；`off`仅关闭私有provider副本的UBSAN，政策及实际ELF引用独立记录，普通provider和内核不变 |
+| KD benchmark 插桩 | `--kd-provider-ubsan off`为默认，关闭私有provider副本的UBSAN；显式`kernel`继承内核配置，政策及实际ELF引用独立记录，普通provider和内核保持原设置 |
 | KD 策略 | `spin_delegate=0` 关闭公共入口代理并跳过其热度记录，默认 `1`。只保留adaptive热度准入；`spin_entry_ratio_limit=0`仅绕过比例，仍受CPU/单锁热度和上下文/JIT安全检查约束 |
 
 选择 `KD_SPIN_DIRECT_LOCK/UNLOCK` 配对壳后，调用端只按 CPU 热值分流；

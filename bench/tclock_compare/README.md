@@ -101,14 +101,20 @@ TCLock保留上游配置值1024。运行器用`modinfo`验证实际ELF，NUMA/�
 `--spin-prefetch 0/1/2`选择现有KD无预取/consumer查找/producer提示，默认2，加载后核对并独立分组。
 collector CLI无参数默认仍为30，32/36-worker运行必须如上显式指定38；与任一worker重合时拒绝。
 
-`--kd-provider-ubsan kernel/off`仅控制本次benchmark的私有KD provider副本，默认`kernel`，
-继承现有内核构建配置。显式`off`向该副本的递归make传入`UBSAN_SANITIZE=n`，用于与当前
-关闭UBSAN的TCLock backend比较；不改普通provider的Makefile、内核配置或显式协议检查。
+`--kd-provider-ubsan kernel/off`仅控制本次benchmark的私有KD provider副本，spin/mutex均默认`off`，
+向该副本的递归make传入`UBSAN_SANITIZE=n`，与当前关闭UBSAN的TCLock backend比较。
+显式`kernel`继承现有内核构建配置；普通provider的Makefile、内核配置及显式协议检查保持原设置。
 每次provider构建重新创建副本，运行器将`nm -u`保存为`imports-kdlock-provider.txt`，
 另存`kdlock-provider-ubsan.json`记录所选政策及实际handler引用；`off`仍有引用时立即拒绝运行。
 `plan.json`、各`session.json`、`environment.json`及汇总均保存`kd_provider_ubsan`；
 `kernel`、`off`和没有记录该字段的历史样本分组独立，不混合取优。
 比较此选项时保留相同源码与其他参数；编译插桩变化单独报告，不记作锁协议优化收益。
+
+2026-09-28默认off调整的guest验证：两个基础C程序及44项运行器检查通过；省略该选项的
+36线程hash功能场完成360万次操作、3595136次返回正文JIT，provider的UBSAN引用为空，
+业务与排空通过。本次未测性能。证据位于guest `/root/kdlock-evidence/ubsan-default-20260928.tar.gz`
+及host `bench/.tmp/ubsan-default-20260928/evidence.tar.gz`，SHA256为
+`af5a236fafe91864de89b308c4eb2a70319bf55d0f895ead2f8d644463e292b3`。
 
 `--spin-entry-ratio-limit`接受0或uint32范围内不小于2的2次幂，默认2。
 非零值是`entries >> 10`的严格上界；值越大，允许的入口/MCS比例越大。
@@ -231,8 +237,8 @@ python3 bench/tclock_compare/test_direct.py
 采用 Linux 6.1 移植版和上游 C 内联换栈，保留 NUMA_AWARE、WWJUMP 与 1024
 批次配置值；其WWJUMP计数从0开始、跳转时递增，普通路径最多可执行1025个正文，
 不同于KD的精确正文上限。未添加运行期代理次数计数。关闭 `ENABLE_IRQS_CHECK`、TCLock 后端
-及三种 direct workload 的 UBSAN 插桩；内核内部 UBSAN 保持原配置，KD provider默认继承该配置，
-只在显式`--kd-provider-ubsan off`的私有benchmark构建中关闭。
+及三种 direct workload 的 UBSAN 插桩；内核内部 UBSAN 保持原配置，KD私有benchmark provider默认关闭UBSAN，
+显式`--kd-provider-ubsan kernel`可继承内核配置。
 运行器检查TCLock/workload实际 ELF、返回布局及无 UBSAN handler 引用；KD按所选政策核对并记录，
 保留 IRQ/preempt 退出检查。
 TCLock 不以 `need_resched()` 截断批次。这些实验设置限于 IRQ 开启的 task 上下文
