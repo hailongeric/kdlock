@@ -10,7 +10,7 @@ struct kd_hostcall_desc {
 	const char *symbol;
 	unsigned long addr;
 	unsigned int flags;
-	int (*invoke)(struct pt_regs *regs);
+	int (*invoke)(struct kd_regs *regs);
 };
 
 static atomic64_t kd_hostcall_exits;
@@ -32,13 +32,13 @@ static atomic64_t kd_mutex_stack_equal;
 static atomic64_t kd_mutex_stack_changed;
 static atomic64_t kd_mutex_stack_unavailable;
 
-static int kd_hostcall_invoke_ktime_get(struct pt_regs *regs)
+static int kd_hostcall_invoke_ktime_get(struct kd_regs *regs)
 {
 	regs->ax = (unsigned long)ktime_to_ns(ktime_get());
 	return 0;
 }
 
-static int kd_hostcall_invoke_ktime_get_ns(struct pt_regs *regs)
+static int kd_hostcall_invoke_ktime_get_ns(struct kd_regs *regs)
 {
 	regs->ax = (unsigned long)ktime_get_ns();
 	return 0;
@@ -49,7 +49,7 @@ static int kd_hostcall_invoke_ktime_get_ns(struct pt_regs *regs)
  * sleeping or task/CPU-context dependency; it does not run on the waiter stack.
  * This CALL boundary requires no new flags or memory-access recovery contract.
  */
-static int kd_hostcall_invoke_int_sqrt(struct pt_regs *regs)
+static int kd_hostcall_invoke_int_sqrt(struct kd_regs *regs)
 {
 	regs->ax = int_sqrt(regs->di);
 	return 0;
@@ -87,7 +87,7 @@ static int kd_hostcall_validate(const struct kd_hostcall_desc *service)
 	return 0;
 }
 
-static int kd_hostcall_dispatch(struct pt_regs *regs)
+static int kd_hostcall_dispatch(struct kd_regs *regs)
 {
 	const struct kd_hostcall_desc *service = kd_hostcall_lookup(regs->ip);
 	int ret = kd_hostcall_validate(service);

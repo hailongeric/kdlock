@@ -48,8 +48,8 @@ static void kd_mutex_task_put(void *p) { assert(p==current); task_put++; }
 static void kd_mutex_release_node(struct kd_mutex_node *n) {
     assert(n==&node); released++; memset(n, 0xaf, sizeof(*n));
 }
-static void jump_to_saved_regs(struct pt_regs *p) { (void)p; abort(); }
-static void jump_to_saved_regs_in_cs(struct pt_regs *p) { (void)p; abort(); }
+static void jump_to_saved_regs(struct kd_regs *p) { (void)p; abort(); }
+static void jump_to_saved_regs_in_cs(struct kd_regs *p) { (void)p; abort(); }
 static __attribute__((__noinline__,noipa)) int
 kd_mutex_lock_slowpath(struct kd_mutex *lock, struct kd_mutex_node *n) {
     unsigned long physical;
@@ -106,8 +106,8 @@ int main(void) {
 
 def main():
     kernel=Path(f'/lib/modules/{os.uname().release}/build')
-    ptrace=(kernel/'arch/x86/include/asm/ptrace.h').read_text().split('#else /* __i386__ */',1)[1]
-    types=definition(ptrace,'struct pt_regs {').rstrip()+';\n'
+    ptrace=(ROOT/'include/kd_regs.h').read_text()
+    types=definition(ptrace,'struct kd_regs {').rstrip()+';\n'
     types+=without_includes((ROOT/'include/kd_mutex.h').read_text())
     with tempfile.TemporaryDirectory(prefix='kd-mutex-wait-') as tmp:
         path=Path(tmp)

@@ -3,7 +3,7 @@
 /* Only abnormal exits log here. Saved flags are not live execution evidence. */
 static void kd_jit_log_hl_error(const char *reason,
 				const struct kd_exec_frame *frame,
-				const struct pt_regs *regs,
+				const struct kd_regs *regs,
 				unsigned long raw_exit, long detail,
 				int continuations, int hostcalls)
 {
@@ -22,7 +22,7 @@ static void kd_jit_log_hl_error(const char *reason,
  * not immutable code identity; in-place publication remains a separate limit.
  */
 static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,
-				   const struct pt_regs *regs,
+				   const struct kd_regs *regs,
 				   unsigned long entry_ip)
 {
 	const struct kd_exec_frame *parent = frame->resume_target;
@@ -54,7 +54,7 @@ static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,
  * original waiter run this callee and the native suffix. This is not an exit
  * from an arbitrary instruction/budget trap and needs no new flags contract. */
 static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
-				    struct pt_regs *regs, bool hostcall)
+				    struct kd_regs *regs, bool hostcall)
 {
 	unsigned long base, end, return_ip;
 	int ret;
@@ -114,7 +114,7 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
 	/* Exact directory bytes, without the out-of-line seven-byte memcmp on
 	 * every request. The overlapping words do not read beyond the signature. */
 	bool directory = code && get_unaligned_le32(code + 25) == 0x4357444bU &&
-	                 get_unaligned_le32(code + 28) == 0x31303043U &&
+	                 get_unaligned_le32(code + 28) == 0x32303043U &&
 	                 get_unaligned_le32(code + 41) == 0x4241444bU;
 
 	if (READ_ONCE(exe->entry_abi) != frame->entry_abi)
@@ -169,7 +169,7 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 			       struct kd_jit_batch_call *call)
 {
 	void *code;
-	struct pt_regs *regs = kd_exec_frame_regs(frame);
+	struct kd_regs *regs = kd_exec_frame_regs(frame);
 	bool clobber;
 
 	if (!frame->spin_simple || frame->parent || frame->depth ||
@@ -185,10 +185,10 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	                          KD_PACKET_FULL : KD_PACKET_MINIMAL))
 		return false;
 	code = READ_ONCE(exe->code_block);
-	/* Check exactly KDWB001: overlapping unaligned words cover bytes 9..15.
+	/* Check exactly KDWB002: overlapping unaligned words cover bytes 9..15.
 	 * This avoids the out-of-line seven-byte memcmp without reading byte 16. */
 	if (!code || get_unaligned_le32((char *)code + 9) != 0x4257444bU ||
-	    get_unaligned_le32((char *)code + 12) != 0x31303042U)
+	    get_unaligned_le32((char *)code + 12) != 0x32303042U)
 		return false;
 	/* These admission checks already prove the simple spin root predicates
 	 * required by kd_jit_minimal_complete_allowed. Select its final metadata
@@ -247,7 +247,7 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	struct kd_exec_frame *frame, struct kd_jit_batch_call *call)
 {
-	struct pt_regs *regs = kd_exec_frame_regs(frame);
+	struct kd_regs *regs = kd_exec_frame_regs(frame);
 
 	if (!frame->mutex_backend || !frame->batch_lease ||
 	    !frame->complex_ready || !frame->regs_borrowed || frame->spin_simple ||

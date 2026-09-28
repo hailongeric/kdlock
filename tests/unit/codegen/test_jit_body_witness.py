@@ -46,8 +46,8 @@ def run_image(assembly, entries, initialize=None, *, resume=None, context=(0xFEE
             regs = (ctypes.c_ulong * 21)()
             stack = (ctypes.c_ulong * 16)()
             stack[8] = 0x4444
-            regs[16] = entry
-            regs[19] = ctypes.addressof(stack) + 8 * 8
+            regs[0] = entry
+            regs[1] = ctypes.addressof(stack) + 8 * 8
             # Boundary tests seed entry packets without replacing the real wrapper.
             if initialize is not None:
                 initialize(regs, stack)
@@ -82,27 +82,27 @@ class JitBodyWitnessTests(unittest.TestCase):
         ).replace(b"JZ      kd_body_entry_", b"JZ      loc_")
         self.assertEqual(without_stubs, plain)
         results = run_image(plain, [0x1000])
-        self.assertEqual(results[0][0][10], 42)
+        self.assertEqual(results[0][0][12], 42)
         self.assertEqual(results[0][1][1], 0)
 
     def test_real_wrapper_body_and_dispatch_only(self):
         assembly, _ = render("48c7c02a000000c3")
         results = run_image(assembly, [0x1000, 0x7777, 0x1000])
         self.assertEqual([args[1] for _, args in results], [1, 0, 1])
-        self.assertEqual([regs[10] for regs, _ in results], [42, 0, 42])
+        self.assertEqual([regs[12] for regs, _ in results], [42, 0, 42])
 
     def test_direct_dispatch_to_later_block(self):
         assembly, _ = render("eb0048c7c02a000000c3")
         self.assertEqual(assembly.count(MARKER), 2)
         results = run_image(assembly, [0x1000, 0x1002, 0x7777])
         self.assertEqual([args[1] for _, args in results], [1, 1, 0])
-        self.assertEqual([regs[10] for regs, _ in results], [42, 42, 0])
+        self.assertEqual([regs[12] for regs, _ in results], [42, 42, 0])
 
     def test_missing_marker_is_not_proof_of_body_execution(self):
         assembly, _ = render("48c7c02a000000c3")
         self.assertIn(MARKER, assembly)
         results = run_image(assembly.replace(MARKER, b""), [0x1000])
-        self.assertEqual(results[0][0][10], 42)
+        self.assertEqual(results[0][0][12], 42)
         self.assertEqual(results[0][1][1], 0)
 
     def test_original_call_and_hostcall_continuation(self):
@@ -113,22 +113,22 @@ class JitBodyWitnessTests(unittest.TestCase):
                 packets = []
 
                 def capture_stack(regs, stack):
-                    packets.append((regs[19], stack))
+                    packets.append((regs[1], stack))
 
                 # Only admitted hostcalls retain a JIT continuation; an
                 # ordinary missing callee continues on the original waiter.
                 entries = [0x1000, 0x1005] if reason == 5 else [0x1000]
                 results = run_image(assembly, entries, initialize=capture_stack)
                 self.assertEqual(results[0][1], [reason, 1])
-                self.assertEqual(results[0][0][16], 0x2000)
+                self.assertEqual(results[0][0][0], 0x2000)
                 # Both callee exits export the pushed virtual SP and preserve
                 # the source CALL's return word for native/hostcall resumption.
-                self.assertEqual(results[0][0][19], packets[0][0] - 8)
+                self.assertEqual(results[0][0][1], packets[0][0] - 8)
                 self.assertEqual(packets[0][1][7], 0x1005)
                 self.assertEqual(packets[0][1][8], 0x4444)
                 if reason == 5:
-                    self.assertEqual(results[1][0][10], 42)
-                    self.assertEqual(results[1][0][19], packets[1][0] + 8)
+                    self.assertEqual(results[1][0][12], 42)
+                    self.assertEqual(results[1][0][1], packets[1][0] + 8)
                     self.assertEqual(results[1][1][1], 1)
 
     def test_only_valid_dispatch_stubs_mark_the_body(self):
@@ -158,9 +158,9 @@ class JitBodyWitnessTests(unittest.TestCase):
                     f"MOV     Stack_BUDGET, {limit}\n".encode(),
                 )
                 regs, args = run_image(bounded, [0x1000])[0]
-                self.assertEqual(regs[10], value)
+                self.assertEqual(regs[12], value)
                 self.assertEqual(args, [reason, 1])
-                self.assertEqual(regs[16], 0x1005 if reason == 4 else 0x4444)
+                self.assertEqual(regs[0], 0x1005 if reason == 4 else 0x4444)
 
 
 if __name__ == "__main__":

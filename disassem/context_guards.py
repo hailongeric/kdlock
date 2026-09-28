@@ -16,28 +16,12 @@ from collections import defaultdict
 MASK = (1 << 64) - 1
 # Keep in sync with KD_EXE_ENTRY_REFUSED, a runtime-only wrapper result.
 ENTRY_REFUSED = 6
+# KD private packet layout; wrapper constants are checked against these offsets.
 REGISTER_OFFSETS = {
-    name: offset * 8
-    for offset, name in enumerate(
-        (
-            "R15",
-            "R14",
-            "R13",
-            "R12",
-            "RBP",
-            "RBX",
-            "R11",
-            "R10",
-            "R9",
-            "R8",
-            "RAX",
-            "RCX",
-            "RDX",
-            "RSI",
-            "RDI",
-        )
-    )
-} | {"RSP": 0x98}
+    "RSP": 8, "RBP": 16, "R15": 24, "R14": 32, "R13": 40,
+    "R12": 48, "R11": 56, "RBX": 64, "R10": 72, "R9": 80,
+    "R8": 88, "RAX": 96, "RCX": 104, "RDX": 112, "RSI": 120, "RDI": 128,
+}
 
 
 def signed_offset(offset):
@@ -220,7 +204,7 @@ class EntryGuards:
         if not conditions and not self.spills and not self.checked_windows:
             return
         output.write("/* Verify entry alias premises before any JIT body label. */\n")
-        output.write("MOV R14, Stack_PT_REG\nMOV R14, [R14 + 0x80]\n")
+        output.write("MOV R14, Stack_PT_REG\nMOV R14, [R14 + KD_REG_IP]\n")
         output.write(f"MOVABS R15, 0x{entry:x}\nCMP R14, R15\n")
         output.write("JNE kd_entry_guards_done\n")
         # Validate every source slot before loading any spill value. SP/BP are
@@ -228,10 +212,10 @@ class EntryGuards:
         for base, offset in self.spills.values():
             output.write(f"MOV R14, Stack_PT_REG\nMOV R14, [R14 + {REGISTER_OFFSETS[base]}]\n")
             output.write(f"LEA R14, [R14 + {offset}]\n")
-            output.write("MOV R15, Stack_PT_REG\nMOV R15, [R15 + 0x98]\n")
+            output.write("MOV R15, Stack_PT_REG\nMOV R15, [R15 + KD_REG_SP]\n")
             output.write("CMP R14, R15\nJB kd_entry_guard_refused\n")
             output.write("LEA R11, [R14 + 8]\nCMP R11, R14\nJB kd_entry_guard_refused\n")
-            output.write("MOV R15, Stack_PT_REG\nMOV R15, [R15 + 0x20]\n")
+            output.write("MOV R15, Stack_PT_REG\nMOV R15, [R15 + KD_REG_BP]\n")
             output.write("CMP R11, R15\nJA kd_entry_guard_refused\n")
         for (a, delta, b), limit in sorted(self.checked_windows.items()):
             output.write(f"MOV R14, Stack_PT_REG\nMOV R14, [R14 + {REGISTER_OFFSETS[a]}]\n")
@@ -262,7 +246,7 @@ class EntryGuards:
             output.write(f"CMP R14, {m}\nJB kd_entry_guard_refused\n")
             output.write(f"NEG R14\nCMP R14, {n}\nJB kd_entry_guard_refused\n")
         output.write("JMP kd_entry_guards_done\nkd_entry_guard_refused:\n")
-        output.write("MOV R14, Stack_PT_REG\nMOV R14, [R14 + 0x80]\n")
+        output.write("MOV R14, Stack_PT_REG\nMOV R14, [R14 + KD_REG_IP]\n")
         output.write(f"MOV Stack_IJ, {ENTRY_REFUSED}\nMOV REG_BANK, Stack_PT_REG\nJMP exit\n")
         # The existing dispatcher still expects PT_REG (R14) to be a pointer.
         output.write("kd_entry_guards_done:\nMOV REG_BANK, Stack_PT_REG\nMOV R14, Stack_PT_REG\n")

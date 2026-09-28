@@ -22,10 +22,10 @@
 #define noinline __attribute__((noinline))
 #define notrace
 
-struct pt_regs { unsigned long sp; };
+#include "../../../include/kd_regs.h"
 #define KD_SPIN_RES_NATIVE_READY 2
 struct kd_spin_continuation {
-	struct { struct pt_regs *regs_ref; } frame;
+	struct { struct kd_regs *regs_ref; } frame;
 	int result;
 };
 typedef uint8_t u8;
@@ -37,7 +37,7 @@ static _Alignas(16) unsigned char task_stack[65536];
 static _Alignas(16) unsigned char shadow_stack[8192];
 static _Alignas(16) unsigned char signal_stack[65536];
 static struct kd_spin_node node, previous;
-static struct pt_regs packet;
+static struct kd_regs packet;
 static struct kd_spin_continuation execution;
 static jmp_buf caller;
 static unsigned int mode, restored;

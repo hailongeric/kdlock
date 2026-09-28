@@ -1,4 +1,4 @@
-/* Frozen pre-unified runner: exercise compatibility with KDWB001 images.
+/* Frozen pre-unified runner: exercise compatibility with KDWB002 images.
  * Test-only; production uses the compiler clobber boundary for both ABIs. */
 /* SPDX-License-Identifier: GPL-2.0 */
 /* The lock scheduler, not generated JIT code, chooses every successor. Save the

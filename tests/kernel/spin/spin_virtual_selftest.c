@@ -14,7 +14,7 @@ MODULE_PARM_DESC(
 /* Keep snapshots off the small combiner stack and out of the default module. */
 static struct {
 	struct kd_exec_frame frame;
-	struct pt_regs regs;
+	struct kd_regs regs;
 	struct kd_spin_node nodes[MAX_NODES];
 	struct kd_spin_continuation_stack requests;
 	struct kd_spin_continuation_stack *request_base;
@@ -39,7 +39,7 @@ static struct {
 
 static bool kd_spin_selftest_virtual_begin(
 	struct qspinlock *lock, const struct kd_spin_ref *request,
-	const struct pt_regs *regs, const struct kd_exec_frame *parent,
+	const struct kd_regs *regs, const struct kd_exec_frame *parent,
 	struct kd_spin_continuation_stack **requests, int initial_preempt)
 {
 	struct kd_spin_node *base = this_cpu_ptr(&kd_spin_nodes[0]);
@@ -109,7 +109,7 @@ static bool kd_spin_selftest_virtual_begin(
 }
 
 static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
-					 const struct pt_regs *regs,
+					 const struct kd_regs *regs,
 					 const struct kd_exec_frame *parent,
 					 int result)
 {

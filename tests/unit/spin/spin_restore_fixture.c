@@ -85,10 +85,9 @@ asm(".text\n.type capture,@function\ncapture:\n"
 int main(void)
 {
 	volatile unsigned int iteration;
-	_Static_assert(offsetof(struct kd_spin_continuation, frame.regs) == 96,
+	_Static_assert(offsetof(struct kd_spin_continuation, frame.regs) == 40,
 		       "restore packet follows request metadata and the admission header");
 	for (iteration = 0; iteration < 192; iteration++) {
-		unsigned long *packet = (void *)&execution.frame.regs;
 		volatile unsigned int mode = iteration < 128 ? iteration % 4 : iteration % 2;
 
 		minimal = iteration >= 128;
@@ -96,8 +95,21 @@ int main(void)
 		expected_unpin = mode == 0 || mode == 3;
 
 		memset(&execution, 0, sizeof(execution));
-		for (unsigned int i = 0; i < 15; i++)
-			packet[i] = 0x12340000UL + i;
+		execution.frame.regs.r15 = 0x12340000UL + 0;
+		execution.frame.regs.r14 = 0x12340000UL + 1;
+		execution.frame.regs.r13 = 0x12340000UL + 2;
+		execution.frame.regs.r12 = 0x12340000UL + 3;
+		execution.frame.regs.bp = 0x12340000UL + 4;
+		execution.frame.regs.bx = 0x12340000UL + 5;
+		execution.frame.regs.r11 = 0x12340000UL + 6;
+		execution.frame.regs.r10 = 0x12340000UL + 7;
+		execution.frame.regs.r9 = 0x12340000UL + 8;
+		execution.frame.regs.r8 = 0x12340000UL + 9;
+		execution.frame.regs.ax = 0x12340000UL + 10;
+		execution.frame.regs.cx = 0x12340000UL + 11;
+		execution.frame.regs.dx = 0x12340000UL + 12;
+		execution.frame.regs.si = 0x12340000UL + 13;
+		execution.frame.regs.di = 0x12340000UL + 14;
 		extra_user = mode == 2;
 		execution.storage = &storage;
 		initial_top = iteration & 1 ? 3 : 1;

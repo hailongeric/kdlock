@@ -102,7 +102,7 @@ execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	struct kd_exec_frame *frame;
 	struct kd_exe_info *exe;
 	struct kd_jit_batch_call call;
-	struct pt_regs retry_regs, *regs;
+	struct kd_regs retry_regs, *regs;
 	bool clobber = curr_node->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	unsigned long lock_addr[1];
 	enum kd_exec_lock_kind lock_kind[1];

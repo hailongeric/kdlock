@@ -267,10 +267,10 @@ static DEFINE_PER_CPU(struct kd_spin_continuation *, kd_spin_native_root);
 #ifdef KDLOCK_SELFTEST
 static bool kd_spin_selftest_virtual_begin(
 	struct qspinlock *lock, const struct kd_spin_ref *request,
-	const struct pt_regs *regs, const struct kd_exec_frame *parent,
+	const struct kd_regs *regs, const struct kd_exec_frame *parent,
 	struct kd_spin_continuation_stack **requests, int initial_preempt);
 static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
-					 const struct pt_regs *regs,
+					 const struct kd_regs *regs,
 					 const struct kd_exec_frame *parent,
 					 int result);
 #endif

@@ -21,12 +21,12 @@ main:
 	/* Fixed, versioned entry directory; old uploads use only main. */
 	.byte 0xe9
 	.long regular_entry - . - 4
-	.ascii "KDWB001"
+	.ascii "KDWB002"
 batch_entry:
 	endbr64
 	.byte 0xe9
 	.long batch_body - . - 4
-	.ascii "KDWC001"
+	.ascii "KDWC002"
 clobber_entry_v1:
 	endbr64
 	.byte 0xe9

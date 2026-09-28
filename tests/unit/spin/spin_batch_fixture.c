@@ -106,7 +106,7 @@ static struct kd_exec_context {
 	unsigned int depth;
 } context;
 static struct kd_exec_context *kd_exec_current_context(void) { return &context; }
-static struct pt_regs *kd_exec_frame_regs(struct kd_exec_frame *f)
+static struct kd_regs *kd_exec_frame_regs(struct kd_exec_frame *f)
 { return f->regs_ref ? f->regs_ref : &f->regs; }
 static void kd_exec_frame_set_state(struct kd_exec_frame *f, int state)
 { f->state = state; }
@@ -399,15 +399,15 @@ static void test_prefetch(void)
 	char stack[THREAD_SIZE];
 	struct task_struct task = { .stack = stack };
 	struct kd_spin_continuation request = { 0 }, before;
-	struct pt_regs root = { .sp = (unsigned long)(stack + 128) }, saved = root;
+	struct kd_regs root = { .sp = (unsigned long)(stack + 128) }, saved = root;
 	struct kd_spin_node node = { .execution = &request, .locked = 1 };
 	request.frame.regs_ref = &root;
 	request.frame.logical_task = &task;
-	request.kind = KD_SPIN_CONT_VIRTUAL;
+	request.frame.spin_kind = KD_SPIN_CONT_VIRTUAL;
 	before = request;
 	kd_spin_prefetch_request(&node);
 	for (unsigned int i = 0; i < 3; i++)
-		CHECK(hints[i] == (char *)&root + i * L1_CACHE_BYTES);
+		CHECK(hints[i + 2] == (char *)&root + i * L1_CACHE_BYTES);
 	CHECK(hints[hint_count - 2] == stack + 128);
 	CHECK(hints[hint_count - 1] == stack + 120);
 	CHECK(!memcmp(&request, &before, sizeof(request)));
@@ -435,10 +435,11 @@ static void test_prefetch(void)
 	/* A physical packet uses its own regs, with identical bounded hints. */
 	node.execution = &request;
 	request.frame.regs_ref = &request.frame.regs;
-	request.kind = KD_SPIN_CONT_ROOT;
+	request.frame.spin_kind = KD_SPIN_CONT_ROOT;
 	request.frame.regs_ref->sp = saved.sp;
 	kd_spin_prefetch_request(&node);
-	CHECK(hints[0] == request.frame.regs_ref && hint_count == with_stack);
+	CHECK(hints[0] == &request.frame && hints[1] == &request.frame.regs_ref &&
+	      hints[2] == request.frame.regs_ref && hint_count == with_stack);
 }
 
 static bool hint_has_line(const void *const *list, unsigned int count,
@@ -458,15 +459,15 @@ static void test_prepared_prefetch(void)
 	char stack[THREAD_SIZE] __aligned(L1_CACHE_BYTES);
 	struct task_struct task = { .stack = stack };
 	struct kd_spin_continuation request = { 0 };
-	struct pt_regs borrowed = { 0 };
+	struct kd_regs borrowed = { 0 };
 	struct kd_spin_node node = { .execution = &request, .locked = 1 };
 	const void *lookup[16];
 	CHECK(sizeof(node) == 2 * L1_CACHE_BYTES);
 	request.frame.logical_task = &task;
 	for (unsigned int alias = 0; alias < 2; alias++) {
-		struct pt_regs *regs = alias ? &borrowed : &request.frame.regs;
+		struct kd_regs *regs = alias ? &borrowed : &request.frame.regs;
 		request.frame.regs_ref = regs;
-		request.kind = alias ? KD_SPIN_CONT_VIRTUAL : KD_SPIN_CONT_ROOT;
+		request.frame.spin_kind = alias ? KD_SPIN_CONT_VIRTUAL : KD_SPIN_CONT_ROOT;
 		for (unsigned int full = 0; full < 2; full++) {
 			if (alias && !full)
 				continue;
@@ -487,7 +488,7 @@ static void test_prepared_prefetch(void)
 					kd_spin_prefetch_mode = 2;
 					kd_spin_prepare_prefetch(&node, regs);
 					struct kd_spin_continuation before = request;
-					struct pt_regs saved = *regs;
+					struct kd_regs saved = *regs;
 					hint_count = 0;
 					kd_spin_prefetch_request(&node);
 					unsigned int old_stack = node.prefetch_sp ? 2 : 0;
@@ -507,21 +508,26 @@ static void test_prepared_prefetch(void)
 							CHECK(a == b);
 						}
 					} else {
-						unsigned int bp_hints = 0, ip_hints = 0;
-
-						CHECK(new_packet + 1 == old_packet);
-						CHECK((uintptr_t)&regs->ip / L1_CACHE_BYTES ==
-						      (uintptr_t)&regs->sp / L1_CACHE_BYTES);
-						/* Fewer packet addresses still warm the same packet lines. */
+						/* Identity, frame state and the entire continuation triple
+						 * share line zero; virtual GPRs and provenance need one
+						 * line each. Complex ledgers retain their own hints. */
+						CHECK(new_packet == old_packet);
+						CHECK(new_packet == 3 + complex * 3);
+						CHECK((uintptr_t)&request.frame % L1_CACHE_BYTES == 0);
+						const void *hot[] = { &request.frame.entry_ip,
+							&request.frame.outer_lock_addr, &request.frame.state,
+							&request.frame.packet_state, &regs->ip, &regs->sp, &regs->bp };
+						for (unsigned int h = 0; h < sizeof(hot)/sizeof(hot[0]); h++)
+							CHECK((uintptr_t)hot[h] / L1_CACHE_BYTES ==
+								  (uintptr_t)&request.frame / L1_CACHE_BYTES);
+						CHECK((uintptr_t)&regs->r15 / L1_CACHE_BYTES ==
+							  (uintptr_t)&regs->r11 / L1_CACHE_BYTES);
+						CHECK((uintptr_t)&request.frame.regs_ref / L1_CACHE_BYTES ==
+							  (uintptr_t)&request.frame.parent / L1_CACHE_BYTES);
 						for (unsigned int h = 0; h < old_packet; h++)
-							CHECK(hint_has_line(hints, new_packet, lookup[h]));
-						for (unsigned int h = 0; h < new_packet; h++) {
-							CHECK(hint_has_line(lookup, old_packet, hints[h]));
-							bp_hints += hints[h] == &regs->bp;
-							ip_hints += hints[h] == &regs->ip;
-						}
-						CHECK(bp_hints == 1 && ip_hints == 1);
-						CHECK(hint_has_line(hints, hint_count, &regs->sp));
+							CHECK(hints[h] == lookup[h]);
+						CHECK(hint_has_line(hints, new_packet, &regs->r15));
+						CHECK(hint_has_line(hints, new_packet, &request.frame.logical_task));
 					}
 					/* Hint every valid upward address, without touching a guard page.
 					 * Caller statistics at SP+144..167 must be covered for each
@@ -566,14 +572,14 @@ static void test_prepared_prefetch(void)
 			  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	CHECK(area != MAP_FAILED);
 	struct kd_spin_continuation *protected = area;
-	struct pt_regs *external_packet = (void *)((char *)area + bytes);
+	struct kd_regs *external_packet = (void *)((char *)area + bytes);
 	node.execution = protected;
 	for (unsigned int full = 0; full < 2; full++) {
 		/* Protect inline MINIMAL and a separately borrowed FULL packet. */
-		struct pt_regs *packet = full ? external_packet : &protected->frame.regs;
+		struct kd_regs *packet = full ? external_packet : &protected->frame.regs;
 
 		CHECK(mprotect(area, bytes + page, PROT_READ | PROT_WRITE) == 0);
-		protected->kind = full ? KD_SPIN_CONT_VIRTUAL : KD_SPIN_CONT_ROOT;
+		protected->frame.spin_kind = full ? KD_SPIN_CONT_VIRTUAL : KD_SPIN_CONT_ROOT;
 		protected->frame.regs_ref = packet;
 		protected->frame.logical_task = &task;
 		protected->frame.packet_state = full ? KD_PACKET_FULL : KD_PACKET_MINIMAL;
@@ -583,7 +589,7 @@ static void test_prepared_prefetch(void)
 		CHECK(mprotect(area, bytes + page, PROT_NONE) == 0);
 		hint_count = 0;
 		kd_spin_prefetch_request(&node);
-		CHECK(hint_count == (full ? 13 : 12));
+		CHECK(hint_count == (full ? 13 : 11));
 		CHECK(hints[hint_count - 5] == stack + 120);
 		for (unsigned int line = 0; line < 4; line++)
 			CHECK(hints[hint_count - 4 + line] == stack + 128 + line * L1_CACHE_BYTES);

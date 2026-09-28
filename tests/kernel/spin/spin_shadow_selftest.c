@@ -60,7 +60,7 @@ static bool kd_shadow_check(bool condition, const char *name, int line)
 
 static struct {
 	struct kd_combiner_state saved;
-	struct pt_regs regs;
+	struct kd_regs regs;
 	struct qspinlock *lock;
 	unsigned int held;
 	int preempt_count;
@@ -78,7 +78,7 @@ static void kd_shadow_release_pressure(void)
 	}
 }
 
-bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct pt_regs *regs,
+bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct kd_regs *regs,
 				   struct kd_exec_frame *frame)
 {
 	struct kd_spin_cpu_state *ptr;
@@ -129,7 +129,7 @@ fail:
 	return false;
 }
 
-void kd_spin_selftest_shadow_end(struct pt_regs *regs,
+void kd_spin_selftest_shadow_end(struct kd_regs *regs,
 				 struct kd_exec_frame *frame, int result)
 {
 	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
@@ -265,10 +265,10 @@ static bool kd_shadow_check_admission(void)
 				  0xfeed };
 	unsigned long outer = (unsigned long)&kd_shadow_test.held[0];
 	enum kd_exec_lock_kind kind = KD_EXEC_LOCK_NATIVE;
-	struct pt_regs regs = { .ip = (unsigned long)_raw_spin_lock,
+	struct kd_regs regs = { .ip = (unsigned long)_raw_spin_lock,
 				.sp = (unsigned long)stack,
 				.ax = 0x1234 };
-	struct pt_regs before = regs;
+	struct kd_regs before = regs;
 	struct kd_exec_frame *frame;
 	bool ok;
 	int ret;
@@ -313,7 +313,7 @@ static void kd_shadow_queue_wait(void)
 	 * packet, independently of the kernel's default ordinary caller ABI. */
 	kd_spin_lock_slowpath(kd_shadow_test.lock, (unsigned long)hook_regs, &request,
 			      0, 0, KD_ENTRY_ABI_LEGACY);
-	KD_SHADOW_CHECK(node->execution->native_regs_decoded && node->execution->frame.regs_ref->bx == 1 &&
+	KD_SHADOW_CHECK(node->execution->frame.spin_regs_decoded && node->execution->frame.regs_ref->bx == 1 &&
 			node->execution->frame.regs_ref->r12 == 2 && node->execution->frame.regs_ref->r13 == 3 &&
 			node->execution->frame.regs_ref->r14 == 4 && node->execution->frame.regs_ref->r15 == 5 && node->execution->frame.regs_ref->bp == 6);
 }

@@ -54,13 +54,13 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 #endif
 
 	/* Physical packets are fully prepared before the waiter publishes next. */
-	if (curr_node->execution->kind != KD_SPIN_CONT_VIRTUAL && !curr_node->execution->native_regs_decoded)
+	if (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL && !curr_node->execution->frame.spin_regs_decoded)
 		return KD_EXE_RUN_ERROR;
-	if (curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL && !jit_context->requester)
+	if (curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL && !jit_context->requester)
 		return KD_EXE_RUN_ERROR;
 	/* B is a continuation in A's admitted code. An independent B translation
 	 * starts at lexical depth one and can stop at an inherited A unlock. */
-	entry_ip = curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL ? jit_context->requester->entry_ip :
+	entry_ip = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL ? jit_context->requester->entry_ip :
 					   curr_node->execution->frame.regs_ref->ip;
 	exe = kd_spin_batch_find_ready(batch, entry_ip);
 	if (!exe) {
@@ -76,7 +76,7 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 		curr_node->execution->frame.regs_ref->r15, curr_node->execution->frame.regs_ref->r14, curr_node->execution->frame.regs_ref->r13,
 		curr_node->execution->frame.regs_ref->r12, curr_node->execution->frame.regs_ref->bx, curr_node->execution->frame.regs_ref->bp,
 		curr_node->execution->frame.regs_ref->ip, curr_node->execution->frame.regs_ref->sp);
-	frame_lock_depth = curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL ?
+	frame_lock_depth = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL ?
 				   jit_context->lock_depth :
 				   kd_spin_lock_stack_depth(ptr);
 	frame = &curr_node->execution->frame;
@@ -86,12 +86,12 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	}
 
 	kd_exec_frame_prepare_complex(frame);
-	if ((curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL &&
+	if ((curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL &&
 	     kd_exec_frame_set_lock_entries(
 		     frame, frame->jit_lock_addr, frame->jit_lock_kind,
 		     frame->jit_lock_node, frame->jit_lock_released,
 		     jit_context->lock_depth)) ||
-	    (curr_node->execution->kind != KD_SPIN_CONT_VIRTUAL &&
+	    (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL &&
 	     kd_exec_frame_set_lock_stack(frame,
 					  (const unsigned long *)ptr->lock_addr,
 					  kd_spin_lock_stack_depth(ptr)))) {
@@ -106,12 +106,12 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	/* The generic ledger initializes only its live prefix. Keep one entry
 	 * for a simple root so promotion to nested/native needs no reconstruction;
 	 * delay the large combiner snapshot until the first non-final exit. */
-	frame->spin_simple = curr_node->execution->kind != KD_SPIN_CONT_VIRTUAL && !frame->parent &&
+	frame->spin_simple = curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL && !frame->parent &&
 			     frame_lock_depth == 1;
 	if (!frame->spin_simple)
 		kd_spin_capture_combiner_state(&frame->saved_combiner, ptr);
 	frame->outer_unlock_hook = &batch->outer;
-	if (curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL) {
+	if (curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL) {
 		frame->resume_target = jit_context->requester;
 		BUG_ON(!frame->resume_target ||
 		       frame->resume_target->logical_task !=
@@ -154,7 +154,7 @@ dispatched:
 		u64 handoff_start = kd_exe_native_timing_start();
 		struct kd_spin_continuation *execution = curr_node->execution;
 		struct kd_spin_ref origin = frame->spin_origin;
-		bool last, virtual = execution->kind == KD_SPIN_CONT_VIRTUAL;
+		bool last, virtual = execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL;
 
 		/* Every ancestor registers its ticket borrow before the root wake.
 		 * NATIVE_READY permits execution, never continuation reclamation. */
@@ -236,7 +236,7 @@ dispatched:
 finish_frame:
 	/* Only a native waiter needs the saved-entry return trampoline. A
 	 * virtual waiter acquires B and continues its existing parent frame. */
-	curr_node->execution->result = curr_node->execution->kind == KD_SPIN_CONT_ROOT &&
+	curr_node->execution->result = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_ROOT &&
 		ret_flag != KD_EXE_RUN_TO_UNLOCK ? KD_SPIN_RES_RETRY : KD_SPIN_RES_QUEUED;
 	if (curr_node->execution->result == KD_SPIN_RES_RETRY)
 		KD_PR_INFO(
@@ -277,7 +277,7 @@ finish_frame:
 		this_cpu_inc(ooo_combiner_count);
 #endif
 
-		/* JIT waiters carry their continuation in pt_regs.  The native
+		/* JIT waiters carry their continuation in kd_regs.  The native
 		 * TCLock path copies a real RSP here, but the combiner's base node
 		 * deliberately has rsp == NULL while run_combiner() is active. */
 		ptr->curr_cs_cpu = -1;

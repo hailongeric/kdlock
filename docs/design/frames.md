@@ -72,7 +72,7 @@ Pinned physical context is rejected before a delegation node is published.
 
 The protocol is:
 
-1. The producer prepares the continuation and register packet in place. `kind`
+1. The producer prepares the continuation and register packet in place. `frame.spin_kind`
    distinguishes physical roots and virtual children; `result` distinguishes
    queued, unstarted retry and NATIVE_READY. Whole records are not cleared.
 2. Release publication transfers execution to the combiner, which binds the
@@ -102,22 +102,34 @@ frame unbinds. Bind still checks admission. Ticket generation, physical owner,
 lock ledger and ACK routing remain separate checks; early-release reacquisition
 uses the original ticket and never repeats a completed physical release.
 
-The ordinary frame state is a 72-byte header followed by the shared packet and
-preallocated cold storage. `complex_ready` gates the eight-lock ledger, remote/
-native discriminators and combiner snapshot. Prepare/bind/validate/complete/pop
-of a pristine single-lock root do not initialize or inspect that cold storage.
-Continuation kind/result and storage metadata precede the frame; entry ABI and packet state
-precede its register packet. These ordinary admission fields fit in the first
-two aligned continuation cache lines. Each storage record has its own cache-line
-boundaries; no second mutable state cache is introduced. The packet starts at
-continuation offset 104; restore/wait assembly uses compiler-derived offsets.
-The first non-final wrapper exit materializes a one-lock ledger in place before
-control/hostcall/native handling. It never copies the register packet.
+The 648-byte frame begins at the aligned continuation base. Its 40-byte core
+header and private `kd_regs.ip/sp/bp` at offsets 40/48/56 fill one 64-byte line.
+That line carries the entry RIP, lock identity, entry ABI, packet state, depth
+and frame state. The five virtual GPR backing slots occupy offsets 64..96 in
+the next line; regs_ref, GS, logical task and parent share offsets 208..232.
+All FULL fields remain in the 168-byte packet. Linux pt_regs is unchanged and
+must never be cast to this private type. Layout-2 image directories are required
+before NORMAL publication, including legacy FULL entries.
+
+Only two queue-private tags share a byte; their producer initializes them before
+publication. Notification, exact owner/ACK state and the 32-bit result are not
+packed into those bits. The 704-byte continuation and 8512-byte storage stack
+retain their capacities and alignment. Result/retirement metadata follows the
+frame, keeping the hot line separate from final storage retirement.
+
+`complex_ready` still gates the preallocated eight-lock ledger, remote/native
+discriminators and combiner snapshot from offset 240. A pristine single-lock
+root does not initialize or inspect that cold storage. The first non-final
+wrapper exit materializes a one-lock ledger in place before control/hostcall/
+native handling. It never copies the spin register packet. The scheduling node
+cannot share this storage lifetime: it may be reused before the final owner ACK.
+The actual caller stack retains its addresses and aliases; only its authoritative
+SP is colocated in the hot line, never a copied stack snapshot.
 
 `kd_spin_batch_run` keeps one physical combiner C frame across the complete
 batch, including mixed caller ABIs. Its inline assembly calls expose all GPR
-clobbers except RSP/RBP to the compiler. The legacy KDWB001 adapter protects only
-RBP, which that wrapper does not restore; KDWC001 restores RBP itself. There is
+clobbers except RSP/RBP to the compiler. The legacy KDWB002 adapter protects only
+RBP, which that wrapper does not restore; KDWC002 restores RBP itself. There is
 no outer assembly register group save or per-waiter callback return/reentry.
 This follows TCLock's retained combiner continuation while keeping the JIT's
 physical scratch frame separate from the logical waiter stack. Admission,
@@ -189,8 +201,11 @@ Mode 2 prepares the packet pointer, bounded logical-stack SP, upward hint count
 and full/complex flags before queue publication. A physical producer passes its inline packet;
 a virtual producer passes the retained parent packet and always marks it FULL.
 Thus mode 2 MINIMAL packets are inline: the aligned continuation and its asserted
-layout put IP/SP in one cacheline, warmed once through IP alongside the BP hint.
-No consumer-side alignment test or packet read is needed. FULL/borrowed packet
+layout put IP/SP/BP in the core frame line. The MINIMAL consumer issues three
+frame/packet hints: the core line, the virtual-GPR backing line, and the line
+containing regs_ref/GS/task/parent. The five backing slots remain active during
+JIT execution even though clobber imports no incoming GPRs. No consumer-side
+alignment test or packet read is needed. FULL/borrowed packet
 hints keep their existing range. For a valid logical SP, mode 2 hints `SP-8`
 and up to four upward addresses: `SP`, `SP+64`, `SP+128`, `SP+192`. The producer
 clamps the count to addresses below the retained task's stack end; the consumer

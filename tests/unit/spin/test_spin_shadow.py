@@ -115,7 +115,7 @@ def main():
         "static int kd_spin_prepare_jit_node(struct kd_spin_node *node,",
         "static int kd_spin_advance_jit_node(struct kd_spin_node *node,",
         "static int kd_spin_finish_remote_node(struct kd_spin_node *node,",
-        "int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,",
+        "int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,",
     ):
         body += definition(source, marker)
     with tempfile.TemporaryDirectory(prefix="kdlock-spin-shadow-") as directory:

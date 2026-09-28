@@ -16,7 +16,7 @@ static unsigned long producer_return;
 /* Physical producer reads eight hook words before publication; the virtual
  * producer instead consumes the single CALL return word above. */
 static unsigned long producer_saved[8] = { 0, 1, 2, 3, 4, 5, 6, 0x78900 };
-static struct pt_regs producer_regs;
+static struct kd_regs producer_regs;
 
 static void producer_setup(int count, bool virtual, enum producer_path path)
 {
@@ -75,7 +75,7 @@ static void producer_setup(int count, bool virtual, enum producer_path path)
 	producer_frame.jit_lock_node[0] = &peer;
 	producer_frame.control_call.phase = KD_CALL_PENDING;
 	producer_return = 0x78900;
-	producer_regs = (struct pt_regs){ .ip = 0x12340,
+	producer_regs = (struct kd_regs){ .ip = 0x12340,
 					  .sp = (unsigned long)&producer_return,
 					  .di = (unsigned long)active_lock };
 	kd_spin_native_inputs.rsp = 0x12345678;
@@ -102,7 +102,7 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 {
 	struct kd_spin_node before[MAX_NODES];
 	struct kd_spin_jit_context contexts[MAX_NODES];
-	struct pt_regs regs_before;
+	struct kd_regs regs_before;
 	int result, expected;
 
 	producer_setup(count, virtual, path);
@@ -155,8 +155,8 @@ static void producer_path_case(int count, bool virtual, enum producer_path path,
 		CHECK(produced_node->rsp ==
 		      (virtual ? regs_before.sp : 0x12345678));
 		CHECK(fixture_request(produced_node)->frame.gsbase == (virtual ? 0x34000 : 0x12000));
-		CHECK((fixture_request(produced_node)->kind == KD_SPIN_CONT_VIRTUAL) == virtual &&
-		      fixture_request(produced_node)->native_regs_decoded == !virtual);
+		CHECK((fixture_request(produced_node)->frame.spin_kind == KD_SPIN_CONT_VIRTUAL) == virtual &&
+		      fixture_request(produced_node)->frame.spin_regs_decoded == !virtual);
 		if (remote)
 			CHECK(peer.next == produced_node &&
 			      !producer_lock.locked);
@@ -260,7 +260,7 @@ static void producer_cancel_case(int count, unsigned int failure)
 {
 	struct kd_spin_node before[MAX_NODES];
 	struct kd_spin_jit_context contexts[MAX_NODES];
-	struct pt_regs regs_before;
+	struct kd_regs regs_before;
 	int expected = -EINVAL;
 
 	producer_setup(count, true, PRODUCER_HEAD);

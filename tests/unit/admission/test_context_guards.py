@@ -172,13 +172,13 @@ class ScopedCallTests(unittest.TestCase):
         initial = {}
 
         def initialize(regs, _):
-            regs[3] = ctypes.addressof(pointer)
-            regs[2] = ctypes.addressof(destination)
-            regs[1] = 42
-            regs[4] = ctypes.addressof(unrelated) + 8
-            regs[5] = 0x5555
-            regs[14] = ctypes.addressof(record)
-            initial.update(rsp=regs[19], rbp=regs[4])
+            regs[6] = ctypes.addressof(pointer)
+            regs[5] = ctypes.addressof(destination)
+            regs[4] = 42
+            regs[2] = ctypes.addressof(unrelated) + 8
+            regs[8] = 0x5555
+            regs[16] = ctypes.addressof(record)
+            initial.update(rsp=regs[1], rbp=regs[2])
 
         # Both CALLs and both visits to the same generated RET really run.
         # The final known lock stub exits without executing a native kernel API.
@@ -186,9 +186,9 @@ class ScopedCallTests(unittest.TestCase):
         self.assertEqual(
             (args, destination.value, list(record)), ([1, 1], 42, [1, 17, 42])
         )
-        self.assertEqual((regs[4], regs[5], regs[10]), (initial["rbp"], 0x5555, 17))
-        self.assertEqual(regs[19], initial["rsp"] - 8)
-        self.assertEqual(regs[16], TEST_LOCK_SYMBOLS["mutex_lock"])
+        self.assertEqual((regs[2], regs[8], regs[12]), (initial["rbp"], 0x5555, 17))
+        self.assertEqual(regs[1], initial["rsp"] - 8)
+        self.assertEqual(regs[0], TEST_LOCK_SYMBOLS["mutex_lock"])
 
     def test_nested_ret_partition_budget_refuses_without_publishing(self):
         regions, _ = self.nested_call()
@@ -246,32 +246,32 @@ class ScopedCallTests(unittest.TestCase):
                     regs, _, state=(pointer, destination, unrelated, record, initial)
                 ):
                     pointer, destination, unrelated, record, initial = state
-                    regs[3] = ctypes.addressof(pointer)
-                    regs[2] = ctypes.addressof(destination)
-                    regs[1] = 42
-                    regs[4] = ctypes.addressof(unrelated) + 8
-                    regs[5] = 0x5555
-                    regs[14] = ctypes.addressof(record)
-                    initial.update(rsp=regs[19], rbp=regs[4])
+                    regs[6] = ctypes.addressof(pointer)
+                    regs[5] = ctypes.addressof(destination)
+                    regs[4] = 42
+                    regs[2] = ctypes.addressof(unrelated) + 8
+                    regs[8] = 0x5555
+                    regs[16] = ctypes.addressof(record)
+                    initial.update(rsp=regs[1], rbp=regs[2])
 
                 def resume(regs, args, stack, calls=calls):
                     self.assertEqual(list(args), [1, 1])
-                    calls.append(regs[16])
+                    calls.append(regs[0])
                     if len(calls) == 3:
                         return False
                     self.assertLess(len(calls), 3)
                     self.assertEqual(
-                        regs[16],
+                        regs[0],
                         TEST_LOCK_SYMBOLS[
                             "mutex_lock" if len(calls) == 1 else "mutex_unlock"
                         ],
                     )
-                    self.assertLessEqual(ctypes.addressof(stack), regs[19])
+                    self.assertLessEqual(ctypes.addressof(stack), regs[1])
                     self.assertLess(
-                        regs[19] + 8, ctypes.addressof(stack) + ctypes.sizeof(stack)
+                        regs[1] + 8, ctypes.addressof(stack) + ctypes.sizeof(stack)
                     )
-                    regs[16] = ctypes.c_ulong.from_address(regs[19]).value
-                    regs[19] += 8
+                    regs[0] = ctypes.c_ulong.from_address(regs[1]).value
+                    regs[1] += 8
                     return True
 
                 regs, args = run_image(assembly, [0x1000], initialize, resume=resume)[0]
@@ -286,9 +286,9 @@ class ScopedCallTests(unittest.TestCase):
                     (args, destination.value, list(record)), ([1, 1], 42, [1, 17, 42])
                 )
                 self.assertEqual(
-                    (regs[4], regs[5], regs[10]), (initial["rbp"], 0x5555, 17)
+                    (regs[2], regs[8], regs[12]), (initial["rbp"], 0x5555, 17)
                 )
-                self.assertEqual(regs[19], initial["rsp"] - 8)
+                self.assertEqual(regs[1], initial["rsp"] - 8)
 
     def test_checked_nested_control_keeps_sensitive_spill_and_unknown_alias_refusals(
         self,
@@ -445,15 +445,15 @@ class ScopedCallTests(unittest.TestCase):
                     unrelated=unrelated,
                     record=record,
                 ):
-                    regs[3] = ctypes.addressof(pointer)
-                    regs[2] = ctypes.addressof(destination)
-                    regs[1] = 42
-                    regs[4] = ctypes.addressof(unrelated) + 8
-                    regs[0] = ctypes.addressof(record)
+                    regs[6] = ctypes.addressof(pointer)
+                    regs[5] = ctypes.addressof(destination)
+                    regs[4] = 42
+                    regs[2] = ctypes.addressof(unrelated) + 8
+                    regs[3] = ctypes.addressof(record)
 
                 regs, args = run_image(assembly, [0x1000], initialize)[0]
-                self.assertEqual((args, regs[10], destination.value), ([1, 1], 42, 42))
-                self.assertEqual(regs[16], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
+                self.assertEqual((args, regs[12], destination.value), ([1, 1], 42, 42))
+                self.assertEqual(regs[0], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
                 # Exact effects distinguish redirected RET execution from
                 # merely publishing a table containing both continuations.
                 self.assertEqual(
@@ -513,7 +513,7 @@ class ScopedCallTests(unittest.TestCase):
         predicate = io.StringIO()
         guards.emit(predicate, 0x1000)
         regs, args = run_image(predicate.getvalue().encode() + assembly, [0x1000])[0]
-        self.assertEqual(regs[10], 42)
+        self.assertEqual(regs[12], 42)
         self.assertEqual(args[1], 1)
 
     def test_callee_memory_writes_reach_caller_admission(self):
@@ -653,14 +653,14 @@ class ScopedCallTests(unittest.TestCase):
                     destination=destination,
                     unrelated=unrelated,
                 ):
-                    regs[3] = ctypes.addressof(pointer)
-                    regs[2] = ctypes.addressof(destination)
-                    regs[1] = 42
-                    regs[4] = ctypes.addressof(unrelated) + 8
+                    regs[6] = ctypes.addressof(pointer)
+                    regs[5] = ctypes.addressof(destination)
+                    regs[4] = 42
+                    regs[2] = ctypes.addressof(unrelated) + 8
 
                 regs, args = run_image(assembly, [0x1000], initialize)[0]
-                self.assertEqual((args, regs[10], destination.value), ([1, 1], 41, 42))
-                self.assertEqual(regs[16], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
+                self.assertEqual((args, regs[12], destination.value), ([1, 1], 41, 42))
+                self.assertEqual(regs[0], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
 
 
 class EntryGuardTests(unittest.TestCase):
@@ -726,10 +726,10 @@ class EntryGuardTests(unittest.TestCase):
                     base=pointer if overlap else unrelated,
                     before=before,
                 ):
-                    regs[3] = ctypes.addressof(pointer)
-                    regs[2] = ctypes.addressof(destination)
-                    regs[1] = 42
-                    regs[4] = ctypes.addressof(base) + 8
+                    regs[6] = ctypes.addressof(pointer)
+                    regs[5] = ctypes.addressof(destination)
+                    regs[4] = 42
+                    regs[2] = ctypes.addressof(base) + 8
                     before.append(list(regs))
 
                 regs, args = run_image(assembly, [0x1000], initialize)[0]
@@ -741,7 +741,7 @@ class EntryGuardTests(unittest.TestCase):
                     )
                 else:
                     self.assertEqual(args, [1, 1])
-                    self.assertEqual(regs[16], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
+                    self.assertEqual(regs[0], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
                     self.assertEqual(pointer.value, ctypes.addressof(destination))
                     self.assertEqual((destination.value, unrelated.value), (42, 0x30))
 
@@ -1044,15 +1044,15 @@ class EntryGuardTests(unittest.TestCase):
         iterator = iter(cases)
 
         def initialize(regs, _):
-            regs[3], regs[2] = next(iterator)
+            regs[6], regs[5] = next(iterator)
 
         results = run_image(guarded(guards), [0x1000] * len(cases), initialize)
         for (a, b), (regs, args) in zip(cases, results):
             accepted = guards.accepts({"R12": a, "R13": b})
             self.assertEqual(args[1], int(accepted))
             self.assertEqual(args[0] == ENTRY_REFUSED, not accepted)
-            self.assertEqual(regs[10], 42 if accepted else 0)
-            self.assertEqual((regs[3], regs[2]), (a, b))
+            self.assertEqual(regs[12], 42 if accepted else 0)
+            self.assertEqual((regs[6], regs[5]), (a, b))
 
     def test_failure_keeps_all_registers_stack_and_memory_unchanged(self):
         guards = EntryGuards()
@@ -1061,10 +1061,11 @@ class EntryGuardTests(unittest.TestCase):
         destination = ctypes.c_ulong(0x1234)
 
         def initialize(regs, stack):
-            for index in range(15):
-                regs[index] = 0x1000 + index
-            regs[0] = regs[1]
-            regs[14] = ctypes.addressof(destination)
+            for offset in REGISTER_OFFSETS.values():
+                if offset != REGISTER_OFFSETS["RSP"]:
+                    regs[offset // 8] = 0x1000 + offset
+            regs[3] = regs[4]
+            regs[16] = ctypes.addressof(destination)
             before.append(list(regs))
             stacks.append(stack)
 
@@ -1096,7 +1097,7 @@ class EntryGuardTests(unittest.TestCase):
         guards.separate(address("RSP", -8), address("R12"), 8, 8)
 
         def initialize(regs, _):
-            regs[3] = regs[19] - 8
+            regs[6] = regs[1] - 8
 
         self.assertEqual(
             run_image(guarded(guards), [0x1000], initialize)[0][1], [ENTRY_REFUSED, 0]
@@ -1109,7 +1110,7 @@ class EntryGuardTests(unittest.TestCase):
         # Non-root entry is a continuation; production must establish prior admission.
         image = guarded(guards, "eb0048c7c02a000000c3")
         result = run_image(image, [0x1002])[0]
-        self.assertEqual(result[0][10], 42)
+        self.assertEqual(result[0][12], 42)
         self.assertEqual(result[1][1], 1)
 
 

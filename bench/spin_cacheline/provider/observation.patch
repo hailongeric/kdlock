@@ -248,7 +248,7 @@ diff --git a/kernel_module/spin/execute.inc b/kernel_module/spin/execute.inc
  			frame->entry_ip, kd_exec_frame_regs(frame)->ip, frame->outer_lock_addr,
  			frame->resume_target->outer_lock_addr,
 @@ -247,7 +247,7 @@
- 	curr_node->execution->result = curr_node->execution->kind == KD_SPIN_CONT_ROOT &&
+ 	curr_node->execution->result = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_ROOT &&
  		ret_flag != KD_EXE_RUN_TO_UNLOCK ? KD_SPIN_RES_RETRY : KD_SPIN_RES_QUEUED;
  	if (curr_node->execution->result == KD_SPIN_RES_RETRY)
 -		KD_PR_INFO(

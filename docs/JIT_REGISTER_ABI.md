@@ -46,7 +46,7 @@ shared packet -> final CPU loads -> retire continuation -> original waiter resum
 
 | 栈 | 当前表示 | 用途 |
 | --- | --- | --- |
-| waiter 逻辑栈 | `pt_regs.sp`，JIT 内主要由物理 R13 表示 | 原临界区的局部变量、保存寄存器和虚拟 `CALL` 返回地址 |
+| waiter 逻辑栈 | `kd_regs.sp`，JIT 内主要由物理 R13 表示 | 原临界区的局部变量、保存寄存器和虚拟 `CALL` 返回地址 |
 | wrapper 实栈 | 物理 RSP | 保存 combiner 的 C ABI 状态和 JIT 私有槽；不能当作 guest RSP 使用 |
 | 后端 C 栈 | spin 使用执行者自己的 task 内核栈；mutex 使用其独立 waiter 栈 | 运行 queue/combiner C 代码；不等于 JIT 的虚拟调用栈 |
 | spin shadow 等待栈 | 每 CPU 20 KiB 区域的高端 8 KiB，`kd_spin_cpu_state.wait_stack_top` | 物理 waiter 发布前切入，保存一个旧 C RSP 并 PAUSE 轮询；不承载 JIT 或 frame |
@@ -57,7 +57,7 @@ shadow 等待栈，再发布和轮询，不访问旧 C 栈。尚未执行的队�
 离开等待栈且读完/退休 continuation 后才释放 pin 并转到续点，IRQ 状态不变。锁地址账本和 wrapper
 暂存不属于这份等待栈。虚拟 waiter 的 owner/ACK 轮询仍使用执行者独立的 C 栈。
 
-`struct pt_regs` 的有效字段由 `packet_state` 决定。嵌套锁或 hostcall
+`struct kd_regs` 的有效字段由 `packet_state` 决定。嵌套锁或 hostcall
 退出 sandbox 后，任何需要再次进入 JIT 的状态都必须先落实到这份结构中。
 
 ### 1.0 普通 spin 的 caller-clobber v1
@@ -136,11 +136,11 @@ RSI=R13、RDX=静态 CALL 后地址、RCX=R12，以及同一 COMPLETE 资格和�
 只恢复三个续点字段，调用者后续
 指令重新装载活跃值。FULL 继续使用原完整恢复。两种状态不能混入通用 dispatcher。
 
-新 wrapper 位于偏移 32，目录偏移 25 为 `KDWC001`、41 为 `KDAB`、45 为
+新 wrapper 位于偏移 32，目录偏移 25 为 `KDWC002`、41 为 `KDAB`、45 为
 生成物的 `entry_abi` 字节。RDX 传递独立元数据描述符；原两元素 `args` 不变。
 `kd_jit_clobber_call_v1()` 为 combiner 提供编译器可见的 clobber 调用边界，
 wrapper 只保护物理 RBP，不导入线程 GPR、不手写保护 RBX/R12–R15。
-JIT 的虚拟 GPR 暂存直接复用预分配 `pt_regs` 字段，不另建入口副本。
+JIT 的虚拟 GPR 暂存直接复用预分配 `kd_regs` 字段，不另建入口副本。
 MINIMAL/COMPLETE 中未捕获字段可以在正文执行后成为 JIT spill，但不能因此
 当作有效的初始或完整恢复状态；只有 FULL 出口补齐 CPU 中的当前逻辑值后
 才允许 C 消费完整包。准入证明禁止正文观察
@@ -269,7 +269,7 @@ kdlock caller-clobber v1:
 
 kdlock 的物理 RSP 必须留在 combiner 栈：wrapper 的控制槽、地址
 重写和逻辑 SP/BP 映射依赖这个帧。虚拟 GPR backing 已改为直接使用共享包，
-没有 `pt_regs → wrapper spill → pt_regs` 的复制链。它只切换 JIT 的逻辑 waiter 栈，不能直接
+没有 `kd_regs → wrapper spill → kd_regs` 的复制链。它只切换 JIT 的逻辑 waiter 栈，不能直接
 套用 TCLock 的物理 RSP 切换汇编；那样会破坏现有 JIT 寄存器映射。
 中途退出也不能只保存六个 callee-saved，因为已执行的逻辑 caller-saved 值
 可能仍被后缀使用。只有明确的 caller-clobber 最终边界允许丢弃这些值。
@@ -291,7 +291,7 @@ IRQ 状态保持不变，也不恢复 JIT 退出点的条件码。详细限制�
 不能把它们转换成下列普通函数指针调用。偏移 0 的类型为：
 
 ```c
-void (*virt_ptr)(struct pt_regs *regs, unsigned long args[2]);
+void (*virt_ptr)(struct kd_regs *regs, unsigned long args[2]);
 ```
 
 按照 x86-64 SysV ABI，进入 wrapper 时：
@@ -333,7 +333,7 @@ entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志
 
 ### 2.3 批次入口与退出保存集合
 
-旧 ABI wrapper 在偏移 9 放置 `KDWB001` 签名，偏移 16 是专用批次入口；偏移 0
+旧 ABI wrapper 在偏移 9 放置 `KDWB002` 签名，偏移 16 是专用批次入口；偏移 0
 仍是普通 C ABI 入口。锁侧准入每次校验 OPEN、NORMAL、entry/backend、未执行
 单锁 root、有效 SP 和签名。旧生成物没有该签名时走通用路径。
 普通入口保存/恢复物理 combiner 的六个 callee-saved 寄存器；批次入口只
@@ -360,18 +360,26 @@ entry/lock 的返回后 `JIT body witness` 日志；原先的调用前 IP 日志
 复杂出口进入 `kd_exe_spin_batch_resume` 时已经执行过正文；通用 dispatcher 先
 消费这次返回，再决定服务或续跑，不能再次调用原入口。下表描述完整保存路径。
 
-## 3. `pt_regs` 输入输出约定
+## 3. `kd_regs` 输入输出约定
 
-`asm_head.h` 对 Linux x86-64 `struct pt_regs` 使用硬编码偏移：
+`include/kd_regs.h` 定义 KD 自有的 168 字节软件包；Linux `struct pt_regs`
+及 guest 内核 ABI 不变，两者不能互相转换指针。`asm_head.h` 引用同一组偏移常量，
+C 编译以每字段 `_Static_assert` 校验；恢复汇编使用 `offsetof`。
 
 ```text
-0x00 r15      0x08 r14      0x10 r13      0x18 r12
-0x20 rbp      0x28 rbx      0x30 r11      0x38 r10
-0x40 r9       0x48 r8       0x50 rax      0x58 rcx
-0x60 rdx      0x68 rsi      0x70 rdi      0x78 orig_rax
-0x80 rip      0x88 cs       0x90 eflags   0x98 rsp
+0x00 rip      0x08 rsp      0x10 rbp      0x18 r15
+0x20 r14      0x28 r13      0x30 r12      0x38 r11
+0x40 rbx      0x48 r10      0x50 r9       0x58 r8
+0x60 rax      0x68 rcx      0x70 rdx      0x78 rsi
+0x80 rdi      0x88 orig_ax  0x90 cs       0x98 flags
 0xa0 ss
 ```
+
+这是软件包 layout 2。wrapper 目录仍在原位置，但标记改为 `KDWB002` / `KDWC002`。
+daemon 与 provider 在发布 NORMAL 前要求两个 layout-2 标记、`KDAB` 及精确
+`entry_abi`；包括 legacy/FULL bridge，未标记或 layout-1 镜像一律拒绝。
+入口 ABI 0/1/2 的含义及两元素输入不变；重新生成镜像后才能使用新包。
+完整 GPR 字段全部保留，MINIMAL 仍只有 IP/SP/BP 是有效入口值。
 
 普通 spin 保持 IRQ 开启时，wrapper 的私有元数据必须一直位于已分配栈区内。
 FULL 出口先写回 GPR，并读完 witness、exit kind、RIP、clobber/batch 描述，
@@ -383,7 +391,7 @@ FULL 出口先写回 GPR，并读完 witness、exit kind、RIP、clobber/batch �
 | 字段 | 进入 JIT | 退出 JIT |
 | --- | --- | --- |
 | RAX、RBX、RCX、RDX、RSI、RDI、R8-R10 | 直接装入同名物理寄存器 | 从同名物理寄存器写回 |
-| R11-R15 | 留在 `pt_regs`，按需映射到物理 R12-R15 | 翻译器 spill 直接写同一字段，无 epilogue 整组复制 |
+| R11-R15 | 留在 `kd_regs`，按需映射到物理 R12-R15 | 翻译器 spill 直接写同一字段，无 epilogue 整组复制 |
 | RSP | 装入物理 R13，作为虚拟 RSP | 从物理 R13 写回 |
 | RBP | 装入物理 R12，作为虚拟 RBP | 从物理 R12 写回 |
 | RIP | 由入口 dispatcher 读取；控制流中作为合成地址处理 | 从协议寄存器 R14 写回 |
@@ -406,7 +414,7 @@ spill，直接执行的其他 GPR 仍须在完整出口写回。共享 backing �
 
 EFLAGS 不是跨 wrapper 边界的持久状态。相邻 translated 指令会自然使用 CPU
 flags，但入口条件的地址比较、dispatcher 的 `CMP` 以及 branch-block budget 的 `DEC` 都会
-改写 flags，epilogue 也不把 flags 写回 `pt_regs.flags`。所以当前正确性要求原始
+改写 flags，epilogue 也不把 flags 写回 `kd_regs.flags`。所以当前正确性要求原始
 代码没有跨这些插桩点存活的 flags；continuation 只能放在函数调用边界等不要求
 旧 flags 保持的位置，不能在任意依赖旧 flags 的指令之间退出和恢复。
 倒计数替代原 `INC`/`TEST` 后保留相同额度与检查位置，但两者产生的 flags 不相同；
@@ -441,10 +449,10 @@ block budget 插桩破坏。需要用跨块 `CMP/JMP/Jcc`、`ADC/SBB` 等差分�
    执行访问，不能重新读取可被并发改写的指针。
 2. 在检查破坏条件码之前保存执行点状态。通过路径恢复原指令需要的条件码；拒绝
    路径还须保存当前 GPR、虚拟 SP 和源 RIP，目的寄存器/内存保持该指令执行前的值。
-   不能使用入口的旧 `pt_regs.flags`，也不能在检查完成后才采样条件码。
+   不能使用入口的旧 `kd_regs.flags`，也不能在检查完成后才采样条件码。
 3. 为这个受检出口定义独立标记和校验，不能复用 `ENTRY_REFUSED`、普通 CALL miss
    或通用 fault。两元素 `args` 不变；条件码是否有效必须有显式状态，不能仅凭
-   `pt_regs.flags` 非零判定。完整包校验成功后才发布 native frame。
+   `kd_regs.flags` 非零判定。完整包校验成功后才发布 native frame。
 4. 原 waiter 在恢复当前 GPR/SP 后、第一条续跑指令前恢复所需条件码。拟评估的
    局部范围是 CF/PF/AF/ZF/SF/OF（mask `0x8d5`），不是直接将 combiner 的整个
    RFLAGS 交给 waiter；IF/TF/DF、IRQ、抢占及其他上下文不因此获得切换保证。
@@ -464,7 +472,7 @@ block budget 插桩破坏。需要用跨块 `CMP/JMP/Jcc`、`ADC/SBB` 等差分�
 本节仅描述 **legacy spin 与 mutex** 的 hook 保存栈。caller-clobber v1
 直接接收显式 IP/SP/BP，不解析本节布局，入口捕获见第 1.0 节。
 
-旧入口的原生 waiter 不是从异常入口得到完整 `pt_regs`。hook 调用点已按 C ABI 保存
+旧入口的原生 waiter 不是从异常入口得到完整 `kd_regs`。hook 调用点已按 C ABI 保存
 callee-saved 寄存器。spin 由 origin CPU 的 `kd_spin_prepare_regs()` 在发布前
 直接解码到共享 request；旧 ABI mutex 由 `execute_cs()` 重建。二者的 legacy 路径使用以下布局：
 
@@ -534,7 +542,7 @@ frame 记录 `KD_EXEC_LOCK_NATIVE`，然后才弹出 lock CALL 的返回地址�
 
 | 偏移 | 宏 | 内容 |
 | --- | --- | --- |
-| `-0x30` | `Stack_PT_REG` | 原 `struct pt_regs *` |
+| `-0x30` | `Stack_PT_REG` | 原 `struct kd_regs *` |
 | `-0x38` | `Stack_ARG_REG` | 原 `args *` |
 | `-0x40` | `Stack_BUDGET` | 本次调用剩余的 branch-block 额度，初值 `2^24` |
 | `-0x48` 至 `-0x70` | 保留空间 | 不初始化、不用作 GPR 副本，保持控制槽偏移 |
@@ -563,7 +571,7 @@ frame 记录 `KD_EXEC_LOCK_NATIVE`，然后才弹出 lock CALL 的返回地址�
 | 物理寄存器 | translated code 中的角色 |
 | --- | --- |
 | RAX、RBX、RCX、RDX、RSI、RDI、R8-R10 | guest 同名寄存器，直接执行 |
-| R11 | 固定 `REG_BANK` 指针；guest R11 位于共享 `pt_regs.r11` / 映射池 |
+| R11 | 固定 `REG_BANK` 指针；guest R11 位于共享 `kd_regs.r11` / 映射池 |
 | R12 | 特殊寄存器映射池；每个 block 初始代表虚拟 RBP |
 | R13 | 特殊寄存器映射池；每个 block 初始代表虚拟 RSP |
 | R14 | 映射池；在 dispatcher/退出桩中固定表示当前 RIP 或目标 RIP |
@@ -606,7 +614,7 @@ R15”。只有 dispatcher 和退出协议对 physical R14/R15 的含义是固�
 
 ### 6.2 RIP 和计数器
 
-- dispatcher 先执行 `Stack_BUDGET = 0x1000000`，再把 `pt_regs.ip` 读入 R14，
+- dispatcher 先执行 `Stack_BUDGET = 0x1000000`，再把 `kd_regs.ip` 读入 R14，
   并跳到匹配的正文入口；开启 witness 时经过第 2 节的观测桩，再到 `loc_<rip>`。
   hostcall/known-call continuation 也通过同一张入口表恢复。
 - translated block 需要 RIP-relative 值时，translator 以当前原始指令地址生成
@@ -678,14 +686,14 @@ PENDING 的 `control_call.target/stack/return_ip`，不是入口寄存器快照�
 FULL及旧ABI精简出口的公共epilogue约定（clobber COMPLETE按上文使用post-CALL续点）：
 
 ```text
-pt_regs.ip = physical R14
-pt_regs.sp = physical R13
-pt_regs.bp = physical R12
+kd_regs.ip = physical R14
+kd_regs.sp = physical R13
+kd_regs.bp = physical R12
 args[0]    = Stack_IJ
 args[1]    = Stack_JIT_WITNESS   (0/1，只供观测)
 ```
 
-FULL还将其余受支持GPR写回`pt_regs`。退出桩的具体协议如下：
+FULL还将其余受支持GPR写回`kd_regs`。退出桩的具体协议如下：
 
 | 原因 | R14 / `regs->ip` | `args[0]` | virtual CALL frame |
 | --- | --- | --- | --- |
@@ -738,7 +746,7 @@ mode 2 和 mode 5 的 sandbox 退出及内部返回流程相同：
    `regs->ax`，不截断参数、不对返回值做有符号 32 位扩展。
 5. `advance_after_known_call()` 读取 `*(unsigned long *)regs->sp` 作为 continuation，
    然后执行 `regs->sp += 8` 和 `regs->ip = continuation`。
-6. 更新后的完整 `pt_regs` 保存到当前 `kd_exec_frame`，同一个 JIT artifact 再次
+6. 更新后的完整 `kd_regs` 保存到当前 `kd_exec_frame`，同一个 JIT artifact 再次
    通过 wrapper 进入；executor 先重新写入该 frame 的 GS base/logical
    task，dispatcher 再直接跳到 continuation label。
 
@@ -753,7 +761,7 @@ unlock 的 OOO 分支还绕过普通 known-call 的上限检查；这不是整�
 
 第 17 次待处理 CALL 尚未执行时，`kd_jit_call_limit_native()` 检查 frame/锁记录、
 无在途 native/remote 请求、原 waiter 栈内的非零返回字以及 callee/return 的源码
-驻留；hostcall 另复用 manifest 校验，但不调用服务。成功后保留完整 `pt_regs`、
+驻留；hostcall 另复用 manifest 校验，但不调用服务。成功后保留完整 `kd_regs`、
 callee RIP 和 CALL RSP，不弹出 `[RSP]`；清除前一条已完成控制调用的 phase，保存
 当前 continuation，返回已有的 `KD_EXE_RUN_NATIVE`。原 waiter 从 callee 入口开始
 执行，按正常 CALL ABI 返回后完成原生后缀，unlock 仍等待真实 owner ACK。
@@ -773,7 +781,7 @@ native suffix，必须按 [历史：使用指南 6.13](https://github.com/hailon
 ### 9.1 普通 CALL miss 的寄存器观察
 
 `KD_NATIVE_REGISTERS=1` 为 `test_10_native_resume.sh` 增加默认关闭的测试探针，
-不修改 wrapper 或生产 `pt_regs` 布局。捕获函数 `kd_resume_register_capture`
+不修改 wrapper 或生产 `kd_regs` 布局。捕获函数 `kd_resume_register_capture`
 是独立汇编 callee，在任何 C prologue 前存储 16 个 GPR，随后按内核
 `ASM_RET` 返回。caller 保存并恢复被写入标记的 callee-saved 寄存器；RBP
 从未改写，额外使用 64 字节原 waiter 的虚拟/原生栈，CALL 再压入八字节返回地址。
@@ -838,7 +846,7 @@ native 注册只接受匹配后继的 spin 包，不能借此恢复通用 ACQUIR
 具体执行流、单元与 live 观测边界见 [历史：受检 spin 续跑](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/spin_protocols.md#611-spin-获取后的受检续跑)。
 
 `KD_JIT_CAPS` 在同一有效设备 lease 上查询这一固定运行时约定。它是独立的
-16 字节 ioctl 输出，不占用 `pt_regs`、两元素 args、64 字节 entry 或 24 字节
+16 字节 ioctl 输出，不占用 `kd_regs`、两元素 args、64 字节 entry 或 24 字节
 上传头；也不新增 flags 保存或代码版本保证。字段、兼容处理及使用命令集中在
 上述栈检查指南。版本 2 复用原保留字段报告模块 per-CPU 预留区大小，不新增
 wrapper 参数；该范围能力与可选的 mutex 栈检查是不同约定。
@@ -858,9 +866,13 @@ A 早释放由真实 owner 回调处理，B owner 不变；旧 combiner 在执�
 恢复迁移/抢占状态，不把 spin 的 pin 生命周期套用到 mutex。
 
 当前 frame/context/continuation 为 648/5208/704 字节，spin node 为 128 字节、
-64 字节对齐。continuation 按 64 字节对齐，frame 起于偏移 24，寄存器包起于 96；
-内部kind使用单字节，汇编轮询的result仍为32位，IP/SP在记录偏移224/248共用一行。
-等待和恢复汇编从 `offsetof` 取得偏移，两种 wrapper 的 `pt_regs` 内部布局与输入 ABI 不变。
+64 字节对齐。continuation 的 frame 起于偏移 0，40 字节头后紧跟 `kd_regs`；
+IP/SP/BP 位于 40/48/56，与入口 RIP、锁地址、entry ABI、packet state 和 frame 状态
+同处第一条 64 字节缓存行。五个 JIT 虚拟 GPR backing 字段位于 64..96，处于第二行；
+regs_ref、GS、逻辑 task 和 parent 位于 208..232，共用另一行。
+只有 ROOT/VIRTUAL 与入口解码两项队列内部标记共用一字节，精确状态及 ABI 宽度不变。
+result 仍为 32 位，位于 664；retired 位于 668，不与热 frame 行合并。
+等待和恢复汇编从 `offsetof` 取得偏移，两种 wrapper 使用同一个新包。
 每 possible CPU 一次预分配 20 KiB，低端 12 KiB 存放 12 条 continuation，
 高端 8 KiB 为物理 waiter 等待栈。栈头和记录合计 8512 字节，初始化时在低端区域
 按 CPU 选择 64 字节对齐的起点，容量和记录内偏移不变；释放使用原始分配基址。
@@ -871,7 +883,7 @@ node 首行保留链接、execution 与预取地址，通知字段位于第二�
 完整分配、wrapper 栈区与数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)，
 不是动态栈峰值或任意深度安全证明。生产 spin 的 node、combiner 与恢复路径引用
 同一份包；frame 的物理链与包引用见 [Frame 协议](design/frames.md#91-frames-and-lock-ledger)。
-`pt_regs` 和两元素 args ABI 未改变；mutex 的最小状态与独立 FULL 生命周期见 1.0 节。
+软件包已升级 layout 2，两元素 args ABI 未改变；mutex 的最小状态与独立 FULL 生命周期见 1.0 节。
 精确节点预留、OOO、远端发布和 readmission 约束见 DESIGN 第 4/9 节；
 相关测试参数与失败记录集中在使用/验收文档，不在 ABI 中复制历史流水。
 
@@ -893,7 +905,7 @@ spin 成功代理使用 `kd_spin_restore_request(..., mode=0)`；mutex COMPLETE 
 `kd_mutex_resume_completed()` 的三字段恢复，FULL/旧 ABI 使用
 `jump_to_saved_regs()`。以下只描述 FULL/旧 ABI 的寄存器与续点语义：
 
-1. 从 `pt_regs` 装入 R15、R14、R13、R12、RBP、RBX、R11、R10、R9、R8、
+1. 从 `kd_regs` 装入 R15、R14、R13、R12、RBP、RBX、R11、R10、R9、R8、
    RAX、RCX、RDX、RSI、RDI。
 2. 把真实 RSP 切换为 `regs->sp`。
 3. 执行 `retq`，从 virtual CALL frame 栈顶取得 post-unlock RIP。
@@ -1016,7 +1028,7 @@ API 的 callee RIP 和返回栈。Linux 在原 waiter 上返回 `-EINTR` 时，�
    普通 miss 的 native callee 需要其中的返回地址，不能提前弹出。
 5. 新增返回 JIT 的可恢复出口时，必须把 post-call RIP 加入入口 dispatcher 的
    continuation label 集合；普通 CALL miss 续跑原生代码，不重新进入 dispatcher。
-6. native handler 只能通过 `pt_regs` 读取 guest 参数、写回明确声明的结果，
+6. native handler 只能通过 `kd_regs` 读取 guest 参数、写回明确声明的结果，
    且必须定义失败、重试和 side-effect 语义。
 7. `args[0]`/`args[1]` 在入口时必须分别为 waiter kernel GS base 和 logical
    task，每次 continuation 都必须重新安装；返回后 `args[1]` 是 0/1 body witness，
@@ -1024,5 +1036,5 @@ API 的 callee RIP 和返回栈。Linux 在原 waiter 上返回 `-EINTR` 时，�
 8. 不得依赖硬件 FS/GS 切换。GS 使用固定 origin base，`current_task` 使用 logical
    waiter；等待结果时不得解抢占，IRQ/NMI 和 native service 的上下文仍有边界。
 9. EFLAGS 和 SIMD/FPU 状态仍不是完整的跨边界 ABI。
-10. 修改 `struct pt_regs` 偏移、wrapper push 顺序或 `Stack_*` 宏时必须同步修改
+10. 修改 `struct kd_regs` 偏移、wrapper push 顺序或 `Stack_*` 宏时必须同步修改
    三者，并反汇编最终 `jit.bin` 验证实际编码。

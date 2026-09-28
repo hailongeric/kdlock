@@ -160,7 +160,7 @@ int kd_mutex_prepare(struct mutex *lock, unsigned long ip, unsigned int abi)
 }
 EXPORT_SYMBOL_GPL(kd_mutex_prepare);
 
-static int kd_jit_begin_call(struct kd_exec_frame *frame, struct pt_regs *regs)
+static int kd_jit_begin_call(struct kd_exec_frame *frame, struct kd_regs *regs)
 {
 	if (!frame || !regs || !regs->sp || !kd_exec_frame_validate(frame))
 		return -EINVAL;
@@ -169,7 +169,7 @@ static int kd_jit_begin_call(struct kd_exec_frame *frame, struct pt_regs *regs)
 }
 
 static int kd_jit_advance_call(struct kd_exec_frame *frame,
-			       struct pt_regs *regs)
+			       struct kd_regs *regs)
 {
 	unsigned long return_ip;
 
@@ -184,7 +184,7 @@ static int kd_jit_advance_call(struct kd_exec_frame *frame,
 	return 0;
 }
 
-int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,
+int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct kd_regs *regs,
 				 struct kd_exec_frame *frame)
 {
 	int ret;

@@ -11,10 +11,10 @@ MODULE_PARM_DESC(spin_prefetch,
 /* Called with initialized, exclusively owned request state. Physical callers
  * pass their inline packet directly; virtual children pass the retained parent
  * packet and always publish FULL. Thus MINIMAL hints use the aligned inline
- * packet, whose IP/SP cache-line sharing is a build-time invariant.
+ * packet, whose IP/SP/BP and hot frame sharing is a build-time invariant.
  * No register copy and no extra task/request reference is introduced. */
 static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
-				     struct pt_regs *regs)
+				     struct kd_regs *regs)
 {
 	struct kd_exec_frame *frame = &node->execution->frame;
 	struct task_struct *task;
@@ -49,24 +49,23 @@ static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
 static void kd_spin_prefetch_lookup(struct kd_spin_node *node)
 {
 	struct kd_exec_frame *frame = &node->execution->frame;
-	struct pt_regs *regs = READ_ONCE(frame->regs_ref);
+	struct kd_regs *regs = READ_ONCE(frame->regs_ref);
 	struct task_struct *task;
 	unsigned long sp, base;
 	unsigned int offset;
 
 	if (!regs)
 		return;
+	prefetchw(frame);
+	prefetchw(&frame->regs_ref);
 	if (frame->packet_state == KD_PACKET_FULL) {
 		for (offset = 0; offset < sizeof(*regs); offset += L1_CACHE_BYTES)
 			prefetchw((char *)regs + offset);
 	} else {
-		prefetchw(&regs->bp);
-		prefetchw(&regs->ip);
-		prefetchw(&regs->sp);
+		/* Inline MINIMAL already shares the hot frame line. The five
+		 * virtual GPR slots remain active JIT backing even for clobber. */
+		prefetchw(&regs->r15);
 	}
-	/* The request prefix and admission header occupy two cache lines. */
-	prefetchw(node->execution);
-	prefetchw(&frame->packet_state);
 	if (READ_ONCE(frame->complex_ready)) {
 		prefetchw(&frame->jit_lock_addr[0]);
 		prefetchw(&frame->jit_lock_kind[0]);
@@ -89,7 +88,7 @@ static void kd_spin_prefetch_lookup(struct kd_spin_node *node)
 static void kd_spin_prefetch_request(struct kd_spin_node *node)
 {
 	struct kd_exec_frame *frame;
-	struct pt_regs *regs;
+	struct kd_regs *regs;
 	unsigned long sp;
 	unsigned int offset, mode = READ_ONCE(kd_spin_prefetch_mode);
 
@@ -101,19 +100,20 @@ static void kd_spin_prefetch_request(struct kd_spin_node *node)
 	}
 	frame = &node->execution->frame;
 	regs = node->prefetch_regs;
-	/* The request prefix and admission header occupy two cache lines. */
-	prefetchw(node->execution);
-	prefetchw(&frame->packet_state);
+	/* One line contains request identity/state and the continuation triple.
+	 * The retained task/GS/parent/packet pointers share a second line. */
+	prefetchw(frame);
+	prefetchw(&frame->regs_ref);
 	if (!regs)
 		return;
 	if (node->prefetch_full) {
 		for (offset = 0; offset < sizeof(*regs); offset += L1_CACHE_BYTES)
 			prefetchw((char *)regs + offset);
 	} else {
-		/* MINIMAL is inline: IP also warms SP on the same cache line.
-		 * Keep both packet lines ahead of admission and COMPLETE writes. */
-		prefetchw(&regs->bp);
-		prefetchw(&regs->ip);
+		/* MINIMAL is inline; its triple was warmed with the frame above.
+		 * This adjacent line holds all five virtual GPR spill slots, whose
+		 * accesses were observed in the generated hash loop. */
+		prefetchw(&regs->r15);
 	}
 	if (node->prefetch_complex) {
 		prefetchw(&frame->jit_lock_addr[0]);

@@ -167,6 +167,10 @@ static void test_chunk_session(void)
 	assert(binary);
 	for (size_t i = 0; i < sizeof(image); i++)
 		image[i] = (unsigned char)i;
+	memcpy(image + 9, "KDWB002", 7);
+	memcpy(image + 25, "KDWC002", 7);
+	memcpy(image + 41, "KDAB", 4);
+	image[45] = exe.entry_abi;
 	assert(fwrite(image, 1, sizeof(image), binary) == sizeof(image));
 	assert(!fclose(binary));
 	sys_fd = open("transport", O_CREAT | O_RDWR | O_CLOEXEC, 0600);

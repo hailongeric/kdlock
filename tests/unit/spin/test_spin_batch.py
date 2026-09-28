@@ -19,8 +19,8 @@ def main():
     spin = read_source(ROOT / "kernel_module/kd_spinlock.c")
     registry = read_source(ROOT / "kernel_module/execution/registry_lifecycle.inc")
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
-    ptrace = (kernel / "arch/x86/include/asm/ptrace.h").read_text()
-    types = definition(ptrace.split("#else /* __i386__ */", 1)[1], "struct pt_regs {").rstrip() + ";\n"
+    ptrace = (ROOT / "include/kd_regs.h").read_text()
+    types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     types += (ROOT / "include/exe_info.h").read_text()
     types += (ROOT / "include/kd_jit_batch.h").read_text()
     types += "\n#define KD_EXEC_MAX_LOCK_DEPTH 8\n#define KD_SPIN_DIAG_SLOTS 32\n"

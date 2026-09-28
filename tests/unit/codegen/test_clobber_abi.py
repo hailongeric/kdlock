@@ -55,14 +55,14 @@ FIXTURE = r'''
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-struct pt_regs { unsigned long w[21]; };
+struct kd_regs { unsigned long w[21]; };
 #define __KERNEL__
 #include "kd_jit_batch.h"
 extern void kd_spin_batch_enter(void *, struct kd_jit_batch_call *(*)(void *));
 #include "caller.h"
-extern void main_wrapper(struct pt_regs *, unsigned long *);
-extern void legacy_wrapper(struct pt_regs *, unsigned long *);
-static struct pt_regs mixed_packets[4];
+extern void main_wrapper(struct kd_regs *, unsigned long *);
+extern void legacy_wrapper(struct kd_regs *, unsigned long *);
+static struct kd_regs mixed_packets[4];
 static unsigned long mixed_logic[4][2], mixed_stacks[4][32];
 static unsigned int mixed_states[4], mixed_index, mixed_first, mixed_unified;
 static struct kd_jit_batch_call mixed_call;
@@ -77,8 +77,8 @@ static struct kd_jit_batch_call *mixed_step(void *opaque) {
             assert(mixed_logic[previous][1]==1 && mixed_call.args[1]==1);
             assert(mixed_call.args[0]==(abi?7:1));
             assert(mixed_states[previous]==(abi?2:0));
-            assert(v[16]==(abi?0x7000:0x4000));
-            assert(v[19]==(unsigned long)&mixed_stacks[previous][16]+(abi?8:0));
+            assert(v[0]==(abi?0x7000:0x4000));
+            assert(v[1]==(unsigned long)&mixed_stacks[previous][16]+(abi?8:0));
         }
         if (mixed_index==4) return NULL;
         unsigned int index=mixed_index++, abi=(index+mixed_first)&1;
@@ -101,9 +101,9 @@ static void check_mixed_batches(void) {
         memset(mixed_logic,0,sizeof(mixed_logic));
         for(unsigned int i=0;i<4;i++) {
             memset(&mixed_packets[i],0xde,sizeof(mixed_packets[i]));
-            mixed_packets[i].w[4]=(unsigned long)mixed_logic[i];
-            mixed_packets[i].w[16]=0x3000;
-            mixed_packets[i].w[19]=(unsigned long)&mixed_stacks[i][16];
+            mixed_packets[i].w[2]=(unsigned long)mixed_logic[i];
+            mixed_packets[i].w[0]=0x3000;
+            mixed_packets[i].w[1]=(unsigned long)&mixed_stacks[i][16];
             mixed_stacks[i][16]=0x7000;
             mixed_states[i]=(i+mixed_first)&1;
         }
@@ -112,7 +112,7 @@ static void check_mixed_batches(void) {
         else {
             struct kd_jit_batch_call *call;
             while ((call=mixed_step(mixed_packets)))
-                ((void (*)(struct pt_regs *,unsigned long *))
+                ((void (*)(struct kd_regs *,unsigned long *))
                  ((char *)call->code-KD_JIT_BATCH_OFFSET))(call->regs,call->args);
         }
         assert(mixed_index==4);
@@ -142,15 +142,15 @@ int main(void) {
     assert((unsigned char) *((char *)main_wrapper+45)==1);
     for(unsigned long seed=1;seed<=32;seed++) {
         for(unsigned long mode=0;mode<4;mode++) {
-            struct pt_regs packet;
+            struct kd_regs packet;
             unsigned long logical[2]={mode,0}, stack[32];
             unsigned int state=1;
             for(int i=0;i<21;i++) packet.w[i]=seed*0x1234567UL+i;
-            packet.w[4]=(unsigned long)logical;
-            packet.w[16]=0x3000;
-            packet.w[19]=(unsigned long)&stack[16];
+            packet.w[2]=(unsigned long)logical;
+            packet.w[0]=0x3000;
+            packet.w[1]=(unsigned long)&stack[16];
             stack[16]=0x7000;
-            struct pt_regs before=packet;
+            struct kd_regs before=packet;
             struct kd_jit_batch_call call={
                 .regs=&packet,.args={0x8000,0x9000},
                 .code=(char *)main_wrapper+32,.lock=0x6000,.unlock=0x4000,
@@ -159,29 +159,29 @@ int main(void) {
             kd_jit_clobber_call_v1(&call);
             assert(logical[1]==(mode!=3));
             assert(call.args[1]==(mode!=3));
-            assert(packet.w[4]==before.w[4]);
+            assert(packet.w[2]==before.w[2]);
             if(mode==0 || mode==3) {
                 assert(call.args[0]==(mode==0?7:6));
                 assert(state==(mode==0?2:1));
-                assert(packet.w[16]==(mode==0?0x7000:0x3000));
-                assert(packet.w[19]==before.w[19]+(mode==0?8:0));
+                assert(packet.w[0]==(mode==0?0x7000:0x3000));
+                assert(packet.w[1]==before.w[1]+(mode==0?8:0));
                 /* COMPLETE validates only three words, but executed JIT
                  * spills now share the preallocated packet. A refusal must
                  * still preserve every input byte because no body ran. */
-                for(int i=0;i<21;i++) if(i!=4&&i!=16&&i!=19) {
+                for(int i=0;i<21;i++) if(i!=0&&i!=1&&i!=2) {
                     unsigned long expected=before.w[i];
-                    if(mode==0 && i<4) expected=0x101UL+i;
-                    if(mode==0 && i==6) expected=0x107;
+                    if(mode==0 && i>=3 && i<7) expected=0x101UL+i-3;
+                    if(mode==0 && i==7) expected=0x107;
                     assert(packet.w[i]==expected);
                 }
             } else {
                 assert(state==0 && call.args[0]==(mode==1?5:1));
-                assert(packet.w[16]==0x5000 && packet.w[19]==before.w[19]);
-                for(int i=0;i<4;i++) assert(packet.w[i]==0x101UL+i);
-                assert(packet.w[5]==0x106 && packet.w[6]==0x107);
-                assert(packet.w[7]==0x10d && packet.w[8]==0x10c && packet.w[9]==0x10b);
-                assert(packet.w[10]==mode && packet.w[11]==0x108 && packet.w[12]==0x109);
-                assert(packet.w[13]==0x10a && packet.w[14]==0x6000);
+                assert(packet.w[0]==0x5000 && packet.w[1]==before.w[1]);
+                for(int i=0;i<4;i++) assert(packet.w[i+3]==0x101UL+i);
+                assert(packet.w[8]==0x106 && packet.w[7]==0x107);
+                assert(packet.w[9]==0x10d && packet.w[10]==0x10c && packet.w[11]==0x10b);
+                assert(packet.w[12]==mode && packet.w[13]==0x108 && packet.w[14]==0x109);
+                assert(packet.w[15]==0x10a && packet.w[16]==0x6000);
             }
         }
         for(int i=0;i<16;i++) inputs[i]=seed*987+i;

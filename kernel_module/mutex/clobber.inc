@@ -5,7 +5,7 @@
 static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_mutex_resume_completed(struct kd_mutex_node *node)
 {
-	struct pt_regs full;
+	struct kd_regs full;
 	bool native = READ_ONCE(node->native_resume);
 	bool minimal = node->packet_state == KD_PACKET_COMPLETE;
 	unsigned long sp = node->regs.sp, ip = node->regs.ip, bp = node->regs.bp;

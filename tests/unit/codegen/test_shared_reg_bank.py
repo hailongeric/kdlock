@@ -31,8 +31,8 @@ class SharedRegisterBankTests(unittest.TestCase):
     def test_aliases_in_both_directions_before_exit(self):
         # A real wrapper invocation must expose each write immediately through
         # the other addressing form. Failure traps before any export can hide it.
-        slots = {"R15": 0, "R14": 8, "R13": 16, "R12": 24,
-                 "RBP": 32, "R11": 48, "RSP": 152}
+        slots = {"R15": 24, "R14": 32, "R13": 40, "R12": 48,
+                 "RBP": 16, "R11": 56, "RSP": 8}
         body = ["cmp REG_BANK, Stack_PT_REG", "jne bad_bank"]
         for name, offset in slots.items():
             body += [f"mov Stack_{name}, {0x100 + offset}",
@@ -81,7 +81,7 @@ class SharedRegisterBankTests(unittest.TestCase):
         stack_refs = []
 
         def initialize(regs, stack):
-            regs[4] = 0x8000
+            regs[2] = 0x8000
             stack_refs.append(stack)
 
         def resume(regs, args, stack):
@@ -89,23 +89,23 @@ class SharedRegisterBankTests(unittest.TestCase):
                 return False
             self.assertFalse(seen, "hostcall prefix replayed")
             seen.append(1)
-            self.assertEqual(regs[0:4], [0x12345678, 0x1234, 19, 17])
-            self.assertEqual(regs[6], 0x1234569a)
-            self.assertEqual(regs[9], 0x8000)
+            self.assertEqual(regs[3:7], [0x12345678, 0x1234, 19, 17])
+            self.assertEqual(regs[7], 0x1234569a)
+            self.assertEqual(regs[11], 0x8000)
             self.assertEqual(stack[9], 0x1234)
-            self.assertEqual(regs[19], ctypes.addressof(stack) + 7 * 8)
+            self.assertEqual(regs[1], ctypes.addressof(stack) + 7 * 8)
             self.assertEqual(stack[7], 0x1000 + call_at + 5)
             # Substitute only the typed hostcall's result/virtual return.
-            regs[10], regs[16], regs[19] = 42, stack[7], regs[19] + 8
+            regs[12], regs[0], regs[1] = 42, stack[7], regs[1] + 8
             return True
 
         regs, args = run_image(assembly, [0x1000], initialize, resume=resume)[0]
         self.assertEqual(seen, [1])
-        self.assertEqual(regs[6], 0x1234569a + 42)
-        self.assertEqual(regs[3], 36)
-        self.assertEqual(regs[0], 0x12345678 + 0x1234)
-        self.assertEqual(regs[4], 0x8000)
-        self.assertEqual(regs[19], ctypes.addressof(stack_refs[0]) + 9 * 8)
+        self.assertEqual(regs[7], 0x1234569a + 42)
+        self.assertEqual(regs[6], 36)
+        self.assertEqual(regs[3], 0x12345678 + 0x1234)
+        self.assertEqual(regs[2], 0x8000)
+        self.assertEqual(regs[1], ctypes.addressof(stack_refs[0]) + 9 * 8)
         self.assertEqual(args[1], 1)
 
     def test_budget_exit_keeps_bank_and_logical_r11(self):
@@ -117,12 +117,12 @@ class SharedRegisterBankTests(unittest.TestCase):
                                     b"MOV     Stack_BUDGET, 1\n")
 
         def initialize(regs, _):
-            regs[6] = 0xabcdef0123456789
+            regs[7] = 0xabcdef0123456789
 
         regs, args = run_image(assembly, [0x1000], initialize)[0]
         self.assertEqual(args, [4, 1])
-        self.assertEqual(regs[16], 0x1000)
-        self.assertEqual(regs[6], 0xabcdef0123456789)
+        self.assertEqual(regs[0], 0x1000)
+        self.assertEqual(regs[7], 0xabcdef0123456789)
 
 
 if __name__ == "__main__":

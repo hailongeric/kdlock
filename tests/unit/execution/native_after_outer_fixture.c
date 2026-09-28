@@ -12,11 +12,7 @@ typedef uint16_t u16;
 #include <string.h>
 #include "kd_source_api.h"
 
-struct pt_regs {
-	/* Use the complete x86 packet so a helper cannot silently clobber GPRs. */
-	unsigned long r15, r14, r13, r12, bp, bx, r11, r10, r9, r8;
-	unsigned long ax, cx, dx, si, di, orig_ax, ip, cs, flags, sp, ss;
-};
+#include "../../../include/kd_regs.h"
 struct task_struct {
 	int pid;
 	void *stack;
@@ -168,7 +164,7 @@ static void kd_mutex_note_nested_jit(void)
 }
 static int kd_mutex_nested_lock(struct mutex *lock);
 static int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock,
-				       struct pt_regs *regs,
+				       struct kd_regs *regs,
 				       struct kd_exec_frame *frame)
 {
 	(void)lock;
@@ -184,7 +180,7 @@ static int kd_spin_jit_nested_unlock_ctx(raw_spinlock_t *lock,
 	return -EOPNOTSUPP;
 }
 static int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock,
-					    struct pt_regs *regs,
+					    struct kd_regs *regs,
 					    struct kd_exec_frame *frame)
 {
 	(void)lock;
@@ -345,7 +341,7 @@ static void check_pending_after_outer(bool mutex)
 	const int errors[] = { -ENOMEM, -E2BIG, -EIO, -EINVAL, -EDEADLK };
 	unsigned long return_ip = 0x900;
 	struct kd_exec_frame f;
-	struct pt_regs staged;
+	struct kd_regs staged;
 	int phase, ret, before;
 
 	for (phase = KD_CALL_PENDING; phase <= KD_CALL_COMPLETE; phase++) {
@@ -406,7 +402,7 @@ static void check_mutex_ooo(void)
 {
 	struct kd_exec_frame f = frame(true);
 	unsigned long *return_ip = &waiter_stack[32];
-	struct pt_regs regs = { .ip = mutex_unlock_addr,
+	struct kd_regs regs = { .ip = mutex_unlock_addr,
 				.sp = (unsigned long)return_ip,
 				.di = (unsigned long)&a };
 	int ret;
@@ -424,7 +420,7 @@ static void check_mutex_ooo(void)
 	f = frame(true);
 	CHECK(kd_exec_frame_record_event(&f, KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
-	regs = (struct pt_regs){ .ip = mutex_unlock_addr,
+	regs = (struct kd_regs){ .ip = mutex_unlock_addr,
 				 .sp = (unsigned long)return_ip,
 				 .di = (unsigned long)&b };
 	ret = handle_known_call(&regs, f.outer_lock_addr);
@@ -450,7 +446,7 @@ static void check_mutex_stack_changes(void)
 	 * exercises the handoff marker/ledger, not actual Linux concurrency. */
 	for (int offset = -8; offset <= KD_MUTEX_CALL_STACK_BYTES; offset++) {
 		struct kd_exec_frame f = frame(true);
-		struct pt_regs expected;
+		struct kd_regs expected;
 		int before = unlocked, result;
 		bool token = offset < 0;
 		bool changed = !token && offset < KD_MUTEX_CALL_STACK_BYTES;
@@ -494,7 +490,7 @@ static void check_mutex_stack_refusals(void)
 	struct kd_mutex_call_stack saved;
 	unsigned long *word = &waiter_stack[32];
 	struct kd_exec_frame f;
-	struct pt_regs expected;
+	struct kd_regs expected;
 	int before;
 
 	/* Valid CALL, insufficient window: no unlock has happened and the waiter
@@ -621,9 +617,9 @@ static void check_completed_mutex_native(void)
 static void check_call_register_preservation(void)
 {
 	unsigned long stack[] = { 0x1234, 0x5678 };
-	unsigned long words[sizeof(struct pt_regs) / sizeof(unsigned long)];
+	unsigned long words[sizeof(struct kd_regs) / sizeof(unsigned long)];
 	struct kd_exec_frame f = frame(false);
-	struct pt_regs regs, expected;
+	struct kd_regs regs, expected;
 
 	for (unsigned int i = 0; i < sizeof(words) / sizeof(words[0]); i++)
 		words[i] = 0x100 + i;
@@ -827,7 +823,7 @@ static void check_mutex_call_pair(void)
 	for (unsigned int endpoint = 0; endpoint < 3; endpoint++)
 	for (unsigned int contended = 0; contended < 2; contended++) {
 		struct kd_exec_frame f = frame(true);
-		struct pt_regs expected;
+		struct kd_regs expected;
 		unsigned long *word = &waiter_stack[32];
 		int before_unlock = unlocked;
 

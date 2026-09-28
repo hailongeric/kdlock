@@ -18,9 +18,8 @@ from test_spin_shadow import definition
 
 def production():
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
-    ptrace = (kernel / "arch/x86/include/asm/ptrace.h").read_text()
-    ptrace = ptrace.split("#else /* __i386__ */", 1)[1]
-    types = definition(ptrace, "struct pt_regs {").rstrip() + ";\n"
+    ptrace = (ROOT / "include/kd_regs.h").read_text()
+    types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     types += (
         definition(
             read_source((ROOT / "include/kd_spin_entry.h")), "struct kd_spin_ref {"
@@ -52,9 +51,9 @@ def production():
             "bool kd_exec_context_busy(void)",
             "bool kd_exec_context_occupied(void)",
             "static struct kd_exec_frame *kd_exec_frame_push_internal(",
-            "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
-            "kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,",
-            "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)",
+            "kd_exec_frame_push(const struct kd_regs *regs, unsigned long entry_ip,",
+            "kd_exec_frame_push_borrowed(struct kd_regs *regs, unsigned long entry_ip,",
+            "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)",
             "static __always_inline int kd_exec_complete_single_spin(struct kd_exec_frame *frame)",
             "int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame)",
             "int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,",

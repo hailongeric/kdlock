@@ -199,20 +199,20 @@ def main():
             "int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)",
         ),
         "kernel_module/kd_lock.c": (
-            "static int kd_jit_begin_call(struct kd_exec_frame *frame, struct pt_regs *regs)",
+            "static int kd_jit_begin_call(struct kd_exec_frame *frame, struct kd_regs *regs)",
             "static int kd_jit_advance_call(struct kd_exec_frame *frame,",
-            "int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,",
+            "int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct kd_regs *regs,",
             "int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,",
         ),
         "kernel_module/exe.c": (
-            "static int advance_after_known_call(struct pt_regs *regs)",
+            "static int advance_after_known_call(struct kd_regs *regs)",
             "static int advance_and_save_continuation(struct kd_exec_frame *frame,",
             "static int finish_acquired_spin_call(struct kd_exec_frame *frame,",
             "static int finish_known_lock_call(struct kd_exec_frame *frame,",
             "static int kd_mutex_stack_prepare(struct kd_exec_frame *frame,",
             "static int kd_mutex_stack_finish(struct kd_exec_frame *frame,",
             "static int handle_known_mutex_call(struct kd_exec_frame *frame,",
-            "static int handle_known_call(struct pt_regs *regs,",
+            "static int handle_known_call(struct kd_regs *regs,",
         ),
     }
     for name, signatures in functions.items():

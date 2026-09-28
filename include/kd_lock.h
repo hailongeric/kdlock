@@ -1,6 +1,7 @@
 #ifndef KD_LOCK_H
 #define KD_LOCK_H
 
+#include "kd_regs.h"
 /*
  * kd_lock.h — kdlock hook declarations.
  *
@@ -44,7 +45,7 @@ void __kd_mutex_unlock_clobber_v1(struct mutex *, unsigned long, unsigned long,
 				  unsigned long);
 
 /* Known-call handlers used by the high-lock JIT continuation path. */
-int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct pt_regs *regs,
+int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct kd_regs *regs,
 				 struct kd_exec_frame *frame);
 int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
 				   struct kd_exec_frame *frame);

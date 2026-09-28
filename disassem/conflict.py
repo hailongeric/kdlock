@@ -1,5 +1,5 @@
 # Map virtual special registers onto the bounded physical scratch pool.
-# GPR spills address shared pt_regs through reserved physical R11; context and
+# GPR spills address shared kd_regs through reserved physical R11; context and
 # control slots stay on the wrapper stack. R11 is never in this physical pool.
 # Restore stable mappings at block boundaries so dispatch/exits find SP/BP.
 import diagnostics

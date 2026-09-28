@@ -36,8 +36,8 @@ class WrapperInputs(unittest.TestCase):
                     self.assertEqual(len(re.findall(r'mov\s+QWORD PTR \[rbp-0x78\],rax', disassembly)), 2*gs)
                     self.assertEqual(len(re.findall(r'mov\s+QWORD PTR \[rbp-0x80\],rax', disassembly)), 2*task)
                     image = (folder/'asm/jit.bin').read_bytes()
-                    self.assertEqual(image[9:16], b'KDWB001')
-                    self.assertEqual(image[25:32], b'KDWC001')
+                    self.assertEqual(image[9:16], b'KDWB002')
+                    self.assertEqual(image[25:32], b'KDWC002')
                     self.assertEqual(image[41:46], b'KDAB\x01')
             finally:
                 os.chdir(previous)

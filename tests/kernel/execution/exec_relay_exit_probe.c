@@ -24,7 +24,7 @@ static atomic_t kd_relay_exit_claimed = ATOMIC_INIT(0);
 static struct {
 	struct kd_exec_frame *frame;
 	int logical_pid;
-	struct pt_regs expected_regs;
+	struct kd_regs expected_regs;
 	struct pid *pid;
 	unsigned int cpu, preempt;
 	bool irq, valid, after_ack;

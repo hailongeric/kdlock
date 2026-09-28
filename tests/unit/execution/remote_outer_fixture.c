@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Production protocol with deterministic CPU switches, not a memory-model test.
- * Full pt_regs comparisons include software flags only, not hardware restore. */
+ * Full kd_regs comparisons include software flags only, not hardware restore. */
 #include <errno.h>
 #include <stdint.h>
 typedef uint8_t u8;
@@ -61,12 +61,12 @@ struct mutex {
 	int unused;
 };
 #include "remote_types.h"
-struct kd_spin_continuation { struct { struct pt_regs *regs_ref; } frame; };
+struct kd_spin_continuation { struct { struct kd_regs *regs_ref; } frame; };
 struct kd_spin_node { struct kd_spin_continuation *execution; };
 
-_Static_assert(sizeof(struct pt_regs) == 168, "guest x86-64 pt_regs size");
-_Static_assert(offsetof(struct pt_regs, ip) == 0x80, "guest RIP offset");
-_Static_assert(offsetof(struct pt_regs, sp) == 0x98, "guest RSP offset");
+_Static_assert(sizeof(struct kd_regs) == 168, "guest x86-64 kd_regs size");
+_Static_assert(offsetof(struct kd_regs, ip) == 0, "guest RIP offset");
+_Static_assert(offsetof(struct kd_regs, sp) == 8, "guest RSP offset");
 
 enum { CPUS = KD_EXEC_MAX_LOCK_DEPTH, WAITER_CPU = CPUS };
 static _Thread_local unsigned int cpu;
@@ -80,7 +80,7 @@ static struct list_head kd_native_frames;
 static struct task_struct logical = { 10 }, executors[CPUS];
 static _Thread_local struct task_struct *current;
 static struct kd_exec_frame frames[CPUS];
-static struct pt_regs packets[CPUS];
+static struct kd_regs packets[CPUS];
 static struct kd_exec_outer_unlock hooks[CPUS];
 static raw_spinlock_t locks[CPUS];
 static unsigned int live_frames;
@@ -245,7 +245,7 @@ void kd_spin_native_retire(struct kd_spin_ref *ref)
 		CHECK(!kd_exec_frame_validate(&frames[i]));
 	ends++;
 }
-int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
+int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)
 {
 	CHECK(!regs && frame == &frames[cpu] && frame->completion_seen);
 	CHECK(!frame->resume_target && !frame->native_request &&
@@ -464,8 +464,8 @@ static void check_remote_chain(unsigned int count, bool reverse)
 static void check_final_call(void)
 {
 	struct kd_spin_node node;
-	struct pt_regs regs;
-	struct pt_regs expected;
+	struct kd_regs regs;
+	struct kd_regs expected;
 
 	setup(2);
 	regs = frames[1].regs;
@@ -747,6 +747,6 @@ int main(void)
 	printf("remote outer production: %u checks, %u failures\n", checks,
 	       failures);
 	printf("remote packet/publication: regs=%zu packet_checks=%u done=%u\n",
-	       sizeof(struct pt_regs), packet_checks, done_publications);
+	       sizeof(struct kd_regs), packet_checks, done_publications);
 	return failures != 0;
 }

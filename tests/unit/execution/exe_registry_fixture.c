@@ -16,9 +16,7 @@
 #include "kd_hostcall.h"
 #include "kd_source_api.h"
 
-struct pt_regs {
-	unsigned long ax, di;
-};
+#include "../../../include/kd_regs.h"
 struct task_struct {
 	int tgid, pid;
 };
@@ -431,6 +429,10 @@ static void check_device(void)
 	CHECK(kd_dev_write_locked((char *)&packet, header + 1) == -EFAULT);
 	CHECK(!kd_exe_is_ready(0, key(0)));
 	fail_copy = 0;
+	memcpy((char *)exe->code_block + 9, "KDWB002", 7);
+	memcpy((char *)exe->code_block + 25, "KDWC002", 7);
+	memcpy((char *)exe->code_block + 41, "KDAB", 4);
+	((unsigned char *)exe->code_block)[45] = exe->entry_abi;
 	packet.head.offset = KD_CODE_BLOCK_SIZE - 1;
 	CHECK(kd_dev_write_locked((char *)&packet, header + 1) ==
 	      (ssize_t)header + 1);
@@ -447,6 +449,39 @@ static void check_device(void)
 	packet.head.status_code = KD_EXE_NORMAL;
 	CHECK(kd_dev_write_locked((char *)&packet, header + 1) == -EPERM);
 	kd_exe_exit();
+}
+
+/* Never publish old pt_regs-layout images, even through the ordinary FULL
+ * bridge. Staging chunks is allowed; only the complete matching directory
+ * grants NORMAL, and a rejected entry stays terminal. */
+static void check_packet_directory(void)
+{
+    struct { struct kd_recv_pkt head; unsigned char data[46]; } packet;
+    for (unsigned int abi = 0; abi <= 2; abi++) {
+        for (unsigned int fault = 0; fault < 5; fault++) {
+            reset(NORMAL);
+            CHECK(kd_exe_init() == 0);
+            kd_exe_add_abi(0, key(0), abi == 1 ? KD_EXE_LOCK_SPIN : KD_EXE_LOCK_MUTEX, abi);
+            packet = (__typeof__(packet)){ .head = { KD_EXE_UNINIT, 0, key(0), 0 } };
+            memcpy(packet.data + 9, "KDWB002", 7);
+            memcpy(packet.data + 25, "KDWC002", 7);
+            memcpy(packet.data + 41, "KDAB", 4);
+            packet.data[45] = abi;
+            if (fault == 1) packet.data[15] = '1';
+            if (fault == 2) packet.data[31] = '1';
+            if (fault == 3) memset(packet.data, 0, sizeof(packet.data));
+            if (fault == 4) packet.data[45] = (abi + 1) % 3;
+            size_t bytes = sizeof(packet.head) + sizeof(packet.data);
+            CHECK(kd_dev_write_locked((char *)&packet, bytes) == (ssize_t)bytes);
+            CHECK(!kd_exe_is_ready(0, key(0)));
+            packet.head.status_code = KD_EXE_NORMAL;
+            CHECK(kd_dev_write_locked((char *)&packet, bytes) ==
+                  (fault ? -EPROTO : (ssize_t)bytes));
+            CHECK(kd_exe_is_ready(0, key(0)) == !fault);
+            if (fault) CHECK(kd_dev_write_locked((char *)&packet, bytes) == -EPERM);
+            kd_exe_exit();
+        }
+    }
 }
 
 static void check_registration_reads(void)
@@ -601,6 +636,7 @@ int main(void)
 	check_pool(PARTIAL);
 	check_full_table();
 	check_device();
+	check_packet_directory();
 	check_registration_reads();
 	check_lookup_publication();
 	check_concurrent_registration();

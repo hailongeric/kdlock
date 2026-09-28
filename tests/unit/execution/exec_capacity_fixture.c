@@ -159,7 +159,7 @@ static void kd_source_frame_put(void)
 }
 
 static struct kd_exec_frame *
-counted_frame_push(const struct pt_regs *regs, unsigned long entry,
+counted_frame_push(const struct kd_regs *regs, unsigned long entry,
 		   unsigned long outer,
 		   unsigned int held, unsigned long gs,
 		   struct task_struct *task)
@@ -252,9 +252,9 @@ static int kd_spin_nested_shadow_remove(struct qspinlock *lock)
 	return shadow_error;
 }
 
-static struct pt_regs registers(unsigned int seed)
+static struct kd_regs registers(unsigned int seed)
 {
-	struct pt_regs regs;
+	struct kd_regs regs;
 	unsigned char *bytes = (unsigned char *)&regs;
 	unsigned int i;
 
@@ -265,7 +265,7 @@ static struct pt_regs registers(unsigned int seed)
 
 static struct kd_exec_frame *push(unsigned int index)
 {
-	struct pt_regs regs = registers(index);
+	struct kd_regs regs = registers(index);
 	struct kd_exec_context before = *kd_exec_current_context();
 	struct kd_exec_frame *frame;
 
@@ -297,7 +297,7 @@ static struct kd_exec_frame *push(unsigned int index)
 	return frame;
 }
 
-static void refused(const struct pt_regs *regs, unsigned long gs,
+static void refused(const struct kd_regs *regs, unsigned long gs,
 		    struct task_struct *task, unsigned int held)
 {
 	struct kd_exec_context before = *kd_exec_current_context();
@@ -313,7 +313,7 @@ static void refused(const struct pt_regs *regs, unsigned long gs,
 
 static void refused_pop(struct kd_exec_frame *frame, int error)
 {
-	struct pt_regs output = registers(71), before = output;
+	struct kd_regs output = registers(71), before = output;
 
 	REJECTS(kd_exec_frame_pop(frame, &output), error);
 	CHECK(!memcmp(&output, &before, sizeof(output)));
@@ -363,7 +363,7 @@ static bool refused_native_retirement(struct kd_exec_frame *frame)
 
 static void exercise(unsigned int depth)
 {
-	struct pt_regs regs = registers(99), output;
+	struct kd_regs regs = registers(99), output;
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
 	unsigned int i;
@@ -541,7 +541,7 @@ static void completion(void)
 	struct kd_exec_frame *frame = push(0);
 	struct kd_exec_outer_unlock hook = { .release = release_outer };
 	unsigned long locks[] = { 0x2000, 0x2001, 0x2002 };
-	struct pt_regs regs = registers(18);
+	struct kd_regs regs = registers(18);
 
 	if (!frame)
 		return;
@@ -729,7 +729,7 @@ static void waiter_exit_observer(bool after_ack, unsigned int behavior)
 {
 	struct kd_exec_frame *frame = push(0), remote = { 0 };
 	struct list_head routing;
-	struct pt_regs expected, output, shared;
+	struct kd_regs expected, output, shared;
 	unsigned long locks[2] = { 0x6000, 0x2000 };
 	bool successful = behavior == 0 || behavior == 2;
 	bool incoming_irq = fixture_irq;
@@ -815,7 +815,7 @@ static void reuse_single(void)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
-	struct pt_regs input = registers(42), expected = input, output;
+	struct kd_regs input = registers(42), expected = input, output;
 	unsigned long lock = 0x2000;
 
 	CHECK(!ctx->depth && !ctx->owner && !source_frames);
@@ -857,7 +857,7 @@ static void reuse_single(void)
 static void borrowed_packets(void)
 {
 	struct kd_exec_frame *frame, *child;
-	struct pt_regs packet = registers(17), expected, poison;
+	struct kd_regs packet = registers(17), expected, poison;
 	unsigned long lock = 0x2000;
 
 	for (unsigned int promote = 0; promote < 2; promote++) {
@@ -904,7 +904,7 @@ static void borrowed_packets(void)
 static void shared_requests(void)
 {
 	struct kd_spin_continuation *live[KD_SPIN_CONT_SLOTS], *root, *child;
-	struct pt_regs expected = registers(73);
+	struct kd_regs expected = registers(73);
 	struct kd_exec_context before;
 
 	cpu = 0;
@@ -1002,7 +1002,7 @@ static void mutex_batch_frames(void)
  struct mutex origin = { .locked = true };
  struct kd_mutex lock = { .origin_mutex_addr = (unsigned long)&origin };
  struct kd_exec_outer_unlock hook = {0};
- struct pt_regs packet = registers(97), expected;
+ struct kd_regs packet = registers(97), expected;
  struct kd_exec_frame *frame, saved, refused;
  struct kd_exec_context before;
 
@@ -1083,8 +1083,8 @@ int main(void)
 	unsigned int depth, cycle, last_released;
 	enum kd_exec_lock_kind kind;
 
-	CHECK(sizeof(struct pt_regs) == 168 &&
-	      offsetof(struct kd_exec_frame, regs) == 72);
+	CHECK(sizeof(struct kd_regs) == 168 &&
+	      offsetof(struct kd_exec_frame, regs) == 40);
 	mutex_batch_frames();
 	if (failures)
 		return 1;
@@ -1151,7 +1151,7 @@ int main(void)
 	fixture_irq = false;
 	CHECK(kd_exec_invariant_failures == 0);
 	printf("production frame capacity: checks=%u failures=%u regs=%zu frame=%zu context=%zu\n",
-	       checks, failures, sizeof(struct pt_regs),
+	       checks, failures, sizeof(struct kd_regs),
 	       sizeof(struct kd_exec_frame), sizeof(struct kd_exec_context));
 	return failures ? 1 : 0;
 }

@@ -141,7 +141,7 @@ waiter CPU                         combiner CPU
 | `kd_spin_continuation_stack` | 8512 / CPU，包含 704 × 12 条记录 | 初始化时按 CPU 在低端预留区选择 64 字节对齐起点；只按 top 分配，退休后收缩连续已退休栈顶；活动记录不搬移 |
 | `kd_spin_continuation` | 704 × 12，已包含在存储栈中 | `spin/request.inc` 按 top 借用槽；包含 frame、恢复结果、调用者上下文；不是 C 自动局部对象 |
 | `kd_exec_frame` | 648，已包含在 continuation 中 | 生产者准备，combiner 原地 bind/pop，不为同一 spin 请求另分配第二个 frame |
-| `pt_regs` | 168，已包含在 frame 中 | 根请求拥有寄存器包；虚拟子请求 `regs_ref` 可指向根包，不按层复制整包 |
+| `kd_regs` | 168，已包含在 frame 中 | 根请求拥有寄存器包；虚拟子请求 `regs_ref` 可指向根包，不按层复制整包 |
 | `kd_spin_jit_context` | 16，已包含在 continuation 中 | 虚拟请求的 `requester` 与锁深度；跟随 continuation 存活，不绑定可复用 node 槽 |
 | `kd_exec_context` | 5208 / CPU | `kd_exec.c` 静态 per-CPU，含 8 × 648 的旧 frame 数组及 top/owner/depth。spin 的 continuation 内嵌 frame 绑定到 top；数组仍服务 mutex/其他 push 路径，不是每个 spin 请求新增一份 |
 | 三个 per-CPU 指针 | 8 × 3 = 24 / CPU | `spin/state.inc` 静态 `kd_spin_resume_nodes`、`kd_spin_continuations`、`kd_spin_native_root`；分别记录本地恢复节点、存储栈基址、等待最终 native 退休的根记录 |
@@ -220,19 +220,26 @@ base + 20480      └ wait_stack_top：初始栈顶
 
 | continuation 内部成员 | 偏移 / 大小 | 用途 |
 | --- | --- | --- |
-| `diag`、`storage` | 0 / 8、8 / 8 | 指向诊断槽及所属 CPU 存储栈 |
-| `result`、`kind` | 16 / 4、20 / 1 | 汇编轮询的32位恢复结果；仅内部ROOT/VIRTUAL类型使用单字节 |
-| `retired`、`native_regs_decoded` | 21 / 1、22 / 1 | 回收标记、入口包准备标记 |
-| `frame` | 24 / 648 | 前 72 字节为热字段，随后 168 字节 `regs`，其余 408 字节为复杂路径存储 |
-| `frame.regs` | 96 / 168 | 根包的实际存储；虚拟子 frame 的 `regs_ref` 指向根包，而非自己的这片空间 |
+| `frame` | 0 / 648 | 40 字节核心头，168 字节 `kd_regs`，32 字节 provenance 指针，408 字节复杂路径存储 |
+| `frame.regs` | 40 / 168 | 唯一根包；虚拟子 frame 的 `regs_ref` 可以指向根包 |
+| `diag`、`storage` | 648 / 8、656 / 8 | 诊断槽及所属 CPU 存储栈 |
+| `result`、`retired` | 664 / 4、668 / 1 | 保留 32 位恢复结果和独立回收标记 |
 | `jit_context` | 672 / 16 | 虚拟请求的父执行者及锁深度 |
 | `queued_at_ns` | 688 / 8 | 可选队列计时；普通 spin 不保存 IRQ flags |
-| 记录末端 | 704 | 末尾8字节填充；下一条记录仍按64字节对齐 |
+| 记录末端 | 704 | 末尾 8 字节填充；下一条记录仍按 64 字节对齐 |
 
-普通MINIMAL包的BP/IP/SP相对记录起点为128/224/248；IP/SP共用同一缓存行。
-连同前两行请求/header及BP行，简单路径涉及四条continuation行，原布局为五条。
-这是地址几何，不代表实际每请求发生四次cache miss或跨节点传输；node、ticket、
-waiter栈及payload另计。producer提示仍在执行前一个正文时预取下一请求，保留FULL和借用包处理。
+MINIMAL 的 RIP/RSP/RBP 位于 40/48/56，与入口 RIP、锁地址、entry ABI、packet state、
+深度及 frame 状态同在首行。ROOT/VIRTUAL 和入口解码两个 producer-owned 内部标记
+位于头部末字节；没有把 owner/ACK 或原子通知改为 bitfield。
+虚拟 R15/R14/R13/R12/R11 backing 位于 64..96，同在第二行；regs_ref/GS/task/parent
+位于 208..232，共用第四行。MINIMAL 预取从原来四条不同 continuation 行变为三条，
+其中一条覆盖完整核心头和三字段续点。JIT 仍使用五个 GPR backing 字段，不能因
+clobber 不导入完整 GPR 就当作未访问存储。`kd_regs` 仍为 168 字节，保留 FULL 字段，
+Linux `pt_regs` 不变。两类新 wrapper 使用 layout-2 目录；旧目录不能发布 NORMAL。
+
+这是地址几何，不是已测 cache miss 数。真实 caller 栈、payload、node 和 ticket 另计。
+caller 栈有原地址别名，不能搬进 continuation；复用更早的 node 也不能代替等待最终
+ACK 的稳定记录。producer 提示仍在执行前一个正文时预取下一请求。
 
 mode 2的producer在发布前保存逻辑SP及`u8 prefetch_stack_lines`，后者放入node首行原有填充，
 node仍为128字节，通知仍在64/65偏移。有效SP必须允许`SP-8`且位于逻辑任务栈内；
@@ -251,10 +258,10 @@ FULL/借用寄存器包的预取范围不变；这些地址只在同一排队存
 
 | 字段 | 当前用途与写入方 |
 | --- | --- |
-| `kind` | ROOT 或 VIRTUAL，明确区分物理入口与嵌套虚拟请求 |
+| `frame.spin_kind` | ROOT 或 VIRTUAL，明确区分物理入口与嵌套虚拟请求 |
 | `result` | QUEUED、RETRY、NATIVE_READY；RETRY 只允许未执行正文的入口恢复 |
 | `storage` / `retired` | 指向所属 CPU 的存储栈及退休标记；仅所属 CPU 更新 top，远端 native 子执行者在 pop 后发布标记 |
-| `native_regs_decoded` | 物理入口寄存器包已准备完成 |
+| `frame.spin_regs_decoded` | 物理入口寄存器包已准备完成 |
 
 `users`、`packet_owner`、`jit_waiter`、`jit_retry`、`native_resume`、
 `pinned_context` 已移除。额外抢占嵌套的检查前移到代理发布前，拒绝走 KD 原生

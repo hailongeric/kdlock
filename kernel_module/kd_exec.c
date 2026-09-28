@@ -207,7 +207,7 @@ bool kd_exec_context_occupied(void)
 #include "execution/frame_lifecycle.inc"
 
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
-				     const struct pt_regs *regs)
+				     const struct kd_regs *regs)
 {
 	if (!frame || !regs)
 		return;
@@ -226,7 +226,7 @@ void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
 
 int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 			       enum kd_exec_event event,
-			       const struct pt_regs *regs)
+			       const struct kd_regs *regs)
 {
 	int state, ret;
 

@@ -67,9 +67,9 @@ class RipRelativeCodegenTests(unittest.TestCase):
         # Decode real LEA encodings, including operand-size prefixes, to cover
         # precisely the expressions produced by production disassembly.
         for destination, raw, packet_index, mask in (
-                ("RDX", "488d15e0ffffff", 12, (1 << 64) - 1),
-                ("EDX", "8d15e0ffffff", 12, (1 << 32) - 1),
-                ("R11", "4c8d1de0ffffff", 6, (1 << 64) - 1)):
+                ("RDX", "488d15e0ffffff", 14, (1 << 64) - 1),
+                ("EDX", "8d15e0ffffff", 14, (1 << 32) - 1),
+                ("R11", "4c8d1de0ffffff", 7, (1 << 64) - 1)):
             with self.subTest(destination=destination):
                 line = decode(raw)
                 self.assertEqual(line.name, "LEA")
@@ -85,8 +85,8 @@ class RipRelativeCodegenTests(unittest.TestCase):
         assembly = normal.process_normal(line.name, line.args, 0xffff888012340000,
                                           conflict.block_init())
         def initialize(registers, stack):
-            registers[12] = 0x123456789abcffff
-        self.assertEqual(execute(assembly, initialize)[12], 0x123456789abc0034)
+            registers[14] = 0x123456789abcffff
+        self.assertEqual(execute(assembly, initialize)[14], 0x123456789abc0034)
 
     def test_low_storage_load_store_rmw_and_flags(self):
         with mmap.mmap(-1, mmap.PAGESIZE, flags=mmap.MAP_PRIVATE | mmap.MAP_ANONYMOUS | 0x40,
@@ -101,8 +101,8 @@ class RipRelativeCodegenTests(unittest.TestCase):
             assembly += "SETNZ BL\n"
             registers = execute(assembly)
             self.assertEqual(list(words), [0x123456789abc, 0x123456789abd, 0, 0])
-            self.assertEqual(registers[10], 0x123456789abc)
-            self.assertEqual(registers[5] & 0xff, 1)
+            self.assertEqual(registers[12], 0x123456789abc)
+            self.assertEqual(registers[8] & 0xff, 1)
 
     def test_high_storage_fallback_executes_original_address(self):
         words = (ctypes.c_ulong * 2)(0x123456789abcdef, 0)

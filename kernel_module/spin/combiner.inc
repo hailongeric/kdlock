@@ -141,8 +141,8 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 	struct kd_spin_diag_cpu __percpu *diag;
 	struct kd_exe_info *exe;
 
-	if (execution->kind == KD_SPIN_CONT_VIRTUAL ||
-	    !execution->native_regs_decoded || kd_exec_current_frame() ||
+	if (execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL ||
+	    !execution->frame.spin_regs_decoded || kd_exec_current_frame() ||
 	    kd_spin_lock_stack_depth(ptr) != 1 || kd_spin_jit_is_disabled(batch->diag))
 		return false;
 	exe = kd_spin_batch_lookup(batch, frame->entry_ip);

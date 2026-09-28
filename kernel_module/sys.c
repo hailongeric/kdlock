@@ -227,12 +227,14 @@ static ssize_t kd_dev_write_locked(const char __user *buf, size_t count)
 	/* Keep the prior miss state recoverable until the full image is present. */
 	if (head.status_code == KD_EXE_NORMAL) {
 		const unsigned char *code = entry->code_block;
-		bool directory = !memcmp(code + 25, "KDWC001", 7) &&
+		bool directory = !memcmp(code + 9, "KDWB002", 7) &&
+		                 !memcmp(code + 25, "KDWC002", 7) &&
 		                 !memcmp(code + 41, "KDAB", 4);
 
-		if ((entry->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
-		     (!directory || code[45] != entry->entry_abi)) ||
-		    (directory && code[45] != entry->entry_abi)) {
+		/* Every uploaded image uses KD's private packet, including FULL
+		 * recovery and legacy kernel-bridge entries. Old pt_regs offsets must
+		 * never be published NORMAL for this provider's rearranged packet. */
+		if (!directory || code[45] != entry->entry_abi) {
 			kd_exe_publish_status(entry, KD_EXE_NATIVE_ONLY);
 			return -EPROTO;
 		}

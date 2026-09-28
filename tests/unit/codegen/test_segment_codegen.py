@@ -74,8 +74,8 @@ def check_execution():
             regs, args = run_image(
                 assembly, [0x1000], context=(ctypes.addressof(origin), logical_task)
             )[0]
-            require(regs[10] == before[5], "GS read did not use origin storage")
-            require(regs[12] == logical_task, "current did not use logical waiter")
+            require(regs[12] == before[5], "GS read did not use origin storage")
+            require(regs[14] == logical_task, "current did not use logical waiter")
             require(list(origin) == before[:6] + [before[5], before[7] + 1],
                     "GS write/RMW changed the wrong storage")
             require(args[1] == 1, "wrapper did not report an executed body")

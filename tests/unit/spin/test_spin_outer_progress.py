@@ -2,7 +2,7 @@
 
 KD word and ticket operations are real extracted code around deterministic
 CPU/lock primitives. Capacity-refusal cases fill the real frame allocator through
-its API and compare full guest pt_regs and contexts across combiner return.
+its API and compare full guest kd_regs and contexts across combiner return.
 This is not natural JIT nesting, concurrent kernel or return-assembly execution.
 The existing fixture also observes release publication before node reuse; its
 primitive substitute checks API/packet ordering, not a hardware memory litmus.
@@ -24,9 +24,8 @@ from test_spin_shadow import definition
 
 def main():
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
-    ptrace = (kernel / "arch/x86/include/asm/ptrace.h").read_text()
-    ptrace = ptrace.split("#else /* __i386__ */", 1)[1]
-    types = definition(ptrace, "struct pt_regs {").rstrip() + ";\n"
+    ptrace = (ROOT / "include/kd_regs.h").read_text()
+    types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     for name in (
         "include/kd_spin_entry.h",
         "include/kd_call.h",
@@ -65,9 +64,9 @@ def main():
         "void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,",
             "int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,",
             "static struct kd_exec_frame *kd_exec_frame_push_internal(",
-            "kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,",
-            "kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,",
-            "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)",
+            "kd_exec_frame_push(const struct kd_regs *regs, unsigned long entry_ip,",
+            "kd_exec_frame_push_borrowed(struct kd_regs *regs, unsigned long entry_ip,",
+            "int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)",
         )
     )
     pool = pool.replace(
@@ -163,13 +162,13 @@ def main():
         part = definition(spin, marker)
         if name == "execute_cs":
             # Model the omitted enqueue producer, using its production decoder.
-            part = part.replace("\tstruct qspinlock *word = batch->request->word;", '\tstruct pt_regs *packet = curr_node->execution->frame.regs_ref;\n\tif (!(curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL) && !curr_node->execution->native_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame,\n\t(curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL) ? curr_node->execution->jit_context.requester->entry_ip : packet->ip,\n\t\t(unsigned long)lock, curr_node->execution->frame.gsbase,\n\t\tcurr_node->execution->frame.logical_task);\n\tcurr_node->execution->frame.regs_ref = packet;\n\tstruct qspinlock *word = batch->request->word;', 1)
+            part = part.replace("\tstruct qspinlock *word = batch->request->word;", '\tstruct kd_regs *packet = curr_node->execution->frame.regs_ref;\n\tif (!(curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL) && !curr_node->execution->frame.spin_regs_decoded)\n\t\tkd_spin_prepare_regs(curr_node);\n\tkd_exec_frame_prepare(&curr_node->execution->frame,\n\t(curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL) ? curr_node->execution->jit_context.requester->entry_ip : packet->ip,\n\t\t(unsigned long)lock, curr_node->execution->frame.gsbase,\n\t\tcurr_node->execution->frame.logical_task);\n\tcurr_node->execution->frame.regs_ref = packet;\n\tstruct qspinlock *word = batch->request->word;', 1)
         if name == "execute_cs":
             part = part.replace("kd_spin_entry_borrow_put(", "fixture_borrow_put(")
         code += prefix + part + "\n"
     code += definition(
         read_source((ROOT / "kernel_module/kd_lock.c")),
-        "int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,",
+        "int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct kd_regs *regs,",
     )
     queue = "static int\n" + definition(
         spin, "__kd_spin_lock_longjmp(struct qspinlock *lock, int tail,"
@@ -178,7 +177,7 @@ def main():
         "static int kd_spin_prepare_jit_node(struct kd_spin_node *node,",
         "static int kd_spin_advance_jit_node(struct kd_spin_node *node,",
         "static int kd_spin_finish_remote_node(struct kd_spin_node *node,",
-        "int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,",
+        "int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,",
     ):
         queue += definition(spin, marker)
     refusal = 'if (kd_exec_frame_bind(frame, frame_lock_depth, true)) {\n\t\tKD_PR_ERR("spin JIT frame stack overflow'
@@ -233,13 +232,13 @@ def main():
             refusal,
             refusal.replace(
                 "{\n",
-                "{\n\t\tif ((curr_node->execution->kind == KD_SPIN_CONT_VIRTUAL))\n"
+                "{\n\t\tif ((curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL))\n"
                 "\t\t\tjit_context->requester->remote_result = KD_EXEC_REMOTE_IDLE;\n",
             ),
         ),
         "virtual-native-trampoline": (
             "code",
-            "curr_node->execution->result = curr_node->execution->kind == KD_SPIN_CONT_ROOT &&",
+            "curr_node->execution->result = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_ROOT &&",
             "curr_node->execution->result =",
         ),
         "child-cancel-ends-parent-wait": (

@@ -61,7 +61,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		kd_spin_selftest_link(curr_node, prev_node, previous_task,
 				      previous_cpu);
 #endif
-		if (curr_node->execution->kind != KD_SPIN_CONT_VIRTUAL) {
+		if (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL) {
 			kd_spin_publish_wait(curr_node, prev_node,
 				this_cpu_ptr(&kd_spin_cpu)->wait_stack_top);
 			/* Only an unexecuted queue-head handoff returns here. */
@@ -98,7 +98,7 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);
 
-			if (curr_node->execution->kind != KD_SPIN_CONT_VIRTUAL && j >= 0) {
+			if (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL && j >= 0) {
 				parent_lock =
 					(struct qspinlock *)(unsigned long)
 						ptr->lock_addr[j];
@@ -339,15 +339,15 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->execution->frame.logical_task = current;
 	curr_node->execution->frame.gsbase = kd_read_kernel_gsbase();
 
-	curr_node->execution->kind = KD_SPIN_CONT_ROOT;
+	curr_node->execution->frame.spin_kind = KD_SPIN_CONT_ROOT;
 	curr_node->execution->result = KD_SPIN_RES_QUEUED;
-	curr_node->execution->native_regs_decoded = false;
+	curr_node->execution->frame.spin_regs_decoded = false;
 	curr_node->execution->jit_context.requester = NULL;
 	if (input->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1) {
 		/* No prologue parsing or GPR capture: the caller spilled live values. */
 		execution->frame.regs.ip = input->ip;
 		execution->frame.regs.bp = input->bp;
-		execution->native_regs_decoded = true;
+		execution->frame.spin_regs_decoded = true;
 	} else {
 		kd_spin_prepare_regs(curr_node);
 	}

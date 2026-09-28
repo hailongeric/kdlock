@@ -23,9 +23,7 @@ struct task_struct {
 struct list_head {
 	struct list_head *next, *prev;
 };
-struct pt_regs {
-	unsigned long ip, sp, di, bx, r12, r13, r14, r15, bp;
-};
+#include "../../../include/kd_regs.h"
 struct mutex {
 	struct task_struct *owner;
 };
@@ -229,7 +227,7 @@ static bool kd_exe_entry_is_ready(struct kd_exe_info *exe, int pid, unsigned lon
 static unsigned int source_leases;
 static bool kd_source_frame_get(void) { source_leases++; return true; }
 static void kd_source_frame_put(void) { CHECK(source_leases == 1); source_leases--; }
-struct kd_exec_frame *kd_exec_frame_push_mutex_batch(struct pt_regs *r, unsigned long ip,
+struct kd_exec_frame *kd_exec_frame_push_mutex_batch(struct kd_regs *r, unsigned long ip,
  unsigned long gs, struct task_struct *task, struct kd_mutex *lock,
  struct kd_exec_outer_unlock *hook)
 { (void)r; (void)ip; (void)gs; (void)task; (void)lock; (void)hook; abort(); }
@@ -257,7 +255,7 @@ bool kd_exec_context_busy(void)
 	return false;
 }
 
-struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
+struct kd_exec_frame *kd_exec_frame_push(const struct kd_regs *regs,
 					 unsigned long ip, unsigned long lock,
 					 unsigned int depth, unsigned long gs,
 					 struct task_struct *task)
@@ -274,13 +272,13 @@ struct kd_exec_frame *kd_exec_frame_push(const struct pt_regs *regs,
 	return &active;
 }
 /* This fixture drives legacy packets; preserve the alternate API's signature. */
-struct kd_exec_frame *kd_exec_frame_push_borrowed(struct pt_regs *regs,
+struct kd_exec_frame *kd_exec_frame_push_borrowed(struct kd_regs *regs,
  unsigned long ip, unsigned long lock, unsigned int depth, unsigned long gs,
  struct task_struct *task)
 {
  return kd_exec_frame_push(regs, ip, lock, depth, gs, task);
 }
-int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
+int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)
 {
 	CHECK(frame == &active && frame->completion_seen);
 	if (regs)
@@ -325,7 +323,7 @@ static void early_unlock_a(void)
 	successor_progress();
 }
 static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
-				   struct pt_regs *regs, unsigned long ip,
+				   struct kd_regs *regs, unsigned long ip,
 				   unsigned long lock)
 {
 	CHECK(exe == &ready_entry);

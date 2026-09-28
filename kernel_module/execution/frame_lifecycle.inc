@@ -102,10 +102,10 @@ int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
 /* Reserve fixed storage and its source/provider lease together. Failure leaves
  * the caller's packet and existing context intact; no frame is published. */
 static struct kd_exec_frame *kd_exec_frame_push_internal(
-		   const struct pt_regs *regs, unsigned long entry_ip,
+		   const struct kd_regs *regs, unsigned long entry_ip,
 		   unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task,
-		   struct pt_regs *borrowed_regs, bool batch_lease)
+		   struct kd_regs *borrowed_regs, bool batch_lease)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
@@ -202,7 +202,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 }
 
 struct kd_exec_frame *
-kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
+kd_exec_frame_push(const struct kd_regs *regs, unsigned long entry_ip,
 		   unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task)
 {
@@ -211,7 +211,7 @@ kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
 }
 
 struct kd_exec_frame *
-kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,
+kd_exec_frame_push_borrowed(struct kd_regs *regs, unsigned long entry_ip,
 		       unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		       unsigned long gsbase, struct task_struct *logical_task)
 {
@@ -224,7 +224,7 @@ kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,
  * block or detach the queue before it returns, so spin's implicit ledger is
  * not a substitute. The original mutex owner remains this physical task. */
 struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
-	struct pt_regs *regs, unsigned long entry_ip, unsigned long gsbase,
+	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
 	struct kd_exec_outer_unlock *hook)
 {
@@ -302,7 +302,7 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
  * A terminal state must not discard an outstanding owner ACK or the frame's
  * source lease. Copy the final packet before retiring physical LIFO storage.
  * Inactive slots have no readers: depth, not zero-filled memory, owns them. */
-int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
+int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	int state;

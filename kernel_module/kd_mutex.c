@@ -181,7 +181,7 @@ __attribute__((noipa)) noinline notrace void
 _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	       unsigned long ret_addr, unsigned long bp, unsigned int abi)
 {
-	struct pt_regs resume_regs;
+	struct kd_regs resume_regs;
 	bool resume_ready = false;
 	bool native_resume = false;
 	int ret_val;

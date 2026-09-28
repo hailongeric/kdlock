@@ -26,7 +26,7 @@ Demo ioctl 和数据布局见 [workload_modules/README.md](../workload_modules/R
 | 来源生命周期 | [kd_source.h](kd_source.h)、[kd_source_api.h](kd_source_api.h) | 内部 pin 接口与设备 ABI；retire 不可撤销 |
 | 设备/诊断 | [sys.h](sys.h)、[utils.h](utils.h) | 设备注册和既有日志，benchmark quiet 仅在专用 provider |
 | 批次调用边界 | [kd_jit_batch.h](kd_jit_batch.h) | 新旧 wrapper 的版本目录和编译器 clobber；clobber wrapper 保护物理 RBP；旧批次适配单独保护 RBP，偏移 0 普通入口保留 C ABI，args 仍为两个元素 |
-| wrapper 布局 | [wrapper.S](wrapper.S)、[asm_head.h](asm_head.h) | x86-64 保存现场、pt_regs 偏移与两元素参数 |
+| wrapper 布局 | [wrapper.S](wrapper.S)、[asm_head.h](asm_head.h)、[kd_regs.h](kd_regs.h) | x86-64 保存现场、KD 私有寄存器包偏移与两元素参数 |
 | 服务/段语义 | [kd_hostcall.h](kd_hostcall.h)、[kd_hostcalls.def](kd_hostcalls.def)、[kd_segment.h](kd_segment.h) | 有界服务能力与既有 GS 输入 |
 
 修改布局时同时检查 C、生成汇编与 Python 解析器，不能只改变一侧结构体。

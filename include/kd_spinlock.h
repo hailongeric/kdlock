@@ -4,7 +4,7 @@
 /* Spin scheduling-node and JIT handoff layouts. Nodes are bounded per CPU and
  * reusable; origin refs and physical holds have separate generation checks.
  * The internal qspinlock alias denotes the explicit KD object, never Linux L. */
-#include <asm/ptrace.h>
+#include "kd_regs.h"
 #include <linux/atomic.h>
 #include "qspinlock_i.h"
 #include "kd_exec.h"
@@ -38,17 +38,15 @@ enum kd_spin_resume_result {
 struct kd_spin_diag_slot;
 struct kd_spin_continuation_stack;
 struct kd_spin_continuation {
-	struct kd_spin_diag_slot *diag __attribute__((aligned(64)));
+	/* Put the hot frame and continuation registers at the aligned base.
+	 * Storage/diagnostic/retirement metadata belongs to this longer-lived
+	 * record, never to a scheduling node that can already have been reused.
+	 * The result remains 32-bit for the assembly wait/restore protocol. */
+	struct kd_exec_frame frame __attribute__((aligned(64)));
+	struct kd_spin_diag_slot *diag;
 	struct kd_spin_continuation_stack *storage;
-	/* Keep the assembly-polled result 32-bit. The internal ROOT/VIRTUAL
-	 * tag needs one byte: this ordering puts frame at +24 and the minimal
-	 * packet's IP/SP in one cache line, without shrinking the ABI identity
-	 * or changing pt_regs. No extra request storage or copying is needed. */
 	enum kd_spin_resume_result result;
-	u8 kind;
 	bool retired;
-	bool native_regs_decoded;
-	struct kd_exec_frame frame;
 	struct kd_spin_jit_context jit_context;
 	u64 queued_at_ns;
 };
@@ -71,7 +69,7 @@ struct kd_spin_node {
 	u8 prefetch_stack_lines;
 	/* NULL for a non-combinable MCS waiter; no logical execution state. */
 	struct kd_spin_continuation *execution;
-	struct pt_regs *prefetch_regs;
+	struct kd_regs *prefetch_regs;
 	unsigned long prefetch_sp;
 	/* A successor writes next while this CPU polls locked. Isolate those
 	 * accesses; only the release notification belongs on the polling line.
@@ -130,7 +128,7 @@ void kd_spin_unlock_ref(struct qspinlock *lock, const struct kd_spin_ref *ref);
 #define KD_SPIN_NESTED_PARENT_OOO 2
 #define KD_SPIN_NESTED_ACQUIRED_QUEUE 3
 #define KD_SPIN_NESTED_NATIVE 4
-int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
+int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,
 			struct kd_exec_frame *parent);
 #define KD_SPIN_NESTED_UNLOCK_OK 0
 #define KD_SPIN_NESTED_UNLOCK_OOO 1
@@ -140,9 +138,9 @@ int kd_spin_nested_shadow_push(struct qspinlock *lock);
 int kd_spin_nested_shadow_remove(struct qspinlock *lock);
 
 #ifdef KDLOCK_SELFTEST
-bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct pt_regs *regs,
+bool kd_spin_selftest_shadow_begin(raw_spinlock_t *lock, struct kd_regs *regs,
 				   struct kd_exec_frame *frame);
-void kd_spin_selftest_shadow_end(struct pt_regs *regs,
+void kd_spin_selftest_shadow_end(struct kd_regs *regs,
 				 struct kd_exec_frame *frame, int result);
 #endif
 
@@ -167,11 +165,11 @@ unsigned long kd_spin_debug_owner(raw_spinlock_t *lock);
 #define KD_JIT_NESTED_NATIVE 0
 #define KD_JIT_NESTED_CONSUMED 1
 #define KD_JIT_NESTED_REMOTE 2
-int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
+int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock, struct kd_regs *regs,
 				struct kd_exec_frame *parent);
 int kd_spin_jit_nested_unlock_ctx(raw_spinlock_t *lock,
 				  struct kd_exec_frame *frame);
-int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
+int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct kd_regs *regs,
 				     struct kd_exec_frame *frame);
 int kd_spin_jit_nested_cleanup(struct kd_exec_frame *frame);
 int kd_spin_jit_abort_cleanup(struct kd_exec_frame *frame);

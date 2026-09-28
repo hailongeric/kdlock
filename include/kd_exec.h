@@ -5,7 +5,7 @@
  * Explicit execution state for delegated critical sections.
  *
  * Native TCLock-style handoff uses a real stack switch. The JIT backend uses
- * pt_regs and a software continuation instead, so nested execution must have
+ * kd_regs and a software continuation instead, so nested execution must have
  * an explicit frame rather than relying on the C call stack for logical state.
  * Suspended physical C/shadow stacks must still stay alive until return/ACK.
  */
@@ -13,7 +13,7 @@
 #include <linux/errno.h>
 #include <linux/types.h>
 #include <linux/list.h>
-#include <asm/ptrace.h>
+#include "kd_regs.h"
 #include "kd_call.h"
 #include "exe_info.h"
 #include "kd_spin_entry.h"
@@ -91,18 +91,19 @@ struct kd_exec_outer_unlock {
 };
 
 struct kd_exec_frame {
-	/* Ordinary spin execution touches this 72-byte header and the
-	 * referenced packet. The cold ledger below is activated only on promotion;
-	 * no allocation, zero-fill or packet copy is needed at that boundary. */
-	struct pt_regs *regs_ref;
+	/* First 40 bytes plus regs.ip/sp/bp form one 64-byte hot line when
+	 * embedded at the aligned continuation base. Keep exact ABI/state widths;
+	 * only the two queue-private, exclusively prepared tags share one byte.
+	 * The next line contains all five virtual GPR backing slots used by JIT.
+	 * Task/GS/parent/packet provenance stays together after the FULL packet.
+	 */
 	unsigned long entry_ip;
 	unsigned long outer_lock_addr;
-	unsigned long gsbase;
-	struct task_struct *logical_task;
-	struct kd_exec_frame *parent;
-	u16 state;
-	u8 role; /* Logical request phase; survives hot-table eviction and node reuse. */
+	unsigned int entry_abi;
+	unsigned int packet_state;
 	unsigned int depth;
+	u16 state;
+	u8 role;
 	bool executed;
 	bool mutex_backend;
 	bool spin_simple;
@@ -111,16 +112,20 @@ struct kd_exec_frame {
 	bool complex_ready;
 	bool regs_borrowed;
 	bool completion_seen;
-	unsigned int entry_abi;
-	unsigned int packet_state;
-	struct pt_regs regs;
+	u8 spin_kind : 1;
+	u8 spin_regs_decoded : 1;
+	struct kd_regs regs;
+	struct kd_regs *regs_ref;
+	unsigned long gsbase;
+	struct task_struct *logical_task;
+	struct kd_exec_frame *parent;
 
 	/* Cold storage: unread until complex_ready, including all eight locks,
 	 * control/native routing and the combiner checkpoint. */
 	unsigned long continuation_ip;
 	union {
 		unsigned long continuation_sp;
-		struct pt_regs *borrowed_regs;
+		struct kd_regs *borrowed_regs;
 	};
 	unsigned long delegated_lock_addr;
 	struct kd_exec_frame *resume_target;
@@ -152,12 +157,12 @@ struct kd_exec_context {
 	unsigned int depth;
 };
 
-static inline struct pt_regs *kd_exec_frame_regs(const struct kd_exec_frame *frame)
+static inline struct kd_regs *kd_exec_frame_regs(const struct kd_exec_frame *frame)
 {
 	if (frame->regs_ref)
 		return frame->regs_ref;
 	return frame->regs_borrowed ? frame->borrowed_regs :
-		(struct pt_regs *)&frame->regs;
+		(struct kd_regs *)&frame->regs;
 }
 
 static inline void kd_exec_frame_own_regs(struct kd_exec_frame *frame)
@@ -182,7 +187,7 @@ bool kd_exec_context_occupied(void);
  * its exact physical-owner ledger for FULL/native recovery; refusal publishes
  * no frame. Retirement is only for the first, terminal ABI2 wrapper return. */
 struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
-	struct pt_regs *regs, unsigned long entry_ip, unsigned long gsbase,
+	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
 	struct kd_exec_outer_unlock *hook);
 int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
@@ -198,20 +203,20 @@ int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,
 		       bool batch_lease);
 
 struct kd_exec_frame *
-kd_exec_frame_push(const struct pt_regs *regs, unsigned long entry_ip,
+kd_exec_frame_push(const struct kd_regs *regs, unsigned long entry_ip,
 		   unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		   unsigned long gsbase, struct task_struct *logical_task);
 /* Borrow a physical mutex packet; nested physical contexts retain a private copy. */
 struct kd_exec_frame *
-kd_exec_frame_push_borrowed(struct pt_regs *regs, unsigned long entry_ip,
+kd_exec_frame_push_borrowed(struct kd_regs *regs, unsigned long entry_ip,
 		       unsigned long outer_lock_addr, unsigned int held_lock_depth,
 		       unsigned long gsbase, struct task_struct *logical_task);
-int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs);
+int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs);
 int kd_exec_frame_complete_single_spin(struct kd_exec_frame *frame);
 int kd_exec_frame_retire_single_spin(struct kd_exec_frame *frame);
 bool kd_exec_frame_validate(const struct kd_exec_frame *frame);
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
-				     const struct pt_regs *regs);
+				     const struct kd_regs *regs);
 unsigned int kd_exec_frame_lock_depth(const struct kd_exec_frame *frame);
 
 /* Logical lock ledger only. Backends perform physical acquisition/release;
@@ -249,7 +254,7 @@ bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame);
  * Aborting changes frame state; backend cleanup/owner ACKs still must finish. */
 int kd_exec_frame_record_event(struct kd_exec_frame *frame,
 			       enum kd_exec_event event,
-			       const struct pt_regs *regs);
+			       const struct kd_regs *regs);
 int kd_exec_frame_complete(struct kd_exec_frame *frame);
 int kd_exec_frame_abort(struct kd_exec_frame *frame);
 int kd_exec_frame_state(const struct kd_exec_frame *frame);

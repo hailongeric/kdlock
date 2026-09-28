@@ -81,11 +81,11 @@ static int write_sys(const struct daemon_config *cfg,
 			fclose(fp);
 			return -1;
 		}
-		directory = !memcmp(header + 25, "KDWC001", 7) &&
+		directory = !memcmp(header + 9, "KDWB002", 7) &&
+		            !memcmp(header + 25, "KDWC002", 7) &&
 		            !memcmp(header + 41, "KDAB", 4);
 		if (!kd_entry_abi_valid(exe->lock_kind, exe->entry_abi) ||
-		    (kd_entry_abi_clobber(exe->entry_abi) && !directory) ||
-		    (directory && header[45] != exe->entry_abi) || fseek(fp, 0, SEEK_SET)) {
+		    !directory || header[45] != exe->entry_abi || fseek(fp, 0, SEEK_SET)) {
 			fprintf(stderr, "daemon: JIT entry ABI mismatch\n");
 			fclose(fp);
 			return -1;

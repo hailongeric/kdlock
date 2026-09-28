@@ -5,7 +5,7 @@
  * kd_mutex — JIT-sandbox mutex delegation protocol.
  *
  * Follows the same JIT execution model as kd_spinlock: the combiner calls
- * kd_exe_on_call_hl_entry() with the waiter's saved pt_regs. The translated
+ * kd_exe_on_call_hl_entry() with the waiter's saved kd_regs. The translated
  * sandbox runs the critical section and returns KD_EXE_RUN_TO_UNLOCK when it
  * reaches mutex_unlock. JIT replaces the body handoff, while queue execution
  * still uses physical shadow stacks with their own lifetime constraints.
@@ -17,7 +17,7 @@
 #define KD_MUTEX_SHADOW_STACK_SIZE 8192L
 #define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
 
-#include <asm/ptrace.h>
+#include "kd_regs.h"
 
 struct kd_exec_frame;
 struct mutex;
@@ -57,7 +57,7 @@ struct kd_mutex_node {
 	unsigned int packet_state; /* published with completed/native_resume */
 	int tail; /* encoded tail (cpu+idx)            */
 	int slot; /* reserved per-CPU slot index       */
-	struct pt_regs regs; /* waiter context → JIT sandbox      */
+	struct kd_regs regs; /* waiter context → JIT sandbox      */
 	/* Optional queue residence clock, not critical-section execution time. */
 	uint64_t queued_at_ns;
 };

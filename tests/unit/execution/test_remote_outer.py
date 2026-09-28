@@ -19,9 +19,8 @@ from test_exe_registry import timing_code
 
 def main():
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
-    ptrace = (kernel / "arch/x86/include/asm/ptrace.h").read_text()
-    ptrace = ptrace.split("#else /* __i386__ */", 1)[1]
-    types = definition(ptrace, "struct pt_regs {").rstrip() + ";\n"
+    ptrace = (ROOT / "include/kd_regs.h").read_text()
+    types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     types += (
         definition(
             read_source((ROOT / "include/kd_spin_entry.h")), "struct kd_spin_ref {"

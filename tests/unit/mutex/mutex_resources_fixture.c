@@ -50,7 +50,7 @@ static unsigned int entry_attempts;
 static struct kd_mutex *waiting_gate, *release_gate;
 static struct kd_mutex_node *recycle_node, *poll_node;
 static unsigned int polls;
-static struct pt_regs expected_regs, captured_regs;
+static struct kd_regs expected_regs, captured_regs;
 static unsigned long native_stack[32];
 static jmp_buf resume_target;
 
@@ -149,8 +149,8 @@ static bool kd_exec_native_unlock(unsigned long addr, bool mutex);
 static unsigned long kd_read_kernel_gsbase(void);
 static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 				      struct kd_mutex_node *node);
-static void jump_to_saved_regs(struct pt_regs *regs);
-static void jump_to_saved_regs_in_cs(struct pt_regs *regs);
+static void jump_to_saved_regs(struct kd_regs *regs);
+static void jump_to_saved_regs_in_cs(struct kd_regs *regs);
 static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 					       int cpu);
 static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *node);
@@ -365,7 +365,7 @@ static unsigned long kd_read_kernel_gsbase(void)
 static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 				      struct kd_mutex_node *node)
 {
-	struct pt_regs entry = { .sp = (unsigned long)&native_stack[16] };
+	struct kd_regs entry = { .sp = (unsigned long)&native_stack[16] };
 
 	slow_calls++;
 	CHECK(preempt == 1 && migration == 1 && refs == 1);
@@ -401,9 +401,9 @@ static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *no
 	CHECK(node->packet_state == KD_PACKET_MINIMAL);
 	CHECK(node->regs.ip == 0x8000 && node->regs.bp == 0xabc0);
 	CHECK(node->regs.sp == (unsigned long)&native_stack[16]);
-	struct pt_regs before = node->regs;
+	struct kd_regs before = node->regs;
 	before.ip = before.sp = before.bp = 0xa7a7a7a7a7a7a7a7UL;
-	struct pt_regs poison;
+	struct kd_regs poison;
 	memset(&poison, 0xa7, sizeof(poison));
 	CHECK(!memcmp(&before, &poison, sizeof(before)));
 	release_peer(lock);
@@ -414,7 +414,7 @@ static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *no
 	return 2;
 }
 
-static void capture_resume(struct pt_regs *regs, int result)
+static void capture_resume(struct kd_regs *regs, int result)
 {
 	CHECK(!preempt && !migration && !table_irq);
 	CHECK(!cpu_shadows.node_slots && !cpu_shadows.resume_node);
@@ -423,11 +423,11 @@ static void capture_resume(struct pt_regs *regs, int result)
 	captured_regs = *regs;
 	longjmp(resume_target, result);
 }
-static void jump_to_saved_regs(struct pt_regs *regs)
+static void jump_to_saved_regs(struct kd_regs *regs)
 {
 	capture_resume(regs, 3);
 }
-static void jump_to_saved_regs_in_cs(struct pt_regs *regs)
+static void jump_to_saved_regs_in_cs(struct kd_regs *regs)
 {
 	capture_resume(regs, 5);
 }
@@ -963,7 +963,7 @@ static void check_minimal_entry(void)
 	struct kd_mutex *gate = get_kd_mutex_shadow(lock);
 	hold_peer(gate);
 	for (unsigned int i = 0; i < KD_MUTEX_MAX_NODES; i++)
-		memset(&kd_mutex_nodes[i].regs, 0xa7, sizeof(struct pt_regs));
+		memset(&kd_mutex_nodes[i].regs, 0xa7, sizeof(struct kd_regs));
 	__kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0xabc0);
 	CHECK(!preempt && !migration && !cpu_shadows.node_slots);
 	CHECK(gate->physical_owner == current && refs == 1);
@@ -996,6 +996,6 @@ int main(void)
 	check_slowpath_packets();
 	printf("production mutex resources: %u checks, 0 failures; nodes=%d shadow=%d regs=%zu\n",
 	       checks, KD_MUTEX_MAX_NODES, KD_MUTEX_SHADOW_TABLE_SIZE,
-	       sizeof(struct pt_regs));
+	       sizeof(struct kd_regs));
 	return 0;
 }

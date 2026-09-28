@@ -7,6 +7,15 @@
 
 ## 1. 当前状态与证据边界
 
+2026-09-28 完成[私有寄存器包与 continuation 重排](../bench/tclock_compare/results/20260928-packed-continuation.md)：
+核心身份/状态与 RIP/RSP/RBP 共用第一条64字节行，虚拟GPR backing共用第二行，
+默认MINIMAL frame/包提示由四条不同记录行减少到三条；168字节包和704字节记录不增长。
+Linux pt_regs不变，生成物升级KDWB002/KDWC002并在NORMAL发布前拒绝旧布局。
+新的UBSAN-off基线/定向/复测共141场性能通过，另有7场实际JIT功能、TCLock执行采样及真实owner ACK。
+这不是吞吐提升：hash16/36复测中位数下降1.01%/2.03%，峰值仅为同期TCLock的83.55%/76.41%。
+两线程首次c1下降4.69%，复测下降1.13%，未复现超过3%的保护点回退。保留此次结构合并及其代价；
+90%竞争hash目标仍未完成，24线程少数node份额仅0.86%–1.99%。没有重跑完整15点矩阵。
+
 2026-09-28 用户指定三方运行器的KD私有provider默认关闭UBSAN；spin/mutex共用
 `--kd-provider-ubsan off`默认值，显式`kernel`仍可继承内核配置。普通provider构建及内核
 保持原设置。此前成绩保留实际插桩政策，不因默认值变化重标历史样本或混合取优。
@@ -147,9 +156,9 @@ NUMA-on继续作为provider和比较运行器默认值。优化优先级按实�
 | 入口/热度 | CPU本地获取/MCS计数，1024次MCS边界采时，单锁独立512次；冷CAS内联，无每次全局热计数 | 多锁碰撞或阶段变化需要独立负载；不新增每次时钟 |
 | 原生pending/MCS | 真实锁字CAS/tail交换和后继release；这是排他/排队成本 | 不能通过删除锁原子或抢占配对降低成绩 |
 | ticket | 删除私有guard，代际/状态/kind/借用数共用一个64位CAS字；分配release发布，等待acquire读 | 后续可测独占OWNED/RELEASED转换的store化；当前保留完整CAS，避免混合优化 |
-| 请求发布 | continuation内result保留32位，内部kind压为字节并重排；frame从32移到24，MINIMAL IP/SP共行 | 记录仍704字节；这是五行变四行的几何，不是已测cache miss次数 |
+| 请求发布 | frame位于continuation偏移0；40字节核心头与IP/SP/BP填满首行，完整包为KD私有layout2；仅两个producer标签共用一字节 | 包/记录仍168/704字节，result仍32位；owner/ACK不压缩，几何不能当作cache miss次数 |
 | NUMA选择 | 有界1024正文/独立1024扫描；连续延期链只改必要接点，远端前缀最后优先交接 | 先测批终止原因；继续放大上限可能损害少数节点进度 |
-| 预取 | producer预先给地址，在前一正文之前预取后继frame/寄存器/栈；MINIMAL IP/SP共行只发一次hint，栈提示扩到SP-8及最多四个向上地址 | FULL/借用包的尾部partial line可单独评估；远距离预取旧回退仍有效 |
+| 预取 | producer预先给地址；MINIMAL预取核心头/三字段续点、虚拟GPR backing及provenance共三行，另有SP-8及最多四个向上地址 | FULL/借用包范围及复杂ledger提示保留；更少提示没有带来本轮hash吞吐提升，远距离旧回退仍有效 |
 | batch准入/lease | registry身份只读复用，发布状态逐请求读取，精确source lease按batch摊销；组合编译内联readiness、prepare/complete、bind/retire，目录改为精确整数比较 | 不复制共享包，不把生命周期计数改成近似统计 |
 | JIT正文 | RIP常量折叠；callee复用公共SP发布；入口witness只写一次、预算DEC/JZ、块内只读GPR不写回 | 已验证静态省略与终态 CALL/COMPLETE 融合；未知需求保留导入，失败完整物化 CALL 一次 |
 | wrapper完成 | 正常COMPLETE已经只回交IP/SP/BP；FULL处理复杂/中途出口 | 已知终态先检查等价 SP/IP/BP/锁/端点；其他路径保留 FULL 与真实续点 |
@@ -275,7 +284,7 @@ spin 的 TCLock 未观测代理计数，不能推算其批长；mutex 已记录�
 - [x] 同一可执行代码比较0与2；关闭预取明显下降，保留producer提示2。
 - [x] 测试首请求+两请求完整预取，以及更远队列头分级预取；前者高竞争下降，
   后者跨NUMA略升但16/20下降约2%，均撤回并归档。当前仍在正文前预取下一请求。
-- [x] 默认producer MINIMAL只预取BP/IP，利用已断言的IP/SP共行；FULL和consumer模式保持原范围。
+- [x] layout2使MINIMAL三字段与核心头共行，虚拟GPR backing与provenance各占一行；默认共三条frame/包提示，FULL范围与栈边界保留。
 - [ ] 后续如调整距离/范围，按实际 cache-miss/生成代码测量定位；本轮已采集独立通用
   cache/L1 事件，但未测得具体 load 或远端延迟，不能用总数证明某次预取的因果收益。
   提示不能代替权威frame或生命周期引用。

@@ -50,7 +50,7 @@ static struct kd_exe_info entry_table[KD_MAX_EXE], *entry;
 static int calls, known_calls, known_result, errors, warnings, checks, failures;
 static unsigned int registry_lookups, readiness_acquires, current_frame_reads;
 static bool source_open = true;
-static struct pt_regs last_wrapper_output;
+static struct kd_regs last_wrapper_output;
 static unsigned long direct_mutex_lock_addr = 0x4130;
 static unsigned long direct_mutex_unlock_addr = 0x4140;
 static unsigned long clobber_spin_lock_addr = 0x3110;
@@ -198,7 +198,7 @@ static unsigned long int_sqrt(unsigned long argument)
 	scalar_argument = argument;
 	return service_values[2];
 }
-static int failing_service(struct pt_regs *regs)
+static int failing_service(struct kd_regs *regs)
 {
 	(void)regs;
 	failed_service_calls++;
@@ -211,7 +211,7 @@ struct step {
 };
 static struct step steps[KD_EXE_HL_MAX_CONTINUATIONS + KD_EXE_HL_MAX_HOSTCALLS + 3];
 
-static void translated(struct pt_regs *regs, unsigned long *args)
+static void translated(struct kd_regs *regs, unsigned long *args)
 {
 	struct step *step;
 
@@ -259,13 +259,13 @@ static bool is_end_point(unsigned long ip)
 {
 	return ip == 0x9000;
 }
-static bool is_outer_lock_unlock(struct pt_regs *regs, unsigned long lock)
+static bool is_outer_lock_unlock(struct kd_regs *regs, unsigned long lock)
 {
 	return is_end_point(regs->ip) && regs->di == lock;
 }
 static int advance_and_save_continuation(struct kd_exec_frame *frame,
-					 struct pt_regs *regs);
-static int handle_known_call(struct pt_regs *regs, unsigned long outer)
+					 struct kd_regs *regs);
+static int handle_known_call(struct kd_regs *regs, unsigned long outer)
 {
 	known_calls++;
 	if (is_outer_lock_unlock(regs, outer))
@@ -367,7 +367,7 @@ static int run(void)
 
 static void check_pristine_refusal(void)
 {
-	struct pt_regs before;
+	struct kd_regs before;
 
 	reset();
 	before = active.regs;
@@ -647,7 +647,7 @@ static void check_service_dispatch(void)
 	CHECK(ARRAY_SIZE(kd_hostcalls) == ARRAY_SIZE(service_calls));
 	for (unsigned int i = 0; i < ARRAY_SIZE(kd_hostcalls); i++) {
 		for (unsigned int flags = 0; flags <= required; flags++) {
-			struct pt_regs expected;
+			struct kd_regs expected;
 
 			service_packet();
 			active.regs.ip = kd_hostcalls[i].addr;
@@ -665,7 +665,7 @@ static void check_service_dispatch(void)
 		}
 	}
 	for (unsigned int zero = 0; zero < 2; zero++) {
-		struct pt_regs before;
+		struct kd_regs before;
 
 		service_packet();
 		for (unsigned int i = 0; i < ARRAY_SIZE(kd_hostcalls); i++)
@@ -688,7 +688,7 @@ static void check_scalar_arguments(void)
 	};
 
 	for (unsigned int i = 0; i < ARRAY_SIZE(arguments); i++) {
-		struct pt_regs expected;
+		struct kd_regs expected;
 
 		service_packet();
 		active.regs.ip = kd_hostcalls[2].addr;
@@ -712,7 +712,7 @@ static void check_service_returns(void)
 					KD_EXE_HL_MAX_HOSTCALLS };
 
 	for (unsigned int n = 0; n < ARRAY_SIZE(counts); n++) {
-		struct pt_regs expected;
+		struct kd_regs expected;
 		unsigned long before_stack[ARRAY_SIZE(stack)];
 		unsigned int count = counts[n];
 
@@ -745,7 +745,7 @@ static void check_service_returns(void)
 static void check_service_errors(void)
 {
 	for (unsigned int bad = 0; bad < 6; bad++) {
-		struct pt_regs expected;
+		struct kd_regs expected;
 
 		service_packet();
 		if (bad >= 1 && bad <= 3)
@@ -1166,7 +1166,7 @@ static void check_native_handoff_timings(void)
 
 static void check_simple_spin(void)
 {
-	struct pt_regs packet, before;
+	struct kd_regs packet, before;
 
 	reset();
 	active.spin_simple = true;
@@ -1235,7 +1235,7 @@ static void check_batch_admission(void)
 	active.complex_ready = false;
 	entry->code_block = code;
 	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
-	memcpy(code + 9, "KDWB001", 7);
+	memcpy(code + 9, "KDWB002", 7);
 	CHECK(kd_exe_spin_batch_prepare(entry, &active, &call));
 	CHECK(call.code == code + KD_JIT_BATCH_OFFSET && call.regs == &active.regs &&
 	      call.args[0] == active.gsbase && call.args[1] == (unsigned long)&waiter);
@@ -1273,8 +1273,8 @@ static void check_batch_metadata(void)
 			active.entry_abi = entry->entry_abi = abi;
 			active.packet_state = abi ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
 			entry->code_block = code;
-			memcpy(code + 9, "KDWB001", 7);
-			memcpy(code + 25, "KDWC001", 7);
+			memcpy(code + 9, "KDWB002", 7);
+			memcpy(code + 25, "KDWC002", 7);
 			memcpy(code + 41, "KDAB", 4);
 			code[KD_JIT_ABI_OFFSET] = abi;
 			kd_jit_timing = timed;
@@ -1359,7 +1359,7 @@ static void check_batch_completion_timings(void)
 	unsigned char code[64] = { 0 };
 	struct kd_jit_batch_call call, rejected, before_call;
 	struct kd_exec_frame before;
-	struct pt_regs bad_regs;
+	struct kd_regs bad_regs;
 	unsigned int bad_packet = KD_PACKET_MINIMAL;
 
 	for (unsigned int abi = 0; abi < 2; abi++) {
@@ -1370,8 +1370,8 @@ static void check_batch_completion_timings(void)
 			active.entry_abi = entry->entry_abi = abi;
 			active.packet_state = abi ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
 			entry->code_block = code;
-			memcpy(code + 9, "KDWB001", 7);
-			memcpy(code + 25, "KDWC001", 7);
+			memcpy(code + 9, "KDWB002", 7);
+			memcpy(code + 25, "KDWC002", 7);
 			memcpy(code + 41, "KDAB", 4);
 			code[KD_JIT_ABI_OFFSET] = abi;
 			kd_jit_timing = timed;
@@ -1435,12 +1435,12 @@ static void check_clobber_identity(void)
 	active.spin_simple = active.request_frame = true;
 	active.complex_ready = false;
 	entry->code_block = code;
-	memcpy(code + 9, "KDWB001", 7);
+	memcpy(code + 9, "KDWB002", 7);
 	active.entry_abi = entry->entry_abi = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
 	active.packet_state = KD_PACKET_MINIMAL;
 	active.regs.di = 0xdead; /* deliberately not the root lock */
 	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
-	memcpy(code + 25, "KDWC001", 7);
+	memcpy(code + 25, "KDWC002", 7);
 	memcpy(code + 41, "KDAB", 4);
 	code[45] = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
 	CHECK(kd_exe_spin_batch_prepare(entry, &active, &call));
@@ -1512,9 +1512,9 @@ static void check_mutex_batch(void)
 {
  unsigned char code[64]={0};
  struct kd_jit_batch_call call, before;
- struct pt_regs borrowed;
+ struct kd_regs borrowed;
  struct kd_exec_frame saved;
- memcpy(code+25,"KDWC001",7); memcpy(code+41,"KDAB",4);
+ memcpy(code+25,"KDWC002",7); memcpy(code+41,"KDAB",4);
  code[45]=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
  for (int timing=0;timing<2;timing++) {
   reset(); borrowed=active.regs;

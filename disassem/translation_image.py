@@ -44,7 +44,7 @@ def write_entry_dispatch(
     dispatch_targets.update(continuation_targets or set())
     ordered_targets = [entry] + sorted(dispatch_targets - {entry})
 
-    # R11 addresses shared pt_regs spill slots; the budget is independent state.
+    # R11 addresses shared kd_regs spill slots; the budget is independent state.
     # Count down to the same 2**24 branch-block visits. DEC supplies the test
     # flags itself, avoiding a second access to the wrapper's budget slot.
     f.write("MOV     Stack_BUDGET, 0x1000000\n")

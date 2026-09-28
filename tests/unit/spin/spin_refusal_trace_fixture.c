@@ -32,16 +32,14 @@ typedef struct {
 	bool held;
 	unsigned long owner;
 } raw_spinlock_t;
-struct pt_regs {
-	unsigned long ip, sp, other[19];
-};
+#include "../../../include/kd_regs.h"
 struct task_struct {
 	int pid;
 };
 struct kd_exec_frame {
 	struct kd_exec_frame *resume_target;
-	struct pt_regs regs;
-	struct pt_regs *regs_ref;
+	struct kd_regs regs;
+	struct kd_regs *regs_ref;
 	struct task_struct *logical_task;
 	unsigned long entry_ip, outer_lock_addr, gsbase;
 	int logical_pid, remote_result;
@@ -52,15 +50,16 @@ struct kd_exec_frame {
 		int phase;
 	} control_call;
 	bool executed, valid;
+	unsigned char spin_kind;
 };
 /* Stable request owns the packet; the reusable queue node only references it. */
 struct kd_spin_request {
     struct kd_exec_frame frame;
-    int kind, result;
+    int result;
 };
-static struct pt_regs *kd_exec_frame_regs(const struct kd_exec_frame *frame)
+static struct kd_regs *kd_exec_frame_regs(const struct kd_exec_frame *frame)
 {
-    return frame->regs_ref ? frame->regs_ref : (struct pt_regs *)&frame->regs;
+    return frame->regs_ref ? frame->regs_ref : (struct kd_regs *)&frame->regs;
 }
 struct kd_spin_node {
     struct kd_spin_request *execution;
@@ -113,7 +112,7 @@ static void test_readmit(void)
 			struct kd_exec_frame parent = {
 				.regs = { .ip = 0x1000,
 					  .sp = 0x2000,
-					  .other = { 0x1234 } },
+					  .r15 = 0x1234 },
 				.logical_task = &tasks[0],
 				.gsbase = 0x8000,
 				.outer_lock_addr = (unsigned long)&a,
@@ -124,7 +123,7 @@ static void test_readmit(void)
 				.valid = true,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .kind = KD_SPIN_CONT_VIRTUAL };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs, .spin_kind = KD_SPIN_CONT_VIRTUAL } };
 			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
 			request.frame.regs_ref = &request.frame.regs;
@@ -152,9 +151,9 @@ static void test_readmit(void)
 			kd_spin_cpu.local_queue_head = NULL;
 			kd_spin_cpu.local_queue_tail = NULL;
 			if (fault == 1)
-				parent.regs.other[18] ^= 1;
+				parent.regs.ss ^= 1;
 			if (fault == 2)
-				request.frame.regs.other[17] ^= 1;
+				request.frame.regs.flags ^= 1;
 			if (fault == 3)
 				child.gsbase ^= 1;
 			assert(kd_spin_selftest_refuse(&child, &node, &ret) ==
@@ -162,9 +161,9 @@ static void test_readmit(void)
 			assert(kd_readmit.initial[1] ==
 			       !(fault >= 1 && fault <= 3));
 			if (fault == 1)
-				parent.regs.other[18] ^= 1;
+				parent.regs.ss ^= 1;
 			if (fault == 2)
-				request.frame.regs.other[17] ^= 1;
+				request.frame.regs.flags ^= 1;
 			if (fault == 3)
 				child.gsbase ^= 1;
 			child.executed = count == 1;
@@ -226,7 +225,7 @@ static void test_readmit_follow(void)
 				.jit_lock_depth = depth,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .kind = KD_SPIN_CONT_VIRTUAL };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs, .spin_kind = KD_SPIN_CONT_VIRTUAL } };
 			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
 			request.frame.regs_ref = &request.frame.regs;
@@ -303,7 +302,7 @@ int main(void)
 			struct kd_exec_frame parent = {
 				.regs = { .ip = 0x1000,
 					  .sp = 0x2000,
-					  .other = { 0x1234 } },
+					  .r15 = 0x1234 },
 				.logical_task = &tasks[0],
 				.gsbase = 0x8000,
 				.outer_lock_addr = (unsigned long)&a,
@@ -314,7 +313,7 @@ int main(void)
 				.valid = true,
 			};
 			struct kd_exec_frame child = parent;
-			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs }, .kind = KD_SPIN_CONT_VIRTUAL };
+			struct kd_spin_request request = { .frame = { .regs = parent.regs, .regs_ref = &request.frame.regs, .spin_kind = KD_SPIN_CONT_VIRTUAL } };
 			struct kd_spin_node node = { .execution = &request };
 			int ret = -1;
 			request.frame.regs_ref = &request.frame.regs;
@@ -334,7 +333,7 @@ int main(void)
 			if (rejected == 2)
 				kd_refusal_kind = 3;
 			if (rejected == 3)
-				request.kind = KD_SPIN_CONT_ROOT;
+				request.frame.spin_kind = KD_SPIN_CONT_ROOT;
 			if (rejected == 4)
 				kd_refusal_lock = (unsigned long)&a;
 			if (rejected == 5)
@@ -358,10 +357,10 @@ int main(void)
 			kd_spin_selftest_refusal_cancel(&child);
 			assert(!kd_refusal.cancel_valid);
 			parent.remote_result = KD_EXEC_REMOTE_WAITING;
-			parent.regs.other[18] ^= 1;
+			parent.regs.ss ^= 1;
 			kd_spin_selftest_refusal_cancel(&child);
 			assert(!kd_refusal.cancel_valid);
-			parent.regs.other[18] ^= 1;
+			parent.regs.ss ^= 1;
 			current = &tasks[2];
 			cpu = 2;
 			b.owner = (unsigned long)current;
@@ -370,10 +369,10 @@ int main(void)
 			       kd_refusal.acquire_valid);
 			kd_spin_selftest_refusal_return(&parent, &node, 4);
 			assert(!kd_refusal.acquire_valid);
-			request.frame.regs.other[17] ^= 1;
+			request.frame.regs.flags ^= 1;
 			kd_spin_selftest_refusal_return(&parent, &node, 2);
 			assert(!kd_refusal.acquire_valid);
-			request.frame.regs.other[17] ^= 1;
+			request.frame.regs.flags ^= 1;
 			kd_refusal.acquired = 1;
 			parent.remote_result = KD_EXEC_REMOTE_IDLE;
 			kd_spin_selftest_refusal_end(&parent,

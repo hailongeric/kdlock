@@ -28,9 +28,7 @@ struct qspinlock {
 typedef struct qspinlock raw_spinlock_t;
 
 /* Only producer-visible fields; this fixture does not test the register ABI. */
-struct pt_regs {
-	unsigned long ip, sp, di, bx, r12, r13, r14, r15, bp;
-};
+#include "../../../include/kd_regs.h"
 struct task_struct {
 	int pid;
 };
@@ -40,8 +38,9 @@ struct kd_spin_ref {
 };
 #include "spin_request_type.h"
 struct kd_exec_frame {
+ unsigned char spin_kind, spin_regs_decoded;
  unsigned char role;
-	struct pt_regs regs, *regs_ref;
+	struct kd_regs regs, *regs_ref;
 	unsigned long entry_ip, delegated_lock_addr, outer_lock_addr;
 	unsigned int entry_abi, packet_state;
 	struct kd_exec_outer_unlock *outer_unlock_hook;
@@ -73,9 +72,7 @@ struct kd_spin_continuation {
 	struct kd_spin_continuation_stack *storage;
 	bool retired;
 	/* Request-owned return/routing state survives recycling of the node. */
-	enum kd_spin_cont_kind kind;
 	enum kd_spin_resume_result result;
-	bool native_regs_decoded;
 	struct kd_spin_jit_context jit_context;
 	u64 queued_at_ns;
 };
@@ -92,7 +89,7 @@ static struct kd_spin_continuation_stack *kd_spin_continuations = &request_stora
 #define container_of(p,t,m) ((t *)((char *)(p) - offsetof(t,m)))
 static bool kd_source_frame_get(void) { return true; }
 static void kd_source_frame_put(void) { }
-static struct pt_regs *kd_exec_frame_regs(struct kd_exec_frame *frame)
+static struct kd_regs *kd_exec_frame_regs(struct kd_exec_frame *frame)
 { return frame->regs_ref ? frame->regs_ref : &frame->regs; }
 static void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long ip,
 	unsigned long lock, unsigned long gs, struct task_struct *task)
@@ -348,13 +345,13 @@ static int mock_xchg_tail(struct qspinlock *lock, int tail)
 		CHECK(kd_spin_cpu.node_count == producer_count + 1);
 		CHECK(produced_node->locked && !produced_node->completed);
 		CHECK(!produced_node->next && tail == ((producer_count + 1) << 16));
-		CHECK((fixture_request(produced_node)->kind == KD_SPIN_CONT_VIRTUAL) == producer_virtual);
+		CHECK((fixture_request(produced_node)->frame.spin_kind == KD_SPIN_CONT_VIRTUAL) == producer_virtual);
 		CHECK(produced_node->cpuid == 0 && fixture_request(produced_node)->frame.gsbase);
 		CHECK(fixture_request(produced_node)->frame.logical_task ==
 		      (producer_virtual ? &logical_task : current));
 		/* Observe readiness at queue publication, before any peer can run JIT. */
 		if (!producer_virtual) {
-			CHECK(fixture_request(produced_node)->native_regs_decoded);
+			CHECK(fixture_request(produced_node)->frame.spin_regs_decoded);
 			CHECK(fixture_request(produced_node)->frame.regs_ref->bx == 1 && fixture_request(produced_node)->frame.regs_ref->r12 == 2 &&
 			      fixture_request(produced_node)->frame.regs_ref->r13 == 3 && fixture_request(produced_node)->frame.regs_ref->r14 == 4 &&
 			      fixture_request(produced_node)->frame.regs_ref->r15 == 5 && fixture_request(produced_node)->frame.regs_ref->bp == 6);
@@ -551,7 +548,7 @@ static void kd_spin_debug_jit_success_simple(struct kd_spin_diag_slot *lock)
 /* Real hint preparation/bounds and protected-page checks live in the
  * batch fixture; this queue fixture retains only its publication interface. */
 static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
-                                     struct pt_regs *regs)
+                                     struct kd_regs *regs)
 { (void)node; (void)regs; }
 
 static void kd_spin_prefetch_request(struct kd_spin_node *node)
@@ -909,7 +906,7 @@ static void run_level(int number)
 			.logical_task = &logical_task,
 			.gsbase = 0x34000,
 		};
-		struct pt_regs regs = { .ip = 0x1000, .sp = rsp };
+		struct kd_regs regs = { .ip = 0x1000, .sp = rsp };
 		struct kd_spin_ref ref = { &level->lock, 1 };
 		int tickets_before = ticket_count;
 

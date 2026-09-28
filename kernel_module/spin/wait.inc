@@ -55,7 +55,7 @@ kd_spin_publish_wait(struct kd_spin_node *node, struct kd_spin_node *previous,
 		  [completed] "i"(offsetof(struct kd_spin_node, completed)),
 		  [rsp] "i"(offsetof(struct kd_spin_node, rsp)),
 		  [regs] "i"(offsetof(struct kd_spin_continuation, frame.regs_ref)),
-		  [sp] "i"(offsetof(struct pt_regs, sp)),
+		  [sp] "i"(offsetof(struct kd_regs, sp)),
 		  [resume] "i"(kd_spin_resume_completed)
 		: "rax", "rdi", "cc", "memory");
 }

@@ -16,7 +16,7 @@ MODULE_PARM_DESC(
 static atomic_t kd_refusal_claimed = ATOMIC_INIT(0);
 static struct {
 	const struct kd_exec_frame *parent;
-	struct pt_regs parent_regs, node_regs;
+	struct kd_regs parent_regs, node_regs;
 	unsigned long entry, ip, sp, lock, outer, gs, task;
 	unsigned long reject_owner, acquired_owner;
 	unsigned int reject_cpu, acquired_cpu, cancelled, acquired, finished;
@@ -32,7 +32,7 @@ static noinline bool kd_spin_selftest_refuse(struct kd_exec_frame *frame,
 
 	if (kd_readmit_refusals)
 		return kd_spin_selftest_readmit_attempt(frame, node, ret);
-	if (!kd_refusal_kind || kd_refusal_kind > 2 || node->execution->kind != KD_SPIN_CONT_VIRTUAL ||
+	if (!kd_refusal_kind || kd_refusal_kind > 2 || node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL ||
 	    frame->outer_lock_addr != READ_ONCE(kd_refusal_lock) || !parent ||
 	    frame->executed || !parent->executed ||
 	    atomic_cmpxchg(&kd_refusal_claimed, 0, 1))

@@ -26,61 +26,80 @@
  * know the registers in use and would have to save all possible caller-saved
  * registers.
  */
+#define KD_RESTORE_REG_OPERANDS \
+	[reg_ip] "i"(offsetof(struct kd_regs, ip)), \
+	[reg_sp] "i"(offsetof(struct kd_regs, sp)), \
+	[reg_bp] "i"(offsetof(struct kd_regs, bp)), \
+	[reg_r15] "i"(offsetof(struct kd_regs, r15)), \
+	[reg_r14] "i"(offsetof(struct kd_regs, r14)), \
+	[reg_r13] "i"(offsetof(struct kd_regs, r13)), \
+	[reg_r12] "i"(offsetof(struct kd_regs, r12)), \
+	[reg_r11] "i"(offsetof(struct kd_regs, r11)), \
+	[reg_bx] "i"(offsetof(struct kd_regs, bx)), \
+	[reg_r10] "i"(offsetof(struct kd_regs, r10)), \
+	[reg_r9] "i"(offsetof(struct kd_regs, r9)), \
+	[reg_r8] "i"(offsetof(struct kd_regs, r8)), \
+	[reg_ax] "i"(offsetof(struct kd_regs, ax)), \
+	[reg_cx] "i"(offsetof(struct kd_regs, cx)), \
+	[reg_dx] "i"(offsetof(struct kd_regs, dx)), \
+	[reg_si] "i"(offsetof(struct kd_regs, si)), \
+	[reg_di] "i"(offsetof(struct kd_regs, di))
+
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 /* Software packet restoration only: neither entry below loads flags. The
  * normal form consumes a saved stack return; the in-CS form pushes regs.ip.
  * Do not reuse them for a new flags-live exit without its separate contract. */
 __attribute__((noipa)) noinline notrace void
-jump_to_saved_regs(struct pt_regs *regs)
+jump_to_saved_regs(struct kd_regs *regs)
 {
-	asm volatile("movq 0x00(%%rdi), %%r15\n"
-				 "movq 0x08(%%rdi), %%r14\n"
-				 "movq 0x10(%%rdi), %%r13\n"
-				 "movq 0x18(%%rdi), %%r12\n"
-				 "movq 0x20(%%rdi), %%rbp\n"
-				 "movq 0x28(%%rdi), %%rbx\n"
-				 "movq 0x30(%%rdi), %%r11\n"
-				 "movq 0x38(%%rdi), %%r10\n"
-				 "movq 0x40(%%rdi), %%r9\n"
-				 "movq 0x48(%%rdi), %%r8\n"
-				 "movq 0x50(%%rdi), %%rax\n"
-				 "movq 0x58(%%rdi), %%rcx\n"
-				 "movq 0x60(%%rdi), %%rdx\n"
-				 "movq 0x68(%%rdi), %%rsi\n"
-				 "movq 0x98(%%rdi), %%rsp\n"
-				 "movq 0x70(%%rdi), %%rdi\n"
+	asm volatile("movq %c[reg_r15](%%rdi), %%r15\n"
+				 "movq %c[reg_r14](%%rdi), %%r14\n"
+				 "movq %c[reg_r13](%%rdi), %%r13\n"
+				 "movq %c[reg_r12](%%rdi), %%r12\n"
+				 "movq %c[reg_bp](%%rdi), %%rbp\n"
+				 "movq %c[reg_bx](%%rdi), %%rbx\n"
+				 "movq %c[reg_r11](%%rdi), %%r11\n"
+				 "movq %c[reg_r10](%%rdi), %%r10\n"
+				 "movq %c[reg_r9](%%rdi), %%r9\n"
+				 "movq %c[reg_r8](%%rdi), %%r8\n"
+				 "movq %c[reg_ax](%%rdi), %%rax\n"
+				 "movq %c[reg_cx](%%rdi), %%rcx\n"
+				 "movq %c[reg_dx](%%rdi), %%rdx\n"
+				 "movq %c[reg_si](%%rdi), %%rsi\n"
+				 "movq %c[reg_sp](%%rdi), %%rsp\n"
+				 "movq %c[reg_di](%%rdi), %%rdi\n"
 				 "retq\n"
 				 :
-				 :
+				 : KD_RESTORE_REG_OPERANDS
 				 : "memory");
 	__builtin_unreachable();
 }
 
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace void
-jump_to_saved_regs_in_cs(struct pt_regs *regs)
+jump_to_saved_regs_in_cs(struct kd_regs *regs)
 {
-	asm volatile("movq 0x00(%%rdi), %%r15\n"
-				 "movq 0x08(%%rdi), %%r14\n"
-				 "movq 0x10(%%rdi), %%r13\n"
-				 "movq 0x18(%%rdi), %%r12\n"
-				 "movq 0x20(%%rdi), %%rbp\n"
-				 "movq 0x28(%%rdi), %%rbx\n"
-				 "movq 0x30(%%rdi), %%r11\n"
-				 "movq 0x38(%%rdi), %%r10\n"
-				 "movq 0x40(%%rdi), %%r9\n"
-				 "movq 0x48(%%rdi), %%r8\n"
-				 "movq 0x50(%%rdi), %%rax\n"
-				 "movq 0x58(%%rdi), %%rcx\n"
-				 "movq 0x60(%%rdi), %%rdx\n"
-				 "movq 0x68(%%rdi), %%rsi\n"
-				 "movq 0x98(%%rdi), %%rsp\n"
-				 "pushq 0x80(%%rdi)\n"
-				 "movq 0x70(%%rdi), %%rdi\n"
+	asm volatile("movq %c[reg_r15](%%rdi), %%r15\n"
+				 "movq %c[reg_r14](%%rdi), %%r14\n"
+				 "movq %c[reg_r13](%%rdi), %%r13\n"
+				 "movq %c[reg_r12](%%rdi), %%r12\n"
+				 "movq %c[reg_bp](%%rdi), %%rbp\n"
+				 "movq %c[reg_bx](%%rdi), %%rbx\n"
+				 "movq %c[reg_r11](%%rdi), %%r11\n"
+				 "movq %c[reg_r10](%%rdi), %%r10\n"
+				 "movq %c[reg_r9](%%rdi), %%r9\n"
+				 "movq %c[reg_r8](%%rdi), %%r8\n"
+				 "movq %c[reg_ax](%%rdi), %%rax\n"
+				 "movq %c[reg_cx](%%rdi), %%rcx\n"
+				 "movq %c[reg_dx](%%rdi), %%rdx\n"
+				 "movq %c[reg_si](%%rdi), %%rsi\n"
+				 "movq %c[reg_sp](%%rdi), %%rsp\n"
+				 "pushq %c[reg_ip](%%rdi)\n"
+				 "movq %c[reg_di](%%rdi), %%rdi\n"
 				 "retq\n"
 				 :
-				 :
+				 : KD_RESTORE_REG_OPERANDS
 				 : "memory");
 	__builtin_unreachable();
 }
@@ -156,21 +175,21 @@ kd_spin_restore_request(struct kd_spin_continuation *execution,
 		"jz 1f\n"
 		"pushq %c[ip](%%rdi)\n"
 		"1: pushq %%rdx\n"
-		"pushq %c[packet]+0x70(%%rdi)\n"
-		"movq %c[packet]+0x00(%%rdi), %%r15\n"
-		"movq %c[packet]+0x08(%%rdi), %%r14\n"
-		"movq %c[packet]+0x10(%%rdi), %%r13\n"
-		"movq %c[packet]+0x18(%%rdi), %%r12\n"
-		"movq %c[packet]+0x20(%%rdi), %%rbp\n"
-		"movq %c[packet]+0x28(%%rdi), %%rbx\n"
-		"movq %c[packet]+0x30(%%rdi), %%r11\n"
-		"movq %c[packet]+0x38(%%rdi), %%r10\n"
-		"movq %c[packet]+0x40(%%rdi), %%r9\n"
-		"movq %c[packet]+0x48(%%rdi), %%r8\n"
-		"movq %c[packet]+0x50(%%rdi), %%rax\n"
-		"movq %c[packet]+0x58(%%rdi), %%rcx\n"
-		"movq %c[packet]+0x60(%%rdi), %%rdx\n"
-		"movq %c[packet]+0x68(%%rdi), %%rsi\n"
+		"pushq %c[packet]+%c[reg_di](%%rdi)\n"
+		"movq %c[packet]+%c[reg_r15](%%rdi), %%r15\n"
+		"movq %c[packet]+%c[reg_r14](%%rdi), %%r14\n"
+		"movq %c[packet]+%c[reg_r13](%%rdi), %%r13\n"
+		"movq %c[packet]+%c[reg_r12](%%rdi), %%r12\n"
+		"movq %c[packet]+%c[reg_bp](%%rdi), %%rbp\n"
+		"movq %c[packet]+%c[reg_bx](%%rdi), %%rbx\n"
+		"movq %c[packet]+%c[reg_r11](%%rdi), %%r11\n"
+		"movq %c[packet]+%c[reg_r10](%%rdi), %%r10\n"
+		"movq %c[packet]+%c[reg_r9](%%rdi), %%r9\n"
+		"movq %c[packet]+%c[reg_r8](%%rdi), %%r8\n"
+		"movq %c[packet]+%c[reg_ax](%%rdi), %%rax\n"
+		"movq %c[packet]+%c[reg_cx](%%rdi), %%rcx\n"
+		"movq %c[packet]+%c[reg_dx](%%rdi), %%rdx\n"
+		"movq %c[packet]+%c[reg_si](%%rdi), %%rsi\n"
 		/* Native execution retains this root until the final unlock barrier. */
 		"cmpl $2, 8(%%rsp)\n"
 		"je 3f\n"
@@ -191,6 +210,7 @@ kd_spin_restore_request(struct kd_spin_continuation *execution,
 		: "D"(execution), "d"(mode),
 		  [unpin] "i"(kd_spin_restore_unpin),
 		  [packet] "i"(offsetof(struct kd_spin_continuation, frame.regs)),
+		  KD_RESTORE_REG_OPERANDS,
 		  [sp] "i"(offsetof(struct kd_spin_continuation, frame.regs.sp)),
 		  [ip] "i"(offsetof(struct kd_spin_continuation, frame.regs.ip)),
 		  KD_SPIN_RETIRE_OPERANDS

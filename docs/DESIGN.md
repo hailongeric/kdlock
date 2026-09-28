@@ -251,7 +251,7 @@ This is the core execution function called by the combiner. Its actual signature
 is:
 
 ```c
-int kd_exe_on_call_hl_entry(struct pt_regs *regs, unsigned long entry_ip,
+int kd_exe_on_call_hl_entry(struct kd_regs *regs, unsigned long entry_ip,
                             unsigned long outer_lock_addr);
 ```
 
@@ -314,13 +314,13 @@ completion. An inner B unlock normally resumes A. Only the legacy
 
 ### 8.1 Registers And State
 
-The wrapper takes `pt_regs *` and exactly two words:
+The wrapper takes `kd_regs *` and exactly two words:
 `{waiter kernel GS base, logical waiter task}`.
 Inputs are reinstalled for every continuation. Hardware GS/current, scheduler,
 IRQ/RCU state, flags and SIMD/FPU are not switched to the waiter.
 
 Physical RSP/RBP belong to the wrapper; R13/R12 initially represent virtual
-RSP/RBP. R11 is the shared `pt_regs` backing pointer; virtual GPR spills use
+RSP/RBP. R11 is the shared `kd_regs` backing pointer; virtual GPR spills use
 that packet directly, with no wrapper-stack copy on entry or exit. CPU-resident
 values still require materialization before C consumes a full packet.
 R12-R15 also form the special-register

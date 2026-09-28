@@ -15,7 +15,7 @@ static int is_end_point(unsigned long addr)
 	return 0;
 }
 
-static int is_outer_lock_unlock(struct pt_regs *regs,
+static int is_outer_lock_unlock(struct kd_regs *regs,
 				unsigned long outer_lock_addr)
 {
 	if (regs->ip != raw_spin_unlock_addr &&
@@ -29,7 +29,7 @@ static int is_outer_lock_unlock(struct pt_regs *regs,
 	return regs->di == outer_lock_addr;
 }
 
-static int advance_after_known_call(struct pt_regs *regs)
+static int advance_after_known_call(struct kd_regs *regs)
 {
 	unsigned long return_ip;
 
@@ -43,7 +43,7 @@ static int advance_after_known_call(struct pt_regs *regs)
 }
 
 static int advance_and_save_continuation(struct kd_exec_frame *frame,
-					 struct pt_regs *regs)
+					 struct kd_regs *regs)
 {
 	int ret = advance_after_known_call(regs);
 
@@ -53,7 +53,7 @@ static int advance_and_save_continuation(struct kd_exec_frame *frame,
 }
 
 static int finish_acquired_spin_call(struct kd_exec_frame *frame,
-				     struct pt_regs *regs, int result)
+				     struct kd_regs *regs, int result)
 {
 	const struct kd_call_state *call;
 	unsigned long base, end, return_ip, lock;
@@ -106,7 +106,7 @@ static int finish_acquired_spin_call(struct kd_exec_frame *frame,
 }
 
 static int finish_known_lock_call(struct kd_exec_frame *frame,
-				  struct pt_regs *regs, int result)
+				  struct kd_regs *regs, int result)
 {
 	unsigned long staged_ip = regs->ip, staged_sp = regs->sp;
 	int acquired = finish_acquired_spin_call(frame, regs, result);
@@ -129,7 +129,7 @@ static int finish_known_lock_call(struct kd_exec_frame *frame,
 }
 
 static int kd_mutex_stack_prepare(struct kd_exec_frame *frame,
-				  struct pt_regs *regs,
+				  struct kd_regs *regs,
 				  struct kd_mutex_call_stack *saved)
 {
 	unsigned long base, end, return_ip;
@@ -170,7 +170,7 @@ static int kd_mutex_stack_prepare(struct kd_exec_frame *frame,
 }
 
 static int kd_mutex_stack_finish(struct kd_exec_frame *frame,
-				 struct pt_regs *regs,
+				 struct kd_regs *regs,
 				 const struct kd_mutex_call_stack *saved)
 {
 	unsigned char after[KD_MUTEX_CALL_STACK_BYTES];
@@ -206,7 +206,7 @@ static int kd_mutex_stack_finish(struct kd_exec_frame *frame,
 }
 
 static int handle_known_mutex_call(struct kd_exec_frame *frame,
-				   struct pt_regs *regs,
+				   struct kd_regs *regs,
 				   unsigned long outer_lock_addr)
 {
 	struct kd_mutex_call_stack saved;
@@ -252,7 +252,7 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 	return kd_mutex_stack_finish(frame, regs, &saved);
 }
 
-static int handle_known_call(struct pt_regs *regs,
+static int handle_known_call(struct kd_regs *regs,
 			     unsigned long outer_lock_addr)
 {
 	struct kd_exec_frame *frame = kd_exec_current_frame();
@@ -320,7 +320,7 @@ static int handle_known_call(struct pt_regs *regs,
 
 /* Include control classification, blocking and nested execution, but not the
  * backend's later original-waiter native suffix/ACK wait after dispatch exits. */
-static int kd_jit_timed_control(struct pt_regs *regs, unsigned long outer)
+static int kd_jit_timed_control(struct kd_regs *regs, unsigned long outer)
 {
 	u64 start = kd_jit_timing_start();
 	int ret = handle_known_call(regs, outer);

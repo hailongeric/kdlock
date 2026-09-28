@@ -18,23 +18,23 @@ FIXTURE = r'''
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-struct pt_regs { unsigned long w[21]; };
+struct kd_regs { unsigned long w[21]; };
 #define __KERNEL__
 #include "kd_jit_batch.h"
-extern void main_wrapper(struct pt_regs *, unsigned long *);
+extern void main_wrapper(struct kd_regs *, unsigned long *);
 int main(void) {
  for (unsigned int refuse=0;refuse<2;refuse++) {
-  struct pt_regs regs;
+  struct kd_regs regs;
   memset(&regs,0xde,sizeof(regs));
   unsigned long stack[64]={0};
   stack[14]=0xabcd; stack[15]=0xcafe;
   stack[16]=0x115;
   stack[17]=0x55aa; /* No caller lock-byte input or path cookie is needed. */
   for(unsigned int i=18;i<24;i++) stack[i]=0x123400+i;
-  regs.w[4]=(unsigned long)&stack[refuse?16:48];
-  regs.w[16]=0x1000;
-  regs.w[19]=(unsigned long)&stack[16];
-  struct pt_regs before=regs;
+  regs.w[2]=(unsigned long)&stack[refuse?16:48];
+  regs.w[0]=0x1000;
+  regs.w[1]=(unsigned long)&stack[16];
+  struct kd_regs before=regs;
   unsigned int state=1;
   struct kd_jit_batch_call call={
    .regs=&regs, .args={0,0}, .code=(char *)main_wrapper+32,
@@ -50,36 +50,36 @@ int main(void) {
    continue;
   }
 #if NATIVE_CALL
-  assert(call.args[0]==1 && call.args[1] && state==0 && regs.w[16]==0x5000);
+  assert(call.args[0]==1 && call.args[1] && state==0 && regs.w[0]==0x5000);
   /* The substituted native callee returns with the ordinary C callee saves
    * intact. Resume only its exact saved return PC/stack, in the same packet. */
   for(unsigned int step=0;step<2;step++) {
-   assert(call.args[0]==1 && regs.w[16]==(step?0x6000:0x5000));
-   regs.w[16]=*(unsigned long *)regs.w[19];
-   regs.w[19]+=8;
+   assert(call.args[0]==1 && regs.w[0]==(step?0x6000:0x5000));
+   regs.w[0]=*(unsigned long *)regs.w[1];
+   regs.w[1]+=8;
    call.args[0]=call.args[1]=0;
    /* FULL packets reenter the regular wrapper, never the pristine-minimal
     * directory. Known control calls retain their precise continuation. */
    main_wrapper(&regs,call.args);
   }
   assert(call.args[0]==1 && call.args[1] && state==0);
-  assert(regs.w[16]==0x4000 && regs.w[19]==before.w[19]-8);
-  assert(regs.w[13]==before.w[19] && regs.w[12]==FINAL_IP);
-  assert(regs.w[14]==0x9000 && regs.w[11]==before.w[4]);
+  assert(regs.w[0]==0x4000 && regs.w[1]==before.w[1]-8);
+  assert(regs.w[15]==before.w[1] && regs.w[14]==FINAL_IP);
+  assert(regs.w[16]==0x9000 && regs.w[13]==before.w[2]);
 #elif FAILURE
   assert(call.args[0]==1 && call.args[1] && state==0);
-  assert(regs.w[16]==0x4000 && regs.w[19]==before.w[19]-8);
+  assert(regs.w[0]==0x4000 && regs.w[1]==before.w[1]-8);
   assert(stack[15]==FINAL_IP && stack[14]==0xabcd);
-  assert(regs.w[13]==before.w[19]+(FAILURE==4?8:0));
-  assert(regs.w[12]==FINAL_IP+(FAILURE==6?8:0));
-  assert(regs.w[11]==before.w[4]+(FAILURE==5?8:0));
+  assert(regs.w[15]==before.w[1]+(FAILURE==4?8:0));
+  assert(regs.w[14]==FINAL_IP+(FAILURE==6?8:0));
+  assert(regs.w[13]==before.w[2]+(FAILURE==5?8:0));
 #else
   assert(call.args[0]==7 && call.args[1] && state==2);
-  assert(regs.w[16]==FINAL_IP && regs.w[19]==before.w[19]);
+  assert(regs.w[0]==FINAL_IP && regs.w[1]==before.w[1]);
   /* Successful fusion never constructs a virtual return slot. */
   assert(stack[15]==0xcafe && stack[14]==0xabcd);
 #endif
-  assert(regs.w[4]==before.w[4]);
+  assert(regs.w[2]==before.w[2]);
   assert(stack[16]==0x116 && stack[17]==0x55aa);
   for(unsigned int i=18;i<24;i++) assert(stack[i]==0x123400+i);
  }

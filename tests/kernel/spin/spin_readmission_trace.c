@@ -14,7 +14,7 @@ MODULE_PARM_DESC(spin_selftest_readmit_lock,
 
 static struct {
 	const struct kd_exec_frame *parent;
-	struct pt_regs parent_regs, node_regs;
+	struct kd_regs parent_regs, node_regs;
 	unsigned long entry, ip, sp, lock, outer, gs, task, node;
 	unsigned long owner[2], head[2], tail[2], return_owner;
 	unsigned int cpu[2], attempts, cancelled, ended[2], return_cpu;
@@ -76,7 +76,7 @@ kd_spin_selftest_readmit_attempt(struct kd_exec_frame *frame,
 	unsigned int index;
 
 	if (!kd_readmit_refusals || kd_readmit_refusals > 2 ||
-	    node->execution->kind != KD_SPIN_CONT_VIRTUAL || !parent || frame->executed ||
+	    node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL || !parent || frame->executed ||
 	    !parent->executed)
 		return false;
 	if (frame->outer_lock_addr != READ_ONCE(kd_readmit_lock)) {

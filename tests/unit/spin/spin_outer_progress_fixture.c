@@ -82,7 +82,7 @@ static void prepare_virtual_ledger(void)
 		frame->jit_lock_released[i] = false;
 	}
 }
-static struct pt_regs readmission_regs;
+static struct kd_regs readmission_regs;
 static unsigned long kd_exec_invariant_failures;
 static unsigned int mode, failures, scripts, pops, native_waits;
 static unsigned int early_releases, waits, stage;
@@ -99,7 +99,7 @@ static unsigned int handoff_starts, handoff_ends;
  * deterministic compiler-contract check, not a Linux memory-order litmus. */
 static struct {
 	struct kd_spin_node *node;
-	struct pt_regs regs;
+	struct kd_regs regs;
 	unsigned int count;
 	bool enabled, completed;
 } wake_probe;
@@ -281,7 +281,7 @@ static bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, int pid,
 				 unsigned long ip)
 {
 	(void)pid;
-	CHECK(ip == ((fixture_request(&request)->kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL));
+	CHECK(ip == ((fixture_request(&request)->frame.spin_kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL));
 	return exe == &ready_entry && mode != 4;
 }
 /* Hint address selection is exercised with real layouts by spin_batch_fixture.
@@ -308,7 +308,7 @@ static int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
 /* Real hint preparation/bounds and protected-page checks live in the
  * batch fixture; this queue fixture retains only its publication interface. */
 static void kd_spin_prepare_prefetch(struct kd_spin_node *node,
-                                     struct pt_regs *regs)
+                                     struct kd_regs *regs)
 { (void)node; (void)regs; }
 
 static void kd_spin_prefetch_request(struct kd_spin_node *node)
@@ -319,7 +319,7 @@ static void kd_spin_prefetch_request(struct kd_spin_node *node)
 static struct kd_exe_info *kd_get_exe(int pid, unsigned long ip)
 {
 	(void)pid;
-	CHECK(ip == ((fixture_request(&request)->kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL));
+	CHECK(ip == ((fixture_request(&request)->frame.spin_kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL));
 	ready_entry.RIP = ip;
 	return mode != 4 && mode != 7 ? &ready_entry : NULL;
 }
@@ -331,7 +331,7 @@ static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi
 	CHECK(abi == KD_ENTRY_ABI_LEGACY);
 }
 static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
-				   struct pt_regs *regs, unsigned long ip,
+				   struct kd_regs *regs, unsigned long ip,
 				   unsigned long lock);
 
 static int kd_exec_invariant_failure(void);
@@ -382,7 +382,7 @@ int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int depth, bool lea
 	frame->batch_lease = lease;
 	return 0;
 }
-int kd_exec_frame_pop(struct kd_exec_frame *frame, struct pt_regs *regs)
+int kd_exec_frame_pop(struct kd_exec_frame *frame, struct kd_regs *regs)
 {
 	CHECK(frame == &active &&
 	      (frame->completion_seen ||
@@ -538,12 +538,12 @@ static void checked_run_combiner(struct qspinlock *lock,
 	bool full = mode == 8 && node == &request;
 
 	if (full) {
-		CHECK(sizeof(struct pt_regs) == 168 &&
-		      offsetof(struct kd_exec_frame, regs) == 72 &&
+		CHECK(sizeof(struct kd_regs) == 168 &&
+		      offsetof(struct kd_exec_frame, regs) == 40 &&
 		      sizeof(struct kd_exec_context) == 5208);
 		CHECK(!kd_exec_current_context()->depth);
 		for (unsigned int i = 0; i < KD_EXEC_MAX_NESTING; i++) {
-			struct pt_regs regs;
+			struct kd_regs regs;
 			struct kd_exec_frame *frame;
 
 			memset(&regs, 0x31 + i, sizeof(regs));
@@ -689,12 +689,12 @@ static void early_a(bool native)
 }
 
 static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
-				   struct pt_regs *regs, unsigned long ip,
+				   struct kd_regs *regs, unsigned long ip,
 				   unsigned long lock)
 {
 	CHECK(exe == &ready_entry);
 	CHECK(regs == kd_exec_frame_regs(&active) &&
-	      ip == ((fixture_request(&request)->kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL) &&
+	      ip == ((fixture_request(&request)->frame.spin_kind == KD_SPIN_CONT_VIRTUAL) ? 0x900UL : 0x800UL) &&
 	      lock == (unsigned long)&origins[0]);
 	scripts++;
 	if (mode == 11 || mode == 12) {
@@ -785,7 +785,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 							   4, 5, 6, 0x800 };
 				unsigned int length = 0;
 				kd_spinlock_t *gate;
-				struct pt_regs expected_regs;
+				struct kd_regs expected_regs;
 				struct kd_exec_frame parent_before;
 				struct kd_spin_jit_context context_before;
 
@@ -828,7 +828,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 							KD_EXEC_REMOTE_WAITING,
 					};
 					prepare_virtual_ledger();
-					fixture_request(&request)->kind = KD_SPIN_CONT_VIRTUAL;
+					fixture_request(&request)->frame.spin_kind = KD_SPIN_CONT_VIRTUAL;
 					fixture_request(&request)->jit_context = request_context;
 					parent_before = requester;
 					context_before = request_context;
@@ -877,7 +877,7 @@ static unsigned int rejected_selection(bool virtual, unsigned int cpu)
 				      fixture_request(&request)->frame.logical_task == &waiter);
 				CHECK(!memcmp(fixture_request(&request)->frame.regs_ref, &expected_regs,
 					      sizeof(expected_regs)));
-				CHECK(fixture_request(&request)->native_regs_decoded ==
+				CHECK(fixture_request(&request)->frame.spin_regs_decoded ==
 				      !virtual);
 				if (virtual) {
 					CHECK(!memcmp(&requester,
@@ -945,7 +945,7 @@ static unsigned int repeated_admission(void)
 			fixture_request(&successor)->frame.logical_task = &waiter;
 			successor.cpuid = 2;
 			successor.locked = 1;
-			readmission_regs = (struct pt_regs){
+			readmission_regs = (struct kd_regs){
 				.ip = 0x800,
 				.sp = (unsigned long)&saved[8],
 				.di = (unsigned long)&origins[0],
@@ -1051,7 +1051,7 @@ static unsigned int preentry_packet(void)
 			shadow_states[0].lock_addr[0] =
 				(unsigned long)&origins[0];
 			shadow_states[0].curr_cs_cpu = -1;
-			readmission_regs = (struct pt_regs){
+			readmission_regs = (struct kd_regs){
 				.ip = 0x800,
 				.sp = (unsigned long)&saved[8],
 				.di = (unsigned long)&origins[0],
@@ -1083,7 +1083,7 @@ static unsigned int preentry_packet(void)
 					.remote_result = KD_EXEC_REMOTE_WAITING,
 				};
 				prepare_virtual_ledger();
-				fixture_request(&request)->kind = KD_SPIN_CONT_VIRTUAL;
+				fixture_request(&request)->frame.spin_kind = KD_SPIN_CONT_VIRTUAL;
 				fixture_request(&request)->jit_context = request_context;
 			}
 			scripts = pops = jit_disables = 0;
@@ -1099,7 +1099,7 @@ static unsigned int preentry_packet(void)
 			CHECK((kd_exec_current_frame() != &fixture_request(&request)->frame) && !request.completed &&
 			      !(fixture_request(&request)->result == KD_SPIN_RES_NATIVE_READY) &&
 			      (fixture_request(&request)->result == KD_SPIN_RES_RETRY) == !virtual);
-			CHECK(fixture_request(&request)->native_regs_decoded == !virtual);
+			CHECK(fixture_request(&request)->frame.spin_regs_decoded == !virtual);
 			CHECK(!request.locked && successor.locked &&
 			      request.next == &successor && !successor.next);
 			CHECK(origins[0].held && !origins[1].held &&
@@ -1126,7 +1126,7 @@ static unsigned int preentry_packet(void)
 static unsigned int publication_boundaries(void)
 {
 	unsigned long saved[8] = { 0 };
-	struct pt_regs reused;
+	struct kd_regs reused;
 
 	memset(&reused, 0xa5, sizeof(reused));
 	for (unsigned int path = 0; path < 5; path++) {
@@ -1149,7 +1149,7 @@ static unsigned int publication_boundaries(void)
 		readmission_regs.sp = (unsigned long)&saved[8];
 		readmission_regs.di = (unsigned long)&origins[0];
 		*fixture_request(&request)->frame.regs_ref = readmission_regs;
-		fixture_request(&request)->native_regs_decoded = true;
+		fixture_request(&request)->frame.spin_regs_decoded = true;
 		fixture_request(&request)->frame.gsbase = 0x20000;
 		request.cpuid = 1;
 		fixture_request(&request)->frame.logical_task = fixture_request(&successor)->frame.logical_task = &waiter;
@@ -1252,7 +1252,7 @@ int main(void)
 				.remote_result = KD_EXEC_REMOTE_WAITING,
 			};
 			prepare_virtual_ledger();
-			fixture_request(&request)->kind = KD_SPIN_CONT_VIRTUAL;
+			fixture_request(&request)->frame.spin_kind = KD_SPIN_CONT_VIRTUAL;
 			fixture_request(&request)->jit_context = request_context;
 			fixture_request(&request)->frame.regs_ref->ip = 0x801;
 		}
@@ -1320,7 +1320,7 @@ int main(void)
 #endif
 	);
 	printf("spin full frame refusal: %u real API failures, regs=%zu frame=%zu context=%zu\n",
-	       full_pool_calls, sizeof(struct pt_regs),
+	       full_pool_calls, sizeof(struct kd_regs),
 	       sizeof(struct kd_exec_frame), sizeof(struct kd_exec_context));
 	printf("spin preentry queue return: %u joined producer/combiner/acquisition cases\n",
 	       queue_cases);

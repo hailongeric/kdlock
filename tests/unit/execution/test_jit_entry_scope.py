@@ -49,8 +49,8 @@ def main():
             "void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,",
         ),
         "kernel_module/exe.c": (
-            "static int kd_jit_timed_control(struct pt_regs *regs, unsigned long outer)",
-            "static int advance_after_known_call(struct pt_regs *regs)",
+            "static int kd_jit_timed_control(struct kd_regs *regs, unsigned long outer)",
+            "static int advance_after_known_call(struct kd_regs *regs)",
             "static int advance_and_save_continuation(struct kd_exec_frame *frame,",
             "static void kd_jit_log_hl_error(const char *reason,",
             "static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,",
@@ -61,8 +61,8 @@ def main():
             "static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,",
             "bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,",
             "bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,",
-            "static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,",
-            "int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,",
+            "static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,",
+            "int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs,",
             "int kd_exe_spin_batch_resume(struct kd_exe_info *exe,",
             "bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,",
             "bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,",
@@ -76,9 +76,9 @@ def main():
     hostcalls = "".join(
         definition(executor, name)
         for name in (
-            "static int kd_hostcall_invoke_ktime_get(struct pt_regs *regs)",
-            "static int kd_hostcall_invoke_ktime_get_ns(struct pt_regs *regs)",
-            "static int kd_hostcall_invoke_int_sqrt(struct pt_regs *regs)",
+            "static int kd_hostcall_invoke_ktime_get(struct kd_regs *regs)",
+            "static int kd_hostcall_invoke_ktime_get_ns(struct kd_regs *regs)",
+            "static int kd_hostcall_invoke_int_sqrt(struct kd_regs *regs)",
         )
     )
     hostcalls += executor[
@@ -89,7 +89,7 @@ def main():
     for name in (
         "static const struct kd_hostcall_desc *kd_hostcall_lookup(unsigned long addr)",
         "static int kd_hostcall_validate(const struct kd_hostcall_desc *service)",
-        "static int kd_hostcall_dispatch(struct pt_regs *regs)",
+        "static int kd_hostcall_dispatch(struct kd_regs *regs)",
     ):
         hostcalls += definition(executor, name)
     # Instrument only lookup entry; keep the production probe/ready decisions.

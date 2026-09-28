@@ -240,5 +240,5 @@ static void kd_spin_prepare_regs(struct kd_spin_node *node)
 	node->execution->frame.regs_ref->bp = saved[6];
 	node->execution->frame.regs_ref->ip = saved[7];
 	node->execution->frame.regs_ref->sp = (unsigned long)(saved + 8);
-	node->execution->native_regs_decoded = true;
+	node->execution->frame.spin_regs_decoded = true;
 }

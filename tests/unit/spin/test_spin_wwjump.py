@@ -51,12 +51,12 @@ FIXTURE = r'''
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-struct pt_regs { unsigned long w[21]; };
+struct kd_regs { unsigned long w[21]; };
 #define __KERNEL__
 #include "kd_jit_batch.h"
 extern void kd_spin_batch_enter(void *, struct kd_jit_batch_call *(*)(void *));
-extern void main_wrapper(struct pt_regs *, unsigned long *);
-static struct pt_regs packets[4];
+extern void main_wrapper(struct kd_regs *, unsigned long *);
+static struct kd_regs packets[4];
 static unsigned long bodies[4];
 static struct kd_jit_batch_call call;
 static int index_;
@@ -69,20 +69,21 @@ static struct kd_jit_batch_call *step(void *opaque)
         assert(bodies[index_ - 1] == (kind != 4));
         assert(call.args[1] == (unsigned long)(kind != 4));
         if (kind == 4) {
-            assert(call.args[0] == 6 && v[16] == 0x3000);
+            assert(call.args[0] == 6 && v[0] == 0x3000);
         } else {
-            for (int j=0; j<6; j++) assert(v[j] == 0x101UL+j);
-            assert(v[19] == 0x9000 && v[14] == 0x6000);
+            for (int j=0; j<4; j++) assert(v[j+3] == 0x101UL+j);
+            assert(v[2] == 0x105 && v[8] == 0x106);
+            assert(v[1] == 0x9000 && v[16] == 0x6000);
             if (kind == 1) {
                 /* R11's JIT spill already lives in the packet. RCX is CPU
                  * resident and the reduced final exit still need not save it. */
-                assert(v[6] == 0x107 && v[11] == 0xdead);
-                assert(call.args[0] == 1 && v[16] == 0x4000);
+                assert(v[7] == 0x107 && v[13] == 0xdead);
+                assert(call.args[0] == 1 && v[0] == 0x4000);
             } else {
-                assert(v[6] == 0x107 && v[11] == 0x108);
-                assert(v[12] == 0x109 && v[13] == 0x10a);
-                assert(v[9] == 0x10b && v[8] == 0x10c && v[7] == 0x10d);
-                assert(v[16] == 0x5000);
+                assert(v[7] == 0x107 && v[13] == 0x108);
+                assert(v[14] == 0x109 && v[15] == 0x10a);
+                assert(v[11] == 0x10b && v[10] == 0x10c && v[9] == 0x10d);
+                assert(v[0] == 0x5000);
                 assert(call.args[0] == (kind == 2 ? 5UL : 1UL));
             }
         }
@@ -101,17 +102,17 @@ int main(void)
 {
     assert(offsetof(struct kd_jit_batch_call, lock) == 32);
     assert(offsetof(struct kd_jit_batch_call, unlock) == 40);
-    assert(!memcmp((char *)main_wrapper + 9, "KDWB001", 7));
+    assert(!memcmp((char *)main_wrapper + 9, "KDWB002", 7));
     for (int unified=0; unified<2; unified++) {
     index_=0;
     memset(bodies,0,sizeof(bodies));
     for (int i=0; i<4; i++) {
         for (int j=0;j<21;j++) packets[i].w[j]=0xdead;
-        packets[i].w[5]=(unsigned long)&bodies[i];
-        packets[i].w[10]=i+1;
-        packets[i].w[14]=0x6000;
-        packets[i].w[16]=0x3000;
-        packets[i].w[19]=0x9000;
+        packets[i].w[8]=(unsigned long)&bodies[i];
+        packets[i].w[12]=i+1;
+        packets[i].w[16]=0x6000;
+        packets[i].w[0]=0x3000;
+        packets[i].w[1]=0x9000;
     }
     if (!unified) kd_spin_batch_enter(packets, step);
     else {
@@ -122,10 +123,10 @@ int main(void)
     }
     /* Normal C ABI still writes all GPRs, including a final unlock. */
     unsigned long args[2]={0x7000,0x8000};
-    packets[0].w[5]=(unsigned long)&bodies[0];
-    packets[0].w[10]=1;
+    packets[0].w[8]=(unsigned long)&bodies[0];
+    packets[0].w[12]=1;
     main_wrapper(&packets[0], args);
-    assert(packets[0].w[6] == 0x107 && packets[0].w[11] == 0x108);
+    assert(packets[0].w[7] == 0x107 && packets[0].w[13] == 0x108);
     assert(bodies[0] == 2 && args[1] == 1);
     puts("[PASS] legacy resident/unified C loop, reduced final ABI, full continuation/refusal ABI");
 }

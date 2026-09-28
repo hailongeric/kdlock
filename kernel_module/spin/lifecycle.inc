@@ -64,14 +64,18 @@ int kd_spinlock_init(void)
 	/* Preserve pair separation within each diagnostic slot and across slots. */
 	BUILD_BUG_ON(__alignof__(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
-	/* The shadow-stack poll compares a 32-bit result. Compact only the
-	 * internal kind tag, keeping minimal IP/SP on one remotely fetched line. */
-	BUILD_BUG_ON(KD_SPIN_CONT_VIRTUAL > 0xff);
+	/* Queue tags share a producer-owned byte; publication/retirement flags
+	 * remain separate. Core identity/state and all three continuation words
+	 * must fit in the aligned first line; virtual GPRs occupy the next. */
+	BUILD_BUG_ON(KD_SPIN_CONT_VIRTUAL > 1);
 	BUILD_BUG_ON(sizeof(((struct kd_spin_continuation *)0)->result) != sizeof(u32));
-	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, frame) != 24);
-	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, frame.regs.ip) / L1_CACHE_BYTES !=
-		     offsetof(struct kd_spin_continuation, frame.regs.sp) / L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, frame.packet_state) >= 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, frame) != 0);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs) != 40);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.bp) + sizeof(unsigned long) != L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.r15) != L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.r11) >= 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs_ref) / L1_CACHE_BYTES !=
+		     offsetof(struct kd_exec_frame, parent) / L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) % L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) > 768);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation_stack) > KD_SPIN_CONT_BYTES);

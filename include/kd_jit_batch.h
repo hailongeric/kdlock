@@ -11,7 +11,7 @@
 #define KD_JIT_ABI_OFFSET 45
 #ifndef __ASSEMBLER__
 struct kd_jit_batch_call {
-	struct pt_regs *regs;
+	struct kd_regs *regs;
 	unsigned long args[2];
 	void *code;
 	unsigned long lock;
@@ -31,7 +31,7 @@ struct kd_jit_batch_call {
  * RBP/RSP obey normal call boundaries; the new wrapper only saves RBP. */
 static __always_inline void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 {
-	struct pt_regs *regs = call->regs;
+	struct kd_regs *regs = call->regs;
 	unsigned long *args = call->args;
 	void *entry = call->code;
 	void *metadata = call;
@@ -43,16 +43,16 @@ static __always_inline void kd_jit_clobber_call_v1(struct kd_jit_batch_call *cal
 		: "rbx", "rcx", "r8", "r9", "r10", "r11",
 		  "r12", "r13", "r14", "r15", "cc", "memory");
 }
-/* KDWB001 predates the compiler clobber boundary: its return discards the
+/* The batch entry retains the legacy return convention: it discards the
  * wrapper frame without restoring physical RBP. Save only that frame pointer
- * here, so existing images can share the resident C loop with KDWC001. The
+ * here, so both layout-2 entries can share the resident C loop. The
  * compiler owns all other live combiner values, as in the v1 call above.
  * Keep CALL alignment and the caller's exact RSP; never infer its prologue.
  * SAVE/RESTORE describe the unchanged outer unwind state: this inner RBP pop
  * is not the enclosing C function's epilogue. They generate no instructions. */
 static __always_inline void kd_jit_legacy_batch_call(struct kd_jit_batch_call *call)
 {
-	struct pt_regs *regs = call->regs;
+	struct kd_regs *regs = call->regs;
 	unsigned long *args = call->args;
 	void *entry = call->code;
 	void *metadata = call;

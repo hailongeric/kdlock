@@ -33,7 +33,7 @@ static atomic_t kd_full_shadow_claimed = ATOMIC_INIT(0);
 static struct {
 	struct kd_exec_frame expected;
 	struct kd_combiner_state shadow;
-	struct pt_regs regs;
+	struct kd_regs regs;
 	raw_spinlock_t *lock;
 	unsigned long return_ip;
 	unsigned int preempt;
@@ -79,7 +79,7 @@ static bool kd_spin_selftest_full_shadow_pending(void)
 }
 
 static bool kd_spin_selftest_full_shadow_begin(raw_spinlock_t *lock,
-					       struct pt_regs *regs,
+					       struct kd_regs *regs,
 					       struct kd_exec_frame *frame)
 {
 	struct kd_spin_cpu_state *stack = this_cpu_ptr(&kd_spin_cpu);
@@ -113,7 +113,7 @@ static bool kd_spin_selftest_full_shadow_begin(raw_spinlock_t *lock,
 	return true;
 }
 
-static void kd_spin_selftest_full_shadow_end(const struct pt_regs *regs,
+static void kd_spin_selftest_full_shadow_end(const struct kd_regs *regs,
 					     const struct kd_exec_frame *frame,
 					     int result)
 {

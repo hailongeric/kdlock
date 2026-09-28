@@ -1,6 +1,6 @@
 """Guest-only production mutex tail, node, shadow-table, selector and hook tests.
 
-Keep the real capacities, guest pt_regs and decisions. Kernel scheduling,
+Keep the real capacities, guest kd_regs and decisions. Kernel scheduling,
 physical mutexes, task records, the assembly slowpath and resume trampolines
 are deterministic substitutes, not proof of live concurrency or owner ACKs.
 """
@@ -86,9 +86,8 @@ def production():
 
 def main():
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
-    ptrace = (kernel / "arch/x86/include/asm/ptrace.h").read_text()
-    ptrace = ptrace.split("#else /* __i386__ */", 1)[1]
-    types = definition(ptrace, "struct pt_regs {").rstrip() + ";\n"
+    ptrace = (ROOT / "include/kd_regs.h").read_text()
+    types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     types += without_includes(read_source((ROOT / "include/kd_mutex.h")))
     code = production()
     # Compile each broken decision first, then require an explicit assertion

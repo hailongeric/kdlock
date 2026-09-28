@@ -145,7 +145,7 @@ static unsigned int preentry_queue_return(void)
 	unsigned int cases = 0;
 
 	for (unsigned int reason = 0; reason < ARRAY_SIZE(reasons); reason++) {
-		struct pt_regs regs, before;
+		struct kd_regs regs, before;
 		unsigned long stack[2] = { 0x801, 0x802 };
 		unsigned long locks[] = { (unsigned long)&origins[1] };
 		enum kd_exec_lock_kind kinds[] = { KD_EXEC_LOCK_QUEUE_OWNER };

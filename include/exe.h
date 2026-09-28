@@ -4,7 +4,7 @@
  * dispatcher results, not the similarly named wrapper/wire status constants
  * in exe_info.h; backends must preserve that distinction when handing off. */
 #include "exe_info.h"
-#include <asm/ptrace.h>
+#include "kd_regs.h"
 
 void kd_exe_add(int pid, unsigned long RIP, enum kd_exe_lock_kind kind);
 void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
@@ -51,7 +51,7 @@ void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end);
 /* Kernel-only entry: pass the slot returned by find_ready and a validated
  * spin/mutex frame. Dispatch rechecks publication/admission after frame setup;
  * the admitted frame retains source residency through all continuations. */
-int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
+int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs,
 			    unsigned long entry_ip,
 			    unsigned long outer_lock_addr);
 
@@ -75,8 +75,8 @@ int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,
 	const struct kd_jit_batch_call *call);
 
 /* Resume a waiter after its critical section has already run in the sandbox. */
-void jump_to_saved_regs(struct pt_regs *regs);
-void jump_to_saved_regs_in_cs(struct pt_regs *regs);
+void jump_to_saved_regs(struct kd_regs *regs);
+void jump_to_saved_regs_in_cs(struct kd_regs *regs);
 
 struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip);
 const struct kd_exe_info *kd_exe_get_slot(unsigned int index);

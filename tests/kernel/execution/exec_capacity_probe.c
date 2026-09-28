@@ -4,7 +4,7 @@ static atomic_t kd_capacity_claimed = ATOMIC_INIT(0);
 static struct {
 	struct kd_exec_context before;
 	struct kd_exec_frame live[KD_EXEC_MAX_NESTING];
-	struct pt_regs packets[KD_EXEC_MAX_NESTING];
+	struct kd_regs packets[KD_EXEC_MAX_NESTING];
 	unsigned long entry, outer;
 	unsigned int depth, cpu, preempt;
 	int task, owner;

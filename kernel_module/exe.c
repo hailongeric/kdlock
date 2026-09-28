@@ -107,12 +107,12 @@ static unsigned long direct_mutex_unlock_addr;
 
 #include "execution/wrapper_entry.inc"
 
-static int kd_exe_dispatch(struct kd_exe_info *exe, struct pt_regs *regs,
+static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 			  unsigned long entry_ip, unsigned long outer_lock_addr,
 			  const struct kd_jit_batch_call *pending)
 {
 	struct kd_exec_frame *frame = kd_exec_current_frame();
-	void (*translated)(struct pt_regs *regs, unsigned long *args);
+	void (*translated)(struct kd_regs *regs, unsigned long *args);
 	unsigned long args[2];
 	int continuation_count = 0;
 	int hostcall_count = 0;
@@ -469,7 +469,7 @@ returned_wrapper:
 	return ret_flag;
 }
 
-int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct pt_regs *regs,
+int kd_exe_on_call_hl_entry(struct kd_exe_info *exe, struct kd_regs *regs,
 			    unsigned long entry_ip, unsigned long outer_lock_addr)
 {
 	return kd_exe_dispatch(exe, regs, entry_ip, outer_lock_addr, NULL);

@@ -6,7 +6,7 @@
  */
 
 static int kd_spin_jit_nested_lock_common(raw_spinlock_t *lock,
-					  struct pt_regs *regs,
+					  struct kd_regs *regs,
 					  struct kd_exec_frame *frame)
 {
 	struct kd_exec_frame *active_frame = frame;
@@ -130,7 +130,7 @@ fallback:
 	return regs ? KD_JIT_NESTED_CONSUMED : KD_JIT_NESTED_NATIVE;
 }
 
-int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
+int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock, struct kd_regs *regs,
 				struct kd_exec_frame *frame)
 {
 #ifdef KDLOCK_SELFTEST
@@ -210,7 +210,7 @@ int kd_spin_jit_nested_unlock_ctx(raw_spinlock_t *lock,
 	return 0;
 }
 
-int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct pt_regs *regs,
+int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct kd_regs *regs,
 				     struct kd_exec_frame *frame)
 {
 	if (!lock || !frame || frame->outer_lock_addr != (unsigned long)lock ||

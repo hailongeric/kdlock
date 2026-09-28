@@ -13,7 +13,7 @@
  */
 static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 				    struct qspinlock *lock,
-				    struct pt_regs *regs,
+				    struct kd_regs *regs,
 				    struct kd_exec_frame *parent)
 {
 	unsigned int i, depth;
@@ -37,7 +37,7 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	frame->entry_abi = parent->entry_abi;
 	frame->packet_state = KD_PACKET_FULL;
 	frame->spin_origin = parent->spin_origin;
-	node->execution->kind = KD_SPIN_CONT_VIRTUAL;
+	node->execution->frame.spin_kind = KD_SPIN_CONT_VIRTUAL;
 	context = &node->execution->jit_context;
 	context->requester = parent;
 	context->lock_depth = depth + 1;
@@ -59,7 +59,7 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
  * critical-section execution.
  */
 static int kd_spin_advance_jit_node(struct kd_spin_node *node,
-				    struct pt_regs *regs)
+				    struct kd_regs *regs)
 {
 	unsigned long return_ip;
 
@@ -77,7 +77,7 @@ static int kd_spin_advance_jit_node(struct kd_spin_node *node,
  * parent done -> return to parent unlock path, else restore caller continuation.
  */
 static int kd_spin_finish_remote_node(struct kd_spin_node *node,
-				      struct pt_regs *regs,
+				      struct kd_regs *regs,
 				      struct kd_exec_frame *parent)
 {
 	if (smp_load_acquire(&parent->remote_result) != KD_EXEC_REMOTE_DONE)
@@ -95,7 +95,7 @@ static int kd_spin_finish_remote_node(struct kd_spin_node *node,
 /* Register a nested spinlock request in logical parent frame and run queue protocol.
  * Returns acquired/delegated markers used by the parent CALL continuation handling.
  */
-int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
+int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,
 			struct kd_exec_frame *parent)
 {
 	struct kd_spin_request request = { 0 };
@@ -189,7 +189,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct pt_regs *regs,
 	node->execution->frame.gsbase = 0;
 
 	node->execution->result = KD_SPIN_RES_QUEUED;
-	node->execution->native_regs_decoded = false;
+	node->execution->frame.spin_regs_decoded = false;
 	ret = kd_spin_prepare_jit_node(node, lock, regs,
 				       parent);
 	if (ret) {

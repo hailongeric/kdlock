@@ -480,7 +480,7 @@ another task cannot overwrite it.
 
 Resource tests compile the production reservation, shadow lookup, hooks and
 entry/return consumer. They check no-node acquisition and copy-before-slot-reuse
-with the guest's complete `pt_regs`; physical locks, scheduler, task records and
+with KD's complete software `kd_regs` packet; physical locks, scheduler, task records and
 assembly are substitutes. Their scope and live-test separation are maintained
 in [历史：the mutex resource guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#61-mutex-资源与恢复包).
 

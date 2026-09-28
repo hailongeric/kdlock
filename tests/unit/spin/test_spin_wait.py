@@ -46,6 +46,8 @@ def main():
         (path / "restore_production.h").write_text(
             "static __attribute__((noipa, used, no_caller_saved_registers)) noinline notrace void\n"
             + definition(source, "kd_spin_restore_unpin(void)")
+            + source[source.index("#define KD_RESTORE_REG_OPERANDS"):
+                     source.index("#pragma GCC push_options", source.index("#define KD_RESTORE_REG_OPERANDS"))]
             + macros + "static __attribute__((noipa, noreturn)) noinline notrace void\n" + code)
         binary = path / "spin-restore"
         subprocess.run(
