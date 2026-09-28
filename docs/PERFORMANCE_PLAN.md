@@ -7,6 +7,15 @@
 
 ## 1. 当前状态与证据边界
 
+2026-09-28 按用户要求完成[36线程 spin 专项复测与归因](../bench/tclock_compare/results/20260928-spin36-analysis.md)：
+45 场性能与 30 场独立诊断全部通过。hash KD/TCLock 峰值为 1.985/2.648 Mops/s（74.96%），
+单 cacheline 为 8.665/5.952（145.59%）；低吞吐依赖正文，不能泛化为所有 spin 工作负载。
+hash 实际 JIT 约 99.9%。新采样定位生成正文和 request/frame 检查的额外工作；固定 16 人
+跨 node 放置使两方中位数分别下降 47.24%/43.08%，单 node 仍有差距。KD provider UBSAN-off
+只提高约 3.81% 中位数，未关闭差距。独立事件显示更多 instructions/L1 misses，却没有更高的
+通用 cache-miss 总数；不以普通 cycles 样本宣称测得远端 load latency 或单条指令的确定耗时。
+本次只新增证据与分析，生产锁实现和默认构建策略不变。
+
 2026-09-28 按[NUMA/mutex 分阶段计划](../bench/tclock_compare/results/20260928-numa-mutex.md)
 完成显式放置、独立单事件 PMU、终态 CALL/COMPLETE 融合、静态 GS/task 导入省略及预算提前检查。
 完整 spin/hash 135 场通过；KD 只在 1、3–6 线程达到同期 TCLock 峰值的 90%，高线程仍有差距。

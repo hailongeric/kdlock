@@ -201,6 +201,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [36线程 spin 性能与原因分析](results/20260928-spin36-analysis.md) | 新测 hash KD/TCLock 1.985/2.648 Mops/s，单 cacheline 为 8.665/5.952；75 场性能/诊断、生成代码、PMU、固定人数 NUMA 与 UBSAN 对照 |
 | [NUMA 与 mutex 分阶段优化](results/20260928-numa-mutex.md) | 显式放置、PMU 与 spin 优化；真正三方 mutex、逐项候选筛选、cacheline 135 场通过；hash 129/135 通过及 6 场 NO_JIT、最终 spin 回归和剩余差距 |
 | [36线程hash采样与批次调优](results/20260927-hash36-profile.md) | 默认上限1024，hash36峰值较前检查点提高6.98%；flat-IP采样、配置消融、无收益JIT候选撤回，少线程及NUMA进度限制单列 |
 | [有界refill与hash复验](results/20260927-spin-refill.md) | 批尾空链接最多PAUSE/重读8次，已有远端队列直接交接；最终hash63场+c1定向27场，恢复c1八线程短批回退，保留512上限 |
