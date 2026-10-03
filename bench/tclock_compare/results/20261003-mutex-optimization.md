@@ -214,6 +214,37 @@ Evidence: guest `mutex-20261003-fail-read-ack`,
 The retained source behavior is native CAS before the counting pin plus published
 shadow reads; task-registry lookup/allocation/locking remain as before this turn.
 
+## Full cacheline checkpoint and repeatability
+
+The retained native-pin/shadow-read source passed all 135 sessions at
+1/2/3/4/5/6/7/8/12/16/20/24/28/32/36 threads. KD meets 90% of the same-phase
+TCLock best peak at 5/6/7/8/12/16/20/24/36. Its protected 1/2/16/36 medians
+improve 11.86%/13.17%/9.92%/28.39% over this turn's starting baseline.
+The 36-thread KD peak triple is 3.725/4.085/4.236 Mops/s, versus TCLock's
+4.389/4.571/4.628; whole-run KD is 3.721/3.787/4.029. Peak ratio is 91.52%.
+
+However, the lower median relative to the earlier shadow screen prompted one
+recheck of the identical retained implementation. All nine sessions passed, but
+KD was 3.663/3.828/3.852 versus TCLock 4.357/4.442/4.522: only 85.19% of peak.
+The earlier 5.002 maximum is not representative, and repeatable TCLock parity
+is not established. These groups remain separate, including every slower sample.
+
+A fresh six-session flat profile passed with zero lost samples. At 36 threads,
+61.28% of KD worker cycle-period weight remains in the kernel queued-spinlock
+slowpath, versus 70.21% before the retained changes. At one thread, RCU lock/unlock
+is 9.08% and task routing 6.28%. Both profiles use exact symbol ranges and leave
+unresolved samples unassigned; neither identifies each queued lock or remote
+memory latency. The task registry still allocates per routed acquisition and
+serializes all hash chains with one lock. A separate bucket-lock experiment is
+being considered without changing exact task references, counts or RCU lifetime.
+
+Evidence: `mutex-20261003-mutex-final-c1`,
+`mutex-20261003-mutex-final-recheck-c1`, `mutex-20261003-final-profile`.
+The directory name `final-profile` identifies this two-change checkpoint;
+it does not imply that later experiments share its source or measurements.
+The matching `mutex-20261003-final-ack` owner/RCU probe also passed, explicitly
+JIT=0, two orders/four ACKs/two deferred frees.
+
 ## Evidence
 
 Guest directories under `/root/kdlock-evidence/`:
