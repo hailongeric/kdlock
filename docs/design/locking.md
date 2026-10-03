@@ -431,7 +431,10 @@ distinct from merely completing all clients.
    `(entries >> 10) < 256`, reset both counts and update the CPU clock. The initial
    limit 2 rejected every CPU in the cacheline screen; the measured native owner
    bursts required a wider mutex window. Spin MCS
-   counters are independent. The short counting pin ends before native blocking.
+   counters are independent. A successful native CAS precedes any counting pin;
+   its single x86 per-CPU increment is approximate and may follow migration.
+   Failed attempts pin their entry/contention observations together, then end
+   that pin before native blocking.
    Cold locks, `mutex_jit=0`, shadow/task-record allocation failure, and nested
    acquisitions by an already-active task use the original native slow route.
 2. A promoted, eligible request registers its task before entering the scheduler.

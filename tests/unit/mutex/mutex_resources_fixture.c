@@ -46,7 +46,7 @@ static bool source_open, native_owner_wait;
 /* Most resource cases substitute a failed first CAS followed by a racing
  * release. The native-first case below substitutes a successful acquisition. */
 static bool fast_available;
-static unsigned int entry_attempts;
+static unsigned int entry_attempts, entry_pins;
 static struct kd_mutex *waiting_gate, *release_gate;
 static struct kd_mutex_node *recycle_node, *poll_node;
 static unsigned int polls;
@@ -155,14 +155,14 @@ static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 					       int cpu);
 static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *node);
 static void might_sleep(void) { CHECK(!preempt); }
-static void kd_hotlock_mutex_entry_pinned(void)
+static void kd_hotlock_mutex_entry(void)
 {
-	CHECK(preempt == 1);
+	CHECK(preempt <= 1);
 	entry_attempts++;
 }
 static bool kd_mutex_trylock_fast(struct mutex *lock)
 {
-	CHECK(preempt == 1 && entry_attempts);
+	CHECK(!preempt);
 	if (!fast_available || lock->owner)
 		return false;
 	lock->owner = current;
@@ -201,6 +201,7 @@ static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 
 static void preempt_disable(void)
 {
+	entry_pins++;
 	preempt++;
 }
 static void preempt_enable(void)
@@ -336,7 +337,9 @@ static void kd_mutex_task_put(struct task_struct *task)
 }
 static int kd_hotlock_record_mutex(unsigned long addr)
 {
-	CHECK(addr);
+	/* Contention sampling may touch several CPU-local fields; it remains
+	 * pinned even though the first native CAS is now unpinned. */
+	CHECK(addr && preempt == 1 && entry_attempts > samples);
 	samples++;
 	sampled_first = true;
 	return cpu_hot && promoted;
@@ -451,7 +454,7 @@ static void reset(void)
 	source_open = true;
 	native_owner_wait = false;
 	fast_available = false;
-	entry_attempts = 0;
+	entry_attempts = entry_pins = 0;
 	native_waits = 0;
 	errors = preempt = migration = table_irq = 0;
 	gets = task_puts = refs = adds = acquires = releases = schedules = 0;
@@ -979,7 +982,7 @@ int main(void)
 	fast_available = true;
 	__kd_mutex_lock_clobber_v1(&origins[0].mutex, 0x7000, 0x8000, 0);
 	CHECK(origins[0].mutex.owner == current && entry_attempts == 1);
-	CHECK(!samples && !gets && !adds && !refs && !comm_queries);
+	CHECK(!samples && !gets && !adds && !refs && !comm_queries && !entry_pins);
 	CHECK(!preempt && !migration && !shadow_count());
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
 	CHECK(!origins[0].mutex.owner && acquires == 1 && releases == 1);

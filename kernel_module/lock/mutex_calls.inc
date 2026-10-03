@@ -29,15 +29,16 @@ static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
 
 	/* Native ownership is authoritative even after a shadow has been created.
 	 * A free original mutex needs no admission, task record or translation.
-	 * The short pin ties the approximate entry/contention counts to one CPU;
-	 * release it before any native slowpath is allowed to sleep. */
+	 * Count a successful CAS with one CPU-local instruction, without a pin.
+	 * Failed entry/contention observations share a short pin, released before
+	 * any native slowpath is allowed to sleep. Neither count grants ownership. */
 	might_sleep();
-	preempt_disable();
-	kd_hotlock_mutex_entry_pinned();
 	if (kd_mutex_trylock_fast(lock)) {
-		preempt_enable();
+		kd_hotlock_mutex_entry();
 		return;
 	}
+	preempt_disable();
+	kd_hotlock_mutex_entry();
 	admitted = kd_hotlock_record_mutex((unsigned long)lock);
 	preempt_enable();
 	/* Only failed acquisitions supply contention observations. Frequency

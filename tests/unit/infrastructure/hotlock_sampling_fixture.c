@@ -293,9 +293,10 @@ static void mutex_contention_ratio(void)
 {
  const unsigned int bound=KD_HOTLOCK_MUTEX_RATIO_LIMIT*1024;
  for(unsigned int entries=bound-1;entries<=bound;entries++) {
-  reset(); pins++;
-  for(unsigned int i=0;i<entries;i++) kd_hotlock_mutex_entry_pinned();
-  assert(clocks==1 && !this_cpu_read(kd_hotlock_mutex_contentions));
+  reset();
+  for(unsigned int i=0;i<entries;i++) kd_hotlock_mutex_entry();
+  assert(!pins && clocks==1 && !this_cpu_read(kd_hotlock_mutex_contentions));
+  pins++;
   for(unsigned int i=0;i<1023;i++) assert(!kd_hotlock_record_mutex(0x3000));
   assert(clocks==1 && this_cpu_read(kd_hotlock_mutex_entries)==entries);
   table(1)->busy=1;

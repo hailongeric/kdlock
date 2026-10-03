@@ -7,6 +7,12 @@
 
 ## 1. 当前状态与证据边界
 
+2026-10-03 开始[mutex 新一轮优化](../bench/tclock_compare/results/20261003-mutex-optimization.md)：
+默认UBSAN-off新基线及原生CAS先于计数pin的候选，共72场定向三方测试通过。
+1/2/16/36线程KD中位数提高约10.19%/7.96%/5.75%/2.44%；36线程最高峰仍仅为同期TCLock的75.49%。
+独立采样显示36线程约70.21%的worker cycles权重位于内核queued spinlock等待，
+当前mutex只有约6%–8%操作委托。继续隔离shadow/task全局协调成本；尚未重跑完整矩阵。
+
 2026-09-28 完成[私有寄存器包与 continuation 重排](../bench/tclock_compare/results/20260928-packed-continuation.md)：
 核心身份/状态与 RIP/RSP/RBP 共用第一条64字节行，虚拟GPR backing共用第二行，
 默认MINIMAL frame/包提示由四条不同记录行减少到三条；168字节包和704字节记录不增长。

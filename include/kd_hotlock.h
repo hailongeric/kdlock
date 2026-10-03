@@ -14,7 +14,10 @@ DECLARE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
 DECLARE_PER_CPU(unsigned long, kd_hotlock_mutex_entries);
 DECLARE_PER_CPU(unsigned long, kd_hotlock_mutex_contentions);
 #define KD_HOTLOCK_MUTEX_RATIO_LIMIT 256U
-static __always_inline void kd_hotlock_mutex_entry_pinned(void)
+/* One x86 this_cpu_inc is CPU-local even without a surrounding pin. A native
+ * success may migrate between acquisition and this approximate observation;
+ * failed entries stay pinned with their corresponding contention sample. */
+static __always_inline void kd_hotlock_mutex_entry(void)
 {
   this_cpu_inc(kd_hotlock_mutex_entries);
 }

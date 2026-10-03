@@ -207,6 +207,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [mutex原生与协调开销优化](results/20261003-mutex-optimization.md) | UBSAN-off新基线、独立cycles/instructions诊断；native CAS先于计数pin，1/2/16/36定向72场通过，36线程目标仍未达到 |
 | [寄存器包与continuation重排](results/20260928-packed-continuation.md) | RIP/RSP/RBP及核心状态共一行，MINIMAL三条frame/包提示；141场定向性能、7场功能及owner ACK；36线程hash复测2.018/2.641 Mops/s，较基线下降约2%，未达到90%目标 |
 | [36线程 spin 性能与原因分析](results/20260928-spin36-analysis.md) | 新测 hash KD/TCLock 1.985/2.648 Mops/s，单 cacheline 为 8.665/5.952；75 场性能/诊断、生成代码、PMU、固定人数 NUMA 与 UBSAN 对照 |
 | [NUMA 与 mutex 分阶段优化](results/20260928-numa-mutex.md) | 显式放置、PMU 与 spin 优化；真正三方 mutex、逐项候选筛选、cacheline 135 场通过；hash 129/135 通过及 6 场 NO_JIT、最终 spin 回归和剩余差距 |
