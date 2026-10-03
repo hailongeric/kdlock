@@ -2,7 +2,8 @@
 
 当前入口使用同一份 `workload_modules/spin_cacheline` 正文，分别构建Linux原生、TCLock、
 当前KD三个后端；KD仅保留adaptive自适应准入。
-本轮继续[全线程集合mutex优化](results/20261003-mutex-followup.md)。
+本轮完成[全线程集合mutex优化与复测](results/20261003-mutex-followup.md)：两负载270场有效，
+cacheline全部15点达到TCLock峰值90%，hash仍缺2/3/4/5/24且存在重复回退；当前为实验性能检查点。
 最新结果与历史参照见[本次结果](#本次结果)，构建及运行环境遵循[操作手册](../../docs/AGENTS.md)。
 
 | 后端 | 直接调用 |
@@ -215,6 +216,7 @@ python3 bench/tclock_compare/test_direct.py
 
 | 报告 | 范围与用途 |
 | --- | --- |
+| [完整15点mutex跟进](results/20261003-mutex-followup.md) | 同源码cacheline/hash各135场及54场定向复测；cacheline峰值追平12/15，hash6/15，后者36整段仍低8.71%；原生/terminal/transport/frame优化、三场独立JIT时序诊断，全负载性能验收拒绝 |
 | [mutex原生与协调开销优化](results/20261003-mutex-optimization.md) | UBSAN-off；保留native CAS先于计数pin与shadow读免锁，完整cacheline135场通过；36线程峰值91.52%，同版本复测85.19%；hash130/135通过，36峰值119.91%但整段中位数低6.94%，仍未稳定追平 |
 | [寄存器包与continuation重排](results/20260928-packed-continuation.md) | RIP/RSP/RBP及核心状态共一行，MINIMAL三条frame/包提示；141场定向性能、7场功能及owner ACK；36线程hash复测2.018/2.641 Mops/s，较基线下降约2%，未达到90%目标 |
 | [36线程 spin 性能与原因分析](results/20260928-spin36-analysis.md) | 新测 hash KD/TCLock 1.985/2.648 Mops/s，单 cacheline 为 8.665/5.952；75 场性能/诊断、生成代码、PMU、固定人数 NUMA 与 UBSAN 对照 |
