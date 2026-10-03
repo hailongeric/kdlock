@@ -17,7 +17,7 @@ screens cover 1, 2, 16 and 36 threads, one cacheline; they are not a full matrix
 
 ## Baseline diagnosis
 
-The baseline reaches only 66.30% of TCLock's corresponding best 36-thread peak
+The baseline reaches only 66.29% of TCLock's corresponding best 36-thread peak
 (3.222 versus 4.860 Mops/s), although its 16-thread peak exceeds TCLock.
 At one thread it reaches 15.123 versus 36.140 Mops/s, without any JIT execution.
 Thus neither cross-node accesses nor generated code alone explains the gap.
@@ -30,8 +30,8 @@ ELF ranges) attributes 40.38% of KD worker event-period weight at 16 threads and
 35.80%/12.03%. The task registry and shadow map both have global writer locks;
 flat samples alone do not identify which lock caused every wait. At one thread,
 RCU read lock/unlock account for 7.79%, and task rerouting another 5.36%.
-TCLock at 36 spends 93.30% in its own queued waiter slowpath. These are CPU-wide
-sample weights, not isolated executor costs or remote-memory latency.
+TCLock at 36 spends 93.30% in its own queued waiter slowpath. These are worker-task sampled
+cycle-period weights, not isolated executor costs or remote-memory latency.
 
 Separate one-event diagnostics at 36 threads counted instructions and cycles
 with 100% running time. Per completed operation they include every worker's
@@ -59,9 +59,9 @@ passed (four drivers total). The resource fixture checks native success never
 pins and failed-acquisition sampling remains pinned. All 36 timed sessions passed
 business/JIT requirements and drained; 1/2-thread sessions correctly report JIT=0,
 while every 16/36-thread KD session has returned-body evidence.
-KD median changes versus the fresh baseline: +10.19% (1), +7.96% (2), +5.75% (16),
-+2.44% (36). The 36-thread spread is 9.50%, so its small median gain is not a claim
-of a stable isolated cross-node speedup. Its best peak remains only 75.49% of
+KD median changes versus the fresh baseline: +10.19% (1), +7.96% (2), +5.73% (16),
++2.47% (36). The 36-thread spread is 9.50%, so its small median gain is not a claim
+of a stable isolated cross-node speedup. Its best peak remains only 75.47% of
 same-phase TCLock. The overall target is not met.
 
 ## Scored samples
@@ -113,9 +113,9 @@ no-reuse lifetime, physical owner state and native fallback remain unchanged.
 This is narrower than the historical fully lock-free shadow/task-cache experiment.
 
 The 16/36-thread screen passed all 18 sessions. KD medians rose from 5.141/3.260
-to 5.451/4.205 Mops/s (+6.02%/+28.98%). A separate 1/2/36-thread recheck passed all
+to 5.451/4.205 Mops/s (+6.03%/+28.97%). A separate 1/2/36-thread recheck passed all
 27 sessions; its 36-thread median was 4.361, with a wide 4.051–5.002 range.
-Screen/recheck best KD peaks were 91.56%/108.93% of their corresponding TCLock
+Screen/recheck best KD peaks were 91.55%/108.93% of their corresponding TCLock
 peaks. Both exceed 90%, but the high recheck peak is not representative of its
 4.141 Mops/s whole-run median. Neither small-thread median regressed relative
 to the preceding native-pin change. Full-matrix conclusions remain pending.
@@ -166,6 +166,31 @@ Normal performance rechecks above passed afterward; no callchain attribution is 
 | 36 | native | 4.861/4.953/5.102 | 4.211/4.465/4.734 | 4.86% |
 | 36 | tclock | 4.541/4.565/4.592 | 4.258/4.498/4.563 | 1.11% |
 | 36 | kdlock | 4.051/4.361/5.002 | 3.834/4.141/4.170 | 21.81% |
+
+## Rejected empty task-bucket shortcut
+
+The candidate read the permanent task-hash bucket head before entering RCU;
+empty buckets returned false, while nonempty buckets reloaded inside the existing
+RCU traversal. The real task/RCU/physical-owner probe passed both orders, four
+ACKs and deferred frees (explicitly JIT=0), including a new cross-task publication
+assertion. All 45 timed screen/recheck sessions passed data/JIT/drain checks.
+
+It improved native small-thread medians to 18.549/6.740 Mops/s at 1/2 threads.
+However, against the most recent accepted shadow recheck's 36-thread median,
+both the initial screen and prescribed recheck lost more than 3%. The candidate
+was preserved on `perf/mutex-empty-bucket-rejected-20261003` and reverted; these
+small-thread gains are not part of the accepted implementation. This is another
+case where a smaller lookup path does not guarantee better mixed-workload timing.
+
+| Phase | KD36 peak min/median/max | Whole min/median/max | Median change |
+|---|---|---|---:|
+| empty-bucket | 4.079/4.090/4.273 | 3.925/3.932/4.093 | -6.22% |
+| empty-recheck | 3.847/4.038/4.101 | 3.805/3.818/3.833 | -7.42% |
+
+Raw evidence: guest `mutex-20261003-empty-bucket-ack`,
+`mutex-20261003-mutex-empty-bucket-c1`, `mutex-20261003-mutex-empty-recheck-c1`.
+All native/TCLock/KD samples remain in their frozen records; no candidates are
+merged into the accepted score set.
 
 ## Evidence
 
