@@ -437,7 +437,11 @@ distinct from merely completing all clients.
    that pin before native blocking.
    Cold locks, `mutex_jit=0`, shadow/task-record allocation failure, and nested
    acquisitions by an already-active task use the original native slow route.
-2. A promoted, eligible request registers its task before entering the scheduler.
+2. A promoted, eligible request finds its original-address shadow by acquire-reading
+   the immutable key. Existing hits take no table lock. Cold insertion rechecks
+   under the insertion lock, initializes the gate, then release-publishes the key;
+   no slot is removed or reused before drain/unload. It then registers its task
+   before entering the scheduler.
    Winning the gate calls `kd_mutex_claim_origin()`, which acquires the original
    mutex and records `physical_owner=current`, before entering any CS.
 3. Queued waiters retain the hook stack address and waiter GS/task. Their combiner

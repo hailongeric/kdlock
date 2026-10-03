@@ -12,7 +12,7 @@ void kd_mutex_init(struct kd_mutex *lock)
 	lock->tail = 0;
 	atomic_set(&lock->state, 0);
 	lock->physical_owner = NULL;
-	lock->origin_mutex_addr = 0;
+	WRITE_ONCE(lock->origin_mutex_addr, 0);
 	atomic_set(&lock->waiter_count, 0);
 }
 

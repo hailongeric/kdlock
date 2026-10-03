@@ -60,7 +60,9 @@ static __always_inline bool kd_mutex_trylock_fast(struct mutex *lock);
 
 #define KD_MUTEX_SHADOW_TABLE_SIZE 1024
 
-/* The initialized original address is also the immutable map key. */
+/* The initialized original address is also the immutable map key. A release
+ * store publishes it only after gate initialization; existing-key readers need
+ * no table lock. Keys and entries remain resident until controlled unload. */
 struct kd_mutex_shadow_entry {
 	struct kd_mutex kd_mtx;
 };
@@ -82,6 +84,22 @@ static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)
 	int start = mutex_addr % KD_MUTEX_SHADOW_TABLE_SIZE;
 	int pos = start;
 
+	/* Hot hits need only the immutable address. A miss must recheck while
+	 * holding the insertion lock: another CPU may publish this key or fill
+	 * the observed hole before we reach that lock. Keep current collision
+	 * placement, table layout and full-table native fallback unchanged. */
+	do {
+		unsigned long seen = smp_load_acquire(
+			&kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr);
+
+		if (seen == mutex_addr)
+			return &kd_mutex_shadows[pos].kd_mtx;
+		if (!seen)
+			break;
+		pos = (pos + 1) % KD_MUTEX_SHADOW_TABLE_SIZE;
+	} while (pos != start);
+
+	pos = start;
 	raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
 	do {
 		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {
@@ -91,8 +109,9 @@ static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)
 		}
 		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == 0) {
 			kd_mutex_init(&kd_mutex_shadows[pos].kd_mtx);
-			kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr =
-				mutex_addr;
+			smp_store_release(
+				&kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr,
+				mutex_addr);
 			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
 						   flags);
 			return &kd_mutex_shadows[pos].kd_mtx;
@@ -107,27 +126,23 @@ static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)
 
 static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
 {
-	unsigned long flags;
 	unsigned long mutex_addr = (unsigned long)lock;
 	int start = mutex_addr % KD_MUTEX_SHADOW_TABLE_SIZE;
 	int pos = start;
 
-	raw_spin_lock_irqsave(&kd_mutex_shadow_lock, flags);
+	/* No removal/reuse occurs while callers are live. Pair with the key's
+	 * release publication before returning the initialized scheduling gate. */
 	do {
-		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {
-			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
-						   flags);
+		unsigned long seen = smp_load_acquire(
+			&kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr);
+
+		if (seen == mutex_addr)
 			return &kd_mutex_shadows[pos].kd_mtx;
-		}
-		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == 0) {
-			raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock,
-						   flags);
+		if (!seen)
 			return NULL;
-		}
 		pos = (pos + 1) % KD_MUTEX_SHADOW_TABLE_SIZE;
 	} while (pos != start);
 
-	raw_spin_unlock_irqrestore(&kd_mutex_shadow_lock, flags);
 	return NULL;
 }
 

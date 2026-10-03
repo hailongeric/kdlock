@@ -11,7 +11,10 @@
 默认UBSAN-off新基线及原生CAS先于计数pin的候选，共72场定向三方测试通过。
 1/2/16/36线程KD中位数提高约10.19%/7.96%/5.75%/2.44%；36线程最高峰仍仅为同期TCLock的75.49%。
 独立采样显示36线程约70.21%的worker cycles权重位于内核queued spinlock等待，
-当前mutex只有约6%–8%操作委托。继续隔离shadow/task全局协调成本；尚未重跑完整矩阵。
+当前mutex只有约6%–8%操作委托。随后仅取消已发布shadow查找的全局锁、保留带锁插入，
+16/36筛选及1/2/36复测45场通过：36中位数4.205/4.361，峰值为同期TCLock的91.56%/108.93%。
+确定性交错测试覆盖重复键/碰撞插入；一个额外callchain诊断因stack-unwinder警告失败，
+保留失败并经检查正常排空，之后普通复测通过。继续隔离task成本；尚未重跑完整矩阵。
 
 2026-09-28 完成[私有寄存器包与 continuation 重排](../bench/tclock_compare/results/20260928-packed-continuation.md)：
 核心身份/状态与 RIP/RSP/RBP 共用第一条64字节行，虚拟GPR backing共用第二行，

@@ -93,6 +93,10 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
+        "shadow-insert-skips-locked-recheck": (
+            "if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {",
+            "if (false && kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {",
+        ),
         "native-success-still-samples": (
             "if (kd_mutex_trylock_fast(lock)) {",
             "if (false && kd_mutex_trylock_fast(lock)) {",

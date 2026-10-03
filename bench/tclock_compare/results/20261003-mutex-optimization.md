@@ -104,6 +104,69 @@ separate from selected windows.
 | 36 | tclock | 4.454/4.491/4.539 | 4.429/4.474/4.475 | 1.89% |
 | 36 | kdlock | 3.116/3.260/3.426 | 3.009/3.021/3.375 | 9.50% |
 
+## Published shadow hits without the insertion lock
+
+The existing-key path now acquire-loads the immutable original-address key.
+Only cold insertion takes the original global lock, rechecks the table, initializes
+the gate, and release-publishes its key. Hashing, 1024-slot capacity, entry layout,
+no-reuse lifetime, physical owner state and native fallback remain unchanged.
+This is narrower than the historical fully lock-free shadow/task-cache experiment.
+
+The 16/36-thread screen passed all 18 sessions. KD medians rose from 5.141/3.260
+to 5.451/4.205 Mops/s (+6.02%/+28.98%). A separate 1/2/36-thread recheck passed all
+27 sessions; its 36-thread median was 4.361, with a wide 4.051–5.002 range.
+Screen/recheck best KD peaks were 91.56%/108.93% of their corresponding TCLock
+peaks. Both exceed 90%, but the high recheck peak is not representative of its
+4.141 Mops/s whole-run median. Neither small-thread median regressed relative
+to the preceding native-pin change. Full-matrix conclusions remain pending.
+
+Two basic tests and the affected resource driver passed before each screen.
+The second fixture additionally injects same-key/colliding-key publication
+between the read miss and insertion lock, checks exact-key uniqueness and
+preservation of an already-owned gate, and detects removal of the locked recheck.
+The existing 1024-capacity, native-peer, slot and FULL/native recovery fixture
+checks remain enabled. The initializer's zero key store is explicitly WRITE_ONCE.
+These deterministic primitives do not by themselves prove kernel memory ordering;
+release/acquire publication was reviewed and live concurrent JIT sessions passed.
+
+An additional frame-pointer callchain diagnostic failed with a kernel unwinder
+warning (`kernel stack frame pointer ... bad value 0`), involving
+`kd_mutex_resume_completed`/`kd_mutex_task_put`. The assembly intentionally clears
+RBP at that switched-stack entry. This is consistent with a frame-chain limitation,
+not proof of data corruption or proof that perf caused it: the warning timestamp
+precedes the measured phase. Its 11,290,112 measured operations completed with
+correct data, but the session remains KERNEL_FAULT and is excluded from results.
+After verifying no worker/daemon, active operation, source frame or writer remained,
+manual retirement succeeded and both modules unloaded normally. The initial manual
+cleanup attempt used the wrong client path and made no retirement/unload changes;
+both attempts are preserved. No forced unload or warning-filter changes occurred.
+Normal performance rechecks above passed afterward; no callchain attribution is used.
+
+### shadow-hit
+
+| Threads | Arm | Peak min/median/max | Whole min/median/max | Peak spread |
+|---:|---|---|---|---:|
+| 16 | native | 6.723/6.974/7.349 | 6.669/6.912/7.301 | 8.98% |
+| 16 | tclock | 4.567/4.634/4.657 | 4.554/4.616/4.637 | 1.95% |
+| 16 | kdlock | 5.380/5.451/5.529 | 5.373/5.392/5.431 | 2.72% |
+| 36 | native | 5.351/5.612/5.712 | 5.100/5.481/5.511 | 6.43% |
+| 36 | tclock | 4.443/4.459/4.600 | 4.413/4.422/4.562 | 3.52% |
+| 36 | kdlock | 3.717/4.205/4.212 | 3.708/3.932/4.150 | 11.77% |
+
+### shadow-recheck
+
+| Threads | Arm | Peak min/median/max | Whole min/median/max | Peak spread |
+|---:|---|---|---|---:|
+| 1 | native | 27.359/27.977/28.005 | 27.349/27.969/27.987 | 2.31% |
+| 1 | tclock | 36.123/36.125/36.142 | 36.108/36.111/36.123 | 0.05% |
+| 1 | kdlock | 16.895/16.904/16.912 | 16.840/16.897/16.904 | 0.10% |
+| 2 | native | 6.827/7.159/7.556 | 6.781/7.151/7.545 | 10.18% |
+| 2 | tclock | 9.552/9.898/10.432 | 9.530/9.865/10.401 | 8.89% |
+| 2 | kdlock | 5.293/5.594/6.538 | 5.280/5.575/6.517 | 22.27% |
+| 36 | native | 4.861/4.953/5.102 | 4.211/4.465/4.734 | 4.86% |
+| 36 | tclock | 4.541/4.565/4.592 | 4.258/4.498/4.563 | 1.11% |
+| 36 | kdlock | 4.051/4.361/5.002 | 3.834/4.141/4.170 | 21.81% |
+
 ## Evidence
 
 Guest directories under `/root/kdlock-evidence/`:
@@ -121,3 +184,11 @@ Record SHA256 (downloaded directly from completed guest outputs):
 - `native-pin-records.json`: `ef418e38c81dad834b217a0903040b32c41455424e15505d3e4ce026e4a1b3cc`
 - `instructions-records.json`: `565103878074b84288a7b2f9afd9faf97b71f9e4c7146b6f6c4626a4ab104690`
 - `cycles-records.json`: `4d359f61b3b39494adbc320060ce4b1ca98fa2829e28d4b1255583247f025c5d`
+
+Shadow evidence: `mutex-20261003-shadow-hit-unit`, `mutex-20261003-shadow-race-unit`,
+`mutex-20261003-mutex-shadow-hit-c1`, `mutex-20261003-mutex-shadow-recheck-c1`;
+failed diagnostic and explicit later drain: `mutex-20261003-shadow-callchain`.
+
+- `shadow-hit-records.json`: `782cab03784d0f50426375c079bd0be32f4dd0df7aa425819a1c4f9562b6b46a`
+
+- `shadow-recheck-records.json`: `ecc53018327963a89b157875f9d69860d9586eb334d667394259b446e59b9d40`
