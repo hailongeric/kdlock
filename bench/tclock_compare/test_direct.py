@@ -78,6 +78,8 @@ class DirectTests(unittest.TestCase):
         self.assertTrue(all(s['lock_kind'] == 'mutex' for s in plan))
         self.assertTrue(all(s['caller_shell'] == 'mutex_outer_cookie'
                             for s in plan if s['arm'] == 'kdlock'))
+        self.assertTrue(all(s['cookie_storage'] == 'outer_acquisition_local'
+                            for s in plan if s['arm'] == 'kdlock'))
         params = dict(target_lock=4096, komb_batch_size=1024, quiescent=1,
                       delegated=8192, batches=8, parks=4)
         tc_quiescent(params, 'mutex')
