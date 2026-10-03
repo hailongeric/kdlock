@@ -42,14 +42,6 @@ bool kd_mutex_task_active(struct task_struct *task)
 	struct kd_mutex_task *entry;
 	bool active = false;
 
-	/* The fixed bucket head outlives all callers. An empty-head observation
-	 * needs no RCU read section; never retain or dereference an entry from
-	 * this check. A nonempty bucket is read again below while RCU-protected.
-	 * A usable acquisition publishes its record before get returns (or the
-	 * cross-task release wake), so its retained route cannot be skipped. */
-	if (!READ_ONCE(kd_mutex_tasks[hash_min((unsigned long)task,
-					     HASH_BITS(kd_mutex_tasks))].first))
-		return false;
 	rcu_read_lock();
 	hash_for_each_possible_rcu(kd_mutex_tasks, entry, link,
 				   (unsigned long)task) {
