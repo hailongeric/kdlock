@@ -28,8 +28,11 @@ kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)
 }
 
 /* The successor is still queued and cannot reuse its node or caller stack
- * before this batch publishes a wake. Fetch its read-mostly header, the saved
- * SP/BP packet lines, and the two stack lines around the virtual return slot.
+ * before this batch publishes a wake. Its first line now contains request
+ * identity/state and IP/SP/BP; the separate link line is read by the following
+ * queue decision. Hint only those two node lines and the unchanged two caller
+ * stack addresses. No FULL-packet sweep or virtual-GPR hint is implied by
+ * clobber: backing slots may first be defined by the generated body itself.
  * Do this before the current body; never chase a successor after handoff. */
 static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 {
@@ -38,8 +41,7 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 	if (!next)
 		return;
 	prefetch(next);
-	prefetch(&next->regs.sp);
-	prefetch(&next->regs.bp);
+	prefetch(&next->next);
 	sp = READ_ONCE(next->regs.sp);
 	if (sp) {
 		prefetch((void *)sp);

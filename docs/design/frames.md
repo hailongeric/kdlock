@@ -303,6 +303,18 @@ returns retain backend identity, detach the packet, and enter the existing
 native/ACK path once. The batch lease ends after every frame/ACK has retired;
 source closure still rejects new roots within the batch.
 
+The 256-byte, 64-byte-aligned mutex node keeps immutable entry/GS/task/lock,
+notification and packet state, and the MINIMAL IP/SP/BP triple in its first
+line. Its five virtual GPR backing slots occupy the next line, separate from
+the waiter-polled byte; `next` occupies the fourth line so an arriving successor
+also does not write the polling line. The physical stack-return anchor remains
+distinct from logical packet SP. This reorders node storage without embedding
+the separately retained execution frame or changing FULL/native-ACK lifetime.
+Before executing the current request, mutex hints the known-live successor's
+core and queue-link lines, plus its existing SP and SP-64 caller-stack addresses.
+It does not hint a full packet or add a virtual-GPR-line hint. Spin's selectable
+prefetch policy is separate; no hint grants lifetime or ownership.
+
 The mutex batch push, preparation, completion and retirement helpers now use
 the same compilation unit as the mutex combiner. Its private queue helpers
 have mutex-specific names; public entries and all packet/frame layouts stay

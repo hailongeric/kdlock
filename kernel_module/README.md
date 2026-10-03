@@ -26,9 +26,12 @@ KD 锁字、稳定持锁记录、逻辑 frame 和来源 pin 各自承担不同�
 普通 mutex 的 MINIMAL/COMPLETE 借用 node 寄存器包，正常完成仅恢复 IP/SP/BP；
 首次 FULL 出口为 owner ACK 的独立生命周期取得 frame 自有包。
 实现约束见 [ABI 文档](../docs/JIT_REGISTER_ABI.md#mutex-clobber-assessment)。
-mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，重新排列为
-256 字节、64 字节对齐；next 与 completed/locked 分行，避免缩减字段后
-引入相邻 node 共行。生产构建对大小、对齐和通知偏移做静态检查。
+mutex node 保持256字节、64字节对齐：首行合并不可变入口/GS/task/lock、通知与
+packet-state，以及IP/SP/BP；五个虚拟GPR backing在第二行，next与物理返回栈字段在
+第四行。轮询字节分别与JIT暂存写入、后继link写入分行，四个预约slot仍各占完整cacheline。
+生产构建固定大小、对齐及各关键偏移；frame/最终ACK继续有独立生命周期。
+mutex在当前正文前只预取已知存活后继的core/link两行及原有SP、SP-64地址，取消重复的
+SP/BP同cacheline提示；不增加FULL或GPR行扫描。spin的可选预取策略保持独立。
 
 `kd_spin_runtime.c`按`kd_exec.c → exe.c → kd_spinlock.c → kd_mutex.c`顺序组合编译，
 让两个combiner看到各自普通batch helper的实现；mutex的push/prepare/complete/retire

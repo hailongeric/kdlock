@@ -36,31 +36,35 @@ bool kd_mutex_check_idle(void);
  * inside the JIT sandbox.
  */
 struct kd_mutex_node {
-	struct kd_mutex_node *next;
-	unsigned long gsbase; /* logical waiter's kernel GS base   */
-	uint64_t rsp; /* saved real stack ptr (for restore) */
-	void *shadow_stack_base;
-	uint64_t shadow_stack_ptr;
-	struct kd_mutex *lock;
+	/* Immutable request identity, notification state and the MINIMAL triple
+	 * share line zero. The JIT's five virtual GPR backing slots start in line
+	 * one, so generated spills do not invalidate the waiter's polling line.
+	 * saved_ret_addr remains distinct from the packet's mutable IP. */
+	unsigned long saved_ret_addr;
+	unsigned long gsbase;
 	struct task_struct *task_struct_ptr;
-	/* Explicit clobber continuation, or legacy hook return-slot validation. */
-	unsigned long saved_ret_addr; /* CS entry point (ret_addr)         */
-
-	/* Removing unused snapshots must not make adjacent reservations share
-	 * a cache line. Keep a four-line stride and put notification bytes on a
-	 * different line from next, which a successor writes during polling.
-	 * Unlike spin, mutex has no combined locked/completed word consumer. */
-	u8 completed __attribute__((aligned(64)));
+	struct kd_mutex *lock;
+	u8 completed;
 	u8 locked;
 	bool native_resume;
-	u8 entry_abi; /* immutable acquisition identity; CPU is encoded in tail */
-	unsigned int packet_state; /* published with completed/native_resume */
-	int tail; /* encoded tail (cpu+idx)            */
-	int slot; /* reserved per-CPU slot index       */
-	struct kd_regs regs; /* waiter context → JIT sandbox      */
+	u8 entry_abi;
+	unsigned int packet_state;
+	struct kd_regs regs;
+
+	/* A successor writes next while this waiter polls locked. Keep the link
+	 * on line three, separate from both notification and virtual-GPR lines.
+	 * This physical return anchor is not the packet's logical caller SP.
+	 * Whole-line type alignment also isolates all four reserved array slots.
+	 * Frame/native-ACK lifetime remains independent of this reusable node. */
+	struct kd_mutex_node *next;
+	uint64_t rsp;
+	void *shadow_stack_base;
+	uint64_t shadow_stack_ptr;
+	int tail; /* encoded CPU/slot identity */
+	int slot;
 	/* Optional queue residence clock, not critical-section execution time. */
 	uint64_t queued_at_ns;
-};
+} __attribute__((aligned(64)));
 
 /*
  * Scheduling state beside one original Linux mutex.

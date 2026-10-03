@@ -220,7 +220,11 @@ RBP spill 与 RSP 检查窗口的覆盖关系可由入口谓词证明；每个�
 必须位于所有先前控制调用的窗口内，CFG 合并取这些约束的交集。原生处理器
 仍比较完整窗口。未知写入/普通 callee 不允许重新取得入口槽身份。
 旧 ABI 仍解码原内核保存栈并完整恢复；重复六寄存器副本已删除。node 为
-256B/64B 对齐，next 与 64/65 偏移的通知字节分行，CPU 从 tail 解码。
+256B/64B 对齐。不可变入口/GS/task/lock、32/33 偏移的通知字节、ABI/packet-state
+与 40/48/56 偏移的 IP/SP/BP 同处首行；五个虚拟 GPR backing 位于第二行
+64–96，避免 JIT 暂存写入与 waiter polling 共行。next 位于第四行208，继续与通知
+分行；物理返回 RSP216、shadow 栈字段及 tail/slot 也在第四行。CPU 从 tail 解码。
+寄存器包格式仍为 layout2，frame 与 node 的独立生命周期不变。
 补丁及基线操作见 [mutex_clobber](../kernel_experiments/mutex_clobber/README.md)。
 已知 pinned mode-4 调度缺口仍见 [TODO](TODO.md#current-checkpoint)。
 
