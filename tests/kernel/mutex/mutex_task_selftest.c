@@ -66,11 +66,10 @@ static void kd_task_wait(bool *flag, bool rcu_reader)
 static unsigned int kd_task_refs(struct task_struct *task)
 {
 	struct kd_mutex_task *entry;
-	raw_spinlock_t *bucket_lock = kd_mutex_task_bucket_lock(task);
 	unsigned long flags;
 	unsigned int refs = 0;
 
-	raw_spin_lock_irqsave(bucket_lock, flags);
+	raw_spin_lock_irqsave(&kd_mutex_tasks_lock, flags);
 	hash_for_each_possible(kd_mutex_tasks, entry, link,
 			       (unsigned long)task) {
 		if (entry->task == task) {
@@ -78,7 +77,7 @@ static unsigned int kd_task_refs(struct task_struct *task)
 			break;
 		}
 	}
-	raw_spin_unlock_irqrestore(bucket_lock, flags);
+	raw_spin_unlock_irqrestore(&kd_mutex_tasks_lock, flags);
 	return refs;
 }
 
@@ -310,64 +309,13 @@ static int kd_task_round(bool outer_first)
 	return atomic_read(&kd_task_test.failures) ? -EINVAL : 0;
 }
 
-/* Exercise only lock selection with synthetic pointer bits: these are never
- * dereferenced, registered, or passed to get/put. Equal low 32 bits deliberately
- * distinguish the native-width table hash from an accidentally truncated key.
- * Existing worker rounds below still exercise real records and final ACKs. */
-static int kd_task_bucket_layout_check(void)
-{
-	bool seen[HASH_SIZE(kd_mutex_tasks)] = { false };
-	unsigned int i, distinct = 0, collisions = 0;
-
-	for (i = 0; i < 4 * HASH_SIZE(kd_mutex_tasks); i++) {
-		unsigned long key = 0xffff888000001000UL ^
-				    ((unsigned long)i << 32);
-		unsigned int bucket = hash_long(key, HASH_BITS(kd_mutex_tasks));
-		raw_spinlock_t *lock =
-			kd_mutex_task_bucket_lock((struct task_struct *)key);
-
-		if (!KD_TASK_CHECK(lock == &kd_mutex_task_locks[bucket].lock))
-			return -EINVAL;
-		if (seen[bucket])
-			collisions++;
-		else {
-			seen[bucket] = true;
-			distinct++;
-		}
-	}
-	if (!KD_TASK_CHECK(collisions && distinct > 1))
-		return -EINVAL;
-	/* Hooks remain unpublished: every statically initialized bucket must be
-	 * independently aligned, unlocked, and usable without a runtime init loop. */
-	for (i = 0; i < HASH_SIZE(kd_mutex_task_locks); i++) {
-		raw_spinlock_t *lock = &kd_mutex_task_locks[i].lock;
-		unsigned long flags;
-
-		if (!KD_TASK_CHECK(!((unsigned long)&kd_mutex_task_locks[i] %
-				     SMP_CACHE_BYTES)))
-			return -EINVAL;
-		if (!KD_TASK_CHECK(raw_spin_trylock_irqsave(lock, flags)))
-			return -EINVAL;
-		raw_spin_unlock_irqrestore(lock, flags);
-	}
-	pr_info("kd_mutex task selftest buckets: locks=%u keys=%u distinct=%u collisions=%u failures=0 JIT=0\n",
-		(unsigned int)HASH_SIZE(kd_mutex_task_locks),
-		(unsigned int)(4 * HASH_SIZE(kd_mutex_tasks)), distinct, collisions);
-	return 0;
-}
-
 int kd_mutex_task_selftest(void)
 {
 	unsigned int i, j;
 	int ret = 0;
 
-	BUILD_BUG_ON(HASH_SIZE(kd_mutex_task_locks) != 256);
-	BUILD_BUG_ON(sizeof(struct kd_mutex_task_lock_bucket) % L1_CACHE_BYTES);
 	if (!kd_task_test_enabled)
 		return 0;
-	ret = kd_task_bucket_layout_check();
-	if (ret)
-		return ret;
 	/* Three distinct online CPUs let the real RCU reader stay non-sleeping
 	 * while the physical owner and original waiter exchange native requests. */
 	cpus_read_lock();
