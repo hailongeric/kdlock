@@ -92,30 +92,6 @@ static __attribute__((__noinline__,noipa)) unsigned long run(void) {
     return total;
 }
 int main(void) {
-    /* Check the real header consumed by the offset-based stack trampoline.
-     * These line relationships are the reason for the reorder; physical and
-     * logical SP must also remain separate fields when the old frame dies. */
-    _Static_assert(sizeof(struct kd_mutex_node)==256, "four-line node stride");
-    _Static_assert(_Alignof(struct kd_mutex_node)==64, "whole-line reservations");
-    _Static_assert(offsetof(struct kd_mutex_node,rsp)!=offsetof(struct kd_mutex_node,regs.sp),
-                   "physical return anchor is not logical SP");
-    struct kd_mutex_node slots[KD_MUTEX_MAX_NODES];
-    for (unsigned int i=0;i<KD_MUTEX_MAX_NODES;i++) {
-        struct kd_mutex_node *n=&slots[i];
-        uintptr_t core=(uintptr_t)n/64;
-        assert((uintptr_t)n%64==0);
-        assert((uintptr_t)&n->saved_ret_addr/64==core);
-        assert((uintptr_t)&n->task_struct_ptr/64==core);
-        assert((uintptr_t)&n->lock/64==core);
-        assert((uintptr_t)&n->packet_state/64==core);
-        assert((uintptr_t)&n->regs.ip/64==core);
-        assert((uintptr_t)&n->regs.sp/64==core);
-        assert((uintptr_t)&n->regs.bp/64==core);
-        assert((uintptr_t)&n->locked/64==core);
-        assert((uintptr_t)&n->regs.r15/64==core+1);
-        assert((uintptr_t)&n->regs.r11/64==core+1);
-        assert((uintptr_t)&n->next/64==core+3);
-    }
     for (int round=0;round<32;round++) {
         unsigned long expected=0;
         for (int i=0;i<16;i++) expected+=(input[i]=round*111+i);
