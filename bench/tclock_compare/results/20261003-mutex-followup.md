@@ -252,3 +252,143 @@ Small-thread screen and 36-thread recheck (`mutex-outer-result-recheck-c1`), kep
 Targeted validation covers the actual compiled synthetic entry with poisoned GPRs, physical/native return routing, COMPLETE and forced FULL, task/shadow resources, once-only sampling, registry endpoints and existing native-after-outer owner recovery. The first `outer-result-unit` phase has six passing drivers and one failed diagnostic assertion: the new rejection test muted the log whose text it then checked. Removing that test-only muting preserves its refusal assertion; `outer-result-admission` passes the basics and all 28 admission tests. The failed phase remains frozen. `outer-result-runner` passes all 44 tests. `outer-result-ack` passes the real owner/RCU probe with two orders, four final ACKs and two deferred frees, explicitly JIT=0. Timed contended sessions independently provide returned-body JIT and clean source/module drain.
 
 This result-routing change is retained as a separate validated checkpoint. Its full 15-point/hash verification remains pending until the next candidate screens finish; neither the earlier full matrix nor its profile is relabeled as this implementation.
+
+## Hash screen and required recheck: regression remains
+
+The `ec45ca2` exact-native-result checkpoint was measured at 16/36 workers in `mutex-outer-result-hash` and `mutex-outer-result-recheck-hash`. Both phases contain 18/18 valid, drained samples. Every contended KD sample returns JIT bodies and every TCLock sample reports delegation. Offline record validation reproduces selected peaks, correct payload/hash state, exact worker CPUs, positive progress for every worker in both the whole run and selected peak, and consistent totals. Functional correctness passes; performance acceptance does not.
+
+The matching historical reference is the full hash matrix at `51493f2`: its 16/36 KD peak medians were 4.249548/2.509651 Mops/s and whole medians 4.118330/2.044662. All six KD reference samples at these two points are valid; the five NO_JIT failures elsewhere in that historical matrix remain excluded. This is a comparison across the cumulative shared-runtime/balance/outer-routing changes, not an isolated causal experiment on the exact-native-result endpoint alone.
+
+| Workers | First peak median change | Recheck peak median change | First whole median change | Recheck whole median change |
+|---:|---:|---:|---:|---:|
+|16|−9.44%|−10.16%|−5.11%|−5.32%|
+|36|−25.81%|−23.33%|−14.36%|−10.51%|
+
+Both protected medians regress by more than 3%, and the loss repeats. At 16 the best KD/TC ratios are 98.97% and 100.57%; at 36 they are 87.99% and 104.45%. The recheck's high 36-thread best window is retained, but its KD peak range is 1.608236–2.846716 Mops/s and its median is 1.924143; it does not cancel the repeated median regression. A single best-window pass is not repeatable target acceptance, and no full hash matrix or all-thread parity is claimed for this checkpoint.
+
+All throughput values are Mops/s; spreads are `(max-min)/median`. Each row contains three valid rounds.
+
+| Phase / threads | Arm | Peak min / median / max | Peak spread | Whole min / median / max | Whole spread |
+|---|---|---:|---:|---:|---:|
+| first / 16 | kdlock | 3.814 / 3.848 / 4.025 | 5.47% | 3.889 / 3.908 / 4.062 | 4.43% |
+| first / 16 | tclock | 4.049 / 4.063 / 4.067 | 0.44% | 4.030 / 4.049 / 4.053 | 0.56% |
+| first / 16 | native | 4.614 / 4.721 / 4.744 | 2.75% | 4.594 / 4.675 / 4.695 | 2.15% |
+| first / 36 | kdlock | 1.749 / 1.862 / 1.940 | 10.25% | 1.650 / 1.751 / 1.801 | 8.59% |
+| first / 36 | tclock | 2.198 / 2.199 / 2.205 | 0.32% | 2.187 / 2.188 / 2.194 | 0.32% |
+| first / 36 | native | 2.682 / 2.688 / 2.697 | 0.55% | 2.633 / 2.645 / 2.655 | 0.83% |
+| recheck / 16 | kdlock | 3.763 / 3.818 / 4.114 | 9.19% | 3.839 / 3.899 / 4.067 | 5.86% |
+| recheck / 16 | tclock | 4.063 / 4.066 / 4.091 | 0.69% | 4.050 / 4.052 / 4.077 | 0.67% |
+| recheck / 16 | native | 4.692 / 4.705 / 4.723 | 0.66% | 4.650 / 4.685 / 4.698 | 1.02% |
+| recheck / 36 | kdlock | 1.608 / 1.924 / 2.847 | 64.37% | 1.725 / 1.830 / 2.331 | 33.10% |
+| recheck / 36 | tclock | 2.202 / 2.209 / 2.726 | 23.69% | 2.191 / 2.199 / 2.281 | 4.07% |
+| recheck / 36 | native | 2.597 / 2.721 / 2.734 | 5.06% | 2.445 / 2.664 / 2.692 | 9.27% |
+
+| Phase / threads | KD max / TC max | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---|---:|---:|---:|---:|---:|---:|
+| first / 16 | 98.97% | 8.987%–11.491% | 97.484%–97.548% | 435200 / 60416 | 0.000%–0.000% | 0.000%–0.000% |
+| first / 36 | 87.99% | 20.182%–24.849% | 97.705%–97.781% | 67584 / 10496 | 36.595%–37.735% | 39.073%–43.096% |
+| recheck / 16 | 100.57% | 9.073%–11.825% | 97.476%–97.581% | 433152 / 61440 | 0.000%–0.000% | 0.000%–0.000% |
+| recheck / 36 | 104.45% | 7.656%–22.673% | 93.149%–98.022% | 62464 / 768 | 35.228%–40.773% | 34.854%–43.004% |
+
+At 36, the 20+16 worker distribution gives node1 a 44.44% worker share, but KD whole-run node1 shares are 36.60%–37.73% in the first phase and 35.23%–40.77% in the recheck. All workers advance, yet one recheck peak worker completes only 768 operations. The node shares and minima should accompany the high peak, rather than treating positive progress as a fairness or starvation guarantee. There is no 24-thread observation in these screens.
+
+Delegation frequency rises substantially from the historical reference: at 16 KD JIT share was 0.067%–1.342%, versus 8.987%–11.491% and 9.073%–11.825% now; at 36 it was 0.405%–9.057%, versus 20.182%–24.849% and 7.656%–22.673%. More returned JIT bodies coexist with lower aggregate throughput. That motivates investigating coordination and per-request costs, but does not isolate their causal contribution or prove remote-cache latency. The retained cacheline gain must not be extrapolated to hash.
+
+
+## Rejected post-admission native retry
+
+This independent candidate permits one later native-owner CAS after the failed outer entry has already recorded contention, and after admission/shadow lookup, only when observations of the original owner, private gate and tail are empty. The real owner CAS still decides acquisition; observations grant no ownership, entry counting is not repeated, and successful retry occurs before task-reference/queue publication. The candidate is rejected for performance, not relabeled a correctness failure. Commit `ae7a26b` preserves it; `6ab4f10` reverts it.
+
+`mutex-retry-c1` has 18/18 valid samples at 16/36; `mutex-retry-recheck-c1` has 36/36 at 1/2/3/36. At 16/36, every KD sample has returned-body JIT. The 1/2-worker recheck samples report zero JIT; the 3-worker samples return 51–58 JIT bodies. Data, worker progress and recorded drain pass. Compared with the ec45 c1 first screen, KD peak medians fall 10.02% at 16 and 7.98% at 36. The 36-thread ec45 recheck is the latest same-source reference (8.163526 Mops/s); against that fixed reference, the retry's first/recheck medians 7.196961/7.358964 fall 11.84%/9.86%. Even against the lower original ec45 screen 7.821451, both retry 36 medians remain more than 3% lower. The repeatable 36 regression is sufficient to reject the candidate; 16 was not repeated, so its loss is reported only as a first-screen result.
+
+The retry recheck also fails to repair small-thread behavior. Compared with matching ec45 recheck medians, changes at 1/2/3/36 are −0.03%/−6.88%/−10.21%/−9.86%; whole-run median changes are −0.05%/−4.50%/−10.07%/−10.42%. At 3 the best KD/TC ratio is 60.69%, with only 51–58 returned JIT bodies. No hash score or full-matrix acceptance is attributed to this rejected candidate. Original valid observations are retained, not removed because the candidate loses.
+
+All throughput values are Mops/s; spreads are `(max-min)/median`. Each row contains three valid rounds.
+
+| Phase / threads | Arm | Peak min / median / max | Peak spread | Whole min / median / max | Whole spread |
+|---|---|---:|---:|---:|---:|
+| first / 16 | kdlock | 8.029 / 8.192 / 8.399 | 4.52% | 7.906 / 8.029 / 8.164 | 3.21% |
+| first / 16 | tclock | 4.390 / 4.628 / 4.750 | 7.78% | 4.369 / 4.602 / 4.725 | 7.73% |
+| first / 16 | native | 6.490 / 6.766 / 7.014 | 7.75% | 6.215 / 6.622 / 6.893 | 10.24% |
+| first / 36 | kdlock | 6.906 / 7.197 / 7.296 | 5.43% | 6.565 / 7.048 / 7.193 | 8.91% |
+| first / 36 | tclock | 4.401 / 4.539 / 4.612 | 4.67% | 4.371 / 4.516 / 4.581 | 4.65% |
+| first / 36 | native | 5.243 / 5.587 / 5.687 | 7.96% | 5.089 / 5.494 / 5.502 | 7.51% |
+| recheck / 1 | kdlock | 32.909 / 32.912 / 32.916 | 0.02% | 32.875 / 32.890 / 32.896 | 0.06% |
+| recheck / 1 | tclock | 36.143 / 36.146 / 36.146 | 0.01% | 36.100 / 36.116 / 36.126 | 0.07% |
+| recheck / 1 | native | 27.930 / 27.987 / 27.990 | 0.21% | 27.915 / 27.966 / 27.972 | 0.20% |
+| recheck / 2 | kdlock | 8.375 / 9.203 / 9.444 | 11.61% | 8.110 / 8.978 / 9.050 | 10.48% |
+| recheck / 2 | tclock | 10.147 / 10.372 / 10.445 | 2.87% | 10.111 / 10.346 / 10.415 | 2.95% |
+| recheck / 2 | native | 5.735 / 6.936 / 7.298 | 22.53% | 5.720 / 6.886 / 7.272 | 22.55% |
+| recheck / 3 | kdlock | 6.013 / 6.015 / 6.608 | 9.90% | 5.582 / 5.614 / 6.271 | 12.26% |
+| recheck / 3 | tclock | 8.605 / 9.058 / 10.889 | 25.22% | 8.540 / 8.928 / 10.773 | 25.01% |
+| recheck / 3 | native | 7.027 / 7.274 / 7.559 | 7.31% | 6.983 / 7.244 / 7.544 | 7.75% |
+| recheck / 36 | kdlock | 7.307 / 7.359 / 7.430 | 1.67% | 7.072 / 7.197 / 7.212 | 1.94% |
+| recheck / 36 | tclock | 4.537 / 4.560 / 4.849 | 6.83% | 4.481 / 4.501 / 4.560 | 1.75% |
+| recheck / 36 | native | 5.401 / 5.604 / 5.639 | 4.25% | 5.324 / 5.434 / 5.479 | 2.85% |
+
+| Phase / threads | KD max / TC max | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---|---:|---:|---:|---:|---:|---:|
+| first / 16 | 176.81% | 2.928%–3.163% | 98.591%–98.916% | 766720 / 113664 | 0.000%–0.000% | 0.000%–0.000% |
+| first / 36 | 158.19% | 1.508%–2.059% | 97.800%–98.350% | 271360 / 38656 | 44.574%–46.341% | 43.012%–47.232% |
+| recheck / 1 | 91.06% | 0.000%–0.000% | 0.000%–0.000% | 65752832 / 9873920 | 0.000%–0.000% | 0.000%–0.000% |
+| recheck / 2 | 90.42% | 0.000%–0.000% | 0.000%–0.000% | 7497728 / 1164032 | 0.000%–0.000% | 0.000%–0.000% |
+| recheck / 3 | 60.69% | 0.000454%–0.000466% | 0.020%–0.199% | 3389952 / 482816 | 0.000%–0.000% | 0.000%–0.000% |
+| recheck / 36 | 153.24% | 1.490%–1.547% | 96.587%–98.147% | 268544 / 39168 | 44.778%–46.414% | 44.040%–45.937% |
+
+All measured retry workers make progress. At 36, KD node1 whole shares remain 44.57%–46.34% first and 44.78%–46.41% recheck; selected-peak shares are 43.01%–47.23% and 44.04%–45.94%. These are near the 16/36 worker fraction, so the observed throughput loss is not explained by a stopped minority node. Finite progress does not establish a starvation bound. The added retry changes admission timing and races; throughput measurements alone do not identify which altered interleaving causes the loss.
+
+Both comparisons preserve min/median/max, whole-run throughput and spreads. Offline audit inputs and per-arm progress/node statistics are recorded in `/tmp/kd-mutex-regression-audit-1003b.json`, with reproducible record-only checks in `/tmp/kd-mutex-regression-audit-1003b.py`. Exact frozen source/binary/session retirement checks remain the archive collector's separate responsibility.
+
+## Rejected mutex node packing
+
+The isolated packing experiment is preserved as `ad59ff3` on `perf/mutex-pack-rejected-20261003b`; `5b75d60` reverts it. The node remains 256 bytes, aligned to 64 bytes. Request identity/state and logical RIP/RSP/RBP move into line 0, the five virtual GPR backings into line 1, and the queue link remains separate from polling in line 3. The two-word wrapper ABI, `kd_regs` layout, original Linux `pt_regs`, physical return-stack semantics, and independent node/frame lifetimes remain unchanged. Prefetching changes from five hints to four: core and queue-link lines plus the existing two caller-stack hints. This is one object-layout/prefetch candidate, so its two parts were not measured independently.
+
+The c1 screen has 18/18 valid samples at 16/36 workers, the first hash screen 18/18 at 16/36, and the hash recheck 9/9 at 36. All 45 records are `OK` and drained; all KD samples have returned JIT bodies, all TCLock samples report delegation, and every worker advances in both whole-run and selected-peak counts. The offline audit reproduces peak selection, business-data validation, CPU bindings and count sums. The candidate passes these functional and measurement checks but fails the protected performance criterion.
+
+For hash, the latest ec45 recheck is the fixed reference for both packing rounds. Its KD peak medians at 16/36 are 3.817764/1.924143 Mops/s, and whole medians are 3.899225/1.829779. The comparisons below use unrounded data.
+
+| Hash phase / workers | KD peak median | Change from fixed ec45 reference | KD whole median | Change from fixed ec45 reference |
+|---|---:|---:|---:|---:|
+| First / 16 | 3.768320 | −1.30% | 3.829705 | −1.78% |
+| First / 36 | 1.815027 | −5.67% | 1.701618 | −7.00% |
+| Recheck / 36 | 1.845459 | −4.09% | 1.821289 | −0.46% |
+
+The 36-worker peak-median loss exceeds 3% in both trials, so packing is rejected. Its recheck still includes a valid 2.674327 Mops/s maximum, yielding 119.41% of that phase's TCLock maximum; the first phase reaches only 85.04%. The recheck KD range is 1.831836–2.674327 Mops/s, a 45.65% peak spread. The high best window does not erase the repeated protected median loss. Both the reference and candidate have substantial 36-worker variability, so this is a failed acceptance screen, not a precise estimate of the layout's isolated cost.
+
+For c1, packing yields peak medians 9.054707/8.276468 and whole medians 8.923697/7.951708 at 16/36. Against the latest available matching ec45 points (16 from the first screen; 36 from the recheck), peak changes are −0.54%/+1.38% and whole changes +0.72%/−1.03%. These do not establish a repeatable c1 improvement. Using the older 36-worker first-screen reference would show +5.82% peak, but that should not replace the later same-source reference.
+
+All throughput values are Mops/s; spreads are `(max-min)/median`. Each row contains three valid rounds.
+
+| Phase / threads | Arm | Peak min / median / max | Peak spread | Whole min / median / max | Whole spread |
+|---|---|---:|---:|---:|---:|
+| c1 first / 16 | kdlock | 8.965 / 9.055 / 9.154 | 2.09% | 8.732 / 8.924 / 8.935 | 2.27% |
+| c1 first / 16 | tclock | 4.610 / 4.618 / 4.762 | 3.30% | 4.595 / 4.601 / 4.747 | 3.30% |
+| c1 first / 16 | native | 6.616 / 6.883 / 7.388 | 11.21% | 6.453 / 6.828 / 7.337 | 12.93% |
+| c1 first / 36 | kdlock | 7.765 / 8.276 / 8.481 | 8.65% | 7.328 / 7.952 / 8.396 | 13.44% |
+| c1 first / 36 | tclock | 4.519 / 4.554 / 4.577 | 1.27% | 4.514 / 4.549 / 4.564 | 1.09% |
+| c1 first / 36 | native | 4.879 / 5.380 / 5.479 | 11.16% | 4.644 / 4.996 / 5.135 | 9.84% |
+| hash first / 16 | kdlock | 3.730 / 3.768 / 3.805 | 2.00% | 3.808 / 3.830 / 3.921 | 2.96% |
+| hash first / 16 | tclock | 3.999 / 4.083 / 4.085 | 2.12% | 3.982 / 4.066 / 4.070 | 2.16% |
+| hash first / 16 | native | 4.645 / 4.699 / 4.708 | 1.34% | 4.619 / 4.684 / 4.687 | 1.46% |
+| hash first / 36 | kdlock | 1.630 / 1.815 / 1.869 | 13.17% | 1.670 / 1.702 / 1.736 | 3.87% |
+| hash first / 36 | tclock | 2.185 / 2.193 / 2.198 | 0.58% | 2.167 / 2.182 / 2.182 | 0.70% |
+| hash first / 36 | native | 2.575 / 2.659 / 2.667 | 3.46% | 2.449 / 2.490 / 2.580 | 5.26% |
+| hash recheck / 36 | kdlock | 1.832 / 1.845 / 2.674 | 45.65% | 1.677 / 1.821 / 2.056 | 20.85% |
+| hash recheck / 36 | tclock | 2.208 / 2.209 / 2.240 | 1.41% | 2.193 / 2.198 / 2.211 | 0.80% |
+| hash recheck / 36 | native | 2.713 / 2.743 / 2.752 | 1.39% | 2.549 / 2.684 / 2.701 | 5.65% |
+
+| Phase / threads | KD max / TC max | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---|---:|---:|---:|---:|---:|---:|
+| c1 first / 16 | 192.22% | 2.448%–3.079% | 98.835%–98.912% | 916480 / 134400 | 0.000%–0.000% | 0.000%–0.000% |
+| c1 first / 36 | 185.30% | 1.146%–1.719% | 98.113%–98.575% | 290560 / 49152 | 41.935%–45.873% | 43.637%–47.634% |
+| hash first / 16 | 93.15% | 11.111%–12.571% | 97.413%–97.581% | 436736 / 64768 | 0.000%–0.000% | 0.000%–0.000% |
+| hash first / 36 | 85.04% | 22.336%–25.140% | 97.626%–97.986% | 60160 / 8704 | 34.075%–36.347% | 33.435%–40.575% |
+| hash recheck / 36 | 119.41% | 13.242%–24.184% | 95.518%–97.891% | 61440 / 1792 | 45.312%–47.885% | 43.545%–47.368% |
+
+At 36 hash workers, node1 has 16/36 (44.44%) of workers. KD whole-run node1 shares are 34.07%–36.35% in the first trial and 45.31%–47.89% in the recheck; selected-peak shares are 33.43%–40.58% and 43.55%–47.37%. The recheck improves node balance but still has the protected median loss, and its least-progressing peak worker completes only 1,792 operations. Positive progress is not a starvation guarantee. No 24-worker result or full matrix was measured for this candidate.
+
+The generated hash evidence also limits the proposed explanation. Both the historical image and frozen ec45 image contain two textual `Stack_R11` loads and one store, with no `Stack_R12`–`Stack_R15` references. R11 is at node offset 136 before packing and 96 after packing; it shares the waiter-polling line under neither layout. Therefore these images do not support repeated GPR-backing writes contending with waiter polling as the explanation for the observed hash gap. Packing reduces the request core's footprint, but also puts logical IP/SP/BP completion writes into the polling line. That is a possible tradeoff, not a measured cache-causality result. The existing hash images do not justify another broad GPR-prefetch experiment.
+
+The generated-code review is `/tmp/kd-mutex-node-pack-hash-audit-1003b.json`; the record audit and all-arm progress/node statistics are `/tmp/kd-mutex-regression-audit-1003b.{json,py}`. Exact frozen input/ELF identities and full lifecycle logs remain separate archive checks. All valid measurements, including the high recheck maximum and rejected candidate, are retained.
+
+The native-retry experiment is preserved by `ae7a26b` / `perf/mutex-retry-rejected-20261003b`, reverted by `6ab4f10`. Packing unit verification (`node-pack-unit`) passed the two basics, actual stack-return fixture, resources and outer-progress driver (five drivers total). Its CLI typo `--workloads` was rejected before output creation/session execution; the corrected `--workload` run is the scored phase.
