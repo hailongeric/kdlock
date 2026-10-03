@@ -264,7 +264,21 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_MUTEX ||
 	    !kd_jit_image_matches(exe, frame))
 		return false;
-	kd_jit_prepare_clobber(call, frame, READ_ONCE(exe->code_block));
+	/* This pristine, exclusively bound root has just passed the complete
+	 * ABI2/ledger predicate above. Fill its final transport directly rather
+	 * than selecting the packet/backend and testing that predicate again in
+	 * the general clobber preparer. Complex/FULL dispatch still uses that
+	 * preparer and all completion/physical-owner retirement checks remain. */
+	call->regs = regs;
+	call->args[0] = frame->gsbase;
+	call->args[1] = (unsigned long)frame->logical_task;
+	call->code = (char *)READ_ONCE(exe->code_block) + KD_JIT_CLOBBER_OFFSET;
+	call->lock = frame->outer_lock_addr;
+	call->unlock = direct_mutex_unlock_addr;
+	call->entry_sp = regs->sp;
+	call->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	call->packet_state = &frame->packet_state;
+	call->complete = true;
 	if (unlikely(kd_jit_timing)) {
 		call->dispatch_start = kd_jit_timing_start();
 		call->wrapper_start = kd_jit_timing_start();

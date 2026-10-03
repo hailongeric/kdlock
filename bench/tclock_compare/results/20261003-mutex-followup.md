@@ -397,7 +397,7 @@ The native-retry experiment is preserved by `ae7a26b` / `perf/mutex-retry-reject
 
 Eligible ABI2/MINIMAL final waiters now execute without a linked successor. Exact tail retirement resolves delayed publishers before COMPLETE/native wake or early outer release; an empty new head still waits for the original mutex and private gate. The saved retirement flag prevents node reads after reuse. Unstarted refusals retain their original handoff; FULL/legacy final packets retain their boundary. Physical owner, final ACK, source lease, FIFO and the 1024-body limit remain intact.
 
-The cacheline screen contains 36 valid samples at 2/3/16/36 threads. Relative to the latest matching ec45 screen medians, changes are -1.01%/+28.01%/+2.80%/+1.75%. Three-thread JIT share rises from approximately 0.001% to 1.513%–2.663%; KD median 8.575 exceeds the same-run TCLock median 8.284. Two-thread parity remains unmet. This is a checkpoint, pending the final 15-point matrix.
+The cacheline screen contains 36 valid samples at 2/3/16/36 threads. Relative to the latest matching ec45 screen medians, changes are -1.01%/+28.01%/+2.80%/+1.75%. Three-thread JIT share rises from 0.000344%–0.000588% to 1.513%–2.663%; KD median 8.575 exceeds the same-run TCLock median 8.284. Two-thread parity remains unmet. This is a checkpoint, pending the final 15-point matrix.
 
 Cacheline (`mutex-terminal-ready-c1`):
 
@@ -458,3 +458,78 @@ Against the fixed ec45 hash reference (16/36 medians 3.817764/1.924143), the fir
 Verification: `terminal-final-unit` passes both basics plus 3141 terminal queue checks with three mutation checks and 483 outer-progress checks over 12 linked/terminal scenarios. Those fixtures substitute body/owner operations; the timed sessions independently establish real returned-body JIT and normal source/module drain. `terminal-ack` separately passes the real owner/RCU observer (two orders, four final ACKs, two deferred frees), explicitly JIT=0. Actual generated nested/early mutex exits were not newly run.
 
 Preserved failures: `terminal-unit` has three passing drivers and one fixture compile failure (signed tail in a ternary); its explicit unsigned correction passes `terminal-progress-unit`, then the final targeted phase. `mutex-terminal-c1` fails before module load because the observation patch retained the old log context; `mutex-terminal-fixed-c1` fails before module load because the field name `current` collides with the kernel macro. Matching nullable-log context and `current_node` fix these integration errors; `mutex-terminal-ready-c1` is the first scored phase. Build failures have logs/plans but no post-build source/binary manifest; they are not passing tests or measured samples.
+
+## Specialized mutex transport preparation
+
+After the complete existing pristine-root predicate passes, mutex preparation now fills its wrapper transport directly. This avoids reselecting the packet/backend and repeating the identical MINIMAL predicate through the generic preparer. Source OPEN/publication, image ABI, exact endpoints, ledger admission and final owner/ACK checks remain. The two-word wrapper ABI and generated-image format are unchanged.
+
+The actual provider ELF confirms removal of the generic preparation CALL and its repeated predicate; the first predicate remains. The candidate provider SHA256 is `ffc6acc67edaad6924c4b388a33a9caea7a7f88167aac1fd17fc5a74d20cfd54`, compared with terminal checkpoint `86d6e0f9f531da77d730bf05e3ba4d30cadb60e63bb85d5dfc1d9701de8f3f66`. Mutex execute_cs grows 4687→4796 bytes, so this is a hot-path work reduction, not a smaller-function claim. All 95 inspected spin functions normalize identically, including ordinary execute_cs; shared generic kd_exe_dispatch does change because GCC inlines its remaining generic preparation call. Its source behavior and recovery rules are unchanged. Offline audit materials are `/tmp/kd-mutex-direct-prepare-elf-audit-1003.{py,json,txt}`.
+
+`direct-prepare-unit` passes both basics and the execution-entry driver: 4049 checks, all mutation checks including completion flag/backend/packet/ledger refusal. The 45 scored sessions below pass returned-body JIT/delegation, payload/context, worker progress and drain. Ownership logic did not change, so the preceding real owner/ACK probe is historical evidence rather than a new run.
+
+Against the terminal checkpoint, c1 KD medians change +0.25% at 16 and -1.02% at 36; hash16 changes -1.18%. Hash36 initially falls 12.75% against the fixed terminal recheck median 2.390149, then its required recheck reaches 2.505840 (+4.84%); the incremental loss does not repeat. These noisy screens establish neither a repeatable large gain nor global hash acceptance. The cumulative 16-thread hash loss versus 51493f2 remains about 11.25%; current-source full15 validation is still required.
+
+mutex-direct-prepare-c1:
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 9.317 / 9.382 / 9.431 | 4.387 / 4.398 / 4.526 | 6.540 / 7.022 / 7.362 | 208.37% | 3/3 |
+| 36 | 8.211 / 8.221 / 8.666 | 4.295 / 4.499 / 4.501 | 4.677 / 4.967 / 5.463 | 192.52% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 16 | 9.082 / 9.221 / 9.255 | 4.365 / 4.371 / 4.503 | 6.314 / 6.972 / 7.319 | 1.22% / 3.17% / 11.69% |
+| 36 | 7.898 / 8.096 / 8.365 | 4.280 / 4.469 / 4.493 | 4.496 / 4.874 / 5.228 | 5.54% / 4.59% / 15.81% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 3.851%–4.083% | 98.810%–98.887% | 812544 / 121344 | 0.000%–0.000% | 0.000%–0.000% |
+| 36 | 2.079%–2.483% | 97.772%–98.009% | 314880 / 49664 | 44.458%–45.225% | 45.144%–47.573% |
+
+mutex-direct-prepare-hash:
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 3.765 / 3.772 / 3.803 | 4.043 / 4.046 / 4.090 | 4.617 / 4.634 / 4.672 | 93.00% | 3/3 |
+| 36 | 2.080 / 2.085 / 2.498 | 2.203 / 2.204 / 2.210 | 2.632 / 2.632 / 2.665 | 113.01% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 16 | 3.834 / 3.846 / 3.855 | 4.028 / 4.029 / 4.077 | 4.600 / 4.608 / 4.658 | 1.02% / 1.16% / 1.19% |
+| 36 | 1.881 / 1.888 / 1.960 | 2.192 / 2.194 / 2.375 | 2.553 / 2.575 / 2.616 | 20.00% / 0.31% / 1.28% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 12.761%–13.209% | 97.406%–97.622% | 426496 / 60928 | 0.000%–0.000% | 0.000%–0.000% |
+| 36 | 17.101%–18.587% | 88.735%–97.935% | 62976 / 4352 | 43.524%–44.313% | 33.020%–40.197% |
+
+mutex-direct-prepare-recheck-hash:
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 36 | 1.770 / 2.506 / 2.518 | 2.193 / 2.195 / 2.210 | 2.651 / 2.685 / 2.690 | 113.94% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 36 | 1.700 / 1.942 / 2.024 | 2.175 / 2.181 / 2.203 | 2.578 / 2.608 / 2.621 | 29.85% / 0.74% / 1.45% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 36 | 15.620%–25.563% | 97.481%–97.702% | 60672 / 3584 | 34.855%–38.131% | 29.554%–40.276% |
+
+Whole-run spreads for the terminal and preparation screens (same unpooled three-round groups):
+
+| Phase | Threads | KD / TC / Native whole spread |
+|---|---:|---:|
+| mutex-terminal-ready-c1 | 2 | 11.79% / 10.49% / 7.95% |
+| mutex-terminal-ready-c1 | 3 | 11.59% / 2.14% / 1.95% |
+| mutex-terminal-ready-c1 | 16 | 1.82% / 9.83% / 1.64% |
+| mutex-terminal-ready-c1 | 36 | 4.16% / 4.58% / 6.62% |
+| mutex-terminal-hash | 16 | 3.95% / 3.85% / 1.39% |
+| mutex-terminal-hash | 36 | 20.60% / 1.57% / 6.66% |
+| mutex-terminal-recheck-hash | 36 | 6.39% / 0.87% / 2.29% |
+| mutex-direct-prepare-c1 | 16 | 1.88% / 3.15% / 14.42% |
+| mutex-direct-prepare-c1 | 36 | 5.77% / 4.78% / 15.02% |
+| mutex-direct-prepare-hash | 16 | 0.53% / 1.22% / 1.27% |
+| mutex-direct-prepare-hash | 36 | 4.20% / 8.30% / 2.43% |
+| mutex-direct-prepare-recheck-hash | 36 | 16.70% / 1.30% / 1.68% |

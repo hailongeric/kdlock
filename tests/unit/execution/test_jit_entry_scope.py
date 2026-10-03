@@ -98,6 +98,22 @@ def main():
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
     mutations = {
+        "mutex-batch-final-completion-disabled": (
+            "call->complete = true;",
+            "call->complete = false;",
+        ),
+        "mutex-batch-wrong-backend-endpoint": (
+            "call->unlock = direct_mutex_unlock_addr;",
+            "call->unlock = clobber_spin_unlock_addr;",
+        ),
+        "mutex-batch-uses-private-stack": (
+            "call->entry_sp = regs->sp;\n\tcall->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;",
+            "call->entry_sp = frame->regs.sp;\n\tcall->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;",
+        ),
+        "mutex-batch-skips-ledger-admission": (
+            "!kd_jit_minimal_complete_allowed(frame) ||",
+            "(false && !kd_jit_minimal_complete_allowed(frame)) ||",
+        ),
         "batch-clobber-uses-legacy-entry": (
             "call->code = (char *)code + (clobber ? KD_JIT_CLOBBER_OFFSET :",
             "call->code = (char *)code + (clobber ? KD_JIT_BATCH_OFFSET :",

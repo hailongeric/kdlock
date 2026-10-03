@@ -1512,12 +1512,15 @@ static void check_mutex_batch(void)
 {
  unsigned char code[64]={0};
  struct kd_jit_batch_call call, before;
- struct kd_regs borrowed;
- struct kd_exec_frame saved;
+ struct kd_regs borrowed, saved_borrowed;
+ unsigned long saved_lock_addr=direct_mutex_lock_addr, saved_unlock_addr=direct_mutex_unlock_addr;
+ struct kd_exec_frame saved, rejected;
  memcpy(code+25,"KDWC002",7); memcpy(code+41,"KDAB",4);
  code[45]=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
  for (int timing=0;timing<2;timing++) {
   reset(); borrowed=active.regs;
+  /* Packet selection must use the borrowed waiter packet, not frame storage. */
+  borrowed.sp+=8; saved_borrowed=borrowed;
   active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
   active.borrowed_regs=&borrowed;
   active.entry_abi=entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
@@ -1527,11 +1530,14 @@ static void check_mutex_batch(void)
   CHECK(kd_exe_mutex_batch_prepare(entry,&active,&call));
   CHECK(call.regs==&borrowed && call.entry_abi==2 && call.complete &&
         call.unlock==direct_mutex_unlock_addr && call.lock==active.outer_lock_addr &&
+        call.entry_sp==borrowed.sp && call.entry_sp!=active.regs.sp &&
         call.code==code+32 && call.args[0]==active.gsbase &&
         call.args[1]==(unsigned long)&waiter && call.packet_state==&active.packet_state);
   CHECK(timing_reads==(timing?2U:0U));
   saved=active;
-  for (int bad=0;bad<13;bad++) {
+  /* Each pristine-frame discriminator stays an admission requirement;
+   * refusal must not partially publish transport or modify the frame. */
+  for (int bad=0;bad<33;bad++) {
    switch(bad) {
    case 0: source_open=false;break;
    case 1: entry->status_code=KD_EXE_NATIVE_ONLY;break;
@@ -1546,12 +1552,35 @@ static void check_mutex_batch(void)
    case 10: active.jit_lock_depth=2;break;
    case 11: active.jit_lock_released[0]=true;break;
    case 12: active.control_call.phase=KD_CALL_ENTERED;break;
+   case 13: active.parent=&parent;break;
+   case 14: active.depth=1;break;
+   case 15: active.complex_ready=false;break;
+   case 16: active.spin_simple=true;break;
+   case 17: active.request_frame=true;break;
+   case 18: active.outer_unlock_seen=true;break;
+   case 19: active.completion_seen=true;break;
+   case 20: active.outer_lock_index=1;break;
+   case 21: active.remote_result=KD_EXEC_REMOTE_WAITING;break;
+   case 22: active.remote_result=KD_EXEC_REMOTE_NATIVE;break;
+   case 23: active.gsbase=0;break;
+   case 24: active.logical_task=NULL;break;
+   case 25: borrowed.ip++;break;
+   case 26: borrowed.sp=0;break;
+   case 27: active.state=KD_EXEC_FRAME_COMPLETE;break;
+   case 28: active.outer_lock_addr=0;break;
+   case 29: entry->entry_abi=KD_ENTRY_ABI_LEGACY;break;
+   case 30: code[25]^=1;break;
+   case 31: direct_mutex_lock_addr=0;break;
+   case 32: direct_mutex_unlock_addr=0;break;
    }
-   before=call;
+   before=call; rejected=active;
    CHECK(!kd_exe_mutex_batch_prepare(entry,&active,&call));
    CHECK(!memcmp(&call,&before,sizeof(call)));
-   active=saved; source_open=true; entry->status_code=KD_EXE_NORMAL;
-   entry->lock_kind=KD_EXE_LOCK_MUTEX; code[45]=2;
+   CHECK(!memcmp(&active,&rejected,sizeof(active)));
+   active=saved; borrowed=saved_borrowed; source_open=true;
+   entry->status_code=KD_EXE_NORMAL; entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+   entry->lock_kind=KD_EXE_LOCK_MUTEX; code[45]=2; code[25]='K';
+   direct_mutex_lock_addr=saved_lock_addr;direct_mutex_unlock_addr=saved_unlock_addr;
   }
   call.args[0]=KD_EXE_CALL_MISS;
   CHECK(!kd_exe_mutex_batch_completed(&call,&active));

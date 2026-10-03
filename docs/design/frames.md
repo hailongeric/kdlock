@@ -303,6 +303,13 @@ returns retain backend identity, detach the packet, and enter the existing
 native/ACK path once. The batch lease ends after every frame/ACK has retired;
 source closure still rejects new roots within the batch.
 
+For this pristine ABI2 mutex root, batch preparation fills the wrapper transport
+from the packet selected before admission. The existing MINIMAL ledger predicate,
+source/publication checks, image identity and direct endpoint checks must all pass
+before it fixes `complete=true` and the mutex ABI/unlock fields. Generic clobber
+preparation remains responsible for other dispatches. This specialization changes
+neither the two-word wrapper input nor completion, physical-owner or final-ACK checks.
+
 The mutex batch push, preparation, completion and retirement helpers now use
 the same compilation unit as the mutex combiner. Its private queue helpers
 have mutex-specific names; public entries and all packet/frame layouts stay
