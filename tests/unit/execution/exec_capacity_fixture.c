@@ -995,6 +995,39 @@ static void lazy_single(void)
 	}
 }
 
+/* Cold routing bytes may contain a previous retired frame. A pristine body
+ * must not clear/read them, while promotion must initialize each discriminator
+ * without changing the live physical ledger, hook or borrowed packet pointer. */
+static void poison_mutex_routing(struct kd_exec_frame *frame)
+{
+ frame->continuation_ip=0xdead;
+ frame->logical_pid=-97;
+ frame->delegated_lock_addr=0xbeef;
+ frame->resume_target=(void *)1;
+ frame->remote_request=(void *)2;
+ frame->control_call.phase=KD_CALL_ENTERED;
+ frame->native_request=(void *)3;
+ frame->remote_result=KD_EXEC_REMOTE_WAITING;
+ frame->native_link.next=(void *)4;
+ frame->native_link.prev=(void *)5;
+}
+static bool mutex_routing_poisoned(const struct kd_exec_frame *frame)
+{
+ return frame->continuation_ip==0xdead && frame->logical_pid==-97 &&
+  frame->delegated_lock_addr==0xbeef && frame->resume_target==(void *)1 &&
+  frame->remote_request==(void *)2 && frame->control_call.phase==KD_CALL_ENTERED &&
+  frame->native_request==(void *)3 && frame->remote_result==KD_EXEC_REMOTE_WAITING &&
+  frame->native_link.next==(void *)4 && frame->native_link.prev==(void *)5;
+}
+static bool mutex_routing_initialized(const struct kd_exec_frame *frame)
+{
+ return !frame->continuation_ip && frame->logical_pid==frame->logical_task->pid &&
+  !frame->delegated_lock_addr && !frame->resume_target && !frame->remote_request &&
+  frame->control_call.phase==KD_CALL_NONE && !frame->native_request &&
+  frame->remote_result==KD_EXEC_REMOTE_IDLE &&
+  frame->native_link.next==&frame->native_link && frame->native_link.prev==&frame->native_link;
+}
+
 /* Exercise real batch push/retirement around an enclosing source lease. The
  * fake mutex checks owner identity; actual blocking/ACK has separate fixtures. */
 static void mutex_batch_frames(void)
@@ -1009,22 +1042,52 @@ static void mutex_batch_frames(void)
  cpu=0; current=&owners[0]; lock.physical_owner=current;
  CHECK(!source_frames && !kd_exec_current_frame());
  CHECK(kd_source_frame_get());
+ before=*kd_exec_current_context();
+ CHECK(!kd_exec_frame_push_mutex_batch(NULL,0x1000,0x3000,&waiters[0],&lock,&hook));
+ CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0,&waiters[0],&lock,&hook));
+ CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,NULL,&lock,&hook));
+ CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],NULL,&hook));
+ CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,NULL));
+ lock.origin_mutex_addr=0;
+ CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
+ lock.origin_mutex_addr=(unsigned long)&origin;
+ CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
+ kd_exec_current_context()->owner=&owners[1];
+ before=*kd_exec_current_context();
+ CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
+ CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
+ kd_exec_current_context()->owner=NULL;
  for (int round=0;round<2;round++) {
+  poison_mutex_routing(&kd_exec_current_context()->frames[0]);
   frame=kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook);
   CHECK(frame && source_frames==1 && frame->batch_lease && frame->regs_borrowed);
   if (!frame) return;
   CHECK(frame->mutex_backend && frame->entry_abi==KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
         frame->packet_state==KD_PACKET_MINIMAL && kd_exec_frame_validate(frame));
   CHECK(frame->jit_lock_node[0]==&lock && frame->jit_lock_addr[0]==(unsigned long)&origin);
+  CHECK(!frame->complex_ready && mutex_routing_poisoned(frame));
+  CHECK(frame->outer_unlock_hook==&hook && kd_exec_frame_regs(frame)==&packet);
+  if (round) {
+   CHECK(!kd_exec_frame_prepare_mutex_complex(frame));
+   CHECK(frame->complex_ready && mutex_routing_initialized(frame));
+   CHECK(frame->outer_unlock_hook==&hook && frame->jit_lock_node[0]==&lock &&
+         kd_exec_frame_regs(frame)==&packet && frame->regs_borrowed);
+   saved=*frame;
+   CHECK(!kd_exec_frame_prepare_mutex_complex(frame));
+   CHECK(!memcmp(frame,&saved,sizeof(saved)));
+  }
   CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
   frame->executed=true; frame->packet_state=KD_PACKET_COMPLETE;
   saved=*frame;
   /* Every refusal must preserve the live frame and source reference. */
   for (int bad=0;bad<26;bad++) {
+   /* Inactive bytes have no authority; the materialized route must still
+    * reject each live control/native/remote corruption. */
+   if (!round && bad>=18 && bad<=21) continue;
    switch(bad) {
    case 0: frame->mutex_backend=false;break;
    case 1: frame->batch_lease=false;break;
-   case 2: frame->complex_ready=false;break;
+   case 2: frame->state=KD_EXEC_FRAME_RESUME;break;
    case 3: frame->spin_simple=true;break;
    case 4: frame->request_frame=true;break;
    case 5: frame->regs_borrowed=false;break;
@@ -1057,6 +1120,7 @@ static void mutex_batch_frames(void)
   /* Closure stops new roots, but cannot strand an admitted body's lease. */
   source_open=false;
   CHECK(!kd_exec_frame_retire_mutex_batch(frame,&lock));
+  if (!round) CHECK(mutex_routing_poisoned(frame));
   CHECK(!kd_exec_current_frame() && source_frames==1 && origin.locked);
   before=*kd_exec_current_context();
   CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
@@ -1067,6 +1131,8 @@ static void mutex_batch_frames(void)
   * may be reused only after detachment. A pending owner ACK still forbids pop. */
  frame=kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook);
  frame->executed=true; frame->packet_state=KD_PACKET_FULL;
+ CHECK(!kd_exec_frame_prepare_mutex_complex(frame));
+ CHECK(frame->complex_ready && mutex_routing_initialized(frame));
  expected=packet; kd_exec_frame_own_regs(frame); memset(&packet,0xa5,sizeof(packet));
  CHECK(!frame->regs_borrowed && !memcmp(&expected,kd_exec_frame_regs(frame),sizeof(expected)));
  CHECK(!kd_exec_frame_record_event(frame,KD_EXEC_EVENT_OUTER_UNLOCK,NULL));

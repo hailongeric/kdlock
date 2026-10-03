@@ -120,8 +120,9 @@ struct kd_exec_frame {
 	struct task_struct *logical_task;
 	struct kd_exec_frame *parent;
 
-	/* Cold storage: unread until complex_ready, including all eight locks,
-	 * control/native routing and the combiner checkpoint. */
+	/* Cold routing storage is unread until complex_ready. Pristine mutex
+	 * batches still initialize borrowed_regs, their exact slot-0 ledger,
+	 * depth/release fields and outer hook here; only routing is deferred. */
 	unsigned long continuation_ip;
 	union {
 		unsigned long continuation_sp;
@@ -190,6 +191,9 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
 	struct kd_exec_outer_unlock *hook);
+/* Materialize cold routing before generic validation/dispatch. This preserves
+ * the borrowed packet union, exact physical ledger and release hook. */
+int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame);
 int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 				    struct kd_mutex *lock);
 

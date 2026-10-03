@@ -36,6 +36,7 @@ struct task_struct {
 struct list_head {
 	struct list_head *next, *prev;
 };
+#define INIT_LIST_HEAD(head) do { (head)->next = (head)->prev = (head); } while (0)
 typedef struct {
 	int value;
 } raw_spinlock_t;
@@ -58,7 +59,11 @@ static unsigned long clobber_spin_unlock_addr = 0x3120;
 static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 {
 	(void)call;
-	abort(); /* Minimal machine code is exercised by test_clobber_abi. */
+	/* Real MINIMAL code belongs to test_clobber_abi. A readiness mutation
+	 * can reach this forbidden boundary; report an assertion, not a signal. */
+	fprintf(stderr, "FAIL line %d: unexpected clobber wrapper invocation\n",
+		__LINE__);
+	exit(1);
 }
 static char last_error[1024];
 static unsigned int service_calls[3], failed_service_calls;
@@ -1506,6 +1511,39 @@ static void check_pending_batch_exit(void)
 	}
 }
 
+/* Cold routing bytes may contain a previous retired frame. A pristine body
+ * must not clear/read them, while promotion must initialize each discriminator
+ * without changing the live physical ledger, hook or borrowed packet pointer. */
+static void poison_mutex_routing(struct kd_exec_frame *frame)
+{
+ frame->continuation_ip=0xdead;
+ frame->logical_pid=-97;
+ frame->delegated_lock_addr=0xbeef;
+ frame->resume_target=(void *)1;
+ frame->remote_request=(void *)2;
+ frame->control_call.phase=KD_CALL_ENTERED;
+ frame->native_request=(void *)3;
+ frame->remote_result=KD_EXEC_REMOTE_WAITING;
+ frame->native_link.next=(void *)4;
+ frame->native_link.prev=(void *)5;
+}
+static bool mutex_routing_poisoned(const struct kd_exec_frame *frame)
+{
+ return frame->continuation_ip==0xdead && frame->logical_pid==-97 &&
+  frame->delegated_lock_addr==0xbeef && frame->resume_target==(void *)1 &&
+  frame->remote_request==(void *)2 && frame->control_call.phase==KD_CALL_ENTERED &&
+  frame->native_request==(void *)3 && frame->remote_result==KD_EXEC_REMOTE_WAITING &&
+  frame->native_link.next==(void *)4 && frame->native_link.prev==(void *)5;
+}
+static bool mutex_routing_initialized(const struct kd_exec_frame *frame)
+{
+ return !frame->continuation_ip && frame->logical_pid==frame->logical_task->pid &&
+  !frame->delegated_lock_addr && !frame->resume_target && !frame->remote_request &&
+  frame->control_call.phase==KD_CALL_NONE && !frame->native_request &&
+  frame->remote_result==KD_EXEC_REMOTE_IDLE &&
+  frame->native_link.next==&frame->native_link && frame->native_link.prev==&frame->native_link;
+}
+
 /* Real ABI2 batch admission and the actual pending dispatcher. Machine-code
  * completion and poisoned CALL fallbacks are exercised by test_clobber_abi. */
 static void check_mutex_batch(void)
@@ -1515,6 +1553,7 @@ static void check_mutex_batch(void)
  struct kd_regs borrowed, saved_borrowed;
  unsigned long saved_lock_addr=direct_mutex_lock_addr, saved_unlock_addr=direct_mutex_unlock_addr;
  struct kd_exec_frame saved, rejected;
+ struct kd_exec_outer_unlock hook={0};
  memcpy(code+25,"KDWC002",7); memcpy(code+41,"KDAB",4);
  code[45]=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
  for (int timing=0;timing<2;timing++) {
@@ -1590,14 +1629,17 @@ static void check_mutex_batch(void)
   CHECK(kd_exe_mutex_batch_completed(&call,&active));
   CHECK(calls==0 && timing_reads==(timing?4U:0U));
  }
- for (int refuse=0;refuse<2;refuse++) {
+ for (int lazy=0;lazy<2;lazy++) for (int refuse=0;refuse<2;refuse++) {
   reset(); borrowed=active.regs;
   active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
   active.borrowed_regs=&borrowed;
   active.entry_abi=entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
   active.packet_state=KD_PACKET_MINIMAL;
   entry->lock_kind=KD_EXE_LOCK_MUTEX;entry->code_block=code;
+  active.jit_lock_node[0]=&active; active.outer_unlock_hook=&hook;
+  if (lazy) { active.complex_ready=false; poison_mutex_routing(&active); }
   CHECK(kd_exe_mutex_batch_prepare(entry,&active,&call));
+  if (lazy) CHECK(mutex_routing_poisoned(&active));
   active.executed=true;
   steps[0]=refuse ? (struct step){KD_EXE_ENTRY_REFUSED,0,0,0} :
                    (struct step){KD_EXE_CALL_MISS,0x9870,1,-8};
@@ -1606,7 +1648,9 @@ static void check_mutex_batch(void)
   known_result=0;
   CHECK(kd_exe_mutex_batch_resume(entry,&call)==(refuse?KD_EXE_NO_RUN:KD_EXE_RUN_NATIVE));
   CHECK(calls==1 && active.executed==!refuse && !complex_preparations);
-  CHECK(active.mutex_backend && active.batch_lease);
+  CHECK(active.mutex_backend && active.batch_lease && active.complex_ready);
+  CHECK(active.jit_lock_node[0]==&active && active.outer_unlock_hook==&hook);
+  if (lazy) CHECK(mutex_routing_initialized(&active));
   CHECK(active.regs_borrowed==(bool)refuse);
   if (!refuse) {
    CHECK(kd_exec_frame_regs(&active)==&active.regs && active.regs.ip==0x9870);
@@ -1614,6 +1658,25 @@ static void check_mutex_batch(void)
    CHECK(active.regs.ip==0x9870 && source_calls==1);
   }
  }
+ /* A failed fast preparation reaches the same materialization before the
+  * generic readiness rejection. It must not execute or copy MINIMAL bytes. */
+ reset(); borrowed=active.regs;
+ active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
+ active.borrowed_regs=&borrowed; active.complex_ready=false;
+ active.jit_lock_node[0]=&active; active.outer_unlock_hook=&hook;
+ active.entry_abi=entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+ active.packet_state=KD_PACKET_MINIMAL;
+ entry->lock_kind=KD_EXE_LOCK_MUTEX; entry->code_block=code;
+ poison_mutex_routing(&active); source_open=false;
+ CHECK(!kd_exe_mutex_batch_prepare(entry,&active,&call));
+ CHECK(mutex_routing_poisoned(&active));
+ CHECK(kd_exe_on_call_hl_entry(entry,&borrowed,active.entry_ip,
+                             active.outer_lock_addr)==KD_EXE_NO_RUN);
+ CHECK(active.complex_ready && mutex_routing_initialized(&active));
+ CHECK(!calls && !active.executed && active.regs_borrowed &&
+       active.packet_state==KD_PACKET_MINIMAL && kd_exec_frame_regs(&active)==&borrowed);
+ CHECK(active.outer_unlock_hook==&hook && active.jit_lock_node[0]==&active);
+ source_open=true;
 }
 
 int main(void)

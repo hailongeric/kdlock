@@ -47,6 +47,7 @@ def main():
             "bool kd_exec_frame_remote_pending(const struct kd_exec_frame *frame)",
             "static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state)",
             "void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,",
+            "int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame)",
         ),
         "kernel_module/exe.c": (
             "static int kd_jit_timed_control(struct kd_regs *regs, unsigned long outer)",
@@ -98,6 +99,10 @@ def main():
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
     mutations = {
+        "mutex-generic-skips-materialization": (
+            "kd_exec_frame_prepare_mutex_complex(frame))",
+            "(false && kd_exec_frame_prepare_mutex_complex(frame)))",
+        ),
         "mutex-batch-final-completion-disabled": (
             "call->complete = true;",
             "call->complete = false;",
@@ -199,12 +204,12 @@ def main():
             "kd_hostcall_dispatch(regs)",
         ),
         "quota-consumes-pending-return": (
-            "frame->control_call.phase = KD_CALL_NONE;",
-            "frame->control_call.phase = KD_CALL_NONE; regs->sp += sizeof(unsigned long);",
+            "frame->control_call.phase = KD_CALL_NONE;\n\tkd_exec_frame_save_continuation(frame, regs);",
+            "frame->control_call.phase = KD_CALL_NONE; regs->sp += sizeof(unsigned long);\n\tkd_exec_frame_save_continuation(frame, regs);",
         ),
         "quota-retains-stale-control-phase": (
-            "frame->control_call.phase = KD_CALL_NONE;",
-            "frame->control_call.phase = KD_CALL_COMPLETE;",
+            "frame->control_call.phase = KD_CALL_NONE;\n\tkd_exec_frame_save_continuation(frame, regs);",
+            "frame->control_call.phase = KD_CALL_COMPLETE;\n\tkd_exec_frame_save_continuation(frame, regs);",
         ),
         "quota-skips-return-source-pin": (
             "ret = kd_source_pin_target(return_ip);",

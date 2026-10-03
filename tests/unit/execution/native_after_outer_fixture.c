@@ -244,6 +244,7 @@ static struct kd_exec_frame frame(bool mutex)
 		.state = KD_EXEC_FRAME_RUNNING,
 		.executed = true,
 		.mutex_backend = mutex,
+		.complex_ready = true, /* Ordinary explicit two-lock ledger. */
 	};
 }
 

@@ -142,7 +142,7 @@ static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 	       frame->mutex_backend && frame->jit_lock_depth == 1 &&
 	       frame->outer_lock_index == 0 && !frame->outer_unlock_seen &&
 	       !frame->jit_lock_released[0] && !frame->completion_seen &&
-	       !kd_exec_frame_remote_pending(frame);
+	       (!frame->complex_ready || !kd_exec_frame_remote_pending(frame));
 }
 
 static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
@@ -251,14 +251,16 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	struct kd_regs *regs = kd_exec_frame_regs(frame);
 
 	if (!frame->mutex_backend || !frame->batch_lease ||
-	    !frame->complex_ready || !frame->regs_borrowed || frame->spin_simple ||
+	    !frame->regs_borrowed || frame->spin_simple ||
 	    frame->parent || frame->depth || frame->request_frame ||
 	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
 	    frame->packet_state != KD_PACKET_MINIMAL || frame->executed ||
 	    frame->state != KD_EXEC_FRAME_RUNNING || !frame->outer_lock_addr ||
 	    !frame->gsbase || !frame->logical_task || !regs->sp ||
 	    regs->ip != frame->entry_ip ||
-	    frame->control_call.phase != KD_CALL_NONE ||
+	    (!frame->complex_ready &&
+	     (!frame->jit_lock_node[0] || !frame->outer_unlock_hook)) ||
+	    (frame->complex_ready && frame->control_call.phase != KD_CALL_NONE) ||
 	    !kd_jit_minimal_complete_allowed(frame) ||
 	    !kd_exe_entry_is_ready(exe, 0, frame->entry_ip) ||
 	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_MUTEX ||

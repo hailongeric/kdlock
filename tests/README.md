@@ -125,7 +125,7 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 | 单锁字入口和 ticket | `spin/test_spin_direct.py`、`spin/test_spin_entry.py` |
 | 入口抢占配对 | `spin/test_spin_preempt.py`、`infrastructure/test_hotlock_sampling.py` |
 | 显式irqsave/irq/bh接口、flags类型及上下文拒绝 | `spin/test_spin_irq.py`、`spin/test_spin_cold.py`、`admission/test_context_policy.py`；真实内核检查见[IRQ/BH消费者](kernel/spin/irq_api/README.md) |
-| continuation 分配、容量、回收与最终恢复 | `spin/test_spin_storage.py`、`execution/test_exec_capacity.py`、`spin/test_spin_wait.py` |
+| continuation 分配、容量、回收与最终恢复；mutex pristine 冷状态及 FULL materialization | `spin/test_spin_storage.py`、`execution/test_exec_capacity.py`、`execution/test_jit_entry_scope.py`、`spin/test_spin_wait.py` |
 | native 借用退休、共享根包与延迟 ACK | `spin/test_spin_entry.py`检查实际ticket CAS；`execution/test_remote_outer.py`、`execution/test_remote_depth_protocol.py`、`execution/test_remote_outer_protocol.py`检查路由/ACK |
 | 嵌套、提前释放、队列、frame 退休 | `spin/test_spin_outer_progress.py`、`spin/test_spin_shadow.py`、`spin/test_spin_batch.py` |
 | 本地热表、获取/MCS计数、频率/比例窗口及准入恢复 | `infrastructure/test_hotlock_sampling.py` |

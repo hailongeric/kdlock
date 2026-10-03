@@ -139,6 +139,11 @@ static void kd_task_owner(void)
 	frame->mutex_backend = true;
 	kd_task_test.outer_hook.release = kd_task_release_outer;
 	frame->outer_unlock_hook = &kd_task_test.outer_hook;
+	/* kd_task_round zeroed the ordinary native frame and routing fields.
+	 * This manual two-lock probe is already materialized, not a borrowed
+	 * pristine ABI2 batch. Publish that fact only after its list is valid. */
+	INIT_LIST_HEAD(&frame->native_link);
+	frame->complex_ready = true;
 	KD_TASK_REQUIRE(kd_exec_frame_set_lock_entries(frame, locks, kinds,
 						       nodes, NULL, 2) == 0);
 	preempt_disable();

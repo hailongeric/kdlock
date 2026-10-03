@@ -124,6 +124,12 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	u64 dispatch_start;
 	int ret_flag;
 
+	/* Both a pending batch return and a refused fast preparation arrive here.
+	 * Materialize before generic validation, scope checks, logging or service
+	 * reads; preserve a MINIMAL/refused borrowed packet and consume FULL once. */
+	if (frame && frame->mutex_backend && !frame->complex_ready &&
+	    kd_exec_frame_prepare_mutex_complex(frame))
+		return KD_EXE_RUN_ERROR;
 	if (!regs || !frame || !kd_exec_frame_validate(frame) ||
 	    !frame->gsbase || !frame->logical_task)
 		return KD_EXE_RUN_ERROR;
@@ -497,8 +503,9 @@ int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,
 	if (!frame || !frame->mutex_backend || !frame->batch_lease ||
 	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
 		return KD_EXE_RUN_ERROR;
-	/* The ledger already exists. Consume the returned exit once; dispatch
-	 * detaches a FULL packet before any service or native owner-ACK wait. */
+	/* The exact ledger already exists. Dispatch first materializes lazy
+	 * routing, then consumes the pending exit once and detaches only FULL
+	 * packets before any service or native owner-ACK wait. */
 	return kd_exe_dispatch(exe, call->regs, frame->entry_ip,
 			       frame->outer_lock_addr, call);
 }

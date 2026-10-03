@@ -533,3 +533,91 @@ Whole-run spreads for the terminal and preparation screens (same unpooled three-
 | mutex-direct-prepare-hash | 16 | 0.53% / 1.22% / 1.27% |
 | mutex-direct-prepare-hash | 36 | 4.20% / 8.30% / 2.43% |
 | mutex-direct-prepare-recheck-hash | 36 | 16.70% / 1.30% / 1.68% |
+
+## Lazy recovery state in ordinary mutex frames
+
+Ordinary ABI2 mutex frames now keep their exact slot-0 ledger, physical shadow,
+release hook, borrowed packet, context reservation and batch source lease while
+deferring ten cold routing/continuation initialization assignments. Generic
+entry materializes those fields before validation, logging or any service;
+FULL still detaches before native publication and final ACK. No packet layout,
+wrapper ABI, ownership predicate, prefetch policy or generated image changes.
+This is a source-level work reduction; it is not a measured cache-miss claim.
+
+The independent screens below have 36/36 valid sessions. Against direct preparation,
+cacheline16/36 peak medians change -0.18%/+1.01%; hash16 improves 4.07%, and hash36
+improves 9.28% against the latest direct-preparation recheck (2.505840).
+The 36-thread hash spread remains 34.06%, its least-progress peak worker has only
+512 operations, and whole-run median 2.065 Mops/s remains below TCLock's 2.201.
+Against the older 51493f2 hash matrix, 16 threads still loses 7.63% in peak median
+and 3.23% in whole median. Incremental improvement does not establish cumulative
+non-regression or full-thread parity; that acceptance remains open.
+
+`pristine-frame-unit` preserves a failed phase: basics and capacity (11,045 checks
+and its mutations) pass, and the unmutated entry fixture passes 4,081 checks, but
+an intentionally stale-read mutation reaches an abort-only forbidden-wrapper
+stub. Replacing that stub's silent signal with an explicit failure assertion
+makes `pristine-frame-entry-unit` pass both basics, all 4,081 checks and all 30
+mutations. The harness does not accept crashes as passes.
+
+`pristine-frame-ack` fails during SELFTEST module initialization: its manually
+constructed generic two-lock frame left `complex_ready=false`, now reserved for
+minimal batch roots. The production validator correctly rejects it before native
+publication; the probe's assertion and dependent timeouts cause kernel BUGs.
+No forced unload was attempted. Frozen source/ELF/kernel and serial evidence were
+archived before reboot (`pristine-frame-ack-fault.tar.gz`, SHA256
+`c73c2d19e30acf96c6d393c43a8d199e1fc59ef24d37d426f9496f71cbd380af`).
+The first reboot selected the older default kernel; no test ran there. A one-shot
+boot selected the existing kdclobber2 image, followed by fresh snapshot, physical
+pinning/frequency, voluntary-preemption and exact-kernel checks. No kernel was
+changed or rebuilt. Explicit routing-list initialization and the materialized
+flag fix the probe. `pristine-frame-fixed-ack` then passes both real unlock orders,
+four final ACKs and two deferred frees with clean source/module drain, explicitly
+JIT=0. The original failed probe remains failed and its original drain unverified.
+
+Cacheline screen (`mutex-pristine-frame-c1`):
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 9.205 / 9.365 / 9.499 | 4.516 / 4.632 / 4.731 | 7.065 / 7.306 / 7.322 | 200.78% | 3/3 |
+| 36 | 8.161 / 8.304 / 8.306 | 4.322 / 4.470 / 4.483 | 5.622 / 5.627 / 5.734 | 185.27% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 16 | 9.104 / 9.138 / 9.405 | 4.500 / 4.604 / 4.705 | 6.990 / 7.251 / 7.294 | 3.14% / 4.63% / 3.52% |
+| 36 | 8.063 / 8.109 / 8.191 | 4.297 / 4.369 / 4.461 | 5.386 / 5.453 / 5.565 | 1.75% / 3.60% / 2.00% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 3.528%–3.878% | 98.751%–98.906% | 803840 / 114688 | 0.000%–0.000% | 0.000%–0.000% |
+| 36 | 2.207%–2.461% | 96.956%–98.342% | 321024 / 47360 | 42.953%–47.071% | 42.678%–48.150% |
+
+Hash screen (`mutex-pristine-frame-hash`):
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 3.896 / 3.925 / 3.993 | 4.011 / 4.095 / 4.113 | 4.629 / 4.701 / 4.725 | 97.10% | 3/3 |
+| 36 | 1.859 / 2.738 / 2.792 | 2.202 / 2.212 / 2.213 | 2.664 / 2.683 / 2.690 | 126.17% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 16 | 3.976 / 3.985 / 4.082 | 3.999 / 4.087 / 4.104 | 4.623 / 4.669 / 4.684 | 2.47% / 2.47% / 2.03% |
+| 36 | 1.730 / 2.065 / 2.105 | 2.192 / 2.201 / 2.203 | 2.537 / 2.592 / 2.610 | 34.06% / 0.46% / 0.99% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 10.117%–11.438% | 97.394%–97.482% | 433920 / 62464 | 0.000%–0.000% | 0.000%–0.000% |
+| 36 | 13.431%–25.385% | 97.491%–97.781% | 67328 / 512 | 36.748%–45.687% | 34.902%–40.667% |
+
+Whole-run spreads (KD / TC / Native) are 3.30% / 4.45% / 4.18% at cacheline16,
+1.58% / 3.75% / 3.29% at cacheline36, 2.65% / 2.56% / 1.30% at hash16 and
+18.16% / 0.47% / 2.82% at hash36. These screens preceded recovery; later full
+matrices use a freshly checked boot and remain separate groups.
+
+The manual native/remote unit constructors likewise mark their generic routing
+materialized. `pristine-frame-native-unit` initially fails compilation in both
+affected drivers because their extracted types omitted the ABI enum now used by
+the validator. Importing that actual enum fixes the dependency.
+`pristine-frame-native-fixed-unit` passes both basics, 3,438 native-after-outer
+checks plus four Python cases, and 6,185 remote-owner checks with 12 mutations.
+These are protocol fixtures; the timed screens separately establish returned JIT.

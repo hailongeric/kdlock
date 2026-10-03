@@ -78,6 +78,21 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 		       frame->gsbase && frame->logical_task && frame->outer_lock_addr &&
 		       (state == KD_EXEC_FRAME_RUNNING ||
 			(state == KD_EXEC_FRAME_COMPLETE && frame->completion_seen));
+	/* A pristine mutex root already has its exact live one-lock ledger. It
+	 * cannot have a continuation or generic side effect before routing state
+	 * is materialized, so never inspect the inactive continuation union. */
+	if (frame->mutex_backend && !frame->complex_ready &&
+	    (!frame->batch_lease || !frame->regs_borrowed || frame->regs_ref ||
+	     !frame->borrowed_regs || frame->spin_simple || frame->request_frame ||
+	     frame->parent || frame->depth || !frame->outer_unlock_hook ||
+	     frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	     frame->held_lock_depth != 1 || frame->outer_lock_depth != 1 ||
+	     frame->jit_lock_depth != 1 || frame->outer_lock_index ||
+	     frame->jit_lock_addr[0] != frame->outer_lock_addr ||
+	     frame->jit_lock_kind[0] != KD_EXEC_LOCK_QUEUE_OWNER ||
+	     !frame->jit_lock_node[0] ||
+	     (state != KD_EXEC_FRAME_RUNNING && state != KD_EXEC_FRAME_COMPLETE)))
+		return false;
 	if (!kd_exec_frame_state_is_active(state) ||
 	    frame->depth >= KD_EXEC_MAX_NESTING || !frame->gsbase ||
 	    !frame->logical_task ||

@@ -298,9 +298,25 @@ The legacy frame-push APIs no longer accept unused waiter/outgoing-RSP arguments
 Mutex keeps a separate `kd_mutex_cpu_state` and its own ownership protocol.
 Ordinary ABI2 mutex roots borrow a single enclosing batch source lease and the
 waiter's packet, while retaining an explicit physical-owner ledger. Their first
-COMPLETE return uses checked mutex retirement before queue publication. FULL
-returns retain backend identity, detach the packet, and enter the existing
-native/ACK path once. The batch lease ends after every frame/ACK has retired;
+COMPLETE return uses checked mutex retirement before queue publication.
+`mutex_backend && !complex_ready` identifies a pristine ABI2 batch root with
+that explicit slot-0 ledger, its exact shadow pointer, release hook, live depths
+and release state already initialized. Only unrelated continuation-IP,
+logical-PID and control/native/remote routing discriminators remain inactive.
+Manually constructed generic mutex frames, including the owner/ACK probe,
+must initialize their routing/list state and mark `complex_ready=true` before
+calling ledger or native-protocol helpers; zero does not identify a generic frame.
+Ordinary completion checks the exact ledger, context owner, physical shadow
+owner and original Linux mutex owner without reading those inactive bytes.
+
+The generic dispatcher materializes mutex routing before its first validation,
+covering both a pending wrapper exit and failed fast preparation. This separate
+mutex helper preserves the borrowed-register union and release hook; the spin
+promotion helper cannot substitute for it. An explicit entry refusal retains
+the MINIMAL borrowed packet, while an actual FULL exit detaches the packet
+before any C service, early outer release, native publication or final owner ACK.
+A materialized frame never returns to the pristine representation. FULL
+returns retain backend identity and enter the existing native/ACK path once. The batch lease ends after every frame/ACK has retired;
 source closure still rejects new roots within the batch.
 
 For this pristine ABI2 mutex root, batch preparation fills the wrapper transport

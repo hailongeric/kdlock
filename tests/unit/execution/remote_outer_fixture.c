@@ -704,6 +704,9 @@ static void check_wait_returns(bool mutex, bool rejected)
 
 	setup(1);
 	frames[0].mutex_backend = mutex;
+	/* This manually constructed native fixture has generic routing state. */
+	if (mutex)
+		frames[0].complex_ready = true;
 	CHECK(kd_exec_native_begin(&frames[0], mutex) == 0);
 	if (rejected)
 		frames[0].state = KD_EXEC_FRAME_ERROR;
