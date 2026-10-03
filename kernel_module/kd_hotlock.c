@@ -53,6 +53,7 @@ DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_entries);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_spin_entries);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_entries);
+EXPORT_PER_CPU_SYMBOL_GPL(kd_hotlock_mutex_entries);
 DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_contentions);
 static DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_last_entries);
 static DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_checks);

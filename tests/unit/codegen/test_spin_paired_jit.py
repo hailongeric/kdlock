@@ -1,7 +1,8 @@
 """Execute generic clobber-unlock continuations through the real wrapper.
 
-The body has one ordinary stack value and a stack canary, without an unlock
-branch or manual five-register save area. Poison uncaptured GPRs and check COMPLETE,
+ABI1 has one ordinary stack value and a canary; ABI2 additionally defines an
+outer cookie and branches at unlock. Neither uses a manual five-register save
+area. Poison uncaptured GPRs and check COMPLETE,
 entry refusal and FULL at native calls. Only the native callee/dispatcher is
 substituted; admission and generated code run.
 """
@@ -29,7 +30,7 @@ int main(void) {
   unsigned long stack[64]={0};
   stack[14]=0xabcd; stack[15]=0xcafe;
   stack[16]=0x115;
-  stack[17]=0x55aa; /* No caller lock-byte input or path cookie is needed. */
+  stack[17]=0x55aa; /* ABI2 must overwrite this cookie after entering JIT. */
   for(unsigned int i=18;i<24;i++) stack[i]=0x123400+i;
   regs.w[2]=(unsigned long)&stack[refuse?16:48];
   regs.w[0]=0x1000;
@@ -80,10 +81,10 @@ int main(void) {
   assert(stack[15]==0xcafe && stack[14]==0xabcd);
 #endif
   assert(regs.w[2]==before.w[2]);
-  assert(stack[16]==0x116 && stack[17]==0x55aa);
+  assert(stack[16]==0x116 && stack[17]==(ENTRY_ABI==2?0:0x55aa));
   for(unsigned int i=18;i<24;i++) assert(stack[i]==0x123400+i);
  }
- puts("PASS generic clobber JIT unlock: no caller branch/register-save area, exact metadata, COMPLETE/refusal and native FULL continuation");
+ puts("PASS clobber JIT unlock: ABI2 routed cookie, exact metadata, COMPLETE/refusal and native FULL continuation");
 }
 '''
 
@@ -101,10 +102,13 @@ def main():
     # Each failed prerequisite must reconstruct exactly one CALL, including
     # immutable endpoint mismatch, disabled completion, and all three words.
     cases = [(False, failure, abi) for abi in (1, 2) for failure in range(7)]
-    for native, failure, abi in [*cases, (True, 0, 1)]:
+    for native, failure, abi in [*cases, (True, 0, 1), (True, 0, 2)]:
         # A compiler-spilled body value, not five incoming register saves.
         # CPU heat is consumed before the continuation and is never a JIT input.
-        code = bytes.fromhex('48ff0424')  # incq (%rsp)
+        # ABI2 outer entry must define the acquisition cookie itself. Poisoned
+        # incoming GPRs and the original stack value cannot select native unlock.
+        code = bytes.fromhex('48c744240800000000') if abi == 2 else b''
+        code += bytes.fromhex('48ff0424')  # incq (%rsp)
         if native:
             # Legacy ordinary-C inner control calls retain resumable FULL
             # boundaries. The outer paired release below always uses the
@@ -112,6 +116,11 @@ def main():
             for target in (0x5000, 0x6000):
                 code += bytes.fromhex('48c7c700910000')
                 code += b'\xe8' + (target-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
+        cookie_branch = None
+        if abi == 2:
+            code += bytes.fromhex('48837c2408000f85')
+            cookie_branch = len(code)
+            code += bytes(4)
         # The production macro ABI is executed by test_spin_cold; here its
         # straight generic-call continuation runs through the real translator
         # and wrapper. Provider ownership selection is outside this body.
@@ -122,15 +131,29 @@ def main():
         code += bytes.fromhex(corrupt)
         code += b'\xe8' + (0x4000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
         code += b'\xc3'
+        if cookie_branch is not None:
+            # This endpoint remains in the CFG but must never execute: a hit
+            # would return FULL to 0x6000 instead of the expected exact endpoint.
+            native_offset = len(code)
+            code = (code[:cookie_branch] +
+                    (native_offset-cookie_branch-4).to_bytes(4, 'little', signed=True) +
+                    code[cookie_branch+4:])
+            code += bytes.fromhex('48c7c700900000')
+            code += b'\xe8' + (0x6000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
+            code += b'\xc3'
         # The fixture endpoints are separate per backend; overlapping symbols
         # would make the admission backend intentionally ambiguous.
         selected = {k:v for k,v in symbols.items() if
                     (k.startswith('kd_mutex') if abi == 2 else k.startswith('kd_spin'))}
+        if abi == 2:
+            selected['mutex_unlock'] = 0x6000
+            if native:
+                selected['mutex_lock'] = 0x5000
         assembly, log, status = render(code.hex(), kernel_symbols=selected, abi=abi,
                                        lock_kind='mutex' if abi == 2 else 'spin',
                                        body_witness=True, return_status=True)
         assert status == 0, log
-        if not native:
+        if not native and abi == 1:
             # Removing the caller unlock condition must leave one body block:
             # no second witness write or branch-budget probe is needed.
             assert assembly.count(b'MOV             Stack_JIT_WITNESS, 1\n') == 1

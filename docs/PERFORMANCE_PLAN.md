@@ -12,7 +12,9 @@ shared runtime独立筛选保留，1/2/16/36三方36场通过；16/36 KD峰值�
 1/2仍仅46.78%/62.86%。六组相关unit、三场spin实际JIT及真实mutex owner/ACK通过；
 公共helper与FULL路径保留。随后精确per-CPU active/reserved余额独立18场及五组unit、owner/ACK通过，
 16/36中位数比shared-runtime筛选提高2.81%/0.79%；36收益小于波动，保留精确排空而不宣称显著增益。有界mutex NUMA分组的27场业务/JIT/排空通过，但36线程中位数两次下降5.44%/7.76%，已保留分支并撤回。
-15点完整复验和后续独立候选尚未完成，不能宣称全线程追平。
+OUTER原生CAS/配对路由独立36场通过，1/2/16/36峰值达到同期TCLock的90.82%/92.25%/194.04%/186.51%；
+真实hash JIT与owner/ACK通过。此优化主要缩短原生路径，36线程JIT仅1.14%–1.40%，node1整段份额约44%。
+15点完整复验尚未完成，且1/2仍低于TCLock，不能宣称全线程追平。
 
 2026-10-03 开始[mutex 新一轮优化](../bench/tclock_compare/results/20261003-mutex-optimization.md)：
 默认UBSAN-off新基线及原生CAS先于计数pin的候选，共72场定向三方测试通过。

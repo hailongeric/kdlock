@@ -72,12 +72,14 @@ def production():
     for marker in (
         "static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)",
         "static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)",
+        "static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,",
         "static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,",
         "void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,",
         "void __kd_mutex_lock_clobber_v1(struct mutex *lock, unsigned long sp,",
         "void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,",
     ):
         code += definition(hook, marker)
+    code += "void " + definition(hook, "kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,")
     # The address-less callback must dispatch without target-name lookup.
     selectors = read_source(ROOT / "kernel_module/kd_main.c")
     code += definition(selectors, "static int kd_mutex_dispatch_enabled(void)")
@@ -93,6 +95,10 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
+        "outer-entry-retries-native-cas": (
+            "kd_mutex_contended_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",
+            "kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",
+        ),
         "shadow-insert-skips-locked-recheck": (
             "if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {",
             "if (false && kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {",

@@ -165,6 +165,28 @@ class ClobberEntryTests(unittest.TestCase):
             self.assertEqual(status, 0)
             self.assertEqual(b'clobber_complete' in asm, target == 0x8000)
 
+    def test_contended_mutex_symbol_is_an_abi2_control_boundary(self):
+        symbols = {"kd_mutex_direct_lock_clobber_v1": 0x5000,
+                   "kd_mutex_direct_contended_clobber_v1": 0x6000,
+                   "kd_mutex_direct_unlock_clobber_v1": 0x7000}
+        code = bytes.fromhex('48c7c700910000')
+        for target in (0x6000, 0x7000):
+            ip = 0x1000 + len(code) + 3 + 7 + 3 + 5
+            code += bytes.fromhex('4889e648c7c2') + ip.to_bytes(4, 'little')
+            code += bytes.fromhex('4889e9')
+            code += b'\xe8' + (target-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
+            code += bytes.fromhex('48c7c700910000')
+        # Finish the outer A after the deliberately constructed inner B.
+        code += bytes.fromhex('48c7c700900000')
+        ip = 0x1000 + len(code) + 3 + 7 + 3 + 5
+        code += bytes.fromhex('4889e648c7c2') + ip.to_bytes(4, 'little')
+        code += bytes.fromhex('4889e9')
+        code += b'\xe8' + (0x7000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
+        code += b'\xc3'
+        _, log, status = render(code.hex(), abi=2, lock_kind='mutex',
+                                kernel_symbols=symbols, return_status=True, muted=True)
+        self.assertEqual(status, 0, log)
+
     def test_mutex_clobber_cannot_use_spin_word_memory_summary(self):
         tracker = FlowConstants(EntryGuards())
         tracker.update(decode('48bc0030000000000000'))
@@ -270,7 +292,7 @@ class ClobberEntryTests(unittest.TestCase):
         for offset in (0, 8, 256, 257, 264):
             expected = 1 if 8 <= offset <= 256 else 6
             def initialize(regs, stack):
-                regs[4] = regs[19] + offset
+                regs[2] = regs[1] + offset
             _, args = run_image(assembly, [0x1000], initialize)[0]
             self.assertEqual(args, [expected, int(expected == 1)])
 
@@ -348,7 +370,7 @@ class ClobberEntryTests(unittest.TestCase):
         assembly = (output.getvalue() + '\nMOV Stack_JIT_WITNESS, 1\nMOV R14, 0x2000\nMOV Stack_IJ, 1\nJMP exit\n').encode()
         for value, valid_bp, expected in ((0x6000, True, 1), (0x7000, True, 6), (0x6000, False, 6)):
             def initialize(regs, stack):
-                regs[4] = ctypes.addressof(stack) + 12 * 8 if valid_bp else 0
+                regs[2] = ctypes.addressof(stack) + 12 * 8 if valid_bp else 0
                 stack[11] = value
             _, args = run_image(assembly, [0x1000], initialize)[0]
             self.assertEqual(args, [expected, int(expected == 1)])
@@ -366,7 +388,7 @@ class ClobberEntryTests(unittest.TestCase):
         assembly = (output.getvalue() + '\nMOV Stack_JIT_WITNESS, 1\nMOV R14, 0x2000\nMOV Stack_IJ, 1\nJMP exit\n').encode()
         for value, expected in ((0x300, 1), (0x380, 6), ((1 << 63) + 0x380, 6)):
             def initialize(regs, stack):
-                regs[4] = ctypes.addressof(stack) + 12 * 8
+                regs[2] = ctypes.addressof(stack) + 12 * 8
                 stack[11] = value
             _, args = run_image(assembly, [0x1000], initialize)[0]
             self.assertEqual(args, [expected, int(expected == 1)])

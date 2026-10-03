@@ -84,3 +84,38 @@ It is nevertheless rejected: 36-thread KD medians fall from 4.701 to 4.445 (-5.4
 | mutex-numa-recheck-c1 / 36 | 4.121 / 4.281 / 4.368 | 4.395 / 4.405 / 4.411 | 5.272 / 5.363 / 5.513 | 5.60% / 0.42% / 4.77% |
 
 Frozen phases: `numa-unit`, `mutex-numa-c1`, `mutex-numa-recheck-c1`. No hash or full-matrix acceptance is attributed to this rejected candidate.
+
+## Native outer acquisition and explicit unlock routing
+
+The retained `KD_MUTEX_OUTER_LOCK/UNLOCK` pair performs the original Linux owner CAS in the caller. Success records one approximate entry and its opaque acquisition-local cookie; unlock calls the original Linux function directly. Failed CAS enters the new contended-only ABI2 endpoint, counts exactly once and writes zero to the cookie immediately after the registered continuation. This includes native fallbacks. Zero routes unlock through the existing provider, preserving queue gate/task-reference release and borrowed owner ACKs. Existing DIRECT APIs remain for nested operations; neither global interception nor the two-word wrapper ABI changes.
+
+The cookie chooses routing only: it does not replace the Linux owner word or any exact KD lifetime state. Five callee-saved caller spills remain. The performance gain therefore does not demonstrate their removal. Both unlock branches end at recognized calls; the native branch's empty compiler barrier prevents tail-call conversion without adding a hardware fence.
+
+All 36 cacheline screen sessions pass. Each contended KD positive has actual returned-body JIT. Relative to shared-runtime small-thread results and the immediately preceding accepted balances screen, KD medians improve about 94.31% / 38.86% / 51.70% / 73.87% at 1/2/16/36. All four peak ratios exceed the original 90% screen threshold; strict parity with TCLock remains unmet at 1 and 2. Full 15-point acceptance is still pending.
+
+| Workers | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD max / TC max |
+|---:|---:|---:|---:|---:|
+| 1 | 32.824 / 32.828 / 32.835 | 36.110 / 36.145 / 36.153 | 27.991 / 27.991 / 27.994 | 90.82% |
+| 2 | 8.084 / 8.279 / 9.691 | 10.228 / 10.381 / 10.505 | 6.575 / 7.005 / 7.006 | 92.25% |
+| 16 | 8.899 / 9.002 / 9.064 | 4.421 / 4.546 / 4.671 | 6.563 / 7.178 / 7.379 | 194.04% |
+| 36 | 8.093 / 8.174 / 8.356 | 4.372 / 4.399 / 4.480 | 5.577 / 5.584 / 5.664 | 186.51% |
+
+| Workers | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 1 | 32.812 / 32.818 / 32.819 | 36.099 / 36.134 / 36.138 | 27.965 / 27.979 / 27.980 | 0.03% / 0.12% / 0.01% |
+| 2 | 7.729 / 8.127 / 9.457 | 10.207 / 10.357 / 10.478 | 6.563 / 6.966 / 6.983 | 19.42% / 2.67% / 6.15% |
+| 16 | 8.632 / 8.851 / 8.977 | 4.391 / 4.529 / 4.655 | 6.444 / 7.092 / 7.175 | 1.83% / 5.50% / 11.37% |
+| 36 | 7.855 / 7.921 / 8.286 | 4.291 / 4.369 / 4.452 | 5.206 / 5.485 / 5.521 | 3.21% / 2.46% / 1.56% |
+
+KD JIT share is 2.44%–2.83% at 16 and 1.14%–1.40% at 36. The faster native path is therefore central to the gain; this is not evidence of TCLock-like delegation frequency. At 36, node1 contributes 44.08%–44.58% of whole-run work (16/36 workers), and 42.57%–44.67% in selected peaks. The smallest individual worker completes 308,992 whole-run and 46,080 peak operations. Observed progress is substantially more balanced than the earlier hash minority-node result; cacheline evidence is not a hash fairness guarantee.
+
+Validation and preserved failures:
+
+- The actual compiled header preserves live registers and flags fallback. Its translated ABI2 continuation runs with poisoned uncaptured registers and verifies zero-cookie routing, unchanged Linux ownership, COMPLETE and exact terminal FULL. Separate generated tests cover 16 completion/refusal and native-CALL continuation cases, including cookie read after native replay.
+- Resources: 12,940 checks with once-only contention observation and native-CAS retry mutation; endpoint registry: 29,659 checks; native-after-outer owner recovery: 3,414 checks plus four Python tests. Basic programs pass with these targeted drivers.
+- The clobber guard driver passes all 27 tests after correcting three stale layout-1 fixture indices to current RBP/RSP slots. Expected success/refusal assertions are unchanged; production admission was not relaxed.
+- Initial `outer-api-unit` failed on a genuine inline-native-release CFG reaching an FS canary epilogue, and on those three stale fixture indices. Inline release was replaced by original Linux unlock. `outer-api-unit-fixed` then passed admission but caught changed source addresses after relinking the fixture. `outer-protocol-unit` caught its unexported weak wrapper, preventing an unexecuted generated image from passing. Fixing a stable text base, wrapper export and explicit entry-SP metadata yields `outer-compiled-unit` pass. All failed logs, statuses and frozen inputs remain retained.
+- The changed benchmark runner passes 44 tests (`outer-runner-unit`). Actual mutex/hash functional sessions at 16/36 complete 1.6/3.6 million operations with 47,732/861,778 returned JIT bodies, valid data and clean drain (`mutex-outer-hash-functional`). This verifies real hash cookie admission; it is not a timed hash score.
+- The real owner/RCU test passes two unlock orders, four final ACKs and two deferred frees, with normal retirement/unload (`outer-ack`, explicitly JIT=0).
+
+The cacheline score phase is `mutex-outer-c1`. Caller identity changes to `mutex_outer_cookie` / `outer_acquisition_stack`; its scores are compared with earlier caller shells as successive implementations, not pooled across shells. No full unit suite or mutex nested benchmark is claimed.

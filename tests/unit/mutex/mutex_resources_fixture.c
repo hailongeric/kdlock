@@ -53,7 +53,7 @@ static bool source_open, native_owner_wait;
 /* Most resource cases substitute a failed first CAS followed by a racing
  * release. The native-first case below substitutes a successful acquisition. */
 static bool fast_available;
-static unsigned int entry_attempts, entry_pins;
+static unsigned int entry_attempts, entry_pins, fast_probes;
 static struct kd_mutex *waiting_gate, *release_gate;
 static struct kd_mutex_node *recycle_node, *poll_node;
 static unsigned int polls;
@@ -176,6 +176,7 @@ static void kd_hotlock_mutex_entry(void)
 }
 static bool kd_mutex_trylock_fast(struct mutex *lock)
 {
+	fast_probes++;
 	CHECK(!preempt);
 	if (!fast_available || lock->owner)
 		return false;
@@ -468,7 +469,7 @@ static void reset(void)
 	source_open = true;
 	native_owner_wait = false;
 	fast_available = false;
-	entry_attempts = entry_pins = 0;
+	entry_attempts = entry_pins = fast_probes = 0;
 	native_waits = 0;
 	errors = preempt = migration = table_irq = table_lock_entries = 0;
 	gets = task_puts = refs = adds = acquires = releases = schedules = 0;
@@ -1051,6 +1052,15 @@ int main(void)
 	CHECK(!preempt && !migration && !shadow_count());
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
 	CHECK(!origins[0].mutex.owner && acquires == 1 && releases == 1);
+	/* This endpoint consumes a caller's failed CAS; it must not retry the CAS
+	 * or count twice even if the original mutex becomes free before entry. */
+	reset();
+	fast_available = true;
+	cpu_hot = false;
+	kd_mutex_direct_contended_clobber_v1(&origins[0].mutex, 0x7000, 0x8000, 0);
+	CHECK(!fast_probes && entry_attempts == 1 && samples == 1);
+	CHECK(origins[0].mutex.owner == current && !refs && !gets);
+	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
 	check_minimal_entry();
 	check_poll_result();
 	check_tails();

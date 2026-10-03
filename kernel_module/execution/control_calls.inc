@@ -222,7 +222,7 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 	if (ret)
 		return ret;
 	if (regs->ip == mutex_lock_addr || regs->ip == clobber_mutex_lock_addr ||
-	    regs->ip == direct_mutex_lock_addr) {
+	    regs->ip == direct_mutex_lock_addr || regs->ip == contended_mutex_lock_addr) {
 		ret = kd_mutex_jit_nested_lock_ctx((struct mutex *)regs->di,
 						   regs, frame);
 		ret = finish_known_lock_call(frame, regs, ret);
@@ -272,7 +272,8 @@ static int handle_known_call(struct kd_regs *regs,
 		     regs->ip == cold_spin_unlock_addr))) ||
 	     (!frame->mutex_backend && mutex_lock_addr && mutex_unlock_addr &&
 	      (regs->ip == mutex_lock_addr || regs->ip == clobber_mutex_lock_addr ||
-	       regs->ip == direct_mutex_lock_addr || regs->ip == mutex_unlock_addr ||
+	       regs->ip == direct_mutex_lock_addr || regs->ip == contended_mutex_lock_addr ||
+	       regs->ip == mutex_unlock_addr ||
 	       regs->ip == clobber_mutex_unlock_addr || regs->ip == direct_mutex_unlock_addr))))
 		return -EOPNOTSUPP;
 
@@ -311,7 +312,8 @@ static int handle_known_call(struct kd_regs *regs,
 		return 0;
 
 	if (regs->ip != mutex_lock_addr && regs->ip != clobber_mutex_lock_addr &&
-	    regs->ip != direct_mutex_lock_addr && regs->ip != mutex_unlock_addr &&
+	    regs->ip != direct_mutex_lock_addr && regs->ip != contended_mutex_lock_addr &&
+	    regs->ip != mutex_unlock_addr &&
 	    regs->ip != clobber_mutex_unlock_addr && regs->ip != direct_mutex_unlock_addr)
 		return 0;
 

@@ -146,8 +146,8 @@ def make_plan(args):
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, lock_kind=lock_kind, hotlock_mode=mode,
-                caller_shell=('mutex_clobber' if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
-                cookie_storage='percpu_direct_gate' if backend == 'kdlock' and lock_kind == 'spin' else 'not_applicable',
+                caller_shell=('mutex_outer_cookie' if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
+                cookie_storage=('outer_acquisition_stack' if lock_kind == 'mutex' else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
                 cpu_heat_policy=('mutex_contention1024_ratio256' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
@@ -471,7 +471,8 @@ def main(lock_kind='spin'):
                                    'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
             if lock_kind == 'mutex':
-                expected = {'kdlock': ('kd_mutex_direct_lock_clobber_v1',
+                expected = {'kdlock': ('kd_mutex_direct_contended_clobber_v1',
+                                       'kd_hotlock_mutex_entries', 'mutex_unlock',
                                        'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_prepare'),
                             'tclock': ('komb_mutex_lock', 'komb_mutex_unlock',
                                        'tc_mutex_worker_register', 'tc_mutex_workers_drain'),

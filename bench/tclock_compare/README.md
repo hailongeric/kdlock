@@ -18,8 +18,14 @@ KD冷获取内联首次CAS，竞争时使用原生pending/MCS队列；热获取�
 
 普通 mutex 使用独立入口 `run_mutex.py` 和 `workload_modules/mutex_cacheline`，
 编译出 `mc_body_N`，复用 payload、计时与结果校验；单次操作中没有 `is_mutex` 分支。
-Linux 调用原始 `mutex_lock/unlock`，KD 调用 `KD_MUTEX_DIRECT_LOCK/UNLOCK`（ABI2），
-TCLock 调用实际上游 `komb_mutex_lock/unlock`。KD global interception 继续关闭。
+Linux 调用原始 `mutex_lock/unlock`，KD 的cacheline/hash外层调用
+`KD_MUTEX_OUTER_LOCK/UNLOCK`（ABI2），TCLock 调用实际上游 `komb_mutex_lock/unlock`。
+KD原生获取内联owner CAS，原生解锁调用原始Linux函数；竞争入口保持现有clobber正文与解锁协议。
+记录使用`caller_shell=mutex_outer_cookie`、`cookie_storage=outer_acquisition_stack`，
+不与历史`mutex_clobber`调用壳合并取优。调用者五个callee-saved spill仍计入实际操作成本。
+接口及同task cookie约束见[锁协议](../../docs/design/locking.md#mutex-outer-direct)。
+已有DIRECT接口继续用于嵌套控制；本运行器的mutex仍限普通plain操作，没有增加nested/early入口。
+KD global interception 继续关闭。
 TCLock worker 注册和整组排空见[端口边界](../../tclock_backend/README.md#普通-mutex-独立端口)。
 mutex 的 `lock_kind` 纳入汇总身份；TCLock 保留委托次数证据，KD 继续要求返回正文 JIT witness。
 先验证 cacheline 基线和各独立优化，再使用同一入口的 `--workload rcuht`。

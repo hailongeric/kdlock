@@ -18,25 +18,12 @@ bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 	       (unsigned long)task;
 }
 
-static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
+static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,
 		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
 	struct kd_mutex *kd_mtx;
 	bool admitted;
-	/* The legacy kernel hook already saved the caller on its native stack.
-	 * execute_cs reads that authoritative frame. The clobber bridge supplies
-	 * IP/SP/BP explicitly; neither ABI needs a second hook snapshot. */
 
-	/* Native ownership is authoritative even after a shadow has been created.
-	 * A free original mutex needs no admission, task record or translation.
-	 * Count a successful CAS with one CPU-local instruction, without a pin.
-	 * Failed entry/contention observations share a short pin, released before
-	 * any native slowpath is allowed to sleep. Neither count grants ownership. */
-	might_sleep();
-	if (kd_mutex_trylock_fast(lock)) {
-		kd_hotlock_mutex_entry();
-		return;
-	}
 	preempt_disable();
 	kd_hotlock_mutex_entry();
 	admitted = kd_hotlock_record_mutex((unsigned long)lock);
@@ -79,6 +66,26 @@ static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
 	}
 	kd_exe_add_abi(0, ret_addr, KD_EXE_LOCK_MUTEX, abi);
 	_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);
+}
+
+static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
+		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
+{
+	/* The legacy kernel hook already saved the caller on its native stack.
+	 * execute_cs reads that authoritative frame. The clobber bridge supplies
+	 * IP/SP/BP explicitly; neither ABI needs a second hook snapshot. */
+
+	/* Native ownership is authoritative even after a shadow has been created.
+	 * A free original mutex needs no admission, task record or translation.
+	 * Count a successful CAS with one CPU-local instruction, without a pin.
+	 * Failed entry/contention observations share a short pin, released before
+	 * any native slowpath is allowed to sleep. Neither count grants ownership. */
+	might_sleep();
+	if (kd_mutex_trylock_fast(lock)) {
+		kd_hotlock_mutex_entry();
+		return;
+	}
+	kd_mutex_contended_entry(lock, ret_rsp, ret_addr, bp, abi);
 }
 
 void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
@@ -134,6 +141,17 @@ kd_mutex_direct_lock_clobber_v1(struct mutex *lock, unsigned long sp,
 	kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_direct_lock_clobber_v1);
+
+/* The outer caller already failed the original-owner CAS and checked sleep
+ * context. Count precisely that failure once; retrying here would change which
+ * acquisition attempts feed the existing contention sampler. */
+__attribute__((noipa)) noinline notrace void
+kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,
+				   unsigned long ip, unsigned long bp)
+{
+	kd_mutex_contended_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+}
+EXPORT_SYMBOL_GPL(kd_mutex_direct_contended_clobber_v1);
 
 __attribute__((noipa)) noinline notrace void
 kd_mutex_direct_unlock_clobber_v1(struct mutex *lock, unsigned long sp,

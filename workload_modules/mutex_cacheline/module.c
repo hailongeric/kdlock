@@ -32,9 +32,10 @@
 #include <linux/objtool.h>
 #include "kd_mutex_direct.h"
 static struct mutex sc_lock __aligned(SC_LINE_BYTES);
-#define SC_LOCK(n) KD_MUTEX_DIRECT_LOCK(&sc_lock, \
+#define SC_LOCK(n) struct kd_mutex_outer_cookie sc_outer_cookie; \
+	KD_MUTEX_OUTER_LOCK(&sc_lock, sc_outer_cookie, \
 	".globl mc_entry_" #n "\nmc_entry_" #n ":\n\t" ANNOTATE_NOENDBR)
-#define SC_UNLOCK() KD_MUTEX_DIRECT_UNLOCK(&sc_lock)
+#define SC_UNLOCK() KD_MUTEX_OUTER_UNLOCK(&sc_lock, sc_outer_cookie)
 extern char mc_entry_0[], mc_entry_1[], mc_entry_2[], mc_entry_4[];
 extern char mc_entry_8[], mc_entry_16[];
 static void sc_lock_init(void) { mutex_init(&sc_lock); }

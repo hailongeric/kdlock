@@ -50,6 +50,7 @@ static unsigned long pinned_spin_lock_addr = 0x120, cold_spin_unlock_addr = 0x22
 static unsigned long clobber_spin_lock_addr = 0x110, clobber_spin_unlock_addr = 0x210;
 static unsigned long clobber_mutex_lock_addr = 0x310, clobber_mutex_unlock_addr = 0x410;
 static unsigned long direct_mutex_lock_addr = 0x320, direct_mutex_unlock_addr = 0x420;
+static unsigned long contended_mutex_lock_addr = 0x330;
 static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;
 static struct mutex a, b;
 static struct task_struct native_peer = { .pid = 13 }, *nested_owner;
@@ -209,7 +210,8 @@ static int kd_mutex_nested_lock(struct mutex *lock)
 	CHECK(active->control_call.phase == KD_CALL_ENTERED);
 	CHECK((active->regs.ip == mutex_lock_addr ||
 	       active->regs.ip == clobber_mutex_lock_addr ||
-	       active->regs.ip == direct_mutex_lock_addr) &&
+	       active->regs.ip == direct_mutex_lock_addr ||
+	       active->regs.ip == contended_mutex_lock_addr) &&
 	      active->regs.sp == (unsigned long)&waiter_stack[32]);
 	CHECK(!kd_exec_frame_lock_contains(active, (unsigned long)lock));
 	if (nested_owner) {
@@ -818,9 +820,9 @@ static void check_mutex_call_pair(void)
 {
 	/* Original Linux, captured kernel bridge and explicit module endpoints
 	 * must preserve the same ownership/continuation contract through FULL. */
-	const unsigned long locks[] = { mutex_lock_addr, clobber_mutex_lock_addr, direct_mutex_lock_addr };
-	const unsigned long unlocks[] = { mutex_unlock_addr, clobber_mutex_unlock_addr, direct_mutex_unlock_addr };
-	for (unsigned int endpoint = 0; endpoint < 3; endpoint++)
+	const unsigned long locks[] = { mutex_lock_addr, clobber_mutex_lock_addr, direct_mutex_lock_addr, contended_mutex_lock_addr };
+	const unsigned long unlocks[] = { mutex_unlock_addr, clobber_mutex_unlock_addr, direct_mutex_unlock_addr, direct_mutex_unlock_addr };
+	for (unsigned int endpoint = 0; endpoint < sizeof(locks) / sizeof(locks[0]); endpoint++)
 	for (unsigned int contended = 0; contended < 2; contended++) {
 		struct kd_exec_frame f = frame(true);
 		struct kd_regs expected;

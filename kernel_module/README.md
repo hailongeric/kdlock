@@ -17,6 +17,11 @@ KD 锁字、稳定持锁记录、逻辑 frame 和来源 pin 各自承担不同�
 默认构建要求 `kdclobber2` 的 `KD_SPIN_CLOBBER_V1` 和 `KD_MUTEX_CLOBBER_V1` 接口；缺失时编译直接报错，
 不再自动降为旧内核 hook。普通 spin/mutex 使用各自 clobber 身份；同一内核上的旧 ABI 调用者
 仍通过兼容 dispatcher 执行，嵌套和原生续跑需要的 FULL 状态也继续保留。
+外层mutex调用者使用`kd_mutex_direct.h`的`KD_MUTEX_OUTER_LOCK/UNLOCK`：原生成功在
+调用者内完成owner CAS，配对解锁调用原始Linux函数；竞争入口
+`kd_mutex_direct_contended_clobber_v1`直接进入`lock/mutex_calls.inc`的已有准入路径，
+不重复CAS或入口计数。已有`KD_MUTEX_DIRECT_LOCK/UNLOCK`继续用于嵌套控制和兼容入口；
+获取局部cookie及FULL/ACK约束见[锁协议](../docs/design/locking.md#mutex-outer-direct)。
 普通 mutex 的 MINIMAL/COMPLETE 借用 node 寄存器包，正常完成仅恢复 IP/SP/BP；
 首次 FULL 出口为 owner ACK 的独立生命周期取得 frame 自有包。
 实现约束见 [ABI 文档](../docs/JIT_REGISTER_ABI.md#mutex-clobber-assessment)。
@@ -176,7 +181,7 @@ spin combiner 和虚拟 waiter 的 owner/ACK 服务使用执行者 task 内核�
 | `kd_mutex.c` | [mutex/waiter.inc](mutex/waiter.inc) | Queue waiting and nested native acquisition; preserve owner/ACK semantics. |
 | `kd_mutex.c` | [mutex/clobber.inc](mutex/clobber.inc) | 发布前切栈，完成后放弃旧 C 帧，按 COMPLETE/FULL 恢复。 |
 | `kd_mutex.c` | [mutex/lifecycle.inc](mutex/lifecycle.inc) | Gate initialization, per-CPU stack allocation, rollback and drained teardown. |
-| `kd_lock.c` | [lock/mutex_calls.inc](lock/mutex_calls.inc) | Mutex hook ownership and nested CALL admission/cleanup against real owners. |
+| `kd_lock.c` | [lock/mutex_calls.inc](lock/mutex_calls.inc) | Mutex direct/contended entries, ownership routing and nested CALL cleanup against real owners. |
 | `kd_lock.c` | [lock/spin_calls.inc](lock/spin_calls.inc) | Nested spin CALL routing, private tickets, out-of-order release and cleanup. |
 
 ## 编译边界

@@ -145,7 +145,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     clobber_mutex_unlock = get_kernel_symbol("kd_mutex_unlock_clobber_v1")
     direct_mutex_lock = get_kernel_symbol("kd_mutex_direct_lock_clobber_v1")
     direct_mutex_unlock = get_kernel_symbol("kd_mutex_direct_unlock_clobber_v1")
-    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, direct_mutex_unlock} - {0, None}
+    contended_mutex_lock = get_kernel_symbol("kd_mutex_direct_contended_clobber_v1")
+    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, direct_mutex_unlock} - {0, None}
     if ((abi == 1 and not (clobber_lock and clobber_unlock)) or
         (abi == 2 and not ((direct_mutex_lock and direct_mutex_unlock) or
                            (clobber_mutex_lock and clobber_mutex_unlock)))):
@@ -160,6 +161,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             (pinned_spin_lock, "spin", "kd_spin_lock_pinned_clobber_v1"),
             (cold_spin_unlock, "spin", "kd_spin_direct_native_unlock"),
             (direct_mutex_lock, "mutex", "kd_mutex_direct_lock_clobber_v1"),
+            (contended_mutex_lock, "mutex", "kd_mutex_direct_contended_clobber_v1"),
             (direct_mutex_unlock, "mutex", "kd_mutex_direct_unlock_clobber_v1"),
             (mutex_lock, "mutex", "mutex_lock"),
             (mutex_unlock, "mutex", "mutex_unlock"),
@@ -206,7 +208,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             block_dict,
             db_dict,
             entry,
-            {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock},
+            {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock},
             {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock},
             discovered_targets,
             native_exits=native_exits,
@@ -284,7 +286,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                 and context_policy.static_address(
                     line.args[0], db_dict[block], line.offset + line.l
                 )
-                in {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock}
+                in {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock}
                 for block in selected.values()
                 for line in block.lines
             )

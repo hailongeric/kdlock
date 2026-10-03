@@ -20,6 +20,7 @@ Demo ioctl 和数据布局见 [workload_modules/README.md](../workload_modules/R
 | hook 与嵌套 CALL | [kd_lock.h](kd_lock.h) | mutex 路由和两类型嵌套控制 CALL |
 | spin 调度 | [kd_spinlock.h](kd_spinlock.h)、[qspinlock_i.h](qspinlock_i.h) | 显式KD单锁字、128字节节点及704字节continuation；per-CPU节点数组显式128字节对齐，类型与通知偏移不变；禁止与Linux锁协议混用 |
 | mutex 调度 | [kd_mutex.h](kd_mutex.h) | 原 mutex owner 保留，原 waiter 可继续后缀 |
+| mutex 直接调用 | [kd_mutex_direct.h](kd_mutex_direct.h) | OUTER 配对使用获取局部 cookie；已有 DIRECT 接口保留嵌套控制与 ABI2 |
 | frame/控制事务 | [kd_exec.h](kd_exec.h)、[kd_call.h](kd_call.h) | physical parent、logical resume_target、锁记录；spin pop 后通知，native ACK 与退休分离 |
 | 注册/执行 | [exe.h](exe.h)、[exe_info.h](exe_info.h) | 注册槽、entry_abi 身份与 packet_state；NORMAL 不证明正文执行 |
 | 热锁 | [kd_hotlock.h](kd_hotlock.h) | 分类型 per-CPU 256 桶/256 精确地址记录，spin 竞争比例准入，无候选淘汰；热度不持有锁 |
@@ -38,6 +39,26 @@ continuation 存储回收和 source pin 释放是不同边界。
 
 显式 KD 对象见 [kd_spin_type.h](kd_spin_type.h)，直接调用 ABI 见
 [kd_spin_direct.h](kd_spin_direct.h)；稳定 ticket 见 [kd_spin_entry.h](kd_spin_entry.h)。
+
+## 普通 mutex 的外层配对接口
+
+`kd_mutex_direct.h`操作原始`struct mutex`。一个外层获取使用独立的
+`struct kd_mutex_outer_cookie`，按`KD_MUTEX_OUTER_LOCK(lock, cookie, continuation)`与
+`KD_MUTEX_OUTER_UNLOCK(lock, cookie)`配对。cookie为不透明、同task且不可转交的获取状态；
+配对结束前不得复制、修改或复用。锁参数仍是同一个原始mutex。
+
+获取在调用者内执行原owner CAS；成功只记录一次mutex入口观察，解锁调用原始
+`(mutex_unlock)(lock)`。失败进入`kd_mutex_direct_contended_clobber_v1`，不重试该CAS，
+由provider记录一次失败入口和竞争观察。精确continuation之后先写零cookie，
+再进入正文；此路径始终使用原`kd_mutex_direct_unlock_clobber_v1`，包括provider原生回退。
+非零cookie保存原生获取时的task指针，只选择原生解锁；Linux owner和KD ledger仍决定真实所有权。
+
+这个配对接口只用于外层入口。翻译正文内的嵌套获取/释放继续使用
+`KD_MUTEX_DIRECT_LOCK/UNLOCK`；准备仍调用`kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`。
+ABI2和wrapper的两元素输入不变，调用者仍有五个callee-saved寄存器的保存/恢复，
+不能把内联获取描述为消除了这些spill。
+完整状态与续跑约束见[外层mutex直接接口](../docs/design/locking.md#mutex-outer-direct)，
+实际调用示例见[mutex workload](../workload_modules/mutex_cacheline/module.c)。
 
 ## 显式 IRQ/BH spin 接口
 

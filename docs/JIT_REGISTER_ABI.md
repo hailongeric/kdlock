@@ -182,6 +182,16 @@ spin 为 1、旧 ABI 为 0，registry、daemon、translator 和 wrapper 必须�
 原 mutex fast/slowpath，避免宏递归。interruptible/killable/trylock、IO、
 显式 nested 和取函数地址的调用者保留旧契约。
 
+模块外层调用可使用[OUTER配对接口](design/locking.md#mutex-outer-direct)：
+原生获取在调用者内CAS，原生解锁调用原始`mutex_unlock`；竞争调用
+`kd_mutex_direct_contended_clobber_v1`。精确lock续点之后显式写零获取cookie，
+因此MINIMAL入口不依赖未捕获寄存器或预先存在的cookie值。
+零cookie解锁仍使用原`kd_mutex_direct_unlock_clobber_v1`及其精确SP/IP/BP元数据；
+FULL/native续跑保留这个路由。嵌套控制继续使用原DIRECT接口。
+两条解锁分支都有已知控制CALL边界，原生分支不把内联CAS成功后的canary/epilogue
+纳入正文；编译器屏障只防止尾跳转，不增加硬件fence。
+该调用壳保持ABI2和两元素wrapper输入，调用者五个callee-saved寄存器的spill仍存在。
+
 node 发布前只写 IP/SP/BP。`kd_mutex_clobber_wait()` 先进入该预约的 8 KiB
 shadow 栈，再运行排队代码；只有未执行的队首可以返回旧 C 帧。已完成请求
 在两个栈位置以下重建恢复帧，清理 slot、恢复抢占/迁移及 task 引用后直接

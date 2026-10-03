@@ -425,8 +425,46 @@ distinct from merely completing all clients.
 
 ### 5.2 Entry, Completion, And Task Routing
 
-1. Try the original mutex's owner CAS first. Success bypasses admission,
-   shadow/task records and translation. The attempt and failed-CAS counts are
+<a id="mutex-outer-direct"></a>
+#### Explicit outer direct pair
+
+`KD_MUTEX_OUTER_LOCK(lock, cookie, continuation)` and
+`KD_MUTEX_OUTER_UNLOCK(lock, cookie)` operate on the original Linux mutex.
+Each lexical acquisition owns an opaque `struct kd_mutex_outer_cookie`; it stays
+with the same task and must not be copied, transferred, modified or reused before
+its paired unlock. This interface is for outer entries. Nested control calls
+inside translated bodies retain `KD_MUTEX_DIRECT_LOCK/UNLOCK` and their lock ledger.
+
+The caller performs `might_sleep()` and the original owner CAS. Native success
+records one approximate mutex entry and stores the acquiring task pointer in its
+cookie. Its unlock calls the original `(mutex_unlock)(lock)`, bypassing KD task
+routing while retaining Linux owner/flags and slowpath behavior. The cookie
+selects the route; it neither grants ownership nor replaces the original mutex.
+
+A failed CAS enters `kd_mutex_direct_contended_clobber_v1`, which records that
+failed attempt once without retrying the first CAS. Immediately after the exact
+registered continuation, the caller writes zero to the cookie before executing
+the body. That store is part of the translated entry, not an assumed incoming
+register or stack value. Zero selects the existing direct clobber unlock including
+when the contended provider entry returns through a native fallback. Queue owners still
+release the gate/task record; borrowed native continuations still request the
+physical owner's unlock and final ACK. COMPLETE resumes after the routed unlock;
+FULL preserves the acquisition's cookie and uses the existing continuation path.
+
+Both unlock branches end at recognized mutex control CALLs. An empty compiler
+barrier keeps the native CALL from becoming a sibling tail jump; it adds no
+hardware fence. The original native unlock call bounds that branch before the
+caller's canary/epilogue. The direct unlock identity, ABI2 MINIMAL/COMPLETE metadata
+and two-element wrapper input remain unchanged. Preparation still registers the
+exact slow-call continuation through `kd_mutex_prepare`; native fast execution
+does not supply JIT completion evidence. The current workload callers retain
+their five callee-saved register spills.
+
+#### Provider acquisition and completion
+
+1. Try the original mutex's owner CAS first. The outer pair does this in the
+   caller; the existing general direct entry does it in the provider. Success
+   bypasses admission, shadow/task records and translation. The attempt and failed-CAS counts are
    separate approximate per-CPU mutex counters: every 1024 contentions compare
    `(entries >> 10) < 256`, reset both counts and update the CPU clock. The initial
    limit 2 rejected every CPU in the cacheline screen; the measured native owner
