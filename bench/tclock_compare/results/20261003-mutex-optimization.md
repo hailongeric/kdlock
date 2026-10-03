@@ -1,5 +1,31 @@
 # Mutex optimization, 2026-10-03
 
+The retained changes improve KD's native and contended mutex paths, but do not
+establish consistent TCLock parity. Native CAS before the counting pin (`278734e`)
+and acquire/release-published shadow reads (`cc75cc1`) remain. Three independent
+slower candidates were tested, preserved and reverted. The original task registry,
+physical-owner protocol, ABI2 and pinned waiter policy remain.
+
+At 36 threads (Mops/s):
+
+| Phase | KD best peak | TCLock best peak | KD/TCLock peak | KD whole median | TCLock whole median |
+|---|---:|---:|---:|---:|---:|
+| Final cacheline matrix | 4.236 | 4.628 | 91.52% | 3.787 | 4.532 |
+| Separate cacheline recheck | 3.852 | 4.522 | 85.19% | 3.680 | 4.429 |
+| Final hash matrix | 2.654 | 2.213 | 119.91% | 2.045 | 2.197 |
+
+The final 36-thread cacheline KD peak-window median is 28.39% above this turn's starting baseline;
+the later recheck is still improved but does not reproduce the 90% threshold.
+Hash's selected peak exceeds TCLock, while its whole-run median is 6.94% lower.
+Five hash sessions fail the returned-body JIT requirement and remain excluded;
+minority-node/individual-worker progress can be very uneven. These are mixed
+native/delegated KD results, not evidence of pure JIT service matching TCLock.
+
+![Three-way mutex throughput and target ratios](20261003-mutex-optimization.png)
+
+[Vector figure](20261003-mutex-optimization.svg). Curves do not bridge incomplete
+three-round groups; the separate cacheline recheck is explicitly marked.
+
 This continues from `3332e25` using the default UBSAN-off private KD provider.
 All builds, tests and measurements ran in the recovery guest on the existing
 `6.1.159-kdclobber2` kernel (Build ID
@@ -12,8 +38,8 @@ TCLock retains its parking implementation.
 
 Each scored configuration has three rounds, 48,000 warmup operations per worker,
 2 seconds measurement, and the highest valid 300 ms window after 300 ms settling.
-All samples, including variation in Linux/TCLock, are retained. These initial
-screens cover 1, 2, 16 and 36 threads, one cacheline; they are not a full matrix.
+All samples, including variation in Linux/TCLock, are retained. Initial screens
+cover 1, 2, 16 and 36 threads, one cacheline; the later full matrix is separate.
 
 ## Baseline diagnosis
 
@@ -118,7 +144,7 @@ to 5.451/4.205 Mops/s (+6.03%/+28.97%). A separate 1/2/36-thread recheck passed 
 Screen/recheck best KD peaks were 91.55%/108.93% of their corresponding TCLock
 peaks. Both exceed 90%, but the high recheck peak is not representative of its
 4.141 Mops/s whole-run median. Neither small-thread median regressed relative
-to the preceding native-pin change. Full-matrix conclusions remain pending.
+to the preceding native-pin change. The later full matrix and recheck are reported below.
 
 Two basic tests and the affected resource driver passed before each screen.
 The second fixture additionally injects same-key/colliding-key publication
@@ -339,8 +365,9 @@ preserved above. The candidate loses by more than 50% against either reference.
 | task-buckets-recheck | 16 | 2.400/2.421/2.454 | 2.649/2.698/2.768 | 70.64–79.13% |
 | task-buckets-recheck | 36 | 1.273/1.357/1.431 | 1.264/1.317/1.362 | 90.59–96.91% |
 
-A separate two-session flat profile passed with no lost samples. Worker cycle
-weight moved primarily into KD's own waiter slowpath: 75.60% at 16 and 89.79% at 36.
+A separate two-session flat profile passed with no lost samples. Kernel queued
+spinlock waiting fell to 0.004%/0.035% at 16/36, while worker cycle weight moved
+primarily into KD's own waiter slowpath: 75.60% at 16 and 89.79% at 36.
 This is evidence against treating removal of registry serialization as sufficient
 to improve throughput. It also demonstrates that increased JIT coverage alone is
 not a performance result. This experiment uses the same generated-body machinery.
@@ -363,6 +390,152 @@ Evidence: `mutex-20261003-task-buckets-unit`, `mutex-20261003-task-buckets-ack`,
 `mutex-20261003-mutex-task-buckets-recheck-c1`,
 `mutex-20261003-task-buckets-profile`.
 
+## Full mutex hash matrix
+
+This matrix uses the two retained changes (`278734e` and `cc75cc1`) after reverting the bucket-lock experiment. It is independent of the cacheline phases; no phase maxima are pooled. The hash payload and its operation mix use the existing runner configuration.
+
+Of 135 sessions, 130 passed and five KD sessions failed the returned-body requirement with explicit `NO_JIT`: 7 threads round 2, all three 12-thread rounds, and 32 threads round 2. Every failed session had correct raw workload data, positive worker progress and complete drain, but zero measured JIT bodies; its published throughput fields remain null. These samples are retained as failures and excluded from scored throughput. Thus 7 and 32 threads have only two accepted KD rounds; 12 has none. They cannot satisfy the three-round performance target.
+
+Offline validation recomputed all raw payload/worker totals, whole-run rates and highest eligible peaks. All 1,836 worker observations had positive whole-run and selected-window counts with the requested CPU placement; 1,761 belong to accepted sessions. All KD sources retired to state 2 with zero modules/frames/writers; TCLock drained quiescently and executed delegation at every contended point. The record/derived-summary comparison found no discrepancy. Frozen-source/ELF and raw kernel-log verification also passed the final archive audit below.
+
+Complete three-round points reach 90% at 6, 8, 16, 20, 24, 28, 36 threads (7/15 planned points; 12 points have complete KD/TCLock triplets). At 36 threads KD’s best peak is 2.654 versus TCLock’s 2.213 Mops/s (119.91%). However, KD’s whole-run median is 2.045 versus TCLock’s 2.197 (-6.94%). The peak result meets this phase’s specified metric; it does not establish a whole-run advantage or repeatability across independent phases.
+
+Peak rates below are Mops/s, min / median / max over accepted rounds only. Incomplete groups are explicitly marked and excluded from target acceptance.
+
+| Threads | Linux peak | TCLock peak | KD peak | KD valid | KD/TCLock best | KD spread |
+|---:|---|---|---|---:|---:|---:|
+| 1 | 10.859/10.864/10.869 | 12.113/12.117/12.120 | 8.651/8.653/8.657 | 3/3 | 71.42% | 0.07% |
+| 2 | 4.849/5.006/5.323 | 7.081/7.131/7.261 | 4.315/4.457/4.730 | 3/3 | 65.14% | 9.31% |
+| 3 | 4.768/4.937/5.025 | 6.395/6.462/6.516 | 4.199/4.402/4.572 | 3/3 | 70.16% | 8.47% |
+| 4 | 4.807/5.024/5.063 | 5.771/5.789/5.813 | 3.820/4.151/4.293 | 3/3 | 73.86% | 11.42% |
+| 5 | 4.787/4.914/4.931 | 5.339/5.363/5.369 | 4.021/4.384/4.482 | 3/3 | 83.48% | 10.53% |
+| 6 | 4.783/4.785/4.938 | 3.759/3.804/3.816 | 3.966/3.978/4.112 | 3/3 | 107.75% | 3.67% |
+| 7 | 4.725/4.829/4.900 | 3.988/4.034/4.059 | 4.382/4.431/4.480 | 2/3 | — incomplete | 2.22% |
+| 8 | 4.720/4.850/4.893 | 4.064/4.132/4.146 | 4.156/4.261/4.343 | 3/3 | 104.75% | 4.39% |
+| 12 | 4.685/4.767/4.773 | 4.009/4.040/4.086 | — | 0/3 | — incomplete | — |
+| 16 | 4.609/4.692/4.740 | 4.044/4.068/4.080 | 4.209/4.250/4.253 | 3/3 | 104.23% | 1.03% |
+| 20 | 4.573/4.574/4.598 | 4.208/4.217/4.253 | 3.786/3.866/4.020 | 3/3 | 94.52% | 6.05% |
+| 24 | 3.332/3.405/3.627 | 3.690/3.702/3.781 | 2.591/3.851/4.025 | 3/3 | 106.46% | 37.25% |
+| 28 | 2.939/2.953/3.029 | 2.213/2.213/2.224 | 3.126/3.605/3.700 | 3/3 | 166.37% | 15.90% |
+| 32 | 2.745/2.792/2.813 | 2.205/2.208/2.228 | 2.687/2.975/3.264 | 2/3 | — incomplete | 19.38% |
+| 36 | 2.701/2.710/2.740 | 2.200/2.207/2.213 | 2.430/2.510/2.654 | 3/3 | 119.91% | 8.94% |
+
+Whole-run rates use exact completed work and measured wall time.
+
+| Threads | Linux whole | TCLock whole | KD whole | KD valid |
+|---:|---|---|---|---:|
+| 1 | 10.849/10.850/10.856 | 12.104/12.105/12.109 | 8.550/8.640/8.645 | 3/3 |
+| 2 | 4.835/4.997/5.317 | 7.072/7.115/7.238 | 4.309/4.455/4.723 | 3/3 |
+| 3 | 4.761/4.923/5.009 | 6.387/6.449/6.507 | 4.200/4.398/4.537 | 3/3 |
+| 4 | 4.799/5.005/5.047 | 5.756/5.776/5.798 | 3.835/4.161/4.309 | 3/3 |
+| 5 | 4.777/4.901/4.918 | 5.324/5.351/5.354 | 4.055/4.218/4.297 | 3/3 |
+| 6 | 4.772/4.775/4.912 | 3.736/3.788/3.795 | 3.965/3.988/4.022 | 3/3 |
+| 7 | 4.710/4.808/4.881 | 3.955/4.020/4.051 | 4.334/4.347/4.360 | 2/3 |
+| 8 | 4.708/4.834/4.878 | 4.054/4.121/4.129 | 3.940/3.989/4.101 | 3/3 |
+| 12 | 4.673/4.753/4.764 | 3.997/4.032/4.073 | — | 0/3 |
+| 16 | 4.586/4.678/4.718 | 4.029/4.054/4.064 | 4.107/4.118/4.209 | 3/3 |
+| 20 | 4.524/4.549/4.564 | 4.177/4.199/4.233 | 3.770/3.787/3.835 | 3/3 |
+| 24 | 3.264/3.329/3.499 | 3.655/3.679/3.762 | 2.730/3.205/3.312 | 3/3 |
+| 28 | 2.810/2.928/2.928 | 2.203/2.203/2.212 | 2.725/2.745/2.755 | 3/3 |
+| 32 | 2.714/2.763/2.778 | 2.192/2.195/2.217 | 2.290/2.393/2.496 | 2/3 |
+| 36 | 2.667/2.670/2.696 | 2.188/2.197/2.202 | 1.925/2.045/2.525 | 3/3 |
+
+### Hash worker progress and node shares
+
+The 24-thread placement has 20 workers on node 0 and four on node 1. KD node 1 receives only 2.85–4.30% of whole-run operations and 0.424–4.939% of selected-window operations, far below its 16.67% worker share. The fastest KD24 peak (4.025 Mops/s) has a 0.424% node-1 share, and its slowest worker completes only 768 operations in that selected window. TCLock is also imbalanced (1.55–1.63% whole-run share); aggregate throughput therefore needs this service-distribution context.
+
+At 36 threads, broadly plausible node totals hide severe per-worker imbalance: the best KD peak (2.654 Mops/s) has a worker with only 4,608 whole-run operations and 256 selected-window operations. Every worker progresses, but 256 is just one published progress batch. Positive accepted-window progress and a bounded delegation batch do not establish a starvation or waiting-time guarantee.
+
+| Threads | Arm | Node 1 whole share | Node 1 peak share | Min whole worker ops | Min peak worker ops |
+|---:|---|---:|---:|---:|---:|
+| 24 | native | 7.784–9.622% | 5.859–7.845% | 127,232 | 7,680 |
+| 24 | tclock | 1.547–1.635% | 1.512–1.573% | 28,160 | 3,840 |
+| 24 | kdlock | 2.853–4.296% | 0.424–4.939% | 31,232 | 768 |
+| 36 | native | 42.462–43.000% | 43.128–43.945% | 89,088 | 8,960 |
+| 36 | tclock | 49.573–49.706% | 49.535–49.794% | 105,984 | 15,104 |
+| 36 | kdlock | 39.121–45.267% | 39.952–48.708% | 4,608 | 256 |
+
+Ranges span accepted rounds. Node 1 has 16/36 workers (44.44%) at 36 threads. Counts are minima over individual workers, not node sums.
+
+### Measured returned/delegated body fractions
+
+These fractions use exact measurement-phase returned bodies divided by all completed operations. Small nonzero KD values prove execution but do not mean most work ran through JIT. The fastest KD36 peak’s session has only 0.4053% JIT work; the three KD36 sessions span 0.4053–9.0573%. TCLock’s corresponding range is 97.3875–97.6863%. Therefore this phase compares the complete mixed-path implementations, not isolated executor throughput.
+
+| Threads | KD JIT share | KD valid rounds | TCLock delegated share |
+|---:|---:|---:|---:|
+| 1 | 0.0000–0.0000% | 3/3 | 0.0000–0.0000% |
+| 2 | 0.0000–0.0000% | 3/3 | 0.0000–0.0000% |
+| 3 | 0.0004–0.0005% | 3/3 | 0.0373–0.2081% |
+| 4 | 0.6252–1.8446% | 3/3 | 7.0253–7.2465% |
+| 5 | 0.9067–1.8773% | 3/3 | 12.5534–12.9492% |
+| 6 | 2.1369–2.7229% | 3/3 | 72.6569–74.4827% |
+| 7 | 0.0657–0.5599% | 2/3 | 97.0444–97.5141% |
+| 8 | 2.2730–2.9661% | 3/3 | 97.4665–97.5792% |
+| 12 | — (all NO_JIT) | 0/3 | 97.4068–97.5078% |
+| 16 | 0.0674–1.3418% | 3/3 | 97.3665–97.5609% |
+| 20 | 4.8798–5.6153% | 3/3 | 97.3891–97.6187% |
+| 24 | 3.0313–8.1058% | 3/3 | 93.5990–94.4898% |
+| 28 | 2.8053–4.0504% | 3/3 | 97.6246–97.7178% |
+| 32 | 2.5462–4.9965% | 2/3 | 97.6007–97.8857% |
+| 36 | 0.4053–9.0573% | 3/3 | 97.3875–97.6863% |
+
+Evidence: host `final-hash-records.json`, SHA256 `7db646213ac93855d1f1eb01f792acb602fb0f81abbae8a65c249f4a511f6c1f`. All five `NO_JIT` records and their raw measurements remain preserved. The archive index provides the exact originating guest directory.
+
+## What remains expensive
+
+The single-thread gap is native-path overhead: neither arm delegates there.
+In the full cacheline matrix KD's best rate is 16.906 Mops/s (59.15 ns/op),
+versus TCLock's 36.136 (27.67 ns/op). KD performs an RCU task-routing lookup on
+unlock and preserves Linux's original owner validation/CAS. TCLock's registered
+context fast path releases its own lock byte with a store. The archived caller
+ELFs also show KD saving/restoring five extra registers and constructing the
+ABI2 SP/IP/BP arguments. These are source/assembly differences; their individual
+nanosecond costs were not isolated. They cannot be attributed to JIT or NUMA.
+
+For admitted requests, task allocation, reference publication/removal and RCU
+freeing remain. Queue/node lifecycle also updates exact shared counters. Each
+delegated body initializes and checks a frame/lock ledger, enters the wrapper,
+checks completion, retires the frame and eventually restores its originating
+worker. The physical executor acquires the original Linux mutex once per ownership
+interval, across the batch and its own body; it does not acquire it anew for every
+delegated body. Likewise, ordinary COMPLETE does not require a complex native-suffix
+ACK on every body. Per-body ownership checks and exact lifetime work remain.
+
+These fixed costs are plausible reasons delegation loses on a one-cacheline
+payload. The rejected bucket experiment demonstrates this on one NUMA node at
+16 workers, so cross-node locality cannot explain the entire loss. FIFO handoffs
+and shared counter traffic can add cost at 36, but no remote-memory latency was
+measured. Do not replace ownership or lifetime fields with approximate statistics
+to remove this work.
+
+Source references: `kernel_module/lock/mutex_calls.inc`,
+`kernel_module/kd_mutex_tasks.c`, `kernel_module/mutex/{queue,combiner,clobber}.inc`,
+`kernel_module/execution/{wrapper_entry,frame_lifecycle}.inc`,
+`include/kd_mutex_direct.h`, and `tclock_backend/komb_mutex.c`.
+
+## Separate cache-event diagnostics
+
+Both selected events first counted successfully on an idle guest, then ran in
+separate 36-thread one-cacheline KD/TCLock sessions on the retained source.
+Every event had a positive count/runtime and 100% running time; four diagnostic
+sessions passed data/JIT/drain checks. They are excluded from throughput scores.
+
+| Event | Arm | Count | Completed operations | Count / completed operation |
+|---|---|---:|---:|---:|
+| cache-misses | TCLock | 3,529,610 | 13,049,344 | 0.270 |
+| cache-misses | KD | 122,672,996 | 11,431,424 | 10.731 |
+| L1-dcache-load-misses | TCLock | 542,883,274 | 13,710,848 | 39.595 |
+| L1-dcache-load-misses | KD | 134,346,554 | 11,825,920 | 11.360 |
+
+These counts cover the measured client and inherited workers, including polling,
+and use different invocations for each event. They show different cache behavior,
+not a uniform increase at every level for KD. Do not divide them into a miss rate,
+assign them to individual request fields, or interpret them as remote-memory
+latency. The counter contrast does not justify an unmeasured broad-prefetch change.
+Evidence: `mutex-20261003-final-cache-misses` and
+`mutex-20261003-final-L1-dcache-load-misses`; event-availability logs are retained
+in the host evidence directory.
+
 ## Evidence
 
 Guest directories under `/root/kdlock-evidence/`:
@@ -373,6 +546,33 @@ Each benchmark directory retains frozen source/ELF identities, commands, kernel
 identity, all session records and cleanup logs. Host observations and downloaded
 records are under `bench/.tmp/mutex-20261003/`; diagnostic throughput is excluded
 from scored results. No guest kernel changes or full test suite were run.
+
+Final integrity collection covers 29 phase directories and 527 benchmark/diagnostic
+sessions: 499 valid timed samples (including preserved rejected implementations),
+22 valid diagnostics, five drained NO_JIT failures and one failed kernel-unwinder
+diagnostic with separately verified manual drain. Four unit phases passed (12
+drivers total), and four real owner/RCU/ACK probes passed with JIT=0. Frozen
+source/ELF/diagnostic-tool hashes, UBSAN-off imports, payload/worker/peak totals,
+returned-body/delegation evidence and recorded retirement were revalidated with
+zero integrity issues. Failed results were not promoted to passes. Basic unit
+phases retain command/log/status but did not capture frozen source manifests;
+the matching benchmark/ACK phases do retain frozen sources. All guest work drained
+and modules unloaded normally. No force unload, kernel changes or warning filters
+were used.
+
+Guest and downloaded archive:
+`/root/kdlock-evidence/mutex-20261003-evidence.tar.gz` and
+`bench/.tmp/mutex-20261003/mutex-20261003-evidence.tar.gz` (179,458,010 bytes).
+SHA256: `795fccac28d8f50b93efea4d891e58d625334c62aa3ee5339f121ffda52f41a7`.
+The adjacent `mutex-20261003-audit.json` and `mutex-20261003-records.json` retain
+phase-separated decisions and every planned session. Final host observations
+reconfirmed all 40 vCPU pins and 2.5 GHz limits for workers 0–35/collector 38.
+Host controllers, offline audit/plot scripts, event-availability logs and CPU
+observations are separately preserved in `bench/.tmp/mutex-20261003/host-analysis.tar.gz`
+(15,638,653 bytes), SHA256
+`946ab11f6b1d90e5ba78d1bf6ffe7d535e1686acb07f78f9c59ccd4c7eda866d`.
+This includes its own per-file manifest; the report figures retain full raw-record
+hashes in `final-plot-provenance.json` within that archive.
 
 Record SHA256 (downloaded directly from completed guest outputs):
 

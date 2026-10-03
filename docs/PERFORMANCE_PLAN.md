@@ -16,7 +16,14 @@
 确定性交错测试覆盖重复键/碰撞插入；一个额外callchain诊断因stack-unwinder警告失败，
 保留失败并经检查正常排空，之后普通复测通过。task空bucket快速否定虽改善1/2线程，36线程连续两组中位数下降
 超过3%，已保留实验分支并撤回；当前保留原RCU查询。停用fault-injection的atomic读前检查亦连续两组下降超过3%，
-已保留分支并撤回。当前准备以native-pin与shadow读优化运行完整mutex矩阵。
+已保留分支并撤回。native-pin与shadow读优化的完整cacheline135场全部通过，1/2/16/36中位数相对本轮基线提高
+11.86%/13.17%/9.92%/28.39%；36峰值91.52%，但相同源码复测只有85.19%，仍未稳定达到目标。
+独立task bucket锁候选通过真实owner/ACK检查和36场筛选/复测，却令JIT占比升至65%–97%而吞吐大幅下降，已保留并撤回。
+其平面profile显示内核queued-spin等待降至不足0.04%，KD自身waiter等待占主导；单纯去除registry锁不足以优化完整委托路径。
+恢复后的两项优化完成mutex/hash135场：130通过，7/12/32线程共5场NO_JIT失败均已排空并保留，不合入有效分数。
+完整三轮且达到90%的点为6/8/16/20/24/28/36；36峰值119.91%，但整段中位数低于TCLock6.94%。
+24线程hash少数node峰值份额最低0.424%，36最快样本单worker峰值仅256次，不能宣称公平或稳定追平。
+最终29阶段归档核对527场benchmark/diagnostic及4组unit、4组JIT=0 owner/ACK，完整性检查零问题；失败状态未改写。
 
 2026-09-28 完成[私有寄存器包与 continuation 重排](../bench/tclock_compare/results/20260928-packed-continuation.md)：
 核心身份/状态与 RIP/RSP/RBP 共用第一条64字节行，虚拟GPR backing共用第二行，
