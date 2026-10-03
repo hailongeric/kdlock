@@ -1,7 +1,7 @@
 """Guest-only production combiner/outer-event tests with deterministic primitives.
 
 The fixture replaces the JIT body, physical mutex operations, scheduling and
-frame pool. The actual execute_cs/run_combiner/event functions are compiled.
+frame pool. The actual kd_mutex_execute_cs/kd_mutex_run_combiner/event functions are compiled.
 It checks protocol control flow; the live dependency workload tests real queues.
 """
 
@@ -80,8 +80,8 @@ def main():
         code += definition(mutex, marker) + "\n"
     # Match the real signature, including a newly added batch parameter.
     for name, prefix in (
-        ("execute_cs", "static int\n"),
-        ("run_combiner", "static void\n"),
+        ("kd_mutex_execute_cs", "static int\n"),
+        ("kd_mutex_run_combiner", "static void\n"),
     ):
         marker = next(
             line for line in mutex.splitlines() if line.startswith(name + "(")

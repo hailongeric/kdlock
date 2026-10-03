@@ -33,12 +33,12 @@ def production():
     code += "#define kd_mutex_shadows cpu_shadows\n"
     code += mutex[
         mutex.index("struct kd_mutex_cpu_state {") : mutex.index(
-            "static inline struct kd_mutex_node *decode_tail"
+            "static inline struct kd_mutex_node *kd_mutex_decode_tail"
         )
     ]
     # Include the actual decoder, not a second copy of its field arithmetic.
     # The fixture substitutes only per_cpu_ptr and verifies its node identity.
-    code += definition(mutex, "static inline struct kd_mutex_node *decode_tail(u32 tail)")
+    code += definition(mutex, "static inline struct kd_mutex_node *kd_mutex_decode_tail(u32 tail)")
     code += (
         next(
             line

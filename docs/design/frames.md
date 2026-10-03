@@ -134,10 +134,10 @@ no outer assembly register group save or per-waiter callback return/reentry.
 This follows TCLock's retained combiner continuation while keeping the JIT's
 physical scratch frame separate from the logical waiter stack. Admission,
 completion/unbind/publication and successor selection remain in the lock loop.
-The provider compiles `kd_exec.c`, `exe.c` and `kd_spinlock.c` together through
-`kd_spin_runtime.c`. Readiness, batch preparation/completion and frame
-bind/retire use GNU always-inline definitions: the combiner sees their bodies,
-while other clients retain external entry points. This changes the compiler's
+The provider compiles `kd_exec.c`, `exe.c`, `kd_spinlock.c` and `kd_mutex.c`
+together through `kd_spin_runtime.c`. Readiness, batch preparation/completion
+and frame bind/retire use GNU always-inline definitions: each combiner can see
+the helper bodies, while other clients retain external entry points. This changes the compiler's
 optimization scope, not the publication, physical-owner or packet contract.
 Both seven-byte wrapper directory signatures use exact overlapping 32-bit
 loads; admission no longer calls `memcmp` for the clobber directory.
@@ -302,6 +302,15 @@ COMPLETE return uses checked mutex retirement before queue publication. FULL
 returns retain backend identity, detach the packet, and enter the existing
 native/ACK path once. The batch lease ends after every frame/ACK has retired;
 source closure still rejects new roots within the batch.
+
+The mutex batch push, preparation, completion and retirement helpers now use
+the same compilation unit as the mutex combiner. Its private queue helpers
+have mutex-specific names; public entries and all packet/frame layouts stay
+unchanged. Stack-switch and restore functions retain their `noipa`/`noinline`
+boundaries. The generic frame constructor and FULL/native dispatcher remain
+available, including physical-owner checks and final-ACK retirement. This
+compiler scope change does not merge spin/mutex state or change source leases,
+publication ordering, batch limits or waiter policy.
 
 Its scheduling object's tail is an encoded `u32`, not a pointer. The immutable
 `origin_mutex_addr` also supplies the protected shadow-map key, removing a

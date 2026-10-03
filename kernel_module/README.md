@@ -24,10 +24,12 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 256 字节、64 字节对齐；next 与 completed/locked 分行，避免缩减字段后
 引入相邻 node 共行。生产构建对大小、对齐和通知偏移做静态检查。
 
-`kd_spin_runtime.c`按`kd_exec.c → exe.c → kd_spinlock.c`顺序组合成一个编译单元，
-让普通batch的readiness、准备、绑定、完成及退休检查内联到同一个combiner循环。
-源文件仍按下表职责阅读，不再分别链接三个对象；GNU inline保留其他调用者需要的外部入口。
-发布检查、frame/owner/ACK、wrapper clobber及节点唤醒顺序保持不变。
+`kd_spin_runtime.c`按`kd_exec.c → exe.c → kd_spinlock.c → kd_mutex.c`顺序组合编译，
+让两个combiner看到各自普通batch helper的实现；mutex的push/prepare/complete/retire
+同样使用GNU always-inline并保留外部定义。源文件仍按下表职责阅读，不再分别链接这四个对象。
+mutex私有队列helper使用独立名称；栈切换/恢复继续保留noipa/noinline边界。
+结构布局、发布检查、frame/owner/最终ACK、wrapper clobber及节点唤醒顺序保持不变，
+FULL/native仍进入原通用分发与退休路径。
 普通clobber unlock的native字节路径保持leaf：局部允许尾调用，其他owner转交
 `kd_spin_unlock`；最后一个preempt pin需要调度时，使用`static_call_mod(preempt_schedule)`
 尾转到内核导出的trampoline，随dynamic preemption配置更新，保留return thunk。
@@ -35,7 +37,7 @@ mutex node 同时删除无消费者的 socket/IRQ 字段和合并通知别名，
 
 | 源码入口 | 保留职责 |
 | --- | --- |
-| [kd_spin_runtime.c](kd_spin_runtime.c) | spin与共享执行层的实际编译入口，避免逐请求跨对象调用 |
+| [kd_spin_runtime.c](kd_spin_runtime.c) | spin、mutex与共享执行层的实际编译入口，使普通batch helper可跨源文件内联 |
 | [kd_main.c](kd_main.c) | 模块初始化、hook 安装/撤销、目标选择 |
 | [kd_lock.c](kd_lock.c) | hook 路由、原生快路径、mutex shadow 查询 |
 | [kd_spinlock.c](kd_spinlock.c) | 按协议顺序组合 spin 私有实现；公共调用、恢复和解锁分别在下表的独立组件中 |

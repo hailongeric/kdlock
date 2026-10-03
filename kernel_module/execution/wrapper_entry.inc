@@ -244,6 +244,7 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 /* Mutex batches retain a full ownership ledger and a borrowed register packet.
  * Only pristine ABI2 roots use the short wrapper path. Every candidate still
  * checks OPEN, publication, backend and image ABI; a cached slot is no lease. */
+__always_inline __gnu_inline
 bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	struct kd_exec_frame *frame, struct kd_jit_batch_call *call)
 {
@@ -274,6 +275,7 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	return true;
 }
 
+__always_inline __gnu_inline
 bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
 	const struct kd_exec_frame *frame)
 {

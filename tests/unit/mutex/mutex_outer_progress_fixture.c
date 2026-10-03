@@ -117,7 +117,7 @@ static int __attribute__((unused)) routine_printk(const char *format, ...)
 	va_end(args);
 	CHECK(length > 0 && (size_t)length < sizeof(text));
 	CHECK(!strncmp(text, KERN_INFO, strlen(KERN_INFO)));
-	CHECK(strstr(text, "[0] [1] kd_mutex (execute_cs)") != NULL);
+	CHECK(strstr(text, "[0] [1] kd_mutex (kd_mutex_execute_cs)") != NULL);
 	CHECK(strstr(text, "JIT exec waiter cpu 0 ip 800 sp ") != NULL);
 	routine_traces++;
 	return length;
@@ -198,12 +198,12 @@ static bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 {
 	return lock->owner == task;
 }
-static void clear_locked_set_completed(struct kd_mutex_node *node)
+static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
 	node->completed = 1;
 	smp_store_release(&node->locked, 0);
 }
-static void set_locked(struct kd_mutex *lock)
+static void kd_mutex_set_locked(struct kd_mutex *lock)
 {
 	smp_store_release(&lock->locked, _Q_LOCKED_VAL);
 }
@@ -394,7 +394,7 @@ int main(void)
 		preempt = 1;
 		kd_mutex_wait_and_lock(&gate);
 		gate.locked = 3;
-		run_combiner(&gate, &request);
+		kd_mutex_run_combiner(&gate, &request);
 		CHECK(scripts == expected && pops == expected);
 		CHECK(queue_finishes == expected);
 		CHECK(request.queued_at_ns == (expected ? 0 : 50));

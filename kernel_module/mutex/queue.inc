@@ -16,20 +16,20 @@
 #define KD_MUTEX_TAIL_CPU_OFFSET \
 	(KD_MUTEX_TAIL_IDX_OFFSET + KD_MUTEX_TAIL_IDX_BITS)
 
-static inline u32 encode_tail(int cpu, int idx)
+static inline u32 kd_mutex_encode_tail(int cpu, int idx)
 {
 	return (cpu + 1) << KD_MUTEX_TAIL_CPU_OFFSET |
 	       idx << KD_MUTEX_TAIL_IDX_OFFSET;
 }
 
-static inline struct kd_mutex_node *decode_tail(u32 tail)
+static inline struct kd_mutex_node *kd_mutex_decode_tail(u32 tail)
 {
 	int cpu = (tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1;
 	int idx = (tail >> KD_MUTEX_TAIL_IDX_OFFSET) & KD_MUTEX_TAIL_IDX_MASK;
 	return per_cpu_ptr(&kd_mutex_nodes[idx], cpu);
 }
 
-static inline u32 xchg_tail(struct kd_mutex *lock, u32 tail)
+static inline u32 kd_mutex_xchg_tail(struct kd_mutex *lock, u32 tail)
 {
 	return xchg(&lock->tail, tail);
 }
@@ -38,13 +38,13 @@ static inline u32 xchg_tail(struct kd_mutex *lock, u32 tail)
  * Small helpers
  * -------------------------------------------------------------------------- */
 static __always_inline void
-clear_locked_set_completed(struct kd_mutex_node *node)
+kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
 	WRITE_ONCE(node->completed, KD_MUTEX_WAITER_PROCESSED);
 	smp_store_release(&node->locked, 0);
 }
 
-static __always_inline void set_locked(struct kd_mutex *lock)
+static __always_inline void kd_mutex_set_locked(struct kd_mutex *lock)
 {
 	smp_store_release(&lock->locked, _Q_LOCKED_VAL);
 }

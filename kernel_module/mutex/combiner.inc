@@ -95,7 +95,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
-execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
+kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	   struct kd_mutex_batch *batch)
 {
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
@@ -325,7 +325,7 @@ prepared:
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static void
-run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
+kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *next_node = NULL;
 	struct kd_mutex_batch batch = {
@@ -338,7 +338,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	if (!curr_node || !curr_node->next || !kd_source_frame_get()) {
 		/* Only one waiter — pass lock directly, no delegation needed */
 		this_cpu_inc(kd_mutex_handoff_count);
-		set_locked(lock);
+		kd_mutex_set_locked(lock);
 		if (curr_node)
 			smp_store_release(&curr_node->locked, 0);
 		return;
@@ -351,11 +351,11 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		batch.outer.released = false;
 		kd_mutex_prefetch_successor(next_node);
 
-		int exe_flag = execute_cs(lock, curr_node, &batch);
+		int exe_flag = kd_mutex_execute_cs(lock, curr_node, &batch);
 
 		if (exe_flag != 0 && exe_flag != KD_EXE_NATIVE_DONE) {
 			/*
-			 * Only execute_cs() returning 0 means the sandbox reached
+			 * Only kd_mutex_execute_cs() returning 0 means the sandbox reached
 			 * mutex_unlock. Any other status must fall back without marking
 			 * the waiter completed.
 			 * Hand the lock to this waiter so it can execute
@@ -368,7 +368,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 		if (exe_flag != KD_EXE_NATIVE_DONE) {
 			this_cpu_inc(kd_mutex_jit_success_count);
-			clear_locked_set_completed(curr_node);
+			kd_mutex_clear_locked_set_completed(curr_node);
 		}
 
 		if (batch.outer.released) {
@@ -391,7 +391,7 @@ run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	/* Pass lock to the next waiter who will become the new combiner.
 	 * next_node is guaranteed non-NULL: either it's the failed curr_node,
 	 * or it was validated as non-NULL before the break above. */
-	set_locked(lock);
+	kd_mutex_set_locked(lock);
 	if (next_node)
 		smp_store_release(&next_node->locked, 0);
 	/* Includes synchronous native continuation and final physical owner ACK. */

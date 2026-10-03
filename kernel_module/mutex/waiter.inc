@@ -22,12 +22,12 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	int old_locked;
 
 	curr_node->queued_at_ns = kd_exe_queue_timing_start();
-	old_tail = xchg_tail(lock, tail);
+	old_tail = kd_mutex_xchg_tail(lock, tail);
 	kd_mutex_waiter_enter(lock);
 
 	if (old_tail) {
 		/* --- waiter path: link behind prev, spin until woken --- */
-		prev_node = decode_tail(old_tail);
+		prev_node = kd_mutex_decode_tail(old_tail);
 		WRITE_ONCE(prev_node->next, curr_node);
 
 		mutex_debug("Mutex waiter spinning\n");
@@ -71,7 +71,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	old_locked = lock->locked;
 	lock->locked = _Q_LOCKED_COMBINER_VAL;
 
-	run_combiner(lock, next_node);
+	kd_mutex_run_combiner(lock, next_node);
 
 	WRITE_ONCE(lock->locked, old_locked);
 

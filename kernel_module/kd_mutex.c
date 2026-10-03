@@ -4,8 +4,8 @@
 // Ported to kdlock: kd_mutex — JIT-sandbox mutex delegation.
 // Follows the same kd_exe_on_call_hl_entry() model as kd_spinlock.c.
 
-/* Read in this order: reserve node, claim original mutex, execute_cs,
- * run_combiner, then waiter restoration. The private gate never substitutes
+/* Read in this order: reserve node, claim original mutex, kd_mutex_execute_cs,
+ * kd_mutex_run_combiner, then waiter restoration. The private gate never substitutes
  * for Linux exclusion. Native continuation keeps the physical owner blocked
  * in its ACK service loop; it does not hand the mutex owner field to waiter.
  * Public lock/unlock and stack trampolines remain here. mutex/ components
@@ -243,7 +243,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->native_resume = false;
 		curr_node->next = NULL;
 		curr_node->tail =
-			encode_tail(smp_processor_id(), curr_node->slot);
+			kd_mutex_encode_tail(smp_processor_id(), curr_node->slot);
 		curr_node->lock = lock;
 		curr_node->task_struct_ptr = current;
 		curr_node->gsbase = kd_read_kernel_gsbase();

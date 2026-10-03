@@ -387,8 +387,8 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	CHECK(preempt == 1 && migration == 1 && refs == 1);
 	CHECK(node->lock == lock && node->task_struct_ptr == current);
 	CHECK(node->gsbase == kd_read_kernel_gsbase());
-	CHECK(node->tail == (int)encode_tail(smp_processor_id(), node->slot));
-	CHECK(decode_tail(node->tail) == node);
+	CHECK(node->tail == (int)kd_mutex_encode_tail(smp_processor_id(), node->slot));
+	CHECK(kd_mutex_decode_tail(node->tail) == node);
 	CHECK(node->locked && !node->completed && !node->native_resume &&
 	      !node->next);
 	CHECK(node->saved_ret_addr == 0x8000);
@@ -507,21 +507,21 @@ static void check_tails(void)
 
 	/* Fixed wire values prevent matching bugs in encoder/decoder from hiding
 	 * behind a round trip. Zero is the caller's empty-queue sentinel: never
-	 * feed it to decode_tail(), which requires a published nonzero tail. */
+	 * feed it to kd_mutex_decode_tail(), which requires a published nonzero tail. */
 	for (unsigned int i = 0; i < sizeof(golden) / sizeof(golden[0]); i++)
-		CHECK(encode_tail(golden[i].cpu, golden[i].idx) == golden[i].word);
+		CHECK(kd_mutex_encode_tail(golden[i].cpu, golden[i].idx) == golden[i].word);
 	for (int cpu = 0; cpu < TAIL_TEST_CPUS; cpu++) {
 		for (int idx = 0; idx < KD_MUTEX_MAX_NODES; idx++) {
 			struct kd_mutex_node *expected =
 				cpu == smp_processor_id() ? &kd_mutex_nodes[idx] :
 							 &remote_nodes[cpu][idx];
-			u32 tail = encode_tail(cpu, idx);
+			u32 tail = kd_mutex_encode_tail(cpu, idx);
 
 			/* Ascending distinct words also rule out zero and collisions
 			 * across CPUs/slots. Reserved low bits must not select a node. */
 			CHECK(tail > previous && !(tail & 3));
-			CHECK(decode_tail(tail) == expected);
-			CHECK(decode_tail(tail | 3) == expected);
+			CHECK(kd_mutex_decode_tail(tail) == expected);
+			CHECK(kd_mutex_decode_tail(tail | 3) == expected);
 			previous = tail;
 		}
 	}
@@ -670,7 +670,7 @@ static void publish_shadow_before_lock(void)
 	CHECK(shadow_racing_entry);
 	/* An actual gate may already be in use when the losing inserter reaches
 	 * the lock. Rechecking an existing key must never reinitialize that gate. */
-	shadow_racing_entry->tail = encode_tail(1, 2);
+	shadow_racing_entry->tail = kd_mutex_encode_tail(1, 2);
 	shadow_racing_entry->locked = _Q_LOCKED_COMBINER_VAL;
 	shadow_racing_entry->physical_owner = &peer;
 	shadow_racing_entry->waiter_count.counter = 2;

@@ -223,6 +223,10 @@ kd_exec_frame_push_borrowed(struct kd_regs *regs, unsigned long entry_ip,
  * lease. Initialize the real one-lock ledger immediately: a FULL exit may
  * block or detach the queue before it returns, so spin's implicit ledger is
  * not a substitute. The original mutex owner remains this physical task. */
+/* Keep external definitions for isolated clients while the shared runtime
+ * folds these predicates into the ordinary mutex body. Assembly and generic
+ * recovery boundaries remain out of line; no ownership check is removed. */
+__always_inline __gnu_inline
 struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
@@ -254,6 +258,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
  * all owner/routing/ledger checks, then retire without revalidating that same
  * one-entry ledger through three generic transitions. No waiter is woken here;
  * the queue publishes its packet only after this frame is inaccessible. */
+__always_inline __gnu_inline
 int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 				    struct kd_mutex *lock)
 {

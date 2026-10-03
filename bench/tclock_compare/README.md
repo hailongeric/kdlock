@@ -2,6 +2,7 @@
 
 当前入口使用同一份 `workload_modules/spin_cacheline` 正文，分别构建Linux原生、TCLock、
 当前KD三个后端；KD仅保留adaptive自适应准入。
+本轮继续[全线程集合mutex优化](results/20261003-mutex-followup.md)。
 最新结果与历史参照见[本次结果](#本次结果)，构建及运行环境遵循[操作手册](../../docs/AGENTS.md)。
 
 | 后端 | 直接调用 |

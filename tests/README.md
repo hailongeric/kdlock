@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [Mutex shared runtime与后续优化](../bench/tclock_compare/results/20261003-mutex-followup.md) | shared runtime基础及相关六组unit、36场三方性能、三场spin实际JIT和真实mutex owner/ACK通过；完整15点与后续候选分别记录，未跑全量 |
 | [KD私有包与核心缓存行重排](../bench/tclock_compare/results/20260928-packed-continuation.md) | 两个基础程序及22个受影响driver分批通过；192次实际恢复、旧镜像拒绝、141场性能、7场spin/mutex实际JIT功能、TCLock执行采样及四个真实owner ACK；初期fixture/overlay失败保留，未跑全量 |
 | [NUMA/hash 与三方 mutex 分阶段验证](../bench/tclock_compare/results/20260928-numa-mutex.md) | spin/hash 与 mutex/cacheline 基线各 135 场；native-first、locality、专用 batch 分别筛选；shadow/task cache 的失败候选保留；对应基本/协议/资源及 JIT 验证以各阶段冻结证据为准，未跑全量 |
 | [36线程hash采样与批次调优](../bench/tclock_compare/results/20260927-hash36-profile.md) | 基础及batch/shadow共4组、runner39+15及NORMAL构建通过；最终默认hash63场+c1定向27场，诊断/撤回候选单列；未跑全量、SELFTEST模块或mutex live |

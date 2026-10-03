@@ -7,6 +7,11 @@
 
 ## 1. 当前状态与证据边界
 
+2026-10-03 继续[全线程集合与mutex执行成本优化](../bench/tclock_compare/results/20261003-mutex-followup.md)：
+shared runtime独立筛选保留，1/2/16/36三方36场通过；16/36 KD峰值为同期TCLock的127.18%/106.51%，
+1/2仍仅46.78%/62.86%。六组相关unit、三场spin实际JIT及真实mutex owner/ACK通过；
+公共helper与FULL路径保留。15点完整复验和后续独立候选尚未完成，不能宣称全线程追平。
+
 2026-10-03 开始[mutex 新一轮优化](../bench/tclock_compare/results/20261003-mutex-optimization.md)：
 默认UBSAN-off新基线及原生CAS先于计数pin的候选，共72场定向三方测试通过。
 1/2/16/36线程KD中位数提高约10.19%/7.96%/5.73%/2.47%；36线程最高峰仍仅为同期TCLock的75.47%。

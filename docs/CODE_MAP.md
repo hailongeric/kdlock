@@ -8,7 +8,7 @@
 | 路径 | 职责 |
 | --- | --- |
 | [kernel_module/kd_main.c](../kernel_module/kd_main.c) | 初始化和退休；mutex hook 安装停用 |
-| [kernel_module/kd_spin_runtime.c](../kernel_module/kd_spin_runtime.c) | 合并编译frame、dispatcher和spin层，内联逐请求batch helper；源文件继续按职责分开 |
+| [kernel_module/kd_spin_runtime.c](../kernel_module/kd_spin_runtime.c) | 合并编译frame、dispatcher、spin和mutex层，使普通batch helper可内联；源文件继续按职责分开 |
 | [kernel_module/kd_spinlock.c](../kernel_module/kd_spinlock.c) | spin源码入口，按声明依赖组合队列、执行、恢复、获取及解锁组件 |
 | [spin/entry.inc](../kernel_module/spin/entry.inc)、[spin/direct.inc](../kernel_module/spin/direct.inc) | 获取准入、原生回退、延迟根ticket、caller ABI及循环外准备 |
 | [spin/restore.inc](../kernel_module/spin/restore.inc)、[spin/unlock.inc](../kernel_module/spin/unlock.inc) | continuation/寄存器恢复与pin退休；按获取来源路由物理解锁 |
