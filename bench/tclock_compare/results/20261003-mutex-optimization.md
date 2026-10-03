@@ -192,6 +192,28 @@ Raw evidence: guest `mutex-20261003-empty-bucket-ack`,
 All native/TCLock/KD samples remain in their frozen records; no candidates are
 merged into the accepted score set.
 
+## Rejected disabled-injection read guard
+
+A separate candidate avoided locked CMPXCHG on the normally zero task-allocation
+fault-injection flag; an observed set flag still used CAS for one-shot consumption.
+The real allocation-refusal/task/owner-ACK probe passed, followed by 27 correct,
+drained timed sessions. It nevertheless failed the same protected 36-thread
+comparison twice and was reverted. The code remains on
+`perf/mutex-fail-read-rejected-20261003`. A statically unnecessary atomic operation
+was identified, but these measurements do not establish a throughput benefit from
+removing it, nor isolate why mixed-path timing changed. Do not count this as an
+accepted optimization or combine its best samples with the retained version.
+
+| Phase | KD36 peak min/median/max | Whole min/median/max | Median change |
+|---|---|---|---:|
+| fail-read | 3.753/3.816/4.141 | 3.638/3.655/3.814 | -12.52% |
+| fail-recheck | 3.646/4.132/4.260 | 3.596/3.901/3.913 | -5.26% |
+
+Evidence: guest `mutex-20261003-fail-read-ack`,
+`mutex-20261003-mutex-fail-read-c1`, `mutex-20261003-mutex-fail-recheck-c1`.
+The retained source behavior is native CAS before the counting pin plus published
+shadow reads; task-registry lookup/allocation/locking remain as before this turn.
+
 ## Evidence
 
 Guest directories under `/root/kdlock-evidence/`:

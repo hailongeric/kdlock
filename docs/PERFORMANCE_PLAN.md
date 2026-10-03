@@ -15,7 +15,8 @@
 16/36筛选及1/2/36复测45场通过：36中位数4.205/4.361，峰值为同期TCLock的91.55%/108.93%。
 确定性交错测试覆盖重复键/碰撞插入；一个额外callchain诊断因stack-unwinder警告失败，
 保留失败并经检查正常排空，之后普通复测通过。task空bucket快速否定虽改善1/2线程，36线程连续两组中位数下降
-超过3%，已保留实验分支并撤回；当前保留原RCU查询。尚未重跑完整矩阵。
+超过3%，已保留实验分支并撤回；当前保留原RCU查询。停用fault-injection的atomic读前检查亦连续两组下降超过3%，
+已保留分支并撤回。当前准备以native-pin与shadow读优化运行完整mutex矩阵。
 
 2026-09-28 完成[私有寄存器包与 continuation 重排](../bench/tclock_compare/results/20260928-packed-continuation.md)：
 核心身份/状态与 RIP/RSP/RBP 共用第一条64字节行，虚拟GPR backing共用第二行，
