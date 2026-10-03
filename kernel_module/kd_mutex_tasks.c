@@ -67,7 +67,10 @@ bool kd_mutex_task_get(struct task_struct *task)
 	struct kd_mutex_task *entry, *new;
 	unsigned long flags;
 
-	new = cmpxchg(&kd_mutex_task_fail_once, 1, 0) == 1 ?
+	/* A disabled test injection is read-only. Only a seen request competes
+	 * to consume the one-shot flag; one winner still skips allocation. */
+	new = unlikely(READ_ONCE(kd_mutex_task_fail_once) == 1) &&
+	      cmpxchg(&kd_mutex_task_fail_once, 1, 0) == 1 ?
 		      NULL : kmalloc(sizeof(*new), GFP_ATOMIC);
 	if (!new) {
 		this_cpu_inc(kd_mutex_task_failures);
