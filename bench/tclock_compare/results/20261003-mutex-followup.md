@@ -392,3 +392,69 @@ The generated hash evidence also limits the proposed explanation. Both the histo
 The generated-code review is `/tmp/kd-mutex-node-pack-hash-audit-1003b.json`; the record audit and all-arm progress/node statistics are `/tmp/kd-mutex-regression-audit-1003b.{json,py}`. Exact frozen input/ELF identities and full lifecycle logs remain separate archive checks. All valid measurements, including the high recheck maximum and rejected candidate, are retained.
 
 The native-retry experiment is preserved by `ae7a26b` / `perf/mutex-retry-rejected-20261003b`, reverted by `6ab4f10`. Packing unit verification (`node-pack-unit`) passed the two basics, actual stack-return fixture, resources and outer-progress driver (five drivers total). Its CLI typo `--workloads` was rejected before output creation/session execution; the corrected `--workload` run is the scored phase.
+
+## Terminal waiter execution checkpoint
+
+Eligible ABI2/MINIMAL final waiters now execute without a linked successor. Exact tail retirement resolves delayed publishers before COMPLETE/native wake or early outer release; an empty new head still waits for the original mutex and private gate. The saved retirement flag prevents node reads after reuse. Unstarted refusals retain their original handoff; FULL/legacy final packets retain their boundary. Physical owner, final ACK, source lease, FIFO and the 1024-body limit remain intact.
+
+The cacheline screen contains 36 valid samples at 2/3/16/36 threads. Relative to the latest matching ec45 screen medians, changes are -1.01%/+28.01%/+2.80%/+1.75%. Three-thread JIT share rises from approximately 0.001% to 1.513%–2.663%; KD median 8.575 exceeds the same-run TCLock median 8.284. Two-thread parity remains unmet. This is a checkpoint, pending the final 15-point matrix.
+
+Cacheline (`mutex-terminal-ready-c1`):
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 2 | 8.739 / 9.783 / 9.787 | 9.603 / 10.299 / 10.689 | 6.861 / 7.088 / 7.409 | 91.56% | 3/3 |
+| 3 | 7.936 / 8.575 / 8.815 | 8.181 / 8.284 / 8.389 | 7.405 / 7.415 / 7.569 | 105.08% | 3/3 |
+| 16 | 9.357 / 9.359 / 9.441 | 4.227 / 4.567 / 4.674 | 7.122 / 7.152 / 7.218 | 202.00% | 3/3 |
+| 36 | 7.972 / 8.306 / 8.317 | 4.339 / 4.527 / 4.566 | 5.400 / 5.559 / 5.614 | 182.16% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 2 | 8.407 / 9.401 / 9.516 | 9.573 / 10.267 / 10.650 | 6.822 / 7.031 / 7.381 | 10.71% / 10.54% / 7.73% |
+| 3 | 7.616 / 8.424 / 8.592 | 8.145 / 8.274 / 8.322 | 7.391 / 7.400 / 7.536 | 10.25% / 2.51% / 2.21% |
+| 16 | 9.124 / 9.187 / 9.291 | 4.213 / 4.545 / 4.660 | 7.049 / 7.064 / 7.165 | 0.90% / 9.77% / 1.34% |
+| 36 | 7.736 / 8.071 / 8.072 | 4.312 / 4.508 / 4.518 | 5.134 / 5.137 / 5.474 | 4.16% / 5.01% / 3.85% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 2 | 0.000%–0.000% | 0.000%–0.000% | 7555328 / 1226752 | 0.000%–0.000% | 0.000%–0.000% |
+| 3 | 1.513%–2.663% | 0.133%–0.418% | 4513536 / 782336 | 0.000%–0.000% | 0.000%–0.000% |
+| 16 | 3.651%–4.060% | 98.775%–98.953% | 958208 / 141312 | 0.000%–0.000% | 0.000%–0.000% |
+| 36 | 2.245%–2.661% | 97.691%–98.435% | 360960 / 56320 | 43.083%–46.361% | 42.167%–45.419% |
+
+Hash first screen (`mutex-terminal-hash`), all 18 samples valid:
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 3.760 / 3.817 / 3.843 | 3.925 / 4.054 / 4.077 | 4.652 / 4.710 / 4.719 | 94.27% | 3/3 |
+| 36 | 1.585 / 1.740 / 2.588 | 2.175 / 2.209 / 2.212 | 2.620 / 2.635 / 2.668 | 117.01% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 16 | 3.791 / 3.872 / 3.944 | 3.910 / 4.044 / 4.066 | 4.630 / 4.687 / 4.695 | 2.19% / 3.75% / 1.42% |
+| 36 | 1.565 / 1.816 / 1.939 | 2.164 / 2.198 / 2.199 | 2.428 / 2.587 / 2.601 | 57.68% / 1.68% / 1.84% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 10.723%–13.081% | 97.372%–97.483% | 440832 / 61440 | 0.000%–0.000% | 0.000%–0.000% |
+| 36 | 17.752%–30.363% | 97.787%–97.843% | 60928 / 3328 | 36.199%–39.219% | 34.850%–41.736% |
+
+Hash recheck (`mutex-terminal-recheck-hash`), all 9 samples valid:
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 36 | 1.852 / 2.390 / 2.518 | 2.199 / 2.218 / 2.270 | 2.675 / 2.696 / 2.723 | 110.93% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 36 | 1.830 / 1.895 / 1.951 | 2.186 / 2.200 / 2.205 | 2.617 / 2.618 / 2.677 | 27.87% / 3.21% / 1.78% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 36 | 16.824%–20.677% | 97.162%–97.750% | 61952 / 3584 | 39.337%–45.944% | 35.773%–42.258% |
+
+Against the fixed ec45 hash reference (16/36 medians 3.817764/1.924143), the first screen changes -0.03%/-9.58%; the required 36-thread recheck changes +24.22%, so the incremental regression does not repeat. Wide spreads and whole-run deficits remain visible. Against the older 51493f2 full-hash matrix, however, cumulative median losses remain: approximately -10.18% at 16 and -30.67%/-4.76% at 36. This checkpoint does not establish global hash improvement or all-thread parity.
+
+Verification: `terminal-final-unit` passes both basics plus 3141 terminal queue checks with three mutation checks and 483 outer-progress checks over 12 linked/terminal scenarios. Those fixtures substitute body/owner operations; the timed sessions independently establish real returned-body JIT and normal source/module drain. `terminal-ack` separately passes the real owner/RCU observer (two orders, four final ACKs, two deferred frees), explicitly JIT=0. Actual generated nested/early mutex exits were not newly run.
+
+Preserved failures: `terminal-unit` has three passing drivers and one fixture compile failure (signed tail in a ternary); its explicit unsigned correction passes `terminal-progress-unit`, then the final targeted phase. `mutex-terminal-c1` fails before module load because the observation patch retained the old log context; `mutex-terminal-fixed-c1` fails before module load because the field name `current` collides with the kernel macro. Matching nullable-log context and `current_node` fix these integration errors; `mutex-terminal-ready-c1` is the first scored phase. Build failures have logs/plans but no post-build source/binary manifest; they are not passing tests or measured samples.

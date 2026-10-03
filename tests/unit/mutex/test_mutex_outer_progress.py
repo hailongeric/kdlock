@@ -63,6 +63,8 @@ def main():
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
     code += "static struct kd_exe_info *\n" + definition(mutex, "kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)") + "\n"
     for marker in (
+        "static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)",
+        "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",

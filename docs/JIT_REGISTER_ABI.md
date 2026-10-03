@@ -208,6 +208,14 @@ shadow 栈，再运行排队代码；只有未执行的队首可以返回旧 C �
 还检查精确的新 unlock 目标、锁和续点元数据。正常路径无整包初始化、导入、
 node/frame 复制或最终完整恢复。JIT 暂存字段不等于有效入口 GPR。
 
+队列末尾没有后继时，仅 ABI2/MINIMAL 请求新增代理资格；FULL/legacy 末尾仍交给
+原生队首。资格不保证 wrapper 最终走 COMPLETE。普通成功完成先退休 frame，再在发布
+waiter 结果前退休其 tail/link；FULL/native 在发布续跑前完成同一队列退休，提前 A 解锁
+也必须先完成它。精确 tail CAS 失败时等待已经入队者补完 next，成功时后来的空队列头
+独立等待原 mutex/gate。batch 的幂等退休标记防止最终 ACK 再访问已复用 node；
+未开始的拒绝保持原 node/tail，已退休的提交请求不得回到入口重放。空队列提前释放不需要
+dummy node，随后仍遵守物理 owner、A 重新获取和 source/final-ACK 生命周期。
+
 中间出口先物化 FULL，再在任何 C 控制服务前复制到 frame 自有包。这个副本
 有独立生命周期：原生 waiter 释放 node 后，combiner 仍必须等待 owner ACK。
 FULL 正常或 native 返回在释放 node 前另存恢复包；不能从已复用的 node 恢复。

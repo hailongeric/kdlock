@@ -45,7 +45,7 @@ static unsigned int checks, failures, mode, wakes, scripts, native_waits, pops;
 static unsigned int release_traces;
 static unsigned int routine_traces;
 static int preempt = 1;
-static bool other_holds;
+static bool other_holds, terminal;
 static int kd_mutex_batch_size = 16;
 static unsigned int queue_finishes;
 static unsigned int handoff_starts, handoff_ends;
@@ -230,7 +230,7 @@ static void kd_source_frame_put(void) { CHECK(source_leases == 1); source_leases
 struct kd_exec_frame *kd_exec_frame_push_mutex_batch(struct kd_regs *r, unsigned long ip,
  unsigned long gs, struct task_struct *task, struct kd_mutex *lock,
  struct kd_exec_outer_unlock *hook)
-{ (void)r; (void)ip; (void)gs; (void)task; (void)lock; (void)hook; abort(); }
+{ (void)r; (void)ip; (void)gs; (void)task; (void)lock; (void)hook; return NULL; }
 static bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
  struct kd_exec_frame *frame, struct kd_jit_batch_call *call)
 { (void)exe; (void)frame; (void)call; abort(); }
@@ -248,7 +248,7 @@ static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi
 	(void)pid;
 	(void)ip;
 	CHECK(kind == KD_EXE_LOCK_MUTEX);
-	CHECK(abi == KD_ENTRY_ABI_LEGACY);
+	CHECK(abi == (terminal ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY));
 }
 bool kd_exec_context_busy(void)
 {
@@ -294,9 +294,11 @@ static int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
 static void successor_progress(void)
 {
 	/* A's independent C owner must be able to enter before B is released. */
-	CHECK(!a.owner && gate.locked == 0 && successor.locked == 0);
+	CHECK(!a.owner && gate.locked == 0);
+	/* A later empty-queue head does not need the detached batch to wake it. */
+	CHECK(terminal ? gate.tail == 0 : successor.locked == 0);
 	CHECK(b.owner == &executor);
-	if (a.owner || gate.locked || successor.locked)
+	if (a.owner || gate.locked || (!terminal && successor.locked))
 		return;
 	current = &other;
 	gate.locked = 1;
@@ -330,6 +332,10 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 	CHECK(regs == &active.regs && ip == 0x800 && lock == (unsigned long)&a);
 	scripts++;
 	active.executed = true;
+	/* Model the dispatcher materializing a full packet before native control. */
+	active.packet_state = KD_PACKET_FULL;
+	if (mode == 5)
+		return KD_EXE_RUN_NATIVE; /* Only A remains; its final ACK does not detach. */
 	active.jit_lock_depth = active.held_lock_depth = 2;
 	active.jit_lock_addr[1] = (unsigned long)&b;
 	active.jit_lock_kind[1] = KD_EXEC_LOCK_NATIVE;
@@ -344,7 +350,8 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 }
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
-	CHECK(frame == &active && mutex && b.owner == &executor);
+	CHECK(frame == &active && mutex &&
+	      (mode == 5 ? !b.owner : b.owner == &executor));
 	CHECK(handoff_starts == 1 && !handoff_ends);
 	return 0;
 }
@@ -352,9 +359,19 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 {
 	CHECK(frame == &active && request.native_resume && !request.locked);
 	native_waits++;
+	if (terminal) {
+		CHECK(!gate.tail);
+		/* Publication lets the origin reuse this exact tail slot before ACK.
+		 * A subsequent early-release hook must use only retired batch state. */
+		request.tail = 0xdead;
+		request.next = (void *)1;
+	}
 	if (mode == 2)
 		early_unlock_a();
-	release_b();
+	if (mode == 5)
+		CHECK(kd_exec_frame_record_event(frame, KD_EXEC_EVENT_OUTER_UNLOCK, NULL) == 0);
+	else
+		release_b();
 	/* The waiter may already have returned its queue slot to its CPU. */
 	request.next = NULL;
 	return 0;
@@ -364,7 +381,9 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 
 int main(void)
 {
-	for (mode = 0; mode < 5; mode++) {
+	for (unsigned int terminal_case = 0; terminal_case < 2; terminal_case++)
+	for (mode = 0; mode < 6; mode++) {
+		terminal = terminal_case;
 		unsigned long stack[8] = { [7] = 0x800 };
 		unsigned int expected = mode == 4 ? 0 : 1;
 		bool early = mode >= 1 && mode <= 3;
@@ -376,7 +395,11 @@ int main(void)
 		b.owner = NULL;
 		gate.origin_mutex_addr = (unsigned long)&a;
 		request.tail = 1U << KD_MUTEX_TAIL_CPU_OFFSET;
-		request.next = &successor;
+		request.next = terminal ? NULL : &successor;
+		gate.tail = terminal ? (unsigned int)request.tail : 2U << KD_MUTEX_TAIL_CPU_OFFSET;
+		request.entry_abi = terminal ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY;
+		request.packet_state = terminal ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
+		request.regs.ip = 0x800;
 		successor.task_struct_ptr = &other;
 		request.locked = successor.locked = 1;
 		request.regs.sp = (unsigned long)stack;
@@ -398,14 +421,16 @@ int main(void)
 		CHECK(scripts == expected && pops == expected);
 		CHECK(queue_finishes == expected);
 		CHECK(request.queued_at_ns == (expected ? 0 : 50));
-		CHECK(native_waits == (mode == 2 || mode == 3));
+		CHECK(native_waits == (mode == 2 || mode == 3 || mode == 5));
 		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
 		CHECK(gate.physical_owner == &executor && a.owner == &executor);
 		CHECK(!b.owner && preempt == 1 && !other_holds);
 		CHECK(kd_mutex_origin_acquires == (early ? 3 : 1));
 		CHECK(kd_mutex_origin_releases == (early ? 2 : 0));
-		CHECK(wakes == (mode == 4 ? 0 : 1));
-		CHECK(successor.locked == (early || mode == 4));
+		CHECK(wakes == ((mode == 4 || terminal) ? 0 : 1));
+		if (terminal)
+			CHECK(gate.tail == (mode == 4 ? 1U << KD_MUTEX_TAIL_CPU_OFFSET : 0));
+		CHECK(successor.locked == (early || mode == 4 || terminal));
 		CHECK(request.completed == (mode == 0 || mode == 1));
 		CHECK(release_traces == early);
 		CHECK(_kd_mutex_unlock_checked(&gate) == 0);
@@ -413,8 +438,8 @@ int main(void)
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
 	}
 	CHECK(!kd_exec_invariant_failures && !kd_mutex_frame_failure_count);
-	CHECK(routine_traces == 5);
-	printf("mutex outer production progress: %u checks, %u failures, 5 scenarios\n",
+	CHECK(routine_traces == 12);
+	printf("mutex outer production progress: %u checks, %u failures, 12 scenarios\n",
 	       checks, failures);
 	printf("mutex routine INFO traces retained: %u\n", routine_traces);
 	return failures != 0;

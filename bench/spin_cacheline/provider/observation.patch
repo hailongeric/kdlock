@@ -195,7 +195,7 @@ diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
 +	KD_PR_ROUTINE("kd_mutex outer release: task=%d owner=%d owner_task=%lx outer=%lx next_task=%d remaining=%u\n",
  		frame->logical_task->pid, current->pid, (unsigned long)current,
  		frame->outer_lock_addr,
- 		batch->next->task_struct_ptr->pid, remaining);
+ 		batch->next ? batch->next->task_struct_ptr->pid : 0, remaining);
 @@ -126,7 +126,7 @@
  		 * Identify the unexecuted request so a busy refusal cannot be
  		 * mistaken for missing translation or a progressed JIT failure. */

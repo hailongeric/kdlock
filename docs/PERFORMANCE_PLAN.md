@@ -20,6 +20,12 @@ OUTER原生CAS/配对路由独立36场通过，1/2/16/36峰值达到同期TCLock
 独立flat cycles 12场通过，3线程几乎只有gate/queue handoff，非翻译未就绪；通用PV-spin样本不能判定具体锁或远端延迟。
 随后精确native-fallback返回值路由54场通过；36首次中位数下降3.44%，复测提高0.79%，未复现。
 1/2/3复测中位数提高0.39%/5.60%/13.87%，但仍未全部追平TCLock；准入、实际编译续点、owner/ACK通过，失败fixture日志保留。
+随后hash16/36两轮筛选均较51493f2完整矩阵下降超过3%，因此上述收益只成立于cacheline，不能作为全负载验收。
+一次额外native retry和mutex首行合并分别因36线程cacheline/hash中位数重复回退而撤回，失败候选与全部有效高峰保留。
+末尾ABI2/MINIMAL waiter允许执行并在唤醒前精确退休tail/link：cacheline 2/3/16/36共36场通过，
+3线程中位数由6.699升至8.575 Mops/s，同期TCLock为8.284。hash首轮18场及36线程复测9场均通过；
+36中位数1.740/2.390，首次相对ec45回退未复现，但整段吞吐及相对旧完整矩阵的hash差距仍需解决。
+定向队列/续跑检查及真实JIT=0 owner/ACK通过；编译失败原样保留。当前仍待最终源码完整15点验证，未宣称全点追平。
 
 2026-10-03 开始[mutex 新一轮优化](../bench/tclock_compare/results/20261003-mutex-optimization.md)：
 默认UBSAN-off新基线及原生CAS先于计数pin的候选，共72场定向三方测试通过。

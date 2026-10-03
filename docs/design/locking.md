@@ -518,6 +518,41 @@ their five callee-saved register spills.
 5. `_kd_mutex_unlock_checked()` releases the original mutex before opening the
    scheduling gate. Native participants can acquire it between scheduler owners.
 
+#### Terminal FIFO waiter retirement
+
+A final queued ABI2/MINIMAL waiter can execute without an already linked
+successor. Legacy/FULL terminal packets keep the existing native handoff.
+Eligibility changes neither image admission nor replay permission: a missing
+image, busy frame context or other unstarted refusal retains its original node
+and tail and receives ordinary physical handoff.
+
+Before publishing a committed result, the batch removes that node's queue
+publication. It retains an already linked successor; otherwise it attempts an
+exact `tail == current.tail` CAS to zero. Losing the CAS means a publisher has
+already exchanged the tail, so the batch waits for that publisher's delayed
+successor link before allowing node reuse. Winning the CAS makes a later
+`old_tail == 0` publisher an independent head: it never links through the old
+node and still waits for the original mutex and private gate. This link-completion
+wait preserves the MCS publication obligation; it is not a bounded refill or a
+starvation guarantee.
+
+The batch records `current_retired` once. Queue retirement precedes COMPLETE
+publication, a native FULL resume publication, and any early outer release.
+After a native wake the origin may immediately recycle its node, so subsequent
+owner-ACK/early-release processing uses only the retained batch state. An early
+release can detach an empty queue and log `next_task=0`; a later independent head
+observes the gate opening itself. A nonempty successor receives one handoff.
+The old executor finishes B and its final ACK, then reacquires A for its own
+original operation. Once retirement occurred, execution is committed: a protocol
+error cannot be converted into an unstarted retry of that request.
+
+The physical-owner ledger, exact task/slot/waiter references and enclosing
+source lease retain their existing lifetimes. The source lease spans the final
+ACK and frame retirement. Normal completion keeps the original mutex for the
+physical owner's own body. The batch remains FIFO with a 1024-body limit, and
+checks the limit before inspecting the next candidate. No dummy node, queue
+reordering, new prefetch access, waiter layout or wrapper ABI is introduced.
+
 Each CPU has four independently reserved 8 KiB waiter stacks, allocated with its
 CPU NUMA node as the preferred node. The combiner prefetches a known-live queued
 successor’s header, register packet and two nearby caller-stack lines before the

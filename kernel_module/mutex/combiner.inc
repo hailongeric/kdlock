@@ -10,6 +10,10 @@
 struct kd_mutex_batch {
 	struct kd_exec_outer_unlock outer;
 	struct kd_mutex_node *next;
+	/* A queue tail can receive a delayed successor link until it is retired.
+	 * This exact flag prevents a second access after native waiter wake/reuse. */
+	struct kd_mutex_node *current_node;
+	bool current_retired;
 	/* Immutable slot identity; readiness/code are rechecked per request. */
 	struct kd_exe_info *exe;
 };
@@ -47,6 +51,47 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 	}
 }
 
+/* An unlinked last node is eligible only under the explicit minimal ABI.
+ * Legacy/FULL last waiters retain the established physical handoff boundary. */
+static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)
+{
+	return node && (READ_ONCE(node->next) ||
+		(node->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+		 node->packet_state == KD_PACKET_MINIMAL));
+}
+
+/* Retire queue publication before letting a committed waiter reuse its node.
+ * A successful tail CAS makes later arrivals independent heads. A failed CAS
+ * means an enqueuer already owns the link: wait for that delayed publication
+ * before waking/releasing this node. This is MCS link completion, not a refill
+ * spin. Never call on an unstarted/refused request which must become the head.
+ * The early-unlock/native paths may call twice; only saved batch state survives
+ * the first wake. The original mutex owner and source lease are unchanged. */
+static void kd_mutex_batch_retire_current(struct kd_mutex *lock,
+					struct kd_mutex_batch *batch)
+{
+	struct kd_mutex_node *node;
+	struct kd_mutex_node *next;
+
+	if (batch->current_retired)
+		return;
+	node = batch->current_node;
+	BUG_ON(!node);
+	next = batch->next;
+	if (!next) {
+		next = smp_load_acquire(&node->next);
+		if (!next && cmpxchg(&lock->tail, (u32)node->tail, 0) !=
+			     (u32)node->tail) {
+			do {
+				cpu_relax();
+				next = smp_load_acquire(&node->next);
+			} while (!next);
+		}
+		batch->next = next;
+	}
+	batch->current_retired = true;
+}
+
 /* Detach A's queue while this executor still owns B. The saved successor is
  * never touched again after publication; it may complete and reuse its slot. */
 static int kd_mutex_release_outer(struct kd_exec_frame *frame,
@@ -58,12 +103,16 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	unsigned int i, remaining = 0;
 	int ret;
 
-	if (!frame->mutex_backend || !lock || !batch->next ||
-	    !batch->next->task_struct_ptr ||
+	if (!frame->mutex_backend || !lock ||
 	    frame->jit_lock_kind[frame->outer_lock_index] !=
 		    KD_EXEC_LOCK_QUEUE_OWNER ||
 	    frame->outer_lock_addr != lock->origin_mutex_addr ||
 	    READ_ONCE(lock->locked) != _Q_LOCKED_COMBINER_VAL)
+		return -EINVAL;
+	/* A terminal request may have no successor. Remove its published tail
+	 * before opening A; future old_tail=0 arrivals poll A's gate themselves. */
+	kd_mutex_batch_retire_current(lock, batch);
+	if (batch->next && !batch->next->task_struct_ptr)
 		return -EINVAL;
 	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
 		remaining += !frame->jit_lock_released[i];
@@ -72,11 +121,12 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	pr_info("kd_mutex outer release: task=%d owner=%d owner_task=%lx outer=%lx next_task=%d remaining=%u\n",
 		frame->logical_task->pid, current->pid, (unsigned long)current,
 		frame->outer_lock_addr,
-		batch->next->task_struct_ptr->pid, remaining);
+		batch->next ? batch->next->task_struct_ptr->pid : 0, remaining);
 	ret = _kd_mutex_unlock_checked(lock);
 	if (ret)
 		return ret;
-	smp_store_release(&batch->next->locked, 0);
+	if (batch->next)
+		smp_store_release(&batch->next->locked, 0);
 	return 0;
 }
 
@@ -250,6 +300,9 @@ prepared:
 		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
 		curr_node->regs = *regs;
 		curr_node->packet_state = KD_PACKET_FULL;
+		/* Native resume releases/reuses the node before owner ACK returns.
+		 * Finish every possible predecessor link before that publication. */
+		kd_mutex_batch_retire_current(lock, batch);
 		WRITE_ONCE(curr_node->native_resume, true);
 		smp_store_release(&curr_node->locked, 0);
 		/* Neither this frame nor its combiner may touch curr_node again. */
@@ -335,8 +388,8 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 	this_cpu_inc(kd_mutex_combiner_count);
 
-	if (!curr_node || !curr_node->next || !kd_source_frame_get()) {
-		/* Only one waiter — pass lock directly, no delegation needed */
+	if (!kd_mutex_batch_can_execute(curr_node) || !kd_source_frame_get()) {
+		/* Keep unsupported last packets and source refusal on native handoff. */
 		this_cpu_inc(kd_mutex_handoff_count);
 		kd_mutex_set_locked(lock);
 		if (curr_node)
@@ -346,8 +399,10 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 	while (curr_node) {
 		counter++;
-		next_node = curr_node->next;
+		next_node = smp_load_acquire(&curr_node->next);
 		batch.next = next_node;
+		batch.current_node = curr_node;
+		batch.current_retired = false;
 		batch.outer.released = false;
 		kd_mutex_prefetch_successor(next_node);
 
@@ -367,6 +422,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		}
 
 		if (exe_flag != KD_EXE_NATIVE_DONE) {
+			kd_mutex_batch_retire_current(lock, &batch);
 			this_cpu_inc(kd_mutex_jit_success_count);
 			kd_mutex_clear_locked_set_completed(curr_node);
 		}
@@ -380,17 +436,20 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			return;
 		}
 
+		/* A terminal tail may have gained a successor while its body ran.
+		 * After publication, never read the completed/reused current node. */
+		next_node = batch.next;
 		if (exe_flag == KD_EXE_NATIVE_DONE ||
-		    !next_node || !next_node->next ||
-		    counter >= kd_mutex_batch_size)
+		    counter >= kd_mutex_batch_size ||
+		    !kd_mutex_batch_can_execute(next_node))
 			break;
 
 		curr_node = next_node;
 	}
 
-	/* Pass lock to the next waiter who will become the new combiner.
-	 * next_node is guaranteed non-NULL: either it's the failed curr_node,
-	 * or it was validated as non-NULL before the break above. */
+	/* The failed current request or a retained successor becomes queue head.
+	 * An empty retired tail needs no wake; future heads already poll the gate.
+	 * Keep the real mutex and gate for this physical owner's original body. */
 	kd_mutex_set_locked(lock);
 	if (next_node)
 		smp_store_release(&next_node->locked, 0);
