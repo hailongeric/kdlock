@@ -64,3 +64,23 @@ Relative to the shared-runtime screen, KD peak medians increase 2.81% at 16 and 
 The matching real mutex owner probe passes both unlock orders, four final ACKs and two deferred frees, with normal source retirement/unload (JIT=0). This exact-balance change is retained for full-matrix verification.
 
 Phase suffixes: `balances-unit`, `mutex-balances-c1`, `balances-ack`. Small-thread and full-matrix acceptance remain separate.
+
+## Rejected bounded NUMA grouping
+
+The independently tested grouping candidate (`87888c9`, branch `perf/mutex-numa-rejected-20261003b`) preserves a deferred remote prefix, independent 1,024-body/scan limits, legacy/FULL boundaries, refusal rollback and priority remote handoff. It adds no broad prefetch hints. The two basics plus actual selection/combiner and outer-progress fixtures pass with NUMA both on and off, including protected reads after scan exhaustion. All 27 timed samples pass data, JIT and drain checks.
+
+It is nevertheless rejected: 36-thread KD medians fall from 4.701 to 4.445 (-5.44%) and 4.336 (-7.76%) Mops/s on the required recheck. The implementation was reverted in `7c74d3e`; accepted mutex queue order remains FIFO. Correct bounded grouping alone is not a throughput improvement when most requests still take native routes. That is a workload/protocol interpretation, not a measured remote-latency attribution.
+
+| Phase / workers | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD max / TC max |
+|---|---:|---:|---:|---:|
+| mutex-numa-c1 / 16 | 5.719 / 6.026 / 6.054 | 4.367 / 4.710 / 4.869 | 6.833 / 6.940 / 7.343 | 124.34% |
+| mutex-numa-c1 / 36 | 4.409 / 4.445 / 4.530 | 4.286 / 4.576 / 4.993 | 4.884 / 5.023 / 5.597 | 90.74% |
+| mutex-numa-recheck-c1 / 36 | 4.161 / 4.336 / 4.404 | 4.410 / 4.429 / 4.429 | 5.612 / 5.667 / 5.883 | 99.44% |
+
+| Phase / workers | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---|---:|---:|---:|---:|
+| mutex-numa-c1 / 16 | 5.652 / 5.947 / 5.959 | 4.341 / 4.687 / 4.858 | 6.768 / 6.873 / 7.284 | 5.56% / 10.66% / 7.36% |
+| mutex-numa-c1 / 36 | 4.191 / 4.301 / 4.387 | 4.263 / 4.529 / 4.542 | 4.716 / 4.838 / 5.496 | 2.73% / 15.44% / 14.20% |
+| mutex-numa-recheck-c1 / 36 | 4.121 / 4.281 / 4.368 | 4.395 / 4.405 / 4.411 | 5.272 / 5.363 / 5.513 | 5.60% / 0.42% / 4.77% |
+
+Frozen phases: `numa-unit`, `mutex-numa-c1`, `mutex-numa-recheck-c1`. No hash or full-matrix acceptance is attributed to this rejected candidate.
