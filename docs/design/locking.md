@@ -442,22 +442,12 @@ routing while retaining Linux owner/flags and slowpath behavior. The cookie
 selects the route; it neither grants ownership nor replaces the original mutex.
 
 A failed CAS enters the outer-only `kd_mutex_outer_contended_clobber_v1`, which
-records that failed attempt once before considering any later retry. On a physical C
+records that failed attempt once without retrying the first CAS. On a physical C
 return, a native fallback made before acquiring a KD task reference or queue gate
 returns the current task pointer. That exact acquisition result selects original
 Linux unlock. Every call into the KD queue returns zero, even a later native
 fallback which already dropped its routing reference. The old void
 `kd_mutex_direct_contended_clobber_v1` remains compatible with existing callers.
-
-After source/task/JIT eligibility and exact shadow lookup, an admitted caller
-makes at most one later native retry before acquiring a KD task reference. It
-skips the retry if the original owner word, private gate or tail is observed
-busy. These reads only avoid challenging an observed queue; the full-word
-zero-to-current acquire CAS is the sole ownership proof. A racing waiter can
-still appear, so this adds no fairness or starvation guarantee. Native owner
-flags prevent a successful CAS. Success returns the exact native owner marker;
-failure enters the existing KD path. The retry adds no entry/contention sample,
-new pin or polling loop; cold calls retain their original observation ordering.
 
 The supplied JIT IP is a separate continuation: a normal return jumps over its
 zeroing instruction and keeps the C result, while translated execution starts at

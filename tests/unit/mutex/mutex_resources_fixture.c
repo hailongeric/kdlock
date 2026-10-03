@@ -53,9 +53,6 @@ static bool source_open, native_owner_wait;
 /* Most resource cases substitute a failed first CAS followed by a racing
  * release. The native-first case below substitutes a successful acquisition. */
 static bool fast_available;
-/* Only the new later-retry cases enable these deterministic CAS observations.
- * The peer can acquire between the empty owner hint and the actual CAS. */
-static bool trace_post_retry, peer_wins_retry;
 static unsigned int entry_attempts, entry_pins, fast_probes;
 static struct kd_mutex *waiting_gate, *release_gate;
 static struct kd_mutex_node *recycle_node, *poll_node;
@@ -92,7 +89,6 @@ static jmp_buf resume_target;
 #define WRITE_ONCE(v, value) ((v) = (value))
 #define smp_load_acquire(p) (*(p))
 #define smp_store_release(p, v) (*(p) = (v))
-#define atomic_long_read(p) ((unsigned long)*(p))
 #define atomic_set(p, v) ((p)->counter = (v))
 #define atomic_inc(p) (++(p)->counter)
 #define atomic_dec(p) (--(p)->counter)
@@ -182,15 +178,6 @@ static bool kd_mutex_trylock_fast(struct mutex *lock)
 {
 	fast_probes++;
 	CHECK(!preempt);
-	if (trace_post_retry)
-		CHECK(sampled_first && entry_attempts == 1 && samples == 1 &&
-		      !gets && !refs && !adds && !migration && !table_irq);
-	if (peer_wins_retry) {
-		peer_wins_retry = false;
-		CHECK(!lock->owner);
-		lock->owner = &peer;
-		native_owner_wait = true;
-	}
 	if (!fast_available || lock->owner)
 		return false;
 	lock->owner = current;
@@ -482,7 +469,6 @@ static void reset(void)
 	source_open = true;
 	native_owner_wait = false;
 	fast_available = false;
-	trace_post_retry = peer_wins_retry = false;
 	entry_attempts = entry_pins = fast_probes = 0;
 	native_waits = 0;
 	errors = preempt = migration = table_irq = table_lock_entries = 0;
@@ -1072,11 +1058,7 @@ static void check_outer_native_result(void)
 		unsigned long route = kd_mutex_outer_contended_clobber_v1(
 			lock, (unsigned long)&native_stack[16], 0x8000, 0);
 		CHECK(route == (unsigned long)current && lock->owner == current);
-		/* Task allocation failure now follows one admitted retry; the other
-		 * cases exit before that phase and must still make no such probe. */
-		CHECK(refs == inherited_refs && !task_puts &&
-		      fast_probes == (unsigned int)(scenario == 5) &&
-		      entry_attempts == 1 && samples == 1);
+		CHECK(refs == inherited_refs && !task_puts && !fast_probes && entry_attempts == 1 && samples == 1);
 		kd_origin_mutex_unlock(lock, 0x9000);
 		CHECK(!lock->owner && refs == inherited_refs && !notify_calls && !task_puts);
 	}
@@ -1109,55 +1091,6 @@ static void check_outer_native_result(void)
 	kd_mutex_release_node(head);
 }
 
-/* The hint skips are an admission policy, not an ownership protocol. Test
- * them without inventing a live queue for a synthetic busy tail. */
-static void check_post_admission_retry(void)
-{
-	for (unsigned int busy = 0; busy < 5; busy++) {
-		reset();
-		struct mutex *lock = &origins[0].mutex;
-		struct kd_mutex *gate = get_kd_mutex_shadow(lock);
-		fast_available = true;
-		if (busy == 1) gate->locked = _Q_LOCKED_VAL;
-		if (busy == 2) gate->tail = 1;
-		if (busy == 3) lock->owner = &peer;
-		if (busy == 4) lock->owner = (struct task_struct *)1UL;
-		struct task_struct *before = lock->owner;
-		CHECK(!kd_mutex_retry_native_before_queue(lock, busy ? gate : NULL));
-		CHECK(!fast_probes && !acquires && lock->owner == before);
-	}
-
-	for (unsigned int race = 0; race < 2; race++) {
-		reset();
-		struct mutex *lock = &origins[0].mutex;
-		fast_available = trace_post_retry = true;
-		peer_wins_retry = race;
-		unsigned long route = kd_mutex_outer_contended_clobber_v1(
-			lock, (unsigned long)&native_stack[16], 0x8000, 0);
-		struct kd_mutex *gate = find_kd_mutex_shadow(lock);
-		CHECK(gate && !peer_wins_retry && !native_owner_wait);
-		CHECK(lock->owner == current && fast_probes == 1);
-		CHECK(entry_attempts == 1 && samples == 1 && entry_pins == 1);
-		CHECK(!preempt && !migration && !cpu_shadows.node_slots);
-		if (!race) {
-			CHECK(route == (unsigned long)current && !gets && !refs && !adds);
-			CHECK(!gate->locked && !gate->tail && !gate->physical_owner);
-			CHECK(!kd_mutex_origin_acquires && !slow_calls && !task_puts);
-			kd_origin_mutex_unlock(lock, 0x9000);
-			CHECK(!lock->owner && releases == 1 && !notify_calls);
-		} else {
-			/* A peer won the real CAS. Its original unlock must complete
-			 * before the KD owner can execute; the result stays ROUTED. */
-			CHECK(!route && gets == 1 && refs == 1 && adds == 1);
-			CHECK(gate->locked && gate->physical_owner == current);
-			CHECK(native_waits == 1 && kd_mutex_origin_acquires == 1);
-			__kd_mutex_unlock(lock, 0, 0x9000);
-			CHECK(!lock->owner && !refs && task_puts == 1 && !gate->locked);
-			CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
-		}
-	}
-}
-
 int main(void)
 {
 	/* Even a hot lock with task/shadow work otherwise eligible must bypass all
@@ -1170,9 +1103,8 @@ int main(void)
 	CHECK(!preempt && !migration && !shadow_count());
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
 	CHECK(!origins[0].mutex.owner && acquires == 1 && releases == 1);
-	/* Preserve the original cold oracle: this endpoint consumes a failed
-	 * CAS and must not retry it BEFORE sampling or count it twice. The new
-	 * later retry is eligible only after hot admission and shadow lookup. */
+	/* This endpoint consumes a caller's failed CAS; it must not retry the CAS
+	 * or count twice even if the original mutex becomes free before entry. */
 	reset();
 	fast_available = true;
 	cpu_hot = false;
@@ -1180,7 +1112,6 @@ int main(void)
 	CHECK(!fast_probes && entry_attempts == 1 && samples == 1);
 	CHECK(origins[0].mutex.owner == current && !refs && !gets);
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
-	check_post_admission_retry();
 	check_outer_native_result();
 	check_minimal_entry();
 	check_poll_result();
