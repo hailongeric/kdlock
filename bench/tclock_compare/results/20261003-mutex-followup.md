@@ -621,3 +621,8 @@ the validator. Importing that actual enum fixes the dependency.
 `pristine-frame-native-fixed-unit` passes both basics, 3,438 native-after-outer
 checks plus four Python cases, and 6,185 remote-owner checks with 12 mutations.
 These are protocol fixtures; the timed screens separately establish returned JIT.
+
+`pristine-frame-outer-unit` also passes both basics and 483 outer-progress checks
+over 12 scenarios, including trace mutations. Its substituted generic constructor
+now initializes the list/materialized flag as production generic push does;
+this follow-up changes fixture fidelity only, with no provider change.

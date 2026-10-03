@@ -261,6 +261,9 @@ struct kd_exec_frame *kd_exec_frame_push(const struct kd_regs *regs,
 					 struct task_struct *task)
 {
 	memset(&active, 0, sizeof(active));
+	/* Model generic push's materialized routing, not pristine ABI2 setup. */
+	active.native_link.next = active.native_link.prev = &active.native_link;
+	active.complex_ready = true;
 	active.regs = *regs;
 	active.entry_ip = ip;
 	active.outer_lock_addr = lock;
