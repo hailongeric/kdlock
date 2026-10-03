@@ -214,20 +214,90 @@ Evidence: guest `mutex-20261003-fail-read-ack`,
 The retained source behavior is native CAS before the counting pin plus published
 shadow reads; task-registry lookup/allocation/locking remain as before this turn.
 
-## Full cacheline checkpoint and repeatability
+## Full cacheline matrix and same-source 36-thread recheck
 
-The retained native-pin/shadow-read source passed all 135 sessions at
-1/2/3/4/5/6/7/8/12/16/20/24/28/32/36 threads. KD meets 90% of the same-phase
-TCLock best peak at 5/6/7/8/12/16/20/24/36. Its protected 1/2/16/36 medians
-improve 11.86%/13.17%/9.92%/28.39% over this turn's starting baseline.
-The 36-thread KD peak triple is 3.725/4.085/4.236 Mops/s, versus TCLock's
-4.389/4.571/4.628; whole-run KD is 3.721/3.787/4.029. Peak ratio is 91.52%.
+These phases retain the two accepted changes: native acquisition before the counting pin (`278734e`) and published shadow reads (`cc75cc1`). The task registry remains the original RCU registry with its global lock. The full matrix and subsequent 36-thread recheck are separate phases; no cross-phase maxima are pooled. They are a checkpoint before any later bucket-lock experiment.
 
-However, the lower median relative to the earlier shadow screen prompted one
-recheck of the identical retained implementation. All nine sessions passed, but
-KD was 3.663/3.828/3.852 versus TCLock 4.357/4.442/4.522: only 85.19% of peak.
-The earlier 5.002 maximum is not representative, and repeatable TCLock parity
-is not established. These groups remain separate, including every slower sample.
+The full 15-point matrix passed all 135 sessions, and the separate 36-thread recheck passed all 9. An offline audit recomputed exact payload/worker totals, whole-run throughput, and the highest eligible full-cohort peak from every raw progress sample. All 2,160 worker observations had positive whole-run and selected-window progress, correct CPU placement, and no worker errors. Every KD session with four or more workers returned JIT bodies; three-worker sessions also returned bodies, while one/two-worker sessions correctly retained zero-JIT status. TCLock delegation was positive at every contended point with four or more workers. All records report a drained provider/backend, KD source retirement state 2 with zero modules/frames/writers, and UBSAN-off. This downloaded-record audit does not substitute for the final frozen-source/ELF and raw-log archive audit.
+
+The full matrix reaches at least 90% of corresponding TCLock best peak at 5, 6, 7, 8, 12, 16, 20, 24, 36 threads (9/15 points). Four threads reaches only 89.75% and remains below target. At 36 threads the full matrix reaches 91.52%, but the independent recheck reaches only 85.19%. Thus the 36-thread 90% threshold is not repeatable, and the overall target is not met.
+
+KD peak-median changes versus the initial UBSAN-off baseline (threads: change): 1: +11.86%, 2: +13.17%, 16: +9.92%, 36: +28.39%. Compared with the immediate native-pin-only phase: 1: +1.51%, 2: +4.82%, 16: +3.95%, 36: +25.30%. These comparisons support retaining the two accepted changes but do not turn phase variability into an isolated per-change causal estimate.
+
+The full-matrix 16-thread median is 5.344 Mops/s, -1.96% versus the earlier same-source screen. At 36 threads the full-matrix and latest recheck medians are 4.085/3.828, versus 4.361 in the earlier same-source recheck. The later 36-thread rates are lower without a source change; this is variability to preserve and investigate, not a new-code regression.
+
+Values below are Mops/s, min / median / max of the three peak windows; the ratio compares each arm’s best peak within this phase.
+
+| Threads | Linux peak | TCLock peak | KD peak | KD/TCLock best | KD peak spread |
+|---:|---|---|---|---:|---:|
+| 1 | 27.665/27.984/27.985 | 36.111/36.133/36.136 | 16.895/16.904/16.906 | 46.78% | 0.06% |
+| 2 | 5.247/7.498/7.596 | 9.466/9.587/10.031 | 5.758/5.803/6.046 | 60.28% | 4.96% |
+| 3 | 7.515/7.569/7.642 | 8.507/8.834/9.138 | 5.520/5.773/5.816 | 63.65% | 5.13% |
+| 4 | 5.954/7.688/7.709 | 5.912/5.994/6.013 | 4.901/5.009/5.396 | 89.75% | 9.90% |
+| 5 | 7.233/7.379/7.381 | 5.476/5.732/5.841 | 5.279/5.420/5.582 | 95.56% | 5.59% |
+| 6 | 7.127/7.151/7.501 | 5.094/5.166/5.371 | 5.298/5.354/5.714 | 106.39% | 7.76% |
+| 7 | 6.796/7.297/7.450 | 4.076/4.105/4.355 | 5.277/5.394/5.400 | 123.98% | 2.28% |
+| 8 | 6.706/7.323/7.354 | 4.288/4.340/4.398 | 5.295/5.326/5.492 | 124.88% | 3.70% |
+| 12 | 6.790/7.355/7.578 | 4.396/4.409/4.636 | 5.156/5.320/5.407 | 116.64% | 4.73% |
+| 16 | 7.133/7.182/7.228 | 4.308/4.426/4.800 | 5.343/5.344/5.345 | 111.37% | 0.06% |
+| 20 | 6.757/7.172/7.200 | 4.715/4.773/4.830 | 5.274/5.285/5.380 | 111.40% | 2.02% |
+| 24 | 6.081/6.099/6.808 | 4.495/4.524/4.606 | 4.308/4.372/4.378 | 95.05% | 1.60% |
+| 28 | 5.525/6.141/6.232 | 4.398/4.527/4.605 | 3.775/3.910/3.937 | 85.49% | 4.16% |
+| 32 | 5.393/5.712/5.751 | 4.476/4.617/4.641 | 3.672/3.750/3.822 | 82.35% | 4.00% |
+| 36 | 5.152/5.546/5.783 | 4.389/4.571/4.628 | 3.725/4.085/4.236 | 91.52% | 12.51% |
+
+Whole-run rates use the exact completed count and measured wall time, separately from selected peaks.
+
+| Threads | Linux whole | TCLock whole | KD whole |
+|---:|---|---|---|
+| 1 | 27.654/27.971/27.973 | 36.087/36.122/36.123 | 16.882/16.890/16.895 |
+| 2 | 5.241/7.489/7.576 | 9.442/9.564/9.996 | 5.748/5.790/6.039 |
+| 3 | 7.486/7.542/7.597 | 8.458/8.772/9.043 | 5.518/5.756/5.771 |
+| 4 | 5.911/7.658/7.681 | 5.891/5.978/5.997 | 4.861/4.928/5.358 |
+| 5 | 7.191/7.353/7.358 | 5.451/5.712/5.812 | 5.242/5.319/5.515 |
+| 6 | 7.100/7.134/7.457 | 4.994/5.098/5.354 | 5.244/5.348/5.680 |
+| 7 | 6.696/7.257/7.399 | 4.021/4.079/4.327 | 5.202/5.362/5.370 |
+| 8 | 6.622/7.297/7.322 | 4.253/4.311/4.360 | 5.278/5.288/5.472 |
+| 12 | 6.656/7.290/7.526 | 4.378/4.392/4.582 | 5.102/5.279/5.395 |
+| 16 | 7.086/7.093/7.133 | 4.285/4.403/4.773 | 5.319/5.330/5.355 |
+| 20 | 6.525/7.102/7.154 | 4.688/4.753/4.789 | 5.308/5.313/5.378 |
+| 24 | 5.920/5.962/6.636 | 4.478/4.506/4.595 | 4.302/4.402/4.468 |
+| 28 | 5.341/5.960/6.049 | 4.386/4.511/4.575 | 3.877/3.897/4.053 |
+| 32 | 5.151/5.540/5.590 | 4.458/4.595/4.613 | 3.652/3.653/3.791 |
+| 36 | 4.984/5.458/5.627 | 4.380/4.532/4.613 | 3.721/3.787/4.029 |
+
+Separate 36-thread recheck:
+
+| Arm | Peak min/median/max | Whole min/median/max | Peak spread |
+|---|---|---|---:|
+| native | 5.406/5.686/5.801 | 5.267/5.552/5.570 | 6.95% |
+| tclock | 4.357/4.442/4.522 | 4.343/4.429/4.486 | 3.72% |
+| kdlock | 3.663/3.828/3.852 | 3.627/3.680/3.825 | 4.95% |
+
+### Worker progress and NUMA shares
+
+At 24 threads, CPUs 20–23 form a four-worker minority on node 1 (16.67% of workers). Positive progress does not establish equal service or starvation freedom. TCLock’s very low minority-node share is material when interpreting its aggregate throughput. KD also underserves that node relative to equal per-worker progress.
+
+| Phase / threads | Arm | Node 1 whole share | Node 1 peak share | Minimum whole worker ops | Minimum peak worker ops |
+|---|---|---:|---:|---:|---:|
+| final-c1 / 24 | native | 14.85–18.90% | 14.99–19.84% | 323,328 | 49,152 |
+| final-c1 / 24 | tclock | 1.26–1.41% | 1.24–1.43% | 25,600 | 3,840 |
+| final-c1 / 24 | kdlock | 10.55–12.61% | 12.12–13.52% | 226,048 | 39,168 |
+| final-c1 / 36 | native | 45.64–50.68% | 47.78–52.92% | 192,768 | 26,624 |
+| final-c1 / 36 | tclock | 49.60–49.90% | 49.61–49.98% | 217,344 | 32,256 |
+| final-c1 / 36 | kdlock | 37.02–42.35% | 36.21–43.62% | 164,352 | 23,552 |
+| final-recheck-c1 / 36 | native | 34.61–51.54% | 32.92–53.10% | 169,472 | 23,552 |
+| final-recheck-c1 / 36 | tclock | 50.03–50.45% | 49.96–50.60% | 213,760 | 32,768 |
+| final-recheck-c1 / 36 | kdlock | 41.18–42.67% | 41.16–45.51% | 166,400 | 24,576 |
+
+Each range spans three sessions. At 36 threads node 1 holds 16/36 workers (44.44%). Minimum operation counts refer to any individual worker, not node sums. Cohort validity requires progress in the selected window; it provides no hard waiting-time bound.
+
+The full-matrix KD36 measured JIT share is 3.52–5.29%, versus TCLock delegation 98.32–98.77%. The recheck has KD 4.66–5.42% versus TCLock 97.79–98.61%. These remain mixed native/delegated KD measurements, not pure generated-body throughput.
+
+Downloaded-record SHA256:
+
+- `final-c1-records.json`: `659b0d0b6825f7151b6eb3adeb6ecb6b379d881804e2e95ced6bb5bf2d901fa5`
+- `final-recheck-c1-records.json`: `94d8f88f2857da308a582692db2a8379c7dc2b16e01063ac74f978ecebc7bb8c`
 
 A fresh six-session flat profile passed with zero lost samples. At 36 threads,
 61.28% of KD worker cycle-period weight remains in the kernel queued-spinlock
@@ -235,8 +305,8 @@ slowpath, versus 70.21% before the retained changes. At one thread, RCU lock/unl
 is 9.08% and task routing 6.28%. Both profiles use exact symbol ranges and leave
 unresolved samples unassigned; neither identifies each queued lock or remote
 memory latency. The task registry still allocates per routed acquisition and
-serializes all hash chains with one lock. A separate bucket-lock experiment is
-being considered without changing exact task references, counts or RCU lifetime.
+serializes all hash chains with one lock. The following bucket-lock experiment
+tests this cost without changing exact task references, counts or RCU lifetime.
 
 Evidence: `mutex-20261003-mutex-final-c1`,
 `mutex-20261003-mutex-final-recheck-c1`, `mutex-20261003-final-profile`.
@@ -244,6 +314,54 @@ The directory name `final-profile` identifies this two-change checkpoint;
 it does not imply that later experiments share its source or measurements.
 The matching `mutex-20261003-final-ack` owner/RCU probe also passed, explicitly
 JIT=0, two orders/four ACKs/two deferred frees.
+
+## Rejected task-registry bucket locks
+
+The candidate replaced one task-registry writer lock with 256 statically initialized,
+cacheline-separated bucket locks. Hash-chain membership, exact reference updates,
+global live count, allocation, RCU reclamation and final ACK ownership stayed intact.
+Two basic unit programs and the real owner/RCU probe passed. The added SELFTEST
+checks 1,024 synthetic native-width hash keys, collisions, alignment and all 256
+initial locks; it never creates synthetic task references. Both real owner orders,
+four ACKs and two deferred frees passed, explicitly JIT=0.
+
+All 36 screen/recheck sessions passed data, returned-JIT and drain checks, but
+throughput fell sharply. The candidate is preserved as `781ef6c` on
+`perf/mutex-task-buckets-rejected-20261003` and reverted by `30e3850`.
+Comparisons use the preceding full-matrix 16-thread median (5.344) and latest
+same-source 36-thread recheck (3.828); the older, higher 4.361 median is also
+preserved above. The candidate loses by more than 50% against either reference.
+
+| Phase | Threads | KD peak min/median/max | Whole min/median/max | JIT share |
+|---|---:|---|---|---:|
+| task-buckets | 16 | 2.478/2.496/2.555 | 2.570/2.770/2.943 | 65.00–82.45% |
+| task-buckets | 36 | 1.349/1.369/1.746 | 1.332/1.343/1.654 | 67.60–94.66% |
+| task-buckets-recheck | 16 | 2.400/2.421/2.454 | 2.649/2.698/2.768 | 70.64–79.13% |
+| task-buckets-recheck | 36 | 1.273/1.357/1.431 | 1.264/1.317/1.362 | 90.59–96.91% |
+
+A separate two-session flat profile passed with no lost samples. Worker cycle
+weight moved primarily into KD's own waiter slowpath: 75.60% at 16 and 89.79% at 36.
+This is evidence against treating removal of registry serialization as sufficient
+to improve throughput. It also demonstrates that increased JIT coverage alone is
+not a performance result. This experiment uses the same generated-body machinery.
+It does not isolate individual executor instructions or remote load latency.
+
+The source provides a plausible explanation for the changed mix: registry get
+occurs after heat admission but before queue publication, and combining needs two
+waiting successors. Removing cross-task serialization can increase simultaneous
+queue occupancy and delegation opportunity. Native acquisition still bypasses the
+queue when the original mutex is free. Queue occupancy and heat transitions were
+not directly measured, so this mechanism remains an inference.
+
+The retained implementation still has the original task registry. Further work
+must reduce the cost of actual delegated service as well as coordination; blindly
+removing another global lock or forcing more delegation is not supported by these
+results. No approximate statistic replaced an exact ownership/lifetime field.
+
+Evidence: `mutex-20261003-task-buckets-unit`, `mutex-20261003-task-buckets-ack`,
+`mutex-20261003-mutex-task-buckets-c1`,
+`mutex-20261003-mutex-task-buckets-recheck-c1`,
+`mutex-20261003-task-buckets-profile`.
 
 ## Evidence
 
