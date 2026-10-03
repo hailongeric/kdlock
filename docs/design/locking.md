@@ -441,15 +441,23 @@ cookie. Its unlock calls the original `(mutex_unlock)(lock)`, bypassing KD task
 routing while retaining Linux owner/flags and slowpath behavior. The cookie
 selects the route; it neither grants ownership nor replaces the original mutex.
 
-A failed CAS enters `kd_mutex_direct_contended_clobber_v1`, which records that
-failed attempt once without retrying the first CAS. Immediately after the exact
-registered continuation, the caller writes zero to the cookie before executing
-the body. That store is part of the translated entry, not an assumed incoming
-register or stack value. Zero selects the existing direct clobber unlock including
-when the contended provider entry returns through a native fallback. Queue owners still
-release the gate/task record; borrowed native continuations still request the
-physical owner's unlock and final ACK. COMPLETE resumes after the routed unlock;
-FULL preserves the acquisition's cookie and uses the existing continuation path.
+A failed CAS enters the outer-only `kd_mutex_outer_contended_clobber_v1`, which
+records that failed attempt once without retrying the first CAS. On a physical C
+return, a native fallback made before acquiring a KD task reference or queue gate
+returns the current task pointer. That exact acquisition result selects original
+Linux unlock. Every call into the KD queue returns zero, even a later native
+fallback which already dropped its routing reference. The old void
+`kd_mutex_direct_contended_clobber_v1` remains compatible with existing callers.
+
+The supplied JIT IP is a separate continuation: a normal return jumps over its
+zeroing instruction and keeps the C result, while translated execution starts at
+that instruction and defines zero before the cookie store and body. SP/BP and
+the two-word wrapper input are unchanged; no incoming RAX fact is trusted. The
+return-valued outer endpoint is explicitly refused inside translated bodies;
+nested controls keep the old direct interface. Zero selects routed unlock: queue
+owners still release the gate/task record, and borrowed native continuations
+still request the physical owner's unlock and final ACK. COMPLETE resumes after
+the routed unlock; FULL preserves the cookie and existing continuation path.
 
 Both unlock branches end at recognized mutex control CALLs. An empty compiler
 barrier keeps the native CALL from becoming a sibling tail jump; it adds no

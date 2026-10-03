@@ -1040,6 +1040,57 @@ static void check_minimal_entry(void)
 	CHECK(!refs && !gate->locked);
 }
 
+/* Only pre-reference native fallbacks may return a native cookie. Existing
+ * unrelated task activity does not change this lock's exact native owner. */
+static void check_outer_native_result(void)
+{
+	for (unsigned int scenario = 0; scenario < 7; scenario++) {
+		reset();
+		struct mutex *lock = &origins[0].mutex;
+		if (scenario == 0) cpu_hot = false;
+		if (scenario == 1) source_open = false;
+		if (scenario == 2) strcpy(current->comm, "non-target");
+		if (scenario == 3) refs = 1; /* An unrelated acquisition remains live. */
+		if (scenario == 4) enabled = false;
+		if (scenario == 5) task_failure = true;
+		if (scenario == 6) { cpu_hot = false; refs = 1; borrowed = true; }
+		unsigned int inherited_refs = refs;
+		unsigned long route = kd_mutex_outer_contended_clobber_v1(
+			lock, (unsigned long)&native_stack[16], 0x8000, 0);
+		CHECK(route == (unsigned long)current && lock->owner == current);
+		CHECK(refs == inherited_refs && !task_puts && !fast_probes && entry_attempts == 1 && samples == 1);
+		kd_origin_mutex_unlock(lock, 0x9000);
+		CHECK(!lock->owner && refs == inherited_refs && !notify_calls && !task_puts);
+	}
+	reset();
+	struct mutex *lock = &origins[0].mutex;
+	unsigned long route = kd_mutex_outer_contended_clobber_v1(
+		lock, (unsigned long)&native_stack[16], 0x8000, 0);
+	struct kd_mutex *gate = find_kd_mutex_shadow(lock);
+	CHECK(!route && refs == 1 && gate && gate->physical_owner == current);
+	__kd_mutex_unlock(lock, 0, 0x9000);
+	CHECK(!refs && task_puts == 1 && !gate->locked);
+
+	/* A later native fallback has already entered the KD queue contract.
+	 * Keep ROUTED even though local-predecessor refusal drops its own ref. */
+	reset();
+	gate = get_kd_mutex_shadow(lock);
+	preempt = migration = 1;
+	struct kd_mutex_node *head = kd_mutex_reserve_node();
+	head->lock = gate;
+	head->task_struct_ptr = &peer;
+	gate->locked = _Q_LOCKED_VAL;
+	preempt = migration = 0;
+	route = kd_mutex_outer_contended_clobber_v1(
+		lock, (unsigned long)&native_stack[16], 0x8000, 0);
+	CHECK(!route && !refs && task_puts == 1 && lock->owner == current);
+	CHECK(gate->locked && !gate->physical_owner && !slow_calls);
+	__kd_mutex_unlock(lock, 0, 0x9000);
+	CHECK(!lock->owner && gate->locked && task_puts == 1);
+	preempt = migration = 1;
+	kd_mutex_release_node(head);
+}
+
 int main(void)
 {
 	/* Even a hot lock with task/shadow work otherwise eligible must bypass all
@@ -1061,6 +1112,7 @@ int main(void)
 	CHECK(!fast_probes && entry_attempts == 1 && samples == 1);
 	CHECK(origins[0].mutex.owner == current && !refs && !gets);
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
+	check_outer_native_result();
 	check_minimal_entry();
 	check_poll_result();
 	check_tails();

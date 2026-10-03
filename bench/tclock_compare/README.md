@@ -20,7 +20,8 @@ KD冷获取内联首次CAS，竞争时使用原生pending/MCS队列；热获取�
 编译出 `mc_body_N`，复用 payload、计时与结果校验；单次操作中没有 `is_mutex` 分支。
 Linux 调用原始 `mutex_lock/unlock`，KD 的cacheline/hash外层调用
 `KD_MUTEX_OUTER_LOCK/UNLOCK`（ABI2），TCLock 调用实际上游 `komb_mutex_lock/unlock`。
-KD原生获取内联owner CAS，原生解锁调用原始Linux函数；竞争入口保持现有clobber正文与解锁协议。
+KD原生获取内联owner CAS，原生解锁调用原始Linux函数；竞争入口在KD引用/gate之前的原生回退也返回精确owner路由。
+独立JIT续点自行定义零，队列/借用请求继续使用现有clobber正文与解锁协议。
 记录使用`caller_shell=mutex_outer_cookie`、`cookie_storage=outer_acquisition_local`，
 编译器可将cookie留在寄存器或spill；不与历史`mutex_clobber`调用壳合并取优。调用者五个callee-saved spill仍计入实际操作成本。
 接口及同task cookie约束见[锁协议](../../docs/design/locking.md#mutex-outer-direct)。

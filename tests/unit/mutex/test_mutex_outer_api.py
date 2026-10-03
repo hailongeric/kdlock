@@ -55,7 +55,7 @@ def main():
         start=symbols['outer_jit_case']; entry=symbols['outer_jit_entry']
         raw=text[start-text_base:start-text_base+sizes['outer_jit_case']]
         selected={name:address for name,address in symbols.items()
-                  if name in {'mutex_unlock','kd_mutex_direct_contended_clobber_v1',
+                  if name in {'mutex_unlock','kd_mutex_outer_contended_clobber_v1',
                               'kd_mutex_direct_unlock_clobber_v1'}}
         # ABI2's compatibility lock endpoint remains exported by the provider.
         selected['kd_mutex_direct_lock_clobber_v1']=0x70000000
@@ -83,7 +83,7 @@ def main():
         # Same compiled object and fixed lock section: all source identities
         # embedded in the generated image must survive relinking unchanged.
         for name in ('outer_jit_entry','kd_mutex_direct_unlock_clobber_v1',
-                     'kd_mutex_direct_contended_clobber_v1','mutex_unlock','test_lock'):
+                     'kd_mutex_outer_contended_clobber_v1','mutex_unlock','test_lock'):
             assert linked_symbols[name]==symbols[name], (name,symbols[name],linked_symbols[name])
         assert any(line.split()[1:] == ['T', 'main_wrapper'] for line in
                    subprocess.check_output(['nm','--defined-only',second],text=True).splitlines())

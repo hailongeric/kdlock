@@ -18,7 +18,10 @@ bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 	       (unsigned long)task;
 }
 
-static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,
+/* A nonzero result is proof that THIS acquisition used only the original
+ * Linux mutex. Other task records do not grant or revoke this ownership. Any
+ * entry into the KD queue keeps zero, including its local native fallbacks. */
+static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,
 		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
 	struct kd_mutex *kd_mtx;
@@ -32,7 +35,7 @@ static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,
 	 * checks still precede process selection and any task/shadow work. */
 	if (!admitted) {
 		kd_origin_mutex_lock(lock);
-		return;
+		return (unsigned long)current;
 	}
 	/* Nested native calls and borrowed continuations must not join another
 	 * delegation queue. Their original mutexes still provide mutual exclusion. */
@@ -40,11 +43,11 @@ static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,
 	    !kd_comm_matches(&kd_spin_target, current->comm) ||
 	    kd_mutex_task_active(current)) {
 		kd_origin_mutex_lock(lock);
-		return;
+		return (unsigned long)current;
 	}
 	if (!kd_mutex_jit_is_enabled()) {
 		kd_origin_mutex_lock(lock);
-		return;
+		return (unsigned long)current;
 	}
 
 	kd_mtx = get_kd_mutex_shadow(lock);
@@ -62,10 +65,18 @@ static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,
 				current->pid, ret_addr, lock,
 				raw_smp_processor_id());
 		kd_origin_mutex_lock(lock);
-		return;
+		return (unsigned long)current;
 	}
 	kd_exe_add_abi(0, ret_addr, KD_EXE_LOCK_MUTEX, abi);
 	_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);
+	return 0;
+}
+
+/* Preserve the void protocol for existing direct and kernel bridge callers. */
+static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,
+		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
+{
+	(void)kd_mutex_contended_acquire(lock, ret_rsp, ret_addr, bp, abi);
 }
 
 static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
@@ -152,6 +163,18 @@ kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,
 	kd_mutex_contended_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_direct_contended_clobber_v1);
+
+/* Only the outer caller consumes this result on a physical C return. The
+ * supplied IP is a different continuation which itself defines route zero.
+ * A translated nested CALL must not model this as the old void interface. */
+__attribute__((noipa)) noinline notrace unsigned long
+kd_mutex_outer_contended_clobber_v1(struct mutex *lock, unsigned long sp,
+				  unsigned long ip, unsigned long bp)
+{
+	return kd_mutex_contended_acquire(lock, sp, ip, bp,
+					 KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+}
+EXPORT_SYMBOL_GPL(kd_mutex_outer_contended_clobber_v1);
 
 __attribute__((noipa)) noinline notrace void
 kd_mutex_direct_unlock_clobber_v1(struct mutex *lock, unsigned long sp,

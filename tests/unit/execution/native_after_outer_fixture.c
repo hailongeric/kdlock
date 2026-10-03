@@ -51,6 +51,7 @@ static unsigned long clobber_spin_lock_addr = 0x110, clobber_spin_unlock_addr = 
 static unsigned long clobber_mutex_lock_addr = 0x310, clobber_mutex_unlock_addr = 0x410;
 static unsigned long direct_mutex_lock_addr = 0x320, direct_mutex_unlock_addr = 0x420;
 static unsigned long contended_mutex_lock_addr = 0x330;
+static unsigned long outer_mutex_lock_addr = 0x340;
 static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;
 static struct mutex a, b;
 static struct task_struct native_peer = { .pid = 13 }, *nested_owner;
@@ -871,6 +872,13 @@ static void check_mutex_call_pair(void)
 		expected = f.regs;
 		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == KD_EXE_KNOWN_OUTER_UNLOCK);
 		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
+		/* The return-valued outer entry cannot be consumed as a nested void
+		 * acquisition: retain the packet and ownership for generic refusal. */
+		f.regs.ip = outer_mutex_lock_addr;
+		expected = f.regs;
+		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == -EOPNOTSUPP);
+		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
+		CHECK(!nested_owner && f.jit_lock_depth == 1);
 		f.regs.ip = 0xDEAD;
 		expected = f.regs;
 		CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == 0);

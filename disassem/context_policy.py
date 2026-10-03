@@ -444,6 +444,10 @@ def instruction_rejection(
             # foreign backend behind an ordinary CALL-miss continuation.
             if lock_symbols and address in lock_symbols:
                 kind, name = lock_symbols[address]
+                # Its C result is meaningful only before its synthetic root
+                # continuation; the nested void-control model cannot supply it.
+                if name == "kd_mutex_outer_contended_clobber_v1":
+                    return "outer-only mutex entry requires native execution", name
                 if kind != lock_kind:
                     return (
                         f"{kind} lock reference in {lock_kind} entry requires native execution",

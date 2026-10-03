@@ -261,6 +261,11 @@ static int handle_known_call(struct kd_regs *regs,
 	if (frame)
 		frame->control_call.phase = KD_CALL_NONE;
 
+	/* The outer-only return-valued entry is not a nested void lock service.
+	 * Admission rejects it; retain the same boundary in generic recovery. */
+	if (regs->ip == outer_mutex_lock_addr)
+		return -EOPNOTSUPP;
+
 	/* Backend-specific lock stacks cannot represent mixed spin/mutex nesting.
 	 * In particular, never enter a sleeping mutex service from a spin frame. */
 	if (frame &&

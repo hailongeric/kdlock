@@ -20,6 +20,7 @@ static inline bool outer_test_cas(unsigned long *p, unsigned long *old, unsigned
 #define might_sleep() do { } while (0)
 unsigned long entries, routed_locks, routed_unlocks, native_unlocks;
 unsigned long *test_cookie_address;
+unsigned long contended_native_return;
 static inline void kd_hotlock_mutex_entry(void) { entries++; }
 __attribute__((noinline,noipa)) void mutex_unlock(struct mutex *lock)
 {
@@ -36,18 +37,25 @@ extern char outer_jit_entry[];
 unsigned long captured_sp, captured_bp, captured_ip, captured_bytes;
 unsigned long captured_stack[64];
 asm(".text\n"
-    ".globl kd_mutex_direct_contended_clobber_v1\n"
-    "kd_mutex_direct_contended_clobber_v1:\n"
+    ".globl kd_mutex_outer_contended_clobber_v1\n"
+    "kd_mutex_outer_contended_clobber_v1:\n"
     "incq routed_locks(%rip)\n incq entries(%rip)\n movq $0x8000,(%rdi)\n"
-    /* Destroy any pre-entry cookie assumption. Only the after-continuation
-     * production store can select routed unlock after this return. */
+    /* Destroy any pre-entry cookie assumption. The physical return supplies
+     * its exact result; only the synthetic JIT entry forces route zero. */
     "movq test_cookie_address(%rip),%rax\n movq $0x8000,(%rax)\n movq $1,%r8\n jmp .Louter_damage\n"
     ".globl kd_mutex_direct_unlock_clobber_v1\n"
     "kd_mutex_direct_unlock_clobber_v1:\n"
     "incq routed_unlocks(%rip)\n movq $0,(%rdi)\n xorq %r8,%r8\n"
     ".Louter_damage:\n"
     "leaq 8(%rsp),%rax\n cmpq %rax,%rsi\n jne .Louter_bad\n"
-    "cmpq (%rsp),%rdx\n jne .Louter_bad\n cmpq %rbp,%rcx\n jne .Louter_bad\n"
+    "cmpq %rbp,%rcx\n jne .Louter_bad\n"
+    /* Unlock still uses its physical return; outer lock supplies a distinct
+     * synthetic continuation immediately after the physical return's JMP. */
+    "testq %r8,%r8\n je .Louter_unlock_ip\n"
+    "movq (%rsp),%rax\n cmpb $0xeb,(%rax)\n jne .Louter_bad\n"
+    "addq $2,%rax\n cmpq %rax,%rdx\n jne .Louter_bad\n jmp .Louter_ip_ok\n"
+    ".Louter_unlock_ip: cmpq (%rsp),%rdx\n jne .Louter_bad\n"
+    ".Louter_ip_ok:\n"
     "testq %r8,%r8\n je .Louter_poison\n"
     "movq %rsi,captured_sp(%rip)\n movq %rcx,captured_bp(%rip)\n movq %rdx,captured_ip(%rip)\n"
     "movq %rcx,%rax\n subq %rsi,%rax\n addq $16,%rax\n cmpq $512,%rax\n ja .Louter_bad\n"
@@ -56,7 +64,9 @@ asm(".text\n"
     ".Louter_poison:\n"
     "movq $17,%rbx\n movq $18,%r12\n movq $19,%r13\n movq $20,%r14\n movq $21,%r15\n"
     "movq $22,%rax\n movq $23,%rdi\n movq $24,%rsi\n movq $25,%rdx\n movq $26,%rcx\n"
-    "movq $27,%r8\n movq $28,%r9\n movq $29,%r10\n movq $30,%r11\n ret\n"
+    /* RAX alone is the acquisition result on a physical lock return. */
+    "testq %r8,%r8\n je .Louter_result_ready\n movq contended_native_return(%rip),%rax\n"
+    ".Louter_result_ready: movq $27,%r8\n movq $28,%r9\n movq $29,%r10\n movq $30,%r11\n ret\n"
     ".Louter_bad: ud2\n");
 
 /* Fixed virtual identity keeps decoded RIP-relative lock references identical
@@ -78,11 +88,12 @@ __attribute__((noinline,noipa)) unsigned long outer_jit_case(void)
 
 __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed, int mode)
 {
- struct mutex lock={ mode==1 ? 0x9000UL : 0 };
+ struct mutex lock={ (mode==1 || mode==3) ? 0x9000UL : 0 };
  struct kd_mutex_outer_cookie cookie;
  unsigned long a=seed+1,b=seed+2,c=seed+3,d=seed+4,e=seed+5;
  asm volatile("" : "+r"(a),"+r"(b),"+r"(c),"+r"(d),"+r"(e) : : "memory");
  test_cookie_address=&cookie.owner;
+ contended_native_return=mode==3 ? (unsigned long)current : 0;
  KD_MUTEX_OUTER_LOCK(&lock,cookie,"");
  assert(cookie.owner == (mode==1 ? 0UL : (unsigned long)current));
  if(mode==2) lock.owner |= 1; /* Original unlock retains Linux waiter/owner semantics. */
@@ -148,14 +159,15 @@ static void check_generated_outer(void)
 
 int main(void)
 {
- for(int mode=0;mode<3;mode++) {
+ for(int mode=0;mode<4;mode++) {
   unsigned long before=entries, locks=routed_locks, unlocks=routed_unlocks;
   assert(stress(100,mode)==515);
   assert(entries==before+1);
-  assert(routed_locks==locks+(mode==1));
+  assert(routed_locks==locks+(mode==1 || mode==3));
   assert(routed_unlocks==unlocks+(mode==1));
  }
- assert(native_unlocks==2);
+ assert(native_unlocks==3);
+ contended_native_return=0;
  for(int hot=0;hot<2;hot++) {
   test_lock.owner=hot?0x9000UL:0;
   assert(outer_jit_case()==0x116 && !test_lock.owner);

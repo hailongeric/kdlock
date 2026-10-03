@@ -183,3 +183,72 @@ All rates below are Mops/s. Spread is `(max-min)/median`.
 | 36 | 1.419%–1.744% | 97.927%–98.617% | 297216 / 43008 | 44.699%–46.183% | 43.354%–52.644% |
 
 At 24 threads, node1 completes 16.705%–17.390% of whole-run KD work, close to its 4/24 worker share; every worker advances in whole-run and selected peak windows. At 36, the minimum is 297,216 whole-run and 43,008 peak operations. This finite observation does not establish a starvation bound. KD JIT is 1.419%–1.744% at 36 versus TCLock delegation 97.927%–98.617%; the throughput lead does not mean the KD delegation mechanism is faster. Timed hash verification remains separate.
+
+## Flat-cycle diagnosis of the remaining low-thread gap
+
+`mutex-20261003b-outer-route-profile` 独立采集 1/2/3/36 threads × 三臂 × 一轮，共 12 个 diagnostic，全部 `OK`、drained、lost samples=0。`perf record -e cycles -F 499` 不采 callchain；逐项核对 `sample_type=IP|TID|TIME|PERIOD`。采集范围是测量 client 及其继承 workers；离线只统计 `sc_worker`：119,298 个 samples，另有 169 个 client samples 不进入下表。百分比是该臂该配置的 sampled event-period 权重，不是独立函数耗时；这批 throughput 不参与成绩。
+
+| threads | KD 主要 worker cycle 权重 | 测量期 returned JIT |
+| --- | --- | --- |
+| 1 | caller `mc_body_1` 50.41%；原始 `mutex_unlock` 41.03% | 0 |
+| 2 | caller 21.66%；原始 unlock 14.75%；task get/put 3.88%/1.15%；PV queued-spin slowpath 5.50%；irqsave spin-lock entry 5.99% | 0 |
+| 3 | private gate wait/acquire 14.23%；PV queued-spin slowpath 13.30%；KD queue slowpath 11.50%；task get/put 3.77%/1.34% | 154，0.001132% |
+| 36 | PV queued-spin slowpath 83.48%；KD queue slowpath 4.45%；generated image 0.03426% | 236,119，1.51263% |
+
+1T 没有进入 KD registry/queue：卸载统计的 origin acquisitions、task reroutes、slowpath 都为 0。剩余差异落在 native caller 和 Linux unlock。冻结 ELF 中 KD caller 仍有 RBX、R12–R15 五组额外 push/pop、current-task load、owner CAS 和 per-CPU entry 计数；TCLock 的冻结 `source/tclock_backend/komb_mutex.c:675` / `:729` 使用自己的 lock-state CAS 与普通 release store。KD 保留原始 Linux owner/flags 及 unlock 语义，不能把这部分直接等价成 TCLock 的状态字释放。这里的 ELF 和 flat samples 能证明工作内容与热点所在，不能分离每组 spill/CAS 的纳秒代价。
+
+2T 的整个模块生命周期（**包含 warmup**）有 2,143,698 次 KD origin acquisitions/task reroutes，618 次 queue slowpath，combiner/JIT 均为 0。3T 有 1,106,704 次 queue slowpath、588,920 次 combiner entry、588,765 次 handoff，JIT success 仅 155；99.97368% 的 combiner entry 走 handoff。`jit_not_ready`、`jit_failure`、`frame_failure` 都为 0。冻结 `source/kernel_module/mutex/combiner.inc:338` 要求当前 waiter 已有 successor 才开始代理，并把最后一个 waiter 留给 native handoff；短队列因此反复承担 registry、gate waiting 和原始 mutex 获取，却几乎没有 batching 收益。卸载 JIT=155 与测量期 returned JIT=154 的统计范围不同。对应三轮 c1 成绩在 3T 只有 37/42/62 个 returned bodies、0.000327–0.000582%；最佳峰值 KD/TC=78.57325%，不能宣布全部 15 点达标。
+
+36T 的 remaining cost 仍指向协调路径；但通用 PV queued-spin slowpath 的 flat samples **不能确定是哪一个 lock 实例，也不能证明 remote-memory latency**。全局 task-registry lock 是源码支持的候选解释，不能把 83.48% 全部归给它。36T unresolved 权重保留为 2.01%，未按最近符号猜测。generated-image 权重低还与 returned JIT 比例低有关，不能据此推导单个代理 body 很便宜。
+
+离线证据保存在 `bench/.tmp/mutex-20261003b/outer-route-hotspots.json`、`outer-route-lifecycle.json` 与 `outer-route-profile-summary.py`；归因使用该 phase 的冻结 ELF/JIT 和相同 kernel Build ID 的 symbol-size capture，不使用正在修改的候选源码，也不执行归档代码。
+
+## Exact native fallback result
+
+The next independently screened change extends OUTER routing to native fallbacks before any KD reference or gate is acquired. A new return-valued endpoint returns the exact native owner for those acquisitions, and zero after every KD queue entry. The old void endpoint stays compatible. Normal C return retains the result; a distinct named JIT entry defines zero itself. This preserves ABI2 and the two-word wrapper input. Nested translated calls to the new outer-only endpoint are refused by admission and runtime recovery, since the existing nested service does not supply this return value.
+
+The initial 16/36 screen has 18 valid samples. Relative to `mutex-final-c1`, medians change -1.57% / -3.44%; the apparent 36-thread regression triggered the required separate recheck. That recheck has 36 valid samples at 1/2/3/36: median changes +0.39% / +5.60% / +13.87% / +0.79%. The 36-thread regression does not repeat. The 2/3-thread gains are observed in this screen, with prior three-thread spread retained; no isolated nanosecond saving or final full-matrix result is claimed. Strict parity remains unmet at 1/2/3.
+
+First screen (`mutex-outer-result-c1`):
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 9.053 / 9.104 / 9.219 | 4.390 / 4.459 / 4.686 | 6.516 / 6.974 / 7.154 | 196.73% | 3/3 |
+| 36 | 7.396 / 7.821 / 8.065 | 4.446 / 5.261 / 5.350 | 5.416 / 5.421 / 5.582 | 150.77% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 16 | 8.823 / 8.860 / 9.078 | 4.356 / 4.445 / 4.656 | 6.456 / 6.827 / 7.101 | 1.82% / 6.65% / 9.15% |
+| 36 | 7.088 / 7.519 / 7.600 | 4.420 / 4.515 / 4.638 | 5.254 / 5.326 / 5.333 | 8.55% / 17.17% / 3.06% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 16 | 2.681%–2.738% | 98.647%–98.855% | 896768 / 140288 | 0.000%–0.000% | 0.000%–0.000% |
+| 36 | 1.441%–1.811% | 93.567%–98.366% | 304384 / 49664 | 41.770%–44.743% | 42.356%–43.869% |
+
+Small-thread screen and 36-thread recheck (`mutex-outer-result-recheck-c1`), kept separate rather than pooled:
+
+| Threads | KD peak min / median / max | TC peak min / median / max | Native peak min / median / max | KD / TC max | Valid KD rounds |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 32.921 / 32.922 / 32.923 | 36.130 / 36.133 / 36.134 | 27.673 / 27.982 / 27.990 | 91.11% | 3/3 |
+| 2 | 9.789 / 9.883 / 9.957 | 9.388 / 9.850 / 10.205 | 6.408 / 6.561 / 7.092 | 97.57% | 3/3 |
+| 3 | 6.089 / 6.699 / 6.743 | 8.020 / 8.369 / 8.801 | 7.376 / 7.397 / 7.447 | 76.62% | 3/3 |
+| 36 | 7.684 / 8.164 / 8.309 | 4.419 / 4.520 / 4.720 | 5.002 / 5.107 / 5.690 | 176.02% | 3/3 |
+
+| Threads | KD whole min / median / max | TC whole min / median / max | Native whole min / median / max | Peak spread KD / TC / Native |
+|---:|---:|---:|---:|---:|
+| 1 | 32.876 / 32.908 / 32.910 | 36.100 / 36.117 / 36.120 | 27.659 / 27.963 / 27.972 | 0.01% / 0.01% / 1.13% |
+| 2 | 9.388 / 9.401 / 9.649 | 9.365 / 9.813 / 10.181 | 6.368 / 6.547 / 6.946 | 1.70% / 8.30% / 10.42% |
+| 3 | 5.695 / 6.243 / 6.481 | 7.953 / 8.313 / 8.764 | 7.363 / 7.381 / 7.423 | 9.77% / 9.34% / 0.96% |
+| 36 | 7.483 / 8.034 / 8.151 | 4.401 / 4.495 / 4.687 | 4.802 / 4.902 / 5.582 | 7.65% / 6.66% / 13.47% |
+
+| Threads | KD JIT share | TC delegation share | KD min worker whole / peak ops | KD node1 whole share | KD node1 peak share |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 0.000%–0.000% | 0.000%–0.000% | 65754368 / 9876992 | 0.000%–0.000% | 0.000%–0.000% |
+| 2 | 0.000%–0.000% | 0.000%–0.000% | 9200896 / 1452800 | 0.000%–0.000% | 0.000%–0.000% |
+| 3 | 0.000%–0.001% | 0.072%–0.750% | 3470592 / 518144 | 0.000%–0.000% | 0.000%–0.000% |
+| 36 | 1.324%–1.670% | 97.914%–98.559% | 352768 / 54016 | 43.900%–44.852% | 43.541%–44.953% |
+
+Targeted validation covers the actual compiled synthetic entry with poisoned GPRs, physical/native return routing, COMPLETE and forced FULL, task/shadow resources, once-only sampling, registry endpoints and existing native-after-outer owner recovery. The first `outer-result-unit` phase has six passing drivers and one failed diagnostic assertion: the new rejection test muted the log whose text it then checked. Removing that test-only muting preserves its refusal assertion; `outer-result-admission` passes the basics and all 28 admission tests. The failed phase remains frozen. `outer-result-runner` passes all 44 tests. `outer-result-ack` passes the real owner/RCU probe with two orders, four final ACKs and two deferred frees, explicitly JIT=0. Timed contended sessions independently provide returned-body JIT and clean source/module drain.
+
+This result-routing change is retained as a separate validated checkpoint. Its full 15-point/hash verification remains pending until the next candidate screens finish; neither the earlier full matrix nor its profile is relabeled as this implementation.

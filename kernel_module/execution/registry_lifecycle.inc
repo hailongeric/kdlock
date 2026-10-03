@@ -111,6 +111,7 @@ int kd_exe_init(void)
 		end_points[end_point_count++] = clobber_mutex_unlock_addr;
 	direct_mutex_lock_addr = (unsigned long)kd_mutex_direct_lock_clobber_v1;
 	contended_mutex_lock_addr = (unsigned long)kd_mutex_direct_contended_clobber_v1;
+	outer_mutex_lock_addr = (unsigned long)kd_mutex_outer_contended_clobber_v1;
 	direct_mutex_unlock_addr = (unsigned long)kd_mutex_direct_unlock_clobber_v1;
 	end_points[end_point_count++] = direct_mutex_unlock_addr;
 	for (i = 0; i < end_point_count; i++)

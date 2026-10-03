@@ -13,6 +13,8 @@ void kd_mutex_direct_lock_clobber_v1(struct mutex *, unsigned long,
 				   unsigned long, unsigned long);
 void kd_mutex_direct_contended_clobber_v1(struct mutex *, unsigned long,
 					unsigned long, unsigned long);
+unsigned long kd_mutex_outer_contended_clobber_v1(struct mutex *, unsigned long,
+					       unsigned long, unsigned long);
 void kd_mutex_direct_unlock_clobber_v1(struct mutex *, unsigned long,
 				     unsigned long, unsigned long);
 
@@ -64,11 +66,22 @@ kd_mutex_outer_trylock(struct mutex *lock, unsigned long owner)
 		kd_hotlock_mutex_entry();                                                  \
 		WRITE_ONCE((cookie).owner, kd_native_owner);                               \
 	} else {                                                                    \
-		KD_MUTEX_DIRECT_CALL(kd_mutex_direct_contended_clobber_v1,                 \
-				     kd_outer_lock, continuation);                                       \
-		/* This store is INSIDE the translated continuation. FULL                  \
-		 * recovery and native fallbacks retain the same endpoint. */              \
-		WRITE_ONCE((cookie).owner, 0);                                             \
+		unsigned long kd_sp, kd_ip, kd_bp, kd_route;                        \
+		/* The physical return consumes an exact acquisition result. The    \
+		 * separate JIT entry defines ROUTED without any incoming GPR. */    \
+		asm volatile("movq %%rsp, %%rsi\n\t"                            \
+			     "leaq 1f(%%rip), %%rdx\n\t"                       \
+			     "movq %%rbp, %%rcx\n\t"                          \
+			     "call kd_mutex_outer_contended_clobber_v1\n\t"     \
+			     "jmp 2f\n\t1:\n\t" continuation                    \
+			     "xorl %%eax, %%eax\n\t2:\n\t"                      \
+			     : "=a" (kd_route), "+D" (kd_outer_lock),            \
+			       "=S" (kd_sp), "=d" (kd_ip), "=c" (kd_bp),         \
+			       ASM_CALL_CONSTRAINT                              \
+			     :                                                   \
+			     : "rbx", "r8", "r9", "r10", "r11",               \
+			       "r12", "r13", "r14", "r15", "cc", "memory");   \
+		WRITE_ONCE((cookie).owner, kd_route);                               \
 	}                                                                           \
 } while (0)
 

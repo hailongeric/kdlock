@@ -183,11 +183,17 @@ spin 为 1、旧 ABI 为 0，registry、daemon、translator 和 wrapper 必须�
 显式 nested 和取函数地址的调用者保留旧契约。
 
 模块外层调用可使用[OUTER配对接口](design/locking.md#mutex-outer-direct)：
-原生获取在调用者内CAS，原生解锁调用原始`mutex_unlock`；竞争调用
-`kd_mutex_direct_contended_clobber_v1`。精确lock续点之后显式写零获取cookie，
-因此MINIMAL入口不依赖未捕获寄存器或预先存在的cookie值。
+原生获取在调用者内CAS，原生解锁调用原始`mutex_unlock`；竞争调用外层专用
+`kd_mutex_outer_contended_clobber_v1`。在获得本次获取的KD引用/gate之前的原生回退
+返回当前owner指针；进入KD队列后的普通返回始终为零。原void
+`kd_mutex_direct_contended_clobber_v1`继续兼容已有调用者。
+普通CALL返回跳过独立的JIT入口清零指令，保留精确获取结果后写cookie；
+显式提供的JIT IP指向清零指令，先定义RAX为零再写cookie，因此MINIMAL入口
+不依赖未捕获寄存器或预先存在的cookie值。显式IP与物理CALL返回地址可以不同，
+SP仍是CALL前/返回后的调用者SP，BP契约不变。
 零cookie解锁仍使用原`kd_mutex_direct_unlock_clobber_v1`及其精确SP/IP/BP元数据；
-FULL/native续跑保留这个路由。嵌套控制继续使用原DIRECT接口。
+FULL/native续跑保留这个路由。新返回值入口不能作为嵌套JIT控制调用；准入与运行时
+均保留这一边界，嵌套控制继续使用原DIRECT接口。
 两条解锁分支都有已知控制CALL边界，原生分支不把内联CAS成功后的canary/epilogue
 纳入正文；编译器屏障只防止尾跳转，不增加硬件fence。
 该调用壳保持ABI2和两元素wrapper输入，调用者五个callee-saved寄存器的spill仍存在。

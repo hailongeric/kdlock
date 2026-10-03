@@ -72,6 +72,7 @@ def production():
     for marker in (
         "static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)",
         "static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)",
+        "static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,",
         "static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,",
         "static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,",
         "void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,",
@@ -80,6 +81,7 @@ def production():
     ):
         code += definition(hook, marker)
     code += "void " + definition(hook, "kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,")
+    code += "unsigned long " + definition(hook, "kd_mutex_outer_contended_clobber_v1(struct mutex *lock, unsigned long sp,")
     # The address-less callback must dispatch without target-name lookup.
     selectors = read_source(ROOT / "kernel_module/kd_main.c")
     code += definition(selectors, "static int kd_mutex_dispatch_enabled(void)")
@@ -98,6 +100,14 @@ def main():
         "outer-entry-retries-native-cas": (
             "kd_mutex_contended_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",
             "kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",
+        ),
+        "outer-native-result-routed": (
+            "return (unsigned long)current;",
+            "return 0;",
+        ),
+        "outer-queued-result-native": (
+            "_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);\n\treturn 0;",
+            "_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);\n\treturn (unsigned long)current;",
         ),
         "shadow-insert-skips-locked-recheck": (
             "if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {",
@@ -195,7 +205,7 @@ def main():
             candidate = code
             if mutation:
                 before, after = mutation
-                assert code.count(before) == 1, (name, code.count(before))
+                assert code.count(before) == (4 if name == "outer-native-result-routed" else 1), (name, code.count(before))
                 candidate = code.replace(before, after)
             (directory / "mutex_resource_code.h").write_text(candidate)
             binary = directory / name

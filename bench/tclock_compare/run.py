@@ -471,7 +471,7 @@ def main(lock_kind='spin'):
                                    'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
             if lock_kind == 'mutex':
-                expected = {'kdlock': ('kd_mutex_direct_contended_clobber_v1',
+                expected = {'kdlock': ('kd_mutex_outer_contended_clobber_v1',
                                        'kd_hotlock_mutex_entries', 'mutex_unlock',
                                        'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_prepare'),
                             'tclock': ('komb_mutex_lock', 'komb_mutex_unlock',
