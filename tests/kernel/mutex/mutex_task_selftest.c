@@ -215,6 +215,9 @@ static void kd_task_reader(void)
 	struct kd_mutex_task *entry, *saved = NULL;
 
 	kd_task_wait(&kd_task_test.published, false);
+	/* get(other) completed before the release publication. The fast empty
+	 * bucket check must therefore observe its still-retained routing entry. */
+	KD_TASK_CHECK(kd_mutex_task_active(waiter));
 	rcu_read_lock();
 	hash_for_each_possible_rcu(kd_mutex_tasks, entry, link,
 				   (unsigned long)waiter) {
