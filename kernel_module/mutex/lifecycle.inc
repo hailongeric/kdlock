@@ -48,12 +48,11 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != L1_CACHE_BYTES + 1);
 
-	atomic_set(&kd_mutex_active_waiters, 0);
-	atomic_set(&kd_mutex_reserved_nodes, 0);
-
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
 
+		per_cpu(kd_mutex_active_waiters, i) = 0;
+		per_cpu(kd_mutex_reserved_nodes, i) = 0;
 		per_cpu(kd_mutex_slowpath_count, i) = 0;
 		per_cpu(kd_mutex_combiner_count, i) = 0;
 		per_cpu(kd_mutex_handoff_count, i) = 0;
@@ -108,16 +107,30 @@ err_free:
 
 bool kd_mutex_check_idle(void)
 {
-	return !atomic_read(&kd_mutex_active_waiters) &&
-	       !atomic_read(&kd_mutex_reserved_nodes);
+	int cpu;
+
+	/* Controlled drain stops callers first. Never use an approximate sum:
+	 * a reserved sleeping executor or an imbalance on any CPU keeps us busy.
+	 * The slot bitmap independently covers the reservation's full lifetime. */
+	for_each_possible_cpu(cpu) {
+		if (READ_ONCE(per_cpu(kd_mutex_active_waiters, cpu)) ||
+		    READ_ONCE(per_cpu(kd_mutex_reserved_nodes, cpu)) ||
+		    READ_ONCE(per_cpu(kd_mutex_shadows, cpu).node_slots))
+			return false;
+	}
+	return true;
 }
 
 void kd_mutex_exit(void)
 {
-	int i, max_waiters = 0;
+	int i, max_waiters = 0, active_waiters = 0, reserved_nodes = 0;
 
-	for_each_possible_cpu(i)
+	/* Teardown diagnostics only. check_idle() uses individual exact balances. */
+	for_each_possible_cpu(i) {
 		max_waiters = max(max_waiters, per_cpu(kd_mutex_max_waiters, i));
+		active_waiters += per_cpu(kd_mutex_active_waiters, i);
+		reserved_nodes += per_cpu(kd_mutex_reserved_nodes, i);
+	}
 
 	KD_PR_INFO(
 		"kd_mutex stats: slowpath=%lld combiner=%lld handoff=%lld "
@@ -126,7 +139,7 @@ void kd_mutex_exit(void)
 		"multi_slot=%lld context_busy=%lld nested_lock=%lld "
 		"nested_fast=%lld nested_queued=%lld nested_jit=%lld "
 		"nested_unlock=%lld nested_abort_release=%lld "
-		"active_waiters=%d max_waiters=%d "
+		"active_waiters=%d max_waiters_per_cpu=%d "
 		"reserved_nodes=%d origin_acquires=%lld origin_releases=%lld\n",
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_slowpath_count),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_combiner_count),
@@ -145,9 +158,9 @@ void kd_mutex_exit(void)
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_jit_count),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_unlock_count),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_nested_abort_release_count),
-		atomic_read(&kd_mutex_active_waiters),
+		active_waiters,
 		max_waiters,
-		atomic_read(&kd_mutex_reserved_nodes),
+		reserved_nodes,
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_origin_acquires),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_origin_releases));
 

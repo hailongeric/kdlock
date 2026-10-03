@@ -312,6 +312,14 @@ available, including physical-owner checks and final-ACK retirement. This
 compiler scope change does not merge spin/mutex state or change source leases,
 publication ordering, batch limits or waiter policy.
 
+Mutex reservations and active waiter balances are exact per-CPU integers. Both
+updates occur with preemption disabled on the migration-pinned origin CPU;
+a remote combiner never releases that node. Controlled drain checks each CPU's
+active balance, reservation balance and node bitmap separately, so opposite
+imbalances cannot cancel. Owner/task acquisition references, nested waits and
+final ACKs retain their separate synchronization. Only shutdown diagnostics sum
+these balances; `max_waiters_per_cpu` names the local maximum explicitly.
+
 Its scheduling object's tail is an encoded `u32`, not a pointer. The immutable
 `origin_mutex_addr` also supplies the protected shadow-map key, removing a
 second address column. These changes leave physical-owner checks, waiter
