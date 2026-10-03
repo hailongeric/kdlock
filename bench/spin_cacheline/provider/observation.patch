@@ -187,7 +187,8 @@ diff --git a/kernel_module/spin/restore.inc b/kernel_module/spin/restore.inc
 diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
 --- a/kernel_module/mutex/combiner.inc
 +++ b/kernel_module/mutex/combiner.inc
-@@ -35,6 +35,6 @@
+@@ -34,7 +34,7 @@
+ 		remaining += !frame->jit_lock_released[i];
  	/* A native successor can run as soon as L opens. Log release intent
  	 * before that point, as on the spin path; the observer proves progress. */
 -	pr_info("kd_mutex outer release: task=%d owner=%d owner_task=%lx outer=%lx next_task=%d remaining=%u\n",
