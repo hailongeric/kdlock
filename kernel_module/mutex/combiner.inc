@@ -12,7 +12,109 @@ struct kd_mutex_batch {
 	struct kd_mutex_node *next;
 	/* Immutable slot identity; readiness/code are rechecked per request. */
 	struct kd_exe_info *exe;
+#ifdef NUMA_AWARE
+	struct kd_mutex_node *deferred_head, *deferred_tail;
+	u16 scan_left;
+	int local_node;
+#endif
 };
+
+#ifdef NUMA_AWARE
+/* A legacy/full packet is a queue boundary. Unknown translation eligibility
+ * is still decided by kd_mutex_execute_cs; a refusal rolls back this scan's deferrals. */
+static bool kd_mutex_numa_candidate(const struct kd_mutex_node *node)
+{
+	return node->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+	       node->packet_state == KD_PACKET_MINIMAL;
+}
+
+static int kd_mutex_node_numa(const struct kd_mutex_node *node)
+{
+	/* The immutable tail already identifies its pinned CPU; no extra shared
+	 * node field or larger node stride is needed for this lookup. */
+	return cpu_to_node((node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1);
+}
+#endif
+
+static struct kd_mutex_node *
+kd_mutex_next_node(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
+{
+	struct kd_mutex_node *next = READ_ONCE(node->next);
+#ifdef NUMA_AWARE
+	bool deferred = false;
+
+	if (!kd_mutex_numa_candidate(node))
+		return next;
+	if (next && kd_mutex_numa_candidate(next) &&
+	    kd_mutex_node_numa(next) == batch->local_node)
+		return next;
+	for (;;) {
+		struct kd_mutex_node *following;
+
+		/* Independent scan budget: do not chase a dependent next pointer
+		 * after exhaustion, even if the body budget has space left. */
+		if (!batch->scan_left || !next || !kd_mutex_numa_candidate(next))
+			return next;
+		following = READ_ONCE(next->next);
+		if (!following || !kd_mutex_numa_candidate(following))
+			return next;
+		batch->scan_left--;
+		if (kd_mutex_node_numa(next) == batch->local_node)
+			return next;
+		/* Preserve contiguous links, joining only the first node of each
+		 * skipped run. The final handoff gives this remote prefix priority. */
+		if (!deferred) {
+			if (batch->deferred_tail)
+				batch->deferred_tail->next = next;
+			else
+				batch->deferred_head = next;
+			deferred = true;
+		}
+		batch->deferred_tail = next;
+		next = following;
+	}
+#else
+	(void)batch;
+	return next;
+#endif
+}
+
+/* Called once before any queue/owner handoff, including early outer release.
+ * The batch must never inspect these nodes after publishing that handoff. */
+static struct kd_mutex_node *
+kd_mutex_splice_deferred(struct kd_mutex_batch *batch, struct kd_mutex_node *next)
+{
+#ifdef NUMA_AWARE
+	if (batch->deferred_head) {
+		BUG_ON(!batch->deferred_tail);
+		batch->deferred_tail->next = next;
+		next = batch->deferred_head;
+		batch->deferred_head = NULL;
+		batch->deferred_tail = NULL;
+	}
+#else
+	(void)batch;
+#endif
+	return next;
+}
+
+static bool kd_mutex_batch_can_continue(struct kd_mutex_node *next, int count)
+{
+	struct kd_mutex_node *following;
+
+	if (count >= kd_mutex_batch_size || !next)
+		return false;
+#ifdef NUMA_AWARE
+	if (!kd_mutex_numa_candidate(next))
+		return false;
+#endif
+	following = READ_ONCE(next->next);
+#ifdef NUMA_AWARE
+	return following && kd_mutex_numa_candidate(following);
+#else
+	return following != NULL;
+#endif
+}
 
 static struct kd_exe_info *
 kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)
@@ -67,6 +169,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 		return -EINVAL;
 	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
 		remaining += !frame->jit_lock_released[i];
+	batch->next = kd_mutex_splice_deferred(batch, batch->next);
 	/* A native successor can run as soon as L opens. Log release intent
 	 * before that point, as on the spin path; the observer proves progress. */
 	pr_info("kd_mutex outer release: task=%d owner=%d owner_task=%lx outer=%lx next_task=%d remaining=%u\n",
@@ -330,6 +433,10 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	struct kd_mutex_node *next_node = NULL;
 	struct kd_mutex_batch batch = {
 		.outer.release = kd_mutex_release_outer,
+#ifdef NUMA_AWARE
+		.scan_left = kd_mutex_batch_size,
+		.local_node = numa_node_id(),
+#endif
 	};
 	int counter = 0;
 
@@ -345,8 +452,11 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	}
 
 	while (curr_node) {
+#ifdef NUMA_AWARE
+		struct kd_mutex_node *saved_tail = batch.deferred_tail;
+#endif
 		counter++;
-		next_node = curr_node->next;
+		next_node = kd_mutex_next_node(&batch, curr_node);
 		batch.next = next_node;
 		batch.outer.released = false;
 		kd_mutex_prefetch_successor(next_node);
@@ -354,6 +464,14 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		int exe_flag = kd_mutex_execute_cs(lock, curr_node, &batch);
 
 		if (exe_flag != 0 && exe_flag != KD_EXE_NATIVE_DONE) {
+#ifdef NUMA_AWARE
+			/* The unstarted current node still links its original followers.
+			 * Drop only this speculative scan; the final splice repairs the
+			 * prior deferred tail and puts it before the refused request. */
+			if (!saved_tail)
+				batch.deferred_head = NULL;
+			batch.deferred_tail = saved_tail;
+#endif
 			/*
 			 * Only kd_mutex_execute_cs() returning 0 means the sandbox reached
 			 * mutex_unlock. Any other status must fall back without marking
@@ -381,8 +499,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		}
 
 		if (exe_flag == KD_EXE_NATIVE_DONE ||
-		    !next_node || !next_node->next ||
-		    counter >= kd_mutex_batch_size)
+		    !kd_mutex_batch_can_continue(next_node, counter))
 			break;
 
 		curr_node = next_node;
@@ -391,6 +508,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	/* Pass lock to the next waiter who will become the new combiner.
 	 * next_node is guaranteed non-NULL: either it's the failed curr_node,
 	 * or it was validated as non-NULL before the break above. */
+	next_node = kd_mutex_splice_deferred(&batch, next_node);
 	kd_mutex_set_locked(lock);
 	if (next_node)
 		smp_store_release(&next_node->locked, 0);
