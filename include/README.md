@@ -48,8 +48,9 @@ continuation 存储回收和 source pin 释放是不同边界。
 配对结束前不得复制、修改或复用。锁参数仍是同一个原始mutex。
 
 获取在调用者内执行原owner CAS；成功只记录一次mutex入口观察，解锁调用原始
-`(mutex_unlock)(lock)`。失败进入外层专用`kd_mutex_outer_contended_clobber_v1`，不重试该CAS，
-由provider记录一次失败入口和竞争观察。在获得KD引用/gate前的原生回退返回owner指针；
+`(mutex_unlock)(lock)`。失败进入外层专用`kd_mutex_outer_contended_clobber_v1`，先记录该次失败，
+由provider记录一次失败入口和竞争观察。准入与shadow查找后，owner/gate/tail均观察为空时
+可在task引用前做一次原生CAS重试；它不增加计数，也不保证公平性。引用/gate前的原生回退返回owner指针；
 一旦进入KD队列则返回零。普通C返回保留此结果，独立的JIT continuation先定义零，
 两者随后写cookie再进入正文。旧void contended接口保持兼容；新返回值接口禁止作为嵌套JIT控制调用。
 非零cookie保存原生获取时的task指针，只选择原生解锁；Linux owner和KD ledger仍决定真实所有权。

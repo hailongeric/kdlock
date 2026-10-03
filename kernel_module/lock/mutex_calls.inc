@@ -18,6 +18,19 @@ bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 	       (unsigned long)task;
 }
 
+/* One later retry, after admission, can avoid creating a singleton KD
+ * acquisition when the original owner released during that work. These empty
+ * reads only avoid challenging an observed queue; they cannot prevent a race
+ * with a new waiter or guarantee fairness. The full owner CAS is authoritative. */
+static __always_inline bool kd_mutex_retry_native_before_queue(struct mutex *lock,
+						     struct kd_mutex *kd_mtx)
+{
+	if (!kd_mtx || READ_ONCE(kd_mtx->locked) ||
+	    READ_ONCE(kd_mtx->tail) || atomic_long_read(&lock->owner))
+		return false;
+	return kd_mutex_trylock_fast(lock);
+}
+
 /* A nonzero result is proof that THIS acquisition used only the original
  * Linux mutex. Other task records do not grant or revoke this ownership. Any
  * entry into the KD queue keeps zero, including its local native fallbacks. */
@@ -51,6 +64,10 @@ static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned lon
 	}
 
 	kd_mtx = get_kd_mutex_shadow(lock);
+	/* Entry and contention were already recorded once. Retry without a new
+	 * pin, task reference, queue publication or diagnostic counter update. */
+	if (kd_mutex_retry_native_before_queue(lock, kd_mtx))
+		return (unsigned long)current;
 	if (!kd_mtx || !kd_mutex_task_get(current)) {
 		/* Distinguish shadow exhaustion from task allocation refusal and
 		 * node shortage. Neither branch acquired a routing reference. */
@@ -154,8 +171,8 @@ kd_mutex_direct_lock_clobber_v1(struct mutex *lock, unsigned long sp,
 EXPORT_SYMBOL_GPL(kd_mutex_direct_lock_clobber_v1);
 
 /* The outer caller already failed the original-owner CAS and checked sleep
- * context. Count precisely that failure once; retrying here would change which
- * acquisition attempts feed the existing contention sampler. */
+ * context. Record that failure before any later admitted retry; retrying the
+ * first CAS here would change which attempts feed the contention sampler. */
 __attribute__((noipa)) noinline notrace void
 kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,
 				   unsigned long ip, unsigned long bp)

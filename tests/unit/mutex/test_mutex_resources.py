@@ -72,6 +72,7 @@ def production():
     for marker in (
         "static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)",
         "static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)",
+        "static __always_inline bool kd_mutex_retry_native_before_queue(struct mutex *lock,",
         "static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,",
         "static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,",
         "static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,",
@@ -97,7 +98,7 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
-        "outer-entry-retries-native-cas": (
+        "outer-entry-retries-first-cas-before-observation": (
             "kd_mutex_contended_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",
             "kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",
         ),
@@ -108,6 +109,32 @@ def main():
         "outer-queued-result-native": (
             "_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);\n\treturn 0;",
             "_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);\n\treturn (unsigned long)current;",
+        ),
+        "later-retry-moved-before-observation": (
+            "bool admitted;\n\n\tpreempt_disable();",
+            "bool admitted;\n\n\tkd_mtx = get_kd_mutex_shadow(lock);\n"
+            "\tif (kd_mutex_retry_native_before_queue(lock, kd_mtx))\n"
+            "\t\treturn (unsigned long)current;\n\tpreempt_disable();",
+        ),
+        "later-retry-counts-entry-again": (
+            "return kd_mutex_trylock_fast(lock);",
+            "kd_hotlock_mutex_entry(); return kd_mutex_trylock_fast(lock);",
+        ),
+        "later-retry-trusts-empty-read": (
+            "return kd_mutex_trylock_fast(lock);",
+            "return true;",
+        ),
+        "later-retry-ignores-visible-gate": (
+            "!kd_mtx || READ_ONCE(kd_mtx->locked) ||",
+            "!kd_mtx || (false && READ_ONCE(kd_mtx->locked)) ||",
+        ),
+        "later-retry-ignores-visible-tail": (
+            "READ_ONCE(kd_mtx->tail) || atomic_long_read(&lock->owner)",
+            "(false && READ_ONCE(kd_mtx->tail)) || atomic_long_read(&lock->owner)",
+        ),
+        "later-retry-ignores-native-owner-flags": (
+            "READ_ONCE(kd_mtx->tail) || atomic_long_read(&lock->owner)",
+            "READ_ONCE(kd_mtx->tail) || (atomic_long_read(&lock->owner) & ~7UL)",
         ),
         "shadow-insert-skips-locked-recheck": (
             "if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {",
@@ -205,7 +232,7 @@ def main():
             candidate = code
             if mutation:
                 before, after = mutation
-                assert code.count(before) == (4 if name == "outer-native-result-routed" else 1), (name, code.count(before))
+                assert code.count(before) == (5 if name == "outer-native-result-routed" else 1), (name, code.count(before))
                 candidate = code.replace(before, after)
             (directory / "mutex_resource_code.h").write_text(candidate)
             binary = directory / name

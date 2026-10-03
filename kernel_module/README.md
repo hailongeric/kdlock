@@ -21,7 +21,8 @@ KD 锁字、稳定持锁记录、逻辑 frame 和来源 pin 各自承担不同�
 调用者内完成owner CAS，配对解锁调用原始Linux函数；竞争入口
 `kd_mutex_outer_contended_clobber_v1`进入`lock/mutex_calls.inc`的已有准入路径，
 在KD引用/gate之前的原生回退返回精确owner；进入队列后返回零。旧void contended接口保留。
-不重复CAS或入口计数。已有`KD_MUTEX_DIRECT_LOCK/UNLOCK`继续用于嵌套控制和兼容入口；
+记录失败前不重复CAS；准入后且owner/gate/tail观察为空时可在task引用前重试一次，不重复入口计数。
+已有`KD_MUTEX_DIRECT_LOCK/UNLOCK`继续用于嵌套控制和兼容入口；
 获取局部cookie及FULL/ACK约束见[锁协议](../docs/design/locking.md#mutex-outer-direct)。
 普通 mutex 的 MINIMAL/COMPLETE 借用 node 寄存器包，正常完成仅恢复 IP/SP/BP；
 首次 FULL 出口为 owner ACK 的独立生命周期取得 frame 自有包。
