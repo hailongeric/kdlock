@@ -795,7 +795,7 @@ static void check_frequency_order(void)
 			source_open = stage != 3;
 			if (stage != 3) strcpy(current->comm, "non-target");
 			trace_admission = true;
-			CHECK(kd_mutex_dispatch_enabled() == 2 && !comm_queries);
+			CHECK(!comm_queries);
 			if (abi) __kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0);
 			else __kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
 			CHECK(samples == 1 && lock->owner == current && !gets && !adds);
@@ -815,7 +815,6 @@ static void check_promotion_and_routing(void)
 
 	reset();
 	promoted = false;
-	CHECK(kd_mutex_dispatch_enabled() == 2);
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
 	CHECK(lock->owner == current && !refs && !shadow_count());
 	promoted = true;
@@ -825,7 +824,6 @@ static void check_promotion_and_routing(void)
 	/* A native peer may win L before the promoted target's next acquisition;
 	 * no queue handoff is allowed to manufacture native ownership. */
 	current = &peer;
-	CHECK(kd_mutex_dispatch_enabled() == 2);
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
 	CHECK(!refs && !shadow_count());
 	current = &waiter;
@@ -839,14 +837,11 @@ static void check_promotion_and_routing(void)
 	cpu_hot = false;
 	source_open = false;
 	strcpy(current->comm, "renamed");
-	CHECK(kd_mutex_dispatch_enabled() == 2);
 	__kd_mutex_unlock(lock, 0, 0x9000);
 	CHECK(!lock->owner && !gate->physical_owner && !gate->locked);
-	CHECK(!refs && task_puts == 1 && kd_mutex_dispatch_enabled() == 2);
+	CHECK(!refs && task_puts == 1);
 	strcpy(current->comm, "target");
-	CHECK(kd_mutex_dispatch_enabled() == 2);
 	source_open = true;
-	CHECK(kd_mutex_dispatch_enabled() == 2);
 	CHECK(acquires == 3 && releases == 3 && !errors);
 	CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
 }
@@ -959,11 +954,10 @@ static void check_slowpath_packets(void)
 				struct mutex *nested = &origins[1].mutex;
 				unsigned int count;
 
-				/* A borrowed suffix must keep using the real selector even
+				/* A borrowed suffix keeps its acquisition routing reference
 				 * after rename and closing; C still belongs to the waiter. */
 				strcpy(current->comm, "renamed");
 				source_open = false;
-				CHECK(kd_mutex_dispatch_enabled() == 2);
 
 				/* The native suffix owns its unrelated C, not borrowed A.
 				 * Exercise absent and idle C shadows without consuming the
@@ -990,7 +984,6 @@ static void check_slowpath_packets(void)
 				      !task_puts && refs == 1);
 				CHECK(gate->physical_owner == &peer &&
 				      lock->owner == &peer);
-				CHECK(kd_mutex_dispatch_enabled() == 2);
 			}
 			release_peer(gate);
 			if (mode == 5) {
@@ -998,7 +991,6 @@ static void check_slowpath_packets(void)
 				 * final routing ref only after the retained L is released. */
 				kd_mutex_task_put(current);
 				CHECK(!refs && task_puts == 1);
-				CHECK(kd_mutex_dispatch_enabled() == 2);
 			}
 		}
 		CHECK(!lock->owner && !gate->physical_owner && !gate->locked);

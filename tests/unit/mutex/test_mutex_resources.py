@@ -1,4 +1,4 @@
-"""Guest-only production mutex tail, node, shadow-table, selector and hook tests.
+"""Guest-only production mutex tail, node, shadow-table and entry routing tests.
 
 Keep the real capacities, guest kd_regs and decisions. Kernel scheduling,
 physical mutexes, task records, the assembly slowpath and resume trampolines
@@ -82,9 +82,6 @@ def production():
         code += definition(hook, marker)
     code += "void " + definition(hook, "kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,")
     code += "unsigned long " + definition(hook, "kd_mutex_outer_contended_clobber_v1(struct mutex *lock, unsigned long sp,")
-    # The address-less callback must dispatch without target-name lookup.
-    selectors = read_source(ROOT / "kernel_module/kd_main.c")
-    code += definition(selectors, "static int kd_mutex_dispatch_enabled(void)")
     return code
 
 

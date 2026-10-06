@@ -1,7 +1,7 @@
-/* Provider lifecycle: allocate all services before publishing guest hooks.
- * Selectors retain active-task routing even after admission closes or a waiter
- * renames. Teardown requires the documented external no-new-callers boundary;
- * clearing plain hook pointers is not a general hot-unload reader protocol. */
+/* Direct provider lifecycle: initialize all services before admitting callers.
+ * Mutex acquisition records retain routing after admission closes or a waiter
+ * renames. No global hooks are installed; teardown still requires the external
+ * no-new-callers boundary and complete request/source retirement. */
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/mutex.h>
@@ -47,20 +47,10 @@ MODULE_PARM_DESC(
 static char *target_process = "kd_test";
 struct kd_comm_key kd_spin_target;
 module_param(target_process, charp, S_IRUGO);
-MODULE_PARM_DESC(target_process, "task comm routed through kdlock hooks");
-
-#if 0 /* Direct-API experiment: do not install global lock selectors. */
-/* This kernel selector has no lock argument. Dispatch without reading comm;
- * the lock hook performs CPU -> address -> task admission, and the unlock
- * hook independently preserves every retained owner's route. */
-static int kd_mutex_dispatch_enabled(void)
-{
-	return 2;
-}
-#endif
+MODULE_PARM_DESC(target_process, "task comm eligible for direct mutex delegation");
 
 /* Error labels unwind only initialized services, in reverse dependency order.
- * Optional component selftests finish before any guest callback is published. */
+ * Optional component selftests finish before direct callers can use the module. */
 static int __init kdlock_km_init(void)
 {
 	int ret;
@@ -105,19 +95,7 @@ static int __init kdlock_km_init(void)
 		goto err_mutex;
 #endif
 
-#if 0 /* Retain disabled mutex interception for future explicit integration.
-       * Keep this block together with its removal/error unwind below. */
-	/* Ordinary callers use clobber v1. The legacy callbacks remain necessary
-	 * for explicit nested APIs and modules compiled with the old caller ABI;
-	 * supporting those callers does not require an older kernel installer. */
-	ret = kd_mutex_static_install_clobber_v1(kd_mutex_dispatch_enabled,
-		__kd_mutex_lock, __kd_mutex_unlock,
-		__kd_mutex_lock_clobber_v1, __kd_mutex_unlock_clobber_v1);
-	if (ret)
-		goto err_mutex;
-#endif
-
-	KD_PR_INFO("kd kernel module init: direct spin API; unified hooks disabled\n");
+	KD_PR_INFO("kd kernel module init: direct spin/mutex APIs; global hooks disabled\n");
 	return 0;
 
 #ifdef KDLOCK_SELFTEST
@@ -141,13 +119,9 @@ err_source:
 }
 
 /* Callers, translators and source leases must already be drained/retired.
- * This RCU wait does not by itself protect the guest's unguarded hook readers. */
+ * RCU alone does not protect outstanding direct calls or lock-object storage. */
 static void __exit kdlock_km_exit(void)
 {
-#if 0 /* Direct-API experiment: this module installed no global hooks. */
-	kd_mutex_static_remove();
-#endif
-
 	synchronize_rcu();
 	kd_mutex_exit();
 	kd_mutex_tasks_exit();

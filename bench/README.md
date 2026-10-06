@@ -1,11 +1,16 @@
 # Benchmarks
 
 当前入口是[三后端直接API对照](tclock_compare/README.md)：Linux原生、TCLock和KD adaptive。
-KD使用per-CPU近似竞争统计和原生队头的有界前缀检查；完整策略统一见
+KD使用per-CPU近似竞争统计，spin另有原生队头的有界前缀检查；完整策略统一见
 [执行流](../docs/JIT_EXECUTION.md#21-热度与角色)，不在测量文档重复参数历史。
 
 ## 当前结果与口径
 
+- [完整15点mutex跟进](tclock_compare/results/20261003-mutex-followup.md)：
+  同源码cacheline/hash各135场，保留全体样本及复测；全负载性能验收拒绝。
+- [36线程spin分析](tclock_compare/results/20260928-spin36-analysis.md)与
+  [紧凑包复验](tclock_compare/results/20260928-packed-continuation.md)：
+  按冻结源码保留PMU有效性、NUMA、UBSAN及布局证据，不作为10月文档清理的新性能重跑。
 - [36线程hash采样与批次调优](tclock_compare/results/20260927-hash36-profile.md)：
   cycles采样、NUMA/插桩消融及撤回的寄存器候选；默认批上限1024，36线程提高约7%，仍低于TCLock。
   定向hash/c1、少线程下降及24线程节点进度代价单列。
@@ -45,7 +50,7 @@ KD使用per-CPU近似竞争统计和原生队头的有界前缀检查；完整�
 | --- | --- |
 | [tclock_compare](tclock_compare/README.md) | 准备、CLI、cacheline/RCUHT、功能检查及结果解释 |
 | [spin_cacheline](spin_cacheline/README.md) | 共用客户端、观察层、峰值计算与离线汇总 |
-| [执行路径](spin_cacheline/EXECUTION_PATHS.md) | TCLock/KD对象、跨CPU数据流及生命周期 |
+| [锁协议](../docs/design/lock_protocols.md) | 六后端所有权与等待协议；[spin](../docs/design/spin_implementation.md)/[mutex](../docs/design/mutex_implementation.md)实现细节 |
 | [早期历史](spin_cacheline/results/HISTORY.md) | 9月15日至21日的冻结版本 |
 
 所有构建和测量在recovery guest执行，环境及排空遵循[AGENTS](../docs/AGENTS.md)。

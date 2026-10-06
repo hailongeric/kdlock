@@ -1,13 +1,14 @@
 # 当前代码地图
 
-当前显式 spin 接入与本地热锁实现见 [locking](design/locking.md)，操作见
+六后端协议见 [lock protocols](design/lock_protocols.md)，KD 详细所有权见
+[locking](design/locking.md)，操作见
 [PROJECT_GUIDE](PROJECT_GUIDE.md)。构建产物、临时证据和 `.git` 不属于源码清理对象。
 
 ## 入口与实现
 
 | 路径 | 职责 |
 | --- | --- |
-| [kernel_module/kd_main.c](../kernel_module/kd_main.c) | 初始化和退休；mutex hook 安装停用 |
+| [kernel_module/kd_main.c](../kernel_module/kd_main.c) | direct provider 初始化和退休，不安装全局 hooks |
 | [kernel_module/kd_spin_runtime.c](../kernel_module/kd_spin_runtime.c) | 合并编译frame、dispatcher、spin和mutex层，使普通batch helper可内联；源文件继续按职责分开 |
 | [kernel_module/kd_spinlock.c](../kernel_module/kd_spinlock.c) | spin源码入口，按声明依赖组合队列、执行、恢复、获取及解锁组件 |
 | [spin/entry.inc](../kernel_module/spin/entry.inc)、[spin/direct.inc](../kernel_module/spin/direct.inc) | 获取准入、原生回退、延迟根ticket、caller ABI及循环外准备 |
@@ -30,6 +31,7 @@
 | [translation_image.py](../disassem/translation_image.py) | 对已经通过准入的block集合生成dispatch、寄存器映射及汇编正文 |
 | [context_values.py](../disassem/context_values.py)、[context_registers.py](../disassem/context_registers.py) | 分别维护跨CFG的有界值传播，以及单block寄存器/地址事实与公共标量分析工具 |
 | [tclock_backend](../tclock_backend/README.md) | 独立 TCLock 原生栈委托比较；保留上游原字节和来源索引 |
+| [tclock_backend/komb_mutex.c](../tclock_backend/komb_mutex.c)、[mutex_provider.c](../tclock_backend/mutex_provider.c) | 实际普通 mutex 队列/parking/WWJUMP；固定亲和 context 注册及完整 cohort 排空 |
 
 私有 `.inc` 保持在所属翻译单元内，按生命周期拆分而不新增公共 ABI。
 普通spin调用从`spin/direct.inc`读起，随后看`spin/entry.inc`，队列/代理组件，
@@ -45,6 +47,7 @@ Linux L 二次获取、旧站点缓存及全局晋升集合已删除。
 | 路径 | 职责 |
 | --- | --- |
 | [workload_modules/spin_cacheline](../workload_modules/spin_cacheline/README.md) | 当前直接 cacheline/RCUHT、KD nested/early |
+| [workload_modules/mutex_cacheline](../workload_modules/mutex_cacheline/README.md) | 独立三方普通 mutex 函数，复用 payload/runner；KD OUTER cookie 与 TCLock worker 注册 |
 | [bench/tclock_compare](../bench/tclock_compare/README.md) | 三后端当前 live 运行器 |
 | [bench/spin_cacheline](../bench/spin_cacheline/README.md) | 共用客户端、观察层、发布/排空、离线汇总 |
 | [tests/unit](../tests/unit/) | 基础程序与按用途分组的生产代码、ABI、oracle回归 |
@@ -64,8 +67,10 @@ Linux L 二次获取、旧站点缓存及全局晋升集合已删除。
 设计主题分别位于 [lifetimes](design/lifetimes.md)、[locking](design/locking.md)、
 [admission](design/admission.md)、[frames](design/frames.md)。
 [执行流](JIT_EXECUTION.md)、[寄存器 ABI](JIT_REGISTER_ABI.md)、[任务](TODO.md)、
-[性能任务](PERFORMANCE_PLAN.md)各自维护单一职责。对象布局、创建位置及
-TCLock/KD 数据流统一见 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+[性能任务](PERFORMANCE_PLAN.md)各自维护单一职责。
+三方协议统一从 [lock protocols](design/lock_protocols.md) 导航；对象布局、创建位置和
+数据流分别由 [spin implementation](design/spin_implementation.md) 与
+[mutex implementation](design/mutex_implementation.md)维护。
 [kernel_baseline](../kernel_baseline/README.md)和[kernel_experiments](../kernel_experiments/)
 保留捕获身份及独立实验，不能因旧内核当前不运行而删掉恢复材料。
 历史结果按冻结版本保留在 [VALIDATION](VALIDATION.md)及 bench/results；

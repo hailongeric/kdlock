@@ -8,7 +8,8 @@
 
 spin 入口检查热度/上下文并按批采样时钟；`nondelegated.inc` 提供完整原生 fast/pending/MCS，虚拟排队继续服务父 ACK。顶层 pending 免 ticket；ticket 使用单个原子控制字，continuation 保留独立退休协议。详见 [当前锁协议](../docs/design/locking.md)。
 
-当前 spin 统一分发已删除；`kd_main.c` 保留停用的 mutex hook 安装和撤销入口。直接入口位于 `spin/direct.inc`，由`kd_spinlock.c`组合编译，
+当前 spin 统一分发及废弃的 mutex hook 安装/撤销适配器已删除；`kd_main.c`
+只初始化/退休direct provider，不安装全局hook。spin直接入口位于 `spin/direct.inc`，由`kd_spinlock.c`组合编译，
 调用者使用 `include/kd_spin_direct.h` 的 clobber-v1 现场约定，并在计时前调用
 `kd_spin_prepare` 登记入口。公开 unlock 处理单锁字快速 owner、ticket 和 native ACK；
 内部 shadow/frame 解锁保留为 `kd_spin_unlock_protocol`。保留的 mutex hook 路由当前未安装。
@@ -44,8 +45,8 @@ FULL/native仍进入原通用分发与退休路径。
 | 源码入口 | 保留职责 |
 | --- | --- |
 | [kd_spin_runtime.c](kd_spin_runtime.c) | spin、mutex与共享执行层的实际编译入口，使普通batch helper可跨源文件内联 |
-| [kd_main.c](kd_main.c) | 模块初始化、hook 安装/撤销、目标选择 |
-| [kd_lock.c](kd_lock.c) | hook 路由、原生快路径、mutex shadow 查询 |
+| [kd_main.c](kd_main.c) | direct provider 初始化/退休、mutex目标配置与回滚 |
+| [kd_lock.c](kd_lock.c) | direct mutex/保留bridge路由、原生快路径、mutex shadow 查询 |
 | [kd_spinlock.c](kd_spinlock.c) | 按协议顺序组合 spin 私有实现；公共调用、恢复和解锁分别在下表的独立组件中 |
 | [kd_mutex.c](kd_mutex.c) | mutex 公共入口、栈切换与 owner 返回 |
 | [exe.c](exe.c) | wrapper 返回包的高层执行循环 |
@@ -65,8 +66,8 @@ FULL/native仍进入原通用分发与退休路径。
 
 `spin_prefetch=0/1/2` 是只读装载参数，分别关闭后继请求预取、保留 combiner
 查询地址的旧策略、使用发布前准备的地址提示（默认）。它不关闭其他既有队列
-返回处的栈预取。默认producer模式的MINIMAL包只需BP与IP两次hint，IP/SP已共用一行，
-覆盖准入读取及COMPLETE写回；借用包始终走FULL策略。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
+返回处的栈预取。默认producer模式的MINIMAL提示覆盖核心头/IP/SP/BP、provenance指针行及虚拟GPR backing行，
+并按producer检查过的边界提示caller栈；借用包始终走FULL策略。新提示只用于缓存预热，不替代寄存器包、准入或 owner/ACK；
 节点为 128 字节，next 与通知字分行，continuation 继续独立存活。
 四节点per-CPU数组显式按128字节对齐，节点类型大小及通知偏移64/65保持；生产断言与存储fixture约束数组对齐。
 匹配ELF每CPU只增加64字节填充，独立性能及地址推断边界见[节点数组报告](../bench/tclock_compare/results/HISTORY.md#20260924-node-array-alignment)。
@@ -108,8 +109,9 @@ continuation 按 64 字节对齐，
 正常完成合并终态验证和解绑；复杂处理仍使用原协议。
 
 当前对象偏移、简单c1访问范围与预取覆盖集中维护在
-[执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。紧凑continuation前缀把MINIMAL
-所需的五行合为四行，记录步长仍为704字节；这是地址几何，不是PMU缓存缺失次数。
+[执行路径](../docs/design/spin_implementation.md)。紧凑continuation前缀把MINIMAL
+所需核心头/包提示合为三行，记录步长仍为704字节；node与caller栈另计。
+这是地址几何，不是PMU缓存缺失次数。mutex独立布局与提示见[mutex实现](../docs/design/mutex_implementation.md)。
 只读配置和JIT镜像可在预热后共享缓存，不能直接当成远端DRAM访问。
 `spin_prefetch=0/1/2`可用于同一镜像的受控诊断，结果须独立冻结参数并保留实际JIT和排空检查。
 
@@ -119,7 +121,7 @@ spin 初始化按 possible CPU 一次预分配20 KiB，NUMA-on时请求该CPU节
 不维护 request users/packet_owner。普通完成先 pop 再通知；native 包括无锁 relay
 在唤醒前借用根 ticket，清理/pop 后解除，原线程最后解锁等待所有执行者退休。
 最终恢复汇编读完现场后才回收根记录。完整对象表与数据流见
-[EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+[Spin implementation](../docs/design/spin_implementation.md)。
 
 ## 私有实现组件
 

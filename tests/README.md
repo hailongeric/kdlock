@@ -10,6 +10,7 @@
 
 | 批次 | 已完成与范围 |
 | --- | --- |
+| [协议文档与死代码清理](#2026-10-06-协议文档与死代码清理) | 基础2组及mutex资源、TCLock spin/mutex换栈共5组通过；6个guest模块构建及布局/UBSAN核验通过；仅单元/构建，不作为live或性能重跑 |
 | [Mutex shared runtime与后续优化](../bench/tclock_compare/results/20261003-mutex-followup.md) | shared runtime、精确余额、OUTER调用壳分阶段验证；包含实际编译续点COMPLETE/FULL、资源/registry/guard、真实hash JIT与owner/ACK；NUMA回退和早期fixture失败保留，cacheline完整15点135场通过，hash功能与计时分列；未跑全量unit |
 | [KD私有包与核心缓存行重排](../bench/tclock_compare/results/20260928-packed-continuation.md) | 两个基础程序及22个受影响driver分批通过；192次实际恢复、旧镜像拒绝、141场性能、7场spin/mutex实际JIT功能、TCLock执行采样及四个真实owner ACK；初期fixture/overlay失败保留，未跑全量 |
 | [NUMA/hash 与三方 mutex 分阶段验证](../bench/tclock_compare/results/20260928-numa-mutex.md) | spin/hash 与 mutex/cacheline 基线各 135 场；native-first、locality、专用 batch 分别筛选；shadow/task cache 的失败候选保留；对应基本/协议/资源及 JIT 验证以各阶段冻结证据为准，未跑全量 |
@@ -103,6 +104,36 @@ observer只运行`CachelineTests.test_provider_isolation_and_incompatible_source
 两次模块及检查记录均保留，没有因这一格式调整重复unit或live。
 NORMAL最终模块SHA256：`f1a8232df997816fcc1f4809a084c261c0decbdc5e54f45d71b499e7f236272b`。
 最终guest归档SHA256：`f7507566cfc171e36642d158f5663f564ba81c637dbb59fd93c85ee220e42e59`。
+
+## 2026-10-06 协议文档与死代码清理
+
+六后端协议及实现集中到 [lock protocols](../docs/design/lock_protocols.md)、
+[spin](../docs/design/spin_implementation.md) 和 [mutex](../docs/design/mutex_implementation.md)。
+清理KD/TCLock未编译的hook安装适配器，以及mutex fixture对其常量selector的检查；
+保留实际原生owner、资源、准入及借用unlock检查。顶层workload构建增加独立mutex目标。
+
+在既有recovery guest、`6.1.159-kdclobber2`上执行两个基础程序与
+`mutex/test_mutex_resources.py`、`spin/test_tclock_context.py`、
+`mutex/test_tclock_mutex_context.py`，5组通过。mutex资源的24个错误变体均被检测；
+TCLock两种实际汇编各检查128次换栈、64次获取返回与64次unlock续点，六GPR/RSP保持，
+mutex另检查parking/wakeup竞态与task refs。
+
+W=1构建KD normal/SELFTEST、TCLock spin/mutex、Native spin/mutex共6个模块通过，
+全部无UBSAN imports；保留换栈相关objtool告警。DWARF核对KD mutex node为256字节、
+regs偏移80，KD gate及Linux mutex为32字节；TCLock context/node/lock为336/160/24字节。
+核验既有kernel baseline、冻结输入及ELF哈希，结束时guest空闲。验证范围为构建与单元，
+没有模块加载、daemon、live JIT或性能矩阵执行。
+
+首次快照漏带`kd_hostcalls.def`导致KD构建失败；原记录保留于guest
+`/root/kdlock-evidence/docs-cleanup-20261006/`。修正快照后在独立`-retry1`目录完成构建；
+重试快照的255条路径中，原254条与已通过单元的快照逐字节匹配，新增缺失的`.def`，
+复用该单元证据。252个host源码文件与guest快照匹配；另含guest-only编辑器配置及
+`7c74d3e`已撤回的两个NUMA实验测试，它们未参与本轮测试/构建。保留其归档后，
+从active guest checkout删除这两个已撤回测试；编辑器配置保留。
+六个固定TCLock上游文件哈希及当前`port.patch`一致，文档链接和回链静态检查通过。
+命令、源码、日志、失败记录、布局及ELF归档到
+[本地证据](../bench/.tmp/docs-cleanup-20261006/guest-evidence.tar.gz)，SHA256：
+`bc346d303a33da327e2bcbbf7beccb9074b32ffbe5ee32907a9042c82e89a531`。
 
 ## 单元检查
 

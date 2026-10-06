@@ -126,7 +126,7 @@ continuation reclamation are separate boundaries, as is node reuse.
 
 TCLock target locks use their own queue/unlock protocol. They cannot mix with
 unmodified Linux qspinlock solely because both expose spin_lock; see
-[compatibility](../tclock_backend/README.md#与-linux-原生-spinlock-的协议兼容边界).
+[compatibility](design/lock_protocols.md#tclock-spin).
 
 ### C3. Immutable JIT Publication And Lifetime
 

@@ -6,8 +6,9 @@
 需要irqsave/irq/bh语义的调用者使用[显式变体接口](../include/README.md#显式-irqbh-spin-接口)，
 这些保护本CPU上下文的获取固定走原生KD pending/MCS，不参与远端代理。
 
-本页描述显式 KD spin API 及保留的执行引擎。全局 spin 分发已删除，mutex hook
-安装仍停用；普通 Linux 锁调用不会因加载模块自动代理。运行步骤见
+本页描述显式 KD spin API 及共享执行引擎；普通mutex的专用路径见
+[mutex implementation](design/mutex_implementation.md)。全局hook不安装；
+普通 Linux 锁调用不会因加载模块自动代理。运行步骤见
 [PROJECT_GUIDE](PROJECT_GUIDE.md)，验证入口见 [tests](../tests/README.md)。
 
 ## 1. 准入范围
@@ -47,7 +48,7 @@
    完整 KD 原生 fast/pending/MCS，已有 ticket 保留，节点不带 continuation/frame；发布后的拒绝或续跑仍须
    完成既有 continuation 生命周期。只有真正节点耗尽才轮询锁字，不回退到 Linux
    锁操作。对象大小、分配位置及与 TCLock 的数据流对照见
-   [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+   [Spin implementation](design/spin_implementation.md)。
 5. 每CPU预分配20 KiB：低12 KiB容纳最多12条continuation，高8 KiB为waiter等待栈。
    continuation栈按CPU在低区内选择64字节对齐偏移，保持全部记录及等待栈不重叠；
    锁路径不计算偏移或新增分配，释放从等待栈顶找回原始基址。布局见 [frames](design/frames.md#911-reuse-before-copy-contract)。
@@ -65,7 +66,8 @@
    拒绝出口留给通用分发，完成分类及JIT正文witness不变。
    clobber 选择对应正文偏移、解锁入口及 COMPLETE 许可；许可只在已有检查证明
    spin_simple、无 parent、depth=0、非 mutex 时成立。legacy 仍不授予最小完成许可；
-   mutex/复杂路径继续使用通用 helper，计时、发布及 frame/ACK 退休顺序不变。
+   复杂路径继续使用通用 helper；普通mutex根有自己的batch prepare/complete/retire，
+   FULL返回才进入通用分发。计时、发布及frame/ACK退休顺序不变。
 6. 嵌套控制 CALL 维护锁记录和独立所有权。提前释放、乱序解锁、远端借用 ACK
    与重新获取不能重复释放 KD 字；ticket 元数据退休与唯一 release store 分开。
 7. 正常 COMPLETE 回交 IP/SP/BP；中途 FULL 物化完整逻辑 GPR。已执行的正文

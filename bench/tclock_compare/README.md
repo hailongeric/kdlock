@@ -28,7 +28,7 @@ KD原生获取内联owner CAS，原生解锁调用原始Linux函数；竞争入�
 接口及同task cookie约束见[锁协议](../../docs/design/locking.md#mutex-outer-direct)。
 已有DIRECT接口继续用于嵌套控制；本运行器的mutex仍限普通plain操作，没有增加nested/early入口。
 KD global interception 继续关闭。
-TCLock worker 注册和整组排空见[端口边界](../../tclock_backend/README.md#普通-mutex-独立端口)。
+TCLock worker 注册和整组排空见[端口边界](../../tclock_backend/README.md#普通-mutex-端口边界)。
 mutex 的 `lock_kind` 纳入汇总身份；TCLock 保留委托次数证据，KD 继续要求返回正文 JIT witness。
 先验证 cacheline 基线和各独立优化，再使用同一入口的 `--workload rcuht`。
 原 spin/hash 入口及成绩不作为 mutex 成绩。
@@ -196,7 +196,7 @@ JIT，并标记 `DISABLED_CONTROL`。当前 continuation 功能证据与未覆�
 热表计数保留在原始日志，不参与性能评分；卸载时的入口/MCS计数是当前未完成采样窗口的余量，
 不是整场累计总数。
 
-kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock 按用户要求删除额外执行计数，
+kdlock 保留最小 JIT 完成计数作实际执行验收；TCLock spin 按用户要求删除额外执行计数，
 代理次数与比例记为 null、状态为 `UNMEASURED`，不把未知写成零或实际代理通过。
 每场检查数据、批次 IRQ/preempt 状态和排空；源文件、二进制、内核身份、生成物和
 日志均冻结保存。JIT 计时与逐次日志关闭，kdlock 的执行计数仍有成本。
@@ -248,8 +248,9 @@ python3 bench/tclock_compare/test_direct.py
 
 采用 Linux 6.1 移植版和上游 C 内联换栈，保留 NUMA_AWARE、WWJUMP 与 1024
 批次配置值；其WWJUMP计数从0开始、跳转时递增，普通路径最多可执行1025个正文，
-不同于KD的精确正文上限。未添加运行期代理次数计数。关闭 `ENABLE_IRQS_CHECK`、TCLock 后端
-及三种 direct workload 的 UBSAN 插桩；内核内部 UBSAN 保持原配置，KD私有benchmark provider默认关闭UBSAN，
+不同于KD的精确正文上限。Spin未添加运行期代理次数计数，mutex另有返回batch观察。
+Spin比较关闭 `ENABLE_IRQS_CHECK`。TCLock 后端与三种 direct workload 均关闭
+模块 UBSAN 插桩；内核内部 UBSAN 保持原配置，KD私有benchmark provider默认关闭UBSAN，
 显式`--kd-provider-ubsan kernel`可继承内核配置。
 运行器检查TCLock/workload实际 ELF、返回布局及无 UBSAN handler 引用；KD按所选政策核对并记录，
 保留 IRQ/preempt 退出检查。

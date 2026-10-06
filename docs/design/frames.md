@@ -66,7 +66,7 @@ may release-publish its retired marker after pop; its producer collapses it on
 its next reservation/release. No request `users` or `packet_owner` remains.
 The stack header plus records occupies 8512 bytes within the reserved 12 KiB.
 Exact object sizes, allocation sites and cross-CPU data flow are maintained in
-[execution paths](../../bench/spin_cacheline/EXECUTION_PATHS.md).
+[execution paths](spin_implementation.md).
 Exhaustion before publication uses native KD MCS with the existing ticket.
 Pinned physical context is rejected before a delegation node is published.
 

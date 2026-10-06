@@ -1,12 +1,12 @@
 /*
- * kd_lock.c — kdlock hook implementations.
+ * kd_lock.c — direct mutex routing and retained kernel bridge endpoints.
  *
- * This file implements the hook callbacks that the patched kernel calls on
- * ordinary spinlock and mutex operations before target-process selection:
+ * No global callbacks are installed. Direct mutex callers use the same
+ * admission and exact-owner routing as the retained bridge endpoints:
  *
  *   Spin callers use the explicit kd_spin_lock_abi() API.
  *
- *   Mutex:        __kd_mutex_lock  → _kd_mutex_lock()   (kd_mutex.c)
+ *   Mutex:        __kd_mutex_lock  → _kd_mutex_lock_abi() (kd_mutex.c)
  *                 __kd_mutex_unlock → _kd_mutex_unlock()
  *
  * Each struct mutex * is mapped to a struct kd_mutex * via the shadow table.

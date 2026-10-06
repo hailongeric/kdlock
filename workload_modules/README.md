@@ -1,9 +1,22 @@
-# 当前内核负载
+# Explicit kernel workloads
 
-[spin_cacheline](spin_cacheline/README.md)是当前显式 Linux/TCLock/KD API 的业务
-负载，生成 `spin_cacheline.ko` 和 `/dev/spin_cacheline`。支持固定展开 cacheline、
-RCUHT，以及 KD 专用的 nested/early 场景，运行器位于 bench/tclock_compare。
+Kernel payloads live here; clients, measurement and reporting live under
+[bench/tclock_compare](../bench/tclock_compare/README.md). Provider-specific
+probes remain in [tests/kernel](../tests/kernel/). Each backend is selected at
+compile time and exclusively owns its target lock protocol.
 
-旧依赖透明 hook 的 lock_scenarios 模块及构建入口已删除。仍有效的寄存器探针
-移至 tests/unit/execution，原有协议历史通过记录可从 VALIDATION 和 Git 历史查看。
-顶层 Makefile 默认仅构建显式 Linux native 负载；三后端实验由运行器构建。
+| Workload | Module / device | Content |
+| --- | --- | --- |
+| [spin_cacheline](spin_cacheline/README.md) | `spin_cacheline.ko` / `/dev/spin_cacheline` | Native/TCLock/KD spin, cacheline/RCUHT payloads and KD nested/early scenarios |
+| [mutex_cacheline](mutex_cacheline/README.md) | `mutex_cacheline.ko` / `/dev/mutex_cacheline` | Separate ordinary mutex functions for the same three arms and shared cacheline/RCUHT payload logic |
+
+The top-level Makefile builds both Linux Native workloads by default; explicit
+`spin_cacheline` and `mutex_cacheline` targets build one. Run it only in the
+guest with the verified kernel build. Comparison runners build isolated
+backend-specific copies with matching symbol dependencies and observer metadata.
+The old transparent-hook workload is removed; its historical evidence remains
+in Git and the validation/report indexes.
+
+Lock behavior is documented in [six protocols](../docs/design/lock_protocols.md)
+and the [spin](../docs/design/spin_implementation.md)/[mutex](../docs/design/mutex_implementation.md)
+implementation guides. Measurement commands and results belong in the runner README.

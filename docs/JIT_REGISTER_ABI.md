@@ -265,7 +265,7 @@ combiner 续点，完成发布后不再访问旧请求。`kd_spin_batch_run()` �
 这不保证机器码不再保存这些寄存器：caller 所在函数仍须满足对外 C ABI，
 combiner 的活跃 C 值也需要跨 clobber 保存。显式状态搬运减少与端到端成本
 下降是不同结论；函数级保存、逐请求校验等抵消点见
-[当前执行路径与对象对照](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+[当前执行路径与对象对照](design/spin_implementation.md)。
 
 ```text
 TCLock:
@@ -904,7 +904,7 @@ result 仍为 32 位，位于 664；retired 位于 668，不与热 frame 行合�
 分配/收缩，远端执行者仅能在 pop 后发布 retired，不扫描空闲引用或搬移活动记录。
 node 首行保留链接、execution 与预取地址，通知字段位于第二行偏移 64/65；
 数组步长为 128 字节。节点复用不回收 continuation，预取提示不参与恢复。
-完整分配、wrapper 栈区与数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)，
+完整分配、wrapper 栈区与数据流见 [执行路径](design/spin_implementation.md)，
 不是动态栈峰值或任意深度安全证明。生产 spin 的 node、combiner 与恢复路径引用
 同一份包；frame 的物理链与包引用见 [Frame 协议](design/frames.md#91-frames-and-lock-ledger)。
 软件包已升级 layout 2，两元素 args ABI 未改变；mutex 的最小状态与独立 FULL 生命周期见 1.0 节。

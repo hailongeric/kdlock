@@ -1,4 +1,8 @@
-# Spin and mutex ownership protocols
+# KD spin and mutex ownership protocols
+
+六后端对照从 [lock protocols](lock_protocols.md) 阅读，具体实现分别见
+[spin](spin_implementation.md) 和 [mutex](mutex_implementation.md)。
+本页只定义 KD 所有权、嵌套、ACK 与退休的详细契约。
 
 旧统一 spin 分发和站点缓存已删除；本页区分当前协议与固定版本验证。
 当前直接入口为 `kd_spin_lock_abi`，快速所有权和 ticket 生命周期仍保留。
@@ -35,7 +39,7 @@ mutex 等待从 CPU 1 迁移到 CPU 2；不是实际 JIT 验收的替代。
 continuation 栈保留稳定 request，普通完成先 pop
 再通知；native 先发布 NATIVE_READY，最终解锁等待包括无锁 relay 在内的根 ticket
 借用全部退休。每次实际获取只持有一次入口抢占 pin，热度记录与原生回退复用它。
-布局、分配位置和两后端数据流集中在 [执行路径](../../bench/spin_cacheline/EXECUTION_PATHS.md)。
+布局、分配位置和两后端数据流集中在 [执行路径](spin_implementation.md)。
 
 验证结果与矩阵维护在 benchmark/tests 索引，未验证边界不得写成通过。
 
@@ -355,7 +359,7 @@ waiters keep their executor C stack for nested owner/ACK service. Allocation
 failure rolls back initialization; drained shutdown frees the shared regions.
 Only the owning CPU changes the continuation top, collapsing contiguous retired
 records without scanning holes or moving live records. Frame pop and storage
-reclamation are separate boundaries; see [storage and data flow](../../bench/spin_cacheline/EXECUTION_PATHS.md). The lock
+reclamation are separate boundaries; see [storage and data flow](spin_implementation.md). The lock
 ledger and wrapper RSP scratch are separate metadata. Frame and held-lock
 depths are bounded at eight.
 Frame count, logical depth, held-lock count and node reservations are distinct
@@ -384,7 +388,8 @@ the original Linux mutex owner and final ACK protocol below.
 ### 5.1 Physical Lock And Scheduling Gate
 
 `kd_mutex_shadows[]` maps original mutex addresses to 1024 bounded scheduler
-entries under `kd_mutex_shadow_lock`. An entry contains a queue, `locked` gate,
+entries. Exact-key hits use acquire reads; insertion initializes and publishes
+under `kd_mutex_shadow_lock`. An entry contains a queue, `locked` gate,
 and `physical_owner`. **Neither the gate nor a queue handoff grants exclusion
 without the original Linux mutex being held by the tracked physical owner.**
 Borrowed native execution does not change that owner; it follows the explicit
@@ -573,8 +578,8 @@ assembly are substitutes. Their scope and live-test separation are maintained
 in [历史：the mutex resource guide](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/mutex_protocols.md#61-mutex-资源与恢复包).
 
 `kd_mutex_tasks.c` keeps RCU-readable task membership with a task reference and
-lock-protected acquisition refs. The existing mutex `is_kd` callback matches
-target comm or membership. This preserves unlock routing after a rename; it
+lock-protected acquisition refs. Direct entry uses target comm for fresh
+admission, while unlock retains active acquisition routing after a rename. It
 does not replace the original lock. `mutex_task_fail_once=1` tests pre-entry
 allocation failure. No allocations are needed in the predicate. Unload requires
 all callers stopped and records/queues drained; `rcu_barrier()` only completes
@@ -621,20 +626,23 @@ owner pinned to a waiter's occupied CPU cannot make progress. Old same-CPU
 waiter-scheduling/oversubscription evidence does not validate this new contract.
 
 A promoted, published entry does not guarantee a delegatable batch. A queue
-head can remove its sole tail and run its own original CS; `run_combiner()`
-hands the last follower onward when it has no successor. Eight userspace
+head can remove its sole tail and run its own original CS. A terminal ABI2/MINIMAL
+follower can be delegated; unstarted refusals and legacy/FULL terminal packets
+receive physical handoff. Eight userspace
 threads on two CPUs need not produce eight simultaneous queued requests.
 The [CPU-mask assessment](../VALIDATION.md#mutex-oversubscription-assessment)
 records an actual prepared-but-unexecuted JIT point, not an admission failure
 or permission to count native completion as JIT.
 
-The local TCLock revision identified in section 13 has a different linked-waiter
-handshake in both `rcuht/locks/komb_mutex.c` and its Linux `kernel/locking/mutex.c`:
+The current [TCLock mutex port](mutex_implementation.md#tclock-implementation)
+retains the upstream linked-waiter handshake in `tclock_backend/komb_mutex.c`:
 when rescheduling is needed and another task can run, an UNPROCESSED waiter
 sets TASK_INTERRUPTIBLE and atomically enters PARKED. The waker changes it to
-PROCESSING and wakes a parked task with `wake_up_process()`. Its queue-head gate
-still polls, and its last-node handoff also avoids delegation. This is a source
-inspection, not a TCLock run or proof that it solves this measured workload.
+PROCESSING and wakes a parked task with `wake_up_process()`. It retains its
+queue-head gate and terminal-node handoff. The ordinary fixed-affinity port is
+executed in the [three-way mutex matrices](../../bench/tclock_compare/results/20261003-mutex-followup.md),
+with separate parking/delegation observations. That evidence does not validate
+arbitrary oversubscription or transfer this parking policy to KD.
 
 Do not copy those completion values or parking transitions into kdlock: here
 PROCESSED is 1, which TCLock uses for PARKED. The requested GS policy requires

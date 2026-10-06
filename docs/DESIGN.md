@@ -2,9 +2,11 @@
 
 当前显式 KD spin API 使用单锁字、按 CPU 热值分流的 C `if` 获取和统一 clobber
 解锁。冷路径包含完整 CAS/pending/MCS，实际 MCS 发布更新 CPU 热度；热路径复用
-fast owner、ticket 和 continuation 退休协议。全局 spin 分发已删除，mutex hook 安装停用。
-锁协议见 [locking](design/locking.md)，现场存储见 [frames](design/frames.md)，
-对象大小、创建位置及 TCLock/KD 数据流见 [执行路径](../bench/spin_cacheline/EXECUTION_PATHS.md)。
+fast owner、ticket 和 continuation 退休协议。KD mutex 保留原 Linux mutex/physical owner；
+全局 hook 不安装，废弃安装适配器已删除，generic FULL 所需桥接端点保留。
+六后端协议见 [lock protocols](design/lock_protocols.md)，实现与布局分别见
+[spin](design/spin_implementation.md) 和 [mutex](design/mutex_implementation.md)。
+KD 嵌套所有权见 [locking](design/locking.md)，现场存储见 [frames](design/frames.md)。
 
 This document describes current implementation contracts, not a chronological
 test log. Usage and execution flow: [JIT_EXECUTION](JIT_EXECUTION.md).
@@ -461,7 +463,7 @@ the paired heat-routed caller is the workload default. Callers must be rebuilt
 when their inline ABI changes, as described in section 3.
 `target_process` defaults to kd_test in the retained mutex path; `mutex_jit`
 defaults to 1, but neither setting installs the disabled global hook.
-Spin defaults to `KDLOCK_NUMA=1` and `KDLOCK_SPIN_BATCH=512`; the build-time
+Spin defaults to `KDLOCK_NUMA=1` and `KDLOCK_SPIN_BATCH=1024`; the build-time
 body cap accepts 1–1024. Each batch starts a separate NUMA scan budget at the
 same value. Mutex keeps its fixed 1024-body limit.
 Recovery-only fault/capacity/rename probes are test controls, not production
@@ -515,8 +517,8 @@ The implementation boundaries are:
     as a security isolation boundary. Access-time checking and its pre-instruction
     native exit, including local condition-code preservation, remain explicitly
     deferred and unimplemented; static screening can miss runtime pointer changes.
-13. **Batch work is bounded** — spin processes at most 512 delegated bodies
-    per batch by default, with an independent scan budget initialized to 512.
+13. **Batch work is bounded** — spin processes at most 1024 delegated bodies
+    per batch by default, with an independent scan budget initialized to 1024.
     Its body cap is a build-time setting; mutex remains fixed at 1024 bodies.
     These are not runtime module parameters or scheduler-latency guarantees.
 14. **Flags can be clobbered inside JIT** — entry predicates, dispatcher comparisons and inserted
@@ -554,15 +556,19 @@ The implementation boundaries are:
 
 The current [direct runner](../bench/tclock_compare/README.md) builds the same
 payload source separately for Linux, TCLock and KD. Each arm exclusively owns
-its lock object's protocol. Linux uses raw native API, TCLock uses native stack
-delegation, and KD uses caller-clobber v1 with a single KD word and JIT admission.
+its lock object's protocol. Spin compares Linux raw API, TCLock stack delegation
+and KD's single word with JIT admission. Mutex compares original Linux functions,
+the actual TCLock mutex port and KD's original-mutex/physical-owner protocol.
+The current outer mutex workload uses its exact acquisition cookie and native CAS.
 Caller spill, lock/unlock, body, post-work and loop costs remain in ns/op.
 
 The paired cold gate applies CPU warmup before adaptive lock admission.
 `spin_entry_ratio_limit=0` bypasses only the ratio. Preserve caller shell
-and option identity as separate comparison groups. Record actual JIT independently of valid throughput. TCLock
-has no current per-body delegation counter; data correctness and drain cannot
-supply a delegation share. The sampler component measures record calls only.
+and option identity as separate comparison groups. Record actual JIT independently
+of valid throughput. TCLock spin delegation remains unmeasured; mutex records
+delegated bodies once per returned batch. Whole-session counts do not establish
+the selected peak window's delegation share. Data correctness and drain are
+independent checks. The sampler component measures record calls only.
 
 Source/ELF/configuration and load settings define each experiment. Matrices
 must not mix old hook or ABI paths with direct results. The latest local-hash

@@ -34,7 +34,7 @@ Demo ioctl 和数据布局见 [workload_modules/README.md](../workload_modules/R
 寄存器约定见 [JIT_REGISTER_ABI.md](../docs/JIT_REGISTER_ABI.md)。frame 锁记录
 只描述实际获取/释放，本身不取得原锁；完成事件、owner ACK、frame pop 和
 continuation 存储回收和 source pin 释放是不同边界。
-每 CPU 区域、字段偏移与数据流见 [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)，
+每 CPU 区域、字段偏移与数据流见 [Spin implementation](../docs/design/spin_implementation.md)，
 这些内嵌对象尺寸不能重复计入总分配。
 
 显式 KD 对象见 [kd_spin_type.h](kd_spin_type.h)，直接调用 ABI 见

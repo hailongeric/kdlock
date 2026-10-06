@@ -3,8 +3,9 @@
 ## 1. 当前进展
 
 spin通过显式`kd_spinlock_t`和caller-clobber v1 API接入，32位KD字承载获取、pending、
-MCS tail及combiner仲裁；Linux、TCLock、KD对象不能混用协议。mutex协议保留，
-全局hook未安装，加载provider不自动代理普通Linux锁。
+MCS tail及combiner仲裁；Linux、TCLock、KD对象不能混用协议。普通mutex已有独立
+三方负载与实际TCLock端口；KD保留原Linux mutex/physical owner，外层用精确cookie。
+全局hook不安装，废弃安装适配器已删除，加载provider不自动代理普通Linux锁。
 
 当前只保留adaptive：复用per-CPU MCS/获取计数，MCS达到1024时用右移判断比例并清零，再采时。
 默认比较`(spin_entries >> 10) < 2`，单锁热度仍独立每512次检查。
@@ -15,7 +16,9 @@ MCS tail及combiner仲裁；Linux、TCLock、KD对象不能混用协议。mutex�
 live观察近似，独立排空后检查最终余额，见[锁协议](design/locking.md#spin-diagnostic-identity-lifetime)。
 
 当前普通spin的[135场c1三方收尾复测](../bench/tclock_compare/results/20260927-spin-checkpoint.md)已完成，
-作为转入mutex阶段前的基线。此前[nested/early](../bench/tclock_compare/results/20260924-warmed-peak.md)
+作为转入mutex阶段前的历史基线。当前mutex [15点cacheline/hash矩阵](../bench/tclock_compare/results/20261003-mutex-followup.md)
+共有270场有效样本；全负载性能验收仍拒绝，不能把个别峰值优势写成全线程追平。
+此前[nested/early](../bench/tclock_compare/results/20260924-warmed-peak.md)
 和[1/8 cacheline复测](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md)保留为各自版本的历史证据。
 成绩、样本分布及源码身份只在匹配报告中维护，不拼接为当前版本的全量功能验收。
 并发冷准备、pinned mutex和访问时guard等边界见[TODO](TODO.md)，
@@ -23,11 +26,12 @@ live观察近似，独立排空后检查最终余额，见[锁协议](design/loc
 
 ## 2. 阅读顺序
 
-- [DESIGN](DESIGN.md)：模块边界与实现契约；[锁协议](design/locking.md)定义所有权。
+- [六后端协议](design/lock_protocols.md)：KD/TCLock/Native的spin与mutex。
+- [DESIGN](DESIGN.md)：KD模块边界与实现契约；[KD锁协议](design/locking.md)定义嵌套所有权。
 - [JIT_EXECUTION](JIT_EXECUTION.md)：准备、等待、执行、续跑和退出。
 - [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md)：寄存器包、wrapper 和控制 CALL。
-- [EXECUTION_PATHS](../bench/spin_cacheline/EXECUTION_PATHS.md)：TCLock/KD 分阶段流程、
-  对象尺寸、创建位置和跨 CPU 数据流。
+- [Spin implementation](design/spin_implementation.md)、[Mutex implementation](design/mutex_implementation.md)：
+  三方分阶段流程、对象尺寸、创建位置、预取和跨CPU数据流。
 - [CODE_MAP](CODE_MAP.md)：文件入口；[tests](../tests/README.md)和
   [bench](../bench/README.md)维护验证和测量命令。
 - [AGENTS](AGENTS.md)：环境与操作边界；[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)
