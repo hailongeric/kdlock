@@ -12,7 +12,7 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 
 | Backend | Exclusion object | Who executes a contended request? | Wait policy | Native peers on the same object |
 | --- | --- | --- | --- | --- |
-| Linux Native spin | Linux `raw_spinlock_t` / qspinlock word | The acquiring caller | Kernel-selected spin/PV path | Ordinary compatible Linux APIs |
+| Linux Native spin | Linux `raw_spinlock_t` / qspinlock word | The acquiring caller | Native pending/MCS in the current VM | Ordinary compatible Linux APIs |
 | TCLock spin | A qspinlock-shaped word owned exclusively by TCLock | Caller or combiner on the waiter's real stack | Pinned polling | Not supported |
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
@@ -40,9 +40,10 @@ tail for heavier contention. The MCS notification transfers queue-head
 eligibility; that caller still obtains the physical lock before its own body.
 Unlock releases the ownership byte and balances preemption protection.
 
-The recovery kernel enables paravirtual spinlock support. Its selected x86
-slowpath may use PV wait/kick operations or the virtualization TAS shortcut;
-the native MCS algorithm alone is not proof of which branch ran in a sample.
+The kernel is compiled with paravirtual spinlock support, but the current KVM
+guest boots with `nopvspin`. This selects native pending/MCS locking and disables
+PV stealing, PV wait/kick parking and the virtualization TAS shortcut. Earlier
+samples retain their recorded boot policy; see [VM configuration](../PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
 Linux does not delegate the critical-section body, lend its stack to another
 CPU, or create a KD packet/frame/source lease.
 

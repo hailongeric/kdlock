@@ -9,6 +9,10 @@ and [mutex](design/mutex_implementation.md); correctness work lives in [TODO](TO
 
 ## Current evidence
 
+The VM now boots with [nopvspin](PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
+The matrix below predates that change. Rerun all three arms under the new policy
+before claiming current performance; no such rerun is recorded yet.
+
 The [2026-10-08 rerun](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
 contains 540 valid samples at committed `009e8e3`, with four lock-outside arithmetic
 rounds. Spin cacheline reaches 90% at 14/15 points and parity at 13/15; mutex

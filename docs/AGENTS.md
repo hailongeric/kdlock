@@ -71,6 +71,10 @@ replace or clear `/root/host_fs`, and do not edit frozen running inputs.
 Verify the captured source, config, build files and live Build ID with
 [the guide](PROJECT_GUIDE.md#kernel-identity); `uname -r` alone is insufficient.
 Keep `nokaslr`, voluntary preemption, frame pointers and mitigations unchanged.
+The current VM boots with `nopvspin` and uses native qspinlocks. Verify the
+argument and boot confirmation independently of Build ID; snapshot restoration
+can restore the earlier policy. Follow [the boot policy](PROJECT_GUIDE.md#native-qspinlocks-in-the-vm)
+before live runs and keep benchmark samples from different policies separate.
 Check actual CPU/NUMA placement. Host vCPUs were pinned to CPUs 0..39, with the
 first 20 on NUMA node 0; recheck that mapping after a restart.
 

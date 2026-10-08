@@ -29,6 +29,9 @@ do not overwrite this original capture or delete it as an obsolete artifact.
   build-file hashes, installed image/config identities and running uname/Build ID.
 - `verify.py`: standard-library-only, read-only checks. It does not download,
   extract, patch, build, load/unload modules, restart the VM or write kernel files.
+- `nopvspin-grub.cfg`: the current VM's separate boot override, activated on
+  2026-10-08. It is not part of this original source/config capture. See
+  [verification and rollback](../docs/PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
 
 The source archive is [official Linux 6.1.159](https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.159.tar.xz).
 Its SHA256, checked against the

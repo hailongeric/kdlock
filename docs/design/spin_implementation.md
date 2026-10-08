@@ -141,15 +141,17 @@ counts are intentionally unmeasured, so data/drain success cannot supply a share
 ## Linux Native path
 
 The Native arm calls the original kernel spin functions without a lock provider.
-The captured kernel is SMP, non-PREEMPT_RT and may use paravirtual qspinlock
-alternatives. Architecture fast acquisition CASes the native word; contention
+The captured kernel is SMP, non-PREEMPT_RT and includes paravirtual qspinlock
+support. The current VM's `nopvspin` boot selects the native path instead.
+Architecture fast acquisition CASes the native word; contention
 uses bounded pending followed by per-CPU MCS tail publication and acquire handoff.
 The ordinary raw-spin contract pairs preemption protection and leaves IRQ/BH state
 unchanged. No other task's critical section is delegated.
 
-PV waiting/kicks, kernel instrumentation and real runtime patching are part of
-this captured Native arm. Recheck the build/config/live identity rather than
-assuming a source-level generic qspinlock path is every executed instruction.
+PV stealing and PV waiting/kicks are disabled in this boot. Kernel instrumentation
+and runtime patching remain part of the Native arm. Verify build/config/live
+identity and [boot selection](../PROJECT_GUIDE.md#native-qspinlocks-in-the-vm)
+separately; historical samples may use the earlier PV policy.
 
 ## Verification boundaries
 

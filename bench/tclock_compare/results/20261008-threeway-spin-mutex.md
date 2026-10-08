@@ -2,6 +2,10 @@
 
 Source commit: `009e8e303e0e5f3d78aadec1c7c5103259194f06`. This rerun contains **540/540 accepted sessions**, across four payload/lock combinations, 15 thread counts, three backends and three rounds.
 
+Boot policy: all 540 samples ran before the later `nopvspin` activation. These
+scores and their raw evidence describe that earlier environment; they are not
+results for the [current native-qspinlock boot](../../../docs/PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
+
 Worker CPUs are the recorded prefixes of CPU0–35; collector CPU38 is separate. The setup uses a fixed 2.5 GHz frequency policy, NUMA on, KD provider UBSAN off, KD body limit 1,024, spin prefetch mode 2, adaptive ratio limit 2, 48,000 warmup operations per worker, and two-second measurements sampled every 10 ms. The scored peak is the highest observed full-cohort window of at least 300 ms after 300 ms settling.
 
 Cacheline updates one cacheline. Hash uses 1,024 buckets, 4,096 preallocated nodes, 8,192 keys and writes in every operation. Each operation includes four dependent multiply/add rounds after unlocking. The uncommitted 64-round change was excluded. These are separate workloads. KD published waiters remain pinned; TCLock mutex supports parking. KD mutex uses its current FIFO queue. TCLock is configured for 1,024; its zero-based upstream jump rule can execute 1,025 bodies.

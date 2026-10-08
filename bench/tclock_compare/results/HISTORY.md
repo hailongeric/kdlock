@@ -9,7 +9,7 @@ by source cleanup and are not shipped in a new checkout.
 
 | Report | Purpose |
 | --- | --- |
-| [Current spin/mutex matrix](20261008-threeway-spin-mutex.md), [statistics](20261008-threeway-spin-mutex-statistics.md), [audit](20261008-threeway-spin-mutex-audit.json) | Fresh `009e8e3` comparison: four workloads, all 15 thread points, 540 valid samples; hash and minority-node gaps remain |
+| [2026-10-08 spin/mutex matrix](20261008-threeway-spin-mutex.md), [statistics](20261008-threeway-spin-mutex-statistics.md), [audit](20261008-threeway-spin-mutex-audit.json) | `009e8e3` before `nopvspin`: four workloads, all 15 thread points, 540 valid samples; hash and minority-node gaps remain |
 | [Final mutex matrix](20261003-mutex-followup.md) | All 15 thread points; acceptance still fails across all workloads |
 | [Mutex statistics](20261003-mutex-followup-statistics.md), [JSON](20261003-mutex-followup.json) | Full valid distributions and targeted rechecks |
 | [Spin36 investigation](20260928-spin36-analysis.md) | Hash/cacheline, NUMA, PMU and UBSAN attribution limits |

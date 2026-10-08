@@ -40,6 +40,40 @@ Expected release: `6.1.159-kdclobber2`; captured Build ID:
 config, build and live identity. Keep `nokaslr`, voluntary preemption and the
 recorded CPU/NUMA placement. A mismatch requires investigation, not a kernel update.
 
+### Native qspinlocks in the VM
+
+Since 2026-10-08, the guest boots with `nopvspin`. Linux uses native qspinlocks;
+PV lock stealing and PV waiter parking are disabled. Kernel source, image and
+Build ID are unchanged. KD/TCLock keep their own target-lock protocols.
+
+The installed override is `/etc/default/grub.d/99-kdlock-nopvspin.cfg`; its exact
+contents are recorded in [nopvspin-grub.cfg](../kernel_baseline/nopvspin-grub.cfg).
+It appends the argument and selects `6.1.159-kdclobber2` as the persistent GRUB
+default. Its menu IDs contain this VM's root filesystem UUID.
+
+Verify in the guest after boot or snapshot restoration:
+
+```sh
+grep -w nopvspin /proc/cmdline
+dmesg | grep -F 'PV spinlocks disabled, forced by "nopvspin" parameter'
+```
+
+Run the kernel identity check above too: a matching Build ID alone does not
+establish the boot policy. The activation check passed with all 40 CPUs online,
+node0 CPUs0–19, node1 CPUs20–39, voluntary preemption, unchanged host CPU pinning
+and the 2.5 GHz frequency policy. Earlier snapshots can restore the old policy;
+confirm a snapshot of the current boot before new live verification.
+
+Backups and verification are in guest
+`/root/kdlock-evidence/pvspin-nopvspin-20261008/`. Its adjacent `.tar.gz` archive
+has SHA256 `287447eabe43596b7494f5caa9d0c2fa39cf58ed918d703d66570ffc2cc37418`.
+To roll back while idle, remove the override, run `update-grub`, select the intended
+kernel and reboot. This also restores the prior GRUB default.
+
+The [540-sample comparison](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
+finished before activation. No performance rerun under `nopvspin` has been made;
+keep the two boot policies separate when comparing all three backends.
+
 ### Dependencies and idle state
 
 Use guest CPython 3.10 and the [pinned requirements](../disassem/requirements.txt).
