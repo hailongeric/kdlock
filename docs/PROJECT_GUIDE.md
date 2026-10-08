@@ -1,52 +1,32 @@
-# 项目执行指南
+# Project guide
 
-## 1. 当前进展
+KD spin uses an explicit four-byte lock; KD mutex retains the original Linux
+mutex and its physical owner. Both use caller-clobber entries and shared JIT
+execution. Providers do not install global interception hooks.
 
-spin通过显式`kd_spinlock_t`和caller-clobber v1 API接入，32位KD字承载获取、pending、
-MCS tail及combiner仲裁；Linux、TCLock、KD对象不能混用协议。普通mutex已有独立
-三方负载与实际TCLock端口；KD保留原Linux mutex/physical owner，外层用精确cookie。
-全局hook不安装，废弃安装适配器已删除，加载provider不自动代理普通Linux锁。
+## Reading order
 
-当前只保留adaptive：复用per-CPU MCS/获取计数，MCS达到1024时用右移判断比例并清零，再采时。
-默认比较`(spin_entries >> 10) < 2`，单锁热度仍独立每512次检查。
-原生队头在同一近似边界检查捕获队尾以内的六个后继。冷获取内联首次CAS，
-热获取走pinned clobber入口；解锁统一走generic clobber协议。
-热度只影响未来准入，owner/ACK/frame退休保持独立；完整规则见
-[执行流](JIT_EXECUTION.md#21-热度与角色)。spin waiter诊断改为per-CPU事件总数，
-live观察近似，独立排空后检查最终余额，见[锁协议](design/locking.md#spin-diagnostic-identity-lifetime)。
+| Need | Document |
+| --- | --- |
+| Understand all six locks | [Lock protocols](design/lock_protocols.md) |
+| Find the KD execution components | [Design](DESIGN.md), [code map](CODE_MAP.md) |
+| Follow spin or mutex operations | [Spin implementation](design/spin_implementation.md), [mutex implementation](design/mutex_implementation.md) |
+| Change generated code or state layout | [Execution flow](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md) |
+| Change ownership or recovery | [KD locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) |
+| Build and verify | [Provider](../kernel_module/README.md), [tests](../tests/README.md), [benchmarks](../bench/README.md) |
+| Review limits and remaining work | [TODO](TODO.md), [performance plan](PERFORMANCE_PLAN.md) |
 
-当前普通spin的[135场c1三方收尾复测](../bench/tclock_compare/results/20260927-spin-checkpoint.md)已完成，
-作为转入mutex阶段前的历史基线。当前mutex [15点cacheline/hash矩阵](../bench/tclock_compare/results/20261003-mutex-followup.md)
-共有270场有效样本；全负载性能验收仍拒绝，不能把个别峰值优势写成全线程追平。
-此前[nested/early](../bench/tclock_compare/results/20260924-warmed-peak.md)
-和[1/8 cacheline复测](../bench/tclock_compare/results/20260925-c1-c8-warmed-peak.md)保留为各自版本的历史证据。
-成绩、样本分布及源码身份只在匹配报告中维护，不拼接为当前版本的全量功能验收。
-并发冷准备、pinned mutex和访问时guard等边界见[TODO](TODO.md)，
-后续性能任务只维护在[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)。
+## Guest workflow
 
-## 2. 阅读顺序
+The host checkout is `/home/eric/vm/vm-shared/kdlock`. SSH connects to
+`root@127.0.0.1:2222`; the guest checkout is `/root/host_fs/kdlock`.
+Recovery uses a separate ext4 copy, so synchronize changed files by SHA256 while
+idle. Normal mode shares source through 9p. Do not replace `/root/host_fs` or
+modify frozen inputs. Full operational rules are in [AGENTS](AGENTS.md).
 
-- [六后端协议](design/lock_protocols.md)：KD/TCLock/Native的spin与mutex。
-- [DESIGN](DESIGN.md)：KD模块边界与实现契约；[KD锁协议](design/locking.md)定义嵌套所有权。
-- [JIT_EXECUTION](JIT_EXECUTION.md)：准备、等待、执行、续跑和退出。
-- [JIT_REGISTER_ABI](JIT_REGISTER_ABI.md)：寄存器包、wrapper 和控制 CALL。
-- [Spin implementation](design/spin_implementation.md)、[Mutex implementation](design/mutex_implementation.md)：
-  三方分阶段流程、对象尺寸、创建位置、预取和跨CPU数据流。
-- [CODE_MAP](CODE_MAP.md)：文件入口；[tests](../tests/README.md)和
-  [bench](../bench/README.md)维护验证和测量命令。
-- [AGENTS](AGENTS.md)：环境与操作边界；[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md)
-  维护后续性能任务。
+### Kernel identity
 
-## 3. 一步一步运行
-
-### 3.1 同步源码
-
-宿主目录 `/home/eric/vm/vm-shared/kdlock`；guest SSH 为 `root@127.0.0.1:2222`，
-项目目录 `/root/host_fs/kdlock`。normal 模式为 9p 共享，recovery 为独立 ext4 副本。
-先确认 guest 空闲，再比较 SHA256，只同步变化文件；对本次明确删除的文件同步删除。
-不能移动、递归覆盖或清空 `/root/host_fs`。运行器冻结输入后不可再改 guest 文件。
-
-### 3.2 进入 guest 并检查基线
+Run in the guest:
 
 ```sh
 cd /root/host_fs/kdlock
@@ -55,15 +35,15 @@ python3 bench/spin_cacheline/kernel_identity.py \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919
 ```
 
-当前 release 为 `6.1.159-kdclobber2`，捕获 Build ID 为
-`5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`。核验源码、配置、构建及运行身份，
-不能只看 uname。保留 `nokaslr`、voluntary 抢占和既定 CPU 放置；不要自动改内核。
-旧内核仅用于匹配历史源码的重现，见 [kernel_baseline](../kernel_baseline/README.md)。
+Expected release: `6.1.159-kdclobber2`; captured Build ID:
+`5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`. The verifier checks source,
+config, build and live identity. Keep `nokaslr`, voluntary preemption and the
+recorded CPU/NUMA placement. A mismatch requires investigation, not a kernel update.
 
-### 3.3 检查依赖与空闲状态
+### Dependencies and idle state
 
-使用 guest 的 CPython 3.10 和 [固定依赖](../disassem/requirements.txt)，
-需要 gcc/make/binutils、Python 开发头文件。已有环境可直接使用：
+Use guest CPython 3.10 and the [pinned requirements](../disassem/requirements.txt).
+An existing environment is available outside the checkout:
 
 ```sh
 export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
@@ -77,43 +57,32 @@ bench_runtime.idle()
 CHECK
 ```
 
-新环境在仓库外创建 venv，按 requirements 安装固定版本；不要升级系统 Python
-或全局 pip 包。构建及测试只在 guest，宿主只做源码/Git/静态检查。
+For a new environment, create a venv outside the repository and install the
+pinned requirements there. GCC, make, binutils and Python development headers
+are required. Do not upgrade system Python or global packages.
 
-### 3.4 构建和选择检查
-
-代码修改后可直接运行[三方性能命令](../bench/tclock_compare/README.md#准备与运行)，
-默认每配置三轮，报告min/median/max及波动；运行器负责构建、业务、IRQ/preempt、JIT和排空检查。
-以下独立构建与单元入口按需使用，不要求先跑完再测性能：
+### Build and check
 
 ```sh
-make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1
+make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1 UBSAN_SANITIZE=n
 make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'
 make -C tests/unit run
 ```
 
-默认单元入口仅运行两个基础 C 程序。按修改添加 `PY_TESTS`，不要自动跑全量。
-provider/device 生命周期用 `tests/run_all.sh --case module`；实际 JIT 使用
-[直接运行器](../bench/tclock_compare/README.md)，支持 `plain`、`nested`、`early`。
-所有 live 检查先按 [AGENTS](AGENTS.md)从 monitor 确认真实可恢复快照，再设置
-`KDLOCK_RECOVERY_CONFIRMED=1`，命令带外层 timeout，结果放仓库外新目录。
+The default unit target runs two basic C programs. Add only directly affected
+Python drivers through `PY_TESTS`; see [test selection](../tests/README.md#unit-checks).
+The benchmark runner builds isolated modules and defaults its KD provider to
+UBSAN off. Standalone builds inherit kernel policy unless explicitly overridden.
 
-### 3.5 排空及证据
+Before any live module/JIT run, confirm a real recovery snapshot through the
+monitor and use an outer timeout. [Tests](../tests/README.md) documents the
+module lifecycle check; [the direct runner](../bench/tclock_compare/README.md)
+documents performance and plain/nested/early JIT checks.
 
-停止新调用，等待已知 workload 和翻译者退出，retire 成功后先卸载 workload，
-再卸载 provider。EBUSY 不能强制卸载；继续保存现场并排查未完成请求。
-不要把 source lease 误当成锁对象任意释放或通用 hook reader 的屏障。
+### Drain and evidence
 
-运行器保留源码/ELF 哈希、内核身份、正文计数、负载结果及排空状态。
-NORMAL 只代表发布，实际 JIT 需要 wrapper 返回后的正文计数。
-运行器要求实际JIT的配置缺正文即失败；允许的 NO_JIT 性能样本不算 JIT PASS。
-旧 hook live 脚本及其操作专题已删除；历史证据见 [VALIDATION](VALIDATION.md)。
-
-### 3.6 2026-09-21 存储清理记录
-
-历史维护只清理 `linux-6.1.159`、`-kdstatic1`、`-kdstatic2`、`-kdclobber1` 的可重建
-编译中间文件，释放约43.03 GiB；旧源码、配置、vmlinux、启动镜像、已安装模块及
-恢复基线保留。当前kdclobber2构建树、测试证据和恢复快照未清理，旧树重建须重新
-生成中间文件。782个受保护文件清理前后SHA256一致；这不代表重新运行功能或性能。
-逐文件清单、脚本与核验见[维护归档](../bench/.tmp/maintenance_20260921/maintenance-20260921.tar.gz)，
-guest目录为 `/root/kdlock-evidence/maintenance-20260921/`。
+Stop new calls, join workers and translators, then retire sources. After success,
+unload workloads before providers. EBUSY retains pins; do not force unload.
+Keep frozen source/ELF hashes, kernel identity, business results, returned-body
+counts and drain. NORMAL only proves publication. Historical results and failed
+candidates remain in [the evidence index](VALIDATION.md), separately from fresh checks.

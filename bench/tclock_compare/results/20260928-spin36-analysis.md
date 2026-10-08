@@ -199,7 +199,7 @@ atomics and publication/ownership ordering remain part of the lock protocol.
 Further optimization should isolate repeated budget/packet work and the sampled
 frame/successor accesses while preserving bounded execution, source lifetime and
 owner/ACK rules. The earlier register-residency and broad-prefetch experiments
-[did not give a repeatable win](20260927-hash36-profile.md); static instruction
+[did not give a repeatable win](https://github.com/hailongeric/kdlock/blob/e533214/bench/tclock_compare/results/20260927-hash36-profile.md); static instruction
 counts alone do not justify repeating them or claiming a speedup. Precise memory
 attribution would be needed before selecting a change specifically for remote
 load latency. The 90% hash target remains unmet.

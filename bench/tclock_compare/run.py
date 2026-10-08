@@ -105,11 +105,13 @@ def source_state():
         for p in (ROOT/folder).rglob('*'):
             if p.is_file() and not any(x.startswith('.') or x == '__pycache__'
                                       for x in p.relative_to(ROOT).parts) and (
-                    p.suffix in ('.c', '.h', '.S', '.py', '.patch', '.json', '.md') or
+                    p.suffix in ('.c', '.h', '.inc', '.S', '.py', '.patch', '.json', '.md') or
                     p.name == 'Makefile') and not p.name.endswith('.mod.c'):
                 result[str(p.relative_to(ROOT))] = digest(p)
-    unit = 'tests/unit/spin/test_tclock_context.py'
-    result[unit] = digest(ROOT/unit)
+    for unit in ('tests/unit/spin/test_tclock_context.py',
+                 'tests/unit/mutex/test_tclock_mutex_context.py',
+                 'tests/unit/infrastructure/source_text.py'):
+        result[unit] = digest(ROOT/unit)
     return result
 
 

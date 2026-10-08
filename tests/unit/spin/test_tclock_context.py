@@ -8,6 +8,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 ROOT = Path(__file__).resolve().parents[3]
 
 CHECK = r'''
@@ -141,7 +143,7 @@ def main():
         p = Path(temporary)
         # Compile the actual production function bodies, not a second assembly
         # implementation. Kernel-only surrounding code is replaced by stubs.
-        source = (ROOT/'tclock_backend/komb.c').read_text()
+        source = read_source(ROOT/'tclock_backend/komb.c')
         marker = '#pragma GCC push_options\n#pragma GCC optimize("O3")\n__attribute__((noipa)) noinline notrace void\nkomb_spin_lock_slowpath('
         start = source.index(marker)
         end = source.index('#pragma GCC pop_options', start) + len('#pragma GCC pop_options')

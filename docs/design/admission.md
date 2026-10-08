@@ -60,7 +60,7 @@ indirect control, IJ history and adjusting RETs are refused. Default
 independent-root analysis remains unchanged.
 This does not assume callee-saved registers or untouched source memory for an
 ordinary function. The predicate/continuation contract is in
-[历史：JIT_EXECUTION](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#5-入口条件与嵌套续点).
+[Historical JIT_EXECUTION](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#5-%E5%85%A5%E5%8F%A3%E6%9D%A1%E4%BB%B6%E4%B8%8E%E5%B5%8C%E5%A5%97%E7%BB%AD%E7%82%B9).
 
 Scoped flow keeps a bounded disjunction of RSP value/origin facts, preserving
 the relation between different CALL depths, saved registers and shared RETs.
@@ -129,7 +129,7 @@ the two unlock ACKs precede suffix completion. The oracle requires the distinct
 stack-change warning, actual source CALL successor and unchanged NORMAL root,
 not only successful native code. This is one bounded shared-slot history, not
 arbitrary concurrent mutation or a stack-privacy assumption; see
-[历史：the execution gate](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#53-mutex-控制-call-的栈检查).
+[Historical the execution gate](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#53-mutex-%E6%8E%A7%E5%88%B6-call-%E7%9A%84%E6%A0%88%E6%A3%80%E6%9F%A5).
 
 The provider now advertises this immutable implementation contract through
 the separate 16-byte `KD_JIT_CAPS` ioctl. Translation queries its validated
@@ -205,7 +205,7 @@ The following order is for a future explicit reopening of this feature,
    Do not reuse entry refusal after progress or treat a generic fault as a
    validated escape. Necessary local guard flags preservation belongs to this
    deferred feature; general flags repair is also still deferred. The
-   [future packet contract](../JIT_REGISTER_ABI.md#31-访问时续跑的前置契约待实现)
+   [future packet contract](../JIT_REGISTER_ABI.md#deferred-access-time-continuation)
    separates pass-path preservation from native-target restoration; neither
    reading the stale packet flags nor relying on the existing MOV/RET stubs
    implements it.
@@ -287,7 +287,7 @@ No such helper is called from generated code in this increment.
 The daemon has flat RIP and RIP/tgid workspace modes, independent of benchmark
 mode. It maintains callee/indirect-target tables, reads /proc/kcore, combines
 generated assembly with the wrapper, assembles/links and transfers jit.bin.
-The [device session](../../daemon/README.md#device-session) remains held across this
+The [device session](../../daemon/README.md#device-session-and-source-residency) remains held across this
 flow; opening a new device after an error is not a supported recovery path.
 Policy refusal removes stale outputs and exits 2; launch failures/exceptions
 are errors/retry conditions, not successful native-only decisions.

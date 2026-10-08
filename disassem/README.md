@@ -1,0 +1,31 @@
+# Translator
+
+This directory reads leased kernel text, selects a reachable JIT episode, checks
+admission, lowers logical registers and emits assembly plus a wrapper image.
+Use [the daemon](../daemon/README.md) for publication and
+[the project guide](../docs/PROJECT_GUIDE.md) for guest dependencies.
+
+| Read first | Responsibility |
+| --- | --- |
+| [disassem.py](disassem.py) |CLI, input coordination, assembly/link and diagnostics |
+| [translation_scope.py](translation_scope.py) | Decode windows, selected blocks and CALL continuations |
+| [translation_image.py](translation_image.py) | Dispatch targets and generated assembly |
+| [context_policy.py](context_policy.py), `context_symbols.py` | Backend/context screening and static ranges |
+| `context_values.py`, `context_registers.py`, `context_memory.py` | Bounded flow, register facts and sequential memory/alias model |
+| `context_guards.py`, `entry_abi.py` | Entry predicates and MINIMAL input-dependency proof |
+| `conflict.py`, `normal.py`, `special_inst.py`, `hostcall.py` | Virtual register/instruction/control lowering |
+| `device_session.py`, `memread.py` | Same-device lease, capabilities and source pinning |
+
+[Admission](../docs/design/admission.md) defines supported scope and refusal.
+[Register ABI](../docs/JIT_REGISTER_ABI.md) defines packet fields, register mapping,
+CALL tokens and COMPLETE/FULL. `solve_bug.py` contains narrow, actively called
+encoding/assembly corrections; it is not an obsolete standalone driver.
+
+Install [the pinned requirements](requirements.txt) in a guest venv. Inspect CLI
+options with `python3 disassem/disassem.py --help`; real-text CLI use acquires its
+own device lease and does not by itself upload a published image. Importing helpers
+for byte fixtures does not establish actual kernel JIT evidence.
+
+Runtime address guards, general processor-state repair and immutable image versions
+remain deferred. The translator's context screening is not a security sandbox;
+see [open contracts](../docs/TODO.md).

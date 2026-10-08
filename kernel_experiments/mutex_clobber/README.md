@@ -20,7 +20,7 @@ Hook installation/removal uses static calls and a serialized update lock; it
 still requires the project's existing no-new-callers/drain boundary and does
 not add general safe hot unloading.
 
-The [ABI document](../../docs/JIT_REGISTER_ABI.md#mutex-clobber-assessment)
+The [ABI document](../../docs/JIT_REGISTER_ABI.md#mutex-clobber-and-outer-cookie)
 defines MINIMAL/COMPLETE/FULL, node reuse and restoration. The full packet is
 preallocated but ordinary entry/completion never initializes or copies it.
 Intermediate exits materialize FULL and detach into frame-owned storage before
@@ -66,4 +66,4 @@ with `grub-reboot`, then reboot. This is a one-shot boot; existing default and
 recovery entries remain. After boot run
 `python3 bench/spin_cacheline/kernel_identity.py` and rebuild target modules.
 Actual run evidence and remaining limits belong in
-[历史：tests/README.md](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-clobber), not this build recipe.
+[Historical tests/README.md](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-clobber), not this build recipe.

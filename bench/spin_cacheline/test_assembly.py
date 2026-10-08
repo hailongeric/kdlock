@@ -90,7 +90,7 @@ class AssemblyTests(unittest.TestCase):
                                  digest)
         self.assertEqual(sorted(p.name for p in self.archive.path.iterdir() if p.is_dir()),
                          ["sc_body_1", "sc_body_2"])
-        self.assertNotIn("| 线程 |", (self.archive.path / "README.md").read_text())
+        self.assertNotIn("| Threads |", (self.archive.path / "README.md").read_text())
         self.assertEqual(original, {p: p.read_bytes() for p in original})
         pointer = json.loads((self.run / "assembly-export.json").read_text())
         self.assertEqual(pointer["directory"], str(self.archive.path))

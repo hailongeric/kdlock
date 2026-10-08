@@ -66,7 +66,7 @@ inherit it, and Python validates the device identity before real text reads.
 An orphaned translator retains the same open description. The live cdev probe
 checks normal unload refusal at each stage, not reader protection after the last
 close. Detailed flow, control commands and direct-CLI restrictions live in
-[the daemon guide](../../daemon/README.md#device-session). Wire structures and the
+[the daemon guide](../../daemon/README.md#device-session-and-source-residency). Wire structures and the
 two-word wrapper ABI are unchanged; source controls are separate ioctls.
 
 `kd_source.c` implements session-wide residency, not per-image reclamation:
@@ -143,6 +143,6 @@ Capability assessment under the no-guest-edit default:
 
 Retain stable lock-allocation lifetimes during a session, retire source pins
 explicitly, and use only the controlled recovery procedure in
-[AGENTS](../AGENTS.md#验收与清理). Replacing a source module requires a fresh kdlock
+[AGENTS](../AGENTS.md#acceptance-and-cleanup). Replacing a source module requires a fresh kdlock
 and daemon session after draining, not merely a new TGID or clearing daemon
 workspaces. This remains an experimental boundary, not safe hot-reload support.

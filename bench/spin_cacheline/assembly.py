@@ -186,17 +186,16 @@ class AssemblyArchive:
             schema=2, source_run=str(self.run), source_sessions=len(self.sessions),
             critical_sections=sections), indent=2) + "\n")
         lines = [
-            "# Spinlock 汇编查看目录", "", f"原始结果：`{self.run}`。", "",
-            "按临界区分组，不按线程数或 repeat 分目录。相同临界区的相同汇编只保存一份；",
-            "来源会话记录在 metadata.json 中，执行证据仍按各自的测量期 JIT 计数判定。",
-            "同一规模若出现不同文件内容，则用内容哈希后缀保留区别，不覆盖已有代码。", "",
-            "- `native.S`：翻译前的完整 `sc_body_N`，提取自已保存模块的反汇编；",
-            "  地址为 ELF 节内偏移，保留重定位注释，不是 guest 运行地址。",
-            "- `JIT.S`：生成器 `asm/jit.S` 的原样副本（仅改变文件名大小写）。",
-            "- `bin.txt`：JIT 机器码（含 wrapper）的反汇编，地址从二进制偏移 0 开始。",
-            "- `metadata.json`：临界区、文件 SHA256 和全部已排空来源会话。", "",
-            "索引随已排空会话更新；导出不执行汇编、不重跑测试、不改变历史结果。", "",
-            "| 临界区 | cacheline | 来源会话数 | 翻译前 | 生成源码 | JIT 反汇编 |",
+            "# Spin assembly archive", "", f"Original evidence: `{self.run}`.", "",
+            "Group by critical section. Identical assembly is stored once; metadata.json",
+            "lists every drained source session. JIT execution still requires each session's",
+            "returned-body evidence. Different contents receive a hash suffix.", "",
+            "- `native.S`: full source body disassembly with relocations and ELF section offsets.",
+            "- `JIT.S`: unchanged copy of the generator's asm/jit.S.",
+            "- `bin.txt`: JIT machine-code disassembly, including the wrapper, from binary offset zero.",
+            "- `metadata.json`: section identity, SHA256 hashes and drained source sessions.", "",
+            "Export updates the index; it does not execute assembly or rerun measurements.", "",
+            "| Critical section | Cachelines | Source sessions | Native | Generated | JIT disassembly |",
             "| --- | ---: | ---: | --- | --- | --- |",
         ]
         for row in sections:

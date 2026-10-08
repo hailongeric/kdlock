@@ -24,7 +24,7 @@ The versioned hook installer retains legacy callbacks alongside new callbacks.
 
 All commands below run in the idle recovery guest. Confirm a recoverable monitor
 snapshot before installing/loading experimental code; see the existing
-[operating guide](../../docs/PROJECT_GUIDE.md#3-一步一步运行) for VM and module lifecycle.
+[operating guide](../../docs/PROJECT_GUIDE.md#guest-workflow) for VM and module lifecycle.
 Do not apply this patch to the parent tree or overwrite its captured bundle.
 
 ```sh
@@ -60,6 +60,6 @@ Build ID with `bench/spin_cacheline/kernel_identity.py --kernel-source ...
 --kernel-baseline ...`. Rebuild every tested module against the new tree.
 
 The request state machine and fixed wrapper directory are documented once in
-[JIT_REGISTER_ABI.md](../../docs/JIT_REGISTER_ABI.md#10-普通-spin-的-caller-clobber-v1).
+[JIT_REGISTER_ABI.md](../../docs/JIT_REGISTER_ABI.md#entry-identities-and-packet-states).
 Directed results belong in [tests](../../tests/README.md); same-kernel four-arm
 performance results belong in [spin_cacheline](../../bench/spin_cacheline/README.md).

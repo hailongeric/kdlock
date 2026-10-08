@@ -8,6 +8,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from source_text import read_source
+
 from test_tclock_context import C, CHECK, ROOT
 from test_spin_shadow import definition
 
@@ -69,7 +71,7 @@ int main(void)
 def main():
     if ROOT != Path('/root/host_fs/kdlock'):
         raise RuntimeError('execute machine-code tests only in recovery guest')
-    source = (ROOT/'tclock_backend/komb_mutex.c').read_text()
+    source = read_source(ROOT/'tclock_backend/komb_mutex.c')
     marker = '#pragma GCC push_options\n#pragma GCC optimize("O3")\n__attribute__((noipa)) noinline notrace void\n__komb_mutex_lock('
     start = source.index(marker)
     end = source.index('#pragma GCC pop_options', start) + len('#pragma GCC pop_options')

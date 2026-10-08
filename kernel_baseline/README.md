@@ -14,7 +14,7 @@ its historical source versions.
 The separate [spin-static](../kernel_experiments/spin_static/README.md) and
 [caller-clobber](../kernel_experiments/spin_clobber/README.md) experiments retain
 independent source/build trees and external captured bundles. Select the bundle
-matching the running kernel as described in [the manual](../docs/PROJECT_GUIDE.md#32-进入-guest-并检查基线);
+matching the running kernel as described in [the manual](../docs/PROJECT_GUIDE.md#kernel-identity);
 do not overwrite this original capture or delete it as an obsolete artifact.
 
 ## Contents

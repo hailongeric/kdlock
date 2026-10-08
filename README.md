@@ -33,14 +33,14 @@ performance acceptance is workload-specific and belongs in the benchmark reports
 | --- | --- |
 | [kernel_module](kernel_module/README.md) | KD direct spin/mutex provider and execution engine |
 | [include](include/README.md) | Shared ABI, direct API headers and wrapper assembly |
-| [disassem](disassem/) | Decode, admission, register lowering and code generation |
+| [disassem](disassem/README.md) | Decode, admission, register lowering and code generation |
 | [daemon](daemon/README.md) | Translation requests and code publication |
 | [tclock_backend](tclock_backend/README.md) | TCLock ports, compatibility contexts and upstream provenance |
 | [workload_modules](workload_modules/README.md) | Separate spin and mutex kernel payloads |
 | [bench](bench/README.md) | Clients, measurement instructions and performance evidence |
 | [tests](tests/README.md) | Targeted verification entry points and evidence |
 | [kernel_baseline](kernel_baseline/README.md) | Captured guest kernel configuration, interfaces and identity |
-| [kernel_experiments](kernel_experiments/) | Separately authorized historical kernel experiments |
+| [kernel_experiments](kernel_experiments/README.md) | Separately authorized historical kernel experiments |
 
 Development, builds and execution target x86_64 only. Use the recovery guest
 and the documented [operations procedure](docs/AGENTS.md); build/test commands

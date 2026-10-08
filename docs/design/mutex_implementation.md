@@ -179,7 +179,7 @@ Mutex heat has separate entry/contention counters from spin. Every 1024
 contentions the accepted policy checks `(entries >> 10) < 256`, resets both
 counters, then samples the clock. The earlier proposed limit 2 is not the
 current mutex setting. CPU and exact-address heat windows remain separate;
-see [heat and roles](../JIT_EXECUTION.md#21-热度与角色) for the full policy.
+see [heat and roles](../JIT_EXECUTION.md#heat-and-roles) for the full policy.
 
 ### Packet/cacheline and prefetch layout
 
@@ -236,7 +236,7 @@ resume first detaches frame-owned state, copies the resume packet, retires the
 queue node and publishes native readiness. The combiner then services the
 exact physical-owner unlock/final ACK and pops the retained frame. Early A
 release uses the same saved batch state and reacquires A for the combiner's
-own operation after B finishes. [The detailed protocol](locking.md#53-nested-a---b-and-native-continuation)
+own operation after B finishes. [The detailed protocol](locking.md#53-nested-ab-and-native-continuation)
 defines that ownership ordering.
 
 Exact per-CPU active-waiter/reserved-node balances and slot bitmaps are

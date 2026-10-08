@@ -17,6 +17,19 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_source_snapshot_covers_tclock_fragments(self):
+        # A frozen run must include the bodies behind the C entry files;
+        # omitting them would allow protocol changes during measurement.
+        state = run.source_state()
+        fragments = sorted((run.ROOT / 'tclock_backend').glob('*/*.inc'))
+        self.assertTrue(fragments)
+        for path in fragments:
+            with self.subTest(path=path):
+                self.assertEqual(state[str(path.relative_to(run.ROOT))],
+                                 run.digest(path))
+        reader = 'tests/unit/infrastructure/source_text.py'
+        self.assertEqual(state[reader], run.digest(run.ROOT / reader))
+
     def test_collect_no_jit_preserves_failure_and_requires_verified_drain(self):
         record = dict(execution_status='NO_JIT', jit_acceptance='NO_JIT',
                       jit_bodies=0, drained=True,
