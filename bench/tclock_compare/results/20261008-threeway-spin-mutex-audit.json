@@ -1,0 +1,785 @@
+{
+  "archive_private_fragments": 63,
+  "checks": 159115,
+  "errors": [],
+  "frozen_commit": "009e8e303e0e5f3d78aadec1c7c5103259194f06",
+  "host_controls_path": "/home/eric/vm/vm-shared/kdlock/bench/.tmp/threeway-20261008-009e8e3",
+  "inventory_findings": [
+    {
+      "count_per_matrix": 21,
+      "description": "Guest retained historical results Markdown absent from HEAD. All compiled/translator/JIT inputs match HEAD, and these unused documents remain unchanged in all four frozen inventories.",
+      "kind": "unused_historical_documents"
+    },
+    {
+      "description": "Fresh KD provider whole-ELF hashes differ only in the .BTF metadata bytes. All bytes outside .BTF, including code/data/relocations/symbols/debug/modinfo and ELF headers, are identical across four builds.",
+      "kind": "kd_provider_btf_metadata_only"
+    }
+  ],
+  "limitation": "Offline consistency checks do not authenticate fresh execution or establish starvation freedom.",
+  "matrices": {
+    "mutex-cacheline": {
+      "elf_files": 8,
+      "frozen_sources": 229,
+      "kd_acceptance_labels": {
+        "NO_JIT": 3,
+        "NO_JIT_LOW_CONTENTION": 3,
+        "PASS": 39
+      },
+      "kd_provider_btf_bytes": 24750,
+      "kd_provider_btf_sha256": "1fbe1d82fcd0f679f4a3938d5b39d3bc129c88288ca432e1596a895260fe5409",
+      "kd_provider_elf_sha256": "7aa7959ceb8a815b1c95aec054a7a10b188090e748759f7892ba82450431151d",
+      "kd_provider_without_btf_sha256": "37679d04b7671ed7fa69ffdb25be96185bf6c52ce586cbbdfc0958f062816f7a",
+      "kd_returned_body_positive_sessions": 39,
+      "node24_observations": [
+        {
+          "arm": "native",
+          "minimum_worker_peak": 50944,
+          "minimum_worker_whole": 327936,
+          "name": "c01-t24-r00-direct-native",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.7667721996080205,
+            "1": 0.2332278003919795
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.7149453336204216,
+            "1": 0.28505466637957844
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 4864,
+          "minimum_worker_whole": 33536,
+          "name": "c01-t24-r00-direct-tclock",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.9833672149325449,
+            "1": 0.016632785067455184
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9830423383722876,
+            "1": 0.016957661627712388
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 86528,
+          "minimum_worker_whole": 597760,
+          "name": "c01-t24-r00-direct-kdlock-adaptive",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.8386259858862598,
+            "1": 0.16137401411374014
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.8368130473410331,
+            "1": 0.16318695265896688
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 101376,
+          "minimum_worker_whole": 626432,
+          "name": "c01-t24-r01-direct-kdlock-adaptive",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.835658032071354,
+            "1": 0.16434196792864597
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.8320424213536701,
+            "1": 0.16795757864632985
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 4096,
+          "minimum_worker_whole": 25600,
+          "name": "c01-t24-r01-direct-tclock",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.9516317016317016,
+            "1": 0.04836829836829837
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9545979105928085,
+            "1": 0.04540208940719145
+          }
+        },
+        {
+          "arm": "native",
+          "minimum_worker_peak": 41984,
+          "minimum_worker_whole": 328192,
+          "name": "c01-t24-r01-direct-native",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.8572398804672643,
+            "1": 0.14276011953273568
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.8288328075709779,
+            "1": 0.1711671924290221
+          }
+        },
+        {
+          "arm": "native",
+          "minimum_worker_peak": 41728,
+          "minimum_worker_whole": 338176,
+          "name": "c01-t24-r02-direct-native",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.8969295279318275,
+            "1": 0.10307047206817259
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.8772617049058011,
+            "1": 0.12273829509419884
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 4096,
+          "minimum_worker_whole": 27392,
+          "name": "c01-t24-r02-direct-tclock",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.942487145305656,
+            "1": 0.05751285469434393
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9448078026391279,
+            "1": 0.05519219736087206
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 95744,
+          "minimum_worker_whole": 607744,
+          "name": "c01-t24-r02-direct-kdlock-adaptive",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.837793499436071,
+            "1": 0.16220650056392905
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.8348453672527747,
+            "1": 0.16515463274722533
+          }
+        }
+      ],
+      "private_fragments": 57,
+      "records": 135,
+      "statuses": {
+        "OK": 135
+      },
+      "tc_mutex_delegated_bodies": 257585206,
+      "tc_mutex_measured_parks": 1239,
+      "unused_historical_documents": {
+        "bench/tclock_compare/results/20260922-adaptive-quick.md": "d97393405c05d1e79b66cd4c493a75d29054e184abc15ff7bed989806677b34e",
+        "bench/tclock_compare/results/20260922-direct-mapped-performance.md": "866b933258b22a34c6e70e8704bd3cc441a33f3518fe5b132e8a14bf7729ed99",
+        "bench/tclock_compare/results/20260922-directhash-v2-performance.md": "51851695eb92f2f0c8ecf05c878775c3a63cf0a4a670612c938b2bc8813627f7",
+        "bench/tclock_compare/results/20260922-directhash-v2-rollback.md": "1bc6754717a39cfa48f237fb9a96d0c68c77730e64c1f678dc94802c2d45806a",
+        "bench/tclock_compare/results/20260922-directhash-v2.md": "e23f10e0a7b873239b2a81ffa85968b9421fe03b55492a590cae17f52e7f9b2a",
+        "bench/tclock_compare/results/20260922-hotlock-direct-mapped.md": "3d35b25514aa5a487ec52a780719ff8623695b39097de62d17813b26b952c84b",
+        "bench/tclock_compare/results/20260922-hotlock-shared-table.md": "b6f369b86d683286bc1b41211fa20585899821f25f90dbcaeb12253e3c4c05e6",
+        "bench/tclock_compare/results/20260922-restored-full-benchmark.md": "6192f272f170580b12a6dd20e5b5027bdbbfd2a60f55106f1a3a1265f0ee212d",
+        "bench/tclock_compare/results/20260922-single-round-baseline.md": "bb130e0db9fd954d600d96fd5015ce4e88e30ff11a4a6327c040e44d0abbf2ac",
+        "bench/tclock_compare/results/20260922-spin-cold-clobber-queue.md": "3a8662aa4029fbc795a8435a5dd647ee3a121c33818f96997faedec7494b2587",
+        "bench/tclock_compare/results/20260922-spin-cold-stage1.md": "edddae3ed31d580e836825bdae982bb9012fc84085000f81d58aae3ef5e0d9cb",
+        "bench/tclock_compare/results/20260922-spin-cold-stage2.md": "399b93efdf7027c8be5ef6b6ac3eb350c7a834ff723cb604401b570d617bb1ca",
+        "bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md": "6717562dd8ac7262db69df0c8afe5906159d2689a93cf466323cf562388c5821",
+        "bench/tclock_compare/results/20260922-spin-mcs1-lock32.md": "1244be56a969ad04f3357d5a5cbab866d0ee62feae356810fad33ee08af5648b",
+        "bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md": "f5ab99b02ce4e7b9998bd8c4356dc6a4909f65afb5a07e1ee3d655aae8856e0c",
+        "bench/tclock_compare/results/20260922-spin-mcs32.md": "226e844323e60ca68f4dd7c2a479f3aae83be511a5a5e4c5928c29af9215b31a",
+        "bench/tclock_compare/results/20260922-spin-mcs4-full-benchmark.md": "e0fcbb7a257a773a17710b887f431fd7dbba89b9223169ffff79d42e22d80663",
+        "bench/tclock_compare/results/20260923-spin-c-if-full.md": "502335594d298084e0662bd1786c69fb7db5a86a664f63e28f5174edb2f556e7",
+        "bench/tclock_compare/results/20260923-spin-c-if.md": "bd962e664a2b4e5c8e61899c97ffdd3d1d0b6eae70470253d42fef2bad3c4a08",
+        "bench/tclock_compare/results/20260923-spin-heat-only-full.md": "3188209f833bae28436b888b2f34fb2c524a38b4eca04ad8cb31f9f8dc62993e",
+        "bench/tclock_compare/results/20260923-spin-three-round.md": "9fb390fe33ca5ffa0c405ce546ee702516270ab582f2d32814ae26daedc0ff9d"
+      }
+    },
+    "mutex-rcuht": {
+      "elf_files": 8,
+      "frozen_sources": 229,
+      "kd_acceptance_labels": {
+        "NO_JIT": 3,
+        "NO_JIT_LOW_CONTENTION": 1,
+        "PASS": 41
+      },
+      "kd_provider_btf_bytes": 24750,
+      "kd_provider_btf_sha256": "d4c34baacf78021e6545f369a5e95aec7ca72219e28aa7497ea3ad372979d6e3",
+      "kd_provider_elf_sha256": "ba691daf89ec1c0fa178e65a747189f4fd5774cbdc73ca342eeed6d6c8ea78a2",
+      "kd_provider_without_btf_sha256": "37679d04b7671ed7fa69ffdb25be96185bf6c52ce586cbbdfc0958f062816f7a",
+      "kd_returned_body_positive_sessions": 41,
+      "node24_observations": [
+        {
+          "arm": "native",
+          "minimum_worker_peak": 3072,
+          "minimum_worker_whole": 65280,
+          "name": "hash1024-t24-r00-direct-native",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.9697288206853059,
+            "1": 0.030271179314694134
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9578717581128633,
+            "1": 0.042128241887136715
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 2560,
+          "minimum_worker_whole": 17152,
+          "name": "hash1024-t24-r00-direct-tclock",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.9830086089714545,
+            "1": 0.016991391028545536
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9822918091070696,
+            "1": 0.0177081908929304
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 7680,
+          "minimum_worker_whole": 58368,
+          "name": "hash1024-t24-r00-direct-kdlock-adaptive",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.9623687281213535,
+            "1": 0.03763127187864644
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9442799930349991,
+            "1": 0.05572000696500087
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 8960,
+          "minimum_worker_whole": 62976,
+          "name": "hash1024-t24-r01-direct-kdlock-adaptive",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.9514824797843666,
+            "1": 0.04851752021563342
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9422173232000928,
+            "1": 0.05778267679990717
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 5376,
+          "minimum_worker_whole": 37376,
+          "name": "hash1024-t24-r01-direct-tclock",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.9787532103665655,
+            "1": 0.02124678963343451
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9790382244143033,
+            "1": 0.02096177558569667
+          }
+        },
+        {
+          "arm": "native",
+          "minimum_worker_peak": 1792,
+          "minimum_worker_whole": 56320,
+          "name": "hash1024-t24-r01-direct-native",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.9773700305810398,
+            "1": 0.022629969418960245
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9458329184506622,
+            "1": 0.054167081549337845
+          }
+        },
+        {
+          "arm": "native",
+          "minimum_worker_peak": 1792,
+          "minimum_worker_whole": 79872,
+          "name": "hash1024-t24-r02-direct-native",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.9748774509803921,
+            "1": 0.025122549019607844
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.952065306122449,
+            "1": 0.04793469387755102
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 5376,
+          "minimum_worker_whole": 35840,
+          "name": "hash1024-t24-r02-direct-tclock",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.9805194805194806,
+            "1": 0.01948051948051948
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9801765958189369,
+            "1": 0.019823404181063067
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 8448,
+          "minimum_worker_whole": 106240,
+          "name": "hash1024-t24-r02-direct-kdlock-adaptive",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.9644683026584867,
+            "1": 0.03553169734151329
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.8993867477688587,
+            "1": 0.10061325223114125
+          }
+        }
+      ],
+      "private_fragments": 57,
+      "records": 135,
+      "statuses": {
+        "OK": 135
+      },
+      "tc_mutex_delegated_bodies": 203050370,
+      "tc_mutex_measured_parks": 1336,
+      "unused_historical_documents": {
+        "bench/tclock_compare/results/20260922-adaptive-quick.md": "d97393405c05d1e79b66cd4c493a75d29054e184abc15ff7bed989806677b34e",
+        "bench/tclock_compare/results/20260922-direct-mapped-performance.md": "866b933258b22a34c6e70e8704bd3cc441a33f3518fe5b132e8a14bf7729ed99",
+        "bench/tclock_compare/results/20260922-directhash-v2-performance.md": "51851695eb92f2f0c8ecf05c878775c3a63cf0a4a670612c938b2bc8813627f7",
+        "bench/tclock_compare/results/20260922-directhash-v2-rollback.md": "1bc6754717a39cfa48f237fb9a96d0c68c77730e64c1f678dc94802c2d45806a",
+        "bench/tclock_compare/results/20260922-directhash-v2.md": "e23f10e0a7b873239b2a81ffa85968b9421fe03b55492a590cae17f52e7f9b2a",
+        "bench/tclock_compare/results/20260922-hotlock-direct-mapped.md": "3d35b25514aa5a487ec52a780719ff8623695b39097de62d17813b26b952c84b",
+        "bench/tclock_compare/results/20260922-hotlock-shared-table.md": "b6f369b86d683286bc1b41211fa20585899821f25f90dbcaeb12253e3c4c05e6",
+        "bench/tclock_compare/results/20260922-restored-full-benchmark.md": "6192f272f170580b12a6dd20e5b5027bdbbfd2a60f55106f1a3a1265f0ee212d",
+        "bench/tclock_compare/results/20260922-single-round-baseline.md": "bb130e0db9fd954d600d96fd5015ce4e88e30ff11a4a6327c040e44d0abbf2ac",
+        "bench/tclock_compare/results/20260922-spin-cold-clobber-queue.md": "3a8662aa4029fbc795a8435a5dd647ee3a121c33818f96997faedec7494b2587",
+        "bench/tclock_compare/results/20260922-spin-cold-stage1.md": "edddae3ed31d580e836825bdae982bb9012fc84085000f81d58aae3ef5e0d9cb",
+        "bench/tclock_compare/results/20260922-spin-cold-stage2.md": "399b93efdf7027c8be5ef6b6ac3eb350c7a834ff723cb604401b570d617bb1ca",
+        "bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md": "6717562dd8ac7262db69df0c8afe5906159d2689a93cf466323cf562388c5821",
+        "bench/tclock_compare/results/20260922-spin-mcs1-lock32.md": "1244be56a969ad04f3357d5a5cbab866d0ee62feae356810fad33ee08af5648b",
+        "bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md": "f5ab99b02ce4e7b9998bd8c4356dc6a4909f65afb5a07e1ee3d655aae8856e0c",
+        "bench/tclock_compare/results/20260922-spin-mcs32.md": "226e844323e60ca68f4dd7c2a479f3aae83be511a5a5e4c5928c29af9215b31a",
+        "bench/tclock_compare/results/20260922-spin-mcs4-full-benchmark.md": "e0fcbb7a257a773a17710b887f431fd7dbba89b9223169ffff79d42e22d80663",
+        "bench/tclock_compare/results/20260923-spin-c-if-full.md": "502335594d298084e0662bd1786c69fb7db5a86a664f63e28f5174edb2f556e7",
+        "bench/tclock_compare/results/20260923-spin-c-if.md": "bd962e664a2b4e5c8e61899c97ffdd3d1d0b6eae70470253d42fef2bad3c4a08",
+        "bench/tclock_compare/results/20260923-spin-heat-only-full.md": "3188209f833bae28436b888b2f34fb2c524a38b4eca04ad8cb31f9f8dc62993e",
+        "bench/tclock_compare/results/20260923-spin-three-round.md": "9fb390fe33ca5ffa0c405ce546ee702516270ab582f2d32814ae26daedc0ff9d"
+      }
+    },
+    "spin-cacheline": {
+      "elf_files": 8,
+      "frozen_sources": 229,
+      "kd_acceptance_labels": {
+        "NO_JIT": 15,
+        "NO_JIT_LOW_CONTENTION": 6,
+        "PASS": 24
+      },
+      "kd_provider_btf_bytes": 24750,
+      "kd_provider_btf_sha256": "8f580ffee7245a77315a320ac2f6600676287adea321632c3ad3fcf0d03f2161",
+      "kd_provider_elf_sha256": "76d23de535b77623c7627c1c4baddb4dfd2b6312c197eef54d5c026309960b08",
+      "kd_provider_without_btf_sha256": "37679d04b7671ed7fa69ffdb25be96185bf6c52ce586cbbdfc0958f062816f7a",
+      "kd_returned_body_positive_sessions": 24,
+      "node24_observations": [
+        {
+          "arm": "native",
+          "minimum_worker_peak": 48896,
+          "minimum_worker_whole": 270080,
+          "name": "c01-t24-r00-direct-native",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.7877986889405794,
+            "1": 0.21220131105942058
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.7607524426992969,
+            "1": 0.23924755730070313
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 1792,
+          "minimum_worker_whole": 11520,
+          "name": "c01-t24-r00-direct-tclock",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.9959402638828476,
+            "1": 0.0040597361171523854
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9960777477556001,
+            "1": 0.0039222522443998955
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 3328,
+          "minimum_worker_whole": 21760,
+          "name": "c01-t24-r00-direct-kdlock-adaptive",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.9950032997077402,
+            "1": 0.004996700292259828
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9950526629148179,
+            "1": 0.0049473370851820875
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 3328,
+          "minimum_worker_whole": 25856,
+          "name": "c01-t24-r01-direct-kdlock-adaptive",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.9950032997077402,
+            "1": 0.004996700292259828
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.994104197523763,
+            "1": 0.00589580247623704
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 1792,
+          "minimum_worker_whole": 11520,
+          "name": "c01-t24-r01-direct-tclock",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.9959177722700102,
+            "1": 0.004082227729989794
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9960592858550255,
+            "1": 0.003940714144974495
+          }
+        },
+        {
+          "arm": "native",
+          "minimum_worker_peak": 38144,
+          "minimum_worker_whole": 247296,
+          "name": "c01-t24-r01-direct-native",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.7712045616535994,
+            "1": 0.22879543834640056
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.7653890824622532,
+            "1": 0.2346109175377468
+          }
+        },
+        {
+          "arm": "native",
+          "minimum_worker_peak": 36096,
+          "minimum_worker_whole": 238080,
+          "name": "c01-t24-r02-direct-native",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.748291015625,
+            "1": 0.251708984375
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.741993617420687,
+            "1": 0.2580063825793129
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 1792,
+          "minimum_worker_whole": 11520,
+          "name": "c01-t24-r02-direct-tclock",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.9959254947613504,
+            "1": 0.004074505238649592
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9960655737704918,
+            "1": 0.003934426229508197
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 3328,
+          "minimum_worker_whole": 24320,
+          "name": "c01-t24-r02-direct-kdlock-adaptive",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.9950065950631242,
+            "1": 0.004993404936875824
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9945026701316504,
+            "1": 0.005497329868349659
+          }
+        }
+      ],
+      "private_fragments": 57,
+      "records": 135,
+      "statuses": {
+        "OK": 135
+      },
+      "tc_mutex_delegated_bodies": 0,
+      "tc_mutex_measured_parks": 0,
+      "unused_historical_documents": {
+        "bench/tclock_compare/results/20260922-adaptive-quick.md": "d97393405c05d1e79b66cd4c493a75d29054e184abc15ff7bed989806677b34e",
+        "bench/tclock_compare/results/20260922-direct-mapped-performance.md": "866b933258b22a34c6e70e8704bd3cc441a33f3518fe5b132e8a14bf7729ed99",
+        "bench/tclock_compare/results/20260922-directhash-v2-performance.md": "51851695eb92f2f0c8ecf05c878775c3a63cf0a4a670612c938b2bc8813627f7",
+        "bench/tclock_compare/results/20260922-directhash-v2-rollback.md": "1bc6754717a39cfa48f237fb9a96d0c68c77730e64c1f678dc94802c2d45806a",
+        "bench/tclock_compare/results/20260922-directhash-v2.md": "e23f10e0a7b873239b2a81ffa85968b9421fe03b55492a590cae17f52e7f9b2a",
+        "bench/tclock_compare/results/20260922-hotlock-direct-mapped.md": "3d35b25514aa5a487ec52a780719ff8623695b39097de62d17813b26b952c84b",
+        "bench/tclock_compare/results/20260922-hotlock-shared-table.md": "b6f369b86d683286bc1b41211fa20585899821f25f90dbcaeb12253e3c4c05e6",
+        "bench/tclock_compare/results/20260922-restored-full-benchmark.md": "6192f272f170580b12a6dd20e5b5027bdbbfd2a60f55106f1a3a1265f0ee212d",
+        "bench/tclock_compare/results/20260922-single-round-baseline.md": "bb130e0db9fd954d600d96fd5015ce4e88e30ff11a4a6327c040e44d0abbf2ac",
+        "bench/tclock_compare/results/20260922-spin-cold-clobber-queue.md": "3a8662aa4029fbc795a8435a5dd647ee3a121c33818f96997faedec7494b2587",
+        "bench/tclock_compare/results/20260922-spin-cold-stage1.md": "edddae3ed31d580e836825bdae982bb9012fc84085000f81d58aae3ef5e0d9cb",
+        "bench/tclock_compare/results/20260922-spin-cold-stage2.md": "399b93efdf7027c8be5ef6b6ac3eb350c7a834ff723cb604401b570d617bb1ca",
+        "bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md": "6717562dd8ac7262db69df0c8afe5906159d2689a93cf466323cf562388c5821",
+        "bench/tclock_compare/results/20260922-spin-mcs1-lock32.md": "1244be56a969ad04f3357d5a5cbab866d0ee62feae356810fad33ee08af5648b",
+        "bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md": "f5ab99b02ce4e7b9998bd8c4356dc6a4909f65afb5a07e1ee3d655aae8856e0c",
+        "bench/tclock_compare/results/20260922-spin-mcs32.md": "226e844323e60ca68f4dd7c2a479f3aae83be511a5a5e4c5928c29af9215b31a",
+        "bench/tclock_compare/results/20260922-spin-mcs4-full-benchmark.md": "e0fcbb7a257a773a17710b887f431fd7dbba89b9223169ffff79d42e22d80663",
+        "bench/tclock_compare/results/20260923-spin-c-if-full.md": "502335594d298084e0662bd1786c69fb7db5a86a664f63e28f5174edb2f556e7",
+        "bench/tclock_compare/results/20260923-spin-c-if.md": "bd962e664a2b4e5c8e61899c97ffdd3d1d0b6eae70470253d42fef2bad3c4a08",
+        "bench/tclock_compare/results/20260923-spin-heat-only-full.md": "3188209f833bae28436b888b2f34fb2c524a38b4eca04ad8cb31f9f8dc62993e",
+        "bench/tclock_compare/results/20260923-spin-three-round.md": "9fb390fe33ca5ffa0c405ce546ee702516270ab582f2d32814ae26daedc0ff9d"
+      }
+    },
+    "spin-rcuht": {
+      "elf_files": 8,
+      "frozen_sources": 229,
+      "kd_acceptance_labels": {
+        "NO_JIT": 15,
+        "NO_JIT_LOW_CONTENTION": 6,
+        "PASS": 24
+      },
+      "kd_provider_btf_bytes": 24750,
+      "kd_provider_btf_sha256": "950fba14d657ca6ec8d1d526089c7862998f5fea2f45823fea0b8916b5968bd0",
+      "kd_provider_elf_sha256": "076eafcb76ac4e1254278d54d3694f301137c3f151f3a28191be8bf1a11db13b",
+      "kd_provider_without_btf_sha256": "37679d04b7671ed7fa69ffdb25be96185bf6c52ce586cbbdfc0958f062816f7a",
+      "kd_returned_body_positive_sessions": 24,
+      "node24_observations": [
+        {
+          "arm": "native",
+          "minimum_worker_peak": 22016,
+          "minimum_worker_whole": 144128,
+          "name": "hash1024-t24-r00-direct-native",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.8104969809568044,
+            "1": 0.18950301904319555
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.8097001886924313,
+            "1": 0.19029981130756865
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 2304,
+          "minimum_worker_whole": 15872,
+          "name": "hash1024-t24-r00-direct-tclock",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.9935321595400647,
+            "1": 0.0064678404599353215
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9931499431418206,
+            "1": 0.006850056858179456
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 4608,
+          "minimum_worker_whole": 32768,
+          "name": "hash1024-t24-r00-direct-kdlock-adaptive",
+          "repeat": 0,
+          "selected_peak": {
+            "0": 0.9809885931558935,
+            "1": 0.019011406844106463
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9800192122958693,
+            "1": 0.019980787704130643
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 4608,
+          "minimum_worker_whole": 32512,
+          "name": "hash1024-t24-r01-direct-kdlock-adaptive",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.981201171875,
+            "1": 0.018798828125
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9799393962640481,
+            "1": 0.020060603735951824
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 2304,
+          "minimum_worker_whole": 16384,
+          "name": "hash1024-t24-r01-direct-tclock",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.9935228499460238,
+            "1": 0.006477150053976251
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9930468792438482,
+            "1": 0.0069531207561518826
+          }
+        },
+        {
+          "arm": "native",
+          "minimum_worker_peak": 22272,
+          "minimum_worker_whole": 148992,
+          "name": "hash1024-t24-r01-direct-native",
+          "repeat": 1,
+          "selected_peak": {
+            "0": 0.8121572212065814,
+            "1": 0.18784277879341865
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.812585969738652,
+            "1": 0.187414030261348
+          }
+        },
+        {
+          "arm": "native",
+          "minimum_worker_peak": 22784,
+          "minimum_worker_whole": 147200,
+          "name": "hash1024-t24-r02-direct-native",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.8231653404067197,
+            "1": 0.1768346595932803
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.8134436401240951,
+            "1": 0.18655635987590485
+          }
+        },
+        {
+          "arm": "tclock",
+          "minimum_worker_peak": 2304,
+          "minimum_worker_whole": 16128,
+          "name": "hash1024-t24-r02-direct-tclock",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.9930984380675627,
+            "1": 0.006901561932437341
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.99293402349848,
+            "1": 0.007065976501520007
+          }
+        },
+        {
+          "arm": "kdlock",
+          "minimum_worker_peak": 4608,
+          "minimum_worker_whole": 31744,
+          "name": "hash1024-t24-r02-direct-kdlock-adaptive",
+          "repeat": 2,
+          "selected_peak": {
+            "0": 0.9819556205803462,
+            "1": 0.01804437941965374
+          },
+          "status": "OK",
+          "whole": {
+            "0": 0.9806416989305018,
+            "1": 0.019358301069498218
+          }
+        }
+      ],
+      "private_fragments": 57,
+      "records": 135,
+      "statuses": {
+        "OK": 135
+      },
+      "tc_mutex_delegated_bodies": 0,
+      "tc_mutex_measured_parks": 0,
+      "unused_historical_documents": {
+        "bench/tclock_compare/results/20260922-adaptive-quick.md": "d97393405c05d1e79b66cd4c493a75d29054e184abc15ff7bed989806677b34e",
+        "bench/tclock_compare/results/20260922-direct-mapped-performance.md": "866b933258b22a34c6e70e8704bd3cc441a33f3518fe5b132e8a14bf7729ed99",
+        "bench/tclock_compare/results/20260922-directhash-v2-performance.md": "51851695eb92f2f0c8ecf05c878775c3a63cf0a4a670612c938b2bc8813627f7",
+        "bench/tclock_compare/results/20260922-directhash-v2-rollback.md": "1bc6754717a39cfa48f237fb9a96d0c68c77730e64c1f678dc94802c2d45806a",
+        "bench/tclock_compare/results/20260922-directhash-v2.md": "e23f10e0a7b873239b2a81ffa85968b9421fe03b55492a590cae17f52e7f9b2a",
+        "bench/tclock_compare/results/20260922-hotlock-direct-mapped.md": "3d35b25514aa5a487ec52a780719ff8623695b39097de62d17813b26b952c84b",
+        "bench/tclock_compare/results/20260922-hotlock-shared-table.md": "b6f369b86d683286bc1b41211fa20585899821f25f90dbcaeb12253e3c4c05e6",
+        "bench/tclock_compare/results/20260922-restored-full-benchmark.md": "6192f272f170580b12a6dd20e5b5027bdbbfd2a60f55106f1a3a1265f0ee212d",
+        "bench/tclock_compare/results/20260922-single-round-baseline.md": "bb130e0db9fd954d600d96fd5015ce4e88e30ff11a4a6327c040e44d0abbf2ac",
+        "bench/tclock_compare/results/20260922-spin-cold-clobber-queue.md": "3a8662aa4029fbc795a8435a5dd647ee3a121c33818f96997faedec7494b2587",
+        "bench/tclock_compare/results/20260922-spin-cold-stage1.md": "edddae3ed31d580e836825bdae982bb9012fc84085000f81d58aae3ef5e0d9cb",
+        "bench/tclock_compare/results/20260922-spin-cold-stage2.md": "399b93efdf7027c8be5ef6b6ac3eb350c7a834ff723cb604401b570d617bb1ca",
+        "bench/tclock_compare/results/20260922-spin-cpu-hot-cookie.md": "6717562dd8ac7262db69df0c8afe5906159d2689a93cf466323cf562388c5821",
+        "bench/tclock_compare/results/20260922-spin-mcs1-lock32.md": "1244be56a969ad04f3357d5a5cbab866d0ee62feae356810fad33ee08af5648b",
+        "bench/tclock_compare/results/20260922-spin-mcs1-window4e10.md": "f5ab99b02ce4e7b9998bd8c4356dc6a4909f65afb5a07e1ee3d655aae8856e0c",
+        "bench/tclock_compare/results/20260922-spin-mcs32.md": "226e844323e60ca68f4dd7c2a479f3aae83be511a5a5e4c5928c29af9215b31a",
+        "bench/tclock_compare/results/20260922-spin-mcs4-full-benchmark.md": "e0fcbb7a257a773a17710b887f431fd7dbba89b9223169ffff79d42e22d80663",
+        "bench/tclock_compare/results/20260923-spin-c-if-full.md": "502335594d298084e0662bd1786c69fb7db5a86a664f63e28f5174edb2f556e7",
+        "bench/tclock_compare/results/20260923-spin-c-if.md": "bd962e664a2b4e5c8e61899c97ffdd3d1d0b6eae70470253d42fef2bad3c4a08",
+        "bench/tclock_compare/results/20260923-spin-heat-only-full.md": "3188209f833bae28436b888b2f34fb2c524a38b4eca04ad8cb31f9f8dc62993e",
+        "bench/tclock_compare/results/20260923-spin-three-round.md": "9fb390fe33ca5ffa0c405ce546ee702516270ab582f2d32814ae26daedc0ff9d"
+      }
+    }
+  },
+  "ok": true,
+  "records": 540,
+  "source_archive_files": 389,
+  "source_archive_sha256": "c4cf7acc1c53a2fbd07644fe5d83a541ae6fe260bfd71ec5594d87e74a4f09fb"
+}

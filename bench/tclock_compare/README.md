@@ -16,7 +16,7 @@ setting recovery variables. Output must be a new directory outside the checkout.
 Recommended full spin cacheline matrix:
 
 ```sh
-KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
+KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_mutex_jit_required_20261008 \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
   --backends native tclock kdlock --workload cacheline --cachelines 1 \
   --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 --repeats 3 \
@@ -105,16 +105,18 @@ Timed peak selection requires all workers to progress in the full cohort window.
 Keep whole-run per-worker and node shares too, especially 24-thread minority-node
 cases. A bounded batch and positive observed counts do not prove starvation freedom.
 
-Current and earlier results are in [the evidence index](results/HISTORY.md).
-[The final mutex report](results/20261003-mutex-followup.md) records unresolved
-parity/regression failures; cleanup does not rerun or repair those results.
+The [2026-10-08 spin/mutex matrix](results/20261008-threeway-spin-mutex.md)
+reruns committed `009e8e3` with one-cacheline/hash payloads, all 15 thread counts
+and 540 valid samples. It preserves four lock-outside arithmetic rounds; the
+uncommitted 64-round change was excluded. Hash and minority-node gaps remain.
+Earlier comparisons and failed candidates are in [the evidence index](results/HISTORY.md).
 
 ## Functional and diagnostic checks
 
 Use a new output directory for selected plain/nested/early JIT checks:
 
 ```sh
-KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
+KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_mutex_jit_required_20261008 \
   LC_ALL=C timeout --kill-after=10s 180s python3 bench/tclock_compare/run.py \
   --functional --backends kdlock --cachelines 1 --threads 20 --repeats 1 \
   --iterations 100000 --scenario nested --spin-entry-ratio-limit 0 \

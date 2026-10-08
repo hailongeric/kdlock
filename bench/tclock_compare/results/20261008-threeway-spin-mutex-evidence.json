@@ -1,0 +1,18 @@
+{
+  "source_commit": "009e8e303e0e5f3d78aadec1c7c5103259194f06",
+  "sessions": 540,
+  "accepted": 540,
+  "protocol_audit_checks": 159115,
+  "raw_guest_archive": {
+    "path": "bench/.tmp/threeway-20261008-009e8e3/guest-evidence.tar.gz",
+    "sha256": "48ef18f53b1fc131720ae3181af4e034ddf30fa0b49954bc6de79ba625256eeb"
+  },
+  "host_controls_archive": {
+    "path": "bench/.tmp/threeway-20261008-009e8e3-host-controls.tar.gz",
+    "sha256": "15ce3edfca389e954d01c8da91ee52ae72146188bc13f556380449e0217e6da3"
+  },
+  "local_markdown_links_checked": 34,
+  "guest_final_idle": true,
+  "frozen_checkout_verified": true,
+  "host_controls_unchanged": true
+}

@@ -2,26 +2,30 @@
 
 Goal: KD reaches at least **90% of TCLock's corresponding warmed peak**, while
 protecting small-thread throughput. The broader user goal is parity across all
-thread counts. The latest mutex matrix still fails that broader acceptance;
+thread counts. The latest four-way matrix still fails that broader acceptance;
 [results](../bench/tclock_compare/results/HISTORY.md) records the remaining gaps.
 Current implementation contracts live in [spin](design/spin_implementation.md)
 and [mutex](design/mutex_implementation.md); correctness work lives in [TODO](TODO.md).
 
 ## Current evidence
 
-The 2026-10-03 final mutex matrices contain 135 valid cacheline and 135 valid hash
-samples. Cacheline reaches 90% at 15/15 points and parity at 12/15; hash reaches
-90% at 10/15 and parity at 6/15. Hash still misses 90% at 2/3/4/5/24 threads.
-At 36, KD's hash peak is 2.789 versus TCLock's 2.228 Mops/s, but whole-run medians
-are 2.023 versus 2.216: KD is 8.71% lower. Rechecked protected medians also regress.
-See [the final report](../bench/tclock_compare/results/20261003-mutex-followup.md)
-for source identity, all distributions and failed candidates.
+The [2026-10-08 rerun](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
+contains 540 valid samples at committed `009e8e3`, with four lock-outside arithmetic
+rounds. Spin cacheline reaches 90% at 14/15 points and parity at 13/15; mutex
+cacheline reaches 90% at 14/15 and parity at 12/15. Spin hash reaches 90% at 5/15
+and parity at 3/15; mutex hash reaches 90% at 10/15 and parity at 5/15.
 
-The recorded spin36 hash gap is substantial despite approximately 99.9% JIT.
-Separate tests identify generated execution/request-handling cost and a NUMA effect;
-ordinary flat cycles cannot measure remote-memory latency. The same cacheline arm
-can favor KD, so the hash gap is workload-specific. See
-[the spin investigation](../bench/tclock_compare/results/20260928-spin36-analysis.md).
+At 36 threads spin/hash peaks are KD 2.019 versus TCLock 2.789 Mops/s despite 99.9%
+KD JIT execution. Mutex/hash peaks are 2.799 versus 2.222, but whole-run medians
+are 2.143 versus 2.202: KD is 2.70% lower. Mutex/hash also misses 90% at 2/3/4/5/24.
+KD mutex returns only 12.56–13.02% of 36-thread hash bodies through JIT, unlike
+spin's nearly complete delegation. Separate native/admission and execution costs.
+
+At 24 threads KD spin's four minority-node workers contribute only 0.5% of cacheline
+and 2% of hash operations; TCLock spin is also strongly skewed. Every worker
+progressed, but throughput and a bounded batch do not establish starvation freedom.
+The [earlier spin investigation](../bench/tclock_compare/results/20260928-spin36-analysis.md)
+records separate execution/NUMA diagnostics; flat cycles cannot measure remote latency.
 
 ## Retained optimizations
 
