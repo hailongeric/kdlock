@@ -9,6 +9,7 @@ by source cleanup and are not shipped in a new checkout.
 
 | Report | Purpose |
 | --- | --- |
+| [2026-10-08 hash diagnosis](20261008-hash-diagnosis.md), [statistics](20261008-hash-diagnosis-statistics.md), [diagnostics](20261008-hash-diagnosis-diagnostics.md) | `11c8e72` under `nopvspin`: 90 unprofiled and 72 diagnostic samples; compares against the stronger of TCLock/Native and ranks optimization experiments |
 | [2026-10-08 spin/mutex matrix](20261008-threeway-spin-mutex.md), [statistics](20261008-threeway-spin-mutex-statistics.md), [audit](20261008-threeway-spin-mutex-audit.json) | `009e8e3` before `nopvspin`: four workloads, all 15 thread points, 540 valid samples; hash and minority-node gaps remain |
 | [Final mutex matrix](20261003-mutex-followup.md) | All 15 thread points; acceptance still fails across all workloads |
 | [Mutex statistics](20261003-mutex-followup-statistics.md), [JSON](20261003-mutex-followup.json) | Full valid distributions and targeted rechecks |

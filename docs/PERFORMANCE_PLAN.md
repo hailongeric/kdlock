@@ -1,35 +1,34 @@
 # Performance plan
 
-Goal: KD reaches at least **90% of TCLock's corresponding warmed peak**, while
-protecting small-thread throughput. The broader user goal is parity across all
-thread counts. The latest four-way matrix still fails that broader acceptance;
+Goal: KD matches the **faster of TCLock and Linux Native** across the requested
+thread counts, while protecting small-thread throughput. Reaching 90% of TCLock's
+warmed peak remains an intermediate milestone. Track whole-run medians as well:
+peak parity must not conceal sustained losses. Current evidence fails acceptance;
 [results](../bench/tclock_compare/results/HISTORY.md) records the remaining gaps.
 Current implementation contracts live in [spin](design/spin_implementation.md)
 and [mutex](design/mutex_implementation.md); correctness work lives in [TODO](TODO.md).
 
 ## Current evidence
 
-The VM now boots with [nopvspin](PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
-The matrix below predates that change. Rerun all three arms under the new policy
-before claiming current performance; no such rerun is recorded yet.
+The [current hash diagnosis](../bench/tclock_compare/results/20261008-hash-diagnosis.md)
+has 90 unprofiled samples under `nopvspin`: 2/16/24/36 threads plus a split-node
+16-worker control,
+all three arms, three rounds. It uses committed `11c8e72`, four lock-outside
+arithmetic rounds and the default UBSAN-off provider. The earlier
+[540-sample matrix](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
+predates this boot policy; the full 15-point matrix has not been rerun under it.
 
-The [2026-10-08 rerun](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
-contains 540 valid samples at committed `009e8e3`, with four lock-outside arithmetic
-rounds. Spin cacheline reaches 90% at 14/15 points and parity at 13/15; mutex
-cacheline reaches 90% at 14/15 and parity at 12/15. Spin hash reaches 90% at 5/15
-and parity at 3/15; mutex hash reaches 90% at 10/15 and parity at 5/15.
+Spin/hash at 36 threads peaks at KD 2.017 versus TCLock 2.765 Mops/s, only 72.95%,
+despite 99.9% JIT execution. Mutex/hash at 36 reaches 92.21% of the strongest peak
+but only 64.27% of Native's whole-run median. At 24, KD mutex reaches 39.69% of Native's
+whole median. Its JIT coverage varies; increasing delegation is not itself a gain.
 
-At 36 threads spin/hash peaks are KD 2.019 versus TCLock 2.789 Mops/s despite 99.9%
-KD JIT execution. Mutex/hash peaks are 2.799 versus 2.222, but whole-run medians
-are 2.143 versus 2.202: KD is 2.70% lower. Mutex/hash also misses 90% at 2/3/4/5/24.
-KD mutex returns only 12.56–13.02% of 36-thread hash bodies through JIT, unlike
-spin's nearly complete delegation. Separate native/admission and execution costs.
-
-At 24 threads KD spin's four minority-node workers contribute only 0.5% of cacheline
-and 2% of hash operations; TCLock spin is also strongly skewed. Every worker
-progressed, but throughput and a bounded batch do not establish starvation freedom.
-The [earlier spin investigation](../bench/tclock_compare/results/20260928-spin36-analysis.md)
-records separate execution/NUMA diagnostics; flat cycles cannot measure remote latency.
+Separate profiles and PMU runs identify generated traversal/request overhead
+for spin and competing native/KD wait paths for mutex. Total L1-load misses per
+operation are similar to TCLock; more prefetch is not supported by that count.
+Fixed 16-worker placement controls show large NUMA effects while a local spin gap remains.
+All workers progressed, but minority-node shares remain uneven. Flat cycles do
+not identify remote latency or the individual lock behind a kernel spin wait.
 
 ## Retained optimizations
 
@@ -51,21 +50,24 @@ measured losses. Do not document those candidates as implemented.
 
 ## Next experiments
 
-1. Separate native/low-delegation contention cost from JIT execution cost. Compare
-   16 workers within one node versus 8+8, and 20 versus 10+10, retaining standard36.
-   Check CPU/node shares and every worker's progress, especially the 24-thread
-   minority node. Positive counts do not prove starvation freedom.
-2. Collect separate supported PMU diagnostics for cycles, instructions and useful
-   cache events. Verify availability and sample validity. Attribute queued-spin
-   wait to a specific call path before claiming it is the task writer lock.
+1. Test local translator proofs independently: omit dead incoming packet reads
+   before complete MOV overwrites, then redundant terminal metadata comparisons.
+   Preserve partial writes, alternate entries and exact-once FULL construction.
+   A later CFG-budget contraction needs finite-work, flags and exit-state proofs.
+2. Optimize native caller cost separately from delegated service. For mutex,
+   first measure route mix, batch exit reasons and stage-specific wait durations;
+   shorten service before promoting more requests. Cache only immutable batch
+   facts; retain per-request publication, identity, ownership and completion checks.
 3. Revisit task/shadow coordination only with new evidence. Any bounded retained
    cache needs exact key publication, inactive zero-ref state, capacity/collision
    fallback, task refs until unload and acquisition refs through final owner ACK.
    Removing a lock alone did not produce an accepted end-to-end gain.
-4. Optimize measured accesses and helper costs. Keep native-peer exclusion,
+4. Optimize measured accesses and NUMA service. Keep native-peer exclusion,
    blocking executor ownership, final ACK and source retirement. Rejected broad
    prefetch/register-residency and packed-mutex/NUMA experiments need new evidence
-   before repetition. Generated hash has no per-body hardware fences to remove.
+   before repetition. The disabled-injection read guard also previously regressed.
+   Generated hash has no per-body hardware fences to remove. Retain local 16 versus
+   split 8+8 and add local 20 versus split 10+10 when a locality change warrants it.
 
 Pinned KD waiters and the two-word input ABI remain fixed scope. Protocol changes
 may use useful TCLock/Linux logic, but must preserve the original Linux mutex owner

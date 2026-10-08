@@ -71,8 +71,11 @@ To roll back while idle, remove the override, run `update-grub`, select the inte
 kernel and reboot. This also restores the prior GRUB default.
 
 The [540-sample comparison](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
-finished before activation. No performance rerun under `nopvspin` has been made;
-keep the two boot policies separate when comparing all three backends.
+finished before activation. The subsequent
+[hash diagnosis](../bench/tclock_compare/results/20261008-hash-diagnosis.md)
+has 90 unprofiled and 72 separate diagnostic samples under `nopvspin`, covering
+selected thread counts and placement controls. It does not replace the full
+15-point matrix. Keep the two boot policies separate.
 
 ### Dependencies and idle state
 
