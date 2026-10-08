@@ -30,15 +30,20 @@ def main():
     with tempfile.TemporaryDirectory(prefix='kd-mutex-terminal-') as tmp:
         path=Path(tmp)
         (path/'types.h').write_text(types)
-        (path/'loop.h').write_text(loop)
+        assert loop.count('kd_mutex_set_locked(lock);') == 2
         mutations = {
-            'production': helpers,
-            'skip-tail-retirement': helpers.replace('if (batch->current_retired)', 'if (true)'),
-            'skip-delayed-link': helpers.replace('} while (!next);', '} while (false);'),
-            'repeat-after-native-reuse': helpers.replace('if (batch->current_retired)', 'if (false)'),
+            'production': (helpers, loop),
+            'skip-tail-retirement': (helpers.replace('if (batch->current_retired)', 'if (true)'), loop),
+            'skip-delayed-link': (helpers.replace('} while (!next);', '} while (false);'), loop),
+            'repeat-after-native-reuse': (helpers.replace('if (batch->current_retired)', 'if (false)'), loop),
+            # Each combiner return must establish the normal gate value
+            # independently, including source refusal before caller cleanup.
+            'skip-refusal-gate': (helpers, loop.replace('kd_mutex_set_locked(lock);', '', 1)),
+            'skip-normal-gate': (helpers, ''.join(loop.rsplit('kd_mutex_set_locked(lock);', 1))),
         }
-        for name, text in mutations.items():
+        for name, (text, candidate_loop) in mutations.items():
             (path/'helpers.h').write_text(text)
+            (path/'loop.h').write_text(candidate_loop)
             binary=path/name
             subprocess.run(shlex.split(os.environ.get('CC','cc'))+[
                 '-std=gnu11','-O2','-Wall','-Wextra','-Werror','-I'+str(path),

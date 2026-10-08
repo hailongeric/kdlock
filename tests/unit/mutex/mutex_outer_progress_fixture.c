@@ -423,6 +423,7 @@ int main(void)
 		CHECK(native_waits == (mode == 2 || mode == 3 || mode == 5));
 		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
 		CHECK(gate.physical_owner == &executor && a.owner == &executor);
+		CHECK(gate.locked == _Q_LOCKED_VAL);
 		CHECK(!b.owner && preempt == 1 && !other_holds);
 		CHECK(kd_mutex_origin_acquires == (early ? 3 : 1));
 		CHECK(kd_mutex_origin_releases == (early ? 2 : 0));

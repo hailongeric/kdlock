@@ -126,7 +126,11 @@ static void reset(unsigned int count)
     }
     lock.tail=nodes[count-1].tail;
 }
-static void finish(void) { CHECK(!leases && lease_gets==lease_puts && lock.physical_owner==current); }
+static void finish(void)
+{
+    CHECK(!leases && lease_gets==lease_puts && lock.physical_owner==current);
+    CHECK(lock.locked==1);
+}
 int main(void)
 {
     scenario=1;reset(1);kd_mutex_run_combiner(&lock,&nodes[0]);
