@@ -133,6 +133,8 @@ def make_plan(args):
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
     lock_kind = getattr(args, 'lock_kind', 'spin')
+    require(lock_kind != 'mutex' or getattr(args, 'spin_delegate', 'on') == 'on',
+            '--spin-delegate off is a spin-only control; mutex JIT is required')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1, 16])
     # Admission is adaptive only. Retain the fixed metadata label so reports
     # keep current results separate from historically frozen admission modes.
@@ -341,7 +343,7 @@ def main(lock_kind='spin'):
     kernel_identity.arguments(p)
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
     p.add_argument("--spin-delegate", choices=("on", "off"), default="on",
-                   help="off: explicit KD self-execution control, no JIT acceptance")
+                   help="off: spin-only KD self-execution control, no JIT acceptance")
     p.add_argument('--spin-entry-ratio-limit', type=int, choices=SPIN_ENTRY_RATIO_LIMITS,
                    metavar='0|2|4|...|2147483648', default=DEFAULT_SPIN_ENTRY_RATIO_LIMIT,
                    help='adaptive (entries >> 10) upper bound per resettable 1024-MCS window; '

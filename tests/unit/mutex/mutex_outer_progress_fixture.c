@@ -207,10 +207,6 @@ static void kd_mutex_set_locked(struct kd_mutex *lock)
 {
 	smp_store_release(&lock->locked, _Q_LOCKED_VAL);
 }
-bool kd_mutex_jit_is_enabled(void)
-{
-	return true;
-}
 /* Opaque lookup token: the production backend must pass this exact slot. */
 static struct kd_exe_info ready_entry;
 static struct kd_exe_info *kd_get_exe(int pid, unsigned long ip)

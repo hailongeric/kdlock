@@ -11,12 +11,44 @@ import tempfile
 import unittest
 
 import run
-from session import BackendSession, hash_layout, tc_quiescent, check_jit_evidence
+from session import (BackendSession, hash_layout, tc_quiescent, check_jit_evidence,
+                     check_kd_parameters)
 from bench_session import Session
 from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_provider_identity_rejects_mutex_jit_switch(self):
+        record = dict(spin_entry_ratio_limit=2, spin_prefetch=2,
+                      spin_delegate='on')
+        params = dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
+                      spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y')
+        check_kd_parameters(params, record, 4096)
+        for value in ('0', '1'):
+            with self.subTest(value=value), self.assertRaises(run.Failure):
+                check_kd_parameters(dict(params, mutex_jit=value), record, 4096)
+
+    def test_mutex_runner_rejects_spin_disabled_control(self):
+        args = Namespace(cachelines=[1], threads=[16], repeats=1,
+                         iterations=100, backends=['kdlock'],
+                         lock_kind='mutex', spin_delegate='off')
+        with self.assertRaisesRegex(run.Failure, 'mutex JIT is required'):
+            run.make_plan(args)
+        argv = ['run_mutex.py', '--output', '/tmp/unused', '--dry-run',
+                '--spin-delegate', 'off']
+        with patch.object(sys, 'argv', argv), \
+                self.assertRaisesRegex(run.Failure, 'mutex JIT is required'):
+            run.main('mutex')
+
+    def test_mutex_cannot_bypass_returned_body_acceptance(self):
+        record = dict(arm='kdlock', lock_kind='mutex', threads=16,
+                      jit_bodies=0, scenario='plain', spin_delegate='off')
+        with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+            check_jit_evidence(record)
+        self.assertEqual(record['jit_acceptance'], 'NO_JIT')
+        check_jit_evidence(record := dict(record, jit_bodies=1))
+        self.assertEqual(record['jit_acceptance'], 'PASS')
+
     def test_source_snapshot_covers_tclock_fragments(self):
         # A frozen run must include the bodies behind the C entry files;
         # omitting them would allow protocol changes during measurement.

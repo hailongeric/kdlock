@@ -214,8 +214,8 @@ The following order is for a future explicit reopening of this feature,
    bans alone do not check computed addresses in a dataflow-skipped block.
 5. Convert the bounded counterexamples into refusal/forward-continuation gates
    in existing test programs, with exactly-once stores and owner ACK checks.
-   Keep affected complex spin/mutex modes actually executing JIT, including
-   `mutex_jit=1`; blanket unknown-pointer refusal is not a passing JIT result.
+   Keep affected complex spin/mutex modes actually executing JIT; mutex JIT
+   is always enabled. Blanket unknown-pointer refusal is not a passing JIT result.
 
 Until an enforceable policy and these exits exist, limit use to audited
 experimental workloads. More static examples or successful stress runs cannot

@@ -41,11 +41,25 @@ def hash_layout(layout):
             ('rcuht', 1024, 4096, 8192, 0), 'hash payload configuration differs')
 
 
+def check_kd_parameters(params, record, lock_addr):
+    # Parameter identity rejects an old provider that can disable mutex JIT.
+    # Returned-body evidence remains a separate execution requirement.
+    require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
+            int(params['bench_lock_addr']) == lock_addr and
+            'hotlock_mode' not in params and 'mutex_jit' not in params and
+            int(params['spin_entry_ratio_limit']) == record['spin_entry_ratio_limit'] and
+            int(params['spin_prefetch']) == record['spin_prefetch'] and
+            'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
+            params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
+            'kdlock observation parameters differ')
+
+
 def check_jit_evidence(record):
     # A policy may select self-execution. Keep NO_JIT explicit and retain all
     # publication/body counters; contended protocol positives still fail
     # without a returned body. Valid throughput is not JIT acceptance.
-    if record['arm'] == 'kdlock' and record.get('spin_delegate', 'on') == 'off':
+    if (record['arm'] == 'kdlock' and record.get('lock_kind', 'spin') == 'spin' and
+            record.get('spin_delegate', 'on') == 'off'):
         require(record.get('jit_bodies', 0) == 0, 'disabled control executed JIT')
         record['jit_acceptance'] = 'DISABLED_CONTROL'
         return
@@ -103,7 +117,6 @@ class BackendSession(Session):
                       'target_process=sc_worker',
                       'spin_entry_ratio_limit=' + str(self.record['spin_entry_ratio_limit']),
                       'spin_prefetch=' + str(self.record['spin_prefetch']),
-                      'mutex_jit=1',
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
                      'load-kdlock.log')
             self.loaded_kd = True
@@ -132,16 +145,7 @@ class BackendSession(Session):
             Path('/sys/module/kdlock_km/parameters/bench_lock_addr').write_text(
                 str(layout['lock_addr']))
             params = parameters()
-            require(params['bench_quiet'] == 'Y' and params['jit_timing'] == 'N' and
-                    int(params['bench_lock_addr']) == layout['lock_addr'] and
-                    'hotlock_mode' not in params and
-                    int(params['spin_entry_ratio_limit']) == self.record['spin_entry_ratio_limit'] and
-                    int(params['spin_prefetch']) == self.record['spin_prefetch'] and
-                    'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
-                    params['spin_delegate'] == ('N' if self.record.get('spin_delegate') == 'off' else 'Y'),
-                    'kdlock observation parameters differ')
-            require(self.lock_kind != 'mutex' or int(params['mutex_jit']) == 1,
-                    'mutex JIT disabled')
+            check_kd_parameters(params, self.record, layout['lock_addr'])
             self.record['parameters'] = params
             prefix = 'mc' if self.lock_kind == 'mutex' else 'sc'
             source_tag = f'[{self.workload_module.stem}]'

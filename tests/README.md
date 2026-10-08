@@ -41,7 +41,7 @@ The large wrapper fixture now groups entry/services/timing/spin/mutex cases unde
 ## Live checks
 
 `tests/run_all.sh` with no arguments lists its scope; `--case module --dry-run`
-previews it. The basic module case checks provider/device lifecycle with JIT=0:
+previews it. The basic module case checks provider/device lifecycle without executing JIT bodies:
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 timeout 240s tests/run_all.sh \
@@ -59,39 +59,38 @@ explicit `spin_delegate=0` is a separate zero-JIT control. Do not infer delegati
 from thread count, queue publication or NORMAL status.
 
 The [mutex task/ACK probe](kernel/mutex/run_task_selftest.py) and selected SELFTEST
-hotlock/entry probes check resource/routing/drain with JIT=0; they do not replace
-contended returned-body acceptance. Normal/SELFTEST builds stay separate.
+hotlock/entry probes check resource/routing/drain without executing JIT bodies;
+they do not replace contended returned-body acceptance. KD mutex JIT is always
+enabled; the task/ACK probe constructs its continuation packet before hooks are
+published. Normal/SELFTEST builds stay separate.
 
 ## Recent verification and historical evidence
 
-On 2026-10-08, guest `6.1.159-kdclobber2` passed:
+On 2026-10-08, the mandatory mutex JIT change passed in guest `6.1.159-kdclobber2`:
 
-- Two basic programs, the entry-scope fixture/mutations and both TCLock
-  assembly/parking drivers: five groups, zero failures.
-- 45 runner tests and seven assembly-export tests.
-- Seven `W=1` module builds: KD NORMAL, before/after TCLock spin and mutex,
-  and both final whitespace rebuilds. All modules have no UBSAN imports. Existing stack-switch objtool warnings
-  are unchanged; the logs retain locale fallback warnings too.
+- Two basic programs plus mutex resource, outer-progress and terminal drivers:
+  five groups, zero failures; 48 runner tests also passed.
+- NORMAL and SELFTEST `W=1` builds with UBSAN off. Both modules have no
+  `mutex_jit` parameter, toggle symbols or UBSAN imports.
+- The task/owner probe completed both release orders, four ACKs and two deferred
+  frees, then drained. It constructs packets and executes no JIT bodies.
+- The 16-thread/eight-cacheline functional run completed 1.6 million operations
+  with 114,914 returned JIT bodies, passed data/JIT acceptance and drained.
 
-Both TCLock modules have identical before/after executable bytes, relocation
-records, alignment and function layouts. The three split C units have identical
-expanded non-comment tokens. The static audit checked 40 Markdown pages, 426 local
-links and 31 fixed Git targets; all maintained files are English and all six
-upstream hashes match. No modules were loaded, and no live JIT or performance
-benchmarks ran.
+The first probe load failed before KD initialization with reserved per-CPU
+allocation ENOMEM. The existing allocator preparation helper allowed a separate
+retry to pass; the initial failure and kernel log are retained. No kernel change,
+full suite or performance matrix was run. The guest inputs remained frozen;
+concurrent host spin post-work edits were excluded from this verification.
 
-Frozen inputs, commands, exits, logs, hashes and modules are archived at guest
-`/root/kdlock-evidence/cleanup-20261008-evidence.tar.gz` and host
-`bench/.tmp/cleanup-20261008/guest-evidence.tar.gz`. The final whitespace check
-repeated affected unit/runner checks and rebuilt both TCLock modules; it is at guest
-`/root/kdlock-evidence/cleanup-20261008-whitespace-evidence.tar.gz` and host
-`bench/.tmp/cleanup-20261008/whitespace-guest-evidence.tar.gz`. It includes the initial
-archive's identity and reuses only its unchanged baseline/KD modules. Final archive SHA256:
-`44555fd71e080c6140da7061cb95a73b9996ed2132f2e1a8a36bfe59520600bf`.
-The final verification text is a documentation-only follow-up to those frozen inputs.
+Sources, commands, exits, module identities, snapshot confirmation and live evidence
+are at guest `/root/kdlock-evidence/mutex-jit-required-20261008-evidence.tar.gz` and
+host `bench/.tmp/mutex-jit-required-20261008/guest-evidence.tar.gz`. Archive SHA256:
+`e55f8b372391cca78daaf16598e3b7532d636901c6a380be83d1ccf575239d8f`.
+This verification text is a documentation-only follow-up to the frozen inputs.
 
-The earlier cleanup's missing-file failure and retry remain in its fixed
-[record](https://github.com/hailongeric/kdlock/blob/e533214/tests/README.md).
+The earlier cleanup, executable comparisons and archive identities remain in the
+fixed [cleanup record](https://github.com/hailongeric/kdlock/blob/10d800ea90d99e2b5e0e3e8d002dfe97b738d94e/tests/README.md).
 Other results remain tied to their versions in [VALIDATION](../docs/VALIDATION.md)
 and [benchmark history](../bench/tclock_compare/results/HISTORY.md). Retain original
 ignored/guest archives and failed candidates; known failures and deferrals remain in

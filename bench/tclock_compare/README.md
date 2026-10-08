@@ -28,7 +28,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 
 For mutex, replace the entry with `run_mutex.py` and choose a new output directory.
 For hash, use `--workload rcuht` and omit `--cachelines`. Mutex accepts only ordinary
-`plain` operations and its current fixed 1,024 batch configuration.
+`plain` operations and its current fixed 1,024 batch configuration. KD mutex JIT
+is always enabled; the provider has no `mutex_jit` parameter.
 
 | Option/default | Meaning |
 | --- | --- |
@@ -125,6 +126,7 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=pre_static_boot_20260915 \
 Nested/early are KD spin cacheline only. Functional runs require actual JIT for
 multithread positives and write `functional.json`, not performance summaries.
 `--spin-delegate off` is an explicit zero-JIT native control marked DISABLED_CONTROL.
+It applies only to spin; the mutex entry rejects it.
 Ratio0 does not guarantee admission or waive returned-body/context/drain checks.
 
 `--pmu` is a separate long-batch diagnostic using supported perf events. Verify

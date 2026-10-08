@@ -306,7 +306,7 @@ static int kd_task_round(bool outer_first)
 	KD_TASK_CHECK(!atomic_read(&kd_mutex_task_count));
 	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
 		      kd_task_test.frees_before + 1);
-	pr_info("kd_mutex task selftest round: order=%s acks=%u deferred_frees=%u failures=%d JIT=0\n",
+	pr_info("kd_mutex task selftest round: order=%s acks=%u deferred_frees=%u failures=%d jit_bodies=0\n",
 		outer_first ? "A-B" : "B-A", kd_task_test.acks,
 		atomic_read(&kd_mutex_task_test_frees) -
 			kd_task_test.frees_before,
@@ -343,7 +343,7 @@ int kd_mutex_task_selftest(void)
 	if (!ret)
 		ret = kd_task_round(true);
 	if (!ret)
-		pr_info("kd_mutex task selftest: cpus=%d,%d,%d orders=2 acks=4 deferred_frees=2 failures=0 JIT=0\n",
+		pr_info("kd_mutex task selftest: cpus=%d,%d,%d orders=2 acks=4 deferred_frees=2 failures=0 jit_bodies=0\n",
 			kd_task_test_cpus[0], kd_task_test_cpus[1],
 			kd_task_test_cpus[2]);
 out:

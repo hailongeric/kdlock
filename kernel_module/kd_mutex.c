@@ -100,15 +100,6 @@ int kd_mutex_debug_nested_waiters(void)
 }
 EXPORT_SYMBOL_GPL(kd_mutex_debug_nested_waiters);
 
-/* Project default: mutex delegation runs enabled unless explicitly disabled. */
-static int kd_mutex_jit_enabled = 1;
-module_param_named(mutex_jit, kd_mutex_jit_enabled, int, 0644);
-
-bool kd_mutex_jit_is_enabled(void)
-{
-	return READ_ONCE(kd_mutex_jit_enabled) != 0;
-}
-
 /* --------------------------------------------------------------------------
  * Per-CPU shadow stack
  * -------------------------------------------------------------------------- */

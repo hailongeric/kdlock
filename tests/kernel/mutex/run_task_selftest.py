@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Recovery-guest task lifetime / physical-owner ACK probe; explicitly JIT=0.
+"""Recovery-guest task lifetime / physical-owner ACK resource probe.
 
 The in-provider fixture uses real pinned tasks and original Linux mutexes. Its
-continuation packet is constructed, so this cannot replace returned JIT tests.
+continuation packet is constructed and executes no JIT bodies. The provider
+always enables mutex JIT; this probe cannot replace returned-body JIT tests.
 """
 import argparse
 import os
@@ -44,11 +45,14 @@ def main():
             hashes[str(relative)] = runtime.digest(path)
     runtime.write_json(out/'sources.json', hashes)
     runtime.command(['make', '-C', ROOT/'kernel_module', f'KDIR={args.kernel_source}',
-                     'KDLOCK_SELFTEST=1', 'W=1'], out/'build.log', timeout=180)
+                     'KDLOCK_SELFTEST=1', 'UBSAN_SANITIZE=n', 'W=1'],
+                    out/'build.log', timeout=180)
     module = ROOT/'kernel_module/kdlock_km.ko'
     shutil.copyfile(module, out/module.name)
     runtime.write_json(out/'identity.json', dict(module_sha256=runtime.digest(module),
-        snapshot_tag=os.environ.get('KDLOCK_SNAPSHOT_TAG'), jit=False, cpus=[0, 1, 2]))
+        snapshot_tag=os.environ.get('KDLOCK_SNAPSHOT_TAG'), provider_ubsan='off', jit=False,
+        jit_bodies=0, mutex_jit_required=True, scope='task_owner_ack_resource_probe',
+        cpus=[0, 1, 2]))
     messages = ''
     fd = os.open('/dev/kmsg', os.O_RDONLY | os.O_NONBLOCK)
     os.lseek(fd, 0, os.SEEK_END)
@@ -64,10 +68,12 @@ def main():
         runtime.require(not runtime.FAULT.search(messages), 'kernel fault: retain state for recovery')
 
     try:
-        runtime.command(['insmod', module, 'mutex_jit=0', 'mutex_task_selftest=1',
+        runtime.command(['insmod', module, 'mutex_task_selftest=1',
                          'mutex_task_cpus=0,1,2'], out/'load.log', timeout=30)
         collect()
-        runtime.require('orders=2 acks=4 deferred_frees=2 failures=0 JIT=0' in messages,
+        runtime.require(not Path('/sys/module/kdlock_km/parameters/mutex_jit').exists(),
+                        'obsolete mutex JIT switch present')
+        runtime.require('orders=2 acks=4 deferred_frees=2 failures=0 jit_bodies=0' in messages,
                         'missing task/owner ACK evidence')
         runtime.command([sys.executable, ROOT/'disassem/device_session.py', 'retire'],
                         out/'retire.log')
@@ -77,8 +83,9 @@ def main():
                         'task registry was not empty at unload')
         runtime.idle()
         runtime.write_json(out/'result.json', dict(passed=True, drained=True,
-            orders=['B-A', 'A-B'], acks=4, deferred_frees=2, jit=False))
-        print('PASS: RCU task lifetime and real owner ACKs; two orders, four ACKs, JIT=0')
+            orders=['B-A', 'A-B'], acks=4, deferred_frees=2, jit=False,
+            jit_bodies=0, mutex_jit_required=True, scope='task_owner_ack_resource_probe'))
+        print('PASS: RCU task lifetime and real owner ACKs; two orders, four ACKs, no JIT bodies')
     finally:
         # An exception is not authorization to force retirement or unloading.
         collect()

@@ -202,7 +202,7 @@ def main():
             candidate = code
             if mutation:
                 before, after = mutation
-                assert code.count(before) == (4 if name == "outer-native-result-routed" else 1), (name, code.count(before))
+                assert code.count(before) == (3 if name == "outer-native-result-routed" else 1), (name, code.count(before))
                 candidate = code.replace(before, after)
             (directory / "mutex_resource_code.h").write_text(candidate)
             binary = directory / name

@@ -89,8 +89,9 @@ see the [fixed maintenance record](https://github.com/hailongeric/kdlock/blob/e5
    Missing dependencies, skipped checks and compile failures are not passes.
 4. Before live module/JIT tests, confirm an actual recoverable snapshot through
    the QEMU monitor, then set `KDLOCK_RECOVERY_CONFIRMED=1`. The variable itself
-   does not prove a snapshot exists. Use `mutex_jit=1` for authorized mutex JIT;
-   `mutex_jit=0` is an explicit native control.
+   does not prove a snapshot exists. Mutex JIT is always enabled; the provider
+   has no `mutex_jit` parameter. Resource probes that execute no JIT bodies do
+   not replace actual JIT acceptance.
 5. Give SSH and test commands an outer timeout. A timeout or signal does not
    prove a blocked ioctl or worker drained. Save failure evidence and stop.
 6. Check business results, returned-body JIT evidence where required, kernel

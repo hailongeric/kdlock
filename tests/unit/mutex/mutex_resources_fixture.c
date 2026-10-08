@@ -38,7 +38,7 @@ static unsigned long kd_mutex_multi_slot_count, kd_mutex_frame_failure_count;
 static unsigned long kd_mutex_node_overflow_count, kd_mutex_jit_resume_count;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
 static int kd_mutex_reserved_nodes;
-static bool promoted, enabled, task_failure, active_override, borrowed;
+static bool promoted, task_failure, active_override, borrowed;
 static bool cpu_hot = true, trace_admission, sampled_first;
 static unsigned int comm_queries, table_lock_entries;
 /* Inject one competing get after a reader observes a hole, before its
@@ -359,10 +359,6 @@ static int kd_hotlock_record_mutex(unsigned long addr)
 	sampled_first = true;
 	return cpu_hot && promoted;
 }
-bool kd_mutex_jit_is_enabled(void)
-{
-	return enabled;
-}
 static void kd_exe_add_abi(int pid, unsigned long ip, enum kd_exe_lock_kind kind, enum kd_entry_abi abi)
 {
 	CHECK(!pid && ip == 0x8000 && kind == KD_EXE_LOCK_MUTEX && refs);
@@ -478,7 +474,7 @@ static void reset(void)
 	kd_mutex_node_overflow_count = kd_mutex_jit_resume_count = 0;
 	kd_mutex_origin_acquires = kd_mutex_origin_releases = 0;
 	kd_mutex_reserved_nodes = 0;
-	promoted = enabled = cpu_hot = true;
+	promoted = cpu_hot = true;
 	trace_admission = sampled_first = false;
 	comm_queries = 0;
 	shadow_before_lock = NULL;
@@ -714,29 +710,28 @@ static void check_hook_fallbacks(void)
 	/* Exercise each early routing decision, both with a cold shadow and with
 	 * an existing unused shadow. Native-only paths never reserve a node. */
 	for (int existing = 0; existing < 2; existing++) {
-		for (int reason = 0; reason < 4; reason++) {
+		for (int reason = 0; reason < 3; reason++) {
 			struct mutex *lock = &origins[0].mutex;
 			reset();
 			if (existing)
 				CHECK(get_kd_mutex_shadow(lock));
 			active_override = reason == 0;
 			promoted = reason != 1;
-			enabled = reason != 2;
-			task_failure = reason == 3;
+			task_failure = reason == 2;
 			__kd_mutex_lock(lock, (unsigned long)&native_stack[16],
 					0x8000);
 			CHECK(lock->owner == current && acquires == 1);
-			CHECK(gets == (unsigned int)(reason == 3) &&
+			CHECK(gets == (unsigned int)(reason == 2) &&
 			      !task_puts && !refs && !adds);
 			CHECK(shadow_count() ==
-			      (unsigned int)(existing || reason == 3));
+			      (unsigned int)(existing || reason == 2));
 			CHECK(samples == 1);
 			CHECK(!slow_calls && !cpu_shadows.node_slots &&
 			      !kd_mutex_reserved_nodes);
 			__kd_mutex_unlock(lock, 0, 0x9000);
 			CHECK(!lock->owner && releases == 1 && !task_puts);
 			CHECK(shadow_count() ==
-			      (unsigned int)(existing || reason == 3));
+			      (unsigned int)(existing || reason == 2));
 			CHECK(!errors && !preempt && !migration && !table_irq);
 		}
 	}
@@ -1036,16 +1031,15 @@ static void check_minimal_entry(void)
  * unrelated task activity does not change this lock's exact native owner. */
 static void check_outer_native_result(void)
 {
-	for (unsigned int scenario = 0; scenario < 7; scenario++) {
+	for (unsigned int scenario = 0; scenario < 6; scenario++) {
 		reset();
 		struct mutex *lock = &origins[0].mutex;
 		if (scenario == 0) cpu_hot = false;
 		if (scenario == 1) source_open = false;
 		if (scenario == 2) strcpy(current->comm, "non-target");
 		if (scenario == 3) refs = 1; /* An unrelated acquisition remains live. */
-		if (scenario == 4) enabled = false;
-		if (scenario == 5) task_failure = true;
-		if (scenario == 6) { cpu_hot = false; refs = 1; borrowed = true; }
+		if (scenario == 4) task_failure = true;
+		if (scenario == 5) { cpu_hot = false; refs = 1; borrowed = true; }
 		unsigned int inherited_refs = refs;
 		unsigned long route = kd_mutex_outer_contended_clobber_v1(
 			lock, (unsigned long)&native_stack[16], 0x8000, 0);

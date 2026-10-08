@@ -87,7 +87,6 @@ void _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 int _kd_mutex_unlock_checked(struct kd_mutex *lock);
 void _kd_mutex_unlock(struct kd_mutex *lock);
 
-bool kd_mutex_jit_is_enabled(void);
 int kd_mutex_debug_nested_waiters(void);
 int kd_mutex_nested_lock(struct mutex *lock);
 int kd_mutex_nested_unlock(struct mutex *lock);

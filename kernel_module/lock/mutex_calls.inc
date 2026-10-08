@@ -45,10 +45,6 @@ static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned lon
 		kd_origin_mutex_lock(lock);
 		return (unsigned long)current;
 	}
-	if (!kd_mutex_jit_is_enabled()) {
-		kd_origin_mutex_lock(lock);
-		return (unsigned long)current;
-	}
 
 	kd_mtx = get_kd_mutex_shadow(lock);
 	if (!kd_mtx || !kd_mutex_task_get(current)) {

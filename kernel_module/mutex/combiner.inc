@@ -166,8 +166,6 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 				      current));
 	if (!incoming_rsp_ptr)
 		return KD_EXE_RUN_ERROR;
-	if (!kd_mutex_jit_is_enabled())
-		return KD_EXE_NO_RUN;
 
 	if (!clobber) {
 		curr_node->regs.bx = ((unsigned long *)incoming_rsp_ptr)[1];
