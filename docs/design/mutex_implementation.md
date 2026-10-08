@@ -246,6 +246,11 @@ their own exact state. Pure observations are per-CPU totals read after drain.
 Native mutex release precedes gate release. The batch source lease outlives
 all native/ACK/frame processing.
 
+Every returning combiner holds the original mutex and normal gate value 1.
+Refusal and ordinary completion publish that value before waking a successor;
+early outer release reacquires it before returning. Terminal and outer-progress
+fixtures check this contract independently of the caller's repeated restoration.
+
 ## Scope and evidence
 
 KD keeps pinned published waiters and has no accepted NUMA queue grouping for
@@ -264,5 +269,8 @@ unchanged. Build/use instructions belong in the
 Current measured gains, rejected grouping/cache candidates, returned-body
 JIT/delegation evidence and remaining full-thread performance gaps are in the
 [final mutex report](../../bench/tclock_compare/results/20261003-mutex-followup.md).
+The later [mandatory-JIT trials](../../bench/tclock_compare/results/20261008-mutex-priority-trials.md)
+retain runtime behavior after rejecting task retention and finding no repeatable
+gain from smaller entry/execution changes under `nopvspin`.
 Source review and synthetic unit fixtures do not substitute for those live
 results or prove starvation freedom.

@@ -10,6 +10,14 @@ and [mutex](design/mutex_implementation.md); correctness work lives in [TODO](TO
 
 ## Current evidence
 
+The [mandatory-JIT mutex trials](../bench/tclock_compare/results/20261008-mutex-priority-trials.md)
+add 306 sessions at 16/36 threads under `nopvspin`. Bounded task retention loses
+repeatedly despite greater JIT share and longer batches. Fault-guard, ledger and
+gate-store trials show no repeatable overall benefit against opening and closing
+baselines. Production remains unchanged; only gate-contract tests are retained.
+No disabled-JIT control was introduced. Measure routes, batch exits and stage
+costs before repeating these candidates or changing admission.
+
 The [current hash diagnosis](../bench/tclock_compare/results/20261008-hash-diagnosis.md)
 has 90 unprofiled samples under `nopvspin`: 2/16/24/36 threads plus a split-node
 16-worker control,
@@ -65,7 +73,7 @@ measured losses. Do not document those candidates as implemented.
 4. Optimize measured accesses and NUMA service. Keep native-peer exclusion,
    blocking executor ownership, final ACK and source retirement. Rejected broad
    prefetch/register-residency and packed-mutex/NUMA experiments need new evidence
-   before repetition. The disabled-injection read guard also previously regressed.
+   before repetition. The latest disabled-injection guard trial remains inconclusive.
    Generated hash has no per-body hardware fences to remove. Retain local 16 versus
    split 8+8 and add local 20 versus split 10+10 when a locality change warrants it.
 

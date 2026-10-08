@@ -118,6 +118,9 @@ The subsequent [hash diagnosis](results/20261008-hash-diagnosis.md) measures
 2/16/24/36 threads and a split-node 16-worker control under `nopvspin`: 90 unprofiled samples plus
 72 separate diagnostics. It compares against the faster of TCLock and Native,
 retains sustained throughput and proposes separate spin/mutex optimization work.
+The [mandatory-JIT mutex trials](results/20261008-mutex-priority-trials.md) add 306
+16/36-thread sessions: task retention regresses, smaller changes remain inconclusive
+against closing baselines, and production code is restored.
 Earlier comparisons and failed candidates are in [the evidence index](results/HISTORY.md).
 
 ## Functional and diagnostic checks

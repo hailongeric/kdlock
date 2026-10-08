@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "frozen_commit": "c04b214fd6332f3d2864d7b2283b18748c3aee96",
+  "production_changed": false,
+  "retained_test_commit": "2a5ca3f7f81cba3bce1a8008e016a1ae5d6f0362",
+  "samples": 306,
+  "valid": 306,
+  "failed_live_samples": 0,
+  "stages": 10,
+  "phases": 20,
+  "threads": [
+    16,
+    36
+  ],
+  "arms": [
+    "kdlock",
+    "tclock",
+    "native"
+  ],
+  "payloads": [
+    "one-cacheline",
+    "hash"
+  ],
+  "boot_policy": "nopvspin",
+  "kd_provider_ubsan": "off",
+  "mutex_jit": "mandatory; no off switch/control",
+  "post_work_rounds": 4,
+  "batch_limit": 1024,
+  "spin_prefetch": 2,
+  "spin_entry_ratio_limit": 2,
+  "mutex_cpu_heat_policy": "mutex_contention1024_ratio256",
+  "source_archive_sha256": "1cdb0abe610b1e1aecf9dd6e974719780916732b20b468a4f5cf4ca91b0f924c",
+  "snapshot_tag": "pre_mutex_priorities_20261008",
+  "guest_evidence_archive": {
+    "host": "/home/eric/vm/vm-shared/kdlock/bench/.tmp/mutex-priorities-20261008/guest-evidence.tar.gz",
+    "guest": "/root/kdlock-evidence/mutex-priorities-20261008-guest-evidence.tar.gz",
+    "sha256": "9374b962b22a1f5e731fc748a34eba66bffbdec82d008b215a79a728a4c4c111",
+    "bytes": 91510544
+  },
+  "host_control_archive": {
+    "host": "/home/eric/vm/vm-shared/kdlock/bench/.tmp/mutex-priorities-20261008-host-controls.tar.gz",
+    "guest": "/root/kdlock-evidence/mutex-priorities-20261008-host-controls.tar.gz",
+    "sha256": "51ab9389c481e76524e64beff474092da775cd4e988542b9139395a6e7ee52fd",
+    "bytes": 20404711
+  },
+  "patches": {
+    "fault-guard": {
+      "path": "fault-guard-source/candidate.patch",
+      "sha256": "61a6e877611e0c8c01fe53ea4a89c8ca3461148f8ec0aa5e557e34637d25311c",
+      "promoted": false
+    },
+    "retention": {
+      "path": "retention-source/complete-candidate.patch",
+      "sha256": "32c00bbf7350fdaeef8fa3902205440d4d4f6570d7927a3e69ca4446e0f65605",
+      "promoted": false
+    },
+    "ledger": {
+      "path": "ledger-source/candidate.patch",
+      "sha256": "541f6a33ecdd5055f2422a08750e84e695de6dee3b4572106ab2b10d99d11788",
+      "promoted": false
+    },
+    "gate-store": {
+      "path": "gate-store-source/candidate.patch",
+      "sha256": "ae89133b7dafe8198ba4d26ad7ed09565435488f94762a9d599eeb483ccb6eca",
+      "promoted": false
+    }
+  },
+  "unit_checks": [
+    {
+      "name": "fault-guard-resources",
+      "passed": 3,
+      "failed": 0,
+      "scope": "basic and mutex resources",
+      "log_sha256": "51452a65adb9b89741a4fbb09cd8d43f6d55d014f60f260f6afb6124ef8b1834",
+      "command_sha256": "2863949ac0ca5941ddf00498e817775c04def98910e8866f32dd6d9be1a6785a"
+    },
+    {
+      "name": "retention-retention",
+      "passed": 4,
+      "failed": 0,
+      "scope": "basic, mutex resources and retention unit substitutes",
+      "log_sha256": "77c2f7efb8ccdb75cf075f96106c8d699da7635378536b29b749e4e4ab439eff",
+      "command_sha256": "1e223ae07ce8f87083150aa1f85dc35923ef13c4ebb711cdaa8c5684555a944b"
+    },
+    {
+      "name": "ledger-ledger",
+      "passed": 7,
+      "failed": 0,
+      "scope": "basic, entry scope, capacity, clobber ABI, outer progress and terminal",
+      "log_sha256": "77dcd2a7e5bfe29dd9dd50f332b4e9b865808265b2216aebabd28529e428e713",
+      "command_sha256": "34db6d608734f0ce0e9b7c761a49e363cc385a4be59c96304c93191df5d5a513"
+    },
+    {
+      "name": "gate-store-gate",
+      "passed": 5,
+      "failed": 0,
+      "scope": "basic, resources, outer progress and terminal",
+      "log_sha256": "0f92f7db917b292e9d3c0f6187e3ad259a38c7aab31ea5e051d54502f6b56822",
+      "command_sha256": "aa3eaac6330e71bd366c6cbd84409161fcc799627df18e8a9f9528b24bd07a43"
+    },
+    {
+      "name": "protocol-checks-final-gate",
+      "passed": 5,
+      "failed": 0,
+      "scope": "retained gate-contract tests against restored production",
+      "log_sha256": "5c2cd7939d72347c18cf6742bf70b499767b4bdfcd19d9f128a88dae37aa775f",
+      "command_sha256": "aa3eaac6330e71bd366c6cbd84409161fcc799627df18e8a9f9528b24bd07a43"
+    }
+  ],
+  "resource_probes": {
+    "fault-guard": {
+      "acks": 4,
+      "deferred_frees": 2,
+      "drained": true,
+      "jit": false,
+      "jit_bodies": 0,
+      "mutex_jit_required": true,
+      "orders": [
+        "B-A",
+        "A-B"
+      ],
+      "passed": true,
+      "scope": "task_owner_ack_resource_probe"
+    },
+    "retention": {
+      "acks": 4,
+      "deferred_frees": 2,
+      "drained": true,
+      "jit": false,
+      "jit_bodies": 0,
+      "mutex_jit_required": true,
+      "orders": [
+        "B-A",
+        "A-B"
+      ],
+      "passed": true,
+      "reactivations": 2,
+      "released_tasks": 2,
+      "retained_tasks": 2,
+      "scope": "task_owner_ack_resource_probe"
+    }
+  },
+  "artifact_sha256": {
+    "bench/tclock_compare/results/20261008-mutex-priority-trials-audit.json": "b0e5b940d98c59aa9e3bac63bd2f19dbf321b5eeb21e2dd4cd951592e6df61ff",
+    "bench/tclock_compare/results/20261008-mutex-priority-trials-samples.csv": "d74b9745153775d808d4f467770bbd37fbe22fb888c682b0efcd740b90bdbc46",
+    "bench/tclock_compare/results/20261008-mutex-priority-trials-statistics.csv": "39fab71c8ef88d79069beb6ebed18266a082182c789e59286cfc416390af6060",
+    "bench/tclock_compare/results/20261008-mutex-priority-trials.md": "4a5fa9a6a92386e0bf1d0ba05276832c7fc3cd35e5a145f38a41a90abf861cb1"
+  },
+  "validation": {
+    "offline_audit": "PASS",
+    "checks": 43991,
+    "all_worker_progress": true,
+    "returned_jit_sessions": 102,
+    "tclock_delegation_sessions": 102,
+    "host_frequency_affinity_unchanged": true,
+    "guest_idle": true,
+    "production_restored": true,
+    "unrelated_files_preserved": 8
+  },
+  "scopes": {
+    "peak": "best valid full-cohort 300 ms window after settling; group max is the best peak across three rounds",
+    "whole": "completed operations divided by joined whole-run elapsed time; group comparisons use medians",
+    "kd_batch": "provider lifetime including warmup; JIT successes / combiner entries",
+    "jit_and_tclock": "joined measurement, including settling; not selected peak window"
+  },
+  "limits": [
+    "No runtime candidate promoted and no performance target claimed achieved.",
+    "The full15-thread sweep and spin workloads were not rerun in this mutex candidate screen.",
+    "Observed execution mix and batch changes do not isolate entry cost or identify a contended lock.",
+    "Positive observed worker progress is not a starvation guarantee.",
+    "Resource probes execute no JIT; retained unit fixtures use substitutes, distinct from live benchmark evidence.",
+    "Full raw archives are preserved locally/on guest and are not included in a fresh Git checkout.",
+    "One exact closing-TCLock BTF type-order difference is proven equivalent; initial audit failure and proof remain archived."
+  ]
+}
