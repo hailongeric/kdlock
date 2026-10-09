@@ -9,11 +9,9 @@ Kernel payloads live under [workload_modules](../workload_modules/README.md).
 
 | Report | Scope |
 | --- | --- |
-| [Final mutex matrix](tclock_compare/results/20261003-mutex-followup.md) |15 thread points, cacheline/hash; broader performance acceptance still fails |
-| [Full statistics](tclock_compare/results/20261003-mutex-followup-statistics.md) | All valid rounds, whole throughput, spread and rechecks |
-| [Spin36 analysis](tclock_compare/results/20260928-spin36-analysis.md) | Hash gap, cacheline control, NUMA and PMU attribution limits |
-| [Packed continuation](tclock_compare/results/20260928-packed-continuation.md) | Current spin layout geometry and matched regression checks |
-| [Evidence index](tclock_compare/results/HISTORY.md) | Fixed Git records for superseded reports, failed candidates and earlier charts |
+| [Protocol simplification](tclock_compare/results/20261008-protocol-simplification/README.md) | Fresh 540-session spin/mutex baseline at all 15 thread counts under `nopvspin`; rejected translator/memory candidates and rechecks retained separately |
+| [Hash diagnosis](tclock_compare/results/20261008-hash-diagnosis.md) | Matched hash controls, NUMA effects and separate profiles; remaining gap against the stronger comparator |
+| [Evidence index](tclock_compare/results/HISTORY.md) | All retained reports, full statistics, rejected candidates and fixed Git links to earlier reports |
 
 These are recorded measurements, not reruns of subsequent cleanup commits.
 Raw ignored/local/guest archives remain intact. A fresh checkout supplies reports,

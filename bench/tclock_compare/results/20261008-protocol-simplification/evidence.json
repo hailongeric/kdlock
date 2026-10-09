@@ -1,0 +1,304 @@
+{
+  "archive_note": "Large raw archives and full analysis logs are retained locally and in the recovery guest; they are not shipped by a Git checkout. Paths below are relative to host_evidence_root unless absolute.",
+  "base_commit": "d2868e382fdd26c8d6a5afc0fdcbda68c5509169",
+  "base_source_archive": {
+    "bytes": 2829645,
+    "path": "source.tar.gz",
+    "sha256": "6972532b851701edb5e9e189fce4da3e13bb38c53f7a1f9891f981bd92e4543b"
+  },
+  "base_source_manifest": {
+    "bytes": 46496,
+    "path": "sources.json",
+    "sha256": "3e2a7b12893d53227aa283b633455fd8bc8bd0ee276e1f2e7536a37daf18af29"
+  },
+  "candidate_patches": {
+    "budget-pair-source": {
+      "bytes": 23858,
+      "path": "budget-pair-source/candidate.patch",
+      "sha256": "1978d119040c9f2426a560dd10bcd3bb8b906b89d989b4eb8b6472d6b93de3cd"
+    },
+    "closing-baseline-source": {
+      "bytes": 0,
+      "path": "closing-baseline-source/candidate.patch",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "dead-read-source": {
+      "bytes": 7700,
+      "path": "dead-read-source/candidate.patch",
+      "sha256": "7c8e2fa42ecbe2757542e5a1634a867a3b0b8645657da40642ffa2e34c7e0f6d"
+    },
+    "final-source": {
+      "bytes": 43061,
+      "path": "final-source/candidate.patch",
+      "sha256": "ee6a3530e217309ba54337dad363a0707857602fad60d4248548e4fd254d5584"
+    },
+    "lazy-cold-source": {
+      "bytes": 27069,
+      "path": "lazy-cold-source/candidate.patch",
+      "sha256": "4f14fe11d2ad4da40478fabf9689e5bc3bffd4c3944a2c10e4ee1bd65ae59b2c"
+    },
+    "lazy-source": {
+      "bytes": 25998,
+      "path": "lazy-source/candidate.patch",
+      "sha256": "85a82690d8caeda05866cf302b40ca83f77546e1a9e47f535e946641fa9bb6c2"
+    },
+    "lazy-verified-source": {
+      "bytes": 26675,
+      "path": "lazy-verified-source/candidate.patch",
+      "sha256": "be655fe80c41caded709fbbb5e1f0978afbbafcfa5cee67265f172c8b28caaeb"
+    },
+    "restored-source": {
+      "bytes": 0,
+      "path": "restored-source/candidate.patch",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "retained-source": {
+      "bytes": 27069,
+      "path": "retained-source/candidate.patch",
+      "sha256": "4f14fe11d2ad4da40478fabf9689e5bc3bffd4c3944a2c10e4ee1bd65ae59b2c"
+    },
+    "terminal-source": {
+      "bytes": 15992,
+      "path": "terminal-source/candidate.patch",
+      "sha256": "f18bc31993392a75d9cfec4103c2d7dc6fa39c5f097b0336aadf290474659d0e"
+    }
+  },
+  "canonical_guest_archive": {
+    "bytes": 294644997,
+    "path": "guest-complete-restored-1009.tar.gz",
+    "sha256": "44212d4414b8de2962e7fad208047fe86c46e070bc430d9bf5ffe7c6feeb7911"
+  },
+  "controls": {
+    "boot_confirmation": {
+      "bytes": 890,
+      "path": "boot-numa-verified.log",
+      "sha256": "afbc7f9f811a88937d03566cbe515bc7c00f903f28878b3438c1e614fab12295"
+    },
+    "closing_host": {
+      "bytes": 10023,
+      "path": "complete-restored-1009-host-controls.json",
+      "sha256": "4bb57dbee793bf644446f642ae44b2e3e0c78279f40333fa767bf982ff30d460"
+    },
+    "export_symlinks": {
+      "bytes": 373391,
+      "path": "complete-restored-1009-export-symlinks.json",
+      "sha256": "35d63961daf05d9d63dce7260d9a556d24a2bc680a55b6d88198efe518d25e3f"
+    },
+    "idle_source_boundary": {
+      "bytes": 5416,
+      "path": "complete-restored-1009-boundary.log",
+      "sha256": "06bc17e1bf8e8f7c8c9b94482dabc7e74e4d79b0593b26eab5aa817d9484f959"
+    },
+    "kernel": {
+      "bytes": 150,
+      "path": "complete-restored-1009-kernel-identity.log",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    "opening_host": {
+      "bytes": 10023,
+      "path": "host-before.json",
+      "sha256": "6fed1e88c0a200c8d14a04d6bce4696d9e8ba897a8d79617ab3683c439c6e350"
+    },
+    "recovery_snapshot": {
+      "bytes": 1524,
+      "path": "resume-1009-snapshot-monitor.txt",
+      "sha256": "f01c81fc3a0d28a2593dbdb3af113911074445c80a164ea3f85ab702f88bd9ba"
+    },
+    "unrelated_files": {
+      "bytes": 1042,
+      "path": "unrelated-files-preserved-resume-1009.json",
+      "sha256": "a7d4f2aa95aa9a9361854c7fafd66a368411d7d03356b89e38e35ebbc6cddfac"
+    }
+  },
+  "earlier_guest_archives": [
+    {
+      "bytes": 253580865,
+      "path": "guest-full-retained-1009.tar.gz",
+      "sha256": "391ea68c86098b002fbe4772dec4aa86a8467432bd982352b16c2e66f8142314"
+    },
+    {
+      "bytes": 260849973,
+      "path": "guest-rejected-memory-1009.tar.gz",
+      "sha256": "f5d8356be3c903a57b61558b0f06989b0c52f5eb37a7b7daf6faddbf0514f178"
+    },
+    {
+      "bytes": 88344846,
+      "path": "guest-screen1.tar.gz",
+      "sha256": "c121119829bf8ee3859c5c3f9e6de62589e593060e616aacbb5b8efd35eba236"
+    }
+  ],
+  "final_formatting_review_archive": {
+    "bytes": 447800,
+    "path": "report-formatting-review-1009.tar.gz",
+    "sha256": "ac2718cea029d79487ed7e3cadfd5a61396e79d313048e6d3f5444d826f92967"
+  },
+  "guest_evidence_root": "/root/kdlock-evidence/protocol-simplify-20261008",
+  "host_evidence_root": "/home/eric/vm/vm-shared/kdlock/bench/.tmp/protocol-simplify-20261008",
+  "host_review_archive": {
+    "archive": {
+      "bytes": 67636753,
+      "path": "host-review-complete-1009.tar.gz",
+      "sha256": "864e609ec0f37bb60edea911e07e744e3635198ef372e9250fac4673fd7174d4"
+    },
+    "files": 4573,
+    "inventory": {
+      "bytes": 816881,
+      "path": "host-review-complete-1009-inventory.json",
+      "sha256": "e554a89d6d3e6ed18c78733e28cbb217e80b22cc2cc4d1ceea46b169bfc96e32"
+    }
+  },
+  "kernel": {
+    "boot_policy": "nopvspin; nokaslr; voluntary preemption",
+    "build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "recovery_snapshot": "pre_mutex_priorities_20261008",
+    "release": "6.1.159-kdclobber2"
+  },
+  "report_files": {
+    "README.md": {
+      "bytes": 6179,
+      "sha256": "e4a44075cc34adc80be9c0a9f2ea6194caaece4f915f1b0fdc804e2c671bc83b"
+    },
+    "audit.json": {
+      "bytes": 6552,
+      "sha256": "72be06d08cc4766bebad1747eadde63989c66a8f69802f25e3f0788519d2fa60"
+    },
+    "comparisons.csv": {
+      "bytes": 25009,
+      "sha256": "5de0ac17e06a5e4f2f4c29559fa9eae208407367f413b16c37fbe7e0a8ffaa52"
+    },
+    "matrix-medians.md": {
+      "bytes": 5533,
+      "sha256": "17be3b1867fb744da76c1ffb52c22781abf8eff25ae084dffadbd6834a04eacb"
+    },
+    "matrix.md": {
+      "bytes": 6478,
+      "sha256": "eedfcc62eb38c1dcbea23ed2a02b95bea996d5d29a8bda3936132c19b6dfb157"
+    },
+    "memory-candidate/comparisons.csv": {
+      "bytes": 24939,
+      "sha256": "137de8a9fd7c295c7a945c83dcf91eab41545cb94c473b48ecb4835ee5bd05e5"
+    },
+    "memory-candidate/matrix-medians.md": {
+      "bytes": 5872,
+      "sha256": "84a7fb52a5057fc8665d4512f0d02ee7e8b7dd89ae6cf9456714cf5b153914f4"
+    },
+    "memory-candidate/matrix.md": {
+      "bytes": 6722,
+      "sha256": "2722625989c9e7b88daef93cafbbb01bbcf47311b7f327030519fdcba1b30d5f"
+    },
+    "memory-candidate/node24-progress.csv": {
+      "bytes": 19591,
+      "sha256": "4a320599762bf80696505fd7ef4661a0412864f72ea793f3e54f3eb71368a345"
+    },
+    "memory-candidate/peak-matrix.svg": {
+      "bytes": 118651,
+      "sha256": "b8bed584e1a78824d14ddf6c1682dafae510b8d2def640b46072d0dc67284f4d"
+    },
+    "memory-candidate/protected-comparisons.csv": {
+      "bytes": 750,
+      "sha256": "6a898f2d268f1e56f148fdb348d1918056a0c188a60f9dc218ac9df93a467298"
+    },
+    "memory-candidate/recheck-samples.csv": {
+      "bytes": 9548,
+      "sha256": "08bc9ad2656902320e4c9142a096cf7269d394e736378dc20cc851d0b4c6d302"
+    },
+    "memory-candidate/recheck-statistics.csv": {
+      "bytes": 2221,
+      "sha256": "e3f6199b01d6de02c8641b3210b3e50217a9e87cfbd96f195caae56da492b38e"
+    },
+    "memory-candidate/samples.csv": {
+      "bytes": 137105,
+      "sha256": "15b5e94f8f93f028d4adb60e96b989e0c6f8040709015b55a0220479cafd921c"
+    },
+    "memory-candidate/statistics.csv": {
+      "bytes": 42498,
+      "sha256": "bef973f3777558b03fd82039e8ce339b4542574b923f6e5190cd38c7f4c11014"
+    },
+    "node24-progress.csv": {
+      "bytes": 19594,
+      "sha256": "2d5e89e41f1c4e13e68b68f1b4d980f7e19f7b1cc5da69cdb40dd7554c63e722"
+    },
+    "peak-matrix.svg": {
+      "bytes": 117383,
+      "sha256": "7cdd9afdd1929010ae83a802eefb880d1fbaabc425e9122677ab05018017f76a"
+    },
+    "rejected-combined-samples.csv": {
+      "bytes": 269533,
+      "sha256": "ecf2a111aa97726ac4350c532265d9e47eee6e91377a33a1b549f87244c9b067"
+    },
+    "rejected-combined-statistics.csv": {
+      "bytes": 43856,
+      "sha256": "653080a4c9039c4aa072af02914befcfbd916df05c0f2b5722bf2d857f42a8d5"
+    },
+    "rejected-protected-comparisons.csv": {
+      "bytes": 1832,
+      "sha256": "cb29dce6a77f0f188493c5aa56fe3810de8bcc00bb9967edc05ab258f18f8879"
+    },
+    "rejected-recheck-samples.csv": {
+      "bytes": 19762,
+      "sha256": "64ec15953bf4fe13d75d0b97e985e56f423abc13cc643f55e788d238293588f4"
+    },
+    "rejected-recheck-statistics.csv": {
+      "bytes": 4183,
+      "sha256": "7673922230203f08f9bd1a0bd4c26a77e2facedf815da20cb0b02eb4abeefac8"
+    },
+    "samples.csv": {
+      "bytes": 136997,
+      "sha256": "f5c5422f902f0bbc371cf7fdf8ea47ebf27f5122e2fe845afc726622e2013c62"
+    },
+    "screen-groups.csv": {
+      "bytes": 79962,
+      "sha256": "7d7635d0cbfc303f918ffb8c2fc53f3406d340c2a903e42f6847bd277bce5603"
+    },
+    "screen-kd-comparisons.csv": {
+      "bytes": 34698,
+      "sha256": "65c412ba7be6ad5043d3577199fdd1da9f5d7dfc8b1330ae05a09879bb18cac0"
+    },
+    "screen-samples.csv": {
+      "bytes": 359247,
+      "sha256": "a98463222c8117f00b563d3d35393848d6b27ea18fae3071e182dad357bb0337"
+    },
+    "screens.md": {
+      "bytes": 7716,
+      "sha256": "77f88df990b14f76c0088d9d53658a80191dc806d1d0131ca4acf6d04651e039"
+    },
+    "statistics.csv": {
+      "bytes": 42562,
+      "sha256": "07e4d8f3dcd10cebd3b63ff1c376a3621b568e88f2a79c676c19cba919f8b194"
+    }
+  },
+  "schema": 1,
+  "settings": {
+    "batch_limit": 1024,
+    "collector_cpu": 38,
+    "duration_ms": 2000,
+    "host_frequency_khz": 2500000,
+    "kd_provider_ubsan": false,
+    "numa": "on",
+    "offline_audit_cpu": 39,
+    "outside_lock_arithmetic_rounds": 4,
+    "peak_window_ms": 300,
+    "rounds": 3,
+    "settle_ms": 300,
+    "spin_prefetch": 2,
+    "threads": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      12,
+      16,
+      20,
+      24,
+      28,
+      32,
+      36
+    ],
+    "warmup_ops_per_worker": 48000,
+    "worker_cpu_order": "0..35"
+  }
+}

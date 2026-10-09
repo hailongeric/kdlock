@@ -15,6 +15,7 @@ execution. Providers do not install global interception hooks.
 | Change ownership or recovery | [KD locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) |
 | Build and verify | [Provider](../kernel_module/README.md), [tests](../tests/README.md), [benchmarks](../bench/README.md) |
 | Review limits and remaining work | [TODO](TODO.md), [performance plan](PERFORMANCE_PLAN.md) |
+| Evaluate simpler execution contracts | [Protocol simplification](design/protocol_simplification.md) |
 
 ## Guest workflow
 
@@ -70,12 +71,15 @@ has SHA256 `287447eabe43596b7494f5caa9d0c2fa39cf58ed918d703d66570ffc2cc37418`.
 To roll back while idle, remove the override, run `update-grub`, select the intended
 kernel and reboot. This also restores the prior GRUB default.
 
-The [540-sample comparison](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
-finished before activation. The subsequent
+The [protocol simplification trials](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+use `nopvspin`. Both combined translator/memory and memory-only candidates were
+rejected after repeated regressions; no runtime change was promoted. Their full
+matrices remain separate from the fresh 540-session comparison of the restored
+runtime at all 15 thread counts. The earlier
 [hash diagnosis](../bench/tclock_compare/results/20261008-hash-diagnosis.md)
-has 90 unprofiled and 72 separate diagnostic samples under `nopvspin`, covering
-selected thread counts and placement controls. It does not replace the full
-15-point matrix. Keep the two boot policies separate.
+uses the same boot policy but covers selected counts and placements. The
+[previous 540-sample comparison](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
+predates activation. Keep samples from the two boot policies separate.
 
 ### Dependencies and idle state
 

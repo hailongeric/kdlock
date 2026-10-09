@@ -73,7 +73,8 @@ holds one source lease through all wrappers, native/remote waits and unbinds.
 Readiness is still checked per request; a cached registry pointer is not an
 immutable executable version.
 
-The registry has 511 slots; an image fits a 640 KiB code block. The daemon uploads
+The registry has 511 slots; provider initialization eagerly allocates up to 64
+page-aligned 640 KiB code blocks (40 MiB at full capacity). The daemon uploads
 bounded chunks and publishes NORMAL only after the final complete chunk. Current
 RIP-keyed recompilation overwrites the same block. Source residency does not
 provide complete-image generation validation or protect simultaneous old execution.

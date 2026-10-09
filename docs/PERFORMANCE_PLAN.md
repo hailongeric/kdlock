@@ -1,42 +1,37 @@
 # Performance plan
 
-Goal: KD matches the **faster of TCLock and Linux Native** across the requested
-thread counts, while protecting small-thread throughput. Reaching 90% of TCLock's
-warmed peak remains an intermediate milestone. Track whole-run medians as well:
-peak parity must not conceal sustained losses. Current evidence fails acceptance;
-[results](../bench/tclock_compare/results/HISTORY.md) records the remaining gaps.
-Current implementation contracts live in [spin](design/spin_implementation.md)
-and [mutex](design/mutex_implementation.md); correctness work lives in [TODO](TODO.md).
+Goal: KD matches the **faster of TCLock and Linux Native** across all requested
+thread counts while protecting small-thread throughput. Reaching 90% of TCLock's
+warmed peak is an intermediate milestone. Whole-run medians must improve too;
+peak parity cannot conceal sustained losses. The goal remains unmet.
+Implementation contracts live in [spin](design/spin_implementation.md) and
+[mutex](design/mutex_implementation.md); correctness work lives in [TODO](TODO.md).
 
 ## Current evidence
 
-The [mandatory-JIT mutex trials](../bench/tclock_compare/results/20261008-mutex-priority-trials.md)
-add 306 sessions at 16/36 threads under `nopvspin`. Bounded task retention loses
-repeatedly despite greater JIT share and longer batches. Fault-guard, ledger and
-gate-store trials show no repeatable overall benefit against opening and closing
-baselines. Production remains unchanged; only gate-contract tests are retained.
-No disabled-JIT control was introduced. Measure routes, batch exits and stage
-costs before repeating these candidates or changing admission.
+The [protocol simplification trials](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+promote no runtime changes. Dead packet-read removal and paired traversal budgets
+brought no consistent benefit. The combined terminal-proof/lazy-backing candidate
+repeatedly lost mutex/hash-36 whole-run throughput against the closing baseline.
+Memory-only backing then repeated a mutex/cacheline-16 median peak loss above 3%
+against the opening baseline; the corresponding closing-baseline peak losses
+stayed below 3%.
+Both candidates were reverted. Their complete matrices and rechecks remain
+separate evidence. A fresh 540-session matrix of the restored runtime covers all
+15 thread counts, both payloads and all three backends for spin and mutex.
 
-The [current hash diagnosis](../bench/tclock_compare/results/20261008-hash-diagnosis.md)
-has 90 unprofiled samples under `nopvspin`: 2/16/24/36 threads plus a split-node
-16-worker control,
-all three arms, three rounds. It uses committed `11c8e72`, four lock-outside
-arithmetic rounds and the default UBSAN-off provider. The earlier
-[540-sample matrix](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
-predates this boot policy; the full 15-point matrix has not been rerun under it.
+The [hash diagnosis](../bench/tclock_compare/results/20261008-hash-diagnosis.md)
+identifies generated traversal/request overhead for spin and competing native/KD
+wait paths for mutex. A spin gap remains within one NUMA node and with nearly all
+returned bodies executed by JIT. Aggregate L1 misses do not justify broad prefetch;
+cycle samples do not establish remote-memory latency. Hash still writes shared
+links and values, so delegation can amortize lock handoff and retain useful data.
 
-Spin/hash at 36 threads peaks at KD 2.017 versus TCLock 2.765 Mops/s, only 72.95%,
-despite 99.9% JIT execution. Mutex/hash at 36 reaches 92.21% of the strongest peak
-but only 64.27% of Native's whole-run median. At 24, KD mutex reaches 39.69% of Native's
-whole median. Its JIT coverage varies; increasing delegation is not itself a gain.
-
-Separate profiles and PMU runs identify generated traversal/request overhead
-for spin and competing native/KD wait paths for mutex. Total L1-load misses per
-operation are similar to TCLock; more prefetch is not supported by that count.
-Fixed 16-worker placement controls show large NUMA effects while a local spin gap remains.
-All workers progressed, but minority-node shares remain uneven. Flat cycles do
-not identify remote latency or the individual lock behind a kernel spin wait.
+The [earlier mutex trials](../bench/tclock_compare/results/20261008-mutex-priority-trials.md)
+show why more delegation is not itself an optimization: retained task records
+increased JIT share and batch length but lost throughput. Fault-guard, ledger and
+gate-store trials did not establish a repeatable overall gain. Preserve their
+evidence and the opening/closing baseline variation before revisiting these ideas.
 
 ## Retained optimizations
 
@@ -52,49 +47,52 @@ not identify remote latency or the individual lock behind a kernel spin wait.
 | Mutex simple execution | Dedicated terminal waiter, batch transport and lazy cold routing fields; generic FULL recovery retained |
 
 Mutex still uses serialized shadow insertion and dynamically allocated exact task
-records with one registry writer lock. Its accepted queue is FIFO; bounded NUMA
+records with one registry writer lock. Its accepted queue is FIFO. Bounded NUMA
 grouping, stable-record/sharded-lock and packed-node candidates were reverted after
-measured losses. Do not document those candidates as implemented.
+measured losses; they are not current implementation features.
 
 ## Next experiments
 
-1. Test local translator proofs independently: omit dead incoming packet reads
-   before complete MOV overwrites, then redundant terminal metadata comparisons.
-   Preserve partial writes, alternate entries and exact-once FULL construction.
-   A later CFG-budget contraction needs finite-work, flags and exit-state proofs.
-2. Optimize native caller cost separately from delegated service. For mutex,
-   first measure route mix, batch exit reasons and stage-specific wait durations;
-   shorten service before promoting more requests. Cache only immutable batch
-   facts; retain per-request publication, identity, ownership and completion checks.
-3. Revisit task/shadow coordination only with new evidence. Any bounded retained
-   cache needs exact key publication, inactive zero-ref state, capacity/collision
-   fallback, task refs until unload and acquisition refs through final owner ACK.
-   Removing a lock alone did not produce an accepted end-to-end gain.
-4. Optimize measured accesses and NUMA service. Keep native-peer exclusion,
-   blocking executor ownership, final ACK and source retirement. Rejected broad
-   prefetch/register-residency and packed-mutex/NUMA experiments need new evidence
-   before repetition. The latest disabled-injection guard trial remains inconclusive.
-   Generated hash has no per-body hardware fences to remove. Retain local 16 versus
-   split 8+8 and add local 20 versus split 10+10 when a locality change warrants it.
+1. Measure mutex native/delegated routes, batch exits and stage costs before
+   changing admission. Optimize native caller and delegated service independently.
+   Hoist only proved immutable batch facts; retain per-request publication,
+   identity, ownership and completion checks.
+2. Prototype an explicit outlined body/context API, as proposed in
+   [protocol simplification](design/protocol_simplification.md). Using today's
+   translator still pays packet, virtual-stack and traversal-budget costs.
+   Removing these needs a separate JIT tier for bounded, nonblocking,
+   task-independent leaf bodies with compiler-managed registers and stack.
+   Establish matched callers and exact completion before measuring it.
+3. Revisit task storage, layout and locality only with new evidence. Cached records
+   need exact publication, inactive zero-reference state, capacity/collision
+   fallback and acquisition references through final owner ACK. Do not repeat
+   broad prefetch, cross-block register residency or NUMA grouping merely because
+   they remove instructions or increase JIT coverage. Keep local 16 versus split
+   8+8 controls; add local 20 versus split 10+10 for locality changes. Measure
+   deferred-waiter residence and node shares alongside throughput.
 
-Pinned KD waiters and the two-word input ABI remain fixed scope. Protocol changes
-may use useful TCLock/Linux logic, but must preserve the original Linux mutex owner
-and distinct backend identity for generic recovery.
+Pinned KD waiters, mandatory mutex JIT and the two-word input ABI remain fixed
+scope. Preserve original Linux mutex ownership, backend identity for recovery,
+source leases, final ACK and frame retirement. Refuse unsupported code before
+execution; never replay completed side effects. Generated hash has no per-body
+hardware fences to remove.
 
 ## Measurement and stopping rules
 
 Use [the runner](../bench/tclock_compare/README.md) with fixed 2.5 GHz, NUMA on,
-UBSAN-off KD benchmark provider and 48000 warmup operations per worker. Measure
-three rounds at 1,2,3,4,5,6,7,8,12,16,20,24,28,32,36 threads for two seconds; select
-the highest valid 300 ms window after settling. Retain whole throughput and
-min/median/max/spread, full samples, failed candidates and frozen identity.
+UBSAN-off KD provider and 48,000 warmup operations per worker. Measure three
+rounds at 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32 and 36 threads for two
+seconds; select the highest valid 300 ms window after settling. Retain whole-run
+throughput, min/median/max/spread, failed candidates, all samples and frozen identity.
 
-Screen at 16/36 before a broader run. Recheck an apparent regression once; reject
-repeatable median losses above 3% at protected points. Require returned-body JIT
-for contended KD positives and actual delegation evidence for TCLock mutex.
-TCLock spin execution counts remain unmeasured; do not invent them.
+Screen at 16/36 before broader runs, adding 2 threads for caller changes and 24
+for fairness. Recheck an apparent regression once; reject repeatable median losses
+above 3% at protected points. Require exact business results, every worker's
+progress, node shares and complete drain. Returned-body JIT is required for
+contended KD positives; allowed native-route controls are not JIT passes. TCLock
+mutex must demonstrate delegation; TCLock spin execution counts remain unmeasured.
 
-Retain NUMA-on, exact 1,024 KD body cap, separate spin scan bound and current prefetch
-defaults. Performance gains do not override correctness or retire already-published
-requests. Commit independently validated changes with matching evidence. Cleanup
-alone is neither a performance rerun nor a throughput improvement.
+Retain NUMA-on, KD's exact 1,024-body cap, separate spin scan bound and current
+prefetch defaults. Positive observed progress is not a starvation guarantee.
+Commit independently validated changes with matching evidence. Cleanup alone is
+neither a performance rerun nor a throughput improvement.

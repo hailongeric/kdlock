@@ -32,8 +32,9 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
 
 For mutex, replace the entry with `run_mutex.py` and choose a new output directory.
 For hash, use `--workload rcuht` and omit `--cachelines`. Mutex accepts only ordinary
-`plain` operations and its current fixed 1,024 batch configuration. KD mutex JIT
-is always enabled; the provider has no `mutex_jit` parameter.
+`plain` operations and its current fixed 1,024 batch configuration. KD mutex
+delegation requires JIT; native-first acquisition remains enabled. The provider
+has no `mutex_jit` parameter.
 
 | Option/default | Meaning |
 | --- | --- |
@@ -109,19 +110,22 @@ Timed peak selection requires all workers to progress in the full cohort window.
 Keep whole-run per-worker and node shares too, especially 24-thread minority-node
 cases. A bounded batch and positive observed counts do not prove starvation freedom.
 
-The [2026-10-08 spin/mutex matrix](results/20261008-threeway-spin-mutex.md)
-reruns committed `009e8e3` with one-cacheline/hash payloads, all 15 thread counts
-and 540 valid samples. It preserves four lock-outside arithmetic rounds; the
-uncommitted 64-round change was excluded. Hash and minority-node gaps remain.
-This matrix predates `nopvspin`; it is not a measurement of the current boot policy.
-The subsequent [hash diagnosis](results/20261008-hash-diagnosis.md) measures
-2/16/24/36 threads and a split-node 16-worker control under `nopvspin`: 90 unprofiled samples plus
-72 separate diagnostics. It compares against the faster of TCLock and Native,
-retains sustained throughput and proposes separate spin/mutex optimization work.
-The [mandatory-JIT mutex trials](results/20261008-mutex-priority-trials.md) add 306
-16/36-thread sessions: task retention regresses, smaller changes remain inconclusive
-against closing baselines, and production code is restored.
-Earlier comparisons and failed candidates are in [the evidence index](results/HISTORY.md).
+The [protocol simplification report](results/20261008-protocol-simplification/README.md)
+keeps isolated screens, full 15-point matrices and rechecks separate under
+`nopvspin`. Both combined terminal/memory and memory-only candidates were rejected
+for repeated regressions. No runtime change was promoted; the eager code pool
+remains current. Raw stage names `final` and `retained` identify those rejected
+candidates. The fresh restored-runtime comparison (`restored`) contains 540
+sessions across all 15 thread counts and both payloads for spin and mutex.
+
+The earlier [hash diagnosis](results/20261008-hash-diagnosis.md) and
+[mandatory-JIT mutex trials](results/20261008-mutex-priority-trials.md) use the same
+boot policy. The [previous 540-sample matrix](results/20261008-threeway-spin-mutex.md)
+predates `nopvspin` and must remain separate. All of these runs use four lock-outside
+arithmetic rounds; the unrelated 64-round working-tree change was excluded.
+The [evidence index](results/HISTORY.md) links source identities, failed candidates
+and complete statistics. Publication, correct execution and performance acceptance
+are distinct results.
 
 ## Functional and diagnostic checks
 

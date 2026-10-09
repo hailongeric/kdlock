@@ -9,6 +9,7 @@ by source cleanup and are not shipped in a new checkout.
 
 | Report | Purpose |
 | --- | --- |
+| [2026-10-08–09 protocol simplification](20261008-protocol-simplification/README.md) | 2,286 sessions under `nopvspin`, including a fresh 540-session restored-runtime matrix at all 15 counts; rejected candidates, full matrices/rechecks and memory accounting retained separately |
 | [2026-10-08 mandatory-JIT mutex trials](20261008-mutex-priority-trials.md), [statistics](20261008-mutex-priority-trials-statistics.csv), [samples](20261008-mutex-priority-trials-samples.csv) | 306 sessions at 16/36 threads; four independent candidates and rechecks, opening/closing baselines; runtime changes restored, gate-contract tests retained |
 | [2026-10-08 hash diagnosis](20261008-hash-diagnosis.md), [statistics](20261008-hash-diagnosis-statistics.md), [diagnostics](20261008-hash-diagnosis-diagnostics.md) | `11c8e72` under `nopvspin`: 90 unprofiled and 72 diagnostic samples; compares against the stronger of TCLock/Native and ranks optimization experiments |
 | [2026-10-08 spin/mutex matrix](20261008-threeway-spin-mutex.md), [statistics](20261008-threeway-spin-mutex-statistics.md), [audit](20261008-threeway-spin-mutex-audit.json) | `009e8e3` before `nopvspin`: four workloads, all 15 thread points, 540 valid samples; hash and minority-node gaps remain |

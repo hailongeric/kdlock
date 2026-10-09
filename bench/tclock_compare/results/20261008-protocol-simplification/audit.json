@@ -1,0 +1,148 @@
+{
+  "all_execution_statuses": {
+    "OK": 2286
+  },
+  "all_kd_execution_classes": {
+    "NATIVE_ROUTE_CONTROL": 153,
+    "RETURNED_BODY_JIT": 609
+  },
+  "analysis_corrections": "Earlier audit failures are preserved. Frozen JIT policy distinguishes allowed native-route controls. A missing per-lock spin diagnostic row is allowed only with zero JIT, zero batch/wait counts and exact emitter-source proof; global drain/error/owner/frame checks remain strict.",
+  "base_commit": "d2868e382fdd26c8d6a5afc0fdcbda68c5509169",
+  "current_matrix": {
+    "kd_execution_classes": {
+      "NATIVE_ROUTE_CONTROL": 51,
+      "RETURNED_BODY_JIT": 129
+    },
+    "mutex_jit_required": true,
+    "sessions": 540,
+    "source": "Exact unpatched frozen baseline",
+    "source_files_verified_at_guest_boundaries": 420,
+    "stage": "restored",
+    "unrelated_working_tree_changes_excluded": true
+  },
+  "detailed_proofs": {
+    "binary_workflow": {
+      "bytes": 4965,
+      "path": "complete2286-audit-1009-workflow.json",
+      "sha256": "b5f70444feaf53871cca95d40805d7f48fd9b6cb7dfa792acd2b44ba02b536ff"
+    },
+    "completeness": {
+      "bytes": 10936,
+      "path": "complete2286-completeness-1009.json",
+      "sha256": "d32e9e212cb44fdbd61acbdd845154d230192726e1c049c35a6357fd861623fd"
+    },
+    "generated_code": {
+      "bytes": 2320984,
+      "path": "complete2286-audit-1009-codegen.json",
+      "sha256": "a19150b8de5eac182b727ab9d83c96eb191d021e0b1fcc96ced9082be6051452"
+    },
+    "guest_validation": {
+      "bytes": 1801,
+      "path": "restored-validation-review-v2-1009.json",
+      "sha256": "f7e20e50cbe34cb5915cac92694e1b29f73c88dbf935e2aa4a0b15ac8f292bcf"
+    },
+    "memory": {
+      "bytes": 63627,
+      "path": "controls/rejected-memory-report-1009/kd-retained-memory-audit-1009.json",
+      "sha256": "bf31024c9c7a339335e2d3a875d1adc50ea71c2149531d0ce2abd201b5b52bfb"
+    },
+    "resume": {
+      "bytes": 2584,
+      "path": "complete-restored-resume-proof-1009.json",
+      "sha256": "e2a2e8ac7c1badf966f0dae0c6e7bc66b91d6f6e43c521808234e6e3a5e4c0c7"
+    },
+    "strict": {
+      "bytes": 6738841,
+      "path": "complete2286-audit-1009.json",
+      "sha256": "4b331c45cf64e69465541ef0d9c287515781c4aacec071d28d5bc3715caf79bc"
+    }
+  },
+  "evidence_validation": "PASS",
+  "fresh_guest_validation": {
+    "commands_and_logs": [
+      {
+        "bytes": 301,
+        "path": "export-complete-restored-1009/restored-targeted-checks.command.json",
+        "sha256": "fb57074021debb1d29c415cceaa2bb9f08ed87f9c5f695001295a8095019fc04"
+      },
+      {
+        "bytes": 7704,
+        "path": "export-complete-restored-1009/restored-targeted-checks.console.log",
+        "sha256": "e35730f470240e9d33ec51b5ecb1f68a43f9c9b68b112c017b8d46e0cb0f3db3"
+      },
+      {
+        "bytes": 62,
+        "path": "export-complete-restored-1009/restored-targeted-checks.exit.json",
+        "sha256": "49a4d000ebedc323d52bbce58511d75aefa43ee6a5229e9e825c533fc167fc84"
+      },
+      {
+        "bytes": 247,
+        "path": "export-complete-restored-1009/restored-normal-build.command.json",
+        "sha256": "e65dbb438d9844c9d2d8d4877b581a24683f994e1688362f89d9d9b4d066c224"
+      },
+      {
+        "bytes": 4582,
+        "path": "export-complete-restored-1009/restored-normal-build.console.log",
+        "sha256": "ca931e4951a11271548d454a167aa65780cece39aa6298fd2334a61dc05a2c34"
+      },
+      {
+        "bytes": 62,
+        "path": "export-complete-restored-1009/restored-normal-build.exit.json",
+        "sha256": "c5cb7187f5e071ae75132a00584194b9178cc1f0ff1d370eba15541e337361f5"
+      }
+    ],
+    "failed_driver_groups": 0,
+    "normal_build": "W=1 UBSAN_SANITIZE=n; actual compilation and linking completed. Existing objtool warnings remain.",
+    "scope": "Two basic programs, extracted production registry/source-lifetime C with substituted primitives, and synthetic mutex protocol oracle; not a full suite or 38 live kernel tests.",
+    "targeted_driver_groups": 5
+  },
+  "inventory": {
+    "combined_recheck": 36,
+    "memory_recheck": 18,
+    "performance_sessions": 2286,
+    "phases": 52,
+    "rejected_combined_matrix": 540,
+    "rejected_memory_matrix": 540,
+    "restored_current_matrix": 540,
+    "screen_and_control_sessions": 612,
+    "separate_unscored_memory_diagnostic_sessions": 8
+  },
+  "limitations": [
+    "Current matrix uses ordinary fixed-affinity pinned workers; no oversubscription claim.",
+    "TCLock mutex execution has returned delegation witnesses; TCLock spin delegation counts were not instrumented.",
+    "Prior PMU/cycle diagnostics do not identify remote-memory latency.",
+    "Rejected candidate test passes are historical, not a fresh whole-project pass."
+  ],
+  "memory_candidate": "Allocation/lifetime proof passed; total pool backing with one uploaded image fell from 40 MiB to 640 KiB. Candidate rejected for repeated mutex/cacheline-16 median-peak loss against opening baseline; current code stays eager.",
+  "performance_target": "NOT_MET",
+  "preserved_resume": {
+    "binary_manifest_sha256": "49809a216fa96aff7f5284d459dde21014d5a0f48645256a7b8af756a744f937",
+    "completed_before": 85,
+    "completed_total": 135,
+    "executed_pending": 50,
+    "first_85_raw_artifacts_byte_identical": true,
+    "first_85_record_objects_equal": true,
+    "live_controls_equal": true,
+    "original_artifacts_unchanged": 3296,
+    "original_failure_preserved": true,
+    "script_sha256": "ccb7945bfe9816e390cca41544f39f3bf03534ef6b0901ad231600688433ce55",
+    "source_manifest_sha256": "beb69a91fcc369fafff8cc37c018680efa8d2430afa85b071d12b9b413978cf4",
+    "status": "PASS"
+  },
+  "provider_binary_comparison": {
+    "evidence_unchanged_between_passes": true,
+    "exact_btf_pairs": 27,
+    "method": "Exact BTF type/string permutations independently verified; every byte outside .BTF must match when provider source is unchanged. No blanket metadata exclusion."
+  },
+  "report_formatting": {
+    "proof": {
+      "bytes": 6375,
+      "path": "report-formatting-1009/proof.json",
+      "sha256": "85f541780fff044ca0a1cfdb1fa102cadcd01f09beaccff54e240a9848966885"
+    },
+    "scope": "CSV CRLF normalized to LF; trailing SVG line whitespace removed. Every parsed CSV cell and SVG element/attribute token/text is unchanged."
+  },
+  "runtime_changes_promoted": [],
+  "schema": 1,
+  "scope": "Offline source, ELF, generated-code, raw measurement, business-result, lifecycle and completeness checks of retained guest evidence. Does not independently authenticate execution provenance or establish starvation freedom."
+}
