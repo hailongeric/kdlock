@@ -33,9 +33,9 @@ def parser():
                    default=['native', 'tclock', 'kdlock'])
     p.add_argument('--workloads', nargs='+', choices=('cacheline', 'rcuht'), default=['cacheline'],
                    help='rcuht is opt-in: its KD writer currently fails strict JIT admission')
-    p.add_argument('--cachelines', nargs='+', type=int, choices=(1, 2, 4, 8, 16), default=[1, 16])
-    p.add_argument('--write-percent', nargs='+', type=int, default=[0, 1, 10, 50, 100])
-    p.add_argument('--threads', nargs='+', type=int, default=[1, 8, 16])
+    p.add_argument('--cachelines', nargs='+', type=int, choices=(1, 2, 4, 8, 16), default=[1])
+    p.add_argument('--write-percent', nargs='+', type=int, default=[1, 20])
+    p.add_argument('--threads', nargs='+', type=int, default=FULL_THREADS)
     p.add_argument('--full-matrix', action='store_true', help='select the existing 15-point thread set')
     p.add_argument('--cpus', nargs='+', type=int, help='ordered worker CPU list; cohorts take prefixes')
     p.add_argument('--collector-cpu', type=int, default=38)

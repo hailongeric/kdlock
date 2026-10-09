@@ -6,9 +6,10 @@ workload separate from the instrumented [rwlock correctness test](../../workload
 All compilation, tests and live runs belong in the recovery guest; follow
 [operations](../../docs/AGENTS.md) for kernel identity, snapshot and drain requirements.
 
-[Measured results, 2026-10-09](results/20261009/README.md): 180 cacheline comparison
-sessions, 12 delegation-disabled controls, read-only hash results and the current
-hash-writer admission refusal.
+[Full thread sweep, 2026-10-09](results/20261009-scaling/README.md): 270 sessions
+for 1% and 20% writes, all 15 thread counts, throughput curves and NUMA progress.
+The [initial mix comparison](results/20261009/README.md) retains the earlier
+180 cacheline sessions, 12 delegation-disabled controls and hash admission evidence.
 
 ## Cases
 
@@ -27,14 +28,17 @@ writer fails strict JIT address admission (`CONTEXT_ADDRESS_WIDENED` on a bucket
 load). Hash readers and native/TCLock writers can run; selecting KD with any writes
 stops at translation and preserves the refusal, without a performance score.
 
-Default write percentages are **0, 1, 10, 50, 100**, so read-only, 99% reads,
-90% reads, balanced and write-only cases are explicit. Every worker uses the
-same percentage with evenly spaced writes and a deterministic phase offset;
+The default comparison has exactly two cases on **one cacheline**: **1% writes**
+(99% reads) and **20% writes** (80% reads). Every worker uses the same percentage
+with evenly spaced writes and a deterministic phase offset;
 this is a mixed-operation workload, not a fixed writer-thread population.
 The runner verifies the exact mix from each worker's completed count.
 
-The short thread set is `1 8 16`; `--full-matrix` selects the existing 15-point
-set through 36 workers. `--cpus` takes an ordered list whose prefixes form cohorts.
+The default thread set matches the earlier spin/mutex comparison:
+`1 2 3 4 5 6 7 8 12 16 20 24 28 32 36`. Three rounds of each case with all three
+backends produce **270 sessions**. `--threads` selects a shorter set;
+`--full-matrix` explicitly restores the default 15-point set.
+`--cpus` takes an ordered list whose prefixes form cohorts.
 Use separate directories for compact and cross-NUMA placements. Collector CPU 38
 must be online, available and outside every worker cohort.
 
@@ -56,14 +60,13 @@ export KDLOCK_SNAPSHOT_TAG=<verified-monitor-tag>
 
 # Small correctness/drain check; one round, no performance scores.
 timeout 900s python3 bench/rwlock_compare/run.py \
-  --functional --repeats 1 --workloads cacheline --cachelines 1 16 \
-  --write-percent 0 50 100 --threads 1 16 \
+  --functional --repeats 1 --workloads cacheline --cachelines 1 \
+  --write-percent 1 20 --threads 1 16 \
   --output /root/kdlock-evidence/rwlock-functional
 
-# Three-round timed comparison.
+# Three-round timed comparison: the two default mixes and all 15 thread counts.
 timeout 3600s python3 bench/rwlock_compare/run.py \
-  --workloads cacheline --cachelines 1 16 \
-  --write-percent 0 1 10 50 100 --threads 1 8 16 \
+  --workloads cacheline --cachelines 1 --write-percent 1 20 --full-matrix \
   --output /root/kdlock-evidence/rwlock-comparison
 
 # Explicit JIT acceptance on contended writers; zero returned bodies fails.

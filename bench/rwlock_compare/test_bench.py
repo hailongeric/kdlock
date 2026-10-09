@@ -39,7 +39,7 @@ def fixture(workload='cacheline', percent=50):
 
 class BenchTests(unittest.TestCase):
     def test_mix_matches_scheduler(self):
-        for percent in (0, 1, 10, 50, 99, 100):
+        for percent in (0, 1, 10, 20, 50, 99, 100):
             for worker in range(64):
                 mix, writes = worker * 17 % 100, 0
                 for count in range(1, 514):
@@ -70,7 +70,7 @@ class BenchTests(unittest.TestCase):
 
     def test_hash_and_read_only(self):
         for workload in ('cacheline', 'rcuht'):
-            for percent in (0, 1, 50, 100):
+            for percent in (0, 1, 20, 50, 100):
                 spec, m = fixture(workload, percent)
                 validate(m, spec)
         spec, m = fixture('rcuht')
