@@ -4,11 +4,15 @@
 #include <pthread.h>
 #include <sched.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 typedef uint32_t u32;
 typedef uint8_t u8;
 typedef struct { int counter; } atomic_t;
+#define __aligned(n) __attribute__((aligned(n)))
+#define smp_mb__before_atomic() __atomic_thread_fence(__ATOMIC_SEQ_CST)
 #define ATOMIC_INIT(n) { (n) }
 #define likely(x) (x)
 #define atomic_set(p, n) __atomic_store_n(&(p)->counter, (n), __ATOMIC_RELAXED)
@@ -29,6 +33,12 @@ static int cmpxchg_count(atomic_t *p, int old, int next, int order)
 	} while (!(condition)); VAL; })
 #define smp_store_release(p, n) __atomic_store_n((p), (n), __ATOMIC_RELEASE)
 static _Thread_local unsigned int pins, gates;
+static _Thread_local struct { unsigned int nondelegated; } kd_spin_fast_cpu;
+#define this_cpu_inc(value) ((void)++(value))
+#define this_cpu_dec(value) ((void)--(value))
+#define READ_ONCE(value) __atomic_load_n(&(value), __ATOMIC_RELAXED)
+#define barrier() __asm__ volatile("" ::: "memory")
+static void kd_hotlock_spin_entry_pinned(void) { assert(pins); }
 static void preempt_disable(void) { pins++; }
 static void preempt_enable(void) { assert(pins); pins--; }
 typedef struct { atomic_t val; } kd_spinlock_t;
@@ -52,17 +62,42 @@ static void kd_spin_direct_native_release_inline(kd_spinlock_t *p)
 #define KD_SPIN_DIRECT_UNLOCK(p, cookie) do { \
 	(void)(cookie); kd_spin_direct_native_release_inline(p); \
 	preempt_enable(); } while (0)
+#define KD_ENTRY_ABI_RWLOCK_CLOBBER_V1 3
+#define this_cpu_read(value) (value)
+#define KD_SPIN_DIRECT_CALL(symbol, p, continuation) do { \
+	(void)(continuation); symbol((p), 0, 0, 0); } while (0)
 static kd_spinlock_t *prepared;
 static int kd_spin_prepare(kd_spinlock_t *p, unsigned long ip, unsigned int abi)
 {
 	prepared = p;
-	return ip == 0x1234 && abi == 1 ? 0 : -EINVAL;
+	return ip == 0x1234 && abi == KD_ENTRY_ABI_RWLOCK_CLOBBER_V1 ? 0 : -EINVAL;
 }
 #include "rwlock_production.h"
+#include "rwlock_native_release.h"
+
+/* Substitute the gate engine, retaining the production writer admission. */
+void kd_rwlock_lock_pinned_clobber_v1(kd_spinlock_t *gate, unsigned long sp,
+				    unsigned long ip, unsigned long bp)
+{
+	(void)sp; (void)ip; (void)bp;
+	kd_spin_direct_native_lock_inline(gate);
+	kd_rwlock_writer_enter((kd_rwlock_t *)((char *)gate - offsetof(kd_rwlock_t, gate)));
+}
+
+struct kd_exec_frame {
+	unsigned int entry_abi, spin_kind;
+	unsigned long outer_lock_addr;
+	unsigned char rwlock_admitted, executed;
+};
+#define KD_SPIN_CONT_ROOT 0
+#define BUG_ON(value) assert(!(value))
+#define container_of(p, type, member) ((type *)((char *)(p) - offsetof(type, member)))
+#include "rwlock_prelude.h"
 
 static DEFINE_KD_RWLOCK(lock);
 static atomic_t active_readers, active_writers, data, mirror;
 static atomic_t ready, release_readers, writer_inside, release_writer, late_inside;
+static atomic_t fast_released, fast_reader_inside;
 static pthread_barrier_t start;
 
 static void wait_nonzero(atomic_t *p)
@@ -125,6 +160,46 @@ static void ordering(void)
 	assert(atomic_read(&late_inside) == 1 && !atomic_read(&lock.cnts));
 }
 
+static void *fast_reader(void *unused)
+{
+	(void)unused;
+	kd_read_lock(&lock);
+	assert(atomic_read(&fast_released));
+	atomic_set(&fast_reader_inside, 1);
+	kd_read_unlock(&lock);
+	return NULL;
+}
+
+static void fast_ordering(void)
+{
+	pthread_t reader, writer;
+	kd_write_lock(&lock);
+	assert(!gates && kd_spin_fast_cpu.nondelegated == 1);
+	assert(atomic_read(&lock.cnts) == KD_RWLOCK_WRITER_FAST);
+	assert(!pthread_create(&reader, NULL, fast_reader, NULL));
+	while (atomic_read(&lock.cnts) != KD_RWLOCK_WRITER_FAST + KD_RWLOCK_READER_BIAS)
+		sched_yield();
+	assert(!atomic_read(&fast_reader_inside));
+	atomic_set(&fast_released, 1);
+	kd_write_unlock(&lock);
+	assert(!pthread_join(reader, NULL));
+	assert(!pins && !gates && !kd_spin_fast_cpu.nondelegated);
+
+	/* A queued writer can publish intent while an ungated writer owns the
+	 * low byte. Releasing that byte must retain WAITING until admission. */
+	atomic_set(&writer_inside, 0);
+	atomic_set(&release_writer, 0);
+	kd_write_lock(&lock);
+	assert(!pthread_create(&writer, NULL, waiting_writer, NULL));
+	while (!(atomic_read(&lock.cnts) & KD_RWLOCK_WRITER_WAITING)) sched_yield();
+	assert(!atomic_read(&writer_inside));
+	kd_write_unlock(&lock);
+	wait_nonzero(&writer_inside);
+	atomic_set(&release_writer, 1);
+	assert(!pthread_join(writer, NULL));
+	assert(!atomic_read(&lock.cnts) && !atomic_read(&lock.gate.val));
+}
+
 #define ITERATIONS 20000
 static void *stress(void *arg)
 {
@@ -150,7 +225,7 @@ static void *stress(void *arg)
 			__atomic_fetch_sub(&active_readers.counter, 1, __ATOMIC_SEQ_CST);
 			kd_read_unlock(&lock);
 		}
-		assert(!pins && !gates);
+		assert(!pins && !gates && !kd_spin_fast_cpu.nondelegated);
 	}
 	return NULL;
 }
@@ -158,10 +233,32 @@ static void *stress(void *arg)
 int main(void)
 {
 	pthread_t workers[10];
-	assert(!kd_rwlock_prepare(&lock, 0x1234, 1) && prepared == &lock.gate);
-	assert(kd_rwlock_prepare(NULL, 0x1234, 1) == -EINVAL);
-	assert(kd_rwlock_prepare(&lock, 0, 1) == -EINVAL);
+	assert(!kd_rwlock_prepare(&lock, 0x1234, 3) && prepared == &lock.gate);
+	assert(kd_rwlock_prepare(NULL, 0x1234, 3) == -EINVAL);
+	assert(kd_rwlock_prepare(&lock, 0, 3) == -EINVAL);
+	assert(kd_rwlock_prepare(&lock, 0x1234, 1) == -EINVAL);
+	/* Production prelude: refusal cancels admission under the held gate.
+	 * Virtual spin children inherit ABI3 without acquiring a writer count. */
+	struct kd_exec_frame frame = { .entry_abi = 3,
+		.outer_lock_addr = (unsigned long)&lock.gate };
+	preempt_disable();
+	kd_spin_direct_native_lock_inline(&lock.gate);
+	kd_spin_rw_begin(&frame);
+	assert(frame.rwlock_admitted && atomic_read(&lock.cnts) == KD_RWLOCK_WRITER_LOCKED);
+	kd_spin_rw_cancel(&frame);
+	assert(!frame.rwlock_admitted && !atomic_read(&lock.cnts));
+	kd_spin_rw_retry(&frame, 0);
+	assert(!atomic_read(&lock.cnts));
+	kd_spin_rw_retry(&frame, 1);
+	assert(!frame.rwlock_admitted && atomic_read(&lock.cnts) == KD_RWLOCK_WRITER_LOCKED);
+	kd_rwlock_writer_exit(&lock);
+	frame.spin_kind = 1;
+	kd_spin_rw_begin(&frame);
+	assert(!frame.rwlock_admitted && !atomic_read(&lock.cnts));
+	kd_spin_direct_native_release_inline(&lock.gate);
+	preempt_enable();
 	ordering();
+	fast_ordering();
 	assert(!pthread_barrier_init(&start, NULL, 10));
 	for (uintptr_t i = 0; i < 10; i++)
 		assert(!pthread_create(&workers[i], NULL, stress, (void *)i));

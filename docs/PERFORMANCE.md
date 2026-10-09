@@ -6,6 +6,19 @@ contains the final comparison, failed candidates and evidence identities.
 KD does not match the stronger of TCLock and Linux Native across the requested
 thread set. Closing the work does not establish performance parity.
 
+## RCUHT rwlocks, 2026-10-10
+
+The separate [rwlock comparison](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+completed 270 RCUHT sessions at 1% and 20% writes over the same fifteen thread
+counts. ABI3 enables actual hash-writer JIT execution; native fast writers and
+separate count/gate cache lines improve the screened implementation. All sessions
+passed correctness and drain. KD met strict peak-and-whole throughput parity at
+21 of 30 configurations, so the requested universal parity target remains unmet.
+At 1% writes TCLock still leads across NUMA nodes; the largest 20% gap is at two
+threads. The report retains all trials, raw evidence, JIT/NO_JIT groups and the
+128-byte lock footprint tradeoff. These results are separate from the closed
+spin/mutex phase below.
+
 ## Completed measurements
 
 The final baseline contains 540 sessions: KD, TCLock and Native; spin and mutex;

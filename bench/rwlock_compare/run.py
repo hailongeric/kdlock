@@ -21,6 +21,7 @@ from context_audit import audit
 # Import our session explicitly from this directory, not the spin/mutex runner.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from session import RWSession
+from parity import assess
 import boot_policy
 
 FULL_THREADS = [1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32, 36]
@@ -31,8 +32,7 @@ def parser():
     p.add_argument('--output', type=Path)
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
-    p.add_argument('--workloads', nargs='+', choices=('cacheline', 'rcuht'), default=['cacheline'],
-                   help='rcuht is opt-in: its KD writer currently fails strict JIT admission')
+    p.add_argument('--workloads', nargs='+', choices=('cacheline', 'rcuht'), default=['rcuht'])
     p.add_argument('--cachelines', nargs='+', type=int, choices=(1, 2, 4, 8, 16), default=[1])
     p.add_argument('--write-percent', nargs='+', type=int, default=[1, 20])
     p.add_argument('--threads', nargs='+', type=int, default=FULL_THREADS)
@@ -49,6 +49,8 @@ def parser():
     p.add_argument('--spin-entry-ratio-limit', type=int, default=2)
     p.add_argument('--delegate', choices=('on', 'off'), default='on', help='KD native control when off')
     p.add_argument('--require-jit', action='store_true', help='require JIT for every multithread KD writer case')
+    p.add_argument('--require-parity', action='store_true',
+                   help='fail after the full comparison if KD is slower on peak or median whole-run throughput')
     p.add_argument('--functional', action='store_true', help='one fixed-iteration round, no performance scores')
     p.add_argument('--dry-run', action='store_true', help='print plan without builds, modules or timing')
     kernel_identity.arguments(p)
@@ -65,6 +67,9 @@ def make_plan(args):
     require(1 <= args.post_work_rounds <= 256 and 0 < args.iterations <= 100000000,
             'invalid post-work or iterations')
     require(args.repeats == (1 if args.functional else 3), 'use one functional round or three performance rounds')
+    require(not args.require_parity or (not args.functional and
+            set(args.backends) == {'native', 'tclock', 'kdlock'}),
+            '--require-parity needs all three backends and a timed comparison')
     require(args.spin_entry_ratio_limit in (0, *(1 << n for n in range(1, 32))), 'invalid entry ratio limit')
     require(not args.require_jit or (args.delegate == 'on' and 'kdlock' in args.backends and
             max(threads) > 1 and max(args.write_percent) > 0), '--require-jit needs contended KD writers')
@@ -133,6 +138,9 @@ def report(out):
             samples=[row['name'] for row in rows]))
     write_json(out / 'records.json', records)
     write_json(out / 'summary.json', summary)
+    parity = assess(json.loads((out / 'plan.json').read_text()), summary)
+    write_json(out / 'parity.json', parity)
+    return parity
 
 
 def idle():
@@ -212,7 +220,7 @@ def build(args, out, plan):
         binaries['workloads'][variant] = binary
         imports = command(['nm', '-u', binary], out / ('imports-' + variant + '.txt'))
         expected = {'native': (), 'tclock': ('komb_read_lock', 'komb_read_unlock', 'komb_write_lock', 'komb_write_unlock'),
-                    'kdlock': ('kd_spin_prepare', 'kd_spin_lock_pinned_clobber_v1', 'kd_spin_unlock_clobber_v1')}[backend]
+                    'kdlock': ('kd_spin_prepare', 'kd_rwlock_lock_pinned_clobber_v1', 'kd_spin_unlock_clobber_v1')}[backend]
         require(all(name in imports.split() for name in expected), 'missing direct rwlock API imports')
         require(backend != 'native' or not any(name in imports for name in ('kd_', 'komb_')), 'native imports a delegate')
         command(['objdump', '-dr', binary], out / ('caller-' + variant + '.txt'))
@@ -279,7 +287,9 @@ def main(argv=None):
             print(f'  reads={session.record["measurement"]["reads"]} writes={session.record["measurement"]["writes"]} '
                   f'JIT={session.record["jit_bodies"]} drained=True', flush=True)
         idle()
-        report(out)
+        parity = report(out)
+        require(not args.require_parity or parity['status'] == 'PASS',
+                'KD throughput parity target not met; see parity.json', 'PERFORMANCE_REGRESSION')
         return 0
     except (Failure, OSError, ValueError, KeyError, AssertionError) as error:
         write_json(out / 'failure.json', dict(error=str(error), status=getattr(error, 'status', 'FAILED')))

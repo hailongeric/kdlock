@@ -28,6 +28,7 @@
 #include "kd_spin_entry.h"
 #include "kd_spin_fast.h"
 #include "kd_spin_direct.h"
+#include "kd_rwlock.h"
 #include "kd_hotlock.h"
 #include <linux/sched.h>
 #include <linux/sched/task_stack.h>

@@ -43,6 +43,7 @@ void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
 	frame->parent = NULL;
 	frame->depth = 0;
 	frame->executed = false;
+	frame->rwlock_admitted = false;
 	frame->role = KD_ROLE_WAITER;
 #ifdef KDLOCK_SELFTEST
  if (kd_hotlock_role_trace)
@@ -162,6 +163,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
 	frame->outer_unlock_seen = false;
 	frame->completion_seen = false;
 	frame->executed = false;
+	frame->rwlock_admitted = false;
 	frame->role = KD_ROLE_WAITER;
 #ifdef KDLOCK_SELFTEST
  if (kd_hotlock_role_trace)
@@ -263,6 +265,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	frame->batch_lease = true;
 	frame->complex_ready = false;
 	frame->executed = false;
+	frame->rwlock_admitted = false;
 	frame->completion_seen = false;
 	frame->outer_unlock_seen = false;
 	frame->role = KD_ROLE_WAITER;
@@ -442,7 +445,7 @@ static __always_inline int kd_exec_complete_single_spin(struct kd_exec_frame *fr
 	    frame->mutex_backend || frame->parent || frame->depth ||
 	    frame->completion_seen ||
 	    (frame->packet_state == KD_PACKET_COMPLETE ?
-	     frame->entry_abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1 :
+	     !kd_entry_abi_spin_clobber(frame->entry_abi) :
 	     (frame->packet_state != KD_PACKET_FULL ||
 	      kd_exec_frame_regs(frame)->di != frame->outer_lock_addr)))
 		return -EINVAL;

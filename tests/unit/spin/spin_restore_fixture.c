@@ -123,7 +123,8 @@ int main(void)
 			*(unsigned long *)execution.frame.regs.sp = (unsigned long)capture;
 		if (minimal) {
 			execution.frame.regs.sp = (unsigned long)(stack + sizeof(stack) - 8);
-			execution.frame.entry_abi = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
+			execution.frame.entry_abi = iteration & 1 ? KD_ENTRY_ABI_SPIN_CLOBBER_V1 :
+				KD_ENTRY_ABI_RWLOCK_CLOBBER_V1;
 			execution.frame.packet_state = mode ? KD_PACKET_MINIMAL : KD_PACKET_COMPLETE;
 		}
 		expected_sp = execution.frame.regs.sp + (!minimal && !mode ? 8 : 0);

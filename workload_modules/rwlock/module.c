@@ -120,7 +120,7 @@ static long rw_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	if (cmd == RW_TEST_PREPARE) {
 #ifdef RW_KDLOCK
 		ret = kd_rwlock_prepare(&test_lock, (unsigned long)rw_test_entry,
-					KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+					KD_ENTRY_ABI_RWLOCK_CLOBBER_V1);
 #endif
 	} else {
 		for (i = 0; i < ARRAY_SIZE(values); i++)
@@ -131,7 +131,7 @@ static long rw_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 #ifdef RW_KDLOCK
 		snapshot.gate_address = (unsigned long)&test_lock.gate;
 		snapshot.entry = (unsigned long)rw_test_entry;
-		snapshot.cnts = atomic_read(&test_lock.cnts);
+		snapshot.cnts = kd_rwlock_state(&test_lock);
 		snapshot.gate = atomic_read(&test_lock.gate.val);
 #endif
 		ret = copy_to_user(user, &snapshot, sizeof(snapshot)) ? -EFAULT : 0;

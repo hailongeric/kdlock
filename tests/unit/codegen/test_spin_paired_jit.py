@@ -1,6 +1,6 @@
 """Execute generic clobber-unlock continuations through the real wrapper.
 
-ABI1 has one ordinary stack value and a canary; ABI2 additionally defines an
+ABI1 and ABI3 have one ordinary stack value and a canary; ABI2 additionally defines an
 outer cookie and branches at unlock. Neither uses a manual five-register save
 area. Poison uncaptured GPRs and check COMPLETE,
 entry refusal and FULL at native calls. Only the native callee/dispatcher is
@@ -84,7 +84,7 @@ int main(void) {
   assert(stack[16]==0x116 && stack[17]==(ENTRY_ABI==2?0:0x55aa));
   for(unsigned int i=18;i<24;i++) assert(stack[i]==0x123400+i);
  }
- puts("PASS clobber JIT unlock: ABI2 routed cookie, exact metadata, COMPLETE/refusal and native FULL continuation");
+ puts("PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation");
 }
 '''
 
@@ -101,8 +101,8 @@ def main():
                'kd_mutex_direct_unlock_clobber_v1': 0x4000}
     # Each failed prerequisite must reconstruct exactly one CALL, including
     # immutable endpoint mismatch, disabled completion, and all three words.
-    cases = [(False, failure, abi) for abi in (1, 2) for failure in range(7)]
-    for native, failure, abi in [*cases, (True, 0, 1), (True, 0, 2)]:
+    cases = [(False, failure, abi) for abi in (1, 2, 3) for failure in range(7)]
+    for native, failure, abi in [*cases, (True, 0, 1), (True, 0, 2), (True, 0, 3)]:
         # A compiler-spilled body value, not five incoming register saves.
         # CPU heat is consumed before the continuation and is never a JIT input.
         # ABI2 outer entry must define the acquisition cookie itself. Poisoned
@@ -153,7 +153,7 @@ def main():
                                        lock_kind='mutex' if abi == 2 else 'spin',
                                        body_witness=True, return_status=True)
         assert status == 0, log
-        if not native and abi == 1:
+        if not native and abi in (1, 3):
             # Removing the caller unlock condition must leave one body block:
             # no second witness write or branch-budget probe is needed.
             assert assembly.count(b'MOV             Stack_JIT_WITNESS, 1\n') == 1

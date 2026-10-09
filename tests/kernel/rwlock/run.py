@@ -76,7 +76,7 @@ class RWSession(Session):
             return
         require(first["entry"] and first["gate_address"], "expected KD workload")
         Path("/sys/module/kdlock_km/parameters/bench_lock_addr").write_text(str(first["gate_address"]))
-        self.record.update(entry_range=[first["entry"], first["entry"] + 1], caller_abi="clobber")
+        self.record.update(entry_range=[first["entry"], first["entry"] + 1], caller_abi="clobber", entry_abi=3)
         with open(DEVICE, "rb", buffering=0) as device:
             fcntl.ioctl(device, PREPARE)
         self.start_daemon()

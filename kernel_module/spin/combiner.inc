@@ -128,6 +128,43 @@ static void kd_spin_reclaim_outer(struct kd_spin_request *request)
 	BUG_ON(kd_spin_entry_reclaim(&request->ref));
 }
 
+/* ABI3 owns reader/writer admission in addition to the physical gate. Only
+ * a fresh physical root acquires it here; virtual children inherit the
+ * parent's ABI but their target can be an ordinary nested spinlock. */
+static void kd_spin_rw_begin(struct kd_exec_frame *frame)
+{
+	if (frame->entry_abi != KD_ENTRY_ABI_RWLOCK_CLOBBER_V1 ||
+	    frame->spin_kind != KD_SPIN_CONT_ROOT)
+		return;
+	BUG_ON(frame->rwlock_admitted || frame->executed);
+	kd_rwlock_writer_enter(container_of((kd_spinlock_t *)frame->outer_lock_addr,
+					   kd_rwlock_t, gate));
+	frame->rwlock_admitted = true;
+}
+
+static void kd_spin_rw_cancel(struct kd_exec_frame *frame)
+{
+	if (!frame->rwlock_admitted)
+		return;
+	/* Only an explicit unstarted exit may undo admission. A progressed
+	 * native suffix keeps ownership until its ordinary paired write unlock. */
+	BUG_ON(frame->executed);
+	kd_rwlock_writer_exit(container_of((kd_spinlock_t *)frame->outer_lock_addr,
+					  kd_rwlock_t, gate));
+	frame->rwlock_admitted = false;
+}
+
+static void kd_spin_rw_retry(struct kd_exec_frame *frame, unsigned int mode)
+{
+	if (mode != 1 || frame->entry_abi != KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)
+		return;
+	/* The refused waiter is now physical queue owner. Its old acquisition
+	 * C frame is discarded; transfer an admitted count to the restored body. */
+	BUG_ON(frame->rwlock_admitted || frame->spin_kind != KD_SPIN_CONT_ROOT);
+	kd_rwlock_writer_enter(container_of((kd_spinlock_t *)frame->outer_lock_addr,
+					   kd_rwlock_t, gate));
+}
+
 #include "execute.inc"
 
 /* Single-root admission and binding touch only hot state. Complex/virtual,
@@ -158,6 +195,7 @@ static bool kd_spin_batch_prepare_simple(struct kd_spin_batch *batch,
 		frame->spin_simple = false;
 		return false;
 	}
+	kd_spin_rw_begin(frame);
 	ptr->curr_cs_cpu = node->cpuid;
 #ifdef KDLOCK_SELFTEST
 	/* Observers inspect ledgers; production roots leave this storage cold. */
@@ -227,6 +265,9 @@ static void kd_spin_batch_run(void *opaque)
 
 			next_node = batch->next;
 			if (kd_exe_spin_batch_completed(&batch->call, frame)) {
+				/* The translated paired unlock already cleared the writer
+				 * byte. Never clear it again after physical handoff. */
+				frame->rwlock_admitted = false;
 #ifdef KDLOCK_SELFTEST
 				/* Observers require the completed ledger before its pop. */
 				BUG_ON(kd_exec_frame_complete_single_spin(frame));
@@ -264,7 +305,7 @@ static void kd_spin_batch_run(void *opaque)
 			kd_spin_prefetch_request(next_node);
 
 			if (kd_spin_batch_prepare_simple(batch, curr_node)) {
-				if (batch->call.entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
+				if (kd_entry_abi_spin_clobber(batch->call.entry_abi))
 					kd_jit_clobber_call_v1(&batch->call);
 				else
 					kd_jit_legacy_batch_call(&batch->call);

@@ -132,10 +132,17 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	/* Exercise only an unexecuted child; never interrupt a live JIT body. */
 	if (!kd_spin_selftest_refuse(frame, curr_node, &ret_flag))
 #endif
+	{
+		kd_spin_rw_begin(frame);
 		ret_flag = kd_exe_on_call_hl_entry(
 			exe, kd_exec_frame_regs(frame), frame->entry_ip,
 			frame->outer_lock_addr);
+	}
 dispatched:
+	if (!frame->executed)
+		kd_spin_rw_cancel(frame);
+	else if (ret_flag == KD_EXE_RUN_TO_UNLOCK)
+		frame->rwlock_admitted = false;
 #ifdef KDLOCK_SELFTEST
 	kd_spin_selftest_frame_end(frame_event, frame, ret_flag);
 	kd_spin_selftest_refusal_end(frame, ret_flag);
@@ -165,6 +172,7 @@ dispatched:
 		smp_store_release(&curr_node->locked, 0);
 		/* The waiter may reuse its queue slot after this publication. */
 		BUG_ON(kd_exec_native_wait(frame));
+		frame->rwlock_admitted = false;
 		kd_exe_native_handoff_timing_end(false, handoff_start);
 		BUG_ON(kd_spin_jit_nested_cleanup(frame));
 		BUG_ON(!kd_spin_combiner_state_matches(&frame->saved_combiner,

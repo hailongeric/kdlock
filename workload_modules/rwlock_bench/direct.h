@@ -31,7 +31,7 @@ static rwlock_t rb_lock __aligned(64) = __RW_LOCK_UNLOCKED(rb_lock);
 static int rb_prepare(void)
 {
 #ifdef RB_KDLOCK
-	return kd_rwlock_prepare(&rb_lock, (unsigned long)rb_entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
+	return kd_rwlock_prepare(&rb_lock, (unsigned long)rb_entry, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1);
 #else
 	return 0;
 #endif
@@ -43,7 +43,7 @@ static void rb_lock_snapshot(struct rw_bench_snapshot *s)
 #if defined(RB_KDLOCK)
 	s->gate_addr = (unsigned long)&rb_lock.gate;
 	s->entry = (unsigned long)rb_entry;
-	s->cnts = atomic_read(&rb_lock.cnts);
+	s->cnts = kd_rwlock_state(&rb_lock);
 	s->gate = atomic_read(&rb_lock.gate.val);
 #elif defined(RB_TCLOCK)
 	s->gate_addr = (unsigned long)&rb_lock.lock;

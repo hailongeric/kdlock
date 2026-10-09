@@ -100,7 +100,9 @@ static void check_batch_metadata(void)
 	struct kd_jit_batch_call call, untouched;
 	struct kd_exec_frame before;
 
-	for (unsigned int abi = 0; abi < 2; abi++) {
+	const unsigned int abis[] = { 0, 1, 3 };
+	for (unsigned int index = 0; index < 3; index++) {
+		unsigned int abi = abis[index];
 		for (unsigned int timed = 0; timed < 2; timed++) {
 			reset();
 			active.spin_simple = active.request_frame = true;
@@ -128,7 +130,7 @@ static void check_batch_metadata(void)
 						    raw_spin_unlock_addr));
 			CHECK(call.entry_sp == active.regs.sp && call.entry_abi == abi &&
 			      call.packet_state == &active.packet_state);
-			CHECK(call.complete == abi &&
+			CHECK(call.complete == !!abi &&
 			      call.complete == kd_jit_minimal_complete_allowed(&active));
 			CHECK(call.dispatch_start == (timed ? 1000 : 0) &&
 			      call.wrapper_start == (timed ? 1010 : 0) &&
@@ -197,7 +199,9 @@ static void check_batch_completion_timings(void)
 	struct kd_regs bad_regs;
 	unsigned int bad_packet = KD_PACKET_MINIMAL;
 
-	for (unsigned int abi = 0; abi < 2; abi++) {
+	const unsigned int abis[] = { 0, 1, 3 };
+	for (unsigned int index = 0; index < 3; index++) {
+		unsigned int abi = abis[index];
 		for (unsigned int timed = 0; timed < 2; timed++) {
 			reset();
 			active.spin_simple = active.request_frame = true;

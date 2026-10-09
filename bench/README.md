@@ -6,7 +6,7 @@ the client, all-worker warmup, peak selection, source snapshots and offline read
 Kernel payloads live under [workload_modules](../workload_modules/README.md).
 
 Use the [rwlock comparison](rwlock_compare/README.md) for native, TCLock and KD
-read-write locks: the default one-cacheline cases use 1% and 20% writes across
+read-write locks: the default RCUHT cases use 1% and 20% writes across
 all 15 thread counts, with returned-writer JIT evidence and validated warmed peaks.
 
 ## Results
@@ -16,6 +16,7 @@ and remaining gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
+| [RCUHT rwlocks](rwlock_compare/results/20261010-rcuht/README.md) | 1%/20% writes on the hash payload; all 15 thread counts, ABI3 JIT writers and strict Native/TCLock parity checks |
 | [Rwlock scaling](rwlock_compare/results/20261009-scaling/README.md) | 1%/20% writes on one cacheline; all 15 thread counts, 270 sessions, throughput curves and NUMA progress |
 | [Initial rwlock mixes](rwlock_compare/results/20261009/README.md) | Native/TCLock/KD, 180 cacheline sessions at 1/16 workers, 12 KD controls, and the hash-writer JIT admission limit |
 | [Protocol simplification](tclock_compare/results/20261008-protocol-simplification/README.md) | Fresh 540-session spin/mutex baseline at all 15 thread counts under `nopvspin`; rejected translator/memory candidates and rechecks retained separately |

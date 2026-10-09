@@ -75,6 +75,7 @@ static int compile_entry(const struct daemon_config *cfg,
 				     "../../../disassem/disassem.py";
 	const char *abi = exe->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ? "1" :
 			  exe->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ? "2" :
+			  exe->entry_abi == KD_ENTRY_ABI_RWLOCK_CLOBBER_V1 ? "3" :
 			  exe->entry_abi == KD_ENTRY_ABI_LEGACY ? "0" : "invalid";
 	const char *kind = exe->lock_kind == KD_EXE_LOCK_SPIN  ? "spin" :
 			   exe->lock_kind == KD_EXE_LOCK_MUTEX ? "mutex" :

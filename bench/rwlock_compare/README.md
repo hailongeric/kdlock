@@ -6,6 +6,9 @@ workload separate from the instrumented [rwlock correctness test](../../workload
 All compilation, tests and live runs belong in the recovery guest; follow
 [operations](../../docs/AGENTS.md) for kernel identity, snapshot and drain requirements.
 
+[RCUHT comparison, 2026-10-10](results/20261010-rcuht/README.md) records the
+ABI3 hash-writer JIT results, optimization trials and strict parity outcome.
+
 [Full thread sweep, 2026-10-09](results/20261009-scaling/README.md): 270 sessions
 for 1% and 20% writes, all 15 thread counts, throughput curves and NUMA progress.
 The [initial mix comparison](results/20261009/README.md) retains the earlier
@@ -23,13 +26,11 @@ Hash moves and the complete structural oracle reuse the previous
 adapted from TCLocks `rcuhashbash_write_lock`. This is a global rwlock benchmark,
 not lock-free RCU. It allocates no nodes and calls no RCU services in the body.
 
-The default workload is `cacheline`. Hash is opt-in because the current KD hash
-writer fails strict JIT address admission (`CONTEXT_ADDRESS_WIDENED` on a bucket
-load). Hash readers and native/TCLock writers can run; selecting KD with any writes
-stops at translation and preserves the refusal, without a performance score.
-
-The default comparison has exactly two cases on **one cacheline**: **1% writes**
-(99% reads) and **20% writes** (80% reads). Every worker uses the same percentage
+The default workload is **RCUHT**, with exactly two mixes: **1% writes**
+(99% reads) and **20% writes** (80% reads). Select `--workloads cacheline` for the
+previous single-cacheline workload. ABI3 writer admission runs before the JIT
+body; the earlier ABI1 hash refusal remains in the historical evidence.
+Every worker uses the same percentage
 with evenly spaced writes and a deterministic phase offset;
 this is a mixed-operation workload, not a fixed writer-thread population.
 The runner verifies the exact mix from each worker's completed count.
@@ -66,13 +67,13 @@ timeout 900s python3 bench/rwlock_compare/run.py \
 
 # Three-round timed comparison: the two default mixes and all 15 thread counts.
 timeout 3600s python3 bench/rwlock_compare/run.py \
-  --workloads cacheline --cachelines 1 --write-percent 1 20 --full-matrix \
+  --workloads rcuht --write-percent 1 20 --full-matrix --require-parity \
   --output /root/kdlock-evidence/rwlock-comparison
 
 # Explicit JIT acceptance on contended writers; zero returned bodies fails.
 timeout 600s python3 bench/rwlock_compare/run.py \
-  --functional --repeats 1 --backends kdlock --workloads cacheline \
-  --cachelines 16 --write-percent 100 --threads 16 --require-jit \
+  --functional --repeats 1 --backends kdlock --workloads rcuht \
+  --write-percent 20 --threads 16 36 --require-jit \
   --spin-entry-ratio-limit 0 --output /root/kdlock-evidence/rwlock-jit
 ```
 
@@ -121,6 +122,13 @@ remain in the output directory. `records.json` includes failed/not-run cases.
 separately from NO_JIT controls. It reports best peak, min/median/max/spread,
 whole-run min/median/max and whether all three rounds are present. Functional
 runs produce no performance summary entries.
+
+`parity.json` checks the requested performance target at every point: KD's best
+warmed peak and median whole-run rate must each meet both native and TCLock.
+`--require-parity` returns a failure after completing all sessions if any point
+is slower or lacks three comparable rounds. There is no tolerance or pooling of
+JIT/NO_JIT groups. This is an observed-throughput threshold, not a statistical
+claim that small differences exceed measurement noise.
 
 Create `<output>/STOP` to stop at the next drained case boundary. A timeout or
 kernel fault preserves processes/modules for diagnosis; it is never evidence

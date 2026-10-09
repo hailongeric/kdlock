@@ -119,7 +119,7 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
 
 	if (READ_ONCE(exe->entry_abi) != frame->entry_abi)
 		return false;
-	if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
+	if (kd_entry_abi_spin_clobber(frame->entry_abi))
 		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
 		       clobber_spin_lock_addr && clobber_spin_unlock_addr;
 	if (frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
@@ -136,7 +136,7 @@ static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 {
 	if (frame->parent || frame->depth)
 		return false;
-	if (frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)
+	if (kd_entry_abi_spin_clobber(frame->entry_abi))
 		return !frame->mutex_backend && frame->spin_simple;
 	return frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
 	       frame->mutex_backend && frame->jit_lock_depth == 1 &&
@@ -194,7 +194,7 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	 * required by kd_jit_minimal_complete_allowed. Select its final metadata
 	 * once: do not fill the legacy call and then rewrite it via the general
 	 * clobber helper, which still handles mutex and complex dispatch below. */
-	clobber = frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1;
+	clobber = kd_entry_abi_spin_clobber(frame->entry_abi);
 	call->regs = regs;
 	call->args[0] = frame->gsbase;
 	call->args[1] = (unsigned long)frame->logical_task;
@@ -223,7 +223,7 @@ __always_inline __gnu_inline
 bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 				 const struct kd_exec_frame *frame)
 {
-	if (call->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ?
+	if (kd_entry_abi_spin_clobber(call->entry_abi) ?
 	    (call->args[0] != KD_EXE_CLOBBER_COMPLETE ||
 	     *call->packet_state != KD_PACKET_COMPLETE || !call->complete) :
 	    (call->args[0] != KD_EXE_CALL_MISS ||

@@ -140,11 +140,15 @@ class ClobberEntryTests(unittest.TestCase):
     def test_contract_identity_matches_backend(self):
         mutex_symbols = {"kd_mutex_lock_clobber_v1": 0x5000,
                          "kd_mutex_unlock_clobber_v1": 0x6000}
-        for abi, kind, expected in ((1, 'mutex', 2), (2, 'spin', 2), (2, 'mutex', 0)):
+        for abi, kind, expected in ((1, 'mutex', 2), (2, 'spin', 2), (2, 'mutex', 0),
+                                    (3, 'mutex', 2), (3, 'spin', 0)):
             self.assertEqual(render('c3', abi=abi, lock_kind=kind,
                                     kernel_symbols=SYMBOLS | mutex_symbols,
                                     return_status=True, muted=True)[2], expected)
         for code in ('488b45f848890424c3', '48890424c3'):
+            self.assertEqual(render(code, abi=3, kernel_symbols=SYMBOLS,
+                                    return_status=True, muted=True)[2],
+                             0 if code.startswith('488b45') else 2)
             self.assertEqual(render(code, abi=2, lock_kind='mutex',
                                     kernel_symbols=mutex_symbols, return_status=True,
                                     muted=True)[2], 0 if code.startswith('488b45') else 2)

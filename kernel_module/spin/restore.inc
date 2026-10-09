@@ -145,7 +145,7 @@ static __attribute__((noipa, noreturn)) noinline notrace void
 kd_spin_restore_request(struct kd_spin_continuation *execution,
 						unsigned int mode)
 {
-	if (execution->frame.entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
+	if (kd_entry_abi_spin_clobber(execution->frame.entry_abi) &&
 		execution->frame.packet_state != KD_PACKET_FULL)
 	{
 		BUG_ON(mode == 2);
@@ -239,6 +239,7 @@ kd_spin_resume_waiter(struct kd_spin_node *node, unsigned int mode)
 	}
 	else if (!mode)
 		BUG_ON(kd_spin_entry_end_pinned(&ref));
+	kd_spin_rw_retry(&execution->frame, mode);
 	/* No node reads follow release; keep the pin through final packet loads. */
 	barrier();
 	this_cpu_dec(kd_spin_cpu.node_count);

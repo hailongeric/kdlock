@@ -40,6 +40,26 @@ kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *lock, unsigned long sp,
 }
 EXPORT_SYMBOL_GPL(kd_spin_lock_pinned_clobber_v1);
 
+/* Remote completion resumes after the caller's paired unlock and never
+ * returns here. An intact return owns the gate and still needs admission. */
+__attribute__((noipa)) noinline notrace void
+kd_rwlock_lock_pinned_clobber_v1(kd_spinlock_t *gate, unsigned long sp,
+			       unsigned long ip, unsigned long bp)
+{
+	kd_spin_lock_abi_pinned(gate, sp, ip, bp, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1);
+	kd_rwlock_writer_enter(container_of(gate, kd_rwlock_t, gate));
+}
+EXPORT_SYMBOL_GPL(kd_rwlock_lock_pinned_clobber_v1);
+
+__attribute__((noipa)) noinline notrace void
+kd_rwlock_fast_write_unlock(kd_rwlock_t *lock)
+{
+	kd_rwlock_writer_exit(lock);
+	this_cpu_dec(kd_spin_fast_cpu.nondelegated);
+	preempt_enable();
+}
+EXPORT_SYMBOL_GPL(kd_rwlock_fast_write_unlock);
+
 void kd_spin_lock(struct qspinlock *lock, unsigned long sp, unsigned long ip)
 {
 	kd_spin_lock_abi(lock, sp, ip, 0, KD_ENTRY_ABI_LEGACY);

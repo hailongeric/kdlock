@@ -115,7 +115,7 @@ clobber_body:
 #endif
 	mov Stack_JIT_WITNESS, 0
 	/* The fixed directory is usable only by a matching generated image. */
-#if KD_GENERATED_ENTRY_ABI != 1 && KD_GENERATED_ENTRY_ABI != 2
+#if KD_GENERATED_ENTRY_ABI != 1 && KD_GENERATED_ENTRY_ABI != 2 && KD_GENERATED_ENTRY_ABI != 3
 	ud2
 #endif
 generated_body:

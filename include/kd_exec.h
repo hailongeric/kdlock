@@ -93,7 +93,7 @@ struct kd_exec_outer_unlock {
 struct kd_exec_frame {
 	/* First 40 bytes plus regs.ip/sp/bp form one 64-byte hot line when
 	 * embedded at the aligned continuation base. Keep exact ABI/state widths;
-	 * only the two queue-private, exclusively prepared tags share one byte.
+	 * the queue-private tags and rwlock admission state share one byte.
 	 * The next line contains all five virtual GPR backing slots used by JIT.
 	 * Task/GS/parent/packet provenance stays together after the FULL packet.
 	 */
@@ -114,6 +114,7 @@ struct kd_exec_frame {
 	bool completion_seen;
 	u8 spin_kind : 1;
 	u8 spin_regs_decoded : 1;
+	u8 rwlock_admitted : 1;
 	struct kd_regs regs;
 	struct kd_regs *regs_ref;
 	unsigned long gsbase;

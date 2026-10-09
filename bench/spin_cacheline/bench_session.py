@@ -137,7 +137,8 @@ class Session:
                 r[0]["lock_kind"] == lock_kind and r[0]["code"] != 0, "entry is not NORMAL")
         entry = r[0]
         if "caller_abi" in self.record:
-            require(entry["entry_abi"] == (lock_kind if self.record["caller_abi"] == "clobber" else 0),
+            expected_abi = self.record.get("entry_abi", lock_kind if self.record["caller_abi"] == "clobber" else 0)
+            require(entry["entry_abi"] == expected_abi,
                     "published entry has the wrong caller ABI")
         begin, end = self.record["entry_range"]
         require(begin <= entry["entry"] < end, "published entry belongs to another CS")

@@ -108,7 +108,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     diagnostics.begin(pid, entry)
     os.makedirs("./asm", exist_ok=True)
 
-    if lock_kind not in {"spin", "mutex"} or abi not in {0, 1, 2} or (abi == 1 and lock_kind != "spin") or (abi == 2 and lock_kind != "mutex"):
+    if lock_kind not in {"spin", "mutex"} or abi not in {0, 1, 2, 3} or (abi in {1, 3} and lock_kind != "spin") or (abi == 2 and lock_kind != "mutex"):
         diagnostics.set_instruction(entry, "<entry lock kind>")
         return reject_translation("missing or invalid entry lock kind")
 
@@ -128,7 +128,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
 
     resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
     hostcall_targets = set(resolved_hostcalls)
-    readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2} else set()
+    readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3} else set()
     # The current provider exposes direct protocol entries. Resolve the same
     # identities as its executor, including the clobber unlock completion PC.
     raw_spin_lock = get_kernel_symbol("kd_spin_lock") or control_symbols["_raw_spin_lock"]
@@ -148,7 +148,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     contended_mutex_lock = get_kernel_symbol("kd_mutex_direct_contended_clobber_v1")
     outer_mutex_lock = get_kernel_symbol("kd_mutex_outer_contended_clobber_v1")
     clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock} - {0, None}
-    if ((abi == 1 and not (clobber_lock and clobber_unlock)) or
+    if ((abi in {1, 3} and not (clobber_lock and clobber_unlock)) or
         (abi == 2 and not ((direct_mutex_lock and direct_mutex_unlock) or
                            (clobber_mutex_lock and clobber_mutex_unlock)))):
         return reject_translation("clobber entry symbols unavailable")
@@ -319,7 +319,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                     guards=candidate,
                     scoped_calls=bool(discovered_targets - {entry}),
                     mutex_stack_bytes=mutex_stack_bytes,
-                    entry_spill_guards=abi in {1, 2},
+                    entry_spill_guards=abi in {1, 2, 3},
                     readonly_targets=readonly_targets,
                 )
                 if not segment_error:
@@ -362,7 +362,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     except indirect_jump.ReturnFlowError as error:
         diagnostics.set_instruction(error.offset, "<return dispatch>")
         return reject_translation(str(error))
-    if abi in {1, 2}:
+    if abi in {1, 2, 3}:
         reason = entry_abi.check_minimal_entry(
             block_dict, db_dict, entry, clobber_targets,
             set(lock_symbols), jump_table,
@@ -375,7 +375,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
         entry_guards=entry_guards, body_witness=body_witness,
-        terminal_clobber_unlocks=({clobber_unlock} if abi == 1 else
+        terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
                                  {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()),
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")

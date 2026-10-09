@@ -38,6 +38,35 @@ def fixture(workload='cacheline', percent=50):
 
 
 class BenchTests(unittest.TestCase):
+    def test_default_rcuht_matrix(self):
+        plan = run.make_plan(run.parser().parse_args([]))
+        self.assertEqual(len(plan), 270)
+        self.assertEqual({s['workload'] for s in plan}, {'rcuht'})
+        self.assertEqual({s['write_percent'] for s in plan}, {1, 20})
+        self.assertEqual(sorted({s['threads'] for s in plan}), run.FULL_THREADS)
+
+    def test_parity_requires_both_metrics_and_both_comparators(self):
+        plan = run.make_plan(run.parser().parse_args(['--threads', '16', '--write-percent', '20']))
+        summary = [dict(variant=f'rcuht-c00-{arm}', write_percent=20, threads=16,
+                        complete=True, valid_rounds=3, jit_status='PASS' if arm == 'kdlock' else 'NATIVE',
+                        best_peak_ops_s=rate, whole_median_ops_s=rate)
+                   for arm, rate in (('native', 10), ('tclock', 11), ('kdlock', 12))]
+        self.assertEqual(run.assess(plan, summary)['status'], 'PASS')
+        for metric in ('best_peak_ops_s', 'whole_median_ops_s'):
+            slower = copy.deepcopy(summary)
+            slower[2][metric] = 10.5
+            self.assertEqual(run.assess(plan, slower)['status'], 'FAIL')
+        summary[2]['complete'] = False
+        summary[2]['valid_rounds'] = 2
+        self.assertEqual(run.assess(plan, summary)['status'], 'INCOMPLETE')
+        summary.append(dict(summary[2], jit_status='NO_JIT', valid_rounds=1))
+        self.assertEqual(run.assess(plan, summary)['status'], 'INCOMPLETE')
+
+    def test_parity_rejects_controls_without_comparators(self):
+        args = run.parser().parse_args(['--require-parity', '--backends', 'kdlock'])
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
     def test_mix_matches_scheduler(self):
         for percent in (0, 1, 10, 20, 50, 99, 100):
             for worker in range(64):

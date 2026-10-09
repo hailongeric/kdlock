@@ -84,7 +84,7 @@ class RWSession(Session):
                 return {'Y': 1, 'N': 0}[value] if value in ('Y', 'N') else int(value, 0)
             require(all(number(params[k]) == v for k, v in expected.items()) and
                     params['target_process'] == 'rb_worker', 'KD parameters differ')
-            self.record.update(entry_range=[layout['entry'], layout['entry'] + 1], caller_abi='clobber')
+            self.record.update(entry_range=[layout['entry'], layout['entry'] + 1], caller_abi='clobber', entry_abi=3)
             # Read-only sessions have no writer continuation to execute. Keep
             # them as explicit native-reader controls, without a fake JIT pass.
             if self.record['write_percent']:

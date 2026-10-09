@@ -13,11 +13,14 @@ Linux `pt_regs` is unchanged and must never be cast to `kd_regs`.
 | 0 | Legacy entry | Defined native callee-saved state plus IP/SP |
 | 1 | Ordinary spin clobber v1 | IP/SP/BP |
 | 2 | Ordinary mutex clobber v1 | IP/SP/BP |
+| 3 | Rwlock writer clobber v1; writer admission before the body | IP/SP/BP |
 
 Direct clobber calls pass lock in RDI, pre-CALL RSP in RSI, post-CALL RIP in RDX
 and caller RBP in RCX. The compiler spills live clobbered values; the provider does
 not save all incoming GPRs. Named continuations belong to one noipa workload function.
 Registry, daemon, translator, frame and image must agree on backend and ABI.
+ABI3 uses the spin backend and completion endpoint, with the rwlock writer
+prelude and unstarted-retry ownership described in [rwlocks](design/rwlock_implementation.md).
 
 | Packet state | C may consume | Meaning |
 | --- | --- | --- |

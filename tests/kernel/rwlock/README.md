@@ -20,7 +20,9 @@ for kernel primitives and an embedded-gate substitute. It forces two simultaneou
 readers, a writer waiting for those readers, and a later reader that must wait
 behind that writer. Ten threads then mix native/direct writers and readers. It
 checks exact updates, mutual exclusion, writer-byte release preserving reader
-increments, argument evaluation, preparation identity and balanced preemption.
+increments and queued intent, ungated writer drain references, ABI3 admission
+and refusal/retry, argument evaluation, preparation identity and balanced
+preemption.
 These are protocol checks; the live workload supplies real queue/JIT evidence.
 
 ## Build live inputs
@@ -88,7 +90,35 @@ the daemon and translators stop, source retirement validates frame/queue/ACK
 drain, and the workload unloads before its provider. Timeouts or kernel faults
 retain the modules and evidence; do not infer drain or force unload.
 
-## Verified on 2026-10-09
+## ABI3 verification on 2026-10-10
+
+The two basic unit programs and five affected groups passed: rwlock protocol,
+clobber admission, generated ABI1/2/3 completion and refusal, execution entry
+scope, and real shadow-wait/continuation restoration. The execution fixture
+checked 4,359 assertions and detected its 30 injected mutations. The rwlock
+benchmark's 13 focused tests also passed.
+
+With the final ABI3 fast-writer and separated-gate implementation, KD-native and
+KD-JIT live sessions each completed 4,801,000 operations on CPUs `0–7,20–27`.
+Both observed 16 simultaneous readers, preserved writer exclusion and exact
+updates, and drained with zero count/gate state. KD-native returned no JIT bodies.
+The JIT session recorded:
+
+| Phase | Writes | Returned JIT bodies |
+| --- | ---: | ---: |
+| Writer warmup | 1,600,000 | 1,156,371 |
+| Writers only | 800,000 | 523,035 |
+| 50/50 reads/writes | 400,000 | 141,651 |
+| 87.5% reads | 100,000 | 547 |
+
+The RCUHT functional probes at 16 and 36 workers also passed, with 23,021 and
+26,964 returned JIT writers respectively. These are correctness checks, not
+performance samples. The [RCUHT report](../../../bench/rwlock_compare/results/20261010-rcuht/README.md)
+links the complete evidence, including the corrected missing-Makefile preflight
+and retained rejected optimization trials. No full test suite or kernel rebuild
+was run.
+
+## Historical ABI1 verification on 2026-10-09
 
 The five selected unit groups passed. The observation provider and both workload
 variants built with `W=1`, UBSAN off, against verified `6.1.159-kdclobber2`, Build
