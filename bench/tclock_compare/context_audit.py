@@ -36,7 +36,9 @@ def audit(disassembly, lock_kind='spin'):
                          (tail[0].startswith('jmp ') and '__x86_return_thunk' in text)):
         raise ValueError('unexpected context-switch return')
 
-    _, slow = function('__komb_mutex_lock' if lock_kind == 'mutex' else 'komb_spin_lock_slowpath')
+    slow_name = {'mutex': '__komb_mutex_lock', 'rwlock': 'kombrw_spin_lock_slowpath',
+                 'spin': 'komb_spin_lock_slowpath'}[lock_kind]
+    _, slow = function(slow_name)
     if slow[:6] != SAVES or not slow[6].startswith('call '):
         raise ValueError('slowpath has an extra prologue before saving the continuation')
     returns = [i for i, instruction in enumerate(slow) if instruction == 'ret']
@@ -45,7 +47,9 @@ def audit(disassembly, lock_kind='spin'):
 
     # Upstream's hidden asm calls do not declare RDI clobbers. The emitted
     # helpers must preserve the incoming lock argument and the saved stack.
-    for name in ('get_komb_mutex_node' if lock_kind == 'mutex' else 'get_komb_node',
+    node_name = {'mutex': 'get_komb_mutex_node', 'rwlock': 'get_komb_rwlock_node',
+                 'spin': 'get_komb_node'}[lock_kind]
+    for name in (node_name,
                  'get_shadow_stack_ptr'):
         _, helper = function(name)
         for instruction in helper:

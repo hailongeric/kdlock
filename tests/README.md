@@ -31,6 +31,7 @@ Missing dependencies, skips, crashes and compile failures are not passes.
 | IRQ/BH variants |`spin/test_spin_irq.py`, `test_spin_cold.py`; [kernel consumer](kernel/spin/irq_api/README.md) |
 | TCLock assembly/parking |`spin/test_tclock_context.py`, `mutex/test_tclock_mutex_context.py` |
 | Reader/writer exclusion and ordering | `rwlock/test_rwlock.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |
+| TCLock rwlock assembly and benchmark oracles | `rwlock/test_tclock_rwlock_context.py`; `bench/rwlock_compare/test_bench.py`; [rwlock benchmark](../bench/rwlock_compare/README.md) |
 | Runner/assembly export |`bench/tclock_compare/test_direct.py`, `bench/spin_cacheline/test_assembly.py` |
 
 Fixtures validate modeled production transitions and machine-code continuations,

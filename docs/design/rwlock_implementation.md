@@ -108,3 +108,10 @@ The inherited [spin](spin_implementation.md), [frame](frames.md) and
 [The tests](../../tests/kernel/rwlock/README.md) distinguish native controls,
 publication and actual returned JIT bodies, and verify reader overlap, writer
 exclusion, exact updates, per-worker progress and final drain.
+
+The [rwlock benchmark](../../bench/rwlock_compare/README.md) compares KD with
+Linux native and the TCLock rwlock port using shared cacheline and hash workloads,
+read/write mixes and warmed timed windows.
+The [measured comparison](../../bench/rwlock_compare/results/20261009/README.md)
+records the gains for larger write-only bodies, balanced-mix delegation costs,
+and the current hash-writer JIT address-admission refusal.

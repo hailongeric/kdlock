@@ -10,6 +10,7 @@ compile time and exclusively owns its target lock protocol.
 | [spin_cacheline](spin_cacheline/README.md) | `spin_cacheline.ko` / `/dev/spin_cacheline` | Native/TCLock/KD spin, cacheline/RCUHT payloads and KD nested/early scenarios |
 | [mutex_cacheline](mutex_cacheline/README.md) | `mutex_cacheline.ko` / `/dev/mutex_cacheline` | Separate ordinary mutex functions for the same three arms and shared cacheline/RCUHT payload logic |
 | [rwlock](rwlock/README.md) | `rwlock_test.ko` / `/dev/kd_rwlock_test` | Native/KD concurrent readers, exclusive writers and JIT writer correctness |
+| [rwlock_bench](rwlock_bench/README.md) | `rwlock_bench.ko` / `/dev/kd_rwlock_bench` | Native/TCLock/KD rwlock cacheline/hash performance workloads and mixed reader/writer phases |
 
 The top-level Makefile builds both Linux Native workloads by default; explicit
 `spin_cacheline` and `mutex_cacheline` targets build one. Run it only in the

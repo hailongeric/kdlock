@@ -1,7 +1,7 @@
-# TCLock spin and mutex ports
+# TCLock spin, mutex and rwlock ports
 
 These are independent x86_64 external-module backends. Callers explicitly use
-`komb_spin_lock/unlock` or `komb_mutex_lock/unlock`; every participant on a target
+`komb_spin_lock/unlock`, `komb_mutex_lock/unlock`, or the `komb_read/write` pairs; every participant on a target
 must use the same TCLock protocol. Providers install no global hooks.
 `target_lock` is a drained diagnostic binding, not a hot-path selector.
 
@@ -13,7 +13,7 @@ must use the same TCLock protocol. Providers install no global hooks.
 
 Pinned source: [TCLocks](https://github.com/rs3lab/TCLocks), commit
 `bbfb9f00a12af51dff6ca291cb9829a82960c2ef`, subtree `src/kernel/rcuht/`.
-[upstream](upstream/) retains six unchanged GPL-2.0 files and author statements;
+[upstream](upstream/) retains eight unchanged upstream files and author statements;
 [UPSTREAM.json](UPSTREAM.json) records their SHA256 hashes.
 
 | Entry/components | Responsibility |
@@ -23,6 +23,7 @@ Pinned source: [TCLocks](https://github.com/rs3lab/TCLocks), commit
 | [combiner.c](combiner.c), [include/lib/combiner.h](include/lib/combiner.h) | Original six-GPR/RSP switch and shared constants |
 | [provider.c](provider.c), [compat.h](compat.h) | Spin lifecycle, binding and drain |
 | [mutex_provider.c](mutex_provider.c), [mutex_compat.h](mutex_compat.h) | Registered fixed-affinity contexts, stacks, task refs and complete cohort drain |
+| [komb_rwlock.c](komb_rwlock.c), [rwlock_provider.c](rwlock_provider.c) | Upstream rwlock reader counts, fast/queued writers, stack delegation and quiescent drain |
 
 Private fragments stay in original declaration order in one translation unit,
 preserving assembly strings, GCC options and inlining boundaries. They are not
@@ -38,9 +39,11 @@ Guest only; the runner normally creates isolated builds:
 ```sh
 make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_NUMA=1
 make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_MUTEX=1 TCLOCK_NUMA=1
+make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_RWLOCK=1 TCLOCK_NUMA=1
 ```
 
-Outputs are `tclock_backend_km.ko` and `tclock_mutex_backend_km.ko`. Load backend
+Outputs are `tclock_backend_km.ko`, `tclock_mutex_backend_km.ko` and
+`tclock_rwlock_backend_km.ko`. Load backend
 before its dependent workload. Join workers, check `quiescent=1`, clear the diagnostic
 target pointer, then unload workload before backend. Never force unload or free
 context/task refs before the complete cohort and queue/stack drain.
@@ -68,6 +71,33 @@ promise arbitrary IRQ/BH, mixed trylock or nested/oversubscribed support.
 Batches do not truncate on `need_resched()`. UBSAN is off for these modules;
 the captured kernel and mitigation/frame-pointer configuration are unchanged.
 Known stack-switch objtool warnings remain; audit the built trampoline before loading.
+
+## Rwlock comparator
+
+The rwlock backend ports the pinned **`komb_rwlock.c`**, including its separate
+count-word writer fast path, queued writer path and short slow-reader gate path.
+It does not replace that algorithm with the spin port. Readers execute their
+application body on the original CPU; slow reader admission itself can use the
+upstream gate's stack delegation. Queued writer bodies run on borrowed waiter
+stacks. Unlike the spin/mutex variants, this upstream rwlock implementation returns
+to its combiner between delegates and does not implement WWJUMP chaining.
+
+[rwlock-port.patch](rwlock-port.patch) records Linux qspinlock type substitution,
+pointer typing, exported noipa boundaries, possible-CPU allocation rollback and
+drain bookkeeping. The original code decrements the node count without incrementing
+it; the port balances this at queue entry to make ownership drain observable.
+As in the selected spin comparator, explicit IRQ toggles are omitted for the
+IRQ-enabled task-context workload. In particular, an inline assembly return must
+not bypass IRQ restoration. The six-register/RSP switch remains the original code
+and is checked both in a userspace fixture and the built module.
+
+Callers pair preemption disable/enable around the complete read/write operation.
+Only one non-nested, pinned benchmark operation per CPU is supported. The original
+8-bit current-CPU field limits this port to at most 256 possible CPUs. Module
+unload requires zero reader/writer count and gate, balanced per-CPU node counts,
+empty lock/NUMA queues, restored shadow-stack pointers and original CPU context.
+Rwlock delegation counts are unmeasured; the
+[rwlock runner](../bench/rwlock_compare/README.md) reports that explicitly.
 
 Spin counts cannot establish a delegation share. Mutex whole-run returned-batch
 counts prove delegation but are not exact selected 300 ms window shares. KD retains

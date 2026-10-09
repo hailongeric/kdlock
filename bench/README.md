@@ -5,6 +5,10 @@ Linux Native spin/mutex. [Shared components](spin_cacheline/README.md) provide
 the client, all-worker warmup, peak selection, source snapshots and offline readers.
 Kernel payloads live under [workload_modules](../workload_modules/README.md).
 
+Use the [rwlock comparison](rwlock_compare/README.md) for native, TCLock and KD
+read-write locks: cacheline and hash workloads, read/write mixes, thread scaling,
+returned-writer JIT evidence and validated warmed peaks.
+
 ## Results
 
 The optimization phase closed on 2026-10-09. The final report retains all samples
@@ -12,6 +16,7 @@ and remaining gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
+| [Rwlock comparison](rwlock_compare/results/20261009/README.md) | Native/TCLock/KD, 180 cacheline sessions at 1/16 workers, 12 KD controls, and the hash-writer JIT admission limit |
 | [Protocol simplification](tclock_compare/results/20261008-protocol-simplification/README.md) | Fresh 540-session spin/mutex baseline at all 15 thread counts under `nopvspin`; rejected translator/memory candidates and rechecks retained separately |
 | [Historical hash diagnosis](tclock_compare/results/HISTORY.md#hash-diagnosis) | Matched hash controls, NUMA effects and separate profiles in a fixed Git snapshot |
 | [Evidence index](tclock_compare/results/HISTORY.md) | All retained reports, full statistics, rejected candidates and fixed Git links to earlier reports |

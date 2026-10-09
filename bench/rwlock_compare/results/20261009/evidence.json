@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "date": "2026-10-09",
+  "guest_root": "/root/kdlock-evidence/rwlock-bench-20261009",
+  "guest_archive": "/root/kdlock-evidence/rwlock-bench-20261009.tar.gz",
+  "host_archive": "/home/eric/vm/vm-shared/kdlock/bench/.tmp/rwlock-bench-20261009.tar.gz",
+  "archive_sha256": "88651ae1c64dc7f73f1314d96a199a1a65eb88476a4a0f1e0176ecf6388b7b8d",
+  "archive_bytes": 29065088,
+  "kd_rwlock_implementation_commit": "a343662",
+  "benchmark_source": "new benchmark and actual upstream TCLock rwlock port; per-run frozen manifests are authoritative",
+  "primary": "comparison-v3",
+  "control": "cacheline-native-control-v5",
+  "offline_archive_integrity": {
+    "comparison-v3": {
+      "frozen_source_files": 221,
+      "binaries": 13,
+      "all_hashes_match": true
+    },
+    "cacheline-native-control-v5": {
+      "frozen_source_files": 221,
+      "binaries": 5,
+      "all_hashes_match": true
+    }
+  },
+  "host_differences_from_control": [
+    "bench/spin_cacheline/post_work_fixture.c",
+    "bench/spin_cacheline/test_spin_cacheline.py",
+    "include/kd_mutex_direct.h",
+    "workload_modules/spin_cacheline/api.h",
+    "workload_modules/spin_cacheline/direct.h",
+    "workload_modules/spin_cacheline/post_work.h",
+    "workload_modules/spin_cacheline/scenario.h"
+  ],
+  "guest_preparation_host_differences": [
+    "include/kd_mutex_direct.h",
+    "bench/spin_cacheline/test_spin_cacheline.py",
+    "bench/spin_cacheline/post_work_fixture.c",
+    "tests/kernel/rwlock/run.py",
+    "workload_modules/spin_cacheline/scenario.h",
+    "workload_modules/spin_cacheline/direct.h",
+    "workload_modules/spin_cacheline/post_work.h",
+    "workload_modules/spin_cacheline/api.h"
+  ],
+  "validation": {
+    "basic_and_rwlock_unit_groups": 4,
+    "runner_tests": 10,
+    "shared_peak_tests": 8,
+    "tclock_built_context_audit": true,
+    "full_suite": false
+  },
+  "completion": {
+    "timestamp_ns": 1791550508553548011,
+    "boot_id": "2553e222-86d1-4582-9093-b773672394c5",
+    "final_idle": true,
+    "primary_to_control_changed_inputs": [
+      "bench/rwlock_compare/run.py"
+    ],
+    "runs": {
+      "comparison-v1": {
+        "counts": {
+          "NOT_RUN": 270
+        },
+        "valid": 0,
+        "attempted_all_drained": true
+      },
+      "comparison-v2": {
+        "counts": {
+          "OK": 10,
+          "PREPARATION_FAILED": 1,
+          "NOT_RUN": 259
+        },
+        "valid": 10,
+        "attempted_all_drained": true
+      },
+      "comparison-v3": {
+        "counts": {
+          "OK": 200,
+          "PREPARATION_FAILED": 1,
+          "NOT_RUN": 69
+        },
+        "valid": 200,
+        "attempted_all_drained": true
+      },
+      "hash-probe-v4": {
+        "counts": {
+          "PREPARATION_FAILED": 1
+        },
+        "valid": 0,
+        "attempted_all_drained": true
+      },
+      "cacheline-native-control-v5": {
+        "counts": {
+          "OK": 12
+        },
+        "valid": 12,
+        "attempted_all_drained": true
+      }
+    },
+    "logs": {
+      "bench-unit-v2.log": "d9165423ba19b58e8a6b71c86ee510ee02fb375591fa327c9cc0cbb307b95318",
+      "hash-probe-v4.log": "228ceae267dc4a7d0ea287e3720030b9b1141fc6b238dc466a5222cca477c2bb",
+      "bench-unit-final.log": "4ac01ba5d39b5a81ebbf83916032bf86f00686736293d62b87613d874bfdfd2a",
+      "comparison-v1.log": "91bec896961252b0593ccec2bb392c6d7cbf10144bb5f12c1ed252b24b5e6d61",
+      "bench-unit-v3.log": "4ac01ba5d39b5a81ebbf83916032bf86f00686736293d62b87613d874bfdfd2a",
+      "peak-unit.log": "133449d6f429f0588126e0403937f271f33f90517460d5c4b39d69c2eeda0f25",
+      "cacheline-native-control-v5.log": "2c7bd7d89a498671eed48451285d41a4633f74601bcc8199dcad182184e4a6cd",
+      "comparison-v3.log": "3d34ce2c82d99aea167c3351ec94abdf027e071c1a7ea866c067437da85abd02",
+      "bench-unit.log": "f847f7a09dc43517adf790d089eaabd6987204a3eadc894b7668fce926aaa89c",
+      "comparison-v2.log": "61d68b2fa56611b426485798157e18a8bf1b3137d1077977782cca634bb712c4",
+      "unit.log": "459da607e77787607eba3141bab397f398de3b068d4725be79e38c903e68462e"
+    }
+  },
+  "outputs": {
+    "samples.csv": "2778dcfa6849b5097f6f35e9d2eccbd9bb68c3bb2002885b6a7a699d1788e84c",
+    "statistics.csv": "28e41334c3924b4047bd8678596bb0ea54c4b842f2da2023e30d1a0b386b0f56"
+  }
+}

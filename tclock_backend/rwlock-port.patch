@@ -1,0 +1,528 @@
+--- upstream/locks/komb_rwlock.c
++++ komb_rwlock.c
+@@ -7,7 +7,8 @@
+  * Currently nested locking becomes TTAS lock.
+  */
+ 
+-#include "rwlock/komb_rwlock.h"
++#include "rwlock_compat.h"
++/* Linux 6.1 task-context port; adaptation is recorded in rwlock-port.patch. */
+ #include <linux/topology.h>
+ #include <linux/vmalloc.h>
+ 
+@@ -15,7 +16,7 @@
+ 
+ #ifdef NUMA_AWARE
+ /*
+- * Create a queue which is used by the combiner to store nodes which belong to 
++ * Create a queue which is used by the combiner to store nodes which belong to
+  * different socket.
+  */
+ static DEFINE_PER_CPU_ALIGNED(struct komb_rwlock_node *, local_queue_head);
+@@ -28,21 +29,21 @@
+ 	 */
+ 	void *ptr;
+ 
+-	/* 
++	/*
+ 	 * lock_addr represents the lock addresses acquired by the current CPU.
+ 	 * when acquiring multiple locks on the same CPU (level locking). Each
+ 	 * lock address is stored in the lock_addr array. This helps when locks
+ 	 * are released out of order [Example : Acquire(A), Acquire(B),
+ 	 * Release(A), Release(B)]
+ 	 *
+-	 * TODO (Space Optimization): Fix this to be at the base of the shadow 
++	 * TODO (Space Optimization): Fix this to be at the base of the shadow
+ 	 * stack.
+ 	 */
+ 	uint64_t lock_addr[8];
+ };
+ 
+ /*
+- * Used by the combiner to identify for which CPU is the critical section 
++ * Used by the combiner to identify for which CPU is the critical section
+  * currently executing.
+  */
+ static DEFINE_PER_CPU_ALIGNED(uint8_t, current_critical_section_cpu);
+@@ -54,8 +55,8 @@
+ 			      komb_rwlock_nodes[MAX_NODES]);
+ 
+ /*
+- * 8KB shadow stack used by all the threads. For waiter threads, switch to 
+- * shadow stack, because of IRQs. For combiner thread, switch to shadow stack 
++ * 8KB shadow stack used by all the threads. For waiter threads, switch to
++ * shadow stack, because of IRQs. For combiner thread, switch to shadow stack
+  * to handle nesting
+  */
+ static DEFINE_PER_CPU_ALIGNED(struct shadow_stack, local_shadow_stack);
+@@ -86,7 +87,7 @@
+ static inline __pure struct komb_rwlock_node *decode_tail(u32 tail)
+ {
+ 	int cpu = (tail >> _Q_TAIL_CPU_OFFSET) - 1;
+-	int idx = (tail & _Q_TAIL_IDX_MASK) >> _Q_TAIL_IDX_OFFSET;
++	int idx __maybe_unused = (tail & _Q_TAIL_IDX_MASK) >> _Q_TAIL_IDX_OFFSET;
+ 
+ 	return per_cpu_ptr(&komb_rwlock_nodes[0], cpu);
+ }
+@@ -103,18 +104,18 @@
+ }
+ 
+ static __always_inline void
+-clear_pending_set_locked(struct orig_qspinlock *lock)
++clear_pending_set_locked(struct qspinlock *lock)
+ {
+ 	WRITE_ONCE(lock->locked_pending, _Q_LOCKED_VAL);
+ }
+ 
+-static __always_inline u32 xchg_tail(struct orig_qspinlock *lock, u32 tail)
++static __always_inline u32 xchg_tail(struct qspinlock *lock, u32 tail)
+ {
+ 	return ((u32)xchg(&lock->tail, tail >> _Q_TAIL_OFFSET))
+ 	       << _Q_TAIL_OFFSET;
+ }
+ 
+-static __always_inline u32 cmpxchg_tail(struct orig_qspinlock *lock, u32 tail,
++static __always_inline u32 cmpxchg_tail(struct qspinlock *lock, u32 tail,
+ 					u32 new_tail)
+ {
+ 	return ((u32)cmpxchg(&lock->tail, tail >> _Q_TAIL_OFFSET,
+@@ -128,7 +129,7 @@
+  *
+  * *,1,* -> *,0,*
+  */
+-static __always_inline void clear_pending(struct orig_qspinlock *lock)
++static __always_inline void clear_pending(struct qspinlock *lock)
+ {
+ 	atomic_andnot(_Q_PENDING_VAL, &lock->val);
+ }
+@@ -139,7 +140,7 @@
+  *
+  * *,*,0 -> *,0,1
+  */
+-static __always_inline void set_locked(struct orig_qspinlock *lock)
++static __always_inline void set_locked(struct qspinlock *lock)
+ {
+ 	WRITE_ONCE(lock->locked, _Q_LOCKED_VAL);
+ }
+@@ -152,7 +153,7 @@
+  * *,*,* -> *,1,*
+  */
+ static __always_inline u32
+-komb_fetch_set_pending_acquire(struct orig_qspinlock *lock)
++komb_fetch_set_pending_acquire(struct qspinlock *lock)
+ {
+ 	return atomic_fetch_or_acquire(_Q_PENDING_VAL, &lock->val);
+ }
+@@ -208,7 +209,7 @@
+ #endif
+ }
+ 
+-__always_inline static void execute_cs(struct orig_qspinlock *lock,
++__always_inline static void execute_cs(struct qspinlock *lock,
+ 				       struct komb_rwlock_node *curr_node)
+ {
+ 	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
+@@ -225,11 +226,9 @@
+ 	 * function call, which we will resume execution at using the switch
+ 	 * in unlock.
+ 	 */
+-	local_irq_disable();
+ 	komb_context_switch(incoming_rsp_ptr, outgoing_rsp_ptr);
+-	local_irq_enable();
+-
+-	BUG_ON((this_cpu_ptr(&local_shadow_stack)->ptr) -
++
++	BUG_ON((unsigned long)(this_cpu_ptr(&local_shadow_stack)->ptr) -
+ 		       (*this_cpu_ptr(&local_shadow_stack_ptr)) >
+ 	       SIZE_OF_SHADOW_STACK);
+ 
+@@ -244,7 +243,7 @@
+ #pragma GCC push_options
+ #pragma GCC optimize("O3")
+ __attribute__((noipa)) noinline notrace static void
+-run_combiner(struct orig_qspinlock *lock, struct komb_rwlock_node *curr_node)
++run_combiner(struct qspinlock *lock, struct komb_rwlock_node *curr_node)
+ {
+ #ifdef NUMA_AWARE
+ 	struct komb_rwlock_node **local_head, **local_tail;
+@@ -257,7 +256,7 @@
+ 	if (next_node == NULL) {
+ 		set_locked(lock);
+ 		/*
+-		 * Make this node spin on the locked variable and then it will 
++		 * Make this node spin on the locked variable and then it will
+ 		 * become the combiner.
+ 		 */
+ 		curr_node->locked = false;
+@@ -283,7 +282,7 @@
+ 	local_head = this_cpu_ptr(&local_queue_head);
+ 	local_tail = this_cpu_ptr(&local_queue_tail);
+ 
+-	if (*local_head != NULL) {
++	if (*local_head != 0) {
+ 		(*local_tail)->next = next_node;
+ 		next_node = *local_head;
+ 		*local_head = NULL;
+@@ -294,8 +293,8 @@
+ 	BUG_ON(next_node == NULL);
+ 
+ 	set_locked(lock);
+-	/* 
+-	 * Make this node spin on the locked variable and then it will become 
++	/*
++	 * Make this node spin on the locked variable and then it will become
+ 	 * the combiner.
+ 	 */
+ 	next_node->locked = false;
+@@ -305,11 +304,11 @@
+ #pragma GCC push_options
+ #pragma GCC optimize("O3")
+ __attribute__((noipa)) noinline notrace static int
+-__kombrw_spin_lock_longjmp(struct orig_qspinlock *lock, int tail,
++__kombrw_spin_lock_longjmp(struct qspinlock *lock, int tail,
+ 			   register struct komb_rwlock_node *curr_node)
+ {
+ 	register struct komb_rwlock_node *prev_node = NULL, *next_node = NULL;
+-	struct orig_qspinlock *parent_lock;
++	struct qspinlock *parent_lock;
+ 	int old_tail, val, j;
+ 
+ 	/*
+@@ -339,11 +338,11 @@
+ 		if (curr_node->completed) {
+ 			for (j = 7; j >= 0; j--)
+ 				if (this_cpu_ptr(&local_shadow_stack)
+-					    ->lock_addr[j] != NULL)
++					    ->lock_addr[j] != 0)
+ 					break;
+ 			curr_node->count--;
+ 			if (j >= 0) {
+-				parent_lock = this_cpu_ptr(&local_shadow_stack)
++				parent_lock = (void *)this_cpu_ptr(&local_shadow_stack)
+ 						      ->lock_addr[j];
+ 
+ 				BUG_ON(parent_lock == lock);
+@@ -406,7 +405,7 @@
+ 	prev_cs_cpu = *this_cpu_ptr(&current_critical_section_cpu);
+ 
+ 	/*
+-	 * curr_node at the head of the queue. 
++	 * curr_node at the head of the queue.
+ 	 * Release the node and run_combiner.
+ 	 */
+ 	curr_node->count--;
+@@ -425,16 +424,16 @@
+ 
+ 	j = 7;
+ 	for (j = 7; j >= 0; j--)
+-		if (this_cpu_ptr(&local_shadow_stack)->lock_addr[j] != NULL)
++		if (this_cpu_ptr(&local_shadow_stack)->lock_addr[j] != 0)
+ 			break;
+ 	j += 1;
+ 	BUG_ON(j >= 8 || j < 0);
+-	this_cpu_ptr(&local_shadow_stack)->lock_addr[j] = lock;
++	this_cpu_ptr(&local_shadow_stack)->lock_addr[j] = (unsigned long)lock;
+ 
+ 	run_combiner(lock, next_node);
+ 
+-	BUG_ON(this_cpu_ptr(&local_shadow_stack)->lock_addr[j] != lock);
+-	this_cpu_ptr(&local_shadow_stack)->lock_addr[j] = NULL;
++	BUG_ON(this_cpu_ptr(&local_shadow_stack)->lock_addr[j] != (unsigned long)lock);
++	this_cpu_ptr(&local_shadow_stack)->lock_addr[j] = 0;
+ 
+ #ifdef NUMA_AWARE
+ 	*this_cpu_ptr(&local_queue_head) = prev_local_queue_head;
+@@ -452,7 +451,7 @@
+ 	return 0;
+ 
+ release:
+-	/* 
++	/*
+ 	 * release the node
+ 	 */
+ 	curr_node->count--;
+@@ -461,7 +460,7 @@
+ #pragma GCC pop_options
+ 
+ __attribute__((noipa)) noinline notrace static int
+-__kombrw_spin_lock_slowpath(struct orig_qspinlock *lock)
++__kombrw_spin_lock_slowpath(struct qspinlock *lock)
+ {
+ 	struct komb_rwlock_node *curr_node;
+ 	int tail, idx;
+@@ -475,6 +474,9 @@
+ 	/*
+ 	 * Initialize curr_node
+ 	 */
++	/* One non-nested benchmark operation per pinned CPU. Balance the
++	 * original release decrements so drain can inspect this ownership. */
++	curr_node->count++;
+ 	curr_node->locked = true;
+ 	curr_node->completed = false;
+ 	curr_node->next = NULL;
+@@ -489,27 +491,33 @@
+  * Public API
+  */
+ 
+-void komb_rwinit(void)
++int komb_rwinit(void)
+ {
+ 	int i, j;
+-	for_each_online_cpu (i) {
++	for_each_possible_cpu(i) {
+ 		void *ptr = vzalloc(SIZE_OF_SHADOW_STACK);
+-		per_cpu_ptr(&local_shadow_stack, i)->ptr =
+-			ptr + SIZE_OF_SHADOW_STACK;
++		if (!ptr) {
++			komb_rwfree();
++			return -ENOMEM;
++		}
++		per_cpu_ptr(&local_shadow_stack, i)->ptr = ptr + SIZE_OF_SHADOW_STACK;
+ 		for (j = 0; j < 8; j++)
+ 			per_cpu_ptr(&local_shadow_stack, i)->lock_addr[j] = 0;
+-		*per_cpu_ptr(&local_shadow_stack_ptr, i) =
+-			ptr + SIZE_OF_SHADOW_STACK;
++		*per_cpu_ptr(&local_shadow_stack_ptr, i) = (unsigned long)(ptr + SIZE_OF_SHADOW_STACK);
+ 		*per_cpu_ptr(&current_critical_section_cpu, i) = i;
+ 	}
++	return 0;
+ }
+ 
+ void komb_rwfree(void)
+ {
+ 	int i;
+-	for_each_online_cpu (i) {
+-		vfree(per_cpu_ptr(&local_shadow_stack, i)->ptr -
+-		      SIZE_OF_SHADOW_STACK);
++	for_each_possible_cpu(i) {
++		struct shadow_stack *s = per_cpu_ptr(&local_shadow_stack, i);
++		if (s->ptr) {
++			vfree(s->ptr - SIZE_OF_SHADOW_STACK);
++			s->ptr = NULL;
++		}
+ 	}
+ }
+ 
+@@ -519,7 +527,7 @@
+ 	atomic_set(&lock->lock.val, 0);
+ }
+ 
+-__attribute__((noipa)) noinline notrace static uint64_t
++__attribute__((noipa)) noinline notrace static u64 *
+ get_shadow_stack_ptr(void)
+ {
+ 	return this_cpu_ptr(&local_shadow_stack_ptr);
+@@ -531,7 +539,7 @@
+ 	return this_cpu_ptr(&komb_rwlock_nodes[0]);
+ }
+ 
+-/* 
++/*
+  * When the following function is called, the compiler in caller frame does
+  * this sequence:
+  *
+@@ -558,10 +566,10 @@
+ #pragma GCC push_options
+ #pragma GCC optimize("O3")
+ __attribute__((noipa)) noinline notrace void
+-kombrw_spin_lock_slowpath(struct orig_qspinlock *lock)
++kombrw_spin_lock_slowpath(struct qspinlock *lock)
+ {
+ 	register int ret_val;
+-	/* 
++	/*
+ 	 * We must save the callee-saved registers now, since we will resume
+ 	 * execution at the return address currently at top of stack. If we
+ 	 * defer saving to when context switch happens later, the C function
+@@ -575,7 +583,6 @@
+ 	 * our return address, but Linux only assumes 8-byte stack alignment,
+ 	 * so it isn't a problem for us.
+ 	 */
+-	local_irq_disable();
+ 	asm volatile("pushq %%rbp\n"
+ 		     "pushq %%rbx\n"
+ 		     "pushq %%r12\n"
+@@ -596,11 +603,9 @@
+ 		     :
+ 		     : "i"(get_shadow_stack_ptr)
+ 		     : "memory");
+-	local_irq_enable();
+ 
+ 	ret_val = __kombrw_spin_lock_slowpath(lock);
+ 
+-	local_irq_disable();
+ 	if (ret_val) {
+ 		asm volatile("callq %P0\n"
+ 			     "movq (%%rax), %%rsp\n"
+@@ -637,12 +642,11 @@
+ 			     :
+ 			     : "memory");
+ 	}
+-	local_irq_enable();
+ }
+ #pragma GCC pop_options
+ 
+ __attribute__((noipa)) noinline notrace void
+-kombrw_spin_lock(struct orig_qspinlock *lock, int state)
++kombrw_spin_lock(struct qspinlock *lock, int state)
+ {
+ 	u32 val, cnt;
+ 
+@@ -727,7 +731,7 @@
+ 	kombrw_spin_lock_slowpath(lock);
+ }
+ 
+-/* 
++/*
+  * No IPA is even more relevant here, because even if assembly is removed,
+  * compiler shouldn't assume which caller-saved registers are in use inside
+  * the function. When we jump from the spin loop to the return address after
+@@ -735,7 +739,7 @@
+  * inconsistent, because we only restored the callee-saved registers.
+  */
+ __attribute__((noipa)) noinline notrace void
+-kombrw_spin_unlock(struct orig_qspinlock *lock)
++kombrw_spin_unlock(struct qspinlock *lock)
+ {
+ 	int from_cpuid = *this_cpu_ptr(&current_critical_section_cpu);
+ 	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
+@@ -759,9 +763,9 @@
+ 	for (j = 0; j < 8; j++) {
+ 		temp_lock_addr =
+ 			this_cpu_ptr(&local_shadow_stack)->lock_addr[j];
+-		if (temp_lock_addr != NULL)
++		if (temp_lock_addr != 0)
+ 			max_idx = j;
+-		if (temp_lock_addr == lock)
++		if (temp_lock_addr == (unsigned long)lock)
+ 			my_idx = j;
+ 	}
+ 
+@@ -785,9 +789,7 @@
+ 	outgoing_rsp_ptr =
+ 		&((per_cpu_ptr(&komb_rwlock_nodes[0], from_cpuid)->rsp));
+ 
+-	local_irq_disable();
+ 	komb_context_switch(incoming_rsp_ptr, outgoing_rsp_ptr);
+-	local_irq_enable();
+ 	return;
+ }
+ 
+@@ -832,21 +834,21 @@
+ 	// kombrw_spin_unlock(&lock->lock);
+ }
+ 
+-void komb_write_lock(struct komb_rwlock *lock)
++__attribute__((noipa)) noinline notrace void komb_write_lock(struct komb_rwlock *lock)
+ {
+ 	if (atomic_cmpxchg_acquire(&lock->cnts, 0, _KOMB_W_LOCKED) == 0)
+ 		return;
+ 	komb_write_lock_slowpath(lock);
+ }
+ 
+-/* 
++/*
+  * No IPA is even more relevant here, because even if assembly is removed,
+  * compiler shouldn't assume which caller-saved registers are in use inside
+  * the function. When we jump from the spin loop to the return address after
+  * the unlock function, we have caller-saved registers that are completely
+  * inconsistent, because we only restored the callee-saved registers.
+  */
+-void komb_write_unlock(struct komb_rwlock *lock)
++__attribute__((noipa)) noinline notrace void komb_write_unlock(struct komb_rwlock *lock)
+ {
+ 	u32 val;
+ 
+@@ -859,7 +861,7 @@
+ 	kombrw_spin_unlock(&lock->lock);
+ }
+ 
+-void komb_read_lock(struct komb_rwlock *lock)
++__attribute__((noipa)) noinline notrace void komb_read_lock(struct komb_rwlock *lock)
+ {
+ 	u32 cnts;
+ 
+@@ -870,7 +872,38 @@
+ 	komb_read_lock_slowpath(lock);
+ }
+ 
+-void komb_read_unlock(struct komb_rwlock *lock)
++__attribute__((noipa)) noinline notrace void komb_read_unlock(struct komb_rwlock *lock)
+ {
+ 	(void)atomic_sub_return_release(_KOMB_R_BIAS, &lock->cnts);
+ }
++
++EXPORT_SYMBOL_GPL(komb_read_lock);
++
++EXPORT_SYMBOL_GPL(komb_read_unlock);
++
++EXPORT_SYMBOL_GPL(komb_write_lock);
++
++EXPORT_SYMBOL_GPL(komb_write_unlock);
++
++/* Called only after all clients join. Never an admission/lifetime substitute. */
++int tc_rw_contexts_idle(void)
++{
++	int cpu, i;
++	for_each_possible_cpu(cpu) {
++		struct shadow_stack *s = per_cpu_ptr(&local_shadow_stack, cpu);
++		if (READ_ONCE(*per_cpu_ptr(&local_shadow_stack_ptr, cpu)) != (unsigned long)s->ptr ||
++		    READ_ONCE(*per_cpu_ptr(&current_critical_section_cpu, cpu)) != cpu)
++			return 0;
++		for (i = 0; i < MAX_NODES; i++)
++			if (READ_ONCE(per_cpu_ptr(&komb_rwlock_nodes[i], cpu)->count))
++				return 0;
++		for (i = 0; i < ARRAY_SIZE(s->lock_addr); i++)
++			if (READ_ONCE(s->lock_addr[i]))
++				return 0;
++#ifdef NUMA_AWARE
++		if (*per_cpu_ptr(&local_queue_head, cpu) || *per_cpu_ptr(&local_queue_tail, cpu))
++			return 0;
++#endif
++	}
++	return 1;
++}
+--- upstream/include/rwlock/komb_rwlock.h
++++ include/rwlock/komb_rwlock.h
+@@ -1,14 +1,16 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi */
+ #ifndef __KOMBRW_H__
+ #define __KOMBRW_H__
+ 
+-#include "spinlock/qspinlock_i.h"
++#include <asm/qspinlock.h>
+ #include "lib/combiner.h"
+ 
+ #define MAX_NODES 4
+ 
+ #define DEFINE_KOMBSPINLOCK(x)                                                 \
+-	struct orig_qspinlock(x) =                                             \
+-		(struct orig_qspinlock)__ORIG_QSPIN_LOCK_UNLOCKED
++	struct qspinlock(x) =                                             \
++		(struct qspinlock)__ARCH_SPIN_LOCK_UNLOCKED
+ 
+ #define NUMA_AWARE 1
+ 
+@@ -24,7 +26,7 @@
+ 
+ #define __KOMB_RWLOCK_UNLOCKED                                                 \
+ 	{                                                                      \
+-		{ .cnts = ATOMIC_INIT(0) }, .lock = __ORIG_QSPIN_LOCK_UNLOCKED \
++		{ .cnts = ATOMIC_INIT(0) }, .lock = __ARCH_SPIN_LOCK_UNLOCKED \
+ 	}
+ 
+ #define DEFINE_KOMBRWLOCK(x) struct komb_rwlock(x) = __KOMB_RWLOCK_UNLOCKED;
+@@ -69,10 +71,10 @@
+ #endif
+ 		};
+ 	};
+-	struct orig_qspinlock lock;
++	struct qspinlock lock;
+ };
+ 
+-void komb_rwinit(void); //Called only once on boot. Setup per-core variables
++int komb_rwinit(void); //Called only once on boot. Setup per-core variables
+ void komb_rwfree(void); //Called only once on exit.
+ 
+ //Called for every spin-lock instance.

@@ -8,6 +8,8 @@
     "include/lib/combiner.h": "dc84cd6fe55e52667ce52111c88448e6df75a79e9d7b735d26c64ac39ceca04e",
     "include/spinlock/komb.h": "5666f599e57ee68d5ce1330bd67eb63c2d6cb15324ad10f5a3bba2f8df0ac415",
     "locks/komb_mutex.c": "d4ae402d81307100ee2c03745643f458d3b42eab13e6e57735eebbd22643dc26",
-    "include/mutex/komb_mutex.h": "cb4fdcd87586e378be4448704816fc05ae4814871bd3e89c6edba4dcd1399329"
+    "include/mutex/komb_mutex.h": "cb4fdcd87586e378be4448704816fc05ae4814871bd3e89c6edba4dcd1399329",
+    "locks/komb_rwlock.c": "d1ec95ea8d025eccaf7111c0831fe206776209b51e2525a0205b878e32c8d472",
+    "include/rwlock/komb_rwlock.h": "c35f2cbaeb04fff8518ac9f5f113a3ce18aa0800dd1e9c4bd55ee4e733295608"
   }
 }
