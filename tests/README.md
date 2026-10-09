@@ -30,6 +30,7 @@ Missing dependencies, skips, crashes and compile failures are not passes.
 | Heat/ratio |`infrastructure/test_hotlock_sampling.py` |
 | IRQ/BH variants |`spin/test_spin_irq.py`, `test_spin_cold.py`; [kernel consumer](kernel/spin/irq_api/README.md) |
 | TCLock assembly/parking |`spin/test_tclock_context.py`, `mutex/test_tclock_mutex_context.py` |
+| Reader/writer exclusion and ordering | `rwlock/test_rwlock.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |
 | Runner/assembly export |`bench/tclock_compare/test_direct.py`, `bench/spin_cacheline/test_assembly.py` |
 
 Fixtures validate modeled production transitions and machine-code continuations,
