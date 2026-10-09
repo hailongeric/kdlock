@@ -160,4 +160,4 @@ IRQ/preempt state, every worker/node share and final queue/frame/owner drain.
 Returned-body counts establish KD JIT where required. Flat cycle/IP samples locate
 execution work, but do not measure remote-memory latency or establish a cache
 cause. See [tests](../../tests/README.md), [runner](../../bench/tclock_compare/README.md)
-and [performance plan](../PERFORMANCE_PLAN.md) for selection and acceptance.
+and [performance status](../PERFORMANCE.md) for selection and acceptance.

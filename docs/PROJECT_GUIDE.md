@@ -4,6 +4,12 @@ KD spin uses an explicit four-byte lock; KD mutex retains the original Linux
 mutex and its physical owner. Both use caller-clobber entries and shared JIT
 execution. Providers do not install global interception hooks.
 
+The optimization phase closed on 2026-10-09. The
+[final benchmark report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+contains the completed comparison and remaining gaps. Use
+[performance status](PERFORMANCE.md) for its outcome and
+[benchmark history](../bench/tclock_compare/results/HISTORY.md) for older evidence.
+
 ## Reading order
 
 | Need | Document |
@@ -14,7 +20,7 @@ execution. Providers do not install global interception hooks.
 | Change generated code or state layout | [Execution flow](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md) |
 | Change ownership or recovery | [KD locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) |
 | Build and verify | [Provider](../kernel_module/README.md), [tests](../tests/README.md), [benchmarks](../bench/README.md) |
-| Review limits and remaining work | [TODO](TODO.md), [performance plan](PERFORMANCE_PLAN.md) |
+| Review status and limits | [Known limitations](TODO.md), [performance status](PERFORMANCE.md) |
 | Evaluate simpler execution contracts | [Protocol simplification](design/protocol_simplification.md) |
 
 ## Guest workflow
@@ -76,9 +82,9 @@ use `nopvspin`. Both combined translator/memory and memory-only candidates were
 rejected after repeated regressions; no runtime change was promoted. Their full
 matrices remain separate from the fresh 540-session comparison of the restored
 runtime at all 15 thread counts. The earlier
-[hash diagnosis](../bench/tclock_compare/results/20261008-hash-diagnosis.md)
+[hash diagnosis](../bench/tclock_compare/results/HISTORY.md#hash-diagnosis)
 uses the same boot policy but covers selected counts and placements. The
-[previous 540-sample comparison](../bench/tclock_compare/results/20261008-threeway-spin-mutex.md)
+[previous 540-sample comparison](../bench/tclock_compare/results/HISTORY.md#pre-nopvspin-matrix)
 predates activation. Keep samples from the two boot policies separate.
 
 ### Dependencies and idle state

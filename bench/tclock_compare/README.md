@@ -110,6 +110,13 @@ Timed peak selection requires all workers to progress in the full cohort window.
 Keep whole-run per-worker and node shares too, especially 24-thread minority-node
 cases. A bounded batch and positive observed counts do not prove starvation freedom.
 
+The closed phase screened candidates separately at 16/36 threads, adding 2 for
+caller changes and 24 for fairness. An apparent regression was rechecked once;
+repeatable median losses above 3% at protected points caused rejection. The full
+comparison used all 15 thread counts and both payloads. Parity required matching
+the stronger of TCLock and Native at each point, with peak and sustained rates
+reported separately; 90% of TCLock's peak was an intermediate milestone.
+
 The [protocol simplification report](results/20261008-protocol-simplification/README.md)
 keeps isolated screens, full 15-point matrices and rechecks separate under
 `nopvspin`. Both combined terminal/memory and memory-only candidates were rejected
@@ -118,9 +125,10 @@ remains current. Raw stage names `final` and `retained` identify those rejected
 candidates. The fresh restored-runtime comparison (`restored`) contains 540
 sessions across all 15 thread counts and both payloads for spin and mutex.
 
-The earlier [hash diagnosis](results/20261008-hash-diagnosis.md) and
+The phase closed on 2026-10-09. The earlier
+[hash diagnosis](results/HISTORY.md#hash-diagnosis) and
 [mandatory-JIT mutex trials](results/20261008-mutex-priority-trials.md) use the same
-boot policy. The [previous 540-sample matrix](results/20261008-threeway-spin-mutex.md)
+boot policy. The [previous 540-sample matrix](results/HISTORY.md#pre-nopvspin-matrix)
 predates `nopvspin` and must remain separate. All of these runs use four lock-outside
 arithmetic rounds; the unrelated 64-round working-tree change was excluded.
 The [evidence index](results/HISTORY.md) links source identities, failed candidates

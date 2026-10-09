@@ -215,5 +215,6 @@ Returned-body KD JIT evidence and TCLock mutex returned-batch delegation
 counts are separate from payload correctness. TCLock spin delegation counts
 remain unmeasured. Performance acceptance, failed candidates and the remaining
 mutex gaps are maintained in the [benchmark index](../../bench/README.md) and
-[final mutex report](../../bench/tclock_compare/results/20261003-mutex-followup.md).
-This documentation cleanup does not rerun those performance matrices.
+[final spin/mutex report](../../bench/tclock_compare/results/20261008-protocol-simplification/README.md).
+The optimization phase is closed; documentation cleanup does not rerun its
+performance matrices.

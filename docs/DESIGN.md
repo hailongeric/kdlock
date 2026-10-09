@@ -90,5 +90,5 @@ explicitly deferred work.
 Published code, a fixture pass and actual returned-body JIT are different evidence.
 [Tests](../tests/README.md) selects affected checks; [benchmarks](../bench/README.md)
 records throughput and progress. Historical records stay tied to their frozen
-source. Performance work and acceptance criteria live in
-[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md); environment rules live in [AGENTS](AGENTS.md).
+source. The closed phase and deferred designs live in
+[performance status](PERFORMANCE.md); environment rules live in [AGENTS](AGENTS.md).

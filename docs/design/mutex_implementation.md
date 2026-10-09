@@ -266,10 +266,12 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-Current measured gains, rejected grouping/cache candidates, returned-body
-JIT/delegation evidence and remaining full-thread performance gaps are in the
-[final mutex report](../../bench/tclock_compare/results/20261003-mutex-followup.md).
-The later [mandatory-JIT trials](../../bench/tclock_compare/results/20261008-mutex-priority-trials.md)
+The final full-thread comparison, returned-body JIT/delegation evidence and
+remaining performance gaps are in the
+[completed report](../../bench/tclock_compare/results/20261008-protocol-simplification/README.md).
+Earlier grouping/cache candidates remain in
+[fixed benchmark records](../../bench/tclock_compare/results/HISTORY.md#mutex-followup).
+The earlier [mandatory-JIT trials](../../bench/tclock_compare/results/20261008-mutex-priority-trials.md)
 retain runtime behavior after rejecting task retention and finding no repeatable
 gain from smaller entry/execution changes under `nopvspin`.
 Source review and synthetic unit fixtures do not substitute for those live

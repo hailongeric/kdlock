@@ -1,22 +1,44 @@
 # Benchmark evidence index
 
-Reports describe their own frozen source and environment. They are historical
-measurements, not performance reruns of a later cleanup commit. Raw archives stay
-under ignored `bench/.tmp/` and guest `/root/kdlock-evidence/`; they are not deleted
-by source cleanup and are not shipped in a new checkout.
+The optimization phase closed on 2026-10-09. Reports apply to their frozen source
+and environment; cleanup does not rerun their measurements. Raw evidence archives
+remain under ignored `bench/.tmp/` and guest `/root/kdlock-evidence/`.
+A fresh checkout includes compact results, not those original run directories.
 
-## Retained reports
+## Final report
 
-| Report | Purpose |
+| Report | Scope |
 | --- | --- |
-| [2026-10-08–09 protocol simplification](20261008-protocol-simplification/README.md) | 2,286 sessions under `nopvspin`, including a fresh 540-session restored-runtime matrix at all 15 counts; rejected candidates, full matrices/rechecks and memory accounting retained separately |
-| [2026-10-08 mandatory-JIT mutex trials](20261008-mutex-priority-trials.md), [statistics](20261008-mutex-priority-trials-statistics.csv), [samples](20261008-mutex-priority-trials-samples.csv) | 306 sessions at 16/36 threads; four independent candidates and rechecks, opening/closing baselines; runtime changes restored, gate-contract tests retained |
-| [2026-10-08 hash diagnosis](20261008-hash-diagnosis.md), [statistics](20261008-hash-diagnosis-statistics.md), [diagnostics](20261008-hash-diagnosis-diagnostics.md) | `11c8e72` under `nopvspin`: 90 unprofiled and 72 diagnostic samples; compares against the stronger of TCLock/Native and ranks optimization experiments |
-| [2026-10-08 spin/mutex matrix](20261008-threeway-spin-mutex.md), [statistics](20261008-threeway-spin-mutex-statistics.md), [audit](20261008-threeway-spin-mutex-audit.json) | `009e8e3` before `nopvspin`: four workloads, all 15 thread points, 540 valid samples; hash and minority-node gaps remain |
-| [Final mutex matrix](20261003-mutex-followup.md) | All 15 thread points; acceptance still fails across all workloads |
-| [Mutex statistics](20261003-mutex-followup-statistics.md), [JSON](20261003-mutex-followup.json) | Full valid distributions and targeted rechecks |
-| [Spin36 investigation](20260928-spin36-analysis.md) | Hash/cacheline, NUMA, PMU and UBSAN attribution limits |
-| [Packed continuation check](20260928-packed-continuation.md) | Current spin packet geometry, ACK and regression evidence |
+| [Protocol simplification and final baseline](20261008-protocol-simplification/README.md) | 2,286 trial sessions; final 540-session spin/mutex comparison at all 15 counts under `nopvspin`; rejected candidates, complete statistics, audits and archive identities |
+
+The performance target remains unmet. [Performance status](../../../docs/PERFORMANCE.md)
+records the closed scope and deferred designs.
+
+## Earlier retained report
+
+| Report | Scope |
+| --- | --- |
+| <a id="mutex-priority-trials"></a>[Mandatory-JIT mutex trials](20261008-mutex-priority-trials.md), [statistics](20261008-mutex-priority-trials-statistics.csv), [samples](20261008-mutex-priority-trials-samples.csv) | 306 sessions at 16/36 threads; rejected retention/entry/service candidates. This report family is retained alongside existing local edits. |
+
+## Superseded reports in Git
+
+The 32 report, chart and data artifacts below were removed from the working tree
+at closeout. Their exact bytes remain in commit
+`cb1629a3788f5c0b75383b9761a8b1838c784581`. Each report links its associated
+statistics, audits and evidence manifests in that same Git snapshot. For local
+retrieval, use:
+
+```sh
+git show cb1629a:bench/tclock_compare/results/20261008-hash-diagnosis.md
+```
+
+| Record | Purpose |
+| --- | --- |
+| <a id="hash-diagnosis"></a>[2026-10-08 hash diagnosis](https://github.com/hailongeric/kdlock/blob/cb1629a3788f5c0b75383b9761a8b1838c784581/bench/tclock_compare/results/20261008-hash-diagnosis.md) | 90 unprofiled and 72 diagnostic sessions under `nopvspin`; NUMA controls, profiles and attribution limits |
+| <a id="pre-nopvspin-matrix"></a>[2026-10-08 spin/mutex matrix](https://github.com/hailongeric/kdlock/blob/cb1629a3788f5c0b75383b9761a8b1838c784581/bench/tclock_compare/results/20261008-threeway-spin-mutex.md) | 540 samples at `009e8e3` before `nopvspin`; keep its boot policy separate |
+| <a id="mutex-followup"></a>[2026-10-03 mutex follow-up](https://github.com/hailongeric/kdlock/blob/cb1629a3788f5c0b75383b9761a8b1838c784581/bench/tclock_compare/results/20261003-mutex-followup.md) | Earlier full matrix, distributions and protected rechecks |
+| <a id="spin36-analysis"></a>[2026-09-28 spin36 investigation](https://github.com/hailongeric/kdlock/blob/cb1629a3788f5c0b75383b9761a8b1838c784581/bench/tclock_compare/results/20260928-spin36-analysis.md) | Hash/cacheline, NUMA, PMU and UBSAN controls |
+| <a id="packed-continuation"></a>[2026-09-28 packed continuation](https://github.com/hailongeric/kdlock/blob/cb1629a3788f5c0b75383b9761a8b1838c784581/bench/tclock_compare/results/20260928-packed-continuation.md) | Spin packet geometry, ACK and regression evidence |
 
 ## Earlier reports in Git
 

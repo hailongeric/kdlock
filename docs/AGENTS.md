@@ -144,4 +144,4 @@ throughput. Keep all valid and failed samples; do not pool different workloads,
 ABIs, call shells or instrumentation settings. Functional runs explicitly use
 one round. Benchmark settings and acceptance criteria live in
 [the runner guide](../bench/tclock_compare/README.md) and
-[performance plan](PERFORMANCE_PLAN.md).
+[performance status](PERFORMANCE.md).

@@ -1,16 +1,18 @@
-# Open tasks
+# Known limitations and deferred work
 
 Current scope: x86_64 kernel spin/mutex delegation. Implementation contracts live
-in [DESIGN](DESIGN.md); performance work has one backlog in
-[PERFORMANCE_PLAN](PERFORMANCE_PLAN.md). Historical evidence is indexed in
+in [DESIGN](DESIGN.md); the optimization phase is closed in
+[Performance status](PERFORMANCE.md). These unresolved issues remain documented;
+they are not work scheduled by the closed phase. Historical evidence is indexed in
 [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
 Explicit KD spin and ordinary three-arm mutex workloads exist. KD retains exact
 owner/ACK/source lifetime and shared clobber packets; providers do not install
-global interception. Current mutex peak parity is incomplete and hash has repeated
-protected regressions; use [the measured report](../bench/tclock_compare/results/20261003-mutex-followup.md).
+global interception. The final comparison still fails parity across all requested
+workloads and counts; use the
+[completed report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md).
 
 Known failures are still open:
 

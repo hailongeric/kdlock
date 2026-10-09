@@ -1,5 +1,8 @@
 # Simplifying delegated execution
 
+This document records unimplemented alternatives after the optimization phase
+closed on 2026-10-09. It does not schedule additional implementation work.
+
 KD's largest simplification opportunity is to give the compiler a more explicit
 critical-section boundary. A normal function with an input/result object is much
 easier to delegate than an arbitrary interval between two lock calls. The existing
@@ -38,7 +41,8 @@ Exception handling, unwinding, objtool/hardening and FULL snapshots need explici
 designs before live use.
 Existing broad register-residency experiments did not establish a repeatable gain.
 
-The outlined operation is the better first prototype. An illustrative
+For a separately scoped prototype, the outlined operation is the preferred
+starting point. An illustrative
 `kd_apply(lock, descriptor, &operation)` would submit explicit hash inputs and a
 result field. Its body would contain no lock/unlock calls. The waiter would remain
 inside an ordinary C call while the physical owner executed the generated body.
@@ -118,7 +122,7 @@ when data movement is smaller than in the cacheline payload.
 
 KD pays queue/caller-stack transfer costs too, then adds translated traversal and
 request processing. More delegated bodies cannot compensate automatically for a
-slower service path. The [hash diagnosis](../../bench/tclock_compare/results/20261008-hash-diagnosis.md)
+slower service path. The [historical hash diagnosis](../../bench/tclock_compare/results/HISTORY.md#hash-diagnosis)
 found roughly 99.9% spin JIT coverage and similar total L1 misses to TCLock, but
 more instructions. Those aggregate counters do not measure remote-memory latency.
 Mutex retention trials increased delegation and batch length while losing

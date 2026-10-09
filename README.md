@@ -5,11 +5,13 @@ translates and executes existing critical-section machine code for contending
 callers. KD spin uses an explicit four-byte lock word; KD mutex retains the
 original Linux mutex and its physical owner beside a private scheduling gate.
 The project also includes independent TCLock spin/mutex ports and Linux Native
-comparison workloads.
+comparison workloads. The optimization phase closed on 2026-10-09; the
+[final results](bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+retain all requested thread counts and the remaining performance gaps.
 
 Callers use explicit APIs. Loading a provider does not intercept ordinary Linux
 locks. The captured `kdclobber2` guest interfaces remain required. The supported
-execution paths, context limits and unfinished work are documented below;
+execution paths, context limits and known limitations are documented below;
 performance acceptance is workload-specific and belongs in the benchmark reports.
 
 ## Documentation
@@ -25,7 +27,8 @@ performance acceptance is workload-specific and belongs in the benchmark reports
 | [JIT execution](docs/JIT_EXECUTION.md) / [register ABI](docs/JIT_REGISTER_ABI.md) | Admission, translation, wrapper entry and COMPLETE/FULL exits |
 | [Code map](docs/CODE_MAP.md) | Source and documentation responsibilities |
 | [Operations](docs/AGENTS.md) | Host/guest boundaries, controlled drain and recovery |
-| [Tasks](docs/TODO.md) / [performance plan](docs/PERFORMANCE_PLAN.md) | Remaining functionality, deferrals and acceptance criteria |
+| [Known limitations](docs/TODO.md) / [performance status](docs/PERFORMANCE.md) | Unresolved contracts, closed-phase outcome and deferred designs |
+| [Validation and cleanup](docs/VALIDATION.md) | Completed checks, evidence retention and closeout scope |
 
 ## Repository
 
