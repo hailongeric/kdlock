@@ -3,7 +3,10 @@
 `rwlock_test.ko` exposes `/dev/kd_rwlock_test`. Build-time `RW_BACKEND=native`
 selects Linux rwlocks; `RW_BACKEND=kdlock` selects the public
 [KD rwlock API](../../include/kd_rwlock.h). Each build owns its target lock.
-The KD build uses real JIT writer continuations; readers execute locally.
+The KD build prepares ABI3 writer continuations; readers execute locally. Native
+code acquires writer admission before the body on both local and JIT routes.
+Prepared publication alone is not proof of delegation; the test runner checks
+returned bodies in its contended JIT phases.
 
 Eight protected values must stay equal. Writers increment all eight; readers
 verify consistency while recording concurrent reader overlap. Additional counters

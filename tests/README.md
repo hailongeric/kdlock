@@ -30,7 +30,7 @@ Missing dependencies, skips, crashes and compile failures are not passes.
 | Heat/ratio |`infrastructure/test_hotlock_sampling.py` |
 | IRQ/BH variants |`spin/test_spin_irq.py`, `test_spin_cold.py`; [kernel consumer](kernel/spin/irq_api/README.md) |
 | TCLock assembly/parking |`spin/test_tclock_context.py`, `mutex/test_tclock_mutex_context.py` |
-| Reader/writer exclusion and ordering | `rwlock/test_rwlock.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |
+| Reader/writer exclusion, ABI3 admission and retry | `rwlock/test_rwlock.py`, `admission/test_clobber_entry.py`, `codegen/test_spin_paired_jit.py`, `execution/test_jit_entry_scope.py`, `spin/test_spin_wait.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |
 | TCLock rwlock assembly and benchmark oracles | `rwlock/test_tclock_rwlock_context.py`; `bench/rwlock_compare/test_bench.py`; [rwlock benchmark](../bench/rwlock_compare/README.md) |
 | Runner/assembly export |`bench/tclock_compare/test_direct.py`, `bench/spin_cacheline/test_assembly.py` |
 
@@ -60,6 +60,12 @@ cacheline only. Functional multithread positives need nonzero returned-body JIT;
 explicit `spin_delegate=0` is a separate zero-JIT control. Do not infer delegation
 from thread count, queue publication or NORMAL status.
 
+Rwlock correctness uses [its own live runner](kernel/rwlock/README.md), checking
+reader overlap, writer exclusion, updates and exact count/gate drain. The
+[rwlock benchmark](../bench/rwlock_compare/README.md) adds the real TCLock port and
+1%/20% RCUHT mixes. Its `--require-jit` checks returned writer bodies; performance
+parity is a separate `--require-parity` result. Readers do not count as JIT bodies.
+
 The [mutex task/ACK probe](kernel/mutex/run_task_selftest.py) and selected SELFTEST
 hotlock/entry probes check resource/routing/drain without executing JIT bodies;
 they do not replace contended returned-body acceptance. KD mutex JIT is always
@@ -67,6 +73,16 @@ enabled; the task/ACK probe constructs its continuation packet before hooks are
 published. Normal/SELFTEST builds stay separate.
 
 ## Recent verification and historical evidence
+
+The [2026-10-10 ABI3 record](kernel/rwlock/README.md#abi3-verification-on-2026-10-10)
+covers two basic programs plus five affected groups, 13 benchmark checks and
+drained KD-native/KD-JIT correctness runs of 4,801,000 operations each.
+The [RCUHT matrix](../bench/rwlock_compare/results/20261010-rcuht/README.md) passed
+all 270 sessions' correctness/progress/drain checks; strict throughput parity
+passed 21 of 30 configurations. These are original 40-vCPU results, not validation
+of the pending 60-vCPU destination migration or a full-suite pass.
+
+### Mandatory mutex JIT, 2026-10-08
 
 On 2026-10-08, the mandatory mutex JIT change passed in guest `6.1.159-kdclobber2`:
 

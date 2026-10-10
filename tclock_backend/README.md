@@ -7,7 +7,9 @@ must use the same TCLock protocol. Providers install no global hooks.
 
 [Lock protocols](../docs/design/lock_protocols.md) defines exclusion and lifetime.
 [Spin](../docs/design/spin_implementation.md) and
-[mutex](../docs/design/mutex_implementation.md) explain storage and handoff.
+[mutex](../docs/design/mutex_implementation.md) explain storage and handoff;
+[rwlock protocols](../docs/design/lock_protocols.md#tclock-rwlock) cover reader
+admission and writer delegation.
 
 ## Source and organization
 
@@ -50,21 +52,21 @@ context/task refs before the complete cohort and queue/stack drain.
 
 ## Selected comparator scope
 
-| Property | Spin | Ordinary mutex |
-| --- | --- | --- |
-| Body execution | Real native waiter stack | Real native waiter stack |
-| Wait | Polling | Upstream parking/wakeup retained |
-| Preemption | Caller pairs pin/unpin | Ordinary operation manages it |
-| Context storage | Per-CPU nodes/8 KiB shadow stack | Preallocated registered context; one fixed worker/CPU |
-| Execution counts | Unmeasured | Returned batches/delegated bodies and successful parks |
+| Property | Spin | Ordinary mutex | Rwlock |
+| --- | --- | --- | --- |
+| Body execution | Real native waiter stack | Real native waiter stack | Reads local; queued writers may use native waiter stacks |
+| Wait | Polling | Upstream parking/wakeup retained | Count/gate polling |
+| Preemption | Caller pairs pin/unpin | Ordinary operation manages it | Caller pairs pin/unpin |
+| Context storage | Per-CPU nodes/8 KiB shadow stack | Preallocated registered context; one fixed worker/CPU | Per-CPU nodes/8 KiB shadow stack; one non-nested worker/CPU |
+| Execution counts | Unmeasured | Returned batches/delegated bodies and successful parks | Unmeasured |
 
-The port covers ordinary mutex only, not unimplemented interruptible/killable/IO
+The mutex port covers ordinary locking only, not unimplemented interruptible/killable/IO
 or rwsem interfaces. Registration/task references replace upstream custom task
 fields without changing parking, NUMA or stack switching. A live exiting task keeps
 drain busy; retry outside measurement rather than releasing early.
 
-Both ports retain NUMA/WWJUMP with configured 1,024; zero-based jumps can execute 1,025
-bodies. The common header enables NUMA even if the Makefile variable is 0, so actual
+The spin and mutex ports retain NUMA/WWJUMP with configured 1,024; zero-based jumps
+can execute 1,025 bodies. The common header enables NUMA even if the Makefile variable is 0, so actual
 ELF metadata must reject misleading off labels. The selected spin comparator disables
 IRQ checks and accepts IRQ-enabled ordinary task-context workloads. It does not
 promise arbitrary IRQ/BH, mixed trylock or nested/oversubscribed support.
@@ -98,6 +100,9 @@ unload requires zero reader/writer count and gate, balanced per-CPU node counts,
 empty lock/NUMA queues, restored shadow-stack pointers and original CPU context.
 Rwlock delegation counts are unmeasured; the
 [rwlock runner](../bench/rwlock_compare/README.md) reports that explicitly.
+The [RCUHT comparison](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+records the 1%/20% write mixes, built assembly audit and complete performance
+matrix against Native and KD ABI3.
 
 Spin counts cannot establish a delegation share. Mutex whole-run returned-batch
 counts prove delegation but are not exact selected 300 ms window shares. KD retains

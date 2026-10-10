@@ -8,11 +8,15 @@ All compilation, tests and live runs belong in the recovery guest; follow
 
 [RCUHT comparison, 2026-10-10](results/20261010-rcuht/README.md) records the
 ABI3 hash-writer JIT results, optimization trials and strict parity outcome.
+All 270 sessions passed correctness and drain, but KD met both throughput targets
+at only 21 of 30 configurations. The remaining nine points fail the requested
+Native/TCLock parity requirement; no universal performance win is claimed.
 
 [Full thread sweep, 2026-10-09](results/20261009-scaling/README.md): 270 sessions
-for 1% and 20% writes, all 15 thread counts, throughput curves and NUMA progress.
+for 1% and 20% writes on the historical ABI1 single-cacheline workload, all 15
+thread counts, throughput curves and NUMA progress.
 The [initial mix comparison](results/20261009/README.md) retains the earlier
-180 cacheline sessions, 12 delegation-disabled controls and hash admission evidence.
+180 cacheline sessions, 12 delegation-disabled controls and the ABI1 hash refusal.
 
 ## Cases
 
@@ -40,15 +44,23 @@ The default thread set matches the earlier spin/mutex comparison:
 backends produce **270 sessions**. `--threads` selects a shorter set;
 `--full-matrix` explicitly restores the default 15-point set.
 `--cpus` takes an ordered list whose prefixes form cohorts.
-Use separate directories for compact and cross-NUMA placements. Collector CPU 38
-must be online, available and outside every worker cohort.
+Use separate directories for compact and cross-NUMA placements. The built-in
+collector default remains CPU 38, matching the recorded 40-vCPU runs. Every
+collector must be online, available and outside all worker cohorts.
+
+The commands below explicitly use collector CPU 58 for the documented 60-vCPU
+destination, after its pending [migration verification](../../docs/PROJECT_GUIDE.md#guest-workflow).
+Default workers remain the prefixes of CPUs 0..35. On that destination, 32/36
+workers cross NUMA nodes; in the original 40-vCPU reports, 24/28 workers crossed
+as well. Reproducing those reports requires their original topology and collector
+38, not just the same thread counts. Do not pool samples across those placements.
 
 ## Commands
 
 Inspect a plan without compiling or loading anything:
 
 ```sh
-python3 bench/rwlock_compare/run.py --dry-run
+python3 bench/rwlock_compare/run.py --dry-run --collector-cpu 58
 ```
 
 After verifying the actual monitor snapshot and guest identity:
@@ -57,23 +69,24 @@ After verifying the actual monitor snapshot and guest identity:
 export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
 export LC_ALL=C
 export KDLOCK_RECOVERY_CONFIRMED=1
-export KDLOCK_SNAPSHOT_TAG=<verified-monitor-tag>
+export KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT
 
 # Small correctness/drain check; one round, no performance scores.
 timeout 900s python3 bench/rwlock_compare/run.py \
   --functional --repeats 1 --workloads cacheline --cachelines 1 \
-  --write-percent 1 20 --threads 1 16 \
+  --write-percent 1 20 --threads 1 16 --collector-cpu 58 \
   --output /root/kdlock-evidence/rwlock-functional
 
 # Three-round timed comparison: the two default mixes and all 15 thread counts.
 timeout 3600s python3 bench/rwlock_compare/run.py \
   --workloads rcuht --write-percent 1 20 --full-matrix --require-parity \
+  --collector-cpu 58 \
   --output /root/kdlock-evidence/rwlock-comparison
 
 # Explicit JIT acceptance on contended writers; zero returned bodies fails.
 timeout 600s python3 bench/rwlock_compare/run.py \
   --functional --repeats 1 --backends kdlock --workloads rcuht \
-  --write-percent 20 --threads 16 36 --require-jit \
+  --write-percent 20 --threads 16 36 --collector-cpu 58 --require-jit \
   --spin-entry-ratio-limit 0 --output /root/kdlock-evidence/rwlock-jit
 ```
 
@@ -82,6 +95,8 @@ limit zero bypasses only the optional spin entry-ratio filter; adaptive CPU/lock
 heat admission remains enabled. The default ratio limit is 2, NUMA is on,
 prefetch mode is 2, and the KD/TCLock batch setting is 1,024. All benchmark modules
 disable UBSAN; the captured kernel's configuration and mitigations stay intact.
+Replace `YOUR_CONFIRMED_SNAPSHOT` with the actual destination monitor tag and use
+new output directories. The archived original-host snapshot is not portable.
 
 ## Measurement and acceptance
 
@@ -149,6 +164,9 @@ make -C tests/unit run PY_TESTS='rwlock/test_tclock_rwlock_context.py rwlock/tes
 python3 bench/rwlock_compare/test_bench.py
 python3 bench/spin_cacheline/test_peak.py
 ```
+
+Changes to ABI3 admission, completion or native retry also need the affected
+drivers listed in the [rwlock correctness guide](../../tests/kernel/rwlock/README.md#unit-checks).
 
 These check the real TCLock acquisition/return assembly, six callee-saved registers
 and RSP, deterministic operation mixes, damaged-result rejection, JIT writer

@@ -1,10 +1,14 @@
 # KD rwlock comparison, 2026-10-09
 
+Historical ABI1 results. The later [ABI3 RCUHT comparison](../20261010-rcuht/README.md)
+resolves the hash-writer refusal below and uses the current 1%/20% mixes and full
+thread set. Preserve these earlier measurements separately.
+
 KD rwlock is competitive on these read-heavy workloads. Writer delegation helps
 write-only throughput, but hurts balanced read/write traffic. With sixteen
 protected cachelines and sixteen workers, KD reaches **3.596 Mops/s**, ahead of
 Linux native's **3.162** and TCLock's **2.942**. With a one-cacheline write body,
-Linux native remains faster. The KD hash writer cannot currently pass strict JIT
+Linux native remains faster. At this checkpoint, the KD hash writer cannot pass strict JIT
 admission, so there is no hash-writer JIT performance result.
 
 The complete comparison covers **180 cacheline sessions**: three backends, two

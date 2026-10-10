@@ -1,22 +1,27 @@
 # Project guide
 
 KD spin uses an explicit four-byte lock; KD mutex retains the original Linux
-mutex and its physical owner. Both use caller-clobber entries and shared JIT
-execution. Providers do not install global interception hooks.
+mutex and its physical owner. KD rwlock uses a 128-byte object with concurrent
+local readers and JIT writers over a KD spin gate. The three APIs use
+caller-clobber entries and shared JIT execution; rwlock ABI3 acquires writer
+admission before entering its translated body. Providers do not install global
+interception hooks.
 
-The optimization phase closed on 2026-10-09. The
+The spin/mutex optimization phase closed on 2026-10-09. Its
 [final benchmark report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
-contains the completed comparison and remaining gaps. Use
-[performance status](PERFORMANCE.md) for its outcome and
+contains the completed comparison and remaining gaps. The subsequent
+[RCUHT rwlock report](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+records 270 valid sessions at 1%/20% writes and strict parity at 21 of 30
+configurations. Use [performance status](PERFORMANCE.md) for measured outcomes and
 [benchmark history](../bench/tclock_compare/results/HISTORY.md) for older evidence.
 
 ## Reading order
 
 | Need | Document |
 | --- | --- |
-| Understand all six locks | [Lock protocols](design/lock_protocols.md) |
+| Understand all nine lock backends | [Lock protocols](design/lock_protocols.md) |
 | Find the KD execution components | [Design](DESIGN.md), [code map](CODE_MAP.md) |
-| Follow spin or mutex operations | [Spin implementation](design/spin_implementation.md), [mutex implementation](design/mutex_implementation.md) |
+| Follow each lock's operations | [Spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md), [rwlock](design/rwlock_implementation.md) |
 | Change generated code or state layout | [Execution flow](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md) |
 | Change ownership or recovery | [KD locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) |
 | Build and verify | [Provider](../kernel_module/README.md), [tests](../tests/README.md), [benchmarks](../bench/README.md) |
@@ -49,9 +54,10 @@ recorded CPU/NUMA placement. A mismatch requires investigation, not a kernel upd
 
 ### Native qspinlocks in the VM
 
-Since 2026-10-08, the guest boots with `nopvspin`. Linux uses native qspinlocks;
-PV lock stealing and PV waiter parking are disabled. Kernel source, image and
-Build ID are unchanged. KD/TCLock keep their own target-lock protocols.
+The benchmark boot policy has required `nopvspin` since 2026-10-08. Linux then
+uses native qspinlocks; PV lock stealing and PV waiter parking are disabled.
+Kernel source, image and Build ID are unchanged. KD/TCLock keep their own
+target-lock protocols. Verify this policy on the destination before new runs.
 
 The installed override is `/etc/default/grub.d/99-kdlock-nopvspin.cfg`; its exact
 contents are recorded in [nopvspin-grub.cfg](../kernel_baseline/nopvspin-grub.cfg).
@@ -123,8 +129,11 @@ UBSAN off. Standalone builds inherit kernel policy unless explicitly overridden.
 
 Before any live module/JIT run, confirm a real recovery snapshot through the
 monitor and use an outer timeout. [Tests](../tests/README.md) documents the
-module lifecycle check; [the direct runner](../bench/tclock_compare/README.md)
-documents performance and plain/nested/early JIT checks.
+module lifecycle check; [the spin/mutex runner](../bench/tclock_compare/README.md)
+documents performance and plain/nested/early JIT checks. Use the separate
+[rwlock correctness guide](../tests/kernel/rwlock/README.md) for overlap/exclusion
+checks and [rwlock runner](../bench/rwlock_compare/README.md) for mixed RCUHT
+performance and writer JIT acceptance.
 
 ### Drain and evidence
 

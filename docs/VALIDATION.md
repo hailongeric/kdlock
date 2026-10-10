@@ -5,9 +5,30 @@ Current behavior lives in [DESIGN](DESIGN.md); commands and fresh evidence live 
 apply only to their frozen source and do not combine into a current full pass.
 Known failures and deferrals remain in [TODO](TODO.md).
 
+## Rwlock ABI3 and RCUHT, 2026-10-10
+
+Implementation and evidence were committed as `ae88bda`. The
+[rwlock verification record](../tests/kernel/rwlock/README.md#abi3-verification-on-2026-10-10)
+records two basic programs, five affected unit groups, 13 benchmark checks and
+drained KD-native/KD-JIT correctness sessions. The execution fixture checked
+4,359 assertions and detected 30 injected mutations. Live sessions each completed
+4,801,000 operations with up to 16 concurrent readers, exclusive writers and
+exact updates. Separate RCUHT probes at 16/36 workers returned actual JIT writers.
+
+The [RCUHT report](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+retains all 270 timed sessions for 1%/20% writes at fifteen thread counts, the
+TCLock assembly audit, raw archives, frozen identities and rejected candidates.
+All sessions passed correctness/progress/drain. Strict peak-and-whole parity
+passed 21 of 30 configurations, so the overall performance target failed.
+JIT and NO_JIT groups remain separate; publication is not execution evidence.
+
+These results used the original 40-vCPU guest and do not validate the pending
+60-vCPU destination setup. No full test suite or guest-kernel rebuild was run.
+This documentation refresh adds no new runtime validation.
+
 ## Completed optimization phase
 
-The phase closed on 2026-10-09. Its
+The spin/mutex phase closed on 2026-10-09. Its
 [final report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
 contains 540 baseline sessions at all 15 requested thread counts and a complete
 2,286-session trial audit. Source, ELF, generated-code, business-result,

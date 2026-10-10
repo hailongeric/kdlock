@@ -1,10 +1,9 @@
 # KD, TCLock and Linux Native lock protocols
 
-This is the protocol entry point for the six benchmark backends. It describes
-the current x86_64 implementation, including the ordinary mutex port, rather
-than the historical transparent-hook experiment. Read
-[spin implementation](spin_implementation.md) and
-[mutex implementation](mutex_implementation.md) for storage, source files and
+This is the protocol entry point for the nine benchmark backends: KD, TCLock and
+Linux Native spin, mutex and rwlock. It describes the current x86_64 implementation.
+Read [spin](spin_implementation.md), [mutex](mutex_implementation.md) and
+[rwlock](rwlock_implementation.md) for storage, source files and
 execution details. KD's nested ownership, recovery and ACK contract remains in
 [locking](locking.md) and [frames](frames.md).
 
@@ -18,6 +17,9 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
 | KD mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Published KD waiters poll pinned; physical owners may sleep | Original Linux mutex callers remain excluded by that same mutex |
+| Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
+| TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
+| KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
 
 A queue-head notification grants scheduling eligibility. It does not prove
 physical ownership or that the request's body ran. A completion notification
@@ -40,8 +42,8 @@ tail for heavier contention. The MCS notification transfers queue-head
 eligibility; that caller still obtains the physical lock before its own body.
 Unlock releases the ownership byte and balances preemption protection.
 
-The kernel is compiled with paravirtual spinlock support, but the current KVM
-guest boots with `nopvspin`. This selects native pending/MCS locking and disables
+The kernel is compiled with paravirtual spinlock support, but benchmark boot
+policy requires `nopvspin`. This selects native pending/MCS locking and disables
 PV stealing, PV wait/kick parking and the virtualization TAS shortcut. Earlier
 samples retain their recorded boot policy; see [VM configuration](../PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
 Linux does not delegate the critical-section body, lend its stack to another
@@ -198,6 +200,51 @@ nested B ownership retain the explicit ledger; there is no Linux owner
 transfer to the logical waiter. Final ACK/frame retirement precede dropping
 the enclosing source lease. Physical mutex release precedes opening its gate.
 
+## Linux Native rwlock
+
+The workload calls Linux `read_lock/unlock` and `write_lock/unlock` on its own
+`rwlock_t`. Multiple read holders may execute concurrently; writers exclude all
+readers and other writers. The captured non-RT kernel uses queued spinning
+admission on contention. Each holder executes its own application body on its
+original CPU, with ordinary preemption protection and IRQ state preserved.
+There is no body delegation, translation preparation or provider module.
+
+## TCLock rwlock
+
+The comparator ports the pinned upstream `komb_rwlock.c`, including its count-word
+fast writer, queued writer and slow reader paths. An uncontended writer owns the
+count without the gate. Slow writers retain the gate while draining readers and
+executing their body. Slow readers withdraw their speculative count before
+queueing, add it back under the gate, wait for an active writer, then release the
+gate before their application read body.
+
+Gate delegation switches six saved GPRs and the real waiter stack. It can serve
+short reader admission or a queued writer body; application reads remain local.
+This rwlock combiner returns between delegated requests and has no WWJUMP chain.
+Callers pin the complete operation, with one non-nested worker per CPU. Count,
+gate, queue, node and stack state must drain before unload. See
+[port scope and provenance](../../tclock_backend/README.md#rwlock-comparator).
+
+## KD rwlock
+
+KD follows the count/admission structure with local readers and a KD spin gate.
+The 128-byte object separates count updates from queue polling. Native fast
+writers CAS zero count to `0xf0` and retain an exact nondelegated reference.
+Gated writers acquire `0xff`, publishing WAITING while existing readers drain.
+The same exclusion applies to native and delegated writers.
+
+ABI3 registers the gate on the spin backend. A native prelude acquires writer
+admission before the prepared body on both caller and combiner routes; reader
+drain is outside the translated code. Writer unlock clears only the count's low
+byte before spin completion. An unstarted refusal cancels admission under the
+gate, and native retry reacquires it before restoring the body. A progressed
+native suffix keeps admission and exact spin ACK/retirement obligations.
+
+Readers are never delegated. Native and direct KD writer pairs may share this
+object, each with its matching unlock. Recursive reads, upgrades/downgrades,
+IRQ/BH variants and sleeping bodies are unsupported. The full state machine,
+API and lifetime contract live in [rwlock implementation](rwlock_implementation.md).
+
 ## Publication, lifetime and validation
 
 KD uses acquire/release queue/result publication and exact ownership,
@@ -212,9 +259,11 @@ provider. An idle sample alone is not a no-new-callers barrier. EBUSY retains
 storage/references; forced unload is outside this protocol.
 
 Returned-body KD JIT evidence and TCLock mutex returned-batch delegation
-counts are separate from payload correctness. TCLock spin delegation counts
-remain unmeasured. Performance acceptance, failed candidates and the remaining
-mutex gaps are maintained in the [benchmark index](../../bench/README.md) and
+counts are separate from payload correctness. TCLock spin and rwlock delegation
+counts remain unmeasured. KD rwlock JIT share uses completed writes as its
+denominator. Performance acceptance, failed candidates and remaining gaps live in
+the [benchmark index](../../bench/README.md),
+[RCUHT rwlock report](../../bench/rwlock_compare/results/20261010-rcuht/README.md) and
 [final spin/mutex report](../../bench/tclock_compare/results/20261008-protocol-simplification/README.md).
-The optimization phase is closed; documentation cleanup does not rerun its
-performance matrices.
+The spin/mutex optimization phase is closed; documentation updates do not rerun
+these performance matrices.

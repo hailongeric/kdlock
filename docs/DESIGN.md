@@ -2,8 +2,10 @@
 
 KD executes a waiting caller's existing critical-section machine code on a
 combiner. Spin uses an explicit KD word; mutex retains Linux's original mutex
-and exact physical owner. The supported scope is x86_64 with the captured
-caller-clobber interfaces. Loading the provider does not intercept global locks.
+and exact physical owner. Rwlock combines local concurrent readers with writers
+using the spin JIT engine and a separate reader count. The supported scope is
+x86_64 with the captured caller-clobber interfaces. Loading the provider does
+not intercept global locks.
 
 ## Components
 
@@ -32,19 +34,27 @@ by responsibility rather than duplicated here.
 
 ## Lock and ownership boundaries
 
-[Six lock protocols](design/lock_protocols.md) compares KD, TCLock and Native.
+[Nine lock protocols](design/lock_protocols.md) compares KD, TCLock and Native
+spin, mutex and rwlock.
 [KD locking](design/locking.md) describes exact tickets, original mutex ownership,
 nested A/B operations and ACKs. Spin and mutex never share a physical protocol.
 A ledger records real acquisitions/releases; it does not acquire a lock.
 
 Admission affects future requests only. A cold or refused spin request uses
 KD's native CAS/pending/MCS path. A refused mutex request uses the original Linux
-mutex. A published request still owes its completion, owner ACKs and retirement,
-regardless of later hotness.
+mutex. Rwlock writers retain the same count/gate exclusion on native and JIT
+routes; readers always run locally. A published request still owes its
+completion, owner ACKs and retirement, regardless of later hotness.
 
-See [spin implementation](design/spin_implementation.md) and
-[mutex implementation](design/mutex_implementation.md) for layout, prefetch,
+See [spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md)
+and [rwlock](design/rwlock_implementation.md) for layout, prefetch,
 queue selection and backend-specific fast paths.
+
+Rwlock ABI3 acquires writer admission in native code before the prepared body.
+The body clears the writer byte before its spin completion endpoint. An unstarted
+refusal cancels admission under the gate; a native retry reacquires it before
+restoring the body. A progressed native suffix retains its admission and exact
+ACK obligations. This adds no new execution backend or guest-kernel interface.
 
 ## Translation and execution
 
@@ -90,5 +100,5 @@ explicitly deferred work.
 Published code, a fixture pass and actual returned-body JIT are different evidence.
 [Tests](../tests/README.md) selects affected checks; [benchmarks](../bench/README.md)
 records throughput and progress. Historical records stay tied to their frozen
-source. The closed phase and deferred designs live in
+source. The rwlock results, closed spin/mutex phase and deferred designs live in
 [performance status](PERFORMANCE.md); environment rules live in [AGENTS](AGENTS.md).

@@ -1,12 +1,15 @@
 # JIT execution flow
 
 This is the direct KD spin flow and shared execution engine. The mutex-specific
-entry is in [mutex implementation](design/mutex_implementation.md).
+entry is in [mutex implementation](design/mutex_implementation.md); ABI3 writer
+entry is in [rwlock implementation](design/rwlock_implementation.md).
 Ordinary spin pairs preemption protection and leaves IRQ/BH state unchanged.
 Explicit [IRQ/BH variants](../include/README.md#explicit-irqbh-spin-interfaces)
 execute natively on the calling CPU.
 
 ## Preparation and entry
+
+For ordinary spin:
 
 1. `kd_spin_prepare()` registers the post-lock continuation and entry ABI.
    The daemon reads leased source text, translates, assembles and publishes NORMAL.
@@ -28,12 +31,25 @@ Backend and emitted-scope checks remain independent of hotness. The
 [admission guide](design/admission.md) defines GS/logical-task screening,
 entry guards and the unresolved dynamic-address gap.
 
+Rwlock preparation registers the embedded gate with ABI3. Readers execute locally;
+writers first try an ungated native count CAS, then use the gate's native or hot
+clobber route. The pinned native helper acquires writer admission before returning
+to the prepared body. ABI3 delegation performs that admission on the combiner.
+
 ## Batch execution and return
 
 Simple spin roots use one resident lock-side C loop. Preparation validates image
 layout, ABI, packet state and pristine-root eligibility, then writes final wrapper
 metadata once. One source lease spans the batch; each request still checks readiness.
 The clobber and legacy entries use the same loop, with separate completion rights.
+
+Before an ABI3 physical root enters its body, the combiner drains readers and
+acquires the writer byte in native code. Virtual nested spin children inherit the
+ABI without acquiring another rwlock count. An unstarted refusal releases writer
+admission under the held gate; physical native retry reacquires it before restoring
+the prepared body. A progressed native suffix keeps admission until its paired
+unlock. The frame's `rwlock_admitted` bit tracks this obligation without enlarging
+the packet or wrapper inputs.
 
 A terminal clobber unlock can fuse CALL and completion validation. On success it
 returns the IP/SP/BP triple without writing a virtual return word. On any failed
@@ -56,6 +72,12 @@ Hotness is approximate admission data; exact owner/ticket/frame state is separat
 Spin and mutex each have per-CPU 256-bucket/256-record exact-address tables.
 Collisions use slot chains, never eviction; an unknown lock at full capacity stays
 native. Queries do not insert, count or read time.
+
+Rwlocks use the existing spin table keyed by the embedded gate. Successful ungated
+writers count an entry and retain an exact nondelegated reference; failed fast
+attempts transfer to ordinary gate accounting. Fast readers do not touch heat
+state, while slow readers acquire the native gate. There is no separate rwlock
+heat policy or reader delegation.
 
 | Sampling point | Current rule |
 | --- | --- |
@@ -101,7 +123,15 @@ ownership releases that byte while retaining pending/tail, decrements its exact
 in-flight count and unpins. Other states use the owner/ticket/native-ACK protocol.
 Unlock does not infer the acquisition route from current hotness or the heat cookie.
 
+Rwlock write unlock clears only the count's writer byte before releasing the gate
+or entering spin completion. Ungated native writers instead drop their exact
+reference and pin after that byte release. Completion clears frame bookkeeping;
+it must not clear the count again after a successor can own it.
+
 Actual JIT positives need returned-body counts, correct data, IRQ/preempt checks
 and drain. Native controls, NO_JIT, refusals and synthetic fixtures are separate
-results. [Tests](../tests/README.md) and [the runner](../bench/tclock_compare/README.md)
-define acceptance and commands; [operations](AGENTS.md) defines environment/recovery.
+results. Rwlock JIT share divides returned writer bodies by completed writes,
+excluding reads from the denominator. [Tests](../tests/README.md), the
+[spin/mutex runner](../bench/tclock_compare/README.md) and
+[rwlock runner](../bench/rwlock_compare/README.md) define acceptance and commands;
+[operations](AGENTS.md) defines environment/recovery.

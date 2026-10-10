@@ -1,7 +1,7 @@
-# KD spin and mutex ownership
+# KD spin, mutex and rwlock ownership
 
 This guide defines exact ownership and handoff. [Lock protocols](lock_protocols.md)
-compares all six backends; [frames](frames.md) defines storage and continuation.
+compares all nine backends; [frames](frames.md) defines storage and continuation.
 Admission counters are approximate and never substitute for these controls.
 
 ## 4. Spin delegation protocol
@@ -147,3 +147,18 @@ observational. A live aggregate may be stale or temporarily negative. Check fina
 balance only after independent lock/frame/ticket drain; a nonzero final balance is
 an invariant failure. Do not use the live balance as admission, ownership or
 reclamation state. Mutex exact lifecycle balances remain separate.
+
+## Rwlock ownership over the spin gate
+
+The [rwlock protocol](rwlock_implementation.md) adds a count to the KD spin gate.
+Readers execute locally and retain their count through read unlock. An ungated
+native writer owns a distinct count byte and an exact nondelegated reference;
+gate ownership is not required on that route. Gated writers must own both the
+gate and writer admission before the application body, including ABI3 JIT entry.
+
+Only unstarted refusal can cancel admission and later reacquire it on native
+retry. A progressed suffix keeps exclusion and the spin ticket/ACK protocol.
+The body releases the writer byte before spin unlock/completion; final frame
+cleanup cannot release that byte again. Readers, native writers and delegated
+writers must all drain before lock storage is reused. Linux and TCLock rwlocks
+cannot participate in this object, and no sleeping rwsem contract is provided.

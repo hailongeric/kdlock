@@ -44,8 +44,10 @@ an ordinary CALL miss finishes its present invocation natively.
 | [publication.inc](publication.inc) |ABI/layout checks, native-only status and upload |
 
 Private components remain in one translation unit and are tracked by the daemon
-build and basic daemon fixture. Entry identities 0/1/2 mean legacy/spin-clobber/
-mutex-clobber; the emitted layout/backend must match before upload.
+build and basic daemon fixture. Entry identities 0/1/2/3 mean legacy/spin-clobber/
+mutex-clobber/rwlock-writer-clobber. ABI3 uses the spin backend with native writer
+admission before the prepared body; the emitted layout/backend must match before
+upload. Rebuild the daemon and translator with ABI3 rwlock callers and provider.
 
 ## Device session and source residency
 
@@ -77,7 +79,7 @@ protect provider use; text pins do not retain arbitrary lock/object allocations.
 The translator selects a reachable episode, screens all emitted blocks, lowers
 registers/control flow and builds `jit.bin`. Policy refusal removes stale outputs
 and returns2 (native-only); exceptions, launch/build or device failures are errors,
-not successful refusals. ABI2/ABI1 MINIMAL requires matching versioned entries;
+not successful refusals. ABI1/ABI2/ABI3 MINIMAL requires matching versioned entries;
 legacy artifacts cannot be relabelled clobber.
 
 Images must be nonempty and fit 640 KiB. Upload uses chunks up to 4,000 bytes; the

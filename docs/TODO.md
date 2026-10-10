@@ -1,18 +1,27 @@
 # Known limitations and deferred work
 
-Current scope: x86_64 kernel spin/mutex delegation. Implementation contracts live
-in [DESIGN](DESIGN.md); the optimization phase is closed in
-[Performance status](PERFORMANCE.md). These unresolved issues remain documented;
-they are not work scheduled by the closed phase. Historical evidence is indexed in
-[VALIDATION](VALIDATION.md).
+Current scope: x86_64 kernel spin/mutex/rwlock delegation. Implementation contracts
+live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
+closed spin/mutex phase from the later rwlock comparison. These unresolved issues
+remain documented; this list does not schedule new work. Historical evidence is
+indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-Explicit KD spin and ordinary three-arm mutex workloads exist. KD retains exact
-owner/ACK/source lifetime and shared clobber packets; providers do not install
-global interception. The final comparison still fails parity across all requested
-workloads and counts; use the
-[completed report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md).
+Explicit KD spin, ordinary mutex and rwlock APIs and three-arm workloads exist.
+KD retains exact owner/ACK/source lifetime and shared clobber packets; providers do not install
+global interception. Neither comparison establishes parity across every requested
+configuration: see the
+[spin/mutex report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+and [RCUHT rwlock report](../bench/rwlock_compare/results/20261010-rcuht/README.md).
+
+Rwlock ABI3 resolves the earlier hash-writer admission refusal by acquiring the
+count before the prepared body. Native fast writers and separated count/gate
+cache lines are implemented; the object is now 128 bytes. The 1%/20% RCUHT matrix
+passed correctness and drain in all 270 sessions, but strict peak-and-whole parity
+passed only 21 of 30 configurations. Read-heavy cross-NUMA performance and
+two-thread writer performance remain gaps. These results do not close the
+general pointer, instruction-state or lifetime limitations below.
 
 Known failures are still open:
 
@@ -47,12 +56,17 @@ Supported CALL/PENDING, post-acquisition spin and checked mutex exits preserve
 current state and exactly-once effects. Fix reproduced defects without replaying
 the prefix. Generic fault, IJ miss and budget errors remain fail-stop, not arbitrary
 native recovery. Broader remote/exhaustion combinations are optional coverage.
+Rwlock ABI3 cancels admission only for an unstarted refusal; a progressed native
+suffix keeps writer exclusion until its paired unlock and final ACK.
 
 ### C2. One protocol per physical lock
 
 KD spin owns its word; TCLock/Native own theirs. KD mutex keeps the original Linux
 mutex plus a scheduling gate. Preserve ledger identity, native-peer exclusion,
 frame pop, owner ACK and storage retirement as separate operations.
+KD rwlock owns its count and KD gate. Ungated native writers retain exact
+nondelegated references; gate quiescence alone does not establish count or reader
+drain. No Linux/TCLock operations may access the same KD rwlock object.
 
 ### C3. Immutable JIT publication and lifetime
 

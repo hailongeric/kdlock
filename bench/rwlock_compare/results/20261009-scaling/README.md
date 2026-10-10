@@ -1,8 +1,13 @@
 # Rwlock scaling: 1% and 20% writes
 
+Historical ABI1 single-cacheline results. The later
+[ABI3 RCUHT comparison](../20261010-rcuht/README.md) records the current hash
+workload, writer admission and performance outcome.
+
 All **270 sessions passed**: one cacheline, two read/write mixes, three backends,
 three rounds and the same 15 thread counts as the previous spin/mutex comparison:
-`1 2 3 4 5 6 7 8 12 16 20 24 28 32 36`. These are now the rwlock runner defaults.
+`1 2 3 4 5 6 7 8 12 16 20 24 28 32 36`. The mixes and thread counts remain the
+rwlock runner defaults; its default payload has since changed to RCUHT.
 Each worker performs the specified mix; this is not a fixed population of reader
 and writer threads. Rates count **reads plus writes**.
 

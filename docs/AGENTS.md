@@ -1,6 +1,6 @@
 # Development and operations
 
-These rules cover the x86_64 KD spin/mutex provider. Start with the
+These rules cover the x86_64 KD spin/mutex/rwlock provider. Start with the
 [project guide](PROJECT_GUIDE.md); use [tests](../tests/README.md) and
 [benchmarks](../bench/README.md) for commands and evidence.
 
@@ -22,8 +22,9 @@ These rules cover the x86_64 KD spin/mutex provider. Start with the
 5. Keep the two-word wrapper input ABI. Userspace/futex, other architectures and
    general oversubscription redesign are outside this phase. Published KD waiters
    remain pinned and poll; native mutex owners/services may sleep.
-6. Ordinary KD spin pairs preemption protection and preserves IRQ/BH state.
-   IRQ/irqsave/BH variants use their explicit native interfaces.
+6. Ordinary KD spin and rwlock pairs protect preemption and preserve IRQ/BH state.
+   Spin IRQ/irqsave/BH variants use their explicit native interfaces. Rwlocks
+   support ordinary task context only; no rwlock IRQ/BH variants are provided.
 7. Do not modify, build or install the guest kernel by default. The separately
    authorized static/spin-clobber/mutex-clobber experiments keep independent
    source trees, releases and captured baselines. Current code requires both
@@ -71,7 +72,7 @@ replace or clear `/root/host_fs`, and do not edit frozen running inputs.
 Verify the captured source, config, build files and live Build ID with
 [the guide](PROJECT_GUIDE.md#kernel-identity); `uname -r` alone is insufficient.
 Keep `nokaslr`, voluntary preemption, frame pointers and mitigations unchanged.
-The current VM boots with `nopvspin` and uses native qspinlocks. Verify the
+Benchmark boot policy requires `nopvspin` and native qspinlocks. Verify the
 argument and boot confirmation independently of Build ID; snapshot restoration
 can restore the earlier policy. Follow [the boot policy](PROJECT_GUIDE.md#native-qspinlocks-in-the-vm)
 before live runs and keep benchmark samples from different policies separate.
@@ -143,5 +144,6 @@ Report the highest valid warmed peak plus min/median/max/spread and whole-run
 throughput. Keep all valid and failed samples; do not pool different workloads,
 ABIs, call shells or instrumentation settings. Functional runs explicitly use
 one round. Benchmark settings and acceptance criteria live in
-[the runner guide](../bench/tclock_compare/README.md) and
+[the spin/mutex runner](../bench/tclock_compare/README.md),
+[the rwlock runner](../bench/rwlock_compare/README.md) and
 [performance status](PERFORMANCE.md).

@@ -4,6 +4,9 @@ The current default kernel is `6.1.159-kdclobber2`, derived from the preserved
 `kdclobber1` spin experiment. Ordinary `mutex_lock/unlock` now use ABI identity 2;
 ordinary spin retains identity 1 and legacy callers retain 0. The provider
 requires both `KD_SPIN_CLOBBER_V1` and `KD_MUTEX_CLOBBER_V1`.
+The later rwlock writer identity 3 is a provider/JIT addition on this same kernel,
+described in [the rwlock guide](../../docs/design/rwlock_implementation.md); it
+does not change the captured patch or Build ID below.
 
 [guest-kernel.patch](guest-kernel.patch) changes only the mutex caller macros,
 a new hook header and versioned bridges in `kernel/locking/mutex.c`. RDI carries

@@ -19,7 +19,13 @@ threads. The report retains all trials, raw evidence, JIT/NO_JIT groups and the
 128-byte lock footprint tradeoff. These results are separate from the closed
 spin/mutex phase below.
 
-## Completed measurements
+All recorded comparisons below and the RCUHT rwlock report used the original
+40-vCPU guest. The [destination setup](PROJECT_GUIDE.md#guest-workflow) describes
+a pending 60-vCPU migration, not a new verified benchmark environment. Preserve
+each report's placement, frequency policy and source identity when reproducing it;
+do not combine samples across those environments.
+
+## Completed spin/mutex measurements
 
 The final baseline contains 540 sessions: KD, TCLock and Native; spin and mutex;
 cacheline and hash; three rounds at 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24,
@@ -37,7 +43,7 @@ Every required KD returned-body JIT and TCLock mutex delegation witness passed,
 as did business results and drain. Allowed native-route controls are recorded
 separately. TCLock spin delegation counts remain unmeasured.
 
-## Outcome
+## Spin/mutex outcome
 
 Spin/hash still trails TCLock with almost all contended bodies executed by JIT.
 Mutex/hash has a large sustained-throughput gap even where a selected peak is
@@ -58,9 +64,10 @@ experiments remain in [benchmark history](../bench/tclock_compare/results/HISTOR
 
 ## Implementation and deferred designs
 
-Current contracts live in the [spin](design/spin_implementation.md) and
-[mutex](design/mutex_implementation.md) guides. KD retains the two-word wrapper
-ABI, mandatory mutex JIT, native-first mutex acquisition, exact Linux ownership,
+Current contracts live in the [spin](design/spin_implementation.md),
+[mutex](design/mutex_implementation.md) and [rwlock](design/rwlock_implementation.md)
+guides. KD retains the two-word wrapper ABI, mandatory mutex JIT, native-first
+mutex acquisition, exact Linux ownership,
 source leases, final ACK and frame retirement. The maximum KD combiner batch is
 **1,024 bodies**, with a separate bounded spin NUMA scan and existing prefetch
 defaults. Mutex's accepted queue is FIFO.
@@ -72,5 +79,6 @@ is an unimplemented design alternative; it requires separate validation and
 matched callers. No additional optimization run is scheduled by this document.
 
 [Known limitations](TODO.md) remain documented. Reproduction settings and
-acceptance rules belong to the [runner guide](../bench/tclock_compare/README.md);
+acceptance rules belong to the [spin/mutex](../bench/tclock_compare/README.md) and
+[rwlock](../bench/rwlock_compare/README.md) runner guides;
 source cleanup is not a performance rerun.

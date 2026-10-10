@@ -4,6 +4,10 @@
 [comparison runner](../../bench/rwlock_compare/README.md). Build variants select
 Linux native, TCLock or KD rwlocks through `RB_BACKEND`; all use the same timed
 worker loop, operation mix and payload.
+The runner defaults to RCUHT at 1% and 20% writes across all fifteen requested
+thread counts. Readers execute locally; only KD writer bodies can contribute
+to the returned-body JIT count. TCLock uses the actual upstream rwlock algorithm,
+with its delegation share reported as unmeasured.
 
 Cacheline variants compile a fixed `RB_LINES` body. Hash variants use
 `RB_WORKLOAD=rcuht RB_LINES=0` and share the existing spin benchmark's preallocated
@@ -14,6 +18,9 @@ checks without including reader-drain counter stores in its translated body.
 `RB_SHARED` points to that hash payload header. Register-only post-work follows
 the earlier cacheline benchmark's multiply/add pattern;
 `RB_POST_WORK_ROUNDS` is always explicit in the runner and layout response.
+Its default is four rounds, independent of the shared spin/mutex post-work
+setting. RCUHT here is a globally locked hash workload, with no per-body
+allocation or RCU services; the name does not imply lock-free reader execution.
 
 The versioned [ABI](api.h) configures a joined phase, claims each worker slot once,
 executes a full batch in one ioctl, and publishes per-worker progress every 256

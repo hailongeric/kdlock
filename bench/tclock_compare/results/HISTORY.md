@@ -1,9 +1,12 @@
-# Benchmark evidence index
+# Spin/mutex benchmark evidence index
 
-The optimization phase closed on 2026-10-09. Reports apply to their frozen source
+The spin/mutex optimization phase closed on 2026-10-09. Reports apply to their frozen source
 and environment; cleanup does not rerun their measurements. Raw evidence archives
 remain under ignored `bench/.tmp/` and guest `/root/kdlock-evidence/`.
 A fresh checkout includes compact results, not those original run directories.
+The separate [rwlock benchmark guide](../../rwlock_compare/README.md) indexes the
+ABI1 cacheline and ABI3 RCUHT results; [all benchmarks](../../README.md) links both
+families.
 
 ## Final report
 

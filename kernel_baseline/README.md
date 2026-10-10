@@ -29,8 +29,8 @@ do not overwrite this original capture or delete it as an obsolete artifact.
   build-file hashes, installed image/config identities and running uname/Build ID.
 - `verify.py`: standard-library-only, read-only checks. It does not download,
   extract, patch, build, load/unload modules, restart the VM or write kernel files.
-- `nopvspin-grub.cfg`: the current VM's separate boot override, activated on
-  2026-10-08. It is not part of this original source/config capture. See
+- `nopvspin-grub.cfg`: the separate boot override activated on the original
+  benchmark VM on 2026-10-08. It is not part of this source/config capture. See
   [verification and rollback](../docs/PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
 
 The source archive is [official Linux 6.1.159](https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.1.159.tar.xz).
@@ -115,8 +115,10 @@ linker: GNU ld (GNU Binutils for Ubuntu) 2.38
 Relevant captured configuration includes SMP, voluntary preemption with dynamic
 preemption support, PV spinlocks, frame pointers, module versioning, strong stack
 protection and out-of-line spin unlock. Debug spinlocks/mutexes and debug lock
-allocation are disabled. The guest currently exposes 40 CPUs; `CONFIG_NR_CPUS=8192`
-is a compile-time maximum, not its online CPU count. Other configurations are
+allocation are disabled. The captured guest exposed 40 CPUs; `CONFIG_NR_CPUS=8192`
+is a compile-time maximum, not its online CPU count. The documented destination
+uses a 60-vCPU launcher configuration and still requires migration verification;
+see [current operations](../docs/PROJECT_GUIDE.md#guest-workflow). Other configurations are
 not validated by matching a few of these options.
 The observed boot uses `nokaslr` and the runtime preemption selector reports
 `none (voluntary) full`. Neither dynamic preemption nor boot arguments are

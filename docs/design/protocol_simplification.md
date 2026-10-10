@@ -1,7 +1,10 @@
 # Simplifying delegated execution
 
-This document records unimplemented alternatives after the optimization phase
-closed on 2026-10-09. It does not schedule additional implementation work.
+This document records unimplemented alternatives after the spin/mutex optimization
+phase closed on 2026-10-09. It does not schedule additional implementation work.
+The later [rwlock ABI3](rwlock_implementation.md) adds native writer admission to
+the existing JIT engine; it implements neither the outlined API nor the proposed
+native-register JIT tier below.
 
 KD's largest simplification opportunity is to give the compiler a more explicit
 critical-section boundary. A normal function with an input/result object is much

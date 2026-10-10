@@ -4,6 +4,10 @@ This guide follows storage and the ordinary spin path. [Lock protocols](lock_pro
 defines exclusion and handoff; [register ABI](../JIT_REGISTER_ABI.md) defines JIT state.
 All measurements belong to their recorded source versions in [benchmarks](../../bench/README.md).
 
+The same KD engine also serves [rwlock writers](rwlock_implementation.md). Their
+ABI3 prelude acquires writer admission before dispatch; the count and embedded
+gate belong to a separate 128-byte object, not the four-byte spin object below.
+
 ## Source paths
 
 | Backend | Caller | Implementation |
@@ -46,6 +50,8 @@ Request identity, entry ABI, packet/depth/frame state and the continuation tripl
 therefore share one cacheline. Virtual R15..R11 backing occupies offsets 64..96
 in the next line. Packet reference, origin GS, logical task and parent share
 offsets 208..232. Cold lock ledgers remain separate. Linux `pt_regs` is unchanged.
+The ABI3 `rwlock_admitted` bit shares the existing queue-tag byte and does not
+move the header, packet or provenance fields.
 
 Reservation takes the next record. Retirement only collapses the contiguous retired
 top; it never moves live records or fills holes below them. Only the allocating
@@ -142,7 +148,7 @@ counts are intentionally unmeasured, so data/drain success cannot supply a share
 
 The Native arm calls the original kernel spin functions without a lock provider.
 The captured kernel is SMP, non-PREEMPT_RT and includes paravirtual qspinlock
-support. The current VM's `nopvspin` boot selects the native path instead.
+support. The benchmark's required `nopvspin` boot policy selects the native path.
 Architecture fast acquisition CASes the native word; contention
 uses bounded pending followed by per-CPU MCS tail publication and acquire handoff.
 The ordinary raw-spin contract pairs preemption protection and leaves IRQ/BH state

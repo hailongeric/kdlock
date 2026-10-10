@@ -35,6 +35,11 @@ The compact 648-byte frame places its header and IP/SP/BP in one cacheline; the 
 line backs five virtual GPRs. Source/provenance pointers share another line.
 [Spin implementation](spin_implementation.md) gives offsets and prefetch coverage.
 
+For ABI3 rwlock roots, `rwlock_admitted` shares one byte with `spin_kind` and
+`spin_regs_decoded`; the header and IP/SP/BP offsets stay unchanged. It records
+native writer admission before body execution, not a second register snapshot.
+Virtual spin children inherit the entry ABI but do not acquire a rwlock count.
+
 Mutex MINIMAL/COMPLETE borrows its node packet. FULL detaches current logical state
 before generic owner/ACK recovery, whose lifetime can exceed node use. Final mutex
 restoration retains a copy before releasing a reusable node. Do not generalize the
@@ -75,6 +80,13 @@ Spin native fallback retains its ticket and original physical protocol. Node
 exhaustion, continuation exhaustion, ledger fullness and source admission failure
 are distinct boundaries. A source lease is not a guarantee that any resource is
 available or any executable generation is immutable.
+
+An unstarted ABI3 refusal cancels writer admission while the gate is held.
+Its physical native retry reacquires admission before restoring the prepared
+body, because the old acquisition helper's C frame is discarded. A progressed
+suffix retains admission through normal write unlock and native ACK handling.
+Completion clears only the frame's admission bookkeeping; the body has already
+released the count byte. See [the rwlock protocol](rwlock_implementation.md).
 
 ### 9.4 Out-of-order and remote completion
 

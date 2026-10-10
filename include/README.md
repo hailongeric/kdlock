@@ -10,7 +10,7 @@ layout shared by translation. Backend-private helpers live under
 | Explicit spin object/API | [kd_spin_type.h](kd_spin_type.h), [kd_spin_direct.h](kd_spin_direct.h), [kd_spin_fast.h](kd_spin_fast.h) | One KD word; ordinary preemption pair; no Linux/TCLock mixing |
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
 | Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_direct.h](kd_mutex_direct.h) | Original Linux mutex, ABI2 and opaque outer cookie |
-| Read-write lock | [kd_rwlock.h](kd_rwlock.h) | Concurrent readers; embedded spin gate and ABI1 JIT writers |
+| Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
 | Packet and wrapper | [kd_regs.h](kd_regs.h), [asm_head.h](asm_head.h), [wrapper.S](wrapper.S) | Layout2, virtual register backing and two-word input |
@@ -35,6 +35,15 @@ before its matching same-task unlock. The native CAS saves an exact owner; conte
 KD entry saves zero. Nested translated operations use `KD_MUTEX_DIRECT_LOCK/UNLOCK`;
 prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`.
 [Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
+
+Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair
+`kd_write_lock/unlock`. Delegating writers use `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`
+with `kd_rwlock_direct_cookie` and a named continuation in a `noipa` function.
+Prepare it with `kd_rwlock_prepare(..., KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)` (ABI3).
+Writer admission precedes that continuation, and writer-byte release precedes
+spin completion. Older ABI1 rwlock callers must be rebuilt with matching provider,
+daemon and translator. See [the rwlock API and protocol](../docs/design/rwlock_implementation.md).
+All rwlock pairs pin preemption; rwlock IRQ/BH variants and upgrades are unsupported.
 
 ## Explicit IRQ/BH spin interfaces
 

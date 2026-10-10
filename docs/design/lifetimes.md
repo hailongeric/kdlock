@@ -16,6 +16,7 @@ owner or by the deferred immutable-JIT work. The earlier capability audit is in
 | Hotlock | Typed CPU-local exact-key counters; no eviction, bounded capacity and window reset | Address reuse is not an allocation epoch; statistics cannot authorize release or retire an active request |
 | Mutex shadow | Address-keyed mutex scheduling records | No lock allocation/free notification or per-object retirement |
 | KD spin word/ticket | Caller-owned four-byte object; stable ticket retains task/CPU/generation | No gate map or second Linux lock; caller storage must outlive all physical owners and requests |
+| KD rwlock count/gate | Caller-owned 128-byte object; ungated writers retain an exact nondelegated reference, gated writers reuse spin tickets/frames | Source pins do not retain reader data or lock allocations; join all readers and writers before freeing or reinitializing storage |
 | Active request | Spin continuations survive node reuse; normal completion follows pop, native root tickets wait for every executor borrow to retire. Mutex keeps task records and owner ACKs. Source/provider leases span actual pop, once per spin batch or per legacy/mutex push | No containing lock-allocation pin or protection before entering the guest hook/after frame pop |
 | Hook provider | Plain guest function pointers into kdlock; device fops has `.owner=THIS_MODULE` | A `/dev/kd_dev` reference is not protection for independent lock-hook readers |
 
@@ -27,6 +28,12 @@ and new object lifetimes apart, reset policy or prove safe reuse while any
 old request/physical owner still exists. A logical final A ACK can precede
 physical batch release; it is not permission to free a containing object
 still used by another request or owner.
+
+Rwlock gate quiescence alone is insufficient: fast readers and ungated native
+writers can own the count without that gate. Stop all callers and check the count,
+gate and existing exact acquisition/frame state. ABI3 writer admission survives
+a progressed native suffix; an unstarted refusal cancels it before physical
+handoff. [Rwlock ownership](rwlock_implementation.md) defines release and retry.
 
 Global spin dispatch is removed and the mutex installer is disabled. The
 following reader limitation applies if the preserved kernel hooks are re-enabled.

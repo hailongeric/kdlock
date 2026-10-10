@@ -12,8 +12,10 @@ flags, irq pairing, existing/nested BH disable depth and plain-native acquisitio
 inside irqsave. Checks compare IRQ/BH/preempt, per-CPU native counts and fast owner
 before and after acquisition/release.
 
-Four pinned workers each execute 10,000 operations, preferably CPUs 0/1/20/21 (at least
-three online CPUs required). They rotate irqsave/irq/BH/plain-native on one KD lock
+Four pinned workers each execute 10,000 operations; the consumer prefers CPUs
+0/1/20/21 when available (at least three online CPUs required). That selection
+spanned both nodes in the original 40-vCPU guest and is within node 0 on the
+documented 60-vCPU destination. They rotate irqsave/irq/BH/plain-native on one KD lock
 and join before init returns. Plain-native uses byte 5 without adaptive registration.
 
 ```sh

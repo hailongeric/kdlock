@@ -21,6 +21,9 @@ not save all incoming GPRs. Named continuations belong to one noipa workload fun
 Registry, daemon, translator, frame and image must agree on backend and ABI.
 ABI3 uses the spin backend and completion endpoint, with the rwlock writer
 prelude and unstarted-retry ownership described in [rwlocks](design/rwlock_implementation.md).
+ABI3 is a provider/translator entry identity, not a new guest-kernel hook. Rebuild
+older ABI1 rwlock callers with matching preparation and generated images; retaining
+ABI1 support for ordinary spin does not make old rwlock images interchangeable.
 
 | Packet state | C may consume | Meaning |
 | --- | --- | --- |
@@ -62,8 +65,9 @@ trylock and explicit nested APIs keep their original contracts. See
 
 The packet is shared by waiter and combiner. Virtual R11..R15 use its backing slots;
 there is no second wrapper GPR snapshot. The spin frame places its 40-byte core
-header immediately before IP/SP/BP, filling one aligned cacheline. Mutex has its own
-node packet layout. [Spin](design/spin_implementation.md) and
+header immediately before IP/SP/BP, filling one aligned cacheline. Its
+`rwlock_admitted` bit shares the queue-tag byte; IP/SP/BP offsets remain 40/48/56.
+Mutex has its own node packet layout. [Spin](design/spin_implementation.md) and
 [mutex](design/mutex_implementation.md) document those enclosing objects.
 
 ## Wrapper inputs and directory
@@ -147,6 +151,11 @@ RSI=R13+8, RDX=the return word and RCX=R12. A fused terminal clobber CALL checks
 equivalent pre-CALL RSI=R13, static post-CALL RDX and RCX=R12. Success skips the
 return-word store/read; failure constructs the original CALL exactly once and
 enters FULL. Unknown/nonterminal endpoints and legacy images retain ordinary CALLs.
+
+ABI3's body releases its writer byte before this spin endpoint. Pre-body refusal
+can cancel native writer admission, but COMPLETE and progressed native handoff
+must not issue a second count release. Packet state and writer ownership are
+separate obligations; materializing FULL releases neither admission nor the gate.
 
 | Wrapper exit | Meaning |
 | --- | --- |

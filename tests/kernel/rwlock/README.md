@@ -12,7 +12,7 @@ Run in the recovery guest:
 
 ```sh
 make -C tests/unit run \
-  PY_TESTS='rwlock/test_rwlock.py spin/test_spin_direct.py codegen/test_spin_paired_jit.py'
+  PY_TESTS='rwlock/test_rwlock.py admission/test_clobber_entry.py codegen/test_spin_paired_jit.py execution/test_jit_entry_scope.py spin/test_spin_wait.py'
 ```
 
 The rwlock fixture compiles the actual public header with C atomic substitutes
@@ -24,6 +24,9 @@ increments and queued intent, ungated writer drain references, ABI3 admission
 and refusal/retry, argument evaluation, preparation identity and balanced
 preemption.
 These are protocol checks; the live workload supplies real queue/JIT evidence.
+The other selected drivers cover ABI3 clobber admission, generated completion and
+refusal, shared frame execution and native restoration. For changes to the TCLock
+port or performance oracle, add the [benchmark's focused checks](../../../bench/rwlock_compare/README.md#focused-checks).
 
 ## Build live inputs
 
@@ -68,8 +71,13 @@ timeout 720s python3 tests/kernel/rwlock/run.py --backend kdlock \
 
 Use new output directories. Defaults are CPUs 0..15 and 50,000 operations per
 worker per main phase. `--cpus` accepts ranges; at least four available CPUs are
-required, and 16 are recommended for reliable contended JIT acceptance. The
-100,000-write-per-worker warmup retains ordinary heat promotion. The test sets
+required, and 16 are recommended for reliable contended JIT acceptance. The CPU
+list is placement, not a fixed NUMA recipe: choose it from the verified live
+topology. The historical cross-node `0–7,20–27` placement below belongs to the
+original 40-vCPU guest. On the documented 60-vCPU destination, `0-7,30-37` would
+span both nodes, after migration verification.
+
+The 100,000-write-per-worker warmup retains ordinary heat promotion. The test sets
 `spin_entry_ratio_limit=0` to bypass that optional ratio filter, retaining the
 existing CPU and lock heat checks. It does not force frames, publication or JIT.
 
@@ -99,7 +107,8 @@ checked 4,359 assertions and detected its 30 injected mutations. The rwlock
 benchmark's 13 focused tests also passed.
 
 With the final ABI3 fast-writer and separated-gate implementation, KD-native and
-KD-JIT live sessions each completed 4,801,000 operations on CPUs `0–7,20–27`.
+KD-JIT live sessions each completed 4,801,000 operations on CPUs `0–7,20–27`
+in the original 40-vCPU guest.
 Both observed 16 simultaneous readers, preserved writer exclusion and exact
 updates, and drained with zero count/gate state. KD-native returned no JIT bodies.
 The JIT session recorded:

@@ -11,14 +11,16 @@ all 15 thread counts, with returned-writer JIT evidence and validated warmed pea
 
 ## Results
 
-The optimization phase closed on 2026-10-09. The final report retains all samples
-and remaining gaps; superseded reports are retrieved from fixed Git records.
+The RCUHT rwlock comparison passed correctness and drain in all 270 sessions;
+KD met strict throughput parity at 21 of 30 configurations. The separate
+spin/mutex optimization phase closed on 2026-10-09. Reports retain the remaining
+gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
 | [RCUHT rwlocks](rwlock_compare/results/20261010-rcuht/README.md) | 1%/20% writes on the hash payload; all 15 thread counts, ABI3 JIT writers and strict Native/TCLock parity checks |
-| [Rwlock scaling](rwlock_compare/results/20261009-scaling/README.md) | 1%/20% writes on one cacheline; all 15 thread counts, 270 sessions, throughput curves and NUMA progress |
-| [Initial rwlock mixes](rwlock_compare/results/20261009/README.md) | Native/TCLock/KD, 180 cacheline sessions at 1/16 workers, 12 KD controls, and the hash-writer JIT admission limit |
+| [Rwlock scaling](rwlock_compare/results/20261009-scaling/README.md) | Historical ABI1, 1%/20% writes on one cacheline; all 15 thread counts, 270 sessions, throughput curves and NUMA progress |
+| [Initial rwlock mixes](rwlock_compare/results/20261009/README.md) | Native/TCLock/KD, 180 cacheline sessions at 1/16 workers, 12 KD controls, and the historical ABI1 hash-writer refusal resolved by ABI3 |
 | [Protocol simplification](tclock_compare/results/20261008-protocol-simplification/README.md) | Fresh 540-session spin/mutex baseline at all 15 thread counts under `nopvspin`; rejected translator/memory candidates and rechecks retained separately |
 | [Historical hash diagnosis](tclock_compare/results/HISTORY.md#hash-diagnosis) | Matched hash controls, NUMA effects and separate profiles in a fixed Git snapshot |
 | [Evidence index](tclock_compare/results/HISTORY.md) | All retained reports, full statistics, rejected candidates and fixed Git links to earlier reports |
@@ -26,6 +28,10 @@ and remaining gaps; superseded reports are retrieved from fixed Git records.
 These are recorded measurements, not reruns of subsequent cleanup commits.
 Raw ignored/local/guest archives remain intact. A fresh checkout supplies reports,
 not those large original run directories.
+The measured environment had 40 vCPUs. The destination's documented 60-vCPU
+setup is pending verification; it is not covered by these passes. Follow
+[guest setup](../docs/PROJECT_GUIDE.md#guest-workflow) and explicitly choose a
+collector outside the actual worker cohorts before new runs.
 
 ## Measurement rules
 
@@ -40,7 +46,8 @@ worker/node shares, frozen source/ELF/kernel identity and drain. Amortized ns/op
 inverse aggregate throughput, not measured acquisition latency. Failed/NO_JIT
 samples stay in records and do not become valid JIT positives.
 
-The runner guide owns commands, result fields and acceptance rules;
-[performance status](../docs/PERFORMANCE.md) records the closed phase and deferred
+The [spin/mutex](tclock_compare/README.md) and [rwlock](rwlock_compare/README.md)
+runner guides own commands, result fields and acceptance rules;
+[performance status](../docs/PERFORMANCE.md) records measured outcomes and deferred
 designs. [Tests](../tests/README.md) owns correctness
 check selection; [operations](../docs/AGENTS.md) owns guest/recovery/drain rules.

@@ -5,6 +5,13 @@ Validation belongs to its frozen inputs in [tests](../../tests/README.md).
 
 ## 7. Translation And Publication
 
+Rwlock writer entries use ABI3 on the spin backend. Native writer admission and
+reader drain occur before the prepared JIT body; payload pointer traversal and
+writer-byte release still undergo the checks below. This boundary resolves the
+historical ABI1 RCUHT alias refusal without relaxing memory/context screening or
+closing the [dynamic-address gap](#721-dynamic-address-gap). Admission cancellation
+and native retry belong to [the rwlock ownership protocol](rwlock_implementation.md).
+
 ### 7.1 Possible JIT Episode
 
 `context_policy.jit_phase_blocks()` selects reachable decoded blocks using

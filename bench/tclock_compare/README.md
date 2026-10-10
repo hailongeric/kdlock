@@ -5,11 +5,13 @@ Each arm has separate workload functions and lock objects, sharing payload, timi
 and reporting. Operations do not branch on a runtime `is_mutex` selector.
 Build and execute in the verified recovery guest; follow [operations](../../docs/AGENTS.md)
 for snapshots, frozen inputs and drain.
+Mixed read/write workloads use the separate [rwlock runner](../rwlock_compare/README.md),
+which compares Native, TCLock and KD on the same adapted RCUHT payload.
 
 ## Prepare and run
 
 Verify the captured kernel and idle state with [the project guide](../../docs/PROJECT_GUIDE.md).
-The current VM uses [nopvspin](../../docs/PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
+Benchmark boot policy requires [nopvspin](../../docs/PROJECT_GUIDE.md#native-qspinlocks-in-the-vm).
 Check the live argument and boot confirmation; Build ID alone does not select
 the spin path. Use a confirmed snapshot of this boot and replace
 `YOUR_CONFIRMED_SNAPSHOT` in the examples with its actual monitor tag.
@@ -17,14 +19,19 @@ Fix host CPUs at 2.5 GHz and check vCPU/NUMA affinity; keep the existing kernel,
 mitigations and preemption configuration. Confirm a real monitor snapshot before
 setting recovery variables. Output must be a new directory outside the checkout.
 
-Recommended full spin cacheline matrix:
+The example uses collector 58 for the documented 60-vCPU destination, whose
+migration verification is pending. Historical 40-vCPU runs used collector 38.
+Verify the actual online/available CPUs and keep the collector outside every
+worker cohort; recorded results do not validate the destination setup.
+
+Full spin cacheline matrix after that verification:
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
   --backends native tclock kdlock --workload cacheline --cachelines 1 \
   --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 --repeats 3 \
-  --duration-ms 2000 --peak-window-ms 300 --collector-cpu 38 \
+  --duration-ms 2000 --peak-window-ms 300 --collector-cpu 58 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
   --output /root/kdlock-evidence/spin-matrix-new
@@ -42,12 +49,12 @@ has no `mutex_jit` parameter.
 | `--repeats 3` | Three rounds/configuration, rotating backend order |
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
-| `--collector-cpu 30` | Dedicated CPU outside workers; use38 for the full 36-worker matrix |
+| `--collector-cpu 30` | Built-in default; override with an available CPU outside workers (58 on the documented destination, 38 in the original full matrix) |
 | `--numa on`, `--kd-batch-size 1024` |KD NUMA selection and body bound; separate scan budget |
 | `--spin-prefetch 2` |KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
-| `--cpus 0-7,20-27` | Ordered worker placement; each cohort takes its prefix |
+| `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--dry-run` | Print plan without live execution |
 
 The runner builds matching backend/workload/provider copies and audits actual ELF
@@ -80,7 +87,7 @@ for this IRQ-enabled task-context comparator, and batches do not truncate on
 Mutex workers preregister one fixed-affinity context per CPU before measurement;
 contexts/task refs survive complete cohort drain. KD published waiters remain pinned
 polling. See [TCLock scope](../../tclock_backend/README.md) and
-[all six protocols](../../docs/design/lock_protocols.md).
+[all nine lock protocols](../../docs/design/lock_protocols.md).
 
 ## Results and validity
 
@@ -107,8 +114,9 @@ reports returned-batch delegated bodies and parks, with positive contended evide
 failed scores and leaves the final exit nonzero.
 
 Timed peak selection requires all workers to progress in the full cohort window.
-Keep whole-run per-worker and node shares too, especially 24-thread minority-node
-cases. A bounded batch and positive observed counts do not prove starvation freedom.
+Keep whole-run per-worker and node shares too, especially cohorts with unequal
+NUMA membership (24 threads in the original 40-vCPU setup). A bounded batch and
+positive observed counts do not prove starvation freedom.
 
 The closed phase screened candidates separately at 16/36 threads, adding 2 for
 caller changes and 24 for fairness. An apparent regression was rechecked once;
@@ -125,7 +133,7 @@ remains current. Raw stage names `final` and `retained` identify those rejected
 candidates. The fresh restored-runtime comparison (`restored`) contains 540
 sessions across all 15 thread counts and both payloads for spin and mutex.
 
-The phase closed on 2026-10-09. The earlier
+The spin/mutex phase closed on 2026-10-09. The earlier
 [hash diagnosis](results/HISTORY.md#hash-diagnosis) and
 [mandatory-JIT mutex trials](results/20261008-mutex-priority-trials.md) use the same
 boot policy. The [previous 540-sample matrix](results/HISTORY.md#pre-nopvspin-matrix)
@@ -143,6 +151,7 @@ Use a new output directory for selected plain/nested/early JIT checks:
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   LC_ALL=C timeout --kill-after=10s 180s python3 bench/tclock_compare/run.py \
   --functional --backends kdlock --cachelines 1 --threads 20 --repeats 1 \
+  --collector-cpu 58 \
   --iterations 100000 --scenario nested --spin-entry-ratio-limit 0 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \

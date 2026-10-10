@@ -1,7 +1,10 @@
 # Shared benchmark components
 
-The live entry points are [run.py and run_mutex.py](../tclock_compare/README.md).
-This directory supplies their common client and evidence helpers; payloads live in
+The spin/mutex entry points are [run.py and run_mutex.py](../tclock_compare/README.md).
+This directory supplies their common client and evidence helpers. The
+[rwlock runner](../rwlock_compare/README.md) reuses peak selection, kernel identity
+and private provider preparation with its own client and read/write oracle.
+Payloads live in
 [workload_modules](../../workload_modules/README.md).
 
 | File | Responsibility |

@@ -1,6 +1,6 @@
 # KD kernel provider
 
-The provider exposes explicit spin/mutex APIs and `/dev/kd_dev` translation
+The provider exposes explicit spin/mutex/rwlock APIs and `/dev/kd_dev` translation
 services. It requires the captured `kdclobber2` spin and mutex clobber-v1 interfaces;
 missing interfaces fail compilation. Loading it does not install global hooks.
 [Lock protocols](../docs/design/lock_protocols.md) and
@@ -40,6 +40,7 @@ boundaries remain separate for reading.
 | Component | Responsibility |
 | --- | --- |
 | [spin](spin/) | Direct entry, native pending/MCS, NUMA queue, batch, prefetch, stable request, restore and unlock |
+| [kd_rwlock.h](../include/kd_rwlock.h) and `spin/{direct,combiner,execute,restore}.inc` | Reader/count protocol and ABI3 writer admission, refusal/retry and completion over the spin backend |
 | `spin/ticket_*.inc` via [kd_spin_entry.c](kd_spin_entry.c) | Exact acquisition generation, root borrowing and final retirement |
 | [mutex](mutex/) via [kd_mutex.c](kd_mutex.c) | Original mutex acquisition, shadow queue, terminal batch, pinned waiter and restore |
 | [lock](lock/) via [kd_lock.c](kd_lock.c) | Direct/bridge mutex routes and nested spin/mutex control CALLs |
@@ -61,7 +62,7 @@ freeze them. Cross-unit APIs live in [include](../include/README.md).
 | `KDLOCK_NUMA` build variable | 1; spin local grouping and CPU-node stack allocation |
 | `KDLOCK_SPIN_BATCH` build variable | 1024, allowed 1..1024 bodies; separate scan budget uses the same initial value |
 | Mutex batch | Fixed 1,024 bodies, FIFO; rejected NUMA grouping is absent |
-| `spin_delegate` | Enabled; false selects native KD self-execution |
+| `spin_delegate` | Enabled; false selects native KD spin/rwlock-writer self-execution |
 | `spin_prefetch` | 2; producer hints. Modes 0/1 select off/consumer lookup |
 | `spin_entry_ratio_limit` | 2; 0 disables only the ratio filter |
 | `hotlock_stats` | Optional final approximate observation totals |
@@ -70,12 +71,16 @@ freeze them. Cross-unit APIs live in [include](../include/README.md).
 [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) owns full heat rules;
 [spin](../docs/design/spin_implementation.md) owns layout/prefetch/batch details;
 [mutex](../docs/design/mutex_implementation.md) owns its separate storage and owner
-protocol. Approximate observation never controls final lifetime.
+protocol. [Rwlocks](../docs/design/rwlock_implementation.md) reuse the spin settings,
+source leases and request storage. Their ABI3 prelude and exact native writer
+references require no new kernel backend or kernel rebuild. Approximate
+observation never controls final lifetime.
 
 ## Validation and shutdown
 
 Use [tests](../tests/README.md) for basic and affected checks; performance can run
-directly through [the benchmark](../bench/tclock_compare/README.md). Do not turn
+directly through the [spin/mutex](../bench/tclock_compare/README.md) or
+[rwlock](../bench/rwlock_compare/README.md) comparison. Do not turn
 source organization changes into an automatic full matrix.
 
 Stop new calls and wait for workers/translators. Retire sources successfully before
