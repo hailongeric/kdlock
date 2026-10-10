@@ -41,5 +41,5 @@ IRQ/softirq injection or PREEMPT_RT. Pending/MCS fixtures are separate checks.
 The 2026-09-27 check passed 40,000 operations on CPUs 0/1/20/21 with normal unload and
 zero final native/frame invariants. Initial fixture/collector failures and reruns
 remain in the fixed [full record](https://github.com/hailongeric/kdlock/blob/e533214/tests/kernel/spin/irq_api/README.md).
-Raw local `results/380G10/raw/legacy/irq-api-20260927/` and guest evidence archives remain intact.
+Raw local `bench/results/380G10/raw/legacy/irq-api-20260927/` and guest evidence archives remain intact.
 This is historical local-native evidence, not fresh JIT or a later full-matrix pass.

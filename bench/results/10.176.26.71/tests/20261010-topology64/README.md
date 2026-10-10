@@ -39,4 +39,4 @@ Guest evidence is `/root/kdlock-evidence/10.176.26.71/tests/20261010-topology64`
 The [host evidence archive](../../raw/tests/20261010-topology64/evidence.tar.gz)
 and its adjacent SHA256 file are ignored by Git. It retains environment,
 kernel identity, test output and the synthetic export fixture. Current workflow
-and machine result placement are in [the project guide](../../../../docs/PROJECT_GUIDE.md).
+and machine result placement are in [the project guide](../../../../../docs/PROJECT_GUIDE.md).

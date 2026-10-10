@@ -24,7 +24,7 @@ verified. SSH and rsync operations have bounded timeouts.
 The dry run compares proposed mirror changes and guest hashes without writing
 remote project files or manifests. The command never builds or runs tests on a
 physical host. It never deletes files, transfers Git metadata, or transfers
-untracked/ignored files. Raw evidence under `results/<machine>/raw/` is excluded
+untracked/ignored files. Raw evidence under `bench/results/<machine>/raw/` is excluded
 even if accidentally tracked. Missing tracked paths are reported and retained
 remotely; review and remove an identified obsolete guest file separately while
 idle. Add intended new source files to Git before synchronizing them.
@@ -36,9 +36,9 @@ does not establish drain. The guest helper `sync_source.py` additionally refuses
 symlink/non-file destinations and staged-source races; it never recursively
 replaces the source root or clears evidence.
 
-Keep tracked receipts under `results/<machine>/tests/` or
-`results/<machine>/bench/` and ignored raw evidence under
-`results/<machine>/raw/`. Preserve the machine identity and CPU topology recorded
+Keep tracked receipts under `bench/results/<machine>/tests/` or
+`bench/results/<machine>/bench/` and ignored raw evidence under
+`bench/results/<machine>/raw/`. Preserve the machine identity and CPU topology recorded
 when each run executed; historical measurements do not become new-host runs
 when their files move. See the [benchmark guide](../../bench/README.md) and
 [test guide](../../tests/README.md) for result placement and execution commands.

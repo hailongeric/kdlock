@@ -2,12 +2,12 @@
 
 The spin/mutex optimization phase closed on 2026-10-09. Reports apply to their frozen source
 and environment; cleanup does not rerun their measurements. Raw evidence archives
-remain under ignored `results/380G10/raw/legacy/` and historical guest
+remain under ignored `bench/results/380G10/raw/legacy/` and historical guest
 `/root/kdlock-evidence/`. See [the machine layout](../../../README.md) for
 relocated paths and compatibility links.
 A fresh checkout includes compact results, not those original run directories.
-The separate [rwlock benchmark guide](../../../../bench/rwlock_compare/README.md) indexes the
-ABI1 cacheline and ABI3 RCUHT results; [all benchmarks](../../../../bench/README.md) links both
+The separate [rwlock benchmark guide](../../../../rwlock_compare/README.md) indexes the
+ABI1 cacheline and ABI3 RCUHT results; [all benchmarks](../../../../README.md) links both
 families.
 
 ## Final report
@@ -16,7 +16,7 @@ families.
 | --- | --- |
 | [Protocol simplification and final baseline](20261008-protocol-simplification/README.md) | 2,286 trial sessions; final 540-session spin/mutex comparison at all 15 counts under `nopvspin`; rejected candidates, complete statistics, audits and archive identities |
 
-The performance target remains unmet. [Performance status](../../../../docs/PERFORMANCE.md)
+The performance target remains unmet. [Performance status](../../../../../docs/PERFORMANCE.md)
 records the closed scope and deferred designs.
 
 ## Earlier retained report

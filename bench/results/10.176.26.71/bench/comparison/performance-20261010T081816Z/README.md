@@ -191,7 +191,7 @@ different source, post-work, topology or frequency policy.
 
 The immutable [raw archive](../../../raw/bench/performance-20261010T081816Z/evidence.tar.gz)
 is retained on both physical hosts outside Git at
-`results/10.176.26.71/raw/bench/performance-20261010T081816Z/evidence.tar.gz`.
+`bench/results/10.176.26.71/raw/bench/performance-20261010T081816Z/evidence.tar.gz`.
 Its SHA256 is:
 
 ```text
@@ -212,7 +212,7 @@ not execute a new benchmark. The interpretation and verification notes in this
 section were added after export.
 
 ```sh
-report_src=/root/host_fs/kdlock/results/10.176.26.71/bench/comparison/performance-20261010T081816Z
+report_src=/root/host_fs/kdlock/bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z
 report_work=/root/kdlock-evidence/10.176.26.71/reports/performance-20261010T081816Z
 python3 -m venv "$report_work/reexport-venv"
 "$report_work/reexport-venv/bin/python3" -m pip install -r "$report_src/requirements.txt"

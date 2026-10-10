@@ -11,7 +11,7 @@ which compares Native, TCLock and KD on the same adapted RCUHT payload.
 
 Keep new guest evidence under `/root/kdlock-evidence/10.176.26.71/bench/<run>`.
 Host archives and compact reports use the corresponding machine directory in
-[the result layout](../../results/README.md). Edit source on `380G10` and synchronize
+[the result layout](../results/README.md). Edit source on `380G10` and synchronize
 reviewed inputs to the new-host VM before running.
 
 ## Prepare and run
@@ -134,7 +134,7 @@ comparison used all 15 thread counts and both payloads. Parity required matching
 the stronger of TCLock and Native at each point, with peak and sustained rates
 reported separately; 90% of TCLock's peak was an intermediate milestone.
 
-The [protocol simplification report](../../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+The [protocol simplification report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 keeps isolated screens, full 15-point matrices and rechecks separate under
 `nopvspin`. Both combined terminal/memory and memory-only candidates were rejected
 for repeated regressions. No runtime change was promoted; the eager code pool
@@ -143,12 +143,12 @@ candidates. The fresh restored-runtime comparison (`restored`) contains 540
 sessions across all 15 thread counts and both payloads for spin and mutex.
 
 The spin/mutex phase closed on 2026-10-09. The earlier
-[hash diagnosis](../../results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis) and
-[mandatory-JIT mutex trials](../../results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md) use the same
-boot policy. The [previous 540-sample matrix](../../results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
+[hash diagnosis](../results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis) and
+[mandatory-JIT mutex trials](../results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md) use the same
+boot policy. The [previous 540-sample matrix](../results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
 predates `nopvspin` and must remain separate. All of these runs use four lock-outside
 arithmetic rounds; the unrelated 64-round working-tree change was excluded.
-The [evidence index](../../results/380G10/bench/tclock_compare/HISTORY.md) links source identities, failed candidates
+The [evidence index](../results/380G10/bench/tclock_compare/HISTORY.md) links source identities, failed candidates
 and complete statistics. Publication, correct execution and performance acceptance
 are distinct results.
 

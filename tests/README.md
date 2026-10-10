@@ -9,8 +9,8 @@ suite requires an explicit request.
 Source edits stay in the checkout on `380G10` and are synchronized to this guest
 before testing. Use a new `/root/kdlock-evidence/10.176.26.71/tests/<run>` directory
 for live evidence and unit-check logs. Keep host archives under
-`results/10.176.26.71/raw/tests/<run>` and compact reports under
-`results/10.176.26.71/tests/<suite>/<run>`; [the result layout](../results/README.md)
+`bench/results/10.176.26.71/raw/tests/<run>` and compact reports under
+`bench/results/10.176.26.71/tests/<suite>/<run>`; [the result layout](../bench/results/README.md)
 keeps historical machines separate.
 
 ## Unit checks
@@ -90,7 +90,7 @@ published. Normal/SELFTEST builds stay separate.
 The [2026-10-10 ABI3 record](kernel/rwlock/README.md#abi3-verification-on-2026-10-10)
 covers two basic programs plus five affected groups, 13 benchmark checks and
 drained KD-native/KD-JIT correctness runs of 4,801,000 operations each.
-All 270 sessions in the [RCUHT matrix](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
+All 270 sessions in the [RCUHT matrix](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 had correct results, worker progress and complete drain. KD matched both alternatives
 on both throughput measures at 21 of 30 comparison points. These results belong
 to the original 40-vCPU guest and cover the listed checks, not the full suite.
@@ -120,13 +120,13 @@ concurrent host spin post-work edits were excluded from this verification.
 
 Sources, commands, exits, module identities, snapshot confirmation and live evidence
 are at guest `/root/kdlock-evidence/mutex-jit-required-20261008-evidence.tar.gz` and
-host `results/380G10/raw/legacy/mutex-jit-required-20261008/guest-evidence.tar.gz`. Archive SHA256:
+host `bench/results/380G10/raw/legacy/mutex-jit-required-20261008/guest-evidence.tar.gz`. Archive SHA256:
 `e55f8b372391cca78daaf16598e3b7532d636901c6a380be83d1ccf575239d8f`.
 This verification text is a documentation-only follow-up to the frozen inputs.
 
 The earlier cleanup, executable comparisons and archive identities remain in the
 fixed [cleanup record](https://github.com/hailongeric/kdlock/blob/10d800ea90d99e2b5e0e3e8d002dfe97b738d94e/tests/README.md).
 Other results remain tied to their versions in [VALIDATION](../docs/VALIDATION.md)
-and [benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md). Retain original
+and [benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.md). Retain original
 ignored/guest archives and failed candidates; known failures and deferrals remain in
 [TODO](../docs/TODO.md).

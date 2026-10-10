@@ -103,7 +103,7 @@ The retained optimization adds an ungated native writer path with exact drain
 accounting, separates the count and queue gate into different cache lines,
 avoids failed fast-writer CAS operations when the count is already busy, and
 uses a release-ordered SUB at reader unlock. The lock grows from **8 to 128 bytes**.
-The [protocol guide](../../../../../docs/design/rwlock_implementation.md) describes
+The [protocol guide](../../../../../../docs/design/rwlock_implementation.md) describes
 ordering and lifetime requirements. The [candidate trials](trials.md) retain
 both improvements and rejected reader-retry/NUMA-counter designs.
 
@@ -119,7 +119,7 @@ writer exclusion, and drained cleanly. The JIT session returned 523,035 JIT bodi
 in its writers-only phase and 141,651 in its 50/50 phase. Native controls returned
 none. Final RCUHT functional probes at 16 and 36 workers also passed, returning
 23,021 and 26,964 JIT writers respectively. These functional operations are not
-performance samples; see the [test record](../../../../../tests/kernel/rwlock/README.md).
+performance samples; see the [test record](../../../../../../tests/kernel/rwlock/README.md).
 
 ## Reproduction and evidence
 

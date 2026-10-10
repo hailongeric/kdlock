@@ -29,6 +29,8 @@ daemon/0x*
 # Per-run assembly inspection copies; original evidence remains in --output.
 /bench/.tmp
 # Machine-specific raw evidence and extracted workspaces; compact reports are tracked.
+/bench/results/*/raw/
+# Retain the old prefix for rollback and compatibility paths.
 /results/*/raw/
 
 # Python cache

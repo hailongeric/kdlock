@@ -128,7 +128,7 @@ The JIT session recorded:
 
 The RCUHT functional probes at 16 and 36 workers also passed, with 23,021 and
 26,964 returned JIT writers respectively. These are correctness checks, not
-performance samples. The [RCUHT report](../../../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
+performance samples. The [RCUHT report](../../../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 links the complete evidence, including the corrected missing-Makefile preflight
 and retained rejected optimization trials. No full test suite or kernel rebuild
 was run.
@@ -164,6 +164,6 @@ preserved separately. Evidence is under guest
 addresses and boot ID, and `native/`, `jit/`, `kd-native-final2/` contain the
 successful sessions. The archive is guest
 `/root/kdlock-evidence/rwlock-20261009-evidence.tar.gz` and host
-`results/380G10/raw/legacy/rwlock-20261009/guest-evidence.tar.gz`, SHA256
+`bench/results/380G10/raw/legacy/rwlock-20261009/guest-evidence.tar.gz`, SHA256
 `73608664642fa7bd4617197d21fac36f43a1bafc69cb694aa4c75bea38d65df6`.
 No full suite, kernel modification or performance matrix was run.

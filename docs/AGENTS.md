@@ -146,13 +146,13 @@ see the [fixed maintenance record](https://github.com/hailongeric/kdlock/blob/e5
 ### Acceptance and cleanup
 
 Store results by the physical machine that executed them. Published reports use
-`results/<machine>/{bench,tests}/`; ignored host archives use
-`results/<machine>/raw/{bench,tests}/`. Current guest runs write outside the
+`bench/results/<machine>/{bench,tests}/`; ignored host archives use
+`bench/results/<machine>/raw/{bench,tests}/`. Current guest runs write outside the
 source tree to `/root/kdlock-evidence/10.176.26.71/{bench,tests}/<run>` before
 archiving to the matching host directory. Original-host reports remain under
-`results/380G10/`. Preserve historical source hashes, commands and paths as
+`bench/results/380G10/`. Preserve historical source hashes, commands and paths as
 captured; relocation mappings and legacy compatibility paths are in
-[the results index](../results/README.md). Never pool different machines or CPU
+[the results index](../bench/results/README.md). Never pool different machines or CPU
 topologies into one benchmark result.
 
 NORMAL means a JIT image was published; it does not show that the body ran. Report

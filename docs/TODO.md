@@ -13,8 +13,8 @@ KD, TCLock and Native. It tracks real lock owners and unlock acknowledgements,
 keeps source modules loaded while needed, and shares register packets between
 waiter and combiner. It does not intercept global lock calls. KD has not matched
 both alternatives at every requested configuration; see the
-[spin/mutex report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-and [RCUHT rwlock report](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md).
+[spin/mutex report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+and [RCUHT rwlock report](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md).
 
 Rwlock ABI3 moves the wait for readers and acquisition of write access before
 the prepared body. This resolves the older hash-writer translation refusal.

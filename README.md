@@ -18,12 +18,12 @@ implementations can be compared. Callers choose an API explicitly; loading KD do
 not redirect ordinary Linux lock calls. Builds require the recorded `kdclobber2`
 guest-kernel interfaces.
 
-The latest [RCUHT rwlock comparison](results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
+The latest [RCUHT rwlock comparison](bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 tested 1% and 20% writes at 15 thread counts. All 270 runs produced correct results
 and shut down cleanly. KD matched or exceeded both alternatives on both throughput
 measures at 21 of the 30 combinations of write percentage and thread count. It did
 not meet that target everywhere. The earlier
-[spin/mutex optimization phase](results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+[spin/mutex optimization phase](bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 closed on 2026-10-09; its results are reported separately.
 
 ## Documentation

@@ -2,15 +2,15 @@
 
 KD does not yet match both TCLock and Linux Native at every requested thread
 count. The current evidence is the
-[64-vCPU destination comparison](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md).
+[64-vCPU destination comparison](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md).
 The original-host spin/mutex optimization phase ended on **2026-10-09**, with
-those gaps still open. Its [report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+those gaps still open. Its [report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 keeps the final comparison, rejected candidates and the source and binary identities
 used for each run.
 
 ## Current 64-vCPU destination, 2026-10-10
 
-The [current report](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+The [current report](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
 contains tables and scaling charts for 72 RCUHT rwlock, 36 spin/cacheline and
 36 mutex/cacheline sessions. All 144 passed correctness and drained. KD met
 the strict target of matching both alternatives on best warmed peak and median
@@ -33,7 +33,7 @@ when reproducing any report; the current environment is in
 
 ## Original-host RCUHT rwlocks, 2026-10-10
 
-The [rwlock comparison](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
+The [rwlock comparison](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 ran 270 RCUHT sessions: 1% and 20% writes, fifteen thread counts, three backends
 and three rounds. All runs produced correct results and shut down cleanly.
 
@@ -87,7 +87,7 @@ Earlier profiles suggest that translated traversal, request handling and coordin
 between native and delegated work contribute to the cost. Increasing the JIT share
 or removing a few instructions did not reliably improve throughput. Total cache
 misses and ordinary cycle samples cannot isolate remote-memory latency. Earlier profiles and failed
-experiments remain in [benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md).
+experiments remain in [benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.md).
 
 ## Implementation and deferred designs
 

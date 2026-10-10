@@ -32,5 +32,5 @@ inherits the kernel's policy. See [runner settings](../tclock_compare/README.md)
 Current heat rules, objects and prefetch are documented once in
 [execution flow](../../docs/JIT_EXECUTION.md) and
 [spin implementation](../../docs/design/spin_implementation.md).
-[The evidence index](../../results/380G10/bench/tclock_compare/HISTORY.md) preserves historical
+[The evidence index](../results/380G10/bench/tclock_compare/HISTORY.md) preserves historical
 measurements; old hook/dispatch-floor entry points are no longer live instructions.

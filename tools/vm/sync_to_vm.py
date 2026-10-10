@@ -57,7 +57,8 @@ def safe_relative(relative):
 
 
 def excluded_evidence(path):
-    return path.parts[0] == "results" and "raw" in path.parts[1:]
+    return ((path.parts[:2] == ("bench", "results") and "raw" in path.parts[2:]) or
+            (path.parts[0] == "results" and "raw" in path.parts[1:]))
 
 
 def snapshot(source, destination):

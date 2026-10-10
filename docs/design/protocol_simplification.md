@@ -95,7 +95,7 @@ maximum code backing remained 40 MiB.
 
 That memory result is valid, but the original and cold-helper variants failed
 throughput qualification and were reverted. The
-[trial report](../../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+[trial report](../../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 preserves their screens, full matrices and rechecks. Lazy backing is not a current
 implementation feature, and no memory reduction was promoted in these trials.
 Exact image-sized allocation is a separate problem: later chunks/recompiles may
@@ -125,7 +125,7 @@ when data movement is smaller than in the cacheline payload.
 
 KD pays queue/caller-stack transfer costs too, then adds translated traversal and
 request processing. More delegated bodies cannot compensate automatically for a
-slower service path. The [historical hash diagnosis](../../results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis)
+slower service path. The [historical hash diagnosis](../../bench/results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis)
 found roughly 99.9% spin JIT coverage and similar total L1 misses to TCLock, but
 more instructions. Those aggregate counters do not measure remote-memory latency.
 Mutex retention trials increased delegation and batch length while losing

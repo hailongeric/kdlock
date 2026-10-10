@@ -271,7 +271,7 @@ counts are separate from payload correctness. TCLock spin and rwlock delegation
 counts remain unmeasured. KD rwlock JIT share uses completed writes as its
 denominator. Performance acceptance, failed candidates and remaining gaps live in
 the [benchmark index](../../bench/README.md),
-[RCUHT rwlock report](../../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) and
-[final spin/mutex report](../../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
+[RCUHT rwlock report](../../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) and
+[final spin/mutex report](../../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
 The spin/mutex optimization phase is closed; documentation updates do not rerun
 these performance matrices.

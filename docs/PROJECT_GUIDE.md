@@ -10,18 +10,18 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-The latest [64-vCPU performance report](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+The latest [64-vCPU performance report](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
 compares rwlock, spin and mutex on the new host, with tables, charts and
 three-round statistics. All 144 selected sessions passed correctness and
 drained; throughput gaps remain. [Performance status](PERFORMANCE.md) summarizes
 the outcome and separates this bounded run from historical measurements.
 
-On the original 40-vCPU host, the [spin/mutex phase](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+On the original 40-vCPU host, the [spin/mutex phase](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 ended on 2026-10-09 with performance gaps remaining. The later
-[RCUHT rwlock comparison](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
+[RCUHT rwlock comparison](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 completed 270 valid runs at 1%/20% writes. KD matched both alternatives on both
 throughput measures at 21 of the 30 combinations of write percentage and thread
-count. [Benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md) links older evidence.
+count. [Benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.md) links older evidence.
 
 ## Reading order
 
@@ -83,7 +83,7 @@ is available only on host loopback. The monitor and serial log remain
 
 The 64-vCPU boot, exact kernel identity, CPU placement and guest health were
 verified on 2026-10-10, followed by the
-[144-session performance comparison](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+[144-session performance comparison](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
 at the current topology. The recorded 73-session migration validation used the
 earlier 60-vCPU layout; it remains separate from the current topology and
 historical 40-vCPU measurements on the original host.
@@ -96,13 +96,13 @@ Do not load a saved state captured under the old 40- or 60-vCPU layout into this
 
 ### Results by machine
 
-Published reports live in `results/<machine>/{bench,tests}/`; raw archives copied
-to either physical host live in ignored `results/<machine>/raw/{bench,tests}/`.
+Published reports live in `bench/results/<machine>/{bench,tests}/`; raw archives copied
+to either physical host live in ignored `bench/results/<machine>/raw/{bench,tests}/`.
 Use `380G10` for original-host runs and `10.176.26.71` for destination-host runs.
 Inside the VM, write live output outside the checkout to
 `/root/kdlock-evidence/10.176.26.71/{bench,tests}/<run>`; runners protect frozen
 inputs by rejecting output beneath the checkout. Archive each run to the matching
-machine directory before snapshot restoration. The [results index](../results/README.md)
+machine directory before snapshot restoration. The [results index](../bench/results/README.md)
 records relocated history and compatibility paths. Keep each run's CPU topology,
 boot policy and frozen source identity with its evidence.
 
@@ -154,14 +154,14 @@ has SHA256 `287447eabe43596b7494f5caa9d0c2fa39cf58ed918d703d66570ffc2cc37418`.
 To roll back while idle, remove the override, run `update-grub`, select the intended
 kernel and reboot. This also restores the prior GRUB default.
 
-The [protocol simplification trials](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+The [protocol simplification trials](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 use `nopvspin`. Both combined translator/memory and memory-only candidates were
 rejected after repeated regressions; no runtime change was promoted. Their full
 matrices remain separate from the fresh 540-session comparison of the restored
 runtime at all 15 thread counts. The earlier
-[hash diagnosis](../results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis)
+[hash diagnosis](../bench/results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis)
 uses the same boot policy but covers selected counts and placements. The
-[previous 540-sample comparison](../results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
+[previous 540-sample comparison](../bench/results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
 predates activation. Keep samples from the two boot policies separate.
 
 ### Dependencies and idle state

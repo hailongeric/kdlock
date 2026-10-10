@@ -82,7 +82,7 @@ High JIT coverage did not close the hash gap. KD adds virtual-register, stack an
 traversal machinery to each delegated body; mutex also maintains Linux physical
 ownership and native/delegated lifetimes. TCLock transfers the native continuation
 on the waiter's stack. These observations motivate measuring service and route
-costs, not forcing more delegation. [Design alternatives](../../../../../docs/design/protocol_simplification.md)
+costs, not forcing more delegation. [Design alternatives](../../../../../../docs/design/protocol_simplification.md)
 describe a restricted outlined API that still requires JIT and matched callers;
 they promise no measured improvement.
 

@@ -12,7 +12,7 @@ tests and benchmarks run in the VM on `10.176.26.71`.
 Each machine directory uses the same structure:
 
 ```text
-results/<machine>/
+bench/results/<machine>/
   bench/<runner>/<run>/       compact benchmark reports, tables and figures
   tests/<suite>/<run>/        compact test reports
   raw/bench/<run>/            original benchmark archives and extracted evidence
@@ -32,16 +32,16 @@ runners' frozen-input checks. New output paths are:
 /root/kdlock-evidence/10.176.26.71/tests/<run>
 ```
 
-Copy or archive those runs to the corresponding host `results/10.176.26.71/raw/`
+Copy or archive those runs to the corresponding host `bench/results/10.176.26.71/raw/`
 directory. Assembly exports follow the source run's parent under `assembly/`;
 retain them with the run's evidence. Use a fresh run name for every execution.
 Publish only compact summaries under `bench/` or `tests/`.
 
 Historical raw files moved from `bench/.tmp/` to
-`results/380G10/raw/legacy/`. This includes source-host scratch files whose
+`bench/results/380G10/raw/legacy/`. This includes source-host scratch files whose
 individual run provenance is not established; retain their existing manifests
 rather than assuming they are benchmark samples. The proven new-host migration
-archive is separated into `results/10.176.26.71/raw/bench/`.
+archive is separated into `bench/results/10.176.26.71/raw/bench/`.
 `bench/.tmp` is a local compatibility symlink to the legacy directory, and its
 old migration-run path redirects to the new-host archive. These links preserve
 old references without duplicating evidence. A fresh checkout contains the
@@ -57,7 +57,8 @@ paths and bytes. For retained compact reports, the relocation mapping is:
 
 | Original path | Current path |
 | --- | --- |
-| `bench/rwlock_compare/results/<report>` | `results/380G10/bench/rwlock_compare/<report>` |
-| `bench/tclock_compare/results/<report>` | `results/380G10/bench/tclock_compare/<report>` |
-| `bench/.tmp/<entry>` | `results/380G10/raw/legacy/<entry>` |
-| `bench/.tmp/migration-20261010T070707Z` | `results/10.176.26.71/raw/bench/migration-20261010T070707Z` |
+| `results/<machine>/<category>/` | `bench/results/<machine>/<category>/` |
+| `bench/rwlock_compare/results/<report>` | `bench/results/380G10/bench/rwlock_compare/<report>` |
+| `bench/tclock_compare/results/<report>` | `bench/results/380G10/bench/tclock_compare/<report>` |
+| `bench/.tmp/<entry>` | `bench/results/380G10/raw/legacy/<entry>` |
+| `bench/.tmp/migration-20261010T070707Z` | `bench/results/10.176.26.71/raw/bench/migration-20261010T070707Z` |

@@ -15,5 +15,5 @@ benchmark matrix. It uses 32 CPUs per NUMA node, collector CPU 63 and the host's
 `ondemand` governor. Its samples remain separate from the initial 60-vCPU
 migration validation and the [original-host reports](../380G10/README.md).
 Record each run's actual topology and frozen source. Current connection and
-operational instructions are in [the project guide](../../docs/PROJECT_GUIDE.md).
+operational instructions are in [the project guide](../../../docs/PROJECT_GUIDE.md).
 See [the common layout](../README.md) for guest output and host archive paths.

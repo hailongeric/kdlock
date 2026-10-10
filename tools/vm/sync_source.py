@@ -42,6 +42,9 @@ def validate_manifest(mapping):
         path = pathlib.PurePosixPath(relative)
         if path.is_absolute() or str(path) != relative or '..' in path.parts:
             raise RuntimeError('Unsafe source path: ' + relative)
+        if ((path.parts[:2] == ('bench', 'results') and 'raw' in path.parts[2:]) or
+                (path.parts[0] == 'results' and 'raw' in path.parts[1:])):
+            raise RuntimeError('Raw evidence is outside source synchronization: ' + relative)
         if any(p.startswith('.') for p in path.parts) and relative not in ('.gitattributes', '.gitignore'):
             raise RuntimeError('Private or Git metadata path forbidden: ' + relative)
         if '__pycache__' in path.parts or not isinstance(digest, str) or not re.fullmatch('[0-9a-f]{64}', digest):
@@ -236,6 +239,9 @@ def validate_manifest(mapping):
         path = PurePosixPath(relative)
         if path.is_absolute() or str(path) != relative or '..' in path.parts:
             raise ValueError('Unsafe source path: ' + relative)
+        if ((path.parts[:2] == ('bench', 'results') and 'raw' in path.parts[2:]) or
+                (path.parts[0] == 'results' and 'raw' in path.parts[1:])):
+            raise ValueError('Raw evidence is outside source synchronization: ' + relative)
         if any(part.startswith('.') for part in path.parts) and relative not in ('.gitattributes', '.gitignore'):
             raise ValueError('Private or Git metadata path forbidden: ' + relative)
         if '__pycache__' in path.parts or not isinstance(digest, str) or not re.fullmatch('[0-9a-f]{64}', digest):
