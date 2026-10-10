@@ -1,0 +1,3256 @@
+{
+  "acceptance_policy": "Execution OK + drained + complete + data_ok + valid timed metrics; raw jit_acceptance is a separate verdict and null does not veto valid baseline/adaptive performance evidence",
+  "accepted_sessions": 144,
+  "archive_sha256": "ed11d709ada817645f403aadd1fb399afefb9485efd93fa1e79058c5932a8493",
+  "captured_metadata": {
+    "performance-20261010T081816Z/final-audit.json": {
+      "all_completed": true,
+      "all_correct": true,
+      "all_drained": true,
+      "guest_numa": {
+        "node0": "0-31",
+        "node1": "32-63"
+      },
+      "guest_system_state": "running",
+      "new_kernel_faults": [],
+      "sessions": 144,
+      "suites": [
+        {
+          "execution_status": {
+            "OK": 72
+          },
+          "exit_code": 0,
+          "jit_acceptance": {
+            "NOT_APPLICABLE": 72
+          },
+          "jit_status": {
+            "NATIVE": 48,
+            "NO_JIT": 9,
+            "PASS": 15
+          },
+          "kd_jit_status": {
+            "NO_JIT": 9,
+            "PASS": 15
+          },
+          "sessions": 72,
+          "suite": "rwlock-rcuht"
+        },
+        {
+          "execution_status": {
+            "OK": 36
+          },
+          "exit_code": 0,
+          "jit_acceptance": {
+            "NOT_APPLICABLE": 12,
+            "NO_JIT": 15,
+            "PASS": 9
+          },
+          "jit_status": {
+            "JIT": 9,
+            "NATIVE": 12,
+            "NOT_APPLICABLE": 12,
+            "NO_JIT": 3
+          },
+          "kd_jit_status": {
+            "JIT": 9,
+            "NO_JIT": 3
+          },
+          "sessions": 36,
+          "suite": "spin-cacheline"
+        },
+        {
+          "execution_status": {
+            "OK": 36
+          },
+          "exit_code": 0,
+          "jit_acceptance": {
+            "NOT_APPLICABLE": 12,
+            "NO_JIT": 15,
+            "PASS": 9
+          },
+          "jit_status": {
+            "JIT": 9,
+            "NATIVE": 12,
+            "NOT_APPLICABLE": 12,
+            "NO_JIT": 3
+          },
+          "kd_jit_status": {
+            "JIT": 9,
+            "NO_JIT": 3
+          },
+          "sessions": 36,
+          "suite": "mutex-cacheline"
+        }
+      ],
+      "verified_binary_hashes": 23,
+      "verified_frozen_source_hashes": 806,
+      "verified_tracked_source_files": 495
+    },
+    "performance-20261010T081816Z/guest-environment.json": {
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "kernel_identity": {
+        "build_files": 9,
+        "bundle_files": 7,
+        "config": true,
+        "ok": true,
+        "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+        "source_files": 20
+      },
+      "lscpu": {
+        "lscpu": [
+          {
+            "data": "x86_64",
+            "field": "Architecture:"
+          },
+          {
+            "data": "32-bit, 64-bit",
+            "field": "CPU op-mode(s):"
+          },
+          {
+            "data": "46 bits physical, 57 bits virtual",
+            "field": "Address sizes:"
+          },
+          {
+            "data": "Little Endian",
+            "field": "Byte Order:"
+          },
+          {
+            "data": "64",
+            "field": "CPU(s):"
+          },
+          {
+            "data": "0-63",
+            "field": "On-line CPU(s) list:"
+          },
+          {
+            "data": "GenuineIntel",
+            "field": "Vendor ID:"
+          },
+          {
+            "data": "Intel(R) Xeon(R) Gold 6438N",
+            "field": "Model name:"
+          },
+          {
+            "data": "6",
+            "field": "CPU family:"
+          },
+          {
+            "data": "143",
+            "field": "Model:"
+          },
+          {
+            "data": "1",
+            "field": "Thread(s) per core:"
+          },
+          {
+            "data": "32",
+            "field": "Core(s) per socket:"
+          },
+          {
+            "data": "2",
+            "field": "Socket(s):"
+          },
+          {
+            "data": "7",
+            "field": "Stepping:"
+          },
+          {
+            "data": "4000.00",
+            "field": "BogoMIPS:"
+          },
+          {
+            "data": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology cpuid tsc_known_freq pni pclmulqdq dtes64 vmx ssse3 fma cx16 pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 wbnoinvd arat avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid bus_lock_detect cldemote movdiri movdir64b fsrm md_clear serialize tsxldtrk amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities",
+            "field": "Flags:"
+          },
+          {
+            "data": "VT-x",
+            "field": "Virtualization:"
+          },
+          {
+            "data": "KVM",
+            "field": "Hypervisor vendor:"
+          },
+          {
+            "data": "full",
+            "field": "Virtualization type:"
+          },
+          {
+            "data": "2 MiB (64 instances)",
+            "field": "L1d cache:"
+          },
+          {
+            "data": "2 MiB (64 instances)",
+            "field": "L1i cache:"
+          },
+          {
+            "data": "256 MiB (64 instances)",
+            "field": "L2 cache:"
+          },
+          {
+            "data": "32 MiB (2 instances)",
+            "field": "L3 cache:"
+          },
+          {
+            "data": "2",
+            "field": "NUMA node(s):"
+          },
+          {
+            "data": "0-31",
+            "field": "NUMA node0 CPU(s):"
+          },
+          {
+            "data": "32-63",
+            "field": "NUMA node1 CPU(s):"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Gather data sampling:"
+          },
+          {
+            "data": "Mitigation; Aligned branch/return thunks",
+            "field": "Vulnerability Indirect target selection:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Itlb multihit:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability L1tf:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Mds:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Meltdown:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Mmio stale data:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Reg file data sampling:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Retbleed:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Spec rstack overflow:"
+          },
+          {
+            "data": "Mitigation; Speculative Store Bypass disabled via prctl",
+            "field": "Vulnerability Spec store bypass:"
+          },
+          {
+            "data": "Mitigation; usercopy/swapgs barriers and __user pointer sanitization",
+            "field": "Vulnerability Spectre v1:"
+          },
+          {
+            "data": "Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop",
+            "field": "Vulnerability Spectre v2:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Srbds:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Tsa:"
+          },
+          {
+            "data": "Mitigation; TSX disabled",
+            "field": "Vulnerability Tsx async abort:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Vmscape:"
+          }
+        ]
+      },
+      "numa": {
+        "node0": "0-31",
+        "node1": "32-63"
+      },
+      "project_modules": [],
+      "project_processes": [],
+      "python": "Python 3.10.12",
+      "rwlock_post_work_rounds": 4,
+      "spin_mutex_post_work_rounds": 64,
+      "uname": "Linux ubuntu 6.1.159-kdclobber2 #4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+      "verified_source_files": 495
+    },
+    "performance-20261010T081816Z/host-environment.json": {
+      "frequency_policy_changed": false,
+      "governors": {
+        "cpu0": "ondemand",
+        "cpu1": "ondemand",
+        "cpu10": "ondemand",
+        "cpu11": "ondemand",
+        "cpu12": "ondemand",
+        "cpu13": "ondemand",
+        "cpu14": "ondemand",
+        "cpu15": "ondemand",
+        "cpu16": "ondemand",
+        "cpu17": "ondemand",
+        "cpu18": "ondemand",
+        "cpu19": "ondemand",
+        "cpu2": "ondemand",
+        "cpu20": "ondemand",
+        "cpu21": "ondemand",
+        "cpu22": "ondemand",
+        "cpu23": "ondemand",
+        "cpu24": "ondemand",
+        "cpu25": "ondemand",
+        "cpu26": "ondemand",
+        "cpu27": "ondemand",
+        "cpu28": "ondemand",
+        "cpu29": "ondemand",
+        "cpu3": "ondemand",
+        "cpu30": "ondemand",
+        "cpu31": "ondemand",
+        "cpu32": "ondemand",
+        "cpu33": "ondemand",
+        "cpu34": "ondemand",
+        "cpu35": "ondemand",
+        "cpu36": "ondemand",
+        "cpu37": "ondemand",
+        "cpu38": "ondemand",
+        "cpu39": "ondemand",
+        "cpu4": "ondemand",
+        "cpu40": "ondemand",
+        "cpu41": "ondemand",
+        "cpu42": "ondemand",
+        "cpu43": "ondemand",
+        "cpu44": "ondemand",
+        "cpu45": "ondemand",
+        "cpu46": "ondemand",
+        "cpu47": "ondemand",
+        "cpu48": "ondemand",
+        "cpu49": "ondemand",
+        "cpu5": "ondemand",
+        "cpu50": "ondemand",
+        "cpu51": "ondemand",
+        "cpu52": "ondemand",
+        "cpu53": "ondemand",
+        "cpu54": "ondemand",
+        "cpu55": "ondemand",
+        "cpu56": "ondemand",
+        "cpu57": "ondemand",
+        "cpu58": "ondemand",
+        "cpu59": "ondemand",
+        "cpu6": "ondemand",
+        "cpu60": "ondemand",
+        "cpu61": "ondemand",
+        "cpu62": "ondemand",
+        "cpu63": "ondemand",
+        "cpu7": "ondemand",
+        "cpu8": "ondemand",
+        "cpu9": "ondemand"
+      },
+      "hostname": "Super-Server",
+      "lscpu": {
+        "lscpu": [
+          {
+            "data": "x86_64",
+            "field": "Architecture:"
+          },
+          {
+            "data": "32-bit, 64-bit",
+            "field": "CPU op-mode(s):"
+          },
+          {
+            "data": "46 bits physical, 57 bits virtual",
+            "field": "Address sizes:"
+          },
+          {
+            "data": "Little Endian",
+            "field": "Byte Order:"
+          },
+          {
+            "data": "64",
+            "field": "CPU(s):"
+          },
+          {
+            "data": "0-63",
+            "field": "On-line CPU(s) list:"
+          },
+          {
+            "data": "GenuineIntel",
+            "field": "Vendor ID:"
+          },
+          {
+            "data": "Intel(R) Corporation",
+            "field": "BIOS Vendor ID:"
+          },
+          {
+            "data": "Intel(R) Xeon(R) Gold 6438N",
+            "field": "Model name:"
+          },
+          {
+            "data": "Intel(R) Xeon(R) Gold 6438N  CPU @ 2.0GHz",
+            "field": "BIOS Model name:"
+          },
+          {
+            "data": "179",
+            "field": "BIOS CPU family:"
+          },
+          {
+            "data": "6",
+            "field": "CPU family:"
+          },
+          {
+            "data": "143",
+            "field": "Model:"
+          },
+          {
+            "data": "1",
+            "field": "Thread(s) per core:"
+          },
+          {
+            "data": "32",
+            "field": "Core(s) per socket:"
+          },
+          {
+            "data": "2",
+            "field": "Socket(s):"
+          },
+          {
+            "data": "7",
+            "field": "Stepping:"
+          },
+          {
+            "data": "31%",
+            "field": "CPU(s) scaling MHz:"
+          },
+          {
+            "data": "3600.0000",
+            "field": "CPU max MHz:"
+          },
+          {
+            "data": "800.0000",
+            "field": "CPU min MHz:"
+          },
+          {
+            "data": "4000.00",
+            "field": "BogoMIPS:"
+          },
+          {
+            "data": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cat_l2 cdp_l3 intel_ppin cdp_l2 ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect user_shstk avx_vnni avx512_bf16 wbnoinvd dtherm ida arat pln pts hfi vnmi avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq la57 rdpid bus_lock_detect cldemote movdiri movdir64b enqcmd fsrm md_clear serialize tsxldtrk pconfig arch_lbr amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities ibpb_exit_to_user",
+            "field": "Flags:"
+          },
+          {
+            "data": "VT-x",
+            "field": "Virtualization:"
+          },
+          {
+            "data": "3 MiB (64 instances)",
+            "field": "L1d cache:"
+          },
+          {
+            "data": "2 MiB (64 instances)",
+            "field": "L1i cache:"
+          },
+          {
+            "data": "128 MiB (64 instances)",
+            "field": "L2 cache:"
+          },
+          {
+            "data": "120 MiB (2 instances)",
+            "field": "L3 cache:"
+          },
+          {
+            "data": "2",
+            "field": "NUMA node(s):"
+          },
+          {
+            "data": "0-31",
+            "field": "NUMA node0 CPU(s):"
+          },
+          {
+            "data": "32-63",
+            "field": "NUMA node1 CPU(s):"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Gather data sampling:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Indirect target selection:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Itlb multihit:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability L1tf:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Mds:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Meltdown:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Mmio stale data:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Reg file data sampling:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Retbleed:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Spec rstack overflow:"
+          },
+          {
+            "data": "Mitigation; Speculative Store Bypass disabled via prctl",
+            "field": "Vulnerability Spec store bypass:"
+          },
+          {
+            "data": "Mitigation; usercopy/swapgs barriers and __user pointer sanitization",
+            "field": "Vulnerability Spectre v1:"
+          },
+          {
+            "data": "Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S",
+            "field": "Vulnerability Spectre v2:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Srbds:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Tsa:"
+          },
+          {
+            "data": "Not affected",
+            "field": "Vulnerability Tsx async abort:"
+          },
+          {
+            "data": "Mitigation; IBPB before exit to userspace",
+            "field": "Vulnerability Vmscape:"
+          }
+        ]
+      },
+      "memory": "MemTotal:       32580084 kB\nMemFree:          348948 kB\nMemAvailable:   23412032 kB\nBuffers:           96992 kB\nCached:         22506436 kB\nSwapCached:          584 kB\nActive:          6750464 kB\nInactive:       22082056 kB\nActive(anon):    6254820 kB\nInactive(anon):    13400 kB\nActive(file):     495644 kB\nInactive(file): 22068656 kB\nUnevictable:        1880 kB\nMlocked:              16 kB\nSwapTotal:       2097148 kB\nSwapFree:        2094844 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:                76 kB\nWriteback:             0 kB\nAnonPages:       6230444 kB\nMapped:           364420 kB\nShmem:             39088 kB\nKReclaimable:     979364 kB\nSlab:            1967876 kB\nSReclaimable:     979364 kB\nSUnreclaim:       988512 kB\nKernelStack:       23096 kB\nPageTables:        70576 kB\nSecPageTables:      6616 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    18387188 kB\nCommitted_AS:   32046204 kB\nVmallocTotal:   13743895347199 kB\nVmallocUsed:      151200 kB\nVmallocChunk:          0 kB\nPercpu:           272128 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:   2197504 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      374680 kB\nDirectMap2M:     6653952 kB\nDirectMap1G:    28311552 kB\n",
+      "numa": {
+        "node0": "0-31",
+        "node1": "32-63"
+      },
+      "qemu_args": [
+        "qemu-system-x86_64",
+        "-name",
+        "ubuntu-build,debug-threads=on",
+        "-enable-kvm",
+        "-cpu",
+        "host",
+        "-smp",
+        "64,maxcpus=64,sockets=2,cores=32,threads=1",
+        "-m",
+        "24G",
+        "-object",
+        "memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind",
+        "-object",
+        "memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind",
+        "-numa",
+        "node,nodeid=0,cpus=0-31,memdev=mem0",
+        "-numa",
+        "node,nodeid=1,cpus=32-63,memdev=mem1",
+        "-device",
+        "virtio-scsi-pci,id=scsi0",
+        "-drive",
+        "file=/home/eric/vm/qemu-disks/ubuntu22.04.img,format=qcow2,if=none,id=drive_system",
+        "-device",
+        "scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0",
+        "-drive",
+        "file=/home/eric/vm/qemu-disks/sda.qcow2,format=qcow2,if=none,id=drive_data1",
+        "-device",
+        "scsi-hd,drive=drive_data1,bus=scsi0.0",
+        "-netdev",
+        "user,id=n1,hostfwd=tcp:0.0.0.0:2222-:22,hostfwd=tcp:0.0.0.0:9090-:9090,hostfwd=tcp:0.0.0.0:9091-:9091",
+        "-device",
+        "virtio-net-pci,netdev=n1",
+        "-display",
+        "none",
+        "-serial",
+        "file:/tmp/qemu-serial.log",
+        "-monitor",
+        "unix:/tmp/qemu-monitor.sock,server=on,wait=off",
+        "-gdb",
+        "tcp:127.0.0.1:1234",
+        "-pidfile",
+        "/tmp/kdlock-qemu.pid",
+        "-daemonize"
+      ],
+      "qemu_threads": [
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "qemu-system-x86",
+          "tid": 17826,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "call_rcu",
+          "tid": 17827,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            0
+          ],
+          "name": "CPU 0/KVM",
+          "tid": 17832,
+          "vcpu": 0
+        },
+        {
+          "host_cpus": [
+            1
+          ],
+          "name": "CPU 1/KVM",
+          "tid": 17833,
+          "vcpu": 1
+        },
+        {
+          "host_cpus": [
+            2
+          ],
+          "name": "CPU 2/KVM",
+          "tid": 17834,
+          "vcpu": 2
+        },
+        {
+          "host_cpus": [
+            3
+          ],
+          "name": "CPU 3/KVM",
+          "tid": 17835,
+          "vcpu": 3
+        },
+        {
+          "host_cpus": [
+            4
+          ],
+          "name": "CPU 4/KVM",
+          "tid": 17836,
+          "vcpu": 4
+        },
+        {
+          "host_cpus": [
+            5
+          ],
+          "name": "CPU 5/KVM",
+          "tid": 17837,
+          "vcpu": 5
+        },
+        {
+          "host_cpus": [
+            6
+          ],
+          "name": "CPU 6/KVM",
+          "tid": 17838,
+          "vcpu": 6
+        },
+        {
+          "host_cpus": [
+            7
+          ],
+          "name": "CPU 7/KVM",
+          "tid": 17839,
+          "vcpu": 7
+        },
+        {
+          "host_cpus": [
+            8
+          ],
+          "name": "CPU 8/KVM",
+          "tid": 17840,
+          "vcpu": 8
+        },
+        {
+          "host_cpus": [
+            9
+          ],
+          "name": "CPU 9/KVM",
+          "tid": 17841,
+          "vcpu": 9
+        },
+        {
+          "host_cpus": [
+            10
+          ],
+          "name": "CPU 10/KVM",
+          "tid": 17842,
+          "vcpu": 10
+        },
+        {
+          "host_cpus": [
+            11
+          ],
+          "name": "CPU 11/KVM",
+          "tid": 17843,
+          "vcpu": 11
+        },
+        {
+          "host_cpus": [
+            12
+          ],
+          "name": "CPU 12/KVM",
+          "tid": 17844,
+          "vcpu": 12
+        },
+        {
+          "host_cpus": [
+            13
+          ],
+          "name": "CPU 13/KVM",
+          "tid": 17845,
+          "vcpu": 13
+        },
+        {
+          "host_cpus": [
+            14
+          ],
+          "name": "CPU 14/KVM",
+          "tid": 17846,
+          "vcpu": 14
+        },
+        {
+          "host_cpus": [
+            15
+          ],
+          "name": "CPU 15/KVM",
+          "tid": 17847,
+          "vcpu": 15
+        },
+        {
+          "host_cpus": [
+            16
+          ],
+          "name": "CPU 16/KVM",
+          "tid": 17848,
+          "vcpu": 16
+        },
+        {
+          "host_cpus": [
+            17
+          ],
+          "name": "CPU 17/KVM",
+          "tid": 17849,
+          "vcpu": 17
+        },
+        {
+          "host_cpus": [
+            18
+          ],
+          "name": "CPU 18/KVM",
+          "tid": 17850,
+          "vcpu": 18
+        },
+        {
+          "host_cpus": [
+            19
+          ],
+          "name": "CPU 19/KVM",
+          "tid": 17851,
+          "vcpu": 19
+        },
+        {
+          "host_cpus": [
+            20
+          ],
+          "name": "CPU 20/KVM",
+          "tid": 17852,
+          "vcpu": 20
+        },
+        {
+          "host_cpus": [
+            21
+          ],
+          "name": "CPU 21/KVM",
+          "tid": 17853,
+          "vcpu": 21
+        },
+        {
+          "host_cpus": [
+            22
+          ],
+          "name": "CPU 22/KVM",
+          "tid": 17854,
+          "vcpu": 22
+        },
+        {
+          "host_cpus": [
+            23
+          ],
+          "name": "CPU 23/KVM",
+          "tid": 17855,
+          "vcpu": 23
+        },
+        {
+          "host_cpus": [
+            24
+          ],
+          "name": "CPU 24/KVM",
+          "tid": 17856,
+          "vcpu": 24
+        },
+        {
+          "host_cpus": [
+            25
+          ],
+          "name": "CPU 25/KVM",
+          "tid": 17857,
+          "vcpu": 25
+        },
+        {
+          "host_cpus": [
+            26
+          ],
+          "name": "CPU 26/KVM",
+          "tid": 17858,
+          "vcpu": 26
+        },
+        {
+          "host_cpus": [
+            27
+          ],
+          "name": "CPU 27/KVM",
+          "tid": 17859,
+          "vcpu": 27
+        },
+        {
+          "host_cpus": [
+            28
+          ],
+          "name": "CPU 28/KVM",
+          "tid": 17860,
+          "vcpu": 28
+        },
+        {
+          "host_cpus": [
+            29
+          ],
+          "name": "CPU 29/KVM",
+          "tid": 17861,
+          "vcpu": 29
+        },
+        {
+          "host_cpus": [
+            30
+          ],
+          "name": "CPU 30/KVM",
+          "tid": 17862,
+          "vcpu": 30
+        },
+        {
+          "host_cpus": [
+            31
+          ],
+          "name": "CPU 31/KVM",
+          "tid": 17863,
+          "vcpu": 31
+        },
+        {
+          "host_cpus": [
+            32
+          ],
+          "name": "CPU 32/KVM",
+          "tid": 17864,
+          "vcpu": 32
+        },
+        {
+          "host_cpus": [
+            33
+          ],
+          "name": "CPU 33/KVM",
+          "tid": 17865,
+          "vcpu": 33
+        },
+        {
+          "host_cpus": [
+            34
+          ],
+          "name": "CPU 34/KVM",
+          "tid": 17866,
+          "vcpu": 34
+        },
+        {
+          "host_cpus": [
+            35
+          ],
+          "name": "CPU 35/KVM",
+          "tid": 17867,
+          "vcpu": 35
+        },
+        {
+          "host_cpus": [
+            36
+          ],
+          "name": "CPU 36/KVM",
+          "tid": 17868,
+          "vcpu": 36
+        },
+        {
+          "host_cpus": [
+            37
+          ],
+          "name": "CPU 37/KVM",
+          "tid": 17869,
+          "vcpu": 37
+        },
+        {
+          "host_cpus": [
+            38
+          ],
+          "name": "CPU 38/KVM",
+          "tid": 17870,
+          "vcpu": 38
+        },
+        {
+          "host_cpus": [
+            39
+          ],
+          "name": "CPU 39/KVM",
+          "tid": 17871,
+          "vcpu": 39
+        },
+        {
+          "host_cpus": [
+            40
+          ],
+          "name": "CPU 40/KVM",
+          "tid": 17872,
+          "vcpu": 40
+        },
+        {
+          "host_cpus": [
+            41
+          ],
+          "name": "CPU 41/KVM",
+          "tid": 17873,
+          "vcpu": 41
+        },
+        {
+          "host_cpus": [
+            42
+          ],
+          "name": "CPU 42/KVM",
+          "tid": 17874,
+          "vcpu": 42
+        },
+        {
+          "host_cpus": [
+            43
+          ],
+          "name": "CPU 43/KVM",
+          "tid": 17875,
+          "vcpu": 43
+        },
+        {
+          "host_cpus": [
+            44
+          ],
+          "name": "CPU 44/KVM",
+          "tid": 17876,
+          "vcpu": 44
+        },
+        {
+          "host_cpus": [
+            45
+          ],
+          "name": "CPU 45/KVM",
+          "tid": 17877,
+          "vcpu": 45
+        },
+        {
+          "host_cpus": [
+            46
+          ],
+          "name": "CPU 46/KVM",
+          "tid": 17878,
+          "vcpu": 46
+        },
+        {
+          "host_cpus": [
+            47
+          ],
+          "name": "CPU 47/KVM",
+          "tid": 17879,
+          "vcpu": 47
+        },
+        {
+          "host_cpus": [
+            48
+          ],
+          "name": "CPU 48/KVM",
+          "tid": 17880,
+          "vcpu": 48
+        },
+        {
+          "host_cpus": [
+            49
+          ],
+          "name": "CPU 49/KVM",
+          "tid": 17881,
+          "vcpu": 49
+        },
+        {
+          "host_cpus": [
+            50
+          ],
+          "name": "CPU 50/KVM",
+          "tid": 17882,
+          "vcpu": 50
+        },
+        {
+          "host_cpus": [
+            51
+          ],
+          "name": "CPU 51/KVM",
+          "tid": 17883,
+          "vcpu": 51
+        },
+        {
+          "host_cpus": [
+            52
+          ],
+          "name": "CPU 52/KVM",
+          "tid": 17884,
+          "vcpu": 52
+        },
+        {
+          "host_cpus": [
+            53
+          ],
+          "name": "CPU 53/KVM",
+          "tid": 17885,
+          "vcpu": 53
+        },
+        {
+          "host_cpus": [
+            54
+          ],
+          "name": "CPU 54/KVM",
+          "tid": 17886,
+          "vcpu": 54
+        },
+        {
+          "host_cpus": [
+            55
+          ],
+          "name": "CPU 55/KVM",
+          "tid": 17887,
+          "vcpu": 55
+        },
+        {
+          "host_cpus": [
+            56
+          ],
+          "name": "CPU 56/KVM",
+          "tid": 17888,
+          "vcpu": 56
+        },
+        {
+          "host_cpus": [
+            57
+          ],
+          "name": "CPU 57/KVM",
+          "tid": 17889,
+          "vcpu": 57
+        },
+        {
+          "host_cpus": [
+            58
+          ],
+          "name": "CPU 58/KVM",
+          "tid": 17890,
+          "vcpu": 58
+        },
+        {
+          "host_cpus": [
+            59
+          ],
+          "name": "CPU 59/KVM",
+          "tid": 17891,
+          "vcpu": 59
+        },
+        {
+          "host_cpus": [
+            60
+          ],
+          "name": "CPU 60/KVM",
+          "tid": 17892,
+          "vcpu": 60
+        },
+        {
+          "host_cpus": [
+            61
+          ],
+          "name": "CPU 61/KVM",
+          "tid": 17893,
+          "vcpu": 61
+        },
+        {
+          "host_cpus": [
+            62
+          ],
+          "name": "CPU 62/KVM",
+          "tid": 17894,
+          "vcpu": 62
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "CPU 63/KVM",
+          "tid": 17895,
+          "vcpu": 63
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "kvm-nx-lpage-re",
+          "tid": 17897,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "worker",
+          "tid": 21234,
+          "vcpu": null
+        }
+      ],
+      "uname": "Linux Super-Server 6.8.0-146-generic #146-Ubuntu SMP PREEMPT_DYNAMIC Thu Sep  3 16:12:30 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+      "uptime": "7519.23 473827.80"
+    },
+    "performance-20261010T081816Z/host-final-state.json": {
+      "all_pins_verified": true,
+      "governors": {
+        "cpu0": "ondemand",
+        "cpu1": "ondemand",
+        "cpu10": "ondemand",
+        "cpu11": "ondemand",
+        "cpu12": "ondemand",
+        "cpu13": "ondemand",
+        "cpu14": "ondemand",
+        "cpu15": "ondemand",
+        "cpu16": "ondemand",
+        "cpu17": "ondemand",
+        "cpu18": "ondemand",
+        "cpu19": "ondemand",
+        "cpu2": "ondemand",
+        "cpu20": "ondemand",
+        "cpu21": "ondemand",
+        "cpu22": "ondemand",
+        "cpu23": "ondemand",
+        "cpu24": "ondemand",
+        "cpu25": "ondemand",
+        "cpu26": "ondemand",
+        "cpu27": "ondemand",
+        "cpu28": "ondemand",
+        "cpu29": "ondemand",
+        "cpu3": "ondemand",
+        "cpu30": "ondemand",
+        "cpu31": "ondemand",
+        "cpu32": "ondemand",
+        "cpu33": "ondemand",
+        "cpu34": "ondemand",
+        "cpu35": "ondemand",
+        "cpu36": "ondemand",
+        "cpu37": "ondemand",
+        "cpu38": "ondemand",
+        "cpu39": "ondemand",
+        "cpu4": "ondemand",
+        "cpu40": "ondemand",
+        "cpu41": "ondemand",
+        "cpu42": "ondemand",
+        "cpu43": "ondemand",
+        "cpu44": "ondemand",
+        "cpu45": "ondemand",
+        "cpu46": "ondemand",
+        "cpu47": "ondemand",
+        "cpu48": "ondemand",
+        "cpu49": "ondemand",
+        "cpu5": "ondemand",
+        "cpu50": "ondemand",
+        "cpu51": "ondemand",
+        "cpu52": "ondemand",
+        "cpu53": "ondemand",
+        "cpu54": "ondemand",
+        "cpu55": "ondemand",
+        "cpu56": "ondemand",
+        "cpu57": "ondemand",
+        "cpu58": "ondemand",
+        "cpu59": "ondemand",
+        "cpu6": "ondemand",
+        "cpu60": "ondemand",
+        "cpu61": "ondemand",
+        "cpu62": "ondemand",
+        "cpu63": "ondemand",
+        "cpu7": "ondemand",
+        "cpu8": "ondemand",
+        "cpu9": "ondemand"
+      },
+      "qemu_pid": 17826,
+      "qemu_threads": [
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "qemu-system-x86",
+          "tid": 17826,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "call_rcu",
+          "tid": 17827,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            0
+          ],
+          "name": "CPU 0/KVM",
+          "tid": 17832,
+          "vcpu": 0
+        },
+        {
+          "host_cpus": [
+            1
+          ],
+          "name": "CPU 1/KVM",
+          "tid": 17833,
+          "vcpu": 1
+        },
+        {
+          "host_cpus": [
+            2
+          ],
+          "name": "CPU 2/KVM",
+          "tid": 17834,
+          "vcpu": 2
+        },
+        {
+          "host_cpus": [
+            3
+          ],
+          "name": "CPU 3/KVM",
+          "tid": 17835,
+          "vcpu": 3
+        },
+        {
+          "host_cpus": [
+            4
+          ],
+          "name": "CPU 4/KVM",
+          "tid": 17836,
+          "vcpu": 4
+        },
+        {
+          "host_cpus": [
+            5
+          ],
+          "name": "CPU 5/KVM",
+          "tid": 17837,
+          "vcpu": 5
+        },
+        {
+          "host_cpus": [
+            6
+          ],
+          "name": "CPU 6/KVM",
+          "tid": 17838,
+          "vcpu": 6
+        },
+        {
+          "host_cpus": [
+            7
+          ],
+          "name": "CPU 7/KVM",
+          "tid": 17839,
+          "vcpu": 7
+        },
+        {
+          "host_cpus": [
+            8
+          ],
+          "name": "CPU 8/KVM",
+          "tid": 17840,
+          "vcpu": 8
+        },
+        {
+          "host_cpus": [
+            9
+          ],
+          "name": "CPU 9/KVM",
+          "tid": 17841,
+          "vcpu": 9
+        },
+        {
+          "host_cpus": [
+            10
+          ],
+          "name": "CPU 10/KVM",
+          "tid": 17842,
+          "vcpu": 10
+        },
+        {
+          "host_cpus": [
+            11
+          ],
+          "name": "CPU 11/KVM",
+          "tid": 17843,
+          "vcpu": 11
+        },
+        {
+          "host_cpus": [
+            12
+          ],
+          "name": "CPU 12/KVM",
+          "tid": 17844,
+          "vcpu": 12
+        },
+        {
+          "host_cpus": [
+            13
+          ],
+          "name": "CPU 13/KVM",
+          "tid": 17845,
+          "vcpu": 13
+        },
+        {
+          "host_cpus": [
+            14
+          ],
+          "name": "CPU 14/KVM",
+          "tid": 17846,
+          "vcpu": 14
+        },
+        {
+          "host_cpus": [
+            15
+          ],
+          "name": "CPU 15/KVM",
+          "tid": 17847,
+          "vcpu": 15
+        },
+        {
+          "host_cpus": [
+            16
+          ],
+          "name": "CPU 16/KVM",
+          "tid": 17848,
+          "vcpu": 16
+        },
+        {
+          "host_cpus": [
+            17
+          ],
+          "name": "CPU 17/KVM",
+          "tid": 17849,
+          "vcpu": 17
+        },
+        {
+          "host_cpus": [
+            18
+          ],
+          "name": "CPU 18/KVM",
+          "tid": 17850,
+          "vcpu": 18
+        },
+        {
+          "host_cpus": [
+            19
+          ],
+          "name": "CPU 19/KVM",
+          "tid": 17851,
+          "vcpu": 19
+        },
+        {
+          "host_cpus": [
+            20
+          ],
+          "name": "CPU 20/KVM",
+          "tid": 17852,
+          "vcpu": 20
+        },
+        {
+          "host_cpus": [
+            21
+          ],
+          "name": "CPU 21/KVM",
+          "tid": 17853,
+          "vcpu": 21
+        },
+        {
+          "host_cpus": [
+            22
+          ],
+          "name": "CPU 22/KVM",
+          "tid": 17854,
+          "vcpu": 22
+        },
+        {
+          "host_cpus": [
+            23
+          ],
+          "name": "CPU 23/KVM",
+          "tid": 17855,
+          "vcpu": 23
+        },
+        {
+          "host_cpus": [
+            24
+          ],
+          "name": "CPU 24/KVM",
+          "tid": 17856,
+          "vcpu": 24
+        },
+        {
+          "host_cpus": [
+            25
+          ],
+          "name": "CPU 25/KVM",
+          "tid": 17857,
+          "vcpu": 25
+        },
+        {
+          "host_cpus": [
+            26
+          ],
+          "name": "CPU 26/KVM",
+          "tid": 17858,
+          "vcpu": 26
+        },
+        {
+          "host_cpus": [
+            27
+          ],
+          "name": "CPU 27/KVM",
+          "tid": 17859,
+          "vcpu": 27
+        },
+        {
+          "host_cpus": [
+            28
+          ],
+          "name": "CPU 28/KVM",
+          "tid": 17860,
+          "vcpu": 28
+        },
+        {
+          "host_cpus": [
+            29
+          ],
+          "name": "CPU 29/KVM",
+          "tid": 17861,
+          "vcpu": 29
+        },
+        {
+          "host_cpus": [
+            30
+          ],
+          "name": "CPU 30/KVM",
+          "tid": 17862,
+          "vcpu": 30
+        },
+        {
+          "host_cpus": [
+            31
+          ],
+          "name": "CPU 31/KVM",
+          "tid": 17863,
+          "vcpu": 31
+        },
+        {
+          "host_cpus": [
+            32
+          ],
+          "name": "CPU 32/KVM",
+          "tid": 17864,
+          "vcpu": 32
+        },
+        {
+          "host_cpus": [
+            33
+          ],
+          "name": "CPU 33/KVM",
+          "tid": 17865,
+          "vcpu": 33
+        },
+        {
+          "host_cpus": [
+            34
+          ],
+          "name": "CPU 34/KVM",
+          "tid": 17866,
+          "vcpu": 34
+        },
+        {
+          "host_cpus": [
+            35
+          ],
+          "name": "CPU 35/KVM",
+          "tid": 17867,
+          "vcpu": 35
+        },
+        {
+          "host_cpus": [
+            36
+          ],
+          "name": "CPU 36/KVM",
+          "tid": 17868,
+          "vcpu": 36
+        },
+        {
+          "host_cpus": [
+            37
+          ],
+          "name": "CPU 37/KVM",
+          "tid": 17869,
+          "vcpu": 37
+        },
+        {
+          "host_cpus": [
+            38
+          ],
+          "name": "CPU 38/KVM",
+          "tid": 17870,
+          "vcpu": 38
+        },
+        {
+          "host_cpus": [
+            39
+          ],
+          "name": "CPU 39/KVM",
+          "tid": 17871,
+          "vcpu": 39
+        },
+        {
+          "host_cpus": [
+            40
+          ],
+          "name": "CPU 40/KVM",
+          "tid": 17872,
+          "vcpu": 40
+        },
+        {
+          "host_cpus": [
+            41
+          ],
+          "name": "CPU 41/KVM",
+          "tid": 17873,
+          "vcpu": 41
+        },
+        {
+          "host_cpus": [
+            42
+          ],
+          "name": "CPU 42/KVM",
+          "tid": 17874,
+          "vcpu": 42
+        },
+        {
+          "host_cpus": [
+            43
+          ],
+          "name": "CPU 43/KVM",
+          "tid": 17875,
+          "vcpu": 43
+        },
+        {
+          "host_cpus": [
+            44
+          ],
+          "name": "CPU 44/KVM",
+          "tid": 17876,
+          "vcpu": 44
+        },
+        {
+          "host_cpus": [
+            45
+          ],
+          "name": "CPU 45/KVM",
+          "tid": 17877,
+          "vcpu": 45
+        },
+        {
+          "host_cpus": [
+            46
+          ],
+          "name": "CPU 46/KVM",
+          "tid": 17878,
+          "vcpu": 46
+        },
+        {
+          "host_cpus": [
+            47
+          ],
+          "name": "CPU 47/KVM",
+          "tid": 17879,
+          "vcpu": 47
+        },
+        {
+          "host_cpus": [
+            48
+          ],
+          "name": "CPU 48/KVM",
+          "tid": 17880,
+          "vcpu": 48
+        },
+        {
+          "host_cpus": [
+            49
+          ],
+          "name": "CPU 49/KVM",
+          "tid": 17881,
+          "vcpu": 49
+        },
+        {
+          "host_cpus": [
+            50
+          ],
+          "name": "CPU 50/KVM",
+          "tid": 17882,
+          "vcpu": 50
+        },
+        {
+          "host_cpus": [
+            51
+          ],
+          "name": "CPU 51/KVM",
+          "tid": 17883,
+          "vcpu": 51
+        },
+        {
+          "host_cpus": [
+            52
+          ],
+          "name": "CPU 52/KVM",
+          "tid": 17884,
+          "vcpu": 52
+        },
+        {
+          "host_cpus": [
+            53
+          ],
+          "name": "CPU 53/KVM",
+          "tid": 17885,
+          "vcpu": 53
+        },
+        {
+          "host_cpus": [
+            54
+          ],
+          "name": "CPU 54/KVM",
+          "tid": 17886,
+          "vcpu": 54
+        },
+        {
+          "host_cpus": [
+            55
+          ],
+          "name": "CPU 55/KVM",
+          "tid": 17887,
+          "vcpu": 55
+        },
+        {
+          "host_cpus": [
+            56
+          ],
+          "name": "CPU 56/KVM",
+          "tid": 17888,
+          "vcpu": 56
+        },
+        {
+          "host_cpus": [
+            57
+          ],
+          "name": "CPU 57/KVM",
+          "tid": 17889,
+          "vcpu": 57
+        },
+        {
+          "host_cpus": [
+            58
+          ],
+          "name": "CPU 58/KVM",
+          "tid": 17890,
+          "vcpu": 58
+        },
+        {
+          "host_cpus": [
+            59
+          ],
+          "name": "CPU 59/KVM",
+          "tid": 17891,
+          "vcpu": 59
+        },
+        {
+          "host_cpus": [
+            60
+          ],
+          "name": "CPU 60/KVM",
+          "tid": 17892,
+          "vcpu": 60
+        },
+        {
+          "host_cpus": [
+            61
+          ],
+          "name": "CPU 61/KVM",
+          "tid": 17893,
+          "vcpu": 61
+        },
+        {
+          "host_cpus": [
+            62
+          ],
+          "name": "CPU 62/KVM",
+          "tid": 17894,
+          "vcpu": 62
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "CPU 63/KVM",
+          "tid": 17895,
+          "vcpu": 63
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "kvm-nx-lpage-re",
+          "tid": 17897,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "worker",
+          "tid": 22209,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "worker",
+          "tid": 22210,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "worker",
+          "tid": 22213,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "worker",
+          "tid": 22425,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "worker",
+          "tid": 22426,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "worker",
+          "tid": 22427,
+          "vcpu": null
+        },
+        {
+          "host_cpus": [
+            63
+          ],
+          "name": "worker",
+          "tid": 22428,
+          "vcpu": null
+        }
+      ],
+      "utc": "2026-10-10T08:34:30Z"
+    },
+    "performance-20261010T081816Z/kernel-identity.json": {
+      "build_files": 9,
+      "bundle_files": 7,
+      "config": true,
+      "ok": true,
+      "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+      "source_files": 20
+    },
+    "performance-20261010T081816Z/run-metadata.json": {
+      "backends": [
+        "native",
+        "tclock",
+        "kdlock"
+      ],
+      "collector_cpu": 63,
+      "duration_ms": 2000,
+      "frequency_policy_changed": false,
+      "guest_environment": "guest-environment.json",
+      "guest_path": "/root/kdlock-evidence/10.176.26.71/bench/performance-20261010T081816Z",
+      "guest_vcpu_to_host_cpu": "identity 0..63",
+      "host_environment": "host-environment.json and host-final-state.json",
+      "host_qemu_service_threads_cpu": 63,
+      "kernel_identity": "kernel-identity.json",
+      "measurement_sample_policy": "All144 measured sessions retained; no timing score filtered, no performance-driven reruns.",
+      "numa_cpus": {
+        "node0": "0-31",
+        "node1": "32-63"
+      },
+      "orchestration_note": "The original wrapper stopped after completed spin measurements because receipt JSON sorting mixed null/string labels. Only the unrun mutex set was resumed; no measured sample reran or changed.",
+      "peak_settle_ms": 300,
+      "peak_window_ms": 300,
+      "physical_host": "10.176.26.71",
+      "repeats": 3,
+      "run_id": "performance-20261010T081816Z",
+      "sample_ms": 10,
+      "sessions": 144,
+      "snapshot_tag": "perf64-20261010T081816Z",
+      "source_host": "380G10",
+      "source_identity": "source-state.json and source-sha256.json",
+      "targeted_fixture": {
+        "exit_code": 0,
+        "path": "validation/post-work-fixture.log",
+        "rounds": [
+          64,
+          4,
+          256
+        ],
+        "test": "test_spin_cacheline.CachelineTests.test_post_work_survives_unused_result_without_memory_or_calls"
+      },
+      "validation": "final-audit.json",
+      "vm_vcpus": 64,
+      "workloads": [
+        {
+          "post_work_rounds": 4,
+          "sessions": 72,
+          "suite": "rwlock-rcuht",
+          "threads": [
+            1,
+            16,
+            32,
+            56
+          ],
+          "write_percent": [
+            1,
+            20
+          ]
+        },
+        {
+          "cachelines": 1,
+          "post_work_rounds": 64,
+          "sessions": 36,
+          "suite": "spin-cacheline",
+          "threads": [
+            1,
+            16,
+            32,
+            36
+          ]
+        },
+        {
+          "cachelines": 1,
+          "post_work_rounds": 64,
+          "sessions": 36,
+          "suite": "mutex-cacheline",
+          "threads": [
+            1,
+            16,
+            32,
+            36
+          ]
+        }
+      ]
+    },
+    "performance-20261010T081816Z/source-state.json": {
+      "excluded_raw_evidence": [],
+      "files": 495,
+      "git_head": "9f09a09a57183c1ba8a84cb1760f918c695bbbbe",
+      "git_status": " M bench/spin_cacheline/post_work_fixture.c\n M bench/spin_cacheline/test_spin_cacheline.py\n M include/kd_mutex_direct.h\n M results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md\n M workload_modules/spin_cacheline/README.md\n M workload_modules/spin_cacheline/api.h\n M workload_modules/spin_cacheline/direct.h\n M workload_modules/spin_cacheline/post_work.h\n M workload_modules/spin_cacheline/scenario.h\n",
+      "omitted_missing_tracked_paths": [],
+      "snapshot_policy": "Regular tracked current bytes copied into a private local snapshot; hashes describe transferred bytes.",
+      "snapshot_utc": "2026-10-10T08:17:41.090994+00:00",
+      "source_host": "380G10",
+      "source_path": "/home/eric/vm/vm-shared/kdlock",
+      "target_host": "eric@10.176.26.71",
+      "transfer_bytes": 7331068
+    },
+    "performance-20261010T081816Z/validation.json": {
+      "all_complete": true,
+      "all_correct": true,
+      "all_drained": true,
+      "execution_status": {
+        "OK": 144
+      },
+      "jit_acceptance": {
+        "NOT_APPLICABLE": 96,
+        "NO_JIT": 30,
+        "PASS": 18
+      },
+      "new_kernel_faults": [],
+      "sessions": 144,
+      "snapshot": "perf64-20261010T081816Z"
+    }
+  },
+  "environments": {
+    "mutex-cacheline": {
+      "argv": [
+        "bench/tclock_compare/run_mutex.py",
+        "--backends",
+        "native",
+        "tclock",
+        "kdlock",
+        "--workload",
+        "cacheline",
+        "--cachelines",
+        "1",
+        "--threads",
+        "1",
+        "16",
+        "32",
+        "36",
+        "--collector-cpu",
+        "63",
+        "--repeats",
+        "3",
+        "--duration-ms",
+        "2000",
+        "--peak-window-ms",
+        "300",
+        "--peak-settle-ms",
+        "300",
+        "--keep-going-no-jit",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/performance-20261010T081816Z/mutex-cacheline"
+      ],
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+      "collector_topology": {
+        "allowed_cpus": [
+          63
+        ],
+        "online_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "role_cpus": [
+          63
+        ],
+        "role_nodes": [
+          1
+        ]
+      },
+      "kd_provider_ubsan": "off",
+      "kernel_identity": {
+        "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+        "build_files": 9,
+        "bundle_files": 7,
+        "config": true,
+        "ok": true,
+        "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+        "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+        "source_files": 20
+      },
+      "packages": {
+        "future": "1.0.0",
+        "miasm": "0.1.5",
+        "pyelftools": "0.27",
+        "pyparsing": "2.4.7"
+      },
+      "preemption": "none (voluntary) full \n",
+      "python": "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "runner_affinity": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ],
+      "snapshot_tag": "perf64-20261010T081816Z",
+      "topology": {
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "online_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "role_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35
+        ],
+        "role_nodes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "uname": [
+        "Linux",
+        "ubuntu",
+        "6.1.159-kdclobber2",
+        "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+        "x86_64"
+      ],
+      "watchdog": "1\n"
+    },
+    "rwlock-rcuht": {
+      "argv": [
+        "bench/rwlock_compare/run.py",
+        "--backends",
+        "native",
+        "tclock",
+        "kdlock",
+        "--workloads",
+        "rcuht",
+        "--write-percent",
+        "1",
+        "20",
+        "--threads",
+        "1",
+        "16",
+        "32",
+        "56",
+        "--collector-cpu",
+        "63",
+        "--repeats",
+        "3",
+        "--duration-ms",
+        "2000",
+        "--peak-window-ms",
+        "300",
+        "--peak-settle-ms",
+        "300",
+        "--post-work-rounds",
+        "4",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/performance-20261010T081816Z/rwlock-rcuht"
+      ],
+      "boot_policy": {
+        "boot_id": "2d4a10f9-9dac-4e6f-b07c-866bed24c2d6",
+        "functions": {
+          "__raw_callee_save___native_queued_spin_unlock": "0xffffffff810a2330",
+          "native_queued_spin_lock_slowpath": "0xffffffff81eecf40"
+        },
+        "method": "live_pv_ops_two_function_pointers",
+        "pv_lock_address": "0xffffffff83064e18"
+      },
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+      "kernel_identity": {
+        "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+        "build_files": 9,
+        "bundle_files": 7,
+        "config": true,
+        "ok": true,
+        "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+        "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+        "source_files": 20
+      },
+      "packages": {
+        "future": "1.0.0",
+        "miasm": "0.1.5",
+        "pyelftools": "0.27",
+        "pyparsing": "2.4.7"
+      },
+      "preemption": "none (voluntary) full \n",
+      "python": "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "snapshot_tag": "perf64-20261010T081816Z",
+      "topology": {
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "online_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "role_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          63
+        ],
+        "role_nodes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "uname": [
+        "Linux",
+        "ubuntu",
+        "6.1.159-kdclobber2",
+        "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+        "x86_64"
+      ]
+    },
+    "spin-cacheline": {
+      "argv": [
+        "bench/tclock_compare/run.py",
+        "--backends",
+        "native",
+        "tclock",
+        "kdlock",
+        "--workload",
+        "cacheline",
+        "--cachelines",
+        "1",
+        "--threads",
+        "1",
+        "16",
+        "32",
+        "36",
+        "--collector-cpu",
+        "63",
+        "--repeats",
+        "3",
+        "--duration-ms",
+        "2000",
+        "--peak-window-ms",
+        "300",
+        "--peak-settle-ms",
+        "300",
+        "--keep-going-no-jit",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/performance-20261010T081816Z/spin-cacheline"
+      ],
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+      "collector_topology": {
+        "allowed_cpus": [
+          63
+        ],
+        "online_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "role_cpus": [
+          63
+        ],
+        "role_nodes": [
+          1
+        ]
+      },
+      "kd_provider_ubsan": "off",
+      "kernel_identity": {
+        "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+        "build_files": 9,
+        "bundle_files": 7,
+        "config": true,
+        "ok": true,
+        "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+        "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+        "source_files": 20
+      },
+      "packages": {
+        "future": "1.0.0",
+        "miasm": "0.1.5",
+        "pyelftools": "0.27",
+        "pyparsing": "2.4.7"
+      },
+      "preemption": "none (voluntary) full \n",
+      "python": "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "runner_affinity": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ],
+      "snapshot_tag": "perf64-20261010T081816Z",
+      "topology": {
+        "allowed_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "online_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ],
+        "role_cpus": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35
+        ],
+        "role_nodes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "uname": [
+        "Linux",
+        "ubuntu",
+        "6.1.159-kdclobber2",
+        "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+        "x86_64"
+      ],
+      "watchdog": "1\n"
+    }
+  },
+  "excluded_sessions": 0,
+  "execution_status_counts": {
+    "OK": 144
+  },
+  "groups": 48,
+  "input": "/root/kdlock-evidence/10.176.26.71/reports/performance-20261010T081816Z/evidence.tar.gz",
+  "mixed_execution_groups": [],
+  "original_runner_parity": {
+    "performance-20261010T081816Z/rwlock-rcuht/parity.json": {
+      "criterion": "KD best warmed peak and median whole-run throughput >= both comparators",
+      "points": [
+        {
+          "cachelines": 0,
+          "kd_jit_status": "NO_JIT",
+          "ratios": {
+            "native": {
+              "best_peak": 1.0505897757862634,
+              "median_whole": 1.063570998259289
+            },
+            "tclock": {
+              "best_peak": 1.0662566180959971,
+              "median_whole": 1.0655542906000477
+            }
+          },
+          "status": "PASS",
+          "threads": 1,
+          "workload": "rcuht",
+          "write_percent": 1
+        },
+        {
+          "cachelines": 0,
+          "kd_jit_status": "NO_JIT",
+          "ratios": {
+            "native": {
+              "best_peak": 1.1647560718424792,
+              "median_whole": 1.1741868651474783
+            },
+            "tclock": {
+              "best_peak": 1.2779876793611644,
+              "median_whole": 1.2802688502587933
+            }
+          },
+          "status": "PASS",
+          "threads": 16,
+          "workload": "rcuht",
+          "write_percent": 1
+        },
+        {
+          "cachelines": 0,
+          "kd_jit_status": "PASS",
+          "ratios": {
+            "native": {
+              "best_peak": 1.049354361262921,
+              "median_whole": 1.0568411671344402
+            },
+            "tclock": {
+              "best_peak": 1.0666206250912909,
+              "median_whole": 1.068884971629974
+            }
+          },
+          "status": "PASS",
+          "threads": 32,
+          "workload": "rcuht",
+          "write_percent": 1
+        },
+        {
+          "cachelines": 0,
+          "kd_jit_status": "PASS",
+          "ratios": {
+            "native": {
+              "best_peak": 1.1651874817689094,
+              "median_whole": 1.162256594054252
+            },
+            "tclock": {
+              "best_peak": 1.0353393399729196,
+              "median_whole": 0.9927213408229062
+            }
+          },
+          "status": "FAIL",
+          "threads": 56,
+          "workload": "rcuht",
+          "write_percent": 1
+        },
+        {
+          "cachelines": 0,
+          "kd_jit_status": "NO_JIT",
+          "ratios": {
+            "native": {
+              "best_peak": 1.0346552564996836,
+              "median_whole": 1.0415564262297976
+            },
+            "tclock": {
+              "best_peak": 1.0463008092110557,
+              "median_whole": 1.0494654527817993
+            }
+          },
+          "status": "PASS",
+          "threads": 1,
+          "workload": "rcuht",
+          "write_percent": 20
+        },
+        {
+          "cachelines": 0,
+          "kd_jit_status": "PASS",
+          "ratios": {
+            "native": {
+              "best_peak": 1.2984139805561874,
+              "median_whole": 1.3003945081468662
+            },
+            "tclock": {
+              "best_peak": 1.7337653726784423,
+              "median_whole": 1.7082961305306748
+            }
+          },
+          "status": "PASS",
+          "threads": 16,
+          "workload": "rcuht",
+          "write_percent": 20
+        },
+        {
+          "cachelines": 0,
+          "kd_jit_status": "PASS",
+          "ratios": {
+            "native": {
+              "best_peak": 1.3682816556819013,
+              "median_whole": 1.397045734962465
+            },
+            "tclock": {
+              "best_peak": 1.738040379537906,
+              "median_whole": 1.7229906433434545
+            }
+          },
+          "status": "PASS",
+          "threads": 32,
+          "workload": "rcuht",
+          "write_percent": 20
+        },
+        {
+          "cachelines": 0,
+          "kd_jit_status": "PASS",
+          "ratios": {
+            "native": {
+              "best_peak": 1.2859671298579862,
+              "median_whole": 1.3078239915665237
+            },
+            "tclock": {
+              "best_peak": 1.282143213496346,
+              "median_whole": 1.2858028219370787
+            }
+          },
+          "status": "PASS",
+          "threads": 56,
+          "workload": "rcuht",
+          "write_percent": 20
+        }
+      ],
+      "status": "FAIL"
+    }
+  },
+  "plots_generated_in_guest": true,
+  "report_generator_sha256": "49a31969cbbd6cb6531e72f6423b44a3a0af44bdb080128e1a1fdd47b81198bc",
+  "reporting_environment": {
+    "kernel": "6.1.159-kdclobber2",
+    "packages": {
+      "matplotlib": "3.10.3",
+      "numpy": "2.2.6"
+    },
+    "python": "/root/kdlock-evidence/10.176.26.71/reports/performance-20261010T081816Z/venv/bin/python3",
+    "python_version": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]"
+  },
+  "sessions": 144,
+  "statistics_policy": "Three-repeat descriptive backend overview; status-separated aggregates retained; excluded samples never scored; spread=(max-min)/median*100"
+}

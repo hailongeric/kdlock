@@ -1,12 +1,37 @@
 # Performance status
 
 KD does not yet match both TCLock and Linux Native at every requested thread
-count. The spin/mutex optimization phase ended on **2026-10-09**, with those gaps
-still open. Its [report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+count. The current evidence is the
+[64-vCPU destination comparison](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md).
+The original-host spin/mutex optimization phase ended on **2026-10-09**, with
+those gaps still open. Its [report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 keeps the final comparison, rejected candidates and the source and binary identities
 used for each run.
 
-## RCUHT rwlocks, 2026-10-10
+## Current 64-vCPU destination, 2026-10-10
+
+The [current report](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+contains tables and scaling charts for 72 RCUHT rwlock, 36 spin/cacheline and
+36 mutex/cacheline sessions. All 144 passed correctness and drained. KD met
+the strict target of matching both alternatives on best warmed peak and median
+whole-run throughput at 10 of 16 selected configurations: seven of eight rwlock,
+three of four spin and none of four mutex configurations. Mutex remains the
+largest measured throughput gap.
+
+The run used the Ubuntu host at `10.176.26.71`, 64 pinned vCPUs with 32 per NUMA
+node, collector CPU 63 and the host's `ondemand` governor. It included the nine
+captured working-tree edits; spin/mutex used 64 post-work rounds and rwlock used
+four. Of 48 KD sessions, 33 returned JIT bodies and 15 were `NO_JIT`; the report
+keeps those execution types explicit. This bounded selection is not the full
+matrix and does not establish a performance gain over another physical host.
+
+The [initial migration receipt](../bench/README.md#vm-migration-validation) used
+60 vCPUs. The historical measurements below used the original 40-vCPU guest on
+`380G10`. Keep source identity, topology, workload and frequency policy separate
+when reproducing any report; the current environment is in
+[the project guide](PROJECT_GUIDE.md#guest-workflow).
+
+## Original-host RCUHT rwlocks, 2026-10-10
 
 The [rwlock comparison](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 ran 270 RCUHT sessions: 1% and 20% writes, fifteen thread counts, three backends
@@ -24,15 +49,7 @@ lines. Those changes improved the screened results but increased the lock to
 observed JIT bodies from NO_JIT runs. These results belong to the rwlock work,
 not the earlier spin/mutex phase.
 
-All recorded comparisons below and the RCUHT rwlock report used the original
-40-vCPU guest. The initial 60-vCPU destination has a separate
-[migration validation record](../bench/README.md#vm-migration-validation).
-Subsequent tests use the 64-vCPU destination VM with 32 cores per NUMA node;
-see [the current environment](PROJECT_GUIDE.md#guest-workflow).
-Preserve each report's placement, frequency policy and source identity when
-reproducing it; do not combine samples across those environments.
-
-## Completed spin/mutex measurements
+## Original-host spin/mutex measurements
 
 The final baseline contains 540 sessions: KD, TCLock and Native; spin and mutex;
 cacheline and hash; three rounds at 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24,

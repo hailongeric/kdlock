@@ -10,13 +10,18 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-The [spin/mutex phase](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+The latest [64-vCPU performance report](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+compares rwlock, spin and mutex on the new host, with tables, charts and
+three-round statistics. All 144 selected sessions passed correctness and
+drained; throughput gaps remain. [Performance status](PERFORMANCE.md) summarizes
+the outcome and separates this bounded run from historical measurements.
+
+On the original 40-vCPU host, the [spin/mutex phase](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 ended on 2026-10-09 with performance gaps remaining. The later
 [RCUHT rwlock comparison](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 completed 270 valid runs at 1%/20% writes. KD matched both alternatives on both
 throughput measures at 21 of the 30 combinations of write percentage and thread
-count. [Performance status](PERFORMANCE.md) explains the results;
-[benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md) links older evidence.
+count. [Benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md) links older evidence.
 
 ## Reading order
 
@@ -77,7 +82,9 @@ is available only on host loopback. The monitor and serial log remain
 `/tmp/qemu-monitor.sock` and `/tmp/qemu-serial.log`.
 
 The 64-vCPU boot, exact kernel identity, CPU placement and guest health were
-verified on 2026-10-10. The recorded 73-session migration validation used the
+verified on 2026-10-10, followed by the
+[144-session performance comparison](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+at the current topology. The recorded 73-session migration validation used the
 earlier 60-vCPU layout; it remains separate from the current topology and
 historical 40-vCPU measurements on the original host.
 The migration copy retains current disk contents without historical VM snapshots.

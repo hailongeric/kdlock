@@ -1,0 +1,1922 @@
+[
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 13902075.377948191,
+    "best_peak_session": "c01-t01-r02-direct-native",
+    "complete": true,
+    "delegation_status_counts": {
+      "NATIVE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 13902075.377948191,
+    "peak_median_ops_s": 13894403.940330794,
+    "peak_min_ops_s": 7690756.426930124,
+    "peak_spread_pct": 44.70374531856449,
+    "samples": [
+      "c01-t01-r00-direct-native",
+      "c01-t01-r01-direct-native",
+      "c01-t01-r02-direct-native"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 13864142.32962793,
+    "whole_median_ops_s": 13829035.99932092,
+    "whole_min_ops_s": 7680071.090958703,
+    "whole_spread_pct": 44.71802111855734,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 13962935.505619,
+    "best_peak_session": "c01-t01-r02-direct-tclock",
+    "complete": true,
+    "delegation_status_counts": {
+      "NO_DELEGATION_UNCONTENDED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 13962935.505619,
+    "peak_median_ops_s": 13956014.65185904,
+    "peak_min_ops_s": 13953770.881849792,
+    "peak_spread_pct": 0.06566791450013272,
+    "samples": [
+      "c01-t01-r00-direct-tclock",
+      "c01-t01-r01-direct-tclock",
+      "c01-t01-r02-direct-tclock"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 13913438.589572264,
+    "whole_median_ops_s": 13896247.582738692,
+    "whole_min_ops_s": 10135291.257242896,
+    "whole_spread_pct": 27.188255749144947,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "kdlock",
+    "best_peak_ops_s": 13895925.29396222,
+    "best_peak_session": "c01-t01-r02-direct-kdlock-adaptive",
+    "complete": true,
+    "delegation_status_counts": {
+      "NO_JIT": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NO_JIT",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NO_JIT": 3
+    },
+    "no_jit_rounds": 3,
+    "peak_max_ops_s": 13895925.29396222,
+    "peak_median_ops_s": 13895215.482946405,
+    "peak_min_ops_s": 11104330.096009266,
+    "peak_spread_pct": 20.090333981355514,
+    "samples": [
+      "c01-t01-r00-direct-kdlock-adaptive",
+      "c01-t01-r01-direct-kdlock-adaptive",
+      "c01-t01-r02-direct-kdlock-adaptive"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 13872616.491890552,
+    "whole_median_ops_s": 13850720.7484666,
+    "whole_min_ops_s": 11082788.970170371,
+    "whole_spread_pct": 20.142110814190225,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 9425584.135018656,
+    "best_peak_session": "c01-t16-r00-direct-native",
+    "complete": true,
+    "delegation_status_counts": {
+      "NATIVE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 9425584.135018656,
+    "peak_median_ops_s": 8809631.580654476,
+    "peak_min_ops_s": 8002080.726795795,
+    "peak_spread_pct": 16.158489662028604,
+    "samples": [
+      "c01-t16-r00-direct-native",
+      "c01-t16-r01-direct-native",
+      "c01-t16-r02-direct-native"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 8650038.147846337,
+    "whole_median_ops_s": 8448420.861511808,
+    "whole_min_ops_s": 7876623.626539423,
+    "whole_spread_pct": 9.154545375814944,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 3678001.020586705,
+    "best_peak_session": "c01-t16-r00-direct-tclock",
+    "complete": true,
+    "delegation_status_counts": {
+      "PASS": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 3678001.020586705,
+    "peak_median_ops_s": 3617679.211123904,
+    "peak_min_ops_s": 3503190.1101075187,
+    "peak_spread_pct": 4.8321285630208655,
+    "samples": [
+      "c01-t16-r00-direct-tclock",
+      "c01-t16-r01-direct-tclock",
+      "c01-t16-r02-direct-tclock"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 3649477.265844931,
+    "whole_median_ops_s": 3588259.5780166397,
+    "whole_min_ops_s": 3482883.5829213243,
+    "whole_spread_pct": 4.642743349568064,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 5571248.758645003,
+    "best_peak_session": "c01-t16-r01-direct-kdlock-adaptive",
+    "complete": true,
+    "delegation_status_counts": {
+      "JIT": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "PASS": 3
+    },
+    "jit_status_counts": {
+      "JIT": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 5571248.758645003,
+    "peak_median_ops_s": 5144527.904191754,
+    "peak_min_ops_s": 4850309.839846136,
+    "peak_spread_pct": 14.013704118728693,
+    "samples": [
+      "c01-t16-r00-direct-kdlock-adaptive",
+      "c01-t16-r01-direct-kdlock-adaptive",
+      "c01-t16-r02-direct-kdlock-adaptive"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5536800.085288749,
+    "whole_median_ops_s": 5082379.430470586,
+    "whole_min_ops_s": 4796783.73702315,
+    "whole_spread_pct": 14.560430963279735,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 7732874.549461038,
+    "best_peak_session": "c01-t32-r00-direct-native",
+    "complete": true,
+    "delegation_status_counts": {
+      "NATIVE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 7732874.549461038,
+    "peak_median_ops_s": 7695262.1675669765,
+    "peak_min_ops_s": 7685093.691362596,
+    "peak_spread_pct": 0.6209126740323739,
+    "samples": [
+      "c01-t32-r00-direct-native",
+      "c01-t32-r01-direct-native",
+      "c01-t32-r02-direct-native"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 7360362.981210526,
+    "whole_median_ops_s": 7320267.969548285,
+    "whole_min_ops_s": 7221154.431549307,
+    "whole_spread_pct": 1.9016865262353138,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 3553942.1075549996,
+    "best_peak_session": "c01-t32-r00-direct-tclock",
+    "complete": true,
+    "delegation_status_counts": {
+      "PASS": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 3553942.1075549996,
+    "peak_median_ops_s": 3493910.050422243,
+    "peak_min_ops_s": 3338082.5203936296,
+    "peak_spread_pct": 6.178166697087213,
+    "samples": [
+      "c01-t32-r00-direct-tclock",
+      "c01-t32-r01-direct-tclock",
+      "c01-t32-r02-direct-tclock"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 3534630.693139808,
+    "whole_median_ops_s": 3473532.6189976986,
+    "whole_min_ops_s": 3314363.817744095,
+    "whole_spread_pct": 6.341292843804409,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 5076132.555647008,
+    "best_peak_session": "c01-t32-r01-direct-kdlock-adaptive",
+    "complete": true,
+    "delegation_status_counts": {
+      "JIT": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "PASS": 3
+    },
+    "jit_status_counts": {
+      "JIT": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 5076132.555647008,
+    "peak_median_ops_s": 4754312.625778631,
+    "peak_min_ops_s": 4573843.11598507,
+    "peak_spread_pct": 10.56492240199867,
+    "samples": [
+      "c01-t32-r00-direct-kdlock-adaptive",
+      "c01-t32-r01-direct-kdlock-adaptive",
+      "c01-t32-r02-direct-kdlock-adaptive"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5037367.020646656,
+    "whole_median_ops_s": 4706348.216312674,
+    "whole_min_ops_s": 4543779.813897748,
+    "whole_spread_pct": 10.48768990441646,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 6883478.1632586885,
+    "best_peak_session": "c01-t36-r01-direct-native",
+    "complete": true,
+    "delegation_status_counts": {
+      "NATIVE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 6883478.1632586885,
+    "peak_median_ops_s": 6660771.419629039,
+    "peak_min_ops_s": 5925880.781294653,
+    "peak_spread_pct": 14.376673836036955,
+    "samples": [
+      "c01-t36-r00-direct-native",
+      "c01-t36-r01-direct-native",
+      "c01-t36-r02-direct-native"
+    ],
+    "sessions": 3,
+    "threads": 36,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 6541265.821611469,
+    "whole_median_ops_s": 5793958.043482464,
+    "whole_min_ops_s": 5642968.9816314215,
+    "whole_spread_pct": 15.504027354677305,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 3455853.2644703905,
+    "best_peak_session": "c01-t36-r01-direct-tclock",
+    "complete": true,
+    "delegation_status_counts": {
+      "PASS": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 3455853.2644703905,
+    "peak_median_ops_s": 3370543.6305890046,
+    "peak_min_ops_s": 3301645.562983373,
+    "peak_spread_pct": 4.57515814622668,
+    "samples": [
+      "c01-t36-r00-direct-tclock",
+      "c01-t36-r01-direct-tclock",
+      "c01-t36-r02-direct-tclock"
+    ],
+    "sessions": 3,
+    "threads": 36,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 3441628.5061869444,
+    "whole_median_ops_s": 3359135.7096913904,
+    "whole_min_ops_s": 3279543.9046941423,
+    "whole_spread_pct": 4.8251876524420965,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 1626854.04333473,
+    "best_peak_session": "c01-t36-r00-direct-kdlock-adaptive",
+    "complete": true,
+    "delegation_status_counts": {
+      "JIT": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "mutex-cacheline",
+    "jit_acceptance_counts": {
+      "PASS": 3
+    },
+    "jit_status_counts": {
+      "JIT": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 1626854.04333473,
+    "peak_median_ops_s": 1466878.166402292,
+    "peak_min_ops_s": 1445893.374898467,
+    "peak_spread_pct": 12.336448423667822,
+    "samples": [
+      "c01-t36-r00-direct-kdlock-adaptive",
+      "c01-t36-r01-direct-kdlock-adaptive",
+      "c01-t36-r02-direct-kdlock-adaptive"
+    ],
+    "sessions": 3,
+    "threads": 36,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 1599536.0740032925,
+    "whole_median_ops_s": 1443576.8532564384,
+    "whole_min_ops_s": 1419150.1571920072,
+    "whole_spread_pct": 12.495761233935593,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 35961028.10505908,
+    "best_peak_session": "rcuht-c00-native-w001-t01-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 35961028.10505908,
+    "peak_median_ops_s": 35404378.067635335,
+    "peak_min_ops_s": 19617958.607430562,
+    "peak_spread_pct": 46.16115404260814,
+    "samples": [
+      "rcuht-c00-native-w001-t01-r00",
+      "rcuht-c00-native-w001-t01-r01",
+      "rcuht-c00-native-w001-t01-r02"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 35546817.454401895,
+    "whole_median_ops_s": 35205342.8728865,
+    "whole_min_ops_s": 19513429.498541594,
+    "whole_spread_pct": 45.54248488290811,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 35432641.460553266,
+    "best_peak_session": "rcuht-c00-tclock-w001-t01-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 35432641.460553266,
+    "peak_median_ops_s": 35407184.42074286,
+    "peak_min_ops_s": 35363308.46589381,
+    "peak_spread_pct": 0.1958161762753317,
+    "samples": [
+      "rcuht-c00-tclock-w001-t01-r00",
+      "rcuht-c00-tclock-w001-t01-r01",
+      "rcuht-c00-tclock-w001-t01-r02"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 35307920.76561707,
+    "whole_median_ops_s": 35139815.956529886,
+    "whole_min_ops_s": 24656195.185070485,
+    "whole_spread_pct": 30.312411407400162,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "kdlock",
+    "best_peak_ops_s": 37780288.45393754,
+    "best_peak_session": "rcuht-c00-kdlock-w001-t01-r00",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NO_JIT",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NO_JIT": 3
+    },
+    "no_jit_rounds": 3,
+    "peak_max_ops_s": 37780288.45393754,
+    "peak_median_ops_s": 37743913.30385586,
+    "peak_min_ops_s": 37728288.797294036,
+    "peak_spread_pct": 0.13776964837980965,
+    "samples": [
+      "rcuht-c00-kdlock-w001-t01-r00",
+      "rcuht-c00-kdlock-w001-t01-r01",
+      "rcuht-c00-kdlock-w001-t01-r02"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 37604659.506853335,
+    "whole_median_ops_s": 37443381.663376436,
+    "whole_min_ops_s": 37413078.76928664,
+    "whole_spread_pct": 0.5116544741846347,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 17547907.571913917,
+    "best_peak_session": "rcuht-c00-native-w001-t16-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 17547907.571913917,
+    "peak_median_ops_s": 17295686.20151332,
+    "peak_min_ops_s": 17242297.532466415,
+    "peak_spread_pct": 1.7669726189919042,
+    "samples": [
+      "rcuht-c00-native-w001-t16-r00",
+      "rcuht-c00-native-w001-t16-r01",
+      "rcuht-c00-native-w001-t16-r02"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 17383783.7996144,
+    "whole_median_ops_s": 17079391.906355683,
+    "whole_min_ops_s": 15066278.185197467,
+    "whole_spread_pct": 13.569017135525353,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 15993136.884335484,
+    "best_peak_session": "rcuht-c00-tclock-w001-t16-r02",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 15993136.884335484,
+    "peak_median_ops_s": 15843699.57447082,
+    "peak_min_ops_s": 15277190.714344518,
+    "peak_spread_pct": 4.518806776319972,
+    "samples": [
+      "rcuht-c00-tclock-w001-t16-r00",
+      "rcuht-c00-tclock-w001-t16-r01",
+      "rcuht-c00-tclock-w001-t16-r02"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 15865117.918135667,
+    "whole_median_ops_s": 15664208.058405232,
+    "whole_min_ops_s": 15148101.380905034,
+    "whole_spread_pct": 4.577419647116411,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "kdlock",
+    "best_peak_ops_s": 20439031.89251735,
+    "best_peak_session": "rcuht-c00-kdlock-w001-t16-r00",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NO_JIT",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NO_JIT": 3
+    },
+    "no_jit_rounds": 3,
+    "peak_max_ops_s": 20439031.89251735,
+    "peak_median_ops_s": 20276132.65909596,
+    "peak_min_ops_s": 18562687.71787044,
+    "peak_spread_pct": 9.253954914351846,
+    "samples": [
+      "rcuht-c00-kdlock-w001-t16-r00",
+      "rcuht-c00-kdlock-w001-t16-r01",
+      "rcuht-c00-kdlock-w001-t16-r02"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 20174997.788538933,
+    "whole_median_ops_s": 20054397.641148992,
+    "whole_min_ops_s": 18332350.388108596,
+    "whole_spread_pct": 9.188246056563004,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 15399728.590958443,
+    "best_peak_session": "rcuht-c00-native-w001-t32-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 15399728.590958443,
+    "peak_median_ops_s": 15282291.548535148,
+    "peak_min_ops_s": 15123340.33142306,
+    "peak_spread_pct": 1.8085524586257227,
+    "samples": [
+      "rcuht-c00-native-w001-t32-r00",
+      "rcuht-c00-native-w001-t32-r01",
+      "rcuht-c00-native-w001-t32-r02"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 15266592.421600517,
+    "whole_median_ops_s": 15157099.030613521,
+    "whole_min_ops_s": 14443371.165771108,
+    "whole_spread_pct": 5.431258674016111,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 15150440.540004035,
+    "best_peak_session": "rcuht-c00-tclock-w001-t32-r00",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 15150440.540004035,
+    "peak_median_ops_s": 15127070.007119585,
+    "peak_min_ops_s": 15072724.318896776,
+    "peak_spread_pct": 0.513755942629221,
+    "samples": [
+      "rcuht-c00-tclock-w001-t32-r00",
+      "rcuht-c00-tclock-w001-t32-r01",
+      "rcuht-c00-tclock-w001-t32-r02"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 14989066.85340273,
+    "whole_median_ops_s": 14986314.388402885,
+    "whole_min_ops_s": 14927355.98933375,
+    "whole_spread_pct": 0.41178145920076364,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 16159772.359187538,
+    "best_peak_session": "rcuht-c00-kdlock-w001-t32-r00",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "PASS": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 16159772.359187538,
+    "peak_median_ops_s": 16154755.074483823,
+    "peak_min_ops_s": 15736244.203757085,
+    "peak_spread_pct": 2.621693448633021,
+    "samples": [
+      "rcuht-c00-kdlock-w001-t32-r00",
+      "rcuht-c00-kdlock-w001-t32-r01",
+      "rcuht-c00-kdlock-w001-t32-r02"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 16018696.105421394,
+    "whole_median_ops_s": 16018646.229885887,
+    "whole_min_ops_s": 15595067.010160498,
+    "whole_spread_pct": 2.6445998568251894,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 13300001.064329151,
+    "best_peak_session": "rcuht-c00-native-w001-t56-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 13300001.064329151,
+    "peak_median_ops_s": 13158466.634712886,
+    "peak_min_ops_s": 12794799.008922273,
+    "peak_spread_pct": 3.839368745854643,
+    "samples": [
+      "rcuht-c00-native-w001-t56-r00",
+      "rcuht-c00-native-w001-t56-r01",
+      "rcuht-c00-native-w001-t56-r02"
+    ],
+    "sessions": 3,
+    "threads": 56,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 13119667.153512072,
+    "whole_median_ops_s": 12618092.960564,
+    "whole_min_ops_s": 12580553.895394016,
+    "whole_spread_pct": 4.272541498964822,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 14968034.29499244,
+    "best_peak_session": "rcuht-c00-tclock-w001-t56-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 14968034.29499244,
+    "peak_median_ops_s": 14945885.33127607,
+    "peak_min_ops_s": 14833342.033244595,
+    "peak_spread_pct": 0.9011996195767987,
+    "samples": [
+      "rcuht-c00-tclock-w001-t56-r00",
+      "rcuht-c00-tclock-w001-t56-r01",
+      "rcuht-c00-tclock-w001-t56-r02"
+    ],
+    "sessions": 3,
+    "threads": 56,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 14820623.483509634,
+    "whole_median_ops_s": 14772989.301960874,
+    "whole_min_ops_s": 14655481.965330223,
+    "whole_spread_pct": 1.1178612182267755,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 15496994.747669498,
+    "best_peak_session": "rcuht-c00-kdlock-w001-t56-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "PASS": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 15496994.747669498,
+    "peak_median_ops_s": 14822287.548245134,
+    "peak_min_ops_s": 14331759.00758398,
+    "peak_spread_pct": 7.861375892842362,
+    "samples": [
+      "rcuht-c00-kdlock-w001-t56-r00",
+      "rcuht-c00-kdlock-w001-t56-r01",
+      "rcuht-c00-kdlock-w001-t56-r02"
+    ],
+    "sessions": 3,
+    "threads": 56,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 14712491.370210746,
+    "whole_median_ops_s": 14665461.747805048,
+    "whole_min_ops_s": 14176249.033205759,
+    "whole_spread_pct": 3.6564981466420305,
+    "write_percent": 1
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 31864503.541468892,
+    "best_peak_session": "rcuht-c00-native-w020-t01-r02",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 31864503.541468892,
+    "peak_median_ops_s": 31565725.999907825,
+    "peak_min_ops_s": 27139345.213576846,
+    "peak_spread_pct": 14.96926865520484,
+    "samples": [
+      "rcuht-c00-native-w020-t01-r00",
+      "rcuht-c00-native-w020-t01-r01",
+      "rcuht-c00-native-w020-t01-r02"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 31610274.846508965,
+    "whole_median_ops_s": 31341023.114724964,
+    "whole_min_ops_s": 26915993.632938936,
+    "whole_spread_pct": 14.978072656997954,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 31509844.77379224,
+    "best_peak_session": "rcuht-c00-tclock-w020-t01-r00",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 31509844.77379224,
+    "peak_median_ops_s": 31315427.070957117,
+    "peak_min_ops_s": 31293263.193062957,
+    "peak_spread_pct": 0.691613051415632,
+    "samples": [
+      "rcuht-c00-tclock-w020-t01-r00",
+      "rcuht-c00-tclock-w020-t01-r01",
+      "rcuht-c00-tclock-w020-t01-r02"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 31348204.858768024,
+    "whole_median_ops_s": 31104829.552255407,
+    "whole_min_ops_s": 31083586.651923813,
+    "whole_spread_pct": 0.8507302906118102,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "kdlock",
+    "best_peak_ops_s": 32968776.084933575,
+    "best_peak_session": "rcuht-c00-kdlock-w020-t01-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NO_JIT",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NO_JIT": 3
+    },
+    "no_jit_rounds": 3,
+    "peak_max_ops_s": 32968776.084933575,
+    "peak_median_ops_s": 32962921.88932999,
+    "peak_min_ops_s": 32923222.675850417,
+    "peak_spread_pct": 0.13819590762038392,
+    "samples": [
+      "rcuht-c00-kdlock-w020-t01-r00",
+      "rcuht-c00-kdlock-w020-t01-r01",
+      "rcuht-c00-kdlock-w020-t01-r02"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 32658500.001937177,
+    "whole_median_ops_s": 32643444.029758412,
+    "whole_min_ops_s": 32593898.896819647,
+    "whole_spread_pct": 0.1978991709901626,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 8744099.525652055,
+    "best_peak_session": "rcuht-c00-native-w020-t16-r02",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 8744099.525652055,
+    "peak_median_ops_s": 8659574.305107368,
+    "peak_min_ops_s": 8485722.197905684,
+    "peak_spread_pct": 2.9837185829559925,
+    "samples": [
+      "rcuht-c00-native-w020-t16-r00",
+      "rcuht-c00-native-w020-t16-r01",
+      "rcuht-c00-native-w020-t16-r02"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 8614404.367938738,
+    "whole_median_ops_s": 8375580.850365152,
+    "whole_min_ops_s": 7694274.816532425,
+    "whole_spread_pct": 10.985859582099295,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 6548441.473335998,
+    "best_peak_session": "rcuht-c00-tclock-w020-t16-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 6548441.473335998,
+    "peak_median_ops_s": 6438267.843822059,
+    "peak_min_ops_s": 6022728.45604131,
+    "peak_spread_pct": 8.165441855593881,
+    "samples": [
+      "rcuht-c00-tclock-w020-t16-r00",
+      "rcuht-c00-tclock-w020-t16-r01",
+      "rcuht-c00-tclock-w020-t16-r02"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 6462757.608774929,
+    "whole_median_ops_s": 6375685.775844664,
+    "whole_min_ops_s": 5984102.558695977,
+    "whole_spread_pct": 7.5075069083927595,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 11353461.071481355,
+    "best_peak_session": "rcuht-c00-kdlock-w020-t16-r02",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "PASS": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 11353461.071481355,
+    "peak_median_ops_s": 11005396.675421754,
+    "peak_min_ops_s": 10996791.713537287,
+    "peak_spread_pct": 3.2408587210728514,
+    "samples": [
+      "rcuht-c00-kdlock-w020-t16-r00",
+      "rcuht-c00-kdlock-w020-t16-r01",
+      "rcuht-c00-kdlock-w020-t16-r02"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 11216978.537003081,
+    "whole_median_ops_s": 10891559.340354903,
+    "whole_min_ops_s": 10862273.274440084,
+    "whole_spread_pct": 3.256698618431615,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 7075685.632125126,
+    "best_peak_session": "rcuht-c00-native-w020-t32-r00",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 7075685.632125126,
+    "peak_median_ops_s": 6913694.959476535,
+    "peak_min_ops_s": 6882272.832301487,
+    "peak_spread_pct": 2.797531579817966,
+    "samples": [
+      "rcuht-c00-native-w020-t32-r00",
+      "rcuht-c00-native-w020-t32-r01",
+      "rcuht-c00-native-w020-t32-r02"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 6821889.01504656,
+    "whole_median_ops_s": 6745305.355597452,
+    "whole_min_ops_s": 6721522.729432196,
+    "whole_spread_pct": 1.4879428035244833,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 5570371.647166704,
+    "best_peak_session": "rcuht-c00-tclock-w020-t32-r02",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 5570371.647166704,
+    "peak_median_ops_s": 5530429.663094375,
+    "peak_min_ops_s": 5518195.937053451,
+    "peak_spread_pct": 0.9434295939324768,
+    "samples": [
+      "rcuht-c00-tclock-w020-t32-r00",
+      "rcuht-c00-tclock-w020-t32-r01",
+      "rcuht-c00-tclock-w020-t32-r02"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5499035.062362913,
+    "whole_median_ops_s": 5469269.444070016,
+    "whole_min_ops_s": 5456032.191847302,
+    "whole_spread_pct": 0.7862635212137212,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 9681530.851808809,
+    "best_peak_session": "rcuht-c00-kdlock-w020-t32-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "PASS": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 9681530.851808809,
+    "peak_median_ops_s": 9547013.965823898,
+    "peak_min_ops_s": 9201393.774252696,
+    "peak_spread_pct": 5.029185871885099,
+    "samples": [
+      "rcuht-c00-kdlock-w020-t32-r00",
+      "rcuht-c00-kdlock-w020-t32-r01",
+      "rcuht-c00-kdlock-w020-t32-r02"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 9427475.932963079,
+    "whole_median_ops_s": 9423500.078056894,
+    "whole_min_ops_s": 9066142.636869432,
+    "whole_spread_pct": 3.8343852400980993,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 5087419.116701842,
+    "best_peak_session": "rcuht-c00-native-w020-t56-r01",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 5087419.116701842,
+    "peak_median_ops_s": 5049856.086811279,
+    "peak_min_ops_s": 4835119.717616467,
+    "peak_spread_pct": 4.9961700838229115,
+    "samples": [
+      "rcuht-c00-native-w020-t56-r00",
+      "rcuht-c00-native-w020-t56-r01",
+      "rcuht-c00-native-w020-t56-r02"
+    ],
+    "sessions": 3,
+    "threads": 56,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5025932.132519439,
+    "whole_median_ops_s": 4910235.579033516,
+    "whole_min_ops_s": 4764055.618456605,
+    "whole_spread_pct": 5.333278003626441,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 5102592.043559075,
+    "best_peak_session": "rcuht-c00-tclock-w020-t56-r02",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 5102592.043559075,
+    "peak_median_ops_s": 5042222.375885101,
+    "peak_min_ops_s": 5010673.286890038,
+    "peak_spread_pct": 1.8229810154476145,
+    "samples": [
+      "rcuht-c00-tclock-w020-t56-r00",
+      "rcuht-c00-tclock-w020-t56-r01",
+      "rcuht-c00-tclock-w020-t56-r02"
+    ],
+    "sessions": 3,
+    "threads": 56,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5022196.513889622,
+    "whole_median_ops_s": 4994330.223065744,
+    "whole_min_ops_s": 4950268.26016311,
+    "whole_spread_pct": 1.4401981950316334,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 6542253.75988972,
+    "best_peak_session": "rcuht-c00-kdlock-w020-t56-r00",
+    "complete": true,
+    "delegation_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "rwlock-rcuht",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "PASS": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 6542253.75988972,
+    "peak_median_ops_s": 6508338.600499669,
+    "peak_min_ops_s": 6505700.958192116,
+    "peak_spread_pct": 0.5616303013920951,
+    "samples": [
+      "rcuht-c00-kdlock-w020-t56-r00",
+      "rcuht-c00-kdlock-w020-t56-r01",
+      "rcuht-c00-kdlock-w020-t56-r02"
+    ],
+    "sessions": 3,
+    "threads": 56,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 6437656.426021493,
+    "whole_median_ops_s": 6421723.894503574,
+    "whole_min_ops_s": 6419020.380773761,
+    "whole_spread_pct": 0.2902031534504704,
+    "write_percent": 20
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 13949404.38252081,
+    "best_peak_session": "c01-t01-r02-direct-native",
+    "complete": true,
+    "delegation_status_counts": {
+      "NATIVE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 13949404.38252081,
+    "peak_median_ops_s": 13944144.111588715,
+    "peak_min_ops_s": 7707587.403331807,
+    "peak_spread_pct": 44.762998210851435,
+    "samples": [
+      "c01-t01-r00-direct-native",
+      "c01-t01-r01-direct-native",
+      "c01-t01-r02-direct-native"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 13902708.067261957,
+    "whole_median_ops_s": 13896762.03527276,
+    "whole_min_ops_s": 7689691.04449087,
+    "whole_spread_pct": 44.7083788799233,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 14130945.454569211,
+    "best_peak_session": "c01-t01-r02-direct-tclock",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 14130945.454569211,
+    "peak_median_ops_s": 13930624.13182765,
+    "peak_min_ops_s": 13915593.31065508,
+    "peak_spread_pct": 1.5458901329633246,
+    "samples": [
+      "c01-t01-r00-direct-tclock",
+      "c01-t01-r01-direct-tclock",
+      "c01-t01-r02-direct-tclock"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 14057268.995681284,
+    "whole_median_ops_s": 13875363.977655325,
+    "whole_min_ops_s": 9692150.038331317,
+    "whole_spread_pct": 31.459491544722635,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "kdlock",
+    "best_peak_ops_s": 14062404.727539625,
+    "best_peak_session": "c01-t01-r02-direct-kdlock-adaptive",
+    "complete": true,
+    "delegation_status_counts": {
+      "NO_JIT": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NO_JIT",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NO_JIT": 3
+    },
+    "no_jit_rounds": 3,
+    "peak_max_ops_s": 14062404.727539625,
+    "peak_median_ops_s": 13953076.499221707,
+    "peak_min_ops_s": 13948068.216971042,
+    "peak_spread_pct": 0.8194358468181623,
+    "samples": [
+      "c01-t01-r00-direct-kdlock-adaptive",
+      "c01-t01-r01-direct-kdlock-adaptive",
+      "c01-t01-r02-direct-kdlock-adaptive"
+    ],
+    "sessions": 3,
+    "threads": 1,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 14023609.101183834,
+    "whole_median_ops_s": 13913844.046374746,
+    "whole_min_ops_s": 13906503.1475355,
+    "whole_spread_pct": 0.8416506125699055,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 7482014.495923087,
+    "best_peak_session": "c01-t16-r02-direct-native",
+    "complete": true,
+    "delegation_status_counts": {
+      "NATIVE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 7482014.495923087,
+    "peak_median_ops_s": 7331387.164652796,
+    "peak_min_ops_s": 5966472.001464338,
+    "peak_spread_pct": 20.671974626653384,
+    "samples": [
+      "c01-t16-r00-direct-native",
+      "c01-t16-r01-direct-native",
+      "c01-t16-r02-direct-native"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 7407171.995168131,
+    "whole_median_ops_s": 7244408.67074461,
+    "whole_min_ops_s": 5601866.515040224,
+    "whole_spread_pct": 24.919983979069887,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 5819497.313920605,
+    "best_peak_session": "c01-t16-r00-direct-tclock",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 5819497.313920605,
+    "peak_median_ops_s": 5818688.759096118,
+    "peak_min_ops_s": 5287204.828139131,
+    "peak_spread_pct": 9.14798003157263,
+    "samples": [
+      "c01-t16-r00-direct-tclock",
+      "c01-t16-r01-direct-tclock",
+      "c01-t16-r02-direct-tclock"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5718909.755303542,
+    "whole_median_ops_s": 5704684.79226667,
+    "whole_min_ops_s": 5212950.908517705,
+    "whole_spread_pct": 8.869181474701634,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 10567923.593809213,
+    "best_peak_session": "c01-t16-r00-direct-kdlock-adaptive",
+    "complete": true,
+    "delegation_status_counts": {
+      "JIT": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "PASS": 3
+    },
+    "jit_status_counts": {
+      "JIT": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 10567923.593809213,
+    "peak_median_ops_s": 10482495.296723137,
+    "peak_min_ops_s": 9762784.381774276,
+    "peak_spread_pct": 7.680797264813715,
+    "samples": [
+      "c01-t16-r00-direct-kdlock-adaptive",
+      "c01-t16-r01-direct-kdlock-adaptive",
+      "c01-t16-r02-direct-kdlock-adaptive"
+    ],
+    "sessions": 3,
+    "threads": 16,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 10532955.25618739,
+    "whole_median_ops_s": 10203824.754412044,
+    "whole_min_ops_s": 9739258.079721607,
+    "whole_spread_pct": 7.778428144040749,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 7292730.367803114,
+    "best_peak_session": "c01-t32-r00-direct-native",
+    "complete": true,
+    "delegation_status_counts": {
+      "NATIVE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 7292730.367803114,
+    "peak_median_ops_s": 7135212.59481156,
+    "peak_min_ops_s": 6237118.27967299,
+    "peak_spread_pct": 14.79440274698644,
+    "samples": [
+      "c01-t32-r00-direct-native",
+      "c01-t32-r01-direct-native",
+      "c01-t32-r02-direct-native"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 7054294.74221001,
+    "whole_median_ops_s": 6966610.915944246,
+    "whole_min_ops_s": 6149953.333962068,
+    "whole_spread_pct": 12.981081032933913,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 5225735.278267394,
+    "best_peak_session": "c01-t32-r00-direct-tclock",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 5225735.278267394,
+    "peak_median_ops_s": 5202426.071393068,
+    "peak_min_ops_s": 5171987.011219893,
+    "peak_spread_pct": 1.0331385071101808,
+    "samples": [
+      "c01-t32-r00-direct-tclock",
+      "c01-t32-r01-direct-tclock",
+      "c01-t32-r02-direct-tclock"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5115343.61854607,
+    "whole_median_ops_s": 5109412.94479918,
+    "whole_min_ops_s": 5081890.831439683,
+    "whole_spread_pct": 0.6547285856085999,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 9887307.826160507,
+    "best_peak_session": "c01-t32-r00-direct-kdlock-adaptive",
+    "complete": true,
+    "delegation_status_counts": {
+      "JIT": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "PASS": 3
+    },
+    "jit_status_counts": {
+      "JIT": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 9887307.826160507,
+    "peak_median_ops_s": 9849296.389844,
+    "peak_min_ops_s": 9769806.500336355,
+    "peak_spread_pct": 1.192992079569389,
+    "samples": [
+      "c01-t32-r00-direct-kdlock-adaptive",
+      "c01-t32-r01-direct-kdlock-adaptive",
+      "c01-t32-r02-direct-kdlock-adaptive"
+    ],
+    "sessions": 3,
+    "threads": 32,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 9745099.297602098,
+    "whole_median_ops_s": 9027018.184214445,
+    "whole_min_ops_s": 8913086.86443241,
+    "whole_spread_pct": 9.216913228607758,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "native",
+    "best_peak_ops_s": 5775337.1489160145,
+    "best_peak_session": "c01-t36-r00-direct-native",
+    "complete": true,
+    "delegation_status_counts": {
+      "NATIVE": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "NO_JIT": 3
+    },
+    "jit_status_counts": {
+      "NATIVE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 5775337.1489160145,
+    "peak_median_ops_s": 5528685.1139723975,
+    "peak_min_ops_s": 4700128.368136083,
+    "peak_spread_pct": 19.447820930560955,
+    "samples": [
+      "c01-t36-r00-direct-native",
+      "c01-t36-r01-direct-native",
+      "c01-t36-r02-direct-native"
+    ],
+    "sessions": 3,
+    "threads": 36,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5283835.544385492,
+    "whole_median_ops_s": 5135685.073112623,
+    "whole_min_ops_s": 4452691.103584608,
+    "whole_spread_pct": 16.183711208311024,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 0,
+    "arm": "tclock",
+    "best_peak_ops_s": 4905979.18890993,
+    "best_peak_session": "c01-t36-r02-direct-tclock",
+    "complete": true,
+    "delegation_status_counts": {
+      "UNMEASURED": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "NATIVE_IMPLEMENTATION",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "UNRECORDED": 3
+    },
+    "jit_status_counts": {
+      "NOT_APPLICABLE": 3
+    },
+    "no_jit_rounds": null,
+    "peak_max_ops_s": 4905979.18890993,
+    "peak_median_ops_s": 4877630.60357472,
+    "peak_min_ops_s": 4809897.584720831,
+    "peak_spread_pct": 1.9698417530569552,
+    "samples": [
+      "c01-t36-r00-direct-tclock",
+      "c01-t36-r01-direct-tclock",
+      "c01-t36-r02-direct-tclock"
+    ],
+    "sessions": 3,
+    "threads": 36,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 4819856.741406706,
+    "whole_median_ops_s": 4802318.44209042,
+    "whole_min_ops_s": 4762513.75468524,
+    "whole_spread_pct": 1.1940688109909106,
+    "write_percent": null
+  },
+  {
+    "actual_jit_rounds": 3,
+    "arm": "kdlock",
+    "best_peak_ops_s": 5957969.242194453,
+    "best_peak_session": "c01-t36-r02-direct-kdlock-adaptive",
+    "complete": true,
+    "delegation_status_counts": {
+      "JIT": 3
+    },
+    "execution_status_counts": {
+      "OK": 3
+    },
+    "execution_type": "ACTUAL_JIT",
+    "expected_rounds": 3,
+    "family": "spin-cacheline",
+    "jit_acceptance_counts": {
+      "PASS": 3
+    },
+    "jit_status_counts": {
+      "JIT": 3
+    },
+    "no_jit_rounds": 0,
+    "peak_max_ops_s": 5957969.242194453,
+    "peak_median_ops_s": 5555540.608402591,
+    "peak_min_ops_s": 5430492.870685095,
+    "peak_spread_pct": 9.49460023227201,
+    "samples": [
+      "c01-t36-r00-direct-kdlock-adaptive",
+      "c01-t36-r01-direct-kdlock-adaptive",
+      "c01-t36-r02-direct-kdlock-adaptive"
+    ],
+    "sessions": 3,
+    "threads": 36,
+    "valid_rounds": 3,
+    "whole_max_ops_s": 5950910.167279293,
+    "whole_median_ops_s": 5475540.98045761,
+    "whole_min_ops_s": 5405827.100917955,
+    "whole_spread_pct": 9.954871460313376,
+    "write_percent": null
+  }
+]

@@ -14,9 +14,8 @@ source snapshots and offline reports. The kernel code being measured lives under
 ## Results
 
 Reports and raw archives are separated by the physical host that ran them;
-see [the results index](../results/README.md). Historical reports below belong to
-`results/380G10/bench/`. All new tests and benchmarks run in the 64-vCPU VM on
-`10.176.26.71`, with 32 cores per NUMA node, after source edits on `380G10` are
+see [the results index](../results/README.md). All new tests and benchmarks run
+in the 64-vCPU VM on `10.176.26.71`, with 32 cores per NUMA node, after source edits on `380G10` are
 synchronized using `python3 tools/vm/sync_to_vm.py`. Use collector CPU 63 and
 exclude it from worker cohorts.
 
@@ -25,14 +24,24 @@ Live benchmark output goes outside the guest checkout to
 `results/10.176.26.71/raw/bench/<run>/`, and compact published reports in
 `results/10.176.26.71/bench/<runner>/<run>/`.
 
-All 270 RCUHT rwlock runs produced correct results and shut down cleanly. KD
-matched or exceeded both comparators on peak and whole-run throughput at 21 of
+The [current 64-vCPU comparison](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+contains 72 rwlock, 36 spin and 36 mutex sessions, with three rounds per backend
+and configuration. All 144 passed correctness and drained; KD met the strict
+target for peak and whole-run throughput at 10 of 16 selected configurations.
+The report provides tables, scaling charts, round variation and separate
+JIT/NO_JIT evidence. It uses current working-tree source and `ondemand` host
+frequency policy; it is a bounded comparison, not the full matrix or a measured
+gain over the original host.
+
+On the original 40-vCPU host, all 270 RCUHT rwlock runs produced correct results
+and shut down cleanly. KD matched or exceeded both comparators on peak and whole-run throughput at 21 of
 the 30 combinations of write percentage and thread count. The separate
 spin/mutex optimization phase closed on 2026-10-09. Reports retain the remaining
 gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
+| [Current 64-vCPU comparison](../results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md) | `10.176.26.71`: RCUHT rwlocks at 1/16/32/56 workers and spin/mutex cacheline at 1/16/32/36 workers; 144 timed sessions, collector CPU 63 |
 | [RCUHT rwlocks](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) | 1%/20% writes on the hash payload; all 15 thread counts, ABI3 JIT writers and strict Native/TCLock parity checks |
 | [Rwlock scaling](../results/380G10/bench/rwlock_compare/20261009-scaling/README.md) | Historical ABI1, 1%/20% writes on one cacheline; all 15 thread counts, 270 sessions, throughput curves and NUMA progress |
 | [Initial rwlock mixes](../results/380G10/bench/rwlock_compare/20261009/README.md) | Native/TCLock/KD, 180 cacheline sessions at 1/16 workers, 12 KD controls, and the historical ABI1 hash-writer refusal resolved by ABI3 |
@@ -43,7 +52,8 @@ gaps; superseded reports are retrieved from fixed Git records.
 These are recorded measurements, not reruns of subsequent cleanup commits.
 Raw ignored/local/guest archives remain intact. A fresh checkout supplies reports,
 not those large original run directories.
-The historical measured environment had 40 vCPUs. Follow
+The original-host reports above used 40 vCPUs; the migration receipt below used
+60. Keep them separate from the current 64-vCPU comparison. Follow
 [guest setup](../docs/PROJECT_GUIDE.md#guest-workflow) and explicitly choose a
 collector outside the actual worker cohorts before new runs.
 
@@ -84,9 +94,11 @@ retains the original topology and acceptance details. New `bench.sh` runs use
 
 ## Measurement rules
 
-The intended comparison uses fixed 2.5 GHz, NUMA-on, UBSAN-off KD benchmark provider,
-48000 operations of warmup per worker, three rounds, two-second measurement and the
-highest valid 300 ms window after settling. For spin/mutex, explicitly select the
+Use NUMA-on, an UBSAN-off KD benchmark provider, 48000 operations of warmup per
+worker, three rounds, two-second measurement and the highest valid 300 ms window
+after settling. Record the actual host governor and frequency policy: historical
+`380G10` reports used fixed 2.5 GHz, while the current destination uses `ondemand`.
+Keep different policies separate. For spin/mutex, explicitly select the
 full 15-point thread set; their shorter defaults are not the complete matrix.
 The rwlock runner defaults to that full thread set.
 
