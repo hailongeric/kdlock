@@ -163,7 +163,7 @@ python3 -u bench/rwlock_compare/run.py \
 ```
 
 Use a new output directory and an outer timeout, following the
-[runner guide](../../README.md). Omitting `rcuht` reproduces the complete supported
+[runner guide](../../../../../bench/rwlock_compare/README.md). Omitting `rcuht` reproduces the complete supported
 cacheline subset. Do not treat the primary command's hash refusal as a full pass.
 
 The kernel is the unchanged `6.1.159-kdclobber2`, live Build ID

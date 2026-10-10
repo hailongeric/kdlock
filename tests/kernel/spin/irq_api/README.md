@@ -15,7 +15,7 @@ before and after acquisition/release.
 Four pinned workers each execute 10,000 operations; the consumer prefers CPUs
 0/1/20/21 when available (at least three online CPUs required). That selection
 spanned both nodes in the original 40-vCPU guest and is within node 0 on the
-documented 60-vCPU destination. They rotate irqsave/irq/BH/plain-native on one KD lock
+current 64-vCPU destination. They rotate irqsave/irq/BH/plain-native on one KD lock
 and join before init returns. Plain-native uses byte 5 without adaptive registration.
 
 ```sh
@@ -41,5 +41,5 @@ IRQ/softirq injection or PREEMPT_RT. Pending/MCS fixtures are separate checks.
 The 2026-09-27 check passed 40,000 operations on CPUs 0/1/20/21 with normal unload and
 zero final native/frame invariants. Initial fixture/collector failures and reruns
 remain in the fixed [full record](https://github.com/hailongeric/kdlock/blob/e533214/tests/kernel/spin/irq_api/README.md).
-Raw local `bench/.tmp/irq-api-20260927/` and guest evidence archives remain intact.
+Raw local `results/380G10/raw/legacy/irq-api-20260927/` and guest evidence archives remain intact.
 This is historical local-native evidence, not fresh JIT or a later full-matrix pass.

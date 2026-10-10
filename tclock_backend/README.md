@@ -106,7 +106,7 @@ unload requires zero reader/writer count and gate, balanced per-CPU node counts,
 empty lock/NUMA queues, restored shadow-stack pointers and original CPU context.
 Rwlock delegation counts are unmeasured; the
 [rwlock runner](../bench/rwlock_compare/README.md) reports that explicitly.
-The [RCUHT comparison](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+The [RCUHT comparison](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 records the 1%/20% write mixes, built assembly audit and complete performance
 matrix against Native and KD ABI3.
 

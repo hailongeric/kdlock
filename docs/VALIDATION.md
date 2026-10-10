@@ -15,21 +15,24 @@ drained KD-native/KD-JIT correctness sessions. The execution fixture checked
 4,801,000 operations with up to 16 concurrent readers, exclusive writers and
 exact updates. Separate RCUHT probes at 16/36 workers returned actual JIT writers.
 
-The [RCUHT report](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+The [RCUHT report](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 retains all 270 timed sessions for 1%/20% writes at fifteen thread counts, the
 TCLock assembly audit, raw archives, frozen identities and rejected candidates.
 All sessions passed correctness/progress/drain. Strict peak-and-whole parity
 passed 21 of 30 configurations, so the overall performance target failed.
 JIT and NO_JIT groups remain separate; publication is not execution evidence.
 
-These results used the original 40-vCPU guest and do not validate the pending
-60-vCPU destination setup. No full test suite or guest-kernel rebuild was run.
-This documentation refresh adds no new runtime validation.
+These results used the original 40-vCPU guest. The initial 60-vCPU destination
+has a separate [migration validation](../bench/README.md#vm-migration-validation).
+The current 64-vCPU destination uses 32 cores per NUMA node; its setup and
+affected-check receipts belong to [the new machine](../results/10.176.26.71/README.md).
+No full test suite or guest-kernel rebuild was run. Historical passes remain
+evidence for their captured source and topology.
 
 ## Completed optimization phase
 
 The spin/mutex phase closed on 2026-10-09. Its
-[final report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+[final report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 contains 540 baseline sessions at all 15 requested thread counts and a complete
 2,286-session trial audit. Source, ELF, generated-code, business-result,
 execution-witness and drain checks passed. Five targeted guest test groups and
@@ -44,7 +47,7 @@ change runtime behavior.
 ## Closeout maintenance
 
 Closeout removed 32 superseded report, chart and data artifacts. Their exact
-bytes remain at `cb1629a`; [benchmark history](../bench/tclock_compare/results/HISTORY.md)
+bytes remain at `cb1629a`; [benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md)
 provides fixed retrieval paths. The open performance plan was replaced by
 [performance status](PERFORMANCE.md).
 
@@ -64,7 +67,7 @@ Documentation links, fixed Git records, final-report hashes and the staged diff
 were checked. No runtime code changed and no build/test/benchmark was rerun.
 
 Older reports and rejected experiments are indexed in
-[benchmark history](../bench/tclock_compare/results/HISTORY.md). Raw ignored/guest
+[benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md). Raw ignored/guest
 archives are preserved; a new checkout does not include them. Offline consistency
 checks are not fresh execution or authentication of every historical artifact.
 

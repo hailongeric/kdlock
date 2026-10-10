@@ -175,7 +175,7 @@ native execution, publication and returned JIT bodies separately.
 
 The [benchmark guide](../../bench/rwlock_compare/README.md) compares KD with Linux
 Native and TCLock using matched cacheline and hash workloads. The
-[RCUHT report](../../bench/rwlock_compare/results/20261010-rcuht/README.md) gives the
+[RCUHT report](../../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) gives the
 1%/20% results and the remaining performance gaps. The
-[initial report](../../bench/rwlock_compare/results/20261009/README.md) preserves the
+[initial report](../../results/380G10/bench/rwlock_compare/20261009/README.md) preserves the
 older ABI1 hash refusal that ABI3 resolved.

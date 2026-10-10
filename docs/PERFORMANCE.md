@@ -2,13 +2,13 @@
 
 KD does not yet match both TCLock and Linux Native at every requested thread
 count. The spin/mutex optimization phase ended on **2026-10-09**, with those gaps
-still open. Its [report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+still open. Its [report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 keeps the final comparison, rejected candidates and the source and binary identities
 used for each run.
 
 ## RCUHT rwlocks, 2026-10-10
 
-The [rwlock comparison](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+The [rwlock comparison](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 ran 270 RCUHT sessions: 1% and 20% writes, fifteen thread counts, three backends
 and three rounds. All runs produced correct results and shut down cleanly.
 
@@ -25,8 +25,10 @@ observed JIT bodies from NO_JIT runs. These results belong to the rwlock work,
 not the earlier spin/mutex phase.
 
 All recorded comparisons below and the RCUHT rwlock report used the original
-40-vCPU guest. The 60-vCPU destination has a separate
+40-vCPU guest. The initial 60-vCPU destination has a separate
 [migration validation record](../bench/README.md#vm-migration-validation).
+Subsequent tests use the 64-vCPU destination VM with 32 cores per NUMA node;
+see [the current environment](PROJECT_GUIDE.md#guest-workflow).
 Preserve each report's placement, frequency policy and source identity when
 reproducing it; do not combine samples across those environments.
 
@@ -68,7 +70,7 @@ Earlier profiles suggest that translated traversal, request handling and coordin
 between native and delegated work contribute to the cost. Increasing the JIT share
 or removing a few instructions did not reliably improve throughput. Total cache
 misses and ordinary cycle samples cannot isolate remote-memory latency. Earlier profiles and failed
-experiments remain in [benchmark history](../bench/tclock_compare/results/HISTORY.md).
+experiments remain in [benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md).
 
 ## Implementation and deferred designs
 

@@ -66,11 +66,11 @@ After confirming the recovery snapshot through the QEMU monitor:
 export KDLOCK_RECOVERY_CONFIRMED=1
 timeout 720s python3 tests/kernel/rwlock/run.py --backend native \
   --workload "$RW_NATIVE_DIR/rwlock_test.ko" \
-  --output /root/kdlock-evidence/rwlock-native-new
+  --output /root/kdlock-evidence/10.176.26.71/tests/rwlock-native-new
 timeout 720s python3 tests/kernel/rwlock/run.py --backend kdlock --delegate off \
-  --output /root/kdlock-evidence/rwlock-disabled-new
+  --output /root/kdlock-evidence/10.176.26.71/tests/rwlock-disabled-new
 timeout 720s python3 tests/kernel/rwlock/run.py --backend kdlock \
-  --output /root/kdlock-evidence/rwlock-jit-new
+  --output /root/kdlock-evidence/10.176.26.71/tests/rwlock-jit-new
 ```
 
 Use new output directories. Defaults are CPUs 0..15 and 50,000 operations per
@@ -78,7 +78,7 @@ worker per main phase. `--cpus` accepts ranges; at least four available CPUs are
 required, and 16 are recommended for reliable contended JIT acceptance. The CPU
 list is placement, not a fixed NUMA recipe: choose it from the verified live
 topology. The historical cross-node `0–7,20–27` placement below belongs to the
-original 40-vCPU guest. On the documented 60-vCPU destination, `0-7,30-37` spans
+original 40-vCPU guest. On the current 64-vCPU destination, `0-7,32-39` spans
 both nodes. Recheck the live mapping before a new run.
 
 The 100,000-write-per-worker warmup retains ordinary heat promotion. The test sets
@@ -128,7 +128,7 @@ The JIT session recorded:
 
 The RCUHT functional probes at 16 and 36 workers also passed, with 23,021 and
 26,964 returned JIT writers respectively. These are correctness checks, not
-performance samples. The [RCUHT report](../../../bench/rwlock_compare/results/20261010-rcuht/README.md)
+performance samples. The [RCUHT report](../../../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 links the complete evidence, including the corrected missing-Makefile preflight
 and retained rejected optimization trials. No full test suite or kernel rebuild
 was run.
@@ -164,6 +164,6 @@ preserved separately. Evidence is under guest
 addresses and boot ID, and `native/`, `jit/`, `kd-native-final2/` contain the
 successful sessions. The archive is guest
 `/root/kdlock-evidence/rwlock-20261009-evidence.tar.gz` and host
-`bench/.tmp/rwlock-20261009/guest-evidence.tar.gz`, SHA256
+`results/380G10/raw/legacy/rwlock-20261009/guest-evidence.tar.gz`, SHA256
 `73608664642fa7bd4617197d21fac36f43a1bafc69cb694aa4c75bea38d65df6`.
 No full suite, kernel modification or performance matrix was run.

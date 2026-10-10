@@ -10,13 +10,13 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-The [spin/mutex phase](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+The [spin/mutex phase](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 ended on 2026-10-09 with performance gaps remaining. The later
-[RCUHT rwlock comparison](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+[RCUHT rwlock comparison](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
 completed 270 valid runs at 1%/20% writes. KD matched both alternatives on both
 throughput measures at 21 of the 30 combinations of write percentage and thread
 count. [Performance status](PERFORMANCE.md) explains the results;
-[benchmark history](../bench/tclock_compare/results/HISTORY.md) links older evidence.
+[benchmark history](../results/380G10/bench/tclock_compare/HISTORY.md) links older evidence.
 
 ## Reading order
 
@@ -33,12 +33,26 @@ count. [Performance status](PERFORMANCE.md) explains the results;
 
 ## Guest workflow
 
-The primary benchmark host is Ubuntu at `eric@10.176.26.71`, with source workspace
-`/home/eric/vm/vm-shared/kdlock`. Guest SSH connects to
+Keep source edits and Git work on the current host `380G10` in
+`/home/eric/vm/vm-shared/kdlock`. All subsequent builds, tests and benchmarks run
+inside the VM on Ubuntu host `eric@10.176.26.71`. Guest SSH connects to
 `root@10.176.26.71:2222` from another machine, or `root@127.0.0.1:2222` from
 that host; the guest checkout remains `/root/host_fs/kdlock`.
-The original Git checkout remains on `380G10`; the destination source mirror
-contains the approved tracked files and their current edits.
+The destination has a source mirror at `/home/eric/vm/vm-shared/kdlock`;
+it receives current tracked files and edits from the original Git checkout.
+Synchronize from the current host before testing:
+
+```sh
+cd /home/eric/vm/vm-shared/kdlock
+python3 tools/vm/sync_to_vm.py --dry-run
+python3 tools/vm/sync_to_vm.py
+ssh -p 2222 root@10.176.26.71
+```
+
+The helper snapshots tracked bytes, verifies hashes and updates only changed
+files while the guest is idle. Git metadata and ignored raw evidence stay on the
+source host. See [sync options](../tools/vm/README.md) for newly added or removed
+files and troubleshooting.
 Recovery uses a separate ext4 copy, so synchronize changed files by SHA256 while
 idle. The optional `shared` mode shares source through 9p with mount tag
 `hostshare`, without VFIO. Do not replace `/root/host_fs` or
@@ -46,30 +60,44 @@ modify frozen inputs. Full operational rules are in [AGENTS](AGENTS.md).
 
 Run the host helpers from `/home/eric/vm/qemu-scripts`. `run_vm.sh` defaults to
 `recovery` and also accepts `shared`, `status`, `monitor [COMMAND]` and graceful
-`stop`. It starts 60 vCPUs across two 30-core sockets with 24 GiB of RAM:
-guest node 0 CPUs 0–29 map to host CPUs 0–29, and guest node 1 CPUs 30–59 map
-to host CPUs 32–61, with 12 GiB bound to each matching host memory node.
-`pin_cpu.sh` runs automatically; host CPUs 30, 31, 62 and 63 are reserved for
-QEMU services and the host. Use collector CPU 58 for cohorts of up to 56 workers.
+`stop`. It starts 64 vCPUs across two 32-core sockets with 24 GiB of RAM:
+guest node 0 CPUs 0–31 map to host CPUs 0–31, and guest node 1 CPUs 32–63 map
+to host CPUs 32–63, with 12 GiB bound to each matching host memory node.
+`pin_cpu.sh` verifies one-to-one pinning automatically. QEMU service threads share
+host CPU 63 with guest CPU 63. Use collector CPU 63 and exclude it from workers.
 The spin/mutex runner's existing maximum remains 36 workers.
 
 `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519` to reach the guest locally.
-The host also provides the `ssh kdlock-vm` alias. `sync_source.py` copies only
-changed files from the reviewed hash manifest while the recovery guest is idle.
-Refresh manifest entries after reviewed source edits. `bench.sh` creates and
+The host also provides the `ssh kdlock-vm` alias. The source-host synchronization
+command updates the mirror, manifest and idle guest in sequence. `bench.sh` creates and
 verifies a fresh snapshot, runs the migration checks, and archives evidence on
 the physical host; see [commands and validation](../bench/README.md#vm-migration-validation).
 Host ports 2222, 9090 and 9091 retain their guest mappings; debugger port 1234
 is available only on host loopback. The monitor and serial log remain
 `/tmp/qemu-monitor.sock` and `/tmp/qemu-serial.log`.
 
-Migration boot, exact kernel identity, source synchronization, CPU placement and
-guest health were verified on 2026-10-10. The recorded 73-session validation is
-separate from historical measurements on the original host.
+The 64-vCPU boot, exact kernel identity, CPU placement and guest health were
+verified on 2026-10-10. The recorded 73-session migration validation used the
+earlier 60-vCPU layout; it remains separate from the current topology and
+historical 40-vCPU measurements on the original host.
 The migration copy retains current disk contents without historical VM snapshots.
 Original disks on `380G10` remain untouched for rollback. Saved VM state from the
 old CPU/topology is not portable: create and verify a new destination snapshot
 before live module/JIT tests, then check the kernel, boot policy and CPU placement.
+Do not load a saved state captured under the old 40- or 60-vCPU layout into this
+64-vCPU VM.
+
+### Results by machine
+
+Published reports live in `results/<machine>/{bench,tests}/`; raw archives copied
+to either physical host live in ignored `results/<machine>/raw/{bench,tests}/`.
+Use `380G10` for original-host runs and `10.176.26.71` for destination-host runs.
+Inside the VM, write live output outside the checkout to
+`/root/kdlock-evidence/10.176.26.71/{bench,tests}/<run>`; runners protect frozen
+inputs by rejecting output beneath the checkout. Archive each run to the matching
+machine directory before snapshot restoration. The [results index](../results/README.md)
+records relocated history and compatibility paths. Keep each run's CPU topology,
+boot policy and frozen source identity with its evidence.
 
 ### Kernel identity
 
@@ -119,14 +147,14 @@ has SHA256 `287447eabe43596b7494f5caa9d0c2fa39cf58ed918d703d66570ffc2cc37418`.
 To roll back while idle, remove the override, run `update-grub`, select the intended
 kernel and reboot. This also restores the prior GRUB default.
 
-The [protocol simplification trials](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+The [protocol simplification trials](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 use `nopvspin`. Both combined translator/memory and memory-only candidates were
 rejected after repeated regressions; no runtime change was promoted. Their full
 matrices remain separate from the fresh 540-session comparison of the restored
 runtime at all 15 thread counts. The earlier
-[hash diagnosis](../bench/tclock_compare/results/HISTORY.md#hash-diagnosis)
+[hash diagnosis](../results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis)
 uses the same boot policy but covers selected counts and placements. The
-[previous 540-sample comparison](../bench/tclock_compare/results/HISTORY.md#pre-nopvspin-matrix)
+[previous 540-sample comparison](../results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
 predates activation. Keep samples from the two boot policies separate.
 
 ### Dependencies and idle state

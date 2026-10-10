@@ -4,10 +4,15 @@
 Each backend has its own compiled workload functions and lock object. They use
 the same protected operations, timing method and reports. Choosing spin versus
 mutex happens at build time, without a runtime `is_mutex` branch in each operation.
-Build and execute in the verified recovery guest; follow [operations](../../docs/AGENTS.md)
+Build and execute in the verified recovery guest on `10.176.26.71`; follow [operations](../../docs/AGENTS.md)
 for snapshots, frozen inputs and drain.
 Mixed read/write workloads use the separate [rwlock runner](../rwlock_compare/README.md),
 which compares Native, TCLock and KD on the same adapted RCUHT payload.
+
+Keep new guest evidence under `/root/kdlock-evidence/10.176.26.71/bench/<run>`.
+Host archives and compact reports use the corresponding machine directory in
+[the result layout](../../results/README.md). Edit source on `380G10` and synchronize
+reviewed inputs to the new-host VM before running.
 
 ## Prepare and run
 
@@ -16,11 +21,11 @@ Benchmark boot policy requires [nopvspin](../../docs/PROJECT_GUIDE.md#native-qsp
 Check the live argument and boot confirmation; Build ID alone does not select
 the spin path. Use a confirmed snapshot of this boot and replace
 `YOUR_CONFIRMED_SNAPSHOT` in the examples with its actual monitor tag.
-Fix host CPUs at 2.5 GHz and check vCPU/NUMA affinity; keep the existing kernel,
+Check the benchmark host frequency policy and vCPU/NUMA affinity; keep the existing kernel,
 mitigations and preemption configuration. Confirm a real monitor snapshot before
 setting recovery variables. Output must be a new directory outside the checkout.
 
-The example uses collector 58 for the documented 60-vCPU destination. Its
+The example uses collector 63 for the documented 64-vCPU destination. Its
 [migration checks](../README.md#vm-migration-validation) are recorded separately
 from the historical 40-vCPU runs, which used collector 38. Verify the actual
 online/available CPUs and keep the collector outside every worker set.
@@ -32,10 +37,10 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
   --backends native tclock kdlock --workload cacheline --cachelines 1 \
   --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 --repeats 3 \
-  --duration-ms 2000 --peak-window-ms 300 --collector-cpu 58 \
+  --duration-ms 2000 --peak-window-ms 300 --collector-cpu 63 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
-  --output /root/kdlock-evidence/spin-matrix-new
+  --output /root/kdlock-evidence/10.176.26.71/bench/spin-matrix-new
 ```
 
 For mutex, replace the entry with `run_mutex.py` and choose a new output directory.
@@ -50,7 +55,7 @@ has no `mutex_jit` parameter.
 | `--repeats 3` | Three rounds/configuration, rotating backend order |
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
-| `--collector-cpu 30` | Built-in default; override with an available CPU outside workers (58 on the documented destination, 38 in the original full matrix) |
+| `--collector-cpu 30` | Built-in default; override with an available CPU outside workers (63 on the documented destination, 38 in the original full matrix) |
 | `--numa on`, `--kd-batch-size 1024` |KD NUMA selection and body bound; separate scan budget |
 | `--spin-prefetch 2` |KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
@@ -129,7 +134,7 @@ comparison used all 15 thread counts and both payloads. Parity required matching
 the stronger of TCLock and Native at each point, with peak and sustained rates
 reported separately; 90% of TCLock's peak was an intermediate milestone.
 
-The [protocol simplification report](results/20261008-protocol-simplification/README.md)
+The [protocol simplification report](../../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 keeps isolated screens, full 15-point matrices and rechecks separate under
 `nopvspin`. Both combined terminal/memory and memory-only candidates were rejected
 for repeated regressions. No runtime change was promoted; the eager code pool
@@ -138,12 +143,12 @@ candidates. The fresh restored-runtime comparison (`restored`) contains 540
 sessions across all 15 thread counts and both payloads for spin and mutex.
 
 The spin/mutex phase closed on 2026-10-09. The earlier
-[hash diagnosis](results/HISTORY.md#hash-diagnosis) and
-[mandatory-JIT mutex trials](results/20261008-mutex-priority-trials.md) use the same
-boot policy. The [previous 540-sample matrix](results/HISTORY.md#pre-nopvspin-matrix)
+[hash diagnosis](../../results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis) and
+[mandatory-JIT mutex trials](../../results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md) use the same
+boot policy. The [previous 540-sample matrix](../../results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
 predates `nopvspin` and must remain separate. All of these runs use four lock-outside
 arithmetic rounds; the unrelated 64-round working-tree change was excluded.
-The [evidence index](results/HISTORY.md) links source identities, failed candidates
+The [evidence index](../../results/380G10/bench/tclock_compare/HISTORY.md) links source identities, failed candidates
 and complete statistics. Publication, correct execution and performance acceptance
 are distinct results.
 
@@ -155,11 +160,11 @@ Use a new output directory for selected plain/nested/early JIT checks:
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   LC_ALL=C timeout --kill-after=10s 180s python3 bench/tclock_compare/run.py \
   --functional --backends kdlock --cachelines 1 --threads 20 --repeats 1 \
-  --collector-cpu 58 \
+  --collector-cpu 63 \
   --iterations 100000 --scenario nested --spin-entry-ratio-limit 0 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
-  --output /root/kdlock-evidence/nested-new
+  --output /root/kdlock-evidence/10.176.26.71/bench/nested-new
 ```
 
 Nested/early are KD spin cacheline only. Functional runs require actual JIT for

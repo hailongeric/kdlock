@@ -27,7 +27,9 @@ daemon/0x*
 /bench/spin_cacheline/client
 /bench/spin_cacheline/.build/
 # Per-run assembly inspection copies; original evidence remains in --output.
-/bench/.tmp/
+/bench/.tmp
+# Machine-specific raw evidence and extracted workspaces; compact reports are tracked.
+/results/*/raw/
 
 # Python cache
 __pycache__/

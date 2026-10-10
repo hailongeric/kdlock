@@ -268,10 +268,10 @@ unchanged. Build/use instructions belong in the
 
 The final full-thread comparison, returned-body JIT/delegation evidence and
 remaining performance gaps are in the
-[completed report](../../bench/tclock_compare/results/20261008-protocol-simplification/README.md).
+[completed report](../../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
 Earlier grouping/cache candidates remain in
-[fixed benchmark records](../../bench/tclock_compare/results/HISTORY.md#mutex-followup).
-The earlier [mandatory-JIT trials](../../bench/tclock_compare/results/20261008-mutex-priority-trials.md)
+[fixed benchmark records](../../results/380G10/bench/tclock_compare/HISTORY.md#mutex-followup).
+The earlier [mandatory-JIT trials](../../results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md)
 retain runtime behavior after rejecting task retention and finding no repeatable
 gain from smaller entry/execution changes under `nopvspin`.
 Source review and synthetic unit fixtures do not substitute for those live

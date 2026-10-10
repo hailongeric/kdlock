@@ -14,9 +14,6 @@ import tempfile
 from pathlib import Path
 
 
-TEMP_ROOT = Path(__file__).resolve().parents[1] / ".tmp/spin_cacheline"
-
-
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -120,9 +117,11 @@ class AssemblyArchive:
     Content hashes avoid hiding a changed translation behind its symbol.
     """
 
-    def __init__(self, run, root=TEMP_ROOT):
+    def __init__(self, run, root=None):
         self.run = Path(run).resolve()
-        self.root = Path(root)
+        # Follow the evidence run's machine directory, including offline exports
+        # of historical runs, instead of writing into a shared checkout scratch path.
+        self.root = Path(root) if root is not None else self.run.parent / "assembly"
         self.path = None
         self.sessions = set()
         self.sections = {}

@@ -21,4 +21,4 @@ parent bundle. Independent releases, installed boot files and recovery materials
 must stay separate. Use a matching frozen checkout for reproduction. Old results,
 failures and commands remain in the fixed
 [experiment record](https://github.com/hailongeric/kdlock/blob/e533214/kernel_experiments/spin_static/README.md)
-and [benchmark history](../../bench/tclock_compare/results/HISTORY.md).
+and [benchmark history](../../results/380G10/bench/tclock_compare/HISTORY.md).

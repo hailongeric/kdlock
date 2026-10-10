@@ -61,29 +61,35 @@ reset. Git rollback does not synchronize the guest or drain loaded modules.
 | Action | Location |
 | --- | --- |
 | Primary benchmark host | Ubuntu host: `eric@10.176.26.71` |
-| Source edits, static checks, archives and VM control | Host workspace: `/home/eric/vm/vm-shared/kdlock` |
-| Original Git checkout | Retained on `380G10` at `/home/eric/vm/vm-shared/kdlock` |
-| Compilation, unit tests, modules, daemon and benchmarks | Guest: `/root/host_fs/kdlock` |
+| Source edits, Git and static checks | Current host `380G10`: `/home/eric/vm/vm-shared/kdlock` |
+| Destination source mirror and VM control | `10.176.26.71`: `/home/eric/vm/vm-shared/kdlock` and `/home/eric/vm/qemu-scripts` |
+| All subsequent compilation, unit tests, modules, daemon and benchmarks | VM on `10.176.26.71`: `/root/host_fs/kdlock` |
 | Guest SSH from another machine | `root@10.176.26.71:2222` |
 | Guest SSH from the benchmark host | `ssh kdlock-vm`, or `/home/eric/vm/qemu-scripts/vm_ssh.sh` |
 | Current kernel source/build | `/root/linux-6.1.159-kdclobber2` |
 | Captured kernel bundle | `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
 | QEMU launcher | Host: `/home/eric/vm/qemu-scripts/run_vm.sh` |
 
-The destination launcher defaults to `recovery`: 60 vCPUs, two sockets with
-30 cores each, and 24 GiB of RAM. Guest NUMA node 0 has CPUs 0–29 and 12 GiB,
-bound to host CPUs 0–29 and memory node 0. Guest node 1 has CPUs 30–59 and
-12 GiB, bound to host CPUs 32–61 and memory node 1. Host CPUs 30, 31, 62 and
-63 are reserved for QEMU services and the host. `pin_cpu.sh` runs automatically
-and verifies vCPU affinity. Collector CPU 58 is separate from cohorts of up to
-56 workers; the spin/mutex runner still accepts at most 36 workers.
+The destination launcher defaults to `recovery`: 64 vCPUs, two sockets with
+32 cores each, and 24 GiB of RAM. Guest NUMA node 0 has CPUs 0–31 and 12 GiB,
+bound to host CPUs 0–31 and memory node 0. Guest node 1 has CPUs 32–63 and
+12 GiB, bound to host CPUs 32–63 and memory node 1. Every guest vCPU is pinned
+to the same-numbered physical host core. QEMU service threads share host CPU 63;
+the VM retains all 64 cores. `pin_cpu.sh` runs automatically and verifies every
+vCPU affinity. Use collector CPU 63 and worker cohorts that exclude it; the
+spin/mutex runner still accepts at most 36 workers.
 
 Launcher modes are `recovery`, `shared`, `status`, `monitor [COMMAND]` and
 `stop`; `stop` requests guest shutdown and never force-kills QEMU. Guest SSH
 and service forwards are host ports 2222, 9090 and 9091; debugger port 1234 is
 host-loopback only. `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519`.
-`sync_source.py` compares the approved source hash manifest and copies changed
-files into an idle ext4 guest. Refresh manifest entries for reviewed source edits.
+Edit kdlock only in the current host's Git checkout, then run
+`python3 tools/vm/sync_to_vm.py` there. It snapshots current tracked source bytes,
+updates the destination mirror and hash manifest, and invokes `sync_source.py`
+to copy changed files into an idle ext4 guest. Do not edit the destination mirror
+or guest as a second source checkout. The synchronization helper excludes Git
+metadata and ignored raw results; tracked deletions are reported without deleting
+guest files. See [the synchronization guide](../tools/vm/README.md).
 `bench.sh` saves and verifies a fresh snapshot, runs the migration checks, and
 archives results on the physical host; see [the benchmark guide](../bench/README.md#vm-migration-validation).
 
@@ -94,8 +100,9 @@ While idle, compare SHA256 and copy only changed files, creating subdirectories
 as needed. Delete only identified obsolete project files. Never move, recursively
 replace or clear `/root/host_fs`, and do not edit frozen running inputs.
 
-Migration boot, exact kernel identity, source hashes, all 60 CPU pins and guest
-health were verified on 2026-10-10. The migration copy contains current disk
+The 64-vCPU boot, exact kernel identity, all 64 CPU pins and guest health were
+verified on 2026-10-10. The earlier 73-session migration benchmark used 60 vCPUs
+and remains evidence for that topology. The migration copy contains current disk
 contents without historical VM snapshots; the original disks on `380G10` remain
 untouched for rollback. Saved VM state from the old CPU/topology is not portable
 to the destination. Create and verify a new snapshot there before live module/JIT
@@ -110,6 +117,8 @@ can restore the earlier policy. Follow [the boot policy](PROJECT_GUIDE.md#native
 before live runs and keep benchmark samples from different policies separate.
 Check actual CPU/NUMA placement against the destination mapping above after
 every restart. Historical 40-vCPU measurements retain their original placement.
+Saved VM states captured with 40 or 60 vCPUs must not be loaded into the current
+64-vCPU configuration; use a verified snapshot from the current boot.
 
 The 2026-09-21 cleanup removed only rebuildable intermediates from old kernel
 builds. Their source, config, boot images and recovery baselines remain preserved;
@@ -135,6 +144,16 @@ see the [fixed maintenance record](https://github.com/hailongeric/kdlock/blob/e5
    errors, every worker's progress and final ownership/frame/queue drain.
 
 ### Acceptance and cleanup
+
+Store results by the physical machine that executed them. Published reports use
+`results/<machine>/{bench,tests}/`; ignored host archives use
+`results/<machine>/raw/{bench,tests}/`. Current guest runs write outside the
+source tree to `/root/kdlock-evidence/10.176.26.71/{bench,tests}/<run>` before
+archiving to the matching host directory. Original-host reports remain under
+`results/380G10/`. Preserve historical source hashes, commands and paths as
+captured; relocation mappings and legacy compatibility paths are in
+[the results index](../results/README.md). Never pool different machines or CPU
+topologies into one benchmark result.
 
 NORMAL means a JIT image was published; it does not show that the body ran. Report
 observed JIT execution, NO_JIT/native controls, refusals, synthetic fixtures and

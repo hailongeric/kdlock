@@ -6,20 +6,24 @@ This runner compares Linux native rwlocks, the
 Use the separate [correctness test](../../workload_modules/rwlock/README.md) for
 instrumented checks of reader overlap and writer exclusion.
 
-Build, test and run only in the recovery guest. Follow
+Build, test and run only in the recovery guest on `10.176.26.71`. Follow
 [operations](../../docs/AGENTS.md) to verify the kernel, confirm a recovery snapshot
 and check that all work has finished before unloading modules.
 
-The latest [RCUHT report](results/20261010-rcuht/README.md) contains 270 runs.
+Edit source in the checkout on `380G10` and synchronize it to this guest first.
+New guest evidence belongs under `/root/kdlock-evidence/10.176.26.71/bench/<run>`;
+retain host archives and compact summaries in [the machine result layout](../../results/README.md).
+
+The latest [RCUHT report](../../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) contains 270 runs.
 All produced correct results and shut down cleanly. At 21 of the 30 combinations
 of write percentage and thread count, KD matched or exceeded both Native and
 TCLock on both peak and whole-run throughput. It fell short at the other nine.
 
 Older reports remain separate:
 
-- [2026-10-09 scaling](results/20261009-scaling/README.md): 270 runs with ABI1 and
+- [2026-10-09 scaling](../../results/380G10/bench/rwlock_compare/20261009-scaling/README.md): 270 runs with ABI1 and
   one protected cacheline, at all 15 thread counts and 1%/20% writes.
-- [Initial mixes](results/20261009/README.md): 180 cacheline runs, 12 runs with KD
+- [Initial mixes](../../results/380G10/bench/rwlock_compare/20261009/README.md): 180 cacheline runs, 12 runs with KD
   delegation disabled, and the ABI1 hash-writer refusal later resolved by ABI3.
 
 ## Cases
@@ -56,11 +60,12 @@ runs on one NUMA node separate from runs spanning nodes. The collector samples
 progress on its own CPU, which must be online, available and outside every worker
 set. Its built-in default is CPU 38, as used in the recorded 40-vCPU runs.
 
-The commands below explicitly use collector CPU 58 for the documented 60-vCPU
-destination. Its [migration checks](../README.md#vm-migration-validation) are
-recorded separately; recheck the live topology and snapshot before each new run.
-Default workers remain the prefixes of CPUs 0..35. On that destination, 32/36
-workers cross NUMA nodes; in the original 40-vCPU reports, 24/28 workers crossed
+The commands below explicitly use collector CPU 63 for the current 64-vCPU
+destination, with 32 cores per NUMA node. Its earlier 60-vCPU
+[migration checks](../README.md#vm-migration-validation) remain separate; recheck
+the live topology and snapshot before each new run. Default workers remain the
+prefixes of CPUs 0..35. On the current destination, 32 workers fit in node 0 and
+36 workers cross nodes; in the original 40-vCPU reports, 24/28 workers crossed
 as well. Reproducing those reports requires their original topology and collector
 38, not just the same thread counts. Do not pool samples across those placements.
 
@@ -69,7 +74,7 @@ as well. Reproducing those reports requires their original topology and collecto
 Inspect a plan without compiling or loading anything:
 
 ```sh
-python3 bench/rwlock_compare/run.py --dry-run --collector-cpu 58
+python3 bench/rwlock_compare/run.py --dry-run --collector-cpu 63
 ```
 
 After verifying the actual monitor snapshot and guest identity:
@@ -83,20 +88,20 @@ export KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT
 # Small correctness/drain check; one round, no performance scores.
 timeout 900s python3 bench/rwlock_compare/run.py \
   --functional --repeats 1 --workloads cacheline --cachelines 1 \
-  --write-percent 1 20 --threads 1 16 --collector-cpu 58 \
-  --output /root/kdlock-evidence/rwlock-functional
+  --write-percent 1 20 --threads 1 16 --collector-cpu 63 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/rwlock-functional
 
 # Three-round timed comparison: the two default mixes and all 15 thread counts.
 timeout 3600s python3 bench/rwlock_compare/run.py \
   --workloads rcuht --write-percent 1 20 --full-matrix --require-parity \
-  --collector-cpu 58 \
-  --output /root/kdlock-evidence/rwlock-comparison
+  --collector-cpu 63 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/rwlock-comparison
 
 # Explicit JIT acceptance on contended writers; zero returned bodies fails.
 timeout 600s python3 bench/rwlock_compare/run.py \
   --functional --repeats 1 --backends kdlock --workloads rcuht \
-  --write-percent 20 --threads 16 36 --collector-cpu 58 --require-jit \
-  --spin-entry-ratio-limit 0 --output /root/kdlock-evidence/rwlock-jit
+  --write-percent 20 --threads 16 36 --collector-cpu 63 --require-jit \
+  --spin-entry-ratio-limit 0 --output /root/kdlock-evidence/10.176.26.71/bench/rwlock-jit
 ```
 
 `--delegate off --backends kdlock` supplies a KD native writer control. Ratio
