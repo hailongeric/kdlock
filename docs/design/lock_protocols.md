@@ -1,7 +1,10 @@
 # KD, TCLock and Linux Native lock protocols
 
-This is the protocol entry point for the nine benchmark backends: KD, TCLock and
-Linux Native spin, mutex and rwlock. It describes the current x86_64 implementation.
+This guide compares how KD, TCLock and Linux Native acquire, delegate and release
+spinlocks, mutexes and rwlocks: nine benchmark backends in total. It describes the
+current x86_64 implementation. Start with the
+[glossary](../DESIGN.md#terms-used-in-these-guides) for terms such as combiner,
+frame, native suffix and ACK.
 Read [spin](spin_implementation.md), [mutex](mutex_implementation.md) and
 [rwlock](rwlock_implementation.md) for storage, source files and
 execution details. KD's nested ownership, recovery and ACK contract remains in
@@ -21,16 +24,17 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
 
-A queue-head notification grants scheduling eligibility. It does not prove
-physical ownership or that the request's body ran. A completion notification
-means a committed body must be skipped on the origin CPU. In particular, KD
-mutex's gate never replaces the original Linux mutex.
+A queue-head notification tells a waiter it may try to acquire the lock. It does
+not mean the waiter owns the lock or that its body has run. A completion
+notification tells the original caller that its body has already run and must be
+skipped. For KD mutex, the scheduling gate and the original Linux mutex are
+separate: the executor must own the Linux mutex before running a body.
 
-The workload compiles a distinct arm for each backend; it does not switch
-algorithms inside an operation or mix them on one object. Loading KD/TCLock
-providers installs no global lock selectors. Captured KD kernel bridge
-endpoints remain recognized for generic FULL recovery; their presence does
-not enable interception.
+The workload builds a separate version for each backend. Every operation on a
+lock uses that backend's matching API. Loading KD or TCLock does not redirect
+other Linux lock calls. KD still recognizes the captured kernel bridge endpoints
+when restoring FULL register state, but those endpoints do not enable global
+interception.
 
 ## Linux Native spin
 
@@ -91,11 +95,12 @@ frame, and executes the translated body with logical waiter IP/SP/BP and
 the existing two-word GS/task inputs. Hardware `current`, GS and physical
 RSP remain those of the executor.
 
-The ordinary clobber terminal unlock can return COMPLETE directly. It must
-validate the exact root/unlock/ownership state; a failed minimal completion
-constructs the original virtual CALL once and enters FULL dispatch. Missing
-images and other unstarted refusals use native self-execution/handoff. An
-exit after progress cannot replay the body from its entry.
+At the final clobber unlock, KD can return COMPLETE directly after checking the
+root request, unlock target and ownership state. If that check fails, it constructs
+the original virtual CALL once and saves FULL register state for generic recovery.
+If JIT never started—for example, because no image was ready—the caller can run
+the body natively after acquiring the lock. Once the body has made progress,
+recovery must resume from that point; it cannot restart the body.
 
 Normal completion retires the frame before release-publishing the node's
 combined completed/locked word. The origin restores the post-unlock
@@ -233,12 +238,14 @@ writers CAS zero count to `0xf0` and retain an exact nondelegated reference.
 Gated writers acquire `0xff`, publishing WAITING while existing readers drain.
 The same exclusion applies to native and delegated writers.
 
-ABI3 registers the gate on the spin backend. A native prelude acquires writer
-admission before the prepared body on both caller and combiner routes; reader
-drain is outside the translated code. Writer unlock clears only the count's low
-byte before spin completion. An unstarted refusal cancels admission under the
-gate, and native retry reacquires it before restoring the body. A progressed
-native suffix keeps admission and exact spin ACK/retirement obligations.
+ABI3 registers the gate with the spin backend. Before the prepared body starts,
+native code waits for readers and acquires exclusive write access. This happens
+whether the caller or a combiner will run the body, so the translated code does
+not include the reader-drain loop. Writer unlock clears only the count's low byte
+before spin completion. If JIT refuses before starting, KD clears that byte while
+still holding the gate; a native retry must acquire write access again. If the
+body has already made progress, its native continuation keeps write access and
+must complete the usual spin unlock acknowledgement and retirement steps.
 
 Readers are never delegated. Native and direct KD writer pairs may share this
 object, each with its matching unlock. Recursive reads, upgrades/downgrades,
@@ -253,10 +260,11 @@ lifetime. TCLock retains the upstream x86 atomics, barriers and WRITE_ONCE
 notifications; a WRITE_ONCE store is not a portable release contract by
 itself. The stack-switch ports are scoped x86 implementations.
 
-Stop new callers, join the entire cohort, drain queues/frames/ACKs, retire KD
-sources, clear TCLock diagnostic target pointers, unload workload, then unload
-provider. An idle sample alone is not a no-new-callers barrier. EBUSY retains
-storage/references; forced unload is outside this protocol.
+For shutdown, stop new calls and join every worker. Wait for queues, frames and
+unlock acknowledgements to finish, then retire KD sources and clear TCLock's
+diagnostic target pointers. Unload the workload before the provider. A single
+idle sample cannot prove that another caller will not enter. If a drain returns
+EBUSY, keep its storage and references alive; never force unload.
 
 Returned-body KD JIT evidence and TCLock mutex returned-batch delegation
 counts are separate from payload correctness. TCLock spin and rwlock delegation

@@ -1,8 +1,10 @@
 # Development and operations
 
-These rules cover the x86_64 KD spin/mutex/rwlock provider. Start with the
-[project guide](PROJECT_GUIDE.md); use [tests](../tests/README.md) and
-[benchmarks](../bench/README.md) for commands and evidence.
+Follow these rules when developing or running the x86_64 KD spin/mutex/rwlock
+provider. Start with the [project guide](PROJECT_GUIDE.md). Use
+[tests](../tests/README.md) and [benchmarks](../bench/README.md) for commands and
+results, and the [design glossary](DESIGN.md#terms-used-in-these-guides) for the
+ownership and lifetime terms used below.
 
 ## Development rules
 
@@ -12,13 +14,15 @@ These rules cover the x86_64 KD spin/mutex/rwlock provider. Start with the
    supported paths working and select basic plus directly affected checks.
    Full suites require an explicit request. Rare resource, cancellation and alias
    combinations are optional coverage, not automatic delivery gates.
-3. Preserve exact physical ownership, source leases, acquisition references,
-   final ACKs and frame retirement. Approximate profiling counters cannot replace
-   these controls. Do not relax admission or remove probes to manufacture a pass.
-4. Reuse a request's shared packet/frame through pointers and ownership transfer.
-   Prefer preallocation. Do not copy whole packets, clear whole records or add a
-   global lock merely to simplify lifetime management. Initial capture, final
-   restoration and independently live owner state remain necessary.
+3. Track the real lock owner and each acquisition exactly. Keep source leases
+   and acquisition references until the required unlock ACKs and frame retirement
+   have finished. Approximate profiling counters cannot replace these records.
+   Do not weaken admission checks or remove probes to make a failing case pass.
+4. Share an existing request packet/frame through pointers and explicit ownership
+   transfer. Prefer preallocated storage. Do not copy whole packets, clear whole
+   records or add a global lock just to make lifetime handling easier. Keep the
+   required initial capture, final restore and owner state that has a separate
+   lifetime.
 5. Keep the two-word wrapper input ABI. Userspace/futex, other architectures and
    general oversubscription redesign are outside this phase. Published KD waiters
    remain pinned and poll; native mutex owners/services may sleep.
@@ -132,22 +136,28 @@ see the [fixed maintenance record](https://github.com/hailongeric/kdlock/blob/e5
 
 ### Acceptance and cleanup
 
-NORMAL publication is not execution. Separate actual JIT, NO_JIT/native controls,
-refusals, synthetic fixtures and kernel protocol probes in reports. Record commands,
-source/ELF hashes, environment, exit status, kernel identity and drain. Historical
-passes never count as a fresh run or a whole-project pass.
+NORMAL means a JIT image was published; it does not show that the body ran. Report
+observed JIT execution, NO_JIT/native controls, refusals, synthetic fixtures and
+kernel protocol probes separately. Save commands, source/ELF hashes, environment,
+exit status, kernel identity and shutdown checks. An old pass is neither a new run
+nor proof that the whole current project passes.
 
-Stop new calls, wait for workers and translators, then retire sources. On EBUSY,
-retain pins and diagnose; never force unload or reopen admission. After successful
-retirement unload workloads before providers. Replace a workload/provider/JIT
-session together: RIP-keyed artifacts have no immutable code generation.
-Source pins, device references, physical owners, ACKs and frame retirement are
-separate lifetimes. Node reuse or waiter wakeup does not retire a frame.
+For shutdown, stop new calls and wait for workers and translators to finish.
+Then retire sources. If retirement returns EBUSY, retain pins and diagnose the
+remaining users; never force unload or reopen admission. After retirement succeeds,
+unload workloads before providers.
 
-Stop a running experiment through its existing case-boundary mechanism before
-changing inputs. Retain partial results; do not combine different frozen versions
-into a purported complete matrix. Offline archive consistency does not prove
-fresh execution or authentic source provenance.
+When replacing code, replace the workload, provider and JIT session together.
+Generated artifacts are keyed by RIP and have no immutable version that makes
+old code safe to reuse. Source pins, device references, physical owners, ACKs and
+frames each have their own lifetime. Reusing a queue node or waking a waiter does
+not mean its frame has retired.
+
+Before changing inputs, stop the experiment through its mechanism for stopping
+between cases. Keep partial results, and do not combine runs from different frozen
+versions into one complete matrix. Matching archived files can establish internal
+consistency; it does not prove a new execution or authenticate where the source
+originally came from.
 
 ## VM recovery
 

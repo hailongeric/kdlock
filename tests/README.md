@@ -1,8 +1,10 @@
 # Verification
 
-Build and execute checks only in the recovery guest. [Operations](../docs/AGENTS.md)
-owns identity, snapshots, frozen inputs and drain; [the project guide](../docs/PROJECT_GUIDE.md)
-owns setup. Run basic plus directly affected checks, not an automatic full suite.
+Build and run checks only in the recovery guest. Use the
+[project guide](../docs/PROJECT_GUIDE.md) for setup and
+[operations](../docs/AGENTS.md) for kernel verification, snapshots, fixed test inputs
+and safe shutdown. Run the basic checks plus those affected by the change. A full
+suite requires an explicit request.
 
 ## Unit checks
 
@@ -12,10 +14,11 @@ make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.p
 python3 tests/unit/run.py --list
 ```
 
-The default runs two basic C programs. `PY_TESTS` selects affected drivers; `run-all`
-requires explicit intent. Drivers extract production bodies through
-[source_text.py](unit/infrastructure/source_text.py), expanding private `.inc` files.
-Missing dependencies, skips, crashes and compile failures are not passes.
+The default target runs two basic C programs. Set `PY_TESTS` to add the relevant
+Python drivers from the table below; use `run-all` only when explicitly requested.
+These drivers use [source_text.py](unit/infrastructure/source_text.py) to extract
+production code, including private `.inc` fragments, for their fixtures. A skipped
+check, missing dependency, crash or compile failure must not be reported as a pass.
 
 | Changed area | Relevant drivers under `tests/unit` |
 | --- | --- |
@@ -34,9 +37,10 @@ Missing dependencies, skips, crashes and compile failures are not passes.
 | TCLock rwlock assembly and benchmark oracles | `rwlock/test_tclock_rwlock_context.py`; `bench/rwlock_compare/test_bench.py`; [rwlock benchmark](../bench/rwlock_compare/README.md) |
 | Runner/assembly export |`bench/tclock_compare/test_direct.py`, `bench/spin_cacheline/test_assembly.py` |
 
-Fixtures validate modeled production transitions and machine-code continuations,
-not every live kernel schedule. Protocol oracles under `protocols/` validate identity,
-owner/ACK/order/effects in traces; synthetic traces are not actual JIT evidence.
+Fixtures check selected state transitions and machine-code continuations. They
+do not exercise every possible kernel schedule. The checkers under `protocols/`
+verify identities, owners, ACKs, ordering and effects in traces. A synthetic trace
+can check those rules without proving that real JIT code ran.
 The large wrapper fixture now groups entry/services/timing/spin/mutex cases under
 [unit/execution/jit_entry_scope](unit/execution/jit_entry_scope/) without changing checks.
 
@@ -50,15 +54,17 @@ KDLOCK_RECOVERY_CONFIRMED=1 timeout 240s tests/run_all.sh \
   --case module --output /root/kdlock-evidence/module-current-new
 ```
 
-Confirm the snapshot in the monitor first. Use a new output directory outside the
-repository. The runner freezes inputs, checks kernel errors and residual callers,
-and preserves failures. `verify_evidence.py` only checks existing archives offline.
+Confirm the snapshot through the QEMU monitor first, and choose a new output
+directory outside the repository. The runner saves fixed copies of its inputs,
+checks for kernel errors and callers still running, and keeps failure records.
+`verify_evidence.py` checks existing archives offline; it does not run the tests again.
 
-Actual JIT uses [the direct runner](../bench/tclock_compare/README.md). Select
-plain, nested or early according to the changed path; nested/early are KD spin
-cacheline only. Functional multithread positives need nonzero returned-body JIT;
-explicit `spin_delegate=0` is a separate zero-JIT control. Do not infer delegation
-from thread count, queue publication or NORMAL status.
+Use [the direct runner](../bench/tclock_compare/README.md) to exercise actual JIT.
+Choose plain, nested or early according to the changed path; nested/early apply
+only to KD spin cacheline workloads. A successful multithreaded functional JIT case
+must return at least one JIT body. `spin_delegate=0` is a separate control that must
+return zero. Many threads, a published request or NORMAL status alone do not prove
+delegation occurred.
 
 Rwlock correctness uses [its own live runner](kernel/rwlock/README.md), checking
 reader overlap, writer exclusion, updates and exact count/gate drain. The
@@ -77,10 +83,12 @@ published. Normal/SELFTEST builds stay separate.
 The [2026-10-10 ABI3 record](kernel/rwlock/README.md#abi3-verification-on-2026-10-10)
 covers two basic programs plus five affected groups, 13 benchmark checks and
 drained KD-native/KD-JIT correctness runs of 4,801,000 operations each.
-The [RCUHT matrix](../bench/rwlock_compare/results/20261010-rcuht/README.md) passed
-all 270 sessions' correctness/progress/drain checks; strict throughput parity
-passed 21 of 30 configurations. These are original 40-vCPU results, not validation
-of the pending 60-vCPU destination migration or a full-suite pass.
+All 270 sessions in the [RCUHT matrix](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+had correct results, worker progress and complete drain. KD matched both alternatives
+on both throughput measures at 21 of 30 comparison points. These results belong
+to the original 40-vCPU guest and cover the listed checks, not the full suite.
+The 60-vCPU destination has its own
+[migration validation record](../bench/README.md#vm-migration-validation).
 
 ### Mandatory mutex JIT, 2026-10-08
 

@@ -1,8 +1,9 @@
 # KD kernel provider
 
-The provider exposes explicit spin/mutex/rwlock APIs and `/dev/kd_dev` translation
-services. It requires the captured `kdclobber2` spin and mutex clobber-v1 interfaces;
-missing interfaces fail compilation. Loading it does not install global hooks.
+This module implements KD spinlocks, mutexes and rwlocks. It also exposes
+`/dev/kd_dev` for translation requests and code uploads. Builds require the recorded
+`kdclobber2` spin and mutex clobber-v1 interfaces and fail if either is missing.
+Loading the module does not redirect ordinary Linux lock calls.
 [Lock protocols](../docs/design/lock_protocols.md) and
 [the code map](../docs/CODE_MAP.md) define behavior and source responsibilities.
 
@@ -14,13 +15,15 @@ Build only in the verified recovery guest:
 make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1 UBSAN_SANITIZE=n
 ```
 
-The benchmark prepares a private provider with observation code and defaults to
-UBSAN off. A standalone build inherits kernel policy unless explicitly overridden
-as above. The existing kernel, mitigations and frame-pointer configuration stay fixed.
-Stack-switch/restore objtool warnings are known; inspect actual machine code rather
-than suppressing them or replacing the trampoline.
+The benchmark builds a separate copy of the provider with measurement counters
+and defaults to UBSAN disabled. A standalone build follows the kernel's sanitizer
+policy unless overridden, as in the command above. Keep the kernel, mitigations and
+frame-pointer settings fixed. Known objtool warnings come from stack switching
+and restoration; inspect the built instructions instead of hiding the warnings
+or replacing the trampoline.
 
-For selected internal regressions, use a separate drained build:
+For selected internal regression checks, use a separate SELFTEST build after the
+previous session has drained:
 
 ```sh
 make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 \
@@ -50,10 +53,11 @@ boundaries remain separate for reading.
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | Exact task/acquisition refs and RCU lifetime |
 | [kd_main.c](kd_main.c) | Setup, rollback and drained shutdown |
 
-Private `.inc` files preserve one translation unit, static state, declaration
-order, GCC attributes and stack-switch labels. Do not add them as Kbuild objects
-or expose internal symbols. Kbuild tracks includes; snapshots/provider copies must
-freeze them. Cross-unit APIs live in [include](../include/README.md).
+Private `.inc` files are fragments included into their parent translation unit.
+This preserves static state, declaration order, GCC attributes and stack-switch
+labels. Do not compile them as separate Kbuild objects or expose their internal
+symbols. Kbuild tracks the includes, and source snapshots or provider copies must
+include those files too. Shared APIs live in [include](../include/README.md).
 
 ## Current settings
 
@@ -83,8 +87,8 @@ directly through the [spin/mutex](../bench/tclock_compare/README.md) or
 [rwlock](../bench/rwlock_compare/README.md) comparison. Do not turn
 source organization changes into an automatic full matrix.
 
-Stop new calls and wait for workers/translators. Retire sources successfully before
-unloading workloads, then unload the provider. EBUSY means keep pins and diagnose;
-never force unload. NORMAL is publication, not actual JIT. Shared packet/frame,
-physical owner, final ACK and source retirement remain separate boundaries under
-[operations](../docs/AGENTS.md).
+Stop new calls and wait for workers and translators to finish. Retire sources,
+then unload workloads, then the provider. If retirement returns EBUSY, keep the
+pins and investigate the remaining users; never force unload. NORMAL means code
+was published, not that JIT ran. Frames, physical owners, unlock ACKs and source
+pins have separate lifetimes, as explained in [operations](../docs/AGENTS.md).

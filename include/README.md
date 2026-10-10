@@ -1,7 +1,7 @@
 # Shared interfaces
 
-Headers define public lock APIs, cross-unit contracts and the C/assembly/Python
-layout shared by translation. Backend-private helpers live under
+These headers define the public lock APIs and the data layouts shared by C,
+assembly and the Python translator. Helpers used only inside a backend live under
 [kernel_module](../kernel_module/README.md). Payload ioctls live under
 [workload_modules](../workload_modules/README.md).
 
@@ -18,16 +18,18 @@ layout shared by translation. Backend-private helpers live under
 | Source/device | [kd_source.h](kd_source.h), [kd_source_api.h](kd_source_api.h), [sys.h](sys.h) | Text residency, capabilities and irreversible retirement |
 | Services/context | [kd_hostcall.h](kd_hostcall.h), [kd_hostcalls.def](kd_hostcalls.def), [kd_segment.h](kd_segment.h) | Typed effects and origin GS/logical task |
 
-Change C offsets, wrapper assembly and Python lowering together. The
-[register ABI](../docs/JIT_REGISTER_ABI.md) gives exact offsets and exit rules;
-[frames](../docs/design/frames.md) gives final-use constraints. A frame ledger,
-node completion, owner ACK and source lease are separate controls.
+When changing a shared layout, update the C offsets, wrapper assembly and Python
+translation together. [Register ABI](../docs/JIT_REGISTER_ABI.md) gives exact offsets
+and exit rules; [frames](../docs/design/frames.md) explains when storage can be reused.
+A frame's lock list, a completed queue node, an unlock ACK and a source lease each
+track different work. One cannot substitute for the others.
 
 ## Ordinary direct pairs
 
-Spin uses `KD_SPIN_DIRECT_LOCK/UNLOCK`. Its heat cookie selects entry from the one
-per-CPU scalar; it does not record an acquisition route. Unlock follows exact owner
-state. [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) defines sampling.
+Spin callers use `KD_SPIN_DIRECT_LOCK/UNLOCK`. The heat cookie reads one per-CPU
+value to choose how to enter the lock. It does not record how acquisition actually
+succeeded. Unlock uses the exact ownership record instead.
+[Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) explains the heat samples.
 
 Mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it
@@ -40,10 +42,12 @@ Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair
 `kd_write_lock/unlock`. Delegating writers use `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`
 with `kd_rwlock_direct_cookie` and a named continuation in a `noipa` function.
 Prepare it with `kd_rwlock_prepare(..., KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)` (ABI3).
-Writer admission precedes that continuation, and writer-byte release precedes
-spin completion. Older ABI1 rwlock callers must be rebuilt with matching provider,
-daemon and translator. See [the rwlock API and protocol](../docs/design/rwlock_implementation.md).
-All rwlock pairs pin preemption; rwlock IRQ/BH variants and upgrades are unsupported.
+The writer has exclusive access before entering that continuation. At unlock,
+it clears the writer byte before completing through the spin engine. Older ABI1
+rwlock callers must be rebuilt with matching provider, daemon and translator.
+See [the rwlock API and protocol](../docs/design/rwlock_implementation.md).
+All rwlock pairs keep preemption disabled until unlock. IRQ/BH variants and
+read-to-write upgrades are unsupported.
 
 ## Explicit IRQ/BH spin interfaces
 

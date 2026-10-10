@@ -1,41 +1,46 @@
 # kdlock
 
-kdlock is an experimental x86_64 kernel lock-delegation provider. A combiner
-translates and executes existing critical-section machine code for contending
-callers. KD spin uses an explicit four-byte lock word; KD mutex retains the
-original Linux mutex and its physical owner beside a private scheduling gate.
-KD rwlock adds concurrent local readers and ABI3 JIT-delegated writers over an
-embedded KD spin gate, with writer admission before the translated body.
-The project includes independent TCLock spin, mutex and rwlock ports and Linux
-Native comparison workloads.
+kdlock is an experimental lock library for x86_64 Linux kernel code. When several
+threads need the same lock, one thread can hold it and run critical sections for
+waiting threads. That thread is the **combiner**. A background daemon translates
+the critical-section machine code; the combiner runs the generated JIT code.
 
-The [RCUHT rwlock comparison](bench/rwlock_compare/results/20261010-rcuht/README.md)
-covers 1% and 20% writes at all 15 requested thread counts. All 270 sessions passed
-correctness and drain; KD met peak-and-whole throughput parity at 21 of 30
-configurations. The universal performance target remains unmet. The earlier
+KD provides three kinds of lock:
+
+- **Spinlock:** uses KD's own four-byte lock object.
+- **Mutex:** keeps the original Linux mutex, including its real owner, and adds
+  a queue for delegated work.
+- **Read-write lock:** lets readers run concurrently on their own CPUs. Writers
+  can run locally or delegate through the spin JIT engine.
+
+The repository also includes TCLock ports and Linux Native workloads so all three
+implementations can be compared. Callers choose an API explicitly; loading KD does
+not redirect ordinary Linux lock calls. Builds require the recorded `kdclobber2`
+guest-kernel interfaces.
+
+The latest [RCUHT rwlock comparison](bench/rwlock_compare/results/20261010-rcuht/README.md)
+tested 1% and 20% writes at 15 thread counts. All 270 runs produced correct results
+and shut down cleanly. KD matched or exceeded both alternatives on both throughput
+measures at 21 of the 30 combinations of write percentage and thread count. It did
+not meet that target everywhere. The earlier
 [spin/mutex optimization phase](bench/tclock_compare/results/20261008-protocol-simplification/README.md)
-closed on 2026-10-09 and retains its separate results.
-
-Callers use explicit APIs. Loading a provider does not intercept ordinary Linux
-locks. The captured `kdclobber2` guest interfaces remain required. The supported
-execution paths, context limits and known limitations are documented below;
-performance acceptance is workload-specific and belongs in the benchmark reports.
+closed on 2026-10-09; its results are reported separately.
 
 ## Documentation
 
 | Start here | Content |
 | --- | --- |
 | [Project guide](docs/PROJECT_GUIDE.md) | Current state, reading order and guest setup |
-| [Nine lock protocols](docs/design/lock_protocols.md) | KD/TCLock/Native spin, mutex and rwlock: ownership, waiting, completion and lifetime |
+| [Nine lock protocols](docs/design/lock_protocols.md) | How KD, TCLock and Native acquire locks, run waiting work and release resources |
 | [Spin implementation](docs/design/spin_implementation.md) | Spin source paths, objects, cachelines, queues, prefetch and stack/packet flow |
-| [Mutex implementation](docs/design/mutex_implementation.md) | Mutex native paths, contexts, task/shadow routing, frames, parking and ACKs |
-| [Read-write lock](docs/design/rwlock_implementation.md) | Reader admission, writer JIT continuation and public API |
-| [KD design](docs/DESIGN.md) | KD execution contracts and supported scope |
-| [KD ownership](docs/design/locking.md) / [frames](docs/design/frames.md) | Nested ownership, source leases, native continuation and final retirement |
-| [JIT execution](docs/JIT_EXECUTION.md) / [register ABI](docs/JIT_REGISTER_ABI.md) | Admission, translation, wrapper entry and COMPLETE/FULL exits |
+| [Mutex implementation](docs/design/mutex_implementation.md) | How mutex acquisition, delegation, sleeping and owner acknowledgements work |
+| [Read-write lock](docs/design/rwlock_implementation.md) | How to use the rwlock and how it coordinates readers and writers |
+| [KD design](docs/DESIGN.md) | Execution model, glossary and supported scope |
+| [KD ownership](docs/design/locking.md) / [frames](docs/design/frames.md) | Which task owns each lock and when request memory can be reused |
+| [JIT execution](docs/JIT_EXECUTION.md) / [register ABI](docs/JIT_REGISTER_ABI.md) | How code is accepted, translated, executed and returned to the caller |
 | [Code map](docs/CODE_MAP.md) | Source and documentation responsibilities |
-| [Operations](docs/AGENTS.md) | Host/guest boundaries, controlled drain and recovery |
-| [Known limitations](docs/TODO.md) / [performance status](docs/PERFORMANCE.md) | Unresolved contracts, measured outcomes and deferred designs |
+| [Operations](docs/AGENTS.md) | Where to build and test, how to shut down safely, and VM recovery |
+| [Known limitations](docs/TODO.md) / [performance status](docs/PERFORMANCE.md) | Known problems, measured performance and work left for later |
 | [Validation and cleanup](docs/VALIDATION.md) | Completed checks, evidence retention and closeout scope |
 
 ## Repository
@@ -53,8 +58,8 @@ performance acceptance is workload-specific and belongs in the benchmark reports
 | [kernel_baseline](kernel_baseline/README.md) | Captured guest kernel configuration, interfaces and identity |
 | [kernel_experiments](kernel_experiments/README.md) | Separately authorized historical kernel experiments |
 
-Development, builds and execution target x86_64 only. Use the recovery guest
-and the documented [operations procedure](docs/AGENTS.md); build/test commands
-are maintained in the relevant directory guides. JIT is not a security sandbox:
-[admission limits](docs/design/admission.md), [lifetime boundaries](docs/design/lifetimes.md)
-and [deferred work](docs/TODO.md#delivery-scope) remain explicit.
+Edit source on the host; build and run tests in the recovery guest, following
+[operations](docs/AGENTS.md). Each directory guide contains its own commands.
+This project targets x86_64 only. Its JIT checks are not a security sandbox; read
+[admission limits](docs/design/admission.md), [resource lifetimes](docs/design/lifetimes.md)
+and [known limitations](docs/TODO.md#delivery-scope) before using it.

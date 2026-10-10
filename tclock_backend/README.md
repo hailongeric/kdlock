@@ -1,9 +1,13 @@
 # TCLock spin, mutex and rwlock ports
 
-These are independent x86_64 external-module backends. Callers explicitly use
-`komb_spin_lock/unlock`, `komb_mutex_lock/unlock`, or the `komb_read/write` pairs; every participant on a target
-must use the same TCLock protocol. Providers install no global hooks.
-`target_lock` is a drained diagnostic binding, not a hot-path selector.
+These modules provide TCLock spinlocks, mutexes and rwlocks for the x86_64
+benchmarks. Callers use `komb_spin_lock/unlock`, `komb_mutex_lock/unlock`, or the
+`komb_read/write` pairs. Every caller sharing a lock must use that lock's TCLock
+API. Loading a provider does not redirect other kernel lock calls.
+
+`target_lock` identifies a lock for diagnostics. Change or clear it only after
+all users have finished and the lock has drained. It does not select the algorithm
+used by a lock operation.
 
 [Lock protocols](../docs/design/lock_protocols.md) defines exclusion and lifetime.
 [Spin](../docs/design/spin_implementation.md) and
@@ -27,12 +31,13 @@ Pinned source: [TCLocks](https://github.com/rs3lab/TCLocks), commit
 | [mutex_provider.c](mutex_provider.c), [mutex_compat.h](mutex_compat.h) | Registered fixed-affinity contexts, stacks, task refs and complete cohort drain |
 | [komb_rwlock.c](komb_rwlock.c), [rwlock_provider.c](rwlock_provider.c) | Upstream rwlock reader counts, fast/queued writers, stack delegation and quiescent drain |
 
-Private fragments stay in original declaration order in one translation unit,
-preserving assembly strings, GCC options and inlining boundaries. They are not
-separate objects. [port.patch](port.patch) compares the six upstream files against
-the **expanded** maintained C units and corresponding headers; fragment organization
-and compat/provider adaptation are also reviewed in Git. It is a provenance diff,
-not an installation patch for another kernel. Do not edit the immutable upstream copy.
+The private source fragments are included in their original declaration order and
+compiled together. This preserves the assembly strings, GCC options and inlining
+boundaries. [port.patch](port.patch) compares six upstream files with the maintained
+C files after their fragments have been expanded, plus the corresponding headers.
+Git also records the fragment organization and compatibility/provider changes.
+Use the patch to review how the port differs from upstream; it is not an installer
+for another kernel. Keep the upstream copy unchanged.
 
 ## Build and drain
 
@@ -44,11 +49,12 @@ make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_MUTEX=1 TCLOCK
 make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_RWLOCK=1 TCLOCK_NUMA=1
 ```
 
-Outputs are `tclock_backend_km.ko`, `tclock_mutex_backend_km.ko` and
-`tclock_rwlock_backend_km.ko`. Load backend
-before its dependent workload. Join workers, check `quiescent=1`, clear the diagnostic
-target pointer, then unload workload before backend. Never force unload or free
-context/task refs before the complete cohort and queue/stack drain.
+The outputs are `tclock_backend_km.ko`, `tclock_mutex_backend_km.ko` and
+`tclock_rwlock_backend_km.ko`. Load the backend before its workload. To shut down,
+join every worker, check `quiescent=1`, and clear the diagnostic target pointer.
+Then unload the workload before the backend. Keep context storage and task
+references until all workers, queues and borrowed stacks have finished. Never
+force unload.
 
 ## Selected comparator scope
 
@@ -76,13 +82,13 @@ Known stack-switch objtool warnings remain; audit the built trampoline before lo
 
 ## Rwlock comparator
 
-The rwlock backend ports the pinned **`komb_rwlock.c`**, including its separate
-count-word writer fast path, queued writer path and short slow-reader gate path.
-It does not replace that algorithm with the spin port. Readers execute their
-application body on the original CPU; slow reader admission itself can use the
-upstream gate's stack delegation. Queued writer bodies run on borrowed waiter
-stacks. Unlike the spin/mutex variants, this upstream rwlock implementation returns
-to its combiner between delegates and does not implement WWJUMP chaining.
+The rwlock backend ports the pinned **`komb_rwlock.c`**. An uncontended writer can
+acquire the count word directly. Contended writers and slow readers queue at a
+separate gate. A reader always runs its application body on its original CPU,
+although the short acquisition path through the gate may be delegated. A combiner
+can run a queued writer's body by switching to that waiter's saved native stack.
+The rwlock code returns to the combiner between delegated requests; it does not
+use the spin/mutex ports' WWJUMP chaining.
 
 [rwlock-port.patch](rwlock-port.patch) records Linux qspinlock type substitution,
 pointer typing, exported noipa boundaries, possible-CPU allocation rollback and

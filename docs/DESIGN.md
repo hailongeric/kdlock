@@ -1,11 +1,32 @@
 # KD design
 
-KD executes a waiting caller's existing critical-section machine code on a
-combiner. Spin uses an explicit KD word; mutex retains Linux's original mutex
-and exact physical owner. Rwlock combines local concurrent readers with writers
-using the spin JIT engine and a separate reader count. The supported scope is
-x86_64 with the captured caller-clobber interfaces. Loading the provider does
-not intercept global locks.
+KD lets one thread run a waiting thread's critical section while holding the
+required lock. The waiting thread then continues after that critical section,
+without running it again. A background daemon translates the original machine
+code, and the lock holder runs the generated code through the JIT engine.
+
+KD supports spinlocks, ordinary mutexes and read-write locks on x86_64. Callers
+use explicit KD APIs, built against the recorded caller-clobber kernel interfaces.
+Loading the provider does not intercept other Linux locks.
+
+## Terms used in these guides
+
+| Term | Meaning |
+| --- | --- |
+| Combiner | The thread that holds a lock and executes queued work for other threads. |
+| Waiter / logical task | The original caller whose critical section is being executed. It may differ from the thread currently running the code. |
+| Native execution | The caller runs the original compiled code rather than delegated JIT code. |
+| Admission | Checks that decide whether KD can delegate a request. **Rwlock writer admission** is a different check: it waits for readers and acquires exclusive write access. |
+| Frame and packet | A frame tracks a request and its owned locks. Its register packet holds the caller's logical execution state. |
+| Continuation | The saved instruction and stack state needed to resume the caller at the correct point. A **native suffix** is the remaining part of a partially executed body, resumed in native code. |
+| Source lease | A reference that keeps inspected or executing source modules loaded until the relevant work finishes. |
+| ACK | An acknowledgement that the physical owner handled an unlock request. A logical unlock ACK does not by itself mean the whole batch has released the lock or the request can be freed. |
+| Drain / retirement | Drain waits for callers, queues, owners and frames to finish. Retirement marks a resource as no longer usable and releases its references when safe. Each resource has its own retirement rule. |
+
+The [register ABI](JIT_REGISTER_ABI.md) defines the exact saved state. IP is the
+instruction pointer, SP the stack pointer and BP the frame pointer. The
+**caller-clobber** interface tells the compiler which registers a lock call may
+overwrite, so the compiler saves values that the caller will need afterward.
 
 ## Components
 
@@ -20,85 +41,102 @@ flowchart LR
     Exit --> Caller
 ```
 
-| Layer | Contract |
+| Component | What it does |
 | --- | --- |
-| Lock backend | Physical exclusion, queue publication and final unlock |
-| Ticket/task record | Exact acquisition identity, native routing and ACK lifetime |
-| Execution frame | Logical task, continuation, packet, roles and held-lock ledger |
-| Registry/translator | Entry/backend/ABI identity, selected scope and image readiness |
-| Wrapper | Two-word input, private register packet and COMPLETE/FULL exits |
-| Source session | Keep inspected and executed module text resident until retirement |
+| Lock backend | Acquires the actual lock, queues waiting requests and performs the final unlock. |
+| Ticket/task record | Identifies one specific acquisition and keeps track of native execution and unlock acknowledgements. |
+| Execution frame | Records the original task, saved execution state and which locks are still held. |
+| Registry/translator | Matches an entry address to its backend and ABI, checks the code, and records whether an image is ready. |
+| Wrapper | Runs generated code using the two-word input ABI and returns its execution state. |
+| Source session | Keeps source modules loaded during inspection and execution, until they can be retired. |
 
-The [code map](CODE_MAP.md) locates implementations. Detailed contracts are split
-by responsibility rather than duplicated here.
+The [code map](CODE_MAP.md) shows where each component is implemented.
 
 ## Lock and ownership boundaries
 
-[Nine lock protocols](design/lock_protocols.md) compares KD, TCLock and Native
-spin, mutex and rwlock.
-[KD locking](design/locking.md) describes exact tickets, original mutex ownership,
-nested A/B operations and ACKs. Spin and mutex never share a physical protocol.
-A ledger records real acquisitions/releases; it does not acquire a lock.
+Each lock type has its own ownership rules:
 
-Admission affects future requests only. A cold or refused spin request uses
-KD's native CAS/pending/MCS path. A refused mutex request uses the original Linux
-mutex. Rwlock writers retain the same count/gate exclusion on native and JIT
-routes; readers always run locally. A published request still owes its
-completion, owner ACKs and retirement, regardless of later hotness.
+- KD spin uses one KD lock word for native acquisition and delegated execution.
+- KD mutex uses the original Linux mutex. A separate scheduling gate orders KD
+  requests, but owning that gate does not mean owning the Linux mutex.
+- KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
+  every writer must exclude readers, whether it runs natively or through JIT.
 
-See [spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md)
-and [rwlock](design/rwlock_implementation.md) for layout, prefetch,
-queue selection and backend-specific fast paths.
+The frame's lock ledger records acquisitions and releases that actually happened.
+Changing the ledger does not itself acquire or release a lock. See
+[all nine protocols](design/lock_protocols.md) and [KD ownership](design/locking.md).
 
-Rwlock ABI3 acquires writer admission in native code before the prepared body.
-The body clears the writer byte before its spin completion endpoint. An unstarted
-refusal cancels admission under the gate; a native retry reacquires it before
-restoring the body. A progressed native suffix retains its admission and exact
-ACK obligations. This adds no new execution backend or guest-kernel interface.
+KD's heat counters help decide whether a new request is worth delegating. If a
+request is cold or refused, it uses the appropriate native path. Once a request
+has been published to the queue, later heat changes cannot cancel its completion,
+owner acknowledgements or cleanup obligations.
+
+Rwlock ABI3 acquires exclusive write access in native code **before** entering
+the translated body. If JIT refuses before the body starts, KD releases that
+write access while still holding the gate; a native retry must acquire it again.
+If the body has already made progress, native execution resumes from that point
+while preserving write access. The body clears the writer byte before spin
+completion, which must not clear it a second time. The
+[rwlock guide](design/rwlock_implementation.md) explains this order in detail.
+This uses the existing spin engine and needs no new guest-kernel interface.
 
 ## Translation and execution
 
-[Admission](design/admission.md) defines the selected JIT episode, context
-screening, learned CALL/RET scope, entry predicates and checked mutex boundary.
-An ordinary untranslated CALL transfers the remaining invocation to the original
-waiter; a future compilation may learn its callee. Known controls and typed
-services can return to JIT at registered continuations.
+The translator checks the code it may emit, including memory accesses, calls and
+context-sensitive operations. It also checks any required conditions at JIT entry.
+[Admission](design/admission.md) documents these checks and their limits.
 
-[Execution flow](JIT_EXECUTION.md) covers adaptive entry, binding, batch execution
-and return. [Register ABI](JIT_REGISTER_ABI.md) specifies packet layout, virtual
-register mapping, wrapper slots and terminal completion. MINIMAL captures
-IP/SP/BP; COMPLETE returns that triple; FULL materializes current logical GPRs
-before generic C recovery. Completed stores and lock operations are never replayed.
+If generated code calls an ordinary function that has not been translated, the
+original waiter runs that function and the rest of the invocation natively. A
+later compilation may include the function. Known lock operations and approved
+services can instead return to JIT at a registered continuation.
 
-[Frames](design/frames.md) defines shared request storage, child frames, forward
-native continuation and final reclamation. Frame pop precedes completion
-publication. Physical unlock ACK is a separate event, and native executors must
-retire before root storage or the entry preemption pin can be released.
+The register packet has three states:
+
+| State | What KD may read |
+| --- | --- |
+| MINIMAL | Only the captured IP/SP/BP and declared metadata. |
+| COMPLETE | The checked IP/SP/BP needed to return after a finished body. |
+| FULL | The current logical general-purpose registers, saved before generic C recovery reads them. |
+
+A native continuation must preserve work already done. It cannot replay earlier
+stores, acquisitions or releases. [Execution flow](JIT_EXECUTION.md) follows the
+normal path; [register ABI](JIT_REGISTER_ABI.md) gives the exact layout and exits.
+
+Finishing a body, acknowledging an unlock and freeing a request are separate
+steps. KD removes the frame from the active execution stack before announcing
+completion. Any native executor still using the root request must finish before
+that storage is reused or the original preemption pin is released. See
+[frames](design/frames.md) for the full ordering rules.
 
 ## Publication and lifetime
 
-[Lifetimes](design/lifetimes.md) distinguishes text pins, source admission, device
-references, physical ownership and request storage. One eligible simple batch
-holds one source lease through all wrappers, native/remote waits and unbinds.
-Readiness is still checked per request; a cached registry pointer is not an
-immutable executable version.
+A simple batch can hold one source lease across all its bodies, including native
+or remote waits. KD still checks each request's image readiness. Holding source
+modules loaded does not make the generated image immutable.
 
-The registry has 511 slots; provider initialization eagerly allocates up to 64
-page-aligned 640 KiB code blocks (40 MiB at full capacity). The daemon uploads
-bounded chunks and publishes NORMAL only after the final complete chunk. Current
-RIP-keyed recompilation overwrites the same block. Source residency does not
-provide complete-image generation validation or protect simultaneous old execution.
+The registry has 511 slots. Provider initialization allocates up to 64 page-aligned
+code blocks of 640 KiB each, or 40 MiB in total. The daemon uploads an image in
+chunks and marks it NORMAL after the last complete chunk. NORMAL means that code
+was published; it does not mean a request executed that code.
+
+Recompiling an entry currently overwrites the block associated with its instruction
+address (RIP). There is no separate immutable generation for an older execution
+that may still be using it. [Lifetimes](design/lifetimes.md) explains what the
+existing text pins, device references and frame leases do and do not protect.
 
 ## Limits and evidence
 
-JIT is an experimental execution mechanism, not a security sandbox. Unresolved
-runtime pointers/concurrent replacement, processor flags and SIMD/FPU state,
-immutable code versions and oversubscribed pinned waiter dependencies remain
-limits. [TODO](TODO.md) separates reproduced failures, supported contracts and
-explicitly deferred work.
+KD remains experimental. Its checks do not cover all runtime pointers or
+concurrent pointer changes. Processor flags and SIMD/FPU state are not fully
+restored, generated images have no immutable versions, and pinned waiters can
+block progress when there are more runnable tasks than available CPUs.
+[TODO](TODO.md) records known failures and work explicitly left for later.
 
-Published code, a fixture pass and actual returned-body JIT are different evidence.
-[Tests](../tests/README.md) selects affected checks; [benchmarks](../bench/README.md)
-records throughput and progress. Historical records stay tied to their frozen
-source. The rwlock results, closed spin/mutex phase and deferred designs live in
-[performance status](PERFORMANCE.md); environment rules live in [AGENTS](AGENTS.md).
+Keep these results distinct: a fixture passed, an image was published, JIT code
+actually ran, and a benchmark met its performance target. One does not establish
+the others. Use [tests](../tests/README.md) for check selection,
+[benchmarks](../bench/README.md) for commands and reports, and
+[performance status](PERFORMANCE.md) for the measured outcomes.
+Historical results apply to their recorded source and environment;
+[operations](AGENTS.md) defines how to run new checks.

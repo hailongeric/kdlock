@@ -1,7 +1,8 @@
 # Translation admission and publication
 
-Current implementation contract; start with the [design overview](../DESIGN.md).
-Validation belongs to its frozen inputs in [tests](../../tests/README.md).
+Admission decides which machine code KD may translate and execute. This guide
+explains the current checks and their limits. Read the [design overview](../DESIGN.md)
+first; [tests](../../tests/README.md) records which source versions were checked.
 
 ## 7. Translation And Publication
 
@@ -14,46 +15,58 @@ and native retry belong to [the rwlock ownership protocol](rwlock_implementation
 
 ### 7.1 Possible JIT Episode
 
-`context_policy.jit_phase_blocks()` selects reachable decoded blocks using
-entry and learned targets as roots. For an ordinary direct CALL to a callee
-absent from those blocks, it retains the CALL/exit stub but removes the native
-return edge. The waiter will complete that suffix without returning to this
-JIT invocation.
+A **JIT episode** is the code that one invocation could execute before finishing
+or transferring to native code. `context_policy.jit_phase_blocks()` selects its
+reachable decoded blocks, starting from the entry and learned targets.
 
-Control calls, allowlisted hostcalls, decoded callees and indirect calls retain
-their relevant successors. An alternate JIT path to a suffix keeps it in scope;
-a deleted native edge must not contaminate that path's dataflow.
-Every recompile rechecks the newly learned scope. Admission, lexical lock
-boundaries, constant propagation, emitted blocks and entry dispatch share it.
-Missing reachable branch text is not an implicitly safe empty block.
-For a cross-window placeholder whose bytes are already cached, the translator
-seeds the owning decoder window and recomputes the selected graph. Decoder roots
-are split into dispatch blocks even when they lie inside an earlier block.
-These seeds do not become independent admission roots. Text reads and decoder
-reseeding share the 32-expansion bound; genuine undecodable blocks still refuse.
+When an ordinary direct CALL targets an untranslated function, the selected graph
+keeps the CALL and exit stub but removes the edge returning from native code to
+JIT. The original waiter runs that function and the rest of the invocation natively.
+Recognized lock controls, allowed hostcalls, decoded callees and indirect calls
+keep the successors that their handling requires.
+
+A block can still belong to the episode if another JIT path reaches it. Analyze
+that block using the JIT paths that reach it; do not import facts from the removed
+native-return edge. Every recompile rechecks the scope, and admission,
+lock-boundary analysis, constant propagation, code emission and entry dispatch
+must all use that same scope. Missing reachable code is a refusal, never an empty
+block assumed safe.
+
+If a branch points into another decoder window whose bytes are already cached,
+the translator seeds that window and recomputes the graph. It splits blocks at
+new decoder roots, even when a root lies inside a previously decoded block. Those
+roots do not become independent admission entries. Text reads and decoder reseeding
+share the 32-expansion limit; code that still cannot be decoded is refused.
 
 ### 7.2 Context And Memory Admission
 
-Production admission accepts explicit GS memory reads, writes and RMW through
-the pinned origin base, and supported current_task MOV loads through logical
-task input. GS displacements are not linear kernel addresses. FS/base operations,
-implicit GS string/XLAT without lowering, known linear per-CPU/current addresses,
-scheduling/preemption/IRQ/BH/RCU references and backend mismatches still refuse.
-Waiter pinning protects against task replacement, not IRQ/NMI or arbitrary
-remote accesses; this is not general per-CPU context equivalence.
-These unconditional byte/operand checks run across every selected emitted block
-before value propagation or its guarded retry. A rewritten RET may leave a
-connected block without a propagated input, but its code and whitelist target
-still exist. Such a block cannot bypass unsupported segment, IRQ, known context-symbol or
-foreign-backend checks. This pass uses the already selected JIT episode; it
-does not reintroduce an ordinary CALL miss's waiter-only suffix.
+Some code depends on the CPU or task that runs it. KD therefore checks context
+operations across every block it will emit:
 
-Analysis covers explicit operands and lifted IR memory effects, including
-implicit/internal-IR accesses, decoded CALL arguments/RET results and CALL
-return-slot writes. Bounded facts propagate through selected CFG edges; merges
-retain sensitive alternatives. Memory values, masks, alias origins and writes
-are checked conservatively. It does not read runtime memory or treat source
-RBP/RSP as private memory. Analysis limits affecting addresses refuse admission.
+- Explicit GS reads, writes and read-modify-write operations may use the pinned
+  origin CPU's GS base. A GS displacement is an offset, not a linear kernel address.
+- Supported `current_task` MOV loads may use the original task supplied to JIT.
+- FS/base operations, implicit GS string/XLAT operations without lowering, known
+  linear per-CPU/current addresses, scheduling/preemption/IRQ/BH/RCU references
+  and calls to the wrong lock backend are refused.
+
+Pinning the waiter prevents task replacement. It does not prevent IRQ/NMI activity
+or arbitrary remote accesses, and it does not reproduce the waiter's complete
+per-CPU context on the combiner.
+
+These byte and operand checks run before value propagation or a guarded retry.
+A rewritten RET can leave a connected block with no propagated input, but that
+block still has emitted code and a permitted target. It must still pass the segment,
+IRQ, context-symbol and backend checks. The scan covers only the selected episode;
+it does not add back an ordinary CALL miss's native-only remainder.
+
+The value analysis follows explicit operands and the lifted intermediate
+representation (IR), including implicit memory accesses, CALL arguments, RET
+results and writes of return addresses. It follows the selected control-flow
+graph (CFG), keeps relevant alternatives when paths merge, and checks memory values,
+masks, aliases and writes conservatively. It neither reads runtime memory nor
+assumes memory addressed through the waiter's RBP/RSP is private. If analysis
+runs out of the resources needed to resolve an address, it refuses the entry.
 
 Eligible single-root nested entries can retry address-precision failures with
 entry disjointness predicates. Every premise is enforced before generated body
@@ -69,32 +82,36 @@ This does not assume callee-saved registers or untouched source memory for an
 ordinary function. The predicate/continuation contract is in
 [Historical JIT_EXECUTION](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#5-%E5%85%A5%E5%8F%A3%E6%9D%A1%E4%BB%B6%E4%B8%8E%E5%B5%8C%E5%A5%97%E7%BB%AD%E7%82%B9).
 
-Scoped flow keeps a bounded disjunction of RSP value/origin facts, preserving
-the relation between different CALL depths, saved registers and shared RETs.
-It checks the plain 64-bit pop IR, then reads its pre-pop target through the
-existing sequential memory model. Only an entirely exact numeric domain
-restricts effect propagation to its intersection with the emitted whitelist.
-An unknown, partially overwritten or widened slot keeps every target; those
-destinations join normally instead of enumerating hypothetical pop-depth cycles.
-No CALL/RET balancing, runtime stack read or private-stack assumption is added.
-Each block permits at most 64 partitions, and total partitions/visits remain
-bounded by the CFG work budget. Exhaustion refuses the entry. A structurally
-connected continuation skipped by a proven return-slot rewrite need not gain
-a fabricated input state. Unconditional checks still cover its emitted bytes;
-register/memory effects use the sequential model, not a proof that another
-executor cannot rewrite a return slot or pointer before its later load.
+Stack analysis keeps several possible RSP values and origins when different paths
+reach a block. This preserves the relationship between CALL depth, saved registers
+and shared RET instructions. For a plain 64-bit pop, it checks the IR and reads
+the pre-pop target from the sequential memory model.
 
-The emitted return-table builder groups direct call sites by callee and walks
-each callee iteratively with a visited set. Shared RET tails retain the union
-of every caller continuation, including targets reached after return-slot
-rewrites; a matching source CALL is not assumed. Location offsets come from
-the decoded location database, not formatted label names. A 65536-unit work
-budget counts instructions, traversed nodes/edges and return-target additions.
-An unresolved location, missing walked successor/database or exhausted budget
-raises an explicit refusal without committing a partial table. Both scoped
-comparison and final emission handle that error as native-only. This is a
-translation graph budget, not a runtime instruction limit, hard memory/time
-bound or executable-version publication protocol.
+Only a completely known set of numeric return targets can narrow propagation to
+those also allowed by the emitted target list. An unknown, partly overwritten or
+widened slot must keep every target. Those paths merge normally; the analysis does
+not invent cycles from hypothetical pop depths. It adds no assumption that CALLs
+and RETs balance, that the stack is private, or that runtime stack contents match
+the model.
+
+Each block permits at most 64 alternative states. The CFG work budget also bounds
+state visits; exhausting either limit refuses the entry. A proven return-slot
+rewrite may skip a connected continuation without inventing an input for it. Its
+emitted bytes still receive unconditional checks. None of this proves that another
+executor cannot change a return slot or pointer before a later load.
+
+The return-table builder groups direct CALL sites by callee and walks each callee
+with a visited set. If several callers share a RET tail, that RET keeps all their
+continuations, including targets reachable after return-slot rewrites. It does
+not assume a RET must match the original CALL. Offsets come from the decoder's
+location database, not from text labels.
+
+The builder has a 65536-unit work budget covering instructions, graph nodes and
+edges, and additions to the return-target table. An unknown location, missing
+successor/database entry or exhausted budget refuses translation without keeping
+a partial table. Both scope comparison and final emission report that outcome as
+native-only. This budget limits translation graph work; it is not a runtime
+instruction limit, a strict memory/time bound or a code-versioning mechanism.
 
 New clobber boundaries retain SP/BP facts only; the compiler spills other live
 values. The separate minimal-entry check tracks uncaptured dependencies per bit.
@@ -115,18 +132,19 @@ The two-level mutex helper therefore requires the following runtime checkpoint,
 not a private-stack or arbitrary callee-ABI assumption. RET emission, thunk
 mitigations and alias checks are unchanged.
 
-The runtime checkpoint for the checked mutex summary is wired into
-`handle_known_mutex_call()`. It snapshots 256 bytes above the virtual CALL word,
-bounded to the original waiter's live kernel stack, using nofault reads. After
-the real local mutex control, it compares those bytes and separately verifies
-the captured target/return token and exact post-CALL RIP/RSP. Equal contents
-permit the existing JIT continuation. Changed contents set a distinct
-`KD_CALL_STACK_CHANGED` phase: the original waiter resumes after the completed
-control, with current memory and registers, while the combiner retains native
-owners and services unlock ACKs. No writes are restored or acquisition replayed.
-An insufficient window exits before the control using a validated PENDING CALL;
-an invalid token/read/packet remains fail-stop after progress. Final completion
-does not need a preservation check because it never returns to this JIT episode.
+`handle_known_mutex_call()` checks whether a supported local mutex call changed
+the waiter's stack. Before the call, nofault reads snapshot 256 bytes above the
+virtual CALL word, bounded by the waiter's live kernel stack. Afterward, KD compares
+those bytes and separately checks the saved target, return token and exact
+post-CALL RIP/RSP.
+
+If the bytes match, JIT may continue. If they changed, `KD_CALL_STACK_CHANGED`
+resumes the original waiter after the completed control call. It keeps the current
+memory and registers; the combiner retains the real locks and handles unlock ACKs.
+No writes are rolled back and no acquisition is replayed. If the required window
+is unavailable before the call, a validated PENDING exit runs the call natively.
+An invalid token, read or packet after progress is still fail-stop. Final completion
+needs no preservation check because it does not return to this JIT episode.
 
 The real contention gate now extends the existing seven-role driver. B's native
 owner waits for the combiner in Linux's mutex wait_list before writing an
@@ -175,12 +193,15 @@ work or validate owner-sensitive native suffixes.
 
 ### 7.2.1 Dynamic Address Gap
 
-Unknown entry pointers and addresses loaded from runtime memory are admitted
-unless another rule rejects them. `mov rax,[rdi]; mov rax,[rax]` therefore can
-reach even a known sensitive interval without embedding its address in text.
-A sequentially tracked store does not prevent another thread from changing
-that word before a later load. Holding A only excludes users of A; it does not
-exclude per-CPU operations or another writer that does not acquire A.
+The current checks do not validate every address when it is accessed. Unknown
+input pointers and pointers loaded from runtime memory are accepted unless another
+rule rejects them. For example, `mov rax,[rdi]; mov rax,[rax]` loads a pointer and
+then follows it. The second load could reach a sensitive region even though that
+region's address never appeared in the instruction bytes.
+
+The sequential memory model also cannot stop another thread from changing a
+pointer before a later load. Holding lock A excludes other users of A, but not
+per-CPU activity or a writer that never takes A.
 
 The bounded [pointer audit](../VALIDATION.md#dynamic-pointer-screening-gap) executes
 these paths against harmless user allocations labelled by mock symbols.

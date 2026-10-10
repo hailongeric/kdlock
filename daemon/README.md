@@ -29,10 +29,12 @@ packages. [requirements.txt](../disassem/requirements.txt) specifies dependency 
 | `--verbose` | Initialization/miss/compiler messages |
 | `--metrics` | Additional compiler-child wall/CPU/resource JSON; off by default |
 
-Kernel entries use lookup pid 0 but retain their registering tgid. Workspace mode
-is independent of lock/JIT/benchmark mode. A workspace gets `asm/`, callee and
-indirect-target tables without a template. New miss targets affect future compilations;
-an ordinary CALL miss finishes its present invocation natively.
+Kernel entries use pid 0 for lookup but keep the tgid of the process that registered
+them. Workspace mode changes directory organization; it does not select the lock,
+JIT or benchmark mode. The daemon creates `asm/` and the callee/indirect-target tables
+without a template. A newly discovered call target can be included in a later
+compilation. The current invocation still finishes natively after an ordinary
+CALL miss.
 
 ## Components
 
@@ -51,16 +53,21 @@ upload. Rebuild the daemon and translator with ABI3 rwlock callers and provider.
 
 ## Device session and source residency
 
-Open the device once with `O_RDWR|O_CLOEXEC` before workspace work. Snapshots,
-chunks and native-only publication all use that description. I/O errors never
-silently reopen it into another provider session.
+Open the device once with `O_RDWR|O_CLOEXEC` before preparing workspaces. Use that
+same open file description for snapshots, code chunks and native-only publication.
+If I/O fails, report the error. Silently reopening the device would start a different
+provider session and lose the original lifetime guarantee.
 
 Only the translator child inherits the internal `KD_DEVICE_FD`; do not set it
-manually. Python validates device identity/access, duplicates it non-inheritably,
-checks source INFO and queries CAPS on the same lease before inspecting real text.
-Assembler/workspace children do not inherit it. The translator CLI opens its own
-lease; imported real-text callers explicitly enter `device_session.session()`.
-A missing/closed/mismatched inherited descriptor is an error, not policy refusal.
+manually. Before reading real code, Python checks the device identity and access
+mode, makes a duplicate that its own children cannot inherit, and queries source
+INFO and CAPS through that same session. Assembler and workspace children do not
+inherit the descriptor.
+
+The standalone translator CLI opens its own session. Code importing the translator
+for real source inspection must explicitly enter `device_session.session()`. A
+missing, closed or wrong inherited descriptor is an infrastructure error, not a
+successful decision to run the body natively.
 
 CAPS v2 advertises the checked mutex stack bound and static module per-CPU arena.
 Unknown/old contracts clear optional bounds; current translation requires the module
@@ -76,16 +83,18 @@ protect provider use; text pins do not retain arbitrary lock/object allocations.
 
 ## Publication and failures
 
-The translator selects a reachable episode, screens all emitted blocks, lowers
-registers/control flow and builds `jit.bin`. Policy refusal removes stale outputs
-and returns2 (native-only); exceptions, launch/build or device failures are errors,
-not successful refusals. ABI1/ABI2/ABI3 MINIMAL requires matching versioned entries;
-legacy artifacts cannot be relabelled clobber.
+The translator selects the code this invocation could reach, checks every block
+it will emit, rewrites register and control-flow operations, and builds `jit.bin`.
+If the code violates admission policy, it deletes stale outputs and returns 2
+(native-only). Exceptions or failures to launch, build or access the device are
+errors, not successful policy refusals. MINIMAL entry for ABI1/ABI2/ABI3 requires
+the matching versioned entry. A legacy image cannot be relabelled as clobber code.
 
-Images must be nonempty and fit 640 KiB. Upload uses chunks up to 4,000 bytes; the
-final complete chunk publishes NORMAL. NORMAL does not prove execution. Current
-recompilation overwrites a RIP-keyed block in place; source residency and workspace
-isolation do not provide immutable code versions or complete-image generation checks.
+Images must be nonempty and fit 640 KiB. Uploads use chunks of at most 4,000 bytes;
+the final complete chunk publishes NORMAL. That status does not prove execution.
+Recompiling an entry overwrites the code block indexed by its RIP. Keeping source
+loaded and workspaces separate does not give running code an immutable image
+version or validate a complete image generation.
 Those changes are deferred in [TODO](../docs/TODO.md#c3-immutable-jit-publication-and-lifetime).
 
 ## Optional translation measurements

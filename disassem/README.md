@@ -1,7 +1,9 @@
 # Translator
 
-This directory reads leased kernel text, selects a reachable JIT episode, checks
-admission, lowers logical registers and emits assembly plus a wrapper image.
+The translator reads kernel machine code while holding a source lease, which
+keeps the source modules loaded. It selects the code a JIT invocation can reach,
+checks whether that code is supported, rewrites uses of the caller's registers,
+and emits assembly and a wrapper image.
 Use [the daemon](../daemon/README.md) for publication and
 [the project guide](../docs/PROJECT_GUIDE.md) for guest dependencies.
 
@@ -33,6 +35,7 @@ options with `python3 disassem/disassem.py --help`; real-text CLI use acquires i
 own device lease and does not by itself upload a published image. Importing helpers
 for byte fixtures does not establish actual kernel JIT evidence.
 
-Runtime address guards, general processor-state repair and immutable image versions
-remain deferred. The translator's context screening is not a security sandbox;
-see [open contracts](../docs/TODO.md).
+The translator does not check every memory address when it is used, restore all
+processor state, or keep separate immutable versions of generated images. Those
+features remain deferred. Its context checks are not a security sandbox; see
+[known limitations](../docs/TODO.md).

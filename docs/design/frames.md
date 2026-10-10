@@ -1,35 +1,44 @@
 # Shared frames and forward continuation
 
-[Ownership](locking.md) defines physical locks and ACKs; this guide defines the
-request storage that survives queue and C-stack handoff. The
-[register ABI](../JIT_REGISTER_ABI.md) defines captured state and wrapper exits.
+A delegated request can outlive its queue node and the C call that created it.
+Its frame keeps the state needed to finish the work and resume the caller.
+This guide explains when that storage can be reused. [Ownership](locking.md)
+covers locks and unlock acknowledgements; [register ABI](../JIT_REGISTER_ABI.md)
+covers saved registers and wrapper exits. Start with the
+[glossary](../DESIGN.md#terms-used-in-these-guides) if these terms are new.
 
 ## 9. Nested ownership and continuation
 
 ### 9.1 Frames and lock ledger
 
-A stable frame identifies entry/backend/ABI, logical task, parent/resume target,
-packet state, role and continuation. Its lock ledger records exact held/released
-locks and their native routes. It does not acquire locks. State transitions must
-match actual effects: a completed release cannot become an unstarted CALL retry.
+A frame identifies one request: its entry address, backend, ABI, original task,
+parent, saved registers and resume point. Its **lock ledger** records which locks
+are held, which have been released and how native code must unlock them. The
+ledger records real effects; it does not perform them. Once a release has happened,
+recovery must not describe the operation as an unstarted CALL and retry it.
 
-`kd_exec_current_frame()` is physical executor state. The logical waiter can be a
-different task. Binding keeps both identities; hardware current/GS/IRQ/RCU context
-is not replaced. Shared per-CPU executor storage must be exclusively owned before
-publication, including a mutex owner that sleeps.
+`kd_exec_current_frame()` belongs to the thread physically executing the code.
+The original waiter may be a different task. Binding a frame tracks both identities,
+but does not switch hardware current/GS/IRQ/RCU context. One executor must own the
+shared per-CPU storage before publishing a frame. A mutex owner that sleeps must
+retain that exclusive use of the storage.
 
 ### 9.1.1 Reuse-before-copy contract
 
-Spin producer and combiner share one continuation/frame/packet. A virtual child has
-its own frame and ledger but aliases the root packet through `regs_ref`. There are
-no node-to-frame/frame-to-node snapshots or whole-record clears on this path.
-Independent owner/control state, initial capture and final restoration remain necessary.
+The spin waiter creates a continuation containing its frame and register packet.
+The combiner uses that same storage. A virtual child has its own frame and lock
+ledger, but `regs_ref` points to the root's register packet. This path does not
+copy snapshots between node and frame or clear whole records. It still needs the
+initial register capture, final restore and any owner/control state with a separate
+lifetime.
 
 Each CPU reserves 20 KiB: low 12 KiB for twelve 704-byte continuations and high 8 KiB
 for the wait stack. The 8512-byte continuation-stack layout is aligned and offset
 inside the low region. Allocation/partial rollback retain the original base.
-Only the producer changes top; remote cleanup publishes `retired` after pop and
-cannot move that top. Reclaim only a contiguous retired suffix.
+Only the CPU that allocated a record may move the stack top. Remote cleanup marks
+the record `retired` after removing its frame; it cannot move that top. Reclaim
+records from the top only while each successive record is retired. Never reclaim
+past a record that is still live.
 
 The compact 648-byte frame places its header and IP/SP/BP in one cacheline; the next
 line backs five virtual GPRs. Source/provenance pointers share another line.
@@ -40,29 +49,36 @@ For ABI3 rwlock roots, `rwlock_admitted` shares one byte with `spin_kind` and
 native writer admission before body execution, not a second register snapshot.
 Virtual spin children inherit the entry ABI but do not acquire a rwlock count.
 
-Mutex MINIMAL/COMPLETE borrows its node packet. FULL detaches current logical state
-before generic owner/ACK recovery, whose lifetime can exceed node use. Final mutex
-restoration retains a copy before releasing a reusable node. Do not generalize the
-spin record's stable lifetime to that mutex node.
+Mutex requests use the packet in their queue node while MINIMAL or COMPLETE. On
+a FULL exit, KD copies the current logical state into independent frame storage
+before general owner/ACK recovery, because that recovery may outlive the node.
+Final restoration also keeps a copy before releasing a reusable node. Spin
+continuations have a longer lifetime than these mutex nodes; they cannot use the
+same reuse rule.
 
 ### 9.1.2 TCLock reference and state boundaries
 
-TCLock switches real native stacks and preserves six callee-saved registers.
-KD executes translated code with a software packet and logical SP/BP on a physical
-wrapper stack. Compiler-owned caller spills are shared source stack data in either
-case, not evidence that arbitrary memory remained unchanged. Cross-backend structures
-cannot be merged solely because both carry a continuation.
+TCLock saves six callee-saved registers and switches onto the waiter's real stack.
+KD keeps the executor on its wrapper stack and represents the waiter's registers,
+SP and BP in software. Both can access values the compiler saved on the waiter's
+original stack. Neither approach proves that other code left those values unchanged.
+These different execution models need different storage and restore rules.
 
 ### 9.2 A/B execution
 
-1. A is acquired on its physical backend; frame ledger records its exact owner.
-2. A known B control captures its original CALL/token and validates resources.
-3. Successful local B updates the ledger and advances once. Remote B publishes a
-   child with independent ownership and a retained root packet.
-4. Child completion detaches/pops before parent DONE. Parent resumes with the current
-   packet and real effects; no prefix replay or recapture of initial GPRs.
-5. Early A release leaves B live. Later cleanup releases only remaining owned locks;
-   reacquisition uses A's original identity if its protocol requires it.
+Suppose a body holds lock A and then acquires lock B:
+
+1. Record A's actual physical owner in the frame's ledger.
+2. For a recognized B lock call, save the original CALL and return token, then
+   check that the required resources are available.
+3. If B is acquired locally, record it and advance past the CALL once. If B needs
+   remote execution, publish a child frame with its own ownership state and keep
+   the root register packet alive.
+4. Remove the completed child before publishing the parent's DONE notification.
+   Resume the parent with the current packet and the effects already performed.
+   Do not replay earlier instructions or restore the initial register values.
+5. If A is released before B, keep tracking B. Cleanup releases only locks still
+   held. If the protocol later requires reacquiring A, use A's original identity.
 
 Lock depth is bounded at eight. Scope/ledger checks reject repeat identities,
 backend mismatches and invalid outer membership before treating a request as simple.
@@ -90,19 +106,25 @@ released the count byte. See [the rwlock protocol](rwlock_implementation.md).
 
 ### 9.4 Out-of-order and remote completion
 
-A released outer A and a still-live B require separate ledger entries. Remote lock
-release ACK and child-frame completion are different messages. After child work,
-pop/detach precedes release-publishing DONE. No frame/packet/node access follows
-its final handoff; any later logs or queue decisions use independently retained data.
+Releasing outer lock A does not release a still-held B. Keep separate ledger
+entries. Likewise, an ACK for a remote unlock does not say that the child frame
+has finished. After the child finishes, remove it before publishing DONE with
+release ordering.
 
-A physical root remains reserved until every native borrower retires. Native
-executors borrow the root ticket before wakeup, keep logical task/backend/lock ACK
-identity, then drop the borrow after cleanup/pop. Zero-lock relay frames participate
-too. An original thread with no native unlock route still waits for final retirement
-before restoring the checked continuation.
+After the final handoff, another thread may reuse the frame, packet or node. Do
+not read it again, even for logging or queue decisions. Save any later-needed
+information in storage that remains yours.
 
-One batch source/provider lease spans wrappers, complex/native/remote waits and
-all frame unbinds. It is not released merely because the queue node can be reused.
+A native executor takes a reference to the root ticket before it is woken. It
+keeps the original task, backend and lock identity needed for ACKs, and releases
+that reference only after cleanup and frame removal. Even relay frames with no
+held locks follow this rule. The physical root stays reserved until every such
+reference is released. An original thread that has no native unlock left to do
+still waits for final retirement before restoring its continuation.
+
+The batch source/provider lease stays live through every wrapper, complex or
+native path, remote wait and frame unbind. A reusable queue node does not by itself
+allow that lease to be released.
 
 ### 9.5 Forward native continuation
 
@@ -115,12 +137,16 @@ post-acquisition/STACK_CHANGED/remote COMPLETE tags. It verifies callee, token,
 IP/SP and phase before borrowing references or publishing a native frame. A held A
 does not make every progressed error recoverable.
 
-A local mutex control snapshots and compares 256 bounded live stack bytes plus
-exact CALL/token/IP/SP. Equal bytes allow JIT continuation. Changed bytes produce
-STACK_CHANGED, retaining current memory and physical owners while the waiter resumes
-after the completed control. Insufficient pre-control coverage uses PENDING;
-an invalid read/token after progress remains fail-stop. This checkpoint protects
-one control interval, not arbitrary concurrent writes or all stack lifetimes.
+Before a supported local mutex control, KD snapshots 256 bytes within the
+waiter's live stack. After the call, it compares those bytes and checks the exact
+CALL, return token, IP and SP. If they still match, JIT may continue. If the bytes
+changed, STACK_CHANGED resumes the waiter after the completed call, preserving
+the new memory contents and real lock owners.
+
+If KD cannot cover the required stack bytes before the call, it uses PENDING
+without executing that control. A bad read or token after progress is still a
+fail-stop error. This checkpoint covers one control call; it does not protect
+against every concurrent stack write or prove all stack objects remain alive.
 
 Spin post-acquisition native continuation has its own completed control tag. It
 must not reexecute B, release A twice or assume a physical unlock ACK also popped

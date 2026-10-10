@@ -1,19 +1,22 @@
 # Project guide
 
-KD spin uses an explicit four-byte lock; KD mutex retains the original Linux
-mutex and its physical owner. KD rwlock uses a 128-byte object with concurrent
-local readers and JIT writers over a KD spin gate. The three APIs use
-caller-clobber entries and shared JIT execution; rwlock ABI3 acquires writer
-admission before entering its translated body. Providers do not install global
-interception hooks.
+KD lets a lock holder execute a waiting caller's critical section through JIT.
+Spinlocks use KD's own four-byte object. Mutexes keep the original Linux mutex
+and its real owner. Read-write locks use a 128-byte object: readers run locally,
+while writers may delegate through the spin engine. Rwlock ABI3 acquires exclusive
+write access before the translated body starts. Callers select these APIs
+explicitly; loading the provider does not redirect global Linux lock calls.
 
-The spin/mutex optimization phase closed on 2026-10-09. Its
-[final benchmark report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
-contains the completed comparison and remaining gaps. The subsequent
-[RCUHT rwlock report](../bench/rwlock_compare/results/20261010-rcuht/README.md)
-records 270 valid sessions at 1%/20% writes and strict parity at 21 of 30
-configurations. Use [performance status](PERFORMANCE.md) for measured outcomes and
-[benchmark history](../bench/tclock_compare/results/HISTORY.md) for older evidence.
+For an introduction to the execution model and its terms, start with
+[Design](DESIGN.md). The table below points to implementation and operations guides.
+
+The [spin/mutex phase](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
+ended on 2026-10-09 with performance gaps remaining. The later
+[RCUHT rwlock comparison](../bench/rwlock_compare/results/20261010-rcuht/README.md)
+completed 270 valid runs at 1%/20% writes. KD matched both alternatives on both
+throughput measures at 21 of the 30 combinations of write percentage and thread
+count. [Performance status](PERFORMANCE.md) explains the results;
+[benchmark history](../bench/tclock_compare/results/HISTORY.md) links older evidence.
 
 ## Reading order
 
@@ -170,8 +173,12 @@ performance and writer JIT acceptance.
 
 ### Drain and evidence
 
-Stop new calls, join workers and translators, then retire sources. After success,
-unload workloads before providers. EBUSY retains pins; do not force unload.
-Keep frozen source/ELF hashes, kernel identity, business results, returned-body
-counts and drain. NORMAL only proves publication. Historical results and failed
-candidates remain in [the evidence index](VALIDATION.md), separately from fresh checks.
+Stop new calls and wait for workers and translators to finish. Then retire sources
+so the provider can invalidate entries and release module pins. Once retirement
+succeeds, unload workloads before providers. If it returns EBUSY, keep the modules
+loaded and diagnose the remaining users; do not force unload.
+
+Save source and ELF hashes, kernel identity, data checks, returned JIT body counts
+and shutdown results. NORMAL means an image was published, not that it ran.
+[The evidence index](VALIDATION.md) keeps older results and failed candidates
+separate from new validation.

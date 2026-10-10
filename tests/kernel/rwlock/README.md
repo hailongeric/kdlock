@@ -2,9 +2,10 @@
 
 The [public API](../../../include/kd_rwlock.h) and
 [protocol guide](../../../docs/design/rwlock_implementation.md) describe the
-supported ordinary task-context scope. Tests use the same style of data,
-continuation, progress and drain checks as the TCLock comparison, with separate
-Linux Native, KD delegation-disabled and KD JIT sessions.
+supported ordinary task-context scope. These tests check data correctness, where
+callers resume after delegation, whether every worker progresses, and whether
+shutdown leaves any live lock state. They follow the TCLock comparison's approach,
+with separate sessions for Linux Native, KD with delegation disabled, and KD JIT.
 
 ## Unit checks
 
@@ -19,14 +20,17 @@ The rwlock fixture compiles the actual public header with C atomic substitutes
 for kernel primitives and an embedded-gate substitute. It forces two simultaneous
 readers, a writer waiting for those readers, and a later reader that must wait
 behind that writer. Ten threads then mix native/direct writers and readers. It
-checks exact updates, mutual exclusion, writer-byte release preserving reader
-increments and queued intent, ungated writer drain references, ABI3 admission
-and refusal/retry, argument evaluation, preparation identity and balanced
+checks exact updates and mutual exclusion. It also verifies that writer unlock
+preserves reader counts and a queued writer's WAITING bit, shutdown tracks writers
+that skip the gate, and ABI3 acquires write access correctly after refusal and
+retry. Other checks cover argument evaluation, preparation identity and balanced
 preemption.
-These are protocol checks; the live workload supplies real queue/JIT evidence.
-The other selected drivers cover ABI3 clobber admission, generated completion and
-refusal, shared frame execution and native restoration. For changes to the TCLock
-port or performance oracle, add the [benchmark's focused checks](../../../bench/rwlock_compare/README.md#focused-checks).
+
+The fixture substitutes queue primitives; live runs are still needed to exercise
+the real queue and show that JIT bodies returned. The other selected drivers check
+ABI3 entry, generated completion and refusal, shared frames, and restoration to
+native code. For changes to the TCLock port or performance checks, add the
+[benchmark's focused checks](../../../bench/rwlock_compare/README.md#focused-checks).
 
 ## Build live inputs
 
@@ -74,21 +78,23 @@ worker per main phase. `--cpus` accepts ranges; at least four available CPUs are
 required, and 16 are recommended for reliable contended JIT acceptance. The CPU
 list is placement, not a fixed NUMA recipe: choose it from the verified live
 topology. The historical cross-node `0–7,20–27` placement below belongs to the
-original 40-vCPU guest. On the documented 60-vCPU destination, `0-7,30-37` would
-span both nodes, after migration verification.
+original 40-vCPU guest. On the documented 60-vCPU destination, `0-7,30-37` spans
+both nodes. Recheck the live mapping before a new run.
 
 The 100,000-write-per-worker warmup retains ordinary heat promotion. The test sets
 `spin_entry_ratio_limit=0` to bypass that optional ratio filter, retaining the
 existing CPU and lock heat checks. It does not force frames, publication or JIT.
 
 The six phases cover one writer, concurrent readers, writer warmup, writers only,
-50/50 reads/writes and 87.5% reads. Each checks every worker's exact progress,
-all eight protected values, reader/writer and writer/writer exclusion, balanced
-preemption/IRQ state, and drained reader/gate state. Concurrent readers must
-overlap. Native controls and readers-only phases must have zero returned JIT
-bodies. The JIT session requires nonzero returned bodies for both the write-only
-and 50/50 phases; publication alone cannot pass. The read-heavy phase records its
-actual JIT count without assuming it will maintain sufficient contention.
+50/50 reads/writes and 87.5% reads. Every phase checks exact progress for every
+worker, all eight protected values, reader/writer and writer/writer exclusion,
+balanced preemption/IRQ state, and zero final reader count and gate state. The
+concurrent-reader phase must show readers overlapping.
+
+Native controls and reader-only phases must return zero JIT bodies. The JIT
+session must return at least one JIT body in both the writer-only and 50/50 phases;
+publishing code is not enough. The read-heavy phase records its actual JIT count
+because it may have too little contention to sustain delegation.
 
 The runner captures kernel identity, boot arguments, kernel logs, source/image
 hashes, worker commands/PIDs/results, compilation/publication state and returned

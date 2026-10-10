@@ -1,18 +1,21 @@
 # Benchmarks
 
-Use [the three-arm direct runner](tclock_compare/README.md) for KD, TCLock and
-Linux Native spin/mutex. [Shared components](spin_cacheline/README.md) provide
-the client, all-worker warmup, peak selection, source snapshots and offline readers.
-Kernel payloads live under [workload_modules](../workload_modules/README.md).
+Choose the runner for the lock you want to compare. Both runners test KD, TCLock
+and Linux Native with matching workloads:
 
-Use the [rwlock comparison](rwlock_compare/README.md) for native, TCLock and KD
-read-write locks: the default RCUHT cases use 1% and 20% writes across
-all 15 thread counts, with returned-writer JIT evidence and validated warmed peaks.
+- [Spin/mutex comparison](tclock_compare/README.md): spinlocks and ordinary mutexes.
+- [Rwlock comparison](rwlock_compare/README.md): read-write locks, with RCUHT at
+  1% and 20% writes across all 15 requested thread counts by default.
+
+[Shared components](spin_cacheline/README.md) handle warmup, peak selection,
+source snapshots and offline reports. The kernel code being measured lives under
+[workload_modules](../workload_modules/README.md).
 
 ## Results
 
-The RCUHT rwlock comparison passed correctness and drain in all 270 sessions;
-KD met strict throughput parity at 21 of 30 configurations. The separate
+All 270 RCUHT rwlock runs produced correct results and shut down cleanly. KD
+matched or exceeded both comparators on peak and whole-run throughput at 21 of
+the 30 combinations of write percentage and thread count. The separate
 spin/mutex optimization phase closed on 2026-10-09. Reports retain the remaining
 gaps; superseded reports are retrieved from fixed Git records.
 
@@ -69,10 +72,12 @@ highest valid 300 ms window after settling. For spin/mutex, explicitly select th
 full 15-point thread set; their shorter defaults are not the complete matrix.
 The rwlock runner defaults to that full thread set.
 
-Keep peak min/median/max/spread and whole throughput, actual JIT/delegation status,
-worker/node shares, frozen source/ELF/kernel identity and drain. Amortized ns/op is
-inverse aggregate throughput, not measured acquisition latency. Failed/NO_JIT
-samples stay in records and do not become valid JIT positives.
+Keep both the best peak and the distribution across rounds: minimum, median,
+maximum and spread. Also keep whole-run throughput, observed JIT/delegation,
+each worker's and NUMA node's share of work, source/binary/kernel identities and
+shutdown checks. Amortized ns/op is the inverse of aggregate throughput; it does
+not measure one caller's lock-acquisition latency. Preserve failed and NO_JIT runs,
+and do not label them successful JIT executions.
 
 The [spin/mutex](tclock_compare/README.md) and [rwlock](rwlock_compare/README.md)
 runner guides own commands, result fields and acceptance rules;

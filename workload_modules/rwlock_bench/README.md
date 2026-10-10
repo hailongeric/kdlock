@@ -22,15 +22,16 @@ Its default is four rounds, independent of the shared spin/mutex post-work
 setting. RCUHT here is a globally locked hash workload, with no per-body
 allocation or RCU services; the name does not imply lock-free reader execution.
 
-The versioned [ABI](api.h) configures a joined phase, claims each worker slot once,
-executes a full batch in one ioctl, and publishes per-worker progress every 256
-completed operations on separate 128-byte slots. A quiescent control gate protects
-configuration, snapshots and KD preparation; it is outside the measured lock.
-Mixed-operation selection and random keys also stay outside critical sections.
+The versioned [ABI](api.h) configures each phase while no workers are active. Each
+worker claims its slot once and executes its whole batch in one ioctl. It publishes
+progress every 256 completed operations in a separate 128-byte slot. A control gate
+protects configuration, snapshots and KD preparation, outside the lock being
+measured. Choosing read versus write and generating random keys also happen outside
+the critical section.
 
-Readers update only caller-local result counters. Writers update protected data;
-hash outcome totals aggregate once per returned ioctl. Snapshots and the Python
-oracle check business results after callers join. Use the separate
+Readers update only their own result counters. Writers update the protected data.
+Hash outcome totals are combined once per returned ioctl. After all callers finish,
+snapshots and the Python checker verify the resulting data. Use the separate
 [rwlock test workload](../rwlock/README.md) for instrumented reader/writer overlap
 checks. These benchmarks support pinned task-context callers with IRQs enabled,
 one global lock and no recursive reads, upgrades or nested/IRQ/BH locking.

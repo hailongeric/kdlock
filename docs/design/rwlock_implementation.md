@@ -1,71 +1,26 @@
 # KD read-write lock
 
-[kd_rwlock.h](../../include/kd_rwlock.h) provides an x86_64 task-context
-reader/writer spin lock. Multiple readers execute locally at the same time.
-Contended writers can delegate their entire critical section through KD's existing
-spin JIT engine. Unprepared, cold, refused and explicitly native calls retain the
-same reader/writer exclusion protocol.
+Use [kd_rwlock.h](../../include/kd_rwlock.h) when several readers should run at
+once, but each writer needs exclusive access. Readers always run on their own
+CPUs. A writer can run locally or let a combiner execute its critical section
+through KD's spin JIT engine. Both routes use the same exclusion rules.
 
-The reader count and admission protocol derive from
-[TCLock's komb_rwlock.c](https://github.com/rs3lab/TCLocks/blob/bbfb9f00a12af51dff6ca291cb9829a82960c2ef/src/kernel/rcuht/locks/komb_rwlock.c).
-TCLock keeps its contended writer gate across the application body and releases
-its reader admission gate before the application read body. KD uses that same
-separation, with local slow-reader admission and JIT writer execution. Both have
-an ungated native writer fast path. KD retains its existing packet, source lease,
-completion and ACK protocol; it does not use TCLock stack switching.
-
-## State and ordering
-
-The 128-byte, 64-byte-aligned `kd_rwlock_t` places its four-byte count and
-four-byte KD spin gate on separate cache lines. This keeps queue polling apart
-from reader increments, at the cost of a larger object than the original
-eight-byte layout. The count's low byte distinguishes gated writer ownership
-(`0xff`) from an ungated native writer (`0xf0`); bit 8 represents a waiting
-writer, and bits 9..31 count readers in units of `0x200`.
-
-1. A reader pins preemption and increments the count with acquire ordering.
-   With no writer bits it enters immediately. Otherwise it withdraws that
-   speculative increment **before** joining the native gate queue. Once it owns
-   the gate it adds its reader count, waits for any ungated writer to release,
-   then releases the gate. Its count prevents a new ungated writer from entering.
-   It retains its preemption pin until read unlock, which uses a release-ordered
-   locked SUB without computing an unused return value.
-2. A pinned writer first tries a zero-count CAS to `0xf0`. This native fast path
-   keeps an exact per-CPU nondelegated acquisition reference until release. A
-   preliminary count read avoids a failed locked CAS when the object is busy.
-3. A writer that misses the fast path takes the KD gate. It changes a zero
-   count to `0xff`, or publishes WAITING and waits for existing readers and any
-   ungated writer to drain. New readers withdraw and queue while WAITING is
-   set. An acquire observation of the last release precedes the writer body.
-4. Write unlock release-stores zero to **only the low byte**, preserving
-   speculative reader increments and any queued writer's WAITING bit. An ungated
-   writer drops its exact acquisition reference and preemption pin. A gated
-   writer reaches the ordinary KD spin unlock endpoint. Batching, NUMA grouping
-   and native fallbacks retain the existing spin policy; strict FIFO fairness
-   is not promised.
-
-The prepared ABI3 continuation starts **after writer admission** and contains the
-application body and writer-byte release. A native pinned acquisition helper
-acquires the gate and count before returning. For a delegated physical root,
-the combiner acquires the count before its first JIT dispatch. Virtual nested
-spin requests inherit the packet ABI without acquiring a second writer count.
-This keeps reader-drain atomics outside translated payload analysis and avoids
-false alias widening when an RCUHT writer subsequently follows list pointers.
-
-A pre-body refusal clears the admitted writer byte while the physical gate is
-still held. When that waiter becomes queue owner, its native retry reacquires
-writer admission before jumping to the prepared body. A progressed native
-continuation retains admission through its existing exact packet and ACK path.
-Successful bodies clear the writer byte before the spin completion endpoint;
-completion must never clear it a second time after a successor can run.
-
-The gate address remains the spin registry, heat, frame and ownership identity.
-`kd_rwlock_prepare` uses `KD_ENTRY_ABI_RWLOCK_CLOBBER_V1` (3), with the existing
-IP/SP/BP clobber packet and two-word wrapper input. Registry, daemon, generated
-image and frame must agree on ABI3. The count is exact shared lock state, never
-an approximate profiling counter. Older ABI1 rwlock callers must be rebuilt.
+This is an x86_64 spinning lock for ordinary task context. Code inside it must
+not sleep. The [design overview](../DESIGN.md#terms-used-in-these-guides) explains
+terms such as combiner, continuation, source lease and ACK.
 
 ## Public API
+
+| Operation | API |
+| --- | --- |
+| Read | `kd_read_lock` / `kd_read_unlock` |
+| Write without delegation | `kd_write_lock` / `kd_write_unlock` |
+| Write with delegation available | `KD_RWLOCK_DIRECT_WRITE_LOCK` / `KD_RWLOCK_DIRECT_WRITE_UNLOCK` |
+| Initialize an unused object | `DEFINE_KD_RWLOCK` or `kd_rwlock_init` |
+
+Native and delegating writers may use the same object, but every acquisition must
+use its matching unlock API. Each pair disables preemption once and restores it
+on unlock. IRQ/BH state is preserved.
 
 ```c
 #include <linux/objtool.h>
@@ -93,42 +48,134 @@ static unsigned long read_value(void)
 }
 ```
 
-After the source module is LIVE and before starting workers, prepare with
+Once the source module is LIVE, prepare the writer before starting workers:
 `kd_rwlock_prepare(&rw, (unsigned long)update_entry, KD_ENTRY_ABI_RWLOCK_CLOBBER_V1)`.
-Preparation registers the source; daemon publication and hot contended admission
-are still necessary for actual delegation. Use one unique named continuation in
-each `noipa` writer function. Runtime initialization is `kd_rwlock_init(&rw)` on
-an unused, drained object.
+Use a unique named continuation in each `noipa` writer function. That name marks
+where the body starts after successful acquisition.
 
-`kd_write_lock`/`kd_write_unlock` provide an explicitly native writer pair for
-callers that do not need delegation. These can coexist with delegating writers
-on the same object, but each acquisition must use its matching unlock API.
-Readers always use `kd_read_lock`/`kd_read_unlock`. Each pair pins preemption
-once and preserves IRQ/BH state.
+Preparation registers the source. Delegation also needs a published JIT image and
+enough contention to pass KD's heat checks. Unprepared, cold, refused or explicitly
+native calls execute locally. Call `kd_rwlock_init` only when no reader, writer or
+queued request can still use the object.
+
+## State and ordering
+
+The lock has two parts: a count that controls reader/writer access, and a KD spin
+**gate** that orders contended writers and slow readers. The count and gate are
+both four bytes. They sit on separate cache lines in a 128-byte object aligned to
+64 bytes. This separates reader updates from queue polling, but uses more memory
+than the original eight-byte layout.
+
+| Count field | Meaning |
+| --- | --- |
+| Low byte = `0xff` | A writer owns the gate and exclusive write access. |
+| Low byte = `0xf0` | A native writer owns exclusive write access without the gate. |
+| Bit 8 / WAITING | A writer holds the gate and is waiting for existing holders to finish. |
+| Bits 9..31 | Reader count; each reader adds `0x200`. |
+
+### Readers
+
+1. Disable preemption and add to the reader count with acquire ordering.
+2. If there are no writer bits, enter the read body immediately.
+3. Otherwise, remove that speculative count **before** joining the native gate
+   queue. Keeping it while queued could make the writer ahead wait forever for
+   this reader to finish.
+4. After acquiring the gate, add the reader count again. Wait for any native writer
+   that acquired without the gate to release its writer byte. The reader count now
+   prevents another such writer from entering. Release the gate, then run the read
+   body locally.
+5. On read unlock, subtract the count with release ordering and enable preemption.
+   The x86 locked SUB avoids computing a return value that the caller does not use.
+
+### Writers
+
+A writer first disables preemption and checks whether the count is zero. If so,
+it takes an exact per-CPU nondelegated reference, then tries an acquire
+compare-and-swap (CAS) from zero to `0xf0`. Success lets the caller run without
+taking the gate. The reference stays live until unlock, so shutdown cannot miss
+this writer. A failed CAS drops the reference before taking the gate. Reading the
+count before the CAS avoids a failed locked instruction when the lock is visibly
+busy.
+
+If the fast attempt fails, the writer takes the KD gate. It then tries to change a
+zero count to `0xff`. If readers or a fast writer are still active, it sets WAITING
+and waits for them to finish. New readers remove their speculative count and queue
+behind the gate while WAITING is set. The writer observes the last holder's release
+with acquire ordering before entering its body.
+
+### Write unlock
+
+Write unlock uses a release store to clear **only the low byte**. It must preserve
+reader increments and any waiting writer's WAITING bit in the rest of the count.
+
+A writer that acquired without the gate then drops its exact reference and enables
+preemption. A gated writer proceeds to the normal KD spin unlock endpoint. Queue
+batching, NUMA selection and native fallback follow the existing spin policy;
+there is no strict FIFO fairness guarantee.
+
+### Why ABI3 starts after writer admission
+
+Here, **writer admission** means waiting for readers and acquiring exclusive write
+access. It happens in native code before the prepared JIT body:
+
+- For local execution, the pinned acquisition helper takes the gate and acquires
+  writer admission before returning to the body.
+- For delegation, the combiner acquires writer admission before its first JIT
+  dispatch for the physical root request.
+
+The prepared body contains the application code and writer-byte release. It does
+not contain the reader-drain atomics. In the older ABI1 body, those counter updates
+could make the translator lose the pointer facts needed to accept the later RCUHT
+list traversal. ABI3 changes the entry boundary while keeping the existing memory
+checks. Nested virtual spin requests inherit the packet ABI, but do not acquire a
+second rwlock count.
+
+Refusal and completion must preserve this order:
+
+| What happened | Required action |
+| --- | --- |
+| JIT refused before the body started | Clear the admitted writer byte while still holding the gate. When the waiter receives physical ownership, reacquire writer admission before resuming the prepared body. |
+| The body made progress and must finish natively | Keep writer admission and resume from the saved current state. Use the existing packet and unlock-ACK path; do not restart the body. |
+| The body completed | The body has already cleared the writer byte before spin completion. Completion must not clear it again, because a successor may now own it. |
+
+The embedded gate's address identifies the lock in the spin registry, heat table,
+frames and ownership records. `kd_rwlock_prepare` requires
+`KD_ENTRY_ABI_RWLOCK_CLOBBER_V1` (3). Registry, daemon, generated image and frame
+must all agree on that identity. Older ABI1 rwlock callers must be rebuilt.
+ABI3 keeps the existing IP/SP/BP packet and two-word wrapper input. The reader/writer
+count is exact lock state; approximate performance counters cannot replace it.
+
+### Relation to TCLock
+
+The count and admission algorithm derive from
+[TCLock's komb_rwlock.c](https://github.com/rs3lab/TCLocks/blob/bbfb9f00a12af51dff6ca291cb9829a82960c2ef/src/kernel/rcuht/locks/komb_rwlock.c).
+Both algorithms keep the gate through a contended writer's application body, but
+release it before a reader's application body. Both also have a native writer fast
+path that skips the gate. KD handles slow readers locally and delegates writers
+through JIT; TCLock delegates by switching native stacks. KD retains its existing
+packet, source lease, completion and ACK rules.
 
 ## Scope and lifetime
 
-This is a spinning lock, not a sleeping rwsem. Bodies must not sleep. Recursive
-reads, upgrades/downgrades, IRQ/BH variants, Linux-lock mixing, and general
-oversubscription are unsupported. Nested translated operations retain existing
-spin admission limits; this addition does not extend the nested control ABI.
-Reader admission drains in native code before the JIT body. Readers must still
-finish in bounded time; this spinning lock cannot make a stalled reader progress.
+Readers must finish in bounded time: a spinning writer cannot make a stalled
+reader progress. Waiting for readers happens before JIT execution. This API does
+not support sleeping bodies, recursive reads, upgrades/downgrades, IRQ/BH variants,
+mixing with Linux or TCLock APIs, or general oversubscription. Nested translated
+operations keep the existing spin admission limits; ABI3 adds no new nested API.
 
-Keep lock storage, reader data and source text alive through all readers,
-writers, queued requests and retained frames. Stop callers and join them before
-source retirement; successful retirement must precede workload/provider unload.
-The inherited [spin](spin_implementation.md), [frame](frames.md) and
-[JIT limitations](../TODO.md) remain applicable.
+Keep the lock, protected data and source text alive while any reader, writer,
+queued request or frame can use them. For shutdown, stop new calls and join all
+callers, then retire sources. Unload the workload and provider only after source
+retirement succeeds. The [spin](spin_implementation.md), [frame](frames.md) and
+[JIT limitations](../TODO.md) also apply.
 
-[The tests](../../tests/kernel/rwlock/README.md) distinguish native controls,
-publication and actual returned JIT bodies, and verify reader overlap, writer
-exclusion, exact updates, per-worker progress and final drain.
+[Correctness tests](../../tests/kernel/rwlock/README.md) check simultaneous readers,
+writer exclusion, exact updates, worker progress and clean shutdown. They report
+native execution, publication and returned JIT bodies separately.
 
-The [rwlock benchmark](../../bench/rwlock_compare/README.md) compares KD with
-Linux native and the TCLock rwlock port using shared cacheline and hash workloads,
-read/write mixes and warmed timed windows.
-The [RCUHT comparison](../../bench/rwlock_compare/results/20261010-rcuht/README.md)
-records the current 1%/20% write mixes and strict performance target. The
-[initial comparison](../../bench/rwlock_compare/results/20261009/README.md) retains
-the historical ABI1 hash-writer admission refusal, resolved by ABI3.
+The [benchmark guide](../../bench/rwlock_compare/README.md) compares KD with Linux
+Native and TCLock using matched cacheline and hash workloads. The
+[RCUHT report](../../bench/rwlock_compare/results/20261010-rcuht/README.md) gives the
+1%/20% results and the remaining performance gaps. The
+[initial report](../../bench/rwlock_compare/results/20261009/README.md) preserves the
+older ABI1 hash refusal that ABI3 resolved.

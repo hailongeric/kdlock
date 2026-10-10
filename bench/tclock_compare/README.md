@@ -1,8 +1,9 @@
 # KD, TCLock and Linux Native comparison
 
 [run.py](run.py) measures spin; [run_mutex.py](run_mutex.py) measures ordinary mutex.
-Each arm has separate workload functions and lock objects, sharing payload, timing
-and reporting. Operations do not branch on a runtime `is_mutex` selector.
+Each backend has its own compiled workload functions and lock object. They use
+the same protected operations, timing method and reports. Choosing spin versus
+mutex happens at build time, without a runtime `is_mutex` branch in each operation.
 Build and execute in the verified recovery guest; follow [operations](../../docs/AGENTS.md)
 for snapshots, frozen inputs and drain.
 Mixed read/write workloads use the separate [rwlock runner](../rwlock_compare/README.md),
@@ -19,10 +20,10 @@ Fix host CPUs at 2.5 GHz and check vCPU/NUMA affinity; keep the existing kernel,
 mitigations and preemption configuration. Confirm a real monitor snapshot before
 setting recovery variables. Output must be a new directory outside the checkout.
 
-The example uses collector 58 for the documented 60-vCPU destination, whose
-migration verification is pending. Historical 40-vCPU runs used collector 38.
-Verify the actual online/available CPUs and keep the collector outside every
-worker cohort; recorded results do not validate the destination setup.
+The example uses collector 58 for the documented 60-vCPU destination. Its
+[migration checks](../README.md#vm-migration-validation) are recorded separately
+from the historical 40-vCPU runs, which used collector 38. Verify the actual
+online/available CPUs and keep the collector outside every worker set.
 
 Full spin cacheline matrix after that verification:
 
@@ -57,11 +58,11 @@ has no `mutex_jit` parameter.
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--dry-run` | Print plan without live execution |
 
-The runner builds matching backend/workload/provider copies and audits actual ELF
-interfaces, return layouts and sanitizer references. KD preparation publishes the
-entry before all workers warm up with 48,000 operations each; the daemon is stopped
-before measurement. NUMA tables and layout metadata describe actual builds, not
-requested labels alone.
+The runner builds matching copies of each backend, workload and provider. It
+checks the built ELF interfaces, return layouts and sanitizer references. KD
+publishes the prepared entry before every worker warms up with 48,000 operations.
+The daemon stops before measurement. Recorded NUMA and layout settings come from
+the actual build, so requested option names alone cannot mislabel a sample.
 
 ## Workloads and backends
 
@@ -91,13 +92,16 @@ polling. See [TCLock scope](../../tclock_backend/README.md) and
 
 ## Results and validity
 
-`records.json` keeps every planned sample, including failure/not-run states.
-Only correct, completed, drained samples enter `summary.csv/json`.
-Timed comparison uses `best_valid_warmed_peak`; fixed iteration uses
-`best_valid_throughput`. The chosen session supplies both its throughput and
-amortized ns/op. Keep `best_whole_*` too; peak superiority does not imply sustained
-superiority. Spread is `(max-min)/median ×100%`. Backend ratios compare corresponding
-best valid peaks; medians describe repeatability and regression.
+`records.json` keeps every planned sample, including failed or unrun cases.
+`summary.csv/json` includes only samples with correct results, completed work and
+successful drain. Timed comparisons select `best_valid_warmed_peak`; fixed-iteration
+comparisons select `best_valid_throughput`. The selected run supplies both its
+throughput and amortized ns/op.
+
+Keep the `best_whole_*` rates as well: winning a short peak window does not mean
+winning over the whole run. Spread is `(max-min)/median ×100%`. Ratios between
+backends use their corresponding best valid peaks, while medians help show
+repeatability and regressions.
 
 Keep workload, lock kind, caller shell/cookie, heat policy, ratio and UBSAN settings
 separate. Never pool historical observe/percentage policies with current adaptive
@@ -105,13 +109,13 @@ right-shift rules. [Execution flow](../../docs/JIT_EXECUTION.md#heat-and-roles)
 defines the current counters. Session-end counters may include warmup and are not
 selected-window counts.
 
-KD actual JIT requires wrapper-returned body evidence where the configuration
-requires delegation. Native low-contention samples can be valid performance
-observations while marked NO_JIT; they are not JIT passes. Contended mutex positives
-require returned bodies. TCLock spin delegation is `UNMEASURED`, not zero; mutex
-reports returned-batch delegated bodies and parks, with positive contended evidence.
-`--keep-going-no-jit` retains drained failures and continues collection, but excludes
-failed scores and leaves the final exit nonzero.
+A configuration that requires KD delegation must record JIT bodies returned by
+the wrapper. With little contention, a native run may have valid throughput but
+is marked NO_JIT, not a JIT pass. Contended mutex cases require returned bodies.
+TCLock spin delegation is `UNMEASURED`; that does not mean zero. TCLock mutex reports
+returned delegated bodies and successful parks, and must show delegation under
+contention. `--keep-going-no-jit` keeps drained failures and continues collecting,
+but excludes their failed scores and still exits nonzero.
 
 Timed peak selection requires all workers to progress in the full cohort window.
 Keep whole-run per-worker and node shares too, especially cohorts with unequal

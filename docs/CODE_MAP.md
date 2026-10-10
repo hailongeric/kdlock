@@ -1,8 +1,9 @@
 # Code map
 
-Start with [the design](DESIGN.md) and [lock protocols](design/lock_protocols.md).
-This map lists maintained source boundaries; build products and evidence archives
-are not source directories.
+Use this map to find the source file responsible for a feature. Start with
+[Design](DESIGN.md) for the execution model and [lock protocols](design/lock_protocols.md)
+for how each lock works. The tables list maintained source, not generated build
+files or benchmark archives.
 
 ## Provider and execution
 
@@ -21,8 +22,9 @@ are not source directories.
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, publication and retirement |
 | [Shared headers](../include/README.md) | Direct APIs, ABI, packet/frame types and wrapper assembly |
 
-Private `.inc` files keep static state and declaration order inside the original
-translation unit. They are not separate Kbuild objects. Read ordinary spin from
+Private `.inc` files are source fragments included by a parent C file. They share
+that file's static state and declaration order; they are not separate Kbuild
+objects. Follow the ordinary spin path from
 `direct.inc` → `entry.inc` → queue/combiner → restore/unlock; read mutex from
 `lock/mutex_calls.inc` → `mutex/queue.inc` → combiner/waiter/clobber. Rwlock's
 public count/gate protocol is in its header; the spin components acquire writer

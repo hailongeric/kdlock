@@ -1,8 +1,11 @@
 # KD spin, mutex and rwlock ownership
 
-This guide defines exact ownership and handoff. [Lock protocols](lock_protocols.md)
-compares all nine backends; [frames](frames.md) defines storage and continuation.
-Admission counters are approximate and never substitute for these controls.
+This guide explains who really holds a KD lock and how that responsibility moves
+between callers and combiners. [Lock protocols](lock_protocols.md) compares all
+nine backends; [frames](frames.md) explains how request state stays alive. The
+[glossary](../DESIGN.md#terms-used-in-these-guides) defines the common terms.
+Approximate heat counters help choose future requests; they cannot prove ownership
+or authorize an unlock.
 
 ## 4. Spin delegation protocol
 
@@ -20,10 +23,12 @@ have one protocol: Linux, TCLock and KD tail encodings cannot be mixed.
 
 ### 4.2 Acquisition tickets and node lifetime
 
-Fast owners and generation-checked tickets identify the exact acquisition, not
-just its address. A physical request reserves once; retries and early-release
-reacquisition keep its original identity. Ticket phase/borrow state controls native
-handoff and final reclamation. Heat-table collisions or capacity do not erase owners.
+A lock address is not enough to identify one acquisition. KD uses a fast-owner
+record or a ticket with a checked generation. A physical request reserves its
+identity once and keeps it through retries, including reacquisition after an early
+release. Ticket state tracks native handoff and references held by other executors.
+Storage cannot be reclaimed until those references are gone. Heat-table collisions
+or a full heat table do not remove ownership records.
 
 Scheduling nodes are bounded and reusable. Their stable continuations survive
 node reuse and C-stack return. A child has its own frame/ticket while sharing the
@@ -37,14 +42,17 @@ Simple roots may use minimal completion; legacy/nested/complex exits require the
 own checks. After final body completion, pop the frame before release-publishing
 parent DONE and waiter completion. Queue handoff and physical unlock remain exact.
 
-NATIVE_READY transfers permission to run a validated suffix with current logical
-state; it is not final retirement. Every native executor, including a zero-lock
-relay, borrows the root ticket before wakeup. The physical owner services unlock
-requests and ACKs. After cleanup/pop, executors drop their borrows. The final native
-unlock waits for all borrowers, releases root storage, then ends the original pin.
-A continuation with no remaining native lock routes still waits for retirement
-before final restore. The original thread cannot reclaim fields another executor
-still needs.
+NATIVE_READY means that the waiter may run a checked remainder of the body using
+its current logical state. It does not mean the root request can be freed. Each
+native executor takes a reference to the root ticket before wakeup, even if it is
+only relaying a continuation and holds no lock. The physical owner processes unlock
+requests and returns ACKs. Executors release their references after cleanup and
+frame removal.
+
+Final native unlock waits for all those references, releases the root storage,
+and only then ends the original preemption pin. A caller with no native unlock
+left still waits for retirement before its final restore. It must never reclaim
+fields another executor still uses.
 
 ### 4.4 Nested contention and stack resources
 
@@ -62,10 +70,11 @@ resource failure after progress cannot be relabelled an unstarted retry.
 
 ### 5.1 Physical lock and scheduling gate
 
-KD uses the original Linux `struct mutex`. Its owner word, wait list, sleeping
-rules and native peers remain authoritative. A private `komb_mutex` shadow gate
-serializes KD queue execution; gate ownership does not itself own Linux's mutex.
-No global mutex interception is installed.
+KD retains the original Linux `struct mutex`, including its owner word, wait list
+and sleeping rules. Ordinary native users still contend on that same mutex. A
+private `komb_mutex`, called the shadow gate, orders KD's queued work. A combiner
+must acquire the Linux mutex as well as that gate before running a delegated body.
+Loading KD does not intercept global mutex calls.
 
 Exact shadow addresses select the gate. The current 1024-entry table has lock-free
 published-key reads and serialized insertion; full capacity falls back natively.
@@ -77,11 +86,15 @@ through final ACK. A profiling value cannot authorize release.
 <a id="mutex-outer-direct"></a>
 #### Outer direct pair
 
-`KD_MUTEX_OUTER_LOCK/UNLOCK` uses an opaque, same-task, nontransferable acquisition
-cookie. Successful caller-side owner CAS records that native owner; matching unlock
-calls original `(mutex_unlock)`. On failure, the provider counts the entry once and
-continues without retrying that first CAS. Native fallback before KD reference/gate
-returns the exact task owner; entry into the KD queue returns zero.
+`KD_MUTEX_OUTER_LOCK/UNLOCK` keeps a cookie for one acquisition. The same task must
+use it for the matching unlock; callers must not copy, modify or transfer it.
+If the caller's owner CAS succeeds, the cookie records the native owner and unlock
+calls the original `(mutex_unlock)`. If the CAS fails, the provider counts that
+entry once and continues without repeating the first CAS.
+
+A native fallback may return the exact task owner only before it takes a KD
+reference or gate. Once the request enters the KD queue, it returns zero instead.
+Zero tells the matching unlock to use KD's ownership routing.
 
 The physical return preserves its result. The separate JIT entry defines zero
 before using the cookie, avoiding an incoming-RAX dependency under MINIMAL. Nested
@@ -105,12 +118,15 @@ never reexecutes its body or unlock. Current mutex batching is FIFO, bounded at
 
 #### Pinned waiting and blocking owners
 
-Published KD waiters remain preemption-disabled and PAUSE-poll on reserved stacks.
-Physical mutex owner/service paths may sleep while migration-pinned. A per-CPU
-executor context is owned by one real task; a competing task on that CPU must be
-refused before frame publication rather than overwrite its packet/continuation.
-Pinned waiters can create oversubscribed scheduling dependencies; the known mode-4
-failure remains in [TODO](../TODO.md#current-checkpoint).
+After publishing a request, a KD waiter stays preemption-disabled and polls with
+PAUSE on a reserved stack. The physical mutex owner or a service path may sleep,
+but remains pinned against migration. One real task owns each per-CPU executor
+context. A competing task on that CPU must be refused before publishing a frame;
+it cannot overwrite the current packet or continuation.
+
+With more runnable tasks than CPUs, a pinned waiter can prevent a task it depends
+on from running. The reproduced mode-4 failure remains in
+[TODO](../TODO.md#current-checkpoint).
 
 ### 5.3 Nested A/B and native continuation
 

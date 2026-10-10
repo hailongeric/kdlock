@@ -1,39 +1,46 @@
 # Source, lock and hook lifetimes
 
-Current implementation contract; start with the [design overview](../DESIGN.md).
-Validation belongs to its frozen inputs in [tests](../../tests/README.md).
+Correct locking does not by itself make memory safe to free or a module safe to
+unload. A caller can finish its body while another executor still needs its frame,
+source code or containing lock object. This guide separates those lifetimes.
+Start with the [design overview](../DESIGN.md); [tests](../../tests/README.md)
+records validation for specific source versions.
 
 ### 3.1 Source, Lock And Hook Lifetimes
 
-These are separate contracts, not solved by preserving a mutex's physical
-owner or by the deferred immutable-JIT work. The earlier capability audit is in
-[VALIDATION](../VALIDATION.md#source-and-hook-lifetime-review).
+The table shows what the current references protect. Keeping the physical mutex
+owner is necessary for correct unlock, but does not solve these other lifetimes.
+The earlier audit is in [VALIDATION](../VALIDATION.md#source-and-hook-lifetime-review).
 
-| Object | Current identity and retention | What is not established |
+| Resource | What keeps it alive | Limit |
 | --- | --- | --- |
-| JIT entry/source text | `(0, RIP)` key; root/read/ordinary-target pins retain up to 64 LIVE modules for the session; retirement invalidates every used entry before releasing dependencies | No concurrent code versions or in-session source replacement; init/unknown source is refused |
-| Translation session | Daemon/cache/children share a writer open description; real kcore reads acquire source pins before inspection | The trusted publisher must follow this path; pins do not prove byte immutability or arbitrary pointer/resource lifetime |
-| Hotlock | Typed CPU-local exact-key counters; no eviction, bounded capacity and window reset | Address reuse is not an allocation epoch; statistics cannot authorize release or retire an active request |
-| Mutex shadow | Address-keyed mutex scheduling records | No lock allocation/free notification or per-object retirement |
-| KD spin word/ticket | Caller-owned four-byte object; stable ticket retains task/CPU/generation | No gate map or second Linux lock; caller storage must outlive all physical owners and requests |
-| KD rwlock count/gate | Caller-owned 128-byte object; ungated writers retain an exact nondelegated reference, gated writers reuse spin tickets/frames | Source pins do not retain reader data or lock allocations; join all readers and writers before freeing or reinitializing storage |
-| Active request | Spin continuations survive node reuse; normal completion follows pop, native root tickets wait for every executor borrow to retire. Mutex keeps task records and owner ACKs. Source/provider leases span actual pop, once per spin batch or per legacy/mutex push | No containing lock-allocation pin or protection before entering the guest hook/after frame pop |
-| Hook provider | Plain guest function pointers into kdlock; device fops has `.owner=THIS_MODULE` | A `/dev/kd_dev` reference is not protection for independent lock-hook readers |
+| JIT entry and source code | Entries use `(0, RIP)`. Registration, text reads and ordinary call targets pin up to 64 LIVE modules for the session. Retirement invalidates every used entry before dropping those pins. | No concurrent code versions or source replacement within a session. Init and unknown source are refused. |
+| Translation session | The daemon, cache and translator children share one writer-open device description. Real kcore reads pin source before inspecting it. | Publishers must follow this path. A pin keeps a module loaded; it does not prove its bytes are unchanged or arbitrary pointers remain valid. |
+| Hotlock record | Per-CPU records match exact typed addresses, have bounded capacity and reset their sampling windows without eviction. | Reusing an address does not identify a new allocation. Statistics cannot authorize unlock or request retirement. |
+| Mutex shadow | Scheduling records are indexed by the mutex address. | There is no allocation/free notification or retirement operation for an individual lock object. |
+| KD spin word and ticket | The caller owns the four-byte word. A stable ticket retains task, CPU and acquisition generation. | There is no separate gate map or second Linux lock. The caller must keep storage alive through every owner and request. |
+| KD rwlock count and gate | The caller owns the 128-byte object. Fast native writers hold an exact nondelegated reference; gated writers use spin tickets and frames. | Source pins do not pin lock allocations or reader data. Join all readers and writers before freeing or reinitializing them. |
+| Active request | Spin continuations outlive queue-node reuse. Native executors retain root tickets; mutex requests retain task records and owner ACKs. Source/provider leases last through frame removal, once per spin batch or per legacy/mutex push. | These references do not pin the containing lock allocation or protect execution before hook entry or after frame removal. |
+| Hook provider | Device operations use `.owner=THIS_MODULE`; preserved guest hooks are plain function pointers into KD. | A `/dev/kd_dev` reference does not protect independent readers of lock-hook pointers. |
 
 See [registration](../../kernel_module/exe.c), [hook publication/removal](../../kernel_module/kd_main.c),
 [mutex shadow lookup](../../kernel_module/kd_lock.c) and
-[spin ticket ownership](../../kernel_module/kd_spin_entry.c). An idle reused lock
-address does not by itself establish broken exclusion: KD acquires its own initialized word and mutex retains its original lock. But the tables cannot tell old
-and new object lifetimes apart, reset policy or prove safe reuse while any
-old request/physical owner still exists. A logical final A ACK can precede
-physical batch release; it is not permission to free a containing object
-still used by another request or owner.
+[spin ticket ownership](../../kernel_module/kd_spin_entry.c) for implementation.
 
-Rwlock gate quiescence alone is insufficient: fast readers and ungated native
-writers can own the count without that gate. Stop all callers and check the count,
-gate and existing exact acquisition/frame state. ABI3 writer admission survives
-a progressed native suffix; an unstarted refusal cancels it before physical
-handoff. [Rwlock ownership](rwlock_implementation.md) defines release and retry.
+Address reuse alone does not prove an exclusion bug: KD still acquires an initialized
+spin word or the original mutex. However, address-keyed tables cannot distinguish
+two allocations at the same address, reset policy for a new allocation, or prove
+that old users have finished. Keep storage alive until all of them finish. Even
+the final logical ACK for lock A can arrive before the batch physically releases
+A, so that ACK alone is not permission to free the containing object.
+
+An idle rwlock gate is also insufficient: fast readers and native fast writers
+can be active without holding it. Stop callers, then check the count, gate and exact
+acquisition/frame state. An ABI3 body that resumes natively after making progress
+keeps writer admission; a refusal before the body starts cancels it before physical
+handoff. [Rwlock ownership](rwlock_implementation.md) explains release and retry.
+
+#### Preserved kernel hooks
 
 Global spin dispatch is removed and the mutex installer is disabled. The
 following reader limitation applies if the preserved kernel hooks are re-enabled.
@@ -59,13 +66,15 @@ does not pin code or module-owned data. The normal delete-module path sets
 GOING, calls the module's `exit()`, then sends the GOING notifier. That notifier
 cannot veto an exit that has already destroyed source-owned resources.
 
-Blindly pinning every source module until kdlock exit is also insufficient:
-the direct KD `spin_cacheline.ko` depends on `kdlock_km`, so pinning it in
-the reverse direction prevents either module being normally unloaded first.
-A separate terminal retirement boundary now releases source pins before either
-exit; force-unload is not a solution. The benchmark's own fops
-reference and module dependency protect its controlled ioctl lifetime, not an
-arbitrary module source or cached image after source reload.
+Keeping every source pin until KD unloads would create a dependency cycle.
+For example, `spin_cacheline.ko` depends on `kdlock_km`. If KD also pins that workload
+until its own exit, neither module can unload first. Source retirement breaks the
+cycle by releasing source pins before either module exits. Force-unload is not a
+substitute. The benchmark's device reference and module dependency protect its
+controlled ioctl calls; they do not make arbitrary source reloads or cached images
+safe.
+
+#### Device session and source retirement
 
 The device-session prerequisite is now implemented in userspace: one daemon
 descriptor spans requests, compilation and publication; only translator children
@@ -76,31 +85,37 @@ close. Detailed flow, control commands and direct-CLI restrictions live in
 [the daemon guide](../../daemon/README.md#device-session-and-source-residency). Wire structures and the
 two-word wrapper ABI are unchanged; source controls are separate ioctls.
 
-`kd_source.c` implements session-wide residency, not per-image reclamation:
+`kd_source.c` keeps source resident for the whole session. It does not reclaim
+individual image versions. Its lifecycle is:
 
-1. Root registration pins LIVE module core text before installing metadata.
-   Each real read pins its bounded range before kcore inspection, including
-   learned/cold windows. Core kernel init and module init ranges are refused.
-   Read windows can include resident data, but roots and ordinary native CALL
-   targets must be text. Dependencies are deduplicated and retained even after
-   partial refusal, because older images can still use them.
-2. Writer admission uses the source lock. Frame admission uses a single atomic
-   word containing a closed bit and a 32-bit live count. Retirement atomically
-   sets the closed bit before checking the count: a racing frame either reserves
-   a counted lease first or fails admission. Module-reference failure rolls the
-   reservation back. Frame get/put take no source raw spinlock; snapshots read
-   the atomic count. Closure remains terminal even when retirement returns busy.
-   Spin batches retain one lease through every native/remote child pop and batch
-   completion; legacy/mutex pushes retain per-frame leases, including failed-push rollback. Ordinary CALL miss pins the target before native transfer/learning;
-   failed target residency after progress is non-continuable, never entry replay.
-3. Retirement serializes against uploads, closes fresh selection/registration,
-   and refuses while writers/frames or known queue/task/origin state remain.
-   Existing task/origin routing survives closing for owner unlock notifications.
-   Existing leased reads/targets can finish while DRAINING, not new publication.
-4. With the external no-new-callers boundary and all holders drained, retirement
-   publishes NATIVE_ONLY under the registry gate, then drops source references
-   outside the raw lock. RETIRED is terminal; slots/images are not reused or
-   reopened. All source/provider modules can then exit in dependency order.
+1. **Pin source before reading it.** Root registration pins LIVE module core text
+   before installing metadata. Every real read pins its bounded range before
+   kcore inspection, including learned callees and cold code extensions. Kernel
+   and module init ranges are refused. Read windows may contain resident data,
+   but roots and ordinary native CALL targets must be text. Duplicate dependencies
+   share pins. Even after a partial refusal, retain dependencies that an older
+   image may still use.
+2. **Count admitted work.** Source writers use the source lock. Frame admission
+   uses one atomic word with a closed bit and a 32-bit live count. Retirement sets
+   the closed bit before inspecting the count. A racing frame therefore either
+   takes a counted lease first or is refused. Failure to obtain the module reference
+   rolls back the reservation. Frame get/put do not take the source raw spinlock;
+   snapshots read the atomic count. Closure stays permanent even if retirement
+   returns busy. A spin batch holds one lease through all native/remote child
+   removal and batch completion. Legacy and mutex pushes hold per-frame leases,
+   including rollback after a failed push. An ordinary CALL miss pins its target
+   before native transfer or learning. If that pin fails after progress, execution
+   cannot continue or restart from entry.
+3. **Close new work and wait for users.** Retirement serializes with uploads and
+   closes new selection and registration. It refuses to finish while source
+   writers, frames or known queue/task/origin state remain. Existing task/origin
+   routing stays available for owner unlock notifications. During DRAINING,
+   already leased reads and targets may finish, but new publication is blocked.
+4. **Invalidate entries, then release pins.** Once the caller has stopped new calls
+   and all holders have drained, retirement publishes NATIVE_ONLY under the
+   registry gate. It drops source references outside the raw lock. RETIRED is
+   permanent: slots and images are not reused or reopened. Workload and provider
+   modules can then unload in dependency order.
 
 Repeated `kd_exe_add()` calls use a read-only registration check: acquire the
 published slot, match PID/RIP/backend and code storage, and observe source OPEN.

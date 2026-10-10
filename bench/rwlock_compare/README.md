@@ -1,22 +1,26 @@
 # Read-write lock comparison
 
-Compare Linux native rwlocks, the [TCLock rwlock port](../../tclock_backend/README.md)
-and [KD rwlocks](../../docs/design/rwlock_implementation.md). This is a performance
-workload separate from the instrumented [rwlock correctness test](../../workload_modules/rwlock/README.md).
-All compilation, tests and live runs belong in the recovery guest; follow
-[operations](../../docs/AGENTS.md) for kernel identity, snapshot and drain requirements.
+This runner compares Linux native rwlocks, the
+[TCLock rwlock port](../../tclock_backend/README.md) and
+[KD rwlocks](../../docs/design/rwlock_implementation.md) on the same workload.
+Use the separate [correctness test](../../workload_modules/rwlock/README.md) for
+instrumented checks of reader overlap and writer exclusion.
 
-[RCUHT comparison, 2026-10-10](results/20261010-rcuht/README.md) records the
-ABI3 hash-writer JIT results, optimization trials and strict parity outcome.
-All 270 sessions passed correctness and drain, but KD met both throughput targets
-at only 21 of 30 configurations. The remaining nine points fail the requested
-Native/TCLock parity requirement; no universal performance win is claimed.
+Build, test and run only in the recovery guest. Follow
+[operations](../../docs/AGENTS.md) to verify the kernel, confirm a recovery snapshot
+and check that all work has finished before unloading modules.
 
-[Full thread sweep, 2026-10-09](results/20261009-scaling/README.md): 270 sessions
-for 1% and 20% writes on the historical ABI1 single-cacheline workload, all 15
-thread counts, throughput curves and NUMA progress.
-The [initial mix comparison](results/20261009/README.md) retains the earlier
-180 cacheline sessions, 12 delegation-disabled controls and the ABI1 hash refusal.
+The latest [RCUHT report](results/20261010-rcuht/README.md) contains 270 runs.
+All produced correct results and shut down cleanly. At 21 of the 30 combinations
+of write percentage and thread count, KD matched or exceeded both Native and
+TCLock on both peak and whole-run throughput. It fell short at the other nine.
+
+Older reports remain separate:
+
+- [2026-10-09 scaling](results/20261009-scaling/README.md): 270 runs with ABI1 and
+  one protected cacheline, at all 15 thread counts and 1%/20% writes.
+- [Initial mixes](results/20261009/README.md): 180 cacheline runs, 12 runs with KD
+  delegation disabled, and the ABI1 hash-writer refusal later resolved by ABI3.
 
 ## Cases
 
@@ -25,31 +29,36 @@ The [initial mix comparison](results/20261009/README.md) retains the earlier
 | `cacheline` | Readers load and compare a consistent version; writers increment every selected line | 1, 2, 4, 8, 16 distinct 64-byte lines |
 | `rcuht` | Readers look up a key; writers move a preallocated node between hash buckets | 1,024 buckets, 4,096 nodes, 8,192 possible keys |
 
-Hash moves and the complete structural oracle reuse the previous
+The hash update and final structure checks reuse the previous
 [KD/TCLock hash payload](../../workload_modules/spin_cacheline/hash_payload.h),
-adapted from TCLocks `rcuhashbash_write_lock`. This is a global rwlock benchmark,
-not lock-free RCU. It allocates no nodes and calls no RCU services in the body.
+adapted from TCLocks `rcuhashbash_write_lock`. One global rwlock protects the table.
+Despite the RCUHT name, readers take that lock: the body uses no lock-free RCU,
+node allocation or RCU services.
 
-The default workload is **RCUHT**, with exactly two mixes: **1% writes**
-(99% reads) and **20% writes** (80% reads). Select `--workloads cacheline` for the
-previous single-cacheline workload. ABI3 writer admission runs before the JIT
-body; the earlier ABI1 hash refusal remains in the historical evidence.
-Every worker uses the same percentage
-with evenly spaced writes and a deterministic phase offset;
-this is a mixed-operation workload, not a fixed writer-thread population.
-The runner verifies the exact mix from each worker's completed count.
+The default workload is **RCUHT**, with two mixes: **1% writes / 99% reads** and
+**20% writes / 80% reads**. Every worker performs the selected mix. Writes are
+spaced evenly, with a deterministic starting offset for each worker. For example,
+20% writes means each worker performs one write for every four reads; it does not
+mean 20% of the workers are dedicated writers. The runner checks each worker's
+exact read and write totals.
+
+Use `--workloads cacheline` for the earlier single-cacheline workload. KD's ABI3
+acquires exclusive writer access before the JIT body, allowing the current hash
+writer to pass the existing translation checks. The older ABI1 refusal stays in
+its original report.
 
 The default thread set matches the earlier spin/mutex comparison:
 `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36`. Three rounds of each case with all three
 backends produce **270 sessions**. `--threads` selects a shorter set;
 `--full-matrix` explicitly restores the default 15-point set.
-`--cpus` takes an ordered list whose prefixes form cohorts.
-Use separate directories for compact and cross-NUMA placements. The built-in
-collector default remains CPU 38, matching the recorded 40-vCPU runs. Every
-collector must be online, available and outside all worker cohorts.
+`--cpus` is an ordered list: a run with N workers uses the first N CPUs. Keep
+runs on one NUMA node separate from runs spanning nodes. The collector samples
+progress on its own CPU, which must be online, available and outside every worker
+set. Its built-in default is CPU 38, as used in the recorded 40-vCPU runs.
 
 The commands below explicitly use collector CPU 58 for the documented 60-vCPU
-destination, after its pending [migration verification](../../docs/PROJECT_GUIDE.md#guest-workflow).
+destination. Its [migration checks](../README.md#vm-migration-validation) are
+recorded separately; recheck the live topology and snapshot before each new run.
 Default workers remain the prefixes of CPUs 0..35. On that destination, 32/36
 workers cross NUMA nodes; in the original 40-vCPU reports, 24/28 workers crossed
 as well. Reproducing those reports requires their original topology and collector
@@ -100,60 +109,84 @@ new output directories. The archived original-host snapshot is not portable.
 
 ## Measurement and acceptance
 
-Each case loads fresh modules and prepares exactly one KD writer entry. Translation
-finishes and the daemon exits before all-worker warmup (48,000 operations each).
-Read-only cases require no writer publication. Measurement is one ioctl per pinned
-worker, with no Python operation loop or added shared reader counters. All backends
-execute identical register-only post-work, explicitly set by `--post-work-rounds`
-(default **4**, the earlier KD benchmark setting). Record this value when comparing
-against later spin/mutex runs; do not pool different post-work amounts.
+Each run loads fresh modules and prepares one KD writer entry. Translation
+finishes and the daemon exits before all workers warm up with 48,000 operations
+each. A read-only case needs no writer publication. Each pinned worker executes
+its measured loop in one ioctl. Python does not run an operation-by-operation
+loop, and measurement adds no shared reader counters.
 
-Timed runs default to two seconds, progress checkpoints every 256 operations,
-10 ms collector samples and the existing highest observed 300 ms full-cohort
-window after 300 ms settling. Actual kernel timestamp brackets determine its
-duration; no interpolation is used. Raw samples retain sampling delay, count
-quantization and per-worker progress. Whole-run read/write rates include start,
-tail and collector/join overhead; these rates and JIT shares do not describe the
-selected peak window. Separate peak read/write rates use the exact deterministic
-mix at each sampled worker count. Inverse aggregate throughput is not acquisition latency.
+After releasing the lock, every backend performs the same register-only arithmetic.
+`--post-work-rounds` sets its amount explicitly; the default is **4**, matching the
+earlier KD benchmarks. Record it when comparing results. Different amounts of
+post-work are different workloads, including when comparing newer spin/mutex runs.
 
-The oracle requires exact read/write counts, consistent cacheline reads, exact
-writer increments on active lines, unchanged inactive lines, valid hash membership,
-unique keys/backlinks/bucket placement and exact move/conflict/miss totals. Worker
-CPU, post-work checksum, preemption/IRQ balance and final count/gate state must also match.
+### Throughput measurements
 
-KD counts **returned JIT writer bodies**, divided by completed **writes**.
-`NO_JIT` remains visible even when adaptive native execution has valid throughput;
-NORMAL publication never proves JIT execution. `--require-jit` makes zero bodies
-a failed case for each selected multithreaded KD writer configuration. Read-only
-and disabled controls require zero JIT. TCLock's native stack delegation is used,
-but its share is **UNMEASURED**, like the existing spin comparator; do not infer it
-from contention or throughput.
+Timed runs last two seconds by default. Each worker publishes progress every 256
+operations, and the collector samples it every 10 ms. The report gives two rates:
 
-`plan.json`, `environment.json`, frozen sources/binaries, build logs, ELF context
-audit, translation images, raw phase samples, kernel logs and each `session.json`
-remain in the output directory. `records.json` includes failed/not-run cases.
-`summary.json` contains only validated drained timed cases, grouping JIT positives
-separately from NO_JIT controls. It reports best peak, min/median/max/spread,
-whole-run min/median/max and whether all three rounds are present. Functional
-runs produce no performance summary entries.
+| Measure | How it is calculated |
+| --- | --- |
+| Warmed peak | After 300 ms of settling, choose the highest observed valid 300 ms window in which every worker progresses. Use the actual kernel timestamps; do not interpolate samples. |
+| Whole-run throughput | Count completed reads and writes over the whole run, including start, tail, collection and worker-join overhead. |
 
-`parity.json` checks the requested performance target at every point: KD's best
-warmed peak and median whole-run rate must each meet both native and TCLock.
-`--require-parity` returns a failure after completing all sessions if any point
-is slower or lacks three comparable rounds. There is no tolerance or pooling of
-JIT/NO_JIT groups. This is an observed-throughput threshold, not a statistical
-claim that small differences exceed measurement noise.
+Raw samples preserve collection delays, the 256-operation reporting granularity
+and every worker's progress. Peak read/write rates use the exact deterministic
+mix at each sampled count. Whole-run rates and JIT shares do not describe the
+selected peak window. The inverse of aggregate throughput is amortized time per
+operation, not a measurement of how long one acquisition waited.
 
-Create `<output>/STOP` to stop at the next drained case boundary. A timeout or
-kernel fault preserves processes/modules for diagnosis; it is never evidence
-that callers drained. Successful teardown joins workers, stops translators,
-retires KD sources, checks TCLock count/gate/stack/queue state, clears its target
-binding, and unloads workload before backend. Never force unload.
+### Correctness and JIT checks
 
-The runner verifies live native qspinlock function pointers from the captured
-kernel's DWARF layout, so rotated boot messages do not require skipping boot-policy
-verification. Only the two dispatch pointers are read from `/proc/kcore`.
+A valid run must have exact read/write counts. Cacheline readers must see consistent
+values; writers must update exactly the active lines and leave inactive lines
+unchanged. Hash checks cover membership, unique keys, backlinks, bucket placement
+and move/conflict/miss totals. Worker CPU, arithmetic checksum, preemption/IRQ
+balance and final reader/writer count and gate state must also match.
+
+KD's JIT share is **returned JIT writer bodies / completed writes**. Reads are
+excluded. `NO_JIT` means no returned JIT bodies were observed; a native run may
+still have valid throughput. NORMAL only means code was published.
+`--require-jit` fails a selected multithreaded KD writer case if it returns no JIT
+bodies. Read-only and delegation-disabled controls must return zero. TCLock uses
+native stack delegation, but its share is **UNMEASURED**. Neither throughput nor
+contention supplies a missing execution count.
+
+### Saved results and the performance target
+
+The output directory keeps `plan.json`, `environment.json`, frozen source/binaries,
+build logs, ELF context audit, translated images, raw phase samples and kernel
+logs. Each run also has a `session.json`.
+
+| File | Contents |
+| --- | --- |
+| `records.json` | Every planned run, including failed and unrun cases. |
+| `summary.json` | Only valid timed runs that finished and drained. JIT and NO_JIT runs form separate groups. Each group reports its best peak, peak min/median/max/spread, whole-run min/median/max, and whether all three rounds are present. |
+| `parity.json` | Whether KD meets the throughput target at each combination of write percentage and thread count. |
+
+Functional runs have no performance summary entries. For performance parity, both
+of these must hold against **each** of Native and TCLock:
+
+1. KD's best warmed peak is at least as high.
+2. KD's median whole-run rate is at least as high.
+
+`--require-parity` completes all sessions, then returns failure if any point is
+slower or lacks three comparable rounds. There is no tolerance and no merging
+of JIT and NO_JIT groups to reach three rounds. This checks the observed rates;
+a small difference does not by itself prove a statistically significant gap.
+
+### Stop and cleanup
+
+Create `<output>/STOP` to stop after the current case has finished and drained.
+A timeout or kernel fault keeps processes and modules available for diagnosis;
+it does not prove workers have stopped. Successful cleanup joins workers, stops
+translators, retires KD sources, and checks TCLock's count, gate, stacks and queues.
+It then clears the diagnostic target binding and unloads the workload before the
+backend. Never force unload.
+
+The runner checks live native qspinlock function pointers using the captured
+kernel's DWARF layout. It reads only the two dispatch pointers from `/proc/kcore`.
+This still verifies boot policy when old boot messages have left the kernel log.
 
 ## Focused checks
 

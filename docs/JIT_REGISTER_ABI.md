@@ -1,7 +1,9 @@
 # JIT register and wrapper ABI
 
-The ABI connects direct callers, the private KD packet, generated code, C recovery
-and final waiter restoration. [kd_regs.h](../include/kd_regs.h),
+The ABI defines how lock callers, generated code and recovery code exchange
+execution state. They must agree on which registers are valid and how the original
+waiter resumes. IP means instruction pointer, SP stack pointer, BP frame pointer,
+and GPR general-purpose register. [kd_regs.h](../include/kd_regs.h),
 [asm_head.h](../include/asm_head.h), [wrapper.S](../include/wrapper.S) and
 [kd_jit_batch.h](../include/kd_jit_batch.h) are the authoritative definitions.
 Linux `pt_regs` is unchanged and must never be cast to `kd_regs`.
@@ -15,9 +17,11 @@ Linux `pt_regs` is unchanged and must never be cast to `kd_regs`.
 | 2 | Ordinary mutex clobber v1 | IP/SP/BP |
 | 3 | Rwlock writer clobber v1; writer admission before the body | IP/SP/BP |
 
-Direct clobber calls pass lock in RDI, pre-CALL RSP in RSI, post-CALL RIP in RDX
-and caller RBP in RCX. The compiler spills live clobbered values; the provider does
-not save all incoming GPRs. Named continuations belong to one noipa workload function.
+A caller-clobber boundary tells the compiler that a call may overwrite registers.
+The compiler saves values needed afterward; the provider does not capture every
+incoming GPR. Direct calls pass the lock in RDI, RSP before the CALL in RSI, the
+resume RIP after the CALL in RDX, and the caller's RBP in RCX. Each named
+continuation belongs to one `noipa` workload function.
 Registry, daemon, translator, frame and image must agree on backend and ABI.
 ABI3 uses the spin backend and completion endpoint, with the rwlock writer
 prelude and unstarted-retry ownership described in [rwlocks](design/rwlock_implementation.md).
@@ -31,11 +35,14 @@ ABI1 support for ordinary spin does not make old rwlock images interchangeable.
 | COMPLETE | Validated IP/SP/BP | Ordinary body finished at its exact terminal unlock |
 | FULL | Current logical GPR packet | Materialized before intermediate C/control/native recovery |
 
-Backing slots written by generated code do not turn a MINIMAL packet into a valid
-entry snapshot or FULL state. Admission rejects any observation of uncaptured
-initial bits in values, addresses, stores or branches. Clobber controls discard
-old non-SP/BP input facts; permitted stack-spill facts require actual alias/guard
-proof. Budget exhaustion refuses before execution.
+A slot may contain bytes written by generated code without being valid captured
+input. While a packet is MINIMAL, C cannot treat those slots as a complete entry
+snapshot or FULL state. Admission rejects code that uses uncaptured initial bits
+in a value, address, store or branch.
+
+At clobber controls, analysis discards old register facts except SP/BP. It retains
+facts about saved stack values only when alias analysis or entry guards prove
+them. If the analysis budget runs out, the entry is refused before execution.
 
 ### Mutex clobber and outer cookie
 
@@ -80,10 +87,12 @@ supply their independent descriptor in RDX. Inputs are:
 | `args[0]` | Origin kernel GS base | Wrapper exit kind |
 | `args[1]` | Logical waiter task | Body witness, 0 or 1 |
 
-The witness means a generated body was entered; it is not an instruction count or
-proof that no effects occurred. Never use it to replay a progressed invocation.
-Each continuation reinstalls its inputs. Translation may omit a proven-unused GS
-or task import; uncertain images retain both. Slots and the two-word ABI stay fixed.
+The body witness records whether execution entered generated body code. It does
+not count instructions, and zero alone does not prove that no effects occurred.
+Never use it to justify replaying a body that has made progress. Each continuation
+restores its own inputs. The translator may skip loading GS or the task input only
+if it proves the body does not use it; otherwise it loads both. The slots and
+two-word ABI remain the same.
 
 | Binary offset | Directory item |
 | --- | --- |
@@ -112,10 +121,12 @@ inside one C batch loop. Neither is callable as an ordinary C function pointer.
 | R15 | Indirect-jump/exit scratch |
 | Other GPRs | Corresponding logical registers while resident |
 
-[conflict.py](../disassem/conflict.py) lowers logical uses of reserved registers
-through the map/backing packet, including partial-register semantics. Translated
-instructions must not assume logical R11..R15 live in their namesake physical GPRs.
-SP/BP substitutions and special-register spill/flush also apply to CALL/RET lowering.
+The physical registers belong to the running executor. The logical registers are
+the values the original waiter should see. [conflict.py](../disassem/conflict.py)
+rewrites uses of reserved registers through the mapping above and packet storage,
+including partial-register accesses. A logical R11..R15 value need not be in the
+same-named physical register. CALL/RET translation must also use the logical SP/BP
+and save or reload reserved-register values as required.
 
 The wrapper reserves the same 176-byte frame plus its CALL word across entries:
 
@@ -145,12 +156,19 @@ only after successful handling. Registered post-CALL continuations form the JIT
 dispatch set. An ordinary CALL miss resumes natively without returning to this
 invocation's JIT.
 
-Terminal completion requires the exact backend unlock, outer lock identity,
-completion eligibility and continuation triple. The ordinary post-CALL proof checks
-RSI=R13+8, RDX=the return word and RCX=R12. A fused terminal clobber CALL checks the
-equivalent pre-CALL RSI=R13, static post-CALL RDX and RCX=R12. Success skips the
-return-word store/read; failure constructs the original CALL exactly once and
-enters FULL. Unknown/nonterminal endpoints and legacy images retain ordinary CALLs.
+KD can finish directly at the body's final unlock only after checking the exact
+backend endpoint, outer lock identity, completion eligibility and resume state.
+The two forms of the register proof are:
+
+| Form | Required values |
+| --- | --- |
+| Ordinary check after CALL | RSI=R13+8, RDX=the return word, RCX=R12 |
+| Fused clobber check before CALL | RSI=R13, RDX=the statically known post-CALL address, RCX=R12 |
+
+The fused form checks the same continuation without storing and rereading a
+virtual return word. If it fails, KD constructs the original CALL exactly once
+and enters FULL handling. Unknown endpoints, nonterminal unlocks and legacy images
+keep ordinary CALL handling.
 
 ABI3's body releases its writer byte before this spin endpoint. Pre-body refusal
 can cancel native writer admission, but COMPLETE and progressed native handoff

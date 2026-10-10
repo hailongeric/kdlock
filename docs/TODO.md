@@ -8,20 +8,21 @@ indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-Explicit KD spin, ordinary mutex and rwlock APIs and three-arm workloads exist.
-KD retains exact owner/ACK/source lifetime and shared clobber packets; providers do not install
-global interception. Neither comparison establishes parity across every requested
-configuration: see the
+KD has explicit spin, ordinary mutex and rwlock APIs, with workloads comparing
+KD, TCLock and Native. It tracks real lock owners and unlock acknowledgements,
+keeps source modules loaded while needed, and shares register packets between
+waiter and combiner. It does not intercept global lock calls. KD has not matched
+both alternatives at every requested configuration; see the
 [spin/mutex report](../bench/tclock_compare/results/20261008-protocol-simplification/README.md)
 and [RCUHT rwlock report](../bench/rwlock_compare/results/20261010-rcuht/README.md).
 
-Rwlock ABI3 resolves the earlier hash-writer admission refusal by acquiring the
-count before the prepared body. Native fast writers and separated count/gate
-cache lines are implemented; the object is now 128 bytes. The 1%/20% RCUHT matrix
-passed correctness and drain in all 270 sessions, but strict peak-and-whole parity
-passed only 21 of 30 configurations. Read-heavy cross-NUMA performance and
-two-thread writer performance remain gaps. These results do not close the
-general pointer, instruction-state or lifetime limitations below.
+Rwlock ABI3 moves the wait for readers and acquisition of write access before
+the prepared body. This resolves the older hash-writer translation refusal.
+Native writers now have a fast path, and the count and gate occupy separate cache
+lines in a 128-byte object. All 270 runs of the 1%/20% RCUHT matrix produced correct
+results and drained, but KD met both throughput targets at only 21 of 30 comparison
+points. Read-heavy runs across NUMA nodes and writer performance at two threads
+still have gaps. None of these results resolves the correctness limits below.
 
 Known failures are still open:
 
@@ -52,12 +53,17 @@ optional coverage, while reproduced supported-path failures must remain visible.
 
 ### C1. Forward continuation after partial execution
 
-Supported CALL/PENDING, post-acquisition spin and checked mutex exits preserve
-current state and exactly-once effects. Fix reproduced defects without replaying
-the prefix. Generic fault, IJ miss and budget errors remain fail-stop, not arbitrary
-native recovery. Broader remote/exhaustion combinations are optional coverage.
-Rwlock ABI3 cancels admission only for an unstarted refusal; a progressed native
-suffix keeps writer exclusion until its paired unlock and final ACK.
+The supported CALL/PENDING, post-acquisition spin and checked mutex exits resume
+from the current state. Earlier stores, lock acquisitions and releases must happen
+exactly once. Fixing a recovery defect must not restart those operations. Generic
+faults, indirect-jump misses and budget errors still stop execution; they cannot
+be used as arbitrary native fallback points. Broader combinations of remote
+execution and resource exhaustion remain optional coverage.
+
+For rwlock ABI3, writer admission can be cancelled only before the body starts.
+A body that already made progress keeps exclusive write access while finishing
+natively. Its matching unlock releases the writer byte, and the request must still
+complete the required ACK and retirement steps.
 
 ### C2. One protocol per physical lock
 
@@ -70,10 +76,12 @@ drain. No Linux/TCLock operations may access the same KD rwlock object.
 
 ### C3. Immutable JIT publication and lifetime
 
-Deferred by user decision. Recompilation overwrites a RIP-keyed code block;
-source leases and ABI tags do not isolate executable versions. A future change
-needs complete-image validation, generations and reclamation after old executors
-finish. No current throughput result closes this gap.
+This work was deferred by user decision. Recompiling an entry overwrites the code
+block indexed by its instruction address (RIP). Source leases keep modules loaded,
+and ABI tags identify calling conventions, but neither gives running code its own
+unchanging image version. A future design must validate complete images, identify
+generations and wait for old executions before reclaiming them. Better throughput
+does not resolve this lifetime problem.
 
 ### C4. Instruction, flags, and fault semantics
 
@@ -107,7 +115,8 @@ permission. Entry guards and the mutex stack checkpoint do not close the
 
 ### Main-plan acceptance audit
 
-Actual JIT requires matching generated/published identity, returned-body evidence,
-correct data, physical-owner ACKs and drain. Publication/native controls/refusals
-are separate. Historical or scoped passes cannot be joined into a whole-project
-PASS; see [the historical audit](VALIDATION.md#main-plan-acceptance-audit).
+A JIT pass requires the generated and published identities to match, an observed
+returned JIT body, correct data, the required physical-owner ACKs and complete
+drain. Report publication, native controls and refusals separately. Combining
+old passes or selected checks does not establish a current whole-project pass;
+see [the historical audit](VALIDATION.md#main-plan-acceptance-audit).
