@@ -63,6 +63,14 @@ has no `mutex_jit` parameter.
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--dry-run` | Print plan without live execution |
 
+Both entries now accept any worker count from 1 through 64. The full new-host
+comparison uses 22 counts: 1–8 in steps of one, then 12–64 in steps of four.
+Use the [complete-matrix driver](../../tools/vm/README.md#complete-164-worker-comparison)
+for all cacheline sizes and hash payloads. Its temporary 66-vCPU placement keeps
+64 distinct worker vCPUs and a separate guest collector; the collector shares
+a physical core with the last worker at the 64-worker point. The 15-point command
+above remains a smaller comparison that fits the regular 64-vCPU boot.
+
 The runner builds matching copies of each backend, workload and provider. It
 checks the built ELF interfaces, return layouts and sanitizer references. KD
 publishes the prepared entry before every worker warms up with 48,000 operations.

@@ -5,7 +5,9 @@ and Linux Native with matching workloads:
 
 - [Spin/mutex comparison](tclock_compare/README.md): spinlocks and ordinary mutexes.
 - [Rwlock comparison](rwlock_compare/README.md): read-write locks, with RCUHT at
-  1% and 20% writes across all 15 requested thread counts by default.
+  1% and 20% writes across the historical 15-point thread set by default.
+- [Complete comparison](../tools/vm/README.md#complete-164-worker-comparison):
+  all three lock families and maintained performance payloads at 22 worker counts.
 
 [Shared components](spin_cacheline/README.md) handle warmup, peak selection,
 source snapshots and offline reports. The kernel code being measured lives under
@@ -15,16 +17,28 @@ source snapshots and offline reports. The kernel code being measured lives under
 
 Reports and raw archives are separated by the physical host that ran them;
 see [the results index](results/README.md). All new tests and benchmarks run
-in the 64-vCPU VM on `10.176.26.71`, with 32 cores per NUMA node, after source edits on `380G10` are
-synchronized using `python3 tools/vm/sync_to_vm.py`. Use collector CPU 63 and
-exclude it from worker cohorts.
+in the VM on `10.176.26.71`, after source edits on `380G10` are synchronized using
+`python3 tools/vm/sync_to_vm.py`. The regular boot has 64 vCPUs with 32 cores per
+NUMA node; use collector CPU 63 and exclude it from worker cohorts. The complete
+64-worker comparison uses a temporary 66-vCPU boot, described below.
 
 Live benchmark output goes outside the guest checkout to
 `/root/kdlock-evidence/10.176.26.71/bench/<run>`. Host archives belong in
 `bench/results/10.176.26.71/raw/bench/<run>/`, and compact published reports in
 `bench/results/10.176.26.71/bench/<runner>/<run>/`.
 
-The [current 64-vCPU comparison](results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+The [complete 22-point comparison](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
+covers **1–8 workers in steps of one, then 12–64 in steps of four**, under KDLock,
+TCLock and Linux Native. It includes spin/mutex cacheline sizes 1/8/16 and RCUHT,
+plus rwlock sizes 1/2/4/8/16 and RCUHT at 1%/20% writes: **3,960 timed sessions**,
+three rounds per backend and configuration. All final-matrix sessions passed
+data checks and drained. Reports retain all samples, round
+variation, JIT/NO_JIT evidence, CSV/JSON and scaling plots. Workers use guest
+CPUs 0–31,33–64 on distinct host cores, with collector vCPU 65. At 64 workers,
+the collector and QEMU services share physical host core 63 with the last worker;
+the report records this limitation. The host governor is `ondemand`.
+
+The [earlier bounded 64-vCPU comparison](results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
 contains 72 rwlock, 36 spin and 36 mutex sessions, with three rounds per backend
 and configuration. All 144 passed correctness and drained; KD met the strict
 target for peak and whole-run throughput at 10 of 16 selected configurations.
@@ -41,7 +55,8 @@ gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
-| [Current 64-vCPU comparison](results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md) | `10.176.26.71`: RCUHT rwlocks at 1/16/32/56 workers and spin/mutex cacheline at 1/16/32/36 workers; 144 timed sessions, collector CPU 63 |
+| [Complete 22-point comparison](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md) | `10.176.26.71`: all maintained spin/mutex/rwlock payloads, 1–8 and 12–64 workers, 3,960 sessions; temporary 66-vCPU VM, collector 65 shares a physical core at 64 workers |
+| [Earlier bounded 64-vCPU comparison](results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md) | `10.176.26.71`: RCUHT rwlocks at 1/16/32/56 workers and spin/mutex cacheline at 1/16/32/36 workers; 144 timed sessions, collector CPU 63 |
 | [RCUHT rwlocks](results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) | 1%/20% writes on the hash payload; all 15 thread counts, ABI3 JIT writers and strict Native/TCLock parity checks |
 | [Rwlock scaling](results/380G10/bench/rwlock_compare/20261009-scaling/README.md) | Historical ABI1, 1%/20% writes on one cacheline; all 15 thread counts, 270 sessions, throughput curves and NUMA progress |
 | [Initial rwlock mixes](results/380G10/bench/rwlock_compare/20261009/README.md) | Native/TCLock/KD, 180 cacheline sessions at 1/16 workers, 12 KD controls, and the historical ABI1 hash-writer refusal resolved by ABI3 |
@@ -53,7 +68,7 @@ These are recorded measurements, not reruns of subsequent cleanup commits.
 Raw ignored/local/guest archives remain intact. A fresh checkout supplies reports,
 not those large original run directories.
 The original-host reports above used 40 vCPUs; the migration receipt below used
-60. Keep them separate from the current 64-vCPU comparison. Follow
+60. Keep them separate from the 64-vCPU and temporary 66-vCPU comparisons. Follow
 [guest setup](../docs/PROJECT_GUIDE.md#guest-workflow) and explicitly choose a
 collector outside the actual worker cohorts before new runs.
 
@@ -98,9 +113,12 @@ Use NUMA-on, an UBSAN-off KD benchmark provider, 48000 operations of warmup per
 worker, three rounds, two-second measurement and the highest valid 300 ms window
 after settling. Record the actual host governor and frequency policy: historical
 `380G10` reports used fixed 2.5 GHz, while the current destination uses `ondemand`.
-Keep different policies separate. For spin/mutex, explicitly select the
-full 15-point thread set; their shorter defaults are not the complete matrix.
-The rwlock runner defaults to that full thread set.
+Keep different policies separate. The complete matrix explicitly selects
+`1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64` for all runners.
+Spin/mutex retain shorter defaults; rwlock retains the historical 15-point
+default ending at 36. Use the [full driver](../tools/vm/README.md#complete-164-worker-comparison)
+for all maintained payload sizes and the [offline exporter](full_compare/README.md)
+after the workers drain.
 
 Keep both the best peak and the distribution across rounds: minimum, median,
 maximum and spread. Also keep whole-run throughput, observed JIT/delegation,

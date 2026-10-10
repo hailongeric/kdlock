@@ -307,7 +307,7 @@ def main(lock_kind='spin'):
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
-    p.add_argument('--threads', type=int, nargs='+', choices=(1,2,3,4,5,6,7,8,12,16,20,24,28,32,36), default=[1,4,8,16,20])
+    p.add_argument('--threads', type=int, nargs='+', choices=range(1, 65), default=[1,4,8,16,20])
     p.add_argument('--cpus', type=runtime.cpu_list,
                    help='ordered worker CPUs, e.g. 0-7,20-27; each cohort uses its prefix')
     p.add_argument('--spin-prefetch', type=int, choices=(0,1,2), default=2,

@@ -10,11 +10,13 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-The latest [64-vCPU performance report](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
-compares rwlock, spin and mutex on the new host, with tables, charts and
-three-round statistics. All 144 selected sessions passed correctness and
-drained; throughput gaps remain. [Performance status](PERFORMANCE.md) summarizes
-the outcome and separates this bounded run from historical measurements.
+The latest [complete performance report](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
+compares rwlock, spin and mutex on the new host at 22 worker counts: 1–8 in
+steps of one and 12–64 in steps of four. All maintained performance payloads
+have three rounds under each backend, for 3,960 timed sessions with tables,
+charts and exported statistics. Its temporary 66-vCPU layout records physical
+collector contention at 64 workers. The [earlier bounded report](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+retains the 144 selected measurements under the regular 64-vCPU layout.
 
 On the original 40-vCPU host, the [spin/mutex phase](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 ended on 2026-10-09 with performance gaps remaining. The later
@@ -70,7 +72,10 @@ guest node 0 CPUs 0–31 map to host CPUs 0–31, and guest node 1 CPUs 32–63 
 to host CPUs 32–63, with 12 GiB bound to each matching host memory node.
 `pin_cpu.sh` verifies one-to-one pinning automatically. QEMU service threads share
 host CPU 63 with guest CPU 63. Use collector CPU 63 and exclude it from workers.
-The spin/mutex runner's existing maximum remains 36 workers.
+Both comparison runners accept up to 64 workers. The [complete 22-point matrix](../tools/vm/README.md#complete-164-worker-comparison)
+uses a temporary 66-vCPU boot for 64 workers and a separate guest collector;
+at 64 workers they share the last physical host core. Archive that topology's
+evidence before restoring the regular boot, and keep its snapshots separate.
 
 `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519` to reach the guest locally.
 The host also provides the `ssh kdlock-vm` alias. The source-host synchronization

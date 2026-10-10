@@ -2,15 +2,40 @@
 
 KD does not yet match both TCLock and Linux Native at every requested thread
 count. The current evidence is the
-[64-vCPU destination comparison](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md).
+[complete destination comparison](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md).
 The original-host spin/mutex optimization phase ended on **2026-10-09**, with
 those gaps still open. Its [report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 keeps the final comparison, rejected candidates and the source and binary identities
 used for each run.
 
-## Current 64-vCPU destination, 2026-10-10
+## Complete destination matrix, 2026-10-10
 
-The [current report](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
+The [complete report](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
+contains **3,960 accepted, drained sessions**: all three backends, three rounds,
+and 22 worker counts (1–8 by one, then 12–64 by four). Spin/mutex include all
+supported cacheline sizes and RCUHT; rwlocks include all five cacheline sizes
+and RCUHT at 1%/20% writes. Every warmed peak was independently recomputed from
+raw progress. Source, binary and JIT-image hashes passed verification.
+
+KD returned JIT bodies in 824 sessions; 496 were NO_JIT controls. Descriptive
+comparisons have 312 PASS, 115 FAIL and 13 MIXED_EXECUTION points out of 440.
+These rate comparisons do not establish JIT gain for NO_JIT controls or satisfy
+strict rwlock parity by pooling mixed execution types. Original runner parity
+and status-separated statistics remain available.
+
+The temporary 66-vCPU VM placed 64 workers on distinct physical cores, with
+32 worker cores per NUMA node. Collector vCPU 65 and QEMU services share the
+last worker's physical host core at 64 workers; that point includes collection
+contention. The `ondemand` governor and captured kernel stayed unchanged.
+An interrupted idle scan left 94 completed, drained sessions; its evidence is
+retained separately and the entire group was rerun without changing measured
+source. The final scores use three rounds throughout. The archive reproduced
+all exported CSV bytes from an extracted copy, and the regular 64-vCPU boot
+was restored and verified afterward.
+
+## Earlier bounded 64-vCPU destination, 2026-10-10
+
+The [bounded report](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
 contains tables and scaling charts for 72 RCUHT rwlock, 36 spin/cacheline and
 36 mutex/cacheline sessions. All 144 passed correctness and drained. KD met
 the strict target of matching both alternatives on best warmed peak and median

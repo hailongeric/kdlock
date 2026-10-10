@@ -625,21 +625,25 @@ class DirectTests(unittest.TestCase):
                 run.main()
 
     def test_cli_small_and_numa_thread_matrix(self):
-        # Exercise parsing as well as placement: 36 workers leave CPU38 free.
+        # Exercise the full 64-worker cohort with a separate collector vCPU.
         output = io.StringIO()
         argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
-                '--cachelines', '1', '--duration-ms', '2000', '--collector-cpu', '38',
+                '--cachelines', '1', '--duration-ms', '2000', '--collector-cpu', '65',
+                '--cpus', '0-31,33-64',
                 '--threads', '1', '2', '3', '4', '5', '6', '7', '8',
-                '12', '16', '20', '24', '28', '32', '36']
+                '12', '16', '20', '24', '28', '32', '36',
+                '40', '44', '48', '52', '56', '60', '64']
         with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
             self.assertEqual(run.main(), 0)
         plan = json.loads(output.getvalue())
-        self.assertEqual(len(plan), 135)
-        self.assertEqual(len({s['name'] for s in plan}), 135)
+        self.assertEqual(len(plan), 198)
+        self.assertEqual(len({s['name'] for s in plan}), 198)
         self.assertEqual({s['threads'] for s in plan},
-                         {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32, 36})
+                         set(range(1, 9)) | set(range(12, 65, 4)))
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
+            self.assertEqual(spec['cpus'], (list(range(32)) + list(range(33, 65)))[:spec['threads']])
+            self.assertNotIn(spec['collector_cpu'], spec['cpus'])
             self.assertEqual(spec['cpu_heat_policy'],
                              'mcs_reset1024_shift10_lock512_head6' if spec['arm'] == 'kdlock' else 'not_applicable')
             self.assertEqual(spec['spin_entry_ratio_limit'],

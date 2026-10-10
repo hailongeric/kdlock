@@ -76,8 +76,12 @@ bound to host CPUs 0–31 and memory node 0. Guest node 1 has CPUs 32–63 and
 12 GiB, bound to host CPUs 32–63 and memory node 1. Every guest vCPU is pinned
 to the same-numbered physical host core. QEMU service threads share host CPU 63;
 the VM retains all 64 cores. `pin_cpu.sh` runs automatically and verifies every
-vCPU affinity. Use collector CPU 63 and worker cohorts that exclude it; the
-spin/mutex runner still accepts at most 36 workers.
+vCPU affinity. Use collector CPU 63 and worker cohorts that exclude it.
+Spin/mutex and rwlock accept up to 64 workers, but the regular VM cannot provide
+64 distinct workers plus a separate collector. The [complete matrix workflow](../tools/vm/README.md#complete-164-worker-comparison)
+uses a temporary 66-vCPU boot and records physical collector contention at
+64 workers. Restore the regular boot after archiving; never load snapshots
+between different CPU topologies.
 
 Launcher modes are `recovery`, `shared`, `status`, `monitor [COMMAND]` and
 `stop`; `stop` requests guest shutdown and never force-kills QEMU. Guest SSH
