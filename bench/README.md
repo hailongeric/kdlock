@@ -28,10 +28,38 @@ gaps; superseded reports are retrieved from fixed Git records.
 These are recorded measurements, not reruns of subsequent cleanup commits.
 Raw ignored/local/guest archives remain intact. A fresh checkout supplies reports,
 not those large original run directories.
-The measured environment had 40 vCPUs. The destination's documented 60-vCPU
-setup is pending verification; it is not covered by these passes. Follow
+The historical measured environment had 40 vCPUs. Follow
 [guest setup](../docs/PROJECT_GUIDE.md#guest-workflow) and explicitly choose a
 collector outside the actual worker cohorts before new runs.
+
+## VM migration validation
+
+The 2026-10-10 migration to Ubuntu host `eric@10.176.26.71` was verified with
+60 pinned guest CPUs, 24 GiB RAM, the captured `6.1.159-kdclobber2` kernel,
+`nopvspin`, voluntary preemption and a fresh recovery snapshot. The host uses
+an `ondemand` governor; these measurements remain separate from the historical
+40-CPU, fixed-2.5-GHz reports.
+
+One 16-worker KD spin functional check completed 1,600,000 operations and
+455,538 JIT bodies. The RCUHT comparison completed all 72 sessions correctly
+and drained: Native/TCLock/KD, 1%/20% writes, 1/16/32/56 workers, three rounds,
+collector CPU 58. KD had 15 JIT-positive and nine `NO_JIT` sessions. Seven of
+eight configurations met throughput parity. At 1% writes/56 workers, KD was
+below TCLock by 1.66% on best peak and 4.52% on median whole-run throughput.
+
+Run on the physical host:
+
+```sh
+cd /home/eric/vm/qemu-scripts
+./vm_ssh.sh                # or ssh kdlock-vm
+./bench.sh                 # new snapshot, smoke and comparison, host archive
+```
+
+Guest evidence is `/root/kdlock-evidence/migration-20261010T070707Z`.
+The host archive is `/home/eric/vm/migration/bench-20261010T070707Z.tar.gz`, with
+SHA256 `bcf6dc00c9d298d8c90780f28b4e2a8d3f191af7ffeede3c731751cde2193801`.
+`/home/eric/vm/migration/validation.json` records the acceptance and
+`host-environment.json` records the physical CPU mappings and governor.
 
 ## Measurement rules
 

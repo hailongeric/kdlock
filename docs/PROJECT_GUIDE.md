@@ -30,11 +30,43 @@ configurations. Use [performance status](PERFORMANCE.md) for measured outcomes a
 
 ## Guest workflow
 
-The host checkout is `/home/eric/vm/vm-shared/kdlock`. SSH connects to
-`root@127.0.0.1:2222`; the guest checkout is `/root/host_fs/kdlock`.
+The primary benchmark host is Ubuntu at `eric@10.176.26.71`, with source workspace
+`/home/eric/vm/vm-shared/kdlock`. Guest SSH connects to
+`root@10.176.26.71:2222` from another machine, or `root@127.0.0.1:2222` from
+that host; the guest checkout remains `/root/host_fs/kdlock`.
+The original Git checkout remains on `380G10`; the destination source mirror
+contains the approved tracked files and their current edits.
 Recovery uses a separate ext4 copy, so synchronize changed files by SHA256 while
-idle. Normal mode shares source through 9p. Do not replace `/root/host_fs` or
+idle. The optional `shared` mode shares source through 9p with mount tag
+`hostshare`, without VFIO. Do not replace `/root/host_fs` or
 modify frozen inputs. Full operational rules are in [AGENTS](AGENTS.md).
+
+Run the host helpers from `/home/eric/vm/qemu-scripts`. `run_vm.sh` defaults to
+`recovery` and also accepts `shared`, `status`, `monitor [COMMAND]` and graceful
+`stop`. It starts 60 vCPUs across two 30-core sockets with 24 GiB of RAM:
+guest node 0 CPUs 0–29 map to host CPUs 0–29, and guest node 1 CPUs 30–59 map
+to host CPUs 32–61, with 12 GiB bound to each matching host memory node.
+`pin_cpu.sh` runs automatically; host CPUs 30, 31, 62 and 63 are reserved for
+QEMU services and the host. Use collector CPU 58 for cohorts of up to 56 workers.
+The spin/mutex runner's existing maximum remains 36 workers.
+
+`vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519` to reach the guest locally.
+The host also provides the `ssh kdlock-vm` alias. `sync_source.py` copies only
+changed files from the reviewed hash manifest while the recovery guest is idle.
+Refresh manifest entries after reviewed source edits. `bench.sh` creates and
+verifies a fresh snapshot, runs the migration checks, and archives evidence on
+the physical host; see [commands and validation](../bench/README.md#vm-migration-validation).
+Host ports 2222, 9090 and 9091 retain their guest mappings; debugger port 1234
+is available only on host loopback. The monitor and serial log remain
+`/tmp/qemu-monitor.sock` and `/tmp/qemu-serial.log`.
+
+Migration boot, exact kernel identity, source synchronization, CPU placement and
+guest health were verified on 2026-10-10. The recorded 73-session validation is
+separate from historical measurements on the original host.
+The migration copy retains current disk contents without historical VM snapshots.
+Original disks on `380G10` remain untouched for rollback. Saved VM state from the
+old CPU/topology is not portable: create and verify a new destination snapshot
+before live module/JIT tests, then check the kernel, boot policy and CPU placement.
 
 ### Kernel identity
 
@@ -72,9 +104,10 @@ dmesg | grep -F 'PV spinlocks disabled, forced by "nopvspin" parameter'
 ```
 
 Run the kernel identity check above too: a matching Build ID alone does not
-establish the boot policy. The activation check passed with all 40 CPUs online,
-node0 CPUs0–19, node1 CPUs20–39, voluntary preemption, unchanged host CPU pinning
-and the 2.5 GHz frequency policy. Earlier snapshots can restore the old policy;
+establish the boot policy. The 2026-10-08 activation check on `380G10` passed
+with all 40 CPUs online, node0 CPUs0–19, node1 CPUs20–39, voluntary preemption,
+unchanged host CPU pinning and the 2.5 GHz frequency policy. This is historical
+evidence for the original host. Earlier snapshots can restore the old policy;
 confirm a snapshot of the current boot before new live verification.
 
 Backups and verification are in guest

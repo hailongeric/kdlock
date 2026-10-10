@@ -56,18 +56,46 @@ reset. Git rollback does not synchronize the guest or drain loaded modules.
 
 | Action | Location |
 | --- | --- |
-| Source edits, static checks, Git, archives and VM control | Host: `/home/eric/vm/vm-shared/kdlock` |
+| Primary benchmark host | Ubuntu host: `eric@10.176.26.71` |
+| Source edits, static checks, archives and VM control | Host workspace: `/home/eric/vm/vm-shared/kdlock` |
+| Original Git checkout | Retained on `380G10` at `/home/eric/vm/vm-shared/kdlock` |
 | Compilation, unit tests, modules, daemon and benchmarks | Guest: `/root/host_fs/kdlock` |
-| SSH | `root@127.0.0.1:2222` |
+| Guest SSH from another machine | `root@10.176.26.71:2222` |
+| Guest SSH from the benchmark host | `ssh kdlock-vm`, or `/home/eric/vm/qemu-scripts/vm_ssh.sh` |
 | Current kernel source/build | `/root/linux-6.1.159-kdclobber2` |
 | Captured kernel bundle | `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
 | QEMU launcher | Host: `/home/eric/vm/qemu-scripts/run_vm.sh` |
 
+The destination launcher defaults to `recovery`: 60 vCPUs, two sockets with
+30 cores each, and 24 GiB of RAM. Guest NUMA node 0 has CPUs 0–29 and 12 GiB,
+bound to host CPUs 0–29 and memory node 0. Guest node 1 has CPUs 30–59 and
+12 GiB, bound to host CPUs 32–61 and memory node 1. Host CPUs 30, 31, 62 and
+63 are reserved for QEMU services and the host. `pin_cpu.sh` runs automatically
+and verifies vCPU affinity. Collector CPU 58 is separate from cohorts of up to
+56 workers; the spin/mutex runner still accepts at most 36 workers.
+
+Launcher modes are `recovery`, `shared`, `status`, `monitor [COMMAND]` and
+`stop`; `stop` requests guest shutdown and never force-kills QEMU. Guest SSH
+and service forwards are host ports 2222, 9090 and 9091; debugger port 1234 is
+host-loopback only. `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519`.
+`sync_source.py` compares the approved source hash manifest and copies changed
+files into an idle ext4 guest. Refresh manifest entries for reviewed source edits.
+`bench.sh` saves and verifies a fresh snapshot, runs the migration checks, and
+archives results on the physical host; see [the benchmark guide](../bench/README.md#vm-migration-validation).
+
 Do not build or execute tests on the host. Read-only offline archive checks are
-allowed there. Recovery mode uses an ext4 copy; normal mode uses shared 9p.
+allowed there. Recovery mode uses an ext4 copy; `shared` mode uses shared 9p
+with the `hostshare` mount tag and does not attach VFIO devices.
 While idle, compare SHA256 and copy only changed files, creating subdirectories
 as needed. Delete only identified obsolete project files. Never move, recursively
 replace or clear `/root/host_fs`, and do not edit frozen running inputs.
+
+Migration boot, exact kernel identity, source hashes, all 60 CPU pins and guest
+health were verified on 2026-10-10. The migration copy contains current disk
+contents without historical VM snapshots; the original disks on `380G10` remain
+untouched for rollback. Saved VM state from the old CPU/topology is not portable
+to the destination. Create and verify a new snapshot there before live module/JIT
+runs, then verify kernel identity, boot policy, placement and benchmark drain.
 
 Verify the captured source, config, build files and live Build ID with
 [the guide](PROJECT_GUIDE.md#kernel-identity); `uname -r` alone is insufficient.
@@ -76,8 +104,8 @@ Benchmark boot policy requires `nopvspin` and native qspinlocks. Verify the
 argument and boot confirmation independently of Build ID; snapshot restoration
 can restore the earlier policy. Follow [the boot policy](PROJECT_GUIDE.md#native-qspinlocks-in-the-vm)
 before live runs and keep benchmark samples from different policies separate.
-Check actual CPU/NUMA placement. Host vCPUs were pinned to CPUs 0..39, with the
-first 20 on NUMA node 0; recheck that mapping after a restart.
+Check actual CPU/NUMA placement against the destination mapping above after
+every restart. Historical 40-vCPU measurements retain their original placement.
 
 The 2026-09-21 cleanup removed only rebuildable intermediates from old kernel
 builds. Their source, config, boot images and recovery baselines remain preserved;
@@ -128,8 +156,9 @@ If SSH fails or times out, save `/tmp/qemu-serial.log`, stop the confirmed old V
 and verify it has exited before launching another instance. Do not restart a
 healthy guest because monitor access failed or a test has not produced output.
 
-Run `./run_vm.sh recovery` from `/home/eric/vm/qemu-scripts`. Recovery supports
-snapshots; normal/VirtFS/VFIO mode must not be assumed to. The monitor socket is
+Run `./run_vm.sh recovery` on `10.176.26.71` from `/home/eric/vm/qemu-scripts`.
+Recovery supports snapshots; shared/VirtFS mode must not be assumed to.
+The monitor socket is
 `/tmp/qemu-monitor.sock`. Confirm `savevm` succeeded and `info snapshots` lists
 the chosen tag. Disconnect the monitor client without sending `quit`.
 Root-owned sockets may require sudo; bound `nc` with a timeout at the same
