@@ -84,8 +84,17 @@ hotlock/entry probes check resource/routing/drain without executing JIT bodies;
 they do not replace contended returned-body acceptance. KD mutex JIT is always
 enabled; the task/ACK probe constructs its continuation packet before hooks are
 published. Normal/SELFTEST builds stay separate.
+The task probe also stresses concurrent exact task references and RCU membership
+turnover. Use `--cpus 0 32 33` for the current guest's cross-NUMA probe; its
+default remains three distinct local CPUs. Final drain requires zero active
+task membership after all workers and ACKs finish.
 
 ## Recent verification and historical evidence
+
+The [new-host NUMA/mutex record](../bench/results/10.176.26.71/bench/comparison/numa-mutex-20261010/README.md#reproduction-and-validation)
+covers the registry/owner/CAS/layout/refill changes, basic and affected fixtures,
+and drained 36-worker nested-spin, early-unlock and rwlock c01 regression runs.
+It retains failed candidates and identifies the limits of the performance gains.
 
 The [2026-10-10 ABI3 record](kernel/rwlock/README.md#abi3-verification-on-2026-10-10)
 covers two basic programs plus five affected groups, 13 benchmark checks and

@@ -178,9 +178,7 @@ static void origin_raw_spin_unlock(raw_spinlock_t *lock)
 
 static __always_inline bool kd_mutex_trylock_fast(struct mutex *lock)
 {
-	unsigned long curr = (unsigned long)current;
-	unsigned long zero = 0UL;
-	return atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, curr);
+	return kd_mutex_outer_trylock(lock, (unsigned long)current);
 }
 
 static __always_inline bool kd_mutex_unlock_fast(struct mutex *lock)

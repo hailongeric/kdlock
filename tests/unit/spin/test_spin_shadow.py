@@ -57,6 +57,10 @@ def main():
         (read_source((ROOT / "include/kd_call.h")), "enum kd_call_phase {"),
     ):
         types += "\n" + definition(header, marker).rstrip() + ";\n"
+    types += "\n" + definition(
+        (ROOT / "include/exe_info.h").read_text(),
+        "static inline int kd_entry_abi_spin_clobber(unsigned int abi)",
+    )
     results = read_source((ROOT / "include/exe.h")).splitlines()
     types += (ROOT / "include/kd_jit_batch.h").read_text()
     types += next(line + "\n" for line in source.splitlines()

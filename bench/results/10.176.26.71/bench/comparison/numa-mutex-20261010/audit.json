@@ -1,0 +1,422 @@
+{
+  "accepted": 354,
+  "checks": {
+    "binary_hashes": 229,
+    "independent_peaks": 354,
+    "jit_image_hashes": 630,
+    "source_hashes": 11096
+  },
+  "diagnostic_sessions": [
+    {
+      "drained": true,
+      "group": "final-profile-mutex",
+      "jit_bodies": 5609344,
+      "lost_samples": 0,
+      "name": "c01-t16-r00-direct-kdlock-adaptive",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "group": "final-profile-mutex",
+      "jit_bodies": 4454510,
+      "lost_samples": 0,
+      "name": "c01-t36-r00-direct-kdlock-adaptive",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "group": "profile-mutex",
+      "jit_bodies": 1224570,
+      "lost_samples": 0,
+      "name": "c01-t16-r00-direct-kdlock-adaptive",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "group": "profile-mutex",
+      "jit_bodies": 1846561,
+      "lost_samples": 0,
+      "name": "c01-t36-r00-direct-kdlock-adaptive",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "group": "profile-spin",
+      "jit_bodies": 6756433,
+      "lost_samples": 0,
+      "name": "c01-t16-r00-direct-kdlock-adaptive",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "group": "profile-spin",
+      "jit_bodies": 8724502,
+      "lost_samples": 0,
+      "name": "c01-t36-r00-direct-kdlock-adaptive",
+      "status": "OK"
+    }
+  ],
+  "failures": [
+    {
+      "failure": {
+        "error": "command exited 2: ['make', '-C', PosixPath('/root/host_fs/kdlock/bench/spin_cacheline'), 'provider', 'KDLOCK_NUMA=1', 'KDLOCK_SPIN_BATCH=1024', 'UBSAN_SANITIZE=n', 'KDIR=/root/linux-6.1.159-kdclobber2']; see /root/kdlock-evidence/10.176.26.71/bench/numa-mutex-20261010/gate-mutex-cacheline/build-provider.log",
+        "status": "PREPARATION_FAILED"
+      },
+      "group": "gate-mutex-cacheline"
+    }
+  ],
+  "groups": [
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "baseline-mutex-cacheline",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "baseline-mutex-rcuht",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "baseline-spin-cacheline",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "baseline-spin-rcuht",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "bounded-layout-mutex-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "bounded-layout-mutex-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "bounded-layout-spin-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "bounded-layout-spin-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "candidate-mutex-cacheline",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "candidate-mutex-rcuht",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "candidate-spin-cacheline",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "candidate-spin-rcuht",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 9,
+      "executed": 9,
+      "group": "control-balanced-spin",
+      "planned": 9,
+      "statuses": {
+        "OK": 9
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "control-oldwork-spin",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 3,
+      "executed": 3,
+      "group": "control-split16-spin",
+      "planned": 3,
+      "statuses": {
+        "OK": 3
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "final-mutex-cacheline",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "final-mutex-rcuht",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 0,
+      "executed": 2,
+      "group": "final-profile-mutex",
+      "planned": 2,
+      "statuses": {
+        "OK": 2
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "final-spin-cacheline",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 18,
+      "executed": 18,
+      "group": "final-spin-rcuht",
+      "planned": 18,
+      "statuses": {
+        "OK": 18
+      }
+    },
+    {
+      "accepted": 0,
+      "executed": 0,
+      "group": "gate-mutex-cacheline",
+      "planned": 6,
+      "statuses": {
+        "BUILD_FAILED_BEFORE_FREEZE": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "gate-v2-mutex-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "gate-v2-mutex-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "pause32-spin-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "pause32-spin-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 0,
+      "executed": 2,
+      "group": "profile-mutex",
+      "planned": 2,
+      "statuses": {
+        "OK": 2
+      }
+    },
+    {
+      "accepted": 0,
+      "executed": 2,
+      "group": "profile-spin",
+      "planned": 2,
+      "statuses": {
+        "OK": 2
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "read-probe-mutex-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "read-probe-mutex-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "retry-mutex-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "retry-mutex-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "spin-read-probe-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "spin-read-probe-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "spin-remote-cap-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "spin-remote-cap-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "tuned-mutex-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "tuned-mutex-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "tuned-spin-cacheline",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    },
+    {
+      "accepted": 6,
+      "executed": 6,
+      "group": "tuned-spin-rcuht",
+      "planned": 6,
+      "statuses": {
+        "OK": 6
+      }
+    }
+  ],
+  "timed_sessions": 354
+}

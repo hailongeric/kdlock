@@ -55,7 +55,12 @@ kd_mutex_outer_trylock(struct mutex *lock, unsigned long owner)
 {
 	unsigned long zero = 0;
 
-	return atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner);
+	/* A combiner keeps the original mutex across many bodies. Failed locked
+	 * RMWs from every producer would repeatedly invalidate its owner line.
+	 * The read only declines a busy mutex; the zero-owner CAS still decides
+	 * acquisition and preserves Linux's WAITERS/HANDOFF/PICKUP semantics. */
+	return !atomic_long_read(&lock->owner) &&
+	       atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner);
 }
 
 #define KD_MUTEX_OUTER_LOCK(lock, cookie, continuation) do {                 \

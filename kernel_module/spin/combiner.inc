@@ -233,11 +233,18 @@ kd_spin_batch_can_continue(struct kd_spin_node *next, unsigned int count)
 	following = READ_ONCE(next->next);
 	if (unlikely(!following)) {
 #ifdef NUMA_AWARE
-		/* A deferred remote group already has useful work. Hand it the
-		 * queue instead of extending a small local group's residence. */
-		if (this_cpu_read(kd_spin_cpu.local_queue_head))
+		/* Extend only the first 128 bodies while a remote chain waits. Once
+		 * that grace is spent, an empty link hands off to the deferred head.
+		 * Already-linked work keeps the ordinary configured body limit. */
+		if (this_cpu_read(kd_spin_cpu.local_queue_head) && count >= 128)
 			return false;
 #endif
+		/* Allow the same bounded refill with a deferred remote group.
+		 * Otherwise a small NUMA cohort loses its batch whenever a returning
+		 * producer has not linked yet, forcing repeated socket handoffs.
+		 * The queued next node stays live throughout these eight hints;
+		 * the refill bound and final deferred-first splice limit added
+		 * remote waiting without forcing an immediate socket handoff. */
 		for (retries = 0; retries < 8 && !following; retries++) {
 			cpu_relax();
 			following = READ_ONCE(next->next);

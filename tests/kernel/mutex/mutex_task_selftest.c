@@ -27,6 +27,7 @@ static struct {
 	unsigned int frees_before;
 	unsigned int acks;
 	bool outer_first;
+	bool registry_stress;
 	bool abort;
 	bool waiter_ready;
 	bool published;
@@ -65,19 +66,19 @@ static void kd_task_wait(bool *flag, bool rcu_reader)
 
 static unsigned int kd_task_refs(struct task_struct *task)
 {
+	struct kd_mutex_task_bucket *bucket = kd_mutex_task_bucket(task);
 	struct kd_mutex_task *entry;
 	unsigned long flags;
 	unsigned int refs = 0;
 
-	raw_spin_lock_irqsave(&kd_mutex_tasks_lock, flags);
-	hash_for_each_possible(kd_mutex_tasks, entry, link,
-			       (unsigned long)task) {
+	raw_spin_lock_irqsave(&bucket->lock, flags);
+	hlist_for_each_entry(entry, &bucket->tasks, link) {
 		if (entry->task == task) {
 			refs = entry->refs;
 			break;
 		}
 	}
-	raw_spin_unlock_irqrestore(&kd_mutex_tasks_lock, flags);
+	raw_spin_unlock_irqrestore(&bucket->lock, flags);
 	return refs;
 }
 
@@ -114,12 +115,12 @@ static void kd_task_owner(void)
 	WRITE_ONCE(kd_mutex_task_fail_once, 1);
 	KD_TASK_REQUIRE(!kd_mutex_task_get(waiter));
 	KD_TASK_CHECK(!kd_mutex_task_active(waiter) &&
-		      !atomic_read(&kd_mutex_task_count));
+		      !kd_mutex_task_count());
 	KD_TASK_CHECK(KD_MUTEX_STAT_READ(kd_mutex_task_failures) == failures + 1);
 	KD_TASK_REQUIRE(kd_mutex_task_get(waiter));
 	KD_TASK_REQUIRE(kd_mutex_task_get(waiter));
 	KD_TASK_CHECK(kd_task_refs(waiter) == 2 &&
-		      atomic_read(&kd_mutex_task_count) == 1);
+		      kd_mutex_task_count() == 1);
 	kd_mutex_task_put(waiter);
 	KD_TASK_CHECK(kd_task_refs(waiter) == 1);
 	smp_store_release(&kd_task_test.published, true);
@@ -201,7 +202,7 @@ static void kd_task_waiter(void)
 	 * reader still pins its memory. A duplicate request must no longer route. */
 	KD_TASK_CHECK(!kd_mutex_task_reroute(current) &&
 		      !kd_task_refs(current));
-	KD_TASK_CHECK(!atomic_read(&kd_mutex_task_count));
+	KD_TASK_CHECK(!kd_mutex_task_count());
 	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
 		      kd_task_test.frees_before);
 	KD_TASK_CHECK(!kd_exec_native_unlock(
@@ -221,8 +222,7 @@ static void kd_task_reader(void)
 
 	kd_task_wait(&kd_task_test.published, false);
 	rcu_read_lock();
-	hash_for_each_possible_rcu(kd_mutex_tasks, entry, link,
-				   (unsigned long)waiter) {
+	hlist_for_each_entry_rcu(entry, &kd_mutex_task_bucket(waiter)->tasks, link) {
 		if (entry->task == waiter) {
 			saved = entry;
 			break;
@@ -240,13 +240,35 @@ static void kd_task_reader(void)
 	rcu_read_unlock();
 }
 
+static void kd_task_registry_stress(void)
+{
+	struct task_struct *shared = kd_task_test.workers[0];
+	unsigned int i;
+
+	/* The parent retains one shared reference across all workers. Concurrent
+	 * increments/decrements must neither lose it nor remove its membership.
+	 * Each other worker also repeatedly inserts/removes its own exact task. */
+	for (i = 0; i < 4096; i++) {
+		KD_TASK_REQUIRE(kd_mutex_task_get(shared));
+		KD_TASK_REQUIRE(kd_mutex_task_get(current));
+		KD_TASK_CHECK(kd_mutex_task_active(shared) &&
+			      kd_mutex_task_active(current) && !kd_mutex_tasks_idle());
+		kd_mutex_task_put(current);
+		kd_mutex_task_put(shared);
+		if (!(i & 63))
+			cond_resched();
+	}
+}
+
 static int kd_task_worker(void *arg)
 {
 	unsigned int worker = (unsigned long)arg;
 
 	wait_for_completion(&kd_task_test.start);
 	if (!READ_ONCE(kd_task_test.abort)) {
-		if (worker == 0)
+		if (kd_task_test.registry_stress)
+			kd_task_registry_stress();
+		else if (worker == 0)
 			kd_task_owner();
 		else if (worker == 1)
 			kd_task_waiter();
@@ -257,7 +279,7 @@ static int kd_task_worker(void *arg)
 	return 0;
 }
 
-static int kd_task_round(bool outer_first)
+static int kd_task_round(bool outer_first, bool registry_stress)
 {
 	unsigned int i;
 	int ret = 0;
@@ -265,6 +287,7 @@ static int kd_task_round(bool outer_first)
 	memset(&kd_task_test, 0, sizeof(kd_task_test));
 	atomic_set(&kd_task_test.failures, 0);
 	kd_task_test.outer_first = outer_first;
+	kd_task_test.registry_stress = registry_stress;
 	kd_task_test.frees_before = atomic_read(&kd_mutex_task_test_frees);
 	for (i = 0; i < ARRAY_SIZE(kd_task_test.locks); i++)
 		mutex_init(&kd_task_test.locks[i]);
@@ -286,6 +309,8 @@ static int kd_task_round(bool outer_first)
 		get_task_struct(worker);
 		wake_up_process(worker);
 	}
+	if (registry_stress && !ret)
+		KD_TASK_REQUIRE(kd_mutex_task_get(kd_task_test.workers[0]));
 	complete_all(&kd_task_test.start);
 	for (i = 0; i < ARRAY_SIZE(kd_task_test.workers); i++) {
 		struct task_struct *worker = kd_task_test.workers[i];
@@ -297,13 +322,27 @@ static int kd_task_round(bool outer_first)
 		kthread_stop(worker);
 		put_task_struct(worker);
 	}
+	if (registry_stress && !ret) {
+		KD_TASK_CHECK(kd_task_refs(kd_task_test.workers[0]) == 1);
+		KD_TASK_CHECK(kd_mutex_task_count() == 1);
+		kd_mutex_task_put(kd_task_test.workers[0]);
+	}
 	/* Drain the production callback before observing its count, reusing the
 	 * fixture, or returning an init error that can unload this module's text. */
 	rcu_barrier();
 	if (ret)
 		return ret;
-	KD_TASK_CHECK(kd_task_test.acks == 2 && hash_empty(kd_mutex_tasks));
-	KD_TASK_CHECK(!atomic_read(&kd_mutex_task_count));
+	if (registry_stress) {
+		KD_TASK_CHECK(kd_mutex_tasks_idle());
+		KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
+			      kd_task_test.frees_before + 8193);
+		pr_info("kd_mutex registry stress: workers=3 iterations=4096 deferred_frees=%u failures=%d jit_bodies=0\n",
+			atomic_read(&kd_mutex_task_test_frees) - kd_task_test.frees_before,
+			atomic_read(&kd_task_test.failures));
+		return atomic_read(&kd_task_test.failures) ? -EINVAL : 0;
+	}
+	KD_TASK_CHECK(kd_task_test.acks == 2 && kd_mutex_tasks_idle());
+	KD_TASK_CHECK(!kd_mutex_task_count());
 	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
 		      kd_task_test.frees_before + 1);
 	pr_info("kd_mutex task selftest round: order=%s acks=%u deferred_frees=%u failures=%d jit_bodies=0\n",
@@ -339,9 +378,11 @@ int kd_mutex_task_selftest(void)
 			}
 		}
 	}
-	ret = kd_task_round(false);
+	ret = kd_task_round(false, true);
 	if (!ret)
-		ret = kd_task_round(true);
+		ret = kd_task_round(false, false);
+	if (!ret)
+		ret = kd_task_round(true, false);
 	if (!ret)
 		pr_info("kd_mutex task selftest: cpus=%d,%d,%d orders=2 acks=4 deferred_frees=2 failures=0 jit_bodies=0\n",
 			kd_task_test_cpus[0], kd_task_test_cpus[1],

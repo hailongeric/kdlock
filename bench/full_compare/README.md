@@ -1,9 +1,11 @@
 # Complete spin, mutex and rwlock reports
 
 The [full benchmark driver](../../tools/vm/README.md#complete-164-worker-comparison)
-runs all maintained performance payloads under KDLock, TCLock and Linux Native
+runs one-cacheline and RCUHT payloads under KDLock, TCLock and Linux Native
 at 22 worker counts: 1–8 in steps of one, then 12–64 in steps of four.
-Three rounds produce 3,960 timed sessions. The driver owns execution and drain;
+Three rounds produce 1,584 timed sessions by default. Explicitly opting into
+multi-cacheline payloads restores the historical 3,960-session matrix.
+The driver owns execution and drain;
 [`export.py`](export.py) reads saved evidence without executing benchmark code.
 
 After the complete matrix has drained, use the plotting environment in the guest:

@@ -51,8 +51,11 @@ selected with `--host`, `--mirror` and `--scripts`; inspect `--help` for options
 
 [`run_full_bench.py`](run_full_bench.py) runs Native, TCLock and KD with three
 rounds at `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64`.
-It includes spin/mutex cacheline sizes 1/8/16 and their RCUHT workload, plus
-rwlock cacheline sizes 1/2/4/8/16 and RCUHT at 1%/20% writes: **3,960 sessions**.
+By default it includes one-cacheline and RCUHT payloads for spin, mutex and
+rwlock, with rwlock at 1%/20% writes: **1,584 sessions** in six groups.
+Multi-cacheline scenarios, including c08 and c16, are excluded from subsequent
+comparisons. `--include-multicacheline` restores the historical 3,960-session
+matrix when explicitly needed.
 Each session has 48,000 warmup operations per worker, a two-second measurement,
 and a 300 ms peak window after 300 ms of settling. The frozen spin/mutex default
 uses 64 post-work arithmetic rounds; rwlock explicitly uses four. Report these
@@ -81,7 +84,7 @@ python3 tools/vm/run_full_bench.py \
   --output /root/kdlock-evidence/10.176.26.71/bench/full-matrix-NEW
 ```
 
-Use `--dry-run` to inspect all 14 groups. Each group has an outer two-hour
+Use `--dry-run` to inspect the selected groups. Each group has an outer two-hour
 timeout and retained runner logs. `matrix-status.json` records progress. Creating
 `<output>/STOP` stops at the next drained group boundary; for a shorter boundary,
 use the active runner's `<group>/STOP`. Incomplete or undrained groups stop the

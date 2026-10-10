@@ -602,9 +602,9 @@ class DirectTests(unittest.TestCase):
         # Performance defaults to repeated measurements for both payloads;
         # explicit one-round performance and functional runs remain available.
         for extra, sessions, repeats in (
-                ([], 90, 3), (['--workload', 'rcuht'], 45, 3),
-                (['--repeats', '1'], 30, 1),
-                (['--functional', '--backends', 'kdlock', '--repeats', '1'], 10, 1)):
+                ([], 45, 3), (['--workload', 'rcuht'], 45, 3),
+                (['--repeats', '1'], 15, 1),
+                (['--functional', '--backends', 'kdlock', '--repeats', '1'], 5, 1)):
             with self.subTest(args=extra):
                 output = io.StringIO()
                 argv = ['run.py', '--output', '/tmp/unused', '--dry-run', *extra]
@@ -613,6 +613,8 @@ class DirectTests(unittest.TestCase):
                 plan = json.loads(output.getvalue())
                 self.assertEqual(len(plan), sessions)
                 self.assertEqual(len({s['name'] for s in plan}), sessions)
+                self.assertEqual({s['cachelines'] for s in plan},
+                                 {0} if 'rcuht' in extra else {1})
                 self.assertEqual({s['repeat'] for s in plan}, set(range(repeats)))
                 self.assertEqual({s['hotlock_mode'] for s in plan if s['arm'] == 'kdlock'},
                                  {'adaptive'})

@@ -66,7 +66,8 @@ has no `mutex_jit` parameter.
 Both entries now accept any worker count from 1 through 64. The full new-host
 comparison uses 22 counts: 1–8 in steps of one, then 12–64 in steps of four.
 Use the [complete-matrix driver](../../tools/vm/README.md#complete-164-worker-comparison)
-for all cacheline sizes and hash payloads. Its temporary 66-vCPU placement keeps
+for one-cacheline and hash payloads; larger cacheline sizes require an explicit
+opt-in. Its temporary 66-vCPU placement keeps
 64 distinct worker vCPUs and a separate guest collector; the collector shares
 a physical core with the last worker at the 64-worker point. The 15-point command
 above remains a smaller comparison that fits the regular 64-vCPU boot.
@@ -79,7 +80,8 @@ the actual build, so requested option names alone cannot mislabel a sample.
 
 ## Workloads and backends
 
-Cacheline bodies update 1/8/16 cachelines. Hash uses 1,024 buckets, 4,096 preallocated
+Cacheline comparisons default to one line; 8/16-line bodies remain available only
+when explicitly requested. Hash uses 1,024 buckets, 4,096 preallocated
 nodes, 8,192 keys and 100% writes: each request records one move, conflict or miss.
 The three arms use the same immediate unlink/relink body and fixed CPU-seeded random
 streams; this adaptation is not a byte-identical upstream RCUHT environment.

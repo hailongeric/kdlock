@@ -123,14 +123,18 @@ def aggregate(key, rows, execution_type=None):
 def markdown(stats, comparisons, verification, run_name):
     rate = lambda v: f'{v / 1e6:.3f}' if v is not None else '—'
     count = verification['sessions']
+    payloads = ('Spin and mutex cover cacheline sizes 1/8/16 plus RCUHT. Rwlocks cover '
+                'cacheline sizes 1/2/4/8/16 plus RCUHT, each at 1% and 20% writes. '
+                if any('-c08' in r['group'] for r in stats) else
+                'Spin, mutex and rwlock cover one-cacheline and RCUHT payloads; '
+                'rwlocks use 1% and 20% writes. Multi-cacheline scenarios are excluded. ')
     lines = [f'# Complete benchmark on 10.176.26.71: {run_name}', '',
              f"All **{count:,} planned timed sessions** were executed and drained; "
              f"**{verification['accepted_sessions']:,}** passed performance-data acceptance. "
              f"The remaining **{verification['excluded_sessions']}** sessions remain in the raw evidence and are excluded from scores.", '',
              'Thread counts: **1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64**. '
              'Every configuration uses Linux Native, TCLock and KDLock, with three rounds per backend.', '',
-             'Spin and mutex cover cacheline sizes 1/8/16 plus RCUHT. Rwlocks cover cacheline sizes '
-             '1/2/4/8/16 plus RCUHT, each at 1% and 20% writes. Warmup is 48,000 operations per worker; '
+             payloads + 'Warmup is 48,000 operations per worker; '
              'measurement is 2,000 ms; peak selection uses an observed 300 ms window after 300 ms of settling. '
              'Spin/mutex use their frozen 64 post-work arithmetic rounds; rwlocks use four. Compare backends within each workload.', '',
              'The temporary VM exposes 66 vCPUs with 24 GiB RAM and two NUMA nodes. Workers use guest '
@@ -247,8 +251,10 @@ def main():
     root = args.input.resolve()
     plan = json.loads((root / 'matrix-plan.json').read_text())
     status = json.loads((root / 'matrix-status.json').read_text())
-    if status['state'] != 'COMPLETE' or status['expected_sessions'] != 3960:
-        raise ValueError('complete 3,960-session matrix required')
+    expected_sessions = status['expected_sessions']
+    if status['state'] != 'COMPLETE' or expected_sessions not in (1584, 3960):
+        raise ValueError('complete default or historical multi-cacheline matrix required')
+    include_multicacheline = expected_sessions == 3960
     expected_cpus = [*range(32), *range(33, 65)]
     if (status['threads'] != THREADS or status['worker_cpus'] != expected_cpus or
             status['collector_cpu'] != 65):
@@ -258,10 +264,11 @@ def main():
         (kind, workload, lines)
         for kind in ('spin', 'mutex', 'rwlock')
         for workload, lines in [('rcuht', 0), *[('cacheline', n) for n in
-                                 ((1, 2, 4, 8, 16) if kind == 'rwlock' else (1, 8, 16))]]
+                                 (((1, 2, 4, 8, 16) if kind == 'rwlock' else (1, 8, 16))
+                                  if include_multicacheline else (1,))]]
     }
-    if len(plan) != 14 or {p['name'] for p in plan} != set(expected_groups):
-        raise ValueError('all 14 payload groups required')
+    if len(plan) != len(expected_groups) or {p['name'] for p in plan} != set(expected_groups):
+        raise ValueError('selected payload groups differ')
     approved = json.loads((root / 'source-sha256-approved.json').read_text())
     samples, interrupted, environments, parity = [], [], {}, {}
     counts = collections.Counter()
@@ -365,7 +372,7 @@ def main():
         key = (row['group'], row['write_percent'], row['threads'], row['arm'])
         grouped[key].append(row)
         separated[key + (row['execution_type'],)].append(row)
-    if len(samples) != 3960 or any(len(rows) != 3 or {r['repeat'] for r in rows} != {0, 1, 2}
+    if len(samples) != expected_sessions or any(len(rows) != 3 or {r['repeat'] for r in rows} != {0, 1, 2}
                                    for rows in grouped.values()):
         raise ValueError('three-round matrix differs')
     stats = [aggregate(key, rows) for key, rows in grouped.items()]

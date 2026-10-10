@@ -1,0 +1,31 @@
+[
+  {
+    "kind": "bench",
+    "guest_path": "/root/kdlock-evidence/10.176.26.71/archives/numa-mutex-20261010-bench.tar.gz",
+    "members": [
+      "bench/numa-mutex-20261010"
+    ],
+    "bytes": 134867408,
+    "sha256": "7f430176576c93366a8ef3284813872fc30257b6f40aa6b7b94c4aae1bf3dd08",
+    "execution_host_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/numa-mutex-20261010-bench.tar.gz",
+    "source_host_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/numa-mutex-20261010-bench.tar.gz",
+    "all_copies_verified": true
+  },
+  {
+    "kind": "tests",
+    "guest_path": "/root/kdlock-evidence/10.176.26.71/archives/numa-mutex-20261010-tests.tar.gz",
+    "members": [
+      "tests/numa-mutex-benchmark-scope-20261010",
+      "tests/numa-mutex-final-20261010",
+      "tests/numa-mutex-registry-20261010",
+      "tests/numa-mutex-registry-stress-20261010",
+      "tests/numa-mutex-units-20261010",
+      "tests/numa-pause-20261010"
+    ],
+    "bytes": 12486438,
+    "sha256": "37e38e8847dc8f802ba516a89aa9a069444ebfd3589cc7258d0105fbe6ee417d",
+    "execution_host_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/numa-mutex-20261010-tests.tar.gz",
+    "source_host_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/numa-mutex-20261010-tests.tar.gz",
+    "all_copies_verified": true
+  }
+]

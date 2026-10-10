@@ -45,6 +45,7 @@ struct kd_exec_frame {
 	unsigned int entry_abi, packet_state;
 	struct kd_exec_outer_unlock *outer_unlock_hook;
 	bool request_frame;
+	bool rwlock_admitted;
 	bool valid, complete;
 	unsigned int jit_lock_depth;
 	unsigned long gsbase, jit_lock_addr[KD_EXEC_MAX_LOCK_DEPTH];

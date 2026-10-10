@@ -126,13 +126,15 @@ unload frees preallocated contexts/stacks; no forced context release is used.
 
 ### Entry and native routing
 
-The outer pair attempts an acquire CAS on the original `mutex.owner` in the
-caller. Success increments only the approximate CPU-local entry observation
+The outer pair first reads the original `mutex.owner`, attempting an acquire
+CAS only when the entire owner/flags word is zero. A busy read declines without
+an exclusive cacheline request; a racing owner still defeats the CAS. Success
+increments only the approximate CPU-local entry observation
 and stores the exact native result in the lexical cookie. Unlock uses the
 original function, preserving its owner/flag slowpath. Cookie zero routes to
 KD, including native fallbacks after joining KD ownership routing.
 
-`kd_mutex_outer_contended_clobber_v1()` does not retry the failed initial CAS.
+`kd_mutex_outer_contended_clobber_v1()` does not retry the declined fastpath.
 `kd_mutex_contended_acquire()` records that contention once and checks heat,
 source OPEN, target comm, active-task routing and JIT policy before shadow/task
 work. A native-only result is returned only when this acquisition obtained no
@@ -153,9 +155,9 @@ unmodelled native result.
 | Object | Current storage/lifetime |
 | --- | --- |
 | Original Linux mutex | Workload's `struct mutex`; authoritative native-peer exclusion and physical ownership |
-| Shadow table | 1024 resident `kd_mutex_shadow_entry` objects in [kd_lock.c](../../kernel_module/kd_lock.c); each gate is 32 bytes with tail, state, physical owner, immutable original address and exact waiter count |
-| Task routing record | RCU hash, 256 buckets, dynamically allocated records and a writer lock in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); exact acquisition refs and retained `task_struct` ref |
-| `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 256 bytes each, 64-byte aligned |
+| Shadow table | 1024 resident `kd_mutex_shadow_entry` objects in [kd_lock.c](../../kernel_module/kd_lock.c); each 192-byte gate separates tail, physical ownership/state and exact waiter count onto three cachelines |
+| Task routing record | RCU hash with 256 cacheline-aligned buckets, each with its own writer lock and exact membership count in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); dynamically allocated records retain exact acquisition refs and a `task_struct` ref |
+| `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
 | Waiter stacks | Four 8 KiB stacks per possible CPU, allocated by [lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) with `vzalloc_node(..., cpu_to_node(cpu))` |
 | Execution frames | Shared per-CPU context, up to eight frames; physical owner remains fixed through sleep/ACK; root borrows node packet until FULL detachment |
 | Batch state | Physical combiner's stack; retains current retirement flag, exact successor, outer-release callback and image-slot identity |
@@ -163,17 +165,18 @@ unmodelled native result.
 Shadow hits acquire-load the immutable exact address without a lock. The
 current collision policy is `address % 1024` plus linear probing; misses take
 `kd_mutex_shadow_lock`, recheck, initialize and release-publish the address.
-Entries are not individually cacheline-isolated and are not removed/reused
-while callers are live. Exhaustion falls back to the original mutex. The
-fully hashed/cacheline-isolated table and retained 1024-task cache experiments
-were not retained; they are not properties of the current code.
+Entries are cacheline-aligned and are not removed/reused while callers are live.
+Exhaustion falls back to the original mutex. The shadow hash policy and immediate
+last-reference removal remain unchanged; no retained inactive task cache is used.
 
 `kd_mutex_task_get()` still allocates a candidate with GFP_ATOMIC and takes
-the registry writer lock. It increments an existing acquisition ref or
+the exact task's bucket writer lock. It increments an existing acquisition ref or
 publishes a new RCU record. Last put removes routing membership immediately;
 the RCU callback drops the task ref and frees storage. Read-side membership
 lookups allocate nothing. Approximate heat/counter values cannot replace
-these exact references or the final owner ACK.
+these exact references or the final owner ACK. Controlled drain sums bucket
+membership after callers stop; acquisitions no longer update a global count.
+The normally disabled allocation-fault switch is read before its one-shot CAS.
 
 Mutex heat has separate entry/contention counters from spin. Every 1024
 contentions the accepted policy checks `(entries >> 10) < 256`, resets both
@@ -186,8 +189,9 @@ see [heat and roles](../JIT_EXECUTION.md#heat-and-roles) for the full policy.
 The node's first line contains next, GS base, saved physical RSP, stack
 base/top, lock, task and saved entry identity. `completed/locked` occupy
 offsets 64/65, separated from successor writes to `next`. ABI/native-result/
-packet/tail/slot state follows; `regs` begins at offset 80. Thus IP/SP/BP at
-80/88/96 share the notification/state line. The full private packet is
+packet/tail/slot state follows; `regs` begins at offset 128. IP/SP/BP and the
+five virtual GPR slots now occupy a separate aligned line, so JIT updates do
+not invalidate the waiter's polling line. The full private packet is
 168 bytes; Linux `pt_regs` is unchanged.
 
 The root frame's own hot header contains entry/lock identity and frame state.
@@ -197,12 +201,18 @@ distinct objects. Caller stack memory keeps its original addresses/aliases
 and is not relocated into either header. These are layout facts, not measured
 cache misses or a claim that all request state occupies one line.
 
-Before the current body, `kd_mutex_prefetch_successor()` hints the known-live
-successor header, `regs.sp`, `regs.bp` and stack addresses SP and SP-64. It uses
-read prefetches and does not fetch the entire frame/FULL packet on every
-minimal request. The pointer is queue-owned until wake; no successor or
+Before the current body, `kd_mutex_prefetch_successor()` reads the known-live
+successor header and gives write hints for its aligned hot packet line and stack
+addresses SP and SP-8. It avoids duplicate hints for SP/BP on the same line and
+does not fetch the entire FULL packet on every minimal request. The pointer is queue-owned until wake; no successor or
 current-node read is allowed after its completion/native publication. Prefetch
 grants no ownership, admission or lifetime.
+
+The private gate also uses a read before its acquire CAS. Together with the
+original-owner guard, this keeps failed producer RMWs from invalidating ownership
+lines held across a batch. Tail exchanges and exact waiter-count updates retain
+their original atomic operations on separate lines; no probe or ownership check
+is removed.
 
 ### Queue, batch execution and recovery
 

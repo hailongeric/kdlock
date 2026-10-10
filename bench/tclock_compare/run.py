@@ -135,7 +135,7 @@ def make_plan(args):
     lock_kind = getattr(args, 'lock_kind', 'spin')
     require(lock_kind != 'mutex' or getattr(args, 'spin_delegate', 'on') == 'on',
             '--spin-delegate off is a spin-only control; mutex JIT is required')
-    sizes = [0] if workload == 'rcuht' else (args.cachelines or [1, 16])
+    sizes = [0] if workload == 'rcuht' else (args.cachelines or [1])
     # Admission is adaptive only. Retain the fixed metadata label so reports
     # keep current results separate from historically frozen admission modes.
     variants = [(backend, 'adaptive' if backend == 'kdlock' else 'not_applicable')

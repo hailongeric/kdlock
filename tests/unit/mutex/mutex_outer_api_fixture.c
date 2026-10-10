@@ -11,10 +11,16 @@ struct mutex { unsigned long owner; };
 #define WRITE_ONCE(x,v) (*(volatile __typeof__(x) *)&(x) = (v))
 register unsigned long current_stack_pointer asm("rsp");
 #define ASM_CALL_CONSTRAINT "+r" (current_stack_pointer)
+static unsigned int owner_cas_count;
+static bool owner_cas_race;
 static inline bool outer_test_cas(unsigned long *p, unsigned long *old, unsigned long value)
 {
+ owner_cas_count++;
+ if (owner_cas_race)
+  *p = 0x9000UL;
  return __atomic_compare_exchange_n(p,old,value,false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);
 }
+#define atomic_long_read(p) READ_ONCE(*(p))
 #define atomic_long_try_cmpxchg_acquire outer_test_cas
 #define atomic_long_try_cmpxchg_release outer_test_cas
 #define might_sleep() do { } while (0)
@@ -29,6 +35,29 @@ __attribute__((noinline,noipa)) void mutex_unlock(struct mutex *lock)
  lock->owner=0;
 }
 #include "outer_api.h"
+
+static void check_owner_probe(void)
+{
+ struct mutex lock = {0};
+ assert(kd_mutex_outer_trylock(&lock, (unsigned long)current));
+ assert(lock.owner == (unsigned long)current && owner_cas_count == 1);
+ /* Busy owners and each Linux owner-flag combination decline without RMW. */
+ for (unsigned long flags=0;flags<8;flags++) {
+  lock.owner=0x9000UL|flags;
+  assert(!kd_mutex_outer_trylock(&lock, (unsigned long)current));
+  assert(lock.owner==(0x9000UL|flags) && owner_cas_count==1);
+  if (flags) {
+   lock.owner=flags;
+   assert(!kd_mutex_outer_trylock(&lock, (unsigned long)current));
+   assert(lock.owner==flags && owner_cas_count==1);
+  }
+ }
+ lock.owner=0;
+ owner_cas_race=true;
+ assert(!kd_mutex_outer_trylock(&lock, (unsigned long)current));
+ assert(lock.owner==0x9000UL && owner_cas_count==2);
+ owner_cas_race=false;
+}
 struct kd_regs { unsigned long w[21]; };
 #define __KERNEL__
 #include "kd_jit_batch.h"
@@ -159,6 +188,7 @@ static void check_generated_outer(void)
 
 int main(void)
 {
+ check_owner_probe();
  for(int mode=0;mode<4;mode++) {
   unsigned long before=entries, locks=routed_locks, unlocks=routed_unlocks;
   assert(stress(100,mode)==515);

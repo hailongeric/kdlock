@@ -183,7 +183,11 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 
 	BUG_ON(abi != KD_ENTRY_ABI_LEGACY &&
 	       abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-	if (likely(cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)) {
+	/* A queued producer must not request exclusive ownership of a busy gate
+	 * just to discover that the current combiner still owns it. The CAS,
+	 * after the read-only hint, remains the sole acquisition decision. */
+	if (likely(!READ_ONCE(lock->locked) &&
+		   cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)) {
 		kd_mutex_claim_origin(lock);
 		return;
 	}

@@ -1,12 +1,44 @@
 # Performance status
 
 KD does not yet match both TCLock and Linux Native at every requested thread
-count. The current evidence is the
-[complete destination comparison](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md).
+count. The latest changes and their measured limits are in the
+[NUMA/mutex investigation](../bench/results/10.176.26.71/bench/comparison/numa-mutex-20261010/README.md).
+The earlier [complete destination comparison](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
+retains the wider baseline at its original source version.
 The original-host spin/mutex optimization phase ended on **2026-10-09**, with
 those gaps still open. Its [report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 keeps the final comparison, rejected candidates and the source and binary identities
 used for each run.
+
+## NUMA spin and mutex fixes, 2026-10-10
+
+The focused investigation used the regular 64-vCPU VM, collector 63 and 16/36
+workers. It retained 354 accepted, drained timed sessions, six separate profile
+sessions and failed candidates. The final comparison is 72 sessions: Native,
+TCLock and KD, three rounds, one-cacheline and hash payloads. Subsequent default
+comparisons exclude multi-cacheline scenarios, including c08 and c16.
+
+Spin's empty-link policy ended short batches as soon as remote work was deferred.
+The accepted bounded refill raises cross-NUMA cacheline median peak from 4.684
+to 6.047 Mops/s (+29.1%). Hash falls from 4.104 to 3.944 (-3.9%) while remote
+progress improves. Larger aggregate gains from long local batches were rejected
+because they substantially reduced remote progress. Placement, post-work and
+historical worker-progress controls explain the limits of the 380G10 comparison;
+the full hardware difference remains unproven.
+
+Mutex's global task-registry lock, shared polling/register and gate cachelines,
+and failed owner/gate CAS traffic compounded each other. Per-bucket exact
+registry accounting, cacheline separation, busy-read guards and targeted write
+prefetch raise cross-NUMA cacheline median peak from 1.293 to 4.563 Mops/s and
+hash from 1.024 to 2.682. Physical ownership, references, probes and final ACKs
+remain exact. Mutex still trails fresh Native results; hash whole-run throughput
+is close (2.582 versus 2.606), while cacheline remains 4.497 versus 5.508.
+
+Basic and affected fixtures, concurrent registry/ACK probes, nested/early spin
+and rwlock regression runs passed. All four final groups' frozen input hashes
+matched after rejected candidates were restored. The report preserves full
+ranges, JIT execution, per-node progress, raw archives and validation limits.
+This bounded investigation is not a rerun of the full matrix.
 
 ## Complete destination matrix, 2026-10-10
 
@@ -121,8 +153,9 @@ Current contracts live in the [spin](design/spin_implementation.md),
 guides. KD retains the two-word wrapper ABI, mandatory mutex JIT, native-first
 mutex acquisition, exact Linux ownership,
 source leases, final ACK and frame retirement. The maximum KD combiner batch is
-**1,024 bodies**, with a separate bounded spin NUMA scan and existing prefetch
-defaults. Mutex's accepted queue is FIFO.
+**1,024 bodies**, with a separate bounded spin NUMA scan. Spin allows at most
+eight refill PAUSEs; with deferred remote work, only before body 128. Mutex's
+accepted queue is FIFO and uses targeted successor write prefetch.
 
 Stable task caches, mutex NUMA grouping, broad prefetch and register-residency
 trials were rejected or did not establish repeatable gains. They are not current

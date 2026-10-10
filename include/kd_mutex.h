@@ -47,7 +47,7 @@ struct kd_mutex_node {
 	unsigned long saved_ret_addr; /* CS entry point (ret_addr)         */
 
 	/* Removing unused snapshots must not make adjacent reservations share
-	 * a cache line. Keep a four-line stride and put notification bytes on a
+	 * a cache line. Keep a five-line stride and put notification bytes on a
 	 * different line from next, which a successor writes during polling.
 	 * Unlike spin, mutex has no combined locked/completed word consumer. */
 	u8 completed __attribute__((aligned(64)));
@@ -57,7 +57,10 @@ struct kd_mutex_node {
 	unsigned int packet_state; /* published with completed/native_resume */
 	int tail; /* encoded tail (cpu+idx)            */
 	int slot; /* reserved per-CPU slot index       */
-	struct kd_regs regs; /* waiter context → JIT sandbox      */
+	/* The combiner writes IP/SP and virtual registers while the producer
+	 * polls locked. Sharing their cacheline makes every packet update fight
+	 * the polling CPU for ownership, especially across NUMA nodes. */
+	struct kd_regs regs __attribute__((aligned(64)));
 	/* Optional queue residence clock, not critical-section execution time. */
 	uint64_t queued_at_ns;
 };
@@ -66,16 +69,20 @@ struct kd_mutex_node {
  * Scheduling state beside one original Linux mutex.
  */
 struct kd_mutex {
+	/* Producers exchange the tail on every request. Keep their writes away
+	 * from the physical ownership fields checked by every delegated body. */
 	u32 tail; /* encoded CPU/slot; zero means no queued tail */
+	struct task_struct *physical_owner __attribute__((aligned(64)));
+	unsigned long origin_mutex_addr; /* original struct mutex *, if shadow */
 	union {
 		atomic_t state;
 		struct {
 			u8 locked;
 		};
 	};
-	struct task_struct *physical_owner; /* task holding the original mutex */
-	unsigned long origin_mutex_addr; /* original struct mutex *, if shadow */
-	atomic_t waiter_count;
+	/* Exact probe count, independent of both queue publication and ownership.
+	 * Its enter/exit RMWs must not invalidate either of those cachelines. */
+	atomic_t waiter_count __attribute__((aligned(64)));
 };
 
 void kd_mutex_init(struct kd_mutex *lock);

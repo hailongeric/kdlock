@@ -20,14 +20,15 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + '\n')
 
 
-def commands(output, cpus, collector):
-    """Put the previous report's payloads first, then complete every size."""
+def commands(output, cpus, collector, include_multicacheline=False):
+    """Compare one-cacheline and hash payloads; larger sizes are opt-in."""
     cases = [('spin', 'cacheline', 1), ('mutex', 'cacheline', 1),
              ('rwlock', 'rcuht', 0), ('spin', 'rcuht', 0),
-             ('mutex', 'rcuht', 0), ('rwlock', 'cacheline', 1),
-             ('spin', 'cacheline', 8), ('mutex', 'cacheline', 8),
-             ('spin', 'cacheline', 16), ('mutex', 'cacheline', 16),
-             *[('rwlock', 'cacheline', n) for n in (2, 4, 8, 16)]]
+             ('mutex', 'rcuht', 0), ('rwlock', 'cacheline', 1)]
+    if include_multicacheline:
+        cases += [('spin', 'cacheline', 8), ('mutex', 'cacheline', 8),
+                  ('spin', 'cacheline', 16), ('mutex', 'cacheline', 16),
+                  *[('rwlock', 'cacheline', n) for n in (2, 4, 8, 16)]]
     result = []
     for kind, workload, lines in cases:
         name = f'{kind}-{workload}' + (f'-c{lines:02d}' if lines else '')
@@ -59,12 +60,14 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--cpus', type=int, nargs='+', required=True)
     parser.add_argument('--collector-cpu', type=int, required=True)
+    parser.add_argument('--include-multicacheline', action='store_true',
+                        help='also run the historical multi-cacheline payloads')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
     if len(args.cpus) != 64 or len(set(args.cpus)) != 64 or args.collector_cpu in args.cpus:
         raise ValueError('provide 64 distinct worker CPUs and a separate collector CPU')
     output = args.output.resolve()
-    plan = commands(output, args.cpus, args.collector_cpu)
+    plan = commands(output, args.cpus, args.collector_cpu, args.include_multicacheline)
     if args.dry_run:
         print(json.dumps(plan, indent=2))
         return 0

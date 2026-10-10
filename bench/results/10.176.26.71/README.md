@@ -4,6 +4,10 @@ This is the machine directory for tests and benchmarks in the VM on the Ubuntu
 Xeon Gold 6438N host at `eric@10.176.26.71`. Source edits remain in the original
 checkout on `380G10` and are synchronized to this VM before testing.
 
+- [NUMA spin and mutex investigation, 2026-10-10](bench/comparison/numa-mutex-20261010/README.md):
+  root causes, accepted fixes and remaining Native gaps; 354 accepted timed
+  sessions, six diagnostics, placement/progress controls and rejected candidates.
+  The final three-round comparison contains 72 c01/hash sessions.
 - [Complete 22-point comparison, 2026-10-10](bench/comparison/full-matrix-20261010T094831Z/README.md):
   spin, rwlock and mutex under KDLock/TCLock/Linux Native at 1–8 and 12–64
   workers; all maintained performance payloads, three rounds, 3,960 accepted and

@@ -1,0 +1,34 @@
+
+/root/kdlock-evidence/10.176.26.71/bench/numa-mutex-20261010/final-profile-mutex/binaries/kdlock_km.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000000fc80 <__kd_mutex_lock_slowpath+0x80>:
+    fc80:	80 8d 46 ff 48 c1 e2 	orb    $0xe2,-0x3eb700ba(%rbp)
+    fc87:	06                   	(bad)
+    fc88:	48 98                	cltq
+    fc8a:	48 81 c2 00 00 00 00 	add    $0x0,%rdx
+			fc8d: R_X86_64_32S	.data..percpu+0xc0
+    fc91:	48 03 14 c5 00 00 00 	add    0x0(,%rax,8),%rdx
+    fc98:	00
+			fc95: R_X86_64_32S	__per_cpu_offset
+    fc99:	48 89 1a             	mov    %rbx,(%rdx)
+    fc9c:	80 3d 00 00 00 00 00 	cmpb   $0x0,0x0(%rip)        # fca3 <__kd_mutex_lock_slowpath+0xa3>
+			fc9e: R_X86_64_PC32	kd_bench_quiet-0x5
+    fca3:	75 07                	jne    fcac <__kd_mutex_lock_slowpath+0xac>
+    fca5:	e9 00 00 00 00       	jmp    fcaa <__kd_mutex_lock_slowpath+0xaa>
+			fca6: R_X86_64_PC32	.text.unlikely+0x1103
+    fcaa:	f3 90                	pause
+    fcac:	0f b6 43 41          	movzbl 0x41(%rbx),%eax
+    fcb0:	84 c0                	test   %al,%al
+    fcb2:	75 f6                	jne    fcaa <__kd_mutex_lock_slowpath+0xaa>
+    fcb4:	0f b6 43 42          	movzbl 0x42(%rbx),%eax
+    fcb8:	84 c0                	test   %al,%al
+    fcba:	0f 85 f9 00 00 00    	jne    fdb9 <__kd_mutex_lock_slowpath+0x1b9>
+    fcc0:	80 7b 40 00          	cmpb   $0x0,0x40(%rbx)
+    fcc4:	0f 85 8b 00 00 00    	jne    fd55 <__kd_mutex_lock_slowpath+0x155>
+    fcca:	4c 89 e7             	mov    %r12,%rdi
+    fccd:	e8                   	.byte 0xe8
+    fcce:	be                   	.byte 0xbe
+    fccf:	36                   	ss

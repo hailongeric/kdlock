@@ -97,7 +97,11 @@ Local eligible successors can stay in the batch; remote runs are deferred withou
 rewriting already-correct links. Deferred remote waiters receive priority at final
 handoff. The remote chain is reattached before ownership transfer.
 A temporarily empty successor link can be rechecked with at most eight PAUSEs;
-an existing deferred remote chain is handed off instead of waiting for refill.
+with a deferred remote chain, this refill is allowed only before body 128.
+After that grace, an empty link ends the batch and the deferred head receives
+handoff. Already-linked work retains the configured 1024-body maximum. This
+amortizes short-queue/socket handoffs while bounding added refill opportunities;
+it does not wait indefinitely for a producer or inspect a node after wake.
 These work bounds do not prove starvation freedom.
 
 ## Current KD prefetch strategy

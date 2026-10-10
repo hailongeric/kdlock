@@ -33,7 +33,9 @@ kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)
 
 /* The successor is still queued and cannot reuse its node or caller stack
  * before this batch publishes a wake. Fetch its read-mostly header, the saved
- * SP/BP packet lines, and the two stack lines around the virtual return slot.
+ * packet line and the stack lines around the virtual return slot. The aligned
+ * IP/SP/BP and virtual GPR slots share one line which the JIT will write; avoid
+ * fetching it read-only and then upgrading ownership in the current body.
  * Do this before the current body; never chase a successor after handoff. */
 static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 {
@@ -42,12 +44,11 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 	if (!next)
 		return;
 	prefetch(next);
-	prefetch(&next->regs.sp);
-	prefetch(&next->regs.bp);
+	prefetchw(&next->regs);
 	sp = READ_ONCE(next->regs.sp);
 	if (sp) {
-		prefetch((void *)sp);
-		prefetch((void *)(sp - 64));
+		prefetchw((void *)sp);
+		prefetchw((void *)(sp - sizeof(unsigned long)));
 	}
 }
 

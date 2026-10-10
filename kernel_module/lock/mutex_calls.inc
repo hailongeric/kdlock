@@ -149,8 +149,8 @@ kd_mutex_direct_lock_clobber_v1(struct mutex *lock, unsigned long sp,
 }
 EXPORT_SYMBOL_GPL(kd_mutex_direct_lock_clobber_v1);
 
-/* The outer caller already failed the original-owner CAS and checked sleep
- * context. Count precisely that failure once; retrying here would change which
+/* The outer caller already declined the original-owner fastpath and checked
+ * sleep context. Count precisely that failure once; retrying here changes which
  * acquisition attempts feed the existing contention sampler. */
 __attribute__((noipa)) noinline notrace void
 kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,
