@@ -1,0 +1,139 @@
+[
+  {
+    "actual_sample_type": "IP|TID|TIME|PERIOD",
+    "completed": 5096192,
+    "drained": true,
+    "group": "baseline-profile",
+    "jit_bodies": 5070337,
+    "lost_samples": 0,
+    "name": "c01-t16-r00-direct-kdlock-adaptive",
+    "original_status": "OK",
+    "recovery": null,
+    "status": "OK"
+  },
+  {
+    "actual_sample_type": "IP|TID|TIME|PERIOD",
+    "completed": 5822976,
+    "drained": true,
+    "group": "baseline-profile",
+    "jit_bodies": 5796006,
+    "lost_samples": 0,
+    "name": "c01-t60-r00-direct-kdlock-adaptive",
+    "original_status": "OK",
+    "recovery": null,
+    "status": "OK"
+  },
+  {
+    "completed": 4313344,
+    "counters": {
+      "cycles": 53853320478,
+      "instructions": 9713035272,
+      "ld_blocks.store_forward": 5281619,
+      "mem_load_retired.l1_miss": 24159296,
+      "resource_stalls.sb": 1070776
+    },
+    "drained": true,
+    "group": "final-pmu",
+    "jit_bodies": 0,
+    "lost_samples": null,
+    "name": "c01-t16-r00-direct-native",
+    "original_status": "OK",
+    "per_completed_op": {
+      "cycles": 12485.282991108523,
+      "instructions": 2251.857322763962,
+      "ld_blocks.store_forward": 1.2244836025135022,
+      "mem_load_retired.l1_miss": 5.601059410054009,
+      "resource_stalls.sb": 0.2482472995429996
+    },
+    "recovery": null,
+    "status": "OK"
+  },
+  {
+    "completed": 8578304,
+    "counters": {
+      "cycles": 72319160902,
+      "instructions": 16008810444,
+      "ld_blocks.store_forward": 62754,
+      "mem_load_retired.l1_miss": 53065949,
+      "resource_stalls.sb": 2230961794
+    },
+    "drained": true,
+    "group": "final-pmu",
+    "jit_bodies": 8525180,
+    "lost_samples": null,
+    "name": "c01-t16-r00-direct-kdlock-adaptive",
+    "original_status": "OK",
+    "per_completed_op": {
+      "cycles": 8430.473075097361,
+      "instructions": 1866.1976124884359,
+      "ld_blocks.store_forward": 0.007315432048106479,
+      "mem_load_retired.l1_miss": 6.186065334126653,
+      "resource_stalls.sb": 260.07026493815096
+    },
+    "recovery": null,
+    "status": "OK"
+  },
+  {
+    "completed": 8795904,
+    "counters": {
+      "cycles": 62932439469,
+      "instructions": 14260362778,
+      "ld_blocks.store_forward": 6640970,
+      "mem_load_retired.l1_miss": 37852217,
+      "resource_stalls.sb": 1329159
+    },
+    "drained": true,
+    "group": "packet-prefetch-pmu",
+    "jit_bodies": 0,
+    "lost_samples": null,
+    "name": "c01-t16-r00-direct-native",
+    "original_status": "OK",
+    "per_completed_op": {
+      "cycles": 7154.743784038571,
+      "instructions": 1621.2503885899619,
+      "ld_blocks.store_forward": 0.7550071033062662,
+      "mem_load_retired.l1_miss": 4.30339132850927,
+      "resource_stalls.sb": 0.1511111308172531
+    },
+    "recovery": null,
+    "status": "OK"
+  },
+  {
+    "completed": 14337536,
+    "counters": {
+      "cycles": 99817512692,
+      "instructions": 25894146343,
+      "ld_blocks.store_forward": 18267415,
+      "mem_load_retired.l1_miss": 83273047,
+      "resource_stalls.sb": 1620888069
+    },
+    "drained": true,
+    "group": "packet-prefetch-pmu",
+    "jit_bodies": 14257596,
+    "lost_samples": null,
+    "name": "c01-t16-r00-direct-kdlock-adaptive",
+    "original_status": "OK",
+    "per_completed_op": {
+      "cycles": 6961.971198677374,
+      "instructions": 1806.038802134481,
+      "ld_blocks.store_forward": 1.2740972367915937,
+      "mem_load_retired.l1_miss": 5.808044492442774,
+      "resource_stalls.sb": 113.05206619882244
+    },
+    "recovery": null,
+    "status": "OK"
+  },
+  {
+    "actual_fixed_period": 100003,
+    "actual_sample_type": "IP|TID|TIME",
+    "completed": 5230080,
+    "drained": true,
+    "group": "packet-prefetch-stalls",
+    "jit_bodies": 5209291,
+    "lost_samples": 0,
+    "name": "c01-t16-r00-direct-kdlock-adaptive",
+    "original_status": "MEASURING",
+    "recovery": "parser-recovery-2",
+    "status": "DIAGNOSTIC_PARSER_FAILED"
+  }
+]

@@ -20,6 +20,9 @@ struct list_head { struct list_head *next, *prev; };
 #define KD_EXE_NO_RUN 2
 #define KD_EXE_NATIVE_DONE 7
 #define READ_ONCE(x) (x)
+#define WRITE_ONCE(x, v) ((x) = (v))
+#define NUMA_AWARE 1
+static int numa_node_id(void) { return 0; }
 #define smp_load_acquire(p) (*(p))
 #define this_cpu_inc(x) (++(x))
 #define container_of(p,type,member) ((type *)((char *)(p)-offsetof(type,member)))
@@ -163,5 +166,37 @@ int main(void)
     }
     scenario=10;reset(1);source_open=false;original_tail=lock.tail;kd_mutex_run_combiner(&lock,&nodes[0]);
     CHECK(!calls && !lease_gets && !completed && wakes==1 && lock.tail==original_tail);finish();
+    /* Select local work without ever detaching the unlinked global tail. */
+    scenario=11;reset(4);nodes[0].numa_node=nodes[2].numa_node=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==4 && completed==4 && !wakes && !lock.tail && cas_calls==1);finish();
+    /* An unexecuted/refused current node must not retain a link into the
+     * deferred prefix, which would make rejoin publish a cycle. */
+    scenario=12;reset(4);nodes[0].numa_node=nodes[2].numa_node=1;refusal_at=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==1 && !completed && wakes==1 && !nodes[0].locked);
+    CHECK(nodes[0].next==&nodes[2] && nodes[2].next==&nodes[1] && nodes[1].next==&nodes[3]);finish();
+    scenario=13;reset(4);nodes[0].numa_node=1;native_at=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==1 && !completed && wakes==1 && nodes[1].native_resume && !nodes[0].locked);
+    CHECK(nodes[0].next==&nodes[2] && nodes[2].next==&nodes[3] && !cas_calls);finish();
+    scenario=14;reset(4);nodes[0].numa_node=1;early_at=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==1 && completed==1 && wakes==1 && reclaims==1 && !nodes[0].locked);
+    CHECK(nodes[0].next==&nodes[2] && nodes[2].next==&nodes[3] && !cas_calls);finish();
+    scenario=15;reset(140);
+    for(unsigned int i=0;i<8;i++)nodes[i].numa_node=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==128 && completed==128 && wakes==1 && !nodes[0].locked);
+    CHECK(nodes[7].next==&nodes[136] && nodes[136].locked && !cas_calls);finish();
+    scenario=16;reset(200);
+    for(unsigned int i=0;i<200;i++)nodes[i].numa_node=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==128 && completed==128 && wakes==1 && !nodes[0].locked);
+    for(unsigned int i=0;i<63;i++)CHECK(nodes[i].next==&nodes[i+1] && !nodes[i].completed);
+    CHECK(nodes[63].next==&nodes[192] && nodes[192].locked && !cas_calls);finish();
+    scenario=17;reset(140);nodes[0].numa_node=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==140 && completed==140 && !wakes && !lock.tail && cas_calls==1);finish();
     printf("PASS terminal queue: %u checks; singleton, delayed link, independent new head, refusal, native reuse, early release, bounds and packet boundaries\n",checks);
 }

@@ -78,7 +78,7 @@ def main():
                         'obsolete mutex JIT switch present')
         runtime.require('orders=2 acks=4 deferred_frees=2 failures=0 jit_bodies=0' in messages,
                         'missing task/owner ACK evidence')
-        runtime.require('registry stress: workers=3 iterations=4096 deferred_frees=8193 failures=0 jit_bodies=0' in messages,
+        runtime.require('registry stress: workers=3 iterations=4096 deferred_frees=3 failures=0 jit_bodies=0' in messages,
                         'missing concurrent task-registry evidence')
         runtime.command([sys.executable, ROOT/'disassem/device_session.py', 'retire'],
                         out/'retire.log')
@@ -90,7 +90,7 @@ def main():
         runtime.write_json(out/'result.json', dict(passed=True, drained=True,
             orders=['B-A', 'A-B'], acks=4, deferred_frees=2, jit=False,
             registry_stress_workers=3, registry_stress_iterations=4096,
-            registry_stress_deferred_frees=8193,
+            registry_stress_deferred_frees=3,
             jit_bodies=0, mutex_jit_required=True, scope='task_owner_ack_resource_probe'))
         print('PASS: RCU task lifetime and real owner ACKs; two orders, four ACKs, no JIT bodies')
     finally:

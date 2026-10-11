@@ -22,7 +22,15 @@ struct task_struct;
 /* Existing guest exports implement the contended paths, without hook reentry. */
 void kd_origin_mutex_lock(struct mutex *lock);
 void kd_origin_mutex_unlock(struct mutex *lock, unsigned long ip);
-bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task);
+/* Both entry and retirement check the authoritative Linux owner, including
+ * the same flag mask. Keep this tiny read inline in every delegated body. */
+#define KD_MUTEX_OWNER_FLAGS 0x7UL
+static __always_inline bool
+kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
+{
+	return (atomic_long_read(&lock->owner) & ~KD_MUTEX_OWNER_FLAGS) ==
+	       (unsigned long)task;
+}
 
 bool kd_mutex_task_active(struct task_struct *task);
 bool kd_mutex_task_reroute(struct task_struct *task);

@@ -46,23 +46,26 @@ struct kd_mutex_node {
 	/* Explicit clobber continuation, or legacy hook return-slot validation. */
 	unsigned long saved_ret_addr; /* CS entry point (ret_addr)         */
 
-	/* Removing unused snapshots must not make adjacent reservations share
-	 * a cache line. Keep a five-line stride and put notification bytes on a
-	 * different line from next, which a successor writes during polling.
-	 * Unlike spin, mutex has no combined locked/completed word consumer. */
-	u8 completed __attribute__((aligned(64)));
-	u8 locked;
-	bool native_resume;
-	u8 entry_abi; /* immutable acquisition identity; CPU is encoded in tail */
+	/* Immutable identity and result tags are separate from the polled line.
+	 * Reading the ABI must not first fetch the waiter's notification line. */
+	u8 entry_abi __attribute__((aligned(64)));
 	unsigned int packet_state; /* published with completed/native_resume */
 	int tail; /* encoded tail (cpu+idx)            */
 	int slot; /* reserved per-CPU slot index       */
+	int numa_node; /* immutable slot locality, set before source publication */
 	/* The combiner writes IP/SP and virtual registers while the producer
 	 * polls locked. Sharing their cacheline makes every packet update fight
 	 * the polling CPU for ownership, especially across NUMA nodes. */
 	struct kd_regs regs __attribute__((aligned(64)));
 	/* Optional queue residence clock, not critical-section execution time. */
 	uint64_t queued_at_ns;
+	/* The unused tail of the FULL packet's last line holds notification.
+	 * MINIMAL/COMPLETE bodies write only the first packet line. Cold FULL
+	 * handoff may share this line, but ordinary body writes never do. Keep
+	 * the five-line stride and isolate the producer's next pointer too. */
+	u8 completed;
+	u8 locked;
+	bool native_resume;
 };
 
 /*

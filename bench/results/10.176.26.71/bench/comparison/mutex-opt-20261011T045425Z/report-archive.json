@@ -1,0 +1,11 @@
+{
+  "all_copies_verified": true,
+  "bytes": 870870,
+  "execution_host": "10.176.26.71",
+  "execution_host_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-opt-20261011T045425Z/final-report.tar.gz",
+  "guest_archive": "/root/kdlock-evidence/10.176.26.71/archives/mutex-opt-20261011T045425Z-final-report.tar.gz",
+  "scope": "Reviewed report, unchanged scored CSVs, offline archive replay and 64-vCPU restoration",
+  "sha256": "a0b8fcf766aaccd501e5a4cd4d6004ff46e2545500f8f65b4b3a89ffbe95de8c",
+  "source_host": "380G10",
+  "source_host_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-opt-20261011T045425Z/final-report.tar.gz"
+}

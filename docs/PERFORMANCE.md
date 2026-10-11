@@ -1,8 +1,10 @@
 # Performance status
 
 KD does not yet match both TCLock and Linux Native at every requested thread
-count. The latest [complete c01/hash rerun](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
-measures the NUMA/mutex fixes across all 22 worker counts on the destination host.
+count. The latest [mutex c01/hash optimization](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+measures task caching, polling layout, retirement loads and bounded NUMA selection
+across all 22 worker counts. The earlier [all-lock c01/hash rerun](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
+retains the spin/rwlock comparison and the pre-optimization mutex baseline.
 The [NUMA/mutex investigation](../bench/results/10.176.26.71/bench/comparison/numa-mutex-20261010/README.md)
 retains their causes, rejected candidates and focused checks.
 The original-host spin/mutex optimization phase ended on **2026-10-09**, with
@@ -10,7 +12,46 @@ those gaps still open. Its [report](../bench/results/380G10/bench/tclock_compare
 keeps the final comparison, rejected candidates and the source and binary identities
 used for each run.
 
-## Current c01/hash comparison, 2026-10-11
+## Mutex c01 optimization, 2026-10-11
+
+The [new comparison](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md) contains **396 drained sessions**,
+**396 accepted**: Native, TCLock and KD, three rounds at each
+of the 22 worker counts, with c01 and hash only. c02/c08/c16 were excluded.
+KD meets the multithreaded strict comparison at **14 of 42 points** and falls
+short at **28**. This requires both best warmed peak and median whole-run
+throughput to match both alternatives.
+
+C01 median whole-run throughput at 64 workers is KD **4.946**,
+Native **3.173** and TCLock **3.305 Mops/s**.
+At 16 workers KD reaches **7.551** but still trails Native's
+**8.670**. Four-worker c01 remains poor at KD
+**4.395** versus Native **9.850**; it is also about 6% below
+the previous full-matrix KD result. Short batches and mixed native/delegated
+routing remain an unresolved bottleneck. Historical comparisons also show a
+44.4% c01 drop at three workers and a 4.7% hash drop at 40 workers. The earlier
+three-worker c01 peak spread was 51.2%; those differences do not isolate source
+effects from run variability, and remain unresolved. Hash at 36 workers is KD
+**3.436**, Native **2.459** and TCLock
+**2.119 Mops/s**. The report keeps every point and spread.
+
+Selected changes retain inactive task identities in a bounded RCU cache while
+keeping exact active references, separate completion polling from metadata,
+prevent a widened retirement load, and use bounded NUMA request grouping.
+Small remote cohorts are serviced without moving the physical owner. Shorter
+batches, capped admission, extra retry, frame reuse and broader prefetch were
+rejected. Separate PMU diagnostics show fewer store-forwarding blocks, but total
+store-buffer stalls did not improve; they are excluded from throughput scores.
+
+The selected source passed seven basic/affected checks, four runner checks and
+the cross-NUMA owner/ACK/RCU probe. Final KD acceptance includes
+**126 ACTUAL_JIT** and **6 NO_JIT** sessions.
+Raw source/ELF/JIT hashes, client totals, placement, worker progress and drain
+were audited, and archive replay reproduced the audit CSV bytes. Validation
+limits and rejected candidates remain in the report. The regular 64-vCPU boot
+was restored after verified archiving; the final comparison uses the documented
+temporary 66-vCPU placement, including physical collector contention at 64 workers.
+
+## Earlier all-lock c01/hash comparison, 2026-10-11
 
 The [rerun](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md) contains **1,584 drained sessions**, with **1,582 accepted**:
 Native, TCLock and KD, three rounds at 1–8 and 12–64 workers. Spin, mutex and
@@ -176,14 +217,19 @@ Current contracts live in the [spin](design/spin_implementation.md),
 [mutex](design/mutex_implementation.md) and [rwlock](design/rwlock_implementation.md)
 guides. KD retains the two-word wrapper ABI, mandatory mutex JIT, native-first
 mutex acquisition, exact Linux ownership,
-source leases, final ACK and frame retirement. The maximum KD combiner batch is
-**1,024 bodies**, with a separate bounded spin NUMA scan. Spin allows at most
-eight refill PAUSEs; with deferred remote work, only before body 128. Mutex's
-accepted queue is FIFO and uses targeted successor write prefetch.
+source leases, final ACK and frame retirement. The default KD combiner cap is
+**1,024 bodies**, with separate bounded NUMA scans. Spin allows at most
+eight refill PAUSEs; with deferred remote work, only before body 128. Mutex
+defers at most 64 linked remote nodes, services or hands them off at the 128-body
+cohort boundary, and uses targeted successor write prefetch. Its task cache
+keeps exact acquisition references and disables routing at the zero transition;
+inactive identity lifetime is separately bounded and protected by RCU.
 
-Stable task caches, mutex NUMA grouping, broad prefetch and register-residency
-trials were rejected or did not establish repeatable gains. They are not current
-features. The [outlined operation/context API](design/protocol_simplification.md)
+Earlier versions of task retention and mutex NUMA grouping were rejected on the
+original host. The current implementations and new-host evidence are documented
+in the [mutex guide](design/mutex_implementation.md). Broad prefetch and
+register-residency trials did not establish repeatable gains. The
+[outlined operation/context API](design/protocol_simplification.md)
 is an unimplemented design alternative; it requires separate validation and
 matched callers. No additional optimization run is scheduled by this document.
 

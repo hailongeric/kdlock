@@ -45,8 +45,8 @@ int kd_mutex_init_percpu(void)
 	/* Per-CPU alignment alone does not isolate the four array elements. */
 	BUILD_BUG_ON(__alignof__(struct kd_mutex_node) < L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_mutex_node) != 5 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != L1_CACHE_BYTES + 1);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != 304);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != 305);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_mutex) != 3 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex, physical_owner) != L1_CACHE_BYTES);
@@ -89,6 +89,7 @@ int kd_mutex_init_percpu(void)
 			void *node_stack = vzalloc_node(KD_MUTEX_SHADOW_STACK_SIZE, cpu_to_node(i));
 
 			node->slot = j;
+			node->numa_node = cpu_to_node(i);
 			node->shadow_stack_base = node_stack;
 			if (!node_stack) {
 				KD_PR_ERR(

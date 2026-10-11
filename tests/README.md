@@ -33,7 +33,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Native pending/MCS |`spin/test_spin_nondelegated.py`, `test_spin_shadow.py` |
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
-| Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
+| Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
 | Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py` |
@@ -84,12 +84,25 @@ hotlock/entry probes check resource/routing/drain without executing JIT bodies;
 they do not replace contended returned-body acceptance. KD mutex JIT is always
 enabled; the task/ACK probe constructs its continuation packet before hooks are
 published. Normal/SELFTEST builds stay separate.
-The task probe also stresses concurrent exact task references and RCU membership
-turnover. Use `--cpus 0 32 33` for the current guest's cross-NUMA probe; its
+The task probe also stresses concurrent exact task references and RCU eviction.
+Zero references disable routing immediately; cached inactive identities can
+remain until eviction or controlled unload. The probe pins a real RCU reader
+across eviction and checks deferred task release. Its three stress workers reuse
+three records, then verify their actual frees at purge. The production-code
+unit fixture additionally checks cache bounds, reactivation/eviction arbitration,
+active overflow, allocation failure and nested references.
+Use `--cpus 0 32 33` for the current guest's cross-NUMA probe; its
 default remains three distinct local CPUs. Final drain requires zero active
 task membership after all workers and ACKs finish.
 
 ## Recent verification and historical evidence
+
+The [mutex c01 optimization record](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md#validation)
+covers bounded task caching and NUMA queue selection, terminal/refusal/early-release
+fixtures, the cross-NUMA task/ACK probe, field-width retirement reads and the
+current c01/hash comparison. Live task/ACK probes execute no JIT bodies;
+the benchmark supplies actual returned-body evidence. No live nested/early
+mutex workload is provided by the maintained runner.
 
 The [new-host NUMA/mutex record](../bench/results/10.176.26.71/bench/comparison/numa-mutex-20261010/README.md#reproduction-and-validation)
 covers the registry/owner/CAS/layout/refill changes, basic and affected fixtures,

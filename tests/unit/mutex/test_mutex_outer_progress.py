@@ -61,6 +61,9 @@ def main():
     code = "#define DSM_DEBUG 1\n" + mutex[start:end] + "\n" + code
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
+    for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
+        marker = next(line for line in mutex.splitlines() if line.startswith(name+'('))
+        code += 'static struct kd_mutex_node *\n' + definition(mutex, marker)+'\n'
     code += "static struct kd_exe_info *\n" + definition(mutex, "kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)") + "\n"
     for marker in (
         "static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)",

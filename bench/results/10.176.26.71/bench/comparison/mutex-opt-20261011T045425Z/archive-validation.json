@@ -1,0 +1,32 @@
+{
+  "accepted_final_sessions": 396,
+  "all_exported_audit_csv_bytes_match": true,
+  "all_exported_csv_bytes_match": true,
+  "archive_extracted": true,
+  "before_after_csv_and_json_recomputed": true,
+  "checked_utc": "2026-10-11T07:19:56.661223+00:00",
+  "checks": {
+    "binary_hashes": 179,
+    "diagnostic_driver_hashes": 3,
+    "diagnostic_perf_hashes": 1,
+    "independent_peaks": 805,
+    "jit_image_hashes": 1419,
+    "source_hashes": 9636,
+    "zero_loss_profiles": 3
+  },
+  "complete_final_sessions": 396,
+  "csv_files": [
+    "comparison.csv",
+    "diagnostics.csv",
+    "final-samples.csv",
+    "final-statistics.csv",
+    "samples.csv",
+    "statistics-by-execution.csv",
+    "statistics.csv"
+  ],
+  "final_unit_logs_match": true,
+  "historical_input_matches_previous_report": true,
+  "live_probe_result_checked": true,
+  "source_binary_jit_hashes_verified": true,
+  "workspace_links_skipped_without_dereferencing": 946
+}

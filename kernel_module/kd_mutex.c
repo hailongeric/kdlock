@@ -63,7 +63,10 @@
 
 #define _Q_LOCKED_COMBINER_VAL 3
 
-static const unsigned int kd_mutex_batch_size = 1024;
+/* Share the runner's configured upper bound with spin; NUMA fairness may
+ * hand off earlier. The default remains 1024 in the provider Makefile. */
+static const unsigned int kd_mutex_batch_size = KDLOCK_SPIN_BATCH;
+MODULE_INFO(mutex_batch, __stringify(KDLOCK_SPIN_BATCH));
 
 /* Observations and pinned lifecycle balances use separate per-CPU storage. */
 KD_MUTEX_STAT(kd_mutex_slowpath_count);

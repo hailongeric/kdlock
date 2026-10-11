@@ -16,7 +16,57 @@ struct kd_mutex_batch {
 	bool current_retired;
 	/* Immutable slot identity; readiness/code are rechecked per request. */
 	struct kd_exe_info *exe;
+	struct kd_mutex_node *deferred_head;
+	struct kd_mutex_node *deferred_tail;
+	unsigned int deferred_count;
+	unsigned int scan_left;
+	int numa_node;
 };
+
+/* Only detach a fully linked node. Its successor remains the published tail
+ * chain, so no enqueuer can subsequently write the detached node's next link.
+ * A finite scan and a 128-body local cohort bound keep remote requests from
+ * being bypassed indefinitely. Deferred requests are serviced or handed off
+ * first at that boundary; a small remote cohort does not move the owner. */
+static struct kd_mutex_node *
+kd_mutex_batch_select(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
+{
+	if (batch->numa_node < 0)
+		return node;
+	while (node && node->numa_node != batch->numa_node && batch->scan_left) {
+		struct kd_mutex_node *next = smp_load_acquire(&node->next);
+
+		if (!next)
+			break;
+		batch->scan_left--;
+		WRITE_ONCE(node->next, NULL);
+		if (batch->deferred_tail)
+			WRITE_ONCE(batch->deferred_tail->next, node);
+		else
+			batch->deferred_head = node;
+		batch->deferred_tail = node;
+		batch->deferred_count++;
+		node = next;
+	}
+	return node;
+}
+
+/* The retained successor is still queued and has not been woken. Splicing
+ * before gate release preserves the global tail, native ACK and early-outer
+ * release protocols. The detached batch must never access this chain again. */
+static struct kd_mutex_node *
+kd_mutex_batch_rejoin(struct kd_mutex_batch *batch, struct kd_mutex_node *next)
+{
+	if (batch->deferred_head) {
+		BUG_ON(!next || !batch->deferred_tail);
+		WRITE_ONCE(batch->deferred_tail->next, next);
+		next = batch->deferred_head;
+		batch->deferred_head = NULL;
+		batch->deferred_tail = NULL;
+		batch->deferred_count = 0;
+	}
+	return next;
+}
 
 static struct kd_exe_info *
 kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)
@@ -44,6 +94,7 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 	if (!next)
 		return;
 	prefetch(next);
+	prefetchw(&next->entry_abi);
 	prefetchw(&next->regs);
 	sp = READ_ONCE(next->regs.sp);
 	if (sp) {
@@ -80,6 +131,9 @@ static void kd_mutex_batch_retire_current(struct kd_mutex *lock,
 	BUG_ON(!node);
 	next = batch->next;
 	if (!next) {
+		/* A deferred chain forbids retiring the last published tail. The
+		 * loop retains that node for rejoin instead of executing it. */
+		BUG_ON(batch->deferred_head);
 		next = smp_load_acquire(&node->next);
 		if (!next && cmpxchg(&lock->tail, (u32)node->tail, 0) !=
 			     (u32)node->tail) {
@@ -113,6 +167,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	/* A terminal request may have no successor. Remove its published tail
 	 * before opening A; future old_tail=0 arrivals poll A's gate themselves. */
 	kd_mutex_batch_retire_current(lock, batch);
+	batch->next = kd_mutex_batch_rejoin(batch, batch->next);
 	if (batch->next && !batch->next->task_struct_ptr)
 		return -EINVAL;
 	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
@@ -382,6 +437,12 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	struct kd_mutex_node *next_node = NULL;
 	struct kd_mutex_batch batch = {
 		.outer.release = kd_mutex_release_outer,
+		.scan_left = 64,
+#ifdef NUMA_AWARE
+		.numa_node = numa_node_id(),
+#else
+		.numa_node = -1,
+#endif
 	};
 	int counter = 0;
 
@@ -397,8 +458,30 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	}
 
 	while (curr_node) {
+		curr_node = kd_mutex_batch_select(&batch, curr_node);
+		next_node = curr_node;
+		/* Keep a real terminal tail while private deferred nodes exist.
+		 * The next physical owner receives that entire joined chain. */
+		if (batch.deferred_head &&
+		    (counter >= 128 || !smp_load_acquire(&curr_node->next))) {
+			if (batch.deferred_count >= 8)
+				break;
+			/* A small remote cohort cannot amortize moving the real owner
+			 * and frame stack to its socket. Service it here at the same
+			 * fairness boundary, then keep FIFO for this batch's remainder.
+			 * Rejoin before execution so the terminal tail remains linked. */
+			curr_node = kd_mutex_batch_rejoin(&batch, curr_node);
+			batch.numa_node = -1;
+		}
 		counter++;
 		next_node = smp_load_acquire(&curr_node->next);
+		if (next_node) {
+			next_node = kd_mutex_batch_select(&batch, next_node);
+			/* A refused current request keeps its node. Repair its link
+			 * before rejoining the deferred chain ahead of that request.
+			 * Never overwrite an empty link still owned by an enqueuer. */
+			WRITE_ONCE(curr_node->next, next_node);
+		}
 		batch.next = next_node;
 		batch.current_node = curr_node;
 		batch.current_retired = false;
@@ -449,6 +532,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	/* The failed current request or a retained successor becomes queue head.
 	 * An empty retired tail needs no wake; future heads already poll the gate.
 	 * Keep the real mutex and gate for this physical owner's original body. */
+	next_node = kd_mutex_batch_rejoin(&batch, next_node);
 	kd_mutex_set_locked(lock);
 	if (next_node)
 		smp_store_release(&next_node->locked, 0);

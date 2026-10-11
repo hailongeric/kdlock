@@ -188,8 +188,12 @@ Linux mutex as `current`; only that physical owner executes/releases bodies.
 It may enable preemption while sleeping for the original mutex or nested B,
 while retaining its CPU reservation and frame ownership.
 
-The combiner executes FIFO JIT requests with a 1024-body limit and a source
-lease covering the batch. A terminal ABI2/MINIMAL node can also be delegated.
+The combiner uses bounded NUMA selection, a default 1024-body limit and a source
+lease covering the batch. At most 64 fully linked remote nodes can be deferred;
+they take priority by the 128-body local cohort boundary. A small remote cohort
+is serviced on the current owner; larger cohorts receive physical handoff.
+Deferred nodes rejoin before any exit publishes a wake. A terminal ABI2/MINIMAL
+node can also be delegated when no detached chain would be stranded.
 Before waking any committed node, the batch retires its queue publication:
 retain its successor, or CAS the exact tail to zero; a lost CAS requires the
 publisher's delayed successor link before node reuse. An unstarted refusal
@@ -270,8 +274,9 @@ Returned-body KD JIT evidence and TCLock mutex returned-batch delegation
 counts are separate from payload correctness. TCLock spin and rwlock delegation
 counts remain unmeasured. KD rwlock JIT share uses completed writes as its
 denominator. Performance acceptance, failed candidates and remaining gaps live in
-the [benchmark index](../../bench/README.md),
+the [current performance status](../PERFORMANCE.md),
 [RCUHT rwlock report](../../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) and
 [final spin/mutex report](../../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
-The spin/mutex optimization phase is closed; documentation updates do not rerun
-these performance matrices.
+Those original-host reports retain their historical source and topology. The
+[current mutex report](../../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+covers the new-host task cache, NUMA queue selection and c01/hash comparison.

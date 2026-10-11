@@ -34,6 +34,8 @@ static struct {
 	bool reader_ready;
 	bool native_ready;
 	bool waiter_done;
+	bool reader_zero;
+	bool evicted;
 } kd_task_test;
 
 static bool kd_task_check(bool ok, int line)
@@ -74,7 +76,7 @@ static unsigned int kd_task_refs(struct task_struct *task)
 	raw_spin_lock_irqsave(&bucket->lock, flags);
 	hlist_for_each_entry(entry, &bucket->tasks, link) {
 		if (entry->task == task) {
-			refs = entry->refs;
+			refs = atomic_read(&entry->refs);
 			break;
 		}
 	}
@@ -169,6 +171,26 @@ static void kd_task_owner(void)
 	}
 	KD_TASK_CHECK(!mutex_is_locked(&kd_task_test.locks[0]) &&
 		      !mutex_is_locked(&kd_task_test.locks[1]));
+	/* Evict while the reader still pins the inactive identity. Cache
+	 * retention must not replace the proof of actual RCU reclamation. */
+	kd_task_wait(&kd_task_test.reader_zero, false);
+	{
+		struct kd_mutex_task_bucket *bucket = kd_mutex_task_bucket(waiter);
+		struct kd_mutex_task *entry;
+		unsigned long flags;
+		bool evicted = false;
+
+		raw_spin_lock_irqsave(&bucket->lock, flags);
+		hlist_for_each_entry(entry, &bucket->tasks, link) {
+			if (entry->task == waiter) {
+				evicted = kd_mutex_task_evict(bucket, entry);
+				break;
+			}
+		}
+		raw_spin_unlock_irqrestore(&bucket->lock, flags);
+		KD_TASK_REQUIRE(evicted);
+	}
+	smp_store_release(&kd_task_test.evicted, true);
 }
 
 static void kd_task_waiter(void)
@@ -228,15 +250,19 @@ static void kd_task_reader(void)
 			break;
 		}
 	}
-	KD_TASK_REQUIRE(saved && READ_ONCE(saved->refs) == 1);
+	KD_TASK_REQUIRE(saved && atomic_read(&saved->refs) == 1);
 	smp_store_release(&kd_task_test.reader_ready, true);
 	/* A real read-side critical section spans both owner ACKs. Do not sleep
 	 * here, including on voluntary/non-preemptible RCU configurations. */
 	kd_task_wait(&kd_task_test.waiter_done, true);
 	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
 		      kd_task_test.frees_before);
-	KD_TASK_CHECK(saved->task == waiter && READ_ONCE(saved->refs) == 0);
+	KD_TASK_CHECK(saved->task == waiter && atomic_read(&saved->refs) == 0);
 	KD_TASK_CHECK(!kd_mutex_task_active(waiter));
+	smp_store_release(&kd_task_test.reader_zero, true);
+	kd_task_wait(&kd_task_test.evicted, true);
+	KD_TASK_CHECK(atomic_read(&saved->refs) == -1 && saved->task == waiter);
+	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) == kd_task_test.frees_before);
 	rcu_read_unlock();
 }
 
@@ -326,6 +352,8 @@ static int kd_task_round(bool outer_first, bool registry_stress)
 		KD_TASK_CHECK(kd_task_refs(kd_task_test.workers[0]) == 1);
 		KD_TASK_CHECK(kd_mutex_task_count() == 1);
 		kd_mutex_task_put(kd_task_test.workers[0]);
+		KD_TASK_CHECK(kd_mutex_tasks_idle());
+		kd_mutex_tasks_purge();
 	}
 	/* Drain the production callback before observing its count, reusing the
 	 * fixture, or returning an init error that can unload this module's text. */
@@ -335,7 +363,7 @@ static int kd_task_round(bool outer_first, bool registry_stress)
 	if (registry_stress) {
 		KD_TASK_CHECK(kd_mutex_tasks_idle());
 		KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
-			      kd_task_test.frees_before + 8193);
+			      kd_task_test.frees_before + 3);
 		pr_info("kd_mutex registry stress: workers=3 iterations=4096 deferred_frees=%u failures=%d jit_bodies=0\n",
 			atomic_read(&kd_mutex_task_test_frees) - kd_task_test.frees_before,
 			atomic_read(&kd_task_test.failures));

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 
-/* RCU task membership preserves mutex ownership routing inside the hooks.
- * Acquisition references outlive comm changes and native borrowed suffixes.
- * Last put removes routing immediately; deferred freeing waits for readers. */
+/* RCU task identities retain exact acquisition references. Zero references
+ * remove routing immediately; a bounded inactive cache avoids allocation and
+ * RCU callback traffic on every contested acquisition. Eviction waits for RCU. */
 #include <linux/cache.h>
 #include <linux/hash.h>
 #include <linux/rculist.h>
@@ -17,22 +17,23 @@
 
 /* Keep task routing alive through queue waits, the owner's CS, and borrowed
  * native CSs, independently of CPU frequency or target-process selection.
- * Reads neither sleep nor allocate. Writers serialize only the bucket for
- * this exact task; unrelated acquisitions do not share a global cacheline. */
+ * Reads neither sleep nor allocate. Cached references use their own atomic;
+ * only insertion and eviction take the bucket's lock. */
 struct kd_mutex_task {
 	struct hlist_node link;
 	struct rcu_head rcu;
 	struct task_struct *task;
-	unsigned int refs;
+	atomic_t refs; /* >=0 live identity, -1 claimed exclusively for eviction */
 };
 
 #define KD_MUTEX_TASK_BITS 8
 #define KD_MUTEX_TASK_BUCKETS (1U << KD_MUTEX_TASK_BITS)
+#define KD_MUTEX_TASK_CACHE_PER_BUCKET 8
 
 struct kd_mutex_task_bucket {
 	raw_spinlock_t lock;
 	struct hlist_head tasks;
-	unsigned int count; /* exact membership, protected by this bucket's lock */
+	unsigned int count; /* resident identities; protected by this bucket's lock */
 } ____cacheline_aligned_in_smp;
 
 static struct kd_mutex_task_bucket kd_mutex_task_buckets[KD_MUTEX_TASK_BUCKETS] = {
@@ -52,9 +53,13 @@ static struct kd_mutex_task_bucket *kd_mutex_task_bucket(struct task_struct *tas
 static unsigned int kd_mutex_task_count(void)
 {
 	unsigned int count = 0, i;
+	struct kd_mutex_task *entry;
 
+	rcu_read_lock();
 	for (i = 0; i < KD_MUTEX_TASK_BUCKETS; i++)
-		count += READ_ONCE(kd_mutex_task_buckets[i].count);
+		hlist_for_each_entry_rcu(entry, &kd_mutex_task_buckets[i].tasks, link)
+			count += atomic_read(&entry->refs) > 0;
+	rcu_read_unlock();
 	return count;
 }
 KD_MUTEX_STAT(kd_mutex_task_failures);
@@ -77,7 +82,7 @@ bool kd_mutex_task_active(struct task_struct *task)
 	rcu_read_lock();
 	hlist_for_each_entry_rcu(entry, &bucket->tasks, link) {
 		if (entry->task == task) {
-			active = true;
+			active = atomic_read(&entry->refs) > 0;
 			break;
 		}
 	}
@@ -93,6 +98,22 @@ bool kd_mutex_task_reroute(struct task_struct *task)
 	return true;
 }
 
+static void kd_mutex_task_free(struct rcu_head *rcu);
+
+/* Caller holds the bucket lock. A concurrent cache hit can reactivate zero;
+ * the CAS arbitrates that race without unlinking a newly active identity.
+ * Once negative, no getter can revive the entry and RCU protects old readers. */
+static bool kd_mutex_task_evict(struct kd_mutex_task_bucket *bucket,
+				struct kd_mutex_task *entry)
+{
+	if (atomic_cmpxchg(&entry->refs, 0, -1) != 0)
+		return false;
+	hlist_del_rcu(&entry->link);
+	WRITE_ONCE(bucket->count, bucket->count - 1);
+	call_rcu(&entry->rcu, kd_mutex_task_free);
+	return true;
+}
+
 bool kd_mutex_task_get(struct task_struct *task)
 {
 	struct kd_mutex_task_bucket *bucket = kd_mutex_task_bucket(task);
@@ -102,29 +123,44 @@ bool kd_mutex_task_get(struct task_struct *task)
 	/* The test switch is normally zero. A read avoids taking exclusive
 	 * ownership of its cacheline on every real acquisition; the CAS still
 	 * allows exactly one injected failure when the switch is armed. */
-	new = unlikely(READ_ONCE(kd_mutex_task_fail_once) == 1) &&
-	      cmpxchg(&kd_mutex_task_fail_once, 1, 0) == 1 ?
-		      NULL : kmalloc(sizeof(*new), GFP_ATOMIC);
-	if (!new) {
-		this_cpu_inc(kd_mutex_task_failures);
-		return false;
+	if (unlikely(READ_ONCE(kd_mutex_task_fail_once) == 1) &&
+	    cmpxchg(&kd_mutex_task_fail_once, 1, 0) == 1)
+		goto failure;
+	rcu_read_lock();
+	hlist_for_each_entry_rcu(entry, &bucket->tasks, link) {
+		if (entry->task == task && atomic_add_unless(&entry->refs, 1, -1)) {
+			rcu_read_unlock();
+			return true;
+		}
 	}
+	rcu_read_unlock();
+	new = kmalloc(sizeof(*new), GFP_ATOMIC);
+	if (!new)
+		goto failure;
 	raw_spin_lock_irqsave(&bucket->lock, flags);
 	hlist_for_each_entry(entry, &bucket->tasks, link) {
 		if (entry->task == task) {
-			entry->refs++;
+			atomic_inc(&entry->refs);
 			raw_spin_unlock_irqrestore(&bucket->lock, flags);
 			kfree(new);
 			return true;
 		}
 	}
+	if (bucket->count >= KD_MUTEX_TASK_CACHE_PER_BUCKET) {
+		hlist_for_each_entry(entry, &bucket->tasks, link)
+			if (kd_mutex_task_evict(bucket, entry))
+				break;
+	}
 	get_task_struct(task);
 	new->task = task;
-	new->refs = 1;
+	atomic_set(&new->refs, 1);
 	hlist_add_head_rcu(&new->link, &bucket->tasks);
 	WRITE_ONCE(bucket->count, bucket->count + 1);
 	raw_spin_unlock_irqrestore(&bucket->lock, flags);
 	return true;
+failure:
+	this_cpu_inc(kd_mutex_task_failures);
+	return false;
 }
 
 static void kd_mutex_task_free(struct rcu_head *rcu)
@@ -144,19 +180,26 @@ void kd_mutex_task_put(struct task_struct *task)
 	struct kd_mutex_task *entry;
 	unsigned long flags;
 
-	raw_spin_lock_irqsave(&bucket->lock, flags);
-	hlist_for_each_entry(entry, &bucket->tasks, link) {
+	rcu_read_lock();
+	hlist_for_each_entry_rcu(entry, &bucket->tasks, link) {
+		int refs;
+
 		if (entry->task != task)
 			continue;
-		if (!--entry->refs) {
-			hlist_del_rcu(&entry->link);
-			WRITE_ONCE(bucket->count, bucket->count - 1);
-			call_rcu(&entry->rcu, kd_mutex_task_free);
+		refs = atomic_dec_return(&entry->refs);
+
+		WARN_ON_ONCE(refs < 0);
+		/* Active collisions may exceed the cache bound. Only the cold
+		 * zero transition of an overfull bucket needs writer serialization. */
+		if (!refs && READ_ONCE(bucket->count) > KD_MUTEX_TASK_CACHE_PER_BUCKET) {
+			raw_spin_lock_irqsave(&bucket->lock, flags);
+			kd_mutex_task_evict(bucket, entry);
+			raw_spin_unlock_irqrestore(&bucket->lock, flags);
 		}
-		raw_spin_unlock_irqrestore(&bucket->lock, flags);
+		rcu_read_unlock();
 		return;
 	}
-	raw_spin_unlock_irqrestore(&bucket->lock, flags);
+	rcu_read_unlock();
 	WARN_ON_ONCE(1);
 }
 
@@ -166,15 +209,29 @@ bool kd_mutex_tasks_idle(void)
 	return !kd_mutex_task_count();
 }
 
-void kd_mutex_tasks_exit(void)
+static void kd_mutex_tasks_purge(void)
 {
 	/* Controlled teardown only: all hook callers and acquisitions must have
 	 * finished before unregistering. This is not concurrent hot-unload support. */
 	unsigned int i;
 
-	for (i = 0; i < KD_MUTEX_TASK_BUCKETS; i++)
-		WARN_ON_ONCE(!hlist_empty(&kd_mutex_task_buckets[i].tasks));
+	for (i = 0; i < KD_MUTEX_TASK_BUCKETS; i++) {
+		struct kd_mutex_task_bucket *bucket = &kd_mutex_task_buckets[i];
+		struct kd_mutex_task *entry;
+		struct hlist_node *next;
+		unsigned long flags;
+
+		raw_spin_lock_irqsave(&bucket->lock, flags);
+		hlist_for_each_entry_safe(entry, next, &bucket->tasks, link)
+			WARN_ON_ONCE(!kd_mutex_task_evict(bucket, entry));
+		raw_spin_unlock_irqrestore(&bucket->lock, flags);
+	}
 	rcu_barrier();
+}
+
+void kd_mutex_tasks_exit(void)
+{
+	kd_mutex_tasks_purge();
 	pr_info("kd_mutex tasks: active_tasks=%d task_alloc_failure=%lld task_reroutes=%lld\n",
 		kd_mutex_task_count(),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_task_failures),

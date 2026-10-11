@@ -341,8 +341,11 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	    frame->spin_simple || frame->request_frame ||
 	    !frame->regs_borrowed || frame->parent || frame->depth ||
 	    ctx->depth != 1 || ctx->owner != current || ctx->top != frame ||
-	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
-	    frame->packet_state != KD_PACKET_COMPLETE || !frame->executed ||
+	    /* The wrapper writes packet_state as a 32-bit value. Keep these
+	     * reads at their field width: GCC otherwise merges ABI and state
+	     * into an overlapping 64-bit load that cannot forward that store. */
+	    READ_ONCE(frame->entry_abi) != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    READ_ONCE(frame->packet_state) != KD_PACKET_COMPLETE || !frame->executed ||
 	    frame->state != KD_EXEC_FRAME_RUNNING || frame->completion_seen ||
 	    frame->outer_unlock_seen || frame->held_lock_depth != 1 ||
 	    frame->outer_lock_depth != 1 || frame->jit_lock_depth != 1 ||

@@ -9,15 +9,6 @@
  * Mutex hooks
  * ========================================================================== */
 
-/* Native owner bits are only inspected; delegation never changes the owner. */
-#define KD_MUTEX_OWNER_FLAGS 0x7UL
-
-bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
-{
-	return (atomic_long_read(&lock->owner) & ~KD_MUTEX_OWNER_FLAGS) ==
-	       (unsigned long)task;
-}
-
 /* A nonzero result is proof that THIS acquisition used only the original
  * Linux mutex. Other task records do not grant or revoke this ownership. Any
  * entry into the KD queue keeps zero, including its local native fallbacks. */

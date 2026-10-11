@@ -16,6 +16,10 @@ steps of one and 12–64 in steps of four. One-cacheline and hash payloads have
 three rounds under each backend, for 1,584 timed sessions with tables, charts
 and exported statistics; c02, c04, c08 and c16 are excluded. Its temporary
 66-vCPU layout records physical collector contention at 64 workers.
+The subsequent [mutex optimization report](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+isolates task caching, polling layout, field-width retirement reads and bounded
+NUMA selection, with a fresh mutex c01/hash comparison at the same worker counts.
+It preserves rejected candidates and identifies remaining Native/TCLock gaps.
 The [earlier full baseline](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
 retains the wider payload matrix before the NUMA/mutex fixes.
 

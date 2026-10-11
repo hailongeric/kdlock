@@ -432,6 +432,11 @@ def main(lock_kind='spin'):
                 batch_value = command(['modinfo', '-F', 'spin_batch', binary],
                                       out/'kdlock-batch.txt').strip()
                 require(batch_value == str(args.kd_batch_size), 'KD batch build identity differs')
+                if lock_kind == 'mutex':
+                    mutex_batch = command(['modinfo', '-F', 'mutex_batch', binary],
+                                          out/'kdlock-mutex-batch.txt').strip()
+                    require(mutex_batch == str(args.kd_batch_size),
+                            'KD mutex batch build identity differs')
                 audit_provider_ubsan(out, args.kd_provider_ubsan)
         if 'tclock' in args.backends:
             # Check the actual ELF: changing a Kbuild variable must not leave a

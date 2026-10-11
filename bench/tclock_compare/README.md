@@ -45,7 +45,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
 
 For mutex, replace the entry with `run_mutex.py` and choose a new output directory.
 For hash, use `--workload rcuht` and omit `--cachelines`. Mutex accepts only ordinary
-`plain` operations and its current fixed 1,024 batch configuration. KD mutex
+`plain` operations. Its default batch cap is 1,024 bodies; `--kd-batch-size`
+sets the compile-time cap, checked against `mutex_batch` provider metadata. KD mutex
 delegation requires JIT; native-first acquisition remains enabled. The provider
 has no `mutex_jit` parameter.
 
@@ -56,7 +57,7 @@ has no `mutex_jit` parameter.
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
 | `--collector-cpu 30` | Built-in default; override with an available CPU outside workers (63 on the documented destination, 38 in the original full matrix) |
-| `--numa on`, `--kd-batch-size 1024` |KD NUMA selection and body bound; separate scan budget |
+| `--numa on`, `--kd-batch-size 1024` | KD spin/mutex NUMA selection and total body bound; separate scan/cohort budgets |
 | `--spin-prefetch 2` |KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
@@ -136,6 +137,11 @@ Timed peak selection requires all workers to progress in the full cohort window.
 Keep whole-run per-worker and node shares too, especially cohorts with unequal
 NUMA membership (24 threads in the original 40-vCPU setup). A bounded batch and
 positive observed counts do not prove starvation freedom.
+
+The current [mutex c01/hash optimization report](../results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+compares all 22 worker counts with three rounds per backend. It documents bounded
+task caching, NUMA selection and field-width retirement reads, including rejected
+candidates and the remaining parity gaps. Only c01 and hash were run.
 
 The closed phase screened candidates separately at 16/36 threads, adding 2 for
 caller changes and 24 for fairness. An apparent regression was rechecked once;

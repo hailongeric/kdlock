@@ -111,10 +111,13 @@ Dedicated ABI2 preparation/completion/retirement avoids generic work for eligibl
 simple roots; FULL exits materialize cold routing fields before generic use.
 
 A terminal COMPLETE returns only IP/SP/BP and can retire its queue node once no
-executor needs it. FIFO tail retirement CASes the exact tail; when a successor is
+executor needs it. Queue tail retirement CASes the exact tail; when a successor is
 not yet linked, wait for publication rather than dropping it. A completed waiter
-never reexecutes its body or unlock. Current mutex batching is FIFO, bounded at
-1024 bodies; the rejected NUMA grouping experiment is not current behavior.
+never reexecutes its body or unlock. Current mutex batching has a default
+1024-body cap and bounded NUMA selection. Only fully linked remote nodes can be
+deferred; every exit rejoins them before handoff. The
+[implementation guide](mutex_implementation.md#queue-batch-execution-and-recovery)
+defines the scan/cohort limits and small-remote-cohort service rule.
 
 #### Pinned waiting and blocking owners
 
@@ -142,7 +145,8 @@ creates no B ownership. Uninterruptible `mutex_lock` completes its suffix and AC
 before userspace signal/exit handling. Generic post-progress faults remain fail-stop.
 
 Each acquisition holds its task-record reference through final owner ACK. Zero-ref
-records leave the lookup table and are freed with the task reference after RCU
+records immediately stop routing and may remain in the bounded inactive cache.
+Eviction unlinks the identity; the record and task reference are released after RCU
 readers drain. Native frames for independent tasks/locks use independent ACK packets.
 
 ### 5.4 Differences from spin

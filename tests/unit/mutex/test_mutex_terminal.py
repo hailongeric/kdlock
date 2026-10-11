@@ -20,6 +20,9 @@ def main():
         types += without_includes(read_source(ROOT/f'include/{name}.h'))+'\n'
     source = read_source(ROOT/'kernel_module/kd_mutex.c')
     helpers = definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
+    for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
+        marker = next(line for line in source.splitlines() if line.startswith(name+'('))
+        helpers += 'static struct kd_mutex_node *\n' + definition(source, marker)+'\n'
     for marker in (
         'static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)',
         'static void kd_mutex_batch_retire_current(struct kd_mutex *lock,',
@@ -36,6 +39,9 @@ def main():
             'skip-tail-retirement': (helpers.replace('if (batch->current_retired)', 'if (true)'), loop),
             'skip-delayed-link': (helpers.replace('} while (!next);', '} while (false);'), loop),
             'repeat-after-native-reuse': (helpers.replace('if (batch->current_retired)', 'if (false)'), loop),
+            'skip-deferred-rejoin': (helpers.replace('if (batch->deferred_head) {', 'if (false) {'), loop),
+            'lose-refused-successor': (helpers, loop.replace('WRITE_ONCE(curr_node->next, next_node);', '')),
+            'unbounded-local-cohort': (helpers, loop.replace('counter >= 128', 'false')),
             # Each combiner return must establish the normal gate value
             # independently, including source refusal before caller cleanup.
             'skip-refusal-gate': (helpers, loop.replace('kd_mutex_set_locked(lock);', '', 1)),

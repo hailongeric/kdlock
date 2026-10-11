@@ -156,27 +156,33 @@ unmodelled native result.
 | --- | --- |
 | Original Linux mutex | Workload's `struct mutex`; authoritative native-peer exclusion and physical ownership |
 | Shadow table | 1024 resident `kd_mutex_shadow_entry` objects in [kd_lock.c](../../kernel_module/kd_lock.c); each 192-byte gate separates tail, physical ownership/state and exact waiter count onto three cachelines |
-| Task routing record | RCU hash with 256 cacheline-aligned buckets, each with its own writer lock and exact membership count in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); dynamically allocated records retain exact acquisition refs and a `task_struct` ref |
+| Task routing record | RCU hash with 256 cacheline-aligned buckets in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); cached identities retain an atomic acquisition count and a `task_struct` ref; insertion/eviction use the bucket writer lock |
 | `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
 | Waiter stacks | Four 8 KiB stacks per possible CPU, allocated by [lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) with `vzalloc_node(..., cpu_to_node(cpu))` |
 | Execution frames | Shared per-CPU context, up to eight frames; physical owner remains fixed through sleep/ACK; root borrows node packet until FULL detachment |
-| Batch state | Physical combiner's stack; retains current retirement flag, exact successor, outer-release callback and image-slot identity |
+| Batch state | Physical combiner's stack; retains current retirement flag, exact successor, bounded NUMA deferred chain, outer-release callback and image-slot identity |
 
 Shadow hits acquire-load the immutable exact address without a lock. The
 current collision policy is `address % 1024` plus linear probing; misses take
 `kd_mutex_shadow_lock`, recheck, initialize and release-publish the address.
 Entries are cacheline-aligned and are not removed/reused while callers are live.
-Exhaustion falls back to the original mutex. The shadow hash policy and immediate
-last-reference removal remain unchanged; no retained inactive task cache is used.
+Exhaustion falls back to the original mutex. The shadow hash policy is unchanged.
 
-`kd_mutex_task_get()` still allocates a candidate with GFP_ATOMIC and takes
-the exact task's bucket writer lock. It increments an existing acquisition ref or
-publishes a new RCU record. Last put removes routing membership immediately;
-the RCU callback drops the task ref and frees storage. Read-side membership
-lookups allocate nothing. Approximate heat/counter values cannot replace
-these exact references or the final owner ACK. Controlled drain sums bucket
-membership after callers stop; acquisitions no longer update a global count.
-The normally disabled allocation-fault switch is read before its one-shot CAS.
+`kd_mutex_task_get()` first attempts an RCU lookup and atomic acquisition-reference
+increment. Cache hits require neither allocation nor the bucket writer lock.
+Misses allocate with GFP_ATOMIC, lock the bucket and recheck before publication.
+The last put changes the exact count to zero, immediately disabling routing;
+the inactive identity can remain cached. A bucket retains up to eight identities
+unless live acquisitions require more. A zero-reference eviction CAS claims
+the record with -1, arbitrating against concurrent reactivation, before unlinking
+it. RCU then protects old readers until the callback drops the task ref and frees
+storage. Inactive records also disappear during controlled provider unload.
+
+Controlled drain counts records with positive references after callers stop.
+Cached task lifetime does not extend routing membership or excuse an outstanding
+owner ACK. Active overflow is pruned on the final put. Approximate heat/counter
+values never replace these references. The allocation-fault switch remains
+checked before cache lookup, using a read before its one-shot CAS.
 
 Mutex heat has separate entry/contention counters from spin. Every 1024
 contentions the accepted policy checks `(entries >> 10) < 256`, resets both
@@ -187,12 +193,13 @@ see [heat and roles](../JIT_EXECUTION.md#heat-and-roles) for the full policy.
 ### Packet/cacheline and prefetch layout
 
 The node's first line contains next, GS base, saved physical RSP, stack
-base/top, lock, task and saved entry identity. `completed/locked` occupy
-offsets 64/65, separated from successor writes to `next`. ABI/native-result/
-packet/tail/slot state follows; `regs` begins at offset 128. IP/SP/BP and the
-five virtual GPR slots now occupy a separate aligned line, so JIT updates do
-not invalidate the waiter's polling line. The full private packet is
-168 bytes; Linux `pt_regs` is unchanged.
+base/top, lock, task and saved entry identity. ABI/packet/tail/slot state and
+immutable NUMA identity occupy the second line; `regs` begins at offset 128.
+IP/SP/BP and five virtual GPR slots share its first aligned line.
+`completed/locked/native_resume` occupy offsets 304/305/306, after the 168-byte
+packet in the node's existing fifth line. Minimal packet and metadata writes
+therefore do not invalidate the polling line. FULL recovery can touch the
+packet's last line; the node remains 320 bytes. Linux `pt_regs` is unchanged.
 
 The root frame's own hot header contains entry/lock identity and frame state.
 For spin its inline IP/SP/BP share that first aligned line. A mutex simple
@@ -224,8 +231,20 @@ resuming. [clobber.inc](../../kernel_module/mutex/clobber.inc) switches to the
 reserved waiter stack before publication and restores the post-completion
 boundary without returning through potentially overwritten hook frames.
 
-[combiner.inc](../../kernel_module/mutex/combiner.inc) keeps FIFO order and
-an exact 1024-body cap. It takes one enclosing source lease and uses
+[combiner.inc](../../kernel_module/mutex/combiner.inc) selects local requests
+when built with NUMA enabled. It can defer at most 64 fully linked remote nodes;
+an unlinked global tail is never detached. At 128 completed bodies, or when the
+retained successor has no link, deferred requests take priority. Eight or more
+deferred requests receive physical handoff; a smaller remote cohort is rejoined
+and serviced on the current owner, with FIFO selection for the rest of that
+batch. This avoids moving the owner and frame stack for only a few requests.
+All refusal, ordinary handoff and early-release exits rejoin deferred requests
+before publishing a wake. These bounds constrain bypass within a batch; they
+do not prove scheduler-independent starvation freedom.
+
+The default total cap is exactly 1024 bodies. `--kd-batch-size` configures that
+compile-time cap, verified through the provider's `mutex_batch` ELF metadata.
+The combiner takes one enclosing source lease and uses
 `kd_exec_frame_push_mutex_batch()` plus `kd_exe_mutex_batch_prepare()` for
 eligible simple ABI2 roots. Each request still checks source OPEN and current
 image readiness/publication/ABI; caching slot identity is not caching readiness.
@@ -236,7 +255,10 @@ The first wrapper invocation either returns terminal COMPLETE and retires
 through the dedicated mutex helper, or its returned FULL/refusal enters
 `kd_exe_mutex_batch_resume()` once. It never reruns the first body. Packet
 state and lock-ledger state are distinct: MINIMAL/COMPLETE only authorize the
-documented clobber fields; FULL authorizes generic recovery GPRs.
+documented clobber fields; FULL authorizes generic recovery GPRs. Retirement
+reads ABI and packet state separately with field-width `READ_ONCE` loads. This
+preserves every check while preventing a compiler-merged 64-bit comparison
+from overlapping the wrapper's 32-bit packet-state store.
 
 Committed terminal nodes retire before any wake: retain a linked successor,
 or remove the exact tail by CAS; losing that CAS waits for the owed link.
@@ -263,8 +285,8 @@ fixtures check this contract independently of the caller's repeated restoration.
 
 ## Scope and evidence
 
-KD keeps pinned published waiters and has no accepted NUMA queue grouping for
-mutex. NUMA-local stack allocation does not imply NUMA-local FIFO selection.
+KD keeps pinned published waiters and bounded NUMA queue grouping. Stack
+allocation, request selection and physical Linux ownership have separate roles.
 TCLock supports parking, but this port's fixed-affinity context contract does
 not validate arbitrary oversubscription. Both stack/context protocols require
 independently runnable dependencies and controlled drain.
@@ -276,13 +298,13 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The final full-thread comparison, returned-body JIT/delegation evidence and
+The current c01/hash comparison, returned-body JIT/delegation evidence and
 remaining performance gaps are in the
-[completed report](../../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
+[mutex optimization report](../../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md).
 Earlier grouping/cache candidates remain in
 [fixed benchmark records](../../bench/results/380G10/bench/tclock_compare/HISTORY.md#mutex-followup).
 The earlier [mandatory-JIT trials](../../bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md)
-retain runtime behavior after rejecting task retention and finding no repeatable
-gain from smaller entry/execution changes under `nopvspin`.
+retain their original-host behavior after rejecting those versions of task
+retention and smaller entry/execution changes under `nopvspin`.
 Source review and synthetic unit fixtures do not substitute for those live
 results or prove starvation freedom.
