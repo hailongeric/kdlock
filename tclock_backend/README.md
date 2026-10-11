@@ -111,6 +111,8 @@ records the 1%/20% write mixes, built assembly audit and complete performance
 matrix against Native and KD ABI3.
 
 Spin counts cannot establish a delegation share. Mutex whole-run returned-batch
-counts prove delegation but are not exact selected 300 ms window shares. KD retains
-pinned polling, so mutex parking policies differ. Data/JIT/context/progress/drain
+counts prove delegation but are not exact selected 300 ms window shares. KD offers
+spin and blocking mutex policies; its bounded polling, result wake batching and
+gate wait queue differ from TCLock's parking policy. See the
+[policy comparison](../bench/mutex_wait_compare/README.md). Data/JIT/context/progress/drain
 acceptance and commands live in [the runner](../bench/tclock_compare/README.md).

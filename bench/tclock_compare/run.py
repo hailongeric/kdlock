@@ -168,6 +168,17 @@ def make_plan(args):
                 measurement_mode='timed_peak' if timing['duration_ms'] else 'fixed_iterations',
                 **timing,
                 iterations=args.iterations, cpus=cpus[:t]))
+    if getattr(args, 'mutex_wait_mode', 'spin') == 'both':
+        paired = []
+        for row in result:
+            if row['arm'] != 'kdlock':
+                paired.append(row)
+                continue
+            modes = ('blocking', 'spin') if row['repeat'] % 2 else ('spin', 'blocking')
+            for policy in modes:
+                paired.append(dict(row, name=row['name'] + '-' + policy,
+                                   mutex_wait_mode=policy))
+        return paired
     return result
 
 
@@ -308,7 +319,8 @@ def execute_session(session, keep_going_no_jit=False):
 
 def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--mutex-wait-mode', choices=('spin', 'blocking'), default='spin')
+    p.add_argument('--mutex-wait-mode', choices=('spin', 'blocking', 'both'), default='spin',
+                   help='both keeps paired policies adjacent and reverses their order on odd rounds')
     p.add_argument('--mutex-spin-limit', type=int, default=4096)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')

@@ -18,6 +18,22 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_mutex_policies_are_paired_without_duplicating_baselines(self):
+        plan = run.make_plan(Namespace(cachelines=[16], threads=[16], repeats=3,
+            iterations=100, backends=['native', 'tclock', 'kdlock'],
+            lock_kind='mutex', mutex_wait_mode='both', mutex_spin_limit=4096))
+        self.assertEqual(len(plan), 12)
+        self.assertEqual(len({r['name'] for r in plan}), len(plan))
+        for repeat in range(3):
+            rows = [r for r in plan if r['repeat'] == repeat]
+            kd = [r for r in rows if r['arm'] == 'kdlock']
+            expected = ['blocking', 'spin'] if repeat % 2 else ['spin', 'blocking']
+            self.assertEqual([r['mutex_wait_mode'] for r in kd], expected)
+            self.assertEqual({r['mutex_spin_limit'] for r in kd}, {4096})
+            self.assertEqual([r['arm'] for r in rows].count('native'), 1)
+            self.assertEqual([r['arm'] for r in rows].count('tclock'), 1)
+            self.assertEqual(rows.index(kd[1]) - rows.index(kd[0]), 1)
+
     def test_provider_identity_rejects_mutex_jit_switch(self):
         record = dict(spin_entry_ratio_limit=2, spin_prefetch=2,
                       spin_delegate='on')

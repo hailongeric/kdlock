@@ -168,6 +168,11 @@ python3 bench/real_api/report.py \
 
 CSV/JSON/text reports use only the standard Python library. `--plots` additionally
 requires Matplotlib; use a separate analysis environment after measurement.
+Select KD blocking mutexes with `--mutex-wait-mode blocking`; the default is
+`spin`. `--mutex-spin-limit` defaults to 4,096 PAUSE iterations. Both options are
+recorded and checked against the loaded module. The
+[wait-policy comparison](../mutex_wait_compare/README.md) retains separate
+statistics for both modes across all accepted API configurations.
 The recorded figures used Matplotlib 3.9.4. Basic and directly affected checks:
 
 ```sh
