@@ -324,10 +324,11 @@ the matching barrier, preventing a head from sleeping through gate opening.
 The 24-byte wait queue fits the existing 192-byte shadow gate. Node size remains
 320 bytes; `completed/locked/native_resume` keep offsets 304/305/306.
 
-Blocking translation rejects any final image requiring origin-CPU GS storage,
+Blocking translation rejects final images that import the origin CPU's GS base,
 including generated guards and learned callees, because another task may use
 that CPU while the caller sleeps. Such bodies take the native path. Logical
-`current` remains a separately supplied task identity. Blocking mode does not
+`current` remains a separately supplied task identity. Existing
+[admission and alias limits](admission.md) still apply. Blocking mode does not
 add new interruptible/killable interfaces or a general rwsem/mmap implementation.
 
 The [comparison runner](../../bench/mutex_wait_compare/README.md) records both
@@ -350,8 +351,10 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The current c01/hash comparison, returned-body JIT/delegation evidence and
-remaining performance gaps are in the
+The [waiting-policy report](../../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
+compares spin and blocking modes, including scheduler validation, retained
+tuning and real API critical sections. The earlier c01/hash comparison,
+returned-body JIT/delegation evidence and remaining performance gaps are in the
 [mutex optimization report](../../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md).
 Earlier grouping/cache candidates remain in
 [fixed benchmark records](../../bench/results/380G10/bench/tclock_compare/HISTORY.md#mutex-followup).

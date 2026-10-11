@@ -33,7 +33,15 @@ Live benchmark output goes outside the guest checkout to
 `bench/results/10.176.26.71/raw/bench/<run>/`, and compact published reports in
 `bench/results/10.176.26.71/bench/<runner>/<run>/`.
 
-The latest [mutex optimization comparison](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+The [mutex waiting-policy comparison](results/10.176.26.71/bench/mutex_wait/20261012/README.md)
+documents blocking and spin modes, protected payloads and real API locks,
+Native/TCLock baselines, scheduler validation and retained tuning. It uses the
+regular 64-vCPU VM with 1/8/16/32/48/60 workers and collector CPU 63. Spin/rwlock
+policy pairs are controls because the mutex parameter does not change those
+algorithms. All 2,430 sessions across 31 configurations passed and drained;
+tables, plots, per-round statistics and archive identities are included.
+
+The earlier [mutex optimization comparison](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
 contains 396 accepted, drained c01/hash sessions: all three backends, three rounds
 at the same 22 worker counts. It records task caching, polling layout, retirement
 loads and bounded NUMA selection, with rejected candidates and remaining gaps.

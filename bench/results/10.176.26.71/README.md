@@ -4,6 +4,11 @@ This is the machine directory for tests and benchmarks in the VM on the Ubuntu
 Xeon Gold 6438N host at `eric@10.176.26.71`. Source edits remain in the original
 checkout on `380G10` and are synchronized to this VM before testing.
 
+- [Mutex spin and blocking policies, 2026-10-12](bench/mutex_wait/20261012/README.md):
+  implementation, sleeping-waiter and deferred-wake validation, Native/TCLock
+  2,430 accepted/drained sessions across 31 configurations, with Native/TCLock
+  baselines, complete tables/charts, and paired diagnostics and earlier candidates
+  retained separately.
 - [Mutex and read/write API results, 2026-10-11](bench/real_api/20261011-sync/RESULTS.md):
   pipe-buffer/capacity queries, shared-file seeks and bounded UTS namespace
   reads/writes; 504 accepted sessions, three-round comparisons, JIT evidence and retained
@@ -15,7 +20,7 @@ checkout on `380G10` and are synchronized to this VM before testing.
   at six worker counts, 288 accepted sessions. The [run record](bench/real_api/20261011/README.md)
   retains validation, xattr refusal and exploratory failures; slower cases remain
   in the results.
-- [Latest mutex optimization, 2026-10-11](bench/comparison/mutex-opt-20261011T045425Z/README.md):
+- [Earlier mutex optimization, 2026-10-11](bench/comparison/mutex-opt-20261011T045425Z/README.md):
   c01/hash, all three backends, 22 worker counts, three rounds;
   396 accepted, drained sessions. Causes, selected changes, rejected candidates
   and unresolved regressions are retained. Strict multithreaded parity holds at
@@ -38,10 +43,10 @@ checkout on `380G10` and are synchronized to this VM before testing.
 - [64-vCPU setup and affected checks, 2026-10-10](tests/20261010-topology64/README.md)
 - [Initial 60-vCPU migration validation, 2026-10-10](bench/migration-20261010T070707Z/README.md)
 
-The complete comparisons, including the latest mutex results, use a temporary
+The 22-point comparisons use a temporary
 66-vCPU boot, 32 worker CPUs per NUMA node and collector vCPU 65. At 64 workers,
 the collector and QEMU services share
-physical host core 63 with the last worker. The earlier bounded report uses a
+physical host core 63 with the last worker. The waiting-policy and earlier bounded reports use a
 64-vCPU boot and collector 63. All record the host's `ondemand` governor;
 keep their samples separate from the initial 60-vCPU migration validation and
 the [original-host reports](../380G10/README.md).

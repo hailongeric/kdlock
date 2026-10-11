@@ -10,7 +10,14 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-The latest [complete performance report](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
+The [mutex waiting-policy report](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
+describes KD's retained spin mode and optimized blocking mode, scheduler/JIT
+validation, and their Native/TCLock comparison across kernel payloads and real
+APIs on the regular 64-vCPU VM. It uses six worker counts up to 60, with a
+separate collector. The two policies share the public mutex API and retain the
+original Linux owner; blocking is selected when loading the provider.
+
+The earlier [complete performance report](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
 compares rwlock, spin and mutex on the new host at 22 worker counts: 1–8 in
 steps of one and 12–64 in steps of four. One-cacheline and hash payloads have
 three rounds under each backend, for 1,584 timed sessions with tables, charts

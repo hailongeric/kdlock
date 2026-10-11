@@ -128,6 +128,11 @@ then registers an RCU waiter and sleeps uninterruptibly. The queue head also
 uses bounded polling followed by a gate wait queue. Both policies retain the
 migration pin and the original Linux mutex's real ownership.
 
+Result sleep uses a one-jiffy timeout to recheck completion when its wake remains
+buffered behind a later translated body. Ordinary wakes can end sleep sooner.
+The [implementation guide](mutex_implementation.md#selectable-blocking-policy)
+explains the dependency case and wake ordering; scheduler delays are not bounded.
+
 Completion release-publishes the result, then orders its wake-slot check against
 the waiter's sleep-state barrier. The independently resident wake slot can be
 read after packet reuse; the packet cannot. Registration is cleared before slot
@@ -135,7 +140,7 @@ release. Acquisition references and RCU task-cache eviction protect the task
 through a late wake. Controlled drain checks each registration as well as slots,
 waiter balances, frames, owners and ACKs.
 
-Blocking-mode translation refuses images requiring the origin CPU's GS storage,
+Blocking-mode translation refuses images that import the origin CPU's GS base,
 including emitted guards and learned callees. Such bodies run natively. Logical
 `current` uses a separate task input and remains supported. This is necessary
 because another task may run on a sleeping caller's CPU. One physical task still

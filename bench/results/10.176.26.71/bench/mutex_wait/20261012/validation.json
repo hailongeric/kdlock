@@ -1,0 +1,280 @@
+{
+  "checked_log_receipts": {
+    "mutex-blocking-20261012-timed-v1/direct.log": {
+      "reported_pass": "Ran 49 tests",
+      "sha256": "ac4f6ea7c5371d0e735c1a2ede58b0ffaf23bd5007b3987c1884afa1020081f8"
+    },
+    "mutex-blocking-20261012-timed-v1/report.log": {
+      "reported_pass": "Ran 6 tests",
+      "sha256": "65378dcad145da2497120819bebfc3c46534dce9714ce064b3d809a56654aca2"
+    },
+    "mutex-blocking-20261012-timed-v1/rw.log": {
+      "reported_pass": "Ran 13 tests",
+      "sha256": "4ae65cb7611595ec879f42d1789bf50a2be2694de21e24871c150ec60aeb1870"
+    },
+    "mutex-blocking-20261012-timed-v1/unit.log": {
+      "reported_pass": "Unit tests: 10 passed, 0 failed",
+      "sha256": "fa7d2dd44ca685a52046966eee0e6ed3433df1f8b96e5d39b92f5adf9d53d3da"
+    },
+    "mutex-blocking-final-audit-20261012/export.log": {
+      "reported_pass": "Ran 7 tests",
+      "sha256": "83166b089fbcb82fac63f22522fa6ae99bb5e46368cd35d756277fd463dd6346"
+    }
+  },
+  "final_health": {
+    "checked_utc": "2026-10-11T21:18:14.307773+00:00",
+    "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+    "frozen_source_hashes_verified": 337,
+    "idle": true,
+    "matrix_status": {
+      "collector_cpu": 63,
+      "expected_sessions": 2430,
+      "finished_utc": "2026-10-11T21:09:43.534801+00:00",
+      "groups": [
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "mutex-cacheline-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "mutex-cacheline-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "mutex-rcuht-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "mutex-rcuht-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "spin-cacheline-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "spin-cacheline-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "spin-rcuht-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "spin-rcuht-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "rwlock-cacheline-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "rwlock-cacheline-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "rwlock-rcuht-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "rwlock-rcuht-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-pipebytes-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-pipebytes-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-pipecap-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-pipecap-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-seek-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-seek-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-ofd-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-ofd-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-setfd-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-setfd-blocking",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-utsname-spin",
+          "returncode": 0
+        },
+        {
+          "complete": true,
+          "jit_exclusions": 0,
+          "name": "api-utsname-blocking",
+          "returncode": 0
+        }
+      ],
+      "mutex_spin_limit": 4096,
+      "snapshot_tag": "mutex-blocking-20261012-v1",
+      "started_utc": "2026-10-11T18:27:12.087229+00:00",
+      "state": "COMPLETE",
+      "threads": [
+        1,
+        8,
+        16,
+        32,
+        48,
+        60
+      ]
+    },
+    "online": "0-63"
+  },
+  "probes": {
+    "mutex-blocking-task-20261012-timed-v1": {
+      "identity": {
+        "cpus": [
+          0,
+          32,
+          33
+        ],
+        "jit": false,
+        "jit_bodies": 0,
+        "module_sha256": "8573bb4c4d5b411151ebd939c66784333c36f20e35dc5c3618a7d18675e2df01",
+        "mutex_jit_required": true,
+        "mutex_wait_mode": "blocking",
+        "provider_ubsan": "off",
+        "scope": "task_owner_ack_resource_probe",
+        "snapshot_tag": "mutex-blocking-20261012-v1"
+      },
+      "result": {
+        "acks": 4,
+        "deferred_frees": 2,
+        "drained": true,
+        "jit": false,
+        "jit_bodies": 0,
+        "mutex_jit_required": true,
+        "mutex_wait_mode": "blocking",
+        "orders": [
+          "B-A",
+          "A-B"
+        ],
+        "passed": true,
+        "registry_stress_deferred_frees": 3,
+        "registry_stress_iterations": 4096,
+        "registry_stress_workers": 3,
+        "scope": "task_owner_ack_resource_probe"
+      },
+      "source_hashes_verified": 84
+    },
+    "mutex-blocking-wait-20261012-timed-v1": {
+      "identity": {
+        "cpu": 0,
+        "jit_bodies": 0,
+        "module_sha256": "8573bb4c4d5b411151ebd939c66784333c36f20e35dc5c3618a7d18675e2df01",
+        "snapshot_tag": "mutex-blocking-20261012-v1"
+      },
+      "result": {
+        "drained": true,
+        "passed": true,
+        "results": [
+          {
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 0,
+            "voluntary_switches": 2054
+          },
+          {
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 1024,
+            "voluntary_switches": 1078
+          },
+          {
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 4096,
+            "voluntary_switches": 1031
+          }
+        ]
+      },
+      "source_hashes_verified": 84
+    }
+  }
+}

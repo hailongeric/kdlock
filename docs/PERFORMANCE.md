@@ -1,7 +1,18 @@
 # Performance status
 
 KD does not yet match both TCLock and Linux Native at every requested thread
-count. The latest [mutex c01/hash optimization](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+count. The [mutex waiting-policy report](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
+documents the new blocking mode, its comparison with the retained spin policy,
+Native/TCLock baselines, real API critical sections and unchanged spin/rwlock
+controls. It keeps timing variation, rejected implementations and scheduler
+validation separate from throughput claims.
+All 2,430 sessions passed and drained. At 60 workers, the nine mutex configurations
+retain 94.5–99.2% of spin's median whole-run throughput; blocking beats Native and
+TCLock on that metric in all nine and on best peak in eight. C16 loses 12.6% at
+eight workers. The single-worker hash slow-start discrepancy, separate paired
+diagnostic and CPU costs are retained in the report; universal parity is unmet.
+
+The earlier [mutex c01/hash optimization](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
 measures task caching, polling layout, retirement loads and bounded NUMA selection
 across all 22 worker counts. The earlier [all-lock c01/hash rerun](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
 retains the spin/rwlock comparison and the pre-optimization mutex baseline.

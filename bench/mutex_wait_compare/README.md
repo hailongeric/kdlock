@@ -5,6 +5,9 @@ mutex policy. Select `mutex_blocking=1` when loading `kdlock_km.ko`; select `0`
 for the spin baseline. `mutex_spin_limit` bounds the number of PAUSE iterations
 before sleeping; zero requests immediate sleeping. Both parameters are immutable
 for that provider lifetime. The public mutex API and caller ABI are unchanged.
+Sleeping result waiters recheck after one timer tick if no wake has arrived;
+ordinary wakes can end the sleep sooner. This covers a later critical section
+that depends on an earlier completed caller before flushing buffered wakes.
 
 The [implementation guide](../../docs/design/mutex_implementation.md) describes
 result/gate wakeup, task lifetime and the blocking image's GS restriction.
@@ -49,8 +52,41 @@ and gate wait calls. A call count alone does not prove a task descheduled; the
 [scheduler probe](../../tests/kernel/mutex/run_wait_selftest.py) separately
 observes sleeping tasks and same-CPU progress.
 
+The direct spin/mutex runner also accepts `both`, which places the two KD
+policies next to each other and reverses their order on alternating rounds.
+For example, a separate c01/c16 mutex diagnostic is:
+
+```sh
+python3 bench/tclock_compare/run_mutex.py \
+  --backends kdlock --workload cacheline --cachelines 1 16 \
+  --threads 16 60 --collector-cpu 63 --repeats 3 --duration-ms 2000 \
+  --mutex-wait-mode both --mutex-spin-limit 4096 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/mutex-paired-NEW
+```
+
 Create `STOP` in the output directory to stop between groups. A failure preserves
 the group and halts further work; only a fully drained NO_JIT exclusion permits
 later groups. Never pool interrupted or tuning candidates into final scores.
 Raw evidence belongs outside the checkout and reports under
 `bench/results/10.176.26.71/bench/mutex_wait/`.
+
+After measurement, export a completed default grid into a separate directory:
+
+```sh
+python3 bench/mutex_wait_compare/export.py --input RAW_RUN --output NEW_REPORT --plots
+python3 bench/mutex_wait_compare/test_export.py
+```
+
+The exporter verifies saved source/binary/JIT hashes and recorded module policy,
+recomputes peaks from raw per-worker progress, and retains all rounds, CPU costs,
+wait observations and execution classifications. `statistics-by-execution.csv`
+keeps NO_JIT controls separate. `TABLES.md` shows every backend's whole-run and
+best peak throughput; the statistics export includes min/median/max/spread.
+Matplotlib is needed only for plots.
+Optional `--pilots BENCH_PARENT`, `--paired RUN...` and `--superseded MATRIX...`
+audit retained tuning, alternating-policy diagnostics and explicitly stopped
+earlier versions into separate exports. They never fill missing final samples.
+The final matrix must still contain all 2,430 planned records, with each executed
+session drained; any required-JIT exclusion remains unscored.
+The [2026-10-12 report](../results/10.176.26.71/bench/mutex_wait/20261012/README.md)
+records the implementation, workload/lock contracts, validation and comparison.

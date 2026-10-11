@@ -1,0 +1,17 @@
+{
+  "record_type": "post-run note transcribed from the execution tool output",
+  "source_exec_session": 26056,
+  "source_output_chunk": "63d535",
+  "guest_output": "/root/kdlock-evidence/10.176.26.71/bench/mutex-blocking-paired-mutex-timed",
+  "command": "taskset -c 0 python3 bench/tclock_compare/run_mutex.py --backends kdlock --mutex-wait-mode both --mutex-spin-limit 4096 --cachelines 1 16 --threads 16 60 --collector-cpu 63 --repeats 3 --duration-ms 2000 --output /root/kdlock-evidence/10.176.26.71/bench/mutex-blocking-paired-mutex-timed",
+  "exit_status": 1,
+  "failure": "AssertionError: CPU outside caller affinity",
+  "trace": [
+    "bench/tclock_compare/run.py:406: topology = runtime.capture_topology(worker_cpus(args))",
+    "tests/protocols/cpu_placement.py:49: validate_topology(result, len(cpus))",
+    "tests/protocols/cpu_placement.py:27: assert set(cpus) <= set(placement[\"allowed_cpus\"]), \"CPU outside caller affinity\""
+  ],
+  "scope": "Placement validation refused the restricted runner affinity before builds, module loads or timed samples. The preceding six FIONREAD acceptance sessions completed and drained successfully.",
+  "followup": "/root/kdlock-evidence/10.176.26.71/bench/mutex-blocking-paired-mutex-timed-v2",
+  "resolution": "Use the normal allowed CPU set and preserve the placement guard. The follow-up retains worker prefixes and separate collector CPU 63."
+}
