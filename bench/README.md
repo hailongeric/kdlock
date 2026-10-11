@@ -27,7 +27,15 @@ Live benchmark output goes outside the guest checkout to
 `bench/results/10.176.26.71/raw/bench/<run>/`, and compact published reports in
 `bench/results/10.176.26.71/bench/<runner>/<run>/`.
 
-The [current 22-point comparison](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
+The latest [mutex optimization comparison](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+contains 396 accepted, drained c01/hash sessions: all three backends, three rounds
+at the same 22 worker counts. It records task caching, polling layout, retirement
+loads and bounded NUMA selection, with rejected candidates and remaining gaps.
+KD meets both peak and whole-run targets against both alternatives at 14 of 42
+multithreaded points; see [performance status](../docs/PERFORMANCE.md#mutex-c01-optimization-2026-10-11)
+for the per-payload outcome. c02/c08/c16 were excluded.
+
+The [earlier all-lock 22-point comparison](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
 covers **1–8 workers in steps of one, then 12–64 in steps of four**, under KDLock,
 TCLock and Linux Native, after the NUMA/mutex fixes. It uses c01 and hash payloads
 for spin, mutex and rwlock, with rwlock at 1%/20% writes: **1,584 drained sessions**,
@@ -36,6 +44,8 @@ excluded.** Reports retain all samples, round variation, JIT/NO_JIT evidence,
 CSV/JSON and scaling plots. The temporary 66-vCPU layout puts workers on distinct
 host cores, with collector vCPU 65; at 64 workers, the collector and QEMU services
 share physical core 63 with the last worker. The governor remains `ondemand`.
+The latest mutex comparison uses this same placement and frequency policy;
+the earlier report retains the latest spin/rwlock results and prior mutex baseline.
 The [earlier full baseline](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
 retains 3,960 sessions and multi-cacheline payloads at its original source version.
 
@@ -56,7 +66,8 @@ gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
-| [Current c01/hash rerun](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md) | `10.176.26.71`: 1,584 sessions, 22 worker counts, all backends and lock families; c02/c04/c08/c16 excluded |
+| [Latest mutex optimization](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md) | `10.176.26.71`: 396 accepted sessions, c01/hash, 22 worker counts; causes, selected changes, rejected candidates and remaining parity gaps |
+| [Earlier all-lock c01/hash rerun](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md) | `10.176.26.71`: 1,584 sessions, 22 worker counts, all backends and lock families; c02/c04/c08/c16 excluded |
 | [Earlier complete baseline](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md) | `10.176.26.71`: all maintained spin/mutex/rwlock payloads, 1–8 and 12–64 workers, 3,960 sessions; temporary 66-vCPU VM, collector 65 shares a physical core at 64 workers |
 | [Earlier bounded 64-vCPU comparison](results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md) | `10.176.26.71`: RCUHT rwlocks at 1/16/32/56 workers and spin/mutex cacheline at 1/16/32/36 workers; 144 timed sessions, collector CPU 63 |
 | [RCUHT rwlocks](results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) | 1%/20% writes on the hash payload; all 15 thread counts, ABI3 JIT writers and strict Native/TCLock parity checks |

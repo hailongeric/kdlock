@@ -21,18 +21,34 @@ KD meets the multithreaded strict comparison at **14 of 42 points** and falls
 short at **28**. This requires both best warmed peak and median whole-run
 throughput to match both alternatives.
 
-C01 median whole-run throughput at 64 workers is KD **4.946**,
-Native **3.173** and TCLock **3.305 Mops/s**.
-At 16 workers KD reaches **7.551** but still trails Native's
-**8.670**. Four-worker c01 remains poor at KD
-**4.395** versus Native **9.850**; it is also about 6% below
-the previous full-matrix KD result. Short batches and mixed native/delegated
-routing remain an unresolved bottleneck. Historical comparisons also show a
-44.4% c01 drop at three workers and a 4.7% hash drop at 40 workers. The earlier
-three-worker c01 peak spread was 51.2%; those differences do not isolate source
-effects from run variability, and remain unresolved. Hash at 36 workers is KD
-**3.436**, Native **2.459** and TCLock
-**2.119 Mops/s**. The report keeps every point and spread.
+C01 meets that target at **2 of 21 multithreaded points**, at 60 and 64 workers.
+Hash meets it at **12 of 21**, at 16–36 and 44–64 workers in steps of four;
+40 workers remains below Native. One-worker controls are excluded from these
+counts. Selected c01 median whole-run rates are shown below, in Mops/s. The
+strict result also checks best warmed peak, so a whole-run lead alone is
+insufficient, as the 36-worker result shows.
+
+| Workers | Native | TCLock | KD | Strict target |
+| --- | --- | --- | --- | --- |
+| 4 | 9.850 | 3.748 | 4.395 | FAIL |
+| 16 | 8.670 | 3.567 | 7.551 | FAIL |
+| 36 | 5.749 | 3.357 | 5.798 | FAIL |
+| 64 | 3.173 | 3.305 | 4.946 | PASS |
+
+Short batches and mixed native/delegated routing remain an unresolved c01
+bottleneck. The four-worker placement stays within NUMA node 0, so cross-node
+handoff cannot explain that point's remaining gap. Measured JIT share is 47–75%;
+session-lifetime counters, including warmup, show only 4.8–16.2 successful bodies per combiner,
+versus 892–972 at sixteen workers. Short batches repeatedly pay physical lock
+acquisition and queue/frame setup for a very small protected body. This supports
+the coordination-overhead explanation but does not isolate each instruction's cost.
+
+Historical whole-run comparisons show a 69.8% c01 gain at 64 workers and a
+25.4% gain at 36, alongside drops of 44.4% at three workers, 6.3% at four,
+and 4.7% for hash at 40. The earlier three-worker c01 peak spread was 51.2%;
+those differences do not isolate source effects from run variability, and the
+regressions remain unresolved. Hash at 36 workers is KD **3.436**, Native
+**2.459** and TCLock **2.119 Mops/s**. The report keeps every point and spread.
 
 Selected changes retain inactive task identities in a bounded RCU cache while
 keeping exact active references, separate completion polling from metadata,
@@ -41,6 +57,10 @@ Small remote cohorts are serviced without moving the physical owner. Shorter
 batches, capped admission, extra retry, frame reuse and broader prefetch were
 rejected. Separate PMU diagnostics show fewer store-forwarding blocks, but total
 store-buffer stalls did not improve; they are excluded from throughput scores.
+The selected implementation and report are committed in `319ef8f`. Measured
+inputs also contain the nine pre-existing working-tree edits captured in the
+report's frozen source manifests; the commit alone does not identify all measured
+source bytes.
 
 The selected source passed seven basic/affected checks, four runner checks and
 the cross-NUMA owner/ACK/RCU probe. Final KD acceptance includes
