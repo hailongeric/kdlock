@@ -1,0 +1,2 @@
+kind,query,entries,value_size,threads,arm,planned,accepted,failed,not_run,jit_positive,jit_bodies,whole_min,whole_median,whole_max,whole_spread_pct,peak_min,peak_median,peak_max,peak_spread_pct,worker_min_share,worker_max_share,cpu_ns_per_op_median
+xattr,size,16,64,16,kdlock,1,0,1,0,0,0,,,,,,,,,,,
