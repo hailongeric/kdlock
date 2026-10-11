@@ -1,12 +1,11 @@
 # Real kernel API contention
 
-This runner measures actual `fgetxattr()`, `fcntl(F_OFD_GETLK)` and
-`fcntl(F_SETFD)` syscalls using private tmpfs files. Userspace and the
-VFS/security/result-copy paths remain in the measured operation. A scoped ftrace
-module substitutes the selected kernel function only for the private file or
-file table. Its critical section uses Native, TCLock or KD spinlocks, selected
-at build time. An optional `stock` arm runs the original kernel function without
-a substitution module.
+This runner measures actual syscalls on private kernel objects: file-lock
+queries, descriptor flags, pipe metadata, file positions and UTS namespace names.
+Userspace and surrounding security/result-copy paths remain in the measured
+operation. A scoped ftrace module substitutes selected functions for the bound
+object. Spin, mutex or reader/writer backends are selected at build time. The
+`stock` arm runs the original kernel functions without a substitution module.
 
 The [2026-10-11 results report](../results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
 contains 288 accepted, drained OFD/setfd sessions: four backends, three rounds,
@@ -15,6 +14,13 @@ subject and kernel lock, relates the workload choices to the TCLocks paper, and
 reports scaling, useful KD regimes, regressions and xattr admission limits.
 The separate [run record](../results/10.176.26.71/bench/real_api/20261011/README.md)
 retains reproduction commands, validation, exploratory failures and raw evidence.
+
+The [mutex and read/write extension](../results/10.176.26.71/bench/real_api/20261011-sync/RESULTS.md)
+adds pipe-buffer and capacity queries, shared-file seeks, and private UTS reads
+with hostname/domain-name updates. It reports three-round scaling and separates
+mutex delegation evidence from UTS's low JIT share, with the sleeping-rwsem
+comparison limits made explicit. All 504 final sessions passed correctness and
+drained; plots, full statistics and the retained pilots accompany the report.
 
 These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading
@@ -27,8 +33,13 @@ KD nor loading TCLock alone changes ordinary syscall locking.
 | tmpfs `fgetxattr()` | `simple_xattr_get()` holds `simple_xattrs.lock` across linked-list name comparisons and the value copy | Implemented; many callers query one metadata-rich file. Attribute count and hit position control real search work. |
 | `fcntl(F_OFD_GETLK)` | `posix_test_lock()` holds `file_lock_context.flc_lock` while checking owners, ranges and conflict type, then copying the conflict | Implemented for local, non-expiring OFD locks; models repeated byte-range conflict queries on one file. |
 | `fcntl(F_SETFD)` | `set_close_on_exec()` holds `files_struct.file_lock` across the close-on-exec bitmap update | Implemented; each thread toggles its own preallocated descriptor flag in the shared table. Descriptor spacing changes the dirty bitmap footprint. |
+| `ioctl(FIONREAD)` on a shared pipe | `pipe_ioctl()` holds `pipe_inode_info.mutex` while summing real buffer lengths around the ring | Implemented mutex case; occupied buffer count controls protected traversal, with one independent file description per worker. |
+| `fcntl(F_GETPIPE_SZ)` | `pipe_fcntl()` holds the same pipe mutex while reading `max_usage` | Implemented short mutex control on the same real subsystem. |
+| Shared-file `lseek(SEEK_SET/SEEK_END)` | `ksys_lseek()` holds `file.f_pos_lock` across size checks and `f_pos`/`f_version` updates | Implemented mutex case for an anonymous tmpfs file and one shared open description. |
+| `uname()` with `sethostname()` / `setdomainname()` | `uts_sem` protects the real UTS structure: readers copy it, writers replace one name | Implemented bounded read/write experiment in a private UTS namespace; Native rwsem versus KD/TCLock reader/writer spinlocks, with the specialization below. |
 | FxMark directory enumeration / rename | Shared dentry/rename state and, for cross-directory rename, `s_vfs_rename_mutex` | Candidate for wider integration; additional lock sites and filesystem behavior must be preserved. |
 | will-it-scale `lock1` | Repeated `F_SETLKW` / unlock, with a **separate file per worker** | Useful reference; it does not itself create a shared inode lock. The original paper's kernel/version bottleneck must be re-established on this kernel. |
+| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The local TCLocks copy maps and unmaps 128 MiB. A general sleeping-rwsem implementation is required before claiming a KD mmap comparison. |
 | eventfd / epoll wakeup paths | Short queue/counter critical sections, often with IRQ exclusion | Poor initial fit for the present ordinary-task-context delegation ports. |
 
 Sources: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),
@@ -42,9 +53,10 @@ hashes; the compiled experiment targets the captured 6.1.159 guest.
 
 ## Contract and comparison limits
 
-The client creates an anonymous `memfd`, fills its `trusted.kdlock.*` attributes
-(root is required; this guest has no tmpfs `user.*` handler) or establishes
-nonadjacent one-byte OFD write locks, and then waits for the controller. The
+For xattr/OFD, the client creates an anonymous `memfd`, fills its
+`trusted.kdlock.*` attributes (root is required; this guest has no tmpfs `user.*`
+handler) or establishes nonadjacent one-byte OFD write locks, and then waits for
+the controller. The
 module pins that file and rejects linked files and non-tmpfs objects. The OFD
 variant also rejects lock-manager callbacks and non-OFD locks. Once bound,
 **no participant may mutate metadata, change the OFD locks, or close their owner
@@ -74,8 +86,8 @@ pooled with the matched native arm. The captured kernel has UBSAN enabled, while
 all timed replacement/provider modules have UBSAN disabled. Therefore only the
 matched native comparison isolates the lock change within this compiled body.
 
-Only one fixed worker runs on each selected CPU. All requests use the real
-kernel list and original lock storage. Syscalls run individually, without an
+Only one fixed worker runs on each selected CPU. The spin cases use the real
+kernel metadata and original lock storage. Syscalls run individually, without an
 ioctl loop or artificial arithmetic inside the critical section. Warmup and
 setup are outside timing. User-buffer validation is inside timing and identical
 across backends. Values differ by attribute key; every returned byte is checked.
@@ -97,6 +109,41 @@ counters distinguish actual JIT execution from
 TCLock spin delegation remains unmeasured, as in the existing comparator.
 The module counts redirected calls, and the runner requires one call per
 measured operation. A failed/undrained session has no accepted score.
+
+## Mutex and reader/writer contracts
+
+The [mutex module](../../workload_modules/real_api/mutex.c) keeps the real pipe
+mutex or `f_pos_lock` for Native and KD; TCLock uses its separate ordinary-mutex
+object. The client creates an unlinked FIFO, fills whole pages before binding,
+and opens an independent description per worker. No pipe reads, writes or resizes
+occur while bound. The seek case retains a shared description, restricts calls
+to `SEEK_SET`/`SEEK_END`, and changes the real position on every worker's sequence.
+Its surrounding shared `file.f_count` traffic remains part of the operation.
+
+TCLock mutex workers register a fixed-CPU context before each phase. The client
+joins every thread and retries the provider's checked drain for up to five seconds:
+`pthread_join` can observe thread completion before the final kernel task exit.
+No live-task or queue check is bypassed. `/dev/real_api_control` carries registration
+and drain commands outside timing. Close it before unloading the source, while
+retaining the benchmark object's descriptors until afterward.
+
+The [UTS module](../../workload_modules/real_api/uts.c) binds only a private
+`CLONE_NEWUTS` namespace with native x86-64 personality. Reads use `uname`; writes
+set a 64-byte hostname or domain name. Every read checks for a complete allowed
+name and unchanged other fields. User copies, permission checks, entropy mixing
+and one proc notification remain in each syscall. The matched arms move that
+notification after unlock, on the original caller. No proc-sysctl observers,
+namespace changes or independent users of the bound namespace are permitted.
+
+All three matched UTS backends use a private lock for the bound namespace: a Linux
+rwsem for Native, and reader/writer spinlocks for KD and TCLock. This is a scoped
+adaptation of the bounded, non-sleeping copy/update body, not a general replacement
+of Linux rwsems. Stock retains global `uts_sem`, the original notification placement
+and kernel instrumentation; its comparison includes all three differences. Global
+proc notifications to other namespaces are retained in every arm. KD prepares the
+ABI3 writer entry; readers stay native and
+concurrent. JIT shares use the number of **writes**, not total mixed operations.
+TCLock mutex delegation counts are recorded; spin/rwlock shares remain unmeasured.
 
 ## Run in the recovery guest
 
@@ -133,6 +180,23 @@ python3 -m unittest discover -s bench/spin_cacheline -p test_peak.py
 Use `--kinds setfd --queries toggle` for the bitmap case; `--entries` then means
 the FD-number stride between workers, starting at FD 64. Use a separate run
 because query modes are API-specific.
+Use separate output directories for these additional cases:
+
+```sh
+# --entries means occupied 4 KiB pipe buffers (capacity pages for pipecap).
+python3 bench/real_api/run.py --kinds pipebytes pipecap --queries query \
+  --entries 16 128 --threads 1 8 16 32 48 60 --repeats 3 \
+  --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/pipe-new
+# --entries means file size in 4 KiB pages.
+python3 bench/real_api/run.py --kinds seek --queries set end --entries 16 \
+  --threads 1 8 16 32 48 60 --repeats 3 \
+  --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/seek-new
+# --entries means write percentage; remaining operations call uname().
+python3 bench/real_api/run.py --kinds utsname --queries host domain \
+  --entries 20 100 --value-size 64 --threads 1 8 16 32 48 60 --repeats 3 \
+  --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/uts-new
+```
+
 `--value-size` defaults to 64 bytes. `--cpus` takes an ordered comma-separated
 list, whose prefix defines each cohort. Use explicit interleaved NUMA placement
 for a separate placement study. Do not pool different placements, payload sizes,

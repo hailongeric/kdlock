@@ -1,0 +1,55 @@
+{
+  "reason": "pthread_join returned before the last check thread completed kernel task exit; the single RA_DRAIN call returned EBUSY and the client exited. Original failed session is retained.",
+  "helper": "/root/kdlock-evidence/10.176.26.71/bench/mutex-opt-20261011T045425Z/final-66/mutex-cacheline-c01/variants/tclock/mutex_cacheline.ko",
+  "helper_sha256": "665def4253d80b572aa3deba61411c17350f95a752189959ecb75ce60f0b560c",
+  "commands": [
+    {
+      "argv": [
+        "modinfo",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex-opt-20261011T045425Z/final-66/mutex-cacheline-c01/variants/tclock/mutex_cacheline.ko"
+      ],
+      "returncode": 0,
+      "stdout": "filename:       /root/kdlock-evidence/10.176.26.71/bench/mutex-opt-20261011T045425Z/final-66/mutex-cacheline-c01/variants/tclock/mutex_cacheline.ko\ndescription:    Direct lock cacheline or RCUHT write microbenchmark\nlicense:        GPL\nsrcversion:     1B89A95B8428F67145E7911\ndepends:        tclock_mutex_backend_km\nretpoline:      Y\nname:           mutex_cacheline\nvermagic:       6.1.159-kdclobber2 SMP preempt mod_unload modversions \n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "insmod",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex-opt-20261011T045425Z/final-66/mutex-cacheline-c01/variants/tclock/mutex_cacheline.ko"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "rmmod",
+        "real_api"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "rmmod",
+        "mutex_cacheline"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "rmmod",
+        "tclock_mutex_backend_km"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "drain_ioctl_result": 0,
+  "quiescent_after": "1",
+  "remaining_modules": []
+}

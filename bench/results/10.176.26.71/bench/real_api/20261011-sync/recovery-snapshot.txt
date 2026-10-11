@@ -1,0 +1,2 @@
+QEMU info snapshots, after completion. Raw monitor output is archived.
+--        real-sync-20261011-v1 3.08 GiB 2026-10-11 22:33:05 07:12:20.922

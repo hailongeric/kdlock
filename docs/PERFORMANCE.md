@@ -14,7 +14,24 @@ used for each run.
 
 ## Real kernel API contention, 2026-10-11
 
-The [API benchmark results](../bench/results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
+The [mutex and reader/writer extension](../bench/results/10.176.26.71/bench/real_api/20261011-sync/RESULTS.md)
+adds FIONREAD, F_GETPIPE_SZ, shared-file lseek and bounded private UTS reads/writes:
+**504 accepted/drained sessions**, three rounds at 1/8/16/32/48/60 workers under
+Stock, matched Native, TCLock and KD. KD meets both median whole-run and best-peak
+parity against Native and TCLock at **32 of 35 multithreaded points**. The three
+exceptions are 128-buffer FIONREAD at 8/16/32 workers.
+
+At 60 workers, the short pipe cases reach 5.330–5.639 Mops/s, 2.92–2.95× Native
+and 2.07–2.20× TCLock. Shared-file seeks reach 3.839 Mops/s, 2.77–2.92× Native
+and 1.46–1.57× TCLock. Mutex JIT shares at 16–60 workers are 96.78–99.79%.
+UTS has favorable throughput but only 0.01–3.16% of writes execute through JIT
+at those counts; all eight-worker UTS rounds are NO_JIT. Its private Native rwsem
+sleeps while KD/TCLock use bounded reader/writer spinlocks, and KD's CPU time per
+operation exceeds Native's. The 60-worker domain case has only a 0.29% best-peak
+lead over TCLock. The report retains these limits, all failed pilots and the
+scope correction; it does not claim a general rwsem, mmap or FxMark integration.
+
+The earlier [spinlock API results](../bench/results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
 map OFD conflict queries to `file_lock_context.flc_lock` and close-on-exec bitmap
 updates to `files_struct.file_lock`. These spinlock comparisons contain 288
 accepted, drained sessions, with stock plus matched Native/TCLock/KD and three

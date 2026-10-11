@@ -6,6 +6,10 @@ import json
 from pathlib import Path
 import statistics
 
+PARAMETER_UNITS = {'xattr': 'attributes', 'ofd': 'ranges', 'setfd': 'FD stride',
+                   'pipebytes': 'pipe buffers', 'pipecap': 'pipe capacity in pages',
+                   'seek': 'file size in pages', 'utsname': 'write percent'}
+
 
 def summarize(records):
     groups = {}
@@ -22,6 +26,14 @@ def summarize(records):
                    not_run=sum(r['execution_status'] == 'NOT_RUN' for r in runs),
                    jit_positive=sum(r.get('jit_bodies', 0) > 0 for r in good),
                    jit_bodies=sum(r.get('jit_bodies', 0) for r in good))
+        row['parameter_unit'] = PARAMETER_UNITS[row['kind']]
+        row['jit_eligible_operations'] = sum(
+            r['measurement'].get('writes', 0) if r['kind'] == 'utsname' else r['measurement']['completed']
+            for r in good)
+        row['jit_share'] = (row['jit_bodies']/row['jit_eligible_operations']
+                            if row['jit_eligible_operations'] else 0)
+        delegated = [r['tclock_delegation'] for r in good if isinstance(r.get('tclock_delegation'), int)]
+        row['tclock_delegated'] = sum(delegated) if len(delegated) == len(good) and good else None
         for metric in ('whole', 'peak'):
             values = [r[f'{metric}_throughput_ops_s'] for r in good]
             row[f'{metric}_min'] = min(values) if values else None
@@ -55,8 +67,9 @@ def write_report(out, records):
     text = ['# Real syscall lock comparison', '',
             'Rates include the syscall, VFS/security checks, metadata search, result copying and userspace validation. '
             'Native/TCLock/KD use matched scoped substitutions; stock uses the captured kernel helper without substitution. '
-            'The private file is populated before binding. Xattr/OFD metadata remains immutable; '
-            'setfd changes only the preallocated descriptor flags. '
+            'Private objects are initialized before binding. Xattr/OFD and pipe data remain immutable; '
+            'setfd changes preallocated flags, seek changes the shared file position, and UTS mixes '
+            'uname reads with fixed-length name updates in a private namespace. '
             'These are API microbenchmarks, not whole-application measurements.', '',
             f'Accepted and drained: {sum(r["accepted"] for r in rows)}/{len(records)} sessions. '
             f'Failed: {sum(r["failed"] for r in rows)}; not run: {sum(r["not_run"] for r in rows)}.', '',
@@ -64,8 +77,12 @@ def write_report(out, records):
             'Peak ratios use the best valid 300 ms window from each backend. '
             'A speedup above 1 favors KD. Raw exports retain min/median/max/spread and NO_JIT runs. '
             'An operation is one xattr/OFD syscall or one F_SETFD plus a validating F_GETFD. '
-            'For setfd, the count is the descriptor-number stride between workers.', '',
-            '| API/query | Entries/stride | Threads | Stock | Native | TCLock | KD | KD/native | KD/TC | Peak KD/native | Peak KD/TC | KD JIT runs |',
+            'Pipe and seek operations each use one syscall; UTS uses one uname or name-update syscall. '
+            'Entries/stride means attributes/ranges for xattr/OFD, FD stride for setfd, occupied buffers '
+            'for pipebytes, capacity in pages for pipecap, file pages for seek, or write percentage for UTS. '
+            'Matched UTS arms use private locks: a Linux rwsem for Native, reader/writer spinlocks for KD/TCLock. '
+            'They move proc notification after unlock; stock keeps the global rwsem and original placement.', '',
+            '| API/query | Entries/stride/write % | Threads | Stock | Native | TCLock | KD | KD/native | KD/TC | Peak KD/native | Peak KD/TC | KD JIT runs |',
             '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |']
     for key, arms in sorted(configs.items()):
         kind, query, count, size, n = key
@@ -82,7 +99,8 @@ def write_report(out, records):
                     f'{rate("tclock")} | {rate("kdlock")} | {ratio("native", "whole_median")} | '
                     f'{ratio("tclock", "whole_median")} | {ratio("native", "peak_max")} | '
                     f'{ratio("tclock", "peak_max")} | {kd.get("jit_positive", 0)}/{kd.get("accepted", 0)} |')
-    text += ['', 'TCLock spin delegation is unmeasured. KD JIT counts are returned-body observations over the measured phase. '
+    text += ['', 'TCLock spin/rwlock delegation is unmeasured; mutex counts are exported when available. '
+             'KD JIT counts are returned-body observations over the measured phase; UTS shares use writes as the denominator. '
              'A published translation alone is not a JIT execution. Throughput is not acquisition latency. '
              'The CPU-time export helps distinguish throughput gains from processor cost.', '']
     (out/'README.md').write_text('\n'.join(text))
@@ -104,7 +122,7 @@ def plot(out, rows):
             xs = [r['threads'] for r in rs]
             ax.plot(xs, [r['whole_median']/1e6 for r in rs], 'o-', label=arm, color=color)
             ax.fill_between(xs, [r['whole_min']/1e6 for r in rs], [r['whole_max']/1e6 for r in rs], color=color, alpha=.15)
-        unit = 'FD stride' if kind == 'setfd' else 'entries'
+        unit = PARAMETER_UNITS[kind]
         ax.set(xlabel='Pinned worker threads', ylabel='Million operations/second',
                title=f'{kind} {query}: {count} {unit}, median and round range')
         ax.grid(alpha=.2)

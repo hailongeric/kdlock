@@ -1,0 +1,1025 @@
+{
+  "checked_utc": "2026-10-11T15:58:12.825274+00:00",
+  "runs": {
+    "real-sync-ofd-regression-v1": {
+      "accepted": 8,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "2ca180da1c4e73f3a3a231bcb2a096b8ee972b9cb9c1183a3342ef852c3fa506"
+      },
+      "emitted_context_audits_recomputed": [
+        "spin"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "ofd"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-ofd-regression-v1",
+          "queries": [
+            "tail"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": false,
+      "kd_eligible_operations": 18000640,
+      "kd_jit_bodies": 10723140,
+      "kd_jit_positive": 1,
+      "kd_sessions": 2,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 8,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "fb19f669d21d0fb45506ffbf3f62eb07fa1a66c0d1041d1140d5e81a9af82908",
+      "source": {
+        "checked_files": 216,
+        "sha256": "7a78e0ea12e5a9f6fe8c4a2076fe8b648bad9a45abbcd5733f4b80178f7791fe"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 8
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 67683840
+    },
+    "real-sync-pipe-screen-v1": {
+      "binary": null,
+      "emitted_context_audits_recomputed": [],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16,
+            128
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "pipebytes",
+            "pipecap"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-pipe-screen-v1",
+          "queries": [
+            "query"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "kernel": null,
+      "source": {
+        "checked_files": 215,
+        "sha256": "924440363f93971ec89185de0c29688fdea9d2b8b6b35c7516f232ed3a58262a"
+      },
+      "status": "BUILD_OR_CAPTURE_FAILED_BEFORE_SESSION_PLAN"
+    },
+    "real-sync-pipe-screen-v2": {
+      "binary": {
+        "checked_files": 12,
+        "sha256": "5fa780238aa89a2ce0b310af2f18b2bcf8c0da2c30116e22aba763bc574e490c"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16,
+            128
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "pipebytes",
+            "pipecap"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-pipe-screen-v2",
+          "queries": [
+            "query"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "kernel": null,
+      "source": {
+        "checked_files": 215,
+        "sha256": "74b93c0b45f0f442a5ab9aa7755e40f18db03338fc19a2e0751bf7a97ce01d57"
+      },
+      "status": "BUILD_OR_CAPTURE_FAILED_BEFORE_SESSION_PLAN"
+    },
+    "real-sync-pipe-screen-v3": {
+      "accepted": 10,
+      "binary": {
+        "checked_files": 12,
+        "sha256": "3c000f0be3901b36e3e25567aaab0987875614b2c2439283a807d9b67245ed4e"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16,
+            128
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "pipebytes",
+            "pipecap"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-pipe-screen-v3",
+          "queries": [
+            "query"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [
+        {
+          "cleanup_error": null,
+          "drained": false,
+          "error": "client exited during check-after; retain object/module for diagnosis",
+          "execution_status": "CLIENT_FAILED",
+          "name": "pipebytes-query-n16-t48-r0-tclock"
+        }
+      ],
+      "final": false,
+      "kd_eligible_operations": 29713920,
+      "kd_jit_bodies": 19336558,
+      "kd_jit_positive": 1,
+      "kd_sessions": 2,
+      "kernel": {
+        "checked_files": 12,
+        "sha256": "9aa241d52f6f2e0ffbdf05f9295a71f994408e9992350270a4eeb9b4f6aadf24"
+      },
+      "planned": 64,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "80c7273da13172072982d7347b328bc18b4aaffa7497c777c8f5f6363b06dba3",
+      "source": {
+        "checked_files": 215,
+        "sha256": "52421f32cedc0c83409f6e6936afa7ab7808f5c0028dbc2bdbd1e0bf7547204c"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "CLIENT_FAILED": 1,
+        "NOT_RUN": 53,
+        "OK": 10
+      },
+      "tclock_mutex_delegated": 5082120,
+      "timed_operations": 90158848
+    },
+    "real-sync-pipe-screen-v4": {
+      "accepted": 64,
+      "binary": {
+        "checked_files": 12,
+        "sha256": "bead4a5af25b2f7d93080c2457ba19d82f2c69dce23b9e463bfc20036fc0c924"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16,
+            128
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "pipebytes",
+            "pipecap"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-pipe-screen-v4",
+          "queries": [
+            "query"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": false,
+      "kd_eligible_operations": 185571328,
+      "kd_jit_bodies": 141686576,
+      "kd_jit_positive": 12,
+      "kd_sessions": 16,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 64,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "da657fb03fbdad2fb660ffeb38f6dacf7c4ae1ad51257b6b59a87115ca3d9659",
+      "source": {
+        "checked_files": 216,
+        "sha256": "e6d213f850d46687d5ea9c4ad587aaaf523d6ea95ff80ed835310c9d6569403e"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 64
+      },
+      "tclock_mutex_delegated": 58268972,
+      "timed_operations": 502828544
+    },
+    "real-sync-pipebytes-final-v1": {
+      "accepted": 144,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "8801a4bb4aaa02958ded0f74e5b52b9398fbb21d9e3e8c19f1c4e90e10c7785e"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16,
+            128
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "pipebytes"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-pipebytes-final-v1",
+          "queries": [
+            "query"
+          ],
+          "repeats": 3,
+          "threads": [
+            1,
+            8,
+            16,
+            32,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": true,
+      "kd_eligible_operations": 376971008,
+      "kd_jit_bodies": 318593475,
+      "kd_jit_positive": 30,
+      "kd_sessions": 36,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 144,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "d9a0b25243dfb35b286bd3cc8d408de85cedd62e9c8596ecefc2a2aae4a3a006",
+      "report_recomputed": true,
+      "source": {
+        "checked_files": 216,
+        "sha256": "7a78e0ea12e5a9f6fe8c4a2076fe8b648bad9a45abbcd5733f4b80178f7791fe"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 144
+      },
+      "tclock_mutex_delegated": 141797354,
+      "timed_operations": 1104651008
+    },
+    "real-sync-pipecap-final-v1": {
+      "accepted": 72,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "18911dff7ede8dbda9c2a0111d50ae084ada75121756fda054b8836904e5845f"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "pipecap"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-pipecap-final-v1",
+          "queries": [
+            "query"
+          ],
+          "repeats": 3,
+          "threads": [
+            1,
+            8,
+            16,
+            32,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": true,
+      "kd_eligible_operations": 263405568,
+      "kd_jit_bodies": 219798258,
+      "kd_jit_positive": 15,
+      "kd_sessions": 18,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 72,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "5cc6007083f9a33e892ccb687e0fc11dd3da2ad6c3141b9165efdbd0415f96b1",
+      "report_recomputed": true,
+      "source": {
+        "checked_files": 216,
+        "sha256": "7a78e0ea12e5a9f6fe8c4a2076fe8b648bad9a45abbcd5733f4b80178f7791fe"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 72
+      },
+      "tclock_mutex_delegated": 80063471,
+      "timed_operations": 646033408
+    },
+    "real-sync-seek-final-v1": {
+      "accepted": 144,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "8639028fbe09bca1156b51dff16ecbf0ec31bd8a74bf559abf40f2ddec80f2ef"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "seek"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-seek-final-v1",
+          "queries": [
+            "set",
+            "end"
+          ],
+          "repeats": 3,
+          "threads": [
+            1,
+            8,
+            16,
+            32,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": true,
+      "kd_eligible_operations": 342968832,
+      "kd_jit_bodies": 272400295,
+      "kd_jit_positive": 30,
+      "kd_sessions": 36,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 144,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "95f2f04c756b6e16a4fcfcb40038d41b403559a115383c230f63050ac1ae6edc",
+      "report_recomputed": true,
+      "source": {
+        "checked_files": 216,
+        "sha256": "7a78e0ea12e5a9f6fe8c4a2076fe8b648bad9a45abbcd5733f4b80178f7791fe"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 144
+      },
+      "tclock_mutex_delegated": 152154282,
+      "timed_operations": 967945472
+    },
+    "real-sync-seek-screen-v1": {
+      "accepted": 32,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "bec02878ac31e65032be02962e08398b1ccfe92de41109ed954944b61dca51e3"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "seek"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-seek-screen-v1",
+          "queries": [
+            "set",
+            "end"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": false,
+      "kd_eligible_operations": 75653120,
+      "kd_jit_bodies": 52594571,
+      "kd_jit_positive": 6,
+      "kd_sessions": 8,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 32,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "cddfc85953eecab7ef866c75370254a87959bc83377f8f5fb737ed622e7d9269",
+      "source": {
+        "checked_files": 216,
+        "sha256": "7a78e0ea12e5a9f6fe8c4a2076fe8b648bad9a45abbcd5733f4b80178f7791fe"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 32
+      },
+      "tclock_mutex_delegated": 29028653,
+      "timed_operations": 213748736
+    },
+    "real-sync-setfd-regression-v1": {
+      "accepted": 8,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "a74abe5cd4f7ef323cc114a560e5dd1628398154909f44d8500f7b6ba549be30"
+      },
+      "emitted_context_audits_recomputed": [
+        "spin"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            16
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "setfd"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-setfd-regression-v1",
+          "queries": [
+            "toggle"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": false,
+      "kd_eligible_operations": 17409536,
+      "kd_jit_bodies": 10862114,
+      "kd_jit_positive": 1,
+      "kd_sessions": 2,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 8,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "02fb60c396dfccfc46603a83e0bcdf4a565b9c8d1308c6379313f7702b76631b",
+      "source": {
+        "checked_files": 216,
+        "sha256": "7a78e0ea12e5a9f6fe8c4a2076fe8b648bad9a45abbcd5733f4b80178f7791fe"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 8
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 64432640
+    },
+    "real-sync-uts-final-v1": {
+      "accepted": 144,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "08ac64ebfffcb3e174970e2f59716f5564e1cadb6794689d45dc93621447cd3b"
+      },
+      "emitted_context_audits_recomputed": [
+        "rwlock"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            20
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "utsname"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-uts-final-v1",
+          "queries": [
+            "host",
+            "domain"
+          ],
+          "repeats": 3,
+          "threads": [
+            1,
+            8,
+            16,
+            32,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": true,
+      "kd_eligible_operations": 64512636,
+      "kd_jit_bodies": 643851,
+      "kd_jit_positive": 24,
+      "kd_sessions": 36,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 144,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "0c04fb1b371deb9a675470524c5f8917b3978d91976b72bd3a99d65952bd4a2c",
+      "report_recomputed": true,
+      "source": {
+        "checked_files": 216,
+        "sha256": "7a78e0ea12e5a9f6fe8c4a2076fe8b648bad9a45abbcd5733f4b80178f7791fe"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 144
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 776683264
+    },
+    "real-sync-uts-screen-v1": {
+      "accepted": 64,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "9792b093b90c3cee46ec2b9b73376ec3066dadb4c39e80c2a090c2134dece7d9"
+      },
+      "emitted_context_audits_recomputed": [
+        "rwlock"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            20,
+            100
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "utsname"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-uts-screen-v1",
+          "queries": [
+            "host",
+            "domain"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": false,
+      "kd_eligible_operations": 34082092,
+      "kd_jit_bodies": 133645,
+      "kd_jit_positive": 6,
+      "kd_sessions": 16,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 64,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "d115bcde2b100689cbf2c1e5197281abf1f20ea39127b24b8e5e1b1f4909575f",
+      "source": {
+        "checked_files": 216,
+        "sha256": "65802bba3e03649318c7ad3dcd5ab366e6e3b2894e77c122a6aeaded3b9b99b9"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 64
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 231447808
+    },
+    "real-sync-uts-screen-v2": {
+      "accepted": 32,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "a43355e13eb342cd13e803e1334c1a34447f606c508141194129998942b80425"
+      },
+      "emitted_context_audits_recomputed": [
+        "rwlock"
+      ],
+      "environment": {
+        "arguments": {
+          "backends": [
+            "stock",
+            "native",
+            "tclock",
+            "kdlock"
+          ],
+          "build_from": null,
+          "collector_cpu": 63,
+          "cpus": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62",
+          "duration_ms": 2000,
+          "entries": [
+            20
+          ],
+          "helper_waves": 4,
+          "kernel_baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+          "kernel_source": "/root/linux-6.1.159-kdclobber2",
+          "kinds": [
+            "utsname"
+          ],
+          "output": "/root/kdlock-evidence/10.176.26.71/bench/real-sync-uts-screen-v2",
+          "queries": [
+            "host",
+            "domain"
+          ],
+          "repeats": 1,
+          "threads": [
+            1,
+            16,
+            48,
+            60
+          ],
+          "value_size": 64,
+          "warmup": 48000,
+          "warmup_ms": 1000
+        },
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "snapshot": "real-sync-20261011-v1",
+        "uname": [
+          "Linux",
+          "ubuntu",
+          "6.1.159-kdclobber2",
+          "#4 SMP PREEMPT_DYNAMIC Sat Sep 19 08:32:13 UTC 2026",
+          "x86_64"
+        ]
+      },
+      "excluded": [],
+      "final": false,
+      "kd_eligible_operations": 12275196,
+      "kd_jit_bodies": 145837,
+      "kd_jit_positive": 6,
+      "kd_sessions": 8,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 32,
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "d8aa433274577e9737332049aa1499db908c5b287441194aa7d37158595b9c0a",
+      "source": {
+        "checked_files": 216,
+        "sha256": "7a78e0ea12e5a9f6fe8c4a2076fe8b648bad9a45abbcd5733f4b80178f7791fe"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 32
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 152558848
+    }
+  },
+  "verifier_sha256": "f95fa248999040006682ab0078bc9304bfc9b9fc722883f6c4deb2c7612b82ef"
+}

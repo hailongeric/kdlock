@@ -48,6 +48,19 @@ class ReportTests(unittest.TestCase):
                 record(value_size=128), record(threads=4), record(query='miss')]
         self.assertEqual(len(summarize(rows)), len(rows))
 
+    def test_rwlock_jit_share_counts_writes_and_mutex_delegation_is_retained(self):
+        rw = record(kind='utsname', query='host', entries=20,
+                    jit_bodies=2, measurement=dict(completed=10, reads=8, writes=2,
+                    workers=[dict(completed=10, cpu_ns=50)]))
+        result, = summarize([rw])
+        self.assertEqual(result['jit_eligible_operations'], 2)
+        self.assertEqual(result['jit_share'], 1)
+        self.assertEqual(result['parameter_unit'], 'write percent')
+        mutex = record(kind='pipebytes', query='query', arm='tclock', jit_bodies=0,
+                       tclock_delegation=7)
+        result, = summarize([mutex, dict(mutex, tclock_delegation=8)])
+        self.assertEqual(result['tclock_delegated'], 15)
+
     def test_exports_retain_failures_and_setfd_operation_unit(self):
         rows = [record(kind='setfd', query='toggle'),
                 record(kind='setfd', query='toggle', arm='native',

@@ -8,9 +8,10 @@ and Linux Native with matching workloads:
   1% and 20% writes across the historical 15-point thread set by default.
 - [Complete comparison](../tools/vm/README.md#complete-164-worker-comparison):
   all three lock families and maintained performance payloads at 22 worker counts.
-- [Real kernel APIs](real_api/README.md): OFD conflict queries and file-table
-  bitmap updates, with scoped Native/TCLock/KD critical sections and a stock
-  Linux-helper control; xattr admission limits are retained too.
+- [Real kernel APIs](real_api/README.md): OFD conflict queries, file-table
+  bitmaps, pipe mutexes, file-position mutexes and bounded UTS reader/writer
+  metadata, with scoped Native/TCLock/KD critical sections and a stock Linux
+  control; xattr admission limits are retained too.
 
 [Shared components](spin_cacheline/README.md) handle warmup, peak selection,
 source snapshots and offline reports. The kernel code being measured lives under
@@ -69,7 +70,8 @@ gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
-| [Real kernel API results](results/10.176.26.71/bench/real_api/20261011/RESULTS.md) | Workload-to-lock mapping, TCLocks paper context and scaling results from 288 accepted OFD/setfd sessions; stock plus matched Native/TCLock/KD, with regressions and exploratory failures retained |
+| [Mutex and read/write API results](results/10.176.26.71/bench/real_api/20261011-sync/RESULTS.md) | 504 accepted sessions: pipe-buffer/capacity queries, shared-file seeks and private UTS reads/writes; syscall-to-lock mapping, three-round scaling, JIT evidence and rwsem integration limits |
+| [Spinlock API results](results/10.176.26.71/bench/real_api/20261011/RESULTS.md) | Workload-to-lock mapping, TCLocks paper context and scaling results from 288 accepted OFD/setfd sessions; stock plus matched Native/TCLock/KD, with regressions and exploratory failures retained |
 | [Latest mutex optimization](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md) | `10.176.26.71`: 396 accepted sessions, c01/hash, 22 worker counts; causes, selected changes, rejected candidates and remaining parity gaps |
 | [Earlier all-lock c01/hash rerun](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md) | `10.176.26.71`: 1,584 sessions, 22 worker counts, all backends and lock families; c02/c04/c08/c16 excluded |
 | [Earlier complete baseline](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md) | `10.176.26.71`: all maintained spin/mutex/rwlock payloads, 1–8 and 12–64 workers, 3,960 sessions; temporary 66-vCPU VM, collector 65 shares a physical core at 64 workers |

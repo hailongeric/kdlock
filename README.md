@@ -41,7 +41,7 @@ closed on 2026-10-09; its results are reported separately.
 | [Code map](docs/CODE_MAP.md) | Source and documentation responsibilities |
 | [Operations](docs/AGENTS.md) | Where to build and test, how to shut down safely, and VM recovery |
 | [Known limitations](docs/TODO.md) / [performance status](docs/PERFORMANCE.md) | Known problems, measured performance and work left for later |
-| [Real kernel API results](bench/results/10.176.26.71/bench/real_api/20261011/RESULTS.md) | Test subjects, kernel locks and measured KD/TCLock/Native comparisons, with TCLocks paper context |
+| [Real kernel API benchmarks](bench/real_api/README.md) | Spinlock, mutex and bounded reader/writer syscall workloads; results, kernel-lock mapping and TCLocks paper context |
 | [Validation and cleanup](docs/VALIDATION.md) | Completed checks, evidence retention and closeout scope |
 
 ## Repository

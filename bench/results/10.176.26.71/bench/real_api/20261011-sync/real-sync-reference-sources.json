@@ -1,0 +1,10 @@
+{
+  "root": "/home/eric/TCLocks",
+  "head": "bbfb9f00a12af51dff6ca291cb9829a82960c2ef",
+  "files": {
+    "src/benchmarks/fxmark/src/MWRM.c": "971f62e2d4f9a79099e735659cab768230e8a9e0297b45354b6393fd288e4642",
+    "src/benchmarks/will-it-scale/tests/mmap1.c": "a7e09c6a7a12524a2cd949e5d37cf8ec0ba2479868cbd04ebd8c83c4eaed9d06"
+  },
+  "paper": "https://www.usenix.org/system/files/osdi23-gupta.pdf",
+  "executed": false
+}

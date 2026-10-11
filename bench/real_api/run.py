@@ -28,6 +28,15 @@ from context_audit import audit as audit_tclock
 TC = ROOT / 'tclock_backend/tclock_backend_km.ko'
 GUARD = ROOT / 'bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'
 PARAM = Path('/sys/module/real_api/parameters')
+MUTEX_KINDS = {'pipebytes', 'pipecap', 'seek'}
+
+
+def lock_kind(kind):
+    return 'rwlock' if kind == 'utsname' else 'mutex' if kind in MUTEX_KINDS else 'spin'
+
+
+def tc_name(family):
+    return 'tclock_backend_km' if family == 'spin' else f'tclock_{family}_backend_km'
 
 
 def sources():
@@ -63,27 +72,33 @@ def build(out, args):
                  'KDLOCK_NUMA=1', 'KDLOCK_SPIN_BATCH=1024', 'UBSAN_SANITIZE=n'],
                 out/'build-kd.log', timeout=300, env=env)
         command(['make', '-C', ROOT/'daemon'], out/'build-daemon.log', timeout=120, env=env)
-        command(['make', '-C', ROOT/'tclock_backend', 'TCLOCK_NUMA=1'],
-                out/'build-tclock.log', timeout=180, env=env)
+        for family in sorted({lock_kind(k) for k in args.kinds}):
+            folder = build_dir/('tclock-'+family)
+            shutil.copytree(out/'source/tclock_backend', folder)
+            command(['make', '-C', folder, 'TCLOCK_NUMA=1',
+                     f'TCLOCK_MUTEX={int(family == "mutex")}', f'TCLOCK_RWLOCK={int(family == "rwlock")}'],
+                    out/f'build-tclock-{family}.log', timeout=180, env=env)
+            shutil.copyfile(folder/(tc_name(family)+'.ko'), build_dir/(tc_name(family)+'.ko'))
         command(['make', '-C', ROOT/'bench/tclock_compare/allocator_guard'],
                 out/'build-guard.log', timeout=120, env=env)
         command(['gcc', '-O2', '-g', '-Wall', '-Wextra', '-Werror', '-std=gnu11',
                  '-pthread', ROOT/'bench/real_api/client.c', '-o', build_dir/'client'],
                 out/'build-client.log', timeout=60)
-        for backend, kind in itertools.product(('native', 'tclock', 'kdlock'), ('xattr', 'ofd', 'setfd')):
+        for backend, kind in itertools.product(('native', 'tclock', 'kdlock'), args.kinds):
             dest = build_dir / (backend + '-' + kind)
             dest.mkdir()
-            for name in ('module.c', 'Makefile'):
+            for name in ('module.c', 'mutex.c', 'uts.c', 'control.h', 'Makefile'):
                 shutil.copyfile(ROOT/'workload_modules/real_api'/name, dest/name)
-            symvers = (PROVIDER.parent/'Module.symvers' if backend == 'kdlock' else TC.parent/'Module.symvers')
+            tc_folder = build_dir/('tclock-'+lock_kind(kind))
+            symvers = (PROVIDER.parent/'Module.symvers' if backend == 'kdlock' else tc_folder/'Module.symvers')
             cmd = ['make', '-C', dest, f'RB_BACKEND={backend}', f'RB_KIND={kind.upper()}',
-                   f'KDLOCK_INCLUDE={ROOT}/include']
+                   f'KDLOCK_INCLUDE={ROOT}/include', f'TCLOCK_INCLUDE={tc_folder}/include']
             if backend != 'native':
                 cmd += [f'KBUILD_EXTRA_SYMBOLS={symvers}']
             command(cmd, out/f'build-{backend}-{kind}.log', timeout=120, env=env)
             command(['objdump', '-dr', dest/'real_api.ko'],
                     dest/'assembly.txt', timeout=30)
-        for name, p in (('kdlock_km.ko', PROVIDER), ('tclock_backend_km.ko', TC),
+        for name, p in (('kdlock_km.ko', PROVIDER),
                         ('tc_allocator_guard.ko', GUARD), ('daemon', ROOT/'daemon/daemon')):
             shutil.copyfile(p, build_dir/name)
             (build_dir/name).chmod(p.stat().st_mode)
@@ -91,13 +106,16 @@ def build(out, args):
                 for p in build_dir.rglob('*') if p.is_file() and
                 (p.suffix == '.ko' or p.name in ('client', 'daemon'))}
     write_json(out/'binaries.json', binaries)
-    tc_assembly = command(['objdump', '-dr', '--no-show-raw-insn',
-                           build_dir/'tclock_backend_km.ko'], out/'tclock-assembly.txt')
-    write_json(out/'tclock-context-audit.json', audit_tclock(tc_assembly))
+    for family in sorted({lock_kind(k) for k in args.kinds}):
+        tc_assembly = command(['objdump', '-dr', '--no-show-raw-insn',
+                               build_dir/(tc_name(family)+'.ko')], out/f'tclock-{family}-assembly.txt')
+        write_json(out/f'tclock-{family}-context-audit.json', audit_tclock(tc_assembly, family))
     metadata = {}
-    for backend in ('kdlock', 'tclock_backend'):
-        module = build_dir/(backend+'_km.ko')
-        fields = ('spin_numa', 'spin_batch') if backend == 'kdlock' else ('spin_numa',)
+    for backend in ['kdlock_km'] + [tc_name(f) for f in sorted({lock_kind(k) for k in args.kinds})]:
+        module = build_dir/(backend+'.ko')
+        fields = (('spin_numa', 'spin_batch') if backend == 'kdlock_km' else
+                  ('mutex_numa',) if 'mutex' in backend else
+                  ('rwlock_numa',) if 'rwlock' in backend else ('spin_numa',))
         metadata[backend] = {}
         for field in fields:
             value = command(['modinfo', '-F', field, module], out/f'{backend}-{field}.txt').strip()
@@ -110,7 +128,9 @@ def build(out, args):
             require('__ubsan_' not in imports, 'timed module still imports UBSAN: '+name)
     write_json(out/'build-configuration.json', metadata)
     # Capture the exact real implementations, not just a moving upstream URL.
-    for relative in ('fs/xattr.c', 'fs/locks.c', 'fs/file.c', 'fs/fcntl.c',
+    for relative in ('fs/xattr.c', 'fs/locks.c', 'fs/file.c', 'fs/fcntl.c', 'fs/pipe.c',
+                     'fs/read_write.c', 'mm/shmem.c', 'include/linux/pipe_fs_i.h', 'include/linux/fs.h',
+                     'kernel/sys.c', 'kernel/utsname_sysctl.c', 'include/linux/utsname.h',
                      'include/linux/fdtable.h', 'include/linux/shmem_fs.h', 'include/linux/xattr.h'):
         p = out/'kernel-inputs'/relative
         p.parent.mkdir(parents=True, exist_ok=True)
@@ -127,6 +147,9 @@ class SyscallSession(Session):
         self.out = out
         self.client = None
         self.loaded_tc = False
+        self.tc_module = tc_name(spec['lock_kind'])
+        self.tc_params = Path('/sys/module', self.tc_module, 'parameters')
+        self.control_bound = False
 
     def start_daemon(self):
         workspace = self.path/'workspace'
@@ -217,19 +240,25 @@ class SyscallSession(Session):
                       'spin_prefetch=2'], 'load-kd.log')
             self.loaded_kd = True
         if s['arm'] == 'tclock':
-            self.run(['insmod', self.out/'build/tclock_backend_km.ko', 'komb_batch_size=1024'], 'load-tc.log')
+            self.run(['insmod', self.out/'build'/(self.tc_module+'.ko'), 'komb_batch_size=1024'], 'load-tc.log')
             self.loaded_tc = True
         if s['arm'] != 'stock':
             load = ['insmod', self.workload_module, 'target_path='+ready['path']]
-            if s['kind'] == 'setfd':
+            if s['kind'] in {'setfd', 'utsname'} | MUTEX_KINDS:
                 load += ['target_pid='+str(ready['pid'])]
+            if s['kind'] == 'utsname':
+                load += ['domain='+str(int(s['query'] == 'domain'))]
             self.run(load, 'load-source.log')
             self.loaded_source = True
+            if s['kind'] in MUTEX_KINDS:
+                require(self.tell('bind')['bound'], 'client control bind failed')
+                self.control_bound = True
             s['lock_addr'] = int((PARAM/'lock_addr').read_text())
+            s['gate_addr'] = int((PARAM/'gate_addr').read_text()) if s['kind'] == 'utsname' else s['lock_addr']
             if self.loaded_tc:
-                Path('/sys/module/tclock_backend_km/parameters/target_lock').write_text(str(s['lock_addr']))
+                (self.tc_params/'target_lock').write_text(str(s['lock_addr']))
             if self.loaded_kd:
-                Path('/sys/module/kdlock_km/parameters/bench_lock_addr').write_text(str(s['lock_addr']))
+                Path('/sys/module/kdlock_km/parameters/bench_lock_addr').write_text(str(s['gate_addr']))
             (PARAM/'prepare').write_text('1')
         if self.loaded_kd:
             sym = [line.split() for line in Path('/proc/kallsyms').read_text().splitlines()]
@@ -276,6 +305,8 @@ class SyscallSession(Session):
         before = int((PARAM/'calls').read_text()) if self.loaded_source else 0
         jit = Path('/sys/module/kdlock_km/parameters/bench_jit_bodies')
         jbefore = int(jit.read_text()) if self.loaded_kd else 0
+        tc_delegated = self.tc_params/'delegated'
+        tc_before = int(tc_delegated.read_text()) if self.loaded_tc and tc_delegated.exists() else None
         s['execution_status'] = 'MEASURING'
         self.save()
         m = self.tell('measure')
@@ -291,9 +322,15 @@ class SyscallSession(Session):
                 'not every measured syscall reached substituted critical section', 'DATA_ERROR')
         s['jit_bodies'] = int(jit.read_text())-jbefore if self.loaded_kd else 0
         require(0 <= s['jit_bodies'] <= m['completed'], 'invalid JIT count')
+        if s['kind'] == 'utsname':
+            require(m['reads'] + m['writes'] == m['completed'] and s['jit_bodies'] <= m['writes'],
+                    'invalid rwlock operation/JIT accounting', 'DATA_ERROR')
+        s['jit_eligible_operations'] = m['writes'] if s['kind'] == 'utsname' else m['completed']
+        s['jit_share'] = s['jit_bodies']/s['jit_eligible_operations'] if s['jit_eligible_operations'] else 0
         s['jit_status'] = ('PASS' if s['jit_bodies'] else 'NO_JIT') if self.loaded_kd else 'NOT_APPLICABLE'
         s['registry_after'] = registry() if self.loaded_kd else []
-        s['tclock_delegation'] = 'UNMEASURED' if self.loaded_tc else 'NOT_APPLICABLE'
+        s['tclock_delegation'] = (int(tc_delegated.read_text())-tc_before if tc_before is not None else
+                                  'UNMEASURED' if self.loaded_tc else 'NOT_APPLICABLE')
         self.faults()
         require(self.tell('check', label='check-after')['check'], 'post-measurement data oracle failed')
         self.save()
@@ -302,10 +339,16 @@ class SyscallSession(Session):
         self.faults()
         # Only command replies after pthread_join permit this path. Timeouts
         # deliberately retain the client (and OFD owner), module and evidence.
+        if self.loaded_source and (PARAM/'quiescent').exists():
+            self.record['source_quiescent'] = (PARAM/'quiescent').read_text().strip() == '1'
+            require(self.record['source_quiescent'], 'source reader/writer state still active', 'UNDRAINED')
         if self.loaded_tc:
-            q = Path('/sys/module/tclock_backend_km/parameters/quiescent')
+            q = self.tc_params/'quiescent'
             require(q.read_text().strip() == '1', 'TCLock not quiescent', 'UNDRAINED')
-            Path('/sys/module/tclock_backend_km/parameters/target_lock').write_text('0')
+            (self.tc_params/'target_lock').write_text('0')
+        if self.control_bound:
+            require(self.tell('unbind')['unbound'], 'client control unbind failed')
+            self.control_bound = False
         if self.loaded_kd:
             if self.daemon is not None and self.daemon.poll() is None:
                 os.kill(self.daemon.pid, signal.SIGCONT)
@@ -323,7 +366,7 @@ class SyscallSession(Session):
             self.run(['rmmod', 'real_api'], 'unload-source.log')
             self.loaded_source = False
         if self.loaded_tc:
-            self.run(['rmmod', 'tclock_backend_km'], 'unload-tc.log')
+            self.run(['rmmod', self.tc_module], 'unload-tc.log')
             self.loaded_tc = False
         if self.loaded_kd:
             self.run(['rmmod', 'kdlock_km'], 'unload-kd.log')
@@ -347,8 +390,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--build-from', type=Path)
-    p.add_argument('--kinds', nargs='+', choices=['xattr', 'ofd', 'setfd'], default=['ofd'])
-    p.add_argument('--queries', nargs='+', choices=['tail', 'miss', 'front', 'size', 'toggle'], default=['tail'])
+    p.add_argument('--kinds', nargs='+', choices=['xattr', 'ofd', 'setfd', 'utsname', *sorted(MUTEX_KINDS)], default=['ofd'])
+    p.add_argument('--queries', nargs='+', choices=['tail', 'miss', 'front', 'size', 'toggle', 'query', 'set', 'end', 'host', 'domain'], default=['tail'])
     p.add_argument('--entries', nargs='+', type=int, default=[16, 128])
     p.add_argument('--value-size', type=int, default=64)
     p.add_argument('--threads', nargs='+', type=int, default=[1, 8, 16, 32, 48, 60])
@@ -369,7 +412,7 @@ def main():
     require(os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and os.environ.get('KDLOCK_SNAPSHOT_TAG'),
             'confirm a real current-topology monitor snapshot before live execution')
     idle()
-    for name in ('real_api', 'tclock_backend_km', 'tc_allocator_guard'):
+    for name in ('real_api', 'tclock_backend_km', 'tclock_mutex_backend_km', 'tclock_rwlock_backend_km', 'tc_allocator_guard'):
         require(not Path('/sys/module', name).exists(), 'existing module: '+name)
     cpus = list(map(int, args.cpus.split(',')))
     require(len(set(cpus)) == len(cpus) and 0 < min(args.threads) <= max(args.threads) <= len(cpus)
@@ -380,8 +423,13 @@ def main():
             and 1 <= args.value_size <= 4096 and 700 <= args.duration_ms <= 10000
             and args.warmup > 0 and 0 <= args.warmup_ms <= 10000, 'invalid workload bounds')
     for kind, query in itertools.product(args.kinds, args.queries):
-        require((kind == 'setfd') == (query == 'toggle') and (kind == 'xattr' or query != 'size'),
-                'setfd requires toggle; size is xattr-specific')
+        allowed = {'setfd': {'toggle'}, 'seek': {'set', 'end'},
+                   'pipebytes': {'query'}, 'pipecap': {'query'},
+                   'utsname': {'host', 'domain'},
+                   'ofd': {'tail', 'front', 'miss'}, 'xattr': {'tail', 'front', 'miss', 'size'}}
+        require(query in allowed[kind], f'invalid query {query} for {kind}')
+    if 'utsname' in args.kinds:
+        require(max(args.entries) <= 100 and args.value_size == 64, 'UTS requires write percentages 1..100 and 64-byte names')
     require('nopvspin' in Path('/proc/cmdline').read_text().split(), 'nopvspin missing')
     out.mkdir(parents=True)
     command([sys.executable, ROOT/'bench/spin_cacheline/kernel_identity.py',
@@ -412,8 +460,10 @@ def main():
                 warmup=args.warmup, warmup_ms=args.warmup_ms,
                 helper_waves=args.helper_waves,
                 syscalls_per_op=2 if kind == 'setfd' else 1,
-                file_descriptions='per-worker' if kind == 'setfd' else 'shared-query',
-                lock_kind='spin', caller_abi='clobber' if arm == 'kdlock' else 'c'))
+                file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
+                lock_kind=lock_kind(kind),
+                entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
+                caller_abi='clobber' if arm == 'kdlock' else 'c'))
     write_json(out/'plan.json', plan)
     try:
         for i, spec in enumerate(plan):
