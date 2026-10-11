@@ -1,0 +1,665 @@
+{
+  "archive_verified_before_switch": true,
+  "checked_utc": "2026-10-11T04:33:10.633973+00:00",
+  "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+  "dmesg_faults": [],
+  "frequency_policy_match_before": true,
+  "governors": {
+    "policy0": "ondemand",
+    "policy1": "ondemand",
+    "policy10": "ondemand",
+    "policy11": "ondemand",
+    "policy12": "ondemand",
+    "policy13": "ondemand",
+    "policy14": "ondemand",
+    "policy15": "ondemand",
+    "policy16": "ondemand",
+    "policy17": "ondemand",
+    "policy18": "ondemand",
+    "policy19": "ondemand",
+    "policy2": "ondemand",
+    "policy20": "ondemand",
+    "policy21": "ondemand",
+    "policy22": "ondemand",
+    "policy23": "ondemand",
+    "policy24": "ondemand",
+    "policy25": "ondemand",
+    "policy26": "ondemand",
+    "policy27": "ondemand",
+    "policy28": "ondemand",
+    "policy29": "ondemand",
+    "policy3": "ondemand",
+    "policy30": "ondemand",
+    "policy31": "ondemand",
+    "policy32": "ondemand",
+    "policy33": "ondemand",
+    "policy34": "ondemand",
+    "policy35": "ondemand",
+    "policy36": "ondemand",
+    "policy37": "ondemand",
+    "policy38": "ondemand",
+    "policy39": "ondemand",
+    "policy4": "ondemand",
+    "policy40": "ondemand",
+    "policy41": "ondemand",
+    "policy42": "ondemand",
+    "policy43": "ondemand",
+    "policy44": "ondemand",
+    "policy45": "ondemand",
+    "policy46": "ondemand",
+    "policy47": "ondemand",
+    "policy48": "ondemand",
+    "policy49": "ondemand",
+    "policy5": "ondemand",
+    "policy50": "ondemand",
+    "policy51": "ondemand",
+    "policy52": "ondemand",
+    "policy53": "ondemand",
+    "policy54": "ondemand",
+    "policy55": "ondemand",
+    "policy56": "ondemand",
+    "policy57": "ondemand",
+    "policy58": "ondemand",
+    "policy59": "ondemand",
+    "policy6": "ondemand",
+    "policy60": "ondemand",
+    "policy61": "ondemand",
+    "policy62": "ondemand",
+    "policy63": "ondemand",
+    "policy7": "ondemand",
+    "policy8": "ondemand",
+    "policy9": "ondemand"
+  },
+  "governors_match_before": true,
+  "guest_idle": true,
+  "kernel_identity": {
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source_files": 20
+  },
+  "native_spin_policy": {
+    "boot_id": "c236bf61-726b-435e-a406-62514aff9ab6",
+    "functions": {
+      "__raw_callee_save___native_queued_spin_unlock": "0xffffffff810a2330",
+      "native_queued_spin_lock_slowpath": "0xffffffff81eecf40"
+    },
+    "method": "live_pv_ops_two_function_pointers",
+    "pv_lock_address": "0xffffffff83064e18"
+  },
+  "normal_vcpus_restored": 64,
+  "numa_nodes": {
+    "node0": "0-31",
+    "node1": "32-63"
+  },
+  "online_cpus": "0-63",
+  "qemu_pid": 83828,
+  "qemu_tasks": [
+    {
+      "affinity": [
+        63
+      ],
+      "name": "qemu-system-x86",
+      "tid": 83828
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "call_rcu",
+      "tid": 83829
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 83830
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 83831
+    },
+    {
+      "affinity": [
+        0
+      ],
+      "name": "CPU 0/KVM",
+      "tid": 83832
+    },
+    {
+      "affinity": [
+        1
+      ],
+      "name": "CPU 1/KVM",
+      "tid": 83833
+    },
+    {
+      "affinity": [
+        2
+      ],
+      "name": "CPU 2/KVM",
+      "tid": 83834
+    },
+    {
+      "affinity": [
+        3
+      ],
+      "name": "CPU 3/KVM",
+      "tid": 83835
+    },
+    {
+      "affinity": [
+        4
+      ],
+      "name": "CPU 4/KVM",
+      "tid": 83836
+    },
+    {
+      "affinity": [
+        5
+      ],
+      "name": "CPU 5/KVM",
+      "tid": 83837
+    },
+    {
+      "affinity": [
+        6
+      ],
+      "name": "CPU 6/KVM",
+      "tid": 83838
+    },
+    {
+      "affinity": [
+        7
+      ],
+      "name": "CPU 7/KVM",
+      "tid": 83839
+    },
+    {
+      "affinity": [
+        8
+      ],
+      "name": "CPU 8/KVM",
+      "tid": 83840
+    },
+    {
+      "affinity": [
+        9
+      ],
+      "name": "CPU 9/KVM",
+      "tid": 83841
+    },
+    {
+      "affinity": [
+        10
+      ],
+      "name": "CPU 10/KVM",
+      "tid": 83842
+    },
+    {
+      "affinity": [
+        11
+      ],
+      "name": "CPU 11/KVM",
+      "tid": 83843
+    },
+    {
+      "affinity": [
+        12
+      ],
+      "name": "CPU 12/KVM",
+      "tid": 83844
+    },
+    {
+      "affinity": [
+        13
+      ],
+      "name": "CPU 13/KVM",
+      "tid": 83845
+    },
+    {
+      "affinity": [
+        14
+      ],
+      "name": "CPU 14/KVM",
+      "tid": 83846
+    },
+    {
+      "affinity": [
+        15
+      ],
+      "name": "CPU 15/KVM",
+      "tid": 83847
+    },
+    {
+      "affinity": [
+        16
+      ],
+      "name": "CPU 16/KVM",
+      "tid": 83848
+    },
+    {
+      "affinity": [
+        17
+      ],
+      "name": "CPU 17/KVM",
+      "tid": 83849
+    },
+    {
+      "affinity": [
+        18
+      ],
+      "name": "CPU 18/KVM",
+      "tid": 83850
+    },
+    {
+      "affinity": [
+        19
+      ],
+      "name": "CPU 19/KVM",
+      "tid": 83851
+    },
+    {
+      "affinity": [
+        20
+      ],
+      "name": "CPU 20/KVM",
+      "tid": 83852
+    },
+    {
+      "affinity": [
+        21
+      ],
+      "name": "CPU 21/KVM",
+      "tid": 83853
+    },
+    {
+      "affinity": [
+        22
+      ],
+      "name": "CPU 22/KVM",
+      "tid": 83854
+    },
+    {
+      "affinity": [
+        23
+      ],
+      "name": "CPU 23/KVM",
+      "tid": 83855
+    },
+    {
+      "affinity": [
+        24
+      ],
+      "name": "CPU 24/KVM",
+      "tid": 83856
+    },
+    {
+      "affinity": [
+        25
+      ],
+      "name": "CPU 25/KVM",
+      "tid": 83857
+    },
+    {
+      "affinity": [
+        26
+      ],
+      "name": "CPU 26/KVM",
+      "tid": 83858
+    },
+    {
+      "affinity": [
+        27
+      ],
+      "name": "CPU 27/KVM",
+      "tid": 83859
+    },
+    {
+      "affinity": [
+        28
+      ],
+      "name": "CPU 28/KVM",
+      "tid": 83860
+    },
+    {
+      "affinity": [
+        29
+      ],
+      "name": "CPU 29/KVM",
+      "tid": 83861
+    },
+    {
+      "affinity": [
+        30
+      ],
+      "name": "CPU 30/KVM",
+      "tid": 83862
+    },
+    {
+      "affinity": [
+        31
+      ],
+      "name": "CPU 31/KVM",
+      "tid": 83863
+    },
+    {
+      "affinity": [
+        32
+      ],
+      "name": "CPU 32/KVM",
+      "tid": 83864
+    },
+    {
+      "affinity": [
+        33
+      ],
+      "name": "CPU 33/KVM",
+      "tid": 83865
+    },
+    {
+      "affinity": [
+        34
+      ],
+      "name": "CPU 34/KVM",
+      "tid": 83866
+    },
+    {
+      "affinity": [
+        35
+      ],
+      "name": "CPU 35/KVM",
+      "tid": 83867
+    },
+    {
+      "affinity": [
+        36
+      ],
+      "name": "CPU 36/KVM",
+      "tid": 83868
+    },
+    {
+      "affinity": [
+        37
+      ],
+      "name": "CPU 37/KVM",
+      "tid": 83869
+    },
+    {
+      "affinity": [
+        38
+      ],
+      "name": "CPU 38/KVM",
+      "tid": 83870
+    },
+    {
+      "affinity": [
+        39
+      ],
+      "name": "CPU 39/KVM",
+      "tid": 83871
+    },
+    {
+      "affinity": [
+        40
+      ],
+      "name": "CPU 40/KVM",
+      "tid": 83872
+    },
+    {
+      "affinity": [
+        41
+      ],
+      "name": "CPU 41/KVM",
+      "tid": 83873
+    },
+    {
+      "affinity": [
+        42
+      ],
+      "name": "CPU 42/KVM",
+      "tid": 83874
+    },
+    {
+      "affinity": [
+        43
+      ],
+      "name": "CPU 43/KVM",
+      "tid": 83875
+    },
+    {
+      "affinity": [
+        44
+      ],
+      "name": "CPU 44/KVM",
+      "tid": 83876
+    },
+    {
+      "affinity": [
+        45
+      ],
+      "name": "CPU 45/KVM",
+      "tid": 83877
+    },
+    {
+      "affinity": [
+        46
+      ],
+      "name": "CPU 46/KVM",
+      "tid": 83878
+    },
+    {
+      "affinity": [
+        47
+      ],
+      "name": "CPU 47/KVM",
+      "tid": 83879
+    },
+    {
+      "affinity": [
+        48
+      ],
+      "name": "CPU 48/KVM",
+      "tid": 83880
+    },
+    {
+      "affinity": [
+        49
+      ],
+      "name": "CPU 49/KVM",
+      "tid": 83881
+    },
+    {
+      "affinity": [
+        50
+      ],
+      "name": "CPU 50/KVM",
+      "tid": 83882
+    },
+    {
+      "affinity": [
+        51
+      ],
+      "name": "CPU 51/KVM",
+      "tid": 83883
+    },
+    {
+      "affinity": [
+        52
+      ],
+      "name": "CPU 52/KVM",
+      "tid": 83884
+    },
+    {
+      "affinity": [
+        53
+      ],
+      "name": "CPU 53/KVM",
+      "tid": 83885
+    },
+    {
+      "affinity": [
+        54
+      ],
+      "name": "CPU 54/KVM",
+      "tid": 83886
+    },
+    {
+      "affinity": [
+        55
+      ],
+      "name": "CPU 55/KVM",
+      "tid": 83887
+    },
+    {
+      "affinity": [
+        56
+      ],
+      "name": "CPU 56/KVM",
+      "tid": 83888
+    },
+    {
+      "affinity": [
+        57
+      ],
+      "name": "CPU 57/KVM",
+      "tid": 83889
+    },
+    {
+      "affinity": [
+        58
+      ],
+      "name": "CPU 58/KVM",
+      "tid": 83890
+    },
+    {
+      "affinity": [
+        59
+      ],
+      "name": "CPU 59/KVM",
+      "tid": 83891
+    },
+    {
+      "affinity": [
+        60
+      ],
+      "name": "CPU 60/KVM",
+      "tid": 83892
+    },
+    {
+      "affinity": [
+        61
+      ],
+      "name": "CPU 61/KVM",
+      "tid": 83893
+    },
+    {
+      "affinity": [
+        62
+      ],
+      "name": "CPU 62/KVM",
+      "tid": 83894
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "CPU 63/KVM",
+      "tid": 83895
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "kvm-nx-lpage-re",
+      "tid": 83897
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84122
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84123
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84124
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84125
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84126
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84127
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84128
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84129
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84130
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84131
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "name": "worker",
+      "tid": 84132
+    }
+  ],
+  "restoration": "Graceful shutdown of temporary 66-vCPU VM and fresh boot through unchanged regular launcher; no saved state loaded.",
+  "snapshot_confirmed": true,
+  "snapshot_tag": "normal64-after-rerun-20261011T025525Z",
+  "verified_vcpu_pins": 64
+}

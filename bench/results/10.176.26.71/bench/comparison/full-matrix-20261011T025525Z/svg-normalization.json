@@ -1,0 +1,35 @@
+{
+  "files": {
+    "mutex-peak-throughput.svg": {
+      "normalized_sha256": "fc011dedce6cbbcbd8f220e7f027c7e87fe7ef94d788b76cc5ec20882df448e4",
+      "original_sha256": "42851c8b03997e463ac076ee9925cc1fbe03096b4dc87d242feee84b63477d99",
+      "svg_structure_and_path_tokens_unchanged": true
+    },
+    "mutex-whole-throughput.svg": {
+      "normalized_sha256": "e419c1517061c7d4a045f28ebeee8a432d002fd9ecf411e8e5545c0fca4628e5",
+      "original_sha256": "a0083d3bbce208870c6225df841fda4380d7a39d2a84714b2a769c68861aa79e",
+      "svg_structure_and_path_tokens_unchanged": true
+    },
+    "rwlock-peak-throughput.svg": {
+      "normalized_sha256": "a524ebbc568269cd68c761fc59af61674e5a3ae748c5fd4368c2f86324478219",
+      "original_sha256": "43162fce2b0caa3cdf3273895e7e695e2df24ef1298dbf3081627946c12861a1",
+      "svg_structure_and_path_tokens_unchanged": true
+    },
+    "rwlock-whole-throughput.svg": {
+      "normalized_sha256": "2920964bccc09a24c474694737e58ef545f9b06f408499bb332c6a7613e9de4f",
+      "original_sha256": "02a2a05166aefc7790d8e49739d5741aa0d3101049471a91736950fcfb91d932",
+      "svg_structure_and_path_tokens_unchanged": true
+    },
+    "spin-peak-throughput.svg": {
+      "normalized_sha256": "f29dbd19b95f33e9b08f6107ebdb5e6b3ad603540151bbae0d214784862dd8bb",
+      "original_sha256": "40b6ae7979bb33ac7b5ca3f2df49d41748ed31b15e0f51b7acc5713a8039b4fc",
+      "svg_structure_and_path_tokens_unchanged": true
+    },
+    "spin-whole-throughput.svg": {
+      "normalized_sha256": "afbfc87df58ea263f45d36ed7d14d98ee87dffac95a8ff0226a18a38d7b87f95",
+      "original_sha256": "1ee03e402284f2030199be3d3e91224a32812e7da8a86f485c31dfc3096acdd8",
+      "svg_structure_and_path_tokens_unchanged": true
+    }
+  },
+  "policy": "Trim trailing whitespace for Git; preserve SVG elements, attributes, text and path tokens. Original generated SVGs remain in the raw archive."
+}

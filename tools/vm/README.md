@@ -53,7 +53,7 @@ selected with `--host`, `--mirror` and `--scripts`; inspect `--help` for options
 rounds at `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64`.
 By default it includes one-cacheline and RCUHT payloads for spin, mutex and
 rwlock, with rwlock at 1%/20% writes: **1,584 sessions** in six groups.
-Multi-cacheline scenarios, including c08 and c16, are excluded from subsequent
+Multi-cacheline scenarios, including c02, c08 and c16, are excluded from subsequent
 comparisons. `--include-multicacheline` restores the historical 3,960-session
 matrix when explicitly needed.
 Each session has 48,000 warmup operations per worker, a two-second measurement,

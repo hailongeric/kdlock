@@ -1,0 +1,18 @@
+{
+  "all_exported_csv_bytes_match": true,
+  "archive_extracted": true,
+  "checked_utc": "2026-10-11T04:32:14.212339+00:00",
+  "complete_peaks_recomputed": 1582,
+  "complete_sessions": 1584,
+  "csv_files": [
+    "comparison.csv",
+    "samples.csv",
+    "statistics-by-execution.csv",
+    "statistics.csv"
+  ],
+  "excluded_peaks_recomputed": 2,
+  "interrupted_peaks_recomputed": 0,
+  "portable_source_binary_jit_hashes_verified": true,
+  "total_peaks_recomputed": 1584,
+  "workspace_links_skipped_without_dereferencing": 1056
+}

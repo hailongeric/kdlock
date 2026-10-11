@@ -1,0 +1,33 @@
+{
+  "accepted_peaks_recomputed": 1582,
+  "excluded_peaks_recomputed": 2,
+  "excluded_sessions": 2,
+  "reason": "Contended KD spin c01 at 20 workers had no actual JIT bodies in rounds 0 and 1. Preserve these native-path executions; exclude them from accepted comparison scores.",
+  "sessions": [
+    {
+      "complete": true,
+      "data_ok": true,
+      "drained": true,
+      "error": "contended kdlock arm had no actual JIT",
+      "group": "spin-cacheline-c01",
+      "included_in_performance_scores": false,
+      "independently_recomputed_peak": true,
+      "name": "c01-t20-r00-direct-kdlock-adaptive",
+      "repeat": 0,
+      "retired": true
+    },
+    {
+      "complete": true,
+      "data_ok": true,
+      "drained": true,
+      "error": "contended kdlock arm had no actual JIT",
+      "group": "spin-cacheline-c01",
+      "included_in_performance_scores": false,
+      "independently_recomputed_peak": true,
+      "name": "c01-t20-r01-direct-kdlock-adaptive",
+      "repeat": 1,
+      "retired": true
+    }
+  ],
+  "total_peaks_recomputed": 1584
+}

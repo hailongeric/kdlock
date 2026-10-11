@@ -27,16 +27,17 @@ Live benchmark output goes outside the guest checkout to
 `bench/results/10.176.26.71/raw/bench/<run>/`, and compact published reports in
 `bench/results/10.176.26.71/bench/<runner>/<run>/`.
 
-The [complete 22-point comparison](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
+The [current 22-point comparison](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
 covers **1–8 workers in steps of one, then 12–64 in steps of four**, under KDLock,
-TCLock and Linux Native. It includes spin/mutex cacheline sizes 1/8/16 and RCUHT,
-plus rwlock sizes 1/2/4/8/16 and RCUHT at 1%/20% writes: **3,960 timed sessions**,
-three rounds per backend and configuration. All final-matrix sessions passed
-data checks and drained. Reports retain all samples, round
-variation, JIT/NO_JIT evidence, CSV/JSON and scaling plots. Workers use guest
-CPUs 0–31,33–64 on distinct host cores, with collector vCPU 65. At 64 workers,
-the collector and QEMU services share physical host core 63 with the last worker;
-the report records this limitation. The host governor is `ondemand`.
+TCLock and Linux Native, after the NUMA/mutex fixes. It uses c01 and hash payloads
+for spin, mutex and rwlock, with rwlock at 1%/20% writes: **1,584 drained sessions**,
+1,582 accepted, three rounds per configuration. **c02, c04, c08 and c16 are
+excluded.** Reports retain all samples, round variation, JIT/NO_JIT evidence,
+CSV/JSON and scaling plots. The temporary 66-vCPU layout puts workers on distinct
+host cores, with collector vCPU 65; at 64 workers, the collector and QEMU services
+share physical core 63 with the last worker. The governor remains `ondemand`.
+The [earlier full baseline](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
+retains 3,960 sessions and multi-cacheline payloads at its original source version.
 
 The [earlier bounded 64-vCPU comparison](results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
 contains 72 rwlock, 36 spin and 36 mutex sessions, with three rounds per backend
@@ -55,7 +56,8 @@ gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
-| [Complete 22-point comparison](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md) | `10.176.26.71`: all maintained spin/mutex/rwlock payloads, 1–8 and 12–64 workers, 3,960 sessions; temporary 66-vCPU VM, collector 65 shares a physical core at 64 workers |
+| [Current c01/hash rerun](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md) | `10.176.26.71`: 1,584 sessions, 22 worker counts, all backends and lock families; c02/c04/c08/c16 excluded |
+| [Earlier complete baseline](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md) | `10.176.26.71`: all maintained spin/mutex/rwlock payloads, 1–8 and 12–64 workers, 3,960 sessions; temporary 66-vCPU VM, collector 65 shares a physical core at 64 workers |
 | [Earlier bounded 64-vCPU comparison](results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md) | `10.176.26.71`: RCUHT rwlocks at 1/16/32/56 workers and spin/mutex cacheline at 1/16/32/36 workers; 144 timed sessions, collector CPU 63 |
 | [RCUHT rwlocks](results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) | 1%/20% writes on the hash payload; all 15 thread counts, ABI3 JIT writers and strict Native/TCLock parity checks |
 | [Rwlock scaling](results/380G10/bench/rwlock_compare/20261009-scaling/README.md) | Historical ABI1, 1%/20% writes on one cacheline; all 15 thread counts, 270 sessions, throughput curves and NUMA progress |
@@ -117,7 +119,7 @@ Keep different policies separate. The complete matrix explicitly selects
 `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64` for all runners.
 Spin/mutex retain shorter defaults; rwlock retains the historical 15-point
 default ending at 36. Use the [full driver](../tools/vm/README.md#complete-164-worker-comparison)
-for all maintained payload sizes and the [offline exporter](full_compare/README.md)
+for the current c01/hash payloads and the [offline exporter](full_compare/README.md)
 after the workers drain.
 
 Keep both the best peak and the distribution across rounds: minimum, median,

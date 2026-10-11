@@ -10,13 +10,14 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-The latest [complete performance report](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
+The latest [complete performance report](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
 compares rwlock, spin and mutex on the new host at 22 worker counts: 1–8 in
-steps of one and 12–64 in steps of four. All maintained performance payloads
-have three rounds under each backend, for 3,960 timed sessions with tables,
-charts and exported statistics. Its temporary 66-vCPU layout records physical
-collector contention at 64 workers. The [earlier bounded report](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
-retains the 144 selected measurements under the regular 64-vCPU layout.
+steps of one and 12–64 in steps of four. One-cacheline and hash payloads have
+three rounds under each backend, for 1,584 timed sessions with tables, charts
+and exported statistics; c02, c04, c08 and c16 are excluded. Its temporary
+66-vCPU layout records physical collector contention at 64 workers.
+The [earlier full baseline](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
+retains the wider payload matrix before the NUMA/mutex fixes.
 
 On the original 40-vCPU host, the [spin/mutex phase](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 ended on 2026-10-09 with performance gaps remaining. The later

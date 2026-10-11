@@ -4,6 +4,10 @@ This is the machine directory for tests and benchmarks in the VM on the Ubuntu
 Xeon Gold 6438N host at `eric@10.176.26.71`. Source edits remain in the original
 checkout on `380G10` and are synchronized to this VM before testing.
 
+- [Current c01/hash rerun, 2026-10-11](bench/comparison/full-matrix-20261011T025525Z/overview.md):
+  all three backends and lock families, 22 worker counts, three rounds;
+  1,584 drained sessions after the NUMA/mutex fixes; 1,582 accepted.
+  c02/c04/c08/c16 excluded; complete charts, statistics and archive replay.
 - [NUMA spin and mutex investigation, 2026-10-10](bench/comparison/numa-mutex-20261010/README.md):
   root causes, accepted fixes and remaining Native gaps; 354 accepted timed
   sessions, six diagnostics, placement/progress controls and rejected candidates.

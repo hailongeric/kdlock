@@ -1,14 +1,38 @@
 # Performance status
 
 KD does not yet match both TCLock and Linux Native at every requested thread
-count. The latest changes and their measured limits are in the
-[NUMA/mutex investigation](../bench/results/10.176.26.71/bench/comparison/numa-mutex-20261010/README.md).
-The earlier [complete destination comparison](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
-retains the wider baseline at its original source version.
+count. The latest [complete c01/hash rerun](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
+measures the NUMA/mutex fixes across all 22 worker counts on the destination host.
+The [NUMA/mutex investigation](../bench/results/10.176.26.71/bench/comparison/numa-mutex-20261010/README.md)
+retains their causes, rejected candidates and focused checks.
 The original-host spin/mutex optimization phase ended on **2026-10-09**, with
 those gaps still open. Its [report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 keeps the final comparison, rejected candidates and the source and binary identities
 used for each run.
+
+## Current c01/hash comparison, 2026-10-11
+
+The [rerun](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md) contains **1,584 drained sessions**, with **1,582 accepted**:
+Native, TCLock and KD, three rounds at 1–8 and 12–64 workers. Spin, mutex and
+rwlock use only c01 and hash payloads; rwlocks cover 1%/20% writes.
+Cacheline c02, c04, c08 and c16 were excluded. Two drained NO_JIT rejections
+at spin c01/20 workers remain archived and excluded from scores, leaving one
+incomplete comparison point. Measured source is `0e1112e` plus the nine captured
+working-tree edits. No implementation changed for this rerun.
+
+At 36 workers, spin c01 median whole-run throughput is KD **6.164**,
+Native **4.956** and TCLock **4.850 Mops/s**.
+Mutex c01 is KD **4.624**, Native **5.691**
+and TCLock **3.373 Mops/s**. Mutex hash is KD **2.659**, Native **2.466**
+and TCLock **2.124 Mops/s** at that count. The full report supplies rwlock,
+peak, range and scaling results, including the remaining gaps at other counts.
+
+Accepted KD sessions include 356 ACTUAL_JIT and 170 NO_JIT controls.
+Status-separated statistics preserve that distinction. All accepted peak windows,
+source/binary/JIT hashes and exported CSV bytes passed the independent archive audit.
+The temporary 66-vCPU layout and unchanged `ondemand` policy match the documented
+complete-matrix setup. At 64 workers the last worker shares its physical core with
+the collector and QEMU services. The regular 64-vCPU boot was restored and verified.
 
 ## NUMA spin and mutex fixes, 2026-10-10
 
