@@ -41,6 +41,7 @@ count. [Benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.
 | Change ownership or recovery | [KD locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) |
 | Build and verify | [Provider](../kernel_module/README.md), [tests](../tests/README.md), [benchmarks](../bench/README.md) |
 | Review status and limits | [Known limitations](TODO.md), [performance status](PERFORMANCE.md) |
+| Compare real syscall critical sections | [API benchmark results](../bench/results/10.176.26.71/bench/real_api/20261011/RESULTS.md), [runner and contract](../bench/real_api/README.md) |
 | Evaluate simpler execution contracts | [Protocol simplification](design/protocol_simplification.md) |
 
 ## Guest workflow

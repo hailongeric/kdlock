@@ -1,105 +1,22 @@
-# Real kernel API contention, 2026-10-11
+# Real kernel API run record, 2026-10-11
 
-Two actual syscall workloads provide useful KD cases: shared-file OFD conflict
-queries and concurrent close-on-exec bitmap updates. **All 288 final sessions
-passed correctness and drained**, with three rounds per configuration. KD's
-strongest bitmap result is 7.549 million validated operations/s at 60 threads:
-**2.55× matched Native, 1.60× TCLock and 2.97× the stock kernel helper**.
-The comparison also retains low-contention regressions and the rejected xattr
-candidate. No KD runtime or admission rule was changed to obtain these results.
+This record preserves the environment, validation, exploratory outcomes and
+reproduction details for the 288 accepted final OFD/setfd sessions. The
+[benchmark results document](RESULTS.md) introduces the test subjects, their
+kernel locks, the relationship to the TCLocks paper, and the measured performance
+comparisons. It also covers single-thread cost, regressions and comparison limits.
 
-## Recommended cases and measured results
+| Document | Responsibility |
+| --- | --- |
+| [Benchmark results](RESULTS.md) | Workloads, lock implementations, methodology, scaling figures and interpretation |
+| [OFD tables](ofd/README.md) / [bitmap tables](setfd/README.md) | Generated comparisons for every thread count and layout; adjacent CSV/JSON retain full statistics |
+| [Runner guide](../../../../../real_api/README.md) | Supported integration contract and maintained commands |
+| This run record | Frozen environment, validation, exploratory failures and evidence locations |
 
-Rates below are median whole-run **million operations/s**, not lock-acquisition
-latency. One OFD operation is `fcntl(F_OFD_GETLK)` with conflict-field validation.
-One bitmap operation is **`F_SETFD` plus a validating `F_GETFD`**, two real syscalls.
-The bitmap stride is the distance between worker FD numbers, starting at 64.
+## Exploratory runs
 
-| Workload | Threads | Stock | Native | TCLock | KD | KD/Native | KD/TC | Best-peak KD/Native | Best-peak KD/TC |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| OFD, tail conflict in 16 ranges | 32 | 4.460 | 4.549 | 4.002 | 5.019 | 1.10× | 1.25× | 1.12× | 1.11× |
-| OFD, tail conflict in 16 ranges | 60 | 2.733 | 2.815 | 3.988 | 4.345 | 1.54× | 1.09× | 1.56× | 1.04× |
-| Bitmap, 16-FD stride | 48 | 2.505 | 2.769 | 5.125 | 5.565 | 2.01× | 1.09× | 1.94× | 1.08× |
-| Bitmap, 512-FD stride | 32 | 5.593 | 5.221 | 5.001 | 8.026 | 1.54× | 1.60× | 1.55× | 1.56× |
-| Bitmap, 512-FD stride | 48 | 3.031 | 3.106 | 4.938 | 7.163 | 2.31× | 1.45× | 2.16× | 1.45× |
-| Bitmap, 512-FD stride | 60 | 2.546 | 2.965 | 4.724 | 7.549 | 2.55× | 1.60× | 2.48× | 1.57× |
-
-For the last row, KD's three whole-run samples span **7.512–7.588 Mops/s**,
-TCLock spans **4.684–4.793**, and Native spans **2.513–3.001**. Their highest
-valid warmed peaks are 7.623, 4.863 and 3.072 Mops/s respectively. These are
-observed round ranges, not statistical confidence intervals.
-
-The recommended OFD regime is 16 ranges at 16–60 threads. For bitmap updates,
-512-FD spacing at 16–60 threads and packed 16-FD spacing at 32–60 threads both
-beat matched Native and TCLock on median whole throughput and best valid peak.
-Across both matrices, KD meets that measured parity criterion at **13 of 20
-multithreaded points**; some remaining advantages are too small to interpret
-as robust wins from three rounds alone.
-
-![OFD scaling, 16 ranges](ofd/ofd-tail-16-64.png)
-
-![Bitmap scaling, separate bitmap cache lines](setfd/setfd-toggle-512-64.png)
-
-Lines show medians; shading covers all three rounds. Worker counts above 32
-use both NUMA nodes. Full tables, including every slower case and single-thread
-control, are in the [OFD report](ofd/README.md) and [bitmap report](setfd/README.md).
-Their CSV/JSON exports include whole/peak min, median, max and spread, worker
-shares, CPU time per operation and JIT counts. Vector figures are also supplied:
-[OFD](ofd/ofd-tail-16-64.svg), [bitmap](setfd/setfd-toggle-512-64.svg).
-
-## What the workloads execute
-
-The [runner and contract](../../../../../real_api/README.md) describe the scoped
-integration. Userspace invokes the real syscalls separately; no ioctl batches
-or artificial computation replace the kernel critical section.
-
-- **OFD queries:** one anonymous tmpfs file contains 16 or 128 nonadjacent,
-  one-byte OFD write locks. Threads share an independent querying file
-  description and repeatedly check the last conflicting range. The protected
-  state is the real `file_lock_context.flc_posix` list under `flc_lock`.
-  The body traverses owners/ranges/types and copies the actual conflict fields.
-  The bound file rejects non-OFD locks and lock-manager callbacks; its locks
-  remain immutable until the module is unloaded.
-- **Descriptor flags:** all threads share their real `files_struct`, but each
-  owns a preallocated FD with an independent open file description. They toggle
-  `FD_CLOEXEC` and verify the returned flag. The critical section is the real
-  `set_close_on_exec()` bitmap update under `files_struct.file_lock`. Stride 16
-  packs flags into a few cache lines; stride 512 places workers' bits in distinct
-  64-byte lines. Independent file descriptions avoid a shared `file.f_count`
-  bottleneck in `fdget_raw()`/`fdput()` outside this lock.
-
-The Native/TCLock/KD arms use one matching C body and original lock storage,
-with only the lock shell selected at compile time. Ftrace redirects the helper
-only for the controlled file or file table. The additional **stock** arm uses
-the captured kernel's original helper with no substitution module. All arms
-include syscall entry, security checks, descriptor references, result copying
-and userspace checking. The OFD specialization removes callback handling only
-after verifying that the private locks have no callbacks.
-
-These are API stress microbenchmarks, not whole FxMark or will-it-scale runs,
-and not a general replacement of every Linux lock. Other native users may not
-mutate the bound lock's data while it uses the experimental protocol. Timed
-modules have UBSAN disabled; the captured kernel has UBSAN enabled. Consequently,
-the stock comparison includes function-substitution/compiler/instrumentation
-differences, while the matched Native arm isolates the locking change within
-the selected body. Hardware cache/coherence counters were not collected, so
-the measurements do not attribute a quantified speedup to cache misses alone.
-
-## Limits and rejected candidates
-
-Single-thread KD is about 0.4–2.0% below matched Native and 1.7–9.2% below the
-stock helper across these cases. All 12 single-thread KD sessions are `NO_JIT`.
-At eight threads, the 128-range OFD case is 37% below Native and 31% below TCLock
-on median whole throughput; its KD round spread is 59%. The separated bitmap
-is 44% below Native and 18% below TCLock at eight threads. Packed bitmap updates
-at 16 threads slightly favor TCLock. The larger OFD list also slightly favors
-TCLock at 32 and 60 threads. These points remain in every export.
-
-The first stock, single-thread sample in each final matrix remained slower than
-later rounds despite the minimum warmup; it was retained. The host governor is
-`ondemand`, and neither fixed frequency nor bare-metal isolation is claimed.
-Backend order rotates across rounds. Medians, peaks and complete ranges are
-shown together rather than deleting slow samples.
+These pilot and failed sessions remain separate from the final matrices. Their
+original status and samples are preserved, including subsequent cleanup records.
 
 | Exploratory run | Outcome retained separately |
 | --- | --- |

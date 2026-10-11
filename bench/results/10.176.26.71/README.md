@@ -4,10 +4,12 @@ This is the machine directory for tests and benchmarks in the VM on the Ubuntu
 Xeon Gold 6438N host at `eric@10.176.26.71`. Source edits remain in the original
 checkout on `380G10` and are synchronized to this VM before testing.
 
-- [Real kernel APIs, 2026-10-11](bench/real_api/20261011/README.md):
-  OFD conflict queries and file-table bitmap updates; stock helper plus matched
-  Native/TCLock/KD, three rounds at six worker counts, 288 accepted sessions.
-  Xattr refusal, exploratory failures and slower cases remain documented.
+- [Real kernel API results, 2026-10-11](bench/real_api/20261011/RESULTS.md):
+  OFD conflict queries and file-table bitmap updates, their kernel locks and
+  TCLocks paper context; stock helper plus matched Native/TCLock/KD, three rounds
+  at six worker counts, 288 accepted sessions. The [run record](bench/real_api/20261011/README.md)
+  retains validation, xattr refusal and exploratory failures; slower cases remain
+  in the results.
 - [Latest mutex optimization, 2026-10-11](bench/comparison/mutex-opt-20261011T045425Z/README.md):
   c01/hash, all three backends, 22 worker counts, three rounds;
   396 accepted, drained sessions. Causes, selected changes, rejected candidates

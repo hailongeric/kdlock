@@ -8,10 +8,13 @@ file table. Its critical section uses Native, TCLock or KD spinlocks, selected
 at build time. An optional `stock` arm runs the original kernel function without
 a substitution module.
 
-The [2026-10-11 comparison](../results/10.176.26.71/bench/real_api/20261011/README.md)
+The [2026-10-11 results report](../results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
 contains 288 accepted, drained OFD/setfd sessions: four backends, three rounds,
-two metadata layouts and six worker counts per API. It reports the useful KD
-regimes, regressions, single-thread cost, xattr refusal and exploratory failures.
+two metadata layouts and six worker counts per API. It introduces each test
+subject and kernel lock, relates the workload choices to the TCLocks paper, and
+reports scaling, useful KD regimes, regressions and xattr admission limits.
+The separate [run record](../results/10.176.26.71/bench/real_api/20261011/README.md)
+retains reproduction commands, validation, exploratory failures and raw evidence.
 
 These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading

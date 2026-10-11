@@ -12,6 +12,22 @@ those gaps still open. Its [report](../bench/results/380G10/bench/tclock_compare
 keeps the final comparison, rejected candidates and the source and binary identities
 used for each run.
 
+## Real kernel API contention, 2026-10-11
+
+The [API benchmark results](../bench/results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
+map OFD conflict queries to `file_lock_context.flc_lock` and close-on-exec bitmap
+updates to `files_struct.file_lock`. These spinlock comparisons contain 288
+accepted, drained sessions, with stock plus matched Native/TCLock/KD and three
+rounds at 1/8/16/32/48/60 workers. KD meets both median whole-run and best-peak
+parity against Native and TCLock at 13 of 20 multithreaded points.
+
+The strongest 60-worker bitmap case reaches 7.549 Mops/s: 2.55× matched Native
+and 1.60× TCLock. Eight-worker regressions, single-thread overhead and the xattr
+admission refusal remain documented. The report distinguishes the stock helper's
+instrumentation from matched Native and actual JIT execution from `NO_JIT`.
+These are scoped API stress measurements; whole-application performance and
+global kernel-lock replacement were not evaluated.
+
 ## Mutex c01 optimization, 2026-10-11
 
 The [new comparison](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md) contains **396 drained sessions**,

@@ -1,6 +1,6 @@
 # Benchmarks
 
-Choose the runner for the lock you want to compare. Both runners test KD, TCLock
+Choose the runner for the lock you want to compare. The runners test KD, TCLock
 and Linux Native with matching workloads:
 
 - [Spin/mutex comparison](tclock_compare/README.md): spinlocks and ordinary mutexes.
@@ -69,7 +69,7 @@ gaps; superseded reports are retrieved from fixed Git records.
 
 | Report | Scope |
 | --- | --- |
-| [Real kernel APIs](results/10.176.26.71/bench/real_api/20261011/README.md) | 288 accepted sessions: actual OFD/setfd syscalls, three rounds at 1/8/16/32/48/60 threads, stock plus matched Native/TCLock/KD; all exploratory failures and regressions retained |
+| [Real kernel API results](results/10.176.26.71/bench/real_api/20261011/RESULTS.md) | Workload-to-lock mapping, TCLocks paper context and scaling results from 288 accepted OFD/setfd sessions; stock plus matched Native/TCLock/KD, with regressions and exploratory failures retained |
 | [Latest mutex optimization](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md) | `10.176.26.71`: 396 accepted sessions, c01/hash, 22 worker counts; causes, selected changes, rejected candidates and remaining parity gaps |
 | [Earlier all-lock c01/hash rerun](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md) | `10.176.26.71`: 1,584 sessions, 22 worker counts, all backends and lock families; c02/c04/c08/c16 excluded |
 | [Earlier complete baseline](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md) | `10.176.26.71`: all maintained spin/mutex/rwlock payloads, 1–8 and 12–64 workers, 3,960 sessions; temporary 66-vCPU VM, collector 65 shares a physical core at 64 workers |
