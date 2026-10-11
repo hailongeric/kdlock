@@ -4,6 +4,8 @@ Choose the runner for the lock you want to compare. The runners test KD, TCLock
 and Linux Native with matching workloads:
 
 - [Spin/mutex comparison](tclock_compare/README.md): spinlocks and ordinary mutexes.
+- [Mutex waiting policies](mutex_wait_compare/README.md): KD spin versus blocking,
+  with Native/TCLock and every maintained performance payload and accepted real API.
 - [Rwlock comparison](rwlock_compare/README.md): read-write locks, with RCUHT at
   1% and 20% writes across the historical 15-point thread set by default.
 - [Complete comparison](../tools/vm/README.md#complete-164-worker-comparison):

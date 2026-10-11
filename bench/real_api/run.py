@@ -17,7 +17,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 from bench_runtime import (Failure, require, command, digest, idle, registry,
-                           status, children, PROVIDER, RETIRE, info)
+                           status, children, PROVIDER, RETIRE, info, parameters)
 from bench_session import Session
 from peak import analyze_peak
 from summarize import write_json
@@ -237,7 +237,9 @@ class SyscallSession(Session):
         if s['arm'] == 'kdlock':
             self.run(['insmod', self.out/'build/kdlock_km.ko', 'bench_quiet=1', 'jit_timing=0',
                       'hotlock_stats=1', 'target_process=sc_worker', 'spin_entry_ratio_limit=2',
-                      'spin_prefetch=2'], 'load-kd.log')
+                      'spin_prefetch=2',
+                      'mutex_blocking=' + str(int(s.get('mutex_wait_mode') == 'blocking')),
+                      'mutex_spin_limit=' + str(s.get('mutex_spin_limit', 1024))], 'load-kd.log')
             self.loaded_kd = True
         if s['arm'] == 'tclock':
             self.run(['insmod', self.out/'build'/(self.tc_module+'.ko'), 'komb_batch_size=1024'], 'load-tc.log')
@@ -261,6 +263,9 @@ class SyscallSession(Session):
                 Path('/sys/module/kdlock_km/parameters/bench_lock_addr').write_text(str(s['gate_addr']))
             (PARAM/'prepare').write_text('1')
         if self.loaded_kd:
+            s['parameters'] = parameters()
+            require(s['parameters']['mutex_blocking'] == ('Y' if s['mutex_wait_mode'] == 'blocking' else 'N') and
+                    int(s['parameters']['mutex_spin_limit']) == s['mutex_spin_limit'], 'mutex waiting policy differs')
             sym = [line.split() for line in Path('/proc/kallsyms').read_text().splitlines()]
             begin = [int(v[0], 16) for v in sym if len(v) == 4 and v[2:] == ['rb_body', '[real_api]']]
             nm = self.run(['nm', '-S', self.workload_module], 'symbols.txt')
@@ -305,12 +310,18 @@ class SyscallSession(Session):
         before = int((PARAM/'calls').read_text()) if self.loaded_source else 0
         jit = Path('/sys/module/kdlock_km/parameters/bench_jit_bodies')
         jbefore = int(jit.read_text()) if self.loaded_kd else 0
+        if self.loaded_kd:
+            s['mutex_wait_before'] = self.mutex_wait_stats()
         tc_delegated = self.tc_params/'delegated'
         tc_before = int(tc_delegated.read_text()) if self.loaded_tc and tc_delegated.exists() else None
         s['execution_status'] = 'MEASURING'
         self.save()
         m = self.tell('measure')
         s['measurement'] = m
+        if self.loaded_kd:
+            s['mutex_wait_after'] = self.mutex_wait_stats()
+            s['mutex_wait_delta'] = {key: value - s['mutex_wait_before'][key]
+                for key, value in s['mutex_wait_after'].items()}
         require(m['ok'] and m['completed'] == sum(w['completed'] for w in m['workers']) and
                 all(w['error'] == 0 and w['cpu'] == w['observed_cpu'] for w in m['workers']),
                 'syscall result or affinity mismatch', 'DATA_ERROR')
@@ -389,6 +400,8 @@ class SyscallSession(Session):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--mutex-wait-mode', choices=('spin', 'blocking'), default='spin')
+    p.add_argument('--mutex-spin-limit', type=int, default=4096)
     p.add_argument('--build-from', type=Path)
     p.add_argument('--kinds', nargs='+', choices=['xattr', 'ofd', 'setfd', 'utsname', *sorted(MUTEX_KINDS)], default=['ofd'])
     p.add_argument('--queries', nargs='+', choices=['tail', 'miss', 'front', 'size', 'toggle', 'query', 'set', 'end', 'host', 'domain'], default=['tail'])
@@ -407,6 +420,7 @@ def main():
     p.add_argument('--kernel-source', default='/root/linux-6.1.159-kdclobber2')
     p.add_argument('--kernel-baseline', default='/root/kdlock-kernel-baselines/mutex-clobber2-20260919')
     args = p.parse_args()
+    require(0 <= args.mutex_spin_limit <= 1048576, 'mutex spin limit must be 0..1048576')
     out = args.output.resolve()
     require(out != ROOT and ROOT not in out.parents and not out.exists(), 'output must be new and outside checkout')
     require(os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and os.environ.get('KDLOCK_SNAPSHOT_TAG'),
@@ -462,6 +476,8 @@ def main():
                 syscalls_per_op=2 if kind == 'setfd' else 1,
                 file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
                 lock_kind=lock_kind(kind),
+                mutex_wait_mode=args.mutex_wait_mode if arm == 'kdlock' else 'not_applicable',
+                mutex_spin_limit=args.mutex_spin_limit if arm == 'kdlock' else None,
                 entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
                 caller_abi='clobber' if arm == 'kdlock' else 'c'))
     write_json(out/'plan.json', plan)

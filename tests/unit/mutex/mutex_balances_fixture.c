@@ -12,6 +12,11 @@ static int cpu_id, pinned, errors;
 static int kd_mutex_active_waiters[2], kd_mutex_reserved_nodes[2];
 static int kd_mutex_max_waiters[2], kd_mutex_frame_failure_count[2];
 static struct { unsigned long node_slots; } kd_mutex_shadows[2];
+#define KD_MUTEX_MAX_NODES 4
+struct rcuwait { void *task; };
+static struct rcuwait kd_mutex_waits[4][2];
+#define per_cpu_ptr(p, cpu) (&(*(p))[cpu])
+static bool rcuwait_active(struct rcuwait *w) { return w->task != NULL; }
 #define unlikely(c) (c)
 #define READ_ONCE(v) (v)
 #define per_cpu(v, cpu) ((v)[cpu])
@@ -34,6 +39,10 @@ static void CHECK_PIN(void) { CHECK(pinned); }
 int main(void)
 {
  struct kd_mutex lock = {0};
+ CHECK(kd_mutex_check_idle());
+ kd_mutex_waits[3][1].task = &lock;
+ CHECK(!kd_mutex_check_idle());
+ kd_mutex_waits[3][1].task = NULL;
  CHECK(kd_mutex_check_idle());
  /* CPU 1 can retain a reserved stack while its executor sleeps. CPU 0
   * progressing through many requests must neither hide nor consume it. */

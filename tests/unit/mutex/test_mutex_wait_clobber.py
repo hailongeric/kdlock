@@ -19,7 +19,9 @@ FIXTURE = r'''
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+typedef struct { unsigned long opaque[3]; } wait_queue_head_t;
 typedef uint8_t u8;
+typedef uint16_t u16;
 typedef uint32_t u32;
 typedef struct { int counter; } atomic_t;
 #define noinline __attribute__((noinline))

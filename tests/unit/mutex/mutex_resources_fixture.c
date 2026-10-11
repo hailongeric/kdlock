@@ -12,6 +12,8 @@
 
 #include "exe_info.h"
 
+typedef struct { unsigned long opaque[3]; } wait_queue_head_t;
+struct rcuwait { void *task; };
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -96,7 +98,7 @@ static jmp_buf resume_target;
 #define this_cpu_dec_return(x) (--(x))
 #define atomic64_inc(p) (++*(p))
 #define BIT(n) (1UL << (n))
-#define DEFINE_PER_CPU_SHARED_ALIGNED(type, name) type name
+#define DEFINE_PER_CPU_SHARED_ALIGNED(type, name) type name __attribute__((unused))
 #define this_cpu_ptr(p) (p)
 #define per_cpu_ptr(p, cpu) tail_node_for_cpu(p, cpu)
 #define DEFINE_RAW_SPINLOCK(name) int name
@@ -184,6 +186,13 @@ static bool kd_mutex_trylock_fast(struct mutex *lock)
 	acquires++;
 	return true;
 }
+/* These resource cases select the retained spin protocol. Parking itself is
+ * exercised by the production parking fixture and real scheduler probe. */
+static const bool kd_mutex_blocking = false;
+static void init_waitqueue_head(wait_queue_head_t *w) { memset(w, 0, sizeof(*w)); }
+static void kd_mutex_wait_result_blocking(struct kd_mutex_node *n) { (void)n; CHECK(false); }
+static void kd_mutex_wait_gate_blocking(struct kd_mutex *g) { (void)g; CHECK(false); }
+static void kd_mutex_open_gate(struct kd_mutex *g) { smp_store_release(&g->locked, 0); }
 #include "mutex_resource_code.h"
 
 /* Equal table-sized strides force collisions using actual mutex addresses;

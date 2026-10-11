@@ -29,6 +29,9 @@ FULL_THREADS = [1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28, 32, 36]
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--mutex-wait-mode', choices=('spin', 'blocking'), default='spin',
+                   help='provider mutex policy; rwlock protocol is unchanged (regression comparison)')
+    p.add_argument('--mutex-spin-limit', type=int, default=4096)
     p.add_argument('--output', type=Path)
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
@@ -58,6 +61,7 @@ def parser():
 
 
 def make_plan(args):
+    require(0 <= getattr(args, 'mutex_spin_limit', 4096) <= 1048576, 'mutex spin limit must be 0..1048576')
     threads = FULL_THREADS if args.full_matrix else args.threads
     for values, name in ((threads, 'threads'), (args.backends, 'backends'), (args.workloads, 'workloads'),
                          (args.cachelines, 'cachelines'), (args.write_percent, 'write percentages')):
@@ -98,6 +102,8 @@ def make_plan(args):
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,
                 require_jit=args.require_jit and arm == 'kdlock' and percent > 0 and n > 1,
                 spin_entry_ratio_limit=args.spin_entry_ratio_limit if arm == 'kdlock' else None,
+                mutex_wait_mode=getattr(args, 'mutex_wait_mode', 'spin') if arm == 'kdlock' else 'not_applicable',
+                mutex_spin_limit=getattr(args, 'mutex_spin_limit', 1024) if arm == 'kdlock' else None,
                 numa_policy='on' if arm != 'native' else 'not_applicable', provider_ubsan='off',
                 delegation_batch_limit=1024 if arm != 'native' else None))
     return plan

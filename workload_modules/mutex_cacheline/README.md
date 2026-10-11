@@ -21,8 +21,9 @@ See [mutex implementation](../../docs/design/mutex_implementation.md) and
 Clients register TCLock workers after pinning/naming and before reporting ready.
 Context allocation and registration occur before measurement. After every
 worker joins, TCLock context drain may return EBUSY while an exiting task is
-still alive; the client retries outside timing. KD keeps its selected pinned
-waiter policy; TCLock supports parking. The target lock is never shared between
+still alive; the client retries outside timing. KD selects spin or blocking
+waiting through `--mutex-wait-mode`; both retain migration pins. TCLock supports
+parking. The target lock is never shared between
 these incompatible backend protocols.
 
 For a standalone Native build in the recovery guest:

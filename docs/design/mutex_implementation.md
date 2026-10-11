@@ -159,6 +159,7 @@ unmodelled native result.
 | Task routing record | RCU hash with 256 cacheline-aligned buckets in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); cached identities retain an atomic acquisition count and a `task_struct` ref; insertion/eviction use the bucket writer lock |
 | `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
 | Waiter stacks | Four 8 KiB stacks per possible CPU, allocated by [lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) with `vzalloc_node(..., cpu_to_node(cpu))` |
+| Blocking notifications | Four `rcuwait` slots per CPU, resident for the provider lifetime; each node retains its immutable slot pointer, independent of packet reuse |
 | Execution frames | Shared per-CPU context, up to eight frames; physical owner remains fixed through sleep/ACK; root borrows node packet until FULL detachment |
 | Batch state | Physical combiner's stack; retains current retirement flag, exact successor, bounded NUMA deferred chain, outer-release callback and image-slot identity |
 
@@ -285,8 +286,53 @@ fixtures check this contract independently of the caller's repeated restoration.
 
 ## Scope and evidence
 
-KD keeps pinned published waiters and bounded NUMA queue grouping. Stack
-allocation, request selection and physical Linux ownership have separate roles.
+### Selectable blocking policy
+
+`mutex_blocking=0` retains the original polling policy. `mutex_blocking=1`
+enables ordinary uninterruptible sleep after at most `mutex_spin_limit` PAUSE
+iterations (default 4096, permitted range 0–1048576). Zero requests immediate
+parking. Scheduler pressure is checked every 64 iterations. These module
+parameters are read-only after load so a published request/image cannot change
+its waiting contract. The public lock/unlock ABI is unchanged.
+
+[parking.inc](../../kernel_module/mutex/parking.inc) separates result waiters
+from gate waiters. Result waiters register in a persistent `rcuwait` slot, set
+`TASK_UNINTERRUPTIBLE`, recheck the result and schedule with preemption enabled.
+They retain migration pinning and their independently reserved stack. Completion
+publishes the aligned two-byte result and orders its wake check against the
+sleep-state barrier. Registration is cleared before node release. Late wakes use
+only the resident wake object, never a recycled packet. A wake of a later user of
+that slot is spurious; its condition loop checks its own result. The exact task
+acquisition reference and RCU-delayed task-cache eviction protect wake readers.
+
+The combiner buffers up to 16 persistent wake-slot pointers so short COMPLETE
+bodies share a store-to-wake barrier. It flushes before FULL/generic dispatch,
+before a native/ACK service can sleep, before early-release reacquisition and
+before batch exit. Native continuation and physical handoff wake immediately.
+Queue retirement and frame retirement still precede result publication; a wake
+does not transfer Linux ownership or release an acquisition reference. This
+bounded batching can add completion-to-wake delay; it is not a latency bound.
+
+Queue heads use bounded polling plus `wait_event` on the gate's private wait
+queue. Original-mutex release still precedes gate release. Its wake check has
+the matching barrier, preventing a head from sleeping through gate opening.
+The 24-byte wait queue fits the existing 192-byte shadow gate. Node size remains
+320 bytes; `completed/locked/native_resume` keep offsets 304/305/306.
+
+Blocking translation rejects any final image requiring origin-CPU GS storage,
+including generated guards and learned callees, because another task may use
+that CPU while the caller sleeps. Such bodies take the native path. Logical
+`current` remains a separately supplied task identity. Blocking mode does not
+add new interruptible/killable interfaces or a general rwsem/mmap implementation.
+
+The [comparison runner](../../bench/mutex_wait_compare/README.md) records both
+policies and scheduler observations. The
+[scheduler probe](../../tests/kernel/mutex/run_wait_selftest.py) checks actual
+sleep, same-CPU progress and exact drain; its constructed packets are separate
+from benchmark JIT evidence.
+
+KD retains migration pins, finite per-CPU reservations and bounded NUMA queue
+grouping. Stack allocation, request selection and physical ownership have separate roles.
 TCLock supports parking, but this port's fixed-affinity context contract does
 not validate arbitrary oversubscription. Both stack/context protocols require
 independently runnable dependencies and controlled drain.

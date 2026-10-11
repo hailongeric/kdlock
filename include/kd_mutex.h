@@ -18,11 +18,14 @@
 #define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
 
 #include "kd_regs.h"
+#include <linux/wait.h>
 
 struct kd_exec_frame;
 struct mutex;
+struct rcuwait;
 
 bool kd_mutex_check_idle(void);
+int kd_mutex_wait_selftest(void);
 
 /*
  * kd_mutex_node — per-waiter queue node.
@@ -30,7 +33,8 @@ bool kd_mutex_check_idle(void);
  * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
  * owns its shadow stack, so an executor acquiring a sleeping native mutex cannot
  * have its stack reused by another target task running on the same CPU.
- * A published delegation waiter keeps preemption disabled while polling.
+ * A published waiter stays migration-pinned; blocking mode can schedule on its
+ * reserved stack. Spin mode also keeps preemption disabled while polling.
  * The combiner feeds node->regs
  * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
  * inside the JIT sandbox.
@@ -53,6 +57,8 @@ struct kd_mutex_node {
 	int tail; /* encoded tail (cpu+idx)            */
 	int slot; /* reserved per-CPU slot index       */
 	int numa_node; /* immutable slot locality, set before source publication */
+	/* Independently resident notification object, never recycled with packet. */
+	struct rcuwait *wait;
 	/* The combiner writes IP/SP and virtual registers while the producer
 	 * polls locked. Sharing their cacheline makes every packet update fight
 	 * the polling CPU for ownership, especially across NUMA nodes. */
@@ -63,8 +69,13 @@ struct kd_mutex_node {
 	 * MINIMAL/COMPLETE bodies write only the first packet line. Cold FULL
 	 * handoff may share this line, but ordinary body writes never do. Keep
 	 * the five-line stride and isolate the producer's next pointer too. */
-	u8 completed;
-	u8 locked;
+	union {
+		u16 result; /* x86: low byte completed, high byte waiting */
+		struct {
+			u8 completed;
+			u8 locked;
+		};
+	};
 	bool native_resume;
 };
 
@@ -86,6 +97,9 @@ struct kd_mutex {
 	/* Exact probe count, independent of both queue publication and ownership.
 	 * Its enter/exit RMWs must not invalidate either of those cachelines. */
 	atomic_t waiter_count __attribute__((aligned(64)));
+	/* Only the queue head (or an unpublished overflow) waits here. Result
+	 * waiters use their own notification byte and never join this list. */
+	wait_queue_head_t gate_wait;
 };
 
 void kd_mutex_init(struct kd_mutex *lock);

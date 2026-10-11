@@ -20,6 +20,15 @@ def record(whole=10, peak=12, *, arm='kdlock', **changes):
 
 
 class ReportTests(unittest.TestCase):
+    def test_wait_policies_are_not_pooled(self):
+        rows = [record(mutex_wait_mode='spin', mutex_spin_limit=4096),
+                record(100, 120, mutex_wait_mode='blocking', mutex_spin_limit=4096),
+                record(200, 240, mutex_wait_mode='blocking', mutex_spin_limit=0)]
+        self.assertEqual(len(summarize(rows)), 3)
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(ValueError, 'distinct KD waiting policies'):
+                write_report(Path(d), rows)
+
     def test_failures_unrun_and_undrained_never_improve_score(self):
         rows = [record(), record(20, 25, jit_bodies=0),
                 record(1000, 2000, execution_status='DATA_ERROR'),

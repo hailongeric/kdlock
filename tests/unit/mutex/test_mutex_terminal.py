@@ -44,6 +44,7 @@ def main():
             'unbounded-local-cohort': (helpers, loop.replace('counter >= 128', 'false')),
             # Each combiner return must establish the normal gate value
             # independently, including source refusal before caller cleanup.
+            'skip-final-wakes': (helpers, loop.replace('kd_mutex_flush_wakes(batch.wake, &batch.wake_count);', '')),
             'skip-refusal-gate': (helpers, loop.replace('kd_mutex_set_locked(lock);', '', 1)),
             'skip-normal-gate': (helpers, ''.join(loop.rsplit('kd_mutex_set_locked(lock);', 1))),
         }

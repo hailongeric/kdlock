@@ -32,6 +32,7 @@ def main():
             'READ_ONCE(per_cpu(kd_mutex_reserved_nodes, cpu))', 'false'),
         'ignores-slot-lifetime': (
             'READ_ONCE(per_cpu(kd_mutex_shadows, cpu).node_slots)', 'false'),
+        'ignores-registered-sleeper': ('if (rcuwait_active(', 'if (false && rcuwait_active('),
         'drops-exit-balance': (
             'this_cpu_dec_return(kd_mutex_active_waiters)',
             'this_cpu_read(kd_mutex_active_waiters)'),

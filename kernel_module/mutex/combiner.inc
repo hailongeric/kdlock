@@ -21,6 +21,8 @@ struct kd_mutex_batch {
 	unsigned int deferred_count;
 	unsigned int scan_left;
 	int numa_node;
+	struct rcuwait *wake[16];
+	unsigned int wake_count;
 };
 
 /* Only detach a fully linked node. Its successor remains the published tail
@@ -182,7 +184,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	if (ret)
 		return ret;
 	if (batch->next)
-		smp_store_release(&batch->next->locked, 0);
+		kd_mutex_publish_result(batch->next, false);
 	return 0;
 }
 
@@ -335,8 +337,10 @@ prepared:
 		}
 		/* FULL, or a checked pre-entry refusal: the pending return is
 		 * consumed once by the existing dispatcher, never re-entered. */
+		kd_mutex_flush_wakes(batch->wake, &batch->wake_count);
 		ret_flag = kd_exe_mutex_batch_resume(exe, &call);
 	} else {
+		kd_mutex_flush_wakes(batch->wake, &batch->wake_count);
 		ret_flag = kd_exe_on_call_hl_entry(exe, regs, frame->entry_ip,
 						 frame->outer_lock_addr);
 	}
@@ -358,7 +362,7 @@ prepared:
 		 * Finish every possible predecessor link before that publication. */
 		kd_mutex_batch_retire_current(lock, batch);
 		WRITE_ONCE(curr_node->native_resume, true);
-		smp_store_release(&curr_node->locked, 0);
+		kd_mutex_publish_result(curr_node, false);
 		/* Neither this frame nor its combiner may touch curr_node again. */
 		BUG_ON(kd_exec_native_wait(frame));
 		kd_exe_native_handoff_timing_end(true, handoff_start);
@@ -453,7 +457,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		this_cpu_inc(kd_mutex_handoff_count);
 		kd_mutex_set_locked(lock);
 		if (curr_node)
-			smp_store_release(&curr_node->locked, 0);
+			kd_mutex_publish_result(curr_node, false);
 		return;
 	}
 
@@ -506,10 +510,11 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		if (exe_flag != KD_EXE_NATIVE_DONE) {
 			kd_mutex_batch_retire_current(lock, &batch);
 			this_cpu_inc(kd_mutex_jit_success_count);
-			kd_mutex_clear_locked_set_completed(curr_node);
+			kd_mutex_defer_result(curr_node, batch.wake, &batch.wake_count);
 		}
 
 		if (batch.outer.released) {
+			kd_mutex_flush_wakes(batch.wake, &batch.wake_count);
 			/* A's queue already runs independently. B and the frame are
 			 * now finished; reacquire A for our own original request.
 			 * Do not inspect or wake the old successor a second time. */
@@ -533,9 +538,10 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	 * An empty retired tail needs no wake; future heads already poll the gate.
 	 * Keep the real mutex and gate for this physical owner's original body. */
 	next_node = kd_mutex_batch_rejoin(&batch, next_node);
+	kd_mutex_flush_wakes(batch.wake, &batch.wake_count);
 	kd_mutex_set_locked(lock);
 	if (next_node)
-		smp_store_release(&next_node->locked, 0);
+		kd_mutex_publish_result(next_node, false);
 	/* Includes synchronous native continuation and final physical owner ACK. */
 	kd_source_frame_put();
 }

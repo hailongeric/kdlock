@@ -25,6 +25,7 @@
 #include <linux/topology.h>
 #include <linux/errno.h>
 #include <linux/mutex.h>
+#include <linux/rcuwait.h>
 #include <asm/asm.h>
 #include <linux/objtool.h>
 
@@ -60,6 +61,17 @@
  * Constants
  * -------------------------------------------------------------------------- */
 #define KD_MUTEX_WAITER_PROCESSED 1
+#define KD_MUTEX_WAITING 1
+
+/* Fixed for one provider lifetime: changing this under published nodes or
+ * generated code would change their wakeup/context contract. Spin is retained
+ * as an explicit baseline. A limit is PAUSE iterations, not a time promise. */
+static bool kd_mutex_blocking __read_mostly;
+module_param_named(mutex_blocking, kd_mutex_blocking, bool, 0444);
+MODULE_PARM_DESC(mutex_blocking, "Bound mutex polling and sleep until result/gate wakeup");
+static unsigned int kd_mutex_spin_limit __read_mostly = 4096;
+module_param_named(mutex_spin_limit, kd_mutex_spin_limit, uint, 0444);
+MODULE_PARM_DESC(mutex_spin_limit, "Maximum PAUSE iterations before parking (0 sleeps immediately)");
 
 #define _Q_LOCKED_COMBINER_VAL 3
 
@@ -88,6 +100,23 @@ KD_MUTEX_STAT(kd_mutex_origin_acquires);
 KD_MUTEX_STAT(kd_mutex_origin_releases);
 KD_MUTEX_STAT(kd_mutex_nested_unlock_count);
 KD_MUTEX_STAT(kd_mutex_nested_abort_release_count);
+KD_MUTEX_STAT(kd_mutex_result_parks);
+KD_MUTEX_STAT(kd_mutex_result_wakes);
+KD_MUTEX_STAT(kd_mutex_gate_parks);
+
+static int kd_mutex_wait_stats_get(char *buffer, const struct kernel_param *kp)
+{
+	(void)kp;
+	return scnprintf(buffer, PAGE_SIZE, "%llu %llu %llu\n",
+		(unsigned long long)KD_MUTEX_STAT_READ(kd_mutex_result_parks),
+		(unsigned long long)KD_MUTEX_STAT_READ(kd_mutex_result_wakes),
+		(unsigned long long)KD_MUTEX_STAT_READ(kd_mutex_gate_parks));
+}
+static const struct kernel_param_ops kd_mutex_wait_stats_ops = {
+	.get = kd_mutex_wait_stats_get,
+};
+module_param_cb(mutex_wait_stats, &kd_mutex_wait_stats_ops, NULL, 0444);
+MODULE_PARM_DESC(mutex_wait_stats, "Observations: result schedule calls, successful wakes, gate wait calls");
 /* Each reservation/waiter enters and leaves on its migration-pinned origin CPU,
  * with preemption disabled at both updates. Unlike observational totals, drain
  * checks every exact balance separately; values on different CPUs cannot cancel.
@@ -113,6 +142,9 @@ struct kd_mutex_cpu_state {
 
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
+/* Wake slots have provider lifetime, independently of node packet reuse.
+ * finish_rcuwait clears its task before the reservation can be reused. */
+static DEFINE_PER_CPU_SHARED_ALIGNED(struct rcuwait, kd_mutex_waits[KD_MUTEX_MAX_NODES]);
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows);
 
 #include "mutex/queue.inc"
@@ -195,9 +227,9 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		return;
 	}
 
-	/* Published waiters keep preemption disabled until completion or native
-	 * handoff: their origin GS storage must not be reused by another task.
-	 * Migration stays pinned when an executor acquires a real sleeping mutex. */
+	/* Slot identity and exact balances stay on the origin CPU across sleep.
+	 * Blocking images cannot access origin-CPU GS storage; the translator
+	 * refuses that context before publication. Logical current is independent. */
 	migrate_disable();
 	preempt_disable();
 	if (unlikely(kd_mutex_has_local_predecessor(lock))) {
@@ -316,7 +348,7 @@ _kd_mutex_unlock_checked(struct kd_mutex *lock)
 		kd_origin_mutex_unlock((struct mutex *)lock->origin_mutex_addr,
 				       _RET_IP_);
 		this_cpu_inc(kd_mutex_origin_releases);
-		smp_store_release(&lock->locked, 0);
+		kd_mutex_open_gate(lock);
 		return 0;
 	}
 	/* Should not reach here in JIT sandbox model */
@@ -329,3 +361,7 @@ _kd_mutex_unlock(struct kd_mutex *lock)
 {
 	_kd_mutex_unlock_checked(lock);
 }
+
+#ifdef KDLOCK_SELFTEST
+#include "../tests/kernel/mutex/mutex_wait_selftest.c"
+#endif

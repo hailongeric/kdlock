@@ -14,6 +14,7 @@ void kd_mutex_init(struct kd_mutex *lock)
 	lock->physical_owner = NULL;
 	WRITE_ONCE(lock->origin_mutex_addr, 0);
 	atomic_set(&lock->waiter_count, 0);
+	init_waitqueue_head(&lock->gate_wait);
 }
 
 static void kd_mutex_free_percpu_stacks(void)
@@ -42,10 +43,14 @@ int kd_mutex_init_percpu(void)
 {
 	int i, j;
 
+	if (kd_mutex_spin_limit > 1048576)
+		return -EINVAL;
+
 	/* Per-CPU alignment alone does not isolate the four array elements. */
 	BUILD_BUG_ON(__alignof__(struct kd_mutex_node) < L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_mutex_node) != 5 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != 304);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, result) != 304);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != 305);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_mutex) != 3 * L1_CACHE_BYTES);
@@ -77,6 +82,9 @@ int kd_mutex_init_percpu(void)
 		per_cpu(kd_mutex_nested_unlock_count, i) = 0;
 		per_cpu(kd_mutex_nested_abort_release_count, i) = 0;
 		per_cpu(kd_mutex_max_waiters, i) = 0;
+		per_cpu(kd_mutex_result_parks, i) = 0;
+		per_cpu(kd_mutex_result_wakes, i) = 0;
+		per_cpu(kd_mutex_gate_parks, i) = 0;
 
 		memset(per_cpu_ptr(&kd_mutex_nodes[0], i), 0,
 		       sizeof(struct kd_mutex_node) * KD_MUTEX_MAX_NODES);
@@ -89,6 +97,8 @@ int kd_mutex_init_percpu(void)
 			void *node_stack = vzalloc_node(KD_MUTEX_SHADOW_STACK_SIZE, cpu_to_node(i));
 
 			node->slot = j;
+			node->wait = per_cpu_ptr(&kd_mutex_waits[j], i);
+			rcuwait_init(node->wait);
 			node->numa_node = cpu_to_node(i);
 			node->shadow_stack_base = node_stack;
 			if (!node_stack) {
@@ -118,10 +128,15 @@ bool kd_mutex_check_idle(void)
 	 * a reserved sleeping executor or an imbalance on any CPU keeps us busy.
 	 * The slot bitmap independently covers the reservation's full lifetime. */
 	for_each_possible_cpu(cpu) {
+		int slot;
+
 		if (READ_ONCE(per_cpu(kd_mutex_active_waiters, cpu)) ||
 		    READ_ONCE(per_cpu(kd_mutex_reserved_nodes, cpu)) ||
 		    READ_ONCE(per_cpu(kd_mutex_shadows, cpu).node_slots))
 			return false;
+		for (slot = 0; slot < KD_MUTEX_MAX_NODES; slot++)
+			if (rcuwait_active(per_cpu_ptr(&kd_mutex_waits[slot], cpu)))
+				return false;
 	}
 	return true;
 }
@@ -168,6 +183,11 @@ void kd_mutex_exit(void)
 		reserved_nodes,
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_origin_acquires),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_origin_releases));
+	KD_PR_INFO("kd_mutex waiting: blocking=%u spin_limit=%u result_parks=%lld result_wakes=%lld gate_parks=%lld\n",
+		kd_mutex_blocking, kd_mutex_spin_limit,
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_result_parks),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_result_wakes),
+		(long long)KD_MUTEX_STAT_READ(kd_mutex_gate_parks));
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);

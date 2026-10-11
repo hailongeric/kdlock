@@ -156,6 +156,8 @@ def make_plan(args):
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
                 kd_provider_ubsan=provider_ubsan if backend == 'kdlock' else 'not_applicable',
+                mutex_wait_mode=getattr(args, 'mutex_wait_mode', 'spin') if backend == 'kdlock' else 'not_applicable',
+                mutex_spin_limit=getattr(args, 'mutex_spin_limit', 1024) if backend == 'kdlock' else None,
                 numa_policy=numa if backend != 'native' else 'not_applicable',
                 delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
                 pmu=getattr(args, 'pmu', False),
@@ -228,10 +230,11 @@ def report(out):
                            r.get('delegation_batch_limit', 'unrecorded'),
                            r.get('spin_prefetch', 'unrecorded'),
                            r.get('kd_provider_ubsan', 'unrecorded'),
+                           r.get('mutex_wait_mode', 'spin'), r.get('mutex_spin_limit', 1024),
                            tuple(r.get('cpus', range(r['threads'])))), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (lock_kind, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, cpus), rows in groups.items():
+    for (lock_kind, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, mutex_wait_mode, mutex_spin_limit, cpus), rows in groups.items():
         good = [r for r in rows if valid(r)]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm, lock_kind=lock_kind,
                    workload=rows[0].get('workload', 'cacheline'),
@@ -244,6 +247,7 @@ def report(out):
                    spin_delegate=delegate,
                    numa_policy=numa, delegation_batch_limit=batch, spin_prefetch=prefetch,
                    kd_provider_ubsan=provider_ubsan,
+                   mutex_wait_mode=mutex_wait_mode, mutex_spin_limit=mutex_spin_limit,
                    cpus=list(cpus), cpu_nodes=rows[0].get('cpu_nodes'),
                    **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
@@ -304,6 +308,8 @@ def execute_session(session, keep_going_no_jit=False):
 
 def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--mutex-wait-mode', choices=('spin', 'blocking'), default='spin')
+    p.add_argument('--mutex-spin-limit', type=int, default=4096)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
@@ -351,6 +357,7 @@ def main(lock_kind='spin'):
                         '0 bypasses only ratio)')
     args = p.parse_args()
     args.lock_kind = lock_kind
+    require(0 <= args.mutex_spin_limit <= 1048576, 'mutex spin limit must be 0..1048576')
     require(lock_kind in ('spin', 'mutex'), 'unknown lock kind')
     require(lock_kind != 'mutex' or args.scenario == 'plain',
             'mutex benchmark supports ordinary operations only')

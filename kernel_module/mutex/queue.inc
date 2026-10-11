@@ -34,14 +34,15 @@ static inline u32 kd_mutex_xchg_tail(struct kd_mutex *lock, u32 tail)
 	return xchg(&lock->tail, tail);
 }
 
+#include "parking.inc"
+
 /* --------------------------------------------------------------------------
  * Small helpers
  * -------------------------------------------------------------------------- */
 static __always_inline void
 kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
-	WRITE_ONCE(node->completed, KD_MUTEX_WAITER_PROCESSED);
-	smp_store_release(&node->locked, 0);
+	kd_mutex_publish_result(node, true);
 }
 
 static __always_inline void kd_mutex_set_locked(struct kd_mutex *lock)
@@ -94,6 +95,10 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock)
  * a polling hint and does not supply that ordering or disable interrupts. */
 static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 {
+	if (kd_mutex_blocking) {
+		kd_mutex_wait_result_blocking(node);
+		return;
+	}
 	while (smp_load_acquire(&node->locked))
 		cpu_relax();
 }
@@ -110,8 +115,13 @@ static void kd_mutex_claim_origin(struct kd_mutex *lock)
 static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
 {
 	for (;;) {
+		if (kd_mutex_blocking)
+			kd_mutex_wait_gate_blocking(lock);
 		while (smp_load_acquire(&lock->locked))
-			cpu_relax();
+			if (kd_mutex_blocking)
+				kd_mutex_wait_gate_blocking(lock);
+			else
+				cpu_relax();
 		if (cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0) {
 			/* This request now owns the gate and cannot be delegated.
 			 * Only the real mutex owner may execute/release its body. */
@@ -126,7 +136,7 @@ static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
 
 /* Reservation is serialized by preemption disable on this migration-pinned
  * CPU. An executor can later sleep acquiring the real mutex; its reserved
- * stack must survive that sleep. Published delegation waiters never schedule. */
+ * stack must survive that sleep, including result parking in blocking mode. */
 /* A reserved local predecessor may have enabled preemption while acquiring
  * the original mutex. Publishing another non-scheduling waiter on its CPU
  * would prevent that predecessor from ever resuming. Refuse before publication;

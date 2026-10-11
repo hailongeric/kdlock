@@ -102,6 +102,9 @@ def main():
             "production": code,
             "alert-regression": code.replace("printk(KERN_INFO ", "printk(KERN_ALERT "),
             "disabled-trace": code.replace("#define DSM_DEBUG 1", "#undef DSM_DEBUG"),
+            "sleep-before-wake-flush": code.replace(
+                "kd_mutex_flush_wakes(batch->wake, &batch->wake_count);\n\t\tret_flag = kd_exe_on_call_hl_entry",
+                "ret_flag = kd_exe_on_call_hl_entry"),
         }
         for name, candidate in candidates.items():
             (path / "mutex_outer_production.h").write_text(candidate)

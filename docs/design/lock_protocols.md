@@ -19,7 +19,7 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
-| KD mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Published KD waiters poll pinned; physical owners may sleep | Original Linux mutex callers remain excluded by that same mutex |
+| KD mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Selectable pinned polling or bounded spin followed by blocking; migration stays pinned | Original Linux mutex callers remain excluded by that same mutex |
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
@@ -182,8 +182,10 @@ their void ABI and are also used by translated nested control calls.
 
 An eligible acquisition holds an exact task routing reference, finds the
 original-address shadow, and reserves a CPU-local node/stack. A delegation
-follower keeps migration/preemption disabled, moves off its caller stack and
-polls. A queue head first takes the private gate, then acquires the original
+follower retains its migration pin and moves off its caller stack. Spin mode
+polls with preemption disabled; blocking mode uses bounded polling then an RCU
+wait slot and uninterruptible sleep. Blocking images refuse origin-CPU GS storage.
+A queue head first takes the private gate, then acquires the original
 Linux mutex as `current`; only that physical owner executes/releases bodies.
 It may enable preemption while sleeping for the original mutex or nested B,
 while retaining its CPU reservation and frame ownership.

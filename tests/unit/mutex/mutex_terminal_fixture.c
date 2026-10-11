@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+typedef struct { unsigned long opaque[3]; } wait_queue_head_t;
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -36,6 +37,7 @@ static struct kd_mutex lock;
 static struct kd_mutex_node nodes[1030];
 static const int kd_mutex_batch_size=1024;
 static unsigned long kd_mutex_combiner_count,kd_mutex_handoff_count,kd_mutex_jit_success_count;
+static unsigned int wake_pending;
 static unsigned int leases,lease_gets,lease_puts,calls,completed,wakes,reclaims,polls,cas_calls;
 static bool source_open,delayed_link,new_head_after_cas,new_head_pending;
 static int refusal_at,native_at,early_at;
@@ -70,6 +72,12 @@ static void publish(u8 *p,int value)
     *p=value;wakes++;
 }
 #define smp_store_release(p,v) publish((p),(v))
+static void kd_mutex_publish_result(struct kd_mutex_node *n, bool completed) { n->completed=completed; smp_store_release(&n->locked, 0); }
+static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node);
+static void kd_mutex_flush_wakes(struct rcuwait **wake, unsigned int *count)
+{ (void)wake; CHECK(wake_pending >= *count); wake_pending -= *count; *count=0; }
+static void kd_mutex_defer_result(struct kd_mutex_node *node, struct rcuwait **wake, unsigned int *count)
+{ (void)wake; kd_mutex_clear_locked_set_completed(node); (*count)++; wake_pending++; if (*count==16) kd_mutex_flush_wakes(wake,count); }
 static void kd_mutex_set_locked(struct kd_mutex *p) { p->locked=1; }
 static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
@@ -131,6 +139,7 @@ static void reset(unsigned int count)
 }
 static void finish(void)
 {
+    CHECK(!wake_pending);
     CHECK(!leases && lease_gets==lease_puts && lock.physical_owner==current);
     CHECK(lock.locked==1);
 }

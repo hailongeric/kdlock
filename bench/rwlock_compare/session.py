@@ -58,6 +58,8 @@ class RWSession(Session):
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', self.binaries['kdlock'], 'bench_quiet=1', 'jit_timing=0',
                       'hotlock_stats=1', 'target_process=rb_worker', 'spin_prefetch=2',
+                      'mutex_blocking=' + str(int(self.record.get('mutex_wait_mode') == 'blocking')),
+                      'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 1024)),
                       f'spin_entry_ratio_limit={self.record["spin_entry_ratio_limit"]}',
                       f'spin_delegate={int(self.record["delegate"])}'], 'load-kdlock.log')
             self.loaded_kd = True
@@ -78,6 +80,8 @@ class RWSession(Session):
             (KD_PARAMS / 'bench_lock_addr').write_text(str(layout['gate_addr']))
             self.record['parameters'] = params = parameters()
             expected = dict(bench_lock_addr=layout['gate_addr'], bench_quiet=1, jit_timing=0,
+                            mutex_blocking=int(self.record.get('mutex_wait_mode') == 'blocking'),
+                            mutex_spin_limit=self.record.get('mutex_spin_limit', 1024),
                             spin_entry_ratio_limit=self.record['spin_entry_ratio_limit'],
                             spin_delegate=int(self.record['delegate']), spin_prefetch=2, hotlock_stats=1)
             def number(value):

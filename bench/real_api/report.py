@@ -14,12 +14,15 @@ PARAMETER_UNITS = {'xattr': 'attributes', 'ofd': 'ranges', 'setfd': 'FD stride',
 def summarize(records):
     groups = {}
     for r in records:
-        key = tuple(r[k] for k in ('kind', 'query', 'entries', 'value_size', 'threads', 'arm'))
+        key = tuple(r[k] for k in ('kind', 'query', 'entries', 'value_size', 'threads', 'arm')) + (
+            r.get('mutex_wait_mode', 'spin') if r['arm'] == 'kdlock' else 'not_applicable',
+            r.get('mutex_spin_limit', 1024) if r['arm'] == 'kdlock' else 0)
         groups.setdefault(key, []).append(r)
     rows = []
     for key, runs in sorted(groups.items()):
         good = [r for r in runs if r['execution_status'] == 'OK' and r.get('drained')]
-        row = dict(zip(('kind', 'query', 'entries', 'value_size', 'threads', 'arm'), key))
+        row = dict(zip(('kind', 'query', 'entries', 'value_size', 'threads', 'arm',
+                        'mutex_wait_mode', 'mutex_spin_limit'), key))
         row.update(planned=len(runs), accepted=len(good),
                    failed=sum(r['execution_status'] != 'NOT_RUN' and
                               (r['execution_status'] != 'OK' or not r.get('drained')) for r in runs),
@@ -53,6 +56,9 @@ def summarize(records):
 
 def write_report(out, records):
     rows = summarize(records)
+    policies = {(r['mutex_wait_mode'], r['mutex_spin_limit']) for r in rows if r['arm'] == 'kdlock'}
+    if len(policies) > 1:
+        raise ValueError('use the mutex_wait_compare exporter to compare distinct KD waiting policies')
     out.mkdir(parents=True, exist_ok=True)
     (out/'summary.json').write_text(json.dumps(rows, indent=2)+'\n')
     if rows:
@@ -103,6 +109,9 @@ def write_report(out, records):
              'KD JIT counts are returned-body observations over the measured phase; UTS shares use writes as the denominator. '
              'A published translation alone is not a JIT execution. Throughput is not acquisition latency. '
              'The CPU-time export helps distinguish throughput gains from processor cost.', '']
+    if policies:
+        mode, limit = next(iter(policies))
+        text += [f'KD mutex policy: **{mode}**, PAUSE limit **{limit}** (ignored in spin mode).', '']
     (out/'README.md').write_text('\n'.join(text))
     return rows
 

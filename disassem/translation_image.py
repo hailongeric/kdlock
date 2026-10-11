@@ -37,6 +37,18 @@ def wrapper_context_inputs(assembly):
             bool(re.search(r'\b(?:Stack_TASK|Stack_RCT|PT_TASK)\b', code)))
 
 
+def blocking_mutex_context_error(assembly, blocking):
+    """A sleeping origin task cannot serialize accesses to its CPU's GS data.
+
+    Inspect the entire lowered image, including entry guards and learned calls.
+    Logical current uses the separate task input and remains supported. Unknown
+    assembly conservatively requires GS, as for wrapper input selection.
+    """
+    if blocking and wrapper_context_inputs(assembly)[0]:
+        return "blocking mutex cannot delegate origin-CPU GS storage"
+    return None
+
+
 def write_entry_dispatch(
     f, entry, block_dict, continuation_targets=None, *, body_witness=False,
 ):

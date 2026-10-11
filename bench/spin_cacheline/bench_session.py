@@ -20,6 +20,12 @@ from bench_runtime import (
 
 
 class Session:
+    @staticmethod
+    def mutex_wait_stats():
+        values = list(map(int, Path('/sys/module/kdlock_km/parameters/mutex_wait_stats').read_text().split()))
+        require(len(values) == 3 and all(v >= 0 for v in values), 'invalid mutex wait observations')
+        return dict(zip(('result_schedule_calls', 'result_wakes', 'gate_wait_calls'), values))
+
     def __init__(self, out, spec, *, workload_module=None):
         self.workload_module = workload_module or WORKLOAD / "spin_cacheline.ko"
         self.path = out / spec["name"]
@@ -163,6 +169,7 @@ class Session:
         """Count returned JIT bodies only across the joined measurement batch."""
         if self.loaded_kd:
             before = self.publication()
+            self.record['mutex_wait_before'] = self.mutex_wait_stats()
             require(before["source"]["writers"] == 0, "writers before measurement", "UNDRAINED")
             count_path = Path("/sys/module/kdlock_km/parameters/bench_jit_bodies")
             self.record["jit_before"] = int(count_path.read_text())
@@ -172,6 +179,10 @@ class Session:
         self.record["measurement"] = self.phase("measure", self.record["iterations"])
         if self.loaded_kd:
             self.record["jit_after"] = int(count_path.read_text())
+            self.record['mutex_wait_after'] = self.mutex_wait_stats()
+            self.record['mutex_wait_delta'] = {
+                key: value - self.record['mutex_wait_before'][key]
+                for key, value in self.record['mutex_wait_after'].items()}
             after = self.publication()
             self.record["published_after"] = after
             require(before == after, "publication changed during measurement")

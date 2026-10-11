@@ -50,6 +50,8 @@ def check_kd_parameters(params, record, lock_addr):
             int(params['spin_entry_ratio_limit']) == record['spin_entry_ratio_limit'] and
             int(params['spin_prefetch']) == record['spin_prefetch'] and
             'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
+            params.get('mutex_blocking', 'N') == ('Y' if record.get('mutex_wait_mode') == 'blocking' else 'N') and
+            int(params.get('mutex_spin_limit', 1024)) == record.get('mutex_spin_limit', 1024) and
             params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
             'kdlock observation parameters differ')
 
@@ -115,6 +117,8 @@ class BackendSession(Session):
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
                       'target_process=sc_worker',
+                      'mutex_blocking=' + str(int(self.record.get('mutex_wait_mode') == 'blocking')),
+                      'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 1024)),
                       'spin_entry_ratio_limit=' + str(self.record['spin_entry_ratio_limit']),
                       'spin_prefetch=' + str(self.record['spin_prefetch']),
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],

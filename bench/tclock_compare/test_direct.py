@@ -397,6 +397,9 @@ class DirectTests(unittest.TestCase):
                               hotlock_mode='adaptive', scenario='plain')
         session.loaded_kd = True
         session.save = Mock()
+        session.mutex_wait_stats = Mock(side_effect=[
+            dict(result_schedule_calls=10, result_wakes=7, gate_wait_calls=2),
+            dict(result_schedule_calls=14, result_wakes=9, gate_wait_calls=3)])
         events, counts = [], iter((700, 705))  # 700 bodies already returned in warmup.
 
         def counter():
@@ -420,6 +423,8 @@ class DirectTests(unittest.TestCase):
         self.assertEqual(session.record['jit_bodies'], 5)
         self.assertEqual(session.record['jit_share'], 5/51)
         self.assertEqual(session.record['measurement']['completed'], 51)
+        self.assertEqual(session.record['mutex_wait_delta'],
+                         dict(result_schedule_calls=4, result_wakes=2, gate_wait_calls=1))
 
     def test_functional_report_has_no_performance_scores(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct { unsigned long opaque[3]; } wait_queue_head_t;
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -47,7 +48,7 @@ static unsigned int routine_traces;
 static int preempt = 1;
 static bool other_holds, terminal;
 static int kd_mutex_batch_size = 16;
-static unsigned int queue_finishes;
+static unsigned int queue_finishes, wake_flushes;
 static unsigned int handoff_starts, handoff_ends;
 
 /* CPU appears only in diagnostics; this fixture does not model scheduling. */
@@ -199,11 +200,20 @@ static bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 {
 	return lock->owner == task;
 }
+static const bool kd_mutex_blocking = false;
+static void kd_mutex_wait_gate_blocking(struct kd_mutex *g) { (void)g; CHECK(false); }
+static void kd_mutex_open_gate(struct kd_mutex *g) { smp_store_release(&g->locked, 0); }
+static void kd_mutex_publish_result(struct kd_mutex_node *n, bool completed) { n->completed=completed; smp_store_release(&n->locked, 0); }
 static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
 	node->completed = 1;
 	smp_store_release(&node->locked, 0);
 }
+static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node);
+static void kd_mutex_flush_wakes(struct rcuwait **wake, unsigned int *count)
+{ (void)wake; *count=0; wake_flushes++; }
+static void kd_mutex_defer_result(struct kd_mutex_node *node, struct rcuwait **wake, unsigned int *count)
+{ (void)wake; (void)count; kd_mutex_clear_locked_set_completed(node); }
 static void kd_mutex_set_locked(struct kd_mutex *lock)
 {
 	smp_store_release(&lock->locked, _Q_LOCKED_VAL);
@@ -329,6 +339,7 @@ static int kd_exe_on_call_hl_entry(struct kd_exe_info *exe,
 				   unsigned long lock)
 {
 	CHECK(exe == &ready_entry);
+	CHECK(wake_flushes > 0);
 	CHECK(regs == &active.regs && ip == 0x800 && lock == (unsigned long)&a);
 	scripts++;
 	active.executed = true;
@@ -405,6 +416,7 @@ int main(void)
 		request.regs.sp = (unsigned long)stack;
 		request.queued_at_ns = 50;
 		queue_finishes = 0;
+		wake_flushes = 0;
 		handoff_starts = handoff_ends = 0;
 		request.gsbase = 1;
 		request.task_struct_ptr = &waiter;

@@ -42,7 +42,10 @@ Known failures are still open:
 Keep the two-word wrapper ABI, separate backend identities, original mutex owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
-change its kernel. Published KD waiters remain pinned polling.
+change its kernel. Mutex spin mode retains pinned polling; the selectable blocking
+mode permits sleep with migration pinned and stricter GS admission. Its new
+scheduler/JIT evidence does not retroactively establish a pass for historical
+oversubscription failures.
 
 Userspace/futex, rwsem, other architectures and oversubscription redesign are outside
 this phase. Basic plus directly affected checks are the default; full suites need

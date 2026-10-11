@@ -71,6 +71,16 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | `spin_entry_ratio_limit` | 2; 0 disables only the ratio filter |
 | `hotlock_stats` | Optional final approximate observation totals |
 | `target_process` | Task comm eligible for direct mutex delegation |
+| `mutex_blocking` | 0; immutable for one load. Set to 1 for bounded polling followed by uninterruptible sleep |
+| `mutex_spin_limit` | 4096 PAUSE iterations in blocking mode; 0 parks immediately, maximum 1048576 |
+| `mutex_wait_stats` | Read-only observations: result schedule calls, successful wakes, gate wait calls |
+
+For blocking mutexes, load with `insmod kdlock_km.ko mutex_blocking=1`.
+The original Linux mutex retains its real owner. Published waiters retain their
+reserved stack and migration pin while sleeping; translations that require
+origin-CPU GS storage are refused in this mode. Spin remains the default for
+compatibility. See the [policy comparison](../bench/mutex_wait_compare/README.md)
+for matching benchmark commands and the implementation guide for wake ordering.
 
 [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) owns full heat rules;
 [spin](../docs/design/spin_implementation.md) owns layout/prefetch/batch details;

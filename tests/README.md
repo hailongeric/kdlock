@@ -34,6 +34,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
+| Mutex blocking/result wakeup | `mutex/test_mutex_parking.py`, `test_mutex_balances.py`, `test_mutex_wait_clobber.py`; [live scheduler probe](kernel/mutex/run_wait_selftest.py) |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
 | Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py` |
@@ -94,6 +95,13 @@ active overflow, allocation failure and nested references.
 Use `--cpus 0 32 33` for the current guest's cross-NUMA probe; its
 default remains three distinct local CPUs. Final drain requires zero active
 task membership after all workers and ACKs finish.
+
+The [mutex wait probe](kernel/mutex/run_wait_selftest.py) tests immediate parking
+and spin limits of 1,024 and 4,096. It observes real result/gate sleepers, runs
+other work on the parked task's CPU, exercises 3,072 result publications and
+checks exact drain. These constructed packets execute no JIT bodies; the
+[policy benchmark](../bench/mutex_wait_compare/README.md) supplies that evidence.
+Use `--mutex-wait-mode blocking` with the task/ACK probe to test the same policy.
 
 ## Recent verification and historical evidence
 

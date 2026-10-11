@@ -93,6 +93,9 @@ static int __init kdlock_km_init(void)
 	ret = kd_mutex_task_selftest();
 	if (ret)
 		goto err_mutex;
+	ret = kd_mutex_wait_selftest();
+	if (ret)
+		goto err_mutex;
 #endif
 
 	KD_PR_INFO("kd kernel module init: direct spin/mutex APIs; global hooks disabled\n");
