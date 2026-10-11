@@ -38,7 +38,14 @@ static void kd_mutex_park_result(struct kd_mutex_node *node)
 			break;
 		this_cpu_inc(kd_mutex_result_parks);
 		preempt_enable();
-		schedule();
+		/* Completion wakes can be batched. A later translated body may
+		 * poll data produced by an already completed caller without making
+		 * a FULL service call. Recheck on the next tick even if that body
+		 * has not returned to flush its predecessor's wake. This also
+		 * bounds dependence on an executor delayed between publication
+		 * and notification. The ordinary wake path can end this sleep
+		 * sooner; keep the state set before the condition read above. */
+		schedule_timeout(1);
 		preempt_disable();
 	}
 	/* Clear registration before slot release. The acquisition's task ref

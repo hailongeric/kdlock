@@ -20,6 +20,8 @@ static bool kd_mutex_blocking = true;
 static unsigned int kd_mutex_spin_limit;
 static unsigned int kd_mutex_result_parks, kd_mutex_result_wakes, kd_mutex_gate_parks;
 static int preempt = 1, schedules, wakes, mode, resched, pauses;
+static struct rcuwait *deferred[16];
+static unsigned int deferred_count;
 #define READ_ONCE(x) (x)
 #define WRITE_ONCE(x,v) ((x)=(v))
 #define smp_load_acquire(p) __atomic_load_n(p, __ATOMIC_ACQUIRE)
@@ -31,7 +33,7 @@ static void preempt_enable(void) { assert(preempt==1); preempt--; }
 static void preempt_disable(void) { assert(!preempt); preempt++; }
 static bool need_resched(void) { return resched; }
 static void cpu_relax(void) { pauses++; if (mode==4 && pauses==2) probe_node.locked=0; }
-static void schedule(void);
+static long schedule_timeout(long timeout);
 static void prepare_to_rcuwait(struct rcuwait *w);
 static void set_current_state(int state);
 static void finish_rcuwait(struct rcuwait *w) {
@@ -57,14 +59,23 @@ static void set_current_state(int state) {
     waiter.state=state;
     if (mode==5) kd_mutex_publish_result(&probe_node, true);
 }
-static void schedule(void) {
-    assert(!preempt); schedules++;
-    if (mode==2 && schedules==1) { waiter.state=TASK_RUNNING; return; }
+static long schedule_timeout(long timeout) {
+    assert(!preempt && timeout==1); schedules++;
+    if (mode==2 && schedules==1) { waiter.state=TASK_RUNNING; return 0; }
+    if (mode==7) {
+        /* Completion is visible but its wake is deliberately withheld. The
+         * timed recheck must let this caller run before a batch can flush. */
+        kd_mutex_defer_result(&probe_node, deferred, &deferred_count);
+        assert(deferred_count==1 && !wakes);
+        waiter.state=TASK_RUNNING;
+        return 0;
+    }
     kd_mutex_publish_result(&probe_node, true);
     assert(waiter.state==TASK_RUNNING);
+    return 0;
 }
 static void reset(int m) {
-    mode=m; preempt=1; schedules=wakes=pauses=resched=0;
+    mode=m; preempt=1; schedules=wakes=pauses=resched=0; deferred_count=0;
     waiter.state=TASK_RUNNING; wait_slot.task=NULL;
     probe_node.result=1U << 8; probe_node.wait=&wait_slot; kd_mutex_spin_limit=0;
 }
@@ -81,6 +92,10 @@ int main(void) {
     assert(!schedules && wakes==1 && waiter.state==TASK_RUNNING && !wait_slot.task);
     reset(6); kd_mutex_park_result(&probe_node); /* publisher cannot reread recycled probe_node */
     assert(schedules==1 && wakes==1 && probe_node.wait==(void *)1 && !wait_slot.task);
+    reset(7); kd_mutex_wait_result_blocking(&probe_node);
+    assert(schedules==1 && !wakes && probe_node.completed && !wait_slot.task);
+    kd_mutex_flush_wakes(deferred, &deferred_count);
+    assert(!deferred_count && !wakes);
     reset(4); kd_mutex_spin_limit=64; kd_mutex_wait_result_blocking(&probe_node);
     assert(pauses==2 && !schedules && !wakes);
     reset(1); kd_mutex_spin_limit=64; resched=1; kd_mutex_wait_result_blocking(&probe_node);

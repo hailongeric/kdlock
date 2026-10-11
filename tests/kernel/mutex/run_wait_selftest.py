@@ -66,14 +66,15 @@ def main():
             runtime.command(['insmod', module, 'mutex_wait_selftest=1', 'mutex_blocking=1',
                 f'mutex_spin_limit={limit}', f'mutex_wait_cpu={args.cpu}'], path/'load.log', timeout=30)
             collect()
-            match = re.search(r'kd_mutex wait probe: rounds=1024 result_sleep=1 gate_sleep=1 switches=(\d+) errors=0 jit_bodies=0', messages)
+            match = re.search(r'kd_mutex wait probe: rounds=1024 result_sleep=1 gate_sleep=1 switches=(\d+) errors=0 jit_bodies=0 deferred_progress=1', messages)
             runtime.require(match and int(match[1]) >= 2, 'missing real scheduler/owner evidence')
             runtime.command([sys.executable, ROOT/'disassem/device_session.py', 'retire'], path/'retire.log')
             runtime.command(['rmmod', 'kdlock_km'], path/'unload.log')
             collect()
             runtime.idle()
             results.append(dict(spin_limit=limit, rounds=1024, result_sleep=True,
-                gate_sleep=True, voluntary_switches=int(match[1]), errors=0, drained=True, jit_bodies=0))
+                gate_sleep=True, deferred_progress=True, voluntary_switches=int(match[1]),
+                errors=0, drained=True, jit_bodies=0))
         finally:
             collect()
             os.close(fd)

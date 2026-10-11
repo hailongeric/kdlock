@@ -227,8 +227,9 @@ is removed.
 [queue.inc](../../kernel_module/mutex/queue.inc) encodes `(CPU+1, slot)` into
 the tail, reserves nodes, and acquires the original Linux mutex only after
 the scheduling gate. A same-CPU reserved predecessor on that queue refuses
-before publication so a pinned follower cannot prevent a sleeping head from
-resuming. [clobber.inc](../../kernel_module/mutex/clobber.inc) switches to the
+before publication. This preserves the spin policy's progress rule and prevents
+two tasks from sharing one CPU's executor context in either waiting mode.
+[clobber.inc](../../kernel_module/mutex/clobber.inc) switches to the
 reserved waiter stack before publication and restores the post-completion
 boundary without returning through potentially overwritten hook frames.
 
@@ -297,7 +298,11 @@ its waiting contract. The public lock/unlock ABI is unchanged.
 
 [parking.inc](../../kernel_module/mutex/parking.inc) separates result waiters
 from gate waiters. Result waiters register in a persistent `rcuwait` slot, set
-`TASK_UNINTERRUPTIBLE`, recheck the result and schedule with preemption enabled.
+`TASK_UNINTERRUPTIBLE`, recheck the result and call `schedule_timeout(1)` with
+preemption enabled. The one-jiffy timeout rechecks completion even when a later
+translated body depends on the completed caller and cannot flush its buffered
+wake. An ordinary wake ends the sleep sooner. A timer tick is not a wall-clock
+latency guarantee; scheduler delays still apply.
 They retain migration pinning and their independently reserved stack. Completion
 publishes the aligned two-byte result and orders its wake check against the
 sleep-state barrier. Registration is cleared before node release. Late wakes use
@@ -328,7 +333,8 @@ add new interruptible/killable interfaces or a general rwsem/mmap implementation
 The [comparison runner](../../bench/mutex_wait_compare/README.md) records both
 policies and scheduler observations. The
 [scheduler probe](../../tests/kernel/mutex/run_wait_selftest.py) checks actual
-sleep, same-CPU progress and exact drain; its constructed packets are separate
+sleep, progress with a deliberately withheld completion wake, same-CPU progress
+and exact drain; its constructed packets are separate
 from benchmark JIT evidence.
 
 KD retains migration pins, finite per-CPU reservations and bounded NUMA queue

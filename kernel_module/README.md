@@ -75,6 +75,10 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | `mutex_spin_limit` | 4096 PAUSE iterations in blocking mode; 0 parks immediately, maximum 1048576 |
 | `mutex_wait_stats` | Read-only observations: result schedule calls, successful wakes, gate wait calls |
 
+Blocking result waits recheck completion after one jiffy if their batched wake
+has not arrived. This permits a completed caller to make progress while a later
+translated body delays the flush. Gate waits use ordinary wait-queue notification.
+
 For blocking mutexes, load with `insmod kdlock_km.ko mutex_blocking=1`.
 The original Linux mutex retains its real owner. Published waiters retain their
 reserved stack and migration pin while sleeping; translations that require

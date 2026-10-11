@@ -81,11 +81,12 @@ int kd_mutex_wait_selftest(void)
 	unsigned int i, wake_count = 0;
 	struct rcuwait *wake[16];
 	unsigned long switches;
-	bool blocked_result, blocked_gate;
+	bool blocked_result = false, blocked_gate, deferred_progress = false;
 
 	if (!mutex_wait_selftest)
 		return 0;
-	if (!kd_mutex_blocking || !cpu_online(mutex_wait_cpu))
+	if (!kd_mutex_blocking || mutex_wait_cpu >= nr_cpu_ids ||
+	    !cpu_online(mutex_wait_cpu))
 		return -EINVAL;
 	init_completion(&test.start);
 	init_completion(&test.entered);
@@ -108,8 +109,14 @@ int kd_mutex_wait_selftest(void)
 		wait_for_completion(&test.entered);
 		if (!i) {
 			msleep(30);
-			blocked_result = READ_ONCE(task->__state) == TASK_UNINTERRUPTIBLE &&
-				rcuwait_active(test.node->wait);
+			/* The timed recheck briefly runs once per tick. Sample a real
+			 * parked interval instead of requiring one exact instant. */
+			for (int attempt = 0; attempt < 100 && !blocked_result; attempt++) {
+				blocked_result = READ_ONCE(task->__state) == TASK_UNINTERRUPTIBLE &&
+					rcuwait_active(test.node->wait);
+				if (!blocked_result)
+					usleep_range(50, 100);
+			}
 			test.errors += !blocked_result;
 			/* Work on the parked waiter's CPU must make progress. */
 			test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cpu_progress, NULL) != 1;
@@ -119,11 +126,18 @@ int kd_mutex_wait_selftest(void)
 		WRITE_ONCE(test.node->regs.ip, i + 1);
 		if (!(i & 15)) {
 			kd_mutex_defer_result(test.node, wake, &wake_count);
+			if (!i) {
+				/* Model a later body depending on this completed caller.
+				 * Its wake stays buffered until the caller makes progress. */
+				wait_for_completion(&test.done);
+				deferred_progress = true;
+			}
 			kd_mutex_flush_wakes(wake, &wake_count);
 		} else {
 			kd_mutex_clear_locked_set_completed(test.node);
 		}
-		wait_for_completion(&test.done);
+		if (i)
+			wait_for_completion(&test.done);
 	}
 	/* The controller owns the actual Linux mutex and gate across its sleep. */
 	test.gate.locked = _Q_LOCKED_VAL;
@@ -141,7 +155,7 @@ int kd_mutex_wait_selftest(void)
 	kthread_stop(task);
 	test.errors += !kd_mutex_check_idle() || test.gate.locked ||
 		test.gate.physical_owner || mutex_is_locked(&test.original);
-	pr_info("kd_mutex wait probe: rounds=1024 result_sleep=%d gate_sleep=%d switches=%lu errors=%d jit_bodies=0\n",
-		blocked_result, blocked_gate, switches, test.errors);
+	pr_info("kd_mutex wait probe: rounds=1024 result_sleep=%d gate_sleep=%d switches=%lu errors=%d jit_bodies=0 deferred_progress=%d\n",
+		blocked_result, blocked_gate, switches, test.errors, deferred_progress);
 	return test.errors ? -EINVAL : 0;
 }
