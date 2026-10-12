@@ -60,9 +60,11 @@ Current runners always use blocking mutexes. The
 Stock controls separately; [the results index](../../bench/results/README.md)
 retains earlier policy comparisons and their frozen source versions.
 Each session has 48,000 warmup operations per worker, a two-second measurement,
-and a 300 ms peak window after 300 ms of settling. The frozen spin/mutex default
-uses 64 post-work arithmetic rounds; rwlock explicitly uses four. Report these
-as separate workloads.
+and a 300 ms peak window after 300 ms of settling. The 2026-10-12 reports froze
+64 post-work arithmetic rounds for spin/mutex; rwlock explicitly used four.
+The committed spin/mutex helper currently has four rounds. The configurable
+64-round change remains on the [pending work branch](../../docs/PROJECT_GUIDE.md#git-branches).
+Record the actual source/build setting and keep these workloads separate.
 
 The standard 64-vCPU VM cannot supply 64 distinct worker CPUs and a separate
 collector CPU. A temporary two-node, 66-vCPU boot can use worker CPUs

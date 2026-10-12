@@ -189,3 +189,48 @@ Save source and ELF hashes, kernel identity, data checks, returned JIT body coun
 and shutdown results. NORMAL means an image was published, not that it ran.
 [The evidence index](VALIDATION.md) keeps older results and failed candidates
 separate from new validation.
+
+## Git branches
+
+The repository's default branch is named `master`. It holds the accepted
+experimental baseline. Use short-lived branches for subsequent tasks; archive
+finished or rejected experiments under `archive/<original-branch>` tags.
+The [2026-10-12 branch inventory](git-branches-20261012.json) records original tips,
+unique commits, rejection/revert evidence and the local/remote cleanup plan.
+
+The former `perf/hash-payload-20260927` branch grew into an integration branch for
+spin/mutex optimization, rwlock ABI3, real APIs, NUMA changes, blocking-only mutexes
+and their evidence. At review it was 91 commits ahead of the old `master`, which
+had no unique commits, so integration can fast-forward without conflicts.
+It is complete as an accepted integration checkpoint; general
+performance parity and the limitations in [TODO](TODO.md) remain unresolved.
+
+| Archived experiment (names below use `perf/`) | Purpose and outcome |
+| --- | --- |
+| `mutex-empty-bucket-rejected-20261003` | Empty task-bucket shortcut; rejected and reverted |
+| `mutex-fail-read-rejected-20261003` | Avoid unconditional fault-injection atomic reads; rejected and reverted |
+| `mutex-hash-admission-20260928` | Ratio512 admission; rejected repeated regressions |
+| `mutex-numa-candidate-20260928` | Original bounded NUMA scan/handoff candidate; performance rejected |
+| `mutex-numa-rejected-20261003b` | Later NUMA grouping candidate; rejected and reverted |
+| `mutex-pack-rejected-20261003b` | Metadata packing and prefetch/layout changes; rejected and reverted |
+| `mutex-retry-rejected-20261003b` | Extra native acquisition retry after admission; rejected and reverted |
+| `mutex-task-buckets-rejected-20261003` | Sharded task-registry locks; rejected and reverted |
+| `mutex-task-cache-batch-candidate-20260928` | High-JIT cache plus batch/NUMA changes; rejected combined candidate |
+| `mutex-task-cache-candidate-20260928` | Original task retention cache; correctness passed, performance rejected |
+
+Six experiment tips are already in the accepted history followed by explicit
+reverts. Four have seven separate commits in total; archive tags preserve them
+without promoting the rejected implementations. Later accepted cache/NUMA work
+is a separate implementation with its own measurements.
+
+Nine pre-existing edits remain on `wip/worktree-20261012`: a configurable 64-round
+post-work workload, associated tests/documentation, formatting and a draft report
+prefix. They need review and their own commits before integration. The current
+committed workload still uses four post-work rounds. The 2026-10-12 measurements
+captured working-tree inputs, including 64 rounds; their source hashes define
+what was measured. [Validation](VALIDATION.md) gives the applicable limits.
+
+Local branch integration and archive creation preserve all original tips and
+pending file bytes. Remote publication must push the archive tags before updating
+`origin/master` and deleting old topic refs; [operations](AGENTS.md#git-and-rollback)
+defines the local Git workflow.

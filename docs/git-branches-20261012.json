@@ -1,0 +1,169 @@
+{
+  "date": "2026-10-12",
+  "default_branch": "master",
+  "remote_default_branch": "master",
+  "integration_branch": "perf/hash-payload-20260927",
+  "integration_tip_before_organization": "b96f2827726c81908145c214399a4c14f92cdf56",
+  "integration_commits_ahead_of_default": 91,
+  "default_unique_commits": 0,
+  "fast_forward_possible": true,
+  "unique_commit_comparison": "Commits on each original branch tip absent from integration_tip_before_organization; the inventory is a pre-organization snapshot.",
+  "branches": [
+    {
+      "branch": "master",
+      "original_tip": "d38173d6697566d787ed36789ac463d11fb95207",
+      "purpose": "Repository default and accepted experimental baseline; currently behind the integration work.",
+      "unique_commits": 0,
+      "original_tip_in_accepted_history": true,
+      "disposition": "retain as default",
+      "archive_tag": "archive/master-before-integration-20261012"
+    },
+    {
+      "branch": "perf/hash-payload-20260927",
+      "original_tip": "b96f2827726c81908145c214399a4c14f92cdf56",
+      "purpose": "Started with hash throughput; accumulated accepted spin/mutex optimization, rwlock ABI3, real APIs, NUMA changes, blocking-only mutexes, measurements and documentation.",
+      "unique_commits": 0,
+      "original_tip_in_accepted_history": true,
+      "disposition": "integrate and archive",
+      "archive_tag": "archive/perf/hash-payload-20260927"
+    },
+    {
+      "branch": "perf/mutex-empty-bucket-rejected-20261003",
+      "original_tip": "67b7d222778bbc9f4cb8e014a65751e653bbbd58",
+      "purpose": "Empty task-registry bucket shortcut; rejected and reverted.",
+      "unique_commits": 0,
+      "original_tip_in_accepted_history": true,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-empty-bucket-rejected-20261003",
+      "revert_commit": "00a2120f08ddc9cfb9cbce3b584a56766a38a81a"
+    },
+    {
+      "branch": "perf/mutex-fail-read-rejected-20261003",
+      "original_tip": "527417010058fe545e927581b8883f7cbdd3b8a6",
+      "purpose": "Avoid unconditional fault-injection atomic access; rejected and reverted.",
+      "unique_commits": 0,
+      "original_tip_in_accepted_history": true,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-fail-read-rejected-20261003",
+      "revert_commit": "eb9d04688fce31bf46fd14cd7a96ce953d8cae44"
+    },
+    {
+      "branch": "perf/mutex-hash-admission-20260928",
+      "original_tip": "ae46afd942edfbcd17d5fc85bd179fb07a87052f",
+      "purpose": "Looser mutex ratio512 admission; rejected after repeated contended regressions.",
+      "unique_commits": 1,
+      "original_tip_in_accepted_history": false,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-hash-admission-20260928"
+    },
+    {
+      "branch": "perf/mutex-numa-candidate-20260928",
+      "original_tip": "8f9d3cd9637d27f13aca995b75f8f5748824573c",
+      "purpose": "Bounded NUMA scans and deferred handoff; original candidate failed performance acceptance.",
+      "unique_commits": 1,
+      "original_tip_in_accepted_history": false,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-numa-candidate-20260928"
+    },
+    {
+      "branch": "perf/mutex-numa-rejected-20261003b",
+      "original_tip": "87888c9e6b8975cef0ee843f1b71bb679d4e9533",
+      "purpose": "Later mutex NUMA grouping candidate; rejected and reverted.",
+      "unique_commits": 0,
+      "original_tip_in_accepted_history": true,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-numa-rejected-20261003b",
+      "revert_commit": "7c74d3e31ee8044394ec4ce22f4f5baa9cfe68c6"
+    },
+    {
+      "branch": "perf/mutex-pack-rejected-20261003b",
+      "original_tip": "ad59ff314c6b9ffa4f9ee62aa46847f49eb63628",
+      "purpose": "Pack mutex metadata and alter prefetch/layout; rejected hash throughput regressions.",
+      "unique_commits": 0,
+      "original_tip_in_accepted_history": true,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-pack-rejected-20261003b",
+      "revert_commit": "5b75d6022afaa55c42bff24e19d46893110b011c"
+    },
+    {
+      "branch": "perf/mutex-retry-rejected-20261003b",
+      "original_tip": "ae7a26be6fe977db8af4404ade141f89f2c7fe0d",
+      "purpose": "Additional native mutex retry after admission; rejected repeated regression.",
+      "unique_commits": 0,
+      "original_tip_in_accepted_history": true,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-retry-rejected-20261003b",
+      "revert_commit": "6ab4f1051a35d494ecec033bb86d226a232a2730"
+    },
+    {
+      "branch": "perf/mutex-task-buckets-rejected-20261003",
+      "original_tip": "781ef6ceb8164c7078d2e11942beaffa81f0c5d9",
+      "purpose": "Shard mutex task-registry locks; rejected and reverted.",
+      "unique_commits": 0,
+      "original_tip_in_accepted_history": true,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-task-buckets-rejected-20261003",
+      "revert_commit": "30e3850979ad0c91703df1769c79b074b496c553"
+    },
+    {
+      "branch": "perf/mutex-task-cache-batch-candidate-20260928",
+      "original_tip": "a8343f2904d2c97c11e8295a4b16da1f6fa77a5f",
+      "purpose": "High-JIT task cache with batch/shadow/balance changes and NUMA grouping; rejected combined performance candidate.",
+      "unique_commits": 4,
+      "original_tip_in_accepted_history": false,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-task-cache-batch-candidate-20260928"
+    },
+    {
+      "branch": "perf/mutex-task-cache-candidate-20260928",
+      "original_tip": "ad4936850a0a2bd9b952350e9db73c360f971f9b",
+      "purpose": "Original bounded task identity retention; correctness passed but repeated performance regressions rejected this version.",
+      "unique_commits": 1,
+      "original_tip_in_accepted_history": false,
+      "disposition": "archive rejected snapshot; do not merge its tip",
+      "archive_tag": "archive/perf/mutex-task-cache-candidate-20260928"
+    }
+  ],
+  "pending_work_branch": "wip/worktree-20261012",
+  "pending_files": {
+    "bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md": "7131841fb0620b7efbdfc4b8c8b08cd0a580892a6561c7abd35e537a2a832ca9",
+    "bench/spin_cacheline/post_work_fixture.c": "5f277955f57259c327534b2b782c56003359b7c7f6a2f1065961b8dac18f9fb9",
+    "bench/spin_cacheline/test_spin_cacheline.py": "0ad8fe7a92406a366a19afc344489c9879fcc3c232d309dc8c61aa003f4fe7b3",
+    "include/kd_mutex_direct.h": "8c01cfc7b555d9e48e25acf037e2fef6cfdcbb20334a66bfad03144e79ef2c57",
+    "workload_modules/spin_cacheline/README.md": "5e70b463f0196fbe5127555bb38399be42723fa9aa7d547470529908be4dcfdd",
+    "workload_modules/spin_cacheline/api.h": "fba2e339e232d1b70d3d2babaab55a03cc9a001ee05e30042124925732aa285b",
+    "workload_modules/spin_cacheline/direct.h": "ce92e5fd5fc75b9cf39efa0704ea95731eae434024589ac39352be14e86ddef0",
+    "workload_modules/spin_cacheline/post_work.h": "2fdb17ee1afe3b88ecb8a88eb928789bef399fd7a586416bf6b49f2a9806caee",
+    "workload_modules/spin_cacheline/scenario.h": "50220d822902d847b7f26c7b8bc49f7031feb51003663ac899b0e8ad8ae48263"
+  },
+  "pending_changes": {
+    "workload": "Spin/mutex post-work: fixed four rounds to configurable 1..256, default 64, with fixture and documentation updates.",
+    "formatting": "Mutex direct header and spin workload interface/scenario macros.",
+    "draft": "Historical report starts with codex#; preserve for review rather than publish."
+  },
+  "completion": {
+    "original_optimization_phase": "closed on 2026-10-09",
+    "accepted_integration": "ready for experimental baseline; topic branch should close after integration",
+    "pending_work": "not complete: nine uncommitted edits retained on a dedicated work branch",
+    "project": "unfinished: performance parity, immutable JIT versions and documented correctness/context limitations remain"
+  },
+  "validation_limits": [
+    "Branch/ref/history checks and existing source-specific receipts; no new runtime tests.",
+    "Blocking-mutex receipt includes pre-existing working-tree edits; it is not a clean-commit full-suite or production-release certification."
+  ],
+  "local_plan": {
+    "primary": "fast-forward master to documented integration tip",
+    "archive_tags": 12,
+    "closed_topic_branches": 11,
+    "preserve_pending_files": true,
+    "final_active_branch": "wip/worktree-20261012"
+  },
+  "remote_plan": {
+    "status": "prepared; not published as part of local organization",
+    "actions": [
+      "Push archive tags before deleting any remote branch.",
+      "Fast-forward origin/master; preserve accepted commits and revert history.",
+      "Delete the eleven old remote perf branches after archive tags are confirmed."
+    ]
+  }
+}
