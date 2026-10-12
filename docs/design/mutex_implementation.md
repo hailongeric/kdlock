@@ -168,7 +168,8 @@ unmodelled native result.
 | Object | Current storage/lifetime |
 | --- | --- |
 | Original Linux mutex | Workload's `struct mutex`; authoritative native-peer exclusion and physical ownership |
-| Shadow table | 1024 resident `kd_mutex_shadow_entry` objects in [kd_lock.c](../../kernel_module/kd_lock.c); each 192-byte gate separates tail, physical ownership/state and exact waiter count onto three cachelines |
+| Shadow table | 1024 resident `kd_mutex_shadow_entry` objects in [kd_lock.c](../../kernel_module/kd_lock.c); each 192-byte gate separates tail, physical ownership/state and waiter identity/gate wait list onto three cachelines |
+| Mapped waiter counts | Dynamically allocated 1024 exact integers per possible CPU (256 KiB for 64 CPUs); immutable shadow slot, initialized before map publication and retained until provider unload |
 | Task routing record | RCU hash with 256 cacheline-aligned buckets in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); cached identities retain an atomic acquisition count and a `task_struct` ref; insertion/eviction use the bucket writer lock |
 | `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
 | Waiter stacks | Four 8 KiB stacks per possible CPU, allocated by [lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) with `vzalloc_node(..., cpu_to_node(cpu))` |
@@ -222,18 +223,25 @@ distinct objects. Caller stack memory keeps its original addresses/aliases
 and is not relocated into either header. These are layout facts, not measured
 cache misses or a claim that all request state occupies one line.
 
-Before the current body, `kd_mutex_prefetch_successor()` reads the known-live
-successor header and gives write hints for its aligned hot packet line and stack
-addresses SP and SP-8. It avoids duplicate hints for SP/BP on the same line and
-does not fetch the entire FULL packet on every minimal request. The pointer is queue-owned until wake; no successor or
-current-node read is allowed after its completion/native publication. Prefetch
-grants no ownership, admission or lifetime.
+Before the current body, `kd_mutex_prefetch_successor()` hints the known-live
+successor header, ABI and aligned hot packet line. After that body,
+`kd_mutex_prefetch_successor_stack()` reads the saved SP and hints SP and SP-8.
+Separating these stages lets the current body overlap the packet fetch instead
+of immediately waiting for a cold SP load. The stack stage is skipped after
+early outer release or native continuation. The pointer is queue-owned until
+wake; no successor or current-node read is allowed after its completion/native
+publication. Prefetch grants no ownership, admission or lifetime.
 
 The private gate also uses a read before its acquire CAS. Together with the
 original-owner guard, this keeps failed producer RMWs from invalidating ownership
-lines held across a batch. Tail exchanges and exact waiter-count updates retain
-their original atomic operations on separate lines; no probe or ownership check
-is removed.
+lines held across a batch. Tail exchanges retain their atomic operations.
+Mapped waiter counts use a component per origin CPU and immutable shadow slot;
+entry/exit run with preemption disabled on the migration-pinned CPU. Private
+unmapped gates retain their atomic count. The live mapped sum spans different
+CPU instants and grants no ownership or retirement authority. Controlled drain
+checks every component, including opposite nonzero balances; active-waiter,
+reservation and underflow checks remain. Storage is allocated once at module
+initialization with rollback, avoiding the reserved module-percpu size limit.
 
 ### Queue, batch execution and recovery
 
@@ -248,7 +256,11 @@ boundary without returning through potentially overwritten hook frames.
 
 [combiner.inc](../../kernel_module/mutex/combiner.inc) selects local requests
 when built with NUMA enabled. It can defer at most 64 fully linked remote nodes;
-an unlinked global tail is never detached. At 128 completed bodies, or when the
+an unlinked global tail is never detached. Selection happens at loop entry;
+the current body retains the original successor chain through refusal and early
+release. The next iteration uses the saved batch pointer, never a completed
+node. This avoids an eager second NUMA selection before the current body.
+At 128 completed bodies, or when the
 retained successor has no link, deferred requests take priority. Eight or more
 deferred requests receive physical handoff; a smaller remote cohort is rejoined
 and serviced on the current owner, with FIFO selection for the rest of that

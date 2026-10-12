@@ -87,6 +87,8 @@ static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
     node->next=(void *)1;node->tail=0xdead;
 }
 static void kd_mutex_prefetch_successor(struct kd_mutex_node *node) { (void)node; }
+static void kd_mutex_prefetch_successor_stack(struct kd_mutex_node *node)
+{ if (node) CHECK(node->locked && node->tail != 0xdead && lock.physical_owner == current); }
 static void kd_mutex_wait_and_lock(struct kd_mutex *p)
 { CHECK(!p->physical_owner && !p->locked && leases==1);p->physical_owner=current;p->locked=1;reclaims++; }
 int _kd_mutex_unlock_checked(struct kd_mutex *p)
@@ -179,12 +181,12 @@ int main(void)
     scenario=11;reset(4);nodes[0].numa_node=nodes[2].numa_node=1;
     kd_mutex_run_combiner(&lock,&nodes[0]);
     CHECK(calls==4 && completed==4 && !wakes && !lock.tail && cas_calls==1);finish();
-    /* An unexecuted/refused current node must not retain a link into the
-     * deferred prefix, which would make rejoin publish a cycle. */
+    /* A refusal rejoins the deferred prefix with the untouched successor
+     * chain. No next-iteration selection has detached nodes[2] yet. */
     scenario=12;reset(4);nodes[0].numa_node=nodes[2].numa_node=1;refusal_at=1;
     kd_mutex_run_combiner(&lock,&nodes[0]);
     CHECK(calls==1 && !completed && wakes==1 && !nodes[0].locked);
-    CHECK(nodes[0].next==&nodes[2] && nodes[2].next==&nodes[1] && nodes[1].next==&nodes[3]);finish();
+    CHECK(nodes[0].next==&nodes[1] && nodes[1].next==&nodes[2] && nodes[2].next==&nodes[3]);finish();
     scenario=13;reset(4);nodes[0].numa_node=1;native_at=1;
     kd_mutex_run_combiner(&lock,&nodes[0]);
     CHECK(calls==1 && !completed && wakes==1 && nodes[1].native_resume && !nodes[0].locked);

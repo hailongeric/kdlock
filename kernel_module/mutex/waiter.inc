@@ -131,7 +131,17 @@ void kd_mutex_note_nested_jit(void)
 
 int kd_mutex_waiter_count(struct kd_mutex *lock)
 {
-	return lock ? atomic_read(&lock->waiter_count) : -EINVAL;
+	int cpu, count = 0;
+
+	if (!lock)
+		return -EINVAL;
+	if (lock->waiter_slot < 0)
+		return atomic_read(&lock->waiter_count);
+	/* A live sum spans CPU instants. Each component is lossless and cannot
+	 * borrow another CPU's exits. Controlled drain checks each separately. */
+	for_each_possible_cpu(cpu)
+		count += READ_ONCE(per_cpu_ptr(kd_mutex_waiter_cpus, cpu)->count[lock->waiter_slot]);
+	return count;
 }
 
 void kd_mutex_note_nested_abort_release(void)

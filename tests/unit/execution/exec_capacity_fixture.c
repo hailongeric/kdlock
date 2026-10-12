@@ -43,6 +43,9 @@ static bool fixture_irq;
 static unsigned long kd_exec_invariant_failures;
 static char report[1024];
 typedef unsigned int atomic_t;
+/* The frame/ledger fixture never queues sleepers; this gate field is opaque.
+ * Actual wait-list behavior is covered by the live wait probe. */
+typedef struct { void *opaque; } wait_queue_head_t;
 static struct kd_spin_continuation_stack request_storage;
 static struct kd_spin_continuation_stack *kd_spin_continuations = &request_storage;
 #define request_pool request_storage.records

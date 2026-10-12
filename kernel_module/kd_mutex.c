@@ -77,6 +77,12 @@ static const unsigned int kd_mutex_batch_size = KDLOCK_SPIN_BATCH;
 MODULE_INFO(mutex_batch, __stringify(KDLOCK_SPIN_BATCH));
 
 /* Observations and pinned lifecycle balances use separate per-CPU storage. */
+struct kd_mutex_waiter_cpu {
+	int count[KD_MUTEX_WAITER_SLOTS];
+};
+/* Dynamic per-CPU memory avoids the limited reserved module-percpu area. */
+static struct kd_mutex_waiter_cpu __percpu *kd_mutex_waiter_cpus;
+
 KD_MUTEX_STAT(kd_mutex_slowpath_count);
 KD_MUTEX_STAT(kd_mutex_combiner_count);
 KD_MUTEX_STAT(kd_mutex_handoff_count);

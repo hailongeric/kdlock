@@ -69,6 +69,7 @@ def main():
         "static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)",
         "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
+        "static void kd_mutex_prefetch_successor_stack(struct kd_mutex_node *next)",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
     ):

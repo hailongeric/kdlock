@@ -6,6 +6,12 @@ execution. Receipts retain their own source, kernel, boot policy and topology.
 
 ## Current source verification
 
+The [c01 cost study](bench/mutex_c01_cost/20261013/README.md) compares fresh
+Native, TCLock and KD mutex runs, profiles separate diagnostics and evaluates
+successor-prefetch changes. Its [receipt](bench/mutex_c01_cost/20261013/validation.json)
+retains affected checks, live owner/ACK and parking/cooling evidence, rejected
+variants and all raw source identities. The 97% Native target is still unmet.
+
 The [c01 admission receipt](bench/mutex_admission/20261013/validation.json)
 records 14 basic/affected groups, 54 runner tests, six acceptance-auditor tests,
 normal/SELFTEST builds and live cooling, parking and owner/ACK checks. All 543

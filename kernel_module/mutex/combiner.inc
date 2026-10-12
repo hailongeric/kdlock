@@ -84,20 +84,28 @@ kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)
 }
 
 /* The successor is still queued and cannot reuse its node or caller stack
- * before this batch publishes a wake. Fetch its read-mostly header, the saved
- * packet line and the stack lines around the virtual return slot. The aligned
- * IP/SP/BP and virtual GPR slots share one line which the JIT will write; avoid
+ * before this batch publishes a wake. Fetch its header and saved packet line.
+ * The aligned IP/SP/BP and virtual GPR slots share one line the JIT writes; avoid
  * fetching it read-only and then upgrading ownership in the current body.
  * Do this before the current body; never chase a successor after handoff. */
 static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 {
-	unsigned long sp;
-
 	if (!next)
 		return;
 	prefetch(next);
 	prefetchw(&next->entry_abi);
 	prefetchw(&next->regs);
+}
+
+/* Read the prefetched packet after executing the current body. An immediate
+ * SP load after the hint would serialize another remote read before it.
+ * Never follow this pointer after early outer release or native handoff. */
+static void kd_mutex_prefetch_successor_stack(struct kd_mutex_node *next)
+{
+	unsigned long sp;
+
+	if (!next)
+		return;
 	sp = READ_ONCE(next->regs.sp);
 	if (sp) {
 		prefetchw((void *)sp);
@@ -479,13 +487,11 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		}
 		counter++;
 		next_node = smp_load_acquire(&curr_node->next);
-		if (next_node) {
-			next_node = kd_mutex_batch_select(&batch, next_node);
-			/* A refused current request keeps its node. Repair its link
-			 * before rejoining the deferred chain ahead of that request.
-			 * Never overwrite an empty link still owned by an enqueuer. */
-			WRITE_ONCE(curr_node->next, next_node);
-		}
+		/* Keep the original successor chain through execution, refusal and
+		 * early outer release. Select its NUMA successor at the next loop
+		 * entry, after this body has overlapped the prefetch below. Selecting
+		 * here serializes a cold successor metadata read before every body.
+		 * The next iteration uses saved batch.next, never a completed node. */
 		batch.next = next_node;
 		batch.current_node = curr_node;
 		batch.current_retired = false;
@@ -508,6 +514,8 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		}
 
 		if (exe_flag != KD_EXE_NATIVE_DONE) {
+			if (!batch.outer.released)
+				kd_mutex_prefetch_successor_stack(batch.next);
 			kd_mutex_batch_retire_current(lock, &batch);
 			this_cpu_inc(kd_mutex_jit_success_count);
 			kd_mutex_defer_result(curr_node, batch.wake, &batch.wake_count);

@@ -8,6 +8,15 @@ Known failures remain in [TODO](TODO.md).
 
 ## Current mutex verification
 
+The [c01 cost-study receipt](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/validation.json)
+records the successor-prefetch checks, live resource probes and exact candidate
+sources. The [report](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md)
+keeps the fresh three-way comparison, separate diagnostics and rejected
+experiments. The 97% Native target remains unmet; no other-workload acceptance
+or full test suite was run.
+
+## Earlier admission verification
+
 The [2026-10-13 admission receipt](../bench/results/10.176.26.71/bench/mutex_admission/20261013/validation.json)
 records 14 basic/affected groups, 54 runner tests and six acceptance-auditor tests,
 normal and SELFTEST builds, plus live cooling/parking and cross-NUMA owner/ACK

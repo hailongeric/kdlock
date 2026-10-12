@@ -36,6 +36,7 @@ static int kd_wait_test_worker(void *data)
 	BUG_ON(!node);
 	node->task_struct_ptr = current;
 	test->node = node;
+	kd_mutex_waiter_enter(&test->gate);
 	preempt_enable();
 	complete(&test->done);
 	for (i = 0; i < 1024; i++) {
@@ -48,15 +49,18 @@ static int kd_wait_test_worker(void *data)
 		complete(&test->done);
 	}
 	preempt_disable();
+	kd_mutex_waiter_exit(&test->gate);
 	kd_mutex_release_node(node);
 	preempt_enable();
 	wait_for_completion(&test->start);
 	preempt_disable();
+	kd_mutex_waiter_enter(&test->gate);
 	complete(&test->entered);
 	kd_mutex_wait_and_lock(&test->gate);
 	test->errors += test->gate.physical_owner != current ||
 		!kd_origin_mutex_owned(&test->original, current);
 	_kd_mutex_unlock(&test->gate);
+	kd_mutex_waiter_exit(&test->gate);
 	preempt_enable();
 	migrate_enable();
 	complete(&test->done);
@@ -121,7 +125,9 @@ int kd_mutex_wait_selftest(void)
 	init_completion(&test.entered);
 	init_completion(&test.done);
 	mutex_init(&test.original);
-	kd_mutex_init(&test.gate);
+	/* The highest mapped identity exercises dynamic per-CPU accounting
+	 * across both real sleep intervals and admission cooling. */
+	kd_mutex_init_shadow(&test.gate, KD_MUTEX_WAITER_SLOTS - 1);
 	test.gate.origin_mutex_addr = (unsigned long)&test.original;
 	task = kthread_create(kd_wait_test_worker, &test, "kd_wait_probe");
 	if (IS_ERR(task))
@@ -150,6 +156,7 @@ int kd_mutex_wait_selftest(void)
 			/* Work on the parked waiter's CPU must make progress. */
 			test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cpu_progress, NULL) != 1;
 			test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cool, &test) != 1;
+			test.errors += kd_mutex_waiter_count(&test.gate) != 1 || kd_mutex_check_idle();
 			test.errors += !test.node->locked || test.node->completed;
 		} else if (!(i & 7)) {
 			udelay(i & 63);
@@ -181,6 +188,7 @@ int kd_mutex_wait_selftest(void)
 	test.errors += !blocked_gate;
 	test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cpu_progress, NULL) != 1;
 	test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cool, &test) != 1;
+	test.errors += kd_mutex_waiter_count(&test.gate) != 1 || kd_mutex_check_idle();
 	test.errors += !test.gate.locked || !kd_origin_mutex_owned(&test.original, current);
 	_kd_mutex_unlock(&test.gate);
 	wait_for_completion(&test.done);

@@ -6,7 +6,22 @@ passed [targeted verification](../bench/results/10.176.26.71/tests/mutex-blockin
 including a drained 320,000-operation mutex JIT run. That functional check does
 not provide a new performance matrix.
 
-## Latest c01 admission study
+## Latest c01 cost study
+
+The [three-way cost study](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md)
+adds a fresh Native/TCLock/KD baseline, separate CPU/PMU diagnostics and measured
+successor-prefetch experiments. At sixteen workers, baseline Native/TCLock/KD
+reach 9.064/3.559/7.230 Mops/s; almost complete delegation does not eliminate
+per-body coordination costs. The report separates whole-run and warmed-peak
+results, variation, worker shares, CPU cost and the limits of intrusive profiles.
+The 97% Native target through 28 remains unmet and ratio default 256 remains.
+The retained counter/prefetch changes gain 7.16% median and 7.58% peak at sixty
+workers and pass the four higher-thread regression gates. Low-thread results
+remain variable, including a lower four-worker median; this is a bounded
+higher-thread improvement, not a parity claim. Removing the counter component
+fails the thirty-two-worker regression gate and remains archived as rejected.
+
+## Earlier c01 admission study
 
 The [2026-10-13 c01 study](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md)
 did **not** reach 97% of Native mutex on both median whole-run throughput and

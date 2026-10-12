@@ -16,6 +16,7 @@
 
 #define KD_MUTEX_SHADOW_STACK_SIZE 8192L
 #define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
+#define KD_MUTEX_WAITER_SLOTS 1024 /* immutable shadow identities */
 
 #include "kd_regs.h"
 #include <linux/wait.h>
@@ -94,15 +95,18 @@ struct kd_mutex {
 			u8 locked;
 		};
 	};
-	/* Exact probe count, independent of both queue publication and ownership.
-	 * Its enter/exit RMWs must not invalidate either of those cachelines. */
+	/* Private gates retain the shared count. Published shadows use an exact
+	 * counter on each origin CPU, indexed by an immutable slot. Live sums are
+	 * observations; no count authorizes publication, ownership or retirement. */
 	atomic_t waiter_count __attribute__((aligned(64)));
+	int waiter_slot; /* -1 for a private gate, otherwise immutable until unload */
 	/* Only the queue head (or an unpublished overflow) waits here. Result
 	 * waiters use their own notification byte and never join this list. */
 	wait_queue_head_t gate_wait;
 };
 
 void kd_mutex_init(struct kd_mutex *lock);
+void kd_mutex_init_shadow(struct kd_mutex *lock, unsigned int slot);
 int kd_mutex_init_percpu(void);
 void kd_mutex_exit(void);
 

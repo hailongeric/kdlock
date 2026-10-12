@@ -236,6 +236,12 @@ candidates were rejected and default 256 remains. The user's original WIP
 branch is retained unchanged at `09bfffe`. [Validation](VALIDATION.md) gives
 the tested scope and remaining limits.
 
+The subsequent [c01 cost study](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md)
+retains exact per-CPU waiter counters and staged successor prefetch as a bounded
+higher-thread improvement. It does not reach the through-28 Native target.
+Its local task tip is archived as `archive/perf/mutex-c01-cost-20261013` after
+fast-forward integration; failed variants and raw evidence remain separate.
+
 All twelve original tips are preserved by verified archive tags, including
 `archive/master-before-integration-20261012`. The eleven local `perf/` branches
 were removed. The remaining local branches are `master` and

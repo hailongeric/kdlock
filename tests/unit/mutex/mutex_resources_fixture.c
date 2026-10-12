@@ -643,6 +643,9 @@ static void check_shadow_table(void)
 		entries[i] = get_kd_mutex_shadow(&origins[i].mutex);
 		CHECK(entries[i] && entries[i]->origin_mutex_addr ==
 					    (unsigned long)&origins[i].mutex);
+		CHECK((unsigned long)entries[i]->waiter_slot ==
+		      (((unsigned long)&origins[0].mutex % KD_MUTEX_SHADOW_TABLE_SIZE + i) %
+		       KD_MUTEX_SHADOW_TABLE_SIZE));
 		CHECK(!entries[i]->tail && !entries[i]->state.counter &&
 		      !entries[i]->waiter_count.counter &&
 		      !entries[i]->physical_owner);

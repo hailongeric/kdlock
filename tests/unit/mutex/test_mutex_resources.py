@@ -49,6 +49,7 @@ def production():
     )
     for marker in (
         "void kd_mutex_init(struct kd_mutex *lock)",
+        "void kd_mutex_init_shadow(struct kd_mutex *lock, unsigned int slot)",
         "static bool kd_mutex_spin_ready(u8 *notification)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
@@ -96,6 +97,9 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
+        "shadow-waiter-slot-alias": (
+            "lock->waiter_slot = slot;", "lock->waiter_slot = 0;",
+        ),
         "native-control-ignored": (
             "if (!admitted || mutex_native_route)",
             "if (!admitted)",

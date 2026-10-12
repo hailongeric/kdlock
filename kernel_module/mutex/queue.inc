@@ -70,14 +70,35 @@ static void kd_mutex_waiter_enter(struct kd_mutex *lock)
 	 * The tail exchange/link and result release/acquire keep their ordering. */
 	int active = this_cpu_inc_return(kd_mutex_active_waiters);
 
-	atomic_inc(&lock->waiter_count);
+	if (lock->waiter_slot >= 0) {
+		int *count = &this_cpu_ptr(kd_mutex_waiter_cpus)->count[lock->waiter_slot];
+
+		/* Enter/exit run with preemption disabled on the migration-pinned
+		 * origin CPU. No other CPU writes this exact lock/CPU balance. */
+		WRITE_ONCE(*count, *count + 1);
+	} else {
+		atomic_inc(&lock->waiter_count);
+	}
 	kd_mutex_update_max_waiters(active);
 }
 
 static void kd_mutex_waiter_exit(struct kd_mutex *lock)
 {
-	if (unlikely(atomic_dec_return(&lock->waiter_count) < 0)) {
-		atomic_set(&lock->waiter_count, 0);
+	int left;
+
+	if (lock->waiter_slot >= 0) {
+		int *count = &this_cpu_ptr(kd_mutex_waiter_cpus)->count[lock->waiter_slot];
+
+		left = *count - 1;
+		WRITE_ONCE(*count, left);
+		if (unlikely(left < 0))
+			WRITE_ONCE(*count, 0);
+	} else {
+		left = atomic_dec_return(&lock->waiter_count);
+		if (unlikely(left < 0))
+			atomic_set(&lock->waiter_count, 0);
+	}
+	if (unlikely(left < 0)) {
 		this_cpu_inc(kd_mutex_frame_failure_count);
 		KD_PR_ERR("kd_mutex lock waiter count underflow lock=%px\n",
 			  lock);

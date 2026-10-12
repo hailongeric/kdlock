@@ -14,7 +14,17 @@ void kd_mutex_init(struct kd_mutex *lock)
 	lock->physical_owner = NULL;
 	WRITE_ONCE(lock->origin_mutex_addr, 0);
 	atomic_set(&lock->waiter_count, 0);
+	lock->waiter_slot = -1;
 	init_waitqueue_head(&lock->gate_wait);
+}
+
+/* The map publishes origin_mutex_addr only after this unique slot is bound.
+ * No slot is reused before provider unload; its per-CPU storage starts zero. */
+void kd_mutex_init_shadow(struct kd_mutex *lock, unsigned int slot)
+{
+	BUG_ON(slot >= KD_MUTEX_WAITER_SLOTS);
+	kd_mutex_init(lock);
+	lock->waiter_slot = slot;
 }
 
 static void kd_mutex_free_percpu_stacks(void)
@@ -37,6 +47,8 @@ static void kd_mutex_free_percpu_stacks(void)
 		shadow->node_slots = 0;
 		shadow->resume_node = NULL;
 	}
+	free_percpu(kd_mutex_waiter_cpus);
+	kd_mutex_waiter_cpus = NULL;
 }
 
 int kd_mutex_init_percpu(void)
@@ -56,6 +68,10 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(sizeof(struct kd_mutex) != 3 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex, physical_owner) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex, waiter_count) != 2 * L1_CACHE_BYTES);
+
+	kd_mutex_waiter_cpus = alloc_percpu(struct kd_mutex_waiter_cpu);
+	if (!kd_mutex_waiter_cpus)
+		return -ENOMEM;
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
@@ -136,6 +152,11 @@ bool kd_mutex_check_idle(void)
 			return false;
 		for (slot = 0; slot < KD_MUTEX_MAX_NODES; slot++)
 			if (rcuwait_active(per_cpu_ptr(&kd_mutex_waits[slot], cpu)))
+				return false;
+		/* Even opposite corrupt balances must not cancel into an idle sum. */
+		for (slot = 0; slot < KD_MUTEX_WAITER_SLOTS; slot++)
+			if (kd_mutex_waiter_cpus &&
+			    READ_ONCE(per_cpu_ptr(kd_mutex_waiter_cpus, cpu)->count[slot]))
 				return false;
 	}
 	return true;

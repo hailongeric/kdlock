@@ -22,12 +22,19 @@ def main():
         'static void kd_mutex_update_max_waiters(int active)',
         'static void kd_mutex_waiter_enter(struct kd_mutex *lock)',
         'static void kd_mutex_waiter_exit(struct kd_mutex *lock)',
+        'int kd_mutex_waiter_count(struct kd_mutex *lock)',
         'bool kd_mutex_check_idle(void)',
     )
     code = '\n'.join(definition(source, marker) for marker in markers)
     mutations = {
-        'ignores-second-cpu': ('for_each_possible_cpu(cpu)',
-                              'for (cpu = 0; cpu < 1; cpu++)'),
+        'ignores-second-cpu': ('for_each_possible_cpu(cpu) {',
+                              'for (cpu = 0; cpu < 1; cpu++) {'),
+        'drops-shadow-enter': ('WRITE_ONCE(*count, *count + 1);',
+                               'WRITE_ONCE(*count, *count);'),
+        'drops-shadow-exit': ('left = *count - 1;', 'left = *count;'),
+        'ignores-shadow-balance': (
+            'if (kd_mutex_waiter_cpus &&',
+            'if (false && kd_mutex_waiter_cpus &&'),
         'ignores-reservation': (
             'READ_ONCE(per_cpu(kd_mutex_reserved_nodes, cpu))', 'false'),
         'ignores-slot-lifetime': (

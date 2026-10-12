@@ -58,7 +58,7 @@ static __always_inline bool kd_mutex_trylock_fast(struct mutex *lock);
 
 /* --- mutex → kd_mutex shadow table ---------------------------------------- */
 
-#define KD_MUTEX_SHADOW_TABLE_SIZE 1024
+#define KD_MUTEX_SHADOW_TABLE_SIZE KD_MUTEX_WAITER_SLOTS
 
 /* The initialized original address is also the immutable map key. A release
  * store publishes it only after gate initialization; existing-key readers need
@@ -108,7 +108,7 @@ static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)
 			return &kd_mutex_shadows[pos].kd_mtx;
 		}
 		if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == 0) {
-			kd_mutex_init(&kd_mutex_shadows[pos].kd_mtx);
+			kd_mutex_init_shadow(&kd_mutex_shadows[pos].kd_mtx, pos);
 			smp_store_release(
 				&kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr,
 				mutex_addr);

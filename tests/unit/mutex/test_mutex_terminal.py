@@ -40,8 +40,10 @@ def main():
             'skip-delayed-link': (helpers.replace('} while (!next);', '} while (false);'), loop),
             'repeat-after-native-reuse': (helpers.replace('if (batch->current_retired)', 'if (false)'), loop),
             'skip-deferred-rejoin': (helpers.replace('if (batch->deferred_head) {', 'if (false) {'), loop),
-            'lose-refused-successor': (helpers, loop.replace('WRITE_ONCE(curr_node->next, next_node);', '')),
+            'lose-refused-successor': (helpers, loop.replace('batch.next = next_node;',
+                'batch.next = next_node; WRITE_ONCE(curr_node->next, NULL);')),
             'unbounded-local-cohort': (helpers, loop.replace('counter >= 128', 'false')),
+            'prefetch-after-outer-release': (helpers, loop.replace('if (!batch.outer.released)', 'if (true)')),
             # Each combiner return must establish the normal gate value
             # independently, including source refusal before caller cleanup.
             'skip-final-wakes': (helpers, loop.replace('kd_mutex_flush_wakes(batch.wake, &batch.wake_count);', '')),
