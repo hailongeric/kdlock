@@ -30,7 +30,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 		prev_node = kd_mutex_decode_tail(old_tail);
 		WRITE_ONCE(prev_node->next, curr_node);
 
-		mutex_debug("Mutex waiter spinning\n");
+		mutex_debug("Mutex waiter waiting\n");
 		kd_mutex_wait_for_result(curr_node);
 		if (READ_ONCE(curr_node->native_resume)) {
 			WRITE_ONCE(ptr->resume_node, curr_node);

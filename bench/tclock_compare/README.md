@@ -61,15 +61,14 @@ has no `mutex_jit` parameter.
 | `--spin-prefetch 2` |KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
-| `--mutex-wait-mode spin`, `--mutex-spin-limit 4096` | Immutable KD mutex policy for this load; blocking polls up to the limit then sleeps |
+| `--mutex-spin-limit 4096` | KD mutex polling budget before uninterruptible sleep; 0 parks immediately |
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--dry-run` | Print plan without live execution |
 
-`--mutex-wait-mode both` puts the two KD policies next to each other in each
-round and reverses their order in odd rounds. Native and TCLock still run once
-per round. Each KD session reloads the provider with its immutable policy; no
-live wait mode changes. Use this for focused paired comparisons when interpreting
-small differences from a sequential campaign.
+KD mutexes always support blocking. `--mutex-wait-mode` has been removed;
+each backend runs once per round. Records retain `mutex_wait_mode=blocking`
+and the polling budget so current runs remain distinct from historical spin
+measurements. The runner rejects providers with the obsolete policy selector.
 
 Both entries now accept any worker count from 1 through 64. The full new-host
 comparison uses 22 counts: 1–8 in steps of one, then 12–64 in steps of four.

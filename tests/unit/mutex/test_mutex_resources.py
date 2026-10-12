@@ -49,6 +49,7 @@ def production():
     )
     for marker in (
         "void kd_mutex_init(struct kd_mutex *lock)",
+        "static bool kd_mutex_spin_ready(u8 *notification)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
@@ -150,13 +151,12 @@ def main():
             "WRITE_ONCE(shadow->node_slots, slots);",
         ),
         "poll-enables-preemption": (
-            "while (smp_load_acquire(&node->locked))\n\t\tcpu_relax();",
-            "while (smp_load_acquire(&node->locked)) { "
-            "preempt_enable(); cpu_relax(); preempt_disable(); }",
+            "\t\tleft--;\n\t\tcpu_relax();",
+            "\t\tleft--;\n\t\tpreempt_enable(); cpu_relax(); preempt_disable();",
         ),
         "poll-returns-before-publication": (
-            "while (smp_load_acquire(&node->locked))",
-            "if (smp_load_acquire(&node->locked))",
+            "while (smp_load_acquire(notification))",
+            "if (smp_load_acquire(notification))",
         ),
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "gate-without-native-lock": (

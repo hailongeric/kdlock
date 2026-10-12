@@ -19,7 +19,7 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
-| KD mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Selectable pinned polling or bounded spin followed by blocking; migration stays pinned | Original Linux mutex callers remain excluded by that same mutex |
+| KD mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Bounded spin followed by blocking; migration stays pinned | Original Linux mutex callers remain excluded by that same mutex |
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |

@@ -58,8 +58,7 @@ class RWSession(Session):
         if self.record['arm'] == 'kdlock':
             self.run(['insmod', self.binaries['kdlock'], 'bench_quiet=1', 'jit_timing=0',
                       'hotlock_stats=1', 'target_process=rb_worker', 'spin_prefetch=2',
-                      'mutex_blocking=' + str(int(self.record.get('mutex_wait_mode') == 'blocking')),
-                      'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 1024)),
+                      'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 4096)),
                       f'spin_entry_ratio_limit={self.record["spin_entry_ratio_limit"]}',
                       f'spin_delegate={int(self.record["delegate"])}'], 'load-kdlock.log')
             self.loaded_kd = True
@@ -80,14 +79,14 @@ class RWSession(Session):
             (KD_PARAMS / 'bench_lock_addr').write_text(str(layout['gate_addr']))
             self.record['parameters'] = params = parameters()
             expected = dict(bench_lock_addr=layout['gate_addr'], bench_quiet=1, jit_timing=0,
-                            mutex_blocking=int(self.record.get('mutex_wait_mode') == 'blocking'),
-                            mutex_spin_limit=self.record.get('mutex_spin_limit', 1024),
+                            mutex_spin_limit=self.record.get('mutex_spin_limit', 4096),
                             spin_entry_ratio_limit=self.record['spin_entry_ratio_limit'],
                             spin_delegate=int(self.record['delegate']), spin_prefetch=2, hotlock_stats=1)
             def number(value):
                 return {'Y': 1, 'N': 0}[value] if value in ('Y', 'N') else int(value, 0)
             require(all(number(params[k]) == v for k, v in expected.items()) and
-                    params['target_process'] == 'rb_worker', 'KD parameters differ')
+                    params['target_process'] == 'rb_worker' and 'mutex_blocking' not in params and
+                    self.record['mutex_wait_mode'] == 'blocking', 'KD parameters differ')
             self.record.update(entry_range=[layout['entry'], layout['entry'] + 1], caller_abi='clobber', entry_abi=3)
             # Read-only sessions have no writer continuation to execute. Keep
             # them as explicit native-reader controls, without a fake JIT pass.

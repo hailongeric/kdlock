@@ -24,10 +24,10 @@ ownership and lifetime terms used below.
    required initial capture, final restore and owner state that has a separate
    lifetime.
 5. Keep the two-word wrapper input ABI. Userspace/futex, other architectures and
-   general oversubscription redesign are outside this phase. Mutex spin mode
-   keeps published waiters pinned and polling. The explicitly requested blocking
-   mode permits sleep on reserved stacks while retaining migration pins; it
-   refuses delegated origin-CPU GS access. Native mutex owners/services may sleep.
+   general oversubscription redesign are outside this phase. Mutexes use
+   bounded polling followed by sleep on reserved stacks while retaining migration
+   pins; they refuse delegated origin-CPU GS access. Native mutex owners/services
+   may sleep. There is no spin-only mutex policy.
 6. Ordinary KD spin and rwlock pairs protect preemption and preserve IRQ/BH state.
    Spin IRQ/irqsave/BH variants use their explicit native interfaces. Rwlocks
    support ordinary task context only; no rwlock IRQ/BH variants are provided.

@@ -180,15 +180,13 @@ python3 bench/real_api/report.py \
 
 CSV/JSON/text reports use only the standard Python library. `--plots` additionally
 requires Matplotlib; use a separate analysis environment after measurement.
-Select KD blocking mutexes with `--mutex-wait-mode blocking`; the default is
-`spin`. `--mutex-spin-limit` defaults to 4,096 PAUSE iterations. Both options are
-recorded and checked against the loaded module. The
-[wait-policy comparison](../mutex_wait_compare/README.md) retains separate
-statistics for both modes across all accepted API configurations.
-`--mutex-wait-mode both` places the two KD modes next to one another and reverses
-their order on alternating rounds. Native, TCLock and Stock still run once per
-round. Use the wait-policy exporter for these paired runs; the single-policy
-API report deliberately refuses to merge them.
+KD mutexes always support blocking. `--mutex-spin-limit` defaults to 4,096
+PAUSE iterations before sleeping; zero parks immediately. Records retain
+`mutex_wait_mode=blocking` and the budget, which is checked against the loaded
+module. `--mutex-wait-mode` has been removed. Each backend runs once per round.
+The historical [wait-policy comparison](../mutex_wait_compare/README.md) retains
+separate statistics for the former spin mode and blocking mode; the API report
+continues to reject mixed-policy archives.
 The recorded figures used Matplotlib 3.9.4. Basic and directly affected checks:
 
 ```sh

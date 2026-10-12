@@ -200,8 +200,11 @@ static bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 {
 	return lock->owner == task;
 }
-static const bool kd_mutex_blocking = false;
-static void kd_mutex_wait_gate_blocking(struct kd_mutex *g) { (void)g; CHECK(false); }
+static void kd_mutex_wait_gate(struct kd_mutex *g)
+{
+	while (smp_load_acquire(&g->locked))
+		cpu_relax();
+}
 static void kd_mutex_open_gate(struct kd_mutex *g) { smp_store_release(&g->locked, 0); }
 static void kd_mutex_publish_result(struct kd_mutex_node *n, bool completed) { n->completed=completed; smp_store_release(&n->locked, 0); }
 static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)

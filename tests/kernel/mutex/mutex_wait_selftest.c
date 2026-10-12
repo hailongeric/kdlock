@@ -85,7 +85,7 @@ int kd_mutex_wait_selftest(void)
 
 	if (!mutex_wait_selftest)
 		return 0;
-	if (!kd_mutex_blocking || mutex_wait_cpu >= nr_cpu_ids ||
+	if (mutex_wait_cpu >= nr_cpu_ids ||
 	    !cpu_online(mutex_wait_cpu))
 		return -EINVAL;
 	init_completion(&test.start);

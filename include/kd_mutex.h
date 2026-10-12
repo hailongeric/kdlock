@@ -33,8 +33,8 @@ int kd_mutex_wait_selftest(void);
  * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
  * owns its shadow stack, so an executor acquiring a sleeping native mutex cannot
  * have its stack reused by another target task running on the same CPU.
- * A published waiter stays migration-pinned; blocking mode can schedule on its
- * reserved stack. Spin mode also keeps preemption disabled while polling.
+ * A published waiter stays migration-pinned and can schedule on its reserved
+ * stack after bounded polling with preemption disabled.
  * The combiner feeds node->regs
  * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
  * inside the JIT sandbox.

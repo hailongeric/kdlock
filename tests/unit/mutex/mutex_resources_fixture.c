@@ -186,12 +186,16 @@ static bool kd_mutex_trylock_fast(struct mutex *lock)
 	acquires++;
 	return true;
 }
-/* These resource cases select the retained spin protocol. Parking itself is
- * exercised by the production parking fixture and real scheduler probe. */
-static const bool kd_mutex_blocking = false;
+/* Resource cases complete within the bounded polling budget. Parking itself
+ * is exercised by the production parking fixture and real scheduler probe. */
+static const unsigned int kd_mutex_spin_limit = 4096;
 static void init_waitqueue_head(wait_queue_head_t *w) { memset(w, 0, sizeof(*w)); }
-static void kd_mutex_wait_result_blocking(struct kd_mutex_node *n) { (void)n; CHECK(false); }
-static void kd_mutex_wait_gate_blocking(struct kd_mutex *g) { (void)g; CHECK(false); }
+static void kd_mutex_park_result(struct kd_mutex_node *n) { (void)n; CHECK(false); }
+static void kd_mutex_wait_gate(struct kd_mutex *g)
+{
+	while (smp_load_acquire(&g->locked))
+		cpu_relax();
+}
 static void kd_mutex_open_gate(struct kd_mutex *g) { smp_store_release(&g->locked, 0); }
 #include "mutex_resource_code.h"
 
@@ -283,10 +287,10 @@ static void release_peer(struct kd_mutex *gate)
 static void cpu_relax(void)
 {
 	if (poll_node) {
-		/* The origin must not enable preemption even with reschedule pending.
+		/* The bounded polling phase must keep preemption disabled.
 		 * Simulate the remote completion only after several PAUSE iterations. */
 		CHECK(preempt == 1 && migration == 1 && current == &waiter);
-		CHECK(schedule_wanted && !schedules);
+		CHECK(!schedule_wanted && !schedules);
 		CHECK(++polls <= 8);
 		if (polls == 8) {
 			poll_node->regs = expected_regs;
@@ -1009,7 +1013,7 @@ static void check_poll_result(void)
 {
 	reset();
 	preempt = migration = 1;
-	schedule_wanted = true;
+	schedule_wanted = false;
 	poll_node = &kd_mutex_nodes[0];
 	poll_node->locked = 1;
 	polls = 0;
@@ -1017,7 +1021,7 @@ static void check_poll_result(void)
 	CHECK(polls == 8 && !schedules && preempt == 1 && migration == 1);
 	CHECK(memcmp(&poll_node->regs, &expected_regs, sizeof(expected_regs)) == 0);
 	kd_mutex_wait_for_result(poll_node);
-	CHECK(polls == 8 && schedule_wanted);
+	CHECK(polls == 8 && !schedule_wanted);
 	poll_node = NULL;
 }
 

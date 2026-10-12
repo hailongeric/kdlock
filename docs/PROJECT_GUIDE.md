@@ -19,11 +19,11 @@ CPU cost and low-thread gaps from high-contention gains. Its temporary 66-vCPU
 boot was restored to the regular 64-vCPU layout after archiving.
 
 The earlier [mutex waiting-policy report](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
-describes KD's retained spin mode and optimized blocking mode, scheduler/JIT
+compares KD's former spin mode and retained blocking implementation, scheduler/JIT
 validation, and their Native/TCLock comparison across kernel payloads and real
 APIs on the regular 64-vCPU VM. It uses six worker counts up to 60, with a
-separate collector. The two policies share the public mutex API and retain the
-original Linux owner; blocking is selected when loading the provider.
+separate collector. Current KD mutexes always support blocking and retain the
+original Linux owner; the wait-mode selector has been removed.
 
 The earlier [complete performance report](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
 compares rwlock, spin and mutex on the new host at 22 worker counts: 1–8 in

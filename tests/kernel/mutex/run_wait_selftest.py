@@ -63,7 +63,7 @@ def main():
             runtime.require(not runtime.FAULT.search(messages), 'kernel fault: retain module and callers')
 
         try:
-            runtime.command(['insmod', module, 'mutex_wait_selftest=1', 'mutex_blocking=1',
+            runtime.command(['insmod', module, 'mutex_wait_selftest=1',
                 f'mutex_spin_limit={limit}', f'mutex_wait_cpu={args.cpu}'], path/'load.log', timeout=30)
             collect()
             match = re.search(r'kd_mutex wait probe: rounds=1024 result_sleep=1 gate_sleep=1 switches=(\d+) errors=0 jit_bodies=0 deferred_progress=1', messages)

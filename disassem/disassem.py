@@ -19,7 +19,7 @@ import memread
 import normal
 import solve_bug
 from translation_image import (emit_jit_assembly, write_entry_dispatch,
-                               wrapper_context_inputs, blocking_mutex_context_error)
+                               wrapper_context_inputs, mutex_context_error)
 from translation_scope import (
     decode_regions, find_resumable_call_continuations, find_segment_policy_error,
 )
@@ -379,11 +379,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
                                  {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()),
     )
-    # The provider parameter is immutable until unload, as are all source/JIT
-    # inputs in a live session. Old providers without the parameter only spin.
-    waiting = Path('/sys/module/kdlock_km/parameters/mutex_blocking')
-    blocking = lock_kind == 'mutex' and waiting.exists() and waiting.read_text().strip() == 'Y'
-    reason = blocking_mutex_context_error(assembly, blocking)
+    # Mutex waiters may sleep, so their CPU's GS data is never a safe delegated
+    # input. Apply this admission rule to every mutex image, including ABI0.
+    reason = mutex_context_error(assembly, lock_kind)
     if reason:
         return reject_translation(reason)
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")

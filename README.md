@@ -9,8 +9,7 @@ KD provides three kinds of lock:
 
 - **Spinlock:** uses KD's own four-byte lock object.
 - **Mutex:** keeps the original Linux mutex, including its real owner, and adds
-  a queue for delegated work. Select either the retained spin policy or bounded
-  polling followed by blocking.
+  a queue for delegated work. Waiters use bounded polling followed by blocking.
 - **Read-write lock:** lets readers run concurrently on their own CPUs. Writers
   can run locally or delegate through the spin JIT engine.
 
@@ -20,9 +19,10 @@ not redirect ordinary Linux lock calls. Builds require the recorded `kdclobber2`
 guest-kernel interfaces.
 
 The [benchmark guide](bench/README.md) links current comparisons and historical
-results. The [mutex wait-policy comparison](bench/mutex_wait_compare/README.md)
-covers both KD modes, TCLock and Native across maintained kernel payloads and
-real API critical sections. The [full 1–64-worker rerun](bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
+results. The historical
+[mutex wait-policy comparison](bench/mutex_wait_compare/README.md)
+covers the former spin mode, blocking mode, TCLock and Native across maintained
+kernel payloads and real API critical sections. The [full 1–64-worker rerun](bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
 reports all 31 configurations on `10.176.26.71`, including c01 and hash,
 with complete tables, scaling plots and CPU/JIT analysis.
 Measured gains, remaining gaps and validation limits

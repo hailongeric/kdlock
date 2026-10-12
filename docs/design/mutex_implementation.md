@@ -287,14 +287,14 @@ fixtures check this contract independently of the caller's repeated restoration.
 
 ## Scope and evidence
 
-### Selectable blocking policy
+### Blocking waits
 
-`mutex_blocking=0` retains the original polling policy. `mutex_blocking=1`
-enables ordinary uninterruptible sleep after at most `mutex_spin_limit` PAUSE
-iterations (default 4096, permitted range 0–1048576). Zero requests immediate
-parking. Scheduler pressure is checked every 64 iterations. These module
-parameters are read-only after load so a published request/image cannot change
-its waiting contract. The public lock/unlock ABI is unchanged.
+KD mutexes always support ordinary uninterruptible sleep after at most
+`mutex_spin_limit` PAUSE iterations (default 4096, permitted range 0–1048576).
+Zero requests immediate parking. Scheduler pressure is checked every 64
+iterations. The polling budget is read-only after load. The spin-only policy
+and `mutex_blocking` selector have been removed; the public lock/unlock ABI
+is unchanged.
 
 [parking.inc](../../kernel_module/mutex/parking.inc) separates result waiters
 from gate waiters. Result waiters register in a persistent `rcuwait` slot, set
@@ -324,15 +324,16 @@ the matching barrier, preventing a head from sleeping through gate opening.
 The 24-byte wait queue fits the existing 192-byte shadow gate. Node size remains
 320 bytes; `completed/locked/native_resume` keep offsets 304/305/306.
 
-Blocking translation rejects final images that import the origin CPU's GS base,
+Mutex translation rejects final images that import the origin CPU's GS base,
 including generated guards and learned callees, because another task may use
 that CPU while the caller sleeps. Such bodies take the native path. Logical
 `current` remains a separately supplied task identity. Existing
-[admission and alias limits](admission.md) still apply. Blocking mode does not
+[admission and alias limits](admission.md) still apply. The mutex does not
 add new interruptible/killable interfaces or a general rwsem/mmap implementation.
 
-The [comparison runner](../../bench/mutex_wait_compare/README.md) records both
-policies and scheduler observations. The
+The [mutex runner](../../bench/tclock_compare/README.md) records the blocking
+policy and scheduler observations. Historical spin/blocking comparisons remain
+in the [archive guide](../../bench/mutex_wait_compare/README.md). The
 [scheduler probe](../../tests/kernel/mutex/run_wait_selftest.py) checks actual
 sleep, progress with a deliberately withheld completion wake, same-CPU progress
 and exact drain; its constructed packets are separate

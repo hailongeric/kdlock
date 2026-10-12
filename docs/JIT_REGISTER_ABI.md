@@ -143,9 +143,10 @@ Other words remain reserved to preserve offsets. `Stack_RSP/RBP/R11..R15` macros
 refer to packet fields, not another copy on the physical stack. Allocation precedes
 stores; kernel code never relies on the red zone.
 
-GS lowering adds the pinned origin base. Supported current_task loads use logical
-task input. Hardware GS, current, IRQ, RCU and scheduler context are not switched;
-native services still run on the physical executor. [Admission](design/admission.md)
+GS lowering adds the pinned origin base for spin/rwlock images; mutex images that
+need it are refused because waiters may sleep. Supported current_task loads use
+logical task input for all backends. Hardware GS, current, IRQ, RCU and scheduler
+context are not switched; native services still run on the physical executor. [Admission](design/admission.md)
 sets the permitted context boundary.
 
 ## CALL, completion and exits

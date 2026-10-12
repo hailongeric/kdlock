@@ -43,16 +43,19 @@ share the 32-expansion limit; code that still cannot be decoded is refused.
 Some code depends on the CPU or task that runs it. KD therefore checks context
 operations across every block it will emit:
 
-- Explicit GS reads, writes and read-modify-write operations may use the pinned
-  origin CPU's GS base. A GS displacement is an offset, not a linear kernel address.
+- Spin and rwlock images may lower explicit GS reads, writes and read-modify-write
+  operations through the pinned origin CPU's GS base. Mutex images requiring that
+  base are refused because their waiters may sleep. A GS displacement is an offset,
+  not a linear kernel address.
 - Supported `current_task` MOV loads may use the original task supplied to JIT.
 - FS/base operations, implicit GS string/XLAT operations without lowering, known
   linear per-CPU/current addresses, scheduling/preemption/IRQ/BH/RCU references
   and calls to the wrong lock backend are refused.
 
-Pinning the waiter prevents task replacement. It does not prevent IRQ/NMI activity
-or arbitrary remote accesses, and it does not reproduce the waiter's complete
-per-CPU context on the combiner.
+Disabling preemption for a spin waiter prevents task replacement. Mutex waiters
+retain only migration pinning while asleep, so another task may run on their CPU.
+Neither pin prevents IRQ/NMI activity or arbitrary remote accesses, or reproduces
+the waiter's complete per-CPU context on the combiner.
 
 These byte and operand checks run before value propagation or a guarded retry.
 A rewritten RET can leave a connected block with no propagated input, but that

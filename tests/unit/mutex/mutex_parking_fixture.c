@@ -16,7 +16,6 @@ struct kd_mutex_node {
 struct kd_mutex { u8 locked; int gate_wait; } gate;
 enum { TASK_RUNNING, TASK_UNINTERRUPTIBLE };
 #define KD_MUTEX_WAITER_PROCESSED 1
-static bool kd_mutex_blocking = true;
 static unsigned int kd_mutex_spin_limit;
 static unsigned int kd_mutex_result_parks, kd_mutex_result_wakes, kd_mutex_gate_parks;
 static int preempt = 1, schedules, wakes, mode, resched, pauses;
@@ -82,9 +81,9 @@ static void reset(int m) {
 int main(void) {
     reset(0); kd_mutex_publish_result(&probe_node, true); kd_mutex_park_result(&probe_node);
     assert(!schedules && !wakes && preempt==1 && waiter.state==TASK_RUNNING);
-    reset(1); kd_mutex_wait_result_blocking(&probe_node);
+    reset(1); kd_mutex_wait_for_result(&probe_node);
     assert(schedules==1 && wakes==1 && probe_node.completed && preempt==1);
-    reset(2); kd_mutex_wait_result_blocking(&probe_node);
+    reset(2); kd_mutex_wait_for_result(&probe_node);
     assert(schedules==2 && wakes==1 && !probe_node.locked && !wait_slot.task);
     reset(3); kd_mutex_park_result(&probe_node); /* completion before state store */
     assert(!schedules && !wakes && waiter.state==TASK_RUNNING && !wait_slot.task);
@@ -92,15 +91,19 @@ int main(void) {
     assert(!schedules && wakes==1 && waiter.state==TASK_RUNNING && !wait_slot.task);
     reset(6); kd_mutex_park_result(&probe_node); /* publisher cannot reread recycled probe_node */
     assert(schedules==1 && wakes==1 && probe_node.wait==(void *)1 && !wait_slot.task);
-    reset(7); kd_mutex_wait_result_blocking(&probe_node);
+    reset(7); kd_mutex_wait_for_result(&probe_node);
     assert(schedules==1 && !wakes && probe_node.completed && !wait_slot.task);
     kd_mutex_flush_wakes(deferred, &deferred_count);
     assert(!deferred_count && !wakes);
-    reset(4); kd_mutex_spin_limit=64; kd_mutex_wait_result_blocking(&probe_node);
+    reset(4); kd_mutex_spin_limit=64; kd_mutex_wait_for_result(&probe_node);
     assert(pauses==2 && !schedules && !wakes);
-    reset(1); kd_mutex_spin_limit=64; resched=1; kd_mutex_wait_result_blocking(&probe_node);
+    for (unsigned int limit=1; limit<=4096; limit*=64) {
+        reset(1); kd_mutex_spin_limit=limit; kd_mutex_wait_for_result(&probe_node);
+        assert(pauses==(int)limit && schedules==1 && wakes==1 && preempt==1);
+    }
+    reset(1); kd_mutex_spin_limit=64; resched=1; kd_mutex_wait_for_result(&probe_node);
     assert(!pauses && schedules==1);
-    gate.locked=1; kd_mutex_spin_limit=0; kd_mutex_wait_gate_blocking(&gate);
+    gate.locked=1; kd_mutex_spin_limit=0; kd_mutex_wait_gate(&gate);
     assert(!gate.locked && !gate.gate_wait && preempt==1);
     reset(1);
     struct rcuwait *batch[16]; unsigned int count=0;
@@ -117,7 +120,5 @@ int main(void) {
     kd_mutex_defer_result(&probe_node,batch,&count);
     assert(count==1 && !wakes); kd_mutex_flush_wakes(batch,&count);
     assert(!count && wakes==1); finish_rcuwait(&wait_slot);
-    reset(0); kd_mutex_blocking=false; kd_mutex_publish_result(&probe_node, true);
-    assert(!probe_node.locked && probe_node.completed && !wakes);
     puts("PASS: completion/sleep races, spurious wake, persistent wake slot, bounded spin, gate wake");
 }

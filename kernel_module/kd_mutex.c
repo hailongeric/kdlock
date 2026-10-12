@@ -63,12 +63,8 @@
 #define KD_MUTEX_WAITER_PROCESSED 1
 #define KD_MUTEX_WAITING 1
 
-/* Fixed for one provider lifetime: changing this under published nodes or
- * generated code would change their wakeup/context contract. Spin is retained
- * as an explicit baseline. A limit is PAUSE iterations, not a time promise. */
-static bool kd_mutex_blocking __read_mostly;
-module_param_named(mutex_blocking, kd_mutex_blocking, bool, 0444);
-MODULE_PARM_DESC(mutex_blocking, "Bound mutex polling and sleep until result/gate wakeup");
+/* Mutex waiters always support blocking. Keep the bounded polling budget fixed
+ * for one provider lifetime; PAUSE iterations are not a time promise. */
 static unsigned int kd_mutex_spin_limit __read_mostly = 4096;
 module_param_named(mutex_spin_limit, kd_mutex_spin_limit, uint, 0444);
 MODULE_PARM_DESC(mutex_spin_limit, "Maximum PAUSE iterations before parking (0 sleeps immediately)");

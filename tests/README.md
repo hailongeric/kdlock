@@ -101,8 +101,8 @@ and spin limits of 1,024 and 4,096. It observes real result/gate sleepers, runs
 other work on the parked task's CPU, exercises 3,072 result publications and
 checks progress with a deliberately withheld completion wake and exact drain.
 These constructed packets execute no JIT bodies; the
-[policy benchmark](../bench/mutex_wait_compare/README.md) supplies that evidence.
-Use `--mutex-wait-mode blocking` with the task/ACK probe to test the same policy.
+[mutex benchmark](../bench/tclock_compare/README.md) supplies that evidence.
+The task/ACK probe and scheduler probe both use the only supported blocking policy.
 
 ```sh
 python3 tests/kernel/mutex/run_wait_selftest.py \
@@ -110,6 +110,16 @@ python3 tests/kernel/mutex/run_wait_selftest.py \
 ```
 
 ## Recent verification and historical evidence
+
+The [blocking-only mutex verification](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
+on 2026-10-12 covers seven basic/affected groups, including 101 context-admission
+cases, and 87 runner/report tests. Normal and SELFTEST `W=1` builds with UBSAN off
+have no `mutex_blocking` parameter or symbol; build logs retain objtool warnings.
+The scheduler probe passed at polling budgets 0, 1024 and 4096, and the cross-NUMA
+task/ACK probe passed on CPUs 0, 32 and 33. A 16-worker/eight-cacheline functional
+run completed 320,000 operations with 308,209 returned JIT bodies and complete
+drain. No full suite or performance matrix was run. The evidence retains the
+initial outdated test expectations, corrected checks and exact working-tree inputs.
 
 The [blocking-mutex record](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md#validation-and-retained-tuning)
 separates scheduler/withheld-wake probes, owner/ACK checks, affected unit groups

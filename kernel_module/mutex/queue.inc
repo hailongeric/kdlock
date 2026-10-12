@@ -89,20 +89,6 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock)
 	}
 }
 
-/* Called with preemption disabled from before request publication. Keep the
- * origin task on its CPU while another CPU executes GS accesses on its behalf.
- * The acquire pairs with completion/native-handoff publication; PAUSE is only
- * a polling hint and does not supply that ordering or disable interrupts. */
-static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
-{
-	if (kd_mutex_blocking) {
-		kd_mutex_wait_result_blocking(node);
-		return;
-	}
-	while (smp_load_acquire(&node->locked))
-		cpu_relax();
-}
-
 /* The scheduling gate cannot authorize a CS without the original mutex. */
 static void kd_mutex_claim_origin(struct kd_mutex *lock)
 {
@@ -115,13 +101,7 @@ static void kd_mutex_claim_origin(struct kd_mutex *lock)
 static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
 {
 	for (;;) {
-		if (kd_mutex_blocking)
-			kd_mutex_wait_gate_blocking(lock);
-		while (smp_load_acquire(&lock->locked))
-			if (kd_mutex_blocking)
-				kd_mutex_wait_gate_blocking(lock);
-			else
-				cpu_relax();
+		kd_mutex_wait_gate(lock);
 		if (cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0) {
 			/* This request now owns the gate and cannot be delegated.
 			 * Only the real mutex owner may execute/release its body. */
@@ -136,11 +116,11 @@ static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
 
 /* Reservation is serialized by preemption disable on this migration-pinned
  * CPU. An executor can later sleep acquiring the real mutex; its reserved
- * stack must survive that sleep, including result parking in blocking mode. */
-/* A reserved local predecessor may have enabled preemption while acquiring
- * the original mutex. Publishing another non-scheduling waiter on its CPU
- * would prevent that predecessor from ever resuming. Refuse before publication;
- * the new caller can sleep on the original mutex without exposing GS state. */
+ * stack must survive that sleep, including result parking. */
+/* Keep same-lock queue reservations on distinct origin CPUs. A reserved
+ * local predecessor may be sleeping while acquiring the original mutex or
+ * waiting for a result. Refuse before publication; the new caller can sleep
+ * on the original mutex without consuming another queue slot. */
 static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)
 {
 	struct kd_mutex_cpu_state *shadow = this_cpu_ptr(&kd_mutex_shadows);

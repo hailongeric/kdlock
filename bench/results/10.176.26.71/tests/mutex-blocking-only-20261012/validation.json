@@ -1,0 +1,132 @@
+{
+  "passed": true,
+  "machine": "10.176.26.71",
+  "kernel": "6.1.159-kdclobber2",
+  "snapshot": "mutex-blocking-only-20261012",
+  "guest_evidence": "/root/kdlock-evidence/10.176.26.71/tests/mutex-blocking-only-20261012",
+  "unit_groups_passed": 7,
+  "context_admission_cases": 101,
+  "runner_tests": {
+    "direct": 50,
+    "real_api_plan": 4,
+    "real_api_report": 6,
+    "rwlock": 13,
+    "historical_exporter": 14
+  },
+  "provider_builds": {
+    "normal": "PASS",
+    "selftest": "PASS",
+    "W": 1,
+    "UBSAN": false,
+    "obsolete_mutex_parameter": false,
+    "obsolete_mutex_symbol": false,
+    "warnings": "objtool stack-switch/RETHUNK warnings and Perl locale notices retained in build logs"
+  },
+  "wait_probe": {
+    "drained": true,
+    "passed": true,
+    "results": [
+      {
+        "deferred_progress": true,
+        "drained": true,
+        "errors": 0,
+        "gate_sleep": true,
+        "jit_bodies": 0,
+        "result_sleep": true,
+        "rounds": 1024,
+        "spin_limit": 0,
+        "voluntary_switches": 2054
+      },
+      {
+        "deferred_progress": true,
+        "drained": true,
+        "errors": 0,
+        "gate_sleep": true,
+        "jit_bodies": 0,
+        "result_sleep": true,
+        "rounds": 1024,
+        "spin_limit": 1024,
+        "voluntary_switches": 1090
+      },
+      {
+        "deferred_progress": true,
+        "drained": true,
+        "errors": 0,
+        "gate_sleep": true,
+        "jit_bodies": 0,
+        "result_sleep": true,
+        "rounds": 1024,
+        "spin_limit": 4096,
+        "voluntary_switches": 1031
+      }
+    ]
+  },
+  "task_probe": {
+    "acks": 4,
+    "deferred_frees": 2,
+    "drained": true,
+    "jit": false,
+    "jit_bodies": 0,
+    "mutex_jit_required": true,
+    "mutex_wait_mode": "blocking",
+    "orders": [
+      "B-A",
+      "A-B"
+    ],
+    "passed": true,
+    "registry_stress_deferred_frees": 3,
+    "registry_stress_iterations": 4096,
+    "registry_stress_workers": 3,
+    "scope": "task_owner_ack_resource_probe"
+  },
+  "jit": {
+    "name": "c08-t16-r00-direct-kdlock-adaptive",
+    "execution_status": "OK",
+    "drained": true,
+    "jit_bodies": 308209,
+    "jit_acceptance": "PASS",
+    "mutex_wait_mode": "blocking",
+    "mutex_spin_limit": 4096,
+    "mutex_wait_delta": {
+      "gate_wait_calls": 0,
+      "result_schedule_calls": 1,
+      "result_wakes": 1
+    },
+    "cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ]
+  },
+  "completed": 320000,
+  "final_idle": true,
+  "limits": [
+    "Basic and affected checks only; no full suite or performance matrix.",
+    "Initial test run retained: old GS-admission expectations and missing mocked ABI2 symbols were corrected; no live runtime failure."
+  ],
+  "archive": {
+    "path": "bench/results/10.176.26.71/raw/tests/mutex-blocking-only-20261012/evidence.tar.gz",
+    "sha256": "e96cf69d0b0768b30767edffc236fd9ebfee98cdf67cb6f09a9629b803342993",
+    "bytes": 5625005,
+    "verified_source_files": 254,
+    "current_tracked_code_matches": true,
+    "additional_generated_artifacts": [
+      "daemon/0xffffffffc0c02f1b/39032/asm/jit.S"
+    ]
+  },
+  "source_base": "742c81ebfa4ce8532d2c179ac28aa3ef9aba0f98",
+  "includes_preexisting_working_tree_edits": true
+}

@@ -6,15 +6,8 @@
 static __always_inline void kd_mutex_publish_result(struct kd_mutex_node *node,
                                                     bool completed)
 {
-	struct rcuwait *wait;
+	struct rcuwait *wait = node->wait;
 
-	if (!kd_mutex_blocking) {
-		if (completed)
-			WRITE_ONCE(node->completed, KD_MUTEX_WAITER_PROCESSED);
-		smp_store_release(&node->locked, 0);
-		return;
-	}
-	wait = node->wait;
 	/* One aligned x86 store publishes completion and releases the poll byte.
 	 * No queue packet field can be read again after this point. */
 	smp_store_release(&node->result, completed ? KD_MUTEX_WAITER_PROCESSED : 0);
@@ -73,10 +66,6 @@ static void kd_mutex_flush_wakes(struct rcuwait **wake, unsigned int *count)
 static __always_inline void kd_mutex_defer_result(struct kd_mutex_node *node,
 					struct rcuwait **wake, unsigned int *count)
 {
-	if (!kd_mutex_blocking) {
-		kd_mutex_publish_result(node, true);
-		return;
-	}
 	wake[(*count)++] = node->wait;
 	smp_store_release(&node->result, KD_MUTEX_WAITER_PROCESSED);
 	if (*count == 16)
@@ -99,13 +88,13 @@ static bool kd_mutex_spin_ready(u8 *notification)
 	return true;
 }
 
-static void kd_mutex_wait_result_blocking(struct kd_mutex_node *node)
+static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 {
 	if (!kd_mutex_spin_ready(&node->locked))
 		kd_mutex_park_result(node);
 }
 
-static void kd_mutex_wait_gate_blocking(struct kd_mutex *lock)
+static void kd_mutex_wait_gate(struct kd_mutex *lock)
 {
 	if (kd_mutex_spin_ready(&lock->locked))
 		return;
@@ -118,11 +107,9 @@ static void kd_mutex_wait_gate_blocking(struct kd_mutex *lock)
 static void kd_mutex_open_gate(struct kd_mutex *lock)
 {
 	smp_store_release(&lock->locked, 0);
-	if (kd_mutex_blocking) {
-		/* Pairs with prepare_to_wait's state barrier: either the head sees
-		 * zero, or we see its list insertion. Never skip a required wake. */
-		smp_mb();
-		if (waitqueue_active(&lock->gate_wait))
-			wake_up_all(&lock->gate_wait);
-	}
+	/* Pairs with prepare_to_wait's state barrier: either the head sees
+	 * zero, or we see its list insertion. Never skip a required wake. */
+	smp_mb();
+	if (waitqueue_active(&lock->gate_wait))
+		wake_up_all(&lock->gate_wait);
 }

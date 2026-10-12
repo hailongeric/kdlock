@@ -183,8 +183,8 @@ void kd_mutex_exit(void)
 		reserved_nodes,
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_origin_acquires),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_origin_releases));
-	KD_PR_INFO("kd_mutex waiting: blocking=%u spin_limit=%u result_parks=%lld result_wakes=%lld gate_parks=%lld\n",
-		kd_mutex_blocking, kd_mutex_spin_limit,
+	KD_PR_INFO("kd_mutex waiting: spin_limit=%u result_parks=%lld result_wakes=%lld gate_parks=%lld\n",
+		kd_mutex_spin_limit,
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_result_parks),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_result_wakes),
 		(long long)KD_MUTEX_STAT_READ(kd_mutex_gate_parks));

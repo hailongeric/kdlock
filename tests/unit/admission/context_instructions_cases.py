@@ -44,7 +44,7 @@ class ContextInstructionsCases(ContextCaseSupport):
                     self.assertIn(b"0x12345678", parent.lower())
 
 
-    def test_gs_reads_writes_and_rmw_use_origin_base(self):
+    def test_gs_access_uses_origin_base_only_for_spin(self):
         for kind in ("spin", "mutex"):
             for raw in (
                 "65488b042528000000c3",
@@ -56,6 +56,11 @@ class ContextInstructionsCases(ContextCaseSupport):
                     assembly, log, status = render(
                         raw, lock_kind=kind, return_status=True
                     )
+                    if kind == 'mutex':
+                        self.assertEqual(status, context_policy.NATIVE_ONLY_EXIT, log)
+                        self.assertFalse(assembly)
+                        self.assertIn('mutex cannot delegate origin-CPU GS storage', log)
+                        continue
                     self.assertEqual(status, 0, log)
                     self.assertIn(b"Stack_RGS", assembly)
                     self.assertNotIn(b"GS:[", re.sub(rb"/\*.*?\*/", b"", assembly, flags=re.S))

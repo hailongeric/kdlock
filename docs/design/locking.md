@@ -119,18 +119,17 @@ deferred; every exit rejoins them before handoff. The
 [implementation guide](mutex_implementation.md#queue-batch-execution-and-recovery)
 defines the scan/cohort limits and small-remote-cohort service rule.
 
-#### Mutex waiting policies
+#### Mutex waiting
 
-With `mutex_blocking=0`, a published KD waiter stays preemption-disabled and
-polls with PAUSE on a reserved stack. With `mutex_blocking=1`, it polls for at
-most `mutex_spin_limit` iterations, checks scheduler pressure every 64 iterations,
-then registers an RCU waiter and sleeps uninterruptibly. The queue head also
-uses bounded polling followed by a gate wait queue. Both policies retain the
-migration pin and the original Linux mutex's real ownership.
+A published KD waiter polls for at most `mutex_spin_limit` iterations, checks
+scheduler pressure every 64 iterations, then registers an RCU waiter and sleeps
+uninterruptibly. The queue head also uses bounded polling followed by a gate
+wait queue. Waiters retain their migration pin and the original Linux mutex's
+real ownership. There is no spin-only mutex policy.
 
 Result sleep uses a one-jiffy timeout to recheck completion when its wake remains
 buffered behind a later translated body. Ordinary wakes can end sleep sooner.
-The [implementation guide](mutex_implementation.md#selectable-blocking-policy)
+The [implementation guide](mutex_implementation.md#blocking-waits)
 explains the dependency case and wake ordering; scheduler delays are not bounded.
 
 Completion release-publishes the result, then orders its wake-slot check against
@@ -140,16 +139,15 @@ release. Acquisition references and RCU task-cache eviction protect the task
 through a late wake. Controlled drain checks each registration as well as slots,
 waiter balances, frames, owners and ACKs.
 
-Blocking-mode translation refuses images that import the origin CPU's GS base,
+Mutex translation refuses images that import the origin CPU's GS base,
 including emitted guards and learned callees. Such bodies run natively. Logical
 `current` uses a separate task input and remains supported. This is necessary
 because another task may run on a sleeping caller's CPU. One physical task still
 owns each per-CPU executor context; a competing task cannot overwrite its frame.
 
-With more runnable tasks than CPUs, a spin-mode waiter can prevent a task it
-depends on from running. Blocking mode makes its CPU available during a long
-wait, but does not replace the finite per-CPU slot or same-CPU native-fallback
-rules. The historical mode-4 spin failure remains in
+Blocking makes the waiter's CPU available during a long wait. The finite per-CPU
+slot and same-CPU native-fallback rules still apply. The historical mode-4 spin
+failure remains in
 [TODO](../TODO.md#current-checkpoint).
 
 ### 5.3 Nested A/B and native continuation

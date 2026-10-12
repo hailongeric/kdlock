@@ -238,8 +238,7 @@ class SyscallSession(Session):
             self.run(['insmod', self.out/'build/kdlock_km.ko', 'bench_quiet=1', 'jit_timing=0',
                       'hotlock_stats=1', 'target_process=sc_worker', 'spin_entry_ratio_limit=2',
                       'spin_prefetch=2',
-                      'mutex_blocking=' + str(int(s.get('mutex_wait_mode') == 'blocking')),
-                      'mutex_spin_limit=' + str(s.get('mutex_spin_limit', 1024))], 'load-kd.log')
+                      'mutex_spin_limit=' + str(s.get('mutex_spin_limit', 4096))], 'load-kd.log')
             self.loaded_kd = True
         if s['arm'] == 'tclock':
             self.run(['insmod', self.out/'build'/(self.tc_module+'.ko'), 'komb_batch_size=1024'], 'load-tc.log')
@@ -264,7 +263,7 @@ class SyscallSession(Session):
             (PARAM/'prepare').write_text('1')
         if self.loaded_kd:
             s['parameters'] = parameters()
-            require(s['parameters']['mutex_blocking'] == ('Y' if s['mutex_wait_mode'] == 'blocking' else 'N') and
+            require('mutex_blocking' not in s['parameters'] and s['mutex_wait_mode'] == 'blocking' and
                     int(s['parameters']['mutex_spin_limit']) == s['mutex_spin_limit'], 'mutex waiting policy differs')
             sym = [line.split() for line in Path('/proc/kallsyms').read_text().splitlines()]
             begin = [int(v[0], 16) for v in sym if len(v) == 4 and v[2:] == ['rb_body', '[real_api]']]
@@ -414,31 +413,24 @@ def make_plan(args):
     for kind, query, count, n, repeat in itertools.product(args.kinds, args.queries, args.entries, args.threads, range(args.repeats)):
         order = args.backends[repeat % len(args.backends):] + args.backends[:repeat % len(args.backends)]
         for arm in order:
-            modes = (('blocking', 'spin') if repeat % 2 else ('spin', 'blocking')) if (
-                arm == 'kdlock' and args.mutex_wait_mode == 'both') else (
-                args.mutex_wait_mode if arm == 'kdlock' else 'not_applicable',)
-            for mode in modes:
-                suffix = '-' + mode if arm == 'kdlock' and args.mutex_wait_mode == 'both' else ''
-                plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}{suffix}', kind=kind,
-                    query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
-                    cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
-                    peak_window_ms=300, peak_settle_ms=300, sample_ms=10,
-                    warmup=args.warmup, warmup_ms=args.warmup_ms,
-                    helper_waves=args.helper_waves,
-                    syscalls_per_op=2 if kind == 'setfd' else 1,
-                    file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
-                    lock_kind=lock_kind(kind), mutex_wait_mode=mode,
-                    mutex_spin_limit=args.mutex_spin_limit if arm == 'kdlock' else None,
-                    entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
-                    caller_abi='clobber' if arm == 'kdlock' else 'c'))
+            plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}', kind=kind,
+                query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
+                cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
+                peak_window_ms=300, peak_settle_ms=300, sample_ms=10,
+                warmup=args.warmup, warmup_ms=args.warmup_ms,
+                helper_waves=args.helper_waves,
+                syscalls_per_op=2 if kind == 'setfd' else 1,
+                file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
+                lock_kind=lock_kind(kind), mutex_wait_mode='blocking' if arm == 'kdlock' else 'not_applicable',
+                mutex_spin_limit=args.mutex_spin_limit if arm == 'kdlock' else None,
+                entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
+                caller_abi='clobber' if arm == 'kdlock' else 'c'))
     return plan
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--mutex-wait-mode', choices=('spin', 'blocking', 'both'), default='spin',
-                   help='both pairs KD policies and alternates their order between rounds')
     p.add_argument('--mutex-spin-limit', type=int, default=4096)
     p.add_argument('--build-from', type=Path)
     p.add_argument('--kinds', nargs='+', choices=['xattr', 'ofd', 'setfd', 'utsname', *sorted(MUTEX_KINDS)], default=['ofd'])
