@@ -1,4 +1,4 @@
-# 2026-10-08: mandatory-JIT mutex optimization trials
+codex# 2026-10-08: mandatory-JIT mutex optimization trials
 
 No runtime candidate was promoted. Bounded task retention repeatedly regressed;
 the smaller changes did not establish a repeatable benefit against both opening

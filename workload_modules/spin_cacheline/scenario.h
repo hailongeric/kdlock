@@ -15,22 +15,29 @@ static kd_spinlock_t sc_inner = KD_SPINLOCK_INITIALIZER;
 #define SC_INNER_CALL(symbol) KD_SPIN_DIRECT_CALL(symbol, &sc_inner, "")
 #define SC_EXTRA_LOCK(n) SC_INNER_CALL(kd_spin_lock_clobber_v1)
 #if SC_SCENARIO == 1
-#define SC_EXIT() do { \
- SC_INNER_CALL(kd_spin_unlock_clobber_v1); \
- SC_UNLOCK(); \
-} while (0)
+#define SC_EXIT()                                 \
+    do                                            \
+    {                                             \
+        SC_INNER_CALL(kd_spin_unlock_clobber_v1); \
+        SC_UNLOCK();                              \
+    } while (0)
 #elif SC_SCENARIO == 2
 /* Releasing the outer object while B remains held exercises early release
  * and the out-of-order continuation without changing data protection. */
-#define SC_EXIT() do { \
- SC_UNLOCK(); \
- SC_INNER_CALL(kd_spin_unlock_clobber_v1); \
-} while (0)
+#define SC_EXIT()                                 \
+    do                                            \
+    {                                             \
+        SC_UNLOCK();                              \
+        SC_INNER_CALL(kd_spin_unlock_clobber_v1); \
+    } while (0)
 #else
 #error "Unknown KD scenario"
 #endif
 #else
-#define SC_EXTRA_LOCK(n) do { } while (0)
+#define SC_EXTRA_LOCK(n) \
+    do                   \
+    {                    \
+    } while (0)
 #define SC_EXIT() SC_UNLOCK()
 #endif
 #endif

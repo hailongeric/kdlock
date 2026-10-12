@@ -10,7 +10,7 @@ __attribute__((noipa)) __u64 fixture_post_work(__u64 state)
 	return sc_post_work(state);
 }
 
-/* This must still contain all eight ALU instructions even without a consumer. */
+/* Every configured round must remain even without a consumer of the result. */
 __attribute__((noipa)) void fixture_discard(__u64 state)
 {
 	(void)sc_post_work(state);
@@ -24,7 +24,7 @@ int main(void)
 		__u64 actual = seeds[i], expected = seeds[i];
 
 		for (unsigned int call = 0; call < 32; call++) {
-			for (unsigned int round = 0; round < 4; round++)
+			for (unsigned int round = 0; round < SC_POST_WORK_ROUNDS; round++)
 				expected = expected * 1664525ULL + 1013904223ULL;
 			actual = fixture_post_work(actual);
 			if (actual != expected)

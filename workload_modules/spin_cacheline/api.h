@@ -21,7 +21,8 @@
 #define SC_TIMED_MAX_DURATION_NS 10000000000ULL
 
 /* Fixed x86-64 ioctl ABI; no kdlock dependency or per-operation syscall. */
-struct sc_layout {
+struct sc_layout
+{
 	__u32 version, line_bytes, slots, lock_bytes;
 	__u64 lock_addr, control_addr, data_addr;
 	__u64 slot_addr[SC_SLOTS];
@@ -29,29 +30,34 @@ struct sc_layout {
 	__u32 workload, buckets, entries, key_range, resched, lock_kind;
 };
 
-struct sc_run {
+struct sc_run
+{
 	__u32 cachelines, reserved;
 	__u64 iterations, completed;
 };
 
-struct sc_counts {
+struct sc_counts
+{
 	__u64 values[SC_SLOTS];
 	__u32 active, reserved;
 };
 
 /* Timed runs have one common CLOCK_MONOTONIC deadline. Configuration clears
  * telemetry while quiescent; fixed SC_RUN neither reads nor writes it. */
-struct sc_timed_config {
+struct sc_timed_config
+{
 	__u64 started_ns, deadline_ns;
 	__u32 workers, reserved;
 };
 
-struct sc_timed_run {
+struct sc_timed_run
+{
 	__u32 cachelines, worker;
 	__u64 started_ns, deadline_ns, completed, active_started_ns, finished_ns;
 };
 
-struct sc_progress {
+struct sc_progress
+{
 	__u64 started_ns, deadline_ns, read_started_ns, read_finished_ns;
 	__u32 workers, reserved;
 	__u64 completed[SC_TIMED_MAX_WORKERS];
