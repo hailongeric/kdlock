@@ -17,6 +17,7 @@ import runpy
 import statistics
 
 THREADS = [1, 8, 16, 32, 48, 60]
+FULL_THREADS = [*range(1, 9), *range(12, 65, 4)]
 BUILD_ID = '5ca28058e156f34a2c7fe91e8e0fbf92f4e51960'
 ARMS = ('stock', 'native', 'tclock', 'kd-spin', 'kd-blocking')
 LABELS = dict(zip(ARMS, ('Stock', 'Native', 'TCLock', 'KD spin', 'KD blocking')))
@@ -119,14 +120,19 @@ def check_execution(row):
     require(row['jit_status'] == expected, 'returned-body classification differs')
     required = row.get('require_jit', False)
     if not api and row['lock_kind'] != 'rwlock':
-        # This matrix has no disabled, functional or two/three-worker arms.
-        required = row['threads'] > 1 and (row['threads'] >= 20 or row['lock_kind'] == 'mutex')
-        require(row['jit_acceptance'] == ('PASS' if jit else 'NO_JIT'), 'JIT acceptance differs')
+        # The frozen direct runner permits zero-JIT plain two/three-worker
+        # controls. Larger contended mutex and >=20-worker spin cases require it.
+        low_contention = row['threads'] in (2, 3)
+        required = row['threads'] >= 20 or row['lock_kind'] == 'mutex' and row['threads'] >= 4
+        acceptance = 'PASS' if jit else 'NO_JIT_LOW_CONTENTION' if low_contention else 'NO_JIT'
+        require(row['jit_acceptance'] == acceptance, 'JIT acceptance differs')
     require(row['execution_status'] == ('NO_JIT' if required and not jit else 'OK'),
             'execution verdict does not match returned-body requirement')
 
 
-def audit_group(folder, group, approved, spin_limit, *, allow_not_run=False):
+def audit_group(folder, group, approved, spin_limit, *, allow_not_run=False,
+                threads=THREADS, worker_cpus=None, collector=63):
+    worker_cpus = list(range(max(threads))) if worker_cpus is None else worker_cpus
     counts = Counter()
     manifest = read(folder / 'source-sha256.json')
     for relative, expected in manifest.items():
@@ -186,8 +192,8 @@ def audit_group(folder, group, approved, spin_limit, *, allow_not_run=False):
         saved = read(path / 'session.json')
         require(all(k in r and r[k] == v for k, v in saved.items()), 'saved session differs')
         require(r['drained'] and r['execution_status'] in ('OK', 'NO_JIT'), 'undrained/failed session')
-        require(r['threads'] in THREADS and r['cpus'] == list(range(r['threads']))
-                and r['collector_cpu'] == 63 and r['duration_ms'] == 2000, 'placement/timing differs')
+        require(r['threads'] in threads and r['cpus'] == worker_cpus[:r['threads']]
+                and r['collector_cpu'] == collector and r['duration_ms'] == 2000, 'placement/timing differs')
         require(not faults.search((path / 'kernel.log').read_text()), 'kernel fault in accepted sample')
         m = r['measurement']
         require(m.get('ok') if api else m['data_ok'] and m['complete'], 'failed business result')
@@ -357,7 +363,7 @@ def comparisons(stats):
     return rows
 
 
-def tables(out, stats, ratios):
+def tables(out, stats, ratios, threads_grid=THREADS):
     by_point = {(r['subject'], r['threads']): r for r in ratios}
     text = ['# Every workload and worker count', '',
         'Rates are Mops/s. Whole-run tables use three-round medians; peak tables use the highest '
@@ -373,7 +379,7 @@ def tables(out, stats, ratios):
         text += ['## ' + name, '', 'Whole-run throughput:', '',
             '| Workers | Stock | Native | TCLock | KD spin | KD blocking | B/S whole | B/S CPU | Spin / blocking JIT rounds |',
             '| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |']
-        for threads in THREADS:
+        for threads in threads_grid:
             arms = {r['backend']: r for r in stats if r['subject'] == name and r['threads'] == threads}
             r = by_point[name, threads]
             rates = [f"{arms[a]['whole_ops_s_median']/1e6:.3f}" if a in arms and arms[a]['complete'] else '—' for a in ARMS]
@@ -385,7 +391,7 @@ def tables(out, stats, ratios):
         text += ['', 'Best warmed peak throughput:', '',
             '| Workers | Stock | Native | TCLock | KD spin | KD blocking | B/S peak |',
             '| ---: | ---: | ---: | ---: | ---: | ---: | ---: |']
-        for threads in THREADS:
+        for threads in threads_grid:
             arms = {r['backend']: r for r in stats if r['subject'] == name and r['threads'] == threads}
             r = by_point[name, threads]
             rates = [f"{arms[a]['peak_ops_s_max']/1e6:.3f}" if a in arms and arms[a]['complete'] else '—' for a in ARMS]
@@ -396,7 +402,7 @@ def tables(out, stats, ratios):
     (out / 'TABLES.md').write_text('\n'.join(text))
 
 
-def plots(out, stats):
+def plots(out, stats, threads_grid=THREADS):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -422,7 +428,8 @@ def plots(out, stats):
                         return [r[metric + suffix] / 1e6 if r['complete'] else float('nan') for r in rows]
                     ax.plot(xs, values(score), 'o-', color=COLORS[arm], label=LABELS[arm], markersize=3)
                     ax.fill_between(xs, values('_min'), values('_max'), color=COLORS[arm], alpha=.08)
-                ax.set(title=name, xlabel='Pinned workers', ylabel=ylabel, xticks=THREADS)
+                ticks = threads_grid if len(threads_grid) < 12 else [1, 8, 16, 24, 32, 40, 48, 56, 64]
+                ax.set(title=name, xlabel='Pinned workers', ylabel=ylabel, xticks=ticks)
                 ax.axvline(32, color='#bbbbbb', linestyle=':', linewidth=1)
                 ax.grid(alpha=.2)
                 ax.legend(fontsize=8)
@@ -430,7 +437,8 @@ def plots(out, stats):
                 ax.set_visible(False)
             fig.text(.5, .006, 'Three rounds; shading = observed range, not a confidence interval. '
                      'Workers >32 span both NUMA nodes.\n'
-                     'NO_JIT controls are included (TABLES.md). Spin/rwlock policy pairs repeat unchanged algorithms.',
+                     'NO_JIT controls are included (TABLES.md). Spin/rwlock policy pairs repeat unchanged algorithms.'
+                     + ('\nAt 64 workers, collector and last worker share a physical core.' if max(threads_grid) == 64 else ''),
                      ha='center', va='bottom', fontsize=8)
             fig.tight_layout(rect=(0, .035, 1, 1))
             stem = out / (category + '-' + metric)
@@ -529,6 +537,47 @@ def superseded(directories, out):
     write(out / 'superseded-verification.json', dict(passed=True, sessions=len(samples), runs=receipts))
 
 
+def matrix_grid(state, plan):
+    """Accept only the complete legacy or requested 22-point grids."""
+    threads = state['threads']
+    require(threads in (THREADS, FULL_THREADS), 'unrecognized complete worker grid')
+    cpus = state.get('worker_cpus', list(range(max(threads))))
+    collector = state['collector_cpu']
+    require(len(cpus) >= max(threads) and len(set(cpus)) == len(cpus) and min(cpus) >= 0
+            and collector >= 0 and collector not in cpus[:max(threads)], 'invalid collector/worker placement')
+    expected = len(threads) * 405
+    require(state['state'] == 'COMPLETE' and state['expected_sessions'] == expected
+            and sum(g['expected'] for g in plan) == expected
+            and len(plan) == (14 if state.get('paired_policies') else 24)
+            and len({g['name'] for g in plan}) == len(plan), 'complete matrix required')
+    return threads, cpus, collector, expected
+
+
+def check_coverage(samples, threads):
+    require({r['subject'] for r in samples} == SUBJECTS, 'incomplete workload coverage')
+    actual = Counter((r['subject'], r['threads'], r['backend'], r['repeat']) for r in samples)
+    expected = Counter((name, n, arm, repeat) for name in SUBJECTS for n in threads
+        for arm in (ARMS if not name.startswith(('spin-', 'mutex-', 'rwlock-')) else ARMS[1:])
+        for repeat in range(3))
+    require(actual == expected, 'missing/duplicated subject, worker, backend or round')
+
+
+def check_pair_order(records, group):
+    if group['mode'] != 'both':
+        return
+    for i, row in enumerate(records):
+        if row['arm'] != 'kdlock':
+            continue
+        modes = ['blocking', 'spin'] if row['repeat'] % 2 else ['spin', 'blocking']
+        other_index = i + 1 if row['mutex_wait_mode'] == modes[0] else i - 1
+        require(0 <= other_index < len(records), 'unpaired KD policy')
+        other = records[other_index]
+        require(other['arm'] == 'kdlock' and subject(other) == subject(row) and
+                other['threads'] == row['threads'] and other['repeat'] == row['repeat'] and
+                other['mutex_wait_mode'] == modes[1 if other_index > i else 0],
+                'KD policies not adjacent and alternating')
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--input', type=Path, required=True)
@@ -541,21 +590,22 @@ def main():
     root, out = args.input.resolve(), args.output.resolve()
     require(not out.exists() and not out.is_relative_to(root), 'use a new report directory outside raw evidence')
     state, plan = read(root / 'matrix-status.json'), read(root / 'matrix-plan.json')
-    require(state['state'] == 'COMPLETE' and state['expected_sessions'] == 2430
-            and state['threads'] == THREADS and state['collector_cpu'] == 63 and len(plan) == 24,
-            'complete default matrix required')
+    threads, cpus, collector, expected = matrix_grid(state, plan)
     approved = read(root / 'source-sha256-approved.json')
     samples, counts, evidence = [], Counter(), {}
     for group in plan:
-        rows, checked, saved = audit_group(root / group['name'], group, approved, state['mutex_spin_limit'])
+        check_pair_order(read(root / group['name'] / 'records.json'), group)
+        rows, checked, saved = audit_group(root / group['name'], group, approved, state['mutex_spin_limit'],
+                                         threads=threads, worker_cpus=cpus, collector=collector)
         samples += rows
         counts.update(checked)
         evidence[group['name']] = saved
         print(group['name'], len(rows), 'verified', flush=True)
-    require(len(samples) == 2430 and {r['subject'] for r in samples} == SUBJECTS, 'incomplete workload coverage')
+    require(len(samples) == expected, 'incomplete sample count')
+    check_coverage(samples, threads)
     stats = aggregate(samples)
     ratios = comparisons(stats)
-    require(len(stats) == 810 and len(ratios) == 186, 'incomplete comparison grid')
+    require(len(stats) == expected // 3 and len(ratios) == len(SUBJECTS) * len(threads), 'incomplete comparison grid')
     out.mkdir(parents=True)
     (out / 'export.py').write_bytes(Path(__file__).read_bytes())
     for name, data in (('samples', samples), ('statistics', stats), ('comparison', ratios),
@@ -569,9 +619,9 @@ def main():
         exporter_sha256=sha(Path(__file__)))
     write(out / 'verification.json', receipt)
     write(out / 'evidence.json', evidence)
-    tables(out, stats, ratios)
+    tables(out, stats, ratios, threads)
     if args.plots:
-        plots(out, stats)
+        plots(out, stats, threads)
     if args.pilots:
         pilots(args.pilots.resolve(), out)
     if args.paired:

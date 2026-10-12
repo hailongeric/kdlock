@@ -397,10 +397,48 @@ class SyscallSession(Session):
         self.record['drained'] = True
 
 
+def worker_cpus(args):
+    cpus = list(map(int, args.cpus.split(',')))
+    require(len(set(cpus)) == len(cpus) and
+            len(set(args.threads)) == len(args.threads) and
+            0 < min(args.threads) <= max(args.threads) <= min(64, len(cpus)) and
+            args.collector_cpu not in cpus[:max(args.threads)], 'invalid worker/collector CPUs')
+    require(min(cpus) >= 0 and max(cpus) < 1024 and 0 <= args.collector_cpu < 1024,
+            'CPU outside supported affinity mask')
+    return cpus
+
+
+def make_plan(args):
+    cpus = worker_cpus(args)
+    plan = []
+    for kind, query, count, n, repeat in itertools.product(args.kinds, args.queries, args.entries, args.threads, range(args.repeats)):
+        order = args.backends[repeat % len(args.backends):] + args.backends[:repeat % len(args.backends)]
+        for arm in order:
+            modes = (('blocking', 'spin') if repeat % 2 else ('spin', 'blocking')) if (
+                arm == 'kdlock' and args.mutex_wait_mode == 'both') else (
+                args.mutex_wait_mode if arm == 'kdlock' else 'not_applicable',)
+            for mode in modes:
+                suffix = '-' + mode if arm == 'kdlock' and args.mutex_wait_mode == 'both' else ''
+                plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}{suffix}', kind=kind,
+                    query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
+                    cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
+                    peak_window_ms=300, peak_settle_ms=300, sample_ms=10,
+                    warmup=args.warmup, warmup_ms=args.warmup_ms,
+                    helper_waves=args.helper_waves,
+                    syscalls_per_op=2 if kind == 'setfd' else 1,
+                    file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
+                    lock_kind=lock_kind(kind), mutex_wait_mode=mode,
+                    mutex_spin_limit=args.mutex_spin_limit if arm == 'kdlock' else None,
+                    entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
+                    caller_abi='clobber' if arm == 'kdlock' else 'c'))
+    return plan
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--mutex-wait-mode', choices=('spin', 'blocking'), default='spin')
+    p.add_argument('--mutex-wait-mode', choices=('spin', 'blocking', 'both'), default='spin',
+                   help='both pairs KD policies and alternates their order between rounds')
     p.add_argument('--mutex-spin-limit', type=int, default=4096)
     p.add_argument('--build-from', type=Path)
     p.add_argument('--kinds', nargs='+', choices=['xattr', 'ofd', 'setfd', 'utsname', *sorted(MUTEX_KINDS)], default=['ofd'])
@@ -428,12 +466,9 @@ def main():
     idle()
     for name in ('real_api', 'tclock_backend_km', 'tclock_mutex_backend_km', 'tclock_rwlock_backend_km', 'tc_allocator_guard'):
         require(not Path('/sys/module', name).exists(), 'existing module: '+name)
-    cpus = list(map(int, args.cpus.split(',')))
-    require(len(set(cpus)) == len(cpus) and 0 < min(args.threads) <= max(args.threads) <= len(cpus)
-            and max(args.threads) <= 63 and args.collector_cpu not in cpus[:max(args.threads)]
-            and args.repeats > 0 and 0 <= args.helper_waves <= 16, 'invalid CPU/repeat configuration')
-    require(min(cpus) >= 0 and max(cpus) < 1024 and 0 <= args.collector_cpu < 1024
-            and 1 <= min(args.entries) <= max(args.entries) <= 4096
+    worker_cpus(args)
+    require(args.repeats > 0 and 0 <= args.helper_waves <= 16, 'invalid repeat/helper configuration')
+    require(1 <= min(args.entries) <= max(args.entries) <= 4096
             and 1 <= args.value_size <= 4096 and 700 <= args.duration_ms <= 10000
             and args.warmup > 0 and 0 <= args.warmup_ms <= 10000, 'invalid workload bounds')
     for kind, query in itertools.product(args.kinds, args.queries):
@@ -463,23 +498,7 @@ def main():
     write_json(out/'source-sha256.json', frozen)
     build(out, args)
     require(sources() == frozen, 'source changed during build')
-    plan = []
-    for kind, query, count, n, repeat in itertools.product(args.kinds, args.queries, args.entries, args.threads, range(args.repeats)):
-        order = args.backends[repeat % len(args.backends):] + args.backends[:repeat % len(args.backends)]
-        for arm in order:
-            plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}', kind=kind,
-                query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
-                cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
-                peak_window_ms=300, peak_settle_ms=300, sample_ms=10,
-                warmup=args.warmup, warmup_ms=args.warmup_ms,
-                helper_waves=args.helper_waves,
-                syscalls_per_op=2 if kind == 'setfd' else 1,
-                file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
-                lock_kind=lock_kind(kind),
-                mutex_wait_mode=args.mutex_wait_mode if arm == 'kdlock' else 'not_applicable',
-                mutex_spin_limit=args.mutex_spin_limit if arm == 'kdlock' else None,
-                entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
-                caller_abi='clobber' if arm == 'kdlock' else 'c'))
+    plan = make_plan(args)
     write_json(out/'plan.json', plan)
     try:
         for i, spec in enumerate(plan):

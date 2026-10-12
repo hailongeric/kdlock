@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include "../../workload_modules/real_api/control.h"
 
-#define MAX_WORKERS 63
+#define MAX_WORKERS 64
 #define MAX_SAMPLES 2048
 #define BATCH 256
 static int nworkers, cpus[MAX_WORKERS], collector = 63, entries = 128;

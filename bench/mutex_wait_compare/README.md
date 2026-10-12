@@ -45,6 +45,23 @@ retain the stock Linux control. Spin/rwlock protocols do not use the mutex wait
 policy; their two KD runs are regression controls, not two new spin/rwlock
 implementations. The matrix contains 2,430 sessions at the default grid.
 
+For the complete 22-point grid (1–8, then 12–64 in steps of four), use the
+verified temporary [66-vCPU layout](../../tools/vm/README.md#complete-164-worker-comparison):
+
+```sh
+python3 bench/mutex_wait_compare/run.py --full-grid --paired-policies \
+  --cpus $(seq 0 31) $(seq 33 64) --collector-cpu 65 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/full-wait-NEW
+```
+
+This reruns all 31 configurations, including the larger cacheline controls, for
+8,910 measured sessions. Spin/mutex payloads and real APIs pair KD policies
+within each round; native rwlock payloads retain separate policy groups as
+regression controls. No baseline is duplicated. Worker prefixes use 32 physical
+cores on each NUMA node. At 64 workers, collector 65 and worker 64 share host
+core 63 with QEMU service threads; this is part of the measurement environment.
+Archive the complete evidence before restoring the normal 64-vCPU boot.
+
 Individual runners accept `--mutex-wait-mode spin|blocking` and
 `--mutex-spin-limit N`. KD records contain the actual module policy and
 `mutex_wait_before/after/delta`: result schedule calls, successful result wakes,
@@ -52,7 +69,7 @@ and gate wait calls. A call count alone does not prove a task descheduled; the
 [scheduler probe](../../tests/kernel/mutex/run_wait_selftest.py) separately
 observes sleeping tasks and same-CPU progress.
 
-The direct spin/mutex runner also accepts `both`, which places the two KD
+The direct spin/mutex and real API runners also accept `both`, which places the two KD
 policies next to each other and reverses their order on alternating rounds.
 For example, a separate c01/c16 mutex diagnostic is:
 
@@ -70,11 +87,12 @@ later groups. Never pool interrupted or tuning candidates into final scores.
 Raw evidence belongs outside the checkout and reports under
 `bench/results/10.176.26.71/bench/mutex_wait/`.
 
-After measurement, export a completed default grid into a separate directory:
+After measurement, export a completed default or full grid into a separate directory:
 
 ```sh
 python3 bench/mutex_wait_compare/export.py --input RAW_RUN --output NEW_REPORT --plots
 python3 bench/mutex_wait_compare/test_export.py
+python3 bench/mutex_wait_compare/test_plan.py
 ```
 
 The exporter verifies saved source/binary/JIT hashes and recorded module policy,
@@ -86,7 +104,11 @@ Matplotlib is needed only for plots.
 Optional `--pilots BENCH_PARENT`, `--paired RUN...` and `--superseded MATRIX...`
 audit retained tuning, alternating-policy diagnostics and explicitly stopped
 earlier versions into separate exports. They never fill missing final samples.
-The final matrix must still contain all 2,430 planned records, with each executed
+The final matrix must contain all 2,430 or 8,910 planned records, with each executed
 session drained; any required-JIT exclusion remains unscored.
+The exporter checks every subject/count/backend/round, worker CPU prefix and
+paired policy order. Plain 2/3-worker direct cases may be NO_JIT controls, as
+specified by the runner; contended mutex cases at four or more workers still
+require returned JIT bodies.
 The [2026-10-12 report](../results/10.176.26.71/bench/mutex_wait/20261012/README.md)
 records the implementation, workload/lock contracts, validation and comparison.

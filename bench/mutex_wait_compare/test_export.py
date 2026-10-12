@@ -87,6 +87,47 @@ class ExportTests(unittest.TestCase):
         self.assertIn('rwlock-rcuht-w20', export.SUBJECTS)
         self.assertIn('pipebytes-query-n128-v64', export.SUBJECTS)
 
+    def test_low_contention_controls_do_not_relax_contended_acceptance(self):
+        row = dict(arm='kdlock', lock_kind='mutex', threads=2, jit_bodies=0,
+                   jit_status='NO_JIT', jit_acceptance='NO_JIT_LOW_CONTENTION', execution_status='OK')
+        for n in (2, 3):
+            export.check_execution(dict(row, threads=n))
+        with self.assertRaises(ValueError):
+            export.check_execution(dict(row, threads=4))
+        with self.assertRaises(ValueError):
+            export.check_execution(dict(row, threads=3, jit_acceptance='PASS'))
+
+    def test_every_requested_point_and_round_is_required(self):
+        rows = [dict(subject=name, threads=n, backend=arm, repeat=i)
+                for name in export.SUBJECTS for n in export.FULL_THREADS
+                for arm in (export.ARMS[1:] if name.startswith(('spin-', 'mutex-', 'rwlock-')) else export.ARMS)
+                for i in range(3)]
+        self.assertEqual(len(rows), 8910)
+        export.check_coverage(rows, export.FULL_THREADS)
+        with self.assertRaises(ValueError):
+            export.check_coverage(rows[:-1], export.FULL_THREADS)
+        # Same sample total cannot conceal a duplicated point and a missing one.
+        with self.assertRaises(ValueError):
+            export.check_coverage(rows[:-1] + rows[:1], export.FULL_THREADS)
+
+    def test_full_grid_rejects_collector_collision(self):
+        state = dict(state='COMPLETE', threads=export.FULL_THREADS, collector_cpu=65,
+                     worker_cpus=[*range(32), *range(33, 65)], expected_sessions=8910,
+                     paired_policies=True)
+        plan = [dict(name=str(i), expected=0) for i in range(14)]
+        plan[-1]['expected'] = 8910
+        self.assertEqual(export.matrix_grid(state, plan)[-1], 8910)
+        with self.assertRaises(ValueError):
+            export.matrix_grid(dict(state, collector_cpu=64), plan)
+
+    def test_pair_order_rejects_separated_policies(self):
+        base = dict(kind='pipebytes', query='query', entries=16, value_size=64,
+                    threads=64, repeat=1, arm='kdlock')
+        rows = [dict(base, mutex_wait_mode=mode) for mode in ('blocking', 'spin')]
+        export.check_pair_order(rows, dict(mode='both'))
+        with self.assertRaises(ValueError):
+            export.check_pair_order([rows[0], dict(base, arm='native'), rows[1]], dict(mode='both'))
+
 
 if __name__ == '__main__':
     unittest.main()

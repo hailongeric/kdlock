@@ -151,6 +151,12 @@ Follow [operations](../../docs/AGENTS.md), synchronize reviewed source, verify
 the current kernel, NUMA placement and physical vCPU pins, and confirm a fresh
 monitor snapshot of the actual CPU topology. Do not rebuild the kernel. The
 standard guest has 64 vCPUs; collector 63 is excluded from worker cohorts.
+The client supports up to 64 workers. A 64-worker run requires explicit
+`--cpus 0,...,31,33,...,64 --collector-cpu 65` on the documented temporary
+[66-vCPU layout](../../tools/vm/README.md#complete-164-worker-comparison).
+Use a comma-separated list with every CPU spelled out, not the ellipses above.
+The collector then shares physical host core 63 with the last worker; retain
+that limitation and topology with the results.
 
 ```sh
 export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
@@ -173,11 +179,16 @@ Select KD blocking mutexes with `--mutex-wait-mode blocking`; the default is
 recorded and checked against the loaded module. The
 [wait-policy comparison](../mutex_wait_compare/README.md) retains separate
 statistics for both modes across all accepted API configurations.
+`--mutex-wait-mode both` places the two KD modes next to one another and reverses
+their order on alternating rounds. Native, TCLock and Stock still run once per
+round. Use the wait-policy exporter for these paired runs; the single-policy
+API report deliberately refuses to merge them.
 The recorded figures used Matplotlib 3.9.4. Basic and directly affected checks:
 
 ```sh
 make -C tests/unit run
 python3 bench/real_api/test_report.py
+python3 bench/real_api/test_plan.py
 python3 -m unittest discover -s bench/spin_cacheline -p test_peak.py
 ```
 
