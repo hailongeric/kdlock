@@ -1,0 +1,156 @@
+{
+  "scope": "source-host documentation and archive maintenance",
+  "machine": "380G10",
+  "date": "2026-10-12",
+  "source_base": "792db45f28d775da667572ebd1e2080025cfd88a",
+  "runtime_code_changed": false,
+  "executable_tests_run": false,
+  "documents_reviewed_before_cleanup": 101,
+  "updated_documents": 25,
+  "removed_files": [
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-screen-v1/README.md",
+      "sha256": "cd14a8de580521051dd8fd5bc72467d0a39cad4876afd81c9e40a8f659d7ceab",
+      "bytes": 1545,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-screen-v1/summary.csv",
+      "sha256": "1de31153f88daaea2532b5b0669e497bc010d694fb7bb0f1d62b1d89a667d7cb",
+      "bytes": 631,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-screen-v1/summary.json",
+      "sha256": "256ea1a30ca7eb08e85cd5adcdd490d41793ee9dcb380c320e8b379209819f61",
+      "bytes": 4313,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-learning-v1/README.md",
+      "sha256": "1f087336e48c2194d1b82072c838b7a66c11ad7fc9cda8fa98ecd614a1d9bd2c",
+      "bytes": 1470,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-learning-v1/summary.csv",
+      "sha256": "18126e192da4e94bf1c721fc24fdf274c1bb08f280c7b8e9d58093824376945d",
+      "bytes": 299,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-learning-v1/summary.json",
+      "sha256": "c8f998b3691b95e08c02660cad044a0a58df5d656db7f6186203a75d39c296f4",
+      "bytes": 544,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-learning-v2/README.md",
+      "sha256": "1f087336e48c2194d1b82072c838b7a66c11ad7fc9cda8fa98ecd614a1d9bd2c",
+      "bytes": 1470,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-learning-v2/summary.csv",
+      "sha256": "18126e192da4e94bf1c721fc24fdf274c1bb08f280c7b8e9d58093824376945d",
+      "bytes": 299,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/real_api/20261011/exploratory/real-api-learning-v2/summary.json",
+      "sha256": "c8f998b3691b95e08c02660cad044a0a58df5d656db7f6186203a75d39c296f4",
+      "bytes": 544,
+      "reason": "Generated performance report contains no accepted measurements; unique failure record remains in evidence.json."
+    },
+    {
+      "path": "docs/design/protocol_simplification.md",
+      "sha256": "2c6d5664fc3154d39b2d1fb225bbb6bbc68a19f5c9a61cf287c9773137e54a25",
+      "bytes": 8744,
+      "reason": "Unimplemented design proposals; fixed historical link retained in validation index."
+    },
+    {
+      "path": "bench/full_compare/__pycache__/export.cpython-310.pyc",
+      "sha256": "48c24e016a1bee0664856bd926b8f574d3e622bdbfc619e28ae1daab73d6776f",
+      "bytes": 20189,
+      "reason": "Regenerable Python bytecode cache."
+    }
+  ],
+  "pruned_extracted_copies": [
+    {
+      "root": "bench/results/10.176.26.71/raw/bench/real-sync-20261011/extracted",
+      "archive": "bench/results/10.176.26.71/raw/bench/real-sync-20261011/real-sync-20261011.tar.gz",
+      "archive_sha256": "68be68c2e0aa21169eaa57a6940cf3886a7bbf9c46e39cf65182c9c2d30aa59e",
+      "files": 20425,
+      "symlinks": 360,
+      "logical_bytes": 405255671,
+      "allocated_bytes_removed": 463519744,
+      "normalized_symlinks": 0,
+      "removed": true
+    },
+    {
+      "root": "bench/results/380G10/raw/legacy/hash-diagnosis-20261008/export",
+      "archive": "bench/results/380G10/raw/legacy/hash-diagnosis-20261008/guest-evidence.tar.gz",
+      "archive_sha256": "57e8c0e0fbad050c0c44ef7d76c31ca71416a7df2debf4d74d9ae92e35e2295b",
+      "files": 11495,
+      "symlinks": 108,
+      "logical_bytes": 694352964,
+      "allocated_bytes_removed": 729071616,
+      "normalized_symlinks": 108,
+      "removed": true
+    },
+    {
+      "root": "bench/results/380G10/raw/legacy/mutex-priorities-20261008/export",
+      "archive": "bench/results/380G10/raw/legacy/mutex-priorities-20261008/guest-evidence.tar.gz",
+      "archive_sha256": "9374b962b22a1f5e731fc748a34eba66bffbdec82d008b215a79a728a4c4c111",
+      "files": 19812,
+      "symlinks": 204,
+      "logical_bytes": 419834055,
+      "allocated_bytes_removed": 479481856,
+      "normalized_symlinks": 204,
+      "removed": true
+    },
+    {
+      "root": "bench/results/380G10/raw/legacy/protocol-simplify-20261008/export-complete-restored-1009",
+      "archive": "bench/results/380G10/raw/legacy/protocol-simplify-20261008/guest-complete-restored-1009.tar.gz",
+      "archive_sha256": "44212d4414b8de2962e7fad208047fe86c46e070bc430d9bf5ffe7c6feeb7911",
+      "files": 102996,
+      "symlinks": 1540,
+      "logical_bytes": 1472817334,
+      "allocated_bytes_removed": 1787994112,
+      "normalized_symlinks": 1540,
+      "removed": true
+    }
+  ],
+  "duplicate_files_removed": 154728,
+  "duplicate_logical_bytes_removed": 2992260024,
+  "allocated_bytes_removed": 3460067328,
+  "preservation": {
+    "canonical_archives_retained": true,
+    "unique_failure_records_retained": true,
+    "old_tracked_bytes_available_at": "792db45f28d775da667572ebd1e2080025cfd88a",
+    "preexisting_files_unchanged": {
+      "bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md": "7131841fb0620b7efbdfc4b8c8b08cd0a580892a6561c7abd35e537a2a832ca9",
+      "bench/spin_cacheline/post_work_fixture.c": "5f277955f57259c327534b2b782c56003359b7c7f6a2f1065961b8dac18f9fb9",
+      "bench/spin_cacheline/test_spin_cacheline.py": "0ad8fe7a92406a366a19afc344489c9879fcc3c232d309dc8c61aa003f4fe7b3",
+      "include/kd_mutex_direct.h": "8c01cfc7b555d9e48e25acf037e2fef6cfdcbb20334a66bfad03144e79ef2c57",
+      "workload_modules/spin_cacheline/README.md": "5e70b463f0196fbe5127555bb38399be42723fa9aa7d547470529908be4dcfdd",
+      "workload_modules/spin_cacheline/api.h": "fba2e339e232d1b70d3d2babaab55a03cc9a001ee05e30042124925732aa285b",
+      "workload_modules/spin_cacheline/direct.h": "ce92e5fd5fc75b9cf39efa0704ea95731eae434024589ac39352be14e86ddef0",
+      "workload_modules/spin_cacheline/post_work.h": "2fdb17ee1afe3b88ecb8a88eb928789bef399fd7a586416bf6b49f2a9806caee",
+      "workload_modules/spin_cacheline/scenario.h": "50220d822902d847b7f26c7b8bc49f7031feb51003663ac899b0e8ad8ae48263"
+    }
+  },
+  "validation": {
+    "documents": 97,
+    "local_links_checked": 976,
+    "fixed_git_links_checked": 54,
+    "current_cli_examples_checked": 23,
+    "preexisting_files_unchanged": 9,
+    "issues": []
+  },
+  "maintenance_archive": {
+    "path": "bench/results/380G10/raw/tests/documentation-cleanup-20261012/evidence.tar.gz",
+    "sha256": "5105f51e11eb993d725ce41f12923805987b2e2f18bd5923d1e2c78082a4a4a5",
+    "bytes": 6036230
+  }
+}

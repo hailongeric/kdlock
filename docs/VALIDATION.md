@@ -1,75 +1,43 @@
-# Historical validation index
+# Validation index
 
-Current behavior lives in [DESIGN](DESIGN.md); commands and fresh evidence live in
-[tests](../tests/README.md) and [benchmarks](../bench/README.md). Historical passes
-apply only to their frozen source and do not combine into a current full pass.
-Known failures and deferrals remain in [TODO](TODO.md).
+[Tests](../tests/README.md) owns check selection and commands;
+[operations](AGENTS.md) owns the verified guest environment, recovery and drain.
+Receipts apply to the source, kernel, boot policy and topology they record.
+Publication, actual JIT execution and performance acceptance are separate results.
+Known failures remain in [TODO](TODO.md).
 
-## Rwlock ABI3 and RCUHT, 2026-10-10
+## Current mutex verification
 
-Implementation and evidence were committed as `ae88bda`. The
-[rwlock verification record](../tests/kernel/rwlock/README.md#abi3-verification-on-2026-10-10)
-records two basic programs, five affected unit groups, 13 benchmark checks and
-drained KD-native/KD-JIT correctness sessions. The execution fixture checked
-4,359 assertions and detected 30 injected mutations. Live sessions each completed
-4,801,000 operations with up to 16 concurrent readers, exclusive writers and
-exact updates. Separate RCUHT probes at 16/36 workers returned actual JIT writers.
+The [blocking-only mutex receipt](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
+records seven basic/affected groups, 101 context-admission cases and 87 runner/report
+tests on 2026-10-12. Normal and SELFTEST `W=1` builds had no mutex wait-mode selector.
+The scheduler probe passed with polling budgets 0, 1024 and 4096. The task/ACK
+probe passed across NUMA nodes. A 16-worker/eight-cacheline functional run returned
+308,209 JIT bodies across 320,000 operations and fully drained. The receipt retains
+build warnings, the initial corrected test assumptions, archive hashes and exact
+working-tree inputs. No full suite or new performance matrix was run.
 
-The [RCUHT report](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
-retains all 270 timed sessions for 1%/20% writes at fifteen thread counts, the
-TCLock assembly audit, raw archives, frozen identities and rejected candidates.
-All sessions passed correctness/progress/drain. Strict peak-and-whole parity
-passed 21 of 30 configurations, so the overall performance target failed.
-JIT and NO_JIT groups remain separate; publication is not execution evidence.
+## Historical receipts
 
-These results used the original 40-vCPU guest. The initial 60-vCPU destination
-has a separate [migration validation](../bench/README.md#vm-migration-validation).
-The current 64-vCPU destination uses 32 cores per NUMA node; its setup and
-affected-check receipts belong to [the new machine](../bench/results/10.176.26.71/README.md).
-No full test suite or guest-kernel rebuild was run. Historical passes remain
-evidence for their captured source and topology.
+| Scope | Evidence |
+| --- | --- |
+| Destination host, including migration, 64-vCPU setup and later comparisons | [10.176.26.71 index](../bench/results/10.176.26.71/README.md) |
+| Original-host spin/mutex/rwlock measurements | [380G10 index](../bench/results/380G10/README.md) |
+| Rwlock ABI3 correctness, 2026-10-10 | [Frozen verification](https://github.com/hailongeric/kdlock/blob/792db45f28d775da667572ebd1e2080025cfd88a/tests/kernel/rwlock/README.md#abi3-verification-on-2026-10-10) |
+| Original-host mandatory mutex JIT, 2026-10-08 | [Frozen verification](https://github.com/hailongeric/kdlock/blob/792db45f28d775da667572ebd1e2080025cfd88a/tests/README.md#mandatory-mutex-jit-2026-10-08) |
+| Optimization closeout and duplicate-artifact cleanup, 2026-10-09 | [Frozen maintenance record](https://github.com/hailongeric/kdlock/blob/792db45f28d775da667572ebd1e2080025cfd88a/docs/VALIDATION.md#closeout-maintenance) |
+| Unimplemented outlined/native-register proposals | [Archived design note](https://github.com/hailongeric/kdlock/blob/792db45f28d775da667572ebd1e2080025cfd88a/docs/design/protocol_simplification.md) |
 
-## Completed optimization phase
+Raw archives include failed and interrupted runs. A fresh checkout contains
+compact reports, not those ignored archives. Offline hash/consistency checks do
+not execute code again or establish a current full-project pass.
 
-The spin/mutex phase closed on 2026-10-09. Its
-[final report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-contains 540 baseline sessions at all 15 requested thread counts and a complete
-2,286-session trial audit. Source, ELF, generated-code, business-result,
-execution-witness and drain checks passed. Five targeted guest test groups and
-an ordinary UBSAN-off `W=1` build passed; existing objtool warnings remain.
-These results do not establish a full-suite pass or performance parity.
+## Repository maintenance
 
-The final source measurement is frozen `d2868e3`; evidence and documentation were
-committed as `cb1629a`. The later closeout changes documentation and removes
-superseded reports and derived files. It does not execute new benchmarks or
-change runtime behavior.
-
-## Closeout maintenance
-
-Closeout removed 32 superseded report, chart and data artifacts. Their exact
-bytes remain at `cb1629a`; [benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.md)
-provides fixed retrieval paths. The open performance plan was replaced by
-[performance status](PERFORMANCE.md).
-
-Two obsolete extracted copies under `bench/.tmp/protocol-simplify-20261008/`
-(`export` and `export-rejected-memory-1009`) were removed after every regular
-file and logical symlink matched the retained canonical guest archive. They
-contained about 2.40 GiB of duplicate file data. The current
-`export-complete-restored-1009`, all raw archives and kernel provenance bundles
-remain. Seven regenerable cache directories and the ignored daemon executable
-were also removed; no host daemon was running.
-Five unused historical directory trees containing only empty directories were
-removed after confirming they had no tracked files or current source references.
-
-The local cleanup inventory and exact preservation proof are under
-`bench/.tmp/closeout-20261009/`. Existing unrelated edits were preserved.
-Documentation links, fixed Git records, final-report hashes and the staged diff
-were checked. No runtime code changed and no build/test/benchmark was rerun.
-
-Older reports and rejected experiments are indexed in
-[benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.md). Raw ignored/guest
-archives are preserved; a new checkout does not include them. Offline consistency
-checks are not fresh execution or authentication of every historical artifact.
+The [2026-10-12 documentation cleanup](../bench/results/380G10/tests/documentation-cleanup-20261012.json)
+records static document/CLI checks, removed empty reports and the byte/symlink
+proof for four redundant extracted copies. Their canonical archives remain
+available. This source-host maintenance record contains no new execution results.
 
 ## Fixed records
 

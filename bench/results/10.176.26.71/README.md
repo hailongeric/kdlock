@@ -1,60 +1,45 @@
 # Results from 10.176.26.71
 
-This is the machine directory for tests and benchmarks in the VM on the Ubuntu
-Xeon Gold 6438N host at `eric@10.176.26.71`. Source edits remain in the original
-checkout on `380G10` and are synchronized to this VM before testing.
+This index covers the VM on the Ubuntu Xeon Gold 6438N host at
+`eric@10.176.26.71`. Source edits stay on `380G10` and are synchronized before
+execution. Receipts retain their own source, kernel, boot policy and topology.
 
-- [Full 1–64-worker rerun, 2026-10-12](bench/mutex_wait/20261012-full/README.md):
-  all 31 configurations, c01/hash and real APIs, three rounds at all 22 requested
-  counts under Native/TCLock/KD spin/blocking, plus Stock API controls;
-  8,910 drained sessions, 8,908 accepted and two retained zero-JIT exclusions.
-  Full tables, 11 PNG/SVG figures, CPU/JIT analysis and archive verification.
-- [Earlier mutex spin and blocking policies, 2026-10-12](bench/mutex_wait/20261012/README.md):
-  implementation, sleeping-waiter and deferred-wake validation, and
-  2,430 accepted/drained sessions across 31 configurations, with Native/TCLock
-  baselines, complete tables/charts, and paired diagnostics and earlier candidates
-  retained separately.
-- [Mutex and read/write API results, 2026-10-11](bench/real_api/20261011-sync/RESULTS.md):
-  pipe-buffer/capacity queries, shared-file seeks and bounded UTS namespace
-  reads/writes; 504 accepted sessions, three-round comparisons, JIT evidence and retained
-  exploratory failures. The UTS experiment distinguishes private Native rwsem
-  from KD/TCLock reader/writer spinlocks and the original global Stock path.
-- [Spinlock API results, 2026-10-11](bench/real_api/20261011/RESULTS.md):
-  OFD conflict queries and file-table bitmap updates, their kernel locks and
-  TCLocks paper context; stock helper plus matched Native/TCLock/KD, three rounds
-  at six worker counts, 288 accepted sessions. The [run record](bench/real_api/20261011/README.md)
-  retains validation, xattr refusal and exploratory failures; slower cases remain
-  in the results.
-- [Earlier mutex optimization, 2026-10-11](bench/comparison/mutex-opt-20261011T045425Z/README.md):
-  c01/hash, all three backends, 22 worker counts, three rounds;
-  396 accepted, drained sessions. Causes, selected changes, rejected candidates
-  and unresolved regressions are retained. Strict multithreaded parity holds at
-  14 of 42 points; c02/c08/c16 excluded.
-- [Earlier all-lock c01/hash rerun, 2026-10-11](bench/comparison/full-matrix-20261011T025525Z/overview.md):
-  all three backends and lock families, 22 worker counts, three rounds;
-  1,584 drained sessions after the NUMA/mutex fixes; 1,582 accepted.
-  c02/c04/c08/c16 excluded; complete charts, statistics and archive replay.
-- [NUMA spin and mutex investigation, 2026-10-10](bench/comparison/numa-mutex-20261010/README.md):
-  root causes, accepted fixes and remaining Native gaps; 354 accepted timed
-  sessions, six diagnostics, placement/progress controls and rejected candidates.
-  The final three-round comparison contains 72 c01/hash sessions.
-- [Complete 22-point comparison, 2026-10-10](bench/comparison/full-matrix-20261010T094831Z/README.md):
-  spin, rwlock and mutex under KDLock/TCLock/Linux Native at 1–8 and 12–64
-  workers; all maintained performance payloads, three rounds, 3,960 accepted and
-  drained timed sessions. The report includes all charts, CSVs and archive receipts.
-- [Earlier bounded 64-vCPU performance comparison, 2026-10-10](bench/comparison/performance-20261010T081816Z/README.md):
-  rwlock, spin and mutex tables, scaling charts and three-round statistics;
-  all 144 sessions passed correctness and drained.
-- [64-vCPU setup and affected checks, 2026-10-10](tests/20261010-topology64/README.md)
-- [Initial 60-vCPU migration validation, 2026-10-10](bench/migration-20261010T070707Z/README.md)
+## Current source verification
 
-The 22-point comparisons use a temporary
-66-vCPU boot, 32 worker CPUs per NUMA node and collector vCPU 65. At 64 workers,
-the collector and QEMU services share
-physical host core 63 with the last worker. The earlier six-count waiting-policy and bounded reports use a
-64-vCPU boot and collector 63. All record the host's `ondemand` governor;
-keep their samples separate from the initial 60-vCPU migration validation and
-the [original-host reports](../380G10/README.md).
-Record each run's actual topology and frozen source. Current connection and
-operational instructions are in [the project guide](../../../docs/PROJECT_GUIDE.md).
-See [the common layout](../README.md) for guest output and host archive paths.
+The [blocking-only mutex receipt](tests/mutex-blocking-only-20261012/validation.json)
+records the `792db45` policy change: seven basic/affected groups, 87 runner/report
+tests, normal/SELFTEST builds, sleeping-waiter and cross-NUMA owner/ACK probes,
+and a fully drained 320,000-operation JIT run. It records all validation limits
+and raw archive hashes. It is functional evidence, not a new performance matrix.
+
+## Frozen benchmark reports
+
+The latest [2026-10-12 full comparison](bench/mutex_wait/20261012-full/README.md)
+was measured before the polling-only mutex policy was removed. It includes 31
+configurations, 22 worker counts and three rounds: 8,910 drained sessions, 8,908
+accepted and two zero-JIT exclusions. Use the KD blocking series for the retained
+mutex policy. [Performance status](../../../docs/PERFORMANCE.md) summarizes its
+throughput, CPU/JIT and topology limits.
+
+| Earlier report | Captured scope |
+| --- | --- |
+| [Six-count wait-policy comparison, 2026-10-12](bench/mutex_wait/20261012/README.md) | 2,430 accepted/drained sessions; scheduler validation, tuning and policy controls |
+| [Mutex and read/write APIs, 2026-10-11](bench/real_api/20261011-sync/RESULTS.md) | 504 accepted sessions; pipes, seeks and bounded UTS metadata |
+| [Spinlock APIs, 2026-10-11](bench/real_api/20261011/RESULTS.md) | 288 accepted sessions; OFD queries and descriptor flags; [run record](bench/real_api/20261011/README.md) retains failed pilots |
+| [Mutex optimization, 2026-10-11](bench/comparison/mutex-opt-20261011T045425Z/README.md) | 396 accepted/drained c01/hash sessions at 22 worker counts |
+| [All-lock c01/hash rerun, 2026-10-11](bench/comparison/full-matrix-20261011T025525Z/overview.md) | 1,584 drained sessions, 1,582 accepted, after NUMA/mutex fixes |
+| [NUMA investigation, 2026-10-10](bench/comparison/numa-mutex-20261010/README.md) | Accepted fixes, rejected candidates, placement/progress controls and parity gaps |
+| [Complete baseline, 2026-10-10](bench/comparison/full-matrix-20261010T094831Z/README.md) | 3,960 accepted/drained sessions, including larger cacheline payloads |
+| [Bounded 64-vCPU comparison, 2026-10-10](bench/comparison/performance-20261010T081816Z/README.md) | 144 accepted/drained sessions at selected counts |
+| [64-vCPU setup](tests/20261010-topology64/README.md) | Topology and affected-check receipts |
+| [Initial migration](bench/migration-20261010T070707Z/README.md) | 60-vCPU setup and validation |
+
+The full 22-point comparisons used temporary 66-vCPU boots with collector 65.
+At 64 workers, the collector, last worker and QEMU services share physical host
+core 63. The six-count and bounded reports used 64 vCPUs and collector 63.
+The migration used 60 vCPUs. Keep these measurements separate from the
+[original-host reports](../380G10/README.md).
+
+Current connection and execution instructions live in the
+[project guide](../../../docs/PROJECT_GUIDE.md). The [common layout](../README.md)
+defines guest output, host archives and historical relocation mappings.

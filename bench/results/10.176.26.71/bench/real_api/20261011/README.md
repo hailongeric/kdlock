@@ -17,14 +17,17 @@ comparisons. It also covers single-thread cost, regressions and comparison limit
 
 These pilot and failed sessions remain separate from the final matrices. Their
 original status and samples are preserved, including subsequent cleanup records.
+The three zero-accepted pilots are described here and in [the evidence record](evidence.json).
+Their empty generated score tables were removed; the original files remain in
+[frozen Git history](https://github.com/hailongeric/kdlock/tree/792db45f28d775da667572ebd1e2080025cfd88a/bench/results/10.176.26.71/bench/real_api/20261011/exploratory).
 
 | Exploratory run | Outcome retained separately |
 | --- | --- |
-| [screen-v1](exploratory/real-api-screen-v1/README.md) | Setup failed before module loading: this kernel's tmpfs has no `user.*` xattr handler. One failure, seven unrun sessions. The workload was changed to root-only `trusted.*`. |
+| [screen-v1](evidence.json) | Setup failed before module loading: this kernel's tmpfs has no `user.*` xattr handler. One failure, seven unrun sessions. The workload was changed to root-only `trusted.*`. |
 | [screen-v2](exploratory/real-api-screen-v2/README.md) | Eight single-thread xattr/OFD controls passed; no KD JIT execution. |
 | [contended-v1](exploratory/real-api-contended-v1/README.md) | 32 short-warmup sessions passed. OFD produced JIT bodies; xattr hit an unlearned `strcmp()` helper and completed through the native remainder with zero returned JIT bodies. Those xattr rates are fallback results. |
-| [learning-v1](exploratory/real-api-learning-v1/README.md) | Runner incorrectly required zero writers while the paused daemon still held its writer lease. Session remains failed/undrained in its original record; subsequent normal retirement and unload are documented in the [manual cleanup note](exploratory/manual-drain-note.json). |
-| [learning-v2](exploratory/real-api-learning-v2/README.md) | After helper learning, xattr was refused by pointer/context analysis with `CONTEXT_ADDRESS_WIDENED` / `CONTEXT_NATIVE_ONLY`. Automatic cleanup drained successfully. [Exact diagnostic excerpt](exploratory/xattr-refusal.txt). Admission safeguards were retained. |
+| [learning-v1](evidence.json) | Runner incorrectly required zero writers while the paused daemon still held its writer lease. Session remains failed/undrained in its original record; subsequent normal retirement and unload are documented in the [manual cleanup note](exploratory/manual-drain-note.json). |
+| [learning-v2](evidence.json) | After helper learning, xattr was refused by pointer/context analysis with `CONTEXT_ADDRESS_WIDENED` / `CONTEXT_NATIVE_ONLY`. Automatic cleanup drained successfully. [Exact diagnostic excerpt](exploratory/xattr-refusal.txt). Admission safeguards were retained. |
 | [setfd-screen-v1](exploratory/real-api-setfd-screen-v1/README.md) | 24 sessions passed with duplicated descriptors sharing one file description. KD lost the 48-thread cases to TCLock. These have a different reference-counter bottleneck and shorter warmup than the final bitmap test; they are not pooled with it. |
 
 ## Environment and validation

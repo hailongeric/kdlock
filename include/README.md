@@ -9,7 +9,7 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | --- | --- | --- |
 | Explicit spin object/API | [kd_spin_type.h](kd_spin_type.h), [kd_spin_direct.h](kd_spin_direct.h), [kd_spin_fast.h](kd_spin_fast.h) | One KD word; ordinary preemption pair; no Linux/TCLock mixing |
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
-| Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_direct.h](kd_mutex_direct.h) | Original Linux mutex, ABI2 and opaque outer cookie |
+| Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_direct.h](kd_mutex_direct.h) | Original Linux mutex, blocking waits, ABI2 and opaque outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
@@ -36,7 +36,10 @@ Mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 before its matching same-task unlock. The native CAS saves an exact owner; contended
 KD entry saves zero. Nested translated operations use `KD_MUTEX_DIRECT_LOCK/UNLOCK`;
 prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`.
-[Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
+Mutex acquisition may sleep uninterruptibly after bounded polling; migration
+remains pinned while a queued waiter sleeps. Delegated images requiring origin-CPU
+GS storage are refused. [Ownership](../docs/design/locking.md#mutex-outer-direct)
+explains the routing.
 
 Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair
 `kd_write_lock/unlock`. Delegating writers use `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`

@@ -30,13 +30,13 @@ The example uses collector 63 for the documented 64-vCPU destination. Its
 from the historical 40-vCPU runs, which used collector 38. Verify the actual
 online/available CPUs and keep the collector outside every worker set.
 
-Full spin cacheline matrix after that verification:
+Example timed spin cacheline comparison after that verification:
 
 ```sh
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
   --backends native tclock kdlock --workload cacheline --cachelines 1 \
-  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 --repeats 3 \
+  --threads 1 8 16 32 48 60 --repeats 3 \
   --duration-ms 2000 --peak-window-ms 300 --collector-cpu 63 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
@@ -52,7 +52,7 @@ has no `mutex_jit` parameter.
 
 | Option/default | Meaning |
 | --- | --- |
-| `--threads 1 4 8 16 20` | Short default; explicitly select the full 15-point set above |
+| `--threads 1 4 8 16 20` | Short default; set worker counts explicitly for a timed comparison |
 | `--repeats 3` | Three rounds/configuration, rotating backend order |
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
@@ -76,8 +76,8 @@ Use the [complete-matrix driver](../../tools/vm/README.md#complete-164-worker-co
 for one-cacheline and hash payloads; larger cacheline sizes require an explicit
 opt-in. Its temporary 66-vCPU placement keeps
 64 distinct worker vCPUs and a separate guest collector; the collector shares
-a physical core with the last worker at the 64-worker point. The 15-point command
-above remains a smaller comparison that fits the regular 64-vCPU boot.
+a physical core with the last worker at the 64-worker point. The example above
+uses six worker counts and fits the regular 64-vCPU boot.
 
 The runner builds matching copies of each backend, workload and provider. It
 checks the built ELF interfaces, return layouts and sanitizer references. KD
@@ -108,9 +108,9 @@ is 0; actual ELF metadata rejects misleading off labels. Spin IRQ checks are dis
 for this IRQ-enabled task-context comparator, and batches do not truncate on
 `need_resched()`. TCLock/workloads have UBSAN off; the kernel's policy is unchanged.
 Mutex workers preregister one fixed-affinity context per CPU before measurement;
-contexts/task refs survive complete cohort drain. KD retains migration pins and
-reserved stacks in both mutex policies; spin polls and blocking can sleep.
-The [wait-policy runner](../mutex_wait_compare/README.md) compares both modes.
+contexts/task refs survive complete cohort drain. KD mutex waiters retain migration
+pins and reserved stacks while sleeping after bounded polling. Historical waiting-policy
+comparisons are indexed in the [archive guide](../mutex_wait_compare/README.md).
 See [TCLock scope](../../tclock_backend/README.md) and
 [all nine lock protocols](../../docs/design/lock_protocols.md).
 
@@ -146,35 +146,11 @@ Keep whole-run per-worker and node shares too, especially cohorts with unequal
 NUMA membership (24 threads in the original 40-vCPU setup). A bounded batch and
 positive observed counts do not prove starvation freedom.
 
-The current [mutex c01/hash optimization report](../results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
-compares all 22 worker counts with three rounds per backend. It documents bounded
-task caching, NUMA selection and field-width retirement reads, including rejected
-candidates and the remaining parity gaps. Only c01 and hash were run.
-
-The closed phase screened candidates separately at 16/36 threads, adding 2 for
-caller changes and 24 for fairness. An apparent regression was rechecked once;
-repeatable median losses above 3% at protected points caused rejection. The full
-comparison used all 15 thread counts and both payloads. Parity required matching
-the stronger of TCLock and Native at each point, with peak and sustained rates
-reported separately; 90% of TCLock's peak was an intermediate milestone.
-
-The [protocol simplification report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-keeps isolated screens, full 15-point matrices and rechecks separate under
-`nopvspin`. Both combined terminal/memory and memory-only candidates were rejected
-for repeated regressions. No runtime change was promoted; the eager code pool
-remains current. Raw stage names `final` and `retained` identify those rejected
-candidates. The fresh restored-runtime comparison (`restored`) contains 540
-sessions across all 15 thread counts and both payloads for spin and mutex.
-
-The spin/mutex phase closed on 2026-10-09. The earlier
-[hash diagnosis](../results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis) and
-[mandatory-JIT mutex trials](../results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md) use the same
-boot policy. The [previous 540-sample matrix](../results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
-predates `nopvspin` and must remain separate. All of these runs use four lock-outside
-arithmetic rounds; the unrelated 64-round working-tree change was excluded.
-The [evidence index](../results/380G10/bench/tclock_compare/HISTORY.md) links source identities, failed candidates
-and complete statistics. Publication, correct execution and performance acceptance
-are distinct results.
+[Performance status](../../docs/PERFORMANCE.md) summarizes the latest frozen
+comparison and remaining gaps. The [machine result indexes](../results/README.md)
+retain older reports, source identities and rejected trials. Current blocking-only
+mutex checks are [recorded separately](../results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json).
+Publication, correct execution and performance acceptance are distinct results.
 
 ## Functional and diagnostic checks
 

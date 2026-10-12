@@ -14,17 +14,10 @@ Edit source in the checkout on `380G10` and synchronize it to this guest first.
 New guest evidence belongs under `/root/kdlock-evidence/10.176.26.71/bench/<run>`;
 retain host archives and compact summaries in [the machine result layout](../results/README.md).
 
-The latest [RCUHT report](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) contains 270 runs.
-All produced correct results and shut down cleanly. At 21 of the 30 combinations
-of write percentage and thread count, KD matched or exceeded both Native and
-TCLock on both peak and whole-run throughput. It fell short at the other nine.
-
-Older reports remain separate:
-
-- [2026-10-09 scaling](../results/380G10/bench/rwlock_compare/20261009-scaling/README.md): 270 runs with ABI1 and
-  one protected cacheline, at all 15 thread counts and 1%/20% writes.
-- [Initial mixes](../results/380G10/bench/rwlock_compare/20261009/README.md): 180 cacheline runs, 12 runs with KD
-  delegation disabled, and the ABI1 hash-writer refusal later resolved by ABI3.
+[Performance status](../../docs/PERFORMANCE.md) summarizes the latest frozen
+all-lock comparison. The [destination-host index](../results/10.176.26.71/README.md)
+and [original-host index](../results/380G10/README.md) retain the separate
+measurements, caller ABIs, JIT evidence and topology limits.
 
 ## Cases
 

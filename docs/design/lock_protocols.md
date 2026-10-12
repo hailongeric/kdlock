@@ -276,9 +276,7 @@ Returned-body KD JIT evidence and TCLock mutex returned-batch delegation
 counts are separate from payload correctness. TCLock spin and rwlock delegation
 counts remain unmeasured. KD rwlock JIT share uses completed writes as its
 denominator. Performance acceptance, failed candidates and remaining gaps live in
-the [current performance status](../PERFORMANCE.md),
-[RCUHT rwlock report](../../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) and
-[final spin/mutex report](../../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
-Those original-host reports retain their historical source and topology. The
-[current mutex report](../../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
-covers the new-host task cache, NUMA queue selection and c01/hash comparison.
+[performance status](../PERFORMANCE.md) and the
+[machine result indexes](../../bench/results/README.md). Current blocking-only
+mutex verification is [recorded separately](../../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json).
+Frozen reports retain the implementation, policy and topology used by each run.

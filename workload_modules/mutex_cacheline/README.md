@@ -36,7 +36,7 @@ make -C workload_modules/mutex_cacheline \
 The [mutex runner](../../bench/tclock_compare/run_mutex.py) builds the other
 arms with the correct provider/include paths and `Module.symvers`, prepares
 KD translations, registers all workers, performs warmup, verifies payload and
-returned-body JIT/delegation evidence, and drains/retire/unloads in order.
+returned-body JIT/delegation evidence, and drains, retires sources and unloads modules in order.
 Commands, the full thread set, UBSAN-off provider policy and statistics are
 maintained in the [comparison README](../../bench/tclock_compare/README.md).
 KD-only low-contention native samples remain distinct from JIT positives.

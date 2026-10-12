@@ -18,15 +18,11 @@ implementations can be compared. Callers choose an API explicitly; loading KD do
 not redirect ordinary Linux lock calls. Builds require the recorded `kdclobber2`
 guest-kernel interfaces.
 
-The [benchmark guide](bench/README.md) links current comparisons and historical
-results. The historical
-[mutex wait-policy comparison](bench/mutex_wait_compare/README.md)
-covers the former spin mode, blocking mode, TCLock and Native across maintained
-kernel payloads and real API critical sections. The [full 1–64-worker rerun](bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
-reports all 31 configurations on `10.176.26.71`, including c01 and hash,
-with complete tables, scaling plots and CPU/JIT analysis.
-Measured gains, remaining gaps and validation limits
-belong to each report's frozen source and environment.
+Use the [project guide](docs/PROJECT_GUIDE.md) to build and run in the verified
+guest. [Performance status](docs/PERFORMANCE.md) summarizes measured outcomes,
+and the [results index](bench/results/README.md) retains source-specific evidence.
+The [blocking-mutex verification](bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
+records the current policy change and its targeted checks.
 
 ## Documentation
 

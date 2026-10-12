@@ -352,15 +352,8 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The [waiting-policy report](../../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
-compares spin and blocking modes, including scheduler validation, retained
-tuning and real API critical sections. The earlier c01/hash comparison,
-returned-body JIT/delegation evidence and remaining performance gaps are in the
-[mutex optimization report](../../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md).
-Earlier grouping/cache candidates remain in
-[fixed benchmark records](../../bench/results/380G10/bench/tclock_compare/HISTORY.md#mutex-followup).
-The earlier [mandatory-JIT trials](../../bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md)
-retain their original-host behavior after rejecting those versions of task
-retention and smaller entry/execution changes under `nopvspin`.
-Source review and synthetic unit fixtures do not substitute for those live
-results or prove starvation freedom.
+The [blocking-only verification](../../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
+records affected fixtures, actual scheduler/owner probes and returned JIT bodies.
+[Performance status](../PERFORMANCE.md) summarizes the latest frozen comparison;
+[validation](../VALIDATION.md) indexes older checks and rejected candidates.
+These selected checks do not establish arbitrary oversubscription or starvation freedom.

@@ -106,8 +106,9 @@ While idle, compare SHA256 and copy only changed files, creating subdirectories
 as needed. Delete only identified obsolete project files. Never move, recursively
 replace or clear `/root/host_fs`, and do not edit frozen running inputs.
 
-The 64-vCPU boot, exact kernel identity, all 64 CPU pins and guest health were
-verified on 2026-10-10. The earlier 73-session migration benchmark used 60 vCPUs
+The 64-vCPU boot, exact kernel identity, all 64 CPU pins and guest idle state were
+verified by the [blocking-mutex checks](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
+on 2026-10-12. The earlier 73-session migration benchmark used 60 vCPUs
 and remains evidence for that topology. The migration copy contains current disk
 contents without historical VM snapshots; the original disks on `380G10` remain
 untouched for rollback. Saved VM state from the old CPU/topology is not portable

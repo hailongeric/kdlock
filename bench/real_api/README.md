@@ -7,26 +7,13 @@ operation. A scoped ftrace module substitutes selected functions for the bound
 object. Spin, mutex or reader/writer backends are selected at build time. The
 `stock` arm runs the original kernel functions without a substitution module.
 
-The latest [complete 1–64-worker rerun](../results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
-includes all eleven accepted API variants at 22 worker counts, three rounds,
-and both KD mutex policies alongside Native, TCLock and Stock. It reports
-throughput, CPU cost, JIT shares and the remaining low-thread and UTS gaps.
-Spin/rwlock policy pairs remain controls of unchanged algorithms.
-
-The earlier [2026-10-11 results report](../results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
-contains 288 accepted, drained OFD/setfd sessions: four backends, three rounds,
-two metadata layouts and six worker counts per API. It introduces each test
-subject and kernel lock, relates the workload choices to the TCLocks paper, and
-reports scaling, useful KD regimes, regressions and xattr admission limits.
-The separate [run record](../results/10.176.26.71/bench/real_api/20261011/README.md)
-retains reproduction commands, validation, exploratory failures and raw evidence.
-
-The [mutex and read/write extension](../results/10.176.26.71/bench/real_api/20261011-sync/RESULTS.md)
-adds pipe-buffer and capacity queries, shared-file seeks, and private UTS reads
-with hostname/domain-name updates. It reports three-round scaling and separates
-mutex delegation evidence from UTS's low JIT share, with the sleeping-rwsem
-comparison limits made explicit. All 504 final sessions passed correctness and
-drained; plots, full statistics and the retained pilots accompany the report.
+KD mutex cases always use bounded polling followed by blocking. The
+[latest frozen report](../results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
+was measured before the polling-only policy was removed. It includes all eleven
+accepted API variants at 22 worker counts; use its KD blocking series for mutex
+comparisons. [Performance status](../../docs/PERFORMANCE.md) describes remaining
+CPU/JIT and throughput gaps. The [machine index](../results/10.176.26.71/README.md)
+retains earlier API reports, exploratory failures and source identities.
 
 These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading
@@ -36,20 +23,15 @@ KD nor loading TCLock alone changes ordinary syscall locking.
 
 | Workload | Actual critical section and cached state | Suitability |
 | --- | --- | --- |
-| tmpfs `fgetxattr()` | `simple_xattr_get()` holds `simple_xattrs.lock` across linked-list name comparisons and the value copy | Implemented; many callers query one metadata-rich file. Attribute count and hit position control real search work. |
+| tmpfs `fgetxattr()` | `simple_xattr_get()` holds `simple_xattrs.lock` across linked-list name comparisons and the value copy | Kernel integration exists; current translated xattr bodies are refused by pointer/context admission and are excluded from accepted performance comparisons. |
 | `fcntl(F_OFD_GETLK)` | `posix_test_lock()` holds `file_lock_context.flc_lock` while checking owners, ranges and conflict type, then copying the conflict | Implemented for local, non-expiring OFD locks; models repeated byte-range conflict queries on one file. |
 | `fcntl(F_SETFD)` | `set_close_on_exec()` holds `files_struct.file_lock` across the close-on-exec bitmap update | Implemented; each thread toggles its own preallocated descriptor flag in the shared table. Descriptor spacing changes the dirty bitmap footprint. |
 | `ioctl(FIONREAD)` on a shared pipe | `pipe_ioctl()` holds `pipe_inode_info.mutex` while summing real buffer lengths around the ring | Implemented mutex case; occupied buffer count controls protected traversal, with one independent file description per worker. |
 | `fcntl(F_GETPIPE_SZ)` | `pipe_fcntl()` holds the same pipe mutex while reading `max_usage` | Implemented short mutex control on the same real subsystem. |
 | Shared-file `lseek(SEEK_SET/SEEK_END)` | `ksys_lseek()` holds `file.f_pos_lock` across size checks and `f_pos`/`f_version` updates | Implemented mutex case for an anonymous tmpfs file and one shared open description. |
 | `uname()` with `sethostname()` / `setdomainname()` | `uts_sem` protects the real UTS structure: readers copy it, writers replace one name | Implemented bounded read/write experiment in a private UTS namespace; Native rwsem versus KD/TCLock reader/writer spinlocks, with the specialization below. |
-| FxMark directory enumeration / rename | Shared dentry/rename state and, for cross-directory rename, `s_vfs_rename_mutex` | Candidate for wider integration; additional lock sites and filesystem behavior must be preserved. |
-| will-it-scale `lock1` | Repeated `F_SETLKW` / unlock, with a **separate file per worker** | Useful reference; it does not itself create a shared inode lock. The original paper's kernel/version bottleneck must be re-established on this kernel. |
-| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The local TCLocks copy maps and unmaps 128 MiB. A general sleeping-rwsem implementation is required before claiming a KD mmap comparison. |
-| eventfd / epoll wakeup paths | Short queue/counter critical sections, often with IRQ exclusion | Poor initial fit for the present ordinary-task-context delegation ports. |
 
 Sources: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),
-[will-it-scale lock1](https://github.com/antonblanchard/will-it-scale/blob/master/tests/lock1.c),
 [Linux xattr implementation](https://github.com/torvalds/linux/blob/v6.1/fs/xattr.c),
 [Linux file-lock implementation](https://github.com/torvalds/linux/blob/v6.1/fs/locks.c),
 [file-table operations](https://github.com/torvalds/linux/blob/v6.1/fs/file.c), and

@@ -63,9 +63,9 @@ include those files too. Shared APIs live in [include](../include/README.md).
 
 | Setting | Default and meaning |
 | --- | --- |
-| `KDLOCK_NUMA` build variable | 1; spin local grouping and CPU-node stack allocation |
+| `KDLOCK_NUMA` build variable | 1; spin/mutex local grouping and CPU-node stack allocation |
 | `KDLOCK_SPIN_BATCH` build variable | 1024, allowed 1..1024 bodies; separate scan budget uses the same initial value |
-| Mutex batch | Fixed 1,024 bodies, FIFO; rejected NUMA grouping is absent |
+| Mutex batch | Uses `KDLOCK_SPIN_BATCH` (default 1,024) with bounded NUMA selection and remote-cohort handoff |
 | `spin_delegate` | Enabled; false selects native KD spin/rwlock-writer self-execution |
 | `spin_prefetch` | 2; producer hints. Modes 0/1 select off/consumer lookup |
 | `spin_entry_ratio_limit` | 2; 0 disables only the ratio filter |

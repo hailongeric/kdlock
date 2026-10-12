@@ -14,7 +14,7 @@ files or benchmark archives.
 | [kd_spinlock.c](../kernel_module/kd_spinlock.c) → [spin](../kernel_module/spin/) | Direct entry, pending/MCS, batching, prefetch, continuation and restore |
 | [kd_rwlock.h](../include/kd_rwlock.h) → `spin/direct.inc`, `combiner.inc`, `execute.inc`, `restore.inc` | Local readers, native fast writers and ABI3 writer admission, cancellation and retry over the spin engine |
 | [kd_spin_entry.c](../kernel_module/kd_spin_entry.c) → `spin/ticket_*.inc` | Exact acquisition tickets, native borrowing and final retirement |
-| [kd_mutex.c](../kernel_module/kd_mutex.c) → [mutex](../kernel_module/mutex/) | Original mutex owner, private scheduling gate, queue and waiter restore |
+| [kd_mutex.c](../kernel_module/kd_mutex.c) → [mutex](../kernel_module/mutex/) | Original mutex owner, private scheduling gate, blocking result/gate waits and waiter restore |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |
 | [kd_lock.c](../kernel_module/kd_lock.c) → [lock](../kernel_module/lock/) | Nested control CALLs, direct mutex routing and retained bridge aliases |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c) → [execution](../kernel_module/execution/) | Frame binding, lock ledger, remote/native ACKs, registry and JIT dispatch |
@@ -26,7 +26,7 @@ Private `.inc` files are source fragments included by a parent C file. They shar
 that file's static state and declaration order; they are not separate Kbuild
 objects. Follow the ordinary spin path from
 `direct.inc` → `entry.inc` → queue/combiner → restore/unlock; read mutex from
-`lock/mutex_calls.inc` → `mutex/queue.inc` → combiner/waiter/clobber. Rwlock's
+`lock/mutex_calls.inc` → `mutex/queue.inc` → parking/combiner/waiter/clobber. Rwlock's
 public count/gate protocol is in its header; the spin components acquire writer
 admission before ABI3 execution and preserve it across native continuation.
 
@@ -50,6 +50,9 @@ admission before ABI3 execution and preserve it across native continuation.
 | [workload_modules](../workload_modules/README.md) | Separate spin/mutex/rwlock payloads; shared timing and business logic |
 | [bench/tclock_compare](../bench/tclock_compare/README.md) | Three-arm spin/mutex runners, sessions and result reports |
 | [bench/rwlock_compare](../bench/rwlock_compare/README.md) | Mixed RCUHT/cacheline rwlock runner, exact read/write oracle, JIT accounting and parity reports |
+| [bench/real_api](../bench/real_api/README.md) | Scoped syscall workloads, matched backends, Stock control and acceptance limits |
+| [tools/vm](../tools/vm/README.md) | Source synchronization and complete 1–64-worker comparison |
+| [bench/results](../bench/results/README.md) | Frozen measurements and validation receipts grouped by machine |
 | [bench/spin_cacheline](../bench/spin_cacheline/README.md) | Shared client, peak selection, provider preparation and offline readers |
 | [tests/unit](../tests/unit/) | Guest-only basic and selected production-code fixtures |
 | [tests/kernel](../tests/kernel/) | Provider observers and kernel selftests |

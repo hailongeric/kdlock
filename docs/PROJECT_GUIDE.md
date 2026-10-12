@@ -10,40 +10,11 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-The latest [full 1–64-worker report](../bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
-compares Native, TCLock and both KD mutex policies across all 31 selected
-configurations: 8,910 drained sessions, 8,908 accepted and two retained zero-JIT
-spin controls. It includes c01/hash, larger payloads and real APIs at 1–8 in
-steps of one and 12–64 in steps of four. The report separates JIT evidence,
-CPU cost and low-thread gaps from high-contention gains. Its temporary 66-vCPU
-boot was restored to the regular 64-vCPU layout after archiving.
-
-The earlier [mutex waiting-policy report](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
-compares KD's former spin mode and retained blocking implementation, scheduler/JIT
-validation, and their Native/TCLock comparison across kernel payloads and real
-APIs on the regular 64-vCPU VM. It uses six worker counts up to 60, with a
-separate collector. Current KD mutexes always support blocking and retain the
-original Linux owner; the wait-mode selector has been removed.
-
-The earlier [complete performance report](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
-compares rwlock, spin and mutex on the new host at 22 worker counts: 1–8 in
-steps of one and 12–64 in steps of four. One-cacheline and hash payloads have
-three rounds under each backend, for 1,584 timed sessions with tables, charts
-and exported statistics; c02, c04, c08 and c16 are excluded. Its temporary
-66-vCPU layout records physical collector contention at 64 workers.
-The subsequent [mutex optimization report](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
-isolates task caching, polling layout, field-width retirement reads and bounded
-NUMA selection, with a fresh mutex c01/hash comparison at the same worker counts.
-It preserves rejected candidates and identifies remaining Native/TCLock gaps.
-The [earlier full baseline](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
-retains the wider payload matrix before the NUMA/mutex fixes.
-
-On the original 40-vCPU host, the [spin/mutex phase](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-ended on 2026-10-09 with performance gaps remaining. The later
-[RCUHT rwlock comparison](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
-completed 270 valid runs at 1%/20% writes. KD matched both alternatives on both
-throughput measures at 21 of the 30 combinations of write percentage and thread
-count. [Benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.md) links older evidence.
+Current mutexes always support blocking after bounded polling and reject delegated
+origin-CPU GS access. The [2026-10-12 verification](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
+checks sleeping waiters, physical-owner ACKs and actual JIT execution.
+[Performance status](PERFORMANCE.md) summarizes the latest frozen measurements;
+[the results index](../bench/results/README.md) owns historical reports and provenance.
 
 ## Reading order
 
@@ -57,7 +28,6 @@ count. [Benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.
 | Build and verify | [Provider](../kernel_module/README.md), [tests](../tests/README.md), [benchmarks](../bench/README.md) |
 | Review status and limits | [Known limitations](TODO.md), [performance status](PERFORMANCE.md) |
 | Compare real syscall critical sections | [Complete rerun and analysis](../bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md), [runner and contract](../bench/real_api/README.md) |
-| Evaluate simpler execution contracts | [Protocol simplification](design/protocol_simplification.md) |
 
 ## Guest workflow
 
@@ -107,18 +77,10 @@ Host ports 2222, 9090 and 9091 retain their guest mappings; debugger port 1234
 is available only on host loopback. The monitor and serial log remain
 `/tmp/qemu-monitor.sock` and `/tmp/qemu-serial.log`.
 
-The 64-vCPU boot, exact kernel identity, CPU placement and guest health were
-verified on 2026-10-10, followed by the
-[144-session performance comparison](../bench/results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md)
-at the current topology. The recorded 73-session migration validation used the
-earlier 60-vCPU layout; it remains separate from the current topology and
-historical 40-vCPU measurements on the original host.
-The migration copy retains current disk contents without historical VM snapshots.
-Original disks on `380G10` remain untouched for rollback. Saved VM state from the
-old CPU/topology is not portable: create and verify a new destination snapshot
-before live module/JIT tests, then check the kernel, boot policy and CPU placement.
-Do not load a saved state captured under the old 40- or 60-vCPU layout into this
-64-vCPU VM.
+The [blocking-mutex validation](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
+verified the captured kernel, native qspinlocks, all 64 CPU pins and a fresh
+recovery snapshot on 2026-10-12. Recheck those properties before live runs.
+Snapshots belong to their exact CPU topology; archive evidence before restoration.
 
 ### Results by machine
 
@@ -168,27 +130,11 @@ dmesg | grep -F 'PV spinlocks disabled, forced by "nopvspin" parameter'
 ```
 
 Run the kernel identity check above too: a matching Build ID alone does not
-establish the boot policy. The 2026-10-08 activation check on `380G10` passed
-with all 40 CPUs online, node0 CPUs0–19, node1 CPUs20–39, voluntary preemption,
-unchanged host CPU pinning and the 2.5 GHz frequency policy. This is historical
-evidence for the original host. Earlier snapshots can restore the old policy;
-confirm a snapshot of the current boot before new live verification.
-
-Backups and verification are in guest
-`/root/kdlock-evidence/pvspin-nopvspin-20261008/`. Its adjacent `.tar.gz` archive
-has SHA256 `287447eabe43596b7494f5caa9d0c2fa39cf58ed918d703d66570ffc2cc37418`.
-To roll back while idle, remove the override, run `update-grub`, select the intended
-kernel and reboot. This also restores the prior GRUB default.
-
-The [protocol simplification trials](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-use `nopvspin`. Both combined translator/memory and memory-only candidates were
-rejected after repeated regressions; no runtime change was promoted. Their full
-matrices remain separate from the fresh 540-session comparison of the restored
-runtime at all 15 thread counts. The earlier
-[hash diagnosis](../bench/results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis)
-uses the same boot policy but covers selected counts and placements. The
-[previous 540-sample comparison](../bench/results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
-predates activation. Keep samples from the two boot policies separate.
+establish the boot policy. Earlier snapshots can restore an earlier policy.
+If the boot printk has rotated out, the maintained benchmark preflight verifies
+native lock/unlock pointers through `/proc/kcore` using the captured vmlinux.
+The [kernel baseline](../kernel_baseline/README.md) and
+[validation index](VALIDATION.md) retain the original boot-policy evidence.
 
 ### Dependencies and idle state
 

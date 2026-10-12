@@ -77,9 +77,9 @@ Use new output directories. Defaults are CPUs 0..15 and 50,000 operations per
 worker per main phase. `--cpus` accepts ranges; at least four available CPUs are
 required, and 16 are recommended for reliable contended JIT acceptance. The CPU
 list is placement, not a fixed NUMA recipe: choose it from the verified live
-topology. The historical cross-node `0–7,20–27` placement below belongs to the
-original 40-vCPU guest. On the current 64-vCPU destination, `0-7,32-39` spans
-both nodes. Recheck the live mapping before a new run.
+topology. On the documented 64-vCPU destination, `0-7,32-39` spans both nodes.
+Recheck the live mapping before a new run; historical receipts retain their own
+worker placements.
 
 The 100,000-write-per-worker warmup retains ordinary heat promotion. The test sets
 `spin_entry_ratio_limit=0` to bypass that optional ratio filter, retaining the
@@ -104,66 +104,12 @@ the daemon and translators stop, source retirement validates frame/queue/ACK
 drain, and the workload unloads before its provider. Timeouts or kernel faults
 retain the modules and evidence; do not infer drain or force unload.
 
-## ABI3 verification on 2026-10-10
+## Recorded verification
 
-The two basic unit programs and five affected groups passed: rwlock protocol,
-clobber admission, generated ABI1/2/3 completion and refusal, execution entry
-scope, and real shadow-wait/continuation restoration. The execution fixture
-checked 4,359 assertions and detected its 30 injected mutations. The rwlock
-benchmark's 13 focused tests also passed.
-
-With the final ABI3 fast-writer and separated-gate implementation, KD-native and
-KD-JIT live sessions each completed 4,801,000 operations on CPUs `0–7,20–27`
-in the original 40-vCPU guest.
-Both observed 16 simultaneous readers, preserved writer exclusion and exact
-updates, and drained with zero count/gate state. KD-native returned no JIT bodies.
-The JIT session recorded:
-
-| Phase | Writes | Returned JIT bodies |
-| --- | ---: | ---: |
-| Writer warmup | 1,600,000 | 1,156,371 |
-| Writers only | 800,000 | 523,035 |
-| 50/50 reads/writes | 400,000 | 141,651 |
-| 87.5% reads | 100,000 | 547 |
-
-The RCUHT functional probes at 16 and 36 workers also passed, with 23,021 and
-26,964 returned JIT writers respectively. These are correctness checks, not
-performance samples. The [RCUHT report](../../../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
-links the complete evidence, including the corrected missing-Makefile preflight
-and retained rejected optimization trials. No full test suite or kernel rebuild
-was run.
-
-## Historical ABI1 verification on 2026-10-09
-
-The five selected unit groups passed. The observation provider and both workload
-variants built with `W=1`, UBSAN off, against verified `6.1.159-kdclobber2`, Build
-ID `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`. Existing provider stack-switch
-objtool warnings remain. The 16-CPU Linux Native, KD-disabled and KD-JIT sessions
-each completed 4,801,000 operations, observed 16 concurrent readers, passed exact
-data/progress checks and unloaded cleanly with zero remaining reader/gate state.
-
-| JIT session phase | Writer operations | Returned JIT bodies |
-| --- | ---: | ---: |
-| Writer warmup | 1,600,000 | 1,537,898 |
-| Writers only | 800,000 | 774,557 |
-| 50/50 reads/writes | 400,000 | 185,813 |
-| 87.5% reads | 100,000 | 83 |
-
-Both native controls and the readers-only phase returned zero JIT bodies. No
-performance claim or TCLock rwlock benchmark comparison follows from these runs.
-Core spin/execution/translator sources matched the host checkout; the unrelated
-local mutex-header edit was excluded from this isolated guest build.
-
-One added preflight stopped before loading modules because the boot printk had
-rotated out. Reading the live `pv_ops` lock/unlock pointers through `/proc/kcore`,
-using the verified vmlinux type offsets, confirmed both native implementations.
-The failed preflight and its source remain alongside the corrected control run.
-Original functional source and the later attribution/ABI-check updates are
-preserved separately. Evidence is under guest
-`/root/kdlock-evidence/rwlock-20261009/`; `native-policy.json` records dispatch
-addresses and boot ID, and `native/`, `jit/`, `kd-native-final2/` contain the
-successful sessions. The archive is guest
-`/root/kdlock-evidence/rwlock-20261009-evidence.tar.gz` and host
-`bench/results/380G10/raw/legacy/rwlock-20261009/guest-evidence.tar.gz`, SHA256
-`73608664642fa7bd4617197d21fac36f43a1bafc69cb694aa4c75bea38d65df6`.
-No full suite, kernel modification or performance matrix was run.
+The [frozen ABI3 verification](https://github.com/hailongeric/kdlock/blob/792db45f28d775da667572ebd1e2080025cfd88a/tests/kernel/rwlock/README.md#abi3-verification-on-2026-10-10)
+records the 2026-10-10 affected checks and KD-native/KD-JIT correctness sessions
+on the original 40-vCPU host. The
+[frozen ABI1 verification](https://github.com/hailongeric/kdlock/blob/792db45f28d775da667572ebd1e2080025cfd88a/tests/kernel/rwlock/README.md#historical-abi1-verification-on-2026-10-09)
+retains the earlier caller ABI, controls, failed preflight and raw archive identity.
+Use [validation](../../../docs/VALIDATION.md) for other receipts and limits; rebuild
+current callers and verify the actual guest placement before new runs.

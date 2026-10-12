@@ -1,40 +1,31 @@
 # Known limitations and deferred work
 
-Current scope: x86_64 kernel spin/mutex/rwlock delegation. Implementation contracts
-live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
-closed spin/mutex phase from the later rwlock comparison. These unresolved issues
-remain documented; this list does not schedule new work. Historical evidence is
-indexed in [VALIDATION](VALIDATION.md).
+Current scope is x86_64 kernel spin/mutex/rwlock delegation through explicit APIs.
+KD mutexes always support blocking, preserve the original Linux owner and reject
+delegated origin-CPU GS access. Rwlock ABI3 acquires write access before the
+translated body. Implementation contracts live in [DESIGN](DESIGN.md);
+[performance status](PERFORMANCE.md) records measured gaps and
+[validation](VALIDATION.md) indexes source-specific receipts. None of those
+measurements resolves the correctness limits below.
 
 ## Current checkpoint
 
-KD has explicit spin, ordinary mutex and rwlock APIs, with workloads comparing
-KD, TCLock and Native. It tracks real lock owners and unlock acknowledgements,
-keeps source modules loaded while needed, and shares register packets between
-waiter and combiner. It does not intercept global lock calls. KD has not matched
-both alternatives at every requested configuration; see the
-[spin/mutex report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-and [RCUHT rwlock report](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md).
+The [blocking-only mutex verification](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
+passed affected checks, real scheduler/owner probes and contended JIT execution.
+It does not establish general oversubscription, starvation freedom, full-suite
+coverage or universal performance parity.
 
-Rwlock ABI3 moves the wait for readers and acquisition of write access before
-the prepared body. This resolves the older hash-writer translation refusal.
-Native writers now have a fast path, and the count and gate occupy separate cache
-lines in a 128-byte object. All 270 runs of the 1%/20% RCUHT matrix produced correct
-results and drained, but KD met both throughput targets at only 21 of 30 comparison
-points. Read-heavy runs across NUMA nodes and writer performance at two threads
-still have gaps. None of these results resolves the correctness limits below.
-
-Known failures are still open:
+Recorded failures and unresolved coverage:
 
 - Concurrent cold promotion stalled with an RCU warning in c16/t4 preparation.
   Single-CPU preparation avoids that phase rather than fixing it. The fixed
   [failure record](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md)
   retains the original inputs.
-- Seven-role/two-CPU mutex mode4 soft-locked with pinned polling. Other passes
-  do not replace that case; see the fixed
+- The former polling-only mutex soft-locked in seven-role/two-CPU mode4. The
+  blocking probes do not rerun that dependency scenario; see the fixed
   [mutex failure](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-pinned-mode4-failure).
-- An older oversubscribed mode5 published code but lacked actual JIT. Its former
-  scheduling strategy does not validate today's pinned waiters; see
+- An older oversubscribed mode5 published code but lacked actual JIT. Current
+  blocking checks do not provide a new run of that scenario; see
   [the recorded assessment](VALIDATION.md#mutex-oversubscription-assessment).
 
 ## Delivery scope

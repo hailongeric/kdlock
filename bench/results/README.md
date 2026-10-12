@@ -19,10 +19,20 @@ bench/results/<machine>/
   raw/tests/<run>/            original test archives and extracted evidence
 ```
 
+Current KD mutexes always support blocking. Older reports retain the policies,
+commands and source hashes captured when they ran; reproduce them with their
+frozen source versions. The [performance guide](../../docs/PERFORMANCE.md) and
+[validation index](../../docs/VALIDATION.md) describe the applicable limits.
+
 Compact reports are tracked in Git. `raw/` is ignored and is not included in source
 synchronization. Keep full raw evidence, including failures, partial runs, commands,
 source/binary hashes, CPU/NUMA topology, kernel identity and final drain checks.
 Do not pool measurements from different machines or VM topologies.
+Extracted working copies may be removed after regular-file bytes and logical
+symlink destinations match a retained canonical archive. The
+[documentation cleanup receipt](380G10/tests/documentation-cleanup-20261012.json)
+records the four pruned copies and recovery archive paths; raw archives and
+unique failure records remain available.
 
 Live guest output must remain outside `/root/host_fs/kdlock`, as required by the
 runners' frozen-input checks. New output paths are:

@@ -58,7 +58,8 @@ Each lock type has its own ownership rules:
 
 - KD spin uses one KD lock word for native acquisition and delegated execution.
 - KD mutex uses the original Linux mutex. A separate scheduling gate orders KD
-  requests, but owning that gate does not mean owning the Linux mutex.
+  requests, but owning that gate does not mean owning the Linux mutex. Waiters
+  always support blocking after bounded polling, retaining their migration pin.
 - KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
   every writer must exclude readers, whether it runs natively or through JIT.
 
@@ -129,8 +130,9 @@ existing text pins, device references and frame leases do and do not protect.
 
 KD remains experimental. Its checks do not cover all runtime pointers or
 concurrent pointer changes. Processor flags and SIMD/FPU state are not fully
-restored, generated images have no immutable versions, and pinned waiters can
-block progress when there are more runnable tasks than available CPUs.
+restored and generated images have no immutable versions. Spin/rwlock waiters
+keep preemption disabled; mutex waiters can sleep, but finite slots and same-CPU
+native fallback still limit general oversubscription.
 [TODO](TODO.md) records known failures and work explicitly left for later.
 
 Keep these results distinct: a fixture passed, an image was published, JIT code

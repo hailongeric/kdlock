@@ -1,7 +1,14 @@
-# Historical tests from 380G10
+# Source-host checks and historical tests
 
-Original-host test archives remain in `../raw/legacy/`, alongside their frozen
-commands, inputs and drain records. Historical test receipts are linked from
-[the test guide](../../../../tests/README.md#recent-verification-and-historical-evidence).
-All subsequent tests run in the VM on `10.176.26.71`; their new receipts belong
-to that machine directory.
+Current source edits and read-only documentation/archive checks run on `380G10`.
+Builds and executable tests run in the VM on `10.176.26.71`, whose receipts belong
+to [that machine index](../../10.176.26.71/README.md).
+
+Original-host executable test archives remain in `../raw/legacy/`, with their
+frozen commands, inputs and drain records. [Validation](../../../../docs/VALIDATION.md)
+indexes those historical receipts and their source-specific limits.
+
+The [2026-10-12 documentation cleanup](documentation-cleanup-20261012.json)
+records the guide audit, obsolete-file removal and archive-backed duplicate-copy
+pruning. It contains static checks only, with canonical archive identities and
+preservation proofs.

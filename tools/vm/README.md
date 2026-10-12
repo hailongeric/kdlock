@@ -55,11 +55,10 @@ By default it includes one-cacheline and RCUHT payloads for spin, mutex and
 rwlock, with rwlock at 1%/20% writes: **1,584 sessions** in six groups.
 This driver's default excludes multi-cacheline scenarios, including c02, c08
 and c16. `--include-multicacheline` selects its wider 3,960-session matrix.
-The historical [mutex waiting-policy comparison](../../bench/mutex_wait_compare/README.md)
-retains the 31-configuration, 8,910-session spin/blocking matrix. Its dual-policy
-launcher has been removed with the spin-only mutex. Current runners always use
-blocking mutexes; the [real API runner](../../bench/real_api/README.md) covers
-the syscall workloads and Stock controls separately.
+Current runners always use blocking mutexes. The
+[real API runner](../../bench/real_api/README.md) covers syscall workloads and
+Stock controls separately; [the results index](../../bench/results/README.md)
+retains earlier policy comparisons and their frozen source versions.
 Each session has 48,000 warmup operations per worker, a two-second measurement,
 and a 300 ms peak window after 300 ms of settling. The frozen spin/mutex default
 uses 64 post-work arithmetic rounds; rwlock explicitly uses four. Report these
