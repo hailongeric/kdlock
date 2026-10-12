@@ -6,6 +6,14 @@ execution. Receipts retain their own source, kernel, boot policy and topology.
 
 ## Current source verification
 
+The [c01 admission receipt](bench/mutex_admission/20261013/validation.json)
+records 14 basic/affected groups, 54 runner tests, six acceptance-auditor tests,
+normal/SELFTEST builds and live cooling, parking and owner/ACK checks. All 543
+benchmark/diagnostic sessions progressed and drained. The
+[study](bench/mutex_admission/20261013/README.md) rejects all eight thresholds;
+default 256 remains and the 97% Native target is unmet. The retained sampler
+passes the specified higher-thread regression gates.
+
 The [blocking-only mutex receipt](tests/mutex-blocking-only-20261012/validation.json)
 records the `792db45` policy change: seven basic/affected groups, 87 runner/report
 tests, normal/SELFTEST builds, sleeping-waiter and cross-NUMA owner/ACK probes,
@@ -14,7 +22,7 @@ and raw archive hashes. It is functional evidence, not a new performance matrix.
 
 ## Frozen benchmark reports
 
-The latest [2026-10-12 full comparison](bench/mutex_wait/20261012-full/README.md)
+The [2026-10-12 full comparison](bench/mutex_wait/20261012-full/README.md)
 was measured before the polling-only mutex policy was removed. It includes 31
 configurations, 22 worker counts and three rounds: 8,910 drained sessions, 8,908
 accepted and two zero-JIT exclusions. Use the KD blocking series for the retained

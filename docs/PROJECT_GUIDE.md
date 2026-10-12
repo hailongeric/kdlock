@@ -226,18 +226,20 @@ reverts. Four have seven separate commits in total; archive tags preserve them
 without promoting the rejected implementations. Later accepted cache/NUMA work
 is a separate implementation with its own measurements.
 
-Nine pre-existing edits remain on `wip/worktree-20261012`: a configurable 64-round
-post-work workload, associated tests/documentation, formatting and a draft report
-prefix. They need review and their own commits before integration. The current
-committed workload still uses four post-work rounds. The 2026-10-12 measurements
-captured working-tree inputs, including 64 rounds; their source hashes define
-what was measured. [Validation](VALIDATION.md) gives the applicable limits.
+The nine pre-existing edits were committed as `09bfffe` on
+`wip/worktree-20261012`. That checkout, including the outer acquisition cookie
+and configurable 64-round post-work default, is the starting baseline for the
+[2026-10-13 admission study](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md).
+Its implementation and evidence are integrated into local `master`; the task
+tip is preserved as `archive/perf/mutex-admission-c01-20261013`. All threshold
+candidates were rejected and default 256 remains. The user's original WIP
+branch is retained unchanged at `09bfffe`. [Validation](VALIDATION.md) gives
+the tested scope and remaining limits.
 
 All twelve original tips are preserved by verified archive tags, including
 `archive/master-before-integration-20261012`. The eleven local `perf/` branches
 were removed. The remaining local branches are `master` and
-`wip/worktree-20261012`; all nine pending files and their original patch were
-preserved unchanged.
+`wip/worktree-20261012`; the original patch remains preserved with the inventory.
 
 Remote publication remains pending; this operation did not push commits or tags,
 or delete remote branches. Publish and verify the archive tags before

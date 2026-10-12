@@ -6,7 +6,24 @@ passed [targeted verification](../bench/results/10.176.26.71/tests/mutex-blockin
 including a drained 320,000-operation mutex JIT run. That functional check does
 not provide a new performance matrix.
 
-## Latest measured comparison
+## Latest c01 admission study
+
+The [2026-10-13 c01 study](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md)
+did **not** reach 97% of Native mutex on both median whole-run throughput and
+best warmed peak through 28 workers. All eight entry-ratio thresholds (2–256)
+failed screening; the default remains 256. The pinned sampler removes cold-path
+work, but no low-thread throughput gain is established. Its full-grid run stays
+within the specified 3% regression bound at 32, 36, 48 and 60 workers, with
+returned JIT bodies in every round.
+
+The report retains 543 correct, progressing, drained sessions, including 48
+unscored diagnostics, source/ELF/JIT hashes, variation and CPU/worker-share data.
+It uses the regular 64-vCPU VM, collector 63 and 64 post-work rounds. Adaptive
+native acceptance is opt-in and visibly distinct from returned JIT execution.
+No candidate qualified for confirmation; this is not a parity result or an
+acceptance of other workloads and the 64-worker topology.
+
+## Earlier full comparison
 
 The [2026-10-12 full report](../bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
 was measured before removal of the polling-only mutex policy. It contains 31

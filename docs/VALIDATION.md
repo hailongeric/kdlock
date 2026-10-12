@@ -8,6 +8,17 @@ Known failures remain in [TODO](TODO.md).
 
 ## Current mutex verification
 
+The [2026-10-13 admission receipt](../bench/results/10.176.26.71/bench/mutex_admission/20261013/validation.json)
+records 14 basic/affected groups, 54 runner tests and six acceptance-auditor tests,
+normal and SELFTEST builds, plus live cooling/parking and cross-NUMA owner/ACK
+checks. All 543 study sessions have correct results, worker progress and drain.
+The [performance report](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md)
+keeps 48 diagnostics unscored and all eight rejected thresholds. The default
+remains 256; higher-thread regression gates pass but the 97% Native target does
+not. No full suite or other-workload acceptance was run.
+
+## Earlier blocking-only verification
+
 The [blocking-only mutex receipt](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
 records seven basic/affected groups, 101 context-admission cases and 87 runner/report
 tests on 2026-10-12. Normal and SELFTEST `W=1` builds had no mutex wait-mode selector.
