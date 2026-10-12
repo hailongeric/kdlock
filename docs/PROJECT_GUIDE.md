@@ -10,7 +10,15 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-The [mutex waiting-policy report](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
+The latest [full 1–64-worker report](../bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
+compares Native, TCLock and both KD mutex policies across all 31 selected
+configurations: 8,910 drained sessions, 8,908 accepted and two retained zero-JIT
+spin controls. It includes c01/hash, larger payloads and real APIs at 1–8 in
+steps of one and 12–64 in steps of four. The report separates JIT evidence,
+CPU cost and low-thread gaps from high-contention gains. Its temporary 66-vCPU
+boot was restored to the regular 64-vCPU layout after archiving.
+
+The earlier [mutex waiting-policy report](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
 describes KD's retained spin mode and optimized blocking mode, scheduler/JIT
 validation, and their Native/TCLock comparison across kernel payloads and real
 APIs on the regular 64-vCPU VM. It uses six worker counts up to 60, with a
@@ -48,7 +56,7 @@ count. [Benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.
 | Change ownership or recovery | [KD locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) |
 | Build and verify | [Provider](../kernel_module/README.md), [tests](../tests/README.md), [benchmarks](../bench/README.md) |
 | Review status and limits | [Known limitations](TODO.md), [performance status](PERFORMANCE.md) |
-| Compare real syscall critical sections | [API benchmark results](../bench/results/10.176.26.71/bench/real_api/20261011/RESULTS.md), [runner and contract](../bench/real_api/README.md) |
+| Compare real syscall critical sections | [Complete rerun and analysis](../bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md), [runner and contract](../bench/real_api/README.md) |
 | Evaluate simpler execution contracts | [Protocol simplification](design/protocol_simplification.md) |
 
 ## Guest workflow

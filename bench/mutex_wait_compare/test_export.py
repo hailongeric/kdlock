@@ -37,6 +37,20 @@ class ExportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             export.comparisons(export.aggregate(self.rows() + self.rows('blocking')))
 
+    def test_api_stock_and_native_ratios_remain_distinct(self):
+        rows = []
+        for arm, rate in (('stock', 10), ('native', 20), ('tclock', 30),
+                          ('kd-spin', 40), ('kd-blocking', 50)):
+            rows += [dict(r, subject='pipebytes-query-n16-v64', suite='api',
+                          backend=arm, whole_ops_s=rate, peak_ops_s=rate)
+                     for r in self.rows()]
+        result, = export.comparisons(export.aggregate(rows))
+        self.assertEqual(result['kd-spin_over_stock_whole_ops_s_median'], 4)
+        self.assertEqual(result['kd-blocking_over_native_whole_ops_s_median'], 2.5)
+        self.assertEqual(result['kd-blocking_over_kd-spin_peak_ops_s_max'], 1.25)
+        with self.assertRaises(ValueError):
+            export.comparisons(export.aggregate([r for r in rows if r['backend'] != 'stock']))
+
     def test_rejected_no_jit_is_retained_but_not_scored(self):
         rows = self.rows()
         rows[0].update(accepted=False, whole_ops_s=1000, peak_ops_s=2000)
@@ -45,6 +59,17 @@ class ExportTests(unittest.TestCase):
         self.assertFalse(result['complete'])
         self.assertEqual(result['whole_ops_s_median'], 11.5)
         self.assertEqual(result['peak_ops_s_max'], 14)
+
+    def test_drained_no_jit_keeps_unscored_measurement_with_blank_reported_rate(self):
+        row = dict(measurement=dict(completed=20, wall_ns=1000000000),
+                   execution_status='NO_JIT', jit_bodies=0, whole_throughput_ops_s=None)
+        self.assertEqual(export.check_whole(row), 20)
+        with self.assertRaises(ValueError):
+            export.check_whole(dict(row, execution_status='OK'))
+        with self.assertRaises(ValueError):
+            export.check_whole(dict(row, jit_bodies=1))
+        with self.assertRaises(ValueError):
+            export.check_whole(dict(row, whole_throughput_ops_s=21))
 
     def test_execution_verdict_matches_returned_bodies(self):
         row = dict(arm='kdlock', lock_kind='mutex', threads=16, jit_bodies=1,
@@ -86,6 +111,19 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(len(export.SUBJECTS), 31)
         self.assertIn('rwlock-rcuht-w20', export.SUBJECTS)
         self.assertIn('pipebytes-query-n128-v64', export.SUBJECTS)
+
+    def test_hash_mix_excludes_warmup_and_uses_writes_for_rwlock(self):
+        before, after = [100, 25, 25, 50] + [0]*12, [120, 30, 31, 59] + [0]*12
+        row = dict(workload='rcuht', lock_kind='mutex', measurement=dict(
+            before=before, after=after, completed=20))
+        expected = dict(hash_move_ops=5, hash_destination_conflict_ops=6, hash_source_miss_ops=9)
+        self.assertEqual(export.hash_outcomes(row), expected)
+        rw = dict(row, lock_kind='rwlock', measurement=dict(
+            before=dict(values=before), after=dict(values=after), completed=100, writes=20))
+        self.assertEqual(export.hash_outcomes(rw), expected)
+        rw['measurement']['writes'] = 21
+        with self.assertRaises(ValueError):
+            export.hash_outcomes(rw)
 
     def test_low_contention_controls_do_not_relax_contended_acceptance(self):
         row = dict(arm='kdlock', lock_kind='mutex', threads=2, jit_bodies=0,

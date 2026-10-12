@@ -4,8 +4,13 @@ This is the machine directory for tests and benchmarks in the VM on the Ubuntu
 Xeon Gold 6438N host at `eric@10.176.26.71`. Source edits remain in the original
 checkout on `380G10` and are synchronized to this VM before testing.
 
-- [Mutex spin and blocking policies, 2026-10-12](bench/mutex_wait/20261012/README.md):
-  implementation, sleeping-waiter and deferred-wake validation, Native/TCLock
+- [Full 1–64-worker rerun, 2026-10-12](bench/mutex_wait/20261012-full/README.md):
+  all 31 configurations, c01/hash and real APIs, three rounds at all 22 requested
+  counts under Native/TCLock/KD spin/blocking, plus Stock API controls;
+  8,910 drained sessions, 8,908 accepted and two retained zero-JIT exclusions.
+  Full tables, 11 PNG/SVG figures, CPU/JIT analysis and archive verification.
+- [Earlier mutex spin and blocking policies, 2026-10-12](bench/mutex_wait/20261012/README.md):
+  implementation, sleeping-waiter and deferred-wake validation, and
   2,430 accepted/drained sessions across 31 configurations, with Native/TCLock
   baselines, complete tables/charts, and paired diagnostics and earlier candidates
   retained separately.
@@ -46,7 +51,7 @@ checkout on `380G10` and are synchronized to this VM before testing.
 The 22-point comparisons use a temporary
 66-vCPU boot, 32 worker CPUs per NUMA node and collector vCPU 65. At 64 workers,
 the collector and QEMU services share
-physical host core 63 with the last worker. The waiting-policy and earlier bounded reports use a
+physical host core 63 with the last worker. The earlier six-count waiting-policy and bounded reports use a
 64-vCPU boot and collector 63. All record the host's `ondemand` governor;
 keep their samples separate from the initial 60-vCPU migration validation and
 the [original-host reports](../380G10/README.md).

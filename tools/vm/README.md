@@ -53,9 +53,13 @@ selected with `--host`, `--mirror` and `--scripts`; inspect `--help` for options
 rounds at `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64`.
 By default it includes one-cacheline and RCUHT payloads for spin, mutex and
 rwlock, with rwlock at 1%/20% writes: **1,584 sessions** in six groups.
-Multi-cacheline scenarios, including c02, c08 and c16, are excluded from subsequent
-comparisons. `--include-multicacheline` restores the historical 3,960-session
-matrix when explicitly needed.
+This driver's default excludes multi-cacheline scenarios, including c02, c08
+and c16. `--include-multicacheline` selects its wider 3,960-session matrix.
+The [mutex waiting-policy driver](../../bench/mutex_wait_compare/README.md)
+provides a separate full-grid comparison of KD spin/blocking policies, Native
+and TCLock: 31 payload/API configurations and 8,910 sessions, including the
+larger cacheline payloads and Stock API controls. Use its `--full-grid
+--paired-policies` options with the same placement described below.
 Each session has 48,000 warmup operations per worker, a two-second measurement,
 and a 300 ms peak window after 300 ms of settling. The frozen spin/mutex default
 uses 64 post-work arithmetic rounds; rwlock explicitly uses four. Report these

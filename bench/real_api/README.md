@@ -7,7 +7,13 @@ operation. A scoped ftrace module substitutes selected functions for the bound
 object. Spin, mutex or reader/writer backends are selected at build time. The
 `stock` arm runs the original kernel functions without a substitution module.
 
-The [2026-10-11 results report](../results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
+The latest [complete 1–64-worker rerun](../results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
+includes all eleven accepted API variants at 22 worker counts, three rounds,
+and both KD mutex policies alongside Native, TCLock and Stock. It reports
+throughput, CPU cost, JIT shares and the remaining low-thread and UTS gaps.
+Spin/rwlock policy pairs remain controls of unchanged algorithms.
+
+The earlier [2026-10-11 results report](../results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
 contains 288 accepted, drained OFD/setfd sessions: four backends, three rounds,
 two metadata layouts and six worker counts per API. It introduces each test
 subject and kernel lock, relates the workload choices to the TCLocks paper, and

@@ -110,5 +110,7 @@ The exporter checks every subject/count/backend/round, worker CPU prefix and
 paired policy order. Plain 2/3-worker direct cases may be NO_JIT controls, as
 specified by the runner; contended mutex cases at four or more workers still
 require returned JIT bodies.
-The [2026-10-12 report](../results/10.176.26.71/bench/mutex_wait/20261012/README.md)
-records the implementation, workload/lock contracts, validation and comparison.
+The [complete 1–64-worker report](../results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
+records all 8,910 sessions, full tables/plots, retained exclusions and CPU/JIT
+analysis. The [earlier six-count report](../results/10.176.26.71/bench/mutex_wait/20261012/README.md)
+retains the implementation, scheduler validation and tuning history.

@@ -1,0 +1,15 @@
+{
+  "commit": "e378642557d29acf2c6d39de9fc49236286158c8",
+  "status": " M bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md\n M bench/spin_cacheline/post_work_fixture.c\n M bench/spin_cacheline/test_spin_cacheline.py\n M include/kd_mutex_direct.h\n M workload_modules/spin_cacheline/README.md\n M workload_modules/spin_cacheline/api.h\n M workload_modules/spin_cacheline/direct.h\n M workload_modules/spin_cacheline/post_work.h\n M workload_modules/spin_cacheline/scenario.h\n",
+  "preexisting_sha256": {
+    "bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md": "7131841fb0620b7efbdfc4b8c8b08cd0a580892a6561c7abd35e537a2a832ca9",
+    "bench/spin_cacheline/post_work_fixture.c": "5f277955f57259c327534b2b782c56003359b7c7f6a2f1065961b8dac18f9fb9",
+    "bench/spin_cacheline/test_spin_cacheline.py": "0ad8fe7a92406a366a19afc344489c9879fcc3c232d309dc8c61aa003f4fe7b3",
+    "include/kd_mutex_direct.h": "8c01cfc7b555d9e48e25acf037e2fef6cfdcbb20334a66bfad03144e79ef2c57",
+    "workload_modules/spin_cacheline/README.md": "5e70b463f0196fbe5127555bb38399be42723fa9aa7d547470529908be4dcfdd",
+    "workload_modules/spin_cacheline/api.h": "fba2e339e232d1b70d3d2babaab55a03cc9a001ee05e30042124925732aa285b",
+    "workload_modules/spin_cacheline/direct.h": "ce92e5fd5fc75b9cf39efa0704ea95731eae434024589ac39352be14e86ddef0",
+    "workload_modules/spin_cacheline/post_work.h": "2fdb17ee1afe3b88ecb8a88eb928789bef399fd7a586416bf6b49f2a9806caee",
+    "workload_modules/spin_cacheline/scenario.h": "50220d822902d847b7f26c7b8bc49f7031feb51003663ac899b0e8ad8ae48263"
+  }
+}

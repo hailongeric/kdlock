@@ -22,7 +22,10 @@ guest-kernel interfaces.
 The [benchmark guide](bench/README.md) links current comparisons and historical
 results. The [mutex wait-policy comparison](bench/mutex_wait_compare/README.md)
 covers both KD modes, TCLock and Native across maintained kernel payloads and
-real API critical sections. Measured gains, remaining gaps and validation limits
+real API critical sections. The [full 1–64-worker rerun](bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
+reports all 31 configurations on `10.176.26.71`, including c01 and hash,
+with complete tables, scaling plots and CPU/JIT analysis.
+Measured gains, remaining gaps and validation limits
 belong to each report's frozen source and environment.
 
 ## Documentation

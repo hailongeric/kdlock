@@ -1,16 +1,33 @@
 # Performance status
 
 KD does not yet match both TCLock and Linux Native at every requested thread
-count. The [mutex waiting-policy report](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
-documents the new blocking mode, its comparison with the retained spin policy,
-Native/TCLock baselines, real API critical sections and unchanged spin/rwlock
-controls. It keeps timing variation, rejected implementations and scheduler
-validation separate from throughput claims.
-All 2,430 sessions passed and drained. At 60 workers, the nine mutex configurations
-retain 94.5–99.2% of spin's median whole-run throughput; blocking beats Native and
-TCLock on that metric in all nine and on best peak in eight. C16 loses 12.6% at
-eight workers. The single-worker hash slow-start discrepancy, separate paired
-diagnostic and CPU costs are retained in the report; universal parity is unmet.
+count. The latest [full 1–64-worker rerun](../bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
+contains 31 configurations at all 22 requested counts on `10.176.26.71`:
+**8,910 drained sessions, 8,908 accepted and two retained zero-JIT spin controls**.
+It includes c01/hash, larger cacheline payloads, mutex APIs and reader/writer
+cases under Native, TCLock and both KD settings; APIs also retain Stock Linux.
+The lock runtime was unchanged during this rerun.
+
+KD spin reaches both baselines on median whole-run throughput and best warmed
+peak at **519/651** complete multithreaded points; the blocking setting does so
+at **502/649**. Mutex-only counts are 124/189 and 119/189. At 60 and 64 workers,
+both mutex policies meet both comparisons in all nine mutex configurations.
+Blocking retains 93.3–99.3% of spin whole-run throughput at 60 workers and
+95.3–98.7% at 64. Across 16–60 workers, all 108 mutex whole-run ratios are
+within ±10% of spin, with 99 within ±5%.
+
+Low-thread gaps remain: two-worker c01 blocking loses 30.1% to spin despite
+zero recorded parking calls, with substantial variation. Several rwlock gains
+execute no JIT bodies, and UTS uses more worker CPU per operation than Native's
+sleeping rwsem. The 64-worker hostname case loses to TCLock. At that endpoint,
+the collector and last worker share a physical core; the report retains this
+limit and all peak-only outliers. Universal parity and general mmap/rwsem
+support are not established.
+
+The earlier [mutex waiting-policy report](../bench/results/10.176.26.71/bench/mutex_wait/20261012/README.md)
+retains implementation details, scheduler/deferred-wake validation, tuning and
+the separate 2,430-session six-count comparison on the regular 64-vCPU boot.
+Keep those measurements separate from the new temporary 66-vCPU comparison.
 
 The earlier [mutex c01/hash optimization](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
 measures task caching, polling layout, retirement loads and bounded NUMA selection

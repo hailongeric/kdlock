@@ -1,0 +1,165 @@
+{
+  "archives": [
+    {
+      "bytes": 655562023,
+      "captured_utc": "2026-10-12T13:04:23.610138+00:00",
+      "guest_base": "/root/kdlock-evidence/10.176.26.71",
+      "guest_command": [
+        "tar",
+        "-C",
+        "/root/kdlock-evidence/10.176.26.71",
+        "-I",
+        "gzip -1",
+        "-cf",
+        "-",
+        "bench/full-wait-20261012",
+        "bench/full-wait-20261012.driver.log",
+        "bench/full-wait-20261012.launch.json",
+        "bench/full-wait-20261012-acceptance"
+      ],
+      "gzip_integrity": true,
+      "host": "Super-Server",
+      "member_count": 282463,
+      "members": [
+        "bench/full-wait-20261012",
+        "bench/full-wait-20261012.driver.log",
+        "bench/full-wait-20261012.launch.json",
+        "bench/full-wait-20261012-acceptance"
+      ],
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/bench-evidence.tar.gz",
+      "sha256": "b815affb736fe20fe04dd92ee0495c98f85efe1421354ebe497393cdce02a45b",
+      "source_host_copy": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/bench-evidence.tar.gz"
+    },
+    {
+      "bytes": 43181,
+      "captured_utc": "2026-10-12T13:04:24.343786+00:00",
+      "guest_base": "/root/kdlock-evidence/10.176.26.71",
+      "guest_command": [
+        "tar",
+        "-C",
+        "/root/kdlock-evidence/10.176.26.71",
+        "-I",
+        "gzip -1",
+        "-cf",
+        "-",
+        "tests/full-wait-20261012"
+      ],
+      "gzip_integrity": true,
+      "host": "Super-Server",
+      "member_count": 27,
+      "members": [
+        "tests/full-wait-20261012"
+      ],
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/full-wait-20261012/tests-evidence.tar.gz",
+      "sha256": "e6c57cf5838d0d746fbc8f7ee3671792d9087c102cfa8ff6d852ae72ba3b7bd8",
+      "source_host_copy": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/full-wait-20261012/tests-evidence.tar.gz"
+    },
+    {
+      "bytes": 10232512,
+      "captured_utc": "2026-10-12T13:04:09.116567+00:00",
+      "guest_base": "/root/kdlock-evidence/10.176.26.71",
+      "guest_command": [
+        "tar",
+        "-C",
+        "/root/kdlock-evidence/10.176.26.71",
+        "-I",
+        "gzip -1",
+        "-cf",
+        "-",
+        "analysis/full-wait-20261012-report",
+        "analysis/full-wait-20261012-final-health.json",
+        "analysis/full-wait-20261012-dmesg-after.txt",
+        "analysis/full-wait-20261012-export.log",
+        "analysis/full-wait-20261012-analyze.log",
+        "analysis/full-wait-20261012-commands.json"
+      ],
+      "gzip_integrity": true,
+      "host": "Super-Server",
+      "member_count": 43,
+      "members": [
+        "analysis/full-wait-20261012-report",
+        "analysis/full-wait-20261012-final-health.json",
+        "analysis/full-wait-20261012-dmesg-after.txt",
+        "analysis/full-wait-20261012-export.log",
+        "analysis/full-wait-20261012-analyze.log",
+        "analysis/full-wait-20261012-commands.json"
+      ],
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/analysis-evidence.tar.gz",
+      "sha256": "f5dadd146ba899ac824585a98f61dc2d3b4695acf63c54543523bf738eea05e6",
+      "source_host_copy": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/analysis-evidence.tar.gz"
+    }
+  ],
+  "check": "offline integrity only; no new tests or benchmarks",
+  "checked_utc": "2026-10-12T13:11:02.469545+00:00",
+  "metadata": {
+    "host-environment.json": {
+      "bytes": 23841,
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/host-environment.json",
+      "sha256": "b3d09860ea60a74c9a30ba5b159dfbfda084f0d26ec0ee1bf73b0782bf51aa11"
+    },
+    "preexisting.patch": {
+      "bytes": 22521,
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/preexisting.patch",
+      "sha256": "bc97b3630e07cc0e98328a6aca45e4f2789fac73af4bedc4b88c06039009af67"
+    },
+    "restore64.json": {
+      "bytes": 10822,
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/restore64.json",
+      "sha256": "dacb79f39b0eea4a9d2b5f1577bf54d0b8003384844ed1844120a5f21140c300"
+    },
+    "snapshot-create.log": {
+      "bytes": 2389,
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/snapshot-create.log",
+      "sha256": "6e16ab51fffc14130bf112e723aee59dcd35451d9f1356387ed0e875938534b6"
+    },
+    "snapshots.log": {
+      "bytes": 1966,
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/snapshots.log",
+      "sha256": "da35cb52300114c9c17fe276b7c64ecf6ba670467062b1713107885650dd0a15"
+    },
+    "source-state.json": {
+      "bytes": 1606,
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/full-wait-20261012/source-state.json",
+      "sha256": "ef707486b829fc8653b620f83f47823b21bf1ecf671f0ea0026fd1f098670a3d"
+    }
+  },
+  "published_artifact_sha256": {
+    "HIGHLIGHTS.md": "d71bd920212bd5b7d5b76b8be4aaa071a068825eb0e9e36ffb112d2de0527276",
+    "TABLES.md": "ff8d3d38c31d5771a96723d8fed0785264bd67aec2facd159dd60af44390896f",
+    "analysis.json": "7116504f142190dd16e918a3eb82cf5680622418f9e45a4d71228fe7d8770364",
+    "analyze.py": "598531368e394e5b1d3abcd21fb228980828f75c8853f2fe8fe804c123adf412",
+    "comparison.csv": "99f839933f5dc16ca9a7e346282e0c9a59d95740c7a7951158b4ddf68dcd62d2",
+    "comparison.json": "caad577694eba00abc208f613370eb42348e0f7506101e7da75cd7b89f4333ae",
+    "evidence.json": "b293030b10a5f9da868d664b717e140e1169c4e570541cae6f3f29e2817977d0",
+    "export.py": "c539a8b3fa5a65d2f3aaaf6163d8ef275e6b21c7cc2b6ac56c4e01ed3495823c",
+    "mutex-api-peak_ops_s.png": "d43ed3ee9724f0e323701a21479941a6c1700614ed95a698123b5b8972e6535b",
+    "mutex-api-peak_ops_s.svg": "d08e460bee4b7d8039f9efa12f95021d26c3e5cce3d50613916584ccf87b6f53",
+    "mutex-api-whole_ops_s.png": "c1aaae9a4f66d1740fa99ff9ef46d6d02dfa878a327ae7c6a6fbaa3c0f1e8936",
+    "mutex-api-whole_ops_s.svg": "1a5320bb3b0666607bf6c5966e33339ac67b24816cb7ba927e4941d130d41449",
+    "mutex-micro-peak_ops_s.png": "0eb205ddec37a527c56f1449b5d54b48fbd0b0a92f7d05b7548327b1b9766796",
+    "mutex-micro-peak_ops_s.svg": "0c01a09751dfb35802723a71c0a623d3e3ea570a05eef6fb2eb81bc0b5b6123d",
+    "mutex-micro-whole_ops_s.png": "68b175d9dfd2406cf9bad0f271c4c3bb8f940ad40abcd8cc0959618ef8b9a674",
+    "mutex-micro-whole_ops_s.svg": "2881cb8225af4f3a23451751cb82ebe27002b7fba6da03cfd3a2b9adfd7b7e50",
+    "mutex-policy-ratio.png": "f972981b91790a8ea8a1c86a76d28881f41192f8c06fd975efd6768e2429d2f5",
+    "mutex-policy-ratio.svg": "2dbf9b8c31cf06c1938423fdc88c332e4f8180c7154e8b843a012406c720ee4d",
+    "rwlock-micro-peak_ops_s.png": "59f1f26d011fd5f2f600bd69dd9a9858686485ff48e57f3abc24bc2f827f0cd3",
+    "rwlock-micro-peak_ops_s.svg": "3886784e9b51e6c1c1cb133f06eac0f2c0ee6c8d0756e3c9b5e347bc4f8e13a6",
+    "rwlock-micro-whole_ops_s.png": "232f79364aefcb94e3539e18571916df5e4b59622f367f31a4c6abbd7eb81f0a",
+    "rwlock-micro-whole_ops_s.svg": "8843a6e7fe4cc655b051bf9d406943fe0bedecd6f3d364e1384f05b03b6d84c8",
+    "samples.csv": "505fff274e1e6e6f89e20cbfd41faa70d3c14de489a79fcc27e7b7ffb87b91f5",
+    "samples.json": "7531e9c514fcb812d5c0c48b419e597300993166035b2561a05d97497bfe5132",
+    "spin-micro-peak_ops_s.png": "92596a05dc60ca60a494570297e0995faab4ae4873f3d265b8a6860de8056c73",
+    "spin-micro-peak_ops_s.svg": "6578700b5b19665949c445ed7e696d800015bad790f78a934e7bfdc27ebdef02",
+    "spin-micro-whole_ops_s.png": "4a69fb2b144ff4abbc7b532d6ec594f98fa8035463b39d6c5bb90c30bf8d9da3",
+    "spin-micro-whole_ops_s.svg": "337033ba7210e8fae775a862e3d7e4e47b630cf14d30b5f97d7c3001414a4a60",
+    "spin-rwlock-api-peak_ops_s.png": "ab37d0a764411ab946e2af0675462d57043ea2b331c8a9afcfcf01f03bf3b7b6",
+    "spin-rwlock-api-peak_ops_s.svg": "c324659469eb223137750948dbe146c054108b75cd61cbefa9bc1e13a2e9e13b",
+    "spin-rwlock-api-whole_ops_s.png": "5baa603886c790ce9a30fa6c32667efa90b6c0355e165e3a3054fb623b29868f",
+    "spin-rwlock-api-whole_ops_s.svg": "0edb809ed3885df10567f24de190a0cb6394307f01796317cc7aeb2880689047",
+    "statistics-by-execution.csv": "cb440ae9bc348470cb106e0c92fb421225e275ddbe8e6e5b2cfc9877547c0674",
+    "statistics-by-execution.json": "071ffa41fdef402763808dd36853434aa36db9d3a2db6a341567a0e38b28f206",
+    "statistics.csv": "3f4c528c30960ca1e6f8ed9027c6712528a69cacb0ded63f6864dbe0ff6ea565",
+    "statistics.json": "eaea206d1d4474cd7491431f21da44202bb08e0157a14a4ee1fb633c2f62b88c",
+    "verification.json": "0d1b554a8e71338e2afc33a864f3a4f3ee68914f11f8289be9eb6b5fa17b31b1"
+  }
+}

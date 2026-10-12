@@ -130,6 +130,36 @@ def check_execution(row):
             'execution verdict does not match returned-body requirement')
 
 
+def hash_outcomes(row):
+    """Retain the measured update mix, excluding warmup and concurrent reads."""
+    if 'kind' in row or row.get('workload') != 'rcuht':
+        return {}
+    m = row['measurement']
+    before, after = m['before'], m['after']
+    eligible = m['completed']
+    if row['lock_kind'] == 'rwlock':
+        before, after = before['values'], after['values']
+        eligible = m['writes']
+    deltas = [a - b for a, b in zip(after[1:4], before[1:4])]
+    require(len(deltas) == 3 and min(deltas) >= 0 and sum(deltas) == eligible,
+            'hash update outcomes differ from measured operations')
+    return dict(zip(('hash_move_ops', 'hash_destination_conflict_ops', 'hash_source_miss_ops'), deltas))
+
+
+def check_whole(row):
+    m = row['measurement']
+    whole = m['completed'] * 1e9 / m['wall_ns']
+    reported = row.get('whole_throughput_ops_s', whole)
+    # Direct runners blank scored rates on a drained NO_JIT rejection. Keep
+    # its measured rate in samples, while aggregate() excludes it from scores.
+    if reported is None:
+        require(row['execution_status'] == 'NO_JIT' and row.get('jit_bodies') == 0,
+                'accepted session has no whole rate')
+    else:
+        require(math.isclose(reported, whole, rel_tol=1e-12), 'whole rate differs')
+    return whole
+
+
 def audit_group(folder, group, approved, spin_limit, *, allow_not_run=False,
                 threads=THREADS, worker_cpus=None, collector=63):
     worker_cpus = list(range(max(threads))) if worker_cpus is None else worker_cpus
@@ -285,8 +315,7 @@ def audit_group(folder, group, approved, spin_limit, *, allow_not_run=False,
                 require(r['mutex_wait_delta'] == {k: v - r['mutex_wait_before'][k]
                     for k, v in r['mutex_wait_after'].items()} and
                     all(v >= 0 for v in r['mutex_wait_delta'].values()), 'wait observations differ')
-        whole = m['completed'] * 1e9 / m['wall_ns']
-        require(math.isclose(r.get('whole_throughput_ops_s', whole), whole, rel_tol=1e-12), 'whole rate differs')
+        whole = check_whole(r)
         cpu_ns = sum(w['cpu_ns'] for w in workers)
         if 'worker_cpu_ns' in m:
             require(m['worker_cpu_ns'] == cpu_ns, 'CPU accounting differs')
@@ -302,6 +331,7 @@ def audit_group(folder, group, approved, spin_limit, *, allow_not_run=False,
             post_work_rounds=None if api else r.get('post_work_rounds', 64),
             mutex_spin_limit=r.get('mutex_spin_limit'),
             tclock_delegated=r.get('tclock_delegation', r.get('delegated_bodies')) if r['arm'] == 'tclock' else None,
+            **hash_outcomes(r),
             **r.get('mutex_wait_delta', {}))
         samples.append(row)
     return samples, dict(counts), dict(environment=environment, kernel_identity=identity,
@@ -355,7 +385,8 @@ def comparisons(stats):
                    blocking_jit_rounds=arms['kd-blocking']['jit_rounds'],
                    complete=all(a['complete'] for a in arms.values()))
         for arm in ('kd-spin', 'kd-blocking'):
-            for baseline in ('native', 'tclock', *(['kd-spin'] if arm == 'kd-blocking' else [])):
+            for baseline in ('native', 'tclock', *(['stock'] if 'stock' in arms else []),
+                             *(['kd-spin'] if arm == 'kd-blocking' else [])):
                 for metric in ('whole_ops_s_median', 'peak_ops_s_max', 'cpu_ns_per_op_median'):
                     row[arm + '_over_' + baseline + '_' + metric] = (arms[arm][metric] / arms[baseline][metric]
                         if arms[arm]['complete'] and arms[baseline]['complete'] else None)
@@ -440,7 +471,7 @@ def plots(out, stats, threads_grid=THREADS):
                      'NO_JIT controls are included (TABLES.md). Spin/rwlock policy pairs repeat unchanged algorithms.'
                      + ('\nAt 64 workers, collector and last worker share a physical core.' if max(threads_grid) == 64 else ''),
                      ha='center', va='bottom', fontsize=8)
-            fig.tight_layout(rect=(0, .035, 1, 1))
+            fig.tight_layout(rect=(0, .05 if max(threads_grid) == 64 else .035, 1, 1))
             stem = out / (category + '-' + metric)
             fig.savefig(str(stem) + '.png', dpi=150)
             svg = Path(str(stem) + '.svg')
