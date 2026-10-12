@@ -65,6 +65,7 @@ def production():
     ):
         code += f"__attribute__((noipa)) {result}\n" + definition(mutex, marker)
     code += "#undef kd_mutex_shadows\n"
+    code += "static bool mutex_native_route;\n"
     code += hook[
         hook.index("#define KD_MUTEX_SHADOW_TABLE_SIZE ") : hook.index(
             "/* --- externs from patched kernel"
@@ -95,6 +96,10 @@ def main():
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
     mutations = {
+        "native-control-ignored": (
+            "if (!admitted || mutex_native_route)",
+            "if (!admitted)",
+        ),
         "outer-entry-retries-native-cas": (
             "kd_mutex_contended_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",
             "kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",

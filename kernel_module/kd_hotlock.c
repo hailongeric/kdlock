@@ -62,6 +62,9 @@ static DEFINE_PER_CPU(unsigned long, kd_hotlock_mutex_checks);
 static unsigned int spin_entry_ratio_limit = 2;
 module_param(spin_entry_ratio_limit, uint, 0444);
 MODULE_PARM_DESC(spin_entry_ratio_limit, "Exclusive (spin entries >> 10) limit per 1024 MCS publications; 0 or a power of two >= 2");
+static unsigned int mutex_entry_ratio_limit = KD_HOTLOCK_MUTEX_RATIO_DEFAULT;
+module_param(mutex_entry_ratio_limit, uint, 0444);
+MODULE_PARM_DESC(mutex_entry_ratio_limit, "Exclusive (mutex entries >> 10) limit per 1024 failed native attempts; power of two from 2 through 256");
 static bool hotlock_stats;
 module_param(hotlock_stats, bool, 0444);
 MODULE_PARM_DESC(hotlock_stats, "Print final CPU-local exact lock counters after provider drain");
@@ -132,7 +135,7 @@ static bool kd_hotlock_clock(struct kd_hotlock_table *t, unsigned int *rate_hot,
                    this_cpu_read(kd_hotlock_mutex_entries));
     this_cpu_inc(kd_hotlock_mutex_checks);
     ratio_hot = (this_cpu_read(kd_hotlock_mutex_entries) >> 10) <
-                KD_HOTLOCK_MUTEX_RATIO_LIMIT;
+                mutex_entry_ratio_limit;
     this_cpu_write(kd_hotlock_mutex_entries, 0);
     this_cpu_write(kd_hotlock_mutex_contentions, 0);
   }
@@ -179,8 +182,8 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   bool pin;
   /* Callers supply a valid lock identity between successful module init and
    * final drain. Do not repeat address/table readiness tests per acquisition. */
-  /* Root spin admission already owns a pin and needs no runtime pin check.
-   * Generic spin and mutex callers retain their existing pin handling,
+  /* Root spin and contended mutex admission already own a pin.
+   * Generic callers retain their existing pin handling,
    * which covers only this access, never the later sleep/ACK interval. */
   pin = !already_pinned && !preempt_count();
   if (pin)
@@ -190,7 +193,15 @@ static __always_inline bool kd_hotlock_access(unsigned long address, unsigned in
   rate_hot = kind ? &local->mutex_rate_hot : raw_cpu_ptr(&kd_hotlock_spin_gate);
   /* Count even a guarded skip; a later contention retries the boundary. */
   if (record && kind == 1)
+  {
     this_cpu_inc(kd_hotlock_mutex_contentions);
+    /* Cold admission cannot use an address entry. Keep every observation and
+     * retry a busy sampling boundary, but avoid touching the table guard or
+     * copying the sample count until a CPU comparison is actually due. */
+    if (!*rate_hot && this_cpu_read(kd_hotlock_mutex_contentions) <
+                     KD_HOTLOCK_CHECK_INTERVAL)
+      goto unpin;
+  }
   if (!kd_hotlock_try_enter(t))
     goto unpin;
   /* Spin CPU heat advances only at MCS publication. Entry records retain the
@@ -239,6 +250,7 @@ unpin:
 bool kd_hotlock_record_spin(unsigned long address) { return kd_hotlock_access(address, 0, true, false); }
 bool kd_hotlock_record_spin_pinned(unsigned long address) { return kd_hotlock_access(address, 0, true, true); }
 bool kd_hotlock_record_mutex(unsigned long address) { return kd_hotlock_access(address, 1, true, false); }
+bool kd_hotlock_record_mutex_pinned(unsigned long address) { return kd_hotlock_access(address, 1, true, true); }
 bool kd_hotlock_query_spin(unsigned long address) { return kd_hotlock_access(address, 0, false, false); }
 bool kd_hotlock_query_mutex(unsigned long address) { return kd_hotlock_access(address, 1, false, false); }
 
@@ -264,6 +276,9 @@ int kd_hotlock_init(void)
   unsigned long now;
   if (spin_entry_ratio_limit == 1 ||
       (spin_entry_ratio_limit & (spin_entry_ratio_limit - 1)))
+    return -EINVAL;
+  if (mutex_entry_ratio_limit < 2 || mutex_entry_ratio_limit > 256 ||
+      (mutex_entry_ratio_limit & (mutex_entry_ratio_limit - 1)))
     return -EINVAL;
   kd_hotlock_cpu = alloc_percpu(struct kd_hotlock_cpu);
   if (!kd_hotlock_cpu)
@@ -299,11 +314,11 @@ void kd_hotlock_exit(void)
       unsigned int rate_hot = kind ? local->mutex_rate_hot :
                                     per_cpu(kd_hotlock_spin_gate, cpu);
       if (kind && per_cpu(kd_hotlock_mutex_entries, cpu))
-        pr_info("kd_hotlock mutex ratio: cpu=%d entries=%lu contentions=%lu last_entries=%lu checks=%lu cpu_hot=%u window=%u scope=unfinished_batch role=DONE\n",
+        pr_info("kd_hotlock mutex ratio: cpu=%d entries=%lu contentions=%lu last_entries=%lu checks=%lu cpu_hot=%u entry_ratio_limit=%u window=%u scope=unfinished_batch role=DONE\n",
                 cpu, per_cpu(kd_hotlock_mutex_entries, cpu),
                 per_cpu(kd_hotlock_mutex_contentions, cpu),
                 per_cpu(kd_hotlock_mutex_last_entries, cpu),
-                per_cpu(kd_hotlock_mutex_checks, cpu), rate_hot,
+                per_cpu(kd_hotlock_mutex_checks, cpu), rate_hot, mutex_entry_ratio_limit,
                 KD_HOTLOCK_CHECK_INTERVAL);
       if (!kind && per_cpu(kd_hotlock_spin_entries, cpu))
       {

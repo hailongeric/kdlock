@@ -69,6 +69,8 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | `spin_delegate` | Enabled; false selects native KD spin/rwlock-writer self-execution |
 | `spin_prefetch` | 2; producer hints. Modes 0/1 select off/consumer lookup |
 | `spin_entry_ratio_limit` | 2; 0 disables only the ratio filter |
+| `mutex_entry_ratio_limit` | 256; read-only power of two from 2 through 256, exclusive `(entries >> 10)` bound per 1,024 failed native attempts |
+| `mutex_native_route` | False; read-only diagnostic control routing new mutex acquisitions natively after admission sampling |
 | `hotlock_stats` | Optional final approximate observation totals |
 | `target_process` | Task comm eligible for direct mutex delegation |
 | `mutex_spin_limit` | 4096 PAUSE iterations before sleeping; 0 parks immediately, maximum 1048576 |

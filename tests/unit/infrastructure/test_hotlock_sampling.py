@@ -29,7 +29,8 @@ def main():
     mutations = {
         "missing-mutex-entry": ("this_cpu_inc(kd_hotlock_mutex_entries);", "(void)0;", 1),
         "missing-mutex-contention": ("this_cpu_inc(kd_hotlock_mutex_contentions);", "(void)0;", 1),
-        "mutex-ratio-equality": ("<\n                KD_HOTLOCK_MUTEX_RATIO_LIMIT;", "<=\n                KD_HOTLOCK_MUTEX_RATIO_LIMIT;", 1),
+        "mutex-ratio-equality": ("<\n                mutex_entry_ratio_limit;", "<=\n                mutex_entry_ratio_limit;", 1),
+        "mutex-cold-guard-overhead": ("if (!*rate_hot && this_cpu_read(kd_hotlock_mutex_contentions) <", "if (false && !*rate_hot && this_cpu_read(kd_hotlock_mutex_contentions) <", 1),
         "missing-mutex-reset": ("this_cpu_write(kd_hotlock_mutex_entries, 0);", "(void)0;", 1),
         "table-busy-guard": ("if (READ_ONCE(t->busy))", "if (false)", 1),
         "late-spin-threshold": ("++slot->count >= target", "++slot->count > target", 1),

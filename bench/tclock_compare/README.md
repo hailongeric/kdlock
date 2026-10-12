@@ -141,6 +141,32 @@ returned delegated bodies and successful parks, and must show delegation under
 contention. `--keep-going-no-jit` keeps drained failures and continues collecting,
 but excludes their failed scores and still exits nonzero.
 
+Mutex acceptance defaults to `--mutex-acceptance jit-required`. Explicit
+`--mutex-acceptance adaptive-performance` also scores correct, drained native
+execution chosen by admission. Those samples retain zero returned bodies and
+the `ADAPTIVE_NATIVE` classification; they do not pass JIT acceptance.
+Functional checks always retain JIT-required acceptance.
+
+`--mutex-entry-ratio-limit` accepts powers of two from 2 through 256 (default
+256). The CPU compares `(entries >> 10) < limit` every 1,024 failed native
+attempts. The 1,025-record exact-address heat check and strict comparison stay
+unchanged. The pinned sampler skips cold table access between CPU comparisons;
+no threshold or route depends on the benchmark's worker count.
+
+`--mutex-routing native` forces the existing native fallback after sampling.
+It is an unscored `NATIVE_ROUTING_CONTROL` diagnostic and must return zero JIT
+bodies. Every sample records threshold, routing, acceptance and execution class.
+Reports keep different thresholds and policies separate, retain median whole-run
+rates, and exclude diagnostic/PMU samples from performance scores.
+
+The [c01 acceptance auditor](mutex_study.py) verifies frozen inputs and recomputes
+peaks from raw progress. Its primary grid is 1–8, 12, 16, 20, 24 and 28 workers;
+32, 36, 48 and 60 compare against fresh baseline KD and require returned JIT in
+every round. Both median whole-run and best warmed peak must reach 97% of their
+respective controls. A failing screening rung rejects a candidate; missing grid
+points cannot pass. A new default requires the smallest passing threshold and
+two independent fresh three-round confirmation blocks.
+
 Timed peak selection requires all workers to progress in the full cohort window.
 Keep whole-run per-worker and node shares too, especially cohorts with unequal
 NUMA membership (24 threads in the original 40-vCPU setup). A bounded batch and
@@ -176,6 +202,16 @@ Ratio0 does not guarantee admission or waive returned-body/context/drain checks.
 `--pmu` is a separate long-batch diagnostic using supported perf events. Verify
 availability, sample loss and identity before attribution; do not add its scores to
 normal measurements or infer remote-memory latency from flat cycle samples.
+`--profile-lock --cachelines 1` adds separate intrusive kprobes for Native spin
+or Native/KD mutex. It counts native slow entries, accepted/declined admission
+and completed packets per combiner, and samples the mutex owner every 100 us on
+the collector CPU. Histogram bucket 0 is empty; bucket k covers
+`2**(k-1)..2**k-1`, with bucket 11 also including larger counts. Returned JIT
+bodies are counted independently. Owner changes count changes between nonzero
+samples, not exact ownership streaks or cacheline transfers. Probe overhead can
+change admission and scheduling; do not use these rates for acceptance. The
+runner requires zero missed probes and unloads the profiler after worker drain,
+before retiring the source/provider whose storage it observes.
 [Tests](../../tests/README.md) selects affected fixtures and source/assembly audits.
 
 ## Shutdown

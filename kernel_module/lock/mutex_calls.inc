@@ -9,6 +9,12 @@
  * Mutex hooks
  * ========================================================================== */
 
+/* Diagnostic control for measuring the existing native fallback and admission
+ * cost. Immutable while loaded; ownership/unlock routing never consults it. */
+static bool mutex_native_route;
+module_param(mutex_native_route, bool, 0444);
+MODULE_PARM_DESC(mutex_native_route, "Route new mutex acquisitions natively after sampling (diagnostic control)");
+
 /* A nonzero result is proof that THIS acquisition used only the original
  * Linux mutex. Other task records do not grant or revoke this ownership. Any
  * entry into the KD queue keeps zero, including its local native fallbacks. */
@@ -20,11 +26,11 @@ static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned lon
 
 	preempt_disable();
 	kd_hotlock_mutex_entry();
-	admitted = kd_hotlock_record_mutex((unsigned long)lock);
+	admitted = kd_hotlock_record_mutex_pinned((unsigned long)lock);
 	preempt_enable();
 	/* Only failed acquisitions supply contention observations. Frequency
 	 * checks still precede process selection and any task/shadow work. */
-	if (!admitted) {
+	if (!admitted || mutex_native_route) {
 		kd_origin_mutex_lock(lock);
 		return (unsigned long)current;
 	}

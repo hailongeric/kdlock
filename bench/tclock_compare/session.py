@@ -16,6 +16,7 @@ from bench_session import Session
 TC_MODULE = ROOT / 'tclock_backend/tclock_backend_km.ko'
 TC_MUTEX_MODULE = ROOT / 'tclock_backend/tclock_mutex_backend_km.ko'
 GUARD_MODULE = ROOT / 'bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'
+PROFILE_MODULE = ROOT / 'tests/kernel/mutex/profile/kd_mutex_profile.ko'
 
 
 def tc_parameters(lock_kind='spin'):
@@ -52,6 +53,8 @@ def check_kd_parameters(params, record, lock_addr):
             'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
             'mutex_blocking' not in params and record['mutex_wait_mode'] == 'blocking' and
             int(params['mutex_spin_limit']) == record['mutex_spin_limit'] and
+            int(params['mutex_entry_ratio_limit']) == record['mutex_entry_ratio_limit'] and
+            params['mutex_native_route'] == ('Y' if record.get('mutex_routing') == 'native' else 'N') and
             params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
             'kdlock observation parameters differ')
 
@@ -60,6 +63,20 @@ def check_jit_evidence(record):
     # A policy may select self-execution. Keep NO_JIT explicit and retain all
     # publication/body counters; contended protocol positives still fail
     # without a returned body. Valid throughput is not JIT acceptance.
+    record['execution_class'] = ('NATIVE' if record['arm'] == 'native' else
+                                 'JIT' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
+    if record['arm'] == 'kdlock' and record.get('lock_kind') == 'mutex':
+        if record.get('mutex_routing', 'adaptive') == 'native':
+            require(record.get('jit_bodies', 0) == 0, 'native routing control executed JIT')
+            require(not record.get('functional', False), 'native control is not a functional JIT check')
+            record.update(jit_acceptance='NATIVE_ROUTING_CONTROL',
+                          execution_class='NATIVE_ROUTING_CONTROL', diagnostic=True)
+            return
+        if record.get('mutex_acceptance', 'jit-required') == 'adaptive-performance':
+            require(not record.get('functional', False), 'adaptive performance is not a functional JIT check')
+            record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else 'ADAPTIVE_NATIVE')
+            record['execution_class'] = ('JIT' if record.get('jit_bodies', 0) > 0 else 'ADAPTIVE_NATIVE')
+            return
     if (record['arm'] == 'kdlock' and record.get('lock_kind', 'spin') == 'spin' and
             record.get('spin_delegate', 'on') == 'off'):
         require(record.get('jit_bodies', 0) == 0, 'disabled control executed JIT')
@@ -97,13 +114,14 @@ class BackendSession(Session):
             # Count the measured client and its pinned workers, excluding module
             # load, translation and warmup. PMU output stays separate from data.
             args = ['perf', 'stat', '-x', ';', '-o', self.path/'pmu.csv',
-                    '-e', 'cycles,instructions,task-clock,context-switches,cpu-migrations',
+                    '-e', 'cycles,instructions,cache-misses,task-clock,context-switches,cpu-migrations',
                     '--', *args]
         return super().run(args, log, **kwargs)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.loaded_tc = False
+        self.loaded_profile = False
         self.lock_kind = self.record.get('lock_kind', 'spin')
         self.tc_module = TC_MUTEX_MODULE if self.lock_kind == 'mutex' else TC_MODULE
         self.tc_params = Path('/sys/module') / self.tc_module.stem / 'parameters'
@@ -118,6 +136,8 @@ class BackendSession(Session):
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
                       'target_process=sc_worker',
                       'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 4096)),
+                      'mutex_entry_ratio_limit=' + str(self.record['mutex_entry_ratio_limit']),
+                      'mutex_native_route=' + ('1' if self.record.get('mutex_routing') == 'native' else '0'),
                       'spin_entry_ratio_limit=' + str(self.record['spin_entry_ratio_limit']),
                       'spin_prefetch=' + str(self.record['spin_prefetch']),
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
@@ -202,6 +222,19 @@ class BackendSession(Session):
         self.save()
 
     def measure(self):
+        if self.record.get('profile_lock'):
+            counter = 0
+            if self.loaded_kd:
+                symbols = [int(s[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
+                           if len(s := line.split()) == 4 and
+                           s[2:] == ['kd_mutex_jit_success_count', '[kdlock_km]']]
+                require(len(symbols) == 1 and symbols[0], 'missing batch completion counter')
+                counter = symbols[0]
+            self.run(['taskset', '-c', str(self.record['collector_cpu']), 'insmod', PROFILE_MODULE,
+                      'target_lock=' + str(self.record['layout']['lock_addr']),
+                      'success_counter=' + str(counter), 'kd=' + str(int(self.loaded_kd)),
+                      'spin=' + str(int(self.lock_kind == 'spin'))], 'load-profile.log')
+            self.loaded_profile = True
         if self.record['arm'] != 'tclock':
             super().measure()
             check_jit_evidence(self.record)
@@ -232,6 +265,21 @@ class BackendSession(Session):
         self.save()
 
     def cleanup(self):
+        if getattr(self, 'loaded_profile', False):
+            self.faults()
+            require(self.counts('profile-drain')['active'] == 0, 'profiler workers active', 'UNDRAINED')
+            self.run(['rmmod', PROFILE_MODULE.stem], 'unload-profile.log')
+            self.loaded_profile = False
+            self.faults()
+            rows = re.findall(r'kd_mutex_profile: ([^\n]+)', self.messages)
+            require(len(rows) == 1, 'missing profiler receipt')
+            observed = {k: int(v) for k, v in re.findall(r'(\w+)=(\d+)', rows[0])}
+            observed['batch_histogram'] = {int(k): int(v) for k, v in re.findall(
+                r'kd_mutex_profile histogram: bucket=(\d+) batches=(\d+)', self.messages)}
+            self.record['lock_profile'] = observed
+            self.save()
+            require(observed['missed'] == 0 and len(observed['batch_histogram']) == 12,
+                    'incomplete lock profile')
         if self.loaded_tc:
             self.faults()
             if self.loaded_source:

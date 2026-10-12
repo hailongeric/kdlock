@@ -6,6 +6,7 @@
 #include <linux/delay.h>
 #include <linux/kthread.h>
 #include <linux/workqueue.h>
+#include "kd_hotlock.h"
 
 static bool mutex_wait_selftest;
 module_param(mutex_wait_selftest, bool, 0444);
@@ -74,6 +75,34 @@ static long kd_wait_test_cpu_progress(void *arg)
 	return raw_smp_processor_id() == mutex_wait_cpu;
 }
 
+/* Drive the real sampler through hot -> cold while a result reservation or
+ * gate waiter on this CPU is outstanding. Only admission observations are
+ * synthetic; the parked task, pin, owner, result publication and drain are real. */
+static long kd_wait_test_cool(void *arg)
+{
+	struct kd_wait_test *test = arg;
+	unsigned long address = (unsigned long)&test->original;
+	unsigned int i;
+	bool hot, cold;
+
+	preempt_disable();
+	for (i = 0; i < 4096; i++) {
+		kd_hotlock_mutex_entry();
+		kd_hotlock_record_mutex_pinned(address);
+	}
+	hot = kd_hotlock_query_mutex(address);
+	/* Exceed even the largest admitted threshold, without changing policy. */
+	for (i = 0; i < 256 * 1024; i++)
+		kd_hotlock_mutex_entry();
+	for (i = 0; i < 1024; i++) {
+		kd_hotlock_mutex_entry();
+		kd_hotlock_record_mutex_pinned(address);
+	}
+	cold = !kd_hotlock_query_mutex(address);
+	preempt_enable();
+	return hot && cold;
+}
+
 int kd_mutex_wait_selftest(void)
 {
 	struct kd_wait_test test = {};
@@ -120,6 +149,8 @@ int kd_mutex_wait_selftest(void)
 			test.errors += !blocked_result;
 			/* Work on the parked waiter's CPU must make progress. */
 			test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cpu_progress, NULL) != 1;
+			test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cool, &test) != 1;
+			test.errors += !test.node->locked || test.node->completed;
 		} else if (!(i & 7)) {
 			udelay(i & 63);
 		}
@@ -149,13 +180,15 @@ int kd_mutex_wait_selftest(void)
 		waitqueue_active(&test.gate.gate_wait);
 	test.errors += !blocked_gate;
 	test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cpu_progress, NULL) != 1;
+	test.errors += work_on_cpu(mutex_wait_cpu, kd_wait_test_cool, &test) != 1;
+	test.errors += !test.gate.locked || !kd_origin_mutex_owned(&test.original, current);
 	_kd_mutex_unlock(&test.gate);
 	wait_for_completion(&test.done);
 	switches = READ_ONCE(task->nvcsw) - switches;
 	kthread_stop(task);
 	test.errors += !kd_mutex_check_idle() || test.gate.locked ||
 		test.gate.physical_owner || mutex_is_locked(&test.original);
-	pr_info("kd_mutex wait probe: rounds=1024 result_sleep=%d gate_sleep=%d switches=%lu errors=%d jit_bodies=0 deferred_progress=%d\n",
+	pr_info("kd_mutex wait probe: rounds=1024 result_sleep=%d gate_sleep=%d switches=%lu errors=%d jit_bodies=0 deferred_progress=%d cooling=2\n",
 		blocked_result, blocked_gate, switches, test.errors, deferred_progress);
 	return test.errors ? -EINVAL : 0;
 }

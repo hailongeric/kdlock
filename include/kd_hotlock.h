@@ -13,7 +13,7 @@ DECLARE_PER_CPU(unsigned long, kd_hotlock_spin_mcs);
  * never influence mutex admission or consume its observations. */
 DECLARE_PER_CPU(unsigned long, kd_hotlock_mutex_entries);
 DECLARE_PER_CPU(unsigned long, kd_hotlock_mutex_contentions);
-#define KD_HOTLOCK_MUTEX_RATIO_LIMIT 256U
+#define KD_HOTLOCK_MUTEX_RATIO_DEFAULT 256U
 /* One x86 this_cpu_inc is CPU-local even without a surrounding pin. A native
  * success may migrate between acquisition and this approximate observation;
  * failed entries stay pinned with their corresponding contention sample. */
@@ -72,11 +72,13 @@ static __always_inline void kd_hotlock_record_spin_mcs_pinned(void)
   if (this_cpu_read(kd_hotlock_spin_mcs) >= KD_HOTLOCK_SPIN_MCS_INTERVAL)
     kd_hotlock_sample_spin_mcs_pinned();
 }
-/* One failed native CAS; samples every 1024 contentions with the exclusive
- * (entries >> 10) < 256 gate, then clears both counts and updates the clock.
- * The initial limit 2 prevented promotion: native mutex owner bursts produced
- * 49k–183k entries per 1024 failed CASes in the measured 16-worker case. */
+/* One failed native attempt; samples every 1024 contentions with the exclusive
+ * (entries >> 10) < mutex_entry_ratio_limit gate (default 256), then clears both
+ * counts and updates the clock. Cold CPUs skip the table until that boundary. */
 bool kd_hotlock_record_mutex(unsigned long address);
+/* Entry hooks already hold a short preemption pin. This observation does not
+ * extend that pin into native sleeping, queued work or owner acknowledgments. */
+bool kd_hotlock_record_mutex_pinned(unsigned long address);
 bool kd_hotlock_query_spin(unsigned long address);
 bool kd_hotlock_query_mutex(unsigned long address);
 

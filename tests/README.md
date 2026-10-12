@@ -100,6 +100,9 @@ The [mutex wait probe](kernel/mutex/run_wait_selftest.py) tests immediate parkin
 and spin limits of 1,024 and 4,096. It observes real result/gate sleepers, runs
 other work on the parked task's CPU, exercises 3,072 result publications and
 checks progress with a deliberately withheld completion wake and exact drain.
+It also drives the real admission sampler from hot to cold while a result
+reservation and a gate waiter remain outstanding, then checks completion,
+native ownership and drain at each polling budget.
 These constructed packets execute no JIT bodies; the
 [mutex benchmark](../bench/tclock_compare/README.md) supplies that evidence.
 The task/ACK probe and scheduler probe both use the only supported blocking policy.

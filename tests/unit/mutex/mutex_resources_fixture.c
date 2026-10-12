@@ -159,7 +159,7 @@ static bool kd_mutex_task_reroute(struct task_struct *task);
 static bool kd_source_is_open(void);
 static bool kd_mutex_task_get(struct task_struct *task);
 static void kd_mutex_task_put(struct task_struct *task);
-static int kd_hotlock_record_mutex(unsigned long addr);
+static int kd_hotlock_record_mutex_pinned(unsigned long addr);
 static void kd_exe_add_abi(int pid, unsigned long ip, enum kd_exe_lock_kind kind, enum kd_entry_abi abi);
 static bool kd_exec_native_unlock(unsigned long addr, bool mutex);
 static unsigned long kd_read_kernel_gsbase(void);
@@ -363,7 +363,7 @@ static void kd_mutex_task_put(struct task_struct *task)
 	refs--;
 	task_puts++;
 }
-static int kd_hotlock_record_mutex(unsigned long addr)
+static int kd_hotlock_record_mutex_pinned(unsigned long addr)
 {
 	/* Contention sampling may touch several CPU-local fields; it remains
 	 * pinned even though the first native CAS is now unpinned. */
@@ -723,7 +723,7 @@ static void check_hook_fallbacks(void)
 	/* Exercise each early routing decision, both with a cold shadow and with
 	 * an existing unused shadow. Native-only paths never reserve a node. */
 	for (int existing = 0; existing < 2; existing++) {
-		for (int reason = 0; reason < 3; reason++) {
+		for (int reason = 0; reason < 4; reason++) {
 			struct mutex *lock = &origins[0].mutex;
 			reset();
 			if (existing)
@@ -731,6 +731,7 @@ static void check_hook_fallbacks(void)
 			active_override = reason == 0;
 			promoted = reason != 1;
 			task_failure = reason == 2;
+			mutex_native_route = reason == 3;
 			__kd_mutex_lock(lock, (unsigned long)&native_stack[16],
 					0x8000);
 			CHECK(lock->owner == current && acquires == 1);
@@ -746,6 +747,7 @@ static void check_hook_fallbacks(void)
 			CHECK(shadow_count() ==
 			      (unsigned int)(existing || reason == 2));
 			CHECK(!errors && !preempt && !migration && !table_irq);
+			mutex_native_route = false;
 		}
 	}
 }

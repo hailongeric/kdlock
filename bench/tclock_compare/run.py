@@ -21,11 +21,14 @@ import kernel_identity
 import bench_runtime as runtime
 from bench_runtime import HERE, WORKLOAD, PROVIDER, require, command, digest, Failure
 from summarize import write_json, csv_file, valid
-from session import BackendSession, TC_MODULE, TC_MUTEX_MODULE, GUARD_MODULE
+from session import BackendSession, TC_MODULE, TC_MUTEX_MODULE, GUARD_MODULE, PROFILE_MODULE
 from context_audit import audit as audit_context
 
 DEFAULT_SPIN_ENTRY_RATIO_LIMIT = 2
 DEFAULT_KD_PROVIDER_UBSAN = 'off'
+DEFAULT_MUTEX_ENTRY_RATIO_LIMIT = 256
+MUTEX_ENTRY_RATIO_LIMITS = tuple(1 << shift for shift in range(1, 9))
+MUTEX_POLICY_FIELDS = ('mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance')
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
@@ -97,11 +100,12 @@ def idle():
     require(not Path('/sys/module/tclock_backend_km').exists(), 'existing TCLock module')
     require(not Path('/sys/module/tclock_mutex_backend_km').exists(), 'existing TCLock mutex module')
     require(not Path('/sys/module/tc_allocator_guard').exists(), 'existing allocator guard')
+    require(not Path('/sys/module/kd_mutex_profile').exists(), 'existing lock profiler')
 
 
 def source_state():
     result = runtime.source_state()
-    for folder in ('tclock_backend', 'bench/tclock_compare'):
+    for folder in ('tclock_backend', 'bench/tclock_compare', 'tests/kernel/mutex/profile'):
         for p in (ROOT/folder).rglob('*'):
             if p.is_file() and not any(x.startswith('.') or x == '__pycache__'
                                       for x in p.relative_to(ROOT).parts) and (
@@ -133,6 +137,23 @@ def make_plan(args):
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
     lock_kind = getattr(args, 'lock_kind', 'spin')
+    mutex_limit = getattr(args, 'mutex_entry_ratio_limit', DEFAULT_MUTEX_ENTRY_RATIO_LIMIT)
+    mutex_routing = getattr(args, 'mutex_routing', 'adaptive')
+    mutex_acceptance = getattr(args, 'mutex_acceptance', 'jit-required')
+    require(mutex_limit in MUTEX_ENTRY_RATIO_LIMITS, 'invalid mutex entry ratio limit')
+    require(mutex_routing in ('adaptive', 'native') and
+            mutex_acceptance in ('jit-required', 'adaptive-performance'), 'invalid mutex policy')
+    require(lock_kind == 'mutex' or (mutex_limit == DEFAULT_MUTEX_ENTRY_RATIO_LIMIT and
+            mutex_routing == 'adaptive' and mutex_acceptance == 'jit-required'),
+            'mutex controls require the mutex runner')
+    require(not getattr(args, 'functional', False) or
+            (mutex_routing == 'adaptive' and mutex_acceptance == 'jit-required'),
+            'functional checks require adaptive routing and JIT-required acceptance')
+    profile = getattr(args, 'profile_lock', False)
+    require(not profile or (workload == 'cacheline' and args.cachelines == [1] and
+            'tclock' not in args.backends and
+            (lock_kind == 'mutex' or args.backends == ['native'])),
+            'lock profile supports c01 Native spin or Native/KD mutex only')
     require(lock_kind != 'mutex' or getattr(args, 'spin_delegate', 'on') == 'on',
             '--spin-delegate off is a spin-only control; mutex JIT is required')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1])
@@ -152,7 +173,12 @@ def make_plan(args):
                 api_mode='direct', workload=workload, lock_kind=lock_kind, hotlock_mode=mode,
                 caller_shell=('mutex_outer_cookie' if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
                 cookie_storage=('outer_acquisition_local' if lock_kind == 'mutex' else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
-                cpu_heat_policy=('mutex_contention1024_ratio256' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
+                cpu_heat_policy=('mutex_contention1024_shift10_lock1025_pinned_cold' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
+                mutex_entry_ratio_limit=mutex_limit if backend == 'kdlock' else None,
+                mutex_routing=mutex_routing if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
+                mutex_acceptance=mutex_acceptance if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
+                diagnostic=bool(getattr(args, 'pmu', False) or profile or mutex_routing == 'native'),
+                profile_lock=profile,
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
                 kd_provider_ubsan=provider_ubsan if backend == 'kdlock' else 'not_applicable',
@@ -188,6 +214,8 @@ def report(out):
                 caller_shell=spec.get('caller_shell', 'unrecorded'),
                 cookie_storage=spec.get('cookie_storage', 'unrecorded'),
                 kd_provider_ubsan=spec.get('kd_provider_ubsan', 'unrecorded'),
+                **{key: spec.get(key, 'unrecorded') for key in MUTEX_POLICY_FIELDS},
+                execution_class=row.get('execution_class', 'UNRECORDED'),
                 status=row.get('execution_status', 'NOT_RUN'),
                 drained=row.get('drained', False),
                 completed=row.get('measurement', {}).get('completed', 0),
@@ -214,6 +242,7 @@ def report(out):
                                  r['whole_throughput_ops_s']) if good else None
         r['amortized_ns_op'] = (peak['amortized_ns_op'] if timed else
                                 r['whole_amortized_ns_op']) if good else None
+        r['score_eligible'] = good and not (r.get('diagnostic', False) or r.get('pmu', False))
         records.append(r)
         # Keep old percentage and current shifted-entry limits as separate
         # identities, including zero's bypass. Never pool tuning candidates.
@@ -231,11 +260,13 @@ def report(out):
                            r.get('spin_prefetch', 'unrecorded'),
                            r.get('kd_provider_ubsan', 'unrecorded'),
                            r.get('mutex_wait_mode', 'spin'), r.get('mutex_spin_limit', 1024),
+                           tuple(r.get(key, 'unrecorded') for key in MUTEX_POLICY_FIELDS),
+                           r.get('diagnostic', r.get('pmu', False)),
                            tuple(r.get('cpus', range(r['threads'])))), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (lock_kind, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, mutex_wait_mode, mutex_spin_limit, cpus), rows in groups.items():
-        good = [r for r in rows if valid(r)]
+    for (lock_kind, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, mutex_wait_mode, mutex_spin_limit, mutex_policy, diagnostic, cpus), rows in groups.items():
+        good = [r for r in rows if r['score_eligible']]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm, lock_kind=lock_kind,
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
@@ -248,6 +279,9 @@ def report(out):
                    numa_policy=numa, delegation_batch_limit=batch, spin_prefetch=prefetch,
                    kd_provider_ubsan=provider_ubsan,
                    mutex_wait_mode=mutex_wait_mode, mutex_spin_limit=mutex_spin_limit,
+                   **dict(zip(MUTEX_POLICY_FIELDS, mutex_policy)),
+                   diagnostic=diagnostic,
+                   execution_classes=sorted({r.get('execution_class', 'UNRECORDED') for r in rows}),
                    cpus=list(cpus), cpu_nodes=rows[0].get('cpu_nodes'),
                    **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
@@ -270,6 +304,13 @@ def report(out):
         row['throughput_spread_pct'] = (
             100 * (max(rates) - min(rates)) / row['median_throughput_ops_s']
             if len(rates) > 1 else None)
+        whole = [r['whole_throughput_ops_s'] for r in good]
+        row['min_whole_throughput_ops_s'] = min(whole) if whole else None
+        row['median_whole_throughput_ops_s'] = statistics.median(whole) if whole else None
+        row['max_whole_throughput_ops_s'] = max(whole) if whole else None
+        row['whole_throughput_spread_pct'] = (
+            100 * (max(whole) - min(whole)) / statistics.median(whole)
+            if len(whole) > 1 else None)
         summary.append(row)
     natives = {(r['lock_kind'], r['cachelines'], r['threads'], tuple(r[k] for k in TIMING_FIELDS), tuple(r['cpus'])):
                r['best_throughput_ops_s']
@@ -286,8 +327,8 @@ def report(out):
 def execute_session(session, keep_going_no_jit=False):
     """Collect a drained missing-body failure without changing its verdict.
 
-    A native-only adaptive sample can be useful diagnostic evidence, but it
-    must never become a contended JIT positive or an accepted timing score.
+    Under JIT-required acceptance, a native-only adaptive sample can be useful
+    diagnostic evidence, but cannot become a JIT positive or timing score.
     All other failures and any uncertain cleanup still stop the matrix.
     """
     try:
@@ -309,6 +350,14 @@ def execute_session(session, keep_going_no_jit=False):
 def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--mutex-spin-limit', type=int, default=4096)
+    p.add_argument('--mutex-entry-ratio-limit', type=int, choices=MUTEX_ENTRY_RATIO_LIMITS,
+                   default=DEFAULT_MUTEX_ENTRY_RATIO_LIMIT,
+                   help='exclusive (entries >> 10) bound per 1024 failed native attempts')
+    p.add_argument('--mutex-routing', choices=('adaptive', 'native'), default='adaptive',
+                   help='native is an unscored diagnostic control; admission is still sampled')
+    p.add_argument('--mutex-acceptance', choices=('jit-required', 'adaptive-performance'),
+                   default='jit-required',
+                   help='opt in to scoring correct adaptive native runs; never a JIT pass')
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
@@ -342,6 +391,8 @@ def main(lock_kind='spin'):
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')
+    p.add_argument('--profile-lock', action='store_true',
+                   help='intrusive, unscored native/admission/batch probes and 100 us owner sampling')
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--functional', action='store_true',
                    help='KD functional acceptance only; requires --backends kdlock --repeats 1; no throughput report')
@@ -405,6 +456,9 @@ def main(lock_kind='spin'):
         builds = [('client',['make','-C',HERE,'client']),
                   ('allocator-guard',['make','-C',GUARD_MODULE.parent])]
         binaries = [HERE/'client', GUARD_MODULE]
+        if args.profile_lock:
+            builds.append(('lock-profile', ['make', '-C', PROFILE_MODULE.parent]))
+            binaries.append(PROFILE_MODULE)
         if args.pmu:
             perf = shutil.which('perf')
             require(perf is not None, 'PMU diagnostic requires perf in PATH')

@@ -142,6 +142,19 @@ KD routing reference. The general direct and bridge APIs keep their void
 contract; their unlock uses task membership, native requests and exact shadow
 physical ownership rather than a fresh admission decision.
 
+The contended hook owns a short preemption pin and calls the specialized
+`kd_hotlock_record_mutex_pinned()` sampler. It records one entry and one failed
+attempt. While the CPU is cold, samples below the 1,024-contention boundary
+return before touching the exact-address table guard. The next boundary still
+checks the strict `(entries >> 10) < mutex_entry_ratio_limit` ratio and CPU-local
+contention frequency; the read-only limit defaults to 256 and accepts powers of two from
+2 through 256. Per-address heat still needs 1,025 records, and a busy table
+retains observations for retry. No task reference, shadow allocation or queue
+publication occurs before native fallback. The load-time `mutex_native_route`
+diagnostic forces that fallback after sampling; unlock never consults it.
+Cooling changes new admission only. Existing waiters, task references and
+owner acknowledgments remain live until their normal completion and retirement.
+
 `kd_mutex_prepare()` registers the named post-lock continuation with
 `KD_ENTRY_ABI_MUTEX_CLOBBER_V1`. Translation/admission/control tables recognize
 direct symbols and kernel bridge aliases. The direct admitted unlock can use

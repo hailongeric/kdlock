@@ -89,6 +89,7 @@ static void reset_policy(unsigned int limit)
  if(kd_hotlock_cpu) kd_hotlock_exit();
  cpu_id=pins=clocks=guards=pin_checks=0; now=1;
  spin_entry_ratio_limit=limit; kd_spin_delegate=true; check_spin_clock=false;
+ mutex_entry_ratio_limit=KD_HOTLOCK_MUTEX_RATIO_DEFAULT;
  assert(!kd_hotlock_init());
 }
 /* Time/hash tests explicitly disable the additional contention policy. */
@@ -139,6 +140,9 @@ static void init_and_pins(void)
  kd_hotlock_record_spin_mcs_pinned(); kd_hotlock_query_spin(0x1000);
  assert(pins==1 && disables==before_disable && enables==before_enable);
  assert(this_cpu_read(kd_hotlock_spin_entries)==1 && !table(0)->busy);
+ before_checks=pin_checks;
+ kd_hotlock_record_mutex_pinned(0x2000);
+ assert(pin_checks==before_checks && pins==1);
  pins=0; kd_hotlock_record_mutex(0x2000);
  assert(!pins && disables==before_disable+1 && enables==before_enable+1);
 }
@@ -291,13 +295,19 @@ static void mutex_sampling(void)
  * observation. A guarded contention delays, rather than loses, comparison. */
 static void mutex_contention_ratio(void)
 {
- const unsigned int bound=KD_HOTLOCK_MUTEX_RATIO_LIMIT*1024;
+ for(unsigned int limit=2;limit<=256;limit*=2) {
+ const unsigned int bound=limit*1024;
  for(unsigned int entries=bound-1;entries<=bound;entries++) {
   reset();
+  mutex_entry_ratio_limit=limit;
   for(unsigned int i=0;i<entries;i++) kd_hotlock_mutex_entry();
   assert(!pins && clocks==1 && !this_cpu_read(kd_hotlock_mutex_contentions));
   pins++;
-  for(unsigned int i=0;i<1023;i++) assert(!kd_hotlock_record_mutex(0x3000));
+  unsigned int before_guards=guards, before_checks=pin_checks;
+  struct kd_hotlock_table cold=*table(1);
+  for(unsigned int i=0;i<1023;i++) assert(!kd_hotlock_record_mutex_pinned(0x3000));
+  assert(guards==before_guards && pin_checks==before_checks);
+  assert(!memcmp(&cold,table(1),sizeof(cold)));
   assert(clocks==1 && this_cpu_read(kd_hotlock_mutex_entries)==entries);
   table(1)->busy=1;
   assert(!kd_hotlock_record_mutex(0x3000));
@@ -309,6 +319,7 @@ static void mutex_contention_ratio(void)
   assert(this_cpu_ptr(kd_hotlock_cpu)->mutex_rate_hot==(entries<bound));
   assert(!this_cpu_read(kd_hotlock_spin_entries) && !this_cpu_read(kd_hotlock_spin_mcs));
   pins--;
+ }
  }
 }
 /* CPU isolation and the table guard protect hash mutation, independent of
@@ -466,6 +477,7 @@ static void native_queue_cooling(void)
 int main(void)
 {
  assert(spin_entry_ratio_limit==2);
+ assert(mutex_entry_ratio_limit==256);
  init_and_pins(); boundaries(); windows(); hash_and_capacity(); mutex_sampling(); mutex_contention_ratio();
  isolation_and_guard(); mcs_publications(); contention_ratio(); busy_sampling_retry(); native_queue_cooling();
  kd_hotlock_exit();
@@ -477,6 +489,11 @@ int main(void)
  for(unsigned int i=0;i<sizeof(valid)/sizeof(valid[0]);i++) {
   spin_entry_ratio_limit=valid[i]; assert(!kd_hotlock_init()); kd_hotlock_exit();
  }
+ const unsigned int invalid_mutex[]={0,1,3,6,257,512,UINT_MAX};
+ for(unsigned int i=0;i<sizeof(invalid_mutex)/sizeof(invalid_mutex[0]);i++) {
+  mutex_entry_ratio_limit=invalid_mutex[i]; assert(kd_hotlock_init()==-EINVAL && !kd_hotlock_cpu);
+ }
+ mutex_entry_ratio_limit=KD_HOTLOCK_MUTEX_RATIO_DEFAULT;
  fail_alloc=true; assert(kd_hotlock_init()==-ENOMEM); assert(!kd_hotlock_cpu);
  printf("PASS hotlock: shared MCS%u/ratio/CPU clock, independent spin512 and mutex1025 windows, exact keys/capacity, pins, read-only queries\n",KD_HOTLOCK_SPIN_MCS_INTERVAL);
  puts("PASS contention admission: native denominator, shifted ratio boundaries, first-window rejection, cold recovery, CPU isolation, zero ratio bypass, busy retry");
