@@ -7,15 +7,15 @@
   "integration_commits_ahead_of_default": 91,
   "default_unique_commits": 0,
   "fast_forward_possible": true,
-  "unique_commit_comparison": "Commits on each original branch tip absent from integration_tip_before_organization; the inventory is a pre-organization snapshot.",
+  "unique_commit_comparison": "Counts and original tips describe the pre-organization snapshot; unique_commits counts commits on each original tip absent from integration_tip_before_organization.",
   "branches": [
     {
       "branch": "master",
       "original_tip": "d38173d6697566d787ed36789ac463d11fb95207",
-      "purpose": "Repository default and accepted experimental baseline; currently behind the integration work.",
+      "purpose": "Repository default and accepted experimental baseline; behind the integration work at review.",
       "unique_commits": 0,
       "original_tip_in_accepted_history": true,
-      "disposition": "retain as default",
+      "disposition": "retained as default and fast-forwarded locally",
       "archive_tag": "archive/master-before-integration-20261012"
     },
     {
@@ -24,7 +24,7 @@
       "purpose": "Started with hash throughput; accumulated accepted spin/mutex optimization, rwlock ABI3, real APIs, NUMA changes, blocking-only mutexes, measurements and documentation.",
       "unique_commits": 0,
       "original_tip_in_accepted_history": true,
-      "disposition": "integrate and archive",
+      "disposition": "integrated into local master, archived and closed locally",
       "archive_tag": "archive/perf/hash-payload-20260927"
     },
     {
@@ -33,7 +33,7 @@
       "purpose": "Empty task-registry bucket shortcut; rejected and reverted.",
       "unique_commits": 0,
       "original_tip_in_accepted_history": true,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-empty-bucket-rejected-20261003",
       "revert_commit": "00a2120f08ddc9cfb9cbce3b584a56766a38a81a"
     },
@@ -43,7 +43,7 @@
       "purpose": "Avoid unconditional fault-injection atomic access; rejected and reverted.",
       "unique_commits": 0,
       "original_tip_in_accepted_history": true,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-fail-read-rejected-20261003",
       "revert_commit": "eb9d04688fce31bf46fd14cd7a96ce953d8cae44"
     },
@@ -53,7 +53,7 @@
       "purpose": "Looser mutex ratio512 admission; rejected after repeated contended regressions.",
       "unique_commits": 1,
       "original_tip_in_accepted_history": false,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-hash-admission-20260928"
     },
     {
@@ -62,7 +62,7 @@
       "purpose": "Bounded NUMA scans and deferred handoff; original candidate failed performance acceptance.",
       "unique_commits": 1,
       "original_tip_in_accepted_history": false,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-numa-candidate-20260928"
     },
     {
@@ -71,7 +71,7 @@
       "purpose": "Later mutex NUMA grouping candidate; rejected and reverted.",
       "unique_commits": 0,
       "original_tip_in_accepted_history": true,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-numa-rejected-20261003b",
       "revert_commit": "7c74d3e31ee8044394ec4ce22f4f5baa9cfe68c6"
     },
@@ -81,7 +81,7 @@
       "purpose": "Pack mutex metadata and alter prefetch/layout; rejected hash throughput regressions.",
       "unique_commits": 0,
       "original_tip_in_accepted_history": true,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-pack-rejected-20261003b",
       "revert_commit": "5b75d6022afaa55c42bff24e19d46893110b011c"
     },
@@ -91,7 +91,7 @@
       "purpose": "Additional native mutex retry after admission; rejected repeated regression.",
       "unique_commits": 0,
       "original_tip_in_accepted_history": true,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-retry-rejected-20261003b",
       "revert_commit": "6ab4f1051a35d494ecec033bb86d226a232a2730"
     },
@@ -101,7 +101,7 @@
       "purpose": "Shard mutex task-registry locks; rejected and reverted.",
       "unique_commits": 0,
       "original_tip_in_accepted_history": true,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-task-buckets-rejected-20261003",
       "revert_commit": "30e3850979ad0c91703df1769c79b074b496c553"
     },
@@ -111,7 +111,7 @@
       "purpose": "High-JIT task cache with batch/shadow/balance changes and NUMA grouping; rejected combined performance candidate.",
       "unique_commits": 4,
       "original_tip_in_accepted_history": false,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-task-cache-batch-candidate-20260928"
     },
     {
@@ -120,7 +120,7 @@
       "purpose": "Original bounded task identity retention; correctness passed but repeated performance regressions rejected this version.",
       "unique_commits": 1,
       "original_tip_in_accepted_history": false,
-      "disposition": "archive rejected snapshot; do not merge its tip",
+      "disposition": "rejected snapshot archived; local branch closed",
       "archive_tag": "archive/perf/mutex-task-cache-candidate-20260928"
     }
   ],
@@ -143,7 +143,7 @@
   },
   "completion": {
     "original_optimization_phase": "closed on 2026-10-09",
-    "accepted_integration": "ready for experimental baseline; topic branch should close after integration",
+    "accepted_integration": "integrated into local master as an experimental baseline; topic branch closed locally",
     "pending_work": "not complete: nine uncommitted edits retained on a dedicated work branch",
     "project": "unfinished: performance parity, immutable JIT versions and documented correctness/context limitations remain"
   },
@@ -151,11 +151,16 @@
     "Branch/ref/history checks and existing source-specific receipts; no new runtime tests.",
     "Blocking-mutex receipt includes pre-existing working-tree edits; it is not a clean-commit full-suite or production-release certification."
   ],
-  "local_plan": {
-    "primary": "fast-forward master to documented integration tip",
+  "local_result": {
+    "status": "completed",
+    "primary": "master fast-forwarded to the accepted integration and branch documentation checkpoint",
+    "integration_checkpoint": "fa48b7d89265befced26925ce7c0b73fd5a44f97",
+    "integrated_commits_including_branch_documentation": 92,
     "archive_tags": 12,
-    "closed_topic_branches": 11,
-    "preserve_pending_files": true,
+    "closed_local_topic_branches": 11,
+    "retained_local_branches": ["master", "wip/worktree-20261012"],
+    "pending_files_unchanged": 9,
+    "pending_patch_unchanged": true,
     "final_active_branch": "wip/worktree-20261012"
   },
   "remote_plan": {

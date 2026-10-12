@@ -196,14 +196,17 @@ The repository's default branch is named `master`. It holds the accepted
 experimental baseline. Use short-lived branches for subsequent tasks; archive
 finished or rejected experiments under `archive/<original-branch>` tags.
 The [2026-10-12 branch inventory](git-branches-20261012.json) records original tips,
-unique commits, rejection/revert evidence and the local/remote cleanup plan.
+unique commits, rejection/revert evidence, completed local cleanup and the remote
+publication plan.
 
 The former `perf/hash-payload-20260927` branch grew into an integration branch for
 spin/mutex optimization, rwlock ABI3, real APIs, NUMA changes, blocking-only mutexes
 and their evidence. At review it was 91 commits ahead of the old `master`, which
-had no unique commits, so integration can fast-forward without conflicts.
-It is complete as an accepted integration checkpoint; general
-performance parity and the limitations in [TODO](TODO.md) remain unresolved.
+had no unique commits. Local `master` was fast-forwarded without conflicts to
+`fa48b7d89265befced26925ce7c0b73fd5a44f97`: the 91 accepted commits plus the branch
+documentation commit. The former integration branch is complete as an experimental
+checkpoint and closed locally. General performance parity and the limitations in
+[TODO](TODO.md) remain unresolved.
 
 | Archived experiment (names below use `perf/`) | Purpose and outcome |
 | --- | --- |
@@ -230,7 +233,13 @@ committed workload still uses four post-work rounds. The 2026-10-12 measurements
 captured working-tree inputs, including 64 rounds; their source hashes define
 what was measured. [Validation](VALIDATION.md) gives the applicable limits.
 
-Local branch integration and archive creation preserve all original tips and
-pending file bytes. Remote publication must push the archive tags before updating
-`origin/master` and deleting old topic refs; [operations](AGENTS.md#git-and-rollback)
-defines the local Git workflow.
+All twelve original tips are preserved by verified archive tags, including
+`archive/master-before-integration-20261012`. The eleven local `perf/` branches
+were removed. The remaining local branches are `master` and
+`wip/worktree-20261012`; all nine pending files and their original patch were
+preserved unchanged.
+
+Remote publication remains pending; this operation did not push commits or tags,
+or delete remote branches. Publish and verify the archive tags before
+fast-forwarding `origin/master`, then remove the eleven old remote topic branches.
+[Operations](AGENTS.md#git-and-rollback) defines the local Git workflow.
