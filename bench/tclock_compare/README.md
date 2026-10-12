@@ -202,6 +202,13 @@ Ratio0 does not guarantee admission or waive returned-body/context/drain checks.
 `--pmu` is a separate long-batch diagnostic using supported perf events. Verify
 availability, sample loss and identity before attribution; do not add its scores to
 normal measurements or infer remote-memory latency from flat cycle samples.
+`--perf-record` instead collects 199 Hz kernel cycle samples around the measured
+client and its workers. It retains `perf.data`, the live module/symbol maps,
+a flat symbol report and timestamped CPU samples. Symbols are resolved before
+module unload; borrowed stacks are not interpreted as call graphs. This option
+is mutually exclusive with `--pmu` and excludes every backend from performance
+scores. Check lost samples and instrumentation-induced behavior changes before
+using a profile to choose an optimization.
 `--profile-lock --cachelines 1` adds separate intrusive kprobes for Native spin
 or Native/KD mutex. It counts native slow entries, accepted/declined admission
 and completed packets per combiner, and samples the mutex owner every 100 us on

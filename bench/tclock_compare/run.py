@@ -177,8 +177,10 @@ def make_plan(args):
                 mutex_entry_ratio_limit=mutex_limit if backend == 'kdlock' else None,
                 mutex_routing=mutex_routing if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
                 mutex_acceptance=mutex_acceptance if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
-                diagnostic=bool(getattr(args, 'pmu', False) or profile or mutex_routing == 'native'),
+                diagnostic=bool(getattr(args, 'pmu', False) or getattr(args, 'perf_record', False) or
+                                profile or mutex_routing == 'native'),
                 profile_lock=profile,
+                perf_record=getattr(args, 'perf_record', False),
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
                 kd_provider_ubsan=provider_ubsan if backend == 'kdlock' else 'not_applicable',
@@ -389,8 +391,11 @@ def main(lock_kind='spin'):
     p.add_argument('--collector-cpu', type=int, default=30,
                    help='dedicated progress collector CPU, outside the worker set')
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
-    p.add_argument('--pmu', action='store_true',
+    perf_mode = p.add_mutually_exclusive_group()
+    perf_mode.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')
+    perf_mode.add_argument('--perf-record', action='store_true',
+                   help='unscored 199 Hz kernel cycle samples around measured client and workers')
     p.add_argument('--profile-lock', action='store_true',
                    help='intrusive, unscored native/admission/batch probes and 100 us owner sampling')
     p.add_argument('--dry-run', action='store_true')
@@ -459,7 +464,7 @@ def main(lock_kind='spin'):
         if args.profile_lock:
             builds.append(('lock-profile', ['make', '-C', PROFILE_MODULE.parent]))
             binaries.append(PROFILE_MODULE)
-        if args.pmu:
+        if args.pmu or args.perf_record:
             perf = shutil.which('perf')
             require(perf is not None, 'PMU diagnostic requires perf in PATH')
             perf = Path(perf).resolve()

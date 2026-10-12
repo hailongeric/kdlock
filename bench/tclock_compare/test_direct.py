@@ -126,6 +126,25 @@ class DirectTests(unittest.TestCase):
                     self.assertEqual(row['median_whole_throughput_ops_s'], 1000000)
                     self.assertEqual(row['execution_classes'], ['ADAPTIVE_NATIVE'])
 
+    def test_cpu_samples_are_unscored_for_every_backend(self):
+        plan = run.make_plan(Namespace(cachelines=[1], threads=[16], repeats=1,
+            iterations=100, backends=['native', 'tclock', 'kdlock'],
+            lock_kind='mutex', perf_record=True))
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            (out/'plan.json').write_text(json.dumps(plan))
+            for spec in plan:
+                self.assertTrue(spec['diagnostic'] and spec['perf_record'])
+                (out/spec['name']).mkdir()
+                row = dict(spec, execution_status='OK', drained=True, jit_bodies=100,
+                           measurement=dict(complete=True, data_ok=True, completed=100, wall_ns=100000))
+                (out/spec['name']/'session.json').write_text(json.dumps(row))
+            run.report(out)
+            self.assertTrue(all(not r['score_eligible'] for r in
+                                json.loads((out/'records.json').read_text())))
+            self.assertTrue(all(r['valid'] == 0 and r['best_session'] is None for r in
+                                json.loads((out/'summary.json').read_text())))
+
     def test_mutex_thresholds_and_policy_contract(self):
         args = Namespace(cachelines=[1], threads=[4], repeats=3, iterations=100,
                          backends=['native', 'kdlock'], lock_kind='mutex')

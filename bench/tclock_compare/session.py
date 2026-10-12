@@ -116,6 +116,24 @@ class BackendSession(Session):
             args = ['perf', 'stat', '-x', ';', '-o', self.path/'pmu.csv',
                     '-e', 'cycles,instructions,cache-misses,task-clock,context-switches,cpu-migrations',
                     '--', *args]
+        if args[0] == HERE/'client' and log == 'measure.json' and self.record.get('perf_record'):
+            # Flat kernel PC samples avoid interpreting borrowed stack frames.
+            # Resolve symbols while modules are still loaded, retain raw data
+            # and the exact symbol map, and never score an instrumented run.
+            for name in ('kallsyms', 'modules'):
+                (self.path/name).write_text(Path('/proc', name).read_text())
+            result = super().run(['perf', 'record', '--quiet', '--sample-cpu',
+                '-e', 'cycles:k', '-F', '199',
+                '-o', self.path/'perf.data', '--', *args], log, **kwargs)
+            super().run(['perf', 'report', '--stdio', '--no-children',
+                '--sort', 'comm,dso,symbol', '--percent-limit', '0.2',
+                '--kallsyms', self.path/'kallsyms', '-i', self.path/'perf.data'],
+                'perf-report.txt', timeout=60)
+            super().run(['perf', 'script', '--show-lost-events',
+                '--kallsyms', self.path/'kallsyms', '-i', self.path/'perf.data',
+                '-F', 'comm,pid,tid,cpu,time,event,ip,sym,dso,period'],
+                'perf-samples.txt', timeout=60)
+            return result
         return super().run(args, log, **kwargs)
 
     def __init__(self, *args, **kwargs):
