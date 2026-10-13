@@ -70,6 +70,9 @@ def production():
     # The policy has its own production-C clock/race fixture. Resource tests
     # retain the disabled policy while exercising the unchanged queue paths.
     code += "static bool kd_mutex_policy_native(struct kd_mutex *lock) { (void)lock; return false; }\n"
+    code += "static bool mutex_native_epoch_cache; static unsigned int mutex_native_epoch_ms;\n"
+    code += "static struct kd_mutex *kd_mutex_policy_cached_pinned(struct mutex *lock) { (void)lock; return NULL; }\n"
+    code += "static bool kd_mutex_policy_native_pinned(struct kd_mutex *lock) { (void)lock; return false; }\n"
     code += hook[
         hook.index("#define KD_MUTEX_SHADOW_TABLE_SIZE ") : hook.index(
             "/* --- externs from patched kernel"
@@ -109,8 +112,8 @@ def main():
             "lock->waiter_slot = slot;", "lock->waiter_slot = 0;",
         ),
         "native-control-ignored": (
-            "if (!admitted || mutex_native_route)",
-            "if (!admitted)",
+            "if (!admitted || mutex_native_route || policy_native)",
+            "if (!admitted || policy_native)",
         ),
         "outer-entry-retries-native-cas": (
             "kd_mutex_contended_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);",

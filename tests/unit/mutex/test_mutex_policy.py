@@ -35,8 +35,18 @@ def main():
                                        '(atomic_long_cmpxchg(&slot->word, old, updating), true)'),
         'native-cookie-routed': ('if (!kd_mtx)\n\t\treturn (unsigned long)current;',
                                 'if (!kd_mtx)\n\t\treturn 0;'),
-        'missing-locality-pin': ('preempt_disable();\n\tnative = kd_mutex_policy_native_pinned(lock);\n\tpreempt_enable();',
-                                 'native = kd_mutex_policy_native_pinned(lock);'),
+        'missing-locality-pin': ('if (likely(!mutex_native_epoch_ms))\n\t\treturn false;\n\tpreempt_disable();',
+                                 'if (likely(!mutex_native_epoch_ms))\n\t\treturn false;'),
+        'cache-address-ignored': ('if (cache->address != (unsigned long)lock)',
+                                  'if (false && cache->address != (unsigned long)lock)'),
+        'cache-native-result-ignored': ('if (!admitted || mutex_native_route || policy_native)',
+                                        'if (!admitted || mutex_native_route || (false && policy_native))'),
+        'cache-kd-skips-eligibility': ('if (!kd_mutex_contended_eligible())',
+                                      'if (false && !kd_mutex_contended_eligible())'),
+        'cache-observes-twice': ('kd_mtx != policy_checked && kd_mutex_policy_native(kd_mtx)',
+                                'kd_mutex_policy_native(kd_mtx)'),
+        'cache-resamples-entry': ('policy_checked = kd_mutex_policy_cached_pinned(lock);',
+                                  'kd_hotlock_mutex_entry(); policy_checked = kd_mutex_policy_cached_pinned(lock);'),
     }
     with tempfile.TemporaryDirectory(prefix='kd-mutex-policy-') as directory:
         directory = Path(directory)

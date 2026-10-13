@@ -20,6 +20,7 @@ struct kd_mutex {
     unsigned int tail;
     unsigned long physical_owner;
     unsigned int locked, waiter_count;
+    unsigned long origin_mutex_addr;
 };
 struct mutex { int unused; };
 struct task_struct { int pid; char comm[16]; };
@@ -29,10 +30,12 @@ enum kd_entry_abi { KD_ENTRY_ABI_MUTEX_CLOBBER_V1 = 2 };
 
 #define KD_MUTEX_WAITER_SLOTS 1024
 #define ____cacheline_aligned __attribute__((aligned(64)))
-#define DEFINE_PER_CPU(type, name) type name
-#define per_cpu(name, cpu) (name)
-#define this_cpu_inc(name) (++(name))
-#define for_each_possible_cpu(cpu) for ((cpu) = 0; (cpu) < 1; (cpu)++)
+#define DEFINE_PER_CPU(type, name) type name[2]
+#define per_cpu(name, cpu) ((name)[cpu])
+#define this_cpu_inc(name) (++(name)[fixture_cpu])
+#define this_cpu_ptr(ptr) ({ CHECK(pin > 0); &(*(ptr))[fixture_cpu]; })
+#define for_each_possible_cpu(cpu) for ((cpu) = 0; (cpu) < 2; (cpu)++)
+#define module_param(name, type, mode)
 #define module_param_cb(name, ops, arg, mode) \
     static const void *param_##name __attribute__((unused)) = (ops)
 #define MODULE_PARM_DESC(name, description)
@@ -40,6 +43,7 @@ enum kd_entry_abi { KD_ENTRY_ABI_MUTEX_CLOBBER_V1 = 2 };
 #define scnprintf snprintf
 #define max_t(type, a, b) ((type)(a) > (type)(b) ? (type)(a) : (type)(b))
 #define likely(value) (value)
+#define unlikely(value) (value)
 #define READ_ONCE(value) (value)
 #define WRITE_ONCE(value, new) ((value) = (new))
 #define smp_rmb() do {} while (0)
@@ -47,6 +51,7 @@ enum kd_entry_abi { KD_ENTRY_ABI_MUTEX_CLOBBER_V1 = 2 };
 
 static unsigned long jiffies;
 static int pin, node, numa_queries, native_calls, refs, queued, observations;
+static int fixture_cpu, pins, samples, source_queries, comm_queries, active_queries, shadow_queries;
 static bool admitted = true, source_open = true, active, comm_match = true;
 static bool mutex_native_route;
 static struct kd_mutex *shadow;
@@ -54,7 +59,7 @@ static int race_kind, compare_calls;
 static unsigned long competing_word, competing_deadline;
 static unsigned long *deadline_address;
 
-static void preempt_disable(void) { pin++; }
+static void preempt_disable(void) { pin++; pins++; }
 static void preempt_enable(void) { CHECK(pin > 0); pin--; }
 static int numa_node_id(void) { CHECK(pin > 0); numa_queries++; return node; }
 static unsigned long msecs_to_jiffies(unsigned int ms) { return ((unsigned long)ms * TEST_HZ + 999) / 1000; }
@@ -91,13 +96,13 @@ static int param_get_uint(char *buffer, const struct kernel_param *kp)
 
 static void kd_hotlock_mutex_entry(void) { CHECK(pin > 0); observations++; }
 static bool kd_hotlock_record_mutex_pinned(unsigned long address)
-{ CHECK(pin > 0 && address); return admitted; }
+{ CHECK(pin > 0 && address); samples++; return admitted; }
 static void kd_origin_mutex_lock(struct mutex *lock)
 { CHECK(!pin && lock); native_calls++; }
-static bool kd_source_is_open(void) { return source_open; }
-#define kd_comm_matches(target, name) (comm_match)
-static bool kd_mutex_task_active(struct task_struct *t) { CHECK(t == current); return active; }
-static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock) { CHECK(lock); return shadow; }
+static bool kd_source_is_open(void) { source_queries++; return source_open; }
+#define kd_comm_matches(target, name) (comm_queries++, comm_match)
+static bool kd_mutex_task_active(struct task_struct *t) { CHECK(t == current); active_queries++; return active; }
+static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock) { CHECK(lock); shadow_queries++; return shadow; }
 static bool kd_mutex_task_get(struct task_struct *t) { CHECK(t == current && !pin); refs++; return true; }
 static void kd_exe_add_abi(int a, unsigned long ip, int kind, enum kd_entry_abi abi)
 { CHECK(!a && ip && kind == 1 && abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1); }
@@ -116,10 +121,13 @@ static void reset(void)
     memset(kd_mutex_policy_slots, 0, sizeof(kd_mutex_policy_slots));
     mutex_native_epoch_ms = 128;
     mutex_native_probe_ms = 1;
-    kd_mutex_policy_native_epochs = 0;
-    kd_mutex_policy_probes = 0;
-    kd_mutex_policy_remote_vetoes = 0;
+    mutex_native_epoch_cache = false;
+    memset(kd_mutex_policy_cache, 0, sizeof(kd_mutex_policy_cache));
+    memset(kd_mutex_policy_native_epochs, 0, sizeof(kd_mutex_policy_native_epochs));
+    memset(kd_mutex_policy_probes, 0, sizeof(kd_mutex_policy_probes));
+    memset(kd_mutex_policy_remote_vetoes, 0, sizeof(kd_mutex_policy_remote_vetoes));
     pin = numa_queries = native_calls = refs = queued = observations = 0;
+    fixture_cpu = pins = samples = source_queries = comm_queries = active_queries = shadow_queries = 0;
     admitted = source_open = comm_match = true;
     active = mutex_native_route = false;
     race_kind = compare_calls = 0;
@@ -214,7 +222,7 @@ static void clocks_and_races(void)
     race_kind = 1;
     CHECK(!kd_mutex_policy_native(&lock));
     CHECK(slot->word.value == competing_word && slot->deadline == competing_deadline);
-    CHECK(!kd_mutex_policy_native_epochs);
+    CHECK(!kd_mutex_policy_native_epochs[0]);
 
     slot->word.value = kd_mutex_policy_word(KD_MUTEX_POLICY_UPDATING, node, slot->word.value);
     before = slot->word.value;
@@ -228,7 +236,7 @@ static void clocks_and_races(void)
     compare_calls = 0;
     race_kind = 2;
     CHECK(!kd_mutex_policy_native(&lock));
-    CHECK(compare_calls == 4 && !pin && !kd_mutex_policy_native_epochs);
+    CHECK(compare_calls == 4 && !pin && !kd_mutex_policy_native_epochs[0]);
 }
 
 static void routing_and_parameters(void)
@@ -268,11 +276,119 @@ static void routing_and_parameters(void)
     CHECK(!numa_queries && refs == 1 && queued == 1 && observations == 4);
 }
 
+static void clear_traffic(void)
+{
+    CHECK(!pin);
+    pins = numa_queries = native_calls = refs = queued = observations = samples = 0;
+    source_queries = comm_queries = active_queries = shadow_queries = 0;
+}
+
+static unsigned long acquire(struct mutex *lock)
+{
+    unsigned long result = kd_mutex_contended_acquire(lock, 1, 2, 3,
+                                                     KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+    CHECK(!pin && observations == 1 && samples == 1);
+    return result;
+}
+
+static void cached_routing(void)
+{
+    struct mutex original, other_original;
+    struct kd_mutex lock = {.waiter_slot = 4, .tail = 13, .physical_owner = 47,
+                            .locked = 3, .waiter_count = 7,
+                            .origin_mutex_addr = (unsigned long)&original};
+    struct kd_mutex saved = lock;
+    struct kd_mutex other = {.waiter_slot = 5,
+                             .origin_mutex_addr = (unsigned long)&other_original};
+    struct kd_mutex_policy_slot *slot = &kd_mutex_policy_slots[4];
+    unsigned long remote_before;
+    reset();
+    mutex_native_epoch_cache = true;
+    shadow = &lock;
+    CHECK(!acquire(&original));
+    CHECK(refs == 1 && queued == 1 && source_queries == 1 && shadow_queries == 1);
+    CHECK(numa_queries == 1 && pins == 2);
+    CHECK(kd_mutex_policy_cache[0].address == (unsigned long)&original);
+    CHECK(kd_mutex_policy_cache[0].shadow == &lock && !kd_mutex_policy_cache[1].shadow);
+
+    /* A native hit shares the sampler pin and precedes all KD eligibility,
+     * task references, address-table lookup and publication, even while old
+     * queue/owner state remains live. Source closing is not native exclusion. */
+    jiffies = slot->deadline;
+    source_open = comm_match = false;
+    active = true;
+    clear_traffic();
+    CHECK(acquire(&original) == (unsigned long)current);
+    CHECK(native_calls == 1 && !refs && !queued && numa_queries == 1 && pins == 1);
+    CHECK(!source_queries && !comm_queries && !active_queries && !shadow_queries);
+    CHECK(!memcmp(&lock, &saved, sizeof(lock)));
+
+    /* A cached KD decision does not grant admission or re-observe locality. */
+    jiffies = slot->deadline;
+    clear_traffic();
+    CHECK(acquire(&original) == (unsigned long)current);
+    CHECK(source_queries == 1 && !shadow_queries && !refs && !queued);
+    CHECK(pins == 1 && numa_queries == 1);
+    source_open = comm_match = true;
+    active = false;
+    clear_traffic();
+    CHECK(!acquire(&original));
+    CHECK(source_queries == 1 && shadow_queries == 1 && refs == 1 && queued == 1);
+    CHECK(pins == 1 && numa_queries == 1);
+
+    jiffies = slot->deadline;
+    clear_traffic();
+    CHECK(acquire(&original) == (unsigned long)current);
+    remote_before = kd_mutex_policy_remote_vetoes[0];
+    node = INT_MAX;
+    clear_traffic();
+    CHECK(!acquire(&original));
+    expect_mode(4, KD_MUTEX_POLICY_MULTINODE);
+    CHECK(kd_mutex_policy_remote_vetoes[0] == remote_before + 1);
+    CHECK(numa_queries == 1 && pins == 1 && source_queries == 1 && shadow_queries == 1);
+    CHECK(refs == 1 && queued == 1 && !memcmp(&lock, &saved, sizeof(lock)));
+
+    /* Migration observes a different CPU's cache, which must first miss. */
+    fixture_cpu = 1;
+    clear_traffic();
+    CHECK(!acquire(&original));
+    CHECK(numa_queries == 1 && pins == 2 && shadow_queries == 1);
+    CHECK(kd_mutex_policy_cache[1].shadow == &lock && kd_mutex_policy_cache[0].shadow == &lock);
+
+    /* A valid but stale hint for a different original address cannot select
+     * its native epoch for the new lock; the real table supplies a new slot. */
+    fixture_cpu = 0;
+    node = 66666;
+    slot->word.value = kd_mutex_policy_word(KD_MUTEX_POLICY_NATIVE, node, slot->word.value);
+    slot->deadline = jiffies + msecs_to_jiffies(128);
+    shadow = &other;
+    clear_traffic();
+    CHECK(!acquire(&other_original));
+    CHECK(source_queries == 1 && shadow_queries == 1 && refs == 1 && queued == 1);
+    CHECK(numa_queries == 1 && pins == 2);
+    CHECK(kd_mutex_policy_cache[0].address == (unsigned long)&other_original);
+    CHECK(kd_mutex_policy_cache[0].shadow == &other);
+    CHECK(kd_mutex_policy_cache[1].address == (unsigned long)&original);
+
+    /* Ordinary cooling wins before the cache and cannot alter queued work. */
+    admitted = false;
+    clear_traffic();
+    CHECK(acquire(&other_original) == (unsigned long)current);
+    CHECK(!numa_queries && pins == 1 && !source_queries && !shadow_queries && !refs && !queued);
+    CHECK(!memcmp(&lock, &saved, sizeof(lock)));
+    admitted = true;
+    mutex_native_epoch_ms = 0;
+    clear_traffic();
+    CHECK(!acquire(&other_original));
+    CHECK(!numa_queries && pins == 1 && source_queries == 1 && shadow_queries == 1 && refs == 1);
+}
+
 int main(void)
 {
     phases();
     clocks_and_races();
     routing_and_parameters();
-    printf("mutex locality policy: phases, cooldown, races, time wrap, queued routing (%d Hz) passed\n", TEST_HZ);
+    cached_routing();
+    printf("mutex locality policy: phases, races, time wrap, queued/cached routing (%d Hz) passed\n", TEST_HZ);
     return 0;
 }

@@ -18,6 +18,43 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_plan_records_fixed_post_work_source(self):
+        args = Namespace(cachelines=[1], threads=[2], repeats=1,
+                         iterations=100, backends=['native', 'kdlock'])
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            header = root/run.POST_WORK_SOURCE
+            header.parent.mkdir(parents=True)
+            for rounds in (64, 8):
+                header.write_text(f'#define SC_POST_WORK_ROUNDS {rounds}\n')
+                with patch.object(run, 'ROOT', root):
+                    plan = run.make_plan(args)
+                self.assertEqual({r['post_work_rounds'] for r in plan}, {rounds})
+
+    def test_summary_keeps_post_work_and_native_controls_separate(self):
+        base = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
+            iterations=100, backends=['native', 'kdlock']))
+        plans = [dict(s, name=s['name']+f'-post{rounds}', post_work_rounds=rounds)
+                 for rounds in (8, 64) for s in base]
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for spec in plans:
+                folder = out/spec['name']; folder.mkdir()
+                rate = {8: {'native': 100, 'kdlock': 80},
+                        64: {'native': 10, 'kdlock': 20}}[spec['post_work_rounds']][spec['arm']]
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True,
+                    measurement=dict(completed=rate, wall_ns=1000000000,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 4)
+            kd = {r['post_work_rounds']: r for r in rows if r['arm'] == 'kdlock'}
+            self.assertEqual(kd[8]['throughput_over_linux'], 0.8)
+            self.assertEqual(kd[64]['throughput_over_linux'], 2.0)
+            self.assertTrue(all(r['sessions'] == 1 for r in rows))
+
     def test_mutex_protocol_policies_remain_separate(self):
         args = Namespace(cachelines=[1], threads=[16], repeats=3,
             iterations=100, backends=['native', 'kdlock'], lock_kind='mutex',
@@ -37,6 +74,53 @@ class DirectTests(unittest.TestCase):
         args.mutex_native_epoch_ms = 1001
         with self.assertRaises(run.Failure):
             run.make_plan(args)
+
+    def test_native_epoch_cache_requires_enabled_mutex_epoch(self):
+        args = Namespace(cachelines=[1], threads=[2], repeats=1,
+            iterations=100, backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
+            mutex_native_epoch_ms=128, mutex_native_epoch_cache=True)
+        plans = run.make_plan(args)
+        self.assertEqual({s['arm']: s['mutex_native_epoch_cache'] for s in plans},
+                         dict(native=False, tclock=False, kdlock=True))
+        args.mutex_native_epoch_ms = 0
+        with self.assertRaisesRegex(run.Failure, 'positive native epoch'):
+            run.make_plan(args)
+        args.mutex_native_epoch_ms = 128
+        args.lock_kind = 'spin'
+        with self.assertRaisesRegex(run.Failure, 'requires mutex'):
+            run.make_plan(args)
+        for enabled in (False, True):
+            argv = ['run_mutex.py', '--output', '/tmp/unused', '--dry-run']
+            if enabled:
+                argv += ['--mutex-native-epoch-cache', '--mutex-native-epoch-ms', '128']
+            output = io.StringIO()
+            with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
+                self.assertEqual(run.main('mutex'), 0)
+            plans = json.loads(output.getvalue())
+            self.assertEqual({s['mutex_native_epoch_cache'] for s in plans if s['arm'] == 'kdlock'},
+                             {enabled})
+
+    def test_native_epoch_cache_summary_identity(self):
+        plans = []
+        for enabled in (False, True):
+            cohort = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
+                iterations=100, backends=['kdlock'], lock_kind='mutex',
+                mutex_native_epoch_ms=128, mutex_native_epoch_cache=enabled))
+            plans.extend(dict(s, name=s['name']+f'-cache{int(enabled)}') for s in cohort)
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for spec in plans:
+                folder = out/spec['name']; folder.mkdir()
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True,
+                    measurement=dict(completed=100, wall_ns=1000000000,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 2)
+            self.assertEqual({r['mutex_native_epoch_cache'] for r in rows}, {False, True})
+            self.assertTrue(all(r['sessions'] == 1 for r in rows))
 
     def test_mutex_plan_uses_blocking_with_one_session_per_backend(self):
         plan = run.make_plan(Namespace(cachelines=[16], threads=[16], repeats=3,
@@ -61,6 +145,13 @@ class DirectTests(unittest.TestCase):
                       mutex_spin_limit='4096',
                       spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y')
         check_kd_parameters(params, record, 4096)
+        cache_record = dict(record, mutex_native_epoch_ms=128, mutex_native_epoch_cache=True)
+        cache_params = dict(params, mutex_native_epoch_ms='128', mutex_native_epoch_cache='Y')
+        check_kd_parameters(cache_params, cache_record, 4096)
+        with self.assertRaisesRegex(run.Failure, 'mutex_native_epoch_cache'):
+            check_kd_parameters(dict(cache_params, mutex_native_epoch_cache='N'), cache_record, 4096)
+        with self.assertRaisesRegex(run.Failure, 'mutex_native_epoch_cache'):
+            check_kd_parameters(cache_params, dict(cache_record, mutex_native_epoch_cache=False), 4096)
         for key, value in (('mutex_entry_ratio_limit', '2'), ('mutex_native_route', 'Y')):
             with self.assertRaises(run.Failure):
                 check_kd_parameters(dict(params, **{key: value}), record, 4096)
@@ -1090,6 +1181,14 @@ class DirectTests(unittest.TestCase):
         self.assertIn('spin_prefetch=0', args)
         self.assertIn('mutex_entry_ratio_limit=256', args)
         self.assertIn('mutex_native_route=0', args)
+        self.assertIn('mutex_native_epoch_cache=0', args)
+        commands.clear()
+        session.record.update(mutex_native_epoch_ms=128, mutex_native_epoch_cache=True)
+        with self.assertRaisesRegex(RuntimeError, 'stop after provider command'):
+            session.prepare()
+        args, = [args for args, log in commands if log == 'load-kdlock.log']
+        self.assertIn('mutex_native_epoch_ms=128', args)
+        self.assertIn('mutex_native_epoch_cache=1', args)
 
 
 if __name__ == '__main__':

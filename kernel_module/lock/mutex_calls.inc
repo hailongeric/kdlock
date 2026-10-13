@@ -32,15 +32,26 @@ static __always_inline struct kd_mutex *kd_mutex_contended_select(
 		struct mutex *lock, unsigned long ret_addr)
 {
 	struct kd_mutex *kd_mtx;
+	struct kd_mutex *policy_checked = NULL;
 	bool admitted;
+	bool policy_native = false;
 
 	preempt_disable();
 	kd_hotlock_mutex_entry();
 	admitted = kd_hotlock_record_mutex_pinned((unsigned long)lock);
+	/* A cache hit may decline delegation before capture/eligibility work.
+	 * It still observes this exact failure once. A KD decision continues
+	 * through every ordinary eligibility and exact-address table check. */
+	if (admitted && !mutex_native_route &&
+	    unlikely(mutex_native_epoch_cache) && mutex_native_epoch_ms) {
+		policy_checked = kd_mutex_policy_cached_pinned(lock);
+		if (policy_checked)
+			policy_native = kd_mutex_policy_native_pinned(policy_checked);
+	}
 	preempt_enable();
 	/* Only failed acquisitions supply contention observations. Frequency
 	 * checks still precede process selection and any task/shadow work. */
-	if (!admitted || mutex_native_route) {
+	if (!admitted || mutex_native_route || policy_native) {
 		kd_origin_mutex_lock(lock);
 		return NULL;
 	}
@@ -53,8 +64,12 @@ static __always_inline struct kd_mutex *kd_mutex_contended_select(
 
 	kd_mtx = get_kd_mutex_shadow(lock);
 	/* Policy governs this new acquisition only. An outstanding KD queue keeps
-	 * its own task references, ownership, completion and drain obligations. */
-	if (kd_mtx && kd_mutex_policy_native(kd_mtx)) {
+	 * its own task references, ownership, completion and drain obligations.
+	 * A matching cached decision already observed this origin under the entry
+	 * pin; after the full checks above, do not observe it a second time. The
+	 * immutable identity remains valid if this task migrated after that pin;
+	 * a prior KD decision cannot grant any new owner or queue authority. */
+	if (kd_mtx && kd_mtx != policy_checked && kd_mutex_policy_native(kd_mtx)) {
 		kd_origin_mutex_lock(lock);
 		return NULL;
 	}

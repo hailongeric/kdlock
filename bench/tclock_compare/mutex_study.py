@@ -19,8 +19,10 @@ REGRESSION = (32, 36, 48, 60)
 GRID = PRIMARY + REGRESSION
 
 
-def load_run(folder):
+def load_run(folder, post_work_rounds=64):
     """Verify frozen source/binaries, raw data, full-cohort peak and sample drain."""
+    require(type(post_work_rounds) is int and 1 <= post_work_rounds <= 256,
+            'requested post-work rounds must be 1..256')
     folder = Path(folder)
     environment = json.loads((folder/'environment.json').read_text())
     require(environment['kernel_identity']['ok'] and
@@ -29,8 +31,12 @@ def load_run(folder):
             environment['collector_topology']['role_cpus'] == [63] and
             {'nokaslr', 'nopvspin'} <= set(environment['cmdline'].split()) and
             '(voluntary)' in environment['preemption'], 'kernel/boot/topology differs')
-    for relative, expected in json.loads((folder/'source-sha256.json').read_text()).items():
+    frozen = json.loads((folder/'source-sha256.json').read_text())
+    require(run.POST_WORK_SOURCE in frozen, 'frozen post-work source is not hashed')
+    for relative, expected in frozen.items():
         require(digest(folder/'source'/relative) == expected, f'changed frozen source: {relative}')
+    require(run.source_post_work_rounds(folder/'source') == post_work_rounds,
+            'frozen post-work rounds differ from requested study')
     for original, expected in json.loads((folder/'binary-sha256.json').read_text()).items():
         path = (folder/'variants'/original.split('/variants/', 1)[1]
                 if '/variants/' in original else folder/'binaries'/Path(original).name)
@@ -39,10 +45,15 @@ def load_run(folder):
     plan = json.loads((folder/'plan.json').read_text())
     require(len({s['name'] for s in plan}) == len(plan), 'duplicate planned samples')
     for spec in plan:
+        require_post_work_metadata(spec, post_work_rounds)
         path = folder/spec['name']/'session.json'
         require(path.exists(), f'missing sample: {path}')
         record = json.loads(path.read_text())
+        require_post_work_metadata(record, post_work_rounds)
         require(all(record.get(k) == v for k, v in spec.items()), 'sample policy differs from plan')
+        # Historical 8/64-round records predate this metadata; the hashed header
+        # establishes their identity before downstream comparisons see it.
+        record.setdefault('post_work_rounds', post_work_rounds)
         require(record['lock_kind'] == 'mutex' and record['cachelines'] == 1 and
                 record['workload'] == 'cacheline' and record['cpus'] == list(range(record['threads'])) and
                 record['collector_cpu'] == 63 and record['duration_ms'] == 2000 and
@@ -74,11 +85,24 @@ def load_run(folder):
         require(peak == record['measurement']['peak'], 'saved peak does not match raw progress')
         require(dict(raw, peak=peak) == record['measurement'], 'saved measurement differs from raw data')
         result.append(record)
-    # This study freezes 64 post-work rounds; a historical four-round input is
-    # not interchangeable even if its rate and session settings look plausible.
-    post = (folder/'source/workload_modules/spin_cacheline/post_work.h').read_text()
-    require('#define SC_POST_WORK_ROUNDS 64' in post, 'post-work default differs')
     return result
+
+
+def require_post_work_metadata(record, rounds):
+    value = record.get('post_work_rounds')
+    require(('post_work_rounds' not in record and rounds in (8, 64)) or
+            (type(value) is int and value == rounds),
+            'post-work metadata differs from frozen source')
+
+
+def study_post_work_rounds(rows):
+    values = [r.get('post_work_rounds', 64) for r in rows]
+    require(values and all(type(n) is int and 1 <= n <= 256 for n in values),
+            'invalid post-work round metadata')
+    rounds = set(values)
+    require(len(rounds) == 1,
+            'cannot pool different post-work rounds in one study')
+    return next(iter(rounds))
 
 
 def metrics(rows):
@@ -88,7 +112,8 @@ def metrics(rows):
     peak = [r['measurement']['peak']['throughput_ops_s'] for r in rows]
     shares = [w['completed']/r['measurement']['completed']
               for r in rows for w in r['measurement']['workers']]
-    return dict(median_whole=statistics.median(whole), best_peak=max(peak),
+    return dict(post_work_rounds=study_post_work_rounds(rows),
+                median_whole=statistics.median(whole), best_peak=max(peak),
                 whole_rates=whole, peak_rates=peak,
                 whole_spread_pct=100*(max(whole)-min(whole))/statistics.median(whole),
                 peak_spread_pct=100*(max(peak)-min(peak))/statistics.median(peak),
@@ -101,6 +126,7 @@ def metrics(rows):
 
 
 def evaluate(baseline, candidate):
+    post_work_rounds = study_post_work_rounds([*baseline, *candidate])
     limits = {r.get('mutex_entry_ratio_limit') for r in candidate if r['arm'] == 'kdlock'}
     require(len(limits) == 1 and next(iter(limits)) in run.MUTEX_ENTRY_RATIO_LIMITS,
             'one threshold per candidate')
@@ -124,7 +150,8 @@ def evaluate(baseline, candidate):
     missing = sorted(set(GRID)-set(counts))
     verdict = ('REJECTED' if any(not c['passed'] for c in checks) else
                'INCOMPLETE' if missing else 'PASS')
-    return dict(threshold=next(iter(limits)), verdict=verdict, missing=missing, checks=checks)
+    return dict(post_work_rounds=post_work_rounds, threshold=next(iter(limits)),
+                verdict=verdict, missing=missing, checks=checks)
 
 
 def sample_identities(records):
@@ -145,13 +172,15 @@ def main():
     parser.add_argument('--candidates', type=Path, nargs='+', required=True)
     parser.add_argument('--confirmations', type=Path, nargs=2)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--post-work-rounds', type=int, choices=range(1, 257), default=64,
+                        help='expected frozen workload rounds; does not change or rebuild inputs')
     args = parser.parse_args()
-    baseline = load_run(args.baseline)
+    baseline = load_run(args.baseline, args.post_work_rounds)
     require({r['threads'] for r in baseline} == set(GRID), 'incomplete baseline grid')
     for t in GRID:
         for arm in ('native', 'kdlock'):
             metrics([r for r in baseline if r['threads'] == t and r['arm'] == arm])
-    candidate_records = {p: load_run(p) for p in args.candidates}
+    candidate_records = {p: load_run(p, args.post_work_rounds) for p in args.candidates}
     trials = [dict(path=str(p), **evaluate(baseline, rows))
               for p, rows in candidate_records.items()]
     passing = sorted(t['threshold'] for t in trials if t['verdict'] == 'PASS')
@@ -167,14 +196,15 @@ def main():
         for records in candidate_records.values():
             seen.update(sample_identities(records))
         for p in args.confirmations:
-            records = load_run(p)
+            records = load_run(p, args.post_work_rounds)
             require(json.loads((p/'source-sha256.json').read_text()) == frozen,
                     'confirmation source differs from selected screen')
             require_fresh(records, seen)
             confirmation.append(dict(path=str(p), **evaluate(baseline, records)))
         if all(c['verdict'] == 'PASS' and c['threshold'] == min(passing) for c in confirmation):
             selected = min(passing)
-    write_json(args.output, dict(selected_default=selected, retained_default=256 if selected is None else None,
+    write_json(args.output, dict(post_work_rounds=args.post_work_rounds,
+        selected_default=selected, retained_default=256 if selected is None else None,
         acceptance='97% separately for median whole-run and best valid warmed peak in each block',
         baseline=str(args.baseline), candidates=trials, confirmations=confirmation))
     print(json.dumps(dict(selected_default=selected,

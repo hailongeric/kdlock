@@ -8,6 +8,30 @@
 
 static unsigned int mutex_native_epoch_ms;
 static unsigned int mutex_native_probe_ms = 1;
+static bool mutex_native_epoch_cache;
+module_param(mutex_native_epoch_cache, bool, 0444);
+MODULE_PARM_DESC(mutex_native_epoch_cache,
+	"Cache exact-address epoch hints on each CPU and share the admission pin");
+
+struct kd_mutex_policy_cache {
+	unsigned long address;
+	struct kd_mutex *shadow;
+};
+static DEFINE_PER_CPU(struct kd_mutex_policy_cache, kd_mutex_policy_cache);
+
+/* A hit supplies only a resident shadow identity, never an acquisition.
+ * The table's immutable exact-address lookup created this pair; neither that
+ * shadow nor this per-CPU cache can outlive the provider. Pinned task-context
+ * readers/writers cannot observe a partially refreshed local pair. */
+static __always_inline struct kd_mutex *
+kd_mutex_policy_cached_pinned(struct mutex *lock)
+{
+	struct kd_mutex_policy_cache *cache = this_cpu_ptr(&kd_mutex_policy_cache);
+
+	if (cache->address != (unsigned long)lock)
+		return NULL;
+	return cache->shadow;
+}
 
 static int kd_mutex_policy_ms_set(const char *value,
 				  const struct kernel_param *kp)
@@ -172,6 +196,12 @@ static bool kd_mutex_policy_native(struct kd_mutex *lock)
 	if (likely(!mutex_native_epoch_ms))
 		return false;
 	preempt_disable();
+	if (mutex_native_epoch_cache) {
+		struct kd_mutex_policy_cache *cache = this_cpu_ptr(&kd_mutex_policy_cache);
+
+		cache->shadow = lock;
+		cache->address = READ_ONCE(lock->origin_mutex_addr);
+	}
 	native = kd_mutex_policy_native_pinned(lock);
 	preempt_enable();
 	return native;

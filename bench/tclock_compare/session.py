@@ -58,7 +58,7 @@ def check_kd_parameters(params, record, lock_addr):
             params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
             'kdlock observation parameters differ')
     for key, default in (('mutex_frame_reuse', False), ('mutex_native_epoch_ms', 0),
-                         ('mutex_native_probe_ms', 1)):
+                         ('mutex_native_probe_ms', 1), ('mutex_native_epoch_cache', False)):
         expected = record.get(key, default)
         actual = params.get(key, 'N' if default is False else str(default))
         require(actual == ('Y' if expected else 'N') if default is False else
@@ -165,6 +165,7 @@ class BackendSession(Session):
                       'mutex_frame_reuse=' + str(int(self.record.get('mutex_frame_reuse', False))),
                       'mutex_native_epoch_ms=' + str(self.record.get('mutex_native_epoch_ms', 0)),
                       'mutex_native_probe_ms=' + str(self.record.get('mutex_native_probe_ms', 1)),
+                      'mutex_native_epoch_cache=' + str(int(self.record.get('mutex_native_epoch_cache', False))),
                       'spin_entry_ratio_limit=' + str(self.record['spin_entry_ratio_limit']),
                       'spin_prefetch=' + str(self.record['spin_prefetch']),
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],

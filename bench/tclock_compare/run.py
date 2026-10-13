@@ -11,6 +11,7 @@ import itertools
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import statistics
 import sys
@@ -31,10 +32,23 @@ MUTEX_ENTRY_RATIO_LIMITS = tuple(1 << shift for shift in range(1, 9))
 MUTEX_POLICY_FIELDS = ('mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance',
                        'mutex_frame_reuse', 'mutex_native_epoch_ms',
                        'mutex_native_probe_ms', 'mutex_lazy_save', 'mutex_node_locality',
-                       'mutex_preflight')
+                       'mutex_preflight', 'mutex_native_epoch_cache')
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
+POST_WORK_SOURCE = 'workload_modules/spin_cacheline/post_work.h'
+
+
+def source_post_work_rounds(root=None):
+    """Read the fixed workload source; this is provenance, not a build override."""
+    source = ((ROOT if root is None else Path(root))/POST_WORK_SOURCE).read_text()
+    definitions = re.findall(
+        r'^[ \t]*#[ \t]*define[ \t]+SC_POST_WORK_ROUNDS[ \t]+([0-9]+)[ \t]*$',
+        source, re.MULTILINE)
+    require(len(definitions) == 1, 'post-work source needs one literal round definition')
+    rounds = int(definitions[0])
+    require(1 <= rounds <= 256, 'post-work rounds must be 1..256')
+    return rounds
 
 
 def worker_cpus(args):
@@ -137,6 +151,7 @@ def make_plan(args):
     provider_ubsan = getattr(args, 'kd_provider_ubsan', DEFAULT_KD_PROVIDER_UBSAN)
     require(provider_ubsan in ('kernel', 'off'), 'invalid KD provider UBSAN policy')
     result = []
+    post_work_rounds = source_post_work_rounds()
     cpus = worker_cpus(args)
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
@@ -147,12 +162,15 @@ def make_plan(args):
     frame_reuse = getattr(args, 'mutex_frame_reuse', False)
     native_epoch = getattr(args, 'mutex_native_epoch_ms', 0)
     native_probe = getattr(args, 'mutex_native_probe_ms', 1)
+    native_epoch_cache = getattr(args, 'mutex_native_epoch_cache', False)
     lazy_save = getattr(args, 'mutex_lazy_save', False)
     node_locality = getattr(args, 'mutex_node_locality', False)
     preflight = getattr(args, 'mutex_preflight', False)
     require(not preflight or lazy_save, 'mutex preflight requires lazy register capture')
     require(0 <= native_epoch <= 1000 and 1 <= native_probe <= 1000,
             'mutex epoch must be 0..1000 ms and probe 1..1000 ms')
+    require(not native_epoch_cache or (lock_kind == 'mutex' and native_epoch > 0),
+            'mutex native epoch cache requires mutex and a positive native epoch')
     require(mutex_limit in MUTEX_ENTRY_RATIO_LIMITS, 'invalid mutex entry ratio limit')
     require(mutex_routing in ('adaptive', 'native') and
             mutex_acceptance in ('jit-required', 'adaptive-performance'), 'invalid mutex policy')
@@ -186,6 +204,7 @@ def make_plan(args):
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, lock_kind=lock_kind, hotlock_mode=mode,
+                post_work_rounds=post_work_rounds,
                 caller_shell=('mutex_outer_cookie' if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
                 cookie_storage=('outer_acquisition_local' if lock_kind == 'mutex' else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
                 cpu_heat_policy=('mutex_contention1024_shift10_lock1025_pinned_cold' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
@@ -195,6 +214,7 @@ def make_plan(args):
                 mutex_frame_reuse=frame_reuse if backend == 'kdlock' else False,
                 mutex_native_epoch_ms=native_epoch if backend == 'kdlock' else 0,
                 mutex_native_probe_ms=native_probe if backend == 'kdlock' else 1,
+                mutex_native_epoch_cache=native_epoch_cache if backend == 'kdlock' else False,
                 mutex_lazy_save=lazy_save if backend == 'kdlock' else False,
                 mutex_node_locality=node_locality if backend == 'kdlock' else False,
                 mutex_preflight=preflight if backend == 'kdlock' else False,
@@ -230,6 +250,7 @@ def report(out):
             path = out/spec['name']/'session.json'
             row = json.loads(path.read_text()) if path.exists() else {}
             rows.append(dict(name=spec['name'], scenario=spec['scenario'],
+                post_work_rounds=spec.get('post_work_rounds', 'unrecorded'),
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
                 cpu_heat_policy=spec.get('cpu_heat_policy', 'unrecorded'),
                 spin_contention_pct=spec.get('spin_contention_pct', 'unrecorded'),
@@ -271,6 +292,7 @@ def report(out):
         # identities, including zero's bypass. Never pool tuning candidates.
         mode = r.get('hotlock_mode', 'unrecorded')
         groups.setdefault((r.get('lock_kind', 'spin'), r['cachelines'], r['threads'], r['arm'], mode,
+                           r.get('post_work_rounds', 'unrecorded'),
                            r.get('caller_shell', 'unrecorded'),
                            r.get('cookie_storage', 'unrecorded'),
                            r.get('cpu_heat_policy', 'unrecorded'),
@@ -288,10 +310,11 @@ def report(out):
                            tuple(r.get('cpus', range(r['threads'])))), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (lock_kind, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, mutex_wait_mode, mutex_spin_limit, mutex_policy, diagnostic, cpus), rows in groups.items():
+    for (lock_kind, n, t, arm, mode, post_work_rounds, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, mutex_wait_mode, mutex_spin_limit, mutex_policy, diagnostic, cpus), rows in groups.items():
         good = [r for r in rows if r['score_eligible']]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm, lock_kind=lock_kind,
                    workload=rows[0].get('workload', 'cacheline'),
+                   post_work_rounds=post_work_rounds,
                    sessions=len(rows), valid=len(good),
                    hotlock_mode=mode, caller_shell=shell,
                    cookie_storage=cookie,
@@ -335,11 +358,12 @@ def report(out):
             100 * (max(whole) - min(whole)) / statistics.median(whole)
             if len(whole) > 1 else None)
         summary.append(row)
-    natives = {(r['lock_kind'], r['cachelines'], r['threads'], tuple(r[k] for k in TIMING_FIELDS), tuple(r['cpus'])):
+    natives = {(r['lock_kind'], r['cachelines'], r['threads'], r['post_work_rounds'], tuple(r[k] for k in TIMING_FIELDS), tuple(r['cpus'])):
                r['best_throughput_ops_s']
                for r in summary if r['arm'] == 'native'}
     for row in summary:
         native = natives.get((row['lock_kind'], row['cachelines'], row['threads'],
+                              row['post_work_rounds'],
                               tuple(row[k] for k in TIMING_FIELDS), tuple(row['cpus'])))
         row['throughput_over_linux'] = row['best_throughput_ops_s']/native if native and row['valid'] else None
     write_json(out/'summary.json', summary)
@@ -385,6 +409,8 @@ def main(lock_kind='spin'):
                    help='reuse a fully retired pristine mutex batch frame')
     p.add_argument('--mutex-native-epoch-ms', type=int, default=0,
                    help='opt-in single-NUMA native epoch duration; 0 disables')
+    p.add_argument('--mutex-native-epoch-cache', action='store_true',
+                   help='cache exact-address locality epochs before capture and task lookup')
     p.add_argument('--mutex-native-probe-ms', type=int, default=1,
                    help='delegation locality probe duration before a native epoch')
     p.add_argument('--mutex-lazy-save', action='store_true',
@@ -617,6 +643,9 @@ def main(lock_kind='spin'):
         for binary in binaries:
             shutil.copyfile(binary,out/'binaries'/binary.name)
         binaries += list(variants.values())
+        actual_post_work_rounds = source_post_work_rounds()
+        require(all(s['post_work_rounds'] == actual_post_work_rounds for s in plan),
+                'post-work source changed after planning')
         frozen = source_state(); write_json(out/'source-sha256.json',frozen)
         for relative in frozen:
             target = out/'source'/relative; target.parent.mkdir(parents=True,exist_ok=True)
