@@ -148,7 +148,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     direct_mutex_unlock = get_kernel_symbol("kd_mutex_direct_unlock_clobber_v1")
     contended_mutex_lock = get_kernel_symbol("kd_mutex_direct_contended_clobber_v1")
     outer_mutex_lock = get_kernel_symbol("kd_mutex_outer_contended_clobber_v1")
-    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock} - {0, None}
+    prepared_mutex_lock = get_kernel_symbol("kd_mutex_outer_prepared_clobber_v1")
+    preflight_mutex_lock = get_kernel_symbol("kd_mutex_outer_preflight")
+    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, prepared_mutex_lock, direct_mutex_unlock} - {0, None}
     if ((abi in {1, 3} and not (clobber_lock and clobber_unlock)) or
         (abi == 2 and not ((direct_mutex_lock and direct_mutex_unlock) or
                            (clobber_mutex_lock and clobber_mutex_unlock)))):
@@ -165,6 +167,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             (direct_mutex_lock, "mutex", "kd_mutex_direct_lock_clobber_v1"),
             (contended_mutex_lock, "mutex", "kd_mutex_direct_contended_clobber_v1"),
             (outer_mutex_lock, "mutex", "kd_mutex_outer_contended_clobber_v1"),
+            (prepared_mutex_lock, "mutex", "kd_mutex_outer_prepared_clobber_v1"),
+            (preflight_mutex_lock, "mutex", "kd_mutex_outer_preflight"),
             (direct_mutex_unlock, "mutex", "kd_mutex_direct_unlock_clobber_v1"),
             (mutex_lock, "mutex", "mutex_lock"),
             (mutex_unlock, "mutex", "mutex_unlock"),

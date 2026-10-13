@@ -15,11 +15,21 @@ static bool mutex_native_route;
 module_param(mutex_native_route, bool, 0444);
 MODULE_PARM_DESC(mutex_native_route, "Route new mutex acquisitions natively after sampling (diagnostic control)");
 
-/* A nonzero result is proof that THIS acquisition used only the original
- * Linux mutex. Other task records do not grant or revoke this ownership. Any
- * entry into the KD queue keeps zero, including its local native fallbacks. */
-static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,
-		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
+#include "mutex_policy.inc"
+
+static __always_inline bool kd_mutex_contended_eligible(void)
+{
+	return kd_source_is_open() &&
+	       kd_comm_matches(&kd_spin_target, current->comm) &&
+	       !kd_mutex_task_active(current);
+}
+
+/* A NULL result means this attempt acquired the original mutex. A shadow is
+ * an immutable address hint, with no task reference or queue publication.
+ * Exactly one failed-attempt sample belongs to this selection, even when a
+ * caller defers capture until after the ordinary C return. */
+static __always_inline struct kd_mutex *kd_mutex_contended_select(
+		struct mutex *lock, unsigned long ret_addr)
 {
 	struct kd_mutex *kd_mtx;
 	bool admitted;
@@ -32,37 +42,56 @@ static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned lon
 	 * checks still precede process selection and any task/shadow work. */
 	if (!admitted || mutex_native_route) {
 		kd_origin_mutex_lock(lock);
-		return (unsigned long)current;
+		return NULL;
 	}
 	/* Nested native calls and borrowed continuations must not join another
 	 * delegation queue. Their original mutexes still provide mutual exclusion. */
-	if (!kd_source_is_open() ||
-	    !kd_comm_matches(&kd_spin_target, current->comm) ||
-	    kd_mutex_task_active(current)) {
+	if (!kd_mutex_contended_eligible()) {
 		kd_origin_mutex_lock(lock);
-		return (unsigned long)current;
+		return NULL;
 	}
 
 	kd_mtx = get_kd_mutex_shadow(lock);
-	if (!kd_mtx || !kd_mutex_task_get(current)) {
-		/* Distinguish shadow exhaustion from task allocation refusal and
-		 * node shortage. Neither branch acquired a routing reference. */
-		if (kd_mtx)
-			KD_PR_INFO(
-				"mutex task fallback: task=%d entry=%lx lock=%px cpu=%u\n",
-				current->pid, ret_addr, lock,
-				raw_smp_processor_id());
-		else
-			KD_PR_INFO(
-				"mutex shadow fallback: task=%d entry=%lx lock=%px cpu=%u\n",
-				current->pid, ret_addr, lock,
-				raw_smp_processor_id());
+	/* Policy governs this new acquisition only. An outstanding KD queue keeps
+	 * its own task references, ownership, completion and drain obligations. */
+	if (kd_mtx && kd_mutex_policy_native(kd_mtx)) {
+		kd_origin_mutex_lock(lock);
+		return NULL;
+	}
+	if (!kd_mtx) {
+		KD_PR_INFO("mutex shadow fallback: task=%d entry=%lx lock=%px cpu=%u\n",
+			current->pid, ret_addr, lock, raw_smp_processor_id());
+		kd_origin_mutex_lock(lock);
+		return NULL;
+	}
+	return kd_mtx;
+}
+
+static __always_inline unsigned long kd_mutex_contended_queue(
+		struct mutex *lock, struct kd_mutex *kd_mtx, unsigned long ret_rsp,
+		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
+{
+	if (!kd_mutex_task_get(current)) {
+		KD_PR_INFO("mutex task fallback: task=%d entry=%lx lock=%px cpu=%u\n",
+			current->pid, ret_addr, lock, raw_smp_processor_id());
 		kd_origin_mutex_lock(lock);
 		return (unsigned long)current;
 	}
 	kd_exe_add_abi(0, ret_addr, KD_EXE_LOCK_MUTEX, abi);
 	_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);
 	return 0;
+}
+
+/* A nonzero result proves this acquisition used only the original mutex.
+ * Once queued, even a local native fallback retains the routed zero cookie. */
+static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,
+		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
+{
+	struct kd_mutex *kd_mtx = kd_mutex_contended_select(lock, ret_addr);
+
+	if (!kd_mtx)
+		return (unsigned long)current;
+	return kd_mutex_contended_queue(lock, kd_mtx, ret_rsp, ret_addr, bp, abi);
 }
 
 /* Preserve the void protocol for existing direct and kernel bridge callers. */
@@ -168,6 +197,33 @@ kd_mutex_outer_contended_clobber_v1(struct mutex *lock, unsigned long sp,
 					 KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_outer_contended_clobber_v1);
+
+/* Ordinary C ABI: native fallbacks return before the caller saves a minimal
+ * packet. The returned shadow is stable for the provider lifetime and carries
+ * no acquisition authority or resource reference across this call boundary. */
+__attribute__((noipa)) noinline notrace struct kd_mutex *
+kd_mutex_outer_preflight(struct mutex *lock)
+{
+	return kd_mutex_contended_select(lock, 0);
+}
+EXPORT_SYMBOL_GPL(kd_mutex_outer_preflight);
+
+/* Recheck eligibility after the caller's capture boundary. Cooling and policy
+ * changes do not repeat the original failed-attempt observation. Source close,
+ * a rename or another active frame may only send this new attempt natively. */
+__attribute__((noipa)) noinline notrace unsigned long
+kd_mutex_outer_prepared_clobber_v1(struct mutex *lock, unsigned long sp,
+		unsigned long ip, unsigned long bp, struct kd_mutex *kd_mtx)
+{
+	if (!kd_mtx || kd_mtx->origin_mutex_addr != (unsigned long)lock ||
+	    !kd_mutex_contended_eligible()) {
+		kd_origin_mutex_lock(lock);
+		return (unsigned long)current;
+	}
+	return kd_mutex_contended_queue(lock, kd_mtx, sp, ip, bp,
+				       KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+}
+EXPORT_SYMBOL_GPL(kd_mutex_outer_prepared_clobber_v1);
 
 __attribute__((noipa)) noinline notrace void
 kd_mutex_direct_unlock_clobber_v1(struct mutex *lock, unsigned long sp,

@@ -446,7 +446,9 @@ def instruction_rejection(
                 kind, name = lock_symbols[address]
                 # Its C result is meaningful only before its synthetic root
                 # continuation; the nested void-control model cannot supply it.
-                if name == "kd_mutex_outer_contended_clobber_v1":
+                if name in {"kd_mutex_outer_contended_clobber_v1",
+                            "kd_mutex_outer_prepared_clobber_v1",
+                            "kd_mutex_outer_preflight"}:
                     return "outer-only mutex entry requires native execution", name
                 if kind != lock_kind:
                     return (

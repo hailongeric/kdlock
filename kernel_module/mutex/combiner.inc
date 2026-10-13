@@ -7,6 +7,11 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
+static bool kd_mutex_frame_reuse __read_mostly;
+module_param_named(mutex_frame_reuse, kd_mutex_frame_reuse, bool, 0444);
+MODULE_PARM_DESC(mutex_frame_reuse,
+	"Reuse retired pristine frame construction within a pinned mutex batch");
+
 struct kd_mutex_batch {
 	struct kd_exec_outer_unlock outer;
 	struct kd_mutex_node *next;
@@ -16,6 +21,8 @@ struct kd_mutex_batch {
 	bool current_retired;
 	/* Immutable slot identity; readiness/code are rechecked per request. */
 	struct kd_exe_info *exe;
+	/* Inactive storage only: each request still retires before publication. */
+	struct kd_exec_frame *retired_frame;
 	struct kd_mutex_node *deferred_head;
 	struct kd_mutex_node *deferred_tail;
 	unsigned int deferred_count;
@@ -216,6 +223,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 {
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
 	struct kd_exec_frame *frame;
+	struct kd_exec_frame *retired = batch->retired_frame;
 	struct kd_exe_info *exe;
 	struct kd_jit_batch_call call;
 	struct kd_regs retry_regs, *regs;
@@ -227,6 +235,9 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	int frame_ret;
 	u64 queue_end;
 
+	/* Consume first, including every cold/refusal return. Only a pristine
+	 * COMPLETE below can publish a fresh token for the next request. */
+	batch->retired_frame = NULL;
 	BUG_ON(READ_ONCE(lock->physical_owner) != current);
 	BUG_ON(!kd_origin_mutex_owned((struct mutex *)lock->origin_mutex_addr,
 				      current));
@@ -284,10 +295,18 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		retry_regs = curr_node->regs;
 	/* The enclosing batch retains source residency through the last ACK/pop.
 	 * Legacy/nested roots keep their private frame lease and generic setup. */
-	frame = clobber && curr_node->packet_state == KD_PACKET_MINIMAL ?
-		kd_exec_frame_push_mutex_batch(&curr_node->regs, curr_node->regs.ip,
-			curr_node->gsbase, curr_node->task_struct_ptr, lock,
-			&batch->outer) : NULL;
+	frame = NULL;
+	if (clobber && curr_node->packet_state == KD_PACKET_MINIMAL) {
+		if (retired)
+			frame = kd_exec_frame_rebind_mutex_batch(retired,
+				&curr_node->regs, curr_node->regs.ip,
+				curr_node->gsbase, curr_node->task_struct_ptr,
+				lock, &batch->outer);
+		if (!frame)
+			frame = kd_exec_frame_push_mutex_batch(&curr_node->regs,
+				curr_node->regs.ip, curr_node->gsbase,
+				curr_node->task_struct_ptr, lock, &batch->outer);
+	}
 	if (frame)
 		goto prepared;
 	if (clobber)
@@ -340,6 +359,8 @@ prepared:
 		if (kd_exe_mutex_batch_completed(&call, frame)) {
 			kd_exe_queue_timing_end(true, &curr_node->queued_at_ns, queue_end);
 			BUG_ON(kd_exec_frame_retire_mutex_batch(frame, lock));
+			if (kd_mutex_frame_reuse && !frame->complex_ready)
+				batch->retired_frame = frame;
 			curr_node->packet_state = KD_PACKET_COMPLETE;
 			return 0;
 		}

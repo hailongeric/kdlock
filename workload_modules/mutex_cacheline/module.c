@@ -11,6 +11,9 @@
 #include "api.h"
 #include "post_work.h"
 
+MODULE_INFO(mutex_lazy_save, __stringify(KD_MUTEX_OUTER_LAZY_SAVE));
+MODULE_INFO(mutex_preflight, __stringify(KD_MUTEX_OUTER_PREFLIGHT));
+
 /* Distinct compiled workload functions, sharing the payload's source only. */
 #define SC_MUTEX_WORKLOAD 1
 #define SC_LOCK_KIND 2

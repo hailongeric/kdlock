@@ -28,7 +28,10 @@ DEFAULT_SPIN_ENTRY_RATIO_LIMIT = 2
 DEFAULT_KD_PROVIDER_UBSAN = 'off'
 DEFAULT_MUTEX_ENTRY_RATIO_LIMIT = 256
 MUTEX_ENTRY_RATIO_LIMITS = tuple(1 << shift for shift in range(1, 9))
-MUTEX_POLICY_FIELDS = ('mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance')
+MUTEX_POLICY_FIELDS = ('mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance',
+                       'mutex_frame_reuse', 'mutex_native_epoch_ms',
+                       'mutex_native_probe_ms', 'mutex_lazy_save', 'mutex_node_locality',
+                       'mutex_preflight')
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
@@ -81,7 +84,8 @@ def provider_build(args):
     # the kernel's sanitizer policy and all explicit protocol checks.
     build = ['make', '-C', HERE, 'provider',
              f'KDLOCK_NUMA={int(args.numa == "on")}',
-             f'KDLOCK_SPIN_BATCH={args.kd_batch_size}']
+             f'KDLOCK_SPIN_BATCH={args.kd_batch_size}',
+             f'KDLOCK_MUTEX_NODE_LOCALITY={int(getattr(args, "mutex_node_locality", False))}']
     if getattr(args, 'kd_provider_ubsan', DEFAULT_KD_PROVIDER_UBSAN) == 'off':
         build.append('UBSAN_SANITIZE=n')
     return build
@@ -140,11 +144,22 @@ def make_plan(args):
     mutex_limit = getattr(args, 'mutex_entry_ratio_limit', DEFAULT_MUTEX_ENTRY_RATIO_LIMIT)
     mutex_routing = getattr(args, 'mutex_routing', 'adaptive')
     mutex_acceptance = getattr(args, 'mutex_acceptance', 'jit-required')
+    frame_reuse = getattr(args, 'mutex_frame_reuse', False)
+    native_epoch = getattr(args, 'mutex_native_epoch_ms', 0)
+    native_probe = getattr(args, 'mutex_native_probe_ms', 1)
+    lazy_save = getattr(args, 'mutex_lazy_save', False)
+    node_locality = getattr(args, 'mutex_node_locality', False)
+    preflight = getattr(args, 'mutex_preflight', False)
+    require(not preflight or lazy_save, 'mutex preflight requires lazy register capture')
+    require(0 <= native_epoch <= 1000 and 1 <= native_probe <= 1000,
+            'mutex epoch must be 0..1000 ms and probe 1..1000 ms')
     require(mutex_limit in MUTEX_ENTRY_RATIO_LIMITS, 'invalid mutex entry ratio limit')
     require(mutex_routing in ('adaptive', 'native') and
             mutex_acceptance in ('jit-required', 'adaptive-performance'), 'invalid mutex policy')
     require(lock_kind == 'mutex' or (mutex_limit == DEFAULT_MUTEX_ENTRY_RATIO_LIMIT and
-            mutex_routing == 'adaptive' and mutex_acceptance == 'jit-required'),
+            mutex_routing == 'adaptive' and mutex_acceptance == 'jit-required' and
+            not frame_reuse and not native_epoch and native_probe == 1 and
+            not lazy_save and not node_locality and not preflight),
             'mutex controls require the mutex runner')
     require(not getattr(args, 'functional', False) or
             (mutex_routing == 'adaptive' and mutex_acceptance == 'jit-required'),
@@ -177,6 +192,12 @@ def make_plan(args):
                 mutex_entry_ratio_limit=mutex_limit if backend == 'kdlock' else None,
                 mutex_routing=mutex_routing if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
                 mutex_acceptance=mutex_acceptance if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
+                mutex_frame_reuse=frame_reuse if backend == 'kdlock' else False,
+                mutex_native_epoch_ms=native_epoch if backend == 'kdlock' else 0,
+                mutex_native_probe_ms=native_probe if backend == 'kdlock' else 1,
+                mutex_lazy_save=lazy_save if backend == 'kdlock' else False,
+                mutex_node_locality=node_locality if backend == 'kdlock' else False,
+                mutex_preflight=preflight if backend == 'kdlock' else False,
                 diagnostic=bool(getattr(args, 'pmu', False) or getattr(args, 'perf_record', False) or
                                 profile or mutex_routing == 'native'),
                 profile_lock=profile,
@@ -360,6 +381,18 @@ def main(lock_kind='spin'):
     p.add_argument('--mutex-acceptance', choices=('jit-required', 'adaptive-performance'),
                    default='jit-required',
                    help='opt in to scoring correct adaptive native runs; never a JIT pass')
+    p.add_argument('--mutex-frame-reuse', action='store_true',
+                   help='reuse a fully retired pristine mutex batch frame')
+    p.add_argument('--mutex-native-epoch-ms', type=int, default=0,
+                   help='opt-in single-NUMA native epoch duration; 0 disables')
+    p.add_argument('--mutex-native-probe-ms', type=int, default=1,
+                   help='delegation locality probe duration before a native epoch')
+    p.add_argument('--mutex-lazy-save', action='store_true',
+                   help='capture outer callee registers inside contended calls')
+    p.add_argument('--mutex-node-locality', action='store_true',
+                   help='separate immutable request inputs from the queue link line')
+    p.add_argument('--mutex-preflight', action='store_true',
+                   help='route native acquisitions before lazy register capture')
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
@@ -489,6 +522,11 @@ def main(lock_kind='spin'):
         for backend, binary in (('kdlock', PROVIDER), ('tclock', tc_module)):
             if backend not in args.backends:
                 continue
+            if backend == 'kdlock':
+                node_layout = command(['modinfo', '-F', 'mutex_node_locality', binary],
+                                      out/'kdlock-node-locality.txt').strip()
+                require(node_layout == str(int(args.mutex_node_locality)),
+                        'mutex node layout build identity differs')
             numa_field = 'mutex_numa' if backend == 'tclock' and lock_kind == 'mutex' else 'spin_numa'
             numa_value = command(['modinfo', '-F', numa_field, binary],
                                  out/f'{backend}-numa.txt').strip()
@@ -529,12 +567,23 @@ def main(lock_kind='spin'):
                 extra = [f'KBUILD_EXTRA_SYMBOLS={module.parent / "Module.symvers"}']
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
+                     f'SC_MUTEX_LAZY_SAVE={int(lock_kind == "mutex" and backend == "kdlock" and args.mutex_lazy_save)}',
+                     f'SC_MUTEX_PREFLIGHT={int(lock_kind == "mutex" and backend == "kdlock" and args.mutex_preflight)}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
                      f'KDLOCK_INCLUDE={ROOT / "include"}',
                      f'SC_SHARED={WORKLOAD}',
                      f'TCLOCK_INCLUDE={ROOT / "tclock_backend/include"}', *extra],
                     out/f'build-{build_name}.log',timeout=120)
             variants[backend] = binary = folder/f'{lock_kind}_cacheline.ko'
+            if lock_kind == 'mutex':
+                compiled_save = command(['modinfo', '-F', 'mutex_lazy_save', binary],
+                                        out/f'{backend}-lazy-save.txt').strip()
+                require(compiled_save == str(int(backend == 'kdlock' and args.mutex_lazy_save)),
+                        'mutex caller capture build identity differs')
+                compiled_preflight = command(['modinfo', '-F', 'mutex_preflight', binary],
+                                             out/f'{backend}-preflight.txt').strip()
+                require(compiled_preflight == str(int(backend == 'kdlock' and args.mutex_preflight)),
+                        'mutex preflight build identity differs')
             command(['objdump','-dr',binary],out/f'caller-{build_name}.txt')
             imported = command(['nm', '-u', binary], out/f'imports-{build_name}.txt')
             require('__ubsan_' not in imported, 'direct workload still imports UBSAN handlers')
@@ -551,6 +600,10 @@ def main(lock_kind='spin'):
                             'tclock': ('komb_mutex_lock', 'komb_mutex_unlock',
                                        'tc_mutex_worker_register', 'tc_mutex_workers_drain'),
                             'native': ('mutex_lock', 'mutex_unlock')}[backend]
+                if backend == 'kdlock' and args.mutex_preflight:
+                    expected = tuple(symbol for symbol in expected
+                                     if symbol != 'kd_mutex_outer_contended_clobber_v1') + (
+                        'kd_mutex_outer_preflight', 'kd_mutex_outer_prepared_clobber_v1')
                 require('kd_mutex_lock_clobber_v1' not in imported.split() and
                         'kd_mutex_unlock_clobber_v1' not in imported.split(),
                         'workload still imports experimental kernel mutex bridge')

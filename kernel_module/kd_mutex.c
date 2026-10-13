@@ -75,6 +75,7 @@ MODULE_PARM_DESC(mutex_spin_limit, "Maximum PAUSE iterations before parking (0 s
  * hand off earlier. The default remains 1024 in the provider Makefile. */
 static const unsigned int kd_mutex_batch_size = KDLOCK_SPIN_BATCH;
 MODULE_INFO(mutex_batch, __stringify(KDLOCK_SPIN_BATCH));
+MODULE_INFO(mutex_node_locality, __stringify(KD_MUTEX_NODE_LOCALITY));
 
 /* Observations and pinned lifecycle balances use separate per-CPU storage. */
 struct kd_mutex_waiter_cpu {

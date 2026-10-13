@@ -302,6 +302,55 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	return frame;
 }
 
+/* Reuse construction, never request lifetime. The caller consumed a token
+ * produced by the preceding pristine COMPLETE retirement in this same pinned
+ * batch. Nothing can bind this CPU's frame storage between those operations.
+ * Retirement already checked every immutable ledger/backend field and emptied
+ * the CPU context before the old waiter could reuse its packet. Keep the exact
+ * source admission, slot identity and terminal boundary here; reset only the
+ * fields whose value belongs to the new request. FULL/service/native exits
+ * cannot produce this token, even after their generic retirement succeeds. */
+__always_inline __gnu_inline
+struct kd_exec_frame *kd_exec_frame_rebind_mutex_batch(
+	struct kd_exec_frame *retired, struct kd_regs *regs,
+	unsigned long entry_ip, unsigned long gsbase, struct task_struct *task,
+	struct kd_mutex *lock, struct kd_exec_outer_unlock *hook)
+{
+	struct kd_exec_context *ctx = kd_exec_current_context();
+
+	if (!retired || !regs || !gsbase || !task || !lock || !hook ||
+	    retired != &ctx->frames[0] || ctx->depth || ctx->owner ||
+	    /* Retirement stores these at their separate widths. Do not merge a
+	     * wider load across both stores and the unchanged executed byte. */
+	    READ_ONCE(retired->state) != KD_EXEC_FRAME_UNUSED ||
+	    READ_ONCE(retired->role) != KD_ROLE_DONE || retired->complex_ready ||
+	    !retired->completion_seen || !retired->outer_unlock_seen ||
+	    !retired->jit_lock_released[0] ||
+	    retired->jit_lock_node[0] != lock ||
+	    retired->outer_unlock_hook != hook || hook->released ||
+	    !kd_source_is_open())
+		return NULL;
+
+	ctx->owner = current;
+	retired->borrowed_regs = regs;
+	retired->entry_ip = entry_ip;
+	retired->gsbase = gsbase;
+	retired->logical_task = task;
+	retired->executed = false;
+	retired->completion_seen = false;
+	retired->outer_unlock_seen = false;
+	retired->role = KD_ROLE_COMBINER;
+	retired->state = KD_EXEC_FRAME_RUNNING;
+	retired->packet_state = KD_PACKET_MINIMAL;
+	retired->jit_lock_released[0] = false;
+	ctx->top = retired;
+	ctx->depth = 1;
+#ifdef KDLOCK_SELFTEST
+	BUG_ON(!kd_exec_context_validate(ctx));
+#endif
+	return retired;
+}
+
 /* Do not use spin's prepare_complex: continuation_sp aliases borrowed_regs,
  * and the physical mutex shadow and outer hook already describe live owners.
  * Publish the materialized discriminator only after every cold reader is safe.

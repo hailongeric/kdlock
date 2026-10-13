@@ -36,6 +36,19 @@ __attribute__((noinline,noipa)) void mutex_unlock(struct mutex *lock)
 }
 #include "outer_api.h"
 
+#if KD_MUTEX_OUTER_PREFLIGHT
+struct kd_mutex *kd_mutex_outer_preflight(struct mutex *lock)
+{
+ entries++;
+ routed_locks++;
+ if (contended_native_return) {
+  lock->owner=(unsigned long)current;
+  return NULL;
+ }
+ return (struct kd_mutex *)lock;
+}
+#endif
+
 static void check_owner_probe(void)
 {
  struct mutex lock = {0};
@@ -68,7 +81,14 @@ unsigned long captured_stack[64];
 asm(".text\n"
     ".globl kd_mutex_outer_contended_clobber_v1\n"
     "kd_mutex_outer_contended_clobber_v1:\n"
-    "incq routed_locks(%rip)\n incq entries(%rip)\n movq $0x8000,(%rdi)\n"
+    ".globl kd_mutex_outer_prepared_clobber_v1\n"
+    "kd_mutex_outer_prepared_clobber_v1:\n"
+#if KD_MUTEX_OUTER_PREFLIGHT
+    "cmpq %rdi,%r8\n jne .Louter_bad\n"
+#else
+    "incq routed_locks(%rip)\n incq entries(%rip)\n"
+#endif
+    "movq $0x8000,(%rdi)\n"
     /* Destroy any pre-entry cookie assumption. The physical return supplies
      * its exact result; only the synthetic JIT entry forces route zero. */
     "movq test_cookie_address(%rip),%rax\n movq $0x8000,(%rax)\n movq $1,%r8\n jmp .Louter_damage\n"
@@ -107,12 +127,17 @@ __attribute__((noinline,noipa)) unsigned long outer_jit_case(void)
 {
  struct kd_mutex_outer_cookie cookie;
  volatile unsigned long body=0x115;
+ unsigned long held=0x13;
+ /* Keep a value live across both calls. The lazy policy must define its
+  * JIT input from the saved stack and preserve it at physical completion. */
+ asm volatile("" : "+r"(held));
  test_cookie_address=&cookie.owner;
  KD_MUTEX_OUTER_LOCK(&test_lock,cookie,
   ".globl outer_jit_entry\nouter_jit_entry:\n");
- body++;
+ body+=held;
  KD_MUTEX_OUTER_UNLOCK(&test_lock,cookie);
- return body;
+ asm volatile("" : "+r"(held));
+ return body+held;
 }
 
 __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed, int mode)
@@ -170,7 +195,7 @@ static void check_generated_outer(void)
    .entry_abi=2, .packet_state=&state, .complete=!full,
   };
   kd_jit_clobber_call_v1(&call);
-  assert(call.args[1]==1 && sp[body_slot]==0x116);
+  assert(call.args[1]==1 && sp[body_slot]==0x128);
   assert(*(unsigned long *)((char *)sp+cookie_offset)==0);
   assert(test_lock.owner==(unsigned long)current);
   assert(routed_locks==old_locks && routed_unlocks==old_unlocks);
@@ -179,6 +204,13 @@ static void check_generated_outer(void)
    assert(regs.w[0]==(unsigned long)kd_mutex_direct_unlock_clobber_v1);
    assert(regs.w[1]==(unsigned long)sp-8);
    assert(*(unsigned long *)regs.w[1]==regs.w[14]);
+#if KD_MUTEX_OUTER_LAZY_SAVE
+   /* At the intercepted CALL, the stack owns the five values that the
+    * physical return/COMPLETE landing pad restores. FULL supplies an
+    * independent register witness for that exact saved state. */
+   assert(sp[0]==regs.w[3] && sp[1]==regs.w[4]);
+   assert(sp[2]==regs.w[5] && sp[3]==regs.w[6] && sp[4]==regs.w[8]);
+#endif
   } else {
    assert(call.args[0]==7 && state==2 && regs.w[1]==(unsigned long)sp);
   }
@@ -200,7 +232,7 @@ int main(void)
  contended_native_return=0;
  for(int hot=0;hot<2;hot++) {
   test_lock.owner=hot?0x9000UL:0;
-  assert(outer_jit_case()==0x116 && !test_lock.owner);
+  assert(outer_jit_case()==0x13b && !test_lock.owner);
  }
  check_generated_outer();
  puts("PASS outer native/routed cookies, once-only observation, flags fallback, live registers and metadata");

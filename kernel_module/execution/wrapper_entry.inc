@@ -253,8 +253,11 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	if (!frame->mutex_backend || !frame->batch_lease ||
 	    !frame->regs_borrowed || frame->spin_simple ||
 	    frame->parent || frame->depth || frame->request_frame ||
-	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
-	    frame->packet_state != KD_PACKET_MINIMAL || frame->executed ||
+	    /* Rebind writes only packet_state. A combined 64-bit ABI/state load
+	     * overlaps that 32-bit store and cannot forward it. Keep field widths
+	     * while checking the same complete admission predicate. */
+	    READ_ONCE(frame->entry_abi) != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    READ_ONCE(frame->packet_state) != KD_PACKET_MINIMAL || frame->executed ||
 	    frame->state != KD_EXEC_FRAME_RUNNING || !frame->outer_lock_addr ||
 	    !frame->gsbase || !frame->logical_task || !regs->sp ||
 	    regs->ip != frame->entry_ip ||

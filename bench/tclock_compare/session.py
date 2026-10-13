@@ -57,6 +57,12 @@ def check_kd_parameters(params, record, lock_addr):
             params['mutex_native_route'] == ('Y' if record.get('mutex_routing') == 'native' else 'N') and
             params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
             'kdlock observation parameters differ')
+    for key, default in (('mutex_frame_reuse', False), ('mutex_native_epoch_ms', 0),
+                         ('mutex_native_probe_ms', 1)):
+        expected = record.get(key, default)
+        actual = params.get(key, 'N' if default is False else str(default))
+        require(actual == ('Y' if expected else 'N') if default is False else
+                int(actual) == expected, 'mutex protocol parameter differs: ' + key)
 
 
 def check_jit_evidence(record):
@@ -156,6 +162,9 @@ class BackendSession(Session):
                       'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 4096)),
                       'mutex_entry_ratio_limit=' + str(self.record['mutex_entry_ratio_limit']),
                       'mutex_native_route=' + ('1' if self.record.get('mutex_routing') == 'native' else '0'),
+                      'mutex_frame_reuse=' + str(int(self.record.get('mutex_frame_reuse', False))),
+                      'mutex_native_epoch_ms=' + str(self.record.get('mutex_native_epoch_ms', 0)),
+                      'mutex_native_probe_ms=' + str(self.record.get('mutex_native_probe_ms', 1)),
                       'spin_entry_ratio_limit=' + str(self.record['spin_entry_ratio_limit']),
                       'spin_prefetch=' + str(self.record['spin_prefetch']),
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
@@ -254,7 +263,14 @@ class BackendSession(Session):
                       'spin=' + str(int(self.lock_kind == 'spin'))], 'load-profile.log')
             self.loaded_profile = True
         if self.record['arm'] != 'tclock':
+            epoch_path = Path('/sys/module/kdlock_km/parameters/mutex_native_epoch_stats')
+            if self.loaded_kd and epoch_path.exists():
+                self.record['mutex_epoch_before'] = list(map(int, epoch_path.read_text().split()))
             super().measure()
+            if self.loaded_kd and epoch_path.exists():
+                self.record['mutex_epoch_after'] = list(map(int, epoch_path.read_text().split()))
+                self.record['mutex_epoch_delta'] = [after - before for before, after in
+                    zip(self.record['mutex_epoch_before'], self.record['mutex_epoch_after'])]
             check_jit_evidence(self.record)
             self.record.update(delegated_bodies=self.record['jit_bodies'],
                                delegation_share=self.record['jit_share'],

@@ -476,6 +476,7 @@ static void reset(void)
 	strcpy(waiter.comm, "target");
 	strcpy(peer.comm, "peer");
 	source_open = true;
+	mutex_native_route = false;
 	native_owner_wait = false;
 	fast_available = false;
 	entry_attempts = entry_pins = fast_probes = 0;
@@ -1095,6 +1096,57 @@ static void check_outer_native_result(void)
 	kd_mutex_release_node(head);
 }
 
+static void check_outer_preflight(void)
+{
+	/* A normal C return may already own the original mutex, but never a
+	 * task reference, shadow queue or continuation packet. */
+	for (unsigned int scenario = 0; scenario < 5; scenario++) {
+		reset();
+		struct mutex *lock = &origins[0].mutex;
+		if (scenario == 0) cpu_hot = false;
+		if (scenario == 1) source_open = false;
+		if (scenario == 2) strcpy(current->comm, "non-target");
+		if (scenario == 3) refs = 1;
+		if (scenario == 4) mutex_native_route = true;
+		unsigned int inherited_refs = refs;
+		CHECK(!kd_mutex_outer_preflight(lock));
+		CHECK(lock->owner == current && refs == inherited_refs);
+		CHECK(entry_attempts == 1 && samples == 1 && !gets && !adds);
+		CHECK(!preempt && !migration && !cpu_shadows.node_slots);
+		kd_origin_mutex_unlock(lock, 0x9000);
+	}
+	/* Capture is a scheduling boundary. Recheck eligibility without taking
+	 * another sample; CPU cooling alone cannot invalidate an accepted hint. */
+	for (unsigned int scenario = 0; scenario < 7; scenario++) {
+		reset();
+		struct mutex *lock = &origins[0].mutex;
+		struct kd_mutex *hint = kd_mutex_outer_preflight(lock);
+		CHECK(hint && !lock->owner && !refs && !gets && !adds);
+		CHECK(entry_attempts == 1 && samples == 1);
+		if (scenario == 0) source_open = false;
+		if (scenario == 1) strcpy(current->comm, "non-target");
+		if (scenario == 2) active_override = true;
+		if (scenario == 3) task_failure = true;
+		if (scenario == 4) cpu_hot = false;
+		if (scenario == 5) hint = NULL;
+		if (scenario == 6) hint = get_kd_mutex_shadow(&origins[1].mutex);
+		unsigned long route = kd_mutex_outer_prepared_clobber_v1(
+			lock, (unsigned long)&native_stack[16], 0x8000, 0, hint);
+		CHECK(entry_attempts == 1 && samples == 1 && lock->owner == current);
+		CHECK(!preempt && !migration && !cpu_shadows.node_slots);
+		if (scenario == 4) {
+			CHECK(!route && refs == 1 && adds == 1);
+			__kd_mutex_unlock(lock, 0, 0x9000);
+			CHECK(!refs && !hint->locked && task_puts == 1);
+		} else {
+			CHECK(route == (unsigned long)current && !refs && !adds);
+			kd_origin_mutex_unlock(lock, 0x9000);
+			CHECK(!task_puts);
+		}
+		CHECK(!lock->owner);
+	}
+}
+
 int main(void)
 {
 	/* Even a hot lock with task/shadow work otherwise eligible must bypass all
@@ -1117,6 +1169,7 @@ int main(void)
 	CHECK(origins[0].mutex.owner == current && !refs && !gets);
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
 	check_outer_native_result();
+	check_outer_preflight();
 	check_minimal_entry();
 	check_poll_result();
 	check_tails();

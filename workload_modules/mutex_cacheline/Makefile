@@ -4,6 +4,10 @@ obj-m := mutex_cacheline.o
 mutex_cacheline-objs := module.o
 UBSAN_SANITIZE := n
 ccflags-y += -I$(SC_SHARED) -I$(TCLOCK_INCLUDE)
+SC_MUTEX_LAZY_SAVE ?= 0
+ccflags-y += -DKD_MUTEX_OUTER_LAZY_SAVE=$(SC_MUTEX_LAZY_SAVE)
+SC_MUTEX_PREFLIGHT ?= 0
+ccflags-y += -DKD_MUTEX_OUTER_PREFLIGHT=$(SC_MUTEX_PREFLIGHT)
 ifeq ($(SC_WORKLOAD),rcuht)
 ccflags-y += -DSC_HASH_PAYLOAD
 endif

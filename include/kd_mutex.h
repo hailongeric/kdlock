@@ -18,6 +18,12 @@
 #define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
 #define KD_MUTEX_WAITER_SLOTS 1024 /* immutable shadow identities */
 
+/* Experimental layout: separate the next publisher's link write from the
+ * current request's immutable combiner inputs without growing the node. */
+#ifndef KD_MUTEX_NODE_LOCALITY
+#define KD_MUTEX_NODE_LOCALITY 0
+#endif
+
 #include "kd_regs.h"
 #include <linux/wait.h>
 
@@ -42,14 +48,18 @@ int kd_mutex_wait_selftest(void);
  */
 struct kd_mutex_node {
 	struct kd_mutex_node *next;
+#if !KD_MUTEX_NODE_LOCALITY
 	unsigned long gsbase; /* logical waiter's kernel GS base   */
+#endif
 	uint64_t rsp; /* saved real stack ptr (for restore) */
 	void *shadow_stack_base;
 	uint64_t shadow_stack_ptr;
 	struct kd_mutex *lock;
+#if !KD_MUTEX_NODE_LOCALITY
 	struct task_struct *task_struct_ptr;
 	/* Explicit clobber continuation, or legacy hook return-slot validation. */
 	unsigned long saved_ret_addr; /* CS entry point (ret_addr)         */
+#endif
 
 	/* Immutable identity and result tags are separate from the polled line.
 	 * Reading the ABI must not first fetch the waiter's notification line. */
@@ -60,6 +70,14 @@ struct kd_mutex_node {
 	int numa_node; /* immutable slot locality, set before source publication */
 	/* Independently resident notification object, never recycled with packet. */
 	struct rcuwait *wait;
+#if KD_MUTEX_NODE_LOCALITY
+	/* Producer-owned inputs are immutable from queue publication to retirement.
+	 * Share the already-fetched ABI line instead of the next-link writer's line.
+	 * Physical stack bookkeeping stays local on the first line. */
+	unsigned long gsbase;
+	struct task_struct *task_struct_ptr;
+	unsigned long saved_ret_addr;
+#endif
 	/* The combiner writes IP/SP and virtual registers while the producer
 	 * polls locked. Sharing their cacheline makes every packet update fight
 	 * the polling CPU for ownership, especially across NUMA nodes. */

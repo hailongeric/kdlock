@@ -18,6 +18,26 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_mutex_protocol_policies_remain_separate(self):
+        args = Namespace(cachelines=[1], threads=[16], repeats=3,
+            iterations=100, backends=['native', 'kdlock'], lock_kind='mutex',
+            mutex_frame_reuse=True, mutex_native_epoch_ms=128,
+            mutex_native_probe_ms=1, mutex_lazy_save=True)
+        plan = run.make_plan(args)
+        kd = [r for r in plan if r['arm'] == 'kdlock']
+        native = [r for r in plan if r['arm'] == 'native']
+        self.assertTrue(all(r['mutex_frame_reuse'] and r['mutex_lazy_save'] and
+                            r['mutex_native_epoch_ms'] == 128 for r in kd))
+        self.assertTrue(all(not r['mutex_frame_reuse'] and not r['mutex_lazy_save'] and
+                            r['mutex_native_epoch_ms'] == 0 for r in native))
+        args.lock_kind = 'spin'
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+        args.lock_kind = 'mutex'
+        args.mutex_native_epoch_ms = 1001
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
     def test_mutex_plan_uses_blocking_with_one_session_per_backend(self):
         plan = run.make_plan(Namespace(cachelines=[16], threads=[16], repeats=3,
             iterations=100, backends=['native', 'tclock', 'kdlock'],

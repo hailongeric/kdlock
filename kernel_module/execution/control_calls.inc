@@ -263,7 +263,9 @@ static int handle_known_call(struct kd_regs *regs,
 
 	/* The outer-only return-valued entry is not a nested void lock service.
 	 * Admission rejects it; retain the same boundary in generic recovery. */
-	if (regs->ip == outer_mutex_lock_addr)
+	if (regs->ip == outer_mutex_lock_addr ||
+	    regs->ip == prepared_mutex_lock_addr ||
+	    regs->ip == preflight_mutex_lock_addr)
 		return -EOPNOTSUPP;
 
 	/* Backend-specific lock stacks cannot represent mixed spin/mutex nesting.

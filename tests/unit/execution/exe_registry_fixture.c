@@ -198,6 +198,8 @@ static void kd_spin_unlock_clobber_v1(void) { CHECK(!"unexpected unlock call"); 
 static void kd_mutex_direct_lock_clobber_v1(void) { CHECK(!"unexpected mutex lock call"); }
 static void kd_mutex_direct_contended_clobber_v1(void) { CHECK(!"unexpected contended mutex lock call"); }
 static void kd_mutex_outer_contended_clobber_v1(void) { CHECK(!"unexpected outer mutex lock call"); }
+static void kd_mutex_outer_prepared_clobber_v1(void) { CHECK(!"unexpected prepared mutex lock call"); }
+static void kd_mutex_outer_preflight(void) { CHECK(!"unexpected preflight mutex lock call"); }
 static void kd_mutex_direct_unlock_clobber_v1(void) { CHECK(!"unexpected mutex unlock call"); }
 
 static unsigned long ktime_get(void)

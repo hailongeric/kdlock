@@ -48,6 +48,7 @@ static unsigned int routine_traces;
 static int preempt = 1;
 static bool other_holds, terminal;
 static int kd_mutex_batch_size = 16;
+static bool kd_mutex_frame_reuse;
 static unsigned int queue_finishes, wake_flushes;
 static unsigned int handoff_starts, handoff_ends;
 
@@ -251,6 +252,11 @@ static bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
 { (void)call; (void)frame; abort(); }
 int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame, struct kd_mutex *lock)
 { (void)frame; (void)lock; abort(); }
+struct kd_exec_frame *kd_exec_frame_rebind_mutex_batch(
+ struct kd_exec_frame *retired, struct kd_regs *regs, unsigned long ip,
+ unsigned long gs, struct task_struct *task, struct kd_mutex *lock,
+ struct kd_exec_outer_unlock *hook)
+{ (void)retired; (void)regs; (void)ip; (void)gs; (void)task; (void)lock; (void)hook; abort(); }
 static int kd_exe_mutex_batch_resume(struct kd_exe_info *exe, const struct kd_jit_batch_call *call)
 { (void)exe; (void)call; abort(); }
 static void kd_exe_add_abi(int pid, unsigned long ip, int kind, unsigned int abi)

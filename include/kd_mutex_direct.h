@@ -15,6 +15,10 @@ void kd_mutex_direct_contended_clobber_v1(struct mutex *, unsigned long,
 										  unsigned long, unsigned long);
 unsigned long kd_mutex_outer_contended_clobber_v1(struct mutex *, unsigned long,
 												  unsigned long, unsigned long);
+struct kd_mutex;
+struct kd_mutex *kd_mutex_outer_preflight(struct mutex *);
+unsigned long kd_mutex_outer_prepared_clobber_v1(struct mutex *, unsigned long,
+		unsigned long, unsigned long, struct kd_mutex *);
 void kd_mutex_direct_unlock_clobber_v1(struct mutex *, unsigned long,
 									   unsigned long, unsigned long);
 
@@ -53,6 +57,57 @@ struct kd_mutex_outer_cookie
 	unsigned long owner;
 };
 
+/* Experimental caller-side capture policy. Preserve the public packet ABI:
+ * the JIT root starts before the restores, so every callee-saved input is
+ * defined by the saved stack, never by an uncaptured incoming register.
+ * Reserve six words to preserve the caller's stack alignment. The paired
+ * unlock saves the same registers before its control CALL: COMPLETE resumes
+ * at those restores, where ordinary C code can again rely on its registers.
+ * Moving only the lock saves would make minimal completion unsafe. */
+#ifndef KD_MUTEX_OUTER_LAZY_SAVE
+#define KD_MUTEX_OUTER_LAZY_SAVE 0
+#endif
+#if KD_MUTEX_OUTER_LAZY_SAVE
+#define KD_MUTEX_OUTER_SAVE_GPRS                                      \
+	"subq $8, %%rsp\n\t"                                           \
+	"pushq %%rbx\n\tpushq %%r12\n\tpushq %%r13\n\t"                \
+	"pushq %%r14\n\tpushq %%r15\n\t"
+#define KD_MUTEX_OUTER_RESTORE_GPRS                                   \
+	"popq %%r15\n\tpopq %%r14\n\tpopq %%r13\n\t"                   \
+	"popq %%r12\n\tpopq %%rbx\n\taddq $8, %%rsp\n\t"
+#define KD_MUTEX_OUTER_CALLEE_CLOBBERS
+#else
+#define KD_MUTEX_OUTER_SAVE_GPRS ""
+#define KD_MUTEX_OUTER_RESTORE_GPRS ""
+#define KD_MUTEX_OUTER_CALLEE_CLOBBERS "rbx", "r12", "r13", "r14", "r15",
+#endif
+
+#ifndef KD_MUTEX_OUTER_PREFLIGHT
+#define KD_MUTEX_OUTER_PREFLIGHT 0
+#endif
+#if KD_MUTEX_OUTER_PREFLIGHT
+#if !KD_MUTEX_OUTER_LAZY_SAVE
+#error "KD_MUTEX_OUTER_PREFLIGHT requires KD_MUTEX_OUTER_LAZY_SAVE"
+#endif
+/* The ordinary helper either owns Linux's mutex or returns a non-owning
+ * shadow hint. Capture and resource acquisition occur only for the latter. */
+#define KD_MUTEX_OUTER_BEFORE_CAPTURE(lock, cookie, native_owner)             \
+	register struct kd_mutex *kd_prepared asm("r8") =                        \
+		kd_mutex_outer_preflight(lock);                                     \
+	if (!kd_prepared) {                                                     \
+		WRITE_ONCE((cookie).owner, native_owner);                            \
+		break;                                                             \
+	}
+#define KD_MUTEX_OUTER_CAPTURE_CALL "call kd_mutex_outer_prepared_clobber_v1\n\t"
+#define KD_MUTEX_OUTER_PREPARED_OUTPUT "+r"(kd_prepared),
+#define KD_MUTEX_OUTER_LOCK_R8_CLOBBER
+#else
+#define KD_MUTEX_OUTER_BEFORE_CAPTURE(lock, cookie, native_owner)
+#define KD_MUTEX_OUTER_CAPTURE_CALL "call kd_mutex_outer_contended_clobber_v1\n\t"
+#define KD_MUTEX_OUTER_PREPARED_OUTPUT
+#define KD_MUTEX_OUTER_LOCK_R8_CLOBBER "r8",
+#endif
+
 static __always_inline bool
 kd_mutex_outer_trylock(struct mutex *lock, unsigned long owner)
 {
@@ -80,22 +135,46 @@ kd_mutex_outer_trylock(struct mutex *lock, unsigned long owner)
 		else                                                                  \
 		{                                                                     \
 			unsigned long kd_sp, kd_ip, kd_bp, kd_route;                      \
+			KD_MUTEX_OUTER_BEFORE_CAPTURE(kd_outer_lock, cookie, kd_native_owner) \
 			/* The physical return consumes an exact acquisition result. The  \
 			 * separate JIT entry defines ROUTED without any incoming GPR. */ \
-			asm volatile("movq %%rsp, %%rsi\n\t"                              \
+			asm volatile(KD_MUTEX_OUTER_SAVE_GPRS                             \
+						 "movq %%rsp, %%rsi\n\t"                              \
 						 "leaq 1f(%%rip), %%rdx\n\t"                          \
 						 "movq %%rbp, %%rcx\n\t"                              \
-						 "call kd_mutex_outer_contended_clobber_v1\n\t"       \
+						 KD_MUTEX_OUTER_CAPTURE_CALL                          \
 						 "jmp 2f\n\t1:\n\t" continuation                      \
 						 "xorl %%eax, %%eax\n\t2:\n\t"                        \
+						 KD_MUTEX_OUTER_RESTORE_GPRS                          \
 						 : "=a"(kd_route), "+D"(kd_outer_lock),               \
 						   "=S"(kd_sp), "=d"(kd_ip), "=c"(kd_bp),             \
-						   ASM_CALL_CONSTRAINT                                \
+						   KD_MUTEX_OUTER_PREPARED_OUTPUT ASM_CALL_CONSTRAINT   \
 						 :                                                    \
-						 : "rbx", "r8", "r9", "r10", "r11",                   \
-						   "r12", "r13", "r14", "r15", "cc", "memory");       \
+						 : KD_MUTEX_OUTER_CALLEE_CLOBBERS                      \
+						   KD_MUTEX_OUTER_LOCK_R8_CLOBBER                     \
+						   "r9", "r10", "r11", "cc", "memory");               \
 			WRITE_ONCE((cookie).owner, kd_route);                             \
 		}                                                                     \
+	} while (0)
+
+/* Both physical return and JIT COMPLETE resume before these local restores.
+ * The direct/nested API retains its original full-clobber compiler contract. */
+#define KD_MUTEX_OUTER_ROUTED_UNLOCK(lock)                             \
+	do                                                                  \
+	{                                                                   \
+		struct mutex *kd_arg = (lock);                                  \
+		unsigned long kd_sp, kd_ip, kd_bp;                              \
+		asm volatile(KD_MUTEX_OUTER_SAVE_GPRS                           \
+					 "movq %%rsp, %%rsi\n\t"                              \
+					 "leaq 1f(%%rip), %%rdx\n\t"                          \
+					 "movq %%rbp, %%rcx\n\t"                              \
+					 "call kd_mutex_direct_unlock_clobber_v1\n\t1:\n\t"    \
+					 KD_MUTEX_OUTER_RESTORE_GPRS                          \
+					 : "+D"(kd_arg), "=S"(kd_sp), "=d"(kd_ip),             \
+					   "=c"(kd_bp), ASM_CALL_CONSTRAINT                   \
+					 :                                                    \
+					 : KD_MUTEX_OUTER_CALLEE_CLOBBERS                      \
+					   "rax", "r8", "r9", "r10", "r11", "cc", "memory");  \
 	} while (0)
 
 /* Both branches end at known mutex control CALLs. An inline native release
@@ -115,7 +194,7 @@ kd_mutex_outer_trylock(struct mutex *lock, unsigned long owner)
 		}                                                              \
 		else                                                           \
 		{                                                              \
-			KD_MUTEX_DIRECT_UNLOCK(kd_outer_lock);                     \
+			KD_MUTEX_OUTER_ROUTED_UNLOCK(kd_outer_lock);               \
 		}                                                              \
 	} while (0)
 

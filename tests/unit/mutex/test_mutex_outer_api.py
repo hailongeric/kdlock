@@ -11,7 +11,7 @@ from pathlib import Path
 from test_jit_diagnostics import ROOT, render
 
 
-def main():
+def run(lazy_save, preflight):
     source = (ROOT/'include/kd_mutex_direct.h').read_text()
     header = re.sub(r'^#include .*$', '', source, flags=re.M)
     with tempfile.TemporaryDirectory(prefix='kd-mutex-outer-') as directory:
@@ -26,7 +26,9 @@ def main():
                '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls',
                '-fno-reorder-blocks-and-partition', '-fno-toplevel-reorder',
                '-mno-red-zone', '-mpreferred-stack-boundary=4', '-fno-pie',
-               '-I'+directory, '-I'+str(ROOT/'include')]
+               '-I'+directory, '-I'+str(ROOT/'include'),
+               '-DKD_MUTEX_OUTER_LAZY_SAVE='+str(int(lazy_save)),
+               '-DKD_MUTEX_OUTER_PREFLIGHT='+str(int(preflight))]
         subprocess.run(['cc', *flags, '-c',
                         str(ROOT/'tests/unit/mutex/mutex_outer_api_fixture.c'),
                         '-o', str(path/'fixture.o')], check=True, timeout=30)
@@ -56,6 +58,8 @@ def main():
         raw=text[start-text_base:start-text_base+sizes['outer_jit_case']]
         selected={name:address for name,address in symbols.items()
                   if name in {'mutex_unlock','kd_mutex_outer_contended_clobber_v1',
+                              'kd_mutex_outer_prepared_clobber_v1',
+                              'kd_mutex_outer_preflight',
                               'kd_mutex_direct_unlock_clobber_v1'}}
         # ABI2's compatibility lock endpoint remains exported by the provider.
         selected['kd_mutex_direct_lock_clobber_v1']=0x70000000
@@ -83,14 +87,22 @@ def main():
         # Same compiled object and fixed lock section: all source identities
         # embedded in the generated image must survive relinking unchanged.
         for name in ('outer_jit_entry','kd_mutex_direct_unlock_clobber_v1',
-                     'kd_mutex_outer_contended_clobber_v1','mutex_unlock','test_lock'):
+                     'kd_mutex_outer_contended_clobber_v1',
+                     'kd_mutex_outer_prepared_clobber_v1','mutex_unlock','test_lock'):
             assert linked_symbols[name]==symbols[name], (name,symbols[name],linked_symbols[name])
         assert any(line.split()[1:] == ['T', 'main_wrapper'] for line in
                    subprocess.check_output(['nm','--defined-only',second],text=True).splitlines())
         result=subprocess.run([second],capture_output=True,text=True,check=True,timeout=10)
         assert 'PASS actual compiled/JIT outer entry:' in result.stdout, result.stdout
         print(result.stdout,end='')
-        print('PASS actual compiled outer continuation: strict ABI2 admission and generated execution')
+        print('PASS actual compiled outer continuation: strict ABI2 admission '
+              'and generated execution, lazy_save='+str(int(lazy_save))+
+              ', preflight='+str(int(preflight)))
+
+
+def main():
+    for lazy_save, preflight in ((False, False), (True, False), (True, True)):
+        run(lazy_save, preflight)
 
 
 if __name__ == '__main__':

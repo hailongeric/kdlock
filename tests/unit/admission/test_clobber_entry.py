@@ -192,18 +192,22 @@ class ClobberEntryTests(unittest.TestCase):
         self.assertEqual(status, 0, log)
 
     def test_outer_mutex_return_endpoint_is_not_a_nested_void_control(self):
-        symbols = {"kd_mutex_direct_lock_clobber_v1": 0x5000,
-                   "kd_mutex_outer_contended_clobber_v1": 0x6000,
-                   "kd_mutex_direct_unlock_clobber_v1": 0x7000}
         # Root starts after the CALL; a CALL inside an image would need a
         # return-valued acquisition model, which the old nested service lacks.
         code = bytes.fromhex('48c7c7009100004889e648c7c2191000004889e9')
         code += b'\xe8' + (0x6000-0x1019).to_bytes(4, 'little', signed=True)
         code += bytes.fromhex('eb0231c048890424c3')
-        _, log, status = render(code.hex(), abi=2, lock_kind='mutex',
-                                kernel_symbols=symbols, return_status=True)
-        self.assertEqual(status, 2, log)
-        self.assertIn('outer-only mutex entry', log)
+        for endpoint in ("kd_mutex_outer_contended_clobber_v1",
+                         "kd_mutex_outer_prepared_clobber_v1",
+                         "kd_mutex_outer_preflight"):
+            with self.subTest(endpoint=endpoint):
+                symbols = {"kd_mutex_direct_lock_clobber_v1": 0x5000,
+                           endpoint: 0x6000,
+                           "kd_mutex_direct_unlock_clobber_v1": 0x7000}
+                _, log, status = render(code.hex(), abi=2, lock_kind='mutex',
+                                       kernel_symbols=symbols, return_status=True)
+                self.assertEqual(status, 2, log)
+                self.assertIn('outer-only mutex entry', log)
 
     def test_mutex_clobber_cannot_use_spin_word_memory_summary(self):
         tracker = FlowConstants(EntryGuards())

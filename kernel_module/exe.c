@@ -95,6 +95,8 @@ static unsigned long clobber_mutex_unlock_addr;
 static unsigned long direct_mutex_lock_addr;
 static unsigned long contended_mutex_lock_addr;
 static unsigned long outer_mutex_lock_addr;
+static unsigned long prepared_mutex_lock_addr;
+static unsigned long preflight_mutex_lock_addr;
 static unsigned long direct_mutex_unlock_addr;
 
 #include "execution/hostcalls.inc"

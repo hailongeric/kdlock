@@ -192,6 +192,12 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
 	struct kd_exec_outer_unlock *hook);
+/* Only a consecutive pristine COMPLETE retirement in the same pinned batch
+ * grants this inactive-slot token. The old request is already inaccessible. */
+struct kd_exec_frame *kd_exec_frame_rebind_mutex_batch(
+	struct kd_exec_frame *retired, struct kd_regs *regs,
+	unsigned long entry_ip, unsigned long gsbase, struct task_struct *task,
+	struct kd_mutex *lock, struct kd_exec_outer_unlock *hook);
 /* Materialize cold routing before generic validation/dispatch. This preserves
  * the borrowed packet union, exact physical ledger and release hook. */
 int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame);
