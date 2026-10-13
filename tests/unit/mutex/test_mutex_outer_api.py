@@ -101,7 +101,11 @@ def run(lazy_save, preflight):
 
 
 def main():
-    for lazy_save, preflight in ((False, False), (True, False), (True, True)):
+    # Keep capture and preflight independent. In particular, preflight with
+    # original compiler clobbers must survive the destructive assembly callees
+    # and execute its real translated continuation with poisoned absent GPRs.
+    for lazy_save, preflight in ((False, False), (True, False),
+                                 (False, True), (True, True)):
         run(lazy_save, preflight)
 
 

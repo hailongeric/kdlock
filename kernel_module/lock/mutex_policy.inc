@@ -9,9 +9,13 @@
 static unsigned int mutex_native_epoch_ms;
 static unsigned int mutex_native_probe_ms = 1;
 static bool mutex_native_epoch_cache;
+static bool mutex_native_epoch_cross_node;
 module_param(mutex_native_epoch_cache, bool, 0444);
 MODULE_PARM_DESC(mutex_native_epoch_cache,
 	"Cache exact-address epoch hints on each CPU and share the admission pin");
+module_param(mutex_native_epoch_cross_node, bool, 0444);
+MODULE_PARM_DESC(mutex_native_epoch_cross_node,
+	"Permit bounded native epochs across NUMA nodes instead of applying the remote veto");
 
 struct kd_mutex_policy_cache {
 	unsigned long address;
@@ -154,9 +158,12 @@ static bool kd_mutex_policy_native_pinned(struct kd_mutex *lock)
 		if (mode == KD_MUTEX_POLICY_EMPTY) {
 			mode = KD_MUTEX_POLICY_PROBE;
 			home = node;
-		} else if ((mode == KD_MUTEX_POLICY_PROBE ||
+		} else if (!mutex_native_epoch_cross_node &&
+			   (mode == KD_MUTEX_POLICY_PROBE ||
 			    mode == KD_MUTEX_POLICY_NATIVE) && node != home) {
-			/* A remote observer wins against a stale local expiry CAS. */
+			/* Locality is a profitability hypothesis, not exclusion. The
+			 * opt-in cross-node experiment retains both bounded phases and
+			 * changes only this veto; queued work/owners are untouched. */
 			mode = KD_MUTEX_POLICY_MULTINODE;
 			remote = true;
 		} else if (time_before(now, deadline)) {

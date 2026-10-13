@@ -32,7 +32,8 @@ MUTEX_ENTRY_RATIO_LIMITS = tuple(1 << shift for shift in range(1, 9))
 MUTEX_POLICY_FIELDS = ('mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance',
                        'mutex_frame_reuse', 'mutex_native_epoch_ms',
                        'mutex_native_probe_ms', 'mutex_lazy_save', 'mutex_node_locality',
-                       'mutex_preflight', 'mutex_native_epoch_cache')
+                       'mutex_preflight', 'mutex_native_epoch_cache',
+                       'mutex_native_epoch_cross_node')
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
@@ -163,14 +164,16 @@ def make_plan(args):
     native_epoch = getattr(args, 'mutex_native_epoch_ms', 0)
     native_probe = getattr(args, 'mutex_native_probe_ms', 1)
     native_epoch_cache = getattr(args, 'mutex_native_epoch_cache', False)
+    native_epoch_cross_node = getattr(args, 'mutex_native_epoch_cross_node', False)
     lazy_save = getattr(args, 'mutex_lazy_save', False)
     node_locality = getattr(args, 'mutex_node_locality', False)
     preflight = getattr(args, 'mutex_preflight', False)
-    require(not preflight or lazy_save, 'mutex preflight requires lazy register capture')
     require(0 <= native_epoch <= 1000 and 1 <= native_probe <= 1000,
             'mutex epoch must be 0..1000 ms and probe 1..1000 ms')
     require(not native_epoch_cache or (lock_kind == 'mutex' and native_epoch > 0),
             'mutex native epoch cache requires mutex and a positive native epoch')
+    require(not native_epoch_cross_node or (lock_kind == 'mutex' and native_epoch > 0),
+            'mutex native epoch cross-node policy requires mutex and a positive native epoch')
     require(mutex_limit in MUTEX_ENTRY_RATIO_LIMITS, 'invalid mutex entry ratio limit')
     require(mutex_routing in ('adaptive', 'native') and
             mutex_acceptance in ('jit-required', 'adaptive-performance'), 'invalid mutex policy')
@@ -215,6 +218,7 @@ def make_plan(args):
                 mutex_native_epoch_ms=native_epoch if backend == 'kdlock' else 0,
                 mutex_native_probe_ms=native_probe if backend == 'kdlock' else 1,
                 mutex_native_epoch_cache=native_epoch_cache if backend == 'kdlock' else False,
+                mutex_native_epoch_cross_node=native_epoch_cross_node if backend == 'kdlock' else False,
                 mutex_lazy_save=lazy_save if backend == 'kdlock' else False,
                 mutex_node_locality=node_locality if backend == 'kdlock' else False,
                 mutex_preflight=preflight if backend == 'kdlock' else False,
@@ -408,9 +412,11 @@ def main(lock_kind='spin'):
     p.add_argument('--mutex-frame-reuse', action='store_true',
                    help='reuse a fully retired pristine mutex batch frame')
     p.add_argument('--mutex-native-epoch-ms', type=int, default=0,
-                   help='opt-in single-NUMA native epoch duration; 0 disables')
+                   help='opt-in native epoch duration; 0 disables')
     p.add_argument('--mutex-native-epoch-cache', action='store_true',
                    help='cache exact-address locality epochs before capture and task lookup')
+    p.add_argument('--mutex-native-epoch-cross-node', action='store_true',
+                   help='allow bounded native epochs across NUMA nodes')
     p.add_argument('--mutex-native-probe-ms', type=int, default=1,
                    help='delegation locality probe duration before a native epoch')
     p.add_argument('--mutex-lazy-save', action='store_true',
@@ -418,7 +424,7 @@ def main(lock_kind='spin'):
     p.add_argument('--mutex-node-locality', action='store_true',
                    help='separate immutable request inputs from the queue link line')
     p.add_argument('--mutex-preflight', action='store_true',
-                   help='route native acquisitions before lazy register capture')
+                   help='route native acquisitions before outer register capture')
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))

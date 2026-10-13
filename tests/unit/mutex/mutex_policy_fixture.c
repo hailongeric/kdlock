@@ -122,6 +122,7 @@ static void reset(void)
     mutex_native_epoch_ms = 128;
     mutex_native_probe_ms = 1;
     mutex_native_epoch_cache = false;
+    mutex_native_epoch_cross_node = false;
     memset(kd_mutex_policy_cache, 0, sizeof(kd_mutex_policy_cache));
     memset(kd_mutex_policy_native_epochs, 0, sizeof(kd_mutex_policy_native_epochs));
     memset(kd_mutex_policy_probes, 0, sizeof(kd_mutex_policy_probes));
@@ -383,12 +384,85 @@ static void cached_routing(void)
     CHECK(!numa_queries && pins == 1 && source_queries == 1 && shadow_queries == 1 && refs == 1);
 }
 
+static void cross_node_epochs(bool cached)
+{
+    struct mutex original;
+    struct kd_mutex lock = {.waiter_slot = 6, .tail = 37, .physical_owner = 81,
+                            .locked = 3, .waiter_count = 13,
+                            .origin_mutex_addr = (unsigned long)&original};
+    struct kd_mutex saved = lock;
+    struct kd_mutex_policy_slot *slot = &kd_mutex_policy_slots[6];
+    unsigned long deadline;
+    reset();
+    mutex_native_epoch_cross_node = true;
+    mutex_native_epoch_cache = cached;
+    shadow = &lock;
+    CHECK(!acquire(&original));
+    expect_mode(6, KD_MUTEX_POLICY_PROBE);
+    deadline = slot->deadline;
+    CHECK(refs == 1 && queued == 1 && !native_calls);
+    CHECK(!memcmp(&lock, &saved, sizeof(lock)));
+
+    /* A different origin cannot veto this explicit policy. It still waits
+     * for the existing probe deadline instead of opening native early. */
+    fixture_cpu = 1;
+    node = INT_MAX;
+    clear_traffic();
+    CHECK(!acquire(&original));
+    expect_mode(6, KD_MUTEX_POLICY_PROBE);
+    CHECK(slot->deadline == deadline && refs == 1 && queued == 1);
+    CHECK(!kd_mutex_policy_remote_vetoes[0] && !kd_mutex_policy_remote_vetoes[1]);
+    jiffies = deadline;
+    clear_traffic();
+    CHECK(acquire(&original) == (unsigned long)current);
+    expect_mode(6, KD_MUTEX_POLICY_NATIVE);
+    CHECK(native_calls == 1 && !refs && !queued && numa_queries == 1);
+    CHECK(pins == (cached ? 1 : 2));
+    CHECK(!memcmp(&lock, &saved, sizeof(lock)));
+
+    fixture_cpu = 0;
+    node = 777777;
+    deadline = slot->deadline;
+    jiffies = deadline - 1;
+    clear_traffic();
+    CHECK(acquire(&original) == (unsigned long)current);
+    CHECK(slot->deadline == deadline && native_calls == 1 && !refs && !queued);
+    CHECK(!memcmp(&lock, &saved, sizeof(lock)));
+
+    /* Cross-node mode cannot extend a native epoch past its deadline. The
+     * next attempt delegates through the ordinary task/queue path, while
+     * previously queued ownership and drain state remain unchanged. */
+    fixture_cpu = 1;
+    node = INT_MAX;
+    jiffies = deadline;
+    clear_traffic();
+    CHECK(!acquire(&original));
+    expect_mode(6, KD_MUTEX_POLICY_PROBE);
+    CHECK(refs == 1 && queued == 1 && !native_calls && numa_queries == 1);
+    CHECK(!memcmp(&lock, &saved, sizeof(lock)));
+    fixture_cpu = 0;
+    node = 0;
+    jiffies = slot->deadline;
+    clear_traffic();
+    CHECK(acquire(&original) == (unsigned long)current);
+    expect_mode(6, KD_MUTEX_POLICY_NATIVE);
+    CHECK(!kd_mutex_policy_remote_vetoes[0] && !kd_mutex_policy_remote_vetoes[1]);
+
+    admitted = false;
+    clear_traffic();
+    CHECK(acquire(&original) == (unsigned long)current);
+    CHECK(!numa_queries && !refs && !queued && pins == 1);
+    CHECK(!memcmp(&lock, &saved, sizeof(lock)));
+}
+
 int main(void)
 {
     phases();
     clocks_and_races();
     routing_and_parameters();
     cached_routing();
+    cross_node_epochs(false);
+    cross_node_epochs(true);
     printf("mutex locality policy: phases, races, time wrap, queued/cached routing (%d Hz) passed\n", TEST_HZ);
     return 0;
 }

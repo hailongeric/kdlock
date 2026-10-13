@@ -25,6 +25,8 @@ def main():
         code += definition(hook, marker)
     mutations = {
         'remote-veto-lost': ('&& node != home)', '&& false && node != home)'),
+        'cross-node-option-ignored': ('!mutex_native_epoch_cross_node &&',
+                                      'true &&'),
         'native-never-expires': ('time_before(now, deadline)',
                                  '(mode == KD_MUTEX_POLICY_NATIVE || time_before(now, deadline))'),
         'deadline-truncated': ('unsigned long now = jiffies;',

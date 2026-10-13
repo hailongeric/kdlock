@@ -86,11 +86,12 @@ struct kd_mutex_outer_cookie
 #define KD_MUTEX_OUTER_PREFLIGHT 0
 #endif
 #if KD_MUTEX_OUTER_PREFLIGHT
-#if !KD_MUTEX_OUTER_LAZY_SAVE
-#error "KD_MUTEX_OUTER_PREFLIGHT requires KD_MUTEX_OUTER_LAZY_SAVE"
-#endif
 /* The ordinary helper either owns Linux's mutex or returns a non-owning
- * shadow hint. Capture and resource acquisition occur only for the latter. */
+ * shadow hint. Capture and resource acquisition occur only for the latter.
+ * Preflight is valid with either capture policy: without lazy saves, the
+ * original compiler callee-register clobbers remain on both lock and unlock.
+ * Native preflight preserves the ordinary C ABI; a captured KD continuation
+ * still has no uncaptured incoming GPRs under the full-clobber contract. */
 #define KD_MUTEX_OUTER_BEFORE_CAPTURE(lock, cookie, native_owner)             \
 	register struct kd_mutex *kd_prepared asm("r8") =                        \
 		kd_mutex_outer_preflight(lock);                                     \

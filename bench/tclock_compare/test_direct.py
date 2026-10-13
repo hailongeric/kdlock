@@ -75,38 +75,25 @@ class DirectTests(unittest.TestCase):
         with self.assertRaises(run.Failure):
             run.make_plan(args)
 
-    def test_native_epoch_cache_requires_enabled_mutex_epoch(self):
-        args = Namespace(cachelines=[1], threads=[2], repeats=1,
-            iterations=100, backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
-            mutex_native_epoch_ms=128, mutex_native_epoch_cache=True)
-        plans = run.make_plan(args)
-        self.assertEqual({s['arm']: s['mutex_native_epoch_cache'] for s in plans},
-                         dict(native=False, tclock=False, kdlock=True))
-        args.mutex_native_epoch_ms = 0
-        with self.assertRaisesRegex(run.Failure, 'positive native epoch'):
-            run.make_plan(args)
-        args.mutex_native_epoch_ms = 128
-        args.lock_kind = 'spin'
-        with self.assertRaisesRegex(run.Failure, 'requires mutex'):
-            run.make_plan(args)
-        for enabled in (False, True):
-            argv = ['run_mutex.py', '--output', '/tmp/unused', '--dry-run']
-            if enabled:
-                argv += ['--mutex-native-epoch-cache', '--mutex-native-epoch-ms', '128']
-            output = io.StringIO()
-            with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
-                self.assertEqual(run.main('mutex'), 0)
-            plans = json.loads(output.getvalue())
-            self.assertEqual({s['mutex_native_epoch_cache'] for s in plans if s['arm'] == 'kdlock'},
-                             {enabled})
-
-    def test_native_epoch_cache_summary_identity(self):
+    def test_mutex_preflight_and_lazy_save_are_independent(self):
         plans = []
-        for enabled in (False, True):
-            cohort = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
-                iterations=100, backends=['kdlock'], lock_kind='mutex',
-                mutex_native_epoch_ms=128, mutex_native_epoch_cache=enabled))
-            plans.extend(dict(s, name=s['name']+f'-cache{int(enabled)}') for s in cohort)
+        modes = {(False, False), (False, True), (True, False), (True, True)}
+        for lazy_save, preflight in sorted(modes):
+            with self.subTest(lazy_save=lazy_save, preflight=preflight):
+                args = Namespace(cachelines=[1], threads=[2], repeats=1,
+                    iterations=100, backends=['native', 'tclock', 'kdlock'],
+                    lock_kind='mutex', mutex_lazy_save=lazy_save,
+                    mutex_preflight=preflight)
+                cohort = run.make_plan(args)
+                for spec in cohort:
+                    self.assertEqual((spec['mutex_lazy_save'], spec['mutex_preflight']),
+                        (lazy_save, preflight) if spec['arm'] == 'kdlock' else (False, False))
+                plans.extend(dict(s, name=s['name']+f'-save{int(lazy_save)}-pre{int(preflight)}')
+                             for s in cohort if s['arm'] == 'kdlock')
+                if lazy_save or preflight:
+                    args.lock_kind = 'spin'
+                    with self.assertRaisesRegex(run.Failure, 'mutex controls require'):
+                        run.make_plan(args)
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
             run.write_json(out/'plan.json', plans)
@@ -118,8 +105,67 @@ class DirectTests(unittest.TestCase):
                                      data_ok=True, complete=True)))
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(rows), 2)
-            self.assertEqual({r['mutex_native_epoch_cache'] for r in rows}, {False, True})
+            self.assertEqual(len(rows), 4)
+            self.assertEqual({(r['mutex_lazy_save'], r['mutex_preflight']) for r in rows}, modes)
+            self.assertTrue(all(r['sessions'] == 1 for r in rows))
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['run_mutex.py', '--output', '/tmp/unused',
+                                      '--dry-run', '--mutex-preflight']), contextlib.redirect_stdout(output):
+            self.assertEqual(run.main('mutex'), 0)
+        kd = [s for s in json.loads(output.getvalue()) if s['arm'] == 'kdlock']
+        self.assertTrue(kd)
+        self.assertTrue(all(s['mutex_preflight'] and not s['mutex_lazy_save'] for s in kd))
+
+    def test_native_epoch_options_require_enabled_mutex_epoch(self):
+        for field in ('mutex_native_epoch_cache', 'mutex_native_epoch_cross_node'):
+            with self.subTest(field=field):
+                args = Namespace(cachelines=[1], threads=[2], repeats=1,
+                    iterations=100, backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
+                    mutex_native_epoch_ms=128, **{field: True})
+                plans = run.make_plan(args)
+                self.assertEqual({s['arm']: s[field] for s in plans},
+                                 dict(native=False, tclock=False, kdlock=True))
+                args.mutex_native_epoch_ms = 0
+                with self.assertRaisesRegex(run.Failure, 'positive native epoch'):
+                    run.make_plan(args)
+                args.mutex_native_epoch_ms = 128
+                args.lock_kind = 'spin'
+                with self.assertRaisesRegex(run.Failure, 'requires mutex'):
+                    run.make_plan(args)
+                for enabled in (False, True):
+                    argv = ['run_mutex.py', '--output', '/tmp/unused', '--dry-run']
+                    if enabled:
+                        argv += ['--'+field.replace('_', '-'), '--mutex-native-epoch-ms', '128']
+                    output = io.StringIO()
+                    with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
+                        self.assertEqual(run.main('mutex'), 0)
+                    plans = json.loads(output.getvalue())
+                    self.assertEqual({s[field] for s in plans if s['arm'] == 'kdlock'}, {enabled})
+
+    def test_native_epoch_options_summary_identity(self):
+        plans = []
+        modes = {(False, False), (False, True), (True, False), (True, True)}
+        for cache, cross_node in sorted(modes):
+            cohort = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
+                iterations=100, backends=['kdlock'], lock_kind='mutex',
+                mutex_native_epoch_ms=128, mutex_native_epoch_cache=cache,
+                mutex_native_epoch_cross_node=cross_node))
+            plans.extend(dict(s, name=s['name']+f'-cache{int(cache)}-cross{int(cross_node)}')
+                         for s in cohort)
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for spec in plans:
+                folder = out/spec['name']; folder.mkdir()
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True,
+                    measurement=dict(completed=100, wall_ns=1000000000,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 4)
+            self.assertEqual({(r['mutex_native_epoch_cache'], r['mutex_native_epoch_cross_node'])
+                              for r in rows}, modes)
             self.assertTrue(all(r['sessions'] == 1 for r in rows))
 
     def test_mutex_plan_uses_blocking_with_one_session_per_backend(self):
@@ -145,13 +191,14 @@ class DirectTests(unittest.TestCase):
                       mutex_spin_limit='4096',
                       spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y')
         check_kd_parameters(params, record, 4096)
-        cache_record = dict(record, mutex_native_epoch_ms=128, mutex_native_epoch_cache=True)
-        cache_params = dict(params, mutex_native_epoch_ms='128', mutex_native_epoch_cache='Y')
-        check_kd_parameters(cache_params, cache_record, 4096)
-        with self.assertRaisesRegex(run.Failure, 'mutex_native_epoch_cache'):
-            check_kd_parameters(dict(cache_params, mutex_native_epoch_cache='N'), cache_record, 4096)
-        with self.assertRaisesRegex(run.Failure, 'mutex_native_epoch_cache'):
-            check_kd_parameters(cache_params, dict(cache_record, mutex_native_epoch_cache=False), 4096)
+        for field in ('mutex_native_epoch_cache', 'mutex_native_epoch_cross_node'):
+            option_record = dict(record, mutex_native_epoch_ms=128, **{field: True})
+            option_params = dict(params, mutex_native_epoch_ms='128', **{field: 'Y'})
+            check_kd_parameters(option_params, option_record, 4096)
+            with self.assertRaisesRegex(run.Failure, field):
+                check_kd_parameters(dict(option_params, **{field: 'N'}), option_record, 4096)
+            with self.assertRaisesRegex(run.Failure, field):
+                check_kd_parameters(option_params, dict(option_record, **{field: False}), 4096)
         for key, value in (('mutex_entry_ratio_limit', '2'), ('mutex_native_route', 'Y')):
             with self.assertRaises(run.Failure):
                 check_kd_parameters(dict(params, **{key: value}), record, 4096)
@@ -1182,13 +1229,16 @@ class DirectTests(unittest.TestCase):
         self.assertIn('mutex_entry_ratio_limit=256', args)
         self.assertIn('mutex_native_route=0', args)
         self.assertIn('mutex_native_epoch_cache=0', args)
+        self.assertIn('mutex_native_epoch_cross_node=0', args)
         commands.clear()
-        session.record.update(mutex_native_epoch_ms=128, mutex_native_epoch_cache=True)
+        session.record.update(mutex_native_epoch_ms=128, mutex_native_epoch_cache=True,
+                              mutex_native_epoch_cross_node=True)
         with self.assertRaisesRegex(RuntimeError, 'stop after provider command'):
             session.prepare()
         args, = [args for args, log in commands if log == 'load-kdlock.log']
         self.assertIn('mutex_native_epoch_ms=128', args)
         self.assertIn('mutex_native_epoch_cache=1', args)
+        self.assertIn('mutex_native_epoch_cross_node=1', args)
 
 
 if __name__ == '__main__':
