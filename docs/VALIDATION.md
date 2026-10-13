@@ -8,6 +8,19 @@ Known failures remain in [TODO](TODO.md).
 
 ## Current mutex verification
 
+The [optimistic-spin receipt](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/validation.json)
+records six rejected retry/OSQ candidates, 369 audited performance sessions,
+affected fixtures, 62 runner/auditor checks and live parking/cooling and owner/ACK
+probes. The accepted provider is restored to `9b76719`; the retained workload
+drain check passes two basic fixtures, its OSQ-on/off state fixture and a separate
+single-round Native/TCLock/KD live check. The
+[report](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/README.md)
+distinguishes candidate tests, restored-source verification and performance gates.
+The 97% Native target remains unmet; no full suite or other-workload acceptance
+was run.
+
+## Earlier cost-study verification
+
 The [c01 cost-study receipt](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/validation.json)
 records the successor-prefetch checks, live resource probes and exact candidate
 sources. The [report](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md)

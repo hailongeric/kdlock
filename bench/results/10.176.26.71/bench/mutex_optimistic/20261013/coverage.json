@@ -1,0 +1,93 @@
+{
+  "baseline": {
+    "binary_manifest_sha256": "8df1ba3cfde60e5646875b0462aab1510aa1d82de24295c85a6ff8398a403a81",
+    "correct": true,
+    "drained": true,
+    "environment_sha256": "d61d360ea12fa00726fc9d9c747a98e6093fe9a2cda02ff82b46582fac7b9753",
+    "every_worker_progress": true,
+    "osq": false,
+    "plan_sha256": "390ff2bdc4330411a0809aecce1f8a0f2bfad59ba6f73a0b295b6ae31b9c1cde",
+    "retry_limit": 0,
+    "sessions": 153,
+    "source_files": 298,
+    "source_manifest_sha256": "4bf2a219aeb2986dd2b6dc7b2e1db308401321a1fc6ad5e8f59cc4f5ef941c3a"
+  },
+  "osq-1024": {
+    "binary_manifest_sha256": "37fc8f582ad3323c6bbab3a62c307a8e3c5276ebb51bf5809c419e80aa6c26b1",
+    "correct": true,
+    "drained": true,
+    "environment_sha256": "3728ba11814e90544427b55e7d568c69adc1b0ad88f0d9c3b26a746e55c46cc6",
+    "every_worker_progress": true,
+    "osq": true,
+    "plan_sha256": "abb79a916f0a83b1113af6d456c97c29bea057390edc52943c19779624eb4538",
+    "retry_limit": 1024,
+    "sessions": 36,
+    "source_files": 300,
+    "source_manifest_sha256": "78a63209ce305bc6f4c6ef1e27126f5a4b288a395fed81b336f5ea18777faf4d"
+  },
+  "osq-64": {
+    "binary_manifest_sha256": "8206a4a72c878c6097ed70395a5d443ba609e0bdeb232e30d33e3c4d2e93c469",
+    "correct": true,
+    "drained": true,
+    "environment_sha256": "5b88461386f3547baa038596f89530c09c3b87b9a1dc2f3ea5c68bffca693d46",
+    "every_worker_progress": true,
+    "osq": true,
+    "plan_sha256": "c5137b10b2976df09d9cb4bd2d4aebcdcafdf2b3ebfb3eda5ebe29740843998e",
+    "retry_limit": 64,
+    "sessions": 36,
+    "source_files": 300,
+    "source_manifest_sha256": "78a63209ce305bc6f4c6ef1e27126f5a4b288a395fed81b336f5ea18777faf4d"
+  },
+  "spin-1024": {
+    "binary_manifest_sha256": "f8ed804fc2957942183723deb8a9a9f800d5672e4805eecbf42e2b8becc4e2ef",
+    "correct": true,
+    "drained": true,
+    "environment_sha256": "7264bcf4fac1a9657bd7d2d57a64e295a233cce517962e86375643d471ad82d3",
+    "every_worker_progress": true,
+    "osq": false,
+    "plan_sha256": "cbaba5fbc39a14653fb591e5c83765075d0119f55962f01dd0f8bb4c04c367f1",
+    "retry_limit": 1024,
+    "sessions": 36,
+    "source_files": 300,
+    "source_manifest_sha256": "6896336d6d3c4b91f90f907926e286d9515cc7bcbd515cffb00dfbc1ff4f636b"
+  },
+  "spin-16": {
+    "binary_manifest_sha256": "573a26dcaeaf67bbb879094006aec6cb0e18b73f54e1b0cbe8fb52da6d7387c2",
+    "correct": true,
+    "drained": true,
+    "environment_sha256": "9088d41bb7528a8a25304da4d354d079c70cd64f6d9e88a3f49565199a9e7cea",
+    "every_worker_progress": true,
+    "osq": false,
+    "plan_sha256": "f67ea846ba268d5629d0b55964f1596960c7e73ebf89a27503040bd2b910ff14",
+    "retry_limit": 16,
+    "sessions": 36,
+    "source_files": 300,
+    "source_manifest_sha256": "6896336d6d3c4b91f90f907926e286d9515cc7bcbd515cffb00dfbc1ff4f636b"
+  },
+  "spin-256": {
+    "binary_manifest_sha256": "da056d2e53d571de512c5a861d6fb7f6da771f3e7fa87d5883a5ca0d01b66ec0",
+    "correct": true,
+    "drained": true,
+    "environment_sha256": "82cc76b31622a4bcaaca0a79023b072b0cb4a449e7a8d82df63ec0c1340d5ebb",
+    "every_worker_progress": true,
+    "osq": false,
+    "plan_sha256": "a4c7ff9918c70eebeaf736925f849303e44f82e2dda64b0024602d5f6c0a6a81",
+    "retry_limit": 256,
+    "sessions": 36,
+    "source_files": 300,
+    "source_manifest_sha256": "6896336d6d3c4b91f90f907926e286d9515cc7bcbd515cffb00dfbc1ff4f636b"
+  },
+  "spin-64": {
+    "binary_manifest_sha256": "95e09b457f5a4445b8e63b24ceb7be29f651c67ea11c1f87fb6f704b6a12b276",
+    "correct": true,
+    "drained": true,
+    "environment_sha256": "b7bfa40197a2efcbc155336153688cf3d0b8cc43893da2b2836d42715cfca974",
+    "every_worker_progress": true,
+    "osq": false,
+    "plan_sha256": "553fff99d16151b9f9a11bfff52560b72d7c9fadfd6dcf71c2b787e766583e86",
+    "retry_limit": 64,
+    "sessions": 36,
+    "source_files": 300,
+    "source_manifest_sha256": "6896336d6d3c4b91f90f907926e286d9515cc7bcbd515cffb00dfbc1ff4f636b"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "baseline.log": {
+    "bytes": 16273,
+    "sha256": "e146fb6ea18ed45e4330a038a600a3d9b1c472872096e352ba60b6b37103cca8"
+  },
+  "baseline.tar.gz": {
+    "bytes": 9858822,
+    "sha256": "e713a5cf6de46ab9474cb90f86cc4f312668d6f833df3eff91e64036f6da3db8"
+  },
+  "host-postflight.json": {
+    "bytes": 8999,
+    "sha256": "bcda3996bb8611fc914f5022a594d98bce92f44001c2f2e9250429765921205f"
+  },
+  "host-preflight.json": {
+    "bytes": 8421,
+    "sha256": "eab8c452da259d2a76f62a1f747e60cc0cfc181be2b2e0c431e5581e2871bb48"
+  },
+  "independent-spins.tar.gz": {
+    "bytes": 12867045,
+    "sha256": "7c95ad8785f2505e11bf659d6c37c23f2061b97667b20ec634a1acbbeea79269"
+  },
+  "optimistic-candidate.patch": {
+    "bytes": 23601,
+    "sha256": "81e2d0408aa4e83ab96f101e6a331a985bef66397f2599aadd84a9a4dffb8840"
+  },
+  "osq-1024.log": {
+    "bytes": 3827,
+    "sha256": "7fd9efb0f2e2f1553d84bac7a88d62d97f5dce0042507f1154372d91a795af0a"
+  },
+  "osq-64.log": {
+    "bytes": 3826,
+    "sha256": "dab0bb1031881baddaf25881d9e9da4ce0d298248ad051570630313e801a01e1"
+  },
+  "osq-candidate.patch": {
+    "bytes": 30415,
+    "sha256": "5573cb86568c60a1fc2ef2f5f4ea2452f9dc587070fec836f6dff614b7a4b75a"
+  },
+  "osq-spins.tar.gz": {
+    "bytes": 8656694,
+    "sha256": "dd9c6527ef717db9da3d52f37eb9cbdd91119089cb01f5bd7e4c819f8a07025d"
+  },
+  "restored-provider-sections.json": {
+    "bytes": 177,
+    "sha256": "d0cc55e5cdf5a5378e463769737cc08b03413603d688ef875f85fad3130b25a6"
+  },
+  "retained-check.log": {
+    "bytes": 309,
+    "sha256": "884c2d2a670bd1b29393a3d3063c737e6125161bfb8633afaa4581021395be2e"
+  },
+  "retained-check.tar.gz": {
+    "bytes": 2860472,
+    "sha256": "c9c4030723463911dbd6a84bade313862e15f775fe0fd107a62c78d7c6ea85d9"
+  },
+  "snapshot.log": {
+    "bytes": 5003,
+    "sha256": "90dc1d3202680f76c74236fc5ed82554e907e20ad2d319d554be068777172af4"
+  },
+  "spin-1024.log": {
+    "bytes": 3828,
+    "sha256": "c6ebf75e6e5ccd4c385974b6bb7933f5169328dda0e2f809a7c2bd413b94ab3e"
+  },
+  "spin-16.log": {
+    "bytes": 3829,
+    "sha256": "e85ab5152b759bba72d79d46d03b74b72940a083387e5e71e13df3a256b57caa"
+  },
+  "spin-256.log": {
+    "bytes": 3826,
+    "sha256": "b8a2d06057a143bcc33ba07ff438476f55055cb87453a9a6ec4ae423ed8be326"
+  },
+  "spin-64.log": {
+    "bytes": 3829,
+    "sha256": "3b743aaf7b9cd1a468ebc65cd08d5fc45d657f8ab84fc111b051b86a2936ae6c"
+  },
+  "spin-64.tar.gz": {
+    "bytes": 4251501,
+    "sha256": "e332af14d02382f69a8d9a799a75987532039ce832d740eb8adb1c45f53e6402"
+  }
+}

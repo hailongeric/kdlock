@@ -227,3 +227,6 @@ Join workers → verify data/lock/queue/frame drain → stop translators → ret
 sources → unload workload → unload backend/provider. Clear TCLock's diagnostic
 `target_lock` before freeing its workload storage. Do not force unload on EBUSY,
 reuse old RIP-keyed JIT after replacing only a source module, or alter frozen inputs.
+For Native and KD mutex workloads, the worker-drain ioctl also requires a zero
+original owner word, an empty sleeping wait list and an empty configured Linux
+OSQ. It checks these only after workers return while holding the snapshot gate.

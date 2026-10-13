@@ -6,6 +6,14 @@ execution. Receipts retain their own source, kernel, boot policy and topology.
 
 ## Current source verification
 
+The [optimistic-spin study](bench/mutex_optimistic/20261013/README.md) measures
+owner-aware retries and Linux OSQ across six candidates. All fail primary parity;
+the accepted provider stays at `9b76719` and the rejected implementation is
+preserved at `260d330`. Its [receipt](bench/mutex_optimistic/20261013/validation.json)
+records 369 audited performance sessions, affected/protocol checks and restored
+provider verification. The benchmark now checks original owner, wait-list and
+OSQ drain explicitly.
+
 The [c01 cost study](bench/mutex_c01_cost/20261013/README.md) compares fresh
 Native, TCLock and KD mutex runs, profiles separate diagnostics and evaluates
 successor-prefetch changes. Its [receipt](bench/mutex_c01_cost/20261013/validation.json)

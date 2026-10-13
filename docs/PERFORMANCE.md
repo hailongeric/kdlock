@@ -6,7 +6,19 @@ passed [targeted verification](../bench/results/10.176.26.71/tests/mutex-blockin
 including a drained 320,000-operation mutex JIT run. That functional check does
 not provide a new performance matrix.
 
-## Latest c01 cost study
+## Latest c01 optimistic-spin study
+
+The [owner-aware retry study](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/README.md)
+adds 369 audited sessions: a fresh three-way baseline and six retry/OSQ screens.
+Linux OSQ plus 1,024 retries improves the observed four-worker KD median from
+5.063 to 8.445 Mops/s, but its paired Native control reaches 9.463. Medium-thread
+gaps remain and all six candidates fail the two-metric 97% target. The provider
+and ratio default 256 remain at `9b76719`; the rejected implementation is archived
+at `260d330`. Only an explicit owner/wait-list/OSQ drain check is retained in the
+benchmark. Low-thread variation and the untested candidate grid points remain
+visible; no new default or stable throughput gain is claimed.
+
+## Earlier c01 cost study
 
 The [three-way cost study](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md)
 adds a fresh Native/TCLock/KD baseline, separate CPU/PMU diagnostics and measured

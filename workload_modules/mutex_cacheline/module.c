@@ -68,6 +68,14 @@ static int sc_workers_drain(void)
 #ifdef SC_DIRECT_TCLOCK
 	return tc_mutex_workers_drain();
 #else
+	/* SC_WORKERS_DRAIN holds the snapshot gate after all workers return.
+	 * No owner flags, sleeping waiters or optimistic spinner may survive. */
+	if (atomic_long_read(&sc_lock.owner) || !list_empty(&sc_lock.wait_list))
+		return -EBUSY;
+#ifdef CONFIG_MUTEX_SPIN_ON_OWNER
+	if (osq_is_locked(&sc_lock.osq))
+		return -EBUSY;
+#endif
 	return 0;
 #endif
 }

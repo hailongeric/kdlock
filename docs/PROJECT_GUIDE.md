@@ -242,6 +242,13 @@ higher-thread improvement. It does not reach the through-28 Native target.
 Its local task tip is archived as `archive/perf/mutex-c01-cost-20261013` after
 fast-forward integration; failed variants and raw evidence remain separate.
 
+The [optimistic-spin study](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/README.md)
+rejects all six owner-aware retry/OSQ candidates. Its exact experimental tip
+`260d330` is preserved as `archive/perf/mutex-optimistic-c01-20261013` without
+merging the rejected provider. The report and retained workload drain check are
+integrated separately, with their tip archived as
+`archive/perf/mutex-optimistic-report-20261013`. The provider remains `9b76719`.
+
 All twelve original tips are preserved by verified archive tags, including
 `archive/master-before-integration-20261012`. The eleven local `perf/` branches
 were removed. The remaining local branches are `master` and
