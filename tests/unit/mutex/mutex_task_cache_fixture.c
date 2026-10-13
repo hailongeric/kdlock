@@ -5,10 +5,12 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #define CHECK(c) do { if (!(c)) { fprintf(stderr, "FAIL cache line %d: %s\n", __LINE__, #c); exit(1); } } while (0)
 typedef struct { int counter; } atomic_t;
 typedef int raw_spinlock_t;
 struct task_struct { int usage; };
+static struct task_struct *current;
 struct hlist_node { struct hlist_node *next, **pprev; };
 struct hlist_head { struct hlist_node *first; };
 struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
@@ -71,11 +73,13 @@ static int cmpxchg(int *p, int old, int value)
 #define unlikely(x) (x)
 static bool warned(bool value) { if(value)warnings++; return value; }
 #define WARN_ON_ONCE(x) warned(!!(x))
+#define BUG_ON(x) CHECK(!(x))
 #define KD_MUTEX_STAT(n) static long n
 #define KD_MUTEX_STAT_READ(n) (n)
 #define this_cpu_inc(n) (++(n))
 #define module_param_named(...)
 #define pr_info(...) do { if(0)printf(__VA_ARGS__); } while(0)
+#define pr_warn pr_info
 #include "task_cache_production.h"
 
 static struct task_struct tasks[16];
@@ -133,7 +137,29 @@ int main(void)
  for(unsigned int i=0;i<12;i++) {
   kd_mutex_task_put(&tasks[i]); CHECK(kd_mutex_task_count()==11-i);
  }
- CHECK(kd_mutex_task_buckets[0].count==8); drain(); kd_mutex_tasks_exit();
+ CHECK(kd_mutex_task_buckets[0].count==8); drain();
+ /* Ordinary B protects its native continuation from unlock-side A batching.
+  * One record reference survives nesting and may coexist with an ACK ref. */
+ current=&tasks[0]; CHECK(kd_owned_mutex_task_can_combine());
+ kd_owned_mutex_task_enter(); kd_owned_mutex_task_enter();
+ CHECK(!kd_owned_mutex_task_can_combine() && identity(0)->owned_holds==2);
+ CHECK(atomic_read(&identity(0)->refs)==1);
+ CHECK(kd_mutex_task_get(current));
+ kd_owned_mutex_task_leave(); CHECK(!kd_owned_mutex_task_can_combine());
+ kd_owned_mutex_task_leave(); CHECK(kd_owned_mutex_task_can_combine());
+ CHECK(atomic_read(&identity(0)->refs)==1);
+ kd_mutex_task_put(current); drain();
+ /* Exhaustion keeps acquisition available through SELF and disables batching
+  * without losing any tracked task's outstanding depth or routing reference. */
+ current=&tasks[0]; kd_owned_mutex_task_enter();
+ current=&tasks[1]; allocation_fail=true; kd_owned_mutex_task_enter();
+ CHECK(kd_owned_tracking_exhausted && !kd_owned_mutex_task_can_combine());
+ allocation_fail=false; kd_owned_mutex_task_enter();
+ CHECK(!identity(1)); kd_owned_mutex_task_leave(); kd_owned_mutex_task_leave();
+ current=&tasks[0]; kd_owned_mutex_task_enter();
+ CHECK(identity(0)->owned_holds==2);
+ kd_owned_mutex_task_leave(); kd_owned_mutex_task_leave();
+ CHECK(!kd_owned_mutex_task_can_combine()); drain(); kd_mutex_tasks_exit();
  puts("PASS production task cache: exact nested refs, reuse, collisions, active overflow, eviction/reactivation race, deferred free, allocation refusal and drain");
  return 0;
 }

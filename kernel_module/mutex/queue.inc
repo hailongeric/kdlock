@@ -29,7 +29,7 @@ static inline struct kd_mutex_node *kd_mutex_decode_tail(u32 tail)
 	return per_cpu_ptr(&kd_mutex_nodes[idx], cpu);
 }
 
-static inline u32 kd_mutex_xchg_tail(struct kd_mutex *lock, u32 tail)
+static inline u32 kd_mutex_xchg_tail(struct kd_mutex_legacy_gate *lock, u32 tail)
 {
 	return xchg(&lock->tail, tail);
 }
@@ -45,7 +45,7 @@ kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 	kd_mutex_publish_result(node, true);
 }
 
-static __always_inline void kd_mutex_set_locked(struct kd_mutex *lock)
+static __always_inline void kd_mutex_set_locked(struct kd_mutex_legacy_gate *lock)
 {
 	smp_store_release(&lock->locked, _Q_LOCKED_VAL);
 }
@@ -64,7 +64,7 @@ static void kd_mutex_update_max_waiters(int active)
 	}
 }
 
-static void kd_mutex_waiter_enter(struct kd_mutex *lock)
+static void kd_mutex_waiter_enter(struct kd_mutex_legacy_gate *lock)
 {
 	/* This is an origin-CPU balance, not a queue publication primitive.
 	 * The tail exchange/link and result release/acquire keep their ordering. */
@@ -82,7 +82,7 @@ static void kd_mutex_waiter_enter(struct kd_mutex *lock)
 	kd_mutex_update_max_waiters(active);
 }
 
-static void kd_mutex_waiter_exit(struct kd_mutex *lock)
+static void kd_mutex_waiter_exit(struct kd_mutex_legacy_gate *lock)
 {
 	int left;
 
@@ -111,7 +111,7 @@ static void kd_mutex_waiter_exit(struct kd_mutex *lock)
 }
 
 /* The scheduling gate cannot authorize a CS without the original mutex. */
-static void kd_mutex_claim_origin(struct kd_mutex *lock)
+static void kd_mutex_claim_origin(struct kd_mutex_legacy_gate *lock)
 {
 	BUG_ON(READ_ONCE(lock->physical_owner));
 	kd_origin_mutex_lock((struct mutex *)lock->origin_mutex_addr);
@@ -119,7 +119,7 @@ static void kd_mutex_claim_origin(struct kd_mutex *lock)
 	this_cpu_inc(kd_mutex_origin_acquires);
 }
 
-static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
+static void kd_mutex_wait_and_lock(struct kd_mutex_legacy_gate *lock)
 {
 	for (;;) {
 		kd_mutex_wait_gate(lock);
@@ -142,7 +142,7 @@ static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
  * local predecessor may be sleeping while acquiring the original mutex or
  * waiting for a result. Refuse before publication; the new caller can sleep
  * on the original mutex without consuming another queue slot. */
-static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)
+static bool kd_mutex_has_local_predecessor(struct kd_mutex_legacy_gate *lock)
 {
 	struct kd_mutex_cpu_state *shadow = this_cpu_ptr(&kd_mutex_shadows);
 	unsigned long slots = READ_ONCE(shadow->node_slots);

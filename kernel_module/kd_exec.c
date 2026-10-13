@@ -21,7 +21,8 @@
 #include "kd_source.h"
 #include "kd_lock.h"
 #include "kd_spinlock.h"
-#include "kd_mutex.h"
+#include "kd_mutex_legacy.h"
+#include "kd_owned_mutex_internal.h"
 
 #ifdef KDLOCK_SELFTEST
 bool kd_hotlock_role_trace;
@@ -118,7 +119,7 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 	for (i = 0; i < frame->jit_lock_depth; i++) {
 		if (!frame->jit_lock_addr[i] ||
 		    frame->jit_lock_kind[i] <= KD_EXEC_LOCK_NONE ||
-		    frame->jit_lock_kind[i] > KD_EXEC_LOCK_NATIVE)
+		    frame->jit_lock_kind[i] > KD_EXEC_LOCK_OWNED)
 			return false;
 	}
 

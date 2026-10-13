@@ -114,6 +114,16 @@ int kd_exe_init(void)
 	outer_mutex_lock_addr = (unsigned long)kd_mutex_outer_contended_clobber_v1;
 	direct_mutex_unlock_addr = (unsigned long)kd_mutex_direct_unlock_clobber_v1;
 	end_points[end_point_count++] = direct_mutex_unlock_addr;
+	owned_mutex_lock_addr = (unsigned long)kd_owned_mutex_lock_v1;
+	owned_mutex_unlock_addr = (unsigned long)kd_owned_mutex_unlock_v1;
+	owned_outer_unlock_addr = (unsigned long)kd_owned_mutex_outer_unlock_v1;
+	owned_direct_lock_addr = (unsigned long)kd_owned_mutex_direct_lock_clobber_v1;
+	owned_contended_lock_addr = (unsigned long)kd_owned_mutex_direct_contended_clobber_v1;
+	owned_outer_lock_addr = (unsigned long)kd_owned_mutex_outer_contended_clobber_v1;
+	owned_direct_unlock_addr = (unsigned long)kd_owned_mutex_direct_unlock_clobber_v1;
+	end_points[end_point_count++] = owned_mutex_unlock_addr;
+	end_points[end_point_count++] = owned_outer_unlock_addr;
+	end_points[end_point_count++] = owned_direct_unlock_addr;
 	for (i = 0; i < end_point_count; i++)
 		KD_PR_INFO("end_point[%d] = %lx", i, end_points[i]);
 	if (mutex_lock_addr)

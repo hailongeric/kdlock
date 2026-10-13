@@ -208,6 +208,9 @@ def main():
             "int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,",
         ),
         "kernel_module/exe.c": (
+            "static bool kd_is_owned_lock_call(unsigned long ip)",
+            "static bool kd_is_owned_unlock_call(unsigned long ip)",
+            "static bool kd_is_legacy_mutex_call(unsigned long ip)",
             "static int advance_after_known_call(struct kd_regs *regs)",
             "static int advance_and_save_continuation(struct kd_exec_frame *frame,",
             "static int finish_acquired_spin_call(struct kd_exec_frame *frame,",

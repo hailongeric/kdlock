@@ -94,7 +94,7 @@ static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 		kd_mutex_park_result(node);
 }
 
-static void kd_mutex_wait_gate(struct kd_mutex *lock)
+static void kd_mutex_wait_gate(struct kd_mutex_legacy_gate *lock)
 {
 	if (kd_mutex_spin_ready(&lock->locked))
 		return;
@@ -104,7 +104,7 @@ static void kd_mutex_wait_gate(struct kd_mutex *lock)
 	preempt_disable();
 }
 
-static void kd_mutex_open_gate(struct kd_mutex *lock)
+static void kd_mutex_open_gate(struct kd_mutex_legacy_gate *lock)
 {
 	smp_store_release(&lock->locked, 0);
 	/* Pairs with prepare_to_wait's state barrier: either the head sees

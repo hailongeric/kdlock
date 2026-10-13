@@ -6,7 +6,24 @@ passed [targeted verification](../bench/results/10.176.26.71/tests/mutex-blockin
 including a drained 320,000-operation mutex JIT run. That functional check does
 not provide a new performance matrix.
 
-## Latest c01 protocol study
+## Latest c01 owned-mutex redesign
+
+The [owned-mutex study](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
+implements a separate 32-byte KD object with private Linux-derived owner/OSQ/sleep
+code and typed SELF/DELEGATE waiters. Target-address probes observe no original
+Linux mutex calls. It audits 426 scored sessions and 114 diagnostics at 64
+post-work rounds. The requested two-metric 97% target remains unmet.
+
+At sixteen workers the fresh Native/TCLock/legacy-KD medians are
+8.694/3.525/7.315 Mops/s. Owned finite FIFO reaches 1.766. Opt-in bounded refill
+reaches 2.614, versus 2.152 for a separate refill-off group on identical source;
+its larger batches improve amortization but leave a substantial gap. Neither
+owned policy preserves the earlier higher-thread gains. All threshold screens
+fail, so ratio 256, refill off and the benchmark's legacy default remain.
+The owned backend is retained as an explicit experimental protocol, with its
+correctness evidence, variation and remaining causal uncertainty visible.
+
+## Earlier c01 protocol study
 
 The [protocol study](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/README.md)
 tests frame retirement reuse, queue-node layout, caller capture, native preflight

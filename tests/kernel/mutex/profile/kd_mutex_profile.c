@@ -11,14 +11,16 @@
 #include <linux/string.h>
 
 static unsigned long target_lock, success_counter;
-static bool kd, spin;
+static bool kd, spin, owned;
 module_param(target_lock, ulong, 0444);
 module_param(success_counter, ulong, 0444);
 module_param(kd, bool, 0444);
 module_param(spin, bool, 0444);
+module_param(owned, bool, 0444);
 
 struct profile_counts {
 	u64 native_calls, native_slow, spin_slow, admitted, declined;
+	u64 native_unlocks, owned_calls, owned_slow;
 	u64 batches, batch_packets, histogram[12];
 };
 static DEFINE_PER_CPU(struct profile_counts, counts);
@@ -28,7 +30,9 @@ static u64 owner_samples, owner_zero, owner_changes;
 
 static enum hrtimer_restart sample_owner(struct hrtimer *timer)
 {
-	unsigned long owner = atomic_long_read(&((struct mutex *)target_lock)->owner) & ~7UL;
+	/* Both supported mutex layouts put the atomic owner word at offset zero.
+	 * Sampling never calls either mutex API or dereferences the owner task. */
+	unsigned long owner = atomic_long_read((atomic_long_t *)target_lock) & ~7UL;
 
 	owner_samples++;
 	if (!owner)
@@ -49,6 +53,12 @@ static int native_entry(struct kprobe *probe, struct pt_regs *regs)
 		return 0;
 	if (!strcmp(probe->symbol_name, "mutex_lock"))
 		c->native_calls++;
+	else if (!strcmp(probe->symbol_name, "mutex_unlock"))
+		c->native_unlocks++;
+	else if (!strcmp(probe->symbol_name, "kd_owned_mutex_lock_self"))
+		c->owned_calls++;
+	else if (!strcmp(probe->symbol_name, "kd_owned_mutex_lock_slow"))
+		c->owned_slow++;
 	else if (spin)
 		c->spin_slow++;
 	else
@@ -105,6 +115,12 @@ static int batch_return(struct kretprobe_instance *instance, struct pt_regs *reg
 
 static struct kprobe native_probe = { .symbol_name = "mutex_lock", .pre_handler = native_entry };
 static struct kprobe slow_probe = { .symbol_name = "__mutex_lock_slowpath", .pre_handler = native_entry };
+/* Keep Linux probes installed for owned runs: any call on the target address
+ * violates object exclusivity, even if the workload result remains correct. */
+static struct kprobe unlock_probe = { .symbol_name = "mutex_unlock", .pre_handler = native_entry };
+static struct kprobe owned_entry_probe = { .symbol_name = "kd_owned_mutex_lock_self", .pre_handler = native_entry };
+static struct kprobe owned_slow_probe = { .symbol_name = "kd_owned_mutex_lock_slow", .pre_handler = native_entry };
+static struct kprobe *owned_probes[] = { &unlock_probe, &owned_entry_probe, &owned_slow_probe };
 static struct kretprobe admission_probe = {
 	.kp.symbol_name = "kd_hotlock_record_mutex_pinned", .maxactive = 128,
 	.entry_handler = admission_entry, .handler = admission_return,
@@ -118,8 +134,12 @@ static int __init profile_init(void)
 {
 	int ret;
 
-	if (!target_lock || (kd && (!success_counter || spin)))
+	if (!target_lock || (kd && (!success_counter || spin)) || (owned && !kd))
 		return -EINVAL;
+	if (owned) {
+		admission_probe.kp.symbol_name = "kd_hotlock_record_owned_mutex_pinned";
+		batch_probe.kp.symbol_name = "kd_owned_mutex_run_batch";
+	}
 	if (spin)
 		slow_probe.symbol_name = "native_queued_spin_lock_slowpath";
 	else {
@@ -130,10 +150,15 @@ static int __init profile_init(void)
 	ret = register_kprobe(&slow_probe);
 	if (ret)
 		goto native;
+	if (owned) {
+		ret = register_kprobes(owned_probes, ARRAY_SIZE(owned_probes));
+		if (ret)
+			goto slow;
+	}
 	if (kd) {
 		ret = register_kretprobe(&admission_probe);
 		if (ret)
-			goto slow;
+			goto owned_out;
 		ret = register_kretprobe(&batch_probe);
 		if (ret)
 			goto admission;
@@ -146,6 +171,9 @@ static int __init profile_init(void)
 	return 0;
 admission:
 	unregister_kretprobe(&admission_probe);
+owned_out:
+	if (owned)
+		unregister_kprobes(owned_probes, ARRAY_SIZE(owned_probes));
 slow:
 	unregister_kprobe(&slow_probe);
 native:
@@ -165,6 +193,8 @@ static void __exit profile_exit(void)
 		unregister_kretprobe(&batch_probe);
 		unregister_kretprobe(&admission_probe);
 	}
+	if (owned)
+		unregister_kprobes(owned_probes, ARRAY_SIZE(owned_probes));
 	unregister_kprobe(&slow_probe);
 	if (!spin)
 		unregister_kprobe(&native_probe);
@@ -173,6 +203,9 @@ static void __exit profile_exit(void)
 		total.native_calls += c->native_calls;
 		total.native_slow += c->native_slow;
 		total.spin_slow += c->spin_slow;
+		total.native_unlocks += c->native_unlocks;
+		total.owned_calls += c->owned_calls;
+		total.owned_slow += c->owned_slow;
 		total.admitted += c->admitted;
 		total.declined += c->declined;
 		total.batches += c->batches;
@@ -184,6 +217,10 @@ static void __exit profile_exit(void)
 		total.native_calls, total.native_slow, total.spin_slow, total.admitted, total.declined,
 		total.batches, total.batch_packets, owner_samples, owner_zero, owner_changes,
 		native_probe.nmissed + slow_probe.nmissed + admission_probe.nmissed + batch_probe.nmissed);
+	if (owned)
+		pr_info("kd_mutex_profile owned: linux_target_unlocks=%llu self_calls=%llu self_slow=%llu missed=%lu\n",
+			total.native_unlocks, total.owned_calls, total.owned_slow,
+			unlock_probe.nmissed + owned_entry_probe.nmissed + owned_slow_probe.nmissed);
 	for (i = 0; i < 12; i++)
 		pr_info("kd_mutex_profile histogram: bucket=%d batches=%llu\n", i, total.histogram[i]);
 }

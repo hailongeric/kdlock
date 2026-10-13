@@ -52,11 +52,30 @@ def check_kd_parameters(params, record, lock_addr):
             int(params['spin_prefetch']) == record['spin_prefetch'] and
             'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
             'mutex_blocking' not in params and record['mutex_wait_mode'] == 'blocking' and
-            int(params['mutex_spin_limit']) == record['mutex_spin_limit'] and
-            int(params['mutex_entry_ratio_limit']) == record['mutex_entry_ratio_limit'] and
-            params['mutex_native_route'] == ('Y' if record.get('mutex_routing') == 'native' else 'N') and
             params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
             'kdlock observation parameters differ')
+    if record.get('mutex_implementation', 'legacy') == 'owned-v1':
+        require({'owned_mutex_spin_limit', 'owned_mutex_entry_ratio_limit',
+                 'owned_mutex_self_route', 'owned_mutex_native_after_control'} <= set(params),
+                'missing owned mutex provider parameters')
+        require(record.get('mutex_routing', 'adaptive') in ('adaptive', 'self') and
+                int(params['owned_mutex_spin_limit']) == record['mutex_spin_limit'] and
+                int(params['owned_mutex_entry_ratio_limit']) == record['owned_mutex_entry_ratio_limit'] and
+                params['owned_mutex_self_route'] == ('Y' if record.get('mutex_routing') == 'self' else 'N') and
+                params['mutex_native_route'] == 'N' and
+                int(params['owned_mutex_native_after_control']) ==
+                int(record.get('owned_mutex_force_full', False)),
+                'owned mutex observation parameters differ')
+        # The initial finite-FIFO archive predates this opt-in control.
+        require(('owned_mutex_refill' not in record or 'owned_mutex_refill' in params) and
+                params.get('owned_mutex_refill', 'N') ==
+                ('Y' if record.get('owned_mutex_refill', False) else 'N'),
+                'owned FIFO refill parameter differs')
+    else:
+        require(int(params['mutex_spin_limit']) == record['mutex_spin_limit'] and
+                int(params['mutex_entry_ratio_limit']) == record['mutex_entry_ratio_limit'] and
+                params['mutex_native_route'] == ('Y' if record.get('mutex_routing') == 'native' else 'N'),
+                'kdlock observation parameters differ')
 
 
 def check_jit_evidence(record):
@@ -66,6 +85,16 @@ def check_jit_evidence(record):
     record['execution_class'] = ('NATIVE' if record['arm'] == 'native' else
                                  'JIT' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
     if record['arm'] == 'kdlock' and record.get('lock_kind') == 'mutex':
+        owned = record.get('mutex_implementation', 'legacy') == 'owned-v1'
+        if owned:
+            require(record.get('mutex_routing', 'adaptive') != 'native',
+                    'owned mutex cannot use a Linux native route')
+            record['execution_class'] = 'JIT' if record.get('jit_bodies', 0) > 0 else 'KD_SELF'
+        if record.get('mutex_routing') == 'self':
+            require(owned and record.get('jit_bodies', 0) == 0, 'self routing control executed JIT or is not owned')
+            require(not record.get('functional', False), 'self control is not a functional JIT check')
+            record.update(jit_acceptance='SELF_ROUTING_CONTROL', execution_class='KD_SELF', diagnostic=True)
+            return
         if record.get('mutex_routing', 'adaptive') == 'native':
             require(record.get('jit_bodies', 0) == 0, 'native routing control executed JIT')
             require(not record.get('functional', False), 'native control is not a functional JIT check')
@@ -74,8 +103,10 @@ def check_jit_evidence(record):
             return
         if record.get('mutex_acceptance', 'jit-required') == 'adaptive-performance':
             require(not record.get('functional', False), 'adaptive performance is not a functional JIT check')
-            record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else 'ADAPTIVE_NATIVE')
-            record['execution_class'] = ('JIT' if record.get('jit_bodies', 0) > 0 else 'ADAPTIVE_NATIVE')
+            record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else
+                                        'ADAPTIVE_SELF' if owned else 'ADAPTIVE_NATIVE')
+            record['execution_class'] = ('JIT' if record.get('jit_bodies', 0) > 0 else
+                                         'KD_SELF' if owned else 'ADAPTIVE_NATIVE')
             return
     if (record['arm'] == 'kdlock' and record.get('lock_kind', 'spin') == 'spin' and
             record.get('spin_delegate', 'on') == 'off'):
@@ -103,6 +134,13 @@ def check_jit_evidence(record):
 
 
 class BackendSession(Session):
+    def mutex_wait_stats(self):
+        if self.record.get('mutex_implementation', 'legacy') != 'owned-v1':
+            return super().mutex_wait_stats()
+        values = list(map(int, Path('/sys/module/kdlock_km/parameters/owned_mutex_wait_stats').read_text().split()))
+        require(len(values) == 3 and all(v >= 0 for v in values), 'invalid owned mutex wait observations')
+        return dict(zip(('result_schedule_calls', 'result_wakes', 'gate_wait_calls'), values))
+
     def run(self, args, log, **kwargs):
         # Every client command, including prepare and drain, checks the loaded
         # payload identity. A hash module must never satisfy a cacheline run.
@@ -151,11 +189,21 @@ class BackendSession(Session):
         self.run(['insmod', GUARD_MODULE], 'load-allocator-guard.log')
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
         if self.record['arm'] == 'kdlock':
+            if self.record.get('mutex_implementation', 'legacy') == 'owned-v1':
+                mutex_params = [
+                    'owned_mutex_spin_limit=' + str(self.record['mutex_spin_limit']),
+                    'owned_mutex_entry_ratio_limit=' + str(self.record['owned_mutex_entry_ratio_limit']),
+                    'owned_mutex_refill=' + str(int(self.record.get('owned_mutex_refill', False))),
+                    'owned_mutex_self_route=' + ('1' if self.record.get('mutex_routing') == 'self' else '0')]
+            else:
+                mutex_params = [
+                    'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 4096)),
+                    'mutex_entry_ratio_limit=' + str(self.record['mutex_entry_ratio_limit']),
+                    'mutex_native_route=' + ('1' if self.record.get('mutex_routing') == 'native' else '0')]
+            if self.record.get('owned_mutex_force_full'):
+                mutex_params.append('owned_mutex_native_after_control=1')
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
-                      'target_process=sc_worker',
-                      'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 4096)),
-                      'mutex_entry_ratio_limit=' + str(self.record['mutex_entry_ratio_limit']),
-                      'mutex_native_route=' + ('1' if self.record.get('mutex_routing') == 'native' else '0'),
+                      'target_process=sc_worker', *mutex_params,
                       'spin_entry_ratio_limit=' + str(self.record['spin_entry_ratio_limit']),
                       'spin_prefetch=' + str(self.record['spin_prefetch']),
                       'spin_delegate=' + ('0' if self.record.get('spin_delegate') == 'off' else '1')],
@@ -170,6 +218,10 @@ class BackendSession(Session):
         self.loaded_source = True
         layout = json.loads(self.run([HERE/'client', '--layout'], 'layout.json'))
         self.record['layout'] = layout
+        if self.record.get('mutex_implementation', 'legacy') == 'owned-v1':
+            require(layout['lock_bytes'] == 32 and layout['line_bytes'] == 64 and
+                    layout['lock_addr'] % 64 == layout['data_addr'] % 64 == 0,
+                    'owned c01 lock/payload layout differs from the 32-byte aligned contract')
         if self.record.get('workload') == 'rcuht':
             hash_layout(layout)
         require(self.counts('initial')['values'] == [0]*16, 'source was not reset')
@@ -242,15 +294,18 @@ class BackendSession(Session):
     def measure(self):
         if self.record.get('profile_lock'):
             counter = 0
+            owned = self.record.get('mutex_implementation') == 'owned-v1'
             if self.loaded_kd:
+                counter_symbol = 'kd_owned_mutex_bodies' if owned else 'kd_mutex_jit_success_count'
                 symbols = [int(s[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
                            if len(s := line.split()) == 4 and
-                           s[2:] == ['kd_mutex_jit_success_count', '[kdlock_km]']]
+                           s[2:] == [counter_symbol, '[kdlock_km]']]
                 require(len(symbols) == 1 and symbols[0], 'missing batch completion counter')
                 counter = symbols[0]
             self.run(['taskset', '-c', str(self.record['collector_cpu']), 'insmod', PROFILE_MODULE,
                       'target_lock=' + str(self.record['layout']['lock_addr']),
                       'success_counter=' + str(counter), 'kd=' + str(int(self.loaded_kd)),
+                      'owned=' + str(int(owned)),
                       'spin=' + str(int(self.lock_kind == 'spin'))], 'load-profile.log')
             self.loaded_profile = True
         if self.record['arm'] != 'tclock':
@@ -295,6 +350,14 @@ class BackendSession(Session):
             observed['batch_histogram'] = {int(k): int(v) for k, v in re.findall(
                 r'kd_mutex_profile histogram: bucket=(\d+) batches=(\d+)', self.messages)}
             self.record['lock_profile'] = observed
+            if self.record.get('mutex_implementation') == 'owned-v1':
+                owned_rows = re.findall(r'kd_mutex_profile owned: ([^\n]+)', self.messages)
+                require(len(owned_rows) == 1, 'missing owned profiler receipt')
+                detail = {k: int(v) for k, v in re.findall(r'(\w+)=(\d+)', owned_rows[0])}
+                observed['owned'] = detail
+                require(observed['native_calls'] == observed['native_slow'] ==
+                        detail['linux_target_unlocks'] == detail['missed'] == 0,
+                        'owned target reached Linux mutex API or profile was incomplete')
             self.save()
             require(observed['missed'] == 0 and len(observed['batch_histogram']) == 12,
                     'incomplete lock profile')
@@ -308,6 +371,25 @@ class BackendSession(Session):
             # Clear the diagnostic pointer before its lock storage disappears.
             (self.tc_params/'target_lock').write_text('0')
         super().cleanup()
+        if self.record.get('mutex_implementation') == 'owned-v1':
+            rows = re.findall(r'kd_owned_mutex: bodies=(\d+) batches=(\d+) refusals=(\d+) early_releases=(\d+)',
+                              self.messages)
+            require(len(rows) == 1, 'missing owned provider drain observations')
+            self.record['owned_observations'] = dict(zip(
+                ('bodies', 'batches', 'refusals', 'early_releases'), map(int, rows[0])))
+            if self.record.get('scenario') == 'early':
+                require(self.record['owned_observations']['early_releases'] > 0,
+                        'early-release scenario never released a delegated outer mutex')
+            if self.record.get('owned_mutex_force_full'):
+                require('reason=OWNED_CONTROL_NATIVE ' in self.messages,
+                        'checked post-control continuation was not exercised')
+                acks = re.findall(r'kd_native stats: started=(\d+) completed=(\d+) unlocks=(\d+)',
+                                  self.messages)
+                require(len(acks) == 1, 'missing FULL owner-ACK observations')
+                started, completed, unlocks = map(int, acks[0])
+                self.record['owned_full_ack'] = dict(started=started, completed=completed, unlocks=unlocks)
+                require(started == completed and started > 0 and unlocks >= 2,
+                        'forced FULL continuation did not drain both owner acknowledgments')
         if self.loaded_tc:
             self.record['drained'] = False
             self.save()

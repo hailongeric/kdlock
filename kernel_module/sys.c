@@ -19,7 +19,8 @@
 
 #include "exe.h"
 #include "kd_lock.h"
-#include "kd_mutex.h"
+#include "kd_mutex_legacy.h"
+#include "kd_owned_mutex_direct.h"
 #include "kd_source.h"
 #include "kd_spin_entry.h"
 #include "sys.h"
@@ -116,7 +117,7 @@ static long kd_dev_ioctl(struct file *file, unsigned int command,
 		/* A readonly control FD does not count as its own writer. The caller
 		 * must stop new workloads; idle snapshots are not a hook-reader barrier. */
 		ret = kd_source_begin_retire();
-		if (!ret && (!kd_mutex_check_idle() || !kd_mutex_tasks_idle() ||
+		if (!ret && (!kd_mutex_check_idle() || !kd_owned_mutex_check_idle() || !kd_mutex_tasks_idle() ||
 			     kd_spin_entries_check_idle()))
 			ret = -EBUSY;
 		if (!ret) {

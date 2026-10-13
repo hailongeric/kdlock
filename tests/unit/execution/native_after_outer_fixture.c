@@ -53,11 +53,17 @@ static unsigned long direct_mutex_lock_addr = 0x320, direct_mutex_unlock_addr = 
 static unsigned long contended_mutex_lock_addr = 0x330;
 static unsigned long outer_mutex_lock_addr = 0x340;
 static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;
+static unsigned long owned_mutex_lock_addr = 0x500, owned_mutex_unlock_addr = 0x600;
+static unsigned long owned_outer_unlock_addr = 0x680;
+static unsigned long owned_direct_lock_addr = 0x510, owned_direct_unlock_addr = 0x610;
+static unsigned long owned_contended_lock_addr = 0x530;
+static unsigned long owned_outer_lock_addr = 0x520;
 static struct mutex a, b;
 static struct task_struct native_peer = { .pid = 13 }, *nested_owner;
 static bool track_nested_owner;
 static unsigned int nested_acquires, nested_waits;
 static int kd_jit_fail_pending_lock;
+static int kd_owned_mutex_native_after_control;
 
 /* Primitive observations only; the live case verifies real owner-side ACKs. */
 static unsigned long kd_spin_debug_owner(raw_spinlock_t *lock)
@@ -189,6 +195,24 @@ static int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock,
 	(void)regs;
 	(void)frame;
 	return -EOPNOTSUPP;
+}
+
+/* These scenarios exercise the legacy family. A routing regression must fail
+ * explicitly if shared dispatch accidentally selects an owned primitive. */
+struct kd_mutex;
+static int kd_owned_mutex_jit_nested_lock_ctx(struct kd_mutex *lock,
+		struct kd_regs *regs, struct kd_exec_frame *frame)
+{
+	(void)lock; (void)regs; (void)frame;
+	fprintf(stderr, "FAIL unexpected owned lock in legacy fixture\n");
+	exit(1);
+}
+static int kd_owned_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
+		struct kd_exec_frame *frame)
+{
+	(void)lock; (void)frame;
+	fprintf(stderr, "FAIL unexpected owned unlock in legacy fixture\n");
+	exit(1);
 }
 
 #include "frame_code.h"
@@ -487,6 +511,37 @@ static void check_mutex_stack_changes(void)
 		CHECK(kd_exec_native_begin(&f, true) ==
 		      (changed ? 0 : -EINVAL));
 	}
+}
+
+static void check_owned_checked_native(void)
+{
+	unsigned long *word = &waiter_stack[32];
+	for (int bad = 0; bad < 3; bad++) {
+		struct kd_exec_frame f = frame(true);
+		struct kd_mutex_call_stack saved;
+		f.owned_mutex = true;
+		*word = 0x900;
+		f.regs.ip = owned_mutex_lock_addr;
+		f.regs.sp = (unsigned long)word;
+		CHECK(kd_mutex_stack_prepare(&f, &f.regs, &saved) == 0);
+		f.control_call.phase = KD_CALL_COMPLETE;
+		f.regs.ip = *word;
+		f.regs.sp += sizeof(*word);
+		kd_owned_mutex_native_after_control = 1;
+		if (bad == 1)
+			f.regs.ip++;
+		if (bad == 2)
+			*word ^= 1;
+		int ret = kd_mutex_stack_finish(&f, &f.regs, &saved);
+		if (bad) {
+			CHECK(ret < 0 && kd_owned_mutex_native_after_control == 1);
+			CHECK(kd_exec_native_begin(&f, true) == -EINVAL);
+		} else {
+			CHECK(ret == KD_EXE_KNOWN_NATIVE && !kd_owned_mutex_native_after_control);
+			CHECK(kd_exec_native_begin(&f, true) == 0);
+		}
+	}
+	kd_owned_mutex_native_after_control = 0;
 }
 
 static void check_mutex_stack_refusals(void)
@@ -900,6 +955,7 @@ int main(void)
 	check_call_register_preservation();
 	check_mutex_stack_changes();
 	check_mutex_stack_refusals();
+	check_owned_checked_native();
 	check_completed_mutex_native();
 	check_acquired_spin_native();
 	check_mutex_call_pair();

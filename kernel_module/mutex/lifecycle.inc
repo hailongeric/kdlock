@@ -7,7 +7,7 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
-void kd_mutex_init(struct kd_mutex *lock)
+void kd_mutex_legacy_gate_init(struct kd_mutex_legacy_gate *lock)
 {
 	lock->tail = 0;
 	atomic_set(&lock->state, 0);
@@ -20,10 +20,10 @@ void kd_mutex_init(struct kd_mutex *lock)
 
 /* The map publishes origin_mutex_addr only after this unique slot is bound.
  * No slot is reused before provider unload; its per-CPU storage starts zero. */
-void kd_mutex_init_shadow(struct kd_mutex *lock, unsigned int slot)
+void kd_mutex_init_shadow(struct kd_mutex_legacy_gate *lock, unsigned int slot)
 {
 	BUG_ON(slot >= KD_MUTEX_WAITER_SLOTS);
-	kd_mutex_init(lock);
+	kd_mutex_legacy_gate_init(lock);
 	lock->waiter_slot = slot;
 }
 
@@ -65,9 +65,9 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, result) != 304);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != 305);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(sizeof(struct kd_mutex) != 3 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_mutex, physical_owner) != L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_mutex, waiter_count) != 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_mutex_legacy_gate) != 3 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_legacy_gate, physical_owner) != L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_legacy_gate, waiter_count) != 2 * L1_CACHE_BYTES);
 
 	kd_mutex_waiter_cpus = alloc_percpu(struct kd_mutex_waiter_cpu);
 	if (!kd_mutex_waiter_cpus)

@@ -13,7 +13,7 @@
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
-__kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
+__kd_mutex_lock_slowpath(struct kd_mutex_legacy_gate *lock, int tail,
 			 struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *prev_node = NULL, *next_node = NULL;
@@ -85,7 +85,7 @@ release:
  * Slowpath entry: init node, queue, may become combiner
  * -------------------------------------------------------------------------- */
 __attribute__((noipa)) noinline notrace static int
-kd_mutex_lock_slowpath(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
+kd_mutex_lock_slowpath(struct kd_mutex_legacy_gate *lock, struct kd_mutex_node *curr_node)
 {
 	this_cpu_inc(kd_mutex_slowpath_count);
 	return __kd_mutex_lock_slowpath(lock, curr_node->tail, curr_node);
@@ -129,7 +129,7 @@ void kd_mutex_note_nested_jit(void)
 	this_cpu_inc(kd_mutex_nested_jit_count);
 }
 
-int kd_mutex_waiter_count(struct kd_mutex *lock)
+int kd_mutex_waiter_count(struct kd_mutex_legacy_gate *lock)
 {
 	int cpu, count = 0;
 

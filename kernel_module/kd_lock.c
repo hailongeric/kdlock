@@ -9,7 +9,7 @@
  *   Mutex:        __kd_mutex_lock  → _kd_mutex_lock_abi() (kd_mutex.c)
  *                 __kd_mutex_unlock → _kd_mutex_unlock()
  *
- * Each struct mutex * is mapped to a struct kd_mutex * via the shadow table.
+ * Each struct mutex * is mapped to a struct kd_mutex_legacy_gate * via the shadow table.
  * The origin_* functions provide fallback to the original kernel lock paths.
  * The shadow entry schedules work alongside the original mutex, not instead
  * of it. A native suffix's unlock is routed to its retained physical owner
@@ -33,7 +33,8 @@
 /* Mutex task selection remains active independently of spin dispatch. */
 extern struct kd_comm_key kd_spin_target;
 #include "kd_lock.h"
-#include "kd_mutex.h"
+#include "kd_mutex_legacy.h"
+#include "kd_owned_mutex_internal.h"
 #include "kd_mutex_direct.h"
 #include "kd_spin_fast.h"
 #include "kd_spinlock.h"
@@ -64,7 +65,7 @@ static __always_inline bool kd_mutex_trylock_fast(struct mutex *lock);
  * store publishes it only after gate initialization; existing-key readers need
  * no table lock. Keys and entries remain resident until controlled unload. */
 struct kd_mutex_shadow_entry {
-	struct kd_mutex kd_mtx;
+	struct kd_mutex_legacy_gate kd_mtx;
 };
 
 static struct kd_mutex_shadow_entry kd_mutex_shadows[KD_MUTEX_SHADOW_TABLE_SIZE];
@@ -77,7 +78,7 @@ extern void __mutex_unlock_slowpath(struct mutex *lock, unsigned long ip);
 
 /* --- mutex shadow table lookup -------------------------------------------- */
 
-static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)
+static struct kd_mutex_legacy_gate *get_kd_mutex_shadow(struct mutex *lock)
 {
 	unsigned long flags;
 	unsigned long mutex_addr = (unsigned long)lock;
@@ -124,7 +125,7 @@ static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)
 	return NULL;
 }
 
-static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)
+static struct kd_mutex_legacy_gate *find_kd_mutex_shadow(struct mutex *lock)
 {
 	unsigned long mutex_addr = (unsigned long)lock;
 	int start = mutex_addr % KD_MUTEX_SHADOW_TABLE_SIZE;
@@ -159,6 +160,7 @@ DEFINE_PER_CPU(struct kd_spin_fast_cpu, kd_spin_fast_cpu);
 EXPORT_PER_CPU_SYMBOL_GPL(kd_spin_fast_cpu);
 
 #include "lock/mutex_calls.inc"
+#include "lock/owned_mutex_calls.inc"
 
 /* ==========================================================================
  * origin_* — original kernel lock paths (fallback when not delegating)

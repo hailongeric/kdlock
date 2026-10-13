@@ -36,6 +36,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
 | Mutex blocking/result wakeup | `mutex/test_mutex_parking.py`, `test_mutex_balances.py`, `test_mutex_wait_clobber.py`; [live scheduler probe](kernel/mutex/run_wait_selftest.py) |
 | Mutex workload drain | `mutex/test_mutex_drain.py` checks residual owner flags, sleeping waiters and configured Linux OSQ |
+| Owned mutex | `mutex/test_owned_mutex_core.py`, `test_owned_mutex_delegation.py --mutations`, `test_owned_mutex_wait_clobber.py`, `test_owned_mutex_outer_api.py`; task-cache and admission checks also cover its private state |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
 | Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py` |
@@ -70,7 +71,7 @@ checks for kernel errors and callers still running, and keeps failure records.
 
 Use [the direct runner](../bench/tclock_compare/README.md) to exercise actual JIT.
 Choose plain, nested or early according to the changed path; nested/early apply
-only to KD spin cacheline workloads. A successful multithreaded functional JIT case
+to KD spin and the explicit owned-v1 c01 mutex functional probes. A successful multithreaded functional JIT case
 must return at least one JIT body. `spin_delegate=0` is a separate control that must
 return zero. Many threads, a published request or NORMAL status alone do not prove
 delegation occurred.
@@ -107,6 +108,13 @@ native ownership and drain at each polling budget.
 These constructed packets execute no JIT bodies; the
 [mutex benchmark](../bench/tclock_compare/README.md) supplies that evidence.
 The task/ACK probe and scheduler probe both use the only supported blocking policy.
+
+Pass `--owned` to the scheduler probe for the owned FIFO. It reserves and
+publishes a real DELEGATE node, cools the independent admission sampler while
+that node remains queued, observes actual result sleeping, then checks directed
+SELF pickup and exact drain at each polling budget. Its deliberately unstarted
+packet executes no JIT. The separate owned functional checks cover both ordinary
+and clobber nested controls, delegated early release and checked FULL owner ACKs.
 
 ```sh
 python3 tests/kernel/mutex/run_wait_selftest.py \

@@ -14,3 +14,5 @@
 #include "exe.c"
 #include "kd_spinlock.c"
 #include "kd_mutex.c"
+
+#include "owned_mutex/delegation.c"

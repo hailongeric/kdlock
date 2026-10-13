@@ -53,7 +53,7 @@ static void kd_mutex_release_node(struct kd_mutex_node *n) {
 static void jump_to_saved_regs(struct kd_regs *p) { (void)p; abort(); }
 static void jump_to_saved_regs_in_cs(struct kd_regs *p) { (void)p; abort(); }
 static __attribute__((__noinline__,noipa)) int
-kd_mutex_lock_slowpath(struct kd_mutex *lock, struct kd_mutex_node *n) {
+kd_mutex_lock_slowpath(struct kd_mutex_legacy_gate *lock, struct kd_mutex_node *n) {
     unsigned long physical;
     asm volatile("mov %%rsp,%0":"=r"(physical));
     assert(lock==(void *)0x1230 && n==&node);
@@ -69,7 +69,7 @@ kd_mutex_lock_slowpath(struct kd_mutex *lock, struct kd_mutex_node *n) {
 }
 #include "clobber.inc"
 static __attribute__((__noinline__,noipa,used)) void
-bridge(struct kd_mutex *lock, unsigned long sp, unsigned long ip, unsigned long bp) {
+bridge(struct kd_mutex_legacy_gate *lock, unsigned long sp, unsigned long ip, unsigned long bp) {
     memset(&node, 0xa5, sizeof(node));
     node.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
     node.packet_state=KD_PACKET_MINIMAL;
@@ -110,7 +110,7 @@ def main():
     kernel=Path(f'/lib/modules/{os.uname().release}/build')
     ptrace=(ROOT/'include/kd_regs.h').read_text()
     types=definition(ptrace,'struct kd_regs {').rstrip()+';\n'
-    types+=without_includes((ROOT/'include/kd_mutex.h').read_text())
+    types+=without_includes((ROOT/'include/kd_mutex_legacy.h').read_text())
     with tempfile.TemporaryDirectory(prefix='kd-mutex-wait-') as tmp:
         path=Path(tmp)
         (path/'types.h').write_text(types)

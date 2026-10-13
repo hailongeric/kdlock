@@ -16,7 +16,9 @@ from source_text import ROOT, without_includes
 
 def main():
     source = "\n".join(
-        without_includes((ROOT / name).read_text())
+        without_includes((ROOT / name).read_text().replace(
+            '#include "owned_mutex/admission.inc"',
+            (ROOT/'kernel_module/owned_mutex/admission.inc').read_text()))
         for name in ("include/kd_hotlock.h", "kernel_module/kd_hotlock.c")
     )
     queue = (ROOT / "kernel_module/spin/queue.inc").read_text()
@@ -27,6 +29,9 @@ def main():
     # A small set of policy mutations checks that these tests reject a wrong
     # result. IRQ ownership and lossless profiling are intentionally not tested.
     mutations = {
+        "owned-ratio-equality": ("<\n\t\t\towned_mutex_entry_ratio_limit;", "<=\n\t\t\towned_mutex_entry_ratio_limit;", 1),
+        "owned-cold-table": ("if (!cpu->hot && this_cpu_read(kd_owned_contentions) <", "if (false && !cpu->hot && this_cpu_read(kd_owned_contentions) <", 1),
+        "owned-early-lock-heat": ("++slot->count >= KD_HOTLOCK_SAMPLE_TARGET + 1U", "++slot->count >= KD_HOTLOCK_SAMPLE_TARGET", 1),
         "missing-mutex-entry": ("this_cpu_inc(kd_hotlock_mutex_entries);", "(void)0;", 1),
         "missing-mutex-contention": ("this_cpu_inc(kd_hotlock_mutex_contentions);", "(void)0;", 1),
         "mutex-ratio-equality": ("<\n                mutex_entry_ratio_limit;", "<=\n                mutex_entry_ratio_limit;", 1),

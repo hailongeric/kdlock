@@ -4,15 +4,29 @@ obj-m := mutex_cacheline.o
 mutex_cacheline-objs := module.o
 UBSAN_SANITIZE := n
 ccflags-y += -I$(SC_SHARED) -I$(TCLOCK_INCLUDE)
+ifneq ($(SC_SCENARIO),)
+ccflags-y += -DSC_SCENARIO=$(SC_SCENARIO)
+endif
 ifeq ($(SC_WORKLOAD),rcuht)
 ccflags-y += -DSC_HASH_PAYLOAD
 endif
 ifeq ($(SC_BACKEND),kdlock)
 ccflags-y += -DSC_DIRECT_KDLOCK -I$(KDLOCK_INCLUDE)
+ifeq ($(SC_MUTEX_OWNED),1)
+ccflags-y += -DSC_MUTEX_OWNED
+endif
 else ifeq ($(SC_BACKEND),tclock)
 ccflags-y += -DSC_DIRECT_TCLOCK
 else ifeq ($(SC_BACKEND),native)
 ccflags-y += -DSC_DIRECT_NATIVE
+endif
+ifeq ($(SC_MUTEX_OWNED),1)
+ifneq ($(SC_BACKEND),kdlock)
+$(error SC_MUTEX_OWNED requires SC_BACKEND=kdlock)
+endif
+ifeq ($(SC_WORKLOAD),rcuht)
+$(error owned-v1 is limited to the c01 cacheline workload)
+endif
 endif
 else
 KDIR ?= /lib/modules/$(shell uname -r)/build

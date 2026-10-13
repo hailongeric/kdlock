@@ -1,7 +1,7 @@
 # KD, TCLock and Linux Native lock protocols
 
 This guide compares how KD, TCLock and Linux Native acquire, delegate and release
-spinlocks, mutexes and rwlocks: nine benchmark backends in total. It describes the
+spinlocks, mutexes and rwlocks, including the separate experimental owned mutex. It describes the
 current x86_64 implementation. Start with the
 [glossary](../DESIGN.md#terms-used-in-these-guides) for terms such as combiner,
 frame, native suffix and ACK.
@@ -19,7 +19,8 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
-| KD mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Bounded spin followed by blocking; migration stays pinned | Original Linux mutex callers remain excluded by that same mutex |
+| KD legacy mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Bounded spin followed by blocking; migration stays pinned | Original Linux mutex callers remain excluded by that same mutex |
+| KD owned mutex | KD-owned 32-byte owner/OSQ/tagged FIFO object | SELF caller or physical owner running JIT at an explicit outer unlock | Private optimistic spinning/sleeping; delegated waiters use bounded polling then sleep | No mixing with Linux or TCLock APIs |
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
@@ -27,8 +28,10 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 A queue-head notification tells a waiter it may try to acquire the lock. It does
 not mean the waiter owns the lock or that its body has run. A completion
 notification tells the original caller that its body has already run and must be
-skipped. For KD mutex, the scheduling gate and the original Linux mutex are
+skipped. For KD legacy mutex, the scheduling gate and the original Linux mutex are
 separate: the executor must own the Linux mutex before running a body.
+The owned mutex has one ownership authority and no original mutex or shadow
+gate; see its [protocol and API](mutex_implementation.md#kd-owned-implementation-experimental).
 
 The workload builds a separate version for each backend. Every operation on a
 lock uses that backend's matching API. Loading KD or TCLock does not redirect

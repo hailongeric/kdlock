@@ -42,7 +42,7 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 }
 
 static __always_inline int
-kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *node)
+kd_mutex_clobber_wait(struct kd_mutex_legacy_gate *lock, struct kd_mutex_node *node)
 {
 	int result;
 

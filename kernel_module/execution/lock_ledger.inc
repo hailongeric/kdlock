@@ -26,7 +26,7 @@ int kd_exec_frame_set_lock_entries(struct kd_exec_frame *frame,
 		if (!lock_addr[i])
 			return -EINVAL;
 		if (lock_kind && (lock_kind[i] <= KD_EXEC_LOCK_NONE ||
-				  lock_kind[i] > KD_EXEC_LOCK_NATIVE))
+				  lock_kind[i] > KD_EXEC_LOCK_OWNED))
 			return -EINVAL;
 		for (j = 0; j < i; j++)
 			if (lock_addr[j] == lock_addr[i])
@@ -71,7 +71,7 @@ int kd_exec_frame_lock_push(struct kd_exec_frame *frame,
 			    enum kd_exec_lock_kind kind, void *lock_node)
 {
 	if (!frame || !lock_addr || kind <= KD_EXEC_LOCK_NONE ||
-	    kind > KD_EXEC_LOCK_NATIVE || !kd_exec_frame_validate(frame))
+	    kind > KD_EXEC_LOCK_OWNED || !kd_exec_frame_validate(frame))
 		return -EINVAL;
 	if (frame->jit_lock_depth >= KD_EXEC_MAX_LOCK_DEPTH)
 		return -E2BIG;

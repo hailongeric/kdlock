@@ -8,8 +8,10 @@ the critical-section machine code; the combiner runs the generated JIT code.
 KD provides three kinds of lock:
 
 - **Spinlock:** uses KD's own four-byte lock object.
-- **Mutex:** keeps the original Linux mutex, including its real owner, and adds
-  a queue for delegated work. Waiters use bounded polling followed by blocking.
+- **Mutex:** the experimental `struct kd_mutex` owns its 32-byte owner, spin queue
+  and waiter list, using ported optimistic spinning and sleeping. Its protocol
+  makes no Linux mutex calls on that object. The legacy backend remains available
+  for existing workloads and comparisons.
 - **Read-write lock:** lets readers run concurrently on their own CPUs. Writers
   can run locally or delegate through the spin JIT engine.
 
@@ -21,15 +23,15 @@ guest-kernel interfaces.
 Use the [project guide](docs/PROJECT_GUIDE.md) to build and run in the verified
 guest. [Performance status](docs/PERFORMANCE.md) summarizes measured outcomes,
 and the [results index](bench/results/README.md) retains source-specific evidence.
-The [blocking-mutex verification](bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-records the current policy change and its targeted checks.
+The [owned-mutex study](bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
+records the protocol redesign, targeted checks and remaining performance gap.
 
 ## Documentation
 
 | Start here | Content |
 | --- | --- |
 | [Project guide](docs/PROJECT_GUIDE.md) | Current state, reading order and guest setup |
-| [Nine lock protocols](docs/design/lock_protocols.md) | How KD, TCLock and Native acquire locks, run waiting work and release resources |
+| [Lock protocols](docs/design/lock_protocols.md) | How KD, TCLock and Native acquire locks, run waiting work and release resources |
 | [Spin implementation](docs/design/spin_implementation.md) | Spin source paths, objects, cachelines, queues, prefetch and stack/packet flow |
 | [Mutex implementation](docs/design/mutex_implementation.md) | How mutex acquisition, delegation, sleeping and owner acknowledgements work |
 | [Read-write lock](docs/design/rwlock_implementation.md) | How to use the rwlock and how it coordinates readers and writers |

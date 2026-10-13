@@ -9,7 +9,8 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | --- | --- | --- |
 | Explicit spin object/API | [kd_spin_type.h](kd_spin_type.h), [kd_spin_direct.h](kd_spin_direct.h), [kd_spin_fast.h](kd_spin_fast.h) | One KD word; ordinary preemption pair; no Linux/TCLock mixing |
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
-| Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_direct.h](kd_mutex_direct.h) | Original Linux mutex, blocking waits, ABI2 and opaque outer cookie |
+| Owned mutex | [kd_mutex.h](kd_mutex.h), [kd_owned_mutex_direct.h](kd_owned_mutex_direct.h) | KD-only 32-byte object, private OSQ/sleeping, ABI2 outer cookie |
+| Legacy mutex | [kd_mutex_legacy.h](kd_mutex_legacy.h), [kd_mutex_direct.h](kd_mutex_direct.h) | Original Linux mutex, blocking waits, ABI2 and opaque outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
@@ -31,7 +32,18 @@ value to choose how to enter the lock. It does not record how acquisition actual
 succeeded. Unlock uses the exact ownership record instead.
 [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) explains the heat samples.
 
-Mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
+Owned objects use `DEFINE_KD_MUTEX(name)` or `kd_mutex_init()`. Ordinary
+`kd_mutex_lock/unlock` and `kd_mutex_trylock` execute through the private SELF
+protocol and support nesting. Delegation uses the explicit outermost
+`KD_OWNED_MUTEX_OUTER_LOCK/UNLOCK` pair and one `kd_owned_mutex_outer_cookie`
+per acquisition, prepared with `kd_owned_mutex_prepare(...,
+KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`. The acquisition cookie is same-task and cannot
+be copied, modified or reused before its matching unlock. Owned objects must
+never be passed to Linux mutex APIs; matching size and offsets do not permit
+mixed waiters. See the [owned protocol](../docs/design/mutex_implementation.md#kd-owned-implementation-experimental)
+and [c01 caller](../workload_modules/spin_cacheline/scenario.h).
+
+Legacy mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it
 before its matching same-task unlock. The native CAS saves an exact owner; contended
 KD entry saves zero. Nested translated operations use `KD_MUTEX_DIRECT_LOCK/UNLOCK`;

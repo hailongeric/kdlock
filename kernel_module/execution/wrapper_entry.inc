@@ -124,7 +124,8 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
 		       clobber_spin_lock_addr && clobber_spin_unlock_addr;
 	if (frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
 		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
-		       direct_mutex_lock_addr && direct_mutex_unlock_addr;
+		       (frame->owned_mutex ? (owned_direct_lock_addr && owned_direct_unlock_addr) :
+		(direct_mutex_lock_addr && direct_mutex_unlock_addr));
 	return frame->entry_abi == KD_ENTRY_ABI_LEGACY &&
 	       (!directory || code[KD_JIT_ABI_OFFSET] == KD_ENTRY_ABI_LEGACY);
 }
@@ -153,7 +154,8 @@ static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
 	call->args[1] = (unsigned long)frame->logical_task;
 	call->code = (char *)code + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
-	call->unlock = frame->mutex_backend ? direct_mutex_unlock_addr :
+	call->unlock = frame->owned_mutex ? owned_direct_unlock_addr :
+		frame->mutex_backend ? direct_mutex_unlock_addr :
 					     clobber_spin_unlock_addr;
 	call->entry_sp = call->regs->sp;
 	call->entry_abi = frame->entry_abi;
@@ -263,7 +265,8 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	    (frame->complex_ready && frame->control_call.phase != KD_CALL_NONE) ||
 	    !kd_jit_minimal_complete_allowed(frame) ||
 	    !kd_exe_entry_is_ready(exe, 0, frame->entry_ip) ||
-	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_MUTEX ||
+	    READ_ONCE(exe->lock_kind) != (frame->owned_mutex ?
+		KD_EXE_LOCK_OWNED_MUTEX : KD_EXE_LOCK_MUTEX) ||
 	    !kd_jit_image_matches(exe, frame))
 		return false;
 	/* This pristine, exclusively bound root has just passed the complete
@@ -276,7 +279,7 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	call->args[1] = (unsigned long)frame->logical_task;
 	call->code = (char *)READ_ONCE(exe->code_block) + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
-	call->unlock = direct_mutex_unlock_addr;
+	call->unlock = frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;
 	call->entry_sp = regs->sp;
 	call->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	call->packet_state = &frame->packet_state;

@@ -17,6 +17,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--cpu', type=int, default=0)
+    p.add_argument('--owned', action='store_true', help='owned FIFO cooling/sleep/pickup probe')
     kernel_identity.arguments(p)
     args = p.parse_args()
     runtime.require(ROOT == Path('/root/host_fs/kdlock') and os.geteuid() == 0 and
@@ -63,16 +64,25 @@ def main():
             runtime.require(not runtime.FAULT.search(messages), 'kernel fault: retain module and callers')
 
         try:
-            runtime.command(['insmod', module, 'mutex_wait_selftest=1',
-                f'mutex_spin_limit={limit}', f'mutex_wait_cpu={args.cpu}'], path/'load.log', timeout=30)
+            prefix = 'owned_mutex' if args.owned else 'mutex'
+            runtime.command(['insmod', module, f'{prefix}_wait_selftest=1',
+                f'{prefix}_spin_limit={limit}', f'{prefix}_wait_cpu={args.cpu}'], path/'load.log', timeout=30)
             collect()
-            match = re.search(r'kd_mutex wait probe: rounds=1024 result_sleep=1 gate_sleep=1 switches=(\d+) errors=0 jit_bodies=0 deferred_progress=1 cooling=2', messages)
-            runtime.require(match and int(match[1]) >= 2, 'missing real scheduler/owner evidence')
+            if args.owned:
+                runtime.require('kd_owned_mutex wait probe: queued_cooling=1 result_sleep=1 pickup=1 drained=1 jit_bodies=0' in messages,
+                                'missing owned queued cooling/scheduler/pickup evidence')
+            else:
+                match = re.search(r'kd_mutex wait probe: rounds=1024 result_sleep=1 gate_sleep=1 switches=(\d+) errors=0 jit_bodies=0 deferred_progress=1 cooling=2', messages)
+                runtime.require(match and int(match[1]) >= 2, 'missing real scheduler/owner evidence')
             runtime.command([sys.executable, ROOT/'disassem/device_session.py', 'retire'], path/'retire.log')
             runtime.command(['rmmod', 'kdlock_km'], path/'unload.log')
             collect()
             runtime.idle()
-            results.append(dict(spin_limit=limit, rounds=1024, result_sleep=True,
+            if args.owned:
+                results.append(dict(spin_limit=limit, result_sleep=True, queued_cooling=True,
+                                    pickup=True, drained=True, jit_bodies=0))
+            else:
+                results.append(dict(spin_limit=limit, rounds=1024, result_sleep=True,
                 gate_sleep=True, deferred_progress=True, admission_cooling_checks=2,
                 voluntary_switches=int(match[1]),
                 errors=0, drained=True, jit_bodies=0))
@@ -80,7 +90,8 @@ def main():
             collect()
             os.close(fd)
     runtime.write_json(out/'result.json', dict(passed=True, drained=True, results=results))
-    print('PASS: immediate/adaptive parking, 3072 publications, sleeping result/gate waiters, same-CPU progress and drain')
+    print('PASS: owned queued admission cooling, actual sleep, SELF pickup and drain' if args.owned else
+          'PASS: immediate/adaptive parking, 3072 publications, sleeping result/gate waiters, same-CPU progress and drain')
 
 
 if __name__ == '__main__':

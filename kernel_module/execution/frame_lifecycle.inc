@@ -50,6 +50,7 @@ void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
   pr_info("kd_hotlock role: address=%lx request=%px role=WAITER\n", frame->outer_lock_addr, frame);
 #endif
 	frame->mutex_backend = false;
+	frame->owned_mutex = false;
 	frame->spin_simple = false;
 	frame->request_frame = true;
 	frame->batch_lease = false;
@@ -170,6 +171,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
   pr_info("kd_hotlock role: address=%lx request=%px role=WAITER\n", frame->outer_lock_addr, frame);
 #endif
 	frame->mutex_backend = false;
+	frame->owned_mutex = false;
 	frame->spin_simple = false;
 	frame->request_frame = false;
 	frame->complex_ready = true;
@@ -226,10 +228,10 @@ kd_exec_frame_push_borrowed(struct kd_regs *regs, unsigned long entry_ip,
  * materializes them before validation or any service can detach the queue. */
 /* Keep external definitions while the shared mutex unit specializes these
  * operations. Neither exact ownership nor the enclosing lease is inferred. */
-__always_inline __gnu_inline
-struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
+static __always_inline
+struct kd_exec_frame *kd_exec_frame_push_mutex_root(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
-	struct task_struct *task, struct kd_mutex *lock,
+	struct task_struct *task, void *lock, unsigned long address, bool owned,
 	struct kd_exec_outer_unlock *hook)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
@@ -237,7 +239,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 
 	/* These are push_internal's checks specialized to depth zero, one held
 	 * lock and an existing batch lease. Failure publishes no frame. */
-	if (!regs || !gsbase || !task || !lock || !lock->origin_mutex_addr ||
+	if (!regs || !gsbase || !task || !lock || !address ||
 	    !hook || ctx->depth || ctx->owner
 #ifdef KDLOCK_SELFTEST
 	    || !kd_exec_context_validate(ctx)
@@ -254,12 +256,13 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	frame->borrowed_regs = regs;
 	frame->regs_ref = NULL;
 	frame->entry_ip = entry_ip;
-	frame->outer_lock_addr = lock->origin_mutex_addr;
+	frame->outer_lock_addr = address;
 	frame->gsbase = gsbase;
 	frame->logical_task = task;
 	frame->parent = NULL;
 	frame->depth = 0;
 	frame->mutex_backend = true;
+	frame->owned_mutex = owned;
 	frame->spin_simple = false;
 	frame->request_frame = false;
 	frame->batch_lease = true;
@@ -280,7 +283,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	frame->packet_state = KD_PACKET_MINIMAL;
 	frame->held_lock_depth = 1;
 	frame->outer_lock_depth = 1;
-	frame->jit_lock_addr[0] = lock->origin_mutex_addr;
+	frame->jit_lock_addr[0] = address;
 	frame->jit_lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
 	frame->jit_lock_node[0] = lock;
 	frame->jit_lock_released[0] = false;
@@ -300,6 +303,28 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	}
 #endif
 	return frame;
+}
+
+__always_inline __gnu_inline
+struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
+	struct kd_regs *regs, unsigned long ip, unsigned long gsbase,
+	struct task_struct *task, struct kd_mutex_legacy_gate *lock,
+	struct kd_exec_outer_unlock *hook)
+{
+	return kd_exec_frame_push_mutex_root(regs, ip, gsbase, task, lock,
+		lock ? lock->origin_mutex_addr : 0, false, hook);
+}
+
+__always_inline __gnu_inline
+struct kd_exec_frame *kd_exec_frame_push_owned_mutex_batch(
+	struct kd_regs *regs, unsigned long ip, unsigned long gsbase,
+	struct task_struct *task, struct kd_mutex *lock,
+	struct kd_exec_outer_unlock *hook)
+{
+	if (!lock || !kd_owned_mutex_owned(lock, current))
+		return NULL;
+	return kd_exec_frame_push_mutex_root(regs, ip, gsbase, task, lock,
+		(unsigned long)lock, true, hook);
 }
 
 /* Do not use spin's prepare_complex: continuation_sp aliases borrowed_regs,
@@ -331,13 +356,13 @@ int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame)
  * all owner/routing/ledger checks, then retire without revalidating that same
  * one-entry ledger through three generic transitions. No waiter is woken here;
  * the queue publishes its packet only after this frame is inaccessible. */
-__always_inline __gnu_inline
-int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
-				    struct kd_mutex *lock)
+static __always_inline
+int kd_exec_frame_retire_mutex_root(struct kd_exec_frame *frame,
+		void *lock, unsigned long address, bool owned)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 
-	if (!frame || !lock || !frame->mutex_backend || !frame->batch_lease ||
+	if (!frame || !lock || !frame->mutex_backend || frame->owned_mutex != owned || !frame->batch_lease ||
 	    frame->spin_simple || frame->request_frame ||
 	    !frame->regs_borrowed || frame->parent || frame->depth ||
 	    ctx->depth != 1 || ctx->owner != current || ctx->top != frame ||
@@ -350,8 +375,8 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	    frame->outer_unlock_seen || frame->held_lock_depth != 1 ||
 	    frame->outer_lock_depth != 1 || frame->jit_lock_depth != 1 ||
 	    frame->outer_lock_index != 0 || frame->jit_lock_released[0] ||
-	    frame->outer_lock_addr != lock->origin_mutex_addr ||
-	    frame->jit_lock_addr[0] != lock->origin_mutex_addr ||
+	    frame->outer_lock_addr != address ||
+	    frame->jit_lock_addr[0] != address ||
 	    frame->jit_lock_kind[0] != KD_EXEC_LOCK_QUEUE_OWNER ||
 	    frame->jit_lock_node[0] != lock ||
 	    /* A pristine root has never entered a service or published routing.
@@ -361,9 +386,7 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	      kd_exec_frame_remote_pending(frame) || frame->resume_target ||
 	      frame->remote_request || frame->native_request ||
 	      !list_empty(&frame->native_link))) ||
-	    !frame->outer_unlock_hook || frame->outer_unlock_hook->released ||
-	    READ_ONCE(lock->physical_owner) != current ||
-	    !kd_origin_mutex_owned((struct mutex *)lock->origin_mutex_addr, current))
+	    !frame->outer_unlock_hook || frame->outer_unlock_hook->released)
 		return -EINVAL;
 	frame->jit_lock_released[0] = true;
 	frame->outer_unlock_seen = true;
@@ -380,6 +403,27 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	frame->state = KD_EXEC_FRAME_UNUSED;
 	return 0;
 #endif
+}
+
+__always_inline __gnu_inline
+int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
+				    struct kd_mutex_legacy_gate *lock)
+{
+	if (!lock || READ_ONCE(lock->physical_owner) != current ||
+	    !kd_origin_mutex_owned((struct mutex *)lock->origin_mutex_addr, current))
+		return -EINVAL;
+	return kd_exec_frame_retire_mutex_root(frame, lock,
+		lock->origin_mutex_addr, false);
+}
+
+__always_inline __gnu_inline
+int kd_exec_frame_retire_owned_mutex_batch(struct kd_exec_frame *frame,
+					 struct kd_mutex *lock)
+{
+	if (!lock || !kd_owned_mutex_owned(lock, current))
+		return -EINVAL;
+	return kd_exec_frame_retire_mutex_root(frame, lock,
+		(unsigned long)lock, true);
 }
 
 /* Retire only after remote dependencies and native routing/requests are gone.

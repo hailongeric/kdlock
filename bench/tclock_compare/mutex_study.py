@@ -8,15 +8,65 @@ confirmation blocks are required before recommending a new default.
 import argparse
 import json
 from pathlib import Path
+import re
 import statistics
 
 import run
-from bench_runtime import digest, require, validate_measurement
+from bench_runtime import FAULT, digest, require, validate_measurement
+from session import check_jit_evidence, check_kd_parameters
 from summarize import valid, write_json
 
 PRIMARY = (1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28)
 REGRESSION = (32, 36, 48, 60)
 GRID = PRIMARY + REGRESSION
+
+OWNED_IDENTITY = dict(registry_lock_kind=3, entry_abi=2, caller_abi='clobber',
+    caller_shell='owned_mutex_outer_cookie', cookie_storage='owned_acquisition_local',
+    mutex_wait_counter_scope='owned_delegate_waits')
+
+
+def require_owned_identity(record):
+    require(all(record.get(key) == value for key, value in OWNED_IDENTITY.items()),
+            'owned mutex family/caller/queue identity differs')
+    require(record.get('owned_queue_policy') ==
+            ('bounded_fifo_refill' if record.get('owned_mutex_refill', False) else 'finite_fifo'),
+            'owned FIFO policy differs from refill control')
+    require(record.get('scenario', 'plain') == 'plain' and
+            not record.get('owned_mutex_force_full', False),
+            'owned performance sample contains a functional control')
+
+
+def require_owned_evidence(record, folder):
+    """Recheck existing live receipts; legacy archives predate owned metadata."""
+    if record.get('mutex_implementation', 'legacy') != 'owned-v1':
+        return
+    require_owned_identity(record)
+    layout = record.get('layout', {})
+    require(layout.get('lock_bytes') == 32 and layout.get('line_bytes') == 64 and
+            layout.get('lock_addr', -1) % 64 == layout.get('data_addr', -1) % 64 == 0,
+            'owned mutex layout differs')
+    entry = record['published_before']['entry']
+    require(entry.get('lock_kind') == 3 and entry.get('entry_abi') == 2 and
+            entry.get('pid') == entry.get('status') == 0 and entry.get('code', 0) > 0,
+            'owned publication has the wrong family/ABI or is not NORMAL')
+    check_kd_parameters(record['parameters'], record, layout['lock_addr'])
+    classified = dict(record)
+    check_jit_evidence(classified)
+    require(all(record.get(key) == classified[key] for key in
+                ('execution_class', 'jit_acceptance')),
+            'owned execution classification differs from returned bodies')
+    log = (folder/'kernel.log').read_text()
+    require(not FAULT.search(log), 'owned sample contains a kernel fault')
+    matches = re.findall(
+        r'kd_owned_mutex: bodies=(\d+) batches=(\d+) refusals=(\d+) early_releases=(\d+)', log)
+    require(len(matches) == 1, 'missing or duplicate owned provider drain receipt')
+    observed = dict(zip(('bodies', 'batches', 'refusals', 'early_releases'), map(int, matches[0])))
+    require(record.get('owned_observations') == observed,
+            'owned drain observations differ from the kernel receipt')
+    require(observed['bodies'] >= record['jit_bodies'] and observed['early_releases'] == 0,
+            'owned plain body observations disagree with measured execution')
+    require(json.loads((folder/'drain.counts.json').read_text())['active'] == 0,
+            'owned workers did not drain')
 
 
 def load_run(folder, post_work_rounds=64):
@@ -60,7 +110,8 @@ def load_run(folder, post_work_rounds=64):
                 record['warmup_iterations_per_worker'] == 48000 and
                 record['peak_window_ms'] == record['peak_settle_ms'] == 300 and
                 not record.get('diagnostic', False) and not record.get('pmu', False) and
-                not record.get('profile_lock', False) and not record.get('functional', False),
+                not record.get('profile_lock', False) and not record.get('perf_record', False) and
+                not record.get('functional', False),
                 'sample is outside the uninstrumented c01 study contract')
         require(valid(record), f'invalid/undrained sample: {path}')
         require(record['cpu_nodes'] == [int(cpu >= 32) for cpu in record['cpus']],
@@ -80,6 +131,7 @@ def load_run(folder, post_work_rounds=64):
             require(record['jit_after'] - record['jit_before'] == record['jit_bodies'] and
                     0 <= record['jit_bodies'] <= record['measurement']['completed'],
                     'invalid returned-body count')
+            require_owned_evidence(record, path.parent)
         raw = json.loads((path.parent/'measure.json').read_text())
         peak = validate_measurement(raw, record, record['iterations'])
         require(peak == record['measurement']['peak'], 'saved peak does not match raw progress')
@@ -127,7 +179,19 @@ def metrics(rows):
 
 def evaluate(baseline, candidate):
     post_work_rounds = study_post_work_rounds([*baseline, *candidate])
-    limits = {r.get('mutex_entry_ratio_limit') for r in candidate if r['arm'] == 'kdlock'}
+    implementations = {r.get('mutex_implementation', 'legacy') for r in candidate if r['arm'] == 'kdlock'}
+    require(len(implementations) == 1 and implementations <= {'legacy', 'owned-v1'},
+            'one mutex implementation per candidate')
+    implementation = next(iter(implementations))
+    policies = {r.get('owned_queue_policy', 'not_applicable') for r in candidate if r['arm'] == 'kdlock'}
+    require(len(policies) == 1, 'one queue policy per candidate')
+    if implementation == 'owned-v1':
+        for record in candidate:
+            if record['arm'] == 'kdlock':
+                require_owned_identity(record)
+    threshold_field = ('owned_mutex_entry_ratio_limit' if implementation == 'owned-v1' else
+                       'mutex_entry_ratio_limit')
+    limits = {r.get(threshold_field) for r in candidate if r['arm'] == 'kdlock'}
     require(len(limits) == 1 and next(iter(limits)) in run.MUTEX_ENTRY_RATIO_LIMITS,
             'one threshold per candidate')
     require(all(r.get('mutex_routing') == 'adaptive' and
@@ -150,7 +214,9 @@ def evaluate(baseline, candidate):
     missing = sorted(set(GRID)-set(counts))
     verdict = ('REJECTED' if any(not c['passed'] for c in checks) else
                'INCOMPLETE' if missing else 'PASS')
-    return dict(post_work_rounds=post_work_rounds, threshold=next(iter(limits)),
+    return dict(post_work_rounds=post_work_rounds, implementation=implementation,
+                queue_policy=next(iter(policies)),
+                threshold_field=threshold_field, threshold=next(iter(limits)),
                 verdict=verdict, missing=missing, checks=checks)
 
 
@@ -183,6 +249,10 @@ def main():
     candidate_records = {p: load_run(p, args.post_work_rounds) for p in args.candidates}
     trials = [dict(path=str(p), **evaluate(baseline, rows))
               for p, rows in candidate_records.items()]
+    require(len({t['implementation'] for t in trials}) == 1,
+            'screen each mutex implementation separately before choosing a threshold')
+    require(len({t['queue_policy'] for t in trials}) == 1,
+            'screen each queue policy separately before choosing a threshold')
     passing = sorted(t['threshold'] for t in trials if t['verdict'] == 'PASS')
     confirmation = []
     selected = None
@@ -201,9 +271,15 @@ def main():
                     'confirmation source differs from selected screen')
             require_fresh(records, seen)
             confirmation.append(dict(path=str(p), **evaluate(baseline, records)))
+        require(all(c['implementation'] == trials[0]['implementation'] for c in confirmation),
+                'confirmation mutex implementation differs from selected screen')
+        require(all(c['queue_policy'] == trials[0]['queue_policy'] for c in confirmation),
+                'confirmation queue policy differs from selected screen')
         if all(c['verdict'] == 'PASS' and c['threshold'] == min(passing) for c in confirmation):
             selected = min(passing)
     write_json(args.output, dict(post_work_rounds=args.post_work_rounds,
+        candidate_implementation=trials[0]['implementation'],
+        selected_implementation=trials[0]['implementation'] if selected is not None else None,
         selected_default=selected, retained_default=256 if selected is None else None,
         acceptance='97% separately for median whole-run and best valid warmed peak in each block',
         baseline=str(args.baseline), candidates=trials, confirmations=confirmation))

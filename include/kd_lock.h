@@ -36,6 +36,9 @@ bool kd_mutex_task_active(struct task_struct *task);
 bool kd_mutex_task_reroute(struct task_struct *task);
 bool kd_mutex_task_get(struct task_struct *task);
 void kd_mutex_task_put(struct task_struct *task);
+void kd_owned_mutex_task_enter(void);
+void kd_owned_mutex_task_leave(void);
+bool kd_owned_mutex_task_can_combine(void);
 void kd_mutex_tasks_exit(void);
 bool kd_mutex_tasks_idle(void);
 #ifdef KDLOCK_SELFTEST
@@ -53,6 +56,12 @@ void __kd_mutex_unlock_clobber_v1(struct mutex *, unsigned long, unsigned long,
 				  unsigned long);
 
 /* Known-call handlers used by the high-lock JIT continuation path. */
+struct kd_mutex;
+int kd_owned_mutex_jit_nested_lock_ctx(struct kd_mutex *, struct kd_regs *,
+				      struct kd_exec_frame *);
+int kd_owned_mutex_jit_nested_unlock_ctx(struct kd_mutex *,
+					struct kd_exec_frame *);
+int kd_owned_mutex_jit_abort_cleanup(struct kd_exec_frame *);
 int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct kd_regs *regs,
 				 struct kd_exec_frame *frame);
 int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,

@@ -21,7 +21,7 @@ MODULE_PARM_DESC(mutex_native_route, "Route new mutex acquisitions natively afte
 static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,
 		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
-	struct kd_mutex *kd_mtx;
+	struct kd_mutex_legacy_gate *kd_mtx;
 	bool admitted;
 
 	preempt_disable();
@@ -109,7 +109,7 @@ void __kd_mutex_lock_clobber_v1(struct mutex *lock, unsigned long sp,
 void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 		       unsigned long ret_addr)
 {
-	struct kd_mutex *kd_mtx;
+	struct kd_mutex_legacy_gate *kd_mtx;
 
 	(void)ret_rsp;
 	/* Always reached, even after CPU cooling, rename or source closing. Task
@@ -309,7 +309,7 @@ int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
 
 int kd_mutex_debug_waiter_count(struct mutex *lock)
 {
-	struct kd_mutex *kd_mtx;
+	struct kd_mutex_legacy_gate *kd_mtx;
 
 	if (!lock)
 		return -EINVAL;

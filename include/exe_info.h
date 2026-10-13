@@ -52,11 +52,14 @@ enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,
 	KD_EXE_LOCK_SPIN = 1,
 	KD_EXE_LOCK_MUTEX = 2,
+	KD_EXE_LOCK_OWNED_MUTEX = 3,
 };
 
 /* A versioned register contract never changes a translation's lock backend. */
 static inline int kd_entry_abi_valid(int kind, unsigned int abi)
 {
+	if (kind == KD_EXE_LOCK_OWNED_MUTEX)
+		return abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	return (kind == KD_EXE_LOCK_SPIN || kind == KD_EXE_LOCK_MUTEX) &&
 	       (abi == KD_ENTRY_ABI_LEGACY ||
 		((abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||

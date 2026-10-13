@@ -41,8 +41,10 @@
 
 #include "utils.h"
 #include "kd_lock.h"
+#include "kd_mutex_legacy.h"
 #include "kd_mutex.h"
 #include "kd_mutex_direct.h"
+#include "kd_owned_mutex_direct.h"
 #include "kd_spinlock.h"
 #include "kd_hostcall.h"
 
@@ -65,6 +67,14 @@ MODULE_PARM_DESC(
 	jit_hl_fault_after_known_call,
 	"Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit");
 
+/* Exercise a real, validated post-mutex-control continuation. Unlike the
+ * synthetic fault above, this never fabricates a CALL or instruction exit. */
+static int kd_owned_mutex_native_after_control;
+module_param_named(owned_mutex_native_after_control,
+		   kd_owned_mutex_native_after_control, int, 0644);
+MODULE_PARM_DESC(owned_mutex_native_after_control,
+	"One-shot owned mutex diagnostic: resume natively after a checked control CALL");
+
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
 static int kd_code_block_free;
 static atomic_t kd_code_block_gate = ATOMIC_INIT(0);
@@ -80,7 +90,7 @@ static void kd_code_block_gate_unlock(void)
 	atomic_set_release(&kd_code_block_gate, 0);
 }
 
-static unsigned long end_points[6];
+static unsigned long end_points[16];
 static int end_point_count;
 static unsigned long raw_spin_lock_addr;
 static unsigned long raw_spin_unlock_addr;
@@ -96,6 +106,13 @@ static unsigned long direct_mutex_lock_addr;
 static unsigned long contended_mutex_lock_addr;
 static unsigned long outer_mutex_lock_addr;
 static unsigned long direct_mutex_unlock_addr;
+static unsigned long owned_mutex_lock_addr;
+static unsigned long owned_mutex_unlock_addr;
+static unsigned long owned_outer_unlock_addr;
+static unsigned long owned_direct_lock_addr;
+static unsigned long owned_contended_lock_addr;
+static unsigned long owned_outer_lock_addr;
+static unsigned long owned_direct_unlock_addr;
 
 #include "execution/hostcalls.inc"
 
@@ -152,7 +169,8 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
 
 	if (READ_ONCE(exe->lock_kind) !=
-	    (frame->mutex_backend ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN)) {
+	    (frame->owned_mutex ? KD_EXE_LOCK_OWNED_MUTEX :
+	     frame->mutex_backend ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN)) {
 		kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);
 		pr_warn_ratelimited(
 			"[KD_JIT][WARN] reason=FRAME_LOCK_KIND_MISMATCH entry=0x%lx registered=%d mutex_frame=%d\n",

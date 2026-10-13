@@ -109,7 +109,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     diagnostics.begin(pid, entry)
     os.makedirs("./asm", exist_ok=True)
 
-    if lock_kind not in {"spin", "mutex"} or abi not in {0, 1, 2, 3} or (abi in {1, 3} and lock_kind != "spin") or (abi == 2 and lock_kind != "mutex"):
+    if lock_kind not in {"spin", "mutex", "mutex-owned"} or abi not in {0, 1, 2, 3} or (abi in {1, 3} and lock_kind != "spin") or (abi == 2 and lock_kind not in {"mutex", "mutex-owned"}) or (lock_kind == "mutex-owned" and abi != 2):
         diagnostics.set_instruction(entry, "<entry lock kind>")
         return reject_translation("missing or invalid entry lock kind")
 
@@ -148,10 +148,23 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     direct_mutex_unlock = get_kernel_symbol("kd_mutex_direct_unlock_clobber_v1")
     contended_mutex_lock = get_kernel_symbol("kd_mutex_direct_contended_clobber_v1")
     outer_mutex_lock = get_kernel_symbol("kd_mutex_outer_contended_clobber_v1")
-    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock} - {0, None}
+    owned_mutex_lock = get_kernel_symbol("kd_owned_mutex_lock_v1")
+    owned_mutex_unlock = get_kernel_symbol("kd_owned_mutex_unlock_v1")
+    owned_outer_unlock = get_kernel_symbol("kd_owned_mutex_outer_unlock_v1")
+    owned_direct_lock = get_kernel_symbol("kd_owned_mutex_direct_lock_clobber_v1")
+    owned_contended_lock = get_kernel_symbol("kd_owned_mutex_direct_contended_clobber_v1")
+    owned_outer_lock = get_kernel_symbol("kd_owned_mutex_outer_contended_clobber_v1")
+    owned_direct_unlock = get_kernel_symbol("kd_owned_mutex_direct_unlock_clobber_v1")
+    if lock_kind == "mutex-owned" and not all((owned_mutex_lock, owned_mutex_unlock, owned_outer_unlock,
+            owned_direct_lock, owned_contended_lock, owned_outer_lock, owned_direct_unlock)):
+        return reject_translation("owned mutex entry symbols unavailable")
+    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock, owned_direct_lock, owned_contended_lock, owned_outer_lock, owned_direct_unlock} - {0, None}
+    mutex_pair = ((owned_direct_lock and owned_direct_unlock)
+                  if lock_kind == "mutex-owned" else
+                  ((direct_mutex_lock and direct_mutex_unlock) or
+                   (clobber_mutex_lock and clobber_mutex_unlock)))
     if ((abi in {1, 3} and not (clobber_lock and clobber_unlock)) or
-        (abi == 2 and not ((direct_mutex_lock and direct_mutex_unlock) or
-                           (clobber_mutex_lock and clobber_mutex_unlock)))):
+        (abi == 2 and not mutex_pair)):
         return reject_translation("clobber entry symbols unavailable")
     lock_symbols = {
         addr: (kind, name)
@@ -166,6 +179,13 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             (contended_mutex_lock, "mutex", "kd_mutex_direct_contended_clobber_v1"),
             (outer_mutex_lock, "mutex", "kd_mutex_outer_contended_clobber_v1"),
             (direct_mutex_unlock, "mutex", "kd_mutex_direct_unlock_clobber_v1"),
+            (owned_mutex_lock, "mutex-owned", "kd_owned_mutex_lock_v1"),
+            (owned_mutex_unlock, "mutex-owned", "kd_owned_mutex_unlock_v1"),
+            (owned_outer_unlock, "mutex-owned", "kd_owned_mutex_outer_unlock_v1"),
+            (owned_direct_lock, "mutex-owned", "kd_owned_mutex_direct_lock_clobber_v1"),
+            (owned_contended_lock, "mutex-owned", "kd_owned_mutex_direct_contended_clobber_v1"),
+            (owned_outer_lock, "mutex-owned", "kd_owned_mutex_outer_contended_clobber_v1"),
+            (owned_direct_unlock, "mutex-owned", "kd_owned_mutex_direct_unlock_clobber_v1"),
             (mutex_lock, "mutex", "mutex_lock"),
             (mutex_unlock, "mutex", "mutex_unlock"),
             (clobber_mutex_lock, "mutex", "kd_mutex_lock_clobber_v1"),
@@ -179,7 +199,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     # device lease. New spin/scalar service summaries describe typed sequential
     # effects; they do not claim this mutex runtime stack-comparison capability.
     mutex_stack_bytes = (
-        memread.device_session.mutex_stack_bytes() if lock_kind == "mutex" else 0
+        memread.device_session.mutex_stack_bytes() if lock_kind in {"mutex", "mutex-owned"} else 0
     )
     jump_table = {}
     diagnostics.set_instruction(entry, "<CFG text coverage>")
@@ -211,8 +231,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             block_dict,
             db_dict,
             entry,
-            {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock},
-            {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock},
+            {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, owned_mutex_lock, owned_direct_lock, owned_contended_lock, owned_outer_lock},
+            {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock, owned_mutex_unlock, owned_outer_unlock, owned_direct_unlock},
             discovered_targets,
             native_exits=native_exits,
         )
@@ -289,7 +309,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                 and context_policy.static_address(
                     line.args[0], db_dict[block], line.offset + line.l
                 )
-                in {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock}
+                in {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, owned_mutex_lock, owned_direct_lock, owned_contended_lock, owned_outer_lock}
                 for block in selected.values()
                 for line in block.lines
             )
@@ -377,7 +397,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         resolved_hostcalls, keep_call_stack,
         entry_guards=entry_guards, body_witness=body_witness,
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
-                                 {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()),
+                                 ({owned_direct_unlock} if lock_kind == "mutex-owned" else
+                                  {direct_mutex_unlock or clobber_mutex_unlock}) if abi == 2 else set()),
     )
     # Mutex waiters may sleep, so their CPU's GS data is never a safe delegated
     # input. Apply this admission rule to every mutex image, including ABI0.

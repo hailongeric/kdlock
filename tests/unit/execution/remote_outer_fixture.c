@@ -297,6 +297,16 @@ static int release_outer(struct kd_exec_frame *frame,
 int kd_spin_jit_nested_unlock_ctx(raw_spinlock_t *lock,
 				  struct kd_exec_frame *frame);
 static void cpu_relax(void);
+/* Owned continuations are outside this legacy remote fixture. Fail rather
+ * than silently treating an unexpected family transition as native success. */
+struct kd_mutex;
+static int kd_owned_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
+		struct kd_exec_frame *frame)
+{
+	(void)lock; (void)frame;
+	fprintf(stderr, "FAIL unexpected owned unlock in remote fixture\n");
+	exit(1);
+}
 #include "timing_code.h"
 #include "remote_code.h"
 

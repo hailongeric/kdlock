@@ -13,7 +13,7 @@ struct kd_mutex_node {
     union { u16 result; struct { u8 completed, locked; }; };
     struct rcuwait *wait;
 } probe_node;
-struct kd_mutex { u8 locked; int gate_wait; } gate;
+struct kd_mutex_legacy_gate { u8 locked; int gate_wait; } gate;
 enum { TASK_RUNNING, TASK_UNINTERRUPTIBLE };
 #define KD_MUTEX_WAITER_PROCESSED 1
 static unsigned int kd_mutex_spin_limit;
@@ -48,7 +48,7 @@ static int rcuwait_wake_up(struct rcuwait *w) {
 static bool waitqueue_active(int *q) { return *q; }
 static void wake_up_all(int *q) { assert(q==&gate.gate_wait); *q=0; }
 #define wait_event(q,condition) do { assert(preempt==0); (q)=1; kd_mutex_open_gate(&gate); assert(condition); } while(0)
-static void kd_mutex_open_gate(struct kd_mutex *lock);
+static void kd_mutex_open_gate(struct kd_mutex_legacy_gate *lock);
 #include "parking.inc"
 static void prepare_to_rcuwait(struct rcuwait *w) {
     assert(w==&wait_slot && !w->task); w->task=&waiter;

@@ -29,7 +29,7 @@
 #include <asm/asm.h>
 #include <linux/objtool.h>
 
-#include "kd_mutex.h"
+#include "kd_mutex_legacy.h"
 #include "kd_mutex_stats.h"
 #include "kd_lock.h"
 #include "kd_exec.h"
@@ -161,7 +161,7 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
-kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
+kd_mutex_lock_slowpath_asm(struct kd_mutex_legacy_gate *lock,
 			   struct kd_mutex_node *curr_node)
 {
 	register int ret_val;
@@ -210,7 +210,7 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
  * _kd_mutex_lock_abi — fastpath cmpxchg, slowpath delegation queue.
  */
 __attribute__((noipa)) noinline notrace void
-_kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
+_kd_mutex_lock_abi(struct kd_mutex_legacy_gate *lock, unsigned long rsp_value,
 	       unsigned long ret_addr, unsigned long bp, unsigned int abi)
 {
 	struct kd_regs resume_regs;
@@ -340,7 +340,7 @@ scheduler_restore:;
  * A unlock with B still live detaches the batch through kd_mutex_release_outer().
  */
 __attribute__((noipa)) noinline notrace int
-_kd_mutex_unlock_checked(struct kd_mutex *lock)
+_kd_mutex_unlock_checked(struct kd_mutex_legacy_gate *lock)
 {
 	u8 locked = smp_load_acquire(&lock->locked);
 
@@ -359,7 +359,7 @@ _kd_mutex_unlock_checked(struct kd_mutex *lock)
 }
 
 __attribute__((noipa)) noinline notrace void
-_kd_mutex_unlock(struct kd_mutex *lock)
+_kd_mutex_unlock(struct kd_mutex_legacy_gate *lock)
 {
 	_kd_mutex_unlock_checked(lock);
 }

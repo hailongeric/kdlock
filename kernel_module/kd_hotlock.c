@@ -270,9 +270,11 @@ void kd_hotlock_sample_spin_mcs_pinned(void)
   WRITE_ONCE(t->busy, 0);
 }
 
+#include "owned_mutex/admission.inc"
+
 int kd_hotlock_init(void)
 {
-  int cpu;
+  int cpu, ret;
   unsigned long now;
   if (spin_entry_ratio_limit == 1 ||
       (spin_entry_ratio_limit & (spin_entry_ratio_limit - 1)))
@@ -283,6 +285,12 @@ int kd_hotlock_init(void)
   kd_hotlock_cpu = alloc_percpu(struct kd_hotlock_cpu);
   if (!kd_hotlock_cpu)
     return -ENOMEM;
+  ret = kd_owned_hotlock_init();
+  if (ret) {
+    free_percpu(kd_hotlock_cpu);
+    kd_hotlock_cpu = NULL;
+    return ret;
+  }
   /* Establish both typed CPU clocks before any caller can enter. The first
    * batch includes startup/idle time, so it may conservatively remain cold. */
   now = rdtsc_ordered();
@@ -336,6 +344,7 @@ void kd_hotlock_exit(void)
                 rate_hot, s->hot);
       }
     }
+  kd_owned_hotlock_exit();
   free_percpu(kd_hotlock_cpu);
   kd_hotlock_cpu = NULL;
 }

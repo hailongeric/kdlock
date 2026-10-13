@@ -8,7 +8,7 @@
 #define CHECK(c) do { if (!(c)) { \
  fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #c); exit(1); } } while (0)
 typedef struct { int value; } atomic_t;
-struct kd_mutex { atomic_t waiter_count; int waiter_slot; };
+struct kd_mutex_legacy_gate { atomic_t waiter_count; int waiter_slot; };
 #define KD_MUTEX_WAITER_SLOTS 1024
 static struct { int count[KD_MUTEX_WAITER_SLOTS]; } waiter_cpus[2];
 static typeof(waiter_cpus) *kd_mutex_waiter_cpus = &waiter_cpus;
@@ -45,7 +45,7 @@ static void CHECK_PIN(void) { CHECK(pinned); }
 
 int main(void)
 {
- struct kd_mutex lock = {.waiter_slot = -1};
+ struct kd_mutex_legacy_gate lock = {.waiter_slot = -1};
  CHECK(kd_mutex_check_idle());
  kd_mutex_waits[3][1].task = &lock;
  CHECK(!kd_mutex_check_idle());
@@ -90,7 +90,7 @@ int main(void)
  CHECK(!lock.waiter_count.value && !kd_mutex_active_waiters[1]);
  /* Stable sums report exact identities across CPUs/locks, and no mapped
   * operation writes the old shared counter. Highest slot remains distinct. */
- struct kd_mutex first = {.waiter_slot = 0}, last = {.waiter_slot = 1023};
+ struct kd_mutex_legacy_gate first = {.waiter_slot = 0}, last = {.waiter_slot = 1023};
  CHECK(kd_mutex_waiter_count(NULL) == -EINVAL);
  CHECK(!kd_mutex_waiter_count(&lock));
  cpu_id = 0; kd_mutex_waiter_enter(&first);

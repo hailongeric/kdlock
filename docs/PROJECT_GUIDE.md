@@ -1,8 +1,10 @@
 # Project guide
 
 KD lets a lock holder execute a waiting caller's critical section through JIT.
-Spinlocks use KD's own four-byte object. Mutexes keep the original Linux mutex
-and its real owner. Read-write locks use a 128-byte object: readers run locally,
+Spinlocks use KD's own four-byte object. The experimental owned mutex uses a
+32-byte `struct kd_mutex` with its own owner, OSQ and tagged waiter list; it
+never passes that object to Linux mutex operations. The retained legacy mutex
+backend keeps the original Linux object and its real owner. Read-write locks use a 128-byte object: readers run locally,
 while writers may delegate through the spin engine. Rwlock ABI3 acquires exclusive
 write access before the translated body starts. Callers select these APIs
 explicitly; loading the provider does not redirect global Linux lock calls.
@@ -20,7 +22,7 @@ checks sleeping waiters, physical-owner ACKs and actual JIT execution.
 
 | Need | Document |
 | --- | --- |
-| Understand all nine lock backends | [Lock protocols](design/lock_protocols.md) |
+| Understand the lock backends | [Lock protocols](design/lock_protocols.md) |
 | Find the KD execution components | [Design](DESIGN.md), [code map](CODE_MAP.md) |
 | Follow each lock's operations | [Spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md), [rwlock](design/rwlock_implementation.md) |
 | Change generated code or state layout | [Execution flow](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md) |
@@ -248,6 +250,15 @@ rejects all six owner-aware retry/OSQ candidates. Its exact experimental tip
 merging the rejected provider. The report and retained workload drain check are
 integrated separately, with their tip archived as
 `archive/perf/mutex-optimistic-report-20261013`. The provider remains `9b76719`.
+
+The later [owned-mutex redesign](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
+adds an explicit experimental KD object and keeps the legacy benchmark default.
+It preserves the Linux object layout while integrating owner spinning and
+sleeping into KD's own protocol. The targeted correctness checks and legacy
+JIT compatibility smoke pass; finite/refill performance acceptance fails.
+The implementation is retained for its requested independent protocol, without
+promoting a rejected throughput policy. Its local task tip is preserved as
+`archive/wip/mutex-owned-v1-20261013` after integration.
 
 All twelve original tips are preserved by verified archive tags, including
 `archive/master-before-integration-20261012`. The eleven local `perf/` branches

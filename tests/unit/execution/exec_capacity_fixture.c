@@ -1036,7 +1036,7 @@ static bool mutex_routing_initialized(const struct kd_exec_frame *frame)
 static void mutex_batch_frames(void)
 {
  struct mutex origin = { .locked = true };
- struct kd_mutex lock = { .origin_mutex_addr = (unsigned long)&origin };
+ struct kd_mutex_legacy_gate lock = { .origin_mutex_addr = (unsigned long)&origin };
  struct kd_exec_outer_unlock hook = {0};
  struct kd_regs packet = registers(97), expected;
  struct kd_exec_frame *frame, saved, refused;

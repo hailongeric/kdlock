@@ -23,7 +23,7 @@ def production():
     # This boundary is substituted, so pin its normal owner result to the
     # actual producer. A consumer accepting other values is not equivalence.
     slowpath = definition(
-        mutex, "__kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,"
+        mutex, "__kd_mutex_lock_slowpath(struct kd_mutex_legacy_gate *lock, int tail,"
     )
     assert "release:\n\tkd_mutex_waiter_exit(lock);\n\treturn 2;" in slowpath
     # These statics belong to separate production translation units. Rename
@@ -48,21 +48,21 @@ def production():
         + "\n"
     )
     for marker in (
-        "void kd_mutex_init(struct kd_mutex *lock)",
-        "void kd_mutex_init_shadow(struct kd_mutex *lock, unsigned int slot)",
+        "void kd_mutex_legacy_gate_init(struct kd_mutex_legacy_gate *lock)",
+        "void kd_mutex_init_shadow(struct kd_mutex_legacy_gate *lock, unsigned int slot)",
         "static bool kd_mutex_spin_ready(u8 *notification)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
-        "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
-        "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
-        "static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)",
+        "static void kd_mutex_claim_origin(struct kd_mutex_legacy_gate *lock)",
+        "static void kd_mutex_wait_and_lock(struct kd_mutex_legacy_gate *lock)",
+        "static bool kd_mutex_has_local_predecessor(struct kd_mutex_legacy_gate *lock)",
         "static struct kd_mutex_node *kd_mutex_reserve_node(void)",
         "static void kd_mutex_release_node(struct kd_mutex_node *node)",
     ):
         code += definition(mutex, marker)
     for marker, result in (
-        ("_kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,", "void"),
-        ("_kd_mutex_unlock_checked(struct kd_mutex *lock)", "int"),
-        ("_kd_mutex_unlock(struct kd_mutex *lock)", "void"),
+        ("_kd_mutex_lock_abi(struct kd_mutex_legacy_gate *lock, unsigned long rsp_value,", "void"),
+        ("_kd_mutex_unlock_checked(struct kd_mutex_legacy_gate *lock)", "int"),
+        ("_kd_mutex_unlock(struct kd_mutex_legacy_gate *lock)", "void"),
     ):
         code += f"__attribute__((noipa)) {result}\n" + definition(mutex, marker)
     code += "#undef kd_mutex_shadows\n"
@@ -73,8 +73,8 @@ def production():
         )
     ]
     for marker in (
-        "static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)",
-        "static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)",
+        "static struct kd_mutex_legacy_gate *get_kd_mutex_shadow(struct mutex *lock)",
+        "static struct kd_mutex_legacy_gate *find_kd_mutex_shadow(struct mutex *lock)",
         "static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,",
         "static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,",
         "static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,",
@@ -92,7 +92,7 @@ def main():
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     ptrace = (ROOT / "include/kd_regs.h").read_text()
     types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
-    types += without_includes(read_source((ROOT / "include/kd_mutex.h")))
+    types += without_includes(read_source((ROOT / "include/kd_mutex_legacy.h")))
     code = production()
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.

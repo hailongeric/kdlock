@@ -15,8 +15,10 @@ per mutex request.
 | TCLock | `komb_mutex_lock` / `komb_mutex_unlock` | [komb_mutex.c](../../tclock_backend/komb_mutex.c), [combiner.c](../../tclock_backend/combiner.c), [mutex_provider.c](../../tclock_backend/mutex_provider.c) |
 | KD outer | `KD_MUTEX_OUTER_LOCK/UNLOCK` | [kd_mutex_direct.h](../../include/kd_mutex_direct.h), [mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc) |
 | KD general/nested | `KD_MUTEX_DIRECT_LOCK/UNLOCK` and retained bridge endpoints | Same routing file, [kd_mutex.c](../../kernel_module/kd_mutex.c), [native.inc](../../kernel_module/execution/native.inc) |
+| KD owned outer | `KD_OWNED_MUTEX_OUTER_LOCK/UNLOCK` | [kd_owned_mutex_direct.h](../../include/kd_owned_mutex_direct.h), [owned core](../../kernel_module/owned_mutex/core.c), [delegation](../../kernel_module/owned_mutex/delegation.c) |
+| KD owned ordinary/nested | `kd_mutex_lock/unlock`, `KD_OWNED_MUTEX_DIRECT_LOCK/UNLOCK` | Owned SELF core; translated nested calls use [owned_mutex_calls.inc](../../kernel_module/lock/owned_mutex_calls.inc) |
 
-All three use distinct compiled functions in
+The benchmark arms use distinct compiled functions in
 [mutex_cacheline/module.c](../../workload_modules/mutex_cacheline/module.c).
 The mutex translation unit reuses payload, ioctl runner and timing sources;
 there is no per-operation runtime `is_mutex` branch. Measurement runs through
@@ -122,7 +124,99 @@ idle. A still-live exiting task yields EBUSY for a bounded retry outside
 measurement. Only after cohort drain are task references released. Backend
 unload frees preallocated contexts/stacks; no forced context release is used.
 
-## KD implementation
+## KD-owned implementation (experimental)
+
+`owned-v1` is a separate object protocol. It ports ordinary non-RT Linux
+6.1.159 owner spinning, OSQ, sleeping and owner flags into KD, with exact captured
+source hashes and port boundaries in [linux-source.json](../../kernel_module/owned_mutex/linux-source.json).
+The owned target never enters `mutex_lock`, `mutex_unlock`, their slowpaths or
+the legacy shadow gate. Linux mutexes used elsewhere by provider control code
+remain unrelated objects. Existing kernel-owned objects continue using the
+explicit legacy interface; an owned object cannot mix callers from either API.
+
+[kd_mutex.h](../../include/kd_mutex.h) statically checks size, alignment and
+every field offset against the captured Linux type: 32 bytes, alignment 8,
+owner at 0, wait lock at 8, OSQ at 12 and wait list at 16. This matches object
+geometry, not measured cache behavior. Unsupported RT/debug layouts fail the
+build. The old internal shadow-gate type is now `kd_mutex_legacy_gate` in
+[kd_mutex_legacy.h](../../include/kd_mutex_legacy.h).
+
+The whole owner word is the sole ownership authority. WAITERS=1, HANDOFF=2 and
+PICKUP=4 retain acquire/release ordering. One FIFO under `wait_lock` contains
+tagged SELF and DELEGATE waiters; each starts with the same 32-byte private
+header. Cold, ineligible and resource-refused outer acquisitions use KD's
+optimistic SELF core. The OSQ head competes for a running owner; a waiter
+sleeps if spinning cannot make progress. Ordinary SELF release permits barging
+until handoff is requested. A delegated head receives directed PICKUP when it
+cannot execute. Publication retries acquisition after setting WAITERS, covering
+a fast owner release between the first retry and waiter insertion.
+
+The outer cookie is an explicit outermost acquisition interface. Its successful
+inline CAS records an approximate entry observation and a nonzero physical-owner
+cookie. A failed attempt records one contention under a short pin, then uses
+independent CPU and exact-address heat. `owned_mutex_entry_ratio_limit` is a
+read-only power of two from 2 through 256, default 256; cadence remains 1,024
+contentions, strict `(entries >> 10) < limit`, then 1,025 exact-address records.
+Cold CPUs avoid table work between comparisons. No policy uses worker count.
+`owned_mutex_self_route` is a diagnostic control, not a Linux fallback.
+
+Ordinary and direct clobber calls are nestable SELF controls on their caller.
+When translated, the dispatcher acquires/releases them through the exact frame
+ledger. Their native acquisitions retain a task-local held count and one cached
+task reference until the count drains. This prevents an early A unlock from
+combining while its own native continuation still holds B: executing another
+A body that takes B at that point would deadlock. Tracking exhaustion keeps
+SELF acquisition available and disables new owned batches until unload;
+existing tracked depths and published requests still drain. The outer cookie
+does not pay for this ordinary/nested acquisition record.
+
+Ordinary unlock never starts a batch, including when its tracked depth reaches
+zero: an explicit outer acquisition may still be held outside that record.
+It releases or hands off through the SELF core and retains borrower ACK routing.
+Only explicit outer unlock can combine. This also prevents B's unlock from
+executing a B waiter that needs the caller's still-held outer A.
+
+Combining starts on explicit outer unlock, after the physical owner's own body. A combiner
+reserves its independent executor stack and source/task references, then detaches
+one finite FIFO snapshot while retaining owner and WAITERS. It executes only
+the leading delegates, stops at SELF, handoff, reschedule, refusal, FULL/native
+continuation, early release or the 1,024-body cap, and does not refill or reorder
+by NUMA node. Unstarted requests rejoin ahead of newer arrivals. Atomic/IRQ-off
+unlock and an occupied executor use the owned release/handoff path.
+
+The opt-in `owned_mutex_refill=1` experiment amortizes executor setup over further
+FIFO snapshots. Only an exhausted private prefix can refill; deferred wakes are
+flushed first. The public head is checked under `wait_lock`, with ownership,
+HANDOFF and reschedule conditions rechecked before detachment. A SELF head ends
+the batch. One cumulative body count bounds all snapshots, and refusal, FULL or
+early release keeps the same stop/rejoin behavior. This changes no object fields
+and introduces no NUMA reordering. Its measured results remain separate from the
+default finite-snapshot protocol.
+
+Four producer packets and four 8 KiB waiter stacks are reserved per CPU, with
+one separate 8 KiB executor stack. Packet size is 320 bytes, registers start at
+128, and the completion result starts at 304. Large per-CPU identities use a
+dynamic allocation at provider initialization; placing the pool in the static
+module arena exceeded this kernel's 8 KiB reserve. Reusable `rcuwait` identities
+outlive packets. Final result publication is the last packet access; deferred
+wakes retain only those stable identities.
+
+Registry kind 3 and ABI2 distinguish owned images from legacy mutex images.
+The two-word wrapper, minimal COMPLETE return, FULL detachment and logical-task
+continuation remain shared. A FULL borrower never releases another task's owner
+word: the physical executor performs each unlock and acknowledges it. Early
+outer release rejoins pending requests and releases A once; the batch neither
+reacquires A nor accesses its queue afterward while B finishes. Source retirement
+requires producer slots, parked waits, executors, task references and frames to
+drain independently of heat.
+
+The benchmark selects this backend with `--mutex-implementation owned-v1` and
+reports KD_SELF separately from JIT and Linux Native. It currently covers plain
+c01 performance and separate nested/early functional probes. It does not expand
+the existing translator's context/flags limits or provide RT/WW/interruptible
+mutex APIs. The legacy benchmark default remains until performance acceptance.
+
+## Legacy KD implementation
 
 ### Entry and native routing
 

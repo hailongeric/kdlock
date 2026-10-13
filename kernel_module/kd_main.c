@@ -28,7 +28,8 @@
 #include "kd_source.h"
 #include "kd_hotlock.h"
 #include "kd_lock.h"
-#include "kd_mutex.h"
+#include "kd_mutex_legacy.h"
+#include "kd_owned_mutex_direct.h"
 #include "kd_spinlock.h"
 #include "kd_spin_entry.h"
 #include "sys.h"
@@ -83,27 +84,36 @@ static int __init kdlock_km_init(void)
 	if (ret)
 		goto err_spinlock;
 
+	ret = kd_owned_mutex_init_percpu();
+	if (ret)
+		goto err_mutex;
+
 #ifdef KDLOCK_SELFTEST
 	ret = kd_hotlock_lifetime_check();
 	if (ret)
-		goto err_mutex;
+		goto err_owned_mutex;
 	ret = kd_spin_entry_selftest();
 	if (ret)
-		goto err_mutex;
+		goto err_owned_mutex;
 	ret = kd_mutex_task_selftest();
 	if (ret)
-		goto err_mutex;
+		goto err_owned_mutex;
 	ret = kd_mutex_wait_selftest();
 	if (ret)
-		goto err_mutex;
+		goto err_owned_mutex;
+	ret = kd_owned_mutex_wait_selftest();
+	if (ret)
+		goto err_owned_mutex;
 #endif
 
 	KD_PR_INFO("kd kernel module init: direct spin/mutex APIs; global hooks disabled\n");
 	return 0;
 
 #ifdef KDLOCK_SELFTEST
-err_mutex:
+err_owned_mutex:
 #endif
+	kd_owned_mutex_exit();
+err_mutex:
 	kd_mutex_exit();
 err_spinlock:
 	kd_spinlock_exit();
@@ -126,6 +136,7 @@ err_source:
 static void __exit kdlock_km_exit(void)
 {
 	synchronize_rcu();
+	kd_owned_mutex_exit();
 	kd_mutex_exit();
 	kd_mutex_tasks_exit();
 	WARN_ON_ONCE(kd_spin_entries_check_idle());

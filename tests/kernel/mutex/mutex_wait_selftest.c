@@ -16,7 +16,7 @@ module_param(mutex_wait_cpu, uint, 0444);
 struct kd_wait_test {
 	struct completion start, entered, done;
 	struct kd_mutex_node *node;
-	struct kd_mutex gate;
+	struct kd_mutex_legacy_gate gate;
 	struct mutex original;
 	unsigned int round;
 	int errors;

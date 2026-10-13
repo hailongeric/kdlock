@@ -6,6 +6,15 @@ execution. Receipts retain their own source, kernel, boot policy and topology.
 
 ## Current source verification
 
+The [KD-owned mutex study](bench/mutex_owned/20261013/README.md) implements the
+same 32-byte object geometry as Linux with private owner/OSQ/sleep code and a
+typed FIFO. It retains 426 scored sessions, 114 diagnostics and the
+[correctness receipt](bench/mutex_owned/20261013/validation.json). Target probes
+observe no original Linux calls for owned objects. Bounded refill improves this
+prototype's throughput but neither owned policy meets the 97% target or retains
+legacy KD's higher-thread performance. The owned protocol stays explicit and
+experimental; legacy remains the benchmark default.
+
 The [c01 protocol study](bench/mutex_protocol/20261013/README.md) expands the
 optimization space to frame reuse, node layout, caller capture, native preflight
 and bounded execution epochs. Its [separate eight-round follow-up](bench/mutex_protocol/20261013-post8/README.md)

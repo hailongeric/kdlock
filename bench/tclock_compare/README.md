@@ -61,7 +61,10 @@ has no `mutex_jit` parameter.
 | `--spin-prefetch 2` |KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
-| `--mutex-spin-limit 4096` | KD mutex polling budget before uninterruptible sleep; 0 parks immediately |
+| `--mutex-spin-limit 4096` | KD mutex result polling budget before uninterruptible sleep; 0 skips polling. For owned-v1 this does not limit SELF owner spinning through OSQ |
+| `--mutex-implementation legacy` | `owned-v1` opts into the separate KD-owned c01 object; nested/early require functional mode |
+| `--owned-mutex-entry-ratio-limit 256` | Independent admission threshold for `owned-v1`; powers of two 2–256 |
+| `--owned-mutex-refill` | Opt-in FIFO refilling within the same total batch cap; default is one finite snapshot |
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--dry-run` | Print plan without live execution |
 
@@ -69,6 +72,8 @@ KD mutexes always support blocking. `--mutex-wait-mode` has been removed;
 each backend runs once per round. Records retain `mutex_wait_mode=blocking`
 and the polling budget so current runs remain distinct from historical spin
 measurements. The runner rejects providers with the obsolete policy selector.
+Owned wait counters cover delegated result waits; the third gate counter is
+zero because owned-v1 has no separate legacy gate. They do not count SELF sleeps.
 
 Both entries now accept any worker count from 1 through 64. The full new-host
 comparison uses 22 counts: 1–8 in steps of one, then 12–64 in steps of four.
@@ -101,6 +106,24 @@ policy. Static snapshots check complete structure and exact operation totals.
 | Native | Original kernel functions, no provider | Original mutex functions bypass experimental clobber macros |
 | TCLock | Native waiter-stack delegation | Actual upstream ordinary mutex port with parking |
 | KD | Explicit KD word, ABI1/JIT | Original Linux mutex plus shadow gate, ABI2/outer cookie/JIT |
+
+`--mutex-implementation owned-v1` selects a distinct KD-owned `struct kd_mutex`
+for the KD arm. The default `legacy` implementation and Native/TCLock arms keep
+their existing objects and interfaces. The owned object is exactly 32 bytes and
+occupies the same 64-byte-aligned lock slot as Native. Its caller uses the owned
+outer-cookie interface and ABI2, with a distinct registry lock kind 3; it never
+casts the object to a Linux mutex. The initial owned performance workload supports
+plain c01; nested/early are available only as KD-only functional checks. RCUHT,
+other body sizes and replacement of kernel-owned pipe/file mutexes are rejected.
+This option names an implementation,
+not a claim of performance acceptance.
+
+The owned caller is compiled with `SC_MUTEX_OWNED=1`; the runner checks its
+`mutex_implementation=owned-v1` module metadata and owned symbol imports. It
+prepares the owned continuation, verifies publication identity and returned JIT
+bodies, and checks object idleness after worker drain before source retirement.
+New owned headers and implementation fragments are covered by the ordinary
+frozen source manifest. The user's fixed post-work setting is unchanged.
 
 TCLock retains NUMA/WWJUMP and configured 1,024; zero-based jumps can execute 1,025
 bodies. The shared port header currently enables NUMA even when Makefile's variable
@@ -146,6 +169,30 @@ Mutex acceptance defaults to `--mutex-acceptance jit-required`. Explicit
 execution chosen by admission. Those samples retain zero returned bodies and
 the `ADAPTIVE_NATIVE` classification; they do not pass JIT acceptance.
 Functional checks always retain JIT-required acceptance.
+
+For `owned-v1`, self-execution is classified `KD_SELF`; adaptive acceptance with
+zero returned bodies is `ADAPTIVE_SELF`, never `ADAPTIVE_NATIVE` or a JIT pass.
+`--mutex-routing self` is an owned-only diagnostic control requiring zero JIT
+bodies and excluded from scores. It keeps the owned lock protocol active.
+`--mutex-routing native` is prohibited for an owned object. The owned threshold
+uses the separate `owned_mutex_entry_ratio_limit` provider parameter; changing
+the legacy threshold with an owned run is rejected. Results and acceptance
+screens keep implementation, queue policy and threshold identities separate.
+Owned records identify `owned_queue_policy=finite_fifo` by default. The opt-in
+`--owned-mutex-refill` experiment records `bounded_fifo_refill` and verifies its
+read-only provider parameter. It takes another FIFO snapshot only after consuming
+the previous one, within the same total body cap and without crossing a SELF or
+handoff boundary. Neither policy reorders by NUMA node, even when the shared
+provider's NUMA build switch is on. Screen thresholds separately for each policy.
+
+`--profile-lock` observes the matching admission and batch symbols for each
+implementation. Owned runs also retain probes on Linux lock/unlock and require
+zero calls with the owned target address. Its 100 us owner samples are not exact
+ownership streaks; probe overhead changes throughput and contention, so these
+runs never score. Separate PMU/flat-PC diagnostics remain available. Owned
+wait observations count delegated-result parks and wakes; their third field
+is zero because there is no legacy gate, and they do not claim a count of all
+self-execution waits.
 
 `--mutex-entry-ratio-limit` accepts powers of two from 2 through 256 (default
 256). The CPU compares `(entries >> 10) < limit` every 1,024 failed native
@@ -205,7 +252,21 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   --output /root/kdlock-evidence/10.176.26.71/bench/nested-new
 ```
 
-Nested/early are KD spin cacheline only. Functional runs require actual JIT for
+Owned mutex c01 additionally supports `--scenario nested` and `--scenario early`
+with `run_mutex.py --mutex-implementation owned-v1 --functional --backends kdlock
+--repeats 1`. These build a separate aligned inner owned mutex. Nested uses
+ordinary owned controls and early uses the direct clobber interface. Nested releases the inner lock
+first; early alternates LIFO and outer-before-inner release using protected
+counter parity. LIFO callers supply executors while native early unlocks decline
+combining with B still held. Acceptance requires a delegated early-release
+observation and verifies both objects are idle. Add `--owned-mutex-force-full`
+to resume one checked post-control continuation on its logical caller, requiring
+both physical-owner ACKs. This uses `owned_mutex_native_after_control`; the
+older `jit_hl_fault_after_known_call` intentionally fabricates invalid exits
+and must not be used as a valid FULL continuation probe. Legacy mutex scenarios and all
+timed nested/early runs are rejected. Keep these runs in separate output directories.
+
+Functional runs require actual JIT for
 multithread positives and write `functional.json`, not performance summaries.
 `--spin-delegate off` is an explicit zero-JIT native control marked DISABLED_CONTROL.
 It applies only to spin; the mutex entry rejects it.
@@ -231,6 +292,13 @@ samples, not exact ownership streaks or cacheline transfers. Probe overhead can
 change admission and scheduling; do not use these rates for acceptance. The
 runner requires zero missed probes and unloads the profiler after worker drain,
 before retiring the source/provider whose storage it observes.
+For owned-v1 it probes the owned admission and batch functions, records
+`lock_profile.owned.self_calls` and `self_slow`, and still watches the Linux
+mutex entry/slowpath/unlock functions at the target address. All three Linux
+target counts and both missed-probe totals must be zero. SELF call counts cover
+the out-of-line refusal path; successful outer inline acquisitions bypass that
+probe. Batch packet counts use the owned completion counter and remain distinct
+from the independently measured returned JIT bodies.
 [Tests](../../tests/README.md) selects affected fixtures and source/assembly audits.
 
 ## Shutdown
@@ -239,6 +307,8 @@ Join workers → verify data/lock/queue/frame drain → stop translators → ret
 sources → unload workload → unload backend/provider. Clear TCLock's diagnostic
 `target_lock` before freeing its workload storage. Do not force unload on EBUSY,
 reuse old RIP-keyed JIT after replacing only a source module, or alter frozen inputs.
-For Native and KD mutex workloads, the worker-drain ioctl also requires a zero
-original owner word, an empty sleeping wait list and an empty configured Linux
-OSQ. It checks these only after workers return while holding the snapshot gate.
+For Native and legacy KD mutex workloads, the worker-drain ioctl also requires
+a zero original owner word, an empty sleeping wait list and an empty configured
+Linux OSQ. Owned-v1 instead calls `kd_owned_mutex_is_idle` on its distinct owner,
+wait list and private OSQ; functional scenarios check both owned objects.
+These checks run only after workers return while holding the snapshot gate.

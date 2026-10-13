@@ -108,8 +108,8 @@ def main():
             "call->complete = false;",
         ),
         "mutex-batch-wrong-backend-endpoint": (
-            "call->unlock = direct_mutex_unlock_addr;",
-            "call->unlock = clobber_spin_unlock_addr;",
+            "call->unlock = frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;",
+            "call->unlock = frame->owned_mutex ? owned_direct_unlock_addr : clobber_spin_unlock_addr;",
         ),
         "mutex-batch-uses-private-stack": (
             "call->entry_sp = regs->sp;\n\tcall->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;",
@@ -233,7 +233,7 @@ def main():
                 count = sum(source.count(before) for source in sources.values())
                 # The error counter occurs on both invoke and return failure.
                 assert count == (2 if name in ("service-error-allows-replay",
-                                               "timing-overflow-not-marked") else 1)
+                                               "timing-overflow-not-marked") else 1), (name, count)
                 sources = {
                     path: text.replace(before, after)
                     for path, text in sources.items()

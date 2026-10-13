@@ -33,7 +33,7 @@ struct mutex {
 static struct task_struct executor = { 1 }, waiter = { 2 }, other = { 3 };
 static struct task_struct *current = &executor;
 static struct mutex a, b;
-static struct kd_mutex gate;
+static struct kd_mutex_legacy_gate gate;
 static struct kd_mutex_node request, successor;
 static struct kd_exec_frame active;
 static unsigned long kd_exec_invariant_failures;
@@ -200,12 +200,12 @@ static bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 {
 	return lock->owner == task;
 }
-static void kd_mutex_wait_gate(struct kd_mutex *g)
+static void kd_mutex_wait_gate(struct kd_mutex_legacy_gate *g)
 {
 	while (smp_load_acquire(&g->locked))
 		cpu_relax();
 }
-static void kd_mutex_open_gate(struct kd_mutex *g) { smp_store_release(&g->locked, 0); }
+static void kd_mutex_open_gate(struct kd_mutex_legacy_gate *g) { smp_store_release(&g->locked, 0); }
 static void kd_mutex_publish_result(struct kd_mutex_node *n, bool completed) { n->completed=completed; smp_store_release(&n->locked, 0); }
 static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
@@ -217,7 +217,7 @@ static void kd_mutex_flush_wakes(struct rcuwait **wake, unsigned int *count)
 { (void)wake; *count=0; wake_flushes++; }
 static void kd_mutex_defer_result(struct kd_mutex_node *node, struct rcuwait **wake, unsigned int *count)
 { (void)wake; (void)count; kd_mutex_clear_locked_set_completed(node); }
-static void kd_mutex_set_locked(struct kd_mutex *lock)
+static void kd_mutex_set_locked(struct kd_mutex_legacy_gate *lock)
 {
 	smp_store_release(&lock->locked, _Q_LOCKED_VAL);
 }
@@ -238,7 +238,7 @@ static unsigned int source_leases;
 static bool kd_source_frame_get(void) { source_leases++; return true; }
 static void kd_source_frame_put(void) { CHECK(source_leases == 1); source_leases--; }
 struct kd_exec_frame *kd_exec_frame_push_mutex_batch(struct kd_regs *r, unsigned long ip,
- unsigned long gs, struct task_struct *task, struct kd_mutex *lock,
+ unsigned long gs, struct task_struct *task, struct kd_mutex_legacy_gate *lock,
  struct kd_exec_outer_unlock *hook)
 { (void)r; (void)ip; (void)gs; (void)task; (void)lock; (void)hook; return NULL; }
 static bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
@@ -249,7 +249,7 @@ static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 static bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
  const struct kd_exec_frame *frame)
 { (void)call; (void)frame; abort(); }
-int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame, struct kd_mutex *lock)
+int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame, struct kd_mutex_legacy_gate *lock)
 { (void)frame; (void)lock; abort(); }
 static int kd_exe_mutex_batch_resume(struct kd_exe_info *exe, const struct kd_jit_batch_call *call)
 { (void)exe; (void)call; abort(); }

@@ -17,6 +17,13 @@ DECLARE_PER_CPU(unsigned long, kd_hotlock_mutex_contentions);
 /* One x86 this_cpu_inc is CPU-local even without a surrounding pin. A native
  * success may migrate between acquisition and this approximate observation;
  * failed entries stay pinned with their corresponding contention sample. */
+DECLARE_PER_CPU(unsigned long, kd_hotlock_owned_mutex_entries);
+static __always_inline void kd_hotlock_owned_mutex_entry(void)
+{
+  this_cpu_inc(kd_hotlock_owned_mutex_entries);
+}
+bool kd_hotlock_record_owned_mutex_pinned(unsigned long address);
+
 static __always_inline void kd_hotlock_mutex_entry(void)
 {
   this_cpu_inc(kd_hotlock_mutex_entries);

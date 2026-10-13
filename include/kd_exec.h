@@ -19,6 +19,7 @@
 #include "kd_spin_entry.h"
 
 struct task_struct;
+struct kd_mutex_legacy_gate;
 struct kd_mutex;
 struct kd_native_request;
 struct kd_remote_request;
@@ -60,6 +61,7 @@ enum kd_exec_lock_kind {
 	KD_EXEC_LOCK_FAST,
 	KD_EXEC_LOCK_QUEUE_OWNER,
 	KD_EXEC_LOCK_NATIVE,
+	KD_EXEC_LOCK_OWNED,
 };
 
 enum kd_exec_remote_state {
@@ -115,6 +117,7 @@ struct kd_exec_frame {
 	u8 spin_kind : 1;
 	u8 spin_regs_decoded : 1;
 	u8 rwlock_admitted : 1;
+	u8 owned_mutex : 1;
 	struct kd_regs regs;
 	struct kd_regs *regs_ref;
 	unsigned long gsbase;
@@ -190,13 +193,20 @@ bool kd_exec_context_occupied(void);
  * no frame. Retirement is only for the first, terminal ABI2 wrapper return. */
 struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
+	struct task_struct *task, struct kd_mutex_legacy_gate *lock,
+	struct kd_exec_outer_unlock *hook);
+struct kd_exec_frame *kd_exec_frame_push_owned_mutex_batch(
+	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
 	struct kd_exec_outer_unlock *hook);
+int kd_exec_frame_retire_owned_mutex_batch(struct kd_exec_frame *frame,
+					 struct kd_mutex *lock);
+
 /* Materialize cold routing before generic validation/dispatch. This preserves
  * the borrowed packet union, exact physical ledger and release hook. */
 int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame);
 int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
-				    struct kd_mutex *lock);
+				    struct kd_mutex_legacy_gate *lock);
 
 /* Prepare once on the producer; bind only changes physical execution state.
  * batch_lease requires an enclosing source lease through the final unbind. */

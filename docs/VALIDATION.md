@@ -8,6 +8,22 @@ Known failures remain in [TODO](TODO.md).
 
 ## Current mutex verification
 
+The [owned-mutex receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261013/validation.json)
+records the 32-byte KD-owned protocol, final ordinary-unlock fix, seven core
+mutations, sixteen refill FIFO mutations, 80 runner/auditor tests and live
+nested/early FULL continuation at 4/16 workers. A final legacy JIT compatibility
+smoke returns 414,157/7,964,008 bodies at 4/16 workers on the same provider,
+with explicit original owner/list/OSQ drain. Earlier affected admission,
+entry/outer ABI, parking/cooling and owner/ACK receipts retain their own source
+identities. Refilling repeats only its affected subset. W=1 builds pass with
+warnings; selected earlier fixture-source gaps remain explicit. The
+[report](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
+retains the archived failures, 426 scored sessions and 114 separate diagnostics.
+Every audited sample progresses and drains, but no candidate meets performance
+acceptance. No full suite, other-workload or 64-worker acceptance is claimed.
+
+## Earlier mutex protocol verification
+
 The [64-round protocol receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/validation.json)
 and separate [eight-round receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/validation.json)
 retain basic and affected frame/cookie/ABI, admission, task-reference, parking,

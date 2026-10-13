@@ -129,7 +129,7 @@ static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)
  * spin. Never call on an unstarted/refused request which must become the head.
  * The early-unlock/native paths may call twice; only saved batch state survives
  * the first wake. The original mutex owner and source lease are unchanged. */
-static void kd_mutex_batch_retire_current(struct kd_mutex *lock,
+static void kd_mutex_batch_retire_current(struct kd_mutex_legacy_gate *lock,
 					struct kd_mutex_batch *batch)
 {
 	struct kd_mutex_node *node;
@@ -164,7 +164,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 {
 	struct kd_mutex_batch *batch =
 		container_of(hook, struct kd_mutex_batch, outer);
-	struct kd_mutex *lock = frame->jit_lock_node[frame->outer_lock_index];
+	struct kd_mutex_legacy_gate *lock = frame->jit_lock_node[frame->outer_lock_index];
 	unsigned int i, remaining = 0;
 	int ret;
 
@@ -211,7 +211,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
-kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
+kd_mutex_execute_cs(struct kd_mutex_legacy_gate *lock, struct kd_mutex_node *curr_node,
 	   struct kd_mutex_batch *batch)
 {
 	void *incoming_rsp_ptr = (void *)curr_node->regs.sp;
@@ -444,7 +444,7 @@ prepared:
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static void
-kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
+kd_mutex_run_combiner(struct kd_mutex_legacy_gate *lock, struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *next_node = NULL;
 	struct kd_mutex_batch batch = {

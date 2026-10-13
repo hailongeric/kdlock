@@ -1,125 +1,67 @@
-#ifndef _LINUX_KD_MUTEX_H
-#define _LINUX_KD_MUTEX_H
+/* SPDX-License-Identifier: GPL-2.0-only */
+#ifndef KD_MUTEX_H
+#define KD_MUTEX_H
 
-/*
- * kd_mutex — JIT-sandbox mutex delegation protocol.
- *
- * Follows the same JIT execution model as kd_spinlock: the combiner calls
- * kd_exe_on_call_hl_entry() with the waiter's saved kd_regs. The translated
- * sandbox runs the critical section and returns KD_EXE_RUN_TO_UNLOCK when it
- * reaches mutex_unlock. JIT replaces the body handoff, while queue execution
- * still uses physical shadow stacks with their own lifetime constraints.
- *
- * The kd_mutex is a scheduling gate beside the kernel's struct mutex. Every
- * executor also acquires the original mutex; only that task releases it.
- */
+#include <linux/atomic.h>
+#include <linux/build_bug.h>
+#include <linux/list.h>
+#include <linux/mutex.h>
+#include <linux/osq_lock.h>
+#include <linux/spinlock.h>
 
-#define KD_MUTEX_SHADOW_STACK_SIZE 8192L
-#define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
-#define KD_MUTEX_WAITER_SLOTS 1024 /* immutable shadow identities */
+/* Owned objects are used exclusively through KD for their entire lifetime.
+ * Matching Linux's layout does not permit mixing either mutex's waiters or
+ * APIs. This first port targets the captured x86-64 non-RT configuration. */
+#if !defined(CONFIG_X86_64) || !defined(CONFIG_MUTEX_SPIN_ON_OWNER) || \
+    defined(CONFIG_PREEMPT_RT) || defined(CONFIG_DEBUG_MUTEXES) || \
+    defined(CONFIG_DEBUG_LOCK_ALLOC) || defined(CONFIG_DEBUG_SPINLOCK)
+#error "KD owned mutex v1 requires the captured x86-64 non-RT mutex layout"
+#endif
 
-#include "kd_regs.h"
-#include <linux/wait.h>
-
-struct kd_exec_frame;
-struct mutex;
-struct rcuwait;
-
-bool kd_mutex_check_idle(void);
-int kd_mutex_wait_selftest(void);
-
-/*
- * kd_mutex_node — per-waiter queue node.
- *
- * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
- * owns its shadow stack, so an executor acquiring a sleeping native mutex cannot
- * have its stack reused by another target task running on the same CPU.
- * A published waiter stays migration-pinned and can schedule on its reserved
- * stack after bounded polling with preemption disabled.
- * The combiner feeds node->regs
- * into kd_exe_on_call_hl_entry() to execute the waiter's critical section
- * inside the JIT sandbox.
- */
-struct kd_mutex_node {
-	struct kd_mutex_node *next;
-	unsigned long gsbase; /* logical waiter's kernel GS base   */
-	uint64_t rsp; /* saved real stack ptr (for restore) */
-	void *shadow_stack_base;
-	uint64_t shadow_stack_ptr;
-	struct kd_mutex *lock;
-	struct task_struct *task_struct_ptr;
-	/* Explicit clobber continuation, or legacy hook return-slot validation. */
-	unsigned long saved_ret_addr; /* CS entry point (ret_addr)         */
-
-	/* Immutable identity and result tags are separate from the polled line.
-	 * Reading the ABI must not first fetch the waiter's notification line. */
-	u8 entry_abi __attribute__((aligned(64)));
-	unsigned int packet_state; /* published with completed/native_resume */
-	int tail; /* encoded tail (cpu+idx)            */
-	int slot; /* reserved per-CPU slot index       */
-	int numa_node; /* immutable slot locality, set before source publication */
-	/* Independently resident notification object, never recycled with packet. */
-	struct rcuwait *wait;
-	/* The combiner writes IP/SP and virtual registers while the producer
-	 * polls locked. Sharing their cacheline makes every packet update fight
-	 * the polling CPU for ownership, especially across NUMA nodes. */
-	struct kd_regs regs __attribute__((aligned(64)));
-	/* Optional queue residence clock, not critical-section execution time. */
-	uint64_t queued_at_ns;
-	/* The unused tail of the FULL packet's last line holds notification.
-	 * MINIMAL/COMPLETE bodies write only the first packet line. Cold FULL
-	 * handoff may share this line, but ordinary body writes never do. Keep
-	 * the five-line stride and isolate the producer's next pointer too. */
-	union {
-		u16 result; /* x86: low byte completed, high byte waiting */
-		struct {
-			u8 completed;
-			u8 locked;
-		};
-	};
-	bool native_resume;
-};
-
-/*
- * Scheduling state beside one original Linux mutex.
- */
 struct kd_mutex {
-	/* Producers exchange the tail on every request. Keep their writes away
-	 * from the physical ownership fields checked by every delegated body. */
-	u32 tail; /* encoded CPU/slot; zero means no queued tail */
-	struct task_struct *physical_owner __attribute__((aligned(64)));
-	unsigned long origin_mutex_addr; /* original struct mutex *, if shadow */
-	union {
-		atomic_t state;
-		struct {
-			u8 locked;
-		};
-	};
-	/* Private gates retain the shared count. Published shadows use an exact
-	 * counter on each origin CPU, indexed by an immutable slot. Live sums are
-	 * observations; no count authorizes publication, ownership or retirement. */
-	atomic_t waiter_count __attribute__((aligned(64)));
-	int waiter_slot; /* -1 for a private gate, otherwise immutable until unload */
-	/* Only the queue head (or an unpublished overflow) waits here. Result
-	 * waiters use their own notification byte and never join this list. */
-	wait_queue_head_t gate_wait;
+	atomic_long_t owner;
+	raw_spinlock_t wait_lock;
+	struct optimistic_spin_queue osq;
+	struct list_head wait_list;
 };
+
+static_assert(sizeof(struct kd_mutex) == 32);
+static_assert(sizeof(struct kd_mutex) == sizeof(struct mutex));
+static_assert(__alignof__(struct kd_mutex) == __alignof__(struct mutex));
+static_assert(offsetof(struct kd_mutex, owner) == 0);
+static_assert(offsetof(struct kd_mutex, wait_lock) == 8);
+static_assert(offsetof(struct kd_mutex, osq) == 12);
+static_assert(offsetof(struct kd_mutex, wait_list) == 16);
+static_assert(offsetof(struct kd_mutex, owner) == offsetof(struct mutex, owner));
+static_assert(offsetof(struct kd_mutex, wait_lock) == offsetof(struct mutex, wait_lock));
+static_assert(offsetof(struct kd_mutex, osq) == offsetof(struct mutex, osq));
+static_assert(offsetof(struct kd_mutex, wait_list) == offsetof(struct mutex, wait_list));
+
+#define __KD_MUTEX_INITIALIZER(name) { \
+	.owner = ATOMIC_LONG_INIT(0), \
+	.wait_lock = __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock), \
+	.osq = OSQ_LOCK_UNLOCKED, \
+	.wait_list = LIST_HEAD_INIT(name.wait_list), \
+}
+#define DEFINE_KD_MUTEX(name) \
+	struct kd_mutex name = __KD_MUTEX_INITIALIZER(name)
 
 void kd_mutex_init(struct kd_mutex *lock);
-void kd_mutex_init_shadow(struct kd_mutex *lock, unsigned int slot);
-int kd_mutex_init_percpu(void);
-void kd_mutex_exit(void);
+void kd_owned_mutex_lock_v1(struct kd_mutex *lock);
+void kd_owned_mutex_unlock_v1(struct kd_mutex *lock);
+/* Paired only with the outermost cookie interface, never an ordinary lock. */
+void kd_owned_mutex_outer_unlock_v1(struct kd_mutex *lock);
+int kd_mutex_trylock(struct kd_mutex *lock);
+bool kd_mutex_is_locked(struct kd_mutex *lock);
 
-void _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
-		       unsigned long ret_addr, unsigned long bp, unsigned int abi);
-int _kd_mutex_unlock_checked(struct kd_mutex *lock);
-void _kd_mutex_unlock(struct kd_mutex *lock);
+/* The captured kernel already exports callback variables named kd_mutex_lock
+ * and kd_mutex_unlock. Keep their namespace separate from these control CALLs.
+ * Function-like macros also leave those callback declarations untouched. */
+#define kd_mutex_lock(lock) kd_owned_mutex_lock_v1(lock)
+#define kd_mutex_unlock(lock) kd_owned_mutex_unlock_v1(lock)
 
-int kd_mutex_debug_nested_waiters(void);
-int kd_mutex_nested_lock(struct mutex *lock);
-int kd_mutex_nested_unlock(struct mutex *lock);
-void kd_mutex_note_nested_jit(void);
-int kd_mutex_waiter_count(struct kd_mutex *lock);
-void kd_mutex_note_nested_abort_release(void);
+/* Quiescent inspection only: callers must first join all lock/unlock users.
+ * The provider's separate executor/request drain must also be complete. */
+bool kd_owned_mutex_is_idle(struct kd_mutex *lock);
 
-#endif /* _LINUX_KD_MUTEX_H */
+#endif /* KD_MUTEX_H */

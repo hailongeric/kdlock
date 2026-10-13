@@ -24,6 +24,10 @@
 #include <asm/ioctls.h>
 #include "control.h"
 
+#ifdef RB_MUTEX_OWNED
+#error "owned-v1 cannot replace a kernel-owned struct mutex; this workload requires the legacy API"
+#endif
+
 static char *target_path;
 module_param(target_path, charp, 0400);
 static int target_pid;

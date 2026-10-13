@@ -11,6 +11,16 @@ build time, using the same payload source for all three arms.
 | `SC_BACKEND=native` | Original `struct mutex`; `(mutex_lock/unlock)` bypass the experiment's caller-clobber macros |
 | `SC_BACKEND=tclock` | `struct komb_mutex`; actual upstream ordinary mutex port and fixed-affinity worker registration |
 | `SC_BACKEND=kdlock` | Original `struct mutex`; outer caller CAS/cookie pair, contended direct clobber entry and named `mc_entry_*` JIT continuations |
+| `SC_BACKEND=kdlock SC_MUTEX_OWNED=1` | Separate 32-byte KD `struct kd_mutex`; owned outer cookie, registry kind 3/ABI2, c01 only |
+
+The owned arm includes `kd_owned_mutex_direct.h`, initializes with
+`kd_mutex_init`, prepares with `kd_owned_mutex_prepare`, and checks
+`kd_owned_mutex_is_idle` after all workers join. It uses the same lock alignment,
+payload counters and post-work as Native. It does not reinterpret a Linux mutex
+or share its object with native consumers. Other cacheline sizes and the hash
+payload are rejected for this initial implementation; kernel-owned real-API
+workloads continue using the legacy interface. Module metadata records the
+actual compiled implementation for the runner to verify.
 
 The paired KD outer cookie records the exact native result for one lexical
 acquisition. General direct mutex interfaces remain available for nested
@@ -41,8 +51,17 @@ Commands, the full thread set, UBSAN-off provider policy and statistics are
 maintained in the [comparison README](../../bench/tclock_compare/README.md).
 KD-only low-contention native samples remain distinct from JIT positives.
 
-This workload supports plain ordinary mutex operations. Spin nested/early
-scenario recipes do not automatically apply to this mutex module. General
+The default workload supports plain ordinary mutex operations. Owned c01 also
+supports `SC_SCENARIO=1` (nested) and `2` (early outer release), selected only by
+the runner's `--functional` KD-only one-round mode. A distinct aligned inner
+owned mutex uses the direct clobber interface; both objects must be idle at drain.
+The owned early probe alternates LIFO and early release using protected counter
+parity. Native early A release cannot combine while B remains held; LIFO callers
+provide executors for queued early-release bodies. Acceptance requires a returned
+JIT body and an observed delegated early outer release. This probe never scores
+as c01 throughput. `--owned-mutex-force-full` additionally requests one validated
+post-control native continuation, requiring both physical-owner acknowledgments.
+The plain timed body has no inner object or scenario operations. General
 oversubscription, PI/RT/WW mutexes and arbitrary context-sensitive bodies are
 outside its validated scope. Build and run only under the documented
 [guest operations procedure](../../docs/AGENTS.md).

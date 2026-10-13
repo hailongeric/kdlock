@@ -24,6 +24,7 @@ struct kd_mutex_task {
 	struct rcu_head rcu;
 	struct task_struct *task;
 	atomic_t refs; /* >=0 live identity, -1 claimed exclusively for eviction */
+	unsigned int owned_holds; /* current task's ordinary/nested KD acquisitions */
 };
 
 #define KD_MUTEX_TASK_BITS 8
@@ -153,6 +154,7 @@ bool kd_mutex_task_get(struct task_struct *task)
 	}
 	get_task_struct(task);
 	new->task = task;
+	new->owned_holds = 0;
 	atomic_set(&new->refs, 1);
 	hlist_add_head_rcu(&new->link, &bucket->tasks);
 	WRITE_ONCE(bucket->count, bucket->count + 1);
@@ -207,6 +209,84 @@ bool kd_mutex_tasks_idle(void)
 {
 	/* Snapshot guard, not a barrier against arbitrary new native callers. */
 	return !kd_mutex_task_count();
+}
+
+/* Outer-cookie calls are explicitly outermost entries. Ordinary/direct
+ * controls can nest, so retain an exact task-local depth through their native
+ * critical sections. An early A unlock while B is held must not execute an A
+ * waiter that acquires B: the native B unlock is still below this call frame.
+ * One routing reference pins the identity until the entire depth drains. */
+static bool kd_owned_tracking_exhausted;
+
+static struct kd_mutex_task *kd_owned_current_record(void)
+{
+	struct kd_mutex_task *entry;
+
+	hlist_for_each_entry_rcu(entry, &kd_mutex_task_bucket(current)->tasks, link)
+		if (entry->task == current)
+			return entry;
+	return NULL;
+}
+
+void kd_owned_mutex_task_enter(void)
+{
+	struct kd_mutex_task *entry;
+
+	rcu_read_lock();
+	entry = kd_owned_current_record();
+	if (entry && entry->owned_holds) {
+		BUG_ON(entry->owned_holds == UINT_MAX);
+		entry->owned_holds++;
+		rcu_read_unlock();
+		return;
+	}
+	rcu_read_unlock();
+	/* Refusal cannot make a mutex acquisition fail. If identity allocation
+	 * fails, permanently disable new batches for this provider lifetime.
+	 * Existing requests receive SELF handoff and retain their normal drain.
+	 * Untracked tasks never start tracking a later nested acquisition. */
+	if (unlikely(READ_ONCE(kd_owned_tracking_exhausted)))
+		return;
+	if (!kd_mutex_task_get(current)) {
+		WRITE_ONCE(kd_owned_tracking_exhausted, true);
+		pr_warn("kd_owned_mutex: task tracking exhausted; combining disabled until unload\n");
+		return;
+	}
+	rcu_read_lock();
+	entry = kd_owned_current_record();
+	BUG_ON(!entry || entry->owned_holds);
+	entry->owned_holds = 1;
+	rcu_read_unlock();
+}
+
+void kd_owned_mutex_task_leave(void)
+{
+	struct kd_mutex_task *entry;
+	bool put = false;
+
+	rcu_read_lock();
+	entry = kd_owned_current_record();
+	if (entry && entry->owned_holds)
+		put = !--entry->owned_holds;
+	else
+		BUG_ON(!READ_ONCE(kd_owned_tracking_exhausted));
+	rcu_read_unlock();
+	if (put)
+		kd_mutex_task_put(current);
+}
+
+bool kd_owned_mutex_task_can_combine(void)
+{
+	struct kd_mutex_task *entry;
+	bool allowed;
+
+	if (unlikely(READ_ONCE(kd_owned_tracking_exhausted)))
+		return false;
+	rcu_read_lock();
+	entry = kd_owned_current_record();
+	allowed = !entry || !entry->owned_holds;
+	rcu_read_unlock();
+	return allowed;
 }
 
 static void kd_mutex_tasks_purge(void)

@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "kernel_release": "6.1.159-kdclobber2",
+  "source_root": "/root/linux-6.1.159-kdclobber2",
+  "read_from": "root@10.176.26.71:2222 via benchmark-host vm_ssh.sh",
+  "captured_date": "2026-10-13",
+  "sources": [
+    {
+      "path": "kernel/locking/mutex.c",
+      "sha256": "9398306fa9f63327ca4fcdacc70acb6b83e29591f81e79f3e52f4e3193131368",
+      "bytes": 37048
+    },
+    {
+      "path": "kernel/locking/mutex.h",
+      "sha256": "3e5eb601e888b94dc3c2e6649bc7ae3df2a2cd1003af1c22b15a17df9c57d97a",
+      "bytes": 1681
+    },
+    {
+      "path": "kernel/locking/osq_lock.c",
+      "sha256": "daab1575a9464194d5ad399a4168bd20718e81db806a2f9b896da7f00367a7dc",
+      "bytes": 5958
+    },
+    {
+      "path": "include/linux/mutex.h",
+      "sha256": "02f1dadc374fda4f1080558fb56a93217f7dea40ad0c9be76f55971e4a38ea36",
+      "bytes": 9019
+    },
+    {
+      "path": "include/linux/osq_lock.h",
+      "sha256": "a2661ef30af34510881fd254c84972bfeae5dd6d579ffe7c174ae3c1f3cfcd10",
+      "bytes": 1066
+    },
+    {
+      "path": "include/linux/sched/wake_q.h",
+      "sha256": "89a70262831142b497d3a3bcd84226ce4cd52ae6d6f54ffeec2fc656f7ff5768",
+      "bytes": 2272
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "sha256": "523519e84270e431495104608205a04baeba9a912d1eb0d537242569ef50042e",
+      "bytes": 292624
+    }
+  ],
+  "port": {
+    "osq.c": "Exact captured OSQ queue/unqueue implementation; private names and local node declaration. Atomic ordering and per-CPU storage unchanged.",
+    "core.c": "Non-RT non-debug ordinary mutex owner flags, trylock, owner spinning and uninterruptible SELF wait loop; no ww/RT/interruptible API or original mutex calls. Private wake_q_add implementation and scheduler preempt-count/schedule sequence copied from the captured scheduler.",
+    "public_layout": "The owner/wait_lock/osq/wait_list fields are checked against captured Linux struct mutex; 32 bytes at offsets0,8,12,16.",
+    "intentional_changes": [
+      "Distinct typed waiter prefix permits SELF or DELEGATE nodes on the owned FIFO.",
+      "Slow release holds wait_lock before releasing owner to distinguish a delegated head; SELF remains wake-before-handoff, DELEGATE and explicit batch/resource handoff are directed with PICKUP.",
+      "Only explicit outer unlock may combine. Ordinary/nested unlock consumes its task-local hold marker and uses the SELF release or owner-ACK path, because a zero ordinary depth does not exclude a still-held explicit outer lock.",
+      "The kernel exports callback variables kd_mutex_lock/unlock, so public function-like aliases call kd_owned_mutex_lock_v1/unlock_v1 ELF symbols.",
+      "MODULE hides preempt_enable_no_resched; the private sleep helper spells its barrier/preempt_count_dec sequence before schedule(), then restores preempt_disable().",
+      "Unsupported RT/debug/non-owner-spin configurations fail at compile time; owned objects never mix Linux/native-peer waiters."
+    ]
+  }
+}

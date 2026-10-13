@@ -18,6 +18,168 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_owned_mutex_plan_preserves_controls_and_distinct_identity(self):
+        args = Namespace(cachelines=[1], threads=[4], repeats=3, iterations=100,
+                         backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
+                         mutex_implementation='owned-v1', owned_mutex_entry_ratio_limit=8)
+        plan = run.make_plan(args)
+        self.assertEqual(len(plan), 9)
+        for row in plan:
+            if row['arm'] == 'kdlock':
+                self.assertEqual(row['mutex_implementation'], 'owned-v1')
+                self.assertEqual((row['registry_lock_kind'], row['entry_abi']), (3, 2))
+                self.assertEqual(row['owned_mutex_entry_ratio_limit'], 8)
+                self.assertIsNone(row['mutex_entry_ratio_limit'])
+                self.assertTrue(row['name'].endswith('-owned-v1'))
+            else:
+                self.assertEqual(row['mutex_implementation'], 'not_applicable')
+                self.assertIsNone(row['owned_mutex_entry_ratio_limit'])
+                self.assertEqual(row['registry_lock_kind'], 2)
+        legacy = run.make_plan(Namespace(**dict(vars(args), mutex_implementation='legacy',
+                                               owned_mutex_entry_ratio_limit=256)))
+        self.assertTrue(all(row['name'] not in {r['name'] for r in plan if r['arm'] == 'kdlock'}
+                            for row in legacy if row['arm'] == 'kdlock'))
+
+    def test_owned_mutex_rejects_unvalidated_scope_and_native_alias(self):
+        base = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1')
+        for change in (dict(cachelines=[8]), dict(cachelines=[1, 8]),
+                       dict(workload='rcuht', cachelines=None), dict(lock_kind='spin'),
+                       dict(backends=['native']), dict(scenario='nested'),
+                       dict(mutex_routing='native'),
+                       dict(mutex_entry_ratio_limit=2)):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(base, **change)))
+        for change in (dict(mutex_routing='self'), dict(owned_mutex_entry_ratio_limit=2)):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(base, mutex_implementation='legacy', **change)))
+
+    def test_owned_profile_is_diagnostic(self):
+        row, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['kdlock'], lock_kind='mutex',
+            mutex_implementation='owned-v1', profile_lock=True))
+        self.assertTrue(row['diagnostic'])
+        self.assertTrue(row['profile_lock'])
+
+    def test_owned_refill_has_distinct_queue_identity(self):
+        args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1')
+        finite, = run.make_plan(Namespace(**args))
+        refill, = run.make_plan(Namespace(**args, owned_mutex_refill=True))
+        self.assertEqual(finite['owned_queue_policy'], 'finite_fifo')
+        self.assertFalse(finite['owned_mutex_refill'])
+        self.assertEqual(refill['owned_queue_policy'], 'bounded_fifo_refill')
+        self.assertTrue(refill['owned_mutex_refill'])
+        self.assertNotEqual(finite['name'], refill['name'])
+        with self.assertRaises(run.Failure):
+            run.make_plan(Namespace(**dict(args, mutex_implementation='legacy'), owned_mutex_refill=True))
+
+    def test_owned_full_probe_is_functional_only(self):
+        base = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+            backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1',
+            functional=True, scenario='early', owned_mutex_force_full=True)
+        row, = run.make_plan(Namespace(**base))
+        self.assertTrue(row['diagnostic'] and row['owned_mutex_force_full'])
+        for change in (dict(functional=False), dict(scenario='plain'),
+                       dict(mutex_implementation='legacy'), dict(backends=['native', 'kdlock'])):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(base, **change)))
+
+    def test_owned_nested_and_early_are_functional_only(self):
+        base = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1',
+                    functional=True)
+        for scenario in ('nested', 'early'):
+            row, = run.make_plan(Namespace(**base, scenario=scenario))
+            self.assertEqual(row['scenario'], scenario)
+            self.assertEqual((row['registry_lock_kind'], row['entry_abi']), (3, 2))
+            self.assertEqual(row['measurement_mode'], 'fixed_iterations')
+            for change in (dict(functional=False), dict(mutex_implementation='legacy'),
+                           dict(repeats=3), dict(backends=['native', 'kdlock']),
+                           dict(mutex_routing='self'), dict(mutex_acceptance='adaptive-performance'),
+                           dict(duration_ms=2000, collector_cpu=63)):
+                with self.subTest(scenario=scenario, change=change), self.assertRaises(run.Failure):
+                    run.make_plan(Namespace(**dict(base, scenario=scenario, **change)))
+            with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+                check_jit_evidence(dict(row, functional=True, jit_bodies=0))
+            check_jit_evidence(dict(row, functional=True, jit_bodies=1))
+
+    def test_owned_execution_distinguishes_self_from_linux_and_jit(self):
+        base = dict(arm='kdlock', lock_kind='mutex', threads=16, jit_bodies=0,
+                    mutex_implementation='owned-v1', mutex_acceptance='adaptive-performance')
+        record = dict(base)
+        check_jit_evidence(record)
+        self.assertEqual((record['execution_class'], record['jit_acceptance']),
+                         ('KD_SELF', 'ADAPTIVE_SELF'))
+        record = dict(base, jit_bodies=1)
+        check_jit_evidence(record)
+        self.assertEqual((record['execution_class'], record['jit_acceptance']), ('JIT', 'PASS'))
+        record = dict(base, mutex_routing='self')
+        check_jit_evidence(record)
+        self.assertEqual(record['execution_class'], 'KD_SELF')
+        self.assertEqual(record['jit_acceptance'], 'SELF_ROUTING_CONTROL')
+        self.assertTrue(record['diagnostic'])
+        for change in (dict(jit_bodies=1), dict(functional=True), dict(mutex_implementation='legacy')):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                check_jit_evidence(dict(record, **change))
+        with self.assertRaises(run.Failure):
+            check_jit_evidence(dict(base, mutex_routing='native'))
+        with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
+            check_jit_evidence(dict(base, mutex_acceptance='jit-required'))
+
+    def test_owned_parameter_identity_uses_its_own_sampler_and_route(self):
+        record = dict(spin_entry_ratio_limit=2, spin_prefetch=2, spin_delegate='on',
+                      mutex_wait_mode='blocking', mutex_spin_limit=4096,
+                      mutex_implementation='owned-v1', owned_mutex_entry_ratio_limit=8,
+                      mutex_routing='self', mutex_entry_ratio_limit=None)
+        params = dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
+                      spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y',
+                      mutex_native_route='N', mutex_entry_ratio_limit='256',
+                      owned_mutex_spin_limit='4096', owned_mutex_entry_ratio_limit='8',
+                      owned_mutex_self_route='Y', owned_mutex_native_after_control='0')
+        check_kd_parameters(params, record, 4096)
+        record['owned_mutex_refill'] = True
+        with self.assertRaisesRegex(run.Failure, 'refill parameter'):
+            check_kd_parameters(params, record, 4096)
+        params['owned_mutex_refill'] = 'Y'
+        check_kd_parameters(params, record, 4096)
+        record['owned_mutex_refill'] = False
+        with self.assertRaisesRegex(run.Failure, 'refill parameter'):
+            check_kd_parameters(params, record, 4096)
+        params['owned_mutex_refill'] = 'N'
+        for change in (dict(owned_mutex_entry_ratio_limit='256'), dict(owned_mutex_self_route='N'),
+                       dict(mutex_native_route='Y'), dict(owned_mutex_native_after_control='1')):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                check_kd_parameters(dict(params, **change), record, 4096)
+        del params['owned_mutex_self_route']
+        with self.assertRaisesRegex(run.Failure, 'missing owned'):
+            check_kd_parameters(params, record, 4096)
+
+    def test_report_keeps_owned_legacy_and_self_diagnostic_separate(self):
+        args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['kdlock'], lock_kind='mutex', mutex_acceptance='adaptive-performance')
+        legacy, = run.make_plan(Namespace(**args))
+        owned, = run.make_plan(Namespace(**args, mutex_implementation='owned-v1'))
+        control, = run.make_plan(Namespace(**args, mutex_implementation='owned-v1', mutex_routing='self'))
+        control['name'] += '-self'
+        plans = [legacy, owned, control]
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for spec in plans:
+                folder = out/spec['name']; folder.mkdir()
+                row = dict(spec, execution_status='OK', drained=True, jit_bodies=0,
+                           measurement=dict(complete=True, data_ok=True, completed=100, wall_ns=100000))
+                check_jit_evidence(row)
+                run.write_json(folder/'session.json', row)
+            run.report(out)
+            summary = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(summary), 3)
+            self.assertEqual(sum(row['valid'] for row in summary), 2)
+            owned_rows = [r for r in summary if r['mutex_implementation'] == 'owned-v1']
+            self.assertTrue(all(r['execution_classes'] == ['KD_SELF'] for r in owned_rows))
+            self.assertIsNone(next(r for r in owned_rows if r['diagnostic'])['best_session'])
+
     def test_plan_records_fixed_post_work_source(self):
         args = Namespace(cachelines=[1], threads=[2], repeats=1,
                          iterations=100, backends=['native', 'kdlock'])
@@ -216,6 +378,9 @@ class DirectTests(unittest.TestCase):
                                  run.digest(path))
         reader = 'tests/unit/infrastructure/source_text.py'
         self.assertEqual(state[reader], run.digest(run.ROOT / reader))
+        for name in ('include/kd_mutex.h', 'include/kd_mutex_legacy.h',
+                     'include/kd_owned_mutex_direct.h', 'workload_modules/mutex_cacheline/module.c'):
+            self.assertEqual(state[name], run.digest(run.ROOT / name))
 
     def test_collect_no_jit_preserves_failure_and_requires_verified_drain(self):
         record = dict(execution_status='NO_JIT', jit_acceptance='NO_JIT',

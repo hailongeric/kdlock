@@ -39,7 +39,7 @@ struct qspinlock { u16 tail; };
 #define xchg(address, value) ({ __typeof__(*(address)) previous=*(address); *(address)=(value); previous; })
 #define alloc_percpu(type) (stride=sizeof(type), fail_alloc ? NULL : calloc(TEST_CPUS, sizeof(type)))
 #define free_percpu(p) free(p)
-#define per_cpu_ptr(p,c) ((__typeof__(p))((char *)(p)+stride*(c)))
+#define per_cpu_ptr(p,c) ((p)+(c))
 #define this_cpu_ptr(p) per_cpu_ptr(p,cpu_id)
 #define for_each_possible_cpu(c) for ((c)=0;(c)<TEST_CPUS;(c)++)
 #define preempt_count() (++pin_checks, pins)
@@ -90,7 +90,11 @@ static void reset_policy(unsigned int limit)
  cpu_id=pins=clocks=guards=pin_checks=0; now=1;
  spin_entry_ratio_limit=limit; kd_spin_delegate=true; check_spin_clock=false;
  mutex_entry_ratio_limit=KD_HOTLOCK_MUTEX_RATIO_DEFAULT;
+ owned_mutex_entry_ratio_limit=KD_HOTLOCK_MUTEX_RATIO_DEFAULT;
  assert(!kd_hotlock_init());
+ /* Each independent sampler establishes its own initial clock. Legacy
+  * assertions below measure only subsequent legacy observations. */
+ assert(clocks==2); clocks=1;
 }
 /* Time/hash tests explicitly disable the additional contention policy. */
 static void reset(void) { reset_policy(0); }
@@ -119,7 +123,7 @@ static void init_and_pins(void)
  assert(offsetof(struct kd_hotlock_cpu,tables[1])==6680);
  assert(offsetof(struct kd_hotlock_cpu,mutex_rate_hot)==13360);
  assert(sizeof(struct kd_hotlock_cpu)==13376 && __alignof__(struct kd_hotlock_cpu)==64);
- assert(stride==13376);
+ assert(stride==sizeof(struct kd_owned_hotlock_cpu));
  for(unsigned int c=0;c<TEST_CPUS;c++) {
   assert(!per_cpu(kd_hotlock_spin_entries,c) && !per_cpu(kd_hotlock_spin_mcs,c));
   assert(!per_cpu(kd_hotlock_spin_gate,c));
@@ -474,12 +478,47 @@ static void native_queue_cooling(void)
  hits(0x1000,511); assert(!kd_hotlock_query_spin(0x1000));
  assert(kd_hotlock_record_spin(0x1000));
 }
+static void owned_sampling(void)
+{
+ for (unsigned int limit=2;limit<=256;limit*=2) {
+  for (unsigned int equality=0;equality<2;equality++) {
+   reset(); owned_mutex_entry_ratio_limit=limit;
+   struct kd_owned_hotlock_cpu *c=this_cpu_ptr(kd_owned_heat);
+   unsigned int g=guards, checks=pin_checks;
+   for(unsigned int i=0;i<limit*1024-!equality;i++)kd_hotlock_owned_mutex_entry();
+   pins=1;
+   for(unsigned int i=0;i<1023;i++)assert(!kd_hotlock_record_owned_mutex_pinned(0x3000));
+   assert(guards==g && pin_checks==checks && !c->table.used);
+   c->table.busy=1; assert(!kd_hotlock_record_owned_mutex_pinned(0x3000));
+   assert(this_cpu_read(kd_owned_contentions)==1024);
+   c->table.busy=0; assert(!kd_hotlock_record_owned_mutex_pinned(0x3000));
+   assert(c->hot==!equality && !this_cpu_read(kd_owned_contentions));
+   assert(!this_cpu_read(kd_hotlock_owned_mutex_entries)); pins=0;
+  }
+ }
+ reset(); pins=1;
+ struct kd_owned_hotlock_cpu *c=this_cpu_ptr(kd_owned_heat);
+ for(unsigned int i=0;i<2047;i++) {
+  kd_hotlock_owned_mutex_entry(); assert(!kd_hotlock_record_owned_mutex_pinned(0x3000));
+ }
+ kd_hotlock_owned_mutex_entry(); assert(kd_hotlock_record_owned_mutex_pinned(0x3000));
+ assert(!kd_hotlock_find(&c->table,0x3001));
+ assert(!this_cpu_read(kd_hotlock_mutex_entries) && !this_cpu_read(kd_hotlock_mutex_contentions));
+ /* The next exact ratio boundary cools new admission and clears lock heat. */
+ this_cpu_write(kd_hotlock_owned_mutex_entries,256*1024);
+ for(unsigned int i=0;i<1023;i++)assert(kd_hotlock_record_owned_mutex_pinned(0x3000));
+ assert(!kd_hotlock_record_owned_mutex_pinned(0x3000));
+ assert(!c->hot && !kd_hotlock_find(&c->table,0x3000)->hot);
+ cpu_id=1; assert(!kd_hotlock_record_owned_mutex_pinned(0x3000));
+ assert(!this_cpu_ptr(kd_owned_heat)->table.used); pins=0;
+}
 int main(void)
 {
  assert(spin_entry_ratio_limit==2);
  assert(mutex_entry_ratio_limit==256);
  init_and_pins(); boundaries(); windows(); hash_and_capacity(); mutex_sampling(); mutex_contention_ratio();
  isolation_and_guard(); mcs_publications(); contention_ratio(); busy_sampling_retry(); native_queue_cooling();
+ owned_sampling();
  kd_hotlock_exit();
  const unsigned int invalid[]={1,3,6,UINT_MAX};
  for(unsigned int i=0;i<sizeof(invalid)/sizeof(invalid[0]);i++) {

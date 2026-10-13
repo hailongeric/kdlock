@@ -33,7 +33,7 @@ static unsigned int scenario, checks;
 #define BUG_ON(c) CHECK(!(c))
 static struct task_struct owner={1}, waiter={2};
 static struct task_struct *current=&owner;
-static struct kd_mutex lock;
+static struct kd_mutex_legacy_gate lock;
 static struct kd_mutex_node nodes[1030];
 static const int kd_mutex_batch_size=1024;
 static unsigned long kd_mutex_combiner_count,kd_mutex_handoff_count,kd_mutex_jit_success_count;
@@ -78,7 +78,7 @@ static void kd_mutex_flush_wakes(struct rcuwait **wake, unsigned int *count)
 { (void)wake; CHECK(wake_pending >= *count); wake_pending -= *count; *count=0; }
 static void kd_mutex_defer_result(struct kd_mutex_node *node, struct rcuwait **wake, unsigned int *count)
 { (void)wake; kd_mutex_clear_locked_set_completed(node); (*count)++; wake_pending++; if (*count==16) kd_mutex_flush_wakes(wake,count); }
-static void kd_mutex_set_locked(struct kd_mutex *p) { p->locked=1; }
+static void kd_mutex_set_locked(struct kd_mutex_legacy_gate *p) { p->locked=1; }
 static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 {
     CHECK(leases==1 && node->locked && lock.tail!=(u32)node->tail);
@@ -89,12 +89,12 @@ static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 static void kd_mutex_prefetch_successor(struct kd_mutex_node *node) { (void)node; }
 static void kd_mutex_prefetch_successor_stack(struct kd_mutex_node *node)
 { if (node) CHECK(node->locked && node->tail != 0xdead && lock.physical_owner == current); }
-static void kd_mutex_wait_and_lock(struct kd_mutex *p)
+static void kd_mutex_wait_and_lock(struct kd_mutex_legacy_gate *p)
 { CHECK(!p->physical_owner && !p->locked && leases==1);p->physical_owner=current;p->locked=1;reclaims++; }
-int _kd_mutex_unlock_checked(struct kd_mutex *p)
+int _kd_mutex_unlock_checked(struct kd_mutex_legacy_gate *p)
 { CHECK(p->physical_owner==current && leases==1);p->physical_owner=NULL;p->locked=0;return 0; }
 #include "helpers.h"
-static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,struct kd_mutex_batch *batch)
+static int kd_mutex_execute_cs(struct kd_mutex_legacy_gate *p,struct kd_mutex_node *node,struct kd_mutex_batch *batch)
 {
     int i=node-nodes;
     CHECK(p==&lock && leases==1 && lock.physical_owner==current);

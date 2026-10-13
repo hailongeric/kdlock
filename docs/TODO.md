@@ -1,14 +1,24 @@
 # Known limitations and deferred work
 
 Current scope is x86_64 kernel spin/mutex/rwlock delegation through explicit APIs.
-KD mutexes always support blocking, preserve the original Linux owner and reject
-delegated origin-CPU GS access. Rwlock ABI3 acquires write access before the
+KD mutexes always support blocking and reject delegated origin-CPU GS access.
+Legacy mutexes preserve the original Linux owner; experimental owned mutexes
+retain their own exact owner/ACK protocol. Rwlock ABI3 acquires write access before the
 translated body. Implementation contracts live in [DESIGN](DESIGN.md);
 [performance status](PERFORMANCE.md) records measured gaps and
 [validation](VALIDATION.md) indexes source-specific receipts. None of those
 measurements resolves the correctness limits below.
 
 ## Current checkpoint
+
+The [owned-mutex redesign](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
+passes targeted ownership, queue, FULL/early-release and drain checks, but its
+finite and refill policies remain substantially slower than legacy KD and
+Native on c01. It is opt-in, limited to the captured x86-64 configuration and
+KD-only object lifetimes. Progress in the measured cohorts does not establish
+fairness; refill's observed minimum worker share is 0.017% at sixteen workers.
+The report separates earlier-source probe coverage, current-source checks,
+retained warnings and unresolved diagnostic variation.
 
 The [blocking-only mutex verification](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
 passed affected checks, real scheduler/owner probes and contended JIT execution.
