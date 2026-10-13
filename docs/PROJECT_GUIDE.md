@@ -260,6 +260,16 @@ The implementation is retained for its requested independent protocol, without
 promoting a rejected throughput policy. Its local task tip is preserved as
 `archive/wip/mutex-owned-v1-20261013` after integration.
 
+The [owned-protocol optimization](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md)
+retains the single-word notification and directed pickup changes as experimental
+owned-backend improvements. Final finite and refill grids pass their fresh
+same-policy higher-thread regression gates, while both fail Native parity.
+The extra C-ABI preflight and bounded OSQ policies remain opt-in; capture-first,
+ratio 256 and finite FIFO remain the owned defaults. The implementation and
+complete evidence are integrated locally, with the task tip preserved as
+`archive/perf/mutex-owned-hybrid-20261014`. This does not promote a rejected
+throughput policy or change the benchmark's legacy default.
+
 All twelve original tips are preserved by verified archive tags, including
 `archive/master-before-integration-20261012`. The eleven local `perf/` branches
 were removed. The remaining local branches are `master` and

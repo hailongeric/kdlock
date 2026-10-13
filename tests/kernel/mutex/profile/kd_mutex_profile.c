@@ -11,16 +11,20 @@
 #include <linux/string.h>
 
 static unsigned long target_lock, success_counter;
-static bool kd, spin, owned;
+static bool kd, spin, owned, preflight;
 module_param(target_lock, ulong, 0444);
 module_param(success_counter, ulong, 0444);
 module_param(kd, bool, 0444);
 module_param(spin, bool, 0444);
 module_param(owned, bool, 0444);
+module_param(preflight, bool, 0444);
+MODULE_PARM_DESC(preflight, "Observe owned C-ABI preflight returns; intrusive diagnostics only");
 
 struct profile_counts {
 	u64 native_calls, native_slow, spin_slow, admitted, declined;
 	u64 native_unlocks, owned_calls, owned_slow;
+	u64 gate_self, gate_capture;
+	u64 optimistic_acquired, optimistic_busy, optimistic_self, optimistic_other;
 	u64 batches, batch_packets, histogram[12];
 };
 static DEFINE_PER_CPU(struct profile_counts, counts);
@@ -83,6 +87,35 @@ static int admission_return(struct kretprobe_instance *instance, struct pt_regs 
 	return 0;
 }
 
+/* The gate may sleep/migrate; aggregate return counts across all CPUs.
+ * Only AL belongs to a bool result. The optimistic helper returns a C enum,
+ * so consume EAX; undefined upper return-register bits are never a result. */
+static int preflight_return(struct kretprobe_instance *instance, struct pt_regs *regs)
+{
+	struct profile_counts *c = this_cpu_ptr(&counts);
+
+	if (regs_return_value(regs) & 0xff)
+		c->gate_self++;
+	else
+		c->gate_capture++;
+	return 0;
+}
+
+static int optimistic_return(struct kretprobe_instance *instance, struct pt_regs *regs)
+{
+	struct profile_counts *c = this_cpu_ptr(&counts);
+
+	/* enum kd_owned_mutex_preflight_result: ACQUIRED=0, BUSY=1, SELF=2.
+	 * Unknown values remain visible and invalidate diagnostic attribution. */
+	switch ((unsigned int)regs_return_value(regs)) {
+	case 0: c->optimistic_acquired++; break;
+	case 1: c->optimistic_busy++; break;
+	case 2: c->optimistic_self++; break;
+	default: c->optimistic_other++; break;
+	}
+	return 0;
+}
+
 struct batch_sample { u64 before; unsigned int cpu; };
 static u64 successes(unsigned int cpu)
 {
@@ -130,11 +163,23 @@ static struct kretprobe batch_probe = {
 	.data_size = sizeof(struct batch_sample), .entry_handler = batch_entry, .handler = batch_return,
 };
 
+/* Entry filtering applies to both probes: other owned objects are excluded.
+ * No probe or counter is added to the scored provider's ordinary fast path. */
+static struct kretprobe preflight_probe = {
+	.kp.symbol_name = "kd_owned_mutex_outer_preflight_v1", .maxactive = 128,
+	.entry_handler = admission_entry, .handler = preflight_return,
+};
+static struct kretprobe optimistic_probe = {
+	.kp.symbol_name = "kd_owned_mutex_try_optimistic_pinned", .maxactive = 128,
+	.entry_handler = admission_entry, .handler = optimistic_return,
+};
+
 static int __init profile_init(void)
 {
 	int ret;
 
-	if (!target_lock || (kd && (!success_counter || spin)) || (owned && !kd))
+	if (!target_lock || (kd && (!success_counter || spin)) ||
+	    (owned && !kd) || (preflight && !owned))
 		return -EINVAL;
 	if (owned) {
 		admission_probe.kp.symbol_name = "kd_hotlock_record_owned_mutex_pinned";
@@ -163,12 +208,24 @@ static int __init profile_init(void)
 		if (ret)
 			goto admission;
 	}
+	if (preflight) {
+		ret = register_kretprobe(&preflight_probe);
+		if (ret)
+			goto batch;
+		ret = register_kretprobe(&optimistic_probe);
+		if (ret)
+			goto preflight_gate;
+	}
 	if (!spin) {
 		hrtimer_init(&owner_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL_PINNED);
 		owner_timer.function = sample_owner;
 		hrtimer_start(&owner_timer, ns_to_ktime(100000), HRTIMER_MODE_REL_PINNED);
 	}
 	return 0;
+preflight_gate:
+	unregister_kretprobe(&preflight_probe);
+batch:
+	unregister_kretprobe(&batch_probe);
 admission:
 	unregister_kretprobe(&admission_probe);
 owned_out:
@@ -189,6 +246,10 @@ static void __exit profile_exit(void)
 
 	if (!spin)
 		hrtimer_cancel(&owner_timer);
+	if (preflight) {
+		unregister_kretprobe(&optimistic_probe);
+		unregister_kretprobe(&preflight_probe);
+	}
 	if (kd) {
 		unregister_kretprobe(&batch_probe);
 		unregister_kretprobe(&admission_probe);
@@ -206,6 +267,12 @@ static void __exit profile_exit(void)
 		total.native_unlocks += c->native_unlocks;
 		total.owned_calls += c->owned_calls;
 		total.owned_slow += c->owned_slow;
+		total.gate_self += c->gate_self;
+		total.gate_capture += c->gate_capture;
+		total.optimistic_acquired += c->optimistic_acquired;
+		total.optimistic_busy += c->optimistic_busy;
+		total.optimistic_self += c->optimistic_self;
+		total.optimistic_other += c->optimistic_other;
 		total.admitted += c->admitted;
 		total.declined += c->declined;
 		total.batches += c->batches;
@@ -221,6 +288,12 @@ static void __exit profile_exit(void)
 		pr_info("kd_mutex_profile owned: linux_target_unlocks=%llu self_calls=%llu self_slow=%llu missed=%lu\n",
 			total.native_unlocks, total.owned_calls, total.owned_slow,
 			unlock_probe.nmissed + owned_entry_probe.nmissed + owned_slow_probe.nmissed);
+	if (preflight)
+		pr_info("kd_mutex_profile ownedpreflight: gate_self=%llu gate_capture=%llu optimistic_acquired=%llu optimistic_busy=%llu optimistic_self=%llu optimistic_other=%llu missed=%lu\n",
+			total.gate_self, total.gate_capture, total.optimistic_acquired,
+			total.optimistic_busy, total.optimistic_self, total.optimistic_other,
+			preflight_probe.nmissed + preflight_probe.kp.nmissed +
+			optimistic_probe.nmissed + optimistic_probe.kp.nmissed);
 	for (i = 0; i < 12; i++)
 		pr_info("kd_mutex_profile histogram: bucket=%d batches=%llu\n", i, total.histogram[i]);
 }

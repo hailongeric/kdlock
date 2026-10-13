@@ -76,6 +76,40 @@ class JitPhaseTests(unittest.TestCase):
         self.assertEqual(status, 2, log)
         self.assertFalse(assembly)
 
+    def test_owned_outer_entries_are_outer_only_for_calls_and_addresses(self):
+        names = ('kd_owned_mutex_lock_v1', 'kd_owned_mutex_unlock_v1',
+            'kd_owned_mutex_outer_unlock_v1', 'kd_owned_mutex_direct_lock_clobber_v1',
+            'kd_owned_mutex_direct_contended_clobber_v1',
+            'kd_owned_mutex_outer_contended_clobber_v1',
+            'kd_owned_mutex_outer_prepared_clobber_v1',
+            'kd_owned_mutex_outer_preflight_v1', 'kd_owned_mutex_direct_unlock_clobber_v1')
+        for endpoint in ('kd_owned_mutex_outer_preflight_v1',
+                         'kd_owned_mutex_outer_prepared_clobber_v1'):
+            target = 0x5000
+            controls = {name: 0x7000000+i*0x100 for i, name in enumerate(names)}
+            controls[endpoint] = target
+            cases = (self.call(target) + b'\xc3',
+                     b'\x48\xb8' + struct.pack('<Q', target) + b'\xc3',
+                     b'\xe9' + struct.pack('<i', target - 0x1000 - 5))
+            for kind in ('mutex-owned', 'mutex', 'spin'):
+                for raw in cases:
+                    with self.subTest(endpoint=endpoint, kind=kind, raw=raw.hex()):
+                        assembly, log, status = render(raw.hex(), kernel_symbols=controls,
+                            lock_kind=kind, abi=2 if kind == 'mutex-owned' else 0,
+                            return_status=True)
+                        self.assertEqual(status, 2, log)
+                        self.assertFalse(assembly)
+                        self.assertIn('outer-only mutex entry', log)
+                        self.assertIn(endpoint, log)
+        for missing in ('kd_owned_mutex_outer_preflight_v1',
+                        'kd_owned_mutex_outer_prepared_clobber_v1'):
+            controls = {name: 0x7000000+i*0x100 for i, name in enumerate(names) if name != missing}
+            assembly, log, status = render('c3', kernel_symbols=controls,
+                lock_kind='mutex-owned', abi=2, return_status=True)
+            self.assertEqual(status, 2, log)
+            self.assertFalse(assembly)
+            self.assertIn('owned mutex entry symbols unavailable', log)
+
     def test_native_call_stack_write_is_still_checked(self):
         prefix = bytes.fromhex("48bc0830000000000000")
         assembly, log, status = render(

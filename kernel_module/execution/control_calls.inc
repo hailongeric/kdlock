@@ -297,7 +297,8 @@ static int handle_known_call(struct kd_regs *regs,
 
 	/* The outer-only return-valued entry is not a nested void lock service.
 	 * Admission rejects it; retain the same boundary in generic recovery. */
-	if (regs->ip == outer_mutex_lock_addr || regs->ip == owned_outer_lock_addr)
+	if (regs->ip == outer_mutex_lock_addr || regs->ip == owned_outer_lock_addr ||
+	    regs->ip == owned_prepared_lock_addr)
 		return -EOPNOTSUPP;
 
 	/* Owned and legacy mutex controls are different object types despite

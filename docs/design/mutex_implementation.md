@@ -143,13 +143,24 @@ build. The old internal shadow-gate type is now `kd_mutex_legacy_gate` in
 
 The whole owner word is the sole ownership authority. WAITERS=1, HANDOFF=2 and
 PICKUP=4 retain acquire/release ordering. One FIFO under `wait_lock` contains
-tagged SELF and DELEGATE waiters; each starts with the same 32-byte private
-header. Cold, ineligible and resource-refused outer acquisitions use KD's
+tagged SELF and DELEGATE waiters; each starts with the same 40-byte private
+header. This header is outside the public 32-byte mutex object. Cold, ineligible
+and resource-refused outer acquisitions use KD's
 optimistic SELF core. The OSQ head competes for a running owner; a waiter
 sleeps if spinning cannot make progress. Ordinary SELF release permits barging
 until handoff is requested. A delegated head receives directed PICKUP when it
 cannot execute. Publication retries acquisition after setting WAITERS, covering
 a fast owner release between the first retry and waiter insertion.
+
+A single outcome word reports QUEUED, GRANTED, COMPLETE or FULL. SELF waiters
+use their stack header's inline state; delegation packets point to their result
+cacheline, away from the FIFO links. A directed delegated grant captures the
+wake task reference and unlinks the packet under `wait_lock`, publishes the
+exact task owner with PICKUP, then release-publishes GRANTED as its last packet
+access. The producer consumes only its own PICKUP with an acquire CAS, without
+retaking `wait_lock`. Concurrent WAITERS updates are preserved by the CAS retry.
+Stack SELF waiters retain removal under `wait_lock`. Completion and FULL also
+retire their packet ownership before publishing the same outcome word.
 
 The outer cookie is an explicit outermost acquisition interface. Its successful
 inline CAS records an approximate entry observation and a nonzero physical-owner
@@ -159,6 +170,35 @@ read-only power of two from 2 through 256, default 256; cadence remains 1,024
 contentions, strict `(entries >> 10) < limit`, then 1,025 exact-address records.
 Cold CPUs avoid table work between comparisons. No policy uses worker count.
 `owned_mutex_self_route` is a diagnostic control, not a Linux fallback.
+
+By default, a failed inline probe enters the original ABI2 capture endpoint,
+which records the failed attempt exactly once before delegation admission.
+`KD_OWNED_MUTEX_PREFLIGHT=1` is an optional caller build choice. It instead calls
+an ordinary C-ABI gate to make that observation before capture. A cold caller
+acquires through the owned SELF core there. The default caller emits no gate
+call and reads no runtime preflight policy. Both entry symbols coexist in the
+provider: the opt-in capture calls `kd_owned_mutex_outer_prepared_clobber_v1`,
+which does not sample again; the original contended endpoint retains sampling. An admitted caller may first retry with
+`owned_mutex_preflight_spins` (0, 64, 256, 1,024 or 4,096; default 0). The
+optimistic candidate competes only as OSQ head, checks the running owner and
+rescheduling state, and releases OSQ before returning. The separate opt-in
+`owned_mutex_preflight_queue` joins an occupied OSQ and shares the budget between
+queue observations and owner polling. On expiry it completes the existing OSQ
+cancellation protocol; a racing grant must still be unlocked. Existing SELF
+spinners retain their unbounded OSQ entry. The budget limits deliberate polling,
+not required cancellation, successor publication or elapsed time. An admitted
+BUSY result permits capture, but conveys no eligibility lease. Source, command
+and active-task eligibility are checked once at prepared entry, before task
+references, registration, packet reservation or publication. A refusal acquires
+SELF and returns the physical-owner cookie; sampling is not repeated. No task
+reference, packet or OSQ lease crosses the C preflight boundary. The compiler
+may still spill callee-saved registers for the function's clobber branch.
+The gate and both return-valued capture endpoints are outer-only controls and
+are rejected inside translated bodies. Compiled caller identity distinguishes
+capture-first from C-gate budget zero; neither is inferred from worker count.
+The intermediate experimental caller that paired a gate with the old endpoint
+must not be reused with this provider; replace the complete caller/provider/JIT
+session, retaining archived binaries with their matching frozen sources.
 
 Ordinary and direct clobber calls are nestable SELF controls on their caller.
 When translated, the dispatcher acquires/releases them through the exact frame

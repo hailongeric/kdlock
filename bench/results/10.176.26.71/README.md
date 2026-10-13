@@ -6,6 +6,19 @@ execution. Receipts retain their own source, kernel, boot policy and topology.
 
 ## Current source verification
 
+The [2026-10-14 owned-protocol optimization](bench/mutex_owned/20261014-hybrid/README.md)
+integrates grant/completion notification and avoids a second queue-lock
+acquisition on delegated pickup, while retaining the Linux-sized 32-byte object
+and excluding original Linux target-lock calls. It audits 708 scored sessions
+and 72 separate diagnostics, with [affected correctness checks](bench/mutex_owned/20261014-hybrid/validation.json).
+Final finite and refill policies pass the fresh same-policy higher-thread
+regression gates; neither meets the 97% Native primary target. Pre-capture
+admission and bounded OSQ polling remain opt-in, and the owned defaults remain
+capture-first, ratio 256 and finite FIFO. This is experimental protocol progress,
+not Native parity; all rejected screens and raw evidence are retained.
+
+## Earlier verification
+
 The [KD-owned mutex study](bench/mutex_owned/20261013/README.md) implements the
 same 32-byte object geometry as Linux with private owner/OSQ/sleep code and a
 typed FIFO. It retains 426 scored sessions, 114 diagnostics and the

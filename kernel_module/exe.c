@@ -112,6 +112,7 @@ static unsigned long owned_outer_unlock_addr;
 static unsigned long owned_direct_lock_addr;
 static unsigned long owned_contended_lock_addr;
 static unsigned long owned_outer_lock_addr;
+static unsigned long owned_prepared_lock_addr;
 static unsigned long owned_direct_unlock_addr;
 
 #include "execution/hostcalls.inc"

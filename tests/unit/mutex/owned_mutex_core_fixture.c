@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef uint32_t u32;
 typedef struct { unsigned long counter; } atomic_long_t;
@@ -27,6 +28,7 @@ static struct task_struct *current;
 static int pin_count, schedules, spins, combine_calls, osq_locks, osq_unlocks;
 static bool resched, release_before_waiters;
 static void (*schedule_action)(void), (*osq_action)(void);
+static void (*store_action)(u32 *);
 
 #define CONFIG_X86_64 1
 #define CONFIG_MUTEX_SPIN_ON_OWNER 1
@@ -48,7 +50,11 @@ static void (*schedule_action)(void), (*osq_action)(void);
 #define __RAW_SPIN_LOCK_UNLOCKED(name) { 0 }
 #define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
 #define WRITE_ONCE(x, v) __atomic_store_n(&(x), (v), __ATOMIC_RELAXED)
-#define smp_store_release(p, v) __atomic_store_n((p), (v), __ATOMIC_RELEASE)
+#define smp_store_release(p, v) do { \
+	__atomic_store_n((p), (v), __ATOMIC_RELEASE); \
+	if (store_action) store_action(p); \
+} while (0)
+#define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 #define smp_mb__before_atomic() __atomic_thread_fence(__ATOMIC_SEQ_CST)
 #define barrier() __asm__ __volatile__("" ::: "memory")
 #define cmpxchg_relaxed(p, old, val) ({ \
@@ -158,6 +164,14 @@ bool kd_owned_osq_lock(struct optimistic_spin_queue *lock)
 		osq_action();
 	return true;
 }
+bool kd_owned_osq_lock_bounded(struct optimistic_spin_queue *lock, unsigned int *remaining)
+{ (void)lock;(void)remaining;assert(false);return false; }
+bool kd_owned_osq_trylock(struct optimistic_spin_queue *lock)
+{
+	if (atomic_read(&lock->tail))
+		return false;
+	return kd_owned_osq_lock(lock);
+}
 void kd_owned_osq_unlock(struct optimistic_spin_queue *lock)
 {
 	assert(pin_count && atomic_read(&lock->tail));
@@ -167,6 +181,8 @@ void kd_owned_osq_unlock(struct optimistic_spin_queue *lock)
 static struct kd_mutex lock;
 static DEFINE_KD_MUTEX(static_lock);
 static struct kd_owned_mutex_waiter wb, wc;
+static u32 wb_outcome, wc_outcome;
+static int immediate_pickups;
 static void reset(void)
 {
 	assert(!pin_count);
@@ -176,15 +192,44 @@ static void reset(void)
 	}
 	current = &tasks[0]; resched = false; combine_handles = false;
 	release_before_waiters = false;
+	store_action = NULL;
 	route_borrowed = false;
 	schedule_action = osq_action = NULL; spins = 0;
+	wb.outcome = &wb_outcome; wc.outcome = &wc_outcome;
 	kd_mutex_init(&lock);
 }
 static void publish(struct kd_owned_mutex_waiter *w, unsigned int task, u32 kind)
 {
 	current = &tasks[task]; w->task = current; w->kind = kind;
+	w->outcome = kind == KD_OWNED_MUTEX_SELF ? &w->state :
+		(w == &wb ? &wb_outcome : &wc_outcome);
 	assert(!kd_owned_mutex_publish(&lock, w));
-	assert(w->state == KD_OWNED_MUTEX_QUEUED && !list_empty(&w->list));
+	assert(*w->outcome == KD_OWNED_MUTEX_QUEUED && !list_empty(&w->list));
+}
+static void pickup_self(struct kd_owned_mutex_waiter *waiter)
+{
+	/* The normal stack SELF loop still removes its own queued entry. */
+	assert(waiter->kind == KD_OWNED_MUTEX_SELF && waiter->outcome == &waiter->state);
+	raw_spin_lock(&lock.wait_lock);
+	assert(!kd_owned_mutex_trylock_common(&lock, false));
+	kd_owned_mutex_remove_waiter(&lock, waiter);
+	raw_spin_unlock(&lock.wait_lock);
+}
+static void pickup_and_reuse_at_publication(u32 *outcome)
+{
+	struct task_struct *releaser = current;
+
+	assert(outcome == &wb_outcome && *outcome == KD_OWNED_MUTEX_GRANTED);
+	assert(lock.wait_lock.locked && tasks[1].refs == 1);
+	assert(list_empty(&wb.list));
+	store_action = NULL;
+	current = &tasks[1];
+	assert(kd_owned_mutex_pickup(&lock, &wb));
+	assert(!kd_owned_mutex_pickup(&lock, &wb));
+	assert(kd_owned_mutex_owned(&lock, current));
+	memset(&wb, 0xaf, sizeof(wb));
+	immediate_pickups++;
+	current = releaser;
 }
 static void release_from_owner(void)
 {
@@ -228,8 +273,7 @@ int main(void)
 	assert(atomic_long_read(&lock.owner) & KD_OWNED_MUTEX_FLAG_HANDOFF);
 	current = &tasks[2]; kd_mutex_unlock(&lock);
 	assert(wb.state == KD_OWNED_MUTEX_GRANTED && !kd_mutex_trylock(&lock));
-	current = &tasks[1]; assert(kd_owned_mutex_pickup(&lock, &wb));
-	assert(!kd_owned_mutex_pickup(&lock, &wb));
+	current = &tasks[1]; pickup_self(&wb);
 	assert(atomic_long_read(&lock.owner) == (unsigned long)current);
 	kd_owned_mutex_outer_unlock_v1(&lock); assert(kd_owned_mutex_is_idle(&lock));
 
@@ -238,14 +282,38 @@ int main(void)
 	reset(); kd_mutex_lock(&lock); publish(&wb, 1, KD_OWNED_MUTEX_DELEGATE);
 	publish(&wc, 2, KD_OWNED_MUTEX_SELF);
 	current = &tasks[0]; kd_mutex_unlock(&lock);
-	assert(wb.kind == KD_OWNED_MUTEX_SELF && wb.state == KD_OWNED_MUTEX_GRANTED);
+	assert(wb.kind == KD_OWNED_MUTEX_SELF && wb_outcome == KD_OWNED_MUTEX_GRANTED);
+	assert(list_empty(&wb.list));
 	current = &tasks[2]; assert(!kd_mutex_trylock(&lock));
 	assert(!kd_owned_mutex_pickup(&lock, &wc));
-	current = &tasks[1]; assert(kd_owned_mutex_pickup(&lock, &wb));
+	current = &tasks[1];
+	wb_outcome = KD_OWNED_MUTEX_QUEUED;
+	assert(!kd_owned_mutex_pickup(&lock, &wb));
+	wb_outcome = KD_OWNED_MUTEX_GRANTED;
+	{
+		unsigned long granted_owner = atomic_long_read(&lock.owner);
+
+		atomic_long_set(&lock.owner, (unsigned long)&tasks[2] |
+				KD_OWNED_MUTEX_FLAG_WAITERS | KD_OWNED_MUTEX_FLAG_PICKUP);
+		assert(!kd_owned_mutex_pickup(&lock, &wb));
+		atomic_long_set(&lock.owner, granted_owner);
+	}
+	assert(kd_owned_mutex_pickup(&lock, &wb));
 	assert(lock.wait_list.next == &wc.list);
 	kd_owned_mutex_release(&lock);
-	current = &tasks[2]; assert(kd_owned_mutex_pickup(&lock, &wc));
+	current = &tasks[2]; pickup_self(&wc);
 	kd_owned_mutex_outer_unlock_v1(&lock); assert(kd_owned_mutex_is_idle(&lock));
+
+	/* Publication is the final request access. Its receiver can acquire and
+	 * poison the packet before the releaser drops wait_lock or wakes tasks. */
+	reset(); kd_mutex_lock(&lock); publish(&wb, 1, KD_OWNED_MUTEX_DELEGATE);
+	current = &tasks[0]; store_action = pickup_and_reuse_at_publication;
+	kd_mutex_unlock(&lock);
+	assert(immediate_pickups == 1 && !tasks[1].refs && tasks[1].wakes);
+	assert(wb.kind == 0xafafafafU && wb.state == 0xafafafafU);
+	assert(atomic_long_read(&lock.owner) == (unsigned long)&tasks[1]);
+	current = &tasks[1]; kd_owned_mutex_outer_unlock_v1(&lock);
+	assert(kd_owned_mutex_is_idle(&lock));
 
 	reset(); wb.task = current; wb.kind = KD_OWNED_MUTEX_DELEGATE;
 	assert(kd_owned_mutex_publish(&lock, &wb) && list_empty(&wb.list));
@@ -298,7 +366,7 @@ int main(void)
 		kd_mutex_unlock(&lock);
 		assert(combine_calls == before && !current->owned_holds);
 		assert(kd_owned_mutex_owned(&outer, current));
-		assert(wb.kind == KD_OWNED_MUTEX_SELF && wb.state == KD_OWNED_MUTEX_GRANTED);
+		assert(wb.kind == KD_OWNED_MUTEX_SELF && wb_outcome == KD_OWNED_MUTEX_GRANTED);
 		current = &tasks[1]; assert(kd_owned_mutex_pickup(&lock, &wb));
 		assert(!kd_mutex_trylock(&outer));
 		current = &tasks[0]; kd_owned_mutex_outer_unlock_v1(&outer);

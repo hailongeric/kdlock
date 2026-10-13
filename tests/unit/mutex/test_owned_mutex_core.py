@@ -18,7 +18,7 @@ def main():
     core = without_includes((ROOT / "kernel_module/owned_mutex/core.c").read_text())
     mutations = {
         "force-self-handoff": (
-            "directed |= waiter->kind == KD_OWNED_MUTEX_DELEGATE;",
+            "directed |= delegated;",
             "directed = true;",
         ),
         "omit-pickup": (
@@ -48,6 +48,42 @@ def main():
             "if (!kd_owned_mutex_unlock_borrowed(lock, owner) &&\n"
             "\t    !kd_owned_mutex_combine(lock))\n"
             "\t\tkd_owned_mutex_release_common(lock, false);",
+        ),
+        "retain-granted-delegate": (
+            "if (delegated) {\n\t\t\tlist_del_init(&waiter->list);",
+            "if (false) {\n\t\t\tlist_del_init(&waiter->list);",
+        ),
+        "pickup-without-grant": (
+            "if (smp_load_acquire(waiter->outcome) != KD_OWNED_MUTEX_GRANTED)",
+            "if (false)",
+        ),
+        "pickup-retains-flag": (
+            "owner & ~KD_OWNED_MUTEX_FLAG_PICKUP))",
+            "owner))",
+        ),
+        "pickup-wrong-owner": (
+            "if ((owner & ~KD_OWNED_MUTEX_FLAGS) != (unsigned long)current ||\n"
+            "\t\t    !(owner & KD_OWNED_MUTEX_FLAG_PICKUP))",
+            "if (!(owner & KD_OWNED_MUTEX_FLAG_PICKUP))",
+        ),
+        "publish-on-stale-inline-state": (
+            "smp_store_release(outcome, KD_OWNED_MUTEX_GRANTED);",
+            "smp_store_release(((void)outcome, &waiter->state), KD_OWNED_MUTEX_GRANTED);",
+        ),
+        "pickup-relocks-wait-queue": (
+            "/* The releaser unlinked this delegated node before publishing GRANTED.",
+            "raw_spin_lock(&lock->wait_lock);\n\traw_spin_unlock(&lock->wait_lock);\n"
+            "\t/* The releaser unlinked this delegated node before publishing GRANTED.",
+        ),
+        "grant-touches-retired-packet": (
+            "smp_store_release(outcome, KD_OWNED_MUTEX_GRANTED);",
+            "smp_store_release(outcome, KD_OWNED_MUTEX_GRANTED);\n"
+            "\tif (waiter) WRITE_ONCE(waiter->state, KD_OWNED_MUTEX_GRANTED);",
+        ),
+        "grant-before-owner-publication": (
+            "if (atomic_long_try_cmpxchg_release(&lock->owner, &owner, next))",
+            "if (grant) smp_store_release(outcome, KD_OWNED_MUTEX_GRANTED);\n"
+            "\t\tif (atomic_long_try_cmpxchg_release(&lock->owner, &owner, next))",
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kd-owned-mutex-core-") as directory:

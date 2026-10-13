@@ -31,11 +31,11 @@ static int kd_owned_wait_test_worker(void *data)
 	node->lock = &test->lock;
 	node->waiter.task = current;
 	node->waiter.kind = KD_OWNED_MUTEX_DELEGATE;
+	node->waiter.outcome = &node->outcome;
 	node->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	node->packet_state = KD_PACKET_MINIMAL;
 	node->regs.sp = node->regs.ip = 0; /* Guaranteed pre-body refusal. */
-	node->result = 0x100;
-	node->native_resume = false;
+	node->outcome = KD_OWNED_MUTEX_QUEUED;
 	this_cpu_ptr(kd_owned_mutex_cpus)->active_waiters++;
 	BUG_ON(kd_owned_mutex_publish(&test->lock, &node->waiter));
 	/* Actual admission cooling while the published FIFO node and its task

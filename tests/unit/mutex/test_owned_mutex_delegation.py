@@ -67,7 +67,7 @@ static void list_splice_init(struct list_head *from,struct list_head *to) {
 enum { KD_OWNED_MUTEX_SELF, KD_OWNED_MUTEX_DELEGATE };
 enum { KD_OWNED_MUTEX_QUEUED, KD_OWNED_MUTEX_GRANTED };
 struct kd_owned_mutex_waiter {
- struct list_head list; struct task_struct *task; unsigned int kind,state;
+ struct list_head list; struct task_struct *task; unsigned int kind,state,*outcome;
 };
 struct kd_mutex { unsigned long owner; int wait_lock; struct list_head wait_list; };
 struct kd_owned_mutex_node { struct kd_owned_mutex_waiter waiter; unsigned int id; };
@@ -311,6 +311,113 @@ def production(source):
     return PREFIX+value+CASES
 
 
+NOTIFICATION_PREFIX = r'''
+#include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+typedef uint32_t u32;
+struct rcuwait { int active, wakes; } waits[16];
+struct kd_owned_mutex_node { struct rcuwait *wait; u32 outcome; } nodes[16];
+static struct kd_owned_mutex_node *publishing;
+static int publications, barriers, last_publish_barrier, reads;
+static u32 expected_outcome;
+static unsigned long kd_owned_mutex_wakes,kd_owned_mutex_parks;
+static unsigned int owned_mutex_spin_limit;
+static int pin=1,prepares,finishes,sleeps,relaxes;
+static void (*state_action)(void),(*sleep_action)(void);
+#define this_cpu_inc(x) (++(x))
+#define TASK_UNINTERRUPTIBLE 2
+static bool need_resched(void) { return false; }
+static void cpu_relax(void) { relaxes++; }
+static void preempt_enable(void) { assert(pin==1);pin=0; }
+static void preempt_disable(void) { assert(!pin);pin=1; }
+static void prepare_to_rcuwait(struct rcuwait *wait) { prepares++;wait->active=1; }
+static void finish_rcuwait(struct rcuwait *wait) { finishes++;wait->active=0; }
+static void set_current_state(int state) {
+ assert(state==TASK_UNINTERRUPTIBLE && pin==1);
+ if(state_action) { void (*action)(void)=state_action;state_action=NULL;action(); }
+}
+static void schedule_timeout(int duration) {
+ assert(!pin && duration==1 && sleep_action);sleeps++;sleep_action();
+}
+static void publish(u32 *p,u32 value) {
+ assert(publishing && p==&publishing->outcome && value==expected_outcome);
+ *p=value; publications++; last_publish_barrier=barriers;
+ /* The producer can reuse its packet immediately. Only the separately
+  * captured rcuwait identity remains available to the old executor. */
+ publishing->wait=(void *)1;
+}
+#define smp_store_release(p,v) publish((p),(v))
+static u32 observe(const u32 *p) { reads++;return *p; }
+#define smp_load_acquire(p) observe(p)
+#define smp_mb() (++barriers)
+static bool rcuwait_active(struct rcuwait *wait) {
+ assert((uintptr_t)wait>=(uintptr_t)waits && (uintptr_t)wait<(uintptr_t)(waits+16));
+ return wait->active;
+}
+static bool rcuwait_wake_up(struct rcuwait *wait) {
+ assert((uintptr_t)wait>=(uintptr_t)waits && (uintptr_t)wait<(uintptr_t)(waits+16));
+ assert(barriers>last_publish_barrier);
+ wait->wakes++; return true;
+}
+'''
+
+NOTIFICATION_CASES = r'''
+static void grant_before_schedule(void) { nodes[0].outcome=KD_OWNED_MUTEX_GRANTED; }
+static void full_after_schedule(void) { nodes[0].outcome=KD_OWNED_MUTEX_FULL; }
+int main(void) {
+ struct rcuwait *wake[16]; unsigned int count=0;
+ for(u32 state=KD_OWNED_MUTEX_QUEUED;state<=KD_OWNED_MUTEX_FULL;state++) {
+  nodes[0].outcome=state; reads=0;
+  assert(kd_owned_mutex_result_ready(&nodes[0])==(state!=KD_OWNED_MUTEX_QUEUED));
+  assert(reads==1);
+ }
+ for(int complete=0;complete<=1;complete++) {
+  publishing=&nodes[0]; publishing->wait=&waits[0];waits[0].active=1;
+  expected_outcome=complete ? KD_OWNED_MUTEX_COMPLETE : KD_OWNED_MUTEX_FULL;
+  kd_owned_mutex_notify(publishing,complete);
+  assert(publishing->outcome==expected_outcome);
+ }
+ assert(publications==2 && waits[0].wakes==2 && kd_owned_mutex_wakes==2);
+ for(int i=0;i<16;i++) {
+  publishing=&nodes[i];publishing->wait=&waits[i];waits[i].active=1;
+  expected_outcome=KD_OWNED_MUTEX_COMPLETE;
+  kd_owned_mutex_defer(publishing,wake,&count);
+  assert(publishing->outcome==KD_OWNED_MUTEX_COMPLETE);
+  if(i<15) assert(count==(unsigned int)i+1);
+ }
+ assert(count==0 && publications==18 && kd_owned_mutex_wakes==18);
+ for(int i=0;i<16;i++) assert(waits[i].wakes==(i==0 ? 3 : 1));
+ nodes[0].wait=&waits[0];nodes[0].outcome=KD_OWNED_MUTEX_QUEUED;
+ owned_mutex_spin_limit=0;state_action=grant_before_schedule;
+ kd_owned_mutex_wait_result(&nodes[0]);
+ assert(prepares==1 && finishes==1 && !sleeps && !waits[0].active && pin==1);
+ nodes[0].outcome=KD_OWNED_MUTEX_QUEUED;owned_mutex_spin_limit=2;
+ sleep_action=full_after_schedule;
+ kd_owned_mutex_wait_result(&nodes[0]);
+ assert(prepares==2 && finishes==2 && sleeps==1 && relaxes==2 && pin==1);
+ assert(kd_owned_mutex_parks==1 && !waits[0].active);
+ nodes[0].outcome=KD_OWNED_MUTEX_COMPLETE;
+ kd_owned_mutex_wait_result(&nodes[0]);
+ assert(prepares==2 && finishes==2 && sleeps==1);
+ puts("PASS production owned single outcome: grant/COMPLETE/FULL acquire poll, notification reuse, deferred stable wake identity");
+}
+'''
+
+
+def notifications(source):
+    header = (ROOT/'include/kd_owned_mutex_internal.h').read_text()
+    value = definition(header, 'enum kd_owned_mutex_waiter_state {')+';\n'
+    for marker in ('static void kd_owned_mutex_flush_wakes(struct rcuwait **wake, unsigned int *count)',
+                   'static void kd_owned_mutex_notify(struct kd_owned_mutex_node *node, bool complete)',
+                   'static void kd_owned_mutex_defer(struct kd_owned_mutex_node *node,',
+                   'static bool kd_owned_mutex_result_ready(struct kd_owned_mutex_node *node)',
+                   'static void kd_owned_mutex_wait_result(struct kd_owned_mutex_node *node)'):
+        value += definition(source, marker)
+    return NOTIFICATION_PREFIX+value+NOTIFICATION_CASES
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mutations', action='store_true')
@@ -350,13 +457,27 @@ def main():
         'stop-after-full': ('if (ret == KD_EXE_NATIVE_DONE)\n\t\t\tbreak;',
                             'if (false)\n\t\t\tbreak;'),
     }
+    notification_mutations = {
+        'notification-swaps-full-complete': (
+            'complete ? KD_OWNED_MUTEX_COMPLETE :\n\t\t\t  KD_OWNED_MUTEX_FULL',
+            'complete ? KD_OWNED_MUTEX_FULL :\n\t\t\t  KD_OWNED_MUTEX_COMPLETE'),
+        'notification-ignores-granted': (
+            'smp_load_acquire(&node->outcome) != KD_OWNED_MUTEX_QUEUED',
+            'smp_load_acquire(&node->outcome) == KD_OWNED_MUTEX_COMPLETE'),
+        'defer-captures-retired-packet': (
+            'wake[(*count)++] = node->wait;\n\tsmp_store_release(&node->outcome, KD_OWNED_MUTEX_COMPLETE);',
+            'smp_store_release(&node->outcome, KD_OWNED_MUTEX_COMPLETE);\n\twake[(*count)++] = node->wait;'),
+        'notify-touches-retired-packet': (
+            'if (rcuwait_active(wait) && rcuwait_wake_up(wait))',
+            '(void)wait;\n\tif (rcuwait_active(node->wait) && rcuwait_wake_up(node->wait))'),
+    }
     with tempfile.TemporaryDirectory(prefix='kd-owned-fifo-') as directory:
         path = Path(directory)
         cc = shlex.split(os.environ.get('CC', 'gcc'))
 
-        def run(text, name):
+        def run(text, name, generate=production):
             cfile, binary = path/(name+'.c'), path/name
-            cfile.write_text(production(text))
+            cfile.write_text(generate(text))
             subprocess.run(cc+['-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
                                str(cfile), '-o', str(binary)],
                            check=True, timeout=30)
@@ -365,10 +486,18 @@ def main():
         result = run(source, 'original')
         assert result.returncode == 0, result.stdout+result.stderr
         print(result.stdout, end='')
+        result = run(source, 'notifications', notifications)
+        assert result.returncode == 0, result.stdout+result.stderr
+        print(result.stdout, end='')
         if args.mutations:
             for name, (old, new) in mutations.items():
                 assert source.count(old) == 1, (name, source.count(old))
                 result = run(source.replace(old, new), name)
+                assert result.returncode != 0, f'mutation escaped: {name}'
+                print(f'PASS rejected mutation: {name}')
+            for name, (old, new) in notification_mutations.items():
+                assert source.count(old) == 1, (name, source.count(old))
+                result = run(source.replace(old, new), name, notifications)
                 assert result.returncode != 0, f'mutation escaped: {name}'
                 print(f'PASS rejected mutation: {name}')
 

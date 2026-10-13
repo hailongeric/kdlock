@@ -19,7 +19,14 @@ void kd_owned_mutex_direct_lock_clobber_v1(struct kd_mutex *, unsigned long,
 					unsigned long, unsigned long);
 void kd_owned_mutex_direct_contended_clobber_v1(struct kd_mutex *, unsigned long,
 					      unsigned long, unsigned long);
+/* Called only after a failed outer probe. True means physical ownership;
+ * false requests ABI2 capture. No preparation resource survives this call. */
+bool kd_owned_mutex_outer_preflight_v1(struct kd_mutex *);
+/* Capture-first entry: records this failed outer attempt before admission. */
 unsigned long kd_owned_mutex_outer_contended_clobber_v1(struct kd_mutex *,
+			unsigned long, unsigned long, unsigned long);
+/* Prepared-only entry: the ordinary preflight already sampled this attempt. */
+unsigned long kd_owned_mutex_outer_prepared_clobber_v1(struct kd_mutex *,
 			unsigned long, unsigned long, unsigned long);
 void kd_owned_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
 					  unsigned long, unsigned long);
@@ -62,6 +69,27 @@ kd_owned_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 		atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner);
 }
 
+/* Caller selection is compile-time only. The default emits neither a C-gate
+ * call nor a runtime policy read, and retains the original sampled endpoint. */
+#ifndef KD_OWNED_MUTEX_PREFLIGHT
+#define KD_OWNED_MUTEX_PREFLIGHT 0
+#endif
+#if KD_OWNED_MUTEX_PREFLIGHT != 0 && KD_OWNED_MUTEX_PREFLIGHT != 1
+#error "KD_OWNED_MUTEX_PREFLIGHT must be 0 or 1"
+#endif
+#if KD_OWNED_MUTEX_PREFLIGHT
+#define KD_OWNED_MUTEX_PREFLIGHT_BRANCH(lock, cookie)                        \
+	else if (kd_owned_mutex_outer_preflight_v1(lock)) {                    \
+		WRITE_ONCE((cookie).owner, (unsigned long)current);             \
+	}
+#define KD_OWNED_MUTEX_CAPTURE_CALL \
+	"call kd_owned_mutex_outer_prepared_clobber_v1\n\t"
+#else
+#define KD_OWNED_MUTEX_PREFLIGHT_BRANCH(lock, cookie)
+#define KD_OWNED_MUTEX_CAPTURE_CALL \
+	"call kd_owned_mutex_outer_contended_clobber_v1\n\t"
+#endif
+
 #define KD_OWNED_MUTEX_OUTER_LOCK(lock, cookie, continuation)                  \
 	do {                                                                    \
 		struct kd_mutex *kd_outer_lock = (lock);                           \
@@ -71,12 +99,14 @@ kd_owned_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 		if (kd_owned_mutex_outer_trylock(kd_outer_lock, kd_owner)) {         \
 			kd_hotlock_owned_mutex_entry();                              \
 			WRITE_ONCE((cookie).owner, kd_owner);                         \
-		} else {                                                            \
+		}                                                                   \
+		KD_OWNED_MUTEX_PREFLIGHT_BRANCH(kd_outer_lock, cookie)               \
+		else {                                                              \
 			unsigned long kd_sp, kd_ip, kd_bp, kd_route;                  \
 			asm volatile("movq %%rsp, %%rsi\n\t"                         \
 				     "leaq 1f(%%rip), %%rdx\n\t"                    \
 				     "movq %%rbp, %%rcx\n\t"                        \
-				     "call kd_owned_mutex_outer_contended_clobber_v1\n\t" \
+				     KD_OWNED_MUTEX_CAPTURE_CALL                         \
 				     "jmp 2f\n\t1:\n\t" continuation                \
 				     "xorl %%eax, %%eax\n\t2:\n\t"                  \
 				     : "=a"(kd_route), "+D"(kd_outer_lock),          \

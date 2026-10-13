@@ -42,7 +42,7 @@
     }
   ],
   "port": {
-    "osq.c": "Exact captured OSQ queue/unqueue implementation; private names and local node declaration. Atomic ordering and per-CPU storage unchanged.",
+    "osq.c": "Exact captured OSQ queue/unqueue implementation; private names and local node declaration. Atomic ordering and per-CPU storage unchanged. An added immediate-head trylock initializes the same node and uses a fully ordered tail CAS; it never joins a nonempty queue. The optional bounded entry shares the original cancellation steps, adding a queued-poll budget; existing SELF entry passes no budget.",
     "core.c": "Non-RT non-debug ordinary mutex owner flags, trylock, owner spinning and uninterruptible SELF wait loop; no ww/RT/interruptible API or original mutex calls. Private wake_q_add implementation and scheduler preempt-count/schedule sequence copied from the captured scheduler.",
     "public_layout": "The owner/wait_lock/osq/wait_list fields are checked against captured Linux struct mutex; 32 bytes at offsets0,8,12,16.",
     "intentional_changes": [
@@ -51,7 +51,10 @@
       "Only explicit outer unlock may combine. Ordinary/nested unlock consumes its task-local hold marker and uses the SELF release or owner-ACK path, because a zero ordinary depth does not exclude a still-held explicit outer lock.",
       "The kernel exports callback variables kd_mutex_lock/unlock, so public function-like aliases call kd_owned_mutex_lock_v1/unlock_v1 ELF symbols.",
       "MODULE hides preempt_enable_no_resched; the private sleep helper spells its barrier/preempt_count_dec sequence before schedule(), then restores preempt_disable().",
-      "Unsupported RT/debug/non-owner-spin configurations fail at compile time; owned objects never mix Linux/native-peer waiters."
+      "Unsupported RT/debug/non-owner-spin configurations fail at compile time; owned objects never mix Linux/native-peer waiters.",
+      "Capture-first is the default caller: the original ABI2 outer endpoint makes the once-only admission observation. The compile-time opt-in C outer preflight instead makes that observation before capture, optionally polls a running owner as the immediate private OSQ head, and acquires through SELF on refusal. Its distinct prepared ABI2 entry checks delegation eligibility once before resources, without resampling. No added runtime policy read selects the default caller route. The poll count does not bound OSQ successor-link completion time.",
+      "Delegated grants unlink under wait_lock before final outcome publication; one private result word carries GRANTED, COMPLETE and FULL, and exact-task PICKUP uses acquire CAS without a second wait_lock acquisition.",
+      "Optional queued preflight shares one deliberate polling budget across OSQ waiting and owner polling. Required OSQ cancellation and successor publication are not bounded by that budget."
     ]
   }
 }

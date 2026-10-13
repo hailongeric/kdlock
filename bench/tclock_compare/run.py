@@ -29,9 +29,11 @@ DEFAULT_SPIN_ENTRY_RATIO_LIMIT = 2
 DEFAULT_KD_PROVIDER_UBSAN = 'off'
 DEFAULT_MUTEX_ENTRY_RATIO_LIMIT = 256
 MUTEX_ENTRY_RATIO_LIMITS = tuple(1 << shift for shift in range(1, 9))
+OWNED_MUTEX_PREFLIGHT_SPINS = (0, 64, 256, 1024, 4096)
 MUTEX_POLICY_FIELDS = ('mutex_implementation', 'mutex_entry_ratio_limit',
                        'owned_mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance',
-                       'owned_queue_policy')
+                       'owned_queue_policy', 'owned_preflight_policy', 'owned_mutex_preflight',
+                       'owned_mutex_preflight_spins', 'owned_mutex_preflight_queue')
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                  'sample_ms', 'collector_cpu')
@@ -164,6 +166,19 @@ def make_plan(args):
             'invalid mutex entry ratio limit')
     require(mutex_implementation in ('legacy', 'owned-v1'), 'invalid mutex implementation')
     owned = mutex_implementation == 'owned-v1'
+    owned_preflight = getattr(args, 'owned_mutex_preflight', False)
+    require(type(owned_preflight) is bool and (not owned_preflight or owned),
+            'owned mutex preflight requires owned-v1')
+    owned_preflight_spins = getattr(args, 'owned_mutex_preflight_spins', 0)
+    require(type(owned_preflight_spins) is int and
+            owned_preflight_spins in OWNED_MUTEX_PREFLIGHT_SPINS,
+            'invalid owned mutex preflight spin budget')
+    require(not owned_preflight_spins or owned_preflight,
+            'preflight spin budget requires --owned-mutex-preflight')
+    owned_preflight_queue = getattr(args, 'owned_mutex_preflight_queue', False)
+    require(type(owned_preflight_queue) is bool and
+            (not owned_preflight_queue or (owned_preflight and owned_preflight_spins > 0)),
+            'queued preflight requires --owned-mutex-preflight and a positive spin budget')
     owned_refill = getattr(args, 'owned_mutex_refill', False)
     require(not owned_refill or owned, 'owned FIFO refill requires owned-v1')
     scenario = getattr(args, 'scenario', 'plain')
@@ -218,6 +233,9 @@ def make_plan(args):
                 suffix += '-owned-v1'
                 if owned_refill:
                     suffix += '-refill'
+                suffix += (f'-preflight{owned_preflight_spins}' if owned_preflight else '-capture-first')
+                if owned_preflight_queue:
+                    suffix += '-queued'
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, lock_kind=lock_kind, hotlock_mode=mode,
@@ -232,12 +250,17 @@ def make_plan(args):
                 owned_mutex_entry_ratio_limit=owned_limit if owned_backend else None,
                 owned_queue_policy=('bounded_fifo_refill' if owned_refill else 'finite_fifo') if owned_backend else 'not_applicable',
                 owned_mutex_refill=owned_refill if owned_backend else False,
+                owned_preflight_policy=('c_abi_v1' if owned_preflight else 'capture_first') if owned_backend else 'not_applicable',
+                owned_mutex_preflight=owned_preflight if owned_backend else False,
+                owned_mutex_preflight_spins=owned_preflight_spins if owned_backend else None,
+                owned_mutex_preflight_queue=owned_preflight_queue if owned_backend else False,
                 mutex_routing=mutex_routing if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
                 mutex_acceptance=mutex_acceptance if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
                 diagnostic=bool(getattr(args, 'pmu', False) or getattr(args, 'perf_record', False) or
                                 profile or force_full or mutex_routing in ('native', 'self')),
                 owned_mutex_force_full=force_full,
                 profile_lock=profile,
+                profile_owned_preflight=bool(profile and owned_backend and owned_preflight),
                 perf_record=getattr(args, 'perf_record', False),
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
@@ -427,6 +450,12 @@ def main(lock_kind='spin'):
                    help='native (legacy) or self (owned-v1) are unscored diagnostic controls')
     p.add_argument('--owned-mutex-force-full', action='store_true',
                    help='functional nested/early probe: force one post-control FULL continuation and ACK')
+    p.add_argument('--owned-mutex-preflight', action='store_true',
+                   help='experimental C-ABI gate before capture; default uses capture-first entry')
+    p.add_argument('--owned-mutex-preflight-queue', action='store_true',
+                   help='allow owned preflight to join OSQ within a positive polling budget')
+    p.add_argument('--owned-mutex-preflight-spins', type=int, choices=OWNED_MUTEX_PREFLIGHT_SPINS,
+                   default=0, help='owned C-ABI admission gate: bounded OSQ head polls before capture; zero disables polling')
     p.add_argument('--owned-mutex-refill', action='store_true',
                    help='experimental owned FIFO refill within the existing total batch cap')
     p.add_argument('--mutex-acceptance', choices=('jit-required', 'adaptive-performance'),
@@ -600,6 +629,7 @@ def main(lock_kind='spin'):
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
                      f'SC_MUTEX_OWNED={int(lock_kind == "mutex" and backend == "kdlock" and args.mutex_implementation == "owned-v1")}',
+                     f'SC_OWNED_MUTEX_PREFLIGHT={int(backend == "kdlock" and args.owned_mutex_preflight)}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
                      f'KDLOCK_INCLUDE={ROOT / "include"}',
                      f'SC_SHARED={WORKLOAD}',
@@ -628,7 +658,18 @@ def main(lock_kind='spin'):
                                        'tc_mutex_worker_register', 'tc_mutex_workers_drain'),
                             'native': ('mutex_lock', 'mutex_unlock')}[backend]
                 if backend == 'kdlock' and args.mutex_implementation == 'owned-v1':
-                    expected = ('kd_owned_mutex_outer_contended_clobber_v1',
+                    gate_policy = 'c_abi_v1' if args.owned_mutex_preflight else 'capture_first'
+                    compiled_policy = command(['modinfo', '-F', 'owned_preflight_policy', binary],
+                                              out/'kdlock-owned-preflight-policy.txt').strip()
+                    require(compiled_policy == gate_policy, 'compiled owned preflight policy differs')
+                    capture_entry = ('kd_owned_mutex_outer_prepared_clobber_v1' if args.owned_mutex_preflight
+                                     else 'kd_owned_mutex_outer_contended_clobber_v1')
+                    forbidden_entry = ('kd_owned_mutex_outer_contended_clobber_v1' if args.owned_mutex_preflight
+                                       else 'kd_owned_mutex_outer_prepared_clobber_v1')
+                    require(forbidden_entry not in imported.split(), 'owned caller imports wrong capture entry')
+                    require(('kd_owned_mutex_outer_preflight_v1' in imported.split()) == args.owned_mutex_preflight,
+                            'owned caller gate import differs from compile-time policy')
+                    expected = (capture_entry,
                                 'kd_owned_mutex_direct_unlock_clobber_v1',
                                 'kd_owned_mutex_outer_unlock_v1', 'kd_owned_mutex_prepare',
                                 'kd_mutex_init', 'kd_owned_mutex_is_idle')

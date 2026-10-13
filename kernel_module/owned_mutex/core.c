@@ -146,9 +146,9 @@ bool kd_owned_mutex_publish(struct kd_mutex *lock,
 	bool acquired;
 
 	BUG_ON(waiter->task != current ||
-	       waiter->kind > KD_OWNED_MUTEX_DELEGATE);
+	       waiter->kind > KD_OWNED_MUTEX_DELEGATE || !waiter->outcome);
 	INIT_LIST_HEAD(&waiter->list);
-	WRITE_ONCE(waiter->state, KD_OWNED_MUTEX_QUEUED);
+	WRITE_ONCE(*waiter->outcome, KD_OWNED_MUTEX_QUEUED);
 	raw_spin_lock(&lock->wait_lock);
 	acquired = !kd_owned_mutex_trylock_common(lock, false);
 	if (!acquired) {
@@ -169,23 +169,23 @@ bool kd_owned_mutex_publish(struct kd_mutex *lock,
 bool kd_owned_mutex_pickup(struct kd_mutex *lock,
 			   struct kd_owned_mutex_waiter *waiter)
 {
-	bool acquired = false;
 	unsigned long owner;
 
 	BUG_ON(waiter->task != current);
-	raw_spin_lock(&lock->wait_lock);
+	if (smp_load_acquire(waiter->outcome) != KD_OWNED_MUTEX_GRANTED)
+		return false;
+	/* The releaser unlinked this delegated node before publishing GRANTED.
+	 * PICKUP excludes every other acquirer until this exact task consumes it.
+	 * Producers may now reuse their node even while release holds wait_lock. */
 	owner = atomic_long_read(&lock->owner);
-	if (READ_ONCE(waiter->state) == KD_OWNED_MUTEX_GRANTED &&
-	    !list_empty(&waiter->list) &&
-	    (owner & ~KD_OWNED_MUTEX_FLAGS) == (unsigned long)current &&
-	    (owner & KD_OWNED_MUTEX_FLAG_PICKUP)) {
-		BUG_ON(waiter->kind != KD_OWNED_MUTEX_SELF);
-		acquired = !kd_owned_mutex_trylock_common(lock, false);
-		BUG_ON(!acquired);
-		kd_owned_mutex_remove_waiter(lock, waiter);
+	for (;;) {
+		if ((owner & ~KD_OWNED_MUTEX_FLAGS) != (unsigned long)current ||
+		    !(owner & KD_OWNED_MUTEX_FLAG_PICKUP))
+			return false;
+		if (atomic_long_try_cmpxchg_acquire(&lock->owner, &owner,
+						  owner & ~KD_OWNED_MUTEX_FLAG_PICKUP))
+			return true;
 	}
-	raw_spin_unlock(&lock->wait_lock);
-	return acquired;
 }
 
 /* Speculative task dereferences retain Linux's owner recheck and compiler
@@ -212,6 +212,64 @@ static bool kd_owned_mutex_can_spin(struct kd_mutex *lock)
 		return false;
 	owner = kd_owned_mutex_owner(lock);
 	return !owner || owner_on_cpu(owner);
+}
+
+/* Bounded queue/owner polling before delegation resources/capture. The initial
+ * retry preserves Linux acquisition of ownerless WAITERS, but an occupied
+ * waiter/handoff state does not recruit another optimistic spinner. A zero
+ * budget disables this retry entirely. Queue cancellation and OSQ unlock retain
+ * their mandatory stabilization waits; this is not a wall-time bound. */
+enum kd_owned_mutex_preflight_result
+kd_owned_mutex_try_optimistic_pinned(struct kd_mutex *lock, unsigned int spins,
+				   bool queued)
+{
+	enum kd_owned_mutex_preflight_result result = KD_OWNED_MUTEX_PREFLIGHT_BUSY;
+	struct task_struct *owner;
+	unsigned int i;
+
+	lockdep_assert_preemption_disabled();
+	if (!spins)
+		return result;
+	owner = kd_owned_mutex_trylock_common(lock, false);
+	if (!owner)
+		return KD_OWNED_MUTEX_PREFLIGHT_ACQUIRED;
+	if (need_resched())
+		return KD_OWNED_MUTEX_PREFLIGHT_SELF;
+	/* Never dereference a stale speculative owner without the recheck. */
+	if (kd_owned_mutex_owner(lock) == owner) {
+		barrier();
+		if (!owner_on_cpu(owner))
+			return KD_OWNED_MUTEX_PREFLIGHT_SELF;
+	}
+	if (atomic_long_read(&lock->owner) & KD_OWNED_MUTEX_FLAGS)
+		return result;
+	if (queued ? !kd_owned_osq_lock_bounded(&lock->osq, &spins) :
+		     !kd_owned_osq_trylock(&lock->osq))
+		return result;
+
+	for (i = 0; i < spins; i++) {
+		owner = kd_owned_mutex_trylock_common(lock, false);
+		if (!owner) {
+			result = KD_OWNED_MUTEX_PREFLIGHT_ACQUIRED;
+			break;
+		}
+		if (need_resched()) {
+			result = KD_OWNED_MUTEX_PREFLIGHT_SELF;
+			break;
+		}
+		if (atomic_long_read(&lock->owner) & KD_OWNED_MUTEX_FLAGS)
+			break;
+		if (kd_owned_mutex_owner(lock) == owner) {
+			barrier();
+			if (!owner_on_cpu(owner)) {
+				result = KD_OWNED_MUTEX_PREFLIGHT_SELF;
+				break;
+			}
+		}
+		cpu_relax();
+	}
+	kd_owned_osq_unlock(&lock->osq);
+	return result;
 }
 
 static bool kd_owned_mutex_optimistic_spin(struct kd_mutex *lock,
@@ -259,6 +317,7 @@ static noinline void kd_owned_mutex_lock_slow(struct kd_mutex *lock)
 	waiter.task = current;
 	waiter.kind = KD_OWNED_MUTEX_SELF;
 	waiter.state = KD_OWNED_MUTEX_QUEUED;
+	waiter.outcome = &waiter.state;
 	raw_spin_lock(&lock->wait_lock);
 	if (!kd_owned_mutex_trylock_common(lock, false))
 		goto unlock_wait;
@@ -311,36 +370,40 @@ EXPORT_SYMBOL_GPL(kd_owned_mutex_lock_v1);
 static void kd_owned_mutex_release_common(struct kd_mutex *lock, bool directed)
 {
 	struct kd_owned_mutex_waiter *waiter = NULL;
+	u32 *outcome = NULL;
 	DEFINE_WAKE_Q(wake_q);
 	unsigned long owner, next;
-	bool grant;
+	bool grant, delegated = false;
 
 	raw_spin_lock(&lock->wait_lock);
 	if (!list_empty(&lock->wait_list)) {
 		waiter = list_first_entry(&lock->wait_list,
 					 struct kd_owned_mutex_waiter, list);
-		directed |= waiter->kind == KD_OWNED_MUTEX_DELEGATE;
+		delegated = waiter->kind == KD_OWNED_MUTEX_DELEGATE;
+		directed |= delegated;
+		outcome = waiter->outcome;
+		/* Hold the wake reference before either result publication or removal
+		 * permits the producer to retire/reuse its request. No packet access
+		 * is allowed after the release-store to the producer's outcome. */
+		kd_owned_mutex_wake_q_add(&wake_q, waiter->task);
+		if (delegated) {
+			list_del_init(&waiter->list);
+			WRITE_ONCE(waiter->kind, KD_OWNED_MUTEX_SELF);
+		}
 	}
 	owner = atomic_long_read(&lock->owner);
 	for (;;) {
 		BUG_ON((owner & ~KD_OWNED_MUTEX_FLAGS) != (unsigned long)current ||
 		       (owner & KD_OWNED_MUTEX_FLAG_PICKUP));
 		grant = waiter && (directed || (owner & KD_OWNED_MUTEX_FLAG_HANDOFF));
-		next = waiter ? KD_OWNED_MUTEX_FLAG_WAITERS : 0;
+		next = list_empty(&lock->wait_list) ? 0 : KD_OWNED_MUTEX_FLAG_WAITERS;
 		if (grant)
 			next |= (unsigned long)waiter->task | KD_OWNED_MUTEX_FLAG_PICKUP;
 		if (atomic_long_try_cmpxchg_release(&lock->owner, &owner, next))
 			break;
 	}
-	if (waiter) {
-		if (grant) {
-			WRITE_ONCE(waiter->kind, KD_OWNED_MUTEX_SELF);
-			smp_store_release(&waiter->state, KD_OWNED_MUTEX_GRANTED);
-		}
-		/* Pickup still needs wait_lock, so this task cannot retire before
-		 * the wake queue acquires its independent task reference. */
-		kd_owned_mutex_wake_q_add(&wake_q, waiter->task);
-	}
+	if (grant)
+		smp_store_release(outcome, KD_OWNED_MUTEX_GRANTED);
 	raw_spin_unlock(&lock->wait_lock);
 	wake_up_q(&wake_q);
 }

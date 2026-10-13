@@ -96,7 +96,39 @@ kd_owned_osq_wait_next(struct optimistic_spin_queue *lock,
 	return next;
 }
 
-bool kd_owned_osq_lock(struct optimistic_spin_queue *lock)
+/* A preflight may become the immediate head, but must not join and wait on
+ * an existing OSQ. Publish initialized node fields with both acquire/release
+ * ordering, as the full OSQ entry does. A successor may join after our CAS. */
+bool kd_owned_osq_trylock(struct optimistic_spin_queue *lock)
+{
+	struct kd_owned_osq_node *node;
+	int curr;
+
+	lockdep_assert_preemption_disabled();
+	if (atomic_read(&lock->tail) != OSQ_UNLOCKED_VAL)
+		return false;
+	node = this_cpu_ptr(&kd_owned_osq_nodes);
+	curr = kd_owned_osq_encode_cpu(smp_processor_id());
+	node->locked = 0;
+	node->next = NULL;
+	node->cpu = curr;
+	return atomic_cmpxchg(&lock->tail, OSQ_UNLOCKED_VAL, curr) ==
+		OSQ_UNLOCKED_VAL;
+}
+
+/* Count deliberate queued observations only. Stabilizing and unlinking an
+ * admitted node must finish even after this budget expires. */
+static __always_inline bool kd_owned_osq_budget_expired(unsigned int *remaining)
+{
+	if (!remaining)
+		return false;
+	if (!*remaining)
+		return true;
+	return !--*remaining;
+}
+
+static __always_inline bool
+kd_owned_osq_lock_common(struct optimistic_spin_queue *lock, unsigned int *remaining)
 {
 	struct kd_owned_osq_node *node = this_cpu_ptr(&kd_owned_osq_nodes);
 	struct kd_owned_osq_node *prev, *next;
@@ -149,7 +181,9 @@ bool kd_owned_osq_lock(struct optimistic_spin_queue *lock)
 	 * is implemented with a monitor-wait. vcpu_is_preempted() relies on
 	 * polling, be careful.
 	 */
-	if (smp_cond_load_relaxed(&node->locked, VAL || need_resched() ||
+	if (smp_cond_load_relaxed(&node->locked,
+				  kd_owned_osq_budget_expired(remaining) || VAL ||
+				  need_resched() ||
 				  vcpu_is_preempted(kd_owned_osq_node_cpu(node->prev))))
 		return true;
 
@@ -211,6 +245,23 @@ bool kd_owned_osq_lock(struct optimistic_spin_queue *lock)
 	WRITE_ONCE(prev->next, next);
 
 	return false;
+}
+
+bool kd_owned_osq_lock(struct optimistic_spin_queue *lock)
+{
+	return kd_owned_osq_lock_common(lock, NULL);
+}
+
+bool kd_owned_osq_lock_bounded(struct optimistic_spin_queue *lock,
+			     unsigned int *remaining)
+{
+	lockdep_assert_preemption_disabled();
+	if (!remaining || !*remaining)
+		return false;
+	/* A predecessor grant racing expiration, including Step A, returns true.
+	 * The caller then owns OSQ and must unlock even if remaining reached zero.
+	 * Neither cancellation nor unlock has a wall-clock or iteration bound. */
+	return kd_owned_osq_lock_common(lock, remaining);
 }
 
 void kd_owned_osq_unlock(struct optimistic_spin_queue *lock)

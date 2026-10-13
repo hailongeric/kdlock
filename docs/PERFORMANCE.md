@@ -6,7 +6,36 @@ passed [targeted verification](../bench/results/10.176.26.71/tests/mutex-blockin
 including a drained 320,000-operation mutex JIT run. That functional check does
 not provide a new performance matrix.
 
-## Latest c01 owned-mutex redesign
+## Latest c01 owned-mutex optimization
+
+The [2026-10-14 protocol study](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md)
+retains 708 scored sessions and 72 separate diagnostics. The owned protocol now
+uses one notification word for directed grants and COMPLETE/FULL results. A
+delegated waiter consumes its exact PICKUP grant without reacquiring the queue
+lock. The public object remains 32 bytes with Linux mutex's alignment and field
+offsets, and owned target operations never call the original Linux mutex API.
+
+The final capture-first finite policy reaches 3.227, 2.325, 2.070 and 1.647 Mops/s
+at 4, 16, 28 and 60 workers, respectively. Against the fresh owned finite baseline,
+those median changes are +96.7%, +22.6%, -3.3% and +74.0%. Both final finite and
+opt-in refill pass the same-policy 32/36/48/60-worker regression gates with
+returned JIT bodies in every round. These are improvements to the experimental
+owned protocol; they do not restore legacy KD's performance or establish Native
+parity. At sixteen workers, the final finite result remains well below its paired
+Native's 8.734 Mops/s. The 97% primary target fails, so confirmation blocks were
+not run.
+
+Optional pre-capture admission and bounded private OSQ polling can reach Native
+at four workers, predominantly through SELF execution, but fail the broader
+grid. They remain explicit compile-time/runtime opt-ins. Capture-first, ratio
+256 and refill off remain the owned defaults. Separate PMU diagnostics show
+substantial extra instructions and cycles per operation at 16–32 workers;
+frequency differences alone do not explain the gap. The report retains worker
+shares, CPU cost, all candidate sources and failed attempts, including variation
+in Native's sixty-worker execution regime. This phase measures 64 post-work
+rounds only; the earlier eight-round study remains separate.
+
+## Earlier c01 owned-mutex redesign
 
 The [owned-mutex study](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
 implements a separate 32-byte KD object with private Linux-derived owner/OSQ/sleep

@@ -8,6 +8,26 @@ Known failures remain in [TODO](TODO.md).
 
 ## Current mutex verification
 
+The [2026-10-14 owned-protocol receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/validation.json)
+records the unified outcome/grant protocol, optional bounded OSQ preflight and
+separate capture-first/prepared entries. Final verification includes two basic
+fixtures and nine affected groups, core/preflight/OSQ/queue mutation checks,
+73 runner checks and 17 study-auditor checks. Both caller policies execute real
+JIT continuations; six live nested/early FULL cases complete owner acknowledgments.
+Cooling and queued-work probes pass with polling budgets 0, 1024 and 4096.
+The failed initial mutation-driver attempt and its narrowly corrected retry
+remain archived separately.
+
+The [report](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md)
+audits 708 scored sessions and 72 unscored diagnostics. Every audited benchmark
+sample has correct results, worker progress and final drain. The final finite
+and refill grids pass their same-policy higher-thread regression gates, but fail
+the primary 97% Native target. Builds, warnings, source identities, recovery
+snapshot, kernel identity and final idle state remain explicit in the receipt.
+No full suite, other-workload, RT/debug-kernel or 64-worker acceptance is claimed.
+
+## Earlier owned-mutex verification
+
 The [owned-mutex receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261013/validation.json)
 records the 32-byte KD-owned protocol, final ordinary-unlock fix, seven core
 mutations, sixteen refill FIFO mutations, 80 runner/auditor tests and live

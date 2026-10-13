@@ -65,6 +65,9 @@ has no `mutex_jit` parameter.
 | `--mutex-implementation legacy` | `owned-v1` opts into the separate KD-owned c01 object; nested/early require functional mode |
 | `--owned-mutex-entry-ratio-limit 256` | Independent admission threshold for `owned-v1`; powers of two 2–256 |
 | `--owned-mutex-refill` | Opt-in FIFO refilling within the same total batch cap; default is one finite snapshot |
+| `--owned-mutex-preflight` | Compile the experimental owned C gate; default false retains capture-first entry |
+| `--owned-mutex-preflight-spins` | Opt-in gate budget: 0 (default), 64, 256, 1024 or 4096 polling steps; positive values require the gate flag |
+| `--owned-mutex-preflight-queue` | Opt in to joining the private OSQ within a positive preflight polling budget; default false |
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--dry-run` | Print plan without live execution |
 
@@ -312,3 +315,40 @@ a zero original owner word, an empty sleeping wait list and an empty configured
 Linux OSQ. Owned-v1 instead calls `kd_owned_mutex_is_idle` on its distinct owner,
 wait list and private OSQ; functional scenarios check both owned objects.
 These checks run only after workers return while holding the snapshot gate.
+
+## Owned preflight experiment
+
+Owned callers use capture-first entry by default: a failed inline probe enters
+the clobber boundary, then records the attempt and checks admission. There is no
+C-gate call or added runtime policy load on this default caller path.
+`--owned-mutex-preflight` compiles the experimental ordinary C-ABI gate after the
+first failed outer probe. It makes exactly one entry/contention observation,
+then attempts physical SELF acquisition before reserving delegation resources.
+`--owned-mutex-preflight-spins 0` disables the additional optimistic polling;
+the explicitly enabled C gate remains active, including its cold SELF path.
+Compare this control separately with the default capture-first build. The bounded
+poll loop normally never joins an occupied OSQ. `--owned-mutex-preflight-queue`
+allows joining with the same polling budget and records a separate boolean
+policy. OSQ cancellation and normal release can still wait for a concurrently
+arriving successor to finish linking; neither policy guarantees a wall-time bound. All owned paths use KD's
+private mutex core and never pass the owned object to Linux mutex operations.
+An admitted BUSY gate result permits capture only. The prepared entry checks
+delegation eligibility before any references or request resources, avoiding a
+duplicate task-state lookup in the gate.
+
+New samples record `owned_preflight_policy=capture_first` or `c_abi_v1`, the
+explicit `owned_mutex_preflight` boolean, exact spin budget and
+`owned_mutex_preflight_queue`. Positive budgets and queueing require the explicit
+gate flag; queueing also requires a positive budget. Native/TCLock controls
+always record false. The workload's module metadata and imported capture symbol
+must match the plan. Historical implicit `c_abi_v1` records lacking the boolean
+remain auditable and separate from both new caller choices. Both provider entry
+symbols are available, but a prepared entry must only follow the C gate's false
+return; the original endpoint performs its own one-time observation. Replace
+provider, caller and JIT session together when changing this interface.
+Summaries and admission-study checks separate these from earlier records and
+from other budgets. The broad-clobber continuation remains ABI2, so skipping
+capture does not eliminate the enclosing function's compiler callee-save spills.
+The [c01 protocol study](../results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md)
+records the measured gains and remaining gaps. No preflight policy passed its
+complete performance acceptance; these controls remain opt-in.

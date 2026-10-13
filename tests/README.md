@@ -37,6 +37,8 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Mutex blocking/result wakeup | `mutex/test_mutex_parking.py`, `test_mutex_balances.py`, `test_mutex_wait_clobber.py`; [live scheduler probe](kernel/mutex/run_wait_selftest.py) |
 | Mutex workload drain | `mutex/test_mutex_drain.py` checks residual owner flags, sleeping waiters and configured Linux OSQ |
 | Owned mutex | `mutex/test_owned_mutex_core.py`, `test_owned_mutex_delegation.py --mutations`, `test_owned_mutex_wait_clobber.py`, `test_owned_mutex_outer_api.py`; task-cache and admission checks also cover its private state |
+| Owned optimistic entry and OSQ | `mutex/test_owned_mutex_preflight.py`, `test_owned_mutex_osq.py`; the outer API fixture compiles both capture-first and opt-in preflight callers and executes their generated JIT |
+| Owned intrusive profiler | `mutex/test_owned_mutex_profile.py`; probe registration/unwind, target filtering and return-value ABI, separate from live diagnostic receipts |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
 | Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py` |

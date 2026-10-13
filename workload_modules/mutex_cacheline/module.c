@@ -56,6 +56,11 @@ static void sc_lock_init(void)
 #endif
 }
 MODULE_INFO(mutex_implementation, "owned-v1");
+#if KD_OWNED_MUTEX_PREFLIGHT
+MODULE_INFO(owned_preflight_policy, "c_abi_v1");
+#else
+MODULE_INFO(owned_preflight_policy, "capture_first");
+#endif
 #else
 #include "kd_mutex_direct.h"
 static struct mutex sc_lock __aligned(SC_LINE_BYTES);

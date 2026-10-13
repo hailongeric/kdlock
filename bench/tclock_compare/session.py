@@ -42,6 +42,38 @@ def hash_layout(layout):
             ('rcuht', 1024, 4096, 8192, 0), 'hash payload configuration differs')
 
 
+def parse_owned_preflight_profile(messages, record):
+    """Separate optional diagnostic receipt; historical lock_profile is unchanged."""
+    enabled = record.get('profile_owned_preflight', False)
+    require(type(enabled) is bool, 'invalid owned preflight profile flag')
+    rows = re.findall(r'kd_mutex_profile ownedpreflight: ([^\n]+)', messages)
+    if not enabled:
+        require(not rows, 'unexpected owned preflight profile receipt')
+        return None
+    require(record.get('profile_lock') and record.get('diagnostic') and
+            record.get('arm') == 'kdlock' and record.get('mutex_implementation') == 'owned-v1' and
+            record.get('owned_preflight_policy') == 'c_abi_v1',
+            'owned preflight profile requires an unscored owned C-ABI gate')
+    require(len(rows) == 1, 'missing or duplicate owned preflight profile receipt')
+    fields = {'gate_self', 'gate_capture', 'optimistic_acquired', 'optimistic_busy',
+              'optimistic_self', 'optimistic_other', 'missed'}
+    tokens = rows[0].split()
+    require(all(re.fullmatch(r'[a-z_]+=[0-9]+', token) for token in tokens),
+            'malformed owned preflight profile counters')
+    pairs = [token.split('=', 1) for token in tokens]
+    require(len(pairs) == len(fields) and {key for key, _ in pairs} == fields,
+            'incomplete owned preflight profile counters')
+    result = {key: int(value) for key, value in pairs}
+    require(result['missed'] == result['optimistic_other'] == 0,
+            'owned preflight profile missed returns or saw an unknown enum')
+    require(result['optimistic_acquired'] + result['optimistic_self'] <= result['gate_self'] and
+            result['gate_capture'] <= result['optimistic_busy'] and
+            result['optimistic_acquired'] + result['optimistic_busy'] + result['optimistic_self'] <=
+            result['gate_self'] + result['gate_capture'],
+            'owned preflight profile outcomes are inconsistent')
+    return result
+
+
 def check_kd_parameters(params, record, lock_addr):
     # Parameter identity rejects an old provider that can disable mutex JIT.
     # Returned-body evidence remains a separate execution requirement.
@@ -71,6 +103,27 @@ def check_kd_parameters(params, record, lock_addr):
                 params.get('owned_mutex_refill', 'N') ==
                 ('Y' if record.get('owned_mutex_refill', False) else 'N'),
                 'owned FIFO refill parameter differs')
+        policy = record.get('owned_preflight_policy')
+        budget = record.get('owned_mutex_preflight_spins')
+        enabled = record.get('owned_mutex_preflight')
+        require('owned_mutex_preflight' not in record or (type(enabled) is bool and
+                policy == ('c_abi_v1' if enabled else 'capture_first')),
+                'owned preflight compile-time policy differs')
+        require((policy is None and budget is None and
+                 int(params.get('owned_mutex_preflight_spins', 0)) == 0) or
+                (policy == 'capture_first' and enabled is False and type(budget) is int and budget == 0 and
+                 'owned_mutex_preflight_spins' in params and int(params['owned_mutex_preflight_spins']) == 0) or
+                (policy == 'c_abi_v1' and type(budget) is int and
+                 budget in (0, 64, 256, 1024, 4096) and
+                 'owned_mutex_preflight_spins' in params and
+                 int(params['owned_mutex_preflight_spins']) == budget),
+                'owned preflight policy or parameter differs')
+        queued = record.get('owned_mutex_preflight_queue')
+        require((queued is None and params.get('owned_mutex_preflight_queue', 'N') == 'N') or
+                (type(queued) is bool and 'owned_mutex_preflight_queue' in params and
+                 params['owned_mutex_preflight_queue'] == ('Y' if queued else 'N') and
+                 (not queued or (policy == 'c_abi_v1' and budget > 0))),
+                'owned queued preflight policy or parameter differs')
     else:
         require(int(params['mutex_spin_limit']) == record['mutex_spin_limit'] and
                 int(params['mutex_entry_ratio_limit']) == record['mutex_entry_ratio_limit'] and
@@ -194,6 +247,8 @@ class BackendSession(Session):
                     'owned_mutex_spin_limit=' + str(self.record['mutex_spin_limit']),
                     'owned_mutex_entry_ratio_limit=' + str(self.record['owned_mutex_entry_ratio_limit']),
                     'owned_mutex_refill=' + str(int(self.record.get('owned_mutex_refill', False))),
+                    'owned_mutex_preflight_spins=' + str(self.record['owned_mutex_preflight_spins']),
+                    'owned_mutex_preflight_queue=' + str(int(self.record.get('owned_mutex_preflight_queue', False))),
                     'owned_mutex_self_route=' + ('1' if self.record.get('mutex_routing') == 'self' else '0')]
             else:
                 mutex_params = [
@@ -302,11 +357,17 @@ class BackendSession(Session):
                            s[2:] == [counter_symbol, '[kdlock_km]']]
                 require(len(symbols) == 1 and symbols[0], 'missing batch completion counter')
                 counter = symbols[0]
+            preflight = self.record.get('profile_owned_preflight', False)
+            require(not preflight or (owned and
+                    self.record.get('owned_preflight_policy') == 'c_abi_v1' and
+                    self.record.get('diagnostic')),
+                    'owned preflight probes require an unscored C-ABI gate')
+            extra_profile = ['preflight=1'] if preflight else []
             self.run(['taskset', '-c', str(self.record['collector_cpu']), 'insmod', PROFILE_MODULE,
                       'target_lock=' + str(self.record['layout']['lock_addr']),
                       'success_counter=' + str(counter), 'kd=' + str(int(self.loaded_kd)),
                       'owned=' + str(int(owned)),
-                      'spin=' + str(int(self.lock_kind == 'spin'))], 'load-profile.log')
+                      'spin=' + str(int(self.lock_kind == 'spin')), *extra_profile], 'load-profile.log')
             self.loaded_profile = True
         if self.record['arm'] != 'tclock':
             super().measure()
@@ -350,6 +411,9 @@ class BackendSession(Session):
             observed['batch_histogram'] = {int(k): int(v) for k, v in re.findall(
                 r'kd_mutex_profile histogram: bucket=(\d+) batches=(\d+)', self.messages)}
             self.record['lock_profile'] = observed
+            preflight = parse_owned_preflight_profile(self.messages, self.record)
+            if preflight is not None:
+                self.record['owned_preflight_profile'] = preflight
             if self.record.get('mutex_implementation') == 'owned-v1':
                 owned_rows = re.findall(r'kd_mutex_profile owned: ([^\n]+)', self.messages)
                 require(len(owned_rows) == 1, 'missing owned profiler receipt')

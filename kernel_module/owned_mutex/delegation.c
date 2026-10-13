@@ -28,7 +28,7 @@ struct kd_owned_mutex_node {
 	unsigned long rsp;
 	void *shadow_stack_base;
 	unsigned long shadow_stack_ptr;
-	u8 entry_abi __aligned(64);
+	u8 entry_abi;
 	unsigned int packet_state;
 	struct kd_mutex *lock;
 	unsigned long saved_ret_addr;
@@ -37,11 +37,7 @@ struct kd_owned_mutex_node {
 	int numa_node;
 	struct kd_regs regs __aligned(64);
 	u64 queued_at_ns;
-	union {
-		u16 result;
-		struct { u8 completed, locked; };
-	};
-	bool native_resume;
+	u32 outcome;
 };
 
 /* One executor per CPU is sufficient: the frame context itself forbids a
@@ -80,6 +76,23 @@ static bool owned_mutex_refill;
 module_param(owned_mutex_refill, bool, 0444);
 MODULE_PARM_DESC(owned_mutex_refill,
 	"Refill exhausted owned FIFO snapshots within the original batch quota");
+/* Zero isolates the C admission gate from optimistic retry. This candidate
+ * changes execution placement only; it never alters existing queued work. */
+static unsigned int owned_mutex_preflight_spins;
+module_param(owned_mutex_preflight_spins, uint, 0444);
+MODULE_PARM_DESC(owned_mutex_preflight_spins,
+	"Owned outer pre-capture owner polls: 0, 64, 256, 1024 or 4096");
+static bool owned_mutex_preflight_queue;
+module_param(owned_mutex_preflight_queue, bool, 0444);
+MODULE_PARM_DESC(owned_mutex_preflight_queue,
+	"Allow preflight OSQ queueing within the shared queue/owner poll budget");
+
+static bool kd_owned_mutex_preflight_spins_valid(unsigned int spins)
+{
+	return spins == 0 || spins == 64 || spins == 256 ||
+		spins == 1024 || spins == 4096;
+}
+
 static unsigned int owned_mutex_spin_limit = 4096;
 module_param(owned_mutex_spin_limit, uint, 0444);
 MODULE_PARM_DESC(owned_mutex_spin_limit,
@@ -158,7 +171,8 @@ static void kd_owned_mutex_notify(struct kd_owned_mutex_node *node, bool complet
 {
 	struct rcuwait *wait = node->wait;
 
-	smp_store_release(&node->result, complete ? 1 : 0);
+	smp_store_release(&node->outcome, complete ? KD_OWNED_MUTEX_COMPLETE :
+			  KD_OWNED_MUTEX_FULL);
 	smp_mb();
 	if (rcuwait_active(wait) && rcuwait_wake_up(wait))
 		this_cpu_inc(kd_owned_mutex_wakes);
@@ -168,15 +182,14 @@ static void kd_owned_mutex_defer(struct kd_owned_mutex_node *node,
 				 struct rcuwait **wake, unsigned int *count)
 {
 	wake[(*count)++] = node->wait;
-	smp_store_release(&node->result, (u16)1);
+	smp_store_release(&node->outcome, KD_OWNED_MUTEX_COMPLETE);
 	if (*count == 16)
 		kd_owned_mutex_flush_wakes(wake, count);
 }
 
 static bool kd_owned_mutex_result_ready(struct kd_owned_mutex_node *node)
 {
-	return !smp_load_acquire(&node->locked) ||
-		smp_load_acquire(&node->waiter.state) == KD_OWNED_MUTEX_GRANTED;
+	return smp_load_acquire(&node->outcome) != KD_OWNED_MUTEX_QUEUED;
 }
 
 static void kd_owned_mutex_wait_result(struct kd_owned_mutex_node *node)
@@ -199,8 +212,8 @@ static void kd_owned_mutex_wait_result(struct kd_owned_mutex_node *node)
 			break;
 		this_cpu_inc(kd_owned_mutex_parks);
 		preempt_enable();
-		/* Also bounds deferred completion notification and core grant wake
-		 * races. The state barrier precedes both independent conditions. */
+		/* Also bounds deferred completion notification. The state barrier
+		 * precedes the single grant/COMPLETE/FULL outcome observation. */
 		schedule_timeout(1);
 		preempt_disable();
 	}
@@ -219,12 +232,15 @@ kd_owned_mutex_wait_on_stack(struct kd_mutex *lock, struct kd_owned_mutex_node *
 		goto acquired;
 	}
 	for (;;) {
+		u32 outcome;
+
 		kd_owned_mutex_wait_result(node);
-		if (!smp_load_acquire(&node->locked)) {
-			ret = READ_ONCE(node->native_resume) ? 5 : 3;
-			BUG_ON(ret == 3 && !node->completed);
+		outcome = smp_load_acquire(&node->outcome);
+		if (outcome == KD_OWNED_MUTEX_COMPLETE || outcome == KD_OWNED_MUTEX_FULL) {
+			ret = outcome == KD_OWNED_MUTEX_FULL ? 5 : 3;
 			break;
 		}
+		BUG_ON(outcome != KD_OWNED_MUTEX_GRANTED);
 		if (kd_owned_mutex_pickup(lock, &node->waiter)) {
 			ret = 2;
 			goto acquired;
@@ -243,12 +259,13 @@ static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_owned_mutex_resume(struct kd_owned_mutex_node *node)
 {
 	struct kd_regs full;
-	bool native = READ_ONCE(node->native_resume);
+	u32 outcome = READ_ONCE(node->outcome);
+	bool native = outcome == KD_OWNED_MUTEX_FULL;
 	bool minimal = node->packet_state == KD_PACKET_COMPLETE;
 	unsigned long sp = node->regs.sp, ip = node->regs.ip, bp = node->regs.bp;
 
 	BUG_ON(node->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-	BUG_ON(native ? minimal : !node->completed);
+	BUG_ON(native ? minimal : outcome != KD_OWNED_MUTEX_COMPLETE);
 	BUG_ON(!minimal && node->packet_state != KD_PACKET_FULL);
 	if (!minimal)
 		full = node->regs;
@@ -313,21 +330,51 @@ kd_owned_mutex_clobber_wait(struct kd_mutex *lock, struct kd_owned_mutex_node *n
 	return result;
 }
 
-static unsigned long kd_owned_mutex_contended(struct kd_mutex *lock,
-		unsigned long sp, unsigned long ip, unsigned long bp)
+static bool kd_owned_mutex_delegation_eligible(void)
 {
-	struct kd_owned_mutex_node *node;
+	return kd_source_is_open() &&
+		kd_comm_matches(&kd_spin_target, current->comm) &&
+		!kd_mutex_task_active(current);
+}
+
+/* Ordinary C ABI: no captured stack or resource lease exists yet. The outer
+ * failed probe reaches this exactly once, irrespective of the execution route.
+ * A false return only permits ABI2 capture; it grants neither delegation nor
+ * an eligibility lease. The prepared entry checks eligibility before resources.
+ * A physical SELF acquisition is valid even when delegation is prohibited. */
+__attribute__((noipa)) noinline notrace bool
+kd_owned_mutex_outer_preflight_v1(struct kd_mutex *lock)
+{
+	enum kd_owned_mutex_preflight_result result = KD_OWNED_MUTEX_PREFLIGHT_BUSY;
 	bool admitted;
 
 	preempt_disable();
 	kd_hotlock_owned_mutex_entry();
 	admitted = kd_hotlock_record_owned_mutex_pinned((unsigned long)lock);
+	if (admitted && !owned_mutex_self_route)
+		result = kd_owned_mutex_try_optimistic_pinned(lock,
+							    owned_mutex_preflight_spins,
+							    owned_mutex_preflight_queue);
 	preempt_enable();
-	/* Admission chooses execution location, never lock ownership. The SELF
-	 * port supplies optimistic spinning and sleeping for every refusal. */
-	if (!admitted || owned_mutex_self_route || !kd_source_is_open() ||
-	    !kd_comm_matches(&kd_spin_target, current->comm) ||
-	    kd_mutex_task_active(current))
+	if (result == KD_OWNED_MUTEX_PREFLIGHT_ACQUIRED)
+		return true;
+	if (admitted && !owned_mutex_self_route &&
+	    result == KD_OWNED_MUTEX_PREFLIGHT_BUSY)
+		return false;
+	kd_owned_mutex_lock_self(lock);
+	return true;
+}
+EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_preflight_v1);
+
+static unsigned long kd_owned_mutex_contended(struct kd_mutex *lock,
+		unsigned long sp, unsigned long ip, unsigned long bp)
+{
+	struct kd_owned_mutex_node *node;
+
+	/* The selected outer endpoint already made the exact heat observation.
+	 * That decision holds no lease; check eligibility before acquiring resources.
+	 * Cooling affects future attempts, never ownership of published requests. */
+	if (owned_mutex_self_route || !kd_owned_mutex_delegation_eligible())
 		goto self;
 	if (!kd_mutex_task_get(current))
 		goto self;
@@ -345,7 +392,6 @@ static unsigned long kd_owned_mutex_contended(struct kd_mutex *lock,
 	INIT_LIST_HEAD(&node->waiter.list);
 	node->waiter.task = current;
 	node->waiter.kind = KD_OWNED_MUTEX_DELEGATE;
-	node->waiter.state = KD_OWNED_MUTEX_QUEUED;
 	node->regs.ip = ip;
 	node->regs.sp = sp;
 	node->regs.bp = bp;
@@ -354,8 +400,6 @@ static unsigned long kd_owned_mutex_contended(struct kd_mutex *lock,
 	node->lock = lock;
 	node->saved_ret_addr = ip;
 	node->gsbase = kd_read_kernel_gsbase();
-	node->result = 0x100;
-	node->native_resume = false;
 	/* COMPLETE/FULL never returns through native frames lent to the JIT. */
 	BUG_ON(kd_owned_mutex_clobber_wait(lock, node) != 2);
 	kd_owned_mutex_unreserve(node);
@@ -372,9 +416,30 @@ __attribute__((noipa)) noinline notrace unsigned long
 kd_owned_mutex_outer_contended_clobber_v1(struct kd_mutex *lock,
 		unsigned long sp, unsigned long ip, unsigned long bp)
 {
+	bool admitted;
+
+	preempt_disable();
+	kd_hotlock_owned_mutex_entry();
+	admitted = kd_hotlock_record_owned_mutex_pinned((unsigned long)lock);
+	preempt_enable();
+	/* Original capture-first route: configured preflight polling is irrelevant
+	 * to callers that did not opt in. Cold attempts use the same owned core. */
+	if (!admitted) {
+		kd_owned_mutex_lock_self(lock);
+		return (unsigned long)current;
+	}
 	return kd_owned_mutex_contended(lock, sp, ip, bp);
 }
 EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_contended_clobber_v1);
+
+__attribute__((noipa)) noinline notrace unsigned long
+kd_owned_mutex_outer_prepared_clobber_v1(struct kd_mutex *lock,
+		unsigned long sp, unsigned long ip, unsigned long bp)
+{
+	/* Paired only with false from the C gate; never sample this attempt again. */
+	return kd_owned_mutex_contended(lock, sp, ip, bp);
+}
+EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_prepared_clobber_v1);
 
 __attribute__((noipa)) noinline notrace void
 kd_owned_mutex_direct_contended_clobber_v1(struct kd_mutex *lock,
@@ -543,7 +608,6 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 		node->regs = *kd_exec_frame_regs(frame);
 		node->packet_state = KD_PACKET_FULL;
 		kd_owned_mutex_retire_current(batch);
-		WRITE_ONCE(node->native_resume, true);
 		kd_owned_mutex_notify(node, false);
 		/* Node and caller stack now belong to the logical waiter. */
 		BUG_ON(kd_exec_native_wait(frame));
@@ -775,12 +839,14 @@ int kd_owned_mutex_init_percpu(void)
 {
 	int cpu, slot;
 
-	if (owned_mutex_spin_limit > 1048576)
+	if (owned_mutex_spin_limit > 1048576 ||
+	    (owned_mutex_preflight_queue && !owned_mutex_preflight_spins) ||
+	    !kd_owned_mutex_preflight_spins_valid(owned_mutex_preflight_spins))
 		return -EINVAL;
-	BUILD_BUG_ON(sizeof(struct kd_owned_mutex_waiter) != 32);
+	BUILD_BUG_ON(sizeof(struct kd_owned_mutex_waiter) != 40);
 	BUILD_BUG_ON(sizeof(struct kd_owned_mutex_node) != 320);
 	BUILD_BUG_ON(offsetof(struct kd_owned_mutex_node, regs) != 128);
-	BUILD_BUG_ON(offsetof(struct kd_owned_mutex_node, result) != 304);
+	BUILD_BUG_ON(offsetof(struct kd_owned_mutex_node, outcome) != 304);
 	kd_owned_mutex_cpus = alloc_percpu(struct kd_owned_mutex_cpu);
 	if (!kd_owned_mutex_cpus)
 		return -ENOMEM;
@@ -796,6 +862,7 @@ int kd_owned_mutex_init_percpu(void)
 			node->slot = slot;
 			node->numa_node = cpu_to_node(cpu);
 			node->wait = &pool->waits[slot];
+			node->waiter.outcome = &node->outcome;
 			rcuwait_init(node->wait);
 			INIT_LIST_HEAD(&node->waiter.list);
 			node->shadow_stack_base = vzalloc_node(KD_OWNED_MUTEX_STACK_SIZE,

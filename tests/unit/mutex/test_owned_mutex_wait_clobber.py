@@ -53,6 +53,8 @@ def main():
               '#define __aligned(n) __attribute__((aligned(n)))\n'
               '#define KD_OWNED_MUTEX_SHADOW_STACK_SIZE 8192\n')
     types += definition((ROOT/'include/kd_owned_mutex_internal.h').read_text(),
+                        'enum kd_owned_mutex_waiter_state {')+';\n'
+    types += definition((ROOT/'include/kd_owned_mutex_internal.h').read_text(),
                         'struct kd_owned_mutex_waiter {')+';\n'
     types += definition(source, 'struct kd_owned_mutex_node {')+';\n'
     types += definition(source, 'struct kd_owned_mutex_executor {')+';\n'
@@ -65,6 +67,9 @@ def main():
     fixture = fixture.replace('static struct { struct kd_owned_mutex_node *resume_node; } kd_owned_mutex_shadows;\n', '')
     fixture = fixture.replace('static unsigned long kd_owned_mutex_jit_resume_count;\n', '')
     fixture = fixture.replace('    assert(kd_owned_mutex_jit_resume_count==32);\n', '')
+    fixture = fixture.replace('n->completed=1;', 'n->outcome=KD_OWNED_MUTEX_COMPLETE;')
+    fixture = fixture.replace('node.native_resume=false; node.completed=0;',
+                              'node.outcome=KD_OWNED_MUTEX_QUEUED;')
     fixture = fixture.replace('int main(void) {', EXECUTOR+'\nint main(void) {\n'
                               '    for(int i=0;i<32;i++) check_executor();\n'
                               '    assert(executor_calls==32);')

@@ -31,6 +31,21 @@ def require_owned_identity(record):
     require(record.get('owned_queue_policy') ==
             ('bounded_fifo_refill' if record.get('owned_mutex_refill', False) else 'finite_fifo'),
             'owned FIFO policy differs from refill control')
+    policy = record.get('owned_preflight_policy')
+    budget = record.get('owned_mutex_preflight_spins')
+    enabled = record.get('owned_mutex_preflight')
+    require('owned_mutex_preflight' not in record or (type(enabled) is bool and
+            policy == ('c_abi_v1' if enabled else 'capture_first')),
+            'owned preflight compile-time identity differs')
+    require((policy is None and budget is None) or
+            (policy == 'capture_first' and enabled is False and type(budget) is int and budget == 0) or
+            (policy == 'c_abi_v1' and type(budget) is int and
+             budget in run.OWNED_MUTEX_PREFLIGHT_SPINS),
+            'owned preflight policy identity differs')
+    queued = record.get('owned_mutex_preflight_queue')
+    require((queued is None or type(queued) is bool) and
+            (not queued or (policy == 'c_abi_v1' and budget > 0)),
+            'owned queued preflight policy identity differs')
     require(record.get('scenario', 'plain') == 'plain' and
             not record.get('owned_mutex_force_full', False),
             'owned performance sample contains a functional control')
@@ -189,6 +204,11 @@ def evaluate(baseline, candidate):
         for record in candidate:
             if record['arm'] == 'kdlock':
                 require_owned_identity(record)
+    preflights = {(r.get('owned_preflight_policy'), r.get('owned_mutex_preflight_spins'),
+                   r.get('owned_mutex_preflight_queue'), r.get('owned_mutex_preflight'))
+                  for r in candidate if r['arm'] == 'kdlock'}
+    require(len(preflights) == 1, 'one preflight policy and budget per candidate')
+    preflight_policy, preflight_spins, preflight_queue, preflight_enabled = next(iter(preflights))
     threshold_field = ('owned_mutex_entry_ratio_limit' if implementation == 'owned-v1' else
                        'mutex_entry_ratio_limit')
     limits = {r.get(threshold_field) for r in candidate if r['arm'] == 'kdlock'}
@@ -216,6 +236,10 @@ def evaluate(baseline, candidate):
                'INCOMPLETE' if missing else 'PASS')
     return dict(post_work_rounds=post_work_rounds, implementation=implementation,
                 queue_policy=next(iter(policies)),
+                owned_preflight_policy=preflight_policy,
+                owned_mutex_preflight=preflight_enabled,
+                owned_mutex_preflight_spins=preflight_spins,
+                owned_mutex_preflight_queue=preflight_queue,
                 threshold_field=threshold_field, threshold=next(iter(limits)),
                 verdict=verdict, missing=missing, checks=checks)
 
@@ -253,6 +277,10 @@ def main():
             'screen each mutex implementation separately before choosing a threshold')
     require(len({t['queue_policy'] for t in trials}) == 1,
             'screen each queue policy separately before choosing a threshold')
+    require(len({(t['owned_preflight_policy'], t['owned_mutex_preflight_spins'],
+                  t['owned_mutex_preflight_queue'], t['owned_mutex_preflight'])
+                 for t in trials}) == 1,
+            'screen each preflight policy separately before choosing a threshold')
     passing = sorted(t['threshold'] for t in trials if t['verdict'] == 'PASS')
     confirmation = []
     selected = None
@@ -275,6 +303,12 @@ def main():
                 'confirmation mutex implementation differs from selected screen')
         require(all(c['queue_policy'] == trials[0]['queue_policy'] for c in confirmation),
                 'confirmation queue policy differs from selected screen')
+        require(all((c['owned_preflight_policy'], c['owned_mutex_preflight_spins'],
+                     c['owned_mutex_preflight_queue'], c['owned_mutex_preflight']) ==
+                    (trials[0]['owned_preflight_policy'], trials[0]['owned_mutex_preflight_spins'],
+                     trials[0]['owned_mutex_preflight_queue'], trials[0]['owned_mutex_preflight'])
+                    for c in confirmation),
+                'confirmation preflight policy differs from selected screen')
         if all(c['verdict'] == 'PASS' and c['threshold'] == min(passing) for c in confirmation):
             selected = min(passing)
     write_json(args.output, dict(post_work_rounds=args.post_work_rounds,

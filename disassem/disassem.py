@@ -154,11 +154,13 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     owned_direct_lock = get_kernel_symbol("kd_owned_mutex_direct_lock_clobber_v1")
     owned_contended_lock = get_kernel_symbol("kd_owned_mutex_direct_contended_clobber_v1")
     owned_outer_lock = get_kernel_symbol("kd_owned_mutex_outer_contended_clobber_v1")
+    owned_prepared = get_kernel_symbol("kd_owned_mutex_outer_prepared_clobber_v1")
+    owned_preflight = get_kernel_symbol("kd_owned_mutex_outer_preflight_v1")
     owned_direct_unlock = get_kernel_symbol("kd_owned_mutex_direct_unlock_clobber_v1")
     if lock_kind == "mutex-owned" and not all((owned_mutex_lock, owned_mutex_unlock, owned_outer_unlock,
-            owned_direct_lock, owned_contended_lock, owned_outer_lock, owned_direct_unlock)):
+            owned_direct_lock, owned_contended_lock, owned_outer_lock, owned_prepared, owned_preflight, owned_direct_unlock)):
         return reject_translation("owned mutex entry symbols unavailable")
-    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock, owned_direct_lock, owned_contended_lock, owned_outer_lock, owned_direct_unlock} - {0, None}
+    clobber_targets = {clobber_lock, clobber_unlock, pinned_spin_lock, clobber_mutex_lock, clobber_mutex_unlock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, direct_mutex_unlock, owned_direct_lock, owned_contended_lock, owned_outer_lock, owned_prepared, owned_direct_unlock} - {0, None}
     mutex_pair = ((owned_direct_lock and owned_direct_unlock)
                   if lock_kind == "mutex-owned" else
                   ((direct_mutex_lock and direct_mutex_unlock) or
@@ -185,6 +187,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             (owned_direct_lock, "mutex-owned", "kd_owned_mutex_direct_lock_clobber_v1"),
             (owned_contended_lock, "mutex-owned", "kd_owned_mutex_direct_contended_clobber_v1"),
             (owned_outer_lock, "mutex-owned", "kd_owned_mutex_outer_contended_clobber_v1"),
+            (owned_prepared, "mutex-owned", "kd_owned_mutex_outer_prepared_clobber_v1"),
+            (owned_preflight, "mutex-owned", "kd_owned_mutex_outer_preflight_v1"),
             (owned_direct_unlock, "mutex-owned", "kd_owned_mutex_direct_unlock_clobber_v1"),
             (mutex_lock, "mutex", "mutex_lock"),
             (mutex_unlock, "mutex", "mutex_unlock"),

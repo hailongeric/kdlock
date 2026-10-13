@@ -61,6 +61,70 @@ class AcceptanceTests(unittest.TestCase):
         with self.assertRaisesRegex(Failure, 'one mutex implementation'):
             evaluate(self.baseline, self.candidate)
 
+    def test_preflight_candidates_and_zero_gate_are_not_pooled(self):
+        for row in self.candidate:
+            if row['arm'] == 'kdlock':
+                row.update(mutex_implementation='owned-v1', mutex_entry_ratio_limit=None,
+                    owned_mutex_entry_ratio_limit=4, registry_lock_kind=3, entry_abi=2,
+                    caller_abi='clobber', caller_shell='owned_mutex_outer_cookie',
+                    cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
+                    mutex_wait_counter_scope='owned_delegate_waits',
+                    owned_preflight_policy='c_abi_v1', owned_mutex_preflight_spins=0)
+        result = evaluate(self.baseline, self.candidate)
+        self.assertEqual((result['owned_preflight_policy'], result['owned_mutex_preflight_spins']),
+                         ('c_abi_v1', 0))
+        first = next(r for r in self.candidate if r['arm'] == 'kdlock')
+        first['owned_mutex_preflight_spins'] = 64
+        with self.assertRaisesRegex(Failure, 'one preflight policy'):
+            evaluate(self.baseline, self.candidate)
+        del first['owned_preflight_policy'], first['owned_mutex_preflight_spins']
+        with self.assertRaisesRegex(Failure, 'one preflight policy'):
+            evaluate(self.baseline, self.candidate)
+
+    def test_explicit_capture_first_and_implicit_gate_remain_separate(self):
+        for row in self.candidate:
+            if row['arm'] == 'kdlock':
+                row.update(mutex_implementation='owned-v1', mutex_entry_ratio_limit=None,
+                           owned_mutex_entry_ratio_limit=4, registry_lock_kind=3, entry_abi=2,
+                           caller_abi='clobber', caller_shell='owned_mutex_outer_cookie',
+                           cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
+                           mutex_wait_counter_scope='owned_delegate_waits',
+                           owned_mutex_preflight=False, owned_preflight_policy='capture_first',
+                           owned_mutex_preflight_spins=0, owned_mutex_preflight_queue=False)
+        result = evaluate(self.baseline, self.candidate)
+        self.assertEqual(result['owned_preflight_policy'],'capture_first')
+        self.assertFalse(result['owned_mutex_preflight'])
+        first = next(r for r in self.candidate if r['arm'] == 'kdlock')
+        first.update(owned_mutex_preflight=True,owned_preflight_policy='c_abi_v1')
+        with self.assertRaisesRegex(Failure,'one preflight policy'):
+            evaluate(self.baseline,self.candidate)
+        for row in self.candidate:
+            if row['arm'] == 'kdlock':
+                row.update(owned_mutex_preflight=True,owned_preflight_policy='c_abi_v1')
+        self.assertTrue(evaluate(self.baseline,self.candidate)['owned_mutex_preflight'])
+        del first['owned_mutex_preflight']
+        with self.assertRaisesRegex(Failure,'one preflight policy'):
+            evaluate(self.baseline,self.candidate)
+
+    def test_queued_preflight_candidates_are_not_pooled(self):
+        for row in self.candidate:
+            if row['arm'] == 'kdlock':
+                row.update(mutex_implementation='owned-v1', mutex_entry_ratio_limit=None,
+                    owned_mutex_entry_ratio_limit=4, registry_lock_kind=3, entry_abi=2,
+                    caller_abi='clobber', caller_shell='owned_mutex_outer_cookie',
+                    cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
+                    mutex_wait_counter_scope='owned_delegate_waits',
+                    owned_preflight_policy='c_abi_v1', owned_mutex_preflight_spins=64,
+                    owned_mutex_preflight_queue=True)
+        self.assertTrue(evaluate(self.baseline, self.candidate)['owned_mutex_preflight_queue'])
+        first = next(r for r in self.candidate if r['arm'] == 'kdlock')
+        first['owned_mutex_preflight_queue'] = False
+        with self.assertRaisesRegex(Failure, 'one preflight policy'):
+            evaluate(self.baseline, self.candidate)
+        del first['owned_mutex_preflight_queue']
+        with self.assertRaisesRegex(Failure, 'one preflight policy'):
+            evaluate(self.baseline, self.candidate)
+
     def test_post_work_studies_cannot_be_pooled(self):
         for row in self.candidate:
             row['post_work_rounds'] = 8

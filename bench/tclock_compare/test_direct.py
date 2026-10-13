@@ -12,7 +12,7 @@ import unittest
 
 import run
 from session import (BackendSession, hash_layout, tc_quiescent, check_jit_evidence,
-                     check_kd_parameters)
+                     check_kd_parameters, parse_owned_preflight_profile)
 from bench_session import Session
 from context_audit import audit as audit_context
 
@@ -30,7 +30,7 @@ class DirectTests(unittest.TestCase):
                 self.assertEqual((row['registry_lock_kind'], row['entry_abi']), (3, 2))
                 self.assertEqual(row['owned_mutex_entry_ratio_limit'], 8)
                 self.assertIsNone(row['mutex_entry_ratio_limit'])
-                self.assertTrue(row['name'].endswith('-owned-v1'))
+                self.assertTrue(row['name'].endswith('-owned-v1-capture-first'))
             else:
                 self.assertEqual(row['mutex_implementation'], 'not_applicable')
                 self.assertIsNone(row['owned_mutex_entry_ratio_limit'])
@@ -39,6 +39,113 @@ class DirectTests(unittest.TestCase):
                                                owned_mutex_entry_ratio_limit=256)))
         self.assertTrue(all(row['name'] not in {r['name'] for r in plan if r['arm'] == 'kdlock'}
                             for row in legacy if row['arm'] == 'kdlock'))
+
+    def test_owned_preflight_plan_scope_and_distinct_identity(self):
+        args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
+                    mutex_implementation='owned-v1', owned_mutex_preflight=True)
+        names = set()
+        for budget in run.OWNED_MUTEX_PREFLIGHT_SPINS:
+            rows = run.make_plan(Namespace(**args, owned_mutex_preflight_spins=budget))
+            for row in rows:
+                if row['arm'] == 'kdlock':
+                    self.assertEqual(row['owned_preflight_policy'], 'c_abi_v1')
+                    self.assertEqual(row['owned_mutex_preflight_spins'], budget)
+                    names.add(row['name'])
+                else:
+                    self.assertEqual(row['owned_preflight_policy'], 'not_applicable')
+                    self.assertIsNone(row['owned_mutex_preflight_spins'])
+        self.assertEqual(len(names), len(run.OWNED_MUTEX_PREFLIGHT_SPINS))
+        for budget in (-1, 1, 65, 4097, True):
+            with self.subTest(budget=budget), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**args, owned_mutex_preflight_spins=budget))
+        for changes in (dict(mutex_implementation='legacy'), dict(lock_kind='spin')):
+            with self.subTest(changes=changes), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(args, **changes), owned_mutex_preflight_spins=64))
+        for key in ('owned_preflight_policy', 'owned_mutex_preflight_spins', 'owned_mutex_preflight'):
+            self.assertIn(key, run.MUTEX_POLICY_FIELDS)
+
+    def test_owned_preflight_requires_explicit_caller_opt_in(self):
+        args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1')
+        default, = run.make_plan(Namespace(**args))
+        gate, = run.make_plan(Namespace(**args, owned_mutex_preflight=True))
+        self.assertEqual(default['owned_preflight_policy'], 'capture_first')
+        self.assertFalse(default['owned_mutex_preflight'])
+        self.assertEqual(default['owned_mutex_preflight_spins'], 0)
+        self.assertEqual(gate['owned_preflight_policy'], 'c_abi_v1')
+        self.assertTrue(gate['owned_mutex_preflight'])
+        self.assertNotEqual(default['name'], gate['name'])
+        for changes in (dict(owned_mutex_preflight_spins=64),
+                        dict(owned_mutex_preflight_queue=True),
+                        dict(owned_mutex_preflight=1),
+                        dict(owned_mutex_preflight=True, mutex_implementation='legacy')):
+            with self.subTest(changes=changes), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(args, **changes)))
+
+    def test_owned_preflight_summary_separates_gate_zero_from_earlier_source(self):
+        args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1', owned_mutex_preflight=True,
+                    mutex_acceptance='adaptive-performance')
+        plans = [run.make_plan(Namespace(**args, owned_mutex_preflight_spins=budget))[0]
+                 for budget in (0, 64, 256)]
+        previous = dict(plans[0], name=plans[0]['name']+'-capture-first')
+        del previous['owned_preflight_policy'], previous['owned_mutex_preflight_spins']
+        del previous['owned_mutex_preflight_queue'], previous['owned_mutex_preflight']
+        plans.append(previous)
+        plans.append(run.make_plan(Namespace(**dict(args, owned_mutex_preflight=False)))[0])
+        historical_gate = dict(plans[0], name=plans[0]['name']+'-implicit-gate')
+        del historical_gate['owned_mutex_preflight']
+        plans.append(historical_gate)
+        plans.append(run.make_plan(Namespace(**args, owned_mutex_preflight_spins=64,
+            owned_mutex_preflight_queue=True))[0])
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for spec in plans:
+                folder = out/spec['name']; folder.mkdir()
+                row = dict(spec, execution_status='OK', drained=True, jit_bodies=0,
+                    measurement=dict(complete=True, data_ok=True, completed=100, wall_ns=100000))
+                check_jit_evidence(row)
+                run.write_json(folder/'session.json', row)
+            run.report(out)
+            summary = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(summary), 7)
+            self.assertTrue(all(row['sessions'] == row['valid'] == 1 for row in summary))
+
+    def test_owned_preflight_is_passed_to_provider(self):
+        session = BackendSession.__new__(BackendSession)
+        session.record = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['kdlock'], lock_kind='mutex',
+            mutex_implementation='owned-v1', owned_mutex_preflight=True, owned_mutex_preflight_spins=256,
+            owned_mutex_preflight_queue=True))[0]
+        commands = []
+        def command(args, log):
+            commands.append((args, log))
+            if log == 'load-kdlock.log':
+                raise RuntimeError('captured provider command')
+        session.run = command
+        with self.assertRaisesRegex(RuntimeError, 'captured provider command'):
+            session.prepare()
+        args, = [args for args, log in commands if log == 'load-kdlock.log']
+        self.assertIn('owned_mutex_preflight_spins=256', args)
+        self.assertIn('owned_mutex_preflight_queue=1', args)
+        self.assertFalse(any(str(arg).startswith('mutex_native_route=') for arg in args))
+
+    def test_queued_preflight_plan_scope_and_provider_identity(self):
+        args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
+                    mutex_implementation='owned-v1', owned_mutex_preflight=True, owned_mutex_preflight_spins=64)
+        ordinary = run.make_plan(Namespace(**args))
+        queued = run.make_plan(Namespace(**args, owned_mutex_preflight_queue=True))
+        self.assertTrue(all(not row['owned_mutex_preflight_queue'] for row in ordinary))
+        self.assertEqual([row['owned_mutex_preflight_queue'] for row in queued], [False, False, True])
+        self.assertNotEqual(ordinary[-1]['name'], queued[-1]['name'])
+        for change in (dict(owned_mutex_preflight_spins=0), dict(mutex_implementation='legacy'),
+                       dict(lock_kind='spin'), dict(owned_mutex_preflight=False)):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(args, **change), owned_mutex_preflight_queue=True))
+        self.assertIn('owned_mutex_preflight_queue', run.MUTEX_POLICY_FIELDS)
 
     def test_owned_mutex_rejects_unvalidated_scope_and_native_alias(self):
         base = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
@@ -57,9 +164,76 @@ class DirectTests(unittest.TestCase):
     def test_owned_profile_is_diagnostic(self):
         row, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
             iterations=100, backends=['kdlock'], lock_kind='mutex',
-            mutex_implementation='owned-v1', profile_lock=True))
+            mutex_implementation='owned-v1', owned_mutex_preflight=True, profile_lock=True))
         self.assertTrue(row['diagnostic'])
         self.assertTrue(row['profile_lock'])
+        self.assertTrue(row['profile_owned_preflight'])
+        default, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['kdlock'], lock_kind='mutex',
+            mutex_implementation='owned-v1', profile_lock=True))
+        self.assertTrue(default['profile_lock'])
+        self.assertFalse(default['profile_owned_preflight'])
+        controls = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['native', 'kdlock'], lock_kind='mutex',
+            mutex_implementation='legacy', profile_lock=True))
+        self.assertTrue(all(not row['profile_owned_preflight'] for row in controls))
+        row, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1'))
+        self.assertFalse(row['profile_owned_preflight'])
+
+    def test_owned_preflight_profile_receipt_is_optional_only_for_old_runs(self):
+        record = dict(arm='kdlock', mutex_implementation='owned-v1',
+            owned_preflight_policy='c_abi_v1', diagnostic=True, profile_lock=True,
+            profile_owned_preflight=True)
+        line = ('kd_mutex_profile ownedpreflight: gate_self=8 gate_capture=2 '
+                'optimistic_acquired=3 optimistic_busy=4 optimistic_self=1 '
+                'optimistic_other=0 missed=0\n')
+        result = parse_owned_preflight_profile(line, record)
+        self.assertEqual(result['gate_self'], 8)
+        self.assertEqual(result['optimistic_busy'], 4)
+        self.assertIsNone(parse_owned_preflight_profile('old profile log', {}))
+        self.assertIsNone(parse_owned_preflight_profile('old profile log',
+                          dict(record, profile_owned_preflight=False)))
+        for text in ('', line+line, line.replace('missed=0', 'missed=1'),
+                     line.replace('optimistic_other=0', 'optimistic_other=1'),
+                     line.replace('gate_self=8', 'gate_self=0'),
+                     line.replace('gate_capture=2', 'gate_capture=5'),
+                     line.replace('optimistic_busy=4', 'optimistic_busy=40'),
+                     line.replace(' missed=0', ''), line.replace('missed=0', 'missed=-1'),
+                     line.replace('missed=0', 'missed=0 missed=0'),
+                     line.replace('missed=0', 'missed=0.5'),
+                     line.replace('missed=0', 'missed=0 ignored=garbage'),
+                     line.replace('missed=0', 'missed=0 trailing')):
+            with self.subTest(text=text), self.assertRaises(run.Failure):
+                parse_owned_preflight_profile(text, record)
+        for changes in (dict(profile_owned_preflight=False), dict(diagnostic=False),
+                        dict(profile_lock=False), dict(mutex_implementation='legacy'),
+                        dict(owned_preflight_policy=None), dict(arm='native')):
+            with self.subTest(changes=changes), self.assertRaises(run.Failure):
+                parse_owned_preflight_profile(line, dict(record, **changes))
+
+    def test_preflight_probes_load_only_for_declared_owned_profile(self):
+        for implementation, enabled in (('owned-v1', True), ('owned-v1', False), ('legacy', False)):
+            session = BackendSession.__new__(BackendSession)
+            session.loaded_kd = True
+            session.lock_kind = 'mutex'
+            session.record = dict(arm='kdlock', mutex_implementation=implementation,
+                profile_lock=True, profile_owned_preflight=enabled, diagnostic=True,
+                owned_preflight_policy='c_abi_v1' if implementation == 'owned-v1' else 'not_applicable',
+                collector_cpu=63, layout=dict(lock_addr=4096))
+            commands = []
+            def command(args, log):
+                commands.append((args, log))
+                if log == 'load-profile.log':
+                    raise RuntimeError('captured profiler command')
+            session.run = command
+            symbols = ('00002000 d kd_owned_mutex_bodies [kdlock_km]\n'
+                       '00003000 d kd_mutex_jit_success_count [kdlock_km]\n')
+            with patch.object(Path, 'read_text', return_value=symbols), \
+                    self.assertRaisesRegex(RuntimeError, 'captured profiler command'):
+                session.measure()
+            args, = [args for args, log in commands if log == 'load-profile.log']
+            self.assertEqual('preflight=1' in args, enabled)
 
     def test_owned_refill_has_distinct_queue_identity(self):
         args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
@@ -138,6 +312,35 @@ class DirectTests(unittest.TestCase):
                       owned_mutex_spin_limit='4096', owned_mutex_entry_ratio_limit='8',
                       owned_mutex_self_route='Y', owned_mutex_native_after_control='0')
         check_kd_parameters(params, record, 4096)
+        # Historical records omit the gate; new records must prove its budget.
+        with self.assertRaisesRegex(run.Failure, 'preflight'):
+            check_kd_parameters(dict(params, owned_mutex_preflight_spins='64'), record, 4096)
+        record.update(owned_preflight_policy='c_abi_v1', owned_mutex_preflight_spins=64)
+        with self.assertRaisesRegex(run.Failure, 'preflight'):
+            check_kd_parameters(params, record, 4096)
+        params['owned_mutex_preflight_spins'] = '64'
+        check_kd_parameters(params, record, 4096)
+        check_kd_parameters(params, dict(record, owned_mutex_preflight=True), 4096)
+        for flag in (False, 1, None):
+            with self.subTest(flag=flag), self.assertRaisesRegex(run.Failure, 'compile-time'):
+                check_kd_parameters(params, dict(record, owned_mutex_preflight=flag), 4096)
+        capture = dict(record, owned_mutex_preflight=False, owned_preflight_policy='capture_first',
+                       owned_mutex_preflight_spins=0, owned_mutex_preflight_queue=False)
+        capture_params = dict(params, owned_mutex_preflight_spins='0', owned_mutex_preflight_queue='N')
+        check_kd_parameters(capture_params, capture, 4096)
+        with self.assertRaisesRegex(run.Failure, 'preflight'):
+            check_kd_parameters(params, capture, 4096)
+        with self.assertRaisesRegex(run.Failure, 'preflight'):
+            check_kd_parameters(dict(params, owned_mutex_preflight_spins='0'), record, 4096)
+        with self.assertRaisesRegex(run.Failure, 'queued preflight'):
+            check_kd_parameters(dict(params, owned_mutex_preflight_queue='Y'), record, 4096)
+        record['owned_mutex_preflight_queue'] = True
+        with self.assertRaisesRegex(run.Failure, 'queued preflight'):
+            check_kd_parameters(params, record, 4096)
+        params['owned_mutex_preflight_queue'] = 'Y'
+        check_kd_parameters(params, record, 4096)
+        with self.assertRaisesRegex(run.Failure, 'queued preflight'):
+            check_kd_parameters(dict(params, owned_mutex_preflight_queue='N'), record, 4096)
         record['owned_mutex_refill'] = True
         with self.assertRaisesRegex(run.Failure, 'refill parameter'):
             check_kd_parameters(params, record, 4096)
