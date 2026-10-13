@@ -6,7 +6,24 @@ passed [targeted verification](../bench/results/10.176.26.71/tests/mutex-blockin
 including a drained 320,000-operation mutex JIT run. That functional check does
 not provide a new performance matrix.
 
-## Latest c01 optimistic-spin study
+## Latest c01 protocol study
+
+The [protocol study](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/README.md)
+tests frame retirement reuse, queue-node layout, caller capture, native preflight
+and bounded native/delegation epochs. None of the 64-round candidates meets the
+two-metric 97% target. Native epochs improve the 28-worker result, but their
+2/4/16-worker gaps remain; favorable isolated counts do not justify a new default.
+
+The user requested a separate [eight-round study](../bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/README.md).
+Its fresh Native/TCLock/KD baseline reaches 10.961/3.584/7.374 Mops/s at sixteen
+workers. Shorter outside work helps Native much more than the delegating paths.
+Exact-address epoch caching and cross-node epochs improve selected counts, but
+all ten initial screens fail acceptance. The cross-node candidate gains at 36
+and loses more than 3% at 60. Keep eight- and 64-round evidence separate.
+The reports retain all samples, worker progress, CPU cost, JIT shares, raw
+sources and rejected implementations; the accepted provider remains `9b76719`.
+
+## Earlier c01 optimistic-spin study
 
 The [owner-aware retry study](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/README.md)
 adds 369 audited sessions: a fresh three-way baseline and six retry/OSQ screens.

@@ -167,6 +167,18 @@ respective controls. A failing screening rung rejects a candidate; missing grid
 points cannot pass. A new default requires the smallest passing threshold and
 two independent fresh three-round confirmation blocks.
 
+The fixed [`SC_POST_WORK_ROUNDS`](../../workload_modules/spin_cacheline/post_work.h)
+source value is recorded as `post_work_rounds` in new plans and sessions. The
+runner checks that it still matches before freezing inputs. Summaries and Native
+reference ratios keep different round counts separate; changing the value starts
+a separate study and requires a fresh matching baseline.
+
+The c01 auditor defaults to `--post-work-rounds 64`; pass `--post-work-rounds 8`
+for the separate eight-round study. This option verifies the hashed frozen header
+and does not modify or rebuild the workload. Historical eight- and 64-round
+records may omit the field only when that header proves the requested value;
+explicit metadata must match, and different round counts cannot be pooled.
+
 Timed peak selection requires all workers to progress in the full cohort window.
 Keep whole-run per-worker and node shares too, especially cohorts with unequal
 NUMA membership (24 threads in the original 40-vCPU setup). A bounded batch and

@@ -8,6 +8,17 @@ Known failures remain in [TODO](TODO.md).
 
 ## Current mutex verification
 
+The [64-round protocol receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/validation.json)
+and separate [eight-round receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/validation.json)
+retain basic and affected frame/cookie/ABI, admission, task-reference, parking,
+terminal and owner/ACK checks. They distinguish compiled JIT fixtures, live
+resource probes and returned benchmark bodies. The reports preserve rejected
+frame/layout/capture/epoch candidates and initial corrected harness failures.
+Correct results and drain do not establish performance acceptance: no candidate
+meets the full 97% target. No full suite or other-workload acceptance was run.
+
+## Earlier optimistic-spin verification
+
 The [optimistic-spin receipt](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/validation.json)
 records six rejected retry/OSQ candidates, 369 audited performance sessions,
 affected fixtures, 62 runner/auditor checks and live parking/cooling and owner/ACK

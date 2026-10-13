@@ -1,0 +1,13 @@
+group,mode,sample,arm,threads,repeat,diagnostic,score_eligible,post_work_rounds,native_calls,native_slow,spin_slow,admitted,declined,batches,batch_packets,owner_samples,owner_zero,owner_changes,missed,native_fast,admission_fraction,mean_batch,owner_zero_fraction,owner_change_fraction
+stage2-profile-control-retry,profile,c01-t02-r00-direct-native,native,2,0,True,False,8,14806272,7439050,0,0,0,0,0,20577,11595,1945,0,7367222,,,0.5634932205860913,0.09452301112893036
+stage2-profile-control-retry,profile,c01-t02-r00-direct-kdlock-adaptive,kdlock,2,0,True,False,8,0,1532747,0,1854857,0,0,0,20634,7481,6424,0,,1.0,,0.36255694484830864,0.31133081322089756
+stage2-profile-control-retry,profile,c01-t04-r00-direct-native,native,4,0,True,False,8,8252160,4022926,0,0,0,0,0,20547,6789,10310,0,4229234,,,0.3304131990071543,0.5017764150484255
+stage2-profile-control-retry,profile,c01-t04-r00-direct-kdlock-adaptive,kdlock,4,0,True,False,8,0,978539,0,2952003,0,589392,1767334,20661,3857,12476,0,,1.0,2.9985714091809865,0.18668021876966265,0.603842989206718
+stage2-profile-control-retry,profile,c01-t16-r00-direct-native,native,16,0,True,False,8,8668416,3469358,0,0,0,0,0,20638,7956,11612,0,5199058,,,0.385502471169687,0.5626514197112124
+stage2-profile-control-retry,profile,c01-t16-r00-direct-kdlock-adaptive,kdlock,16,0,True,False,8,0,663092,0,4180862,0,418992,3325281,20706,2905,16702,0,,1.0,7.9363830335662735,0.1402974983096687,0.8066260987153482
+stage2-profile-control-retry,profile,c01-t28-r00-direct-native,native,28,0,True,False,8,7678464,2974172,0,0,0,0,0,20653,8303,11729,0,4704292,,,0.40202391904323825,0.5679078100033893
+stage2-profile-control-retry,profile,c01-t28-r00-direct-kdlock-adaptive,kdlock,28,0,True,False,8,0,427316,0,2973882,2178,238602,2408882,20738,2952,17118,0,,0.9992681599161307,10.095816464237517,0.14234738161828528,0.8254412190182274
+stage2-profile-control-retry,profile,c01-t32-r00-direct-native,native,32,0,True,False,8,7266304,3029394,0,0,0,0,0,20588,8024,12069,0,4236910,,,0.3897415970468234,0.5862152710316689
+stage2-profile-control-retry,profile,c01-t32-r00-direct-kdlock-adaptive,kdlock,32,0,True,False,8,0,427192,0,2932037,0,238304,2363028,20725,3076,17082,0,,1.0,9.916023230831208,0.14841978287092883,0.8242219541616406
+stage2-profile-control-retry,profile,c01-t60-r00-direct-native,native,60,0,True,False,8,4310528,1956654,0,0,0,0,0,21020,6145,14615,0,2353874,,,0.2923406279733587,0.6952901998097051
+stage2-profile-control-retry,profile,c01-t60-r00-direct-kdlock-adaptive,kdlock,60,0,True,False,8,0,373563,0,1827266,19,192806,1332754,21133,3767,17058,0,,0.9999896020598866,6.912409364853791,0.17825202290256945,0.8071736147257843

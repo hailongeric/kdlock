@@ -1,0 +1,11 @@
+{
+  "rejected_branch": "perf/mutex-protocol-c01-20261013",
+  "archive_tag": "archive/perf/mutex-protocol-c01-20261013",
+  "exact_rejected_tip": "722ea98f10abac56eee3b503c264090df47c1612",
+  "archive_verified": true,
+  "rejected_branch_deleted": true,
+  "accepted_work_branch": "perf/mutex-protocol-report-20261013",
+  "accepted_base": "096f1d400916e0a83a32fcb6fb861bfb9ab129be",
+  "user_post_work_sha256": "81e44696ca4466206664c8f71e1dd8f940580cbcee3e3866c251b3ad8bde7165",
+  "user_post_work_staged": false
+}

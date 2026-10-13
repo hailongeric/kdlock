@@ -1,0 +1,22 @@
+{
+  "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-post8-20261013/baseline.tar.gz": {
+    "sha256": "e7464841f0c6c16dba04e461b027904aa390be889d80ed64b1b5b3d4f0af506b",
+    "bytes": 10049657
+  },
+  "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-post8-20261013/diagnostics.tar.gz": {
+    "sha256": "568b099058cfe2bf9499402452324da9e336b1a24d6ed479873191f68a7f0e77",
+    "bytes": 15429822
+  },
+  "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-post8-20261013/late-owner.tar.gz": {
+    "sha256": "ae09a095ac99e7c9c33d42991ae221b3d3062fd032c54baddbf69bebcaec4757",
+    "bytes": 10377535
+  },
+  "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-post8-20261013/restored-smoke.tar.gz": {
+    "sha256": "50b3351fbe00b302e520549cb73c1cacc9d1fb88b94c77f3b8c3a8697eaaba8f",
+    "bytes": 2859600
+  },
+  "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-post8-20261013/screens.tar.gz": {
+    "sha256": "a4627be593bc26e21bfdcbf503c7cbf82c641410953b0dfb409a7f87158a9726",
+    "bytes": 57154952
+  }
+}

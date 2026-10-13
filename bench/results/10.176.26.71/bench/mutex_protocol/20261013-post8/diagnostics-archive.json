@@ -1,0 +1,9 @@
+{
+  "archive": "../../../raw/bench/mutex-protocol-c01-post8-20261013/diagnostics.tar.gz",
+  "archive_matches_extracted": true,
+  "regular_files_verified": 2078,
+  "sha256": "568b099058cfe2bf9499402452324da9e336b1a24d6ed479873191f68a7f0e77",
+  "symlink_targets_verified": 26,
+  "uncompressed_regular_file_bytes": 51760545,
+  "verification": "Read every tar member without extraction. Compare each regular member's SHA-256 with its extracted file; compare symlink target strings without following them; verify archived directories exist. Reject absolute member names, parent traversal and unsupported member types."
+}
