@@ -1,13 +1,27 @@
 # Performance status
 
-The owned ABI4/reuse-32 profile passes the 97% Native target for c01/post64 at
-1–8 workers. It extends the experimental `d8d14a1` provider with Linux-style
-local acquisition before delegation. The benchmark still defaults to legacy
+The archived 64-vCPU study accepted the owned ABI4/reuse-32 profile against the
+97% Native target for c01/post64 at 1–8 workers. It extends the experimental
+`d8d14a1` provider with Linux-style local acquisition before delegation.
+The benchmark still defaults to legacy
 mutexes; `owned-v1` explicitly selects the independent 32-byte KD object.
 Owned capture-first, admission ratio 256 and finite FIFO remain the general defaults.
 This narrow result does not establish general Native parity. Implementation contracts live in
 [the mutex guide](design/mutex_implementation.md); correctness receipts live in
 [validation](VALIDATION.md).
+
+## Fresh c01 1–64-worker comparison
+
+The [full-grid report](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md)
+compares the unchanged ABI4/reuse-32 profile, Linux Native and TCLock at 1–8
+workers in steps of one and 12–64 in steps of four. All 198 samples are correct
+and drained. KD reaches 97% of Native median throughput at every count; the
+three-worker warmed peak reaches only 93.86%, so this block does not establish
+full-grid parity. At 60 workers, KD/Native medians are 6.913/3.599 Mops/s.
+At least 99.5% of each KD sample executes through SELF, although all 63 contended
+KD sessions return some JIT bodies. This descriptive three-round block uses the
+temporary 66-vCPU topology, with physical collector contention at 64 workers;
+it remains separate from the accepted 64-vCPU study below.
 
 <a id="active-c01-18-worker-study"></a>
 

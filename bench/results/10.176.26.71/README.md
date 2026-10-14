@@ -9,6 +9,13 @@ Current commands and accepted-provider status live in the
 
 ## Current owned-protocol optimization
 
+The [fresh c01 1–64-worker comparison](bench/mutex_owned/20261014-full-grid/README.md)
+contains 198 correct, drained Native/TCLock/KD samples at the full 22-point grid.
+KD reaches at least 97% of Native median throughput at every count, but misses
+the warmed-peak threshold at three workers (93.86%). At 60 workers its median
+is 1.92× Native. The temporary 66-vCPU topology and its 64-worker physical
+collector contention remain separate from the accepted narrow study below.
+
 The [Linux-local ABI4/reuse-32 profile](bench/mutex_owned/20261014-linux-local/README.md)
 passes the 97% Native target for both throughput measures at all counts 1–8,
 in the screen and both fresh confirmations. It extends the experimental owned
