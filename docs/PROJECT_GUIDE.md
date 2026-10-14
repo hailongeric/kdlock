@@ -29,7 +29,7 @@ checks sleeping waiters, physical-owner ACKs and actual JIT execution.
 | Change ownership or recovery | [KD locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) |
 | Build and verify | [Provider](../kernel_module/README.md), [tests](../tests/README.md), [benchmarks](../bench/README.md) |
 | Review status and limits | [Known limitations](TODO.md), [performance status](PERFORMANCE.md) |
-| Compare real syscall critical sections | [Complete rerun and analysis](../bench/results/10.176.26.71/bench/mutex_wait/20261012-full/README.md), [runner and contract](../bench/real_api/README.md) |
+| Compare real syscall critical sections | [Runner and contract](../bench/real_api/README.md), [API reports](../bench/results/10.176.26.71/README.md#frozen-benchmark-reports) |
 
 ## Guest workflow
 

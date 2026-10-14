@@ -135,8 +135,7 @@ for this IRQ-enabled task-context comparator, and batches do not truncate on
 `need_resched()`. TCLock/workloads have UBSAN off; the kernel's policy is unchanged.
 Mutex workers preregister one fixed-affinity context per CPU before measurement;
 contexts/task refs survive complete cohort drain. KD mutex waiters retain migration
-pins and reserved stacks while sleeping after bounded polling. Historical waiting-policy
-comparisons are indexed in the [archive guide](../mutex_wait_compare/README.md).
+pins and reserved stacks while sleeping after bounded polling.
 See [TCLock scope](../../tclock_backend/README.md) and
 [all nine lock protocols](../../docs/design/lock_protocols.md).
 

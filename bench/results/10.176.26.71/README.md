@@ -67,16 +67,8 @@ and raw archive hashes. It is functional evidence, not a new performance matrix.
 
 ## Frozen benchmark reports
 
-The [2026-10-12 full comparison](bench/mutex_wait/20261012-full/README.md)
-was measured before the polling-only mutex policy was removed. It includes 31
-configurations, 22 worker counts and three rounds: 8,910 drained sessions, 8,908
-accepted and two zero-JIT exclusions. Use the KD blocking series for the retained
-mutex policy. [Performance status](../../../docs/PERFORMANCE.md) summarizes its
-throughput, CPU/JIT and topology limits.
-
 | Earlier report | Captured scope |
 | --- | --- |
-| [Six-count wait-policy comparison, 2026-10-12](bench/mutex_wait/20261012/README.md) | 2,430 accepted/drained sessions; scheduler validation, tuning and policy controls |
 | [Mutex and read/write APIs, 2026-10-11](bench/real_api/20261011-sync/RESULTS.md) | 504 accepted sessions; pipes, seeks and bounded UTS metadata |
 | [Spinlock APIs, 2026-10-11](bench/real_api/20261011/RESULTS.md) | 288 accepted sessions; OFD queries and descriptor flags; [run record](bench/real_api/20261011/README.md) retains failed pilots |
 | [Mutex optimization, 2026-10-11](bench/comparison/mutex-opt-20261011T045425Z/README.md) | 396 accepted/drained c01/hash sessions at 22 worker counts |
@@ -89,7 +81,7 @@ throughput, CPU/JIT and topology limits.
 
 The full 22-point comparisons used temporary 66-vCPU boots with collector 65.
 At 64 workers, the collector, last worker and QEMU services share physical host
-core 63. The six-count and bounded reports used 64 vCPUs and collector 63.
+core 63. The bounded reports used 64 vCPUs and collector 63.
 The migration used 60 vCPUs. Keep these measurements separate from the
 [original-host reports](../380G10/README.md).
 

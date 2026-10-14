@@ -491,8 +491,7 @@ that CPU while the caller sleeps. Such bodies take the native path. Logical
 add new interruptible/killable interfaces or a general rwsem/mmap implementation.
 
 The [mutex runner](../../bench/tclock_compare/README.md) records the blocking
-policy and scheduler observations. Historical spin/blocking comparisons remain
-in the [archive guide](../../bench/mutex_wait_compare/README.md). The
+policy and scheduler observations. The
 [scheduler probe](../../tests/kernel/mutex/run_wait_selftest.py) checks actual
 sleep, progress with a deliberately withheld completion wake, same-CPU progress
 and exact drain; its constructed packets are separate

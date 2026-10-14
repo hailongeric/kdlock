@@ -7,13 +7,10 @@ operation. A scoped ftrace module substitutes selected functions for the bound
 object. Spin, mutex or reader/writer backends are selected at build time. The
 `stock` arm runs the original kernel functions without a substitution module.
 
-KD mutex cases always use bounded polling followed by blocking. The
-[latest frozen report](../results/10.176.26.71/bench/mutex_wait/20261012-full/README.md)
-was measured before the polling-only policy was removed. It includes all eleven
-accepted API variants at 22 worker counts; use its KD blocking series for mutex
-comparisons. [Performance status](../../docs/PERFORMANCE.md) describes remaining
-CPU/JIT and throughput gaps. The [machine index](../results/10.176.26.71/README.md)
-retains earlier API reports, exploratory failures and source identities.
+KD mutex cases always use bounded polling followed by blocking.
+[Performance status](../../docs/PERFORMANCE.md) describes remaining throughput
+gaps. The [machine index](../results/10.176.26.71/README.md) retains earlier API
+reports, exploratory failures and source identities.
 
 These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading
@@ -166,9 +163,8 @@ KD mutexes always support blocking. `--mutex-spin-limit` defaults to 4,096
 PAUSE iterations before sleeping; zero parks immediately. Records retain
 `mutex_wait_mode=blocking` and the budget, which is checked against the loaded
 module. `--mutex-wait-mode` has been removed. Each backend runs once per round.
-The historical [wait-policy comparison](../mutex_wait_compare/README.md) retains
-separate statistics for the former spin mode and blocking mode; the API report
-continues to reject mixed-policy archives.
+The API report rejects archives with different mutex wait settings; export each
+setting to a separate report directory.
 The recorded figures used Matplotlib 3.9.4. Basic and directly affected checks:
 
 ```sh

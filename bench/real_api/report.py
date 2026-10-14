@@ -58,7 +58,7 @@ def write_report(out, records):
     rows = summarize(records)
     policies = {(r['mutex_wait_mode'], r['mutex_spin_limit']) for r in rows if r['arm'] == 'kdlock'}
     if len(policies) > 1:
-        raise ValueError('use the mutex_wait_compare exporter to compare distinct KD waiting policies')
+        raise ValueError('cannot compare distinct KD waiting policies in one report; use separate report directories')
     out.mkdir(parents=True, exist_ok=True)
     (out/'summary.json').write_text(json.dumps(rows, indent=2)+'\n')
     if rows:

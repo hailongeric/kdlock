@@ -13,8 +13,6 @@ KD mutexes always support blocking after bounded polling.
 | [Shared components](spin_cacheline/README.md) | Clients, warmup, peak selection, provider preparation and offline reports |
 
 Kernel payloads live under [workload_modules](../workload_modules/README.md).
-The [historical wait-policy exporter](mutex_wait_compare/README.md) reads archived
-spin/blocking comparisons; its dual-policy launcher has been retired.
 
 ## Environment and output
 
