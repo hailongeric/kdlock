@@ -74,6 +74,66 @@ def parse_owned_preflight_profile(messages, record):
     return result
 
 
+OWNED_CALLER_FIELDS = ('owned_mutex_cabi', 'owned_caller_policy', 'owned_entry_abi',
+                       'owned_acquire_policy', 'owned_release_policy')
+
+
+def parse_owned_local_first_profile(messages, record):
+    """ABI4 helper outcomes are separate from ABI2 gate and JIT counters."""
+    enabled = record.get('profile_owned_local_first', False)
+    require(type(enabled) is bool, 'invalid owned local-first profile flag')
+    rows = re.findall(r'kd_mutex_profile ownedlocalfirst: ([^\n]+)', messages)
+    if not enabled:
+        require(not rows, 'unexpected owned local-first profile receipt')
+        return None
+    require(record.get('profile_lock') and record.get('diagnostic') and
+            record.get('arm') == 'kdlock' and record.get('mutex_implementation') == 'owned-v1' and
+            check_owned_caller_policy(record) and record.get('owned_acquire_policy') == 'linux_local_first' and
+            not record.get('profile_owned_preflight', False),
+            'local-first profile requires an unscored ABI4 local-first caller')
+    require(len(rows) == 1, 'missing or duplicate owned local-first profile receipt')
+    fields = {'acquired', 'failed', 'missed'}
+    tokens = rows[0].split()
+    require(all(re.fullmatch(r'[a-z_]+=[0-9]+', token) for token in tokens),
+            'malformed owned local-first counters')
+    pairs = [token.split('=', 1) for token in tokens]
+    require(len(pairs) == len(fields) and {key for key, _ in pairs} == fields,
+            'incomplete owned local-first counters')
+    result = {key: int(value) for key, value in pairs}
+    require(result['missed'] == 0,
+            'owned local-first profile missed returns or saw an unknown enum')
+    return result
+
+
+def check_owned_caller_policy(record):
+    """Keep old ABI2 archives valid without normalizing their missing identity."""
+    if not any(key in record for key in OWNED_CALLER_FIELDS):
+        require(record.get('entry_abi', 2) == 2, 'unrecorded owned caller is not ABI2')
+        return False
+    require(all(key in record for key in OWNED_CALLER_FIELDS),
+            'incomplete owned caller policy')
+    cabi = record['owned_mutex_cabi']
+    require(type(cabi) is bool and
+            record['owned_acquire_policy'] == ('linux_local_first' if cabi else 'capture_admission') and
+            record['owned_release_policy'] == 'guarded_owner_release' and
+            record['owned_caller_policy'] == ('c_abi_v2' if cabi else 'clobber_v1') and
+            type(record['owned_entry_abi']) is int and
+            record['owned_entry_abi'] == record.get('entry_abi') == (4 if cabi else 2) and
+            record.get('caller_abi') == ('c' if cabi else 'clobber') and
+            record.get('caller_shell') == ('owned_mutex_outer_cabi' if cabi else 'owned_mutex_outer_cookie'),
+            'owned caller policy or ABI differs')
+    require(not cabi or (record.get('owned_mutex_preflight') is False and
+            record.get('owned_preflight_policy') == 'not_applicable' and
+            record.get('owned_mutex_preflight_spins') == 0 and
+            record.get('owned_mutex_preflight_queue') is False),
+            'owned ABI4 cannot use ABI2 preflight')
+    if 'owned_mutex_reuse_spins' in record:
+        spins = record['owned_mutex_reuse_spins']
+        require(type(spins) is int and spins in (0, 8, 32, 128) and (not spins or cabi),
+                'owned reuse grace identity differs')
+    return cabi
+
+
 def check_kd_parameters(params, record, lock_addr):
     # Parameter identity rejects an old provider that can disable mutex JIT.
     # Returned-body evidence remains a separate execution requirement.
@@ -87,6 +147,7 @@ def check_kd_parameters(params, record, lock_addr):
             params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
             'kdlock observation parameters differ')
     if record.get('mutex_implementation', 'legacy') == 'owned-v1':
+        cabi = check_owned_caller_policy(record)
         require({'owned_mutex_spin_limit', 'owned_mutex_entry_ratio_limit',
                  'owned_mutex_self_route', 'owned_mutex_native_after_control'} <= set(params),
                 'missing owned mutex provider parameters')
@@ -107,11 +168,13 @@ def check_kd_parameters(params, record, lock_addr):
         budget = record.get('owned_mutex_preflight_spins')
         enabled = record.get('owned_mutex_preflight')
         require('owned_mutex_preflight' not in record or (type(enabled) is bool and
-                policy == ('c_abi_v1' if enabled else 'capture_first')),
+                policy == ('not_applicable' if cabi else 'c_abi_v1' if enabled else 'capture_first')),
                 'owned preflight compile-time policy differs')
         require((policy is None and budget is None and
                  int(params.get('owned_mutex_preflight_spins', 0)) == 0) or
                 (policy == 'capture_first' and enabled is False and type(budget) is int and budget == 0 and
+                 'owned_mutex_preflight_spins' in params and int(params['owned_mutex_preflight_spins']) == 0) or
+                (cabi and policy == 'not_applicable' and enabled is False and type(budget) is int and budget == 0 and
                  'owned_mutex_preflight_spins' in params and int(params['owned_mutex_preflight_spins']) == 0) or
                 (policy == 'c_abi_v1' and type(budget) is int and
                  budget in (0, 64, 256, 1024, 4096) and
@@ -124,6 +187,16 @@ def check_kd_parameters(params, record, lock_addr):
                  params['owned_mutex_preflight_queue'] == ('Y' if queued else 'N') and
                  (not queued or (policy == 'c_abi_v1' and budget > 0))),
                 'owned queued preflight policy or parameter differs')
+        if 'owned_mutex_reuse_spins' in record:
+            require('owned_mutex_reuse_spins' in params and
+                    int(params['owned_mutex_reuse_spins']) == record['owned_mutex_reuse_spins'],
+                    'owned reuse grace provider parameter differs')
+        if any(key in record for key in OWNED_CALLER_FIELDS):
+            require(params.get('owned_mutex_protocol') == 'linux_local_first_v1' and
+                    not {'owned_mutex_native_first', 'owned_mutex_native_first_spins',
+                         'owned_mutex_early_release'} & params.keys(),
+                    'owned provider protocol differs')
+
     else:
         require(int(params['mutex_spin_limit']) == record['mutex_spin_limit'] and
                 int(params['mutex_entry_ratio_limit']) == record['mutex_entry_ratio_limit'] and
@@ -244,6 +317,7 @@ class BackendSession(Session):
         if self.record['arm'] == 'kdlock':
             if self.record.get('mutex_implementation', 'legacy') == 'owned-v1':
                 mutex_params = [
+                    'owned_mutex_reuse_spins=' + str(self.record.get('owned_mutex_reuse_spins', 0)),
                     'owned_mutex_spin_limit=' + str(self.record['mutex_spin_limit']),
                     'owned_mutex_entry_ratio_limit=' + str(self.record['owned_mutex_entry_ratio_limit']),
                     'owned_mutex_refill=' + str(int(self.record.get('owned_mutex_refill', False))),
@@ -310,7 +384,11 @@ class BackendSession(Session):
                 roots = [int(s[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
                          if len(s := line.split()) == 4 and s[2:] == [entry_name, source_tag]]
                 require(len(roots) == 1, 'ambiguous direct root continuation')
-                self.record['root_entry'] = roots[0]
+                # ABI4 registers the hardware CALL return before its fixed
+                # nine-byte TEST/JNZ stub, as KD_OWNED_MUTEX_PREPARE_IP does.
+                # Provider preparation independently validates those bytes.
+                self.record['root_entry_symbol'] = roots[0]
+                self.record['root_entry'] = roots[0] - (9 if self.record.get('owned_mutex_cabi') else 0)
         self.record['prepare'] = json.loads(self.run(
             [HERE/'client', '--prepare', '--cachelines', self.record['cachelines']],
             'prepare.json'))
@@ -363,6 +441,13 @@ class BackendSession(Session):
                     self.record.get('diagnostic')),
                     'owned preflight probes require an unscored C-ABI gate')
             extra_profile = ['preflight=1'] if preflight else []
+            local_first = self.record.get('profile_owned_local_first', False)
+            require(not local_first or (owned and self.record.get('diagnostic') and
+                    check_owned_caller_policy(self.record) and
+                    self.record.get('owned_acquire_policy') == 'linux_local_first' and not preflight),
+                    'owned local-first probes require an unscored ABI4 local-first caller')
+            if local_first:
+                extra_profile.append('local_first=1')
             self.run(['taskset', '-c', str(self.record['collector_cpu']), 'insmod', PROFILE_MODULE,
                       'target_lock=' + str(self.record['layout']['lock_addr']),
                       'success_counter=' + str(counter), 'kd=' + str(int(self.loaded_kd)),
@@ -414,10 +499,17 @@ class BackendSession(Session):
             preflight = parse_owned_preflight_profile(self.messages, self.record)
             if preflight is not None:
                 self.record['owned_preflight_profile'] = preflight
+            local_first = parse_owned_local_first_profile(self.messages, self.record)
+            if local_first is not None:
+                self.record['owned_local_first_profile'] = local_first
             if self.record.get('mutex_implementation') == 'owned-v1':
                 owned_rows = re.findall(r'kd_mutex_profile owned: ([^\n]+)', self.messages)
                 require(len(owned_rows) == 1, 'missing owned profiler receipt')
-                detail = {k: int(v) for k, v in re.findall(r'(\w+)=(\d+)', owned_rows[0])}
+                pairs = re.findall(r'(\w+)=(\d+)', owned_rows[0])
+                detail = {k: int(v) for k, v in pairs}
+                require(len(pairs) == len(detail) and set(detail) == {
+                            'linux_target_unlocks', 'self_calls', 'self_slow',
+                            'self_wait', 'missed'}, 'incomplete owned profiler receipt')
                 observed['owned'] = detail
                 require(observed['native_calls'] == observed['native_slow'] ==
                         detail['linux_target_unlocks'] == detail['missed'] == 0,

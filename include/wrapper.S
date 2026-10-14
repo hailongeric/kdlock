@@ -89,7 +89,11 @@ clobber_body:
 	cmp QWORD PTR[rdx + 72], KD_GENERATED_ENTRY_ABI
 	jne clobber_invalid
 	mov rax, QWORD PTR[rdx + 80]
+#if KD_GENERATED_ENTRY_ABI == 4
+	cmp DWORD PTR[rax], 3
+#else
 	cmp DWORD PTR[rax], 1
+#endif
 	jne clobber_invalid
 	/* Same JIT scratch offsets, without a thread GPR import or group save. */
 	push rbp
@@ -114,8 +118,14 @@ clobber_body:
 	mov Stack_TASK, rax
 #endif
 	mov Stack_JIT_WITNESS, 0
+#if KD_GENERATED_ENTRY_ABI == 4
+	/* Callee values R12-R15 already reside in their authoritative packet
+	 * slots. Only logical RBX is CPU-resident; RAX is the borrowed cookie. */
+	mov rbx, PT_RBX
+	xor eax, eax
+#endif
 	/* The fixed directory is usable only by a matching generated image. */
-#if KD_GENERATED_ENTRY_ABI != 1 && KD_GENERATED_ENTRY_ABI != 2 && KD_GENERATED_ENTRY_ABI != 3
+#if KD_GENERATED_ENTRY_ABI != 1 && KD_GENERATED_ENTRY_ABI != 2 && KD_GENERATED_ENTRY_ABI != 3 && KD_GENERATED_ENTRY_ABI != 4
 	ud2
 #endif
 generated_body:
@@ -157,6 +167,10 @@ exit:
 	jne full_exit
 	cmp RDI, QWORD PTR[R15 + 32]
 	jne full_exit
+#if KD_GENERATED_ENTRY_ABI == 4
+	/* A generic CALL exit has not proved a static terminal fallthrough. */
+	jmp full_exit
+#endif
 	/* Prove the exact post-CALL boundary before granting minimal completion. */
 	lea R14, [R13 + 8]
 	cmp RSI, R14
@@ -165,6 +179,25 @@ exit:
 	jne clobber_bad_metadata
 	cmp RDX, QWORD PTR[R13]
 	jne clobber_bad_metadata
+#if KD_GENERATED_ENTRY_ABI == 4
+	/* Keep ABI4-only completion code out of older generated images. */
+	jmp clobber_complete
+/* ABI4 reaches this only through a verified source terminal CALL. R13 is
+ * its post-CALL SP; RDX is the decoded and checked source fallthrough. No volatile
+ * caller register is presumed captured. Logical R12-R15 are already backed. */
+callee_complete:
+	mov PT_REG, Stack_PT_REG
+	mov PT_RBX, rbx
+	mov PT_RIP, rdx
+	lea rax, [R13 + 8]
+	mov PT_RSP, rax
+	mov PT_RBP, R12
+	mov rax, QWORD PTR[R15 + 80]
+	mov DWORD PTR[rax], 4
+	mov ARG_REG, Stack_ARG_REG
+	mov MEM_ARG, 7
+	jmp clobber_result
+#endif
 clobber_complete:
 	/* A fused terminal CALL reaches here only after the same identity and
 	 * SP/IP/BP proof, with the pre-CALL stack untouched. */

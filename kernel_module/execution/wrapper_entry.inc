@@ -122,6 +122,10 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
 	if (kd_entry_abi_spin_clobber(frame->entry_abi))
 		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
 		       clobber_spin_lock_addr && clobber_spin_unlock_addr;
+	if (frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2)
+		return frame->owned_mutex && directory &&
+		       code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
+		       owned_cabi_lock_addr && owned_cabi_unlock_addr;
 	if (frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
 		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
 		       (frame->owned_mutex ? (owned_direct_lock_addr && owned_direct_unlock_addr) :
@@ -139,7 +143,8 @@ static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 		return false;
 	if (kd_entry_abi_spin_clobber(frame->entry_abi))
 		return !frame->mutex_backend && frame->spin_simple;
-	return frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
+	return kd_entry_abi_mutex_reduced(frame->entry_abi) &&
+	       (frame->entry_abi != KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 || frame->owned_mutex) &&
 	       frame->mutex_backend && frame->jit_lock_depth == 1 &&
 	       frame->outer_lock_index == 0 && !frame->outer_unlock_seen &&
 	       !frame->jit_lock_released[0] && !frame->completion_seen &&
@@ -154,7 +159,8 @@ static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
 	call->args[1] = (unsigned long)frame->logical_task;
 	call->code = (char *)code + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
-	call->unlock = frame->owned_mutex ? owned_direct_unlock_addr :
+	call->unlock = frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ?
+		owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr :
 		frame->mutex_backend ? direct_mutex_unlock_addr :
 					     clobber_spin_unlock_addr;
 	call->entry_sp = call->regs->sp;
@@ -255,8 +261,9 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	if (!frame->mutex_backend || !frame->batch_lease ||
 	    !frame->regs_borrowed || frame->spin_simple ||
 	    frame->parent || frame->depth || frame->request_frame ||
-	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
-	    frame->packet_state != KD_PACKET_MINIMAL || frame->executed ||
+	    !kd_entry_abi_mutex_reduced(frame->entry_abi) ||
+	    (frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 && !frame->owned_mutex) ||
+	    frame->packet_state != kd_entry_packet_state(frame->entry_abi) || frame->executed ||
 	    frame->state != KD_EXEC_FRAME_RUNNING || !frame->outer_lock_addr ||
 	    !frame->gsbase || !frame->logical_task || !regs->sp ||
 	    regs->ip != frame->entry_ip ||
@@ -270,7 +277,7 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	    !kd_jit_image_matches(exe, frame))
 		return false;
 	/* This pristine, exclusively bound root has just passed the complete
-	 * ABI2/ledger predicate above. Fill its final transport directly rather
+	 * reduced-ABI/ledger predicate above. Fill its final transport directly rather
 	 * than selecting the packet/backend and testing that predicate again in
 	 * the general clobber preparer. Complex/FULL dispatch still uses that
 	 * preparer and all completion/physical-owner retirement checks remain. */
@@ -279,9 +286,10 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	call->args[1] = (unsigned long)frame->logical_task;
 	call->code = (char *)READ_ONCE(exe->code_block) + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
-	call->unlock = frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;
+	call->unlock = frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ?
+		owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;
 	call->entry_sp = regs->sp;
-	call->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
 	call->complete = true;
 	if (unlikely(kd_jit_timing)) {
@@ -298,9 +306,9 @@ __always_inline __gnu_inline
 bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
 	const struct kd_exec_frame *frame)
 {
-	if (call->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	if (!kd_entry_abi_mutex_reduced(call->entry_abi) ||
 	    call->args[0] != KD_EXE_CLOBBER_COMPLETE || !call->complete ||
-	    *call->packet_state != KD_PACKET_COMPLETE)
+	    *call->packet_state != kd_complete_packet_state(call->entry_abi))
 		return false;
 	if (unlikely(call->wrapper_start)) {
 		kd_jit_timing_end(KD_JIT_TIME_WRAPPER, call->wrapper_start);

@@ -16,12 +16,13 @@ Linux `pt_regs` is unchanged and must never be cast to `kd_regs`.
 | 1 | Ordinary spin clobber v1 | IP/SP/BP |
 | 2 | Ordinary mutex clobber v1 | IP/SP/BP |
 | 3 | Rwlock writer clobber v1; writer admission before the body | IP/SP/BP |
+| 4 | Owned mutex ordinary C v2 (opt-in) | IP/SP/BP, RBX, R12–R15; synthetic RAX=0 |
 
 A caller-clobber boundary tells the compiler that a call may overwrite registers.
 The compiler saves values needed afterward; the provider does not capture every
-incoming GPR. Direct calls pass the lock in RDI, RSP before the CALL in RSI, the
-resume RIP after the CALL in RDX, and the caller's RBP in RCX. Each named
-continuation belongs to one `noipa` workload function.
+incoming GPR. The ABI1–3 direct clobber calls pass the lock in RDI, RSP before
+the CALL in RSI, the resume RIP after the CALL in RDX, and the caller's RBP in
+RCX. Each named continuation belongs to one `noipa` workload function.
 Registry, daemon, translator, frame and image must agree on backend and ABI.
 ABI3 uses the spin backend and completion endpoint, with the rwlock writer
 prelude and unstarted-retry ownership described in [rwlocks](design/rwlock_implementation.md).
@@ -34,6 +35,8 @@ ABI1 support for ordinary spin does not make old rwlock images interchangeable.
 | MINIMAL | IP/SP/BP and declared metadata | Entry, before arbitrary incoming GPRs are captured |
 | COMPLETE | Validated IP/SP/BP | Ordinary body finished at its exact terminal unlock |
 | FULL | Current logical GPR packet | Materialized before intermediate C/control/native recovery |
+| CALLEE_ENTRY | IP/SP/BP, RBX, R12–R15 and synthetic RAX=0 | ABI4 entry after the ordinary C helper has returned |
+| CALLEE_COMPLETE | Updated IP/SP/BP, RBX, R12–R15 | ABI4 body finished at its exact terminal unlock |
 
 A slot may contain bytes written by generated code without being valid captured
 input. While a packet is MINIMAL, C cannot treat those slots as a complete entry
@@ -57,6 +60,52 @@ Nested translated operations keep `KD_MUTEX_DIRECT_LOCK/UNLOCK`. Retained kernel
 bridge aliases use generic FULL control handling. Special interruptible/killable/IO,
 trylock and explicit nested APIs keep their original contracts. See
 [mutex routing](design/locking.md#mutex-outer-direct).
+
+### Owned mutex ordinary C entry
+
+`KD_OWNED_MUTEX_CABI=1` selects internal ABI4 for the owned outer pair. It does
+not change the 32-byte lock, the two-word wrapper input, or the device record.
+Both outer boundaries obey the ordinary x86-64 C register contract. A leaf
+assembly owner CAS returns the physical task cookie without saving nonvolatile
+registers. On contention, Linux-style optimistic SELF acquisition runs before
+KD heat, eligibility, references or capture. Its OSQ/owner loop has no fixed poll
+budget; owner progress and scheduling decide when it stops. Fast and optimistic
+successes do not update the ABI2 admission counters. After optimism fails, the
+helper performs the required scheduler yield and a final acquisition retry.
+Only a remaining failure can request capture of the original caller's
+nonvolatile registers and actual post-CALL IP/SP. No OSQ, preemption, waiter,
+packet or task-reference lease crosses that C return. Capture checks exact
+delegation eligibility before resources; refusal commits to SELF waiting.
+
+The caller emits an explicit nine-byte `TEST RAX,RAX; JNZ` stub at that IP.
+A physical SELF cookie skips the supplied continuation text; synthetic RAX=0
+enters it. `KD_OWNED_MUTEX_PREPARE_IP(label)` identifies the exact hardware
+return PC before this fixed stub. Preparation checks the encoded stub and
+branch shape. This is a versioned call sequence, not inferred compiler layout.
+Other caller-saved registers and flags are undefined on entry; translation
+must prove they are defined before use.
+
+The unlock leaf checks that a nonzero cookie equals `current` before attempting
+the exact, unflagged owner-to-zero CAS. Success needs no stack frame or saved
+nonvolatile registers. A zero cookie, invalid cookie or failed CAS tail-calls
+the C fallback with the original arguments and return address. That fallback
+retains cookie validation, owner flags and borrowed FULL unlock ACK routing;
+neither route calls Linux's mutex API.
+
+ABI4 completion does not use ABI2's RSI/RDX/RCX metadata. The translator checks
+the decoded terminal unlock CALL, its target, zero borrowed cookie, source
+fallthrough and virtual return word. It exports post-CALL SP and the **updated** nonvolatile registers
+before using them as scratch. Restoring the entry values would lose legitimate
+critical-section updates. CALLEE_ENTRY and CALLEE_COMPLETE are separate validity
+states; neither may be consumed as a FULL packet. Intermediate controls still
+materialize FULL state and retain the existing owner acknowledgments.
+The wrapper compiles the `callee_complete` body and its preceding skip branch
+only when `KD_GENERATED_ENTRY_ABI == 4`. Older generated ABIs retain their
+existing fallthrough to `clobber_complete`; they contain no ABI4 completion body.
+
+ABI2 remains the default. ABI4 preparation, caller, provider and generated image
+must be replaced together; source identity includes both owned lock kind and
+entry ABI. ABI4 is not a new guest-kernel hook or an ABI for Linux mutex objects.
 
 ## Private packet layout
 

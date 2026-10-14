@@ -449,6 +449,7 @@ def instruction_rejection(
                 if name in {"kd_mutex_outer_contended_clobber_v1",
                             "kd_owned_mutex_outer_contended_clobber_v1",
                             "kd_owned_mutex_outer_prepared_clobber_v1",
+                            "kd_owned_mutex_outer_lock_cabi_v2",
                             "kd_owned_mutex_outer_preflight_v1"}:
                     return "outer-only mutex entry requires native execution", name
                 if kind != lock_kind:

@@ -194,22 +194,54 @@ def main():
     for marker in ("int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame)",
                    "struct kd_exec_frame *kd_exec_frame_push_mutex_root(",
                    "struct kd_exec_frame *kd_exec_frame_push_mutex_batch(",
+                   "struct kd_exec_frame *kd_exec_frame_push_owned_mutex_batch(",
                    "int kd_exec_frame_retire_mutex_root(struct kd_exec_frame *frame,",
-                   "int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,"):
+                   "int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,",
+                   "int kd_exec_frame_retire_owned_mutex_batch(struct kd_exec_frame *frame,"):
         extra += definition(source, marker) + "\n"
     extra += "\n#undef this_cpu_ptr\n#define this_cpu_ptr(p) (p)\n"
     extra += read_source(ROOT / "kernel_module/spin/request.inc")
     extra += "\n#undef this_cpu_ptr\n#define this_cpu_ptr(p) (&(*(p))[cpu])\n"
+    constructor_mutations = {
+        "owned-constructor-forces-abi2": (
+            "frame->entry_abi = entry_abi;",
+            "frame->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;",
+        ),
+        "owned-constructor-wrong-entry-state": (
+            "frame->packet_state = kd_entry_packet_state(entry_abi);",
+            "frame->packet_state = KD_PACKET_MINIMAL;",
+        ),
+        "owned-constructor-admits-invalid-abi": (
+            "!kd_entry_abi_mutex_reduced(entry_abi) ||",
+            "false ||",
+        ),
+        "legacy-constructor-allows-abi4": (
+            "(entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 && !owned) ||",
+            "false ||",
+        ),
+        "owned-constructor-ignores-owner": (
+            "if (!lock || !kd_owned_mutex_owned(lock, current))\n\t\treturn NULL;",
+            "if (!lock)\n\t\treturn NULL;",
+        ),
+    }
+    variants = [("production", None, False)]
+    variants += [(name, mutation, False) for name, mutation in mutations.items()]
+    variants += [(name, mutation, True) for name, mutation in constructor_mutations.items()]
     with tempfile.TemporaryDirectory(prefix="kdlock-exec-capacity-unit-") as tmp:
         path = Path(tmp)
         (path / "frame_types.h").write_text(types)
-        for name, mutation in [("production", None), *mutations.items()]:
+        for name, mutation, constructor in variants:
             candidate = code
+            candidate_extra = extra
             if mutation:
                 before, after = mutation
-                assert code.count(before) == 1, (name, code.count(before))
-                candidate = code.replace(before, after)
-            (path / "frame_code.h").write_text(candidate + extra)
+                target = extra if constructor else code
+                assert target.count(before) == 1, (name, target.count(before))
+                if constructor:
+                    candidate_extra = extra.replace(before, after)
+                else:
+                    candidate = code.replace(before, after)
+            (path / "frame_code.h").write_text(candidate + candidate_extra)
             binary = path / name
             subprocess.run(
                 shlex.split(os.environ.get("CC", "cc"))

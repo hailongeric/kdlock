@@ -190,7 +190,8 @@ bool kd_exec_context_occupied(void);
 
 /* The mutex combiner owns one enclosing source lease. A root still carries
  * its exact physical-owner ledger for FULL/native recovery; refusal publishes
- * no frame. Retirement is only for the first, terminal ABI2 wrapper return. */
+ * no frame. Retirement is only for the first terminal reduced-ABI wrapper return.
+ * Owned roots accept ABI2/ABI4; legacy roots retain constant ABI2 construction. */
 struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex_legacy_gate *lock,
@@ -198,7 +199,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 struct kd_exec_frame *kd_exec_frame_push_owned_mutex_batch(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
-	struct kd_exec_outer_unlock *hook);
+	struct kd_exec_outer_unlock *hook, unsigned int entry_abi);
 int kd_exec_frame_retire_owned_mutex_batch(struct kd_exec_frame *frame,
 					 struct kd_mutex *lock);
 

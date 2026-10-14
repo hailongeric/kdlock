@@ -13,7 +13,7 @@ import statistics
 
 import run
 from bench_runtime import FAULT, digest, require, validate_measurement
-from session import check_jit_evidence, check_kd_parameters
+from session import check_jit_evidence, check_kd_parameters, check_owned_caller_policy
 from summarize import valid, write_json
 
 PRIMARY = (1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 28)
@@ -26,7 +26,11 @@ OWNED_IDENTITY = dict(registry_lock_kind=3, entry_abi=2, caller_abi='clobber',
 
 
 def require_owned_identity(record):
-    require(all(record.get(key) == value for key, value in OWNED_IDENTITY.items()),
+    cabi = check_owned_caller_policy(record)
+    identity = dict(OWNED_IDENTITY)
+    if cabi:
+        identity.update(entry_abi=4, caller_abi='c', caller_shell='owned_mutex_outer_cabi')
+    require(all(record.get(key) == value for key, value in identity.items()),
             'owned mutex family/caller/queue identity differs')
     require(record.get('owned_queue_policy') ==
             ('bounded_fifo_refill' if record.get('owned_mutex_refill', False) else 'finite_fifo'),
@@ -35,10 +39,11 @@ def require_owned_identity(record):
     budget = record.get('owned_mutex_preflight_spins')
     enabled = record.get('owned_mutex_preflight')
     require('owned_mutex_preflight' not in record or (type(enabled) is bool and
-            policy == ('c_abi_v1' if enabled else 'capture_first')),
+            policy == ('not_applicable' if cabi else 'c_abi_v1' if enabled else 'capture_first')),
             'owned preflight compile-time identity differs')
     require((policy is None and budget is None) or
             (policy == 'capture_first' and enabled is False and type(budget) is int and budget == 0) or
+            (cabi and policy == 'not_applicable' and enabled is False and type(budget) is int and budget == 0) or
             (policy == 'c_abi_v1' and type(budget) is int and
              budget in run.OWNED_MUTEX_PREFLIGHT_SPINS),
             'owned preflight policy identity differs')
@@ -61,7 +66,7 @@ def require_owned_evidence(record, folder):
             layout.get('lock_addr', -1) % 64 == layout.get('data_addr', -1) % 64 == 0,
             'owned mutex layout differs')
     entry = record['published_before']['entry']
-    require(entry.get('lock_kind') == 3 and entry.get('entry_abi') == 2 and
+    require(entry.get('lock_kind') == 3 and entry.get('entry_abi') == record['entry_abi'] and
             entry.get('pid') == entry.get('status') == 0 and entry.get('code', 0) > 0,
             'owned publication has the wrong family/ABI or is not NORMAL')
     check_kd_parameters(record['parameters'], record, layout['lock_addr'])
@@ -209,6 +214,10 @@ def evaluate(baseline, candidate):
                   for r in candidate if r['arm'] == 'kdlock'}
     require(len(preflights) == 1, 'one preflight policy and budget per candidate')
     preflight_policy, preflight_spins, preflight_queue, preflight_enabled = next(iter(preflights))
+    callers = {tuple(r.get(key) for key in run.OWNED_CALLER_FIELDS)
+               for r in candidate if r['arm'] == 'kdlock'}
+    require(len(callers) == 1, 'one owned caller/native-first/release policy per candidate')
+    caller_policy = dict(zip(run.OWNED_CALLER_FIELDS, next(iter(callers))))
     threshold_field = ('owned_mutex_entry_ratio_limit' if implementation == 'owned-v1' else
                        'mutex_entry_ratio_limit')
     limits = {r.get(threshold_field) for r in candidate if r['arm'] == 'kdlock'}
@@ -240,6 +249,7 @@ def evaluate(baseline, candidate):
                 owned_mutex_preflight=preflight_enabled,
                 owned_mutex_preflight_spins=preflight_spins,
                 owned_mutex_preflight_queue=preflight_queue,
+                **caller_policy,
                 threshold_field=threshold_field, threshold=next(iter(limits)),
                 verdict=verdict, missing=missing, checks=checks)
 
@@ -279,6 +289,8 @@ def main():
                   t['owned_mutex_preflight_queue'], t['owned_mutex_preflight'])
                  for t in trials}) == 1,
             'screen each preflight policy separately before choosing a threshold')
+    require(len({tuple(t[key] for key in run.OWNED_CALLER_FIELDS) for t in trials}) == 1,
+            'screen each owned caller/native-first/release policy separately')
     passing = sorted(t['threshold'] for t in trials if t['verdict'] == 'PASS')
     confirmation = []
     selected = None
@@ -307,6 +319,10 @@ def main():
                      trials[0]['owned_mutex_preflight_queue'], trials[0]['owned_mutex_preflight'])
                     for c in confirmation),
                 'confirmation preflight policy differs from selected screen')
+        require(all(tuple(c[key] for key in run.OWNED_CALLER_FIELDS) ==
+                    tuple(trials[0][key] for key in run.OWNED_CALLER_FIELDS)
+                    for c in confirmation),
+                'confirmation owned caller/native-first/release policy differs')
         if all(c['verdict'] == 'PASS' and c['threshold'] == min(passing) for c in confirmation):
             selected = min(passing)
     write_json(args.output, dict(post_work_rounds=64,

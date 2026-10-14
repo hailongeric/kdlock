@@ -63,7 +63,8 @@ has no `mutex_jit` parameter.
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
 | `--mutex-spin-limit 4096` | KD mutex result polling budget before uninterruptible sleep; 0 skips polling. For owned-v1 this does not limit SELF owner spinning through OSQ |
 | `--mutex-implementation legacy` | `owned-v1` opts into the separate KD-owned c01 object; nested/early require functional mode |
-| `--owned-mutex-entry-ratio-limit 256` | Independent admission threshold for `owned-v1`; powers of two 2–256 |
+| `--owned-mutex-entry-ratio-limit 256` | Independent ABI2 admission threshold for `owned-v1`; powers of two 2–256. ABI4 local-first does not use heat admission |
+| `--owned-mutex-cabi` | Opt-in ABI4 ordinary-C caller; Linux local acquisition before late capture, with no fixed owner-spin budget |
 | `--owned-mutex-refill` | Opt-in FIFO refilling within the same total batch cap; default is one finite snapshot |
 | `--owned-mutex-preflight` | Compile the experimental owned C gate; default false retains capture-first entry |
 | `--owned-mutex-preflight-spins` | Opt-in gate budget: 0 (default), 64, 256, 1024 or 4096 polling steps; positive values require the gate flag |
@@ -117,7 +118,7 @@ policy. Static snapshots check complete structure and exact operation totals.
 for the KD arm. The default `legacy` implementation and Native/TCLock arms keep
 their existing objects and interfaces. The owned object is exactly 32 bytes and
 occupies the same 64-byte-aligned lock slot as Native. Its caller uses the owned
-outer-cookie interface and ABI2, with a distinct registry lock kind 3; it never
+outer-cookie interface with default ABI2 or opt-in ABI4, and distinct registry lock kind 3; it never
 casts the object to a Linux mutex. The initial owned performance workload supports
 plain c01; nested/early are available only as KD-only functional checks. RCUHT,
 other body sizes and replacement of kernel-owned pipe/file mutexes are rejected.
@@ -286,7 +287,7 @@ change admission and scheduling; do not use these rates for acceptance. The
 runner requires zero missed probes and unloads the profiler after worker drain,
 before retiring the source/provider whose storage it observes.
 For owned-v1 it probes the owned admission and batch functions, records
-`lock_profile.owned.self_calls` and `self_slow`, and still watches the Linux
+`lock_profile.owned.self_calls`, `self_slow` and `self_wait`, and still watches the Linux
 mutex entry/slowpath/unlock functions at the target address. All three Linux
 target counts and both missed-probe totals must be zero. SELF call counts cover
 the out-of-line refusal path; successful outer inline acquisitions bypass that
@@ -342,3 +343,76 @@ capture does not eliminate the enclosing function's compiler callee-save spills.
 The [c01 protocol study](../results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md)
 records the measured gains and remaining gaps. No preflight policy passed its
 complete performance acceptance; these controls remain opt-in.
+
+## Owned Linux-local-first study
+
+`--mutex-implementation owned-v1 --owned-mutex-cabi` selects internal ABI4 with
+ordinary C register preservation. Its owner-word leaf CAS and private Linux
+OSQ path execute locally before KD admission, task/registry work or capture.
+The optimistic loop has no fixed poll budget; scheduling and owner state decide
+when it stops. Only failure after the required scheduler yield and final exact
+retry permits late capture. ABI4 does not update ABI2's heat/entry-ratio history.
+Source or resource refusal then commits to SELF waiting without another initial
+optimistic pass. No owned target is passed to a Linux mutex API.
+
+The 32-byte object geometry and outer acquisition cookie are unchanged. A
+nonzero return identifies physical ownership; a zero delegated cookie retains
+the FULL owner-ACK path. Both owned caller ABIs now use guarded owner release:
+SELF-only release can clear ownership before acquiring `wait_lock`, while a
+published or detached DELEGATE retains the guard until its queue is drained.
+ABI2 remains the default caller, and the benchmark's implementation default
+remains `legacy`. ABI4 is incompatible with the ABI2 preflight switches.
+
+`--owned-mutex-reuse-spins 0` preserves Linux retry timing. Experimental values
+8, 32 and 128 permit one short grace after an unflagged release per OSQ turn,
+to test whether the releasing owner can reuse the protected cacheline. First
+waiters and flagged releases bypass it; rescheduling interrupts it. The read-only
+provider value is recorded and checked for every sample. Positive values require
+ABI4 in this runner, and different values must not be pooled.
+
+Records distinguish `owned_acquire_policy=linux_local_first` from ABI2
+`capture_admission`, and record `owned_release_policy=guarded_owner_release`.
+The provider must report `owned_mutex_protocol=linux_local_first_v1`; the old
+native-first budget and optional early-release parameters are absent. Existing
+caller ABI, preparation, ELF imports and source checks still apply.
+`--profile-lock` automatically adds the ABI4 `local_first` diagnostic probe and
+stores a separate `owned_local_first_profile` record. Its acquired/failed counts
+come from the fused gate's full-width acquisition cookie, and missed returns must be zero. These
+instrumented sessions remain excluded from scores.
+
+The separate [local study auditor](mutex_local_study.py) covers c01 with the
+frozen 64-round post-work header and **1–8 workers only**. Use
+`--mutex-acceptance adaptive-performance`, 48,000 warmup operations per worker,
+two-second measurement and the existing 300 ms warmed-peak rules. Each candidate
+gets three rounds in alternating backend order, paired with fresh Native runs.
+A selected candidate needs two additional fresh three-round blocks with the
+same source and policy; each block must independently reach 97% of Native for
+both median whole-run throughput and best valid warmed peak at every count.
+Retain all samples, worker progress/shares, CPU cost, correctness and drain.
+KD_SELF and returned JIT remain distinct classifications; this scoped study has
+no minimum JIT share or higher-thread gate. It makes no claim above eight workers
+or for other mutex workloads. Implementation and a passing screen alone do not
+establish accepted parity.
+
+The [2026-10-14 study](../results/10.176.26.71/bench/mutex_owned/20261014-linux-local/README.md)
+passes the full screen and both confirmations with ABI4 and reuse bound 32.
+Reproduce the accepted profile in the verified recovery guest with a new output:
+
+```sh
+python3 bench/tclock_compare/run_mutex.py \
+  --mutex-implementation owned-v1 --owned-mutex-cabi --owned-mutex-reuse-spins 32 \
+  --mutex-acceptance adaptive-performance --kd-provider-ubsan off \
+  --cachelines 1 --threads 1 2 3 4 5 6 7 8 --duration-ms 2000 \
+  --collector-cpu 63 --backends native kdlock --repeats 3 --output NEW_OUTPUT
+```
+
+Audit frozen run directories without executing workloads:
+
+```sh
+python3 bench/tclock_compare/mutex_local_study.py --raw RAWROOT \
+  --baseline REL_BASELINE --screen REL_SCREEN \
+  --confirmations REL_BLOCK1 REL_BLOCK2 --out REPORTDIR
+```
+
+Paths for each block are relative to `RAWROOT`. Omit screen/confirmation options
+for a baseline-only receipt; it cannot report accepted parity.

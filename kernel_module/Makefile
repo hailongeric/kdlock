@@ -5,6 +5,7 @@
 obj-m += kdlock_km.o
 
 ccflags-y += -I$(src)/../include
+asflags-y += -I$(src)/../include
 
 # Private-state kernel regressions are absent from normal builds.
 ifeq ($(KDLOCK_SELFTEST),1)
@@ -29,7 +30,8 @@ kdlock_km-objs := \
 	kd_spin_entry.o \
 	kd_mutex_tasks.o \
 	owned_mutex/core.o \
-	owned_mutex/osq.o
+	owned_mutex/osq.o \
+	owned_mutex/entry.o
 
 OBJECT_FILES_NON_STANDARD_kd_spin_runtime.o := y
 

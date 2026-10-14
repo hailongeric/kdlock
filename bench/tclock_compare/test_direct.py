@@ -12,12 +12,137 @@ import unittest
 
 import run
 from session import (BackendSession, hash_layout, tc_quiescent, check_jit_evidence,
-                     check_kd_parameters, parse_owned_preflight_profile)
+                     check_kd_parameters, parse_owned_preflight_profile,
+                     parse_owned_local_first_profile)
 from bench_session import Session
 from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_owned_local_first_profile_is_distinct_and_strict(self):
+        args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['native', 'kdlock'], lock_kind='mutex', mutex_implementation='owned-v1',
+                    owned_mutex_cabi=True, profile_lock=True)
+        native, record = run.make_plan(Namespace(**args))
+        self.assertFalse(native['profile_owned_local_first'])
+        self.assertTrue(record['profile_owned_local_first'])
+        self.assertFalse(record['profile_owned_preflight'])
+        receipt = 'kd_mutex_profile ownedlocalfirst: acquired=7 failed=2 missed=0\n'
+        expected = dict(acquired=7, failed=2, missed=0)
+        self.assertEqual(parse_owned_local_first_profile(receipt, record), expected)
+        self.assertIsNone(parse_owned_local_first_profile('', native))
+        for log in ('', receipt+receipt, receipt.replace('failed=2', 'extra=1'),
+                    receipt.replace('missed=0', 'missed=1'),
+                    receipt.replace('failed=2', 'failed=-1'),
+                    receipt.replace('failed=2', 'acquired=3'), receipt.rstrip()+' extra=1\n'):
+            with self.subTest(log=log), self.assertRaises(run.Failure):
+                parse_owned_local_first_profile(log, record)
+        for changes in (dict(profile_owned_local_first=False), dict(diagnostic=False),
+                        dict(owned_acquire_policy='capture_admission'), dict(owned_mutex_cabi=False),
+                        dict(profile_owned_preflight=True)):
+            with self.subTest(changes=changes), self.assertRaises(run.Failure):
+                parse_owned_local_first_profile(receipt, dict(record, **changes))
+
+    def test_owned_cabi_stage_controls_preserve_default_and_reject_invalid_combinations(self):
+        args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
+                    backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
+                    mutex_implementation='owned-v1')
+        default = run.make_plan(Namespace(**args))[-1]
+        self.assertEqual((default['entry_abi'], default['owned_caller_policy']), (2, 'clobber_v1'))
+        self.assertEqual(default['owned_acquire_policy'], 'capture_admission')
+        self.assertEqual(default['owned_release_policy'], 'guarded_owner_release')
+        rows = run.make_plan(Namespace(**args, owned_mutex_cabi=True))
+        row = rows[-1]
+        self.assertEqual(row['entry_abi'], 4)
+        self.assertEqual(row['owned_acquire_policy'], 'linux_local_first')
+        self.assertEqual(row['owned_release_policy'], 'guarded_owner_release')
+        self.assertNotEqual(row['name'], default['name'])
+        for control in rows[:-1]:
+            self.assertFalse(control['owned_mutex_cabi'])
+            self.assertEqual(control['owned_acquire_policy'], 'not_applicable')
+            self.assertEqual(control['owned_release_policy'], 'not_applicable')
+            self.assertIsNone(control['owned_entry_abi'])
+        for changes in (dict(owned_mutex_cabi=1),
+                        dict(owned_mutex_cabi=True, owned_mutex_preflight=True),
+                        dict(owned_mutex_cabi=True, mutex_implementation='legacy')):
+            with self.subTest(changes=changes), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(args, **changes)))
+
+    def test_owned_reuse_grace_identity_and_scope(self):
+        args = dict(cachelines=[1], threads=[3], repeats=1, iterations=100,
+                    backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1',
+                    owned_mutex_cabi=True)
+        names = set()
+        for spins in (0, 8, 32, 128):
+            row, = run.make_plan(Namespace(**args, owned_mutex_reuse_spins=spins))
+            self.assertEqual(row['owned_mutex_reuse_spins'], spins)
+            self.assertNotIn(row['name'], names)
+            names.add(row['name'])
+        for change in (dict(owned_mutex_reuse_spins=True), dict(owned_mutex_reuse_spins=64),
+                       dict(owned_mutex_reuse_spins=8, owned_mutex_cabi=False)):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(args, **change)))
+
+    def test_owned_cabi_import_audit_excludes_other_outer_paths(self):
+        common = {'kd_owned_mutex_prepare', 'kd_mutex_init', 'kd_owned_mutex_is_idle'}
+        abi4 = common | {'kd_owned_mutex_outer_lock_cabi_v2', 'kd_owned_mutex_outer_unlock_cabi_v2'}
+        abi2 = common | {'kd_owned_mutex_outer_contended_clobber_v1',
+                         'kd_owned_mutex_outer_unlock_v1', 'kd_owned_mutex_direct_unlock_clobber_v1'}
+        run.owned_workload_imports(' '.join(abi4), cabi=True)
+        run.owned_workload_imports(' '.join(abi2))
+        for wrong in ('mutex_lock', 'mutex_unlock', 'kd_owned_mutex_outer_preflight_v1',
+                      'kd_owned_mutex_outer_contended_clobber_v1', 'kd_owned_mutex_outer_unlock_v1'):
+            with self.subTest(wrong=wrong), self.assertRaises(run.Failure):
+                run.owned_workload_imports(' '.join(abi4 | {wrong}), cabi=True)
+        for missing in abi4:
+            with self.subTest(missing=missing), self.assertRaises(run.Failure):
+                run.owned_workload_imports(' '.join(abi4 - {missing}), cabi=True)
+        with self.assertRaises(run.Failure):
+            run.owned_workload_imports(' '.join(abi4))
+        with self.assertRaises(run.Failure):
+            run.owned_workload_imports(' '.join(abi4), cabi=True, preflight=True)
+
+    def test_owned_cabi_provider_load_and_readback_are_exact(self):
+        record, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['kdlock'], lock_kind='mutex',
+            mutex_implementation='owned-v1', owned_mutex_cabi=True))
+        session = BackendSession.__new__(BackendSession)
+        session.record = record
+        captured = []
+        def command(args, log):
+            if log == 'load-kdlock.log':
+                captured.extend(args)
+                raise RuntimeError('captured')
+        session.run = command
+        with self.assertRaisesRegex(RuntimeError, 'captured'):
+            session.prepare()
+        self.assertFalse(any(str(arg).startswith(('owned_mutex_native_first=',
+                         'owned_mutex_native_first_spins=', 'owned_mutex_early_release='))
+                         for arg in captured))
+        params = dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
+            spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y',
+            mutex_native_route='N', owned_mutex_spin_limit='4096',
+            owned_mutex_entry_ratio_limit='256', owned_mutex_self_route='N',
+            owned_mutex_native_after_control='0', owned_mutex_refill='N',
+            owned_mutex_preflight_spins='0', owned_mutex_preflight_queue='N',
+            owned_mutex_reuse_spins='0', owned_mutex_protocol='linux_local_first_v1')
+        check_kd_parameters(params, record, 4096)
+        for value in ('', 'old_protocol'):
+            with self.subTest(value=value), self.assertRaises(run.Failure):
+                check_kd_parameters(dict(params, owned_mutex_protocol=value), record, 4096)
+        missing = dict(params); del missing['owned_mutex_protocol']
+        with self.assertRaises(run.Failure):
+            check_kd_parameters(missing, record, 4096)
+        for key in ('owned_mutex_native_first', 'owned_mutex_native_first_spins',
+                    'owned_mutex_early_release'):
+            with self.subTest(key=key), self.assertRaises(run.Failure):
+                check_kd_parameters(dict(params, **{key: '0'}), record, 4096)
+        for changes in (dict(entry_abi=2), dict(owned_entry_abi=2),
+                        dict(owned_caller_policy='clobber_v1'), dict(caller_abi='clobber'),
+                        dict(owned_mutex_cabi=False), dict(owned_mutex_preflight=True)):
+            with self.subTest(changes=changes), self.assertRaises(run.Failure):
+                check_kd_parameters(params, dict(record, **changes), 4096)
+
     def test_owned_mutex_plan_preserves_controls_and_distinct_identity(self):
         args = Namespace(cachelines=[1], threads=[4], repeats=3, iterations=100,
                          backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',

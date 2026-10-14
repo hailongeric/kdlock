@@ -44,10 +44,10 @@ def main():
         ),
         "combine-ordinary-under-outer": (
             "if (!kd_owned_mutex_unlock_borrowed(lock, owner))\n"
-            "\t\tkd_owned_mutex_release_common(lock, false);",
+            "\t\tkd_owned_mutex_release_noncombining(lock);",
             "if (!kd_owned_mutex_unlock_borrowed(lock, owner) &&\n"
             "\t    !kd_owned_mutex_combine(lock))\n"
-            "\t\tkd_owned_mutex_release_common(lock, false);",
+            "\t\tkd_owned_mutex_release_noncombining(lock);",
         ),
         "retain-granted-delegate": (
             "if (delegated) {\n\t\t\tlist_del_init(&waiter->list);",
@@ -84,6 +84,32 @@ def main():
             "if (atomic_long_try_cmpxchg_release(&lock->owner, &owner, next))",
             "if (grant) smp_store_release(outcome, KD_OWNED_MUTEX_GRANTED);\n"
             "\t\tif (atomic_long_try_cmpxchg_release(&lock->owner, &owner, next))",
+        ),
+        "omit-delegation-guard": (
+            "atomic_long_or(guard, &lock->owner);",
+            "atomic_long_or(KD_OWNED_MUTEX_FLAG_WAITERS, &lock->owner);",
+        ),
+        "lose-sticky-guard-on-handoff": (
+            "KD_OWNED_MUTEX_FLAG_WAITERS | (owner & KD_OWNED_MUTEX_FLAG_DELEGATION);",
+            "KD_OWNED_MUTEX_FLAG_WAITERS;",
+        ),
+        "release-through-delegation-guard": (
+            "if (owner & (KD_OWNED_MUTEX_FLAG_HANDOFF | KD_OWNED_MUTEX_FLAG_DELEGATION))",
+            "if (owner & KD_OWNED_MUTEX_FLAG_HANDOFF)",
+        ),
+        "retain-owner-before-queue-lock": (
+            "owner & KD_OWNED_MUTEX_FLAG_WAITERS)) {",
+            "owner)) {",
+        ),
+        "old-releaser-handoffs-new-owner": (
+            "/* A newer owner may already be executing, publishing delegates or asking",
+            "kd_owned_mutex_release_common(lock, false);\n\treturn;\n"
+            "\t/* A newer owner may already be executing, publishing delegates or asking",
+        ),
+        "repeat-local-first-optimism": (
+            "void kd_owned_mutex_lock_self_wait(struct kd_mutex *lock)\n{\n\tmight_sleep();",
+            "void kd_owned_mutex_lock_self_wait(struct kd_mutex *lock)\n{\n"
+            "\tkd_owned_mutex_lock_slow(lock);\n\treturn;\n\tmight_sleep();",
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kd-owned-mutex-core-") as directory:

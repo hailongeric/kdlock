@@ -59,6 +59,7 @@ static unsigned long owned_direct_lock_addr = 0x510, owned_direct_unlock_addr = 
 static unsigned long owned_contended_lock_addr = 0x530;
 static unsigned long owned_outer_lock_addr = 0x520;
 static unsigned long owned_prepared_lock_addr = 0x528;
+static unsigned long owned_cabi_lock_addr = 0x538, owned_cabi_unlock_addr = 0x630;
 static struct mutex a, b;
 static struct task_struct native_peer = { .pid = 13 }, *nested_owner;
 static bool track_nested_owner;
@@ -932,7 +933,7 @@ static void check_mutex_call_pair(void)
 		/* The return-valued outer entry cannot be consumed as a nested void
 		 * acquisition: retain the packet and ownership for generic refusal. */
 		unsigned long outer_only[] = { outer_mutex_lock_addr, owned_outer_lock_addr,
-			owned_prepared_lock_addr };
+			owned_prepared_lock_addr, owned_cabi_lock_addr };
 		for (unsigned int entry = 0; entry < sizeof(outer_only)/sizeof(outer_only[0]); entry++) {
 			f.regs.ip = outer_only[entry];
 			expected = f.regs;
@@ -946,6 +947,29 @@ static void check_mutex_call_pair(void)
 		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
 		track_nested_owner = false;
 	}
+}
+
+static void check_owned_cabi_cookie(void)
+{
+	struct kd_exec_frame f = frame(true), before;
+	int before_unlock = unlocked;
+
+	CHECK(kd_exec_frame_lock_pop(&f, (unsigned long)&b) == 0);
+	f.owned_mutex = true;
+	f.entry_abi = KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2;
+	f.regs.ip = owned_cabi_unlock_addr;
+	f.regs.di = f.outer_lock_addr;
+	f.regs.si = 0x123;
+	active = &f;
+	before = f;
+	/* A malformed borrowed cookie cannot change the ledger, packet or owner.
+	 * This is the generic FULL path after terminal reduced completion refused. */
+	CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == -EINVAL);
+	CHECK(!memcmp(&f, &before, sizeof(f)) && unlocked == before_unlock);
+	f.regs.si = 0;
+	before = f;
+	CHECK(handle_known_call(&f.regs, f.outer_lock_addr) == KD_EXE_KNOWN_OUTER_UNLOCK);
+	CHECK(!memcmp(&f, &before, sizeof(f)) && unlocked == before_unlock);
 }
 
 int main(void)
@@ -964,6 +988,7 @@ int main(void)
 	check_completed_mutex_native();
 	check_acquired_spin_native();
 	check_mutex_call_pair();
+	check_owned_cabi_cookie();
 	CHECK(kd_exec_invariant_failures == 0);
 	printf("after-outer production functions: %d checks, %d failures\n",
 	       checks, failures);

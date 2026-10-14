@@ -44,7 +44,9 @@ def main():
     module = ROOT/'kernel_module/kdlock_km.ko'
     shutil.copyfile(module, out/module.name)
     runtime.write_json(out/'identity.json', dict(module_sha256=runtime.digest(module),
-        snapshot_tag=os.environ.get('KDLOCK_SNAPSHOT_TAG'), cpu=args.cpu, jit_bodies=0))
+        snapshot_tag=os.environ.get('KDLOCK_SNAPSHOT_TAG'), cpu=args.cpu, jit_bodies=0,
+        owned_mutex_protocol='linux_local_first_v1' if args.owned else 'not_applicable',
+        owned_release_policy='guarded_owner_release' if args.owned else 'not_applicable'))
     results = []
     for limit in (0, 1024, 4096):
         path = out/f'spin-{limit}'
@@ -66,7 +68,14 @@ def main():
         try:
             prefix = 'owned_mutex' if args.owned else 'mutex'
             runtime.command(['insmod', module, f'{prefix}_wait_selftest=1',
-                f'{prefix}_spin_limit={limit}', f'{prefix}_wait_cpu={args.cpu}'], path/'load.log', timeout=30)
+                f'{prefix}_spin_limit={limit}', f'{prefix}_wait_cpu={args.cpu}'],
+                path/'load.log', timeout=30)
+            if args.owned:
+                protocol = Path('/sys/module/kdlock_km/parameters/owned_mutex_protocol').read_text().strip()
+                runtime.require(protocol == 'linux_local_first_v1',
+                                'owned protocol identity differs')
+                runtime.write_json(path/'policy.json', dict(
+                    owned_mutex_protocol=protocol, owned_release_policy='guarded_owner_release'))
             collect()
             if args.owned:
                 runtime.require('kd_owned_mutex wait probe: queued_cooling=1 result_sleep=1 pickup=1 drained=1 jit_bodies=0' in messages,
@@ -80,7 +89,9 @@ def main():
             runtime.idle()
             if args.owned:
                 results.append(dict(spin_limit=limit, result_sleep=True, queued_cooling=True,
-                                    pickup=True, drained=True, jit_bodies=0))
+                                    pickup=True, drained=True, jit_bodies=0,
+                                    owned_mutex_protocol=protocol,
+                                    owned_release_policy='guarded_owner_release'))
             else:
                 results.append(dict(spin_limit=limit, rounds=1024, result_sleep=True,
                 gate_sleep=True, deferred_progress=True, admission_cooling_checks=2,

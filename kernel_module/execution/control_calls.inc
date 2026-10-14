@@ -24,7 +24,7 @@ static bool kd_is_owned_lock_call(unsigned long ip)
 static bool kd_is_owned_unlock_call(unsigned long ip)
 {
 	return ip == owned_mutex_unlock_addr || ip == owned_outer_unlock_addr ||
-		ip == owned_direct_unlock_addr;
+		ip == owned_direct_unlock_addr || ip == owned_cabi_unlock_addr;
 }
 
 static bool kd_is_legacy_mutex_call(unsigned long ip)
@@ -243,6 +243,11 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 	struct kd_mutex_call_stack saved;
 	int ret;
 
+	/* ABI4 synthetic entry defines the borrowed acquisition cookie as zero.
+	 * A bad cookie must not gain permission merely by reaching a known CALL. */
+	if (regs->ip == owned_cabi_unlock_addr && regs->si)
+		return -EINVAL;
+
 	/* Final outer completion does not resume this JIT, so needs no memory
 	 * preservation check. All other local mutex controls use one checkpoint. */
 	if ((regs->ip == mutex_unlock_addr || regs->ip == clobber_mutex_unlock_addr ||
@@ -298,7 +303,7 @@ static int handle_known_call(struct kd_regs *regs,
 	/* The outer-only return-valued entry is not a nested void lock service.
 	 * Admission rejects it; retain the same boundary in generic recovery. */
 	if (regs->ip == outer_mutex_lock_addr || regs->ip == owned_outer_lock_addr ||
-	    regs->ip == owned_prepared_lock_addr)
+	    regs->ip == owned_prepared_lock_addr || regs->ip == owned_cabi_lock_addr)
 		return -EOPNOTSUPP;
 
 	/* Owned and legacy mutex controls are different object types despite

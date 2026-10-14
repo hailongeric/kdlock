@@ -12,6 +12,17 @@ from miasm.expression.expression import ExprId, ExprInt, ExprMem
 from test_jit_body_witness import run_image
 
 SYMBOLS={"kd_raw_spin_lock_clobber_v1":0x3000,"kd_raw_spin_unlock_clobber_v1":0x4000}
+OWNED_SYMBOLS = {
+    name: 0x10000 + index * 0x100
+    for index, name in enumerate((
+        "kd_owned_mutex_lock_v1", "kd_owned_mutex_unlock_v1",
+        "kd_owned_mutex_outer_unlock_v1", "kd_owned_mutex_direct_lock_clobber_v1",
+        "kd_owned_mutex_direct_contended_clobber_v1", "kd_owned_mutex_outer_contended_clobber_v1",
+        "kd_owned_mutex_outer_prepared_clobber_v1", "kd_owned_mutex_outer_preflight_v1",
+        "kd_owned_mutex_direct_unlock_clobber_v1", "kd_owned_mutex_outer_lock_cabi_v2",
+        "kd_owned_mutex_outer_unlock_cabi_v2",
+    ))
+}
 
 class ClobberEntryTests(unittest.TestCase):
     def generate(self, code):
@@ -21,6 +32,52 @@ class ClobberEntryTests(unittest.TestCase):
         assembly, _, status=self.generate('488b45f848890424c3')
         self.assertEqual(status,0)
         self.assertTrue(assembly)
+
+    def test_owned_cabi_only_seeds_its_eight_words_and_cookie(self):
+        # STORE each input to make its definition observable. ABI4 imports
+        # RBX/R12-R15 and synthetic RAX, but not any other volatile GPR.
+        for instruction, expected in (
+            ('48890424', 0), ('48891c24', 0), ('4c892424', 0),
+            ('4c892c24', 0), ('4c893424', 0), ('4c893c24', 0),
+            ('48890c24', 2), ('48891424', 2), ('48893424', 2),
+            ('48893c24', 2), ('4c890424', 2), ('4c890c24', 2),
+            ('4c891424', 2), ('4c891c24', 2),
+        ):
+            with self.subTest(instruction=instruction):
+                _, log, status = render(instruction + 'c3', abi=4,
+                    lock_kind='mutex-owned', kernel_symbols=OWNED_SYMBOLS,
+                    return_status=True, muted=True)
+                self.assertEqual(status, expected, log)
+        for kind in ('spin', 'mutex'):
+            self.assertEqual(render('c3', abi=4, lock_kind=kind,
+                kernel_symbols=OWNED_SYMBOLS | SYMBOLS,
+                return_status=True, muted=True)[2], 2)
+
+    def test_owned_cabi_unlock_cookie_must_be_defined(self):
+        for defined in (False, True):
+            code = bytes.fromhex('48c7c700900000')
+            if defined:
+                code += bytes.fromhex('31f6')
+            target = OWNED_SYMBOLS['kd_owned_mutex_outer_unlock_cabi_v2']
+            code += b'\xe8' + (target - 0x1000 - len(code) - 5).to_bytes(4, 'little', signed=True)
+            code += b'\xc3'
+            assembly, log, status = render(code.hex(), abi=4, lock_kind='mutex-owned',
+                kernel_symbols=OWNED_SYMBOLS, return_status=True, muted=True)
+            self.assertEqual(status, 0 if defined else 2, log)
+            if defined:
+                self.assertIn(b'callee_complete', assembly)
+
+    def test_owned_cabi_unlock_trims_the_native_suffix(self):
+        code = bytes.fromhex('48c7c70090000031f6')
+        target = OWNED_SYMBOLS['kd_owned_mutex_outer_unlock_cabi_v2']
+        code += b'\xe8' + (target - 0x1000 - len(code) - 5).to_bytes(4, 'little', signed=True)
+        # FS is prohibited inside a delegated body. This load belongs to the
+        # native post-unlock suffix and must not enter the translated scope.
+        code += bytes.fromhex('64488b042500000000c3')
+        assembly, log, status = render(code.hex(), abi=4, lock_kind='mutex-owned',
+            kernel_symbols=OWNED_SYMBOLS, return_status=True, muted=True)
+        self.assertEqual(status, 0, log)
+        self.assertIn(b'callee_complete', assembly)
 
     def test_direct_unlock_is_the_critical_section_boundary(self):
         direct = {'kd_spin_lock': 0x7000, 'kd_spin_unlock': 0x8000,

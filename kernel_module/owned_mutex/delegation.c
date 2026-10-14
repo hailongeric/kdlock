@@ -68,10 +68,30 @@ static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_batches);
 static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_refusals);
 static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_early_releases);
 
-static bool owned_mutex_self_route;
+/* One bounded grace after an unqueued release can preserve owner locality.
+ * Zero keeps the exact Linux optimistic retry cadence. */
+unsigned int owned_mutex_reuse_spins;
+module_param(owned_mutex_reuse_spins, uint, 0444);
+MODULE_PARM_DESC(owned_mutex_reuse_spins,
+	"One unqueued-release grace per OSQ acquisition: 0, 8, 32 or 128 polls");
+
+bool owned_mutex_self_route;
 module_param(owned_mutex_self_route, bool, 0444);
 MODULE_PARM_DESC(owned_mutex_self_route,
 	"Use only the owned SELF core for new acquisitions (diagnostic control)");
+/* A getter-only identity cannot be overridden at module load to misdescribe
+ * the acquisition policy implemented by this provider. */
+static int kd_owned_mutex_protocol_get(char *buffer,
+				       const struct kernel_param *kp)
+{
+	(void)kp;
+	return scnprintf(buffer, PAGE_SIZE, "linux_local_first_v1");
+}
+static const struct kernel_param_ops kd_owned_mutex_protocol_ops = {
+	.get = kd_owned_mutex_protocol_get,
+};
+module_param_cb(owned_mutex_protocol, &kd_owned_mutex_protocol_ops, NULL, 0444);
+MODULE_PARM_DESC(owned_mutex_protocol, "Owned acquisition/release protocol identity");
 static bool owned_mutex_refill;
 module_param(owned_mutex_refill, bool, 0444);
 MODULE_PARM_DESC(owned_mutex_refill,
@@ -259,15 +279,23 @@ static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_owned_mutex_resume(struct kd_owned_mutex_node *node)
 {
 	struct kd_regs full;
+	struct kd_owned_mutex_cabi_state callee;
 	u32 outcome = READ_ONCE(node->outcome);
 	bool native = outcome == KD_OWNED_MUTEX_FULL;
-	bool minimal = node->packet_state == KD_PACKET_COMPLETE;
+	bool cabi = node->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2;
+	bool reduced = node->packet_state == kd_complete_packet_state(node->entry_abi);
 	unsigned long sp = node->regs.sp, ip = node->regs.ip, bp = node->regs.bp;
 
-	BUG_ON(node->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-	BUG_ON(native ? minimal : outcome != KD_OWNED_MUTEX_COMPLETE);
-	BUG_ON(!minimal && node->packet_state != KD_PACKET_FULL);
-	if (!minimal)
+	BUG_ON(!kd_entry_abi_mutex_reduced(node->entry_abi));
+	BUG_ON(native ? reduced : outcome != KD_OWNED_MUTEX_COMPLETE);
+	BUG_ON(!reduced && node->packet_state != KD_PACKET_FULL);
+	if (cabi && reduced) {
+		callee.ip = ip; callee.sp = sp; callee.bp = bp;
+		callee.bx = node->regs.bx; callee.r12 = node->regs.r12;
+		callee.r13 = node->regs.r13; callee.r14 = node->regs.r14;
+		callee.r15 = node->regs.r15;
+	}
+	if (!reduced)
 		full = node->regs;
 	kd_owned_mutex_unreserve(node);
 	preempt_enable();
@@ -275,8 +303,10 @@ kd_owned_mutex_resume(struct kd_owned_mutex_node *node)
 	if (native)
 		jump_to_saved_regs_in_cs(&full);
 	kd_mutex_task_put(current);
-	if (!minimal)
+	if (!reduced)
 		jump_to_saved_regs(&full);
+	if (cabi)
+		kd_owned_mutex_resume_cabi(&callee);
 	asm volatile("movq %%rax, %%rsp\n\t"
 		     "movq %%rcx, %%rbp\n\t"
 		     "pushq %%rdx\n\t"
@@ -365,6 +395,94 @@ kd_owned_mutex_outer_preflight_v1(struct kd_mutex *lock)
 	return true;
 }
 EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_preflight_v1);
+
+/* The hardware post-CALL PC is the ABI4 identity. The exported continuation
+ * label follows one fixed, explicitly encoded nine-byte test/branch prefix.
+ * This is a format check, never a scan through a compiler-generated prologue. */
+static bool kd_owned_mutex_cabi_stub_valid(unsigned long ip)
+{
+	u8 bytes[KD_CABI_CALL_STUB_SIZE], tail[2];
+	s32 displacement;
+	unsigned long target;
+
+	if (!ip || copy_from_kernel_nofault(bytes, (void *)ip, sizeof(bytes)) ||
+	    bytes[0] != 0x48 || bytes[1] != 0x85 || bytes[2] != 0xc0 ||
+	    bytes[3] != 0x0f || bytes[4] != 0x85)
+		return false;
+	memcpy(&displacement, bytes + 5, sizeof(displacement));
+	if (displacement < 2 || ip > ~0UL - sizeof(bytes) - displacement)
+		return false;
+	target = ip + sizeof(bytes) + displacement;
+	return !copy_from_kernel_nofault(tail, (void *)(target - 2), sizeof(tail)) &&
+	       tail[0] == 0x31 && tail[1] == 0xc0;
+}
+
+
+unsigned long kd_owned_mutex_outer_cabi_capture(struct kd_mutex *lock,
+		const struct kd_owned_mutex_cabi_state *saved)
+{
+	struct kd_owned_mutex_node *node;
+
+	if (owned_mutex_self_route || !kd_owned_mutex_delegation_eligible() ||
+	    !kd_owned_mutex_cabi_stub_valid(saved->ip))
+		goto self;
+	if (!kd_mutex_task_get(current))
+		goto self;
+	kd_exe_add_abi(0, saved->ip, KD_EXE_LOCK_OWNED_MUTEX,
+		       KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2);
+	migrate_disable();
+	preempt_disable();
+	node = kd_owned_mutex_reserve(lock);
+	if (!node) {
+		this_cpu_inc(kd_owned_mutex_refusals);
+		preempt_enable();
+		migrate_enable();
+		kd_mutex_task_put(current);
+		goto self;
+	}
+	INIT_LIST_HEAD(&node->waiter.list);
+	node->waiter.task = current;
+	node->waiter.kind = KD_OWNED_MUTEX_DELEGATE;
+	node->regs.ip = saved->ip; node->regs.sp = saved->sp; node->regs.bp = saved->bp;
+	node->regs.bx = saved->bx; node->regs.r12 = saved->r12;
+	node->regs.r13 = saved->r13; node->regs.r14 = saved->r14;
+	node->regs.r15 = saved->r15;
+	node->regs.ax = 0;
+	node->entry_abi = KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2;
+	node->packet_state = KD_PACKET_CALLEE_ENTRY;
+	node->lock = lock;
+	node->saved_ret_addr = saved->ip;
+	node->gsbase = kd_read_kernel_gsbase();
+	/* Once execution starts, COMPLETE/FULL bypass these native frames. */
+	BUG_ON(kd_owned_mutex_clobber_wait(lock, node) != 2);
+	kd_owned_mutex_unreserve(node);
+	preempt_enable();
+	migrate_enable();
+	kd_mutex_task_put(current);
+	return (unsigned long)current;
+self:
+	/* The C gate already exhausted local optimism. Source/resource refusal
+	 * commits to SELF waiting instead of repeating the initial OSQ phase. */
+	kd_owned_mutex_lock_self_wait(lock);
+	return (unsigned long)current;
+}
+EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_lock_cabi_v2);
+
+/* The assembly leaf tail-calls this unchanged slow contract. The cookie is
+ * required on physical returns; a FULL borrowed continuation uses exact ACK
+ * routing before the ordinary owner path is allowed to touch L. Rechecking
+ * physical ownership here also preserves flag handling after a failed CAS. */
+void kd_owned_mutex_outer_cabi_unlock_slow(struct kd_mutex *lock, unsigned long owner)
+{
+	if (!owner) {
+		BUG_ON(!kd_mutex_task_reroute(current) ||
+		       !kd_exec_native_unlock((unsigned long)lock, true));
+		return;
+	}
+	BUG_ON(owner != (unsigned long)current);
+	kd_owned_mutex_outer_unlock_v1(lock);
+}
+EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_unlock_cabi_v2);
 
 static unsigned long kd_owned_mutex_contended(struct kd_mutex *lock,
 		unsigned long sp, unsigned long ip, unsigned long bp)
@@ -480,7 +598,10 @@ int kd_owned_mutex_prepare(struct kd_mutex *lock, unsigned long ip, unsigned int
 {
 	struct kd_exe_info *exe;
 
-	if (!lock || !ip || abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+	if (!lock || !ip || !kd_entry_abi_mutex_reduced(abi))
+		return -EINVAL;
+	if (abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 &&
+	    !kd_owned_mutex_cabi_stub_valid(ip))
 		return -EINVAL;
 	if (!kd_source_is_open())
 		return -ESHUTDOWN;
@@ -558,12 +679,13 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	struct kd_exe_info *exe = batch->exe;
 	struct kd_jit_batch_call call;
 	struct kd_regs *regs;
+	unsigned int entry_abi = node->entry_abi;
 	u64 queue_end;
 	int ret, clean;
 
 	BUG_ON(!kd_owned_mutex_owned(lock, current));
-	BUG_ON(node->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
-	       node->packet_state != KD_PACKET_MINIMAL);
+	BUG_ON(!kd_entry_abi_mutex_reduced(entry_abi) ||
+	       node->packet_state != kd_entry_packet_state(entry_abi));
 	if (!node->regs.sp || !node->regs.ip || node->regs.ip != node->saved_ret_addr)
 		return KD_EXE_NO_RUN;
 	if (!exe || READ_ONCE(exe->RIP) != node->regs.ip ||
@@ -576,7 +698,7 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	    kd_exec_context_occupied())
 		return KD_EXE_NO_RUN;
 	frame = kd_exec_frame_push_owned_mutex_batch(&node->regs, node->regs.ip,
-		node->gsbase, node->waiter.task, lock, &batch->outer);
+		node->gsbase, node->waiter.task, lock, &batch->outer, entry_abi);
 	if (!frame)
 		return KD_EXE_NO_RUN;
 	queue_end = kd_exe_queue_timing_start();
@@ -587,7 +709,7 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 		if (kd_exe_mutex_batch_completed(&call, frame)) {
 			kd_exe_queue_timing_end(true, &node->queued_at_ns, queue_end);
 			BUG_ON(kd_exec_frame_retire_owned_mutex_batch(frame, lock));
-			node->packet_state = KD_PACKET_COMPLETE;
+			node->packet_state = kd_complete_packet_state(node->entry_abi);
 			return 0;
 		}
 		kd_owned_mutex_flush_wakes(batch->wake, &batch->wake_count);
@@ -624,7 +746,7 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	if (ret == KD_EXE_RUN_TO_UNLOCK) {
 		clean = frame->outer_unlock_seen ? 0 : kd_exec_frame_record_event(
 			frame, KD_EXEC_EVENT_OUTER_UNLOCK,
-			frame->packet_state == KD_PACKET_COMPLETE ? NULL : regs);
+			frame->packet_state == kd_complete_packet_state(frame->entry_abi) ? NULL : regs);
 		BUG_ON(clean || kd_exec_frame_complete(frame));
 	} else {
 		BUG_ON(kd_owned_mutex_jit_abort_cleanup(frame));
@@ -841,7 +963,9 @@ int kd_owned_mutex_init_percpu(void)
 
 	if (owned_mutex_spin_limit > 1048576 ||
 	    (owned_mutex_preflight_queue && !owned_mutex_preflight_spins) ||
-	    !kd_owned_mutex_preflight_spins_valid(owned_mutex_preflight_spins))
+	    !kd_owned_mutex_preflight_spins_valid(owned_mutex_preflight_spins) ||
+	    (owned_mutex_reuse_spins != 0 && owned_mutex_reuse_spins != 8 &&
+	     owned_mutex_reuse_spins != 32 && owned_mutex_reuse_spins != 128))
 		return -EINVAL;
 	BUILD_BUG_ON(sizeof(struct kd_owned_mutex_waiter) != 40);
 	BUILD_BUG_ON(sizeof(struct kd_owned_mutex_node) != 320);

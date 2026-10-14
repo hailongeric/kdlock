@@ -114,6 +114,8 @@ static unsigned long owned_contended_lock_addr;
 static unsigned long owned_outer_lock_addr;
 static unsigned long owned_prepared_lock_addr;
 static unsigned long owned_direct_unlock_addr;
+static unsigned long owned_cabi_lock_addr;
+static unsigned long owned_cabi_unlock_addr;
 
 #include "execution/hostcalls.inc"
 
@@ -232,8 +234,9 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 		} else {
 			frame->executed = true;
 			boundary_start = kd_jit_timing_start();
-			if (kd_entry_abi_clobber(frame->entry_abi) &&
-			    frame->packet_state == KD_PACKET_MINIMAL) {
+			if ((kd_entry_abi_clobber(frame->entry_abi) ||
+			     frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2) &&
+			    frame->packet_state == kd_entry_packet_state(frame->entry_abi)) {
 				struct kd_jit_batch_call call;
 
 				kd_jit_prepare_clobber(&call, frame, (void *)translated);
@@ -286,7 +289,7 @@ returned_wrapper:
 		 * Every other exit materializes complex state BEFORE its side effects. */
 		if (args[0] == KD_EXE_CLOBBER_COMPLETE) {
 			/* A minimal result never enters the general register dispatcher. */
-			if (frame->packet_state != KD_PACKET_COMPLETE ||
+			if (frame->packet_state != kd_complete_packet_state(frame->entry_abi) ||
 			    !kd_jit_minimal_complete_allowed(frame)) {
 				ret_flag = KD_EXE_RUN_ERROR;
 				break;
@@ -520,7 +523,7 @@ int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,
 	struct kd_exec_frame *frame = kd_exec_current_frame();
 
 	if (!frame || !frame->mutex_backend || !frame->batch_lease ||
-	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
+	    !kd_entry_abi_mutex_reduced(frame->entry_abi))
 		return KD_EXE_RUN_ERROR;
 	/* The exact ledger already exists. Dispatch first materializes lazy
 	 * routing, then consumes the pending exit once and detaches only FULL

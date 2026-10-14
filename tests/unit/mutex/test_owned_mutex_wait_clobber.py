@@ -47,7 +47,8 @@ static __attribute__((noipa,__noinline__)) void check_executor(void) {
 def main():
     source = (ROOT/'kernel_module/owned_mutex/delegation.c').read_text()
     types = definition((ROOT/'include/kd_regs.h').read_text(), 'struct kd_regs {')+';\n'
-    types += ('typedef uint64_t u64;\n'
+    types += ('#include "kd_owned_mutex_cabi.h"\n'
+              'typedef uint64_t u64;\n'
               'struct list_head { struct list_head *next,*prev; };\n'
               'struct task_struct; struct kd_mutex; struct rcuwait;\n'
               '#define __aligned(n) __attribute__((aligned(n)))\n'
@@ -70,6 +71,9 @@ def main():
     fixture = fixture.replace('n->completed=1;', 'n->outcome=KD_OWNED_MUTEX_COMPLETE;')
     fixture = fixture.replace('node.native_resume=false; node.completed=0;',
                               'node.outcome=KD_OWNED_MUTEX_QUEUED;')
+    fixture = fixture.replace('#include "clobber.inc"',
+                              'void kd_owned_mutex_resume_cabi(const struct kd_owned_mutex_cabi_state *p) '
+                              '{ (void)p; abort(); }\n#include "clobber.inc"')
     fixture = fixture.replace('int main(void) {', EXECUTOR+'\nint main(void) {\n'
                               '    for(int i=0;i<32;i++) check_executor();\n'
                               '    assert(executor_calls==32);')

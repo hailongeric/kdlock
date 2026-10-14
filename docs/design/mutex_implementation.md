@@ -142,11 +142,13 @@ build. The old internal shadow-gate type is now `kd_mutex_legacy_gate` in
 [kd_mutex_legacy.h](../../include/kd_mutex_legacy.h).
 
 The whole owner word is the sole ownership authority. WAITERS=1, HANDOFF=2 and
-PICKUP=4 retain acquire/release ordering. One FIFO under `wait_lock` contains
+PICKUP=4 retain acquire/release ordering. The owned-only DELEGATION=8 guard uses
+the captured task pointer's 16-byte alignment; pointer comparisons mask all four
+bits. One FIFO under `wait_lock` contains
 tagged SELF and DELEGATE waiters; each starts with the same 40-byte private
-header. This header is outside the public 32-byte mutex object. Cold, ineligible
-and resource-refused outer acquisitions use KD's
-optimistic SELF core. The OSQ head competes for a running owner; a waiter
+header. This header is outside the public 32-byte mutex object. ABI2 cold and
+refused acquisitions use KD's optimistic SELF core; ABI4 tries local acquisition
+first and commits to SELF waiting on later refusal. The OSQ head competes for a running owner; a waiter
 sleeps if spinning cannot make progress. Ordinary SELF release permits barging
 until handoff is requested. A delegated head receives directed PICKUP when it
 cannot execute. Publication retries acquisition after setting WAITERS, covering
@@ -162,9 +164,9 @@ retaking `wait_lock`. Concurrent WAITERS updates are preserved by the CAS retry.
 Stack SELF waiters retain removal under `wait_lock`. Completion and FULL also
 retire their packet ownership before publishing the same outcome word.
 
-The outer cookie is an explicit outermost acquisition interface. Its successful
-inline CAS records an approximate entry observation and a nonzero physical-owner
-cookie. A failed attempt records one contention under a short pin, then uses
+The outer cookie is an explicit outermost acquisition interface. The default
+ABI2 caller's successful inline CAS records an approximate entry observation and
+a nonzero physical-owner cookie. A failed attempt records one contention under a short pin, then uses
 independent CPU and exact-address heat. `owned_mutex_entry_ratio_limit` is a
 read-only power of two from 2 through 256, default 256; cadence remains 1,024
 contentions, strict `(entries >> 10) < limit`, then 1,025 exact-address records.
@@ -199,6 +201,36 @@ capture-first from C-gate budget zero; neither is inferred from worker count.
 The intermediate experimental caller that paired a gate with the old endpoint
 must not be reused with this provider; replace the complete caller/provider/JIT
 session, retaining archived binaries with their matching frozen sources.
+
+`KD_OWNED_MUTEX_CABI=1` instead selects ordinary-C ABI4. A leaf owner CAS returns
+the physical cookie without saving nonvolatile registers. On contention, the
+private Linux SELF path retries and uses its cancelable OSQ queue while the
+owner is running. There is no fixed owner-poll budget. Scheduler or owner state
+can end optimism; required rescheduling and a final acquisition retry happen
+before deciding to capture. Fast and optimistic successes perform no KD heat,
+task-record, registry or packet work. This is a separate admission policy, not
+ABI2's once-per-attempt entry ratio with delayed bookkeeping.
+
+If local acquisition still fails, the C helper returns without an OSQ, pin,
+published stack waiter or resource lease. The assembly then captures eight
+words: actual post-CALL IP/SP, caller BP, RBX and R12–R15. Exact source/task
+eligibility is checked once before acquiring delegation resources. Refusal
+uses the committed SELF wait loop without restarting initial optimism. The
+physical cookie remains nonzero; a synthetic delegated continuation receives
+zero, preserving FULL owner-ACK routing. The [register ABI](../JIT_REGISTER_ABI.md#owned-mutex-ordinary-c-entry)
+defines the fixed caller stub, updated-register completion and restore rules.
+ABI4 is opt-in; ABI2 remains supported and the current caller default.
+
+Guarded owner release applies to both owned caller ABIs. A delegate publisher
+sets WAITERS and DELEGATION under `wait_lock` before linking, preserving its
+post-publication acquisition retry. The guard remains set across detached
+private batches and clears only at true drain. Without HANDOFF or DELEGATION,
+slow SELF unlock can release the owner word before taking `wait_lock`, then
+only wake a waiter; it cannot hand off on behalf of a newer owner. A guarded
+release retains ownership until the tagged queue/batch is resolved. This keeps
+Linux ownership reuse on SELF-only queues without stranding delegated requests.
+The read-only provider identity is `owned_mutex_protocol=linux_local_first_v1`;
+there is no optional early-release or budgeted native-first mode.
 
 Ordinary and direct clobber calls are nestable SELF controls on their caller.
 When translated, the dispatcher acquires/releases them through the exact frame
@@ -241,8 +273,8 @@ module arena exceeded this kernel's 8 KiB reserve. Reusable `rcuwait` identities
 outlive packets. Final result publication is the last packet access; deferred
 wakes retain only those stable identities.
 
-Registry kind 3 and ABI2 distinguish owned images from legacy mutex images.
-The two-word wrapper, minimal COMPLETE return, FULL detachment and logical-task
+Registry kind 3 and entry ABI2 or ABI4 distinguish owned images from legacy mutex images.
+The two-word wrapper, reduced COMPLETE return, FULL detachment and logical-task
 continuation remain shared. A FULL borrower never releases another task's owner
 word: the physical executor performs each unlock and acknowledges it. Early
 outer release rejoins pending requests and releases A once; the batch neither
@@ -255,6 +287,8 @@ reports KD_SELF separately from JIT and Linux Native. It currently covers plain
 c01 performance and separate nested/early functional probes. It does not expand
 the existing translator's context/flags limits or provide RT/WW/interruptible
 mutex APIs. The legacy benchmark default remains until performance acceptance.
+The current local-first acceptance study is separately scoped to c01, 64
+post-work rounds and 1–8 workers; implementation alone establishes no parity.
 
 ## Legacy KD implementation
 

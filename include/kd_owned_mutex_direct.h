@@ -7,6 +7,7 @@
 #include "kd_mutex.h"
 #include "kd_hotlock.h"
 #include "exe_info.h"
+#include "kd_owned_mutex_cabi.h"
 
 int kd_owned_mutex_prepare(struct kd_mutex *, unsigned long, unsigned int);
 int kd_owned_mutex_init_percpu(void);
@@ -30,6 +31,8 @@ unsigned long kd_owned_mutex_outer_prepared_clobber_v1(struct kd_mutex *,
 			unsigned long, unsigned long, unsigned long);
 void kd_owned_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
 					  unsigned long, unsigned long);
+unsigned long kd_owned_mutex_outer_lock_cabi_v2(struct kd_mutex *);
+void kd_owned_mutex_outer_unlock_cabi_v2(struct kd_mutex *, unsigned long);
 
 /* ABI2 captures only IP/SP/BP. The compiler spills every other live value;
  * neither SELF refusal nor synthetic JIT entry can assume incoming GPRs. */
@@ -74,6 +77,23 @@ kd_owned_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 #ifndef KD_OWNED_MUTEX_PREFLIGHT
 #define KD_OWNED_MUTEX_PREFLIGHT 0
 #endif
+#ifndef KD_OWNED_MUTEX_CABI
+#define KD_OWNED_MUTEX_CABI 0
+#endif
+#if KD_OWNED_MUTEX_CABI != 0 && KD_OWNED_MUTEX_CABI != 1
+#error "KD_OWNED_MUTEX_CABI must be 0 or 1"
+#endif
+#if KD_OWNED_MUTEX_CABI && KD_OWNED_MUTEX_PREFLIGHT
+#error "Owned ordinary C ABI and ABI2 preflight are separate caller contracts"
+#endif
+#if KD_OWNED_MUTEX_CABI
+#define KD_OWNED_MUTEX_ENTRY_ABI KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2
+#define KD_OWNED_MUTEX_PREPARE_IP(label) \
+	((unsigned long)(label) - KD_CABI_CALL_STUB_SIZE)
+#else
+#define KD_OWNED_MUTEX_ENTRY_ABI KD_ENTRY_ABI_MUTEX_CLOBBER_V1
+#define KD_OWNED_MUTEX_PREPARE_IP(label) ((unsigned long)(label))
+#endif
 #if KD_OWNED_MUTEX_PREFLIGHT != 0 && KD_OWNED_MUTEX_PREFLIGHT != 1
 #error "KD_OWNED_MUTEX_PREFLIGHT must be 0 or 1"
 #endif
@@ -90,6 +110,7 @@ kd_owned_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 	"call kd_owned_mutex_outer_contended_clobber_v1\n\t"
 #endif
 
+#if !KD_OWNED_MUTEX_CABI
 #define KD_OWNED_MUTEX_OUTER_LOCK(lock, cookie, continuation)                  \
 	do {                                                                    \
 		struct kd_mutex *kd_outer_lock = (lock);                           \
@@ -130,5 +151,35 @@ kd_owned_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 			KD_OWNED_MUTEX_DIRECT_UNLOCK(kd_outer_lock);                  \
 		}                                                                   \
 	} while (0)
+#else
+/* ABI4 uses Linux local acquisition before KD admission or capture; it does
+ * not participate in ABI2's entry-ratio/heat sampling policy.
+ * The fixed ordinary-C CALL stub starts at the hardware return PC. A physical
+ * SELF return skips arbitrary supplied continuation text. The synthetic entry
+ * seeds RAX=0 and reaches that text before writing its borrowed cookie. No
+ * nonvolatile clobber forces spills on enclosing native critical sections. */
+#define KD_OWNED_MUTEX_OUTER_LOCK(lock, cookie, continuation)                 \
+	do {                                                                   \
+		struct kd_mutex *kd_arg = (lock);                                \
+		unsigned long kd_route;                                         \
+		might_sleep();                                                   \
+		asm volatile("call kd_owned_mutex_outer_lock_cabi_v2\n\t"        \
+			     ".byte 0x48,0x85,0xc0,0x0f,0x85\n\t"                 \
+			     ".long 2f - . - 4\n\t" continuation                 \
+			     "xorl %%eax, %%eax\n\t2:\n\t"                     \
+			     : "=a"(kd_route), "+D"(kd_arg), ASM_CALL_CONSTRAINT \
+			     :                                                    \
+			     : "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", \
+			       "cc", "memory");                               \
+		WRITE_ONCE((cookie).owner, kd_route);                            \
+	} while (0)
+
+#define KD_OWNED_MUTEX_OUTER_UNLOCK(lock, cookie)                             \
+	do {                                                                   \
+		kd_owned_mutex_outer_unlock_cabi_v2((lock),                       \
+					 READ_ONCE((cookie).owner));            \
+		asm volatile("" : : : "memory");                              \
+	} while (0)
+#endif
 
 #endif

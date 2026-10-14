@@ -232,14 +232,16 @@ static __always_inline
 struct kd_exec_frame *kd_exec_frame_push_mutex_root(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, void *lock, unsigned long address, bool owned,
-	struct kd_exec_outer_unlock *hook)
+	struct kd_exec_outer_unlock *hook, unsigned int entry_abi)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
 	struct kd_exec_frame *frame;
 
 	/* These are push_internal's checks specialized to depth zero, one held
 	 * lock and an existing batch lease. Failure publishes no frame. */
-	if (!regs || !gsbase || !task || !lock || !address ||
+	if (!kd_entry_abi_mutex_reduced(entry_abi) ||
+	    (entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 && !owned) ||
+	    !regs || !gsbase || !task || !lock || !address ||
 	    !hook || ctx->depth || ctx->owner
 #ifdef KDLOCK_SELFTEST
 	    || !kd_exec_context_validate(ctx)
@@ -279,8 +281,10 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_root(
 #endif
 	frame->role = KD_ROLE_COMBINER;
 	frame->state = KD_EXEC_FRAME_RUNNING;
-	frame->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
-	frame->packet_state = KD_PACKET_MINIMAL;
+	/* Publish the actual entry contract once. No default ABI2 frame is
+	 * exposed and then rewritten from the producer after construction. */
+	frame->entry_abi = entry_abi;
+	frame->packet_state = kd_entry_packet_state(entry_abi);
 	frame->held_lock_depth = 1;
 	frame->outer_lock_depth = 1;
 	frame->jit_lock_addr[0] = address;
@@ -312,19 +316,20 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	struct kd_exec_outer_unlock *hook)
 {
 	return kd_exec_frame_push_mutex_root(regs, ip, gsbase, task, lock,
-		lock ? lock->origin_mutex_addr : 0, false, hook);
+		lock ? lock->origin_mutex_addr : 0, false, hook,
+		KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 }
 
 __always_inline __gnu_inline
 struct kd_exec_frame *kd_exec_frame_push_owned_mutex_batch(
 	struct kd_regs *regs, unsigned long ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
-	struct kd_exec_outer_unlock *hook)
+	struct kd_exec_outer_unlock *hook, unsigned int entry_abi)
 {
 	if (!lock || !kd_owned_mutex_owned(lock, current))
 		return NULL;
 	return kd_exec_frame_push_mutex_root(regs, ip, gsbase, task, lock,
-		(unsigned long)lock, true, hook);
+		(unsigned long)lock, true, hook, entry_abi);
 }
 
 /* Do not use spin's prepare_complex: continuation_sp aliases borrowed_regs,
@@ -369,8 +374,9 @@ int kd_exec_frame_retire_mutex_root(struct kd_exec_frame *frame,
 	    /* The wrapper writes packet_state as a 32-bit value. Keep these
 	     * reads at their field width: GCC otherwise merges ABI and state
 	     * into an overlapping 64-bit load that cannot forward that store. */
-	    READ_ONCE(frame->entry_abi) != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
-	    READ_ONCE(frame->packet_state) != KD_PACKET_COMPLETE || !frame->executed ||
+	    !kd_entry_abi_mutex_reduced(READ_ONCE(frame->entry_abi)) ||
+	    (READ_ONCE(frame->entry_abi) == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 && !owned) ||
+	    READ_ONCE(frame->packet_state) != kd_complete_packet_state(READ_ONCE(frame->entry_abi)) || !frame->executed ||
 	    frame->state != KD_EXEC_FRAME_RUNNING || frame->completion_seen ||
 	    frame->outer_unlock_seen || frame->held_lock_depth != 1 ||
 	    frame->outer_lock_depth != 1 || frame->jit_lock_depth != 1 ||

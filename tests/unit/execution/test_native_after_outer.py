@@ -156,9 +156,8 @@ def main():
         ).rstrip()
         + ";\n"
     )
-    # The pristine mutex validator uses the real published ABI discriminator.
-    types += definition(read_source(ROOT / "include/exe_info.h"),
-                        "enum kd_entry_abi {").rstrip() + ";\n"
+    # Use the published discriminator and helpers, as the frame validator does.
+    types += without_includes(read_source(ROOT / "include/exe_info.h")) + "\n"
     for name in ("include/kd_call.h", "include/kd_exec.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
     executor = read_source((ROOT / "kernel_module/exe.c"))

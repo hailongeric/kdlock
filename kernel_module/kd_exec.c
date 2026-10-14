@@ -86,7 +86,8 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 	    (!frame->batch_lease || !frame->regs_borrowed || frame->regs_ref ||
 	     !frame->borrowed_regs || frame->spin_simple || frame->request_frame ||
 	     frame->parent || frame->depth || !frame->outer_unlock_hook ||
-	     frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	     (!kd_entry_abi_mutex_reduced(frame->entry_abi) ||
+	      (frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 && !frame->owned_mutex)) ||
 	     frame->held_lock_depth != 1 || frame->outer_lock_depth != 1 ||
 	     frame->jit_lock_depth != 1 || frame->outer_lock_index ||
 	     frame->jit_lock_addr[0] != frame->outer_lock_addr ||

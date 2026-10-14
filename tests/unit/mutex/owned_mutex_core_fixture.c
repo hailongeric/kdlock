@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+unsigned int owned_mutex_reuse_spins;
+
+bool owned_mutex_self_route;
 
 typedef uint32_t u32;
 typedef struct { unsigned long counter; } atomic_long_t;
@@ -23,12 +26,15 @@ struct task_struct {
 	struct wake_q_node wake_q;
 	int refs, state, on_cpu, wakes, owned_holds;
 } __attribute__((aligned(64)));
-static struct task_struct tasks[3];
+static struct task_struct tasks[4];
 static struct task_struct *current;
 static int pin_count, schedules, spins, combine_calls, osq_locks, osq_unlocks;
 static bool resched, release_before_waiters;
 static void (*schedule_action)(void), (*osq_action)(void);
 static void (*store_action)(u32 *);
+static void (*before_wait_lock)(raw_spinlock_t *);
+static void (*before_release_cas)(atomic_long_t *, unsigned long *, unsigned long);
+static void (*before_list_add)(struct list_head *, struct list_head *);
 
 #define CONFIG_X86_64 1
 #define CONFIG_MUTEX_SPIN_ON_OWNER 1
@@ -37,11 +43,14 @@ static void (*store_action)(u32 *);
 #undef __always_inline
 #define __always_inline inline __attribute__((always_inline))
 #define noinline __attribute__((noinline))
+#define notrace
 #define likely(x) (x)
 #define unlikely(x) (x)
 #define BUG_ON(x) assert(!(x))
 #define BUG() assert(false)
 #define EXPORT_SYMBOL_GPL(x)
+#define module_param(name, type, permissions)
+#define MODULE_PARM_DESC(name, text)
 #define TASK_RUNNING 0
 #define TASK_UNINTERRUPTIBLE 2
 #define OSQ_UNLOCKED_VAL 0
@@ -56,6 +65,7 @@ static void (*store_action)(u32 *);
 } while (0)
 #define smp_load_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 #define smp_mb__before_atomic() __atomic_thread_fence(__ATOMIC_SEQ_CST)
+#define smp_mb__after_atomic() __atomic_thread_fence(__ATOMIC_SEQ_CST)
 #define barrier() __asm__ __volatile__("" ::: "memory")
 #define cmpxchg_relaxed(p, old, val) ({ \
 	__typeof__(*(p)) expected = (old); \
@@ -74,8 +84,14 @@ static void (*store_action)(u32 *);
 #define atomic_long_andnot(v, p) __atomic_fetch_and(&(p)->counter, ~(v), __ATOMIC_SEQ_CST)
 #define atomic_long_try_cmpxchg_acquire(p, old, val) \
 	__atomic_compare_exchange_n(&(p)->counter, (old), (val), false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)
-#define atomic_long_try_cmpxchg_release(p, old, val) \
-	__atomic_compare_exchange_n(&(p)->counter, (old), (val), false, __ATOMIC_RELEASE, __ATOMIC_RELAXED)
+static bool release_cas(atomic_long_t *p, unsigned long *old, unsigned long value)
+{
+	if (before_release_cas)
+		before_release_cas(p, old, value);
+	return __atomic_compare_exchange_n(&p->counter, old, value, false,
+					   __ATOMIC_RELEASE, __ATOMIC_RELAXED);
+}
+#define atomic_long_try_cmpxchg_release release_cas
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 #define container_of(p, type, member) ((type *)((char *)(p) - offsetof(type, member)))
 #define list_first_entry(p, type, member) container_of((p)->next, type, member)
@@ -83,6 +99,8 @@ static void INIT_LIST_HEAD(struct list_head *p) { p->next = p->prev = p; }
 static bool list_empty(const struct list_head *p) { return p->next == p; }
 static void list_add_tail(struct list_head *p, struct list_head *head)
 {
+	if (before_list_add)
+		before_list_add(p, head);
 	p->next = head; p->prev = head->prev;
 	head->prev->next = p; head->prev = p;
 }
@@ -96,6 +114,8 @@ static void preempt_count_dec(void) { assert(pin_count > 0); pin_count--; }
 static void preempt_enable(void) { preempt_count_dec(); }
 static void raw_spin_lock(raw_spinlock_t *p)
 {
+	if (before_wait_lock)
+		before_wait_lock(p);
 	assert(!p->locked); preempt_disable(); p->locked = 1;
 }
 static void raw_spin_unlock(raw_spinlock_t *p)
@@ -186,13 +206,14 @@ static int immediate_pickups;
 static void reset(void)
 {
 	assert(!pin_count);
-	for (unsigned int i = 0; i < 3; i++) {
+	for (unsigned int i = 0; i < 4; i++) {
 		assert(!tasks[i].refs && !tasks[i].wake_q.next && !tasks[i].owned_holds);
 		tasks[i].state = TASK_RUNNING; tasks[i].on_cpu = 0;
 	}
 	current = &tasks[0]; resched = false; combine_handles = false;
 	release_before_waiters = false;
 	store_action = NULL;
+	before_wait_lock = NULL; before_release_cas = NULL; before_list_add = NULL;
 	route_borrowed = false;
 	schedule_action = osq_action = NULL; spins = 0;
 	wb.outcome = &wb_outcome; wc.outcome = &wc_outcome;
@@ -244,6 +265,127 @@ static void release_for_spinner(void)
 	assert(kd_owned_mutex_owner(&lock) == &tasks[0]);
 	atomic_long_set(&lock.owner, 0);
 	tasks[0].owned_holds--;
+}
+
+static void check_guard_before_link(struct list_head *node, struct list_head *head)
+{
+	assert(node == &wb.list && head == &lock.wait_list && lock.wait_lock.locked);
+	assert((lock.owner.counter & KD_OWNED_MUTEX_FLAGS) ==
+	       (KD_OWNED_MUTEX_FLAG_WAITERS | KD_OWNED_MUTEX_FLAG_DELEGATION));
+	assert(list_empty(node));
+	before_list_add = NULL;
+}
+
+static void new_owner_before_old_wake(raw_spinlock_t *queue_lock)
+{
+	struct task_struct *old = current;
+
+	before_wait_lock = NULL;
+	assert(queue_lock == &lock.wait_lock && !queue_lock->locked);
+	assert(lock.owner.counter == KD_OWNED_MUTEX_FLAG_WAITERS);
+	current = &tasks[2]; assert(kd_mutex_trylock(&lock));
+	current = &tasks[1];
+	assert(kd_owned_mutex_trylock_common(&lock, true) == &tasks[2]);
+	publish(&wc, 3, KD_OWNED_MUTEX_DELEGATE);
+	current = old;
+}
+
+static void publish_during_release(atomic_long_t *word, unsigned long *expected,
+				  unsigned long next)
+{
+	struct task_struct *old = current;
+
+	/* Skip the first uncontended-unlock probe; race the actual flags-only
+	 * release after it has observed a SELF-only queue. */
+	if (!(*expected & KD_OWNED_MUTEX_FLAG_WAITERS))
+		return;
+	assert(word == &lock.owner && next == KD_OWNED_MUTEX_FLAG_WAITERS);
+	before_release_cas = NULL;
+	publish(&wc, 3, KD_OWNED_MUTEX_DELEGATE);
+	current = old;
+}
+
+static void finish_self_then_delegate(void)
+{
+	current = &tasks[1]; pickup_self(&wb);
+	assert(lock.owner.counter & KD_OWNED_MUTEX_FLAG_DELEGATION);
+	kd_owned_mutex_outer_unlock_v1(&lock);
+	current = &tasks[3]; assert(kd_owned_mutex_pickup(&lock, &wc));
+	assert(lock.owner.counter == (unsigned long)current);
+	kd_owned_mutex_outer_unlock_v1(&lock);
+	assert(kd_owned_mutex_is_idle(&lock));
+}
+
+static void check_early_release_guard(void)
+{
+	int before;
+
+	/* A published delegate is guarded before its link becomes visible. The
+	 * final detached grant clears the guard but retains exact-task PICKUP. */
+	reset(); kd_mutex_lock(&lock);
+	before_list_add = check_guard_before_link;
+	publish(&wb, 1, KD_OWNED_MUTEX_DELEGATE);
+	assert(!before_list_add);
+	current = &tasks[0]; kd_mutex_unlock(&lock);
+	assert(wb_outcome == KD_OWNED_MUTEX_GRANTED && list_empty(&wb.list));
+	assert(lock.owner.counter == ((unsigned long)&tasks[1] | KD_OWNED_MUTEX_FLAG_PICKUP));
+	current = &tasks[1]; assert(kd_owned_mutex_pickup(&lock, &wb));
+	kd_owned_mutex_outer_unlock_v1(&lock); assert(kd_owned_mutex_is_idle(&lock));
+
+	/* The guard is deliberately sticky when only SELF remains in the suffix;
+	 * last-waiter acquisition, not kind inspection, finally clears it. */
+	reset(); kd_mutex_lock(&lock);
+	publish(&wb, 1, KD_OWNED_MUTEX_DELEGATE); publish(&wc, 2, KD_OWNED_MUTEX_SELF);
+	current = &tasks[0]; kd_mutex_unlock(&lock);
+	assert(lock.owner.counter & KD_OWNED_MUTEX_FLAG_DELEGATION);
+	current = &tasks[1]; assert(kd_owned_mutex_pickup(&lock, &wb));
+	kd_owned_mutex_outer_unlock_v1(&lock);
+	assert(lock.owner.counter == (KD_OWNED_MUTEX_FLAG_WAITERS | KD_OWNED_MUTEX_FLAG_DELEGATION));
+	current = &tasks[2]; pickup_self(&wc);
+	assert(lock.owner.counter == (unsigned long)current);
+	kd_owned_mutex_outer_unlock_v1(&lock); assert(kd_owned_mutex_is_idle(&lock));
+
+	/* Fast release can beat the guard publication, so the second acquisition
+	 * retry still has to consume ownerless flags and remove this request. */
+	reset(); kd_mutex_lock(&lock);
+	current = &tasks[1]; wb.task = current; wb.kind = KD_OWNED_MUTEX_DELEGATE;
+	release_before_waiters = true;
+	assert(kd_owned_mutex_publish(&lock, &wb));
+	assert(!release_before_waiters && list_empty(&wb.list));
+	assert(lock.owner.counter == (unsigned long)current);
+	kd_owned_mutex_outer_unlock_v1(&lock); assert(kd_owned_mutex_is_idle(&lock));
+
+	/* The old releaser has no authority after clearing owner. A new owner,
+	 * HANDOFF request and delegate may all appear before its queue lock. */
+	reset(); kd_owned_mutex_lock_self(&lock);
+	publish(&wb, 1, KD_OWNED_MUTEX_SELF); current = &tasks[0];
+	before = combine_calls; before_wait_lock = new_owner_before_old_wake;
+	kd_owned_mutex_outer_unlock_v1(&lock);
+	assert(combine_calls == before && !before_wait_lock);
+	assert(lock.owner.counter == ((unsigned long)&tasks[2] | KD_OWNED_MUTEX_FLAG_WAITERS |
+	       KD_OWNED_MUTEX_FLAG_HANDOFF | KD_OWNED_MUTEX_FLAG_DELEGATION));
+	assert(wb.state == KD_OWNED_MUTEX_QUEUED);
+	current = &tasks[2]; kd_mutex_unlock(&lock);
+	finish_self_then_delegate();
+
+	/* A guard arriving between the unguarded read and release CAS prevents
+	 * that release and preserves the flag through the guarded SELF wake. */
+	reset(); kd_mutex_lock(&lock);
+	publish(&wb, 1, KD_OWNED_MUTEX_SELF); current = &tasks[0];
+	before_release_cas = publish_during_release; kd_mutex_unlock(&lock);
+	assert(!before_release_cas);
+	assert(lock.owner.counter == (KD_OWNED_MUTEX_FLAG_WAITERS | KD_OWNED_MUTEX_FLAG_DELEGATION));
+	finish_self_then_delegate();
+
+	/* A local-first refusal is already committed to SELF. A running owner
+	 * must not cause this continuation to repeat the initial OSQ phase. */
+	reset(); kd_mutex_lock(&lock); tasks[0].on_cpu = 1; current = &tasks[1];
+	before = osq_locks; schedule_action = release_from_owner;
+	osq_action = release_for_spinner;
+	kd_owned_mutex_lock_self_wait(&lock);
+	assert(osq_locks == before && !pin_count && kd_owned_mutex_owned(&lock, current));
+	kd_owned_mutex_outer_unlock_v1(&lock); assert(kd_owned_mutex_is_idle(&lock));
+	reset();
 }
 
 int main(void)
@@ -387,6 +529,24 @@ int main(void)
 	current = &tasks[1]; assert(kd_owned_mutex_pickup(&lock, &wb));
 	combine_handles = false; kd_owned_mutex_outer_unlock_v1(&lock);
 	assert(kd_owned_mutex_is_idle(&lock)); reset();
-	puts("[PASS] owned mutex layout, SELF barging/handoff, typed FIFO, pickup, sleep, OSQ branch and wake lifetime");
+	check_early_release_guard();
+	/* A refused local attempt continues under the original pin. Its stack
+	 * waiter is consumed before returning; there is no second OSQ pass. */
+	reset(); kd_mutex_lock(&lock); current = &tasks[1];
+	{
+		int before = osq_locks;
+
+		preempt_disable();
+		assert(!kd_owned_mutex_try_local_pinned(&lock));
+		assert(pin_count == 1 && osq_locks == before);
+		schedule_action = release_from_owner;
+		kd_owned_mutex_lock_wait_pinned(&lock);
+		assert(pin_count == 1 && osq_locks == before);
+		assert(kd_owned_mutex_owned(&lock, current) && list_empty(&lock.wait_list));
+		preempt_enable();
+		kd_owned_mutex_outer_unlock_v1(&lock);
+		assert(kd_owned_mutex_is_idle(&lock));
+	}
+	puts("[PASS] owned mutex layout, SELF barging/handoff, typed FIFO, pickup, sleep, OSQ, guarded release races and wake lifetime");
 	return 0;
 }

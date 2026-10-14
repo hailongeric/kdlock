@@ -56,10 +56,18 @@ static void sc_lock_init(void)
 #endif
 }
 MODULE_INFO(mutex_implementation, "owned-v1");
+#if KD_OWNED_MUTEX_CABI
+MODULE_INFO(owned_caller_policy, "c_abi_v2");
+MODULE_INFO(owned_entry_abi, "4");
+MODULE_INFO(owned_preflight_policy, "not_applicable");
+#else
+MODULE_INFO(owned_caller_policy, "clobber_v1");
+MODULE_INFO(owned_entry_abi, "2");
 #if KD_OWNED_MUTEX_PREFLIGHT
 MODULE_INFO(owned_preflight_policy, "c_abi_v1");
 #else
 MODULE_INFO(owned_preflight_policy, "capture_first");
+#endif
 #endif
 #else
 #include "kd_mutex_direct.h"

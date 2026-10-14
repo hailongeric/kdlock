@@ -56,6 +56,7 @@ static unsigned long direct_mutex_lock_addr = 0x4130;
 static unsigned long direct_mutex_unlock_addr = 0x4140;
 static unsigned long owned_direct_lock_addr = 0x4150;
 static unsigned long owned_direct_unlock_addr = 0x4160;
+static unsigned long owned_cabi_lock_addr = 0x4170, owned_cabi_unlock_addr = 0x4180;
 static unsigned long clobber_spin_lock_addr = 0x3110;
 static unsigned long clobber_spin_unlock_addr = 0x3120;
 static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)

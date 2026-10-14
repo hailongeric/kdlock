@@ -63,6 +63,44 @@ def terminal_clobber_unlock(target, continuation, reg_map):
     return code
 
 
+
+def terminal_cabi_unlock(target, continuation, reg_map):
+    """ABI4 terminal ordinary CALL: derive continuation from decoded source.
+
+    The incoming C ABI defines only the unlock arguments. Preserve every
+    logical nonvolatile value, and materialize the real source return word
+    exactly once. Validate that word against the decoded fallthrough before
+    reduced completion. Failed checks exit FULL at the already-pushed CALL.
+    """
+    fallback = f'kd_cabi_terminal_full_{continuation:x}'
+    code = release_conflict(reg_map)
+    code += make_inst('MOVABS', ['R15', hex(continuation)])
+    code += make_inst('LEA', ['R13', '[R13 - 8]'])
+    code += make_inst('MOV', ['QWORD PTR[R13]', 'R15'])
+    code += make_inst('MOV', ['R15', 'Stack_CLOBBER'])
+    code += make_inst('TEST', ['R15', 'R15'])
+    code += make_inst('JZ', [fallback])
+    for left, right in [('QWORD PTR[R15 + 72]', '4'),
+                        ('QWORD PTR[R15 + 88]', '1')]:
+        code += make_inst('CMP', [left, right])
+        code += make_inst('JNE', [fallback])
+    code += make_inst('MOVABS', ['R14', hex(target)])
+    for left, right in [('R14', 'QWORD PTR[R15 + 40]'),
+                        ('RDI', 'QWORD PTR[R15 + 32]'), ('RSI', '0')]:
+        code += make_inst('CMP', [left, right])
+        code += make_inst('JNE', [fallback])
+    code += make_inst('MOVABS', ['R14', hex(continuation)])
+    code += make_inst('CMP', ['QWORD PTR[R13]', 'R14'])
+    code += make_inst('JNE', [fallback])
+    # Only volatile RDX changes after every fallback condition has passed.
+    code += make_inst('MOVABS', ['RDX', hex(continuation)])
+    code += make_inst('JMP', ['callee_complete'])
+    code += fallback + ':\n'
+    code += make_inst('MOVABS', ['R14', hex(target)])
+    code += make_inst('MOV', ['Stack_IJ', '1'])
+    code += make_inst('JMP', ['full_exit'])
+    return code
+
 def process_jump(name, line, arg, offset, db, reg_map):
     ret_str = ""
     if isinstance(arg, ExprLoc):

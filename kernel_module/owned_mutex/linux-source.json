@@ -39,6 +39,21 @@
       "path": "kernel/sched/core.c",
       "sha256": "523519e84270e431495104608205a04baeba9a912d1eb0d537242569ef50042e",
       "bytes": 292624
+    },
+    {
+      "path": "kernel/fork.c",
+      "sha256": "2ee0038d33d84f0c7a2799f5832405b6de53a6c5cf9c347dcc73c928c9422562",
+      "bytes": 85217
+    },
+    {
+      "path": "arch/x86/include/asm/processor.h",
+      "sha256": "feb0efe2346068ab7b60ed3956c68153ee4bcbdae89448e985c01fc0a6f0f92d",
+      "bytes": 22831
+    },
+    {
+      "path": "arch/x86/include/asm/cache.h",
+      "sha256": "a4940ff4b26143d543d46089e40864ede0dc3d50d905de20e1f95e76c9d7f3e5",
+      "bytes": 622
     }
   ],
   "port": {
@@ -47,14 +62,19 @@
     "public_layout": "The owner/wait_lock/osq/wait_list fields are checked against captured Linux struct mutex; 32 bytes at offsets0,8,12,16.",
     "intentional_changes": [
       "Distinct typed waiter prefix permits SELF or DELEGATE nodes on the owned FIFO.",
-      "Slow release holds wait_lock before releasing owner to distinguish a delegated head; SELF remains wake-before-handoff, DELEGATE and explicit batch/resource handoff are directed with PICKUP.",
+      "Tagged SELF/DELEGATE nodes share wait_list. A delegate publisher sets sticky WAITERS|DELEGATION (owned-only bit0x08) before linking. Guarded release retains physical ownership through batching or directed PICKUP; unguarded release clears ownership before wait_lock, then only wakes and cannot hand off a newer owner.",
       "Only explicit outer unlock may combine. Ordinary/nested unlock consumes its task-local hold marker and uses the SELF release or owner-ACK path, because a zero ordinary depth does not exclude a still-held explicit outer lock.",
       "The kernel exports callback variables kd_mutex_lock/unlock, so public function-like aliases call kd_owned_mutex_lock_v1/unlock_v1 ELF symbols.",
       "MODULE hides preempt_enable_no_resched; the private sleep helper spells its barrier/preempt_count_dec sequence before schedule(), then restores preempt_disable().",
       "Unsupported RT/debug/non-owner-spin configurations fail at compile time; owned objects never mix Linux/native-peer waiters.",
       "Capture-first is the default caller: the original ABI2 outer endpoint makes the once-only admission observation. The compile-time opt-in C outer preflight instead makes that observation before capture, optionally polls a running owner as the immediate private OSQ head, and acquires through SELF on refusal. Its distinct prepared ABI2 entry checks delegation eligibility once before resources, without resampling. No added runtime policy read selects the default caller route. The poll count does not bound OSQ successor-link completion time.",
       "Delegated grants unlink under wait_lock before final outcome publication; one private result word carries GRANTED, COMPLETE and FULL, and exact-task PICKUP uses acquire CAS without a second wait_lock acquisition.",
-      "Optional queued preflight shares one deliberate polling budget across OSQ waiting and owner polling. Required OSQ cancellation and successor publication are not bounded by that budget."
-    ]
+      "Optional queued preflight shares one deliberate polling budget across OSQ waiting and owner polling. Required OSQ cancellation and successor publication are not bounded by that budget.",
+      "Bounded ABI2 preflight permits WAITERS-only owner spinning while retaining its HANDOFF/PICKUP veto.",
+      "ABI4 uses the Linux running-owner check, cancelable OSQ and unbounded owner spinning before KD admission, counters, task references or capture. Only actual optimism failure permits late capture and delegation eligibility; source/resource refusal joins the existing SELF queue without another initial OSQ pass. Explicit outer callers retain the exact acquisition cookie and capture all callee-saved registers only when needed.",
+      "The delegation guard clears only when the actual queue drains without a retained private prefix. SELF-only suffixes may conservatively retain the guard. The guarded release protocol is mandatory, with immutable provider identity linux_local_first_v1.",
+      "Opt-in owned_mutex_reuse_spins allows one 8/32/128-poll pause after an unflagged release per non-waiter OSQ turn. Zero preserves Linux retry timing. The allowance is never reset on owner transitions, first waiters and flagged releases bypass it, and need_resched interrupts it before normal OSQ cleanup and yield. It adds no public object state."
+    ],
+    "task_alignment_proof": "Captured fork.c:919 chooses max(L1_CACHE_BYTES, ARCH_MIN_TASKALIGN), passed to task_struct slab creation at924\u2013927. Captured x86 processor.h:50\u201358 gives the architecture task/FPU alignment; cache.h:7\u20139 defines L1_CACHE_BYTES from the x86 configuration. Core additionally rejects a compiled task type with alignment below16 before using owned-only owner bit0x08. Raw excerpts and hashes: bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/task-alignment-{excerpts,source}.log."
   }
 }

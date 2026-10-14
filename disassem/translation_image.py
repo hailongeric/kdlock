@@ -82,7 +82,7 @@ def write_entry_dispatch(
 def emit_jit_assembly(
     entry, block_dict, db_dict, jump_table, missing_callees,
     resolved_hostcalls, keep_call_stack, *, entry_guards=None, body_witness=False,
-    terminal_clobber_unlocks=(),
+    terminal_clobber_unlocks=(), terminal_cabi_unlocks=(),
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -164,7 +164,9 @@ def emit_jit_assembly(
             target = (db.get_location_offset(line.args[0].loc_key)
                       if line.name == 'CALL' and isinstance(line.args[0], ExprLoc)
                       else None)
-            if target in terminal_clobber_unlocks and offset not in emitted_offsets:
+            if target in terminal_cabi_unlocks and offset not in emitted_offsets:
+                f.write(special_inst.terminal_cabi_unlock(target, offset, reg_map))
+            elif target in terminal_clobber_unlocks and offset not in emitted_offsets:
                 f.write(special_inst.terminal_clobber_unlock(target, offset, reg_map))
             else:
                 f.write(special_inst.translate(line, offset, db, reg_map, block_end))

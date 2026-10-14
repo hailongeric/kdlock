@@ -28,7 +28,8 @@ static struct optimistic_spin_queue *active_queue(void) { return core_mode ? &mu
 #define KD_OWNED_MUTEX_FLAG_WAITERS 1UL
 #define KD_OWNED_MUTEX_FLAG_HANDOFF 2UL
 #define KD_OWNED_MUTEX_FLAG_PICKUP 4UL
-#define KD_OWNED_MUTEX_FLAGS 7UL
+#define KD_OWNED_MUTEX_FLAG_DELEGATION 8UL
+#define KD_OWNED_MUTEX_FLAGS 15UL
 #define likely(x) (x)
 #define BUG_ON(x) assert(!(x))
 #define barrier() __asm__ __volatile__("" ::: "memory")
@@ -193,6 +194,27 @@ int main(void)
  reset(1);core_mode=true;scenario=GRANT_IN_WAIT;event_at=2;
  assert(kd_owned_mutex_try_optimistic_pinned(&mutex,4,true)==KD_OWNED_MUTEX_PREFLIGHT_BUSY);
  assert(observations==2 && relaxes==3 && releases==1 && !mutex.osq.tail.counter);
- puts("PASS owned bounded OSQ: exact budget, timeout/grant race, predecessor cancellation, delayed/canceling successor, unbounded compatibility and mandatory preflight unlock");
+ /* Guarded delegation does not stop bounded spinning on WAITERS alone.
+  * Acquiring or cancelling OSQ must never clear the physical owner's guard. */
+ for(unsigned long flags=KD_OWNED_MUTEX_FLAG_WAITERS;flags<=9;flags+=8) {
+  reset(1);core_mode=true;scenario=GRANT_STEP_A;
+  mutex.owner.counter|=flags;
+  assert(kd_owned_mutex_try_optimistic_pinned(&mutex,3,true)==KD_OWNED_MUTEX_PREFLIGHT_BUSY);
+  assert(event_done && observations==3 && releases==1 && !mutex.osq.tail.counter);
+  assert(mutex.owner.counter==((unsigned long)&tasks[0]|flags));
+
+  reset(1);core_mode=true;mutex.owner.counter|=flags;
+  assert(kd_owned_mutex_try_optimistic_pinned(&mutex,3,true)==KD_OWNED_MUTEX_PREFLIGHT_BUSY);
+  assert(observations==3 && !releases && mutex.osq.tail.counter==1);
+  assert(mutex.owner.counter==((unsigned long)&tasks[0]|flags));
+  assert(!kd_owned_osq_nodes[0].next);release_head();
+
+  reset(1);core_mode=true;mutex.owner.counter=flags;
+  assert(kd_owned_mutex_try_optimistic_pinned(&mutex,3,true)==KD_OWNED_MUTEX_PREFLIGHT_ACQUIRED);
+  assert(mutex.owner.counter==((unsigned long)current|flags));
+  assert(!observations && !releases && mutex.osq.tail.counter==1);
+  release_head();
+ }
+ puts("PASS owned bounded OSQ: exact budget, timeout/grant race, predecessor cancellation, delayed/canceling successor, unbounded compatibility, guard preservation and mandatory preflight unlock");
  return 0;
 }

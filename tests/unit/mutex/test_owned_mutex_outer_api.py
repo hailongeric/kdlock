@@ -141,6 +141,8 @@ def check_mode(preflight):
         linked = {words[-1]: int(words[0], 16) for line in subprocess.check_output(
             ['nm', '--defined-only', generated], text=True).splitlines()
             if len(words := line.split()) == 3}
+        # Default ABI2 images retain their original completion layout.
+        assert 'callee_complete' not in linked
         for name in names | {'outer_jit_entry', 'test_lock'}:
             assert linked[name] == symbols[name], name
         result = subprocess.run([generated], capture_output=True, text=True,

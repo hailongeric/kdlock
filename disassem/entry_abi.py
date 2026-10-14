@@ -21,10 +21,12 @@ def merge(left, right):
     return {key: left.get(key, 0) | right.get(key, 0) for key in left.keys() | right.keys()}
 
 
-def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets, jump_table):
+def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets, jump_table,
+                        *, abi=2, cookie_targets=frozenset()):
     """Return a refusal reason, or None after bounded conservative propagation."""
     tracker = FlowConstants()
-    incoming = {entry: {ExprId(name, 64): MASK for name in GPRS - {"RSP", "RBP"}}}
+    defined = PRESERVED | {"RAX"} if abi == 4 else {"RSP", "RBP"}
+    incoming = {entry: {ExprId(name, 64): MASK for name in GPRS - defined}}
     pending = deque([entry])
     work = 0
 
@@ -157,6 +159,8 @@ def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets,
                 before = state
                 if line.name.upper() == "CALL" and target in lock_targets:
                     required = {"RDI"} | ({"RSI", "RDX", "RCX"} if target in clobber_targets else set())
+                    if target in cookie_targets:
+                        required.add("RSI")
                     if any(state.get(ExprId(reg, 64), 0) for reg in required):
                         raise ValueError("lock metadata depends on an uncaptured GPR")
                 state = step(line, state)

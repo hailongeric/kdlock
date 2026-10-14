@@ -1,4 +1,5 @@
 """Acceptance must fail on either throughput metric, missing rounds or no JIT."""
+from argparse import Namespace
 import unittest
 import copy
 from pathlib import Path
@@ -29,6 +30,34 @@ class AcceptanceTests(unittest.TestCase):
         self.assertEqual(evaluate(self.baseline, self.candidate)['verdict'], 'PASS')
         partial = [r for r in self.candidate if r['threads'] == 4]
         self.assertEqual(evaluate(self.baseline, partial)['verdict'], 'INCOMPLETE')
+
+    def test_owned_cabi_stage_identities_cannot_be_pooled(self):
+        spec, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1',
+            owned_mutex_cabi=True, mutex_acceptance='adaptive-performance'))
+        for row in self.candidate:
+            if row['arm'] == 'kdlock':
+                row.update({key: value for key, value in spec.items()
+                            if key not in ('threads', 'repeat', 'arm', 'name')})
+        result = evaluate(self.baseline, self.candidate)
+        self.assertEqual((result['owned_entry_abi'], result['owned_caller_policy']), (4, 'c_abi_v2'))
+        self.assertEqual(result['owned_acquire_policy'], 'linux_local_first')
+        self.assertEqual(result['owned_release_policy'], 'guarded_owner_release')
+        first = self.candidate[0]
+        abi2, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1',
+            mutex_acceptance='adaptive-performance'))
+        for changes in (dict(owned_acquire_policy='bounded_native_first'),
+                        dict(owned_release_policy='unrecorded'),
+                        {key: abi2[key] for key in (*run.OWNED_CALLER_FIELDS,
+                            'entry_abi', 'caller_abi', 'caller_shell',
+                            'owned_preflight_policy', 'owned_mutex_preflight',
+                            'owned_mutex_preflight_spins', 'owned_mutex_preflight_queue')}):
+            saved = dict(first)
+            first.update(changes)
+            with self.subTest(changes=changes), self.assertRaises(Failure):
+                evaluate(self.baseline, self.candidate)
+            first.clear(); first.update(saved)
 
     def test_owned_candidate_keeps_implementation_and_threshold_identity(self):
         for row in self.candidate:
@@ -168,6 +197,38 @@ class AcceptanceTests(unittest.TestCase):
             require_fresh(rows, seen)
 
 
+class LocalAcceptanceTests(unittest.TestCase):
+    def setUp(self):
+        from mutex_local_study import evaluate as evaluate_local
+        self.evaluate = evaluate_local
+        self.rows = [r for t in range(1, 9) for arm in ('kdlock', 'native')
+                     for r in samples(t, arm, jit=0)]
+
+    def test_local_scope_allows_self_without_high_thread_grid(self):
+        result = self.evaluate(self.rows)
+        self.assertTrue(result['passed'])
+        self.assertEqual([row['threads'] for row in result['checks']], list(range(1, 9)))
+
+    def test_local_scope_requires_both_native_ratios(self):
+        for field in ('whole', 'peak'):
+            rows = copy.deepcopy(self.rows)
+            for row in rows:
+                if row['threads'] == 3 and row['arm'] == 'kdlock':
+                    if field == 'whole':
+                        row['measurement']['wall_ns'] = 1100000000
+                    else:
+                        row['measurement']['peak']['throughput_ops_s'] = 115
+            result = self.evaluate(rows)
+            self.assertFalse(result['passed'])
+            self.assertEqual([row['threads'] for row in result['checks'] if not row['passed']], [3])
+
+    def test_local_scope_requires_all_eight_three_round_cohorts(self):
+        with self.assertRaises(Failure):
+            self.evaluate([row for row in self.rows if row['threads'] != 8])
+        with self.assertRaises(Failure):
+            self.evaluate(self.rows[:-1])
+
+
 class OwnedEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -207,6 +268,32 @@ class OwnedEvidenceTests(unittest.TestCase):
         require_owned_evidence(self.record, self.folder)
         require_owned_evidence({}, Path('/unused'))
         require_owned_evidence(dict(mutex_implementation='legacy'), Path('/unused'))
+
+    def test_owned_cabi_requires_matching_published_abi_and_stage_readback(self):
+        spec, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
+            iterations=100, backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1',
+            owned_mutex_cabi=True, mutex_acceptance='adaptive-performance'))
+        record = dict(self.record, **{key: spec[key] for key in
+            (*run.OWNED_CALLER_FIELDS, 'entry_abi', 'caller_abi', 'caller_shell',
+             'owned_mutex_preflight', 'owned_preflight_policy',
+             'owned_mutex_preflight_spins', 'owned_mutex_preflight_queue')})
+        record['parameters'] = dict(record['parameters'], owned_mutex_preflight_spins='0',
+            owned_mutex_preflight_queue='N', owned_mutex_reuse_spins='0', owned_mutex_protocol='linux_local_first_v1')
+        with self.assertRaisesRegex(Failure, 'wrong family/ABI'):
+            require_owned_evidence(record, self.folder)
+        record['published_before'] = dict(entry=dict(record['published_before']['entry'], entry_abi=4))
+        require_owned_evidence(record, self.folder)
+        missing = dict(record); del missing['owned_entry_abi']
+        with self.assertRaisesRegex(Failure, 'incomplete owned caller'):
+            require_owned_evidence(missing, self.folder)
+        wrong = copy.deepcopy(record)
+        wrong['parameters']['owned_mutex_protocol'] = 'bounded_native_first_v1'
+        with self.assertRaisesRegex(Failure, 'provider protocol'):
+            require_owned_evidence(wrong, self.folder)
+        wrong['parameters']['owned_mutex_protocol'] = 'linux_local_first_v1'
+        wrong['parameters']['owned_mutex_native_first_spins'] = '4096'
+        with self.assertRaisesRegex(Failure, 'provider protocol'):
+            require_owned_evidence(wrong, self.folder)
 
     def test_changed_owned_identity_and_live_observations_are_rejected(self):
         variants = [dict(registry_lock_kind=2), dict(entry_abi=3),

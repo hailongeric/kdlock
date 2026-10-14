@@ -38,6 +38,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Mutex workload drain | `mutex/test_mutex_drain.py` checks residual owner flags, sleeping waiters and configured Linux OSQ |
 | Owned mutex | `mutex/test_owned_mutex_core.py`, `test_owned_mutex_delegation.py --mutations`, `test_owned_mutex_wait_clobber.py`, `test_owned_mutex_outer_api.py`; task-cache and admission checks also cover its private state |
 | Owned optimistic entry and OSQ | `mutex/test_owned_mutex_preflight.py`, `test_owned_mutex_osq.py`; the outer API fixture compiles both capture-first and opt-in preflight callers and executes their generated JIT |
+| Owned ordinary-C ABI4 | `mutex/test_owned_mutex_cabi.py --mutations`; actual leaf entry/unlock, eight-word late capture/restore, poisoned caller-saved registers, updated callee COMPLETE, exact FULL and cookie checks. Also select `execution/test_native_after_outer.py`, `test_exec_capacity.py` and ABI admission/codegen checks when changing shared state |
 | Owned intrusive profiler | `mutex/test_owned_mutex_profile.py`; probe registration/unwind, target filtering and return-value ABI, separate from live diagnostic receipts |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
@@ -117,6 +118,19 @@ that node remains queued, observes actual result sleeping, then checks directed
 SELF pickup and exact drain at each polling budget. Its deliberately unstarted
 packet executes no JIT. The separate owned functional checks cover both ordinary
 and clobber nested controls, delegated early release and checked FULL owner ACKs.
+Guarded release is mandatory. The driver verifies
+`owned_mutex_protocol=linux_local_first_v1` from sysfs and records that identity
+and `owned_release_policy=guarded_owner_release`; there is no early-release flag.
+ABI4 local-first acquisition may finish entirely through SELF, so use separate
+returned-JIT and forced-FULL functional checks to validate delegation. A correct
+zero-JIT performance sample does not replace those checks.
+
+The intrusive profiler's `local_first` option counts the acquisition outcome from
+`kd_owned_mutex_outer_cabi_gate`, using its full-width acquisition cookie. Its `ownedlocalfirst` receipt
+reports acquired, failed and missed calls; failed local acquisition does not
+prove a packet was published or executed. The fixture checks poisoned upper
+register bits, exact target filtering, allocation/registration cleanup and
+aggregation across CPUs. Instrumented runs are never performance scores.
 
 ```sh
 python3 tests/kernel/mutex/run_wait_selftest.py \

@@ -36,15 +36,24 @@ static void (*lock_action)(void);
 #define KDLOCK_SPIN_BATCH 3
 #define KD_OWNED_MUTEX_FLAG_WAITERS 1UL
 #define KD_OWNED_MUTEX_FLAG_HANDOFF 2UL
+#define KD_OWNED_MUTEX_FLAG_DELEGATION 8UL
+#define KD_OWNED_MUTEX_FLAGS 15UL
 #define KD_EXEC_LOCK_QUEUE_OWNER 1
 #define KD_EXE_NATIVE_DONE 5
 #define KD_EXE_NO_RUN 9
 #define EINVAL 22
-struct task_struct { int id; } owner __attribute__((aligned(8)))={1}, tasks[8];
+struct task_struct { int id; } __attribute__((aligned(16)));
+static struct task_struct owner={1}, tasks[8];
 static struct task_struct *current=&owner;
 struct list_head { struct list_head *next,*prev; };
 static struct list_head *refill_source;
 static int refills,flushes,last_refill_flush;
+static unsigned long *guard_owner;
+static unsigned int private_guard_checks,refill_guard_checks,rejoin_guard_checks;
+static void assert_guard(void) {
+ assert(*guard_owner&KD_OWNED_MUTEX_FLAG_DELEGATION);
+ assert(*guard_owner&KD_OWNED_MUTEX_FLAG_WAITERS);
+}
 static void INIT_LIST_HEAD(struct list_head *h) { h->next=h->prev=h; }
 static bool list_empty(const struct list_head *h) { return h->next==h; }
 static void list_add_tail(struct list_head *n,struct list_head *h) {
@@ -54,14 +63,17 @@ static void list_del_init(struct list_head *n) {
  n->next->prev=n->prev; n->prev->next=n->next; INIT_LIST_HEAD(n);
 }
 static void list_splice_init(struct list_head *from,struct list_head *to) {
+ assert_guard();
  if(list_empty(from)) return;
  if(from==refill_source) {
   assert(list_empty(to)); assert(flushes>last_refill_flush);
-  last_refill_flush=flushes;refills++;
+  last_refill_flush=flushes;refills++;refill_guard_checks++;
  }
  struct list_head *first=from->next,*last=from->prev,*next=to->next;
  first->prev=to; to->next=first; last->next=next; next->prev=last;
  INIT_LIST_HEAD(from);
+ assert_guard();
+ if(from!=refill_source) rejoin_guard_checks++;
 }
 #define list_first_entry(h,t,m) container_of((h)->next,t,m)
 enum { KD_OWNED_MUTEX_SELF, KD_OWNED_MUTEX_DELEGATE };
@@ -83,7 +95,7 @@ static unsigned long kd_owned_mutex_batches,kd_owned_mutex_refusals,kd_owned_mut
 static bool resched,owned_mutex_refill;
 static bool need_resched(void) { return resched; }
 static bool kd_owned_mutex_owned(struct kd_mutex *lock,struct task_struct *task) {
- return (lock->owner&~7UL)==(unsigned long)task;
+ return (lock->owner&~KD_OWNED_MUTEX_FLAGS)==(unsigned long)task;
 }
 static int released,executed,completed,scenario;
 static unsigned int release_order[8], release_count;
@@ -100,6 +112,9 @@ static void kd_owned_mutex_flush_wakes(struct rcuwait **wake,unsigned int *count
 }
 static void kd_owned_mutex_release(struct kd_mutex *lock) {
  assert(kd_owned_mutex_owned(lock,current)); assert(!lock->wait_lock);
+ /* Rejoin precedes every physical release, including an early outer release.
+  * Even an empty public list cannot clear D while a private batch owns it. */
+ assert_guard();
  release_count=0;
  for(struct list_head *p=lock->wait_list.next;p!=&lock->wait_list;p=p->next) {
   struct kd_owned_mutex_node *n=container_of(p,struct kd_owned_mutex_node,waiter.list);
@@ -122,6 +137,9 @@ EXECUTE = r'''
 static int kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
                                   struct kd_owned_mutex_batch *batch) {
  assert(kd_owned_mutex_owned(batch->lock,current));
+ assert_guard();
+ if(list_empty(&batch->lock->wait_list) && !list_empty(&batch->pending))
+  private_guard_checks++;
  executed++;
  if(scenario==1) return KD_EXE_NO_RUN;
  if(scenario==8 && node->id==1) {
@@ -163,7 +181,9 @@ CASES = r'''
 static void setup(struct kd_mutex *lock,struct kd_owned_mutex_batch *batch,int count) {
  memset(lock,0,sizeof(*lock)); memset(batch,0,sizeof(*batch));
  INIT_LIST_HEAD(&lock->wait_list); INIT_LIST_HEAD(&batch->pending);
- lock->owner=(unsigned long)current|KD_OWNED_MUTEX_FLAG_WAITERS;
+ lock->owner=(unsigned long)current|KD_OWNED_MUTEX_FLAG_WAITERS|
+             KD_OWNED_MUTEX_FLAG_DELEGATION;
+ guard_owner=&lock->owner;
  batch->lock=lock; batch->outer.release=kd_owned_mutex_release_outer;
  memset(nodes,0,sizeof(nodes));
  for(int i=0;i<8;i++) {
@@ -184,8 +204,9 @@ static void handoff_during_refill(void) {
  lock_action=NULL;arrival_lock->owner|=KD_OWNED_MUTEX_FLAG_HANDOFF;
 }
 static void reschedule_during_refill(void) { lock_action=NULL;resched=true; }
-int main(void) {
+static void run_cases(void) {
  struct kd_mutex lock; struct kd_owned_mutex_batch batch;
+ private_guard_checks=refill_guard_checks=rejoin_guard_checks=0;
  const unsigned int all[]={0,1,2,5},suffix[]={1,2,5},self_suffix[]={1,2};
  setup(&lock,&batch,3); scenario=1;
  list_add_tail(&nodes[5].waiter.list,&lock.wait_list);
@@ -294,6 +315,11 @@ int main(void) {
  assert(!kd_owned_mutex_refill_batch(&batch,0));
  assert(!refills && !flushes);
  puts("PASS production optional FIFO refill: off gate, quota across snapshots, wake-time arrivals, SELF cutoff, locked HANDOFF/reschedule, refusal/FULL/early stop");
+ assert(private_guard_checks && refill_guard_checks && rejoin_guard_checks);
+}
+int main(void) {
+ run_cases();
+ puts("PASS mandatory detached owned guard: public-empty private prefix, refill, early-release rejoin and physical-release boundary");
 }
 '''
 
@@ -456,6 +482,14 @@ def main():
                                  '!owned_mutex_refill || false ||'),
         'stop-after-full': ('if (ret == KD_EXE_NATIVE_DONE)\n\t\t\tbreak;',
                             'if (false)\n\t\t\tbreak;'),
+        'rejoin-drops-private-guard': (
+            '\tlist_splice_init(&batch->pending, &lock->wait_list);',
+            '\tlock->owner &= ~KD_OWNED_MUTEX_FLAG_DELEGATION;\n'
+            '\tlist_splice_init(&batch->pending, &lock->wait_list);'),
+        'refill-drops-empty-public-guard': (
+            '\tlist_splice_init(&lock->wait_list, &batch->pending);',
+            '\tlist_splice_init(&lock->wait_list, &batch->pending);\n'
+            '\tlock->owner &= ~KD_OWNED_MUTEX_FLAG_DELEGATION;'),
     }
     notification_mutations = {
         'notification-swaps-full-complete': (

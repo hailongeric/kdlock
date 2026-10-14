@@ -10,7 +10,9 @@ void kd_owned_mutex_lock_self(struct kd_mutex *lock);
 #define KD_OWNED_MUTEX_FLAG_WAITERS 0x01UL
 #define KD_OWNED_MUTEX_FLAG_HANDOFF 0x02UL
 #define KD_OWNED_MUTEX_FLAG_PICKUP  0x04UL
-#define KD_OWNED_MUTEX_FLAGS   0x07UL
+#define KD_OWNED_MUTEX_FLAG_DELEGATION 0x08UL
+#define KD_OWNED_MUTEX_LINUX_FLAGS 0x07UL
+#define KD_OWNED_MUTEX_FLAGS (KD_OWNED_MUTEX_LINUX_FLAGS | KD_OWNED_MUTEX_FLAG_DELEGATION)
 
 enum kd_owned_mutex_waiter_kind {
 	KD_OWNED_MUTEX_SELF = 0,
@@ -91,6 +93,16 @@ enum kd_owned_mutex_preflight_result {
 enum kd_owned_mutex_preflight_result
 kd_owned_mutex_try_optimistic_pinned(struct kd_mutex *lock, unsigned int spins,
 				   bool queued);
+
+/* Diagnostic routing is read only after the fused local path fails. */
+extern bool owned_mutex_self_route;
+extern unsigned int owned_mutex_reuse_spins;
+/* Committed SELF wait loop, with no initial optimistic pass or pin transition.
+ * No stack waiter or resource survives its return. Caller retains its pin. */
+void kd_owned_mutex_lock_wait_pinned(struct kd_mutex *lock);
+/* Committed SELF continuation: retry, enqueue and sleep without repeating the
+ * initial optimistic pass. No captured request is carried into this call. */
+void kd_owned_mutex_lock_self_wait(struct kd_mutex *lock);
 
 bool kd_owned_osq_trylock(struct optimistic_spin_queue *lock);
 bool kd_owned_osq_lock_bounded(struct optimistic_spin_queue *lock,

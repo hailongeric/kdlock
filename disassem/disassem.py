@@ -109,7 +109,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     diagnostics.begin(pid, entry)
     os.makedirs("./asm", exist_ok=True)
 
-    if lock_kind not in {"spin", "mutex", "mutex-owned"} or abi not in {0, 1, 2, 3} or (abi in {1, 3} and lock_kind != "spin") or (abi == 2 and lock_kind not in {"mutex", "mutex-owned"}) or (lock_kind == "mutex-owned" and abi != 2):
+    if lock_kind not in {"spin", "mutex", "mutex-owned"} or abi not in {0, 1, 2, 3, 4} or (abi in {1, 3} and lock_kind != "spin") or (abi == 2 and lock_kind not in {"mutex", "mutex-owned"}) or (abi == 4 and lock_kind != "mutex-owned") or (lock_kind == "mutex-owned" and abi not in {2, 4}):
         diagnostics.set_instruction(entry, "<entry lock kind>")
         return reject_translation("missing or invalid entry lock kind")
 
@@ -129,7 +129,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
 
     resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
     hostcall_targets = set(resolved_hostcalls)
-    readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3} else set()
+    readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3, 4} else set()
     # The current provider exposes direct protocol entries. Resolve the same
     # identities as its executor, including the clobber unlock completion PC.
     raw_spin_lock = get_kernel_symbol("kd_spin_lock") or control_symbols["_raw_spin_lock"]
@@ -157,6 +157,10 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     owned_prepared = get_kernel_symbol("kd_owned_mutex_outer_prepared_clobber_v1")
     owned_preflight = get_kernel_symbol("kd_owned_mutex_outer_preflight_v1")
     owned_direct_unlock = get_kernel_symbol("kd_owned_mutex_direct_unlock_clobber_v1")
+    owned_cabi_lock = get_kernel_symbol("kd_owned_mutex_outer_lock_cabi_v2")
+    owned_cabi_unlock = get_kernel_symbol("kd_owned_mutex_outer_unlock_cabi_v2")
+    if abi == 4 and not (owned_cabi_lock and owned_cabi_unlock):
+        return reject_translation("owned ordinary C ABI symbols unavailable")
     if lock_kind == "mutex-owned" and not all((owned_mutex_lock, owned_mutex_unlock, owned_outer_unlock,
             owned_direct_lock, owned_contended_lock, owned_outer_lock, owned_prepared, owned_preflight, owned_direct_unlock)):
         return reject_translation("owned mutex entry symbols unavailable")
@@ -189,6 +193,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             (owned_outer_lock, "mutex-owned", "kd_owned_mutex_outer_contended_clobber_v1"),
             (owned_prepared, "mutex-owned", "kd_owned_mutex_outer_prepared_clobber_v1"),
             (owned_preflight, "mutex-owned", "kd_owned_mutex_outer_preflight_v1"),
+            (owned_cabi_lock, "mutex-owned", "kd_owned_mutex_outer_lock_cabi_v2"),
+            (owned_cabi_unlock, "mutex-owned", "kd_owned_mutex_outer_unlock_cabi_v2"),
             (owned_direct_unlock, "mutex-owned", "kd_owned_mutex_direct_unlock_clobber_v1"),
             (mutex_lock, "mutex", "mutex_lock"),
             (mutex_unlock, "mutex", "mutex_unlock"),
@@ -236,7 +242,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             db_dict,
             entry,
             {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock, owned_mutex_lock, owned_direct_lock, owned_contended_lock, owned_outer_lock},
-            {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock, owned_mutex_unlock, owned_outer_unlock, owned_direct_unlock},
+            {raw_spin_unlock, clobber_unlock, cold_spin_unlock, mutex_unlock, clobber_mutex_unlock, direct_mutex_unlock, owned_mutex_unlock, owned_outer_unlock, owned_direct_unlock, owned_cabi_unlock},
             discovered_targets,
             native_exits=native_exits,
         )
@@ -344,7 +350,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                     guards=candidate,
                     scoped_calls=bool(discovered_targets - {entry}),
                     mutex_stack_bytes=mutex_stack_bytes,
-                    entry_spill_guards=abi in {1, 2, 3},
+                    entry_spill_guards=abi in {1, 2, 3, 4},
                     readonly_targets=readonly_targets,
                 )
                 if not segment_error:
@@ -387,14 +393,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     except indirect_jump.ReturnFlowError as error:
         diagnostics.set_instruction(error.offset, "<return dispatch>")
         return reject_translation(str(error))
-    if abi in {1, 2, 3}:
+    if abi in {1, 2, 3, 4}:
         reason = entry_abi.check_minimal_entry(
             block_dict, db_dict, entry, clobber_targets,
-            set(lock_symbols), jump_table,
+            set(lock_symbols), jump_table, abi=abi,
+            cookie_targets={owned_cabi_unlock} if abi == 4 else set(),
         )
         if reason:
             return reject_translation(reason)
-        if entry_guards is not None and entry_guards.register_dependencies() - {"RSP", "RBP"}:
+        defined_entry = entry_abi.PRESERVED | {"RAX"} if abi == 4 else {"RSP", "RBP"}
+        if entry_guards is not None and entry_guards.register_dependencies() - defined_entry:
             return reject_translation("entry guard requires an uncaptured GPR")
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
@@ -403,6 +411,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
                                  ({owned_direct_unlock} if lock_kind == "mutex-owned" else
                                   {direct_mutex_unlock or clobber_mutex_unlock}) if abi == 2 else set()),
+        terminal_cabi_unlocks={owned_cabi_unlock} if abi == 4 else set(),
     )
     # Mutex waiters may sleep, so their CPU's GS data is never a safe delegated
     # input. Apply this admission rule to every mutex image, including ABI0.

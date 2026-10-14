@@ -122,6 +122,9 @@ int kd_exe_init(void)
 	owned_outer_lock_addr = (unsigned long)kd_owned_mutex_outer_contended_clobber_v1;
 	owned_prepared_lock_addr = (unsigned long)kd_owned_mutex_outer_prepared_clobber_v1;
 	owned_direct_unlock_addr = (unsigned long)kd_owned_mutex_direct_unlock_clobber_v1;
+	owned_cabi_lock_addr = (unsigned long)kd_owned_mutex_outer_lock_cabi_v2;
+	owned_cabi_unlock_addr = (unsigned long)kd_owned_mutex_outer_unlock_cabi_v2;
+	end_points[end_point_count++] = owned_cabi_unlock_addr;
 	end_points[end_point_count++] = owned_mutex_unlock_addr;
 	end_points[end_point_count++] = owned_outer_unlock_addr;
 	end_points[end_point_count++] = owned_direct_unlock_addr;

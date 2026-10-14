@@ -108,12 +108,14 @@ def main():
             "call->complete = false;",
         ),
         "mutex-batch-wrong-backend-endpoint": (
-            "call->unlock = frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;",
-            "call->unlock = frame->owned_mutex ? owned_direct_unlock_addr : clobber_spin_unlock_addr;",
+            "owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;",
+            "owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr : clobber_spin_unlock_addr;",
         ),
         "mutex-batch-uses-private-stack": (
-            "call->entry_sp = regs->sp;\n\tcall->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;",
-            "call->entry_sp = frame->regs.sp;\n\tcall->entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;",
+            "call->entry_sp = regs->sp;\n\tcall->entry_abi = frame->entry_abi;\n"
+            "\tcall->packet_state = &frame->packet_state;\n\tcall->complete = true;",
+            "call->entry_sp = frame->regs.sp;\n\tcall->entry_abi = frame->entry_abi;\n"
+            "\tcall->packet_state = &frame->packet_state;\n\tcall->complete = true;",
         ),
         "mutex-batch-skips-ledger-admission": (
             "!kd_jit_minimal_complete_allowed(frame) ||",

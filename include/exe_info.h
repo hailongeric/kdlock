@@ -37,6 +37,8 @@ enum kd_entry_abi {
 	KD_ENTRY_ABI_MUTEX_CLOBBER_V1 = 2,
 	/* Spin packet/completion ABI; writer admission precedes the body. */
 	KD_ENTRY_ABI_RWLOCK_CLOBBER_V1 = 3,
+	/* Owned outer CALL preserves the ordinary x86-64 nonvolatile registers. */
+	KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 = 4,
 };
 
 /* Only FULL permits reading all GPR slots. MINIMAL and COMPLETE contain
@@ -45,6 +47,9 @@ enum kd_packet_state {
 	KD_PACKET_FULL = 0,
 	KD_PACKET_MINIMAL = 1,
 	KD_PACKET_COMPLETE = 2,
+	/* IP/SP/BP, RBX/R12-R15; entry also defines synthetic RAX=0. */
+	KD_PACKET_CALLEE_ENTRY = 3,
+	KD_PACKET_CALLEE_COMPLETE = 4,
 };
 #define KD_EXE_CLOBBER_COMPLETE 7
 
@@ -59,7 +64,8 @@ enum kd_exe_lock_kind {
 static inline int kd_entry_abi_valid(int kind, unsigned int abi)
 {
 	if (kind == KD_EXE_LOCK_OWNED_MUTEX)
-		return abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+		return abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+		       abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2;
 	return (kind == KD_EXE_LOCK_SPIN || kind == KD_EXE_LOCK_MUTEX) &&
 	       (abi == KD_ENTRY_ABI_LEGACY ||
 		((abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
@@ -78,6 +84,24 @@ static inline int kd_entry_abi_spin_clobber(unsigned int abi)
 {
 	return abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
 	       abi == KD_ENTRY_ABI_RWLOCK_CLOBBER_V1;
+}
+
+static inline int kd_entry_abi_mutex_reduced(unsigned int abi)
+{
+	return abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	       abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2;
+}
+
+static inline unsigned int kd_entry_packet_state(unsigned int abi)
+{
+	return abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ?
+		KD_PACKET_CALLEE_ENTRY : KD_PACKET_MINIMAL;
+}
+
+static inline unsigned int kd_complete_packet_state(unsigned int abi)
+{
+	return abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ?
+		KD_PACKET_CALLEE_COMPLETE : KD_PACKET_COMPLETE;
 }
 
 struct kd_exe_info {

@@ -61,6 +61,11 @@ typedef struct qspinlock raw_spinlock_t;
 struct mutex {
 	bool locked;
 };
+struct kd_mutex {
+	struct task_struct *owner;
+};
+static bool kd_owned_mutex_owned(struct kd_mutex *lock, struct task_struct *task)
+{ return lock->owner == task; }
 static bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
 { return lock->locked && task == current; }
 #define ATOMIC_INIT(value) (value)
@@ -1147,6 +1152,62 @@ static void mutex_batch_frames(void)
  kd_source_frame_put(); CHECK(!source_frames && !kd_exec_current_frame());
 }
 
+/* Construct the actual owned entry contract before context publication.
+ * Invalid ABI/type/owner requests must not modify even the inactive slot. */
+static void owned_mutex_batch_abis(void)
+{
+ struct kd_mutex lock = { .owner = current };
+ struct kd_exec_outer_unlock hook = {0};
+ struct kd_regs packet = registers(103);
+ struct kd_exec_frame *frame;
+ struct kd_exec_context before;
+ const unsigned int invalid[] = {0,1,3,5,255};
+ const unsigned int valid[] = {KD_ENTRY_ABI_MUTEX_CLOBBER_V1,
+                               KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2};
+
+ cpu=0;current=&owners[0];lock.owner=current;
+ CHECK(!source_frames && !kd_exec_current_frame());
+ CHECK(kd_source_frame_get());
+ before=*kd_exec_current_context();
+ for (unsigned int i=0;i<sizeof(invalid)/sizeof(invalid[0]);i++) {
+  CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,
+        &waiters[0],&lock,&hook,invalid[i]));
+  CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
+ }
+ /* The private shared constructor must not silently make a legacy ABI4
+  * frame, even though owned construction supports that same entry ABI. */
+ CHECK(!kd_exec_frame_push_mutex_root(&packet,0x1000,0x3000,&waiters[0],
+       &lock,(unsigned long)&lock,false,&hook,KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2));
+ CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
+ lock.owner=&owners[1];
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,
+       &waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+ CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
+ lock.owner=current;
+ for (unsigned int i=0;i<sizeof(valid)/sizeof(valid[0]);i++) {
+  unsigned int abi=valid[i];
+
+  frame=kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,
+        &waiters[0],&lock,&hook,abi);
+  CHECK(frame && source_frames==1);
+  if (!frame) return;
+  CHECK(frame->owned_mutex && frame->entry_abi==abi &&
+        frame->packet_state==kd_entry_packet_state(abi) && kd_exec_frame_validate(frame));
+  CHECK(frame->batch_lease && frame->regs_borrowed && !frame->complex_ready);
+  CHECK(frame->jit_lock_node[0]==&lock && frame->jit_lock_addr[0]==(unsigned long)&lock);
+  CHECK(frame->outer_unlock_hook==&hook && kd_exec_frame_regs(frame)==&packet);
+  frame->executed=true;frame->packet_state=kd_complete_packet_state(abi);
+  CHECK(!kd_exec_frame_retire_owned_mutex_batch(frame,&lock));
+  CHECK(!kd_exec_current_frame() && source_frames==1 && lock.owner==current);
+ }
+ source_open=false;before=*kd_exec_current_context();
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,
+       &waiters[0],&lock,&hook,KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2));
+ CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
+ source_open=true;kd_source_frame_put();
+ CHECK(!source_frames && !kd_exec_current_frame());
+}
+
 int main(void)
 {
 	unsigned int depth, cycle, last_released;
@@ -1155,6 +1216,7 @@ int main(void)
 	CHECK(sizeof(struct kd_regs) == 168 &&
 	      offsetof(struct kd_exec_frame, regs) == 40);
 	mutex_batch_frames();
+	owned_mutex_batch_abis();
 	if (failures)
 		return 1;
 	lazy_single();
