@@ -63,7 +63,9 @@ when ancestry permits it; retain existing revert history. Keep unfinished edits
 on a task/WIP branch. Finished and rejected experiments use `archive/<original-branch>`
 tags rather than active topic branches. Verify each tag points to the exact old tip
 before deleting a local branch. Never merge a rejected tip merely to mark it merged.
-The [branch inventory](git-branches-20261012.json) records the 2026-10-12 dispositions.
+The [latest branch inventory](git-branches-20261014.json) records local archival
+and retained frozen worktrees; the [earlier inventory](git-branches-20261012.json)
+preserves the 2026-10-12 dispositions.
 
 ## Environment
 

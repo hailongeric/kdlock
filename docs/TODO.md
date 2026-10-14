@@ -11,19 +11,14 @@ measurements resolves the correctness limits below.
 
 ## Current checkpoint
 
-The [owned-mutex redesign](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
-passes targeted ownership, queue, FULL/early-release and drain checks, but its
-finite and refill policies remain substantially slower than legacy KD and
-Native on c01. It is opt-in, limited to the captured x86-64 configuration and
-KD-only object lifetimes. Progress in the measured cohorts does not establish
-fairness; refill's observed minimum worker share is 0.017% at sixteen workers.
-The report separates earlier-source probe coverage, current-source checks,
-retained warnings and unresolved diagnostic variation.
-
-The [blocking-only mutex verification](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-passed affected checks, real scheduler/owner probes and contended JIT execution.
-It does not establish general oversubscription, starvation freedom, full-suite
-coverage or universal performance parity.
+The experimental owned provider extends `d8d14a1` with the accepted
+[ABI4/reuse-32 c01 profile](PERFORMANCE.md#active-c01-18-worker-study), limited to
+KD-only object lifetimes and the captured x86-64 configuration. Its
+[targeted receipts](VALIDATION.md#current-owned-protocol-verification) do not
+establish fairness, general oversubscription or universal Native parity.
+The broader native-first experiment remains rejected and archived. The accepted
+1–8-worker result has a narrower performance scope; it does not waive ownership, lifetime, progress or drain
+requirements, or resolve the failures below.
 
 Recorded failures and unresolved coverage:
 

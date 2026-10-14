@@ -2,113 +2,52 @@
 
 [Tests](../tests/README.md) owns check selection and commands;
 [operations](AGENTS.md) owns the verified guest environment, recovery and drain.
-Receipts apply to the source, kernel, boot policy and topology they record.
+Receipts apply to their recorded source, kernel, boot policy and topology.
 Publication, actual JIT execution and performance acceptance are separate results.
 Known failures remain in [TODO](TODO.md).
+
+## Current owned-protocol verification
+
+The owned ABI4/reuse-32 extension has a new
+[verification receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/validation.json):
+basic and affected unit/mutation checks, live queued cooling/task probes,
+returned JIT with forced FULL/owner ACKs, normal build and final idle state.
+The [c01/post64 1–8-worker result](PERFORMANCE.md#active-c01-18-worker-study)
+passes its independent performance screen and both confirmations. These are
+source-specific checks, not a full-suite or general fairness result.
+
+The earlier `d8d14a1`
+[protocol receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/validation.json)
+records affected unit/mutation checks, real JIT/FULL acknowledgments and queued
+cooling. The [later restoration receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/validation.json)
+separately records restoration, normal build and idle state after the rejected
+native-first experiment; it is not a fresh performance run or a full-suite pass.
+
+The new acceptance does not revise historical failures or extend the measured
+performance scope above eight workers or to other payloads.
 
 ## Archived native-first mutex verification
 
 The [native-first receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/validation.json)
-records the ordinary C ABI, late callee-state capture, exact-owner leaf unlock,
-sticky delegation guard and revised owner-spin transitions. It ties each
-selected VM check, mutation family, real JIT/FULL/ACK run and corrected failure
-to its frozen source generation. The [study](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/README.md)
-keeps performance acceptance separate from those correctness results and from
-unscored diagnostic observations. No full suite or other-workload acceptance is
-claimed; the receipt states the precise final checks and inherited coverage.
-The implementation is archived as `archive/perf/mutex-native-first-20261014`
-after failing performance acceptance. These are checks of that experiment,
-not a claim that its provider is installed in the current source tree.
+ties ABI4, owner spinning, leaf unlock and guarded-release checks to each frozen
+candidate. It preserves corrected fixture failures, actual JIT/FULL/ACK runs,
+queued cooling and the failed profiler load. The implementation is archived at
+`9a5305e`; [performance acceptance failed](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/README.md).
+These historical checks do not replace the new source-specific receipt above.
 
-## Current owned-protocol verification
+## Earlier mutex receipts
 
-The [2026-10-14 owned-protocol receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/validation.json)
-records the unified outcome/grant protocol, optional bounded OSQ preflight and
-separate capture-first/prepared entries. Final verification includes two basic
-fixtures and nine affected groups, core/preflight/OSQ/queue mutation checks,
-73 runner checks and 17 study-auditor checks. Both caller policies execute real
-JIT continuations; six live nested/early FULL cases complete owner acknowledgments.
-Cooling and queued-work probes pass with polling budgets 0, 1024 and 4096.
-The failed initial mutation-driver attempt and its narrowly corrected retry
-remain archived separately.
+The linked receipts own exact test counts, source hashes, build warnings and
+inherited-versus-rerun coverage. No row implies a current full-project pass.
 
-The [report](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md)
-audits 708 scored sessions and 72 unscored diagnostics. Every audited benchmark
-sample has correct results, worker progress and final drain. The final finite
-and refill grids pass their same-policy higher-thread regression gates, but fail
-the primary 97% Native target. Builds, warnings, source identities, recovery
-snapshot, kernel identity and final idle state remain explicit in the receipt.
-No full suite, other-workload, RT/debug-kernel or 64-worker acceptance is claimed.
-
-## Earlier owned-mutex verification
-
-The [owned-mutex receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261013/validation.json)
-records the 32-byte KD-owned protocol, final ordinary-unlock fix, seven core
-mutations, sixteen refill FIFO mutations, 80 runner/auditor tests and live
-nested/early FULL continuation at 4/16 workers. A final legacy JIT compatibility
-smoke returns 414,157/7,964,008 bodies at 4/16 workers on the same provider,
-with explicit original owner/list/OSQ drain. Earlier affected admission,
-entry/outer ABI, parking/cooling and owner/ACK receipts retain their own source
-identities. Refilling repeats only its affected subset. W=1 builds pass with
-warnings; selected earlier fixture-source gaps remain explicit. The
-[report](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
-retains the archived failures, 426 scored sessions and 114 separate diagnostics.
-Every audited sample progresses and drains, but no candidate meets performance
-acceptance. No full suite, other-workload or 64-worker acceptance is claimed.
-
-## Earlier mutex protocol verification
-
-The [protocol receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/validation.json)
-retains basic and affected frame/cookie/ABI, admission, task-reference, parking,
-terminal and owner/ACK checks. It distinguishes compiled JIT fixtures, live
-resource probes and returned benchmark bodies. The report preserves rejected
-frame/layout/capture/epoch candidates and initial corrected harness failures.
-Correct results and drain do not establish performance acceptance: no candidate
-meets the full 97% target. No full suite or other-workload acceptance was run.
-
-## Earlier optimistic-spin verification
-
-The [optimistic-spin receipt](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/validation.json)
-records six rejected retry/OSQ candidates, 369 audited performance sessions,
-affected fixtures, 62 runner/auditor checks and live parking/cooling and owner/ACK
-probes. The accepted provider is restored to `9b76719`; the retained workload
-drain check passes two basic fixtures, its OSQ-on/off state fixture and a separate
-single-round Native/TCLock/KD live check. The
-[report](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/README.md)
-distinguishes candidate tests, restored-source verification and performance gates.
-The 97% Native target remains unmet; no full suite or other-workload acceptance
-was run.
-
-## Earlier cost-study verification
-
-The [c01 cost-study receipt](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/validation.json)
-records the successor-prefetch checks, live resource probes and exact candidate
-sources. The [report](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md)
-keeps the fresh three-way comparison, separate diagnostics and rejected
-experiments. The 97% Native target remains unmet; no other-workload acceptance
-or full test suite was run.
-
-## Earlier admission verification
-
-The [2026-10-13 admission receipt](../bench/results/10.176.26.71/bench/mutex_admission/20261013/validation.json)
-records 14 basic/affected groups, 54 runner tests and six acceptance-auditor tests,
-normal and SELFTEST builds, plus live cooling/parking and cross-NUMA owner/ACK
-checks. All 543 study sessions have correct results, worker progress and drain.
-The [performance report](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md)
-keeps 48 diagnostics unscored and all eight rejected thresholds. The default
-remains 256; higher-thread regression gates pass but the 97% Native target does
-not. No full suite or other-workload acceptance was run.
-
-## Earlier blocking-only verification
-
-The [blocking-only mutex receipt](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-records seven basic/affected groups, 101 context-admission cases and 87 runner/report
-tests on 2026-10-12. Normal and SELFTEST `W=1` builds had no mutex wait-mode selector.
-The scheduler probe passed with polling budgets 0, 1024 and 4096. The task/ACK
-probe passed across NUMA nodes. A 16-worker/eight-cacheline functional run returned
-308,209 JIT bodies across 320,000 operations and fully drained. The receipt retains
-build warnings, the initial corrected test assumptions, archive hashes and exact
-working-tree inputs. No full suite or new performance matrix was run.
+| Scope | Receipt and limits |
+| --- | --- |
+| <a id="earlier-owned-mutex-verification"></a>Owned redesign, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261013/validation.json): core/refill, outer/FULL/ACK and legacy compatibility; earlier-source coverage remains distinct. |
+| <a id="earlier-mutex-protocol-verification"></a>Legacy protocol trials, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/validation.json): frame/cookie/ABI, admission, task references, parking and terminal/owner checks; candidates rejected on performance. |
+| <a id="earlier-optimistic-spin-verification"></a>Legacy optimistic retry, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/validation.json): rejected candidates and restored-provider drain verification kept separate. |
+| <a id="earlier-cost-study-verification"></a>Cost study, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/validation.json): prefetch/counter checks and live resource probes; exact candidate sources retained. |
+| <a id="earlier-admission-verification"></a>Admission study, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_admission/20261013/validation.json): affected admission/caller checks, parking/cooling and owner/ACK; no broader workload acceptance. |
+| <a id="earlier-blocking-only-verification"></a>Blocking policy, 2026-10-12 | [Receipt](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json): scheduler/task probes and contended JIT; historical oversubscription scenarios are not thereby rerun. |
 
 ## Historical receipts
 

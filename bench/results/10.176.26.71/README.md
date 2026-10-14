@@ -1,80 +1,39 @@
 # Results from 10.176.26.71
 
 This index covers the VM on the Ubuntu Xeon Gold 6438N host at
-`eric@10.176.26.71`. Source edits stay on `380G10` and are synchronized before
-execution. Receipts retain their own source, kernel, boot policy and topology.
-
-## Latest archived mutex experiment
-
-The [native-first entry and waiting study](bench/mutex_owned/20261014-native-first/README.md)
-tests an ordinary C caller, late capture, a leaf unlock and guarded SELF release
-to the independent 32-byte owned protocol. It compares fresh Native, TCLock and
-owned references and preserves every staged candidate. Its
-[correctness receipt](bench/mutex_owned/20261014-native-first/validation.json)
-distinguishes source-specific unit/mutation checks, real JIT/FULL acknowledgments
-and queued cooling probes. Adaptive local execution remains visibly KD_SELF;
-the performance gates also require higher-thread returned JIT bodies. Experimental
-entry and release policies failed acceptance and are retained in
-`archive/perf/mutex-native-first-20261014`, separately from the current provider.
+`eric@10.176.26.71`. Source edits stay on `380G10`. Each report retains its own
+source, kernel, boot policy, topology, measurements and failed attempts.
+Current commands and accepted-provider status live in the
+[project guide](../../../docs/PROJECT_GUIDE.md) and
+[performance status](../../../docs/PERFORMANCE.md).
 
 ## Current owned-protocol optimization
 
-The [2026-10-14 owned-protocol optimization](bench/mutex_owned/20261014-hybrid/README.md)
-integrates grant/completion notification and avoids a second queue-lock
-acquisition on delegated pickup, while retaining the Linux-sized 32-byte object
-and excluding original Linux target-lock calls. It audits 708 scored sessions
-and 72 separate diagnostics, with [affected correctness checks](bench/mutex_owned/20261014-hybrid/validation.json).
-Final finite and refill policies pass the fresh same-policy higher-thread
-regression gates; neither meets the 97% Native primary target. Pre-capture
-admission and bounded OSQ polling remain opt-in, and the owned defaults remain
-capture-first, ratio 256 and finite FIFO. This is experimental protocol progress,
-not Native parity; all rejected screens and raw evidence are retained.
+The [Linux-local ABI4/reuse-32 profile](bench/mutex_owned/20261014-linux-local/README.md)
+passes the 97% Native target for both throughput measures at all counts 1–8,
+in the screen and both fresh confirmations. It extends the experimental owned
+provider while preserving the 32-byte object and KD-only ownership. Its c01/post64
+scope remains separate from the older through-28/higher-thread studies below.
+
+## Latest archived mutex experiment
+
+The native-first implementation at `9a5305e` failed its full performance gates
+and is preserved under `archive/perf/mutex-native-first-20261014`. Its report is
+integrated separately; the accepted provider was restored. Correctness evidence,
+KD_SELF throughput and returned-JIT requirements remain distinct.
 
 ## Earlier verification
 
-The [KD-owned mutex study](bench/mutex_owned/20261013/README.md) implements the
-same 32-byte object geometry as Linux with private owner/OSQ/sleep code and a
-typed FIFO. It retains 426 scored sessions, 114 diagnostics and the
-[correctness receipt](bench/mutex_owned/20261013/validation.json). Target probes
-observe no original Linux calls for owned objects. Bounded refill improves this
-prototype's throughput but neither owned policy meets the 97% target or retains
-legacy KD's higher-thread performance. The owned protocol stays explicit and
-experimental; legacy remains the benchmark default.
-
-The [c01 protocol study](bench/mutex_protocol/20261013/README.md) expands the
-optimization space to frame reuse, node layout, caller capture, native preflight
-and bounded execution epochs. It retains fresh Native/TCLock/KD baselines and all
-rejected screens; it does not establish the two-metric 97% target. The accepted
-provider remains `9b76719`. The linked receipts distinguish correctness, returned JIT,
-performance acceptance and diagnostic evidence.
-
-The [optimistic-spin study](bench/mutex_optimistic/20261013/README.md) measures
-owner-aware retries and Linux OSQ across six candidates. All fail primary parity;
-the accepted provider stays at `9b76719` and the rejected implementation is
-preserved at `260d330`. Its [receipt](bench/mutex_optimistic/20261013/validation.json)
-records 369 audited performance sessions, affected/protocol checks and restored
-provider verification. The benchmark now checks original owner, wait-list and
-OSQ drain explicitly.
-
-The [c01 cost study](bench/mutex_c01_cost/20261013/README.md) compares fresh
-Native, TCLock and KD mutex runs, profiles separate diagnostics and evaluates
-successor-prefetch changes. Its [receipt](bench/mutex_c01_cost/20261013/validation.json)
-retains affected checks, live owner/ACK and parking/cooling evidence, rejected
-variants and all raw source identities. The 97% Native target is still unmet.
-
-The [c01 admission receipt](bench/mutex_admission/20261013/validation.json)
-records 14 basic/affected groups, 54 runner tests, six acceptance-auditor tests,
-normal/SELFTEST builds and live cooling, parking and owner/ACK checks. All 543
-benchmark/diagnostic sessions progressed and drained. The
-[study](bench/mutex_admission/20261013/README.md) rejects all eight thresholds;
-default 256 remains and the 97% Native target is unmet. The retained sampler
-passes the specified higher-thread regression gates.
-
-The [blocking-only mutex receipt](tests/mutex-blocking-only-20261012/validation.json)
-records the `792db45` policy change: seven basic/affected groups, 87 runner/report
-tests, normal/SELFTEST builds, sleeping-waiter and cross-NUMA owner/ACK probes,
-and a fully drained 320,000-operation JIT run. It records all validation limits
-and raw archive hashes. It is functional evidence, not a new performance matrix.
+| Study | Captured scope and disposition | Correctness receipt |
+| --- | --- | --- |
+| [Native-first entry/waiting, 2026-10-14](bench/mutex_owned/20261014-native-first/README.md) | ABI4, OSQ, leaf unlock and guarded release; implementation rejected, report retained. | [Receipt](bench/mutex_owned/20261014-native-first/validation.json) |
+| [Owned outcome/grant protocol, 2026-10-14](bench/mutex_owned/20261014-hybrid/README.md) | Structural changes retained experimentally; same-policy higher-thread gates pass, Native parity fails. | [Receipt](bench/mutex_owned/20261014-hybrid/validation.json) |
+| [Owned redesign, 2026-10-13](bench/mutex_owned/20261013/README.md) | Independent 32-byte object and finite/refill protocol retained explicitly; performance target fails. | [Receipt](bench/mutex_owned/20261013/validation.json) |
+| [Legacy protocol trials, 2026-10-13](bench/mutex_protocol/20261013/README.md) | Frame/layout/capture/epoch candidates rejected; post-work variants kept separate. | [Receipt](bench/mutex_protocol/20261013/validation.json) |
+| [Legacy optimistic retry, 2026-10-13](bench/mutex_optimistic/20261013/README.md) | Six candidates rejected; native owner/list/OSQ drain check retained. | [Receipt](bench/mutex_optimistic/20261013/validation.json) |
+| [Three-way cost study, 2026-10-13](bench/mutex_c01_cost/20261013/README.md) | Native/TCLock/KD diagnostics and bounded counter/prefetch improvement; parity unmet. | [Receipt](bench/mutex_c01_cost/20261013/validation.json) |
+| [Admission study, 2026-10-13](bench/mutex_admission/20261013/README.md) | Eight thresholds rejected; pinned cold sampler and default 256 retained. | [Receipt](bench/mutex_admission/20261013/validation.json) |
+| Blocking policy, 2026-10-12 | Sleeping/task/ACK probes and contended JIT; functional evidence, not a new matrix. | [Receipt](tests/mutex-blocking-only-20261012/validation.json) |
 
 ## Frozen benchmark reports
 

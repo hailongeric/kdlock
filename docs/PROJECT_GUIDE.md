@@ -195,96 +195,30 @@ separate from new validation.
 
 ## Git branches
 
-The repository's default branch is named `master`. It holds the accepted
-experimental baseline. Use short-lived branches for subsequent tasks; archive
-finished or rejected experiments under `archive/<original-branch>` tags.
-The [2026-10-12 branch inventory](git-branches-20261012.json) records original tips,
-unique commits, rejection/revert evidence, completed local cleanup and the remote
-publication plan.
+`master` holds accepted work. The owned local-acquisition extension is
+`585335b`, with an explicit ABI4/reuse-32 profile accepted under the
+[c01/post64 1–8-worker scope](PERFORMANCE.md#active-c01-18-worker-study).
+Its measured source snapshots remain independent of the later report/index edits.
+The rejected native-first provider is a separate historical experiment.
 
-The former `perf/hash-payload-20260927` branch grew into an integration branch for
-spin/mutex optimization, rwlock ABI3, real APIs, NUMA changes, blocking-only mutexes
-and their evidence. At review it was 91 commits ahead of the old `master`, which
-had no unique commits. Local `master` was fast-forwarded without conflicts to
-`fa48b7d89265befced26925ce7c0b73fd5a44f97`: the 91 accepted commits plus the branch
-documentation commit. The former integration branch is complete as an experimental
-checkpoint and closed locally. General performance parity and the limitations in
-[TODO](TODO.md) remain unresolved.
+Use short-lived task branches. Archive finished or rejected tips under
+`archive/<original-branch>` tags and verify the exact object before deleting a
+branch. Never merge a rejected implementation merely to close its branch.
+The native-first implementation is preserved at `9a5305e`, tag
+`archive/perf/mutex-native-first-20261014`; its
+[report](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/README.md)
+was integrated separately. [The machine index](../bench/results/10.176.26.71/README.md)
+records earlier study dispositions without duplicating their narratives here.
 
-| Archived experiment (names below use `perf/`) | Purpose and outcome |
-| --- | --- |
-| `mutex-empty-bucket-rejected-20261003` | Empty task-bucket shortcut; rejected and reverted |
-| `mutex-fail-read-rejected-20261003` | Avoid unconditional fault-injection atomic reads; rejected and reverted |
-| `mutex-hash-admission-20260928` | Ratio512 admission; rejected repeated regressions |
-| `mutex-numa-candidate-20260928` | Original bounded NUMA scan/handoff candidate; performance rejected |
-| `mutex-numa-rejected-20261003b` | Later NUMA grouping candidate; rejected and reverted |
-| `mutex-pack-rejected-20261003b` | Metadata packing and prefetch/layout changes; rejected and reverted |
-| `mutex-retry-rejected-20261003b` | Extra native acquisition retry after admission; rejected and reverted |
-| `mutex-task-buckets-rejected-20261003` | Sharded task-registry locks; rejected and reverted |
-| `mutex-task-cache-batch-candidate-20260928` | High-JIT cache plus batch/NUMA changes; rejected combined candidate |
-| `mutex-task-cache-candidate-20260928` | Original task retention cache; correctness passed, performance rejected |
+The [2026-10-14 inventory](git-branches-20261014.json) records the local cleanup:
+merged WIP `09bfffe` is preserved exactly by
+`archive/wip/worktree-20261012` and its local branch is closed. The cached remote
+protocol tip `475e1d6` has a separate exact-tip archive tag; no remote refs changed.
+The [2026-10-12 inventory](git-branches-20261012.json) retains earlier dispositions. Detached worktrees may contain dirty frozen experiment inputs. Their
+canonical source evidence must be preserved before removing a checkout.
 
-Six experiment tips are already in the accepted history followed by explicit
-reverts. Four have seven separate commits in total; archive tags preserve them
-without promoting the rejected implementations. Later accepted cache/NUMA work
-is a separate implementation with its own measurements.
-
-The nine pre-existing edits were committed as `09bfffe` on
-`wip/worktree-20261012`. That checkout, including the outer acquisition cookie, is
-the starting baseline for the
-[2026-10-13 admission study](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md).
-Its implementation and evidence are integrated into local `master`; the task
-tip is preserved as `archive/perf/mutex-admission-c01-20261013`. All threshold
-candidates were rejected and default 256 remains. The user's original WIP
-branch is retained unchanged at `09bfffe`. [Validation](VALIDATION.md) gives
-the tested scope and remaining limits.
-
-The subsequent [c01 cost study](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md)
-retains exact per-CPU waiter counters and staged successor prefetch as a bounded
-higher-thread improvement. It does not reach the through-28 Native target.
-Its local task tip is archived as `archive/perf/mutex-c01-cost-20261013` after
-fast-forward integration; failed variants and raw evidence remain separate.
-
-The [optimistic-spin study](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/README.md)
-rejects all six owner-aware retry/OSQ candidates. Its exact experimental tip
-`260d330` is preserved as `archive/perf/mutex-optimistic-c01-20261013` without
-merging the rejected provider. The report and retained workload drain check are
-integrated separately, with their tip archived as
-`archive/perf/mutex-optimistic-report-20261013`. The provider remains `9b76719`.
-
-The later [owned-mutex redesign](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
-adds an explicit experimental KD object and keeps the legacy benchmark default.
-It preserves the Linux object layout while integrating owner spinning and
-sleeping into KD's own protocol. The targeted correctness checks and legacy
-JIT compatibility smoke pass; finite/refill performance acceptance fails.
-The implementation is retained for its requested independent protocol, without
-promoting a rejected throughput policy. Its local task tip is preserved as
-`archive/wip/mutex-owned-v1-20261013` after integration.
-
-The [owned-protocol optimization](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md)
-retains the single-word notification and directed pickup changes as experimental
-owned-backend improvements. Final finite and refill grids pass their fresh
-same-policy higher-thread regression gates, while both fail Native parity.
-The extra C-ABI preflight and bounded OSQ policies remain opt-in; capture-first,
-ratio 256 and finite FIFO remain the owned defaults. The implementation and
-complete evidence are integrated locally, with the task tip preserved as
-`archive/perf/mutex-owned-hybrid-20261014`. This does not promote a rejected
-throughput policy or change the benchmark's legacy default.
-
-The subsequent [native-first study](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/README.md)
-tests a late-capture C ABI, owner-aware OSQ, exact-owner leaf unlock and guarded
-early release within the same 32-byte KD-owned object. Its primary throughput,
-higher-thread JIT and final compatibility gates do not all pass. The tested
-implementation is preserved as `archive/perf/mutex-native-first-20261014` without
-integrating the rejected provider; current mutex source remains `d8d14a1`.
-The separate report retains every score, diagnostic, correction and source hash.
-
-All twelve original tips are preserved by verified archive tags, including
-`archive/master-before-integration-20261012`. The eleven local `perf/` branches
-were removed. The remaining local branches are `master` and
-`wip/worktree-20261012`; the original patch remains preserved with the inventory.
-
-Remote publication remains pending; this operation did not push commits or tags,
-or delete remote branches. Publish and verify the archive tags before
-fast-forwarding `origin/master`, then remove the eleven old remote topic branches.
-[Operations](AGENTS.md#git-and-rollback) defines the local Git workflow.
+Remote-tracking refs are cached observations. Publishing tags, advancing remote
+`master` and deleting remote branches are separate operations; verify actual
+remote tips and archive targets first. Local cleanup does not publish anything
+or synchronize the guest. [Operations](AGENTS.md#git-and-rollback) defines the
+Git and recovery workflow.

@@ -1,0 +1,13 @@
+{
+  "inventory": "bench/results/10.176.26.71/raw/bench/mutex-linux-local-20261014/raw-inventory.json",
+  "inventory_sha256": "5911e4a13dd99958ab1754610ec2fe12212a9af60ede8114ac960f885fdc70a0",
+  "regular_files": 24801,
+  "bytes": 265154014,
+  "directories": 2194,
+  "symlinks": 514,
+  "symlink_policy": "Target strings preserved; directory symlinks never traversed.",
+  "includes": "All scored/diagnostic/functional samples, source/binary/JIT bytes, corrected harness failures, rejected candidates and closeout.",
+  "archive": "bench/results/10.176.26.71/raw/bench/mutex-linux-local-20261014.tar.gz",
+  "archive_bytes": 71954359,
+  "archive_sha256": "a2dd1d59f876e5e687eb9f70c011e3d3dd5ececbe013b337f9d804c98c40fc28"
+}

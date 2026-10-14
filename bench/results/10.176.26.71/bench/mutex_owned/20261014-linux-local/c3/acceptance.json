@@ -1,0 +1,2147 @@
+{
+  "auditor_sha256": "2d7bb3939b68446477bcb07caa41f6932b6df3a14118987c4eab4a970da18cd1",
+  "command": [
+    "bench/tclock_compare/mutex_local_study.py",
+    "--raw",
+    "bench/results/10.176.26.71/raw/bench/mutex-linux-local-20261014/extracted",
+    "--baseline",
+    "bench/mutex-linux-local-baseline-20261014",
+    "--screen",
+    "bench/mutex-linux-local-c3-screen-20261014",
+    "--out",
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/c3"
+  ],
+  "comparisons": {
+    "baseline": {
+      "checks": [
+        {
+          "candidate": {
+            "best_peak": 13923737.56770396,
+            "execution_classes": [
+              "KD_SELF",
+              "KD_SELF",
+              "KD_SELF"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_whole": 13864057.893139003,
+            "peak_rates": [
+              10322256.77319688,
+              13903598.39063392,
+              13923737.56770396
+            ],
+            "peak_spread_pct": 25.903228022849092,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              8118582.933537247,
+              13864057.893139003,
+              13896582.22141231
+            ],
+            "whole_spread_pct": 41.67610473362535,
+            "worker_cpu_ns_per_op": [
+              123.16992941911428,
+              72.12904365179197,
+              71.95855208621165
+            ],
+            "worker_share_max": 1.0,
+            "worker_share_min": 1.0
+          },
+          "paired_native": {
+            "best_peak": 13906674.17874644,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 13826267.384206772,
+            "peak_rates": [
+              7697495.1752412785,
+              13906674.17874644,
+              13865983.397224797
+            ],
+            "peak_spread_pct": 44.77993969578743,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              7677431.452929812,
+              13860463.896918919,
+              13826267.384206772
+            ],
+            "whole_spread_pct": 44.719462398447135,
+            "worker_cpu_ns_per_op": [
+              130.250774633542,
+              72.14652163818937,
+              72.32547997032984
+            ],
+            "worker_share_max": 1.0,
+            "worker_share_min": 1.0
+          },
+          "passed": true,
+          "ratios": {
+            "best_peak": 1.0012269927905264,
+            "median_whole": 1.0027332401350344
+          },
+          "threads": 1
+        },
+        {
+          "candidate": {
+            "best_peak": 6218006.161514953,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              2046564,
+              2052601,
+              1831348
+            ],
+            "jit_shares": [
+              0.16851582261804385,
+              0.1680176998857945,
+              0.14820798717576864
+            ],
+            "median_whole": 6108000.82012544,
+            "peak_rates": [
+              6092770.429754181,
+              6136757.486190211,
+              6218006.161514953
+            ],
+            "peak_spread_pct": 2.0407476104863993,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              6072068.431168863,
+              6108000.82012544,
+              6178026.436717264
+            ],
+            "whole_spread_pct": 1.7347411807686313,
+            "worker_cpu_ns_per_op": [
+              329.3758131159096,
+              327.4353093698267,
+              323.72764483586434
+            ],
+            "worker_share_max": 0.5447091062394603,
+            "worker_share_min": 0.4552908937605396
+          },
+          "paired_native": {
+            "best_peak": 10016305.77459339,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 9080378.627332836,
+            "peak_rates": [
+              9098112.7707754,
+              9138867.710770037,
+              10016305.77459339
+            ],
+            "peak_spread_pct": 10.047119981131928,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              7937720.1959690675,
+              9080378.627332836,
+              9967379.557717541
+            ],
+            "whole_spread_pct": 22.352144608144407,
+            "worker_cpu_ns_per_op": [
+              251.8976032898768,
+              220.19649687953708,
+              200.59445045940186
+            ],
+            "worker_share_max": 0.6024090557275542,
+            "worker_share_min": 0.39759094427244585
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.6207883726240747,
+            "median_whole": 0.6726592657424829
+          },
+          "threads": 2
+        },
+        {
+          "candidate": {
+            "best_peak": 4769197.887691803,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              2900450,
+              2984665,
+              2885607
+            ],
+            "jit_shares": [
+              0.30522313611260776,
+              0.3588220994783331,
+              0.3410457276254879
+            ],
+            "median_whole": 4229475.6282184,
+            "peak_rates": [
+              4769197.887691803,
+              4169379.9678628515,
+              4277812.14283855
+            ],
+            "peak_spread_pct": 14.021604965358334,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              4751027.570600885,
+              4158629.498831528,
+              4229475.6282184
+            ],
+            "whole_spread_pct": 14.00641885289443,
+            "worker_cpu_ns_per_op": [
+              631.4383524927599,
+              721.3863597674043,
+              709.1612441756679
+            ],
+            "worker_share_max": 0.34814723624276744,
+            "worker_share_min": 0.31047952586206895
+          },
+          "paired_native": {
+            "best_peak": 7730280.160489686,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 7334976.842739765,
+            "peak_rates": [
+              7073825.315399683,
+              7419455.128497532,
+              7730280.160489686
+            ],
+            "peak_spread_pct": 8.847750053351119,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              6800621.641220598,
+              7334976.842739765,
+              7650593.15909891
+            ],
+            "whole_spread_pct": 11.58792367176487,
+            "worker_cpu_ns_per_op": [
+              440.8026561882446,
+              408.7195695811814,
+              391.8956243830827
+            ],
+            "worker_share_max": 0.4130013362693618,
+            "worker_share_min": 0.22473792181883198
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.616950199562973,
+            "median_whole": 0.5766174480025494
+          },
+          "threads": 3
+        },
+        {
+          "candidate": {
+            "best_peak": 3117124.705517549,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              3016031,
+              3003501,
+              3031236
+            ],
+            "jit_shares": [
+              0.48673295161123736,
+              0.4864794867209852,
+              0.5018336776859504
+            ],
+            "median_whole": 3086789.312525773,
+            "peak_rates": [
+              3117124.705517549,
+              3104342.7148918468,
+              3034879.660972974
+            ],
+            "peak_spread_pct": 2.649354536470392,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              3097882.8001726675,
+              3086789.312525773,
+              3019921.5439749663
+            ],
+            "whole_spread_pct": 2.5256422873224613,
+            "worker_cpu_ns_per_op": [
+              1290.3745428049474,
+              1295.412844803458,
+              1324.5305576525748
+            ],
+            "worker_share_max": 0.2659781036975831,
+            "worker_share_min": 0.2406940714728362
+          },
+          "paired_native": {
+            "best_peak": 9671831.90152078,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 8936876.00929908,
+            "peak_rates": [
+              9671831.90152078,
+              9054936.254124897,
+              7137042.217543452
+            ],
+            "peak_spread_pct": 27.993456970198174,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              9287634.440085476,
+              8936876.00929908,
+              7064667.468604264
+            ],
+            "whole_spread_pct": 24.874094361028956,
+            "worker_cpu_ns_per_op": [
+              430.39502095779244,
+              447.25572556789706,
+              565.7515633209381
+            ],
+            "worker_share_max": 0.401589574681369,
+            "worker_share_min": 0.045876743288683096
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.3222889662740539,
+            "median_whole": 0.3453991427556876
+          },
+          "threads": 4
+        },
+        {
+          "candidate": {
+            "best_peak": 2592339.8146417434,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              3252173,
+              3348845,
+              3339171
+            ],
+            "jit_shares": [
+              0.6587399938423645,
+              0.6498472817312468,
+              0.6669548866774045
+            ],
+            "median_whole": 2502666.405463711,
+            "peak_rates": [
+              2481559.650175574,
+              2592339.8146417434,
+              2511358.325761116
+            ],
+            "peak_spread_pct": 4.4111651981242295,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              2468101.7683402053,
+              2576422.3077735268,
+              2502666.405463711
+            ],
+            "whole_spread_pct": 4.328205277253126,
+            "worker_cpu_ns_per_op": [
+              2025.8552785519835,
+              1939.646255976776,
+              1997.7229562544742
+            ],
+            "worker_share_max": 0.20998509687034278,
+            "worker_share_min": 0.18479880774962743
+          },
+          "paired_native": {
+            "best_peak": 9739096.835780017,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 8391266.725535503,
+            "peak_rates": [
+              8858153.77540664,
+              9739096.835780017,
+              8421297.564684704
+            ],
+            "peak_spread_pct": 14.876680903350186,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              8205598.85650545,
+              9637501.985272044,
+              8391266.725535503
+            ],
+            "whole_spread_pct": 17.06420705719154,
+            "worker_cpu_ns_per_op": [
+              608.6935947492591,
+              518.3201844253791,
+              595.3770200057008
+            ],
+            "worker_share_max": 0.3301816636566451,
+            "worker_share_min": 0.10173430362264953
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.2661786671139634,
+            "median_whole": 0.2982465564880491
+          },
+          "threads": 5
+        },
+        {
+          "candidate": {
+            "best_peak": 2264500.5059698154,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              3256835,
+              3737013,
+              3676818
+            ],
+            "jit_shares": [
+              0.8241246173965149,
+              0.8279568391611366,
+              0.8262423236783064
+            ],
+            "median_whole": 2224651.07951489,
+            "peak_rates": [
+              1982289.467868871,
+              2264500.5059698154,
+              2230496.061285418
+            ],
+            "peak_spread_pct": 12.652388990918384,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              1975659.9094302969,
+              2256224.0852910867,
+              2224651.07951489
+            ],
+            "whole_spread_pct": 12.611603610305036,
+            "worker_cpu_ns_per_op": [
+              3036.8983960006803,
+              2659.271909651324,
+              2696.986690705359
+            ],
+            "worker_share_max": 0.1667721336938388,
+            "worker_share_min": 0.16648312495951287
+          },
+          "paired_native": {
+            "best_peak": 9649466.63647564,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 9278268.620754406,
+            "peak_rates": [
+              9284421.904317014,
+              9333920.239080537,
+              9649466.63647564
+            ],
+            "peak_spread_pct": 3.9109476276667348,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              8430909.928155337,
+              9278268.620754406,
+              9587503.565928038
+            ],
+            "whole_spread_pct": 12.465619234018904,
+            "worker_cpu_ns_per_op": [
+              710.7250983678574,
+              646.1215404756855,
+              625.104323652849
+            ],
+            "worker_share_max": 0.23406162928632515,
+            "worker_share_min": 0.08161604458054016
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.23467623561802367,
+            "median_whole": 0.2397700659947056
+          },
+          "threads": 6
+        },
+        {
+          "candidate": {
+            "best_peak": 2419154.85050664,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              3903069,
+              4035159,
+              4122890
+            ],
+            "jit_shares": [
+              0.8562486398545434,
+              0.8565092563033201,
+              0.8562866366705657
+            ],
+            "median_whole": 2355402.752935863,
+            "peak_rates": [
+              2286768.060983006,
+              2362625.947566824,
+              2419154.85050664
+            ],
+            "peak_spread_pct": 5.6033749083291875,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              2278772.0531012993,
+              2355402.752935863,
+              2406796.0536722187
+            ],
+            "whole_spread_pct": 5.435333741176341,
+            "worker_cpu_ns_per_op": [
+              3071.7016661343087,
+              2971.8493573143646,
+              2908.397972480128
+            ],
+            "worker_share_max": 0.14291790727350065,
+            "worker_share_min": 0.14281156954487453
+          },
+          "paired_native": {
+            "best_peak": 9526334.179469932,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 9066415.303673552,
+            "peak_rates": [
+              9526334.179469932,
+              9153638.716155265,
+              9246203.453151995
+            ],
+            "peak_spread_pct": 4.0307945331617905,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              8769440.10554048,
+              9066415.303673552,
+              9204659.882061265
+            ],
+            "whole_spread_pct": 4.800351207653608,
+            "worker_cpu_ns_per_op": [
+              796.6968333961173,
+              771.0888949640402,
+              759.4600446304432
+            ],
+            "worker_share_max": 0.25692478328128193,
+            "worker_share_min": 0.07311884767254324
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.25394394159719136,
+            "median_whole": 0.25979427083838696
+          },
+          "threads": 7
+        },
+        {
+          "candidate": {
+            "best_peak": 2520464.198436644,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              4268602,
+              4390467,
+              3983557
+            ],
+            "jit_shares": [
+              0.8746905818863767,
+              0.8747009597975213,
+              0.8746427705721994
+            ],
+            "median_whole": 2439523.358932002,
+            "peak_rates": [
+              2451106.204390968,
+              2520464.198436644,
+              2286030.2483616946
+            ],
+            "peak_spread_pct": 9.56441420836759,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              2439523.358932002,
+              2509380.0891218204,
+              2276692.5803547893
+            ],
+            "whole_spread_pct": 9.538236554082406,
+            "worker_cpu_ns_per_op": [
+              3279.25783176179,
+              3187.901745071913,
+              3513.618715221179
+            ],
+            "worker_share_max": 0.12500702602439437,
+            "worker_share_min": 0.1249508178292395
+          },
+          "paired_native": {
+            "best_peak": 9923297.458203925,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 8960590.90935164,
+            "peak_rates": [
+              9923297.458203925,
+              9073742.283068614,
+              8993894.155708086
+            ],
+            "peak_spread_pct": 10.24277826614145,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              9570039.032038746,
+              8960590.90935164,
+              8944360.163005242
+            ],
+            "whole_spread_pct": 6.982562593952595,
+            "worker_cpu_ns_per_op": [
+              834.699359531296,
+              891.4849634257705,
+              893.1589982877631
+            ],
+            "worker_share_max": 0.22671960694698354,
+            "worker_share_min": 0.06667736500040118
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.2539946231635827,
+            "median_whole": 0.2722502771983503
+          },
+          "threads": 8
+        }
+      ],
+      "passed": false
+    },
+    "screen": {
+      "checks": [
+        {
+          "candidate": {
+            "best_peak": 13917948.273263508,
+            "execution_classes": [
+              "KD_SELF",
+              "KD_SELF",
+              "KD_SELF"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_whole": 8760685.783774639,
+            "peak_rates": [
+              7706013.986957867,
+              13900881.077958249,
+              13917948.273263508
+            ],
+            "peak_spread_pct": 44.68734212938139,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              7687083.506852133,
+              8760685.783774639,
+              13870221.545848306
+            ],
+            "whole_spread_pct": 70.57824229294638,
+            "worker_cpu_ns_per_op": [
+              130.08679986815048,
+              114.14702420521287,
+              72.09883228844646
+            ],
+            "worker_share_max": 1.0,
+            "worker_share_min": 1.0
+          },
+          "paired_native": {
+            "best_peak": 13898649.966399405,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 13841594.244857466,
+            "peak_rates": [
+              7699602.515580109,
+              13898649.966399405,
+              13898309.98249966
+            ],
+            "peak_spread_pct": 44.602886672012296,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              7684511.725701655,
+              13841594.244857466,
+              13871833.332174286
+            ],
+            "whole_spread_pct": 44.70093182200736,
+            "worker_cpu_ns_per_op": [
+              130.1316688423358,
+              72.24457374371191,
+              72.08846127839625
+            ],
+            "worker_share_max": 1.0,
+            "worker_share_min": 1.0
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 1.0013885022581874,
+            "median_whole": 0.6329246204446048
+          },
+          "threads": 1
+        },
+        {
+          "candidate": {
+            "best_peak": 9838032.679062814,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              267,
+              263,
+              225
+            ],
+            "jit_shares": [
+              1.480543331677195e-05,
+              1.3605399947026883e-05,
+              1.1474571126429579e-05
+            ],
+            "median_whole": 9664878.545107432,
+            "peak_rates": [
+              9046823.14764915,
+              9691259.373320924,
+              9838032.679062814
+            ],
+            "peak_spread_pct": 8.16415597741388,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              9016619.775885997,
+              9664878.545107432,
+              9803838.087164422
+            ],
+            "whole_spread_pct": 8.145144376148751,
+            "worker_cpu_ns_per_op": [
+              221.81479567393,
+              206.93751908894518,
+              204.005555222368
+            ],
+            "worker_share_max": 0.508965699907297,
+            "worker_share_min": 0.49103430009270294
+          },
+          "paired_native": {
+            "best_peak": 9958115.164712572,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 8990405.465271782,
+            "peak_rates": [
+              9958115.164712572,
+              9058191.489416609,
+              9775112.149343442
+            ],
+            "peak_spread_pct": 9.206274685619933,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              8990405.465271782,
+              8970319.009153688,
+              9729279.479416415
+            ],
+            "whole_spread_pct": 8.441893674255805,
+            "worker_cpu_ns_per_op": [
+              222.39995159522218,
+              222.87195784819428,
+              205.51348952029588
+            ],
+            "worker_share_max": 0.6483108156205065,
+            "worker_share_min": 0.3516891843794935
+          },
+          "passed": true,
+          "ratios": {
+            "best_peak": 0.9879412435321815,
+            "median_whole": 1.0750214306174521
+          },
+          "threads": 2
+        },
+        {
+          "candidate": {
+            "best_peak": 10846698.23429221,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              484,
+              570,
+              621
+            ],
+            "jit_shares": [
+              2.2411125994239045e-05,
+              4.0500627546565774e-05,
+              4.395964716755464e-05
+            ],
+            "median_whole": 7062795.558557902,
+            "peak_rates": [
+              10846698.23429221,
+              7055113.847077875,
+              7112312.567151249
+            ],
+            "peak_spread_pct": 53.31014844209817,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              10797672.921318384,
+              7036080.606114162,
+              7062795.558557902
+            ],
+            "whole_spread_pct": 53.25925526254751,
+            "worker_cpu_ns_per_op": [
+              277.8398027246743,
+              426.35176507419146,
+              424.76464224350786
+            ],
+            "worker_share_max": 0.3939498109315916,
+            "worker_share_min": 0.27613470679579427
+          },
+          "paired_native": {
+            "best_peak": 9983738.11372378,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 9054083.755644513,
+            "peak_rates": [
+              9978834.097363152,
+              7873285.797006025,
+              9983738.11372378
+            ],
+            "peak_spread_pct": 21.14928754327551,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              9054083.755644513,
+              7770987.762038072,
+              9898138.224121306
+            ],
+            "whole_spread_pct": 23.493823555112602,
+            "worker_cpu_ns_per_op": [
+              331.1816585167272,
+              385.84218466938404,
+              303.0242787280333
+            ],
+            "worker_share_max": 0.4073765161582176,
+            "worker_share_min": 0.20181514885917046
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 1.086436574230868,
+            "median_whole": 0.780067398222907
+          },
+          "threads": 3
+        },
+        {
+          "candidate": {
+            "best_peak": 9653691.010327158,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              1421,
+              973,
+              1439
+            ],
+            "jit_shares": [
+              8.865080093908711e-05,
+              5.060690842032382e-05,
+              8.585492653347997e-05
+            ],
+            "median_whole": 8379980.517552445,
+            "peak_rates": [
+              8040926.41573067,
+              9653691.010327158,
+              8401003.003140915
+            ],
+            "peak_spread_pct": 19.19728625252863,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              8014199.785062519,
+              9612841.494666623,
+              8379980.517552445
+            ],
+            "whole_spread_pct": 19.0769143944385,
+            "worker_cpu_ns_per_op": [
+              499.1220141337201,
+              416.1200737581387,
+              477.32683496857436
+            ],
+            "worker_share_max": 0.38183052833404346,
+            "worker_share_min": 0.052234235193864505
+          },
+          "paired_native": {
+            "best_peak": 10447954.955407286,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 8443282.923927406,
+            "peak_rates": [
+              7998275.123926968,
+              10447954.955407286,
+              8489785.54343532
+            ],
+            "peak_spread_pct": 28.854437122672895,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              7471188.024072001,
+              10342072.831197195,
+              8443282.923927406
+            ],
+            "whole_spread_pct": 34.0019970074602,
+            "worker_cpu_ns_per_op": [
+              534.9619147818769,
+              386.5597121281033,
+              473.41077416376777
+            ],
+            "worker_share_max": 0.419655454072919,
+            "worker_share_min": 0.08489888864137027
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.9239790036930566,
+            "median_whole": 0.9925026311512589
+          },
+          "threads": 4
+        },
+        {
+          "candidate": {
+            "best_peak": 10237525.618878571,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              1800,
+              1855,
+              2002
+            ],
+            "jit_shares": [
+              9.970434338707619e-05,
+              9.103018492229997e-05,
+              0.00010806462199621374
+            ],
+            "median_whole": 9261755.643291174,
+            "peak_rates": [
+              9052689.126360089,
+              10237525.618878571,
+              9373824.265734905
+            ],
+            "peak_spread_pct": 12.639841103588173,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              9026206.456398655,
+              10187414.832712652,
+              9261755.643291174
+            ],
+            "whole_spread_pct": 12.537670189508056,
+            "worker_cpu_ns_per_op": [
+              553.9528355250563,
+              490.7669108074961,
+              539.8250626472529
+            ],
+            "worker_share_max": 0.32203905094863683,
+            "worker_share_min": 0.08964711498599263
+          },
+          "paired_native": {
+            "best_peak": 9752845.129786955,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 8525860.87429543,
+            "peak_rates": [
+              9752845.129786955,
+              7951347.4633754995,
+              8560331.856587602
+            ],
+            "peak_spread_pct": 21.044717618337586,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              9412372.92470181,
+              7913144.504507099,
+              8525860.87429543
+            ],
+            "whole_spread_pct": 17.58448140661931,
+            "worker_cpu_ns_per_op": [
+              530.814713589473,
+              631.3482323375279,
+              585.9176265830206
+            ],
+            "worker_share_max": 0.284488502699248,
+            "worker_share_min": 0.06820870558479174
+          },
+          "passed": true,
+          "ratios": {
+            "best_peak": 1.049696317601857,
+            "median_whole": 1.086313250925122
+          },
+          "threads": 5
+        },
+        {
+          "candidate": {
+            "best_peak": 9962926.175776348,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              2344,
+              2463,
+              2403
+            ],
+            "jit_shares": [
+              0.00012889591193197817,
+              0.000150400089885884,
+              0.00012150148532152842
+            ],
+            "median_whole": 9091259.552563755,
+            "peak_rates": [
+              9114375.223137671,
+              8210792.066144364,
+              9962926.175776348
+            ],
+            "peak_spread_pct": 19.22385316312227,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              9091259.552563755,
+              8186847.603301529,
+              9887302.301363194
+            ],
+            "whole_spread_pct": 18.70428061403366,
+            "worker_cpu_ns_per_op": [
+              659.9218981506737,
+              732.8194198696655,
+              606.7988173552054
+            ],
+            "worker_share_max": 0.2723024748886818,
+            "worker_share_min": 0.10651599875737806
+          },
+          "paired_native": {
+            "best_peak": 8628594.45535729,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 8538206.245876035,
+            "peak_rates": [
+              8186657.404785164,
+              8628594.45535729,
+              8589281.961412262
+            ],
+            "peak_spread_pct": 5.14521531086707,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              7720605.400397632,
+              8594523.436798004,
+              8538206.245876035
+            ],
+            "whole_spread_pct": 10.235382131024016,
+            "worker_cpu_ns_per_op": [
+              776.1956349286526,
+              697.3980793669776,
+              702.0278853901215
+            ],
+            "worker_share_max": 0.18375026939208566,
+            "worker_share_min": 0.13262379602460173
+          },
+          "passed": true,
+          "ratios": {
+            "best_peak": 1.1546406807415317,
+            "median_whole": 1.0647739455760798
+          },
+          "threads": 6
+        },
+        {
+          "candidate": {
+            "best_peak": 9228659.232184513,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              2781,
+              3051,
+              2843
+            ],
+            "jit_shares": [
+              0.00015895003584806273,
+              0.00016949879467523785,
+              0.00015451731898374888
+            ],
+            "median_whole": 8998705.209011497,
+            "peak_rates": [
+              8768273.604310196,
+              9022789.394282619,
+              9228659.232184513
+            ],
+            "peak_spread_pct": 5.102475606557376,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              8745721.752006294,
+              8998705.209011497,
+              9199032.50996741
+            ],
+            "whole_spread_pct": 5.037510924428991,
+            "worker_cpu_ns_per_op": [
+              800.2690297657805,
+              777.8250476329946,
+              760.9548961065332
+            ],
+            "worker_share_max": 0.14481154161301651,
+            "worker_share_min": 0.13985975066785397
+          },
+          "paired_native": {
+            "best_peak": 9632132.439550094,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 9286397.76853264,
+            "peak_rates": [
+              9632132.439550094,
+              9209069.062382683,
+              9538214.335112495
+            ],
+            "peak_spread_pct": 4.435456808828583,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              9286397.76853264,
+              9139715.184647402,
+              9452028.104215471
+            ],
+            "whole_spread_pct": 3.3631223575879456,
+            "worker_cpu_ns_per_op": [
+              752.6619759400368,
+              765.0731561340405,
+              739.5341467999735
+            ],
+            "worker_share_max": 0.20512149069007815,
+            "worker_share_min": 0.07395564866243091
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.9581117462931783,
+            "median_whole": 0.9690200046679024
+          },
+          "threads": 7
+        },
+        {
+          "candidate": {
+            "best_peak": 9447117.195078442,
+            "execution_classes": [
+              "JIT",
+              "JIT",
+              "JIT"
+            ],
+            "jit_bodies": [
+              3617,
+              3419,
+              3512
+            ],
+            "jit_shares": [
+              0.0002206055998813353,
+              0.0001817664101203114,
+              0.0001926763669049592
+            ],
+            "median_whole": 9111359.8755661,
+            "peak_rates": [
+              8224488.074002921,
+              9447117.195078442,
+              9170399.731248282
+            ],
+            "peak_spread_pct": 13.33234272121632,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              8196608.165207868,
+              9403485.303179558,
+              9111359.8755661
+            ],
+            "whole_spread_pct": 13.245850832960377,
+            "worker_cpu_ns_per_op": [
+              975.947343510914,
+              850.6846377771313,
+              877.8851536934172
+            ],
+            "worker_share_max": 0.18645805536439095,
+            "worker_share_min": 0.11119225853569473
+          },
+          "paired_native": {
+            "best_peak": 9833497.342059858,
+            "execution_classes": [
+              "NATIVE",
+              "NATIVE",
+              "NATIVE"
+            ],
+            "jit_bodies": [
+              0,
+              0,
+              0
+            ],
+            "jit_shares": [
+              0,
+              0,
+              0
+            ],
+            "median_whole": 8481043.581828078,
+            "peak_rates": [
+              8270437.718784218,
+              9833497.342059858,
+              8548896.751821049
+            ],
+            "peak_spread_pct": 18.283758345106744,
+            "post_work_rounds": 64,
+            "whole_rates": [
+              7850255.47692265,
+              9767927.737898706,
+              8481043.581828078
+            ],
+            "whole_spread_pct": 22.61127704950083,
+            "worker_cpu_ns_per_op": [
+              1017.3876706039085,
+              818.0095113947561,
+              941.7391879569789
+            ],
+            "worker_share_max": 0.22962694675842085,
+            "worker_share_min": 0.09362142613800152
+          },
+          "passed": false,
+          "ratios": {
+            "best_peak": 0.9607077590463374,
+            "median_whole": 1.0743206054368792
+          },
+          "threads": 8
+        }
+      ],
+      "passed": false
+    }
+  },
+  "generic_helper_sha256": "b7a7ceff3b47fd3de7b0e2824fb1d3607d13f51142e7d629a4c4a9353afd34da",
+  "higher_thread_requirement": false,
+  "limitations": [
+    "No extrapolation above 8 workers or other workloads.",
+    "JIT/SELF classification retained; no minimum JIT required in this scope.",
+    "Both metrics and each fresh block must pass independently.",
+    "Every declared sample and raw correctness/progress/drain check is required.",
+    "Protocol unit/live correctness coverage is a separate receipt."
+  ],
+  "maintained_validator_sha256": {
+    "mutex_study.py": "03fc9cfb4dc0f0a89b548d91fae2f41497e1bc952fb3d3e770c74b631fd9a65d",
+    "run.py": "77e50027cc739271f819cc4d4283bb128192547cd6b6baed62fab23531c207e2",
+    "session.py": "6b2bb8c3bda0f6f7771f39b9c4db71bfed7df6bcffc41b79eefa52f8a0840521"
+  },
+  "minimum_jit_requirement": false,
+  "performance_target_reached": false,
+  "policies": {
+    "baseline": {
+      "api_mode": "direct",
+      "arm": "kdlock",
+      "cachelines": 1,
+      "caller_abi": "clobber",
+      "caller_shell": "owned_mutex_outer_cookie",
+      "collector_cpu": 63,
+      "cookie_storage": "owned_acquisition_local",
+      "cpu_heat_policy": "owned_mutex_contention1024_shift10_lock1025_pinned_cold",
+      "delegation_batch_limit": 1024,
+      "diagnostic": false,
+      "duration_ms": 2000,
+      "entry_abi": 2,
+      "hotlock_mode": "adaptive",
+      "iterations": 100000,
+      "kd_provider_ubsan": "off",
+      "lock_kind": "mutex",
+      "measurement_mode": "timed_peak",
+      "mutex_acceptance": "adaptive-performance",
+      "mutex_entry_ratio_limit": null,
+      "mutex_implementation": "owned-v1",
+      "mutex_routing": "adaptive",
+      "mutex_spin_limit": 4096,
+      "mutex_wait_counter_scope": "owned_delegate_waits",
+      "mutex_wait_mode": "blocking",
+      "numa_policy": "on",
+      "owned_mutex_entry_ratio_limit": 256,
+      "owned_mutex_force_full": false,
+      "owned_mutex_preflight": false,
+      "owned_mutex_preflight_queue": false,
+      "owned_mutex_preflight_spins": 0,
+      "owned_mutex_refill": false,
+      "owned_preflight_policy": "capture_first",
+      "owned_queue_policy": "finite_fifo",
+      "peak_settle_ms": 300,
+      "peak_window_ms": 300,
+      "perf_record": false,
+      "pmu": false,
+      "post_work_rounds": 64,
+      "profile_lock": false,
+      "profile_owned_preflight": false,
+      "registry_lock_kind": 3,
+      "sample_ms": 10,
+      "scenario": "plain",
+      "spin_delegate": "on",
+      "spin_entry_ratio_limit": 2,
+      "spin_prefetch": 2,
+      "warmup_iterations_per_worker": 48000,
+      "warmup_pause_seconds": 0,
+      "warmup_policy": "all_workers",
+      "workload": "cacheline"
+    },
+    "screen": {
+      "api_mode": "direct",
+      "arm": "kdlock",
+      "cachelines": 1,
+      "caller_abi": "c",
+      "caller_shell": "owned_mutex_outer_cabi",
+      "collector_cpu": 63,
+      "cookie_storage": "owned_acquisition_local",
+      "cpu_heat_policy": "owned_mutex_contention1024_shift10_lock1025_pinned_cold",
+      "delegation_batch_limit": 1024,
+      "diagnostic": false,
+      "duration_ms": 2000,
+      "entry_abi": 4,
+      "hotlock_mode": "adaptive",
+      "iterations": 100000,
+      "kd_provider_ubsan": "off",
+      "lock_kind": "mutex",
+      "measurement_mode": "timed_peak",
+      "mutex_acceptance": "adaptive-performance",
+      "mutex_entry_ratio_limit": null,
+      "mutex_implementation": "owned-v1",
+      "mutex_routing": "adaptive",
+      "mutex_spin_limit": 4096,
+      "mutex_wait_counter_scope": "owned_delegate_waits",
+      "mutex_wait_mode": "blocking",
+      "numa_policy": "on",
+      "owned_acquire_policy": "linux_local_first",
+      "owned_caller_policy": "c_abi_v2",
+      "owned_entry_abi": 4,
+      "owned_mutex_cabi": true,
+      "owned_mutex_entry_ratio_limit": 256,
+      "owned_mutex_force_full": false,
+      "owned_mutex_preflight": false,
+      "owned_mutex_preflight_queue": false,
+      "owned_mutex_preflight_spins": 0,
+      "owned_mutex_refill": false,
+      "owned_preflight_policy": "not_applicable",
+      "owned_queue_policy": "finite_fifo",
+      "owned_release_policy": "guarded_owner_release",
+      "peak_settle_ms": 300,
+      "peak_window_ms": 300,
+      "perf_record": false,
+      "pmu": false,
+      "post_work_rounds": 64,
+      "profile_lock": false,
+      "profile_owned_local_first": false,
+      "profile_owned_preflight": false,
+      "registry_lock_kind": 3,
+      "sample_ms": 10,
+      "scenario": "plain",
+      "spin_delegate": "on",
+      "spin_entry_ratio_limit": 2,
+      "spin_prefetch": 2,
+      "warmup_iterations_per_worker": 48000,
+      "warmup_pause_seconds": 0,
+      "warmup_policy": "all_workers",
+      "workload": "cacheline"
+    }
+  },
+  "primary": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "receipts": {
+    "baseline": {
+      "binaries": 6,
+      "binary_manifest_sha256": "cf1c592891bed11603e1430c09aab826b35f05184b345eea6893030d710c39a6",
+      "environment_sha256": "8a7d002fb9061b1d5e4d7936464b1108d8aa202673f6a0eb6c090d83af4537b7",
+      "passed": true,
+      "plan_sha256": "214412ba07c4b2789ba4c0ce89c6813683e961689eb6dbad7b7491e0501af87d",
+      "post_work_rounds": 64,
+      "raw_artifact_sha256": {
+        "c01-t01-r00-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "ecbfe8d2aa5781ef543ccf2438ab04b540da181009cee185e84c0a0215ea0fd1",
+          "kernel.log": "31377970aee50a140b6c84ced5205d47f73442a910c879406828cd4ae55c18df",
+          "measure.json": "c552cf012db76e66b082e7ccd45272b9576b509f112e703bd801032f435058b8",
+          "session.json": "9d1b5f6f9f966155ed449098e6243f40aa49844d07592ed34fc8ec0c9caa58eb"
+        },
+        "c01-t01-r00-direct-native": {
+          "drain.counts.json": "fd427f0adc4b89386f63552b6e75625a9f54b81bebcb431bb67965f28b951f7c",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "da6248f4a64815c1349f3433291ceedf6e2f57236e6bd469962fb3a77da2b3b4",
+          "session.json": "eefbf971bb271c9fe6f9afc45ed9ada05c81709cb7a20e0af59a3c8ab03daeee"
+        },
+        "c01-t01-r01-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "2a2fcc1a45c6ac3690882d127ff1326121c7f74c34788dca529b0546c738999a",
+          "kernel.log": "21655d6946429c438d335651808d5e132c9e4b6e610b8c660db86f0c613a4572",
+          "measure.json": "9f00c2c21de0a9b0c0ab66c1f26b7d045c0e1d36ae9d4b1b4991a658017c3fe5",
+          "session.json": "c11d39434d4fcf2518c40a75b4f0121fcdd47c8306c572fc9196cd013d37d5f1"
+        },
+        "c01-t01-r01-direct-native": {
+          "drain.counts.json": "e4a6f699ac680fe08da9fa10f2ba4266d254e879dccb11c996903cf1bade46ee",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "b3fb9895c4786bd35f721ff88be26cc89df807d3217753b2bd7b46c719a34631",
+          "session.json": "851e6775b22c6c2eca156075075f2237cdf8cdc6a3f549c7557265d4d6a9570c"
+        },
+        "c01-t01-r02-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "1cfcc42f290dc5a07894b09cec5496fe586cba648ea16a0f5388fb4b5c07b58d",
+          "kernel.log": "c69063f2e7dddfe8af5d66359d6f26d78fbc063cc253ea68064946946d18b00c",
+          "measure.json": "aa57e10f7f906e00c7f1ef799c624633b57af6655b4bb60b4dabd4e9aa7727f3",
+          "session.json": "0e7729b97a7a784432088ae7b22dd0e9938cb706421f44f7755522e19eb0a4b1"
+        },
+        "c01-t01-r02-direct-native": {
+          "drain.counts.json": "c038fa4f9f39b8049336b2821120bc89641f901488db39884d1caa6e6a346a7a",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "6af48beb4f3326a787c153bde6c111e38211209b9a9335ac46a9ef56cd0c3738",
+          "session.json": "0e0a45ec16a52b6243c0fdbc582f33dea91e685c1f5d494d755dcbfc172f04a9"
+        },
+        "c01-t02-r00-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "796e0ffb57b51c3f7570d36ce26c6c359b73906b6e235742eae19d8cb08f6f79",
+          "kernel.log": "f9d814b3055acbb375c34a6fb15a72456e5af0160ce2837fc2e23b5acfe3aad8",
+          "measure.json": "9a5283e9e06639096576e51d85740cc85425a7710a1ccc7a0cfe27449ba0cfc7",
+          "session.json": "7048dcab9f109451ab155b991b5ee70ee503c786cb5c573cc8672fbcd7457c4f"
+        },
+        "c01-t02-r00-direct-native": {
+          "drain.counts.json": "62c7b0d30ec6f3d8d6dfd9b9d9d9601bba98d64b7fdb0eb353356ebb56eff456",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "60a36c6eb41da2ec2ad2fd876cb147489a6df7225f9868896d750286f643f6b7",
+          "session.json": "13c7ace534d985e2681c57848d131d4409f3332605de8eee80d491ecce4512f1"
+        },
+        "c01-t02-r01-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "1fd48cb30abfb57e00006e12d890d0bf9e24586ac7ac6c5df6df9110e644ac8f",
+          "kernel.log": "17f91791338f3c714bd1aac06374bdb785d06a9838024244f5f6c6f4542e5c5a",
+          "measure.json": "08b2f075338124654665152c94bef94668ca64c721066d678ebd513eda3cff3a",
+          "session.json": "6bf9913cb5ac3f9ad039ebd4be7b09dcd837200864b65a149094ef3ae6dddabd"
+        },
+        "c01-t02-r01-direct-native": {
+          "drain.counts.json": "c195c8f800f9c879451642b290a40efb63995b08e333ddbd43520664082f0ee0",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "db56dd5d574f2aa5c02206e3de1c8c857b8ebcf3d783b83276a6c43b695b5586",
+          "session.json": "65feb843f2dd2f0b25a4cf20fac94257556617ce2cf655c6e6fce8fa2ad6d745"
+        },
+        "c01-t02-r02-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "3a443bb9dd8b98075d01027d9e0e7aed3f35a09ab300eb0f6e964737cd0aa39d",
+          "kernel.log": "ce9a45e09c3076e5617ba78f3816702693fec5f08337c68a71a8dec436b6d5fc",
+          "measure.json": "3d5c7cd6791e0ba1c3359328f09fab2da0ae3216a2ea2b3224eaa4b9b1317831",
+          "session.json": "0ec2e0964ad1e28d4f84982e1174d2df0700fbee91a4c6c8e3eeb3f0f1a1d552"
+        },
+        "c01-t02-r02-direct-native": {
+          "drain.counts.json": "302c599a5ebe15702931627993a77d7961c06df8f387318616d585db3c68cf37",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "d840b11651acb8027de296d91e800a947f91d8a382dbb7a32543dd922ba028c4",
+          "session.json": "f7a2a86de1c08bcca2ef8d30021e94e4a766d0f15de1b58c2490475b851c2541"
+        },
+        "c01-t03-r00-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "1a4aa61e03e2f3fffab68b0ed4cdb624e8fb42d48514ee6b74faf9dfa89ff091",
+          "kernel.log": "7c76af5c9c3dc52e18d4da1d4c192f0811430d924fba8d8e5ea10ae0d40f5b90",
+          "measure.json": "6b68793fb0476099f927c0a650227e48ca04ab2c535ca1a61e8226497508ae96",
+          "session.json": "981ddeffde05bd917fa7f92f8ee143e85f5c87b3ea8017409f9654286a7fca3d"
+        },
+        "c01-t03-r00-direct-native": {
+          "drain.counts.json": "57895df8c74484fe2ca031708631e70521068357be082cc55382384c1e3efff6",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "cb2b952240ff73af83406815018f349763b3371d45416e8b028bf1903bd27ebe",
+          "session.json": "d5fa21f66b4b82e6d25f02065e342650ccbf3925a6e9aeb0e1ae1f6180de2018"
+        },
+        "c01-t03-r01-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "68afbe04d8be43e05e7987aef5dabe165d223de05579559d0f776e2c3eb10237",
+          "kernel.log": "d62d498f3c2700d8e4444fa40355b4b432b54e9d4fd1afd6e924359c11daccd7",
+          "measure.json": "56766d67583dd7e13a9518d2d2727375372c441ea87bc5fedfa43c3a37664662",
+          "session.json": "aad97fe04e827309acbab9cea2113c0661a09b28e67459a65833c6ff9f320b24"
+        },
+        "c01-t03-r01-direct-native": {
+          "drain.counts.json": "817a7ecbeaa432d287b92678167f47053838e57b77f40c20720aa9c60822d227",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "a4aff0414fa762524aaee246bf576ae52889a6c0886f415d613b4720b08aa37a",
+          "session.json": "1d40c31b1b75256b6c9c8dac670b7c638a0313f86ebb0356c7da2e7ff252da6f"
+        },
+        "c01-t03-r02-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "d3f0506deee49008de8b9afc5d35e764f2a15de8ddbebcbcef4f7392cc76a739",
+          "kernel.log": "a23807bb1b2212222785b44f9b34ac971a51355ff1dcb8920d56b6d884a38ece",
+          "measure.json": "1bf5e0bcd26b36c57943b81ce521dfd7def699193d2adb2740cea017af8294f8",
+          "session.json": "d1fe0e510c04f891926260dcc7d94703ebfaf2e0215e37a4d6add589b488bce4"
+        },
+        "c01-t03-r02-direct-native": {
+          "drain.counts.json": "fc3c5bcc3fdbdea2fc9a47a94c29e274f31e58f316c4abcffdeaaad5e4dccc8e",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "7abd1f331e584c4edada98bf266c937c146360721b266ec5a6fad276ade4c3ff",
+          "session.json": "768774f5937334ad73e38dd98dda89cc503b4ef8fef5d60148778172b1fd87ba"
+        },
+        "c01-t04-r00-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "549c2d44a1069c07a779a91015c71e7bcce848d72c3457f3300aa84f7e7bf4c5",
+          "kernel.log": "7a47ae50d24541d1c8e09040bba260606e0ad7055bc9b77587569d5720f28ede",
+          "measure.json": "322950ddc7b190caa01376acf7b243aa81ad762794675083d733235b8fdef3d4",
+          "session.json": "eaac22ba02b6cea0032b4c3a06e0cdaaeffd9a98f44f6b4c702838503da10715"
+        },
+        "c01-t04-r00-direct-native": {
+          "drain.counts.json": "d768e4b2c9d91cf0fb90f45d584943f7544307fddabdfb2a0a692f5dee19bc5a",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "fb77a8fca6fe8f93282320c867c3c0834db207901c41a7ac19aa73c180efafb8",
+          "session.json": "ab59644fce1469d98ebf45db01e04c31d75d0afd3efea3e0d652a87c0f0f766b"
+        },
+        "c01-t04-r01-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "c5733d66cc869e1846d19228e7c848ee9005088892d456b3cb382386a47b33cc",
+          "kernel.log": "162367d608f4430c1e26e4c4437ecf9b845020d604b27eb5fedd7bbe2e9945d3",
+          "measure.json": "4259bba821ed48058c6fc4d18d94f1f7192ccc7d1d1d505552537fbcee6115b8",
+          "session.json": "4bf3ecddaa7a1ee7a4bf231b5c3512430c736205283d9759b3fdb4eae2abd1d9"
+        },
+        "c01-t04-r01-direct-native": {
+          "drain.counts.json": "8d9006931ac1fa4de5e738f802da9210da0bd0c0cbdd6410ce30d8508f61645e",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "251db0996c960c341f39cc661cbff5a376e173243326e0949da87bf4d7889557",
+          "session.json": "627449f1478805890c95ef0fd104aa264d987d3ecb99db962adeb891c4220514"
+        },
+        "c01-t04-r02-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "3611f478904ae420a720544571b193f73239f757cd255c3536a5437efd990d14",
+          "kernel.log": "80582f5e5f2aefa0153557b8dc56ccc2bf55b9833280baf847170c3b1e02c7da",
+          "measure.json": "cfda52f27c7e9932ed89ab021ce8f859faa3fc366560dad55d2bfa45b2b03fb5",
+          "session.json": "208c96e4e0e9567355f0a0b71b0c3a0cdc927011752726c8a5deb24c048d769a"
+        },
+        "c01-t04-r02-direct-native": {
+          "drain.counts.json": "988f5c5733a0d2c32df44348e54946652938d69f9a1555f4f9b325c6ba668052",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "176e83f73a208163805576fbc3b7d0990c55de3d55b57c253b6bae565e32ed6e",
+          "session.json": "5c384c32f704eee48fe6011dfb02a895797a22da1378cb2a2f145530662f36fb"
+        },
+        "c01-t05-r00-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "1ac607eef362c40e28fdd570dd2ad5c1b6666cbb2fe3b781f9befe0b5c3f2e08",
+          "kernel.log": "47f42dbb9300d3d3ba66780f577bec7bd01d62105445edd47043f3dcf3b96f6b",
+          "measure.json": "313a498dca34745c384d14cb2131c8983625676a17f1b632e4965d62ad15b9c9",
+          "session.json": "eb4328ab29ace4b4ad9e14e79adcd61a01b94f815248e7253a393ade348742fc"
+        },
+        "c01-t05-r00-direct-native": {
+          "drain.counts.json": "fe0547859679d0f57ef674b122797bae7576b6d43a7d7a0d9ec57b4fe07f06d7",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "fec55067f06895c8fe08c803880cc2f5a663b8128c04dbecb7d0ea9be55b810c",
+          "session.json": "fe375f90b5931e8a54d0ffc94902f0cb042628d21326478174a77b8b50e9cfeb"
+        },
+        "c01-t05-r01-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "58d8994756b7b232246869c85c632cf5796ffbfa595404fb125f5660774174a1",
+          "kernel.log": "f5eaac6090705003ea089b428b1dc9de42d9f89c14325901a6f404a6fa81901a",
+          "measure.json": "55fd5c6c5d58184ba58129db04c4a1efa2a569115464717fe3d8e173a5afb9dd",
+          "session.json": "60a332266559eb5461b54c6a09be309a0016ce2874272a6a703567b9e5f0e942"
+        },
+        "c01-t05-r01-direct-native": {
+          "drain.counts.json": "d8de4c931793f8534d76baa09f03e09f2d4be786029297d93b978042f665044a",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "1245a66ecd96d45013586c867e63cac1c57572ea609b70be053c4ca1c4ce25b2",
+          "session.json": "ceac1deeb898bd0aa40feeab5dd0064baca88d45e4b92f86e6bf0e86a1030e54"
+        },
+        "c01-t05-r02-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "fd14b9923091f18c2d15b295f77f5b821ecfc3c52de7a0872f2572e85b2c74e9",
+          "kernel.log": "951b302f944d1eaccfcda3861077e0233d44f8aad3c0e92461d50b568264db56",
+          "measure.json": "89ec436275e839231c0dd6d974e8fbe5ad09737e55800eab3c22798a5bc2c14d",
+          "session.json": "2f73641a8661500d88d84e6a31a3575cb6e7dd834f661640b7911b32ea0bc4c2"
+        },
+        "c01-t05-r02-direct-native": {
+          "drain.counts.json": "c135bacb73ce82dd169b1fe423d69c2009a45a38f3826237fdbca183c1a33265",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "6b84a29786b9fb9d2b1451a6256563ac9d8f76b5a494cf9c30f213a47726cd0e",
+          "session.json": "69c8ce1d9e4f36bbb12dd85444d3f150487fb2328bd130d051088ed314bb5495"
+        },
+        "c01-t06-r00-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "4d27fd27cb25d8c42b68b147d8c81ca41bdfcdb73683d14c6a8980d9cf08cd3e",
+          "kernel.log": "090b8a264b8416b2cbda4e8712447a577ff6902b48d2c628d3eaccafe997f92d",
+          "measure.json": "241f4fb5061c47e20782d58c712b4b04f4e62d6426375e189e6e31c7d28c4881",
+          "session.json": "72f0c30b844fbcd00974d30a53e3c2095298828d102910679f118d8236a28aa9"
+        },
+        "c01-t06-r00-direct-native": {
+          "drain.counts.json": "2ef3ebc370d3d50cde20bd98006b6158fa2dd15333ebe5ae8a15849aa468ac18",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "8ab4edbbe760e26536b8da7fecef4bb10f3d6d9d99f5017a6a5ee29c096b7289",
+          "session.json": "8ff1e9bbeb143e05896b1fcc7555dfa4b9b36d79806911c2d63a06ce0e9e346d"
+        },
+        "c01-t06-r01-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "f469ef4631c55682496d79db55fe88b4ddbd0632502727ec5fb1a0af88c0dc88",
+          "kernel.log": "96c2cbf139945f291c386992beec29cbce3ef4e0e5e994935d00a8e3f558050f",
+          "measure.json": "7f1720e0eb34aa22e6e5099c7fd1051bf8a7cefe16e9f7f1e1609c319e026c8b",
+          "session.json": "717c08a351b72ef1cb920b84fedc91b70568aca8219798ced7b24eb565d0bcbd"
+        },
+        "c01-t06-r01-direct-native": {
+          "drain.counts.json": "13dfb6e1447dd1f289bc16c554488c776036a9cf159c9c73964d723396ddd27f",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "e954262e6ef95ddd51202664d0a27de6a1b67eaaf1cd50bc45a5e290b88030fa",
+          "session.json": "b0e6bb9a0ee9e6f7a4a13efc9f42466a800e78acd0b2c1888b5f63d4840f7e2c"
+        },
+        "c01-t06-r02-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "98082b44a7d4ca02e2a24f124032c171ff717cc9c2d782a86fffd7a25e29565f",
+          "kernel.log": "b621bf02fb824e763fd1003f1468f55a43a66a218e6287e173815dad95d5f935",
+          "measure.json": "cdb7e12444645e368a1b621a6426065ac7b9cd7b829f723984f06a2bd69cfa38",
+          "session.json": "80cfa9d26fabe15661b98b9294f5f514e784dc87582e658a9a0d5120342f79a2"
+        },
+        "c01-t06-r02-direct-native": {
+          "drain.counts.json": "c449566e93b79da7b812f4922f6228f0bea7ec77c9104c7b653b353423515e1a",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "101e32b9ecbf6e69bff8acf7177511e87a398961aad38a8e949bad4864af4583",
+          "session.json": "974b7e040d97387544c96ef18605167c1a90797fc2f6f1faf81702ca6823c1a9"
+        },
+        "c01-t07-r00-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "106d73bdb8b0c56ed7a365fc90b103dcabea71344b56f928ce03fccb6b3b15a8",
+          "kernel.log": "3209c909be70230a77caf94ca482762db18d7800d0702491698a1f5bc905cf02",
+          "measure.json": "74e6ea405ada61f7a0e1f5cfe5fa28e8f55fea5e0dc202456e8380ba6da7e9a7",
+          "session.json": "45ba32ad26248a669f371eb991d1fe7b764e55da557ebfb58c94ac519b7aae0c"
+        },
+        "c01-t07-r00-direct-native": {
+          "drain.counts.json": "8f67929d786af68857d63608a4906a1790260d0afb89103efaf2bf48db6d15ef",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "ad7827f93aa6adb8f71951418b14852bdba3d6b68c6b1b0892725a752cb55c02",
+          "session.json": "0954e5d893b31c76937b8a98b9b231e362cc0064ee2e5b4497da28d81c6b1913"
+        },
+        "c01-t07-r01-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "2c3013500c53ee31a807f904be2fc8bee8eed6bfb9e1103db3de58e7067c0a9c",
+          "kernel.log": "b22440138ae8fb81d082325e666fcff9570155ef6eb4eb5c0bd5e5ce87d59eb8",
+          "measure.json": "502dd478d9e690395d22daa62ff11e45072cc44157f54be871988952bdd4f02d",
+          "session.json": "3404aca5d5ebbf1922c546f4caa2e5deea25c83031b2ea3e7ed4a4c12f72abae"
+        },
+        "c01-t07-r01-direct-native": {
+          "drain.counts.json": "e6fe5cc23158902e12c9087fdae76b02f0013fcc6c2466f4f7675da9e700eb92",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "07ef346a714c17241d07d5742f360c20c6b7e1a5b862b87b75764101d7d0822b",
+          "session.json": "e8d98fd665c70e7c1357bd992331d92781ed8271bd0dea8ab6ff2943775b8889"
+        },
+        "c01-t07-r02-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "6b3117fbf0fd7ac75eb5e09efe75d14a153df7d96f8c280421fcf7e278ffcaeb",
+          "kernel.log": "f7512a444d91a3d7e5ab32ca2723ddea8b12f371081a2f68526a03170314d4ad",
+          "measure.json": "93a425d38f7f4af380d2252cf60e033d37191e5c22f217abbf433a7fd1074d03",
+          "session.json": "cc9c9fe025534bbc4b33ab7b7628a17eb4674191ccda16ebc9b9891350e5646c"
+        },
+        "c01-t07-r02-direct-native": {
+          "drain.counts.json": "b27bd4395181faa0cd61ac80502e991828398cbfe51c55e16ed6791a4db20f93",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "7bb9ee5fe4b4554345da36877954cf827fc65eefa037f7f746d31464bcf4ecb4",
+          "session.json": "e8d62efbc4e13ac9135b0d10b601cbbefa7b976ef34d9dd73e7e8767b5f8b126"
+        },
+        "c01-t08-r00-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "e2e9b364b7769eb6b408dcecac84f427fa59cc5aeb4a11112fc493e00fbeb532",
+          "kernel.log": "8056472b8a93ccc0eb151e8315642c4b38497b8ba586b00e2c4d909534ce5e04",
+          "measure.json": "21908dbaf2489858a2fe9adafc0b7157df63dd4c537f075582f62af3feaa7fc5",
+          "session.json": "b8a723728a59c8a67049d03c372f5d559ba8128a3b6db8e3b06a3026056cfc1c"
+        },
+        "c01-t08-r00-direct-native": {
+          "drain.counts.json": "b14ffc12115e1fdd503a885132cea9bd24611c120d1b0aba0196735294132c0c",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "2193d1e3725a2148a26d59f2cc4245e720393fdf7b2c97ce8f4c4498f3432779",
+          "session.json": "b67624e543c8e2571026cecc92f0e98cf6676e4ba967dd0e287762ca319f29e7"
+        },
+        "c01-t08-r01-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "3fd52675619a96a01ff267b048939b9de7d5b1a2054bbf4883a1df46d6565761",
+          "kernel.log": "64f50ab9928e697967110c73810de2b09ff08d0142b90336814165ec25c990cd",
+          "measure.json": "66e06dfa22e31b4263be10fe15f148252bd685754b05557696190209c80d587b",
+          "session.json": "7b2d3f2f1d6d973f7613cf29159b603ca9d0319758797eb6f787da33a804f8f5"
+        },
+        "c01-t08-r01-direct-native": {
+          "drain.counts.json": "f2e6404a00d6daf78e189ff9fa1fa0cd3da1ab1d000e761854712056882cd14a",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "5979bf24113e7f091d81f3f7652580bc771406226bf04a91a3099976f1360477",
+          "session.json": "c61881c106b6c8a8ee990117908a531d85354d3a63c4f8b02ed66ba8b46ad84c"
+        },
+        "c01-t08-r02-direct-kdlock-adaptive-owned-v1-capture-first": {
+          "drain.counts.json": "1eda5cc84b4963084a1e9b4f9784032d9806cbafe505f34af663c3fecdff1138",
+          "kernel.log": "3a1257abbfa41dcd5bc264caf902090062f3607d21ff517d9b8797f745e1901b",
+          "measure.json": "54dbe70e6420d234bdfd9dd0fdbc6e71d168626d795c68a33faf3e60b160248f",
+          "session.json": "1ee2b341a30c5d8e6488cc7e727ea1037c09f96f048ad5c2898ec6b01c86887b"
+        },
+        "c01-t08-r02-direct-native": {
+          "drain.counts.json": "29ae6618f4a27b57f7dcc3267216a8dc5e0a70204ceee48b3de9d05ba93d6940",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "beb2781512a695132ea918f5d1cd049538fbc9b8bee56178181784951a2f6d8c",
+          "session.json": "b14caa388378cae935ad303a6f9b0e81f79330bff50c03995791bef6132a3af4"
+        }
+      },
+      "sessions": 48,
+      "source_files": 319,
+      "source_manifest_sha256": "963ab08e55ca11cd9ae864173ebc0788d6a4ed7efe90d23c25bbf2884ea7a816"
+    },
+    "screen": {
+      "binaries": 6,
+      "binary_manifest_sha256": "e986957cdd6e47706a66445e29d6f0f37fe3efd202077cdd954525fc9902c27e",
+      "environment_sha256": "e46a7829069a962de3279c8a98ea74b8263afb163a3a3cf164af5b25267cc8d9",
+      "passed": true,
+      "plan_sha256": "b8ef68a809ee35218aaf5c6926e504f7f575d496421c95ebbfdec490a964c1f8",
+      "post_work_rounds": 64,
+      "raw_artifact_sha256": {
+        "c01-t01-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "7f51875342392be12150c444a8c1a3cf64b33e78b5b58a0ce65f6bb1ca94e104",
+          "kernel.log": "02dc351f38b55de47455e1d048415ce7b4dc98ed57a159e4be18a4beccd4908d",
+          "measure.json": "447c960d468e95a304538ac99d08f07ad48da1bdb2bf6de3da25eec03bdf4221",
+          "session.json": "a87ffd3f04eb6fdcd0c78f85540cecd1a8529548482677b76b4e073068883cf6"
+        },
+        "c01-t01-r00-direct-native": {
+          "drain.counts.json": "0858ae1b3c51742d9cdf932fb41d4bbb1bd2186d2102f22cebec82b2011b30aa",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "ac7d3bc574286ce9ec3d5a332f9fa1b57f4383d6e78ae9145d2ef14a7ec02f08",
+          "session.json": "d89d5bfd61c02388259487d046ca150964b5876bb965e199e60a632cb719b7d9"
+        },
+        "c01-t01-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "5098fa42a254fa4b0455fd60cd93a7292abe1054317e0f53a65acd743307439e",
+          "kernel.log": "23f94b0bfb27e7648bfe460f7351fa109ea45f2ecfac7848cfef0d8ea9466fe7",
+          "measure.json": "a5f4ef0ff4d34ea2771c67c0d1b62a3ab3693d0b3ce288a5f239dd782e88cfcd",
+          "session.json": "3f2d72f1cf19ee81848b79769bdc55f7afe33a5c3e49a804f6e6919e27dee5a6"
+        },
+        "c01-t01-r01-direct-native": {
+          "drain.counts.json": "abd88aec5121c451c03dff8f96dda3a9daa6fbce06d6c315c077448a969b60aa",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "e04f77294e25cca0307a1dea0830104a8c55bbb55407895e4e6b5fcdd9db2811",
+          "session.json": "8f066faa1ebb18bebe5c9cb5c796b6bbaa05a511ca9287d1c7cbf1a5f3f155fc"
+        },
+        "c01-t01-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "47a860aec5181d39684a81ad49ef8ab43b52f18dd521f0bbd282b5d10709c9d1",
+          "kernel.log": "4a25327cfb41de82fd243e7c1a5e31bbc3cca978eddd2563003e7794c7b619a3",
+          "measure.json": "b05f7eb7ac0e4f245efc460ef14c6f898e30b4f5f3414b1ce77397ff00a6a969",
+          "session.json": "90217f6b6bb00d62b5797b9e7841381a4f16dff191072662791b4346d336299b"
+        },
+        "c01-t01-r02-direct-native": {
+          "drain.counts.json": "1f64d2e41647f1e60c46ed4f19cca1174d455b9b82992592f24d90f94aa75add",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "0a409e9aab5e89da55dbc8e4223a5a03d2f76f3329981863a632165ab22b9584",
+          "session.json": "b344147811f1353207dd481d43be2067427fe5238852e6bee3f744aa2f45f786"
+        },
+        "c01-t02-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "a0d93a898605396f45cb779f158e48ac6876d0e9dbaf0a64f210a1a778c72d4e",
+          "kernel.log": "864e704cc21455955bfdbe5a5f453f21caf26513b0c1903fc83ed5bbbadf3d4d",
+          "measure.json": "1b4cb5795d6d2d991d7b670a23328bfbdd0dc667fb310d379e712fb2262e2bc2",
+          "session.json": "f30aa0a3e582552cfc2e843e27d5cde986116f914fd60d8c4b922b3181027def"
+        },
+        "c01-t02-r00-direct-native": {
+          "drain.counts.json": "debcd95eb2497cec10be1dd795f54b09a88b40a0761546b8d43ec523e9bb43fd",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "88899209b50a2e93a7d50b15c8d7da4274edc49d10a9a3152865461d2d4ba315",
+          "session.json": "1e4641112a4056e48b6b83b07f5162b9a0b1e5f49ad9f37143c60948d623744d"
+        },
+        "c01-t02-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "64bbaa086598d4cd9bfd1be5a62f6edcffa888d34bdc96d45ab87cf09957e1d6",
+          "kernel.log": "3619877081b819bf0c6fb0e0843d053eec3f3e595acc88163180207ac41b683b",
+          "measure.json": "9df9732abce0507c2a5fdad430be5afd0f15170550ab0e24bc1bdba6e93c7097",
+          "session.json": "56ee2b97372c0c8f17afc53b561dcd93254b125ab825e2449ee397c01629f996"
+        },
+        "c01-t02-r01-direct-native": {
+          "drain.counts.json": "0a3a80ed87044cd0a85f3d828c270815f2efb09a432335d3e0f5afc381f0e45d",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "66b7aac640f24c3e4faae19e737287a11e852c3786bce0192717642976addbdc",
+          "session.json": "1c0c81112ddb428607e4916cf4aaeb76c27fd14d339bee2bcd30dbd9fe43b694"
+        },
+        "c01-t02-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "0f6d2b59ad072d01fbed70d0437f5259de7614649938b90141af8a28873ff765",
+          "kernel.log": "f30427aa769e46966e9ff2df583952ac7b5f607081c554911d1f59a899da0c22",
+          "measure.json": "a1ff7a71b5d58369d61df4ba66530a5812ea46146cdc023312fa8f8184c09204",
+          "session.json": "91d8624aaf14675729b9ee21baed2885ff75b47f530fdd3820c4d9999e7f682e"
+        },
+        "c01-t02-r02-direct-native": {
+          "drain.counts.json": "ee5c60e314ab2cd62cc1bdbc8d4d7c0bf9da51236dce196fcd0a1929355d4259",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "6e57ff06bde11e0584629940d97ab2d3ddb7c9d56755b1ce8e17d08249cfda9a",
+          "session.json": "be7f81655f58db6fdf2c0a30b2c3f16f1ceb2b9b0c5b05ebd739ac3c765a6db9"
+        },
+        "c01-t03-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "29202e2272bc405077a0da00c5d69a02e5b18c93aa55d01fead8eb42a77dd06c",
+          "kernel.log": "87384b4796a126787d4a0a57390b3f3aa645a43f4298e9b91165c8580a0e1a98",
+          "measure.json": "655bf6b011d7684ab638cba0bcf050be44f0b6064b8081bdf24320fd5a0e9759",
+          "session.json": "9f6ab5033148dce061d95ceb3e0fe2be85e1b4a0ee8eb590d22f7a14a679745e"
+        },
+        "c01-t03-r00-direct-native": {
+          "drain.counts.json": "d2ec4c83f8c0aeac24473407400fbda3c0b4701b91fd7228a7e2ea69ab3c23d6",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "8df4590d5db50586e2931be3ce5c9deccb2dd0abd1d968fc862bc2dc1be028a1",
+          "session.json": "4b3caf52eba08289f1e5e2ef0e4b973bff53cd8c8c177867a94e08aaa6425b17"
+        },
+        "c01-t03-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "47a0759152c75c0f65e4f17a00f3cd5756c75b232521a76d0280d154d4d40331",
+          "kernel.log": "5e8b753441a18d7039b1df2417a47e8f31df11772cfb1bd57c4719f95ce18589",
+          "measure.json": "848f11f354bd302c1f463e6265f8ae2fd16809ee629fd6231c217b78f2a29cdd",
+          "session.json": "ce8020c8686a8edc72303925209e86192ffb2b95ea3c6c8b4beb95524b78feca"
+        },
+        "c01-t03-r01-direct-native": {
+          "drain.counts.json": "8c4481db2a1c0542d0597b243f8ecae4ba2d3aeacb5244116014d5817fdd52cd",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "6395d1aa17d4c80bcb64b39d17484492c954d6e77be767d7beee0efdb2c1bf01",
+          "session.json": "680721f4719f45b29284711c26620efadb8035b7d36358dca6b99fe87cd13be7"
+        },
+        "c01-t03-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "5e13a2f5a28c0c8047d6d93ab8320cc09d036054fcd49a8b26bc9f862856d90e",
+          "kernel.log": "1998c9ee199623760e2c4d8cda638a03cf0074c1b545a3da4e3a323e07d58112",
+          "measure.json": "f7737322de3d12c8facae40d8fa9c9be415bc7f99bf43d7b0e89fae05b022261",
+          "session.json": "f1c27cd3e2c303d6c1c6a01f0b686d102d310983f9c3573dc2b3d0e7de6da65b"
+        },
+        "c01-t03-r02-direct-native": {
+          "drain.counts.json": "8401a144a6c3cdc82aeae473b0d9b781d8b1356c2cd83820016d106fb0f57d07",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "97c0ce05f19d8773066ddc0e761aa1016cb814536064aea6cd09f0151fd9a880",
+          "session.json": "199f5208376d754260dd6c3a5f75a5e029a5fab424776fbc91d81af82ec7b773"
+        },
+        "c01-t04-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "380063a46b909b088a2545155770394b27037438b367eefacad07300a293f3a6",
+          "kernel.log": "be884cbb1c24fa607966fed5cee4536b45409326c4b4dcfeb717d7d65e1fcc11",
+          "measure.json": "3ec340ac3fd546a609012e1ba9c4fd3f7daceec2a7fb3879a4c411e57d8fd5f9",
+          "session.json": "c70d4673f5bd8722cfb957667c74d798bf6c2f648f9fae0d290ef92ef218cb07"
+        },
+        "c01-t04-r00-direct-native": {
+          "drain.counts.json": "ea4e8e11f44f78bec020a921db9cf1f86a4123fb00a297b6f279d62e23c52dcc",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "1b6fa7059eb66e96b0bb1346b70fa4be07f59769bb80f5a3953bc6631768909b",
+          "session.json": "b4fe3d8d24a060ce943551cbf16d333c7fb8533ff8aca555a5ffd0dddb167e48"
+        },
+        "c01-t04-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "c5f89c038e483b2dc10f0203dcfe7e5eb9b41e9409855470724c5cdc9a43047e",
+          "kernel.log": "103ccc8710dff4fae6b5d0bddb5c7c8018fe5b98a80486aa0fe2b3c07f288bbf",
+          "measure.json": "05fbfd21817bf09f472b90dc5ef3aba742783b0d6829cf8634fc6abe64ac4d06",
+          "session.json": "955db4bf78f7c5c1b9b26166424b32aacc26b58b6754808eab8dd272c268a974"
+        },
+        "c01-t04-r01-direct-native": {
+          "drain.counts.json": "ae75d26080e86a233bec283546e9445fdd5156d4704410207be56566481068d8",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "4bae157926e84a733b2ff32e6d012d84d69b35b384925572208cf072e4ab6ff0",
+          "session.json": "682100431ff8885d2a6ebe08e8eda5f31f09d9412197f463e7156eb87416eb12"
+        },
+        "c01-t04-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "c367922142a9dfcc0afc90d5389af0d9190e9139c359910f6a5fd0bc50980a1e",
+          "kernel.log": "4e79f770eeb5ff630323bcc0323fc285558d1ae4ec0517a9a88f5e641733fdc4",
+          "measure.json": "5a831836c8d1cafb3a9d6f68fd04fb3b0e7e920df0d2481a7d6893088a8b5f48",
+          "session.json": "4e6a49928e02003dd81d8d1555407802aec07f0bd37ae57528ce580efa6e5310"
+        },
+        "c01-t04-r02-direct-native": {
+          "drain.counts.json": "28a7bbcdb5979192d992afd3916a02eee40a66b1d252118542d252c1dbc48ef7",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "435440bb17880047a6199992730f29bff4f2efe47456d6169e14b709755d5962",
+          "session.json": "f4dfe50fe4ab6e9b2b328c28ecadb4c6e68de266128a3eb59f1069311bfb5c5a"
+        },
+        "c01-t05-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "b8664268e3a3ab2bfdb1caa890998c6988a4740e5fcf74865a76e1234f8b77ae",
+          "kernel.log": "9705c73ef8d72161a50f51739fc7ac4ef91232b69034ace03362a4511f76886c",
+          "measure.json": "4ce34babaf54b813accbdb8ea48a6d0ce6720af87e04aa2c4241860a9dde5b7d",
+          "session.json": "4f6ea1af381198f87e44af3b7a4290e329d10fd28224bbe699e08f09224ec27c"
+        },
+        "c01-t05-r00-direct-native": {
+          "drain.counts.json": "aad15c8813fdc3dd6aa668d3499dd49fc6bd2206d7e6b17f52fff4bacf42a9d5",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "df226b86a1d311ba9825aad7e5ab3d8ad8c27dbb55c4e65015f785b834485f54",
+          "session.json": "e7d923532e8cc96a860d10f480fad7bbb67cc631c2c8ba3aaf4f9c4ba534b6fa"
+        },
+        "c01-t05-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "30c531b19f304958d300e228dde9baa7bcb44ad3529afbb2ce07dccd6d010e0a",
+          "kernel.log": "13839842cb515e2228d78970429ae3964fbab13b0cddeb0b64ab3550135301bc",
+          "measure.json": "66eda32e6099933a887ca187cf3c41eb0087800872215a509d2f1d8744945412",
+          "session.json": "1f1f5d0764334a4c3c3de3312c80753b9b9528a4f47af1e04a33e7435b845a16"
+        },
+        "c01-t05-r01-direct-native": {
+          "drain.counts.json": "245e1d3f01f42ca6f2e21657b0bec0677bd7cb930a44f9b218c6f40fcdc58ae5",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "fea769adba0029aeb6e77180f5f000a4bfcb74e8b0605b4a9a5fad864fdbd135",
+          "session.json": "419896d4920f5eea24181cb7c409b0849c600e58d42e355f78049dbbff09acfe"
+        },
+        "c01-t05-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "0d3f80805c0e34b147601e1d471ef057afb4ad88115012d890aaf52d5e3d58c1",
+          "kernel.log": "2c4f8baf07bf642d9e1b4242101862b38779bedcfa6b1440e879d802e6d59018",
+          "measure.json": "60e54d071c0e6185b13f8903778aa847a199e639ea3e70c32d084df121a54336",
+          "session.json": "5a1aaa55344d5469bbd34e8200ce22b6fe2b15e5ba91f2e9b04fc90dbf17cf93"
+        },
+        "c01-t05-r02-direct-native": {
+          "drain.counts.json": "8245813a1a16c2e19e7f1fc89c0c1499924fb10ab8739a6f059e88a5aa558e2c",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "e1b550f774bef09f4b48396989d1d57457bcedaeda8fa715ace91377a1629084",
+          "session.json": "ca6458de5b0a3dc907c97b5dac6afaaaa015392975a840427afa37dbce9197e5"
+        },
+        "c01-t06-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "289ee3ba7a9e0756110b07daf01260d6203b12f3f1ab11dba86e1d93cf789ab1",
+          "kernel.log": "d9c64390a50fbfd3d45d9e0a3ce8cb37483e83ae69df964713bee73a341ffe5a",
+          "measure.json": "13ce8afc7a77129bfdf44e25fae472285494ad6d15ab48bb2773b88663d8b78d",
+          "session.json": "272f406f28b1c8505a31d172d822d344e188662d1d5820f57ca4c3ff6e8d0250"
+        },
+        "c01-t06-r00-direct-native": {
+          "drain.counts.json": "65d8b97b3e6de012db4dddd922a6ce852de104a144c26e6e32cd9d692f0ebc8e",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "589d817ff0156e665511db3a6b6bfc673d8d8ce69743badc0be8cb00b2685e7b",
+          "session.json": "fa8b9b77ad7aa71a29a8f81d3e950165e7d9171b1b55b19f7e46bb24df5a44f1"
+        },
+        "c01-t06-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "23199f210be2e8e86b8f1b945ccc2384f423f7f7aea3ffc5d8120752634a854c",
+          "kernel.log": "05c17dd9978be270b93ac021efa979ae241089f8f10fc98ff39f555658e140ca",
+          "measure.json": "7384d930951c6b5ab2e7ea2e8e3852f93cf49655bc4d6b3d02a457737ad811b4",
+          "session.json": "f72fa5575f6f1c59964f689fd7f83f7f14aef1d7ecf9a8257ce0782625769a50"
+        },
+        "c01-t06-r01-direct-native": {
+          "drain.counts.json": "07516c47288aa328f60a46a75ab3f7661cd72af78b4e41957dbd181d7c5aa6a2",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "169e1b33d00eeca044deffb6ee7e420a6d144d76824506d12ac104e40de1675d",
+          "session.json": "c3a2d98b755c6dc04cb36bd5a5d9e2a56a12bc4006f84967898eb1655be23497"
+        },
+        "c01-t06-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "6cdfa0155f8b37f344c13122036da0a64ff4bb9a6610f44e9506bb87df72128d",
+          "kernel.log": "fb5f0603042551771ebbbd3e8ab66d106136d9e3d9e1ee4a3a44202f5815abad",
+          "measure.json": "1cac6ba28c08b5a7ab3071c9b4f0dd2c00e981033a37db68a640f2ab7e7f189b",
+          "session.json": "ce9d3733fb1dbef9251a09eb13a71fec4cc0392be833f5fb5679859738672ea0"
+        },
+        "c01-t06-r02-direct-native": {
+          "drain.counts.json": "678f148dd452974aac89ba15305e990ab3079bf5c9c523e4f78c81e8400687c1",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "17019d704c10a189f40c72ced59b2fafde84921f7b3dcd040583953ae136f5fe",
+          "session.json": "f00dd0982e9600455302f4ccb3aefd5b80bd21b23ed56f7ea9f5878a30026b97"
+        },
+        "c01-t07-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "fd425831d123203add8b00f989c79d4106a13d6c408daaa3e1ede4df9e7222d8",
+          "kernel.log": "65ffe15ecdfb1982062581354f8e802097979f8ab8abf0c288cbd4ad70ca4acf",
+          "measure.json": "6d36198ef9b07d686e522b9cbe8e0ddf89fdf69787cd3d76ad462d7770a91804",
+          "session.json": "d78ffe54f00c1fe74f7edc601c6886d9f1927b49c89d4af4a7cda18897a291d8"
+        },
+        "c01-t07-r00-direct-native": {
+          "drain.counts.json": "265cf45f15db8e184e9f205b99adc04f2775a899f10f1ecfa0072a42bad0f14f",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "9454c7d67908f57e8430fc65da11c176ad211f372d7ab3626163fbbb22dbde67",
+          "session.json": "133b48793c4a19bbbbd8e746c1da0513189e06c8f291a056f95a917ee8196446"
+        },
+        "c01-t07-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "9cfde67776e17b47c6524fcf7c9947eadb2e829b44781a4731109d4ba97484e5",
+          "kernel.log": "e6ac94ff802687a2a66d0a048eeaa361e66290f13a6e7201dceb94bcbf2ffb98",
+          "measure.json": "65892ffda49f8bc0c540bd17576b4d888be4fbed13de11401c2e531d310a4744",
+          "session.json": "fccecc2619281594c78d1f2788008b1af9aff93db9549fc5d5f69e4d47cfa375"
+        },
+        "c01-t07-r01-direct-native": {
+          "drain.counts.json": "4306e2656fc2643e1705118a5386f9bdc70c860507bb72a2c4461e74412bd2df",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "1541e88222f926a01a22a32ea03ef596a5c38b2523466c5c96c1872dec87d025",
+          "session.json": "df88a7a7c942fdb4dd8c25ca92bbb4a6d1c5c7527ec37f83f19f1bf8ba54137a"
+        },
+        "c01-t07-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "f5fdefeddab53503b354827414282774df7bfc816380d26d2ccfb2709410bf29",
+          "kernel.log": "ec38ebb0094a91e59d3f4d25eebe15aec0dbb1e7fae0584e1306daa452221d84",
+          "measure.json": "5d23c22053342130d131b5bfe519a123c52b5b21876e1ca45f467882410b8311",
+          "session.json": "1daebdfc38fbc96637d64d68bdb27e905d3f9d598b588fe2f67845893aef0594"
+        },
+        "c01-t07-r02-direct-native": {
+          "drain.counts.json": "0c5fc7e867c570ba5e68dd60e9418b8f8b91aa9326f87caeb6ca2b7926ce2f60",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "afb02567de738098104a4a52db41d67afd1f60eac0bc49397efefdad93bef6cb",
+          "session.json": "deb634b3aa26d656acdd56e2d9fd36655aeef7da9d0fa34b353fc74b73186cad"
+        },
+        "c01-t08-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "3160af54aac43746e0ddf52bf3f15f1ad0f74ccb1d341ce48cba2751829d588c",
+          "kernel.log": "6c48891af3008300684a6bfb5860e2183a92012eddbf25b3d40fd8981986dda8",
+          "measure.json": "b075322cb7677a33e29150a8e2bf46a953550e3eea39fe13d47d68f0422fb822",
+          "session.json": "e37f50a4d9b25404e2dee5be9c4f9d03c2df0456da6306adc2b44f815fe2b358"
+        },
+        "c01-t08-r00-direct-native": {
+          "drain.counts.json": "09393cb5d53c47ebd2677770d69d8c294dabe9123e41a6918933d2008e66088f",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "71bdb903e76d5e671ac203aa20878092d2f5d057402919a90c8283e924cd80c3",
+          "session.json": "12b53d8a4e2524d396bdc88832461030daeefa5bcea64fa3928ba206ecf4ea7d"
+        },
+        "c01-t08-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "e217d1650ea73ecd7501b123aa33e7ff0d8cb33e77a29210f632c574589e5965",
+          "kernel.log": "041d33e574e2a1e0e6658fe207e4cfb12407f01cba4fb3925db9b2b97a600344",
+          "measure.json": "79ee5399e08d46ce15c6e70ef04702b6ccc315114ba07bd90bd5cafd5852fb4f",
+          "session.json": "d47a9d01f2b2feb19c66cb6c4578ac8de36bb087d6e4416e15bd43496b5ff2fe"
+        },
+        "c01-t08-r01-direct-native": {
+          "drain.counts.json": "83326534a25e6504a7b36fb060da43bb5359da95868c2977075cf8b35b9da8cf",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "2109e48e4d49606867a5b2d6e057a3b81c8bcb84b3c82881dd355f2627841359",
+          "session.json": "a61c5695a5c54b8b1e4ae06b4e5a6f8dfd48077d13b819d28c32cd5966baf805"
+        },
+        "c01-t08-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local": {
+          "drain.counts.json": "e896d724f3f07c88f092721afac8e522d09bf18ed699013b3645bdcb0af33a8d",
+          "kernel.log": "0f2e00f6005fb0626e6c8ec9ebd4d981ddfba4d059aae630abffecca4b990071",
+          "measure.json": "fd6b4ae3f0dbf57f743ae48c0dfc27e99a6154ec5693884f0bfbc1c88b8bbb0b",
+          "session.json": "4fb7838c000fb2f2a685170f657797e648895769a451c13fe298cf90fe93155e"
+        },
+        "c01-t08-r02-direct-native": {
+          "drain.counts.json": "befed49258b703ffee85237ab2cd96387286f1b88efaf690302150142c8bd76a",
+          "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "measure.json": "c37090cb262ba33f365d341a9211eb5a8dd192008ed94affd8db463c91ad1131",
+          "session.json": "45da357c215763b614e03a681d43bb1efb52cabc57b92f8717fdc4beb31c4d3b"
+        }
+      },
+      "sessions": 48,
+      "source_files": 320,
+      "source_manifest_sha256": "6f45c9c02a1eb670e7822d017e7f2ed527c6614a138f070af1c39060707f5e0c"
+    }
+  },
+  "required_fresh_confirmation_blocks": 2,
+  "schema": 1,
+  "scope": "owned c01 post64 workers 1\u20138 only"
+}
