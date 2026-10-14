@@ -262,15 +262,13 @@ def main():
     parser.add_argument('--candidates', type=Path, nargs='+', required=True)
     parser.add_argument('--confirmations', type=Path, nargs=2)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--post-work-rounds', type=int, choices=range(1, 257), default=64,
-                        help='expected frozen workload rounds; does not change or rebuild inputs')
     args = parser.parse_args()
-    baseline = load_run(args.baseline, args.post_work_rounds)
+    baseline = load_run(args.baseline)
     require({r['threads'] for r in baseline} == set(GRID), 'incomplete baseline grid')
     for t in GRID:
         for arm in ('native', 'kdlock'):
             metrics([r for r in baseline if r['threads'] == t and r['arm'] == arm])
-    candidate_records = {p: load_run(p, args.post_work_rounds) for p in args.candidates}
+    candidate_records = {p: load_run(p) for p in args.candidates}
     trials = [dict(path=str(p), **evaluate(baseline, rows))
               for p, rows in candidate_records.items()]
     require(len({t['implementation'] for t in trials}) == 1,
@@ -294,7 +292,7 @@ def main():
         for records in candidate_records.values():
             seen.update(sample_identities(records))
         for p in args.confirmations:
-            records = load_run(p, args.post_work_rounds)
+            records = load_run(p)
             require(json.loads((p/'source-sha256.json').read_text()) == frozen,
                     'confirmation source differs from selected screen')
             require_fresh(records, seen)
@@ -311,7 +309,7 @@ def main():
                 'confirmation preflight policy differs from selected screen')
         if all(c['verdict'] == 'PASS' and c['threshold'] == min(passing) for c in confirmation):
             selected = min(passing)
-    write_json(args.output, dict(post_work_rounds=args.post_work_rounds,
+    write_json(args.output, dict(post_work_rounds=64,
         candidate_implementation=trials[0]['implementation'],
         selected_implementation=trials[0]['implementation'] if selected is not None else None,
         selected_default=selected, retained_default=256 if selected is None else None,

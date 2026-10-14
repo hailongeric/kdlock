@@ -60,10 +60,7 @@ Current runners always use blocking mutexes. The
 Stock controls separately; [the results index](../../bench/results/README.md)
 retains benchmark reports and their frozen source versions.
 Each session has 48,000 warmup operations per worker, a two-second measurement,
-and a 300 ms peak window after 300 ms of settling. The current spin/mutex helper
-defaults to 64 post-work arithmetic rounds; `SC_POST_WORK_ROUNDS` can
-override it at build time. Rebuild all compared arms with the same setting.
-Record the actual source/build setting and keep these workloads separate.
+and a 300 ms peak window after 300 ms of settling.
 
 The standard 64-vCPU VM cannot supply 64 distinct worker CPUs and a separate
 collector CPU. A temporary two-node, 66-vCPU boot can use worker CPUs

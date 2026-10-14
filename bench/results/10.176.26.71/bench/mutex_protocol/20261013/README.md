@@ -9,7 +9,7 @@ unchanged. Rejected implementations are preserved at exact tip `722ea98`, tag
 to that archived source. [Git disposition](git-disposition.json).
 
 The 64-round study below and the separately requested
-[8-round study](../20261013-post8/README.md) must be
+[8-round study](https://github.com/hailongeric/kdlock/blob/fe8d7586239d9fbe18adc3e89c98052d8873933e/bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/README.md) must be
 evaluated independently. Reducing the work outside the critical section changes
 offered contention, the opportunities for immediate reacquisition, and the
 fraction of time spent in lock machinery. It is not a lock optimization.

@@ -90,7 +90,6 @@ class BenchTests(unittest.TestCase):
                        lambda x: x['workers'][0].__setitem__('read_errors', 1),
                        lambda x: x['after'].__setitem__('cnts', 512),
                        lambda x: x['workers'][1].__setitem__('observed_cpu', 0),
-                       lambda x: x['workers'][0].__setitem__('checksum', 0),
                        lambda x: x['workers'][0].__setitem__('completed', 99)):
             bad = copy.deepcopy(m)
             modify(bad)
@@ -116,15 +115,6 @@ class BenchTests(unittest.TestCase):
                 (10, 9, 10, 'kdlock', True), (0, 1, 10, 'native', False), (0, 1, 10, 'kdlock', False)):
             with self.assertRaises(ValueError):
                 jit_evidence(before, after, writes, backend=backend, delegate=delegate)
-
-    def test_post_work_amount(self):
-        self.assertEqual(post_work_checksum(1, 1), 1015568748)
-        for rounds in (1, 4, 64, 256):
-            state = 1
-            for count in range(1, 20):
-                for _ in range(rounds):
-                    state = (state * 1664525 + 1013904223) % 2**64
-                self.assertEqual(post_work_checksum(count, rounds), state)
 
     def test_peak_read_write_split_uses_worker_phase(self):
         from test_peak import fixture as timed_fixture

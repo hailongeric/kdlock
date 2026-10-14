@@ -15,8 +15,8 @@ build time, using the same payload source for all three arms.
 
 The owned arm includes `kd_owned_mutex_direct.h`, initializes with
 `kd_mutex_init`, prepares with `kd_owned_mutex_prepare`, and checks
-`kd_owned_mutex_is_idle` after all workers join. It uses the same lock alignment,
-payload counters and post-work as Native. It does not reinterpret a Linux mutex
+`kd_owned_mutex_is_idle` after all workers join. It uses the same lock alignment and
+payload counters as Native. It does not reinterpret a Linux mutex
 or share its object with native consumers. Other cacheline sizes and the hash
 payload are rejected for this initial implementation; kernel-owned real-API
 workloads continue using the legacy interface. Module metadata records the

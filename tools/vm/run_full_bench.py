@@ -43,7 +43,7 @@ def commands(output, cpus, collector, include_multicacheline=False):
                 '--output', str(output / name)]
         if kind == 'rwlock':
             args += ['--workloads', workload, '--write-percent', '1', '20',
-                     '--post-work-rounds', '4', '--cpus', *map(str, cpus)]
+                     '--cpus', *map(str, cpus)]
         else:
             args += ['--workload', workload, '--cpus', ','.join(map(str, cpus)),
                      '--keep-going-no-jit']

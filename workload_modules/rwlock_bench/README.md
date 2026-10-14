@@ -15,11 +15,8 @@ hash move body and structural snapshot oracle, adding concurrent read lookups.
 KD writers use ABI3: native or delegated writer admission precedes the JIT
 payload. Hash pointer traversal therefore retains the original strict admission
 checks without including reader-drain counter stores in its translated body.
-`RB_SHARED` points to that hash payload header. Register-only post-work follows
-the earlier cacheline benchmark's multiply/add pattern;
-`RB_POST_WORK_ROUNDS` is always explicit in the runner and layout response.
-Its default is four rounds, independent of the shared spin/mutex post-work
-setting. RCUHT here is a globally locked hash workload, with no per-body
+`RB_SHARED` points to that hash payload header.
+RCUHT here is a globally locked hash workload, with no per-body
 allocation or RCU services; the name does not imply lock-free reader execution.
 
 The versioned [ABI](api.h) configures each phase while no workers are active. Each

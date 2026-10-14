@@ -2,12 +2,11 @@
 #ifndef KD_RW_BENCH_POST_WORK_H
 #define KD_RW_BENCH_POST_WORK_H
 
-#if RB_POST_WORK_ROUNDS < 1 || RB_POST_WORK_ROUNDS > 256
-#error "RB_POST_WORK_ROUNDS must be 1..256"
-#endif
+#define RB_POST_WORK_ROUNDS 4
+
 /* Same dependent multiply/add work as the earlier KD cacheline benchmarks.
- * Compile the selected count so every backend has identical work outside
- * its lock. Volatile asm retains it without shared-memory writes or yielding. */
+ * Every backend has identical work outside its lock. Volatile asm retains it
+ * without shared-memory writes or yielding. */
 static __always_inline u64 rb_post_work(u64 state)
 {
 #define RB_STRING_INNER(value) #value

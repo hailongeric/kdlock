@@ -35,9 +35,9 @@ Live output belongs in a new directory outside the guest checkout:
 Use NUMA-on, an UBSAN-off KD benchmark provider, 48,000 warmup operations per
 worker, three rounds, a two-second measurement and the highest valid 300 ms
 window after settling. Real API warmup additionally lasts at least one second
-per worker. Record the actual host governor, frequency policy, CPU/NUMA placement
-and post-work rounds. Functional runs explicitly use one round and are separate
-from performance measurements.
+per worker. Record the actual host governor, frequency policy and CPU/NUMA placement.
+Functional runs explicitly use one round and are separate from performance
+measurements.
 
 The complete grid is
 `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64`.

@@ -34,7 +34,6 @@ typedef pthread_spinlock_t spinlock_t;
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 #define WRITE_ONCE(x, v) (*(volatile __typeof__(x) *)&(x) = (v))
 #include "../../workload_modules/spin_cacheline/payload.h"
-#include "../../workload_modules/spin_cacheline/post_work.h"
 
 static unsigned char control[64] __attribute__((aligned(64)));
 static int snapshots;
@@ -139,7 +138,6 @@ int fixture_ioctl(int fd, unsigned long cmd, ...)
 	if (cmd == SC_RUN) {
 		struct sc_run *r = packet;
 		void (*body)(void) = NULL;
-		__u64 post_state = 1;
 		atomic_fetch_add_explicit(&run_calls, 1, memory_order_relaxed);
 		atomic_fetch_add_explicit(&submitted_iterations, r->iterations, memory_order_relaxed);
 		if (fault_is("create") || fault_is("affinity") ||
@@ -157,7 +155,6 @@ int fixture_ioctl(int fd, unsigned long cmd, ...)
 			return -1;
 		for (r->completed = 0; r->completed < r->iterations; r->completed++) {
 			body();
-			post_state = sc_post_work(post_state);
 		}
 		if (fault && !strcmp(fault, "completed"))
 			r->completed--;

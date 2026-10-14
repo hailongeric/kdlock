@@ -44,11 +44,10 @@ acceptance. No full suite, other-workload or 64-worker acceptance is claimed.
 
 ## Earlier mutex protocol verification
 
-The [64-round protocol receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/validation.json)
-and separate [eight-round receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/validation.json)
-retain basic and affected frame/cookie/ABI, admission, task-reference, parking,
-terminal and owner/ACK checks. They distinguish compiled JIT fixtures, live
-resource probes and returned benchmark bodies. The reports preserve rejected
+The [protocol receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/validation.json)
+retains basic and affected frame/cookie/ABI, admission, task-reference, parking,
+terminal and owner/ACK checks. It distinguishes compiled JIT fixtures, live
+resource probes and returned benchmark bodies. The report preserves rejected
 frame/layout/capture/epoch candidates and initial corrected harness failures.
 Correct results and drain do not establish performance acceptance: no candidate
 meets the full 97% target. No full suite or other-workload acceptance was run.

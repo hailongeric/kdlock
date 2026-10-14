@@ -32,16 +32,15 @@ grid. They remain explicit compile-time/runtime opt-ins. Capture-first, ratio
 substantial extra instructions and cycles per operation at 16–32 workers;
 frequency differences alone do not explain the gap. The report retains worker
 shares, CPU cost, all candidate sources and failed attempts, including variation
-in Native's sixty-worker execution regime. This phase measures 64 post-work
-rounds only; the earlier eight-round study remains separate.
+in Native's sixty-worker execution regime.
 
 ## Earlier c01 owned-mutex redesign
 
 The [owned-mutex study](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
 implements a separate 32-byte KD object with private Linux-derived owner/OSQ/sleep
 code and typed SELF/DELEGATE waiters. Target-address probes observe no original
-Linux mutex calls. It audits 426 scored sessions and 114 diagnostics at 64
-post-work rounds. The requested two-metric 97% target remains unmet.
+Linux mutex calls. It audits 426 scored sessions and 114 diagnostics.
+The requested two-metric 97% target remains unmet.
 
 At sixteen workers the fresh Native/TCLock/legacy-KD medians are
 8.694/3.525/7.315 Mops/s. Owned finite FIFO reaches 1.766. Opt-in bounded refill
@@ -56,17 +55,11 @@ correctness evidence, variation and remaining causal uncertainty visible.
 
 The [protocol study](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/README.md)
 tests frame retirement reuse, queue-node layout, caller capture, native preflight
-and bounded native/delegation epochs. None of the 64-round candidates meets the
+and bounded native/delegation epochs. None of the candidates meets the
 two-metric 97% target. Native epochs improve the 28-worker result, but their
 2/4/16-worker gaps remain; favorable isolated counts do not justify a new default.
 
-The user requested a separate [eight-round study](../bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/README.md).
-Its fresh Native/TCLock/KD baseline reaches 10.961/3.584/7.374 Mops/s at sixteen
-workers. Shorter outside work helps Native much more than the delegating paths.
-Exact-address epoch caching and cross-node epochs improve selected counts, but
-all ten initial screens fail acceptance. The cross-node candidate gains at 36
-and loses more than 3% at 60. Keep eight- and 64-round evidence separate.
-The reports retain all samples, worker progress, CPU cost, JIT shares, raw
+The report retains all samples, worker progress, CPU cost, JIT shares, raw
 sources and rejected implementations; the accepted provider remains `9b76719`.
 
 ## Earlier c01 optimistic-spin study
@@ -108,7 +101,7 @@ returned JIT bodies in every round.
 
 The report retains 543 correct, progressing, drained sessions, including 48
 unscored diagnostics, source/ELF/JIT hashes, variation and CPU/worker-share data.
-It uses the regular 64-vCPU VM, collector 63 and 64 post-work rounds. Adaptive
+It uses the regular 64-vCPU VM and collector 63. Adaptive
 native acceptance is opt-in and visibly distinct from returned JIT execution.
 No candidate qualified for confirmation; this is not a parity result or an
 acceptance of other workloads and the 64-worker topology.
@@ -123,7 +116,7 @@ The [complete comparison workflow](../tools/vm/README.md#complete-164-worker-com
 uses a temporary 66-vCPU boot. At 64 workers, collector vCPU 65, the last worker
 and QEMU services share physical host core 63. The regular VM has 64 vCPUs;
 collector 63 is excluded from worker cohorts. Keep source versions, topologies,
-workload/post-work settings, governors and JIT/NO_JIT classes separate.
+workload settings, governors and JIT/NO_JIT classes separate.
 Aggregate throughput and amortized ns/op do not measure lock-acquisition latency.
 
 ## Reproduction and history

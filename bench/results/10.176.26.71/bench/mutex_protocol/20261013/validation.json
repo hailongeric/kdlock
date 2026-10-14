@@ -1345,6 +1345,6 @@
     "not_covered_by_above_test_passes": true,
     "eight_round_study": "Completed separately; no eight-round samples are included in this receipt.",
     "status_at_initial_assembly": "Pending VM validation when this record was assembled.",
-    "resolved_by": "../20261013-post8/validation.json"
+    "resolved_by": "https://github.com/hailongeric/kdlock/blob/fe8d7586239d9fbe18adc3e89c98052d8873933e/bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/validation.json"
   }
 }

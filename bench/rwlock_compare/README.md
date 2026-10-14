@@ -113,11 +113,6 @@ each. A read-only case needs no writer publication. Each pinned worker executes
 its measured loop in one ioctl. Python does not run an operation-by-operation
 loop, and measurement adds no shared reader counters.
 
-After releasing the lock, every backend performs the same register-only arithmetic.
-`--post-work-rounds` sets its amount explicitly; the default is **4**, matching the
-earlier KD benchmarks. Record it when comparing results. Different amounts of
-post-work are different workloads, including when comparing newer spin/mutex runs.
-
 ### Throughput measurements
 
 Timed runs last two seconds by default. Each worker publishes progress every 256

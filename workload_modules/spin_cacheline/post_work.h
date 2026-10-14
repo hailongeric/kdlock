@@ -2,17 +2,10 @@
 #ifndef SPIN_CACHELINE_POST_WORK_H
 #define SPIN_CACHELINE_POST_WORK_H
 
-/* Keep the amount identical across every backend in a comparison. Overrides
- * are compile-time so measured operations need no loop counter or branch. */
-#ifndef SC_POST_WORK_ROUNDS
+/* Keep the amount identical across every backend in a comparison. */
 #define SC_POST_WORK_ROUNDS 64
-#endif
-#if SC_POST_WORK_ROUNDS < 1 || SC_POST_WORK_ROUNDS > 256
-#error "SC_POST_WORK_ROUNDS must be between 1 and 256"
-#endif
 
 /* Dependent multiply/add rounds after sc_body_N has unlocked and returned.
- * The default executes 128 ALU instructions, sixteen times the old workload.
  * This x86-64 register-only work separates consecutive acquisitions;
  * it neither yields the CPU nor guarantees a handoff. All arms execute it.
  * Volatile asm keeps even an unused final result, without a shared-memory sink,

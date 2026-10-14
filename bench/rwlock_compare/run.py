@@ -46,7 +46,6 @@ def parser():
     p.add_argument('--peak-settle-ms', type=int, default=300)
     p.add_argument('--sample-ms', type=int, default=10)
     p.add_argument('--iterations', type=int, default=50000, help='per worker for fixed/functional runs')
-    p.add_argument('--post-work-rounds', type=int, default=4)
     p.add_argument('--spin-entry-ratio-limit', type=int, default=2)
     p.add_argument('--delegate', choices=('on', 'off'), default='on', help='KD native control when off')
     p.add_argument('--require-jit', action='store_true', help='require JIT for every multithread KD writer case')
@@ -66,8 +65,7 @@ def make_plan(args):
         require(values and len(values) == len(set(values)), 'empty/duplicate ' + name)
     require(all(1 <= n <= 64 for n in threads), 'threads must be 1..64')
     require(all(0 <= p <= 100 for p in args.write_percent), 'write percentages must be 0..100')
-    require(1 <= args.post_work_rounds <= 256 and 0 < args.iterations <= 100000000,
-            'invalid post-work or iterations')
+    require(0 < args.iterations <= 100000000, 'invalid iterations')
     require(args.repeats == (1 if args.functional else 3), 'use one functional round or three performance rounds')
     require(not args.require_parity or (not args.functional and
             set(args.backends) == {'native', 'tclock', 'kdlock'}),
@@ -94,7 +92,7 @@ def make_plan(args):
                 arm=arm, workload=workload, cachelines=lines, write_percent=percent, threads=n, repeat=repeat,
                 cpus=cpus[:n], collector_cpu=args.collector_cpu, iterations=args.iterations,
                 duration_ms=duration, peak_window_ms=args.peak_window_ms, peak_settle_ms=args.peak_settle_ms,
-                sample_ms=args.sample_ms, functional=args.functional, post_work_rounds=args.post_work_rounds,
+                sample_ms=args.sample_ms, functional=args.functional, post_work_rounds=4,
                 warmup_iterations_per_worker=48000, mix_policy='evenly_spaced_worker_phase17',
                 lock_kind='rwlock', caller_abi='clobber' if arm == 'kdlock' else 'c',
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,
@@ -127,7 +125,7 @@ def report(out):
         row['write_ops_s'] = m['writes'] * 1e9 / m['wall_ns']
         row['peak_ops_s'] = m['peak']['throughput_ops_s']
         # No pooling of JIT positives and native-admitted runs, or different
-        # placement/mixes/post-work. This report consumes one frozen plan only.
+        # placement/mixes. This report consumes one frozen plan only.
         key = (row['variant'], row['write_percent'], row['threads'], row['jit_status'])
         groups.setdefault(key, []).append(row)
     summary = []
@@ -216,7 +214,6 @@ def build(args, out, plan):
         extra = [] if backend == 'native' else [f'KBUILD_EXTRA_SYMBOLS={binaries[backend].parent / "Module.symvers"}']
         command(['make', '-C', folder, f'KDIR={args.kernel_source}', f'RB_BACKEND={backend}',
                  f'RB_WORKLOAD={spec["workload"]}', f'RB_LINES={spec["cachelines"]}',
-                 f'RB_POST_WORK_ROUNDS={spec["post_work_rounds"]}',
                  f'KDLOCK_INCLUDE={source / "include"}', f'TCLOCK_INCLUDE={source / "tclock_backend/include"}',
                  f'RB_SHARED={source / "workload_modules/spin_cacheline"}', *extra],
                 out / ('build-' + variant + '.log'), timeout=180)

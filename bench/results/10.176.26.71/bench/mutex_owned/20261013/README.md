@@ -11,7 +11,7 @@ finite FIFO remain the owned defaults; bounded refill is opt-in.
 The fresh study audits **426 scored sessions and 114 diagnostics**. No candidate
 qualifies for the two fresh confirmation blocks. Correctness evidence and rejected
 performance evidence are both retained. The earlier user-requested
-[eight-round study](../../mutex_protocol/20261013-post8/README.md) is separate;
+[eight-round study](https://github.com/hailongeric/kdlock/blob/fe8d7586239d9fbe18adc3e89c98052d8873933e/bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/README.md) is separate;
 this study uses 64 post-work rounds throughout.
 
 ## Implemented protocol

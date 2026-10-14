@@ -136,7 +136,7 @@ def markdown(stats, comparisons, verification, run_name):
              'Every configuration uses Linux Native, TCLock and KDLock, with three rounds per backend.', '',
              payloads + 'Warmup is 48,000 operations per worker; '
              'measurement is 2,000 ms; peak selection uses an observed 300 ms window after 300 ms of settling. '
-             'Spin/mutex use their frozen 64 post-work arithmetic rounds; rwlocks use four. Compare backends within each workload.', '',
+             'Compare backends within each workload.', '',
              'The temporary VM exposes 66 vCPUs with 24 GiB RAM and two NUMA nodes. Workers use guest '
              'CPUs 0–31,33–64, pinned to host physical cores 0–63: 32 worker cores per NUMA node. '
              'Collector vCPU 65 is outside every guest worker cohort. **At 64 workers, collector 65 '

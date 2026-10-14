@@ -229,8 +229,8 @@ without promoting the rejected implementations. Later accepted cache/NUMA work
 is a separate implementation with its own measurements.
 
 The nine pre-existing edits were committed as `09bfffe` on
-`wip/worktree-20261012`. That checkout, including the outer acquisition cookie
-and configurable 64-round post-work default, is the starting baseline for the
+`wip/worktree-20261012`. That checkout, including the outer acquisition cookie, is
+the starting baseline for the
 [2026-10-13 admission study](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md).
 Its implementation and evidence are integrated into local `master`; the task
 tip is preserved as `archive/perf/mutex-admission-c01-20261013`. All threshold

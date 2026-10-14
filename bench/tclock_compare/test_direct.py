@@ -383,43 +383,6 @@ class DirectTests(unittest.TestCase):
             self.assertTrue(all(r['execution_classes'] == ['KD_SELF'] for r in owned_rows))
             self.assertIsNone(next(r for r in owned_rows if r['diagnostic'])['best_session'])
 
-    def test_plan_records_fixed_post_work_source(self):
-        args = Namespace(cachelines=[1], threads=[2], repeats=1,
-                         iterations=100, backends=['native', 'kdlock'])
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            header = root/run.POST_WORK_SOURCE
-            header.parent.mkdir(parents=True)
-            for rounds in (64, 8):
-                header.write_text(f'#define SC_POST_WORK_ROUNDS {rounds}\n')
-                with patch.object(run, 'ROOT', root):
-                    plan = run.make_plan(args)
-                self.assertEqual({r['post_work_rounds'] for r in plan}, {rounds})
-
-    def test_summary_keeps_post_work_and_native_controls_separate(self):
-        base = run.make_plan(Namespace(cachelines=[1], threads=[2], repeats=1,
-            iterations=100, backends=['native', 'kdlock']))
-        plans = [dict(s, name=s['name']+f'-post{rounds}', post_work_rounds=rounds)
-                 for rounds in (8, 64) for s in base]
-        with tempfile.TemporaryDirectory() as temporary:
-            out = Path(temporary)
-            run.write_json(out/'plan.json', plans)
-            for spec in plans:
-                folder = out/spec['name']; folder.mkdir()
-                rate = {8: {'native': 100, 'kdlock': 80},
-                        64: {'native': 10, 'kdlock': 20}}[spec['post_work_rounds']][spec['arm']]
-                run.write_json(folder/'session.json', dict(spec,
-                    execution_status='OK', drained=True,
-                    measurement=dict(completed=rate, wall_ns=1000000000,
-                                     data_ok=True, complete=True)))
-            run.report(out)
-            rows = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(rows), 4)
-            kd = {r['post_work_rounds']: r for r in rows if r['arm'] == 'kdlock'}
-            self.assertEqual(kd[8]['throughput_over_linux'], 0.8)
-            self.assertEqual(kd[64]['throughput_over_linux'], 2.0)
-            self.assertTrue(all(r['sessions'] == 1 for r in rows))
-
     def test_mutex_plan_uses_blocking_with_one_session_per_backend(self):
         plan = run.make_plan(Namespace(cachelines=[16], threads=[16], repeats=3,
             iterations=100, backends=['native', 'tclock', 'kdlock'],

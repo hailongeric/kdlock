@@ -74,27 +74,6 @@ class CachelineTests(unittest.TestCase):
                         submitted_iterations=threads * iterations,
                         monotonic=threads + 2, thread_cputime=2 * threads))
 
-    def test_post_work_survives_unused_result_without_memory_or_calls(self):
-        # Check the heavier default, the historical workload and the upper
-        # override bound using actual generated instructions and arithmetic.
-        for override, rounds in ((None, 64), (4, 4), (256, 256)):
-            with self.subTest(rounds=rounds, override=override):
-                binary = self.out / f"post-work-fixture-{rounds}"
-                flags = [] if override is None else [f"-DSC_POST_WORK_ROUNDS={override}"]
-                subprocess.run(["cc", "-O2", "-Wall", "-Wextra", "-Werror", "-std=gnu11",
-                                *flags, str(HERE / "post_work_fixture.c"), "-o", str(binary)],
-                               check=True, timeout=30)
-                subprocess.run([str(binary)], check=True, timeout=10)
-                assembly = subprocess.check_output(
-                    ["objdump", "-d", "--no-show-raw-insn", "--disassemble=fixture_discard", str(binary)],
-                    text=True, timeout=10)
-                instructions = re.findall(r"^\s*[0-9a-f]+:\s+(.*)$", assembly, re.MULTILINE)
-                alu = [line for line in instructions if line.startswith(("imul", "add"))]
-                self.assertEqual(sum(line.startswith("imul") for line in alu), rounds, assembly)
-                self.assertEqual(sum(line.startswith("add") for line in alu), rounds, assembly)
-                self.assertTrue(all("(" not in line for line in alu), assembly)
-                self.assertFalse(any(line.startswith(("call", "pause", "j")) for line in instructions), assembly)
-
     def test_selected_kernel_bundle_rejects_corrupt_identity(self):
         # Selecting an experimental bundle must still use the existing file
         # verifier; a CLI override must not turn a bad identity into a pass.

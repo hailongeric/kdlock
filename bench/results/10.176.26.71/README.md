@@ -30,11 +30,9 @@ experimental; legacy remains the benchmark default.
 
 The [c01 protocol study](bench/mutex_protocol/20261013/README.md) expands the
 optimization space to frame reuse, node layout, caller capture, native preflight
-and bounded execution epochs. Its [separate eight-round follow-up](bench/mutex_protocol/20261013-post8/README.md)
-adds exact-address caching and cross-node epochs after the user changed the
-outside work. Both retain fresh Native/TCLock/KD baselines and all rejected
-screens; neither establishes the two-metric 97% target. The accepted provider
-remains `9b76719`. The linked receipts distinguish correctness, returned JIT,
+and bounded execution epochs. It retains fresh Native/TCLock/KD baselines and all
+rejected screens; it does not establish the two-metric 97% target. The accepted
+provider remains `9b76719`. The linked receipts distinguish correctness, returned JIT,
 performance acceptance and diagnostic evidence.
 
 The [optimistic-spin study](bench/mutex_optimistic/20261013/README.md) measures
