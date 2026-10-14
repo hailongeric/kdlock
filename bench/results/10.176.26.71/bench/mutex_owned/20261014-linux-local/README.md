@@ -285,4 +285,6 @@ implementation contracts and operations. The
 [branch inventory](../../../../../../docs/git-branches-20261014.json) preserves
 the merged WIP tip and the exact cached remote protocol tip under distinct
 archive tags. Dirty historical frozen worktrees remain intact. No remote refs
-were changed or published.
+were changed or published. Accepted implementation `585335b` and report
+`c768c23` were fast-forwarded into local `master`; the finished topic is preserved
+as `archive/perf/mutex-linux-local-c01-20261014` and its local branch is closed.

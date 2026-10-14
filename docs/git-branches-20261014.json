@@ -1025,7 +1025,7 @@
   ],
   "wip_master_symmetric_difference": "12\t0",
   "remote_protocol_archive_symmetric_difference": "1\t0",
-  "organization_note": "Exact cached remote tips archived locally; no remote push or deletion. Dirty frozen worktrees retained. Implementation 585335b passes the narrowed c01/post64 1\u20138-worker scope.",
+  "organization_note": "Accepted implementation 585335b and report c768c23 integrated locally by fast-forward. Finished topic archived at its exact tip and closed. Cached remote refs and remote branches unchanged; historical and new frozen worktrees retained.",
   "completed_actions": [
     {
       "branch": "wip/worktree-20261012",
@@ -1038,6 +1038,15 @@
       "action": "preserve exact cached remote tip without moving prior archive tag",
       "commit": "475e1d62b05c167881c64f8993e4b1e4cd137eb1",
       "tag": "archive/remote/perf/mutex-protocol-c01-20261013"
+    },
+    {
+      "branch": "perf/mutex-linux-local-c01-20261014",
+      "archive_tag": "archive/perf/mutex-linux-local-c01-20261014",
+      "tip": "c768c231544b3c2636decdbe6210aa4c52d451d2",
+      "previous_master": "c9db8ad88c2f934d9931fe0b7f982a7261698f48",
+      "new_master": "c768c231544b3c2636decdbe6210aa4c52d451d2",
+      "action": "fast-forward accepted work, verify exact-tip archive, normal local branch deletion",
+      "remote_changes": false
     }
   ],
   "initial_inventory_scope": "Read-only local/cached-ref inventory; no fetch, network publication, ref changes or worktree removal performed.",
@@ -1050,5 +1059,11 @@
     "master c9db8ad88c2f934d9931fe0b7f982a7261698f48",
     "perf/mutex-linux-local-c01-20261014 c9db8ad88c2f934d9931fe0b7f982a7261698f48"
   ],
-  "accepted_implementation": "585335b555bcf1f694286dba440a191c56fff6b7"
+  "accepted_implementation": "585335b555bcf1f694286dba440a191c56fff6b7",
+  "branch_snapshot_after_integration": [
+    "master c768c231544b3c2636decdbe6210aa4c52d451d2"
+  ],
+  "active_local_branch_names_after_integration": [
+    "master"
+  ]
 }

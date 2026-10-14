@@ -210,7 +210,10 @@ The native-first implementation is preserved at `9a5305e`, tag
 was integrated separately. [The machine index](../bench/results/10.176.26.71/README.md)
 records earlier study dispositions without duplicating their narratives here.
 
-The [2026-10-14 inventory](git-branches-20261014.json) records the local cleanup:
+The [2026-10-14 inventory](git-branches-20261014.json) records the local cleanup.
+Accepted topic tip `c768c23` was fast-forwarded into `master`, preserved as
+`archive/perf/mutex-linux-local-c01-20261014`, then its local branch was closed.
+Earlier cleanup also preserves the following tips:
 merged WIP `09bfffe` is preserved exactly by
 `archive/wip/worktree-20261012` and its local branch is closed. The cached remote
 protocol tip `475e1d6` has a separate exact-tip archive tag; no remote refs changed.
