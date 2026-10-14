@@ -49,6 +49,8 @@ def main():
     production += capture
     production += 'unsigned long ' + definition(delegate, 'kd_owned_mutex_outer_prepared_clobber_v1(')
     mutations = {
+        'stop-on-waiters': ('(KD_OWNED_MUTEX_FLAG_HANDOFF | KD_OWNED_MUTEX_FLAG_PICKUP)', 'KD_OWNED_MUTEX_FLAGS'),
+        'ignore-directed-flags': ('(KD_OWNED_MUTEX_FLAG_HANDOFF | KD_OWNED_MUTEX_FLAG_PICKUP)', '0UL'),
         'retain-osq': ('\tkd_owned_osq_unlock(&lock->osq);', '\t/* deliberately retain OSQ */'),
         'ignore-budget': ('i < spins; i++', 'i < spins + 1; i++'),
         'ignore-scheduler': ('if (need_resched())', 'if (false && need_resched())'),

@@ -23,7 +23,7 @@ static bool task_get_ok, reserve_ok, node_reserved;
 static bool owned_mutex_self_route,owned_mutex_preflight_queue;
 static unsigned int owned_mutex_preflight_spins;
 static int kd_spin_target;
-static enum { NONE, FREE_OWNER, RESCHED, OWNER_OFF_CPU, ADD_WAITERS, ADD_SUCCESSOR } action;
+static enum { NONE, FREE_OWNER, RESCHED, OWNER_OFF_CPU, ADD_WAITERS, ADD_HANDOFF, ADD_PICKUP, FREE_WITH_WAITERS, ADD_SUCCESSOR } action;
 #define KD_OWNED_MUTEX_FLAG_WAITERS 1UL
 #define KD_OWNED_MUTEX_FLAG_HANDOFF 2UL
 #define KD_OWNED_MUTEX_FLAG_PICKUP 4UL
@@ -91,6 +91,9 @@ static void cpu_relax(void)
  case RESCHED: resched=true; break;
  case OWNER_OFF_CPU: tasks[1].on_cpu=false; break;
  case ADD_WAITERS: lock.owner.counter |= KD_OWNED_MUTEX_FLAG_WAITERS; break;
+ case ADD_HANDOFF: lock.owner.counter |= KD_OWNED_MUTEX_FLAG_HANDOFF; break;
+ case ADD_PICKUP: lock.owner.counter |= KD_OWNED_MUTEX_FLAG_PICKUP; break;
+ case FREE_WITH_WAITERS: lock.owner.counter=KD_OWNED_MUTEX_FLAG_WAITERS; break;
  case ADD_SUCCESSOR:
   successor=(struct kd_owned_osq_node){.prev=&kd_owned_osq_nodes,.cpu=2};
   kd_owned_osq_nodes.next=&successor; lock.osq.tail.counter=2;
@@ -208,6 +211,17 @@ static void check_cleanup(void)
  assert(polls==1 && releases==1 && !lock.osq.tail.counter && pins==1);
  reset(); action=ADD_WAITERS;
  assert(kd_owned_mutex_try_optimistic_pinned(&lock,64,false)==KD_OWNED_MUTEX_PREFLIGHT_BUSY);
+ assert(polls==64 && releases==1 && !lock.osq.tail.counter);
+ assert(lock.owner.counter==((unsigned long)&tasks[1]|KD_OWNED_MUTEX_FLAG_WAITERS));
+ reset(); lock.owner.counter|=KD_OWNED_MUTEX_FLAG_WAITERS; action=FREE_WITH_WAITERS;
+ assert(kd_owned_mutex_try_optimistic_pinned(&lock,64,false)==KD_OWNED_MUTEX_PREFLIGHT_ACQUIRED);
+ assert(polls==1 && releases==1 && !lock.osq.tail.counter);
+ assert(lock.owner.counter==((unsigned long)current|KD_OWNED_MUTEX_FLAG_WAITERS));
+ reset(); action=ADD_HANDOFF;
+ assert(kd_owned_mutex_try_optimistic_pinned(&lock,64,false)==KD_OWNED_MUTEX_PREFLIGHT_BUSY);
+ assert(polls==1 && releases==1 && !lock.osq.tail.counter);
+ reset(); action=ADD_PICKUP;
+ assert(kd_owned_mutex_try_optimistic_pinned(&lock,64,false)==KD_OWNED_MUTEX_PREFLIGHT_BUSY);
  assert(polls==1 && releases==1 && !lock.osq.tail.counter);
  /* Exercise the real OSQ unlock's linked-successor transfer too. */
  reset(); action=ADD_SUCCESSOR;
@@ -228,7 +242,9 @@ static void check_refusals_and_bounds(void)
   reset(); lock.owner.counter|=flags;
   unsigned long owner=lock.owner.counter;
   assert(kd_owned_mutex_try_optimistic_pinned(&lock,64,false)==KD_OWNED_MUTEX_PREFLIGHT_BUSY);
-  assert(lock.owner.counter==owner && !polls && !releases && !lock.osq.tail.counter);
+  assert(lock.owner.counter==owner && !lock.osq.tail.counter);
+  assert(polls==(flags==KD_OWNED_MUTEX_FLAG_WAITERS ? 64U : 0U));
+  assert(releases==(flags==KD_OWNED_MUTEX_FLAG_WAITERS ? 1U : 0U));
  }
  reset(); lock.osq.tail.counter=2;
  struct kd_owned_osq_node saved=kd_owned_osq_nodes;

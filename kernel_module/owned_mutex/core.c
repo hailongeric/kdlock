@@ -216,7 +216,8 @@ static bool kd_owned_mutex_can_spin(struct kd_mutex *lock)
 
 /* Bounded queue/owner polling before delegation resources/capture. The initial
  * retry preserves Linux acquisition of ownerless WAITERS, but an occupied
- * waiter/handoff state does not recruit another optimistic spinner. A zero
+ * directed handoff state does not recruit another optimistic spinner. WAITERS
+ * alone permits bounded spinning, as in the ordinary Linux owner-spin path. A zero
  * budget disables this retry entirely. Queue cancellation and OSQ unlock retain
  * their mandatory stabilization waits; this is not a wall-time bound. */
 enum kd_owned_mutex_preflight_result
@@ -241,7 +242,8 @@ kd_owned_mutex_try_optimistic_pinned(struct kd_mutex *lock, unsigned int spins,
 		if (!owner_on_cpu(owner))
 			return KD_OWNED_MUTEX_PREFLIGHT_SELF;
 	}
-	if (atomic_long_read(&lock->owner) & KD_OWNED_MUTEX_FLAGS)
+	if (atomic_long_read(&lock->owner) &
+	    (KD_OWNED_MUTEX_FLAG_HANDOFF | KD_OWNED_MUTEX_FLAG_PICKUP))
 		return result;
 	if (queued ? !kd_owned_osq_lock_bounded(&lock->osq, &spins) :
 		     !kd_owned_osq_trylock(&lock->osq))
@@ -257,7 +259,8 @@ kd_owned_mutex_try_optimistic_pinned(struct kd_mutex *lock, unsigned int spins,
 			result = KD_OWNED_MUTEX_PREFLIGHT_SELF;
 			break;
 		}
-		if (atomic_long_read(&lock->owner) & KD_OWNED_MUTEX_FLAGS)
+		if (atomic_long_read(&lock->owner) &
+	    (KD_OWNED_MUTEX_FLAG_HANDOFF | KD_OWNED_MUTEX_FLAG_PICKUP))
 			break;
 		if (kd_owned_mutex_owner(lock) == owner) {
 			barrier();
