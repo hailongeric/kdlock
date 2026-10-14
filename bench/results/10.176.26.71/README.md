@@ -4,7 +4,20 @@ This index covers the VM on the Ubuntu Xeon Gold 6438N host at
 `eric@10.176.26.71`. Source edits stay on `380G10` and are synchronized before
 execution. Receipts retain their own source, kernel, boot policy and topology.
 
-## Current source verification
+## Latest archived mutex experiment
+
+The [native-first entry and waiting study](bench/mutex_owned/20261014-native-first/README.md)
+tests an ordinary C caller, late capture, a leaf unlock and guarded SELF release
+to the independent 32-byte owned protocol. It compares fresh Native, TCLock and
+owned references and preserves every staged candidate. Its
+[correctness receipt](bench/mutex_owned/20261014-native-first/validation.json)
+distinguishes source-specific unit/mutation checks, real JIT/FULL acknowledgments
+and queued cooling probes. Adaptive local execution remains visibly KD_SELF;
+the performance gates also require higher-thread returned JIT bodies. Experimental
+entry and release policies failed acceptance and are retained in
+`archive/perf/mutex-native-first-20261014`, separately from the current provider.
+
+## Current owned-protocol optimization
 
 The [2026-10-14 owned-protocol optimization](bench/mutex_owned/20261014-hybrid/README.md)
 integrates grant/completion notification and avoids a second queue-lock

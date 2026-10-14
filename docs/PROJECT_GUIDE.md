@@ -270,6 +270,14 @@ complete evidence are integrated locally, with the task tip preserved as
 `archive/perf/mutex-owned-hybrid-20261014`. This does not promote a rejected
 throughput policy or change the benchmark's legacy default.
 
+The subsequent [native-first study](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/README.md)
+tests a late-capture C ABI, owner-aware OSQ, exact-owner leaf unlock and guarded
+early release within the same 32-byte KD-owned object. Its primary throughput,
+higher-thread JIT and final compatibility gates do not all pass. The tested
+implementation is preserved as `archive/perf/mutex-native-first-20261014` without
+integrating the rejected provider; current mutex source remains `d8d14a1`.
+The separate report retains every score, diagnostic, correction and source hash.
+
 All twelve original tips are preserved by verified archive tags, including
 `archive/master-before-integration-20261012`. The eleven local `perf/` branches
 were removed. The remaining local branches are `master` and

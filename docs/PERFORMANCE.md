@@ -6,7 +6,26 @@ passed [targeted verification](../bench/results/10.176.26.71/tests/mutex-blockin
 including a drained 320,000-operation mutex JIT run. That functional check does
 not provide a new performance matrix.
 
-## Latest c01 owned-mutex optimization
+## Latest owned-mutex entry and waiting study
+
+The [native-first study](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/README.md)
+tests an ordinary C caller ABI, late continuation capture, an exact-owner
+leaf unlock and guarded release before the queue lock for SELF-only contention.
+Its Linux-derived optimistic path retries acquisition across owner transitions
+and directed handoffs; only sustained contention after the polling budget can
+request delegation. The public object still matches Linux mutex's 32-byte size,
+alignment and field offsets. Owned target operations remain inside KD.
+
+Neither full optimistic-policy screen meets all primary throughput and
+higher-thread JIT requirements. The final ABI2 compatibility screen also fails
+the 32-worker regression floor. The implementation is preserved separately as
+`archive/perf/mutex-native-first-20261014`; it is not integrated into the current
+provider. Current owned source and defaults remain the preceding `d8d14a1`
+implementation. The report separates all policy/source versions, returned JIT
+bodies and unscored diagnostics. Fast KD_SELF execution does not satisfy a gate
+requiring delegation.
+
+## Earlier c01 owned-mutex optimization
 
 The [2026-10-14 protocol study](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md)
 retains 708 scored sessions and 72 separate diagnostics. The owned protocol now

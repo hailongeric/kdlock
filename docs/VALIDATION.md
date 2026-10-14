@@ -6,7 +6,21 @@ Receipts apply to the source, kernel, boot policy and topology they record.
 Publication, actual JIT execution and performance acceptance are separate results.
 Known failures remain in [TODO](TODO.md).
 
-## Current mutex verification
+## Archived native-first mutex verification
+
+The [native-first receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/validation.json)
+records the ordinary C ABI, late callee-state capture, exact-owner leaf unlock,
+sticky delegation guard and revised owner-spin transitions. It ties each
+selected VM check, mutation family, real JIT/FULL/ACK run and corrected failure
+to its frozen source generation. The [study](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/README.md)
+keeps performance acceptance separate from those correctness results and from
+unscored diagnostic observations. No full suite or other-workload acceptance is
+claimed; the receipt states the precise final checks and inherited coverage.
+The implementation is archived as `archive/perf/mutex-native-first-20261014`
+after failing performance acceptance. These are checks of that experiment,
+not a claim that its provider is installed in the current source tree.
+
+## Current owned-protocol verification
 
 The [2026-10-14 owned-protocol receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/validation.json)
 records the unified outcome/grant protocol, optional bounded OSQ preflight and

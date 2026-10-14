@@ -1,0 +1,162 @@
+{
+  "compressed_bytes": 4477968,
+  "directories": 194,
+  "every_regular_file_byte_verified": true,
+  "path": "waiters-stage1.tar.gz",
+  "regular_bytes": 20491873,
+  "regular_files": 1659,
+  "sha256": "627db381deb8a93c8e9166ffc848da6f0c65a8fa400a8381782fb14e92536201",
+  "symlink_limit": "Unmaterialized workspace links are retained as archive target strings; audited JIT/source files are regular files.",
+  "symlinks": [
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t16-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t16-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t04-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t04-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t28-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t28-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t01-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t01-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t60-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t60-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t04-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t04-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t01-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t01-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t28-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t28-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t01-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t01-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t60-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t60-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t04-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t04-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t16-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t16-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t16-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t16-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t60-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t60-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t28-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/include"
+    },
+    {
+      "materialized": false,
+      "path": "bench/mutex-native-first-mask-pref4096q64-20261014/c01-t28-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-mask-pref4096q64-20261014/source/disassem"
+    }
+  ]
+}

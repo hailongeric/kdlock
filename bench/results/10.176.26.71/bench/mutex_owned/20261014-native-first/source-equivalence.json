@@ -1,0 +1,1025 @@
+{
+  "schema_version": 3,
+  "audit_utc": "2026-10-14T04:52:06.214909+00:00",
+  "method": "Static maintained-path enumeration and SHA256 comparison only; no compilation, tests, module operations or guest actions. Concurrent code edits are matched by exact ordered added/removed lines to named cleanup commits; deleted inputs match the cleanup parent blob.",
+  "validation_status": "HISTORICAL_EXPERIMENT_SOURCE_AUDIT_WITH_SCOPED_SUPPLEMENTAL_ARTIFACTS",
+  "current_checkout": "/home/eric/vm/vm-shared/kdlock",
+  "current_head": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+  "current_tree_note": "Historical audit-time label: ab2c3f4 plus the experimental task worktree, later archived in 9a5305e7631247136ea89f1c8ac771afd7da3d8c. This path now holds accepted ab2 runtime plus report edits; current_* fields below do not describe that restored runtime.",
+  "frozen_checkout": "/tmp/kdlock-native-first-candidate10-20261014",
+  "frozen_base_head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+  "frozen_tree_note": "Frozen C10 worktree includes its experimental source and the dynamic per-CPU profiler patch; base HEAD alone is not the candidate identity.",
+  "prior_audit": {
+    "path": "c8-source-equivalence.json",
+    "bytes": 8427,
+    "sha256": "b627ee39cc60608fc466167e0997209fb03a0c6f6726fcfe3537714abc256708",
+    "preserved_byte_for_byte": true,
+    "candidate": "C8"
+  },
+  "scope": {
+    "roots": [
+      "include",
+      "kernel_module",
+      "disassem",
+      "daemon",
+      "bench",
+      "workload_modules",
+      "tests",
+      "tools/vm",
+      "tclock_backend"
+    ],
+    "enumeration": "Union of git ls-files --cached --others --exclude-standard in both trees",
+    "excluded": [
+      "bench/results/**",
+      "docs/**"
+    ],
+    "note": "Expanded from the C8 receipt to include tools/vm and all tclock_backend inputs. Untracked docs/BENCHMARK_WORKLOADS.md remains untouched and excluded."
+  },
+  "counts": {
+    "selected_paths": 440,
+    "identical_paths": 410,
+    "identical_non_document_non_provenance_files": 400,
+    "classified_differences": 30,
+    "unclassified_differences": 0,
+    "identical_source_by_root": {
+      "bench": 33,
+      "daemon": 5,
+      "disassem": 22,
+      "include": 32,
+      "kernel_module": 58,
+      "tclock_backend": 40,
+      "tests": 183,
+      "tools": 4,
+      "workload_modules": 23
+    }
+  },
+  "identical_source_manifest": {
+    "algorithm": "SHA256 of UTF-8 JSON array sorted by path; entries path,bytes,sha256; JSON sort_keys=True,separators=(comma,colon)",
+    "sha256": "80c04ba09181da051e47fb2cec16cb78ebd61e217f360bfb7b05575564c0fd52"
+  },
+  "selected_current_manifest_sha256": "3f667d30442580d50178963b9ee6a652330a051c9527a891d6c7dd8f6393942f",
+  "selected_frozen_manifest_sha256": "470f3f87ef7b3034f60ab5d1374a845f7736794ae5e90e2cf06f3795468efa59",
+  "categories": {
+    "include/": {
+      "files": 32,
+      "byte_identical": 32,
+      "different": []
+    },
+    "kernel_module/": {
+      "files": 58,
+      "byte_identical": 58,
+      "different": []
+    },
+    "disassem/": {
+      "files": 22,
+      "byte_identical": 22,
+      "different": []
+    },
+    "daemon/": {
+      "files": 5,
+      "byte_identical": 5,
+      "different": []
+    },
+    "tclock_backend/": {
+      "files": 40,
+      "byte_identical": 40,
+      "different": []
+    },
+    "tests/": {
+      "files": 183,
+      "byte_identical": 183,
+      "different": []
+    },
+    "bench/": {
+      "files": 46,
+      "byte_identical": 33,
+      "different": [
+        "bench/full_compare/export.py",
+        "bench/mutex_wait_compare/export.py",
+        "bench/mutex_wait_compare/test_export.py",
+        "bench/real_api/report.py",
+        "bench/rwlock_compare/run.py",
+        "bench/rwlock_compare/test_bench.py",
+        "bench/spin_cacheline/client_fixture.c",
+        "bench/spin_cacheline/post_work_fixture.c",
+        "bench/spin_cacheline/test_spin_cacheline.py",
+        "bench/tclock_compare/mutex_study.py",
+        "bench/tclock_compare/test_direct.py",
+        "bench/tclock_compare/test_mutex_study.py",
+        "bench/tclock_compare/workload-observation.patch"
+      ]
+    },
+    "workload_modules/": {
+      "files": 26,
+      "byte_identical": 23,
+      "different": [
+        "workload_modules/rwlock_bench/Makefile",
+        "workload_modules/rwlock_bench/post_work.h",
+        "workload_modules/spin_cacheline/post_work.h"
+      ]
+    },
+    "tools/vm/": {
+      "files": 5,
+      "byte_identical": 4,
+      "different": [
+        "tools/vm/run_full_bench.py"
+      ]
+    }
+  },
+  "active_build_input_receipts": [
+    {
+      "path": "kernel_module/Makefile",
+      "frozen": {
+        "bytes": 1170,
+        "sha256": "045f727d7ecc1086a95637651541b975fc8ac313ca2477be0521a9bf0900e39d"
+      },
+      "current": {
+        "bytes": 1170,
+        "sha256": "045f727d7ecc1086a95637651541b975fc8ac313ca2477be0521a9bf0900e39d"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "kernel_module/kd_spin_runtime.c",
+      "frozen": {
+        "bytes": 849,
+        "sha256": "e272e9a85595f02fe068205e629778d0d3bfd96f14a2612a2e2d5527375a5275"
+      },
+      "current": {
+        "bytes": 849,
+        "sha256": "e272e9a85595f02fe068205e629778d0d3bfd96f14a2612a2e2d5527375a5275"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "kernel_module/execution/frame_lifecycle.inc",
+      "frozen": {
+        "bytes": 20243,
+        "sha256": "761c44479f4a707209a2973fc87c9d4eea0273bfc89de245f3d26fc45f394c96"
+      },
+      "current": {
+        "bytes": 20243,
+        "sha256": "761c44479f4a707209a2973fc87c9d4eea0273bfc89de245f3d26fc45f394c96"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "kernel_module/owned_mutex/core.c",
+      "frozen": {
+        "bytes": 21256,
+        "sha256": "fd8a3d44073045f66ab96d33400582df72755aa5c0814522415f0e48b308a1b3"
+      },
+      "current": {
+        "bytes": 21256,
+        "sha256": "fd8a3d44073045f66ab96d33400582df72755aa5c0814522415f0e48b308a1b3"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "kernel_module/owned_mutex/delegation.c",
+      "frozen": {
+        "bytes": 36698,
+        "sha256": "b509fdbe17dc41f229f27d2bfb6f50bb6eb0cb08e1c88a3322e8da3496f804c5"
+      },
+      "current": {
+        "bytes": 36698,
+        "sha256": "b509fdbe17dc41f229f27d2bfb6f50bb6eb0cb08e1c88a3322e8da3496f804c5"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "kernel_module/owned_mutex/entry.S",
+      "frozen": {
+        "bytes": 3536,
+        "sha256": "3328f2608469c43b72d4fa3cf5fa715a297dd5b255068ea10e68c9ef0acfd0b2"
+      },
+      "current": {
+        "bytes": 3536,
+        "sha256": "3328f2608469c43b72d4fa3cf5fa715a297dd5b255068ea10e68c9ef0acfd0b2"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "include/kd_exec.h",
+      "frozen": {
+        "bytes": 11068,
+        "sha256": "7bb4b396214194d8fb89a8eaf01e019a7eeadb115b92937277381e1a8ff102bb"
+      },
+      "current": {
+        "bytes": 11068,
+        "sha256": "7bb4b396214194d8fb89a8eaf01e019a7eeadb115b92937277381e1a8ff102bb"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "include/kd_owned_mutex_direct.h",
+      "frozen": {
+        "bytes": 9136,
+        "sha256": "bad7b44e64be51384ed24916086c112a00eb6296a9a2fc9dc950bf9f1aa7b8db"
+      },
+      "current": {
+        "bytes": 9136,
+        "sha256": "bad7b44e64be51384ed24916086c112a00eb6296a9a2fc9dc950bf9f1aa7b8db"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "include/wrapper.S",
+      "frozen": {
+        "bytes": 7273,
+        "sha256": "f980a13aa532e4885e7a37a478ce61f1bde64ccd1f93fa902e152b741cc43770"
+      },
+      "current": {
+        "bytes": 7273,
+        "sha256": "f980a13aa532e4885e7a37a478ce61f1bde64ccd1f93fa902e152b741cc43770"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "daemon/Makefile",
+      "frozen": {
+        "bytes": 302,
+        "sha256": "0d57b1892d38ad682d19c8d06e76f2174867c9ad47d6e81ff2bd91cbf69d4bec"
+      },
+      "current": {
+        "bytes": 302,
+        "sha256": "0d57b1892d38ad682d19c8d06e76f2174867c9ad47d6e81ff2bd91cbf69d4bec"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "daemon/compiler.inc",
+      "frozen": {
+        "bytes": 5654,
+        "sha256": "3148e76afc9439110246dfcc17adf773127be444d837412d65d0fefeee066cdb"
+      },
+      "current": {
+        "bytes": 5654,
+        "sha256": "3148e76afc9439110246dfcc17adf773127be444d837412d65d0fefeee066cdb"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "disassem/disassem.py",
+      "frozen": {
+        "bytes": 22094,
+        "sha256": "7adb9e38fdc78791083bff482c1b908eaf0574ad358ffdb7a8d07898d791a67e"
+      },
+      "current": {
+        "bytes": 22094,
+        "sha256": "7adb9e38fdc78791083bff482c1b908eaf0574ad358ffdb7a8d07898d791a67e"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "disassem/special_inst.py",
+      "frozen": {
+        "bytes": 9171,
+        "sha256": "32e1765666f620a12f2dc235ddc9463a7a71d6d2e83f678b00b0ca2dcd95e016"
+      },
+      "current": {
+        "bytes": 9171,
+        "sha256": "32e1765666f620a12f2dc235ddc9463a7a71d6d2e83f678b00b0ca2dcd95e016"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bench/tclock_compare/run.py",
+      "frozen": {
+        "bytes": 52270,
+        "sha256": "34cbf6836565cf5cd0f7097e12cc18cb6395c0bad60e09c93981b023b69d930c"
+      },
+      "current": {
+        "bytes": 52270,
+        "sha256": "34cbf6836565cf5cd0f7097e12cc18cb6395c0bad60e09c93981b023b69d930c"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bench/tclock_compare/session.py",
+      "frozen": {
+        "bytes": 35180,
+        "sha256": "68404d72bd229cbce59148af83d712d90e2ac3d476e182c0724ad56839e3bef4"
+      },
+      "current": {
+        "bytes": 35180,
+        "sha256": "68404d72bd229cbce59148af83d712d90e2ac3d476e182c0724ad56839e3bef4"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bench/spin_cacheline/Makefile",
+      "frozen": {
+        "bytes": 1083,
+        "sha256": "95b71c89b62fc21bce11df2591637254a2001c3de2e9521d609d9c46e961a9e4"
+      },
+      "current": {
+        "bytes": 1083,
+        "sha256": "95b71c89b62fc21bce11df2591637254a2001c3de2e9521d609d9c46e961a9e4"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bench/spin_cacheline/client.c",
+      "frozen": {
+        "bytes": 18764,
+        "sha256": "59b85e4490e5d1f1c555358bd48d01bd74c91c27ae497158645014289e99141a"
+      },
+      "current": {
+        "bytes": 18764,
+        "sha256": "59b85e4490e5d1f1c555358bd48d01bd74c91c27ae497158645014289e99141a"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bench/spin_cacheline/bench_runtime.py",
+      "frozen": {
+        "bytes": 11640,
+        "sha256": "37d527bc11fd5e55b1f1f78eda3dec1adead18052fb83e3e37e6df8a6a184f19"
+      },
+      "current": {
+        "bytes": 11640,
+        "sha256": "37d527bc11fd5e55b1f1f78eda3dec1adead18052fb83e3e37e6df8a6a184f19"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bench/spin_cacheline/bench_session.py",
+      "frozen": {
+        "bytes": 12385,
+        "sha256": "921a59ab81751bc2dfc620715503dc4e3766c549eb6ceb912a245e358de4c231"
+      },
+      "current": {
+        "bytes": 12385,
+        "sha256": "921a59ab81751bc2dfc620715503dc4e3766c549eb6ceb912a245e358de4c231"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "workload_modules/mutex_cacheline/Makefile",
+      "frozen": {
+        "bytes": 1732,
+        "sha256": "48c076d432b5756e4e2204a34ff9bb50f58259dbfdffb9d6491eeee049daa431"
+      },
+      "current": {
+        "bytes": 1732,
+        "sha256": "48c076d432b5756e4e2204a34ff9bb50f58259dbfdffb9d6491eeee049daa431"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "workload_modules/mutex_cacheline/module.c",
+      "frozen": {
+        "bytes": 4199,
+        "sha256": "84c5542ac88e7c57dc035e8793a03f6b767ecfafe356eb1d576fb7816113997e"
+      },
+      "current": {
+        "bytes": 4199,
+        "sha256": "84c5542ac88e7c57dc035e8793a03f6b767ecfafe356eb1d576fb7816113997e"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "workload_modules/spin_cacheline/Makefile",
+      "frozen": {
+        "bytes": 964,
+        "sha256": "f69edf4fd611b83610e111ee483c1e906ba63ccf342f85290d10008a58162485"
+      },
+      "current": {
+        "bytes": 964,
+        "sha256": "f69edf4fd611b83610e111ee483c1e906ba63ccf342f85290d10008a58162485"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "workload_modules/spin_cacheline/payload.h",
+      "frozen": {
+        "bytes": 2812,
+        "sha256": "003adc61a9ad9f5a035f99d62bd729e08ddf92a6e9914441644bd6766e1a6322"
+      },
+      "current": {
+        "bytes": 2812,
+        "sha256": "003adc61a9ad9f5a035f99d62bd729e08ddf92a6e9914441644bd6766e1a6322"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "workload_modules/spin_cacheline/post_work.h",
+      "frozen": {
+        "bytes": 1506,
+        "sha256": "2fdb17ee1afe3b88ecb8a88eb928789bef399fd7a586416bf6b49f2a9806caee"
+      },
+      "current": {
+        "bytes": 1189,
+        "sha256": "24562675adaf74954b0aa705c70d007204beacc1ca84901516ae974b43366280"
+      },
+      "classification": "concurrent_active_workload_input",
+      "note": "Replaces guarded/overridable SC_POST_WORK_ROUNDS64 with an unconditional64 definition and removes bounds checks/comments. The measured default is64 in both trees, but source bytes differ and this audit does not prove compiled ELF equivalence.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "806f238c77f24013988f66016acad1bbaabe98d6942e82098990415bda067aa3",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      },
+      "byte_identical": false
+    },
+    {
+      "path": "tests/kernel/mutex/profile/Makefile",
+      "frozen": {
+        "bytes": 191,
+        "sha256": "7b97927f80e653d5d940041c269452239ba18993f93279e3f03bd9608faffda8"
+      },
+      "current": {
+        "bytes": 191,
+        "sha256": "7b97927f80e653d5d940041c269452239ba18993f93279e3f03bd9608faffda8"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "tests/kernel/mutex/profile/kd_mutex_profile.c",
+      "frozen": {
+        "bytes": 13374,
+        "sha256": "4121eac8438b8a08dcfae6f7a52f1cc2f4aa26e07e055147c48cb22a8dd85260"
+      },
+      "current": {
+        "bytes": 13374,
+        "sha256": "4121eac8438b8a08dcfae6f7a52f1cc2f4aa26e07e055147c48cb22a8dd85260"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "tests/unit/mutex/test_owned_mutex_profile.py",
+      "frozen": {
+        "bytes": 14403,
+        "sha256": "0d7bccbf3fedaf307eabb3857ad13f03bfe810ac47e34acf037f1247d4676f13"
+      },
+      "current": {
+        "bytes": 14403,
+        "sha256": "0d7bccbf3fedaf307eabb3857ad13f03bfe810ac47e34acf037f1247d4676f13"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "tests/unit/execution/exec_capacity_fixture.c",
+      "frozen": {
+        "bytes": 49741,
+        "sha256": "bd3c8b3de88a0e6c53a6c0a9c93a6bebdaba6cc4411fb9225e14cc488165b7e3"
+      },
+      "current": {
+        "bytes": 49741,
+        "sha256": "bd3c8b3de88a0e6c53a6c0a9c93a6bebdaba6cc4411fb9225e14cc488165b7e3"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "tests/unit/execution/test_exec_capacity.py",
+      "frozen": {
+        "bytes": 13096,
+        "sha256": "bb34e3c1c02605b03f7f423dc8b5b3b4cec4a4802cbdea576f9560eda5685d58"
+      },
+      "current": {
+        "bytes": 13096,
+        "sha256": "bb34e3c1c02605b03f7f423dc8b5b3b4cec4a4802cbdea576f9560eda5685d58"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "tclock_backend/Makefile",
+      "frozen": {
+        "bytes": 907,
+        "sha256": "1d913e2ebf02f76526b338a68e9eebaa625429ea9a04e01efe7b20ea931682dc"
+      },
+      "current": {
+        "bytes": 907,
+        "sha256": "1d913e2ebf02f76526b338a68e9eebaa625429ea9a04e01efe7b20ea931682dc"
+      },
+      "byte_identical": true
+    }
+  ],
+  "c01_post_work": {
+    "frozen_rounds": 64,
+    "current_rounds": 64,
+    "body_arithmetic_unchanged": true,
+    "source_byte_identical": false,
+    "interpretation": "Both historical c01 workloads specify64; the merged header removes override support. The supplemental guest check proves equal isolated sc_post_work function bytes and64 arithmetic pairs for these exact headers. Whole-workload ELF equivalence and performance acceptance are not inferred."
+  },
+  "differences": [
+    {
+      "path": "bench/README.md",
+      "frozen": {
+        "bytes": 4427,
+        "sha256": "426cddd3ff7b1f96d2a9bdfa0179cc00bf146a071cab4410698e93dc483ee4c4"
+      },
+      "current": {
+        "bytes": 4256,
+        "sha256": "32a039e2d71702807f25292cd378a7f0976c3ca717022eb6eec6b4f5f71c9084"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "bench/full_compare/export.py",
+      "frozen": {
+        "bytes": 27847,
+        "sha256": "1b8301cb72c7f533a1fb9eccffe9fc8c2a06dd2d252949c83657621c8f20c7a5"
+      },
+      "current": {
+        "bytes": 27769,
+        "sha256": "d85d045e0e217d0043f1a5eae36117e2eced2ee63e0a78591473c1499c9d4a4d"
+      },
+      "classification": "concurrent_report_prose",
+      "note": "Removes post-work wording from generated Markdown; throughput/statistical logic is unchanged.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "0191071320af9557f82884948692937f601f3f3db18b0f9e1ac2b5bb9c7bae6d",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/mutex_wait_compare/README.md",
+      "frozen": {
+        "bytes": 2390,
+        "sha256": "7dd39d69b3dbcc1dc660aeae9a78c6da6d60d4dfb31befe02377b871fdeb9293"
+      },
+      "current": null,
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "bench/mutex_wait_compare/export.py",
+      "frozen": {
+        "bytes": 38463,
+        "sha256": "c539a8b3fa5a65d2f3aaaf6163d8ef275e6b21c7cc2b6ac56c4e01ed3495823c"
+      },
+      "current": null,
+      "classification": "concurrent_retired_exporter_deletion",
+      "note": "Retired exporter deleted by fe8; outside current c01 execution.",
+      "cleanup_proof": {
+        "commit": "fe8d7586239d9fbe18adc3e89c98052d8873933e",
+        "cleanup_diff_sha256": "f533844d9e92e744ec35104d3f6aab29bd516e6e25719502320f212c28512419",
+        "frozen_matches_deleted_cleanup_input": true,
+        "current_absent": true
+      }
+    },
+    {
+      "path": "bench/mutex_wait_compare/test_export.py",
+      "frozen": {
+        "bytes": 8923,
+        "sha256": "95e004d2553211208b5402761cb0f81b12bf924f1d770e5a44076c1ff8a18c30"
+      },
+      "current": null,
+      "classification": "concurrent_retired_exporter_test_deletion",
+      "note": "Retired exporter test deleted by fe8.",
+      "cleanup_proof": {
+        "commit": "fe8d7586239d9fbe18adc3e89c98052d8873933e",
+        "cleanup_diff_sha256": "8a92ffa5237f1ffebe5306ad44e9b058cbc9804a3602f60d2e6ef02d0e3756b9",
+        "frozen_matches_deleted_cleanup_input": true,
+        "current_absent": true
+      }
+    },
+    {
+      "path": "bench/real_api/README.md",
+      "frozen": {
+        "bytes": 14820,
+        "sha256": "91a8aff93e9d9469ec2a1b79e00c18779363916bbc867e5a94f37f86e4e8ab14"
+      },
+      "current": {
+        "bytes": 14459,
+        "sha256": "8ccba602b28bfad064ff1afd5a0107a09bd6cfe79ae1d17f014184182f514ba1"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "bench/real_api/report.py",
+      "frozen": {
+        "bytes": 9593,
+        "sha256": "96776d4f7ce235931880a04ebbe0e8655662a106b21d0f4d2cf76f48a00fd9f6"
+      },
+      "current": {
+        "bytes": 9608,
+        "sha256": "dcd1e08999d743e732d491d3212e00096cafbe7aba167b6dc98a76f022e49ab6"
+      },
+      "classification": "concurrent_error_message_only",
+      "note": "Changes guidance for incompatible report policies; real-API reporting is outside the C10 validation scope.",
+      "cleanup_proof": {
+        "commit": "fe8d7586239d9fbe18adc3e89c98052d8873933e",
+        "cleanup_diff_sha256": "d46d2aad3d87905e7482376e2a43cfffb542fd23f1dacfa139a3a7887d928b2a",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/rwlock_compare/README.md",
+      "frozen": {
+        "bytes": 11212,
+        "sha256": "164e8b93b4f4f8af9d5b3acbc87cfe427b931a70889d9f7ef36f58891a870075"
+      },
+      "current": {
+        "bytes": 10882,
+        "sha256": "bccc0a47bba2fc5328315919a4a9aa61b238c206722bf9ddc238a31930ce2192"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "bench/rwlock_compare/run.py",
+      "frozen": {
+        "bytes": 18502,
+        "sha256": "8dc44d479ad0f4cc64e84d22035a702a93f27dd36bd267a0230a929ef45e0ff3"
+      },
+      "current": {
+        "bytes": 18279,
+        "sha256": "b14e9398ceb74848e34bbc1ad5e73dc8716073b2f8906def06ead27eea674d4a"
+      },
+      "classification": "concurrent_runner_behavior",
+      "note": "Removes --post-work-rounds and build override; rwlock plans now use fixed 4 rounds. Outside owned c01 performance scope.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "28645fbf80b6e771e969fd4dbe72bc273af286c731ef21e7b1e55efcb4b00692",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/rwlock_compare/test_bench.py",
+      "frozen": {
+        "bytes": 12889,
+        "sha256": "ba54ff18bac730e6210fa734e5cfd6f1023a94478bb4784c00d1ad6ece4aab2c"
+      },
+      "current": {
+        "bytes": 12429,
+        "sha256": "3e62c264f796d52eb8d036f68be8071f8c09a87aa5091bc16dae5dcbe759cb75"
+      },
+      "classification": "concurrent_test_coverage_change",
+      "note": "Removes post-work arithmetic test and checksum corruption case; old test counts cannot be attributed to this tree.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "f736a8938a70857c8768892c3c257c5312258af92ac3ee661533d65c5b19ee4d",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/spin_cacheline/client_fixture.c",
+      "frozen": {
+        "bytes": 6120,
+        "sha256": "49a7a8fe08e92a4f698134b87668a9f8471af7fcc00232704363268562053b9c"
+      },
+      "current": {
+        "bytes": 5993,
+        "sha256": "0b8d346f1691c1648a720489806d4446ce325065071053fe7f757add702d5e4d"
+      },
+      "classification": "concurrent_test_fixture_behavior",
+      "note": "Removes post-work execution from the collector test fixture. This is not the live kernel workload or client.c.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "f1ef0b7b06f7acf5db9221d207f1e38a3317f6e2e8d0c642a9e167d2d1d6be04",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/spin_cacheline/post_work_fixture.c",
+      "frozen": {
+        "bytes": 1060,
+        "sha256": "5f277955f57259c327534b2b782c56003359b7c7f6a2f1065961b8dac18f9fb9"
+      },
+      "current": null,
+      "classification": "concurrent_test_fixture_deletion",
+      "note": "Dedicated post-work arithmetic/code-generation fixture removed.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "d0da36cdf20b0c14f5857751c056f792958610b382769cca7c746c5db93a7fdc",
+        "frozen_matches_deleted_cleanup_input": true,
+        "current_absent": true
+      }
+    },
+    {
+      "path": "bench/spin_cacheline/test_spin_cacheline.py",
+      "frozen": {
+        "bytes": 25548,
+        "sha256": "0ad8fe7a92406a366a19afc344489c9879fcc3c232d309dc8c61aa003f4fe7b3"
+      },
+      "current": {
+        "bytes": 23949,
+        "sha256": "81a60c4ca792c5a121272a67be53c0cb08854fd969ab215e6714c0dede3d46e5"
+      },
+      "classification": "concurrent_test_coverage_change",
+      "note": "Removes the post-work override/code-generation test.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "f6afcc473ae819c7e37a22fdce8dc85549350cc4e36501a71c40148cbc1a6ae7",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/tclock_compare/README.md",
+      "frozen": {
+        "bytes": 23908,
+        "sha256": "4b9239601a690fe773e99e044998052ed21e67601782977cd0a2b6db83d47c38"
+      },
+      "current": {
+        "bytes": 22977,
+        "sha256": "edad60f2c98d318d31cccf8f6a029b867ddd9af1b2c8a1657cc31ae0cf63ab44"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "bench/tclock_compare/mutex_study.py",
+      "frozen": {
+        "bytes": 20504,
+        "sha256": "051c5c5de5d44f31e40250ba57168c4105cde836f4380bfa4cb85f37744e1d7f"
+      },
+      "current": {
+        "bytes": 20226,
+        "sha256": "03fc9cfb4dc0f0a89b548d91fae2f41497e1bc952fb3d3e770c74b631fd9a65d"
+      },
+      "classification": "concurrent_study_cli_behavior",
+      "note": "Removes CLI post-work selection; command-line study audit uses default64 and records64. The callable load_run provenance validator and per-policy acceptance code are preserved.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "dbba906f13bea1e8892568135c55b212ac588d7b0e8a4fc877b5e9bd17870a5a",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/tclock_compare/test_direct.py",
+      "frozen": {
+        "bytes": 96941,
+        "sha256": "72b8e107222a1cab501c971020293d406d5263477c32125f04bdb227a097178d"
+      },
+      "current": {
+        "bytes": 94851,
+        "sha256": "23ae29ae5847582825dbb83f6a29273364156475e0a81bb0b7b5fbf362384727"
+      },
+      "classification": "concurrent_test_coverage_change",
+      "note": "Removes two post-work provenance/grouping tests; C10 frozen runner test inventory is not identical to current inventory.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "7772e2e8efa2b811c697579b0d6032e981aec6463d57bb02690d02c849a18495",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/tclock_compare/test_mutex_study.py",
+      "frozen": {
+        "bytes": 20381,
+        "sha256": "bcc62f694b3a021636f4857e373a16d81712831bb13256a7cea315ecfe42542f"
+      },
+      "current": {
+        "bytes": 17074,
+        "sha256": "6d5357e906058e437e0c71a443eb1920ec45aab46e5e45d45db7e93739dfc9a2"
+      },
+      "classification": "concurrent_test_coverage_change",
+      "note": "Removes post-work pooling test and three post-work provenance tests; retained acceptance and owned-entry tests stay present.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "887a34886c97afe305baabc8d18f43fe2ee234f9934ca74ccb052107f73389db",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "bench/tclock_compare/workload-observation.patch",
+      "frozen": {
+        "bytes": 959,
+        "sha256": "43c7394d727188fee377db5def1a9ed97c5d7e7ed1171da47c017de8706b90c8"
+      },
+      "current": null,
+      "classification": "concurrent_unused_patch_deletion",
+      "note": "Deletes historical observation patch; active run.py has no reference/application to this file.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "1f6c9537cdd55f0a575dc7614f40388aeeb9f8e8e546f003bfab38dd46207719",
+        "frozen_matches_deleted_cleanup_input": true,
+        "current_absent": true
+      }
+    },
+    {
+      "path": "include/README.md",
+      "frozen": {
+        "bytes": 6570,
+        "sha256": "40daef8e8da274d374b10a55b3b82cbc9918a4f62baae344fd8d0f4cef3d7a81"
+      },
+      "current": {
+        "bytes": 6625,
+        "sha256": "ea6082ec6f3c5d8fb2dc6b2213539cd7e55b1e645555926c51ace37ecbcd39fa"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "kernel_module/owned_mutex/linux-source.json",
+      "frozen": {
+        "bytes": 6195,
+        "sha256": "bb86c08400be57a76db4f61a454ccba478d47820259164d7d946152e6c2a7ab1"
+      },
+      "current": {
+        "bytes": 6516,
+        "sha256": "ca3d6e295edb0f530a7dc0b8141852fe8afdbde9fb704d647b3506fd9de00dc1"
+      },
+      "classification": "provenance_description_only",
+      "changed_json_paths": [
+        "/port/intentional_changes/10"
+      ],
+      "note": "Corrects C8/C10 native-first polling/owner-transition description; source extraction hashes are unchanged."
+    },
+    {
+      "path": "tclock_backend/README.md",
+      "frozen": {
+        "bytes": 7395,
+        "sha256": "084afcf2e5d4446a4d8795701a197c0d820c1856d6531527c05c2dd8c286eb66"
+      },
+      "current": {
+        "bytes": 7282,
+        "sha256": "c577fc7ce8842b43d4f2fd5331cfa77372c2109ca69d4e089425e2eed9e9c6df"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "tests/README.md",
+      "frozen": {
+        "bytes": 10207,
+        "sha256": "92151ad7536ef98e0ca28b41ed49ad2ea65ef3c799148f8979ba453db1912762"
+      },
+      "current": {
+        "bytes": 11091,
+        "sha256": "e045c5852b0ab81c65181235fd3264e4038c6812fde692af200b5addb67455ea"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "tools/vm/README.md",
+      "frozen": {
+        "bytes": 6705,
+        "sha256": "17a9d02d41adfca05088a78fb3982543a4191316439f8c78cd7ea33cf6a3fbcf"
+      },
+      "current": {
+        "bytes": 6362,
+        "sha256": "ecad119cf530842e7e4fcec8d60bfe792aa2c1872149300885e699f789b65c03"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "tools/vm/run_full_bench.py",
+      "frozen": {
+        "bytes": 7285,
+        "sha256": "b54897a44d18d9947baa9efd466482a0de65424e19ade91ad5dbd23acea7b764"
+      },
+      "current": {
+        "bytes": 7258,
+        "sha256": "df738128b4f04ff28478ce34ba132b32323e98c8a2c4c6663a99a6526236e75f"
+      },
+      "classification": "concurrent_orchestrator_cli_behavior",
+      "note": "Stops passing the removed rwlock --post-work-rounds option; not invoked by this owned c01 screen.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "b0dd1a7ddaeba463ab136912ba1796ec33e1bbc04480a920e446c741f5d45518",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "workload_modules/mutex_cacheline/README.md",
+      "frozen": {
+        "bytes": 4199,
+        "sha256": "5f927d9bf24aac120a3577dbc358334d011ca36cadd4a01836ea619e818fb633"
+      },
+      "current": {
+        "bytes": 4188,
+        "sha256": "f1b3e85970190c3fdab4493b0d2f85064a49d92f816687d53b4ef3e52a1a1119"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "workload_modules/rwlock_bench/Makefile",
+      "frozen": {
+        "bytes": 904,
+        "sha256": "d8c60c44fadbc33d35aad813a478e12ce5870910f8682d86670ad838ad1be1a9"
+      },
+      "current": {
+        "bytes": 791,
+        "sha256": "fe62b45d66c06cc6cf659051d2cd2817377cd2ccc1c7a442d403bf646e344166"
+      },
+      "classification": "concurrent_build_control_behavior",
+      "note": "Removes RB_POST_WORK_ROUNDS compiler/build argument; rwlock header now fixes4.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "7fd1def2c8d6efed94fb82f7a38084fcab4d6dc1e84b92d9801222292f990719",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "workload_modules/rwlock_bench/README.md",
+      "frozen": {
+        "bytes": 2407,
+        "sha256": "f197698bc80daeef0030fc3ff4cf7713afdf243e5576bb7288d17e063204dfe2"
+      },
+      "current": {
+        "bytes": 2159,
+        "sha256": "ede9c7b9bda8eade7d9370f2ffd11e1c2b751b3521895d766ee4749a0ab6cb5d"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "workload_modules/rwlock_bench/post_work.h",
+      "frozen": {
+        "bytes": 810,
+        "sha256": "a05b8ccca4924947bc5af7653f0a91da5dbac133ef66306e4460bebea52bfe35"
+      },
+      "current": {
+        "bytes": 703,
+        "sha256": "6f1d0413ad8fd6fff84629c27fa263bfdcb0233c6c2fd34435c594ec8511d4b7"
+      },
+      "classification": "concurrent_workload_control_behavior",
+      "note": "Fixes RB_POST_WORK_ROUNDS to4 and removes override validation. Outside owned c01 scope.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "49434c0ada654c6f8771d34d74b8fb4f780fdfab248b0915897e40a4dd28c443",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    },
+    {
+      "path": "workload_modules/spin_cacheline/README.md",
+      "frozen": {
+        "bytes": 2231,
+        "sha256": "5e70b463f0196fbe5127555bb38399be42723fa9aa7d547470529908be4dcfdd"
+      },
+      "current": {
+        "bytes": 1632,
+        "sha256": "c6692e44a142996b6f57b4ff17f53a32f6be3d23ad6784ebb26c8cb3e307cb11"
+      },
+      "classification": "documentation_only",
+      "note": "Readme changes from task documentation and/or concurrent cleanup; not an executable build input."
+    },
+    {
+      "path": "workload_modules/spin_cacheline/post_work.h",
+      "frozen": {
+        "bytes": 1506,
+        "sha256": "2fdb17ee1afe3b88ecb8a88eb928789bef399fd7a586416bf6b49f2a9806caee"
+      },
+      "current": {
+        "bytes": 1189,
+        "sha256": "24562675adaf74954b0aa705c70d007204beacc1ca84901516ae974b43366280"
+      },
+      "classification": "concurrent_active_workload_input",
+      "note": "Replaces guarded/overridable SC_POST_WORK_ROUNDS64 with an unconditional64 definition and removes bounds checks/comments. The measured default is64 in both trees, but source bytes differ and this audit does not prove compiled ELF equivalence.",
+      "cleanup_proof": {
+        "commit": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+        "cleanup_diff_sha256": "806f238c77f24013988f66016acad1bbaabe98d6942e82098990415bda067aa3",
+        "exact_ordered_added_removed_lines_match_cleanup": true
+      }
+    }
+  ],
+  "conclusion": "At the original audit, the experimental C10 lock/JIT runtime, assembly, daemon/translator, diagnostic profiler and production-extract tests matched frozen C10. All440 historical selected-source mappings now independently match archived experiment commit9a5305e. The recorded concurrent cleanup differences and original hashes remain unchanged. The experiment was subsequently rejected and accepted ab2 runtime restored; this receipt does not claim ABI4/native-first is present in the accepted checkout. Supplemental links establish only the stated final experimental-checkout source/build identities and isolated post-work equivalence; full correctness and performance disposition remain in validation.json and acceptance.json.",
+  "limits": [
+    "This source receipt does not replace the separately audited C10 build/unit/live/performance results; its supplemental artifacts have the explicitly stated narrow scopes.",
+    "The post-work header and study/other-workload CLI changes are behavior-bearing concurrent changes, despite unchanged default c01 rounds.",
+    "Removed tests and the collector test-fixture change mean older test totals must not be described as a run of the final experimental or restored accepted inventory.",
+    "Unrelated rwlock/full-matrix/real-API paths, retired exporters and post8 report deletions were not executed or accepted by this audit.",
+    "Report/output directories, kernel/toolchain/runtime environment, general binary/runtime validation and untracked BENCHMARK_WORKLOADS.md are outside the original source byte comparison. The later supplemental artifacts are identified separately."
+  ],
+  "scope_updated_utc": "2026-10-14T05:13:21.844575+00:00",
+  "historical_field_convention": "current/current_head/current_checkout/selected_current_manifest refer to the experimental checkout at audit_utc. frozen refers to the C10 worktree. File mappings, source hashes and the preserved C8 receipt are unchanged by this disposition update.",
+  "disposition": {
+    "experiment_archive_commit": "9a5305e7631247136ea89f1c8ac771afd7da3d8c",
+    "accepted_runtime_reference": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+    "decision": "Experimental implementation rejected after C10 failed the high-thread regression gates at32 and60; accepted runtime restored and report-only integration planned.",
+    "current_runtime_scope": "The accepted checkout does not retain this experiment ABI4/native-first/provider implementation. This receipt is evidence about archived experimental source, not an implementation claim for the restored checkout.",
+    "performance_authority": "acceptance.json and README.md",
+    "runtime_validation_authority": "validation.json"
+  },
+  "archive_mapping_verification": {
+    "archive_commit": "9a5305e7631247136ea89f1c8ac771afd7da3d8c",
+    "selected_paths": 440,
+    "method": "Read every scoped archived Git blob (or recorded deletion), reconstruct sorted path/file SHA256 manifest, and compare with the original selected_current_manifest_sha256.",
+    "manifest_sha256": "3f667d30442580d50178963b9ee6a652330a051c9527a891d6c7dd8f6393942f",
+    "matches_original_historical_manifest": true,
+    "original_receipt_sha256_before_scope_update": "97cc5cccb8946dfb681e227ce75b019bbb672ec963c26281d045e01933500a4c"
+  },
+  "supplemental_artifacts": {
+    "scope": "References to subsequently archived final experimental-checkout validation; no new build/test/module operation was performed for this update. Full test accounting and initial failures/retries belong to validation.json.",
+    "final_checkout_directory": "bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/extracted/tests/mutex-native-first-final-checkout-20261014",
+    "post_work_equivalence": {
+      "receipt": "bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/extracted/tests/mutex-native-first-final-checkout-20261014/post-work-equivalence/equivalence.json",
+      "receipt_sha256": "7322ac3a644d43a172c55ba061146fd7eeb7d1ba92fc46615cd98442aa81508b",
+      "recorded_artifact_hashes_rechecked": 43,
+      "passed": true,
+      "text_bytes": 836,
+      "text_sha256": "7364069d047c080f3768a165b9baafb290e9a5294c60d457fd493f0854662569",
+      "exact_multiply_add_pairs": 64,
+      "headers_match_historical_source_mapping": true,
+      "scope": "Isolated sc_post_work wrapper, identical compiler flags, no round override; not whole-workload ELF equivalence or a performance test."
+    },
+    "normal_provider_rebuild": {
+      "receipt": "bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/extracted/tests/mutex-native-first-final-checkout-20261014/retry-result.json",
+      "receipt_sha256": "feb2d5f457ecd8e7673764315d6b115e1bd318d5150bf40a4942ab45dbec47a7",
+      "binary": "bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/extracted/tests/mutex-native-first-final-checkout-20261014/normal-kdlock_km.ko",
+      "binary_sha256": "ade27d028a2d27b7238a1efa95107ec1100cf2a1d27fb7731f03089cb09d3b50",
+      "binary_matches_saved_expected_codegen_sha256": true,
+      "command": "bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/extracted/tests/mutex-native-first-final-checkout-20261014/normal-provider.log.command.json",
+      "command_sha256": "afd4c5b8762523f85ce01cd1a46990d752a1af015847fcb099ff06925694df9f",
+      "scope": "Archived normal experimental-provider rebuild and its recorded expected code-generation ELF identity; not the subsequently restored accepted provider."
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "auxiliary_audits": {
+    "commands": {
+      "partial-profile.json": [
+        "/tmp/native-first-ab2-offline-audit/bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/partial_diagnostic.py",
+        "--raw",
+        "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014",
+        "--out",
+        "/tmp/native-first-ab2-offline-audit/bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/partial-profile.json"
+      ],
+      "references.json": [
+        "/tmp/native-first-ab2-offline-audit/bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/references.py",
+        "--raw",
+        "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/extracted",
+        "--run",
+        "bench/mutex-native-first-tclock-control64-20261014",
+        "--archive",
+        "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/baseline-controls.tar.gz",
+        "--archive-sha256",
+        "4c0e97e71cbcd6286278fd424a1438e9bf41cb5c0dc46d97af15d3b372835550",
+        "--out",
+        "/tmp/native-first-ab2-offline-audit/bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first"
+      ],
+      "self-observer.json": [
+        "/tmp/native-first-ab2-offline-audit/bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/self_diagnostics.py",
+        "--raw",
+        "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014",
+        "--out",
+        "/tmp/native-first-ab2-offline-audit/bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first"
+      ]
+    },
+    "matching_exports": {
+      "self-frequency-samples.csv": "cbfd49dd37fa0288d9dde17f8e220de2760d6a96ce52d79db4b48e62764e00f0",
+      "self-pmu-analysis.csv": "e7d4950150e9bc23b361fbd6c15781c95ffd04d349051f7d5bebf1ee1ceb0fdc",
+      "tclock-batches.csv": "cd84e0ceb9db51e501b999477730b0d1072f8f78acb0c5d082ad777b8672a0f6",
+      "tclock-comparisons.csv": "a372bb8aeec675e1c8519e49d2ab6c91018e66f7992d61ccd20298dd99a8cc00",
+      "tclock-samples.csv": "8300801a0f0bc5295fd47835b34e917c540b0cc5ce5aa007c0517f985437ddd5",
+      "tclock-statistics.csv": "969aed8d579d3503bf7f5862a0e36a55f1a7150af7d5944c442b3b8d65fe951a",
+      "tclock-workers.csv": "11833b7f1fe7161069e39045710d9047ddee6b6273f22c17c2525e018b69a149"
+    },
+    "partial_profile_outcome": "1 completed Native,1 preparation-failed owned,34 not run; source/raw/warning/drain verified",
+    "passed": true
+  },
+  "final_accepted_tree_audit": {
+    "coverage": {
+      "baseline_sessions": 204,
+      "candidate_sessions": 540,
+      "control_sessions": 30,
+      "diagnostic_sessions": 90,
+      "tclock_context_sessions": 30
+    },
+    "entry_points": [
+      "analyze.py",
+      "references.py",
+      "self_diagnostics.py",
+      "partial_diagnostic.py"
+    ],
+    "generic_files": {
+      "bench/spin_cacheline/bench_runtime.py": "37d527bc11fd5e55b1f1f78eda3dec1adead18052fb83e3e37e6df8a6a184f19",
+      "bench/spin_cacheline/peak.py": "9df9a2d11a159f6451e58f52b618223663e025ad0c5b55936d2883abfee017a5",
+      "bench/spin_cacheline/summarize.py": "3535df0ad59016f097488693528313f99546353676633fbf39d38ca7d846ca06",
+      "disassem/device_session.py": "7ac41e83b1f07cb5f64fc654a4ae69f504c9e6f046fdd680c04c83c96722ed39",
+      "tests/protocols/cpu_placement.py": "73abd05f1f9be74a7387c73c3f51ec20784bf45dd60282fb34aab04e7fe0b306",
+      "tests/protocols/native_only_protocol.py": "628211807eb2cea031a2da2e072641f931cfec835cb2664bb8714203dfa2692e"
+    },
+    "passed": true,
+    "repository_head": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+    "scope": "Offline archive audit only; current accepted runner/session/study lack ABI4 extensions and are not imported.",
+    "score_and_gate_sha256": {
+      "acceptance.json": "32319adfd82ff7523795f10e7e2c34fdc63ec71d9e08091699dec10cf6123a08",
+      "comparisons.csv": "64743bab3012e6a5334699bd8b6744c2b7f889d7f153211cd11f96ba9e8b5c76",
+      "progress.csv.gz": "66dbcf4da12ad05fa4f3c50d1538e8e42b9eca815a6f1479f6ba5983ca7c674b",
+      "samples.csv": "773d5cd1ed98e42e29e5d9904637e91fbef270cec1a2f83fffa3ed1ee8684767",
+      "statistics.csv": "8c39de2db756c59a6a4343f5ce5e84b5fcb5bdf1b4df87c5c56e8c37d2c502d2",
+      "workers.csv": "feda8259a94e3f20ca365264f47a8853a83e92a82055a7e824a5dd729148fb31"
+    }
+  },
+  "imports": {
+    "bench_runtime": "/tmp/native-first-ab2-offline-audit/bench/spin_cacheline/bench_runtime.py",
+    "cpu_placement": "/tmp/native-first-ab2-offline-audit/tests/protocols/cpu_placement.py",
+    "device_session": "/tmp/native-first-ab2-offline-audit/disassem/device_session.py",
+    "experiment_policy": "/tmp/native-first-ab2-offline-audit/bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/experiment_policy.py",
+    "native_only_protocol": "/tmp/native-first-ab2-offline-audit/tests/protocols/native_only_protocol.py",
+    "peak": "/tmp/native-first-ab2-offline-audit/bench/spin_cacheline/peak.py",
+    "study_audit": "/tmp/native-first-ab2-offline-audit/bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/study_audit.py",
+    "summarize": "/tmp/native-first-ab2-offline-audit/bench/spin_cacheline/summarize.py"
+  },
+  "isolation_inputs": {
+    "accepted_reference": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+    "generic_files": {
+      "bench/spin_cacheline/bench_runtime.py": "37d527bc11fd5e55b1f1f78eda3dec1adead18052fb83e3e37e6df8a6a184f19",
+      "bench/spin_cacheline/peak.py": "9df9a2d11a159f6451e58f52b618223663e025ad0c5b55936d2883abfee017a5",
+      "bench/spin_cacheline/summarize.py": "3535df0ad59016f097488693528313f99546353676633fbf39d38ca7d846ca06",
+      "disassem/device_session.py": "7ac41e83b1f07cb5f64fc654a4ae69f504c9e6f046fdd680c04c83c96722ed39",
+      "tests/protocols/cpu_placement.py": "73abd05f1f9be74a7387c73c3f51ec20784bf45dd60282fb34aab04e7fe0b306",
+      "tests/protocols/native_only_protocol.py": "628211807eb2cea031a2da2e072641f931cfec835cb2664bb8714203dfa2692e"
+    },
+    "isolated_root": "/tmp/native-first-ab2-offline-audit",
+    "no_live_runner_files_copied": true
+  },
+  "matching_generated_outputs": [
+    "acceptance.json",
+    "batch-histograms.csv",
+    "batches.csv",
+    "comparisons.csv",
+    "flat-profiles.csv",
+    "lock-profiles.csv",
+    "owned-native-first-profiles.csv",
+    "owned-preflight-profiles.csv",
+    "pmu.csv",
+    "progress.csv.gz",
+    "samples.csv",
+    "statistics.csv",
+    "workers.csv"
+  ],
+  "no_runner_session_study_imports": true,
+  "passed": true,
+  "scope": "Offline re-audit before C10 integration; no workloads or test fixtures were executed. Thirteen main exports were independently regenerated in isolation. Twenty prior score/diagnostic exports remained byte-identical in the local extraction audit.",
+  "unchanged_prior_outputs": {
+    "acceptance.json": "b6507665ae6312da6a8ae8e55cfd7b5c06e9b277601d3ebdc3bf46d6fe7d4a38",
+    "batch-histograms.csv": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "batches.csv": "b9a58451a2c02e9a86b8e8417f15f5df154f407dbce9003448071a32a83cdae8",
+    "comparisons.csv": "eb8b74ebc966062f70715322067999c12e1d349f5eddc026a6e8bf59c51c87d0",
+    "flat-profiles.csv": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "lock-profiles.csv": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "owned-native-first-profiles.csv": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "owned-preflight-profiles.csv": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "pmu.csv": "b4e6493247f5febf1535d32481d824bd5b6b100624a85d4620fc88175d248d8d",
+    "progress.csv.gz": "ecb5cbe1da7d5c766b2687e5dd4ee79f55faf0dfee1c4295425100170c8a6760",
+    "samples.csv": "3f06351607021b65a5c8f8f2ae36a3817a03d43dce29eaf6bbbdb085f4b08cc0",
+    "self-frequency-samples.csv": "cbfd49dd37fa0288d9dde17f8e220de2760d6a96ce52d79db4b48e62764e00f0",
+    "self-pmu-analysis.csv": "e7d4950150e9bc23b361fbd6c15781c95ffd04d349051f7d5bebf1ee1ceb0fdc",
+    "statistics.csv": "90a4799a1a48a5389ca890546590891fccafc3e063196d1a757ee6e4e4228a19",
+    "tclock-batches.csv": "cd84e0ceb9db51e501b999477730b0d1072f8f78acb0c5d082ad777b8672a0f6",
+    "tclock-comparisons.csv": "a372bb8aeec675e1c8519e49d2ab6c91018e66f7992d61ccd20298dd99a8cc00",
+    "tclock-samples.csv": "8300801a0f0bc5295fd47835b34e917c540b0cc5ce5aa007c0517f985437ddd5",
+    "tclock-statistics.csv": "969aed8d579d3503bf7f5862a0e36a55f1a7150af7d5944c442b3b8d65fe951a",
+    "tclock-workers.csv": "11833b7f1fe7161069e39045710d9047ddee6b6273f22c17c2525e018b69a149",
+    "workers.csv": "bc21056dfc81c2c1f5b5f36679b63c85b39bb6ac408dccebcad15c898c3964c3"
+  }
+}

@@ -1,0 +1,16 @@
+group,sample,arm,lock_kind,implementation,threads,repeat,post_work_rounds,diagnostic,score_eligible,measured_returned_bodies,measured_delegation_share,scope,parks,batches,bodies,bodies_per_batch
+tclock_control,c01-t01-r00-direct-tclock,tclock,mutex,tclock,1,0,64,False,True,0,0.0,measurement,0,0,0,
+tclock_control,c01-t01-r01-direct-tclock,tclock,mutex,tclock,1,1,64,False,True,0,0.0,measurement,0,0,0,
+tclock_control,c01-t01-r02-direct-tclock,tclock,mutex,tclock,1,2,64,False,True,0,0.0,measurement,0,0,0,
+tclock_control,c01-t04-r00-direct-tclock,tclock,mutex,tclock,4,0,64,False,True,2594188,0.38083155605246344,measurement,4,1297685,2594188,1.9990891472121508
+tclock_control,c01-t04-r01-direct-tclock,tclock,mutex,tclock,4,1,64,False,True,2587470,0.37540130320531867,measurement,5,1294358,2587470,1.999037360606571
+tclock_control,c01-t04-r02-direct-tclock,tclock,mutex,tclock,4,2,64,False,True,2538917,0.3407891049154697,measurement,7,1269957,2538917,1.999214934048948
+tclock_control,c01-t16-r00-direct-tclock,tclock,mutex,tclock,16,0,64,False,True,7089908,0.9960780148539778,measurement,24,6975,7089908,1016.4742652329749
+tclock_control,c01-t16-r01-direct-tclock,tclock,mutex,tclock,16,1,64,False,True,7207718,0.9964660568925854,measurement,10,7074,7207718,1018.9027424370936
+tclock_control,c01-t16-r02-direct-tclock,tclock,mutex,tclock,16,2,64,False,True,7340428,0.99630114228631,measurement,22,7193,7340428,1020.4960378145419
+tclock_control,c01-t28-r00-direct-tclock,tclock,mutex,tclock,28,0,64,False,True,6297774,0.9741300264314564,measurement,30,6156,6297774,1023.0302144249513
+tclock_control,c01-t28-r01-direct-tclock,tclock,mutex,tclock,28,1,64,False,True,6189850,0.992248094324524,measurement,41,6059,6189850,1021.5959729328272
+tclock_control,c01-t28-r02-direct-tclock,tclock,mutex,tclock,28,2,64,False,True,6164856,0.9757087942141729,measurement,61,6030,6164856,1022.3641791044776
+tclock_control,c01-t60-r00-direct-tclock,tclock,mutex,tclock,60,0,64,False,True,3434246,0.9870519783312486,measurement,115,3383,3434246,1015.1480934082175
+tclock_control,c01-t60-r01-direct-tclock,tclock,mutex,tclock,60,1,64,False,True,6270080,0.9887969317723052,measurement,114,6146,6270080,1020.1887406443215
+tclock_control,c01-t60-r02-direct-tclock,tclock,mutex,tclock,60,2,64,False,True,6378875,0.99134595061667,measurement,191,6255,6378875,1019.8041566746602
