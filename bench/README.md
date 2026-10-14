@@ -12,6 +12,8 @@ KD mutexes always support blocking after bounded polling.
 | [Real kernel APIs](real_api/README.md) | OFD queries, descriptor flags, pipe/file-position mutexes and bounded UTS reader/writer metadata |
 | [Shared components](spin_cacheline/README.md) | Clients, warmup, peak selection, provider preparation and offline reports |
 
+The [workload guide](../docs/BENCHMARK_WORKLOADS.md) explains cacheline and hash
+payloads, reader/writer mixes and real API parameters such as `n16` and `v64`.
 Kernel payloads live under [workload_modules](../workload_modules/README.md).
 
 ## Environment and output
@@ -53,12 +55,12 @@ sessions remain visible and are not successful JIT measurements.
 
 ## Results
 
-[Performance status](../docs/PERFORMANCE.md) summarizes the latest frozen
-comparison and remaining gaps. It predates the blocking-only cleanup; current
-[mutex verification](results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-is functional evidence. The [machine indexes](results/README.md) retain complete
-reports, earlier measurements and rejected trials. An older pass applies to its
-captured source, boot policy and topology.
+[Performance status](../docs/PERFORMANCE.md) summarizes the recent c01 mutex
+studies, retained changes and rejected experiments. The
+[validation index](../docs/VALIDATION.md) separates correctness checks from
+performance acceptance. The [machine indexes](results/README.md) retain complete
+reports, earlier all-lock comparisons and rejected trials. Each result applies
+to its captured source, workload, boot policy and topology.
 
 ## VM migration validation
 

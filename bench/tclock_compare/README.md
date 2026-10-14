@@ -95,6 +95,9 @@ the actual build, so requested option names alone cannot mislabel a sample.
 
 ## Workloads and backends
 
+See [workloads and critical sections](../../docs/BENCHMARK_WORKLOADS.md#synthetic-cacheline-updates)
+for the meaning of `c01`–`c16`, the shared counter layout and each hash move attempt.
+
 Cacheline comparisons default to one line; 8/16-line bodies remain available only
 when explicitly requested. Hash uses 1,024 buckets, 4,096 preallocated
 nodes, 8,192 keys and 100% writes: each request records one move, conflict or miss.

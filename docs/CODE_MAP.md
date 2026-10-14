@@ -46,6 +46,9 @@ admission before ABI3 execution and preserve it across native continuation.
 
 ## Workloads and checks
 
+The [workload guide](BENCHMARK_WORKLOADS.md) explains the shared data, protected
+operations and label parameters implemented by these modules and runners.
+
 | Directory | Contents |
 | --- | --- |
 | [workload_modules](../workload_modules/README.md) | Separate spin/mutex/rwlock payloads; shared timing and business logic |

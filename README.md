@@ -23,8 +23,9 @@ guest-kernel interfaces.
 Use the [project guide](docs/PROJECT_GUIDE.md) to build and run in the verified
 guest. [Performance status](docs/PERFORMANCE.md) summarizes measured outcomes,
 and the [results index](bench/results/README.md) retains source-specific evidence.
-The [owned-mutex study](bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md)
-records the protocol redesign, targeted checks and remaining performance gap.
+The [owned-mutex studies](docs/PERFORMANCE.md#latest-owned-mutex-entry-and-waiting-study)
+distinguish the retained protocol improvements from archived experiments and
+record the remaining performance gap.
 
 ## Documentation
 
@@ -41,6 +42,7 @@ records the protocol redesign, targeted checks and remaining performance gap.
 | [Code map](docs/CODE_MAP.md) | Source and documentation responsibilities |
 | [Operations](docs/AGENTS.md) | Where to build and test, how to shut down safely, and VM recovery |
 | [Known limitations](docs/TODO.md) / [performance status](docs/PERFORMANCE.md) | Known problems, measured performance and work left for later |
+| [Benchmark workloads](docs/BENCHMARK_WORKLOADS.md) | Shared objects, protected operations and the meaning of cacheline, write-mix and real API labels |
 | [Real kernel API benchmarks](bench/real_api/README.md) | Spinlock, mutex and bounded reader/writer syscall workloads; results, kernel-lock mapping and TCLocks paper context |
 | [Validation and cleanup](docs/VALIDATION.md) | Completed checks, evidence retention and closeout scope |
 

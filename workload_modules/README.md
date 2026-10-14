@@ -25,7 +25,9 @@ separate [test](../tests/kernel/rwlock/README.md) and
 The old transparent-hook workload is removed; its historical evidence remains
 in Git and the validation/report indexes.
 
-Lock behavior is documented in [nine protocols](../docs/design/lock_protocols.md)
+The [workload guide](../docs/BENCHMARK_WORKLOADS.md) describes the data and
+operations protected by each lock. Lock behavior is documented in
+[nine protocols](../docs/design/lock_protocols.md)
 and the [spin](../docs/design/spin_implementation.md),
 [mutex](../docs/design/mutex_implementation.md) and [rwlock](../docs/design/rwlock_implementation.md)
 implementation guides. Measurement commands and results belong in the runner README.

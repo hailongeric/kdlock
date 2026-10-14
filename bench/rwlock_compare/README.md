@@ -14,12 +14,15 @@ Edit source in the checkout on `380G10` and synchronize it to this guest first.
 New guest evidence belongs under `/root/kdlock-evidence/10.176.26.71/bench/<run>`;
 retain host archives and compact summaries in [the machine result layout](../results/README.md).
 
-[Performance status](../../docs/PERFORMANCE.md) summarizes the latest frozen
-all-lock comparison. The [destination-host index](../results/10.176.26.71/README.md)
+[Performance status](../../docs/PERFORMANCE.md) summarizes measured outcomes and
+remaining gaps. The [destination-host index](../results/10.176.26.71/README.md)
 and [original-host index](../results/380G10/README.md) retain the separate
 measurements, caller ABIs, JIT evidence and topology limits.
 
 ## Cases
+
+The [workload guide](../../docs/BENCHMARK_WORKLOADS.md#synthetic-readerwriter-mixes)
+explains the reader and writer bodies and labels such as `c08-w20`.
 
 | Workload | Protected operations | Sizes |
 | --- | --- | --- |

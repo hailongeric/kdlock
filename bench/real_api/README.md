@@ -18,6 +18,11 @@ KD nor loading TCLock alone changes ordinary syscall locking.
 
 ## Candidate selection
 
+The [workload guide](../../docs/BENCHMARK_WORKLOADS.md#real-api-labels-and-parameters)
+explains each API's setup, protected reads and writes, kernel call path and label
+parameters. In particular, `--entries` has a different unit for each API;
+worker count is always selected separately with `--threads`.
+
 | Workload | Actual critical section and cached state | Suitability |
 | --- | --- | --- |
 | tmpfs `fgetxattr()` | `simple_xattr_get()` holds `simple_xattrs.lock` across linked-list name comparisons and the value copy | Kernel integration exists; current translated xattr bodies are refused by pointer/context admission and are excluded from accepted performance comparisons. |
