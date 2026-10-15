@@ -1,0 +1,71 @@
+{
+  "passed": true,
+  "physical_host": "10.176.26.71",
+  "archive_base": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw",
+  "source_roots": {
+    "bench": "/root/kdlock-evidence/10.176.26.71/bench/owned-origin-20261015",
+    "tests": "/root/kdlock-evidence/10.176.26.71/tests/owned-origin-20261015"
+  },
+  "transfer": "rsync -a from VM localhost:2222 to its physical host, without deletion or symlink dereference",
+  "verification_sha256": "6e7be95f8bc24f39585da0a3f38525c3ca59517d9965f8bd29e4e12374e6f351",
+  "scored_blocks": {
+    "confirm64-a": {
+      "sessions": 264,
+      "raw_files": 1320,
+      "source_files": 330,
+      "baseline_source_files": 116,
+      "binaries": 8,
+      "passed": true
+    },
+    "confirm64-b-clean": {
+      "sessions": 264,
+      "raw_files": 1320,
+      "source_files": 330,
+      "baseline_source_files": 116,
+      "binaries": 8,
+      "passed": true
+    },
+    "screen64": {
+      "sessions": 330,
+      "raw_files": 1650,
+      "source_files": 330,
+      "baseline_source_files": 116,
+      "binaries": 8,
+      "passed": true
+    }
+  },
+  "test_receipts": {
+    "gs-fifo-percpu/result.json": "fbc5d910b47b40ed92490fc42462f840de55d0e81148f303905d7cb9309e81d1",
+    "gs-numa-percpu/result.json": "8dc96c510588eed28797565e086a594173c74e7f2ed842360a24cdb6307e6974"
+  },
+  "control_receipts": {
+    "guest-final.json": "02226e52c0ca7fe61f130c08e228ac2799d32c7fe06bab8aeebc8e44208736f0",
+    "kernel-final.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "host-final.json": "dd4ffd54614a0d89c3bc0e67b3a3b4c6f118cc5a535d9a9d91d0621130aeb343",
+    "snapshots-final.txt": "3adb8e2bd34aed779d639b4317f779d98d720e7b6a8cdc4dda7e92a26bb05365",
+    "isolated-source.json": "ddebd577de8a60e1ece077633de005c25513cc5905547a30731bff435ac61f03",
+    "rejected-confirm64-b.json": "f93a8accbc2721732c6e620ed33445fa6629f1f0d116d05850d50c78d57b28c2"
+  },
+  "report_receipts": {
+    "validation.json": "43ff7692667125a5658e77024d478da72128ff082d06c3a1b862c992385d593d",
+    "commit-identity.json": "0bfd29eb406c825191782f4ac6c89de5e0d34717cec9c43aaddb4375c42cef9c",
+    "regression.svg": "d79d4669252a6a73b1d7229a5ad05c525f8b51c80e21fcb011bbda63e2dc1087",
+    "plotting.json": "21d838a116e611a8e7866bd30960f9fe513ad866bd94bc63d7ed82d55265ad4d"
+  },
+  "required_test_log_files": 13,
+  "inventory_totals": {
+    "bench": {
+      "files": 49660,
+      "symlinks": 1354,
+      "bytes": 831527028
+    },
+    "tests": {
+      "files": 3867,
+      "symlinks": 8,
+      "bytes": 91926602
+    }
+  },
+  "inventory_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/owned-origin-20261015/control/archive-inventory.json",
+  "inventory_sha256": "be2f89a26103afa58a4b56c5e4e6981ce0dfc78ad72d0e0fd8dad2e2f650b90f",
+  "limits": "Offline integrity check of copied evidence; not a new benchmark or protocol execution. Inventory includes failed/excluded attempts and historical frozen sources. Its own two control files are excluded to avoid recursive hashes."
+}

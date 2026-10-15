@@ -1,0 +1,194 @@
+{
+  "counter": 160000,
+  "counter_per_cpu": [
+    20000,
+    20000,
+    20000,
+    20000,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    20000,
+    20000,
+    20000,
+    20000,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "drained": true,
+  "errors": 0,
+  "numa": true,
+  "operations": 320000,
+  "passed": true,
+  "results": [
+    {
+      "command": 18177,
+      "origin_stats_after": [
+        98,
+        0,
+        0,
+        41,
+        98
+      ],
+      "origin_stats_before": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "workers": [
+        {
+          "cpu": 3,
+          "cpu_ns": 19711276,
+          "operations": 20000
+        },
+        {
+          "cpu": 1,
+          "cpu_ns": 20951111,
+          "operations": 20000
+        },
+        {
+          "cpu": 0,
+          "cpu_ns": 21248593,
+          "operations": 20000
+        },
+        {
+          "cpu": 2,
+          "cpu_ns": 21754937,
+          "operations": 20000
+        },
+        {
+          "cpu": 35,
+          "cpu_ns": 26240457,
+          "operations": 20000
+        },
+        {
+          "cpu": 33,
+          "cpu_ns": 26520197,
+          "operations": 20000
+        },
+        {
+          "cpu": 34,
+          "cpu_ns": 26221697,
+          "operations": 20000
+        },
+        {
+          "cpu": 32,
+          "cpu_ns": 26036110,
+          "operations": 20000
+        }
+      ]
+    },
+    {
+      "command": 18178,
+      "origin_stats_after": [
+        143,
+        0,
+        0,
+        50,
+        143
+      ],
+      "origin_stats_before": [
+        98,
+        0,
+        0,
+        41,
+        98
+      ],
+      "workers": [
+        {
+          "cpu": 3,
+          "cpu_ns": 14933069,
+          "operations": 20000
+        },
+        {
+          "cpu": 33,
+          "cpu_ns": 16165702,
+          "operations": 20000
+        },
+        {
+          "cpu": 0,
+          "cpu_ns": 18503818,
+          "operations": 20000
+        },
+        {
+          "cpu": 35,
+          "cpu_ns": 20548108,
+          "operations": 20000
+        },
+        {
+          "cpu": 34,
+          "cpu_ns": 21950348,
+          "operations": 20000
+        },
+        {
+          "cpu": 1,
+          "cpu_ns": 22824488,
+          "operations": 20000
+        },
+        {
+          "cpu": 2,
+          "cpu_ns": 24677246,
+          "operations": 20000
+        },
+        {
+          "cpu": 32,
+          "cpu_ns": 25183087,
+          "operations": 20000
+        }
+      ]
+    }
+  ]
+}

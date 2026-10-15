@@ -159,6 +159,10 @@ worker progress, CPU time, returned bodies and shares, parking, claims/failures,
 preparation requests and bypasses. GS correctness/diagnostic runs contribute no
 performance scores.
 
+The [2026-10-15 report](../results/10.176.26.71/bench/mutex_owned/20261015-origin/README.md)
+records the screen, separate confirmations, affected correctness checks and
+the decision to retain opt-in defaults.
+
 ## Owned c01 full grid
 
 The recorded c01 profile uses `owned-v1`, ABI4 and reuse allowance 32.

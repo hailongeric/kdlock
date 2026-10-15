@@ -9,6 +9,20 @@ NUMA node 0 has CPUs 0–31 and node 1 has CPUs 32–63, with no extra vCPUs or
 unused spare CPU. Historical receipts retain their original topology; they
 do not authorize reusing a superseded placement.
 
+## Origin readiness and image-version verification
+
+The [2026-10-15 receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/validation.json)
+records immutable upload/binding fixtures, 10,000 park/claim races, bounded
+selector mutations, ABI/cookie/task/owner-ACK checks and live GS bodies.
+Live kernel probes observe zero schedules during 768 claims despite explicit
+reschedule requests. Version replacement and pool exhaustion use production C
+in VM userspace fixtures; those are not live image-replacement results. Separate
+GS and forced-FULL controls return JIT bodies and drain. The
+[performance report](../bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/README.md)
+keeps each c01 block, the shared 64-worker point and failed attempts distinct.
+These checks cover frozen implementation `20bd721` and the stated affected
+tests, excluding concurrent source edits and a full-project-suite claim.
+
 <a id="current-owned-protocol-verification"></a>
 
 ## Recorded owned-protocol verification

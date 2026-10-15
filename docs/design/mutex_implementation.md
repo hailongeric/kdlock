@@ -617,7 +617,8 @@ These selected checks do not establish arbitrary oversubscription or starvation 
 
 `owned_mutex_origin_spin=1` enables the separately audited GS subset.
 `owned_mutex_numa=1` enables experimental NUMA selection. Both are off by default
-pending their validation and performance gates. GS-independent images continue
+after the [2026-10-15 comparison](../../bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/README.md)
+missed the regression gates. GS-independent images continue
 to execute for sleeping producers with their existing FULL/native ACK behavior.
 The public mutex is still 32 bytes; request registers remain at offset 128 and
 the outcome at offset 304 in the 320-byte private packet. Readiness, origin CPU

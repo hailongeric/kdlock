@@ -1,0 +1,398 @@
+[
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": true,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0002826171863581,
+      "median_whole": 1.001337025694708,
+      "peak_session_whole": 1.001569415224578
+    },
+    "over_native": {
+      "best_peak": 1.0011719799028937,
+      "median_whole": 1.0016712629668096,
+      "peak_session_whole": 1.0007877962219618
+    },
+    "regression_pass": true,
+    "threads": 1
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": true,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9830991155950252,
+      "median_whole": 1.0479963790162916,
+      "peak_session_whole": 0.9836902364930078
+    },
+    "over_native": {
+      "best_peak": 1.2037031301908483,
+      "median_whole": 1.419956256551514,
+      "peak_session_whole": 1.4457132724412673
+    },
+    "regression_pass": true,
+    "threads": 2
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": true,
+    "native_pass": false,
+    "over_current_kd": {
+      "best_peak": 0.886691064097322,
+      "median_whole": 0.9641392967468614,
+      "peak_session_whole": 0.8866355028968771
+    },
+    "over_native": {
+      "best_peak": 0.899658670807009,
+      "median_whole": 0.8976523540815761,
+      "peak_session_whole": 0.9065394518212797
+    },
+    "regression_pass": false,
+    "threads": 3
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": true,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9449966135028173,
+      "median_whole": 0.9619423125044899,
+      "peak_session_whole": 0.9439964407860036
+    },
+    "over_native": {
+      "best_peak": 1.1869732862108437,
+      "median_whole": 1.2462667256264564,
+      "peak_session_whole": 1.1892235180836614
+    },
+    "regression_pass": false,
+    "threads": 4
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": true,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9945723051236287,
+      "median_whole": 1.0154144824967934,
+      "peak_session_whole": 0.9957373615200833
+    },
+    "over_native": {
+      "best_peak": 1.0044548838542184,
+      "median_whole": 1.2020477964408682,
+      "peak_session_whole": 1.0137640349454717
+    },
+    "regression_pass": true,
+    "threads": 5
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": true,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.975630844476449,
+      "median_whole": 0.9961608263068046,
+      "peak_session_whole": 0.9773603524832138
+    },
+    "over_native": {
+      "best_peak": 1.1182593501552338,
+      "median_whole": 1.1399457592985116,
+      "peak_session_whole": 1.1185560192392772
+    },
+    "regression_pass": true,
+    "threads": 6
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": true,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9659521485602712,
+      "median_whole": 0.9418443210066245,
+      "peak_session_whole": 0.9672528542678561
+    },
+    "over_native": {
+      "best_peak": 1.0689901155792791,
+      "median_whole": 1.1837594052626885,
+      "peak_session_whole": 1.1461780793672078
+    },
+    "regression_pass": false,
+    "threads": 7
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": true,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0347740745519414,
+      "median_whole": 1.011811140181865,
+      "peak_session_whole": 1.035134488850044
+    },
+    "over_native": {
+      "best_peak": 1.1220381295430788,
+      "median_whole": 1.1317880960122304,
+      "peak_session_whole": 1.2142802678122933
+    },
+    "regression_pass": true,
+    "threads": 8
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9921075745569798,
+      "median_whole": 1.0119602950467483,
+      "peak_session_whole": 0.9929398171684517
+    },
+    "over_native": {
+      "best_peak": 1.1054329105190204,
+      "median_whole": 1.1452390450226422,
+      "peak_session_whole": 1.187207277523768
+    },
+    "regression_pass": true,
+    "threads": 12
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0014614221176117,
+      "median_whole": 0.996653918374087,
+      "peak_session_whole": 1.0010573850521067
+    },
+    "over_native": {
+      "best_peak": 1.0856035277517617,
+      "median_whole": 1.1035580501689035,
+      "peak_session_whole": 1.0934367090288584
+    },
+    "regression_pass": true,
+    "threads": 16
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0094728799086081,
+      "median_whole": 1.001151952186371,
+      "peak_session_whole": 1.010989633706656
+    },
+    "over_native": {
+      "best_peak": 1.054124070479081,
+      "median_whole": 1.0742888277225682,
+      "peak_session_whole": 1.0874480000307667
+    },
+    "regression_pass": true,
+    "threads": 20
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.011649281501027,
+      "median_whole": 1.0016520310750723,
+      "peak_session_whole": 1.009339638001325
+    },
+    "over_native": {
+      "best_peak": 1.1045950717038173,
+      "median_whole": 1.154130160359252,
+      "peak_session_whole": 1.1317266349133064
+    },
+    "regression_pass": true,
+    "threads": 24
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9821698549828005,
+      "median_whole": 0.9789534128860232,
+      "peak_session_whole": 0.9850856250172766
+    },
+    "over_native": {
+      "best_peak": 1.125213167838907,
+      "median_whole": 1.172356168354632,
+      "peak_session_whole": 1.1364046367640048
+    },
+    "regression_pass": true,
+    "threads": 28
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0056000715403526,
+      "median_whole": 0.9829714630239575,
+      "peak_session_whole": 1.005504893046436
+    },
+    "over_native": {
+      "best_peak": 1.1533220692418082,
+      "median_whole": 1.232918803752574,
+      "peak_session_whole": 1.2661398604673875
+    },
+    "regression_pass": true,
+    "threads": 32
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9956484646562294,
+      "median_whole": 0.9991169213422484,
+      "peak_session_whole": 0.9968347798167034
+    },
+    "over_native": {
+      "best_peak": 1.1876764108468767,
+      "median_whole": 1.4226998375063595,
+      "peak_session_whole": 1.3346840369336155
+    },
+    "regression_pass": true,
+    "threads": 36
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.002450528991215,
+      "median_whole": 1.0230896759018435,
+      "peak_session_whole": 1.0034553858170627
+    },
+    "over_native": {
+      "best_peak": 1.2244160795902814,
+      "median_whole": 1.404451407245259,
+      "peak_session_whole": 1.4052745903116843
+    },
+    "regression_pass": true,
+    "threads": 40
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0091776642280441,
+      "median_whole": 1.014809161749389,
+      "peak_session_whole": 1.0098830170222415
+    },
+    "over_native": {
+      "best_peak": 1.2311706610667505,
+      "median_whole": 1.5180523671710173,
+      "peak_session_whole": 1.436603046467527
+    },
+    "regression_pass": true,
+    "threads": 44
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9964028952884154,
+      "median_whole": 1.0006924044590912,
+      "peak_session_whole": 0.9954863919455635
+    },
+    "over_native": {
+      "best_peak": 1.2482585667755162,
+      "median_whole": 1.4127515554599182,
+      "peak_session_whole": 1.3599819752836382
+    },
+    "regression_pass": true,
+    "threads": 48
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0228432048449558,
+      "median_whole": 1.025206839526606,
+      "peak_session_whole": 1.0265390783465997
+    },
+    "over_native": {
+      "best_peak": 1.2861918390298028,
+      "median_whole": 1.6119642463627966,
+      "peak_session_whole": 1.607384167671076
+    },
+    "regression_pass": true,
+    "threads": 52
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0143190189869091,
+      "median_whole": 1.0205241162290137,
+      "peak_session_whole": 1.0178428598818317
+    },
+    "over_native": {
+      "best_peak": 1.279343097079903,
+      "median_whole": 1.5907952547283848,
+      "peak_session_whole": 1.4469151321403397
+    },
+    "regression_pass": true,
+    "threads": 56
+  },
+  {
+    "arm": "numa",
+    "collector_shared": false,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 0.9987818445155635,
+      "median_whole": 1.0094940861250086,
+      "peak_session_whole": 1.0007603848354896
+    },
+    "over_native": {
+      "best_peak": 1.4957648107730397,
+      "median_whole": 1.7027195288339774,
+      "peak_session_whole": 1.7088039470529173
+    },
+    "regression_pass": true,
+    "threads": 60
+  },
+  {
+    "arm": "numa",
+    "collector_shared": true,
+    "native_applicable": false,
+    "native_pass": true,
+    "over_current_kd": {
+      "best_peak": 1.0136277112165881,
+      "median_whole": 1.0080452234513855,
+      "peak_session_whole": 1.0178579116620086
+    },
+    "over_native": {
+      "best_peak": 1.8668763693776582,
+      "median_whole": 2.073547472597622,
+      "peak_session_whole": 1.964753152022377
+    },
+    "regression_pass": true,
+    "threads": 64
+  }
+]

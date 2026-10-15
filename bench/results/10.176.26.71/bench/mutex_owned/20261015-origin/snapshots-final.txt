@@ -1,0 +1,36 @@
+i[K[Din[K[D[Dinf[K[D[D[Dinfo[K[D[D[D[Dinfo [K[D[D[D[D[Dinfo s[K[D[D[D[D[D[Dinfo sn[K[D[D[D[D[D[D[Dinfo sna[K[D[D[D[D[D[D[D[Dinfo snap[K[D[D[D[D[D[D[D[D[Dinfo snaps[K[D[D[D[D[D[D[D[D[D[Dinfo snapsh[K[D[D[D[D[D[D[D[D[D[D[Dinfo snapsho[K[D[D[D[D[D[D[D[D[D[D[D[Dinfo snapshot[K[D[D[D[D[D[D[D[D[D[D[D[D[Dinfo snapshots[K
+List of snapshots present on all disks:
+ID        TAG               VM SIZE                DATE     VM CLOCK     ICOUNT
+--        migration-ready-20261010T070707Z  2.3 GiB 2026-10-10 15:07:07 00:04:06.627           
+--        topology64-ready-20261010 5.07 GiB 2026-10-10 15:51:06 00:06:12.455           
+--        topology64-source-ready-20261010 5.06 GiB 2026-10-10 16:03:52 00:18:51.640           
+--        perf64-20261010T081816Z 5.06 GiB 2026-10-10 16:19:56 00:34:49.030           
+--        full64-20261010T094831Z 2.33 GiB 2026-10-10 17:50:13 00:00:54.398           
+--        normal64-after-fullmatrix-20261010T140110Z 2.32 GiB 2026-10-10 22:01:10 00:09:48.638           
+--        full66-20261011T025525Z  2.3 GiB 2026-10-11 10:58:23 00:00:55.005           
+--        normal64-after-rerun-20261011T025525Z 2.27 GiB 2026-10-11 12:33:11 00:00:19.922           
+--        mutex-opt-normal64-20261011T045425Z 2.34 GiB 2026-10-11 12:58:20 00:25:24.456           
+--        mutex-opt-full66-20261011T045425Z 2.32 GiB 2026-10-11 14:51:01 00:00:19.890           
+--        normal64-after-mutex-opt-20261011T045425Z 2.27 GiB 2026-10-11 15:20:52 00:00:18.377           
+--        real-api-20261011-v1 2.69 GiB 2026-10-11 16:22:00 01:01:21.306           
+--        real-sync-20261011-v1 3.08 GiB 2026-10-11 22:33:05 07:12:20.922           
+--        mutex-blocking-20261012-v1 3.72 GiB 2026-10-12 00:38:33 09:17:43.571           
+--        full-wait-66cpu-20261012-v1 2.41 GiB 2026-10-12 11:36:43 00:02:45.155           
+--        mutex-blocking-only-20261012 2.52 GiB 2026-10-12 21:34:47 00:28:32.388           
+--        mutex-admission-20261013 2.64 GiB 2026-10-13 00:16:23 03:10:03.855           
+--        mutex-c01-cost-20261013 4.96 GiB 2026-10-13 02:20:23 05:13:59.395           
+--        mutex-optimistic-c01-20261013 6.46 GiB 2026-10-13 10:09:24 13:02:54.188           
+--        mutex-protocol-c01-20261013 6.77 GiB 2026-10-13 12:34:09 15:27:30.330           
+--        mutex-protocol-c01-post8-20261013 7.18 GiB 2026-10-13 13:32:15 16:25:27.331           
+--        mutex-owned-v1-20261013 7.79 GiB 2026-10-13 15:58:22 18:51:25.279           
+--        mutex-owned-hybrid-20261014 9.18 GiB 2026-10-14 00:26:20 26:03:01.953           
+--        mutex-native-first-20261014   10 GiB 2026-10-14 10:14:52 35:42:25.337           
+--        mutex-owned-c01-full66-20261014 1.61 GiB 2026-10-14 20:07:50 00:01:21.847           
+--        normal64-after-mutex-owned-full-20261014 2.32 GiB 2026-10-14 20:28:22 00:03:43.173           
+--        owned-origin-before-20261015 3.02 GiB 2026-10-15 12:33:24 16:08:41.415           
+--        owned-origin-66-20261015 2.02 GiB 2026-10-15 13:13:36 00:00:42.231           
+--        owned-origin-regular64-final-20261015  1.7 GiB 2026-10-15 13:36:39 00:00:34.630           
+--        rwsem-snapshots-20261015 3.48 GiB 2026-10-15 14:27:54 00:51:46.100           
+--        rwsem-snapshots-ready-20261015 4.17 GiB 2026-10-15 14:56:07 01:19:52.975           
+--        rwsem-snapshots-current-20261015 4.53 GiB 2026-10-15 15:14:38 01:38:17.040           
+(qemu) 

@@ -77,6 +77,18 @@ causal limits. These dispositions apply to the recorded version and scope.
 | <a id="earlier-c01-cost-study"></a>Three-way cost study, 2026-10-13 | [Report](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md): waiter counters and successor prefetch retained as a bounded higher-thread gain; Native parity unmet. |
 | <a id="earlier-c01-admission-study"></a>Admission study, 2026-10-13 | [Report](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md): all eight thresholds rejected; default 256 retained with the pinned cold sampler. |
 
+## Origin claims and bounded NUMA selection
+
+The [2026-10-15 origin/NUMA report](../bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/README.md)
+compares immutable owned images with fresh Native, TCLock and pre-change KD
+controls across the full 22-count c01/post64 grid. The screen and separate
+confirmation blocks do not meet the 97%-of-current-KD regression requirement;
+origin claims and NUMA selection remain independently selectable and off by
+default. The Native target at 1–8 workers is assessed separately. All scored
+blocks use the regular 64-vCPU topology, with explicit collector contention at
+64 workers. The report separates functional GS results from performance scores
+and identifies the exact frozen implementation tested.
+
 ## Remaining gaps and comparison limits
 
 Keep source versions, policies, object/caller ABIs, workloads, topologies,

@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "implementation_commit": "20bd7211392f7ca0ab59b013b8d877f7a780d56d",
+  "frozen_input_count": 330,
+  "identical_tracked_input_count": 230,
+  "prepared_provider_input_count": 97,
+  "prepared_provider_scope": "Generated private provider copies and observation overlay; hashed in all accepted block manifests and validated by the independent guest audit.",
+  "historical_auxiliary_inputs": {
+    "bench/spin_cacheline/post_work_fixture.c": {
+      "sha256": "5f277955f57259c327534b2b782c56003359b7c7f6a2f1065961b8dac18f9fb9",
+      "tracked_at_commit": false
+    },
+    "bench/tclock_compare/workload-observation.patch": {
+      "sha256": "43c7394d727188fee377db5def1a9ed97c5d7e7ed1171da47c017de8706b90c8",
+      "tracked_at_commit": false
+    }
+  },
+  "historical_auxiliary_scope": "The broad source freezer retained two historical unused auxiliary files. They are identical in all accepted blocks. The active runner builds the client from client.c, the payload from workload_modules/mutex_cacheline, and the private provider through provider/prepare.py; it neither compiles post_work_fixture.c nor applies workload-observation.patch.",
+  "active_build_paths_sha256": {
+    "bench/tclock_compare/run.py": "deb50ff74a06adccc882d2ccdd1352b565d8d57d56cf387c96ba4531277f52f8",
+    "bench/spin_cacheline/Makefile": "95b71c89b62fc21bce11df2591637254a2001c3de2e9521d609d9c46e961a9e4",
+    "bench/spin_cacheline/provider/prepare.py": "06b485cddbf40c7f706330e1880dc2d082cdf17bb57aa198efee7ee48cc7175c",
+    "workload_modules/mutex_cacheline/Makefile": "48c076d432b5756e4e2204a34ff9bb50f58259dbfdffb9d6491eeee049daa431"
+  },
+  "documentation_differences": {
+    "bench/tclock_compare/README.md": {
+      "git_sha256": "b67576da44c34bc15e1657cd208be862d3f31c0b96c0325884da57d5b2fe2255",
+      "frozen_sha256": "440e0a2d13e2145bdf49f1c7063041873d983f1ddab0c1b47abb255a54683149"
+    }
+  },
+  "source_archive_sha256": "520312a89db97edf8b9eae08d61fb31b5497f14d5367a25636eecff6323b362d",
+  "limits": "Frozen inputs are not identical to a bare git archive: the historical auxiliary files, one README and the prepared provider copies are explicitly accounted for. All remaining tracked inputs match the implementation commit."
+}
