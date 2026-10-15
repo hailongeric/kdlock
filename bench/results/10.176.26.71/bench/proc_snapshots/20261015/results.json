@@ -333,6 +333,14 @@
     ],
     "verified": true
   },
+  "integration": {
+    "implementation_commit": "8ce6ab9",
+    "merge_commit": "82f92db",
+    "note": "The historical assembly file is retained in both raw source inventories but is not built or loaded by these runs. Production provider, translator, caller, payload and runner bytes still match the task-name frozen source after merging documentation and independent probes.",
+    "parallel_committed_tip": "c67bb1c",
+    "unchanged_tracked_runtime_inputs_verified": 146,
+    "unused_historical_frozen_input": "daemon/0xffffffffc0c02f1b/39032/asm/jit.S"
+  },
   "machine": "10.176.26.71",
   "raw_archives": {
     "raw/bench/proc-argbounds-20261015.tar.gz": "beed0bf94d31b8b1f981cbe899b2d0a3f1c5455f17beff560b7112e12bb21357",

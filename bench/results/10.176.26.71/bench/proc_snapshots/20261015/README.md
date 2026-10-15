@@ -136,6 +136,10 @@ hashes. Both timing blocks' frozen sources and all ELF hashes were verified
 after download, along with every saved admitted image. Their only source
 differences are the helper-readiness fix and its test; the payload/provider
 sources match. [Final idle receipt](final-idle.json) confirms no project modules.
+Implementation commit `8ce6ab9` was integrated with the already committed parallel
+documentation/probes at `82f92db`; 146 tracked runtime inputs still match the
+task-name frozen source. Both raw inventories also retain one unused historical
+`daemon/0x.../asm/jit.S`, which these builds and sessions do not consume.
 
 All failed candidates remain archived: the initial Native-hook import rejection,
 an incorrect pinned-entry import expectation, the strict mixed-case NO_JIT
