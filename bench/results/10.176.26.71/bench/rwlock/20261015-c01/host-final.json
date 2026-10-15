@@ -1,0 +1,294 @@
+{
+  "checked_utc": "2026-10-15T14:44:47.630008+00:00",
+  "qemu_pid": 257489,
+  "vcpus": {
+    "0": "0",
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8",
+    "9": "9",
+    "10": "10",
+    "11": "11",
+    "12": "12",
+    "13": "13",
+    "14": "14",
+    "15": "15",
+    "16": "16",
+    "17": "17",
+    "18": "18",
+    "19": "19",
+    "20": "20",
+    "21": "21",
+    "22": "22",
+    "23": "23",
+    "24": "24",
+    "25": "25",
+    "26": "26",
+    "27": "27",
+    "28": "28",
+    "29": "29",
+    "30": "30",
+    "31": "31",
+    "32": "32",
+    "33": "33",
+    "34": "34",
+    "35": "35",
+    "36": "36",
+    "37": "37",
+    "38": "38",
+    "39": "39",
+    "40": "40",
+    "41": "41",
+    "42": "42",
+    "43": "43",
+    "44": "44",
+    "45": "45",
+    "46": "46",
+    "47": "47",
+    "48": "48",
+    "49": "49",
+    "50": "50",
+    "51": "51",
+    "52": "52",
+    "53": "53",
+    "54": "54",
+    "55": "55",
+    "56": "56",
+    "57": "57",
+    "58": "58",
+    "59": "59",
+    "60": "60",
+    "61": "61",
+    "62": "62",
+    "63": "63"
+  },
+  "service_threads": [
+    {
+      "tid": 257489,
+      "name": "qemu-system-x86",
+      "affinity": "63"
+    },
+    {
+      "tid": 257490,
+      "name": "call_rcu",
+      "affinity": "63"
+    },
+    {
+      "tid": 257560,
+      "name": "kvm-nx-lpage-re",
+      "affinity": "63"
+    },
+    {
+      "tid": 264081,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264099,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264251,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264252,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264253,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264254,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264255,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264256,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264260,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264261,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264262,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264263,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264264,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264265,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264268,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264271,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264272,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264273,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264274,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264275,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264277,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264279,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264281,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264282,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264283,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264286,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264288,
+      "name": "worker",
+      "affinity": "63"
+    },
+    {
+      "tid": 264289,
+      "name": "worker",
+      "affinity": "63"
+    }
+  ],
+  "governors": {
+    "0": "ondemand",
+    "1": "ondemand",
+    "2": "ondemand",
+    "3": "ondemand",
+    "4": "ondemand",
+    "5": "ondemand",
+    "6": "ondemand",
+    "7": "ondemand",
+    "8": "ondemand",
+    "9": "ondemand",
+    "10": "ondemand",
+    "11": "ondemand",
+    "12": "ondemand",
+    "13": "ondemand",
+    "14": "ondemand",
+    "15": "ondemand",
+    "16": "ondemand",
+    "17": "ondemand",
+    "18": "ondemand",
+    "19": "ondemand",
+    "20": "ondemand",
+    "21": "ondemand",
+    "22": "ondemand",
+    "23": "ondemand",
+    "24": "ondemand",
+    "25": "ondemand",
+    "26": "ondemand",
+    "27": "ondemand",
+    "28": "ondemand",
+    "29": "ondemand",
+    "30": "ondemand",
+    "31": "ondemand",
+    "32": "ondemand",
+    "33": "ondemand",
+    "34": "ondemand",
+    "35": "ondemand",
+    "36": "ondemand",
+    "37": "ondemand",
+    "38": "ondemand",
+    "39": "ondemand",
+    "40": "ondemand",
+    "41": "ondemand",
+    "42": "ondemand",
+    "43": "ondemand",
+    "44": "ondemand",
+    "45": "ondemand",
+    "46": "ondemand",
+    "47": "ondemand",
+    "48": "ondemand",
+    "49": "ondemand",
+    "50": "ondemand",
+    "51": "ondemand",
+    "52": "ondemand",
+    "53": "ondemand",
+    "54": "ondemand",
+    "55": "ondemand",
+    "56": "ondemand",
+    "57": "ondemand",
+    "58": "ondemand",
+    "59": "ondemand",
+    "60": "ondemand",
+    "61": "ondemand",
+    "62": "ondemand",
+    "63": "ondemand"
+  },
+  "model": "model name\t: Intel(R) Xeon(R) Gold 6438N"
+}

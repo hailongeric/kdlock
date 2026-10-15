@@ -1,0 +1,29 @@
+{
+  "all_drained": true,
+  "all_valid": true,
+  "binaries": 7,
+  "delegated_writers": 1553555,
+  "input_hashes": {
+    "environment.json": "f5f926d574ccca137237b8c0e098a35964d0a1bfc7f2d1af2ee25ebd454f5f1a",
+    "parity.json": "7324a48e522999c8ba530ff72c69c0b6ec070996997a572c145f9499bd368c2f",
+    "plan.json": "78e9d0d083964c4a829f34ae6782ac1a10ecd7937adb6af19eea1d5357bfb8ae",
+    "records.json": "faa134cc2e38b546f403cb6495eb74f7fbd085f7411d3a116c466c4cf5a11be9",
+    "summary.json": "d7422617fc9e5517ed95583b261a57be27cb0c3610b4b6281dfaf2081f3f0abc"
+  },
+  "jit_status_counts": {
+    "NATIVE": 252,
+    "NO_JIT": 63,
+    "PASS": 63
+  },
+  "parity_counts": {
+    "FAIL": 1,
+    "INCOMPLETE": 2,
+    "PASS": 39
+  },
+  "published_image_files": 378,
+  "sessions": 378,
+  "source_files": 249,
+  "warmup_and_measurement_revalidated": true,
+  "whole_and_peak_recomputed": true,
+  "workers": 9072
+}

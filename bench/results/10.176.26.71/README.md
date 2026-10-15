@@ -7,6 +7,15 @@ Current commands and accepted-provider status live in the
 [project guide](../../../docs/PROJECT_GUIDE.md) and
 [performance status](../../../docs/PERFORMANCE.md).
 
+## One-cacheline rwlock rerun
+
+The [2026-10-15 rwlock comparison](bench/rwlock/20261015-c01/README.md) contains
+378 correct, drained Native/TCLock/KD measurements at 1–8 workers and 12–60
+in steps of four, with 1% and 20% writes. KD meets both observed throughput
+criteria at 39 of 42 points; one misses TCLock's median and two have mixed
+JIT statuses. The report includes the complete grid, variation, plots and
+1,553,555 completed delegated writers, with NO_JIT groups kept separate.
+
 ## Sleeping rwsem and proc snapshots
 
 The [rwsem validation](tests/rwsem-snapshots-20261015/README.md) covers ordinary

@@ -19,6 +19,11 @@ remaining gaps. The [destination-host index](../results/10.176.26.71/README.md)
 and [original-host index](../results/380G10/README.md) retain the separate
 measurements, caller ABIs, JIT evidence and topology limits.
 
+The [2026-10-15 one-cacheline rerun](../results/10.176.26.71/bench/rwlock/20261015-c01/README.md)
+uses 1–8 workers in steps of one and 12–60 in steps of four, both standard write
+mixes and three rounds. Its 378 samples all pass correctness and drain checks;
+the report separates measured delegation from NO_JIT and mixed-status groups.
+
 ## Cases
 
 The [workload guide](../../docs/BENCHMARK_WORKLOADS.md#synthetic-readerwriter-mixes)

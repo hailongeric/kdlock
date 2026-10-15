@@ -12,6 +12,17 @@ This narrow result does not establish general Native parity. Implementation cont
 [the mutex guide](design/mutex_implementation.md); correctness receipts live in
 [validation](VALIDATION.md).
 
+## One-cacheline rwlock comparison
+
+The [2026-10-15 rerun](../bench/results/10.176.26.71/bench/rwlock/20261015-c01/README.md)
+covers 378 correct, drained Native/TCLock/KD samples at 1–8 and 12–60 workers,
+with 1% and 20% writes, on the regular 64-vCPU topology. KD meets both strict
+peak and median criteria at 39 of 42 points. Its two-worker 1% median is 1.86%
+below TCLock; two other points have mixed JIT statuses and remain unpooled.
+At 60 workers, KD/Native median throughput is 1.197× at 1% writes and 2.059×
+at 20% writes. The latter KD samples are NO_JIT. The report retains every
+round, observed spread and completed-writer evidence; full-grid parity is unmet.
+
 ## Proc snapshot comparison
 
 The [2026-10-15 report](../bench/results/10.176.26.71/bench/proc_snapshots/20261015/README.md)

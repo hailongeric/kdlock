@@ -1,0 +1,742 @@
+{
+  "criterion": "KD best warmed peak and median whole-run throughput >= both comparators",
+  "points": [
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.2683969624322704,
+          "median_whole": 1.2779137435850076
+        },
+        "tclock": {
+          "best_peak": 1.2027513193181925,
+          "median_whole": 1.407613774575455
+        }
+      },
+      "status": "PASS",
+      "threads": 1,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.2244279321101765,
+          "median_whole": 1.2187690713099795
+        },
+        "tclock": {
+          "best_peak": 1.0666397764954654,
+          "median_whole": 0.9814448525310421
+        }
+      },
+      "status": "FAIL",
+      "threads": 2,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.1332454156481464,
+          "median_whole": 1.250380080362582
+        },
+        "tclock": {
+          "best_peak": 1.277711765965255,
+          "median_whole": 1.353199630548455
+        }
+      },
+      "status": "PASS",
+      "threads": 3,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.103925855822433,
+          "median_whole": 1.140417124924926
+        },
+        "tclock": {
+          "best_peak": 1.2397098302361051,
+          "median_whole": 1.1918364439583367
+        }
+      },
+      "status": "PASS",
+      "threads": 4,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.0703851737429122,
+          "median_whole": 1.1221064253297064
+        },
+        "tclock": {
+          "best_peak": 1.3005961398402057,
+          "median_whole": 1.3301739215124415
+        }
+      },
+      "status": "PASS",
+      "threads": 5,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.1398741556716925,
+          "median_whole": 1.207003748853675
+        },
+        "tclock": {
+          "best_peak": 1.3376642585135063,
+          "median_whole": 1.4440567396690192
+        }
+      },
+      "status": "PASS",
+      "threads": 6,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.2219805511189408,
+          "median_whole": 1.1398882533597865
+        },
+        "tclock": {
+          "best_peak": 1.433834133323699,
+          "median_whole": 1.3778560827027964
+        }
+      },
+      "status": "PASS",
+      "threads": 7,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.1994624336338557,
+          "median_whole": 1.1846360358084354
+        },
+        "tclock": {
+          "best_peak": 1.3345319267768099,
+          "median_whole": 1.4500329808891679
+        }
+      },
+      "status": "PASS",
+      "threads": 8,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.2534689652906368,
+          "median_whole": 1.3181575328739836
+        },
+        "tclock": {
+          "best_peak": 1.404821021820544,
+          "median_whole": 1.3998551001221085
+        }
+      },
+      "status": "PASS",
+      "threads": 12,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "reason": "Need three validated rounds per backend in one execution-status group",
+      "status": "INCOMPLETE",
+      "threads": 16,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.2669757479356782,
+          "median_whole": 1.2181396425639464
+        },
+        "tclock": {
+          "best_peak": 1.2532915424090867,
+          "median_whole": 1.2029564903001508
+        }
+      },
+      "status": "PASS",
+      "threads": 20,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.1683652597088257,
+          "median_whole": 1.1770083990323428
+        },
+        "tclock": {
+          "best_peak": 1.138020964923122,
+          "median_whole": 1.1341745462052577
+        }
+      },
+      "status": "PASS",
+      "threads": 24,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.1804191442885636,
+          "median_whole": 1.2122490297789679
+        },
+        "tclock": {
+          "best_peak": 1.1395242173838436,
+          "median_whole": 1.1661845288714012
+        }
+      },
+      "status": "PASS",
+      "threads": 28,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.1926219305101822,
+          "median_whole": 1.2172772115674668
+        },
+        "tclock": {
+          "best_peak": 1.1499489362751019,
+          "median_whole": 1.1828755696919162
+        }
+      },
+      "status": "PASS",
+      "threads": 32,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.2046741402415624,
+          "median_whole": 1.176086237221661
+        },
+        "tclock": {
+          "best_peak": 1.1414029840296331,
+          "median_whole": 1.1109200649259823
+        }
+      },
+      "status": "PASS",
+      "threads": 36,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.0949696420072534,
+          "median_whole": 1.2053200991883568
+        },
+        "tclock": {
+          "best_peak": 1.1513097423601861,
+          "median_whole": 1.1357960643584708
+        }
+      },
+      "status": "PASS",
+      "threads": 40,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.2195699901838275,
+          "median_whole": 1.2306780779716409
+        },
+        "tclock": {
+          "best_peak": 1.1694053852599073,
+          "median_whole": 1.1898226706518436
+        }
+      },
+      "status": "PASS",
+      "threads": 44,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.19681343534004,
+          "median_whole": 1.2127276990117541
+        },
+        "tclock": {
+          "best_peak": 1.1161578725327825,
+          "median_whole": 1.100181084261103
+        }
+      },
+      "status": "PASS",
+      "threads": 48,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.3489594704564583,
+          "median_whole": 1.1840513221799254
+        },
+        "tclock": {
+          "best_peak": 1.291463441022963,
+          "median_whole": 1.139860276609999
+        }
+      },
+      "status": "PASS",
+      "threads": 52,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.1980262050564843,
+          "median_whole": 1.2460212326405122
+        },
+        "tclock": {
+          "best_peak": 1.0979920489952613,
+          "median_whole": 1.0716118199430975
+        }
+      },
+      "status": "PASS",
+      "threads": 56,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.1740905144918934,
+          "median_whole": 1.197339169353996
+        },
+        "tclock": {
+          "best_peak": 1.0652582265044197,
+          "median_whole": 1.055563081038645
+        }
+      },
+      "status": "PASS",
+      "threads": 60,
+      "workload": "cacheline",
+      "write_percent": 1
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.111390235653545,
+          "median_whole": 1.1238034483742187
+        },
+        "tclock": {
+          "best_peak": 1.1072084156985067,
+          "median_whole": 1.1087570839871934
+        }
+      },
+      "status": "PASS",
+      "threads": 1,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.155744992604743,
+          "median_whole": 1.1545271838890454
+        },
+        "tclock": {
+          "best_peak": 1.2413849707654796,
+          "median_whole": 1.2682469413787918
+        }
+      },
+      "status": "PASS",
+      "threads": 2,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 2.023415170478269,
+          "median_whole": 2.1187214630916955
+        },
+        "tclock": {
+          "best_peak": 2.001045595032353,
+          "median_whole": 2.065511582301622
+        }
+      },
+      "status": "PASS",
+      "threads": 3,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.7792295103773657,
+          "median_whole": 1.9758171030193779
+        },
+        "tclock": {
+          "best_peak": 1.7394695948448313,
+          "median_whole": 1.9329442324736523
+        }
+      },
+      "status": "PASS",
+      "threads": 4,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.9552030428230045,
+          "median_whole": 2.098025139952597
+        },
+        "tclock": {
+          "best_peak": 2.0004721215045453,
+          "median_whole": 2.1487961888378195
+        }
+      },
+      "status": "PASS",
+      "threads": 5,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.9317257141104616,
+          "median_whole": 1.9617391052715367
+        },
+        "tclock": {
+          "best_peak": 2.0705039384618655,
+          "median_whole": 2.102054522250547
+        }
+      },
+      "status": "PASS",
+      "threads": 6,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.971485044918036,
+          "median_whole": 2.0230370255800025
+        },
+        "tclock": {
+          "best_peak": 2.2399462969445803,
+          "median_whole": 2.3080358464083344
+        }
+      },
+      "status": "PASS",
+      "threads": 7,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 1.9408622365031356,
+          "median_whole": 1.9711525750363792
+        },
+        "tclock": {
+          "best_peak": 2.2666335690074515,
+          "median_whole": 2.3328825657950456
+        }
+      },
+      "status": "PASS",
+      "threads": 8,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.8443751403326696,
+          "median_whole": 1.8058795056367423
+        },
+        "tclock": {
+          "best_peak": 2.270173497797482,
+          "median_whole": 2.247185586215159
+        }
+      },
+      "status": "PASS",
+      "threads": 12,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.909275684145758,
+          "median_whole": 1.8708883320859506
+        },
+        "tclock": {
+          "best_peak": 2.2308184498388393,
+          "median_whole": 2.18288984954895
+        }
+      },
+      "status": "PASS",
+      "threads": 16,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.9352788924578503,
+          "median_whole": 1.8651189876169045
+        },
+        "tclock": {
+          "best_peak": 2.2396129045332804,
+          "median_whole": 2.169145800533002
+        }
+      },
+      "status": "PASS",
+      "threads": 20,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.942151788956027,
+          "median_whole": 1.9132994139505382
+        },
+        "tclock": {
+          "best_peak": 2.1834228865257987,
+          "median_whole": 2.1823130713431538
+        }
+      },
+      "status": "PASS",
+      "threads": 24,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.9382050858067152,
+          "median_whole": 1.9397841990270184
+        },
+        "tclock": {
+          "best_peak": 2.201490134654573,
+          "median_whole": 2.2716088843064033
+        }
+      },
+      "status": "PASS",
+      "threads": 28,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.7825321686915316,
+          "median_whole": 1.9115092128513338
+        },
+        "tclock": {
+          "best_peak": 2.342472798945633,
+          "median_whole": 2.2936039919835753
+        }
+      },
+      "status": "PASS",
+      "threads": 32,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.7134821308034327,
+          "median_whole": 1.988270885794993
+        },
+        "tclock": {
+          "best_peak": 1.814859128325244,
+          "median_whole": 1.8104050718931972
+        }
+      },
+      "status": "PASS",
+      "threads": 36,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 2.116000771319246,
+          "median_whole": 2.1221324718649237
+        },
+        "tclock": {
+          "best_peak": 1.8367866754254136,
+          "median_whole": 1.8126010546652684
+        }
+      },
+      "status": "PASS",
+      "threads": 40,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "PASS",
+      "ratios": {
+        "native": {
+          "best_peak": 1.9622472195626977,
+          "median_whole": 1.9724800784953493
+        },
+        "tclock": {
+          "best_peak": 1.772771408022717,
+          "median_whole": 1.787830204947706
+        }
+      },
+      "status": "PASS",
+      "threads": 44,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "reason": "Need three validated rounds per backend in one execution-status group",
+      "status": "INCOMPLETE",
+      "threads": 48,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 2.0222051324830264,
+          "median_whole": 2.108644378888176
+        },
+        "tclock": {
+          "best_peak": 1.7512611003521843,
+          "median_whole": 1.7857668968553058
+        }
+      },
+      "status": "PASS",
+      "threads": 52,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 2.1405842158430217,
+          "median_whole": 2.1161823510645523
+        },
+        "tclock": {
+          "best_peak": 1.7738020068849791,
+          "median_whole": 1.754437556702193
+        }
+      },
+      "status": "PASS",
+      "threads": 56,
+      "workload": "cacheline",
+      "write_percent": 20
+    },
+    {
+      "cachelines": 1,
+      "kd_jit_status": "NO_JIT",
+      "ratios": {
+        "native": {
+          "best_peak": 2.027613625914792,
+          "median_whole": 2.0592361967162827
+        },
+        "tclock": {
+          "best_peak": 1.7483241308566657,
+          "median_whole": 1.7472681085948183
+        }
+      },
+      "status": "PASS",
+      "threads": 60,
+      "workload": "cacheline",
+      "write_percent": 20
+    }
+  ],
+  "status": "FAIL"
+}
