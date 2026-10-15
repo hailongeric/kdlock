@@ -308,7 +308,10 @@ static void kd_owned_mutex_wait_result(struct kd_owned_mutex_node *node)
 		preempt_enable();
 		schedule_timeout(1);
 		preempt_disable();
-		left = owned_mutex_spin_limit;
+		/* Ordinary timeout wakes retain the existing sleeping path. Only a
+		 * new preparation request earns another bounded acknowledgment poll. */
+		left = smp_load_acquire(&node->readiness) == KD_ORIGIN_REQUESTED &&
+		       !need_resched() ? owned_mutex_spin_limit : 0;
 	}
 	if (registered)
 		finish_rcuwait(wait);

@@ -378,7 +378,16 @@ int main(void) {
 
 def production(source):
     value = definition(source, 'struct kd_owned_mutex_batch {')+';\n'
-    value += (ROOT/'kernel_module/owned_mutex/selection.inc').read_text()
+    value += '\n'.join(line for line in source.splitlines()
+                       if line.startswith(('#define KD_OWNED_MUTEX_WINDOW ',
+                                           '#define KD_OWNED_MUTEX_MAX_BYPASSES '))) + '\n'
+    for marker in ('kd_owned_mutex_candidate(struct kd_owned_mutex_node *node, struct kd_exe_info **exe)',
+                   'static struct kd_owned_mutex_node *kd_owned_mutex_select(struct kd_owned_mutex_batch *batch)',
+                   'static void kd_owned_mutex_note_dispatch(struct kd_owned_mutex_batch *batch,',
+                   'static void kd_owned_mutex_prepare_successor(struct kd_owned_mutex_batch *batch,'):
+        if marker.startswith('kd_owned_mutex_candidate'):
+            value += 'static const struct kd_jit_image *\n'
+        value += definition(source, marker)
     for marker in ('static void kd_owned_mutex_retire_current(struct kd_owned_mutex_batch *batch)',
                    'static void kd_owned_mutex_rejoin(struct kd_owned_mutex_batch *batch)',
                    'static int kd_owned_mutex_release_outer(struct kd_exec_frame *frame,'):
@@ -457,6 +466,10 @@ static bool rcuwait_wake_up(struct rcuwait *wait) {
 NOTIFICATION_CASES = r'''
 static void grant_before_schedule(void) { nodes[0].outcome=KD_OWNED_MUTEX_GRANTED; }
 static void full_after_schedule(void) { nodes[0].outcome=KD_OWNED_MUTEX_FULL; }
+static int timeouts;
+static void delayed_full(void) {
+ if (++timeouts == 3) nodes[0].outcome=KD_OWNED_MUTEX_FULL;
+}
 int main(void) {
  struct rcuwait *wake[16]; unsigned int count=0;
  for(u32 state=KD_OWNED_MUTEX_QUEUED;state<=KD_OWNED_MUTEX_FULL;state++) {
@@ -492,6 +505,10 @@ int main(void) {
  nodes[0].outcome=KD_OWNED_MUTEX_COMPLETE;
  kd_owned_mutex_wait_result(&nodes[0]);
  assert(prepares==2 && finishes==2 && sleeps==1);
+ nodes[0].outcome=KD_OWNED_MUTEX_QUEUED;nodes[0].readiness=KD_ORIGIN_PARKABLE;
+ sleep_action=delayed_full;
+ kd_owned_mutex_wait_result(&nodes[0]);
+ assert(timeouts==3 && relaxes==4); /* no fresh budget on ordinary timeout */
  puts("PASS production owned single outcome: grant/COMPLETE/FULL acquire poll, notification reuse, deferred stable wake identity");
 }
 '''
@@ -514,11 +531,18 @@ def main():
     parser.add_argument('--mutations', action='store_true')
     args = parser.parse_args()
     source = (ROOT/'kernel_module/owned_mutex/delegation.c').read_text()
+    source = source.replace('#include "selection.inc"', (ROOT/'kernel_module/owned_mutex/selection.inc').read_text())
     mutations = {
+        'eight-request-window': ('#define KD_OWNED_MUTEX_WINDOW 8U', '#define KD_OWNED_MUTEX_WINDOW 9U'),
+        'four-bypass-limit': ('#define KD_OWNED_MUTEX_MAX_BYPASSES 4U', '#define KD_OWNED_MUTEX_MAX_BYPASSES 5U'),
         'retire-before-notify': ('\t\t\tkd_owned_mutex_retire_current(batch);\n'
                                 '\t\t\tthis_cpu_inc(kd_owned_mutex_bodies);',
                                 '\t\t\tthis_cpu_inc(kd_owned_mutex_bodies);'),
-        'honor-self-boundary': ('waiter->kind != KD_OWNED_MUTEX_DELEGATE ||', 'false ||'),
+        'honor-self-boundary': ('inspected++ == (owned_mutex_numa ? KD_OWNED_MUTEX_WINDOW : 1U) ||\n\t\t    waiter->kind != KD_OWNED_MUTEX_DELEGATE',
+                                'inspected++ == (owned_mutex_numa ? KD_OWNED_MUTEX_WINDOW : 1U) || false'),
+        'honor-bypass-barrier': ('if (node->bypasses >= KD_OWNED_MUTEX_MAX_BYPASSES)\n\t\t\tbreak;\n\t}\n\treturn best;',
+                               'if (false) break;\n\t}\n\treturn best;'),
+        'count-bypasses': ('node->bypasses++;', 'node->bypasses += 0;'),
         'honor-handoff': ('(atomic_long_read(&batch->lock->owner) & KD_OWNED_MUTEX_FLAG_HANDOFF)', 'false'),
         'honor-cap': ('count >= KDLOCK_SPIN_BATCH || need_resched() ||',
                       'count >= 100 || need_resched() ||'),
@@ -557,6 +581,8 @@ def main():
             '\tlock->owner &= ~KD_OWNED_MUTEX_FLAG_DELEGATION;'),
     }
     notification_mutations = {
+        'timeout-renews-budget': ('left = smp_load_acquire(&node->readiness) == KD_ORIGIN_REQUESTED &&\n\t\t       !need_resched() ? owned_mutex_spin_limit : 0;',
+                                  'left = owned_mutex_spin_limit;'),
         'notification-swaps-full-complete': (
             'complete ? KD_OWNED_MUTEX_COMPLETE :\n\t\t\t  KD_OWNED_MUTEX_FULL',
             'complete ? KD_OWNED_MUTEX_FULL :\n\t\t\t  KD_OWNED_MUTEX_COMPLETE'),
