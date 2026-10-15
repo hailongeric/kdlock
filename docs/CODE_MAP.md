@@ -13,6 +13,7 @@ files or benchmark archives.
 | [kd_spin_runtime.c](../kernel_module/kd_spin_runtime.c) | One compilation unit for spin, mutex, dispatcher and frame helpers |
 | [kd_spinlock.c](../kernel_module/kd_spinlock.c) → [spin](../kernel_module/spin/) | Direct entry, pending/MCS, batching, prefetch, continuation and restore |
 | [kd_rwlock.h](../include/kd_rwlock.h) → `spin/direct.inc`, `combiner.inc`, `execute.inc`, `restore.inc` | Local readers, native fast writers and ABI3 writer admission, cancellation and retry over the spin engine |
+| [kd_rwsem.h](../include/kd_rwsem.h) → [kd_rwsem.c](../kernel_module/kd_rwsem.c), `owned_mutex/` | Sleeping reader admission/drain, ordinary writers/trylock/downgrade, and outer writers through the owned-mutex ABI |
 | [kd_spin_entry.c](../kernel_module/kd_spin_entry.c) → `spin/ticket_*.inc` | Exact acquisition tickets, native borrowing and final retirement |
 | [kd_mutex.c](../kernel_module/kd_mutex.c) → [mutex](../kernel_module/mutex/) | Legacy original mutex owner, private scheduling gate, blocking result/gate waits and waiter restore |
 | [owned core](../kernel_module/owned_mutex/core.c), [OSQ](../kernel_module/owned_mutex/osq.c) | KD-owned 32-byte mutex, Linux-derived SELF acquisition, guarded release and typed FIFO |

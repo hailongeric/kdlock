@@ -135,6 +135,30 @@ diff --git a/kernel_module/execution/wrapper_entry.inc b/kernel_module/execution
  		   entry_ip, outer_lock_addr, witness);
  }
  
+@@ -278,8 +279,10 @@
+ 	}
+ 	/* The batch retains this exact bound frame until retirement below. */
+-	if (call->args[1] == 1)
++	if (call->args[1] == 1) {
+ 		kd_exe_note_body(frame->entry_ip, call->lock, call->args[1]);
++		kd_bench_note_completion(call->lock);
++	}
+ 	return true;
+ }
+ 
+ /* Mutex batches retain a full ownership ledger and a borrowed register packet.
+@@ -348,8 +351,10 @@
+ 		kd_jit_timing_end(KD_JIT_TIME_DISPATCH, call->dispatch_start);
+ 	}
+-	if (call->args[1] == 1)
++	if (call->args[1] == 1) {
+ 		kd_exe_note_body(frame->entry_ip, call->lock, call->args[1]);
++		kd_bench_note_completion(call->lock);
++	}
+ 	return true;
+ }
+ 
+ /* One logical invocation may cross several control/hostcall wrapper returns.
 diff --git a/kernel_module/kd_exec.c b/kernel_module/kd_exec.c
 --- a/kernel_module/kd_exec.c
 +++ b/kernel_module/kd_exec.c

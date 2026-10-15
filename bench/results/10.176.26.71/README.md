@@ -7,6 +7,14 @@ Current commands and accepted-provider status live in the
 [project guide](../../../docs/PROJECT_GUIDE.md) and
 [performance status](../../../docs/PERFORMANCE.md).
 
+## Sleeping rwsem and proc snapshots
+
+The [rwsem validation](tests/rwsem-snapshots-20261015/README.md) covers ordinary
+sleeping APIs and actual ABI2/ABI4 delegated writers. The [snapshot comparison](bench/proc_snapshots/20261015/README.md)
+separates complete argument-boundary delegation from the exact task-name helper
+refusal and its KD native timing control. The real mmap integration remains
+outside this work.
+
 ## Current owned-protocol optimization
 
 The [fresh c01 1–64-worker comparison](bench/mutex_owned/20261014-full-grid/README.md)

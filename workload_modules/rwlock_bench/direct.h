@@ -1,6 +1,11 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #ifndef KD_RW_BENCH_DIRECT_H
 #define KD_RW_BENCH_DIRECT_H
+#if defined(RB_SPIN)
+#include "direct_spin.h"
+#elif defined(RB_RWSEM)
+#include "direct_rwsem.h"
+#else
 #ifdef RB_KDLOCK
 #include "kd_rwlock.h"
 static kd_rwlock_t rb_lock __aligned(64) = KD_RWLOCK_INITIALIZER;
@@ -54,4 +59,5 @@ static void rb_lock_snapshot(struct rw_bench_snapshot *s)
 	s->gate = atomic_read(&rb_lock.raw_lock.wait_lock.val);
 #endif
 }
+#endif /* ordinary rwlock */
 #endif

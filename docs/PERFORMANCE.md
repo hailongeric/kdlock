@@ -12,6 +12,16 @@ This narrow result does not establish general Native parity. Implementation cont
 [the mutex guide](design/mutex_implementation.md); correctness receipts live in
 [validation](VALIDATION.md).
 
+## Proc snapshot comparison
+
+The [2026-10-15 report](../bench/results/10.176.26.71/bench/proc_snapshots/20261015/README.md)
+compares exclusive-spin argument-boundary and task-name copies on the regular
+64-vCPU guest. Argument-boundary KD beats both comparators at eight and 16
+workers with complete delegation, but remains native and slower at 32; the
+60-worker rounds have mixed execution status. Exact `strscpy_pad()` delegation
+is refused by spin ABI1's register-store check, so its KD timing is explicitly
+a native control. This does not establish end-to-end `ps` or mmap performance.
+
 ## Fresh c01 1–64-worker comparison
 
 The [full-grid report](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md)

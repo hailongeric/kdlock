@@ -8,7 +8,8 @@
 #include <linux/spinlock.h>
 #include "kd_spin_direct.h"
 
-/* Ordinary task-context reader/writer spin lock, inspired by TCLock's
+/* For sleeping reader/writer critical sections use kd_rwsem.h instead.
+ * Ordinary task-context reader/writer spin lock, inspired by TCLock's
  * komb_rwlock. Readers execute concurrently on their own CPUs. The embedded
  * KD gate queues writers and slow readers; writer bodies use the existing
  * spin clobber-v1 JIT, source leases, packets and completion/ACK protocol.

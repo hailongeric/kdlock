@@ -15,6 +15,7 @@ import boot_policy
 from oracle import jit_evidence, post_work_checksum, validate, writes_for
 import run
 import client
+import session
 from protocol import RUN_FORMAT
 
 
@@ -38,6 +39,86 @@ def fixture(workload='cacheline', percent=50):
 
 
 class BenchTests(unittest.TestCase):
+    def test_cold_normal_image_does_not_finish_helper_learning(self):
+        # Reproduce a NORMAL CALL-miss image that has never executed. Only a
+        # later complete returned body can make preparation successful.
+        for complete_second_wave in (False, True):
+            with self.subTest(complete_second_wave=complete_second_wave), tempfile.TemporaryDirectory() as tmp:
+                params = Path(tmp)
+                for name in ('bench_jit_bodies', 'bench_jit_completions'):
+                    (params / name).write_text('0')
+                candidate = object.__new__(session.RWSession)
+                candidate.record = dict(helper_waves=2)
+                candidate.daemon = SimpleNamespace(pid=123)
+                candidate.pause_daemon = lambda: None
+                candidate.save = lambda: None
+                phases = []
+
+                def phase(label, spec):
+                    phases.append(label)
+                    if len(phases) == 2 and complete_second_wave:
+                        for name in ('bench_jit_bodies', 'bench_jit_completions'):
+                            (params / name).write_text('1')
+                    return dict(reads=100)
+
+                candidate.phase = phase
+                with patch.object(session, 'KD_PARAMS', params), \
+                     patch.object(session, 'status', return_value=dict(frames=0, writers=1)), \
+                     patch.object(session, 'registry', return_value=[dict(status=0)]), \
+                     patch.object(session.os, 'kill'):
+                    if complete_second_wave:
+                        candidate.learn_helpers()
+                    else:
+                        with self.assertRaises(run.Failure):
+                            candidate.learn_helpers()
+                self.assertEqual(phases, ['learning-0', 'learning-1'])
+
+    def test_snapshot_plan_and_evidence(self):
+        args = run.parser().parse_args(['--lock-kind', 'spin', '--workloads', 'taskname', 'argbounds',
+            '--write-percent', '0', '--threads', '1', '8', '--collector-cpu', '63', '--require-jit'])
+        plan = run.make_plan(args)
+        self.assertEqual(len(plan), 36)
+        self.assertTrue(all(s['cachelines'] == 0 and s['entry_abi'] == 1 for s in plan))
+        self.assertTrue(all(s['require_jit'] == (s['arm'] == 'kdlock' and s['threads'] > 1) for s in plan))
+        row = jit_evidence(2, 8, 10, backend='kdlock', delegate=True, operation='snapshot')
+        self.assertEqual(row['jit_snapshot_share'], .6)
+        self.assertNotIn('jit_writer_share', row)
+        partial = jit_evidence(0, 10, 20, backend='kdlock', delegate=True, operation='snapshot', completed=0)
+        self.assertEqual(partial['jit_status'], 'PARTIAL_JIT')
+        with self.assertRaises(ValueError):
+            jit_evidence(0, 10, 20, backend='kdlock', delegate=True, completed=11)
+        args.lock_kind = 'rwlock'
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
+    def test_snapshot_oracle_and_mutations(self):
+        for workload, number in (('taskname', 2), ('argbounds', 3)):
+            spec, m = fixture('cacheline', 20)
+            spec.update(workload=workload, cachelines=0, lock_kind='spin')
+            for snap in (m['before'], m['after']):
+                snap.update(workload=number, lines=0)
+            m['after']['values'] = [40] + [0] * 15
+            validate(m, spec)
+            for change in (lambda b: b['workers'][0].__setitem__('read_errors', 1),
+                           lambda b: b['after']['values'].__setitem__(0, 39),
+                           lambda b: b['after'].__setitem__('gate', 1)):
+                bad = copy.deepcopy(m)
+                change(bad)
+                with self.assertRaises(ValueError):
+                    validate(bad, spec)
+
+    def test_rwsem_plan_requires_sleeping_backend(self):
+        args = run.parser().parse_args(['--lock-kind', 'rwsem', '--workloads', 'cacheline',
+            '--backends', 'native', 'kdlock', '--threads', '8', '--write-percent', '20'])
+        plan = run.make_plan(args)
+        self.assertTrue(all(s['registry_lock_kind'] == 3 and s['entry_abi'] == 4 for s in plan))
+        self.assertTrue(all(s['lock_kind'] == 'rwsem' for s in plan))
+        args.rwsem_cabi = 0
+        self.assertTrue(all(s['entry_abi'] == 2 for s in run.make_plan(args)))
+        args.backends.append('tclock')
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
     def test_default_rcuht_matrix(self):
         plan = run.make_plan(run.parser().parse_args([]))
         self.assertEqual(len(plan), 270)

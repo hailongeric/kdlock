@@ -392,8 +392,14 @@ admission and excluded from accepted KD performance comparisons.
 
 ## Process inspection and mmap candidates
 
-**Investigation status, 2026-10-15:** these are proposed workloads, not new
-`bench/real_api/run.py` kinds or measured KD results. The audit inspected
+**Investigation status, 2026-10-15:** `taskname` and `argbounds` are implemented
+in the [comparison runner](../bench/rwlock_compare/README.md) with their original
+exclusive spin semantics. The separate [sleeping rwsem](design/rwsem_implementation.md)
+adds ordinary read/write acquisition and writer delegation; mmap integration
+remains separate. These are extracted workloads, not new `bench/real_api/run.py`
+kinds or changes to the guest kernel. The [measured snapshot report](../bench/results/10.176.26.71/bench/proc_snapshots/20261015/README.md)
+establishes complete argument-boundary delegation and records the exact task-name
+helper refusal with the current spin ABI1. The audit inspected
 `/root/linux-6.1.159-kdclobber2` on the benchmark guest and traced three ordinary
 `ps` invocations. The running kernel and source-tree `vmlinux` both had Build ID
 `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`, matching the recorded
@@ -495,19 +501,20 @@ reverse mappings have additional locks.
 
 ### What KD can delegate
 
-The current provider has no rwsem backend. Its
-[reader/writer lock](design/rwlock_implementation.md) disables preemption,
-requires non-sleeping bodies and delegates **writers only**. Its reader path
-runs locally. The UTS experiment's bounded copy under a private lock does not
-establish that a real `mmap_lock` can be replaced in the same way.
+The provider now has an [ordinary sleeping rwsem](design/rwsem_implementation.md)
+alongside its [spinning rwlock](design/rwlock_implementation.md). Both delegate
+writers only; readers run locally. The sleeping API and the UTS experiment's
+bounded copy under a private lock do not establish that a real `mmap_lock` can
+be replaced in the same way.
 
 The decisive constraints are:
 
 - **Lock protocol and callers.** A private KD lock cannot exclude fault, exec,
   exit or other native users of the real rwsem. KD mutexes are exclusive, with
-  different storage and ownership rules; neither mutex backend supplies mmap's
-  concurrent readers, killable waits, trylock, downgrade and release/reacquire
-  semantics. A new backend or an audited cooperating adapter would be required.
+  different storage and ownership rules. The new rwsem adds concurrent readers,
+  ordinary waits, trylock and downgrade, but does not supply mmap's killable
+  acquisition or an audited integration with its existing native callers.
+  All callers and lock-mode transitions would need a cooperating adapter.
 - **Execution context.** Allocation, page faults, scheduling, nested MM locks,
   callbacks and TLB operations cannot be treated as a bounded spinning payload.
   KD's support for a logical `current` load does not switch the hardware address
@@ -521,11 +528,12 @@ The decisive constraints are:
   scheduler and RCU operations in
   [context_symbols.py](../disassem/context_symbols.py). RCU traversal and task
   exit/reclamation cannot simply be moved to a different executor.
-- **Whole-body admission.** The small plain-spin snapshots below are candidates,
-  not established JIT successes. Pointer lifetime, helper translation and alias
-  checks still apply. An ordinary untranslated call can return execution to the
-  original caller; that native continuation is not evidence that the full body
-  was delegated. Record actual returned-body JIT counts and refusals.
+- **Whole-body admission.** The argument-boundary snapshot has now returned
+  complete delegated bodies. The exact task-name helper is refused with spin
+  ABI1: `strscpy_pad()` pushes uncaptured R13 in its prologue, which fails the
+  minimal-entry store check. Its initial partial JIT execution followed by native
+  continuation is not a complete delegated snapshot. Pointer lifetime, helper
+  translation and alias checks still apply; the experiment does not bypass them.
 
 Consequently, neither full mmap operations nor full `ps` statistics collection
 are supported KD delegation workloads today. This is a limit of the current
@@ -533,17 +541,18 @@ implementation and integration contract, not a claim that such delegation is
 impossible with a new design. Also, combining a short snapshot does not remove
 the surrounding PID enumeration, thread traversal or userspace formatting cost.
 
-### Proposed benchmark additions
+### Snapshot workloads and remaining candidates
 
 Start with native measurements to identify which shared object is expensive,
 then use an extracted body only where a controlled lock comparison is meaningful.
-The labels below are proposals and are not accepted runner options.
+`taskname` and `argbounds` are accepted by the comparison runner with
+`--lock-kind spin`; the other labels below remain proposals.
 
-| Proposed case | Setup and measured operation | KD status |
+| Case | Setup and measured operation | KD status |
 | --- | --- | --- |
 | `proc-stat` | Multiple observers repeatedly read one live group's `stat`; vary threads per group and compare with observers assigned distinct groups. Add a separately labelled thread-exit/child-reaping variant to study retries. | Useful native scaling workload. Preserve the seqlock/RCU first attempt; no current full-body delegation adapter. |
-| `proc-comm-snapshot` | Extract the bounded, NUL-terminated/zero-padded task-name copy under an ordinary exclusive spinlock; use module-owned records and stable per-worker kernel output buffers. Vary shared versus distinct records and separately add controlled name updates. | Plausible KD spin candidate after compiled-body admission. It models the `alloc_lock` payload, not the whole procfs syscall. Trace/perf side effects of real name setters remain outside this extracted experiment. |
-| `proc-arg-bounds` | Extract the four-word `arg_lock` snapshot into a controlled module-owned record. Readers copy one complete tuple; optional writers alternate valid tuples under the same selected lock. | Plausible KD spin candidate, including delegation of reads because the original lock is exclusive. It does not benchmark fetching `cmdline` pages or the mmap rwsem. |
+| `taskname` | One module-owned 16-byte name, copied with `strscpy_pad()` into a 64-byte local result. Optional mutations alternate 3- and 15-character names. Every result is checked after unlock, including all padding. | Models the `alloc_lock` payload. Real name-setter trace/perf side effects and procfs lookup are outside the experiment. Check completion evidence as well as entry witnesses. |
+| `argbounds` | Four `arg_lock` words in one module-owned record. Readers copy a tuple; optional writers update all related boundaries under the same selected lock. Every result and the final write count are checked. | Reads may delegate because the original lock is exclusive. This does not fetch `cmdline` pages or use the mmap rwsem. |
 | `proc-cmdline-mmap` | Observers read a target's `cmdline` while its threads map/unmap disjoint scratch regions in the same address space. Vary observer count, mapping-writer count, argument bytes and VMA count. | Useful native mmap contention workload; current KD backend unsupported. Keep a stable-arguments oracle and a no-writer control. |
 | `proc-maps` / `proc-smaps` | Read maps or memory-accounting records while a target changes separate mappings. Vary actual VMA count, resident bytes and target count independently. | Native workload; current KD backend unsupported. Report maps and smaps separately. |
 | `task-lifecycle` | Controlled fork/thread creation and exit/reaping, with and without concurrent procfs observers. | Native control for global `tasklist_lock` and accounting writers. Current KD rwlock has no required IRQ variant; ordinary read acquisitions would not delegate anyway. |
@@ -590,8 +599,9 @@ tasks, and do not interpret arbitrary container oversubscription as validated KD
 operation. Native lifecycle tests must tolerate documented procfs exit races;
 stable snapshot tests should validate exact tuples/names. Matched extracted-body
 tests need identical payloads, successful JIT execution and complete drain.
-No large-container run, new kernel hook, module/JIT experiment or performance
-comparison was performed for this audit.
+The original source audit did not run a large-container workload or modify any
+kernel hook. The extracted snapshot experiments have their own source, module,
+placement and delegation receipts; they do not establish end-to-end `ps` gains.
 
 ## Source references
 

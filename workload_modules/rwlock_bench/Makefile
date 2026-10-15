@@ -3,6 +3,21 @@ obj-m := rwlock_bench.o
 rwlock_bench-objs := module.o
 UBSAN_SANITIZE := n
 ccflags-y += -DRB_LINES=$(RB_LINES) -I$(RB_SHARED)
+ifeq ($(RB_LOCK_KIND),spin)
+ccflags-y += -DRB_SPIN
+else ifeq ($(RB_LOCK_KIND),rwsem)
+RB_RWSEM_CABI ?= 1
+ccflags-y += -DRB_RWSEM -DKD_OWNED_MUTEX_CABI=$(RB_RWSEM_CABI)
+ifeq ($(RB_BACKEND),tclock)
+$(error TCLock backend has no sleeping rwsem port)
+endif
+endif
+ifneq ($(filter taskname argbounds,$(RB_WORKLOAD)),)
+ccflags-y += -DRB_SNAPSHOT_PAYLOAD
+ifeq ($(RB_WORKLOAD),taskname)
+ccflags-y += -DRB_TASKNAME
+endif
+endif
 ifeq ($(RB_WORKLOAD),rcuht)
 ccflags-y += -DRB_HASH
 endif

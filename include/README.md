@@ -13,6 +13,7 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | Owned late capture | [kd_owned_mutex_cabi.h](kd_owned_mutex_cabi.h) | ABI4 eight-word record and fixed nine-byte caller stub; allocated after failed local acquisition |
 | Legacy mutex | [kd_mutex_legacy.h](kd_mutex_legacy.h), [kd_mutex_direct.h](kd_mutex_direct.h) | Original Linux mutex, blocking waits, ABI2 and opaque outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
+| Sleeping read-write semaphore | [kd_rwsem.h](kd_rwsem.h) | Owned-mutex admission gate, concurrent sleeping readers, ordinary writers/trylock/downgrade and explicit outer writer delegation |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
 | Packet and wrapper | [kd_regs.h](kd_regs.h), [asm_head.h](asm_head.h), [wrapper.S](wrapper.S) | Layout2, virtual register backing and two-word input |

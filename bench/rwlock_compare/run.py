@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare native, TCLock and KD rwlocks in the verified recovery guest."""
+"""Compare rwlocks, sleeping rwsems and proc snapshots in the recovery guest."""
 import argparse
 import importlib.metadata
 import itertools
@@ -33,7 +33,12 @@ def parser():
     p.add_argument('--output', type=Path)
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
-    p.add_argument('--workloads', nargs='+', choices=('cacheline', 'rcuht'), default=['rcuht'])
+    p.add_argument('--workloads', nargs='+', choices=('cacheline', 'rcuht', 'taskname', 'argbounds'), default=['rcuht'])
+    p.add_argument('--lock-kind', choices=('rwlock', 'spin', 'rwsem'), default='rwlock')
+    p.add_argument('--rwsem-cabi', type=int, choices=(0, 1), default=1,
+                   help='sleeping rwsem caller: 1 selects ABI4, 0 tests the default ABI2 header path')
+    p.add_argument('--helper-waves', type=int, default=8,
+                   help='maximum drain-separated task-name helper-learning rounds; 0 diagnoses the initial image')
     p.add_argument('--cachelines', nargs='+', type=int, choices=(1, 2, 4, 8, 16), default=[1])
     p.add_argument('--write-percent', nargs='+', type=int, default=[1, 20])
     p.add_argument('--threads', nargs='+', type=int, default=FULL_THREADS)
@@ -48,7 +53,8 @@ def parser():
     p.add_argument('--iterations', type=int, default=50000, help='per worker for fixed/functional runs')
     p.add_argument('--spin-entry-ratio-limit', type=int, default=2)
     p.add_argument('--delegate', choices=('on', 'off'), default='on', help='KD native control when off')
-    p.add_argument('--require-jit', action='store_true', help='require JIT for every multithread KD writer case')
+    p.add_argument('--require-jit', action='store_true',
+                   help='require complete delegation in each eligible multithread KD case')
     p.add_argument('--require-parity', action='store_true',
                    help='fail after the full comparison if KD is slower on peak or median whole-run throughput')
     p.add_argument('--functional', action='store_true', help='one fixed-iteration round, no performance scores')
@@ -58,6 +64,16 @@ def parser():
 
 
 def make_plan(args):
+    require(0 <= args.helper_waves <= 16, 'helper waves must be 0..16')
+    snapshots = {'taskname', 'argbounds'}
+    require((args.lock_kind == 'spin') == set(args.workloads).issubset(snapshots),
+            'snapshot workloads require --lock-kind spin; other workloads use rwlock/rwsem')
+    require(not (set(args.workloads) & snapshots) or set(args.workloads).issubset(snapshots),
+            'run snapshots separately from rwlock/rwsem payloads')
+    require(args.lock_kind != 'rwsem' or 'tclock' not in args.backends,
+            'the TCLock backend has no sleeping rwsem port; use native/kdlock here')
+    require(args.lock_kind != 'rwsem' or args.delegate == 'on',
+            'sleeping rwsem uses the owned mutex delegation policy')
     require(0 <= getattr(args, 'mutex_spin_limit', 4096) <= 1048576, 'mutex spin limit must be 0..1048576')
     threads = FULL_THREADS if args.full_matrix else args.threads
     for values, name in ((threads, 'threads'), (args.backends, 'backends'), (args.workloads, 'workloads'),
@@ -72,7 +88,8 @@ def make_plan(args):
             '--require-parity needs all three backends and a timed comparison')
     require(args.spin_entry_ratio_limit in (0, *(1 << n for n in range(1, 32))), 'invalid entry ratio limit')
     require(not args.require_jit or (args.delegate == 'on' and 'kdlock' in args.backends and
-            max(threads) > 1 and max(args.write_percent) > 0), '--require-jit needs contended KD writers')
+            max(threads) > 1 and (min(args.write_percent) < 100 if args.lock_kind == 'spin'
+                                 else max(args.write_percent) > 0)), '--require-jit needs contended eligible operations')
     cpus = args.cpus if args.cpus is not None else list(range(max(threads)))
     require(len(cpus) >= max(threads) and len(set(cpus)) == len(cpus) and all(c >= 0 for c in cpus),
             'need distinct nonnegative worker CPUs')
@@ -88,19 +105,32 @@ def make_plan(args):
     for (workload, lines), percent, n, repeat in itertools.product(cases, args.write_percent, threads, range(args.repeats)):
         for arm in (args.backends if repeat % 2 == 0 else list(reversed(args.backends))):
             variant = f'{workload}-c{lines:02d}-{arm}'
+            if args.lock_kind != 'rwlock':
+                variant = f'{args.lock_kind}-{variant}'
+            if args.lock_kind == 'rwsem' and not args.rwsem_cabi:
+                variant = 'abi2-' + variant
             plan.append(dict(name=f'{variant}-w{percent:03d}-t{n:02d}-r{repeat:02d}', variant=variant,
                 arm=arm, workload=workload, cachelines=lines, write_percent=percent, threads=n, repeat=repeat,
                 cpus=cpus[:n], collector_cpu=args.collector_cpu, iterations=args.iterations,
                 duration_ms=duration, peak_window_ms=args.peak_window_ms, peak_settle_ms=args.peak_settle_ms,
                 sample_ms=args.sample_ms, functional=args.functional, post_work_rounds=4,
                 warmup_iterations_per_worker=48000, mix_policy='evenly_spaced_worker_phase17',
-                lock_kind='rwlock', caller_abi='clobber' if arm == 'kdlock' else 'c',
+                helper_waves=args.helper_waves if workload == 'taskname' and arm == 'kdlock' and n > 1
+                    and percent < 100 and args.delegate == 'on' else 0,
+                lock_kind=args.lock_kind,
+                registry_lock_kind=3 if args.lock_kind == 'rwsem' else 1,
+                entry_abi={'rwlock': 3, 'spin': 1, 'rwsem': 4 if args.rwsem_cabi else 2}[args.lock_kind],
+                rwsem_cabi=args.rwsem_cabi if args.lock_kind == 'rwsem' else None,
+                caller_abi=('cabi-v2' if args.lock_kind == 'rwsem' and args.rwsem_cabi else 'clobber')
+                    if arm == 'kdlock' else 'c',
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,
-                require_jit=args.require_jit and arm == 'kdlock' and percent > 0 and n > 1,
+                require_jit=args.require_jit and arm == 'kdlock' and
+                    (percent < 100 if args.lock_kind == 'spin' else percent > 0) and n > 1,
                 spin_entry_ratio_limit=args.spin_entry_ratio_limit if arm == 'kdlock' else None,
                 mutex_wait_mode='blocking' if arm == 'kdlock' else 'not_applicable',
                 mutex_spin_limit=getattr(args, 'mutex_spin_limit', 4096) if arm == 'kdlock' else None,
-                numa_policy='on' if arm != 'native' else 'not_applicable', provider_ubsan='off',
+                numa_policy=('off' if args.lock_kind == 'rwsem' else 'on') if arm != 'native' else 'not_applicable',
+                provider_ubsan='off',
                 delegation_batch_limit=1024 if arm != 'native' else None))
     return plan
 
@@ -137,6 +167,7 @@ def report(out):
             best_peak_ops_s=max(peaks), peak_min_ops_s=min(peaks), peak_median_ops_s=statistics.median(peaks),
             peak_max_ops_s=max(peaks), peak_spread_pct=(max(peaks) - min(peaks)) * 100 / min(peaks),
             whole_min_ops_s=min(whole), whole_median_ops_s=statistics.median(whole), whole_max_ops_s=max(whole),
+            whole_spread_pct=(max(whole) - min(whole)) * 100 / min(whole),
             samples=[row['name'] for row in rows]))
     write_json(out / 'records.json', records)
     write_json(out / 'summary.json', summary)
@@ -198,13 +229,15 @@ def build(args, out, plan):
     if 'tclock' in args.backends:
         tc = builds / 'tclock'
         shutil.copytree(source / 'tclock_backend', tc)
-        command(['make', '-C', tc, f'KDIR={args.kernel_source}', 'TCLOCK_RWLOCK=1', 'TCLOCK_NUMA=1'],
+        tc_kind = 'rwlock' if args.lock_kind == 'rwlock' else 'spin'
+        command(['make', '-C', tc, f'KDIR={args.kernel_source}',
+                 f'TCLOCK_RWLOCK={int(tc_kind == "rwlock")}', 'TCLOCK_NUMA=1'],
                 out / 'build-tclock.log', timeout=180)
-        binaries['tclock'] = tc / 'tclock_rwlock_backend_km.ko'
-        require(command(['modinfo', '-F', 'rwlock_numa', binaries['tclock']], out / 'tc-numa.txt').strip() == '1',
+        binaries['tclock'] = tc / ('tclock_rwlock_backend_km.ko' if tc_kind == 'rwlock' else 'tclock_backend_km.ko')
+        require(command(['modinfo', '-F', tc_kind + '_numa', binaries['tclock']], out / 'tc-numa.txt').strip() == '1',
                 'TCLock compiled policy differs')
         disasm = command(['objdump', '-dr', '--no-show-raw-insn', binaries['tclock']], out / 'tclock-context.txt')
-        write_json(out / 'tclock-context-audit.json', audit(disasm, 'rwlock'))
+        write_json(out / 'tclock-context-audit.json', audit(disasm, tc_kind))
     for spec in plan:
         variant, backend = spec['variant'], spec['arm']
         if variant in binaries['workloads']:
@@ -214,6 +247,8 @@ def build(args, out, plan):
         extra = [] if backend == 'native' else [f'KBUILD_EXTRA_SYMBOLS={binaries[backend].parent / "Module.symvers"}']
         command(['make', '-C', folder, f'KDIR={args.kernel_source}', f'RB_BACKEND={backend}',
                  f'RB_WORKLOAD={spec["workload"]}', f'RB_LINES={spec["cachelines"]}',
+                 f'RB_LOCK_KIND={spec["lock_kind"]}',
+                 f'RB_RWSEM_CABI={spec["rwsem_cabi"] if spec["rwsem_cabi"] is not None else 1}',
                  f'KDLOCK_INCLUDE={source / "include"}', f'TCLOCK_INCLUDE={source / "tclock_backend/include"}',
                  f'RB_SHARED={source / "workload_modules/spin_cacheline"}', *extra],
                 out / ('build-' + variant + '.log'), timeout=180)
@@ -222,7 +257,17 @@ def build(args, out, plan):
         imports = command(['nm', '-u', binary], out / ('imports-' + variant + '.txt'))
         expected = {'native': (), 'tclock': ('komb_read_lock', 'komb_read_unlock', 'komb_write_lock', 'komb_write_unlock'),
                     'kdlock': ('kd_spin_prepare', 'kd_rwlock_lock_pinned_clobber_v1', 'kd_spin_unlock_clobber_v1')}[backend]
-        require(all(name in imports.split() for name in expected), 'missing direct rwlock API imports')
+        if spec['lock_kind'] == 'spin':
+            expected = {'native': (), 'tclock': ('komb_spin_lock', 'komb_spin_unlock'),
+                        'kdlock': ('kd_spin_prepare', 'kd_spin_lock_pinned_clobber_v1', 'kd_spin_unlock_clobber_v1')}[backend]
+        elif spec['lock_kind'] == 'rwsem':
+            owned = (('kd_owned_mutex_outer_lock_cabi_v2', 'kd_owned_mutex_outer_unlock_cabi_v2')
+                     if spec['rwsem_cabi'] else
+                     ('kd_owned_mutex_outer_contended_clobber_v1', 'kd_owned_mutex_outer_unlock_v1'))
+            expected = {'native': ('down_read', 'down_write', 'up_read', 'up_write'),
+                        'kdlock': ('kd_down_read', 'kd_up_read', 'kd_rwsem_wait_readers', *owned)}[backend]
+        missing = sorted(set(expected) - set(imports.split()))
+        require(not missing, f'{variant}: missing direct API imports: {missing}')
         require(backend != 'native' or not any(name in imports for name in ('kd_', 'komb_')), 'native imports a delegate')
         command(['objdump', '-dr', binary], out / ('caller-' + variant + '.txt'))
     all_binaries = [value for key, value in binaries.items() if key != 'workloads'] + list(binaries['workloads'].values())
@@ -286,7 +331,8 @@ def main(argv=None):
             session = RWSession(out, spec, binaries)
             session.execute()
             print(f'  reads={session.record["measurement"]["reads"]} writes={session.record["measurement"]["writes"]} '
-                  f'JIT={session.record["jit_bodies"]} drained=True', flush=True)
+                  f'JIT_entries={session.record["jit_bodies"]} '
+                  f'JIT_complete={session.record["jit_completions"]} drained=True', flush=True)
         idle()
         parity = report(out)
         require(not args.require_parity or parity['status'] == 'PASS',

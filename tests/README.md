@@ -50,6 +50,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | TCLock assembly/parking |`spin/test_tclock_context.py`, `mutex/test_tclock_mutex_context.py` |
 | Reader/writer exclusion, ABI3 admission and retry | `rwlock/test_rwlock.py`, `admission/test_clobber_entry.py`, `codegen/test_spin_paired_jit.py`, `execution/test_jit_entry_scope.py`, `spin/test_spin_wait.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |
 | TCLock rwlock assembly and benchmark oracles | `rwlock/test_tclock_rwlock_context.py`; `bench/rwlock_compare/test_bench.py`; [rwlock benchmark](../bench/rwlock_compare/README.md) |
+| Sleeping rwsem and proc snapshots | [rwsem scheduler/API probe](kernel/rwsem/README.md); `bench/rwlock_compare/test_bench.py`; [mixed writer delegation and spin snapshots](../bench/rwlock_compare/README.md) |
 | Runner/assembly export |`bench/tclock_compare/test_direct.py`, `bench/spin_cacheline/test_assembly.py` |
 
 Fixtures check selected state transitions and machine-code continuations. They

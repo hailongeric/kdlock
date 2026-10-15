@@ -28,6 +28,32 @@ explains the reader and writer bodies and labels such as `c08-w20`.
 | --- | --- | --- |
 | `cacheline` | Readers load and compare a consistent version; writers increment every selected line | 1, 2, 4, 8, 16 distinct 64-byte lines |
 | `rcuht` | Readers look up a key; writers move a preallocated node between hash buckets | 1,024 buckets, 4,096 nodes, 8,192 possible keys |
+| `taskname` | Under an exclusive spinlock, `strscpy_pad()` copies a 16-byte task name into a 64-byte padded destination | `--lock-kind spin` |
+| `argbounds` | Under an exclusive spinlock, copy `arg_start`, `arg_end`, `env_start`, `env_end` | Four 64-bit words; `--lock-kind spin` |
+
+The two snapshot workloads extract the audited Linux procfs bodies into
+preallocated synthetic objects. They retain ordinary **exclusive spinlocks**,
+matching `task->alloc_lock` and `mm->arg_lock`. No task/MM lookup, reference,
+procfs parsing, remote page copy or mmap read lock is included. Each worker
+validates its returned local snapshot after unlock. Optional mutations alternate
+short and long names or change all four related boundaries, checking for torn
+snapshots and exact final mutation counts. KD mutations use the nondelegating
+spin API; only snapshots are prepared/delegated. Read-only performance runs
+therefore use `--write-percent 0`. All three backends execute the same payload
+and four rounds of register-only post-work.
+
+The [2026-10-15 measurements](../results/10.176.26.71/bench/proc_snapshots/20261015/README.md)
+prove complete `argbounds` delegation. Exact `taskname` delegation is refused
+under spin ABI1 when `strscpy_pad()` saves uncaptured R13. Its reported KD timing
+is therefore a separately labeled `--delegate off` native control. No register
+capture or admission check was relaxed to obtain a score.
+
+`--lock-kind rwsem --backends native kdlock` selects the new
+[sleeping rwsem](../../docs/design/rwsem_implementation.md) for `cacheline` or
+`rcuht`. Readers run locally and explicit ABI4 writers can delegate. The existing
+TCLock backend has no sleeping rwsem port, so it is not an available rwsem arm.
+`--rwsem-cabi 0` exercises the ordinary header's ABI2 writer shell separately.
+The default `--lock-kind rwlock` and its original workload/ABI remain unchanged.
 
 The hash update and final structure checks reuse the previous
 [KD/TCLock hash payload](../../workload_modules/spin_cacheline/hash_payload.h),
@@ -98,9 +124,27 @@ timeout 600s python3 bench/rwlock_compare/run.py \
   --functional --repeats 1 --backends kdlock --workloads rcuht \
   --write-percent 20 --threads 16 36 --collector-cpu 63 --require-jit \
   --spin-entry-ratio-limit 0 --output /root/kdlock-evidence/10.176.26.71/bench/rwlock-jit
+
+# Argument-boundary consistency under concurrent mutations; no timing scores.
+timeout 1800s python3 bench/rwlock_compare/run.py \
+  --lock-kind spin --workloads argbounds --write-percent 20 \
+  --functional --repeats 1 --threads 32 60 --collector-cpu 63 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/proc-snapshot-mixed
+
+# All three backends, three rounds, original argument-boundary lock semantics.
+timeout 3600s python3 bench/rwlock_compare/run.py \
+  --lock-kind spin --workloads argbounds --write-percent 0 \
+  --threads 1 8 16 32 60 --collector-cpu 63 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/proc-argbounds
+
+# Exact task-name helper: Native/TCLock versus an explicit KD native control.
+timeout 3600s python3 bench/rwlock_compare/run.py \
+  --lock-kind spin --workloads taskname --write-percent 0 --delegate off \
+  --threads 1 8 16 32 60 --collector-cpu 63 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/proc-taskname-native
 ```
 
-`--delegate off --backends kdlock` supplies a KD native writer control. Ratio
+`--delegate off --backends kdlock` supplies a KD native control for spin/rwlock cases. Ratio
 limit zero bypasses only the optional spin entry-ratio filter; adaptive CPU/lock
 heat admission remains enabled. The default ratio limit is 2, NUMA is on,
 prefetch mode is 2, and the KD/TCLock batch setting is 1,024. All benchmark modules
@@ -110,11 +154,35 @@ new output directories. The archived original-host snapshot is not portable.
 
 ## Measurement and acceptance
 
-Each run loads fresh modules and prepares one KD writer entry. Translation
+Each run loads fresh modules and prepares one KD writer or spin-snapshot entry. Translation
 finishes and the daemon exits before all workers warm up with 48,000 operations
-each. A read-only case needs no writer publication. Each pinned worker executes
+each. A read-only rwlock/rwsem case needs no writer publication. Read-only spin
+snapshots do prepare an entry and count returned delegated snapshots, with
+`jit_snapshot_share` using completed reads as its denominator. Each pinned worker executes
 its measured loop in one ioctl. Python does not run an operation-by-operation
 loop, and measurement adds no shared reader counters.
+
+The private provider also enables `bench_complete_probe`. Its per-CPU
+`bench_jit_completions` count advances only when a pristine batch wrapper returns
+at its matching outer unlock in that same invocation, with the expected packet
+state and a body witness. This establishes complete delegated execution without
+a native fallback in between. `jit_bodies` still counts entry witnesses, including
+partial execution; `jit_completions` and `jit_complete_share` report the stronger
+evidence. Positive witnesses with no complete bodies are `PARTIAL_JIT` and fail
+`--require-jit`. This narrower counter can undercount more complex bodies that
+complete through the general dispatcher, but cannot promote a partial snapshot
+to a complete one. The two observer counters add KD-only measurement overhead.
+
+Contended `taskname` sessions use up to eight helper-learning waves before the
+matched warmup. Following the existing real-API runner, the daemon is stopped
+while each wave runs, all workers and frames drain, then the daemon resumes to
+learn a reported helper miss. This avoids replacing a spin image during active
+execution. Convergence requires a complete delegated body as well as a NORMAL
+registry entry; a wave that ran only natively cannot establish helper readiness.
+Every wave and learned image stays in the session archive. Use
+`--helper-waves 0` to diagnose the initial image; a helper miss can invalidate
+that publication and prevent a timed score. No helper or admission policy is
+whitelisted specially for these workloads.
 
 ### Throughput measurements
 
@@ -140,13 +208,14 @@ unchanged. Hash checks cover membership, unique keys, backlinks, bucket placemen
 and move/conflict/miss totals. Worker CPU, arithmetic checksum, preemption/IRQ
 balance and final reader/writer count and gate state must also match.
 
-KD's JIT share is **returned JIT writer bodies / completed writes**. Reads are
-excluded. `NO_JIT` means no returned JIT bodies were observed; a native run may
-still have valid throughput. NORMAL only means code was published.
-`--require-jit` fails a selected multithreaded KD writer case if it returns no JIT
-bodies. Read-only and delegation-disabled controls must return zero. TCLock uses
-native stack delegation, but its share is **UNMEASURED**. Neither throughput nor
-contention supplies a missing execution count.
+For rwlock/rwsem, the JIT denominator is completed writes; their readers run
+locally. For spin snapshots it is completed reads, and KD mutations run locally.
+`NO_JIT` means no returned JIT bodies were observed; a native run may still have
+valid throughput. NORMAL only means code was published. `--require-jit` fails an
+eligible multithread KD case unless the complete-body counter increases.
+Delegation-disabled controls and cases with no eligible operations must return
+zero. TCLock uses native stack delegation, but its share is **UNMEASURED**.
+Neither throughput nor contention supplies a missing execution count.
 
 ### Saved results and the performance target
 

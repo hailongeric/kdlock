@@ -8,6 +8,9 @@ through KD's spin JIT engine. Both routes use the same exclusion rules.
 This is an x86_64 spinning lock for ordinary task context. Code inside it must
 not sleep. The [design overview](../DESIGN.md#terms-used-in-these-guides) explains
 terms such as combiner, continuation, source lease and ACK.
+Use the separate [sleeping rwsem API](rwsem_implementation.md) when ordinary
+readers or physical writers need to sleep; it retains the owned-mutex queue and
+can delegate explicit outer writers.
 
 ## Public API
 

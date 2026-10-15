@@ -1,6 +1,6 @@
 # Known limitations and deferred work
 
-Current scope is x86_64 kernel spin/mutex/rwlock delegation through explicit APIs.
+Current scope is x86_64 kernel spin/mutex/rwlock/rwsem delegation through explicit APIs.
 KD mutexes always support blocking. Legacy mutexes reject delegated origin-CPU GS;
 owned mutexes can opt into the bounded audited subset with an exclusive claim.
 Legacy mutexes preserve the original Linux owner; experimental owned mutexes
@@ -50,7 +50,9 @@ owned image additionally requires a spinning claim. Blocking scheduler/JIT evide
 retroactively establish a pass for historical
 oversubscription failures.
 
-Userspace/futex, rwsem, other architectures and oversubscription redesign are outside
+The [ordinary sleeping rwsem](design/rwsem_implementation.md) supports local
+readers and delegated outer writers. Killable waits and real mmap integration,
+userspace/futex, other architectures and oversubscription redesign remain outside
 this phase. Basic plus directly affected checks are the default; full suites need
 explicit selection. Extremely uncommon scheduling/resource/alias combinations are
 optional coverage, while reproduced supported-path failures must remain visible.
@@ -82,6 +84,9 @@ pop, owner ACK and storage retirement as separate operations.
 KD rwlock owns its count and KD gate. Ungated native writers retain exact
 nondelegated references; gate quiescence alone does not establish count or reader
 drain. No Linux/TCLock operations may access the same KD rwlock object.
+KD rwsem retains its owned-mutex gate while writers drain the reader count;
+ordinary slow readers are noncombining queue boundaries. Neither the gate alone
+nor its idle state replaces reader and frame drain.
 
 ### C3. Immutable JIT publication and lifetime
 
@@ -102,6 +107,11 @@ limits. Packet comparisons do not prove live hardware flags restoration.
 Current analysis screens emitted scope, CALL/RET, aliases and static per-CPU ranges;
 GS/logical current are not a hardware context switch. Arbitrary hidden calls,
 context-object lifetimes, runtime pointers and concurrent replacement remain open.
+The [task-name snapshot experiment](../bench/results/10.176.26.71/bench/proc_snapshots/20261015/README.md)
+records a concrete spin ABI1 limit: `strscpy_pad()` pushes uncaptured R13, so the
+minimal-entry store check refuses its helper scope. The initial partial body
+returns natively. Supporting that helper needs an audited register/stack contract;
+the experiment does not suppress the check or substitute a different copy body.
 
 #### Deferred access-time guard
 

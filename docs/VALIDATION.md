@@ -6,6 +6,16 @@ Receipts apply to their recorded source, kernel, boot policy and topology.
 Publication, actual JIT execution and performance acceptance are separate results.
 Known failures remain in [TODO](TODO.md).
 
+## Sleeping rwsem and proc snapshots
+
+The [2026-10-15 rwsem receipt](../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md)
+records ordinary sleeping readers/writers, trylocks, downgrade and 21 correct,
+drained Native/KD sessions with complete ABI2/ABI4 delegated writers. The separate
+[snapshot report](../bench/results/10.176.26.71/bench/proc_snapshots/20261015/README.md)
+records complete argument-boundary delegation, exact task-name helper refusal,
+mutation checks and three-round performance comparisons. These checks do not
+integrate the real mmap lock or constitute a full-suite pass.
+
 ## Current owned-protocol verification
 
 The owned ABI4/reuse-32 extension at `585335b` has a source-specific
