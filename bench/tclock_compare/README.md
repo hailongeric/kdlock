@@ -148,9 +148,10 @@ CPU with the final worker and QEMU services. Record that contention separately.
 The session and raw client JSON mark this point with `collector_shared=true`;
 unlabelled overlap and partially shared cohorts are rejected.
 
-`origin-gates.json` compares both rates from each arm's highest valid warmed-peak
-session against fresh current KD. Both must reach 97% at every requested worker
-count in the screen and both confirmations before enabling NUMA by default.
+`origin-gates.json` compares median whole-run throughput and each arm's highest
+valid warmed peak against fresh current KD. It also retains and checks the
+whole-run rate from that winning peak session. All must reach 97% at every
+worker count in the screen and both confirmations before enabling NUMA by default.
 Require all 22 counts, including the shared 64-worker point; passing a subset
 does not authorize changing the default.
 The 97%-of-Native target at 1–8 workers is assessed separately. Session JSON keeps

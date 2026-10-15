@@ -26,7 +26,7 @@ def frozen_inputs(root):
 
 
 def gates(out):
-    """Both rates come from the same highest-valid-warmed-peak session."""
+    """Keep median whole-run and best warmed peak, plus its paired whole rate."""
     rows = [json.loads(p.read_text()) for p in out.glob('*/session.json')]
     groups = {}
     for row in rows:
@@ -37,8 +37,11 @@ def gates(out):
         best = max(samples, key=lambda r: r['measurement']['peak']['throughput_ops_s'])
         m = best['measurement']
         scores[key] = dict(threads=key[0], arm=key[1], samples=len(samples),
+            rounds=sorted({r['repeat'] for r in samples}),
             best_session=best['name'], peak=m['peak']['throughput_ops_s'],
             whole=m['completed'] * 1e9 / m['wall_ns'],
+            median_whole=statistics.median(r['measurement']['completed'] * 1e9 /
+                                           r['measurement']['wall_ns'] for r in samples),
             peak_range=[min(r['measurement']['peak']['throughput_ops_s'] for r in samples),
                         statistics.median(r['measurement']['peak']['throughput_ops_s'] for r in samples),
                         max(r['measurement']['peak']['throughput_ops_s'] for r in samples)])
@@ -50,12 +53,22 @@ def gates(out):
         native = scores.get((threads, 'native'))
         if not baseline or not native:
             continue
-        ratios = {metric: row[metric] / baseline[metric] for metric in ('peak', 'whole')}
+        ratios = {metric: row[metric] / baseline[metric] for metric in ('peak', 'whole', 'median_whole')}
+        complete = all(s['samples'] == 3 and s['rounds'] == [0, 1, 2]
+                       for s in (row, baseline, native))
+        native_ratios = {metric: row[metric] / native[metric] for metric in ratios}
         comparisons.append(dict(threads=threads, arm=arm, over_current_kd=ratios,
-            regression_pass=min(ratios.values()) >= .97 and row['samples'] == baseline['samples'] == 3,
-            over_native={metric: row[metric] / native[metric] for metric in ('peak', 'whole')},
-            native_target_applicable=threads <= 8))
-    runner.write_json(out / 'origin-gates.json', dict(scores=list(scores.values()), comparisons=comparisons))
+            regression_pass=min(ratios.values()) >= .97 and complete,
+            over_native=native_ratios, native_target_applicable=threads <= 8,
+            native_target_pass=complete and min(native_ratios.values()) >= .97 if threads <= 8 else None))
+    grid = set(range(1, 9)) | set(range(12, 65, 4))
+    arms = {arm for _, arm in scores}
+    coverage = bool(arms & {'fifo', 'numa'}) and {'native', 'tclock', 'current-kd'} <= arms
+    coverage = coverage and set(scores) == {(count, arm) for count in grid for arm in arms}
+    coverage = coverage and all(s['samples'] == 3 and s['rounds'] == [0, 1, 2] for s in scores.values())
+    runner.write_json(out / 'origin-gates.json', dict(scores=list(scores.values()), comparisons=comparisons,
+        full_grid_complete=coverage,
+        regression_pass=coverage and all(row['regression_pass'] for row in comparisons)))
 
 
 def main():

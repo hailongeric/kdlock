@@ -72,7 +72,7 @@ def ensure_idle():
                 continue
             if (arg.startswith(('bench/', str(ROOT) + '/bench/')) and
                     pathlib.PurePosixPath(arg).name in
-                    {'run.py', 'run_mutex.py', 'client.py', 'bench_session.py', 'client'}):
+                    {'run.py', 'run_mutex.py', 'owned_origin.py', 'client.py', 'bench_session.py', 'client'}):
                 raise RuntimeError('Guest benchmark process is active: ' + str(cmdline))
 
 def ensure_root():
