@@ -1,0 +1,1361 @@
+{
+  "auditor_sha256": "9ed6fbf60fb2609121716b5efab14d2445dda3c69938775c9039171fb93d11c1",
+  "binaries": 8,
+  "committed_files": 1024,
+  "controls": {
+    "boot-policy.json": "c6a3874b4d3743cfef46d3d3f2e5afaff67b1008161b4f345cfdef20f4f6b71f",
+    "guest-before.json": "43ec791801630680c85409c2f91eb7fbcbbfd189b3ffe68f75edfbbf17ea2928",
+    "guest-final.json": "dee8c5d6aa4e9ec3c2fc3aaf9a5fea6b02b093999a664c53c6f12fadc7c3ff2b",
+    "host-before.json": "400f96669fc79b62c08bb2e64144e8b859aeb800bd96118c8c40d1e5cac18669",
+    "host-final.json": "ad9287e2e175739a594dc311266111fa8ef36e3530c71a80581424c31c5fd172",
+    "host_check.py": "688f6196920c90d57ef1d1ab6b6154be32c888c89e4d1ad035f6936eb7c3f257",
+    "kernel-final.log": "907d0884b0dc4c35e9040048065deb83a52b094fe7a48c52911d6aeb4d0a3805",
+    "plan.json": "9a82f45db48340738b018cb8158b866930dd48cbe9d0639235b66e57cef90723",
+    "pv-lock-ops.txt": "21b0b519c0971fda89805a9c5ebf5e98a0096ae6f0e7885a094bd8cd58dca50b",
+    "pv-template.txt": "13fd429df7b80bdab0b26edd8dc9a43362f9f176933f7a97a5452841b9f3a054",
+    "source-before.json": "ebe6d01d3cac1c4e5857b3ee9a0f6ce889fe2a68d216dd12a35b6f60c4bab4e2"
+  },
+  "manifests": {
+    "binary-sha256.json": "e9282c8edb61781551d49c57d36c0cdba4f87c6bbbc5b81acf2a861440593334",
+    "environment.json": "677d2c7cc8764786b1306d43b0b85cca5cd109de0b6bc11f4af7eb2d0b2af11b",
+    "plan.json": "2889d62332ce6a4e66b6d9b2ced440765afa8f3032516e6ca422cffc489cc79f",
+    "records.json": "0c0fab359c17a6c60e309fac30363a6c1e608c15748d063f578aa2e0d380a13b",
+    "source-sha256.json": "cfd84ddceeec6616f898f06356d59b359b030bc6dd46a7bca22d278a4a96bdb6"
+  },
+  "passed": true,
+  "raw_sha256": {
+    "c01-t01-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "00ae6b253a741b1106568030c3ff8b88be09471a73978a58f0862d303ad74a3d",
+      "kernel.log": "50985317466e1783d38b106cef5f5241d66458ef1ce69fbc2eab698cb4cb47cd",
+      "measure.json": "31d3cffabe90320fe7e85556f9cf1b4e931323a043679b1c10965a48c855a7dd",
+      "session.json": "26ab5cf1a998fb5b653b2a18bc882dfb0e3008efa8b5e5166adea067b82b2c80",
+      "warmup.json": "0c20f5cec91395e26ec28d7d34ab4ca00ebcaa914aeadd0e0d57637f0c7ffeea"
+    },
+    "c01-t01-r00-direct-native": {
+      "drain.counts.json": "17b288154d5ccdb0ab829c3f52c716f86b1e54781eb65e6275d49c74631e28a0",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "27a81f21c94ff95aee586c2650ec9877cbbf29b4ebbdf4a3eb9c6cad7913350f",
+      "session.json": "0ee8fa40fa625a5c25a0951856a7d43cf0f3cc65656b3c9b7daf35328c8d93b5",
+      "warmup.json": "a09a76c1849ca4c3534316d0ca7a9c2d4488ec38eebcac00b7f0a66856f112db"
+    },
+    "c01-t01-r00-direct-tclock": {
+      "drain.counts.json": "5b8cbf1612c36c751f8e0ace26a425a8694c2b9882c9a3114d0b0e8c24fd6fb1",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "dbba3dc27af5cb780a96ba990646ec28726d61762dab62aac8335b111c942f7f",
+      "session.json": "2ed1ae24391dc58bd7b8e73537e7894a81d8bcfc2b88d69ec097020b00c569e1",
+      "warmup.json": "33f1b5720cdd0cfb1064b47f44e876b527c02de7d2f4ee2371a91be35c21d058"
+    },
+    "c01-t01-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "b5736a1c1611618d2f8f6fb1cfa1f75c27baac80a15b3a81efe8c953db4c5809",
+      "kernel.log": "0d919624bf161277c6810f36b65b3895b05bd7a7a342cf5593b309ac2ba5737a",
+      "measure.json": "7af9677d24980ac3f13602c20b62b7edde0c005ff4c7c8e32b77625e653b1732",
+      "session.json": "527cbfeeaa4cc2e3356f67df772645a3631ab026fcd1f4589b06d2ed5eadf6b5",
+      "warmup.json": "3ad666805dc1334797e2f9a8888d3e770e187c3b6115b0b9d62060263e960ebd"
+    },
+    "c01-t01-r01-direct-native": {
+      "drain.counts.json": "ec3929a27a107354de39b556078bbd51d97d7c2bf9a79ae57660c68b7e90b8d0",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "6c2c105baa2c3a96f344b7bfde1340f602326cb0c9636a4ef1717e76b6307fb1",
+      "session.json": "f5de6d05bd01a8d7d9c1be02b8e6cecffeecdb053b6301886186627c954b9ce0",
+      "warmup.json": "d199d09d48f5b890d0b52505b1eb2837fff9df2c3bfaf99a6901b79eded60fd9"
+    },
+    "c01-t01-r01-direct-tclock": {
+      "drain.counts.json": "12e5b11e420fd4e3988bf0ee60160465b716eed8964ae1433daf0a106b6f7f9a",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "5df9abb4d08d5d461a95592b8901d5f9bb718d95b478197cb80f10dd10ce62e4",
+      "session.json": "9bcbc8645c22b78cd5357cb5f8b3108d223b074e180436f58b4c1c26935b0ccb",
+      "warmup.json": "f2c819b7424f214c4c39f5f51e85397d7362e35daec408e519ac03252002a535"
+    },
+    "c01-t01-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "d482a2d1b0459c89e58ad443e36a594c0152a4fab1d7d85f2431e830976ea650",
+      "kernel.log": "70932453ebd4184d6ce4eb7e11287f31e5187d166b7788f52a2f292eb06caeff",
+      "measure.json": "05fba7d5df558042a0ec2aa865cb95c93ba9d5b3f85cf09e87154693effd95eb",
+      "session.json": "19b974867dbcac7fbf487c71cbde081e99d95a87a1b93f2f2378dafa00bfb049",
+      "warmup.json": "c86559bae42dbf179b108915c16150a427b58c1b1e3df92e40ce535fe83a6d50"
+    },
+    "c01-t01-r02-direct-native": {
+      "drain.counts.json": "2290f3896888acc0fee13a5f6e2a242fa1732c7bd595c5f1dea4da79d5c0a44d",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "0ba48c35a2183d21451dc9de0806752d0dbd1f099c7c5f1840c3e499180d8400",
+      "session.json": "8db02def3d615b19dd881ae368fbd8d3fb19727fd44412aa23550b42cdadc964",
+      "warmup.json": "7d35440001f839c6e91cf68917e1b8f1811fe364f2ec8cb62d036d58290cc943"
+    },
+    "c01-t01-r02-direct-tclock": {
+      "drain.counts.json": "12c95f2b013fab358d9946f88b6e1bc38712c60cff533c7517997ef98c2c5904",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "5b325962a97377924163e50cc56701f4b7c0839a55784a8480ad886f73ca0f55",
+      "session.json": "6473d44e1902d121b4014aad6644d92bc5658a707be98edad5ce929e2f1bf9bd",
+      "warmup.json": "45002955132811e70b0c3b2c9312fbe9bf17e24afdbeaa3bd0f0795637c1f7e5"
+    },
+    "c01-t02-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "3f84e1899e41fbad792e92f04e7ac610b77978a087fe5a8363467bb943fdd83b",
+      "kernel.log": "2c24d5972fe657755c5de0ce31f438d30441be2a6854ef64bd48abbd0b7d8a8b",
+      "measure.json": "529fa6482d76272e10a9ffb79b6bb9fc4e291706aee22d1723f9b7a6185b9764",
+      "session.json": "b179d046d0aeca8f55fd5697ba4184df386abc662c8c87c1a61c5a12847b5e57",
+      "warmup.json": "8818154ed2c5ac0b235f025ef246d1a0846ddbd0ce9e5e6b2ec59b1b0e5d60db"
+    },
+    "c01-t02-r00-direct-native": {
+      "drain.counts.json": "8debed164b846cc0081e567084c559defcc8cbdfb1062af973e64b4a2705385b",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "c84719c2d7ac73a4cb15ab7ba987855df976c2f9571aa0b39459fb527c530dd9",
+      "session.json": "c7ce012dbc48fe45440697cc5461268858a5ae5953d2016695bce9dcaa5a9ff5",
+      "warmup.json": "a296d59fff1b0b61d3e1c373bdc3ca8948e86a152a0edc2d449b6f19f85077f3"
+    },
+    "c01-t02-r00-direct-tclock": {
+      "drain.counts.json": "37e997025dda8ed421c641d038ed38b50ab76f6478c111a1d0658f9a5365f5c5",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "f4deebcc0ae48e1f49664bfa2ddbc4d24e7b630e7aa4686011246c59011b64ef",
+      "session.json": "5a38b1a8cfd3311c05b37fa6abfda0c817a90b29f9d720e4efcd24ea5ec42e3b",
+      "warmup.json": "03bf96b4302aede03d6d9a58e509bb32b830262c4e71996211c92de2f6587fb4"
+    },
+    "c01-t02-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "cb989279aab32480bb49790c23c315a38bafd8ca81ca41f61db25d4af9a6266c",
+      "kernel.log": "03bb663cf22da77b0e643e662e37bb6f689796f09ecdc01d899eca78acafcf7f",
+      "measure.json": "d0047cb46b6dc6f200f3bab09ebd0ca6207bb81864d17c72f330b3083ced9a32",
+      "session.json": "4b34228cf40efa41ac738ab0171798435ec4ae6b6737c0b77c5df4fbca115b19",
+      "warmup.json": "cb512cd40ebd47c44ed5e1844731dbe21d0b06f9ae636bd102faf1de93cdc66f"
+    },
+    "c01-t02-r01-direct-native": {
+      "drain.counts.json": "0ad4d2b590c15c0a212b74ba9017840ed3e0280f774f017cf4c44af15628f6f6",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "abe534e4b7239e7f7d74fa1d51d14766b88f15c921f02cac8d6c1fdff6116080",
+      "session.json": "88ee02d92d13911ad4fbfc5624b8bb55afdcbf7f1e9e5a4e69f1c13299e0acdf",
+      "warmup.json": "4095bddba01dfa40223d7b7f1e5bf2646ea2b349ef665bb1f49d52adb6003470"
+    },
+    "c01-t02-r01-direct-tclock": {
+      "drain.counts.json": "fdc1679c3a0f8667c26dd68afbc9056aeb6e282722f5e0a2b290f82e4102679b",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "d0b281a1335bbda0bcc77669a8e85bc400ccc4bd1bfcca2c7cdbfb03abdf8e87",
+      "session.json": "868d71592e85551a0eddcf62041ac9a768404fa7d37bb8eed2784a8dfba842af",
+      "warmup.json": "1040d46a2ee0481a94ab09bb7f5e4520ea5fd60bcee6ea041b49e950bd1ed091"
+    },
+    "c01-t02-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "400db9f2f7c2f2f2c4b85df87565f66d891e0dc9af5fa8c6011afc24b8802eed",
+      "kernel.log": "9f2f759c250ff785a939154cabe81b38c6b8d79b090ee74a54b918f346fd2ddd",
+      "measure.json": "7c2500f55191792f0e461fed0aa0c263f8ac9533fc1c7b89e82efebee2ce602f",
+      "session.json": "843a92db97acc4dcd3ad0537f247e089ae8133a58f23af0ded15fe50a4402266",
+      "warmup.json": "17945c195a155e9215513afd4d68ab84135be4bb4deabd7ac95f70f0d57e976e"
+    },
+    "c01-t02-r02-direct-native": {
+      "drain.counts.json": "44ebc84332006e8f26dde75569bb093125dde99b6c122a66a68f5c902f810c29",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "e53099a07297105b79b7f3e155db4e7582fc07ac2049c08bfb6c443250917462",
+      "session.json": "4660e47ed3cc8461e41342e4ac1d3c7057f2b1709231caceec0e151ad7563b60",
+      "warmup.json": "5455404c6c37494935f13758908edf21b7e540ed211ac5f3e9f8b19b9423a649"
+    },
+    "c01-t02-r02-direct-tclock": {
+      "drain.counts.json": "6ea4ac8bb1fcd1f481188a6435cbc09e1556b010de6f83c878b15e6a8b78f624",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "e5970a2ad417226c1962392b49ab8c860281394bd0172656349a9516d5cda587",
+      "session.json": "5e686ac8cc5b2873b222b2e7b1bd000999a86a0f13ff5dd9adccaf4a240e05c4",
+      "warmup.json": "22b8d1d89cc72b0cf3bbe747037bcb457c0ffc3b74f6a25dbee44a89a2f68e7c"
+    },
+    "c01-t03-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "628a7e58e8b29e26f0559848f9b70917f19e79c5de3a91eb7419fb3140fa0336",
+      "kernel.log": "3d051cec56e0f6a1540c10606ca2a4651b1f2a8765cb068d3e243dec98b6d95a",
+      "measure.json": "f7b027a2e5778042bad05dd09f7ccf95b86201da8ab34f042dda5ddfc41c38b0",
+      "session.json": "c5e140678beeb37b0a46e0debc4e4052c23ff717536e13ac4c98472f4db53007",
+      "warmup.json": "2da61a045d20268c3071992fa7086b386478ffda10b06cd8c37b5284df2c3ac9"
+    },
+    "c01-t03-r00-direct-native": {
+      "drain.counts.json": "73a1daa78f2f7eb4680b993a8c6ad8097fcd4350d6370fd3eb39aec5dab1ffa0",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "0a01e105a918421fb27bc4d8650e7e5c22fed2e6283dea16aafffc899e14fa27",
+      "session.json": "dde0102f3b9d6c5606c7a465c951aec165e39bf59dcb4f0e7f350e69e7b0b21b",
+      "warmup.json": "c74b025d96574eacc3df82ea4c61d49dc3bb842b51ffbd44da886d8a567e3033"
+    },
+    "c01-t03-r00-direct-tclock": {
+      "drain.counts.json": "e856491f56e8414c298b438d41f9a158bf121a174dd1ecf6ead1abbcd24503c6",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "08c90ad55f7810c610f5fd6c9e2c31853d4d896c556d19be5fbd21fa374d0604",
+      "session.json": "993062604bb1234e8d0b60fe165c1c051a45e8f8a425b1437cad63c0ee4c35dd",
+      "warmup.json": "e780466fa3f40af2853162990506372f7411357d0a043d1dfd8efd0f3f63ea64"
+    },
+    "c01-t03-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "ebb3be43b021b1a802660380dd920adbd9614755b926e3a3196108cf3f290626",
+      "kernel.log": "5c967afebad4ee001af2b3a3bac3310ba8663b30bdf26fd338a0aab4802dc6a6",
+      "measure.json": "50efb13e356f3a126fcdd31e3b4e35199fcf9a143aad89a2c4c000bbf4b83304",
+      "session.json": "0c71d3c12d4dca3fc3e964bdbac1d75a43cfc0fb21bf0b5b41431a9104824a20",
+      "warmup.json": "9ec45cfc904eac580b8086a3e9bb0b63eac962a12ac3437aaea2bf07395ad13f"
+    },
+    "c01-t03-r01-direct-native": {
+      "drain.counts.json": "455e75535d28b79c9d21fa61445268993aa43f35cb2b007ef7bfd7d31483dec8",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "2b71820ce56f9a40ea2036ac78bdd33e6ebfeb7f5cc6300240df83408a0338bb",
+      "session.json": "bbbca4282694121aa993f0331c38aa9c9ee62fa28e0026a28f28dd4b4cf1ff6a",
+      "warmup.json": "c53c790102048eb85c66bbc31bda6901ba77dd9252145917d83253385e6b3b4f"
+    },
+    "c01-t03-r01-direct-tclock": {
+      "drain.counts.json": "c05f4a334450ce845ffa4d533e10601db53ac3a7e92122130b9a618a21ee42af",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "baca88be5c5a318bc159348c28cdea07eed9e74d290482e4dd648ffe793f3868",
+      "session.json": "e7dccea8969c1c4faaf29c861614392e3e0c1bb408537572896d2b5ed127f89b",
+      "warmup.json": "e88d65cf3ae6739ff189c0ebffd2169706f4c510866ba7bd07defc9e9cf35f71"
+    },
+    "c01-t03-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "16eed08007ae5fdfd934c13f1b772678f3d566168aeb3b3d55c26bd726ea7593",
+      "kernel.log": "8c8b99243aaf15b3d4f5b53987c5c665155210629426b8fc46c2d53dfbb92f0d",
+      "measure.json": "257425fc1fe549617d4ae294424b750649ce9743339f806bbd7f169cd1e06d88",
+      "session.json": "01205e3c3412dc1f7a53336d7ecff89062205d9d765d6565dea437ab3e58841e",
+      "warmup.json": "c234453ff55e3a50682a262b6ce97989dce7e09fa81202543f97576c4ffe7a6a"
+    },
+    "c01-t03-r02-direct-native": {
+      "drain.counts.json": "7ad583f3b8cce550077074e8498680c344d726ec0a256c3260b8b09d58246e18",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "8eea2502a65ec166b8abbc18ec33593d715f911e6cf84644354f2e3e173c1000",
+      "session.json": "b8ec25881471d7f8b3fe1785088da6ebce3e73fc86cb129b543275bbb25b6bfc",
+      "warmup.json": "a8253e3eab1135d944d1d0e34b563d6d397092caa8dd428f0a68f0c38d83ff52"
+    },
+    "c01-t03-r02-direct-tclock": {
+      "drain.counts.json": "055d91d37ff8b76da087a79f16b5967dd0f5f2a3faa0827573bffc06681a6d27",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "1b3efd38be68bcfadb65b0b8ce1841da9b39b2308eb5646b7cbbd03130a153d0",
+      "session.json": "56a1a2eab496cebc4bb1c36a7aa1fd362ad4f1be0ae788fd277fb3ba70e1dee3",
+      "warmup.json": "e240c155a597c044b9cf57713ccb3a186f1f3ad5c81a17658723ec4177df792e"
+    },
+    "c01-t04-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "4110df966e27ea0ab0bbd9198a8a0225a00ba5e75f12a28ac605b69e794508f9",
+      "kernel.log": "47446481ac35fe4ad1d0059cc9ec96deb8dcbae0f0473025fa776f439c222245",
+      "measure.json": "1d424cc09c4827d9cf970d363f8ff77452a22ff7d852dbca1217987a9c11e6a7",
+      "session.json": "390e6e31f486f93304c16f9a9f2d1ca45712c0d7e4d856055da44f69f4c28d9b",
+      "warmup.json": "a3f813575abb4ecb1f66c2ecd6208d6df2d837d2cf5d959e1a6456172d2f36c6"
+    },
+    "c01-t04-r00-direct-native": {
+      "drain.counts.json": "679f6cddac6dd8c6bafffcc44a3d97db7c2c17aa6a2d5fa9e7e987840f1456df",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "a6a620a2a0fb944b181bd574da23e27c7c139bc98c1904042a6d3c34c84d4a6a",
+      "session.json": "16c423fe24b5743e35c1a44fc62a62bf2df5e1e1a08d07f40070318ef2650cba",
+      "warmup.json": "354ef9c3709230650c9857131c20fcb2068e7eb1e1808b28618f9f2a152900bf"
+    },
+    "c01-t04-r00-direct-tclock": {
+      "drain.counts.json": "dd813a21e5a66180252262470757231e8f41d551ab5f9dc00b0b06e30e1c347f",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "76b311ad553dd0d6c81ec2275229c6682fc5be59d65e5a49df6ed81a29c8cba4",
+      "session.json": "ef48fd59c52bf9ccad3e7ef086f8db648022348f882e7cfa14b84b467e9033ac",
+      "warmup.json": "2e1bd9d4b11cdcc9354c44d57e06ae80b7e32136fa777edf2949a73593200d2c"
+    },
+    "c01-t04-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "dc888007e9004845989df2a78225b50dbf4e9cc3c3821a127f727de38b7e6703",
+      "kernel.log": "ae0740295a3695f72a939c39cb5828d01a829052168957a795dc8668904428c1",
+      "measure.json": "45350d9c7b2c9e17db27ea702a42c3ea2cdb9735590bdc42303e8ecc5942a9fe",
+      "session.json": "373acf3e8ca5ea79b2b2b000782004cb83d78bb51d992b29b598930a6fae68ec",
+      "warmup.json": "5ab91c8546fd76f98a52aa25f704b34077d5166f136061e756f433b96d3b106e"
+    },
+    "c01-t04-r01-direct-native": {
+      "drain.counts.json": "4992969212193b726fa61a127eec3e133316b167a3b4a67119a25e05fe29a384",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "20d05de10d24ba3675b5cd649c0a6debab576ac31a6a869a97b684b4c283eaea",
+      "session.json": "5ba8360d8f622321a4f2ac6878a2dc5fd8ef658a629f0ce303c9e90f79425960",
+      "warmup.json": "edc679fc80f16e50f0e875556a648e2d4a351ccdf33141325584058379affe5b"
+    },
+    "c01-t04-r01-direct-tclock": {
+      "drain.counts.json": "2eada1b7a8f7bcb3d5e188a2006fab559dd96d4d15bf0e051a8f70af129ad122",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "01cd03b9645bcb6d3070dd0ed36a91c74fc1ca636207aa5422840ce87bb738cb",
+      "session.json": "1d8825e0dca8c78fa555799d0624bee10935fca8a0896093d08b4c80a659f4a6",
+      "warmup.json": "c5385d29de277b02ff0af6875bcd9b2e85afa7399e4078af930c6e853e64abb6"
+    },
+    "c01-t04-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "206177e54528ac79f08456e67982bee78ca1503b429fdb076d112175b9da56a1",
+      "kernel.log": "22ac691cd5ec52fe28e07f27001acc7440cff7a4d0a141ba1ef2caf92f935576",
+      "measure.json": "1771f76321ba98f77ab2fde2a5e8b6b9266fb66b4a546e696f5c7ee07bb08ab0",
+      "session.json": "6f6d1bb231417fc9f9fb8dee08e9e1ff559bb0c5422da0073ea6cc2b6839e0f2",
+      "warmup.json": "3f3b3f6f3628b5a70183548c19130d0278b41d6a3ee6a04aa5339e218ef3e489"
+    },
+    "c01-t04-r02-direct-native": {
+      "drain.counts.json": "9efb9e5fcaffdc77b18d5abfc6e8bbbe9c63e9cd2516eaab15caf89d873f06c8",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "945d68988c386bd80313fa8dfeb8fe57a4904c7bed4d88fefac454c90ae3a981",
+      "session.json": "2189420e014f91c18db87e0ba9fdf18a53e88e5ca20c5087ccc63fe5231fac80",
+      "warmup.json": "d78ba82bf184ca623175ab39d69cf93303202004809cbcf8f13e01bf01100f2f"
+    },
+    "c01-t04-r02-direct-tclock": {
+      "drain.counts.json": "052c7a88cc7122c994151542c3398c66b7d8e22fa6161f91853cc844ee4c3594",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "0bae6ee5b58cf26235c72d0a3a0ebd331d105ca3738566142ee93ce961b812e8",
+      "session.json": "451ac8ab4470185729d59c82ef6545314edd50db777a66d32b45c55264797e40",
+      "warmup.json": "48d24f7e9b2edaeaef1da57e2102f0331a929c9e2ca82680751f4ed6d15d280d"
+    },
+    "c01-t05-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "21803984e4ab21b26e6fc7f0f0ec3e38dc445c38aef9055e18a4228cf6f075e1",
+      "kernel.log": "85df58d5858663965b77e47712837b5d1e090ad70b31eac4a31734f44ef2558e",
+      "measure.json": "6c8da136bb566b608333384e6825ada57ea3ffa762e23c269f17bbbbdfe64257",
+      "session.json": "ddae381ef13d9dc4325578567780ae058233d7e3f024faff5219230c3ffca852",
+      "warmup.json": "8f2804b83d3abde18d2ddb3fc3e55c1e27b2aa5cf010cb17b560666d8af496d4"
+    },
+    "c01-t05-r00-direct-native": {
+      "drain.counts.json": "c350367a50748f35c100717f8a444885ae049dc990f79092bb2c036bbe5b22ab",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "a05f2f8421f422d52843327e78a99b9e9350a8a6ff3a948c5633b5333e292713",
+      "session.json": "e0ec9b65aaaa66929b4b15625ee313c3bdd362011f81247bdee826dc82cca471",
+      "warmup.json": "a6105ce5fceeb20e6c9c097e40c43e9294637499bee9ac18013fe89fc4047a34"
+    },
+    "c01-t05-r00-direct-tclock": {
+      "drain.counts.json": "454f2246665bd0402311e013b12beb13f59820b63fe225741e435c70fcdef809",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "de38fcca488a2883f7e28d81e09910dffc3bf0e564aa9347bf0d7457c4ca70ec",
+      "session.json": "5fd559c32df3490858ef100ff644b6c5d391d2866f20d93af6d84d4ee04d7ba9",
+      "warmup.json": "6ec45dd2def1fd4c599ddd54f33747f412941d472d6ecd8b4b732324dcd0ea27"
+    },
+    "c01-t05-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "d6fcce9d1386e20d0e3c6d7c78afbf9305771437b184e22d89878dcf7d9f75c0",
+      "kernel.log": "c28f527025e4e4e404017ed4460b90f8e48a23f4a819e8c57d9cbdd2f9bd86d5",
+      "measure.json": "00fefcb2bfb941edaf47f14a665945e9223f0ce45c20eacef72dbd46d309f264",
+      "session.json": "86b4cb4a23029fa6d4b892cb9732cf429a93ebb5af67a8654d7386fd3bb42ced",
+      "warmup.json": "221e5803d2817be48ddf00be5052ef010e6c660265f63a3fb43499b68cc48634"
+    },
+    "c01-t05-r01-direct-native": {
+      "drain.counts.json": "9fe08c39a5e02dd7dada162eab113b418d0d460864a7c26d029dedc8b14af694",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "618c76a6da5f682ae9960800deb3a8573c0c4037167d7b2666581788f87a4493",
+      "session.json": "6f179f8040bbbddabfb3e43de560eab91265477dcb058258cd948107acd344fc",
+      "warmup.json": "3c448f3a030b67d2267fc47bdac84c3175d4906cbcd3a65d3cd43f3a3a5afeb9"
+    },
+    "c01-t05-r01-direct-tclock": {
+      "drain.counts.json": "d431a05d29fad12935963fb1d7d9fb353bf73212f0f888269929730323b68e31",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "5d6cf2bfe097d6262f4f97b04f1d5b59934629b13a70af6f6db08f1ba1ab7cfe",
+      "session.json": "edabc41ad9e142c850aaa6a42108b657a03a70e83926f9d67e2418b4b7481d30",
+      "warmup.json": "a3caed5fe601bd219ea455ebce18a8a0a8a49638a4a6ccdc7ba79b8dc4d75f50"
+    },
+    "c01-t05-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "08f516b5afd5398f27c7ed1e33c7191d916542c94f366f867d1f2685d6115c45",
+      "kernel.log": "126b2f480b7ebfc21b9c3dac2e5edf375fb9ae556a6ca3142112f7640af91ba4",
+      "measure.json": "349ef4f961fcc49b14af65f276abf786cc45ef68916579f1765689b09a355a0e",
+      "session.json": "28afe8c841a0c3c7cb0ec67c82387690661e05189d63ca3230f3d73071d28366",
+      "warmup.json": "f99f10cf251b0a351c748a67087a4af2e17ba8022ca8b2a60b1f4f093957b569"
+    },
+    "c01-t05-r02-direct-native": {
+      "drain.counts.json": "23bac8e96d2c1734661df0a13f2b10d30460c22b9e5d68245c70974e9e04d820",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "f210ca62c121172ddb1d2dfd28dc8a236dec1a4b15a209fb2b5b219889dc0517",
+      "session.json": "7fc0f80b731f37c5e66d393c20babe6bf80c10ebc60b7e7d4cf3bc0d040f8385",
+      "warmup.json": "b4899d2bfc704a4bab67658e60ad24409bf8e61345149e6f8734416a2e9a9310"
+    },
+    "c01-t05-r02-direct-tclock": {
+      "drain.counts.json": "56e28412b47b96ed4be9c2b4e22ef648f5f1901ed4b183683f7aa8a57ce3b5f7",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "1495910ef258eb82c6e401df190998f6ae44b209cef66f27da3f79fb2fb4ddb1",
+      "session.json": "26dcfc569a1c15fa665dc71751c8b4977afee3feff7918d8c5603e1a8fb9805d",
+      "warmup.json": "797e5da0d468f48f4c1cef815a7177859dadc90fac1077079eccdbc79f95adc4"
+    },
+    "c01-t06-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "36ad61c9ac92fb04a4be97cc7b26fedbf13f99eaadc09b03d6b19be10d2e5bc4",
+      "kernel.log": "cb0f829c5252f1e6bdf0a21ea52df663cf86c0dce2c9eece70064fec2f4255cd",
+      "measure.json": "794fabac8ccf3dd97c5184469e16fcbb4a8e42040e29046245f5ef689b58a2ac",
+      "session.json": "f060285390ede1a0e887037feb45262a57243210d0c193e1f812a67713fccfb7",
+      "warmup.json": "255273c6585c3422455b6769126f5dbc0579a96ba99ce4f22980f28806da7e89"
+    },
+    "c01-t06-r00-direct-native": {
+      "drain.counts.json": "59b2d7fbb4efa64ed7a3688d20c50d7c5d970faaa86b32ccc46ea2ee80d6b71a",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "0518768b015f51716d7d35c011f5c06af169e5ba5e8abb6edb5e0ad6d57ea015",
+      "session.json": "a2edbb7e1e1fdb234177c1709395f20e7986a2c984b9301b75e5bc648f56c0f0",
+      "warmup.json": "e1fbc39f55a81f66bb50b046aac860e6b80bd50a05b25e80251a9b16dd8b75e9"
+    },
+    "c01-t06-r00-direct-tclock": {
+      "drain.counts.json": "01b76bd8ea1786eb1d8542109f96b3b9b7a99d997b537bbc0773ad5eed2cc77d",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "29a3bf98fdb9403757dfb6fa8203775dbf5293c913a2326a414764818b2cc34f",
+      "session.json": "c769d0cdfcee4d2cf43f8147d154cccf67d9632acb001fecbb2a10c1bae7b745",
+      "warmup.json": "ab471100cd7d69160c4a8d867bf836613c242b5d2cf519f2aba415e6095317df"
+    },
+    "c01-t06-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "4a1c943538d1300bd03a5548eb8b86b80872fd8ebf4fd5e6feb329ea1a9b910e",
+      "kernel.log": "ab61b899990d11fbda3f7fbeb9408c3c83e6353a652ff4b146739deda1dc9d6b",
+      "measure.json": "479355cb4d01315e35109dc177e3b8f6cad9720a2c1c02b66c5405553c8897d4",
+      "session.json": "7b81b0a166e0a6be91b0bd7d4466a22934aabd7de2ac3389b042917e58e0b427",
+      "warmup.json": "651c50e76223e3167b458aa376d7e729a3cbb3c29e9351eae7cf8bba97bc0b7c"
+    },
+    "c01-t06-r01-direct-native": {
+      "drain.counts.json": "7fc1726ae55731a703de602a3deaeea176ef92e6d61a3229f61f4d4ec01fed98",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "2faebccf6517e16d0000cae4e828473b14c46062dc78142e2d3c5344dcb5a298",
+      "session.json": "0f5498777f149809c674c0fc90f81a2c629a9ff6e3ce1d4b9f0e767cd395e5d7",
+      "warmup.json": "5afc68f140dedf963dd3544586f447d1bdc7532ff4fee1fce13de6e84d172a66"
+    },
+    "c01-t06-r01-direct-tclock": {
+      "drain.counts.json": "37a994e956962a80dccccdf6e4d804f9e66fa244d8a656689260c17b6b945aee",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "c5ced57eceda1c0076bc84a4970e6c8cd852a15d1540646e600f9bf70f2fe712",
+      "session.json": "7e1bff7944d1a58bae1308037c211868b58e580d762031e8be72bb305f4bb6a8",
+      "warmup.json": "20ae37b642e4d0d807f3a5b588bbd8438ccb050dff88fb7a2a476d7c0f823755"
+    },
+    "c01-t06-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "386237ffa357553095384640df74fcdbf123a461cb3f1ccd2b2e9be236ea1b29",
+      "kernel.log": "ddad1ff2f73ed2ad6a798172dd1f285d504afca33036bbaaaa2f81c6d38ffb98",
+      "measure.json": "fc8ec0624b0fe1b3ca8bfe579fc5b76a3fe8fde14722b9f9a38474783c68a916",
+      "session.json": "61b06c42957e24b39209894066cc8cc3956e0c2995a1fed337925bb0e68f42a7",
+      "warmup.json": "62ffa9e5a2c9d839a73dfdef7f4453ef371afddb20a860733e73e752ceb83468"
+    },
+    "c01-t06-r02-direct-native": {
+      "drain.counts.json": "ae65815d9ca371a861782984425c0079cbcf2ce8a6338b259d534e1661f48f04",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "a224a0946ef942fa9663a681312ffdb1c696e4f9d2e995c2e01b3e0ee8b5d6c9",
+      "session.json": "303b2a33f9ea4c5fe867a81890c874bca0edd9ac82f15d94615a6b158959007f",
+      "warmup.json": "16c04d6452b08dcb3fa36ac1e8b8b04e0643538865444c7bc055f0e4614de99b"
+    },
+    "c01-t06-r02-direct-tclock": {
+      "drain.counts.json": "c51e3e16c87b6c7d3fa110ec9106bc8007327c0ceca0fa1f77d81818992e469f",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "aa7abe5d28da0d9837e894680cb159f54f617252b6f2babeaff0754f6606e258",
+      "session.json": "655985888e905d0381d8ae5c99b5b379aa5f7bb16cb419d4c63a90b9b582b855",
+      "warmup.json": "7999a06ea0182a47281cf188cb94f9c1c07095f9aa326e515cb51cc56aeafa24"
+    },
+    "c01-t07-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "61abc125c4f6477bfb44b10359cbc3088533c664ce5d72a3f95c74544e95799d",
+      "kernel.log": "c70c249816240a165375133070dc9a2a62c5da47ee697e7d302538b89c9fe210",
+      "measure.json": "db6aa560ff75b5a47a31d7e478ed9b9addcfde3e7fba8b32d070c2bdadbf5659",
+      "session.json": "6a79d486c78aa836aee9ae5182ec705806f874883ed3b68555b7f9fb4708d224",
+      "warmup.json": "9f126467573a3f4c77564a48b8199e29b07f4b66e81d659675d956c32acbd749"
+    },
+    "c01-t07-r00-direct-native": {
+      "drain.counts.json": "7f9ec98f8b95de2656f9ab12f6c8288cd85d10e9b10c5460cf0a882b8cf5e92a",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "cc16d76c26315a98bebd7e6b4ad501b848ad6a2268ee917616ea7eb07fa7f34b",
+      "session.json": "7e5639ead54d1f302f829ffcba952f5da2ac3ddb736730c8b4fe699f861c96bf",
+      "warmup.json": "b9a293313982f0c68fcc5e5c9688a001a4c576080911fefd7fed6f3da35e082c"
+    },
+    "c01-t07-r00-direct-tclock": {
+      "drain.counts.json": "97a58e39913310e410fedace4f4e0aa6af5c5bdb3d40b82d833d348f2a1468b3",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "b7ed45358248ec04123abe4033c7f6e28025bb68fd57c669ae939ef339c106f4",
+      "session.json": "38c13a86d7c5b516cf0598db90c2dc5ffd1952fcb9f7e9c8ae5e19f693366a3f",
+      "warmup.json": "bbbea6cf90e4cdf940ba2918b6a0acbae30e448f54b10ee8477a46ce46580346"
+    },
+    "c01-t07-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "a72f13e4aa5302b8526aee70f3e39c33d4f399a49b816adb88ea7c934dd16f1a",
+      "kernel.log": "972249bd3bbbb6a9f38d7c8cda40020bb12e5bbbe1bc1b1c0a26601bb76dd16d",
+      "measure.json": "28b78fe32f0c242e2cbb473882015493df1fed00b35b25e05b8b0d09a466e8f2",
+      "session.json": "7dd5bb1199f25c9a70a7b97f485310e58f753343a745327f47af9fc9ee110823",
+      "warmup.json": "55f36e4c89fb38afb20cbb893eb844a1a95e6077e8271df7f19f9f4e387b2112"
+    },
+    "c01-t07-r01-direct-native": {
+      "drain.counts.json": "34f9626f9de5afb6e1664ee7dbfc124a42a9e56e96e89478b95876d529e4ccf0",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "2aa679654c64091bb25fac1ad549680218fd891b7256bbcb1a5ba9605093faaa",
+      "session.json": "dc4d9116d0d80fd50821eff9483e9dba2fbf74e379efa4dfcfb10f2a6a19eb30",
+      "warmup.json": "850470e8ae81135b9936ab922188a0ca1e61ba4ed255e92c65820669434081b1"
+    },
+    "c01-t07-r01-direct-tclock": {
+      "drain.counts.json": "0622fbf7b39297595b1b02a890c644848cc67305b6ada9c5019cea13fd45ccc2",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "6edbdf8d1af870a4c39569390ad4af2eb0a5225d9dde6a93e2edcd849415601d",
+      "session.json": "f793da7cce3552efc76f2abe71d4f684f773f102f1592e4eed6dacaa92ee7faa",
+      "warmup.json": "dca2205049e52326635a7ddf1a316419fa7559dd41c5005e190c3c30d590f9c3"
+    },
+    "c01-t07-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "5ce4e6937276a32292ef0745bfa2117c23e4b6438502bd89746944bff7e9b376",
+      "kernel.log": "54c9512413dbaf8e9863dcb751e140fcfbf915305c9d5d264b9cf3f4f6f07ec0",
+      "measure.json": "51cd28cd1d77e414a0e6b5e21dd91bc3a1d446ea886bfb8c6a0175bf3edeaf7f",
+      "session.json": "df87f66488eba018d0b5f0a86af105d74a614162992ec2e7ea56bb929e79ed56",
+      "warmup.json": "3c8f89a72f46897e16801447b85a1cb2474a4b822d3f2694bcb45d446911a871"
+    },
+    "c01-t07-r02-direct-native": {
+      "drain.counts.json": "de3189322111b87ce637ab8aae0cb780ef711f7d671856bb7d4133c45c6e65b0",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "8bf82f161c193e38da1f859a3086e764eff03cf485335d18934b8a134569bd79",
+      "session.json": "7c12cfea896eaad5c0904680cab426c0dc15919e409019a6457a74d01c5d4e32",
+      "warmup.json": "6a5e28151f1a7a1bbc330354cd003a34114dbb0acd52942327376cd4dfc4f65d"
+    },
+    "c01-t07-r02-direct-tclock": {
+      "drain.counts.json": "ace326c49deddd3a6199d7e95e0b9bf4b4e72233da19eb827bd3f0c3c69280ee",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "9774e77684d4ddf3fa27636465e86eb547d8cc03cc7111ebe6bbad6e67de26d5",
+      "session.json": "f5df27fc4126b832f9a9bd80352679bdada15a29b0125213dec27d74e88874dc",
+      "warmup.json": "e2c35c2b1cbb5ad8370e59a764df8756187882db318b8e6d8ee2941f4b9cb3b5"
+    },
+    "c01-t08-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "bd8ee714a101bf6d3e6e616e06f942500cb951d5681a7522fdc3c95c40fc3fa9",
+      "kernel.log": "2624f1377625f075c55aaf78054225fc0c05ac047c9a61ea822c341d12edec48",
+      "measure.json": "9e547e2434cc1f87e7c86d47362f5484234a00d79adc526dbff9d712863818ba",
+      "session.json": "f27677dbaf9f8d3edc01bfe4112f5e344b3e4d2191a6110c58c4a28d5e8c464f",
+      "warmup.json": "40daa71a76ba3509b8110ba9b8a51216608d42e4fdce84e262eff26c678c734a"
+    },
+    "c01-t08-r00-direct-native": {
+      "drain.counts.json": "71ebadd0ce496547084f4378e6b4f909273d4a1165f4e2d94fe4e7f0dda399bc",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "7447eaec70f21f5ffe12e21ace9b4e0e46ea18660f710aa884586bcb33aea1a6",
+      "session.json": "f7c2d2f3a8d3b7c9a0412ef8ed5caa33d4ebb2276c88e03f6985016442933700",
+      "warmup.json": "c316e507b33da2cf773ad7b6c2ac1aec62b3772c6bbd0fafce0bb2e2adc493a6"
+    },
+    "c01-t08-r00-direct-tclock": {
+      "drain.counts.json": "99fb7edfc4b502ab43396c86aa14060154900cf3de37baef2dcb77bb7bed6c45",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "c03591437d841bab4d78ec18472cd0066250a8fb0e3af9434a61954dcfdfba78",
+      "session.json": "475d833f316aa5070ff9208ab21826fefb764a5a2a6f566a7378cf00ac3e8535",
+      "warmup.json": "5a1c6e4cd58884feace1608afafc807082017cc6e88044407348b8e3c96b68e8"
+    },
+    "c01-t08-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "97fae3473963cff402342eb1d46d0c14e46bd7d436b02b5361b44c390efff991",
+      "kernel.log": "824a97d832901ed50f0ecc4ef01a91ed2b22b0d47af9a43693bc6bcabb8844f0",
+      "measure.json": "061776b24ba22867d3802bc32aa34c2a7523c339c06f5872214da5c0c3705c44",
+      "session.json": "1eb7476bcb09b5f2cce225cad360c938a3728439987d7c404eae3d1a941f6060",
+      "warmup.json": "3ab6e27d4e4c31a0b9919d15b5f5c892f1237e4cd4c5f019ee47e3215d5c8841"
+    },
+    "c01-t08-r01-direct-native": {
+      "drain.counts.json": "74e69d47c8b5cd8321b985894d23298a6adcdc369c8584a0c3f6a60dcc4fab07",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "9f66d1fb5619d1fbcdf9da73a869d9857489da5964a9eb3c4923c5fb62dc3630",
+      "session.json": "6b213715d2ac84163782e9ff23724ad9d80fe2eb3a1a94fc8ffa2d1d4311d199",
+      "warmup.json": "49f6df1ae26b0b188db6340297bc4b50d8225c93de63c3d716b0bd660267449d"
+    },
+    "c01-t08-r01-direct-tclock": {
+      "drain.counts.json": "a1bf69964a6588e492eb4c5a34ec8843d737f73e05e19bc32d944b67eb6d4a9d",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "4d7775c07ce2172bae84f12f8d3e9e1e5861e6260becbbc9c40f4bcf51e51c3e",
+      "session.json": "3e10b5f03925c7ed37e43832279f7a84f517b5070beeadfc6cb6ba29e0e1dde4",
+      "warmup.json": "c9ce68e4c9a51358e1c0e0df778008bb263879f8be2db29baedcb95db2ba4f33"
+    },
+    "c01-t08-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "4d2a74bb6f7a90d51fa039f3a555f4deeaa0acfae323262bf23ff1137310e960",
+      "kernel.log": "5efc2cece5f969ae762dd0f5abc6b654d28219e45367c01c099e7d2b5e387e19",
+      "measure.json": "fd49a9b7e4b0f32b496ca01db72b23724a8f04e977f4821be019dbdb6b9b6981",
+      "session.json": "104b59c8bfa9f0fdcd1f5216157d3e27fa86047cdf194a5b309d06c04e00beb9",
+      "warmup.json": "0641b215aa1ee4ad01ff25fbe20a4925ced4456cad86293f6e1246255a3433f7"
+    },
+    "c01-t08-r02-direct-native": {
+      "drain.counts.json": "fd588e90bfc433c6240cdd034e97557e3027656ed7f0a049ec83628b880f24d9",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "42c4a2bb5413e72c1f1298b2a815a9761248c34410db57608811ddf9a84c110b",
+      "session.json": "915eb38562e321d81011b05b57dc45d5dbcddf11ba722782c3197675cf77bc82",
+      "warmup.json": "0489795e03d5f0dfbe9b2f5b3fa19060b896bfe8e2504efe2f825ef19363b831"
+    },
+    "c01-t08-r02-direct-tclock": {
+      "drain.counts.json": "440b43fbfd708ce35290f3817645b0277037cbc252667b672b775327623b5a5f",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "12d8e48b64a3e4d6815d4fd645ec665f69faa4df9be936b79ae98fc102f8b832",
+      "session.json": "95d4a3328213d82de075b56740c904abdf4bdaca3b9a404a9a886df98b2508ce",
+      "warmup.json": "9f8a40462dd44197d28d9981001ffab2c00c12f5d4fe2a8d2296d2a98c030e7c"
+    },
+    "c01-t12-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "747b6bf2fe31986579cdff40f60d3ffab3df99342a9ccda63e3a7eef74bb913d",
+      "kernel.log": "9b257fb39c2dfa6b1a30ca1e2c81aedb862f0b63630eda2032fd3dc637b52c71",
+      "measure.json": "cdf074c2c3cea8d4cf883d4563ec941fdd7b92befb8da129437ca62647c310f0",
+      "session.json": "518a49dc1d86d1fe64d0de8755765c3099e9de89a16eac626daf71ee2f7249b1",
+      "warmup.json": "995b3d370d483142a52c57358bfc99c1e3b130c9c427da768f4501f0198b519b"
+    },
+    "c01-t12-r00-direct-native": {
+      "drain.counts.json": "8ef3661cf4db1580b35dbf9f6bbf21aa4c3aded4c57f9ca95d38799470a968b4",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "69805e33d34d94cd937021f11aea67089e713b30fedd670e95ba863755959bba",
+      "session.json": "235f86fec56913e2df87c45fe2270eb4855335c1e8a3b352dc1e41490bc09f69",
+      "warmup.json": "9a6095dea181f2decb924cac33f7503141e123b14829613c38b8de1ee700aa6f"
+    },
+    "c01-t12-r00-direct-tclock": {
+      "drain.counts.json": "cb00002b33c02f2fd3c1c74f96d83221dfcf3e119d7f2a89ec5a2b5a72799a58",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "744efdc4f840751077572e29972a430f2d7ffb6442e34a1ac33f6141be8b5904",
+      "session.json": "204157ed718a5e29007360da437f47b90c9998eb15001be6c5859aa740c4401e",
+      "warmup.json": "110f58748b1b1d317a0ded3941230f479aee10dc529296947a441e7132d2868e"
+    },
+    "c01-t12-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "8d5f52051df4cc93a38f68228da232ee39436e93e6c8292b3b5dc14d630ab154",
+      "kernel.log": "7f922d5495efd7def38b727129f7be42f7b767a811f86eb26cad54ed7c410821",
+      "measure.json": "8712730214c13455b5ed95dde5ada6dca6325c8c8eb43df0a02e6e2249020a08",
+      "session.json": "29974eb7a7da1c4ed7dd0c25fab1fd984f1975cf11bb7410569097ffabb216b7",
+      "warmup.json": "48eb2bd2c835214275452d91874cb286521ca75e64f6323a2421f0d0155b9fb8"
+    },
+    "c01-t12-r01-direct-native": {
+      "drain.counts.json": "72b6dc6ce29db596537daf7102e5764cd86f10faa077c7fea36fd3583dd336bd",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "79180a743ce064fa8e735de3b86de9afdabc4e7f9aa78af3dea2e92501718600",
+      "session.json": "5d3d02f97acba09fcf21943336cfe114a194a4d66e87f96d9626569b888111a3",
+      "warmup.json": "0bf739bf8d9824d8857f987f077abb99c4c4f2e71a177fee4384efb59440043e"
+    },
+    "c01-t12-r01-direct-tclock": {
+      "drain.counts.json": "5ea60d769bd0a54ab14b02e4f5a7bb61f033598eab738dec82e0b8b6206e25cf",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "aa467905539474a79272174dec8e994e4b11cfcb896f8880ea882318ceaab852",
+      "session.json": "ee17c3254918b469cca04ea574d1f5f06a161eb26ada0c1f5ec26f9c25609ca6",
+      "warmup.json": "7d7fb750323f1879329696bea5a725a70c4d2bc16658b9ac73fe9ef693a2fc5d"
+    },
+    "c01-t12-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "8e269a3371c606bf062145d3794369b49f4a73bb8f8ddc7ae1a920db93c686c7",
+      "kernel.log": "3a7a35cdefe07a3867db9b0a82d1feb0c230743c241a5db13d7854d697ea3401",
+      "measure.json": "35c380803b06efabc395811d83d16c1b094ca53083fa0432f96a76511b8f9ff3",
+      "session.json": "0d15d28e1ff7cc1622b0279846ae93589b8e72c7f26fe3aa487beb52f941ddf2",
+      "warmup.json": "d1f0727bdfb412dba96a504da4dce8da5218685ae993c580749ed0bbd7ee693c"
+    },
+    "c01-t12-r02-direct-native": {
+      "drain.counts.json": "9c32b08a9b1a90e44af30cea370d34cc9e19deeffc27e60225349a0e6583ba91",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "026e8e8422d41a52664d8acb05ad6266f21eeb085427a4ee3a95ceb3b307b21d",
+      "session.json": "11e885d903f4b476bda231f3f75bd670a394531fd8d6ea4f5249d2426aab1d08",
+      "warmup.json": "17aeff78468ff0d5380b19e765074e79d8b5d59b3e323f4709acbc6d1dd45caa"
+    },
+    "c01-t12-r02-direct-tclock": {
+      "drain.counts.json": "49a80086ca1110e8b44009f7bb16272483690945f5c0e71c929d8e4227f1780f",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "107a1133df540f408f7881b056656322669f57797edf7d6170c4b532da1a31a8",
+      "session.json": "42211a692a247a75045e805435575af2c6c26ecd91485be3f6da0cb57989f9cf",
+      "warmup.json": "e65fb5e1d4bdc6f7fa647c5ac884afed5a676635e4b448fac11ec14db82ee0f9"
+    },
+    "c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "dc888007e9004845989df2a78225b50dbf4e9cc3c3821a127f727de38b7e6703",
+      "kernel.log": "329fe9522e419ae7582327b067ba30956b7f0b9d036fe13c96590f3cf772330e",
+      "measure.json": "0d61377d51ec3055731d652e1734fe7f19dc86d2bcf78ca9c864b8df973562b1",
+      "session.json": "3553896952239a2d5867bdd1e730fab6c539375b7a8d2c04a0baaf9e412d969c",
+      "warmup.json": "a536cdb3a383ddba641586323e0a42689f851dd0723be52f3e51c17f72b16216"
+    },
+    "c01-t16-r00-direct-native": {
+      "drain.counts.json": "5dabaf75dea5ed713ecdddb3c68941ffc9755cfc583ee68c0f42844fe7e0c552",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "3aed80ef7d294ad8ce5a236cbef071b975b174bc62d6454449cd36673c271733",
+      "session.json": "c05ed58e1b69ddcf162b6af5ac3cb0e3d79ade117ecb0c45fca7ab6f1fa17f76",
+      "warmup.json": "7c00c1ee70853d1b6873e12bf0a507a4b7affc0adc90ace3b425f3b4d63bf446"
+    },
+    "c01-t16-r00-direct-tclock": {
+      "drain.counts.json": "b9b55a0fec4c4274aee3cde6dfb7a82eac96792363a8b52e58e805ee8b01b46d",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "386306346c50ea4f213ca66a85e222ed20b60ce30a9812ef8e558cb3c57e92b4",
+      "session.json": "2a2b803a3de38657d149dc5e29c5e6eee3b605fcd95b783027642d35fd4fb096",
+      "warmup.json": "1223151fd199e1c1e1c3e5fe73ec4054e7b6716a8dcc453d90811dcbcdcd9eb1"
+    },
+    "c01-t16-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "8e641e67ef10b068d0c0d55dfa7416d47bcbc1e4d41cb40f0c50f493f624f8ee",
+      "kernel.log": "862b9df50a6178d1f9899095170ff7d2624c9c363a9bc807c6b5120d1d94a4a3",
+      "measure.json": "e2c24f4178260512bb8ac4d2fe5facea82799b1829663aaa4515bcf1958060e8",
+      "session.json": "4f14b3c435f05e733c63613cd13ffef2d25a1200c7f7708008ad2774c5ae5e56",
+      "warmup.json": "c20cd56663c0a1c8f29c2f9b6fcd83a5c72bc7efb52df9f124baf10b18fc6214"
+    },
+    "c01-t16-r01-direct-native": {
+      "drain.counts.json": "533756accbf7fed24fbbe357cb95776620dbf9230eeca364c5ef5ec847fdfd35",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "c0a91c854423c0efb581ae44a250756da71bbd5144641123df88b4a06ecdff8e",
+      "session.json": "41c139c401c4e3575cc188d950fec53a247111327c3fb22bbe6bcc580bb49276",
+      "warmup.json": "7cbeed0533642e08538bdd227e230ec84e42444d9adfdab7502d5745f5e91e99"
+    },
+    "c01-t16-r01-direct-tclock": {
+      "drain.counts.json": "2d702b8462ba2655f7c7ffbe483dc2e670fde2df10d48b147c9edd95cc950169",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "cb6cd3ff5d0fb766a9124cf64b690b215fd2360d45374003d156b32a13133acf",
+      "session.json": "6d66f347f5d4efe09bc1a9efe917e466d156134cdfd04f5fff7c40f00e563e82",
+      "warmup.json": "82d578dd709cea477b335d291872256bf4e4c5f1e9a01caddd6787f676993a6c"
+    },
+    "c01-t16-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "41fcee22909ad06a61f51a7d1c5f525e3c15bb29f5fb4a9b25897e7b4d5c93c7",
+      "kernel.log": "d097cd432d29e7ff5e9f7193998b35bcd0a1646310604604c9d63744ea0de68a",
+      "measure.json": "5bafd7a72757a762cc6cb3c25d1b69ab397040f81ecd14da42d2117830fe2bce",
+      "session.json": "f5b6354fb023a9fe9f2b9f7ec59ddea129f56f661779a416f01295c2919e6a07",
+      "warmup.json": "6c0143d0c50c1446fc9614899b82c9742dc19048501938b98fb9d721ab8dfc0c"
+    },
+    "c01-t16-r02-direct-native": {
+      "drain.counts.json": "92e6bdd378bdeec805b136fff9b1c90941f845919ff60a81f9fb03f0c83e86c3",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "bfe0245ae497833f8e1629dba76ce199f56f463eed1ac007d60ac3bc839f7028",
+      "session.json": "65da05c08666b6b3cf349e172d360e6587fc80f91230f3036916bfe46e63d225",
+      "warmup.json": "666beaf3d86aeaf88d73a8ed77a8d4c60354693ab2e2629dbd27c3983827da8b"
+    },
+    "c01-t16-r02-direct-tclock": {
+      "drain.counts.json": "f0f7f1a2a7b1e3f02f90adcac388cde6f0f591eaa7e42bace9c3af083223999a",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "4e893cc3809243b3f5c882d8121d72ae0a74084803a47e8a2a5fa19a85468839",
+      "session.json": "a8729710e0ca715f72eb3457fc28e5e261183928dccd0b222876b3dafff6a03d",
+      "warmup.json": "15f47e82106461cf84f2028a84cb2fad9b949547601a144da5cc14de986189c7"
+    },
+    "c01-t20-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "0579117bbd78f762203235b4f3aa2080daef11c0976cf12686dd8b0bfc5b0298",
+      "kernel.log": "c92dc25d5480960397a1dd2338f6d335cd598f56b1a77be8ec647e90a7fe92ce",
+      "measure.json": "c8d68307304ae0d1c80e39c6be8f360dece8ad8be83b97eb012e6dce06fea7bf",
+      "session.json": "2cb3f94f7a59eeae96e4b4c5e3761f0fe2684ceddc05b7207591e6cb470a472f",
+      "warmup.json": "4068d6fccd63ddc5265defb3254902e7a503dfa80626b1203121f79d38781981"
+    },
+    "c01-t20-r00-direct-native": {
+      "drain.counts.json": "9c1ffc40d870e9a67e3f6d4b8ac519d23d8416553ed2fbd8a3509e6a74181c03",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "c20d0fdabc3768d404df2a8ab20101f52cc1b5b5814a2a4ecc07b1f6830b37f4",
+      "session.json": "ac259e1ac064e59c72740030cda92b6a5545166565cfc4492fff62f4d1c82b43",
+      "warmup.json": "d03daeaeb50beb2360768aa419192aea3d2b0d27b1a90b1f1f47bb74d2861888"
+    },
+    "c01-t20-r00-direct-tclock": {
+      "drain.counts.json": "b99518ff1d42c0518a1f48558e42d71946d4d401df371374e6c625d1cd7c262c",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "1a5d95abccf9d03b34ef1c65b37d8f9ebceebe8776db72c43296b1811c91ba74",
+      "session.json": "5cc3245a9b1d5044f268d04ae77a778960bc8b64650e92259a00fde648ddca5f",
+      "warmup.json": "e25f17cff7c427d3e5bc5fc5dae27f9348b01240bda0966026cc52ce856e9e5c"
+    },
+    "c01-t20-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "c2981c6e54b85e2b3e043e6e158ce06defe272d7b66e1159f20df23eebce0c9d",
+      "kernel.log": "e61e9c6b4d54477657281312104884d20f6f2ed5ced63175729900abc1b8d86f",
+      "measure.json": "a440ee16e60223fc1b7ef8bccfd6a99f28d02fd394f3eccf172c98d6fae34d5e",
+      "session.json": "a48d1eb1f54ef9f9157d40d291cace93014bd7f5f55acd4d38ee6f7b79be4fda",
+      "warmup.json": "c5e58738303bc8dda9b5d7383dc321d0e3f41325e50cbcf55d0a7c01416fdeb3"
+    },
+    "c01-t20-r01-direct-native": {
+      "drain.counts.json": "1c14827d8bcd112ae2faf9c25a4c6d37b23cc9830cac63e34eb005ac77348bbd",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "17beccac5ee96041a70c8da0b1156a81ee85339014112dbbba138233ac895223",
+      "session.json": "992852b1000a93ed801458080a6302f830ce927378f214121bfbbc86de72e59a",
+      "warmup.json": "fb14ac7d968282103efef0cee2aeb97fee6c7bbdf136f33591cab3b6d13d14b7"
+    },
+    "c01-t20-r01-direct-tclock": {
+      "drain.counts.json": "1d8829b9e0ab685eba8ac6ef59469a0472d1d02c3718c4f05355fe93d3b51102",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "f0fc1f42116e68ad4faebda15bc96948427ad8f79c390f3f2006b18465cb4951",
+      "session.json": "1f4c42e5f0b686682265f6dd234798ed07e3bd2e508de60e204854626d9b8045",
+      "warmup.json": "992b8d4feadc5ac436b2bd19cb2c78c2ab62da7e4a7f3509f225e4ecc3325094"
+    },
+    "c01-t20-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "088a5c80ffaad8a456dada48bafa3fa656d9dcffa87c91b719200fcfee8379bd",
+      "kernel.log": "5cbed5c4f0f418c242157f2fb5e392cad4204ee187517bb23aacd1803a55b054",
+      "measure.json": "9e89e16b9bab8b8043a3d056007e89c01aebd9a0c5291c07bb12077d477b78fd",
+      "session.json": "dc3e4490af3cd02406c89fd7bf35d0eb74d7bbd62b763357a69788cb3160589e",
+      "warmup.json": "3d858829324bf858a9d54d21abe495b2be1b54b6021760d27e958fff38c99f3b"
+    },
+    "c01-t20-r02-direct-native": {
+      "drain.counts.json": "6a02ec38dc7aaf1b7001dce88f6ce03b5a35b3dbc9049b479901212e439c3376",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "d6e573f98f4d28a78a70d75e7d5b70e4e055bf3295ea38398e895e70661c2a69",
+      "session.json": "6590288e3bed7e1d2d18e0eea2434ec78d0a54fa01f8489c09683bd088376603",
+      "warmup.json": "c0408fcc2366f9394cb7c3f2751aa23b4fa42560445a32231baee36102a002b4"
+    },
+    "c01-t20-r02-direct-tclock": {
+      "drain.counts.json": "abf46b5855213b6ad612c72678f6c18223153ef07aa52b3c0b1d1ad545f47ca0",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "912bed936babcd676d66d32f48e907c4befb944429c7632539feda025d5aeb63",
+      "session.json": "19996042e2f77b50400cbffac71ffd4f152a04686335b2353ecda5a03a201b45",
+      "warmup.json": "45f8b4f96a8b6fa676168aeb72c52bfb196f1f889d04ecaa8035d07c72045adb"
+    },
+    "c01-t24-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "d886f6ccd6977ba8d90af7484719887cbfb0a2a3012515ea84b145253addae54",
+      "kernel.log": "23a95f33f0b2d22846fe25254fd60a8862a3bbc9923b543f28b42d61c3f03e05",
+      "measure.json": "82012e6137a2a038ff2e67e6ec37e5f0b4bbbb28ed681fe729098f06d631d0a8",
+      "session.json": "df23b87727f35ec018f5e39cda30529d51e29a5a3f054d7c391482faa455890e",
+      "warmup.json": "dfa7b68443e68126e53076f2ce68a8b2cea54c83948ae9be47c2b32e5a642ca7"
+    },
+    "c01-t24-r00-direct-native": {
+      "drain.counts.json": "62ba08cd970c89a78895eca461080c22f5d66a5097f38dd5f21247f791b0d795",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "c9b02205b488a7bd8a6378d4c73dc2d4812f48a4bf61dcaafb10e09ef970fca7",
+      "session.json": "3cf97f3acc7e5e4c41ef4201a11c41ee1a9ec706ebd1cc1c9325583f0a2fbf99",
+      "warmup.json": "b1196c7a9a0bba498db80d77fb0abe0594572f2d76cd9d96ad23ace0701b5a65"
+    },
+    "c01-t24-r00-direct-tclock": {
+      "drain.counts.json": "dd42ead00d3d3c1f26bf44a7e3b063b375d66d4d7a4b3b10c6bc7e8cf4a84863",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "32cd3a1cf7637f399bb89f98223ba293019ab3bba7497ffe298cc18534bd6461",
+      "session.json": "018e9680d464504bbde6471bc790d65d0962224160831755232743d5b2c2de58",
+      "warmup.json": "e10462466d652a7e905eac4d88d74f30be215e7802acd845a622f7999916b51b"
+    },
+    "c01-t24-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "f1bc7000cfd183ce9bbb20e42034fd7e2bc3bef78bc9e325aa853cf7cae48684",
+      "kernel.log": "379cd8f82aa2c30231c7b69b2cac252c515e5605f5f565c75abe8f2ea6b538a6",
+      "measure.json": "ac825ffb6ef659e0f590381fcfff54714ab0aad12d202c5695665f646837ed9a",
+      "session.json": "3eab119af0dab83b4370a19210f723d4a93f6cf681673af9fb727a0390e5cf05",
+      "warmup.json": "b3de27290e09494cb6969193b818f8529b7a03e2f7cdaf0be139709c49e5ad32"
+    },
+    "c01-t24-r01-direct-native": {
+      "drain.counts.json": "e27aab8fbd5878f6b47f45d5ceed8931eea7ed62f688410542b01ae5d3347686",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "7b129b9f2c14e29eb9e98f14e6f5b066b7dae847d5d7a5f8c1fb5558b9a78045",
+      "session.json": "c9cf17853d39cddb2f6903bd229c6a2ffb26ef71151efc4eca5d14b1518a460d",
+      "warmup.json": "75b0637266d265a8cd67f20a6dc112ab718d2ccf896cb6f8341cf74624f5639f"
+    },
+    "c01-t24-r01-direct-tclock": {
+      "drain.counts.json": "c8c541ca9387da8a53954ec063b94279910e69cfa31841b6394858fd1047066f",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "93138fd8837e04a4ad216b8267351cbcd4076202bdef9ed0001ebbd433334144",
+      "session.json": "158017de76e9f35f760477301b945d081110afa8559df9bc35129b2d6d865222",
+      "warmup.json": "e86a853c68045a320089221df3e417f9147379af50b4d952daa0ace68207a976"
+    },
+    "c01-t24-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "48c04cffaa8d78ac199c18ddfc0c19f2870c70d369d57e15ccf75ffe8c999f04",
+      "kernel.log": "33f8ee272e77804b633c1f78be059752f26d375e3e07073ba458f2411f826ed6",
+      "measure.json": "5642ffc472765b0e60fe31ffce3bfd1f14f3666868d4dd30bf05183903905af8",
+      "session.json": "29b039933dcaf92ea195637f9f68417e4d72197b84df765a4d4329736fb28eab",
+      "warmup.json": "12d6b1f00263d117d945ae352c1aea44234016699578e3006835fb136a454b7c"
+    },
+    "c01-t24-r02-direct-native": {
+      "drain.counts.json": "efc9c5ce745c53860359d31c115abcd85e285014ed81dde35e5866d894ef8e52",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "9632a3340b33a4680c67c234f49413d1d42f3e6366862c311501cb9434d2463d",
+      "session.json": "5938f04406216479299818c017a2e7494b84c6e3541ddf8f3c5dea053607175e",
+      "warmup.json": "6c301889518b14e3d4e7957fdfbf02913de39f7efb888d554bbc9f2b4ce6e934"
+    },
+    "c01-t24-r02-direct-tclock": {
+      "drain.counts.json": "256af538093bec1080e041158a22672bfea85b3a8550dffd4796cb0b984b6bfd",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "1ab22d939858e24f260ba2421d2845c1d45bb8b64430725393e2c5e648435463",
+      "session.json": "69b45c5edaded0adc8b7b0f4877aebadf98285091a159399ca98005bc9fae13b",
+      "warmup.json": "4ccbdddfdf4bc14d1efb7c65f34e542a27900d0eeb6d09804c812841783f0f8b"
+    },
+    "c01-t28-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "bcd932029f7160fb98182aa5f5a8bdb07b7dec130264f09ffba78873594148b2",
+      "kernel.log": "880925a6f6dd0acf2179ff16acc8d782031bab42ffa09f2e6ae3beff002370db",
+      "measure.json": "923b4588bfc4ff34a1c3332bb68db48a14f9680cb3a7a20fd5ce1614ad69e8bc",
+      "session.json": "8a065b7de4af009a35aa98d9beacb2357bd3417fd070be7a495be812e265efb7",
+      "warmup.json": "c16b2d90551883638065e2e34a9844d86ae605ab0fc3861f473035a1b066e0e4"
+    },
+    "c01-t28-r00-direct-native": {
+      "drain.counts.json": "2166e714fbcad71e9d7621c092d126d74e3e77619cb1043020df46668fc99bae",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "90dcdbd1a0f6de4cbf0c24587d1a7a54c21d294f263ab4abffda59fd6551d803",
+      "session.json": "8c4ea99562f6a74a15784089e16865b2ff16993b770049acfe6c71eee7fe984b",
+      "warmup.json": "bb25c644be0b24eb1bed3020dc0d7873aebe50e91b22d6a6875d40e8df30d124"
+    },
+    "c01-t28-r00-direct-tclock": {
+      "drain.counts.json": "925616253765746eac9d7cad28cfa614ac8aa220dae7386d09b95a5b80041194",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "3845f37b78894fb80f2ae75ebbb19cfda756759ff438bed96cc0e6f7b60fd12e",
+      "session.json": "99829e55aee04a5ba920cb531cc2da829536d88bac8584cede0b1be5b2eba9d6",
+      "warmup.json": "cd1c4e4faf82dd9c5ba4d8618a3b24ef50807360ee8d844fcb30e7bff307c0ea"
+    },
+    "c01-t28-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "9b5ed134f69b85fd97c9fa3aa05e44583731a909d59ebc8001ac39cd46f77d10",
+      "kernel.log": "1f646dad76f6c747c5fb8a31dbf959df1052262178b5058d52c99ebaa20455a1",
+      "measure.json": "253a104f5fb9fcd5d76c87eae255b59f496d3aa64c71bc0a1a630d1a7c5f394d",
+      "session.json": "3a7fbb2bc40ca753e518ecdb4ee0c72c9c56a2a342134aebf06917fb974614b8",
+      "warmup.json": "e1a4a9564f8d504627da5fb85b43dee2814d3ba39d5022683d4708ec56d61391"
+    },
+    "c01-t28-r01-direct-native": {
+      "drain.counts.json": "5f1caa6fc1ed860c5fe93203774c3183016cb29b222c6c0affe471d24c143737",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "7fefa2a75ffaa511e7d1c4b47f0d7aa21f8d97afbadf61609b621b10c0514f0c",
+      "session.json": "d1cdcf87e1c61a0c150a6214780be1713939a883b0555fc66ca197bb22dc784e",
+      "warmup.json": "6a4e907733133236ec439bf106f6681d98c5c6226cf41dcdf48fbb8c26e08c7d"
+    },
+    "c01-t28-r01-direct-tclock": {
+      "drain.counts.json": "6008072eac61b5d7747cb453dd63fa2d55dee5b3d74fcd9c745527c0dca85546",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "54358713a2e4d2bc083523c71a65bcdb70a8aa461107b1082bba41cf46eb8bbc",
+      "session.json": "2ad071cea071f15ccd6434c6fdebb752f1ccff3dd53353c50676c011ea9ba0eb",
+      "warmup.json": "17d4f9bc3e8b6f786c270e7a84c3b7366f854be87f63e01a9598a2e40e9314bc"
+    },
+    "c01-t28-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "979ba4f1e4540e4d31bb8c6c6bffafad68aedc4e9bd3be004e623383717b8959",
+      "kernel.log": "af3e4bf6d977222c2bd069fca41ef169814428a81fd28ad85ecdf5bdaa5cbc6f",
+      "measure.json": "756416c8179cbe813cb112a90b59c39113fa65fc09134f4bde6dd16721a2733e",
+      "session.json": "5285e58e546dc9562dc8005f5a4d438091b3577ac48f097a78f26911382249dd",
+      "warmup.json": "d4ebbc94e4e97de15a103d750e2fc152069251cd62df274da548c48d318239c6"
+    },
+    "c01-t28-r02-direct-native": {
+      "drain.counts.json": "706d55d5bc2dea8f36852f77fc133a8843d9d201db34b00752496213b0c6c4f2",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "8ad38f8dd06b04cbb80c87f4cd144df5805d3582fb89bf5339ba81b9b99abe08",
+      "session.json": "111d3312f00ebe58e0402dce37c55bd97e52c6958881d39f0bcb4010f515607a",
+      "warmup.json": "87360f0a7303720ed7d6052ec35e28362419ec3e91160fb17aa6b7c3a52c674c"
+    },
+    "c01-t28-r02-direct-tclock": {
+      "drain.counts.json": "9e0dc6fc03c9e13e88192c649b5fe631e09022f9d181a4a9aa99e22d2caf6c55",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "40582156eb92d76d7c54957907bb8475fc5946bb456e1f1086a2c546040d574a",
+      "session.json": "9c65cbfd72714056e77279a2e03b9a09bf259ad0d20a9d6471c772b72b0ce3f9",
+      "warmup.json": "d2a7feb53634b2b35ff55b6d50b5b466a309b1088c5e219566d0e259fe562294"
+    },
+    "c01-t32-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "b0fff7091e6f143f22e98761b3be3788eedc6ed70de0b66cd512ba777b739e17",
+      "kernel.log": "7d402902be88e2a9f4ceba1e5a8ae989cf51219dc42aed940d908cf228adbca3",
+      "measure.json": "b364185636835bd2f9997ede75657f2f7669cc25bc9efed9c52a4690447cf068",
+      "session.json": "47996641364129ef63b71780e44bf89462886c17fa948935796ef0bd6636fc2f",
+      "warmup.json": "831d8cbcfb6f89040423b9a7f56ab8e5f9ce90e3603a2fb6f28c56be83669301"
+    },
+    "c01-t32-r00-direct-native": {
+      "drain.counts.json": "9c9e69f9eb131bfddde7afcdee12a34f532b6bada083b7497ec1b87fa24be55d",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "3ddf020ca3119867c108024b7bfd832c3c6f9c0b9573fa410078b9565d106428",
+      "session.json": "eaad89935fb72e4bbd751cbdbbe1493e593192a8f1f7746142be8b1c7c91030f",
+      "warmup.json": "94b359889f0baab0ab23f1cc57933dc8a438358a9c8c82cb9dc863a5d8bf2329"
+    },
+    "c01-t32-r00-direct-tclock": {
+      "drain.counts.json": "9ef87810cc4efb64b77136f6dcc901d4ce39b61c24da92b462f7454d23cb1f0e",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "cdc4635f35e25cceeb15a99ce99589ea3d10df9a6acc90ddaf665960d5cdc720",
+      "session.json": "75cb79d203a50f448091f5fa3dcfe1407033452a44918e25525d0dfb3bbdb34c",
+      "warmup.json": "691b1041f60305cc466c603d25a51ddb92a9e65347f7e8d179b31460516fad41"
+    },
+    "c01-t32-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "41f31b4a5ca1de7e2a4700d981eefe6530948265eac2094cd1e20bb9889232ef",
+      "kernel.log": "e92aa24fef0d48382946a6a5e2ab9d6d8b8460e75c910de4c539f6c5e14ae5c2",
+      "measure.json": "677a9f097a64815932b77fa189d077188181c68522f046ff23695fd95eccbcc6",
+      "session.json": "39cbf1093a0df43a2a8958cf4f0381d7a52f92514324c45a2cc50990a9fdb142",
+      "warmup.json": "d6d1f4b1be52ec1d34b12fdbf182c037ff5180e1854a223d803ec6296c10bcec"
+    },
+    "c01-t32-r01-direct-native": {
+      "drain.counts.json": "3eff14f6adbde60f964fdf6e41a7c740f57b5f54e002d0225c86314063b40a5b",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "a00917c23d4ad967505760a6e28f7214d3b912426decf7d832ce9b2aef7c1b08",
+      "session.json": "9c1955d066c51d8dbdc111eb595c436037c8e252e0f1521957018399640a7a7c",
+      "warmup.json": "73d57bd1a4eb4b3432d4bd3ed7da0b3d45b33574b51cc056a33fe4c333ab319d"
+    },
+    "c01-t32-r01-direct-tclock": {
+      "drain.counts.json": "aa7b2e48fc9c259009497963b7a8dcabe961c8c4d6149cf09640b87007d9332c",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "e58eee4e2687eb721ded08d000862fa7456a6ae49403c3b989edf80384fb69b0",
+      "session.json": "ddfec86c7717df378f7782baf8c628973f3a6b634406dc4088b870367d79c543",
+      "warmup.json": "a712bdcbe5fdfb4cdf1209262f12cdcb0e4feb6f0c10df5780761392c1ae8f01"
+    },
+    "c01-t32-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "3f1f9bb29ab6fc2713a10d487f7975aafc273141fa9b0d57c992776dc51b4d5d",
+      "kernel.log": "814ff172e1f20526e9cf6382ddab879c0307830b2078d42d9ed91e71143a8c51",
+      "measure.json": "b963a99e29a8d31b55f0773875ebfef27a6971ff08362035a2cc1467cd7f0536",
+      "session.json": "67ea2d6cf5b5584f6101398cde774973a7442de8e77ccd7589c8a98c192b07ed",
+      "warmup.json": "e31a0963af2ac1e84f1a38f3634b7d128a6103c856196be9dc7d2e84baca2b8d"
+    },
+    "c01-t32-r02-direct-native": {
+      "drain.counts.json": "c7bc70550c3249834c3db4cb74f90bfb28a62ff869193ee46098c30aacb7fa92",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "170c223aa9c1b6e7beadb86d63f5c9eb0c8c20ba08229f33be5ede98dffd6f0a",
+      "session.json": "dbdd792e904ba00a59e997dae512739e9d248eaf099c7708f8ff777daaee5fe8",
+      "warmup.json": "82473d98190e64c6ac35204ea6a32f18753f7488d7bc38749b2ebff95058185b"
+    },
+    "c01-t32-r02-direct-tclock": {
+      "drain.counts.json": "4eb0af291afc25265af2b8a6a7f71b26e3afc6f3de6a4d0d928b0fcec241c473",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "9b4d09b27b7795fd94bc4b2bc0de23137551c85a90b3331a336f6430f8741f35",
+      "session.json": "5397b5a7e18dca99da653aa53a54a7aba7e3b0f57a65a7ce744fc8dffcdfbb91",
+      "warmup.json": "fb0335386769f71bc78937572c7b09724bc327c8828f706bcdc8ad2f87bef103"
+    },
+    "c01-t36-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "62bf0b080767815b9ee31edfbe12f2b362db863ca539208decae7b6e770375df",
+      "kernel.log": "12feb2314cbdf065dd121e2290a5bc399c24a0bf02dd625b05a2db6567f00baf",
+      "measure.json": "c5ddd71aafa62f9d74d994f243b0eae200b31db9cddbbc0cc1cabfab214a24ca",
+      "session.json": "06b9fe03eb5d519a733423d753c81b9d84fffd09619fe7d9fc8c14ae185008bb",
+      "warmup.json": "e0b22e91e9b81db373bb2e2006d401c11e92c1ea5a85e2dc52a78cca289ffadd"
+    },
+    "c01-t36-r00-direct-native": {
+      "drain.counts.json": "1ef36db501473ade481c0b66f02d192c909777317f7c99df8283078a49f3f723",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "03539aa10fe5855bc1887792162f01ba3c7b81921a29c23a77410dc58b761238",
+      "session.json": "ebe61dbd266d85774741292cc80e9a60a422b1d89af41fef6957acba87898b1b",
+      "warmup.json": "3697bc1f92e7cfd67ed220ab5801ee0037ca4bb901b7590048cb2158f6143c69"
+    },
+    "c01-t36-r00-direct-tclock": {
+      "drain.counts.json": "d96b8efa7984efb0f30f3c6094bed6bc82b62b00bac813b5cdff7dd325b0fa88",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "d2fb0abc32efa2a4688faa06870865668be34e49976b068c01b63504ed488b3b",
+      "session.json": "eca84c6eb51d5fa7cff38e00996bd39536485e9b2c5d51fe223ffbc0efa73430",
+      "warmup.json": "fe8feff3f482b5bf40b13b8a90af5b9d8cda0ef4d6d705cb8fb0a16210ab485f"
+    },
+    "c01-t36-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "32497217f797270678f9227cc75b1c2a981c4e1e183fbb34cc27a5adfa521b58",
+      "kernel.log": "ff58421c755d2a45db11b0caaa220c3f5fe0be0e4fb631345633eaebdc835ea1",
+      "measure.json": "84357e7908cb37e5b55d4312362b21293f04a80073e31e942312fbf2c19d89fa",
+      "session.json": "1ab416a03f3635503e59423330328df02ac882256e171b28fa2811e8b92e253d",
+      "warmup.json": "36eb9567c7cff53a69cf2f4b46fc861fd140b216401f01ec31dda15fc762640a"
+    },
+    "c01-t36-r01-direct-native": {
+      "drain.counts.json": "43402301e1b127f75ee0262c29def0046c3729e6e327ffa19f4b0cf95563d3dc",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "a1cced71640df5a295a7664645707b5b620e5438a9a52000a335d39c40667f1b",
+      "session.json": "6b7929723e429def8304aa8b9690c7b135447dbde402fb5ab3e1510e5a18e474",
+      "warmup.json": "1d8b279cbd4a7707e4567f64bbe2b4ac0d02dce07332c7f16f4f911af11fbbbe"
+    },
+    "c01-t36-r01-direct-tclock": {
+      "drain.counts.json": "7a00962431ad9f63095f3b72734c745903bfb6e5591ede397f6b86b8ae28d130",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "d0ee6ba9829f7b66756212ed49ef909238ddb6abde1852a294274d0d36da850a",
+      "session.json": "c428d6134ac480269ab74eb336a4505aae7987c569c261b4af5e1f8217f413a8",
+      "warmup.json": "6fcd68f1a7049f4a8a0631e6c5639e07320003a37a39ffc1f731c142e46ad77a"
+    },
+    "c01-t36-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "63882feac53496a878d196989161446a3a27dc262dd4ff5462bff21965367020",
+      "kernel.log": "55efe2cce1160753f86fb82df68811faa3207db17d5661b685a7044d9c8f6665",
+      "measure.json": "2b36bb7c5748fccb976302fbf56ac50586af5ff7f450498ec44b068fce3007cf",
+      "session.json": "1c20207c22dd871810d100a7d17cec0fcb3b92de71b5375ab83ebd90c6314384",
+      "warmup.json": "59673fa36176f2577a07d071dbe9574813f68597461275b323bc5918b8f8065a"
+    },
+    "c01-t36-r02-direct-native": {
+      "drain.counts.json": "f04d8e76f83912a979a99c2a2a4ce7ca14f340805c329351810bf1ee5bcacb09",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "6c6039a72c424adab2ea304affd5c6146e1724cdf8d51d22ebb72084c89649f6",
+      "session.json": "3e6049f41d1bb4c108f8f41d7123a5a85b52b6826c70ee1632f6a9d8a0013e03",
+      "warmup.json": "cb3335f2459ed3a87b920f9e998e3cbff084ab9396c255cdca8667f5cc0fcaae"
+    },
+    "c01-t36-r02-direct-tclock": {
+      "drain.counts.json": "4b228792ad7dcf44014d6b85c66048e8cc7a6f77a7e75ba801d445b519acd143",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "57be9eeb9d51977f47d5d82265e6755002a140c036a667f59c762c8bfc3bf989",
+      "session.json": "d01215235c4e76969dd99ecdaaf32433123fb5a5e217a0f4923f13c76ad2a312",
+      "warmup.json": "71b4eadf4b3c34de162cee59212a074878f63c87592a9b9c9924695873e27cc8"
+    },
+    "c01-t40-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "366cf5d44ade920097a03993f5cb0e07bf5d14c9e0eeaa39b360d177ac2b4bbe",
+      "kernel.log": "a4ff119bcf4eb4fdcd1eb0a1da68c2eb31720aad1cac8f54d98d04418563e0a1",
+      "measure.json": "2b487e9e1002db84c04a0247302b42d94243c2f0d039230ca8953432089da8f2",
+      "session.json": "b7f4e0fd5eed5b930851774dde947da9fcf453f504a07235ba18e3c613b579ce",
+      "warmup.json": "31ed6970c8069afddc5928eb744deb13f42458be31ed0d493d99a9a9c7be4177"
+    },
+    "c01-t40-r00-direct-native": {
+      "drain.counts.json": "e06f0bbdfc30cedd5b2e0bc69615a4b769cf631028d14ffd307598748f66bcf9",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "4b38848f5b91787bc9e2b1468b6f316dcd974df7a433f08c44e138d83165e734",
+      "session.json": "f9d881ac9c25e655cef35919a5e5dce68a83dda98e158da310619eed0d0fb7eb",
+      "warmup.json": "c82491dd65b7cadeca79fcb96ddf34575491b9b5a0c4e85c9547e2d4f8c8a50e"
+    },
+    "c01-t40-r00-direct-tclock": {
+      "drain.counts.json": "647a3e8363b26efc3fc7c1d871d559dc845c3f7017e8c5221bbb8e9d40fbd877",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "f232806e6c5aef0f3455570c8c04a650c8054e2c659e4ae9294bf124aacdab04",
+      "session.json": "0a34f31e39692465204794b36f070b213be685b5d47af71fffc8b797b4835259",
+      "warmup.json": "5f37282c6a6acfe6ab32bcb6dd80f9c4f13c92c91c3e02641b62d2914a2cf785"
+    },
+    "c01-t40-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "c6767d8ff80b24eb256609feed0cc4929ba67c13cf4c40645bc716eddecb23f4",
+      "kernel.log": "4cb4afdccf23a38be7b2a804983b029d918ee7078b5316b275d7d089c44d6571",
+      "measure.json": "c0bcfcdafbb6582a86e0e88b9db5ed87a5c26ecc7e11f8e0c0f5191e2ffc6350",
+      "session.json": "649b40a95e5d354987bf20cbb5f58bba7764f9728383a793074ba265428340f3",
+      "warmup.json": "40ae9aaa4fc01c46307476618e1cbef4d3fb14a107f772c40befb71464c67aad"
+    },
+    "c01-t40-r01-direct-native": {
+      "drain.counts.json": "c8922e71e269506fa44aaf47026ade981328840576990da272fd8bc65bffd410",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "9fa30920797f34e71b936602205d51647f5cca51095e1f5028f5cb271a91dcb0",
+      "session.json": "d2b989f9ab840c325bf2aa67ce8007324753df7097220f55c3b7c1a0d13f8b55",
+      "warmup.json": "add9224d5c34c96bdd3d1ad7740a909f0f371180b6fa7f7932e219ace9b77e0d"
+    },
+    "c01-t40-r01-direct-tclock": {
+      "drain.counts.json": "819b533fa655ccf5a79231a7d92cd9225dba1b438bf661bc2a9b3f7a6d0d014a",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "e2f73f3039d7bd3e30272a90f19b56bb196dcab32921196a6391f66088753b5f",
+      "session.json": "ff169190426cb668d25ef3b6966f96bc1fc653ce84d3998bc71c18bc763a1602",
+      "warmup.json": "6fccdd58e287906e48ea8c1c968d432c10b230056aee58c494f8ba4b4a3caace"
+    },
+    "c01-t40-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "0393450e6cfb3f9393c0c77167c8a47359a9f3124b94097a12dc4b8b650e6ef4",
+      "kernel.log": "592a61f56ef0168d1cdd6563752640a52da09f42140ed6c9ee87b50733f62142",
+      "measure.json": "46a2889b7523947dc352a980bde43ac99cbc3e20973cac86b85a1ea9580557f8",
+      "session.json": "7349a17c019a8a54b9be255ed2befe9a2aa346275ca4ec1de069a7c772c120fb",
+      "warmup.json": "e3da6a470269ba9aea60dad94c9a5af44ee49cca8c2b8c192e523cdc7fb89d94"
+    },
+    "c01-t40-r02-direct-native": {
+      "drain.counts.json": "17f4d92b3afc600ca6499ee3f880b4fb42ec03d66b74e795ca8c1687afc85b3c",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "59bf67c7f8a5b6ab9e0018ec9e1ee3f99197988cfc8885657687c77b815f6984",
+      "session.json": "8874e1f0c1db626b6b26270a1a88daa75679473fa010c07ae3f288a3dd844135",
+      "warmup.json": "f86067f044088113da03c62be9befaf28600e0e76a0276c4103dff8a8651b7b6"
+    },
+    "c01-t40-r02-direct-tclock": {
+      "drain.counts.json": "741b4c1b36063073ad5dd9f278460887945b9731054f05943d4da1569f621dc1",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "51bc74e170b79fa447ebd101103a1d64b4af3523ceccb944ca19684c53a251bf",
+      "session.json": "5e4e2005ba06e1ffb7a7c8d5540d9ee974418a513f99434ac1be889ab6f7b69e",
+      "warmup.json": "cd047f06d09e05685856a405bae9c3855be982fa296d5750106489ce84848c5a"
+    },
+    "c01-t44-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "36d49bcd07dcc537f05b36c0c14218c61cde68030defa4fc717922dcb190e2bc",
+      "kernel.log": "b0243db5adae3a094180d84e9c3efd6d74932cacfab403807828a98131a4b72b",
+      "measure.json": "c7194082dac5b86ee5550659e8b16917099c40068e7075d352a072d1ac2d0cdf",
+      "session.json": "a8682911efd7460067e3498f7f80d981cbcc53b47255f0c0050d1069e8ae3dd9",
+      "warmup.json": "88cb292e43c0357d149405df26725f0f807167cb1164a62596b91cb5b4fa3e7e"
+    },
+    "c01-t44-r00-direct-native": {
+      "drain.counts.json": "03abeac06dd9c7b3dc218c641da7d821e65ebf5e1b84006b8a7c62f64bae708d",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "cc7555bad9765b4d79db2d75937f4413b0a7d8959c41e015df3d04e072cc8206",
+      "session.json": "3a9bdfcc9ee3eb23ac424076a79e823283899e78d923739b53530c0629e72757",
+      "warmup.json": "d18e2ae814afdf67c489690159cf70c1fe162a3d0f0fc7158a26a75067ac86eb"
+    },
+    "c01-t44-r00-direct-tclock": {
+      "drain.counts.json": "e9b44e1f6ab95e5cd60639cbdcdd15c369b40ed9cc2a493a4d46e15c38b00153",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "ccb08f343942aa7ef409f1f4b4f66764b0704c2798cde93477154641182d1b52",
+      "session.json": "5942af43a17fc104c211d2c5d1c3d24f34fb3e8c569df7afc7a15f40bdf6b28b",
+      "warmup.json": "6c82f02fbd65964cfe91fa41e50b1a194ff86ee4c10e0f48414825de7593ce20"
+    },
+    "c01-t44-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "d93e42956c4aeb313bd29a8f631e53c5f4741982e57ab8636d0023d44dfefe3a",
+      "kernel.log": "24bc67638d0b37ac8b4ccf980d28ec6318d54914aaf31615c426fa055c3e0bb0",
+      "measure.json": "1d81fdee306ac021df921728983fbf685f3d7286abe91171cd5c7d378cd2dd45",
+      "session.json": "3fec516e6758cb975cd0a41f20e4844af7c6e6661d90c2a71559396a165f9240",
+      "warmup.json": "77631d607b8249913f81ef1031d456056b31509e41ea1099e2c66566419e3b08"
+    },
+    "c01-t44-r01-direct-native": {
+      "drain.counts.json": "08d0d104a5f60821d57bc2d542c2c16d3bdf49cd563a453afff929b654c4c9b6",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "54a28e31d4f9bd76b7305786737cd27d3ba81abeae0375c4a8d12c3da9913131",
+      "session.json": "26f03ba05c198a661988b00033a9a8752f8ff93471533a8ef474a661b1196969",
+      "warmup.json": "6b34b829880e87243f4e44e225e55234e8b4423cd54be058464902ec81765f96"
+    },
+    "c01-t44-r01-direct-tclock": {
+      "drain.counts.json": "a27cd0f4f4d4e5da0c0b9777a8984b11acfedebac839f15ad1579cae072caf3f",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "a02870e3262b086004d7dae00072b7f5d9604f990fef2f613c6850bbc3e7bcdf",
+      "session.json": "5cff7c151606f36d7ba98cced04cc02558d51ea37e0d98f62d255d6a95f3ec4b",
+      "warmup.json": "b31e95541c958c85cf4202a21c5735791338b86539b8cc56e66d5c62af2ebf9f"
+    },
+    "c01-t44-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "d774bd18e1fddff8924a4aef420141361dac89f74844db369259e98cbcacf9fd",
+      "kernel.log": "2066d804ccc2060b8be1e0419e6b3373424aab01a1a835c2599cbe5d39bcee90",
+      "measure.json": "b12b7ab00f0ec1a9996853152b2eaf8e62581e6e11edfde7671c1f6c4edd734c",
+      "session.json": "ac0f12cddbd4311e18a59e6a3db773ebfad6b2ffc60360f6471af35d05ea71a5",
+      "warmup.json": "645d937ba432d0d5cb4c7cb3db92d09d8de04606a59662ab504c5d6beeab6045"
+    },
+    "c01-t44-r02-direct-native": {
+      "drain.counts.json": "cbfd6267a5bf9d4ca0ac3822e4a752351cada552898d36e72c7ae9e785d54055",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "63aafda0285b316d7e03b8c6ae25f26d539ddaa3591b831f43384f80501d3c42",
+      "session.json": "0a68c5268a1650c3dfa78095206be9212a7d5f2bf762094497dab6895e1f6d40",
+      "warmup.json": "b88b9d61d3dadd0545b17885c099601899e46f3d9830ba02804dbc26c065e946"
+    },
+    "c01-t44-r02-direct-tclock": {
+      "drain.counts.json": "b7b9a25f1386351d4394d71767c3569bee2b5863e34b976150fbc8024bace522",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "bec50b462318291657c062eedaf55d9673eba8b0092757c9ec156b3c38027cb3",
+      "session.json": "f0212a4f52aff42181786b9eee758cbb583454157350f6127c017ae7b968ed0a",
+      "warmup.json": "dbb4567245c6bc1ead27bd1ef538472f711d44167c63ce1a00bd8fc1a646f8f3"
+    },
+    "c01-t48-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "d94fcb646acbea5907fbda40ad8784775316f6d0ecc96fb83dac2b1cdf83dd14",
+      "kernel.log": "d5d056723b315803c7767ba1174a9ae107f4d883f061c6329fb61d2b7e736842",
+      "measure.json": "3c356ea136037036b035b729d426415e2df5cbd9e2ad9d55c471e8357a1e6284",
+      "session.json": "b4a3e587b05eaadffeaaba8f90522824e3683187fc3bc587507df4b05a487ee3",
+      "warmup.json": "09da4921ce40d0e6ea0752e1946077eae66f3444082b2c5ee9048dd3d3b9a847"
+    },
+    "c01-t48-r00-direct-native": {
+      "drain.counts.json": "102136182ec63bd9303620ca40ff9e690ede1d59fe4702c1fd57c09c38168a38",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "528ee04e72cbea9fffa0758d603e3c4a7ed8528005c993db3c138e884ecf4c05",
+      "session.json": "0b2189002a1ab37d798686b8c81bb05cc3cc4d3cce32358b68c99c69e318134f",
+      "warmup.json": "a7d2d7c7a1b78afa954db3b065798326140b3ad4956f38cdd95d00beac4a2994"
+    },
+    "c01-t48-r00-direct-tclock": {
+      "drain.counts.json": "140c415bd8b9c3239b4b473128dc2eb464ca74043395b5ab3934447310b48bef",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "74e803aeb54a6be86a371438260208b2cac70d06c86cb97334cce02245a62945",
+      "session.json": "8c8b6ac7a5a16b6454370ea9851197d472f2a33fb1841f59bb6dc708946f8a0d",
+      "warmup.json": "ad14498f2342dddd678eb941fadeb0980744650f5881059dc68bb65d63c65d80"
+    },
+    "c01-t48-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "38a51a9d6b69b3cd5514dbd6fa333b2ee9d30b49b218aa298e62294f237a8328",
+      "kernel.log": "50de778efa7fc9ae6c4ac4629beda16783776662afa81ed5a787b2d8b4f2456a",
+      "measure.json": "975f70581855cb0476358ff0ac9acd82fa7161c2fe57cd197f14e63777570c3e",
+      "session.json": "edbb0af45c709437b6a47da67b1ddca033a9489c10da106fcf91c7088f851f99",
+      "warmup.json": "80e7ca595e2a6bb73a1c086c9f506a787944a8a65a0cc8b8cb6b885118af1471"
+    },
+    "c01-t48-r01-direct-native": {
+      "drain.counts.json": "931c20496fdc8f68276279eeb20a541f706904a94c9346cb0dafecf6d4a0c547",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "dac002d81eba687c0b322ab0b7597bf08b830e792fb85415cff35f7846ae8cb1",
+      "session.json": "7b92612f4c2ae4443cd3b7a50f1f9030a38949c84e1da73f67edfdd8c201f435",
+      "warmup.json": "9f7fa8501106479766a87ef34da2805864782d4138472ce40b1daccebc8e34e9"
+    },
+    "c01-t48-r01-direct-tclock": {
+      "drain.counts.json": "0b9ffc603f2f178131b4ab5972ca0a599d9b98dae7d078b9338d50572d7404f3",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "939031aa5a0b4169193ee6c50b46b13585cf5946aeaf9e378ccdf69f856e84a1",
+      "session.json": "0307a2450cc172208df9448ce301307f03a709795eda869df20dc533f9fd7332",
+      "warmup.json": "3c30f77f09a74e23e857064f54f0276040e111dcc96750acead997a4f5715e6e"
+    },
+    "c01-t48-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "bbe241632c411f61dd9e788e66f3ad854974c69649e4b4ce309f57a35ae657dd",
+      "kernel.log": "ff67bf94bd36c30b1754c990d825f94f71c99a55cc5e63acf53d3510c6cb178a",
+      "measure.json": "5da7dd6ff1f18333eee6fec6cf3b4e4670839fb9f645d1aa0b9a6e9d7c678d8e",
+      "session.json": "b30f500f75f55bad866652ec6cd82d65a3be681bede32cacf9f64135ae4409ab",
+      "warmup.json": "1dc62f4287686aacbd747c42bc9991f39319f52d95d67a472e37093d838e9968"
+    },
+    "c01-t48-r02-direct-native": {
+      "drain.counts.json": "4e90e5fe1676f133601c6d3c33c6c2376dce8a7e17792d3b2a7c143d02528cdf",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "2f198f125683bc9d00e5024be6dd745c1651dcd9f8b6de77e4c76194e36bb213",
+      "session.json": "987eb84df21c8f366b480773cc07cccd6cf05fa24e9020178b7d54f1750432ea",
+      "warmup.json": "e114f694ef1e673512d6a893dab3ec17a2227653bd42a586442143ffb12b051d"
+    },
+    "c01-t48-r02-direct-tclock": {
+      "drain.counts.json": "50d96216737cec14b7cfb27baa538929501f81cf62e9f4b5b1378d47af8e33b5",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "261fcf65f95ff891f81617625d6fea113ddda348462b1e3c40a5fac351a05b5f",
+      "session.json": "40c9afb7259427e2cd5b669045c46589f64290930b8473175c539bf5afd7463f",
+      "warmup.json": "f7893cb87c9701f12147e4dc60a659296f0ab84ac28734541cf46e789bf6744f"
+    },
+    "c01-t52-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "1e1f6db5151c204aff7a0240357f7d6399ffa2c7776537a09c5c953a2c9b1f12",
+      "kernel.log": "bba7776616cce433037430d3358350343febacce08a6ded363ec7ab4c089dc30",
+      "measure.json": "87bcbbb470dff2a1d6daee080e74cc39dd7919c07f33a680613078ad565fed1b",
+      "session.json": "f352f0a52a6ab04f81fd750be213a3369244cfe42233474b875e415182f3230b",
+      "warmup.json": "3a269f100b9e5cd3b3170c5e367c79e9339662e5cdcc4a62f6013aa874bbc5a7"
+    },
+    "c01-t52-r00-direct-native": {
+      "drain.counts.json": "ec828baa72310787fce2ba1f39f259ba892c94d79574851cee1845641e91841d",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "279e6468f778b08614a779b90d67a1a866b84b0434e221adf4bcc6ae901a35cd",
+      "session.json": "17ba287343eb636aa242a0599d0bbc9fba9eb4b2c3f6a15d33d0dd80cdac3602",
+      "warmup.json": "e27ffef8947d0ff67edf0445d2a40c95257b77d2f9096d455d470da462256f77"
+    },
+    "c01-t52-r00-direct-tclock": {
+      "drain.counts.json": "65305ab014b923a703da05bb6203e4baab148a9c721af50ed8ea85a5bbd59387",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "8898692ec9fac3af074c3e75d4ac6bd2da767a0e03f387fefc3e1bbebe27ed47",
+      "session.json": "de099cec50c0cf0ef1cac368659e406f9b54eb8c7aaf3f83d3ac16e3fa2f371d",
+      "warmup.json": "654d3bbda4b082c3b70e9087ee69800b74113317c679a68d7483e86cdf8b1dc2"
+    },
+    "c01-t52-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "56f489007b609da420cee4f9a899570164dfafa16c92bd61b21eded6fbef1206",
+      "kernel.log": "0eb92475879d858c9e80d752174a273735cae43ebaef5b2a95a4988896746e3d",
+      "measure.json": "a53e7ef2065044e4b2087fbe8e0bc18135c97640c03a6c8dade398d54b433501",
+      "session.json": "f3a5a292f1f8e5f874a093de94d4cbb685f88a4621033a75639bb41284bea336",
+      "warmup.json": "7a1376f9d070558c9e118c29c97a6dae023a4c138f6cdc75687685b680546bb1"
+    },
+    "c01-t52-r01-direct-native": {
+      "drain.counts.json": "91641062766d4741dbf5cde1b1b57db8df596d788ab86b06e08c2e00e7efaac1",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "74cfad523049164e7d8391cb426d2488cd74cb9ba688f412e2ffe090a1455c27",
+      "session.json": "f648df0e31f9b3468e94c288076f585522a316f8e3f158051e8399a61da36fb3",
+      "warmup.json": "021e0841fb09d24f1989f528026522d100ac5746403a63ec000a440fe4c62341"
+    },
+    "c01-t52-r01-direct-tclock": {
+      "drain.counts.json": "077a407b3fccc242330b0cfb719710007e6342df153d3e8d2483790e46b71099",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "019b2eacc8d3a7169c36ff4ca74013a9411eb16522f241e7554310226b07f63c",
+      "session.json": "dae37c3cf21676b7756dd8fd2b60456be275eebb331900abea61568430d5d394",
+      "warmup.json": "fe5b9fadd9351253514080a7592838283ccd03c226e15abc82b2e35c28b50fc9"
+    },
+    "c01-t52-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "94ac63159bfab1b82e72cc618696e580a725d86653f6cacea6d11580467ae1cb",
+      "kernel.log": "497bce33e73916158d532bea4eb0816760c5393fe84b3bb5d499194a996fd987",
+      "measure.json": "c3b2c9b3e86f473e8e19106e32a9cf03484731ae9a4beeff1310250743d265e3",
+      "session.json": "f7162bb39ea9cb24b223514cc49d3dbb361e4f4d7cc2b81a9e2005c63a4d86a4",
+      "warmup.json": "b56de976cafd952d2d8138c1367f5b15764c590c42e97d4a116ab467970019ba"
+    },
+    "c01-t52-r02-direct-native": {
+      "drain.counts.json": "d2c9efed0d4746446f35f5c98a1969d665cb009175c1abf830052670f6850e6c",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "9d301ddbf4e270287ed6c903dd4cc993b40966a8719d56bbac2eba4d2de3306a",
+      "session.json": "799bf96fa08888327c6d739ceea050c9f26d7570e1c827bf906811107ce6c4df",
+      "warmup.json": "ada962d165c46342b734f44b6145b50a0d1e4d3c4d5f43085dff60c5250a3737"
+    },
+    "c01-t52-r02-direct-tclock": {
+      "drain.counts.json": "29eaed02efdbcc88555207643f6fa0c98692e38d6815bfc41755795a0af3bcd0",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "d5e1e52a49782089fdc8e48075bd8a0829e7e4a3298aa2ddf2851b4249f81a1d",
+      "session.json": "179f41806fc1c8f2f8e15c184eda91a8e2b990363072aa882713ad125cc6a85f",
+      "warmup.json": "c994926ce9521912c6d2d66070992f0ae507dc273a2d6d4a7b9c2303ad422798"
+    },
+    "c01-t56-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "497e90eabef36b10c12399bc0475eff7107bce64d87717a77b967b86297d4a83",
+      "kernel.log": "a811436d8f3c3191121f333dcf6bc968116dd0d0c20f860c10925dc5aae4e69b",
+      "measure.json": "9e5f2d54b1effa022207a6356e717561e8f59daf2b9075412734f65d42a55714",
+      "session.json": "836f36a149db3af36a70283586ff6449c4c932babc09bdb35831f9fee8bcb21c",
+      "warmup.json": "b413e1561d6efadd4ef9b22d58b1c45f83bf281bbad20069fb4e56be5c0071f8"
+    },
+    "c01-t56-r00-direct-native": {
+      "drain.counts.json": "a23e48378d040119db9ac0501351be5a8f0977277a993f0a7fe717984cd0d73a",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "b956fc997fa711be45d3b336fbc5209cd312aabc3f8109b6adf8e7bc76f8ab16",
+      "session.json": "b596f4c03e910057e71bcb183fec0f09972717f073d52e04a2309ac8e70c9a49",
+      "warmup.json": "6ff753ca20a0cd3bbc17cba29b6f2afb92322ccb2a20d0bac72f4569789094f8"
+    },
+    "c01-t56-r00-direct-tclock": {
+      "drain.counts.json": "faaaecfd288c4196fd1803b8b549277e623d36f31afb9ee41799b3c05bc9a6ca",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "4377a57f060d5a36d36833e66264daa2fae6c38aecee2cddd24fb627ce86e0ed",
+      "session.json": "dd37ac6bfbad66c1383ecc1c2c426f48badbc334a42dacef52924ac851e59546",
+      "warmup.json": "a6018205ff04fb0c4573c918b9345be1e81d2336eb6a844ce5579095334a0dcd"
+    },
+    "c01-t56-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "377abfbbdd5c567225207742934cab46e103922e4ee8ce102bf36ee9f171afec",
+      "kernel.log": "66d1c472dcd16a80ca377fae0ec070fc30f4c790868169800072567204cc6514",
+      "measure.json": "1d25f70aa0ec4a6c5f3ceeaf3e67c686904c3e14600b2a7e3304e18f5dfbac7d",
+      "session.json": "b5533b7026941e0ba8156f154a1adaa162766669ca0c4a1b363d02e06dc6f310",
+      "warmup.json": "b2dea7a93451269c0f0a7ddb5a4f4d41ab7888adceaecffada95ff0638fc86b4"
+    },
+    "c01-t56-r01-direct-native": {
+      "drain.counts.json": "5a863c371beae0c7626e66b1631e7ea9ff71dee0033eca344032b40aad4e21a4",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "9c196a2872fbd88374dc8b6507a4208da5634a23d7ec98b57cd0dd0f96e05beb",
+      "session.json": "e030c0620fe751aaf9f45d0b25894a3ce1ce5f0bb50d1ba68d8ba3f8b5a42d92",
+      "warmup.json": "56fe7cf08017e070c16374dd82018c624a7ef2d552543494a4b35c6614fa9dfe"
+    },
+    "c01-t56-r01-direct-tclock": {
+      "drain.counts.json": "941766b0d4b3634884c1bae6787ccf91b0ac62bfc59678b2b09a8a2cd1be3c94",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "7170deedbb5ecfcf68601fb0de37acedfae4f10bda947bc6821f96e787e516aa",
+      "session.json": "d8684dbacd5b7fdc3e78a4727f71a432eb468ad0aaa5066e2b091736e091917b",
+      "warmup.json": "dfa4b100c1f5cffd5c44dc3dd884e3730e349b716eaf123093f27ed005ce3f42"
+    },
+    "c01-t56-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "13f26a9790ac3959f1299f2786ff979e307e30882d71fb0b0fd4a0f1155f42a6",
+      "kernel.log": "dae624b60e5ef7d7edf380cf9dfbacd753f0adf0e0f4d3277389a2bad435128d",
+      "measure.json": "4545039a67eb2038193c4ff6239f1849e1e06d9f632b6e2e211070df81f21376",
+      "session.json": "a0a65f38b31f555488e6edf0d4b47ab2c447bf389c2e84b145de15623f0c4e88",
+      "warmup.json": "ca5b533cbe3280619f774619317deb3d4102bce34a853d7d9772692c9953ed24"
+    },
+    "c01-t56-r02-direct-native": {
+      "drain.counts.json": "5430213380e45dbbad14edb27093d552afada4e6b614dbed6495f186fa1cd91e",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "b98711536f62ba323b57970a1b5483fba62ef4a4278fe6978695b97e2c03e031",
+      "session.json": "e6b7616e3aff4d8563982b075c5d36995d366b8f289b3f476af28ac56d296238",
+      "warmup.json": "1ba6d75c5ab50194928b0c11e5bd3d729d7d00991b68767f1e9cafe9e50386be"
+    },
+    "c01-t56-r02-direct-tclock": {
+      "drain.counts.json": "e4b4501e785b969a2a1ec801eca96e5826c2034e53ae34843d3a0bca540ed767",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "4f9f6e268d92b2858758273aaf7b4788e4b1e4639ff9954a197b73f065d0785d",
+      "session.json": "6b28ac40feff18dbe806df495cfb88b467f03641db256d6a9b926e3879177b4a",
+      "warmup.json": "a49675fe4306ce96d05532d04f0a4954e81c975e07ef366e844b92880dc02547"
+    },
+    "c01-t60-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "7eaf88949cc37839af621c42c4808255fb00bda666d6437708eb820361df365e",
+      "kernel.log": "1b1009af343a5462f5603fbd89ff7002db37e38ca6d94d501e790453ef47749d",
+      "measure.json": "067374da09a68c0e46df1f0d4045ad926a9ef6703f6aa3b0f7750ccfb03ec176",
+      "session.json": "18fcd7ce80ed09abe50011f6824cf95d3abd4406f7d61f3c6b14b76bd14cebe1",
+      "warmup.json": "ed99d99ec1763c8f0d1dfe1741007517e92260fb883daf72c1c1cff15165749b"
+    },
+    "c01-t60-r00-direct-native": {
+      "drain.counts.json": "a116280fdd7f8ead4b6aef6e0bec93cba224ae5fbedd9f2d969b5e536f25a7c5",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "088e14f07577e1a9d6330cf4ad8260e06d8a7b8d6e62dfc8e2a10434094a2ae0",
+      "session.json": "3716b32556b0473cb94502b8fcf6aed4595f3fe70e3fa121279e83b9654d864b",
+      "warmup.json": "b234877d539b86eafb875599f9b87c8d777d2ced69b2a9f38cd3992ef2960501"
+    },
+    "c01-t60-r00-direct-tclock": {
+      "drain.counts.json": "0fb6fef6b7e6a9bc51d191683537bc0d9c87fb29765e20494c8970f05ef8dc9b",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "6b233a8fc04193b6bafe62427fbbe397b8637e655f0eda2d4ef39afa01ddc219",
+      "session.json": "6a8da01769bc36cf910ed78a9e384d2aab6dbc30c6ac2eb1b40485290ebbfa98",
+      "warmup.json": "8c7ff0e3cb9d8f1d11693b239cac844f3a5e3176fd7598ac21ea240fe1adf09c"
+    },
+    "c01-t60-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "fb8a231812b0f2df4a9d450898db16c4a48065e3d92a6f249e301888f74d113a",
+      "kernel.log": "1a014944fbd6c1fda08789682161bcaad6b654c544a8b0812d98d8703ee514d7",
+      "measure.json": "c97d99fe036ea18654a6d426508cd079c8b47de83b75f13429aabaeda180e9c0",
+      "session.json": "2e5ba886397cf1f2a42ca7eb55fd23b8edc015431fe1dae9a606c95bbd24dc37",
+      "warmup.json": "c5aaf67170d095cb90938dd1f449a7d07e0ffada2bd745f04b535f9fde4d0ee6"
+    },
+    "c01-t60-r01-direct-native": {
+      "drain.counts.json": "4e7547d74274e0602f1d83c60368e65d878ec71249afccad2057bc564a0586f0",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "f1f713bf1a561f02a73a4b23f8f98df16545019a695dac75f7eeb0f157cf6ea2",
+      "session.json": "272988232b49f9a51dd02be685ee95cea2d6d94bfc429700e11700eda1021ff5",
+      "warmup.json": "34d07c081113caa5f325bfe19a3419c0bc838023591a4d18df11af8be3a53c18"
+    },
+    "c01-t60-r01-direct-tclock": {
+      "drain.counts.json": "ba9c8551b4a33025d410412210a201531300c105e4fa04724707940c20200d5b",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "e91edc05426049ac1b3118eaa18bed4ed4ed347db2ded24b2a3ad3fe786526e2",
+      "session.json": "4111c1535f3a294959e0dc5ab1565e186284d108131ba8d6d517ba426a2c7647",
+      "warmup.json": "fc55fc5688c813717562f197cfa515e98a62be807005372cc1dc0d22b848fccf"
+    },
+    "c01-t60-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+      "drain.counts.json": "5069794295bdaa43bed5702f4685680aaeff46c0a8edc1ff5f7330ee4458204f",
+      "kernel.log": "27883d5029e903e66a1fa20bd166f56147def69c2a18759281ae129aa09a4ec4",
+      "measure.json": "b086264fe8afd54e27b68f10ffbe681d4ea5bd3956b76de84551d1230a615583",
+      "session.json": "84a9b789482f33b85bd49e0500a3e93f30e9f251cf2cb7a8f7c7f49f7e1cc343",
+      "warmup.json": "24413e14d2ab730bead454fe8d322378a2e6a328263664b42b66c2b160344a69"
+    },
+    "c01-t60-r02-direct-native": {
+      "drain.counts.json": "fc736bff970b69a8ffbe2f4301649b33bd43c6949c4a304215c69a01e58047ce",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "f57d578168d900b2698b291b4aded1caae1a4612e630c45014d91f93f368f07b",
+      "session.json": "a3fc54fedd8ae712ddd7920956355cb822a0cec36544ce653ee8ad429736c9e2",
+      "warmup.json": "c565f3985e9edb4ab8b9cb3a30033b07f72a34d9f4cced3b854fdb557e70446a"
+    },
+    "c01-t60-r02-direct-tclock": {
+      "drain.counts.json": "ba5bbc33168298247363850ffe76c736dd00ad259706c442739eb6f3004017ab",
+      "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measure.json": "3a6b5a66924126f3e86ef6468d4302ce5210c9545041f72b5921230069794159",
+      "session.json": "857c10f27211b6354531a6169c363bd12f2601ce11be5b5ac761da1078a215cc",
+      "warmup.json": "b34f1f50afe05883d09259073cdbfa6beec891c24d74ee178e9c6cdeee99362e"
+    }
+  },
+  "sessions": 189,
+  "source_commit": "5b50a4afb1d0c948227497ac9a15eb0f69f4a83c",
+  "source_files": 329,
+  "validators": {
+    "bench/full_compare/export.py": "d85d045e0e217d0043f1a5eae36117e2eced2ee63e0a78591473c1499c9d4a4d",
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/analyze.py": "773006a5044519d02903b78468ec46d04013ae0c66ac747b8d49d4fd45c5ad58",
+    "bench/spin_cacheline/bench_runtime.py": "37d527bc11fd5e55b1f1f78eda3dec1adead18052fb83e3e37e6df8a6a184f19",
+    "bench/tclock_compare/mutex_study.py": "03fc9cfb4dc0f0a89b548d91fae2f41497e1bc952fb3d3e770c74b631fd9a65d",
+    "bench/tclock_compare/session.py": "e48d5f7c7b2858bb852abac0078594beaba4a6761cab0132d354335f97e45fd0"
+  }
+}

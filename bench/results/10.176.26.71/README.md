@@ -15,6 +15,12 @@ affected and live JIT verification. Its regular-64 c01 screen and separate
 confirmations miss the regression gates; both new policies remain opt-in.
 The shared-collector 64-worker point and GS diagnostics have separate evidence.
 
+The [fresh c01 1–60-worker rerun](bench/mutex_owned/20261015-numa-rerun/README.md)
+contains 189 audited Native/TCLock/KD sessions on the regular 64-vCPU guest,
+with origin claims and NUMA selection enabled for KD and a separate collector.
+At 60 workers, KD median throughput is 7.106 Mops/s, 1.79× Native and 2.28×
+TCLock. This three-round comparison leaves the opt-in defaults unchanged.
+
 The [fresh c01 1–64-worker comparison](bench/mutex_owned/20261014-full-grid/README.md)
 contains 198 correct, drained Native/TCLock/KD samples at the full 22-point grid.
 KD reaches at least 97% of Native median throughput at every count, but misses

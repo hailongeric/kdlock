@@ -1,0 +1,1245 @@
+{
+  "boot-policy.json": {
+    "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+    "functions": {
+      "__raw_callee_save___native_queued_spin_unlock": "0xffffffff810a2330",
+      "native_queued_spin_lock_slowpath": "0xffffffff81eecf40"
+    },
+    "method": "live_pv_ops_two_function_pointers",
+    "pv_lock_address": "0xffffffff83064e18"
+  },
+  "guest-before.json": {
+    "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+    "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+    "idle": true,
+    "kernel_identity": {
+      "build_files": 9,
+      "bundle_files": 7,
+      "config": true,
+      "ok": true,
+      "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+      "source_files": 20
+    },
+    "modules": [],
+    "nodes": [
+      "0-31",
+      "32-63"
+    ],
+    "online": "0-63",
+    "passed": true,
+    "preemption": "none (voluntary) full"
+  },
+  "guest-final.json": {
+    "binaries_unchanged": true,
+    "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+    "committed_files": 1024,
+    "idle": true,
+    "kernel_faults": false,
+    "online_cpus": "0-63",
+    "passed": true,
+    "preemption": "none (voluntary) full",
+    "project_modules": [],
+    "source_files": 329,
+    "source_unchanged": true
+  },
+  "host-before.json": {
+    "command": "qemu-system-x86_64 -name ubuntu-build,debug-threads=on -enable-kvm -cpu host -smp 64,maxcpus=64,sockets=2,cores=32,threads=1 -m 24G -object memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind -object memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind -numa node,nodeid=0,cpus=0-31,memdev=mem0 -numa node,nodeid=1,cpus=32-63,memdev=mem1 -device virtio-scsi-pci,id=scsi0 -drive file=/home/eric/vm/qemu-disks/ubuntu22.04.img,format=qcow2,if=none,id=drive_system -device scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0 -drive file=/home/eric/vm/qemu-disks/sda.qcow2,format=qcow2,if=none,id=drive_data1 -device scsi-hd,drive=drive_data1,bus=scsi0.0 -netdev user,id=n1,hostfwd=tcp:0.0.0.0:2222-:22,hostfwd=tcp:0.0.0.0:9090-:9090,hostfwd=tcp:0.0.0.0:9091-:9091 -device virtio-net-pci,netdev=n1 -display none -serial file:/tmp/qemu-serial.log -monitor unix:/tmp/qemu-monitor.sock,server=on,wait=off -gdb tcp:127.0.0.1:1234 -pidfile /tmp/kdlock-qemu.pid -daemonize ",
+    "created": true,
+    "disk_free_bytes": 356952334336,
+    "governors": {
+      "0": "ondemand",
+      "1": "ondemand",
+      "10": "ondemand",
+      "11": "ondemand",
+      "12": "ondemand",
+      "13": "ondemand",
+      "14": "ondemand",
+      "15": "ondemand",
+      "16": "ondemand",
+      "17": "ondemand",
+      "18": "ondemand",
+      "19": "ondemand",
+      "2": "ondemand",
+      "20": "ondemand",
+      "21": "ondemand",
+      "22": "ondemand",
+      "23": "ondemand",
+      "24": "ondemand",
+      "25": "ondemand",
+      "26": "ondemand",
+      "27": "ondemand",
+      "28": "ondemand",
+      "29": "ondemand",
+      "3": "ondemand",
+      "30": "ondemand",
+      "31": "ondemand",
+      "32": "ondemand",
+      "33": "ondemand",
+      "34": "ondemand",
+      "35": "ondemand",
+      "36": "ondemand",
+      "37": "ondemand",
+      "38": "ondemand",
+      "39": "ondemand",
+      "4": "ondemand",
+      "40": "ondemand",
+      "41": "ondemand",
+      "42": "ondemand",
+      "43": "ondemand",
+      "44": "ondemand",
+      "45": "ondemand",
+      "46": "ondemand",
+      "47": "ondemand",
+      "48": "ondemand",
+      "49": "ondemand",
+      "5": "ondemand",
+      "50": "ondemand",
+      "51": "ondemand",
+      "52": "ondemand",
+      "53": "ondemand",
+      "54": "ondemand",
+      "55": "ondemand",
+      "56": "ondemand",
+      "57": "ondemand",
+      "58": "ondemand",
+      "59": "ondemand",
+      "6": "ondemand",
+      "60": "ondemand",
+      "61": "ondemand",
+      "62": "ondemand",
+      "63": "ondemand",
+      "7": "ondemand",
+      "8": "ondemand",
+      "9": "ondemand"
+    },
+    "passed": true,
+    "qemu_pid": 257489,
+    "save_response": "s\u001b[K\u001b[Dsa\u001b[K\u001b[D\u001b[Dsav\u001b[K\u001b[D\u001b[D\u001b[Dsave\u001b[K\u001b[D\u001b[D\u001b[D\u001b[Dsavev\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm \u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm m\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mu\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mut\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mute\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-n\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-nu\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-num\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c0\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-r\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-re\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rer\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-reru\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-2\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-20\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-202\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-2026\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-20261\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-202610\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-2026101\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dsavevm mutex-numa-c01-rerun-20261015\u001b[K\r\n(qemu) ",
+    "service_threads": [
+      {
+        "affinity": [
+          63
+        ],
+        "name": "qemu-system-x86",
+        "tid": 257489
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "call_rcu",
+        "tid": 257490
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "kvm-nx-lpage-re",
+        "tid": 257560
+      }
+    ],
+    "snapshot_listing": "i\u001b[K\u001b[Din\u001b[K\u001b[D\u001b[Dinf\u001b[K\u001b[D\u001b[D\u001b[Dinfo\u001b[K\u001b[D\u001b[D\u001b[D\u001b[Dinfo \u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo s\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo sn\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo sna\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snap\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snaps\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapsh\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapsho\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapshot\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapshots\u001b[K\r\nList of snapshots present on all disks:\r\nID        TAG               VM SIZE                DATE     VM CLOCK     ICOUNT\r\n--        migration-ready-20261010T070707Z  2.3 GiB 2026-10-10 15:07:07 00:04:06.627           \r\n--        topology64-ready-20261010 5.07 GiB 2026-10-10 15:51:06 00:06:12.455           \r\n--        topology64-source-ready-20261010 5.06 GiB 2026-10-10 16:03:52 00:18:51.640           \r\n--        perf64-20261010T081816Z 5.06 GiB 2026-10-10 16:19:56 00:34:49.030           \r\n--        full64-20261010T094831Z 2.33 GiB 2026-10-10 17:50:13 00:00:54.398           \r\n--        normal64-after-fullmatrix-20261010T140110Z 2.32 GiB 2026-10-10 22:01:10 00:09:48.638           \r\n--        full66-20261011T025525Z  2.3 GiB 2026-10-11 10:58:23 00:00:55.005           \r\n--        normal64-after-rerun-20261011T025525Z 2.27 GiB 2026-10-11 12:33:11 00:00:19.922           \r\n--        mutex-opt-normal64-20261011T045425Z 2.34 GiB 2026-10-11 12:58:20 00:25:24.456           \r\n--        mutex-opt-full66-20261011T045425Z 2.32 GiB 2026-10-11 14:51:01 00:00:19.890           \r\n--        normal64-after-mutex-opt-20261011T045425Z 2.27 GiB 2026-10-11 15:20:52 00:00:18.377           \r\n--        real-api-20261011-v1 2.69 GiB 2026-10-11 16:22:00 01:01:21.306           \r\n--        real-sync-20261011-v1 3.08 GiB 2026-10-11 22:33:05 07:12:20.922           \r\n--        mutex-blocking-20261012-v1 3.72 GiB 2026-10-12 00:38:33 09:17:43.571           \r\n--        full-wait-66cpu-20261012-v1 2.41 GiB 2026-10-12 11:36:43 00:02:45.155           \r\n--        mutex-blocking-only-20261012 2.52 GiB 2026-10-12 21:34:47 00:28:32.388           \r\n--        mutex-admission-20261013 2.64 GiB 2026-10-13 00:16:23 03:10:03.855           \r\n--        mutex-c01-cost-20261013 4.96 GiB 2026-10-13 02:20:23 05:13:59.395           \r\n--        mutex-optimistic-c01-20261013 6.46 GiB 2026-10-13 10:09:24 13:02:54.188           \r\n--        mutex-protocol-c01-20261013 6.77 GiB 2026-10-13 12:34:09 15:27:30.330           \r\n--        mutex-protocol-c01-post8-20261013 7.18 GiB 2026-10-13 13:32:15 16:25:27.331           \r\n--        mutex-owned-v1-20261013 7.79 GiB 2026-10-13 15:58:22 18:51:25.279           \r\n--        mutex-owned-hybrid-20261014 9.18 GiB 2026-10-14 00:26:20 26:03:01.953           \r\n--        mutex-native-first-20261014   10 GiB 2026-10-14 10:14:52 35:42:25.337           \r\n--        mutex-owned-c01-full66-20261014 1.61 GiB 2026-10-14 20:07:50 00:01:21.847           \r\n--        normal64-after-mutex-owned-full-20261014 2.32 GiB 2026-10-14 20:28:22 00:03:43.173           \r\n--        owned-origin-before-20261015 3.02 GiB 2026-10-15 12:33:24 16:08:41.415           \r\n--        owned-origin-66-20261015 2.02 GiB 2026-10-15 13:13:36 00:00:42.231           \r\n--        owned-origin-regular64-final-20261015  1.7 GiB 2026-10-15 13:36:39 00:00:34.630           \r\n--        rwsem-snapshots-20261015 3.48 GiB 2026-10-15 14:27:54 00:51:46.100           \r\n--        rwsem-snapshots-ready-20261015 4.17 GiB 2026-10-15 14:56:07 01:19:52.975           \r\n--        rwsem-snapshots-current-20261015 4.53 GiB 2026-10-15 15:14:38 01:38:17.040           \r\n--        mutex-numa-c01-rerun-20261015 4.94 GiB 2026-10-15 17:21:47 03:45:19.941           \r\n(qemu) ",
+    "snapshot_tag": "mutex-numa-c01-rerun-20261015",
+    "vcpus": {
+      "0": {
+        "affinity": [
+          0
+        ],
+        "tid": 257495
+      },
+      "1": {
+        "affinity": [
+          1
+        ],
+        "tid": 257496
+      },
+      "10": {
+        "affinity": [
+          10
+        ],
+        "tid": 257505
+      },
+      "11": {
+        "affinity": [
+          11
+        ],
+        "tid": 257506
+      },
+      "12": {
+        "affinity": [
+          12
+        ],
+        "tid": 257507
+      },
+      "13": {
+        "affinity": [
+          13
+        ],
+        "tid": 257508
+      },
+      "14": {
+        "affinity": [
+          14
+        ],
+        "tid": 257509
+      },
+      "15": {
+        "affinity": [
+          15
+        ],
+        "tid": 257510
+      },
+      "16": {
+        "affinity": [
+          16
+        ],
+        "tid": 257511
+      },
+      "17": {
+        "affinity": [
+          17
+        ],
+        "tid": 257512
+      },
+      "18": {
+        "affinity": [
+          18
+        ],
+        "tid": 257513
+      },
+      "19": {
+        "affinity": [
+          19
+        ],
+        "tid": 257514
+      },
+      "2": {
+        "affinity": [
+          2
+        ],
+        "tid": 257497
+      },
+      "20": {
+        "affinity": [
+          20
+        ],
+        "tid": 257515
+      },
+      "21": {
+        "affinity": [
+          21
+        ],
+        "tid": 257516
+      },
+      "22": {
+        "affinity": [
+          22
+        ],
+        "tid": 257517
+      },
+      "23": {
+        "affinity": [
+          23
+        ],
+        "tid": 257518
+      },
+      "24": {
+        "affinity": [
+          24
+        ],
+        "tid": 257519
+      },
+      "25": {
+        "affinity": [
+          25
+        ],
+        "tid": 257520
+      },
+      "26": {
+        "affinity": [
+          26
+        ],
+        "tid": 257521
+      },
+      "27": {
+        "affinity": [
+          27
+        ],
+        "tid": 257522
+      },
+      "28": {
+        "affinity": [
+          28
+        ],
+        "tid": 257523
+      },
+      "29": {
+        "affinity": [
+          29
+        ],
+        "tid": 257524
+      },
+      "3": {
+        "affinity": [
+          3
+        ],
+        "tid": 257498
+      },
+      "30": {
+        "affinity": [
+          30
+        ],
+        "tid": 257525
+      },
+      "31": {
+        "affinity": [
+          31
+        ],
+        "tid": 257526
+      },
+      "32": {
+        "affinity": [
+          32
+        ],
+        "tid": 257527
+      },
+      "33": {
+        "affinity": [
+          33
+        ],
+        "tid": 257528
+      },
+      "34": {
+        "affinity": [
+          34
+        ],
+        "tid": 257529
+      },
+      "35": {
+        "affinity": [
+          35
+        ],
+        "tid": 257530
+      },
+      "36": {
+        "affinity": [
+          36
+        ],
+        "tid": 257531
+      },
+      "37": {
+        "affinity": [
+          37
+        ],
+        "tid": 257532
+      },
+      "38": {
+        "affinity": [
+          38
+        ],
+        "tid": 257533
+      },
+      "39": {
+        "affinity": [
+          39
+        ],
+        "tid": 257534
+      },
+      "4": {
+        "affinity": [
+          4
+        ],
+        "tid": 257499
+      },
+      "40": {
+        "affinity": [
+          40
+        ],
+        "tid": 257535
+      },
+      "41": {
+        "affinity": [
+          41
+        ],
+        "tid": 257536
+      },
+      "42": {
+        "affinity": [
+          42
+        ],
+        "tid": 257537
+      },
+      "43": {
+        "affinity": [
+          43
+        ],
+        "tid": 257538
+      },
+      "44": {
+        "affinity": [
+          44
+        ],
+        "tid": 257539
+      },
+      "45": {
+        "affinity": [
+          45
+        ],
+        "tid": 257540
+      },
+      "46": {
+        "affinity": [
+          46
+        ],
+        "tid": 257541
+      },
+      "47": {
+        "affinity": [
+          47
+        ],
+        "tid": 257542
+      },
+      "48": {
+        "affinity": [
+          48
+        ],
+        "tid": 257543
+      },
+      "49": {
+        "affinity": [
+          49
+        ],
+        "tid": 257544
+      },
+      "5": {
+        "affinity": [
+          5
+        ],
+        "tid": 257500
+      },
+      "50": {
+        "affinity": [
+          50
+        ],
+        "tid": 257545
+      },
+      "51": {
+        "affinity": [
+          51
+        ],
+        "tid": 257546
+      },
+      "52": {
+        "affinity": [
+          52
+        ],
+        "tid": 257547
+      },
+      "53": {
+        "affinity": [
+          53
+        ],
+        "tid": 257548
+      },
+      "54": {
+        "affinity": [
+          54
+        ],
+        "tid": 257549
+      },
+      "55": {
+        "affinity": [
+          55
+        ],
+        "tid": 257550
+      },
+      "56": {
+        "affinity": [
+          56
+        ],
+        "tid": 257551
+      },
+      "57": {
+        "affinity": [
+          57
+        ],
+        "tid": 257552
+      },
+      "58": {
+        "affinity": [
+          58
+        ],
+        "tid": 257553
+      },
+      "59": {
+        "affinity": [
+          59
+        ],
+        "tid": 257554
+      },
+      "6": {
+        "affinity": [
+          6
+        ],
+        "tid": 257501
+      },
+      "60": {
+        "affinity": [
+          60
+        ],
+        "tid": 257555
+      },
+      "61": {
+        "affinity": [
+          61
+        ],
+        "tid": 257556
+      },
+      "62": {
+        "affinity": [
+          62
+        ],
+        "tid": 257557
+      },
+      "63": {
+        "affinity": [
+          63
+        ],
+        "tid": 257558
+      },
+      "7": {
+        "affinity": [
+          7
+        ],
+        "tid": 257502
+      },
+      "8": {
+        "affinity": [
+          8
+        ],
+        "tid": 257503
+      },
+      "9": {
+        "affinity": [
+          9
+        ],
+        "tid": 257504
+      }
+    }
+  },
+  "host-final.json": {
+    "command": "qemu-system-x86_64 -name ubuntu-build,debug-threads=on -enable-kvm -cpu host -smp 64,maxcpus=64,sockets=2,cores=32,threads=1 -m 24G -object memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind -object memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind -numa node,nodeid=0,cpus=0-31,memdev=mem0 -numa node,nodeid=1,cpus=32-63,memdev=mem1 -device virtio-scsi-pci,id=scsi0 -drive file=/home/eric/vm/qemu-disks/ubuntu22.04.img,format=qcow2,if=none,id=drive_system -device scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0 -drive file=/home/eric/vm/qemu-disks/sda.qcow2,format=qcow2,if=none,id=drive_data1 -device scsi-hd,drive=drive_data1,bus=scsi0.0 -netdev user,id=n1,hostfwd=tcp:0.0.0.0:2222-:22,hostfwd=tcp:0.0.0.0:9090-:9090,hostfwd=tcp:0.0.0.0:9091-:9091 -device virtio-net-pci,netdev=n1 -display none -serial file:/tmp/qemu-serial.log -monitor unix:/tmp/qemu-monitor.sock,server=on,wait=off -gdb tcp:127.0.0.1:1234 -pidfile /tmp/kdlock-qemu.pid -daemonize ",
+    "created": false,
+    "disk_free_bytes": 351141470208,
+    "governors": {
+      "0": "ondemand",
+      "1": "ondemand",
+      "10": "ondemand",
+      "11": "ondemand",
+      "12": "ondemand",
+      "13": "ondemand",
+      "14": "ondemand",
+      "15": "ondemand",
+      "16": "ondemand",
+      "17": "ondemand",
+      "18": "ondemand",
+      "19": "ondemand",
+      "2": "ondemand",
+      "20": "ondemand",
+      "21": "ondemand",
+      "22": "ondemand",
+      "23": "ondemand",
+      "24": "ondemand",
+      "25": "ondemand",
+      "26": "ondemand",
+      "27": "ondemand",
+      "28": "ondemand",
+      "29": "ondemand",
+      "3": "ondemand",
+      "30": "ondemand",
+      "31": "ondemand",
+      "32": "ondemand",
+      "33": "ondemand",
+      "34": "ondemand",
+      "35": "ondemand",
+      "36": "ondemand",
+      "37": "ondemand",
+      "38": "ondemand",
+      "39": "ondemand",
+      "4": "ondemand",
+      "40": "ondemand",
+      "41": "ondemand",
+      "42": "ondemand",
+      "43": "ondemand",
+      "44": "ondemand",
+      "45": "ondemand",
+      "46": "ondemand",
+      "47": "ondemand",
+      "48": "ondemand",
+      "49": "ondemand",
+      "5": "ondemand",
+      "50": "ondemand",
+      "51": "ondemand",
+      "52": "ondemand",
+      "53": "ondemand",
+      "54": "ondemand",
+      "55": "ondemand",
+      "56": "ondemand",
+      "57": "ondemand",
+      "58": "ondemand",
+      "59": "ondemand",
+      "6": "ondemand",
+      "60": "ondemand",
+      "61": "ondemand",
+      "62": "ondemand",
+      "63": "ondemand",
+      "7": "ondemand",
+      "8": "ondemand",
+      "9": "ondemand"
+    },
+    "passed": true,
+    "qemu_pid": 257489,
+    "save_response": null,
+    "service_threads": [
+      {
+        "affinity": [
+          63
+        ],
+        "name": "qemu-system-x86",
+        "tid": 257489
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "call_rcu",
+        "tid": 257490
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "kvm-nx-lpage-re",
+        "tid": 257560
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262759
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262760
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262763
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262764
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262765
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262766
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262767
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262768
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262769
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262770
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262771
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262772
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262773
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262774
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262775
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262776
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262777
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262778
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262779
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262780
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262781
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262782
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262783
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262784
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262785
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262786
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262787
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262788
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262789
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262790
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262791
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "name": "worker",
+        "tid": 262792
+      }
+    ],
+    "snapshot_listing": "i\u001b[K\u001b[Din\u001b[K\u001b[D\u001b[Dinf\u001b[K\u001b[D\u001b[D\u001b[Dinfo\u001b[K\u001b[D\u001b[D\u001b[D\u001b[Dinfo \u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo s\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo sn\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo sna\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snap\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snaps\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapsh\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapsho\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapshot\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapshots\u001b[K\r\nList of snapshots present on all disks:\r\nID        TAG               VM SIZE                DATE     VM CLOCK     ICOUNT\r\n--        migration-ready-20261010T070707Z  2.3 GiB 2026-10-10 15:07:07 00:04:06.627           \r\n--        topology64-ready-20261010 5.07 GiB 2026-10-10 15:51:06 00:06:12.455           \r\n--        topology64-source-ready-20261010 5.06 GiB 2026-10-10 16:03:52 00:18:51.640           \r\n--        perf64-20261010T081816Z 5.06 GiB 2026-10-10 16:19:56 00:34:49.030           \r\n--        full64-20261010T094831Z 2.33 GiB 2026-10-10 17:50:13 00:00:54.398           \r\n--        normal64-after-fullmatrix-20261010T140110Z 2.32 GiB 2026-10-10 22:01:10 00:09:48.638           \r\n--        full66-20261011T025525Z  2.3 GiB 2026-10-11 10:58:23 00:00:55.005           \r\n--        normal64-after-rerun-20261011T025525Z 2.27 GiB 2026-10-11 12:33:11 00:00:19.922           \r\n--        mutex-opt-normal64-20261011T045425Z 2.34 GiB 2026-10-11 12:58:20 00:25:24.456           \r\n--        mutex-opt-full66-20261011T045425Z 2.32 GiB 2026-10-11 14:51:01 00:00:19.890           \r\n--        normal64-after-mutex-opt-20261011T045425Z 2.27 GiB 2026-10-11 15:20:52 00:00:18.377           \r\n--        real-api-20261011-v1 2.69 GiB 2026-10-11 16:22:00 01:01:21.306           \r\n--        real-sync-20261011-v1 3.08 GiB 2026-10-11 22:33:05 07:12:20.922           \r\n--        mutex-blocking-20261012-v1 3.72 GiB 2026-10-12 00:38:33 09:17:43.571           \r\n--        full-wait-66cpu-20261012-v1 2.41 GiB 2026-10-12 11:36:43 00:02:45.155           \r\n--        mutex-blocking-only-20261012 2.52 GiB 2026-10-12 21:34:47 00:28:32.388           \r\n--        mutex-admission-20261013 2.64 GiB 2026-10-13 00:16:23 03:10:03.855           \r\n--        mutex-c01-cost-20261013 4.96 GiB 2026-10-13 02:20:23 05:13:59.395           \r\n--        mutex-optimistic-c01-20261013 6.46 GiB 2026-10-13 10:09:24 13:02:54.188           \r\n--        mutex-protocol-c01-20261013 6.77 GiB 2026-10-13 12:34:09 15:27:30.330           \r\n--        mutex-protocol-c01-post8-20261013 7.18 GiB 2026-10-13 13:32:15 16:25:27.331           \r\n--        mutex-owned-v1-20261013 7.79 GiB 2026-10-13 15:58:22 18:51:25.279           \r\n--        mutex-owned-hybrid-20261014 9.18 GiB 2026-10-14 00:26:20 26:03:01.953           \r\n--        mutex-native-first-20261014   10 GiB 2026-10-14 10:14:52 35:42:25.337           \r\n--        mutex-owned-c01-full66-20261014 1.61 GiB 2026-10-14 20:07:50 00:01:21.847           \r\n--        normal64-after-mutex-owned-full-20261014 2.32 GiB 2026-10-14 20:28:22 00:03:43.173           \r\n--        owned-origin-before-20261015 3.02 GiB 2026-10-15 12:33:24 16:08:41.415           \r\n--        owned-origin-66-20261015 2.02 GiB 2026-10-15 13:13:36 00:00:42.231           \r\n--        owned-origin-regular64-final-20261015  1.7 GiB 2026-10-15 13:36:39 00:00:34.630           \r\n--        rwsem-snapshots-20261015 3.48 GiB 2026-10-15 14:27:54 00:51:46.100           \r\n--        rwsem-snapshots-ready-20261015 4.17 GiB 2026-10-15 14:56:07 01:19:52.975           \r\n--        rwsem-snapshots-current-20261015 4.53 GiB 2026-10-15 15:14:38 01:38:17.040           \r\n--        mutex-numa-c01-rerun-20261015 4.94 GiB 2026-10-15 17:21:47 03:45:19.941           \r\n(qemu) ",
+    "snapshot_tag": "mutex-numa-c01-rerun-20261015",
+    "vcpus": {
+      "0": {
+        "affinity": [
+          0
+        ],
+        "tid": 257495
+      },
+      "1": {
+        "affinity": [
+          1
+        ],
+        "tid": 257496
+      },
+      "10": {
+        "affinity": [
+          10
+        ],
+        "tid": 257505
+      },
+      "11": {
+        "affinity": [
+          11
+        ],
+        "tid": 257506
+      },
+      "12": {
+        "affinity": [
+          12
+        ],
+        "tid": 257507
+      },
+      "13": {
+        "affinity": [
+          13
+        ],
+        "tid": 257508
+      },
+      "14": {
+        "affinity": [
+          14
+        ],
+        "tid": 257509
+      },
+      "15": {
+        "affinity": [
+          15
+        ],
+        "tid": 257510
+      },
+      "16": {
+        "affinity": [
+          16
+        ],
+        "tid": 257511
+      },
+      "17": {
+        "affinity": [
+          17
+        ],
+        "tid": 257512
+      },
+      "18": {
+        "affinity": [
+          18
+        ],
+        "tid": 257513
+      },
+      "19": {
+        "affinity": [
+          19
+        ],
+        "tid": 257514
+      },
+      "2": {
+        "affinity": [
+          2
+        ],
+        "tid": 257497
+      },
+      "20": {
+        "affinity": [
+          20
+        ],
+        "tid": 257515
+      },
+      "21": {
+        "affinity": [
+          21
+        ],
+        "tid": 257516
+      },
+      "22": {
+        "affinity": [
+          22
+        ],
+        "tid": 257517
+      },
+      "23": {
+        "affinity": [
+          23
+        ],
+        "tid": 257518
+      },
+      "24": {
+        "affinity": [
+          24
+        ],
+        "tid": 257519
+      },
+      "25": {
+        "affinity": [
+          25
+        ],
+        "tid": 257520
+      },
+      "26": {
+        "affinity": [
+          26
+        ],
+        "tid": 257521
+      },
+      "27": {
+        "affinity": [
+          27
+        ],
+        "tid": 257522
+      },
+      "28": {
+        "affinity": [
+          28
+        ],
+        "tid": 257523
+      },
+      "29": {
+        "affinity": [
+          29
+        ],
+        "tid": 257524
+      },
+      "3": {
+        "affinity": [
+          3
+        ],
+        "tid": 257498
+      },
+      "30": {
+        "affinity": [
+          30
+        ],
+        "tid": 257525
+      },
+      "31": {
+        "affinity": [
+          31
+        ],
+        "tid": 257526
+      },
+      "32": {
+        "affinity": [
+          32
+        ],
+        "tid": 257527
+      },
+      "33": {
+        "affinity": [
+          33
+        ],
+        "tid": 257528
+      },
+      "34": {
+        "affinity": [
+          34
+        ],
+        "tid": 257529
+      },
+      "35": {
+        "affinity": [
+          35
+        ],
+        "tid": 257530
+      },
+      "36": {
+        "affinity": [
+          36
+        ],
+        "tid": 257531
+      },
+      "37": {
+        "affinity": [
+          37
+        ],
+        "tid": 257532
+      },
+      "38": {
+        "affinity": [
+          38
+        ],
+        "tid": 257533
+      },
+      "39": {
+        "affinity": [
+          39
+        ],
+        "tid": 257534
+      },
+      "4": {
+        "affinity": [
+          4
+        ],
+        "tid": 257499
+      },
+      "40": {
+        "affinity": [
+          40
+        ],
+        "tid": 257535
+      },
+      "41": {
+        "affinity": [
+          41
+        ],
+        "tid": 257536
+      },
+      "42": {
+        "affinity": [
+          42
+        ],
+        "tid": 257537
+      },
+      "43": {
+        "affinity": [
+          43
+        ],
+        "tid": 257538
+      },
+      "44": {
+        "affinity": [
+          44
+        ],
+        "tid": 257539
+      },
+      "45": {
+        "affinity": [
+          45
+        ],
+        "tid": 257540
+      },
+      "46": {
+        "affinity": [
+          46
+        ],
+        "tid": 257541
+      },
+      "47": {
+        "affinity": [
+          47
+        ],
+        "tid": 257542
+      },
+      "48": {
+        "affinity": [
+          48
+        ],
+        "tid": 257543
+      },
+      "49": {
+        "affinity": [
+          49
+        ],
+        "tid": 257544
+      },
+      "5": {
+        "affinity": [
+          5
+        ],
+        "tid": 257500
+      },
+      "50": {
+        "affinity": [
+          50
+        ],
+        "tid": 257545
+      },
+      "51": {
+        "affinity": [
+          51
+        ],
+        "tid": 257546
+      },
+      "52": {
+        "affinity": [
+          52
+        ],
+        "tid": 257547
+      },
+      "53": {
+        "affinity": [
+          53
+        ],
+        "tid": 257548
+      },
+      "54": {
+        "affinity": [
+          54
+        ],
+        "tid": 257549
+      },
+      "55": {
+        "affinity": [
+          55
+        ],
+        "tid": 257550
+      },
+      "56": {
+        "affinity": [
+          56
+        ],
+        "tid": 257551
+      },
+      "57": {
+        "affinity": [
+          57
+        ],
+        "tid": 257552
+      },
+      "58": {
+        "affinity": [
+          58
+        ],
+        "tid": 257553
+      },
+      "59": {
+        "affinity": [
+          59
+        ],
+        "tid": 257554
+      },
+      "6": {
+        "affinity": [
+          6
+        ],
+        "tid": 257501
+      },
+      "60": {
+        "affinity": [
+          60
+        ],
+        "tid": 257555
+      },
+      "61": {
+        "affinity": [
+          61
+        ],
+        "tid": 257556
+      },
+      "62": {
+        "affinity": [
+          62
+        ],
+        "tid": 257557
+      },
+      "63": {
+        "affinity": [
+          63
+        ],
+        "tid": 257558
+      },
+      "7": {
+        "affinity": [
+          7
+        ],
+        "tid": 257502
+      },
+      "8": {
+        "affinity": [
+          8
+        ],
+        "tid": 257503
+      },
+      "9": {
+        "affinity": [
+          9
+        ],
+        "tid": 257504
+      }
+    }
+  },
+  "source-before.json": {
+    "archive_sha256": "25d3c71e8a5e704530897a1aeaeef860fa4be930bd1e9e1e47f8d9fcf8be158f",
+    "commit": "5b50a4afb1d0c948227497ac9a15eb0f69f4a83c",
+    "files": 1024,
+    "passed": true
+  }
+}
