@@ -609,7 +609,7 @@ int kd_owned_mutex_prepare(struct kd_mutex *lock, unsigned long ip, unsigned int
 	exe = kd_get_exe(0, ip);
 	if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED ||
 	    exe->RIP != ip || exe->entry_abi != abi ||
-	    exe->lock_kind != KD_EXE_LOCK_OWNED_MUTEX || !exe->code_block)
+	    exe->lock_kind != KD_EXE_LOCK_OWNED_MUTEX)
 		return -EINVAL;
 	return READ_ONCE(exe->status_code) == KD_EXE_NATIVE_ONLY ? -EOPNOTSUPP : 0;
 }

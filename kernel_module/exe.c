@@ -76,18 +76,28 @@ MODULE_PARM_DESC(owned_mutex_native_after_control,
 	"One-shot owned mutex diagnostic: resume natively after a checked control CALL");
 
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
+static void *kd_code_block_allocations[KD_CODE_BLOCK_POOL];
+static struct kd_jit_image kd_images[KD_CODE_BLOCK_POOL];
+static const struct kd_jit_image *kd_published_images[KD_MAX_EXE];
 static int kd_code_block_free;
 static atomic_t kd_code_block_gate = ATOMIC_INIT(0);
 
-static void kd_code_block_gate_lock(void)
+static unsigned long kd_code_block_gate_lock(void)
 {
+	unsigned long flags;
+
+	/* A process-side publisher must not be preempted by a lock hook which
+	 * takes the same existing registry gate on this CPU. */
+	local_irq_save(flags);
 	while (atomic_cmpxchg_acquire(&kd_code_block_gate, 0, 1))
 		cpu_relax();
+	return flags;
 }
 
-static void kd_code_block_gate_unlock(void)
+static void kd_code_block_gate_unlock(unsigned long flags)
 {
 	atomic_set_release(&kd_code_block_gate, 0);
+	local_irq_restore(flags);
 }
 
 static unsigned long end_points[16];
@@ -122,6 +132,7 @@ static unsigned long owned_cabi_unlock_addr;
 #include "execution/timing.inc"
 
 #include "execution/registry_lifecycle.inc"
+#include "execution/images.inc"
 
 #include "execution/control_calls.inc"
 
@@ -188,7 +199,7 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	/* Exclude pre-entry rejections and the caller's frame setup/teardown. */
 	dispatch_start = pending ? pending->dispatch_start : kd_jit_timing_start();
 	pristine_root = pending || (!frame->resume_target && regs->ip == entry_ip);
-	translated = exe->code_block;
+	translated = kd_jit_bound_code(exe, frame);
 	for (;;) {
 		int call_ret;
 		int fault_kind;
@@ -461,10 +472,9 @@ returned_wrapper:
 					ret_flag = KD_EXE_RUN_ERROR;
 					break;
 				}
-				exe->tgt_addr = regs->ip;
-				if (!is_end_point(exe->tgt_addr))
-					kd_exe_publish_status(exe,
-							      KD_EXE_CALL_MISS);
+				if (!is_end_point(regs->ip))
+					kd_image_report(exe, frame->owned_mutex ? frame->image : NULL, KD_EXE_CALL_MISS,
+							regs->ip, 0);
 				/* Synthetic faults have no CALL frame and are not resumable. */
 				ret_flag = fault_kind ? KD_EXE_RUN_ERROR :
 							KD_EXE_RUN_NATIVE;
@@ -473,7 +483,7 @@ returned_wrapper:
 			kd_jit_log_hl_error("UNSUPPORTED_INSTRUCTION", frame,
 					    regs, args[0], -EILSEQ,
 					    continuation_count, hostcall_count);
-			kd_exe_publish_status(exe, KD_EXE_ERROR_INST);
+			kd_image_report(exe, frame->owned_mutex ? frame->image : NULL, KD_EXE_ERROR_INST, regs->ip, 0);
 			ret_flag = KD_EXE_RUN_ERROR;
 		} else if (args[0] == KD_EXE_INST_LIMIT) {
 			kd_jit_log_hl_error("BUDGET_LIMIT", frame, regs,
@@ -483,11 +493,9 @@ returned_wrapper:
 		} else {
 			kd_jit_log_hl_error("IJ_MISS", frame, regs, args[0], 0,
 					    continuation_count, hostcall_count);
-			exe->tgt_addr = regs->ip;
-			exe->jump_from = args[0];
-			if (!is_end_point(exe->tgt_addr) &&
-			    !is_end_point(exe->jump_from))
-				kd_exe_publish_status(exe, KD_EXE_IJ_MISS);
+			if (!is_end_point(regs->ip) && !is_end_point(args[0]))
+				kd_image_report(exe, frame->owned_mutex ? frame->image : NULL, KD_EXE_IJ_MISS,
+						regs->ip, args[0]);
 			ret_flag = KD_EXE_RUN_ERROR;
 		}
 		break;

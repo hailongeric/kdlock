@@ -263,6 +263,24 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 #include "hostcall_code.h"
 #include "timing_code.h"
 #pragma GCC diagnostic pop
+/* Owned descriptor and claim races execute in test_owned_images. This fixture
+ * covers legacy generic/ACK routes; an unexpected owned lookup must refuse. */
+const struct kd_jit_image *kd_image_current(const struct kd_exe_info *exe)
+{
+	(void)exe;
+	CHECK(false);
+	return NULL;
+}
+void kd_image_report(struct kd_exe_info *exe, const struct kd_jit_image *image,
+		     int status, unsigned long target, unsigned long from)
+{
+	CHECK(!image);
+	exe->tgt_addr = target;
+	exe->jump_from = from;
+	kd_exe_publish_status(exe, status);
+}
+#define preempt_count() 1
+#define raw_smp_processor_id() 0
 static bool is_end_point(unsigned long ip)
 {
 	return ip == 0x9000;

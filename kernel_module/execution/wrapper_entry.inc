@@ -19,7 +19,7 @@ static void kd_jit_log_hl_error(const char *reason,
 /* A non-root first dispatch is valid only for the published logical child of
  * a root invocation which already returned through a known lock CALL. A CPU-
  * local physical parent is not that proof. This establishes logical scope,
- * not immutable code identity; in-place publication remains a separate limit.
+ * not immutable code identity; owned descriptors establish that separately.
  */
 static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,
 				   const struct kd_regs *regs,
@@ -107,13 +107,47 @@ static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_ad
 /* This is a root-only admission, not a bypass around translated entry guards.
  * Source OPEN, slot key/backend/status/code and the versioned alternate entry
  * are checked for every candidate. Code storage remains pinned by the batch. */
-static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
-                                 const struct kd_exec_frame *frame)
+static void *kd_jit_bound_code(const struct kd_exe_info *exe,
+			       const struct kd_exec_frame *frame)
 {
-	const unsigned char *code = READ_ONCE(exe->code_block);
+	return frame->owned_mutex ? (frame->image ? frame->image->code : NULL) :
+		READ_ONCE(exe->code_block);
+}
+
+/* All owned dispatch routes, including generic FULL continuations, validate
+ * the descriptor bound to this frame. A sleeping waiter has no claim proof. */
+static bool kd_jit_bind_image(const struct kd_exe_info *exe,
+			      struct kd_exec_frame *frame)
+{
+	const struct kd_jit_image *image;
+
+	if (!frame->owned_mutex)
+		return true;
+	if (!frame->image)
+		frame->image = kd_image_current(exe);
+	image = frame->image;
+	if (!image || image->entry != exe || image->entry_abi != frame->entry_abi ||
+	    (image->requirements & ~KD_IMAGE_REQUIREMENTS))
+		return false;
+	if (image->requirements & KD_IMAGE_ORIGIN_SPIN)
+		return frame->origin && preempt_count() && frame->origin->cpu >= 0 &&
+		       frame->origin->cpu != raw_smp_processor_id() &&
+		       smp_load_acquire(&frame->origin->readiness) == KD_ORIGIN_CLAIMED;
+	return true;
+}
+
+static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
+                                 struct kd_exec_frame *frame)
+{
+	const unsigned char *code;
+	bool directory;
+
+	if (!kd_jit_bind_image(exe, frame))
+		return false;
+	code = kd_jit_bound_code(exe, frame);
 	/* Exact directory bytes, without the out-of-line seven-byte memcmp on
 	 * every request. The overlapping words do not read beyond the signature. */
-	bool directory = code && get_unaligned_le32(code + 25) == 0x4357444bU &&
+	directory = code && get_unaligned_le32(code + 25) == 0x4357444bU &&
 	                 get_unaligned_le32(code + 28) == 0x32303043U &&
 	                 get_unaligned_le32(code + 41) == 0x4241444bU;
 
@@ -284,7 +318,7 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	call->regs = regs;
 	call->args[0] = frame->gsbase;
 	call->args[1] = (unsigned long)frame->logical_task;
-	call->code = (char *)READ_ONCE(exe->code_block) + KD_JIT_CLOBBER_OFFSET;
+	call->code = (char *)kd_jit_bound_code(exe, frame) + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
 	call->unlock = frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ?
 		owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;

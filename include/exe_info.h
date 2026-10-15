@@ -114,6 +114,8 @@ struct kd_exe_info {
 	unsigned long jump_from; /* source address for indirect jump fixup   */
 	unsigned long tgt_addr; /* target address for call-miss / ij-miss   */
 	unsigned int entry_abi; /* immutable; occupies existing cacheline padding */
+	unsigned int requirements; /* snapshot of the published image contract */
+	unsigned long generation; /* runtime misses belong to this image only */
 } __attribute__((aligned(64)));
 
 /*
@@ -128,6 +130,20 @@ struct kd_recv_pkt {
 	int pid; /* matches kd_exe_info.pid                  */
 	unsigned long RIP; /* matches kd_exe_info.RIP                  */
 	unsigned long offset; /* byte offset within code_block            */
+	unsigned int version;
+	unsigned int entry_abi;
+	unsigned int requirements;
+	unsigned int reserved;
+	unsigned long image_length;
+	unsigned long upload_id;
+	unsigned long base_generation;
 };
+
+#define KD_IMAGE_PROTOCOL 2U
+#define KD_IMAGE_ORIGIN_SPIN (1U << 0)
+#define KD_IMAGE_REQUIREMENTS KD_IMAGE_ORIGIN_SPIN
+#define KD_IMAGE_HEADER_SIZE 48U
+#define KD_IMAGE_VERSION_OFFSET 46U
+#define KD_IMAGE_REQUIREMENTS_OFFSET 47U
 
 #endif

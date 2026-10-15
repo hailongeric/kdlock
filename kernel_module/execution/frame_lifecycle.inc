@@ -270,6 +270,8 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_root(
 	frame->batch_lease = true;
 	frame->complex_ready = false;
 	frame->executed = false;
+	frame->image = NULL;
+	frame->origin = NULL;
 	frame->rwlock_admitted = false;
 	frame->completion_seen = false;
 	frame->outer_unlock_seen = false;

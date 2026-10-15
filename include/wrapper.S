@@ -5,6 +5,9 @@
 #ifndef KD_GENERATED_ENTRY_ABI
 #define KD_GENERATED_ENTRY_ABI 0
 #endif
+#ifndef KD_GENERATED_REQUIREMENTS
+#define KD_GENERATED_REQUIREMENTS 0
+#endif
 /* Unknown/standalone images retain the two imports. Translation may omit an
  * unused import, while the directory, frame slots and two-word ABI stay fixed. */
 #ifndef KD_GENERATED_GS_INPUT
@@ -33,6 +36,8 @@ clobber_entry_v1:
 	.long clobber_body - . - 4
 	.ascii "KDAB"
 	.byte KD_GENERATED_ENTRY_ABI
+	.byte 2 /* publication protocol */
+	.byte KD_GENERATED_REQUIREMENTS
 	.balign 16
 batch_body:
 	/* The lock-side clobber caller owns the native combiner live values.

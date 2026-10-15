@@ -168,3 +168,29 @@ of returned JIT writer bodies divided by completed writes; reads are excluded.
 [spin/mutex runner](../bench/tclock_compare/README.md) and
 [rwlock runner](../bench/rwlock_compare/README.md) define acceptance and commands;
 [operations](AGENTS.md) defines environment/recovery.
+
+## Owned image publication protocol 2
+
+Owned mutex images use device capability version 3 (`KD_JIT_CAP_OWNED_IMAGES`)
+and a 64-byte upload header. The wrapper directory keeps its entry offsets and
+its two input words; bytes 46 and 47 identify publication protocol 2 and the
+context requirements. The daemon and device reject incomplete or mismatched
+metadata, unsupported requirements, ABI mismatches, holes, overlapping chunks,
+changed upload identities and stale base generations.
+
+Each owned upload stages in a separate block from the existing 64-block pool.
+A final contiguous upload publishes one immutable descriptor containing code,
+length, requirements, entry ABI and generation. An interrupted or invalid private
+upload returns its block. A published version stays resident until terminal
+session drain and provider teardown; replacement never overwrites it. Exhaustion
+refuses the replacement and preserves the previous image. Registration alone
+reserves no owned code block. Legacy spin/mutex uploads retain their existing
+in-place lifetime limitation.
+
+An owned frame binds one descriptor before dispatch and keeps it through every
+continuation. Both the reduced batch entry and generic dispatcher check its
+context requirement. Runtime miss/error metadata is updated only when the
+reporting frame's descriptor is still the published generation. Replacing an
+image cannot let an old execution cool or change the newer generation's status.
+The existing source, task, physical-owner, native ACK and frame-retirement leases
+remain independently required.

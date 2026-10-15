@@ -60,6 +60,7 @@ def production():
         ]
     )
     code += timing_code() + lookup_code()
+    code += (ROOT/'kernel_module/execution/images.inc').read_text()
     for name in (
         "int kd_exe_init(void)",
         "void kd_exe_exit(void)",
@@ -72,7 +73,7 @@ def production():
     device = read_source((ROOT / "kernel_module/sys.c"))
     for name in (
         "static ssize_t kd_dev_read(struct file *file, char __user *buf, size_t count,",
-        "static ssize_t kd_dev_write_locked(const char __user *buf, size_t count)",
+        "static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,",
     ):
         code += definition(device, name)
     return code
@@ -88,10 +89,10 @@ def main():
         "timing-unload-not-reported": (
             "\tkd_jit_timing_report();", "\t/* injected missing timing report */"),
         "partial-publish": (
-            "if (!mem) {\n\t\tkd_code_block_gate_unlock();",
+            "if (!mem && kind != KD_EXE_LOCK_OWNED_MUTEX) {\n\t\tkd_code_block_gate_unlock(publish_flags);",
             (
-                "if (!mem) {\n\t\texe->status_code = KD_EXE_UNINIT;"
-                "\n\t\tkd_code_block_gate_unlock();"
+                "if (!mem && kind != KD_EXE_LOCK_OWNED_MUTEX) {\n\t\texe->status_code = KD_EXE_UNINIT;"
+                "\n\t\tkd_code_block_gate_unlock(publish_flags);"
             ),
         ),
         "duplicate-consumes-block": (
@@ -102,8 +103,8 @@ def main():
             ),
         ),
         "pool-stops-early": (
-            "if (kd_code_block_free > 0)\n\t\tmem =",
-            "if (kd_code_block_free > 1)\n\t\tmem =",
+            "if (kind != KD_EXE_LOCK_OWNED_MUTEX && kd_code_block_free > 0)\n\t\tmem =",
+            "if (kind != KD_EXE_LOCK_OWNED_MUTEX && kd_code_block_free > 1)\n\t\tmem =",
         ),
         "premature-readiness": (
             "smp_store_release(&exe->status_code, KD_EXE_UNINIT);",
@@ -118,8 +119,8 @@ def main():
             "index >= KD_MAX_EXE - 1",
         ),
         "upload-past-end": (
-            "head.offset > KD_CODE_BLOCK_SIZE",
-            "head.offset > KD_CODE_BLOCK_SIZE + 1",
+            "head.image_length > KD_CODE_BLOCK_SIZE",
+            "head.image_length > KD_CODE_BLOCK_SIZE + 1",
         ),
         "repeat-enters-registration-gate": (
             "if (kd_exe_registered(pid, rip, kind, abi))",
@@ -142,8 +143,8 @@ def main():
             "(kind != KD_EXE_LOCK_UNKNOWN) &&",
         ),
         "registered-after-close": (
-            "READ_ONCE(exe->code_block) && kd_source_is_open();",
-            "READ_ONCE(exe->code_block);",
+            "kd_source_is_open();",
+            "true;",
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-exe-registry-") as tmp:

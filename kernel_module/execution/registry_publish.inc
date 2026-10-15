@@ -19,12 +19,14 @@ static bool kd_exe_registered(unsigned int pid, unsigned long rip,
 	return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == rip &&
 	       READ_ONCE(exe->lock_kind) == kind &&
 	       READ_ONCE(exe->entry_abi) == abi &&
-	       READ_ONCE(exe->code_block) && kd_source_is_open();
+	       (kind == KD_EXE_LOCK_OWNED_MUTEX || READ_ONCE(exe->code_block)) &&
+	       kd_source_is_open();
 }
 
 void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
                     enum kd_entry_abi abi)
 {
+	unsigned long publish_flags;
 	void *mem = NULL;
 	struct kd_exe_info *exe;
 	int ret;
@@ -39,10 +41,10 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 	 * Misses, backend conflicts and closed admission keep the serialized path. */
 	if (kd_exe_registered(pid, rip, kind, abi))
 		return;
-	kd_code_block_gate_lock();
+	publish_flags = kd_code_block_gate_lock();
 	ret = kd_source_pin_root(rip);
 	if (ret) {
-		kd_code_block_gate_unlock();
+		kd_code_block_gate_unlock(publish_flags);
 		pr_warn_ratelimited(
 			"[KD_JIT][WARN] reason=SOURCE_ROOT_REFUSED entry=0x%lx error=%d\n",
 			rip, ret);
@@ -50,7 +52,7 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 	}
 	exe = kd_get_exe(pid, rip);
 	if (!exe) {
-		kd_code_block_gate_unlock();
+		kd_code_block_gate_unlock(publish_flags);
 		KD_PR_ERR("kd_exe_add: translation table exhausted\n");
 		return;
 	}
@@ -62,7 +64,7 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 				"[KD_JIT][WARN] reason=ENTRY_LOCK_KIND_CONFLICT entry=0x%lx registered=%d requested=%d\n",
 				rip, exe->lock_kind, kind);
 		}
-		kd_code_block_gate_unlock();
+		kd_code_block_gate_unlock(publish_flags);
 		return;
 	}
 
@@ -72,11 +74,11 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 			exe->status_code, exe->pid, exe->RIP, pid, rip);
 
 	/* The pool makes registration safe while a lock hook has IRQs disabled. */
-	if (kd_code_block_free > 0)
+	if (kind != KD_EXE_LOCK_OWNED_MUTEX && kd_code_block_free > 0)
 		mem = kd_code_block_pool[--kd_code_block_free];
 
-	if (!mem) {
-		kd_code_block_gate_unlock();
+	if (!mem && kind != KD_EXE_LOCK_OWNED_MUTEX) {
+		kd_code_block_gate_unlock(publish_flags);
 		/* Identify the rejected root without publishing a partial entry or
 		 * evicting an image still used by an older execution/native frame. */
 		KD_PR_ERR(
@@ -93,7 +95,7 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 	exe->code_block = mem;
 
 	smp_store_release(&exe->status_code, KD_EXE_UNINIT);
-	kd_code_block_gate_unlock();
+	kd_code_block_gate_unlock(publish_flags);
 	KD_PR_INFO("exe added %d %lx %d lock_kind=%d\n", pid, rip,
 		   current->tgid, kind);
 }
@@ -105,13 +107,14 @@ void kd_exe_add(int pid, unsigned long rip, enum kd_exe_lock_kind kind)
 
 void kd_exe_retire_all(void)
 {
+	unsigned long publish_flags;
 	unsigned int i;
 
 	/* Closing precedes this gate, so a racing registration either finishes
 	 * before invalidation or refuses. Slots/images are not reused in-session. */
-	kd_code_block_gate_lock();
+	publish_flags = kd_code_block_gate_lock();
 	for (i = 0; kd_exes && i < KD_MAX_EXE; i++)
 		if (READ_ONCE(kd_exes[i].status_code) != KD_EXE_UNUSED)
 			kd_exe_publish_status(&kd_exes[i], KD_EXE_NATIVE_ONLY);
-	kd_code_block_gate_unlock();
+	kd_code_block_gate_unlock(publish_flags);
 }

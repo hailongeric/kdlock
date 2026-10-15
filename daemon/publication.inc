@@ -7,6 +7,9 @@ static int write_native_only(const struct kd_exe_info *exe)
 		.pid = exe->pid,
 		.RIP = exe->RIP,
 		.offset = 0,
+		.version = KD_IMAGE_PROTOCOL,
+		.entry_abi = exe->entry_abi,
+		.base_generation = exe->generation,
 	};
 	ssize_t written;
 
@@ -44,7 +47,12 @@ static int write_sys(const struct daemon_config *cfg,
 		     const struct kd_exe_info *exe)
 {
 	unsigned char buffer[sizeof(struct kd_recv_pkt) + MAX_PAYLOAD];
-	struct kd_recv_pkt pkt;
+	static unsigned long upload_sequence;
+	struct kd_recv_pkt pkt = {
+		.version = KD_IMAGE_PROTOCOL,
+		.entry_abi = exe->entry_abi,
+		.base_generation = exe->generation,
+	};
 	char jit_path[512];
 	char workspace[256];
 	size_t remaining;
@@ -74,7 +82,7 @@ static int write_sys(const struct daemon_config *cfg,
 		return -1;
 	}
 	{
-		unsigned char header[46];
+		unsigned char header[KD_IMAGE_HEADER_SIZE];
 		bool directory;
 
 		if (fread(header, 1, sizeof(header), fp) != sizeof(header)) {
@@ -85,13 +93,19 @@ static int write_sys(const struct daemon_config *cfg,
 		            !memcmp(header + 25, "KDWC002", 7) &&
 		            !memcmp(header + 41, "KDAB", 4);
 		if (!kd_entry_abi_valid(exe->lock_kind, exe->entry_abi) ||
-		    !directory || header[45] != exe->entry_abi || fseek(fp, 0, SEEK_SET)) {
+		    !directory || header[45] != exe->entry_abi ||
+		    header[KD_IMAGE_VERSION_OFFSET] != KD_IMAGE_PROTOCOL ||
+		    (header[KD_IMAGE_REQUIREMENTS_OFFSET] & ~KD_IMAGE_REQUIREMENTS) ||
+		    fseek(fp, 0, SEEK_SET)) {
 			fprintf(stderr, "daemon: JIT entry ABI mismatch\n");
 			fclose(fp);
 			return -1;
 		}
+		pkt.requirements = header[KD_IMAGE_REQUIREMENTS_OFFSET];
 	}
 	remaining = (size_t)image_size;
+	pkt.image_length = remaining;
+	pkt.upload_id = ++upload_sequence;
 
 	pkt.pid = exe->pid;
 	pkt.RIP = exe->RIP;
