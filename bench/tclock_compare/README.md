@@ -99,6 +99,48 @@ the actual build, so requested option names alone cannot mislabel a sample.
 
 ## Owned c01 full grid
 
+The origin-readiness/NUMA comparison uses `owned_origin.py` with a separately
+archived and built pre-change source tree. Its `current-kd` arm uses that tree's
+provider, daemon and translator; Native and TCLock are also measured afresh.
+`fifo` enables origin claims with FIFO selection; `numa` additionally enables
+the eight-request/four-bypass selector. Both switches remain independently
+selectable in `run_mutex.py` as `--owned-mutex-origin-spin` and
+`--owned-mutex-numa`. Provider defaults are off.
+
+The screen requires the full 22-count grid. Until collector-sharing support is
+available, the following runs only its 21-count subset through 60 workers on
+the required 64-vCPU topology:
+
+```sh
+python3 bench/tclock_compare/owned_origin.py \
+  --baseline-root /root/kdlock-evidence/BASELINE_SOURCE \
+  --baseline-commit FULL_BASELINE_COMMIT \
+  --mutex-implementation owned-v1 --owned-mutex-cabi --owned-mutex-reuse-spins 32 \
+  --mutex-acceptance adaptive-performance --cachelines 1 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
+  --cpus 0-62 --collector-cpu 63 --duration-ms 2000 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/origin-screen-through60-NEW
+```
+
+Build the archived baseline's private provider and daemon in the guest before
+running. The matrix retains three alternating-order rounds, 64 post-work rounds,
+48,000 warmup operations per worker and the existing warmed-peak rules. Confirm
+the selected candidate with `--policies fifo` or `--policies numa` in two new
+three-round output directories. Never combine blocks or CPU topologies into one
+score. The 64-worker point must use workers 0–63 and collector 63, sharing that
+CPU with the final worker and QEMU services. Record that contention separately;
+the subset above cannot satisfy the full-grid gate.
+
+`origin-gates.json` compares both rates from each arm's highest valid warmed-peak
+session against fresh current KD. Both must reach 97% at every requested worker
+count in the screen and both confirmations before enabling NUMA by default.
+Require all 22 counts, including the pending 64-worker point; passing a subset
+does not authorize changing the default.
+The 97%-of-Native target at 1–8 workers is assessed separately. Session JSON keeps
+worker progress, CPU time, returned bodies and shares, parking, claims/failures,
+preparation requests and bypasses. GS correctness/diagnostic runs contribute no
+performance scores.
+
 The current measured profile uses `owned-v1`, ABI4 and reuse allowance 32.
 All workers increment the same counter in one 64-byte payload line; the lock
 has its own aligned slot. The source currently defines 64 post-work arithmetic

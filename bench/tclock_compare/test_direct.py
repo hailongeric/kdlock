@@ -125,7 +125,8 @@ class DirectTests(unittest.TestCase):
             owned_mutex_entry_ratio_limit='256', owned_mutex_self_route='N',
             owned_mutex_native_after_control='0', owned_mutex_refill='N',
             owned_mutex_preflight_spins='0', owned_mutex_preflight_queue='N',
-            owned_mutex_reuse_spins='0', owned_mutex_protocol='linux_local_first_v1')
+            owned_mutex_reuse_spins='0', owned_mutex_protocol='linux_local_first_v1',
+            owned_mutex_origin_spin='N', owned_mutex_numa='N')
         check_kd_parameters(params, record, 4096)
         for value in ('', 'old_protocol'):
             with self.subTest(value=value), self.assertRaises(run.Failure):

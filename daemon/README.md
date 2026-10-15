@@ -71,11 +71,11 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS v2 advertises the checked mutex stack bound and static module per-CPU arena.
-Unknown/old contracts clear optional bounds; current translation requires the module
-arena and fails before text inspection if unavailable. Rebuild/reload matching
-code rather than overriding capabilities. These bounds are not mutable admission
-flags, runtime address guards or executable generations.
+CAPS v3 advertises the checked mutex stack bound, static module per-CPU arena and
+immutable owned-image publication. Current translation rejects a missing image
+capability before text inspection, and requires the module arena. Raw observers
+can still inspect older CAPS contracts. Rebuild/reload matching code rather than
+overriding capabilities; these bounds are not runtime address guards.
 
 Real kcore text windows pin up to 64 distinct LIVE source modules, including learned
 callees and cold extensions. Core text/rodata follow their declared ranges; init,
@@ -93,12 +93,17 @@ errors, not successful policy refusals. MINIMAL entry for ABI1/ABI2/ABI3 require
 the matching versioned entry; ABI4 requires its CALLEE_ENTRY contract and owned
 backend identity. A legacy image cannot be relabelled as clobber or ABI4 code.
 
-Images must be nonempty and fit 640 KiB. Uploads use chunks of at most 4,000 bytes;
-the final complete chunk publishes NORMAL. That status does not prove execution.
-Recompiling an entry overwrites the code block indexed by its RIP. Keeping source
-loaded and workspaces separate does not give running code an immutable image
-version or validate a complete image generation.
-Those changes are deferred in [TODO](../docs/TODO.md#c3-immutable-jit-publication-and-lifetime).
+Images must include the 48-byte wrapper directory and fit 640 KiB. The 64-byte
+version 2 upload header identifies the entry ABI, context requirements, upload,
+declared length and base generation. Chunks cover the image contiguously; the
+final validated chunk publishes NORMAL. That status does not prove execution.
+Owned images stage in separate blocks and publish immutable descriptors retained
+until session teardown. A replacement cannot change a frame's bound version;
+an old miss cannot overwrite a newer version's status. The 64-block pool rejects
+exhausted replacements. Interrupted uploads return only their unpublished block.
+See [the publication lifecycle](../docs/JIT_EXECUTION.md#owned-image-publication-protocol-2).
+Legacy image families still overwrite their RIP-indexed block, as tracked in
+[TODO](../docs/TODO.md#c3-immutable-jit-publication-and-lifetime).
 
 ## Optional translation measurements
 

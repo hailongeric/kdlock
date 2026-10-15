@@ -14,7 +14,8 @@ For an introduction to the execution model and its terms, start with
 
 Mutex delegation-result waits use bounded polling then sleep on reserved stacks;
 owned SELF acquisition separately uses Linux-style optimistic spinning and
-sleeping. Delegated origin-CPU GS access is refused. The
+sleeping. Legacy mutexes refuse delegated origin-CPU GS access; owned mutexes
+can opt into the audited bounded subset with an exclusive spinning claim. The
 [validation index](VALIDATION.md#current-owned-protocol-verification) separates
 current-source protocol/JIT/FULL/ACK checks from older receipts and performance runs.
 [Performance status](PERFORMANCE.md) summarizes the latest frozen measurements;

@@ -187,6 +187,9 @@ def check_kd_parameters(params, record, lock_addr):
                  params['owned_mutex_preflight_queue'] == ('Y' if queued else 'N') and
                  (not queued or (policy == 'c_abi_v1' and budget > 0))),
                 'owned queued preflight policy or parameter differs')
+        for field in ('owned_mutex_origin_spin', 'owned_mutex_numa'):
+            if field in record:
+                require(params.get(field) == ('Y' if record[field] else 'N'), 'loaded policy differs: ' + field)
         if 'owned_mutex_reuse_spins' in record:
             require('owned_mutex_reuse_spins' in params and
                     int(params['owned_mutex_reuse_spins']) == record['owned_mutex_reuse_spins'],
@@ -324,6 +327,9 @@ class BackendSession(Session):
                     'owned_mutex_preflight_spins=' + str(self.record['owned_mutex_preflight_spins']),
                     'owned_mutex_preflight_queue=' + str(int(self.record.get('owned_mutex_preflight_queue', False))),
                     'owned_mutex_self_route=' + ('1' if self.record.get('mutex_routing') == 'self' else '0')]
+                mutex_params += [field + '=' + str(int(self.record[field]))
+                                 for field in ('owned_mutex_origin_spin', 'owned_mutex_numa')
+                                 if field in self.record]
             else:
                 mutex_params = [
                     'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 4096)),
@@ -455,7 +461,17 @@ class BackendSession(Session):
                       'spin=' + str(int(self.lock_kind == 'spin')), *extra_profile], 'load-profile.log')
             self.loaded_profile = True
         if self.record['arm'] != 'tclock':
+            origin_path = Path('/sys/module/kdlock_km/parameters/owned_mutex_origin_stats')
+            observe_origin = self.loaded_kd and 'owned_mutex_origin_spin' in self.record
+            if observe_origin:
+                self.record['origin_before'] = list(map(int, origin_path.read_text().split()))
             super().measure()
+            if observe_origin:
+                self.record['origin_after'] = list(map(int, origin_path.read_text().split()))
+                delta = [b-a for a,b in zip(self.record['origin_before'], self.record['origin_after'])]
+                require(len(delta) == 5 and min(delta) >= 0, 'invalid origin observations')
+                self.record['origin_delta'] = dict(zip(
+                    ('claims', 'claim_failures', 'preparations', 'bypasses', 'bodies'), delta))
             check_jit_evidence(self.record)
             self.record.update(delegated_bodies=self.record['jit_bodies'],
                                delegation_share=self.record['jit_share'],

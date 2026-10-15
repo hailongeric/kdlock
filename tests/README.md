@@ -39,6 +39,8 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Owned mutex | `mutex/test_owned_mutex_core.py`, `test_owned_mutex_delegation.py --mutations`, `test_owned_mutex_wait_clobber.py`, `test_owned_mutex_outer_api.py`; task-cache and admission checks also cover its private state |
 | Owned optimistic entry and OSQ | `mutex/test_owned_mutex_preflight.py`, `test_owned_mutex_osq.py`; the outer API fixture compiles both capture-first and opt-in preflight callers and executes their generated JIT |
 | Owned ordinary-C ABI4 | `mutex/test_owned_mutex_cabi.py --mutations`; actual leaf entry/unlock, eight-word late capture/restore, poisoned caller-saved registers, updated callee COMPLETE, exact FULL and cookie checks. Also select `execution/test_native_after_outer.py`, `test_exec_capacity.py` and ABI admission/codegen checks when changing shared state |
+| Owned origin readiness / NUMA | `mutex/test_owned_origin.py`, `test_owned_mutex_delegation.py`, `admission/test_origin_policy.py`; atomic park/claim arbitration, exact audit bounds and operations, eight-request selection and persistent four-bypass barriers |
+| Owned immutable images | `execution/test_owned_images.py`, `test_exe_registry.py`, `test_jit_entry_scope.py`, `admission/test_text_regions.py`; interrupted/invalid uploads, old-frame binding during replacement, stale misses, generic claim checks, capability negotiation and 64-block exhaustion |
 | Owned intrusive profiler | `mutex/test_owned_mutex_profile.py`; probe registration/unwind, target filtering and return-value ABI, separate from live diagnostic receipts |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
@@ -138,6 +140,31 @@ python3 tests/kernel/mutex/run_wait_selftest.py \
 ```
 
 ## Recent verification and historical evidence
+
+The origin GS workload runs separately from c01 performance:
+
+```sh
+python3 tests/kernel/mutex/run_origin_gs.py \
+  --output /root/kdlock-evidence/10.176.26.71/tests/origin-gs-NEW
+python3 tests/kernel/mutex/run_origin_gs.py --numa \
+  --output /root/kdlock-evidence/10.176.26.71/tests/origin-gs-numa-NEW
+```
+
+Use the pinned Python environment and a verified regular 64-vCPU snapshot. Each
+run checks origin CPU reads and the private task-only per-CPU counter with eight
+workers on CPUs 0–3 and 32–35. Both roots must return claimed JIT bodies; totals
+and per-worker CPU time are saved separately from performance scores. The exact
+module source audit, ELF digest and live Build ID must match. Failed admission
+retains the loaded session and evidence for explicit diagnosis and drain.
+
+The SELFTEST provider's `owned_mutex_origin_selftest=1` plus
+`owned_mutex_origin_spin=1` executes 256 claims with explicit reschedule requests,
+checking actual voluntary/involuntary context-switch counts and repeated slot
+reuse. Run it with `owned_mutex_spin_limit=0` and `4096`, from CPU 1 with the
+origin on CPU 0. The existing owned wait probe additionally checks queued cooling,
+sleep and local pickup. These constructed claims execute zero JIT bodies; the GS
+workload supplies that separate evidence. Image-replacement and pool-exhaustion
+coverage uses production C in VM userspace fixtures, not a live replacement claim.
 
 The current owned implementation's [targeted verification](../docs/VALIDATION.md#current-owned-protocol-verification)
 records basic and affected fixtures, queued cooling/task probes and actual

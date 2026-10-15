@@ -119,7 +119,9 @@ individual image versions. Its lifecycle is:
    modules can then unload in dependency order.
 
 Repeated `kd_exe_add()` calls use a read-only registration check: acquire the
-published slot, match PID/RIP/backend and code storage, and observe source OPEN.
+published slot, match PID/RIP/backend, and observe source OPEN. Legacy slots also
+require their reserved code block; owned slots receive code only when a complete
+immutable image is published.
 The initial UNINIT release publishes both immutable metadata and completed root
 pinning. UNINIT, miss and terminal native-only entries need no new registration;
 they do not become executable by passing this check. An UNUSED slot is only a

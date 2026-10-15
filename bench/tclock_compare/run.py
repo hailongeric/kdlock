@@ -34,7 +34,7 @@ OWNED_MUTEX_PREFLIGHT_SPINS = (0, 64, 256, 1024, 4096)
 MUTEX_POLICY_FIELDS = ('mutex_implementation', 'mutex_entry_ratio_limit',
                        'owned_mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance',
                        'owned_queue_policy', 'owned_preflight_policy', 'owned_mutex_preflight',
-                       'owned_mutex_reuse_spins',
+                       'owned_mutex_reuse_spins', 'owned_mutex_origin_spin', 'owned_mutex_numa',
                        'owned_mutex_preflight_spins', 'owned_mutex_preflight_queue',
                        *OWNED_CALLER_FIELDS)
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
@@ -225,6 +225,9 @@ def make_plan(args):
     require(type(owned_preflight_queue) is bool and
             (not owned_preflight_queue or (owned_preflight and owned_preflight_spins > 0)),
             'queued preflight requires --owned-mutex-preflight and a positive spin budget')
+    origin_spin = getattr(args, 'owned_mutex_origin_spin', False)
+    owned_numa = getattr(args, 'owned_mutex_numa', False)
+    require(not (origin_spin or owned_numa) or owned, 'origin/NUMA policies require owned-v1')
     owned_refill = getattr(args, 'owned_mutex_refill', False)
     require(not owned_refill or owned, 'owned FIFO refill requires owned-v1')
     scenario = getattr(args, 'scenario', 'plain')
@@ -299,6 +302,8 @@ def make_plan(args):
                 owned_mutex_entry_ratio_limit=owned_limit if owned_backend else None,
                 owned_queue_policy=('bounded_fifo_refill' if owned_refill else 'finite_fifo') if owned_backend else 'not_applicable',
                 owned_mutex_refill=owned_refill if owned_backend else False,
+                owned_mutex_origin_spin=origin_spin if owned_backend else False,
+                owned_mutex_numa=owned_numa if owned_backend else False,
                 owned_preflight_policy=('not_applicable' if owned_cabi else 'c_abi_v1' if owned_preflight else 'capture_first') if owned_backend else 'not_applicable',
                 owned_mutex_preflight=owned_preflight if owned_backend else False,
                 owned_mutex_preflight_spins=owned_preflight_spins if owned_backend else None,
@@ -516,6 +521,8 @@ def main(lock_kind='spin'):
                    help='allow owned preflight to join OSQ within a positive polling budget')
     p.add_argument('--owned-mutex-preflight-spins', type=int, choices=OWNED_MUTEX_PREFLIGHT_SPINS,
                    default=0, help='owned C-ABI admission gate: bounded OSQ head polls before capture; zero disables polling')
+    p.add_argument('--owned-mutex-origin-spin', action='store_true', help='validate exclusive origin claims')
+    p.add_argument('--owned-mutex-numa', action='store_true', help='experimental bounded owned NUMA selection')
     p.add_argument('--owned-mutex-refill', action='store_true',
                    help='experimental owned FIFO refill within the existing total batch cap')
     p.add_argument('--mutex-acceptance', choices=('jit-required', 'adaptive-performance'),

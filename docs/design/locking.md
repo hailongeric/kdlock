@@ -172,7 +172,7 @@ release. Acquisition references and RCU task-cache eviction protect the task
 through a late wake. Controlled drain checks each registration as well as slots,
 waiter balances, frames, owners and ACKs.
 
-Mutex translation refuses images that import the origin CPU's GS base,
+Legacy mutex translation refuses images that import the origin CPU's GS base,
 including emitted guards and learned callees. Such bodies run natively. Logical
 `current` uses a separate task input and remains supported. This is necessary
 because another task may run on a sleeping caller's CPU. One physical task still

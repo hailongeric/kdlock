@@ -211,7 +211,9 @@ An eligible acquisition holds an exact task routing reference, finds the
 original-address shadow, and reserves a CPU-local node/stack. A delegation
 follower retains its migration pin and moves off its caller stack. It uses
 bounded polling then an RCU wait slot and uninterruptible sleep. Delegated
-mutex images refuse origin-CPU GS storage; no spin-only policy remains.
+legacy mutex images refuse origin-CPU GS storage. Owned mutexes use the
+[conditional claim protocol](mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection)
+for their separately audited subset; no spin-only mutex policy remains.
 A queue head first takes the private gate, then acquires the original
 Linux mutex as `current`; only that physical owner executes/releases bodies.
 It may enable preemption while sleeping for the original mutex or nested B,
