@@ -107,9 +107,9 @@ the eight-request/four-bypass selector. Both switches remain independently
 selectable in `run_mutex.py` as `--owned-mutex-origin-spin` and
 `--owned-mutex-numa`. Provider defaults are off.
 
-The screen requires the full 22-count grid. Until collector-sharing support is
-available, the following runs only its 21-count subset through 60 workers on
-the required 64-vCPU topology:
+The screen requires the full 22-count grid on the fixed 64-vCPU topology.
+`--share-collector` explicitly permits the 64-worker cohort to share CPU 63;
+all smaller cohorts retain a separate collector:
 
 ```sh
 python3 bench/tclock_compare/owned_origin.py \
@@ -117,9 +117,9 @@ python3 bench/tclock_compare/owned_origin.py \
   --baseline-commit FULL_BASELINE_COMMIT \
   --mutex-implementation owned-v1 --owned-mutex-cabi --owned-mutex-reuse-spins 32 \
   --mutex-acceptance adaptive-performance --cachelines 1 \
-  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
-  --cpus 0-62 --collector-cpu 63 --duration-ms 2000 \
-  --output /root/kdlock-evidence/10.176.26.71/bench/origin-screen-through60-NEW
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 \
+  --cpus 0-63 --collector-cpu 63 --share-collector --duration-ms 2000 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/origin-screen-NEW
 ```
 
 Build the archived baseline's private provider and daemon in the guest before
@@ -128,13 +128,14 @@ running. The matrix retains three alternating-order rounds, 64 post-work rounds,
 the selected candidate with `--policies fifo` or `--policies numa` in two new
 three-round output directories. Never combine blocks or CPU topologies into one
 score. The 64-worker point must use workers 0–63 and collector 63, sharing that
-CPU with the final worker and QEMU services. Record that contention separately;
-the subset above cannot satisfy the full-grid gate.
+CPU with the final worker and QEMU services. Record that contention separately.
+The session and raw client JSON mark this point with `collector_shared=true`;
+unlabelled overlap and partially shared cohorts are rejected.
 
 `origin-gates.json` compares both rates from each arm's highest valid warmed-peak
 session against fresh current KD. Both must reach 97% at every requested worker
 count in the screen and both confirmations before enabling NUMA by default.
-Require all 22 counts, including the pending 64-worker point; passing a subset
+Require all 22 counts, including the shared 64-worker point; passing a subset
 does not authorize changing the default.
 The 97%-of-Native target at 1–8 workers is assessed separately. Session JSON keeps
 worker progress, CPU time, returned bodies and shares, parking, claims/failures,

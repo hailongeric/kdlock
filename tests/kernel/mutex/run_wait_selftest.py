@@ -18,8 +18,10 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--cpu', type=int, default=0)
     p.add_argument('--owned', action='store_true', help='owned FIFO cooling/sleep/pickup probe')
+    p.add_argument('--origin', action='store_true', help='also verify exclusive origin claims (requires --owned)')
     kernel_identity.arguments(p)
     args = p.parse_args()
+    runtime.require(not args.origin or args.owned, '--origin requires --owned')
     runtime.require(ROOT == Path('/root/host_fs/kdlock') and os.geteuid() == 0 and
                     os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1', 'confirmed recovery VM required')
     runtime.idle()
@@ -67,8 +69,12 @@ def main():
 
         try:
             prefix = 'owned_mutex' if args.owned else 'mutex'
-            runtime.command(['insmod', module, f'{prefix}_wait_selftest=1',
-                f'{prefix}_spin_limit={limit}', f'{prefix}_wait_cpu={args.cpu}'],
+            load = ['insmod', module, f'{prefix}_wait_selftest=1',
+                    f'{prefix}_spin_limit={limit}', f'{prefix}_wait_cpu={args.cpu}']
+            if args.origin:
+                load = ['taskset', '-c', '1', *load, 'owned_mutex_origin_spin=1',
+                        'owned_mutex_origin_selftest=1']
+            runtime.command(load,
                 path/'load.log', timeout=30)
             if args.owned:
                 protocol = Path('/sys/module/kdlock_km/parameters/owned_mutex_protocol').read_text().strip()
@@ -80,6 +86,9 @@ def main():
             if args.owned:
                 runtime.require('kd_owned_mutex wait probe: queued_cooling=1 result_sleep=1 pickup=1 drained=1 jit_bodies=0' in messages,
                                 'missing owned queued cooling/scheduler/pickup evidence')
+                if args.origin:
+                    runtime.require('kd_owned_mutex origin probe: claims=256 scheduled_while_claimed=0 resched=256 reused=256 drained=1 jit_bodies=0' in messages,
+                                    'missing exclusive origin claim evidence')
             else:
                 match = re.search(r'kd_mutex wait probe: rounds=1024 result_sleep=1 gate_sleep=1 switches=(\d+) errors=0 jit_bodies=0 deferred_progress=1 cooling=2', messages)
                 runtime.require(match and int(match[1]) >= 2, 'missing real scheduler/owner evidence')
@@ -90,6 +99,8 @@ def main():
             if args.owned:
                 results.append(dict(spin_limit=limit, result_sleep=True, queued_cooling=True,
                                     pickup=True, drained=True, jit_bodies=0,
+                                    origin_claims=256 if args.origin else 0,
+                                    scheduled_while_claimed=0 if args.origin else None,
                                     owned_mutex_protocol=protocol,
                                     owned_release_policy='guarded_owner_release'))
             else:

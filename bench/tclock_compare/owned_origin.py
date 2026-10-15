@@ -125,6 +125,8 @@ def main():
     # mirror. Reuse only identically hashed artifacts across confirmation blocks.
     if '--dry-run' not in remaining:
         runner.idle()
+        runner.require(Path('/sys/devices/system/cpu/online').read_text().strip() == '0-63',
+                       'origin comparison requires exactly 64 online vCPUs')
         runner.require(provider.is_file() and daemon.is_file(), 'build archived baseline first')
         binary_hashes = {str(path): runner.digest(path) for path in (provider, daemon)}
     return runner.main('mutex')

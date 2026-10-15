@@ -160,8 +160,9 @@ retains the loaded session and evidence for explicit diagnosis and drain.
 The SELFTEST provider's `owned_mutex_origin_selftest=1` plus
 `owned_mutex_origin_spin=1` executes 256 claims with explicit reschedule requests,
 checking actual voluntary/involuntary context-switch counts and repeated slot
-reuse. Run it with `owned_mutex_spin_limit=0` and `4096`, from CPU 1 with the
-origin on CPU 0. The existing owned wait probe additionally checks queued cooling,
+reuse. `run_wait_selftest.py --owned --origin` runs it with spin limits 0, 1024
+and 4096, from CPU 1 with the origin on CPU 0, and saves each receipt.
+The existing owned wait probe additionally checks queued cooling,
 sleep and local pickup. These constructed claims execute zero JIT bodies; the GS
 workload supplies that separate evidence. Image-replacement and pool-exhaustion
 coverage uses production C in VM userspace fixtures, not a live replacement claim.

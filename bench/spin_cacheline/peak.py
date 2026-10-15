@@ -31,9 +31,15 @@ def analyze_peak(measurement, spec):
     require(unsigned(m['started_ns']) and
             m['deadline_ns'] == m['started_ns'] + m['duration_ns'],
             'timed deadline differs')
+    shared = spec.get('collector_shared', False)
+    require(type(shared) is bool and type(m.get('collector_shared', False)) is bool
+            and m.get('collector_shared', False) == shared,
+            'collector sharing identity differs')
     require(unsigned(m['collector_cpu']) and m['collector_cpu'] == spec['collector_cpu']
-            and m['collector_cpu'] not in spec['cpus'],
-            'collector CPU differs or overlaps workers')
+            and ((shared and spec['cpus'] == list(range(64)) and spec['threads'] == 64
+                  and m['collector_cpu'] == 63)
+                 or (not shared and m['collector_cpu'] not in spec['cpus'])),
+            'collector CPU differs or has unapproved overlap')
     require(m['collector_observed_cpu'] == m['collector_cpu'] and m['collector_error'] == 0,
             'collector affinity/setup failed')
     require(m['progress_batch'] == 256, 'unexpected progress checkpoint size')
@@ -114,5 +120,6 @@ def analyze_peak(measurement, spec):
                 # The 256th operation can finish just before its publication.
                 progress_count_error_bound=len(workers) * m['progress_batch'],
                 max_snapshot_span_ns=max(widths),
-                sample_period_ns=m['sample_period_ns'], collector_cpu=m['collector_cpu'])
+                sample_period_ns=m['sample_period_ns'], collector_cpu=m['collector_cpu'],
+                collector_shared=shared)
     return best

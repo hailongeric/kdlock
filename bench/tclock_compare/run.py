@@ -71,13 +71,19 @@ def timing_settings(args):
                 zip(TIMING_FIELDS, (0, 300, 300, 10, 30))}
     duration = settings['duration_ms']
     require(0 <= duration <= 10000, 'duration must be 0..10000 ms')
+    require(duration or not getattr(args, 'share_collector', False),
+            'shared collector requires timed measurement')
     if duration:
         require(0 < settings['sample_ms'] <= settings['peak_window_ms'] and
                 settings['peak_settle_ms'] >= 0 and
                 settings['peak_settle_ms'] + settings['peak_window_ms'] < duration,
                 'invalid peak timing intervals')
+        shared = getattr(args, 'share_collector', False)
+        require(type(shared) is bool and (not shared or
+                (worker_cpus(args) == list(range(64)) and settings['collector_cpu'] == 63)),
+                'shared collector requires all 64 CPUs and collector 63')
         require(settings['collector_cpu'] >= 0 and
-                settings['collector_cpu'] not in worker_cpus(args),
+                (shared or settings['collector_cpu'] not in worker_cpus(args)),
                 'collector CPU must be outside every worker cohort')
         require(getattr(args, 'scenario', 'plain') == 'plain' and
                 getattr(args, 'workload', 'cacheline') in ('cacheline', 'rcuht') and
@@ -339,6 +345,7 @@ def make_plan(args):
                 measurement_mode='timed_peak' if timing['duration_ms'] else 'fixed_iterations',
                 **timing,
                 iterations=args.iterations, cpus=cpus[:t]))
+            result[-1]['collector_shared'] = timing['collector_cpu'] in cpus[:t] if timing['duration_ms'] else False
     return result
 
 
@@ -433,6 +440,7 @@ def report(out):
                    cpus=list(cpus), cpu_nodes=rows[0].get('cpu_nodes'),
                    **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
+        row['collector_shared'] = rows[0].get('collector_shared', False)
         # Select one valid session per backend. Keep its matching ns/op and
         # identity so the maximum throughput is auditable in records.json.
         best = max(good, key=lambda r: r['throughput_ops_s']) if good else None
@@ -558,6 +566,8 @@ def main(lock_kind='spin'):
     p.add_argument('--sample-ms', type=int, default=10)
     p.add_argument('--collector-cpu', type=int, default=30,
                    help='dedicated progress collector CPU, outside the worker set')
+    p.add_argument('--share-collector', action='store_true',
+                   help='allow the labelled 64-worker point to share CPU 63 on a 64-vCPU VM')
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     perf_mode = p.add_mutually_exclusive_group()
     perf_mode.add_argument('--pmu', action='store_true',

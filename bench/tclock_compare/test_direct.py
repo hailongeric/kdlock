@@ -940,6 +940,18 @@ class DirectTests(unittest.TestCase):
         with self.assertRaisesRegex(run.Failure, 'timing intervals'):
             run.make_plan(args)
 
+    def test_shared_collector_rejects_unlabelled_or_partial_overlap(self):
+        args = dict(cachelines=[1], threads=[64], repeats=3, iterations=100,
+                    backends=['native'], duration_ms=2000, collector_cpu=63,
+                    cpus=list(range(64)))
+        with self.assertRaisesRegex(run.Failure, 'collector CPU'):
+            run.make_plan(Namespace(**args))
+        for change in (dict(collector_cpu=62), dict(threads=[60]),
+                       dict(cpus=list(range(1,65))), dict(share_collector=1),
+                       dict(duration_ms=0)):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**(args | {'share_collector': True} | change)))
+
     def test_warmup_uses_all_workers_without_changing_preparation(self):
         cpus, nodes = [2, 7, 11], [0, 1, 0]
         warmup = dict(schema=1, complete=True, data_ok=True, workload='cacheline',
@@ -1244,11 +1256,11 @@ class DirectTests(unittest.TestCase):
                 run.main()
 
     def test_cli_small_and_numa_thread_matrix(self):
-        # Exercise the full 64-worker cohort with a separate collector vCPU.
+        # The 64-worker point explicitly shares collector 63; smaller cohorts do not.
         output = io.StringIO()
         argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
-                '--cachelines', '1', '--duration-ms', '2000', '--collector-cpu', '65',
-                '--cpus', '0-31,33-64',
+                '--cachelines', '1', '--duration-ms', '2000', '--collector-cpu', '63',
+                '--cpus', '0-63', '--share-collector',
                 '--threads', '1', '2', '3', '4', '5', '6', '7', '8',
                 '12', '16', '20', '24', '28', '32', '36',
                 '40', '44', '48', '52', '56', '60', '64']
@@ -1261,8 +1273,9 @@ class DirectTests(unittest.TestCase):
                          set(range(1, 9)) | set(range(12, 65, 4)))
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
-            self.assertEqual(spec['cpus'], (list(range(32)) + list(range(33, 65)))[:spec['threads']])
-            self.assertNotIn(spec['collector_cpu'], spec['cpus'])
+            self.assertEqual(spec['cpus'], list(range(spec['threads'])))
+            self.assertEqual(spec['collector_shared'], spec['threads'] == 64)
+            self.assertEqual(spec['collector_cpu'] in spec['cpus'], spec['collector_shared'])
             self.assertEqual(spec['cpu_heat_policy'],
                              'mcs_reset1024_shift10_lock512_head6' if spec['arm'] == 'kdlock' else 'not_applicable')
             self.assertEqual(spec['spin_entry_ratio_limit'],
