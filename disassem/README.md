@@ -13,6 +13,7 @@ Use [the daemon](../daemon/README.md) for publication and
 | [translation_scope.py](translation_scope.py) | Decode windows, selected blocks and CALL continuations |
 | [translation_image.py](translation_image.py) | Dispatch targets and generated assembly |
 | [context_policy.py](context_policy.py), `context_symbols.py` | Backend/context screening and static ranges |
+| [instruction_policy.py](instruction_policy.py) | Scalar instruction/operand admission and processor-state encoding refusals |
 | `context_values.py`, `context_registers.py`, `context_memory.py` | Bounded flow, register facts and sequential memory/alias model |
 | `context_guards.py`, `entry_abi.py` | Entry predicates and MINIMAL input-dependency proof |
 | [origin_policy.py](origin_policy.py) | Exact audit, allowed operations and bounded origin-GS body proof for owned mutex images |

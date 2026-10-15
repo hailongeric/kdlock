@@ -9,6 +9,7 @@ from copy import copy
 
 import context_memory  # Preserve the admission API used by guard consumers.
 import indirect_jump
+import instruction_policy
 from context_symbols import (
     CONTEXT_SYMBOLS, CONTROL_SYMBOLS, MAX_PERCPU_CPUS, MAX_PERCPU_STATIC_BYTES,
     ContextSymbols, is_context_symbol, load_context_symbols,
@@ -392,7 +393,10 @@ def constant_blocks(
 def instruction_rejection(
     line, offset, db, symbols, lock_kind=None, lock_symbols=None, constants=None
 ):
-    """Return (reason, symbol), preserving all ordinary codegen semantics."""
+    """Return (reason, symbol) before any stateful instruction reaches lowering."""
+    reason = instruction_policy.rejection(line)
+    if reason:
+        return reason, ""
     if line.name.upper() == "NOP":
         return None
     # miasm exposes no operands for string/XLAT instructions. Their segment
@@ -406,9 +410,6 @@ def instruction_rejection(
                 and not 0x40 <= byte <= 0x4F
             ):
                 break
-    if line.name.upper() in {"CLI", "STI"}:
-        return "IRQ state modification requires native context", ""
-
     # Covers direct calls/tail calls and statically addressed context data.
     # Register-derived pointers and unresolved indirect calls are not proven safe.
     for arg in line.args:

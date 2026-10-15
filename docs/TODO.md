@@ -104,9 +104,14 @@ deferred. Source leases and ABI tags alone do not resolve that lifetime problem.
 
 ### C4. Instruction, flags, and fault semantics
 
-Deferred by user decision. INT-to-NOP, warning-only special instructions,
-instrumentation flag clobbers and incomplete flags/SIMD/FPU restoration remain
-limits. Packet comparisons do not prove live hardware flags restoration.
+Processor-state instruction admission now refuses interrupt/uaccess controls,
+MSRs, hardware registers, extended state and unsupported instructions before
+emission; INT-to-NOP and silent flags-instruction omission are removed. See
+[instruction admission](design/admission.md#processor-state-instructions).
+General instruction/flags repair remains deferred: instrumentation flag clobbers
+and incomplete flags/SIMD/FPU restoration are still limits. Packet comparisons
+do not prove live hardware flags restoration, and the scalar allowlist is not
+a proof of every existing lowering's semantics.
 
 ### C5. Origin context and nested boundaries
 

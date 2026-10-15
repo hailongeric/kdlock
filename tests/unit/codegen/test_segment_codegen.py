@@ -64,6 +64,12 @@ def check_execution():
             raw, lock_kind=kind, kernel_symbols={"current_task": 0x20},
             symbols={0x20: "current_task"}, return_status=True,
         )
+        if kind == "mutex":
+            require((status, assembly) == (2, b""),
+                    "sleeping mutex admitted origin-CPU GS storage")
+            require("mutex cannot delegate origin-CPU GS storage" in log,
+                    "mutex refused for a reason other than origin GS")
+            continue
         require(status == 0, log)
         require(b"GS:[" not in re.sub(rb"/\*.*?\*/", b"", assembly, flags=re.S),
                 "hardware GS survived lowering")
@@ -79,6 +85,20 @@ def check_execution():
             require(list(origin) == before[:6] + [before[5], before[7] + 1],
                     "GS write/RMW changed the wrong storage")
             require(args[1] == 1, "wrapper did not report an executed body")
+
+    # Logical current needs no origin-CPU storage and remains usable by both
+    # backends. A zero GS base catches accidental dependence on that input.
+    for kind in ("spin", "mutex"):
+        assembly, log, status = render(
+            "65488b142520000000c3", lock_kind=kind,
+            kernel_symbols={"current_task": 0x20}, symbols={0x20: "current_task"},
+            return_status=True,
+        )
+        require(status == 0, log)
+        for task in (0x12345678, 0xABCDEF00):
+            regs, args = run_image(assembly, [0x1000], context=(0, task))[0]
+            require(regs[14] == task, "current did not use the logical waiter")
+            require(args[1] == 1, "logical-current body did not execute")
 
 
 def main():

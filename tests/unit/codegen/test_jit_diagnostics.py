@@ -137,17 +137,17 @@ class JitDiagnosticsTests(unittest.TestCase):
     def setUp(self):
         diagnostics.begin(7, 0x1000)
 
-    def test_int_is_still_nop_with_source_location(self):
-        assembly, log = render("90cd80c3")
-        warning = next(line for line in log.splitlines() if "reason=INT_AS_NOP" in line)
+    def test_int_is_refused_with_source_location(self):
+        assembly, log, status = render("90cd80c3", return_status=True)
+        warning = next(line for line in log.splitlines() if "reason=CONTEXT_NATIVE_ONLY" in line)
         self.assertIn('entry="0x1000"', warning)
         self.assertIn('rip="0x1001"', warning)
-        self.assertIn('action="emit_nop"', warning)
+        self.assertIn('action="reject_entry"', warning)
         self.assertIn("INT", warning)
-        self.assertIn(b"NOP\n", assembly)
-        self.assertEqual(assembly, render("90cd80c3", muted=True)[0])
+        self.assertEqual((status, assembly), (2, b""))
+        self.assertNotIn("INT_AS_NOP", log)
 
-    def test_existing_unhandled_special_names_still_emit_nothing(self):
+    def test_unhandled_special_names_cannot_be_silently_omitted(self):
         for name in ("PUSHF", "POPF"):
             with self.subTest(name=name):
                 diagnostics.begin(7, 0x1000)
@@ -155,15 +155,10 @@ class JitDiagnosticsTests(unittest.TestCase):
                 # Exercise the existing dispatch names, not PUSHFQ/POPFQ aliases.
                 line.name = name
                 diagnostics.set_instruction(0x1010, line)
-                output = io.StringIO()
-                with contextlib.redirect_stderr(output):
-                    assembly = special_inst.special_inst_dispatch(
+                with self.assertRaisesRegex(ValueError, "unsupported special instruction"):
+                    special_inst.special_inst_dispatch(
                         line, [], 0x1011, LocationDB(), conflict.block_init(), True
                     )
-                self.assertEqual(assembly, "")
-                self.assertIn("reason=UNSUPPORTED_SPECIAL", output.getvalue())
-                self.assertIn('rip="0x1010"', output.getvalue())
-                self.assertIn('action="omit_instruction"', output.getvalue())
 
     def test_operand_warning_retains_existing_result(self):
         arg = ExprOp("-", ExprId("RAX", 64), ExprId("RBX", 64))
@@ -212,7 +207,6 @@ class JitDiagnosticsTests(unittest.TestCase):
         # Captured from unmodified 044dba1 in the guest; includes original comments.
         fixtures = {
             "4f8d2c344839d8750190c3": "7f95692fd0fead784e376e38ac766c25bd48abe33ac2ef76f8b7bcced4e18720",
-            "cd80c3": "c54e582bfd8936de0a90acaf0072b519e39c0c8673fd8bcff56274112ca972ee",
         }
         for raw, expected in fixtures.items():
             with self.subTest(raw=raw):

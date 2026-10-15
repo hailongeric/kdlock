@@ -56,6 +56,9 @@ operations across every block it will emit:
   the audited subset below, with an exclusive origin claim. A GS displacement is an offset,
   not a linear kernel address.
 - Supported `current_task` MOV loads may use the original task supplied to JIT.
+- Instructions outside the supported scalar CPU-state contract are refused,
+  including interrupt/uaccess state, MSRs, hardware control registers and SIMD/FPU
+  operations. Ordinary GPR writes remain eligible; see the instruction rules below.
 - FS/base operations, implicit GS string/XLAT operations without lowering, known
   linear per-CPU/current addresses, scheduling/preemption/IRQ/BH/RCU references
   and calls to the wrong lock backend are refused.
@@ -68,8 +71,45 @@ the waiter's complete per-CPU context on the combiner.
 These byte and operand checks run before value propagation or a guarded retry.
 A rewritten RET can leave a connected block with no propagated input, but that
 block still has emitted code and a permitted target. It must still pass the segment,
-IRQ, context-symbol and backend checks. The scan covers only the selected episode;
+processor-state, context-symbol and backend checks. The scan covers only the selected episode;
 it does not add back an ordinary CALL miss's native-only remainder.
+
+#### Processor-state instructions
+
+`instruction_policy.py` permits supported scalar instruction families with GPR
+operands, then applies the existing segment, memory and entry-value checks.
+An unknown mnemonic or a hardware register without a lowering contract refuses
+the entry. This applies equally to legacy, clobber, rwlock and owned-mutex ABIs.
+
+| Native-only operations | Examples |
+| --- | --- |
+| Interrupt, access-permission and flags state | CLI/STI, STAC/CLAC, RDPKRU/WRPKRU, PUSHF/POPF aliases, IRET, CLD/STD, LAHF/SAHF |
+| CPU context reads and writes | RDMSR/WRMSR, control/debug registers, CPUID, RDTSC/RDTSCP/RDPMC, XGETBV/XSETBV |
+| Hardware segmentation and descriptors | SWAPGS, FSGSBASE, direct segment registers, descriptor/task-register operations |
+| System effects and transitions | Interrupts, system calls/returns, HLT, TLB invalidation, port I/O, virtualization and transactional instructions |
+| Unmanaged extended state | x87, MMX/SIMD/vector registers, MXCSR, FXSAVE/FXRSTOR and XSAVE/XRSTOR families |
+
+Balanced enable/disable pairs are still refused: their intermediate effects and
+observations belong to the physical executor. Known uaccess, MSR and FPU helper
+symbols are screened too. Typed hostcalls retain their separate audited contracts.
+Scalar arithmetic, ordinary memory operations, fences, PAUSE and supported GS or
+logical-current lowering remain eligible for the other admission checks.
+
+Raw checks strip prefixes only at decoded instruction boundaries or selected
+undecodable CFG roots. They catch sensitive encodings despite Miasm misidentifying
+SWAPGS/FSGSBASE or lacking STAC/CLAC/PKRU decoding; immediate/displacement bytes
+are not searched. Missing/unknown instructions still fail closed once text is
+complete. Every emitted branch, decoded callee and learned target is rechecked,
+including blocks skipped by value propagation. Code after the outer unlock or
+an ordinary native CALL exit remains outside this episode. This is not a proof
+of every callee in the entire lexical critical section before any delegation.
+
+Refusal happens before emission/assembly, deletes stale generated artifacts and
+returns translator status 2. The daemon publishes `KD_EXE_NATIVE_ONLY` instead
+of uploading an image. INT is no longer replaced by NOP, flags instructions are
+not silently omitted, and unsupported instructions do not get runtime error stubs.
+This admission policy does not repair arithmetic condition-flag clobbers or add
+general processor-state restoration or a pre-instruction native exit.
 
 The value analysis follows explicit operands and the lifted intermediate
 representation (IR), including implicit memory accesses, CALL arguments, RET

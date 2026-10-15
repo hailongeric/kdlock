@@ -6,11 +6,27 @@ this module does not read kernel text, publish images, or relax scope checks.
 
 import context_policy
 import diagnostics
+import instruction_policy
 import normal
 from miasm.analysis.machine import Machine
 from miasm.core.bin_stream import bin_stream_str
 from miasm.core.locationdb import LocationDB
 from miasm.expression.expression import ExprLoc
+
+
+def find_undecoded_policy_error(blocks, regions):
+    """Screen known state opcodes at selected undecodable CFG roots only."""
+    for offset, block in sorted(blocks.items()):
+        if block.lines:
+            continue
+        for data, start, _ in regions:
+            if start <= offset < start + len(data):
+                raw = data[offset - start:offset - start + 15]
+                reason = instruction_policy.encoding_rejection(raw)
+                if reason:
+                    diagnostics.set_instruction(offset, "<undecoded " + raw.hex() + ">")
+                    return offset, reason
+    return None
 
 
 def find_segment_policy_error(
