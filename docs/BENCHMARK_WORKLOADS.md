@@ -390,6 +390,209 @@ successful value queries. These are independent dimensions. Xattr remains an
 exploratory case: the runner guide records that translated bodies are refused by
 admission and excluded from accepted KD performance comparisons.
 
+## Process inspection and mmap candidates
+
+**Investigation status, 2026-10-15:** these are proposed workloads, not new
+`bench/real_api/run.py` kinds or measured KD results. The audit inspected
+`/root/linux-6.1.159-kdclobber2` on the benchmark guest and traced three ordinary
+`ps` invocations. The running kernel and source-tree `vmlinux` both had Build ID
+`5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`, matching the recorded
+`mutex-clobber2-20260919` baseline; the configuration hash also matched.
+[Audit metadata](proc_mmap_source_audit.json) records source hashes, commands,
+procfs access counts and the local raw archive. These checks establish source
+and syscall-path evidence, not contention, throughput or JIT admission.
+
+### What many containers and threads change
+
+Linux has no single lock protecting every field of every `task_struct`.
+`task_lock(task)` takes that task's `alloc_lock`; signal state and accumulated
+statistics have separate locks, and the task's address space has
+`mm->mmap_lock`, a **sleeping reader/writer semaphore**. Ordinary threads of one
+process share an `mm_struct`, `signal_struct` and `sighand_struct`, but have
+distinct task structures and `alloc_lock`s. Independent processes normally have
+different address spaces, even when they are in the same container. Container
+count is therefore not the number of contenders on one mmap lock.
+
+A host PID-namespace scan can inspect processes in descendant containers.
+A scan through a container's own procfs mount normally sees that PID namespace
+and its descendants; sharing the host PID namespace changes this scope. Keep
+container count, processes per container, threads per process and concurrent
+observers as separate parameters. More processes increase enumeration and procfs
+work; more threads increase whole-process accounting traversal. Repeated scans
+of the same process can contend on its shared signal/accounting locks. Mapping
+writers in that process can also delay observers taking its mmap read lock.
+
+The guest has procps-ng 3.3.17. The following diagnostic commands were traced
+with `openat`, `getdents64` and raw-address `read` logging, with command output
+discarded:
+
+| Command | Observed process files |
+| --- | --- |
+| `ps -e -o pid=,comm=` | `/proc/PID/stat` and `/proc/PID/status` |
+| `ps -e -o pid=,args=` | `stat`, `status` and `/proc/PID/cmdline` |
+| `ps -eL -o pid=,tid=,comm=` | Process `stat`/`status`, `/proc/PID/task` enumeration and per-thread `stat`/`status` |
+
+None of these commands opened `maps` or `smaps`. Command selection and procps
+version matter: a process-name-only query and a full command-line query do not
+exercise identical kernel paths. The kernel's [procfs documentation](https://docs.kernel.org/6.1/filesystems/proc.html)
+describes these interfaces and distinguishes inexpensive memory counters from
+the page-table inspection used for `smaps`.
+In this guest, the basic memory-counter helpers used by `stat`, `statm` and
+`status` do not take `mmap_lock`; acquiring a reference with `get_task_mm()` is
+also distinct from taking that lock. The `cmdline` page-access path is the
+relevant mmap-lock connection for the traced argument-displaying command.
+
+### Locks reached by process inspection
+
+The paths and line numbers below refer to the hashed guest sources in the audit
+archive. They describe the relevant task/MM locks, not every VFS, security-module
+or scheduler lock that a complete syscall could reach.
+
+| Operation and source | Lock and scope | Protected work / scaling |
+| --- | --- | --- |
+| Enumerate `/proc`: `fs/proc/base.c:3536`, `next_tgid()` | RCU and task references, using the procfs PID namespace | Find the next TGID and pin its task. It does not hold global `tasklist_lock` across the scan. `first_tid()` / `next_tid()` also use RCU for thread enumeration. |
+| Read names, task pointers and selected status fields: `fs/exec.c:1219`, `kernel/fork.c:1388`, `fs/proc/array.c:147` | `task->alloc_lock`, through ordinary `task_lock()` | Copy `comm`; obtain and reference `task->mm`; snapshot `fs`/`files` fields. These are per-task acquisitions. Access checks in `kernel/ptrace.c:359` also take this lock, but run a more complex credential/LSM body. |
+| Read signal fields in `stat`/`status`: `fs/proc/array.c:505` / `:275`, `kernel/signal.c:1389` | `sighand->siglock`, acquired with `spin_lock_irqsave()` after RCU lookup and pointer revalidation | Snapshot signal dispositions, thread count, limits and process identifiers; the stat path may also query a TTY. Threads normally share this lock. |
+| Aggregate whole-process statistics: `fs/proc/array.c:532`, `kernel/sched/cputime.c:308` | `signal->stats_lock`, a seqlock, plus RCU traversal | First attempt reads without taking the seqlock's spinlock; a retry can take its exclusive IRQ-saving lock. Fault/guest-time and CPU-time aggregation visit live threads, so traversal grows with thread count even without lock contention. |
+| Adjust CPU accounting: `kernel/sched/cputime.c:554` / `:644` | `signal->prev_cputime.lock` for process totals, or `task->prev_cputime.lock` for a thread; raw spinlock with IRQ saving | Keep returned user/system times monotonic. This path is present with the guest's tick accounting configuration; it is separate from the long thread traversal. |
+| Snapshot command-line boundaries: `fs/proc/base.c:291`, `get_mm_cmdline()` | `mm->arg_lock`, ordinary exclusive spinlock, shared by an address space | Copy four words: `arg_start`, `arg_end`, `env_start`, `env_end`. The lock does not cover fetching the argument bytes. |
+| Fetch command-line bytes: `fs/proc/base.c:336` / `:358` → `mm/memory.c:5700` | Target `mm->mmap_lock`, acquired for reading with a killable wait | `access_remote_vm()` looks up a VMA and obtains/copies remote pages. Missing pages can fault; stack expansion can change the lock mode. Kernel-buffer-to-observer `copy_to_user()` follows this helper, outside its mmap lock. |
+
+There is an important kernel-version distinction. Older `do_task_stat()` code
+summed thread statistics while holding `sighand->siglock` with interrupts
+disabled. Upstream commit `7601df8031fd` moved that traversal to `stats_lock`
+with a normally lockless first attempt; the
+[maintainer patch and rationale](https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/stable-queue/+/refs/tags/v6.12.41/releases/5.15.181/fs-proc-do_task_stat-use-sig-stats_lock-to-gather-the-threads-children-stats.patch)
+describe the excessive waiting caused by many concurrent observers of a large
+thread group. The inspected 6.1.159 source already contains this change. A
+benchmark that puts the entire scan under one exclusive spinlock would not model
+this guest's normal path. Thread exit and child reaping can still update
+`stats_lock` and force retries; read-only observers alone do not invalidate its
+sequence counter.
+
+Global `tasklist_lock` remains relevant to fork, exit, reparenting and wait
+operations (`kernel/fork.c`, `kernel/exit.c`). It is a system-wide `rwlock_t`,
+including write acquisitions with IRQs disabled. A container creation/exit storm
+can exercise it, but the ordinary procfs enumeration above is not a global
+task-list read-lock benchmark.
+
+### mmap critical-section boundaries
+
+`include/linux/mm_types.h` declares `mmap_lock` as `struct rw_semaphore`.
+`include/linux/mmap_lock.h` maps its read/write/killable/trylock/downgrade
+interfaces to rwsem operations. This protects VMA layout and associated address
+space operations, not all task fields or all page-table changes. Page tables and
+reverse mappings have additional locks.
+
+| Entry / source | mmap acquisition and protected work |
+| --- | --- |
+| `mmap()` → `vm_mmap_pgoff()`, `mm/util.c:505` | Write-killable lock around `do_mmap()`: choose/validate addresses, merge/create VMAs and update the Maple Tree and accounting. Allocation and filesystem/security callbacks can occur. Requested population is performed after this wrapper unlocks. |
+| `munmap()` → `__vm_munmap()`, `mm/mmap.c:2926` | Write-killable lock around `do_mas_munmap()`, including VMA changes and unmapping work. The syscall path can downgrade to read ownership before release. |
+| `mprotect()`, `mm/mprotect.c:702`; `mremap()`, `mm/mremap.c:943`; `brk()`, `mm/mmap.c:181` | Write-killable acquisitions around VMA validation/mutation; paths can split/merge VMAs, allocate, change page tables and perform TLB/MMU-notifier work. Their bodies are not fixed-size metadata copies. |
+| `/proc/PID/maps`, `fs/proc/task_mmu.c:141` / `:186` | `m_start()` takes a killable read lock; `m_stop()` releases it. A seq-file iteration batch walks VMAs and formats records while protected, rather than one acquisition necessarily covering the complete file. Opening the file also uses the task/MM access-check and lifetime machinery. |
+| `/proc/PID/smaps` and `smaps_rollup`, `fs/proc/task_mmu.c:613` / `:877` | Read mmap ownership plus page-table locks while collecting resident/PSS/etc. statistics. Page-table walks call `cond_resched()`; rollup explicitly releases/reacquires mmap read ownership when contended. Cost depends on mapped/resident pages as well as VMA count. |
+| User faults, `arch/x86/mm/fault.c:1312`; remote argument reads, `mm/memory.c:5700` | Stabilize VMAs under mmap read ownership before fault/page lookup work; retry and stack-growth paths need their own lock-state handling. Remote reads can therefore wait behind a target's mapping writer even when `ps` never opens `maps`. |
+
+### What KD can delegate
+
+The current provider has no rwsem backend. Its
+[reader/writer lock](design/rwlock_implementation.md) disables preemption,
+requires non-sleeping bodies and delegates **writers only**. Its reader path
+runs locally. The UTS experiment's bounded copy under a private lock does not
+establish that a real `mmap_lock` can be replaced in the same way.
+
+The decisive constraints are:
+
+- **Lock protocol and callers.** A private KD lock cannot exclude fault, exec,
+  exit or other native users of the real rwsem. KD mutexes are exclusive, with
+  different storage and ownership rules; neither mutex backend supplies mmap's
+  concurrent readers, killable waits, trylock, downgrade and release/reacquire
+  semantics. A new backend or an audited cooperating adapter would be required.
+- **Execution context.** Allocation, page faults, scheduling, nested MM locks,
+  callbacks and TLB operations cannot be treated as a bounded spinning payload.
+  KD's support for a logical `current` load does not switch the hardware address
+  space or reproduce arbitrary task/CPU context. A mutex combiner may sleep, so
+  sleep alone is not a universal prohibition on delegation; it does not solve
+  these rwsem and context requirements.
+- **IRQ and RCU boundaries.** The explicit IRQ/BH spin APIs in
+  [kd_spin_direct.h](../include/kd_spin_direct.h) deliberately execute locally.
+  This excludes delegating the real `siglock`, statistics fallback and raw CPU
+  accounting sections through those APIs. The translator also screens IRQ,
+  scheduler and RCU operations in
+  [context_symbols.py](../disassem/context_symbols.py). RCU traversal and task
+  exit/reclamation cannot simply be moved to a different executor.
+- **Whole-body admission.** The small plain-spin snapshots below are candidates,
+  not established JIT successes. Pointer lifetime, helper translation and alias
+  checks still apply. An ordinary untranslated call can return execution to the
+  original caller; that native continuation is not evidence that the full body
+  was delegated. Record actual returned-body JIT counts and refusals.
+
+Consequently, neither full mmap operations nor full `ps` statistics collection
+are supported KD delegation workloads today. This is a limit of the current
+implementation and integration contract, not a claim that such delegation is
+impossible with a new design. Also, combining a short snapshot does not remove
+the surrounding PID enumeration, thread traversal or userspace formatting cost.
+
+### Proposed benchmark additions
+
+Start with native measurements to identify which shared object is expensive,
+then use an extracted body only where a controlled lock comparison is meaningful.
+The labels below are proposals and are not accepted runner options.
+
+| Proposed case | Setup and measured operation | KD status |
+| --- | --- | --- |
+| `proc-stat` | Multiple observers repeatedly read one live group's `stat`; vary threads per group and compare with observers assigned distinct groups. Add a separately labelled thread-exit/child-reaping variant to study retries. | Useful native scaling workload. Preserve the seqlock/RCU first attempt; no current full-body delegation adapter. |
+| `proc-comm-snapshot` | Extract the bounded, NUL-terminated/zero-padded task-name copy under an ordinary exclusive spinlock; use module-owned records and stable per-worker kernel output buffers. Vary shared versus distinct records and separately add controlled name updates. | Plausible KD spin candidate after compiled-body admission. It models the `alloc_lock` payload, not the whole procfs syscall. Trace/perf side effects of real name setters remain outside this extracted experiment. |
+| `proc-arg-bounds` | Extract the four-word `arg_lock` snapshot into a controlled module-owned record. Readers copy one complete tuple; optional writers alternate valid tuples under the same selected lock. | Plausible KD spin candidate, including delegation of reads because the original lock is exclusive. It does not benchmark fetching `cmdline` pages or the mmap rwsem. |
+| `proc-cmdline-mmap` | Observers read a target's `cmdline` while its threads map/unmap disjoint scratch regions in the same address space. Vary observer count, mapping-writer count, argument bytes and VMA count. | Useful native mmap contention workload; current KD backend unsupported. Keep a stable-arguments oracle and a no-writer control. |
+| `proc-maps` / `proc-smaps` | Read maps or memory-accounting records while a target changes separate mappings. Vary actual VMA count, resident bytes and target count independently. | Native workload; current KD backend unsupported. Report maps and smaps separately. |
+| `task-lifecycle` | Controlled fork/thread creation and exit/reaping, with and without concurrent procfs observers. | Native control for global `tasklist_lock` and accounting writers. Current KD rwlock has no required IRQ variant; ordinary read acquisitions would not delegate anyway. |
+
+For procfs cases, give every observer an independent open file description;
+sharing one can introduce seq-file or file-position serialization unrelated to
+the target lock. Define an operation as a complete read from offset zero and
+record whether open/close or rewind costs are timed. For the name-copy payload,
+preserve the source and destination sizes: the audited proc display uses a
+64-byte temporary for a task name stored in `TASK_COMM_LEN` (16) bytes.
+
+For extracted-body comparisons, all participants must use one selected lock
+protocol. Do not redirect only procfs readers to a KD lock while real task/MM
+writers retain Linux locks, or install a private lock over live VMAs. Task and
+MM references pin allocations but do not freeze fields, thread membership or
+the target's exec/exit state. A future real-object adapter needs a complete
+consumer, lifetime and permission-check audit.
+
+A useful native screening matrix separates these dimensions:
+
+1. **Sharing:** one observed process versus many independent processes; many
+   threads in one address space versus the same total tasks spread across
+   address spaces. Keep total task count fixed for the comparison that isolates
+   sharing. Then vary container/PID-namespace count separately.
+2. **Observers and activity:** vary concurrent readers independently of target
+   threads and mapping writers. Compare idle targets, CPU activity, mapping
+   churn and lifecycle churn in separate cases; sleeping target threads can
+   provide a large population without making every target runnable.
+3. **Payload:** distinguish `comm` from `args`; vary VMA count independently of
+   thread count and distinguish VMA traversal from resident-page traversal.
+   Avoid unintended VMA merging in setup and record the actual map count.
+4. **Measurement:** retain whole-scan latency, reads/second, CPU time, tail
+   latency, errors and target progress. Attribute lock wait and hold time to
+   lock address/target `mm` and call stack rather than only to a lock class.
+   The guest source provides `mmap_lock_start_locking`,
+   `mmap_lock_acquire_returned` and `mmap_lock_released` tracepoints. Pair by
+   caller and `mm`, check success, and account for trylock, downgrade and retry
+   paths. Use separate profiling runs so probe cost is not counted as lock
+   performance; the captured configuration has `CONFIG_LOCK_STAT` disabled.
+
+Use the existing 64-vCPU recovery guest and measurement rules for future runs.
+Keep fixed worker/coordinator placement distinct from the number of observed
+tasks, and do not interpret arbitrary container oversubscription as validated KD
+operation. Native lifecycle tests must tolerate documented procfs exit races;
+stable snapshot tests should validate exact tuples/names. Matched extracted-body
+tests need identical payloads, successful JIT execution and complete drain.
+No large-container run, new kernel hook, module/JIT experiment or performance
+comparison was performed for this audit.
+
 ## Source references
 
 | Description | Maintained source |
