@@ -8,6 +8,12 @@ Original-host executable test archives remain in `../raw/legacy/`, with their
 frozen commands, inputs and drain records. [Validation](../../../../docs/VALIDATION.md)
 indexes those historical receipts and their source-specific limits.
 
+The [2026-10-15 documentation and file cleanup](documentation-cleanup-20261015.json)
+records maintained-guide and command checks, local/Git link validation, 17 removed
+Python caches and three verified duplicate extraction trees. Canonical archives,
+unique records and copies that differ from their archives remain intact. This
+source-host cleanup executes no project tests or benchmarks.
+
 The [2026-10-15 documentation refresh](documentation-refresh-20261015.json)
 records static guide/link checks, source-backed options, full-grid result-table
 consistency and the local branch inventory. It runs no compiler, kernel test or

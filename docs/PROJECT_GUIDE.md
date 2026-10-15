@@ -21,13 +21,22 @@ current-source protocol/JIT/FULL/ACK checks from older receipts and performance 
 [Performance status](PERFORMANCE.md) summarizes the latest frozen measurements;
 [the results index](../bench/results/README.md) owns historical reports and provenance.
 
-The owned ABI4/reuse-32 profile is accepted for c01/post64 at 1–8 workers on the
-regular boot. The later 22-count, 1–64-worker comparison uses the same implementation
-on a temporary 66-vCPU boot; its three-worker peak misses the 97% Native gate.
+The recorded owned ABI4/reuse-32 profile at `585335b` is accepted for c01/post64
+at 1–8 workers on the regular boot. The historical 2026-10-14 22-count,
+1–64-worker comparison used the same implementation on a temporary 66-vCPU
+boot; its three-worker peak missed the 97% Native gate. That topology is
+superseded for new runs by the 64-CPU
+placement below.
 The [current flowcharts](design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
 show the protocol, and the [owned benchmark command](../bench/tclock_compare/README.md#owned-c01-full-grid)
 selects the measured profile explicitly. The runner's legacy default and the
 owned caller's ABI2/reuse-0 defaults remain unchanged.
+
+Later source adds immutable owned-image generations, optional audited origin-GS
+delegation and optional bounded NUMA selection. The origin and NUMA policies
+default to off. Their [fresh-control workflow](../bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
+keeps the earlier accepted implementation as a separately frozen comparison arm;
+the older acceptance does not validate these additions.
 
 ## Reading order
 
@@ -76,11 +85,15 @@ Run the host helpers from `/home/eric/vm/qemu-scripts`. `run_vm.sh` defaults to
 guest node 0 CPUs 0–31 map to host CPUs 0–31, and guest node 1 CPUs 32–63 map
 to host CPUs 32–63, with 12 GiB bound to each matching host memory node.
 `pin_cpu.sh` verifies one-to-one pinning automatically. QEMU service threads share
-host CPU 63 with guest CPU 63. Use collector CPU 63 and exclude it from workers.
-Both comparison runners accept up to 64 workers. The [complete 22-point matrix](../tools/vm/README.md#complete-164-worker-comparison)
-uses a temporary 66-vCPU boot for 64 workers and a separate guest collector;
-at 64 workers they share the last physical host core. Archive that topology's
-evidence before restoring the regular boot, and keep its snapshots separate.
+host CPU 63 with guest CPU 63. All new runs must keep exactly CPUs 0–63, with
+node 0 on 0–31 and node 1 on 32–63; do not add extra vCPUs or an unused spare.
+For up to 63 workers, use collector CPU 63 and exclude it from worker cohorts.
+At 64 workers, all CPUs 0–63 are workers and the collector must share CPU 63.
+Spin/mutex timed runs support it with
+`--cpus 0-63 --collector-cpu 63 --share-collector`. Rwlock and real-API runners,
+and the [complete-matrix driver](../tools/vm/README.md#complete-164-worker-comparison),
+still require a separate collector. Record collector/QEMU contention separately
+and preserve historical topology metadata.
 The [full-grid closeout](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md#verification-and-closeout)
 records the 2026-10-14 restoration, kernel/boot-policy and idle checks, and confirmed
 `normal64-after-mutex-owned-full-20261014` snapshot. Reverify the live state and
@@ -229,8 +242,10 @@ was integrated separately. [The machine index](../bench/results/10.176.26.71/REA
 records earlier study dispositions without duplicating their narratives here.
 
 The [2026-10-15 inventory](git-branches-20261015.json) records refs and retained
-worktrees during this documentation refresh, after full-grid integration. It
-predates the documentation commit and includes its temporary task branch.
+worktrees after full-grid integration, before the earlier documentation commit.
+It is a dated snapshot, not the current branch list; later origin/NUMA work is
+outside that inventory. Inspect `git branch --list` and `git worktree list`
+before changing refs or removing a checkout.
 The [2026-10-14 inventory](git-branches-20261014.json) preserves the prior cleanup.
 Accepted topic tip `c768c23` was fast-forwarded into `master`, preserved as
 `archive/perf/mutex-linux-local-c01-20261014`, then its local branch was closed.
@@ -238,8 +253,9 @@ Earlier cleanup also preserves the following tips:
 merged WIP `09bfffe` is preserved exactly by
 `archive/wip/worktree-20261012` and its local branch is closed. The cached remote
 protocol tip `475e1d6` has a separate exact-tip archive tag; no remote refs changed.
-The [2026-10-12 inventory](git-branches-20261012.json) retains earlier dispositions. Detached worktrees may contain dirty frozen experiment inputs. Their
-canonical source evidence must be preserved before removing a checkout.
+The [2026-10-12 inventory](git-branches-20261012.json) retains earlier dispositions.
+Detached worktrees may contain dirty frozen experiment inputs. Preserve their
+canonical source evidence before removing a checkout.
 
 Remote-tracking refs are cached observations. Publishing tags, advancing remote
 `master` and deleting remote branches are separate operations; verify actual

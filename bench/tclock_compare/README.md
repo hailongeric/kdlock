@@ -25,10 +25,15 @@ Check the benchmark host frequency policy and vCPU/NUMA affinity; keep the exist
 mitigations and preemption configuration. Confirm a real monitor snapshot before
 setting recovery variables. Output must be a new directory outside the checkout.
 
-The example uses collector 63 for the documented 64-vCPU destination. Its
+All new runs use exactly CPUs 0–63: NUMA node 0 has 0–31 and node 1 has 32–63,
+with each vCPU pinned to the same-numbered host core. Do not add extra vCPUs
+or an unused spare CPU. The example uses collector 63. Its
 [migration checks](../README.md#vm-migration-validation) are recorded separately
 from the historical 40-vCPU runs, which used collector 38. Verify the actual
-online/available CPUs and keep the collector outside every worker set.
+online/available CPUs and keep the collector outside worker sets of up to 63
+workers. For the 64-worker point, explicitly select
+`--cpus 0-63 --collector-cpu 63 --share-collector`. This marks the overlap in the
+client/session records; smaller cohorts still have a separate collector.
 
 Example timed spin cacheline comparison after that verification:
 
@@ -57,8 +62,9 @@ has no `mutex_jit` parameter.
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
 | `--collector-cpu 30` | Built-in default; override with an available CPU outside workers (63 on the documented destination, 38 in the original full matrix) |
-| `--numa on`, `--kd-batch-size 1024` | KD spin/legacy-mutex NUMA selection and total body bound; owned uses FIFO without NUMA reordering |
-| `--spin-prefetch 2` |KD producer-prepared hints |
+| `--share-collector` | Off by default; timed runs only, with the full ordered CPU list `0-63` and collector 63; labels overlap at 64 workers |
+| `--numa on`, `--kd-batch-size 1024` | KD spin/legacy-mutex NUMA selection and total body bound; owned selection has its own opt-in switch |
+| `--spin-prefetch 2` | KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
 | `--mutex-spin-limit 4096` | KD mutex result polling budget before uninterruptible sleep; 0 skips polling. For owned-v1 this does not limit SELF owner spinning through OSQ |
@@ -67,6 +73,8 @@ has no `mutex_jit` parameter.
 | `--owned-mutex-cabi` | Opt-in ABI4 ordinary-C caller; Linux local acquisition before late capture, with no fixed owner-spin budget |
 | `--owned-mutex-reuse-spins 0` | ABI4 allowance 0/8/32/128 after an unflagged release, once per OSQ turn; measured profile selects 32 |
 | `--owned-mutex-refill` | Opt-in FIFO refilling within the same total batch cap; default is one finite snapshot |
+| `--owned-mutex-origin-spin` | Opt into audited origin-GS execution with an exclusive readiness claim; requires `owned-v1` |
+| `--owned-mutex-numa` | Opt into the eight-request/four-bypass selector; requires `owned-v1`, independent of origin claims |
 | `--owned-mutex-preflight` | Compile the experimental ABI2 C gate; default false retains capture-first entry; mutually exclusive with ABI4 |
 | `--owned-mutex-preflight-spins` | Opt-in gate budget: 0 (default), 64, 256, 1024 or 4096 polling steps; positive values require the gate flag |
 | `--owned-mutex-preflight-queue` | Opt in to joining the private OSQ within a positive preflight polling budget; default false |
@@ -86,10 +94,11 @@ Both entries now accept any worker count from 1 through 64. The full new-host
 comparison uses 22 counts: 1–8 in steps of one, then 12–64 in steps of four.
 Use the [complete-matrix driver](../../tools/vm/README.md#complete-164-worker-comparison)
 for one-cacheline and hash payloads; larger cacheline sizes require an explicit
-opt-in. Its temporary 66-vCPU placement keeps
-64 distinct worker vCPUs and a separate guest collector; the collector shares
-a physical core with the last worker at the 64-worker point. The example above
-uses six worker counts and fits the regular 64-vCPU boot.
+opt-in. That driver still requires a separate collector and cannot complete
+its grid on the required topology. The individual spin/mutex runners support
+all 22 counts with explicit collector sharing; the rwlock runner does not yet
+support that overlap. Keep the 64-vCPU topology. The example above uses six
+worker counts and a separate collector.
 
 The runner builds matching copies of each backend, workload and provider. It
 checks the built ELF interfaces, return layouts and sanitizer references. KD
@@ -97,11 +106,12 @@ publishes the prepared entry before every worker warms up with 48,000 operations
 The daemon stops before measurement. Recorded NUMA and layout settings come from
 the actual build, so requested option names alone cannot mislabel a sample.
 
-## Owned c01 full grid
+## Owned origin and NUMA comparison
 
-The origin-readiness/NUMA comparison uses `owned_origin.py` with a separately
-archived and built pre-change source tree. Its `current-kd` arm uses that tree's
-provider, daemon and translator; Native and TCLock are also measured afresh.
+The origin-readiness/NUMA comparison uses [owned_origin.py](owned_origin.py)
+with a separately archived and built pre-change source tree. Its `current-kd`
+arm uses that tree's provider, daemon and translator; Native and TCLock are also
+measured afresh.
 `fifo` enables origin claims with FIFO selection; `numa` additionally enables
 the eight-request/four-bypass selector. Both switches remain independently
 selectable in `run_mutex.py` as `--owned-mutex-origin-spin` and
@@ -112,18 +122,24 @@ The screen requires the full 22-count grid on the fixed 64-vCPU topology.
 all smaller cohorts retain a separate collector:
 
 ```sh
-python3 bench/tclock_compare/owned_origin.py \
+KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_64_VCPU_SNAPSHOT \
+  LC_ALL=C timeout --kill-after=10s 7200s python3 bench/tclock_compare/owned_origin.py \
   --baseline-root /root/kdlock-evidence/BASELINE_SOURCE \
   --baseline-commit FULL_BASELINE_COMMIT \
   --mutex-implementation owned-v1 --owned-mutex-cabi --owned-mutex-reuse-spins 32 \
-  --mutex-acceptance adaptive-performance --cachelines 1 \
+  --mutex-acceptance adaptive-performance --workload cacheline --cachelines 1 \
   --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 \
-  --cpus 0-63 --collector-cpu 63 --share-collector --duration-ms 2000 \
+  --cpus 0-63 --collector-cpu 63 --share-collector \
+  --backends native tclock kdlock --repeats 3 --duration-ms 2000 \
   --output /root/kdlock-evidence/10.176.26.71/bench/origin-screen-NEW
 ```
 
 Build the archived baseline's private provider and daemon in the guest before
-running. The matrix retains three alternating-order rounds, 64 post-work rounds,
+running. Replace `BASELINE_SOURCE` with that tree and `FULL_BASELINE_COMMIT` with
+its 40-character commit ID. The default screen has five arms and 330 sessions:
+Native, TCLock, frozen KD, origin/FIFO and origin/NUMA. Each single-policy
+confirmation has four arms and 264 sessions.
+The matrix retains three alternating-order rounds, 64 post-work rounds,
 48,000 warmup operations per worker and the existing warmed-peak rules. Confirm
 the selected candidate with `--policies fifo` or `--policies numa` in two new
 three-round output directories. Never combine blocks or CPU topologies into one
@@ -142,25 +158,29 @@ worker progress, CPU time, returned bodies and shares, parking, claims/failures,
 preparation requests and bypasses. GS correctness/diagnostic runs contribute no
 performance scores.
 
-The current measured profile uses `owned-v1`, ABI4 and reuse allowance 32.
+## Owned c01 full grid
+
+The recorded c01 profile uses `owned-v1`, ABI4 and reuse allowance 32.
 All workers increment the same counter in one 64-byte payload line; the lock
 has its own aligned slot. The source currently defines 64 post-work arithmetic
 rounds in [post_work.h](../../workload_modules/spin_cacheline/post_work.h).
 Changing that value requires a separate baseline and evidence block.
 
-For 1–8 and 12–64 workers, first establish the verified temporary
-[66-vCPU placement](../../tools/vm/README.md#complete-164-worker-comparison),
-confirm its own recovery snapshot, and use the pinned guest Python environment.
-Run only in that guest, with a fresh external output directory:
+For new measurements, verify the fixed
+[64-vCPU placement](../../tools/vm/README.md#complete-164-worker-comparison),
+confirm its recovery snapshot, and use the pinned guest Python environment.
+The command below covers 1–8 and 12–64 workers, explicitly sharing the collector
+at 64. Run only in that guest, with a fresh external output directory:
 
 ```sh
-KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_66_VCPU_SNAPSHOT \
+KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_64_VCPU_SNAPSHOT \
   LC_ALL=C timeout --kill-after=10s 7200s python3 bench/tclock_compare/run_mutex.py \
   --mutex-implementation owned-v1 --owned-mutex-cabi --owned-mutex-reuse-spins 32 \
   --mutex-acceptance adaptive-performance --kd-provider-ubsan off \
   --workload cacheline --cachelines 1 \
   --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 \
-  --cpus 0-31,33-64 --collector-cpu 65 --backends native tclock kdlock --repeats 3 \
+  --cpus 0-63 --collector-cpu 63 --share-collector \
+  --backends native tclock kdlock --repeats 3 \
   --duration-ms 2000 --peak-window-ms 300 --peak-settle-ms 300 --sample-ms 10 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
@@ -168,13 +188,16 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_66_VCPU_SNAPSHOT 
 ```
 
 This collects 198 samples, with 48,000 warmup operations per worker and finite
-FIFO batching. At 64 workers, the collector and last worker share physical core
-63 with QEMU services. Use the same temporary topology for the whole block, then
-archive evidence and restore the regular boot. For the separate regular-boot
-1–8 profile, use `--threads 1 2 3 4 5 6 7 8 --cpus 0-7 --collector-cpu 63`.
+FIFO batching. Origin claims and owned NUMA selection remain off. Keep the same
+64-vCPU topology for the whole block and archive its evidence. At 64 workers,
+CPU 63 carries the final worker, collector and QEMU services; record that
+contention separately. For the separate 1–8 profile, omit `--share-collector`
+and use `--threads 1 2 3 4 5 6 7 8 --cpus 0-7 --collector-cpu 63`.
 
 The [recorded full-grid report](../results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md)
 owns all samples, variation, worker shares, CPU cost, plot and offline auditor.
+That historical report used a temporary 66-vCPU topology, which must not be
+reused for new runs or relabeled as the required 64-vCPU placement.
 The [accepted 1–8 study](../../docs/PERFORMANCE.md#accepted-c01-18-worker-profile)
 has its own screen and two confirmation blocks. A descriptive full-grid run
 does not substitute for that acceptance procedure or the functional FULL/ACK checks.
@@ -273,8 +296,10 @@ Owned records identify `owned_queue_policy=finite_fifo` by default. The opt-in
 `--owned-mutex-refill` experiment records `bounded_fifo_refill` and verifies its
 read-only provider parameter. It takes another FIFO snapshot only after consuming
 the previous one, within the same total body cap and without crossing a SELF or
-handoff boundary. Neither policy reorders by NUMA node, even when the shared
-provider's NUMA build switch is on. Screen thresholds separately for each policy.
+handoff boundary. These labels describe batch refilling. NUMA reordering is
+controlled separately by `--owned-mutex-numa`, which defaults to off regardless
+of the shared provider's NUMA build switch. Records retain both
+`owned_mutex_numa` and `owned_mutex_origin_spin`; compare each policy separately.
 
 `--profile-lock` observes the matching admission and batch symbols for each
 implementation. Owned runs also retain probes on Linux lock/unlock and require

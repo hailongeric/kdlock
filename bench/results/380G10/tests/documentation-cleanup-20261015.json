@@ -1,0 +1,262 @@
+{
+  "scope": "source-host documentation and confirmed duplicate/cache cleanup",
+  "machine": "380G10",
+  "date": "2026-10-15",
+  "captured_utc": "2026-10-15T06:29:12.454369+00:00",
+  "source_base": "4dc8d2a715614939211c8cfcb5407047a6184748",
+  "runtime_code_changed_by_this_task": false,
+  "executable_tests_run": false,
+  "benchmarks_run": false,
+  "workspace_note": "Started with pending documentation, kernel readability and VM synchronization edits. Concurrent benchmark work remains separate; this receipt describes the reviewed working-tree documentation and local cleanup.",
+  "maintained_guides_reviewed": 48,
+  "updated_documents": 25,
+  "updated_document_sha256": {
+    "README.md": "b18e74a096f325015862545cf5f139336422acc3a1feec1fd2bc96e1aaa0af36",
+    "bench/README.md": "bf0115ba460becae9f1c4972f5f20482480568eb765ac7751e10baee58c2635b",
+    "bench/results/380G10/README.md": "6e5ad3082689e5196f359aa23617f33141f650d0cbb8165bb6ee31e25eed4631",
+    "bench/results/380G10/tests/README.md": "0c253bbc91ad33021065ff8c96b4bdbd9c6062d4bcf6e87362cbe9c00fbd2f96",
+    "bench/results/README.md": "9e401a6569306c242ec9f0ad6da022bb7b7705f308c6db9ab667db11c8df069e",
+    "bench/spin_cacheline/README.md": "173dcd313a9063d07cb68f6c1a2815c6daaa05d2bd88c1d9210401197f84199c",
+    "bench/tclock_compare/README.md": "2003938d5828cecb790e2e4bad582a0037e1d890fcfbc7ca1465c5c3dcabe5b5",
+    "daemon/README.md": "6d4a00b988b3d3afa465a1a5277c0b2ca6e966095205f7aad164e3902ed21d3c",
+    "disassem/README.md": "cf489a5b538274ba2d2dd8edd19d63f1229398d9d1e8d1398afb11663ec4d231",
+    "docs/AGENTS.md": "d6f2f969d0067dcf74c1367052236f18a585f6164ec737a907bfd5fe40a402e6",
+    "docs/CODE_MAP.md": "9b8f6f29733d5e67fd84a19f92a4aea6f65f5aa5d9d7cd421962077895553fa6",
+    "docs/DESIGN.md": "2843e8cf99021173071997d1638e81537c3980417d88833c12c8ec6988a3cc1b",
+    "docs/JIT_REGISTER_ABI.md": "a29e78737c78607bb5819b65c0fdf1b54407c767fc1bce2be7a23d7dbfe85a03",
+    "docs/PERFORMANCE.md": "2f86c92e4cf738feecb99dd4cf7e6012be29f141e4da551a2578ad693b9c4af0",
+    "docs/PROJECT_GUIDE.md": "caa4f141212e31c8ad69ac9250cf3f17847042c35ef9b384b59afe2a0859659c",
+    "docs/TODO.md": "f088c40288544b640c8930563a022f2f5a6355d9e7ba530f3e6634202bcd1821",
+    "docs/VALIDATION.md": "1ec778f1bfbee5e1208b15597f730ffe6dc0f81a30d5bc5af79fb9723df7a456",
+    "docs/design/admission.md": "5df323faceaf897bb2156b70bc8b4a6474a19cf95a427cbf328dafa3d6f68cf3",
+    "docs/design/lifetimes.md": "31f9821edf694ffdc142d8db4ebe3ff643b290d059cb827933e20eca03f2e64b",
+    "include/README.md": "4bfdde9ab14060d289b176743b9d989eb14ae5abd831d2ca18ec20c6e0a4e8dc",
+    "kernel_baseline/README.md": "a5876d18e153ae2e3c96c589bdde24a5844ec75306c92712dde23a761a998570",
+    "kernel_experiments/README.md": "c6255fc869fce44b43531c1b917fdcdb4d3868783a6032b4837ace6bfbfbd21a",
+    "kernel_module/README.md": "8a431084ac111805da068f33539a37ce0e77eacfc6348f63b7d85572c8644308",
+    "tools/vm/README.md": "e27cbe1ed6ef1cb642320ba9e0f7064c7dcda11e876cd3085d46d0553ad58223",
+    "workload_modules/mutex_cacheline/README.md": "ce578b3c27e6988bb46fe6031a3682589176d0de35004248892826ddc5ef41e6"
+  },
+  "validation": {
+    "links": {
+      "documents": 100,
+      "local_links": 1294,
+      "anchors": 161,
+      "external_links_not_fetched": 40,
+      "fixed_git_links": 65
+    },
+    "command_examples_checked": 36,
+    "method": "Static local Markdown paths/anchors; fixed Git links checked using local objects; command options checked against AST argparse declarations including forwarded kernel-identity options. External URLs were not fetched. No project code executed.",
+    "git_diff_check_passed": true,
+    "issues": []
+  },
+  "removed_extractions": [
+    {
+      "root": "bench/results/380G10/raw/legacy/threeway-20261008-009e8e3/export",
+      "archive": "bench/results/380G10/raw/legacy/threeway-20261008-009e8e3/guest-evidence.tar.gz",
+      "archive_sha256": "48ef18f53b1fc131720ae3181af4e034ddf30fa0b49954bc6de79ba625256eeb",
+      "archive_prefix": "",
+      "files": 19689,
+      "symlinks": 360,
+      "logical_bytes": 170841687,
+      "normalized_symlinks": 360,
+      "allocated_bytes": 231690240,
+      "issues": [],
+      "verified": true,
+      "removed": true
+    },
+    {
+      "root": "bench/results/380G10/raw/legacy/spin-three-round-20260923",
+      "archive": "bench/results/380G10/raw/legacy/spin-three-round-20260923.tar.gz",
+      "archive_sha256": "6c2132fad5a2884a205dc52c1f694b5360e12397c4ea24512ce76a11c0ee1730",
+      "archive_prefix": "spin-three-round-20260923",
+      "files": 9429,
+      "symlinks": 336,
+      "logical_bytes": 21031397,
+      "normalized_symlinks": 0,
+      "allocated_bytes": 53108736,
+      "issues": [],
+      "verified": true,
+      "removed": true
+    },
+    {
+      "root": "bench/results/380G10/raw/legacy/spin-generic-unlock-20260923",
+      "archive": "bench/results/380G10/raw/legacy/spin-generic-unlock-20260923.tar.gz",
+      "archive_sha256": "83ce82f28f5f5e2f48c43dc73830a309e9285c053e57fa9b8436ccd972676e7a",
+      "archive_prefix": "spin-generic-unlock-20260923",
+      "files": 5110,
+      "symlinks": 152,
+      "logical_bytes": 29277904,
+      "normalized_symlinks": 0,
+      "allocated_bytes": 46247936,
+      "issues": [],
+      "verified": true,
+      "removed": true
+    }
+  ],
+  "retained_extractions_with_differences": [
+    {
+      "root": "bench/results/380G10/raw/legacy/spin-heat-only-full-20260923",
+      "archive": "bench/results/380G10/raw/legacy/spin-heat-only-full-20260923.tar.gz",
+      "archive_sha256": "6205210aa8ee5299a26d8e0075cea9665c81caf10212612e7728168411f40bf4",
+      "archive_prefix": "spin-heat-only-full-20260923",
+      "issues": [
+        [
+          "different permissions",
+          "independent-audit.json"
+        ]
+      ]
+    },
+    {
+      "root": "bench/results/380G10/raw/legacy/spin-mcs1-window4e10-20260922",
+      "archive": "bench/results/380G10/raw/legacy/spin-mcs1-window4e10-20260922.tar.gz",
+      "archive_sha256": "1ee6a571e26ced2aaa9cb4810a0210e3554f2640fe342115bdb24eb54c140f1a",
+      "archive_prefix": "spin-mcs1-window4e10-20260922",
+      "issues": [
+        [
+          "not in archive",
+          "audit.json"
+        ],
+        [
+          "not in archive",
+          "table.md"
+        ]
+      ]
+    }
+  ],
+  "removed_generated_files": [
+    {
+      "path": "bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/__pycache__/export.cpython-310.pyc",
+      "bytes": 25802,
+      "sha256": "02f4e7d460e752c59600a9d077888af0f0147e8a91d309196774f15cae938b9f",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/__pycache__/matrix-audit-helpers.cpython-310.pyc",
+      "bytes": 25814,
+      "sha256": "c5fe3a1722c8ffb655aa9464d654eb23cd4fe6dcce7a02c85792bc3618ff70e3",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/comparison/numa-mutex-20261010/__pycache__/matrix-audit-helpers.cpython-310.pyc",
+      "bytes": 25807,
+      "sha256": "e5dede09600c91956b9d1ec7badf4382f934f2cbf7fa2c646b09e497d0e5baba",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/mutex_owned/20261013/__pycache__/validate.cpython-310.pyc",
+      "bytes": 27837,
+      "sha256": "94197d31e5313fa48cc0e6991d88005a77bfeb1d89368d5803f027ba8fc33ffc",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/__pycache__/validation_builder.cpython-310.pyc",
+      "bytes": 32800,
+      "sha256": "05cbed7e544fe2e194e135d941eebe178cb46a70f744aef33c62f59c2f4dd9eb",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/__pycache__/plot.cpython-310.pyc",
+      "bytes": 10565,
+      "sha256": "43c3410fde0ce4c756e9c804b48ab1a7ef96a816dd3f7419c9d8069cbf620b7a",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/spin_cacheline/__pycache__/bench_runtime.cpython-310.pyc",
+      "bytes": 12677,
+      "sha256": "1b92489f2afa10add8095cca491b02715e806d1d81b5f7dfa0004cfa68695620",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/spin_cacheline/__pycache__/bench_session.cpython-310.pyc",
+      "bytes": 10556,
+      "sha256": "5b8027f5a910d01d2ee384b6e40278c7bfeabd9e3f018318477152ed4f6c2bb1",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/spin_cacheline/__pycache__/kernel_identity.cpython-310.pyc",
+      "bytes": 2234,
+      "sha256": "9aa62a1f2b51af35f3e58a8ce0363d01e3f5a76ae1e9df47caf96e507376460f",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/spin_cacheline/__pycache__/summarize.cpython-310.pyc",
+      "bytes": 8707,
+      "sha256": "07d066361a91a0614e77299b576d6d94557f93a9fc35cd138145b44a3a4f340c",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/tclock_compare/__pycache__/context_audit.cpython-310.pyc",
+      "bytes": 3066,
+      "sha256": "5f2a1b38b6d22f005de4a8c96dc59a2d225641b692bab325eb461dc90ce286da",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/tclock_compare/__pycache__/mutex_study.cpython-310.pyc",
+      "bytes": 20518,
+      "sha256": "0cdeda7e1142bf64605561f190f6eab5da91c72416be07e5fa1fb3d004502955",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/tclock_compare/__pycache__/run.cpython-310.pyc",
+      "bytes": 35806,
+      "sha256": "f9487d0a71d1969b32d24556981ee41a7f50e79188b1bd3d9a7574741445e7d1",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "bench/tclock_compare/__pycache__/session.cpython-310.pyc",
+      "bytes": 24790,
+      "sha256": "b11376c3b2719a7a305fc974ae4ef81c749079e8d232a52e2eeb6ec8a2b15d35",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "disassem/__pycache__/device_session.cpython-310.pyc",
+      "bytes": 6531,
+      "sha256": "171b0e04fdb2aa15e6396b567d8b7340401de725b87413b9faca11bf844cd944",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "tests/protocols/__pycache__/cpu_placement.cpython-310.pyc",
+      "bytes": 2150,
+      "sha256": "b13b02ecc5c91185e0ece8eafe61ed9718316d1b0b05f41b1b4e03e285d1bf9c",
+      "reason": "Regenerable Python bytecode cache"
+    },
+    {
+      "path": "tests/protocols/__pycache__/native_only_protocol.cpython-310.pyc",
+      "bytes": 1242,
+      "sha256": "a34077ba2ab6bc1fe4e7916e193414ac40fa3fa576efbd6ddda0a0243774e64a",
+      "reason": "Regenerable Python bytecode cache"
+    }
+  ],
+  "duplicate_regular_files_removed": 34228,
+  "duplicate_symlinks_removed": 848,
+  "duplicate_logical_bytes_removed": 221150988,
+  "duplicate_allocated_bytes_removed": 331046912,
+  "generated_cache_bytes_removed": 276902,
+  "preservation": {
+    "canonical_archives_retained": true,
+    "historical_files_compared_unchanged": 255,
+    "branch_inventories_and_kernel_captures_retained": true,
+    "frozen_worktrees_unchanged": true,
+    "bench_tmp_compatibility_link_retained": true
+  },
+  "recovery": {
+    "instructions": "Extract each retained archive into an isolated directory. archive_prefix identifies the member prefix; use an empty prefix for the threeway export. Consult the recorded symlink map before using an extracted workspace.",
+    "normalized_symlink_mapping": {
+      "archive_prefix": "/root/kdlock-evidence/threeway-20261008-009e8e3/",
+      "extracted_root": "bench/results/380G10/raw/legacy/threeway-20261008-009e8e3/export",
+      "retained_map": "bench/results/380G10/raw/legacy/threeway-20261008-009e8e3/export-symlinks.json"
+    },
+    "verification": "All removed regular-file bytes and permissions matched the canonical archive. Symlinks matched exactly or resolved to the same internal archived path under the explicit mapping. File identities and hashes were rechecked immediately before removal."
+  },
+  "maintenance_archive": {
+    "path": "bench/results/380G10/raw/tests/documentation-cleanup-20261015/evidence.tar.gz",
+    "sha256": "1816f2e7c397002413a635d8939b11bd68403256363ab6ef0022a9a4909ba520",
+    "bytes": 1783273
+  },
+  "passed": true,
+  "concurrent_document_edit_excluded_from_commit": {
+    "bench/tclock_compare/README.md": "Median whole-run origin-gate description belongs to the concurrent benchmark change and remains unstaged."
+  },
+  "document_hash_scope": "Reviewed documentation bytes selected for this cleanup commit; the concurrent origin-gate paragraph remains in the working tree separately."
+}

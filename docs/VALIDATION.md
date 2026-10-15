@@ -4,9 +4,14 @@
 [operations](AGENTS.md) owns the verified guest environment, recovery and drain.
 Receipts apply to their recorded source, kernel, boot policy and topology.
 Publication, actual JIT execution and performance acceptance are separate results.
-Known failures remain in [TODO](TODO.md).
+Known failures remain in [TODO](TODO.md). New runs use exactly CPUs 0–63:
+NUMA node 0 has CPUs 0–31 and node 1 has CPUs 32–63, with no extra vCPUs or
+unused spare CPU. Historical receipts retain their original topology; they
+do not authorize reusing a superseded placement.
 
-## Current owned-protocol verification
+<a id="current-owned-protocol-verification"></a>
+
+## Recorded owned-protocol verification
 
 The owned ABI4/reuse-32 extension at `585335b` has a source-specific
 [verification receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/validation.json):
@@ -15,6 +20,12 @@ returned JIT with forced FULL/owner ACKs, normal build and final idle state.
 The [c01/post64 1–8-worker result](PERFORMANCE.md#active-c01-18-worker-study)
 passes its independent performance screen and both confirmations. These are
 source-specific checks, not a full-suite or general fairness result.
+
+Later source adds immutable owned-image generations and opt-in origin-readiness
+and NUMA policies. The [test selection guide](../tests/README.md#unit-checks)
+lists their affected checks, and the
+[policy comparison](../bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
+requires fresh controls. The receipts below do not validate those later additions.
 
 The earlier `d8d14a1`
 [protocol receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/validation.json)
@@ -83,6 +94,13 @@ compact reports, not those ignored archives. Offline hash/consistency checks do
 not execute code again or establish a current full-project pass.
 
 ## Repository maintenance
+
+The [2026-10-15 documentation and file cleanup](../bench/results/380G10/tests/documentation-cleanup-20261015.json)
+records the current guide/command/link audit, generated-cache removal and three
+archive-backed duplicate extractions removed from the source host. File bytes,
+permissions and logical symlink destinations were checked before deletion;
+canonical archives and differing copies remain. No compilation, executable tests
+or benchmarks were run for this cleanup.
 
 The [2026-10-15 documentation refresh](../bench/results/380G10/tests/documentation-refresh-20261015.json)
 records source-host static link/anchor, option/default, result-table and Git

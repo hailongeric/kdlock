@@ -158,11 +158,17 @@ two-word ABI remain the same.
 | 32 | Clobber entry |
 | 41 | `KDAB` identity tag |
 | 45 | Generated `entry_abi` byte |
+| 46 | Publication protocol version, currently 2 |
+| 47 | Context requirement bits; owned origin-GS bodies require `KD_IMAGE_ORIGIN_SPIN` |
 
 Layout-1 images cannot be published NORMAL. Ordinary offset 0 preserves the C ABI.
 Offset 16's adapter preserves physical RBP; offset 32 preserves it in the wrapper.
 Both batch entries allow the compiler to protect live combiner values and stay
 inside one C batch loop. Neither is callable as an ordinary C function pointer.
+The directory remains 48 bytes. Publication also checks the versioned 64-byte
+upload header, including length, upload identity and base generation. Owned
+frames bind one immutable code/ABI/requirements descriptor through all
+continuations; see [the publication lifecycle](JIT_EXECUTION.md#owned-image-publication-protocol-2).
 
 ## Physical and virtual registers
 
@@ -198,11 +204,14 @@ Other words remain reserved to preserve offsets. `Stack_RSP/RBP/R11..R15` macros
 refer to packet fields, not another copy on the physical stack. Allocation precedes
 stores; kernel code never relies on the red zone.
 
-GS lowering adds the pinned origin base for spin/rwlock images; mutex images that
-need it are refused because waiters may sleep. Supported current_task loads use
-logical task input for all backends. Hardware GS, current, IRQ, RCU and scheduler
-context are not switched; native services still run on the physical executor. [Admission](design/admission.md)
-sets the permitted context boundary.
+GS lowering adds the pinned origin base for spin/rwlock images. Legacy mutex
+images that need it are refused because waiters may sleep. Owned mutex images
+may use the [audited bounded subset](design/admission.md#audited-owned-mutex-gs-subset)
+when enabled and protected by an exclusive claim on a spinning origin; a parked
+origin cannot grant that claim. Supported current_task loads use logical task
+input for all backends. Hardware GS, current, IRQ, RCU and scheduler context are
+not switched; native services still run on the physical executor.
+[Admission](design/admission.md) sets the permitted context boundary.
 
 ## CALL, completion and exits
 

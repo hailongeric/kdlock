@@ -15,6 +15,9 @@ Source-host maintenance receipts are separate from those historical VM runs:
 [documentation cleanup, 2026-10-12](tests/documentation-cleanup-20261012.json) and
 [documentation refresh, 2026-10-15](tests/documentation-refresh-20261015.json).
 The latter contains only static documentation/source/evidence checks.
+The later [documentation and file cleanup](tests/documentation-cleanup-20261015.json)
+updates current guides and records removal of generated caches and verified
+duplicate extractions, with their retained recovery archives.
 
 Ignored raw evidence and source-host scratch files are retained in `raw/legacy/`.
 Some entries are documentation or maintenance artifacts with no measured machine

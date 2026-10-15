@@ -27,6 +27,9 @@ The [owned-mutex performance status](docs/PERFORMANCE.md) distinguishes the
 accepted c01/post64 profile at 1–8 workers from the later 1–64-worker comparison
 and archived experiments. The [current protocol flowcharts](docs/design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
 show local acquisition, delegation and owner acknowledgements.
+Current owned-mutex code also supports immutable image versions and opt-in
+origin-readiness/NUMA policies. The [policy comparison](bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
+uses fresh controls; earlier acceptance applies to its recorded implementation.
 
 ## Documentation
 

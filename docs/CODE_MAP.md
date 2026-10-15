@@ -17,9 +17,11 @@ files or benchmark archives.
 | [kd_mutex.c](../kernel_module/kd_mutex.c) → [mutex](../kernel_module/mutex/) | Legacy original mutex owner, private scheduling gate, blocking result/gate waits and waiter restore |
 | [owned core](../kernel_module/owned_mutex/core.c), [OSQ](../kernel_module/owned_mutex/osq.c) | KD-owned 32-byte mutex, Linux-derived SELF acquisition, guarded release and typed FIFO |
 | [owned entry](../kernel_module/owned_mutex/entry.S), [delegation](../kernel_module/owned_mutex/delegation.c) | ABI4 leaf acquisition/unlock and late capture; ABI2 heat admission; unlock-side batching, result wait and restore |
+| [owned readiness](../kernel_module/owned_mutex/readiness.inc), [selection](../kernel_module/owned_mutex/selection.inc) | Exclusive origin claims, park arbitration and optional bounded NUMA delegate selection |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |
 | [kd_lock.c](../kernel_module/kd_lock.c) → [lock](../kernel_module/lock/) | Nested control CALLs, direct mutex routing and retained bridge aliases |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c) → [execution](../kernel_module/execution/) | Frame binding, lock ledger, remote/native ACKs, registry and JIT dispatch |
+| [images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Owned upload staging, immutable image generations, frame binding and stale-status rejection |
 | [kd_hotlock.c](../kernel_module/kd_hotlock.c) | Per-type exact-address hot tables and approximate admission statistics |
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, publication and retirement |
 | [Shared headers](../include/README.md) | Direct APIs, ABI, packet/frame types and wrapper assembly |
@@ -44,6 +46,7 @@ keep SELF returns, directed grants, COMPLETE and FULL separate.
 | [disassem.py](../disassem/disassem.py) | Translation coordination and CLI |
 | [translation_scope.py](../disassem/translation_scope.py), [translation_image.py](../disassem/translation_image.py) | Selected decode scope, dispatch table and generated body |
 | `context_*.py` in [disassem](../disassem/) | Admission, bounded value/memory flow, register facts and guards |
+| [origin_policy.py](../disassem/origin_policy.py) | Exact audited origin-GS ranges, permitted instructions and bounded body proof |
 | [komb.c](../tclock_backend/komb.c) → [TCLock spin](../tclock_backend/spin/) | State, queue, combiner, waiter, lifecycle, trampoline, lock and unlock |
 | [komb_mutex.c](../tclock_backend/komb_mutex.c) → [TCLock mutex](../tclock_backend/mutex/) | Parking, queue, combiner, slowpath, trampoline and unlock |
 | [komb_rwlock.c](../tclock_backend/komb_rwlock.c), [rwlock_provider.c](../tclock_backend/rwlock_provider.c) | TCLock local readers, fast/queued writers, native stack delegation and count/gate/context drain |
@@ -57,7 +60,7 @@ operations and label parameters implemented by these modules and runners.
 | Directory | Contents |
 | --- | --- |
 | [workload_modules](../workload_modules/README.md) | Separate spin/mutex/rwlock payloads; shared timing and business logic |
-| [bench/tclock_compare](../bench/tclock_compare/README.md) | Three-arm spin/mutex runners, sessions and result reports |
+| [bench/tclock_compare](../bench/tclock_compare/README.md) | Three-arm spin/mutex runners, fresh-control owned origin/NUMA comparison, sessions and reports |
 | [bench/rwlock_compare](../bench/rwlock_compare/README.md) | Mixed RCUHT/cacheline rwlock runner, exact read/write oracle, JIT accounting and parity reports |
 | [bench/real_api](../bench/real_api/README.md) | Scoped syscall workloads, matched backends, Stock control and acceptance limits |
 | [tools/vm](../tools/vm/README.md) | Source synchronization and complete 1–64-worker comparison |

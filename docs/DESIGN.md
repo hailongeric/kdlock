@@ -77,6 +77,13 @@ sleeping. Published delegation requests use bounded result polling followed by
 sleep on reserved stacks, retaining migration pins. These are separate wait paths;
 the result polling budget does not bound SELF optimism.
 
+Owned mutexes may opt into audited origin-CPU GS access while holding an
+exclusive claim on a spinning origin. A parked origin cannot grant that claim.
+Optional bounded NUMA selection may reorder eligible delegates within the
+existing batch limit; both policies default to off. The
+[owned policy contract](design/mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection)
+defines the claim, parking and selection boundaries.
+
 Spin, legacy mutex and owned ABI2 use heat counters to decide whether a new
 request is worth delegating. Owned ABI4 instead requires failed local acquisition
 before checking delegation eligibility, without heat accounting. A cold or refused
@@ -104,13 +111,15 @@ original waiter runs that function and the rest of the invocation natively. A
 later compilation may include the function. Known lock operations and approved
 services can instead return to JIT at a registered continuation.
 
-The register packet has three states:
+The register packet has three general states and two owned-ABI4 states:
 
 | State | What KD may read |
 | --- | --- |
 | MINIMAL | Only the captured IP/SP/BP and declared metadata. |
 | COMPLETE | The checked IP/SP/BP needed to return after a finished body. |
 | FULL | The current logical general-purpose registers, saved before generic C recovery reads them. |
+| CALLEE_ENTRY | Owned ABI4's captured IP/SP/BP and nonvolatile registers, with synthetic RAX=0. |
+| CALLEE_COMPLETE | Owned ABI4's checked return state and updated nonvolatile registers. |
 
 A native continuation must preserve work already done. It cannot replay earlier
 stores, acquisitions or releases. [Execution flow](JIT_EXECUTION.md) follows the
@@ -133,16 +142,23 @@ code blocks of 640 KiB each, or 40 MiB in total. The daemon uploads an image in
 chunks and marks it NORMAL after the last complete chunk. NORMAL means that code
 was published; it does not mean a request executed that code.
 
-Recompiling an entry currently overwrites the block associated with its instruction
-address (RIP). There is no separate immutable generation for an older execution
-that may still be using it. [Lifetimes](design/lifetimes.md) explains what the
-existing text pins, device references and frame leases do and do not protect.
+Owned mutex uploads stage in a separate block and publish an immutable descriptor
+with its code, ABI, requirements and generation. A frame keeps its bound version
+through every continuation; published blocks remain resident until terminal drain
+and provider teardown. Pool exhaustion refuses a replacement while preserving
+the previous image. Registration alone reserves no owned block. See
+[publication protocol 2](JIT_EXECUTION.md#owned-image-publication-protocol-2).
+
+Legacy spin, rwlock and mutex images still overwrite their RIP-indexed block.
+Their in-place publication limitation remains open.
+[Lifetimes](design/lifetimes.md) explains the separate protection provided by text
+pins, device references, image versions and frame leases.
 
 ## Limits and evidence
 
 KD remains experimental. Its checks do not cover all runtime pointers or
 concurrent pointer changes. Processor flags and SIMD/FPU state are not fully
-restored and generated images have no immutable versions. Spin/rwlock waiters
+restored, and legacy image families lack immutable versions. Spin/rwlock waiters
 keep preemption disabled; mutex waiters can sleep, but finite slots and same-CPU
 native fallback still limit general oversubscription.
 [TODO](TODO.md) records known failures and work explicitly left for later.

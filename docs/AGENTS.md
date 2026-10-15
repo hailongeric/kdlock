@@ -28,9 +28,9 @@ ownership and lifetime terms used below.
    delegation requests use bounded result polling followed by sleep on reserved
    stacks while retaining migration pins. Owned SELF acquisition uses a separate
    Linux-style optimistic spin/sleep path; the result budget does not limit that
-   owner spin. Legacy mutexes refuse delegated origin-CPU GS access. Owned mutexes may opt in
-   to the audited bounded subset with an exclusive origin-readiness claim. Physical mutex
-   owners/services may sleep. There is no spin-only mutex policy.
+   owner spin. Legacy mutexes refuse delegated origin-CPU GS access. Owned mutexes
+   may opt into the audited bounded subset with an exclusive origin-readiness
+   claim. Physical mutex owners/services may sleep. There is no spin-only mutex policy.
 6. Ordinary KD spin and rwlock pairs protect preemption and preserve IRQ/BH state.
    Spin IRQ/irqsave/BH variants use their explicit native interfaces. Rwlocks
    support ordinary task context only; no rwlock IRQ/BH variants are provided.
@@ -86,18 +86,24 @@ inventories preserve earlier dispositions.
 | Captured kernel bundle | `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
 | QEMU launcher | Host: `/home/eric/vm/qemu-scripts/run_vm.sh` |
 
-The destination launcher defaults to `recovery`: 64 vCPUs, two sockets with
-32 cores each, and 24 GiB of RAM. Guest NUMA node 0 has CPUs 0–31 and 12 GiB,
+Use exactly 64 vCPUs (CPUs 0–63) for all new runs; do not add extra vCPUs or
+an unused spare CPU. The destination launcher defaults to `recovery`: two
+sockets with 32 cores each, and 24 GiB of RAM. Guest NUMA node 0 has CPUs 0–31 and 12 GiB,
 bound to host CPUs 0–31 and memory node 0. Guest node 1 has CPUs 32–63 and
 12 GiB, bound to host CPUs 32–63 and memory node 1. Every guest vCPU is pinned
 to the same-numbered physical host core. QEMU service threads share host CPU 63;
 the VM retains all 64 cores. `pin_cpu.sh` runs automatically and verifies every
-vCPU affinity. Use collector CPU 63 and worker cohorts that exclude it.
-Spin/mutex and rwlock accept up to 64 workers, but the regular VM cannot provide
-64 distinct workers plus a separate collector. The [complete matrix workflow](../tools/vm/README.md#complete-164-worker-comparison)
-uses a temporary 66-vCPU boot and records physical collector contention at
-64 workers. Restore the regular boot after archiving; never load snapshots
-between different CPU topologies.
+vCPU affinity. For up to 63 workers, use collector CPU 63 and worker cohorts
+that exclude it. At 64 workers, use all CPUs 0–63 and share CPU 63 with the
+collector and QEMU service threads, recording that contention separately.
+Spin/mutex timed runs support this point with
+`--cpus 0-63 --collector-cpu 63 --share-collector` and record the overlap explicitly.
+Rwlock, real-API and the complete-matrix driver still require a separate collector;
+do not work around their limitation by adding CPUs. The
+[runner support table](../tools/vm/README.md#complete-164-worker-comparison)
+defines the supported placement. Historical extra-vCPU runs retain their recorded
+topology and are not templates for new runs. Never load snapshots between
+different CPU topologies.
 
 Launcher modes are `recovery`, `shared`, `status`, `monitor [COMMAND]` and
 `stop`; `stop` requests guest shutdown and never force-kills QEMU. Guest SSH

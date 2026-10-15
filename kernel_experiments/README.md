@@ -8,8 +8,8 @@ and [the project guide](../docs/PROJECT_GUIDE.md#kernel-identity) define identit
 | Directory | Release/role |
 | --- | --- |
 | [spin_static](spin_static/README.md) | Historical kdstatic1/2 static-call ancestor |
-| [spin_clobber](spin_clobber/README.md) |kdclobber1 spin caller-clobber v1 |
-| [mutex_clobber](mutex_clobber/README.md) |kdclobber2 ordinary mutex caller-clobber v1; required kernel baseline |
+| [spin_clobber](spin_clobber/README.md) | kdclobber1 spin caller-clobber v1 |
+| [mutex_clobber](mutex_clobber/README.md) | kdclobber2 ordinary mutex caller-clobber v1; required kernel baseline |
 
 Keep each patch, capture script and immutable captured parent bundle. The current
 provider requires both clobber interfaces and does not support old static-only
