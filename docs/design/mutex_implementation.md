@@ -613,10 +613,11 @@ records affected fixtures, actual scheduler/owner probes and returned JIT bodies
 [validation](../VALIDATION.md) indexes older checks and rejected candidates.
 These selected checks do not establish arbitrary oversubscription or starvation freedom.
 
-## Conditional origin readiness
+## Conditional origin readiness and bounded NUMA selection
 
 `owned_mutex_origin_spin=1` enables the separately audited GS subset.
-It is off by default pending validation. GS-independent images continue
+`owned_mutex_numa=1` enables experimental NUMA selection. Both are off by default
+pending their validation and performance gates. GS-independent images continue
 to execute for sleeping producers with their existing FULL/native ACK behavior.
 The public mutex is still 32 bytes; request registers remain at offset 128 and
 the outcome at offset 304 in the 320-byte private packet. Readiness, origin CPU
@@ -644,6 +645,15 @@ timeout. Completion is published only after the frame retires and the claim is
 released. A preparation wake is a request, never execution authority. Only the
 combiner inspects queue links; it may prepare one prospective successor while
 processing the current request.
+
+NUMA mode examines at most eight delegates, stopping at SELF and HANDOFF
+boundaries. It chooses the earliest eligible local-node request, otherwise the
+earliest eligible remote request. Each overtaken predecessor increments its
+persistent count when the selected request is dispatched. A count of four stops
+selection from crossing that waiter, including after a private list is rejoined
+and detached in another batch. An ineligible head at this barrier is rejoined
+and granted physical ownership through KD's local protocol. Unselected links
+retain their order. Cooling never invalidates already-published requests.
 
 The origin claim excludes task scheduling, not interrupts or NMIs. It does not
 make arbitrary per-CPU storage safe; admission must separately exclude conflicting

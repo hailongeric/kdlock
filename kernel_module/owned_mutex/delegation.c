@@ -80,6 +80,9 @@ static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_preparations);
 static bool owned_mutex_origin_spin;
 module_param(owned_mutex_origin_spin, bool, 0444);
 MODULE_PARM_DESC(owned_mutex_origin_spin, "Admit audited images with exclusive origin readiness claims");
+static bool owned_mutex_numa;
+module_param(owned_mutex_numa, bool, 0444);
+MODULE_PARM_DESC(owned_mutex_numa, "Select within eight delegates with at most four bypasses (experimental)");
 
 /* One bounded grace after an unqueued release can preserve owner locality.
  * Zero keeps the exact Linux optimistic retry cadence. */
@@ -781,6 +784,7 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	}
 	frame->image = batch->image;
 	frame->origin = &node->origin;
+	kd_owned_mutex_note_dispatch(batch, node);
 	kd_owned_mutex_prepare_successor(batch, node);
 	queue_end = kd_exe_queue_timing_start();
 	regs = kd_exec_frame_regs(frame);

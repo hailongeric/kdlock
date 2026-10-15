@@ -95,11 +95,13 @@ struct kd_exec_outer_unlock {
 struct kd_exe_info; struct rcuwait;
 static unsigned long kd_owned_mutex_batches,kd_owned_mutex_refusals,kd_owned_mutex_bodies,kd_owned_mutex_early_releases;
 static bool resched,owned_mutex_refill,owned_mutex_numa,owned_mutex_origin_spin;
+static unsigned long kd_owned_mutex_bypasses;
 static struct kd_exe_info entries[16];
 static struct kd_jit_image images[16];
 #define smp_load_acquire(p) (*(p))
 #define list_for_each_entry(p,h,m) for(p=container_of((h)->next,__typeof__(*(p)),m); &p->m!=(h); p=container_of(p->m.next,__typeof__(*(p)),m))
 static int raw_smp_processor_id(void) {return 0;}
+static int numa_node_id(void) {return 0;}
 static struct kd_exe_info *kd_exe_find_ready(int pid,unsigned long ip) {
  (void)pid;return ip && ip<=16 && entries[ip-1].status_code==KD_EXE_NORMAL ? &entries[ip-1] : NULL;
 }
@@ -155,6 +157,7 @@ static int kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
  assert_guard();
  if(list_empty(&batch->lock->wait_list) && !list_empty(&batch->pending))
   private_guard_checks++;
+ kd_owned_mutex_note_dispatch(batch,node);
  kd_owned_mutex_prepare_successor(batch,node);
  executed++;
  if(scenario==1) return KD_EXE_NO_RUN;
@@ -336,8 +339,38 @@ static void run_cases(void) {
  puts("PASS production optional FIFO refill: off gate, quota across snapshots, wake-time arrivals, SELF cutoff, locked HANDOFF/reschedule, refusal/FULL/early stop");
  assert(private_guard_checks && refill_guard_checks && rejoin_guard_checks);
 }
+static void selection_cases(void) {
+ struct kd_mutex lock;struct kd_owned_mutex_batch batch;
+ setup(&lock,&batch,10);owned_mutex_numa=true;
+ for(int i=0;i<10;i++) nodes[i].waiter.kind=KD_OWNED_MUTEX_DELEGATE;
+ nodes[0].numa_node=1;
+ for(int i=1;i<=4;i++) {
+  struct kd_owned_mutex_node *chosen=kd_owned_mutex_select(&batch);
+  assert(chosen==&nodes[i]);kd_owned_mutex_note_dispatch(&batch,chosen);
+  list_del_init(&chosen->waiter.list);
+  assert(nodes[0].bypasses==(unsigned int)i);
+ }
+ assert(kd_owned_mutex_select(&batch)==&nodes[0]);
+ entries[0].status_code=KD_EXE_UNINIT;
+ assert(kd_owned_mutex_select(&batch)==NULL); /* saturated ineligible head */
+ kd_owned_mutex_rejoin(&batch);
+ refill_source=NULL;list_splice_init(&lock.wait_list,&batch.pending);
+ assert(nodes[0].bypasses==4 && kd_owned_mutex_select(&batch)==NULL);
+ setup(&lock,&batch,10);owned_mutex_numa=true;
+ for(int i=0;i<10;i++) {nodes[i].waiter.kind=KD_OWNED_MUTEX_DELEGATE;nodes[i].numa_node=1;}
+ nodes[8].numa_node=0;assert(kd_owned_mutex_select(&batch)==&nodes[0]); /* only eight */
+ nodes[1].waiter.kind=KD_OWNED_MUTEX_SELF;nodes[2].numa_node=0;
+ assert(kd_owned_mutex_select(&batch)==&nodes[0]);
+ nodes[1].waiter.kind=KD_OWNED_MUTEX_DELEGATE;owned_mutex_origin_spin=true;
+ images[0].requirements=KD_IMAGE_ORIGIN_SPIN;nodes[0].readiness=KD_ORIGIN_PARKABLE;
+ assert(kd_owned_mutex_select(&batch)==&nodes[2]); /* sleeping sensitive head */
+ nodes[0].readiness=KD_ORIGIN_READY;nodes[0].origin_cpu=0;
+ assert(kd_owned_mutex_select(&batch)==&nodes[2]); /* same CPU excluded */
+ owned_mutex_numa=false;assert(kd_owned_mutex_select(&batch)==NULL);
+ puts("PASS bounded NUMA: earliest locality, eight-window, four persistent bypasses, SELF, ineligible/same-CPU heads and FIFO control");
+}
 int main(void) {
- run_cases();
+ run_cases();selection_cases();
  puts("PASS mandatory detached owned guard: public-empty private prefix, refill, early-release rejoin and physical-release boundary");
 }
 '''
