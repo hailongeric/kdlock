@@ -7,6 +7,10 @@ Three rounds produce 1,584 timed sessions by default. Explicitly opting into
 multi-cacheline payloads restores the historical 3,960-session matrix.
 The driver owns execution and drain;
 [`export.py`](export.py) reads saved evidence without executing benchmark code.
+This all-lock driver retains the legacy mutex default. The current owned ABI4
+c01 profile uses the [dedicated command](../tclock_compare/README.md#owned-c01-full-grid)
+and its [198-sample report/auditor](../results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md),
+separately from the all-lock c01/hash matrix.
 
 After the complete matrix has drained, use the plotting environment in the guest:
 

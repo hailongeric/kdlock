@@ -8,7 +8,7 @@ Known failures remain in [TODO](TODO.md).
 
 ## Current owned-protocol verification
 
-The owned ABI4/reuse-32 extension has a new
+The owned ABI4/reuse-32 extension at `585335b` has a source-specific
 [verification receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/validation.json):
 basic and affected unit/mutation checks, live queued cooling/task probes,
 returned JIT with forced FULL/owner ACKs, normal build and final idle state.
@@ -23,8 +23,26 @@ cooling. The [later restoration receipt](../bench/results/10.176.26.71/bench/mut
 separately records restoration, normal build and idle state after the rejected
 native-first experiment; it is not a fresh performance run or a full-suite pass.
 
-The new acceptance does not revise historical failures or extend the measured
-performance scope above eight workers or to other payloads.
+That acceptance is limited to 1–8 workers on the regular 64-vCPU boot. It does
+not revise historical failures or accept other payloads. The later broader
+measurement below retains a separate topology and acceptance verdict.
+
+## Full-grid c01 verification
+
+The [2026-10-14 full-grid audit](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/verification.json)
+checks 198 Native/TCLock/KD samples at 1–8 workers in steps of one and 12–64 in
+steps of four. Every sample has correct results, progress by every worker and
+complete drain. The audit recomputes all warmed peaks and checks frozen source,
+binary and JIT identities. All 63 multithreaded KD sessions return JIT, while at
+least 99.5% of each KD sample executes SELF. Plain runs record no FULL
+continuations; they do not replace the separate nested/FULL/ACK tests above.
+
+The [report and closeout](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md)
+record the unchanged implementation, temporary 66-vCPU topology, physical
+collector contention at 64 workers and restoration of the regular 64-vCPU boot.
+The new regular snapshot was `normal64-after-mutex-owned-full-20261014`.
+This is one three-round comparison block: the three-worker peak misses the
+97% Native target, and no broader confirmation blocks or new unit suite were run.
 
 ## Archived native-first mutex verification
 
@@ -65,6 +83,12 @@ compact reports, not those ignored archives. Offline hash/consistency checks do
 not execute code again or establish a current full-project pass.
 
 ## Repository maintenance
+
+The [2026-10-15 documentation refresh](../bench/results/380G10/tests/documentation-refresh-20261015.json)
+records source-host static link/anchor, option/default, result-table and Git
+inventory checks. It updates maintained guides to the owned protocol and the
+full-grid evidence, preserving historical reports and frozen worktrees. It
+contains no new compilation, kernel tests or performance measurements.
 
 The [2026-10-12 documentation cleanup](../bench/results/380G10/tests/documentation-cleanup-20261012.json)
 records static document/CLI checks, removed empty reports and the byte/symlink

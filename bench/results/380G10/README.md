@@ -11,6 +11,11 @@ new physical host.
 - [Initial rwlock comparison](bench/rwlock_compare/20261009/README.md)
 - [Spin/mutex evidence index](bench/tclock_compare/HISTORY.md)
 
+Source-host maintenance receipts are separate from those historical VM runs:
+[documentation cleanup, 2026-10-12](tests/documentation-cleanup-20261012.json) and
+[documentation refresh, 2026-10-15](tests/documentation-refresh-20261015.json).
+The latter contains only static documentation/source/evidence checks.
+
 Ignored raw evidence and source-host scratch files are retained in `raw/legacy/`.
 Some entries are documentation or maintenance artifacts with no measured machine
 identity; this directory records their storage origin, without relabeling their

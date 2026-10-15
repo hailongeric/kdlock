@@ -139,6 +139,14 @@ python3 tests/kernel/mutex/run_wait_selftest.py \
 
 ## Recent verification and historical evidence
 
+The current owned implementation's [targeted verification](../docs/VALIDATION.md#current-owned-protocol-verification)
+records basic and affected fixtures, queued cooling/task probes and actual
+JIT/FULL/owner ACK checks at `585335b`. The later
+[full-grid c01 audit](../docs/VALIDATION.md#full-grid-c01-verification) covers
+198 correct, drained performance samples using that implementation; it does not
+rerun the unit suite or special nested/FULL cases. Correct SELF throughput,
+returned JIT and performance acceptance remain separate results.
+
 The [blocking-only mutex verification](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
 on 2026-10-12 covers seven basic/affected groups, including 101 context-admission
 cases, and 87 runner/report tests. Normal and SELFTEST `W=1` builds with UBSAN off

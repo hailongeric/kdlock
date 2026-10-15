@@ -49,7 +49,7 @@ them. If the analysis budget runs out, the entry is refused before execution.
 
 ### Mutex clobber and outer cookie
 
-Ordinary direct mutex uses ABI2. The outer paired API first attempts Linux's native
+Legacy direct mutex uses ABI2. Its outer paired API first attempts Linux's native
 owner CAS in the caller. A native acquisition stores its exact task owner in an
 opaque same-task cookie; its matching unlock calls original `mutex_unlock`.
 The contended outer entry returns an exact native owner only before taking a KD
@@ -61,6 +61,12 @@ bridge aliases use generic FULL control handling. Special interruptible/killable
 trylock and explicit nested APIs keep their original contracts. See
 [mutex routing](design/locking.md#mutex-outer-direct).
 
+The owned ABI2 pair uses a distinct registry kind and the KD owner protocol.
+Its physical cookie identifies a SELF owner and its borrowed cookie is zero;
+neither calls the original Linux mutex API. The
+[owned entry contract](design/mutex_implementation.md#kd-owned-implementation-experimental)
+defines capture-first heat admission and the optional C preflight.
+
 ### Owned mutex ordinary C entry
 
 `KD_OWNED_MUTEX_CABI=1` selects internal ABI4 for the owned outer pair. It does
@@ -68,10 +74,10 @@ not change the 32-byte lock, the two-word wrapper input, or the device record.
 Both outer boundaries obey the ordinary x86-64 C register contract. A leaf
 assembly owner CAS returns the physical task cookie without saving nonvolatile
 registers. On contention, Linux-style optimistic SELF acquisition runs before
-KD heat, eligibility, references or capture. Its OSQ/owner loop has no fixed poll
+eligibility, references or capture. Its OSQ/owner loop has no fixed poll
 budget; owner progress and scheduling decide when it stops. Fast and optimistic
 successes do not update the ABI2 admission counters. After optimism fails, the
-helper performs the required scheduler yield and a final acquisition retry.
+helper reschedules if needed and performs a final acquisition retry.
 Only a remaining failure can request capture of the original caller's
 nonvolatile registers and actual post-CALL IP/SP. No OSQ, preemption, waiter,
 packet or task-reference lease crosses that C return. Capture checks exact

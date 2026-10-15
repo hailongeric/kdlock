@@ -23,8 +23,14 @@ Use [the daemon](../daemon/README.md) for publication and
 CALL tokens and COMPLETE/FULL. `solve_bug.py` contains narrow, actively called
 encoding/assembly corrections; it is not an obsolete standalone driver.
 
-Entry identities are legacy 0, spin clobber 1, mutex clobber 2 and rwlock writer
-clobber 3. ABI3 uses the spin backend and IP/SP/BP packet; native code acquires
+Entry identities are legacy 0, spin clobber 1, mutex clobber 2, rwlock writer
+clobber 3 and owned mutex ordinary C 4. ABI4 uses owned lock kind 3, late capture
+of IP/SP/BP and nonvolatile registers, and a distinct completion path that restores
+updated values. Caller-saved inputs must be defined before use. It shares the
+two-word wrapper input and existing FULL recovery contract; see
+[the owned ABI](../docs/JIT_REGISTER_ABI.md#owned-mutex-ordinary-c-entry).
+
+ABI3 uses the spin backend and IP/SP/BP packet; native code acquires
 writer admission before the translated body. The body still passes the existing
 memory/context checks and releases its writer byte before spin completion.
 This admits the current RCUHT writer without translating reader-drain atomics;

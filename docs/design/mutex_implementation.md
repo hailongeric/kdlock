@@ -1,7 +1,7 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
 Read [lock protocols](lock_protocols.md) for the algorithm/ownership comparison
-and [KD locking](locking.md#5-mutex-delegation-protocol) for nested owner/ACK
+and [KD locking](locking.md#kd-owned-mutex-ownership) for nested owner/ACK
 details. This page maps the current ordinary mutex paths to their data and
 source. [Spin implementation](spin_implementation.md) owns the shared wrapper,
 code-pool and spin-continuation geometry; those allocations are not duplicated
@@ -13,8 +13,8 @@ per mutex request.
 | --- | --- | --- |
 | Native | `(mutex_lock)` / `(mutex_unlock)` | Captured kernel `kernel/locking/mutex.c`, `include/linux/mutex.h` |
 | TCLock | `komb_mutex_lock` / `komb_mutex_unlock` | [komb_mutex.c](../../tclock_backend/komb_mutex.c), [combiner.c](../../tclock_backend/combiner.c), [mutex_provider.c](../../tclock_backend/mutex_provider.c) |
-| KD outer | `KD_MUTEX_OUTER_LOCK/UNLOCK` | [kd_mutex_direct.h](../../include/kd_mutex_direct.h), [mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc) |
-| KD general/nested | `KD_MUTEX_DIRECT_LOCK/UNLOCK` and retained bridge endpoints | Same routing file, [kd_mutex.c](../../kernel_module/kd_mutex.c), [native.inc](../../kernel_module/execution/native.inc) |
+| KD legacy outer | `KD_MUTEX_OUTER_LOCK/UNLOCK` | [kd_mutex_direct.h](../../include/kd_mutex_direct.h), [mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc) |
+| KD legacy general/nested | `KD_MUTEX_DIRECT_LOCK/UNLOCK` and retained bridge endpoints | Same routing file, [kd_mutex.c](../../kernel_module/kd_mutex.c), [native.inc](../../kernel_module/execution/native.inc) |
 | KD owned outer | `KD_OWNED_MUTEX_OUTER_LOCK/UNLOCK` | [kd_owned_mutex_direct.h](../../include/kd_owned_mutex_direct.h), [owned core](../../kernel_module/owned_mutex/core.c), [delegation](../../kernel_module/owned_mutex/delegation.c) |
 | KD owned ordinary/nested | `kd_mutex_lock/unlock`, `KD_OWNED_MUTEX_DIRECT_LOCK/UNLOCK` | Owned SELF core; translated nested calls use [owned_mutex_calls.inc](../../kernel_module/lock/owned_mutex_calls.inc) |
 
@@ -221,8 +221,69 @@ zero, preserving FULL owner-ACK routing. The [register ABI](../JIT_REGISTER_ABI.
 defines the fixed caller stub, updated-register completion and restore rules.
 ABI4 is opt-in; ABI2 remains supported and the current caller default.
 
-Guarded owner release applies to both owned caller ABIs. A delegate publisher
-sets WAITERS and DELEGATION under `wait_lock` before linking, preserving its
+`owned_mutex_reuse_spins` is a read-only allowance of 0, 8, 32 or 128 PAUSEs,
+default 0. The measured ABI4 profile selects 32. An optimistic OSQ spinner can
+consume this allowance once after observing an entirely zero owner word, giving
+the releasing owner an opportunity to reacquire. First sleeping SELF waiters
+receive no allowance; flagged owner states do not start it. The allowance is
+not a total owner-spin budget, an ownership guarantee or a thread-count policy.
+It adds no field to the public object. Result polling uses the separate
+`owned_mutex_spin_limit`, default 4,096, before sleeping on a reserved stack.
+
+### Owned ABI4 acquisition and release flow
+
+This is the opt-in local-first path used by the current c01 profile. The OSQ
+serializes optimistic spinners; it is separate from the tagged wait list under
+`wait_lock`. ABI2's heat/capture path above remains a different caller policy.
+
+```mermaid
+flowchart TD
+    Entry[Outer lock: leaf CAS from zero to current] --> Fast{Acquired?}
+    Fast -->|Yes| Self[Return physical cookie; caller runs body]
+    Fast -->|No| Local[Retry and owner-running OSQ spin; reschedule if needed; final retry]
+    Local --> LocalOK{Acquired?}
+    LocalOK -->|Yes| Self
+    LocalOK -->|No| Capture[Late capture of eight words]
+    Capture --> Eligible{Source, task, caller stub and resources valid?}
+    Eligible -->|No| Sleep[Commit to SELF core: retry, queue and sleep as needed]
+    Sleep --> Self
+    Eligible -->|Yes| Publish[Set WAITERS and DELEGATION; publish with acquisition retries]
+    Publish -->|Acquired during retry| Self
+    Publish -->|Queued| Wait[Poll result, then sleep on reserved stack]
+    Wait --> Outcome{Published outcome}
+    Outcome -->|GRANTED| Pickup[Consume own PICKUP; release request resources]
+    Pickup --> Self
+    Outcome -->|COMPLETE| Complete[Restore updated state after unlock; body already finished]
+    Outcome -->|FULL| Full[Resume progressed native suffix; retained owner services unlock ACKs]
+```
+
+Acquisition races that return SELF release temporary request resources before
+returning. COMPLETE and FULL use different register-state contracts; neither
+restarts the body. A FULL borrower has cookie zero and cannot release another
+task's owner word directly.
+
+```mermaid
+flowchart TD
+    Unlock[Explicit outer unlock] --> Borrowed{Cookie zero?}
+    Borrowed -->|Yes| Ack[Route exact unlock to retained physical owner; wait for ACK]
+    Borrowed -->|No| Release{Exact unflagged owner CAS succeeds?}
+    Release -->|Yes| Done[Return]
+    Release -->|No| CanBatch{Owner, queue, context and executor permit combining?}
+    CanBatch -->|No| Handoff[Guarded release or directed grant; wake waiters]
+    CanBatch -->|Yes| Batch[Retain ownership; detach finite FIFO prefix]
+    Batch --> Execute[Run leading delegates; stop at SELF, handoff, reschedule, refusal, FULL or cap]
+    Execute --> Rejoin[Rejoin unstarted prefix ahead of new arrivals]
+    Rejoin --> Handoff
+    Handoff --> Done
+    Ack --> Done
+```
+
+The following release rules apply to both owned caller ABIs. Ordinary/nested
+unlock never enters the combining branch. Optional refill takes further FIFO
+snapshots under the same cumulative cap; it is off in the measured profile.
+
+A delegate publisher sets WAITERS and DELEGATION under `wait_lock` before
+linking, preserving its
 post-publication acquisition retry. The guard remains set across detached
 private batches and clears only at true drain. Without HANDOFF or DELEGATION,
 slow SELF unlock can release the owner word before taking `wait_lock`, then
@@ -283,12 +344,14 @@ requires producer slots, parked waits, executors, task references and frames to
 drain independently of heat.
 
 The benchmark selects this backend with `--mutex-implementation owned-v1` and
-reports KD_SELF separately from JIT and Linux Native. It currently covers plain
-c01 performance and separate nested/early functional probes. It does not expand
-the existing translator's context/flags limits or provide RT/WW/interruptible
-mutex APIs. The legacy benchmark default remains until performance acceptance.
-The current local-first acceptance study is separately scoped to c01, 64
-post-work rounds and 1–8 workers; implementation alone establishes no parity.
+reports KD_SELF separately from JIT and Linux Native. It covers plain c01
+performance and separate nested/early functional probes. The
+[accepted profile](../PERFORMANCE.md#accepted-c01-18-worker-profile) is scoped to
+64 post-work rounds and 1–8 workers on the regular 64-vCPU boot. The later
+[1–64-worker comparison](../PERFORMANCE.md#fresh-c01-164-worker-comparison) uses
+the same implementation on a temporary 66-vCPU boot and misses the three-worker
+peak gate. These results do not promote general defaults or expand translator
+context/flags limits, payload coverage or RT/WW/interruptible mutex APIs.
 
 ## Legacy KD implementation
 

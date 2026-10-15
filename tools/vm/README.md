@@ -61,6 +61,13 @@ Stock controls separately; [the results index](../../bench/results/README.md)
 retains benchmark reports and their frozen source versions.
 Each session has 48,000 warmup operations per worker, a two-second measurement,
 and a 300 ms peak window after 300 ms of settling.
+The all-lock driver retains legacy mutexes. Use the
+[owned c01 full-grid command](../../bench/tclock_compare/README.md#owned-c01-full-grid)
+for the ABI4/reuse-32 comparison alone: 22 counts, three arms, three rounds and
+198 sessions. It uses the same temporary placement below. Its
+[2026-10-14 closeout](../../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md#verification-and-closeout)
+records restoration of the regular 64-vCPU boot afterward; it is not a current
+health or snapshot check for a future run.
 
 The standard 64-vCPU VM cannot supply 64 distinct worker CPUs and a separate
 collector CPU. A temporary two-node, 66-vCPU boot can use worker CPUs

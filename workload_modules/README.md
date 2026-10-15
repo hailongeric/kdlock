@@ -10,7 +10,7 @@ compile time. All participants on a target lock must use that same backend's API
 | Workload | Module / device | Content |
 | --- | --- | --- |
 | [spin_cacheline](spin_cacheline/README.md) | `spin_cacheline.ko` / `/dev/spin_cacheline` | Native/TCLock/KD spin, cacheline/RCUHT payloads and KD nested/early scenarios |
-| [mutex_cacheline](mutex_cacheline/README.md) | `mutex_cacheline.ko` / `/dev/mutex_cacheline` | Separate ordinary mutex functions for the same three arms and shared cacheline/RCUHT payload logic |
+| [mutex_cacheline](mutex_cacheline/README.md) | `mutex_cacheline.ko` / `/dev/mutex_cacheline` | Separate Native/TCLock/KD functions; legacy cacheline/RCUHT and explicit owned c01 with ABI2 or ABI4 |
 | [rwlock](rwlock/README.md) | `rwlock_test.ko` / `/dev/kd_rwlock_test` | Native/KD concurrent readers, exclusive writers and JIT writer correctness |
 | [rwlock_bench](rwlock_bench/README.md) | `rwlock_bench.ko` / `/dev/kd_rwlock_bench` | Native/TCLock/KD rwlock performance; default 1%/20% RCUHT mixes and ABI3 JIT writers |
 | [real_api](../bench/real_api/README.md) | `real_api.ko` / scoped ftrace substitution | Real syscall critical sections: xattr/OFD, descriptor flags, pipe mutexes, file-position mutexes and bounded UTS reader/writer metadata; Native/TCLock/KD selection |

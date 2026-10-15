@@ -24,10 +24,12 @@ ownership and lifetime terms used below.
    required initial capture, final restore and owner state that has a separate
    lifetime.
 5. Keep the two-word wrapper input ABI. Userspace/futex, other architectures and
-   general oversubscription redesign are outside this phase. Mutexes use
-   bounded polling followed by sleep on reserved stacks while retaining migration
-   pins; they refuse delegated origin-CPU GS access. Native mutex owners/services
-   may sleep. There is no spin-only mutex policy.
+   general oversubscription redesign are outside this phase. Published mutex
+   delegation requests use bounded result polling followed by sleep on reserved
+   stacks while retaining migration pins. Owned SELF acquisition uses a separate
+   Linux-style optimistic spin/sleep path; the result budget does not limit that
+   owner spin. Mutexes refuse delegated origin-CPU GS access. Physical mutex
+   owners/services may sleep. There is no spin-only mutex policy.
 6. Ordinary KD spin and rwlock pairs protect preemption and preserve IRQ/BH state.
    Spin IRQ/irqsave/BH variants use their explicit native interfaces. Rwlocks
    support ordinary task context only; no rwlock IRQ/BH variants are provided.
@@ -63,9 +65,10 @@ when ancestry permits it; retain existing revert history. Keep unfinished edits
 on a task/WIP branch. Finished and rejected experiments use `archive/<original-branch>`
 tags rather than active topic branches. Verify each tag points to the exact old tip
 before deleting a local branch. Never merge a rejected tip merely to mark it merged.
-The [latest branch inventory](git-branches-20261014.json) records local archival
-and retained frozen worktrees; the [earlier inventory](git-branches-20261012.json)
-preserves the 2026-10-12 dispositions.
+The [latest branch inventory](git-branches-20261015.json) records completed topic
+archives and retained frozen worktrees before the documentation commit. The
+[2026-10-14](git-branches-20261014.json) and [2026-10-12](git-branches-20261012.json)
+inventories preserve earlier dispositions.
 
 ## Environment
 
@@ -117,8 +120,11 @@ replace or clear `/root/host_fs`, and do not edit frozen running inputs.
 
 The 64-vCPU boot, exact kernel identity, all 64 CPU pins and guest idle state were
 verified by the [blocking-mutex checks](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-on 2026-10-12. The earlier 73-session migration benchmark used 60 vCPUs
-and remains evidence for that topology. The migration copy contains current disk
+on 2026-10-12. The [full-grid closeout](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md#verification-and-closeout)
+records restoration and rechecking of the regular boot on 2026-10-14, with
+confirmed snapshot `normal64-after-mutex-owned-full-20261014`. Recheck live state
+and snapshot availability before new work. The earlier 73-session migration
+benchmark used 60 vCPUs and remains evidence for that topology. The migration copy contains current disk
 contents without historical VM snapshots; the original disks on `380G10` remain
 untouched for rollback. Saved VM state from the old CPU/topology is not portable
 to the destination. Create and verify a new snapshot there before live module/JIT

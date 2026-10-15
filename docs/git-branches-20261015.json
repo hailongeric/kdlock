@@ -1,0 +1,527 @@
+{
+  "record_date": "2026-10-15",
+  "captured_utc": "2026-10-15T03:40:03.975209+00:00",
+  "scope": "Read-only local and cached-ref inventory during documentation refresh after full-grid integration. No fetch, remote publication, archived-tag movement or worktree removal. This snapshot predates the documentation commit; the active documentation branch has uncommitted guide edits.",
+  "base_commit": "5d09eefda7530834636b4528a7feeb59018339b8",
+  "implementation_commit": "585335b555bcf1f694286dba440a191c56fff6b7",
+  "active_branch": "docs/mutex-status-20261015",
+  "refs": [
+    {
+      "ref": "refs/heads/docs/mutex-status-20261015",
+      "commit": "5d09eefda7530834636b4528a7feeb59018339b8"
+    },
+    {
+      "ref": "refs/heads/master",
+      "commit": "5d09eefda7530834636b4528a7feeb59018339b8"
+    },
+    {
+      "ref": "refs/remotes/origin/master",
+      "commit": "ed2108ab8672703db83339ec9c0de6c62c1d3cb6"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/hash-payload-20260927",
+      "commit": "b96f2827726c81908145c214399a4c14f92cdf56"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-empty-bucket-rejected-20261003",
+      "commit": "67b7d222778bbc9f4cb8e014a65751e653bbbd58"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-fail-read-rejected-20261003",
+      "commit": "527417010058fe545e927581b8883f7cbdd3b8a6"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-hash-admission-20260928",
+      "commit": "ae46afd942edfbcd17d5fc85bd179fb07a87052f"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-numa-candidate-20260928",
+      "commit": "8f9d3cd9637d27f13aca995b75f8f5748824573c"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-numa-rejected-20261003b",
+      "commit": "87888c9e6b8975cef0ee843f1b71bb679d4e9533"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-pack-rejected-20261003b",
+      "commit": "ad59ff314c6b9ffa4f9ee62aa46847f49eb63628"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-protocol-c01-20261013",
+      "commit": "475e1d62b05c167881c64f8993e4b1e4cd137eb1"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-retry-rejected-20261003b",
+      "commit": "ae7a26be6fe977db8af4404ade141f89f2c7fe0d"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-task-buckets-rejected-20261003",
+      "commit": "781ef6ceb8164c7078d2e11942beaffa81f0c5d9"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-task-cache-batch-candidate-20260928",
+      "commit": "a8343f2904d2c97c11e8295a4b16da1f6fa77a5f"
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-task-cache-candidate-20260928",
+      "commit": "ad4936850a0a2bd9b952350e9db73c360f971f9b"
+    },
+    {
+      "ref": "refs/remotes/origin/wip/worktree-20261012",
+      "commit": "09bfffe07f0123622b7b68ae67057339d18ca7f2"
+    },
+    {
+      "ref": "refs/tags/archive/master-before-integration-20261012",
+      "commit": "d38173d6697566d787ed36789ac463d11fb95207"
+    },
+    {
+      "ref": "refs/tags/archive/perf/hash-payload-20260927",
+      "commit": "b96f2827726c81908145c214399a4c14f92cdf56"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-admission-c01-20261013",
+      "commit": "33fde04b221369ca62584e3960c55999f40b5cbb"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-c01-cost-20261013",
+      "commit": "9b7671984cc9adadc5cd94e698ac9b80c3b3b6d6"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-c01-full-grid-20261014",
+      "commit": "5d09eefda7530834636b4528a7feeb59018339b8"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-empty-bucket-rejected-20261003",
+      "commit": "67b7d222778bbc9f4cb8e014a65751e653bbbd58"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-fail-read-rejected-20261003",
+      "commit": "527417010058fe545e927581b8883f7cbdd3b8a6"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-hash-admission-20260928",
+      "commit": "ae46afd942edfbcd17d5fc85bd179fb07a87052f"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-linux-local-c01-20261014",
+      "commit": "c768c231544b3c2636decdbe6210aa4c52d451d2"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-native-first-20261014",
+      "commit": "9a5305e7631247136ea89f1c8ac771afd7da3d8c"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-native-first-report-20261014",
+      "commit": "b8808436a4de9dd2e3b70e972d5a3c0091e40c73"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-numa-candidate-20260928",
+      "commit": "8f9d3cd9637d27f13aca995b75f8f5748824573c"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-numa-rejected-20261003b",
+      "commit": "87888c9e6b8975cef0ee843f1b71bb679d4e9533"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-optimistic-c01-20261013",
+      "commit": "260d330f7e0f58e2d894e5e7ba4bfed0a3244850"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-optimistic-report-20261013",
+      "commit": "096f1d400916e0a83a32fcb6fb861bfb9ab129be"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-owned-hybrid-20261014",
+      "commit": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-pack-rejected-20261003b",
+      "commit": "ad59ff314c6b9ffa4f9ee62aa46847f49eb63628"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-protocol-c01-20261013",
+      "commit": "722ea98f10abac56eee3b503c264090df47c1612"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-protocol-report-20261013",
+      "commit": "de0150816aaf5a0cbf3f76f554dd1393dd1b0689"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-retry-rejected-20261003b",
+      "commit": "ae7a26be6fe977db8af4404ade141f89f2c7fe0d"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-task-buckets-rejected-20261003",
+      "commit": "781ef6ceb8164c7078d2e11942beaffa81f0c5d9"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-task-cache-batch-candidate-20260928",
+      "commit": "a8343f2904d2c97c11e8295a4b16da1f6fa77a5f"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-task-cache-candidate-20260928",
+      "commit": "ad4936850a0a2bd9b952350e9db73c360f971f9b"
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-waiters-only-20261014",
+      "commit": "5dd159ded2d5765d1a4250e13f2df41a2e7c0ca3"
+    },
+    {
+      "ref": "refs/tags/archive/remote/perf/mutex-protocol-c01-20261013",
+      "commit": "475e1d62b05c167881c64f8993e4b1e4cd137eb1"
+    },
+    {
+      "ref": "refs/tags/archive/wip/mutex-owned-v1-20261013",
+      "commit": "66576d11aac9c67403cde0cf18aafa9533ddd4f5"
+    },
+    {
+      "ref": "refs/tags/archive/wip/worktree-20261012",
+      "commit": "09bfffe07f0123622b7b68ae67057339d18ca7f2"
+    }
+  ],
+  "completed_topic_archives": [
+    {
+      "former_branch": "perf/mutex-linux-local-c01-20261014",
+      "archive_tag": "archive/perf/mutex-linux-local-c01-20261014",
+      "commit": "c768c231544b3c2636decdbe6210aa4c52d451d2",
+      "exact_tip_verified": true,
+      "disposition": "accepted implementation/report fast-forwarded; local topic closed"
+    },
+    {
+      "former_branch": "perf/mutex-native-first-20261014",
+      "archive_tag": "archive/perf/mutex-native-first-20261014",
+      "commit": "9a5305e7631247136ea89f1c8ac771afd7da3d8c",
+      "exact_tip_verified": true,
+      "disposition": "rejected implementation retained separately; local topic closed"
+    },
+    {
+      "former_branch": "perf/mutex-c01-full-grid-20261014",
+      "archive_tag": "archive/perf/mutex-c01-full-grid-20261014",
+      "commit": "5d09eefda7530834636b4528a7feeb59018339b8",
+      "exact_tip_verified": true,
+      "disposition": "full-grid report fast-forwarded; local topic closed"
+    },
+    {
+      "former_branch": "wip/worktree-20261012",
+      "archive_tag": "archive/wip/worktree-20261012",
+      "commit": "09bfffe07f0123622b7b68ae67057339d18ca7f2",
+      "exact_tip_verified": true,
+      "disposition": "merged WIP archived; local branch closed"
+    }
+  ],
+  "cached_remote_protocol_tip_has_exact_archive": true,
+  "worktrees": [
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock",
+      "head": "5d09eefda7530834636b4528a7feeb59018339b8",
+      "branch": "refs/heads/docs/mutex-status-20261015",
+      "detached": false,
+      "tracked_changes": 28,
+      "untracked_paths": 0,
+      "status_sha256": "54b26c71aecd5ed00c817c65ca6a46073f72fd82d93d2924f03e7ea82c73add6",
+      "tracked_diff_sha256": "e05632ecaa2e8767258fcb187e4030892aecfafd654206bb07ce88d6971afb0e",
+      "disposition": "active documentation checkout"
+    },
+    {
+      "path": "/tmp/kdlock-baseline-de01508",
+      "head": "de0150816aaf5a0cbf3f76f554dd1393dd1b0689",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 0,
+      "untracked_paths": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-linux-local-baseline-20261014",
+      "head": "c9db8ad88c2f934d9931fe0b7f982a7261698f48",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 0,
+      "untracked_paths": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-linux-local-c1-20261014",
+      "head": "c9db8ad88c2f934d9931fe0b7f982a7261698f48",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 62,
+      "untracked_paths": 0,
+      "status_sha256": "b4a360295e34a953a37a7e5aae1e645ef92a3f78ca5c476d7baef313cb6c0107",
+      "tracked_diff_sha256": "e0ed4801709c8e696bca527298d5a0ad7b678aa9da350cc3c9749accd8d2b5b1",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-linux-local-c2-20261014",
+      "head": "c9db8ad88c2f934d9931fe0b7f982a7261698f48",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 63,
+      "untracked_paths": 0,
+      "status_sha256": "bb0dffbea70b2b32c86ea4393210e1a4a71422774eb45a1f1623f1ea425a1fa1",
+      "tracked_diff_sha256": "5c831993048a0f5285f81833d4a5dab2934e3e0ecf5ee59ede3bc3b4d9ca4e64",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-linux-local-c3-20261014",
+      "head": "c9db8ad88c2f934d9931fe0b7f982a7261698f48",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 63,
+      "untracked_paths": 0,
+      "status_sha256": "bb0dffbea70b2b32c86ea4393210e1a4a71422774eb45a1f1623f1ea425a1fa1",
+      "tracked_diff_sha256": "ba000d942284a9e651fe1f4ff2d0594bf9e5ef473ce0a9d0db6c8f6a480da903",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-linux-local-c4-20261014",
+      "head": "c9db8ad88c2f934d9931fe0b7f982a7261698f48",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 63,
+      "untracked_paths": 0,
+      "status_sha256": "bb0dffbea70b2b32c86ea4393210e1a4a71422774eb45a1f1623f1ea425a1fa1",
+      "tracked_diff_sha256": "5f18448cae1989cb7d5720f2cbf3ae30b23381a333e510fe22aa04039278b875",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-linux-local-c5-20261014",
+      "head": "c9db8ad88c2f934d9931fe0b7f982a7261698f48",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 63,
+      "untracked_paths": 0,
+      "status_sha256": "bb0dffbea70b2b32c86ea4393210e1a4a71422774eb45a1f1623f1ea425a1fa1",
+      "tracked_diff_sha256": "c049c8693db9fd917699bddf1a26b9a42efc63203e26d207e61e0ca6f3f3d87b",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-accepted-20261014",
+      "head": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 0,
+      "untracked_paths": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-baseline-d8d14a1",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 0,
+      "untracked_paths": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate1-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 55,
+      "untracked_paths": 0,
+      "status_sha256": "9b5d94f56322b1ad8227dc6361f942f23959a32c3be7b4f5ef4eb059c230acd0",
+      "tracked_diff_sha256": "3ed18c81f21abc6cbdb072a8e71ecdc78222e21cba64cf8d96c7fccd43eb65c5",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate10-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 60,
+      "untracked_paths": 0,
+      "status_sha256": "0fe9ba25a9cad89aac1c63a4f4d87b4b767941e0589f617a73e9131d2637ef8b",
+      "tracked_diff_sha256": "29fa3a8d7e7bffd552439221515d685a185eadfc6db3905a0167d43b3a8a2813",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate2-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 56,
+      "untracked_paths": 0,
+      "status_sha256": "c40602752d5dca055e92e21790b2ceb9324b29d8960a1501a638482054ef4ba1",
+      "tracked_diff_sha256": "7f36d7558bff44bf7deee50a3893bf4f8dbeb63004bb41861865411f896d353e",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate3-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 56,
+      "untracked_paths": 0,
+      "status_sha256": "c40602752d5dca055e92e21790b2ceb9324b29d8960a1501a638482054ef4ba1",
+      "tracked_diff_sha256": "a05134a1fd091ab24636ee8f4818898f39c29256a7da9a7decf92124086fe62a",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate4-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 56,
+      "untracked_paths": 0,
+      "status_sha256": "c40602752d5dca055e92e21790b2ceb9324b29d8960a1501a638482054ef4ba1",
+      "tracked_diff_sha256": "a6fcea8367a7a76474a06dfb7c341f2aba62db813500c2a2d395184d09b25903",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate5-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 56,
+      "untracked_paths": 0,
+      "status_sha256": "c40602752d5dca055e92e21790b2ceb9324b29d8960a1501a638482054ef4ba1",
+      "tracked_diff_sha256": "b67150d00cd718c40786d819d762b92eb5f472594cc439d7aa3de085b10095a6",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate6-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 56,
+      "untracked_paths": 0,
+      "status_sha256": "c40602752d5dca055e92e21790b2ceb9324b29d8960a1501a638482054ef4ba1",
+      "tracked_diff_sha256": "4387be6ea9b6b8a91323245e1d1ac6ab41af09777de0fce93d5abc8734ad26ea",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate7-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 56,
+      "untracked_paths": 0,
+      "status_sha256": "c40602752d5dca055e92e21790b2ceb9324b29d8960a1501a638482054ef4ba1",
+      "tracked_diff_sha256": "eb79934025170e1b11fd040fe84ede03257100da2309b3a1da6ce12109a9ee34",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate8-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 56,
+      "untracked_paths": 0,
+      "status_sha256": "c40602752d5dca055e92e21790b2ceb9324b29d8960a1501a638482054ef4ba1",
+      "tracked_diff_sha256": "c857e6d6442b0cda5f068a35ab8783038618b31998dcf6371314d156880073b1",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-candidate9-20261014",
+      "head": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 57,
+      "untracked_paths": 0,
+      "status_sha256": "65a65ca30ce68b1ed4b50de0350fe2363dcec335fb0e7323c3939ed2d5ab40d0",
+      "tracked_diff_sha256": "caf56e28ebe555e281560f3ee23048d278bbcac2fe4fe48c1adada501c3194cf",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-final-source-20261014",
+      "head": "ab2c3f4a53597a9c6e4deb7390e526379be72d28",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 59,
+      "untracked_paths": 0,
+      "status_sha256": "51ff2dc242b53b43f88c68a12ed44ace82d0f51e7d192718cc117e05b51a7811",
+      "tracked_diff_sha256": "91f113b5f0ecdf1d9a6531846f0d2782f54d55f1eb758afde9baa4c6a6121c9f",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-native-first-waiters-20261014",
+      "head": "5dd159ded2d5765d1a4250e13f2df41a2e7c0ca3",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 0,
+      "untracked_paths": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-owned-baseline-66576d1",
+      "head": "66576d11aac9c67403cde0cf18aafa9533ddd4f5",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 0,
+      "untracked_paths": 0,
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-owned-final-capture-first-20261014",
+      "head": "66576d11aac9c67403cde0cf18aafa9533ddd4f5",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 34,
+      "untracked_paths": 0,
+      "status_sha256": "26bdb9a3a25f65ca762efb9a73e3b6fdb4924b45555c7b35341dc17a5c64b4c1",
+      "tracked_diff_sha256": "e49a8bdb7a0482788aecc9aaf75c074eed45e9a4a85b4d7d90fa7897c93edba7",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-owned-outcome-20261014",
+      "head": "66576d11aac9c67403cde0cf18aafa9533ddd4f5",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 9,
+      "untracked_paths": 0,
+      "status_sha256": "92c5bde1daa0d6bdb7604c7050f93c76169bcb83dc71e2419585e2e0df87e253",
+      "tracked_diff_sha256": "78d97fc3d60205f38ceb8317c882d6cf0f13010337e3d13e3d815e2145352904",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-owned-preflight-20261014",
+      "head": "66576d11aac9c67403cde0cf18aafa9533ddd4f5",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 24,
+      "untracked_paths": 0,
+      "status_sha256": "760e31fb5504530cc9b09fe0eaf3f31e1b48019559fad724376acb138acbcc19",
+      "tracked_diff_sha256": "ac747302c634728e157a951b96b4ee9ecd4b0a8af12a1a148a7f47b0e347b184",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-owned-queued-preflight-20261014",
+      "head": "66576d11aac9c67403cde0cf18aafa9533ddd4f5",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 26,
+      "untracked_paths": 0,
+      "status_sha256": "60c73e31c5b09e01ddbf7f7aa0d8f208bfc3d19fe5d48d80454092a9f6e72be0",
+      "tracked_diff_sha256": "0c223d96f71c61e190bd5e322dd3527387e6c54bc2c0e67e194af1dfe3b13c24",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    },
+    {
+      "path": "/tmp/kdlock-owned-single-eligibility-20261014",
+      "head": "66576d11aac9c67403cde0cf18aafa9533ddd4f5",
+      "branch": null,
+      "detached": true,
+      "tracked_changes": 28,
+      "untracked_paths": 0,
+      "status_sha256": "3c30511694f5b03d9665f2908bf0b54c4da21d2f9a470b7c12b476972d9dfd35",
+      "tracked_diff_sha256": "ccf5224eb9cba34a99e26e42d5ca1938f3fd7dd37757d2d01ba2e08a30d409f9",
+      "disposition": "retained; not modified or removed by documentation refresh"
+    }
+  ],
+  "prior_inventories": [
+    "git-branches-20261012.json",
+    "git-branches-20261014.json"
+  ]
+}

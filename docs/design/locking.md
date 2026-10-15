@@ -2,7 +2,7 @@
 
 This guide explains who really holds a KD lock and how that responsibility moves
 between callers and combiners. [Lock protocols](lock_protocols.md) compares all
-nine backends; [frames](frames.md) explains how request state stays alive. The
+backends; [frames](frames.md) explains how request state stays alive. The
 [glossary](../DESIGN.md#terms-used-in-these-guides) defines the common terms.
 Approximate heat counters help choose future requests; they cannot prove ownership
 or authorize an unlock.
@@ -68,11 +68,44 @@ resource failure after progress cannot be relabelled an unstarted retry.
 
 ## 5. Mutex delegation protocol
 
+Owned and legacy mutexes use distinct physical protocols. Both retain exact
+physical owners and acquisition references through native continuation and ACK.
+The sections below label those object boundaries explicitly.
+
+### KD-owned mutex ownership
+
+`struct kd_mutex` owns its 32-byte owner/OSQ/wait-list object for its entire
+lifetime. Only KD APIs may access it. SELF callers and delegated executors use
+the same owner word; there is no second lock or address-indexed shadow gate.
+The [implementation flowcharts](mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
+cover ABI4 local acquisition, late capture, guarded publication and unlock.
+
+An explicit outer acquisition returns the exact physical-task cookie on SELF
+or directed GRANTED pickup. A borrowed FULL continuation carries zero and routes
+unlock to the retained owner, waiting for its exact ACK. COMPLETE means the body
+already finished. The shared frame ledger must record nested acquisitions and
+early releases exactly once on every path.
+
+Ordinary/nested native acquisitions retain task-local held counts and never combine on
+unlock. Only explicit outer unlock may detach and execute a leading DELEGATE
+prefix. WAITERS/DELEGATION remain set while detached work still needs ownership.
+An early outer release rejoins unstarted requests before releasing A; the batch
+does not reacquire or access A while a still-held B finishes. No later heat or
+admission change can cancel already published work or its cleanup obligations.
+
+Result waits use bounded polling then sleeping with reserved stacks and migration
+pins. This does not limit the separate Linux-style SELF optimistic spin phase.
+Stop callers and drain the object, producer packets, executor, frames and ACKs
+before reinitializing or freeing its storage.
+
 ### 5.1 Physical lock and scheduling gate
 
-KD retains the original Linux `struct mutex`, including its owner word, wait list
-and sleeping rules. Ordinary native users still contend on that same mutex. A
-private `komb_mutex`, called the shadow gate, orders KD's queued work. A combiner
+Sections 5.1–5.4 describe the retained legacy backend.
+
+The retained legacy backend uses the original Linux `struct mutex`, including
+its owner word, wait list and sleeping rules. Ordinary native users still contend
+on that same mutex. A private `kd_mutex_legacy_gate`, called the shadow gate,
+orders KD's queued work. A combiner
 must acquire the Linux mutex as well as that gate before running a delegated body.
 Loading KD does not intercept global mutex calls.
 
@@ -170,7 +203,7 @@ readers drain. Native frames for independent tasks/locks use independent ACK pac
 
 ### 5.4 Differences from spin
 
-| Boundary | Spin | Mutex |
+| Boundary | Spin | Legacy mutex |
 | --- | --- | --- |
 | Physical lock | KD word | Original Linux mutex |
 | Queue | Tail in the same word | Separate shadow gate |

@@ -53,11 +53,11 @@ has no `mutex_jit` parameter.
 | Option/default | Meaning |
 | --- | --- |
 | `--threads 1 4 8 16 20` | Short default; set worker counts explicitly for a timed comparison |
-| `--repeats 3` | Three rounds/configuration, rotating backend order |
+| `--repeats 3` | Three rounds/configuration, reversing backend order in the middle round |
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
 | `--collector-cpu 30` | Built-in default; override with an available CPU outside workers (63 on the documented destination, 38 in the original full matrix) |
-| `--numa on`, `--kd-batch-size 1024` | KD spin/mutex NUMA selection and total body bound; separate scan/cohort budgets |
+| `--numa on`, `--kd-batch-size 1024` | KD spin/legacy-mutex NUMA selection and total body bound; owned uses FIFO without NUMA reordering |
 | `--spin-prefetch 2` |KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
@@ -65,11 +65,14 @@ has no `mutex_jit` parameter.
 | `--mutex-implementation legacy` | `owned-v1` opts into the separate KD-owned c01 object; nested/early require functional mode |
 | `--owned-mutex-entry-ratio-limit 256` | Independent ABI2 admission threshold for `owned-v1`; powers of two 2–256. ABI4 local-first does not use heat admission |
 | `--owned-mutex-cabi` | Opt-in ABI4 ordinary-C caller; Linux local acquisition before late capture, with no fixed owner-spin budget |
+| `--owned-mutex-reuse-spins 0` | ABI4 allowance 0/8/32/128 after an unflagged release, once per OSQ turn; measured profile selects 32 |
 | `--owned-mutex-refill` | Opt-in FIFO refilling within the same total batch cap; default is one finite snapshot |
-| `--owned-mutex-preflight` | Compile the experimental owned C gate; default false retains capture-first entry |
+| `--owned-mutex-preflight` | Compile the experimental ABI2 C gate; default false retains capture-first entry; mutually exclusive with ABI4 |
 | `--owned-mutex-preflight-spins` | Opt-in gate budget: 0 (default), 64, 256, 1024 or 4096 polling steps; positive values require the gate flag |
 | `--owned-mutex-preflight-queue` | Opt in to joining the private OSQ within a positive preflight polling budget; default false |
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
+| `--mutex-acceptance jit-required` | Default JIT acceptance; `adaptive-performance` also scores valid local execution with distinct classification |
+| `--mutex-routing adaptive` | `native` is an unscored legacy control; `self` is an unscored owned control |
 | `--dry-run` | Print plan without live execution |
 
 KD mutexes always support blocking. `--mutex-wait-mode` has been removed;
@@ -94,6 +97,45 @@ publishes the prepared entry before every worker warms up with 48,000 operations
 The daemon stops before measurement. Recorded NUMA and layout settings come from
 the actual build, so requested option names alone cannot mislabel a sample.
 
+## Owned c01 full grid
+
+The current measured profile uses `owned-v1`, ABI4 and reuse allowance 32.
+All workers increment the same counter in one 64-byte payload line; the lock
+has its own aligned slot. The source currently defines 64 post-work arithmetic
+rounds in [post_work.h](../../workload_modules/spin_cacheline/post_work.h).
+Changing that value requires a separate baseline and evidence block.
+
+For 1–8 and 12–64 workers, first establish the verified temporary
+[66-vCPU placement](../../tools/vm/README.md#complete-164-worker-comparison),
+confirm its own recovery snapshot, and use the pinned guest Python environment.
+Run only in that guest, with a fresh external output directory:
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_66_VCPU_SNAPSHOT \
+  LC_ALL=C timeout --kill-after=10s 7200s python3 bench/tclock_compare/run_mutex.py \
+  --mutex-implementation owned-v1 --owned-mutex-cabi --owned-mutex-reuse-spins 32 \
+  --mutex-acceptance adaptive-performance --kd-provider-ubsan off \
+  --workload cacheline --cachelines 1 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 \
+  --cpus 0-31,33-64 --collector-cpu 65 --backends native tclock kdlock --repeats 3 \
+  --duration-ms 2000 --peak-window-ms 300 --peak-settle-ms 300 --sample-ms 10 \
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/mutex-owned-c01-full-NEW
+```
+
+This collects 198 samples, with 48,000 warmup operations per worker and finite
+FIFO batching. At 64 workers, the collector and last worker share physical core
+63 with QEMU services. Use the same temporary topology for the whole block, then
+archive evidence and restore the regular boot. For the separate regular-boot
+1–8 profile, use `--threads 1 2 3 4 5 6 7 8 --cpus 0-7 --collector-cpu 63`.
+
+The [recorded full-grid report](../results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md)
+owns all samples, variation, worker shares, CPU cost, plot and offline auditor.
+The [accepted 1–8 study](../../docs/PERFORMANCE.md#accepted-c01-18-worker-profile)
+has its own screen and two confirmation blocks. A descriptive full-grid run
+does not substitute for that acceptance procedure or the functional FULL/ACK checks.
+
 ## Workloads and backends
 
 See [workloads and critical sections](../../docs/BENCHMARK_WORKLOADS.md#synthetic-cacheline-updates)
@@ -112,7 +154,7 @@ policy. Static snapshots check complete structure and exact operation totals.
 | --- | --- | --- |
 | Native | Original kernel functions, no provider | Original mutex functions bypass experimental clobber macros |
 | TCLock | Native waiter-stack delegation | Actual upstream ordinary mutex port with parking |
-| KD | Explicit KD word, ABI1/JIT | Original Linux mutex plus shadow gate, ABI2/outer cookie/JIT |
+| KD | Explicit KD word, ABI1/JIT | Default legacy: original mutex plus shadow gate, ABI2; explicit owned-v1: private owner/OSQ/FIFO, ABI2 or ABI4 |
 
 `--mutex-implementation owned-v1` selects a distinct KD-owned `struct kd_mutex`
 for the KD arm. The default `legacy` implementation and Native/TCLock arms keep
@@ -141,7 +183,7 @@ Mutex workers preregister one fixed-affinity context per CPU before measurement;
 contexts/task refs survive complete cohort drain. KD mutex waiters retain migration
 pins and reserved stacks while sleeping after bounded polling.
 See [TCLock scope](../../tclock_backend/README.md) and
-[all nine lock protocols](../../docs/design/lock_protocols.md).
+[lock protocols](../../docs/design/lock_protocols.md).
 
 ## Results and validity
 
@@ -171,8 +213,8 @@ contention. `--keep-going-no-jit` keeps drained failures and continues collectin
 but excludes their failed scores and still exits nonzero.
 
 Mutex acceptance defaults to `--mutex-acceptance jit-required`. Explicit
-`--mutex-acceptance adaptive-performance` also scores correct, drained native
-execution chosen by admission. Those samples retain zero returned bodies and
+`--mutex-acceptance adaptive-performance` also scores correct, drained local
+execution chosen by the selected policy. Zero-JIT legacy samples retain
 the `ADAPTIVE_NATIVE` classification; they do not pass JIT acceptance.
 Functional checks always retain JIT-required acceptance.
 
@@ -220,6 +262,11 @@ respective controls. A failing screening rung rejects a candidate; missing grid
 points cannot pass. A new default requires the smallest passing threshold and
 two independent fresh three-round confirmation blocks.
 
+That broader through-28 threshold study is distinct from the accepted ABI4/reuse-32
+[1–8 auditor](mutex_local_study.py) and the descriptive 22-count full-grid report.
+The latter has one three-round block and does not promote a default or supply
+the two additional confirmations required for broader parity acceptance.
+
 Timed peak selection requires all workers to progress in the full cohort window.
 Keep whole-run per-worker and node shares too, especially cohorts with unequal
 NUMA membership (24 threads in the original 40-vCPU setup). A bounded batch and
@@ -227,8 +274,9 @@ positive observed counts do not prove starvation freedom.
 
 [Performance status](../../docs/PERFORMANCE.md) summarizes the latest frozen
 comparison and remaining gaps. The [machine result indexes](../results/README.md)
-retain older reports, source identities and rejected trials. Current blocking-only
-mutex checks are [recorded separately](../results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json).
+retain older reports, source identities and rejected trials. The
+[validation index](../../docs/VALIDATION.md) separates current owned protocol
+checks, the full-grid audit and historical blocking-only receipts.
 Publication, correct execution and performance acceptance are distinct results.
 
 ## Functional and diagnostic checks
@@ -350,7 +398,7 @@ complete performance acceptance; these controls remain opt-in.
 ordinary C register preservation. Its owner-word leaf CAS and private Linux
 OSQ path execute locally before KD admission, task/registry work or capture.
 The optimistic loop has no fixed poll budget; scheduling and owner state decide
-when it stops. Only failure after the required scheduler yield and final exact
+when it stops. Only failure after any required rescheduling and a final exact
 retry permits late capture. ABI4 does not update ABI2's heat/entry-ratio history.
 Source or resource refusal then commits to SELF waiting without another initial
 optimistic pass. No owned target is passed to a Linux mutex API.

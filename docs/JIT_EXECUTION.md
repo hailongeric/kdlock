@@ -43,6 +43,12 @@ Writers first try a native count CAS without the gate; on failure they take the
 native or hot gate path. Before the body starts, either the pinned native helper
 or the combiner must acquire exclusive writer admission.
 
+Owned mutex ABI4 first tries its own leaf CAS and Linux-style optimistic SELF
+acquisition. It performs no heat accounting. Only failed local acquisition reaches
+late capture and source/task/resource checks. The owned ABI2 caller instead uses
+its independent heat policy. See the [owned acquisition flow](design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
+for publication, SELF pickup and unlock-side batching.
+
 ## Batch execution and return
 
 A combiner can execute several simple root requests in one C loop. For each
@@ -87,7 +93,8 @@ A lock is called **hot** when sampled contention makes it eligible for delegatio
 These measurements are approximate. They never decide who owns a lock or when a
 request can be freed.
 
-Spin and mutex each maintain a per-CPU table with 256 buckets and 256 records.
+Spin, legacy mutex and owned ABI2 each maintain a separate per-CPU table with
+256 buckets and 256 records.
 Records match the full lock address. Hash collisions form chains; they do not evict
 existing records. If the table is full, an unknown lock stays native. A lookup does
 not insert a record, increment a counter or read the clock.
@@ -104,19 +111,23 @@ heat policy or reader delegation.
 | Spin MCS publication | Count only real publications; at `>=1024`, compare `(entries >> 10) < spin_entry_ratio_limit` |
 | Spin CPU gate | Default ratio limit 2; after comparison clear both counters and sample time; interval must be `<40000000000` TSC ticks |
 | Spin lock gate | At `>=512` records, interval must be `<1250000000` TSC ticks |
-| Mutex CPU gate | Own entry/contention counters; at `>=1024` contentions compare `(entries >> 10) < 256`, reset both, then sample time |
-| Mutex lock gate | The 1025th record checks an interval `<2500000000` TSC ticks |
+| Legacy mutex / owned ABI2 CPU gate | Independent entry/contention counters; at `>=1024` contentions compare `(entries >> 10) < limit`, reset both, then sample time; each limit defaults to 256 |
+| Legacy mutex / owned ABI2 lock gate | The 1025th record checks an interval `<2500000000` TSC ticks |
+| Owned ABI4 | No heat samples or ratio gate; local acquisition must fail before delegation eligibility checks |
 
 At 1024 MCS publications, the default ratio accepts 1024..2047 acquisitions and
 rejects 2048. The first window participates. Limit 0 disables only the ratio;
 it does not bypass CPU/lock heat, queue eligibility, context or JIT validation.
 Supported nonzero values are powers of two of at least 2.
 
-Mutex uses its separate fixed ratio limit 256 and the same CPU time bound;
-the initially proposed limit 2 is not its current setting. Native successful
-acquisitions count entries without touching shadow/task/translation state.
+Legacy `mutex_entry_ratio_limit` and owned ABI2 `owned_mutex_entry_ratio_limit`
+are separate read-only powers of two from 2 through 256, both defaulting to 256,
+with the same CPU time bound as spin. Successful acquisitions count entries
+without touching shadow/task/translation state. Their pinned contention samplers
+skip address-table work while the CPU is cold between comparison points. These
+rules do not apply to ABI4's local-first path.
 
-When sampling, a hot native MCS queue head also saves the current tail and checks
+For spin sampling, a hot native MCS queue head also saves the current tail and checks
 up to six linked successors before waiting for or acquiring the word. A missing
 tail, zero locked byte, incomplete link or fewer than six successors makes the
 CPU cold. This check does not wait for missing links. It stops at the saved tail,

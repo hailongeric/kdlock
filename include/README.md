@@ -10,6 +10,7 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | Explicit spin object/API | [kd_spin_type.h](kd_spin_type.h), [kd_spin_direct.h](kd_spin_direct.h), [kd_spin_fast.h](kd_spin_fast.h) | One KD word; ordinary preemption pair; no Linux/TCLock mixing |
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
 | Owned mutex | [kd_mutex.h](kd_mutex.h), [kd_owned_mutex_direct.h](kd_owned_mutex_direct.h) | KD-only 32-byte object, private OSQ/sleeping, outer cookie with default ABI2 or opt-in ABI4 |
+| Owned late capture | [kd_owned_mutex_cabi.h](kd_owned_mutex_cabi.h) | ABI4 eight-word record and fixed nine-byte caller stub; allocated after failed local acquisition |
 | Legacy mutex | [kd_mutex_legacy.h](kd_mutex_legacy.h), [kd_mutex_direct.h](kd_mutex_direct.h) | Original Linux mutex, blocking waits, ABI2 and opaque outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
@@ -41,7 +42,9 @@ per acquisition. The default ABI2 caller is prepared with
 The acquisition cookie is same-task and cannot be copied, modified or reused
 before its matching unlock. Owned objects must
 never be passed to Linux mutex APIs; matching size and offsets do not permit
-mixed waiters. See the [owned protocol](../docs/design/mutex_implementation.md#kd-owned-implementation-experimental)
+mixed waiters. Compile-time checks require the same size, alignment and field
+offsets as the captured non-RT `struct mutex`; this preserves embedding geometry,
+without adding public fields or proving identical cache traffic. See the [owned protocol](../docs/design/mutex_implementation.md#kd-owned-implementation-experimental)
 and [c01 caller](../workload_modules/spin_cacheline/scenario.h).
 
 The opt-in `KD_OWNED_MUTEX_CABI=1` outer caller uses ordinary C register
@@ -55,6 +58,10 @@ spin budget or heat accounting. Only failed local acquisition can reach late
 capture and delegation eligibility checks. The provider reports
 `owned_mutex_protocol=linux_local_first_v1`; guarded owner release is mandatory.
 ABI2 remains the default; caller and image identities cannot be mixed.
+The [measured c01 profile](../docs/PERFORMANCE.md#accepted-c01-18-worker-profile)
+explicitly pairs ABI4 with `owned_mutex_reuse_spins=32`; the provider default is 0.
+That allowance is separate from delegated-result polling and does not bound the
+whole optimistic acquisition loop.
 
 Legacy mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it

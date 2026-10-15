@@ -111,7 +111,11 @@ records the 1%/20% write mixes, built assembly audit and complete performance
 matrix against Native and KD ABI3.
 
 Spin counts cannot establish a delegation share. Mutex whole-run returned-batch
-counts prove delegation but are not exact selected 300 ms window shares. KD mutexes
-use bounded polling followed by blocking; result wake batching and the gate wait
-queue differ from TCLock's parking policy. Data/JIT/context/progress/drain
+counts prove delegation but are not exact selected 300 ms window shares. KD mutex
+delegates use bounded result polling followed by blocking. Owned SELF uses
+Linux-style optimism/sleeping; only the legacy KD backend has a separate gate
+wait queue. These wait paths differ from TCLock's parking policy. The
+[current owned c01 comparison](../docs/PERFORMANCE.md#fresh-c01-164-worker-comparison)
+records predominantly SELF execution for KD and whole-run delegated shares for
+TCLock; throughput alone cannot attribute a benefit to delegation. Data/JIT/context/progress/drain
 acceptance and commands live in [the runner](../bench/tclock_compare/README.md).

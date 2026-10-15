@@ -11,7 +11,7 @@ build time, using the same payload source for all three arms.
 | `SC_BACKEND=native` | Original `struct mutex`; `(mutex_lock/unlock)` bypass the experiment's caller-clobber macros |
 | `SC_BACKEND=tclock` | `struct komb_mutex`; actual upstream ordinary mutex port and fixed-affinity worker registration |
 | `SC_BACKEND=kdlock` | Original `struct mutex`; outer caller CAS/cookie pair, contended direct clobber entry and named `mc_entry_*` JIT continuations |
-| `SC_BACKEND=kdlock SC_MUTEX_OWNED=1` | Separate 32-byte KD `struct kd_mutex`; owned outer cookie, registry kind 3/ABI2, c01 only |
+| `SC_BACKEND=kdlock SC_MUTEX_OWNED=1` | Separate 32-byte KD `struct kd_mutex`; owned outer cookie, registry kind 3, default ABI2 or opt-in ABI4, c01 only |
 
 The owned arm includes `kd_owned_mutex_direct.h`, initializes with
 `kd_mutex_init`, prepares with `kd_owned_mutex_prepare`, and checks
@@ -22,17 +22,27 @@ payload are rejected for this initial implementation; kernel-owned real-API
 workloads continue using the legacy interface. Module metadata records the
 actual compiled implementation for the runner to verify.
 
-The paired KD outer cookie records the exact native result for one lexical
-acquisition. General direct mutex interfaces remain available for nested
-control calls; they are not substituted for the outer caller's fast path.
+`KD_OWNED_MUTEX_CABI=1` selects the ordinary-C ABI4 caller, which tries KD-owned
+local acquisition before late capture. The runner's measured c01 profile also
+sets `--owned-mutex-reuse-spins 32`; that is an explicit selection, while the
+provider default is 0. Both arms retain the same 32-byte public object and
+64-byte-aligned lock slot, separate from the shared counter line. The payload's
+[post-work source](../spin_cacheline/post_work.h) currently selects 64 rounds.
+
+The paired KD outer cookie records the exact acquisition route for one lexical
+acquisition. Owned SELF uses KD's physical owner and borrowed FULL uses exact
+owner ACKs; it never routes the target to Linux mutex APIs. General direct mutex
+interfaces remain available for nested control calls; they are not substituted
+for the outer caller's fast path.
 See [mutex implementation](../../docs/design/mutex_implementation.md) and
 [ownership protocols](../../docs/design/lock_protocols.md).
 
 Clients register TCLock workers after pinning/naming and before reporting ready.
 Context allocation and registration occur before measurement. After every
 worker joins, TCLock context drain may return EBUSY while an exiting task is
-still alive; the client retries outside timing. KD always uses blocking waits
-after bounded polling, retaining migration pins while asleep. TCLock supports
+still alive; the client retries outside timing. KD delegates use blocking waits
+after bounded result polling, retaining migration pins while asleep. Owned SELF
+uses separate Linux-style optimistic spinning and sleeping. TCLock supports
 parking. The target lock is never shared between
 these incompatible backend protocols.
 
@@ -49,7 +59,9 @@ KD translations, registers all workers, performs warmup, verifies payload and
 returned-body JIT/delegation evidence, and drains, retires sources and unloads modules in order.
 Commands, the full thread set, UBSAN-off provider policy and statistics are
 maintained in the [comparison README](../../bench/tclock_compare/README.md).
-KD-only low-contention native samples remain distinct from JIT positives.
+Owned `KD_SELF`/`ADAPTIVE_SELF`, legacy native execution and returned-JIT samples
+remain distinct. The [full-grid command](../../bench/tclock_compare/README.md#owned-c01-full-grid)
+uses the owned profile explicitly; the general runner still defaults to legacy.
 
 The default workload supports plain ordinary mutex operations. Owned c01 also
 supports `SC_SCENARIO=1` (nested) and `2` (early outer release), selected only by

@@ -15,7 +15,7 @@ Loading the provider does not intercept other Linux locks.
 | --- | --- |
 | Combiner | The thread that holds a lock and executes queued work for other threads. |
 | Waiter / logical task | The original caller whose critical section is being executed. It may differ from the thread currently running the code. |
-| Native execution | The caller runs the original compiled code rather than delegated JIT code. |
+| Native execution / SELF | The caller runs the original compiled body. Owned-mutex SELF acquires through KD's private protocol; it does not call the Linux Native mutex API. |
 | Admission | Checks that decide whether KD can delegate a request. **Rwlock writer admission** is a different check: it waits for readers and acquires exclusive write access. |
 | Frame and packet | A frame tracks a request and its owned locks. Its register packet holds the caller's logical execution state. |
 | Continuation | The saved instruction and stack state needed to resume the caller at the correct point. A **native suffix** is the remaining part of a partially executed body, resumed in native code. |
@@ -32,7 +32,7 @@ overwrite, so the compiler saves values that the caller will need afterward.
 
 ```mermaid
 flowchart LR
-    Caller[Direct lock API] --> Queue[Native acquisition or waiter queue]
+    Caller[Direct lock API] --> Queue[Local acquisition or waiter queue]
     Queue --> Combiner[Combiner and shared frame]
     Registry[Translation registry] --> Combiner
     Daemon[Daemon and translator] --> Registry
@@ -57,18 +57,30 @@ The [code map](CODE_MAP.md) shows where each component is implemented.
 Each lock type has its own ownership rules:
 
 - KD spin uses one KD lock word for native acquisition and delegated execution.
-- KD mutex uses the original Linux mutex. A separate scheduling gate orders KD
-  requests, but owning that gate does not mean owning the Linux mutex. Waiters
-  always support blocking after bounded polling, retaining their migration pin.
+- KD owned mutex uses a 32-byte object matching the captured Linux mutex's size,
+  alignment and field offsets. Its own owner word, optimistic spin queue and
+  tagged SELF/DELEGATE wait list provide exclusion. The opt-in ABI4 outer caller
+  tries local acquisition before capturing state for delegation; only an explicit
+  outer unlock can combine. It never passes that object to Linux mutex APIs.
+- KD legacy mutex retains the original Linux mutex and a separate scheduling
+  gate. Owning that gate does not mean owning the Linux mutex. This remains the
+  general benchmark default and the interface for existing kernel-owned objects.
 - KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
   every writer must exclude readers, whether it runs natively or through JIT.
 
 The frame's lock ledger records acquisitions and releases that actually happened.
 Changing the ledger does not itself acquire or release a lock. See
-[all nine protocols](design/lock_protocols.md) and [KD ownership](design/locking.md).
+[lock protocols](design/lock_protocols.md) and [KD ownership](design/locking.md).
 
-KD's heat counters help decide whether a new request is worth delegating. If a
-request is cold or refused, it uses the appropriate native path. Once a request
+Owned SELF acquisition uses Linux-style owner-running optimistic spinning and
+sleeping. Published delegation requests use bounded result polling followed by
+sleep on reserved stacks, retaining migration pins. These are separate wait paths;
+the result polling budget does not bound SELF optimism.
+
+Spin, legacy mutex and owned ABI2 use heat counters to decide whether a new
+request is worth delegating. Owned ABI4 instead requires failed local acquisition
+before checking delegation eligibility, without heat accounting. A cold or refused
+request acquires through its own backend's local path. Once a request
 has been published to the queue, later heat changes cannot cancel its completion,
 owner acknowledgements or cleanup obligations.
 

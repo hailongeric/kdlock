@@ -11,14 +11,20 @@ measurements resolves the correctness limits below.
 
 ## Current checkpoint
 
-The experimental owned provider extends `d8d14a1` with the accepted
+The experimental owned provider at `585335b` extends `d8d14a1` with the accepted
 [ABI4/reuse-32 c01 profile](PERFORMANCE.md#active-c01-18-worker-study), limited to
 KD-only object lifetimes and the captured x86-64 configuration. Its
 [targeted receipts](VALIDATION.md#current-owned-protocol-verification) do not
 establish fairness, general oversubscription or universal Native parity.
-The broader native-first experiment remains rejected and archived. The accepted
-1–8-worker result has a narrower performance scope; it does not waive ownership, lifetime, progress or drain
-requirements, or resolve the failures below.
+The later [c01/post64 full-grid comparison](PERFORMANCE.md#fresh-c01-164-worker-comparison)
+measures 1–8 workers in steps of one and 12–64 in steps of four on a separate
+66-vCPU boot. All 198 samples are correct and drained; the three-worker warmed
+peak misses 97% of Native. Full-grid parity and its two fresh confirmation blocks
+remain outstanding. The predominantly SELF results do not establish a benefit
+from bulk delegation. Other payloads and post-work settings need separate studies.
+The broader native-first experiment remains rejected and archived. None of these
+results waives ownership, lifetime, progress or drain requirements, or resolves
+the failures below.
 
 Recorded failures and unresolved coverage:
 
@@ -35,7 +41,7 @@ Recorded failures and unresolved coverage:
 
 ## Delivery scope
 
-Keep the two-word wrapper ABI, separate backend identities, original mutex owners,
+Keep the two-word wrapper ABI, separate backend identities, exact physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
 change its kernel. Mutexes always permit sleep with migration pinned and reject
@@ -66,9 +72,12 @@ complete the required ACK and retirement steps.
 
 ### C2. One protocol per physical lock
 
-KD spin owns its word; TCLock/Native own theirs. KD mutex keeps the original Linux
-mutex plus a scheduling gate. Preserve ledger identity, native-peer exclusion,
-frame pop, owner ACK and storage retirement as separate operations.
+KD spin owns its word; TCLock/Native own theirs. KD owned mutex uses its own
+owner word, OSQ and tagged wait list. Its Linux-compatible object geometry does
+not permit Linux or TCLock callers on the same object. The retained legacy mutex
+uses the original Linux mutex plus a scheduling gate and excludes native peers
+through that original mutex. Preserve ledger identity, physical exclusion, frame
+pop, owner ACK and storage retirement as separate operations.
 KD rwlock owns its count and KD gate. Ungated native writers retain exact
 nondelegated references; gate quiescence alone does not establish count or reader
 drain. No Linux/TCLock operations may access the same KD rwlock object.

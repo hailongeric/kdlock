@@ -23,6 +23,11 @@ Current KD mutexes always support blocking. Older reports retain the policies,
 commands and source hashes captured when they ran; reproduce them with their
 frozen source versions. The [performance guide](../../docs/PERFORMANCE.md) and
 [validation index](../../docs/VALIDATION.md) describe the applicable limits.
+The current owned ABI4 profile has a separate
+[1–8-worker acceptance study](10.176.26.71/bench/mutex_owned/20261014-linux-local/README.md)
+and [1–64-worker comparison](10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md).
+They use different VM topologies; the latter's three-worker peak misses its
+Native target. Neither changes historical report verdicts or general defaults.
 
 Compact reports are tracked in Git. `raw/` is ignored and is not included in source
 synchronization. Keep full raw evidence, including failures, partial runs, commands,

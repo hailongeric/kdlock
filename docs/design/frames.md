@@ -49,8 +49,11 @@ For ABI3 rwlock roots, `rwlock_admitted` shares one byte with `spin_kind` and
 native writer admission before body execution, not a second register snapshot.
 Virtual spin children inherit the entry ABI but do not acquire a rwlock count.
 
-Mutex requests use the packet in their queue node while MINIMAL or COMPLETE. On
-a FULL exit, KD copies the current logical state into independent frame storage
+Mutex requests use the packet in their queue node while MINIMAL or COMPLETE;
+owned ABI4 uses CALLEE_ENTRY and CALLEE_COMPLETE for its nonvolatile-register
+contract. The initial eight-word capture is allocated only after local acquisition
+fails, and completion restores the updated values. On a FULL exit, KD copies
+the current logical state into independent frame storage
 before general owner/ACK recovery, because that recovery may outlive the node.
 Final restoration also keeps a copy before releasing a reusable node. Spin
 continuations have a longer lifetime than these mutex nodes; they cannot use the

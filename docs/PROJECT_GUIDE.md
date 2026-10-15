@@ -12,11 +12,21 @@ explicitly; loading the provider does not redirect global Linux lock calls.
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
 
-Current mutexes always support blocking after bounded polling and reject delegated
-origin-CPU GS access. The [2026-10-12 verification](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-checks sleeping waiters, physical-owner ACKs and actual JIT execution.
+Mutex delegation-result waits use bounded polling then sleep on reserved stacks;
+owned SELF acquisition separately uses Linux-style optimistic spinning and
+sleeping. Delegated origin-CPU GS access is refused. The
+[validation index](VALIDATION.md#current-owned-protocol-verification) separates
+current-source protocol/JIT/FULL/ACK checks from older receipts and performance runs.
 [Performance status](PERFORMANCE.md) summarizes the latest frozen measurements;
 [the results index](../bench/results/README.md) owns historical reports and provenance.
+
+The owned ABI4/reuse-32 profile is accepted for c01/post64 at 1–8 workers on the
+regular boot. The later 22-count, 1–64-worker comparison uses the same implementation
+on a temporary 66-vCPU boot; its three-worker peak misses the 97% Native gate.
+The [current flowcharts](design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
+show the protocol, and the [owned benchmark command](../bench/tclock_compare/README.md#owned-c01-full-grid)
+selects the measured profile explicitly. The runner's legacy default and the
+owned caller's ABI2/reuse-0 defaults remain unchanged.
 
 ## Reading order
 
@@ -70,6 +80,10 @@ Both comparison runners accept up to 64 workers. The [complete 22-point matrix](
 uses a temporary 66-vCPU boot for 64 workers and a separate guest collector;
 at 64 workers they share the last physical host core. Archive that topology's
 evidence before restoring the regular boot, and keep its snapshots separate.
+The [full-grid closeout](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md#verification-and-closeout)
+records the 2026-10-14 restoration, kernel/boot-policy and idle checks, and confirmed
+`normal64-after-mutex-owned-full-20261014` snapshot. Reverify the live state and
+snapshot before any new run; the receipt is a historical observation.
 
 `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519` to reach the guest locally.
 The host also provides the `ssh kdlock-vm` alias. The source-host synchronization
@@ -199,6 +213,9 @@ separate from new validation.
 `585335b`, with an explicit ABI4/reuse-32 profile accepted under the
 [c01/post64 1–8-worker scope](PERFORMANCE.md#active-c01-18-worker-study).
 Its measured source snapshots remain independent of the later report/index edits.
+The unchanged implementation's full-grid report is committed at `5d09eef`,
+archived exactly as `archive/perf/mutex-c01-full-grid-20261014`, and integrated
+into local `master`. Its completed local topic branch is closed.
 The rejected native-first provider is a separate historical experiment.
 
 Use short-lived task branches. Archive finished or rejected tips under
@@ -210,7 +227,10 @@ The native-first implementation is preserved at `9a5305e`, tag
 was integrated separately. [The machine index](../bench/results/10.176.26.71/README.md)
 records earlier study dispositions without duplicating their narratives here.
 
-The [2026-10-14 inventory](git-branches-20261014.json) records the local cleanup.
+The [2026-10-15 inventory](git-branches-20261015.json) records refs and retained
+worktrees during this documentation refresh, after full-grid integration. It
+predates the documentation commit and includes its temporary task branch.
+The [2026-10-14 inventory](git-branches-20261014.json) preserves the prior cleanup.
 Accepted topic tip `c768c23` was fast-forwarded into `master`, preserved as
 `archive/perf/mutex-linux-local-c01-20261014`, then its local branch was closed.
 Earlier cleanup also preserves the following tips:

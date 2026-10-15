@@ -4,6 +4,13 @@ Admission decides which machine code KD may translate and execute. This guide
 explains the current checks and their limits. Read the [design overview](../DESIGN.md)
 first; [tests](../../tests/README.md) records which source versions were checked.
 
+Delegation admission and translation admission are separate. Owned mutex ABI4
+offers a request only after its local acquisition path fails; it then checks
+source/task eligibility and resources without heat sampling. The translator still
+checks owned lock kind 3, ABI4's defined register inputs, the fixed caller stub,
+terminal unlock and all applicable context/memory rules below. A local SELF
+success executes no JIT body. See the [owned register contract](../JIT_REGISTER_ABI.md#owned-mutex-ordinary-c-entry).
+
 ## 7. Translation And Publication
 
 Rwlock writer entries use ABI3 on the spin backend. Native writer admission and

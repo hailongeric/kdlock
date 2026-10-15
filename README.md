@@ -23,9 +23,10 @@ guest-kernel interfaces.
 Use the [project guide](docs/PROJECT_GUIDE.md) to build and run in the verified
 guest. [Performance status](docs/PERFORMANCE.md) summarizes measured outcomes,
 and the [results index](bench/results/README.md) retains source-specific evidence.
-The [owned-mutex studies](docs/PERFORMANCE.md#latest-owned-mutex-entry-and-waiting-study)
-distinguish the retained protocol improvements from archived experiments and
-record the remaining performance gap.
+The [owned-mutex performance status](docs/PERFORMANCE.md) distinguishes the
+accepted c01/post64 profile at 1–8 workers from the later 1–64-worker comparison
+and archived experiments. The [current protocol flowcharts](docs/design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
+show local acquisition, delegation and owner acknowledgements.
 
 ## Documentation
 

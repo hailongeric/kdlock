@@ -45,7 +45,8 @@ boundaries remain separate for reading.
 | [spin](spin/) | Direct entry, native pending/MCS, NUMA queue, batch, prefetch, stable request, restore and unlock |
 | [kd_rwlock.h](../include/kd_rwlock.h) and `spin/{direct,combiner,execute,restore}.inc` | Reader/count protocol and ABI3 writer admission, refusal/retry and completion over the spin backend |
 | `spin/ticket_*.inc` via [kd_spin_entry.c](kd_spin_entry.c) | Exact acquisition generation, root borrowing and final retirement |
-| [mutex](mutex/) via [kd_mutex.c](kd_mutex.c) | Original mutex acquisition, shadow queue, terminal batch, pinned waiter and restore |
+| [owned_mutex](owned_mutex/) | Independent 32-byte object, Linux-derived SELF/OSQ, ABI4 leaf entry and late capture, guarded FIFO and outer-unlock delegation |
+| [mutex](mutex/) via [kd_mutex.c](kd_mutex.c) | Legacy original mutex acquisition, shadow queue, terminal batch, pinned waiter and restore |
 | [lock](lock/) via [kd_lock.c](kd_lock.c) | Direct/bridge mutex routes and nested spin/mutex control CALLs |
 | [execution](execution/) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
@@ -63,29 +64,42 @@ include those files too. Shared APIs live in [include](../include/README.md).
 
 | Setting | Default and meaning |
 | --- | --- |
-| `KDLOCK_NUMA` build variable | 1; spin/mutex local grouping and CPU-node stack allocation |
+| `KDLOCK_NUMA` build variable | 1; spin/legacy-mutex local grouping and CPU-node stack allocation; owned FIFO does not reorder by NUMA |
 | `KDLOCK_SPIN_BATCH` build variable | 1024, allowed 1..1024 bodies; separate scan budget uses the same initial value |
-| Mutex batch | Uses `KDLOCK_SPIN_BATCH` (default 1,024) with bounded NUMA selection and remote-cohort handoff |
+| Legacy mutex batch | Uses `KDLOCK_SPIN_BATCH` (default 1,024) with bounded NUMA selection and remote-cohort handoff |
+| Owned mutex batch | Same total body cap; finite FIFO snapshot at explicit outer unlock, stopping at SELF/handoff boundaries |
 | `spin_delegate` | Enabled; false selects native KD spin/rwlock-writer self-execution |
 | `spin_prefetch` | 2; producer hints. Modes 0/1 select off/consumer lookup |
 | `spin_entry_ratio_limit` | 2; 0 disables only the ratio filter |
-| `mutex_entry_ratio_limit` | 256; read-only power of two from 2 through 256, exclusive `(entries >> 10)` bound per 1,024 failed native attempts |
-| `mutex_native_route` | False; read-only diagnostic control routing new mutex acquisitions natively after admission sampling |
+| `mutex_entry_ratio_limit` | Legacy: 256; read-only power of two from 2 through 256, exclusive `(entries >> 10)` bound per 1,024 failed native attempts |
+| `mutex_native_route` | Legacy: false; read-only diagnostic control routing new acquisitions through Linux after admission sampling |
+| `owned_mutex_entry_ratio_limit` | Owned ABI2: independent limit 256 with the same ratio/cadence; ABI4 does not use heat admission |
+| `owned_mutex_reuse_spins` | 0; allowed 0/8/32/128, one allowance after observing an unflagged release per optimistic OSQ turn; the measured ABI4 profile selects 32 |
+| `owned_mutex_self_route` | False; read-only diagnostic control selecting only KD-owned SELF acquisition |
+| `owned_mutex_refill` | False; opt-in further FIFO snapshots within the same cumulative batch cap |
+| `owned_mutex_preflight_spins`, `owned_mutex_preflight_queue` | 0/false; bounded ABI2 C-preflight experiment, separate from ABI4's unbounded owner optimism |
+| `owned_mutex_protocol` | Getter-only identity `linux_local_first_v1`; guarded owner release is mandatory |
 | `hotlock_stats` | Optional final approximate observation totals |
 | `target_process` | Task comm eligible for direct mutex delegation |
-| `mutex_spin_limit` | 4096 PAUSE iterations before sleeping; 0 parks immediately, maximum 1048576 |
-| `mutex_wait_stats` | Read-only observations: result schedule calls, successful wakes, gate wait calls |
+| `mutex_spin_limit`, `owned_mutex_spin_limit` | Separate delegation-result polling limits, both 4096; 0 parks immediately, maximum 1048576; neither limits SELF owner optimism |
+| `mutex_wait_stats`, `owned_mutex_wait_stats` | Read-only result schedule/wake observations; legacy also reports gate waits, owned reports zero in that field and does not count SELF sleeps |
 
 Blocking result waits recheck completion after one jiffy if their batched wake
 has not arrived. This permits a completed caller to make progress while a later
 translated body delays the flush. Gate waits use ordinary wait-queue notification.
 
-KD mutexes always use bounded polling followed by uninterruptible sleep; load
-with `insmod kdlock_km.ko`. The `mutex_blocking` selector has been removed.
-The original Linux mutex retains its real owner. Published waiters retain their
-reserved stack and migration pin while sleeping; translations that require
-origin-CPU GS storage are refused. See the [mutex runner](../bench/tclock_compare/README.md)
-for benchmark commands and the implementation guide for wake ordering.
+KD mutexes always support blocking; load with `insmod kdlock_km.ko`. The
+`mutex_blocking` selector has been removed. Owned SELF acquisition uses its own
+Linux-style optimistic spin/sleep protocol; the legacy backend retains the original
+Linux mutex owner. Published delegates retain their reserved stack and migration
+pin while sleeping after bounded result polling. Translations that require
+origin-CPU GS storage are refused.
+
+Caller build option `KD_OWNED_MUTEX_CABI=1` selects ABI4's local acquisition before
+late capture. The default remains ABI2 capture-first, with optional
+`KD_OWNED_MUTEX_PREFLIGHT=1`. These caller choices are not provider load parameters.
+See the [mutex runner](../bench/tclock_compare/README.md#owned-c01-full-grid)
+for the explicit measured profile and the implementation guide for wake ordering.
 
 [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) owns full heat rules;
 [spin](../docs/design/spin_implementation.md) owns layout/prefetch/batch details;

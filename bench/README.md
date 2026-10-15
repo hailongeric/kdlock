@@ -2,11 +2,13 @@
 
 Choose a maintained runner for the workload you want to compare. Each uses matching
 KD, TCLock and Linux Native payloads; the real API runner also provides Stock Linux.
-KD mutexes always support blocking after bounded polling.
+KD mutexes support blocking. Their delegation-result polling budget is separate
+from the owned protocol's Linux-style optimistic SELF acquisition.
 
 | Runner | Scope |
 | --- | --- |
 | [Spin/mutex comparison](tclock_compare/README.md) | Separate spinlock and ordinary blocking-mutex cacheline/RCUHT workloads |
+| [Owned mutex c01 full grid](tclock_compare/README.md#owned-c01-full-grid) | ABI4/reuse-32, one shared counter, Native/TCLock/KD, 22 worker counts and 198 samples |
 | [Rwlock comparison](rwlock_compare/README.md) | Cacheline and RCUHT reader/writer mixes; 1%/20% writes by default |
 | [Complete comparison](../tools/vm/README.md#complete-164-worker-comparison) | All three lock families, c01/hash and 22 worker counts; larger payloads are opt-in |
 | [Real kernel APIs](real_api/README.md) | OFD queries, descriptor flags, pipe/file-position mutexes and bounded UTS reader/writer metadata |
@@ -46,6 +48,8 @@ The complete grid is
 Individual runners retain shorter defaults; use explicit placement and worker
 counts for a comparison. Follow the [complete driver](../tools/vm/README.md#complete-164-worker-comparison)
 and its [offline exporter](full_compare/README.md) for the full c01/hash matrix.
+That driver retains the legacy mutex default. The owned c01 profile has its own
+explicit command above and does not support the full driver's hash payload.
 
 Retain best peak and whole-run throughput, minimum/median/maximum/spread across
 rounds, returned JIT/delegation counts, each worker's and NUMA node's progress,

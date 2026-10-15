@@ -46,10 +46,12 @@ CALL miss.
 | [publication.inc](publication.inc) |ABI/layout checks, native-only status and upload |
 
 Private components remain in one translation unit and are tracked by the daemon
-build and basic daemon fixture. Entry identities 0/1/2/3 mean legacy/spin-clobber/
-mutex-clobber/rwlock-writer-clobber. ABI3 uses the spin backend with native writer
-admission before the prepared body; the emitted layout/backend must match before
-upload. Rebuild the daemon and translator with ABI3 rwlock callers and provider.
+build and basic daemon fixture. Entry identities 0/1/2/3/4 mean legacy/spin-clobber/
+mutex-clobber/rwlock-writer-clobber/owned-mutex-ordinary-C. ABI3 uses the spin
+backend with native writer admission before the prepared body. ABI4 uses owned
+lock kind 3 and the late-capture nonvolatile-register contract. The emitted
+layout/backend/ABI must match before upload. Replace callers, provider, daemon
+and translator together when changing those identities.
 
 ## Device session and source residency
 
@@ -88,7 +90,8 @@ it will emit, rewrites register and control-flow operations, and builds `jit.bin
 If the code violates admission policy, it deletes stale outputs and returns 2
 (native-only). Exceptions or failures to launch, build or access the device are
 errors, not successful policy refusals. MINIMAL entry for ABI1/ABI2/ABI3 requires
-the matching versioned entry. A legacy image cannot be relabelled as clobber code.
+the matching versioned entry; ABI4 requires its CALLEE_ENTRY contract and owned
+backend identity. A legacy image cannot be relabelled as clobber or ABI4 code.
 
 Images must be nonempty and fit 640 KiB. Uploads use chunks of at most 4,000 bytes;
 the final complete chunk publishes NORMAL. That status does not prove execution.

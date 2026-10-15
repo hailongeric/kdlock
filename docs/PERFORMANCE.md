@@ -2,10 +2,12 @@
 
 The archived 64-vCPU study accepted the owned ABI4/reuse-32 profile against the
 97% Native target for c01/post64 at 1–8 workers. It extends the experimental
-`d8d14a1` provider with Linux-style local acquisition before delegation.
+`d8d14a1` provider with Linux-style local acquisition before delegation at
+implementation commit `585335b`.
 The benchmark still defaults to legacy
 mutexes; `owned-v1` explicitly selects the independent 32-byte KD object.
-Owned capture-first, admission ratio 256 and finite FIFO remain the general defaults.
+Owned ABI2 capture-first, admission ratio 256, reuse allowance 0 and finite FIFO
+remain the general defaults. The measured profile explicitly selects ABI4 and 32.
 This narrow result does not establish general Native parity. Implementation contracts live in
 [the mutex guide](design/mutex_implementation.md); correctness receipts live in
 [validation](VALIDATION.md).
@@ -21,7 +23,14 @@ full-grid parity. At 60 workers, KD/Native medians are 6.913/3.599 Mops/s.
 At least 99.5% of each KD sample executes through SELF, although all 63 contended
 KD sessions return some JIT bodies. This descriptive three-round block uses the
 temporary 66-vCPU topology, with physical collector contention at 64 workers;
-it remains separate from the accepted 64-vCPU study below.
+it remains separate from the accepted 64-vCPU study below and supplies no fresh
+confirmation blocks for full-grid acceptance.
+
+At three workers, Native's whole-run spread is 35.88% versus KD's 5.67%; the
+fastest Native sample gives one worker 85.11% of operations. Those shares are
+consistent with ownership reuse helping the tiny workload, but do not measure
+ownership streaks or coherence traffic. The report retains CPU cost, all worker
+shares and all samples, including the slow first one-worker Native round.
 
 <a id="active-c01-18-worker-study"></a>
 
@@ -41,7 +50,9 @@ the screen and both confirmations pass. Their lowest whole/peak ratios are
 98.15%/98.51%. The owned target uses only KD's protocol and retains the Linux
 object layout. General defaults and acceptance above eight workers are unchanged.
 
-## Latest owned-mutex entry and waiting study
+<a id="latest-owned-mutex-entry-and-waiting-study"></a>
+
+## Archived native-first entry and waiting study
 
 The preceding [native-first study](../bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/README.md)
 failed its broader primary-through-28, higher-thread JIT and compatibility gates.
